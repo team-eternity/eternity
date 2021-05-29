@@ -1690,6 +1690,14 @@ void Mobj::serialize(SaveArchive &arc)
    if(arc.saveVersion() >= 2)
       arc << flags5;
 
+   qstring name;
+   if(arc.saveVersion() >= 7)
+   {
+      if(arc.isSaving())
+         name = info->name;
+      arc.archiveCachedString(name);   // use name later when loading
+   }
+
    // Arrays
    P_ArchiveArray<int>(arc, counters, NUMMOBJCOUNTERS); // Counters
    P_ArchiveArray<int>(arc, args,     NUMMTARGS);       // Arguments 
@@ -1725,7 +1733,30 @@ void Mobj::serialize(SaveArchive &arc)
       state = states[temp];
       
       // haleyjd 07/23/09: this must be before skin setting!
-      info = mobjinfo[type]; 
+      // Check bounds
+      if(type < 0 || type >= NUMMOBJTYPES)
+      {
+         C_Printf("Mobj::serialize: invalid type %d\n", type);
+         type = UnknownThingType;
+      }
+      // check if the type shifted between save games and correct to match the loaded name
+      if(arc.saveVersion() >= 7 && name.strCaseCmp(mobjinfo[type]->name))
+      {
+         // We have a mismatched thing type to thing name, so correct it
+         temp = E_SafeThingName(name.constPtr());
+         if(temp != UnknownThingType)
+         {
+            C_Printf("Mobj::serialize: corrected %s from type %d to %d\n", name.constPtr(),
+                     type, temp);
+         }
+         else
+         {
+            C_Printf("Mobj::serialize: invalid correction of type %d to %s\n", type,
+                     name.constPtr());
+         }
+         type = temp;
+      }
+      info = mobjinfo[type];
 
       arc << temp; // Player number
       if(temp)
