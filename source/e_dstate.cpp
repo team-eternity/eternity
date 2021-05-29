@@ -2036,7 +2036,7 @@ static edecstateout_t *E_DecoratePrincipals(const char *owner, const char *input
 
          qstring firstname;
          firstname.Printf(len, "{%s 0}", owner);
-         int alreadystate = E_StateNumForNameIncludingDecorate(firstname.constPtr());
+         int alreadystate = E_StateNumForNameOnlyDecorate(firstname.constPtr());
 
          if(alreadystate != -1)  // we already have a state, so find the last offset
          {

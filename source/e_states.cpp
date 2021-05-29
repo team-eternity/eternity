@@ -225,6 +225,12 @@ int E_StateNumForNameIncludingDecorate(const char *name)
       return st->index;
    return -1;
 }
+// Or only Decorate
+int E_StateNumForNameOnlyDecorate(const char *name)
+{
+   const state_t *st = decstate_namehash.objectForKey(name);
+   return st ? st->index : -1;
+}
 
 //
 // Stores a Decorate state to its special hash
