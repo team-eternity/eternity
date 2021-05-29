@@ -190,7 +190,7 @@ default_t defaults[] =
    DEFAULT_INT("weapon_recoil", &default_weapon_recoil, &weapon_recoil, 0, 0, 1, default_t::wad_game,
                "1 to enable recoil from weapon fire"),
 
-   DEFAULT_BOOL("r_centerfire", &centerfire, nullptr, false, default_t::wad_no,
+   DEFAULT_BOOL("r_centerfire", &centerfire, nullptr, false, default_t::wad_game,
                 "0 - don't center weapon when firing, 1 - center weapon when firing"),
 
    // killough 7/19/98
