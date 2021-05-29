@@ -47,6 +47,7 @@
 #include "e_dstate.h"
 #include "m_dllist.h"
 #include "m_qstr.h"
+#include "m_strcasestr.h"
 #include "p_pspr.h"
 
 //==============================================================================
@@ -1982,7 +1983,8 @@ static bool E_checkPrincipalSemantics(const char *firststate)
 //
 // Counts and allocates labels, states, etc.
 //
-static edecstateout_t *E_DecoratePrincipals(const char *input, const char *firststate)
+static edecstateout_t *E_DecoratePrincipals(const char *owner, const char *input, 
+                                            const char *firststate)
 {
    edecstateout_t *newdso = nullptr;
    int totalstates;
@@ -2018,22 +2020,51 @@ static edecstateout_t *E_DecoratePrincipals(const char *input, const char *first
          state_t *newstates;
 
          // Add the required number of pointers to the states array
+         int prevNumStates = NUMSTATES;   // we'll need to look through the list
          E_ReallocStates(totalstates);
 
          // Allocate the new states as a block
          newstates = estructalloc(state_t, totalstates);
 
          // Initialize states
+
+         // Determine the next number to start from
+         int offset = 0;
+
+         // IMPORTANT: this must contain the full buffer of {<name> -##########}
+         size_t len = strlen(owner) + 16; 
+
+         qstring firstname;
+         firstname.Printf(len, "{%s 0}", owner);
+         int alreadystate = E_StateNumForNameIncludingDecorate(firstname.constPtr());
+
+         if(alreadystate != -1)  // we already have a state, so find the last offset
+         {
+            // Look backwards and find the last owner name
+            for(int i = prevNumStates - 1; i >= alreadystate; --i)
+            {
+               const char *substring = M_StrCaseStr(states[i]->name, owner);
+               if(substring)
+               {
+                  substring += strlen(owner);   // go past the word
+                  offset = atoi(substring) + 1; // and convert the number
+                  break;                        // we're done
+               }
+            }
+         }
+
          for(int i = DSP.firststate; i < NUMSTATES; i++)
          {
             states[i] = &newstates[i - DSP.firststate];
             states[i]->index = i;
-            states[i]->name = ecalloc(char *, 1, 40);
-            psnprintf(states[i]->name, 40, "{DS %d}", i);         
+            states[i]->name = ecalloc(char *, 1, len);
+            psnprintf(states[i]->name, len, "{%s %d}", owner, i - DSP.firststate + offset);
             states[i]->dehnum = -1;
             states[i]->sprite = blankSpriteNum;
             states[i]->nextstate = NullStateNum;
             states[i]->flags |= STATEFI_DECORATE;
+
+            E_AddDecorateStateNameToHash(states[i]);
          }
       }
    }
@@ -2203,7 +2234,8 @@ static void E_freeDecorateData()
 // * A list of gotos that need external resolution
 // * A list of states to remove from the object
 //
-edecstateout_t *E_ParseDecorateStates(const char *input, const char *firststate)
+edecstateout_t *E_ParseDecorateStates(const char *owner, const char *input, 
+                                      const char *firststate)
 {
    edecstateout_t *dso = nullptr;
    bool isgood = false;
@@ -2213,7 +2245,7 @@ edecstateout_t *E_ParseDecorateStates(const char *input, const char *firststate)
    DSP.firststate = DSP.currentstate = DSP.lastlabelstate = NullStateNum;
 
    // parse for principals
-   if(!(dso = E_DecoratePrincipals(input, firststate)))
+   if(!(dso = E_DecoratePrincipals(owner, input, firststate)))
       return nullptr;
 
    // do main pass

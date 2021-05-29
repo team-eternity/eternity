@@ -1529,7 +1529,9 @@ static void E_ProcessDecorateStateList(mobjinfo_t *mi, const char *str,
 {
    edecstateout_t *dso;
 
-   if(!(dso = E_ParseDecorateStates(str, firststate)))
+   qstring owner;
+   owner.Printf(strlen(mi->name) + 4, "t{%s}", mi->name);
+   if(!(dso = E_ParseDecorateStates(owner.constPtr(), str, firststate)))
    {
       E_EDFLoggedWarning(2, "Warning: couldn't attach DECORATE states to thing '%s'.\n",
                          mi->name);

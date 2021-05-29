@@ -1690,12 +1690,12 @@ void Mobj::serialize(SaveArchive &arc)
    if(arc.saveVersion() >= 2)
       arc << flags5;
 
-   qstring name;
+   qstring mobjname;
    if(arc.saveVersion() >= 7)
    {
       if(arc.isSaving())
-         name = info->name;
-      arc.archiveCachedString(name);   // use name later when loading
+         mobjname = info->name;
+      arc.archiveCachedString(mobjname);   // use name later when loading
    }
 
    // Arrays
@@ -1709,6 +1709,11 @@ void Mobj::serialize(SaveArchive &arc)
       // Basic serializable pointers (state, player)
       arc << state->index;
       temp = static_cast<unsigned>(player ? player - players + 1 : 0);
+      if(arc.saveVersion() >= 7)
+      {
+         auto statename = qstring(state->name);
+         arc.archiveCachedString(statename);
+      }
       arc << temp;
 
       // Pointers to other mobjs
@@ -1730,6 +1735,17 @@ void Mobj::serialize(SaveArchive &arc)
          C_Printf("Mobj::serialize: invalid state %d\n", temp);
          temp = NullStateNum;
       }
+      if(arc.saveVersion() >= 7)
+      {
+         qstring statename;
+         arc.archiveCachedString(statename);
+         if(statename.strCaseCmp(states[temp]->name)) // name mismatch. Fix it.
+         {
+            temp = E_StateNumForNameIncludingDecorate(statename.constPtr());
+            C_Printf("Mobj::serialize: corrected state %s to index %d\n",
+                     statename.constPtr(), temp);
+         }
+      }
       state = states[temp];
       
       // haleyjd 07/23/09: this must be before skin setting!
@@ -1740,19 +1756,19 @@ void Mobj::serialize(SaveArchive &arc)
          type = UnknownThingType;
       }
       // check if the type shifted between save games and correct to match the loaded name
-      if(arc.saveVersion() >= 7 && name.strCaseCmp(mobjinfo[type]->name))
+      if(arc.saveVersion() >= 7 && mobjname.strCaseCmp(mobjinfo[type]->name))
       {
          // We have a mismatched thing type to thing name, so correct it
-         temp = E_SafeThingName(name.constPtr());
+         temp = E_SafeThingName(mobjname.constPtr());
          if(temp != UnknownThingType)
          {
-            C_Printf("Mobj::serialize: corrected %s from type %d to %d\n", name.constPtr(),
+            C_Printf("Mobj::serialize: corrected %s from type %d to %d\n", mobjname.constPtr(),
                      type, temp);
          }
          else
          {
             C_Printf("Mobj::serialize: invalid correction of type %d to %s\n", type,
-                     name.constPtr());
+                     mobjname.constPtr());
          }
          type = temp;
       }

@@ -829,7 +829,9 @@ static void E_processDecorateWepStateList(weaponinfo_t *wi, const char *str,
 {
    edecstateout_t *dso;
 
-   if(!(dso = E_ParseDecorateStates(str, firststate)))
+   qstring owner;
+   owner.Printf(strlen(wi->name) + 4, "w{%s}", wi->name);
+   if(!(dso = E_ParseDecorateStates(owner.constPtr(), str, firststate)))
    {
       E_EDFLoggedWarning(2, "Warning: couldn't attach DECORATE states to weapon '%s'.\n",
                          wi->name);
