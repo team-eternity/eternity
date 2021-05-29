@@ -1717,6 +1717,11 @@ void Mobj::serialize(SaveArchive &arc)
       int temp;
 
       arc << temp; // State index
+      if(temp < 0 || temp >= NUMSTATES)
+      {
+         C_Printf("Mobj::serialize: invalid state %d\n", temp);
+         temp = NullStateNum;
+      }
       state = states[temp];
       
       // haleyjd 07/23/09: this must be before skin setting!
