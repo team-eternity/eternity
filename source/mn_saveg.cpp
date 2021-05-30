@@ -926,10 +926,10 @@ CONSOLE_COMMAND(quicksave, 0)
    if(gamestate != GS_LEVEL)
       return;
 
+   MN_readSaveStrings();
    if(quickID.slot < 0)
    {
       quickID.slot = -2; // means to pick a slot now
-      MN_readSaveStrings();
       MN_StartMenu(GameModeInfo->saveMenu);
       return;
    }
