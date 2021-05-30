@@ -626,10 +626,10 @@ CONSOLE_COMMAND(quickload, 0)
       return;
    }
 
+   MN_readSaveStrings();
    if(quickID.slot < 0)
    {
       quickID.slot = -2; // means to pick a slot now
-      MN_readSaveStrings();
       MN_StartMenu(GameModeInfo->loadMenu);
       return;
    }
