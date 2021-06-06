@@ -512,6 +512,11 @@ static void P_LoadSubsectors(int lump)
    int  i;
    
    numsubsectors = setupwad->lumpLength(lump) / sizeof(mapsubsector_t);
+   if(numsubsectors <= 0)
+   {
+      level_error = "no subsectors in level (is this compressed ZDBSP?)";
+      return;
+   }
    subsectors = estructalloctag(subsector_t, numsubsectors, PU_LEVEL);
    data = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
    
@@ -1049,11 +1054,20 @@ static ZNodeType P_CheckForZDoomUncompressedNodes(int nodelumpnum,
    // haleyjd: load at PU_CACHE and it may stick around for later.
    data = setupwad->cacheLumpNum(*actualNodeLump, PU_CACHE);
 
-   if(!udmf && !glNodesFallback && !memcmp(data, "XNOD", 4))
+   if(!udmf && !glNodesFallback)
    {
-      // only classic maps with NODES having XNOD
-      C_Printf("ZDoom uncompressed normal nodes detected\n");
-      return ZNodeType_Normal;
+      if(!memcmp(data, "XNOD", 4))
+      {
+         // only classic maps with NODES having XNOD
+         C_Printf("ZDoom uncompressed normal nodes detected\n");
+         return ZNodeType_Normal;
+      }
+      if(!memcmp(data, "ZNOD", 4))
+      {
+         // Warn but don't quit (ZNOD may be accidental)
+         C_Printf("Warning: ZNOD header detected; ZDBSP compressed nodes are not supported\n");
+         return ZNodeType_Invalid;
+      }
    }
 
 
@@ -1073,6 +1087,12 @@ static ZNodeType P_CheckForZDoomUncompressedNodes(int nodelumpnum,
       {
          C_Printf("ZDoom uncompressed GL nodes version 3 detected\n");
          return ZNodeType_GL3;
+      }
+      if(!memcmp(data, "ZGLN", 4) || !memcmp(data, "ZGL2", 4) || !memcmp(data, "ZGL3", 4))
+      {
+         // Warn but don't quit (ZGL* may be accidental)
+         C_Printf("Warning: ZGL* header detected; ZDBSP compressed nodes are not supported\n");
+         return ZNodeType_Invalid;
       }
    }
 
