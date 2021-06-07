@@ -8,6 +8,11 @@ Since v4.02.00 "Forseti"
 ========================
 
 --------------------------------------------------------------------------------
+07.06.2021
+
+BUGFIX: thinggroup definitions didn't work if they reused thing types! Fixed.
+
+--------------------------------------------------------------------------------
 05.05.2021
 
 BUGFIX: The "chgun" hack apparently hasn't worked for awhile, but nobody was
