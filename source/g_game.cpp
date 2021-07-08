@@ -1056,6 +1056,7 @@ struct complevel_s
    { 335, 335 }, // comp_special
    { 337, 337 }, // comp_ninja
    { 340, 340 }, // comp_jump
+   { 401, 401 }, // comp_passuse
    { 0,   0   }
 };
 
