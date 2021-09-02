@@ -709,8 +709,11 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
    // killough 8/10/98: allow bouncing objects to pass through as missiles
    if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
    {
-      if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
+      if((ld->flags & ML_BLOCKING) ||
+         (mbf21_temp && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
       {
+         // explicitly blocking everything
+         // or blocking player
          bool result = clip.unstuck && !untouched(ld);  // killough 8/1/98: allow escape
 
          // When it's Hexen, keep side 0 even when hitting from backside

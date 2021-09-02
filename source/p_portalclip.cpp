@@ -346,8 +346,11 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       // killough 8/10/98: allow bouncing objects to pass through as missiles
       if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
       {
-         if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
+         if((ld->flags & ML_BLOCKING) ||
+            (mbf21_temp && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
          {
+            // explicitly blocking everything
+            // or blocking player
             bool result = clip.unstuck && !untouchedViaOffset(ld, link);
             if(!result && pushhit && ld->special &&
                full_demo_version >= make_full_version(401, 0))
@@ -379,8 +382,11 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       }
       if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
       {
-         if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
+         if((ld->flags & ML_BLOCKING) ||
+            (mbf21_temp && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
          {
+            // explicitly blocking everything
+            // or blocking player
             P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop, 
                pushhit);
             return true;

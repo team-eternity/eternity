@@ -165,6 +165,9 @@ struct maplinedefhexen_t
 // is one of the first ever created, so it may have something to do with that.
 #define ML_RESERVED             2048
 
+// MBF21
+#define ML_BLOCKPLAYERS         8192
+
 // haleyjd 01/22/11: internal line flags
 enum
 {
