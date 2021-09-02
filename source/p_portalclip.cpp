@@ -363,8 +363,13 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
 
          // killough 8/9/98: monster-blockers don't affect friends
          // SoM 9/7/02: block monsters standing on 3dmidtex only
-         if(ld->flags & ML_BLOCKMONSTERS && !(ld->flags & ML_3DMIDTEX) &&
-            P_BlockedAsMonster(*clip.thing))
+         // MaxW: Land-monster blockers gotta be factored in, too
+         if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
+            (
+               ld->flags & ML_BLOCKMONSTERS ||
+               (mbf21_temp && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
+               )
+            )
          {
             return false; // block monsters only
          }
@@ -391,8 +396,12 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
                pushhit);
             return true;
          }
-         if(ld->flags & ML_BLOCKMONSTERS && !(ld->flags & ML_3DMIDTEX) &&
-            P_BlockedAsMonster(*clip.thing))
+         if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
+            (
+               ld->flags & ML_BLOCKMONSTERS ||
+               (mbf21_temp && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
+               )
+            )
          {
             P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop, 
                pushhit);
