@@ -58,10 +58,10 @@
 // haleyjd 11/01/02: moved deh file/wad stdio emulation to d_io.c
 // and generalized, strengthened encapsulation
 
-// killough 10/98: new functions, to allow processing DEH files 
+// killough 10/98: new functions, to allow processing DEH files
 // in-memory (e.g. from wads)
 
-// killough 10/98: emulate IO whether input really comes from a file 
+// killough 10/98: emulate IO whether input really comes from a file
 // or not
 
 // variables used in other routines
@@ -217,9 +217,9 @@ static dehflags_t deh_mobjflags[] =
   // SLIDE bit has no effect, as it is never used. I will make a point
   // of avoiding duplicate flag names in the future ;)
 
-  {"SLIDE",            0x00000100, 2}, // mobj slides against walls (for real)  
+  {"SLIDE",            0x00000100, 2}, // mobj slides against walls (for real)
   {"SLIDE",            0x00002000}, // keep info about sliding along walls
-  
+
   {"FLOAT",            0x00004000}, // allow movement to any height
   {"TELEPORT",         0x00008000}, // don't cross lines or look at heights
   {"MISSILE",          0x00010000}, // don't hit same species, explode on block
@@ -232,7 +232,7 @@ static dehflags_t deh_mobjflags[] =
   {"COUNTITEM",        0x00800000}, // count toward the items total
   {"SKULLFLY",         0x01000000}, // special handling for flying skulls
   {"NOTDMATCH",        0x02000000}, // do not spawn in deathmatch
-  
+
   // killough 10/98: TRANSLATION consists of 2 bits, not 1:
 
   {"TRANSLATION",      0x04000000}, // for Boom bug-compatibility
@@ -375,13 +375,13 @@ static dehflagset_t dehacked_flags =
 static const char *deh_state[] =
 {
   "Sprite number",    // .sprite (spritenum_t) // an enum
-  "Sprite subnumber", // .frame 
-  "Duration",         // .tics 
+  "Sprite subnumber", // .frame
+  "Duration",         // .tics
   "Next frame",       // .nextstate (statenum_t)
   // This is set in a separate "Pointer" block from Dehacked
   "Codep Frame",      // pointer to first use of action (actionf_t)
-  "Unknown 1",        // .misc1 
-  "Unknown 2",        // .misc2 
+  "Unknown 1",        // .misc1
+  "Unknown 2",        // .misc2
   "Particle event",   // haleyjd 08/09/02: particle event num
   "Args1",            // haleyjd 08/09/02: arguments
   "Args2",
@@ -441,7 +441,7 @@ static const char *deh_weapon[] =
   "Bobbing frame",  // .readystate
   "Shooting frame", // .atkstate
   "Firing frame",   // .flashstate
-  "Ammo per shot",  // haleyjd 08/10/02: .ammopershot 
+  "Ammo per shot",  // haleyjd 08/10/02: .ammopershot
 };
 
 enum dehweaponid_e
@@ -562,7 +562,7 @@ static void deh_CloseLog()
    // haleyjd 05/21/02: must check fileout for validity!
    if(fileout && fileout != stdout)
       fclose(fileout);
-   
+
    fileout = nullptr;
 }
 
@@ -589,7 +589,7 @@ void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum)
       deh_OpenLog(outfilename);
 
    // killough 10/98: allow DEH files to come from wad lumps
-   
+
    if(filename)
    {
       infile.openFile(filename, "rt");
@@ -607,7 +607,7 @@ void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum)
    }
 
    usermsg("Loading DEH file %s",filename);
-   
+
    deh_LogPrintf("\nLoading DEH file %s\n\n", filename);
 
    // loop until end of file
@@ -631,10 +631,10 @@ void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum)
       {
          // preserve state while including a file
          // killough 10/98: moved to here
-         
+
          char *nextfile;
          bool oldnotext = includenotext;       // killough 10/98
-         
+
          // killough 10/98: exclude if inside wads (only to discourage
          // the practice, since the code could otherwise handle it)
 
@@ -649,40 +649,40 @@ void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum)
 
          if(!strncasecmp(nextfile = ptr_lstrip(inbuffer+7),"NOTEXT",6))
          {
-            includenotext = true; 
+            includenotext = true;
             nextfile = ptr_lstrip(nextfile+6);
          }
 
          deh_LogPrintf("Branching to include file %s...\n", nextfile);
 
          // killough 10/98:
-         // Second argument must be nullptr to prevent closing fileout too soon         
+         // Second argument must be nullptr to prevent closing fileout too soon
          ProcessDehFile(nextfile, nullptr, 0); // do the included file
-         
+
          includenotext = oldnotext;
-         
+
          deh_LogPrintf("...continuing with %s\n", filename);
-         
+
          continue;
       }
 
       for(size_t i = 0; i < earrlen(deh_blocks); i++)
       {
          if(!strncasecmp(inbuffer, deh_blocks[i].key, strlen(deh_blocks[i].key)))
-         { 
+         {
             // matches one
-            deh_LogPrintf("Processing function [%d] for %s\n", 
+            deh_LogPrintf("Processing function [%d] for %s\n",
                           i, deh_blocks[i].key);
-            
+
             deh_blocks[i].fptr(&infile, inbuffer);  // call function
-            
+
             break;  // we got one, that's enough for this block
          }
       }
    }
 
    // killough 10/98: only at top recursion level
-   if(outfilename)   
+   if(outfilename)
       deh_CloseLog();
 }
 
@@ -711,7 +711,7 @@ static void deh_procBexCodePointers(DWFILE *fpin, char *line)
    // for this one, we just read 'em until we hit a blank line
    while(!fpin->atEof() && *inbuffer && (*inbuffer != ' '))
    {
-      if(!fpin->getStr(inbuffer, sizeof(inbuffer))) 
+      if(!fpin->getStr(inbuffer, sizeof(inbuffer)))
          break;
 
       lfstrip(inbuffer);
@@ -727,12 +727,12 @@ static void deh_procBexCodePointers(DWFILE *fpin, char *line)
             inbuffer);
          return;  // early return
       }
-      
+
       // haleyjd: resolve DeHackEd num of state through EDF
       indexnum = E_GetStateNumForDEHNum(indexnum);
 
       deh_LogPrintf("Processing pointer at index %d: %s\n", indexnum, mnemonic);
-      
+
       // haleyjd 03/14/03: why do this? how wasteful and useless...
       //strcpy(key,"A_");  // reusing the key area to prefix the mnemonic
 
@@ -744,14 +744,14 @@ static void deh_procBexCodePointers(DWFILE *fpin, char *line)
 
       if(!bexptr)
       {
-         deh_LogPrintf("Invalid pointer mnemonic '%s' for frame %d\n", 
+         deh_LogPrintf("Invalid pointer mnemonic '%s' for frame %d\n",
                        key, indexnum);
       }
       else
       {
          // copy codepointer to state
          states[indexnum]->action = bexptr->cptr;
-         deh_LogPrintf("- applied codepointer %p to states[%d]\n", 
+         deh_LogPrintf("- applied codepointer %p to states[%d]\n",
                        bexptr->cptr, indexnum);
       }
    }
@@ -883,7 +883,7 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
 
    switch(keyIndex)
    {
-   case 0: 
+   case 0:
       mi->doomednum = value;
       break;
    case 1:
@@ -893,88 +893,88 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
       states[statenum]->flags |= STATEFI_VANILLA0TIC;
       break;
    }
-   case 2: 
+   case 2:
       mi->spawnhealth = value;
       E_ThingDefaultGibHealth(mi); // haleyjd 01/02/15: reset gibhealth
       break;
-   case 3: 
-      mi->seestate = E_GetStateNumForDEHNum(value); 
+   case 3:
+      mi->seestate = E_GetStateNumForDEHNum(value);
       break;
-   case 4: 
-      mi->seesound = value; 
+   case 4:
+      mi->seesound = value;
       break;
-   case 5: 
-      mi->reactiontime = value; 
+   case 5:
+      mi->reactiontime = value;
       break;
-   case 6: 
-      mi->attacksound = value; 
+   case 6:
+      mi->attacksound = value;
       break;
-   case 7: 
-      mi->painstate = E_GetStateNumForDEHNum(value); 
+   case 7:
+      mi->painstate = E_GetStateNumForDEHNum(value);
       break;
-   case 8: 
-      mi->painchance = value; 
+   case 8:
+      mi->painchance = value;
       break;
-   case 9: 
-      mi->painsound = value; 
+   case 9:
+      mi->painsound = value;
       break;
-   case 10: 
-      mi->meleestate = E_GetStateNumForDEHNum(value); 
+   case 10:
+      mi->meleestate = E_GetStateNumForDEHNum(value);
       break;
-   case 11: 
-      mi->missilestate = E_GetStateNumForDEHNum(value); 
+   case 11:
+      mi->missilestate = E_GetStateNumForDEHNum(value);
       break;
-   case 12: 
-      mi->deathstate = E_GetStateNumForDEHNum(value); 
+   case 12:
+      mi->deathstate = E_GetStateNumForDEHNum(value);
       break;
-   case 13: 
-      mi->xdeathstate = E_GetStateNumForDEHNum(value); 
+   case 13:
+      mi->xdeathstate = E_GetStateNumForDEHNum(value);
       break;
-   case 14: 
-      mi->deathsound = value; 
+   case 14:
+      mi->deathsound = value;
       break;
-   case 15: 
-      mi->speed = value; 
+   case 15:
+      mi->speed = value;
       break;
-   case 16: 
-      mi->radius = value; 
+   case 16:
+      mi->radius = value;
       break;
-   case 17: 
+   case 17:
       mi->height    = value;
       mi->c3dheight = 0; // haleyjd 08/23/09
       break;
-   case 18: 
-      mi->mass = value; 
+   case 18:
+      mi->mass = value;
       break;
-   case 19: 
-      mi->damage = value; 
+   case 19:
+      mi->damage = value;
       break;
-   case 20: 
-      mi->activesound = value; 
+   case 20:
+      mi->activesound = value;
       break;
-   case MOBJFLAGSINDEX: 
+   case MOBJFLAGSINDEX:
       mi->flags = value;
       if(mi->flags & MF_SPAWNCEILING)
          mi->c3dheight = 0; // haleyjd 08/23/09
       break;
-   case MOBJFLAGS2INDEX: 
-      mi->flags2 = value; 
+   case MOBJFLAGS2INDEX:
+      mi->flags2 = value;
       break;
-   case 23: 
-      mi->raisestate = E_GetStateNumForDEHNum(value); 
+   case 23:
+      mi->raisestate = E_GetStateNumForDEHNum(value);
       break;
-   case MOBJTRANSINDEX: 
-      mi->translucency = value; 
+   case MOBJTRANSINDEX:
+      mi->translucency = value;
       break;
-   case MOBJFLAGS3INDEX: 
-      mi->flags3 = value; 
+   case MOBJFLAGS3INDEX:
+      mi->flags3 = value;
       break;
-   case 26: 
-      mi->bloodcolor = value; 
+   case 26:
+      mi->bloodcolor = value;
    case 27:
       E_SetDropItem(mi, value);
       break;
-   default: 
+   default:
       break;
    }
 }
@@ -1006,7 +1006,7 @@ static void deh_procThing(DWFILE *fpin, char *line)
    deh_LogPrintf("count=%d, Thing %d\n", ix, indexnum);
 
    // Note that the mobjinfo[] array is base zero, but object numbers
-   // in the dehacked file start with one.  Grumble.   
+   // in the dehacked file start with one.  Grumble.
    // haleyjd: not as big an issue with EDF, as it uses a hash lookup
    // --indexnum;  <-- old code
 
@@ -1015,14 +1015,14 @@ static void deh_procThing(DWFILE *fpin, char *line)
    // now process the stuff
    // Note that for Things we can look up the key and use its offset
    // in the array of key strings as an int offset in the structure
-   
+
    // get a line until a blank or end of file--it's not
    // blank now because it has our incoming key in it
    while(!fpin->atEof() && *inbuffer && (*inbuffer != ' '))
    {
-      if(!fpin->getStr(inbuffer, sizeof(inbuffer))) 
+      if(!fpin->getStr(inbuffer, sizeof(inbuffer)))
          break;
-      
+
       lfstrip(inbuffer);  // toss the end of line
 
       // killough 11/98: really bail out on blank lines (break != continue)
@@ -1070,7 +1070,7 @@ static void deh_procThing(DWFILE *fpin, char *line)
 
                deh_LogPrintf("Bits2 = 0x%08lX = %ld \n", value, value);
             }
-            
+
             SetMobjInfoValue(indexnum, MOBJFLAGS2INDEX, value);
          }
          else if(!strcasecmp(key, "bits3"))
@@ -1083,7 +1083,7 @@ static void deh_procThing(DWFILE *fpin, char *line)
                deh_ParseFlags(&dehacked_flags, &strval);
 
                value = dehacked_flags.results[DEHFLAGS_MODE3];
-               
+
                deh_LogPrintf("Bits3 = 0x%08lX = %ld \n", value, value);
             }
 
@@ -1091,7 +1091,7 @@ static void deh_procThing(DWFILE *fpin, char *line)
          }
          else
             SetMobjInfoValue(indexnum, ix, value);
-         
+
          deh_LogPrintf("Assigned %d to %s(%d) at index %d\n",
                        value, key, indexnum, ix);
 
@@ -1128,15 +1128,15 @@ static void deh_procFrame(DWFILE *fpin, char *line)
    int indexnum;
 
    strncpy(inbuffer,line,DEH_BUFFERMAX);
-   
+
    // killough 8/98: allow hex numbers in input:
    sscanf(inbuffer,"%" DEH_MAXKEYLEN_FMT "s %i",key, &indexnum);
 
    // haleyjd: resolve state number through EDF
    indexnum = E_GetStateNumForDEHNum(indexnum);
-   
+
    deh_LogPrintf("Processing Frame at index %d: %s\n", indexnum, key);
-      
+
    while(!fpin->atEof() && *inbuffer && (*inbuffer != ' '))
    {
       if(!fpin->getStr(inbuffer, sizeof(inbuffer)))
@@ -1154,7 +1154,7 @@ static void deh_procFrame(DWFILE *fpin, char *line)
 
       // haleyjd 08/09/02: significant reformatting, added new
       // fields
-      
+
       if(!strcasecmp(key,deh_state[0]))  // Sprite number
       {
          deh_LogPrintf(" - sprite = %ld\n", value);
@@ -1210,28 +1210,28 @@ static void deh_procFrame(DWFILE *fpin, char *line)
       else if(!strcasecmp(key,deh_state[9])) // Args2
       {
          deh_LogPrintf(" - args[1] = %ld\n", value);
-         
+
          deh_createArgList(states[indexnum]);
          E_SetArgFromNumber(states[indexnum]->args, 1, value);
       }
       else if(!strcasecmp(key,deh_state[10])) // Args3
       {
          deh_LogPrintf(" - args[2] = %ld\n", value);
-         
+
          deh_createArgList(states[indexnum]);
          E_SetArgFromNumber(states[indexnum]->args, 2, value);
       }
       else if(!strcasecmp(key,deh_state[11])) // Args4
       {
          deh_LogPrintf(" - args[3] = %ld\n", value);
-         
+
          deh_createArgList(states[indexnum]);
          E_SetArgFromNumber(states[indexnum]->args, 3, value);
       }
       else if(!strcasecmp(key,deh_state[12])) // Args5
       {
          deh_LogPrintf(" - args[4] = %ld\n", value);
-         
+
          deh_createArgList(states[indexnum]);
          E_SetArgFromNumber(states[indexnum]->args, 4, value);
       }
@@ -1271,14 +1271,14 @@ static void deh_procPointer(DWFILE *fpin, char *line) // done
    indexnum = E_GetStateNumForDEHNum(indexnum);
 
    deh_LogPrintf("Processing Pointer at index %d: %s\n", indexnum, key);
-   
+
    while(!fpin->atEof() && *inbuffer && (*inbuffer != ' '))
    {
       if(!fpin->getStr(inbuffer, sizeof(inbuffer)))
          break;
 
       lfstrip(inbuffer);
-      if(!*inbuffer) 
+      if(!*inbuffer)
          break;       // killough 11/98
 
       if(!deh_GetData(inbuffer, key, &value, nullptr)) // returns TRUE if ok
@@ -1295,15 +1295,15 @@ static void deh_procPointer(DWFILE *fpin, char *line) // done
          states[indexnum]->action = states[value]->oldaction;
          deh_LogPrintf(" - applied %p from codeptr[%ld] to states[%d]\n",
                        states[value]->oldaction, value, indexnum);
-         
+
          // Write BEX-oriented line to match:
-         
+
          // haleyjd 03/14/03: It's amazing what you can catch just by
          // reformatting some code -- the below line is COMPLETELY
          // incorrect. Must use NUMBEXPTRS, not NUMSTATES.
 
          // for(i=0;i<NUMSTATES;i++)
-         
+
          for(i = 0; i < num_bexptrs; i++)
          {
             if(deh_bexptrs[i].cptr == states[value]->oldaction)
@@ -1337,9 +1337,9 @@ static void deh_procSounds(DWFILE *fpin, char *line)
    int value;      // All deh values are ints or longs
    int indexnum;
    sfxinfo_t *sfx;  // haleyjd 09/03/03
-   
+
    strncpy(inbuffer, line, DEH_BUFFERMAX);
-   
+
    // killough 8/98: allow hex numbers in input:
    sscanf(inbuffer, "%" DEH_MAXKEYLEN_FMT "s %i", key, &indexnum);
 
@@ -1360,8 +1360,8 @@ static void deh_procSounds(DWFILE *fpin, char *line)
       lfstrip(inbuffer);
       if(!*inbuffer)
          break;         // killough 11/98
-      
-      if(!deh_GetData(inbuffer, key, &value, nullptr)) // returns TRUE if ok      
+
+      if(!deh_GetData(inbuffer, key, &value, nullptr)) // returns TRUE if ok
       {
          deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
          continue;
@@ -1448,14 +1448,14 @@ static void deh_procAmmo(DWFILE *fpin, char *line)
    int value;      // All deh values are ints or longs
    int indexnum;
    itemeffect_t *smallitem, *largeitem, *ammotype;
-   
+
    strncpy(inbuffer, line, DEH_BUFFERMAX);
-   
+
    // killough 8/98: allow hex numbers in input:
    sscanf(inbuffer, "%" DEH_MAXKEYLEN_FMT "s %i", key, &indexnum);
 
    deh_LogPrintf("Processing Ammo at index %d: %s\n", indexnum, key);
-  
+
    if(indexnum < 0 || indexnum >= NUMAMMO)
    {
       deh_LogPrintf("Bad ammo number %d of %d\n", indexnum, NUMAMMO);
@@ -1468,19 +1468,19 @@ static void deh_procAmmo(DWFILE *fpin, char *line)
 
    while(!fpin->atEof() && *inbuffer && (*inbuffer != ' '))
    {
-      if(!fpin->getStr(inbuffer, sizeof(inbuffer))) 
+      if(!fpin->getStr(inbuffer, sizeof(inbuffer)))
          break;
 
       lfstrip(inbuffer);
       if(!*inbuffer)
          break;       // killough 11/98
-      
+
       if(!deh_GetData(inbuffer, key, &value, nullptr)) // returns TRUE if ok
       {
          deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
          continue;
       }
-      
+
       if(!strcasecmp(key, "Max ammo"))
       {
          // max ammo is now stored in the ammotype effect
@@ -1496,10 +1496,10 @@ static void deh_procAmmo(DWFILE *fpin, char *line)
          if(smallitem)
          {
             smallitem->setInt("amount", value);
-            
+
             // may also modify dropped amount; original is 1/2 clip, but
             // only bullet clips originally obeyed this
-            if(indexnum == am_clip) 
+            if(indexnum == am_clip)
                smallitem->setInt("dropamount", value / 2);
          }
 
@@ -1555,9 +1555,9 @@ static void deh_procWeapon(DWFILE *fpin, char *line)
    int indexnum;
 
    // haleyjd 08/10/02: significant reformatting
-   
+
    strncpy(inbuffer,line,DEH_BUFFERMAX);
-   
+
    // killough 8/98: allow hex numbers in input:
    sscanf(inbuffer,"%" DEH_MAXKEYLEN_FMT "s %i",key, &indexnum);
    deh_LogPrintf("Processing Weapon at index %d: %s\n", indexnum, key);
@@ -1567,16 +1567,16 @@ static void deh_procWeapon(DWFILE *fpin, char *line)
       deh_LogPrintf("Bad weapon number %d of %d\n", indexnum, NUMWEAPONS);
       return; // haleyjd 10/08/06: bugfix!
    }
-      
+
    while(!fpin->atEof() && *inbuffer && (*inbuffer != ' '))
    {
-      if(!fpin->getStr(inbuffer, sizeof(inbuffer))) 
+      if(!fpin->getStr(inbuffer, sizeof(inbuffer)))
          break;
 
       lfstrip(inbuffer);
-      if(!*inbuffer) 
+      if(!*inbuffer)
          break;       // killough 11/98
-      
+
       if(!deh_GetData(inbuffer, key, &value, nullptr)) // returns TRUE if ok
       {
          deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
@@ -1654,12 +1654,12 @@ static void deh_procSprite(DWFILE *fpin, char *line) // Not supported
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
    int indexnum;
-   
+
    // Too little is known about what this is supposed to do, and
    // there are better ways of handling sprite renaming.  Not supported.
-   
+
    strncpy(inbuffer,line,DEH_BUFFERMAX);
-   
+
    // killough 8/98: allow hex numbers in input:
    sscanf(inbuffer,"%" DEH_MAXKEYLEN_FMT "s %i",key, &indexnum);
    deh_LogPrintf("Ignoring Sprite offset change at index %d: %s\n",
@@ -1670,9 +1670,9 @@ static void deh_procSprite(DWFILE *fpin, char *line) // Not supported
       if(!fpin->getStr(inbuffer, sizeof(inbuffer)))
          break;
       lfstrip(inbuffer);
-      if(!*inbuffer) 
+      if(!*inbuffer)
          break;      // killough 11/98
-      
+
       // ignore line
       deh_LogPrintf("- %s\n", inbuffer);
    }
@@ -1692,7 +1692,7 @@ static void deh_procPars(DWFILE *fpin, char *line) // extension
    char inbuffer[DEH_BUFFERMAX];
    int indexnum;
    int episode, level, partime, oldpar;
-   
+
    // new item, par times
    // usage: After [PARS] Par 0 section identifier, use one or more of these
    // lines:
@@ -1703,9 +1703,9 @@ static void deh_procPars(DWFILE *fpin, char *line) // extension
    // of parameters on the line determines which group of par values
    // is being changed.  Error checking is done based on current fixed
    // array sizes of[4][10] and [32]
-   
+
    strncpy(inbuffer,line,DEH_BUFFERMAX);
-   
+
    // killough 8/98: allow hex numbers in input:
    sscanf(inbuffer,"%" DEH_MAXKEYLEN_FMT "s %i",key, &indexnum);
    deh_LogPrintf("Processing Par value at index %d: %s\n", indexnum,  key);
@@ -1713,24 +1713,24 @@ static void deh_procPars(DWFILE *fpin, char *line) // extension
    // indexnum is a dummy entry
    while (!fpin->atEof() && *inbuffer && (*inbuffer != ' '))
    {
-      if(!fpin->getStr(inbuffer, sizeof(inbuffer))) 
+      if(!fpin->getStr(inbuffer, sizeof(inbuffer)))
          break;
-      
+
       lfstrip(M_Strlwr(inbuffer)); // lowercase it
-      
-      if(!*inbuffer) 
+
+      if(!*inbuffer)
          break; // killough 11/98
-      
+
       if(3 != sscanf(inbuffer,"par %i %i %i",&episode, &level, &partime))
-      { 
+      {
          // not 3
          if(2 != sscanf(inbuffer,"par %i %i",&level, &partime))
-         { 
+         {
             // not 2
             deh_LogPrintf("Invalid par time setting string: %s\n", inbuffer);
          }
          else
-         { 
+         {
             // is 2
             // Ty 07/11/98 - wrong range check, not zero-based
             if(level < 1 || level > 32) // base 0 array (but 1-based parm)
@@ -1746,8 +1746,8 @@ static void deh_procPars(DWFILE *fpin, char *line) // extension
          }
       }
       else // is 3
-      { 
-         // note that though it's a [4][10] array, the "left" and "top" aren't 
+      {
+         // note that though it's a [4][10] array, the "left" and "top" aren't
          // used, effectively making it a base 1 array.
          // Ty 07/11/98 - level was being checked against max 3 - dumb error
          // Note that episode 4 does not have par times per original design
@@ -1781,27 +1781,27 @@ static void deh_procCheat(DWFILE *fpin, char *line) // done
    int   value;  // All deh values are ints or longs
    char *strval; // pointer to the value area
    char *p;      // utility pointer
-   
+
    deh_LogPrintf("Processing Cheat: %s\n", line);
 
    strncpy(inbuffer, line, DEH_BUFFERMAX);
 
    while(!fpin->atEof() && *inbuffer && (*inbuffer != ' '))
    {
-      if(!fpin->getStr(inbuffer, sizeof(inbuffer))) 
+      if(!fpin->getStr(inbuffer, sizeof(inbuffer)))
          break;
 
       lfstrip(inbuffer);
       if(!*inbuffer)
          break;       // killough 11/98
-      
+
       if(!deh_GetData(inbuffer, key, &value, &strval)) // returns TRUE if ok
       {
          deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
          continue;
       }
 
-      // Otherwise we got a (perhaps valid) cheat name, so look up the key in 
+      // Otherwise we got a (perhaps valid) cheat name, so look up the key in
       // the array
       for(size_t ix = 0; ix < earrlen(deh_cheats); ix++)
       {
@@ -1825,14 +1825,14 @@ static void deh_procCheat(DWFILE *fpin, char *line) // done
             // haleyjd 08/21/13: talk about overkill...
             if(deh_cheats[ix].cheatnum == CHEAT_IDKFA)
                cheat[CHEAT_IDK].deh_disabled = true;
-               
+
             // Ty 03/16/98 - change to use a strdup and orphan the original
             // Also has the advantage of allowing length changes.
             cht.cheat = estrdup(p);
             deh_LogPrintf("Assigned new cheat '%s' to cheat '%s'\n", p, deh_cheats[ix].name);
          }
       } // end for
-      
+
       deh_LogPrintf("- %s\n", inbuffer);
 
    } // end while
@@ -1851,7 +1851,7 @@ static void deh_procMisc(DWFILE *fpin, char *line) // done
    char inbuffer[DEH_BUFFERMAX];
    int  value;      // All deh values are ints or longs
    itemeffect_t *fx;
-   
+
    strncpy(inbuffer,line,DEH_BUFFERMAX);
 
    while(!fpin->atEof() && *inbuffer && (*inbuffer != ' '))
@@ -1862,16 +1862,16 @@ static void deh_procMisc(DWFILE *fpin, char *line) // done
       lfstrip(inbuffer);
       if(!*inbuffer)
          break;    // killough 11/98
-      
+
       if(!deh_GetData(inbuffer, key, &value, nullptr)) // returns TRUE if ok
       {
          deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
          continue;
       }
-      
+
       // Otherwise it's ok
       deh_LogPrintf("Processing Misc item '%s'\n", key);
-      
+
       if(!strcasecmp(key, "Initial Health"))
       {
          playerclass_t *pc;
@@ -2038,12 +2038,12 @@ static void deh_procText(DWFILE *fpin, char *line)
    if(includenotext) // flag to skip included deh-style text
    {
       deh_LogPrintf("Skipped text block because of notext directive\n");
-      
+
       strcpy(inbuffer,line);
-      
+
       while(!fpin->atEof() && *inbuffer && (*inbuffer != ' '))
          fpin->getStr(inbuffer, sizeof(inbuffer));  // skip block
-      
+
       // Ty 05/17/98 - don't care if this fails
       return; // early return
    }
@@ -2051,7 +2051,7 @@ static void deh_procText(DWFILE *fpin, char *line)
    // killough 8/98: allow hex numbers in input:
    sscanf(line, "%" DEH_MAXKEYLEN_FMT "s %i %i", key, &fromlen, &tolen);
 
-   deh_LogPrintf("Processing Text (key=%s, from=%d, to=%d)\n", 
+   deh_LogPrintf("Processing Text (key=%s, from=%d, to=%d)\n",
                  key, fromlen, tolen);
 
    // killough 10/98: fix incorrect usage of feof
@@ -2086,10 +2086,10 @@ static void deh_procText(DWFILE *fpin, char *line)
                           i,sprnames[i], tolen, &inbuffer[fromlen]);
 
             // Ty 03/18/98 - not using strdup because length is fixed
-            
+
             // killough 10/98: but it's an array of pointers, so we must
             // use strdup unless we redeclare sprnames and change all else
-            
+
             // haleyjd 03/11/03: can now use the original
             // sprnames[i] = estrdup(sprnames[i]);
 
@@ -2148,7 +2148,7 @@ static void deh_procText(DWFILE *fpin, char *line)
    {
       deh_LogPrintf(
          "Checking text area through strings for '%.12s%s' from=%d to=%d\n",
-         inbuffer, 
+         inbuffer,
          (strlen(inbuffer) > 12) ? "..." : "",
          fromlen, tolen);
 
@@ -2157,7 +2157,7 @@ static void deh_procText(DWFILE *fpin, char *line)
          line2 = estrdup(&inbuffer[fromlen]);
          inbuffer[fromlen] = '\0';
       }
-      
+
       deh_procStringSub(nullptr, inbuffer, line2);
    }
 
@@ -2168,11 +2168,11 @@ static void deh_procText(DWFILE *fpin, char *line)
 static void deh_procError(DWFILE *fpin, char *line)
 {
    char inbuffer[DEH_BUFFERMAX];
-   
+
    strncpy(inbuffer, line, DEH_BUFFERMAX);
    deh_LogPrintf("Unmatched Block: '%s'\n", inbuffer);
 }
-   
+
 // ============================================================
 // deh_procStrings
 // Purpose: Handle BEX [STRINGS] extension
@@ -2210,7 +2210,7 @@ static void deh_procStrings(DWFILE *fpin, char *line)
       if(*inbuffer == '#')
          continue;  // skip comment lines
       lfstrip(inbuffer);
-      if(!*inbuffer) 
+      if(!*inbuffer)
          break;  // killough 11/98
 
       if(!*holdstring) // first one--get the key
@@ -2226,7 +2226,7 @@ static void deh_procStrings(DWFILE *fpin, char *line)
       {
          // killough 11/98: allocate enough the first time
          maxstrlen += static_cast<unsigned>(strlen(holdstring) + strlen(inbuffer) - maxstrlen);
-         
+
          deh_LogPrintf("* Increased buffer from to %d for buffer size %d\n",
                        maxstrlen, (int)strlen(inbuffer));
 
@@ -2253,7 +2253,7 @@ static void deh_procStrings(DWFILE *fpin, char *line)
 
           if(!found)
           {
-             deh_LogPrintf("Invalid string key '%s', substitution skipped.\n", 
+             deh_LogPrintf("Invalid string key '%s', substitution skipped.\n",
                            key);
           }
 
@@ -2290,7 +2290,7 @@ static bool deh_procStringSub(char *key, char *lookfor, char *newstring)
       return false;
    }
 
-   char *copyNewStr = estrdup(newstring); 
+   char *copyNewStr = estrdup(newstring);
 
    // Handle embedded \n's in the incoming string, convert to 0x0a's
    char *s, *t;
@@ -2305,7 +2305,7 @@ static bool deh_procStringSub(char *key, char *lookfor, char *newstring)
          *t = *s;
    }
    *t = '\0';  // cap off the target string
-   
+
    *dehstr->ppstr = copyNewStr; // orphan original string
 
    if(key)
@@ -2330,10 +2330,10 @@ static bool deh_procStringSub(char *key, char *lookfor, char *newstring)
 //
 // deh_procHelperThing
 //
-// Allows handy substitution of any thing for helper dogs.  DEH 
-// patches are being made frequently for this purpose and it 
-// requires a complete rewiring of the DOG thing.  I feel this 
-// is a waste of effort, and so have added this new [HELPER] 
+// Allows handy substitution of any thing for helper dogs.  DEH
+// patches are being made frequently for this purpose and it
+// requires a complete rewiring of the DOG thing.  I feel this
+// is a waste of effort, and so have added this new [HELPER]
 // BEX block
 //
 static void deh_procHelperThing(DWFILE *fpin, char *line)
@@ -2347,11 +2347,11 @@ static void deh_procHelperThing(DWFILE *fpin, char *line)
    {
       if(!fpin->getStr(inbuffer, sizeof(inbuffer)))
          break;
-      
+
       lfstrip(inbuffer);
       if(!*inbuffer)
-         break;    
-      
+         break;
+
       if(!deh_GetData(inbuffer, key, &value, nullptr)) // returns TRUE if ok
       {
          deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
@@ -2361,7 +2361,7 @@ static void deh_procHelperThing(DWFILE *fpin, char *line)
       // Otherwise it's ok
       deh_LogPrintf("Processing Helper Thing item '%s'\n", key);
       deh_LogPrintf("value is %i", (int)value);
-      
+
       if(!strncasecmp(key, "type", 4))
          HelperThing = E_ThingNumForDEHNum((int)value);
    }
@@ -2383,7 +2383,7 @@ static void deh_procBexSprites(DWFILE *fpin, char *line)
    int  rover;
 
    deh_LogPrintf("Processing sprite name substitution\n");
-   
+
    strncpy(inbuffer,line,DEH_BUFFERMAX);
 
    while(!fpin->atEof() && *inbuffer && (*inbuffer != ' '))
@@ -2395,7 +2395,7 @@ static void deh_procBexSprites(DWFILE *fpin, char *line)
          continue;  // skip comment lines
 
       lfstrip(inbuffer);
-      if(!*inbuffer) 
+      if(!*inbuffer)
          break;  // killough 11/98
 
       if(!deh_GetData(inbuffer, key, &value, &strval)) // returns TRUE if ok
@@ -2420,7 +2420,7 @@ static void deh_procBexSprites(DWFILE *fpin, char *line)
          {
             deh_LogPrintf("Substituting '%s' for sprite '%s'\n",
                           candidate, deh_spritenames[rover]);
-            
+
             // haleyjd 03/11/03: can now use original due to EDF
             // sprnames[rover] = estrdup(candidate);
             strncpy(sprnames[rover], candidate, 4);
@@ -2443,9 +2443,9 @@ static void deh_procBexSounds(DWFILE *fpin, char *line)
    sfxinfo_t *sfx;
 
    // haleyjd 09/03/03: rewritten to work with EDF
-   
+
    deh_LogPrintf("Processing sound name substitution\n");
-   
+
    strncpy(inbuffer,line,DEH_BUFFERMAX);
 
    while(!fpin->atEof() && *inbuffer && (*inbuffer != ' '))
@@ -2457,9 +2457,9 @@ static void deh_procBexSounds(DWFILE *fpin, char *line)
          continue;  // skip comment lines
 
       lfstrip(inbuffer);
-      if(!*inbuffer) 
+      if(!*inbuffer)
          break;  // killough 11/98
-      
+
       if(!deh_GetData(inbuffer, key, &value, &strval)) // returns TRUE if ok
       {
          deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
@@ -2484,7 +2484,7 @@ static void deh_procBexSounds(DWFILE *fpin, char *line)
          continue;
       }
 
-      deh_LogPrintf("Substituting '%s' for sound '%s'\n", 
+      deh_LogPrintf("Substituting '%s' for sound '%s'\n",
                     candidate, sfx->mnemonic);
 
       strncpy(sfx->name, candidate, 9);
@@ -2500,9 +2500,9 @@ static void deh_procBexMusic(DWFILE *fpin, char *line)
    char *strval;  // holds the string value of the line
    char candidate[7];
    int  rover, len;
-   
+
    deh_LogPrintf("Processing music name substitution\n");
-   
+
    strncpy(inbuffer,line,DEH_BUFFERMAX);
 
    while(!fpin->atEof() && *inbuffer && (*inbuffer != ' '))
@@ -2514,7 +2514,7 @@ static void deh_procBexMusic(DWFILE *fpin, char *line)
          continue;  // skip comment lines
 
       lfstrip(inbuffer);
-      if(!*inbuffer) 
+      if(!*inbuffer)
          break;  // killough 11/98
 
       if(!deh_GetData(inbuffer, key, &value, &strval)) // returns TRUE if ok
@@ -2539,7 +2539,7 @@ static void deh_procBexMusic(DWFILE *fpin, char *line)
          {
             deh_LogPrintf("Substituting '%s' for music '%s'\n",
                           candidate, deh_musicnames[rover]);
-            
+
             S_music[rover].name = estrdup(candidate);
             break;
          }
@@ -2562,12 +2562,12 @@ static void deh_procBexMusic(DWFILE *fpin, char *line)
 static char *dehReformatStr(char *string)
 {
    // only processing the changed string, don't need double buffer
-   static char buff[DEH_BUFFERMAX]; 
+   static char buff[DEH_BUFFERMAX];
    char *s, *t;
-   
+
    s = string;  // source
    t = buff;    // target
-   
+
    // let's play...
    while(*s)
    {
@@ -2637,7 +2637,7 @@ static char *ptr_lstrip(char *p)  // point past leading whitespace
 //          strval -- a pointer to the place in s where the number
 //                    value comes from.  Pass nullptr to not use this.
 // Notes:   Expects a key phrase, optional space, equal sign,
-//          optional space and a value, mostly an int. The passed 
+//          optional space and a value, mostly an int. The passed
 //          pointer to hold the key must be DEH_MAXKEYLEN in size.
 
 static bool deh_GetData(char *s, char *k, int *l, char **strval)
@@ -2652,19 +2652,19 @@ static bool deh_GetData(char *s, char *k, int *l, char **strval)
 
    for(i = 0, t = s; *t && i < DEH_MAXKEYLEN; ++t, ++i)
    {
-      if(*t == '=') 
+      if(*t == '=')
          break;
       buffer[i] = *t; // copy it
    }
 
    buffer[--i] = '\0';  // terminate the key before the '='
-   
+
    if(!*t)  // end of string with no equal sign
       okrc = false;
    else
    {
-      if(!*++t) // in case "thiskey =" with no value 
-         okrc = false; 
+      if(!*++t) // in case "thiskey =" with no value
+         okrc = false;
 
       // we've incremented t
       val = static_cast<int>(strtol(t, nullptr, 0));  // killough 8/9/98: allow hex or octal input
@@ -2672,10 +2672,10 @@ static bool deh_GetData(char *s, char *k, int *l, char **strval)
 
    // go put the results in the passed pointers
    *l = val;  // may be a faked zero
-   
+
    // if spaces between key and equal sign, strip them
    strcpy(k, ptr_lstrip(buffer));  // could be a zero-length string
-   
+
    if(strval != nullptr) // pass nullptr if you don't want this back
       *strval = t;       // pointer, has to be somewhere in s,
                          // even if pointing at the zero byte.
