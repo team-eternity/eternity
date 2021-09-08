@@ -38,6 +38,7 @@
 #include "doomstat.h"
 #include "e_args.h"
 #include "e_inventory.h"
+#include "e_lib.h"
 #include "e_player.h"
 #include "e_sound.h"
 #include "e_states.h"
@@ -110,7 +111,6 @@ struct deh_block
 #define DEH_BUFFERMAX 1024 // input buffer area size, hardcoded for now
 #define DEH_MAXKEYLEN 32   // as much of any key as we'll look at
 #define DEH_MAXKEYLEN_FMT "31"  // for scanf format strings
-#define DEH_MOBJINFOMAX 28 // number of ints in the mobjinfo_t structure (!) MaxW: 28
 
 // Put all the block header values, and the function to be called when that
 // one is encountered, in this array:
@@ -149,7 +149,41 @@ static bool includenotext = false;
 // array to offset by sizeof(int) into the mobjinfo_t array at [nn]
 // * things are base zero but dehacked considers them to start at #1. ***
 
-static const char *deh_mobjinfo[DEH_MOBJINFOMAX] =
+
+enum dehmobjinfoid_e : int
+{
+   dehmobjinfoid_doomednum,
+   dehmobjinfoid_spawnstate,
+   dehmobjinfoid_spawnhealth,
+   dehmobjinfoid_seestate,
+   dehmobjinfoid_seesound,
+   dehmobjinfoid_reactiontime,
+   dehmobjinfoid_attacksound,
+   dehmobjinfoid_painstate,
+   dehmobjinfoid_painchance,
+   dehmobjinfoid_painsound,
+   dehmobjinfoid_meleestate,
+   dehmobjinfoid_missilestate,
+   dehmobjinfoid_deathstate,
+   dehmobjinfoid_xdeathstate,
+   dehmobjinfoid_deathsound,
+   dehmobjinfoid_speed,
+   dehmobjinfoid_radius,
+   dehmobjinfoid_height,
+   dehmobjinfoid_mass,
+   dehmobjinfoid_damage,
+   dehmobjinfoid_activesound,
+   dehmobjinfoid_flags,
+   dehmobjinfoid_flags2,
+   dehmobjinfoid_raisestate,
+   dehmobjinfoid_translucency,
+   dehmobjinfoid_flags3,
+   dehmobjinfoid_bloodcolor,
+   dehmobjinfoid_droppeditem,
+   DEH_MOBJINFOMAX
+};
+
+static constexpr const char *deh_mobjinfo[DEH_MOBJINFOMAX] =
 {
   "ID #",                // .doomednum
   "Initial frame",       // .spawnstate
@@ -372,7 +406,25 @@ static dehflagset_t dehacked_flags =
 // that Dehacked uses and is useless to us.
 // * states are base zero and have a dummy #0 (TROO)
 
-static const char *deh_state[] =
+enum dehstateid_e : int
+{
+   dehstateid_sprite,
+   dehstateid_frame,
+   dehstateid_tics,
+   dehstateid_nextstate,
+   dehstateid_action,
+   dehstateid_misc1,
+   dehstateid_misc2,
+   dehstateid_particleEvent,
+   dehstateid_args1,
+   dehstateid_args2,
+   dehstateid_args3,
+   dehstateid_args4,
+   dehstateid_args5,
+   NUMDEHSTATEIDS
+};
+
+static constexpr const char *deh_state[NUMDEHSTATEIDS] =
 {
   "Sprite number",    // .sprite (spritenum_t) // an enum
   "Sprite subnumber", // .frame
@@ -399,7 +451,21 @@ static const char *deh_state[] =
 
 // * sounds are base zero but have a dummy #0
 
-static const char *deh_sfxinfo[] =
+enum dehsfxinfoid_e : int
+{
+   dehsfxinfoid_offset,
+   dehsfxinfoid_singularity,
+   dehsfxinfoid_priority,
+   dehsfxinfoid_link,
+   dehsfxinfoid_pitch,
+   dehsfxinfoid_volume,
+   dehsfxinfoid_data,
+   dehsfxinfoid_usefulness,
+   dehsfxinfoid_lumpnum,
+   NUMDEHSFXINFOIDS
+};
+
+static constexpr const char *deh_sfxinfo[] =
 {
   "Offset",     // pointer to a name string, changed in text
   "Zero/One",   // .singularity (int, one at a time flag)
@@ -420,7 +486,7 @@ static const char *deh_sfxinfo[] =
 // Sprite redirection by offset into the text area - unsupported by BOOM
 // * sprites are base zero and dehacked uses it that way.
 
-static const char *deh_sprite[] =
+static constexpr const char *deh_sprite[] =
 {
   "Offset"      // supposed to be the offset into the text section
 };
@@ -433,18 +499,7 @@ static const char *deh_sprite[] =
 // Usage: Weapon nn (name)
 // Basically a list of frames and what kind of ammo (see above)it uses.
 
-static const char *deh_weapon[] =
-{
-  "Ammo type",      // .ammo
-  "Deselect frame", // .upstate
-  "Select frame",   // .downstate
-  "Bobbing frame",  // .readystate
-  "Shooting frame", // .atkstate
-  "Firing frame",   // .flashstate
-  "Ammo per shot",  // haleyjd 08/10/02: .ammopershot
-};
-
-enum dehweaponid_e
+enum dehweaponid_e : int
 {
    dehweaponid_ammoType,
    dehweaponid_deselect,
@@ -453,6 +508,18 @@ enum dehweaponid_e
    dehweaponid_shooting,
    dehweaponid_firing,
    dehweaponid_ammoPerShot,
+   NUMDEHWEAPONIDS
+};
+
+static constexpr const char *deh_weapon[NUMDEHWEAPONIDS] =
+{
+  "Ammo type",      // .ammo
+  "Deselect frame", // .upstate
+  "Select frame",   // .downstate
+  "Bobbing frame",  // .readystate
+  "Shooting frame", // .atkstate
+  "Firing frame",   // .flashstate
+  "Ammo per shot",  // haleyjd 08/10/02: .ammopershot
 };
 
 // MISC - Dehacked block name = "Misc"
@@ -865,11 +932,6 @@ unsigned int *deh_ParseFlagsCombined(const char *strval)
    return dehacked_flags.results;
 }
 
-#define MOBJFLAGSINDEX  21
-#define MOBJFLAGS2INDEX 22
-#define MOBJTRANSINDEX  24
-#define MOBJFLAGS3INDEX 25
-
 static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
 {
    mobjinfo_t *mi;
@@ -883,95 +945,95 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
 
    switch(keyIndex)
    {
-   case 0:
+   case dehmobjinfoid_doomednum:
       mi->doomednum = value;
       break;
-   case 1:
+   case dehmobjinfoid_spawnstate:
    {
       const int statenum = E_GetStateNumForDEHNum(value);
       mi->spawnstate = statenum;
       states[statenum]->flags |= STATEFI_VANILLA0TIC;
       break;
    }
-   case 2:
+   case dehmobjinfoid_spawnhealth:
       mi->spawnhealth = value;
       E_ThingDefaultGibHealth(mi); // haleyjd 01/02/15: reset gibhealth
       break;
-   case 3:
+   case dehmobjinfoid_seestate:
       mi->seestate = E_GetStateNumForDEHNum(value);
       break;
-   case 4:
+   case dehmobjinfoid_seesound:
       mi->seesound = value;
       break;
-   case 5:
+   case dehmobjinfoid_reactiontime:
       mi->reactiontime = value;
       break;
-   case 6:
+   case dehmobjinfoid_attacksound:
       mi->attacksound = value;
       break;
-   case 7:
+   case dehmobjinfoid_painstate:
       mi->painstate = E_GetStateNumForDEHNum(value);
       break;
-   case 8:
+   case dehmobjinfoid_painchance:
       mi->painchance = value;
       break;
-   case 9:
+   case dehmobjinfoid_painsound:
       mi->painsound = value;
       break;
-   case 10:
+   case dehmobjinfoid_meleestate:
       mi->meleestate = E_GetStateNumForDEHNum(value);
       break;
-   case 11:
+   case dehmobjinfoid_missilestate:
       mi->missilestate = E_GetStateNumForDEHNum(value);
       break;
-   case 12:
+   case dehmobjinfoid_deathstate:
       mi->deathstate = E_GetStateNumForDEHNum(value);
       break;
-   case 13:
+   case dehmobjinfoid_xdeathstate:
       mi->xdeathstate = E_GetStateNumForDEHNum(value);
       break;
-   case 14:
+   case dehmobjinfoid_deathsound:
       mi->deathsound = value;
       break;
-   case 15:
+   case dehmobjinfoid_speed:
       mi->speed = value;
       break;
-   case 16:
+   case dehmobjinfoid_radius:
       mi->radius = value;
       break;
-   case 17:
+   case dehmobjinfoid_height:
       mi->height    = value;
       mi->c3dheight = 0; // haleyjd 08/23/09
       break;
-   case 18:
+   case dehmobjinfoid_mass:
       mi->mass = value;
       break;
-   case 19:
+   case dehmobjinfoid_damage:
       mi->damage = value;
       break;
-   case 20:
+   case dehmobjinfoid_activesound:
       mi->activesound = value;
       break;
-   case MOBJFLAGSINDEX:
+   case dehmobjinfoid_flags:
       mi->flags = value;
       if(mi->flags & MF_SPAWNCEILING)
          mi->c3dheight = 0; // haleyjd 08/23/09
       break;
-   case MOBJFLAGS2INDEX:
+   case dehmobjinfoid_flags2:
       mi->flags2 = value;
       break;
    case 23:
       mi->raisestate = E_GetStateNumForDEHNum(value);
       break;
-   case MOBJTRANSINDEX:
+   case dehmobjinfoid_translucency:
       mi->translucency = value;
       break;
-   case MOBJFLAGS3INDEX:
+   case dehmobjinfoid_flags3:
       mi->flags3 = value;
       break;
-   case 26:
+   case dehmobjinfoid_bloodcolor:
       mi->bloodcolor = value;
-   case 27:
+   case dehmobjinfoid_droppeditem:
       E_SetDropItem(mi, value);
       break;
    default:
@@ -995,15 +1057,14 @@ static void deh_procThing(DWFILE *fpin, char *line)
    char inbuffer[DEH_BUFFERMAX];
    int value;      // All deh values are ints or longs
    int indexnum;
-   int ix;
    char *strval;
 
    strncpy(inbuffer, line, DEH_BUFFERMAX);
    deh_LogPrintf("Thing line: '%s'\n", inbuffer);
 
    // killough 8/98: allow hex numbers in input:
-   ix = sscanf(inbuffer, "%" DEH_MAXKEYLEN_FMT "s %i", key, &indexnum);
-   deh_LogPrintf("count=%d, Thing %d\n", ix, indexnum);
+   const int varcount = sscanf(inbuffer, "%" DEH_MAXKEYLEN_FMT "s %i", key, &indexnum);
+   deh_LogPrintf("count=%d, Thing %d\n", varcount, indexnum);
 
    // Note that the mobjinfo[] array is base zero, but object numbers
    // in the dehacked file start with one.  Grumble.
@@ -1032,16 +1093,11 @@ static void deh_procThing(DWFILE *fpin, char *line)
          deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
          continue;
       }
-      for(ix=0; ix < DEH_MOBJINFOMAX; ix++)
+
+      const int dehmobjinfoid = E_StrToNumLinear(deh_mobjinfo, DEH_MOBJINFOMAX, key);
+      if(dehmobjinfoid != DEH_MOBJINFOMAX)
       {
-         // haleyjd 02/02/03: restructured to use SetMobjInfoValue,
-         // to eliminate indexing of mobjinfo_t structure as an
-         // integer array (thanks to prboom for parts of fix)
-
-         if(strcasecmp(key, deh_mobjinfo[ix]))
-            continue;
-
-         if(!strcasecmp(key, "bits"))
+         if(dehmobjinfoid == dehmobjinfoid_flags)
          {
             if(!value)
             {
@@ -1055,9 +1111,9 @@ static void deh_procThing(DWFILE *fpin, char *line)
                deh_LogPrintf("Bits = 0x%08lX = %ld \n", value, value);
             }
 
-            SetMobjInfoValue(indexnum, MOBJFLAGSINDEX, value);
+            SetMobjInfoValue(indexnum, dehmobjinfoid_flags, value);
          }
-         else if(!strcasecmp(key, "bits2"))
+         else if(dehmobjinfoid == dehmobjinfoid_flags2)
          {
             // haleyjd 04/09/99: flags2 support
             if(!value)
@@ -1071,9 +1127,9 @@ static void deh_procThing(DWFILE *fpin, char *line)
                deh_LogPrintf("Bits2 = 0x%08lX = %ld \n", value, value);
             }
 
-            SetMobjInfoValue(indexnum, MOBJFLAGS2INDEX, value);
+            SetMobjInfoValue(indexnum, dehmobjinfoid_flags2, value);
          }
-         else if(!strcasecmp(key, "bits3"))
+         else if(dehmobjinfoid == dehmobjinfoid_flags3)
          {
             // haleyjd 02/02/03: flags3 support
             if(!value)
@@ -1087,14 +1143,13 @@ static void deh_procThing(DWFILE *fpin, char *line)
                deh_LogPrintf("Bits3 = 0x%08lX = %ld \n", value, value);
             }
 
-            SetMobjInfoValue(indexnum, MOBJFLAGS3INDEX, value);
+            SetMobjInfoValue(indexnum, dehmobjinfoid_flags3, value);
          }
          else
-            SetMobjInfoValue(indexnum, ix, value);
+            SetMobjInfoValue(indexnum, dehmobjinfoid, value);
 
          deh_LogPrintf("Assigned %d to %s(%d) at index %d\n",
-                       value, key, indexnum, ix);
-
+                       value, key, indexnum, dehmobjinfoid);
       }
    }
    return;
@@ -1155,88 +1210,63 @@ static void deh_procFrame(DWFILE *fpin, char *line)
       // haleyjd 08/09/02: significant reformatting, added new
       // fields
 
-      if(!strcasecmp(key,deh_state[0]))  // Sprite number
+      const int dehstateid = E_StrToNumLinear(deh_state, NUMDEHSTATEIDS, key);
+      switch(dehstateid)
       {
+      case dehstateid_sprite:  // Sprite number
          deh_LogPrintf(" - sprite = %ld\n", value);
          states[indexnum]->sprite = (spritenum_t)value;
-      }
-      else if(!strcasecmp(key,deh_state[1]))  // Sprite subnumber
-      {
+         break;
+      case dehstateid_frame:  // Sprite subnumber
          deh_LogPrintf(" - frame = %ld\n", value);
          states[indexnum]->frame = value;
-      }
-      else if(!strcasecmp(key,deh_state[2]))  // Duration
-      {
+         break;
+      case dehstateid_tics:  // Duration
          deh_LogPrintf(" - tics = %ld\n", value);
          states[indexnum]->tics = value;
          states[indexnum]->flags |= STATEFI_VANILLA0TIC;
-      }
-      else if(!strcasecmp(key,deh_state[3]))  // Next frame
-      {
+         break;
+      case dehstateid_nextstate:  // Next frame
          deh_LogPrintf(" - nextstate = %ld\n", value);
 
          // haleyjd: resolve state number through EDF
          states[indexnum]->nextstate = E_GetStateNumForDEHNum(value);
 
-      }
-      else if(!strcasecmp(key,deh_state[4]))  // Codep frame (not set in Frame deh block)
-      {
+         break;
+      case dehstateid_action:  // Codep frame (not set in Frame deh block)
          deh_LogPrintf(" - codep, should not be set in Frame section!\n");
          /* nop */ ;
-      }
-      else if(!strcasecmp(key,deh_state[5]))  // Unknown 1
-      {
+         break;
+      case dehstateid_misc1:  // Unknown 1
          deh_LogPrintf(" - misc1 = %ld\n", value);
          states[indexnum]->misc1 = value;
-      }
-      else if(!strcasecmp(key,deh_state[6]))  // Unknown 2
-      {
+         break;
+      case dehstateid_misc2:  // Unknown 2
          deh_LogPrintf(" - misc2 = %ld\n", value);
          states[indexnum]->misc2 = value;
-      }
-      else if(!strcasecmp(key,deh_state[7])) // Particle event
-      {
+         break;
+      case dehstateid_particleEvent: // Particle event
          // haleyjd 08/09/02: particle event setting
          deh_LogPrintf(" - particle_evt = %ld\n", value);
          states[indexnum]->particle_evt = value;
-      }
-      else if(!strcasecmp(key,deh_state[8])) // Args1
+         break;
+      case dehstateid_args1: // Args1
+      case dehstateid_args2: // Args2
+      case dehstateid_args3: // Args3
+      case dehstateid_args4: // Args4
+      case dehstateid_args5: // Args5
       {
-         deh_LogPrintf(" - args[0] = %ld\n", value);
+         const int argIndex = dehstateid - dehstateid_args1;
+         deh_LogPrintf(" - args[%d] = %ld\n", argIndex, value);
 
          deh_createArgList(states[indexnum]);
-         E_SetArgFromNumber(states[indexnum]->args, 0, value);
+         E_SetArgFromNumber(states[indexnum]->args, argIndex, value);
       }
-      else if(!strcasecmp(key,deh_state[9])) // Args2
-      {
-         deh_LogPrintf(" - args[1] = %ld\n", value);
-
-         deh_createArgList(states[indexnum]);
-         E_SetArgFromNumber(states[indexnum]->args, 1, value);
-      }
-      else if(!strcasecmp(key,deh_state[10])) // Args3
-      {
-         deh_LogPrintf(" - args[2] = %ld\n", value);
-
-         deh_createArgList(states[indexnum]);
-         E_SetArgFromNumber(states[indexnum]->args, 2, value);
-      }
-      else if(!strcasecmp(key,deh_state[11])) // Args4
-      {
-         deh_LogPrintf(" - args[3] = %ld\n", value);
-
-         deh_createArgList(states[indexnum]);
-         E_SetArgFromNumber(states[indexnum]->args, 3, value);
-      }
-      else if(!strcasecmp(key,deh_state[12])) // Args5
-      {
-         deh_LogPrintf(" - args[4] = %ld\n", value);
-
-         deh_createArgList(states[indexnum]);
-         E_SetArgFromNumber(states[indexnum]->args, 4, value);
-      }
-      else
+         break;
+      default:
          deh_LogPrintf("Invalid frame string index for '%s'\n", key);
+         break;
+      }
    }
 }
 
@@ -1290,7 +1320,7 @@ static void deh_procPointer(DWFILE *fpin, char *line) // done
       // haleyjd: resolve xref state number through EDF
       value = E_GetStateNumForDEHNum(value);
 
-      if(!strcasecmp(key, deh_state[4])) // Codep frame (not set in Frame deh block)
+      if(!strcasecmp(key, deh_state[dehstateid_action])) // Codep frame (not set in Frame deh block)
       {
          states[indexnum]->action = states[value]->oldaction;
          deh_LogPrintf(" - applied %p from codeptr[%ld] to states[%d]\n",
@@ -1367,52 +1397,48 @@ static void deh_procSounds(DWFILE *fpin, char *line)
          continue;
       }
 
-      if(!strcasecmp(key, deh_sfxinfo[0]))  // Offset
+      const int dehsfxinfoid = E_StrToNumLinear(deh_sfxinfo, NUMDEHSFXINFOIDS, key);
+      switch(dehsfxinfoid)
       {
+      case dehsfxinfoid_offset:  // Offset
          /* nop */ ;  // we don't know what this is, I don't think
-      }
-      else if(!strcasecmp(key, deh_sfxinfo[1]))  // Zero/One
-      {
+         break;
+      case dehsfxinfoid_singularity:  // Zero/One
          sfx->singularity = value;
-      }
-      else if(!strcasecmp(key, deh_sfxinfo[2]))  // Value
-      {
+         break;
+      case dehsfxinfoid_priority:  // Value
          sfx->priority = value;
-      }
-      else if(!strcasecmp(key, deh_sfxinfo[3]))  // Zero 1
-      {
+         break;
+      case dehsfxinfoid_link:  // Zero 1
          ; // haleyjd: NO!
          // sfx->link = (sfxinfo_t *)value;
-      }
-      else if(!strcasecmp(key, deh_sfxinfo[4]))  // Zero 2
-      {
+         break;
+      case dehsfxinfoid_pitch:  // Zero 2
          sfx->pitch = value;
-      }
-      else if(!strcasecmp(key, deh_sfxinfo[5]))  // Zero 3
-      {
+         break;
+      case dehsfxinfoid_volume:  // Zero 3
          sfx->volume = value;
-      }
-      else if(!strcasecmp(key, deh_sfxinfo[6]))  // Zero 4
-      {
+         break;
+      case dehsfxinfoid_data:  // Zero 4
          ; // haleyjd: NO!
          //sfx->data = (void *)value; // killough 5/3/98: changed cast
-      }
-      else if(!strcasecmp(key,deh_sfxinfo[7]))  // Neg. One 1
-      {
+         break;
+      case dehsfxinfoid_usefulness:  // Neg. One 1
          sfx->usefulness = value;
-      }
-      else if(!strcasecmp(key,deh_sfxinfo[8]))  // Neg. One 2
-      {
+         break;
+      case dehsfxinfoid_lumpnum:  // Neg. One 2
          ; // sf: pointless and no longer works
          //sfx->lumpnum = value;
-      }
-      else
+         break;
+      default:
          deh_LogPrintf("Invalid sound string index for '%s'\n", key);
+         break;
+      }
    }
    return;
 }
 
-static const char *deh_itemsForAmmoNum[NUMAMMO][3] =
+static constexpr const char *deh_itemsForAmmoNum[NUMAMMO][3] =
 {
    // ammotype,     small item,   large item
    { "AmmoClip",    "Clip",       "ClipBox"   },
@@ -1421,7 +1447,7 @@ static const char *deh_itemsForAmmoNum[NUMAMMO][3] =
    { "AmmoMissile", "RocketAmmo", "RocketBox" },
 };
 
-static const char *deh_giverNames[NUMWEAPONS] =
+static constexpr const char *deh_giverNames[NUMWEAPONS] =
 {
    "GiverFist",
    "GiverPistol",
@@ -1585,7 +1611,10 @@ static void deh_procWeapon(DWFILE *fpin, char *line)
 
       weaponinfo_t &weaponinfo = *E_WeaponForDEHNum(indexnum);
       // haleyjd: resolution adjusted for EDF
-      if(!strcasecmp(key, deh_weapon[dehweaponid_ammoType]))
+      const int dehweaponid = E_StrToNumLinear(deh_weapon, NUMDEHWEAPONIDS, key);
+      switch(dehweaponid)
+      {
+      case dehweaponid_ammoType:
       {
          itemeffect_t *giver = E_ItemEffectForName(deh_giverNames[weaponinfo.dehnum]);
 
@@ -1609,13 +1638,15 @@ static void deh_procWeapon(DWFILE *fpin, char *line)
             given->setInt("ammo.give",     amount * 2);
             given->setInt("ammo.dropped",  amount);
          }
+         break;
       }
-      else if(!strcasecmp(key, deh_weapon[dehweaponid_deselect]))
+      case dehweaponid_deselect:
          weaponinfo.upstate = E_GetStateNumForDEHNum(value);
-      else if(!strcasecmp(key, deh_weapon[dehweaponid_select]))
+         break;
+      case dehweaponid_select:
          weaponinfo.downstate = E_GetStateNumForDEHNum(value);
-      else if(!strcasecmp(key, deh_weapon[dehweaponid_bobbing]))
-      {
+         break;
+      case dehweaponid_bobbing:
          weaponinfo.readystate = E_GetStateNumForDEHNum(value);
          // Apply chainsaw replacement hack by suppressing ready sound
          if(indexnum == wp_chainsaw)
@@ -1625,19 +1656,22 @@ static void deh_procWeapon(DWFILE *fpin, char *line)
             else
                weaponinfo.intflags |= WIF_SUPPRESSREADYSOUND;
          }
-      }
-      else if(!strcasecmp(key, deh_weapon[dehweaponid_shooting]))
+         break;
+      case dehweaponid_shooting:
          weaponinfo.atkstate = E_GetStateNumForDEHNum(value);
-      else if(!strcasecmp(key, deh_weapon[dehweaponid_firing]))
+         break;
+      case dehweaponid_firing:
          weaponinfo.flashstate = E_GetStateNumForDEHNum(value);
-      else if(!strcasecmp(key, deh_weapon[dehweaponid_ammoPerShot]))
-      {
+         break;
+      case dehweaponid_ammoPerShot:
          weaponinfo.ammopershot = value;
          // enable ammo per shot value usage for this weapon
          weaponinfo.flags &= ~WPF_DISABLEAPS;
-      }
-      else
+         break;
+      default:
          deh_LogPrintf("Invalid weapon string index for '%s'\n", key);
+         break;
+      }
    }
    return;
 }
