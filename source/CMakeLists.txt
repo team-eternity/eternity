@@ -763,6 +763,8 @@ target_link_libraries(eternity ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY} ${SDL2_NET_
 
 if(APPLE)
    eternity_set_mac_library_output()
+   # Fix the lookup to the SDL2 frameworks
+   set_target_properties(eternity PROPERTIES LINK_FLAGS "-Wl,-F${CMAKE_BINARY_DIR}")
 endif()
 
 if(OPENGL_LIBRARY)
