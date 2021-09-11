@@ -52,6 +52,13 @@ inline static linkdata_t *R_CPLink(const sector_t *s)
    return &(s->srf.ceiling.portal->data.link);
 }
 
+//
+// Generic version
+//
+inline static const linkdata_t *R_PLink(surf_e surf, const sector_t &s)
+{
+   return &s.srf[surf].portal->data.link;
+}
 
 #endif
 

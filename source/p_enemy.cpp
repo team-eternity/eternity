@@ -104,33 +104,23 @@ static void P_RecursiveSound(sector_t *sec, const int soundblocks,
    sec->soundtraversed = soundblocks+1;
    P_SetTarget<Mobj>(&sec->soundtarget, soundtarget);    // killough 11/98
 
-   if(sec->srf.floor.pflags & PS_PASSSOUND)
+   const line_t *portalcheck = nullptr;
+   v2fixed_t portalcheckpos;
+   for(surf_e surf : SURFS)
    {
+      if(!(sec->srf[surf].pflags & PS_PASSSOUND))
+         continue;
       // Ok, because the same portal can be used on many sectors and even
       // lines, the portal structure won't tell you what sector is on the
       // other side of the portal. SO
-      sector_t *other;
-      const line_t *check = sec->lines[0];
-
-      other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + R_FPLink(sec)->delta.x,
-                            ((check->v1->y + check->v2->y) / 2) + R_FPLink(sec)->delta.y)->sector;
-
-      P_RecursiveSound(other, soundblocks, soundtarget);
-   }
-   
-   if(sec->srf.ceiling.pflags & PS_PASSSOUND)
-   {
-      // Ok, because the same portal can be used on many sectors and even 
-      // lines, the portal structure won't tell you what sector is on the 
-      // other side of the portal. SO
-      sector_t *other;
-      const line_t *check = sec->lines[0];
-
-      other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + R_CPLink(sec)->delta.x,
-                            ((check->v1->y + check->v2->y) / 2) + R_CPLink(sec)->delta.y)->sector;
-
+      if(!portalcheck)
+      {
+         portalcheck = sec->lines[0];
+         portalcheckpos.x = (portalcheck->v1->x + portalcheck->v2->x) / 2;
+         portalcheckpos.y = (portalcheck->v1->y + portalcheck->v2->y) / 2;
+      }
+      sector_t *other = R_PointInSubsector(portalcheckpos.x + R_PLink(surf, *sec)->delta.x,
+                                           portalcheckpos.y + R_PLink(surf, *sec)->delta.y)->sector;
       P_RecursiveSound(other, soundblocks, soundtarget);
    }
 
