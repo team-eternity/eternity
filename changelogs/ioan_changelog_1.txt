@@ -8,6 +8,12 @@ Since v4.02.00 "Forseti"
 ========================
 
 --------------------------------------------------------------------------------
+11.09.2021
+
+FEATURE: New console variable "am_drawsegs" for displaying the BSP segs in the
+         automap. Useful for debugging BSP.
+
+--------------------------------------------------------------------------------
 07.06.2021
 
 BUGFIX: thinggroup definitions didn't work if they reused thing types! Fixed.
