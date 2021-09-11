@@ -90,7 +90,7 @@ static Mobj *current_actor;
 //
 // killough 5/5/98: reformatted, cleaned up
 //
-static void P_RecursiveSound(sector_t *sec, int soundblocks,
+static void P_RecursiveSound(sector_t *sec, const int soundblocks,
                              Mobj *soundtarget)
 {
    int i;
@@ -110,7 +110,7 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       // lines, the portal structure won't tell you what sector is on the
       // other side of the portal. SO
       sector_t *other;
-      line_t *check = sec->lines[0];
+      const line_t *check = sec->lines[0];
 
       other = 
          R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + R_FPLink(sec)->delta.x,
@@ -125,7 +125,7 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       // lines, the portal structure won't tell you what sector is on the 
       // other side of the portal. SO
       sector_t *other;
-      line_t *check = sec->lines[0];
+      const line_t *check = sec->lines[0];
 
       other = 
          R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + R_CPLink(sec)->delta.x,
@@ -137,7 +137,7 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
    for(i=0; i<sec->linecount; i++)
    {
       sector_t *other;
-      line_t *check = sec->lines[i];
+      const line_t *check = sec->lines[i];
       
       if(check->pflags & PS_PASSSOUND)
       {
