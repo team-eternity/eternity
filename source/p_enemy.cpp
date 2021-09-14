@@ -74,6 +74,42 @@ extern fixed_t FloatBobOffsets[64]; // haleyjd: Float Bobbing
 static Mobj *current_actor;
 
 //
+// Given a linedef belonging to a sector, find the best point to propagate the noise alert
+//
+static bool P_LocateSectorPortalNoiseAlertSpot(const sector_t &sector, v2fixed_t &spot)
+{
+   static const fixed_t EPS = FRACUNIT / 128;
+
+   if(!sector.linecount)
+      return false;
+   const line_t &line = *sector.lines[0];
+   spot.x = line.v1->x + line.dx / 2;
+   spot.y = line.v1->y + line.dy / 2;
+   if(line.frontsector == &sector)
+   {
+      switch (line.slopetype)
+      {
+         case ST_HORIZONTAL:
+            spot.y -= EPS;
+            break;
+         case ST_VERTICAL:
+            spot.x += EPS;
+            break;
+         case ST_POSITIVE:
+            spot.x += EPS / 2;
+            spot.y -= EPS / 2;
+            break;
+         case ST_NEGATIVE:
+
+
+         default:
+            break;
+      }
+   }
+   return true;
+}
+
+//
 // ENEMY THINKING
 // Enemies are allways spawned
 // with targetplayer = -1, threshold = 0
@@ -124,12 +160,13 @@ static void P_RecursiveSound(sector_t *sec, const int soundblocks,
       P_RecursiveSound(other, soundblocks, soundtarget);
    }
 
-   for(i=0; i<sec->linecount; i++)
+   for(i = 0; i < sec->linecount; i++)
    {
       sector_t *other;
       const line_t *check = sec->lines[i];
-      
-      if(check->pflags & PS_PASSSOUND)
+
+      // Only for front-facing wall portals
+      if(check->pflags & PS_PASSSOUND && check->frontsector == sec)
       {
          sector_t *iother;
 

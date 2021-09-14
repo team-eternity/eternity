@@ -105,6 +105,10 @@ struct intercept_t
 typedef bool (*traverser_t)(intercept_t *in, void *context);
 
 fixed_t P_AproxDistance(fixed_t dx, fixed_t dy);
+inline static fixed_t P_AproxDistance(v2fixed_t dv)
+{
+   return P_AproxDistance(dv.x, dv.y);
+}
 
 int P_PointOnLineSideClassic(fixed_t x, fixed_t y, const line_t *line);
 int P_PointOnLineSidePrecise(fixed_t x, fixed_t y, const line_t *line);
