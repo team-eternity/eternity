@@ -93,8 +93,6 @@ static Mobj *current_actor;
 static void P_RecursiveSound(sector_t *sec, const int soundblocks,
                              Mobj *soundtarget)
 {
-   int i;
-   
    // wake up all monsters in this sector
    if(sec->validcount == validcount &&
       sec->soundtraversed <= soundblocks+1)
@@ -104,8 +102,7 @@ static void P_RecursiveSound(sector_t *sec, const int soundblocks,
    sec->soundtraversed = soundblocks+1;
    P_SetTarget<Mobj>(&sec->soundtarget, soundtarget);    // killough 11/98
 
-   const line_t *portalcheck = nullptr;
-   v2fixed_t portalcheckpos;
+   // Check the floor and ceiling portals
    for(surf_e surf : SURFS)
    {
       if(!(sec->srf[surf].pflags & PS_PASSSOUND))
@@ -113,18 +110,35 @@ static void P_RecursiveSound(sector_t *sec, const int soundblocks,
       // Ok, because the same portal can be used on many sectors and even
       // lines, the portal structure won't tell you what sector is on the
       // other side of the portal. SO
-      if(!portalcheck)
+
+      // ioanch: check all lines, since we can have multiple polygons
+      for(int i = 0; i < sec->linecount; ++i)
       {
-         portalcheck = sec->lines[0];
-         portalcheckpos.x = (portalcheck->v1->x + portalcheck->v2->x) / 2;
-         portalcheckpos.y = (portalcheck->v1->y + portalcheck->v2->y) / 2;
+         const line_t &check = *sec->lines[i];
+         v2fixed_t checkpos;
+         if(!check.dx && !check.dy)
+            continue;   // degenerate; don't bother with this
+         fixed_t len = P_AproxDistance(check.dx, check.dy);
+         checkpos.x = check.v1->x + check.dx / 2;
+         checkpos.y = check.v1->y + check.dy / 2;
+         if(check.frontsector == sec)
+         {
+            checkpos.x += FixedDiv(check.dy, len) / 256;
+            checkpos.y -= FixedDiv(check.dx, len) / 256;
+         }
+         else
+         {
+            checkpos.x -= FixedDiv(check.dy, len) / 256;
+            checkpos.y += FixedDiv(check.dx, len) / 256;
+         }
+
+         sector_t *other = R_PointInSubsector(checkpos.x + R_PLink(surf, *sec)->delta.x,
+                                              checkpos.y + R_PLink(surf, *sec)->delta.y)->sector;
+         P_RecursiveSound(other, soundblocks, soundtarget);
       }
-      sector_t *other = R_PointInSubsector(portalcheckpos.x + R_PLink(surf, *sec)->delta.x,
-                                           portalcheckpos.y + R_PLink(surf, *sec)->delta.y)->sector;
-      P_RecursiveSound(other, soundblocks, soundtarget);
    }
 
-   for(i=0; i<sec->linecount; i++)
+   for(int i=0; i<sec->linecount; i++)
    {
       sector_t *other;
       const line_t *check = sec->lines[i];
