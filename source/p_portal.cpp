@@ -590,11 +590,9 @@ static void P_findSectorNeighborsViaSurfacePortal(const sector_t &source, const 
    {
       const sector_t &source;
       const linkdata_t &link;
-      v2fixed_t sorg;
-      int tgroupid;
       PODCollection<sector_t *> &neighs;
    };
-   ctx_t ctx = { source, link, { source.soundorg.x, source.soundorg.y }, tgroupid, coll };
+   ctx_t ctx = { source, link, coll };
 
    // Now scan all lines, as long as they belong to the right groupid
    ++validcount;
@@ -603,56 +601,54 @@ static void P_findSectorNeighborsViaSurfacePortal(const sector_t &source, const 
       for(int bx = blockbox[BOXLEFT]; bx <= blockbox[BOXRIGHT]; ++bx)
       {
          P_BlockLinesIterator(bx, by, [](line_t *line, polyobj_t *po, void *context) {
-            if(line->validcount == validcount)
-               return true;
-            line->validcount = validcount;
 
             auto &ctx = *static_cast<ctx_t *>(context);
+            if(!line->dx && !line->dy)
+               return true;
 
             // Get how they'd be placed on our source sector
-            v2fixed_t ov[2];
-            ov[0] = { line->v1->x - ctx.link.delta.x, line->v1->y - ctx.link.delta.y };
-            ov[1] = { line->v2->x - ctx.link.delta.x, line->v2->y - ctx.link.delta.y };
-            v2fixed_t nudge[2];
-            nudge[0] = (ctx.sorg - ov[0]).fixedDiv(P_AproxDistance(ctx.sorg - ov[0])) / 256;
-            nudge[1] = (ctx.sorg - ov[1]).fixedDiv(P_AproxDistance(ctx.sorg - ov[1])) / 256;
+            v2fixed_t mid = { line->v1->x + line->dx / 2, line->v1->y + line->dy / 2 };
+            fixed_t len = P_AproxDistance(line->dx, line->dy);
+            v2fixed_t nudge = { 
+               FixedDiv(line->dy, len) / (1 << (FRACBITS - 8)), 
+               -FixedDiv(line->dx, len) / (1 << (FRACBITS - 8)) 
+            };
 
-            sector_t *sector[4]; // be comprehensive
-            sector[0] = R_PointInSubsector(line->v1->x + nudge[0].x,
-                                           line->v1->y + nudge[0].y)->sector;
-            sector[1] = R_PointInSubsector(line->v2->x + nudge[1].x,
-                                           line->v2->y + nudge[1].y)->sector;
-            sector[2] = R_PointInSubsector(line->v1->x - nudge[0].x,
-                                           line->v1->y - nudge[0].y)->sector;
-            sector[3] = R_PointInSubsector(line->v2->x - nudge[1].x,
-                                           line->v2->y - nudge[1].y)->sector;
-            if(sector[0]->groupid == ctx.tgroupid && sector[0]->validcount != validcount)
+            sector_t *const targsectors[2] = { line->frontsector, line->backsector };
+            v2fixed_t delta = { ctx.link.delta.x, ctx.link.delta.y };
+            v2fixed_t ov[2] = { mid + nudge - delta, mid - nudge - delta };
+            for(int i = 0; i < 2; ++i)
             {
-               sector[0]->validcount = validcount;
-               if(R_PointInSubsector(ov[0] + nudge[0])->sector == &ctx.source)
-                  ctx.neighs.add(sector[0]);
-            }
-            if(sector[1]->groupid == ctx.tgroupid && sector[1]->validcount != validcount)
-            {
-               sector[1]->validcount = validcount;
-               if(R_PointInSubsector(ov[1] + nudge[1])->sector == &ctx.source)
-                  ctx.neighs.add(sector[1]);
-            }
-            if(sector[2]->groupid == ctx.tgroupid && sector[2]->validcount != validcount)
-            {
-               sector[2]->validcount = validcount;
-               if(R_PointInSubsector(ov[0] - nudge[0])->sector == &ctx.source)
-                  ctx.neighs.add(sector[2]);
-            }
-            if(sector[3]->groupid == ctx.tgroupid && sector[3]->validcount != validcount)
-            {
-               sector[3]->validcount = validcount;
-               if(R_PointInSubsector(ov[1] - nudge[1])->sector == &ctx.source)
-                  ctx.neighs.add(sector[1]);
+               const subsector_t &ss = *R_PointInSubsector(ov[i]);
+               if(targsectors[i] && ss.sector == &ctx.source && !P_IsInVoid(ov[i].x, ov[i].y, ss) &&
+                  targsectors[i]->validcount != validcount)
+               {
+                  ctx.neighs.add(targsectors[i]);
+                  targsectors[i]->validcount = validcount;
+               }
             }
             return true;
          }, tgroupid, &ctx);
       }
+   }
+
+   // If no linedef was caught, then it means the entirety of the target place is inside a sector. 
+   // Pick it going from here.
+   if(coll.isEmpty())
+   {
+      const line_t &line = *source.lines[0];
+      v2fixed_t mid = { line.v1->x + line.dx / 2, line.v1->y + line.dy / 2 };
+      fixed_t len = P_AproxDistance(line.dx, line.dy);
+      v2fixed_t nudge = {
+         FixedDiv(line.dy, len) / (1 << (FRACBITS - 8)),
+         -FixedDiv(line.dx, len) / (1 << (FRACBITS - 8)),
+      };
+      if(line.frontsector != &source)
+         nudge = -nudge;
+      v2fixed_t delta = { link.delta.x, link.delta.y };
+      sector_t &sector = *R_PointInSubsector(mid + nudge + delta)->sector;
+      if(sector.groupid == tgroupid)
+         coll.add(&sector);
    }
 }
 
@@ -661,9 +657,10 @@ static void P_findSectorNeighborsViaSurfacePortal(const sector_t &source, const 
 //
 void P_initSectorPortalNeighbors()
 {
-   gSectorNeighborsThroughPortals.clear();
    static PODCollection<sector_t *> proto;
    gSectorNeighborsThroughPortals.setPrototype(&proto);
+
+   gSectorNeighborsThroughPortals.clear();
    for(int i = 0; i < numsectors; ++i)
    {
       PODCollection<sector_t *> &coll = gSectorNeighborsThroughPortals.addNew();
