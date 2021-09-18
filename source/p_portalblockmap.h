@@ -26,6 +26,7 @@
 #define P_PORTALBLOCKMAP_H_
 
 #include "m_collection.h"
+#include "m_intmap.h"
 #include "r_defs.h"
 
 struct line_t;
@@ -121,7 +122,7 @@ public:
       bool(*func)(const line_t &, void *data)) const;
 
 private:
-   Collection<PODCollection<const line_t *>> mMap;
+   IntListMap mMap;
    int mValidcount;
    int *mValids;
 };
