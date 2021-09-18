@@ -614,14 +614,10 @@ static void P_findSectorNeighborsViaSurfacePortal(const sector_t &source, const 
 
             // Get how they'd be placed on our source sector
             v2fixed_t mid = { line->v1->x + line->dx / 2, line->v1->y + line->dy / 2 };
-            fixed_t len = P_AproxDistance(line->dx, line->dy);
-            v2fixed_t nudge = { 
-               FixedDiv(line->dy, len) / (1 << (FRACBITS - 8)), 
-               -FixedDiv(line->dx, len) / (1 << (FRACBITS - 8)) 
-            };
+            v2fixed_t nudge = P_GetSafeLineNormal(*line) / (1 << (FRACBITS - 8));
 
             sector_t *const targsectors[2] = { line->frontsector, line->backsector };
-            v2fixed_t delta = { ctx.link.delta.x, ctx.link.delta.y };
+            auto delta = v2fixed_t(ctx.link.delta);
             v2fixed_t ov[2] = { mid + nudge - delta, mid - nudge - delta };
             for(int i = 0; i < 2; ++i)
             {
