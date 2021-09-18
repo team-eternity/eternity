@@ -211,7 +211,7 @@ void PortalBlockmap::checkLinkSector(const sector_t &sector, const portal_t *por
 //
 void StaticLinedefPortalBlockmap::mapInit()
 {
-   mMap.clear();
+   Collection<PODCollection<int>> map;
    int numblocks = bmapwidth * bmapheight;
    for(int i = 0; i < numblocks; ++i)
    {
@@ -246,8 +246,9 @@ void StaticLinedefPortalBlockmap::mapInit()
          }
       }
 
-      mMap.add(coll);
+      map.add(coll);
    }
+   mMap.load(map);
 
    mValids = ecalloctag(decltype(mValids), numlines, sizeof(*mValids), PU_LEVEL,
       nullptr);
@@ -262,13 +263,16 @@ bool StaticLinedefPortalBlockmap::iterator(int x, int y, void *data,
    if(x < 0 || x >= bmapwidth || y < 0 || y >= bmapheight)
       return true;
    int i = y * bmapwidth + x;
-   const PODCollection<int> coll = mMap[i];
-   for(int linenum : coll)
+
+   int linecount = 0;
+   const int *linenum = mMap.getList(i, &linecount);
+
+   for(int j = 0; j < linecount; ++j)
    {
-      if(mValids[linenum] == mValidcount)
+      if(mValids[linenum[j]] == mValidcount)
          continue;
-      mValids[linenum] = mValidcount;
-      if(!func(lines[linenum], data))
+      mValids[linenum[j]] = mValidcount;
+      if(!func(lines[linenum[j]], data))
          return false;
    }
    return true;
