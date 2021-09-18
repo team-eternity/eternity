@@ -121,7 +121,7 @@ public:
       bool(*func)(const line_t &, void *data)) const;
 
 private:
-   Collection<PODCollection<const line_t *>> mMap;
+   Collection<PODCollection<int>> mMap;
    int mValidcount;
    int *mValids;
 };

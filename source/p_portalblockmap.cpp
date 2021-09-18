@@ -226,7 +226,7 @@ void StaticLinedefPortalBlockmap::mapInit()
          list++;
       }
 
-      PODCollection<const line_t *> coll;
+      PODCollection<int> coll;
 
       for(; *list != -1; ++list)
       {
@@ -242,7 +242,7 @@ void StaticLinedefPortalBlockmap::mapInit()
                   line.backsector->srf.ceiling.portal &&
                   line.backsector->srf.ceiling.portal->type == R_LINKED)))
          {
-            coll.add(&line);
+            coll.add(*list);
          }
       }
 
@@ -262,13 +262,13 @@ bool StaticLinedefPortalBlockmap::iterator(int x, int y, void *data,
    if(x < 0 || x >= bmapwidth || y < 0 || y >= bmapheight)
       return true;
    int i = y * bmapwidth + x;
-   const PODCollection<const line_t *> coll = mMap[i];
-   for(const line_t *line : coll)
+   const PODCollection<int> coll = mMap[i];
+   for(int linenum : coll)
    {
-      if(mValids[line - lines] == mValidcount)
+      if(mValids[linenum] == mValidcount)
          continue;
-      mValids[line - lines] = mValidcount;
-      if(!func(*line, data))
+      mValids[linenum] = mValidcount;
+      if(!func(lines[linenum], data))
          return false;
    }
    return true;
