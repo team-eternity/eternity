@@ -8,6 +8,13 @@ Since v4.02.00 "Forseti"
 ========================
 
 --------------------------------------------------------------------------------
+18.09.2021
+
+BUGFIX: Fixed a bug where classic format floor and ceiling linked portal
+        specials were wrongly finding the like-tagged edge portal flagged
+        linedef as anchor.
+
+--------------------------------------------------------------------------------
 11.09.2021
 
 FEATURE: New console variable "am_drawsegs" for displaying the BSP segs in the
