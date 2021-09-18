@@ -43,8 +43,10 @@
 #include "v_misc.h"
 
 //
-// Polyobject-generated sector couple. Needed before P_GatherSectors is called
-// due to potential polyobject portals
+// Polyobject-generated sector couple. The couple is between the external box sector which houses
+// the polyobject prototype in the editor, and the spawn spot sector in the game world. This
+// information is needed when flood-filling the portal layers with P_GatherSectors, to ensure that
+// the box sector is assigned the correct group ID.
 //
 struct polycouple_t
 {
@@ -102,12 +104,15 @@ static void P_addPolyCouple(int polyid, sector_t &sector1, sector_t &sector2)
 }
 
 //
-// Checks if a poly couple with polyid was already added
+// Checks if a poly couple with polyid was already added.
 //
-static bool P_isPolyCoupleAdded(int polyid, const sector_t &sector)
+// NOTE: it's sufficient for either the poly id to be listed or the control sector. It means they
+// already got connected to the main world.
+//
+static bool P_isPolyCoupleAdded(int polyid, const sector_t &polyobjControlSector)
 {
    for(const polycouple_t &couple : gPolyCouples)
-      if(couple.polyid == polyid || couple.sectors[0] == &sector || couple.sectors[1] == &sector)
+      if(couple.polyid == polyid || couple.sectors[0] == &polyobjControlSector || couple.sectors[1] == &polyobjControlSector)
          return true;
    return false;
 }
