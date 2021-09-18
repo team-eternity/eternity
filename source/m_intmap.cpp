@@ -22,6 +22,7 @@
 // Authors: Ioan Chera
 //
 
+#include <assert.h>
 #include "z_zone.h"
 #include "m_intmap.h"
 
@@ -56,6 +57,45 @@ const int *IntListMap::getList(int index, int *length) const
 {
    *length = mData[index + 1] - mData[index];
    return mData + mData[index];
+}
+
+//
+// Load data from two given collections
+//
+// LAYOUT: num_lists + 1 items
+//         then for each list pair, address of second list, followed by first list, then second list
+//
+void DualIntListMap::load(const Collection<PODCollection<int>> &first,
+                          const Collection<PODCollection<int>> &second)
+{
+   size_t length = first.getLength();
+   assert(length == second.getLength());
+   size_t size = length + 1;
+
+   for(size_t i = 0; i < length; ++i)
+      size += 1 + first[i].getLength() + second[i].getLength();
+
+   efree(mData);
+   mData = emalloc(decltype(mData), size * sizeof(*mData));
+
+   size_t pos = length + 1;
+   int *ptr = mData;
+   for(size_t i = 0; i < length; ++i)
+   {
+      *ptr++ = static_cast<int>(pos);
+      pos += 1 + first[i].getLength() + second[i].getLength();
+   }
+   *ptr++ = static_cast<int>(pos);
+   pos = length + 1;
+   for(size_t i = 0; i < length; ++i)
+   {
+      *ptr++ = static_cast<int>(pos + 1 + first[i].getLength());
+      for(int value : first[i])
+         *ptr = value;
+      for(int value : second[i])
+         *ptr = value;
+      pos += 1 + first[i].getLength() + second[i].getLength();
+   }
 }
 
 // EOF

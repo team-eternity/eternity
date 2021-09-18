@@ -28,22 +28,39 @@
 #include "m_collection.h"
 
 //
+// Base class which holds the common functionality
+//
+class BaseIntListMap : public ZoneObject
+{
+public:
+   virtual ~BaseIntListMap()
+   {
+      efree(mData);
+   }
+protected:
+   int *mData = nullptr;
+};
+
+//
 // Holds [int: [int]] storage. Read only. Contiguous in memory.
 //
 // Meant to replace Collection<PODCollection<int>> data
 //
-class IntListMap : public ZoneObject
+class IntListMap : public BaseIntListMap
 {
 public:
-   ~IntListMap()
-   {
-      efree(mData);
-   }
    void load(const Collection<PODCollection<int>> &source);
    const int *getList(int index, int *length) const;
+};
 
-private:
-   int *mData = nullptr;
+//
+// This one has two lists per item
+//
+class DualIntListMap : public BaseIntListMap
+{
+public:
+   void load(const Collection<PODCollection<int>> &first,
+             const Collection<PODCollection<int>> &second);
 };
 
 #endif /* M_INTMAP_H_ */
