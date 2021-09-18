@@ -3312,11 +3312,10 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          {
             // SoM 3-10-04: Two different anchor linedef codes so I can tag
             // two anchored portals to the same sector.
-            if((lines[s].special != anchortype &&
-                !(lines[s].extflags &
-                  (EX_ML_LOWERPORTAL | EX_ML_UPPERPORTAL))) ||
-               line == &lines[s] ||
-               lines[s].frontsector == nullptr)
+            if((lines[s].special != anchortype && (anchorfunc != EV_STATIC_PORTAL_LINKED_L2L_ANCHOR ||
+                                                   !(lines[s].extflags & (EX_ML_LOWERPORTAL |
+                                                                          EX_ML_UPPERPORTAL)))) ||
+               line == &lines[s] || lines[s].frontsector == nullptr)
             {
                continue;
             }
