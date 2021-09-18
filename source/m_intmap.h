@@ -61,6 +61,7 @@ class DualIntListMap : public BaseIntListMap
 public:
    void load(const Collection<PODCollection<int>> &first,
              const Collection<PODCollection<int>> &second);
+   const int *getList(int index, int which, int *length) const;
 };
 
 #endif /* M_INTMAP_H_ */
