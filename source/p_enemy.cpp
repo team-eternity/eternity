@@ -75,42 +75,6 @@ extern fixed_t FloatBobOffsets[64]; // haleyjd: Float Bobbing
 static Mobj *current_actor;
 
 //
-// Given a linedef belonging to a sector, find the best point to propagate the noise alert
-//
-static bool P_LocateSectorPortalNoiseAlertSpot(const sector_t &sector, v2fixed_t &spot)
-{
-   static const fixed_t EPS = FRACUNIT / 128;
-
-   if(!sector.linecount)
-      return false;
-   const line_t &line = *sector.lines[0];
-   spot.x = line.v1->x + line.dx / 2;
-   spot.y = line.v1->y + line.dy / 2;
-   if(line.frontsector == &sector)
-   {
-      switch (line.slopetype)
-      {
-         case ST_HORIZONTAL:
-            spot.y -= EPS;
-            break;
-         case ST_VERTICAL:
-            spot.x += EPS;
-            break;
-         case ST_POSITIVE:
-            spot.x += EPS / 2;
-            spot.y -= EPS / 2;
-            break;
-         case ST_NEGATIVE:
-
-
-         default:
-            break;
-      }
-   }
-   return true;
-}
-
-//
 // ENEMY THINKING
 // Enemies are allways spawned
 // with targetplayer = -1, threshold = 0
