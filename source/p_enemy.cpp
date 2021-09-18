@@ -155,18 +155,6 @@ static void P_RecursiveSound(sector_t *sec, const int soundblocks,
    {
       sector_t *other;
       const line_t *check = sec->lines[i];
-
-      // Only for front-facing wall portals
-      if(check->pflags & PS_PASSSOUND && check->frontsector == sec)
-      {
-         sector_t *iother;
-
-         iother = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + check->portal->data.link.delta.x,
-                            ((check->v1->y + check->v2->y) / 2) + check->portal->data.link.delta.y)->sector;
-
-         P_RecursiveSound(iother, soundblocks, soundtarget);
-      }
       if(!(check->flags & ML_TWOSIDED))
          continue;
 
@@ -174,6 +162,18 @@ static void P_RecursiveSound(sector_t *sec, const int soundblocks,
 
       if(clip.open.range <= 0)
          continue;       // closed door
+
+      // Only for front-facing wall portals
+      if(check->pflags & PS_PASSSOUND && check->frontsector == sec)
+      {
+         v2fixed_t mid = { check->v1->x + check->dx / 2, check->v1->y + check->dy / 2};
+         v2fixed_t nudge = P_GetSafeLineNormal(*check) / (1 << (FRACBITS - 8));
+
+         sector_t *iother = R_PointInSubsector(mid - nudge +
+                                               v2fixed_t(check->portal->data.link.delta))->sector;
+
+         P_RecursiveSound(iother, soundblocks, soundtarget);
+      }
 
       other=sides[check->sidenum[sides[check->sidenum[0]].sector==sec]].sector;
       
