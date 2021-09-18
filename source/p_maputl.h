@@ -176,6 +176,8 @@ bool P_ShootThing(const intercept_t *in,
 bool P_CheckThingAimAvailability(const Mobj *th, const Mobj *source, bool aimflagsmask);
 bool P_CheckThingAimSlopes(const Mobj *th, fixed_t origindist, fixed_t infrac, linetracer_t &atrace);
 
+v2fixed_t P_GetSafeLineNormal(const line_t &line);
+
 extern linetracer_t trace;
 
 #endif  // __P_MAPUTL__

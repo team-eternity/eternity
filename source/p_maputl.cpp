@@ -981,6 +981,15 @@ void P_RotatePoint(fixed_t &x, fixed_t &y, const angle_t angle)
    x = tmp;
 }
 
+//
+// Gets a playsim-safe line normal (nx, ny are floating point so they're not safe)
+//
+v2fixed_t P_GetSafeLineNormal(const line_t &line)
+{
+   fixed_t len = P_AproxDistance(line.dx, line.dy);
+   return { FixedDiv(line.dy, len), -FixedDiv(line.dx, len) };
+}
+
 //----------------------------------------------------------------------------
 //
 // $Log: p_maputl.c,v $
