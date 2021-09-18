@@ -1034,11 +1034,11 @@ struct insideMobjMove_t
 static bool PolyobjIT_moveObjectsInside(int groupid, void *context)
 {
    int count;
-   sector_t **gsectors = P_GetSectorsWithGroupId(groupid, &count);
+   const int *gsecnums = P_GetSectorsWithGroupId(groupid, &count);
    auto &moved = *static_cast<PODCollection<insideMobjMove_t> *>(context);
    for(int i = 0; i < count; ++i)
    {
-      for(Mobj *mo = gsectors[i]->thinglist; mo; mo = mo->snext)
+      for(Mobj *mo = sectors[gsecnums[i]].thinglist; mo; mo = mo->snext)
       {
          // NOSECTOR invisible things will be ignored :)
          // Also don't push back standing and hanging things
