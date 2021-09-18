@@ -164,6 +164,10 @@ static void P_RecursiveSound(sector_t *sec, const int soundblocks,
          continue;       // closed door
 
       // Only for front-facing wall portals
+
+      // NOTE: edge portals don't need any handling, because the sound propagates through the
+      // expanded line opening naturally to the sector behind, after which it can propagate through
+      // the sector portal.
       if(check->pflags & PS_PASSSOUND && check->frontsector == sec)
       {
          v2fixed_t mid = { check->v1->x + check->dx / 2, check->v1->y + check->dy / 2};
