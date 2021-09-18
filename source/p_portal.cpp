@@ -1343,5 +1343,14 @@ const int *P_GetSectorsWithGroupId(int groupid, int *count)
    return gGroupSectors.getList(groupid, count);
 }
 
+//
+// Gets the list of neighbors through a sector portal
+//
+const int *P_GetSectorPortalNeighbors(const sector_t &sector, surf_e surf,
+                                      int *count)
+{
+   return gSectorNeighborsThroughPortals.getList(eindex(&sector - sectors), surf, count);
+}
+
 // EOF
 

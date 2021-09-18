@@ -57,6 +57,7 @@
 #include "p_maputl.h"
 #include "p_mobjcol.h"
 #include "p_partcl.h"
+#include "p_portal.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
@@ -143,35 +144,11 @@ static void P_RecursiveSound(sector_t *sec, const int soundblocks,
    {
       if(!(sec->srf[surf].pflags & PS_PASSSOUND))
          continue;
-      // Ok, because the same portal can be used on many sectors and even
-      // lines, the portal structure won't tell you what sector is on the
-      // other side of the portal. SO
 
-      // ioanch: check all lines, since we can have multiple polygons
-      for(int i = 0; i < sec->linecount; ++i)
-      {
-         const line_t &check = *sec->lines[i];
-         v2fixed_t checkpos;
-         if(!check.dx && !check.dy)
-            continue;   // degenerate; don't bother with this
-         fixed_t len = P_AproxDistance(check.dx, check.dy);
-         checkpos.x = check.v1->x + check.dx / 2;
-         checkpos.y = check.v1->y + check.dy / 2;
-         if(check.frontsector == sec)
-         {
-            checkpos.x += FixedDiv(check.dy, len) / 256;
-            checkpos.y -= FixedDiv(check.dx, len) / 256;
-         }
-         else
-         {
-            checkpos.x -= FixedDiv(check.dy, len) / 256;
-            checkpos.y += FixedDiv(check.dx, len) / 256;
-         }
-
-         sector_t *other = R_PointInSubsector(checkpos.x + R_PLink(surf, *sec)->delta.x,
-                                              checkpos.y + R_PLink(surf, *sec)->delta.y)->sector;
-         P_RecursiveSound(other, soundblocks, soundtarget);
-      }
+      int neighcount;
+      const int *neighlist = P_GetSectorPortalNeighbors(*sec, surf, &neighcount);
+      for(int i = 0; i < neighcount; ++i)
+         P_RecursiveSound(&sectors[neighlist[i]], soundblocks, soundtarget);
    }
 
    for(int i = 0; i < sec->linecount; i++)

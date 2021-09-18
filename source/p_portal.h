@@ -176,6 +176,9 @@ void P_BuildSectorGroupMappings();
 const int *P_GetSectorsWithGroupId(int groupid, int *count);
 bool P_PortalLayersByPoly(int groupid1, int groupid2);
 
+const int *P_GetSectorPortalNeighbors(const sector_t &sector, surf_e surf,
+                                      int *count);
+
 #endif
 
 // EOF
