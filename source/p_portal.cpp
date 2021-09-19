@@ -624,15 +624,38 @@ static void P_findSectorNeighborsViaSurfacePortal(const sector_t &source, const 
             auto &ctx = *static_cast<ctx_t *>(context);
             auto delta = v2fixed_t(ctx.link.delta);
             v2fixed_t ov[2] = { mid + nudge - delta, mid - nudge - delta };
+            bool gotOne = false;
             for(int i = 0; i < 2; ++i)
             {
+               if(!targsectors[i])
+                  continue;   // back may of course be missing
                const subsector_t &ss = *R_PointInSubsector(ov[i]);
-               if(targsectors[i] && ss.sector == &ctx.source && !P_IsInVoid(ov[i].x, ov[i].y, ss) &&
-                  targsectors[i]->validcount != validcount)
+               if(ss.sector == &ctx.source && !P_IsInVoid(ov[i].x, ov[i].y, ss))
                {
-                  ctx.neighs.add(eindex(targsectors[i] - sectors));
-                  targsectors[i]->validcount = validcount;
+                  gotOne = true; // mark it now if it's on spot
+                  if(targsectors[i]->validcount != validcount)
+                  {
+                     ctx.neighs.add(eindex(targsectors[i] - sectors));
+                     targsectors[i]->validcount = validcount;
+                  }
                }
+            }
+            if(!gotOne)
+            {
+               // Now also check intersection
+               // Need to shorten them a bit to clear out edge cases
+               nudge = v2fixed_t{ line->dx, line->dy }.fixedDiv(P_AproxDistance(line->dx, line->dy))
+                     / (1 << (FRACBITS - 8));
+               ov[0] = v2fixed_t{ line->v1->x, line->v1->y } - delta + nudge;
+               ov[1] = v2fixed_t{ line->v2->x, line->v2->y } - delta - nudge;
+               if(P_SegmentIntersectsSector(ov[0], ov[1], ctx.source))
+                  for(int i = 0; i < 2; ++i)
+                  {
+                     if(!targsectors[i] || targsectors[i]->validcount == validcount)
+                        continue;
+                     ctx.neighs.add(eindex(targsectors[i] - sectors));
+                     targsectors[i]->validcount = validcount;
+                  }
             }
             return true;
          }, tgroupid, &ctx);
@@ -653,8 +676,10 @@ static void P_findSectorNeighborsViaSurfacePortal(const sector_t &source, const 
       if(line.frontsector != &source)
          nudge = -nudge;
       v2fixed_t delta = { link.delta.x, link.delta.y };
-      sector_t &sector = *R_PointInSubsector(mid + nudge + delta)->sector;
-      if(sector.groupid == tgroupid)
+      v2fixed_t point = mid + nudge + delta;
+      const subsector_t &ss = *R_PointInSubsector(point);
+      sector_t &sector = *ss.sector;
+      if(sector.groupid == tgroupid && !P_IsInVoid(point.x, point.y, ss))
          coll.add(eindex(&sector - sectors));
    }
 }
