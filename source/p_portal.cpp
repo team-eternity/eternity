@@ -608,15 +608,20 @@ static void P_findSectorNeighborsViaSurfacePortal(const sector_t &source, const 
       {
          P_BlockLinesIterator(bx, by, [](line_t *line, polyobj_t *po, void *context) {
 
-            auto &ctx = *static_cast<ctx_t *>(context);
-            if(!line->dx && !line->dy)
+            if(!line->dx && !line->dy) // must avoid degenerate lines, division by 0
                return true;
+            sector_t *const targsectors[2] = { line->frontsector, line->backsector };
+            if(targsectors[0]->validcount == validcount &&
+               (!targsectors[1] || targsectors[1]->validcount == validcount))
+            {
+               return true;   // both sectors already visited
+            }
 
             // Get how they'd be placed on our source sector
             v2fixed_t mid = { line->v1->x + line->dx / 2, line->v1->y + line->dy / 2 };
             v2fixed_t nudge = P_GetSafeLineNormal(*line) / (1 << (FRACBITS - 8));
 
-            sector_t *const targsectors[2] = { line->frontsector, line->backsector };
+            auto &ctx = *static_cast<ctx_t *>(context);
             auto delta = v2fixed_t(ctx.link.delta);
             v2fixed_t ov[2] = { mid + nudge - delta, mid - nudge - delta };
             for(int i = 0; i < 2; ++i)
