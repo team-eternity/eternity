@@ -26,6 +26,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include <assert.h>
 #include "z_zone.h"
 
 #include "doomstat.h"
@@ -988,6 +989,47 @@ v2fixed_t P_GetSafeLineNormal(const line_t &line)
 {
    fixed_t len = P_AproxDistance(line.dx, line.dy);
    return { FixedDiv(line.dy, len), -FixedDiv(line.dx, len) };
+}
+
+//
+// True if the line described by points v1 and v2 intersects one of the lines of the sector
+//
+bool P_SegmentIntersectsSector(v2fixed_t v1, v2fixed_t v2, const sector_t &sector)
+{
+   // Make a divline out of the points
+   divline_t dl;
+   dl.v = v1;
+   dl.dv = v2 - v1;
+
+   for(int i = 0; i < sector.linecount; ++i)
+   {
+      // Check our line against sector's line
+      assert(sector.lines[i]);
+      const line_t &line = *sector.lines[i];
+      if(!line.dx && !line.dy)
+         continue;
+      // We need to send the extremities into the linedef to prevent edge uncertainties
+      divline_t sectordl;
+      P_MakeDivline(&line, &sectordl);
+      v2fixed_t nudge = sectordl.dv.fixedDiv(P_AproxDistance(sectordl.dv)) / (1 << (FRACBITS - 8));
+      sectordl.v += nudge;
+      sectordl.dv -= nudge * 2;
+      nudge = P_GetSafeLineNormal(line) / (1 << (FRACBITS - 8));
+      if(line.frontsector == &sector)
+         sectordl.v += nudge;
+      else
+         sectordl.v -= nudge;
+      int side1 = P_PointOnDivlineSidePrecise(v1.x, v1.y, &sectordl);
+      int side2 = P_PointOnDivlineSidePrecise(v2.x, v2.y, &sectordl);
+      if(side1 == side2)
+         continue;
+      // Crossing. Now check the sector's line against our line
+      side1 = P_PointOnDivlineSidePrecise(sectordl.x, sectordl.y, &dl);
+      side2 = P_PointOnDivlineSidePrecise(sectordl.x + sectordl.dx, sectordl.y + sectordl.dy, &dl);
+      if(side1 != side2)   // got it, there's an intersection
+         return true;
+   }
+   return false;
 }
 
 //----------------------------------------------------------------------------
