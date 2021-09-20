@@ -993,7 +993,7 @@ v2fixed_t P_GetSafeLineNormal(const line_t &line)
 }
 
 //
-// True if two segments strictly intersect, without the point being on top of each segment.
+// True if two segments strictly intersect, without the point being on top of each segment.         
 // This uses an epsilon of 1/256
 //
 static bool P_segmentsStrictlyIntersect(const divline_t &dl1, const divline_t &dl2)
@@ -1001,15 +1001,35 @@ static bool P_segmentsStrictlyIntersect(const divline_t &dl1, const divline_t &d
    if(!dl1.dv || !dl2.dv)
       return false;  // no degenerate lines allowed
 
-   // If bounding boxes don't intersect, it's clear
-   if(emin(dl1.x, dl1.x + dl1.dx) >= emax(dl2.x, dl2.x + dl2.dx) ||
-      emin(dl1.y, dl1.y + dl1.dy) >= emax(dl2.y, dl2.y + dl2.dy) ||
-      emin(dl2.x, dl2.x + dl2.dx) >= emax(dl1.x, dl1.x + dl1.dx) ||
-      emin(dl2.y, dl2.y + dl2.dy) >= emax(dl1.y, dl1.y + dl1.dy) ||
-      (!dl1.dx && !dl2.dx) || (!dl1.dy && !dl2.dy))   // also disregard any parallel lines
+   fixed_t box[2][4];
+   box[0][BOXLEFT] = emin(dl1.x, dl1.x + dl1.dx);
+   box[0][BOXBOTTOM] = emin(dl1.y, dl1.y + dl1.dy);
+   box[0][BOXRIGHT] = emax(dl1.x, dl1.x + dl1.dx);
+   box[0][BOXTOP] = emax(dl1.y, dl1.y + dl1.dy);
+   box[1][BOXLEFT] = emin(dl2.x, dl2.x + dl2.dx);
+   box[1][BOXBOTTOM] = emin(dl2.y, dl2.y + dl2.dy);
+   box[1][BOXRIGHT] = emax(dl2.x, dl2.x + dl2.dx);
+   box[1][BOXTOP] = emax(dl2.y, dl2.y + dl2.dy);
+
+   if((!dl1.dx && !dl2.dx) || (!dl1.dy && !dl2.dy) || // Disregard any parallel or colinear segments
+      box[0][BOXLEFT] >= box[1][BOXRIGHT] || box[0][BOXBOTTOM] >= box[1][BOXTOP] || // can't touch
+      box[1][BOXLEFT] >= box[0][BOXRIGHT] || box[1][BOXBOTTOM] >= box[0][BOXTOP])   // either
    {
       return false;
    }
+
+   if(!dl1.dx && !dl2.dy)  // |-
+   {
+      // Strictly over
+      return dl1.x > box[1][BOXLEFT] && dl1.x < box[1][BOXRIGHT] &&
+         dl2.y > box[0][BOXBOTTOM] && dl2.y < box[0][BOXTOP];
+   }
+   if(!dl1.dy && !dl2.dx)  // -|
+   {
+      return dl2.x > box[0][BOXLEFT] && dl2.x < box[0][BOXRIGHT] &&
+         dl1.y > box[1][BOXBOTTOM] && dl1.y < box[1][BOXTOP];
+   }
+   // Now one is diagonal
 
    fixed_t len1 = P_AproxDistance(dl1.dv);
    fixed_t len2 = P_AproxDistance(dl2.dv);
