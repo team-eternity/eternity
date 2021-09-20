@@ -33,6 +33,7 @@
 #include "e_exdata.h"
 #include "ev_specials.h"
 #include "m_bbox.h"
+#include "m_compare.h"
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_maputl.h"
@@ -989,6 +990,37 @@ v2fixed_t P_GetSafeLineNormal(const line_t &line)
 {
    fixed_t len = P_AproxDistance(line.dx, line.dy);
    return { FixedDiv(line.dy, len), -FixedDiv(line.dx, len) };
+}
+
+//
+// True if two segments strictly intersect, without the point being on top of each segment.
+// This uses an epsilon of 1/256
+//
+static bool P_segmentsStrictlyIntersect(const divline_t &dl1, const divline_t &dl2)
+{
+   if(!dl1.dv || !dl2.dv)
+      return false;  // no degenerate lines allowed
+
+   // If bounding boxes don't intersect, it's clear
+   if(emin(dl1.x, dl1.x + dl1.dx) >= emax(dl2.x, dl2.x + dl2.dx) ||
+      emin(dl1.y, dl1.y + dl1.dy) >= emax(dl2.y, dl2.y + dl2.dy) ||
+      emin(dl2.x, dl2.x + dl2.dx) >= emax(dl1.x, dl1.x + dl1.dx) ||
+      emin(dl2.y, dl2.y + dl2.dy) >= emax(dl1.y, dl1.y + dl1.dy) ||
+      (!dl1.dx && !dl2.dx) || (!dl1.dy && !dl2.dy))   // also disregard any parallel lines
+   {
+      return false;
+   }
+
+   fixed_t len1 = P_AproxDistance(dl1.dv);
+   fixed_t len2 = P_AproxDistance(dl2.dv);
+   v2fixed_t dirnudge1 = dl1.dv.fixedDiv(len1) / (1 << (FRACBITS - 8));
+   v2fixed_t dirnudge2 = dl2.dv.fixedDiv(len2) / (1 << (FRACBITS - 8));
+   v2fixed_t nornudge1 = { dirnudge1.y, -dirnudge1.x };
+   v2fixed_t nornudge2 = { dirnudge2.y, -dirnudge2.x };
+
+   // TODO: determine intersection here, covering the best ground
+
+   return false;
 }
 
 //
