@@ -33,7 +33,6 @@
 #include "e_exdata.h"
 #include "ev_specials.h"
 #include "m_bbox.h"
-#include "m_compare.h"
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_maputl.h"
