@@ -2962,14 +2962,16 @@ void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, WadDirectory 
 }
 
 // killough 7/19/98: Marine's best friend :)
-static int G_GetHelpers()
+static int G_getHelpers()
 {
-   int j = M_CheckParm ("-dog");
-   
-   if(!j)
-      j = M_CheckParm ("-dogs");
+   if(M_CheckParm("-dog"))
+      return 1;
 
-   return j ? ((j+1 < myargc) ? atoi(myargv[j+1]) : 1) : default_dogs;
+   const int j = M_CheckParm("-dogs");
+   if(j != 0 && j + 1 < myargc)
+      return atoi(myargv[j + 1]);
+   else
+      return default_dogs;
 }
 
 // killough 3/1/98: function to reload all the default parameter
@@ -2991,9 +2993,9 @@ void G_ReloadDefaults()
    
    monster_infighting = default_monster_infighting; // killough 7/19/98
    
-   // dogs = netgame ? 0 : G_GetHelpers();             // killough 7/19/98
+   // dogs = netgame ? 0 : G_getHelpers();             // killough 7/19/98
    if(GameType == gt_single) // haleyjd 04/10/03
-      dogs = G_GetHelpers();
+      dogs = G_getHelpers();
    else
       dogs = 0;
    

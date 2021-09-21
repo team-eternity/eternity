@@ -119,6 +119,16 @@ Made the menus use the console font by default.
 Holding down weapon switch weapons no longer rotates between all weapons in that
 slot automatically.
 
+--------------------------------------------------------------------------------
+2021/09/02
+[MBF21]
+ * Added blockplayers linedef flag.
+ * Added blocklandmonsters linedef flag.
+
+--------------------------------------------------------------------------------
+2021/09/21
+Fixed -dog. Made it so -dogs only works if it's not the last command-line arg.
+
 ================================================================================
 EOF
 ================================================================================
