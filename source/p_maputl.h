@@ -177,6 +177,7 @@ bool P_CheckThingAimAvailability(const Mobj *th, const Mobj *source, bool aimfla
 bool P_CheckThingAimSlopes(const Mobj *th, fixed_t origindist, fixed_t infrac, linetracer_t &atrace);
 
 v2fixed_t P_GetSafeLineNormal(const line_t &line);
+bool P_SegmentIntersectsSector(v2fixed_t v1, v2fixed_t v2, const sector_t &sector);
 
 extern linetracer_t trace;
 

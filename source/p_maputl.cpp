@@ -26,6 +26,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include <assert.h>
 #include "z_zone.h"
 
 #include "doomstat.h"
@@ -988,6 +989,99 @@ v2fixed_t P_GetSafeLineNormal(const line_t &line)
 {
    fixed_t len = P_AproxDistance(line.dx, line.dy);
    return { FixedDiv(line.dy, len), -FixedDiv(line.dx, len) };
+}
+
+//
+// True if two segments strictly intersect, without the point being on top of each segment.         
+// This uses an epsilon of 1/256.
+// 
+// Arguments are intentionally copied
+//
+static bool P_segmentsStrictlyIntersect(divline_t dl1, divline_t dl2)
+{
+   if(!dl1.dv || !dl2.dv)
+      return false;  // no degenerate lines allowed
+
+   // Block any colinear or parallel lines
+   if((!dl1.dx && !dl2.dx) || (!dl1.dy && !dl2.dy))
+      return false;
+
+   // Now we're left with concurrent lines.
+
+   fixed_t len1 = P_AproxDistance(dl1.dv);
+   fixed_t len2 = P_AproxDistance(dl2.dv);
+   v2fixed_t nudge1 = dl1.dv.fixedDiv(len1) / (1 << (FRACBITS - 8));
+   v2fixed_t nudge2 = dl2.dv.fixedDiv(len2) / (1 << (FRACBITS - 8));
+
+   // Now reduce the lines to make sure they don't intersect if barely touching
+   dl1.v += nudge1;
+   dl1.dv -= nudge1 * 2;
+   dl2.v += nudge2;
+   dl2.dv -= nudge2 * 2;
+
+   int side1 = P_PointOnDivlineSidePrecise(dl1.x, dl1.y, &dl2);
+   int side2 = P_PointOnDivlineSidePrecise(dl1.x + dl1.dx, dl1.y + dl1.dy, &dl2);
+   if(side1 == side2)
+      return false;
+
+   side1 = P_PointOnDivlineSidePrecise(dl2.x, dl2.y, &dl1);
+   side2 = P_PointOnDivlineSidePrecise(dl2.x + dl2.dx, dl2.y + dl2.dy, &dl1);
+   if(side1 != side2)
+   {
+      // Possibly intersecting. But they may still be overlapping diagonal lines, so let's nudge one
+      // a bit and see if it still intersects. Pick the longer line to nudge and measure the shorter
+      // one against that.
+
+      divline_t *tonudge;
+      const divline_t *tocheck;
+      if(len2 > len1)
+      {
+         tonudge = &dl2;
+         nudge1 = { nudge2.y, -nudge2.x };
+         tocheck = &dl1;
+      }
+      else
+      {
+         tonudge = &dl1;
+         nudge1 = { nudge1.y, -nudge1.x };
+         tocheck = &dl2;
+      }
+
+      tonudge->v += nudge1;
+      
+      side1 = P_PointOnDivlineSidePrecise(tocheck->x, tocheck->y, tonudge);
+      side2 = P_PointOnDivlineSidePrecise(tocheck->x + tocheck->dx, tocheck->y + tocheck->dy, 
+                                          tonudge);
+      return side1 != side2;
+   }
+   return false;
+}
+
+//
+// True if the line described by points v1 and v2 intersects one of the lines of the sector
+//
+bool P_SegmentIntersectsSector(v2fixed_t v1, v2fixed_t v2, const sector_t &sector)
+{
+   // Make a divline out of the points
+   divline_t dl;
+   dl.v = v1;
+   dl.dv = v2 - v1;
+
+   for(int i = 0; i < sector.linecount; ++i)
+   {
+      // Check our line against sector's line
+      assert(sector.lines[i]);
+      const line_t &line = *sector.lines[i];
+      if(!line.dx && !line.dy)
+         continue;
+      // We need to send the extremities into the linedef to prevent edge uncertainties
+      divline_t sectordl;
+      P_MakeDivline(&line, &sectordl);
+
+      if(P_segmentsStrictlyIntersect(dl, sectordl))
+         return true;   // found one
+   }
+   return false;
 }
 
 //----------------------------------------------------------------------------

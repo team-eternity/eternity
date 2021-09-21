@@ -145,6 +145,11 @@ struct v2fixed_t
    {
       return { x / scalar, y / scalar };
    }
+
+   v2fixed_t operator * (int scalar) const
+   {
+      return { x * scalar, y * scalar };
+   }
 };
 
 struct v3float_t
