@@ -644,10 +644,8 @@ static void P_findSectorNeighborsViaSurfacePortal(const sector_t &source, const 
             {
                // Now also check intersection
                // Need to shorten them a bit to clear out edge cases
-               nudge = v2fixed_t{ line->dx, line->dy }.fixedDiv(P_AproxDistance(line->dx, line->dy))
-                     / (1 << (FRACBITS - 8));
-               ov[0] = v2fixed_t{ line->v1->x, line->v1->y } - delta + nudge;
-               ov[1] = v2fixed_t{ line->v2->x, line->v2->y } - delta - nudge;
+               ov[0] = v2fixed_t{ line->v1->x, line->v1->y } - delta;
+               ov[1] = v2fixed_t{ line->v2->x, line->v2->y } - delta;
                if(P_SegmentIntersectsSector(ov[0], ov[1], ctx.source))
                   for(int i = 0; i < 2; ++i)
                   {

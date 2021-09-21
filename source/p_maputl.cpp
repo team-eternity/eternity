@@ -994,52 +994,67 @@ v2fixed_t P_GetSafeLineNormal(const line_t &line)
 
 //
 // True if two segments strictly intersect, without the point being on top of each segment.         
-// This uses an epsilon of 1/256
+// This uses an epsilon of 1/256.
+// 
+// Arguments are intentionally copied
 //
-static bool P_segmentsStrictlyIntersect(const divline_t &dl1, const divline_t &dl2)
+static bool P_segmentsStrictlyIntersect(divline_t dl1, divline_t dl2)
 {
    if(!dl1.dv || !dl2.dv)
       return false;  // no degenerate lines allowed
 
-   fixed_t box[2][4];
-   box[0][BOXLEFT] = emin(dl1.x, dl1.x + dl1.dx);
-   box[0][BOXBOTTOM] = emin(dl1.y, dl1.y + dl1.dy);
-   box[0][BOXRIGHT] = emax(dl1.x, dl1.x + dl1.dx);
-   box[0][BOXTOP] = emax(dl1.y, dl1.y + dl1.dy);
-   box[1][BOXLEFT] = emin(dl2.x, dl2.x + dl2.dx);
-   box[1][BOXBOTTOM] = emin(dl2.y, dl2.y + dl2.dy);
-   box[1][BOXRIGHT] = emax(dl2.x, dl2.x + dl2.dx);
-   box[1][BOXTOP] = emax(dl2.y, dl2.y + dl2.dy);
-
-   if((!dl1.dx && !dl2.dx) || (!dl1.dy && !dl2.dy) || // Disregard any parallel or colinear segments
-      box[0][BOXLEFT] >= box[1][BOXRIGHT] || box[0][BOXBOTTOM] >= box[1][BOXTOP] || // can't touch
-      box[1][BOXLEFT] >= box[0][BOXRIGHT] || box[1][BOXBOTTOM] >= box[0][BOXTOP])   // either
-   {
+   // Block any colinear or parallel lines
+   if((!dl1.dx && !dl2.dx) || (!dl1.dy && !dl2.dy))
       return false;
-   }
 
-   if(!dl1.dx && !dl2.dy)  // |-
-   {
-      // Strictly over
-      return dl1.x > box[1][BOXLEFT] && dl1.x < box[1][BOXRIGHT] &&
-         dl2.y > box[0][BOXBOTTOM] && dl2.y < box[0][BOXTOP];
-   }
-   if(!dl1.dy && !dl2.dx)  // -|
-   {
-      return dl2.x > box[0][BOXLEFT] && dl2.x < box[0][BOXRIGHT] &&
-         dl1.y > box[1][BOXBOTTOM] && dl1.y < box[1][BOXTOP];
-   }
-   // Now one is diagonal
+   // Now we're left with concurrent lines.
 
    fixed_t len1 = P_AproxDistance(dl1.dv);
    fixed_t len2 = P_AproxDistance(dl2.dv);
-   v2fixed_t dirnudge1 = dl1.dv.fixedDiv(len1) / (1 << (FRACBITS - 8));
-   v2fixed_t dirnudge2 = dl2.dv.fixedDiv(len2) / (1 << (FRACBITS - 8));
-   v2fixed_t nornudge1 = { dirnudge1.y, -dirnudge1.x };
-   v2fixed_t nornudge2 = { dirnudge2.y, -dirnudge2.x };
+   v2fixed_t nudge1 = dl1.dv.fixedDiv(len1) / (1 << (FRACBITS - 8));
+   v2fixed_t nudge2 = dl2.dv.fixedDiv(len2) / (1 << (FRACBITS - 8));
 
-   // TODO: determine intersection here, covering the best ground
+   // Now reduce the lines to make sure they don't intersect if barely touching
+   dl1.v += nudge1;
+   dl1.dv -= nudge1 * 2;
+   dl2.v += nudge2;
+   dl2.dv -= nudge2 * 2;
 
+   int side1 = P_PointOnDivlineSidePrecise(dl1.x, dl1.y, &dl2);
+   int side2 = P_PointOnDivlineSidePrecise(dl1.x + dl1.dx, dl1.y + dl1.dy, &dl2);
+   if(side1 == side2)
+      return false;
+
+   side1 = P_PointOnDivlineSidePrecise(dl2.x, dl2.y, &dl1);
+   side2 = P_PointOnDivlineSidePrecise(dl2.x + dl2.dx, dl2.y + dl2.dy, &dl1);
+   if(side1 != side2)
+   {
+      // Possibly intersecting. But they may still be overlapping diagonal lines, so let's nudge one
+      // a bit and see if it still intersects. Pick the longer line to nudge and measure the shorter
+      // one against that.
+
+      divline_t *tonudge;
+      const divline_t *tocheck;
+      if(len2 > len1)
+      {
+         tonudge = &dl2;
+         nudge1 = { nudge2.y, -nudge2.x };
+         tocheck = &dl1;
+      }
+      else
+      {
+         tonudge = &dl1;
+         nudge1 = { nudge1.y, -nudge1.x };
+         tocheck = &dl2;
+      }
+
+      tonudge->v += nudge1;
+      
+      side1 = P_PointOnDivlineSidePrecise(tocheck->x, tocheck->y, tonudge);
+      side2 = P_PointOnDivlineSidePrecise(tocheck->x + tocheck->dx, tocheck->y + tocheck->dy, 
+                                          tonudge);
+      return side1 != side2;
+   }
    return false;
 }
 
@@ -1063,23 +1078,9 @@ bool P_SegmentIntersectsSector(v2fixed_t v1, v2fixed_t v2, const sector_t &secto
       // We need to send the extremities into the linedef to prevent edge uncertainties
       divline_t sectordl;
       P_MakeDivline(&line, &sectordl);
-      v2fixed_t nudge = sectordl.dv.fixedDiv(P_AproxDistance(sectordl.dv)) / (1 << (FRACBITS - 8));
-      sectordl.v += nudge;
-      sectordl.dv -= nudge * 2;
-      nudge = P_GetSafeLineNormal(line) / (1 << (FRACBITS - 8));
-      if(line.frontsector == &sector)
-         sectordl.v += nudge;
-      else
-         sectordl.v -= nudge;
-      int side1 = P_PointOnDivlineSidePrecise(v1.x, v1.y, &sectordl);
-      int side2 = P_PointOnDivlineSidePrecise(v2.x, v2.y, &sectordl);
-      if(side1 == side2)
-         continue;
-      // Crossing. Now check the sector's line against our line
-      side1 = P_PointOnDivlineSidePrecise(sectordl.x, sectordl.y, &dl);
-      side2 = P_PointOnDivlineSidePrecise(sectordl.x + sectordl.dx, sectordl.y + sectordl.dy, &dl);
-      if(side1 != side2)   // got it, there's an intersection
-         return true;
+
+      if(P_segmentsStrictlyIntersect(dl, sectordl))
+         return true;   // found one
    }
    return false;
 }
