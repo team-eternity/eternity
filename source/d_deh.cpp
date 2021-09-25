@@ -421,6 +421,9 @@ enum dehstateid_e : int
    dehstateid_args3,
    dehstateid_args4,
    dehstateid_args5,
+   dehstateid_args6,
+   dehstateid_args7,
+   dehstateid_args8,
    NUMDEHSTATEIDS
 };
 
@@ -440,6 +443,9 @@ static constexpr const char *deh_state[NUMDEHSTATEIDS] =
   "Args3",
   "Args4",
   "Args5",
+  "Args6",
+  "Args7",
+  "Args8",
 };
 
 // SFXINFO_STRUCT - Dehacked block name = "Sounds"
@@ -1255,6 +1261,9 @@ static void deh_procFrame(DWFILE *fpin, char *line)
       case dehstateid_args3: // Args3
       case dehstateid_args4: // Args4
       case dehstateid_args5: // Args5
+      case dehstateid_args6: // Args6
+      case dehstateid_args7: // Args7
+      case dehstateid_args8: // Args8
       {
          const int argIndex = dehstateid - dehstateid_args1;
          deh_LogPrintf(" - args[%d] = %ld\n", argIndex, value);
