@@ -1772,11 +1772,6 @@ void Mobj::serialize(SaveArchive &arc)
       // Basic serializable pointers (state, player)
       arc << state->index;
       temp = static_cast<unsigned>(player ? player - players + 1 : 0);
-      if(arc.saveVersion() >= 7)
-      {
-         auto statename = qstring(state->name);
-         arc.archiveCachedString(statename);
-      }
       arc << temp;
 
       // Pointers to other mobjs
@@ -1797,17 +1792,6 @@ void Mobj::serialize(SaveArchive &arc)
       {
          C_Printf("Mobj::serialize: invalid state %d\n", temp);
          temp = NullStateNum;
-      }
-      if(arc.saveVersion() >= 7)
-      {
-         qstring statename;
-         arc.archiveCachedString(statename);
-         if(statename.strCaseCmp(states[temp]->name)) // name mismatch. Fix it.
-         {
-            temp = E_StateNumForNameIncludingDecorate(statename.constPtr());
-            C_Printf("Mobj::serialize: corrected state %s to index %d\n",
-                     statename.constPtr(), temp);
-         }
       }
       state = states[temp];
       
