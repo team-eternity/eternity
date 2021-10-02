@@ -254,8 +254,19 @@ void FloorMoveThinker::serialize(SaveArchive &arc)
 {
    Super::serialize(arc);
 
-   arc << type << crush << direction << special << texture 
-       << floordestheight << speed << resetTime << resetHeight
+   arc << type << crush << direction << special;
+   if(arc.saveVersion() >= 7)
+   {
+      qstring fieldname;
+      if(arc.isSaving())
+         fieldname = texture == -1 ? "{no flat}" : textures[texture]->name;
+      arc.archiveCachedString(fieldname);
+      if(arc.isLoading())
+         texture = fieldname == "{no flat}" ? -1 : R_FindFlat(fieldname.constPtr());
+   }
+   else
+      arc << texture;
+   arc << floordestheight << speed << resetTime << resetHeight
        << stepRaiseTime << delayTime << delayTimer;
 }
 
