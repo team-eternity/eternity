@@ -1653,16 +1653,16 @@ void Mobj::serialize(SaveArchive &arc)
    Super::serialize(arc);
 
    // Basic Properties
+   qstring fieldname;
 
    // Identity
    if(arc.saveVersion() >= 7)
    {
-      qstring mobjname;
       if(arc.isSaving())
-         mobjname = info->name;
-      arc.archiveCachedString(mobjname);
+         fieldname = info->name;
+      arc.archiveCachedString(fieldname);
       if(arc.isLoading())
-         type = E_SafeThingName(mobjname.constPtr());
+         type = E_SafeThingName(fieldname.constPtr());
    }
    else
       arc << type;
