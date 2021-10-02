@@ -101,6 +101,7 @@ int map_secret_after;
 // haleyjd 05/17/08: ability to draw node lines on map
 static bool am_drawnodelines;
 static bool am_dynasegs_bysubsec;
+static bool am_drawsegs;
 
 // haleyjd 07/07/04: removed key_map* variables
 
@@ -1944,6 +1945,23 @@ static void AM_drawNodeLines()
 }
 
 //
+// Draw regular BSP segs. Needed for BSP debugging.
+//
+static void AM_drawSegs()
+{
+   mline_t l;
+   for(int i = 0; i < numsegs; ++i)
+   {
+      const seg_t &seg = segs[i];
+      l.a.x = seg.v1->fx;
+      l.a.y = seg.v1->fy;
+      l.b.x = seg.v2->fx;
+      l.b.y = seg.v2->fy;
+      AM_drawMline(&l, mapcolor_frnd);
+   }
+}
+
+//
 // AM_drawDynaSegs
 //
 // haleyjd 05/04/13: experimental debug code to display dynasegs.
@@ -2403,6 +2421,10 @@ void AM_Drawer()
       AM_drawNodeLines();
       AM_drawDynaSegs();
    }
+   if(am_drawsegs)
+   {
+      AM_drawSegs();
+   }
 
    AM_drawPlayers();
    
@@ -2423,6 +2445,9 @@ CONSOLE_VARIABLE(am_drawnodelines, am_drawnodelines, 0) {}
 
 VARIABLE_TOGGLE(am_dynasegs_bysubsec, nullptr, yesno);
 CONSOLE_VARIABLE(am_dynasegs_bysubsec, am_dynasegs_bysubsec, 0) {}
+
+VARIABLE_TOGGLE(am_drawsegs, nullptr, onoff);
+CONSOLE_VARIABLE(am_drawsegs, am_drawsegs, 0) {}
 
 //----------------------------------------------------------------------------
 //

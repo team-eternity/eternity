@@ -619,7 +619,9 @@ bool P_GivePower(player_t *player, int power, int duration, bool additiveTime)
    }
 
    // Unless player has infinite duration cheat, set duration (killough)
-   if(player->powers[power] >= 0)
+   // We want to always set duration if the powerup is berserk, since it counts up
+   // FIXME: Infinite duration must be tracked some other way
+   if(player->powers[power] >= 0 || power == pw_strength)
       player->powers[power] = additiveTime ? players->powers[power] + duration : duration;
 
    return true;
@@ -665,7 +667,9 @@ bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
       return false;
 
    // Unless player has infinite duration cheat, set duration (MaxW stolen from killough)
-   if(player->powers[powerNum] >= 0)
+   // We want to always set duration if the powerup is berserk, since it counts up
+   // FIXME: Infinite duration must be tracked some other way
+   if(player->powers[powerNum] >= 0 || powerNum == pw_strength)
    {
       int duration = power->getInt("duration", 0);
       if(power->getInt("permanent", 0))

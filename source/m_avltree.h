@@ -183,17 +183,15 @@ public:
             else
             {
                avlnode_t *minnode, *minparent;
+
                // Two child nodes
-               if(onleft || !prev)
-               {
-                  minnode    = minimumNode(node, &minparent);
+               minnode = minimumNode(node, &minparent);
+               if(!prev)
+                  root = minnode;
+               else if(onleft)
                   prev->left = minnode;
-               }
                else
-               {
-                  minnode     = minimumNode(node, &minparent);
                   prev->right = minnode;
-               }
 
                // TODO: Is this correct?
                if(minparent != nullptr)

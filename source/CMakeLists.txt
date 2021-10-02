@@ -409,6 +409,7 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/m_fcvt.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/m_fixed.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/m_hash.h"
+      "${CMAKE_CURRENT_SOURCE_DIR}/m_intmap.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/m_misc.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/m_qstr.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/m_qstrkeys.h"
@@ -429,6 +430,7 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/m_debug.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/m_fcvt.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/m_hash.cpp"
+      "${CMAKE_CURRENT_SOURCE_DIR}/m_intmap.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/m_misc.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/m_qstr.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/m_queue.cpp"
@@ -763,6 +765,10 @@ target_link_libraries(eternity ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY} ${SDL2_NET_
 
 if(APPLE)
    eternity_set_mac_library_output()
+   # Fix the lookup to the SDL2 frameworks
+   set_target_properties(eternity PROPERTIES LINK_FLAGS "-Wl,-F${CMAKE_BINARY_DIR}")
+   set_target_properties(eternity PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE
+                                             INSTALL_RPATH "@loader_path")
 endif()
 
 if(OPENGL_LIBRARY)

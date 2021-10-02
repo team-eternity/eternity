@@ -98,7 +98,8 @@
 #include "xl_emapinfo.h"
 
 // haleyjd: new demo format stuff
-static char     eedemosig[] = "ETERN";
+static constexpr const char eedemosig[] = "ETERN";
+static constexpr const char prdemosig[] = "PR+UM";
 
 //static size_t   savegamesize = SAVEGAMESIZE; // killough
 static char    *demoname;
@@ -1221,27 +1222,41 @@ static byte *G_ReadDemoHeader(byte *demo_p)
       if(demo_version == 255 && !strncmp((const char *)demo_p, eedemosig, 5))
       {
          int temp;
-         
+
          demo_p += 6; // increment past signature
-         
+
          // reconstruct full version number and reset it
          temp  =        *demo_p++;         // byte one
          temp |= ((int)(*demo_p++)) <<  8; // byte two
          temp |= ((int)(*demo_p++)) << 16; // byte three
          temp |= ((int)(*demo_p++)) << 24; // byte four
          demo_version = demover = temp;
-         
+
          // get subversion
          demo_subversion = *demo_p++;
+      }
+      else if(demo_version == 255 && !strncmp((const char *)demo_p, prdemosig, 5))
+      {
+         // TODO: Support in future
+         if(singledemo)
+            I_Error("G_ReadDemoHeader: PRBoom+UMAPINFO demo format not currently supported\n");
+         else
+         {
+            C_Printf(FC_ERROR "PRBoom+UMAPINFO demo format not currently supported\n");
+            gameaction = ga_nothing;
+            Z_ChangeTag(demobuffer, PU_CACHE);
+            D_AdvanceDemo();
+         }
+         return nullptr;
       }
       else
       {
          demo_p += 6; // increment past signature
-         
+
          // subversion is always 0 for demo versions < 329
          demo_subversion = 0;
       }
-      
+
       compatibility = *demo_p++;       // load old compatibility flag
       skill = (skill_t)(*demo_p++);
       episode = *demo_p++;
@@ -2962,14 +2977,16 @@ void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, WadDirectory 
 }
 
 // killough 7/19/98: Marine's best friend :)
-static int G_GetHelpers()
+static int G_getHelpers()
 {
-   int j = M_CheckParm ("-dog");
-   
-   if(!j)
-      j = M_CheckParm ("-dogs");
+   if(M_CheckParm("-dog"))
+      return 1;
 
-   return j ? ((j+1 < myargc) ? atoi(myargv[j+1]) : 1) : default_dogs;
+   const int j = M_CheckParm("-dogs");
+   if(j != 0 && j + 1 < myargc)
+      return atoi(myargv[j + 1]);
+   else
+      return default_dogs;
 }
 
 // killough 3/1/98: function to reload all the default parameter
@@ -2991,9 +3008,9 @@ void G_ReloadDefaults()
    
    monster_infighting = default_monster_infighting; // killough 7/19/98
    
-   // dogs = netgame ? 0 : G_GetHelpers();             // killough 7/19/98
+   // dogs = netgame ? 0 : G_getHelpers();             // killough 7/19/98
    if(GameType == gt_single) // haleyjd 04/10/03
-      dogs = G_GetHelpers();
+      dogs = G_getHelpers();
    else
       dogs = 0;
    

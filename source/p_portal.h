@@ -173,8 +173,11 @@ inline fixed_t P_PortalZ(surf_e surf, const sector_t &sector)
 
 // Group mappings
 void P_BuildSectorGroupMappings();
-sector_t **P_GetSectorsWithGroupId(int groupid, int *count);
+const int *P_GetSectorsWithGroupId(int groupid, int *count);
 bool P_PortalLayersByPoly(int groupid1, int groupid2);
+
+const int *P_GetSectorPortalNeighbors(const sector_t &sector, surf_e surf,
+                                      int *count);
 
 #endif
 

@@ -709,8 +709,11 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
    // killough 8/10/98: allow bouncing objects to pass through as missiles
    if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
    {
-      if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
+      if((ld->flags & ML_BLOCKING) ||
+         (mbf21_temp && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
       {
+         // explicitly blocking everything
+         // or blocking player
          bool result = clip.unstuck && !untouched(ld);  // killough 8/1/98: allow escape
 
          // When it's Hexen, keep side 0 even when hitting from backside
@@ -726,8 +729,13 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
 
       // killough 8/9/98: monster-blockers don't affect friends
       // SoM 9/7/02: block monsters standing on 3dmidtex only
-      if(ld->flags & ML_BLOCKMONSTERS && !(ld->flags & ML_3DMIDTEX) &&
-         P_BlockedAsMonster(*clip.thing))
+      // MaxW: Land-monster blockers gotta be factored in, too
+      if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
+         (
+            ld->flags & ML_BLOCKMONSTERS ||
+            (mbf21_temp && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
+         )
+        )
       {
          return false; // block monsters only
       }

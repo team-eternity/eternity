@@ -8,6 +8,26 @@ Since v4.02.00 "Forseti"
 ========================
 
 --------------------------------------------------------------------------------
+18.09.2021
+
+BUGFIX: Fixed a bug where classic format floor and ceiling linked portal
+        specials were wrongly finding the like-tagged edge portal flagged
+        linedef as anchor.
+
+        Fixed problems with noise alert propagation through linked portals.
+
+--------------------------------------------------------------------------------
+11.09.2021
+
+FEATURE: New console variable "am_drawsegs" for displaying the BSP segs in the
+         automap. Useful for debugging BSP.
+
+--------------------------------------------------------------------------------
+07.06.2021
+
+BUGFIX: thinggroup definitions didn't work if they reused thing types! Fixed.
+
+--------------------------------------------------------------------------------
 05.05.2021
 
 BUGFIX: The "chgun" hack apparently hasn't worked for awhile, but nobody was

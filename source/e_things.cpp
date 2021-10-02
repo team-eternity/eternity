@@ -3187,6 +3187,9 @@ void E_ProcessThingGroups(cfg_t *cfg)
       unsigned numtypes = cfg_size(gsec, ITEM_TGROUP_TYPES);
       if(numtypes)
       {
+         // Must reset it
+         memset(visited, 0, zvisited.getSize());
+
          group->types.clear();   // clear it even if thinggroup redefined.
          for(unsigned j = 0; j < numtypes; ++j)
          {

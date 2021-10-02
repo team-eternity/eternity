@@ -1086,8 +1086,8 @@ texture_t *R_CacheTexture(int num)
 //
 static void R_checkerBoardTexture(texture_t *tex)
 {
-   // allocate buffer
-   tex->bufferalloc = emalloctag(byte *, 64*64 + 8, PU_RENDERER, nullptr);
+   // allocate buffer (also allow some slack space _after_ the buffer)
+   tex->bufferalloc = emalloctag(byte *, 64*64 + 16, PU_RENDERER, nullptr);
    tex->bufferdata = tex->bufferalloc + 8;
 
    // allocate column pointers

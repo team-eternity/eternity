@@ -57,6 +57,7 @@
 #include "p_maputl.h"
 #include "p_mobjcol.h"
 #include "p_partcl.h"
+#include "p_portal.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
@@ -90,11 +91,9 @@ static Mobj *current_actor;
 //
 // killough 5/5/98: reformatted, cleaned up
 //
-static void P_RecursiveSound(sector_t *sec, int soundblocks,
+static void P_RecursiveSound(sector_t *sec, const int soundblocks,
                              Mobj *soundtarget)
 {
-   int i;
-   
    // wake up all monsters in this sector
    if(sec->validcount == validcount &&
       sec->soundtraversed <= soundblocks+1)
@@ -104,51 +103,22 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
    sec->soundtraversed = soundblocks+1;
    P_SetTarget<Mobj>(&sec->soundtarget, soundtarget);    // killough 11/98
 
-   if(sec->srf.floor.pflags & PS_PASSSOUND)
+   // Check the floor and ceiling portals
+   for(surf_e surf : SURFS)
    {
-      // Ok, because the same portal can be used on many sectors and even
-      // lines, the portal structure won't tell you what sector is on the
-      // other side of the portal. SO
-      sector_t *other;
-      line_t *check = sec->lines[0];
+      if(!(sec->srf[surf].pflags & PS_PASSSOUND))
+         continue;
 
-      other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + R_FPLink(sec)->delta.x,
-                            ((check->v1->y + check->v2->y) / 2) + R_FPLink(sec)->delta.y)->sector;
-
-      P_RecursiveSound(other, soundblocks, soundtarget);
-   }
-   
-   if(sec->srf.ceiling.pflags & PS_PASSSOUND)
-   {
-      // Ok, because the same portal can be used on many sectors and even 
-      // lines, the portal structure won't tell you what sector is on the 
-      // other side of the portal. SO
-      sector_t *other;
-      line_t *check = sec->lines[0];
-
-      other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + R_CPLink(sec)->delta.x,
-                            ((check->v1->y + check->v2->y) / 2) + R_CPLink(sec)->delta.y)->sector;
-
-      P_RecursiveSound(other, soundblocks, soundtarget);
+      int neighcount;
+      const int *neighlist = P_GetSectorPortalNeighbors(*sec, surf, &neighcount);
+      for(int i = 0; i < neighcount; ++i)
+         P_RecursiveSound(&sectors[neighlist[i]], soundblocks, soundtarget);
    }
 
-   for(i=0; i<sec->linecount; i++)
+   for(int i = 0; i < sec->linecount; i++)
    {
       sector_t *other;
-      line_t *check = sec->lines[i];
-      
-      if(check->pflags & PS_PASSSOUND)
-      {
-         sector_t *iother;
-
-         iother = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + check->portal->data.link.delta.x,
-                            ((check->v1->y + check->v2->y) / 2) + check->portal->data.link.delta.y)->sector;
-
-         P_RecursiveSound(iother, soundblocks, soundtarget);
-      }
+      const line_t *check = sec->lines[i];
       if(!(check->flags & ML_TWOSIDED))
          continue;
 
@@ -156,6 +126,22 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
 
       if(clip.open.range <= 0)
          continue;       // closed door
+
+      // Only for front-facing wall portals
+
+      // NOTE: edge portals don't need any handling, because the sound propagates through the
+      // expanded line opening naturally to the sector behind, after which it can propagate through
+      // the sector portal.
+      if(check->pflags & PS_PASSSOUND && check->frontsector == sec)
+      {
+         v2fixed_t mid = { check->v1->x + check->dx / 2, check->v1->y + check->dy / 2};
+         v2fixed_t nudge = P_GetSafeLineNormal(*check) / (1 << (FRACBITS - 8));
+
+         sector_t *iother = R_PointInSubsector(mid - nudge +
+                                               v2fixed_t(check->portal->data.link.delta))->sector;
+
+         P_RecursiveSound(iother, soundblocks, soundtarget);
+      }
 
       other=sides[check->sidenum[sides[check->sidenum[0]].sector==sec]].sector;
       
