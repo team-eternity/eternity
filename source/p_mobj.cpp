@@ -1710,9 +1710,47 @@ void Mobj::serialize(SaveArchive &arc)
       << movedir << movecount << strafecount               // Movement
       << reactiontime << threshold << pursuecount          // Attack AI
       << lastlook                                          // More AI
-      << gear                                              // Lee's torque
-      // Appearance
-      << colour                                            // Translations
+      << gear;                                             // Lee's torque
+
+   // Appearance
+   // Translations
+   if(arc.saveVersion() >= 7)
+   {
+      if(arc.isSaving())
+      {
+         // IMPORTANT: the internal name must be longer than 8 characters.
+         if(colour <= TRANSLATIONCOLOURS)
+            fieldname.Printf(24, "Internal{%d}", colour);
+         else
+            fieldname = R_TranslationNameForNum(colour);
+      }
+      arc.archiveCachedString(fieldname);
+      if(arc.isLoading())
+      {
+         long index;
+         char *endptr;
+
+         // Check that it's Internal{###} and that ### is entirely a number within range, without
+         // other garbage. If so, use the internal tables
+         if(!fieldname.strNCmp("Internal{", 9) && fieldname.endsWith('}') &&
+            (index = strtol(fieldname.constPtr() + 9, &endptr, 10)) <= TRANSLATIONCOLOURS &&
+            index >= 0 && !*(endptr + 1))
+         {
+            colour = static_cast<int>(index);
+         }
+         else
+         {
+            // Otherwise look for the lump
+            colour = R_TranslationNumForName(fieldname.constPtr());
+            if(colour == -1)
+               colour = 0; // safe default
+         }
+      }
+   }
+   else
+      arc << colour;
+
+   arc
       << translucency << tranmap << alphavelocity          // Alpha blending
       << xscale << yscale                                  // Scaling
       // Inventory related fields
