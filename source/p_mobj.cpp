@@ -1653,9 +1653,22 @@ void Mobj::serialize(SaveArchive &arc)
    Super::serialize(arc);
 
    // Basic Properties
+
+   // Identity
+   if(arc.saveVersion() >= 7)
+   {
+      qstring mobjname;
+      if(arc.isSaving())
+         mobjname = info->name;
+      arc.archiveCachedString(mobjname);
+      if(arc.isLoading())
+         type = E_SafeThingName(mobjname.constPtr());
+   }
+   else
+      arc << type;
+
    arc 
-      // Identity
-      << type << tid
+      << tid
       // Position
       << angle                                             // Angles
       << momx << momy << momz                              // Momenta
@@ -1689,14 +1702,6 @@ void Mobj::serialize(SaveArchive &arc)
 
    if(arc.saveVersion() >= 2)
       arc << flags5;
-
-   qstring mobjname;
-   if(arc.saveVersion() >= 7)
-   {
-      if(arc.isSaving())
-         mobjname = info->name;
-      arc.archiveCachedString(mobjname);   // use name later when loading
-   }
 
    // Arrays
    P_ArchiveArray<int>(arc, counters, NUMMOBJCOUNTERS); // Counters
@@ -1754,23 +1759,6 @@ void Mobj::serialize(SaveArchive &arc)
       {
          C_Printf("Mobj::serialize: invalid type %d\n", type);
          type = UnknownThingType;
-      }
-      // check if the type shifted between save games and correct to match the loaded name
-      if(arc.saveVersion() >= 7 && mobjname.strCaseCmp(mobjinfo[type]->name))
-      {
-         // We have a mismatched thing type to thing name, so correct it
-         temp = E_SafeThingName(mobjname.constPtr());
-         if(temp != UnknownThingType)
-         {
-            C_Printf("Mobj::serialize: corrected %s from type %d to %d\n", mobjname.constPtr(),
-                     type, temp);
-         }
-         else
-         {
-            C_Printf("Mobj::serialize: invalid correction of type %d to %s\n", type,
-                     mobjname.constPtr());
-         }
-         type = temp;
       }
       info = mobjinfo[type];
 
