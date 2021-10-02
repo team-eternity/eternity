@@ -76,6 +76,7 @@
 #include "st_stuff.h"
 #include "v_misc.h"
 #include "v_video.h"
+#include "w_wad.h"
 
 // Local constants (ioanch)
 // Bounding box distance to avoid and get away from edge portals
@@ -1750,8 +1751,21 @@ void Mobj::serialize(SaveArchive &arc)
    else
       arc << colour;
 
+   // Alpha blending
    arc
-      << translucency << tranmap << alphavelocity          // Alpha blending
+      << translucency;
+   if(arc.saveVersion() >= 7)
+   {
+      if(arc.isSaving())
+         fieldname = tranmap >= 0 ? wGlobalDir.getLumpName(tranmap) : "none";
+      arc.archiveCachedString(fieldname);
+      if(arc.isLoading())
+         tranmap = fieldname == "none" ? -1 : W_CheckNumForName(fieldname.constPtr());
+   }
+   else
+      arc << tranmap;
+
+   arc << alphavelocity
       << xscale << yscale                                  // Scaling
       // Inventory related fields
       << dropamount
