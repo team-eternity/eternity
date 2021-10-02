@@ -1979,6 +1979,32 @@ static bool E_checkPrincipalSemantics(const char *firststate)
 }
 
 //
+// Find the next Decorate state name index for this owner. Returns 0 for the first such state.
+//
+static int E_getNextDecorateStateIndex(const char *owner, int prevNumStates)
+{
+   qstring firstname;
+   size_t len = strlen(owner) + 16;
+   firstname.Printf(len, "{%s 0}", owner);
+   int alreadystate = E_StateNumForNameOnlyDecorate(firstname.constPtr());
+
+   if(alreadystate != -1)  // we already have a state, so find the last offset
+   {
+      // Look backwards and find the last owner name
+      for(int i = prevNumStates - 1; i >= alreadystate; --i)
+      {
+         const char *substring = M_StrCaseStr(states[i]->name, owner);
+         if(substring)
+         {
+            substring += strlen(owner);   // go past the word
+            return atoi(substring) + 1; // and convert the number
+         }
+      }
+   }
+   return 0;
+}
+
+//
 // E_DecoratePrincipals
 //
 // Counts and allocates labels, states, etc.
@@ -2029,29 +2055,10 @@ static edecstateout_t *E_DecoratePrincipals(const char *owner, const char *input
          // Initialize states
 
          // Determine the next number to start from
-         int offset = 0;
+         int offset = E_getNextDecorateStateIndex(owner, prevNumStates);
 
          // IMPORTANT: this must contain the full buffer of {<name> -##########}
-         size_t len = strlen(owner) + 16; 
-
-         qstring firstname;
-         firstname.Printf(len, "{%s 0}", owner);
-         int alreadystate = E_StateNumForNameOnlyDecorate(firstname.constPtr());
-
-         if(alreadystate != -1)  // we already have a state, so find the last offset
-         {
-            // Look backwards and find the last owner name
-            for(int i = prevNumStates - 1; i >= alreadystate; --i)
-            {
-               const char *substring = M_StrCaseStr(states[i]->name, owner);
-               if(substring)
-               {
-                  substring += strlen(owner);   // go past the word
-                  offset = atoi(substring) + 1; // and convert the number
-                  break;                        // we're done
-               }
-            }
-         }
+         size_t len = strlen(owner) + 16;
 
          for(int i = DSP.firststate; i < NUMSTATES; i++)
          {
