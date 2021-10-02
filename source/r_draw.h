@@ -146,6 +146,7 @@ void R_InitTranslationTables();
 
 // haleyjd 09/13/09: translation num-for-name lookup function
 int R_TranslationNumForName(const char *name);
+const char *R_TranslationNameForNum(int num);
 
 // haleyjd: 09/08/12: global identity translation map
 byte *R_GetIdentityMap();

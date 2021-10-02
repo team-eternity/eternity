@@ -1143,6 +1143,21 @@ int R_TranslationNumForName(const char *name)
 }
 
 //
+// Get the name from a given number of "mobjinfo colour". Returns nullptr if not found.
+//
+const char *R_TranslationNameForNum(int num)
+{
+   if(num <= TRANSLATIONCOLOURS)
+      return nullptr;
+   num -= TRANSLATIONCOLOURS + 1;
+   const WadDirectory::namespace_t &ns = wGlobalDir.getNamespace(lumpinfo_t::ns_translations);
+   if(num >= ns.numLumps)
+      return nullptr;
+   num += ns.firstLump;
+   return wGlobalDir.getLumpName(num);
+}
+
+//
 // R_GetIdentityMap
 //
 // haleyjd 09/08/12: Returns a pointer to the identity translation.
