@@ -32,10 +32,12 @@
 #include "d_mod.h"
 #include "doomdef.h"
 #include "doomstat.h"
+#include "e_edf.h"
 #include "e_exdata.h"
 #include "e_inventory.h"
 #include "e_player.h"
 #include "e_puff.h"
+#include "e_sprite.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
@@ -1682,9 +1684,27 @@ void Mobj::serialize(SaveArchive &arc)
       << effects                                           // Particle flags
       << intflags                                          // Internal flags
       // Basic metrics (copied to Mobj from mobjinfo)
-      << radius << height << health << damage
-      // State info (copied to Mobj from state)
-      << sprite << frame << tics
+      << radius << height << health << damage;
+
+   // State info (copied to Mobj from state)
+   // sprite
+   if(arc.saveVersion() >= 7)
+   {
+      if(arc.isSaving())
+         fieldname = sprnames[sprite];
+      arc.archiveCachedString(fieldname);
+      if(arc.isLoading())
+      {
+         sprite = E_SpriteNumForName(fieldname.constPtr());
+         if(sprite == -1)
+            sprite = blankSpriteNum;
+      }
+   }
+   else
+      arc << sprite;
+
+   arc
+      << frame << tics
       // Movement logic and clipping
       << validcount                                        // Traversals
       << movedir << movecount << strafecount               // Movement
