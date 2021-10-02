@@ -1784,7 +1784,13 @@ void Mobj::serialize(SaveArchive &arc)
       unsigned int temp, targetNum, tracerNum, enemyNum;
 
       // Basic serializable pointers (state, player)
-      arc << state->index;
+      if(arc.saveVersion() >= 7)
+      {
+         fieldname = state->name;
+         arc.archiveCachedString(fieldname);
+      }
+      else
+         arc << state->index;
       temp = static_cast<unsigned>(player ? player - players + 1 : 0);
       arc << temp;
 
@@ -1801,11 +1807,21 @@ void Mobj::serialize(SaveArchive &arc)
       // Restore basic pointers
       int temp;
 
-      arc << temp; // State index
-      if(temp < 0 || temp >= NUMSTATES)
+      if(arc.saveVersion() >= 7)
       {
-         C_Printf("Mobj::serialize: invalid state %d\n", temp);
-         temp = NullStateNum;
+         arc.archiveCachedString(fieldname);
+         temp = E_StateNumForNameIncludingDecorate(fieldname.constPtr());
+         if(temp == -1)
+            temp = NullStateNum;
+      }
+      else
+      {
+         arc << temp; // State index
+         if(temp < 0 || temp >= NUMSTATES)
+         {
+            C_Printf("Mobj::serialize: invalid state %d\n", temp);
+            temp = NullStateNum;
+         }
       }
       state = states[temp];
       
