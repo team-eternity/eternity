@@ -173,6 +173,42 @@ void Archive_MobjType(SaveArchive &arc, mobjtype_t &type)
 }
 
 //
+// Save PSprite state
+//
+void Archive_PSpriteState_Save(SaveArchive &arc, const state_t *state)
+{
+   assert(arc.isSaving());
+   int statenum = state ? state->index : -1;
+   assert(statenum == -1 || (statenum >= 0 && statenum < NUMSTATES));
+   if(arc.saveVersion() >= 7)
+   {
+      qstring fieldname;
+      fieldname = statenum == -1 ? "no state" RAT : states[statenum]->name;
+      arc.archiveCachedString(fieldname);
+   }
+   else
+      arc << statenum;
+}
+
+//
+// Load PSprite state
+//
+state_t *Archive_PSpriteState_Load(SaveArchive &arc)
+{
+   assert(arc.isLoading());
+   int statenum;
+   if(arc.saveVersion() >= 7)
+   {
+      qstring fieldname;
+      arc.archiveCachedString(fieldname);
+      statenum = E_StateNumForNameIncludingDecorate(fieldname.constPtr());
+   }
+   else
+      arc << statenum;
+   return statenum < 0 || statenum >= NUMSTATES ? nullptr : states[statenum];
+}
+
+//
 // Sprite
 //
 void Archive_SpriteNum(SaveArchive &arc, spritenum_t &sprite)

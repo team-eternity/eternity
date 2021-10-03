@@ -51,6 +51,7 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "p_saveg.h"
+#include "p_saveid.h"
 #include "p_enemy.h"
 #include "p_xenemy.h"
 #include "p_portal.h"
@@ -586,18 +587,10 @@ static void P_ArchivePSprite(SaveArchive &arc, pspdef_t &pspr)
       arc << pspr.renderpos.x << pspr.renderpos.y;
 
    if(arc.isSaving())
-   {
-      int statenum = pspr.state ? pspr.state->index : -1;
-      arc << statenum;
-   }
+      Archive_PSpriteState_Save(arc, pspr.state);
    else
    {
-      int statenum = -1;
-      arc << statenum;
-      if(statenum != -1) // TODO: bounds-check!
-         pspr.state = states[statenum];
-      else
-         pspr.state = nullptr;
+      pspr.state = Archive_PSpriteState_Load(arc);
       pspr.backupPosition();
    }
 }
