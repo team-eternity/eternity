@@ -30,6 +30,7 @@
 #include "e_things.h"
 #include "p_saveg.h"
 #include "p_saveid.h"
+#include "r_data.h"
 #include "r_draw.h"
 #include "w_wad.h"
 
@@ -77,6 +78,24 @@ void Archive_ColorTranslation(SaveArchive &arc, int &colour)
    }
    else
       arc << colour;
+}
+
+//
+// Archive a floor/ceiling texture
+//
+void Archive_Flat(SaveArchive &arc, int16_t &flat)
+{
+   if(arc.saveVersion() >= 7)
+   {
+      qstring fieldname;
+      if(arc.isSaving())
+         fieldname = flat == -1 ? "{no flat}" : textures[flat]->name;
+      arc.archiveCachedString(fieldname);
+      if(arc.isLoading())
+         flat = fieldname == "{no flat}" ? -1 : R_FindFlat(fieldname.constPtr());
+   }
+   else
+      arc << flat;
 }
 
 //

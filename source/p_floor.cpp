@@ -34,6 +34,7 @@
 #include "p_map.h"
 #include "p_portal.h"
 #include "p_saveg.h"
+#include "p_saveid.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "s_sound.h"
@@ -255,17 +256,7 @@ void FloorMoveThinker::serialize(SaveArchive &arc)
    Super::serialize(arc);
 
    arc << type << crush << direction << special;
-   if(arc.saveVersion() >= 7)
-   {
-      qstring fieldname;
-      if(arc.isSaving())
-         fieldname = texture == -1 ? "{no flat}" : textures[texture]->name;
-      arc.archiveCachedString(fieldname);
-      if(arc.isLoading())
-         texture = fieldname == "{no flat}" ? -1 : R_FindFlat(fieldname.constPtr());
-   }
-   else
-      arc << texture;
+   Archive_Flat(arc, texture);
    arc << floordestheight << speed << resetTime << resetHeight
        << stepRaiseTime << delayTime << delayTimer;
 }
