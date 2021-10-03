@@ -39,7 +39,7 @@ enum
 //
 // Archive colo(u)r translation from the 256-byte T_START/T_END tables
 //
-void Archive_ColorTranslation(SaveArchive &arc, int colour)
+void Archive_ColorTranslation(SaveArchive &arc, int &colour)
 {
    if(arc.saveVersion() >= VER)
    {
@@ -122,7 +122,7 @@ void Archive_SpriteNum(SaveArchive &arc, spritenum_t &sprite)
 //
 // Archive 256x256 translucency map reference
 //
-void Archive_TranslucencyMap(SaveArchive &arc, int tranmap)
+void Archive_TranslucencyMap(SaveArchive &arc, int &tranmap)
 {
    if(arc.saveVersion() >= VER)
    {
