@@ -33,6 +33,8 @@ class SaveArchive;
 // on playsim.
 
 void Archive_ColorTranslation(SaveArchive &arc, int &colour);
+void Archive_MobjState_Save(SaveArchive &arc, const state_t &state);
+state_t &Archive_MobjState_Load(SaveArchive &arc);
 void Archive_MobjType(SaveArchive &arc, mobjtype_t &type);
 void Archive_SpriteNum(SaveArchive &arc, spritenum_t &sprite);
 void Archive_TranslucencyMap(SaveArchive &arc, int &tranmap);

@@ -1713,20 +1713,15 @@ void Mobj::serialize(SaveArchive &arc)
 
    // Arrays
    P_ArchiveArray<int>(arc, counters, NUMMOBJCOUNTERS); // Counters
-   P_ArchiveArray<int>(arc, args,     NUMMTARGS);       // Arguments 
+   P_ArchiveArray<int>(arc, args,     NUMMTARGS);       // Arguments
 
    if(arc.isSaving()) // Saving
    {
       unsigned int temp, targetNum, tracerNum, enemyNum;
 
       // Basic serializable pointers (state, player)
-      if(arc.saveVersion() >= 7)
-      {
-         fieldname = state->name;
-         arc.archiveCachedString(fieldname);
-      }
-      else
-         arc << state->index;
+      Archive_MobjState_Save(arc, *state);
+      
       temp = static_cast<unsigned>(player ? player - players + 1 : 0);
       arc << temp;
 
@@ -1743,24 +1738,8 @@ void Mobj::serialize(SaveArchive &arc)
       // Restore basic pointers
       int temp;
 
-      if(arc.saveVersion() >= 7)
-      {
-         arc.archiveCachedString(fieldname);
-         temp = E_StateNumForNameIncludingDecorate(fieldname.constPtr());
-         if(temp == -1)
-            temp = NullStateNum;
-      }
-      else
-      {
-         arc << temp; // State index
-         if(temp < 0 || temp >= NUMSTATES)
-         {
-            C_Printf("Mobj::serialize: invalid state %d\n", temp);
-            temp = NullStateNum;
-         }
-      }
-      state = states[temp];
-      
+      state = &Archive_MobjState_Load(arc);
+
       // haleyjd 07/23/09: this must be before skin setting!
       // Check bounds
       if(type < 0 || type >= NUMMOBJTYPES)

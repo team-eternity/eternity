@@ -22,9 +22,11 @@
 // Authors: Ioan Chera
 //
 
+#include <assert.h>
 #include "z_zone.h"
 #include "e_edf.h"
 #include "e_sprite.h"
+#include "e_states.h"
 #include "e_things.h"
 #include "p_saveg.h"
 #include "p_saveid.h"
@@ -75,6 +77,45 @@ void Archive_ColorTranslation(SaveArchive &arc, int &colour)
    }
    else
       arc << colour;
+}
+
+//
+// Save the mobj state
+//
+void Archive_MobjState_Save(SaveArchive &arc, const state_t &state)
+{
+   assert(arc.isSaving());
+   if(arc.saveVersion() >= 7)
+   {
+      qstring fieldname;
+      fieldname = state.name;
+      arc.archiveCachedString(fieldname);
+   }
+   else
+   {
+      statenum_t index = state.index;
+      arc << index;
+   }
+}
+
+//
+// Load the mobj state
+//
+state_t &Archive_MobjState_Load(SaveArchive &arc)
+{
+   int temp;
+   assert(arc.isLoading());
+   if(arc.saveVersion() >= 7)
+   {
+      qstring fieldname;
+      arc.archiveCachedString(fieldname);
+      temp = E_StateNumForNameIncludingDecorate(fieldname.constPtr());
+   }
+   else
+      arc << temp;
+   if(temp < 0 || temp >= NUMSTATES)
+      temp = NullStateNum;
+   return *states[temp];
 }
 
 //
