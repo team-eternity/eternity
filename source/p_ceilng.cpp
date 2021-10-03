@@ -29,6 +29,7 @@
 #include "r_main.h"
 #include "p_info.h"
 #include "p_saveg.h"
+#include "p_saveid.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "r_data.h"
@@ -317,9 +318,9 @@ void CeilingThinker::serialize(SaveArchive &arc)
 {
    Super::serialize(arc);
 
-   arc << type << bottomheight << topheight << speed << oldspeed
-       << crush << special << texture << direction << inStasis << tag 
-       << olddirection;
+   arc << type << bottomheight << topheight << speed << oldspeed << crush << special;
+   Archive_Flat(arc, texture);
+   arc << direction << inStasis << tag << olddirection;
 
    if((arc.saveVersion() >= 3))
       arc << upspeed << crushflags;
