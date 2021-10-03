@@ -38,6 +38,7 @@
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_saveg.h"
+#include "p_saveid.h"
 #include "p_setup.h"
 #include "p_things.h"
 #include "a_small.h"
@@ -561,7 +562,7 @@ void LevelActionThinker::serialize(SaveArchive &arc)
 {
    Super::serialize(arc);
    arc << special;
-   arc << mobjtype;
+   Archive_MobjType(arc, mobjtype);
    P_ArchiveArray(arc, args, NUMLINEARGS);
 }
 
