@@ -1681,20 +1681,7 @@ void Mobj::serialize(SaveArchive &arc)
 
    // State info (copied to Mobj from state)
    // sprite
-   if(arc.saveVersion() >= 7)
-   {
-      if(arc.isSaving())
-         fieldname = sprnames[sprite];
-      arc.archiveCachedString(fieldname);
-      if(arc.isLoading())
-      {
-         sprite = E_SpriteNumForName(fieldname.constPtr());
-         if(sprite == -1)
-            sprite = blankSpriteNum;
-      }
-   }
-   else
-      arc << sprite;
+   Archive_SpriteNum(arc, sprite);
 
    arc
       << frame << tics

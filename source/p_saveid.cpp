@@ -23,6 +23,8 @@
 //
 
 #include "z_zone.h"
+#include "e_edf.h"
+#include "e_sprite.h"
 #include "e_things.h"
 #include "p_saveg.h"
 #include "p_saveid.h"
@@ -48,6 +50,28 @@ void Archive_MobjType(SaveArchive &arc, mobjtype_t &type)
    }
    else
       arc << type;
+}
+
+//
+// Sprite
+//
+void Archive_SpriteNum(SaveArchive &arc, spritenum_t &sprite)
+{
+   if(arc.saveVersion() >= VER)
+   {
+      qstring fieldname;
+      if(arc.isSaving())
+         fieldname = sprnames[sprite];
+      arc.archiveCachedString(fieldname);
+      if(arc.isLoading())
+      {
+         sprite = E_SpriteNumForName(fieldname.constPtr());
+         if(sprite == -1)
+            sprite = blankSpriteNum;
+      }
+   }
+   else
+      arc << sprite;
 }
 
 // EOF

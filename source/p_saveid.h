@@ -33,6 +33,7 @@ class SaveArchive;
 // on playsim.
 
 void Archive_MobjType(SaveArchive &arc, mobjtype_t &type);
+void Archive_SpriteNum(SaveArchive &arc, spritenum_t &sprite);
 
 #endif
 
