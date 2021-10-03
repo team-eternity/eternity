@@ -32,8 +32,10 @@ class SaveArchive;
 // NOTE: all functions here begin with Archive_ instead of P_, since they're not really influential
 // on playsim.
 
+void Archive_ColorTranslation(SaveArchive &arc, int colour);
 void Archive_MobjType(SaveArchive &arc, mobjtype_t &type);
 void Archive_SpriteNum(SaveArchive &arc, spritenum_t &sprite);
+void Archive_TranslucencyMap(SaveArchive &arc, int tranmap);
 
 #endif
 

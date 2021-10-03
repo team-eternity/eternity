@@ -28,11 +28,56 @@
 #include "e_things.h"
 #include "p_saveg.h"
 #include "p_saveid.h"
+#include "r_draw.h"
+#include "w_wad.h"
 
 enum
 {
    VER = 7, // the save version which introduces this
 };
+
+//
+// Archive colo(u)r translation from the 256-byte T_START/T_END tables
+//
+void Archive_ColorTranslation(SaveArchive &arc, int colour)
+{
+   if(arc.saveVersion() >= VER)
+   {
+      qstring fieldname;
+      if(arc.isSaving())
+      {
+         // IMPORTANT: the internal name must be longer than 8 characters.
+         if(colour <= TRANSLATIONCOLOURS)
+            fieldname.Printf(24, "Internal{%d}", colour);
+         else
+            fieldname = R_TranslationNameForNum(colour);
+      }
+      arc.archiveCachedString(fieldname);
+      if(arc.isLoading())
+      {
+         long index;
+         char *endptr;
+
+         // Check that it's Internal{###} and that ### is entirely a number within range, without
+         // other garbage. If so, use the internal tables
+         if(!fieldname.strNCmp("Internal{", 9) && fieldname.endsWith('}') &&
+            (index = strtol(fieldname.constPtr() + 9, &endptr, 10)) <= TRANSLATIONCOLOURS &&
+            index >= 0 && !*(endptr + 1))
+         {
+            colour = static_cast<int>(index);
+         }
+         else
+         {
+            // Otherwise look for the lump
+            colour = R_TranslationNumForName(fieldname.constPtr());
+            if(colour == -1)
+               colour = 0; // safe default
+         }
+      }
+   }
+   else
+      arc << colour;
+}
 
 //
 // Mobjtype
@@ -72,6 +117,24 @@ void Archive_SpriteNum(SaveArchive &arc, spritenum_t &sprite)
    }
    else
       arc << sprite;
+}
+
+//
+// Archive 256x256 translucency map reference
+//
+void Archive_TranslucencyMap(SaveArchive &arc, int tranmap)
+{
+   if(arc.saveVersion() >= VER)
+   {
+      qstring fieldname;
+      if(arc.isSaving())
+         fieldname = tranmap >= 0 ? wGlobalDir.getLumpName(tranmap) : "none";
+      arc.archiveCachedString(fieldname);
+      if(arc.isLoading())
+         tranmap = fieldname == "none" ? -1 : W_CheckNumForName(fieldname.constPtr());
+   }
+   else
+      arc << tranmap;
 }
 
 // EOF
