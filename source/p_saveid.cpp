@@ -31,17 +31,15 @@
 #include "r_draw.h"
 #include "w_wad.h"
 
-enum
-{
-   VER = 7, // the save version which introduces this
-};
+// IMPORTANT: as usual, when you change the saving structure, increment the save version in p_saveg
+// and use that value in the new functions added here.
 
 //
 // Archive colo(u)r translation from the 256-byte T_START/T_END tables
 //
 void Archive_ColorTranslation(SaveArchive &arc, int &colour)
 {
-   if(arc.saveVersion() >= VER)
+   if(arc.saveVersion() >= 7)
    {
       qstring fieldname;
       if(arc.isSaving())
@@ -84,7 +82,7 @@ void Archive_ColorTranslation(SaveArchive &arc, int &colour)
 //
 void Archive_MobjType(SaveArchive &arc, mobjtype_t &type)
 {
-   if(arc.saveVersion() >= VER)
+   if(arc.saveVersion() >= 7)
    {
       qstring fieldname;
       if(arc.isSaving())
@@ -102,7 +100,7 @@ void Archive_MobjType(SaveArchive &arc, mobjtype_t &type)
 //
 void Archive_SpriteNum(SaveArchive &arc, spritenum_t &sprite)
 {
-   if(arc.saveVersion() >= VER)
+   if(arc.saveVersion() >= 7)
    {
       qstring fieldname;
       if(arc.isSaving())
@@ -124,7 +122,7 @@ void Archive_SpriteNum(SaveArchive &arc, spritenum_t &sprite)
 //
 void Archive_TranslucencyMap(SaveArchive &arc, int &tranmap)
 {
-   if(arc.saveVersion() >= VER)
+   if(arc.saveVersion() >= 7)
    {
       qstring fieldname;
       if(arc.isSaving())
