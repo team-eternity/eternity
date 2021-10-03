@@ -37,6 +37,9 @@
 // IMPORTANT: as usual, when you change the saving structure, increment the save version in p_saveg
 // and use that value in the new functions added here.
 
+// For all internal names, use \r\a\t. It's a safe way to avoid user-defined names
+#define RAT "\r\a\t"
+
 //
 // Archive colo(u)r translation from the 256-byte T_START/T_END tables
 //
@@ -49,7 +52,7 @@ void Archive_ColorTranslation(SaveArchive &arc, int &colour)
       {
          // IMPORTANT: the internal name must be longer than 8 characters.
          if(colour <= TRANSLATIONCOLOURS)
-            fieldname.Printf(24, "Internal{%d}", colour);
+            fieldname.Printf(27, "Internal" RAT "%d", colour);
          else
             fieldname = R_TranslationNameForNum(colour);
       }
@@ -61,9 +64,9 @@ void Archive_ColorTranslation(SaveArchive &arc, int &colour)
 
          // Check that it's Internal{###} and that ### is entirely a number within range, without
          // other garbage. If so, use the internal tables
-         if(!fieldname.strNCmp("Internal{", 9) && fieldname.endsWith('}') &&
-            (index = strtol(fieldname.constPtr() + 9, &endptr, 10)) <= TRANSLATIONCOLOURS &&
-            index >= 0 && !*(endptr + 1))
+         if(!fieldname.strNCmp("Internal" RAT, 11) &&
+            (index = strtol(fieldname.constPtr() + 11, &endptr, 10)) <= TRANSLATIONCOLOURS &&
+            index >= 0 && !*endptr)
          {
             colour = static_cast<int>(index);
          }
@@ -89,10 +92,10 @@ void Archive_Flat(SaveArchive &arc, int &flat)
    {
       qstring fieldname;
       if(arc.isSaving())
-         fieldname = flat == -1 ? "{no flat}" : textures[flat]->name;
+         fieldname = flat == -1 ? "no flat" RAT : textures[flat]->name;
       arc.archiveCachedString(fieldname);
       if(arc.isLoading())
-         flat = fieldname == "{no flat}" ? -1 : R_FindFlat(fieldname.constPtr());
+         flat = fieldname == "no flat" RAT ? -1 : R_FindFlat(fieldname.constPtr());
    }
    else
       arc << flat;
@@ -103,10 +106,10 @@ void Archive_Flat(SaveArchive &arc, int16_t &flat)
    {
       qstring fieldname;
       if(arc.isSaving())
-         fieldname = flat == -1 ? "{no flat}" : textures[flat]->name;
+         fieldname = flat == -1 ? "no flat" RAT : textures[flat]->name;
       arc.archiveCachedString(fieldname);
       if(arc.isLoading())
-         flat = fieldname == "{no flat}" ? -1 : R_FindFlat(fieldname.constPtr());
+         flat = fieldname == "no flat" RAT ? -1 : R_FindFlat(fieldname.constPtr());
    }
    else
       arc << flat;
