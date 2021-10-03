@@ -1,0 +1,39 @@
+//
+// The Eternity Engine
+// Copyright(C) 2021 James Haley, Ioan Chera, et al.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see http://www.gnu.org/licenses/
+//
+// Additional terms and conditions compatible with the GPLv3 apply. See the
+// file COPYING-EE for details.
+//
+// Purpose: archiving named objects by their name and not index, for forward compatibility.
+// Authors: Ioan Chera
+//
+
+#ifndef P_SAVEID_H_
+#define P_SAVEID_H_
+
+#include "info.h"
+
+class SaveArchive;
+
+// NOTE: all functions here begin with Archive_ instead of P_, since they're not really influential
+// on playsim.
+
+void Archive_MobjType(SaveArchive &arc, mobjtype_t &type);
+
+#endif
+
+// EOF

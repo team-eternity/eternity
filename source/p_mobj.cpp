@@ -60,6 +60,7 @@
 #include "p_portal.h"
 #include "p_portalcross.h"
 #include "p_saveg.h"
+#include "p_saveid.h"
 #include "p_sector.h"
 #include "p_skin.h"
 #include "p_tick.h"
@@ -1659,16 +1660,7 @@ void Mobj::serialize(SaveArchive &arc)
    qstring fieldname;
 
    // Identity
-   if(arc.saveVersion() >= 7)
-   {
-      if(arc.isSaving())
-         fieldname = info->name;
-      arc.archiveCachedString(fieldname);
-      if(arc.isLoading())
-         type = E_SafeThingName(fieldname.constPtr());
-   }
-   else
-      arc << type;
+   Archive_MobjType(arc, type);
 
    arc 
       << tid
