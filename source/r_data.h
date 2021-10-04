@@ -28,6 +28,7 @@
 #define R_DATA_H__
 
 // Required for: DLListItem
+#include "doomtype.h"
 #include "m_dllist.h"
 
 enum
