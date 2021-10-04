@@ -8,6 +8,15 @@ Since v4.02.00 "Forseti"
 ========================
 
 --------------------------------------------------------------------------------
+04.10.2021
+
+IMPROVEMENT: Savegames are now more resistant to version changes. Now if
+             anything gets added to the Eternity base resources, the saves will
+             retain the correct references (things won't stop working, textures
+             won't shift etc.) This won't recover previous saves which failed
+             with this, but new saves will be forward compatible.
+
+--------------------------------------------------------------------------------
 18.09.2021
 
 BUGFIX: Fixed a bug where classic format floor and ceiling linked portal
