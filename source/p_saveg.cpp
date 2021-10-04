@@ -792,9 +792,10 @@ static void P_ArchiveWorld(SaveArchive &arc)
       Archive_Colormap(arc, sec->bottommap);
       arc << sec->flags << sec->intflags
           << sec->damage << sec->damageflags << sec->leakiness << sec->damagemask
-          << sec->damagemod
-          << sec->srf.floor.pic << sec->srf.ceiling.pic
-          << sec->lightlevel << sec->oldlightlevel
+          << sec->damagemod;
+      Archive_Flat(arc, sec->srf.floor.pic);
+      Archive_Flat(arc, sec->srf.ceiling.pic);
+      arc << sec->lightlevel << sec->oldlightlevel
           << sec->srf.floor.lightdelta << sec->srf.ceiling.lightdelta
           << sec->special << sec->tag; // needed?   yes -- transfer types -- killough
 
