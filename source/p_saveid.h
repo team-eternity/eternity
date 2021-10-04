@@ -42,6 +42,7 @@ void Archive_MobjType(SaveArchive &arc, mobjtype_t &type);
 void Archive_PSpriteState_Save(SaveArchive &arc, const state_t *state);
 state_t *Archive_PSpriteState_Load(SaveArchive &arc);
 void Archive_SpriteNum(SaveArchive &arc, spritenum_t &sprite);
+void Archive_Texture(SaveArchive &arc, int16_t &texture);
 void Archive_TranslucencyMap(SaveArchive &arc, int &tranmap);
 
 #endif

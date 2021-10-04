@@ -832,8 +832,10 @@ static void P_ArchiveWorld(SaveArchive &arc)
             // killough 10/98: save full sidedef offsets,
             // preserving fractional scroll offsets
             
-            arc << si->textureoffset << si->rowoffset
-                << si->toptexture << si->bottomtexture << si->midtexture;
+            arc << si->textureoffset << si->rowoffset;
+            Archive_Texture(arc, si->toptexture);
+            Archive_Texture(arc, si->bottomtexture);
+            Archive_Texture(arc, si->midtexture);
          }
       }
    }
