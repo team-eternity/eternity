@@ -1411,7 +1411,8 @@ static void P_ArchiveButtons(SaveArchive &arc)
    // my recent rewrite of the button code.
    for(int i = 0; i < numsaved; i++)
    {
-      arc << buttonlist[i].btexture << buttonlist[i].btimer
+      Archive_Texture(arc, buttonlist[i].btexture);
+      arc << buttonlist[i].btimer
           << buttonlist[i].dopopout << buttonlist[i].line
           << buttonlist[i].side     << buttonlist[i].where
           << buttonlist[i].switchindex;
