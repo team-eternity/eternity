@@ -786,9 +786,11 @@ static void P_ArchiveWorld(SaveArchive &arc)
       // haleyjd 08/30/09: save floorpic/ceilingpic as ints
 
       arc << sec->srf.floor.height << sec->srf.ceiling.height
-          << sec->friction << sec->movefactor
-          << sec->topmap << sec->midmap << sec->bottommap
-          << sec->flags << sec->intflags
+          << sec->friction << sec->movefactor;
+      Archive_Colormap(arc, sec->topmap);
+      Archive_Colormap(arc, sec->midmap);
+      Archive_Colormap(arc, sec->bottommap);
+      arc << sec->flags << sec->intflags
           << sec->damage << sec->damageflags << sec->leakiness << sec->damagemask
           << sec->damagemod
           << sec->srf.floor.pic << sec->srf.ceiling.pic

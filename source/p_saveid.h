@@ -32,6 +32,7 @@ class SaveArchive;
 // NOTE: all functions here begin with Archive_ instead of P_, since they're not really influential
 // on playsim.
 
+void Archive_Colormap(SaveArchive &arc, int &colormap);
 void Archive_ColorTranslation(SaveArchive &arc, int &colour);
 void Archive_Flat(SaveArchive &arc, int &flat);
 void Archive_Flat(SaveArchive &arc, int16_t &flat);

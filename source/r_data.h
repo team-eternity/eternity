@@ -174,6 +174,7 @@ int R_CheckForWall(const char *name);
 void R_InitTranMap(bool force);      // killough 3/6/98: translucency initialization
 void R_InitSubMap(bool force);
 int  R_ColormapNumForName(const char *name);      // killough 4/4/98
+const char *R_ColormapNameForNum(int index);
 
 // haleyjd: new global colormap method
 void R_SetGlobalLevelColormap(void);

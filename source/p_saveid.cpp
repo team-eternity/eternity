@@ -41,6 +41,45 @@
 #define RAT "\r\a\t"
 
 //
+// Archive colormap reference (such as with sectors)
+//
+void Archive_Colormap(SaveArchive &arc, int &colormap)
+{
+   if(arc.saveVersion() >= 7)
+   {
+      qstring fieldname;
+      if(arc.isSaving())
+      {
+         const char *name;
+         if(colormap == -1)
+            fieldname = "no map" RAT;
+         else
+         {
+            bool boomkind = !!(colormap & COLORMAP_BOOMKIND);
+            name = R_ColormapNameForNum(boomkind ? colormap & ~COLORMAP_BOOMKIND : colormap);
+            fieldname = name ? name : "no map" RAT;
+
+            // Add a RAT prefix to know whether to flag it
+            if(boomkind && fieldname != "no map" RAT)
+               fieldname = qstring(RAT) + fieldname;
+         }
+      }
+      arc.archiveCachedString(fieldname);
+      if(arc.isLoading())
+      {
+         if(fieldname == "no map" RAT)
+            colormap = -1;
+         else if(!fieldname.strNCmp(RAT, 3))
+            colormap = COLORMAP_BOOMKIND | R_ColormapNumForName(fieldname.constPtr() + 3);
+         else
+            colormap = R_ColormapNumForName(fieldname.constPtr());
+      }
+   }
+   else
+      arc << colormap;
+}
+
+//
 // Archive colo(u)r translation from the 256-byte T_START/T_END tables
 //
 void Archive_ColorTranslation(SaveArchive &arc, int &colour)
