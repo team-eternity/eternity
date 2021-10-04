@@ -844,7 +844,9 @@ static void P_ArchiveWorld(SaveArchive &arc)
    arc << brain.easy;
 
    // haleyjd 08/30/09: save state of lightning engine
-   arc << NextLightningFlash << LightningFlash << LevelSky << LevelTempSky;
+   arc << NextLightningFlash << LightningFlash;
+   Archive_Texture(arc, LevelSky);
+   Archive_Texture(arc, LevelTempSky);
 
    // ioanch: musinfo stuff
    S_MusInfoArchive(arc);

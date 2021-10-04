@@ -272,6 +272,20 @@ void Archive_SpriteNum(SaveArchive &arc, spritenum_t &sprite)
 //
 // Texture
 //
+void Archive_Texture(SaveArchive &arc, int &texture)
+{
+   if(arc.saveVersion() >= 7)
+   {
+      qstring fieldname;
+      if(arc.isSaving())
+         fieldname = texture == -1 ? "no tex" RAT : textures[texture]->name;
+      arc.archiveCachedString(fieldname);
+      if(arc.isLoading())
+         texture = fieldname == "no tex" RAT ? -1 : R_FindWall(fieldname.constPtr());
+   }
+   else
+      arc << texture;
+}
 void Archive_Texture(SaveArchive &arc, int16_t &texture)
 {
    if(arc.saveVersion() >= 7)
