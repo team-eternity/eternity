@@ -1881,7 +1881,7 @@ bool ACS_CF_SetLineBlock(ACS_CF_ARGS)
 //
 // ACS_CF_SetLineBlockMon
 //
-// void SetLineBlockMon(int tag, int block);
+// void SetLineMonsterBlocking(int tag, int block);
 //
 bool ACS_CF_SetLineBlockMon(ACS_CF_ARGS)
 {
