@@ -1601,7 +1601,8 @@ enum
 // Sets the indicated texture on all lines of lineid tag (if usetag false) or of
 // the given tag (if usetag true)
 //
-void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag)
+void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag,
+                     line_t *triggerLine)
 {
    line_t *l = nullptr;
    int linenum, texnum;
@@ -1609,7 +1610,7 @@ void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool useta
    texnum = R_FindWall(texture);
    linenum = -1;
 
-   while((l = P_FindLine(tag, &linenum)) != nullptr)
+   while((l = P_FindLine(tag, &linenum, triggerLine)) != nullptr)
    {
        if(l->sidenum[side] == -1)
          continue;

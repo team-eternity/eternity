@@ -1549,7 +1549,7 @@ int EV_DoGenDoor(const line_t *line, Mobj *thing);
 
 int EV_DoGenLockedDoor(const line_t *line, Mobj *thing);
 
-void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag);
+void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag, line_t *triggerLine);
 
 // p_things
 

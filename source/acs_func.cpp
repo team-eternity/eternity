@@ -937,7 +937,8 @@ bool ACS_CF_GetLineX(ACS_CF_ARGS)
    int           linedist = argV[2];
 
    int           linenum = -1;
-   const line_t *line    = P_FindLine(lineid, &linenum);
+   line_t *triggerLine = static_cast<const ACSThread *>(thread)->info.line;
+   const line_t *line = P_FindLine(lineid, &linenum, triggerLine);
 
    if(!line)
    {
@@ -971,7 +972,8 @@ bool ACS_CF_GetLineY(ACS_CF_ARGS)
    int           linedist = argV[2];
 
    int           linenum = -1;
-   const line_t *line = P_FindLine(lineid, &linenum);
+   line_t *triggerLine = static_cast<const ACSThread *>(thread)->info.line;
+   const line_t *line = P_FindLine(lineid, &linenum, triggerLine);
 
    if(!line)
    {
@@ -1902,7 +1904,8 @@ bool ACS_CF_SetLineSpecial(ACS_CF_ARGS)
    line_t *l;
    int     linenum = -1;
 
-   while((l = P_FindLine(tag, &linenum)) != nullptr)
+   line_t *triggerLine = static_cast<const ACSThread *>(thread)->info.line;
+   while((l = P_FindLine(tag, &linenum, triggerLine)) != nullptr)
    {
       l->special = EV_ActionForACSAction(spec);
       for(int i = NUMLINEARGS; i--;)
@@ -1919,7 +1922,8 @@ bool ACS_CF_SetLineSpecial(ACS_CF_ARGS)
 //
 bool ACS_CF_SetLineTex(ACS_CF_ARGS)
 {
-   P_ChangeLineTex(thread->scopeMap->getString(argV[3])->str, argV[2], argV[1], argV[0], true);
+   line_t *triggerLine = static_cast<const ACSThread *>(thread)->info.line;
+   P_ChangeLineTex(thread->scopeMap->getString(argV[3])->str, argV[2], argV[1], argV[0], true, triggerLine);
    return false;
 }
 
