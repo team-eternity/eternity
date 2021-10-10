@@ -1680,7 +1680,7 @@ bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta,
 
 void P_CalcFriction(int length, int &friction, int &movefactor); // ioanch
 
-line_t *P_FindLine(int tag, int *searchPosition);
+line_t *P_FindLine(int tag, int *searchPosition, line_t *defaultLine = nullptr);
 
 // haleyjd: sector special transfers
 void P_SetupSpecialTransfer(const sector_t *, spectransfer_t *);

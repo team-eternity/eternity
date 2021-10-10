@@ -1833,12 +1833,12 @@ enum
 //
 // Toggles the blocking flag on all tagged lines.
 //
-static void ACS_setLineBlocking(int tag, int block)
+static void ACS_setLineBlocking(const ACSThread *thread, int tag, int block)
 {
    line_t *l;
    int linenum = -1;
 
-   while((l = P_FindLine(tag, &linenum)) != nullptr)
+   while((l = P_FindLine(tag, &linenum, thread->info.line)) != nullptr)
    {
       switch(block)
       {
@@ -1874,7 +1874,7 @@ static void ACS_setLineBlocking(int tag, int block)
 //
 bool ACS_CF_SetLineBlock(ACS_CF_ARGS)
 {
-   ACS_setLineBlocking(argV[0], argV[1]);
+   ACS_setLineBlocking(static_cast<const ACSThread *>(thread), argV[0], argV[1]);
    return false;
 }
 
@@ -1885,7 +1885,8 @@ bool ACS_CF_SetLineBlock(ACS_CF_ARGS)
 //
 bool ACS_CF_SetLineBlockMon(ACS_CF_ARGS)
 {
-   ACS_setLineBlocking(argV[0], argV[1] ? BLOCK_MONSTERS_ON : BLOCK_MONSTERS_OFF);
+   ACS_setLineBlocking(static_cast<const ACSThread *>(thread), argV[0],
+                       argV[1] ? BLOCK_MONSTERS_ON : BLOCK_MONSTERS_OFF);
    return false;
 }
 

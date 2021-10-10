@@ -1903,8 +1903,22 @@ static void P_SpawnFriction()
 // haleyjd 02/27/07: rewritten to get rid of Raven code and to speed up in the
 // same manner as P_FindLineFromLineTag by using in-table tag hash.
 //
-line_t *P_FindLine(int tag, int *searchPosition)
+// ioanch 20211010: return defaultline if provided and tag is zero.
+//
+line_t *P_FindLine(int tag, int *searchPosition, line_t *defaultLine)
 {
+   if(defaultLine && !tag)
+   {
+      if(*searchPosition == eindex(defaultLine - lines))
+      {
+         // Don't loop over; make sure to still provide valid output
+         *searchPosition = -1;
+         return nullptr;
+      }
+      *searchPosition = eindex(defaultLine - lines);
+      return defaultLine;
+   }
+
    line_t *line = nullptr;
    
    int start = 
