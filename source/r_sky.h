@@ -37,7 +37,7 @@
 // Necessary height of sky to prevent stretching for looking up
 enum
 {
-   SKY_FREELOOK_HEIGHT = 260,
+   SKY_FREELOOK_HEIGHT = 200,
 };
 
 // haleyjd: information on sky flats

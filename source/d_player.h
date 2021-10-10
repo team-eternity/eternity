@@ -118,8 +118,8 @@ struct invbarstate_t {
 };
 
 // These defines are in degrees:
-#define MAXPITCHUP   45
-#define MAXPITCHDOWN 45
+#define MAXPITCHUP   32
+#define MAXPITCHDOWN 32
 
 enum attacktype_e : unsigned int
 {

@@ -119,17 +119,11 @@ static skytexture_t *R_AddSkyTexture(int texturenum)
    // should we use it
    newSky->texturenum = texturenum;
    newSky->height = textures[texturenum]->height;
-   
+
    if(newSky->height >= SKY_FREELOOK_HEIGHT)
    {
-      // 260px is the height to prevent stretching. Having more will just continue drawing
-      // down.
-      newSky->texturemid = SKY_FREELOOK_HEIGHT * FRACUNIT;
-   }
-   else if(newSky->height >= SCREENHEIGHT)
-   {
       // 200px is the minimum freelook compatible sky height
-      newSky->texturemid = newSky->height * FRACUNIT;
+      newSky->texturemid = SKY_FREELOOK_HEIGHT * FRACUNIT;
    }
    else
       newSky->texturemid = (SCREENHEIGHT / 2) *FRACUNIT; // shorter skies draw like Doom
