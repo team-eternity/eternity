@@ -865,9 +865,6 @@ static fixed_t R_getSkyColumnStep(const skytexture_t &sky)
 // haleyjd: moved here from r_newsky.c
 static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visplane_t *pl)
 {
-   int x, offset, skyTexture, offset2, skyTexture2;
-   skytexture_t *sky1, *sky2;
-
    cb_column_t column = {};
 
    R_ColumnFunc colfunc = r_column_engine->DrawColumn;
@@ -883,13 +880,13 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    if(!(skyflat1 && skyflat2))
       return; // feh!
 
-   offset      = skyflat1->columnoffset >> 16;
-   skyTexture  = texturetranslation[skyflat1->texture];
-   offset2     = skyflat2->columnoffset >> 16;
-   skyTexture2 = texturetranslation[skyflat2->texture];
+   int offset      = skyflat1->columnoffset >> 16;
+   int skyTexture  = texturetranslation[skyflat1->texture];
+   int offset2     = skyflat2->columnoffset >> 16;
+   int skyTexture2 = texturetranslation[skyflat2->texture];
 
-   sky1 = R_GetSkyTexture(skyTexture);
-   sky2 = R_GetSkyTexture(skyTexture2);
+   skytexture_t *sky1 = R_GetSkyTexture(skyTexture);
+   skytexture_t *sky2 = R_GetSkyTexture(skyTexture2);
       
    if(getComp(comp_skymap) || !(column.colormap = context.fixedcolormap))
       column.colormap = context.fullcolormap;
@@ -900,7 +897,7 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
 
    column.step = R_getSkyColumnStep(*sky2);
       
-   for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
+   for(int x = pl->minx; (column.x = x) <= pl->maxx; x++)
    {
       if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
       {
@@ -919,7 +916,7 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    column.step = R_getSkyColumnStep(*sky1);
       
    colfunc = r_column_engine->DrawNewSkyColumn;
-   for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
+   for(int x = pl->minx; (column.x = x) <= pl->maxx; x++)
    {
       if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
       {
@@ -947,15 +944,15 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
 {
    int texture;
    int offset = 0;
-   angle_t an, flip;
-   skytexture_t *sky;
+   angle_t flip;
+   const skytexture_t *sky;
 
    // killough 10/98: allow skies to come from sidedefs.
    // Allows scrolling and/or animated skies, as well as
    // arbitrary multiple skies per level without having
    // to use info lumps.
 
-   an = viewangle;
+   angle_t an = viewangle;
 
    cb_column_t column = {};
    if(pl->picnum & PL_SKYFLAT)
@@ -1050,6 +1047,7 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
    // haleyjd: hexen-style skies
    if(R_IsSkyFlat(pl->picnum) && LevelInfo.doubleSky)
    {
+      // NOTE: MBF sky transfers change pl->picnum so it won't go here if set to transfer.
       do_draw_newsky(context, viewangle, pl);
       return;
    }
