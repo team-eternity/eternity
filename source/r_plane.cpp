@@ -885,8 +885,8 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    int offset2     = skyflat2->columnoffset >> 16;
    int skyTexture2 = texturetranslation[skyflat2->texture];
 
-   skytexture_t *sky1 = R_GetSkyTexture(skyTexture);
-   skytexture_t *sky2 = R_GetSkyTexture(skyTexture2);
+   const skytexture_t *sky1 = R_GetSkyTexture(skyTexture);
+   const skytexture_t *sky2 = R_GetSkyTexture(skyTexture2);
       
    if(getComp(comp_skymap) || !(column.colormap = context.fixedcolormap))
       column.colormap = context.fullcolormap;
@@ -927,7 +927,6 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
          colfunc(column);
       }
    }
-   colfunc = r_column_engine->DrawColumn;
 }
 
 // Log base 2 LUT
