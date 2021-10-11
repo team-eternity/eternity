@@ -941,14 +941,109 @@ static const int MultiplyDeBruijnBitPosition2[32] =
 };
 
 //
+// Drawing sky as a background texture instead of a visplane.
+//
+static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *skyflat)
+{
+   int texture;
+   int offset = 0;
+   angle_t an, flip;
+   skytexture_t *sky;
+
+   // killough 10/98: allow skies to come from sidedefs.
+   // Allows scrolling and/or animated skies, as well as
+   // arbitrary multiple skies per level without having
+   // to use info lumps.
+
+   an = viewangle;
+
+   cb_column_t column = {};
+   if(pl->picnum & PL_SKYFLAT)
+   {
+      // Sky Linedef
+      const line_t *l = &lines[pl->picnum & ~PL_SKYFLAT];
+
+      // Sky transferred from first sidedef
+      const side_t *s = *l->sidenum + sides;
+
+      // Texture comes from upper texture of reference sidedef
+      texture = texturetranslation[s->toptexture];
+
+      // haleyjd 08/30/02: set skytexture info pointer
+      sky = R_GetSkyTexture(texture);
+
+      // Horizontal offset is turned into an angle offset,
+      // to allow sky rotation as well as careful positioning.
+      // However, the offset is scaled very small, so that it
+      // allows a long-period of sky rotation.
+
+      an += s->textureoffset;
+
+      // Vertical offset allows careful sky positioning.
+
+      column.texmid = s->rowoffset - 28*FRACUNIT;
+
+      // We sometimes flip the picture horizontally.
+      //
+      // Doom always flipped the picture, so we make it optional,
+      // to make it easier to use the new feature, while to still
+      // allow old sky textures to be used.
+      int staticFn = EV_StaticInitForSpecial(l->special);
+
+      bool flipCond = staticFn == EV_STATIC_SKY_TRANSFER_FLIPPED
+      || (staticFn == EV_STATIC_INIT_PARAM
+          && l->args[ev_StaticInit_Arg_Flip]);
+
+      flip = flipCond ? 0u : ~0u;
+   }
+   else     // Normal Doom sky, only one allowed per level
+   {
+      texture       = skyflat->texture;            // Default texture
+      sky           = R_GetSkyTexture(texture);    // haleyjd 08/30/02
+      column.texmid = sky->texturemid;             // Default y-offset
+      flip          = 0;                           // Doom flips it
+      offset        = skyflat->columnoffset >> 16; // Hexen-style scrolling
+   }
+
+   // Sky is always drawn full bright, i.e. colormaps[0] is used.
+   // Because of this hack, sky is not affected by INVUL inverse mapping.
+   //
+   // killough 7/19/98: fix hack to be more realistic:
+   // haleyjd 10/31/10: use plane colormaps, not global vars!
+   if(getComp(comp_skymap) || !(column.colormap = pl->fixedcolormap))
+      column.colormap = pl->fullcolormap;
+
+   //dc_texheight = (textureheight[texture])>>FRACBITS; // killough
+   // haleyjd: use height determined from patches in texture
+   column.texheight = sky->height;
+
+   column.step = R_getSkyColumnStep(*sky);
+
+   // killough 10/98: Use sky scrolling offset, and possibly flip picture
+   for(int x = pl->minx; x <= pl->maxx; x++)
+   {
+      column.x = x;
+
+      column.y1 = pl->top[x];
+      column.y2 = pl->bottom[x];
+
+      if(column.y1 <= column.y2)
+      {
+         column.source = R_GetRawColumn(texture,
+            (((an + xtoviewangle[x])^flip) >> ANGLETOSKYSHIFT) + offset);
+
+         r_column_engine->DrawColumn(column);
+      }
+   }
+}
+
+//
 // New function, by Lee Killough
 // haleyjd 08/30/02: slight restructuring to use hashed sky texture info cache.
 //
 static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
                           const angle_t viewangle, visplane_t *pl)
 {
-   int x;
-
    if(!(pl->minx <= pl->maxx))
       return;
 
@@ -962,98 +1057,7 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
    skyflat_t *skyflat = R_SkyFlatForPicnum(pl->picnum);
    
    if(skyflat || pl->picnum & PL_SKYFLAT)  // sky flat
-   {
-      int texture;
-      int offset = 0;
-      angle_t an, flip;
-      skytexture_t *sky;
-      
-      // killough 10/98: allow skies to come from sidedefs.
-      // Allows scrolling and/or animated skies, as well as
-      // arbitrary multiple skies per level without having
-      // to use info lumps.
-
-      an = viewangle;
-      
-      cb_column_t column = {};
-      if(pl->picnum & PL_SKYFLAT)
-      { 
-         // Sky Linedef
-         const line_t *l = &lines[pl->picnum & ~PL_SKYFLAT];
-         
-         // Sky transferred from first sidedef
-         const side_t *s = *l->sidenum + sides;
-         
-         // Texture comes from upper texture of reference sidedef
-         texture = texturetranslation[s->toptexture];
-
-         // haleyjd 08/30/02: set skytexture info pointer
-         sky = R_GetSkyTexture(texture);
-
-         // Horizontal offset is turned into an angle offset,
-         // to allow sky rotation as well as careful positioning.
-         // However, the offset is scaled very small, so that it
-         // allows a long-period of sky rotation.
-         
-         an += s->textureoffset;
-         
-         // Vertical offset allows careful sky positioning.        
-         
-         column.texmid = s->rowoffset - 28*FRACUNIT;
-         
-         // We sometimes flip the picture horizontally.
-         //
-         // Doom always flipped the picture, so we make it optional,
-         // to make it easier to use the new feature, while to still
-         // allow old sky textures to be used.
-         int staticFn = EV_StaticInitForSpecial(l->special);
-
-         bool flipCond = staticFn == EV_STATIC_SKY_TRANSFER_FLIPPED
-         || (staticFn == EV_STATIC_INIT_PARAM
-             && l->args[ev_StaticInit_Arg_Flip]);
-
-         flip = flipCond ? 0u : ~0u;
-      }
-      else 	 // Normal Doom sky, only one allowed per level
-      {
-         texture       = skyflat->texture;            // Default texture
-         sky           = R_GetSkyTexture(texture);    // haleyjd 08/30/02
-         column.texmid = sky->texturemid;             // Default y-offset
-         flip          = 0;                           // Doom flips it
-         offset        = skyflat->columnoffset >> 16; // Hexen-style scrolling
-      }
-
-      // Sky is always drawn full bright, i.e. colormaps[0] is used.
-      // Because of this hack, sky is not affected by INVUL inverse mapping.
-      //
-      // killough 7/19/98: fix hack to be more realistic:
-      // haleyjd 10/31/10: use plane colormaps, not global vars!
-      if(getComp(comp_skymap) || !(column.colormap = pl->fixedcolormap))
-         column.colormap = pl->fullcolormap;
-
-      //dc_texheight = (textureheight[texture])>>FRACBITS; // killough
-      // haleyjd: use height determined from patches in texture
-      column.texheight = sky->height;
-      
-      column.step = R_getSkyColumnStep(*sky);
-
-      // killough 10/98: Use sky scrolling offset, and possibly flip picture
-      for(x = pl->minx; x <= pl->maxx; x++)
-      {
-         column.x = x;
-
-         column.y1 = pl->top[x];
-         column.y2 = pl->bottom[x];
-
-         if(column.y1 <= column.y2)
-         {
-            column.source = R_GetRawColumn(texture,
-               (((an + xtoviewangle[x])^flip) >> ANGLETOSKYSHIFT) + offset);
-            
-            r_column_engine->DrawColumn(column);
-         }
-      }
-   }
+      R_drawSky(viewangle, pl, skyflat);
    else // regular flat
    {  
       texture_t *tex;
@@ -1196,7 +1200,7 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
 
       plane.MapFunc = (plane.slope == nullptr ? R_mapPlane : R_mapSlope);
 
-      for(x = pl->minx; x <= stop; x++)
+      for(int x = pl->minx; x <= stop; x++)
       {
          R_makeSpans(
             flatfunc, slopefunc, span, slopespan, plane, spanstart, x,
