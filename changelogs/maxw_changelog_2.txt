@@ -113,7 +113,6 @@ ZDoom.
 2021/04/19
 Made the menus use the console font by default.
 
-
 --------------------------------------------------------------------------------
 2021/05/22
 Holding down weapon switch weapons no longer rotates between all weapons in that
