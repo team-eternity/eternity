@@ -120,7 +120,9 @@ static skytexture_t *R_AddSkyTexture(int texturenum)
    newSky->texturenum = texturenum;
    newSky->height = textures[texturenum]->height;
 
-   if(newSky->height >= SKY_FREELOOK_HEIGHT)
+   // Preserve visual compatibility with certain Boom-compatible wads with tall sky textures
+   if(newSky->height >= SKY_FREELOOK_HEIGHT && (!LevelInfo.enableBoomSkyHack ||
+                                                !(GameModeInfo->flags & GIF_PRBOOMTALLSKY)))
    {
       // 200px is the minimum freelook compatible sky height
       newSky->texturemid = SKY_FREELOOK_HEIGHT * FRACUNIT;

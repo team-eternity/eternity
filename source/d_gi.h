@@ -235,6 +235,7 @@ enum
    GIF_FLIGHTINERTIA  = 0x02000000, // player flight retains some inertia
    // TODO: make this public for EDF gameprops (in a good public form)
    GIF_WPNSWITCHSUPER = 0x04000000, // only switch to superior weapon when picking up
+   GIF_PRBOOMTALLSKY  = 0x08000000, // PrBoom tall sky draw compatibility (do not raise for mlook)
 };
 
 // Game mode handling - identify IWAD version

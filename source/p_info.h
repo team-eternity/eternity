@@ -132,6 +132,8 @@ struct LevelInfo_t
    fixed_t skyDelta;          // double-sky scroll speeds (units/tic)
    fixed_t sky2Delta;
 
+   bool enableBoomSkyHack;    // Hack to disable the Boom sky visual compatibility
+
    // gameplay options
    bool disableJump;          // if true, jumping is disabled
 
