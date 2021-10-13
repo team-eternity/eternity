@@ -103,7 +103,7 @@ void XLTokenizer::doStateScan()
          state     = STATE_INBRACKETS;
          break;
       }
-      else if(c == '$') // detect $ keywords
+      else if(c == '$' || flags & TF_STRINGSQUOTED) // detect $ keywords (or without $ if flagged)
          tokentype = TOKEN_KEYWORD;
       else
          tokentype = TOKEN_STRING;

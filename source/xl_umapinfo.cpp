@@ -127,11 +127,8 @@ bool XLUMapInfoParser::doStateExpectMap(XLTokenizer &tokenizer)
 //
 bool XLUMapInfoParser::doStateExpectMapName(XLTokenizer &tokenizer)
 {
-   if(tokenizer.getTokenType() != XLTokenizer::TOKEN_STRING &&
-      tokenizer.getTokenType() != XLTokenizer::TOKEN_KEYWORD)
-   {
+   if(tokenizer.getTokenType() != XLTokenizer::TOKEN_KEYWORD)
       return false;
-   }
    state = STATE_EXPECTOPENBRACE;
    curInfo = XL_newUMapInfo(tokenizer.getToken().constPtr());
    return true;
@@ -209,7 +206,7 @@ bool XLUMapInfoParser::doStatePostValue(XLTokenizer &tokenizer)
       state = STATE_EXPECTMAP;
       result = true;
    }
-   else if(tokenizer.getTokenType() == XLTokenizer::TOKEN_STRING)
+   else if(tokenizer.getTokenType() == XLTokenizer::TOKEN_KEYWORD)
    {
       // Otherwise it's a new key
       result = doStateExpectKey(tokenizer);
@@ -243,8 +240,8 @@ void XLUMapInfoParser::startLump()
 //
 void XLUMapInfoParser::initTokenizer(XLTokenizer &tokenizer)
 {
-   tokenizer.setTokenFlags(XLTokenizer::TF_OPERATORS |
-                           XLTokenizer::TF_ESCAPESTRINGS);
+   tokenizer.setTokenFlags(XLTokenizer::TF_OPERATORS | XLTokenizer::TF_ESCAPESTRINGS |
+                           XLTokenizer::TF_STRINGSQUOTED);
 }
 
 //
