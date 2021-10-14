@@ -1014,6 +1014,7 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
    column.texheight = sky->height;
 
    column.step = R_getSkyColumnStep(*sky);
+   column.skycolor = sky->medianColor;
 
    // killough 10/98: Use sky scrolling offset, and possibly flip picture
    for(int x = pl->minx; x <= pl->maxx; x++)
@@ -1028,7 +1029,7 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
          column.source = R_GetRawColumn(texture,
             (((an + xtoviewangle[x])^flip) >> ANGLETOSKYSHIFT) + offset);
 
-         r_column_engine->DrawColumn(column);
+         r_column_engine->DrawSkyColumn(column);
       }
    }
 }

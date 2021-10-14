@@ -164,6 +164,82 @@ void CB_DrawColumn_8(cb_column_t &column)
    }
 }
 
+//
+// Sky drawing: for showing just a color above the texture
+//
+void CB_DrawSkyColumn_8(cb_column_t &column)
+{
+   int count;
+   byte *dest;
+   fixed_t frac;
+   fixed_t fracstep;
+
+   count = column.y2 - column.y1 + 1;
+   if(count <= 0) return;
+
+#ifdef RANGECHECK
+   if(column.x  < 0 || column.x  >= video.width ||
+      column.y1 < 0 || column.y2 >= video.height)
+      I_Error("CB_DrawColumn_8: %i to %i at %i\n", column.y1, column.y2, column.x);
+#endif
+
+   dest = R_ADDRESS(column.x, column.y1);
+   fracstep = column.step;
+   frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
+
+   {
+      const byte *source = static_cast<const byte *>(column.source);
+      const lighttable_t *colormap = column.colormap;
+      int heightmask = column.texheight - 1;
+
+      // Fill in the median color here
+      if(frac < 0)
+      {
+         int n = (-frac + fracstep - 1) / fracstep;
+         if(n > count)
+            n = count;
+         memset(dest, colormap[column.skycolor], n);
+         dest += n;
+         if(!(count -= n))
+            return;
+         frac += fracstep * n;
+      }
+
+      if(column.texheight & heightmask)
+      {
+         heightmask++;
+         heightmask <<= FRACBITS;
+
+
+         while(frac >= heightmask)
+            frac -= heightmask;
+
+         do
+         {
+            *dest = colormap[source[frac>>FRACBITS]];
+            dest += 1;                     // killough 11/98
+            if((frac += fracstep) >= heightmask)
+               frac -= heightmask;
+         }
+         while(--count);
+      }
+      else
+      {
+         while((count -= 2) >= 0) // texture height is a power of 2 -- killough
+         {
+            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
+            dest += 1;   // killough 11/98
+            frac += fracstep;
+            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
+            dest += 1;   // killough 11/98
+            frac += fracstep;
+         }
+         if(count & 1)
+            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
+      }
+   }
+}
+
 // haleyjd: experimental column drawer for masked sky textures
 // ioanch: confirmed OK, but only for basic r_draw (non-quad) mode.
 static void CB_DrawNewSkyColumn_8(cb_column_t &column)
@@ -1038,6 +1114,7 @@ void CB_DrawAddTRColumn_8(cb_column_t &column)
 columndrawer_t r_normal_drawer =
 {
    CB_DrawColumn_8,
+   CB_DrawSkyColumn_8,
    CB_DrawNewSkyColumn_8,
    CB_DrawTLColumn_8,
    CB_DrawTRColumn_8,

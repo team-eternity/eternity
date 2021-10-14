@@ -70,6 +70,7 @@ using R_ColumnFunc = void (*)(cb_column_t &);
 struct columndrawer_t
 {
    R_ColumnFunc DrawColumn;       // normal
+   R_ColumnFunc DrawSkyColumn;    // sky column (uses median color)
    R_ColumnFunc DrawNewSkyColumn; // double-sky drawing (index 0 = transparent)
    R_ColumnFunc DrawTLColumn;     // translucent
    R_ColumnFunc DrawTRColumn;     // translated
@@ -184,6 +185,7 @@ struct cb_column_t
    const lighttable_t *colormap;
    const byte *translation;
    fixed_t translevel; // haleyjd: zdoom style trans level
+   byte skycolor; // the sky color
 
    const void *source;
 };
