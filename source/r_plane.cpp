@@ -894,9 +894,10 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    // first draw sky 2 with R_DrawColumn (unmasked)
    column.texmid    = sky2->texturemid;      
    column.texheight = sky2->height;
-
+   column.skycolor = sky2->medianColor;
    column.step = R_getSkyColumnStep(*sky2);
-      
+
+   colfunc = r_column_engine->DrawSkyColumn;
    for(int x = pl->minx; (column.x = x) <= pl->maxx; x++)
    {
       if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))

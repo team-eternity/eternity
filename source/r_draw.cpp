@@ -305,16 +305,26 @@ static void CB_DrawNewSkyColumn_8(cb_column_t &column)
       const byte *source = static_cast<const byte *>(column.source);
       const lighttable_t *colormap = column.colormap;
       int heightmask = column.texheight-1;
+
+      // Skip above-areas
+      if(frac < 0)
+      {
+         int n = (-frac + fracstep - 1) / fracstep;
+         if(n > count)
+            n = count;
+         if(!(count -= n))
+            return;
+         dest += n;
+         frac += fracstep * n;
+      }
+
       if (column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
          heightmask <<= FRACBITS;
 
-         if (frac < 0)
-            while ((frac += heightmask) <  0);
-         else
-            while (frac >= heightmask)
-               frac -= heightmask;
+         while (frac >= heightmask)
+            frac -= heightmask;
 
          do
          {
