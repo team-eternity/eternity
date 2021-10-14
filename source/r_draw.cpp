@@ -193,15 +193,40 @@ void CB_DrawSkyColumn_8(cb_column_t &column)
       int heightmask = column.texheight - 1;
 
       // Fill in the median color here
-      if(frac < 0)
+      // Have two intermediary fade lines, using the main_tranmap structure
+      int n;
+      if(frac < -2 * FRACUNIT)
       {
-         int n = (-frac + fracstep - 1) / fracstep;
+         n = (-frac - 2 * FRACUNIT + fracstep - 1) / fracstep;
          if(n > count)
             n = count;
          memset(dest, colormap[column.skycolor], n);
-         dest += n;
          if(!(count -= n))
             return;
+         dest += n;
+         frac += fracstep * n;
+      }
+      if(frac < -FRACUNIT)
+      {
+         n = (-frac - FRACUNIT + fracstep - 1) / fracstep;
+         if(n > count)
+            n = count;
+         memset(dest, main_tranmap[(main_tranmap[(colormap[source[0]] << 8) + colormap[column.skycolor]] << 8) + colormap[column.skycolor]], n);
+         if(!(count -= n))
+            return;
+         dest += n;
+         frac += fracstep * n;
+      }
+      // Now it's on the edge
+      if(frac < 0)
+      {
+         n = (-frac + fracstep - 1) / fracstep;
+         if(n > count)
+            n = count;
+         memset(dest, main_tranmap[(colormap[source[0]] << 8) + colormap[column.skycolor]], n);
+         if(!(count -= n))
+            return;
+         dest += n;
          frac += fracstep * n;
       }
 
