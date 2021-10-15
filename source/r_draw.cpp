@@ -211,7 +211,9 @@ void CB_DrawSkyColumn_8(cb_column_t &column)
          n = (-frac - FRACUNIT + fracstep - 1) / fracstep;
          if(n > count)
             n = count;
-         memset(dest, main_tranmap[(main_tranmap[(colormap[source[0]] << 8) + colormap[column.skycolor]] << 8) + colormap[column.skycolor]], n);
+         memset(dest, main_tranmap[(main_tranmap[(colormap[source[0]] << 8) +
+                                                 colormap[column.skycolor]] << 8) +
+                                   colormap[column.skycolor]], n);
          if(!(count -= n))
             return;
          dest += n;
