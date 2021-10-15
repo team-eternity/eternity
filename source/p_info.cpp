@@ -1184,6 +1184,10 @@ static void P_InfoDefaultSky()
    // altSkyName -- this is used for lightning flashes --
    // starts out nullptr to indicate none.
    LevelInfo.altSkyName = nullptr;
+
+   // Set the sky offset to "unset"
+   LevelInfo.skyRowOffset = SKYROWOFFSET_DEFAULT;
+   LevelInfo.sky2RowOffset = SKYROWOFFSET_DEFAULT;
 }
 
 //
@@ -1617,6 +1621,8 @@ static levelvar_t levelvars[]=
    LI_DBLFIX("sky2delta",          sky2Delta),
    LI_STRING("skyname",            skyName),
    LI_STRING("sky2name",           sky2Name),
+   LI_INTEGR("skyrowoffset",       skyRowOffset),
+   LI_INTEGR("sky2rowoffset",      sky2RowOffset),
    LI_STRING("sound-swtchn",       sound_swtchn),
    LI_STRING("sound-swtchx",       sound_swtchx),
    LI_STRING("sound-stnmov",       sound_stnmov),

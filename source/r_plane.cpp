@@ -892,7 +892,10 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
       column.colormap = context.fullcolormap;
       
    // first draw sky 2 with R_DrawColumn (unmasked)
-   column.texmid    = sky2->texturemid;      
+   if(LevelInfo.sky2RowOffset != SKYROWOFFSET_DEFAULT)
+      column.texmid = LevelInfo.sky2RowOffset * FRACUNIT;
+   else
+      column.texmid = sky2->texturemid;
    column.texheight = sky2->height;
    column.skycolor = sky2->medianColor;
    column.step = R_getSkyColumnStep(*sky2);
@@ -911,7 +914,10 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    }
       
    // now draw sky 1 with R_DrawNewSkyColumn (masked)
-   column.texmid = sky1->texturemid;
+   if(LevelInfo.skyRowOffset != SKYROWOFFSET_DEFAULT)
+      column.texmid = LevelInfo.skyRowOffset * FRACUNIT;
+   else
+      column.texmid = sky1->texturemid;
    column.texheight = sky1->height;
 
    column.step = R_getSkyColumnStep(*sky1);
@@ -1009,9 +1015,16 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
    {
       texture       = skyflat->texture;            // Default texture
       sky           = R_GetSkyTexture(texture);    // haleyjd 08/30/02
-      column.texmid = sky->texturemid;             // Default y-offset
       flip          = 0;                           // Doom flips it
       offset        = skyflat->columnoffset >> 16; // Hexen-style scrolling
+
+      // Set y offset depending on level info or depending on R_GetSkyTexture
+      if(skyflat == R_SkyFlatForIndex(0) && LevelInfo.skyRowOffset != SKYROWOFFSET_DEFAULT)
+         column.texmid = LevelInfo.skyRowOffset * FRACUNIT;
+      else if(skyflat == R_SkyFlatForIndex(1) && LevelInfo.sky2RowOffset != SKYROWOFFSET_DEFAULT)
+         column.texmid = LevelInfo.sky2RowOffset * FRACUNIT;
+      else
+         column.texmid = sky->texturemid;
    }
 
    // Sky is always drawn full bright, i.e. colormaps[0] is used.
