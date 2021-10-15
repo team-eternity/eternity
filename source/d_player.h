@@ -117,10 +117,6 @@ struct invbarstate_t {
    int  ArtifactFlash;
 };
 
-// These defines are in degrees:
-#define MAXPITCHUP   32
-#define MAXPITCHDOWN 32
-
 enum attacktype_e : unsigned int
 {
    AT_NONE      = 0,
