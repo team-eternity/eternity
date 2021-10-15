@@ -113,6 +113,11 @@ static byte R_getMedianTopColor(int texturenum)
    const texture_t *texture = textures[texturenum];
    I_Assert(texture != nullptr, "Missing texture");
 
+   const byte *texbuffer = texture->bufferdata;
+   if(!texture->bufferalloc || !texbuffer)
+      texbuffer = R_GetLinearBuffer(texturenum);
+   I_Assert(texbuffer != nullptr, "Couldn't make texbuffer");
+
    struct rgb_t
    {
       int r, g, b;
@@ -123,11 +128,10 @@ static byte R_getMedianTopColor(int texturenum)
    AutoPalette pal(wGlobalDir);
    const byte *playpal = pal.get();
 
-   const byte *data = texture->bufferdata;
    for(int x = 0; x < texture->width; ++x)
    {
       rgb_t rgb;
-      int palindex = 3 * data[x * texture->height];
+      int palindex = 3 * texbuffer[x * texture->height];
       rgb.r = playpal[palindex];
       rgb.g = playpal[palindex + 1];
       rgb.b = playpal[palindex + 2];
