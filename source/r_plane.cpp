@@ -955,6 +955,7 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
    angle_t an = viewangle;
 
    cb_column_t column = {};
+   bool tilevert = false;
    if(pl->picnum & PL_SKYFLAT)
    {
       // Sky Linedef
@@ -979,6 +980,17 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
       // Vertical offset allows careful sky positioning.
 
       column.texmid = s->rowoffset - 28*FRACUNIT;
+
+      // Adjust it upwards to make sure the fade-to-color effect doesn't happen too early
+      tilevert = !!(s->intflags & SDI_VERTICALLYSCROLLING);
+      if(!tilevert && column.texmid < SCREENHEIGHT / 2 * FRACUNIT)
+      {
+         fixed_t diff = column.texmid - SCREENHEIGHT / 2 * FRACUNIT;
+         diff %= textures[sky->texturenum]->heightfrac;
+         if(diff < 0)
+            diff += textures[sky->texturenum]->heightfrac;
+         column.texmid = SCREENHEIGHT / 2 * FRACUNIT + diff;
+      }
 
       // We sometimes flip the picture horizontally.
       //
@@ -1017,6 +1029,9 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
    column.step = R_getSkyColumnStep(*sky);
    column.skycolor = sky->medianColor;
 
+   R_ColumnFunc colfunc = tilevert ? r_column_engine->DrawColumn :
+                                     r_column_engine->DrawSkyColumn;
+
    // killough 10/98: Use sky scrolling offset, and possibly flip picture
    for(int x = pl->minx; x <= pl->maxx; x++)
    {
@@ -1030,7 +1045,7 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
          column.source = R_GetRawColumn(texture,
             (((an + xtoviewangle[x])^flip) >> ANGLETOSKYSHIFT) + offset);
 
-         r_column_engine->DrawSkyColumn(column);
+         colfunc(column);
       }
    }
 }

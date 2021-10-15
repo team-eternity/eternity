@@ -179,6 +179,11 @@ enum
    MLI_MOVINGPORTAL = 0x10,   // line is on a moving portal
 };
 
+enum
+{
+   SDI_VERTICALLYSCROLLING = 0x0001,   // sidedef is targeted for vertical scrolling (needed by skies)
+};
+
 // Sector definition, from editing.
 struct mapsector_t
 {

@@ -840,6 +840,11 @@ static void P_ArchiveWorld(SaveArchive &arc)
       }
    }
 
+   // do sides
+   if(arc.saveVersion() >= 8)
+      for(i = 0, si = sides; i < numsides; ++i, ++si)
+         arc << si->intflags;
+
    // killough 3/26/98: Save boss brain state
    arc << brain.easy;
 
