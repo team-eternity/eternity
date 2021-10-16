@@ -413,6 +413,7 @@ struct side_t
   int16_t toptexture;      // Texture indices. We do not maintain names here. 
   int16_t bottomtexture;
   int16_t midtexture;
+  uint16_t intflags; // keep intflags here (we may also afford to edit "special")
   sector_t* sector;      // Sector the SideDef is facing.
 
   // killough 4/4/98, 4/11/98: highest referencing special linedef's type,

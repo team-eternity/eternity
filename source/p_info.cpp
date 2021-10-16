@@ -855,11 +855,15 @@ static void P_applyHexenMapInfo()
       LevelInfo.skyName  = s;
       // FIXME: currently legacy MAPINFO is still integer-only
       LevelInfo.skyDelta = xlmi->getInt("sky1delta", 0) * FRACUNIT;
+
+      LevelInfo.enableBoomSkyHack = false;
    }
    if((s = xlmi->getString("sky2", nullptr)))
    {
       LevelInfo.sky2Name  = s;
       LevelInfo.sky2Delta = xlmi->getInt("sky2delta", 0) * FRACUNIT;
+
+      LevelInfo.enableBoomSkyHack = false;
    }
 
    // double skies
@@ -1132,9 +1136,9 @@ static void P_InfoDefaultFinale()
 //
 static void P_InfoDefaultSky()
 {
-   skydata_t *sd      = GameModeInfo->skyData;
-   skyrule_t *rule    = sd->rules;
-   skyrule_t *theRule = nullptr;
+   const skydata_t *sd      = GameModeInfo->skyData;
+   const skyrule_t *rule    = sd->rules;
+   const skyrule_t *theRule = nullptr;
 
    // DOOM determines the sky texture to be used
    // depending on the current episode, and the game version.
@@ -1162,7 +1166,10 @@ static void P_InfoDefaultSky()
 
    // we MUST have a default sky rule
    if(theRule)
+   {
       LevelInfo.skyName = theRule->skyTexture;
+      LevelInfo.enableBoomSkyHack = true;  // allow Boom tall sky compatibility
+   }
    else
       I_Error("P_InfoDefaultSky: no default rule in skyrule set\n");
 
@@ -1177,6 +1184,10 @@ static void P_InfoDefaultSky()
    // altSkyName -- this is used for lightning flashes --
    // starts out nullptr to indicate none.
    LevelInfo.altSkyName = nullptr;
+
+   // Set the sky offset to "unset"
+   LevelInfo.skyRowOffset = SKYROWOFFSET_DEFAULT;
+   LevelInfo.sky2RowOffset = SKYROWOFFSET_DEFAULT;
 }
 
 //
@@ -1610,6 +1621,8 @@ static levelvar_t levelvars[]=
    LI_DBLFIX("sky2delta",          sky2Delta),
    LI_STRING("skyname",            skyName),
    LI_STRING("sky2name",           sky2Name),
+   LI_INTEGR("skyrowoffset",       skyRowOffset),
+   LI_INTEGR("sky2rowoffset",      sky2RowOffset),
    LI_STRING("sound-swtchn",       sound_swtchn),
    LI_STRING("sound-swtchx",       sound_swtchx),
    LI_STRING("sound-stnmov",       sound_stnmov),
@@ -1633,6 +1646,10 @@ static levelvar_t levelvars[]=
 static void P_parseLevelString(levelvar_t *var, const qstring &value)
 {
    *(char**)var->variable = value.duplicate(PU_LEVEL);
+
+   // Hack for sky compatibility
+   if(var->variable == &LevelInfo.skyName || var->variable == &LevelInfo.sky2Name)
+      LevelInfo.enableBoomSkyHack = false;
 }
 
 //
@@ -1927,7 +1944,7 @@ static void P_processUMapInfo(MetaTable *info)
       else if(!strcasecmp(key, "nextsecret"))
          applyTo(LevelInfo.nextSecret);
       else if(!strcasecmp(key, "skytexture"))
-         applyTo(LevelInfo.skyName);
+         applyTo(LevelInfo.skyName);   // UMAPINFO is in PrBoom+UM, so don't disable the sky compat
       else if(!strcasecmp(key, "music"))
          applyTo(LevelInfo.musicName);
       else if(!strcasecmp(key, "exitpic"))

@@ -662,10 +662,12 @@ void P_PlayerThink(player_t *player)
          else
          {
             player->pitch -= look << 16;
-            if(player->pitch < -ANGLE_1*MAXPITCHUP)
-               player->pitch = -ANGLE_1*MAXPITCHUP;
-            else if(player->pitch > ANGLE_1*MAXPITCHDOWN)
-               player->pitch = ANGLE_1*MAXPITCHDOWN;
+            int maxpitchup = GameModeInfo->lookPitchUp;
+            int maxpitchdown = GameModeInfo->lookPitchDown;
+            if(player->pitch < -ANGLE_1*maxpitchup)
+               player->pitch = -ANGLE_1*maxpitchup;
+            else if(player->pitch > ANGLE_1*maxpitchdown)
+               player->pitch = ANGLE_1*maxpitchdown;
 
             // Eternity previously had ±32˚ pitch range
             if(demo_version >= 300 && demo_version <= 402)

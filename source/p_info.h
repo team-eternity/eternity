@@ -58,6 +58,11 @@ enum
    INFO_SECMAP_SMMU
 };
 
+enum
+{
+   SKYROWOFFSET_DEFAULT = INT_MIN,
+};
+
 // levelaction structures
 struct levelaction_t
 {
@@ -131,6 +136,10 @@ struct LevelInfo_t
    bool hasLightning;         // map has lightning flashes?
    fixed_t skyDelta;          // double-sky scroll speeds (units/tic)
    fixed_t sky2Delta;
+   int skyRowOffset;          // sky row offset
+   int sky2RowOffset;         // sky-2 row offset: may want better control if height different
+
+   bool enableBoomSkyHack;    // Hack to disable the Boom sky visual compatibility
 
    // gameplay options
    bool disableJump;          // if true, jumping is disabled

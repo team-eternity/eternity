@@ -149,8 +149,8 @@
 //
 
 #define DOOM_GIFLAGS \
-   (GIF_FLIGHTINERTIA | GIF_HASEXITSOUNDS | GIF_CLASSICMENUS | GIF_SKILL5RESPAWN | \
-    GIF_SKILL5WARNING | GIF_HUDSTATBARNAME | GIF_DOOMWEAPONOFFSET)
+   (GIF_PRBOOMTALLSKY | GIF_FLIGHTINERTIA | GIF_HASEXITSOUNDS | GIF_CLASSICMENUS | \
+    GIF_SKILL5RESPAWN | GIF_SKILL5WARNING | GIF_HUDSTATBARNAME | GIF_DOOMWEAPONOFFSET)
 
 #define HERETIC_GIFLAGS \
    (GIF_MNBIGFONT | GIF_SAVESOUND | GIF_HASADVISORY | GIF_SHADOWTITLES | \
@@ -1162,6 +1162,8 @@ static gamemodeinfo_t giDoomSW =
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
    nullptr,          // autoFlightArtifact
+   45,               // lookPitchUp
+   45,               // lookPitchDown
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1289,6 +1291,8 @@ static gamemodeinfo_t giDoomReg =
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
    nullptr,          // autoFlightArtifact
+   45,               // lookPitchUp
+   45,               // lookPitchDown
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1416,6 +1420,8 @@ static gamemodeinfo_t giDoomRetail =
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
    nullptr,          // autoFlightArtifact
+   45,               // lookPitchUp
+   45,               // lookPitchDown
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1543,6 +1549,8 @@ static gamemodeinfo_t giDoomCommercial =
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
    nullptr,          // autoFlightArtifact
+   45,               // lookPitchUp
+   45,               // lookPitchDown
 
    INTERPIC_DOOM,     // interPic
    mus_dm2int,        // interMusNum
@@ -1670,6 +1678,8 @@ static gamemodeinfo_t giHereticSW =
    meleecalc_raven,     // monsterMeleeRange
    32 * FRACUNIT,     // itemHeight
    "ArtiFly",         // autoFlightArtifact
+   32,               // lookPitchUp
+   32,               // lookPitchDown
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
@@ -1801,6 +1811,8 @@ static gamemodeinfo_t giHereticReg =
    meleecalc_raven,     // monsterMeleeRange
    32 * FRACUNIT,     // itemHeight
    "ArtiFly",         // autoFlightArtifact
+   32,               // lookPitchUp
+   32,               // lookPitchDown
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
