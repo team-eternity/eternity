@@ -1026,6 +1026,67 @@ static void P_LoadInterTextLumps()
 }
 
 //
+// Locate the finale rule suitable for current map or classic game rules. Shared both by
+// initialization and UMAPINFO settings.
+//
+static const finalerule_t *P_determineEpisodeFinaleRule(bool checkmap)
+{
+   const finaledata_t *fdata = GameModeInfo->finaleData;
+
+   // look for a rule that applies to this level in particular
+   for(const finalerule_t *rule = fdata->rules; rule->gameepisode != -2; rule++)
+   {
+      // if !checkmap, this is a hack for UMAPINFO to find the correct finale
+      bool pickit = checkmap ? rule->gamemap == gamemap :
+                               rule->finaleType != FINALE_TEXT || rule->endOfGame;
+      if((rule->gameepisode == -1 || rule->gameepisode == gameepisode) &&
+         (rule->gamemap == -1 || pickit))
+      {
+         return rule;
+      }
+   }
+   return nullptr;
+}
+
+//
+// Set the finale based on rule
+//
+static void P_setFinaleFromRule(const finalerule_t *rule)
+{
+   if(!rule)
+   {
+      // This shouldn't really happen but I'll be proactive about it.
+      // The finale data sets all have rules to cover defaulted maps.
+
+      // haleyjd: note -- this cannot use F_SKY1 like it did in BOOM
+      // because heretic.wad contains an invalid F_SKY1 flat. This
+      // caused crashes during development of Heretic support, so now
+      // it uses the F_SKY2 flat which is provided in eternity.wad.
+      LevelInfo.backDrop   = "F_SKY2";
+      LevelInfo.interText  = nullptr;
+      LevelInfo.finaleType = FINALE_TEXT;
+      return;
+   }
+
+   // set backdrop graphic, intertext, and finale type
+   LevelInfo.backDrop   = DEH_String(rule->backDrop);
+   LevelInfo.interText  = DEH_String(rule->interText);
+   LevelInfo.finaleType = rule->finaleType;
+
+   // check for endOfGame flag
+   if(rule->endOfGame)
+      LevelInfo.endOfGame = true;
+
+   // check for secretOnly flag
+   if(rule->secretOnly)
+      LevelInfo.finaleSecretOnly = true;
+
+   // check for early flag
+   if(rule->early)
+      LevelInfo.finaleEarly = true;
+}
+
+//
 // P_InfoDefaultFinale
 //
 // Sets up default MapInfo values related to f_finale.c code.
@@ -1037,8 +1098,6 @@ static void P_LoadInterTextLumps()
 static void P_InfoDefaultFinale()
 {
    finaledata_t *fdata   = GameModeInfo->finaleData;
-   finalerule_t *rule    = fdata->rules;
-   finalerule_t *theRule = nullptr;
 
    // universal defaults
    LevelInfo.interTextLump    = nullptr;
@@ -1067,36 +1126,11 @@ static void P_InfoDefaultFinale()
          LevelInfo.killStats = true;
    }
 
-   // look for a rule that applies to this level in particular
-   for(; rule->gameepisode != -2; rule++)
+   const finalerule_t *rule = P_determineEpisodeFinaleRule(true);
+   P_setFinaleFromRule(rule);
+
+   if(rule)
    {
-      if((rule->gameepisode == -1 || rule->gameepisode == gameepisode) &&
-         (rule->gamemap == -1 || rule->gamemap == gamemap))
-      {
-         theRule = rule;
-         break;
-      }
-   }
-
-   if(theRule)
-   {
-      // set backdrop graphic, intertext, and finale type
-      LevelInfo.backDrop   = DEH_String(rule->backDrop);
-      LevelInfo.interText  = DEH_String(rule->interText);
-      LevelInfo.finaleType = rule->finaleType;
-
-      // check for endOfGame flag
-      if(rule->endOfGame)
-         LevelInfo.endOfGame = true;
-
-      // check for secretOnly flag
-      if(rule->secretOnly)
-         LevelInfo.finaleSecretOnly = true;
-
-      // check for early flag
-      if(rule->early)
-         LevelInfo.finaleEarly = true;
-
       // allow metainfo overrides
       if(curmetainfo)
       {
@@ -1108,19 +1142,6 @@ static void P_InfoDefaultFinale()
          else
             LevelInfo.interText = nullptr; // disable other levels
       }
-   }
-   else
-   {
-      // This shouldn't really happen but I'll be proactive about it.
-      // The finale data sets all have rules to cover defaulted maps.
-
-      // haleyjd: note -- this cannot use F_SKY1 like it did in BOOM
-      // because heretic.wad contains an invalid F_SKY1 flat. This 
-      // caused crashes during development of Heretic support, so now
-      // it uses the F_SKY2 flat which is provided in eternity.wad.
-      LevelInfo.backDrop   = "F_SKY2";
-      LevelInfo.interText  = nullptr;
-      LevelInfo.finaleType = FINALE_TEXT;
    }
 
    // finale type for secret exits starts unspecified; if left that way and a
