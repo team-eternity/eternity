@@ -1944,46 +1944,187 @@ static void P_processEMapInfo(MetaTable *info)
 //
 // Process UMAPINFO obtained data.
 //
-static void P_processUMapInfo(MetaTable *info)
+// Source: https://github.com/coelckers/prboom-plus/blob/master/prboom2/doc/umapinfo.txt
+//
+static void P_processUMapInfo(MetaTable *info, const char *mapname)
 {
-   MetaMultiString *mms = nullptr;
-   while((mms = info->getNextTypeEx(mms)))
+   I_Assert(info, "No info provided!\n");
+   I_Assert(mapname, "Null mapname provided!\n");
+
+   int val;
+   const char *strval;
+
+   strval = info->getString("levelname", nullptr);
+   if(strval)
    {
-      if(mms->value.isEmpty())
-         continue;
-      const char *key = mms->getKey();
-      const qstring &value = mms->value[0];
-      auto applyTo = [&](const char *&info) {
-         info = value.duplicate(PU_LEVEL);
-      };
-      if(!strcasecmp(key, "levelname"))
+      const char *label = info->getString("label", nullptr);
+
+      qstring fullname;
+      if(label)
       {
-         applyTo(LevelInfo.levelName);
-         applyTo(LevelInfo.interLevelName);  // apply to both
+         fullname = label;
+         fullname += ": ";
+         fullname += strval;
       }
-      else if(!strcasecmp(key, "levelpic"))
-         applyTo(LevelInfo.levelPic);
-      else if(!strcasecmp(key, "next"))
-         applyTo(LevelInfo.nextLevel);
-      else if(!strcasecmp(key, "nextsecret"))
-         applyTo(LevelInfo.nextSecret);
-      else if(!strcasecmp(key, "skytexture"))
-         applyTo(LevelInfo.skyName);   // UMAPINFO is in PrBoom+UM, so don't disable the sky compat
-      else if(!strcasecmp(key, "music"))
-         applyTo(LevelInfo.musicName);
-      else if(!strcasecmp(key, "exitpic"))
-         applyTo(LevelInfo.interPic);  // NOTE: enterpic not used here
-      else if(!strcasecmp(key, "partime"))
-         LevelInfo.partime = value.toInt();
-      else if(!strcasecmp(key, "endgame"))
+      else
       {
-         if(!value.strCaseCmp("false"))
-            LevelInfo.killFinale = true;
-         // ???
-//         else
-//            forcefinale = true;
+         val = info->getInt("label", XL_UMAPINFO_SPECVAL_NOT_SET);
+         if(val == XL_UMAPINFO_SPECVAL_CLEAR)
+            fullname = strval;
+         else  // only other valid option is "missing"
+         {
+            fullname = mapname;
+            fullname += ": ";
+            fullname += strval;
+         }
+      }
+      LevelInfo.levelName = LevelInfo.interLevelName = fullname.duplicate(PU_LEVEL);
+   }
+   strval = info->getString("levelpic", nullptr);
+   if(strval)
+      LevelInfo.levelPic = strval;  // allocation is permanent in the UMAPINFO table
+   strval = info->getString("next", nullptr);
+   if(strval)
+      LevelInfo.nextLevel = strval;
+   strval = info->getString("nextsecret", nullptr);
+   if(strval)
+      LevelInfo.nextSecret = strval;
+   strval = info->getString("skytexture", nullptr);
+   if(strval)
+      LevelInfo.skyName = strval;   // UMAPINFO is in PrBoom+UM, so don't disable the sky compat
+   strval = info->getString("music", nullptr);
+   if(strval)
+      LevelInfo.musicName = strval;
+   strval = info->getString("exitpic", nullptr);
+   if(strval)
+      LevelInfo.interPic = strval;   // NOTE: enterpic not used here
+   val = info->getInt("partime", XL_UMAPINFO_SPECVAL_NOT_SET);
+   if(val != XL_UMAPINFO_SPECVAL_NOT_SET)
+      LevelInfo.partime = val;
+   val = info->getInt("endgame", XL_UMAPINFO_SPECVAL_NOT_SET);
+   if(val == XL_UMAPINFO_SPECVAL_FALSE)
+   {
+      // Override a default map exit
+      // Default map exits are defined in P_InfoDefaultFinale according to game mode info
+      LevelInfo.interMusic = nullptr;
+      LevelInfo.backDrop = "F_SKY2";
+      LevelInfo.interText = nullptr;
+      LevelInfo.finaleType = FINALE_TEXT;
+      LevelInfo.endOfGame = false;
+      LevelInfo.finaleSecretOnly = false;
+      LevelInfo.finaleEarly = false;
+   }
+   else if(val == XL_UMAPINFO_SPECVAL_TRUE)
+   {
+      const finalerule_t *rule = P_determineEpisodeFinaleRule(false);
+      P_setFinaleFromRule(rule); // use the most basic setting
+   }
+   strval = info->getString("endpic", nullptr);
+   if(strval)
+   {
+      const finalerule_t *rule = P_determineEpisodeFinaleRule(false);
+      P_setFinaleFromRule(rule);
+      // Now also update the ending type
+      LevelInfo.endOfGame = false;
+      LevelInfo.finaleType = FINALE_END_PIC;
+      LevelInfo.endPic = strval;
+   }
+   val = info->getInt("endbunny", XL_UMAPINFO_SPECVAL_NOT_SET);
+   if(val == XL_UMAPINFO_SPECVAL_TRUE)
+   {
+      const finalerule_t *rule = P_determineEpisodeFinaleRule(false);
+      P_setFinaleFromRule(rule);
+      LevelInfo.endOfGame = false;
+      LevelInfo.finaleType = FINALE_DOOM_BUNNY;
+   }
+   val = info->getInt("endcast", XL_UMAPINFO_SPECVAL_NOT_SET);
+   if(val == XL_UMAPINFO_SPECVAL_TRUE)
+   {
+      const finalerule_t *rule = P_determineEpisodeFinaleRule(false);
+      P_setFinaleFromRule(rule);
+      LevelInfo.endOfGame = true;
+      LevelInfo.finaleType = FINALE_TEXT;
+   }
+   val = info->getInt("nointermission", XL_UMAPINFO_SPECVAL_NOT_SET);
+   if(val == XL_UMAPINFO_SPECVAL_TRUE)
+   {
+      LevelInfo.killStats = true;
+      LevelInfo.finaleEarly = true;
+   }
+   else if(val == XL_UMAPINFO_SPECVAL_FALSE)
+   {
+      LevelInfo.killStats = false;
+      LevelInfo.finaleEarly = false;
+   }
+
+   const char *intertextkeys[] = {"intertext", "intertextsecret"};
+   const char *LevelInfo_t::*intertexttargets[] = {
+      &LevelInfo_t::interText,
+      &LevelInfo_t::interTextSecret
+   };
+
+   for(int i = 0; i < 2; ++i)
+   {
+      val = info->getInt(intertextkeys[i], XL_UMAPINFO_SPECVAL_NOT_SET);
+      if(val == XL_UMAPINFO_SPECVAL_CLEAR)
+         LevelInfo.*intertexttargets[i] = nullptr;
+      else
+      {
+         // Populate "intertext"
+         const MetaString *metastr = nullptr;
+         qstring intertext;
+         while((metastr = info->getNextKeyAndTypeEx(metastr, intertextkeys[i])))
+         {
+            // MetaTables are stored in reverse order
+            if(!intertext.empty())
+               intertext = qstring(metastr->getValue()) + "\n" + intertext;
+            else
+               intertext = metastr->getValue();
+         }
+         if(!intertext.empty())
+            LevelInfo.*intertexttargets[i] = intertext.duplicate(PU_LEVEL);
       }
    }
+   // TODO: more
+
+//   MetaMultiString *mms = nullptr;
+//   while((mms = info->getNextTypeEx(mms)))
+//   {
+//      if(mms->value.isEmpty())
+//         continue;
+//      const char *key = mms->getKey();
+//      const qstring &value = mms->value[0];
+//      auto applyTo = [&](const char *&info) {
+//         info = value.duplicate(PU_LEVEL);
+//      };
+//      if(!strcasecmp(key, "levelname"))
+//      {
+//         applyTo(LevelInfo.levelName);
+//         applyTo(LevelInfo.interLevelName);  // apply to both
+//      }
+//      else if(!strcasecmp(key, "levelpic"))
+//         applyTo(LevelInfo.levelPic);
+//      else if(!strcasecmp(key, "next"))
+//         applyTo(LevelInfo.nextLevel);
+//      else if(!strcasecmp(key, "nextsecret"))
+//         applyTo(LevelInfo.nextSecret);
+//      else if(!strcasecmp(key, "skytexture"))
+//         applyTo(LevelInfo.skyName);   // UMAPINFO is in PrBoom+UM, so don't disable the sky compat
+//      else if(!strcasecmp(key, "music"))
+//         applyTo(LevelInfo.musicName);
+//      else if(!strcasecmp(key, "exitpic"))
+//         applyTo(LevelInfo.interPic);  // NOTE: enterpic not used here
+//      else if(!strcasecmp(key, "partime"))
+//         LevelInfo.partime = value.toInt();
+//      else if(!strcasecmp(key, "endgame"))
+//      {
+//         if(!value.strCaseCmp("false"))
+//            LevelInfo.killFinale = true;
+//         // ???
+////         else
+////            forcefinale = true;
+//      }
+//   }
 }
 
 //=============================================================================
@@ -2033,14 +2174,15 @@ void P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname)
    if(demo_version > 203)  // do NOT read any MapInfo in MBF or less
    {
       // FIXME: this may need finer compatibility check if it materializes
-      if((info = XL_UMapInfoForMapName(dir->getLumpName(lumpnum))))
+      const char *mapname = dir->getLumpName(lumpnum);
+      if((info = XL_UMapInfoForMapName(mapname)))
       {
-         P_processUMapInfo(info);
+         P_processUMapInfo(info, mapname);
          // Don't give it higher priority over Hexen MAPINFO
       }
 
       // process any global EMAPINFO data
-      if((info = XL_EMapInfoForMapName(dir->getLumpName(lumpnum))))
+      if((info = XL_EMapInfoForMapName(mapname)))
       {
          P_processEMapInfo(info);
          foundEEMapInfo = true;

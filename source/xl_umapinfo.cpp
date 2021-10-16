@@ -28,6 +28,7 @@
 #include "metaqstring.h"
 #include "w_wad.h"
 #include "xl_scripts.h"
+#include "xl_umapinfo.h"
 
 // UMAPINFO entry maintenance
 static MetaTable umapInfoTable;
@@ -68,14 +69,6 @@ class XLUMapInfoParser final : public XLParser
       STATE_EXPECTEQUAL,      // before =
       STATE_EXPECTVALUE,      // before ""
       STATE_POSTVALUE,        // before , or }
-   };
-
-   enum
-   {
-      // Use the minimum extreme values for special meanings
-      SPECVAL_CLEAR = INT_MIN,
-      SPECVAL_FALSE,
-      SPECVAL_TRUE
    };
 
    bool doStateExpectMap(XLTokenizer &);
@@ -198,11 +191,11 @@ bool XLUMapInfoParser::doStateExpectValue(XLTokenizer &tokenizer)
       if(!*endptr)
          curInfo->addInt(key.constPtr(), (int)val);
       else if(!value.strCaseCmp("clear"))
-         curInfo->addInt(key.constPtr(), SPECVAL_CLEAR);
+         curInfo->addInt(key.constPtr(), XL_UMAPINFO_SPECVAL_CLEAR);
       else if(!value.strCaseCmp("false"))
-         curInfo->addInt(key.constPtr(), SPECVAL_FALSE);
+         curInfo->addInt(key.constPtr(), XL_UMAPINFO_SPECVAL_FALSE);
       else if(!value.strCaseCmp("true"))
-         curInfo->addInt(key.constPtr(), SPECVAL_TRUE);
+         curInfo->addInt(key.constPtr(), XL_UMAPINFO_SPECVAL_TRUE);
       else
          return false;  // FAILURE
    }

@@ -27,6 +27,15 @@
 
 class MetaTable;
 
+enum
+{
+   // Use the minimum extreme values for special meanings
+   XL_UMAPINFO_SPECVAL_CLEAR = INT_MIN,
+   XL_UMAPINFO_SPECVAL_FALSE,
+   XL_UMAPINFO_SPECVAL_TRUE,
+   XL_UMAPINFO_SPECVAL_NOT_SET = INT_MAX  // this is the default when querying the meta table.
+};
+
 MetaTable *XL_UMapInfoForMapName(const char *mapname);
 void XL_ParseUMapInfo();
 void XL_BuildInterUMapInfo();
