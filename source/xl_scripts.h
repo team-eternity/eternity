@@ -60,7 +60,7 @@ public:
    enum
    {
       TOKEN_NONE,       // Nothing identified yet
-      TOKEN_KEYWORD,    // Starts with a $; otherwise, same as a string
+      TOKEN_KEYWORD,    // Starts with a $ (or without quotes if specified); or same as a string
       TOKEN_STRING,     // Generic string token; ex: 92 foobar
       TOKEN_EOF,        // End of input
       TOKEN_LINEBREAK,  // '\n' character, only a token when TF_LINEBREAKS is enabled

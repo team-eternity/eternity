@@ -70,6 +70,14 @@ class XLUMapInfoParser final : public XLParser
       STATE_POSTVALUE,        // before , or }
    };
 
+   enum
+   {
+      // Use the minimum extreme values for special meanings
+      SPECVAL_CLEAR = INT_MIN,
+      SPECVAL_FALSE,
+      SPECVAL_TRUE
+   };
+
    bool doStateExpectMap(XLTokenizer &);
    bool doStateExpectMapName(XLTokenizer &);
    bool doStateExpectOpenBrace(XLTokenizer &);
@@ -87,8 +95,6 @@ class XLUMapInfoParser final : public XLParser
    void startLump() override;
    void initTokenizer(XLTokenizer &tokenizer) override;
    void onEOF(bool early) override;
-
-   void addValue(const qstring &key, const qstring &value);
 
 public:
    XLUMapInfoParser() : XLParser("UMAPINFO"), state(STATE_EXPECTMAP),
@@ -181,9 +187,26 @@ bool XLUMapInfoParser::doStateExpectEqual(XLTokenizer &tokenizer)
 //
 bool XLUMapInfoParser::doStateExpectValue(XLTokenizer &tokenizer)
 {
-   if(value.length())
-      value << " ";
    value << tokenizer.getToken();
+
+   if(tokenizer.getTokenType() == XLTokenizer::TOKEN_STRING)
+      curInfo->addString(key.constPtr(), value.constPtr());
+   else if(tokenizer.getTokenType() == XLTokenizer::TOKEN_KEYWORD)
+   {
+      char *endptr = nullptr;
+      long val = value.toLong(&endptr, 10);
+      if(!*endptr)
+         curInfo->addInt(key.constPtr(), (int)val);
+      else if(!value.strCaseCmp("clear"))
+         curInfo->addInt(key.constPtr(), SPECVAL_CLEAR);
+      else if(!value.strCaseCmp("false"))
+         curInfo->addInt(key.constPtr(), SPECVAL_FALSE);
+      else if(!value.strCaseCmp("true"))
+         curInfo->addInt(key.constPtr(), SPECVAL_TRUE);
+      else
+         return false;  // FAILURE
+   }
+
    state = STATE_POSTVALUE;
    return true;
 }
@@ -198,22 +221,17 @@ bool XLUMapInfoParser::doStatePostValue(XLTokenizer &tokenizer)
       state = STATE_EXPECTVALUE;
       return true;
    }
-   bool result = false;
-   qstring savedkey = key;
-   qstring savedval = value;
    if(tokenizer.getToken() == "}")
    {
       state = STATE_EXPECTMAP;
-      result = true;
+      return true;
    }
-   else if(tokenizer.getTokenType() == XLTokenizer::TOKEN_KEYWORD)
+   if(tokenizer.getTokenType() == XLTokenizer::TOKEN_KEYWORD)
    {
       // Otherwise it's a new key
-      result = doStateExpectKey(tokenizer);
+      return doStateExpectKey(tokenizer);
    }
-
-   addValue(savedkey, savedval);
-   return result;
+   return false;
 }
 
 //
@@ -249,22 +267,6 @@ void XLUMapInfoParser::initTokenizer(XLTokenizer &tokenizer)
 //
 void XLUMapInfoParser::onEOF(bool early)
 {
-   if(state == STATE_POSTVALUE && curInfo && !key.empty() && !value.empty())
-      addValue(key, value);
-}
-
-//
-// Adds a value for a key
-//
-void XLUMapInfoParser::addValue(const qstring &key, const qstring &value)
-{
-   if(!curInfo)
-      return;
-   auto mms = curInfo->getObjectKeyAndTypeEx<MetaMultiString>(key.constPtr());
-   if(!mms)
-      curInfo->addObject(new MetaMultiString(key.constPtr(), value));
-   else
-      mms->value.add(value);
 }
 
 //
@@ -294,21 +296,21 @@ void XL_BuildInterUMapInfo()
    {
       intermapinfo_t &info = IN_GetMapInfo(level->getKey());
 
-      auto mms = level->getObjectKeyAndTypeEx<MetaMultiString>("levelname");
-      if(mms && !mms->value.isEmpty())
-         info.levelname = mms->value[0].constPtr();
+      auto str = level->getObjectKeyAndTypeEx<MetaString>("levelname");
+      if(str)
+         info.levelname = str->getValue();
 
-      mms = level->getObjectKeyAndTypeEx<MetaMultiString>("levelpic");
-      if(mms && !mms->value.isEmpty())
-         info.levelpic = mms->value[0].constPtr();
+      str = level->getObjectKeyAndTypeEx<MetaString>("levelpic");
+      if(str)
+         info.levelpic = str->getValue();
 
-      mms = level->getObjectKeyAndTypeEx<MetaMultiString>("enterpic");
-      if(mms && !mms->value.isEmpty())
-         info.enterpic = mms->value[0].constPtr();
+      str = level->getObjectKeyAndTypeEx<MetaString>("enterpic");
+      if(str)
+         info.enterpic = str->getValue();
 
-      mms = level->getObjectKeyAndTypeEx<MetaMultiString>("exitpic");
-      if(mms && !mms->value.isEmpty())
-         info.exitpic = mms->value[0].constPtr();
+      str = level->getObjectKeyAndTypeEx<MetaString>("exitpic");
+      if(str)
+         info.exitpic = str->getValue();
    }
 }
 
