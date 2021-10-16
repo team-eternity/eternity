@@ -575,6 +575,7 @@ static int R_ReadTextureNamespace(int texnum)
 
       texture = textures[texnum] = R_AllocTexStruct(lump->name, width, height, 1);
       texture->index = texnum;
+      texture->flags |= TF_NONVANILLA;
 
       auto component = texture->components;
       component->originx = 0;

@@ -85,6 +85,8 @@ typedef enum
    TF_ANIMATED  = 0x08u,
    // Set if texture width is non-power-of-two
    TF_WIDTHNP2  = 0x10u,
+   // Set if texture was loaded in non-vanilla ways (i.e. not by TEXTUREx/PNAMES)
+   TF_NONVANILLA = 0x20u,
 } texflag_e;
 
 struct texture_t
