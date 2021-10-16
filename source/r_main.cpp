@@ -1592,7 +1592,7 @@ CONSOLE_VARIABLE(r_showhom, autodetect_hom, 0)
    doom_printf("hom detection %s", autodetect_hom ? "on" : "off");
 }
 
-CONSOLE_VARIABLE(r_stretchsky, stretchsky, 0) {}
+CONSOLE_VARIABLE(r_stretchsky, stretchsky, 0) {}   // DEPRECATED
 CONSOLE_VARIABLE(r_swirl, r_swirl, 0) {}
 
 CONSOLE_VARIABLE(r_trans, general_translucency, 0)

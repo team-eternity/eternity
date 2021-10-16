@@ -66,7 +66,7 @@ struct skytexture_t
    byte medianColor; // median color for fading high pitch view of sky
 };
 
-extern int stretchsky;
+extern int stretchsky;  // DEPRECATED
 
 // init sky at start of level
 void R_StartSky();

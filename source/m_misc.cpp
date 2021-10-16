@@ -800,8 +800,8 @@ default_t defaults[] =
    DEFAULT_INT("pevent_bfgexpl",&(particleEvents[P_EVENT_BFG_EXPLODE].enabled), nullptr,
                0, 0, 1, default_t::wad_game, "draw particle bfg explosions"),
 
-   DEFAULT_INT("stretchsky", &stretchsky, nullptr, 0, 0, 1, default_t::wad_game,
-               "stretch short sky textures for mlook"),
+   DEFAULT_INT("stretchsky", &stretchsky, nullptr, 0, 0, 1, default_t::wad_no,
+               "(deprecated; do not use)"),
 
 #ifdef _SDL_VER   
    DEFAULT_INT("showendoom", &showendoom, nullptr, 1, 0, 1, default_t::wad_game,
@@ -904,7 +904,6 @@ default_or_t HereticDefaultORs[] =
    // misc
    { "pitched_sounds",    1 }, // pitched sounds should be on
    { "allowmlook",        1 }, // mlook defaults to on
-   { "stretchsky",        1 }, // if mlook is on, we now need to stretch sthe sky.
    { "wipetype",          2 }, // use crossfade wipe by default
    { "hud_overlaylayout", 4 }, // use graphical HUD style
    

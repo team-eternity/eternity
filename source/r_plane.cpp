@@ -844,24 +844,6 @@ static void R_makeSpans(const R_FlatFunc flatfunc, const R_SlopeFunc slopefunc,
       spanstart[b2--] = x;
 }
 
-//
-// Returns the column step for the sky, depending on settings
-//
-static fixed_t R_getSkyColumnStep(const skytexture_t &sky)
-{
-   // haleyjd:  don't stretch textures over 200 tall (ioanch: will be 260 now)
-   // 10/07/06: don't stretch skies in old demos (no mlook)
-   if(demo_version >= 300 && stretchsky && sky.texturemid > 0 && 
-      sky.texturemid < SKY_FREELOOK_HEIGHT * FRACUNIT)
-   {
-      // Use sky's designated texturemid, not column's assigned one, which may be
-      // changed by scrolling.
-      return M_FloatToFixed(view.pspriteystep * 
-                            M_FixedToFloat(sky.texturemid) / SKY_FREELOOK_HEIGHT);
-   }
-   return M_FloatToFixed(view.pspriteystep);
-}
-
 // haleyjd: moved here from r_newsky.c
 static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visplane_t *pl)
 {
@@ -898,7 +880,7 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
       column.texmid = sky2->texturemid;
    column.texheight = sky2->height;
    column.skycolor = sky2->medianColor;
-   column.step = R_getSkyColumnStep(*sky2);
+   column.step = M_FloatToFixed(view.pspriteystep);
 
    colfunc = r_column_engine->DrawSkyColumn;
    for(int x = pl->minx; (column.x = x) <= pl->maxx; x++)
@@ -920,7 +902,7 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
       column.texmid = sky1->texturemid;
    column.texheight = sky1->height;
 
-   column.step = R_getSkyColumnStep(*sky1);
+   column.step = M_FloatToFixed(view.pspriteystep);
       
    colfunc = r_column_engine->DrawNewSkyColumn;
    for(int x = pl->minx; (column.x = x) <= pl->maxx; x++)
@@ -1039,7 +1021,7 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
    // haleyjd: use height determined from patches in texture
    column.texheight = sky->height;
 
-   column.step = R_getSkyColumnStep(*sky);
+   column.step = M_FloatToFixed(view.pspriteystep);
    column.skycolor = sky->medianColor;
 
    R_ColumnFunc colfunc = tilevert ? r_column_engine->DrawColumn :
