@@ -168,7 +168,8 @@ static const char *finaleTypeStrs[FINALE_NUMFINALES] =
    "htic_water",
    "htic_demon",
    "psx_udoom",
-   "psx_doom2"
+   "psx_doom2",
+   "endpic"
 };
 
 // GameModeInfo flags

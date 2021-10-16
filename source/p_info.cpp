@@ -151,7 +151,8 @@ static const char *finaleTypeStrs[FINALE_NUMFINALES] =
    "htic_water",
    "htic_demon",
    "psx_udoom",
-   "psx_doom2"
+   "psx_doom2",
+   "endpic",
 };
 
 static textvals_t finaleTypeVals =
@@ -1049,6 +1050,7 @@ static void P_InfoDefaultFinale()
    LevelInfo.killStats        = false;
    LevelInfo.endOfGame        = false;
    LevelInfo.useEDFInterName  = false;
+   LevelInfo.endPic           = GameModeInfo->interPic;  // just have a valid default
 
    // set data from the finaledata object
    if(fdata->musicnum != mus_None)
@@ -1588,6 +1590,7 @@ static levelvar_t levelvars[]=
    LI_BOOLNF("doublesky",          doubleSky),
    LI_BOOLNF("edf-intername",      useEDFInterName),
    LI_BOOLNF("endofgame",          endOfGame),
+   LI_STRING("endpic",             endPic),
    LI_STRING("extradata",          extraData),
    LI_BOOLNF("finale-normal",      finaleNormalOnly),
    LI_BOOLNF("finale-secret",      finaleSecretOnly), 
