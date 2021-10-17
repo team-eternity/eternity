@@ -1889,7 +1889,10 @@ static void G_DoCompleted()
       {
          wminfo.next = G_GetMapForName(LevelInfo.nextLevel);
          if(!(GameModeInfo->flags & GIF_MAPXY))
-            wminfo.next = wminfo.next % 10;
+         {
+            if((wminfo.next %= 10) < 1)
+               wminfo.next = 1;  // hack to protect against underflow
+         }
          wminfo.next--;
       }
    }
@@ -1899,7 +1902,10 @@ static void G_DoCompleted()
       {
          wminfo.next = G_GetMapForName(LevelInfo.nextSecret);
          if(!(GameModeInfo->flags & GIF_MAPXY))
-            wminfo.next %= 10;
+         {
+            if((wminfo.next %= 10) < 1)
+               wminfo.next = 1;  // hack to protect against underflow
+         }
          wminfo.next--;
       }
    }
