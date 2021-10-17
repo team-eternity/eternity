@@ -491,7 +491,7 @@ void XL_ParseHexenScripts()
    XL_ParseAnimDefs();  // Hexen: ANIMDEFS
 
    // FIXME: do this when it's time, not now yet.
-// XL_ParseUMapInfo();  // Universal MAPINFO new format
+   XL_ParseUMapInfo();  // Universal MAPINFO new format
 
    XL_buildInterMapInfo();
 }
