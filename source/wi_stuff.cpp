@@ -1890,7 +1890,10 @@ static void WI_DrawBackground()
    char  name[9];  // limited to 8 characters
 
    if(state != StatCount && estrnonempty(wbs->li_nextenterpic))
+   {
       strncpy(name, wbs->li_nextenterpic, sizeof(name));
+      name[sizeof(name) - 1] = 0;
+   }
    else if(estrnonempty(wbs->li_lastexitpic) ||
       GameModeInfo->id == commercial || (GameModeInfo->id == retail &&
                                          wbs->epsd == 3))
@@ -1898,11 +1901,11 @@ static void WI_DrawBackground()
       // Use LevelInfo's interpic here: it handles cases where li_lastexitpic IS
       // empty. By the help of logic, the intermapinfo_t last exitpic must be
       // equivalent to currently exited level's interPic.
-      strcpy(name, LevelInfo.interPic);
+      strncpy(name, LevelInfo.interPic, sizeof(name));
+      name[sizeof(name) - 1] = 0;
    }
    else
-      sprintf(name, "WIMAP%d", wbs->epsd);
-   name[sizeof(name) - 1] = 0;
+      snprintf(name, sizeof(name), "WIMAP%d", wbs->epsd);
 
    // background
    V_DrawFSBackground(&subscreen43, wGlobalDir.checkNumForName(name));
