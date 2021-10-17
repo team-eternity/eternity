@@ -2085,7 +2085,16 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
             LevelInfo.*intertexttargets[i] = intertext.duplicate(PU_LEVEL);
       }
    }
-   // TODO: more
+
+   strval = info->getString("interbackdrop", nullptr);
+   if(strval)
+      LevelInfo.backDrop = strval;
+
+   strval = info->getString("intermusic", nullptr);
+   if(strval)
+      LevelInfo.interMusic = strval;
+
+
 
 //   MetaMultiString *mms = nullptr;
 //   while((mms = info->getNextTypeEx(mms)))
