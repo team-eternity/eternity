@@ -1979,6 +1979,7 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
          }
       }
       LevelInfo.levelName = LevelInfo.interLevelName = fullname.duplicate(PU_LEVEL);
+      LevelInfo.interLevelName = strval;  // just the inter level name
    }
    strval = info->getString("levelpic", nullptr);
    if(strval)
