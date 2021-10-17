@@ -2137,6 +2137,68 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
 //   }
 }
 
+//
+// Check level info and fail early in case of severe errors
+//
+static bool P_validateLevelInfo(qstring *errorOut)
+{
+   qstring error;
+
+   // For any lump names assumed to be at most 8 characters, signal error if they surpass it.
+   // Only remove these limitations if the rest of the code guarantees it can handle longer names.
+
+   //
+   // Lump string information: holds its address and user readable description
+   //
+   struct LumpStringInfo
+   {
+      const char *infoField;
+      const char *description;
+   };
+
+   // * Some of these get fed into 8-character buffers.
+   // * All the lump lookups go into hash tables which only check the first 8 characters.
+   // * Textures and flats are fine, however, so they're not limited here.
+   LumpStringInfo eightCharMaxFields[] =
+   {
+      { LevelInfo.interPic, "intermission background" },
+      { LevelInfo.interTextLump, "story text lump" },
+      { LevelInfo.interTextSLump, "secret story text lump" },
+      { LevelInfo.backDrop, "story text back drop" },
+      { LevelInfo.interMusic, "story text music" },
+      { LevelInfo.levelPic, "intermission level name graphic" },
+      { LevelInfo.nextLevelPic, "intermission next level name graphic" },
+      { LevelInfo.nextSecretPic, "intermission next secret level name graphic" },
+      { LevelInfo.nextLevel, "next level name" },
+      { LevelInfo.nextSecret, "next secret level name" },
+      { LevelInfo.musicName, "music name" },
+      { LevelInfo.colorMap, "color map name" },
+      { LevelInfo.outdoorFog, "outdoor fog name" },
+      { LevelInfo.acsScriptLump, "ACS script lump" },
+      { LevelInfo.extraData, "ExtraData lump" },
+      // skyName is fine! Apart from TXTRCONV which isn't crashy.
+      // Same for: altSkyName,
+   };
+
+   for(const LumpStringInfo &info : eightCharMaxFields)
+   {
+      if(info.infoField && strlen(info.infoField) > 8)
+      {
+         error = qstring("Invalid ") + info.description + ": " + info.infoField +
+               ". Must not be longer than 8 characters.";
+         break;
+      }
+   }
+
+   if(!error.empty())
+   {
+      if(errorOut)
+         *errorOut = error;
+      return false;
+   }
+   return true;
+}
+
 //=============================================================================
 //
 // LevelInfo External Interface
@@ -2153,7 +2215,7 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
 // lvname, if non-null, is the filepath of the wad that contains
 // the level when it has been loaded from a managed wad directory.
 //
-void P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname)
+bool P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname, qstring *error)
 {
    MetaTable *info = nullptr;
    
@@ -2211,6 +2273,9 @@ void P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname)
          P_applyHexenMapInfo();
    }
 
+   if(!P_validateLevelInfo(error))
+      return false;
+
    // haleyjd: call post-processing routines
    P_LoadInterTextLumps();
    P_SetSky2Texture();
@@ -2219,6 +2284,7 @@ void P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname)
    P_SetOutdoorFog();
 
    P_InitWeapons();
+   return true;
 }
 
 //

@@ -2927,11 +2927,11 @@ char *G_GetNameForMap(int episode, int map)
 
    if(GameModeInfo->flags & GIF_MAPXY)
    {
-      sprintf(levelname, "MAP%02d", map);
+      snprintf(levelname, sizeof(levelname), "MAP%02d", map);
    }
    else
    {
-      sprintf(levelname, "E%01dM%01d", episode, map);
+      snprintf(levelname, sizeof(levelname), "E%01dM%01d", episode, map);
    }
 
    return levelname;

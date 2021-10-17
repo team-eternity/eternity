@@ -3409,7 +3409,9 @@ static void P_PreZoneFreeLevel()
 //
 // Performs (re)initialization of subsystems after Z_FreeTags.
 //
-static void P_InitNewLevel(int lumpnum, WadDirectory *waddir)
+// IF THIS RETURNS false, IT MUST HAVE CALLED P_SetupLevelError.
+//
+static bool P_InitNewLevel(int lumpnum, WadDirectory *waddir)
 {
    //==============================================
    // Playsim
@@ -3427,7 +3429,12 @@ static void P_InitNewLevel(int lumpnum, WadDirectory *waddir)
    // Map data scripts
 
    // load MapInfo
-   P_LoadLevelInfo(waddir, lumpnum, W_GetManagedDirFN(waddir));
+   qstring error;
+   if(!P_LoadLevelInfo(waddir, lumpnum, W_GetManagedDirFN(waddir), &error))
+   {
+      P_SetupLevelError(error.constPtr(), gamemapname);
+      return false;
+   }
    
    // haleyjd 10/08/03: load ExtraData
    E_LoadExtraData();         
@@ -3459,6 +3466,8 @@ static void P_InitNewLevel(int lumpnum, WadDirectory *waddir)
    //==============================================
    // MUSINFO
    S_MusInfoClear();
+
+   return true;
 }
 
 //
@@ -3650,7 +3659,8 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    Z_FreeTags(PU_LEVEL, PU_LEVEL);
 
    // perform post-Z_FreeTags actions
-   P_InitNewLevel(lumpnum, dir);
+   if(!P_InitNewLevel(lumpnum, dir))
+      return;  // The error was thrown by P_InitNewLevel if it got false.
 
    // note: most of this ordering is important
    

@@ -24,9 +24,10 @@
 #include "doomdef.h"
 #include "r_defs.h"  // needed for NUMLINEARGS
 
+class qstring;
 class WadDirectory;
 
-void P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname);
+bool P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname, qstring *error);
 
 void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
                       int next, int secr, bool finale, const char *intertext,
@@ -150,8 +151,8 @@ struct LevelInfo_t
    const char *creator;       // creator: name of who made this map
 
    // attached scripts
-   char *acsScriptLump;       // name of ACS script lump, for DOOM-format maps
-   char *extraData;           // name of ExtraData lump
+   const char *acsScriptLump;       // name of ACS script lump, for DOOM-format maps
+   const char *extraData;           // name of ExtraData lump
    bool  acsOpenDelay;        // delay open scripts?
 
    // per-level sound replacements
