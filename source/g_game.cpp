@@ -1730,8 +1730,8 @@ static void G_PlayerFinishLevel(int player)
 //
 static void G_SetNextMap()
 {
-   exitrule_t *exitrule = GameModeInfo->exitRules;
-   exitrule_t *theRule = nullptr;
+   const exitrule_t *exitrule = GameModeInfo->exitRules;
+   const exitrule_t *theRule = nullptr;
 
    // find a rule
    for(; exitrule->gameepisode != -2; exitrule++)
@@ -2889,7 +2889,7 @@ static char    d_mapname[10];
 
 int G_GetMapForName(const char *name)
 {
-   char normName[9];
+   char normName[9] = {};  // zero-protect it
    int map;
 
    strncpy(normName, name, 9);
