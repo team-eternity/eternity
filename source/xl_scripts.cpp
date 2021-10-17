@@ -490,7 +490,6 @@ void XL_ParseHexenScripts()
    XL_ParseMusInfo();  // Risen3D:  MUSINFO
    XL_ParseAnimDefs();  // Hexen: ANIMDEFS
 
-   // FIXME: do this when it's time, not now yet.
    XL_ParseUMapInfo();  // Universal MAPINFO new format
 
    XL_buildInterMapInfo();
