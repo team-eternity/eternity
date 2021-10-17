@@ -150,8 +150,8 @@ struct LevelInfo_t
    const char *creator;       // creator: name of who made this map
 
    // attached scripts
-   char *acsScriptLump;       // name of ACS script lump, for DOOM-format maps
-   char *extraData;           // name of ExtraData lump
+   const char *acsScriptLump;       // name of ACS script lump, for DOOM-format maps
+   const char *extraData;           // name of ExtraData lump
    bool  acsOpenDelay;        // delay open scripts?
 
    // per-level sound replacements
