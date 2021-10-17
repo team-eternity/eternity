@@ -8,6 +8,11 @@ Since v4.02.00 "Forseti"
 ========================
 
 --------------------------------------------------------------------------------
+17.10.2021
+
+BUGFIX: Invalid entries in EMAPINFO are now detected early.
+
+--------------------------------------------------------------------------------
 16.10.2021
 
 IMPROVEMENT: Short skies now fade into a single colour instead of stretching.

@@ -24,9 +24,10 @@
 #include "doomdef.h"
 #include "r_defs.h"  // needed for NUMLINEARGS
 
+class qstring;
 class WadDirectory;
 
-void P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname);
+bool P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname, qstring *error);
 
 void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
                       int next, int secr, bool finale, const char *intertext,
