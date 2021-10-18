@@ -1730,8 +1730,8 @@ static void G_PlayerFinishLevel(int player)
 //
 static void G_SetNextMap()
 {
-   exitrule_t *exitrule = GameModeInfo->exitRules;
-   exitrule_t *theRule = nullptr;
+   const exitrule_t *exitrule = GameModeInfo->exitRules;
+   const exitrule_t *theRule = nullptr;
 
    // find a rule
    for(; exitrule->gameepisode != -2; exitrule++)
@@ -1889,7 +1889,10 @@ static void G_DoCompleted()
       {
          wminfo.next = G_GetMapForName(LevelInfo.nextLevel);
          if(!(GameModeInfo->flags & GIF_MAPXY))
-            wminfo.next = wminfo.next % 10;
+         {
+            if((wminfo.next %= 10) < 1)
+               wminfo.next = 1;  // hack to protect against underflow
+         }
          wminfo.next--;
       }
    }
@@ -1899,7 +1902,10 @@ static void G_DoCompleted()
       {
          wminfo.next = G_GetMapForName(LevelInfo.nextSecret);
          if(!(GameModeInfo->flags & GIF_MAPXY))
-            wminfo.next %= 10;
+         {
+            if((wminfo.next %= 10) < 1)
+               wminfo.next = 1;  // hack to protect against underflow
+         }
          wminfo.next--;
       }
    }
@@ -2889,7 +2895,7 @@ static char    d_mapname[10];
 
 int G_GetMapForName(const char *name)
 {
-   char normName[9];
+   char normName[9] = {};  // zero-protect it
    int map;
 
    strncpy(normName, name, 9);
