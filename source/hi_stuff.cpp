@@ -60,6 +60,11 @@ extern char gamemapname[9];
 #define HIS_VICTIMS     "VICTIMS"
 #define HIS_KILLERS     "K\0I\0L\0L\0E\0R\0S"
 
+enum
+{
+   NUM_OVERWORLD_EPISODES = 3,
+   NUM_LEVELS_PER_EPISODE = 9,
+};
 
 // Private Data
 
@@ -69,7 +74,7 @@ struct hipoint_t
    int y;
 };
 
-static hipoint_t hipoints[3][9] =
+static hipoint_t hipoints[NUM_OVERWORLD_EPISODES][NUM_LEVELS_PER_EPISODE] =
 {
    {
       { 172, 78 },
@@ -165,15 +170,20 @@ static void HI_loadData(void)
       hi_exitpic = PatchLoader::CacheName(wGlobalDir, hi_wbs.li_lastexitpic,
                                           PU_STATIC);
    }
+   else if(hi_wbs.epsd >= 0 && hi_wbs.epsd < NUM_OVERWORLD_EPISODES && hi_wbs.epsd != hi_wbs.nextEpisode)
+   {
+      snprintf(mapname, sizeof(mapname), "MAPE%d", hi_wbs.epsd + 1);
+      hi_exitpic = PatchLoader::CacheName(wGlobalDir, mapname, PU_STATIC);
+   }
 
    if(estrnonempty(hi_wbs.li_nextenterpic))
    {
       hi_interpic = PatchLoader::CacheName(wGlobalDir, hi_wbs.li_nextenterpic,
                                            PU_STATIC);
    }
-   else if(gameepisode <= 3)
+   else if(hi_wbs.nextEpisode >= 0 && hi_wbs.nextEpisode < NUM_OVERWORLD_EPISODES)
    {
-      sprintf(mapname, "MAPE%d", gameepisode);
+      snprintf(mapname, sizeof(mapname), "MAPE%d", hi_wbs.nextEpisode + 1);
       hi_interpic = PatchLoader::CacheName(wGlobalDir, mapname, PU_STATIC);
    }
 
@@ -188,10 +198,10 @@ static void HI_loadData(void)
 
       memset(tempstr, 0, 9);
 
-      sprintf(tempstr, "FACEA%.1d", i);
+      snprintf(tempstr, sizeof(tempstr), "FACEA%.1d", i);
       hi_faces[i] = W_GetNumForName(tempstr);
 
-      sprintf(tempstr, "FACEB%.1d", i);
+      snprintf(tempstr, sizeof(tempstr), "FACEB%.1d", i);
       hi_dead_faces[i] = W_GetNumForName(tempstr);
    }
 
@@ -237,7 +247,7 @@ static void HI_loadData(void)
          if(isExMy(gamemapname))
          {
             psnprintf(nameBuffer, 24, "_IN_NAME_E%01dM%01d", 
-                      hi_wbs.epsd + 1, hi_wbs.next + 1);
+                      hi_wbs.nextEpisode + 1, hi_wbs.next + 1);
             if((str = E_StringForName(nameBuffer)))
                nextMapName = str->string;
          }
@@ -390,8 +400,11 @@ static void HI_drawGoing()
 {
    int i, previous;
 
-   if(gameepisode > 3 && estrempty(hi_wbs.li_nextenterpic))
+   if((hi_wbs.nextEpisode >= NUM_OVERWORLD_EPISODES || hi_wbs.nextEpisode < 0) &&
+      estrempty(hi_wbs.li_nextenterpic))
+   {
       return;
+   }
  
    HI_drawNewLevelName(10);
 
@@ -407,30 +420,35 @@ static void HI_drawGoing()
    {
       previous = hi_wbs.next - 1;
    }
-   
+
    // draw patches on levels visited
-   for(i = 0; i <= previous; i++)
+   if(hi_wbs.nextEpisode == hi_wbs.epsd && hi_wbs.epsd >= 0 && hi_wbs.epsd < NUM_OVERWORLD_EPISODES)
    {
-      V_DrawPatch(hipoints[hi_wbs.epsd][i].x, 
-                  hipoints[hi_wbs.epsd][i].y,
-                  &subscreen43,
-                  hi_in_x);
-   }
+      for(i = 0; i <= previous; i++)
+      {
+         if(i >= NUM_LEVELS_PER_EPISODE)
+            break;
+         V_DrawPatch(hipoints[hi_wbs.epsd][i].x,
+                     hipoints[hi_wbs.epsd][i].y,
+                     &subscreen43,
+                     hi_in_x);
+      }
 
-   // draw patch on secret level
-   if(hi_wbs.didsecret)
-   {
-      V_DrawPatch(hipoints[hi_wbs.epsd][8].x, 
-                  hipoints[hi_wbs.epsd][8].y,
-                  &subscreen43,
-                  hi_in_x);
+      // draw patch on secret level
+      if(hi_wbs.didsecret)
+      {
+         V_DrawPatch(hipoints[hi_wbs.epsd][8].x,
+                     hipoints[hi_wbs.epsd][8].y,
+                     &subscreen43,
+                     hi_in_x);
+      }
    }
-
    // blink destination arrow
-   if(flashtime)
+   if(flashtime && hi_wbs.nextEpisode >= 0 && hi_wbs.nextEpisode < NUM_OVERWORLD_EPISODES &&
+      hi_wbs.next >= 0 && hi_wbs.next < NUM_LEVELS_PER_EPISODE)
    {
-      V_DrawPatch(hipoints[hi_wbs.epsd][hi_wbs.next].x,
-                  hipoints[hi_wbs.epsd][hi_wbs.next].y, 
+      V_DrawPatch(hipoints[hi_wbs.nextEpisode][hi_wbs.next].x,
+                  hipoints[hi_wbs.nextEpisode][hi_wbs.next].y,
                   &subscreen43,
                   hi_in_yah);
    }
@@ -448,8 +466,11 @@ static void HI_drawLeaving(void)
    int lastlevel, thislevel;
    bool drawsecret;
 
-   if(gameepisode > 3 && estrempty(hi_wbs.li_nextenterpic))
+   if((hi_wbs.nextEpisode >= NUM_OVERWORLD_EPISODES || hi_wbs.nextEpisode < 0) &&
+      estrempty(hi_wbs.li_nextenterpic))
+   {
       return;
+   }
 
    HI_drawOldLevelName(3);
 
@@ -469,9 +490,14 @@ static void HI_drawLeaving(void)
       drawsecret = hi_wbs.didsecret;
    }
 
+   if(hi_wbs.epsd < 0 || hi_wbs.epsd >= NUM_OVERWORLD_EPISODES)
+      return;
+
    // draw all the previous levels
    for(i = 0; i < lastlevel; ++i)
    {
+      if(i >= NUM_LEVELS_PER_EPISODE)
+         break;
       V_DrawPatch(hipoints[hi_wbs.epsd][i].x,
                   hipoints[hi_wbs.epsd][i].y,
                   &subscreen43,
@@ -488,7 +514,7 @@ static void HI_drawLeaving(void)
    }
 
    // blink the level we're leaving
-   if(flashtime)
+   if(flashtime && thislevel >= 0 && thislevel < NUM_LEVELS_PER_EPISODE)
    {
       V_DrawPatch(hipoints[hi_wbs.epsd][thislevel].x, 
                   hipoints[hi_wbs.epsd][thislevel].y,
@@ -639,7 +665,8 @@ static void HI_drawSingleStats(void)
          statstage = 4;
       }
 
-      if(gameepisode < 4 || estrnonempty(hi_wbs.li_nextenterpic))
+      if((hi_wbs.nextEpisode >= 0 && hi_wbs.nextEpisode < NUM_OVERWORLD_EPISODES) ||
+         estrnonempty(hi_wbs.li_nextenterpic))
       {         
          int time, hours, minutes, seconds;
          
@@ -885,8 +912,8 @@ static void HI_Ticker(void)
    {
       interstate++;
       
-      if(gameepisode > 3 && interstate > INTR_STATS &&
-         estrempty(hi_wbs.li_nextenterpic))
+      if((hi_wbs.nextEpisode < 0 || hi_wbs.nextEpisode >= NUM_OVERWORLD_EPISODES) &&
+         interstate > INTR_STATS && estrempty(hi_wbs.li_nextenterpic))
       {
          // extended episodes have no map screens
          interstate = INTR_WAITING;
@@ -895,9 +922,9 @@ static void HI_Ticker(void)
       switch(interstate)
       {
       case INTR_STATS:
-         statetime = intertime + ((gameepisode > 3 &&
-                                   estrempty(hi_wbs.li_nextenterpic)) ? 1200 :
-                                  300);
+         statetime = intertime + (((hi_wbs.nextEpisode < 0 ||
+                                    hi_wbs.nextEpisode >= NUM_OVERWORLD_EPISODES) &&
+                                   estrempty(hi_wbs.li_nextenterpic)) ? 1200 : 300);
          break;
       case INTR_LEAVING:
          if(estrnonempty(hi_wbs.li_nextenterpic))
@@ -927,7 +954,8 @@ static void HI_Ticker(void)
       {
          intertime = 150;
       }
-      else if(interstate < INTR_GOING && (gameepisode < 4 ||
+      else if(interstate < INTR_GOING && ((hi_wbs.nextEpisode >= 0 &&
+                                           hi_wbs.nextEpisode < NUM_OVERWORLD_EPISODES) ||
                                           estrnonempty(hi_wbs.li_nextenterpic)))
       {
          interstate = INTR_GOING;
@@ -955,15 +983,18 @@ static void HI_Ticker(void)
 //
 static void HI_DrawBackground(void)
 {
-   int comparestate = estrnonempty(hi_wbs.li_nextenterpic) ? INTR_GOING :
+   int comparestate = estrnonempty(hi_wbs.li_nextenterpic) ||
+   (hi_wbs.nextEpisode >= 0 && hi_wbs.nextEpisode < NUM_OVERWORLD_EPISODES &&
+    hi_wbs.nextEpisode != hi_wbs.epsd) ? INTR_GOING :
    INTR_STATS + 1;
+
    if(interstate >= comparestate && hi_interpic)
       V_DrawPatch(0, 0, &subscreen43, hi_interpic);
    else
    {
       // TODO: externalize flat name
 
-      if(estrnonempty(hi_wbs.li_lastexitpic))
+      if(hi_exitpic && interstate >= INTR_STATS + 1)
          V_DrawPatch(0, 0, &subscreen43, hi_exitpic);
       else
          V_DrawBackground("FLOOR16", &subscreen43);
