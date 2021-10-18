@@ -1795,7 +1795,7 @@ enum levelkind_t
 //
 // Gets the name of the next level, either from map-info or explicit next
 //
-static const char *G_getNextLevelName(levelkind_t kind, int map)
+static const char *G_getNextLevelName(levelkind_t kind, int episode, int map)
 {
    const char *nextName = nullptr;
 
@@ -1809,7 +1809,7 @@ static const char *G_getNextLevelName(levelkind_t kind, int map)
    if(nextName && *nextName)
       return nextName;
 
-   return G_GetNameForMap(gameepisode, map);
+   return G_GetNameForMap(episode, map);
 }
 
 //
@@ -1818,7 +1818,7 @@ static const char *G_getNextLevelName(levelkind_t kind, int map)
 static void G_setupMapInfoWMInfo(levelkind_t kind)
 {
    const intermapinfo_t &next =
-   IN_GetMapInfo(G_getNextLevelName(kind, wminfo.next + 1));
+   IN_GetMapInfo(G_getNextLevelName(kind, wminfo.nextEpisode + 1, wminfo.next + 1));
 
    wminfo.li_lastlevelname = LevelInfo.interLevelName;  // just reference it
    wminfo.li_nextlevelname = next.levelname;
@@ -1879,6 +1879,9 @@ static void G_DoCompleted()
 
    // set the next gamemap
    G_SetNextMap();
+   // the internal GameModeInfo episode never leads into another episode. Only custom level-info
+   // does.
+   wminfo.nextEpisode = wminfo.epsd;
 
    // haleyjd: override with MapInfo values
    int episode;
@@ -1887,6 +1890,7 @@ static void G_DoCompleted()
       if(*LevelInfo.nextLevel) // only for normal exit
       {
          wminfo.next = G_GetMapForName(LevelInfo.nextLevel, episode);
+         wminfo.nextEpisode = episode - 1;
          if(!(GameModeInfo->flags & GIF_MAPXY))
          {
             // TODO: remove this limit once we have a stable way
@@ -1903,6 +1907,7 @@ static void G_DoCompleted()
       if(*LevelInfo.nextSecret) // only for secret exit
       {
          wminfo.next = G_GetMapForName(LevelInfo.nextSecret, episode);
+         wminfo.nextEpisode = episode - 1;
          if(!(GameModeInfo->flags & GIF_MAPXY))
          {
             // TODO: remove this limit once we have a stable way
@@ -1919,9 +1924,11 @@ static void G_DoCompleted()
    if(g_destmap)
    {
       wminfo.next = g_destmap;
+      // TODO: determine next Episode!
       wminfo.nextexplicit = true;
       if(!(GameModeInfo->flags & GIF_MAPXY))
       {
+         // TODO: remove this limit once we have a stable way
          if(wminfo.next < 1)
             wminfo.next = 1;
          else if(wminfo.next > 9)
@@ -1967,6 +1974,7 @@ static void G_DoWorldDone()
 {
    idmusnum = -1; //jff 3/17/98 allow new level's music to be loaded
    gamestate = GS_LOADING;
+   gameepisode = wminfo.nextEpisode + 1;
    gamemap = wminfo.next+1;
 
    // haleyjd: handle heretic hidden levels via missioninfo samelevel rules
@@ -1986,11 +1994,11 @@ static void G_DoWorldDone()
    
    // haleyjd: customizable secret exits
    if(secretexit)
-      G_SetGameMapName(G_getNextLevelName(lk_secret, gamemap));
+      G_SetGameMapName(G_getNextLevelName(lk_secret, gameepisode, gamemap));
    else
    {
       // haleyjd 12/14/01: don't use nextlevel for secret exits here either!
-      G_SetGameMapName(G_getNextLevelName(lk_overt, gamemap));
+      G_SetGameMapName(G_getNextLevelName(lk_overt, gameepisode, gamemap));
    }
 
    // haleyjd 10/24/10: if in Master Levels mode, see if the next map exists

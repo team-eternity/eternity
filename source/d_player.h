@@ -241,6 +241,7 @@ struct wbplayerstruct_t
 struct wbstartstruct_t
 {
   int         epsd;   // episode # (0-2)
+  int         nextEpisode; // next episode (0-based) in case of custom level info
 
   // if true, splash the secret level
   bool        didsecret;
