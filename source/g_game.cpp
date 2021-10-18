@@ -704,13 +704,11 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 //
 void G_SetGameMap(void)
 {
-   gamemap = G_GetMapForName(gamemapname);
+   int episode;
+   gamemap = G_GetMapForName(gamemapname, episode);
 
    if(!(GameModeInfo->flags & GIF_MAPXY))
-   {
-      gameepisode = gamemap / 10;
-      gamemap = gamemap % 10;
-   }
+      gameepisode = episode;
    else
       gameepisode = 1;
 
@@ -1883,15 +1881,19 @@ static void G_DoCompleted()
    G_SetNextMap();
 
    // haleyjd: override with MapInfo values
+   int episode;
    if(!secretexit)
    {
       if(*LevelInfo.nextLevel) // only for normal exit
       {
-         wminfo.next = G_GetMapForName(LevelInfo.nextLevel);
+         wminfo.next = G_GetMapForName(LevelInfo.nextLevel, episode);
          if(!(GameModeInfo->flags & GIF_MAPXY))
          {
-            if((wminfo.next %= 10) < 1)
+            // TODO: remove this limit once we have a stable way
+            if(wminfo.next < 1)
                wminfo.next = 1;  // hack to protect against underflow
+            else if(wminfo.next > 9)
+               wminfo.next = 9;  // likewise against overflow, for now
          }
          wminfo.next--;
       }
@@ -1900,11 +1902,14 @@ static void G_DoCompleted()
    {
       if(*LevelInfo.nextSecret) // only for secret exit
       {
-         wminfo.next = G_GetMapForName(LevelInfo.nextSecret);
+         wminfo.next = G_GetMapForName(LevelInfo.nextSecret, episode);
          if(!(GameModeInfo->flags & GIF_MAPXY))
          {
-            if((wminfo.next %= 10) < 1)
+            // TODO: remove this limit once we have a stable way
+            if(wminfo.next < 1)
                wminfo.next = 1;  // hack to protect against underflow
+            else if(wminfo.next > 9)
+               wminfo.next = 9;  // likewise against overflow, for now
          }
          wminfo.next--;
       }
@@ -2893,7 +2898,7 @@ static int     d_episode;
 static int     d_map;
 static char    d_mapname[10];
 
-int G_GetMapForName(const char *name)
+int G_GetMapForName(const char *name, int &outEpisode)
 {
    char normName[9] = {};  // zero-protect it
    int map;
@@ -2906,6 +2911,7 @@ int G_GetMapForName(const char *name)
    {
       map = isMAPxy(normName) ? 
          10 * (normName[3]-'0') + (normName[4]-'0') : 0;
+      outEpisode = 1;
       return map;
    }
    else
@@ -2921,7 +2927,8 @@ int G_GetMapForName(const char *name)
          episode = 1;
          map = 0;
       }
-      return (episode*10) + map;
+      outEpisode = episode;
+      return map;
    }
 }
 
@@ -2951,14 +2958,9 @@ void G_DeferedInitNewNum(skill_t skill, int episode, int map)
 void G_DeferedInitNew(skill_t skill, const char *levelname)
 {
    strncpy(d_mapname, levelname, 8);
-   d_map = G_GetMapForName(levelname);
+   d_map = G_GetMapForName(levelname, d_episode);
    
-   if(!(GameModeInfo->flags & GIF_MAPXY))
-   {
-      d_episode = d_map / 10;
-      d_map = d_map % 10;
-   }
-   else
+   if(GameModeInfo->flags & GIF_MAPXY)
       d_episode = 1;
    
    d_skill = skill;

@@ -34,7 +34,7 @@ class  WadDirectory;
 //
 
 char *G_GetNameForMap(int episode, int map);
-int   G_GetMapForName(const char *name);
+int   G_GetMapForName(const char *name, int &episode);
 
 bool G_Responder(const event_t *ev);
 bool G_CheckDemoStatus();
