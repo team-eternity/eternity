@@ -160,6 +160,14 @@ inline static bool overworld(int epid)
    return epid >= 0 && epid < NUM_OVERWORLD_EPISODES;
 }
 
+//
+// Common handling of next-episode overworld and next enterpic.
+//
+inline static bool HI_haveEnteringPic()
+{
+   return overworld(hi_wbs.nextEpisode) || estrnonempty(hi_wbs.li_nextenterpic);
+}
+
 static void HI_DrawBackground(void);
 
 static void HI_loadData(void)
@@ -402,7 +410,7 @@ static void HI_drawGoing()
 {
    int i, previous;
 
-   if(!overworld(hi_wbs.nextEpisode) && estrempty(hi_wbs.li_nextenterpic))
+   if(!HI_haveEnteringPic())
       return;
 
    HI_drawNewLevelName(10);
@@ -466,7 +474,7 @@ static void HI_drawLeaving(void)
    bool drawsecret;
 
    // TODO: actually show the "leaving" screen if we exit a map with picture
-   if(!overworld(hi_wbs.nextEpisode) && estrempty(hi_wbs.li_nextenterpic))
+   if(!HI_haveEnteringPic())
       return;
 
    HI_drawOldLevelName(3);
@@ -663,7 +671,7 @@ static void HI_drawSingleStats(void)
       }
 
       // TODO: actually draw if we have last-exit-pic
-      if(overworld(hi_wbs.nextEpisode) || estrnonempty(hi_wbs.li_nextenterpic))
+      if(HI_haveEnteringPic())
       {         
          int time, hours, minutes, seconds;
          
@@ -909,8 +917,7 @@ static void HI_Ticker(void)
    {
       interstate++;
       
-      if(!overworld(hi_wbs.nextEpisode) && interstate > INTR_STATS &&
-         estrempty(hi_wbs.li_nextenterpic))
+      if(!HI_haveEnteringPic() && interstate > INTR_STATS)
       {
          // extended episodes have no map screens
          interstate = INTR_WAITING;
@@ -919,8 +926,7 @@ static void HI_Ticker(void)
       switch(interstate)
       {
       case INTR_STATS:
-         statetime = intertime + (!overworld(hi_wbs.nextEpisode) &&
-                                   estrempty(hi_wbs.li_nextenterpic) ? 1200 : 300);
+         statetime = intertime + (!HI_haveEnteringPic() ? 1200 : 300);
          break;
       case INTR_LEAVING:
          if(estrnonempty(hi_wbs.li_nextenterpic))
@@ -950,8 +956,7 @@ static void HI_Ticker(void)
       {
          intertime = 150;
       }
-      else if(interstate < INTR_GOING && (overworld(hi_wbs.nextEpisode) ||
-                                          estrnonempty(hi_wbs.li_nextenterpic)))
+      else if(interstate < INTR_GOING && HI_haveEnteringPic())
       {
          interstate = INTR_GOING;
          HI_DrawBackground(); // force a background change
