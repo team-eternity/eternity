@@ -152,6 +152,14 @@ static int  blockfade;
 
 // Private functions
 
+//
+// Helper to know if an episode index is for an overworld map
+//
+inline static bool overworld(int epid)
+{
+   return epid >= 0 && epid < NUM_OVERWORLD_EPISODES;
+}
+
 static void HI_DrawBackground(void);
 
 static void HI_loadData(void)
@@ -166,22 +174,16 @@ static void HI_loadData(void)
    hi_exitpic = nullptr;
 
    if(estrnonempty(hi_wbs.li_lastexitpic))
-   {
-      hi_exitpic = PatchLoader::CacheName(wGlobalDir, hi_wbs.li_lastexitpic,
-                                          PU_STATIC);
-   }
-   else if(hi_wbs.epsd >= 0 && hi_wbs.epsd < NUM_OVERWORLD_EPISODES && hi_wbs.epsd != hi_wbs.nextEpisode)
+      hi_exitpic = PatchLoader::CacheName(wGlobalDir, hi_wbs.li_lastexitpic, PU_STATIC);
+   else if(overworld(hi_wbs.epsd) && hi_wbs.epsd != hi_wbs.nextEpisode)
    {
       snprintf(mapname, sizeof(mapname), "MAPE%d", hi_wbs.epsd + 1);
       hi_exitpic = PatchLoader::CacheName(wGlobalDir, mapname, PU_STATIC);
    }
 
    if(estrnonempty(hi_wbs.li_nextenterpic))
-   {
-      hi_interpic = PatchLoader::CacheName(wGlobalDir, hi_wbs.li_nextenterpic,
-                                           PU_STATIC);
-   }
-   else if(hi_wbs.nextEpisode >= 0 && hi_wbs.nextEpisode < NUM_OVERWORLD_EPISODES)
+      hi_interpic = PatchLoader::CacheName(wGlobalDir, hi_wbs.li_nextenterpic, PU_STATIC);
+   else if(overworld(hi_wbs.nextEpisode))
    {
       snprintf(mapname, sizeof(mapname), "MAPE%d", hi_wbs.nextEpisode + 1);
       hi_interpic = PatchLoader::CacheName(wGlobalDir, mapname, PU_STATIC);
@@ -400,12 +402,9 @@ static void HI_drawGoing()
 {
    int i, previous;
 
-   if((hi_wbs.nextEpisode >= NUM_OVERWORLD_EPISODES || hi_wbs.nextEpisode < 0) &&
-      estrempty(hi_wbs.li_nextenterpic))
-   {
+   if(!overworld(hi_wbs.nextEpisode) && estrempty(hi_wbs.li_nextenterpic))
       return;
-   }
- 
+
    HI_drawNewLevelName(10);
 
    // don't proceed by drawing the location indicators if using "enterpic".
@@ -422,7 +421,7 @@ static void HI_drawGoing()
    }
 
    // draw patches on levels visited
-   if(hi_wbs.nextEpisode == hi_wbs.epsd && hi_wbs.epsd >= 0 && hi_wbs.epsd < NUM_OVERWORLD_EPISODES)
+   if(hi_wbs.nextEpisode == hi_wbs.epsd && overworld(hi_wbs.epsd))
    {
       for(i = 0; i <= previous; i++)
       {
@@ -444,7 +443,7 @@ static void HI_drawGoing()
       }
    }
    // blink destination arrow
-   if(flashtime && hi_wbs.nextEpisode >= 0 && hi_wbs.nextEpisode < NUM_OVERWORLD_EPISODES &&
+   if(flashtime && overworld(hi_wbs.nextEpisode) &&
       hi_wbs.next >= 0 && hi_wbs.next < NUM_LEVELS_PER_EPISODE)
    {
       V_DrawPatch(hipoints[hi_wbs.nextEpisode][hi_wbs.next].x,
@@ -466,15 +465,16 @@ static void HI_drawLeaving(void)
    int lastlevel, thislevel;
    bool drawsecret;
 
-   if((hi_wbs.nextEpisode >= NUM_OVERWORLD_EPISODES || hi_wbs.nextEpisode < 0) &&
-      estrempty(hi_wbs.li_nextenterpic))
-   {
+   // TODO: actually show the "leaving" screen if we exit a map with picture
+   if(!overworld(hi_wbs.nextEpisode) && estrempty(hi_wbs.li_nextenterpic))
       return;
-   }
 
    HI_drawOldLevelName(3);
 
    if(estrnonempty(hi_wbs.li_nextenterpic))
+      return;
+
+   if(!overworld(hi_wbs.epsd))
       return;
 
    if(hi_wbs.last == 8)
@@ -489,9 +489,6 @@ static void HI_drawLeaving(void)
       lastlevel = thislevel = hi_wbs.last;
       drawsecret = hi_wbs.didsecret;
    }
-
-   if(hi_wbs.epsd < 0 || hi_wbs.epsd >= NUM_OVERWORLD_EPISODES)
-      return;
 
    // draw all the previous levels
    for(i = 0; i < lastlevel; ++i)
@@ -665,8 +662,8 @@ static void HI_drawSingleStats(void)
          statstage = 4;
       }
 
-      if((hi_wbs.nextEpisode >= 0 && hi_wbs.nextEpisode < NUM_OVERWORLD_EPISODES) ||
-         estrnonempty(hi_wbs.li_nextenterpic))
+      // TODO: actually draw if we have last-exit-pic
+      if(overworld(hi_wbs.nextEpisode) || estrnonempty(hi_wbs.li_nextenterpic))
       {         
          int time, hours, minutes, seconds;
          
@@ -912,8 +909,8 @@ static void HI_Ticker(void)
    {
       interstate++;
       
-      if((hi_wbs.nextEpisode < 0 || hi_wbs.nextEpisode >= NUM_OVERWORLD_EPISODES) &&
-         interstate > INTR_STATS && estrempty(hi_wbs.li_nextenterpic))
+      if(!overworld(hi_wbs.nextEpisode) && interstate > INTR_STATS &&
+         estrempty(hi_wbs.li_nextenterpic))
       {
          // extended episodes have no map screens
          interstate = INTR_WAITING;
@@ -922,9 +919,8 @@ static void HI_Ticker(void)
       switch(interstate)
       {
       case INTR_STATS:
-         statetime = intertime + (((hi_wbs.nextEpisode < 0 ||
-                                    hi_wbs.nextEpisode >= NUM_OVERWORLD_EPISODES) &&
-                                   estrempty(hi_wbs.li_nextenterpic)) ? 1200 : 300);
+         statetime = intertime + (!overworld(hi_wbs.nextEpisode) &&
+                                   estrempty(hi_wbs.li_nextenterpic) ? 1200 : 300);
          break;
       case INTR_LEAVING:
          if(estrnonempty(hi_wbs.li_nextenterpic))
@@ -954,8 +950,7 @@ static void HI_Ticker(void)
       {
          intertime = 150;
       }
-      else if(interstate < INTR_GOING && ((hi_wbs.nextEpisode >= 0 &&
-                                           hi_wbs.nextEpisode < NUM_OVERWORLD_EPISODES) ||
+      else if(interstate < INTR_GOING && (overworld(hi_wbs.nextEpisode) ||
                                           estrnonempty(hi_wbs.li_nextenterpic)))
       {
          interstate = INTR_GOING;
@@ -984,8 +979,7 @@ static void HI_Ticker(void)
 static void HI_DrawBackground(void)
 {
    int comparestate = estrnonempty(hi_wbs.li_nextenterpic) ||
-   (hi_wbs.nextEpisode >= 0 && hi_wbs.nextEpisode < NUM_OVERWORLD_EPISODES &&
-    hi_wbs.nextEpisode != hi_wbs.epsd) ? INTR_GOING :
+   (overworld(hi_wbs.nextEpisode) && hi_wbs.nextEpisode != hi_wbs.epsd) ? INTR_GOING :
    INTR_STATS + 1;
 
    if(interstate >= comparestate && hi_interpic)
