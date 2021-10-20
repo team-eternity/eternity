@@ -116,6 +116,12 @@ extern char gamemapname[9];
 #define DM_VICTIMSX    5
 #define DM_VICTIMSY   50
 
+enum
+{
+   NUM_OVERWORLD_EPISODES = 3,
+   NUM_LEVELS_PER_EPISODE = 9,
+};
+
 // These animation variables, structures, etc. are used for the
 // DOOM/Ultimate DOOM intermission screen animations.  This is
 // totally different from any sprite or texture/flat animations
@@ -411,6 +417,14 @@ static void WI_OverlayBackground();
 // CODE
 //
 
+//
+// Helper to know if an episode index is for an overworld map
+//
+inline static bool overworld(int epid)
+{
+   return epid >= 0 && epid < NUM_OVERWORLD_EPISODES;
+}
+
 // ====================================================================
 // WI_drawLF
 // Purpose: Draw the "Finished" level name before showing stats
@@ -548,6 +562,9 @@ static void WI_drawOnLnode(int n, patch_t *c[], int numpatches)
    int  right;
    int  bottom;
    bool fits = false;
+
+   if(n < 0 || n >= NUM_LEVELS_PER_EPISODE)
+      return;
    
    i = 0;
    do
@@ -598,7 +615,7 @@ static void WI_initAnimatedBack(bool entering)
    if(GameModeInfo->id == commercial)  // no animation for DOOM2
       return;
 
-   if(wbs->epsd > 2)
+   if(!overworld(wbs->epsd))
       return;
 
    for(i = 0; i < NUMANIMS[wbs->epsd]; i++)
@@ -643,7 +660,7 @@ static void WI_updateAnimatedBack()
    if(GameModeInfo->id == commercial)
       return;
 
-   if(wbs->epsd > 2)
+   if(!overworld(wbs->epsd))
       return;
 
    for(i = 0; i < NUMANIMS[wbs->epsd]; i++)
@@ -706,7 +723,7 @@ static void WI_drawAnimatedBack()
    if(GameModeInfo->id == commercial) //jff 4/25/98 Someone forgot commercial an enum
       return;
 
-   if(wbs->epsd > 2)
+   if(!overworld(wbs->epsd))
       return;
    
    for(i = 0; i < NUMANIMS[wbs->epsd]; i++)
@@ -861,7 +878,7 @@ static void WI_unloadData()
       
       Z_ChangeTag(splat, PU_CACHE);
       
-      if(wbs->epsd < 3)
+      if(overworld(wbs->epsd))
       {
          for(j = 0; j < NUMANIMS[wbs->epsd]; j++)
          {
@@ -1010,7 +1027,7 @@ static void WI_drawShowNextLoc()
 
    if(GameModeInfo->id != commercial)
    {
-      if(wbs->epsd > 2)
+      if(!overworld(wbs->epsd))
       {
          WI_drawEL();  // "Entering..." if not E1 or E2 or E3
          return;
@@ -1823,7 +1840,7 @@ static void WI_drawStats()
 
    if(wbs->partime != -1)
    {
-      if(wbs->epsd < 3)
+      if(overworld(wbs->epsd))
       {
          V_DrawPatch(SCREENWIDTH/2 + SP_TIMEX, SP_TIMEY, &subscreen43, par);
          WI_drawTime(SCREENWIDTH - SP_TIMEX, SP_TIMEY, cnt_par);
@@ -1896,7 +1913,7 @@ static void WI_DrawBackground()
    }
    else if(estrnonempty(wbs->li_lastexitpic) ||
       GameModeInfo->id == commercial || (GameModeInfo->id == retail &&
-                                         wbs->epsd == 3))
+                                         !overworld(wbs->epsd)))
    {
       // Use LevelInfo's interpic here: it handles cases where li_lastexitpic IS
       // empty. By the help of logic, the intermapinfo_t last exitpic must be
@@ -1981,7 +1998,7 @@ static void WI_loadData()
       // splat
       splat = PatchLoader::CacheName(wGlobalDir, "WISPLAT", PU_STATIC);
       
-      if(wbs->epsd < 3)
+      if(overworld(wbs->epsd))
       {
          for(j = 0; j < NUMANIMS[wbs->epsd]; j++)
          {
@@ -2150,8 +2167,9 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
 
    if(GameModeInfo->id != retail)
    {
-      if(wbs->epsd > 2)
-         wbs->epsd -= 3;
+      // IOANCH: What was this?!
+//      if(wbs->epsd > 2)
+//         wbs->epsd -= 3;
    }
 
    // haleyjd 03/27/05: EDF-defined intermission map names
