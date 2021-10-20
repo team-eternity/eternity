@@ -565,12 +565,14 @@ static void WI_drawOnLnode(int n, patch_t *c[], int numpatches)
 
    if(n < 0 || n >= NUM_LEVELS_PER_EPISODE)
       return;
+
+   int epsd = state == StatCount ? wbs->epsd : wbs->nextEpisode;
    
    i = 0;
    do
    {
-      left   = lnodes[wbs->epsd][n].x - c[i]->leftoffset;
-      top    = lnodes[wbs->epsd][n].y - c[i]->topoffset;
+      left   = lnodes[epsd][n].x - c[i]->leftoffset;
+      top    = lnodes[epsd][n].y - c[i]->topoffset;
       right  = left + c[i]->width;
       bottom = top  + c[i]->height;
       
@@ -585,10 +587,7 @@ static void WI_drawOnLnode(int n, patch_t *c[], int numpatches)
    while(!fits && i != numpatches); // haleyjd: bug fix
 
    if(fits && i < numpatches) // haleyjd: bug fix
-   {
-      V_DrawPatch(lnodes[wbs->epsd][n].x, lnodes[wbs->epsd][n].y,
-                  &subscreen43, c[i]);
-   }
+      V_DrawPatch(lnodes[epsd][n].x, lnodes[epsd][n].y, &subscreen43, c[i]);
    else
    {
       // haleyjd: changed printf to C_Printf
@@ -615,12 +614,14 @@ static void WI_initAnimatedBack(bool entering)
    if(GameModeInfo->id == commercial)  // no animation for DOOM2
       return;
 
-   if(!overworld(wbs->epsd))
+   int epsd = !entering ? wbs->epsd : wbs->nextEpisode;
+
+   if(!overworld(epsd))
       return;
 
-   for(i = 0; i < NUMANIMS[wbs->epsd]; i++)
+   for(i = 0; i < NUMANIMS[epsd]; i++)
    {
-      a = &anims[wbs->epsd][i];
+      a = &anims[epsd][i];
       
       // init variables
       a->ctr = -1;
@@ -660,12 +661,14 @@ static void WI_updateAnimatedBack()
    if(GameModeInfo->id == commercial)
       return;
 
-   if(!overworld(wbs->epsd))
+   int epsd = state == StatCount ? wbs->epsd : wbs->nextEpisode;
+
+   if(!overworld(epsd))
       return;
 
-   for(i = 0; i < NUMANIMS[wbs->epsd]; i++)
+   for(i = 0; i < NUMANIMS[epsd]; i++)
    {
-      a = &anims[wbs->epsd][i];
+      a = &anims[epsd][i];
       
       if(intertime == a->nexttic)
       {
@@ -723,12 +726,13 @@ static void WI_drawAnimatedBack()
    if(GameModeInfo->id == commercial) //jff 4/25/98 Someone forgot commercial an enum
       return;
 
-   if(!overworld(wbs->epsd))
+   int epsd = state == StatCount ? wbs->epsd : wbs->nextEpisode;
+   if(!overworld(epsd))
       return;
    
-   for(i = 0; i < NUMANIMS[wbs->epsd]; i++)
+   for(i = 0; i < NUMANIMS[epsd]; i++)
    {
-      a = &anims[wbs->epsd][i];
+      a = &anims[epsd][i];
       
       if(a->ctr >= 0)
          V_DrawPatch(a->loc.x, a->loc.y, &subscreen43, a->p[a->ctr]);
@@ -877,14 +881,16 @@ static void WI_unloadData()
       Z_ChangeTag(yah[1], PU_CACHE);
       
       Z_ChangeTag(splat, PU_CACHE);
-      
-      if(overworld(wbs->epsd))
+      for(int epsd = wbs->epsd; epsd != -1; epsd = epsd != wbs->nextEpisode ? wbs->nextEpisode : -1)
       {
-         for(j = 0; j < NUMANIMS[wbs->epsd]; j++)
+         if(overworld(epsd))
          {
-            if(wbs->epsd != 1 || j != 8)
-               for(i = 0; i < anims[wbs->epsd][j].nanims; i++)
-                  Z_ChangeTag(anims[wbs->epsd][j].p[i], PU_CACHE);
+            for(j = 0; j < NUMANIMS[epsd]; j++)
+            {
+               if(epsd != 1 || j != 8)
+                  for(i = 0; i < anims[epsd][j].nanims; i++)
+                     Z_ChangeTag(anims[epsd][j].p[i], PU_CACHE);
+            }
          }
       }
    }
@@ -1027,7 +1033,7 @@ static void WI_drawShowNextLoc()
 
    if(GameModeInfo->id != commercial)
    {
-      if(!overworld(wbs->epsd))
+      if(!overworld(wbs->nextEpisode))
       {
          WI_drawEL();  // "Entering..." if not E1 or E2 or E3
          return;
@@ -1922,7 +1928,10 @@ static void WI_DrawBackground()
       name[sizeof(name) - 1] = 0;
    }
    else
-      snprintf(name, sizeof(name), "WIMAP%d", wbs->epsd);
+   {
+      int epsd = state == StatCount ? wbs->epsd : wbs->nextEpisode;
+      snprintf(name, sizeof(name), "WIMAP%d", epsd);
+   }
 
    // background
    V_DrawFSBackground(&subscreen43, wGlobalDir.checkNumForName(name));
@@ -1981,7 +1990,7 @@ static void WI_loadData()
          else
             wi_lname_this = nullptr;
 
-         psnprintf(name, sizeof(name), "WILV%d%d", wbs->epsd, wbs->next);
+         psnprintf(name, sizeof(name), "WILV%d%d", wbs->nextEpisode, wbs->next);
 
          if((lumpnum = g_dir->checkNumForName(name)) != -1)
             wi_lname_next = PatchLoader::CacheNum(*g_dir, lumpnum, PU_STATIC);
@@ -1997,29 +2006,30 @@ static void WI_loadData()
 
       // splat
       splat = PatchLoader::CacheName(wGlobalDir, "WISPLAT", PU_STATIC);
-      
-      if(overworld(wbs->epsd))
-      {
-         for(j = 0; j < NUMANIMS[wbs->epsd]; j++)
+
+      for(int epsd = wbs->epsd; epsd != -1; epsd = epsd != wbs->nextEpisode ? wbs->nextEpisode : -1)
+         if(overworld(epsd))
          {
-            anim_t *a = &anims[wbs->epsd][j];
-            for(i = 0; i < a->nanims; i++)
+            for(j = 0; j < NUMANIMS[epsd]; j++)
             {
-               // MONDO HACK!
-               if(wbs->epsd != 1 || j != 8) 
+               anim_t *a = &anims[epsd][j];
+               for(i = 0; i < a->nanims; i++)
                {
-                  // animations
-                  snprintf(name, sizeof(name), "WIA%d%.2d%.2d", wbs->epsd, j, i);
-                  a->p[i] = PatchLoader::CacheName(wGlobalDir, name, PU_STATIC);
-               }
-               else
-               {
-                  // HACK ALERT!
-                  a->p[i] = anims[1][4].p[i]; 
-               }
+                  // MONDO HACK!
+                  if(epsd != 1 || j != 8)
+                  {
+                     // animations
+                     snprintf(name, sizeof(name), "WIA%d%.2d%.2d", epsd, j, i);
+                     a->p[i] = PatchLoader::CacheName(wGlobalDir, name, PU_STATIC);
+                  }
+                  else
+                  {
+                     // HACK ALERT!
+                     a->p[i] = anims[1][4].p[i];
+                  }
+               } // end for
             } // end for
-         } // end for
-      } // end if
+         } // end if
    } // end else (!commercial)
 
    // More hacks on minus sign.
@@ -2239,7 +2249,7 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
             {
                edf_string_t *str;
                psnprintf(nameBuffer, 24, "_IN_NAME_E%01dM%01d",
-                         wbs->epsd + 1, wbs->next + 1);
+                         wbs->nextEpisode + 1, wbs->next + 1);
                if((str = E_StringForName(nameBuffer)))
                   nextMapName = str->string;
             }
