@@ -534,12 +534,12 @@ static void HI_drawLevelStat(int stat, int max, int x, int y)
 {
    char str[16];
 
-   sprintf(str, "%3d", stat);
+   snprintf(str, sizeof(str), "%3d", stat);
    V_FontWriteTextShadowed(in_bignumfont, str, x, y, &subscreen43);
    
    V_FontWriteTextShadowed(in_bigfont, "/", x + 37, y, &subscreen43);
 
-   sprintf(str, "%3d", max);
+   snprintf(str, sizeof(str), "%3d", max);
    V_FontWriteTextShadowed(in_bignumfont, str, x + 48, y, &subscreen43);
 }
 
@@ -552,7 +552,7 @@ static void HI_drawLevelStatPct(int stat, int x, int y, int pctx)
 {
    char str[16];
 
-   sprintf(str, "%3d", stat);
+   snprintf(str, sizeof(str), "%3d", stat);
    V_FontWriteTextShadowed(in_bignumfont, str,  x,    y, &subscreen43);
    V_FontWriteTextShadowed(in_bigfont,    "%",  pctx, y, &subscreen43);
 }
@@ -561,7 +561,7 @@ static void HI_drawFragCount(int count, int x, int y)
 {
    char str[16];
 
-   sprintf(str, "%3d", count);
+   snprintf(str, sizeof(str), "%3d", count);
    V_FontWriteTextShadowed(in_bignumfont, str, x, y, &subscreen43);
 }
 
@@ -578,16 +578,16 @@ static void HI_drawTime(int h, int m, int s, int x, int y)
 
    if(h)
    {
-      sprintf(timestr, "%02d", h);
+      snprintf(timestr, sizeof(timestr), "%02d", h);
       V_FontWriteTextShadowed(in_bignumfont, timestr, x,      y, &subscreen43);
       V_FontWriteTextShadowed(in_bigfont,    ":",     x + 26, y, &subscreen43);
    }
 
-   sprintf(timestr, "%02d", m);
+   snprintf(timestr, sizeof(timestr), "%02d", m);
    V_FontWriteTextShadowed(in_bignumfont, timestr, x + 34, y, &subscreen43);
    V_FontWriteTextShadowed(in_bigfont,    ":",     x + 60, y, &subscreen43);
 
-   sprintf(timestr, "%02d", s);
+   snprintf(timestr, sizeof(timestr), "%02d", s);
    V_FontWriteTextShadowed(in_bignumfont, timestr, x + 68, y, &subscreen43);
 }
 
