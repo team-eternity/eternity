@@ -608,9 +608,9 @@ static void WI_initAnimatedBack(bool entering)
    int   i;
    anim_t* a;
 
-   if(wbs->li_lastexitpic && *wbs->li_lastexitpic)
+   if(estrnonempty(wbs->li_lastexitpic))
       return;
-   if(wbs->li_nextenterpic && *wbs->li_nextenterpic && entering)
+   if(estrnonempty(wbs->li_nextenterpic) && entering)
       return;
    if(GameModeInfo->id == commercial)  // no animation for DOOM2
       return;
@@ -653,9 +653,9 @@ static void WI_updateAnimatedBack()
    int     i;
    anim_t *a;
 
-   if(wbs->li_lastexitpic && *wbs->li_lastexitpic)
+   if(estrnonempty(wbs->li_lastexitpic))
       return;
-   if(wbs->li_nextenterpic && *wbs->li_nextenterpic && state != StatCount)
+   if(estrnonempty(wbs->li_nextenterpic) && state != StatCount)
       return;
    if(GameModeInfo->id == commercial)
       return;
@@ -716,9 +716,9 @@ static void WI_drawAnimatedBack()
    int     i;
    anim_t *a;
 
-   if(wbs->li_lastexitpic && *wbs->li_lastexitpic)
+   if(estrnonempty(wbs->li_lastexitpic))
       return;
-   if(wbs->li_nextenterpic && *wbs->li_nextenterpic && state != StatCount)
+   if(estrnonempty(wbs->li_nextenterpic) && state != StatCount)
       return;
    if(GameModeInfo->id == commercial) //jff 4/25/98 Someone forgot commercial an enum
       return;
