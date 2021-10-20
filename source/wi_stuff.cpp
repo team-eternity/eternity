@@ -1992,7 +1992,7 @@ static void WI_loadData()
                if(wbs->epsd != 1 || j != 8) 
                {
                   // animations
-                  sprintf(name, "WIA%d%.2d%.2d", wbs->epsd, j, i);  
+                  snprintf(name, sizeof(name), "WIA%d%.2d%.2d", wbs->epsd, j, i);
                   a->p[i] = PatchLoader::CacheName(wGlobalDir, name, PU_STATIC);
                }
                else
@@ -2011,7 +2011,7 @@ static void WI_loadData()
    for(i = 0; i < 10; i++)
    {
       // numbers 0-9
-      sprintf(name, "WINUM%d", i);     
+      snprintf(name, sizeof(name), "WINUM%d", i);
       num[i] = PatchLoader::CacheName(wGlobalDir, name, PU_STATIC);
    }
 
@@ -2072,11 +2072,11 @@ static void WI_loadData()
    for(i = 0; i < MAXPLAYERS; i++)
    {
       // "1,2,3,4"
-      sprintf(name, "STPB%d", i);      
+      snprintf(name, sizeof(name), "STPB%d", i);
       p[i] = PatchLoader::CacheName(wGlobalDir, name, PU_STATIC);
       
       // "1,2,3,4"
-      sprintf(name, "WIBP%d", i+1);     
+      snprintf(name, sizeof(name), "WIBP%d", i+1);
       bp[i] = PatchLoader::CacheName(wGlobalDir, name, PU_STATIC);
    }
 }
