@@ -1891,15 +1891,7 @@ static void G_DoCompleted()
       {
          wminfo.next = G_GetMapForName(LevelInfo.nextLevel, episode);
          wminfo.nextEpisode = episode - 1;
-         if(!(GameModeInfo->flags & GIF_MAPXY))
-         {
-            // TODO: remove this limit once we have a stable way
-            if(wminfo.next < 1)
-               wminfo.next = 1;  // hack to protect against underflow
-            else if(wminfo.next > 9)
-               wminfo.next = 9;  // likewise against overflow, for now
-         }
-         wminfo.next--;
+         wminfo.next--; // can even become -1, but that's supported
       }
    }
    else
@@ -1908,14 +1900,6 @@ static void G_DoCompleted()
       {
          wminfo.next = G_GetMapForName(LevelInfo.nextSecret, episode);
          wminfo.nextEpisode = episode - 1;
-         if(!(GameModeInfo->flags & GIF_MAPXY))
-         {
-            // TODO: remove this limit once we have a stable way
-            if(wminfo.next < 1)
-               wminfo.next = 1;  // hack to protect against underflow
-            else if(wminfo.next > 9)
-               wminfo.next = 9;  // likewise against overflow, for now
-         }
          wminfo.next--;
       }
    }
@@ -1926,14 +1910,6 @@ static void G_DoCompleted()
       wminfo.next = g_destmap;
       // TODO: determine next Episode!
       wminfo.nextexplicit = true;
-      if(!(GameModeInfo->flags & GIF_MAPXY))
-      {
-         // TODO: remove this limit once we have a stable way
-         if(wminfo.next < 1)
-            wminfo.next = 1;
-         else if(wminfo.next > 9)
-            wminfo.next = 9;
-      }
       wminfo.next--;
       g_destmap = 0;
    }
