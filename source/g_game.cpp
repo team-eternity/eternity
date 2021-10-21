@@ -706,26 +706,7 @@ void G_SetGameMap(void)
 {
    int episode;
    gamemap = G_GetMapForName(gamemapname, episode);
-
-   if(!(GameModeInfo->flags & GIF_MAPXY))
-      gameepisode = episode;
-   else
-      gameepisode = 1;
-
-   if(gameepisode < 1)
-      gameepisode = 1;
-
-   // haleyjd: simplified to use gameModeInfo
-
-   // bound to maximum episode for gamemode (if the no-upper-episode-bound flag isn't set)
-   // (only start episode 1 on shareware, etc)
-   if(gameepisode > GameModeInfo->numEpisodes && !(GameModeInfo->flags & GIF_NOUPPEREPBOUND))
-      gameepisode = GameModeInfo->numEpisodes;
-
-   if(gamemap < 0)
-      gamemap = 0;
-   if(gamemap > 9 && !(GameModeInfo->flags & GIF_MAPXY))
-      gamemap = 9;
+   gameepisode = episode;
 }
 
 //
@@ -1865,6 +1846,7 @@ static void G_DoCompleted()
 
    if(!(GameModeInfo->flags & GIF_MAPXY)) // kilough 2/7/98
    {
+      // TODO: change this to a level info definition
       if(gamemap == 9)
       {
          for(int i = 0; i < MAXPLAYERS; i++)

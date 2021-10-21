@@ -381,6 +381,7 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    
    // killough 8/9/98: make telefragging more consistent, preserve compatibility
    // haleyjd 03/25/03: TELESTOMP flag handling moved here (was thing->player)
+   // TODO: make this an EMAPINFO flag
    telefrag = (thing->flags3 & MF3_TELESTOMP) || 
               (!getComp(comp_telefrag) ? boss : (gamemap == 30));
 
