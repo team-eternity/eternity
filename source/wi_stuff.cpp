@@ -1845,13 +1845,10 @@ static void WI_drawStats()
    // sf: cleverer: only skips on _new_ non-iwad levels
    //   new logic in g_game.c
 
-   if(wbs->partime != -1)
+   if(wbs->partime >= TICRATE)
    {
-      if(overworld(wbs->epsd))
-      {
-         V_DrawPatch(SCREENWIDTH/2 + SP_TIMEX, SP_TIMEY, &subscreen43, par);
-         WI_drawTime(SCREENWIDTH - SP_TIMEX, SP_TIMEY, cnt_par);
-      }
+      V_DrawPatch(SCREENWIDTH/2 + SP_TIMEX, SP_TIMEY, &subscreen43, par);
+      WI_drawTime(SCREENWIDTH - SP_TIMEX, SP_TIMEY, cnt_par);
    }
 }
 
