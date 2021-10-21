@@ -716,7 +716,7 @@ static void P_BFGNameHacks()
 //
 void P_DoomDefaultLevelName(levelnamedata_t &lnd)
 {
-   if(isExMy(gamemapname) &&
+   if(M_IsExMy(gamemapname, nullptr, nullptr) &&
       gameepisode > 0 && gameepisode <= GameModeInfo->numEpisodes &&
       gamemap > 0 && gamemap <= 9)
    {
@@ -742,7 +742,7 @@ void P_Doom2DefaultLevelName(levelnamedata_t &lnd)
       (GameModeInfo->missionInfo->flags & MI_HASBETRAY))
       d2upperbound = 33;
 
-   if(isMAPxy(gamemapname) && gamemap > 0 && gamemap <= d2upperbound)
+   if(M_IsMAPxy(gamemapname, nullptr) && gamemap > 0 && gamemap <= d2upperbound)
       lnd.bexName = GameModeInfo->levelNames[gamemap-1];   
 }
 
@@ -755,7 +755,7 @@ void P_HticDefaultLevelName(levelnamedata_t &lnd)
 {
    int maxEpisode = GameModeInfo->numEpisodes;
 
-   if(isExMy(gamemapname) &&
+   if(M_IsExMy(gamemapname, nullptr, nullptr) &&
       gameepisode > 0 && gameepisode <= maxEpisode &&
       gamemap > 0 && gamemap <= 9)
    {
@@ -1447,18 +1447,13 @@ static void P_ClearLevelVars()
    P_InfoDefaultMusic(curmetainfo);
    
    // special handling for ExMy maps under DOOM II
-   if(GameModeInfo->id == commercial && isExMy(levelmapname))
+   int levelepisode, levelmap;
+   if(GameModeInfo->id == commercial && M_IsExMy(levelmapname, &levelepisode, &levelmap))
    {
       LevelInfo.nextLevel = nextlevel;
       
       // set the next episode
-      strcpy(nextlevel, levelmapname);
-      nextlevel[3]++;
-      if(nextlevel[3] > '9')  // next episode
-      {
-         nextlevel[3] = '1';
-         nextlevel[1]++;
-      }
+      snprintf(nextlevel, 9, "E%dM%d", levelepisode, levelmap + 1);
       LevelInfo.musicName = levelmapname;
    }
    else

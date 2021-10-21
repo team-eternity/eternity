@@ -2888,25 +2888,21 @@ int G_GetMapForName(const char *name, int &outEpisode)
    int map;
 
    strncpy(normName, name, 9);
+   normName[8] = 0;
 
    M_Strupr(normName);
    
    if(GameModeInfo->flags & GIF_MAPXY)
    {
-      map = isMAPxy(normName) ? 
-         10 * (normName[3]-'0') + (normName[4]-'0') : 0;
+      if(!M_IsMAPxy(normName, &map))
+         map = 0;
       outEpisode = 1;
       return map;
    }
    else
    {
       int episode;
-      if(isExMy(normName))
-      {
-         episode = normName[1] - '0';
-         map = normName[3] - '0';
-      }
-      else
+      if(!M_IsExMy(normName, &episode, &map))
       {
          episode = 1;
          map = 0;

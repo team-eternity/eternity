@@ -56,6 +56,9 @@ char  *M_SafeFilePath(const char *pbasepath, const char *newcomponent);
 
 int M_PositiveModulo(int op1, int op2);
 
+bool M_IsExMy(const char *name, int *episode, int *map);
+bool M_IsMAPxy(const char *name, int *map);
+
 #endif
 
 // EOF

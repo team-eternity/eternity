@@ -38,6 +38,7 @@
 #include "m_qstr.h"
 #include "m_random.h"
 #include "m_swap.h"
+#include "m_utils.h"
 #include "p_info.h"
 #include "p_mobj.h"
 #include "p_tick.h"
@@ -1955,7 +1956,7 @@ static void WI_loadData()
    {
       // haleyjd 06/17/06: only load the patches that are needed, and also
       // allow them to be loaded for ANY valid MAPxy map, not just 1 - 32
-      if(isMAPxy(gamemapname))
+      if(M_IsMAPxy(gamemapname, nullptr))
       {
          int lumpnum;
 
@@ -1977,7 +1978,7 @@ static void WI_loadData()
    else
    {
       // haleyjd 06/17/06: as above, but for ExMy maps
-      if(isExMy(gamemapname))
+      if(M_IsExMy(gamemapname, nullptr, nullptr))
       {
          int lumpnum;
 
@@ -2243,7 +2244,7 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
          else
          {
             // try ExMy and MAPxy defaults for normally-named maps
-            if(isExMy(gamemapname))
+            if(M_IsExMy(gamemapname, nullptr, nullptr))
             {
                edf_string_t *str;
                psnprintf(nameBuffer, 24, "_IN_NAME_E%01dM%01d",
@@ -2251,7 +2252,7 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
                if((str = E_StringForName(nameBuffer)))
                   nextMapName = str->string;
             }
-            else if(isMAPxy(gamemapname))
+            else if(M_IsMAPxy(gamemapname, nullptr))
             {
                edf_string_t *str;
                psnprintf(nameBuffer, 24, "_IN_NAME_MAP%02d", wbs->next + 1);

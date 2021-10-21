@@ -418,12 +418,6 @@ typedef enum {
 //
 
 #define isnumchar(c) ((c) >= '0' && (c) <= '9')
-#define isExMy(s)                                       \
-   ((s)[0] == 'E' && isnumchar((s)[1]) && (s)[2] == 'M' && \
-    isnumchar((s)[3]) && !(s)[4])
-#define isMAPxy(s)                                      \
-   ((s)[0] == 'M' && (s)[1] == 'A' && (s)[2] == 'P' &&  \
-    isnumchar((s)[3]) && isnumchar((s)[4]) && !(s)[5])
 
 #define HTIC_GHOST_TRANS 26624
 

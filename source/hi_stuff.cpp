@@ -31,6 +31,7 @@
 #include "e_string.h"
 #include "g_game.h"
 #include "in_lude.h"
+#include "m_utils.h"
 #include "p_info.h"
 #include "s_sound.h"
 #include "v_block.h"
@@ -262,14 +263,14 @@ static void HI_loadData(void)
       else
       {
          // try ExMy and MAPxy defaults for normally-named maps
-         if(isExMy(gamemapname))
+         if(M_IsExMy(gamemapname, nullptr, nullptr))
          {
             psnprintf(nameBuffer, 24, "_IN_NAME_E%01dM%01d", 
                       hi_wbs.nextEpisode + 1, hi_wbs.next + 1);
             if((str = E_StringForName(nameBuffer)))
                nextMapName = str->string;
          }
-         else if(isMAPxy(gamemapname))
+         else if(M_IsMAPxy(gamemapname, nullptr))
          {
             psnprintf(nameBuffer, 24, "_IN_NAME_MAP%02d", hi_wbs.next + 1);
             if((str = E_StringForName(nameBuffer)))
