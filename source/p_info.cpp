@@ -2002,9 +2002,6 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
    {
       // Override a default map exit
       // Default map exits are defined in P_InfoDefaultFinale according to game mode info
-      LevelInfo.interMusic = nullptr;
-      LevelInfo.backDrop = "F_SKY2";
-      LevelInfo.interText = nullptr;
       LevelInfo.finaleType = FINALE_TEXT;
       LevelInfo.endOfGame = false;
       LevelInfo.finaleSecretOnly = false;
