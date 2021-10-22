@@ -2037,10 +2037,9 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
    val = info->getInt("endbunny", XL_UMAPINFO_SPECVAL_NOT_SET);
    if(val == XL_UMAPINFO_SPECVAL_TRUE)
    {
-      const finalerule_t *rule = P_determineEpisodeFinaleRule(false);
-      P_setFinaleFromRule(rule, false);
       LevelInfo.endOfGame = false;
       LevelInfo.finaleType = FINALE_DOOM_BUNNY;
+      P_EnsureDefaultStoryText();
    }
    val = info->getInt("endcast", XL_UMAPINFO_SPECVAL_NOT_SET);
    if(val == XL_UMAPINFO_SPECVAL_TRUE)
