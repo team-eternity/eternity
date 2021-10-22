@@ -2044,22 +2044,17 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
    val = info->getInt("endcast", XL_UMAPINFO_SPECVAL_NOT_SET);
    if(val == XL_UMAPINFO_SPECVAL_TRUE)
    {
-      const finalerule_t *rule = P_determineEpisodeFinaleRule(false);
-      P_setFinaleFromRule(rule, false);
       LevelInfo.endOfGame = true;
       LevelInfo.finaleType = FINALE_TEXT;
+      P_EnsureDefaultStoryText();
    }
+
+   // NOTE: according to specs and PrBoom+um, nointermission only affects finale-early
    val = info->getInt("nointermission", XL_UMAPINFO_SPECVAL_NOT_SET);
    if(val == XL_UMAPINFO_SPECVAL_TRUE)
-   {
-      LevelInfo.killStats = true;
       LevelInfo.finaleEarly = true;
-   }
    else if(val == XL_UMAPINFO_SPECVAL_FALSE)
-   {
-      LevelInfo.killStats = false;
       LevelInfo.finaleEarly = false;
-   }
 
    const char *intertextkeys[] = {"intertext", "intertextsecret"};
    const char *LevelInfo_t::*intertexttargets[] = {
