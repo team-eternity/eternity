@@ -199,6 +199,7 @@ void P_HticDefaultLevelName(levelnamedata_t &lnd);
 
 // ioanch
 bool P_LevelIsVanillaHexen();
+void P_EnsureDefaultStoryText();
 
 #endif
 

@@ -1937,6 +1937,16 @@ static void P_processEMapInfo(MetaTable *info)
 }
 
 //
+// If interText is not set, give it some dummy value
+//
+void P_EnsureDefaultStoryText()
+{
+   // no text defined? make up something.
+   if(!LevelInfo.interText)
+      LevelInfo.interText = "You have won.";
+}
+
+//
 // Process UMAPINFO obtained data.
 //
 // Source: https://github.com/coelckers/prboom-plus/blob/master/prboom2/doc/umapinfo.txt
@@ -2017,12 +2027,12 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
    strval = info->getString("endpic", nullptr);
    if(strval)
    {
-      const finalerule_t *rule = P_determineEpisodeFinaleRule(false);
-      P_setFinaleFromRule(rule, false);
       // Now also update the ending type
       LevelInfo.endOfGame = false;
       LevelInfo.finaleType = FINALE_END_PIC;
       LevelInfo.endPic = strval;
+
+      P_EnsureDefaultStoryText();
    }
    val = info->getInt("endbunny", XL_UMAPINFO_SPECVAL_NOT_SET);
    if(val == XL_UMAPINFO_SPECVAL_TRUE)

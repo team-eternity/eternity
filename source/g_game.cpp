@@ -1996,9 +1996,7 @@ void G_ForceFinale()
    if(LevelInfo.finaleType == FINALE_TEXT) // modify finale type?
       LevelInfo.finaleType = GameModeInfo->teleEndGameFinaleType;
 
-   // no text defined? make up something.
-   if(!LevelInfo.interText)
-      LevelInfo.interText = "You have won.";
+   P_EnsureDefaultStoryText();
 
    // set other variables for consistency
    LevelInfo.killFinale       = false;
