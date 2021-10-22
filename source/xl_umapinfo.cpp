@@ -191,7 +191,7 @@ bool XLUMapInfoParser::doStateExpectEqual(XLTokenizer &tokenizer)
 //
 bool XLUMapInfoParser::doStateExpectValue(XLTokenizer &tokenizer)
 {
-   value << tokenizer.getToken();
+   value = tokenizer.getToken();
 
    if(tokenizer.getTokenType() == XLTokenizer::TOKEN_STRING)
       curInfo->addString(key.constPtr(), value.constPtr());
@@ -269,7 +269,7 @@ void XLUMapInfoParser::startLump()
 void XLUMapInfoParser::initTokenizer(XLTokenizer &tokenizer)
 {
    tokenizer.setTokenFlags(XLTokenizer::TF_OPERATORS | XLTokenizer::TF_ESCAPESTRINGS |
-                           XLTokenizer::TF_STRINGSQUOTED);
+                           XLTokenizer::TF_STRINGSQUOTED | XLTokenizer::TF_SLASHCOMMENTS);
 }
 
 //
