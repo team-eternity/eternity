@@ -29,6 +29,7 @@
 #include "doomstat.h"
 #include "e_fonts.h"
 #include "e_string.h"
+#include "f_finale.h"
 #include "g_game.h"
 #include "in_lude.h"
 #include "m_utils.h"
@@ -370,6 +371,9 @@ static void HI_Stop(void)
 //
 static void HI_drawNewLevelName(int y)
 {
+   if(LevelInfo.endOfGame || LevelInfo.finaleType != FINALE_TEXT)
+      return;
+
    int x;
    const char *thisLevelName;
 
