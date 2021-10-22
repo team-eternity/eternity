@@ -1051,7 +1051,7 @@ static const finalerule_t *P_determineEpisodeFinaleRule(bool checkmap)
 //
 // Set the finale based on rule
 //
-static void P_setFinaleFromRule(const finalerule_t *rule)
+static void P_setFinaleFromRule(const finalerule_t *rule, bool changeFinaleEarly)
 {
    if(!rule)
    {
@@ -1082,7 +1082,7 @@ static void P_setFinaleFromRule(const finalerule_t *rule)
       LevelInfo.finaleSecretOnly = true;
 
    // check for early flag
-   if(rule->early)
+   if(rule->early && changeFinaleEarly)
       LevelInfo.finaleEarly = true;
 }
 
@@ -1127,7 +1127,7 @@ static void P_InfoDefaultFinale()
    }
 
    const finalerule_t *rule = P_determineEpisodeFinaleRule(true);
-   P_setFinaleFromRule(rule);
+   P_setFinaleFromRule(rule, true);
 
    if(rule)
    {
@@ -2010,13 +2010,15 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
    else if(val == XL_UMAPINFO_SPECVAL_TRUE)
    {
       const finalerule_t *rule = P_determineEpisodeFinaleRule(false);
-      P_setFinaleFromRule(rule); // use the most basic setting
+
+      // Do not also change the finale-early flag, so that it's like PrBoom+um
+      P_setFinaleFromRule(rule, false); // use the most basic setting
    }
    strval = info->getString("endpic", nullptr);
    if(strval)
    {
       const finalerule_t *rule = P_determineEpisodeFinaleRule(false);
-      P_setFinaleFromRule(rule);
+      P_setFinaleFromRule(rule, false);
       // Now also update the ending type
       LevelInfo.endOfGame = false;
       LevelInfo.finaleType = FINALE_END_PIC;
@@ -2026,7 +2028,7 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
    if(val == XL_UMAPINFO_SPECVAL_TRUE)
    {
       const finalerule_t *rule = P_determineEpisodeFinaleRule(false);
-      P_setFinaleFromRule(rule);
+      P_setFinaleFromRule(rule, false);
       LevelInfo.endOfGame = false;
       LevelInfo.finaleType = FINALE_DOOM_BUNNY;
    }
@@ -2034,7 +2036,7 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
    if(val == XL_UMAPINFO_SPECVAL_TRUE)
    {
       const finalerule_t *rule = P_determineEpisodeFinaleRule(false);
-      P_setFinaleFromRule(rule);
+      P_setFinaleFromRule(rule, false);
       LevelInfo.endOfGame = true;
       LevelInfo.finaleType = FINALE_TEXT;
    }
