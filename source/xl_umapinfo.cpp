@@ -116,7 +116,10 @@ bool (XLUMapInfoParser::*XLUMapInfoParser::States[])(XLTokenizer &) =
 bool XLUMapInfoParser::doStateExpectMap(XLTokenizer &tokenizer)
 {
    if(tokenizer.getToken().strCaseCmp("map"))
+   {
+      I_Error("UMAPINFO: expected 'map' at the top level\n");
       return false;
+   }
    state = STATE_EXPECTMAPNAME;
    return true;
 }
@@ -127,7 +130,10 @@ bool XLUMapInfoParser::doStateExpectMap(XLTokenizer &tokenizer)
 bool XLUMapInfoParser::doStateExpectMapName(XLTokenizer &tokenizer)
 {
    if(tokenizer.getTokenType() != XLTokenizer::TOKEN_KEYWORD)
+   {
+      I_Error("UMAPINFO: expected map name after 'map' keyword\n");
       return false;
+   }
    state = STATE_EXPECTOPENBRACE;
    curInfo = XL_newUMapInfo(tokenizer.getToken().constPtr());
    return true;
@@ -141,7 +147,10 @@ bool XLUMapInfoParser::doStateExpectOpenBrace(XLTokenizer &tokenizer)
    if(tokenizer.getTokenType() == XLTokenizer::TOKEN_LINEBREAK)
       return true;   // keep looking
    if(tokenizer.getToken() != "{")
+   {
+      I_Error("UMAPINFO: expected '{' after map '%s'\n", curInfo->getKey());
       return false;
+   }
    state = STATE_EXPECTKEY;
    return true;
 }
@@ -172,6 +181,8 @@ bool XLUMapInfoParser::doStateExpectEqual(XLTokenizer &tokenizer)
       state = STATE_EXPECTVALUE;
       return true;
    }
+   I_Error("UMAPINFO: expected '=' after key '%s' in map '%s'\n", key.constPtr(),
+           curInfo->getKey());
    return false;
 }
 
@@ -197,7 +208,11 @@ bool XLUMapInfoParser::doStateExpectValue(XLTokenizer &tokenizer)
       else if(!value.strCaseCmp("true"))
          curInfo->addInt(key.constPtr(), XL_UMAPINFO_SPECVAL_TRUE);
       else
+      {
+         I_Error("UMAPINFO: unexpected token '%s' for key '%s' in map '%s'\n",
+                 value.constPtr(), key.constPtr(), curInfo->getKey());
          return false;  // FAILURE
+      }
    }
 
    state = STATE_POSTVALUE;
@@ -224,6 +239,8 @@ bool XLUMapInfoParser::doStatePostValue(XLTokenizer &tokenizer)
       // Otherwise it's a new key
       return doStateExpectKey(tokenizer);
    }
+   I_Error("UMAPINFO: unexpected token '%s' in map '%s'\n",
+           tokenizer.getToken().constPtr(), curInfo->getKey());
    return false;
 }
 
