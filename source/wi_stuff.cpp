@@ -33,6 +33,7 @@
 #include "doomstat.h"
 #include "e_fonts.h"
 #include "e_string.h"
+#include "f_finale.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "m_qstr.h"
@@ -482,6 +483,9 @@ static void WI_drawLF()
 //
 static void WI_drawEL()
 {
+   if(LevelInfo.endOfGame || LevelInfo.finaleType != FINALE_TEXT)
+      return;
+
    int y = WI_TITLEY;
    patch_t *patch = nullptr;
    bool loadedInfoPatch = false;
@@ -1057,8 +1061,8 @@ static void WI_drawShowNextLoc()
 
    // draws which level you are entering..
    // check for end of game -- haleyjd 07/08/04: use map info
-   if((GameModeInfo->id != commercial) || !LevelInfo.endOfGame)
-      WI_drawEL();  
+   // ioanch: don't make it exclusive to DOOM ][
+   WI_drawEL();
 }
 
 // ====================================================================
