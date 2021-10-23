@@ -1142,6 +1142,17 @@ static void WI_initDeathmatchStats()
    WI_initAnimatedBack(false);
 }
 
+//
+// Prepares the entering stage, depending on game mode and enterpic settings
+//
+static void WI_prepareEnteringStage()
+{
+   if(GameModeInfo->id == commercial && estrempty(wbs->li_nextenterpic))
+      WI_initNoState();
+   else
+      WI_initShowNextLoc();
+}
+
 
 // ====================================================================
 // WI_updateDeathmatchStats
@@ -1243,13 +1254,7 @@ static void WI_updateDeathmatchStats()
       if(acceleratestage)
       {   
          S_StartInterfaceSound(sfx_slop);
-
-         if(GameModeInfo->id == commercial && estrempty(wbs->li_nextenterpic))
-         {
-            WI_initNoState();
-         }
-         else
-            WI_initShowNextLoc();
+         WI_prepareEnteringStage();
       }
    }
    else if(dm_state & 1)
@@ -1560,10 +1565,7 @@ static void WI_updateNetgameStats()
       if(acceleratestage)
       {
          S_StartInterfaceSound(sfx_sgcock);
-         if(GameModeInfo->id == commercial && estrempty(wbs->li_nextenterpic))
-            WI_initNoState();
-         else
-            WI_initShowNextLoc();
+         WI_prepareEnteringStage();
       }
    }
    else if(ng_state & 1)
@@ -1782,11 +1784,7 @@ static void WI_updateStats()
       if(acceleratestage)
       {
          S_StartInterfaceSound(sfx_sgcock);
-         
-         if(GameModeInfo->id == commercial && estrempty(wbs->li_nextenterpic))
-            WI_initNoState();
-         else
-            WI_initShowNextLoc();
+         WI_prepareEnteringStage();
       }
    }
    else if(sp_state & 1)
