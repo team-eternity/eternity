@@ -474,6 +474,15 @@ static void WI_drawLF()
       Z_ChangeTag(patch, PU_CACHE);
 }
 
+//
+// Check if it's finale
+//
+inline static bool WI_isFinale()
+{
+   // FIXME: handle finaleTypeSecret too
+   return LevelInfo.endOfGame || LevelInfo.finaleType != FINALE_TEXT;
+}
+
 
 // ====================================================================
 // WI_drawEL
@@ -483,7 +492,7 @@ static void WI_drawLF()
 //
 static void WI_drawEL()
 {
-   if(LevelInfo.endOfGame || LevelInfo.finaleType != FINALE_TEXT)
+   if(WI_isFinale())
       return;
 
    int y = WI_TITLEY;
@@ -945,11 +954,11 @@ static void WI_End()
 // Args:    none
 // Returns: void
 //
-static void WI_initNoState()
+static void WI_initNoState(int ticcount)
 {
    state = NoState;
    acceleratestage = 0;
-   cnt = 10;
+   cnt = ticcount;
 }
 
 
@@ -1008,7 +1017,7 @@ static void WI_updateShowNextLoc()
    WI_updateAnimatedBack();
    
    if(!--cnt || acceleratestage)
-      WI_initNoState();
+      WI_initNoState(10);
    else
       snl_pointeron = (cnt & 31) < 20;
 }
@@ -1038,7 +1047,7 @@ static void WI_drawShowNextLoc()
 
    if(GameModeInfo->id != commercial)
    {
-      if(!overworld(wbs->nextEpisode))
+      if(!overworld(wbs->nextEpisode) || WI_isFinale())
       {
          WI_drawEL();  // "Entering..." if not E1 or E2 or E3
          return;
@@ -1147,8 +1156,15 @@ static void WI_initDeathmatchStats()
 //
 static void WI_prepareEnteringStage()
 {
-   if(GameModeInfo->id == commercial && estrempty(wbs->li_nextenterpic))
-      WI_initNoState();
+   if(GameModeInfo->id != commercial && WI_isFinale())
+      WI_initNoState(1);   // do it (roughly?) like in PrBoom+um
+   else if(GameModeInfo->id == commercial && (estrempty(wbs->li_nextenterpic) ||
+                                              demo_version <= 203))
+   {
+      // Also keep demo compatibility, since PrBoom+um doesn't show the next enterpic more than 10
+      // tics. But it looks better if it mimics the Doom 1 time.
+      WI_initNoState(10);
+   }
    else
       WI_initShowNextLoc();
 }
