@@ -1051,7 +1051,7 @@ static const finalerule_t *P_determineEpisodeFinaleRule(bool checkmap)
 //
 // Set the finale based on rule
 //
-static void P_setFinaleFromRule(const finalerule_t *rule, bool changeFinaleEarly)
+static void P_setFinaleFromRule(const finalerule_t *rule, bool changeFinaleEarly, bool changeText)
 {
    if(!rule)
    {
@@ -1069,8 +1069,11 @@ static void P_setFinaleFromRule(const finalerule_t *rule, bool changeFinaleEarly
    }
 
    // set backdrop graphic, intertext, and finale type
-   LevelInfo.backDrop   = DEH_String(rule->backDrop);
-   LevelInfo.interText  = DEH_String(rule->interText);
+   if(changeText)
+   {
+      LevelInfo.backDrop   = DEH_String(rule->backDrop);
+      LevelInfo.interText  = DEH_String(rule->interText);
+   }
    LevelInfo.finaleType = rule->finaleType;
 
    // check for endOfGame flag
@@ -1127,7 +1130,7 @@ static void P_InfoDefaultFinale()
    }
 
    const finalerule_t *rule = P_determineEpisodeFinaleRule(true);
-   P_setFinaleFromRule(rule, true);
+   P_setFinaleFromRule(rule, true, true);
 
    if(rule)
    {
@@ -2007,6 +2010,30 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
    val = info->getInt("partime", XL_UMAPINFO_SPECVAL_NOT_SET);
    if(val != XL_UMAPINFO_SPECVAL_NOT_SET)
       LevelInfo.partime = val;
+
+   // If we have the finale-secret-only flag, transfer whatever's in basic inter-text to inter-text-
+   // secret, so that we replace the correct field afterwards
+   if(LevelInfo.finaleSecretOnly && !LevelInfo.interTextSecret && LevelInfo.interText)
+   {
+      LevelInfo.interTextSecret = LevelInfo.interText;
+      LevelInfo.interText = nullptr;
+   }
+   else if(!LevelInfo.finaleNormalOnly && LevelInfo.interText)
+      LevelInfo.interTextSecret = LevelInfo.interText;   // also transfer if distributed
+   else if(LevelInfo.finaleNormalOnly)    // cleanup the other states
+      LevelInfo.interTextSecret = nullptr;
+
+   //
+   // Needed to copy the pointer to the secret-exit story to the normal-exit one
+   //
+   auto reuseSecretStoryForMainExit = []()
+   {
+      if(LevelInfo.finaleSecretOnly && LevelInfo.interTextSecret && !LevelInfo.interText)
+         LevelInfo.interText = LevelInfo.interTextSecret;
+      LevelInfo.finaleSecretOnly = false;
+   };
+
+
    val = info->getInt("endgame", XL_UMAPINFO_SPECVAL_NOT_SET);
    if(val == XL_UMAPINFO_SPECVAL_FALSE)
    {
@@ -2014,7 +2041,6 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
       // Default map exits are defined in P_InfoDefaultFinale according to game mode info
       LevelInfo.finaleType = FINALE_TEXT;
       LevelInfo.endOfGame = false;
-      LevelInfo.finaleSecretOnly = false;
       LevelInfo.finaleEarly = false;
    }
    else if(val == XL_UMAPINFO_SPECVAL_TRUE)
@@ -2022,7 +2048,13 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
       const finalerule_t *rule = P_determineEpisodeFinaleRule(false);
 
       // Do not also change the finale-early flag, so that it's like PrBoom+um
-      P_setFinaleFromRule(rule, false); // use the most basic setting
+      // HACK to maximize PrBoom+um compatibility, avoid
+      P_setFinaleFromRule(rule, false, GameModeInfo->id != commercial);
+
+      // Also generalize this (and same below) for both exits. The presence of the respective
+      // intertext will dictate whether it will really happen.
+      reuseSecretStoryForMainExit();
+      P_EnsureDefaultStoryText();
    }
    strval = info->getString("endpic", nullptr);
    if(strval)
@@ -2032,6 +2064,7 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
       LevelInfo.finaleType = FINALE_END_PIC;
       LevelInfo.endPic = strval;
 
+      reuseSecretStoryForMainExit();
       P_EnsureDefaultStoryText();
    }
    val = info->getInt("endbunny", XL_UMAPINFO_SPECVAL_NOT_SET);
@@ -2039,6 +2072,7 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
    {
       LevelInfo.endOfGame = false;
       LevelInfo.finaleType = FINALE_DOOM_BUNNY;
+      reuseSecretStoryForMainExit();
       P_EnsureDefaultStoryText();
    }
    val = info->getInt("endcast", XL_UMAPINFO_SPECVAL_NOT_SET);
@@ -2046,6 +2080,7 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
    {
       LevelInfo.endOfGame = true;
       LevelInfo.finaleType = FINALE_TEXT;
+      reuseSecretStoryForMainExit();
       P_EnsureDefaultStoryText();
    }
 
@@ -2084,6 +2119,13 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
             LevelInfo.*intertexttargets[i] = intertext.duplicate(PU_LEVEL);
       }
    }
+
+   // Must clear what's not there.
+   if(LevelInfo.interText && !LevelInfo.interTextSecret)
+      LevelInfo.finaleNormalOnly = true;
+   else if(!LevelInfo.interText && LevelInfo.interTextSecret)
+      LevelInfo.finaleSecretOnly = true;
+
 
    strval = info->getString("interbackdrop", nullptr);
    if(strval)
