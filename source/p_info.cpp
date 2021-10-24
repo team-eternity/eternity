@@ -1965,27 +1965,29 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
    strval = info->getString("levelname", nullptr);
    if(strval)
    {
-      const char *label = info->getString("label", nullptr);
-
+      // Must always get the last object
+      MetaObject *label = info->getObject("label");
       qstring fullname;
+
       if(label)
       {
-         fullname = label;
-         fullname += ": ";
-         fullname += strval;
-      }
-      else
-      {
-         val = info->getInt("label", XL_UMAPINFO_SPECVAL_NOT_SET);
-         if(val == XL_UMAPINFO_SPECVAL_CLEAR)
-            fullname = strval;
-         else  // only other valid option is "missing"
+         auto labelString = runtime_cast<MetaString *>(label);
+         if(labelString)
          {
-            fullname = mapname;
+            fullname = labelString->getValue();
             fullname += ": ";
             fullname += strval;
          }
+         else  // int: clear
+            fullname = strval;
       }
+      else  // unmentioned
+      {
+         fullname = mapname;
+         fullname += ": ";
+         fullname += strval;
+      }
+
       LevelInfo.levelName = LevelInfo.interLevelName = fullname.duplicate(PU_LEVEL);
       LevelInfo.interLevelName = strval;  // just the inter level name
    }
