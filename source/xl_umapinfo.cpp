@@ -658,13 +658,9 @@ void XL_BuildUMapInfoEpisodes()
 
    // Now we have the episode!
    mn_episode_override = estructalloc(menu_t, 1);
+   *mn_episode_override = newmenu;  // copy the properties
    mn_episode_override->menuitems = estructalloc(menuitem_t,
                                                  prefixItems.getLength() + items.getLength() + 1);
-   // Copy over the flags
-   mn_episode_override->x = newmenu.x;
-   mn_episode_override->y = newmenu.y;
-   mn_episode_override->selected = newmenu.selected;
-   mn_episode_override->flags = newmenu.flags;
 
    for(size_t i = 0; i < prefixItems.getLength(); ++i)
       mn_episode_override->menuitems[i] = prefixItems[i];
