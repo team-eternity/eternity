@@ -350,7 +350,7 @@ bool XLUMapInfoParser::doStateExpectValue(XLTokenizer &tokenizer)
                curInfo->addInt(key.constPtr(), XL_UMAPINFO_SPECVAL_CLEAR);
             else
             {
-               subtable = new MetaTable;
+               subtable = new MetaTable(key.constPtr());
                subtable->setString("patch", value.constPtr());
                curInfo->addMetaTable(key.constPtr(), subtable);
             }
@@ -372,7 +372,7 @@ bool XLUMapInfoParser::doStateExpectValue(XLTokenizer &tokenizer)
                curInfo->addInt(key.constPtr(), XL_UMAPINFO_SPECVAL_CLEAR);
             else
             {
-               subtable = new MetaTable;
+               subtable = new MetaTable(key.constPtr());
                subtable->setString("thingtype", value.constPtr());
                curInfo->addMetaTable(key.constPtr(), subtable);
             }
