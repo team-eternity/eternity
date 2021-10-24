@@ -579,9 +579,6 @@ void XL_BuildUMapInfoEpisodes()
          finishedPrefix = true;
          items.add(*item);
       }
-
-      newmenu.flags |= mf_bigfont;
-      newmenu.flags &= ~mf_emulated; // we no longer emulate custom menus
    }
    else
    {
