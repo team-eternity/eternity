@@ -755,6 +755,7 @@ void A_HticExplode(actionargs_t *actionargs)
       break;
    case 3: // 3 -- Time Bomb of the Ancients, special effects
       actor->z += 32*FRACUNIT;
+      actor->backupPosition();   // don't show the bomb popping up
       actor->translucency = FRACUNIT;
       break;
    default:
