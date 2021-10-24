@@ -167,6 +167,9 @@ bool XLUMapInfoParser::doStateExpectMapName(XLTokenizer &tokenizer)
       I_Error("UMAPINFO: expected map name after 'map' keyword\n");
       return false;
    }
+
+   // NOTE: do not restrict to certain names, unlike the base specs
+
    state = STATE_EXPECTOPENBRACE;
    curInfo = XL_newUMapInfo(tokenizer.getToken().constPtr());
    return true;

@@ -1962,6 +1962,22 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
    int val;
    const char *strval;
 
+   // Setup the next levels here. According to UMAPINFO, by default _both_ properties mean the next
+   // map. Only do it for standard IWAD lump names
+   int ep, lev;
+   if(M_IsExMy(info->getKey(), &ep, &lev))
+   {
+      qstring nextname;
+      nextname.Printf(8, "E%dM%d", ep, lev + 1);
+      LevelInfo.nextLevel = LevelInfo.nextSecret = nextname.duplicate(PU_LEVEL);
+   }
+   else if(M_IsMAPxy(info->getKey(), &lev))
+   {
+      qstring nextname;
+      nextname.Printf(8, "MAP%02d", lev + 1);
+      LevelInfo.nextLevel = LevelInfo.nextSecret = nextname.duplicate(PU_LEVEL);
+   }
+
    strval = info->getString("levelname", nullptr);
    if(strval)
    {
