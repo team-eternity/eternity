@@ -3400,8 +3400,8 @@ static void P_PreZoneFreeLevel()
    // sf: free the psecnode_t linked list in p_map.c
    P_FreeSecNodeList(); 
 
-   // Clear all global reference-counted mobj references
-   P_ClearGlobalMobjReferences();
+   // Clear all global references
+   P_ClearGlobalLevelReferences();
 }
 
 //
