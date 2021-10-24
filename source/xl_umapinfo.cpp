@@ -71,7 +71,7 @@ static MetaTable umapInfoTable;
 static MetaTable *XL_newUMapInfo(const char *levelname)
 {
    MetaTable *ret;
-   if((ret = umapInfoTable.getObjectKeyAndTypeEx<MetaTable>(levelname)))
+   if((ret = umapInfoTable.getMetaTable(levelname, nullptr)))
       ret->clearTable();
    else
    {
@@ -457,7 +457,7 @@ void XLUMapInfoParser::onEOF(bool early)
 //
 MetaTable *XL_UMapInfoForMapName(const char *mapname)
 {
-   return umapInfoTable.getObjectKeyAndTypeEx<MetaTable>(mapname);
+   return umapInfoTable.getMetaTable(mapname, nullptr);
 }
 
 //
@@ -521,21 +521,21 @@ void XL_BuildInterUMapInfo()
    {
       intermapinfo_t &info = IN_GetMapInfo(level->getKey());
 
-      auto str = level->getObjectKeyAndTypeEx<MetaString>("levelname");
+      const char *str = level->getString("levelname", nullptr);
       if(str)
-         info.levelname = str->getValue();
+         info.levelname = str;
 
-      str = level->getObjectKeyAndTypeEx<MetaString>("levelpic");
+      str = level->getString("levelpic", nullptr);
       if(str)
-         info.levelpic = str->getValue();
+         info.levelpic = str;
 
-      str = level->getObjectKeyAndTypeEx<MetaString>("enterpic");
+      str = level->getString("enterpic", nullptr);
       if(str)
-         info.enterpic = str->getValue();
+         info.enterpic = str;
 
-      str = level->getObjectKeyAndTypeEx<MetaString>("exitpic");
+      str = level->getString("exitpic", nullptr);
       if(str)
-         info.exitpic = str->getValue();
+         info.exitpic = str;
    }
 }
 
