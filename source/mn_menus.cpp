@@ -334,7 +334,7 @@ menu_t menu_episodeDoom2Stub =
    nullptr, nullptr, nullptr,
    48, 63,
    0,
-   mf_skullmenu | mf_bigfont,
+   mf_skullmenu | mf_emulated,
    MN_EpisodeDrawer
 };
 
