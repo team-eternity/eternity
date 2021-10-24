@@ -25,12 +25,16 @@
 #include <assert.h>
 #include "z_zone.h"
 
+#include "d_gi.h"
 #include "e_hash.h"
 #include "in_lude.h"
+#include "m_utils.h"
 #include "metaqstring.h"
+#include "mn_engin.h"
 #include "w_wad.h"
 #include "xl_scripts.h"
 #include "xl_umapinfo.h"
+#include "mn_emenu.h"
 
 //
 // UMAPINFO property data type
@@ -64,6 +68,9 @@ static EHashTable<propertyrule_t, ENCStringHashKey, &propertyrule_t::name, &prop
 // UMAPINFO entry maintenance
 static MetaTable umapInfoTable;
 
+// In-order map names
+static PODCollection<const char *> orderedLevels;
+
 //
 // Creates a new metatable to hold data for a global UMAPINFO level entry and
 // add it to the umapInfoTable
@@ -77,6 +84,7 @@ static MetaTable *XL_newUMapInfo(const char *levelname)
    {
       ret = new MetaTable(levelname);
       umapInfoTable.addObject(ret);
+      orderedLevels.add(ret->getKey());
    }
    return ret;
 }
@@ -540,6 +548,129 @@ void XL_BuildInterUMapInfo()
       if(str)
          info.exitpic = str;
    }
+}
+
+//
+// Constructs the episodes from UMAPINFO, if available
+//
+void XL_BuildUMapInfoEpisodes()
+{
+   // The EDF episode menu has priority
+   if(mn_episode_override)
+      return;
+
+   PODCollection<menuitem_t> prefixItems; // the visual items before the actual items, if any
+   PODCollection<menuitem_t> items;
+
+   const menu_t *base = GameModeInfo->episodeMenu;
+   edefstructvar(menu_t, newmenu);
+   bool finishedPrefix = false;
+   if(base)
+   {
+      newmenu = *base;  // copy the vanilla menu properties
+      for(const menuitem_t *item = newmenu.menuitems; item->type != it_end; ++item)
+      {
+         if(item->type != it_runcmd)
+         {
+            if(!finishedPrefix)
+               prefixItems.add(*item);
+            continue;
+         }
+         finishedPrefix = true;
+         items.add(*item);
+      }
+
+      newmenu.flags |= mf_bigfont;
+      newmenu.flags &= ~mf_emulated; // we no longer emulate custom menus
+   }
+   else
+   {
+      // Shouldn't really go here
+      // Based on the Doom menu
+      newmenu.x = 48;
+      newmenu.y = 63;
+      newmenu.flags = mf_skullmenu | mf_bigfont;
+   }
+
+   struct episodeinfo_t
+   {
+      const char *patch;
+      const char *name;
+      // NOTE: key currently unused
+   };
+
+   PODCollection<episodeinfo_t> epinfos;  // REVERSE LIST
+
+   for(const char *levelname : orderedLevels)
+   {
+      const MetaTable *level = XL_UMapInfoForMapName(levelname);
+      assert(level);
+
+      // Locate the last "clear" entry, if any. Use it to clear the items list.
+      int mint = level->getInt("episode", XL_UMAPINFO_SPECVAL_NOT_SET);
+      if(mint == XL_UMAPINFO_SPECVAL_CLEAR)
+         items.makeEmpty();   // empty out the episode list
+
+      // Now get the episode list.
+      epinfos.makeEmpty();
+      // use MetaObject because we may hit a MetaInteger and know to stop
+      MetaObject *epentry = nullptr;
+      while((epentry = level->getNextObject(epentry, "episode")))
+      {
+         auto eptable = runtime_cast<MetaTable *>(epentry);
+         if(!eptable)   // hit a "clear" entry
+            break;
+         edefstructvar(episodeinfo_t, epinfo);
+         epinfo.patch = eptable->getString("patch", nullptr);
+         assert(epinfo.patch);
+         epinfo.name = eptable->getString("name", nullptr);
+         assert(epinfo.name);
+         epinfos.add(epinfo);
+      }
+
+      // Visit the list in reverse
+      for(int i = (int)epinfos.getLength() - 1; i >= 0; --i)
+      {
+         const episodeinfo_t &epinfo = epinfos[i];
+
+         qstring ccmd("mn_start_mapname ");
+         ccmd += levelname;
+
+         edefstructvar(menuitem_t, newitem);
+         newitem.type = it_runcmd;
+         newitem.description = epinfo.name;
+         newitem.data = ccmd.duplicate(PU_STATIC);
+         newitem.patch = epinfo.patch;
+         items.add(newitem);
+      }
+   }
+   // Now we have the items
+   // Cut them off to 8 (UMAPINFO limit)
+   if(items.getLength() > 8)
+      items.resize(8);
+
+   // Scan for missing patches and remove them
+   // NOTE: this is a deviation from the UMAPINFO specs, by only invalidating the missing patches
+   // on an element-by-element basis, not every item.
+   for(menuitem_t &item : items)
+      if(item.patch && W_CheckNumForName(item.patch) == -1)
+         item.patch = nullptr;
+
+   // Now we have the episode!
+   mn_episode_override = estructalloc(menu_t, 1);
+   mn_episode_override->menuitems = estructalloc(menuitem_t,
+                                                 prefixItems.getLength() + items.getLength() + 1);
+   // Copy over the flags
+   mn_episode_override->x = newmenu.x;
+   mn_episode_override->y = newmenu.y;
+   mn_episode_override->selected = newmenu.selected;
+   mn_episode_override->flags = newmenu.flags;
+
+   for(size_t i = 0; i < prefixItems.getLength(); ++i)
+      mn_episode_override->menuitems[i] = prefixItems[i];
+   for(size_t i = 0; i < items.getLength(); ++i)
+      mn_episode_override->menuitems[prefixItems.getLength() + i] = items[i];
+   mn_episode_override->menuitems[prefixItems.getLength() + items.getLength()].type = it_end;
 }
 
 // EOF

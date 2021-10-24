@@ -469,6 +469,9 @@ static void XL_buildInterMapInfo()
    // Then, override with EMAPINFO
    XL_BuildInterEMapInfo();
 
+   // Episode menu from UMAPINFO
+   XL_BuildUMapInfoEpisodes();
+
    // FIXME: MAPINFO is meant only for Hexen, which doesn't have Doom-style in-
    // termission anyway. But maybe we should use its fields.
 }

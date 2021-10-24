@@ -39,6 +39,7 @@ enum
 MetaTable *XL_UMapInfoForMapName(const char *mapname);
 void XL_ParseUMapInfo();
 void XL_BuildInterUMapInfo();
+void XL_BuildUMapInfoEpisodes();
 
 #endif
 
