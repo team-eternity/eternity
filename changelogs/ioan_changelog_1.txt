@@ -8,6 +8,11 @@ Since v4.02.00 "Forseti"
 ========================
 
 --------------------------------------------------------------------------------
+24.10.2021
+
+BUGFIX: Fixed a rare crash potentially happening when changing the level.
+
+--------------------------------------------------------------------------------
 17.10.2021
 
 BUGFIX: Invalid entries in EMAPINFO are now detected early.

@@ -3155,10 +3155,16 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
 }
 
 //
-// Clears all remaining Mobj references to avoid dangling references on next PU_LEVEL session.
+// Clears all remaining references to avoid dangling references on next PU_LEVEL session.
 //
-void P_ClearGlobalMobjReferences()
+void P_ClearGlobalLevelReferences()
 {
+   clip.thing = nullptr;   // this isn't reference-counted
+   clip.ceilingline = clip.blockline = clip.floorline = nullptr;
+   clip.numspechit = 0;
+   clip.open.frontsector = clip.open.backsector = nullptr;
+   clip.BlockingMobj = nullptr;  // also not ref-counted
+   clip.numportalhit = 0;
    P_ClearTarget(clip.linetarget);
 }
 

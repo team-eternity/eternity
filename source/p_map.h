@@ -295,7 +295,7 @@ void P_PushClipStack();
 // Pops the tm stack, storing the discarded element for later re-insertion.
 void P_PopClipStack();
 
-void P_ClearGlobalMobjReferences();
+void P_ClearGlobalLevelReferences();
 
 bool P_OnGroundOrThing(const Mobj &mobj);
 
