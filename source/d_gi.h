@@ -389,6 +389,7 @@ struct gamemodeinfo_t
    menu_t *saveMenu;              // pointer to save menu structure
    menu_t *loadMenu;              // pointer to load menu structure
    menu_t *newGameMenu;           // pointer to new game menu structure
+   const menu_t *episodeMenu;     // pointer to the episode menu (for UMAPINFO)
    const char *menuStartMap;      // new game map lump for skill selection
    int *menuSounds;               // menu sound indices
    int transFrame;                // frame DEH # used on video menu

@@ -321,6 +321,23 @@ menu_t menu_episode =
    MN_EpisodeDrawer            // drawer
 };
 
+//
+// Stub episode menu (for UMAPINFO)
+//
+static menuitem_t mn_episode_itemsStub[] =
+{
+   { it_end }
+};
+menu_t menu_episodeDoom2Stub =
+{
+   mn_episode_itemsStub,
+   nullptr, nullptr, nullptr,
+   48, 63,
+   0,
+   mf_skullmenu | mf_bigfont,
+   MN_EpisodeDrawer
+};
+
 // console command to select episode
 
 CONSOLE_COMMAND(mn_episode, cf_notnet)

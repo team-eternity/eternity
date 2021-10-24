@@ -158,6 +158,7 @@
 
 #define FINALDOOM_MIFLAGS (MI_DEMOIFDEMO4 | MI_NOTELEPORTZ)
 
+extern menu_t menu_episode, menu_episodeDoom2Stub, menu_hepisode;
 // globals
 
 // holds the address of the gamemodeinfo_t for the current gamemode,
@@ -1104,6 +1105,7 @@ static gamemodeinfo_t giDoomSW =
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
    &menu_newgame,    // newGameMenu
+   &menu_episode,    // episodeMenu
    nullptr,          // menuStartMap
    doomMenuSounds,   // menuSounds
    S_TBALL1,         // transFrame
@@ -1233,6 +1235,7 @@ static gamemodeinfo_t giDoomReg =
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
    &menu_newgame,    // newGameMenu
+   &menu_episode,    // episodeMenu
    nullptr,          // menuStartMap
    doomMenuSounds,   // menuSounds
    S_TBALL1,         // transFrame
@@ -1362,6 +1365,7 @@ static gamemodeinfo_t giDoomRetail =
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
    &menu_newgame,    // newGameMenu
+   &menu_episode,    // episodeMenu
    nullptr,          // menuStartMap
    doomMenuSounds,   // menuSounds
    S_TBALL1,         // transFrame
@@ -1491,6 +1495,7 @@ static gamemodeinfo_t giDoomCommercial =
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
    &menu_newgame,    // newGameMenu
+   &menu_episodeDoom2Stub, // episodeMenu
    nullptr,          // menuStartMap
    doomMenuSounds,   // menuSounds
    S_TBALL1,         // transFrame
@@ -1620,6 +1625,7 @@ static gamemodeinfo_t giHereticSW =
    &menu_savegame,  // saveMenu
    &menu_loadgame,  // loadMenu
    &menu_hnewgame,   // newGameMenu
+   &menu_hepisode,   // episodeMenu
    nullptr,          // menuStartMap
    hticMenuSounds,   // menuSounds
    S_MUMMYFX1_1,     // transFrame
@@ -1753,6 +1759,7 @@ static gamemodeinfo_t giHereticReg =
    &menu_savegame,  // saveMenu
    &menu_loadgame,  // loadMenu
    &menu_hnewgame,   // newGameMenu
+   &menu_hepisode,   // episodeMenu
    nullptr,          // menuStartMap
    hticMenuSounds,   // menuSounds
    S_MUMMYFX1_1,     // transFrame
