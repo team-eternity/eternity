@@ -417,6 +417,16 @@ bool XLUMapInfoParser::doStatePostValue(XLTokenizer &tokenizer)
       state = STATE_EXPECTVALUE;
       return true;
    }
+   const propertyrule_t *rule = rules.objectForKey(key.constPtr());
+   I_Assert(rule, "Expected to have a rule for '%s'\n", key.constPtr());
+
+   if((rule->type == PropertyType::addBossActionOrClear ||
+       rule->type == PropertyType::addEpisodeOrClear) && valueIndex != 2)
+   {
+      I_Error("UMAPINFO: expected 3 arguments for '%s' in map '%s'\n", key.constPtr(),
+              curInfo->getKey());
+   }
+
    if(tokenizer.getToken() == "}")
    {
       state = STATE_EXPECTMAP;
