@@ -1570,7 +1570,10 @@ CONSOLE_VARIABLE(hu_obitcolor, obcolour, 0) {}
 CONSOLE_VARIABLE(hu_crosshair, crosshairnum, 0) {}
 CONSOLE_VARIABLE(hu_crosshair_hilite, crosshair_hilite, 0) {}
 CONSOLE_VARIABLE(hu_crosshair_scale, crosshair_scale, 0) {}
-CONSOLE_VARIABLE(hu_messages, showMessages, 0) {}
+CONSOLE_VARIABLE(hu_messages, showMessages, 0)
+{
+   doom_printf("%s", DEH_String(showMessages ? "MSGON" : "MSGOFF"));
+}
 CONSOLE_VARIABLE(hu_messagealignment, mess_align, 0) {}
 CONSOLE_VARIABLE(hu_messagecolor, mess_colour, 0) {}
 CONSOLE_NETCMD(say, cf_netvar, netcmd_chat)
