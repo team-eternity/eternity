@@ -26,6 +26,7 @@
 #include "z_zone.h"
 
 #include "d_gi.h"
+#include "e_fonts.h"
 #include "e_hash.h"
 #include "in_lude.h"
 #include "m_utils.h"
@@ -35,6 +36,7 @@
 #include "xl_scripts.h"
 #include "xl_umapinfo.h"
 #include "mn_emenu.h"
+#include "v_font.h"
 
 //
 // UMAPINFO property data type
@@ -561,6 +563,7 @@ void XL_BuildUMapInfoEpisodes()
 
    PODCollection<menuitem_t> prefixItems; // the visual items before the actual items, if any
    PODCollection<menuitem_t> items;
+   int prefixGaps = 0;   // number of prefix lines with blanks
 
    const menu_t *base = GameModeInfo->episodeMenu;
    edefstructvar(menu_t, newmenu);
@@ -573,7 +576,11 @@ void XL_BuildUMapInfoEpisodes()
          if(item->type != it_runcmd)
          {
             if(!finishedPrefix)
+            {
                prefixItems.add(*item);
+               if(item->type == it_gap)
+                  ++prefixGaps;
+            }
             continue;
          }
          finishedPrefix = true;
@@ -652,6 +659,36 @@ void XL_BuildUMapInfoEpisodes()
    for(menuitem_t &item : items)
       if(item.patch && W_CheckNumForName(item.patch) == -1)
          item.patch = nullptr;
+
+   // Check if the menu needs adjustment (DOOM mf_emulated menus are fine, they have fixed height)
+   if(newmenu.flags & mf_bigfont)
+   {
+      const vfont_t *gapfont = E_FontForName(mn_fontname);  // the gap uses the basic font height
+      const vfont_t *font = E_FontForName(mn_bigfontname);
+      if(font && gapfont)
+      {
+         int prefixHeight = font->cy * ((int)prefixItems.getLength() - prefixGaps) +
+               gapfont->cy * prefixGaps;
+         int contentHeight = font->cy * ((int)items.getLength());
+         if(newmenu.y + prefixHeight + contentHeight > SCREENHEIGHT)
+         {
+            // Center to fit it to screen
+            newmenu.y = (SCREENHEIGHT - prefixHeight - contentHeight) / 2;
+            if(newmenu.y < 0)
+            {
+               // Still not fitting? Remove the title
+               newmenu.selected -= (int)prefixItems.getLength();
+               prefixItems.makeEmpty();
+               newmenu.y = (SCREENHEIGHT - contentHeight) / 2;
+               if(newmenu.y < 0)
+               {
+                  // Still not fitting? Give up, but ensure valid origin
+                  newmenu.y = 0;
+               }
+            }
+         }
+      }
+   }
 
    // Now we have the episode!
    mn_episode_override = estructalloc(menu_t, 1);
