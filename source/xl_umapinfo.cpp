@@ -709,13 +709,16 @@ void XL_BuildUMapInfoEpisodes()
             shiftedTop = 38 - (oldmenuy - newmenu.y);
 
             // HACK: replace the drawer function to something equivalent but dynamically offset.
-            extern menu_t menu_episode;
-            if(GameModeInfo->episodeMenu == &menu_episode)
+            extern menu_t menu_episode, menu_episodeDoom2Stub;
+            if(GameModeInfo->episodeMenu == &menu_episode ||
+               GameModeInfo->episodeMenu == &menu_episodeDoom2Stub)
+            {
                newmenu.drawer = []()
                {
                   V_DrawPatch(54, shiftedTop, &subscreen43,
                               PatchLoader::CacheName(wGlobalDir, "M_EPISOD", PU_CACHE));
                };
+            }
          }
       }
    }
