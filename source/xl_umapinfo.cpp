@@ -358,8 +358,11 @@ bool XLUMapInfoParser::doStateExpectValue(XLTokenizer &tokenizer)
       case PropertyType::addEpisodeOrClear:
          if(!valueIndex)
          {
-            if(!value.strCaseCmp("clear"))
+            if(type == XLTokenizer::TOKEN_KEYWORD && !value.strCaseCmp("clear"))
+            {
                curInfo->addInt(key.constPtr(), XL_UMAPINFO_SPECVAL_CLEAR);
+               gotClear = true;
+            }
             else
             {
                subtable = new MetaTable(key.constPtr());
@@ -381,7 +384,10 @@ bool XLUMapInfoParser::doStateExpectValue(XLTokenizer &tokenizer)
          if(!valueIndex)
          {
             if(!value.strCaseCmp("clear"))
+            {
                curInfo->addInt(key.constPtr(), XL_UMAPINFO_SPECVAL_CLEAR);
+               gotClear = true;
+            }
             else
             {
                subtable = new MetaTable(key.constPtr());
@@ -421,7 +427,8 @@ bool XLUMapInfoParser::doStatePostValue(XLTokenizer &tokenizer)
    I_Assert(rule, "Expected to have a rule for '%s'\n", key.constPtr());
 
    if((rule->type == PropertyType::addBossActionOrClear ||
-       rule->type == PropertyType::addEpisodeOrClear) && valueIndex != 2)
+       rule->type == PropertyType::addEpisodeOrClear) && !gotClear &&
+      valueIndex != 2)
    {
       I_Error("UMAPINFO: expected 3 arguments for '%s' in map '%s'\n", key.constPtr(),
               curInfo->getKey());
@@ -517,8 +524,8 @@ static void XL_initRules()
    addRule("endbunny", PropertyType::setTrue);
    addRule("endcast", PropertyType::setTrue);
    addRule("nointermission", PropertyType::setBoolean);
-   addRule("intertext", PropertyType::setStringOrClear);
-   addRule("intertextsecret", PropertyType::setStringOrClear);
+   addRule("intertext", PropertyType::setMultiStringOrClear);
+   addRule("intertextsecret", PropertyType::setMultiStringOrClear);
    addRule("interbackdrop", PropertyType::setString);
    addRule("intermusic", PropertyType::setString);
    addRule("episode", PropertyType::addEpisodeOrClear);
