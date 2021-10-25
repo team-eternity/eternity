@@ -32,6 +32,8 @@
 #include "m_utils.h"
 #include "metaqstring.h"
 #include "mn_engin.h"
+#include "st_stuff.h"
+#include "v_patchfmt.h"
 #include "w_wad.h"
 #include "xl_scripts.h"
 #include "xl_umapinfo.h"
@@ -665,13 +667,22 @@ void XL_BuildUMapInfoEpisodes()
    if(newmenu.flags & mf_bigfont)
    {
       const vfont_t *gapfont = E_FontForName(mn_fontname);  // the gap uses the basic font height
-      const vfont_t *font = E_FontForName(mn_bigfontname);
-      if(font && gapfont)
+      int rowheight = -1;  // by default invalid
+      if(newmenu.flags & mf_emulated)
+         rowheight = EMULATED_ITEM_SIZE;
+      else
       {
-         int prefixHeight = font->cy * ((int)prefixItems.getLength() - prefixGaps) +
+         const vfont_t *font = E_FontForName(mn_bigfontname);
+         if(font)
+            rowheight = font->cy;
+      }
+      if(rowheight > 0 && gapfont)
+      {
+         int prefixHeight = rowheight * ((int)prefixItems.getLength() - prefixGaps) +
                gapfont->cy * prefixGaps;
-         int contentHeight = font->cy * ((int)items.getLength());
-         if(newmenu.y + prefixHeight + contentHeight > SCREENHEIGHT)
+         int contentHeight = rowheight * ((int)items.getLength());
+         int bottom = newmenu.y + prefixHeight + contentHeight;
+         if(bottom > SCREENHEIGHT)
          {
             // Center to fit it to screen
             newmenu.y = (SCREENHEIGHT - prefixHeight - contentHeight) / 2;
@@ -687,6 +698,24 @@ void XL_BuildUMapInfoEpisodes()
                   newmenu.y = 0;
                }
             }
+         }
+         else if(GameModeInfo->StatusBar == &DoomStatusBar && bottom > SCREENHEIGHT - 32)
+         {
+            static int shiftedTop;
+            int oldmenuy = newmenu.y;
+            newmenu.y = SCREENHEIGHT - 32 - prefixHeight - contentHeight;  // touch the status bar
+            if(newmenu.y < 0)
+               newmenu.y = 0;
+            shiftedTop = 38 - (oldmenuy - newmenu.y);
+
+            // HACK: replace the drawer function to something equivalent but dynamically offset.
+            extern menu_t menu_episode;
+            if(GameModeInfo->episodeMenu == &menu_episode)
+               newmenu.drawer = []()
+               {
+                  V_DrawPatch(54, shiftedTop, &subscreen43,
+                              PatchLoader::CacheName(wGlobalDir, "M_EPISOD", PU_CACHE));
+               };
          }
       }
    }
