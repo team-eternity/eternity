@@ -586,6 +586,7 @@ void XL_BuildUMapInfoEpisodes()
          finishedPrefix = true;
          items.add(*item);
       }
+      newmenu.flags |= mf_bigfont;
    }
    else
    {
