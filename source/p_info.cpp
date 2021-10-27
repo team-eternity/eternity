@@ -46,6 +46,7 @@
 
 /* includes ************************/
 
+#include <assert.h>
 #include "z_zone.h"
 #include "i_system.h"
 
@@ -1954,7 +1955,7 @@ void P_EnsureDefaultStoryText()
 //
 // Source: https://github.com/coelckers/prboom-plus/blob/master/prboom2/doc/umapinfo.txt
 //
-static void P_processUMapInfo(MetaTable *info, const char *mapname)
+static bool P_processUMapInfo(MetaTable *info, const char *mapname, qstring *error)
 {
    I_Assert(info, "No info provided!\n");
    I_Assert(mapname, "Null mapname provided!\n");
@@ -2160,45 +2161,48 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
    if(val == XL_UMAPINFO_SPECVAL_CLEAR)
       LevelInfo.bossSpecs = 0;
 
+   struct bossaction_t
+   {
+      const char *mobjclass;
+      int special;
+      int tag;
+   };
 
-//   MetaMultiString *mms = nullptr;
-//   while((mms = info->getNextTypeEx(mms)))
-//   {
-//      if(mms->value.isEmpty())
-//         continue;
-//      const char *key = mms->getKey();
-//      const qstring &value = mms->value[0];
-//      auto applyTo = [&](const char *&info) {
-//         info = value.duplicate(PU_LEVEL);
-//      };
-//      if(!strcasecmp(key, "levelname"))
-//      {
-//         applyTo(LevelInfo.levelName);
-//         applyTo(LevelInfo.interLevelName);  // apply to both
-//      }
-//      else if(!strcasecmp(key, "levelpic"))
-//         applyTo(LevelInfo.levelPic);
-//      else if(!strcasecmp(key, "next"))
-//         applyTo(LevelInfo.nextLevel);
-//      else if(!strcasecmp(key, "nextsecret"))
-//         applyTo(LevelInfo.nextSecret);
-//      else if(!strcasecmp(key, "skytexture"))
-//         applyTo(LevelInfo.skyName);   // UMAPINFO is in PrBoom+UM, so don't disable the sky compat
-//      else if(!strcasecmp(key, "music"))
-//         applyTo(LevelInfo.musicName);
-//      else if(!strcasecmp(key, "exitpic"))
-//         applyTo(LevelInfo.interPic);  // NOTE: enterpic not used here
-//      else if(!strcasecmp(key, "partime"))
-//         LevelInfo.partime = value.toInt();
-//      else if(!strcasecmp(key, "endgame"))
-//      {
-//         if(!value.strCaseCmp("false"))
-//            LevelInfo.killFinale = true;
-//         // ???
-////         else
-////            forcefinale = true;
-//      }
-//   }
+   PODCollection<bossaction_t> actions;
+   MetaObject *bossentry = nullptr;
+   while((bossentry = info->getNextObject(bossentry, "bossaction")))
+   {
+      auto bosstable = runtime_cast<MetaTable *>(bossentry);
+      if(!bosstable) // hit a "clear" entry
+         break;
+      edefstructvar(bossaction_t, bossinfo);
+      bossinfo.mobjclass = bosstable->getString("thingtype", nullptr);
+      assert(bossinfo.mobjclass);
+      bossinfo.special = bosstable->getInt("linespecial", XL_UMAPINFO_SPECVAL_NOT_SET);
+      assert(bossinfo.special != XL_UMAPINFO_SPECVAL_NOT_SET);
+      bossinfo.tag = bosstable->getInt("tag", XL_UMAPINFO_SPECVAL_NOT_SET);
+      assert(bossinfo.tag != XL_UMAPINFO_SPECVAL_NOT_SET);
+      actions.add(bossinfo);
+   }
+
+   // Visit the list in reverse
+   for(int i = (int)actions.getLength() - 1; i >= 0; --i)
+   {
+      const bossaction_t &action = actions[i];
+
+      mobjtype_t type = E_ThingNumForCompatName(action.mobjclass);
+      if(type == -1)
+      {
+         if(error)
+            *error = qstring("UMAPINFO: invalid bossaction thingtype '") + action.mobjclass + "'";
+         return false;
+      }
+
+      // Get the binding here
+
+   }
+
+   return true;
 }
 
 //
@@ -2313,7 +2317,8 @@ bool P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname, qstring
       const char *mapname = dir->getLumpName(lumpnum);
       if((info = XL_UMapInfoForMapName(mapname)))
       {
-         P_processUMapInfo(info, mapname);
+         if(!P_processUMapInfo(info, mapname, error))
+            return false;
          // Don't give it higher priority over Hexen MAPINFO
       }
 
