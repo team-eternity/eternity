@@ -2153,6 +2153,12 @@ static void P_processUMapInfo(MetaTable *info, const char *mapname)
    if(strval)
       LevelInfo.interMusic = strval;
 
+   // boss specials
+
+   // The presence of a bossaction = clear line must clear any built-in (vanilla) boss actions
+   val = info->getInt("bossaction", XL_UMAPINFO_SPECVAL_NOT_SET);
+   if(val == XL_UMAPINFO_SPECVAL_CLEAR)
+      LevelInfo.bossSpecs = 0;
 
 
 //   MetaMultiString *mms = nullptr;
