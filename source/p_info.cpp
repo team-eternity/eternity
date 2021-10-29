@@ -1954,6 +1954,115 @@ void P_EnsureDefaultStoryText()
 }
 
 //
+// Process the bossaction part of UMAPINFO. Moved here due to complexity.
+//
+static bool P_processUMapInfoBossActions(MetaTable *info, qstring *error)
+{
+
+   // The presence of a bossaction = clear line must clear any built-in (vanilla) boss actions
+   int val;
+   val = info->getInt("bossaction", XL_UMAPINFO_SPECVAL_NOT_SET);
+   if(val == XL_UMAPINFO_SPECVAL_CLEAR)
+      LevelInfo.bossSpecs = 0;
+
+   struct bossaction_t
+   {
+      const char *mobjclass;
+      int special;
+      int tag;
+   };
+
+   PODCollection<bossaction_t> actions;
+   MetaObject *bossentry = nullptr;
+   while((bossentry = info->getNextObject(bossentry, "bossaction")))
+   {
+      auto bosstable = runtime_cast<MetaTable *>(bossentry);
+      if(!bosstable) // hit a "clear" entry
+         break;
+      edefstructvar(bossaction_t, bossinfo);
+      bossinfo.mobjclass = bosstable->getString("thingtype", nullptr);
+      assert(bossinfo.mobjclass);
+      bossinfo.special = bosstable->getInt("linespecial", XL_UMAPINFO_SPECVAL_NOT_SET);
+      assert(bossinfo.special != XL_UMAPINFO_SPECVAL_NOT_SET);
+      bossinfo.tag = bosstable->getInt("tag", XL_UMAPINFO_SPECVAL_NOT_SET);
+      assert(bossinfo.tag != XL_UMAPINFO_SPECVAL_NOT_SET);
+      actions.add(bossinfo);
+   }
+
+   // Visit the list in reverse
+   for(int i = (int)actions.getLength() - 1; i >= 0; --i)
+   {
+      const bossaction_t &action = actions[i];
+
+      mobjtype_t type = E_ThingNumForCompatName(action.mobjclass);
+      if(type == -1)
+      {
+         if(error)
+            *error = qstring("UMAPINFO: invalid bossaction thingtype '") + action.mobjclass + "'";
+         return false;
+      }
+
+      // Check the binding here
+
+      // Ban parameterized special
+      if(EV_IsParamLineSpec(action.special))
+      {
+         C_Printf(FC_ERROR "UMAPINFO: skipping illegal parameterized special %d from %s on tag "
+                  "%d\n", action.special, action.mobjclass, action.tag);
+         continue;
+      }
+
+      // Block shootable specials
+      const char *skipname = nullptr;
+      const ev_action_t *evaction = EV_DOOMActionForSpecial(action.special);
+      if(EV_CheckGenSpecialSpac(action.special, SPAC_IMPACT))
+         skipname = "generalized";
+      else
+      {
+         // UMAPINFO uses the DOOM number space.
+         if(evaction && EV_CheckActionIntrinsicSpac(*evaction, SPAC_IMPACT))
+         {
+            skipname = evaction->name;
+            assert(skipname); // by how the code is written, we must be having the name always.
+         }
+      }
+      if(skipname)
+      {
+         C_Printf(FC_ERROR "UMAPINFO: skipping bossaction %s from %s to tag %d because gunshot "
+                  "types are not allowed\n", skipname, action.mobjclass, action.tag);
+         continue;
+      }
+
+      // Block teleport lines
+      if(evaction)
+      {
+         EVActionFunc func = evaction->action;
+         if(func == EV_ActionSilentLineTeleport || func == EV_ActionSilentLineTeleportReverse ||
+            func == EV_ActionSilentTeleport || func == EV_ActionTeleport)
+         {
+            C_Printf(FC_ERROR "UMAPINFO: skipping bossaction %s from %s to tag %d because "
+                     "teleport types are not allowed\n", evaction->name, action.mobjclass,
+                     action.tag);
+            continue;
+         }
+      }
+
+      // Block locked types
+      if(EV_GenTypeForSpecial(action.special) == GenTypeLocked ||
+         (evaction && (evaction->action == EV_ActionVerticalDoor ||
+                       evaction->action == EV_ActionDoLockedDoor)))
+      {
+         C_Printf(FC_ERROR "UMAPINFO: skipping bossaction %s from %s to tag %d because locked "
+                  "types are not allowed\n", evaction ? evaction->name : "generalized",
+                  action.mobjclass, action.tag);
+         continue;
+      }
+   }
+
+   return true;
+}
+
+//
 // Process UMAPINFO obtained data.
 //
 // Source: https://github.com/coelckers/prboom-plus/blob/master/prboom2/doc/umapinfo.txt
@@ -2158,98 +2267,7 @@ static bool P_processUMapInfo(MetaTable *info, const char *mapname, qstring *err
       LevelInfo.interMusic = strval;
 
    // boss specials
-
-   // The presence of a bossaction = clear line must clear any built-in (vanilla) boss actions
-   val = info->getInt("bossaction", XL_UMAPINFO_SPECVAL_NOT_SET);
-   if(val == XL_UMAPINFO_SPECVAL_CLEAR)
-      LevelInfo.bossSpecs = 0;
-
-   struct bossaction_t
-   {
-      const char *mobjclass;
-      int special;
-      int tag;
-   };
-
-   PODCollection<bossaction_t> actions;
-   MetaObject *bossentry = nullptr;
-   while((bossentry = info->getNextObject(bossentry, "bossaction")))
-   {
-      auto bosstable = runtime_cast<MetaTable *>(bossentry);
-      if(!bosstable) // hit a "clear" entry
-         break;
-      edefstructvar(bossaction_t, bossinfo);
-      bossinfo.mobjclass = bosstable->getString("thingtype", nullptr);
-      assert(bossinfo.mobjclass);
-      bossinfo.special = bosstable->getInt("linespecial", XL_UMAPINFO_SPECVAL_NOT_SET);
-      assert(bossinfo.special != XL_UMAPINFO_SPECVAL_NOT_SET);
-      bossinfo.tag = bosstable->getInt("tag", XL_UMAPINFO_SPECVAL_NOT_SET);
-      assert(bossinfo.tag != XL_UMAPINFO_SPECVAL_NOT_SET);
-      actions.add(bossinfo);
-   }
-
-   // Visit the list in reverse
-   for(int i = (int)actions.getLength() - 1; i >= 0; --i)
-   {
-      const bossaction_t &action = actions[i];
-
-      mobjtype_t type = E_ThingNumForCompatName(action.mobjclass);
-      if(type == -1)
-      {
-         if(error)
-            *error = qstring("UMAPINFO: invalid bossaction thingtype '") + action.mobjclass + "'";
-         return false;
-      }
-
-      // Check the binding here
-      // Block shootable specials
-      const char *skipname = nullptr;
-      const ev_action_t *evaction = EV_DOOMActionForSpecial(action.special);
-      if(EV_CheckGenSpecialSpac(action.special, SPAC_IMPACT))
-         skipname = "generalized";
-      else
-      {
-         // UMAPINFO uses the DOOM number space.
-         if(evaction && EV_CheckActionIntrinsicSpac(*evaction, SPAC_IMPACT))
-         {
-            skipname = evaction->name;
-            assert(skipname); // by how the code is written, we must be having the name always.
-         }
-      }
-      if(skipname)
-      {
-         C_Printf(FC_ERROR "UMAPINFO: skipping bossaction %s from %s to tag %d because gunshot "
-                  "types are not allowed\n", skipname, action.mobjclass, action.tag);
-         continue;
-      }
-
-      // Block teleport lines
-      if(evaction)
-      {
-         EVActionFunc func = evaction->action;
-         if(func == EV_ActionSilentLineTeleport || func == EV_ActionSilentLineTeleportReverse ||
-            func == EV_ActionSilentTeleport || func == EV_ActionTeleport)
-         {
-            C_Printf(FC_ERROR "UMAPINFO: skipping bossaction %s from %s to tag %d because "
-                     "teleport types are not allowed\n", evaction->name, action.mobjclass,
-                     action.tag);
-            continue;
-         }
-      }
-
-      // Block locked types
-      if(EV_GenTypeForSpecial(action.special) == GenTypeLocked ||
-         (evaction && (evaction->action == EV_ActionVerticalDoor ||
-                       evaction->action == EV_ActionDoLockedDoor)))
-      {
-         C_Printf(FC_ERROR "UMAPINFO: skipping bossaction %s from %s to tag %d because locked "
-                  "types are not allowed\n", evaction ? evaction->name : "generalized",
-                  action.mobjclass, action.tag);
-         continue;
-      }
-   }
-
-   return true;
+   return P_processUMapInfoBossActions(info, error);
 }
 
 //
