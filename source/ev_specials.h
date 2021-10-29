@@ -214,6 +214,7 @@ int EV_LockDefIDForLine(const line_t *line);
 bool EV_IsParamLineSpec(int special);
 bool EV_CheckGenSpecialSpac(int special, int spac);
 bool EV_CheckActionIntrinsicSpac(const ev_action_t &action, int spac);
+int EV_GenTypeForSpecial(int special);
 
 // Activation
 bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, polyobj_t *poly, int spac);

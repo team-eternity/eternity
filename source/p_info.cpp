@@ -62,6 +62,7 @@
 #include "e_hash.h"
 #include "e_sound.h"
 #include "e_things.h"
+#include "ev_actions.h"
 #include "ev_specials.h"
 #include "f_finale.h"
 #include "g_game.h"
@@ -2201,13 +2202,14 @@ static bool P_processUMapInfo(MetaTable *info, const char *mapname, qstring *err
       }
 
       // Check the binding here
+      // Block shootable specials
       const char *skipname = nullptr;
+      const ev_action_t *evaction = EV_DOOMActionForSpecial(action.special);
       if(EV_CheckGenSpecialSpac(action.special, SPAC_IMPACT))
          skipname = "generalized";
       else
       {
          // UMAPINFO uses the DOOM number space.
-         const ev_action_t *evaction = EV_DOOMActionForSpecial(action.special);
          if(evaction && EV_CheckActionIntrinsicSpac(*evaction, SPAC_IMPACT))
          {
             skipname = evaction->name;
@@ -2217,11 +2219,34 @@ static bool P_processUMapInfo(MetaTable *info, const char *mapname, qstring *err
       if(skipname)
       {
          C_Printf(FC_ERROR "UMAPINFO: skipping bossaction %s from %s to tag %d because gunshot "
-                  "specials are not allowed\n", skipname, action.mobjclass, action.tag);
+                  "types are not allowed\n", skipname, action.mobjclass, action.tag);
          continue;
       }
-      // TODO: also ban teleportation and whatever else
 
+      // Block teleport lines
+      if(evaction)
+      {
+         EVActionFunc func = evaction->action;
+         if(func == EV_ActionSilentLineTeleport || func == EV_ActionSilentLineTeleportReverse ||
+            func == EV_ActionSilentTeleport || func == EV_ActionTeleport)
+         {
+            C_Printf(FC_ERROR "UMAPINFO: skipping bossaction %s from %s to tag %d because "
+                     "teleport types are not allowed\n", evaction->name, action.mobjclass,
+                     action.tag);
+            continue;
+         }
+      }
+
+      // Block locked types
+      if(EV_GenTypeForSpecial(action.special) == GenTypeLocked ||
+         (evaction && (evaction->action == EV_ActionVerticalDoor ||
+                       evaction->action == EV_ActionDoLockedDoor)))
+      {
+         C_Printf(FC_ERROR "UMAPINFO: skipping bossaction %s from %s to tag %d because locked "
+                  "types are not allowed\n", evaction ? evaction->name : "generalized",
+                  action.mobjclass, action.tag);
+         continue;
+      }
    }
 
    return true;

@@ -1165,7 +1165,7 @@ ev_binding_t *EV_BindingForName(const char *name)
 //
 // Get a GenType enumeration value given a line special
 //
-static int EV_GenTypeForSpecial(int special)
+int EV_GenTypeForSpecial(int special)
 {
    // Floors
    if(special >= GenFloorBase)
