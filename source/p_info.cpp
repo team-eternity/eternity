@@ -78,6 +78,7 @@
 #include "r_sky.h"
 #include "s_sound.h"
 #include "sounds.h"
+#include "v_misc.h"
 #include "w_levels.h"
 #include "w_wad.h"
 #include "xl_emapinfo.h"
@@ -2201,19 +2202,26 @@ static bool P_processUMapInfo(MetaTable *info, const char *mapname, qstring *err
 
       // Check the binding here
       bool skipshootable = false;
+      const char *skipname = nullptr;
       if(EV_CheckGenSpecialSpac(action.special, SPAC_IMPACT))
+      {
          skipshootable = true;
+         skipname = "generalized";
+      }
       else
       {
          // UMAPINFO uses the DOOM number space.
          const ev_action_t *evaction = EV_DOOMActionForSpecial(action.special);
          if(evaction && EV_CheckActionIntrinsicSpac(*evaction, SPAC_IMPACT))
+         {
             skipshootable = true;
+            skipname = evaction->name;
+         }
       }
       if(skipshootable)
       {
-         C_Printf("UMAPINFO: skipping bossaction %s %d %d because gunshot specials are not "
-                  "allowed\n", action.mobjclass, action.special, action.tag);
+         C_Printf(FC_ERROR "UMAPINFO: skipping bossaction %s from %s to tag %d because gunshot "
+                  "specials are not allowed\n", skipname, action.mobjclass, action.tag);
          continue;
       }
       // TODO: also ban teleportation and whatever else
