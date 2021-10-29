@@ -1378,6 +1378,29 @@ int EV_LockDefIDForLine(const line_t *line)
 //
 
 //
+// Basic mapping between BOOM generalized activation bitfield and the given SPAC identifier.
+//
+inline static bool EV_checkGenSpac(int genspac, int spac)
+{
+   switch(genspac)
+   {
+   case WalkOnce:
+   case WalkMany:
+      return spac == SPAC_CROSS;
+   case GunOnce:
+   case GunMany:
+      return spac == SPAC_IMPACT;
+   case SwitchOnce:
+   case SwitchMany:
+   case PushOnce:
+   case PushMany:
+      return spac == SPAC_USE;
+   default:
+      return false; // should be unreachable.
+   }
+}
+
+//
 // EV_checkSpac
 //
 // Checks against the activation characteristics of the action to see if this
@@ -1391,22 +1414,7 @@ static bool EV_checkSpac(ev_action_t *action, ev_instance_t *instance)
    }
    else if(instance->gentype >= GenTypeFloor) // generalized line?
    {
-      switch(instance->genspac)
-      {
-      case WalkOnce:
-      case WalkMany:
-         return instance->spac == SPAC_CROSS;
-      case GunOnce:
-      case GunMany:
-         return instance->spac == SPAC_IMPACT;
-      case SwitchOnce:
-      case SwitchMany:
-      case PushOnce:
-      case PushMany:
-         return instance->spac == SPAC_USE;
-      default:
-         return false; // should be unreachable.
-      }
+      return EV_checkGenSpac(instance->genspac, instance->spac);
    }
    else // activation ability is determined by the linedef's flags
    {
@@ -1628,6 +1636,26 @@ bool EV_IsParamLineSpec(int special)
 {
    ev_action_t *action = EV_ActionForSpecial(special);
    return ((EV_CompositeActionFlags(action) & EV_PARAMLINESPEC) == EV_PARAMLINESPEC);
+}
+
+//
+// Checks if the given special is BOOM generalized and requires the given spac
+//
+bool EV_CheckGenSpecialSpac(int special, int spac)
+{
+   int gentype = EV_GenTypeForSpecial(special);
+   if(gentype < GenTypeFloor)
+      return false;
+   return EV_checkGenSpac(EV_GenActivationType(special), spac);
+}
+
+//
+// Checks if a given action requires the given spac in its activation type
+// (typical for non-parameterized specials and does NOT apply for parameterized)
+//
+bool EV_CheckActionIntrinsicSpac(const ev_action_t &action, int spac)
+{
+   return action.type->activation >= 0 ? action.type->activation == spac : false;
 }
 
 static bool EV_checkSectorActionSpac(ev_action_t *action, ev_instance_t *instance)
