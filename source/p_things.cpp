@@ -591,7 +591,8 @@ void LevelActionThinker::Spawn(int pSpecial, int *pArgs, int pMobjType)
 void P_SpawnLevelActions()
 {
    for(auto action = LevelInfo.actions; action; action = action->next)
-      LevelActionThinker::Spawn(action->special, action->args, action->mobjtype);
+      if(!action->bossonly)   // boss-only actions are handled in UMAPINFO
+         LevelActionThinker::Spawn(action->special, action->args, action->mobjtype);
 }
 
 // EOF

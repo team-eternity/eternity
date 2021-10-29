@@ -2057,6 +2057,15 @@ static bool P_processUMapInfoBossActions(MetaTable *info, qstring *error)
                   action.mobjclass, action.tag);
          continue;
       }
+
+      // Now we may have it
+      auto bossaction = estructalloctag(levelaction_t, 1, PU_LEVEL);
+      bossaction->special = action.special;
+      bossaction->mobjtype = type;
+      bossaction->args[0] = action.tag;
+      bossaction->next = LevelInfo.actions;
+      bossaction->bossonly = true;
+      LevelInfo.actions = bossaction;
    }
 
    return true;

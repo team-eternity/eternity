@@ -71,6 +71,7 @@ struct levelaction_t
    int mobjtype;
    int args[NUMLINEARGS];
    levelaction_t *next;
+   bool bossonly; // activated in A_BossDeath instead of LevelActionThinker
 };
 
 //
