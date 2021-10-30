@@ -535,6 +535,12 @@ void ACSThread::loadState(ACSVM::Serial &in)
    info.line = linenum ? &lines[linenum - 1] : nullptr;
 
    info.side = static_cast<int>(ACSVM::ReadVLN<size_t>(in));
+
+   if(saveLoadVersion >= 9)
+   {
+      size_t ponum = ACSVM::ReadVLN<size_t>(in);
+      info.po = ponum ? &PolyObjects[ponum - 1] : nullptr;
+   }
 }
 
 //
@@ -547,6 +553,8 @@ void ACSThread::saveState(ACSVM::Serial &out) const
    ACSVM::WriteVLN<size_t>(out, P_NumForThinker(info.mo));
    ACSVM::WriteVLN<size_t>(out, info.line ? info.line - lines + 1 : 0);
    ACSVM::WriteVLN<size_t>(out, info.side);
+   if(saveLoadVersion >= 9)
+      ACSVM::WriteVLN<size_t>(out, info.po ? info.po - PolyObjects + 1 : 0);
 }
 
 //
