@@ -1540,10 +1540,10 @@ int EV_DoGenLiftByParameters(bool manualtrig, const line_t *line, int tag, fixed
                              int target, fixed_t height);
 
 int EV_DoParamStairs(const line_t *line, int tag, const stairdata_t *sd);
-int EV_DoGenStairs(line_t *line);
+int EV_DoGenStairs(line_t *line, int special, int tag);
 
 int EV_DoParamCrusher(const line_t *line, int tag, const crusherdata_t *cd);
-int EV_DoGenCrusher(const line_t *line);
+int EV_DoGenCrusher(const line_t *line, int special, int tag);
 
 int EV_DoParamDoor(const line_t *line, int tag, const doordata_t *dd);
 int EV_DoGenDoor(const line_t *line, Mobj *thing, int special, int tag);

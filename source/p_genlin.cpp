@@ -1086,11 +1086,11 @@ manual_stair:
 // Passed the linedef activating the stairs
 // Returns true if a thinker is created
 //
-int EV_DoGenStairs(line_t *line)
+int EV_DoGenStairs(line_t *line, int special, int tag)
 {
    edefstructvar(stairdata_t, sd);
    int         rtn;
-   int         value = line->special - GenStairsBase;
+   int         value = special - GenStairsBase;
 
    // parse the bit fields in the line's special type
    sd.direction     = (value & StairDirection) >> StairDirectionShift;
@@ -1108,10 +1108,10 @@ int EV_DoGenStairs(line_t *line)
    sd.speed_value    = 0;
    sd.stepsize_value = 0;
 
-   rtn = EV_DoParamStairs(line, line->args[0], &sd);
+   rtn = EV_DoParamStairs(line, tag, &sd);
 
    // retriggerable generalized stairs build up or down alternately
-   if(rtn)
+   if(rtn && line)
       line->special ^= StairDirection; // alternate dir on succ activations
 
    return rtn;
@@ -1145,7 +1145,7 @@ int EV_DoParamCrusher(const line_t *line, int tag, const crusherdata_t *cd)
        (cd->trigger_type == PushOnce || cd->trigger_type == PushMany)) ||
       manualParam)
    {
-      if(!(sec = line->backsector))
+      if(!line || !(sec = line->backsector))
          return rtn;
       secnum = eindex(sec-sectors);
       manual = true;
@@ -1263,10 +1263,10 @@ manual_crusher:
 // Passed the linedef activating the crusher
 // Returns true if a thinker created
 //
-int EV_DoGenCrusher(const line_t *line)
+int EV_DoGenCrusher(const line_t *line, int special, int tag)
 {
    edefstructvar(crusherdata_t, cd);
-   int value = line->special - GenCrusherBase;
+   int value = special - GenCrusherBase;
 
    cd.type = ((value & CrusherSilent) >> CrusherSilentShift != 0) ? 
              genSilentCrusher : genCrusher;
@@ -1276,7 +1276,7 @@ int EV_DoGenCrusher(const line_t *line)
    cd.flags = CDF_HAVETRIGGERTYPE;
    cd.ground_dist = 8 * FRACUNIT;
 
-   return EV_DoParamCrusher(line, line->args[0], &cd);
+   return EV_DoParamCrusher(line, tag, &cd);
 }
 
 

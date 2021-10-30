@@ -1275,9 +1275,9 @@ DEFINE_ACTION(EV_ActionBoomGen)
    case GenTypeLift:
       return EV_DoGenLift(instance->line, instance->special, instance->tag);
    case GenTypeStairs:
-      return EV_DoGenStairs(instance->line);
+      return EV_DoGenStairs(instance->line, instance->special, instance->tag);
    case GenTypeCrusher:
-      return EV_DoGenCrusher(instance->line);
+      return EV_DoGenCrusher(instance->line, instance->special, instance->tag);
    default:
       return false;
    }
