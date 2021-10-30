@@ -435,7 +435,7 @@ int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID)
    }
 
    // if the wrong side of door is pushed, give oof sound
-   if(line->sidenum[1] == -1)                      // killough
+   if(!line || line->sidenum[1] == -1)                      // killough
    {
       if(player)
          S_StartSound(player->mo, GameModeInfo->playerSounds[sk_oof]); // killough 3/20/98
