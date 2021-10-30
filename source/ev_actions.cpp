@@ -1273,7 +1273,7 @@ DEFINE_ACTION(EV_ActionBoomGen)
    case GenTypeLocked:
       return EV_DoGenLockedDoor(instance->line, instance->actor, instance->special, instance->tag);
    case GenTypeLift:
-      return EV_DoGenLift(instance->line);
+      return EV_DoGenLift(instance->line, instance->special, instance->tag);
    case GenTypeStairs:
       return EV_DoGenStairs(instance->line);
    case GenTypeCrusher:
@@ -4379,7 +4379,8 @@ DEFINE_ACTION(EV_ActionParamPlatGeneric)
          return 0;
    }
 
-   return EV_DoGenLiftByParameters(!instance->tag, *instance->line, speed, delay, target, height);
+   return EV_DoGenLiftByParameters(!instance->tag, instance->line, instance->tag, speed, delay,
+                                   target, height);
 }
 
 //

@@ -1535,8 +1535,8 @@ int EV_DoGenCeiling(const line_t *line, int special, int tag);
 int EV_DoFloorAndCeiling(const line_t *line, int tag, const floordata_t &fd,
                          const ceilingdata_t &cd);
 
-int EV_DoGenLift(const line_t *line);
-int EV_DoGenLiftByParameters(bool manualtrig, const line_t &line, fixed_t speed, int delay,
+int EV_DoGenLift(const line_t *line, int special, int tag);
+int EV_DoGenLiftByParameters(bool manualtrig, const line_t *line, int tag, fixed_t speed, int delay,
                              int target, fixed_t height);
 
 int EV_DoParamStairs(const line_t *line, int tag, const stairdata_t *sd);

@@ -676,9 +676,9 @@ int EV_DoGenCeiling(const line_t *line, int special, int tag)
 // Passed the linedef activating the lift
 // Returns true if a thinker is created
 //
-int EV_DoGenLift(const line_t *line)
+int EV_DoGenLift(const line_t *line, int special, int tag)
 {
-   int  value = line->special - GenLiftBase;
+   int  value = special - GenLiftBase;
 
    // parse the bit fields in the line's special type
    
@@ -729,15 +729,15 @@ int EV_DoGenLift(const line_t *line)
          break;
    }
 
-   return EV_DoGenLiftByParameters(Trig == PushOnce || Trig == PushMany, *line, speed, delay, Targ,
-                                   0);
+   return EV_DoGenLiftByParameters(Trig == PushOnce || Trig == PushMany, line, tag, speed, delay,
+                                   Targ, 0);
 }
 
 //
 // Do generic lift using direct parameters. Meant to be called both from Boom generalized actions
 // and the parameterized special Generic_Lift.
 //
-int EV_DoGenLiftByParameters(bool manualtrig, const line_t &line, fixed_t speed, int delay,
+int EV_DoGenLiftByParameters(bool manualtrig, const line_t *line, int tag, fixed_t speed, int delay,
                              int target, fixed_t height)
 {
    PlatThinker *plat;
@@ -754,13 +754,13 @@ int EV_DoGenLiftByParameters(bool manualtrig, const line_t &line, fixed_t speed,
    // Activate all <type> plats that are in_stasis
 
    if(target == LnF2HnF)
-      PlatThinker::ActivateInStasis(line.args[0]);
+      PlatThinker::ActivateInStasis(tag);
 
    // check if a manual trigger, if so do just the sector on the backside
    manual = false;
    if(manualtrig)
    {
-      if (!(sec = line.backsector))
+      if (!line || !(sec = line->backsector))
          return rtn;
       secnum = eindex(sec - sectors);
       manual = true;
@@ -768,7 +768,7 @@ int EV_DoGenLiftByParameters(bool manualtrig, const line_t &line, fixed_t speed,
    }
 
    // if not manual do all sectors tagged the same as the line
-   while((secnum = P_FindSectorFromLineArg0(&line, secnum)) >= 0)
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       sec = &sectors[secnum];
 
@@ -788,7 +788,7 @@ int EV_DoGenLiftByParameters(bool manualtrig, const line_t &line, fixed_t speed,
       plat->addThinker();
 
       plat->crush  = -1;
-      plat->tag    = line.args[0];
+      plat->tag    = tag;
       plat->type   = genLift;
       plat->high   = sec->srf.floor.height;
       plat->status = PlatThinker::down;
