@@ -792,15 +792,16 @@ void EV_SetFriction(const int tag, int amount)
 // BTW, I'm pretty sure this is the longest function name in the
 // source code! ^_^
 //
-static int P_FindSectorFromLineTagWithLowerBound(const line_t *l, int start,
-                                                 int min)
+// ioanch 20211030: renamed
+//
+static int P_FindSectorFromTagWithLowerBound(int tag, int start, int min)
 {
    // Emulate original Doom's linear lower-bounded 
    // P_FindSectorFromLineArg0 as needed
 
    do
    {
-      start = P_FindSectorFromLineArg0(l, start);
+      start = P_FindSectorFromTag(tag, start);
    }
    while(start >= 0 && start <= min);
 
@@ -834,7 +835,7 @@ static int P_FindSectorFromLineTagWithLowerBound(const line_t *l, int start,
 //
 // * Boom fixed the bug, and MBF/PrBoom without comp_stairs work right
 //
-int EV_BuildStairs(const line_t *line, stair_e type)
+int EV_BuildStairs(int tag, stair_e type)
 {
    // cph 2001/09/22 - cleaned up this function to save my sanity. 
    // A separate outer loop index makes the logic much cleared, and 
@@ -844,7 +845,7 @@ int EV_BuildStairs(const line_t *line, stair_e type)
    int                   rtn = 0;
 
    // start a stair at each sector tagged the same as the linedef
-   while((ssec = P_FindSectorFromLineTagWithLowerBound(line,ssec,minssec)) >= 0)
+   while((ssec = P_FindSectorFromTagWithLowerBound(tag, ssec, minssec)) >= 0)
    {
       int           secnum = ssec;
       sector_t*     sec = &sectors[secnum];

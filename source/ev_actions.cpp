@@ -225,7 +225,7 @@ DEFINE_ACTION(EV_ActionBuildStairsUp8)
    // case 256: (WR - BOOM Extended)
    // case 258: (SR - BOOM Extended)
    // Build Stairs
-   return EV_BuildStairs(instance->line, build8);
+   return EV_BuildStairs(instance->tag, build8);
 }
 
 //
@@ -667,7 +667,7 @@ DEFINE_ACTION(EV_ActionBuildStairsTurbo16)
    // case 257: (WR - BOOM Extended)
    // case 259: (SR - BOOM Extended)
    // Build Stairs Turbo 16
-   return EV_BuildStairs(instance->line, turbo16);
+   return EV_BuildStairs(instance->tag, turbo16);
 }
 
 //
