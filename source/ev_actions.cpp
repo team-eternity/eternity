@@ -1031,8 +1031,8 @@ DEFINE_ACTION(EV_ActionElevatorUp)
    // case 229: (S1 - BOOM Extended)
    // case 230: (SR - BOOM Extended)
    // Raise elevator next floor
-   return EV_DoElevator(instance->line, instance->tag, elevateUp,
-                        ELEVATORSPEED, 0, false);
+   return EV_DoElevator(instance->line, instance->actor, instance->poly,
+                        instance->tag, elevateUp, ELEVATORSPEED, 0, false);
 }
 
 //
@@ -1045,8 +1045,8 @@ DEFINE_ACTION(EV_ActionElevatorDown)
    // case 233: (S1 - BOOM Extended)
    // case 234: (SR - BOOM Extended)
    // Lower elevator next floor
-   return EV_DoElevator(instance->line, instance->tag, elevateDown,
-                        ELEVATORSPEED, 0, false);
+   return EV_DoElevator(instance->line, instance->actor, instance->poly,
+                        instance->tag, elevateDown, ELEVATORSPEED, 0, false);
 
 }
 
@@ -1060,8 +1060,8 @@ DEFINE_ACTION(EV_ActionElevatorCurrent)
    // case 237: (S1 - BOOM Extended)
    // case 238: (SR - BOOM Extended)
    // Elevator to current floor
-   return EV_DoElevator(instance->line, instance->tag, elevateCurrent,
-                        ELEVATORSPEED, 0, false);
+   return EV_DoElevator(instance->line, instance->actor, instance->poly,
+                        instance->tag, elevateCurrent, ELEVATORSPEED, 0, false);
 }
 
 //
@@ -3961,7 +3961,8 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingLowerByValue)
    // If it's a contemporary level, try to make it as the user expects it to
    // work: Boom elevator moved by value
 
-   return EV_DoElevator(instance->line, instance->tag, elevateByValue,
+   return EV_DoElevator(instance->line, instance->actor, instance->poly,
+                        instance->tag, elevateByValue,
                         instance->args[1] * (FRACUNIT / 8),
                        -instance->args[2] * FRACUNIT, true);
 
@@ -4004,7 +4005,8 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingRaiseByValue)
    // If it's a contemporary level, try to make it as the user expects it to
    // work: Boom elevator moved by value
 
-   return EV_DoElevator(instance->line, instance->tag, elevateByValue,
+   return EV_DoElevator(instance->line, instance->actor, instance->poly,
+                        instance->tag, elevateByValue,
                         instance->args[1] * (FRACUNIT / 8),
                         instance->args[2] * FRACUNIT, true);
 }
@@ -4017,7 +4019,8 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingRaiseByValue)
 //
 DEFINE_ACTION(EV_ActionParamElevatorUp)
 {
-   return EV_DoElevator(instance->line, instance->tag, elevateUp,
+   return EV_DoElevator(instance->line, instance->actor, instance->poly,
+                        instance->tag, elevateUp,
                         instance->args[1] * (FRACUNIT / 8), 0, true);
 }
 
@@ -4029,7 +4032,8 @@ DEFINE_ACTION(EV_ActionParamElevatorUp)
 //
 DEFINE_ACTION(EV_ActionParamElevatorDown)
 {
-   return EV_DoElevator(instance->line, instance->tag, elevateDown,
+   return EV_DoElevator(instance->line, instance->actor, instance->poly,
+                        instance->tag, elevateDown,
                         instance->args[1] * (FRACUNIT / 8), 0, true);
 }
 
@@ -4041,7 +4045,8 @@ DEFINE_ACTION(EV_ActionParamElevatorDown)
 //
 DEFINE_ACTION(EV_ActionParamElevatorCurrent)
 {
-   return EV_DoElevator(instance->line, instance->tag, elevateCurrent,
+   return EV_DoElevator(instance->line, instance->actor, instance->poly,
+                        instance->tag, elevateCurrent,
                         instance->args[1] * (FRACUNIT / 8), 0, true);
 }
 

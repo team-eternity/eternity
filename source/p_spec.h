@@ -1441,7 +1441,8 @@ int EV_ParamSilentTeleport(int tid, const line_t *line, int tag, int side,
 
 // p_floor
 
-int EV_DoElevator(const line_t *line, int tag, elevator_e type, fixed_t speed,
+int EV_DoElevator(const line_t *line, const Mobj *mo, const polyobj_t *po,
+                  int tag, elevator_e type, fixed_t speed,
                   fixed_t amount, bool isParam);
 
 int EV_BuildStairs(int tag, stair_e type);

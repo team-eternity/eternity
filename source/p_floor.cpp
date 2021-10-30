@@ -1195,7 +1195,7 @@ int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
 // jff 2/22/98 new type to move floor and ceiling in parallel
 //
 int EV_DoElevator
-( const line_t* line, int tag,
+( const line_t *line, const Mobj *mo, const polyobj_t *po, int tag,
   elevator_e    elevtype, fixed_t speed, fixed_t amount, bool isParam )
 {
    int                   secnum;
@@ -1261,7 +1261,17 @@ int EV_DoElevator
 
       // elevator to floor height of activating switch's front sector
       case elevateCurrent:
-         elevator->floordestheight = line->frontsector->srf.floor.height;
+         // Fall back to different references if linedef is missing
+         if(line)
+            elevator->floordestheight = line->frontsector->srf.floor.height;
+         else if(mo)
+            elevator->floordestheight = mo->zref.floor;  // where it rests
+         else if(po)
+         {
+            elevator->floordestheight = R_PointInSubsector(po->centerPt.x,
+                                                           po->centerPt.y)
+                  ->sector->srf.floor.height;   // the sector of the trigger poly
+         }
          elevator->ceilingdestheight =
             elevator->floordestheight + sec->srf.ceiling.height - sec->srf.floor.height;
          elevator->direction =
