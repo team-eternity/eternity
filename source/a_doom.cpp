@@ -38,6 +38,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "ev_specials.h"
 #include "g_game.h"
 #include "m_bbox.h"  // ioanch 20160108: portal aware block iterator
 #include "p_enemy.h"
@@ -1245,21 +1246,49 @@ static boss_spec_t boss_specs[NUM_BOSS_SPECS] =
 void A_BossDeath(actionargs_t *actionargs)
 {
    Mobj    *mo = actionargs->actor;
-   Thinker *th;
    line_t   junk;
    int      i;
+
+   player_t *thePlayer = nullptr;
 
    // make sure there is a player alive for victory
    for(i = 0; i < MAXPLAYERS; i++)
    {
       if(playeringame[i] && players[i].health > 0)
+      {
+         thePlayer = players + i;
          break;
+      }
    }
 
    // no one left alive, so do not end game
-   if(i == MAXPLAYERS)
+   if(i == MAXPLAYERS || !thePlayer)
       return;
 
+   // Now check the UMAPINFO bossactions
+   bool deathchecked = false;
+   for(levelaction_t *action = LevelInfo.actions; action; action = action->next)
+   {
+      if(!action->bossonly)   // the non-boss-only ones are handled in LevelActionThinker
+         continue;
+      if(mo->type != action->mobjtype)
+         continue;
+      // scan the remaining thinkers to see if all bosses are dead
+      if(!deathchecked)
+         for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+         {
+            Mobj *mo2;
+            if((mo2 = thinker_cast<Mobj *>(th)))
+            {
+               if(mo2 != mo && mo2->type == mo->type && mo2->health > 0)
+                  goto failedBossAction;         // other boss not dead; go ahead and try classic
+            }
+         }
+      deathchecked = true;  // mark not to check twice
+      EV_ActivateSpecialNum(action->special, action->args, thePlayer->mo);
+   }
+
+failedBossAction:
    for(boss_spec_t &boss_spec : boss_specs)
    {
       // to activate a special, the thing must be a boss that triggers
@@ -1268,7 +1297,7 @@ void A_BossDeath(actionargs_t *actionargs)
          (LevelInfo.bossSpecs & boss_spec.level_flag))
       {
          // scan the remaining thinkers to see if all bosses are dead
-         for(th = thinkercap.next; th != &thinkercap; th = th->next)
+         for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
          {
             Mobj *mo2;
             if((mo2 = thinker_cast<Mobj *>(th)))

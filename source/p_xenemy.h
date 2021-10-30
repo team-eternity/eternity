@@ -56,7 +56,7 @@ public:
    qstring soundName;    // name of sound to play (default: Earthquake)
 };
 
-bool P_StartQuake(int *args, Mobj *activator);
+bool P_StartQuake(const int *args, Mobj *activator);
 
 #endif
 
