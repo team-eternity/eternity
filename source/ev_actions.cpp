@@ -199,7 +199,7 @@ DEFINE_ACTION(EV_ActionRaiseFloor)
    // case  91: (WR)
    // case 101: (S1)
    // Raise Floor
-   return EV_DoFloor(instance->line, raiseFloor);
+   return EV_DoFloor(instance->line, instance->tag, raiseFloor);
 }
 
 //
@@ -308,7 +308,7 @@ DEFINE_ACTION(EV_ActionLowerFloor)
    // case  83: (WR)
    // case 102: (S1)
    // Lower Floor
-   return EV_DoFloor(instance->line, lowerFloor);
+   return EV_DoFloor(instance->line, instance->tag, lowerFloor);
 }
 
 //
@@ -348,7 +348,7 @@ DEFINE_ACTION(EV_ActionFloorRaiseToTexture)
    // case 158: (S1 - BOOM Extended)
    // case 176: (SR - BOOM Extended)
    // Raise floor to shortest texture height on either side of lines.
-   return EV_DoFloor(instance->line, raiseToTexture);
+   return EV_DoFloor(instance->line, instance->tag, raiseToTexture);
 }
 
 //
@@ -374,7 +374,7 @@ DEFINE_ACTION(EV_ActionLowerFloorTurbo)
    // case 71: (S1)
    // case 98: (WR)
    // Lower Floor (TURBO)
-   return EV_DoFloor(instance->line, turboLower);
+   return EV_DoFloor(instance->line, instance->tag, turboLower);
 }
 
 //
@@ -387,7 +387,7 @@ DEFINE_ACTION(EV_ActionFloorLowerAndChange)
    // case 159: (S1 - BOOM Extended)
    // case 177: (SR - BOOM Extended)
    // LowerAndChange
-   return EV_DoFloor(instance->line, lowerAndChange);
+   return EV_DoFloor(instance->line, instance->tag, lowerAndChange);
 }
 
 //
@@ -400,7 +400,7 @@ DEFINE_ACTION(EV_ActionFloorLowerToLowest)
    // case 60: (SR)
    // case 82: (WR)
    // Lower Floor To Lowest
-   return EV_DoFloor(instance->line, lowerFloorToLowest);
+   return EV_DoFloor(instance->line, instance->tag, lowerFloorToLowest);
 }
 
 //
@@ -438,7 +438,7 @@ DEFINE_ACTION(EV_ActionRaiseCeilingLowerFloor)
    if(demo_compatibility)
    {
       EV_DoCeiling(line, raiseToHighest);
-      EV_DoFloor(line, lowerFloorToLowest); // jff 02/12/98 doesn't work
+      EV_DoFloor(line, instance->tag, lowerFloorToLowest); // jff 02/12/98 doesn't work
       line->special = 0;
       return true;
    }
@@ -459,7 +459,7 @@ DEFINE_ACTION(EV_ActionBOOMRaiseCeilingLowerFloor)
    // 151 WR  EV_DoCeiling(raiseToHighest),
    //         EV_DoFloor(lowerFloortoLowest)
    EV_DoCeiling(instance->line, raiseToHighest);
-   EV_DoFloor(instance->line, lowerFloorToLowest);
+   EV_DoFloor(instance->line, instance->tag, lowerFloorToLowest);
 
    return true;
 }
@@ -477,7 +477,7 @@ DEFINE_ACTION(EV_ActionBOOMRaiseCeilingOrLowerFloor)
    // case 186: (SR - BOOM Extended)
    // Raise ceiling, Lower floor
    return (EV_DoCeiling(instance->line, raiseToHighest) ||
-           EV_DoFloor(instance->line, lowerFloorToLowest));
+           EV_DoFloor(instance->line, instance->tag, lowerFloorToLowest));
 }
 
 //
@@ -615,7 +615,7 @@ DEFINE_ACTION(EV_ActionFloorRaiseCrush)
    // case 65: (SR)
    // case 94: (WR)
    // Raise Floor Crush
-   return EV_DoFloor(instance->line, raiseFloorCrush);
+   return EV_DoFloor(instance->line, instance->tag, raiseFloorCrush);
 }
 
 //
@@ -641,7 +641,7 @@ DEFINE_ACTION(EV_ActionRaiseFloor24)
    // case 161: (S1 - BOOM Extended)
    // case 180: (SR - BOOM Extended)
    // Raise Floor 24
-   return EV_DoFloor(instance->line, raiseFloor24);
+   return EV_DoFloor(instance->line, instance->tag, raiseFloor24);
 }
 
 //
@@ -654,7 +654,7 @@ DEFINE_ACTION(EV_ActionRaiseFloor24Change)
    // case 160: (S1 - BOOM Extended)
    // case 179: (SR - BOOM Extended)
    // Raise Floor 24 And Change
-   return EV_DoFloor(instance->line, raiseFloor24AndChange);
+   return EV_DoFloor(instance->line, instance->tag, raiseFloor24AndChange);
 }
 
 //
@@ -736,7 +736,7 @@ DEFINE_ACTION(EV_ActionFloorRaiseToNearest)
    // case 119: (W1)
    // case 128: (WR)
    // Raise floor to nearest surr. floor
-   return EV_DoFloor(instance->line, raiseFloorToNearest);
+   return EV_DoFloor(instance->line, instance->tag, raiseFloorToNearest);
 }
 
 //
@@ -841,7 +841,7 @@ DEFINE_ACTION(EV_ActionRaiseFloorTurbo)
    // case 131: (S1)
    // case 132: (SR)
    // Raise Floor Turbo
-   return EV_DoFloor(instance->line, raiseFloorTurbo);
+   return EV_DoFloor(instance->line, instance->tag, raiseFloorTurbo);
 }
 
 //
@@ -867,7 +867,7 @@ DEFINE_ACTION(EV_ActionRaiseFloor512)
    // case 147: (WR - BOOM Extended)
    // case 178: (SR - BOOM Extended)
    // Raise Floor 512
-   return EV_DoFloor(instance->line, raiseFloor512);
+   return EV_DoFloor(instance->line, instance->tag, raiseFloor512);
 }
 
 //
@@ -1017,7 +1017,7 @@ DEFINE_ACTION(EV_ActionFloorLowerToNearest)
    // case 221: (S1 - BOOM Extended)
    // case 222: (SR - BOOM Extended)
    // Lower floor to next lower neighbor
-   return EV_DoFloor(instance->line, lowerFloorToNearest);
+   return EV_DoFloor(instance->line, instance->tag, lowerFloorToNearest);
 }
 
 //
@@ -1182,7 +1182,7 @@ DEFINE_ACTION(EV_ActionDoLockedDoor)
 //
 DEFINE_ACTION(EV_ActionLowerFloorTurboA)
 {
-   return EV_DoFloor(instance->line, turboLowerA);
+   return EV_DoFloor(instance->line, instance->tag, turboLowerA);
 }
 
 //

@@ -432,7 +432,7 @@ int EV_FloorCrushStop(const line_t *line, int tag)
 // Passed the line that activated the floor and the type of floor motion
 // Returns true if a thinker was created.
 //
-int EV_DoFloor(const line_t *line, floor_e floortype )
+int EV_DoFloor(const line_t *line, int tag, floor_e floortype )
 {
    int           secnum;
    int           rtn;
@@ -443,7 +443,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
    secnum = -1;
    rtn = 0;
    // move all floors with the same tag as the linedef
-   while((secnum = P_FindSectorFromLineArg0(line,secnum)) >= 0)
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       sec = &sectors[secnum];
       
@@ -582,9 +582,12 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
          floor->speed = FLOORSPEED;
          floor->floordestheight =
             floor->sector->srf.floor.height + 24 * FRACUNIT;
-         sec->srf.floor.pic = line->frontsector->srf.floor.pic;
-         //jff 3/14/98 transfer both old and new special
-         P_DirectTransferSectorSpecial(line->frontsector, sec);
+         if(line)
+         {
+            sec->srf.floor.pic = line->frontsector->srf.floor.pic;
+            //jff 3/14/98 transfer both old and new special
+            P_DirectTransferSectorSpecial(line->frontsector, sec);
+         }
          break;
 
       case raiseToTexture:

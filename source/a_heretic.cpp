@@ -795,7 +795,6 @@ void A_HticBossDeath(actionargs_t *actionargs)
 {
    Mobj    *actor = actionargs->actor;
    Thinker *th;
-   line_t   junk;
 
    for(boss_spec_htic_t &hboss_spec : hboss_specs)
    {
@@ -835,8 +834,7 @@ void A_HticBossDeath(actionargs_t *actionargs)
 
             // fall through
          case BSPEC_E1M8:
-            junk.tag = junk.args[0] = 666;
-            EV_DoFloor(&junk, lowerFloor);
+            EV_DoFloor(nullptr, 666, lowerFloor);
             break;
          } // end switch
       } // end if

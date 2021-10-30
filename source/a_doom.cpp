@@ -1246,7 +1246,6 @@ void A_BossDeath(actionargs_t *actionargs)
 {
    Mobj    *mo = actionargs->actor;
    Thinker *th;
-   line_t   junk;
    int      i;
 
    // make sure there is a player alive for victory
@@ -1287,13 +1286,11 @@ void A_BossDeath(actionargs_t *actionargs)
          case BSPEC_E4M8:
          case BSPEC_MAP07_1:
             // lower floors tagged 666 to lowest neighbor
-            junk.args[0] = junk.tag = 666;
-            EV_DoFloor(&junk, lowerFloorToLowest);
+            EV_DoFloor(nullptr, 666, lowerFloorToLowest);
             break;
          case BSPEC_MAP07_2:
             // raise floors tagged 667 by shortest lower texture
-            junk.args[0] = junk.tag = 667;
-            EV_DoFloor(&junk, raiseToTexture);
+            EV_DoFloor(nullptr, 667, raiseToTexture);
             break;
          case BSPEC_E2M8:
          case BSPEC_E3M8:
