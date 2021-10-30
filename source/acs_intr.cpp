@@ -79,6 +79,7 @@ ACSEnvironment ACSenv;
 
 int ACS_thingtypes[ACS_NUM_THINGTYPES];
 
+int ACSThread::saveLoadVersion;
 
 //
 // Global Functions
@@ -897,6 +898,9 @@ protected:
 //
 void ACS_Archive(SaveArchive &arc)
 {
+   // Setup the context here so we know how to sav it
+   ACSThread::saveLoadVersion = arc.saveVersion();
+
    if(arc.isLoading())
    {
       ACSBuffer     buf{arc.getLoadFile()};

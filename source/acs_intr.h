@@ -282,6 +282,8 @@ public:
    virtual void stop();
 
    ACSThreadInfo info;
+
+   static int saveLoadVersion;   // context information stored when saving and loading
 };
 
 
