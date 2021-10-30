@@ -238,7 +238,7 @@ DEFINE_ACTION(EV_ActionPlatDownWaitUpStay)
    // case 62: (SR)
    // case 88: (WR)
    // PlatDownWaitUp
-   return EV_DoPlat(instance->line, downWaitUpStay, 0);
+   return EV_DoPlat(instance->line, instance->tag, downWaitUpStay, 0);
 }
 
 //
@@ -322,7 +322,7 @@ DEFINE_ACTION(EV_ActionPlatRaiseNearestChange)
    // case 68: (SR)
    // case 95: (WR)
    // Raise floor to nearest height and change texture
-   return EV_DoPlat(instance->line, raiseToNearestAndChange, 0);
+   return EV_DoPlat(instance->line, instance->tag, raiseToNearestAndChange, 0);
 }
 
 //
@@ -589,7 +589,7 @@ DEFINE_ACTION(EV_ActionPlatPerpetualRaise)
    // case 162: (S1 - BOOM Extended)
    // case 181: (SR - BOOM Extended)
    // Perpetual Platform Raise
-   return EV_DoPlat(instance->line, perpetualRaise, 0);
+   return EV_DoPlat(instance->line, instance->tag, perpetualRaise, 0);
 }
 
 //
@@ -749,7 +749,7 @@ DEFINE_ACTION(EV_ActionPlatBlazeDWUS)
    // case 122: (S1)
    // case 123: (SR)
    // Blazing PlatDownWaitUpStay
-   return EV_DoPlat(instance->line, blazeDWUS, 0);
+   return EV_DoPlat(instance->line, instance->tag, blazeDWUS, 0);
 }
 
 //
@@ -880,7 +880,7 @@ DEFINE_ACTION(EV_ActionPlatRaise24Change)
    // case 143: (W1 - BOOM Extended)
    // case 148: (WR - BOOM Extended)
    // Raise Floor 24 and change
-   return EV_DoPlat(instance->line, raiseAndChange, 24);
+   return EV_DoPlat(instance->line, instance->tag, raiseAndChange, 24);
 }
 
 //
@@ -893,7 +893,7 @@ DEFINE_ACTION(EV_ActionPlatRaise32Change)
    // case 144: (W1 - BOOM Extended)
    // case 149: (WR - BOOM Extended)
    // Raise Floor 32 and change
-   return EV_DoPlat(instance->line, raiseAndChange, 32);
+   return EV_DoPlat(instance->line, instance->tag, raiseAndChange, 32);
 }
 
 //
@@ -1109,7 +1109,7 @@ DEFINE_ACTION(EV_ActionPlatToggleUpDown)
    // jff 3/14/98 create instant toggle floor type
    // case 211: (SR - BOOM Extended)
    // case 212: (WR - BOOM Extended)
-   return EV_DoPlat(instance->line, toggleUpDn, 0);
+   return EV_DoPlat(instance->line, instance->tag, toggleUpDn, 0);
 }
 
 //
