@@ -439,7 +439,8 @@ DEFINE_ACTION(EV_ActionRaiseCeilingLowerFloor)
    {
       EV_DoCeiling(line, instance->tag, raiseToHighest);
       EV_DoFloor(line, instance->tag, lowerFloorToLowest); // jff 02/12/98 doesn't work
-      line->special = 0;
+      if(line) // just to be ultra safe
+         line->special = 0;
       return true;
    }
    else
