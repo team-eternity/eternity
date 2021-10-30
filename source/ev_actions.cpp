@@ -159,7 +159,7 @@ DEFINE_ACTION(EV_ActionOpenDoor)
    // case  86: (WR)
    // case 103: (S1)
    // Open Door
-   return EV_DoDoor(instance->line, doorOpen);
+   return EV_DoDoor(instance->tag, doorOpen);
 }
 
 //
@@ -172,7 +172,7 @@ DEFINE_ACTION(EV_ActionCloseDoor)
    // case 50: (S1)
    // case 75: (WR)
    // Close Door
-   return EV_DoDoor(instance->line, doorClose);
+   return EV_DoDoor(instance->tag, doorClose);
 }
 
 //
@@ -185,7 +185,7 @@ DEFINE_ACTION(EV_ActionRaiseDoor)
    // case 63: (SR)
    // case 90: (WR)
    // Raise Door
-   return EV_DoDoor(instance->line, doorNormal);
+   return EV_DoDoor(instance->tag, doorNormal);
 }
 
 //
@@ -281,7 +281,7 @@ DEFINE_ACTION(EV_ActionCloseDoor30)
    // case 175: (S1 - BOOM Extended)
    // case 196: (SR - BOOM Extended)
    // Close Door 30
-   return EV_DoDoor(instance->line, closeThenOpen);
+   return EV_DoDoor(instance->tag, closeThenOpen);
 }
 
 //
@@ -697,7 +697,7 @@ DEFINE_ACTION(EV_ActionDoorBlazeRaise)
    // case 111: (S1)
    // case 114: (SR)
    // Blazing Door Raise (faster than TURBO!)
-   return EV_DoDoor(instance->line, blazeRaise);
+   return EV_DoDoor(instance->tag, blazeRaise);
 }
 
 //
@@ -710,7 +710,7 @@ DEFINE_ACTION(EV_ActionDoorBlazeOpen)
    // case 112: (S1)
    // case 115: (SR)
    // Blazing Door Open (faster than TURBO!)
-   return EV_DoDoor(instance->line, blazeOpen);
+   return EV_DoDoor(instance->tag, blazeOpen);
 }
 
 //
@@ -723,7 +723,7 @@ DEFINE_ACTION(EV_ActionDoorBlazeClose)
    // case 113: (S1)
    // case 116: (SR)
    // Blazing Door Close (faster than TURBO!)
-   return EV_DoDoor(instance->line, blazeClose);
+   return EV_DoDoor(instance->tag, blazeClose);
 }
 
 //
@@ -1161,7 +1161,7 @@ DEFINE_ACTION(EV_ActionDoLockedDoor)
 
    int lockID = EV_LockDefIDForSpecial(instance->special);
    if(EV_lockCheck(instance->actor, lockID, true))
-      return EV_DoDoor(instance->line, blazeOpen);
+      return EV_DoDoor(instance->tag, blazeOpen);
    return 0;
 }
 

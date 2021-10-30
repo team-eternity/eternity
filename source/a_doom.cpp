@@ -1302,8 +1302,7 @@ void A_BossDeath(actionargs_t *actionargs)
             return;
          case BSPEC_E4M6:
             // open sectors tagged 666 as blazing doors
-            junk.args[0] = junk.tag = 666;
-            EV_DoDoor(&junk, blazeOpen);
+            EV_DoDoor(666, blazeOpen);
             break;
          default:
             break;
@@ -1322,8 +1321,7 @@ void A_KeenDie(actionargs_t *actionargs)
 {
    Mobj    *mo = actionargs->actor;
    Thinker *th;
-   line_t   junk;
-   
+
    A_Fall(actionargs);
 
    // scan the remaining thinkers to see if all Keens are dead
@@ -1338,8 +1336,7 @@ void A_KeenDie(actionargs_t *actionargs)
       }
    }
 
-   junk.args[0] = junk.tag = 666;
-   EV_DoDoor(&junk, doorOpen);
+   EV_DoDoor(666, doorOpen);
 }
 
 //=============================================================================

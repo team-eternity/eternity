@@ -326,14 +326,14 @@ bool VerticalDoorThinker::reTriggerVerticalDoor(bool player)
 // Passed the line activating the door and the type of door
 // Returns true if a thinker created
 //
-int EV_DoDoor(const line_t *line, vldoor_e type)
+int EV_DoDoor(int tag, vldoor_e type)
 {
    int secnum = -1, rtn = 0;
    sector_t *sec;
    VerticalDoorThinker *door;
 
    // open all doors with the same tag as the activating line
-   while((secnum = P_FindSectorFromLineArg0(line, secnum)) >= 0)
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       sec = &sectors[secnum];
       // if the ceiling already moving, don't start the door action
