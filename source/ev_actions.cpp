@@ -212,7 +212,7 @@ DEFINE_ACTION(EV_ActionFastCeilCrushRaise)
    // case 164: (S1 - BOOM Extended)
    // case 183: (SR - BOOM Extended)
    // Fast Ceiling Crush & Raise
-   return EV_DoCeiling(instance->line, fastCrushAndRaise);
+   return EV_DoCeiling(instance->line, instance->tag, fastCrushAndRaise);
 }
 
 //
@@ -335,7 +335,7 @@ DEFINE_ACTION(EV_ActionCeilingCrushAndRaise)
    // case  73: (WR)
    // case 184: (SR - BOOM Extended)
    // Ceiling Crush and Raise
-   return EV_DoCeiling(instance->line, crushAndRaise);
+   return EV_DoCeiling(instance->line, instance->tag, crushAndRaise);
 }
 
 //
@@ -437,13 +437,13 @@ DEFINE_ACTION(EV_ActionRaiseCeilingLowerFloor)
    // RaiseCeilingLowerFloor
    if(demo_compatibility)
    {
-      EV_DoCeiling(line, raiseToHighest);
+      EV_DoCeiling(line, instance->tag, raiseToHighest);
       EV_DoFloor(line, instance->tag, lowerFloorToLowest); // jff 02/12/98 doesn't work
       line->special = 0;
       return true;
    }
    else
-      return EV_DoCeiling(line, raiseToHighest);
+      return EV_DoCeiling(line, instance->tag, raiseToHighest);
 }
 
 //
@@ -458,7 +458,7 @@ DEFINE_ACTION(EV_ActionBOOMRaiseCeilingLowerFloor)
    // RaiseCeilingLowerFloor
    // 151 WR  EV_DoCeiling(raiseToHighest),
    //         EV_DoFloor(lowerFloortoLowest)
-   EV_DoCeiling(instance->line, raiseToHighest);
+   EV_DoCeiling(instance->line, instance->tag, raiseToHighest);
    EV_DoFloor(instance->line, instance->tag, lowerFloorToLowest);
 
    return true;
@@ -476,7 +476,7 @@ DEFINE_ACTION(EV_ActionBOOMRaiseCeilingOrLowerFloor)
    // case 166: (S1 - BOOM Extended)
    // case 186: (SR - BOOM Extended)
    // Raise ceiling, Lower floor
-   return (EV_DoCeiling(instance->line, raiseToHighest) ||
+   return (EV_DoCeiling(instance->line, instance->tag, raiseToHighest) ||
            EV_DoFloor(instance->line, instance->tag, lowerFloorToLowest));
 }
 
@@ -490,7 +490,7 @@ DEFINE_ACTION(EV_ActionCeilingLowerAndCrush)
    // case 167: (S1 - BOOM Extended)
    // case 187: (SR - BOOM Extended)
    // Ceiling Crush
-   return EV_DoCeiling(instance->line, lowerAndCrush);
+   return EV_DoCeiling(instance->line, instance->tag, lowerAndCrush);
 }
 
 // ioanch 20160427: provide an inline helper for checking zombies
@@ -854,7 +854,7 @@ DEFINE_ACTION(EV_ActionSilentCrushAndRaise)
    // case 165: (S1 - BOOM Extended)
    // case 185: (SR - BOOM Extended)
    // Silent Ceiling Crush & Raise
-   return EV_DoCeiling(instance->line, silentCrushAndRaise);
+   return EV_DoCeiling(instance->line, instance->tag, silentCrushAndRaise);
 }
 
 //
@@ -906,7 +906,7 @@ DEFINE_ACTION(EV_ActionCeilingLowerToFloor)
    // case 145: (W1 - BOOM Extended)
    // case 152: (WR - BOOM Extended)
    // Lower Ceiling to Floor
-   return EV_DoCeiling(instance->line, lowerToFloor);
+   return EV_DoCeiling(instance->line, instance->tag, lowerToFloor);
 }
 
 //
@@ -933,7 +933,7 @@ DEFINE_ACTION(EV_ActionCeilingLowerToLowest)
    // case 203: (S1 - BOOM Extended)
    // case 205: (SR - BOOM Extended)
    // Lower ceiling to lowest surrounding ceiling
-   return EV_DoCeiling(instance->line, lowerToLowest);
+   return EV_DoCeiling(instance->line, instance->tag, lowerToLowest);
 }
 
 //
@@ -946,7 +946,7 @@ DEFINE_ACTION(EV_ActionCeilingLowerToMaxFloor)
    // case 204: (S1 - BOOM Extended)
    // case 206: (SR - BOOM Extended)
    // Lower ceiling to highest surrounding floor
-   return EV_DoCeiling(instance->line, lowerToMaxFloor);
+   return EV_DoCeiling(instance->line, instance->tag, lowerToMaxFloor);
 }
 
 //

@@ -1452,7 +1452,7 @@ int EV_FloorCrushStop(const line_t *line, int tag);
 
 // p_ceilng
 
-int EV_DoCeiling(const line_t *line, ceiling_e type);
+int EV_DoCeiling(const line_t *line, int tag, ceiling_e type);
 
 int EV_CeilingCrushStop(int tag, bool removeThinker);
 
