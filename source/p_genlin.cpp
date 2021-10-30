@@ -337,12 +337,12 @@ manual_floor:
 //
 // haleyjd 05/07/04: rewritten to use EV_DoParamFloor
 //
-int EV_DoGenFloor(const line_t *line)
+int EV_DoGenFloor(const line_t *line, int special, int tag)
 {
    floordata_t fd;
    memset(&fd, 0, sizeof(fd));
 
-   int value = line->special - GenFloorBase;
+   int value = special - GenFloorBase;
 
    // parse the bit fields in the line's special type
    
@@ -355,7 +355,7 @@ int EV_DoGenFloor(const line_t *line)
    fd.trigger_type = (value & TriggerType   ) >> TriggerTypeShift;
    fd.flags        = FDF_HAVETRIGGERTYPE;
 
-   return EV_DoParamFloor(line, line->args[0], &fd);
+   return EV_DoParamFloor(line, tag, &fd);
 }
 
 //
@@ -645,10 +645,10 @@ manual_ceiling:
 // jff 02/04/98 Added this routine (and file) to handle generalized
 // floor movers using bit fields in the line special type.
 //
-int EV_DoGenCeiling(const line_t *line)
+int EV_DoGenCeiling(const line_t *line, int special, int tag)
 {
    edefstructvar(ceilingdata_t, cd);
-   int value = line->special - GenCeilingBase;
+   int value = special - GenCeilingBase;
 
    // parse the bit fields in the line's special type
    
@@ -665,7 +665,7 @@ int EV_DoGenCeiling(const line_t *line)
    cd.height_value = 0;
    cd.speed_value  = 0;
 
-   return EV_DoParamCeiling(line, line->args[0], &cd);
+   return EV_DoParamCeiling(line, tag, &cd);
 }
 
 //
@@ -1483,10 +1483,10 @@ manual_door:
 //
 // haleyjd 05/04/04: rewritten to use EV_DoParamDoor
 //
-int EV_DoGenLockedDoor(const line_t *line, Mobj *thing)
+int EV_DoGenLockedDoor(const line_t *line, Mobj *thing, int special, int tag)
 {
    doordata_t dd;
-   int value = line->special - GenLockedBase;
+   int value = special - GenLockedBase;
    int speedType;
 
    memset(&dd, 0, sizeof(doordata_t));
@@ -1518,7 +1518,7 @@ int EV_DoGenLockedDoor(const line_t *line, Mobj *thing)
 
    dd.kind = (value & LockedKind) >> LockedKindShift;
    
-   return EV_DoParamDoor(line, line->args[0], &dd);
+   return EV_DoParamDoor(line, tag, &dd);
 }
 
 //
@@ -1531,10 +1531,10 @@ int EV_DoGenLockedDoor(const line_t *line, Mobj *thing)
 //
 // haleyjd 05/04/04: rewritten to use EV_DoParamDoor
 //
-int EV_DoGenDoor(const line_t *line, Mobj *thing)
+int EV_DoGenDoor(const line_t *line, Mobj *thing, int special, int tag)
 {
    doordata_t dd;
-   int value = line->special - GenDoorBase;
+   int value = special - GenDoorBase;
    int delayType, speedType;
 
    memset(&dd, 0, sizeof(doordata_t));
@@ -1584,7 +1584,7 @@ int EV_DoGenDoor(const line_t *line, Mobj *thing)
 
    dd.kind = (value & DoorKind) >> DoorKindShift;
    
-   return EV_DoParamDoor(line, line->args[0], &dd);
+   return EV_DoParamDoor(line, tag, &dd);
 }
 
 // ChangeLineTex texture position numbers

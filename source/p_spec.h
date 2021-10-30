@@ -1527,10 +1527,10 @@ bool EV_StopPlatByTag(int tag, bool removeThinker);
 // p_genlin
 
 int EV_DoParamFloor(const line_t *line, int tag, const floordata_t *fd);
-int EV_DoGenFloor(const line_t *line);
+int EV_DoGenFloor(const line_t *line, int special, int tag);
 
 int EV_DoParamCeiling(const line_t *line, int tag, const ceilingdata_t *cd);
-int EV_DoGenCeiling(const line_t *line);
+int EV_DoGenCeiling(const line_t *line, int special, int tag);
 
 int EV_DoFloorAndCeiling(const line_t *line, int tag, const floordata_t &fd,
                          const ceilingdata_t &cd);
@@ -1546,9 +1546,9 @@ int EV_DoParamCrusher(const line_t *line, int tag, const crusherdata_t *cd);
 int EV_DoGenCrusher(const line_t *line);
 
 int EV_DoParamDoor(const line_t *line, int tag, const doordata_t *dd);
-int EV_DoGenDoor(const line_t *line, Mobj *thing);
+int EV_DoGenDoor(const line_t *line, Mobj *thing, int special, int tag);
 
-int EV_DoGenLockedDoor(const line_t *line, Mobj *thing);
+int EV_DoGenLockedDoor(const line_t *line, Mobj *thing, int special, int tag);
 
 void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag, line_t *triggerLine);
 

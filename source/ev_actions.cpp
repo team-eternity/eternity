@@ -1265,13 +1265,13 @@ DEFINE_ACTION(EV_ActionBoomGen)
    switch(instance->gentype)
    {
    case GenTypeFloor:
-      return EV_DoGenFloor(instance->line);
+      return EV_DoGenFloor(instance->line, instance->special, instance->tag);
    case GenTypeCeiling:
-      return EV_DoGenCeiling(instance->line);
+      return EV_DoGenCeiling(instance->line, instance->special, instance->tag);
    case GenTypeDoor:
-      return EV_DoGenDoor(instance->line, instance->actor);
+      return EV_DoGenDoor(instance->line, instance->actor, instance->special, instance->tag);
    case GenTypeLocked:
-      return EV_DoGenLockedDoor(instance->line, instance->actor);
+      return EV_DoGenLockedDoor(instance->line, instance->actor, instance->special, instance->tag);
    case GenTypeLift:
       return EV_DoGenLift(instance->line);
    case GenTypeStairs:
