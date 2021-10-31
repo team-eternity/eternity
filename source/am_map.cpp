@@ -1021,7 +1021,7 @@ int map_point_coordinates;
 void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
 {
    assert(mo);
-   if(followplayer || !map_point_coordinates)
+   if(followplayer || !map_point_coordinates || !automapactive)
    {
       const linkoffset_t &link = *P_GetLinkOffset(mo->groupid, 0);
       x = mo->x + link.x;
