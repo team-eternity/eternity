@@ -8,6 +8,18 @@ Since v4.02.00 "Forseti"
 ========================
 
 --------------------------------------------------------------------------------
+31.10.2021
+
+BUGFIX: Fixed a crash happening when using the "idmypos" cheat when the automap
+        wasn't started yet and follow mode is off. Easy to reproduce after
+        loading a game.
+
+IMPROVEMENT: Eliminate the automap coordinate shifting by linked portals,
+             because it added more confusion for mappers and playtesters alike,
+             and it didn't effectively hide any immersion detail (the XY
+             coordinates are already pretty arbitrary for the player).
+
+--------------------------------------------------------------------------------
 30.10.2021
 
 BUGFIX: Saving a game failed storing the polyobject activators of ACS scripts.
