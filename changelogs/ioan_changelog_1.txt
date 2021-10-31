@@ -8,6 +8,13 @@ Since v4.02.00 "Forseti"
 ========================
 
 --------------------------------------------------------------------------------
+31.10.2021
+
+BUGFIX: Fixed a crash happening when using the "idmypos" cheat when the automap
+        wasn't started yet and follow mode is off. Easy to reproduce after
+        loading a game.
+
+--------------------------------------------------------------------------------
 30.10.2021
 
 BUGFIX: Saving a game failed storing the polyobject activators of ACS scripts.

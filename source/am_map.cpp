@@ -23,6 +23,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include <assert.h>
 #include "z_zone.h"
 #include "i_system.h"
 
@@ -1019,6 +1020,7 @@ int map_point_coordinates;
 
 void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
 {
+   assert(mo);
    if(followplayer || !map_point_coordinates)
    {
       const linkoffset_t &link = *P_GetLinkOffset(mo->groupid, 0);
@@ -1028,12 +1030,12 @@ void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
    }
    else
    {
-      const linkoffset_t &link = *P_GetLinkOffset(plr->mo->groupid, 0);
+      const linkoffset_t &link = *P_GetLinkOffset(mo->groupid, 0);
       v2fixed_t pos = { M_DoubleToFixed(m_x + m_w / 2), M_DoubleToFixed(m_y + m_h / 2) };
       x = pos.x + link.x;
       y = pos.y + link.y;
       const sector_t &sector = *R_PointInSubsector(pos.x, pos.y)->sector;
-      z = sector.groupid == plr->mo->groupid ? sector.srf.floor.getZAt(pos) + link.z : 0;
+      z = sector.groupid == mo->groupid ? sector.srf.floor.getZAt(pos) + link.z : 0;
    }
 }
 
