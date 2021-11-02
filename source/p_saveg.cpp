@@ -799,7 +799,24 @@ static void P_ArchiveWorld(SaveArchive &arc)
       arc << sec->lightlevel << sec->oldlightlevel << floor.lightdelta << ceiling.lightdelta
           << sec->special << sec->tag; // needed?   yes -- transfer types -- killough
       if(arc.saveVersion() >= 10)
-         arc << floor.offset << ceiling.offset << floor.angle << ceiling.angle;
+      {
+         // surf.data handled elsewhere
+         // surf.scale, .baseangle, .lightsec, .(attached), .pflags, .portal invariant
+         // surf.heightf derivative, same with .slope Z.
+         // surf.terrain invariant
+
+         // nexttag, firsttag invariant because tag is also invariant
+         // soundtarget handled elsewhere
+         // blockbox, soundorg, csoundorg invariant
+         // validcount, thinglist, spriteproj dynamic
+         // heightsec, sky invariant
+         // touching_thinglist dynamic
+         // linecount, lines, groupid, hticPushType, hticPushAngle, hticPushForce invariant
+         arc << floor.offset << ceiling.offset << floor.angle << ceiling.angle
+             << sec->soundtraversed << sec->stairlock << sec->prevsec << sec->nextsec;
+
+         // TODO: sndSeqID (NAMED OBJECT, STORE NAME, NOT INDEX)
+      }
 
       if(arc.isLoading())
       {
