@@ -784,33 +784,33 @@ static void P_ArchiveWorld(SaveArchive &arc)
       // haleyjd 08/30/09: intflags
       // haleyjd 03/02/09: save sector damage properties
       // haleyjd 08/30/09: save floorpic/ceilingpic as ints
+      surface_t &floor = sec->srf.floor;
+      surface_t &ceiling = sec->srf.ceiling;
 
-      arc << sec->srf.floor.height << sec->srf.ceiling.height
-          << sec->friction << sec->movefactor;
+      arc << floor.height << ceiling.height << sec->friction << sec->movefactor;
       Archive_Colormap(arc, sec->topmap);
       Archive_Colormap(arc, sec->midmap);
       Archive_Colormap(arc, sec->bottommap);
       arc << sec->flags << sec->intflags
           << sec->damage << sec->damageflags << sec->leakiness << sec->damagemask
           << sec->damagemod;
-      Archive_Flat(arc, sec->srf.floor.pic);
-      Archive_Flat(arc, sec->srf.ceiling.pic);
-      arc << sec->lightlevel << sec->oldlightlevel
-          << sec->srf.floor.lightdelta << sec->srf.ceiling.lightdelta
+      Archive_Flat(arc, floor.pic);
+      Archive_Flat(arc, ceiling.pic);
+      arc << sec->lightlevel << sec->oldlightlevel << floor.lightdelta << ceiling.lightdelta
           << sec->special << sec->tag; // needed?   yes -- transfer types -- killough
       if(arc.saveVersion() >= 10)
-         arc << sec->srf.floor.offset << sec->srf.ceiling.offset;
+         arc << floor.offset << ceiling.offset;
 
       if(arc.isLoading())
       {
          // jff 2/22/98 now three thinker fields, not two
-         sec->srf.ceiling.data = nullptr;
-         sec->srf.floor.data = nullptr;
+         ceiling.data = nullptr;
+         floor.data = nullptr;
          sec->soundtarget  = nullptr;
 
          // SoM: update the heights
-         P_SetSectorHeight(*sec, surf_floor, sec->srf.floor.height);
-         P_SetSectorHeight(*sec, surf_ceil, sec->srf.ceiling.height);
+         P_SetSectorHeight(*sec, surf_floor, floor.height);
+         P_SetSectorHeight(*sec, surf_ceil, ceiling.height);
       }
    }
 
