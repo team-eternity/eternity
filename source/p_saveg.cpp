@@ -798,6 +798,8 @@ static void P_ArchiveWorld(SaveArchive &arc)
       arc << sec->lightlevel << sec->oldlightlevel
           << sec->srf.floor.lightdelta << sec->srf.ceiling.lightdelta
           << sec->special << sec->tag; // needed?   yes -- transfer types -- killough
+      if(arc.saveVersion() >= 10)
+         arc << sec->srf.floor.offset << sec->srf.ceiling.offset;
 
       if(arc.isLoading())
       {
@@ -822,6 +824,9 @@ static void P_ArchiveWorld(SaveArchive &arc)
 
       if((arc.saveVersion() >= 1))
          arc << li->extflags;
+
+      if(arc.saveVersion() >= 10)
+         arc << li->intflags;
 
       for(j = 0; j < 2; j++)
       {
