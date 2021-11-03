@@ -815,7 +815,7 @@ static void P_ArchiveWorld(SaveArchive &arc)
          arc << floor.offset << ceiling.offset << floor.angle << ceiling.angle
              << sec->soundtraversed << sec->stairlock << sec->prevsec << sec->nextsec;
 
-         // TODO: sndSeqID (NAMED OBJECT, STORE NAME, NOT INDEX)
+         arc << sec->sndSeqID;   // currently the ID is always stable, no need for name
       }
 
       if(arc.isLoading())
