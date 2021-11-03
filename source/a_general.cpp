@@ -397,7 +397,8 @@ void A_LineEffect(actionargs_t *actionargs)
    // This line can end up being referred to long after this
    // function returns, thus it must be made static or memory
    // corruption is possible.
-   static line_t junk;
+   I_Assert(numlinesPlusExtra > numlines, "Must have one extra line\n");
+   line_t &junk = lines[numlines];
 
    if(!(mo->intflags & MIF_LINEDONE))                // Unless already used up
    {

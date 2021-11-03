@@ -13,6 +13,9 @@ Since v4.02.00 "Forseti"
 BUGFIX: Several linedef and sector properties were NOT saved, even though they
         should.
 
+        Fixed the LineEffect codepointer combined with complex effects (e.g.
+        ACS) and saving/loading crashing Eternity.
+
 --------------------------------------------------------------------------------
 31.10.2021
 

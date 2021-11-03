@@ -451,7 +451,7 @@ SaveArchive &SaveArchive::operator << (line_t *&ln)
       loadfile->readSint32(linenum);
       if(linenum == -1) // Some line pointers can be nullptr
          ln = nullptr;
-      else if(linenum < 0 || linenum >= numlines)
+      else if(linenum < 0 || linenum >= numlinesPlusExtra)
       {
          I_Error("SaveArchive: line num %d out of range\n", linenum);
       }
@@ -832,7 +832,8 @@ static void P_ArchiveWorld(SaveArchive &arc)
    }
 
    // do lines
-   for(i = 0, li = lines; i < numlines; ++i, ++li)
+   int numlinesSave = arc.saveVersion() >= 11 ? numlinesPlusExtra : numlines;
+   for(i = 0, li = lines; i < numlinesSave; ++i, ++li)
    {
       int j;
 

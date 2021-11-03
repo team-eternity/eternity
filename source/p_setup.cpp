@@ -151,6 +151,7 @@ node_t   *nodes;
 fnode_t  *fnodes;
 
 int      numlines;
+int      numlinesPlusExtra;
 line_t   *lines;
 
 int      numsides;
@@ -1365,7 +1366,7 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
    if(vertexes != newvertarray)
    {
       // fixup linedef vertex pointers
-      for(i = 0; i < (unsigned int)numlines; i++)
+      for(i = 0; i < (unsigned int)numlinesPlusExtra; i++)
       {
          lines[i].v1 = lines[i].v1 - vertexes + newvertarray;
          lines[i].v2 = lines[i].v2 - vertexes + newvertarray;
@@ -1775,7 +1776,8 @@ static void P_LoadLineDefs(int lump, UDMFSetupSettings &setupSettings)
    byte *data;
 
    numlines = setupwad->lumpLength(lump) / sizeof(maplinedef_t);
-   lines    = estructalloctag(line_t, numlines, PU_LEVEL);
+   numlinesPlusExtra = numlines + NUM_LINES_EXTRA;
+   lines    = estructalloctag(line_t, numlinesPlusExtra, PU_LEVEL);
    data     = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
 
    for(int i = 0; i < numlines; i++)
@@ -3813,6 +3815,10 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // overrun
    P_GroupLines();
    P_LoadReject(mgla.reject); // haleyjd 01/26/04
+
+   I_Assert(lines && numlinesPlusExtra == numlines + NUM_LINES_EXTRA,
+            "lines not initialized\n");
+   lines[numlines] = lines[0];   // use the first line as a base for the "junk" line
 
    // Create bounding boxes now
    P_createSectorBoundingBoxes();

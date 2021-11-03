@@ -310,7 +310,8 @@ void UDMFParser::loadSidedefs() const
 bool UDMFParser::loadLinedefs(UDMFSetupSettings &setupSettings)
 {
    numlines = (int)mLinedefs.getLength();
-   lines = estructalloctag(line_t, numlines, PU_LEVEL);
+   numlinesPlusExtra = numlines + NUM_LINES_EXTRA;
+   lines = estructalloctag(line_t, numlinesPlusExtra, PU_LEVEL);
    for(int i = 0; i < numlines; ++i)
    {
       line_t *ld = lines + i;
