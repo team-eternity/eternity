@@ -8,6 +8,12 @@ Since v4.02.00 "Forseti"
 ========================
 
 --------------------------------------------------------------------------------
+03.11.2021
+
+BUGFIX: Several linedef and sector properties were NOT saved, even though they
+        should.
+
+--------------------------------------------------------------------------------
 31.10.2021
 
 BUGFIX: Fixed a crash happening when using the "idmypos" cheat when the automap
