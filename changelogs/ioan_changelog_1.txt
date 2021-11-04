@@ -14,7 +14,9 @@ BUGFIX: Several linedef and sector properties were NOT saved, even though they
         should.
 
         Fixed the LineEffect codepointer combined with complex effects (e.g.
-        ACS) and saving/loading crashing Eternity.
+        ACS) and saving/loading crashing Eternity. Alsoo fixed a crash happening
+        when using it to open locked doors. Under MBF it would work purely due
+        to chance (undefined behaviour otherwise).
 
 --------------------------------------------------------------------------------
 31.10.2021

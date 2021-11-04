@@ -80,6 +80,7 @@ struct ev_instance_t
    int             gentype;      // generalized type, if is generalized (-1 otherwise)
    int             genspac;      // generalized activation type, if generalized
    polyobj_t      *poly;         // possible polyobject activator
+   bool byCodepointer;           // true if activated by A_LineEffect
 };
 
 //
@@ -214,7 +215,7 @@ int EV_LockDefIDForLine(const line_t *line);
 bool EV_IsParamLineSpec(int special);
 
 // Activation
-bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, polyobj_t *poly, int spac);
+bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, polyobj_t *poly, int spac, bool byCodepointer);
 bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing);
 int  EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing, polyobj_t *poly);
 bool EV_ActivateAction(ev_action_t *action, int *args, Mobj *thing);

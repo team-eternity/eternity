@@ -42,6 +42,7 @@
 #include "e_string.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "ev_specials.h"
 #include "hu_stuff.h"
 #include "p_enemy.h"
 #include "p_info.h"
@@ -398,6 +399,9 @@ void A_LineEffect(actionargs_t *actionargs)
    // function returns, thus it must be made static or memory
    // corruption is possible.
    I_Assert(numlinesPlusExtra > numlines, "Must have one extra line\n");
+
+   // ioanch: use the footer "shadow" linedef from the lines list. This will allow any thinkers who
+   // adopt this linedef to be serialized properly when saving, so it won't crash after loading.
    line_t &junk = lines[numlines];
 
    if(!(mo->intflags & MIF_LINEDONE))                // Unless already used up
@@ -405,15 +409,16 @@ void A_LineEffect(actionargs_t *actionargs)
       junk = *lines;                                 // Fake linedef set to 1st
       if((junk.special = mo->state->misc1))          // Linedef type
       {
-         player_t player, *oldplayer = mo->player;   // Remember player status
-         mo->player = &player;                       // Fake player
-         player.health = 100;                        // Alive player
+         // ioanch: remove the fake player, it was causing undefined behaviour and crashes.
+         // Instead, mark the activation instance as "byCodepointer", which will allow the monster
+         // to trigger linedefs and open locked doors, just like in MBF.
+
          junk.args[0] = junk.tag = mo->state->misc2;            // Sector tag for linedef
-         if(!P_UseSpecialLine(mo, &junk, 0))         // Try using it
-            P_CrossSpecialLine(&junk, 0, mo, nullptr);  // Try crossing it
+         // Only try use or cross
+         if(!EV_ActivateSpecialLineWithSpac(&junk, 0, mo, nullptr, SPAC_USE, true))
+            EV_ActivateSpecialLineWithSpac(&junk, 0, mo, nullptr, SPAC_CROSS, true);
          if(!junk.special)                           // If type cleared,
             mo->intflags |= MIF_LINEDONE;            // no more for this thing
-         mo->player = oldplayer;                     // Restore player status
       }
    }
 }

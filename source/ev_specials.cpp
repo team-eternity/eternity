@@ -144,6 +144,16 @@ static int EV_NullPostCrossLine(ev_action_t *action, int result,
 //
 
 //
+// For the classic DOOM specials activateable by A_LineEffect, allow both player activator and
+// actual A_LineEffect trigger
+//
+inline static bool EV_byPlayerOrCodepointer(const ev_instance_t &instance)
+{
+   I_Assert(instance.actor, "Actor must have been checked!\n");
+   return instance.actor->player || instance.byCodepointer;
+}
+
+//
 // EV_DOOMPreCrossLine
 //
 // This function is used as the preamble to all DOOM cross-type line specials.
@@ -157,7 +167,7 @@ static bool EV_DOOMPreCrossLine(ev_action_t *action, ev_instance_t *instance)
    REQUIRE_LINE(instance->line);
 
    // Things that should never trigger lines
-   if(!instance->actor->player)
+   if(!EV_byPlayerOrCodepointer(*instance))
    {
       // haleyjd: changed to check against MF2_NOCROSS flag instead of 
       // switching on type.
@@ -167,7 +177,7 @@ static bool EV_DOOMPreCrossLine(ev_action_t *action, ev_instance_t *instance)
 
    // Check if action only allows player
    // jff 3/5/98 add ability of monsters etc. to use teleporters
-   if(!instance->actor->player && !(flags & EV_PREALLOWMONSTERS))
+   if(!EV_byPlayerOrCodepointer(*instance) && !(flags & EV_PREALLOWMONSTERS))
       return false;
 
    // jff 2/27/98 disallow zero tag on some types
@@ -180,7 +190,7 @@ static bool EV_DOOMPreCrossLine(ev_action_t *action, ev_instance_t *instance)
       return false;
 
    // line type is *only* for monsters?
-   if(instance->actor->player && (flags & EV_PREMONSTERSONLY))
+   if(EV_byPlayerOrCodepointer(*instance) && (flags & EV_PREMONSTERSONLY))
       return false;
 
    return true;
@@ -232,7 +242,7 @@ static bool EV_DOOMPreUseLine(ev_action_t *action, ev_instance_t *instance)
    if(!EV_Check3DMidTexSwitch(line, thing, instance->side))
       return false;
 
-   if(!thing->player)
+   if(!EV_byPlayerOrCodepointer(*instance))
    {
       // Monsters never activate use specials on secret lines
       if(line->flags & ML_SECRET)
@@ -295,7 +305,7 @@ static bool EV_DOOMPreShootLine(ev_action_t *action, ev_instance_t *instance)
    REQUIRE_ACTOR(thing);
    REQUIRE_LINE(line);
 
-   if(!thing->player)
+   if(!EV_byPlayerOrCodepointer(*instance))
    {
       // Check if special allows monsters
       if(!(flags & EV_PREALLOWMONSTERS))
@@ -465,7 +475,7 @@ static bool EV_BOOMGenPreActivate(ev_action_t *action, ev_instance_t *instance)
    }
 
    // check whether monsters are allowed or not
-   if(!thing->player)
+   if(!EV_byPlayerOrCodepointer(*instance))
    {
       switch(instance->gentype)
       {
@@ -508,6 +518,8 @@ static bool EV_BOOMGenPreActivate(ev_action_t *action, ev_instance_t *instance)
    switch(instance->gentype)
    {
    case GenTypeLocked:
+      // NOTE: here we strictly check player. With A_LineEffect, usually (due to uninitialized
+      // variables) the locked doors would be activateable.
       if(thing->player && !EV_canUnlockGenDoor(line, thing->player))
          return false;
       break;
@@ -1410,6 +1422,7 @@ static bool EV_checkSpac(ev_action_t *action, ev_instance_t *instance)
    }
    else // activation ability is determined by the linedef's flags
    {
+      // NOTE: byCodepointer doesn't apply here.
       Mobj        *thing = instance->actor;
       line_t      *line  = instance->line;
       unsigned int flags = 0;
@@ -1512,7 +1525,7 @@ static int EV_ActivateSpecial(ev_action_t *action, ev_instance_t *instance)
 // special.
 //
 bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing,
-                                    polyobj_t *poly, int spac)
+                                    polyobj_t *poly, int spac, bool byCodepointer)
 {
    ev_action_t *action;
    INIT_STRUCT(ev_instance_t, instance);
@@ -1526,6 +1539,7 @@ bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing,
    instance.side    = side;
    instance.spac    = spac;
    instance.tag     = line->args[0];
+   instance.byCodepointer = byCodepointer;
 
    // get action
    if(!(action = EV_ActionForInstance(instance)))

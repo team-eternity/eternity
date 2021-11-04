@@ -1090,7 +1090,7 @@ void P_CrossSpecialLine(line_t *line, int side, Mobj *thing, polyobj_t *poly)
 {
    // EV_SPECIALS TODO: This function should return success or failure to 
    // the caller.
-   EV_ActivateSpecialLineWithSpac(line, side, thing, poly, SPAC_CROSS);
+   EV_ActivateSpecialLineWithSpac(line, side, thing, poly, SPAC_CROSS, false);
 }
 
 //
@@ -1109,7 +1109,7 @@ void P_ShootSpecialLine(Mobj *thing, line_t *line, int side)
 {
    // EV_SPECIALS TODO: This function should return success or failure to 
    // the caller.
-   EV_ActivateSpecialLineWithSpac(line, side, thing, nullptr, SPAC_IMPACT);
+   EV_ActivateSpecialLineWithSpac(line, side, thing, nullptr, SPAC_IMPACT, false);
 }
 
 //
@@ -1117,7 +1117,7 @@ void P_ShootSpecialLine(Mobj *thing, line_t *line, int side)
 //
 void P_PushSpecialLine(Mobj &thing, line_t &line, int side)
 {
-   EV_ActivateSpecialLineWithSpac(&line, side, &thing, nullptr, SPAC_PUSH);
+   EV_ActivateSpecialLineWithSpac(&line, side, &thing, nullptr, SPAC_PUSH, false);
 }
 
         // sf: changed to enable_nuke for console
