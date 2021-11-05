@@ -2048,12 +2048,13 @@ static bool P_processUMapInfoBossActions(MetaTable *info, qstring *error)
       }
 
       // Block locked types
+      // NOTE: the Dx generalized specials are also skipped because we have no line
       if(EV_GenTypeForSpecial(action.special) == GenTypeLocked ||
          (evaction && (evaction->action == EV_ActionVerticalDoor ||
                        evaction->action == EV_ActionDoLockedDoor)))
       {
          C_Printf(FC_ERROR "UMAPINFO: skipping bossaction %s from %s to tag %d because locked "
-                  "types are not allowed\n", evaction ? evaction->name : "generalized",
+                  "types or manual doors are not allowed\n", evaction ? evaction->name : "generalized",
                   action.mobjclass, action.tag);
          continue;
       }
