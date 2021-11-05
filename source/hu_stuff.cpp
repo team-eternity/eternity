@@ -1435,22 +1435,22 @@ void HUDCoordWidget::ticker()
 
    if(coordType == COORDTYPE_X)
    {
-      sprintf(coordxstr, "%cX: %-5d", hu_coordscolor + 128, x >> FRACBITS);
+      snprintf(coordxstr, sizeof(coordxstr), "%cX: %-5d", hu_coordscolor + 128, x >> FRACBITS);
       message = coordxstr;
    }
    else if(coordType == COORDTYPE_Y)
    {
-      sprintf(coordystr, "%cY: %-5d", hu_coordscolor + 128, y >> FRACBITS);
+      snprintf(coordystr, sizeof(coordystr), "%cY: %-5d", hu_coordscolor + 128, y >> FRACBITS);
       message = coordystr;
    }
    else if(coordType == COORDTYPE_Z)
    {
-      sprintf(coordzstr, "%cZ: %-5d", hu_coordscolor + 128, z >> FRACBITS);
+      snprintf(coordzstr, sizeof(coordzstr), "%cZ: %-5d", hu_coordscolor + 128, z >> FRACBITS);
       message = coordzstr;
    }
    else
    {
-      sprintf(coordastr, "%cA: %-.0f", hu_coordscolor + 128,
+      snprintf(coordastr, sizeof(coordastr), "%cA: %-.0f", hu_coordscolor + 128,
               static_cast<double>(plyr->mo->angle) / ANGLE_1);
       message = coordastr;
    }

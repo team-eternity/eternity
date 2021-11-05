@@ -8,6 +8,37 @@ Since v4.02.00 "Forseti"
 ========================
 
 --------------------------------------------------------------------------------
+03.11.2021
+
+BUGFIX: Several linedef and sector properties were NOT saved, even though they
+        should.
+
+        Fixed the LineEffect codepointer combined with complex effects (e.g.
+        ACS) and saving/loading crashing Eternity. Alsoo fixed a crash happening
+        when using it to open locked doors. Under MBF it would work purely due
+        to chance (undefined behaviour otherwise).
+
+        Fixed so LineEffect always uses the DOOM classic format specials, even
+        inside UDMF. This also aligns the rules with ZDoom's.
+
+--------------------------------------------------------------------------------
+31.10.2021
+
+BUGFIX: Fixed a crash happening when using the "idmypos" cheat when the automap
+        wasn't started yet and follow mode is off. Easy to reproduce after
+        loading a game.
+
+IMPROVEMENT: Eliminate the automap coordinate shifting by linked portals,
+             because it added more confusion for mappers and playtesters alike,
+             and it didn't effectively hide any immersion detail (the XY
+             coordinates are already pretty arbitrary for the player).
+
+--------------------------------------------------------------------------------
+30.10.2021
+
+BUGFIX: Saving a game failed storing the polyobject activators of ACS scripts.
+
+--------------------------------------------------------------------------------
 24.10.2021
 
 BUGFIX: Fixed a rare crash potentially happening when changing the level.

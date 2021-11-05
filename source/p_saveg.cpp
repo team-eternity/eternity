@@ -451,7 +451,7 @@ SaveArchive &SaveArchive::operator << (line_t *&ln)
       loadfile->readSint32(linenum);
       if(linenum == -1) // Some line pointers can be nullptr
          ln = nullptr;
-      else if(linenum < 0 || linenum >= numlines)
+      else if(linenum < 0 || linenum >= numlinesPlusExtra)
       {
          I_Error("SaveArchive: line num %d out of range\n", linenum);
       }
@@ -784,36 +784,56 @@ static void P_ArchiveWorld(SaveArchive &arc)
       // haleyjd 08/30/09: intflags
       // haleyjd 03/02/09: save sector damage properties
       // haleyjd 08/30/09: save floorpic/ceilingpic as ints
+      surface_t &floor = sec->srf.floor;
+      surface_t &ceiling = sec->srf.ceiling;
 
-      arc << sec->srf.floor.height << sec->srf.ceiling.height
-          << sec->friction << sec->movefactor;
+      arc << floor.height << ceiling.height << sec->friction << sec->movefactor;
       Archive_Colormap(arc, sec->topmap);
       Archive_Colormap(arc, sec->midmap);
       Archive_Colormap(arc, sec->bottommap);
       arc << sec->flags << sec->intflags
           << sec->damage << sec->damageflags << sec->leakiness << sec->damagemask
           << sec->damagemod;
-      Archive_Flat(arc, sec->srf.floor.pic);
-      Archive_Flat(arc, sec->srf.ceiling.pic);
-      arc << sec->lightlevel << sec->oldlightlevel
-          << sec->srf.floor.lightdelta << sec->srf.ceiling.lightdelta
+      Archive_Flat(arc, floor.pic);
+      Archive_Flat(arc, ceiling.pic);
+      arc << sec->lightlevel << sec->oldlightlevel << floor.lightdelta << ceiling.lightdelta
           << sec->special << sec->tag; // needed?   yes -- transfer types -- killough
+      if(arc.saveVersion() >= 10)
+      {
+         // surf.data handled elsewhere
+         // surf.scale, .baseangle, .lightsec, .(attached), .pflags, .portal invariant
+         // surf.heightf derivative, same with .slope Z.
+         // surf.terrain invariant
+
+         // nexttag, firsttag invariant because tag is also invariant
+         // soundtarget handled elsewhere
+         // blockbox, soundorg, csoundorg invariant
+         // validcount, thinglist, spriteproj dynamic
+         // heightsec, sky invariant
+         // touching_thinglist dynamic
+         // linecount, lines, groupid, hticPushType, hticPushAngle, hticPushForce invariant
+         arc << floor.offset << ceiling.offset << floor.angle << ceiling.angle
+             << sec->soundtraversed << sec->stairlock << sec->prevsec << sec->nextsec;
+
+         arc << sec->sndSeqID;   // currently the ID is always stable, no need for name
+      }
 
       if(arc.isLoading())
       {
          // jff 2/22/98 now three thinker fields, not two
-         sec->srf.ceiling.data = nullptr;
-         sec->srf.floor.data = nullptr;
+         ceiling.data = nullptr;
+         floor.data = nullptr;
          sec->soundtarget  = nullptr;
 
          // SoM: update the heights
-         P_SetSectorHeight(*sec, surf_floor, sec->srf.floor.height);
-         P_SetSectorHeight(*sec, surf_ceil, sec->srf.ceiling.height);
+         P_SetSectorHeight(*sec, surf_floor, floor.height);
+         P_SetSectorHeight(*sec, surf_ceil, ceiling.height);
       }
    }
 
    // do lines
-   for(i = 0, li = lines; i < numlines; ++i, ++li)
+   int numlinesSave = arc.saveVersion() >= 11 ? numlinesPlusExtra : numlines;
+   for(i = 0, li = lines; i < numlinesSave; ++i, ++li)
    {
       int j;
 
@@ -822,6 +842,9 @@ static void P_ArchiveWorld(SaveArchive &arc)
 
       if((arc.saveVersion() >= 1))
          arc << li->extflags;
+
+      if(arc.saveVersion() >= 10)
+         arc << li->intflags;
 
       for(j = 0; j < 2; j++)
       {
