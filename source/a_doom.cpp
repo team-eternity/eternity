@@ -1215,6 +1215,32 @@ void A_PainDie(actionargs_t *actionargs)
 // Special Death Effects
 //
 
+//
+// Called by A_BossDeath to check LevelInfo boss actions
+//
+static void P_checkCustomBossActions(const Mobj &mo, const player_t &player)
+{
+   bool deathchecked = false;
+   for(levelaction_t *action = LevelInfo.actions; action; action = action->next)
+   {
+      if(!action->bossonly)   // the non-boss-only ones are handled in LevelActionThinker
+         continue;
+      if(mo.type != action->mobjtype)
+         continue;
+      // scan the remaining thinkers to see if all bosses are dead
+      if(!deathchecked)
+         for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+         {
+            Mobj *mo2;
+            if((mo2 = thinker_cast<Mobj *>(th)))
+               if(mo2 != &mo && mo2->type == mo.type && mo2->health > 0)
+                  return;         // other boss not dead; quit
+         }
+      deathchecked = true;  // mark not to check twice
+      EV_ActivateSpecialNum(action->special, action->args, player.mo);
+   }
+}
+
 struct boss_spec_t
 {
    unsigned int thing_flag;
@@ -1266,27 +1292,7 @@ void A_BossDeath(actionargs_t *actionargs)
       return;
 
    // Now check the UMAPINFO bossactions
-   bool deathchecked = false;
-   for(levelaction_t *action = LevelInfo.actions; action; action = action->next)
-   {
-      if(!action->bossonly)   // the non-boss-only ones are handled in LevelActionThinker
-         continue;
-      if(mo->type != action->mobjtype)
-         continue;
-      // scan the remaining thinkers to see if all bosses are dead
-      if(!deathchecked)
-         for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
-         {
-            Mobj *mo2;
-            if((mo2 = thinker_cast<Mobj *>(th)))
-            {
-               if(mo2 != mo && mo2->type == mo->type && mo2->health > 0)
-                  goto failedBossAction;         // other boss not dead; go ahead and try classic
-            }
-         }
-      deathchecked = true;  // mark not to check twice
-      EV_ActivateSpecialNum(action->special, action->args, thePlayer->mo);
-   }
+   P_checkCustomBossActions(*mo, *thePlayer);
 
 failedBossAction:
    for(boss_spec_t &boss_spec : boss_specs)
