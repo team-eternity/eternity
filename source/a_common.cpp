@@ -37,6 +37,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "ev_specials.h"
 #include "m_compare.h"
 #include "metaapi.h"
 #include "p_enemy.h"
@@ -809,6 +810,29 @@ void A_RestoreSpecialThing2(actionargs_t *actionargs)
 
    thing->flags |= MF_SPECIAL;
    P_SetMobjState(thing, thing->info->spawnstate);
+}
+
+void P_CheckCustomBossActions(const Mobj &mo, const player_t &player)
+{
+   bool deathchecked = false;
+   for(levelaction_t *action = LevelInfo.actions; action; action = action->next)
+   {
+      if(!action->bossonly)   // the non-boss-only ones are handled in LevelActionThinker
+         continue;
+      if(mo.type != action->mobjtype)
+         continue;
+      // scan the remaining thinkers to see if all bosses are dead
+      if(!deathchecked)
+         for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+         {
+            Mobj *mo2;
+            if((mo2 = thinker_cast<Mobj *>(th)))
+               if(mo2 != &mo && mo2->type == mo.type && mo2->health > 0)
+                  return;         // other boss not dead; quit
+         }
+      deathchecked = true;  // mark not to check twice
+      EV_ActivateSpecialNum(action->special, action->args, player.mo, true);
+   }
 }
 
 // EOF

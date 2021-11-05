@@ -796,6 +796,10 @@ void A_HticBossDeath(actionargs_t *actionargs)
    Mobj    *actor = actionargs->actor;
    Thinker *th;
 
+   // Now check the UMAPINFO bossactions
+   // TODO
+//   P_CheckCustomBossActions(*actor, *thePlayer);
+
    for(boss_spec_htic_t &hboss_spec : hboss_specs)
    {
       unsigned int flags =
