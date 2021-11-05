@@ -1610,7 +1610,7 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side);
 void P_ShootSpecialLine(Mobj *thing, line_t *line, int side);
 
 // killough 11/98
-void P_CrossSpecialLine(line_t *, int side, Mobj *thing, polyobj_t *poly); 
+void P_CrossSpecialLine(line_t *, int side, Mobj *thing, polyobj_t *poly);
 // ioanch
 void P_PushSpecialLine(Mobj &thing, line_t &line, int side);
 

@@ -147,7 +147,7 @@ static fixed_t ACS_getSurfaceZ(int tag, surf_e type, fixed_t x, fixed_t y)
 //
 // ACS_CF_ActivatorArmor
 //
-// int ActivatorArmor(void);
+// int PlayerArmorPoints(void);
 //
 bool ACS_CF_ActivatorArmor(ACS_CF_ARGS)
 {
@@ -157,7 +157,7 @@ bool ACS_CF_ActivatorArmor(ACS_CF_ARGS)
 //
 // ACS_CF_ActivatorFrags
 //
-// int ActivatorFrags(void);
+// int PlayerFrags(void);
 //
 bool ACS_CF_ActivatorFrags(ACS_CF_ARGS)
 {
@@ -167,7 +167,7 @@ bool ACS_CF_ActivatorFrags(ACS_CF_ARGS)
 //
 // ACS_CF_ActivatorHealth
 //
-// int ActivatorHealth(void);
+// int PlayerHealth(void);
 //
 bool ACS_CF_ActivatorHealth(ACS_CF_ARGS)
 {
@@ -245,7 +245,7 @@ bool ACS_CF_AmbientSoundLoc(ACS_CF_ARGS)
 //
 // ACS_CF_ATan2
 //
-// fixed ATan2(fixed x, fixed y);
+// fixed VectorAngle(fixed x, fixed y);
 //
 bool ACS_CF_ATan2(ACS_CF_ARGS)
 {
@@ -455,7 +455,7 @@ bool ACS_CF_CheckWeapon(ACS_CF_ARGS)
 //
 // ACS_CF_ChkThingCeilTex
 //
-// int CheckThingCeilingTexture(int tid, str texture)
+// int CheckActorCeilingTexture(int tid, str texture)
 //
 bool ACS_CF_ChkThingCeilTex(ACS_CF_ARGS)
 {
@@ -465,7 +465,7 @@ bool ACS_CF_ChkThingCeilTex(ACS_CF_ARGS)
 //
 // ACS_CF_ChkThingFlag
 //
-// int CheckThingFlag(int tid, str flag);
+// int CheckFlag(int tid, str flag);
 //
 bool ACS_CF_ChkThingFlag(ACS_CF_ARGS)
 {
@@ -588,7 +588,7 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
 //
 // ACS_CF_ChkThingProp
 //
-// int CheckThingProperty(int tid, int prop, int val);
+// int CheckActorProperty(int tid, int prop, int val);
 //
 bool ACS_CF_ChkThingProp(ACS_CF_ARGS)
 {
@@ -598,7 +598,7 @@ bool ACS_CF_ChkThingProp(ACS_CF_ARGS)
 //
 // ACS_CF_ChkThingType
 //
-// int CheckThingType(int tid, str type)
+// int CheckActorClass(int tid, str type)
 //
 bool ACS_CF_ChkThingType(ACS_CF_ARGS)
 {
@@ -623,7 +623,7 @@ enum
 //
 // ACS_CF_ClassifyThing
 //
-// int ClassifyThing(int tid);
+// int ClassifyActor(int tid);
 //
 bool ACS_CF_ClassifyThing(ACS_CF_ARGS)
 {

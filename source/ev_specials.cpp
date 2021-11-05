@@ -144,6 +144,16 @@ static int EV_NullPostCrossLine(ev_action_t *action, int result,
 //
 
 //
+// For the classic DOOM specials activateable by A_LineEffect, allow both player activator and
+// actual A_LineEffect trigger
+//
+inline static bool EV_byPlayerOrCodepointer(const ev_instance_t &instance)
+{
+   I_Assert(instance.actor, "Actor must have been checked!\n");
+   return instance.actor->player || instance.byCodepointer;
+}
+
+//
 // EV_DOOMPreCrossLine
 //
 // This function is used as the preamble to all DOOM cross-type line specials.
@@ -156,7 +166,7 @@ static bool EV_DOOMPreCrossLine(ev_action_t *action, ev_instance_t *instance)
    REQUIRE_ACTOR(instance->actor);
 
    // Things that should never trigger lines
-   if(!instance->actor->player)
+   if(!EV_byPlayerOrCodepointer(*instance))
    {
       // haleyjd: changed to check against MF2_NOCROSS flag instead of 
       // switching on type.
@@ -166,7 +176,7 @@ static bool EV_DOOMPreCrossLine(ev_action_t *action, ev_instance_t *instance)
 
    // Check if action only allows player
    // jff 3/5/98 add ability of monsters etc. to use teleporters
-   if(!instance->actor->player && !(flags & EV_PREALLOWMONSTERS))
+   if(!EV_byPlayerOrCodepointer(*instance) && !(flags & EV_PREALLOWMONSTERS))
       return false;
 
    // jff 2/27/98 disallow zero tag on some types
@@ -179,7 +189,7 @@ static bool EV_DOOMPreCrossLine(ev_action_t *action, ev_instance_t *instance)
       return false;
 
    // line type is *only* for monsters?
-   if(instance->actor->player && (flags & EV_PREMONSTERSONLY))
+   if(EV_byPlayerOrCodepointer(*instance) && (flags & EV_PREMONSTERSONLY))
       return false;
 
    return true;
@@ -230,7 +240,7 @@ static bool EV_DOOMPreUseLine(ev_action_t *action, ev_instance_t *instance)
    if(line && !EV_Check3DMidTexSwitch(line, thing, instance->side))
       return false;
 
-   if(!thing->player)
+   if(!EV_byPlayerOrCodepointer(*instance))
    {
       // Monsters never activate use specials on secret lines
       if(line && line->flags & ML_SECRET)
@@ -291,7 +301,7 @@ static bool EV_DOOMPreShootLine(ev_action_t *action, ev_instance_t *instance)
    // actor and line are required
    REQUIRE_ACTOR(thing);
 
-   if(!thing->player)
+   if(!EV_byPlayerOrCodepointer(*instance))
    {
       // Check if special allows monsters
       if(!(flags & EV_PREALLOWMONSTERS))
@@ -460,7 +470,7 @@ static bool EV_BOOMGenPreActivate(ev_action_t *action, ev_instance_t *instance)
    }
 
    // check whether monsters are allowed or not
-   if(!thing->player)
+   if(!EV_byPlayerOrCodepointer(*instance))
    {
       switch(instance->gentype)
       {
@@ -503,6 +513,8 @@ static bool EV_BOOMGenPreActivate(ev_action_t *action, ev_instance_t *instance)
    switch(instance->gentype)
    {
    case GenTypeLocked:
+      // NOTE: here we strictly check player. With A_LineEffect, usually (due to uninitialized
+      // variables) the locked doors would be activateable.
       if(thing->player && !EV_canUnlockGenDoor(instance->special, thing->player))
          return false;
       break;
@@ -1204,6 +1216,21 @@ static int EV_GenActivationType(int special)
    return (special & TriggerType) >> TriggerTypeShift;
 }
 
+ev_action_t *EV_classicFormatActionForSpecial(int special)
+{
+   switch(LevelInfo.levelType)
+   {
+   case LI_TYPE_DOOM:
+   default:
+      return EV_DOOMActionForSpecial(special);
+   case LI_TYPE_HERETIC:
+   case LI_TYPE_HEXEN:
+      return EV_HereticActionForSpecial(special);
+   case LI_TYPE_STRIFE:
+      return EV_StrifeActionForSpecial(special);
+   }
+}
+
 //
 // EV_ActionForSpecial
 //
@@ -1218,17 +1245,7 @@ ev_action_t *EV_ActionForSpecial(int special)
    case LEVEL_FORMAT_PSX:
       return EV_PSXActionForSpecial(special);
    default:
-      switch(LevelInfo.levelType)
-      {
-      case LI_TYPE_DOOM:
-      default:
-         return EV_DOOMActionForSpecial(special);
-      case LI_TYPE_HERETIC:
-      case LI_TYPE_HEXEN:
-         return EV_HereticActionForSpecial(special);
-      case LI_TYPE_STRIFE:
-         return EV_StrifeActionForSpecial(special);
-      }
+      return EV_classicFormatActionForSpecial(special);
    }
 }
 
@@ -1238,7 +1255,7 @@ ev_action_t *EV_ActionForSpecial(int special)
 // Given an instance, obtain the corresponding ev_action_t structure,
 // within the currently defined set of bindings.
 //
-static ev_action_t *EV_ActionForInstance(ev_instance_t &instance)
+static ev_action_t *EV_ActionForInstance(ev_instance_t &instance, bool nonParamOnly)
 {
    // check if it is a generalized type 
    instance.gentype = EV_GenTypeForSpecial(instance.special);
@@ -1253,6 +1270,8 @@ static ev_action_t *EV_ActionForInstance(ev_instance_t &instance)
       return &BoomGenAction;
    }
 
+   if(nonParamOnly)
+      return EV_classicFormatActionForSpecial(instance.special);
    return EV_ActionForSpecial(instance.special);
 }
 
@@ -1405,6 +1424,7 @@ static bool EV_checkSpac(ev_action_t *action, ev_instance_t *instance)
    }
    else // activation ability is determined by the linedef's flags
    {
+      // NOTE: byCodepointer doesn't apply here.
       Mobj        *thing = instance->actor;
       line_t      *line  = instance->line;
       unsigned int flags = 0;
@@ -1507,7 +1527,7 @@ static int EV_ActivateSpecial(ev_action_t *action, ev_instance_t *instance)
 // special.
 //
 bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing,
-                                    polyobj_t *poly, int spac)
+                                    polyobj_t *poly, int spac, bool byALineEffect)
 {
    ev_action_t *action;
    INIT_STRUCT(ev_instance_t, instance);
@@ -1521,9 +1541,10 @@ bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing,
    instance.side    = side;
    instance.spac    = spac;
    instance.tag     = line->args[0];
+   instance.byCodepointer = byALineEffect;
 
    // get action
-   if(!(action = EV_ActionForInstance(instance)))
+   if(!(action = EV_ActionForInstance(instance, byALineEffect)))
       return false;
 
    // check for parameterized special behavior with tags
@@ -1557,7 +1578,7 @@ bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing)
    instance.tag     = args[0];
 
    // get action
-   if(!(action = EV_ActionForInstance(instance)))
+   if(!(action = EV_ActionForInstance(instance, false)))
       return false;
 
    return !!EV_ActivateSpecial(action, &instance);
@@ -1681,7 +1702,7 @@ int EV_ActivateSectorAction(sector_t *sector, Mobj *thing, int seac)
       instance.tag          = sectoraction->mo->args[0];
 
       // get action
-      if(!(action = EV_ActionForInstance(instance)))
+      if(!(action = EV_ActionForInstance(instance, false)))
          continue;
 
       // check for parameterized special behavior with tags

@@ -1161,7 +1161,11 @@ DEFINE_ACTION(EV_ActionDoLockedDoor)
    // case 137: (S1) BlzOpenDoor YELLOW
 
    int lockID = EV_LockDefIDForSpecial(instance->special);
-   if(EV_lockCheck(instance->actor, lockID, true))
+   // Simulate MBF's undefined behavior which allows A_LineEffect to open locked doors most of the
+   // time.
+   // NOTE: do not do the same for EV_VerticalDoor, as that only goes for manual doors. If we get
+   // incompatibilities with wild wads, we can add it later.
+   if(instance->byCodepointer || EV_lockCheck(instance->actor, lockID, true))
       return EV_DoDoor(instance->tag, blazeOpen);
    return 0;
 }

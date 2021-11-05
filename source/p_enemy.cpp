@@ -327,7 +327,6 @@ bool P_CheckMissileRange(Mobj *actor)
 static bool P_IsOnLift(const Mobj *actor)
 {
    const sector_t *sec = actor->subsector->sector;
-   line_t line;
 
    // Short-circuit: it's on a lift which is active.
    if(thinker_cast<PlatThinker *>(sec->srf.floor.data) != nullptr)
@@ -336,9 +335,9 @@ static bool P_IsOnLift(const Mobj *actor)
    // Check to see if it's in a sector which can be 
    // activated as a lift.
    // ioanch 20160303: use args[0]
-   if((line.args[0] = sec->tag))
+   if(sec->tag)
    {
-      for(int l = -1; (l = P_FindLineFromLineArg0(&line, l)) >= 0;)
+      for(int l = -1; (l = P_FindLineFromTag(sec->tag, l)) >= 0;)
       {
          // FIXME: I'm still keeping the old code because I don't know of any MBF
          // demos which can verify all of this. If you're confident you found one,
