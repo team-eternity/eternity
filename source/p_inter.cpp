@@ -231,7 +231,7 @@ static void P_consumeSpecial(player_t *activator, Mobj *special)
 {
    if(special->special)
    {
-      EV_ActivateSpecialNum(special->special, special->args, activator->mo);
+      EV_ActivateSpecialNum(special->special, special->args, activator->mo, false);
       special->special = 0;
    }
 }
@@ -1054,7 +1054,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
    // during the death frame of a thing.
    P_DropItems(target, false);
 
-   if(EV_ActivateSpecialNum(target->special, target->args, target))
+   if(EV_ActivateSpecialNum(target->special, target->args, target, false))
       target->special = 0; // Stop special from executing if revived/respawned
 }
 

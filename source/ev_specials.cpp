@@ -1572,7 +1572,7 @@ bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing,
 // Activate a special without a source linedef. Only some specials support
 // this; ones which don't will return false in their preamble.
 //
-bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing)
+bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing, bool nonParamOnly)
 {
    ev_action_t *action;
    INIT_STRUCT(ev_instance_t, instance);
@@ -1586,7 +1586,7 @@ bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing)
    instance.tag     = args[0];
 
    // get action
-   if(!(action = EV_ActionForInstance(instance, false)))
+   if(!(action = EV_ActionForInstance(instance, nonParamOnly)))
       return false;
 
    return !!EV_ActivateSpecial(action, &instance);

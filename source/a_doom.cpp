@@ -1237,7 +1237,7 @@ static void P_checkCustomBossActions(const Mobj &mo, const player_t &player)
                   return;         // other boss not dead; quit
          }
       deathchecked = true;  // mark not to check twice
-      EV_ActivateSpecialNum(action->special, action->args, player.mo);
+      EV_ActivateSpecialNum(action->special, action->args, player.mo, true);
    }
 }
 
