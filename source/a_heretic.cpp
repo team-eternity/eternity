@@ -797,8 +797,20 @@ void A_HticBossDeath(actionargs_t *actionargs)
    Thinker *th;
 
    // Now check the UMAPINFO bossactions
-   // TODO
-//   P_CheckCustomBossActions(*actor, *thePlayer);
+   // We need a player for this. NOTE: we don't require a living player here.
+   const player_t *thePlayer = nullptr;
+   int i;
+   for(i = 0; i < MAXPLAYERS; i++)
+      if(playeringame[i] && players[i].health > 0)
+      {
+         thePlayer = players + i;
+         break;
+      }
+   // none alive found
+   if(i == MAXPLAYERS || !thePlayer)
+      thePlayer = players; // pick player 1, even if dead
+
+   P_CheckCustomBossActions(*actor, *thePlayer);
 
    for(boss_spec_htic_t &hboss_spec : hboss_specs)
    {
