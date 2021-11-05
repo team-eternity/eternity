@@ -164,7 +164,6 @@ static bool EV_DOOMPreCrossLine(ev_action_t *action, ev_instance_t *instance)
 
    // DOOM-style specials require an actor and a line
    REQUIRE_ACTOR(instance->actor);
-   REQUIRE_LINE(instance->line);
 
    // Things that should never trigger lines
    if(!EV_byPlayerOrCodepointer(*instance))
@@ -207,7 +206,7 @@ static int EV_DOOMPostCrossLine(ev_action_t *action, int result,
 {
    unsigned int flags = EV_CompositeActionFlags(action);
 
-   if(flags & EV_POSTCLEARSPECIAL)
+   if(instance->line && flags & EV_POSTCLEARSPECIAL)
    {
       bool clearSpecial = (result || EV_ClearSwitchOnFail());
 
@@ -232,20 +231,19 @@ static bool EV_DOOMPreUseLine(ev_action_t *action, ev_instance_t *instance)
 
    // actor and line are required
    REQUIRE_ACTOR(thing);
-   REQUIRE_LINE(line);
 
    // All DOOM-style use specials only support activation from the first side
    if(instance->side) 
       return false;
 
    // Check for 3DMidTex range restrictions
-   if(!EV_Check3DMidTexSwitch(line, thing, instance->side))
+   if(line && !EV_Check3DMidTexSwitch(line, thing, instance->side))
       return false;
 
    if(!EV_byPlayerOrCodepointer(*instance))
    {
       // Monsters never activate use specials on secret lines
-      if(line->flags & ML_SECRET)
+      if(line && line->flags & ML_SECRET)
          return false;
 
       // Otherwise, check the special flags
@@ -271,7 +269,7 @@ static int EV_DOOMPostUseLine(ev_action_t *action, int result,
    unsigned int flags = EV_CompositeActionFlags(action);
 
    // check for switch texture changes
-   if(flags & EV_POSTCHANGESWITCH)
+   if(instance->line && flags & EV_POSTCHANGESWITCH)
    {
       if(result || (flags & EV_POSTCHANGEALWAYS))
       {
@@ -299,11 +297,9 @@ static bool EV_DOOMPreShootLine(ev_action_t *action, ev_instance_t *instance)
    unsigned int flags = EV_CompositeActionFlags(action);
 
    Mobj   *thing = instance->actor;
-   line_t *line  = instance->line;
 
    // actor and line are required
    REQUIRE_ACTOR(thing);
-   REQUIRE_LINE(line);
 
    if(!EV_byPlayerOrCodepointer(*instance))
    {
@@ -330,7 +326,7 @@ static int EV_DOOMPostShootLine(ev_action_t *action, int result,
    unsigned int flags = EV_CompositeActionFlags(action);
 
    // check for switch texture changes
-   if(flags & EV_POSTCHANGESWITCH)
+   if(instance->line && flags & EV_POSTCHANGESWITCH)
    {
       // Non-BOOM gun line types may clear their special even if they fail
       if(result || (flags & EV_POSTCHANGEALWAYS) || 
@@ -397,9 +393,9 @@ static int EV_lockdefIDForGenSpec(int special)
 //
 // haleyjd 08/22/00: fixed bug found by fraggle
 //
-static bool EV_canUnlockGenDoor(line_t *line, player_t *player)
+static bool EV_canUnlockGenDoor(int special, player_t *player)
 {
-   int lockdefID = EV_lockdefIDForGenSpec(line->special);
+   int lockdefID = EV_lockdefIDForGenSpec(special);
 
    itemeffect_t *yskull = E_ItemEffectForName(ARTI_YELLOWSKULL);
    bool hasYellowSkull  = (E_GetItemOwnedAmount(player, yskull) > 0);
@@ -440,10 +436,9 @@ static bool EV_BOOMGenPreActivate(ev_action_t *action, ev_instance_t *instance)
    line_t *line  = instance->line;
    
    REQUIRE_ACTOR(thing);
-   REQUIRE_LINE(line);
 
    // check against zero tags
-   if(!line->args[0])
+   if(!instance->tag)
    {
       switch(instance->genspac)
       {
@@ -459,7 +454,7 @@ static bool EV_BOOMGenPreActivate(ev_action_t *action, ev_instance_t *instance)
       case PushOnce:
       case PushMany:
          // jff 3/2/98 all non-manual generalized types require tag
-         if((line->special & 6) != 6)
+         if((instance->special & 6) != 6)
             return false;
          break;
       case GunOnce:
@@ -481,32 +476,32 @@ static bool EV_BOOMGenPreActivate(ev_action_t *action, ev_instance_t *instance)
       {
       case GenTypeFloor:
          // FloorModel is "Allow Monsters" if FloorChange is 0
-         if((line->special & FloorChange) || !(line->special & FloorModel))
+         if((instance->special & FloorChange) || !(instance->special & FloorModel))
             return false;
          break;
       case GenTypeCeiling:
          // CeilingModel is "Allow Monsters" if CeilingChange is 0
-         if((line->special & CeilingChange) || !(line->special & CeilingModel))
+         if((instance->special & CeilingChange) || !(instance->special & CeilingModel))
             return false; 
          break;
       case GenTypeDoor:
-         if(!(line->special & DoorMonster))
+         if(!(instance->special & DoorMonster))
             return false;            // monsters disallowed from this door
-         if(line->flags & ML_SECRET) // they can't open secret doors either
+         if(line && line->flags & ML_SECRET) // they can't open secret doors either
             return false;
          break;
       case GenTypeLocked:
          return false; // monsters disallowed from unlocking doors
       case GenTypeLift:
-         if(!(line->special & LiftMonster))
+         if(!(instance->special & LiftMonster))
             return false; // monsters disallowed
          break;
       case GenTypeStairs:
-         if(!(line->special & StairMonster))
+         if(!(instance->special & StairMonster))
             return false; // monsters disallowed
          break;
       case GenTypeCrusher:
-         if(!(line->special & CrusherMonster))
+         if(!(instance->special & CrusherMonster))
             return false; // monsters disallowed
          break;
       default:
@@ -520,7 +515,7 @@ static bool EV_BOOMGenPreActivate(ev_action_t *action, ev_instance_t *instance)
    case GenTypeLocked:
       // NOTE: here we strictly check player. With A_LineEffect, usually (due to uninitialized
       // variables) the locked doors would be activateable.
-      if(thing->player && !EV_canUnlockGenDoor(line, thing->player))
+      if(thing->player && !EV_canUnlockGenDoor(instance->special, thing->player))
          return false;
       break;
    case GenTypeCrusher:
@@ -559,7 +554,7 @@ static bool EV_BOOMGenPreActivate(ev_action_t *action, ev_instance_t *instance)
    case PushMany:
    case SwitchOnce:
    case SwitchMany:
-      if(!EV_Check3DMidTexSwitch(line, thing, instance->side))
+      if(line && !EV_Check3DMidTexSwitch(line, thing, instance->side))
          return false;
    }
 
@@ -574,7 +569,7 @@ static bool EV_BOOMGenPreActivate(ev_action_t *action, ev_instance_t *instance)
 static int EV_BOOMGenPostActivate(ev_action_t *action, int result,
                                   ev_instance_t *instance)
 {
-   if(result)
+   if(instance->line && result)
    {
       switch(instance->genspac)
       {

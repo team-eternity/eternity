@@ -1272,7 +1272,6 @@ static boss_spec_t boss_specs[NUM_BOSS_SPECS] =
 void A_BossDeath(actionargs_t *actionargs)
 {
    Mobj    *mo = actionargs->actor;
-   line_t   junk;
    int      i;
 
    player_t *thePlayer = nullptr;
@@ -1322,13 +1321,11 @@ failedBossAction:
          case BSPEC_E4M8:
          case BSPEC_MAP07_1:
             // lower floors tagged 666 to lowest neighbor
-            junk.args[0] = junk.tag = 666;
-            EV_DoFloor(&junk, lowerFloorToLowest);
+            EV_DoFloor(nullptr, 666, lowerFloorToLowest);
             break;
          case BSPEC_MAP07_2:
             // raise floors tagged 667 by shortest lower texture
-            junk.args[0] = junk.tag = 667;
-            EV_DoFloor(&junk, raiseToTexture);
+            EV_DoFloor(nullptr, 667, raiseToTexture);
             break;
          case BSPEC_E2M8:
          case BSPEC_E3M8:
@@ -1337,8 +1334,7 @@ failedBossAction:
             return;
          case BSPEC_E4M6:
             // open sectors tagged 666 as blazing doors
-            junk.args[0] = junk.tag = 666;
-            EV_DoDoor(&junk, blazeOpen);
+            EV_DoDoor(666, blazeOpen);
             break;
          default:
             break;
@@ -1357,8 +1353,7 @@ void A_KeenDie(actionargs_t *actionargs)
 {
    Mobj    *mo = actionargs->actor;
    Thinker *th;
-   line_t   junk;
-   
+
    A_Fall(actionargs);
 
    // scan the remaining thinkers to see if all Keens are dead
@@ -1373,8 +1368,7 @@ void A_KeenDie(actionargs_t *actionargs)
       }
    }
 
-   junk.args[0] = junk.tag = 666;
-   EV_DoDoor(&junk, doorOpen);
+   EV_DoDoor(666, doorOpen);
 }
 
 //=============================================================================

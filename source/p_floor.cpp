@@ -432,7 +432,7 @@ int EV_FloorCrushStop(const line_t *line, int tag)
 // Passed the line that activated the floor and the type of floor motion
 // Returns true if a thinker was created.
 //
-int EV_DoFloor(const line_t *line, floor_e floortype )
+int EV_DoFloor(const line_t *line, int tag, floor_e floortype )
 {
    int           secnum;
    int           rtn;
@@ -443,7 +443,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
    secnum = -1;
    rtn = 0;
    // move all floors with the same tag as the linedef
-   while((secnum = P_FindSectorFromLineArg0(line,secnum)) >= 0)
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       sec = &sectors[secnum];
       
@@ -582,9 +582,12 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
          floor->speed = FLOORSPEED;
          floor->floordestheight =
             floor->sector->srf.floor.height + 24 * FRACUNIT;
-         sec->srf.floor.pic = line->frontsector->srf.floor.pic;
-         //jff 3/14/98 transfer both old and new special
-         P_DirectTransferSectorSpecial(line->frontsector, sec);
+         if(line)
+         {
+            sec->srf.floor.pic = line->frontsector->srf.floor.pic;
+            //jff 3/14/98 transfer both old and new special
+            P_DirectTransferSectorSpecial(line->frontsector, sec);
+         }
          break;
 
       case raiseToTexture:
@@ -789,15 +792,16 @@ void EV_SetFriction(const int tag, int amount)
 // BTW, I'm pretty sure this is the longest function name in the
 // source code! ^_^
 //
-static int P_FindSectorFromLineTagWithLowerBound(const line_t *l, int start,
-                                                 int min)
+// ioanch 20211030: renamed
+//
+static int P_FindSectorFromTagWithLowerBound(int tag, int start, int min)
 {
    // Emulate original Doom's linear lower-bounded 
    // P_FindSectorFromLineArg0 as needed
 
    do
    {
-      start = P_FindSectorFromLineArg0(l, start);
+      start = P_FindSectorFromTag(tag, start);
    }
    while(start >= 0 && start <= min);
 
@@ -831,7 +835,7 @@ static int P_FindSectorFromLineTagWithLowerBound(const line_t *l, int start,
 //
 // * Boom fixed the bug, and MBF/PrBoom without comp_stairs work right
 //
-int EV_BuildStairs(const line_t *line, stair_e type)
+int EV_BuildStairs(int tag, stair_e type)
 {
    // cph 2001/09/22 - cleaned up this function to save my sanity. 
    // A separate outer loop index makes the logic much cleared, and 
@@ -841,7 +845,7 @@ int EV_BuildStairs(const line_t *line, stair_e type)
    int                   rtn = 0;
 
    // start a stair at each sector tagged the same as the linedef
-   while((ssec = P_FindSectorFromLineTagWithLowerBound(line,ssec,minssec)) >= 0)
+   while((ssec = P_FindSectorFromTagWithLowerBound(tag, ssec, minssec)) >= 0)
    {
       int           secnum = ssec;
       sector_t*     sec = &sectors[secnum];
@@ -1191,7 +1195,7 @@ int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
 // jff 2/22/98 new type to move floor and ceiling in parallel
 //
 int EV_DoElevator
-( const line_t* line, int tag,
+( const line_t *line, const Mobj *mo, const polyobj_t *po, int tag,
   elevator_e    elevtype, fixed_t speed, fixed_t amount, bool isParam )
 {
    int                   secnum;
@@ -1257,7 +1261,17 @@ int EV_DoElevator
 
       // elevator to floor height of activating switch's front sector
       case elevateCurrent:
-         elevator->floordestheight = line->frontsector->srf.floor.height;
+         // Fall back to different references if linedef is missing
+         if(line)
+            elevator->floordestheight = line->frontsector->srf.floor.height;
+         else if(mo)
+            elevator->floordestheight = mo->zref.floor;  // where it rests
+         else if(po)
+         {
+            elevator->floordestheight = R_PointInSubsector(po->centerPt.x,
+                                                           po->centerPt.y)
+                  ->sector->srf.floor.height;   // the sector of the trigger poly
+         }
          elevator->ceilingdestheight =
             elevator->floordestheight + sec->srf.ceiling.height - sec->srf.floor.height;
          elevator->direction =
