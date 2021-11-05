@@ -18,6 +18,9 @@ BUGFIX: Several linedef and sector properties were NOT saved, even though they
         when using it to open locked doors. Under MBF it would work purely due
         to chance (undefined behaviour otherwise).
 
+        Fixed so LineEffect always uses the DOOM classic format specials, even
+        inside UDMF. This also aligns the rules with ZDoom's.
+
 --------------------------------------------------------------------------------
 31.10.2021
 

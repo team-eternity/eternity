@@ -1221,6 +1221,21 @@ static int EV_GenActivationType(int special)
    return (special & TriggerType) >> TriggerTypeShift;
 }
 
+ev_action_t *EV_classicFormatActionForSpecial(int special)
+{
+   switch(LevelInfo.levelType)
+   {
+   case LI_TYPE_DOOM:
+   default:
+      return EV_DOOMActionForSpecial(special);
+   case LI_TYPE_HERETIC:
+   case LI_TYPE_HEXEN:
+      return EV_HereticActionForSpecial(special);
+   case LI_TYPE_STRIFE:
+      return EV_StrifeActionForSpecial(special);
+   }
+}
+
 //
 // EV_ActionForSpecial
 //
@@ -1235,17 +1250,7 @@ ev_action_t *EV_ActionForSpecial(int special)
    case LEVEL_FORMAT_PSX:
       return EV_PSXActionForSpecial(special);
    default:
-      switch(LevelInfo.levelType)
-      {
-      case LI_TYPE_DOOM:
-      default:
-         return EV_DOOMActionForSpecial(special);
-      case LI_TYPE_HERETIC:
-      case LI_TYPE_HEXEN:
-         return EV_HereticActionForSpecial(special);
-      case LI_TYPE_STRIFE:
-         return EV_StrifeActionForSpecial(special);
-      }
+      return EV_classicFormatActionForSpecial(special);
    }
 }
 
@@ -1255,7 +1260,7 @@ ev_action_t *EV_ActionForSpecial(int special)
 // Given an instance, obtain the corresponding ev_action_t structure,
 // within the currently defined set of bindings.
 //
-static ev_action_t *EV_ActionForInstance(ev_instance_t &instance)
+static ev_action_t *EV_ActionForInstance(ev_instance_t &instance, bool nonParamOnly)
 {
    // check if it is a generalized type 
    instance.gentype = EV_GenTypeForSpecial(instance.special);
@@ -1270,6 +1275,8 @@ static ev_action_t *EV_ActionForInstance(ev_instance_t &instance)
       return &BoomGenAction;
    }
 
+   if(nonParamOnly)
+      return EV_classicFormatActionForSpecial(instance.special);
    return EV_ActionForSpecial(instance.special);
 }
 
@@ -1525,7 +1532,7 @@ static int EV_ActivateSpecial(ev_action_t *action, ev_instance_t *instance)
 // special.
 //
 bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing,
-                                    polyobj_t *poly, int spac, bool byCodepointer)
+                                    polyobj_t *poly, int spac, bool byALineEffect)
 {
    ev_action_t *action;
    INIT_STRUCT(ev_instance_t, instance);
@@ -1539,10 +1546,10 @@ bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing,
    instance.side    = side;
    instance.spac    = spac;
    instance.tag     = line->args[0];
-   instance.byCodepointer = byCodepointer;
+   instance.byCodepointer = byALineEffect;
 
    // get action
-   if(!(action = EV_ActionForInstance(instance)))
+   if(!(action = EV_ActionForInstance(instance, byALineEffect)))
       return false;
 
    // check for parameterized special behavior with tags
@@ -1576,7 +1583,7 @@ bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing)
    instance.tag     = args[0];
 
    // get action
-   if(!(action = EV_ActionForInstance(instance)))
+   if(!(action = EV_ActionForInstance(instance, false)))
       return false;
 
    return !!EV_ActivateSpecial(action, &instance);
@@ -1700,7 +1707,7 @@ int EV_ActivateSectorAction(sector_t *sector, Mobj *thing, int seac)
       instance.tag          = sectoraction->mo->args[0];
 
       // get action
-      if(!(action = EV_ActionForInstance(instance)))
+      if(!(action = EV_ActionForInstance(instance, false)))
          continue;
 
       // check for parameterized special behavior with tags
