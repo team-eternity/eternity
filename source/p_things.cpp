@@ -548,7 +548,7 @@ void LevelActionThinker::Think()
    }
 
    // Execute special
-   ev_action_t *action = EV_HexenActionForSpecial(special);
+   ev_action_t *action = EV_UDMFEternityActionForSpecial(special);
    if(action && EV_ActivateAction(action, args, thePlayer->mo))
       remove();
 }

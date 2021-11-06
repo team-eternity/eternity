@@ -8,6 +8,12 @@ Since v4.02.00 "Forseti"
 ========================
 
 --------------------------------------------------------------------------------
+06.11.2021
+
+BUGFIX: Some activation specials (notably those beyond UDMF index 255) didn't
+        work with EMAPINFO levelaction.
+
+--------------------------------------------------------------------------------
 03.11.2021
 
 BUGFIX: Several linedef and sector properties were NOT saved, even though they
