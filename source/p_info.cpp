@@ -1864,7 +1864,7 @@ static void P_parseLevelAction(levelvar_t *var, const qstring &value)
    // lookup thing and special; both must be valid
    if((mobjType = E_ThingNumForName(mobjName.constPtr())) == -1)
       return;
-   if(!(binding = EV_HexenBindingForName(lineSpec.constPtr())))
+   if(!(binding = EV_UDMFEternityBindingForName(lineSpec.constPtr())))
       return;
 
    // translate arguments

@@ -1093,7 +1093,7 @@ static ev_binding_t *EV_UDMFEternityBindingForSpecial(int special)
 // Returns a special binding from the UDMFEternity gamemode's bindings array
 // by name.
 //
-static ev_binding_t *EV_UDMFEternityBindingForName(const char *name)
+ev_binding_t *EV_UDMFEternityBindingForName(const char *name)
 {
    ev_binding_t *bind;
 
@@ -1114,7 +1114,7 @@ static ev_binding_t *EV_UDMFEternityBindingForName(const char *name)
 // regardless of the current gamemode or map format. Returns nullptr if
 // the special is not bound to an action.
 //
-static ev_action_t *EV_UDMFEternityActionForSpecial(int special)
+ev_action_t *EV_UDMFEternityActionForSpecial(int special)
 {
    ev_binding_t *bind = EV_UDMFEternityBindingForSpecial(special);
 

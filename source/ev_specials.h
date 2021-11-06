@@ -193,12 +193,14 @@ ev_binding_t *EV_HexenBindingForSpecial(int special);
 // Binding for Name
 ev_binding_t *EV_DOOMBindingForName(const char *name);
 ev_binding_t *EV_HexenBindingForName(const char *name);
+ev_binding_t *EV_UDMFEternityBindingForName(const char *name);
 ev_binding_t *EV_BindingForName(const char *name);
 
 // Action for Special 
 ev_action_t  *EV_DOOMActionForSpecial(int special);
 ev_action_t  *EV_HereticActionForSpecial(int special);
 ev_action_t  *EV_HexenActionForSpecial(int special);
+ev_action_t  *EV_UDMFEternityActionForSpecial(int special);
 ev_action_t  *EV_ACSActionForSpecial(int special);
 ev_action_t  *EV_ActionForSpecial(int special);
 
