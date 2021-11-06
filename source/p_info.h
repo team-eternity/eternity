@@ -67,11 +67,17 @@ enum
 // levelaction structures
 struct levelaction_t
 {
+   enum  // flags, tucked here for scope reasons.
+   {
+      BOSS_ONLY = 1,       // activated in A_BossDeath instead of LevelActionThinker
+      CLASSIC_SPECIAL = 2  // use classic non-parameterized special instead of Hexen
+   };
+
    int special;
    int mobjtype;
    int args[NUMLINEARGS];
    levelaction_t *next;
-   bool bossonly; // activated in A_BossDeath instead of LevelActionThinker
+   unsigned flags;
 };
 
 //

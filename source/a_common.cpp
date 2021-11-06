@@ -812,12 +812,18 @@ void A_RestoreSpecialThing2(actionargs_t *actionargs)
    P_SetMobjState(thing, thing->info->spawnstate);
 }
 
+//
+// Executes any potential boss-death actions. Triggered by A_BossDeath and A_HticBossDeath. Player
+// life is not checked here, due to different game rules. A player reference is needed anyway to
+// know who should be the activator.
+//
 void P_CheckCustomBossActions(const Mobj &mo, const player_t &player)
 {
    bool deathchecked = false;
    for(levelaction_t *action = LevelInfo.actions; action; action = action->next)
    {
-      if(!action->bossonly)   // the non-boss-only ones are handled in LevelActionThinker
+      // the non-boss-only ones are handled in LevelActionThinker
+      if(!(action->flags & levelaction_t::BOSS_ONLY))
          continue;
       if(mo.type != action->mobjtype)
          continue;
@@ -831,7 +837,9 @@ void P_CheckCustomBossActions(const Mobj &mo, const player_t &player)
                   return;         // other boss not dead; quit
          }
       deathchecked = true;  // mark not to check twice
-      EV_ActivateSpecialNum(action->special, action->args, player.mo, true);
+      EV_ActivateSpecialNum(action->special, action->args, player.mo,
+                            !!(action->flags & levelaction_t::CLASSIC_SPECIAL));
+      // TODO: make this actively look for UDMF specials when not classic!
    }
 }
 

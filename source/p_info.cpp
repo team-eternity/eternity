@@ -2065,7 +2065,7 @@ static bool P_processUMapInfoBossActions(MetaTable *info, qstring *error)
       bossaction->mobjtype = type;
       bossaction->args[0] = action.tag;
       bossaction->next = LevelInfo.actions;
-      bossaction->bossonly = true;
+      bossaction->flags |= levelaction_t::BOSS_ONLY | levelaction_t::CLASSIC_SPECIAL;
       LevelInfo.actions = bossaction;
    }
 
