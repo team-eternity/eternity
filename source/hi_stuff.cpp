@@ -175,7 +175,7 @@ inline static bool HI_haveExitingPic()
 }
 inline static bool HI_singlePage()
 {
-   return !HI_haveExitingPic() && !HI_haveEnteringPic();
+   return (!HI_haveExitingPic() && !HI_haveEnteringPic()) || (estrnonempty(hi_wbs.li_lastexitpic) && estrempty(hi_wbs.li_nextenterpic));
 }
 
 static void HI_DrawBackground(void);
@@ -427,8 +427,11 @@ static void HI_drawGoing()
 
    // don't proceed by drawing the location indicators if using "enterpic".
    // Keep them for a more advanced scripting.
-   if(estrnonempty(hi_wbs.li_nextenterpic) || !overworld(hi_wbs.nextEpisode))
+   if(estrnonempty(hi_wbs.li_nextenterpic) || !overworld(hi_wbs.nextEpisode) ||
+      (estrnonempty(hi_wbs.li_lastexitpic) && estrempty(hi_wbs.li_nextenterpic)))
+   {
       return;
+   }
    
    previous = hi_wbs.last;
 
@@ -991,13 +994,20 @@ static void HI_DrawBackground(void)
          break;
       case INTR_GOING:
       case INTR_WAITING:
-         if(hi_interpic)
+         // Make sure to continue showing the last explicit exit pic if the next enterpic is not
+         // provided
+         if(estrnonempty(hi_wbs.li_lastexitpic) && estrempty(hi_wbs.li_nextenterpic))
+            V_DrawPatch(0, 0, &subscreen43, hi_exitpic);
+         else if(hi_interpic)
             V_DrawPatch(0, 0, &subscreen43, hi_interpic);
          else
             V_DrawBackground("FLOOR16", &subscreen43);
          break;
       default:
-         V_DrawBackground("FLOOR16", &subscreen43);
+         if(estrnonempty(hi_wbs.li_lastexitpic) && estrempty(hi_wbs.li_nextenterpic))
+            V_DrawPatch(0, 0, &subscreen43, hi_exitpic);
+         else
+            V_DrawBackground("FLOOR16", &subscreen43);
          break;
    }
 }
