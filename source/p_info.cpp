@@ -1631,6 +1631,7 @@ static levelvar_t levelvars[]=
    LI_BOOLNF("killfinale",         killFinale),
    LI_BOOLNF("killstats",          killStats),
    LI_ACTION("levelaction",        actions),
+   LI_ACTION("levelaction-bossdeath", actions),
    LI_STRING("levelname",          levelName),
    LI_STRING("levelpic",           levelPic),
    LI_STRING("levelpicnext",       nextLevelPic),
@@ -1902,6 +1903,9 @@ static void P_parseLevelAction(levelvar_t *var, const qstring &value)
    newAction->mobjtype = mobjType;
    newAction->special  = binding->actionNumber;
    memcpy(newAction->args, args, sizeof(args));
+
+   if(!strcasecmp(var->name, "levelaction-bossdeath"))
+      newAction->flags |= levelaction_t::BOSS_ONLY;
 
    // put it onto the linked list in LevelInfo
    newAction->next = LevelInfo.actions;

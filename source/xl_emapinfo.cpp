@@ -224,13 +224,15 @@ bool XLEMapInfoParser::doStateExpectHeader(XLTokenizer &tokenizer)
 enum multivalkw_e
 {
    MVKW_LEVELACTION,
+   MVKW_LEVELACTION_BOSSDEATH,
    MVKW_NUMKEYWORDS
 };
 
 // Keywords which allow multiple values
 static const char *multiValKeywords[MVKW_NUMKEYWORDS] =
 {
-   "levelaction"
+   "levelaction",
+   "levelaction-bossdeath"
 };
 
 // Expecting a MapInfo keyword
