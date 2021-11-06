@@ -13,6 +13,9 @@ Since v4.02.00 "Forseti"
 FEATURE: Introduced UMAPINFO (cross-port map definition) lump support for
          Eternity.
 
+         Added STANDING to ExtraData mapthing options. Currently the actual
+         feature is not implemented, but it's overloaded for sector actions.
+
 BUGFIX: Some activation specials (notably those beyond UDMF index 255) didn't
         work with EMAPINFO levelaction.
 
