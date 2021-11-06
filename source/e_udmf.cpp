@@ -346,6 +346,10 @@ bool UDMFParser::loadLinedefs(UDMFSetupSettings &setupSettings)
       {
          if(uld.midtex3d)
             ld->flags |= ML_3DMIDTEX;
+         if(uld.blocklandmonsters)
+            ld->flags |= ML_BLOCKLANDMONSTERS;
+         if(uld.blockplayers)
+            ld->flags |= ML_BLOCKPLAYERS;
          if(uld.firstsideonly)
             ld->extflags |= EX_ML_1SONLY;
          if(uld.blockeverything)
@@ -588,7 +592,9 @@ enum token_e
    t_blockeverything,
    t_blockfloaters,
    t_blocking,
+   t_blocklandmonsters,
    t_blockmonsters,
+   t_blockplayers,
    t_blocksound,
    t_ceilingid,
    t_ceilingterrain,
@@ -743,7 +749,9 @@ static keytoken_t gTokenList[] =
    TOKEN(blockeverything),
    TOKEN(blockfloaters),
    TOKEN(blocking),
+   TOKEN(blocklandmonsters),
    TOKEN(blockmonsters),
+   TOKEN(blockplayers),
    TOKEN(blocksound),
    TOKEN(ceilingid),
    TOKEN(ceilingterrain),
@@ -1036,7 +1044,9 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                   REQUIRE_INT(linedef, sidefront, sfrontset);
                   READ_NUMBER(linedef, sideback);
                   READ_BOOL(linedef, blocking);
+                  READ_BOOL(linedef, blocklandmonsters);
                   READ_BOOL(linedef, blockmonsters);
+                  READ_BOOL(linedef, blockplayers);
                   READ_BOOL(linedef, twosided);
                   READ_BOOL(linedef, dontpegtop);
                   READ_BOOL(linedef, dontpegbottom);

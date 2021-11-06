@@ -285,7 +285,10 @@ private:
       float alpha;               // opacity ratio
       qstring renderstyle;       // zdoomish renderstyle (add, translucent)
       qstring tranmap;           // boomish translucency lump
-      
+
+      // MBF21
+      bool blocklandmonsters; // ML_BLOCKLANDMONSTERS
+      bool blockplayers;      // ML_BLOCKPLAYERS
 
       ULinedef() : identifier(-1), sideback(-1), alpha(1)
       {
