@@ -625,6 +625,8 @@ void XL_BuildUMapInfoEpisodes()
 
    PODCollection<episodeinfo_t> epinfos;  // REVERSE LIST
 
+   bool changed = false;
+
    for(const char *levelname : orderedLevels)
    {
       const MetaTable *level = XL_UMapInfoForMapName(levelname);
@@ -633,7 +635,10 @@ void XL_BuildUMapInfoEpisodes()
       // Locate the last "clear" entry, if any. Use it to clear the items list.
       int mint = level->getInt("episode", XL_UMAPINFO_SPECVAL_NOT_SET);
       if(mint == XL_UMAPINFO_SPECVAL_CLEAR)
+      {
          items.makeEmpty();   // empty out the episode list
+         changed = true;
+      }
 
       // Now get the episode list.
       epinfos.makeEmpty();
@@ -666,12 +671,16 @@ void XL_BuildUMapInfoEpisodes()
          newitem.data = ccmd.duplicate(PU_STATIC);
          newitem.patch = epinfo.patch;
          items.add(newitem);
+         changed = true;
       }
    }
    // Now we have the items
    // Cut them off to 8 (UMAPINFO limit)
    if(items.getLength() > 8)
+   {
       items.resize(8);
+      changed = true;
+   }
 
    // Scan for missing patches and remove them
    // NOTE: this is a deviation from the UMAPINFO specs, by only invalidating the missing patches
@@ -739,6 +748,11 @@ void XL_BuildUMapInfoEpisodes()
          }
       }
    }
+
+   // the stock menu didn't get changed, so don't override!
+   // Also do not perform any change if the menu is merely cleared. We never want an empty menu.
+   if(!changed || items.isEmpty())
+      return;
 
    // Now we have the episode!
    mn_episode_override = estructalloc(menu_t, 1);
