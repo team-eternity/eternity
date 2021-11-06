@@ -837,9 +837,15 @@ void P_CheckCustomBossActions(const Mobj &mo, const player_t &player)
                   return;         // other boss not dead; quit
          }
       deathchecked = true;  // mark not to check twice
-      EV_ActivateSpecialNum(action->special, action->args, player.mo,
-                            !!(action->flags & levelaction_t::CLASSIC_SPECIAL));
-      // TODO: make this actively look for UDMF specials when not classic!
+      if(action->flags & levelaction_t::CLASSIC_SPECIAL)
+         EV_ActivateSpecialNum(action->special, action->args, player.mo, true);
+      else
+      {
+         ev_action_t *evaction = EV_UDMFEternityActionForSpecial(action->special);
+         if(evaction)
+            EV_ActivateAction(evaction, action->args, player.mo);
+      }
+
    }
 }
 
