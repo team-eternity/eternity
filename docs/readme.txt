@@ -342,7 +342,8 @@ These are features planned to debut in future versions of the Eternity Engine:
 4.03.00 "Glitnir" -- 11/06/21
 
   UMAPINFO support, overlay automap, sky and freelook improvements, save game
-  improvements, added the first MBF21 features and sector actions.
+  improvements, added the first MBF21 features and sector actions. Many bug
+  fixes.
 
 4.02.00 "Forseti" -- 01/24/21
 
