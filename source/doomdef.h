@@ -121,7 +121,7 @@ typedef enum {
 #define MTF_PSX_SPECTRE   (32|64|128)
 
 // Strife flags
-#define MTF_STRIFE_STAND       32
+#define MTF_STRIFE_STAND       32   // WARNING: this is already in MTF_EX_STAND
 #define MTF_STRIFE_FRIEND      64
 #define MTF_STRIFE_TRANSLUCENT 256
 #define MTF_STRIFE_MVCIS       512

@@ -184,6 +184,21 @@ static dehflagset_t mt_flagset =
    0,             // mode
 };
 
+//
+// Apparently it's safe to mix known with unknown flags, so we're going to use both basic and
+// extended flags from the same flag string
+//
+static dehflags_t mapthingflags_ex[] =
+{
+   { "STANDING", MTF_EX_STAND },
+   { nullptr, 0 }
+};
+static dehflagset_t mt_flagset_ex =
+{
+   mapthingflags_ex,
+   0,
+};
+
 // linedef options and related data structures
 
 static cfg_opt_t linedef_opts[] =
@@ -498,10 +513,12 @@ static void E_ProcessEDThings(cfg_t *cfg)
       // options
       tempstr = cfg_getstr(thingsec, FIELD_OPTIONS);
       if(*tempstr == '\0')
-         EDThings[i].options = 0;
+         EDThings[i].options = EDThings[i].extOptions = 0;
       else
+      {
          EDThings[i].options = (int16_t)(E_ParseFlags(tempstr, &mt_flagset));
-      EDThings[i].extOptions = 0;   // ioanch: not set by ExtraData
+         EDThings[i].extOptions = (uint32_t)(E_ParseFlags(tempstr, &mt_flagset_ex));
+      }
 
       // extended fields
 
