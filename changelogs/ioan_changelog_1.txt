@@ -10,6 +10,9 @@ Since v4.02.00 "Forseti"
 --------------------------------------------------------------------------------
 06.11.2021
 
+FEATURE: Introduced UMAPINFO (cross-port map definition) lump support for
+         Eternity.
+
 BUGFIX: Some activation specials (notably those beyond UDMF index 255) didn't
         work with EMAPINFO levelaction.
 
