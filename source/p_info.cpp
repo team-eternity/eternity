@@ -887,7 +887,23 @@ static void P_applyHexenMapInfo()
 
    // next map
    if((s = xlmi->getString("next", nullptr)))
+   {
+      // Check for finale!
+      if(!strcasecmp(s, "endgame1"))
+      {
+         LevelInfo.finaleType = FINALE_DOOM_CREDITS;
+      }
+      else if(!strcasecmp(s, "endgame2"))
+         LevelInfo.finaleType = FINALE_DOOM_DEIMOS;
+      else if(!strcasecmp(s, "endgame3") || !strcasecmp(s, "endbunny"))
+         LevelInfo.finaleType = FINALE_DOOM_BUNNY;
+      else if(!strcasecmp(s, "endgamec")) // TODO: check if it must be capital C
+         LevelInfo.endOfGame = true;
+      else if(!strcasecmp(s, "endgamew")) // TODO: same thing
+         LevelInfo.finaleType = FINALE_HTIC_WATER;
+      // TODO: continue checking next
       LevelInfo.nextLevel = s;
+   }
 
    // next secret
    if((s = xlmi->getString("secretnext", nullptr)))
