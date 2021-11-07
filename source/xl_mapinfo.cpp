@@ -44,6 +44,7 @@
 // MAPINFO Data Maintenance
 //
 
+static MetaTable defaultMap;
 static MetaTable mapInfoTable;
 
 //
@@ -129,17 +130,15 @@ protected:
    int            globalKW;
    MetaTable     *curInfo;
    qstring        mapName;
-   bool           defaultMap;
-   MetaTable      defaultInfo;
    xlmikeyword_t *kwd;
 
-   virtual bool doToken(XLTokenizer &token);
-   virtual void startLump();
+   virtual bool doToken(XLTokenizer &token) override;
+   virtual void startLump() override;
 
 public:
    XLMapInfoParser() 
       : XLParser("MAPINFO"), state(STATE_EXPECTCMD), globalKW(KW_NUMGLOBAL),
-        curInfo(nullptr), mapName(), defaultMap(), kwd(nullptr)
+        curInfo(nullptr), mapName(), kwd(nullptr)
    {
    }
 };
@@ -267,7 +266,6 @@ void XLMapInfoParser::startLump()
    curInfo  = nullptr;            // not in a current info definition
    kwd      = nullptr;            // no current keyword data
    mapName.clear();
-   defaultMap = false;
 }
 
 // Expecting a command at the global level
@@ -282,15 +280,14 @@ bool XLMapInfoParser::doStateExpectCmd(XLTokenizer &token)
       return false; // error, stop parsing.
    }
 
-   defaultMap = false;  // reset the "defaultmap" marker here, before processing anything new
    switch(kwNum)
    {
    case KW_GLOBAL_MAP:
       state = STATE_EXPECTMAPNAME; // map name or number should be next.
       break;
    case KW_GLOBAL_DEFAULTMAP:
-      defaultMap = true;
-      curInfo = &defaultInfo;
+      defaultMap.clearTable();   // must clear previous defaultmap data
+      curInfo = &defaultMap;
       state = STATE_EXPECTMAPCMD;
       break;
    default:
@@ -339,6 +336,9 @@ bool XLMapInfoParser::doStateExpectMapDName(XLTokenizer &token)
 {
    // we have enough information now to create a new XLMapInfo
    curInfo = XL_newMapInfo(mapName, token.getToken());
+
+   // Copy now whatever we have in defaultmap
+   curInfo->copyTableFrom(&defaultMap);
 
    state = STATE_EXPECTMAPCMD;
    return true;
