@@ -89,6 +89,7 @@ public:
       KW_GLOBAL_CD_END3,
       KW_GLOBAL_CD_INTRM,
       KW_GLOBAL_CD_TITLE,
+      KW_GLOBAL_DEFAULTMAP,
      
       KW_NUMGLOBAL
    };
@@ -127,6 +128,8 @@ protected:
    int            globalKW;
    MetaTable     *curInfo;
    qstring        mapName;
+   bool           defaultMap;
+   MetaTable      defaultInfo;
    xlmikeyword_t *kwd;
 
    virtual bool doToken(XLTokenizer &token);
@@ -135,7 +138,7 @@ protected:
 public:
    XLMapInfoParser() 
       : XLParser("MAPINFO"), state(STATE_EXPECTCMD), globalKW(KW_NUMGLOBAL),
-        curInfo(nullptr), mapName(), kwd(nullptr)
+        curInfo(nullptr), mapName(), defaultMap(), kwd(nullptr)
    {
    }
 };
@@ -150,6 +153,7 @@ const char *XLMapInfoParser::globalKeywords[KW_NUMGLOBAL] =
    "cd_end3_track",         // specifies END3 track for Hexen (TODO)
    "cd_intermission_track", // specifies intermission CD track (TODO)
    "cd_title_track",        // specifies titlescreen CD track (TODO)
+   "defaultmap",            // GZDoom defaultmap
 };
 
 // Keywords allowed in a map context
@@ -256,6 +260,7 @@ void XLMapInfoParser::startLump()
    curInfo  = nullptr;            // not in a current info definition
    kwd      = nullptr;            // no current keyword data
    mapName.clear();
+   defaultMap = false;
 }
 
 // Expecting a command at the global level
@@ -267,10 +272,16 @@ bool XLMapInfoParser::doStateExpectCmd(XLTokenizer &token)
    if(kwNum == KW_NUMGLOBAL)
       return false; // error, stop parsing.
 
+   defaultMap = false;  // reset the "defaultmap" marker here, before processing anything new
    switch(kwNum)
    {
    case KW_GLOBAL_MAP:
       state = STATE_EXPECTMAPNAME; // map name or number should be next.
+      break;
+   case KW_GLOBAL_DEFAULTMAP:
+      defaultMap = true;
+      curInfo = &defaultInfo;
+      state = STATE_EXPECTMAPCMD;
       break;
    default:
       globalKW = kwNum;
