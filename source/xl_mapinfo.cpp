@@ -31,6 +31,7 @@
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_gi.h"
+#include "d_main.h"
 #include "e_lib.h"
 #include "metaapi.h"
 #include "v_misc.h"
@@ -276,7 +277,10 @@ bool XLMapInfoParser::doStateExpectCmd(XLTokenizer &token)
    int   kwNum    = E_StrToNumLinear(globalKeywords, KW_NUMGLOBAL, tokenVal.constPtr());
 
    if(kwNum == KW_NUMGLOBAL)
+   {
+      usermsg("MAPINFO: unknown item '%s'; stopping parsing.", tokenVal.constPtr());
       return false; // error, stop parsing.
+   }
 
    defaultMap = false;  // reset the "defaultmap" marker here, before processing anything new
    switch(kwNum)
