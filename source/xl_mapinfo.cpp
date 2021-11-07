@@ -131,6 +131,7 @@ protected:
    MetaTable     *curInfo;
    qstring        mapName;
    xlmikeyword_t *kwd;
+   bool classicHexenMode;  // use ZDoom's method of determining how to compute some fields
 
    virtual bool doToken(XLTokenizer &token) override;
    virtual void startLump() override;
@@ -138,7 +139,7 @@ protected:
 public:
    XLMapInfoParser() 
       : XLParser("MAPINFO"), state(STATE_EXPECTCMD), globalKW(KW_NUMGLOBAL),
-        curInfo(nullptr), mapName(), kwd(nullptr)
+        curInfo(nullptr), mapName(), kwd(nullptr), classicHexenMode()
    {
    }
 };
@@ -265,6 +266,7 @@ void XLMapInfoParser::startLump()
    globalKW = KW_NUMGLOBAL;    // no current global keyword
    curInfo  = nullptr;            // not in a current info definition
    kwd      = nullptr;            // no current keyword data
+   classicHexenMode = false;
    mapName.clear();
 }
 
@@ -312,21 +314,27 @@ bool XLMapInfoParser::doStateExpectGlobalVal(XLTokenizer &token)
 // MakeMAPxy
 //
 // Utility to convert Hexen's map numbers into MAPxy map name strings.
+// Returns true if it was indeed just a number
 //
-static void MakeMAPxy(qstring &mapName)
+static bool MakeMAPxy(qstring &mapName)
 {
    char *endptr = nullptr;
    auto  num    = mapName.toLong(&endptr, 10);
 
    if(*endptr == '\0' && num >= 1 && num <= 99)
+   {
       mapName.Printf(9, "MAP%02ld", num);
+      return true;
+   }
+   return false;
 }
 
 // Expecting the map lump name or number after "map"
 bool XLMapInfoParser::doStateExpectMapName(XLTokenizer &token)
 {
    mapName = token.getToken();
-   MakeMAPxy(mapName);
+   if(MakeMAPxy(mapName))
+      classicHexenMode = true;   // WARNING: GZDoom keeps this on true for the rest of the lump.
    state = STATE_EXPECTMAPDNAME;
    return true;
 }
@@ -394,6 +402,9 @@ bool XLMapInfoParser::doStateExpectSkyNum(XLTokenizer &token)
    if(*endptr) // not a number, it's optional, so try something else
       return doStateExpectMapCmd(token);
 
+   // Must apply GZDoom's scale if so far the format is modern
+   if(!classicHexenMode)
+      val *= 256;
    curInfo->setDouble(kwd->intkey, val);
    state = STATE_EXPECTMAPCMD; // go back to scanning for a map command
    return true;
