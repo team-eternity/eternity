@@ -2392,7 +2392,7 @@ bool P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname, qstring
 
    if(demo_version > 203)  // do NOT read any MapInfo in MBF or less
    {
-      // FIXME: this may need finer compatibility check if it materializes
+      // FIXME: this may need finer compatibility check, especially if we seek demo compatibility.
       const char *mapname = dir->getLumpName(lumpnum);
       if((info = XL_UMapInfoForMapName(mapname)))
       {
