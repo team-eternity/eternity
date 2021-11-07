@@ -1029,7 +1029,7 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
    case dehmobjinfoid_flags2:
       mi->flags2 = value;
       break;
-   case 23:
+   case dehmobjinfoid_raisestate:
       mi->raisestate = E_GetStateNumForDEHNum(value);
       break;
    case dehmobjinfoid_translucency:
@@ -1040,6 +1040,7 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
       break;
    case dehmobjinfoid_bloodcolor:
       mi->bloodcolor = value;
+      break;
    case dehmobjinfoid_droppeditem:
       E_SetDropItem(mi, value);
       break;
