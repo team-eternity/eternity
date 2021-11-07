@@ -196,7 +196,7 @@ with any concerns.
 ===============================================================================
 * Features New to Version 4.03.00 *
 
-** UMAPINFO and EMAPINFO **
+** Level Info **
 
   * Implemented full UMAPINFO (cross-port level info) support in Eternity.
   * Added the following properties to EMAPINFO: endpic, finaletype endpic,
@@ -205,6 +205,8 @@ with any concerns.
     format ExMy or MAPxx, it wasn't possible to use parameterized special
     Teleport_NewMap or linedef type 74 (Exit to map). THANKS TO Afterglow FOR
     THIS FIX.
+  * Increased the support for MAPINFO fields, as needed with many megawads
+    (still in progress).
   * Fixed various bugs about unusual level transitions. Thanks to the UMAPINFO
     standard for driving these fixes.
   * Improved support for numbering the ExMy and MAPxy going beyond their
