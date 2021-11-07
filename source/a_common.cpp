@@ -91,7 +91,7 @@ void P_MakeSeeSound(Mobj *actor, pr_class_t rngnum)
       }
       
       // haleyjd: generalize to all bosses
-      if(actor->flags2 & MF2_BOSS)
+      if((actor->flags2 & MF2_BOSS) || (actor->flags5 & MF5_FULLVOLSOUNDS))
          emitter = nullptr;
 
       S_StartSound(emitter, sound);
@@ -546,7 +546,7 @@ void A_Scream(actionargs_t *actionargs)
 
    // Check for bosses.
    // haleyjd: generalize to all bosses
-   if(actor->flags2 & MF2_BOSS)
+   if((actor->flags2 & MF2_BOSS) || (actor->flags5 & MF5_FULLVOLSOUNDS))
       S_StartSound(nullptr, sound); // full volume
    else
       S_StartSound(actor, sound);

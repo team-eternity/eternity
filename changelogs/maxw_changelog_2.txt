@@ -133,6 +133,12 @@ Fixed -dog. Made it so -dogs only works if it's not the last command-line arg.
 [MBF21]
  * Added support for dehacked frames Args[6-8] (1-5 were already present).
 
+--------------------------------------------------------------------------------
+2021/09/25
+[MBF21] 
+ * Added support for the FULLVOLSOUNDS thing flag, which makes see and death
+   sounds maximum volume.
+
 ================================================================================
 EOF
 ================================================================================

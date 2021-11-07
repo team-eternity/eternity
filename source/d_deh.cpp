@@ -385,6 +385,7 @@ static dehflags_t deh_mobjflags[] =
 
    // flags5 bits
   {"NOTAUTOAIMED",       0x00000001, 4}, // can't be autoaimed (for real)
+  {"FULLVOLSOUNDS",      0x00000002, 4}, // full-volume see/death sounds
 
   { nullptr,             0 }             // nullptr terminator
 };
