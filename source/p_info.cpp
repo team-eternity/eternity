@@ -911,8 +911,12 @@ static void P_applyHexenMapInfo()
       LevelInfo.killStats = !!i;
    if((i = xlmi->getInt("evenlighting", -1)) >= 0)
       LevelInfo.unevenLight = !i;
+   if((i = xlmi->getInt("map07special", -1)) >= 0)
+      LevelInfo.bossSpecs |= BSPEC_MAP07_1 | BSPEC_MAP07_2;
    if((i = xlmi->getInt("noautosequences", -1)) >= 0)
       LevelInfo.noAutoSequences = !!i;
+   if((i = xlmi->getInt("nojump", -1)) >= 0)
+      LevelInfo.disableJump = true;
 
    /*
    Stuff with "Unfinished Business":
