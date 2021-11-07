@@ -388,7 +388,13 @@ bool XLMapInfoParser::doStateExpectSkyName(XLTokenizer &token)
 // Expecting the scroll delta to apply to that sky texture
 bool XLMapInfoParser::doStateExpectSkyNum(XLTokenizer &token)
 {
-   curInfo->setInt(kwd->intkey, token.getToken().toInt());
+   char *endptr = nullptr;
+   double val = token.getToken().toDouble(&endptr);
+
+   if(*endptr) // not a number, it's optional, so try something else
+      return doStateExpectMapCmd(token);
+
+   curInfo->setDouble(kwd->intkey, val);
    state = STATE_EXPECTMAPCMD; // go back to scanning for a map command
    return true;
 }

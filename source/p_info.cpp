@@ -859,14 +859,14 @@ static void P_applyHexenMapInfo()
    {
       LevelInfo.skyName  = s;
       // FIXME: currently legacy MAPINFO is still integer-only
-      LevelInfo.skyDelta = xlmi->getInt("sky1delta", 0) * FRACUNIT;
+      LevelInfo.skyDelta = M_DoubleToFixed(xlmi->getDouble("sky1delta", 0));
 
       LevelInfo.enableBoomSkyHack = false;
    }
    if((s = xlmi->getString("sky2", nullptr)))
    {
       LevelInfo.sky2Name  = s;
-      LevelInfo.sky2Delta = xlmi->getInt("sky2delta", 0) * FRACUNIT;
+      LevelInfo.sky2Delta = M_DoubleToFixed(xlmi->getDouble("sky2delta", 0));
 
       LevelInfo.enableBoomSkyHack = false;
    }
