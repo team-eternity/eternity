@@ -26,6 +26,7 @@
 #include "z_zone.h"
 
 #include "d_gi.h"
+#include "d_main.h"
 #include "e_fonts.h"
 #include "e_hash.h"
 #include "in_lude.h"
@@ -217,11 +218,7 @@ bool XLUMapInfoParser::doStateExpectKey(XLTokenizer &tokenizer)
    // Check the key
    const qstring &newkey = tokenizer.getToken();
    if(!rules.objectForKey(newkey.constPtr()))
-   {
-      // Don't allow unrecognized properties
-      I_Error("UMAPINFO: unexpected property '%s' in map '%s'\n", newkey.constPtr(),
-              curInfo->getKey());
-   }
+      usermsg("UMAPINFO: unknown property '%s' in map '%s'", newkey.constPtr(), curInfo->getKey());
 
    key = newkey;
    value = "";
@@ -255,7 +252,11 @@ bool XLUMapInfoParser::doStateExpectValue(XLTokenizer &tokenizer)
    int type = tokenizer.getTokenType();
 
    const propertyrule_t *rule = rules.objectForKey(key.constPtr());
-   I_Assert(rule, "Key '%s' unexpectedly passed\n", key.constPtr());
+   if(!rule)
+   {
+      state = STATE_POSTVALUE;
+      return true;
+   }
 
    //
    // Helper to check if it's a number
@@ -424,10 +425,9 @@ bool XLUMapInfoParser::doStatePostValue(XLTokenizer &tokenizer)
       return true;
    }
    const propertyrule_t *rule = rules.objectForKey(key.constPtr());
-   I_Assert(rule, "Expected to have a rule for '%s'\n", key.constPtr());
 
-   if((rule->type == PropertyType::addBossActionOrClear ||
-       rule->type == PropertyType::addEpisodeOrClear) && !gotClear &&
+   if(rule && (rule->type == PropertyType::addBossActionOrClear ||
+               rule->type == PropertyType::addEpisodeOrClear) && !gotClear &&
       valueIndex != 2)
    {
       I_Error("UMAPINFO: expected 3 arguments for '%s' in map '%s'\n", key.constPtr(),
