@@ -175,6 +175,9 @@ const char *XLMapInfoParser::mapKeywords[XL_NUMMAPINFO_FIELDS] =
    "nointermission",  // kill intermission after map
    "evenlighting",    // map has no fake contrast
    "noautosequences", // disables auto-assignment of default sound sequences
+   "nojump",          // disable jumping
+   "nocrouch",        // unused
+   "map07special",    // map07 boss special
 };
 
 // holds data about how to parse and store a map keyword's data
@@ -235,7 +238,10 @@ static xlmikeyword_t mapKeywordParseTable[XL_NUMMAPINFO_FIELDS] =
    XLMI_QSTRING(XL_MAPINFO_MUSIC),
    XLMI_BOOLEAN(XL_MAPINFO_NOINTERMISSION),
    XLMI_BOOLEAN(XL_MAPINFO_EVENLIGHTING),
-   XLMI_BOOLEAN(XL_MAPINFO_NOAUTOSEQUENCES)
+   XLMI_BOOLEAN(XL_MAPINFO_NOAUTOSEQUENCES),
+   XLMI_BOOLEAN(XL_MAPINFO_NOJUMP),
+   XLMI_BOOLEAN(XL_MAPINFO_NOCROUCH),
+   XLMI_BOOLEAN(XL_MAPINFO_MAP07SPECIAL),
 };
 
 //
