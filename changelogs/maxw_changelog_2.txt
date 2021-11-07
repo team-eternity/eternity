@@ -138,7 +138,8 @@ Fixed -dog. Made it so -dogs only works if it's not the last command-line arg.
 [MBF21] 
  * Added support for the FULLVOLSOUNDS thing flag, which makes see and death
    sounds maximum volume.
- * Added support of thingtype "MBF21 Bits".
+ * Added dehacked support for thingtype "MBF21 Bits".
+ * Added dehacked support for "Fast speed".
 
 ================================================================================
 EOF

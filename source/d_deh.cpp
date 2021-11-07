@@ -190,6 +190,7 @@ enum dehmobjinfoid_e : int
    dehmobjinfoid_bloodcolor,
    dehmobjinfoid_droppeditem,
    dehmobjinfoid_mbf21flags,
+   dehmobjinfoid_fastspeed,
    DEH_MOBJINFOMAX
 };
 
@@ -224,6 +225,7 @@ static constexpr const char *deh_mobjinfo[DEH_MOBJINFOMAX] =
   "Blood color",         // .bloodcolor haleyjd 05/08/03
   "Dropped item",        // .meta sorta kinda it's complicated
   "MBF21 Bits",          // .flags[2-5] (they're scattered across)
+  "Fast speed",          // .meta sorta kinda it's complicated
 };
 
 // Strings that are used to indicate flags ("Bits" in mobjinfo)
@@ -1135,6 +1137,9 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
       break;
    case dehmobjinfoid_droppeditem:
       E_SetDropItem(mi, value);
+      break;
+   case dehmobjinfoid_fastspeed:
+      G_SpeedSetAddThing(mobjInfoIndex, mi->speed, value);
       break;
    default:
       break;
