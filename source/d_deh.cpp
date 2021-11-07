@@ -108,6 +108,15 @@ struct deh_block
   void (*const fptr)(DWFILE *, char *); // handler
 };
 
+struct dehflagremap_t
+{
+   unsigned int inFlag;
+   int          inIndex;
+   unsigned int outFlag;
+   int          outIndex;
+};
+
+
 #define DEH_BUFFERMAX 1024 // input buffer area size, hardcoded for now
 #define DEH_MAXKEYLEN 32   // as much of any key as we'll look at
 #define DEH_MAXKEYLEN_FMT "31"  // for scanf format strings
@@ -180,6 +189,7 @@ enum dehmobjinfoid_e : int
    dehmobjinfoid_flags3,
    dehmobjinfoid_bloodcolor,
    dehmobjinfoid_droppeditem,
+   dehmobjinfoid_mbf21flags,
    DEH_MOBJINFOMAX
 };
 
@@ -213,6 +223,7 @@ static constexpr const char *deh_mobjinfo[DEH_MOBJINFOMAX] =
   "Bits3",               // .flags3 haleyjd 02/02/03
   "Blood color",         // .bloodcolor haleyjd 05/08/03
   "Dropped item",        // .meta sorta kinda it's complicated
+  "MBF21 Bits",          // .flags[2-5] (they're scattered across)
 };
 
 // Strings that are used to indicate flags ("Bits" in mobjinfo)
@@ -396,6 +407,60 @@ static dehflagset_t dehacked_flags =
 {
    deh_mobjflags, // flaglist
 };
+
+static dehflags_t deh_mbf21mobjflags[] =
+{
+   { "LOGRAV",         0x00000001 }, // low gravity
+   { "SHORTMRANGE",    0x00000002 }, // short missile range
+   { "DMGIGNORED",     0x00000004 }, // other things ignore its attacks
+   { "NORADIUSDMG",    0x00000008 }, // doesn't take splash damage
+   { "FORCERADIUSDMG", 0x00000010 }, // causes splash damage even if target immune
+   { "HIGHERMPROB",    0x00000020 }, // higher missile attack probability
+   { "RANGEHALF",      0x00000040 }, // use half distance for missile attack probability
+   { "NOTHRESHOLD",    0x00000080 }, // no targeting threshold
+   { "LONGMELEE",      0x00000100 }, // long melee range
+   { "BOSS",           0x00000200 }, // full volume see / death sound + splash immunity
+   { "MAP07BOSS1",     0x00000400 }, // Tag 666 "boss" on doom 2 map 7
+   { "MAP07BOSS2",     0x00000800 }, // Tag 667 "boss" on doom 2 map 7
+   { "E1M8BOSS",       0x00001000 }, // E1M8 boss
+   { "E2M8BOSS",       0x00002000 }, // E2M8 boss
+   { "E3M8BOSS",       0x00004000 }, // E3M8 boss
+   { "E4M6BOSS",       0x00008000 }, // E4M6 boss
+   { "E4M8BOSS",       0x00010000 }, // E4M8 boss
+   { "RIP",            0x00020000 }, // projectile rips through targets
+   { "FULLVOLSOUNDS",  0x00040000 }, // full volume see / death sound
+   { nullptr,          0          }  // nullptr terminator
+};
+
+static dehflagset_t dehacked_mbf21flags =
+{
+   deh_mbf21mobjflags, // flaglist
+};
+
+dehflagremap_t dehacked_mbf21mobjflags_remappings[earrlen(deh_mbf21mobjflags)] =
+{
+   { 0x00000001, 0, MF2_LOGRAV,         1 },
+   { 0x00000002, 0, MF2_SHORTMRANGE,    1 },
+   { 0x00000004, 0, MF3_DMGIGNORED,     2 },
+   { 0x00000008, 0, MF4_NORADIUSDMG,    3 },
+   { 0x00000010, 0, MF4_FORCERADIUSDMG, 3 },
+   { 0x00000020, 0, MF2_HIGHERMPROB,    1 },
+   { 0x00000040, 0, MF2_RANGEHALF,      1 },
+   { 0x00000080, 0, MF3_NOTHRESHOLD,    2 },
+   { 0x00000100, 0, MF2_LONGMELEE,      1 },
+   { 0x00000200, 0, MF2_BOSS,           1 },
+   { 0x00000400, 0, MF2_MAP07BOSS1,     1 },
+   { 0x00000800, 0, MF2_MAP07BOSS2,     1 },
+   { 0x00001000, 0, MF2_E1M8BOSS,       1 },
+   { 0x00002000, 0, MF2_E2M8BOSS,       1 },
+   { 0x00004000, 0, MF2_E3M8BOSS,       1 },
+   { 0x00008000, 0, MF2_E4M6BOSS,       1 },
+   { 0x00010000, 0, MF2_E4M8BOSS,       1 },
+   { 0x00020000, 0, MF3_RIP,            2 },
+   { 0x00040000, 0, MF5_FULLVOLSOUNDS,  4 },
+   { 0,          0, 0,                  0 }
+};
+
 
 // STATE - Dehacked block name = "Frame" and "Pointer"
 // Usage: Frame nn
@@ -939,6 +1004,33 @@ unsigned int *deh_ParseFlagsCombined(const char *strval)
    return dehacked_flags.results;
 }
 
+static unsigned int *deh_ParseFlagsCombinedRemapped(
+   const char *strval, dehflagset_t *flagset, dehflagremap_t *flagremapping
+)
+{
+   char *buffer;
+   char *bufferptr;
+   unsigned int results[MAXFLAGFIELDS];
+
+   bufferptr = buffer = estrdup(strval);
+
+   flagset->mode = DEHFLAGS_MODE_ALL;
+
+   deh_ParseFlags(flagset, &bufferptr);
+
+   efree(buffer);
+
+   memcpy(results, flagset->results, MAXFLAGFIELDS * sizeof(unsigned int));
+   memset(flagset->results, 0, MAXFLAGFIELDS * sizeof(unsigned int));
+   for(dehflagremap_t *currRemap = flagremapping; currRemap->inFlag; currRemap++)
+   {
+      if(results[currRemap->inIndex] & currRemap->inFlag)
+         flagset->results[currRemap->outIndex] |= currRemap->outFlag;
+   }
+
+   return flagset->results;
+}
+
 static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
 {
    mobjinfo_t *mi;
@@ -1152,6 +1244,24 @@ static void deh_procThing(DWFILE *fpin, char *line)
             }
 
             SetMobjInfoValue(indexnum, dehmobjinfoid_flags3, value);
+         }
+         else if(dehmobjinfoid == dehmobjinfoid_mbf21flags)
+         {
+            if(!value)
+            {
+               mobjinfo_t *mi = mobjinfo[indexnum];
+
+               deh_ParseFlagsCombinedRemapped(strval, &dehacked_mbf21flags, dehacked_mbf21mobjflags_remappings);
+
+               deh_LogPrintf("MBF21 Bits = %s \n", strval);
+
+               mi->flags  = dehacked_mbf21flags.results[DEHFLAGS_MODE1];
+               mi->flags2 = dehacked_mbf21flags.results[DEHFLAGS_MODE2];
+               mi->flags3 = dehacked_mbf21flags.results[DEHFLAGS_MODE3];
+               mi->flags4 = dehacked_mbf21flags.results[DEHFLAGS_MODE3];
+               mi->flags5 = dehacked_mbf21flags.results[DEHFLAGS_MODE3];
+            }
+
          }
          else
             SetMobjInfoValue(indexnum, dehmobjinfoid, value);
