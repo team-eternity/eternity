@@ -844,6 +844,15 @@ static void R_makeSpans(const R_FlatFunc flatfunc, const R_SlopeFunc slopefunc,
       spanstart[b2--] = x;
 }
 
+//
+// Get the sky column from input parms. Shared by the sky drawers here.
+//
+inline static int32_t R_getSkyColum(angle_t an, int x, angle_t flip, int offset)
+{
+   return ((((an + xtoviewangle[x]) ^ flip) / (1 << (ANGLETOSKYSHIFT - FRACBITS))) + offset)
+         / FRACUNIT;
+}
+
 // haleyjd: moved here from r_newsky.c
 static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visplane_t *pl)
 {
@@ -862,9 +871,9 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    if(!(skyflat1 && skyflat2))
       return; // feh!
 
-   int offset      = skyflat1->columnoffset >> 16;
+   int offset      = skyflat1->columnoffset;
    int skyTexture  = texturetranslation[skyflat1->texture];
-   int offset2     = skyflat2->columnoffset >> 16;
+   int offset2     = skyflat2->columnoffset;
    int skyTexture2 = texturetranslation[skyflat2->texture];
 
    const skytexture_t *sky1 = R_GetSkyTexture(skyTexture);
@@ -887,10 +896,8 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    {
       if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
       {
-         column.source = 
-            R_GetRawColumn(skyTexture2,
-               (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset2);
-            
+         column.source = R_GetRawColumn(skyTexture2, R_getSkyColum(an, x, 0, offset2));
+
          colfunc(column);
       }
    }
@@ -909,10 +916,8 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    {
       if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
       {
-         column.source =
-            R_GetRawColumn(skyTexture,
-               (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset);
-            
+         column.source = R_GetRawColumn(skyTexture, R_getSkyColum(an, x, 0, offset));
+
          colfunc(column);
       }
    }
@@ -998,7 +1003,8 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
       texture       = skyflat->texture;            // Default texture
       sky           = R_GetSkyTexture(texture);    // haleyjd 08/30/02
       flip          = 0;                           // Doom flips it
-      offset        = skyflat->columnoffset >> 16; // Hexen-style scrolling
+      // Hexen-style scrolling
+      offset        = skyflat->columnoffset;
 
       // Set y offset depending on level info or depending on R_GetSkyTexture
       if(skyflat == R_SkyFlatForIndex(0) && LevelInfo.skyRowOffset != SKYROWOFFSET_DEFAULT)
@@ -1037,9 +1043,7 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
 
       if(column.y1 <= column.y2)
       {
-         column.source = R_GetRawColumn(texture,
-            (((an + xtoviewangle[x])^flip) >> ANGLETOSKYSHIFT) + offset);
-
+         column.source = R_GetRawColumn(texture, R_getSkyColum(an, x, flip, offset));
          colfunc(column);
       }
    }

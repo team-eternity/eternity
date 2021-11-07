@@ -274,6 +274,8 @@ with any concerns.
     pitch in two new EDF gameproperties fields: game.lookpitchup and
     game.lookpitchdown.
 
+  * Horizontally scrolling skies (e.g. clouds) now move smoothly.
+
 ** Save game improvements **
 
   * Overhauled the save and load menus. You can now have an arbitrary amount of
