@@ -1158,8 +1158,8 @@ static void WI_prepareEnteringStage()
 {
    if(GameModeInfo->id != commercial && WI_isFinale())
       WI_initNoState(1);   // do it (roughly?) like in PrBoom+um
-   else if(GameModeInfo->id == commercial && (estrempty(wbs->li_nextenterpic) ||
-                                              demo_version <= 203))
+   else if(GameModeInfo->id == commercial &&
+           (estrempty(wbs->li_nextenterpic) || WI_isFinale() || demo_version <= 203))
    {
       // Also keep demo compatibility, since PrBoom+um doesn't show the next enterpic more than 10
       // tics. But it looks better if it mimics the Doom 1 time.
@@ -1929,7 +1929,8 @@ static void WI_DrawBackground()
    char  name[9];  // limited to 8 characters
 
    int epsd = state == StatCount ? wbs->epsd : wbs->nextEpisode;
-   if(state != StatCount && estrnonempty(wbs->li_nextenterpic))
+   // also do not draw the nextenterpic if now's a finale
+   if(state != StatCount && estrnonempty(wbs->li_nextenterpic) && !WI_isFinale())
    {
       strncpy(name, wbs->li_nextenterpic, sizeof(name));
       name[sizeof(name) - 1] = 0;
