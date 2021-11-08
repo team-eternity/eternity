@@ -885,29 +885,54 @@ static void P_applyHexenMapInfo()
 
    // TODO: cluster, warptrans
 
+   //
+   // Sets the normal or secret next option
+   //
+   auto setNextOrFinale = [](const char *s, bool secret)
+   {
+      int &finaleType = secret ? LevelInfo.finaleSecretType : LevelInfo.finaleType;
+      bool &finaleOnly = secret ? LevelInfo.finaleSecretOnly : LevelInfo.finaleNormalOnly;
+      const char *&nextLevel = secret ? LevelInfo.nextSecret : LevelInfo.nextLevel;
+
+      bool getfinale = true;
+
+      // Check for finale!
+      // TODO: check if endgameC and endgameW must be with capitals
+      if(!strcasecmp(s, "endgame1"))
+         finaleType = FINALE_DOOM_CREDITS;
+      else if(!strcasecmp(s, "endgame2"))
+         finaleType = FINALE_DOOM_DEIMOS;
+      else if(!strcasecmp(s, "endgame3") || !strcasecmp(s, "endbunny"))
+         finaleType = FINALE_DOOM_BUNNY;
+      else if((!strcasecmp(s, "endgamec") && s[7] == 'C') || !strcasecmp(s, "endcast"))
+      {
+         LevelInfo.endOfGame = true;
+         finaleOnly = true;
+      }
+      else if((!strcasecmp(s, "endgamew") && s[7] == 'W') || !strcasecmp(s, "endunderwater"))
+         finaleType = FINALE_HTIC_WATER;
+      else if(!strcasecmp(s, "enddemon"))
+         finaleType = FINALE_HTIC_DEMON;
+      else if(!strcasecmp(s, "endunderwater"))
+         finaleType = FINALE_HTIC_WATER;
+      else
+      {
+         nextLevel = s;
+         getfinale = false;
+      }
+      // FIXME: endpic support (figure out the syntax) and others
+      if(getfinale)
+         P_EnsureDefaultStoryText(secret);
+
+   };
+
    // next map
    if((s = xlmi->getString("next", nullptr)))
-   {
-      // Check for finale!
-      if(!strcasecmp(s, "endgame1"))
-      {
-         LevelInfo.finaleType = FINALE_DOOM_CREDITS;
-      }
-      else if(!strcasecmp(s, "endgame2"))
-         LevelInfo.finaleType = FINALE_DOOM_DEIMOS;
-      else if(!strcasecmp(s, "endgame3") || !strcasecmp(s, "endbunny"))
-         LevelInfo.finaleType = FINALE_DOOM_BUNNY;
-      else if(!strcasecmp(s, "endgamec")) // TODO: check if it must be capital C
-         LevelInfo.endOfGame = true;
-      else if(!strcasecmp(s, "endgamew")) // TODO: same thing
-         LevelInfo.finaleType = FINALE_HTIC_WATER;
-      // TODO: continue checking next
-      LevelInfo.nextLevel = s;
-   }
+      setNextOrFinale(s, false);
 
    // next secret
    if((s = xlmi->getString("secretnext", nullptr)))
-      LevelInfo.nextSecret = s;
+      setNextOrFinale(s, true);
 
    // titlepatch for intermission
    if((s = xlmi->getString("titlepatch", nullptr)))
@@ -1970,11 +1995,12 @@ static void P_processEMapInfo(MetaTable *info)
 //
 // If interText is not set, give it some dummy value
 //
-void P_EnsureDefaultStoryText()
+void P_EnsureDefaultStoryText(bool secret)
 {
    // no text defined? make up something.
-   if(!LevelInfo.interText)
-      LevelInfo.interText = "You have won.";
+   const char *&interText = secret ? LevelInfo.interTextSecret : LevelInfo.interText;
+   if(!interText)
+      interText = "You have won.";
 }
 
 //
@@ -2219,7 +2245,7 @@ static bool P_processUMapInfo(MetaTable *info, const char *mapname, qstring *err
       // Also generalize this (and same below) for both exits. The presence of the respective
       // intertext will dictate whether it will really happen.
       reuseSecretStoryForMainExit();
-      P_EnsureDefaultStoryText();
+      P_EnsureDefaultStoryText(false);
    }
    strval = info->getString("endpic", nullptr);
    if(strval)
@@ -2230,7 +2256,7 @@ static bool P_processUMapInfo(MetaTable *info, const char *mapname, qstring *err
       LevelInfo.endPic = strval;
 
       reuseSecretStoryForMainExit();
-      P_EnsureDefaultStoryText();
+      P_EnsureDefaultStoryText(false);
    }
    val = info->getInt("endbunny", XL_UMAPINFO_SPECVAL_NOT_SET);
    if(val == XL_UMAPINFO_SPECVAL_TRUE)
@@ -2238,7 +2264,7 @@ static bool P_processUMapInfo(MetaTable *info, const char *mapname, qstring *err
       LevelInfo.endOfGame = false;
       LevelInfo.finaleType = FINALE_DOOM_BUNNY;
       reuseSecretStoryForMainExit();
-      P_EnsureDefaultStoryText();
+      P_EnsureDefaultStoryText(false);
    }
    val = info->getInt("endcast", XL_UMAPINFO_SPECVAL_NOT_SET);
    if(val == XL_UMAPINFO_SPECVAL_TRUE)
@@ -2246,7 +2272,7 @@ static bool P_processUMapInfo(MetaTable *info, const char *mapname, qstring *err
       LevelInfo.endOfGame = true;
       LevelInfo.finaleType = FINALE_TEXT;
       reuseSecretStoryForMainExit();
-      P_EnsureDefaultStoryText();
+      P_EnsureDefaultStoryText(false);
    }
 
    // NOTE: according to specs and PrBoom+um, nointermission only affects finale-early

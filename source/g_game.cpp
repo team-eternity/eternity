@@ -1996,7 +1996,7 @@ void G_ForceFinale()
    if(LevelInfo.finaleType == FINALE_TEXT) // modify finale type?
       LevelInfo.finaleType = GameModeInfo->teleEndGameFinaleType;
 
-   P_EnsureDefaultStoryText();
+   P_EnsureDefaultStoryText(false);
 
    // set other variables for consistency
    LevelInfo.killFinale       = false;
