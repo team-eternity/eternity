@@ -839,6 +839,75 @@ static const char **infoSoundPtrs[NUMMAPINFOSOUNDS] =
 };
 
 //
+// Handle MAPINFO next and secretnext which work both for next level and finale
+//
+static void P_handleMapInfoNext(const MetaTable *xlmi)
+{
+   //
+   // Sets the normal or secret next option. Returns true if it's a finale special
+   //
+   auto setNextOrFinale = [](const char *s, bool secret) -> bool
+   {
+      int &finaleType = secret ? LevelInfo.finaleSecretType : LevelInfo.finaleType;
+      const char *&nextLevel = secret ? LevelInfo.nextSecret : LevelInfo.nextLevel;
+
+      bool getfinale = true;
+
+      // Check for finale!
+      // TODO: check if endgameC and endgameW must be with capitals
+      if (!strcasecmp(s, "endgame1"))
+         finaleType = FINALE_DOOM_CREDITS;
+      else if (!strcasecmp(s, "endgame2"))
+         finaleType = FINALE_DOOM_DEIMOS;
+      else if (!strcasecmp(s, "endgame3") || !strcasecmp(s, "endbunny"))
+         finaleType = FINALE_DOOM_BUNNY;
+      else if ((!strcasecmp(s, "endgamec") && s[7] == 'C') || !strcasecmp(s, "endcast"))
+         LevelInfo.endOfGame = true;
+      else if ((!strcasecmp(s, "endgamew") && s[7] == 'W') || !strcasecmp(s, "endunderwater"))
+         finaleType = FINALE_HTIC_WATER;
+      else if (!strcasecmp(s, "enddemon"))
+         finaleType = FINALE_HTIC_DEMON;
+      else
+      {
+         nextLevel = s;
+         getfinale = false;
+      }
+      // FIXME: endpic support (figure out the syntax) and others
+      if (getfinale)
+         P_EnsureDefaultStoryText(secret);
+      return getfinale;
+   };
+
+   // Check prior end-of-game
+
+   const char *next = xlmi->getString("next", nullptr);
+   const char *secretnext = xlmi->getString("secretnext", nullptr);
+
+   if(!next && !secretnext)   // no next map set
+      return;
+
+   bool nextfinale = false;
+   if(next)
+      nextfinale = setNextOrFinale(next, false);
+   bool secretnextfinale = false;
+   if(secretnext)
+      secretnextfinale = setNextOrFinale(secretnext, true);
+
+   // Disable any previously set restrictions
+   if(nextfinale)
+      LevelInfo.finaleSecretOnly = false;
+   if(secretnextfinale)
+      LevelInfo.finaleNormalOnly = false;
+
+   // Check for end of game and disable if we actually set the next map
+   if(LevelInfo.endOfGame)
+      if(next && !nextfinale)
+         LevelInfo.finaleSecretOnly = true;
+      else if(secretnext && !secretnextfinale)
+         LevelInfo.finaleNormalOnly = true;
+}
+
+//
 // P_applyHexenMapInfo
 //
 // haleyjd 01/26/14: Applies data from Hexen MAPINFO
@@ -885,67 +954,7 @@ static void P_applyHexenMapInfo()
 
    // TODO: cluster, warptrans
 
-   //
-   // Sets the normal or secret next option
-   //
-   auto setNextOrFinale = [](const char *s, bool secret)
-   {
-      int &finaleType = secret ? LevelInfo.finaleSecretType : LevelInfo.finaleType;
-      bool &finaleOnly = secret ? LevelInfo.finaleSecretOnly : LevelInfo.finaleNormalOnly;
-      const char *&nextLevel = secret ? LevelInfo.nextSecret : LevelInfo.nextLevel;
-
-      bool getfinale = true;
-
-      // Check for finale!
-      // TODO: check if endgameC and endgameW must be with capitals
-      if(!strcasecmp(s, "endgame1"))
-      {
-         finaleType = FINALE_DOOM_CREDITS;
-         LevelInfo.finaleEarly = true;
-      }
-      else if(!strcasecmp(s, "endgame2"))
-      {
-         finaleType = FINALE_DOOM_DEIMOS;
-         LevelInfo.finaleEarly = true;
-      }
-      else if(!strcasecmp(s, "endgame3") || !strcasecmp(s, "endbunny"))
-      {
-         finaleType = FINALE_DOOM_BUNNY;
-         LevelInfo.finaleEarly = true;
-      }
-      else if((!strcasecmp(s, "endgamec") && s[7] == 'C') || !strcasecmp(s, "endcast"))
-      {
-         LevelInfo.endOfGame = true;
-         finaleOnly = true;
-      }
-      else if((!strcasecmp(s, "endgamew") && s[7] == 'W') || !strcasecmp(s, "endunderwater"))
-      {
-         finaleType = FINALE_HTIC_WATER;
-         LevelInfo.finaleEarly = true;
-      }
-      else if(!strcasecmp(s, "enddemon"))
-      {
-         finaleType = FINALE_HTIC_DEMON;
-         LevelInfo.finaleEarly = true;
-      }
-      else
-      {
-         nextLevel = s;
-         getfinale = false;
-      }
-      // FIXME: endpic support (figure out the syntax) and others
-      if(getfinale)
-         P_EnsureDefaultStoryText(secret);
-
-   };
-
-   // next map
-   if((s = xlmi->getString("next", nullptr)))
-      setNextOrFinale(s, false);
-
-   // next secret
-   if((s = xlmi->getString("secretnext", nullptr)))
-      setNextOrFinale(s, true);
+   P_handleMapInfoNext(xlmi);
 
    // titlepatch for intermission
    if((s = xlmi->getString("titlepatch", nullptr)))
