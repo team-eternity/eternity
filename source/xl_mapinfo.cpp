@@ -182,7 +182,7 @@ const char *XLMapInfoParser::mapKeywords[XL_NUMMAPINFO_FIELDS] =
    "baronspecial",    // baron boss actor
    "cyberdemonspecial", // cyberdemon boss actor
    "spidermastermindspecial", // spiderdemon boss actor
-   "specialaction_lowerfloow",   // lower tag 666
+   "specialaction_lowerfloor",   // lower tag 666
    "specialaction_exitlevel", // exit
 };
 
