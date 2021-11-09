@@ -479,8 +479,16 @@ static void WI_drawLF()
 //
 inline static bool WI_isFinale()
 {
-   // FIXME: handle finaleTypeSecret too
-   return LevelInfo.endOfGame || LevelInfo.finaleType != FINALE_TEXT;
+   if(wbs->gotosecret)
+   {
+      return !LevelInfo.finaleNormalOnly && (LevelInfo.endOfGame ||
+                                             (LevelInfo.finaleSecretType != FINALE_UNSPECIFIED &&
+                                              LevelInfo.finaleSecretType != FINALE_TEXT) ||
+                                             (LevelInfo.finaleSecretType != FINALE_TEXT &&
+                                              LevelInfo.finaleType != FINALE_TEXT));
+   }
+   return !LevelInfo.finaleSecretOnly && (LevelInfo.endOfGame ||
+                                          LevelInfo.finaleType != FINALE_TEXT);
 }
 
 

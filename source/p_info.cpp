@@ -899,22 +899,35 @@ static void P_applyHexenMapInfo()
       // Check for finale!
       // TODO: check if endgameC and endgameW must be with capitals
       if(!strcasecmp(s, "endgame1"))
+      {
          finaleType = FINALE_DOOM_CREDITS;
+         LevelInfo.finaleEarly = true;
+      }
       else if(!strcasecmp(s, "endgame2"))
+      {
          finaleType = FINALE_DOOM_DEIMOS;
+         LevelInfo.finaleEarly = true;
+      }
       else if(!strcasecmp(s, "endgame3") || !strcasecmp(s, "endbunny"))
+      {
          finaleType = FINALE_DOOM_BUNNY;
+         LevelInfo.finaleEarly = true;
+      }
       else if((!strcasecmp(s, "endgamec") && s[7] == 'C') || !strcasecmp(s, "endcast"))
       {
          LevelInfo.endOfGame = true;
          finaleOnly = true;
       }
       else if((!strcasecmp(s, "endgamew") && s[7] == 'W') || !strcasecmp(s, "endunderwater"))
+      {
          finaleType = FINALE_HTIC_WATER;
+         LevelInfo.finaleEarly = true;
+      }
       else if(!strcasecmp(s, "enddemon"))
+      {
          finaleType = FINALE_HTIC_DEMON;
-      else if(!strcasecmp(s, "endunderwater"))
-         finaleType = FINALE_HTIC_WATER;
+         LevelInfo.finaleEarly = true;
+      }
       else
       {
          nextLevel = s;
