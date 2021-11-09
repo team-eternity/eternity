@@ -910,6 +910,29 @@ static void P_handleMapInfoNext(const MetaTable *xlmi)
 }
 
 //
+// Handle MAPINFO boss specials. Unlike EMAPINFO, they can branch off both into bossspec and
+// bossaction
+//
+static void P_handleMapInfoBossSpecials(const MetaTable &xlmi)
+{
+   auto hasflag = [&xlmi](const char *name)
+   {
+      return xlmi.getInt(name, -1) >= 0;
+   };
+
+   if(hasflag("baronspecial"))
+   {
+      if(hasflag("specialaction_lowerfloor"))
+         LevelInfo.bossSpecs |= BSPEC_E1M8;
+      else if(hasflag("specialaction_exitlevel"))
+      {
+         levelaction_t *action = estructalloctag(levelaction_t, 1, PU_LEVEL);
+
+      }
+   }
+}
+
+//
 // P_applyHexenMapInfo
 //
 // haleyjd 01/26/14: Applies data from Hexen MAPINFO
