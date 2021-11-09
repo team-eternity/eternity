@@ -901,10 +901,12 @@ static void P_handleMapInfoNext(const MetaTable *xlmi)
 
    // Check for end of game and disable if we actually set the next map
    if(LevelInfo.endOfGame)
+   {
       if(next && !nextfinale)
          LevelInfo.finaleSecretOnly = true;
       else if(secretnext && !secretnextfinale)
          LevelInfo.finaleNormalOnly = true;
+   }
 }
 
 //
