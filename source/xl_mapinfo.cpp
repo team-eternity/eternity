@@ -179,6 +179,11 @@ const char *XLMapInfoParser::mapKeywords[XL_NUMMAPINFO_FIELDS] =
    "nojump",          // disable jumping
    "nocrouch",        // unused
    "map07special",    // map07 boss special
+   "baronspecial",    // baron boss actor
+   "cyberdemonspecial", // cyberdemon boss actor
+   "spidermastermindspecial", // spiderdemon boss actor
+   "specialaction_lowerfloow",   // lower tag 666
+   "specialaction_exitlevel", // exit
 };
 
 // holds data about how to parse and store a map keyword's data
@@ -243,6 +248,11 @@ static xlmikeyword_t mapKeywordParseTable[XL_NUMMAPINFO_FIELDS] =
    XLMI_BOOLEAN(XL_MAPINFO_NOJUMP),
    XLMI_BOOLEAN(XL_MAPINFO_NOCROUCH),
    XLMI_BOOLEAN(XL_MAPINFO_MAP07SPECIAL),
+   XLMI_BOOLEAN(XL_MAPINFO_BARONSPECIAL),
+   XLMI_BOOLEAN(XL_MAPINFO_CYBERDEMONSPECIAL),
+   XLMI_BOOLEAN(XL_MAPINFO_SPIDERMASTERMINDSPECIAL),
+   XLMI_BOOLEAN(XL_MAPINFO_SPECIALACTION_LOWERFLOOR),
+   XLMI_BOOLEAN(XL_MAPINFO_SPECIALACTION_EXITLEVEL)
 };
 
 //
