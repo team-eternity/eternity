@@ -937,50 +937,59 @@ static void P_handleMapInfoBossSpecials(const MetaTable &xlmi)
       return xlmi.getInt(name, -1) >= 0;
    };
 
+   struct bossspecialbinding_t
+   {
+      const char *name;
+      unsigned bspec;
+      unsigned mflag2;
+   };
+
+   struct specialactionbinding_t
+   {
+      const char *name;
+      unsigned nativebspecs;
+      const char *specialname;
+      int args[NUMLINEARGS];
+   };
+
+   static const bossspecialbinding_t bossspecialbindings[] =
+   {
+      { "baronspecial", BSPEC_E1M8, MF2_E1M8BOSS },
+      { "cyberdemonspecial", BSPEC_E2M8, MF2_E2M8BOSS },
+      { "spidermastermindspecial", BSPEC_E3M8, MF2_E3M8BOSS },
+   };
+
+   static const specialactionbinding_t specialactionbindings[] =
+   {
+      { "specialaction_lowerfloor", BSPEC_E1M8, "Floor_LowerToLowest", { 666, 8, 0, 0, 0 } },
+      { "specialaction_exitlevel", BSPEC_E2M8 | BSPEC_E3M8, "Exit_Normal", { 0, 0, 0, 0, 0 } },
+   };
+
    unsigned bspec = 0;
    unsigned mflag2 = 0;
-   if(hasflag("baronspecial"))
-   {
-      bspec |= BSPEC_E1M8;
-      mflag2 |= MF2_E1M8BOSS;
-   }
-   else if(hasflag("cyberdemonspecial"))  // only one can be used at a time
-   {
-      bspec |= BSPEC_E2M8;
-      mflag2 |= MF2_E2M8BOSS;
-   }
-   else if(hasflag("spidermastermindspecial"))
-   {
-      bspec |= BSPEC_E3M8;
-      mflag2 |= MF2_E3M8BOSS;
-   }
-
-   if(hasflag("specialaction_lowerfloor"))
-   {
-      if(bspec & BSPEC_E1M8)
-         LevelInfo.bossSpecs |= BSPEC_E1M8;
-      if(bspec & (BSPEC_E2M8 | BSPEC_E3M8))
+   for(const bossspecialbinding_t &binding : bossspecialbindings)
+      if(hasflag(binding.name))
       {
-         I_Assert(!(mflag2 & MF2_E1M8BOSS), "Must only allow one boss special\n");
-         E_ForEachMobjInfoWithFlags2(mflag2, [](const mobjinfo_t &info)
-                                     {
-            P_addMapInfoBossAction(info.index, "Floor_LowerToLowest", 666, 8);
-            return true;
-         });
+         bspec |= binding.bspec;
+         mflag2 |= binding.mflag2;
+         break;   // only one can be used at a time
       }
-   }
-   if(hasflag("specialaction_exitlevel"))
+   for(const specialactionbinding_t &binding : specialactionbindings)
    {
-      if(bspec & (BSPEC_E2M8 | BSPEC_E3M8))
+      if(!hasflag(binding.name))
+         continue;
+
+      if(bspec & binding.nativebspecs)
          LevelInfo.bossSpecs |= bspec;
-      if(bspec & BSPEC_E1M8)
+      else // not native spec: spawn level boss action
       {
-         I_Assert(!(mflag2 & (MF2_E2M8BOSS | MF2_E3M8BOSS)), "Must only allow one boss special\n");
-         E_ForEachMobjInfoWithFlags2(mflag2, [](const mobjinfo_t &info)
-                                     {
-            P_addMapInfoBossAction(info.index, "Exit_Normal", 0, 0);
-            return true;
-         });
+         E_ForEachMobjInfoWithFlags2(mflag2, [](const mobjinfo_t &info, void *context)
+            {
+               auto binding = static_cast<const specialactionbinding_t *>(context);
+               P_addMapInfoBossAction(info.index, binding->specialname, binding->args[0], 
+                  binding->args[1]);
+               return true;
+            }, const_cast<specialactionbinding_t *>(&binding));
       }
    }
 }
