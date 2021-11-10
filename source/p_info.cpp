@@ -910,6 +910,23 @@ static void P_handleMapInfoNext(const MetaTable *xlmi)
 }
 
 //
+// Helper to add MAPINFO custom boss action not covered by bossspec flags
+//
+static void P_addMapInfoBossAction(const mobjtype_t type, const char *name, int args0, int args1)
+{
+  auto action = estructalloctag(levelaction_t, 1, PU_LEVEL);
+  action->flags = levelaction_t::BOSS_ONLY;
+  action->mobjtype = type;
+  const ev_binding_t *binding = EV_UDMFEternityBindingForName(name);
+  I_Assert(binding, "Binding must exist\n");
+  action->special = binding->actionNumber;
+  action->args[0] = args0;
+  action->args[1] = args1;
+  action->next = LevelInfo.actions;
+  LevelInfo.actions = action;
+}
+
+//
 // Handle MAPINFO boss specials. Unlike EMAPINFO, they can branch off both into bossspec and
 // bossaction
 //
@@ -920,14 +937,50 @@ static void P_handleMapInfoBossSpecials(const MetaTable &xlmi)
       return xlmi.getInt(name, -1) >= 0;
    };
 
+   unsigned bspec = 0;
+   unsigned mflag2 = 0;
    if(hasflag("baronspecial"))
    {
-      if(hasflag("specialaction_lowerfloor"))
-         LevelInfo.bossSpecs |= BSPEC_E1M8;
-      else if(hasflag("specialaction_exitlevel"))
-      {
-         levelaction_t *action = estructalloctag(levelaction_t, 1, PU_LEVEL);
+      bspec |= BSPEC_E1M8;
+      mflag2 |= MF2_E1M8BOSS;
+   }
+   else if(hasflag("cyberdemonspecial"))  // only one can be used at a time
+   {
+      bspec |= BSPEC_E2M8;
+      mflag2 |= MF2_E2M8BOSS;
+   }
+   else if(hasflag("spidermastermindspecial"))
+   {
+      bspec |= BSPEC_E3M8;
+      mflag2 |= MF2_E3M8BOSS;
+   }
 
+   if(hasflag("specialaction_lowerfloor"))
+   {
+      if(bspec & BSPEC_E1M8)
+         LevelInfo.bossSpecs |= BSPEC_E1M8;
+      if(bspec & (BSPEC_E2M8 | BSPEC_E3M8))
+      {
+         I_Assert(!(mflag2 & MF2_E1M8BOSS), "Must only allow one boss special\n");
+         E_ForEachMobjInfoWithFlags2(mflag2, [](const mobjinfo_t &info)
+                                     {
+            P_addMapInfoBossAction(info.index, "Floor_LowerToLowest", 666, 8);
+            return true;
+         });
+      }
+   }
+   if(hasflag("specialaction_exitlevel"))
+   {
+      if(bspec & (BSPEC_E2M8 | BSPEC_E3M8))
+         LevelInfo.bossSpecs |= bspec;
+      if(bspec & BSPEC_E1M8)
+      {
+         I_Assert(!(mflag2 & (MF2_E2M8BOSS | MF2_E3M8BOSS)), "Must only allow one boss special\n");
+         E_ForEachMobjInfoWithFlags2(mflag2, [](const mobjinfo_t &info)
+                                     {
+            P_addMapInfoBossAction(info.index, "Exit_Normal", 0, 0);
+            return true;
+         });
       }
    }
 }
@@ -1005,6 +1058,8 @@ static void P_applyHexenMapInfo()
       LevelInfo.noAutoSequences = !!i;
    if((i = xlmi->getInt("nojump", -1)) >= 0)
       LevelInfo.disableJump = true;
+
+   P_handleMapInfoBossSpecials(*xlmi);
 
    /*
    Stuff with "Unfinished Business":
