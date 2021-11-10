@@ -3556,7 +3556,7 @@ state_t *E_GetStateForMobj(const Mobj *mo, const char *label)
 //
 // Iterates through the mobjinfo table and runs callback for each one satisfying flags2
 //
-void E_ForEachMobjInfoWithFlags2(unsigned flags, 
+void E_ForEachMobjInfoWithAnyFlags2(unsigned flags, 
    bool (*func)(const mobjinfo_t &info, void *context), void *context)
 {
    for(int i = 0; i < NUMMOBJTYPES; ++i)

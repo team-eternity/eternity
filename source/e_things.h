@@ -132,7 +132,7 @@ enum bloodtype_e : int
 int E_BloodTypeForThing(const Mobj *mo, bloodaction_e action);
 bloodtype_e E_GetBloodBehaviorForAction(mobjinfo_t *info, bloodaction_e action);
 
-void E_ForEachMobjInfoWithFlags2(unsigned flags,
+void E_ForEachMobjInfoWithAnyFlags2(unsigned flags,
    bool (*func)(const mobjinfo_t &info, void *context), void *context);
 
 #endif

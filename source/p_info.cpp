@@ -953,18 +953,23 @@ static void P_handleMapInfoBossSpecials(const MetaTable &xlmi)
    };
 
    // Conditions: which monsters to die
+   // NOTE: currently Heretic monsters aren't implemented. We only focus on supporting cross-port 
+   // maps which get this treatment, and those usually aim Boom. The cross-port Heretic megawads are
+   // all vanilla.
    static const bossspecialbinding_t bossspecialbindings[] =
    {
       { "baronspecial", BSPEC_E1M8, MF2_E1M8BOSS },
-      { "cyberdemonspecial", BSPEC_E2M8, MF2_E2M8BOSS },
-      { "spidermastermindspecial", BSPEC_E3M8, MF2_E3M8BOSS },
+      { "cyberdemonspecial", BSPEC_E2M8 | BSPEC_E4M6, MF2_E2M8BOSS | MF2_E4M6BOSS },
+      { "spidermastermindspecial", BSPEC_E3M8 | BSPEC_E4M8, MF2_E3M8BOSS | MF2_E4M8BOSS },
    };
 
    // Actions: what to do
    static const specialactionbinding_t specialactionbindings[] =
    {
-      { "specialaction_lowerfloor", BSPEC_E1M8, "Floor_LowerToLowest", { 666, 8, 0, 0, 0 } },
+      { "specialaction_lowerfloor", BSPEC_E1M8 | BSPEC_E4M8, "Floor_LowerToLowest", 
+            { 666, 8, 0, 0, 0 } },
       { "specialaction_exitlevel", BSPEC_E2M8 | BSPEC_E3M8, "Exit_Normal", { 0, 0, 0, 0, 0 } },
+      { "specialaction_opendoor", BSPEC_E4M6, "Door_Open", { 666, 64, 0, 0, 0 } },
    };
 
    for(const bossspecialbinding_t &monsterBinding : bossspecialbindings)
@@ -979,13 +984,14 @@ static void P_handleMapInfoBossSpecials(const MetaTable &xlmi)
 
          // If the action coincides with the base game association (e.g. barons or other 
          // MF2_E1M8BOSS to lower floors), then just assign LevelInfo.bossSpecs.
-         if(actionBinding.nativebspecs & monsterBinding.bspec)
-            LevelInfo.bossSpecs |= monsterBinding.bspec;
+         unsigned commonbspecs = actionBinding.nativebspecs & monsterBinding.bspec;
+         if(commonbspecs)
+            LevelInfo.bossSpecs |= commonbspecs;
          else
          {
             // Otherwise we need to use custom boss level actions. Thanks to UMAPINFO for driving
             // these into Eternity.
-            E_ForEachMobjInfoWithFlags2(monsterBinding.mflag2,
+            E_ForEachMobjInfoWithAnyFlags2(monsterBinding.mflag2,
                [](const mobjinfo_t &info, void *context)
                {
                   auto actionBinding = static_cast<const specialactionbinding_t *>(context);
