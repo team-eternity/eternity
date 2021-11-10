@@ -967,38 +967,33 @@ static void P_handleMapInfoBossSpecials(const MetaTable &xlmi)
       { "specialaction_exitlevel", BSPEC_E2M8 | BSPEC_E3M8, "Exit_Normal", { 0, 0, 0, 0, 0 } },
    };
 
-   const bossspecialbinding_t *monsterBinding = nullptr;
-   for(const bossspecialbinding_t &binding : bossspecialbindings)
-      if(hasflag(binding.name))
-      {
-         monsterBinding = &binding;
-         break;   // only one can be used at a time
-      }
-
-   if(!monsterBinding)   // just exit if nothing got taken
-      return;
-
-   for(const specialactionbinding_t &actionBinding : specialactionbindings)
+   for(const bossspecialbinding_t &monsterBinding : bossspecialbindings)
    {
-      if(!hasflag(actionBinding.name))
+      if(!hasflag(monsterBinding.name))
          continue;
 
-      // If the action coincides with the base game association (e.g. barons or other MF2_E1M8BOSS 
-      // to lower floors), then just assign LevelInfo.bossSpecs.
-      if(monsterBinding->bspec & actionBinding.nativebspecs)
-         LevelInfo.bossSpecs |= monsterBinding->bspec;
-      else 
+      for(const specialactionbinding_t &actionBinding : specialactionbindings)
       {
-         // Otherwise we need to use custom boss level actions. Thanks to UMAPINFO for driving
-         // these into Eternity.
-         E_ForEachMobjInfoWithFlags2(monsterBinding->mflag2,
-            [](const mobjinfo_t &info, void *context)
-            {
-               auto actionBinding = static_cast<const specialactionbinding_t *>(context);
-               P_addMapInfoBossAction(info.index, actionBinding->specialname, 
-                  actionBinding->args[0], actionBinding->args[1]);
-               return true;
-            }, const_cast<specialactionbinding_t *>(&actionBinding));
+         if(!hasflag(actionBinding.name))
+            continue;
+
+         // If the action coincides with the base game association (e.g. barons or other 
+         // MF2_E1M8BOSS to lower floors), then just assign LevelInfo.bossSpecs.
+         if(actionBinding.nativebspecs & monsterBinding.bspec)
+            LevelInfo.bossSpecs |= monsterBinding.bspec;
+         else
+         {
+            // Otherwise we need to use custom boss level actions. Thanks to UMAPINFO for driving
+            // these into Eternity.
+            E_ForEachMobjInfoWithFlags2(monsterBinding.mflag2,
+               [](const mobjinfo_t &info, void *context)
+               {
+                  auto actionBinding = static_cast<const specialactionbinding_t *>(context);
+                  P_addMapInfoBossAction(info.index, actionBinding->specialname,
+                     actionBinding->args[0], actionBinding->args[1]);
+                  return true;
+               }, const_cast<specialactionbinding_t *>(&actionBinding));
+         }
       }
    }
 }
