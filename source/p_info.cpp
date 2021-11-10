@@ -952,6 +952,7 @@ static void P_handleMapInfoBossSpecials(const MetaTable &xlmi)
       int args[NUMLINEARGS];
    };
 
+   // Conditions: which monsters to die
    static const bossspecialbinding_t bossspecialbindings[] =
    {
       { "baronspecial", BSPEC_E1M8, MF2_E1M8BOSS },
@@ -959,6 +960,7 @@ static void P_handleMapInfoBossSpecials(const MetaTable &xlmi)
       { "spidermastermindspecial", BSPEC_E3M8, MF2_E3M8BOSS },
    };
 
+   // Actions: what to do
    static const specialactionbinding_t specialactionbindings[] =
    {
       { "specialaction_lowerfloor", BSPEC_E1M8, "Floor_LowerToLowest", { 666, 8, 0, 0, 0 } },
@@ -981,10 +983,14 @@ static void P_handleMapInfoBossSpecials(const MetaTable &xlmi)
       if(!hasflag(actionBinding.name))
          continue;
 
+      // If the action coincides with the base game association (e.g. barons or other MF2_E1M8BOSS 
+      // to lower floors), then just assign LevelInfo.bossSpecs.
       if(monsterBinding->bspec & actionBinding.nativebspecs)
          LevelInfo.bossSpecs |= monsterBinding->bspec;
-      else // not native spec: spawn level boss action
+      else 
       {
+         // Otherwise we need to use custom boss level actions. Thanks to UMAPINFO for driving
+         // these into Eternity.
          E_ForEachMobjInfoWithFlags2(monsterBinding->mflag2,
             [](const mobjinfo_t &info, void *context)
             {
