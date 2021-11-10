@@ -939,17 +939,17 @@ static void P_handleMapInfoBossSpecials(const MetaTable &xlmi)
 
    struct bossspecialbinding_t
    {
-      const char *name;
-      unsigned bspec;
-      unsigned mflag2;
+      const char *name; // name of the binding key in MAPINFO
+      unsigned bspec;   // LevelInfo boss special flag where the monster flag natively maps to
+      unsigned mflag2;  // Monster flag who represents the traditional monster class (e.g. baron)
    };
 
    struct specialactionbinding_t
    {
-      const char *name;
-      unsigned nativebspecs;
-      const char *specialname;
-      int args[NUMLINEARGS];
+      const char *name;          // name of the binding key in MAPINFO
+      unsigned nativebspecs;     // One or more native LevelInfo specs where this action is native
+      const char *specialname;   // Name of actual special to execute if action is not native
+      int args[NUMLINEARGS];     // Args for the special to execute
    };
 
    // Conditions: which monsters to die
