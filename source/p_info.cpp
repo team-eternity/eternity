@@ -965,31 +965,34 @@ static void P_handleMapInfoBossSpecials(const MetaTable &xlmi)
       { "specialaction_exitlevel", BSPEC_E2M8 | BSPEC_E3M8, "Exit_Normal", { 0, 0, 0, 0, 0 } },
    };
 
-   unsigned bspec = 0;
-   unsigned mflag2 = 0;
+   const bossspecialbinding_t *monsterBinding = nullptr;
    for(const bossspecialbinding_t &binding : bossspecialbindings)
       if(hasflag(binding.name))
       {
-         bspec |= binding.bspec;
-         mflag2 |= binding.mflag2;
+         monsterBinding = &binding;
          break;   // only one can be used at a time
       }
-   for(const specialactionbinding_t &binding : specialactionbindings)
+
+   if(!monsterBinding)   // just exit if nothing got taken
+      return;
+
+   for(const specialactionbinding_t &actionBinding : specialactionbindings)
    {
-      if(!hasflag(binding.name))
+      if(!hasflag(actionBinding.name))
          continue;
 
-      if(bspec & binding.nativebspecs)
-         LevelInfo.bossSpecs |= bspec;
+      if(monsterBinding->bspec & actionBinding.nativebspecs)
+         LevelInfo.bossSpecs |= monsterBinding->bspec;
       else // not native spec: spawn level boss action
       {
-         E_ForEachMobjInfoWithFlags2(mflag2, [](const mobjinfo_t &info, void *context)
+         E_ForEachMobjInfoWithFlags2(monsterBinding->mflag2,
+            [](const mobjinfo_t &info, void *context)
             {
-               auto binding = static_cast<const specialactionbinding_t *>(context);
-               P_addMapInfoBossAction(info.index, binding->specialname, binding->args[0], 
-                  binding->args[1]);
+               auto actionBinding = static_cast<const specialactionbinding_t *>(context);
+               P_addMapInfoBossAction(info.index, actionBinding->specialname, 
+                  actionBinding->args[0], actionBinding->args[1]);
                return true;
-            }, const_cast<specialactionbinding_t *>(&binding));
+            }, const_cast<specialactionbinding_t *>(&actionBinding));
       }
    }
 }
