@@ -27,6 +27,8 @@
 class qstring;
 class WadDirectory;
 
+struct finalerule_t;
+
 bool P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname, qstring *error);
 
 void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
@@ -207,6 +209,9 @@ void P_HticDefaultLevelName(levelnamedata_t &lnd);
 // ioanch
 bool P_LevelIsVanillaHexen();
 void P_EnsureDefaultStoryText(bool secret);
+
+const finalerule_t *P_DetermineEpisodeFinaleRule(bool checkmap);
+void P_SetFinaleFromRule(const finalerule_t *rule, bool changeFinaleEarly, bool changeText);
 
 #endif
 
