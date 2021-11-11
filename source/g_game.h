@@ -22,6 +22,7 @@
 #define G_GAME_H__
 
 // Required for byte
+#include "doomdef.h"
 #include "doomtype.h"
 
 struct event_t;
