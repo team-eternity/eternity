@@ -185,6 +185,7 @@ const char *XLMapInfoParser::mapKeywords[XL_NUMMAPINFO_FIELDS] =
    "specialaction_lowerfloor",   // lower tag 666
    "specialaction_exitlevel", // exit
    "nosoundclipping" // no sound clipping (TODO)
+   "sucktime",       // suck time (TODO)
 };
 
 // holds data about how to parse and store a map keyword's data
@@ -255,6 +256,7 @@ static xlmikeyword_t mapKeywordParseTable[XL_NUMMAPINFO_FIELDS] =
    XLMI_BOOLEAN(XL_MAPINFO_SPECIALACTION_LOWERFLOOR),
    XLMI_BOOLEAN(XL_MAPINFO_SPECIALACTION_EXITLEVEL),
    XLMI_BOOLEAN(XL_MAPINFO_NOSOUNDCLIPPING),
+   XLMI_INTEGER(XL_MAPINFO_SUCKTIME),
 };
 
 //
