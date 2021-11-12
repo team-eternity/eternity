@@ -186,6 +186,7 @@ const char *XLMapInfoParser::mapKeywords[XL_NUMMAPINFO_FIELDS] =
    "specialaction_exitlevel", // exit
    "nosoundclipping" // no sound clipping (TODO)
    "sucktime",       // suck time (TODO)
+   "allowmonstertelefrags",   // whether to allow monsters to telefrag (TODO)
 };
 
 // holds data about how to parse and store a map keyword's data
@@ -257,6 +258,7 @@ static xlmikeyword_t mapKeywordParseTable[XL_NUMMAPINFO_FIELDS] =
    XLMI_BOOLEAN(XL_MAPINFO_SPECIALACTION_EXITLEVEL),
    XLMI_BOOLEAN(XL_MAPINFO_NOSOUNDCLIPPING),
    XLMI_INTEGER(XL_MAPINFO_SUCKTIME),
+   XLMI_BOOLEAN(XL_MAPINFO_ALLOWMONSTERTELEFRAGS),
 };
 
 //
