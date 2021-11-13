@@ -211,6 +211,8 @@ with any concerns.
     standard for driving these fixes.
   * Improved support for numbering the ExMy and MAPxy going beyond their
     conventional number limitations.
+  * Now the level info changes (from any such lump) will also take effect in de-
+    mos and vanilla mode if they're only cosmetic.
 
 ** Level editing features **
 
