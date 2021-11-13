@@ -2940,6 +2940,7 @@ static menuitem_t mn_weapons_items[] =
    {it_toggle,     "Center when firing",             "r_centerfire"},
    {it_toggle,     "Recoil",                         "recoil"},
    {it_toggle,     "Weapon hotkey cycling",          "weapon_hotkey_cycling"},
+   {it_toggle,     "Cycle when holding key",         "weapon_hotkey_holding"},
    {it_toggle,     "Autoaiming",                     "autoaim"},
    {it_gap},
    {it_end},

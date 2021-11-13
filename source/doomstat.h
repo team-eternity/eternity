@@ -421,6 +421,8 @@ extern int flashing_hom; // killough 10/98
 
 extern int weapon_hotkey_cycling;   // killough 10/98
 
+extern bool weapon_hotkey_holding;  // ioanch 20211113
+
 //=======================================================
 //
 // haleyjd: Eternity Stuff

@@ -222,6 +222,8 @@ default_t defaults[] =
    DEFAULT_INT("weapon_hotkey_cycling", &weapon_hotkey_cycling, nullptr, 1, 0, 1, default_t::wad_no,
                "1 to allow in-slot weapon cycling (e.g. SSG to SG)"),
 
+   DEFAULT_BOOL("weapon_hotkey_holding", &weapon_hotkey_holding, nullptr, false, default_t::wad_game, "1 to keep switching weapon while holding hotkey"),
+
    // phares 2/25/98
    DEFAULT_INT("player_bobbing", &default_player_bobbing, &player_bobbing, 1, 0, 1, default_t::wad_game,
                "1 to enable player bobbing (view moving up/down slightly)"),

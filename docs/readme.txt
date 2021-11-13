@@ -297,8 +297,10 @@ with any concerns.
 
 ** Gameplay improvements **
 
-  * Holding down weapon switch weapons no longer rotates between all weapons in
-    that slot automatically.
+  * Holding down weapon switch won't rotate any longer between all weapons in
+    that slot automatically, unless the "weapon_hotkey_holding" console variable
+    is set to ON. There's a new entry in the weapon options menu for this, and
+    the option can also be set in a wad OPTIONS lump.
 
 ** Interface improvements **
 

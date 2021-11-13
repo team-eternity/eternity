@@ -233,6 +233,9 @@ CONSOLE_NETVAR(bobbing, player_bobbing, cf_server, netcmd_bobbing) {}
 VARIABLE_BOOLEAN(weapon_hotkey_cycling, nullptr, onoff);
 CONSOLE_VARIABLE(weapon_hotkey_cycling, weapon_hotkey_cycling, 0) {}
 
+VARIABLE_TOGGLE(weapon_hotkey_holding, nullptr, onoff);
+CONSOLE_VARIABLE(weapon_hotkey_holding, weapon_hotkey_holding, 0) {}
+
 // turbo scale
 
 int turbo_scale = 100;
