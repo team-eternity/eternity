@@ -1483,36 +1483,32 @@ bool P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname, qstring
 
    foundEEMapInfo = false;
 
-   if(demo_version > 203)  // do NOT read any MapInfo in MBF or less
+   const char *mapname = dir->getLumpName(lumpnum);
+   if((info = XL_UMapInfoForMapName(mapname)))
    {
-      // FIXME: this may need finer compatibility check, especially if we seek demo compatibility.
-      const char *mapname = dir->getLumpName(lumpnum);
-      if((info = XL_UMapInfoForMapName(mapname)))
-      {
-         if(!P_ProcessUMapInfo(info, mapname, error))
-            return false;
-         // Don't give it higher priority over Hexen MAPINFO
-      }
-
-      // process any global EMAPINFO data
-      if((info = XL_EMapInfoForMapName(mapname)))
-      {
-         P_ProcessEMapInfo(info);
-         foundEEMapInfo = true;
-      }
-
-      // additively process any SMMU header information for compatibility
-      if((info = XL_ParseLevelInfo(dir, lumpnum)))
-      {
-         P_ProcessEMapInfo(info);
-         foundEEMapInfo = true;
-      }
-
-      // haleyjd 01/26/14: if no EE map information was specified for this map,
-      // defer to any defined Hexen MAPINFO data now.
-      if(!foundEEMapInfo)
-         P_ApplyHexenMapInfo();
+      if(!P_ProcessUMapInfo(info, mapname, error))
+         return false;
+      // Don't give it higher priority over Hexen MAPINFO
    }
+
+   // process any global EMAPINFO data
+   if((info = XL_EMapInfoForMapName(mapname)))
+   {
+      P_ProcessEMapInfo(info);
+      foundEEMapInfo = true;
+   }
+
+   // additively process any SMMU header information for compatibility
+   if((info = XL_ParseLevelInfo(dir, lumpnum)))
+   {
+      P_ProcessEMapInfo(info);
+      foundEEMapInfo = true;
+   }
+
+   // haleyjd 01/26/14: if no EE map information was specified for this map,
+   // defer to any defined Hexen MAPINFO data now.
+   if(!foundEEMapInfo)
+      P_ApplyHexenMapInfo();
 
    if(!P_validateLevelInfo(error))
       return false;
