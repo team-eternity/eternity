@@ -24,6 +24,7 @@
 
 #include "z_zone.h"
 
+#include "doomstat.h"
 #include "e_things.h"
 #include "ev_specials.h"
 #include "f_finale.h"
@@ -214,6 +215,9 @@ void P_ApplyHexenMapInfo()
    if(!(xlmi = XL_MapInfoForMapName(gamemapname)))
       return;
 
+   // Mark if classic demos to avoid changing certain playsim settings
+   bool classicDemo = demo_version <= 203;
+
    LevelInfo.levelName = xlmi->getString("name", "");
 
    // sky textures
@@ -238,7 +242,7 @@ void P_ApplyHexenMapInfo()
       LevelInfo.doubleSky = !!i;
 
    // lightning
-   if((i = xlmi->getInt("lightning", -1)) >= 0)
+   if(!classicDemo && (i = xlmi->getInt("lightning", -1)) >= 0)
       LevelInfo.hasLightning = !!i;
 
    // colormap
@@ -247,7 +251,8 @@ void P_ApplyHexenMapInfo()
 
    // TODO: cluster, warptrans
 
-   P_handleMapInfoNext(xlmi);
+   if(!classicDemo)
+      P_handleMapInfoNext(xlmi);
 
    // titlepatch for intermission
    if((s = xlmi->getString("titlepatch", nullptr)))
@@ -256,25 +261,26 @@ void P_ApplyHexenMapInfo()
    // TODO: cdtrack
 
    // par time
-   if((i = xlmi->getInt("par", -1)) >= 0)
+   if(!classicDemo && (i = xlmi->getInt("par", -1)) >= 0)
       LevelInfo.partime = i;
 
    if((s = xlmi->getString("music", nullptr)))
       LevelInfo.musicName = s;
 
    // flags
-   if((i = xlmi->getInt("nointermission", -1)) >= 0)
+   if(!classicDemo && (i = xlmi->getInt("nointermission", -1)) >= 0)
       LevelInfo.killStats = !!i;
    if((i = xlmi->getInt("evenlighting", -1)) >= 0)
       LevelInfo.unevenLight = !i;
-   if((i = xlmi->getInt("map07special", -1)) >= 0)
+   if(!classicDemo && (i = xlmi->getInt("map07special", -1)) >= 0)
       LevelInfo.bossSpecs |= BSPEC_MAP07_1 | BSPEC_MAP07_2;
    if((i = xlmi->getInt("noautosequences", -1)) >= 0)
       LevelInfo.noAutoSequences = !!i;
-   if((i = xlmi->getInt("nojump", -1)) >= 0)
+   if(!classicDemo && (i = xlmi->getInt("nojump", -1)) >= 0)
       LevelInfo.disableJump = true;
 
-   P_handleMapInfoBossSpecials(*xlmi);
+   if(!classicDemo)
+      P_handleMapInfoBossSpecials(*xlmi);
 
    /*
    Stuff with "Unfinished Business":
