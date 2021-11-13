@@ -27,6 +27,7 @@
 
 #include "c_io.h"
 #include "d_gi.h"
+#include "doomstat.h"
 #include "e_things.h"
 #include "ev_actions.h"
 #include "ev_specials.h"
@@ -169,23 +170,29 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
    I_Assert(info, "No info provided!\n");
    I_Assert(mapname, "Null mapname provided!\n");
 
+   // Mark if classic demos to avoid changing certain playsim settings
+   bool classicDemo = demo_version <= 203;
+
    int val;
    const char *strval;
 
-   // Setup the next levels here. According to UMAPINFO, by default _both_ properties mean the next
-   // map. Only do it for standard IWAD lump names
-   int ep, lev;
-   if(M_IsExMy(info->getKey(), &ep, &lev))
+   if(!classicDemo)
    {
-      qstring nextname;
-      nextname.Printf(8, "E%dM%d", ep, lev + 1);
-      LevelInfo.nextLevel = LevelInfo.nextSecret = nextname.duplicate(PU_LEVEL);
-   }
-   else if(M_IsMAPxy(info->getKey(), &lev))
-   {
-      qstring nextname;
-      nextname.Printf(8, "MAP%02d", lev + 1);
-      LevelInfo.nextLevel = LevelInfo.nextSecret = nextname.duplicate(PU_LEVEL);
+      // Setup the next levels here. According to UMAPINFO, by default _both_ properties mean the
+      // next map. Only do it for standard IWAD lump names
+      int ep, lev;
+      if(M_IsExMy(info->getKey(), &ep, &lev))
+      {
+         qstring nextname;
+         nextname.Printf(8, "E%dM%d", ep, lev + 1);
+         LevelInfo.nextLevel = LevelInfo.nextSecret = nextname.duplicate(PU_LEVEL);
+      }
+      else if(M_IsMAPxy(info->getKey(), &lev))
+      {
+         qstring nextname;
+         nextname.Printf(8, "MAP%02d", lev + 1);
+         LevelInfo.nextLevel = LevelInfo.nextSecret = nextname.duplicate(PU_LEVEL);
+      }
    }
 
    strval = info->getString("levelname", nullptr);
@@ -220,12 +227,15 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
    strval = info->getString("levelpic", nullptr);
    if(strval)
       LevelInfo.levelPic = strval;  // allocation is permanent in the UMAPINFO table
-   strval = info->getString("next", nullptr);
-   if(strval)
-      LevelInfo.nextLevel = strval;
-   strval = info->getString("nextsecret", nullptr);
-   if(strval)
-      LevelInfo.nextSecret = strval;
+   if(!classicDemo)
+   {
+      strval = info->getString("next", nullptr);
+      if(strval)
+         LevelInfo.nextLevel = strval;
+      strval = info->getString("nextsecret", nullptr);
+      if(strval)
+         LevelInfo.nextSecret = strval;
+   }
    strval = info->getString("skytexture", nullptr);
    if(strval)
       LevelInfo.skyName = strval;   // UMAPINFO is in PrBoom+UM, so don't disable the sky compat
@@ -235,125 +245,127 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
    strval = info->getString("exitpic", nullptr);
    if(strval)
       LevelInfo.interPic = strval;   // NOTE: enterpic not used here
-   val = info->getInt("partime", XL_UMAPINFO_SPECVAL_NOT_SET);
-   if(val != XL_UMAPINFO_SPECVAL_NOT_SET)
-      LevelInfo.partime = val;
-
-   // If we have the finale-secret-only flag, transfer whatever's in basic inter-text to inter-text-
-   // secret, so that we replace the correct field afterwards
-   if(LevelInfo.finaleSecretOnly && !LevelInfo.interTextSecret && LevelInfo.interText)
+   if(!classicDemo)
    {
-      LevelInfo.interTextSecret = LevelInfo.interText;
-      LevelInfo.interText = nullptr;
-   }
-   else if(!LevelInfo.finaleNormalOnly && LevelInfo.interText)
-      LevelInfo.interTextSecret = LevelInfo.interText;   // also transfer if distributed
-   else if(LevelInfo.finaleNormalOnly)    // cleanup the other states
-      LevelInfo.interTextSecret = nullptr;
+      val = info->getInt("partime", XL_UMAPINFO_SPECVAL_NOT_SET);
+      if(val != XL_UMAPINFO_SPECVAL_NOT_SET)
+         LevelInfo.partime = val;
 
-   //
-   // Needed to copy the pointer to the secret-exit story to the normal-exit one
-   //
-   auto reuseSecretStoryForMainExit = []()
-   {
-      if(LevelInfo.finaleSecretOnly && LevelInfo.interTextSecret && !LevelInfo.interText)
-         LevelInfo.interText = LevelInfo.interTextSecret;
-      LevelInfo.finaleSecretOnly = false;
-   };
-
-
-   val = info->getInt("endgame", XL_UMAPINFO_SPECVAL_NOT_SET);
-   if(val == XL_UMAPINFO_SPECVAL_FALSE)
-   {
-      // Override a default map exit
-      // Default map exits are defined in P_InfoDefaultFinale according to game mode info
-      LevelInfo.finaleType = FINALE_TEXT;
-      LevelInfo.endOfGame = false;
-      LevelInfo.finaleEarly = false;
-   }
-   else if(val == XL_UMAPINFO_SPECVAL_TRUE)
-   {
-      const finalerule_t *rule = P_DetermineEpisodeFinaleRule(false);
-
-      // Do not also change the finale-early flag, so that it's like PrBoom+um
-      // HACK to maximize PrBoom+um compatibility, avoid
-      P_SetFinaleFromRule(rule, false, GameModeInfo->id != commercial);
-
-      // Also generalize this (and same below) for both exits. The presence of the respective
-      // intertext will dictate whether it will really happen.
-      reuseSecretStoryForMainExit();
-      P_EnsureDefaultStoryText(false);
-   }
-   strval = info->getString("endpic", nullptr);
-   if(strval)
-   {
-      // Now also update the ending type
-      LevelInfo.endOfGame = false;
-      LevelInfo.finaleType = FINALE_END_PIC;
-      LevelInfo.endPic = strval;
-
-      reuseSecretStoryForMainExit();
-      P_EnsureDefaultStoryText(false);
-   }
-   val = info->getInt("endbunny", XL_UMAPINFO_SPECVAL_NOT_SET);
-   if(val == XL_UMAPINFO_SPECVAL_TRUE)
-   {
-      LevelInfo.endOfGame = false;
-      LevelInfo.finaleType = FINALE_DOOM_BUNNY;
-      reuseSecretStoryForMainExit();
-      P_EnsureDefaultStoryText(false);
-   }
-   val = info->getInt("endcast", XL_UMAPINFO_SPECVAL_NOT_SET);
-   if(val == XL_UMAPINFO_SPECVAL_TRUE)
-   {
-      LevelInfo.endOfGame = true;
-      LevelInfo.finaleType = FINALE_TEXT;
-      reuseSecretStoryForMainExit();
-      P_EnsureDefaultStoryText(false);
-   }
-
-   // NOTE: according to specs and PrBoom+um, nointermission only affects finale-early
-   val = info->getInt("nointermission", XL_UMAPINFO_SPECVAL_NOT_SET);
-   if(val == XL_UMAPINFO_SPECVAL_TRUE)
-      LevelInfo.finaleEarly = true;
-   else if(val == XL_UMAPINFO_SPECVAL_FALSE)
-      LevelInfo.finaleEarly = false;
-
-   const char *intertextkeys[] = { "intertext", "intertextsecret" };
-   const char *LevelInfo_t:: *intertexttargets[] = {
-      &LevelInfo_t::interText,
-      &LevelInfo_t::interTextSecret
-   };
-
-   for(int i = 0; i < 2; ++i)
-   {
-      val = info->getInt(intertextkeys[i], XL_UMAPINFO_SPECVAL_NOT_SET);
-      if(val == XL_UMAPINFO_SPECVAL_CLEAR)
-         LevelInfo.*intertexttargets[i] = nullptr;
-      else
+      // If we have the finale-secret-only flag, transfer whatever's in basic inter-text to
+      // inter-text-secret, so that we replace the correct field afterwards
+      if(LevelInfo.finaleSecretOnly && !LevelInfo.interTextSecret && LevelInfo.interText)
       {
-         // Populate "intertext"
-         const MetaString *metastr = nullptr;
-         qstring intertext;
-         while((metastr = info->getNextKeyAndTypeEx(metastr, intertextkeys[i])))
-         {
-            // MetaTables are stored in reverse order
-            if(!intertext.empty())
-               intertext = qstring(metastr->getValue()) + "\n" + intertext;
-            else
-               intertext = metastr->getValue();
-         }
-         if(!intertext.empty())
-            LevelInfo.*intertexttargets[i] = intertext.duplicate(PU_LEVEL);
+         LevelInfo.interTextSecret = LevelInfo.interText;
+         LevelInfo.interText = nullptr;
       }
+      else if(!LevelInfo.finaleNormalOnly && LevelInfo.interText)
+         LevelInfo.interTextSecret = LevelInfo.interText;   // also transfer if distributed
+      else if(LevelInfo.finaleNormalOnly)    // cleanup the other states
+         LevelInfo.interTextSecret = nullptr;
+
+      //
+      // Needed to copy the pointer to the secret-exit story to the normal-exit one
+      //
+      auto reuseSecretStoryForMainExit = []()
+      {
+         if(LevelInfo.finaleSecretOnly && LevelInfo.interTextSecret && !LevelInfo.interText)
+            LevelInfo.interText = LevelInfo.interTextSecret;
+         LevelInfo.finaleSecretOnly = false;
+      };
+
+
+      val = info->getInt("endgame", XL_UMAPINFO_SPECVAL_NOT_SET);
+      if(val == XL_UMAPINFO_SPECVAL_FALSE)
+      {
+         // Override a default map exit
+         // Default map exits are defined in P_InfoDefaultFinale according to game mode info
+         LevelInfo.finaleType = FINALE_TEXT;
+         LevelInfo.endOfGame = false;
+         LevelInfo.finaleEarly = false;
+      }
+      else if(val == XL_UMAPINFO_SPECVAL_TRUE)
+      {
+         const finalerule_t *rule = P_DetermineEpisodeFinaleRule(false);
+
+         // Do not also change the finale-early flag, so that it's like PrBoom+um
+         // HACK to maximize PrBoom+um compatibility, avoid
+         P_SetFinaleFromRule(rule, false, GameModeInfo->id != commercial);
+
+         // Also generalize this (and same below) for both exits. The presence of the respective
+         // intertext will dictate whether it will really happen.
+         reuseSecretStoryForMainExit();
+         P_EnsureDefaultStoryText(false);
+      }
+      strval = info->getString("endpic", nullptr);
+      if(strval)
+      {
+         // Now also update the ending type
+         LevelInfo.endOfGame = false;
+         LevelInfo.finaleType = FINALE_END_PIC;
+         LevelInfo.endPic = strval;
+
+         reuseSecretStoryForMainExit();
+         P_EnsureDefaultStoryText(false);
+      }
+      val = info->getInt("endbunny", XL_UMAPINFO_SPECVAL_NOT_SET);
+      if(val == XL_UMAPINFO_SPECVAL_TRUE)
+      {
+         LevelInfo.endOfGame = false;
+         LevelInfo.finaleType = FINALE_DOOM_BUNNY;
+         reuseSecretStoryForMainExit();
+         P_EnsureDefaultStoryText(false);
+      }
+      val = info->getInt("endcast", XL_UMAPINFO_SPECVAL_NOT_SET);
+      if(val == XL_UMAPINFO_SPECVAL_TRUE)
+      {
+         LevelInfo.endOfGame = true;
+         LevelInfo.finaleType = FINALE_TEXT;
+         reuseSecretStoryForMainExit();
+         P_EnsureDefaultStoryText(false);
+      }
+
+      // NOTE: according to specs and PrBoom+um, nointermission only affects finale-early
+      val = info->getInt("nointermission", XL_UMAPINFO_SPECVAL_NOT_SET);
+      if(val == XL_UMAPINFO_SPECVAL_TRUE)
+         LevelInfo.finaleEarly = true;
+      else if(val == XL_UMAPINFO_SPECVAL_FALSE)
+         LevelInfo.finaleEarly = false;
+
+      const char *intertextkeys[] = { "intertext", "intertextsecret" };
+      const char *LevelInfo_t:: *intertexttargets[] = {
+         &LevelInfo_t::interText,
+         &LevelInfo_t::interTextSecret
+      };
+
+      for(int i = 0; i < 2; ++i)
+      {
+         val = info->getInt(intertextkeys[i], XL_UMAPINFO_SPECVAL_NOT_SET);
+         if(val == XL_UMAPINFO_SPECVAL_CLEAR)
+            LevelInfo.*intertexttargets[i] = nullptr;
+         else
+         {
+            // Populate "intertext"
+            const MetaString *metastr = nullptr;
+            qstring intertext;
+            while((metastr = info->getNextKeyAndTypeEx(metastr, intertextkeys[i])))
+            {
+               // MetaTables are stored in reverse order
+               if(!intertext.empty())
+                  intertext = qstring(metastr->getValue()) + "\n" + intertext;
+               else
+                  intertext = metastr->getValue();
+            }
+            if(!intertext.empty())
+               LevelInfo.*intertexttargets[i] = intertext.duplicate(PU_LEVEL);
+         }
+      }
+
+      // Must clear what's not there.
+      if(LevelInfo.interText && !LevelInfo.interTextSecret)
+         LevelInfo.finaleNormalOnly = true;
+      else if(!LevelInfo.interText && LevelInfo.interTextSecret)
+         LevelInfo.finaleSecretOnly = true;
    }
-
-   // Must clear what's not there.
-   if(LevelInfo.interText && !LevelInfo.interTextSecret)
-      LevelInfo.finaleNormalOnly = true;
-   else if(!LevelInfo.interText && LevelInfo.interTextSecret)
-      LevelInfo.finaleSecretOnly = true;
-
 
    strval = info->getString("interbackdrop", nullptr);
    if(strval)
@@ -363,8 +375,8 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
    if(strval)
       LevelInfo.interMusic = strval;
 
-   // boss specials
-   return P_processUMapInfoBossActions(info, error);
+   // boss specials (don't process them in classic demos)
+   return classicDemo ? true : P_processUMapInfoBossActions(info, error);
 }
 
 // EOF
