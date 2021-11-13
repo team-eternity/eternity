@@ -102,8 +102,6 @@ static int nummetainfo, nummetainfoalloc;
 static metainfo_t *metainfo;
 static metainfo_t *curmetainfo;
 
-static bool foundEEMapInfo;
-
 //=============================================================================
 //
 // Meta Info
@@ -1481,7 +1479,7 @@ bool P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname, qstring
       }
    }
 
-   foundEEMapInfo = false;
+   bool foundEEMapInfo = false;
 
    const char *mapname = dir->getLumpName(lumpnum);
    if((info = XL_UMapInfoForMapName(mapname)))
