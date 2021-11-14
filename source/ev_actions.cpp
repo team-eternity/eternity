@@ -1165,7 +1165,7 @@ DEFINE_ACTION(EV_ActionDoLockedDoor)
    // time.
    // NOTE: do not do the same for EV_VerticalDoor, as that only goes for manual doors. If we get
    // incompatibilities with wild wads, we can add it later.
-   if(instance->byCodepointer || EV_lockCheck(instance->actor, lockID, true))
+   if(instance->byALineEffect || EV_lockCheck(instance->actor, lockID, true))
       return EV_DoDoor(instance->tag, blazeOpen);
    return 0;
 }

@@ -80,7 +80,7 @@ struct ev_instance_t
    int             gentype;      // generalized type, if is generalized (-1 otherwise)
    int             genspac;      // generalized activation type, if generalized
    polyobj_t      *poly;         // possible polyobject activator
-   bool byCodepointer;           // true if activated by A_LineEffect
+   bool byALineEffect;           // true if activated by A_LineEffect
 };
 
 //

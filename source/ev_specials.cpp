@@ -147,10 +147,10 @@ static int EV_NullPostCrossLine(ev_action_t *action, int result,
 // For the classic DOOM specials activateable by A_LineEffect, allow both player activator and
 // actual A_LineEffect trigger
 //
-inline static bool EV_byPlayerOrCodepointer(const ev_instance_t &instance)
+inline static bool EV_byPlayerOrALineEffect(const ev_instance_t &instance)
 {
    I_Assert(instance.actor, "Actor must have been checked!\n");
-   return instance.actor->player || instance.byCodepointer;
+   return instance.actor->player || instance.byALineEffect;
 }
 
 //
@@ -166,7 +166,7 @@ static bool EV_DOOMPreCrossLine(ev_action_t *action, ev_instance_t *instance)
    REQUIRE_ACTOR(instance->actor);
 
    // Things that should never trigger lines
-   if(!EV_byPlayerOrCodepointer(*instance))
+   if(!EV_byPlayerOrALineEffect(*instance))
    {
       // haleyjd: changed to check against MF2_NOCROSS flag instead of 
       // switching on type.
@@ -176,7 +176,7 @@ static bool EV_DOOMPreCrossLine(ev_action_t *action, ev_instance_t *instance)
 
    // Check if action only allows player
    // jff 3/5/98 add ability of monsters etc. to use teleporters
-   if(!EV_byPlayerOrCodepointer(*instance) && !(flags & EV_PREALLOWMONSTERS))
+   if(!EV_byPlayerOrALineEffect(*instance) && !(flags & EV_PREALLOWMONSTERS))
       return false;
 
    // jff 2/27/98 disallow zero tag on some types
@@ -189,7 +189,7 @@ static bool EV_DOOMPreCrossLine(ev_action_t *action, ev_instance_t *instance)
       return false;
 
    // line type is *only* for monsters?
-   if(EV_byPlayerOrCodepointer(*instance) && (flags & EV_PREMONSTERSONLY))
+   if(EV_byPlayerOrALineEffect(*instance) && (flags & EV_PREMONSTERSONLY))
       return false;
 
    return true;
@@ -240,7 +240,7 @@ static bool EV_DOOMPreUseLine(ev_action_t *action, ev_instance_t *instance)
    if(line && !EV_Check3DMidTexSwitch(line, thing, instance->side))
       return false;
 
-   if(!EV_byPlayerOrCodepointer(*instance))
+   if(!EV_byPlayerOrALineEffect(*instance))
    {
       // Monsters never activate use specials on secret lines
       if(line && line->flags & ML_SECRET)
@@ -301,7 +301,7 @@ static bool EV_DOOMPreShootLine(ev_action_t *action, ev_instance_t *instance)
    // actor and line are required
    REQUIRE_ACTOR(thing);
 
-   if(!EV_byPlayerOrCodepointer(*instance))
+   if(!EV_byPlayerOrALineEffect(*instance))
    {
       // Check if special allows monsters
       if(!(flags & EV_PREALLOWMONSTERS))
@@ -470,7 +470,7 @@ static bool EV_BOOMGenPreActivate(ev_action_t *action, ev_instance_t *instance)
    }
 
    // check whether monsters are allowed or not
-   if(!EV_byPlayerOrCodepointer(*instance))
+   if(!EV_byPlayerOrALineEffect(*instance))
    {
       switch(instance->gentype)
       {
@@ -1549,7 +1549,7 @@ bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing,
    instance.side    = side;
    instance.spac    = spac;
    instance.tag     = line->args[0];
-   instance.byCodepointer = byALineEffect;
+   instance.byALineEffect = byALineEffect;
 
    // get action
    if(!(action = EV_ActionForInstance(instance, byALineEffect)))
