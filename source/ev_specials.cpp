@@ -1553,7 +1553,7 @@ bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing,
 
    // get action
    if(!(action = EV_ActionForInstance(instance, byALineEffect)))
-      return false;
+      return byALineEffect;   // Hack to return "true" for A_LineEffect
 
    // check for parameterized special behavior with tags
    if(EV_CompositeActionFlags(action) & EV_PARAMLINESPEC)
@@ -1561,7 +1561,11 @@ bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing,
 
    // check for special instance
    if(!EV_checkSpac(action, &instance))
+   {
+      if(action->type->activation >= 0)
+         return byALineEffect;   // also hack to return "true" for A_LineEffect
       return false;
+   }
 
    return !!EV_ActivateSpecial(action, &instance);
 }
