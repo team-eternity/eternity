@@ -417,7 +417,7 @@ DEFINE_ACTION(EV_ActionTeleport)
    // case 126: (WR)
    // TELEPORT MonsterONLY.
    // jff 02/09/98 fix using up with wrong side crossing
-   return EV_Teleport(instance->tag, instance->side, instance->actor);
+   return EV_Teleport(instance->tag, instance->side, instance->actor, instance->byALineEffect);
 }
 
 //
@@ -967,9 +967,10 @@ DEFINE_ACTION(EV_ActionSilentTeleport)
    // case 268: (W1 - BOOM Extended)
    // case 269: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent
-   teleparms_t parms;
+   INIT_STRUCT(teleparms_t, parms);
    parms.teleangle = teleangle_relative_boom;
    parms.keepheight = true;
+   parms.alwaysfrag = instance->byALineEffect;
    return EV_SilentTeleport(line, instance->tag, side, thing, parms);
 }
 
@@ -1081,7 +1082,7 @@ DEFINE_ACTION(EV_ActionSilentLineTeleport)
    // case 267: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent line-line
 
-   return EV_SilentLineTeleport(line, instance->tag, side, thing, false);
+   return EV_SilentLineTeleport(line, instance->tag, side, thing, false, instance->byALineEffect);
 }
 
 //
@@ -1099,7 +1100,7 @@ DEFINE_ACTION(EV_ActionSilentLineTeleportReverse)
    // case 264: (W1 - BOOM Extended)
    // case 265: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent line-line reversed
-   return EV_SilentLineTeleport(line, instance->tag, side, thing, true);
+   return EV_SilentLineTeleport(line, instance->tag, side, thing, true, instance->byALineEffect);
 }
 
 //
@@ -3770,7 +3771,7 @@ DEFINE_ACTION(EV_ActionParamGenCrusher)
 DEFINE_ACTION(EV_ActionParamTeleport)
 {
    return EV_ParamTeleport(instance->args[0], instance->args[1], 
-                           instance->side,    instance->actor);
+                           instance->side,    instance->actor, instance->byALineEffect);
 }
 
 //
@@ -3782,7 +3783,7 @@ DEFINE_ACTION(EV_ActionParamTeleport)
 //
 DEFINE_ACTION(EV_ActionParamTeleportNoFog)
 {
-   teleparms_t parms;
+   INIT_STRUCT(teleparms_t, parms);
    switch(instance->args[1])
    {
    case 0: // hexen
@@ -3799,6 +3800,7 @@ DEFINE_ACTION(EV_ActionParamTeleportNoFog)
       break;
    }
    parms.keepheight = instance->args[3] != 0;
+   parms.alwaysfrag = instance->byALineEffect;
    return EV_ParamSilentTeleport(instance->args[0], instance->line,
                                  instance->args[2], instance->side,
                                  instance->actor, parms);
@@ -3817,7 +3819,7 @@ DEFINE_ACTION(EV_ActionParamTeleportLine)
    // do it.
    return EV_SilentLineTeleport(instance->line, instance->args[1],
                                 instance->side, instance->actor,
-                                instance->args[2] != 0);
+                                instance->args[2] != 0, instance->byALineEffect);
 }
 
 //

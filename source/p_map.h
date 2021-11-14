@@ -96,8 +96,14 @@ ItemCheckResult P_CheckThingCommon(Mobj *thing);
 // Teleportation
 //
 
+enum
+{
+   TELEMOVE_BOSS = 1,
+   TELEMOVE_FRAG = 2,
+};
+
 // killough 8/9/98: extra argument for telefragging
-bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y,bool boss);
+bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, unsigned flags);
 
 // haleyjd 06/06/05: new function that won't stick the thing inside inert objects
 bool P_TeleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss);

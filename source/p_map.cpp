@@ -373,7 +373,7 @@ int P_GetMoveFactor(Mobj *mo, int *frictionp)
 //
 
 // killough 8/9/98
-bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
+bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, unsigned flags)
 {
    int xl, xh, yl, yh, bx, by;
    subsector_t *newsubsec;
@@ -382,8 +382,8 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    // killough 8/9/98: make telefragging more consistent, preserve compatibility
    // haleyjd 03/25/03: TELESTOMP flag handling moved here (was thing->player)
    // TODO: make this an EMAPINFO flag
-   telefrag = (thing->flags3 & MF3_TELESTOMP) || 
-              (!getComp(comp_telefrag) ? boss : (gamemap == 30));
+   telefrag = (thing->flags3 & MF3_TELESTOMP) || !!(flags & TELEMOVE_FRAG) ||
+              (!getComp(comp_telefrag) ? !!(flags & TELEMOVE_BOSS) : (gamemap == 30));
 
    // kill anything occupying the position
    
@@ -491,7 +491,7 @@ bool P_TeleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    bool res;
 
    ignore_inerts = false;
-   res = P_TeleportMove(thing, x, y, boss);
+   res = P_TeleportMove(thing, x, y, boss ? TELEMOVE_BOSS : 0);
    ignore_inerts = true;
    
    return res;

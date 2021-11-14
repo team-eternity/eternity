@@ -1419,7 +1419,7 @@ void P_BossTeleport(bossteleport_t *bt)
    prevy = boss->y;
    prevz = boss->z;
 
-   if(P_TeleportMove(boss, targ->x, targ->y, false))
+   if(P_TeleportMove(boss, targ->x, targ->y, 0))
    {
       if(bt->hereThere <= BOSSTELE_BOTH && bt->hereThere != BOSSTELE_NONE)
       {
@@ -1952,7 +1952,7 @@ static void P_ResurrectPlayer()
       p->health = p->pclass->initialhealth;
       P_SpawnPlayer(&mthing);
       oldmo->player = nullptr;
-      P_TeleportMove(p->mo, p->mo->x, p->mo->y, true);
+      P_TeleportMove(p->mo, p->mo->x, p->mo->y, TELEMOVE_BOSS);
    }
 }
 

@@ -1405,7 +1405,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side);
 //
 // Silent teleport angle change
 //
-enum teleangle_e
+enum teleangle_e : int8_t
 {
    teleangle_keep,               // keep current thing angle (Hexen silent teleport)
    teleangle_absolute,           // totally change angle (ZDoom extension)
@@ -1419,12 +1419,13 @@ enum teleangle_e
 struct teleparms_t
 {
    bool keepheight;
+   bool alwaysfrag;
    teleangle_e teleangle;
 };
 
-bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle);
+bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle, bool alwaysfrag);
 
-int EV_Teleport(int tag, int side, Mobj *thing);
+int EV_Teleport(int tag, int side, Mobj *thing, bool alwaysfrag);
 
 // killough 2/14/98: Add silent teleporter
 int EV_SilentTeleport(const line_t *line, int tag, int side, Mobj *thing,
@@ -1432,10 +1433,10 @@ int EV_SilentTeleport(const line_t *line, int tag, int side, Mobj *thing,
 
 // killough 1/31/98: Add silent line teleporter
 int EV_SilentLineTeleport(const line_t *line, int lineid, int side,
-			              Mobj *thing, bool reverse);
+			              Mobj *thing, bool reverse, bool alwaysfrag);
 
 // ioanch 20160330: parameterized teleport
-int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing);
+int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing, bool alwaysfrag);
 int EV_ParamSilentTeleport(int tid, const line_t *line, int tag, int side,
                            Mobj *thing, teleparms_t parms);
 
