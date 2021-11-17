@@ -56,6 +56,14 @@ char  *M_SafeFilePath(const char *pbasepath, const char *newcomponent);
 
 int M_PositiveModulo(int op1, int op2);
 
+//
+// This one assumes op2 > 0. Needed to avoid calling abs if we guarantee op2 > 0
+//
+inline static int M_PositiveModPositiveRight(int op1, int op2)
+{
+   return (op1 % op2 + op2) % op2;
+}
+
 bool M_IsExMy(const char *name, int *episode, int *map);
 bool M_IsMAPxy(const char *name, int *map);
 

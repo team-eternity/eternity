@@ -544,6 +544,10 @@ These are features planned to debut in future versions of the Eternity Engine:
 
 Bugs Fixed (between 4.02.00 and 4.03.00):
 
++ Fixed a crash happening when looking at non-power-of-2 midtextures straight
+  on their edges. Eliminated the risk of illegal memory access when it would not
+  crash.
+
 + Fixed a glaring portal autoaim failure (it was affecting wads like Heartland).
 
 + Fixed problems with noise alert propagation through linked portals.
