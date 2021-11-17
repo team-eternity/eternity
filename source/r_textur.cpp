@@ -949,7 +949,7 @@ static void FinishTexture(texture_t *tex)
    }
    
    // Allocate column pointers
-   tex->columns = ecalloctag(texcol_t **, sizeof(texcol_t **), tex->width, PU_RENDERER, nullptr);
+   tex->columns = ecalloctag(texcol_t **, sizeof(texcol_t *), tex->width, PU_RENDERER, nullptr);
    
    // Build the columns based on mask info
    maskp = tempmask.buffer;
