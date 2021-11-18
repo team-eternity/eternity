@@ -545,7 +545,8 @@ These are features planned to debut in future versions of the Eternity Engine:
 Bugs Fixed (between 4.02.00 and 4.03.00):
 
 + Fixed a crash happening when respawning dynamically created items which
-  weren't initially placed in the editor.
+  weren't initially placed in the editor. Thanks to MP2E for noticing and
+  fixing it!
 
 + Fixed a crash happening when looking at non-power-of-2 midtextures straight
   on their edges. Eliminated the risk of illegal memory access when it would not
