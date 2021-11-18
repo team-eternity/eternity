@@ -2182,6 +2182,16 @@ void P_RespawnSpecials()
       return;
 
    mthing = &itemrespawnque[iquetail];
+    
+    // find which type to spawn
+    
+    // killough 8/23/98: use table for faster lookup
+    i = P_FindDoomedNum(mthing->type);
+    
+    if (i == -1 || i == NUMMOBJTYPES) {
+       iquetail = (iquetail+1)&(ITEMQUESIZE-1);
+       return;
+    }
 
    x = mthing->x;
    y = mthing->y;
@@ -2190,11 +2200,6 @@ void P_RespawnSpecials()
    ss = R_PointInSubsector(x,y);
    mo = P_SpawnMobj(x, y, ss->sector->srf.floor.height, E_SafeThingType(MT_IFOG));
    S_StartSound(mo, sfx_itmbk);
-
-   // find which type to spawn
-
-   // killough 8/23/98: use table for faster lookup
-   i = P_FindDoomedNum(mthing->type);
 
    // spawn it
    z = mobjinfo[i]->flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
