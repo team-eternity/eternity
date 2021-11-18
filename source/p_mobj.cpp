@@ -2183,15 +2183,17 @@ void P_RespawnSpecials()
 
    mthing = &itemrespawnque[iquetail];
     
-    // find which type to spawn
-    
-    // killough 8/23/98: use table for faster lookup
-    i = P_FindDoomedNum(mthing->type);
-    
-    if (i == -1 || i == NUMMOBJTYPES) {
-       iquetail = (iquetail+1)&(ITEMQUESIZE-1);
-       return;
-    }
+   // find which type to spawn
+
+   // killough 8/23/98: use table for faster lookup
+   i = P_FindDoomedNum(mthing->type);
+
+   if(i == -1 || i == NUMMOBJTYPES)
+   {
+      // No spawn point? Don't try to respawn (otherwise it would crash).
+      iquetail = (iquetail + 1) & (ITEMQUESIZE - 1);
+      return;
+   }
 
    x = mthing->x;
    y = mthing->y;
