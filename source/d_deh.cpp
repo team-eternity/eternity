@@ -582,6 +582,7 @@ enum dehweaponid_e : int
    dehweaponid_shooting,
    dehweaponid_firing,
    dehweaponid_ammoPerShot,
+   dehweaponid_mbf21flags,
    NUMDEHWEAPONIDS
 };
 
@@ -594,6 +595,33 @@ static constexpr const char *deh_weapon[NUMDEHWEAPONIDS] =
   "Shooting frame", // .atkstate
   "Firing frame",   // .flashstate
   "Ammo per shot",  // haleyjd 08/10/02: .ammopershot
+};
+
+static dehflags_t deh_mbf21weaponflags[] =
+{
+   { "NOTHRUST",       0x00000001 },
+   { "SILENT",         0x00000002 },
+   { "NOAUTOFIRE",     0x00000004 },
+   { "FLEEMELEE",      0x00000008 },
+   { "AUTOSWITCHFROM", 0x00000010 },
+   { "NOAUTOSWITCHTO", 0x00000020 },
+   { nullptr,          0          }
+};
+
+static dehflagset_t dehacked_mbf21weaponflags =
+{
+   deh_mbf21weaponflags, // flaglist
+};
+
+dehflagremap_t dehacked_mbf21weaponflags_remappings[earrlen(deh_mbf21weaponflags)] =
+{
+   { 0x00000001, 0, WPF_NOTHRUST,       0 },
+   { 0x00000002, 0, WPF_SILENT,         0 },
+   { 0x00000004, 0, WPF_NOAUTOFIRE,     0 },
+   { 0x00000008, 0, WPF_FLEEMELEE,      0 },
+   { 0x00000010, 0, WPF_AUTOSWITCHFROM, 0 },
+   { 0x00000020, 0, WPF_NOAUTOSWITCHTO, 0 },
+   { 0,          0, 0,                  0 }
 };
 
 // MISC - Dehacked block name = "Misc"
@@ -1705,6 +1733,7 @@ static void deh_procWeapon(DWFILE *fpin, char *line)
    char inbuffer[DEH_BUFFERMAX];
    int value;      // All deh values are ints or longs
    int indexnum;
+   char* strval;
 
    // haleyjd 08/10/02: significant reformatting
 
@@ -1729,7 +1758,7 @@ static void deh_procWeapon(DWFILE *fpin, char *line)
       if(!*inbuffer)
          break;       // killough 11/98
 
-      if(!deh_GetData(inbuffer, key, &value, nullptr)) // returns TRUE if ok
+      if(!deh_GetData(inbuffer, key, &value, &strval)) // returns TRUE if ok
       {
          deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
          continue;
@@ -1794,6 +1823,13 @@ static void deh_procWeapon(DWFILE *fpin, char *line)
          // enable ammo per shot value usage for this weapon
          weaponinfo.flags &= ~WPF_DISABLEAPS;
          break;
+      case dehweaponid_mbf21flags:
+      if(!value)
+      {
+         deh_ParseFlagsCombinedRemapped(strval, &dehacked_mbf21weaponflags, dehacked_mbf21weaponflags_remappings);
+         weaponinfo.flags = dehacked_mbf21weaponflags.results[DEHFLAGS_MODE1];
+      }
+      break;
       default:
          deh_LogPrintf("Invalid weapon string index for '%s'\n", key);
          break;
