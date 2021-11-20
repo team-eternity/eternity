@@ -1263,8 +1263,8 @@ static void deh_procThing(DWFILE *fpin, char *line)
                mi->flags  = dehacked_mbf21flags.results[DEHFLAGS_MODE1];
                mi->flags2 = dehacked_mbf21flags.results[DEHFLAGS_MODE2];
                mi->flags3 = dehacked_mbf21flags.results[DEHFLAGS_MODE3];
-               mi->flags4 = dehacked_mbf21flags.results[DEHFLAGS_MODE3];
-               mi->flags5 = dehacked_mbf21flags.results[DEHFLAGS_MODE3];
+               mi->flags4 = dehacked_mbf21flags.results[DEHFLAGS_MODE4];
+               mi->flags5 = dehacked_mbf21flags.results[DEHFLAGS_MODE5];
             }
 
          }
