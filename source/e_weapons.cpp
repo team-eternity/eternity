@@ -207,6 +207,7 @@ static dehflags_t e_weaponFlags[] =
    { "FORCETOREADY",   WPF_FORCETOREADY   },
    { "PHOENIXRESET",   WPF_PHOENIXRESET   },
    { "DEPOWERSWITCH",  WPF_DEPOWERSWITCH  },
+   { "NOAUTOSWITCHTO", WPF_NOAUTOSWITCHTO },
    { nullptr,          0                  }
 };
 
@@ -530,7 +531,8 @@ static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t *player,
 
    if(node->left  && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->left)))
       return ret;
-   if(E_PlayerOwnsWeapon(player, temp) && correctammo && P_WeaponHasAmmo(player, temp))
+   if(E_PlayerOwnsWeapon(player, temp) && !(temp->flags & WPF_NOAUTOSWITCHTO) &&
+      correctammo && P_WeaponHasAmmo(player, temp))
       return temp;
    if(node->next  && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->next)))
       return ret;

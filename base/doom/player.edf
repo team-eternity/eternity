@@ -55,7 +55,7 @@ weaponinfo Fist : DoomWeapon, 0
 
   selectionorder 9.0
 
-  flags        FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM
+  flags        FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM|NOAUTOSWITCHTO
   mod          Fist
   recoil       10.0
 
@@ -333,7 +333,7 @@ weaponinfo Chainsaw : DoomWeapon, 7
 
   selectionorder 6.0
 
-  flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS
+  flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS|NOAUTOSWITCHTO
   mod          Chainsaw
   upsound      sawup
   readysound   sawidl

@@ -140,6 +140,11 @@ Fixed -dog. Made it so -dogs only works if it's not the last command-line arg.
    sounds maximum volume.
  * Added dehacked support for thingtype "MBF21 Bits".
  * Added dehacked support for "Fast speed".
+ 
+ --------------------------------------------------------------------------------
+2021/11/20
+Add NOAUTOSWITCHTO weapon flag, which forbids a weapon for being automatically
+switched to when weapon is picked up on a "worse" weapon.
 
 ================================================================================
 EOF
