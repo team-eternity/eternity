@@ -685,7 +685,7 @@ static dehcheat_t deh_cheats[] =
 // haleyjd 10/08/06: DeHackEd log file made module-global
 static FILE *fileout;
 
-static unsigned int *deh_calcMBF21FlagMasks(const dehflagremap_t *flagremapping)
+static unsigned int *deh_calcMBF21FlagMasks(const dehflagremap_t *const flagremapping)
 {
    static unsigned int results[MAXFLAGFIELDS];
 
@@ -1046,6 +1046,20 @@ unsigned int *deh_ParseFlagsCombined(const char *strval)
    return dehacked_flags.results;
 }
 
+static unsigned int *deh_remapFlags(
+   const unsigned int flags, dehflagset_t *flagset, const dehflagremap_t *const flagremapping
+)
+{
+   memset(flagset->results, 0, MAXFLAGFIELDS * sizeof(unsigned int));
+   for(const dehflagremap_t *currRemap = flagremapping; currRemap->inFlag; currRemap++)
+   {
+      if(flags & currRemap->inFlag)
+         flagset->results[currRemap->outIndex] |= currRemap->outFlag;
+   }
+
+   return flagset->results;
+}
+
 static unsigned int *deh_parseFlagsCombinedRemapped(
    const char *strval, dehflagset_t *flagset, dehflagremap_t *flagremapping
 )
@@ -1306,14 +1320,19 @@ static void deh_procThing(DWFILE *fpin, char *line)
                deh_parseFlagsCombinedRemapped(strval, &dehacked_mbf21flags, dehacked_mbf21mobjflags_remappings);
 
                deh_LogPrintf("MBF21 Bits = %s \n", strval);
+            }
+            else
+            {
+               deh_remapFlags(value, &dehacked_mbf21flags, dehacked_mbf21mobjflags_remappings);
 
-               mi->flags  |= dehacked_mbf21flags.results[DEHFLAGS_MODE1];
-               mi->flags2 |= dehacked_mbf21flags.results[DEHFLAGS_MODE2];
-               mi->flags3 |= dehacked_mbf21flags.results[DEHFLAGS_MODE3];
-               mi->flags4 |= dehacked_mbf21flags.results[DEHFLAGS_MODE4];
-               mi->flags5 |= dehacked_mbf21flags.results[DEHFLAGS_MODE5];
+               deh_LogPrintf("MBF21 Bits = %d \n", value);
             }
 
+            mi->flags  |= dehacked_mbf21flags.results[DEHFLAGS_MODE1];
+            mi->flags2 |= dehacked_mbf21flags.results[DEHFLAGS_MODE2];
+            mi->flags3 |= dehacked_mbf21flags.results[DEHFLAGS_MODE3];
+            mi->flags4 |= dehacked_mbf21flags.results[DEHFLAGS_MODE4];
+            mi->flags5 |= dehacked_mbf21flags.results[DEHFLAGS_MODE5];
          }
          else
             SetMobjInfoValue(indexnum, dehmobjinfoid, value);
@@ -1843,15 +1862,17 @@ static void deh_procWeapon(DWFILE *fpin, char *line)
          weaponinfo.flags &= ~WPF_DISABLEAPS;
          break;
       case dehweaponid_mbf21flags:
+      {
          unsigned int *flagMasks = deh_calcMBF21FlagMasks(dehacked_mbf21mobjflags_remappings);
          weaponinfo.flags &= ~flagMasks[0];
 
          if(!value)
-         {
             deh_parseFlagsCombinedRemapped(strval, &dehacked_mbf21weaponflags, dehacked_mbf21weaponflags_remappings);
-            weaponinfo.flags |= dehacked_mbf21weaponflags.results[DEHFLAGS_MODE1];
-         }
+         else
+            deh_remapFlags(value, &dehacked_mbf21weaponflags, dehacked_mbf21weaponflags_remappings);
+         weaponinfo.flags |= dehacked_mbf21weaponflags.results[DEHFLAGS_MODE1];
          break;
+      }
       default:
          deh_LogPrintf("Invalid weapon string index for '%s'\n", key);
          break;
