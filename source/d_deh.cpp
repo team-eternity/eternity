@@ -595,6 +595,7 @@ static constexpr const char *deh_weapon[NUMDEHWEAPONIDS] =
   "Shooting frame", // .atkstate
   "Firing frame",   // .flashstate
   "Ammo per shot",  // haleyjd 08/10/02: .ammopershot
+  "MBF21 Bits",     // .flags
 };
 
 static dehflags_t deh_mbf21weaponflags[] =
@@ -1824,12 +1825,12 @@ static void deh_procWeapon(DWFILE *fpin, char *line)
          weaponinfo.flags &= ~WPF_DISABLEAPS;
          break;
       case dehweaponid_mbf21flags:
-      if(!value)
-      {
-         deh_ParseFlagsCombinedRemapped(strval, &dehacked_mbf21weaponflags, dehacked_mbf21weaponflags_remappings);
-         weaponinfo.flags = dehacked_mbf21weaponflags.results[DEHFLAGS_MODE1];
-      }
-      break;
+         if(!value)
+         {
+            deh_ParseFlagsCombinedRemapped(strval, &dehacked_mbf21weaponflags, dehacked_mbf21weaponflags_remappings);
+            weaponinfo.flags = dehacked_mbf21weaponflags.results[DEHFLAGS_MODE1];
+         }
+         break;
       default:
          deh_LogPrintf("Invalid weapon string index for '%s'\n", key);
          break;
