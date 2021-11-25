@@ -133,7 +133,7 @@ struct midi_event_t
 
 // Load a MIDI file.
 
-midi_file_t *MIDI_LoadFile(SDL_RWops *rw);
+midi_file_t *MIDI_LoadFile(SDL_RWops *stream);
 
 // Free a MIDI file.
 
