@@ -14,6 +14,8 @@
 // DESCRIPTION:
 //      Windows native MIDI
 
+#include "SDL.h"
+
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 
@@ -412,7 +414,7 @@ void I_WIN_PlaySong(bool looping)
    }
 }
 
-bool I_WIN_RegisterSong(char *filename)
+bool I_WIN_RegisterSong(void *data, int size)
 {
    int i;
    midi_file_t *file;
@@ -420,7 +422,8 @@ bool I_WIN_RegisterSong(char *filename)
    MIDIPROPTEMPO tempo;
    MMRESULT mmr;
 
-   file = MIDI_LoadFile(filename);
+   SDL_RWops *rw = SDL_RWFromMem(data, size);
+   file = MIDI_LoadFile(rw);
 
    if(file == NULL)
    {

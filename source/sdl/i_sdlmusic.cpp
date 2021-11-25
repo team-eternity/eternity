@@ -655,13 +655,9 @@ static int I_SDLRegisterSong(void *data, int size)
    if(isMIDI && winMIDIStreamOpened)
 #endif
    {
-      char *filename = M_TempFile("doom.mid");
-
-      M_WriteFile(filename, data, size);
-
       if(winMIDIStreamOpened)
       {
-         if(I_WIN_RegisterSong(filename))
+         if(I_WIN_RegisterSong(data, size))
             return 1;
          else
             music = nullptr;
@@ -736,4 +732,3 @@ i_musicdriver_t i_sdlmusicdriver =
 };
 
 // EOF
-

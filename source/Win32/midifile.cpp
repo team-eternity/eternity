@@ -15,6 +15,8 @@
 //    Reading of MIDI files.
 //
 
+#include "SDL.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -107,11 +109,11 @@ static bool CheckChunkHeader(chunk_header_t *chunk,
 
 // Read a single byte.  Returns false on error.
 
-static bool ReadByte(byte *result, FILE *stream)
+static bool ReadByte(byte *result, SDL_RWops *stream)
 {
    int c;
 
-   c = fgetc(stream);
+   c = SDL_RWread(stream, &c, 1, 1);
 
    if(c == EOF)
    {
@@ -128,7 +130,7 @@ static bool ReadByte(byte *result, FILE *stream)
 
 // Read a variable-length value.
 
-static bool ReadVariableLength(unsigned int *result, FILE *stream)
+static bool ReadVariableLength(unsigned int *result, SDL_RWops *stream)
 {
    int i;
    byte b = 0;
@@ -164,7 +166,7 @@ static bool ReadVariableLength(unsigned int *result, FILE *stream)
 
 // Read a byte sequence into the data buffer.
 
-static byte *ReadByteSequence(unsigned int num_bytes, FILE *stream)
+static byte *ReadByteSequence(unsigned int num_bytes, SDL_RWops *stream)
 {
    unsigned int i;
    byte *result;
@@ -199,7 +201,7 @@ static byte *ReadByteSequence(unsigned int num_bytes, FILE *stream)
 // two_param indicates that the event type takes two parameters
 // (three byte) otherwise it is single parameter (two byte)
 
-static bool ReadChannelEvent(midi_event_t *event, byte event_type, bool two_param, FILE *stream)
+static bool ReadChannelEvent(midi_event_t *event, byte event_type, bool two_param, SDL_RWops *stream)
 {
    byte b = 0;
 
@@ -238,7 +240,7 @@ static bool ReadChannelEvent(midi_event_t *event, byte event_type, bool two_para
 
 // Read sysex event:
 
-static bool ReadSysExEvent(midi_event_t *event, int event_type, FILE *stream)
+static bool ReadSysExEvent(midi_event_t *event, int event_type, SDL_RWops *stream)
 {
    event->event_type = midi_event_type_e(event_type);
 
@@ -264,7 +266,7 @@ static bool ReadSysExEvent(midi_event_t *event, int event_type, FILE *stream)
 
 // Read meta event:
 
-static bool ReadMetaEvent(midi_event_t *event, FILE *stream)
+static bool ReadMetaEvent(midi_event_t *event, SDL_RWops *stream)
 {
    byte b = 0;
 
@@ -303,7 +305,7 @@ static bool ReadMetaEvent(midi_event_t *event, FILE *stream)
 }
 
 static bool ReadEvent(midi_event_t *event, unsigned int *last_event_type,
-   FILE *stream)
+   SDL_RWops *stream)
 {
    byte event_type = 0;
 
@@ -328,7 +330,7 @@ static bool ReadEvent(midi_event_t *event, unsigned int *last_event_type,
    {
       event_type = *last_event_type;
 
-      if(fseek(stream, -1, SEEK_CUR) < 0)
+      if(SDL_RWseek(stream, -1, RW_SEEK_CUR) < 0)
       {
          fprintf(stderr, "ReadEvent: Unable to seek in stream\n");
          return false;
@@ -407,12 +409,12 @@ static void FreeEvent(midi_event_t *event)
 
 // Read and check the track chunk header
 
-static bool ReadTrackHeader(midi_track_t *track, FILE *stream)
+static bool ReadTrackHeader(midi_track_t *track, SDL_RWops *stream)
 {
    size_t records_read;
    chunk_header_t chunk_header;
 
-   records_read = fread(&chunk_header, sizeof(chunk_header_t), 1, stream);
+   records_read = SDL_RWread(stream, &chunk_header, sizeof(chunk_header_t), 1);
 
    if(records_read < 1)
    {
@@ -429,7 +431,7 @@ static bool ReadTrackHeader(midi_track_t *track, FILE *stream)
    return true;
 }
 
-static bool ReadTrack(midi_track_t *track, FILE *stream)
+static bool ReadTrack(midi_track_t *track, SDL_RWops *stream)
 {
    midi_event_t *new_events;
    midi_event_t *event;
@@ -486,7 +488,7 @@ static void FreeTrack(midi_track_t *track)
    efree(track->events);
 }
 
-static bool ReadAllTracks(midi_file_t *file, FILE *stream)
+static bool ReadAllTracks(midi_file_t *file, SDL_RWops *stream)
 {
    unsigned int i;
 
@@ -512,12 +514,12 @@ static bool ReadAllTracks(midi_file_t *file, FILE *stream)
 
 // Read and check the header chunk.
 
-static bool ReadFileHeader(midi_file_t *file, FILE *stream)
+static bool ReadFileHeader(midi_file_t *file, SDL_RWops *stream)
 {
    size_t records_read;
    unsigned int format_type;
 
-   records_read = fread(&file->header, sizeof(midi_header_t), 1, stream);
+   records_read = SDL_RWread(stream, &file->header, sizeof(midi_header_t), 1);
 
    if(records_read < 1)
    {
@@ -563,32 +565,29 @@ void MIDI_FreeFile(midi_file_t *file)
    efree(file);
 }
 
-midi_file_t *MIDI_LoadFile(char *filename)
+midi_file_t *MIDI_LoadFile(SDL_RWops *rw)
 {
    midi_file_t *file;
-   FILE *stream;
+   SDL_RWops *stream = rw;
 
    file = estructalloc(midi_file_t, 1);
 
    if(file == nullptr)
       return nullptr;
 
-   // Open file
-
-   stream = fopen(filename, "rb");
-
-   if(stream == nullptr)
-   {
-      fprintf(stderr, "MIDI_LoadFile: Failed to open '%s'\n", filename);
-      MIDI_FreeFile(file);
-      return nullptr;
-   }
+   //// Open file
+   //if(stream == nullptr)
+   //{
+   //   fprintf(stderr, "MIDI_LoadFile: Failed to open '%s'\n", filename);
+   //   MIDI_FreeFile(file);
+   //   return nullptr;
+   //}
 
    // Read MIDI file header
 
    if(!ReadFileHeader(file, stream))
    {
-      fclose(stream);
+      SDL_RWclose(stream);
       MIDI_FreeFile(file);
       return nullptr;
    }
@@ -597,12 +596,12 @@ midi_file_t *MIDI_LoadFile(char *filename)
 
    if(!ReadAllTracks(file, stream))
    {
-      fclose(stream);
+      SDL_RWclose(stream);
       MIDI_FreeFile(file);
       return nullptr;
    }
 
-   fclose(stream);
+   SDL_RWclose(stream);
 
    return file;
 }

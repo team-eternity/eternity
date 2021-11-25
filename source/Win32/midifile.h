@@ -18,6 +18,8 @@
 #ifndef MIDIFILE_H
 #define MIDIFILE_H
 
+typedef struct SDL_RWops SDL_RWops;
+
 struct midi_file_t;
 struct midi_track_iter_t;
 
@@ -131,7 +133,7 @@ struct midi_event_t
 
 // Load a MIDI file.
 
-midi_file_t *MIDI_LoadFile(char *filename);
+midi_file_t *MIDI_LoadFile(SDL_RWops *rw);
 
 // Free a MIDI file.
 
