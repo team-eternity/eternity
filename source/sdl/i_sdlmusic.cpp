@@ -57,14 +57,11 @@
 #include "adlmidi.h"
 #endif
 
-#if EE_FEATURE_MIDIRPC
+#if defined(_WIN32)
 #include <windows.h>
-#pragma comment(lib, "Winmm.lib")
 
 #include "../Win32/midifile.h"
 #include "../Win32/i_winmusic.h"
-
-#include "../Win32/i_winversion.h"
 #endif
 
 extern int audio_buffers;
@@ -241,10 +238,8 @@ static void I_effectADLMIDI(void *udata, Uint8 *stream, int len)
 // MUSIC API.
 //
 
-#ifdef EE_FEATURE_MIDIRPC
+#if defined(_WIN32)
 static bool winMIDIStreamOpened = false;
-
-static std::optional<DWORD> initialVolume;
 #endif
 
 // julian (10/25/2005): rewrote (nearly) entirely
@@ -277,7 +272,7 @@ static void I_SDLShutdownMusic(void)
 {
    I_SDLUnRegisterSong(1);
 
-#ifdef EE_FEATURE_MIDIRPC
+#if defined(_WIN32)
    if(winMIDIStreamOpened)
    {
       I_WIN_ShutdownMusic();
@@ -346,7 +341,7 @@ static int I_SDLInitMusic(void)
    else
       success = 1;
 
-#ifdef EE_FEATURE_MIDIRPC
+#if defined(_WIN32)
    winMIDIStreamOpened = I_WIN_InitMusic();
 #endif
 
@@ -374,7 +369,7 @@ static void I_SDLPlaySong(int handle, int looping)
       }
       else
 #endif
-#ifdef EE_FEATURE_MIDIRPC
+#if defined(_WIN32)
    if(winMIDIStreamOpened)
       I_WIN_PlaySong(!!looping);
    else
@@ -394,7 +389,7 @@ static void I_SDLSetMusicVolume(int volume)
    // haleyjd 09/04/06: adjust to use scale from 0 to SND_MAXVOLUME
    Mix_VolumeMusic((volume * 128) / SND_MAXVOLUME);
 
-#ifdef EE_FEATURE_MIDIRPC
+#if defined(_WIN32)
    // adjust server volume
    I_WIN_SetMusicVolume(volume);
 #endif
@@ -415,7 +410,7 @@ static int paused_midi_volume;
 //
 static void I_SDLPauseSong(int handle)
 {
-//#ifdef EE_FEATURE_MIDIRPC
+//#if defined(_WIN32)
 //   if(serverMidiPlaying)
 //   {
 //      I_MidiRPCPauseSong();
@@ -446,7 +441,7 @@ static void I_SDLPauseSong(int handle)
 //
 static void I_SDLResumeSong(int handle)
 {
-//#ifdef EE_FEATURE_MIDIRPC
+//#if defined(_WIN32)
 //   if(serverMidiPlaying)
 //   {
 //      I_MidiRPCResumeSong();
@@ -473,7 +468,7 @@ static void I_SDLResumeSong(int handle)
 //
 static void I_SDLStopSong(int handle)
 {
-#ifdef EE_FEATURE_MIDIRPC
+#if defined(_WIN32)
    if(winMIDIStreamOpened)
       I_WIN_StopSong();
 #endif
@@ -497,7 +492,7 @@ static void I_SDLStopSong(int handle)
 //
 static void I_SDLUnRegisterSong(int handle)
 {
-#ifdef EE_FEATURE_MIDIRPC
+#if defined(_WIN32)
    if(winMIDIStreamOpened)
       I_WIN_UnRegisterSong();
 #endif
@@ -648,7 +643,7 @@ static int I_SDLRegisterSong(void *data, int size)
       isMIDI = true;   // now it's a MIDI.
    }
 
-#ifdef EE_FEATURE_MIDIRPC
+#if defined(_WIN32)
 #ifdef HAVE_ADLMIDILIB
    if(isMIDI && winMIDIStreamOpened && midi_device == -1)
 #else

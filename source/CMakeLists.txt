@@ -90,7 +90,7 @@ function(eternity_target_compile_definitions _TARGET)
       target_compile_definitions("${_TARGET}" PRIVATE EE_FEATURE_REGISTRYSCAN)
 
       if(MSVC)
-         target_compile_definitions("${_TARGET}" PRIVATE EE_FEATURE_MIDIRPC EE_FEATURE_XINPUT)
+         target_compile_definitions("${_TARGET}" PRIVATE EE_FEATURE_XINPUT)
       endif()
    endif()
 endfunction()
@@ -120,26 +120,6 @@ function(eternity_target_sources _TARGET)
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_xinput.cpp"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/midifile.cpp"
       )
-      if(MSVC)
-         if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-            add_custom_command(OUTPUT midiproc_c.c midiproc_s.c midiproc.h
-            COMMAND midl -Oicf -W1 -Zp8 /env amd64 /protocol dce /app_config /out ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../midiproc/midiproc.idl
-            MAIN_DEPENDENCY ../midiproc/midiproc.idl)
-         elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
-            add_custom_command(OUTPUT midiproc_c.c midiproc_s.c midiproc.h
-               COMMAND midl -Oicf -W1 -Zp8 /env win32 /protocol dce /app_config /out ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../midiproc/midiproc.idl
-               MAIN_DEPENDENCY ../midiproc/midiproc.idl)
-         endif()
-         target_include_directories("${_TARGET}" PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-
-         add_sources(
-            SOURCE_GROUP "Source Files\\\\SDL\\\\midiproc"
-            "${CMAKE_CURRENT_BINARY_DIR}/midiproc_c.c"
-         )
-
-         target_include_directories("${_TARGET}" PRIVATE Win32/)
-         target_include_directories("${_TARGET}" PRIVATE ../midiproc/)
-      endif()
    endif()
 
    # macOS has no unique files currently
@@ -615,7 +595,6 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/s_sound.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/sounds.cpp"
       SOURCE_GROUP "Source Files\\\\SDL\\\\SDL Headers"
-      "${CMAKE_CURRENT_SOURCE_DIR}/sdl/i_midirpc.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/i_net.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/sdl/i_sdlgamepads.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/sdl/i_sdlgl2d.h"
@@ -627,7 +606,6 @@ function(eternity_target_sources _TARGET)
       SOURCE_GROUP "Source Files\\\\SDL\\\\SDL Source"
       "${CMAKE_CURRENT_SOURCE_DIR}/sdl/i_input.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/sdl/i_main.cpp"
-      "${CMAKE_CURRENT_SOURCE_DIR}/sdl/i_midirpc.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/sdl/i_net.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/sdl/i_pcsound.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/sdl/i_picker.cpp"
@@ -787,9 +765,11 @@ if(OPENGL_LIBRARY)
    target_link_libraries(eternity ${OPENGL_LIBRARY})
 endif()
 
-if(MSVC)
-   target_link_libraries(eternity rpcrt4)
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+   target_link_libraries(eternity winmm)
+endif()
 
+if(MSVC)
    target_compile_options(eternity PUBLIC
                           "/MP" "/utf-8")
 
