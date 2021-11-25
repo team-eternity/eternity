@@ -31,8 +31,6 @@
 #include "SDL.h"
 #include "SDL_mixer.h"
 
-#include "i_midirpc.h"
-
 #include "../z_zone.h"
 #include "../d_io.h"
 #include "../c_runcmd.h"
@@ -49,6 +47,7 @@
 #include "../d_gi.h"
 #include "../s_sound.h"
 #include "../mn_engin.h"
+#include "../m_utils.h"
 
 #ifdef HAVE_SPCLIB
 #include "../../snes_spc/spc.h"
@@ -58,9 +57,12 @@
 #include "adlmidi.h"
 #endif
 
-#ifdef EE_FEATURE_MIDIRPC
+#if EE_FEATURE_MIDIRPC
 #include <windows.h>
 #pragma comment(lib, "Winmm.lib")
+
+#include "../Win32/midifile.h"
+#include "../Win32/i_winmusic.h"
 
 #include "../Win32/i_winversion.h"
 #endif
@@ -240,9 +242,7 @@ static void I_effectADLMIDI(void *udata, Uint8 *stream, int len)
 //
 
 #ifdef EE_FEATURE_MIDIRPC
-static bool haveMidiServer;
-static bool haveMidiClient;
-static bool serverMidiPlaying;
+static bool winMIDIStreamOpened = false;
 
 static std::optional<DWORD> initialVolume;
 #endif
@@ -278,10 +278,11 @@ static void I_SDLShutdownMusic(void)
    I_SDLUnRegisterSong(1);
 
 #ifdef EE_FEATURE_MIDIRPC
-   if(initialVolume.has_value() && I_IsWindowsVistaOrHigher())
-      waveOutSetVolume(nullptr, *initialVolume);
-
-   I_MidiRPCClientShutDown();
+   if(winMIDIStreamOpened)
+   {
+      I_WIN_ShutdownMusic();
+      winMIDIStreamOpened = false;
+   }
 #endif
 }
 
@@ -346,14 +347,7 @@ static int I_SDLInitMusic(void)
       success = 1;
 
 #ifdef EE_FEATURE_MIDIRPC
-   // Initialize RPC server
-   haveMidiServer = I_MidiRPCInitServer();
-
-   if(!haveMidiServer)
-   {
-      if(DWORD currVolume = 0; waveOutGetVolume(nullptr, &currVolume) == MMSYSERR_NOERROR)
-         initialVolume = currVolume;
-   }
+   winMIDIStreamOpened = I_WIN_InitMusic();
 #endif
 
    return success;
@@ -381,8 +375,8 @@ static void I_SDLPlaySong(int handle, int looping)
       else
 #endif
 #ifdef EE_FEATURE_MIDIRPC
-   if(serverMidiPlaying)
-      I_MidiRPCPlaySong(!!looping);
+   if(winMIDIStreamOpened)
+      I_WIN_PlaySong(!!looping);
    else
 #endif
    if(CHECK_MUSIC(handle) && Mix_PlayMusic(music, looping ? -1 : 0) == -1)
@@ -402,7 +396,7 @@ static void I_SDLSetMusicVolume(int volume)
 
 #ifdef EE_FEATURE_MIDIRPC
    // adjust server volume
-   I_MidiRPCSetVolume(volume);
+   I_WIN_SetMusicVolume(volume);
 #endif
 
 #ifdef HAVE_SPCLIB
@@ -421,13 +415,13 @@ static int paused_midi_volume;
 //
 static void I_SDLPauseSong(int handle)
 {
-#ifdef EE_FEATURE_MIDIRPC
-   if(serverMidiPlaying)
-   {
-      I_MidiRPCPauseSong();
-      return;
-   }
-#endif
+//#ifdef EE_FEATURE_MIDIRPC
+//   if(serverMidiPlaying)
+//   {
+//      I_MidiRPCPauseSong();
+//      return;
+//   }
+//#endif
 
    if(CHECK_MUSIC(handle))
    {
@@ -452,13 +446,13 @@ static void I_SDLPauseSong(int handle)
 //
 static void I_SDLResumeSong(int handle)
 {
-#ifdef EE_FEATURE_MIDIRPC
-   if(serverMidiPlaying)
-   {
-      I_MidiRPCResumeSong();
-      return;
-   }
-#endif
+//#ifdef EE_FEATURE_MIDIRPC
+//   if(serverMidiPlaying)
+//   {
+//      I_MidiRPCResumeSong();
+//      return;
+//   }
+//#endif
 
    if(CHECK_MUSIC(handle))
    {
@@ -480,11 +474,8 @@ static void I_SDLResumeSong(int handle)
 static void I_SDLStopSong(int handle)
 {
 #ifdef EE_FEATURE_MIDIRPC
-   if(serverMidiPlaying)
-   {
-      I_MidiRPCStopSong();
-      serverMidiPlaying = false;
-   }
+   if(winMIDIStreamOpened)
+      I_WIN_StopSong();
 #endif
 
    if(CHECK_MUSIC(handle))
@@ -507,11 +498,8 @@ static void I_SDLStopSong(int handle)
 static void I_SDLUnRegisterSong(int handle)
 {
 #ifdef EE_FEATURE_MIDIRPC
-   if(serverMidiPlaying)
-   {
-      I_MidiRPCStopSong();
-      serverMidiPlaying = false;
-   }
+   if(winMIDIStreamOpened)
+      I_WIN_UnRegisterSong();
 #endif
 
 #ifdef HAVE_ADLMIDILIB
@@ -661,21 +649,22 @@ static int I_SDLRegisterSong(void *data, int size)
    }
 
 #ifdef EE_FEATURE_MIDIRPC
-   // Check for option to invoke RPC server if isMIDI
 #ifdef HAVE_ADLMIDILIB
-   if(isMIDI && haveMidiServer && midi_device == -1)
+   if(isMIDI && winMIDIStreamOpened && midi_device == -1)
 #else
-   if(isMIDI && haveMidiServer)
+   if(isMIDI && winMIDIStreamOpened)
 #endif
    {
-      // Init client if not yet started
-      if(!haveMidiClient)
-         haveMidiClient = I_MidiRPCInitClient();
+      char *filename = M_TempFile("doom.mid");
 
-      if(I_MidiRPCRegisterSong(data, size))
+      M_WriteFile(filename, data, size);
+
+      if(winMIDIStreamOpened)
       {
-         serverMidiPlaying = true;
-         return 1; // server will play this song.
+         if(I_WIN_RegisterSong(filename))
+            return 1;
+         else
+            music = nullptr;
       }
    }
 #endif

@@ -29,6 +29,7 @@
 
 bool  M_WriteFile(const char *name, void *source, size_t length);
 int   M_ReadFile(const char *name, byte **buffer);
+char *M_TempFile(const char *s);
 char *M_LoadStringFromFile(const char *filename);
 
 // haleyjd: Portable versions of common non-standard C functions, as well as

@@ -312,7 +312,7 @@ static void MIDItoStream(midi_file_t *file)
 
    if(tracks)
    {
-      free(tracks);
+      efree(tracks);
    }
 }
 
@@ -365,7 +365,8 @@ void I_WIN_SetMusicVolume(int volume)
          (MIDI_CONTROLLER_MAIN_VOLUME << 8) |
          (value << 16);
 
-      midiOutShortMsg((HMIDIOUT)hMidiStream, msg);
+      auto foo = midiOutShortMsg((HMIDIOUT)hMidiStream, msg);
+      auto bar = 1;
    }
 }
 
@@ -471,7 +472,7 @@ void I_WIN_UnRegisterSong()
 {
    if(song.native_events)
    {
-      free(song.native_events);
+      efree(song.native_events);
       song.native_events = NULL;
    }
    song.num_events = 0;

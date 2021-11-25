@@ -26,6 +26,7 @@
 
 #include "d_main.h"    // for usermsg
 #include "i_system.h"  // for I_Error
+#include "m_qstr.h"    // for qstring
 
 //=============================================================================
 //
@@ -86,6 +87,36 @@ int M_ReadFile(char const *name, byte **buffer)
    //	  errno ? strerror(errno) : "(Unknown Error)");
    
    return -1;
+}
+
+// Returns the path to a temporary file of the given name, stored
+// inside the system temporary directory.
+//
+// The returned value must be freed with Z_Free after use.
+char *M_TempFile(const char *s)
+{
+   const char *tempdir;
+
+#ifdef _WIN32
+
+   // Check the TEMP environment variable to find the location.
+
+   tempdir = getenv("TEMP");
+
+   if(tempdir == NULL)
+   {
+      tempdir = ".";
+   }
+#else
+   // In Unix, just use /tmp.
+
+   tempdir = "/tmp";
+#endif
+
+   qstring temp(tempdir);
+   temp.pathConcatenate(s);
+
+   return temp.duplicate();
 }
 
 //

@@ -187,7 +187,7 @@ static byte *ReadByteSequence(unsigned int num_bytes, FILE *stream)
       if(!ReadByte(&result[i], stream))
       {
          fprintf(stderr, "ReadByteSequence: Error while reading byte %u\n", i);
-         free(result);
+         efree(result);
          return nullptr;
       }
    }
@@ -392,11 +392,11 @@ static void FreeEvent(midi_event_t *event)
    {
    case MIDI_EVENT_SYSEX:
    case MIDI_EVENT_SYSEX_SPLIT:
-      free(event->data.sysex.data);
+      efree(event->data.sysex.data);
       break;
 
    case MIDI_EVENT_META:
-      free(event->data.meta.data);
+      efree(event->data.meta.data);
       break;
 
    default:
@@ -483,7 +483,7 @@ static void FreeTrack(midi_track_t *track)
       FreeEvent(&track->events[i]);
    }
 
-   free(track->events);
+   efree(track->events);
 }
 
 static bool ReadAllTracks(midi_file_t *file, FILE *stream)
@@ -644,7 +644,7 @@ midi_track_iter_t *MIDI_IterateTrack(midi_file_t *file, unsigned int track)
 
 void MIDI_FreeIterator(midi_track_iter_t *iter)
 {
-   free(iter);
+   efree(iter);
 }
 
 // Get the time until the next MIDI event in a track.
