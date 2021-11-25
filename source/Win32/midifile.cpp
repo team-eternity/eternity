@@ -97,7 +97,7 @@ static bool CheckChunkHeader(chunk_header_t *chunk,
 
    if(!result)
    {
-      fprintf(stderr, "CheckChunkHeader: Expected '%s' chunk header, "
+      printf("CheckChunkHeader: Expected '%s' chunk header, "
          "got '%c%c%c%c'\n",
          expected_id,
          chunk->chunk_id[0], chunk->chunk_id[1],
@@ -113,11 +113,9 @@ static bool ReadByte(byte *result, SDL_RWops *stream)
 {
    int c;
 
-   c = SDL_RWread(stream, &c, 1, 1);
-
-   if(c == EOF)
+   if(SDL_RWread(stream, &c, 1, 1) == 0)
    {
-      fprintf(stderr, "ReadByte: Unexpected end of file\n");
+      printf("ReadByte: Unexpected end of file\n");
       return false;
    }
    else
@@ -141,7 +139,7 @@ static bool ReadVariableLength(unsigned int *result, SDL_RWops *stream)
    {
       if(!ReadByte(&b, stream))
       {
-         fprintf(stderr, "ReadVariableLength: Error while reading "
+         printf("ReadVariableLength: Error while reading "
             "variable-length value\n");
          return false;
       }
@@ -159,7 +157,7 @@ static bool ReadVariableLength(unsigned int *result, SDL_RWops *stream)
       }
    }
 
-   fprintf(stderr, "ReadVariableLength: Variable-length value too "
+   printf("ReadVariableLength: Variable-length value too "
       "long: maximum of four bytes\n");
    return false;
 }
@@ -178,7 +176,7 @@ static byte *ReadByteSequence(unsigned int num_bytes, SDL_RWops *stream)
 
    if(result == nullptr)
    {
-      fprintf(stderr, "ReadByteSequence: Failed to allocate buffer\n");
+      printf("ReadByteSequence: Failed to allocate buffer\n");
       return nullptr;
    }
 
@@ -188,7 +186,7 @@ static byte *ReadByteSequence(unsigned int num_bytes, SDL_RWops *stream)
    {
       if(!ReadByte(&result[i], stream))
       {
-         fprintf(stderr, "ReadByteSequence: Error while reading byte %u\n", i);
+         printf("ReadByteSequence: Error while reading byte %u\n", i);
          efree(result);
          return nullptr;
       }
@@ -214,7 +212,7 @@ static bool ReadChannelEvent(midi_event_t *event, byte event_type, bool two_para
 
    if(!ReadByte(&b, stream))
    {
-      fprintf(stderr, "ReadChannelEvent: Error while reading channel "
+      printf("ReadChannelEvent: Error while reading channel "
          "event parameters\n");
       return false;
    }
@@ -227,7 +225,7 @@ static bool ReadChannelEvent(midi_event_t *event, byte event_type, bool two_para
    {
       if(!ReadByte(&b, stream))
       {
-         fprintf(stderr, "ReadChannelEvent: Error while reading channel "
+         printf("ReadChannelEvent: Error while reading channel "
             "event parameters\n");
          return false;
       }
@@ -246,7 +244,7 @@ static bool ReadSysExEvent(midi_event_t *event, int event_type, SDL_RWops *strea
 
    if(!ReadVariableLength(&event->data.sysex.length, stream))
    {
-      fprintf(stderr, "ReadSysExEvent: Failed to read length of "
+      printf("ReadSysExEvent: Failed to read length of "
          "SysEx block\n");
       return false;
    }
@@ -257,7 +255,7 @@ static bool ReadSysExEvent(midi_event_t *event, int event_type, SDL_RWops *strea
 
    if(event->data.sysex.data == nullptr)
    {
-      fprintf(stderr, "ReadSysExEvent: Failed while reading SysEx event\n");
+      printf("ReadSysExEvent: Failed while reading SysEx event\n");
       return false;
    }
 
@@ -276,7 +274,7 @@ static bool ReadMetaEvent(midi_event_t *event, SDL_RWops *stream)
 
    if(!ReadByte(&b, stream))
    {
-      fprintf(stderr, "ReadMetaEvent: Failed to read meta event type\n");
+      printf("ReadMetaEvent: Failed to read meta event type\n");
       return false;
    }
 
@@ -286,7 +284,7 @@ static bool ReadMetaEvent(midi_event_t *event, SDL_RWops *stream)
 
    if(!ReadVariableLength(&event->data.meta.length, stream))
    {
-      fprintf(stderr, "ReadSysExEvent: Failed to read length of "
+      printf("ReadSysExEvent: Failed to read length of "
          "SysEx block\n");
       return false;
    }
@@ -297,7 +295,7 @@ static bool ReadMetaEvent(midi_event_t *event, SDL_RWops *stream)
 
    if(event->data.meta.data == nullptr)
    {
-      fprintf(stderr, "ReadSysExEvent: Failed while reading SysEx event\n");
+      printf("ReadSysExEvent: Failed while reading SysEx event\n");
       return false;
    }
 
@@ -311,13 +309,13 @@ static bool ReadEvent(midi_event_t *event, unsigned int *last_event_type,
 
    if(!ReadVariableLength(&event->delta_time, stream))
    {
-      fprintf(stderr, "ReadEvent: Failed to read event timestamp\n");
+      printf("ReadEvent: Failed to read event timestamp\n");
       return false;
    }
 
    if(!ReadByte(&event_type, stream))
    {
-      fprintf(stderr, "ReadEvent: Failed to read event type\n");
+      printf("ReadEvent: Failed to read event type\n");
       return false;
    }
 
@@ -332,7 +330,7 @@ static bool ReadEvent(midi_event_t *event, unsigned int *last_event_type,
 
       if(SDL_RWseek(stream, -1, RW_SEEK_CUR) < 0)
       {
-         fprintf(stderr, "ReadEvent: Unable to seek in stream\n");
+         printf("ReadEvent: Unable to seek in stream\n");
          return false;
       }
    }
@@ -379,7 +377,7 @@ static bool ReadEvent(midi_event_t *event, unsigned int *last_event_type,
       break;
    }
 
-   fprintf(stderr, "ReadEvent: Unknown MIDI event type: 0x%x\n", event_type);
+   printf("ReadEvent: Unknown MIDI event type: 0x%x\n", event_type);
    return false;
 }
 
@@ -529,7 +527,7 @@ static bool ReadFileHeader(midi_file_t *file, SDL_RWops *stream)
    if(!CheckChunkHeader(&file->header.chunk_header, HEADER_CHUNK_ID) ||
       SwapBigULong(file->header.chunk_header.chunk_size) != 6)
    {
-      fprintf(stderr, "ReadFileHeader: Invalid MIDI chunk header! "
+      printf("ReadFileHeader: Invalid MIDI chunk header! "
          "chunk_size=%i\n",
          SwapBigULong(file->header.chunk_header.chunk_size)
       );
@@ -542,7 +540,7 @@ static bool ReadFileHeader(midi_file_t *file, SDL_RWops *stream)
    if((format_type != 0 && format_type != 1)
       || file->num_tracks < 1)
    {
-      fprintf(stderr, "ReadFileHeader: Only type 0/1 "
+      printf("ReadFileHeader: Only type 0/1 "
          "MIDI files supported!\n");
       return false;
    }
@@ -578,7 +576,7 @@ midi_file_t *MIDI_LoadFile(SDL_RWops *rw)
    //// Open file
    //if(stream == nullptr)
    //{
-   //   fprintf(stderr, "MIDI_LoadFile: Failed to open '%s'\n", filename);
+   //   printf("MIDI_LoadFile: Failed to open '%s'\n", filename);
    //   MIDI_FreeFile(file);
    //   return nullptr;
    //}
@@ -795,7 +793,7 @@ int main(int argc, char *argv[])
 
    if(file == nullptr)
    {
-      fprintf(stderr, "Failed to open %s\n", argv[1]);
+      printf("Failed to open %s\n", argv[1]);
       exit(1);
    }
 

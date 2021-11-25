@@ -101,7 +101,7 @@ static void MidiErrorMessageBox(DWORD dwError)
    }
    else
    {
-      fprintf(stderr, "Unknown midiStream error.\n");
+      printf("Unknown midiStream error.\n");
    }
 }
 
@@ -427,7 +427,7 @@ bool I_WIN_RegisterSong(void *data, int size)
 
    if(file == NULL)
    {
-      fprintf(stderr, "I_WIN_RegisterSong: Failed to load MID.\n");
+      printf("I_WIN_RegisterSong: Failed to load MID.\n");
       return false;
    }
 
