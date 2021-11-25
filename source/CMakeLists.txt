@@ -107,14 +107,18 @@ function(eternity_target_sources _TARGET)
          "${CMAKE_CURRENT_BINARY_DIR}/Eternity.rc"
          SOURCE_GROUP "Source Files\\\\Win32\\\\Win32 Headers"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_fnames.h"
+         "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_winmusic.h"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_winversion.h"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_xinput.h"
+         "${CMAKE_CURRENT_SOURCE_DIR}/Win32/midifile.h"
          SOURCE_GROUP "Source Files\\\\Win32\\\\Win32 Source"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_exception.cpp"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_fnames.cpp"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_w32gui.cpp"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_w32main.cpp"
+         "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_winmusic.cpp"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_xinput.cpp"
+         "${CMAKE_CURRENT_SOURCE_DIR}/Win32/midifile.cpp"
       )
       if(MSVC)
          if(CMAKE_SIZEOF_VOID_P EQUAL 8)
