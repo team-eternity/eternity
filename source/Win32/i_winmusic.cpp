@@ -26,6 +26,7 @@
 
 #include "z_zone.h"
 
+#include "doomstat.h"
 #include "doomtype.h"
 #include "m_misc.h"
 #include "midifile.h"
@@ -136,7 +137,7 @@ static void FillBuffer()
 
          channel_volume[MIDIEVENT_CHANNEL(event->dwEvent)] = volume;
 
-         volume *= volume_factor;
+         volume = int(float(volume) * volume_factor);
 
          event->dwEvent = (event->dwEvent & 0xFF00FFFF) |
             ((volume & 0x7F) << 16);
@@ -354,21 +355,18 @@ bool I_WIN_InitMusic()
 
 void I_WIN_SetMusicVolume(int volume)
 {
-   int i;
-
-   volume_factor = (float)volume / 127;
+   volume_factor = float(volume) / float(SND_MAXVOLUME);
 
    // Send MIDI controller events to adjust the volume.
-   for(i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
+   for(int i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
    {
-      int value = channel_volume[i] * volume_factor;
+      int value = int(float(channel_volume[i]) * volume_factor);
 
       DWORD msg = MIDI_EVENT_CONTROLLER | i |
          (MIDI_CONTROLLER_MAIN_VOLUME << 8) |
          (value << 16);
 
-      auto foo = midiOutShortMsg((HMIDIOUT)hMidiStream, msg);
-      auto bar = 1;
+      midiOutShortMsg((HMIDIOUT)hMidiStream, msg);
    }
 }
 
