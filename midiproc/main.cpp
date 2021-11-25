@@ -36,7 +36,6 @@
 #include <stdlib.h>
 
 #include <atomic>
-#include <thread>
 #include <vector>
 
 #include "SDL.h"
@@ -48,7 +47,6 @@ static Mix_Music *music = NULL;
 static SDL_RWops *rw    = NULL;
 
 static std::atomic_bool quitting = false;
-static std::atomic_bool sentinel_running = false;
 
 static void UnregisterSong();
 
@@ -131,46 +129,37 @@ static bool Sentinel_FindEternityPID(const std::vector<DWORD> &ndwPIDs,
    return false;
 }
 
-void Sentinel_Main()
+bool Sentinel_Main()
 {
    constexpr size_t initMaxNumPIDs = 1024;
    std::vector<DWORD> ndwPIDs(initMaxNumPIDs, 0);
    HANDLE pEternityHandle;
    size_t numValidPIDs;
 
-   sentinel_running = true;
 
    if(!Sentinel_EnumerateProcesses(ndwPIDs, numValidPIDs))
    {
-      sentinel_running = false;
-      exit(-1);
+      return false;
    }
    if(!Sentinel_FindEternityPID(ndwPIDs, pEternityHandle, numValidPIDs))
    {
       MessageBox(
          NULL, TEXT("eternity.exe not currently running"), TEXT("midiproc: Error"), MB_ICONERROR
       );
-      sentinel_running = false;
-      exit(-1);
+      return false;
    }
 
    DWORD dwExitCode;
    do
    {
       if(quitting)
-      {
-         sentinel_running = false;
-         return;
-      }
+         return true;
       else if(GetExitCodeProcess(pEternityHandle, &dwExitCode) == 0)
-      {
-         sentinel_running = false;
-         exit(-1);
-      }
+         return false;
       Sleep(100);
    } while(dwExitCode == STILL_ACTIVE);
 
-   exit(-1);
+   return false;
 }
 
 //=============================================================================
@@ -484,9 +473,12 @@ static bool MidiRPC_InitServer()
       return false;
 
    // Start listening
-   status = RpcServerListen(1, RPC_C_LISTEN_MAX_CALLS_DEFAULT, FALSE);
+   status = RpcServerListen(1, RPC_C_LISTEN_MAX_CALLS_DEFAULT, TRUE);
 
-   return !status;
+   if(status != RPC_S_OK)
+      return false;
+
+   return Sentinel_Main();
 }
 
 //
@@ -556,13 +548,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
    // Initialize RPC Server
    if(!MidiRPC_InitServer())
       return -1;
-
-   std::thread watcher(Sentinel_Main);
-
-   while(sentinel_running)
-      Sleep(1);
-
-   watcher.join();
 
    return 0;
 }
