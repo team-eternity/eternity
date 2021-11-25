@@ -492,6 +492,7 @@ enum dehstateid_e : int
    dehstateid_args6,
    dehstateid_args7,
    dehstateid_args8,
+   dehstateid_mbf21flags,
    NUMDEHSTATEIDS
 };
 
@@ -514,6 +515,24 @@ static constexpr const char *deh_state[NUMDEHSTATEIDS] =
   "Args6",
   "Args7",
   "Args8",
+  "MBF21 Bits",
+};
+
+static dehflags_t deh_mbf21stateflags[] =
+{
+   { "SKILL5FAST", 0x00000001 },
+   { nullptr,      0          }
+};
+
+static dehflagset_t dehacked_mbf21stateflags =
+{
+   deh_mbf21stateflags, // flaglist
+};
+
+dehflagremap_t dehacked_mbf21stateflags_remappings[earrlen(deh_mbf21stateflags)] =
+{
+   { 0x00000001, 0, STATEF_SKILL5FAST,  0 },
+   { 0,          0, 0,                  0 }
 };
 
 // SFXINFO_STRUCT - Dehacked block name = "Sounds"
@@ -852,7 +871,7 @@ void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum)
          if(!strncasecmp(inbuffer, deh_blocks[i].key, strlen(deh_blocks[i].key)))
          {
             // matches one
-            deh_LogPrintf("Processing function [%d] for %s\n",
+            deh_LogPrintf("Processing function [%zu] for %s\n",
                           i, deh_blocks[i].key);
 
             deh_blocks[i].fptr(&infile, inbuffer);  // call function
@@ -1370,6 +1389,7 @@ static void deh_procFrame(DWFILE *fpin, char *line)
    char inbuffer[DEH_BUFFERMAX];
    int value;      // All deh values are ints or longs
    int indexnum;
+   char *strval;
 
    strncpy(inbuffer,line,DEH_BUFFERMAX);
 
@@ -1390,7 +1410,7 @@ static void deh_procFrame(DWFILE *fpin, char *line)
       if(!*inbuffer)
          break; // killough 11/98
 
-      if(!deh_GetData(inbuffer, key, &value, nullptr)) // returns TRUE if ok
+      if(!deh_GetData(inbuffer, key, &value, &strval)) // returns TRUE if ok
       {
          deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
          continue;
@@ -1453,8 +1473,20 @@ static void deh_procFrame(DWFILE *fpin, char *line)
 
          deh_createArgList(states[indexnum]);
          E_SetArgFromNumber(states[indexnum]->args, argIndex, value);
-      }
          break;
+      }
+      case dehstateid_mbf21flags:
+      {
+         unsigned int *flagMasks = deh_calcMBF21FlagMasks(dehacked_mbf21stateflags_remappings);
+         states[indexnum]->flags &= ~flagMasks[0];
+
+         if(!value)
+            deh_parseFlagsCombinedRemapped(strval, &dehacked_mbf21stateflags, dehacked_mbf21stateflags_remappings);
+         else
+            deh_remapFlags(value, &dehacked_mbf21stateflags, dehacked_mbf21stateflags_remappings);
+         states[indexnum]->flags |= dehacked_mbf21stateflags.results[DEHFLAGS_MODE1];
+         break;
+      }
       default:
          deh_LogPrintf("Invalid frame string index for '%s'\n", key);
          break;
