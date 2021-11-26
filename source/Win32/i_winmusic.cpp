@@ -246,6 +246,7 @@ static void MIDItoStream(midi_file_t *file)
 
       if(!MIDI_GetNextEvent(tracks[idx].iter, &event))
       {
+         MIDI_FreeIterator(tracks[idx].iter);
          tracks[idx].iter = nullptr;
          continue;
       }
@@ -339,7 +340,17 @@ bool I_WIN_InitMusic()
 
 void I_WIN_SetMusicVolume(int volume)
 {
-   volume_factor = float(volume) / float(SND_MAXVOLUME);
+   if(volume)
+   {
+      // Change either of these two values if clamping the range to something else is desired
+      constexpr float MIDI_MINVOL = 0.15f;
+      constexpr float MIDI_MAXVOL = 0.75f;
+
+      constexpr float MIDI_INCREMENT = (MIDI_MAXVOL - MIDI_MINVOL) / float(SND_MAXVOLUME - 1);
+      volume_factor = MIDI_MINVOL + MIDI_INCREMENT * float(volume - 1);
+   }
+   else
+      volume_factor = 0.0f;
 
    // Send MIDI controller events to adjust the volume.
    for(int i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
