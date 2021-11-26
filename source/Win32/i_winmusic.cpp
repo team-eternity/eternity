@@ -106,7 +106,9 @@ static void MidiErrorMessageBox(DWORD dwError)
 
 static void FillBuffer()
 {
-   for(int i = 0; i < STREAM_MAX_EVENTS; ++i)
+   int i;
+
+   for(i = 0; i < STREAM_MAX_EVENTS; ++i)
    {
       native_event_t *event = &buffer.events[i];
 
