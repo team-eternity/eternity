@@ -106,9 +106,7 @@ static void MidiErrorMessageBox(DWORD dwError)
 
 static void FillBuffer()
 {
-   int i;
-
-   for(i = 0; i < STREAM_MAX_EVENTS; ++i)
+   for(int i = 0; i < STREAM_MAX_EVENTS; ++i)
    {
       native_event_t *event = &buffer.events[i];
 
@@ -201,14 +199,12 @@ static DWORD WINAPI PlayerProc()
 //
 static void MIDItoStream(midi_file_t *file)
 {
-   int i;
-
    int num_tracks = MIDI_NumTracks(file);
    win_midi_track_t *tracks = estructalloc(win_midi_track_t, num_tracks);
 
    int current_time = 0;
 
-   for(i = 0; i < num_tracks; ++i)
+   for(int i = 0; i < num_tracks; ++i)
    {
       tracks[i].iter = MIDI_IterateTrack(file, i);
       tracks[i].absolute_time = 0;
@@ -224,7 +220,7 @@ static void MIDItoStream(midi_file_t *file)
       int idx = -1;
 
       // Look for an event with a minimal delta time.
-      for(i = 0; i < num_tracks; ++i)
+      for(int i = 0; i < num_tracks; ++i)
       {
          int time = 0;
 

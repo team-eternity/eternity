@@ -126,12 +126,11 @@ static bool ReadByte(byte *result, SDL_RWops *stream)
 
 static bool ReadVariableLength(unsigned int *result, SDL_RWops *stream)
 {
-   int i;
    byte b = 0;
 
    *result = 0;
 
-   for(i = 0; i < 4; ++i)
+   for(int i = 0; i < 4; ++i)
    {
       if(!ReadByte(&b, stream))
       {
@@ -158,7 +157,6 @@ static bool ReadVariableLength(unsigned int *result, SDL_RWops *stream)
 //
 static byte *ReadByteSequence(unsigned int num_bytes, SDL_RWops *stream)
 {
-   unsigned int i;
    byte *result;
 
    // Allocate a buffer. Allocate one extra byte, as malloc(0) is
@@ -174,7 +172,7 @@ static byte *ReadByteSequence(unsigned int num_bytes, SDL_RWops *stream)
 
    // Read the data:
 
-   for(i = 0; i < num_bytes; ++i)
+   for(unsigned int i = 0; i < num_bytes; ++i)
    {
       if(!ReadByte(&result[i], stream))
       {
@@ -456,9 +454,7 @@ static bool ReadTrack(midi_track_t *track, SDL_RWops *stream)
 //
 static void FreeTrack(midi_track_t *track)
 {
-   unsigned int i;
-
-   for(i = 0; i < track->num_events; ++i)
+   for(int i = 0; i < track->num_events; ++i)
       FreeEvent(&track->events[i]);
 
    efree(track->events);
@@ -518,11 +514,9 @@ static bool ReadFileHeader(midi_file_t *file, SDL_RWops *stream)
 
 void MIDI_FreeFile(midi_file_t *file)
 {
-   int i;
-
    if(file->tracks != nullptr)
    {
-      for(i = 0; i < file->num_tracks; ++i)
+      for(unsigned int i = 0; i < file->num_tracks; ++i)
          FreeTrack(&file->tracks[i]);
 
       efree(file->tracks);
@@ -580,10 +574,9 @@ unsigned int MIDI_NumTracks(midi_file_t *file)
 
 unsigned int MIDI_NumEvents(midi_file_t *file)
 {
-   int i;
    unsigned int num_events = 0;
 
-   for(i = 0; i < file->num_tracks; ++i)
+   for(unsigned int i = 0; i < file->num_tracks; ++i)
       num_events += file->tracks[i].num_events;
 
    return num_events;
@@ -614,7 +607,7 @@ void MIDI_FreeIterator(midi_track_iter_t *iter)
 
 unsigned int MIDI_GetDeltaTime(midi_track_iter_t *iter)
 {
-   if(iter->position < iter->track->num_events)
+   if(int(iter->position) < iter->track->num_events)
    {
       midi_event_t *next_event;
 
@@ -632,7 +625,7 @@ unsigned int MIDI_GetDeltaTime(midi_track_iter_t *iter)
 
 int MIDI_GetNextEvent(midi_track_iter_t *iter, midi_event_t **event)
 {
-   if(iter->position < iter->track->num_events)
+   if(int(iter->position) < iter->track->num_events)
    {
       *event = &iter->track->events[iter->position];
       ++iter->position;
@@ -697,9 +690,8 @@ static char *MIDI_EventTypeToString(midi_event_type_t event_type)
 void PrintTrack(midi_track_t *track)
 {
    midi_event_t *event;
-   unsigned int i;
 
-   for(i = 0; i < track->num_events; ++i)
+   for(int i = 0; i < track->num_events; ++i)
    {
       event = &track->events[i];
 
@@ -742,7 +734,6 @@ void PrintTrack(midi_track_t *track)
 int main(int argc, char *argv[])
 {
    midi_file_t *file;
-   unsigned int i;
 
    if(argc < 2)
    {
@@ -758,7 +749,7 @@ int main(int argc, char *argv[])
       exit(1);
    }
 
-   for(i = 0; i < file->num_tracks; ++i)
+   for(unsigned int i = 0; i < file->num_tracks; ++i)
    {
       printf("\n== Track %u ==\n\n", i);
 
