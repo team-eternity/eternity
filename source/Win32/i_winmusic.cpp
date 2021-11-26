@@ -342,7 +342,7 @@ void I_WIN_SetMusicVolume(int volume)
 {
    if(volume)
    {
-      // Change either of these two values if clamping the range to something else is desired
+      // Change either of these two values if remapping the range to something else is desired
       constexpr float MIDI_MINVOL = 0.20f;
       constexpr float MIDI_MAXVOL = 0.75f;
 
