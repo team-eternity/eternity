@@ -338,19 +338,12 @@ bool I_WIN_InitMusic()
    return true;
 }
 
+static constexpr int volume_correction[SND_MAXVOLUME + 1] = { 0, 21, 26, 29, 33, 37, 42, 47, 54, 61, 69, 78, 89, 100, 113, 127 };
+//static constexpr int volume_correction[SND_MAXVOLUME + 1] = { 0, 21, 25, 29, 32, 36, 40, 45, 51, 57, 64, 72, 81, 91, 102, 115 };
+
 void I_WIN_SetMusicVolume(int volume)
 {
-   if(volume)
-   {
-      // Change either of these two values if remapping the range to something else is desired
-      constexpr float MIDI_MINVOL = 0.20f;
-      constexpr float MIDI_MAXVOL = 0.75f;
-
-      constexpr float MIDI_INCREMENT = (MIDI_MAXVOL - MIDI_MINVOL) / float(SND_MAXVOLUME - 1);
-      volume_factor = MIDI_MINVOL + MIDI_INCREMENT * float(volume - 1);
-   }
-   else
-      volume_factor = 0.0f;
+   volume_factor = float(volume_correction[volume]) / 127.0f;
 
    // Send MIDI controller events to adjust the volume.
    for(int i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
