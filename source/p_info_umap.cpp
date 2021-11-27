@@ -209,6 +209,8 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
          {
             fullname = labelString->getValue();
             fullname += ": ";
+            if(GameModeInfo->type == Game_Heretic)
+               fullname += " ";  // Heretic has two spaces after label name
             fullname += strval;
          }
          else  // int: clear
@@ -218,6 +220,8 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
       {
          fullname = mapname;
          fullname += ": ";
+         if(GameModeInfo->type == Game_Heretic)
+            fullname += " ";  // Heretic has two spaces after label name
          fullname += strval;
       }
 
