@@ -68,7 +68,7 @@ static float volume_factor = 1.0;
 
 static int channel_volume[MIDI_CHANNELS_PER_TRACK];
 
-static int volume_correction[] = {
+static constexpr int volume_correction[] = {
     0,   4,   7,  11,  13,  14,  16,  18,
    21,  22,  23,  24,  24,  24,  25,  25,
    25,  26,  26,  27,  27,  27,  28,  28,
