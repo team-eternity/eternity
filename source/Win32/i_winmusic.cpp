@@ -1,5 +1,6 @@
 //
 // Copyright(C) 2021 Roman Fomin
+// Copyright(C) 2021 James Haley et al.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -10,9 +11,14 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// DESCRIPTION:
-//      Windows native MIDI
+//----------------------------------------------------------------------------
+//
+// Purpose: Windows native MIDI
+// Authors: Roman Fomin, Max Waine
+//
 
 #include "SDL.h"
 
@@ -148,9 +154,7 @@ static void FillBuffer()
 
          channel_volume[MIDIEVENT_CHANNEL(event->dwEvent)] = volume;
 
-         volume = int(float(volume) * volume_factor);
          volume = volume_correction[int(float(volume) * volume_factor)];
-
 
          event->dwEvent = (event->dwEvent & 0xFF00FFFF) | ((volume & 0x7F) << 16);
       }
