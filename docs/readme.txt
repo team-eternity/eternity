@@ -245,9 +245,11 @@ with any concerns.
     missile attack probability.
   * Added the NOTAUTOAIMED flag for thingtype, useful for destructible objects
     which shouldn't capture autoaim.
+  * Added NOSPLASHDAMAGE to thinggroup, for MBF21 parity (see below).
   * Added a spawn type parameter to the A_FatAttack* codepointers.
   * MBF21: added support for dehacked frames Args[6-8] (1-5 were already
     present).
+  * MBF21: added "Splash group" specifier for "Thing" sections.
   * Made thing-based obituaries use deh or EDF strings if they start with $.
 
 ** Automap **
