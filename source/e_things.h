@@ -110,6 +110,7 @@ state_t *E_GetStateForMobj(const Mobj *mo, const char *label);
 
 // Thing groups
 bool E_ThingPairValid(int t1, int t2, unsigned flags);
+void E_AddToMBF21ThingGroup(int idnum, unsigned flag, int type);
 
 // ioanch 20160220: metastate key names used throughout the code. They also
 // work as DECORATE state label names.

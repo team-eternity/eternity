@@ -664,9 +664,26 @@ public:
    explicit ThingGroup(const char *inname) : name(inname), link(), flags()
    {
    }
+   ThingGroup(int idnum, unsigned flag) : link(), flags()
+   {
+      coding.idnum = idnum;
+      coding.flag = flag;
+   }
 
    qstring name;
    DLListItem<ThingGroup> link;
+
+   // MBF21 number-based addressing
+   struct mbf21coding_t
+   {
+      int32_t idnum;
+      uint32_t flag;
+   };
+   union
+   {
+      mbf21coding_t coding;
+      int64_t num;
+   };
 
    unsigned flags;
    PODCollection<int> types;
@@ -715,6 +732,8 @@ static EHashTable<mobjinfo_t, EIntHashKey,
 // Thing group
 static EHashTable<ThingGroup, ENCQStrHashKey,
                   &ThingGroup::name, &ThingGroup::link> thinggroup_namehash(53);
+static EHashTable<ThingGroup, EInt64HashKey,
+                  &ThingGroup::num, &ThingGroup::link> thinggroup_mbf21hash(53);
 
 static EHashTable<thinggrouppair_t, EInt64HashKey,
      &thinggrouppair_t::key, &thinggrouppair_t::link> thinggrouppairs(NUMTHINGCHAINS);
@@ -3155,6 +3174,25 @@ static bool E_mobjTypeIsDescendantOf(mobjtype_t low, mobjtype_t high)
 }
 
 //
+// Get thing group pair from two types
+//
+static thinggrouppair_t *E_getThingGroupPair(mobjtype_t type1, mobjtype_t type2)
+{
+   mobjtype_t min = type1 < type2 ? type1 : type2;
+   mobjtype_t max = type1 > type2 ? type1 : type2;
+   int64_t key = (int64_t)min | (int64_t)max << 32;
+   thinggrouppair_t *proj = thinggrouppairs.objectForKey(key);
+   if (!proj)
+   {
+      proj = estructalloc(thinggrouppair_t, 1);
+      proj->types[0] = min;
+      proj->types[1] = max;
+      thinggrouppairs.addObject(proj);
+   }
+   return proj;
+}
+
+//
 // Process thing group definitions
 //
 void E_ProcessThingGroups(cfg_t *cfg)
@@ -3255,18 +3293,58 @@ void E_ProcessThingGroups(cfg_t *cfg)
             else if(other <= entry)
                continue;
 
-            int64_t key = (int64_t)entry | (int64_t)other << 32;
-            proj = thinggrouppairs.objectForKey(key);
-            if (!proj)
-            {
-               proj = estructalloc(thinggrouppair_t, 1);
-               proj->types[0] = entry;
-               proj->types[1] = other;
-               thinggrouppairs.addObject(proj);
-            }
+            proj = E_getThingGroupPair(entry, other);
             proj->flags |= setflags;
          }
       }
+   }
+}
+
+//
+// Gets (or creates) thing group by MBF21id
+//
+static ThingGroup *E_getThingGroupByMBF21id(int idnum, unsigned flag)
+{
+   union
+   {
+      ThingGroup::mbf21coding_t coding;
+      int64_t num;
+   } u = {};
+   u.coding.idnum = idnum;
+   u.coding.flag = flag;
+
+   // Locate the group
+   ThingGroup *group = thinggroup_mbf21hash.objectForKey(u.num);
+   if(!group)
+   {
+      E_EDFLogPrintf("\t\tCreating thing group '%d'\n", idnum);
+      group = new ThingGroup(idnum, flag);
+      group->flags = flag;
+      thinggroup_mbf21hash.addObject(group);
+      return group;
+   }
+   E_EDFLogPrintf("\t\tModifying thing group '%d'\n", idnum);
+   return group;
+}
+
+//
+// Given an external source, adds the type and flag to a thing group
+//
+void E_AddToMBF21ThingGroup(int idnum, unsigned flag, int type)
+{
+   ThingGroup *group = E_getThingGroupByMBF21id(idnum, flag);
+
+   for(int addedtype : group->types)   // primitive check against duplicates
+      if(addedtype == type)
+         return;
+   group->types.add(type);
+
+   // Plug the types together
+   for(int addedtype : group->types)
+   {
+      // All the MBF21 flags are inclusive, so also add a self-pair
+      thinggrouppair_t *pair = E_getThingGroupPair(addedtype, type);
+      pair->flags |= flag;
    }
 }
 

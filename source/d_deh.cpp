@@ -191,6 +191,7 @@ enum dehmobjinfoid_e : int
    dehmobjinfoid_droppeditem,
    dehmobjinfoid_mbf21flags,
    dehmobjinfoid_fastspeed,
+   dehmobjinfoid_splashgroup,
    DEH_MOBJINFOMAX
 };
 
@@ -226,6 +227,7 @@ static constexpr const char *deh_mobjinfo[DEH_MOBJINFOMAX] =
   "Dropped item",        // .meta sorta kinda it's complicated
   "MBF21 Bits",          // .flags[2-5] (they're scattered across)
   "Fast speed",          // .meta sorta kinda it's complicated
+  "Splash group",        // Thing group NOSPLASHDAMAGE
 };
 
 // Strings that are used to indicate flags ("Bits" in mobjinfo)
@@ -1214,6 +1216,9 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
    case dehmobjinfoid_fastspeed:
       G_SpeedSetAddThing(mobjInfoIndex, mi->speed, value);
       break;
+   case dehmobjinfoid_splashgroup:
+      E_AddToMBF21ThingGroup(value, TGF_NOSPLASHDAMAGE, mi->index);
+      break;
    default:
       break;
    }
@@ -1238,6 +1243,7 @@ static void deh_procThing(DWFILE *fpin, char *line)
    char *strval;
 
    strncpy(inbuffer, line, DEH_BUFFERMAX);
+   inbuffer[DEH_BUFFERMAX - 1] = 0;
    deh_LogPrintf("Thing line: '%s'\n", inbuffer);
 
    // killough 8/98: allow hex numbers in input:
