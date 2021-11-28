@@ -61,6 +61,7 @@ enum
    TGF_PROJECTILEALLIANCE = 1,   // things in group are immune to their projectiles
    TGF_DAMAGEIGNORE = 2,         // things in group don't react to being damaged
    TGF_INHERITED = 4,            // make sure to also apply these to inheriting objects
+   TGF_NOSPLASHDAMAGE = 8,       // things in group immune to splash damage
 };
 
 // Global Functions

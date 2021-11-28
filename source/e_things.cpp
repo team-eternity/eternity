@@ -632,6 +632,7 @@ static dehflags_t tgroup_kinds[] =
    { "PROJECTILEALLIANCE", TGF_PROJECTILEALLIANCE },
    { "DAMAGEIGNORE",       TGF_DAMAGEIGNORE       },
    { "INHERITED",          TGF_INHERITED          },
+   { "NOSPLASHDAMAGE",     TGF_NOSPLASHDAMAGE     },
    { nullptr,              0                      }
 };
 
@@ -3230,19 +3231,30 @@ void E_ProcessThingGroups(cfg_t *cfg)
    }
 
    group = nullptr;
-   static const unsigned operationalFlags = TGF_PROJECTILEALLIANCE | TGF_DAMAGEIGNORE;
+   static const unsigned operationalFlags = (TGF_PROJECTILEALLIANCE |
+                                             TGF_DAMAGEIGNORE |
+                                             TGF_NOSPLASHDAMAGE);
+
+   // These ones also apply to monsters from the same species
+   static const unsigned inclusiveFlags = TGF_NOSPLASHDAMAGE;
+
    while((group = thinggroup_namehash.tableIterator(group)))
    {
       // Currently only these are supported
-      if(!(group->flags & operationalFlags))
+      unsigned flags = group->flags & operationalFlags;
+      if(!flags)
          continue;
       // Setup relation
       for(int entry : group->types)
       {
          for(int other : group->types)
          {
-            if(other <= entry)
+            unsigned setflags = flags;
+            if(other == entry && flags & inclusiveFlags)
+               setflags &= inclusiveFlags;
+            else if(other <= entry)
                continue;
+
             int64_t key = (int64_t)entry | (int64_t)other << 32;
             proj = thinggrouppairs.objectForKey(key);
             if (!proj)
@@ -3252,7 +3264,7 @@ void E_ProcessThingGroups(cfg_t *cfg)
                proj->types[1] = other;
                thinggrouppairs.addObject(proj);
             }
-            proj->flags |= group->flags & operationalFlags;
+            proj->flags |= setflags;
          }
       }
    }

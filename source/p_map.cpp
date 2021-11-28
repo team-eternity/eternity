@@ -2455,6 +2455,14 @@ static bombdata_t bombs[MAXBOMBS]; // bombs away!
 static bombdata_t *theBomb;        // it's the bomb, man. (the current explosion)
 
 //
+// Check if the actors are immune to each other's radius attack. This is a MBF21 feature.
+//
+inline static bool P_splashImmune(const Mobj *target, const Mobj *spot)
+{
+   return E_ThingPairValid(spot->type, target->type, TGF_NOSPLASHDAMAGE);
+}
+
+//
 // PIT_RadiusAttack
 //
 // "bombsource" is the creature that caused the explosion at "bombspot".
@@ -2471,6 +2479,9 @@ static bool PIT_RadiusAttack(Mobj *thing, void *context)
    // (missile bouncers are already excluded with MF_NOBLOCKMAP)
    
    if(!(thing->flags & (MF_SHOOTABLE | MF_BOUNCES)))
+      return true;
+
+   if(bombspot && P_splashImmune(thing, bombspot))
       return true;
 
    // haleyjd 12/22/12: Hexen check for no self-damage
