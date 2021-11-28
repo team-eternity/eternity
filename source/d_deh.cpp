@@ -1217,7 +1217,10 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
       G_SpeedSetAddThing(mobjInfoIndex, mi->speed, value);
       break;
    case dehmobjinfoid_splashgroup:
-      E_AddToMBF21ThingGroup(value, TGF_NOSPLASHDAMAGE, mi->index);
+      if(value < 0)
+         deh_LogPrintf("Bad \"Splash group\" in %d for \"%s\"\n", value, mi->name);
+      else
+         E_AddToMBF21ThingGroup(value, TGF_NOSPLASHDAMAGE, mi->index);
       break;
    default:
       break;
