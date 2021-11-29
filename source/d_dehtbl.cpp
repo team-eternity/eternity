@@ -2376,7 +2376,8 @@ static void D_useGatheredData(const MetaTable &gatheredData)
       const char *key;
       unsigned flag;
       bool inclusive;
-      void (*negativeHandler)(mobjtype_t type, int val);
+      void (*negativeHandler)(mobjtype_t type, int val); // applied if val < 0
+      void (*generalHandler)(mobjtype_t type, int val);  // applied all the time
    };
 
    static const tgfmapping_t mappings[] =
@@ -2388,6 +2389,7 @@ static void D_useGatheredData(const MetaTable &gatheredData)
          [](mobjtype_t type, int val) {
             I_Error("DEHACKED: Bad \"Splash group\" %d for \"%s\"", val, mobjinfo[type]->name);
          },
+         nullptr
       },
       {
          DEH_KEY_PROJECTILE_GROUP,
@@ -2396,7 +2398,19 @@ static void D_useGatheredData(const MetaTable &gatheredData)
          [](mobjtype_t type, int val) {
             mobjinfo[type]->flags4 |= MF4_HARMSPECIESMISSILE;
          },
+         nullptr
       },
+      {
+         DEH_KEY_INFIGHTING_GROUP,
+         TGF_DAMAGEIGNORE,
+         true,
+         [](mobjtype_t type, int val) {
+            I_Error("DEHACKED: Bad \"Infighting group\" %d for \"%s\"", val, mobjinfo[type]->name);
+         },
+         [](mobjtype_t type, int val) {
+            mobjinfo[type]->flags4 |= MF4_NOSPECIESINFIGHT;
+         }
+      }
    };
 
    const MetaObject *obj = nullptr;
@@ -2416,6 +2430,8 @@ static void D_useGatheredData(const MetaTable &gatheredData)
             mapping.negativeHandler(type, val);
          else
             E_AddToMBF21ThingGroup(val, mapping.flag, type, mapping.inclusive);
+         if(mapping.generalHandler)
+            mapping.generalHandler(type, val);
       }
    }
 }

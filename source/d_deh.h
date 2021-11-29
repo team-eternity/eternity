@@ -24,6 +24,7 @@
 #ifndef D_DEH_H__
 #define D_DEH_H__
 
+#define DEH_KEY_INFIGHTING_GROUP "Infighting group"
 #define DEH_KEY_PROJECTILE_GROUP "Projectile group"
 #define DEH_KEY_SPLASH_GROUP "Splash group"
 
