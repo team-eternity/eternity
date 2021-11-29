@@ -913,6 +913,9 @@ default_or_t HereticDefaultORs[] =
    { "comp_terrain",   0 }, // terrain active
    { "comp_soul",      1 }, // SKULLFLY objects do not bounce
    { "comp_overunder", 0 }, // 3D object clipping is on
+
+   // monsters
+   { "monster_friction", 0 }, // monsters shouldn't be affected by ice
    
    // colors
    // TODO: player color
