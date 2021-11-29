@@ -1221,17 +1221,10 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value, MetaTab
       G_SpeedSetAddThing(mobjInfoIndex, mi->speed, value);
       break;
    case dehmobjinfoid_splashgroup:
-      if(value < 0)
-         deh_LogPrintf("Bad \"Splash group\" in %d for \"%s\"\n", value, mi->name);
-      else
-         E_AddToMBF21ThingGroup(value, TGF_NOSPLASHDAMAGE, mi->index, true);
+      M_GetTableOrDefault(gatheredData, mi->name).setInt(DEH_KEY_SPLASH_GROUP, value);
       break;
    case dehmobjinfoid_projectilegroup:
-      if(value < 0)  // under EE we can just use this flag
-         mi->flags4 |= MF4_HARMSPECIESMISSILE;
-      else
-         E_AddToMBF21ThingGroup(value, TGF_PROJECTILEALLIANCE, mi->index, false);
-         // TODO: eliminate old groups
+      M_GetTableOrDefault(gatheredData, mi->name).setInt(DEH_KEY_PROJECTILE_GROUP, value);
       break;
    default:
       break;

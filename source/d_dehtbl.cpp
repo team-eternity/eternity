@@ -29,19 +29,23 @@
 #include "z_zone.h"
 #include "i_system.h"
 
+#include "d_deh.h"
 #include "d_dehtbl.h"
 #include "d_io.h"
+#include "d_main.h"
 #include "d_mod.h"
 #include "doomdef.h"
 #include "doomtype.h"
 #include "dhticstr.h"  // haleyjd
 #include "dstrings.h"  // to get initial text values
 #include "e_lib.h"
+#include "e_things.h"
 #include "info.h"
 #include "m_argv.h"
 #include "m_fixed.h"
 #include "m_queue.h"
 #include "metaapi.h"
+#include "p_mobj.h"
 #include "sounds.h"
 
 //
@@ -2362,6 +2366,61 @@ static const char *D_dehout()
 }
 
 //
+// Use gathered data. Handle some of the Dehacked changes here, since they need to be safely handled
+// only once, in case the DEHACKED definition has the same thing multiple times.
+//
+static void D_useGatheredData(const MetaTable &gatheredData)
+{
+   struct tgfmapping_t
+   {
+      const char *key;
+      unsigned flag;
+      bool inclusive;
+      void (*negativeHandler)(mobjtype_t type, int val);
+   };
+
+   static const tgfmapping_t mappings[] =
+   {
+      {
+         DEH_KEY_SPLASH_GROUP,
+         TGF_NOSPLASHDAMAGE,
+         true,
+         [](mobjtype_t type, int val) {
+            I_Error("DEHACKED: Bad \"Splash group\" %d for \"%s\"", val, mobjinfo[type]->name);
+         },
+      },
+      {
+         DEH_KEY_PROJECTILE_GROUP,
+         TGF_PROJECTILEALLIANCE,
+         false,
+         [](mobjtype_t type, int val) {
+            mobjinfo[type]->flags4 |= MF4_HARMSPECIESMISSILE;
+         },
+      },
+   };
+
+   const MetaObject *obj = nullptr;
+   while((obj = gatheredData.tableIterator(obj)))
+   {
+      const MetaTable *table = static_cast<const MetaTable *>(obj);
+      mobjtype_t type = E_GetThingNumForName(table->getKey());
+
+      // Override thing groups with whatever got set in Dehacked
+      for(const tgfmapping_t &mapping : mappings)
+      {
+         int val = table->getInt(mapping.key, D_MININT);
+         if(val == D_MININT)
+            continue;
+         E_RemoveFromExistingThingPairs(type, mapping.flag);
+         if(val < 0)
+            mapping.negativeHandler(type, val);
+         else
+            E_AddToMBF21ThingGroup(val, mapping.flag, type, mapping.inclusive);
+      }
+   }
+}
+
+//
 // D_ProcessDEHQueue
 //
 // Processes all the DeHackEd/BEX files queued during startup, including
@@ -2393,6 +2452,10 @@ void D_ProcessDEHQueue()
 
    // free the elements and reset the queue
    M_QueueFree(&dehqueue);
+
+   // Handle gathered data
+   D_useGatheredData(gatheredData);
+   gatheredData.clearTable();
 }
 
 // EOF
