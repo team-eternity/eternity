@@ -249,7 +249,8 @@ with any concerns.
   * Added a spawn type parameter to the A_FatAttack* codepointers.
   * MBF21: added support for dehacked frames Args[6-8] (1-5 were already
     present).
-  * MBF21: added "Splash group" specifier for "Thing" sections.
+  * MBF21: added the "Splash group", "Projectile group" and "Infighting group"
+    specifiers for "Thing" sections.
   * Made thing-based obituaries use deh or EDF strings if they start with $.
 
 ** Automap **
