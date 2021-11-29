@@ -3134,6 +3134,7 @@ void E_ProcessThings(cfg_t *cfg)
    {
      for(i = 0; i < ACS_NUM_THINGTYPES; i++)
         ACS_thingtypes[i] = UnknownThingType;
+     firsttime = false;
    }
 
    for(i = 0; i < numthings; i++)
