@@ -3329,8 +3329,9 @@ static ThingGroup *E_getThingGroupByMBF21id(int idnum, unsigned flag)
 
 //
 // Given an external source, adds the type and flag to a thing group
+// "inclusive" means to also add a self-self pair.
 //
-void E_AddToMBF21ThingGroup(int idnum, unsigned flag, int type)
+void E_AddToMBF21ThingGroup(int idnum, unsigned flag, int type, bool inclusive)
 {
    ThingGroup *group = E_getThingGroupByMBF21id(idnum, flag);
 
@@ -3342,7 +3343,8 @@ void E_AddToMBF21ThingGroup(int idnum, unsigned flag, int type)
    // Plug the types together
    for(int prevtype : group->types)
    {
-      // All the MBF21 flags are inclusive, so also add a self-pair
+      if(!inclusive && prevtype == type) // only allow self-pairs if inclusive
+         continue;
       thinggrouppair_t *pair = E_getThingGroupPair(prevtype, type);
       pair->flags |= flag;
    }
