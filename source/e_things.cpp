@@ -3351,6 +3351,21 @@ void E_AddToMBF21ThingGroup(int idnum, unsigned flag, int type, bool inclusive)
 }
 
 //
+// Clears all pairs of this thing and flag with any other things.
+//
+void E_RemoveFromExistingThingPairs(int type, unsigned flag)
+{
+   // What we need to understand here is to remove all pre-existing pairs of this thing.
+   thinggrouppair_t *pair = nullptr;
+   while((pair = thinggrouppairs.tableIterator(pair)))
+   {
+      if(pair->types[0] != type && pair->types[1] != type)
+         continue;
+      pair->flags &= ~flag;
+   }
+}
+
+//
 // Returns that two monsters are allies
 //
 bool E_ThingPairValid(mobjtype_t t1, mobjtype_t t2, unsigned flags)
