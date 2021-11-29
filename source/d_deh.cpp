@@ -192,6 +192,7 @@ enum dehmobjinfoid_e : int
    dehmobjinfoid_mbf21flags,
    dehmobjinfoid_fastspeed,
    dehmobjinfoid_splashgroup,
+   dehmobjinfoid_projectilegroup,
    DEH_MOBJINFOMAX
 };
 
@@ -228,6 +229,7 @@ static constexpr const char *deh_mobjinfo[DEH_MOBJINFOMAX] =
   "MBF21 Bits",          // .flags[2-5] (they're scattered across)
   "Fast speed",          // .meta sorta kinda it's complicated
   "Splash group",        // Thing group NOSPLASHDAMAGE
+  "Projectile group",    // Thing group PROJECTILEALLIANCE or mobjinfo MF4_HARMSPECIESMISSILE
 };
 
 // Strings that are used to indicate flags ("Bits" in mobjinfo)
@@ -1220,7 +1222,14 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
       if(value < 0)
          deh_LogPrintf("Bad \"Splash group\" in %d for \"%s\"\n", value, mi->name);
       else
-         E_AddToMBF21ThingGroup(value, TGF_NOSPLASHDAMAGE, mi->index);
+         E_AddToMBF21ThingGroup(value, TGF_NOSPLASHDAMAGE, mi->index, true);
+      break;
+   case dehmobjinfoid_projectilegroup:
+      if(value < 0)  // under EE we can just use this flag
+         mi->flags4 |= MF4_HARMSPECIESMISSILE;
+      else
+         E_AddToMBF21ThingGroup(value, TGF_PROJECTILEALLIANCE, mi->index, false);
+         // TODO: eliminate old groups
       break;
    default:
       break;
