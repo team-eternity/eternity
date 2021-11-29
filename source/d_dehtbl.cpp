@@ -41,6 +41,7 @@
 #include "m_argv.h"
 #include "m_fixed.h"
 #include "m_queue.h"
+#include "metaapi.h"
 #include "sounds.h"
 
 //
@@ -2344,7 +2345,8 @@ void D_QueueDEH(const char *filename, int lumpnum)
 // DeHackEd support - Ty 03/09/97
 // killough 10/98:
 // Add lump number as third argument, for use when filename==nullptr
-void ProcessDehFile(const char *filename, const char *outfilename, int lump);
+void ProcessDehFile(const char *filename, const char *outfilename, int lump,
+                    MetaTable &gatheredData);
 
 // killough 10/98: support -dehout filename
 // cph - made const, don't cache results
@@ -2371,6 +2373,7 @@ void D_ProcessDEHQueue()
    // has preserved the proper processing order.
 
    mqueueitem_t *rover;
+   MetaTable gatheredData;
 
    while((rover = M_QueueIterator(&dehqueue)))
    {
@@ -2380,11 +2383,11 @@ void D_ProcessDEHQueue()
       // it's a file
       if(dqitem->lumpnum != -1)
       {
-         ProcessDehFile(nullptr, D_dehout(), dqitem->lumpnum);
+         ProcessDehFile(nullptr, D_dehout(), dqitem->lumpnum, gatheredData);
       }
       else
       {
-         ProcessDehFile(dqitem->name, D_dehout(), 0);
+         ProcessDehFile(dqitem->name, D_dehout(), 0, gatheredData);
       }
    }
 
