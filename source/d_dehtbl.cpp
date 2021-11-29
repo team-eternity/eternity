@@ -27,22 +27,13 @@
 //--------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
 
 #include "d_deh.h"
 #include "d_dehtbl.h"
-#include "d_io.h"
-#include "d_main.h"
-#include "d_mod.h"
-#include "doomdef.h"
-#include "doomtype.h"
 #include "dhticstr.h"  // haleyjd
 #include "dstrings.h"  // to get initial text values
-#include "e_lib.h"
 #include "e_things.h"
-#include "info.h"
 #include "m_argv.h"
-#include "m_fixed.h"
 #include "m_queue.h"
 #include "metaapi.h"
 #include "p_mobj.h"

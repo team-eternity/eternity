@@ -31,11 +31,8 @@
 #include "z_zone.h"
 
 #include "d_deh.h"
-#include "d_dehtbl.h"
 #include "d_dwfile.h"
-#include "d_io.h"
 #include "d_main.h" // haleyjd
-#include "doomdef.h"
 #include "doomstat.h"
 #include "e_args.h"
 #include "e_inventory.h"
@@ -46,16 +43,11 @@
 #include "e_things.h"
 #include "e_weapons.h"
 #include "g_game.h"
-#include "info.h"
 #include "metaapi.h"
 #include "m_cheat.h"
 #include "m_utils.h"
 #include "p_info.h"
 #include "p_inter.h"
-#include "p_mobj.h"
-#include "p_tick.h"
-#include "sounds.h"
-#include "w_wad.h"
 
 // haleyjd 11/01/02: moved deh file/wad stdio emulation to d_io.c
 // and generalized, strengthened encapsulation
