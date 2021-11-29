@@ -1825,5 +1825,19 @@ size_t MetaTable::IndexForKey(const char *key)
    return MetaKey(key).index;
 }
 
+//
+// Either returns an existing subtable or creates a new one
+//
+MetaTable &M_GetTableOrDefault(MetaTable &table, const char *key)
+{
+   MetaTable *subtable = table.getMetaTable(key, nullptr);
+   if(!subtable)
+   {
+      subtable = new MetaTable(key);
+      table.addMetaTable(key, subtable);
+   }
+   return *subtable;
+}
+
 // EOF
 
