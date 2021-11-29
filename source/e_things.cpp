@@ -3334,16 +3334,16 @@ void E_AddToMBF21ThingGroup(int idnum, unsigned flag, int type)
 {
    ThingGroup *group = E_getThingGroupByMBF21id(idnum, flag);
 
-   for(int addedtype : group->types)   // primitive check against duplicates
-      if(addedtype == type)
+   for(int prevtype : group->types)   // primitive check against duplicates
+      if(prevtype == type)
          return;
    group->types.add(type);
 
    // Plug the types together
-   for(int addedtype : group->types)
+   for(int prevtype : group->types)
    {
       // All the MBF21 flags are inclusive, so also add a self-pair
-      thinggrouppair_t *pair = E_getThingGroupPair(addedtype, type);
+      thinggrouppair_t *pair = E_getThingGroupPair(prevtype, type);
       pair->flags |= flag;
    }
 }
