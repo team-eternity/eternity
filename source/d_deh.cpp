@@ -30,6 +30,7 @@
 // killough 5/2/98: fixed headers, removed redundant external declarations:
 #include "z_zone.h"
 
+#include "d_deh.h"
 #include "d_dehtbl.h"
 #include "d_dwfile.h"
 #include "d_io.h"
@@ -228,8 +229,8 @@ static constexpr const char *deh_mobjinfo[DEH_MOBJINFOMAX] =
   "Dropped item",        // .meta sorta kinda it's complicated
   "MBF21 Bits",          // .flags[2-5] (they're scattered across)
   "Fast speed",          // .meta sorta kinda it's complicated
-  "Splash group",        // Thing group NOSPLASHDAMAGE
-  "Projectile group",    // Thing group PROJECTILEALLIANCE or mobjinfo MF4_HARMSPECIESMISSILE
+  DEH_KEY_SPLASH_GROUP,  // Thing group NOSPLASHDAMAGE
+  DEH_KEY_PROJECTILE_GROUP,   // Thing group PROJECTILEALLIANCE or mobjinfo MF4_HARMSPECIESMISSILE
 };
 
 // Strings that are used to indicate flags ("Bits" in mobjinfo)
