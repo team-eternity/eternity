@@ -30,11 +30,9 @@
 // killough 5/2/98: fixed headers, removed redundant external declarations:
 #include "z_zone.h"
 
-#include "d_dehtbl.h"
+#include "d_deh.h"
 #include "d_dwfile.h"
-#include "d_io.h"
 #include "d_main.h" // haleyjd
-#include "doomdef.h"
 #include "doomstat.h"
 #include "e_args.h"
 #include "e_inventory.h"
@@ -45,16 +43,11 @@
 #include "e_things.h"
 #include "e_weapons.h"
 #include "g_game.h"
-#include "info.h"
 #include "metaapi.h"
 #include "m_cheat.h"
 #include "m_utils.h"
 #include "p_info.h"
 #include "p_inter.h"
-#include "p_mobj.h"
-#include "p_tick.h"
-#include "sounds.h"
-#include "w_wad.h"
 
 // haleyjd 11/01/02: moved deh file/wad stdio emulation to d_io.c
 // and generalized, strengthened encapsulation
@@ -79,25 +72,25 @@ static char *dehReformatStr(char *);
 // Prototypes for block processing functions
 // Pointers to these functions are used as the blocks are encountered.
 
-static void deh_procThing(DWFILE *, char *);
-static void deh_procFrame(DWFILE *, char *);
-static void deh_procPointer(DWFILE *, char *);
-static void deh_procSounds(DWFILE *, char *);
-static void deh_procAmmo(DWFILE *, char *);
-static void deh_procWeapon(DWFILE *, char *);
-static void deh_procSprite(DWFILE *, char *);
-static void deh_procCheat(DWFILE *, char *);
-static void deh_procMisc(DWFILE *, char *);
-static void deh_procText(DWFILE *, char *);
-static void deh_procPars(DWFILE *, char *);
-static void deh_procStrings(DWFILE *, char *);
-static void deh_procError(DWFILE *, char *);
-static void deh_procBexCodePointers(DWFILE *, char *);
-static void deh_procHelperThing(DWFILE *, char *); // haleyjd 9/22/99
+static void deh_procThing(DWFILE *, char *, MetaTable &);
+static void deh_procFrame(DWFILE *, char *, MetaTable &);
+static void deh_procPointer(DWFILE *, char *, MetaTable &);
+static void deh_procSounds(DWFILE *, char *, MetaTable &);
+static void deh_procAmmo(DWFILE *, char *, MetaTable &);
+static void deh_procWeapon(DWFILE *, char *, MetaTable &);
+static void deh_procSprite(DWFILE *, char *, MetaTable &);
+static void deh_procCheat(DWFILE *, char *, MetaTable &);
+static void deh_procMisc(DWFILE *, char *, MetaTable &);
+static void deh_procText(DWFILE *, char *, MetaTable &);
+static void deh_procPars(DWFILE *, char *, MetaTable &);
+static void deh_procStrings(DWFILE *, char *, MetaTable &);
+static void deh_procError(DWFILE *, char *, MetaTable &);
+static void deh_procBexCodePointers(DWFILE *, char *, MetaTable &);
+static void deh_procHelperThing(DWFILE *, char *, MetaTable &); // haleyjd 9/22/99
 // haleyjd: handlers to fully deprecate the DeHackEd text section
-static void deh_procBexSounds(DWFILE *, char *);
-static void deh_procBexMusic(DWFILE *, char *);
-static void deh_procBexSprites(DWFILE *, char *);
+static void deh_procBexSounds(DWFILE *, char *, MetaTable &);
+static void deh_procBexMusic(DWFILE *, char *, MetaTable &);
+static void deh_procBexSprites(DWFILE *, char *, MetaTable &);
 
 // Structure deh_block is used to hold the block names that can
 // be encountered, and the routines to use to decipher them
@@ -105,7 +98,7 @@ static void deh_procBexSprites(DWFILE *, char *);
 struct deh_block
 {
   const char *key;       // a mnemonic block code name
-  void (*const fptr)(DWFILE *, char *); // handler
+  void (*const fptr)(DWFILE *, char *, MetaTable &); // handler
 };
 
 struct dehflagremap_t
@@ -192,6 +185,8 @@ enum dehmobjinfoid_e : int
    dehmobjinfoid_mbf21flags,
    dehmobjinfoid_fastspeed,
    dehmobjinfoid_splashgroup,
+   dehmobjinfoid_projectilegroup,
+   dehmobjinfoid_infightinggroup,
    DEH_MOBJINFOMAX
 };
 
@@ -227,7 +222,9 @@ static constexpr const char *deh_mobjinfo[DEH_MOBJINFOMAX] =
   "Dropped item",        // .meta sorta kinda it's complicated
   "MBF21 Bits",          // .flags[2-5] (they're scattered across)
   "Fast speed",          // .meta sorta kinda it's complicated
-  "Splash group",        // Thing group NOSPLASHDAMAGE
+  DEH_KEY_SPLASH_GROUP,  // Thing group NOSPLASHDAMAGE
+  DEH_KEY_PROJECTILE_GROUP,   // Thing group PROJECTILEALLIANCE or mobjinfo MF4_HARMSPECIESMISSILE
+  DEH_KEY_INFIGHTING_GROUP,   // Thing group DAMAGEIGNORE and flag
 };
 
 // Strings that are used to indicate flags ("Bits" in mobjinfo)
@@ -781,7 +778,8 @@ static void deh_CloseLog()
 // haleyjd 09/07/01: this can be called while in video mode now,
 // so printf calls needed to be converted to usermsg calls
 //
-void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum)
+void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum,
+                    MetaTable &gatheredData)
 {
    DWFILE infile;                 // killough 10/98
    char inbuffer[DEH_BUFFERMAX];  // Place to put the primary infostring
@@ -859,7 +857,7 @@ void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum)
 
          // killough 10/98:
          // Second argument must be nullptr to prevent closing fileout too soon
-         ProcessDehFile(nextfile, nullptr, 0); // do the included file
+         ProcessDehFile(nextfile, nullptr, 0, gatheredData); // do the included file
 
          includenotext = oldnotext;
 
@@ -876,7 +874,7 @@ void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum)
             deh_LogPrintf("Processing function [%zu] for %s\n",
                           i, deh_blocks[i].key);
 
-            deh_blocks[i].fptr(&infile, inbuffer);  // call function
+            deh_blocks[i].fptr(&infile, inbuffer, gatheredData);  // call function
 
             break;  // we got one, that's enough for this block
          }
@@ -899,7 +897,7 @@ void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum)
 // haleyjd 03/14/03: rewritten to replace linear search on deh_bexptrs
 // table with in-table chained hashing -- table is now in d_dehtbl.c
 //
-static void deh_procBexCodePointers(DWFILE *fpin, char *line)
+static void deh_procBexCodePointers(DWFILE *fpin, char *line, MetaTable &gatheredData)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -1108,7 +1106,7 @@ static unsigned int *deh_parseFlagsCombinedRemapped(
    return flagset->results;
 }
 
-static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
+static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value, MetaTable &gatheredData)
 {
    mobjinfo_t *mi;
 
@@ -1217,10 +1215,13 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
       G_SpeedSetAddThing(mobjInfoIndex, mi->speed, value);
       break;
    case dehmobjinfoid_splashgroup:
-      if(value < 0)
-         deh_LogPrintf("Bad \"Splash group\" in %d for \"%s\"\n", value, mi->name);
-      else
-         E_AddToMBF21ThingGroup(value, TGF_NOSPLASHDAMAGE, mi->index);
+      M_GetTableOrDefault(gatheredData, mi->name).setInt(DEH_KEY_SPLASH_GROUP, value);
+      break;
+   case dehmobjinfoid_projectilegroup:
+      M_GetTableOrDefault(gatheredData, mi->name).setInt(DEH_KEY_PROJECTILE_GROUP, value);
+      break;
+   case dehmobjinfoid_infightinggroup:
+      M_GetTableOrDefault(gatheredData, mi->name).setInt(DEH_KEY_INFIGHTING_GROUP, value);
       break;
    default:
       break;
@@ -1237,7 +1238,7 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
 // Ty 8/27/98 - revised to also allow mnemonics for
 // bit masks for monster attributes
 //
-static void deh_procThing(DWFILE *fpin, char *line)
+static void deh_procThing(DWFILE *fpin, char *line, MetaTable &gatheredData)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -1298,7 +1299,7 @@ static void deh_procThing(DWFILE *fpin, char *line)
                deh_LogPrintf("Bits = 0x%08lX = %ld \n", value, value);
             }
 
-            SetMobjInfoValue(indexnum, dehmobjinfoid_flags, value);
+            SetMobjInfoValue(indexnum, dehmobjinfoid_flags, value, gatheredData);
          }
          else if(dehmobjinfoid == dehmobjinfoid_flags2)
          {
@@ -1314,7 +1315,7 @@ static void deh_procThing(DWFILE *fpin, char *line)
                deh_LogPrintf("Bits2 = 0x%08lX = %ld \n", value, value);
             }
 
-            SetMobjInfoValue(indexnum, dehmobjinfoid_flags2, value);
+            SetMobjInfoValue(indexnum, dehmobjinfoid_flags2, value, gatheredData);
          }
          else if(dehmobjinfoid == dehmobjinfoid_flags3)
          {
@@ -1330,7 +1331,7 @@ static void deh_procThing(DWFILE *fpin, char *line)
                deh_LogPrintf("Bits3 = 0x%08lX = %ld \n", value, value);
             }
 
-            SetMobjInfoValue(indexnum, dehmobjinfoid_flags3, value);
+            SetMobjInfoValue(indexnum, dehmobjinfoid_flags3, value, gatheredData);
          }
          else if(dehmobjinfoid == dehmobjinfoid_mbf21flags)
          {
@@ -1363,7 +1364,7 @@ static void deh_procThing(DWFILE *fpin, char *line)
             mi->flags5 |= dehacked_mbf21flags.results[DEHFLAGS_MODE5];
          }
          else
-            SetMobjInfoValue(indexnum, dehmobjinfoid, value);
+            SetMobjInfoValue(indexnum, dehmobjinfoid, value, gatheredData);
 
          deh_LogPrintf("Assigned %d to %s(%d) at index %d\n",
                        value, key, indexnum, dehmobjinfoid);
@@ -1392,7 +1393,7 @@ static void deh_createArgList(state_t *state)
 //          line  -- current line in file to process
 // Returns: void
 //
-static void deh_procFrame(DWFILE *fpin, char *line)
+static void deh_procFrame(DWFILE *fpin, char *line, MetaTable &gatheredData)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -1510,7 +1511,7 @@ static void deh_procFrame(DWFILE *fpin, char *line)
 //          line  -- current line in file to process
 // Returns: void
 //
-static void deh_procPointer(DWFILE *fpin, char *line) // done
+static void deh_procPointer(DWFILE *fpin, char *line, MetaTable &gatheredData) // done
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -1593,7 +1594,7 @@ static void deh_procPointer(DWFILE *fpin, char *line) // done
 //          line  -- current line in file to process
 // Returns: void
 //
-static void deh_procSounds(DWFILE *fpin, char *line)
+static void deh_procSounds(DWFILE *fpin, char *line, MetaTable &gatheredData)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -1700,7 +1701,7 @@ static constexpr const char *deh_giverNames[NUMWEAPONS] =
 //          line  -- current line in file to process
 // Returns: void
 //
-static void deh_procAmmo(DWFILE *fpin, char *line)
+static void deh_procAmmo(DWFILE *fpin, char *line, MetaTable &gatheredData)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -1806,7 +1807,7 @@ static void deh_procAmmo(DWFILE *fpin, char *line)
 //          line  -- current line in file to process
 // Returns: void
 //
-static void deh_procWeapon(DWFILE *fpin, char *line)
+static void deh_procWeapon(DWFILE *fpin, char *line, MetaTable &gatheredData)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -1929,7 +1930,7 @@ static void deh_procWeapon(DWFILE *fpin, char *line)
 //          line  -- current line in file to process
 // Returns: void
 //
-static void deh_procSprite(DWFILE *fpin, char *line) // Not supported
+static void deh_procSprite(DWFILE *fpin, char *line, MetaTable &gatheredData) // Not supported
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -1966,7 +1967,7 @@ static void deh_procSprite(DWFILE *fpin, char *line) // Not supported
 //          line  -- current line in file to process
 // Returns: void
 //
-static void deh_procPars(DWFILE *fpin, char *line) // extension
+static void deh_procPars(DWFILE *fpin, char *line, MetaTable &gatheredData) // extension
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -2054,7 +2055,7 @@ static void deh_procPars(DWFILE *fpin, char *line) // extension
 //          line  -- current line in file to process
 // Returns: void
 //
-static void deh_procCheat(DWFILE *fpin, char *line) // done
+static void deh_procCheat(DWFILE *fpin, char *line, MetaTable &gatheredData) // done
 {
    char  key[DEH_MAXKEYLEN];
    char  inbuffer[DEH_BUFFERMAX];
@@ -2125,7 +2126,7 @@ static void deh_procCheat(DWFILE *fpin, char *line) // done
 //          line  -- current line in file to process
 // Returns: void
 //
-static void deh_procMisc(DWFILE *fpin, char *line) // done
+static void deh_procMisc(DWFILE *fpin, char *line, MetaTable &gatheredData) // done
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -2303,7 +2304,7 @@ static void deh_procMisc(DWFILE *fpin, char *line) // done
 //          line  -- current line in file to process
 // Returns: void
 //
-static void deh_procText(DWFILE *fpin, char *line)
+static void deh_procText(DWFILE *fpin, char *line, MetaTable &gatheredData)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX*2]; // can't use line -- double size buffer too.
@@ -2445,7 +2446,7 @@ static void deh_procText(DWFILE *fpin, char *line)
       efree(line2);
 }
 
-static void deh_procError(DWFILE *fpin, char *line)
+static void deh_procError(DWFILE *fpin, char *line, MetaTable &gatheredData)
 {
    char inbuffer[DEH_BUFFERMAX];
 
@@ -2460,7 +2461,7 @@ static void deh_procError(DWFILE *fpin, char *line)
 //          line  -- current line in file to process
 // Returns: void
 //
-static void deh_procStrings(DWFILE *fpin, char *line)
+static void deh_procStrings(DWFILE *fpin, char *line, MetaTable &gatheredData)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -2616,7 +2617,7 @@ static bool deh_procStringSub(char *key, char *lookfor, char *newstring)
 // is a waste of effort, and so have added this new [HELPER]
 // BEX block
 //
-static void deh_procHelperThing(DWFILE *fpin, char *line)
+static void deh_procHelperThing(DWFILE *fpin, char *line, MetaTable &gatheredData)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -2653,7 +2654,7 @@ static void deh_procHelperThing(DWFILE *fpin, char *line)
 // Supports sprite name substitutions without requiring use
 // of the DeHackEd Text block
 //
-static void deh_procBexSprites(DWFILE *fpin, char *line)
+static void deh_procBexSprites(DWFILE *fpin, char *line, MetaTable &gatheredData)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -2712,7 +2713,7 @@ static void deh_procBexSprites(DWFILE *fpin, char *line)
 }
 
 // ditto for sound names
-static void deh_procBexSounds(DWFILE *fpin, char *line)
+static void deh_procBexSounds(DWFILE *fpin, char *line, MetaTable &gatheredData)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -2772,7 +2773,7 @@ static void deh_procBexSounds(DWFILE *fpin, char *line)
 }
 
 // ditto for music names
-static void deh_procBexMusic(DWFILE *fpin, char *line)
+static void deh_procBexMusic(DWFILE *fpin, char *line, MetaTable &gatheredData)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
