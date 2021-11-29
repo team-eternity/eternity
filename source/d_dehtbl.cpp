@@ -30,6 +30,7 @@
 
 #include "d_deh.h"
 #include "d_dehtbl.h"
+#include "d_io.h"
 #include "dhticstr.h"  // haleyjd
 #include "dstrings.h"  // to get initial text values
 #include "e_things.h"
