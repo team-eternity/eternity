@@ -3194,16 +3194,54 @@ static thinggrouppair_t *E_getThingGroupPair(mobjtype_t type1, mobjtype_t type2)
 }
 
 //
+// Populate a thinggroup's array from EDF config
+//
+static void E_populateEDFThingGroup(ThingGroup &group, cfg_t *gsec)
+{
+   // Have a visited list
+   ZAutoBuffer zvisited(NUMMOBJTYPES, true);
+   bool *visited = zvisited.getAs<bool *>();
+
+   unsigned numtypes = cfg_size(gsec, ITEM_TGROUP_TYPES);
+   if(!numtypes)
+      return;
+
+   for(unsigned j = 0; j < numtypes; ++j)
+   {
+      const char *tempstr = cfg_getnstr(gsec, ITEM_TGROUP_TYPES, j);
+      int type = E_ThingNumForName(tempstr);
+      if(type != -1 && !visited[type])
+      {
+         visited[type] = true;
+         group.types.add(type);
+         if(group.flags & TGF_INHERITED)
+         {
+            // Also check children
+            for(int k = 0; k < NUMMOBJTYPES; ++k)
+            {
+               if(visited[k] || !E_mobjTypeIsDescendantOf(k, type))
+                  continue;
+
+               visited[k] = true;
+               group.types.add(k);
+            }
+         }
+      }
+      else if(!visited[type]) // don't scream if visited
+      {
+         E_EDFLoggedWarning(2, "Warning: unknown type '%s' for group '%s'\n",
+                            tempstr, group.name.constPtr());
+      }
+   }
+}
+
+//
 // Process thing group definitions
 //
 void E_ProcessThingGroups(cfg_t *cfg)
 {
    unsigned numgroups = cfg_size(cfg, EDF_SEC_THINGGROUP);
    ThingGroup *group;
-
-   // Have a visited list
-   ZAutoBuffer zvisited(NUMMOBJTYPES, true);
-   bool *visited = zvisited.getAs<bool *>();
 
    for(unsigned i = 0; i < numgroups; ++i)
    {
@@ -3218,50 +3256,24 @@ void E_ProcessThingGroups(cfg_t *cfg)
          thinggroup_namehash.addObject(group);
       }
       else
+      {
          E_EDFLogPrintf("\t\tModifying thing group '%s'\n", name);
+         // Reset the properties if group redefined
+         group->flags = 0;
+         group->types.makeEmpty();
+      }
 
       const char *tempstr = cfg_getstr(gsec, ITEM_TGROUP_FLAGS);
       if(estrnonempty(tempstr))
          group->flags = E_ParseFlags(tempstr, &tgroup_kindset);
 
-      unsigned numtypes = cfg_size(gsec, ITEM_TGROUP_TYPES);
-      if(numtypes)
-      {
-         // Must reset it
-         memset(visited, 0, zvisited.getSize());
-
-         group->types.clear();   // clear it even if thinggroup redefined.
-         for(unsigned j = 0; j < numtypes; ++j)
-         {
-            tempstr = cfg_getnstr(gsec, ITEM_TGROUP_TYPES, j);
-            int type = E_ThingNumForName(tempstr);
-            if(type != -1 && !visited[type])
-            {
-               visited[type] = true;
-               group->types.add(type);
-               if(group->flags & TGF_INHERITED)
-               {
-                  // Also check children
-                  for(int k = 0; k < NUMMOBJTYPES; ++k)
-                  {
-                     if(visited[k] || !E_mobjTypeIsDescendantOf(k, type))
-                        continue;
-
-                     visited[k] = true;
-                     group->types.add(k);
-                  }
-               }
-            }
-            else if(!visited[type]) // don't scream if visited
-            {
-               E_EDFLoggedWarning(2, "Warning: unknown type '%s' for group '%s'\n",
-                                  tempstr, name);
-            }
-         }
-      }
+      E_populateEDFThingGroup(*group, gsec);
    }
 
-   // Now process them
+   // Now process them.
+   // It's safe to remove all thinggrouppairs now, because we'll redefine them from all ThingGroups,
+   // new and current.
+   // MBF21 Dehacked will apply on top of this, overriding as necessary.
    thinggrouppair_t *proj;
    while((proj = thinggrouppairs.tableIterator((thinggrouppair_t*)nullptr)))
    {
@@ -3356,7 +3368,7 @@ void E_AddToMBF21ThingGroup(int idnum, unsigned flag, int type, bool inclusive)
 //
 void E_RemoveFromExistingThingPairs(int type, unsigned flag)
 {
-   // What we need to understand here is to remove all pre-existing pairs of this thing.
+   // What we need to do here is to remove all pre-existing pairs of this thing.
    thinggrouppair_t *pair = nullptr;
    while((pair = thinggrouppairs.tableIterator(pair)))
    {
