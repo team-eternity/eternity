@@ -123,7 +123,8 @@ enum
    SDMG_ENDGODMODE = 0x00000004, // turns off god mode if on
    SDMG_EXITLEVEL  = 0x00000008, // exits when player health <= 10
    SDMG_TERRAINHIT = 0x00000010, // damage causes a terrain hit
-   SDMG_EXITSECRET = 0x00000020, // exits to secret map (only for MBF21 instadeath)
+   SDMG_INSTAEXITNORMAL = 0x00000020,  // exits to next map (only for MBF21 instadeath)
+   SDMG_INSTAEXITSECRET = 0x00000040,  // exits to secret map (only for MBF21 instadeath)
 };
 
 // haleyjd 08/30/09: internal sector flags
