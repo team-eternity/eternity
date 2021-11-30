@@ -102,6 +102,8 @@ struct v3fixed_t;
 #define KILLSOUND_SHIFT 10
 #define MOVESOUND_MASK  0x800
 #define MOVESOUND_SHIFT 11
+#define INSTANTDEATH_MASK  0x1000
+#define INSTANTDEATH_SHIFT 12
 
 #define UDMF_SEC_MASK   0xff  // 0-255 are the UDMF non-Boom gen specials
 // right-shift from UDMF generalized namespace to Boom generalized namespace
@@ -110,7 +112,7 @@ struct v3fixed_t;
 // haleyjd 12/28/08: mask used to get generalized special bits that are now
 // part of the sector flags
 #define GENSECTOFLAGSMASK \
-   (SECRET_MASK|FRICTION_MASK|PUSH_MASK|KILLSOUND_MASK|MOVESOUND_MASK)
+   (SECRET_MASK|FRICTION_MASK|PUSH_MASK|KILLSOUND_MASK|MOVESOUND_MASK|INSTANTDEATH_MASK)
 
 //jff 02/04/98 Define masks, shifts, for fields in 
 // generalized linedef types

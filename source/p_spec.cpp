@@ -1124,6 +1124,37 @@ void P_PushSpecialLine(Mobj &thing, line_t &line, int side)
 int enable_nuke = 1;  // killough 12/98: nukage disabling cheat
 
 //
+// Handle MBF21 instant death sector for player
+//
+static void P_runInstantDeathSector(player_t *player, sector_t *sector)
+{
+   bool exit = !!(sector->damageflags & (SDMG_EXITLEVEL | SDMG_EXITSECRET));
+   bool kill;
+   if(!enable_nuke)  // allow the nuke cheat to eliminate the insta-deaths without exit
+      kill = exit;
+   else
+   {
+      kill = sector->damageflags & SDMG_IGNORESUIT || (!player->powers[pw_ironfeet] &&
+                                                       !player->powers[pw_invulnerability]);
+   }
+   if(!kill)
+      return;
+
+   P_DamageMobj(player->mo, nullptr, nullptr, GOD_BREACH_DAMAGE, sector->damagemod);
+   if(!exit)
+      return;
+
+   // Must also "kill" the other players before exiting
+   for(int i = 0; i < MAXPLAYERS; ++i)
+      if(playeringame[i] && players[i].mo != player->mo)
+         P_DamageMobj(player->mo, nullptr, nullptr, GOD_BREACH_DAMAGE, sector->damagemod);
+   if(sector->damageflags & SDMG_EXITSECRET)
+      G_SecretExitLevel();
+   else
+      G_ExitLevel();
+}
+
+//
 // P_PlayerInSpecialSector
 //
 // Called every tic that the player origin is in a special sector
@@ -1168,9 +1199,11 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
 
    // Has hit ground
 
-   // haleyjd 12/31/08: generalized sector damage engine
-   if(enable_nuke && sector->damage > 0) // killough 12/98: nukage disabling cheat
+   if(mbf21_temp && sector->flags & SECF_INSTANTDEATH)
+      P_runInstantDeathSector(player, sector);
+   else if(enable_nuke && sector->damage > 0) // killough 12/98: nukage disabling cheat
    {
+      // haleyjd 12/31/08: generalized sector damage engine
       if(!player->powers[pw_ironfeet]          ||  // no rad suit?
          sector->leakiness >= 256              ||  // ignores suit?
          (sector->leakiness > 0                &&  // suit leaks?

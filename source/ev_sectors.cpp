@@ -938,19 +938,31 @@ static void EV_initGeneralizedSector(sector_t *sector)
       return;
    }
 
+   // Apply slime damage UNLESS the MBF21 insta-death bit is set, which changes rules
    // convert damage
    int damagetype = (sector->special & DAMAGE_MASK) >> DAMAGE_SHIFT;
+   bool instadeath = mbf21_temp && sector->flags & SECF_INSTANTDEATH;
+   // Don't just make a new nukage type with GOD_BREACH_DAMAGE, because we may
 
    switch(damagetype)
    {
    case 1:
-      EV_SectorDamageNukage(sector); // 5 per 32 tics
+      if(instadeath)
+         sector->damageflags |= SDMG_IGNORESUIT;
+      else
+         EV_SectorDamageNukage(sector); // 5 per 32 tics
       break;
    case 2:
-      EV_SectorDamageHellSlime(sector); // 10 per 32 tics
+      if(instadeath)
+         sector->damageflags |= SDMG_EXITLEVEL | SDMG_IGNORESUIT;
+      else
+         EV_SectorDamageHellSlime(sector); // 10 per 32 tics
       break;
    case 3:
-      EV_SectorDamageSuperHellSlime(sector); // 20 per 32 tics w/LEAKYSUIT
+      if(instadeath)
+         sector->damageflags |= SDMG_EXITSECRET | SDMG_IGNORESUIT;
+      else
+         EV_SectorDamageSuperHellSlime(sector); // 20 per 32 tics w/LEAKYSUIT
    default:
       break;
    }
