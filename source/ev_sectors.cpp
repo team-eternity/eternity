@@ -877,7 +877,7 @@ static ev_sectorbinding_t *EV_BindingForSectorSpecial(int special)
 //
 // Test if a sector special is generalized
 //
-bool EV_IsGenSectorSpecial(int special)
+static bool EV_IsGenSectorSpecial(int special)
 {
    // UDMF (based on ZDoom's) sector specials
    if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
