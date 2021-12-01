@@ -954,15 +954,22 @@ static void EV_initGeneralizedSector(sector_t *sector)
       break;
    case 2:
       if(instadeath)
-         sector->damageflags |= SDMG_INSTAEXITNORMAL | SDMG_IGNORESUIT;
+      {
+         sector->damageflags |= SDMG_IGNORESUIT;
+         sector->intflags |= SIF_INSTADEATH_EXITNORMAL;
+      }
       else
          EV_SectorDamageHellSlime(sector); // 10 per 32 tics
       break;
    case 3:
       if(instadeath)
-         sector->damageflags |= SDMG_INSTAEXITSECRET | SDMG_IGNORESUIT;
+      {
+         sector->damageflags |= SDMG_IGNORESUIT;
+         sector->intflags |= SIF_INSTADEATH_EXITSECRET;
+      }
       else
          EV_SectorDamageSuperHellSlime(sector); // 20 per 32 tics w/LEAKYSUIT
+      break;
    default:
       break;
    }
