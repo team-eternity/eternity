@@ -123,6 +123,8 @@ enum
    SDMG_ENDGODMODE = 0x00000004, // turns off god mode if on
    SDMG_EXITLEVEL  = 0x00000008, // exits when player health <= 10
    SDMG_TERRAINHIT = 0x00000010, // damage causes a terrain hit
+   SDMG_INSTAEXITNORMAL = 0x00000020,  // exits to next map (only for MBF21 instadeath)
+   SDMG_INSTAEXITSECRET = 0x00000040,  // exits to secret map (only for MBF21 instadeath)
 };
 
 // haleyjd 08/30/09: internal sector flags
@@ -131,10 +133,8 @@ enum
    SIF_SKY       = 0x00000001, // sector is sky
    SIF_WASSECRET = 0x00000002, // sector was previously secret
    SIF_PHASESCAN = 0x00000004, // being scanned for phased light
-   SIF_PORTALBOX = 0x00000008, // sector is a line portal buffer: all its lines
+   SIF_PORTALBOX = 0x00000008  // sector is a line portal buffer: all its lines
                                // are either 1-sided walls or portal walls.
-   SIF_INSTADEATH_EXITNORMAL = 0x00000010,   // for SECF_INSTANTDEATH, cause normal exit
-   SIF_INSTADEATH_EXITSECRET = 0x00000020,   // for SECF_INSTANTDEATH, cause normal exit
 };
 
 // haleyjd 06/22/14: Heretic push types

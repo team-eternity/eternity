@@ -1128,7 +1128,7 @@ int enable_nuke = 1;  // killough 12/98: nukage disabling cheat
 //
 static void P_runInstantDeathSector(player_t *player, const sector_t *sector)
 {
-   bool exit = !!(sector->intflags & (SIF_INSTADEATH_EXITNORMAL | SIF_INSTADEATH_EXITSECRET));
+   bool exit = !!(sector->damageflags & (SDMG_INSTAEXITNORMAL | SDMG_INSTAEXITSECRET));
    bool kill;
    if(!enable_nuke)  // allow the nuke cheat to eliminate the insta-deaths without exit
       kill = exit;
@@ -1148,7 +1148,7 @@ static void P_runInstantDeathSector(player_t *player, const sector_t *sector)
    for(int i = 0; i < MAXPLAYERS; ++i)
       if(playeringame[i] && players[i].mo != player->mo)
          P_DamageMobj(player->mo, nullptr, nullptr, GOD_BREACH_DAMAGE, sector->damagemod);
-   if(sector->intflags & SIF_INSTADEATH_EXITSECRET)
+   if(sector->damageflags & SDMG_INSTAEXITSECRET)
       G_SecretExitLevel();
    else
       G_ExitLevel();
