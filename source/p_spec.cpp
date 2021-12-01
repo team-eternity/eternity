@@ -2030,7 +2030,7 @@ void P_SetLineID(line_t *line, int id)
 // the sector special (not all sector flags may be considered to be such).
 
 #define SPECIALFLAGSMASK \
-   (SECF_SECRET|SECF_FRICTION|SECF_PUSH|SECF_KILLSOUND|SECF_KILLMOVESOUND)
+   (SECF_SECRET|SECF_FRICTION|SECF_PUSH|SECF_KILLSOUND|SECF_KILLMOVESOUND|SECF_INSTANTDEATH)
 
 //
 // P_SetupSpecialTransfer
