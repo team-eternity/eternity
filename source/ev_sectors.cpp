@@ -911,6 +911,27 @@ static void EV_setGeneralizedSectorFlags(sector_t *sector)
    sector->flags |= (special & GENSECTOFLAGSMASK) >> SECRET_SHIFT;
 }
 
+static void EV_applyGeneralizedDamage(sector_t *sector, bool udmf)
+{
+   // convert damage
+   int damagetype = (sector->special >> (udmf ? UDMF_BOOM_SHIFT : 0) & DAMAGE_MASK) >> DAMAGE_SHIFT;
+
+   switch(damagetype)
+   {
+   case 1:
+      EV_SectorDamageNukage(sector); // 5 per 32 tics
+      break;
+   case 2:
+      EV_SectorDamageHellSlime(sector); // 10 per 32 tics
+      break;
+   case 3:
+      EV_SectorDamageSuperHellSlime(sector); // 20 per 32 tics w/LEAKYSUIT
+      break;
+   default:
+      break;
+   }
+}
+
 //
 // EV_initGeneralizedSector
 //
@@ -930,6 +951,8 @@ static void EV_initGeneralizedSector(sector_t *sector)
    // UDMF format handled right here
    if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
    {
+      EV_applyGeneralizedDamage(sector, true);
+
       // mask it by the smallest 8 bits
       auto binding = EV_UDMFEternityBindingForSectorSpecial(sector->special
                                                             & UDMF_SEC_MASK);
@@ -938,22 +961,7 @@ static void EV_initGeneralizedSector(sector_t *sector)
       return;
    }
 
-   // convert damage
-   int damagetype = (sector->special & DAMAGE_MASK) >> DAMAGE_SHIFT;
-
-   switch(damagetype)
-   {
-   case 1:
-      EV_SectorDamageNukage(sector); // 5 per 32 tics
-      break;
-   case 2:
-      EV_SectorDamageHellSlime(sector); // 10 per 32 tics
-      break;
-   case 3:
-      EV_SectorDamageSuperHellSlime(sector); // 20 per 32 tics w/LEAKYSUIT
-   default:
-      break;
-   }
+   EV_applyGeneralizedDamage(sector, false);
 
    // apply "light" specials (some are allowed that are not lighting specials)
    auto binding = EV_GenBindingForSectorSpecial(sector->special);
