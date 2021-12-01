@@ -911,38 +911,14 @@ static void EV_setGeneralizedSectorFlags(sector_t *sector)
    sector->flags |= (special & GENSECTOFLAGSMASK) >> SECRET_SHIFT;
 }
 
-//
-// EV_initGeneralizedSector
-//
-// Called to initialize a generalized sector. The types considered generalized
-// may differ based on the map format or gamemode.
-//
-static void EV_initGeneralizedSector(sector_t *sector)
+static void EV_applyGeneralizedDamage(sector_t *sector, bool udmf)
 {
-   // generalized sectors don't exist in old demos (they would have caused the
-   // game to bomb out anyway).
-   if(demo_version < 200)
-   {
-      sector->special = 0;
-      return;
-   }
-
-   // UDMF format handled right here
-   if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
-   {
-      // mask it by the smallest 8 bits
-      auto binding = EV_UDMFEternityBindingForSectorSpecial(sector->special
-                                                            & UDMF_SEC_MASK);
-      if(binding)
-         binding->apply(sector);
-      return;
-   }
-
    // Apply slime damage UNLESS the MBF21 insta-death bit is set, which changes rules
    // convert damage
-   int damagetype = (sector->special & DAMAGE_MASK) >> DAMAGE_SHIFT;
+   int damagetype = (sector->special >> (udmf ? UDMF_BOOM_SHIFT : 0) & DAMAGE_MASK) >> DAMAGE_SHIFT;
    bool instadeath = mbf21_temp && sector->flags & SECF_INSTANTDEATH;
-   // Don't just make a new nukage type with GOD_BREACH_DAMAGE, because we may
+   // Don't just make a new nukage type with GOD_BREACH_DAMAGE, because most subtypes work 
+   // differently
 
    switch(damagetype)
    {
@@ -973,6 +949,38 @@ static void EV_initGeneralizedSector(sector_t *sector)
    default:
       break;
    }
+}
+
+//
+// EV_initGeneralizedSector
+//
+// Called to initialize a generalized sector. The types considered generalized
+// may differ based on the map format or gamemode.
+//
+static void EV_initGeneralizedSector(sector_t *sector)
+{
+   // generalized sectors don't exist in old demos (they would have caused the
+   // game to bomb out anyway).
+   if(demo_version < 200)
+   {
+      sector->special = 0;
+      return;
+   }
+
+   // UDMF format handled right here
+   if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
+   {
+      EV_applyGeneralizedDamage(sector, true);
+
+      // mask it by the smallest 8 bits
+      auto binding = EV_UDMFEternityBindingForSectorSpecial(sector->special
+                                                            & UDMF_SEC_MASK);
+      if(binding)
+         binding->apply(sector);
+      return;
+   }
+
+   EV_applyGeneralizedDamage(sector, false);
 
    // apply "light" specials (some are allowed that are not lighting specials)
    auto binding = EV_GenBindingForSectorSpecial(sector->special);
