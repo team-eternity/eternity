@@ -118,6 +118,7 @@ constexpr const char ITEM_TNG_DEACTIVATESND[] = "deactivatesound";
 constexpr const char ITEM_TNG_SPAWNHEALTH[]  = "spawnhealth";
 constexpr const char ITEM_TNG_GIBHEALTH[]    = "gibhealth";
 constexpr const char ITEM_TNG_REACTTIME[]    = "reactiontime";
+constexpr const char ITEM_TNG_MELEERANGE[]   = "meleerange";
 constexpr const char ITEM_TNG_PAINCHANCE[]   = "painchance";
 constexpr const char ITEM_TNG_SPEED[]        = "speed";
 constexpr const char ITEM_TNG_FASTSPEED[]    = "fastspeed";
@@ -588,6 +589,7 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_FLOAT(ITEM_TNG_RADIUS,        20.0f,         CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_HEIGHT,        16.0f,         CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_C3DHEIGHT,     0.0f,          CFGF_NONE), \
+   CFG_FLOAT(ITEM_TNG_MELEERANGE,    FPMELEERANGE,  CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_AVELOCITY,     0.0f,          CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_XSCALE,        1.0f,          CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_YSCALE,        1.0f,          CFGF_NONE), \
@@ -2688,6 +2690,10 @@ void E_ProcessThing(int i, cfg_t *const thingsec, cfg_t *pcfg, const bool def)
       tempfloat = cfg_getfloat(thingsec, ITEM_TNG_C3DHEIGHT);
       mobjinfo[i]->c3dheight = (int)(tempfloat * FRACUNIT);
    }
+
+   // process melee range
+   if(IS_SET(ITEM_TNG_MELEERANGE))
+      mobjinfo[i]->meleerange = M_DoubleToFixed(cfg_getfloat(thingsec, ITEM_TNG_MELEERANGE));
 
    // process mass
    if(IS_SET(ITEM_TNG_MASS))

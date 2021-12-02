@@ -188,8 +188,9 @@ bool P_CheckMeleeRange(Mobj *actor)
    tx = getThingX(actor, pl);
    ty = getThingY(actor, pl);
 
-   fixed_t range = GameModeInfo->monsterMeleeRange == meleecalc_raven ?
-   MELEERANGE : MELEERANGE - 20 * FRACUNIT + pl->info->radius;
+   fixed_t range = actor->info->meleerange;
+   if(GameModeInfo->monsterMeleeRange == meleecalc_doom)
+      range += pl->info->radius - 20 * FRACUNIT;
 
    return  // killough 7/18/98: friendly monsters don't attack other friends
       pl && !(actor->flags & pl->flags & MF_FRIEND) &&
@@ -873,8 +874,8 @@ void P_NewChaseDir(Mobj *actor)
                if(monster_backing &&
                   actor->info->missilestate != NullStateNum && 
                   !(actor->flags2 & MF2_NOSTRAFE) &&
-                  ((target->info->missilestate == NullStateNum && dist < MELEERANGE*2) ||
-                   (target->player && dist < MELEERANGE*3 &&
+                  ((target->info->missilestate == NullStateNum && dist < target->info->meleerange * 2) ||
+                   (target->player && dist < target->info->meleerange * 3 &&
                     target->player->readyweapon->flags & WPF_FLEEMELEE)))
                {
                   // Back away from melee attacker
@@ -913,8 +914,8 @@ static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
    // haleyjd 11/14/02: Heretic ghost effects
    if(mo->flags3 & MF3_GHOST)
    {
-      if(P_AproxDistance(mox - actor->x, moy - actor->y) > 2*MELEERANGE 
-         && P_AproxDistance(mo->momx, mo->momy) < 5*FRACUNIT)
+      if(P_AproxDistance(mox - actor->x, moy - actor->y) > SNEAKRANGE &&
+         P_AproxDistance(mo->momx, mo->momy) < 5 * FRACUNIT)
       {
          // when distant and moving slow, target is considered
          // to be "sneaking"
@@ -927,10 +928,8 @@ static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
 
    if(!allaround)
    {
-      angle_t an = P_PointToAngle(actor->x, actor->y, 
-                                   mox, moy) - actor->angle;
-      if(an > ANG90 && an < ANG270 &&
-         P_AproxDistance(mox-actor->x, moy-actor->y) > MELEERANGE)
+      const angle_t an = P_PointToAngle(actor->x, actor->y, mox, moy) - actor->angle;
+      if(an > ANG90 && an < ANG270 && P_AproxDistance(mox-actor->x, moy-actor->y) > WAKEUPRANGE)
          return false;
    }
 

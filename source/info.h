@@ -387,6 +387,8 @@ struct mobjinfo_t
    int c3dheight;       // haleyjd 07/06/05: a height value corrected for
                         //  3D object clipping. Used only if non-zero and
                         //  comp_theights is enabled.
+   int meleerange;      // MaxW: Range at which monster will initiate melee attack
+                        //  and also the default range for their melee attacks
    int mass;            // How much an impact will move it.  Cacodemons
                         //  seem to retreat when shot because they have
                         //  very little mass and are moved by impact

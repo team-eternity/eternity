@@ -187,6 +187,7 @@ enum dehmobjinfoid_e : int
    dehmobjinfoid_splashgroup,
    dehmobjinfoid_projectilegroup,
    dehmobjinfoid_infightinggroup,
+   dehmobjinfoid_meleerange,
    DEH_MOBJINFOMAX
 };
 
@@ -225,6 +226,8 @@ static constexpr const char *deh_mobjinfo[DEH_MOBJINFOMAX] =
   DEH_KEY_SPLASH_GROUP,  // Thing group NOSPLASHDAMAGE
   DEH_KEY_PROJECTILE_GROUP,   // Thing group PROJECTILEALLIANCE or mobjinfo MF4_HARMSPECIESMISSILE
   DEH_KEY_INFIGHTING_GROUP,   // Thing group DAMAGEIGNORE and flag
+  "Melee range",         // .meleerange
+
 };
 
 // Strings that are used to indicate flags ("Bits" in mobjinfo)
@@ -1222,6 +1225,9 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value, MetaTab
       break;
    case dehmobjinfoid_infightinggroup:
       M_GetTableOrDefault(gatheredData, mi->name).setInt(DEH_KEY_INFIGHTING_GROUP, value);
+      break;
+   case dehmobjinfoid_meleerange:
+      mi->meleerange = value;
       break;
    default:
       break;
