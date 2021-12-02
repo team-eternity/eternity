@@ -944,7 +944,7 @@ ItemCheckResult P_CheckThingCommon(Mobj *thing)
          return ItemCheck_pass;
 
       // see if it went over / under
-      
+
       if(clip.thing->z > thing->z + height) // haleyjd 07/06/05
          return ItemCheck_pass;    // overhead
 
@@ -958,7 +958,7 @@ ItemCheckResult P_CheckThingCommon(Mobj *thing)
          if(!P_allowMissileDamage(*clip.thing->target, *thing))
             return ItemCheck_hit;
       }
-      
+
       // haleyjd 10/15/08: rippers
       if(clip.thing->flags3 & MF3_RIP)
       {
@@ -970,19 +970,18 @@ ItemCheckResult P_CheckThingCommon(Mobj *thing)
          {
             BloodSpawner(thing, clip.thing, damage, clip.thing).spawn(BLOOD_RIP);
          }
-         
-         // TODO: ripper sound - gamemode dependent? thing dependent?
-         //S_StartSound(clip.thing, sfx_ripslop);
+
+         S_StartSound(clip.thing, clip.thing->info->ripsound);
 
          P_DamageMobj(thing, clip.thing, clip.thing->target, damage, clip.thing->info->mod);
-         
+
          if(thing->flags2 & MF2_PUSHABLE && !(clip.thing->flags3 & MF3_CANNOTPUSH))
-         { 
+         {
             // Push thing
             thing->momx += clip.thing->momx >> 2;
             thing->momy += clip.thing->momy >> 2;
          }
-         
+
          // TODO: huh?
          //numspechit = 0;
          return ItemCheck_pass;

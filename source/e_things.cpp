@@ -113,6 +113,7 @@ constexpr const char ITEM_TNG_DEATHSOUND[]    = "deathsound";
 constexpr const char ITEM_TNG_ACTIVESOUND[]   = "activesound";
 constexpr const char ITEM_TNG_ACTIVATESND[]   = "activatesound";
 constexpr const char ITEM_TNG_DEACTIVATESND[] = "deactivatesound";
+constexpr const char ITEM_TNG_RIPSOUND[]      = "ripsound";
 
 // Basic Stats
 constexpr const char ITEM_TNG_SPAWNHEALTH[]  = "spawnhealth";
@@ -552,6 +553,7 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_ACTIVESOUND,     "none",        CFGF_NONE), \
    CFG_STR(ITEM_TNG_ACTIVATESND,     "none",        CFGF_NONE), \
    CFG_STR(ITEM_TNG_DEACTIVATESND,   "none",        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_RIPSOUND,        "none",        CFGF_NONE), \
    CFG_INT(ITEM_TNG_SPAWNHEALTH,     1000,          CFGF_NONE), \
    CFG_INT(ITEM_TNG_GIBHEALTH,       0,             CFGF_NONE), \
    CFG_INT(ITEM_TNG_REACTTIME,       8,             CFGF_NONE), \
@@ -2573,55 +2575,54 @@ void E_ProcessThing(int i, cfg_t *const thingsec, cfg_t *pcfg, const bool def)
    if(IS_SET(ITEM_TNG_SEESOUND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_SEESOUND);
-      E_ThingSound(tempstr, ITEM_TNG_SEESOUND, i,
-                   &(mobjinfo[i]->seesound));
+      E_ThingSound(tempstr, ITEM_TNG_SEESOUND, i, &(mobjinfo[i]->seesound));
    }
 
    // process attacksound
    if(IS_SET(ITEM_TNG_ATKSOUND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_ATKSOUND);
-      E_ThingSound(tempstr, ITEM_TNG_ATKSOUND, i,
-                   &(mobjinfo[i]->attacksound));
+      E_ThingSound(tempstr, ITEM_TNG_ATKSOUND, i, &(mobjinfo[i]->attacksound));
    }
 
    // process painsound
    if(IS_SET(ITEM_TNG_PAINSOUND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_PAINSOUND);
-      E_ThingSound(tempstr, ITEM_TNG_PAINSOUND, i,
-                   &(mobjinfo[i]->painsound));
+      E_ThingSound(tempstr, ITEM_TNG_PAINSOUND, i, &(mobjinfo[i]->painsound));
    }
 
    // process deathsound
    if(IS_SET(ITEM_TNG_DEATHSOUND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_DEATHSOUND);
-      E_ThingSound(tempstr, ITEM_TNG_DEATHSOUND, i,
-                   &(mobjinfo[i]->deathsound));
+      E_ThingSound(tempstr, ITEM_TNG_DEATHSOUND, i, &(mobjinfo[i]->deathsound));
    }
 
    // process activesound
    if(IS_SET(ITEM_TNG_ACTIVESOUND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_ACTIVESOUND);
-      E_ThingSound(tempstr, ITEM_TNG_ACTIVESOUND, i,
-                   &(mobjinfo[i]->activesound));
+      E_ThingSound(tempstr, ITEM_TNG_ACTIVESOUND, i, &(mobjinfo[i]->activesound));
    }
 
    // 3/19/11: process activatesound/deactivatesound
    if(IS_SET(ITEM_TNG_ACTIVATESND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_ACTIVATESND);
-      E_ThingSound(tempstr, ITEM_TNG_ACTIVATESND, i,
-                   &(mobjinfo[i]->activatesound));
+      E_ThingSound(tempstr, ITEM_TNG_ACTIVATESND, i, &(mobjinfo[i]->activatesound));
    }
 
    if(IS_SET(ITEM_TNG_DEACTIVATESND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_DEACTIVATESND);
-      E_ThingSound(tempstr, ITEM_TNG_DEACTIVATESND, i,
-                   &(mobjinfo[i]->deactivatesound));
+      E_ThingSound(tempstr, ITEM_TNG_DEACTIVATESND, i, &(mobjinfo[i]->deactivatesound));
+   }
+
+   if(IS_SET(ITEM_TNG_RIPSOUND))
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_RIPSOUND);
+      E_ThingSound(tempstr, ITEM_TNG_RIPSOUND, i, &(mobjinfo[i]->ripsound));
    }
 
    // ******************************* METRICS ********************************

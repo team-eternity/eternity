@@ -428,6 +428,7 @@ struct mobjinfo_t
    int inactivestate;   // haleyjd 03/19/11: Hexen deactivation state
    int activatesound;   // haleyjd 03/19/11: Hexen activation sound
    int deactivatesound; // haleyjd 03/19/11: Hexen deactivation sound
+   int ripsound;        // MaxW: 2021/12/02: Hexen/Heretic ripper sound
    int gibhealth;       // haleyjd 09/12/13: health at which actor gibs
 
    e_pickupfx_t *pickupfx;
