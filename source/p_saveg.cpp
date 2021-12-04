@@ -791,7 +791,14 @@ static void P_ArchiveWorld(SaveArchive &arc)
       Archive_Colormap(arc, sec->topmap);
       Archive_Colormap(arc, sec->midmap);
       Archive_Colormap(arc, sec->bottommap);
-      arc << sec->flags << sec->intflags
+      arc << sec->flags;
+      if(arc.saveVersion() <= 11 && arc.isLoading())
+      {
+         // Adjust for the INSTANTDEATH flag inserted in the middle
+         sec->flags = (sec->flags &            (SECF_INSTANTDEATH - 1)) |
+                     ((sec->flags & ~((unsigned)SECF_INSTANTDEATH - 1)) << 1);
+      }
+      arc << sec->intflags
           << sec->damage << sec->damageflags << sec->leakiness << sec->damagemask
           << sec->damagemod;
       Archive_Flat(arc, floor.pic);
