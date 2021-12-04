@@ -1676,8 +1676,8 @@ void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
       sector->leakiness = 5;
    if(sector->damageflags & SDMG_IGNORESUIT)
       sector->leakiness = 256;
-   sector->damageflags &= ~(SDMG_LEAKYSUIT | SDMG_IGNORESUIT);
-   // delete the flags
+   // NOTE: no real need to delete these flags even if we use leakiness. Instead, we really should
+   // keep the flags because now the MBF21 instant death special uses them.
 
    // flat offsets
    sector->srf.floor.offset = v2fixed_t::doubleToFixed(edsector->surface.floor.offset);
