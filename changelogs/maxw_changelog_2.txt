@@ -158,6 +158,14 @@ switched to when weapon is picked up on a "worse" weapon.
 Removed midiproc, as Eternity is now using a solution based on Woof!'s code,
 by Roman Fomin, which removes the need for a separate MIDI playback application.
 
+--------------------------------------------------------------------------------
+2021/12/02
+Added "meleerange" EDF property. It's a float, like radius and height.
+Added "ripsound" EDF property, which is played when a ripper rips.
+[MBF21]
+ * Added support for dehacked "Melee range".
+ * Added support for dehacked "Rip sound".
+
 ================================================================================
 EOF
 ================================================================================
