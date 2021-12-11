@@ -240,6 +240,7 @@ static void I_effectADLMIDI(void *udata, Uint8 *stream, int len)
 
 #if defined(_WIN32)
 static bool winMIDIStreamOpened = false;
+static bool winMIDISteamRegistered = false;
 #endif
 
 // julian (10/25/2005): rewrote (nearly) entirely
@@ -370,7 +371,7 @@ static void I_SDLPlaySong(int handle, int looping)
       else
 #endif
 #if defined(_WIN32)
-   if(winMIDIStreamOpened)
+   if(winMIDISteamRegistered)
       I_WIN_PlaySong(!!looping);
    else
 #endif
@@ -469,7 +470,7 @@ static void I_SDLResumeSong(int handle)
 static void I_SDLStopSong(int handle)
 {
 #if defined(_WIN32)
-   if(winMIDIStreamOpened)
+   if(winMIDISteamRegistered)
       I_WIN_StopSong();
 #endif
 
@@ -493,8 +494,11 @@ static void I_SDLStopSong(int handle)
 static void I_SDLUnRegisterSong(int handle)
 {
 #if defined(_WIN32)
-   if(winMIDIStreamOpened)
+   if(winMIDISteamRegistered)
+   {
+      winMIDISteamRegistered = false;
       I_WIN_UnRegisterSong();
+   }
 #endif
 
 #ifdef HAVE_ADLMIDILIB
@@ -653,9 +657,15 @@ static int I_SDLRegisterSong(void *data, int size)
       if(winMIDIStreamOpened)
       {
          if(I_WIN_RegisterSong(data, size))
+         {
+            winMIDISteamRegistered = true;
             return 1;
+         }
          else
+         {
+            winMIDISteamRegistered = false;
             music = nullptr;
+         }
       }
    }
 #endif
