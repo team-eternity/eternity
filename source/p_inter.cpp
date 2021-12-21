@@ -1664,7 +1664,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
 
    // TODO: add fine-grained infighting control as metadata
 
-   if(source && source != target                                     // source checks
+   if(source && (source != target || vanilla_heretic)                // source checks
       && !(source->flags3 & MF3_DMGIGNORED)                          // not ignored?
       && !speciesignore                                              // species not fighting
       && (!target->threshold || (target->flags3 & MF3_NOTHRESHOLD))  // threshold?
