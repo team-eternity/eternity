@@ -27,6 +27,7 @@
 
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "d_gi.h"
 #include "d_main.h"
 #include "doomstat.h"
 #include "e_edf.h"
@@ -1044,7 +1045,13 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
 
    distyscale = idist * view.yfoc;
    // SoM: forgot about footclipping
-   tz1 = thing->yscale * stopoffset + M_FixedToFloat(spritepos.z - thing->floorclip) - cb_viewpoint.z;
+   fixed_t floorclip = thing->floorclip;
+   if(vanilla_heretic && thing->z > thing->subsector->sector->srf.floor.height)
+   {
+      // prevent ugly visuals when emulating the Heretic foot clip bug
+      floorclip = 0;
+   }
+   tz1 = thing->yscale * stopoffset + M_FixedToFloat(spritepos.z - floorclip) - cb_viewpoint.z;
    y1  = view.ycenter - (tz1 * distyscale);
    if(y1 >= view.height)
       return;
@@ -1122,7 +1129,7 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
       vis->translucency = HTIC_GHOST_TRANS - 1;
 
    // haleyjd 10/12/02: foot clipping
-   vis->footclip = thing->floorclip;
+   vis->footclip = floorclip;
 
    // haleyjd: moved this down, added footclip term
    // This needs to be scaled down (?) I don't get why this works...
