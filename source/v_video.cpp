@@ -635,7 +635,7 @@ void V_DrawPatchShadowed(int x, int y, VBuffer *buffer, patch_t *patch,
 //
 // haleyjd 04/08/03: rewritten for ANYRES system -- see v_block.c
 // 
-void V_DrawBlock(int x, int y, VBuffer *buffer, int width, int height, byte *src)
+void V_DrawBlock(int x, int y, VBuffer *buffer, int width, int height, const byte *src)
 {
    buffer->BlockDrawer(x, y, buffer, width, height, src);
 }
@@ -648,7 +648,7 @@ void V_DrawBlock(int x, int y, VBuffer *buffer, int width, int height, byte *src
 // haleyjd 06/29/08
 // 
 void V_DrawMaskedBlockTR(int x, int y, VBuffer *buffer, int width, int height,
-                         int srcpitch, byte *src, byte *cmap)
+                         int srcpitch, const byte *src, byte *cmap)
 {
    buffer->MaskedBlockDrawer(x, y, buffer, width, height, srcpitch, src, cmap);
 }
@@ -659,7 +659,7 @@ void V_DrawMaskedBlockTR(int x, int y, VBuffer *buffer, int width, int height,
 // haleyjd 05/18/09: Convenience routine to do V_DrawBlock but with
 // the assumption that the graphic is fullscreen, 320x200.
 //
-void V_DrawBlockFS(VBuffer *buffer, byte *src)
+void V_DrawBlockFS(VBuffer *buffer, const byte *src)
 {
    buffer->BlockDrawer(0, 0, buffer, SCREENWIDTH, SCREENHEIGHT, src);
 }
@@ -697,15 +697,15 @@ void V_DrawFSBackground(VBuffer *dest, int lumpnum)
    case 4160:
    case 8192:
       source = wGlobalDir.cacheLumpNum(lumpnum, PU_CACHE);
-      V_DrawBackgroundCached((byte *)source, dest);
+      V_DrawBackgroundCached(static_cast<const byte *>(source), dest);
       break;
    case 64000: // 320x200 linear
       source = wGlobalDir.cacheLumpNum(lumpnum, PU_CACHE);
-      V_DrawBlockFS(dest, (byte *)source);
+      V_DrawBlockFS(dest, static_cast<const byte *>(source));
       break;
    case 76800: // 320x240 linear
       source = wGlobalDir.cacheLumpNum(lumpnum, PU_CACHE);
-      V_FillBuffer(dest, (byte *)source, 320, 240);
+      V_FillBuffer(dest, static_cast<const byte *>(source), 320, 240);
       break;
    default:    // anything else is treated like a patch (let god sort it out)
       patch = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_CACHE);

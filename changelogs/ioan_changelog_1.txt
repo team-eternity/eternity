@@ -8,6 +8,129 @@ Since v4.02.00 "Forseti"
 ========================
 
 --------------------------------------------------------------------------------
+06.11.2021
+
+FEATURE: Introduced UMAPINFO (cross-port map definition) lump support for
+         Eternity.
+
+         Added STANDING to ExtraData mapthing options. Currently the actual
+         feature is not implemented, but it's overloaded for sector actions.
+
+BUGFIX: Some activation specials (notably those beyond UDMF index 255) didn't
+        work with EMAPINFO levelaction.
+
+--------------------------------------------------------------------------------
+03.11.2021
+
+BUGFIX: Several linedef and sector properties were NOT saved, even though they
+        should.
+
+        Fixed the LineEffect codepointer combined with complex effects (e.g.
+        ACS) and saving/loading crashing Eternity. Alsoo fixed a crash happening
+        when using it to open locked doors. Under MBF it would work purely due
+        to chance (undefined behaviour otherwise).
+
+        Fixed so LineEffect always uses the DOOM classic format specials, even
+        inside UDMF. This also aligns the rules with ZDoom's.
+
+--------------------------------------------------------------------------------
+31.10.2021
+
+BUGFIX: Fixed a crash happening when using the "idmypos" cheat when the automap
+        wasn't started yet and follow mode is off. Easy to reproduce after
+        loading a game.
+
+IMPROVEMENT: Eliminate the automap coordinate shifting by linked portals,
+             because it added more confusion for mappers and playtesters alike,
+             and it didn't effectively hide any immersion detail (the XY
+             coordinates are already pretty arbitrary for the player).
+
+--------------------------------------------------------------------------------
+30.10.2021
+
+BUGFIX: Saving a game failed storing the polyobject activators of ACS scripts.
+
+--------------------------------------------------------------------------------
+24.10.2021
+
+BUGFIX: Fixed a rare crash potentially happening when changing the level.
+
+--------------------------------------------------------------------------------
+17.10.2021
+
+BUGFIX: Invalid entries in EMAPINFO are now detected early.
+
+--------------------------------------------------------------------------------
+16.10.2021
+
+IMPROVEMENT: Short skies now fade into a single colour instead of stretching.
+             The r_stretchsky console variable and stretchsky OPTIONS entry are
+             deprecated now and do nothing. Removed the "stretch short skies"
+             mouse menu option.
+
+             Added more control to the user on how the sky set in EMAPINFO gets
+             drawn. The skyrowoffset and sky2rowoffset fields give this control.
+
+             Doom now allows the player to look up and down at maximum ±45
+             degrees, due to popular demand, especially with portal-heavy maps.
+             Heretic still stays at ±32 degrees since that's how it was designed
+             (whereas for Doom, looking up and down is an optional extension).
+             Mod authors can configure the look pitch in two new EDF
+             gameproperties fields: game.lookpitchup and game.lookpitchdown.
+
+--------------------------------------------------------------------------------
+04.10.2021
+
+IMPROVEMENT: Savegames are now more resistant to version changes. Now if
+             anything gets added to the Eternity base resources, the saves will
+             retain the correct references (things won't stop working, textures
+             won't shift etc.) This won't recover previous saves which failed
+             with this, but new saves will be forward compatible.
+
+--------------------------------------------------------------------------------
+18.09.2021
+
+BUGFIX: Fixed a bug where classic format floor and ceiling linked portal
+        specials were wrongly finding the like-tagged edge portal flagged
+        linedef as anchor.
+
+        Fixed problems with noise alert propagation through linked portals.
+
+--------------------------------------------------------------------------------
+11.09.2021
+
+FEATURE: New console variable "am_drawsegs" for displaying the BSP segs in the
+         automap. Useful for debugging BSP.
+
+--------------------------------------------------------------------------------
+07.06.2021
+
+BUGFIX: thinggroup definitions didn't work if they reused thing types! Fixed.
+
+--------------------------------------------------------------------------------
+05.05.2021
+
+BUGFIX: The "chgun" hack apparently hasn't worked for awhile, but nobody was
+        here to check it until now.
+
+--------------------------------------------------------------------------------
+03.05.2021
+
+IMPROVEMENT: Now sky textures of height 260 shall cover the entire viewport of
+             looking up. Taller sky textures than that will  continue to cover
+             the bottom of the viewport.
+
+--------------------------------------------------------------------------------
+25.04.2021
+
+BUGFIX: Fixed the wrong coordinate display in automap when follow mode is off.
+
+IMPROVEMENT: If the SetActorPosition ACS function uses fog, make sure to spawn
+             the fog in front of the destination area, not on top of it. If the
+             player was targeted, they would not be able to see the fog (but
+             hear it).
+
+--------------------------------------------------------------------------------
 22.04.2021
 
 FEATURE: Now the automap has an overlay mode like in PrBoom+ and Crispy Doom. It

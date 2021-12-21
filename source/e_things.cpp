@@ -113,11 +113,13 @@ constexpr const char ITEM_TNG_DEATHSOUND[]    = "deathsound";
 constexpr const char ITEM_TNG_ACTIVESOUND[]   = "activesound";
 constexpr const char ITEM_TNG_ACTIVATESND[]   = "activatesound";
 constexpr const char ITEM_TNG_DEACTIVATESND[] = "deactivatesound";
+constexpr const char ITEM_TNG_RIPSOUND[]      = "ripsound";
 
 // Basic Stats
 constexpr const char ITEM_TNG_SPAWNHEALTH[]  = "spawnhealth";
 constexpr const char ITEM_TNG_GIBHEALTH[]    = "gibhealth";
 constexpr const char ITEM_TNG_REACTTIME[]    = "reactiontime";
+constexpr const char ITEM_TNG_MELEERANGE[]   = "meleerange";
 constexpr const char ITEM_TNG_PAINCHANCE[]   = "painchance";
 constexpr const char ITEM_TNG_SPEED[]        = "speed";
 constexpr const char ITEM_TNG_FASTSPEED[]    = "fastspeed";
@@ -551,6 +553,7 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_ACTIVESOUND,     "none",        CFGF_NONE), \
    CFG_STR(ITEM_TNG_ACTIVATESND,     "none",        CFGF_NONE), \
    CFG_STR(ITEM_TNG_DEACTIVATESND,   "none",        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_RIPSOUND,        "none",        CFGF_NONE), \
    CFG_INT(ITEM_TNG_SPAWNHEALTH,     1000,          CFGF_NONE), \
    CFG_INT(ITEM_TNG_GIBHEALTH,       0,             CFGF_NONE), \
    CFG_INT(ITEM_TNG_REACTTIME,       8,             CFGF_NONE), \
@@ -588,6 +591,7 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_FLOAT(ITEM_TNG_RADIUS,        20.0f,         CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_HEIGHT,        16.0f,         CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_C3DHEIGHT,     0.0f,          CFGF_NONE), \
+   CFG_FLOAT(ITEM_TNG_MELEERANGE,    FPMELEERANGE,  CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_AVELOCITY,     0.0f,          CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_XSCALE,        1.0f,          CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_YSCALE,        1.0f,          CFGF_NONE), \
@@ -632,6 +636,7 @@ static dehflags_t tgroup_kinds[] =
    { "PROJECTILEALLIANCE", TGF_PROJECTILEALLIANCE },
    { "DAMAGEIGNORE",       TGF_DAMAGEIGNORE       },
    { "INHERITED",          TGF_INHERITED          },
+   { "NOSPLASHDAMAGE",     TGF_NOSPLASHDAMAGE     },
    { nullptr,              0                      }
 };
 
@@ -663,9 +668,26 @@ public:
    explicit ThingGroup(const char *inname) : name(inname), link(), flags()
    {
    }
+   ThingGroup(int idnum, unsigned flag) : link(), flags()
+   {
+      coding.idnum = idnum;
+      coding.flag = flag;
+   }
 
    qstring name;
    DLListItem<ThingGroup> link;
+
+   // MBF21 number-based addressing
+   struct mbf21coding_t
+   {
+      int32_t idnum;
+      uint32_t flag;
+   };
+   union
+   {
+      mbf21coding_t coding;
+      int64_t num;
+   };
 
    unsigned flags;
    PODCollection<int> types;
@@ -714,6 +736,8 @@ static EHashTable<mobjinfo_t, EIntHashKey,
 // Thing group
 static EHashTable<ThingGroup, ENCQStrHashKey,
                   &ThingGroup::name, &ThingGroup::link> thinggroup_namehash(53);
+static EHashTable<ThingGroup, EInt64HashKey,
+                  &ThingGroup::num, &ThingGroup::link> thinggroup_mbf21hash(53);
 
 static EHashTable<thinggrouppair_t, EInt64HashKey,
      &thinggrouppair_t::key, &thinggrouppair_t::link> thinggrouppairs(NUMTHINGCHAINS);
@@ -1529,7 +1553,9 @@ static void E_ProcessDecorateStateList(mobjinfo_t *mi, const char *str,
 {
    edecstateout_t *dso;
 
-   if(!(dso = E_ParseDecorateStates(str, firststate)))
+   qstring owner;
+   owner.Printf(strlen(mi->name) + 4, "t{%s}", mi->name);
+   if(!(dso = E_ParseDecorateStates(owner.constPtr(), str, firststate)))
    {
       E_EDFLoggedWarning(2, "Warning: couldn't attach DECORATE states to thing '%s'.\n",
                          mi->name);
@@ -2549,55 +2575,54 @@ void E_ProcessThing(int i, cfg_t *const thingsec, cfg_t *pcfg, const bool def)
    if(IS_SET(ITEM_TNG_SEESOUND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_SEESOUND);
-      E_ThingSound(tempstr, ITEM_TNG_SEESOUND, i,
-                   &(mobjinfo[i]->seesound));
+      E_ThingSound(tempstr, ITEM_TNG_SEESOUND, i, &(mobjinfo[i]->seesound));
    }
 
    // process attacksound
    if(IS_SET(ITEM_TNG_ATKSOUND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_ATKSOUND);
-      E_ThingSound(tempstr, ITEM_TNG_ATKSOUND, i,
-                   &(mobjinfo[i]->attacksound));
+      E_ThingSound(tempstr, ITEM_TNG_ATKSOUND, i, &(mobjinfo[i]->attacksound));
    }
 
    // process painsound
    if(IS_SET(ITEM_TNG_PAINSOUND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_PAINSOUND);
-      E_ThingSound(tempstr, ITEM_TNG_PAINSOUND, i,
-                   &(mobjinfo[i]->painsound));
+      E_ThingSound(tempstr, ITEM_TNG_PAINSOUND, i, &(mobjinfo[i]->painsound));
    }
 
    // process deathsound
    if(IS_SET(ITEM_TNG_DEATHSOUND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_DEATHSOUND);
-      E_ThingSound(tempstr, ITEM_TNG_DEATHSOUND, i,
-                   &(mobjinfo[i]->deathsound));
+      E_ThingSound(tempstr, ITEM_TNG_DEATHSOUND, i, &(mobjinfo[i]->deathsound));
    }
 
    // process activesound
    if(IS_SET(ITEM_TNG_ACTIVESOUND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_ACTIVESOUND);
-      E_ThingSound(tempstr, ITEM_TNG_ACTIVESOUND, i,
-                   &(mobjinfo[i]->activesound));
+      E_ThingSound(tempstr, ITEM_TNG_ACTIVESOUND, i, &(mobjinfo[i]->activesound));
    }
 
    // 3/19/11: process activatesound/deactivatesound
    if(IS_SET(ITEM_TNG_ACTIVATESND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_ACTIVATESND);
-      E_ThingSound(tempstr, ITEM_TNG_ACTIVATESND, i,
-                   &(mobjinfo[i]->activatesound));
+      E_ThingSound(tempstr, ITEM_TNG_ACTIVATESND, i, &(mobjinfo[i]->activatesound));
    }
 
    if(IS_SET(ITEM_TNG_DEACTIVATESND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_DEACTIVATESND);
-      E_ThingSound(tempstr, ITEM_TNG_DEACTIVATESND, i,
-                   &(mobjinfo[i]->deactivatesound));
+      E_ThingSound(tempstr, ITEM_TNG_DEACTIVATESND, i, &(mobjinfo[i]->deactivatesound));
+   }
+
+   if(IS_SET(ITEM_TNG_RIPSOUND))
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_RIPSOUND);
+      E_ThingSound(tempstr, ITEM_TNG_RIPSOUND, i, &(mobjinfo[i]->ripsound));
    }
 
    // ******************************* METRICS ********************************
@@ -2666,6 +2691,10 @@ void E_ProcessThing(int i, cfg_t *const thingsec, cfg_t *pcfg, const bool def)
       tempfloat = cfg_getfloat(thingsec, ITEM_TNG_C3DHEIGHT);
       mobjinfo[i]->c3dheight = (int)(tempfloat * FRACUNIT);
    }
+
+   // process melee range
+   if(IS_SET(ITEM_TNG_MELEERANGE))
+      mobjinfo[i]->meleerange = M_DoubleToFixed(cfg_getfloat(thingsec, ITEM_TNG_MELEERANGE));
 
    // process mass
    if(IS_SET(ITEM_TNG_MASS))
@@ -3112,6 +3141,7 @@ void E_ProcessThings(cfg_t *cfg)
    {
      for(i = 0; i < ACS_NUM_THINGTYPES; i++)
         ACS_thingtypes[i] = UnknownThingType;
+     firsttime = false;
    }
 
    for(i = 0; i < numthings; i++)
@@ -3152,16 +3182,73 @@ static bool E_mobjTypeIsDescendantOf(mobjtype_t low, mobjtype_t high)
 }
 
 //
+// Get thing group pair from two types
+//
+static thinggrouppair_t *E_getThingGroupPair(mobjtype_t type1, mobjtype_t type2)
+{
+   mobjtype_t min = type1 < type2 ? type1 : type2;
+   mobjtype_t max = type1 > type2 ? type1 : type2;
+   int64_t key = (int64_t)min | (int64_t)max << 32;
+   thinggrouppair_t *proj = thinggrouppairs.objectForKey(key);
+   if (!proj)
+   {
+      proj = estructalloc(thinggrouppair_t, 1);
+      proj->types[0] = min;
+      proj->types[1] = max;
+      thinggrouppairs.addObject(proj);
+   }
+   return proj;
+}
+
+//
+// Populate a thinggroup's array from EDF config
+//
+static void E_populateEDFThingGroup(ThingGroup &group, cfg_t *gsec)
+{
+   // Have a visited list
+   ZAutoBuffer zvisited(NUMMOBJTYPES, true);
+   bool *visited = zvisited.getAs<bool *>();
+
+   unsigned numtypes = cfg_size(gsec, ITEM_TGROUP_TYPES);
+   if(!numtypes)
+      return;
+
+   for(unsigned j = 0; j < numtypes; ++j)
+   {
+      const char *tempstr = cfg_getnstr(gsec, ITEM_TGROUP_TYPES, j);
+      int type = E_ThingNumForName(tempstr);
+      if(type != -1 && !visited[type])
+      {
+         visited[type] = true;
+         group.types.add(type);
+         if(group.flags & TGF_INHERITED)
+         {
+            // Also check children
+            for(int k = 0; k < NUMMOBJTYPES; ++k)
+            {
+               if(visited[k] || !E_mobjTypeIsDescendantOf(k, type))
+                  continue;
+
+               visited[k] = true;
+               group.types.add(k);
+            }
+         }
+      }
+      else if(!visited[type]) // don't scream if visited
+      {
+         E_EDFLoggedWarning(2, "Warning: unknown type '%s' for group '%s'\n",
+                            tempstr, group.name.constPtr());
+      }
+   }
+}
+
+//
 // Process thing group definitions
 //
 void E_ProcessThingGroups(cfg_t *cfg)
 {
    unsigned numgroups = cfg_size(cfg, EDF_SEC_THINGGROUP);
    ThingGroup *group;
-
-   // Have a visited list
-   ZAutoBuffer zvisited(NUMMOBJTYPES, true);
-   bool *visited = zvisited.getAs<bool *>();
 
    for(unsigned i = 0; i < numgroups; ++i)
    {
@@ -3176,47 +3263,24 @@ void E_ProcessThingGroups(cfg_t *cfg)
          thinggroup_namehash.addObject(group);
       }
       else
+      {
          E_EDFLogPrintf("\t\tModifying thing group '%s'\n", name);
+         // Reset the properties if group redefined
+         group->flags = 0;
+         group->types.makeEmpty();
+      }
 
       const char *tempstr = cfg_getstr(gsec, ITEM_TGROUP_FLAGS);
       if(estrnonempty(tempstr))
          group->flags = E_ParseFlags(tempstr, &tgroup_kindset);
 
-      unsigned numtypes = cfg_size(gsec, ITEM_TGROUP_TYPES);
-      if(numtypes)
-      {
-         group->types.clear();   // clear it even if thinggroup redefined.
-         for(unsigned j = 0; j < numtypes; ++j)
-         {
-            tempstr = cfg_getnstr(gsec, ITEM_TGROUP_TYPES, j);
-            int type = E_ThingNumForName(tempstr);
-            if(type != -1 && !visited[type])
-            {
-               visited[type] = true;
-               group->types.add(type);
-               if(group->flags & TGF_INHERITED)
-               {
-                  // Also check children
-                  for(int k = 0; k < NUMMOBJTYPES; ++k)
-                  {
-                     if(visited[k] || !E_mobjTypeIsDescendantOf(k, type))
-                        continue;
-
-                     visited[k] = true;
-                     group->types.add(k);
-                  }
-               }
-            }
-            else if(!visited[type]) // don't scream if visited
-            {
-               E_EDFLoggedWarning(2, "Warning: unknown type '%s' for group '%s'\n",
-                                  tempstr, name);
-            }
-         }
-      }
+      E_populateEDFThingGroup(*group, gsec);
    }
 
-   // Now process them
+   // Now process them.
+   // It's safe to remove all thinggrouppairs now, because we'll redefine them from all ThingGroups,
+   // new and current.
+   // MBF21 Dehacked will apply on top of this, overriding as necessary.
    thinggrouppair_t *proj;
    while((proj = thinggrouppairs.tableIterator((thinggrouppair_t*)nullptr)))
    {
@@ -3225,31 +3289,99 @@ void E_ProcessThingGroups(cfg_t *cfg)
    }
 
    group = nullptr;
-   static const unsigned operationalFlags = TGF_PROJECTILEALLIANCE | TGF_DAMAGEIGNORE;
+   static const unsigned operationalFlags = (TGF_PROJECTILEALLIANCE |
+                                             TGF_DAMAGEIGNORE |
+                                             TGF_NOSPLASHDAMAGE);
+
+   // These ones also apply to monsters from the same species
+   static const unsigned inclusiveFlags = TGF_NOSPLASHDAMAGE;
+
    while((group = thinggroup_namehash.tableIterator(group)))
    {
       // Currently only these are supported
-      if(!(group->flags & operationalFlags))
+      unsigned flags = group->flags & operationalFlags;
+      if(!flags)
          continue;
       // Setup relation
       for(int entry : group->types)
       {
          for(int other : group->types)
          {
-            if(other <= entry)
+            unsigned setflags = flags;
+            if(other == entry && flags & inclusiveFlags)
+               setflags &= inclusiveFlags;
+            else if(other <= entry)
                continue;
-            int64_t key = (int64_t)entry | (int64_t)other << 32;
-            proj = thinggrouppairs.objectForKey(key);
-            if (!proj)
-            {
-               proj = estructalloc(thinggrouppair_t, 1);
-               proj->types[0] = entry;
-               proj->types[1] = other;
-               thinggrouppairs.addObject(proj);
-            }
-            proj->flags |= group->flags & operationalFlags;
+
+            proj = E_getThingGroupPair(entry, other);
+            proj->flags |= setflags;
          }
       }
+   }
+}
+
+//
+// Gets (or creates) thing group by MBF21id
+//
+static ThingGroup *E_getThingGroupByMBF21id(int idnum, unsigned flag)
+{
+   union
+   {
+      ThingGroup::mbf21coding_t coding;
+      int64_t num;
+   } u = {};
+   u.coding.idnum = idnum;
+   u.coding.flag = flag;
+
+   // Locate the group
+   ThingGroup *group = thinggroup_mbf21hash.objectForKey(u.num);
+   if(!group)
+   {
+      E_EDFLogPrintf("\t\tCreating thing group '%d'\n", idnum);
+      group = new ThingGroup(idnum, flag);
+      group->flags = flag;
+      thinggroup_mbf21hash.addObject(group);
+      return group;
+   }
+   E_EDFLogPrintf("\t\tModifying thing group '%d'\n", idnum);
+   return group;
+}
+
+//
+// Given an external source, adds the type and flag to a thing group
+// "inclusive" means to also add a self-self pair.
+//
+void E_AddToMBF21ThingGroup(int idnum, unsigned flag, int type, bool inclusive)
+{
+   ThingGroup *group = E_getThingGroupByMBF21id(idnum, flag);
+
+   for(int prevtype : group->types)   // primitive check against duplicates
+      if(prevtype == type)
+         return;
+   group->types.add(type);
+
+   // Plug the types together
+   for(int prevtype : group->types)
+   {
+      if(!inclusive && prevtype == type) // only allow self-pairs if inclusive
+         continue;
+      thinggrouppair_t *pair = E_getThingGroupPair(prevtype, type);
+      pair->flags |= flag;
+   }
+}
+
+//
+// Clears all pairs of this thing and flag with any other things.
+//
+void E_RemoveFromExistingThingPairs(int type, unsigned flag)
+{
+   // What we need to do here is to remove all pre-existing pairs of this thing.
+   thinggrouppair_t *pair = nullptr;
+   while((pair = thinggrouppairs.tableIterator(pair)))
+   {
+      if(pair->types[0] != type && pair->types[1] != type)
+         continue;
+      pair->flags &= ~flag;
    }
 }
 
@@ -3546,6 +3678,18 @@ state_t *E_GetStateForMobjInfo(const mobjinfo_t *mi, const char *label)
 state_t *E_GetStateForMobj(const Mobj *mo, const char *label)
 {
    return E_GetStateForMobjInfo(mo->info, label);
+}
+
+//
+// Iterates through the mobjinfo table and runs callback for each one satisfying flags2
+//
+void E_ForEachMobjInfoWithAnyFlags2(unsigned flags, 
+   bool (*func)(const mobjinfo_t &info, void *context), void *context)
+{
+   for(int i = 0; i < NUMMOBJTYPES; ++i)
+      if(mobjinfo[i]->flags2 & flags)
+         if(!func(*mobjinfo[i], context))
+            return;
 }
 
 // EOF

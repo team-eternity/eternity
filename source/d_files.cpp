@@ -541,12 +541,6 @@ void D_NewWadLumps(int source)
       if(lumpinfo[i]->source != source)
          continue;
 
-      // new sound
-      if(!strncmp(lumpinfo[i]->name, "DSCHGUN",8)) // chaingun sound
-      {
-         S_Chgun();
-         continue;
-      }
       // haleyjd 03/26/11: sounds are not handled here any more
       // haleyjd 04/10/11: music is not handled here now either
 

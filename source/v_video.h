@@ -183,16 +183,16 @@ void V_DrawPatchShadowed(int x, int y, VBuffer *buffer, patch_t *patch,
 // Draw a linear block of pixels into the view buffer, using the buffer's
 // scaling information (if present)
 void V_DrawBlock(int x, int y, VBuffer *buffer, int width, int height, 
-                 byte *src);
+                 const byte *src);
 
 // V_DrawMaskedBlockTR
 // Draw a translated, masked linear block of pixels into a view buffer, using
 //  the buffer's scaling information (if present)
 void V_DrawMaskedBlockTR(int x, int y, VBuffer *buffer, int width, int height,
-                         int srcpitch, byte *src, byte *cmap);
+                         int srcpitch, const byte *src, byte *cmap);
 
 // haleyjd 05/18/09: Fullscreen background drawing helpers
-void V_DrawBlockFS(VBuffer *buffer, byte *src);
+void V_DrawBlockFS(VBuffer *buffer, const byte *src);
 void V_DrawPatchFS(VBuffer *buffer, patch_t *patch);
 void V_DrawFSBackground(VBuffer *dest, int lumpnum);
 

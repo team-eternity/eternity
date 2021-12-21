@@ -51,7 +51,7 @@
 void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
                             const fixed_t viewz, drawseg_t *ds, int x1, int x2)
 {
-   texcol_t *col;
+   const texcol_t *col;
    int      lightnum;
    int      texnum;
    sector_t tempsec;      // killough 4/13/98

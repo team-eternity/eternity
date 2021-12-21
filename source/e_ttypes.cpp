@@ -756,9 +756,9 @@ ETerrain *E_GetThingFloorType(Mobj *thing, bool usefloorz)
       msecnode_t *m = nullptr;
 
       // determine what touched sector the thing is standing on
+      fixed_t z = usefloorz ? thing->zref.floor : thing->z;
       for(m = thing->touching_sectorlist; m; m = m->m_tnext)
       {
-         fixed_t z = usefloorz ? thing->zref.floor : thing->z;
          if(z == m->m_sector->srf.floor.height)
             break;
       }
@@ -778,6 +778,8 @@ ETerrain *E_GetThingFloorType(Mobj *thing, bool usefloorz)
       if(!(terrain = thing->subsector->sector->srf.floor.terrain))
          terrain = TerrainTypes[thing->subsector->sector->srf.floor.pic];
    }
+
+   I_Assert(!!terrain, "Unexpected null terrain\n");
    
    if(demo_version < terrain->minversion || getComp(comp_terrain))
       terrain = &solid;

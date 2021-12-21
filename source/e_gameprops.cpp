@@ -91,6 +91,8 @@ constexpr const char ITEM_GPROP_SKILLMUL[]     = "game.skillammomultiplier";
 constexpr const char ITEM_GPROP_MELEECALC[]    = "game.monstermeleerange";
 constexpr const char ITEM_GPROP_ITEMHEIGHT[]   = "game.itemheight";
 constexpr const char ITEM_GPROP_AUTOFLIGHT[]   = "game.autoflightartifact";
+constexpr const char ITEM_GPROP_LOOKPITCHUP[]  = "game.lookpitchup";
+constexpr const char ITEM_GPROP_LOOKPITCHDN[]  = "game.lookpitchdown";
 constexpr const char ITEM_GPROP_FINALEX[]      = "finale.text.x";
 constexpr const char ITEM_GPROP_FINALEY[]      = "finale.text.y";
 constexpr const char ITEM_GPROP_CASTTITLEY[]   = "castcall.title.y";
@@ -142,6 +144,15 @@ enum
    GI_STR_NUMSTRS
 };
 
+//
+// Limits
+//
+enum
+{
+   // The engine is unstable if look pitch + autoaim > 90 degrees, and y-shearing becomes excessive
+   LOOKPITCH_MAX = 45
+};
+
 // Keep track of the dynamic string values assigned into GameModeInfo
 static char *dynamicStrings[GI_STR_NUMSTRS];
 
@@ -157,7 +168,8 @@ static const char *finaleTypeStrs[FINALE_NUMFINALES] =
    "htic_water",
    "htic_demon",
    "psx_udoom",
-   "psx_doom2"
+   "psx_doom2",
+   "endpic"
 };
 
 // GameModeInfo flags
@@ -261,6 +273,8 @@ cfg_opt_t edf_game_opts[] =
    CFG_STR(ITEM_GPROP_MELEECALC,   "",   CFGF_NONE),
    CFG_FLOAT(ITEM_GPROP_ITEMHEIGHT, 0,   CFGF_NONE),
    CFG_STR(ITEM_GPROP_AUTOFLIGHT,  "",   CFGF_NONE),
+   CFG_INT(ITEM_GPROP_LOOKPITCHUP, 0,    CFGF_NONE),
+   CFG_INT(ITEM_GPROP_LOOKPITCHDN, 0,    CFGF_NONE),
    CFG_INT(ITEM_GPROP_FINALEX,     0,    CFGF_NONE),
    CFG_INT(ITEM_GPROP_FINALEY,     0,    CFGF_NONE),
    CFG_INT(ITEM_GPROP_CASTTITLEY,  0,    CFGF_NONE),
@@ -562,6 +576,26 @@ static void E_processGamePropsBlock(cfg_t *const props)
       const char *name = cfg_getstr(props, ITEM_GPROP_AUTOFLIGHT);
       if(E_ItemEffectForName(name))
          E_setDynamicString(GameModeInfo->autoFlightArtifact, GI_STR_AUTOFLIGHT, name);
+   }
+   if(IS_SET(ITEM_GPROP_LOOKPITCHUP))
+   {
+      int val = cfg_getint(props, ITEM_GPROP_LOOKPITCHUP);
+      if(val < 0 || val > LOOKPITCH_MAX)
+      {
+         E_EDFLoggedErr(2, "%s: Invalid %s value %d: must be in the 0-%d range\n", __func__,
+                        ITEM_GPROP_LOOKPITCHUP, val, LOOKPITCH_MAX);
+      }
+      GameModeInfo->lookPitchUp = val;
+   }
+   if(IS_SET(ITEM_GPROP_LOOKPITCHDN))
+   {
+      int val = cfg_getint(props, ITEM_GPROP_LOOKPITCHDN);
+      if(val < 0 || val > LOOKPITCH_MAX)
+      {
+         E_EDFLoggedErr(2, "%s: Invalid %s value %d: must be in the 0-%d range\n", __func__,
+                        ITEM_GPROP_LOOKPITCHDN, val, LOOKPITCH_MAX);
+      }
+      GameModeInfo->lookPitchDown = val;
    }
 
    // Finale Properties

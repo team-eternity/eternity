@@ -2852,6 +2852,7 @@ thingtype HereticBlasterSmoke : Mobj, -1, 421
 thingtype HereticRipper : HereticMissile, -1, 422
 {
   compatname Ripper
+  ripsound   ht_ripslop
   deathsound ht_hrnhit
   speed      14.0
   radius     8.0

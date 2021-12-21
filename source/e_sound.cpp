@@ -821,6 +821,9 @@ void E_ProcessSounds(cfg_t *cfg)
    }
 
    E_EDFLogPuts("\t\tFinished sound processing\n");
+
+   // Apply the Chgun hack now
+   S_Chgun();
 }
 
 //

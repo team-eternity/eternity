@@ -32,10 +32,12 @@
 #include "d_mod.h"
 #include "doomdef.h"
 #include "doomstat.h"
+#include "e_edf.h"
 #include "e_exdata.h"
 #include "e_inventory.h"
 #include "e_player.h"
 #include "e_puff.h"
+#include "e_sprite.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
@@ -59,6 +61,7 @@
 #include "p_portal.h"
 #include "p_portalcross.h"
 #include "p_saveg.h"
+#include "p_saveid.h"
 #include "p_sector.h"
 #include "p_skin.h"
 #include "p_tick.h"
@@ -75,6 +78,7 @@
 #include "st_stuff.h"
 #include "v_misc.h"
 #include "v_video.h"
+#include "w_wad.h"
 
 // Local constants (ioanch)
 // Bounding box distance to avoid and get away from edge portals
@@ -443,14 +447,14 @@ void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec)
    {
       const sector_t *ceilingsector = P_ExtremeSectorAtPoint(mo, surf_ceil);
       if((ceilingsector->intflags & SIF_SKY ||
-         R_IsSkyLikePortalCeiling(*ceilingsector)) &&
+         R_IsSkyLikePortalSurface(ceilingsector->srf.ceiling)) &&
          mo->z >= ceilingsector->srf.ceiling.height - P_ThingInfoHeight(mo->info))
       {
          mo->remove(); // don't explode on the actual sky itself
          return;
       }
       if(topedgesec && demo_version >= 342 && (topedgesec->intflags & SIF_SKY ||
-         R_IsSkyLikePortalCeiling(*topedgesec)) &&
+         R_IsSkyLikePortalSurface(topedgesec->srf.ceiling)) &&
          mo->z >= topedgesec->srf.ceiling.height - P_ThingInfoHeight(mo->info))
       {
          mo->remove(); // don't explode on the edge
@@ -657,7 +661,7 @@ void P_XYMovement(Mobj* mo)
                (clip.ceilingline->backsector->intflags & SIF_SKY || 
                (demo_version >= 342 && 
                   clip.ceilingline->extflags & EX_ML_UPPERPORTAL &&
-                  R_IsSkyLikePortalCeiling(*clip.ceilingline->backsector))))
+                  R_IsSkyLikePortalSurface(clip.ceilingline->backsector->srf.ceiling))))
             {
                if (demo_compatibility ||  // killough
                   mo->z > clip.ceilingline->backsector->srf.ceiling.height)
@@ -975,7 +979,7 @@ static void P_ZMovement(Mobj* mo)
             (clip.ceilingline->backsector->intflags & SIF_SKY ||
             (demo_version >= 342 &&
                clip.ceilingline->extflags & EX_ML_UPPERPORTAL &&
-               R_IsSkyLikePortalCeiling(*clip.ceilingline->backsector))))
+               R_IsSkyLikePortalSurface(clip.ceilingline->backsector->srf.ceiling))))
          {
             mo->remove();  // don't explode on skies
          }
@@ -1705,9 +1709,13 @@ void Mobj::serialize(SaveArchive &arc)
    Super::serialize(arc);
 
    // Basic Properties
+   qstring fieldname;
+
+   // Identity
+   Archive_MobjType(arc, type);
+
    arc 
-      // Identity
-      << type << tid
+      << tid
       // Position
       << angle                                             // Angles
       << momx << momy << momz                              // Momenta
@@ -1721,18 +1729,31 @@ void Mobj::serialize(SaveArchive &arc)
       << effects                                           // Particle flags
       << intflags                                          // Internal flags
       // Basic metrics (copied to Mobj from mobjinfo)
-      << radius << height << health << damage
-      // State info (copied to Mobj from state)
-      << sprite << frame << tics
+      << radius << height << health << damage;
+
+   // State info (copied to Mobj from state)
+   // sprite
+   Archive_SpriteNum(arc, sprite);
+
+   arc
+      << frame << tics
       // Movement logic and clipping
       << validcount                                        // Traversals
       << movedir << movecount << strafecount               // Movement
       << reactiontime << threshold << pursuecount          // Attack AI
       << lastlook                                          // More AI
-      << gear                                              // Lee's torque
-      // Appearance
-      << colour                                            // Translations
-      << translucency << tranmap << alphavelocity          // Alpha blending
+      << gear;                                             // Lee's torque
+
+   // Appearance
+   // Translations
+   Archive_ColorTranslation(arc, colour);
+
+   // Alpha blending
+   arc << translucency;
+   Archive_TranslucencyMap(arc, tranmap);
+
+   arc
+      << alphavelocity
       << xscale << yscale                                  // Scaling
       // Inventory related fields
       << dropamount
@@ -1744,14 +1765,15 @@ void Mobj::serialize(SaveArchive &arc)
 
    // Arrays
    P_ArchiveArray<int>(arc, counters, NUMMOBJCOUNTERS); // Counters
-   P_ArchiveArray<int>(arc, args,     NUMMTARGS);       // Arguments 
+   P_ArchiveArray<int>(arc, args,     NUMMTARGS);       // Arguments
 
    if(arc.isSaving()) // Saving
    {
       unsigned int temp, targetNum, tracerNum, enemyNum;
 
       // Basic serializable pointers (state, player)
-      arc << state->index;
+      Archive_MobjState_Save(arc, *state);
+      
       temp = static_cast<unsigned>(player ? player - players + 1 : 0);
       arc << temp;
 
@@ -1768,11 +1790,16 @@ void Mobj::serialize(SaveArchive &arc)
       // Restore basic pointers
       int temp;
 
-      arc << temp; // State index
-      state = states[temp];
-      
+      state = &Archive_MobjState_Load(arc);
+
       // haleyjd 07/23/09: this must be before skin setting!
-      info = mobjinfo[type]; 
+      // Check bounds
+      if(type < 0 || type >= NUMMOBJTYPES)
+      {
+         C_Printf("Mobj::serialize: invalid type %d\n", type);
+         type = UnknownThingType;
+      }
+      info = mobjinfo[type];
 
       arc << temp; // Player number
       if(temp)
@@ -2207,6 +2234,18 @@ void P_RespawnSpecials()
       return;
 
    mthing = &itemrespawnque[iquetail];
+    
+   // find which type to spawn
+
+   // killough 8/23/98: use table for faster lookup
+   i = P_FindDoomedNum(mthing->type);
+
+   if(i == -1 || i == NUMMOBJTYPES)
+   {
+      // No spawn point? Don't try to respawn (otherwise it would crash).
+      iquetail = (iquetail + 1) & (ITEMQUESIZE - 1);
+      return;
+   }
 
    x = mthing->x;
    y = mthing->y;
@@ -2215,11 +2254,6 @@ void P_RespawnSpecials()
    ss = R_PointInSubsector(x,y);
    mo = P_SpawnMobj(x, y, ss->sector->srf.floor.height, E_SafeThingType(MT_IFOG));
    S_StartSound(mo, sfx_itmbk);
-
-   // find which type to spawn
-
-   // killough 8/23/98: use table for faster lookup
-   i = P_FindDoomedNum(mthing->type);
 
    // spawn it
    z = mobjinfo[i]->flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
@@ -2659,6 +2693,12 @@ spawnit:
       mobj->intflags |= MIF_MUSICCHANGER;
       mobj->args[0] = mthing->type - 14100;
    }
+
+   // MaxW: If the thing inherits from EESectorActionProto then we need to make
+   // a new sector action for this Mobj
+   if(mobjinfo[i]->parent &&
+      mobjinfo[i]->parent->index == E_GetThingNumForName("EESectorActionProto"))
+      P_NewSectorActionFromMobj(mobj);
 
    mobj->backupPosition();
 

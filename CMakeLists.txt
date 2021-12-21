@@ -137,9 +137,8 @@ add_subdirectory(source)
 
 if(WIN32 AND MSVC)
    add_subdirectory(eecrashreport)
-   add_subdirectory(midiproc)
 
-   add_dependencies(eternity eecrashreport midiproc)
+   add_dependencies(eternity eecrashreport)
 endif()
 if(APPLE)
    add_subdirectory(macosx/launcher)

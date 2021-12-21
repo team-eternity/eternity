@@ -100,6 +100,7 @@ extern int demo_subversion;
 #define demo_compatibility (demo_version < 200) /* killough 11/98: macroized */
 #define ancient_demo       (demo_version < 5)   /* haleyjd  03/17: for old demos */
 #define vanilla_heretic    (ancient_demo && GameModeInfo->type == Game_Heretic)
+#define mbf21_temp         (demo_version >= 403) /* MaxW: 2021: TODO: Sort this out once MBF21 demo compat ends up in */
 
 // haleyjd 10/16/10: full version macros
 #define make_full_version(v, sv) ((v << 8) | sv)
@@ -419,6 +420,8 @@ extern int allowmlook, default_allowmlook; // haleyjd
 extern int flashing_hom; // killough 10/98
 
 extern int weapon_hotkey_cycling;   // killough 10/98
+
+extern bool weapon_hotkey_holding;  // ioanch 20211113
 
 //=======================================================
 //

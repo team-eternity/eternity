@@ -38,6 +38,7 @@ typedef MetaTable itemeffect_t;
 enum
 {
    GOD_BREACH_DAMAGE = 10000, // common damage that bypasses invulnerability
+   LESSER_GOD_BREACH_DAMAGE = 1000, // this one bypasses less cases but is there (P_DamageMobj)
 };
 
 bool P_GiveAmmoPickup(player_t *, const itemeffect_t *, bool, int);

@@ -104,8 +104,67 @@ Fixed Chainsaw and Fist not being switched away from if dehacked made them use
 ammo.
 
 --------------------------------------------------------------------------------
+2021/05/10
+Added sector actions for entering and leaving a sector, EESectorActionEnter and
+EESectorActionExit. They have doomednum 9997 and 9998 respectively, the same as
+ZDoom.
+
+--------------------------------------------------------------------------------
 2021/04/19
 Made the menus use the console font by default.
+
+--------------------------------------------------------------------------------
+2021/05/22
+Holding down weapon switch weapons no longer rotates between all weapons in that
+slot automatically.
+
+--------------------------------------------------------------------------------
+2021/09/02
+[MBF21]
+ * Added blockplayers linedef flag.
+ * Added blocklandmonsters linedef flag.
+
+--------------------------------------------------------------------------------
+2021/09/21
+Fixed -dog. Made it so -dogs only works if it's not the last command-line arg.
+
+--------------------------------------------------------------------------------
+2021/09/25
+[MBF21]
+ * Added support for dehacked frames Args[6-8] (1-5 were already present).
+
+--------------------------------------------------------------------------------
+2021/11/07
+[MBF21] 
+ * Added support for the FULLVOLSOUNDS thing flag, which makes see and death
+   sounds maximum volume.
+ * Added dehacked support for thingtype "MBF21 Bits".
+ * Added dehacked support for "Fast speed".
+ 
+ --------------------------------------------------------------------------------
+2021/11/20
+Add NOAUTOSWITCHTO weapon flag, which forbids a weapon for being automatically
+switched to when weapon is picked up on a "worse" weapon.
+[MBF21]
+ * Added support for dehacked weapon flags.
+ 
+--------------------------------------------------------------------------------
+2021/11/25
+[MBF21]
+ * Added support for dehacked frame flags.
+
+--------------------------------------------------------------------------------
+2021/11/28
+Removed midiproc, as Eternity is now using a solution based on Woof!'s code,
+by Roman Fomin, which removes the need for a separate MIDI playback application.
+
+--------------------------------------------------------------------------------
+2021/12/02
+Added "meleerange" EDF property. It's a float, like radius and height.
+Added "ripsound" EDF property, which is played when a ripper rips.
+[MBF21]
+ * Added support for dehacked "Melee range".
+ * Added support for dehacked "Rip sound".
 
 ================================================================================
 EOF

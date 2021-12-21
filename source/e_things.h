@@ -61,6 +61,7 @@ enum
    TGF_PROJECTILEALLIANCE = 1,   // things in group are immune to their projectiles
    TGF_DAMAGEIGNORE = 2,         // things in group don't react to being damaged
    TGF_INHERITED = 4,            // make sure to also apply these to inheriting objects
+   TGF_NOSPLASHDAMAGE = 8,       // things in group immune to splash damage
 };
 
 // Global Functions
@@ -109,6 +110,8 @@ state_t *E_GetStateForMobj(const Mobj *mo, const char *label);
 
 // Thing groups
 bool E_ThingPairValid(int t1, int t2, unsigned flags);
+void E_AddToMBF21ThingGroup(int idnum, unsigned flag, int type, bool inclusive);
+void E_RemoveFromExistingThingPairs(int type, unsigned flag);
 
 // ioanch 20160220: metastate key names used throughout the code. They also
 // work as DECORATE state label names.
@@ -131,6 +134,9 @@ enum bloodtype_e : int
 
 int E_BloodTypeForThing(const Mobj *mo, bloodaction_e action);
 bloodtype_e E_GetBloodBehaviorForAction(mobjinfo_t *info, bloodaction_e action);
+
+void E_ForEachMobjInfoWithAnyFlags2(unsigned flags,
+   bool (*func)(const mobjinfo_t &info, void *context), void *context);
 
 #endif
 

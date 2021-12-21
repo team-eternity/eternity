@@ -86,12 +86,13 @@ private:
 //
 // Holds opening data just for the routines here
 //
-struct lineopening_t
+struct tracelineopening_t
 {
    fixed_t openrange;
    Surfaces<fixed_t> open;
 
    void calculate(const line_t *linedef);
+   void calculateAtPoint(const line_t &line, v2fixed_t pos);
 };
 
 #endif

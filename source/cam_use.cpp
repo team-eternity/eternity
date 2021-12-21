@@ -152,7 +152,7 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
    }
 
    // no special
-   lineopening_t lo = { 0 };
+   tracelineopening_t lo = { 0 };
    if(li->extflags & EX_ML_BLOCKALL) // haleyjd 04/30/11
       lo.openrange = 0;
    else
@@ -214,7 +214,7 @@ bool UseContext::noWayTraverse(const intercept_t *in, void *vcontext,
       return true;
    if(ld->flags & ML_BLOCKING) // Always blocking
       return false;
-   lineopening_t lo = { 0 };
+   tracelineopening_t lo = { 0 };
    lo.calculate(ld);
 
    const UseContext *context = static_cast<const UseContext *>(vcontext);

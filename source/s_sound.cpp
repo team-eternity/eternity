@@ -1138,6 +1138,9 @@ sfxinfo_t *S_SfxInfoForName(const char *name)
 //
 void S_Chgun()
 {
+   // but only if DSCHGUN is present
+   if(wGlobalDir.checkNumForName("DSCHGUN") == -1)
+      return;
    sfxinfo_t *s_chgun = E_SoundForName("chgun");
 
    if(!s_chgun)

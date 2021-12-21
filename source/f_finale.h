@@ -62,6 +62,7 @@ enum
    FINALE_HTIC_DEMON,   // text, then demon scroller
    FINALE_PSX_UDOOM,    // text, then return to title
    FINALE_PSX_DOOM2,    // text, scrolling, then cast call
+   FINALE_END_PIC,      // custom end-pic finale, from UMAPINFO
    FINALE_NUMFINALES,
 
    FINALE_UNSPECIFIED   // not specified explicitly

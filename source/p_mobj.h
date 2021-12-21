@@ -735,6 +735,7 @@ enum mobjflags4_e : unsigned int
 enum mobjflags5_e : unsigned int
 {
    MF5_NOTAUTOAIMED       = 0x00000001, // can't be autoaimed (for real)
+   MF5_FULLVOLSOUNDS      = 0x00000002, // full-volume see/death sounds
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

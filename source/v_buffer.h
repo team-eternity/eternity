@@ -45,10 +45,10 @@ struct VBuffer
    bool  owndata;
    int   subx, suby;
 
-   void (*BlockDrawer)(int, int, VBuffer *, int, int, byte *);
+   void (*BlockDrawer)(int, int, VBuffer *, int, int, const byte *);
    void (*MaskedBlockDrawer)(int, int, VBuffer *, int, int, int, 
-                             byte *, byte *);
-   void (*TileBlock64)(VBuffer *, byte *);
+                             const byte *, byte *);
+   void (*TileBlock64)(VBuffer *, const byte *);
 
    // SoM: Include the screen size
    bool  scaled, freelookups;

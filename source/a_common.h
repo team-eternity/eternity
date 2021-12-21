@@ -33,6 +33,7 @@
 #include "m_random.h"
 
 struct actionargs_t;
+struct player_t;
 class  Mobj;
 
 void P_MakeSeeSound(Mobj *actor, pr_class_t rngnum);
@@ -44,6 +45,8 @@ void A_FaceTarget(actionargs_t *actionargs);
 void A_Fall(actionargs_t *actionargs);
 void A_Look(actionargs_t *actionargs);
 void A_Pain(actionargs_t *actionargs);
+
+void P_CheckCustomBossActions(const Mobj &mo, const player_t &player);
 
 #endif
 

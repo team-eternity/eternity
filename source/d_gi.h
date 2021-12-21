@@ -235,6 +235,7 @@ enum
    GIF_FLIGHTINERTIA  = 0x02000000, // player flight retains some inertia
    // TODO: make this public for EDF gameprops (in a good public form)
    GIF_WPNSWITCHSUPER = 0x04000000, // only switch to superior weapon when picking up
+   GIF_PRBOOMTALLSKY  = 0x08000000, // PrBoom tall sky draw compatibility (do not raise for mlook)
 };
 
 // Game mode handling - identify IWAD version
@@ -388,6 +389,7 @@ struct gamemodeinfo_t
    menu_t *saveMenu;              // pointer to save menu structure
    menu_t *loadMenu;              // pointer to load menu structure
    menu_t *newGameMenu;           // pointer to new game menu structure
+   const menu_t *episodeMenu;     // pointer to the episode menu (for UMAPINFO)
    const char *menuStartMap;      // new game map lump for skill selection
    int *menuSounds;               // menu sound indices
    int transFrame;                // frame DEH # used on video menu
@@ -452,6 +454,8 @@ struct gamemodeinfo_t
    meleecalc_e monsterMeleeRange;  // how monster melee range is calculated
    fixed_t itemHeight;             // item pick-up height (independent of thing height)
    const char *autoFlightArtifact; // name of artifact to trigger when commanding to fly
+   int lookPitchUp;
+   int lookPitchDown;
 
    // Intermission and Finale stuff
    const char *interPic;          // default intermission backdrop

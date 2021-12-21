@@ -103,15 +103,16 @@ enum
    SECF_PUSH               = 0x00000004,  // bit 9 of generalized special
    SECF_KILLSOUND          = 0x00000008,  // bit A of generalized special
    SECF_KILLMOVESOUND      = 0x00000010,  // bit B of generalized special
+   SECF_INSTANTDEATH       = 0x00000020,  // bit C of generalized special (MBF21)
 
    // Hexen phased lighting
-   SECF_PHASEDLIGHT        = 0x00000020,  // spawned with sequence start special
-   SECF_LIGHTSEQUENCE      = 0x00000040,  // spawned with sequence special
-   SECF_LIGHTSEQALT        = 0x00000080,  // spawned with sequence alt special
+   SECF_PHASEDLIGHT        = 0x00000040,  // spawned with sequence start special
+   SECF_LIGHTSEQUENCE      = 0x00000080,  // spawned with sequence special
+   SECF_LIGHTSEQALT        = 0x00000100,  // spawned with sequence alt special
 
    // UDMF given
-   SECF_FLOORLIGHTABSOLUTE = 0x00000100,  // lightfloor is set absolutely
-   SECF_CEILLIGHTABSOLUTE  = 0x00000200,  // lightceiling is set absolutely
+   SECF_FLOORLIGHTABSOLUTE = 0x00000200,  // lightfloor is set absolutely
+   SECF_CEILLIGHTABSOLUTE  = 0x00000400,  // lightceiling is set absolutely
 };
 
 // haleyjd 12/31/08: sector damage flags
@@ -122,6 +123,8 @@ enum
    SDMG_ENDGODMODE = 0x00000004, // turns off god mode if on
    SDMG_EXITLEVEL  = 0x00000008, // exits when player health <= 10
    SDMG_TERRAINHIT = 0x00000010, // damage causes a terrain hit
+   SDMG_INSTAEXITNORMAL = 0x00000020,  // exits to next map (only for MBF21 instadeath)
+   SDMG_INSTAEXITSECRET = 0x00000040,  // exits to secret map (only for MBF21 instadeath)
 };
 
 // haleyjd 08/30/09: internal sector flags
@@ -187,18 +190,22 @@ struct pslope_t
 #define NUMLINEARGS 5
 
 // sector action flags
-enum
+enum sectoractionflags_e : unsigned int
 {
-   SEC_ACTION_ENTER = 0x00000001
+   SEC_ACTION_NOTREPEAT  = 0x00000001,
+   SEC_ACTION_PROJECTILE = 0x00000002,
+   SEC_ACTION_MONSTER    = 0x00000004,
+   SEC_ACTION_NOPLAYER   = 0x00000008,
+   SEC_ACTION_ENTER      = 0x00000010,
+   SEC_ACTION_EXIT       = 0x00000020,
 };
 
 struct sectoraction_t
 {
    DLListItem<sectoraction_t> links;
 
-   int special;
-   int args[NUMLINEARGS];
-   int actionflags;
+   Mobj *mo;
+   int   actionflags;
 };
 
 // sector interpolation values
@@ -409,6 +416,7 @@ struct side_t
   int16_t toptexture;      // Texture indices. We do not maintain names here. 
   int16_t bottomtexture;
   int16_t midtexture;
+  uint16_t intflags; // keep intflags here (we may also afford to edit "special")
   sector_t* sector;      // Sector the SideDef is facing.
 
   // killough 4/4/98, 4/11/98: highest referencing special linedef's type,

@@ -90,7 +90,8 @@ struct edecstateout_t
    int numkillsalloc;        // number of kill states allocated
 };
 
-edecstateout_t *E_ParseDecorateStates(const char *input, const char *firststate);
+edecstateout_t *E_ParseDecorateStates(const char *owner, const char *input, 
+                                      const char *firststate);
 void E_FreeDSO(edecstateout_t *dso);
 
 #endif

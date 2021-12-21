@@ -26,6 +26,23 @@
 #ifndef __P_SAVEG__
 #define __P_SAVEG__
 
+#include "e_hash.h"
+#include "m_collection.h"
+#include "m_qstrkeys.h"
+
+//
+// Cached string, stored in an EHashTable
+//
+class CachedString : public ZoneObject
+{
+public:
+   qstring string;   // this is also the key
+   int identifier;   // can't use "id" due to objective-C reserved use.
+
+   DLListItem<CachedString> stringLink;
+   DLListItem<CachedString> idLink;
+};
+
 // Persistent storage/archiving.
 // These are the load / save game routines.
 
@@ -43,17 +60,31 @@ struct zrefs_t;
 
 class SaveArchive
 {
+private:
+   // The string table for this save archive. Mapped both by string and by ID, depending on use
+   EHashTable<CachedString, ENCQStrHashKey, &CachedString::string, &CachedString::stringLink>
+      mStringTable;
+   EHashTable<CachedString, EIntHashKey, &CachedString::identifier, &CachedString::idLink>
+      mIdTable;
+   int mNextCachedStringID = 0;
+   PODCollection<CachedString *> mCacheStringHolder;  // to be cleared on destruction
+
 protected:
    OutBuffer *savefile;        // valid when saving
    InBuffer  *loadfile;        // valid when loading
 
-   static constexpr int WRITE_SAVE_VERSION = 5; // Version of saves that EE writes
+   static constexpr int WRITE_SAVE_VERSION = 12; // Version of saves that EE writes
    int read_save_version;                       // Version of currently-read save
 
 
 public:
    explicit SaveArchive(OutBuffer *pSaveFile);
    explicit SaveArchive(InBuffer  *pLoadFile);
+   ~SaveArchive()
+   {
+      for(CachedString *string : mCacheStringHolder)
+         delete string;
+   }
 
    // Accessors
    bool isSaving()  const   { return (savefile != nullptr); }
@@ -78,6 +109,8 @@ public:
    // char *'s which must be saved, and are read into temporary buffers 
    // during loading.
    void writeLString(const char *str, size_t len = 0);
+
+   void archiveCachedString(qstring &str);
 
    // archive a size_t
    void archiveSize(size_t &value);

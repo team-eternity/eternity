@@ -23,6 +23,7 @@
 //
 //-----------------------------------------------------------------------------
 
+#include <assert.h>
 #include "z_zone.h"
 #include "i_system.h"
 
@@ -99,8 +100,9 @@ int map_secret_after;
 #define FB    0
 
 // haleyjd 05/17/08: ability to draw node lines on map
-bool am_drawnodelines;
-bool am_dynasegs_bysubsec;
+static bool am_drawnodelines;
+static bool am_dynasegs_bysubsec;
+static bool am_drawsegs;
 
 // haleyjd 07/07/04: removed key_map* variables
 
@@ -157,7 +159,7 @@ struct islope_t
 //   starting from the middle.
 //
 #define R ((8*PLAYERRADIUS)/7)
-mline_t player_arrow[] =
+static constexpr mline_t player_arrow[] =
 {
   { { -R+R/8,   0 }, {  R,      0   } }, // -----
   { {  R,       0 }, {  R-R/2,  R/4 } }, // ----->
@@ -167,11 +169,23 @@ mline_t player_arrow[] =
   { { -R+3*R/8, 0 }, { -R+R/8,  R/4 } }, // >>--->
   { { -R+3*R/8, 0 }, { -R+R/8, -R/4 } }
 };
+static constexpr mline_t player_arrow_raven[] = 
+{
+  { { -R + R / 4, 0 }, { 0, 0} }, // center line.
+  { { -R + R / 4, R / 8 }, { R, 0} }, // blade
+  { { -R + R / 4, -R / 8 }, { R, 0 } },
+  { { -R + R / 4, -R / 4 }, { -R + R / 4, R / 4 } }, // crosspiece
+  { { -R + R / 8, -R / 4 }, { -R + R / 8, R / 4 } },
+  { { -R + R / 8, -R / 4 }, { -R + R / 4, -R / 4} }, //crosspiece connectors
+  { { -R + R / 8, R / 4 }, { -R + R / 4, R / 4} },
+  { { -R - R / 4, R / 8 }, { -R - R / 4, -R / 8 } }, //pommel
+  { { -R - R / 4, R / 8 }, { -R + R / 8, R / 8 } },
+  { { -R - R / 4, -R / 8}, { -R + R / 8, -R / 8 } }
+};
 #undef R
-#define NUMPLYRLINES (sizeof(player_arrow)/sizeof(mline_t))
 
 #define R ((8*PLAYERRADIUS)/7)
-mline_t cheat_player_arrow[] =
+static constexpr mline_t cheat_player_arrow[] =
 { // killough 3/22/98: He's alive, Jim :)
   { { -R+R/8,         0   }, {  R,             0   } }, // -----
   { {  R,             0   }, {  R-R/2,         R/4 } }, // ----->
@@ -189,32 +203,21 @@ mline_t cheat_player_arrow[] =
   { { -R/10+R/4,      R/4 }, { -R/10+R/4+R/8,  R/4 } },
 };
 #undef R
-#define NUMCHEATPLYRLINES (sizeof(cheat_player_arrow)/sizeof(mline_t))
-
-mline_t triangle_guy[] =
-{
-  { { -0.867, -0.5 }, {  0.867, -0.5 } },
-  { {  0.867, -0.5 }, {  0.0,    1.0 } },
-  { {  0.0,    1.0 }, { -0.867, -0.5 } }
-};
-#define NUMTRIANGLEGUYLINES (sizeof(triangle_guy)/sizeof(mline_t))
 
 //jff 1/5/98 new symbol for keys on automap
-mline_t cross_mark[] =
+static constexpr mline_t cross_mark[] =
 {
   { { -1.0,  0.0 }, { 1.0, 0.0 } },
   { {  0.0, -1.0 }, { 0.0, 1.0 } },
 };
-#define NUMCROSSMARKLINES (sizeof(cross_mark)/sizeof(mline_t))
 //jff 1/5/98 end of new symbol
 
-mline_t thintriangle_guy[] =
+static constexpr mline_t thintriangle_guy[] =
 {
   { { -0.5, -0.7 }, {  1.0,  0.0 } },
   { {  1.0,  0.0 }, { -0.5,  0.7 } },
   { { -0.5,  0.7 }, { -0.5, -0.7 } }
 };
-#define NUMTHINTRIANGLEGUYLINES (sizeof(thintriangle_guy)/sizeof(mline_t))
 
 int ddt_cheating = 0;         // killough 2/7/98: make global, rename to ddt_*
 
@@ -955,7 +958,7 @@ bool AM_Responder(const event_t *ev)
 
       case ka_map_overlay:
          automap_overlay = !automap_overlay;
-         doom_printf("Overlay mode %s\n", automap_overlay ? "on" : "off");
+         doom_printf("Overlay mode %s", automap_overlay ? "on" : "off");
          AM_Start(); // refresh view size
          return true;
 
@@ -1017,19 +1020,20 @@ int map_point_coordinates;
 
 void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
 {
-   if(followplayer || !map_point_coordinates)
+   assert(mo);
+   if(followplayer || !map_point_coordinates || !automapactive)
    {
-      const linkoffset_t &link = *P_GetLinkOffset(mo->groupid, 0);
-      x = mo->x + link.x;
-      y = mo->y + link.y;
-      z = mo->z + link.z;
+      x = mo->x;
+      y = mo->y;
+      z = mo->z;
    }
    else
    {
-      const linkoffset_t &link = *P_GetLinkOffset(plr->mo->groupid, 0);
-      x = M_DoubleToFixed(m_x + m_w / 2) + link.x;
-      y = M_DoubleToFixed(m_y + m_h / 2) + link.y;
-      z = R_PointInSubsector(x, y)->sector->srf.floor.height + link.z;
+      v2fixed_t pos = { M_DoubleToFixed(m_x + m_w / 2), M_DoubleToFixed(m_y + m_h / 2) };
+      x = pos.x;
+      y = pos.y;
+      const sector_t &sector = *R_PointInSubsector(pos)->sector;
+      z = sector.groupid == mo->groupid ? sector.srf.floor.getZAt(pos) : 0;
    }
 }
 
@@ -1679,11 +1683,16 @@ inline static bool AM_isDoorClosed(const line_t *line)
 //
 inline static bool AM_drawAsClosedDoor(const line_t *line)
 {
+   const surface_t &backfloor = line->backsector->srf.floor;
+   const surface_t &backceil = line->backsector->srf.ceiling;
+   const surface_t &frontfloor = line->frontsector->srf.floor;
+   const surface_t &frontceil = line->frontsector->srf.ceiling;
    return (mapcolor_clsd &&  
            !(line->flags & ML_SECRET) &&    // non-secret closed door
            AM_isDoorClosed(line) &&
-           (line->backsector->srf.floor.height == line->backsector->srf.ceiling.height ||
-            line->frontsector->srf.floor.height == line->backsector->srf.ceiling.height));
+           (backfloor.height == backceil.height || frontfloor.height == frontceil.height ||
+            (frontfloor.slope && R_CompareSlopesFlipped(frontfloor.slope, frontceil.slope)) ||
+            (backfloor.slope && R_CompareSlopesFlipped(backfloor.slope, backceil.slope))));
 }
 
 //
@@ -1936,6 +1945,23 @@ static void AM_drawNodeLines()
 }
 
 //
+// Draw regular BSP segs. Needed for BSP debugging.
+//
+static void AM_drawSegs()
+{
+   mline_t l;
+   for(int i = 0; i < numsegs; ++i)
+   {
+      const seg_t &seg = segs[i];
+      l.a.x = seg.v1->fx;
+      l.a.y = seg.v1->fy;
+      l.b.x = seg.v2->fx;
+      l.b.y = seg.v2->fy;
+      AM_drawMline(&l, mapcolor_frnd);
+   }
+}
+
+//
 // AM_drawDynaSegs
 //
 // haleyjd 05/04/13: experimental debug code to display dynasegs.
@@ -2029,7 +2055,7 @@ static void AM_rotate(double &x, double &y, angle_t a)
 // the color to draw it with, and the map coordinates to draw it at.
 // Returns nothing
 //
-static void AM_drawLineCharacter(mline_t *lineguy, int lineguylines, 
+static void AM_drawLineCharacter(const mline_t *lineguy, int lineguylines, 
                                  double scale, angle_t angle, int color,
                                  fixed_t x, fixed_t y)
 {
@@ -2085,23 +2111,39 @@ static void AM_drawLineCharacter(mline_t *lineguy, int lineguylines,
 //
 static void AM_drawPlayers()
 {
-   player_t* p;
+   const player_t* p;
    int   their_color = -1;
    int   color;
    // SoM: player x and y
    fixed_t px, py;
+
+   // FIXME: make this a pclass property or something
+   const mline_t *arrow;
+   int arrowsize;
+   bool drawSword = GameModeInfo->type == Game_Heretic;  // TODO: Game_Hexen when it comes
+   if(drawSword) 
+   {
+      arrow = player_arrow_raven;
+      arrowsize = earrlen(player_arrow_raven);
+   }
+   else
+   {
+      arrow = player_arrow;
+      arrowsize = earrlen(player_arrow);
+   }
+   
 
    if(!netgame)
    {
       px = plr->mo->x;
       py = plr->mo->y;
 
-      if(ddt_cheating)
+      if(ddt_cheating && !drawSword)   // Raven games have no cheat arrow
       {
          AM_drawLineCharacter
           (
             cheat_player_arrow,
-            NUMCHEATPLYRLINES,
+            earrlen(cheat_player_arrow),
             0.0,
             plr->mo->angle,
             mapcolor_sngl,      //jff color
@@ -2113,8 +2155,8 @@ static void AM_drawPlayers()
       {
          AM_drawLineCharacter
           (
-            player_arrow,
-            NUMPLYRLINES,
+            arrow,
+            arrowsize,
             0.0,
             plr->mo->angle,
             mapcolor_sngl,      //jff color
@@ -2163,8 +2205,8 @@ static void AM_drawPlayers()
       
       AM_drawLineCharacter
        (
-         player_arrow,
-         NUMPLYRLINES,
+         arrow,
+         arrowsize,
          0.0,
          p->mo->angle,
          color,
@@ -2214,7 +2256,7 @@ static void AM_drawThings(int colors, int colorrange)
                AM_drawLineCharacter
                   (
                    cross_mark,
-                   NUMCROSSMARKLINES,
+                   earrlen(cross_mark),
                    16.0,
                    t->angle,
                    mapcolor_rkey!=-1? mapcolor_rkey : mapcolor_sprt,
@@ -2227,7 +2269,7 @@ static void AM_drawThings(int colors, int colorrange)
                AM_drawLineCharacter
                   (
                    cross_mark,
-                   NUMCROSSMARKLINES,
+                   earrlen(cross_mark),
                    16.0,
                    t->angle,
                    mapcolor_ykey!=-1? mapcolor_ykey : mapcolor_sprt,
@@ -2240,7 +2282,7 @@ static void AM_drawThings(int colors, int colorrange)
                AM_drawLineCharacter
                   (
                    cross_mark,
-                   NUMCROSSMARKLINES,
+                   earrlen(cross_mark),
                    16.0,
                    t->angle,
                    mapcolor_bkey!=-1? mapcolor_bkey : mapcolor_sprt,
@@ -2259,7 +2301,7 @@ static void AM_drawThings(int colors, int colorrange)
          AM_drawLineCharacter
             (
              thintriangle_guy,
-             NUMTHINTRIANGLEGUYLINES,
+             earrlen(thintriangle_guy),
              16.0,
              t->angle,
              // killough 8/8/98: mark friends specially
@@ -2379,6 +2421,10 @@ void AM_Drawer()
       AM_drawNodeLines();
       AM_drawDynaSegs();
    }
+   if(am_drawsegs)
+   {
+      AM_drawSegs();
+   }
 
    AM_drawPlayers();
    
@@ -2399,6 +2445,9 @@ CONSOLE_VARIABLE(am_drawnodelines, am_drawnodelines, 0) {}
 
 VARIABLE_TOGGLE(am_dynasegs_bysubsec, nullptr, yesno);
 CONSOLE_VARIABLE(am_dynasegs_bysubsec, am_dynasegs_bysubsec, 0) {}
+
+VARIABLE_TOGGLE(am_drawsegs, nullptr, onoff);
+CONSOLE_VARIABLE(am_drawsegs, am_drawsegs, 0) {}
 
 //----------------------------------------------------------------------------
 //

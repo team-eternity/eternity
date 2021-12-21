@@ -103,7 +103,7 @@ void XLTokenizer::doStateScan()
          state     = STATE_INBRACKETS;
          break;
       }
-      else if(c == '$') // detect $ keywords
+      else if(c == '$' || flags & TF_STRINGSQUOTED) // detect $ keywords (or without $ if flagged)
          tokentype = TOKEN_KEYWORD;
       else
          tokentype = TOKEN_STRING;
@@ -469,6 +469,9 @@ static void XL_buildInterMapInfo()
    // Then, override with EMAPINFO
    XL_BuildInterEMapInfo();
 
+   // Episode menu from UMAPINFO
+   XL_BuildUMapInfoEpisodes();
+
    // FIXME: MAPINFO is meant only for Hexen, which doesn't have Doom-style in-
    // termission anyway. But maybe we should use its fields.
 }
@@ -490,8 +493,7 @@ void XL_ParseHexenScripts()
    XL_ParseMusInfo();  // Risen3D:  MUSINFO
    XL_ParseAnimDefs();  // Hexen: ANIMDEFS
 
-   // FIXME: do this when it's time, not now yet.
-// XL_ParseUMapInfo();  // Universal MAPINFO new format
+   XL_ParseUMapInfo();  // Universal MAPINFO new format
 
    XL_buildInterMapInfo();
 }

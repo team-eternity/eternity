@@ -31,9 +31,11 @@
 #include "tables.h" // for angle_t
 
 struct line_t;
+struct lineopening_t;
 class  Mobj;
 struct mobjinfo_t;
 struct polyobj_t; // ioanch 20160114
+struct sector_t;
 struct subsector_t;
 
 // mapblocks are used to check movement against lines and things
@@ -103,6 +105,10 @@ struct intercept_t
 typedef bool (*traverser_t)(intercept_t *in, void *context);
 
 fixed_t P_AproxDistance(fixed_t dx, fixed_t dy);
+inline static fixed_t P_AproxDistance(v2fixed_t dv)
+{
+   return P_AproxDistance(dv.x, dv.y);
+}
 
 int P_PointOnLineSideClassic(fixed_t x, fixed_t y, const line_t *line);
 int P_PointOnLineSidePrecise(fixed_t x, fixed_t y, const line_t *line);
@@ -124,8 +130,10 @@ int P_BoxOnDivlineSideFloat(const float *box, v2float_t start, v2float_t delta);
 
 //SoM 9/2/02: added mo parameter for 3dside clipping
 // ioanch 20150113: added optional portal detection
-void    P_LineOpening (const line_t *linedef, const Mobj *mo,
-                       bool portaldetect = false, uint32_t *lineclipflags = nullptr);
+
+lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo,
+                            const v2fixed_t *ppoint = nullptr, bool portaldetect = false,
+                            uint32_t *lineclipflags = nullptr);
 
 void P_UnsetThingPosition(Mobj *thing);
 void P_SetThingPosition(Mobj *thing);
@@ -148,6 +156,14 @@ angle_t P_DoubleToAngle(double a);
 
 void P_RotatePoint(fixed_t &x, fixed_t &y, const angle_t angle);
 
+bool P_CheckShootPlane(const sector_t &sidesector, fixed_t origx, fixed_t origy,
+                       fixed_t origz, fixed_t aimslope, v2fixed_t prevedgepos,
+                       fixed_t prevfrac, fixed_t attackrange,
+                       fixed_t shootcos, fixed_t shootsin,
+                       fixed_t &x, fixed_t &y, fixed_t &z, bool &hitplane, int &updown);
+bool P_CheckShootSkyHack(const line_t &li, fixed_t x, fixed_t y, fixed_t z);
+bool P_CheckShootSkyLikeEdgePortal(const line_t &li, v2fixed_t edgepos, fixed_t z);
+
 bool P_ShootThing(const intercept_t *in,
                   Mobj *shooter,
                   fixed_t attackrange_local,
@@ -159,6 +175,9 @@ bool P_ShootThing(const intercept_t *in,
                   int damage);
 bool P_CheckThingAimAvailability(const Mobj *th, const Mobj *source, bool aimflagsmask);
 bool P_CheckThingAimSlopes(const Mobj *th, fixed_t origindist, fixed_t infrac, linetracer_t &atrace);
+
+v2fixed_t P_GetSafeLineNormal(const line_t &line);
+bool P_SegmentIntersectsSector(v2fixed_t v1, v2fixed_t v2, const sector_t &sector);
 
 extern linetracer_t trace;
 

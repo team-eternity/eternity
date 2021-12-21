@@ -130,7 +130,7 @@ extern int v_ticker;
 
 struct VBuffer;
 
-void V_DrawBackgroundCached(byte *src, VBuffer *back_dest);
+void V_DrawBackgroundCached(const byte *src, VBuffer *back_dest);
 void V_DrawBackground(const char *patchname, VBuffer *back_dest);
 void V_DrawDistortedBackground(const char* patchname, VBuffer *back_dest);
 

@@ -315,6 +315,8 @@ void Add_Scroller(int type, fixed_t dx, fixed_t dy,
          EV_stopFlatScrollerBySecnum(type, affectee);
       s->addScroller();
    }
+   else if(dy) // mark it as vertically scrolling for proper sky rendering
+      sides[affectee].intflags |= SDI_VERTICALLYSCROLLING;
 
    s->addThinker();
 }

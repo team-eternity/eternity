@@ -172,11 +172,12 @@ font ee_bignumfont
    filter { start '!'; end 'Z'; mask "FONTB%.2d" }
 }
 
-// Menu font - it's just the console font
+// Menu font - it's just the console font but as a patch
 font ee_menufont
 {
    id           5
-   linearlump   CONCHARS
+   linearlump   MENCHARS
+   linearformat patch
    spacesize    4
    usespacesize true
 }

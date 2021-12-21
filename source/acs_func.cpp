@@ -114,6 +114,32 @@ inline static PointThinker *ACS_getSoundSource(const ACSThreadInfo *info)
    return info->mo ? info->mo : info->po ? &info->po->spawnSpot : nullptr;
 }
 
+//
+// Getter for surface Z of given tag
+//
+static fixed_t ACS_getSurfaceZ(int tag, surf_e type, fixed_t x, fixed_t y)
+{
+   const sector_t &pointedSector = *R_PointInSubsector(x, y)->sector;
+   if(!tag)
+   {
+      // tag 0 means to look at x and y and get the sector from there
+      return pointedSector.srf[type].getZAt(x, y);
+   }
+
+   // In this case it's tagged, focus on that sector
+
+   // But first prioritize the coordinate if the sector is tagged.
+   if(pointedSector.tag == tag)
+      return pointedSector.srf[type].getZAt(x, y);
+
+   // Otherwise pick the first sector   
+   int secnum = P_FindSectorFromTag(tag, -1);
+   if(secnum < 0)
+      return 0;   // In case of no sector, return 0
+
+   return sectors[secnum].srf[type].getZAt(x, y);
+}
+
 //=============================================================================
 // CallFuncs
 //
@@ -121,7 +147,7 @@ inline static PointThinker *ACS_getSoundSource(const ACSThreadInfo *info)
 //
 // ACS_CF_ActivatorArmor
 //
-// int ActivatorArmor(void);
+// int PlayerArmorPoints(void);
 //
 bool ACS_CF_ActivatorArmor(ACS_CF_ARGS)
 {
@@ -131,7 +157,7 @@ bool ACS_CF_ActivatorArmor(ACS_CF_ARGS)
 //
 // ACS_CF_ActivatorFrags
 //
-// int ActivatorFrags(void);
+// int PlayerFrags(void);
 //
 bool ACS_CF_ActivatorFrags(ACS_CF_ARGS)
 {
@@ -141,7 +167,7 @@ bool ACS_CF_ActivatorFrags(ACS_CF_ARGS)
 //
 // ACS_CF_ActivatorHealth
 //
-// int ActivatorHealth(void);
+// int PlayerHealth(void);
 //
 bool ACS_CF_ActivatorHealth(ACS_CF_ARGS)
 {
@@ -219,7 +245,7 @@ bool ACS_CF_AmbientSoundLoc(ACS_CF_ARGS)
 //
 // ACS_CF_ATan2
 //
-// fixed ATan2(fixed x, fixed y);
+// fixed VectorAngle(fixed x, fixed y);
 //
 bool ACS_CF_ATan2(ACS_CF_ARGS)
 {
@@ -429,7 +455,7 @@ bool ACS_CF_CheckWeapon(ACS_CF_ARGS)
 //
 // ACS_CF_ChkThingCeilTex
 //
-// int CheckThingCeilingTexture(int tid, str texture)
+// int CheckActorCeilingTexture(int tid, str texture)
 //
 bool ACS_CF_ChkThingCeilTex(ACS_CF_ARGS)
 {
@@ -439,7 +465,7 @@ bool ACS_CF_ChkThingCeilTex(ACS_CF_ARGS)
 //
 // ACS_CF_ChkThingFlag
 //
-// int CheckThingFlag(int tid, str flag);
+// int CheckFlag(int tid, str flag);
 //
 bool ACS_CF_ChkThingFlag(ACS_CF_ARGS)
 {
@@ -562,7 +588,7 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
 //
 // ACS_CF_ChkThingProp
 //
-// int CheckThingProperty(int tid, int prop, int val);
+// int CheckActorProperty(int tid, int prop, int val);
 //
 bool ACS_CF_ChkThingProp(ACS_CF_ARGS)
 {
@@ -572,7 +598,7 @@ bool ACS_CF_ChkThingProp(ACS_CF_ARGS)
 //
 // ACS_CF_ChkThingType
 //
-// int CheckThingType(int tid, str type)
+// int CheckActorClass(int tid, str type)
 //
 bool ACS_CF_ChkThingType(ACS_CF_ARGS)
 {
@@ -597,7 +623,7 @@ enum
 //
 // ACS_CF_ClassifyThing
 //
-// int ClassifyThing(int tid);
+// int ClassifyActor(int tid);
 //
 bool ACS_CF_ClassifyThing(ACS_CF_ARGS)
 {
@@ -911,7 +937,8 @@ bool ACS_CF_GetLineX(ACS_CF_ARGS)
    int           linedist = argV[2];
 
    int           linenum = -1;
-   const line_t *line    = P_FindLine(lineid, &linenum);
+   line_t *triggerLine = static_cast<const ACSThread *>(thread)->info.line;
+   const line_t *line = P_FindLine(lineid, &linenum, triggerLine);
 
    if(!line)
    {
@@ -945,7 +972,8 @@ bool ACS_CF_GetLineY(ACS_CF_ARGS)
    int           linedist = argV[2];
 
    int           linenum = -1;
-   const line_t *line = P_FindLine(lineid, &linenum);
+   line_t *triggerLine = static_cast<const ACSThread *>(thread)->info.line;
+   const line_t *line = P_FindLine(lineid, &linenum, triggerLine);
 
    if(!line)
    {
@@ -1095,16 +1123,8 @@ bool ACS_CF_GetScreenW(ACS_CF_ARGS)
 //
 bool ACS_CF_GetSectorCeilZ(ACS_CF_ARGS)
 {
-   int secnum = P_FindSectorFromTag(argV[0], -1);
-
-   if(secnum >= 0)
-   {
-      // TODO/FIXME: sloped sectors
-      thread->dataStk.push(sectors[secnum].srf.ceiling.height);
-   }
-   else
-      thread->dataStk.push(0);
-
+   thread->dataStk.push(ACS_getSurfaceZ(argV[0], surf_ceil, 
+                                        argV[1] * FRACUNIT, argV[2] * FRACUNIT));
    return false;
 }
 
@@ -1115,16 +1135,8 @@ bool ACS_CF_GetSectorCeilZ(ACS_CF_ARGS)
 //
 bool ACS_CF_GetSectorFloorZ(ACS_CF_ARGS)
 {
-   int secnum = P_FindSectorFromTag(argV[0], -1);
-
-   if(secnum >= 0)
-   {
-      // TODO/FIXME: sloped sectors
-      thread->dataStk.push(sectors[secnum].srf.floor.height);
-   }
-   else
-      thread->dataStk.push(0);
-
+   thread->dataStk.push(ACS_getSurfaceZ(argV[0], surf_floor,
+                                        argV[1] * FRACUNIT, argV[2] * FRACUNIT));
    return false;
 }
 
@@ -1823,12 +1835,12 @@ enum
 //
 // Toggles the blocking flag on all tagged lines.
 //
-static void ACS_setLineBlocking(int tag, int block)
+static void ACS_setLineBlocking(const ACSThread *thread, int tag, int block)
 {
    line_t *l;
    int linenum = -1;
 
-   while((l = P_FindLine(tag, &linenum)) != nullptr)
+   while((l = P_FindLine(tag, &linenum, thread->info.line)) != nullptr)
    {
       switch(block)
       {
@@ -1864,18 +1876,19 @@ static void ACS_setLineBlocking(int tag, int block)
 //
 bool ACS_CF_SetLineBlock(ACS_CF_ARGS)
 {
-   ACS_setLineBlocking(argV[0], argV[1]);
+   ACS_setLineBlocking(static_cast<const ACSThread *>(thread), argV[0], argV[1]);
    return false;
 }
 
 //
 // ACS_CF_SetLineBlockMon
 //
-// void SetLineBlockMon(int tag, int block);
+// void SetLineMonsterBlocking(int tag, int block);
 //
 bool ACS_CF_SetLineBlockMon(ACS_CF_ARGS)
 {
-   ACS_setLineBlocking(argV[0], argV[1] ? BLOCK_MONSTERS_ON : BLOCK_MONSTERS_OFF);
+   ACS_setLineBlocking(static_cast<const ACSThread *>(thread), argV[0],
+                       argV[1] ? BLOCK_MONSTERS_ON : BLOCK_MONSTERS_OFF);
    return false;
 }
 
@@ -1891,7 +1904,8 @@ bool ACS_CF_SetLineSpecial(ACS_CF_ARGS)
    line_t *l;
    int     linenum = -1;
 
-   while((l = P_FindLine(tag, &linenum)) != nullptr)
+   line_t *triggerLine = static_cast<const ACSThread *>(thread)->info.line;
+   while((l = P_FindLine(tag, &linenum, triggerLine)) != nullptr)
    {
       l->special = EV_ActionForACSAction(spec);
       for(int i = NUMLINEARGS; i--;)
@@ -1908,7 +1922,8 @@ bool ACS_CF_SetLineSpecial(ACS_CF_ARGS)
 //
 bool ACS_CF_SetLineTex(ACS_CF_ARGS)
 {
-   P_ChangeLineTex(thread->scopeMap->getString(argV[3])->str, argV[2], argV[1], argV[0], true);
+   line_t *triggerLine = static_cast<const ACSThread *>(thread)->info.line;
+   P_ChangeLineTex(thread->scopeMap->getString(argV[3])->str, argV[2], argV[1], argV[0], true, triggerLine);
    return false;
 }
 
@@ -2062,7 +2077,7 @@ bool ACS_CF_SetThingPitchRet(ACS_CF_ARGS)
 //
 // ACS_CF_SetThingPos
 //
-// int SetThingPosition(int tid, fixed x, fixed y, fixed z, int fog);
+// int SetActorPosition(int tid, fixed x, fixed y, fixed z, int fog);
 //
 bool ACS_CF_SetThingPos(ACS_CF_ARGS)
 {
@@ -2092,9 +2107,9 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS)
          // Set new position.
          P_UnsetThingPosition(mo);
 
-         mo->zref.floor = mo->zref.dropoff = newsubsec->sector->srf.floor.height;
+         mo->zref.floor = mo->zref.dropoff = newsubsec->sector->srf.floor.getZAt(x, y);
          mo->zref.floorgroupid = newsubsec->sector->groupid;
-         mo->zref.ceiling = newsubsec->sector->srf.ceiling.height;
+         mo->zref.ceiling = newsubsec->sector->srf.ceiling.getZAt(x, y);
          mo->zref.passfloor = mo->zref.secfloor = mo->zref.floor;
          mo->zref.passceil = mo->zref.secceil = mo->zref.ceiling;
 
@@ -2114,7 +2129,8 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS)
             S_StartSound(fogmo, GameModeInfo->teleSound);
 
             // ... and destination.
-            fogmo = P_SpawnMobj(x, y, z + GameModeInfo->teleFogHeight,
+            v3fixed_t fogpos = P_GetArrivalTelefogLocation({ x, y, z }, mo->angle);
+            fogmo = P_SpawnMobj(fogpos.x, fogpos.y, fogpos.z, 
                                 E_SafeThingName(GameModeInfo->teleFogType));
             S_StartSound(fogmo, GameModeInfo->teleSound);
          }

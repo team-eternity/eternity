@@ -664,10 +664,7 @@ void A_GenWizard(actionargs_t *actionargs)
                     wizType);
 
    // ioanch 20160116: portal aware
-   if(!P_CheckPosition(mo, mo->x, mo->y) ||
-      (mo->z >
-      (P_ExtremeSectorAtPoint(mo, surf_ceil)->srf.ceiling.height - mo->height)) ||
-      (mo->z < P_ExtremeSectorAtPoint(mo, surf_floor)->srf.floor.height))
+   if(!P_CheckPosition(mo, mo->x, mo->y) || !P_CheckFloorCeilingForSpawning(*mo))
    {
       // doesn't fit, so remove it immediately
       mo->remove();
@@ -758,6 +755,7 @@ void A_HticExplode(actionargs_t *actionargs)
       break;
    case 3: // 3 -- Time Bomb of the Ancients, special effects
       actor->z += 32*FRACUNIT;
+      actor->backupPosition();   // don't show the bomb popping up
       actor->translucency = FRACUNIT;
       break;
    default:
@@ -797,7 +795,22 @@ void A_HticBossDeath(actionargs_t *actionargs)
 {
    Mobj    *actor = actionargs->actor;
    Thinker *th;
-   line_t   junk;
+
+   // Now check the UMAPINFO bossactions
+   // We need a player for this. NOTE: we don't require a living player here.
+   const player_t *thePlayer = nullptr;
+   int i;
+   for(i = 0; i < MAXPLAYERS; i++)
+      if(playeringame[i] && players[i].health > 0)
+      {
+         thePlayer = players + i;
+         break;
+      }
+   // none alive found
+   if(i == MAXPLAYERS || !thePlayer)
+      thePlayer = players; // pick player 1, even if dead
+
+   P_CheckCustomBossActions(*actor, *thePlayer);
 
    for(boss_spec_htic_t &hboss_spec : hboss_specs)
    {
@@ -837,8 +850,7 @@ void A_HticBossDeath(actionargs_t *actionargs)
 
             // fall through
          case BSPEC_E1M8:
-            junk.tag = junk.args[0] = 666;
-            EV_DoFloor(&junk, lowerFloor);
+            EV_DoFloor(nullptr, 666, lowerFloor);
             break;
          } // end switch
       } // end if

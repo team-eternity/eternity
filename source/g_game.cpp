@@ -98,7 +98,8 @@
 #include "xl_emapinfo.h"
 
 // haleyjd: new demo format stuff
-static char     eedemosig[] = "ETERN";
+static constexpr const char eedemosig[] = "ETERN";
+static constexpr const char prdemosig[] = "PR+UM";
 
 //static size_t   savegamesize = SAVEGAMESIZE; // killough
 static char    *demoname;
@@ -405,6 +406,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
                const auto slot = E_FindEntryForWeaponInSlotIndex(&p, weapon, i - ka_weapon1);
                newweapon = weapon->id;
                cmd->slotIndex = slot->slotindex;
+               if(!weapon_hotkey_holding)
+                  gameactions[i] = false;
                break;
             }
          }
@@ -702,30 +705,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 //
 void G_SetGameMap(void)
 {
-   gamemap = G_GetMapForName(gamemapname);
-
-   if(!(GameModeInfo->flags & GIF_MAPXY))
-   {
-      gameepisode = gamemap / 10;
-      gamemap = gamemap % 10;
-   }
-   else
-      gameepisode = 1;
-
-   if(gameepisode < 1)
-      gameepisode = 1;
-
-   // haleyjd: simplified to use gameModeInfo
-
-   // bound to maximum episode for gamemode (if the no-upper-episode-bound flag isn't set)
-   // (only start episode 1 on shareware, etc)
-   if(gameepisode > GameModeInfo->numEpisodes && !(GameModeInfo->flags & GIF_NOUPPEREPBOUND))
-      gameepisode = GameModeInfo->numEpisodes;
-
-   if(gamemap < 0)
-      gamemap = 0;
-   if(gamemap > 9 && !(GameModeInfo->flags & GIF_MAPXY))
-      gamemap = 9;
+   int episode;
+   gamemap = G_GetMapForName(gamemapname, episode);
+   gameepisode = episode;
 }
 
 //
@@ -895,7 +877,7 @@ bool G_Responder(const event_t* ev)
    case ev_keydown:
       if(ev->data1 == key_pause) // phares
          C_RunTextCmd("pause");
-      else
+      else if(!ev->repeat)
       {
          action = G_KeyResponder(ev, kac_game); // haleyjd
          gameactions[action] = true;
@@ -1220,27 +1202,41 @@ static byte *G_ReadDemoHeader(byte *demo_p)
       if(demo_version == 255 && !strncmp((const char *)demo_p, eedemosig, 5))
       {
          int temp;
-         
+
          demo_p += 6; // increment past signature
-         
+
          // reconstruct full version number and reset it
          temp  =        *demo_p++;         // byte one
          temp |= ((int)(*demo_p++)) <<  8; // byte two
          temp |= ((int)(*demo_p++)) << 16; // byte three
          temp |= ((int)(*demo_p++)) << 24; // byte four
          demo_version = demover = temp;
-         
+
          // get subversion
          demo_subversion = *demo_p++;
+      }
+      else if(demo_version == 255 && !strncmp((const char *)demo_p, prdemosig, 5))
+      {
+         // TODO: Support in future
+         if(singledemo)
+            I_Error("G_ReadDemoHeader: PRBoom+UMAPINFO demo format not currently supported\n");
+         else
+         {
+            C_Printf(FC_ERROR "PRBoom+UMAPINFO demo format not currently supported\n");
+            gameaction = ga_nothing;
+            Z_ChangeTag(demobuffer, PU_CACHE);
+            D_AdvanceDemo();
+         }
+         return nullptr;
       }
       else
       {
          demo_p += 6; // increment past signature
-         
+
          // subversion is always 0 for demo versions < 329
          demo_subversion = 0;
       }
-      
+
       compatibility = *demo_p++;       // load old compatibility flag
       skill = (skill_t)(*demo_p++);
       episode = *demo_p++;
@@ -1714,8 +1710,8 @@ static void G_PlayerFinishLevel(int player)
 //
 static void G_SetNextMap()
 {
-   exitrule_t *exitrule = GameModeInfo->exitRules;
-   exitrule_t *theRule = nullptr;
+   const exitrule_t *exitrule = GameModeInfo->exitRules;
+   const exitrule_t *theRule = nullptr;
 
    // find a rule
    for(; exitrule->gameepisode != -2; exitrule++)
@@ -1781,7 +1777,7 @@ enum levelkind_t
 //
 // Gets the name of the next level, either from map-info or explicit next
 //
-static const char *G_getNextLevelName(levelkind_t kind, int map)
+static const char *G_getNextLevelName(levelkind_t kind, int episode, int map)
 {
    const char *nextName = nullptr;
 
@@ -1795,7 +1791,7 @@ static const char *G_getNextLevelName(levelkind_t kind, int map)
    if(nextName && *nextName)
       return nextName;
 
-   return G_GetNameForMap(gameepisode, map);
+   return G_GetNameForMap(episode, map);
 }
 
 //
@@ -1804,7 +1800,7 @@ static const char *G_getNextLevelName(levelkind_t kind, int map)
 static void G_setupMapInfoWMInfo(levelkind_t kind)
 {
    const intermapinfo_t &next =
-   IN_GetMapInfo(G_getNextLevelName(kind, wminfo.next + 1));
+   IN_GetMapInfo(G_getNextLevelName(kind, wminfo.nextEpisode + 1, wminfo.next + 1));
 
    wminfo.li_lastlevelname = LevelInfo.interLevelName;  // just reference it
    wminfo.li_nextlevelname = next.levelname;
@@ -1851,6 +1847,7 @@ static void G_DoCompleted()
 
    if(!(GameModeInfo->flags & GIF_MAPXY)) // kilough 2/7/98
    {
+      // TODO: change this to a level info definition
       if(gamemap == 9)
       {
          for(int i = 0; i < MAXPLAYERS; i++)
@@ -1865,25 +1862,27 @@ static void G_DoCompleted()
 
    // set the next gamemap
    G_SetNextMap();
+   // the internal GameModeInfo episode never leads into another episode. Only custom level-info
+   // does.
+   wminfo.nextEpisode = wminfo.epsd;
 
    // haleyjd: override with MapInfo values
+   int episode;
    if(!secretexit)
    {
       if(*LevelInfo.nextLevel) // only for normal exit
       {
-         wminfo.next = G_GetMapForName(LevelInfo.nextLevel);
-         if(!(GameModeInfo->flags & GIF_MAPXY))
-            wminfo.next = wminfo.next % 10;
-         wminfo.next--;
+         wminfo.next = G_GetMapForName(LevelInfo.nextLevel, episode);
+         wminfo.nextEpisode = episode - 1;
+         wminfo.next--; // can even become -1, but that's supported
       }
    }
    else
    {
       if(*LevelInfo.nextSecret) // only for secret exit
       {
-         wminfo.next = G_GetMapForName(LevelInfo.nextSecret);
-         if(!(GameModeInfo->flags & GIF_MAPXY))
-            wminfo.next %= 10;
+         wminfo.next = G_GetMapForName(LevelInfo.nextSecret, episode);
+         wminfo.nextEpisode = episode - 1;
          wminfo.next--;
       }
    }
@@ -1892,14 +1891,8 @@ static void G_DoCompleted()
    if(g_destmap)
    {
       wminfo.next = g_destmap;
+      // TODO: determine next Episode!
       wminfo.nextexplicit = true;
-      if(!(GameModeInfo->flags & GIF_MAPXY))
-      {
-         if(wminfo.next < 1)
-            wminfo.next = 1;
-         else if(wminfo.next > 9)
-            wminfo.next = 9;
-      }
       wminfo.next--;
       g_destmap = 0;
    }
@@ -1940,6 +1933,7 @@ static void G_DoWorldDone()
 {
    idmusnum = -1; //jff 3/17/98 allow new level's music to be loaded
    gamestate = GS_LOADING;
+   gameepisode = wminfo.nextEpisode + 1;
    gamemap = wminfo.next+1;
 
    // haleyjd: handle heretic hidden levels via missioninfo samelevel rules
@@ -1959,11 +1953,11 @@ static void G_DoWorldDone()
    
    // haleyjd: customizable secret exits
    if(secretexit)
-      G_SetGameMapName(G_getNextLevelName(lk_secret, gamemap));
+      G_SetGameMapName(G_getNextLevelName(lk_secret, gameepisode, gamemap));
    else
    {
       // haleyjd 12/14/01: don't use nextlevel for secret exits here either!
-      G_SetGameMapName(G_getNextLevelName(lk_overt, gamemap));
+      G_SetGameMapName(G_getNextLevelName(lk_overt, gameepisode, gamemap));
    }
 
    // haleyjd 10/24/10: if in Master Levels mode, see if the next map exists
@@ -2003,9 +1997,7 @@ void G_ForceFinale()
    if(LevelInfo.finaleType == FINALE_TEXT) // modify finale type?
       LevelInfo.finaleType = GameModeInfo->teleEndGameFinaleType;
 
-   // no text defined? make up something.
-   if(!LevelInfo.interText)
-      LevelInfo.interText = "You have won.";
+   P_EnsureDefaultStoryText(false);
 
    // set other variables for consistency
    LevelInfo.killFinale       = false;
@@ -2871,35 +2863,33 @@ static int     d_episode;
 static int     d_map;
 static char    d_mapname[10];
 
-int G_GetMapForName(const char *name)
+int G_GetMapForName(const char *name, int &outEpisode)
 {
-   char normName[9];
+   char normName[9] = {};  // zero-protect it
    int map;
 
    strncpy(normName, name, 9);
+   normName[8] = 0;
 
    M_Strupr(normName);
    
    if(GameModeInfo->flags & GIF_MAPXY)
    {
-      map = isMAPxy(normName) ? 
-         10 * (normName[3]-'0') + (normName[4]-'0') : 0;
+      if(!M_IsMAPxy(normName, &map))
+         map = 0;
+      outEpisode = 1;
       return map;
    }
    else
    {
       int episode;
-      if(isExMy(normName))
-      {
-         episode = normName[1] - '0';
-         map = normName[3] - '0';
-      }
-      else
+      if(!M_IsExMy(normName, &episode, &map))
       {
          episode = 1;
          map = 0;
       }
-      return (episode*10) + map;
+      outEpisode = episode;
+      return map;
    }
 }
 
@@ -2911,11 +2901,11 @@ char *G_GetNameForMap(int episode, int map)
 
    if(GameModeInfo->flags & GIF_MAPXY)
    {
-      sprintf(levelname, "MAP%02d", map);
+      snprintf(levelname, sizeof(levelname), "MAP%02d", map);
    }
    else
    {
-      sprintf(levelname, "E%01dM%01d", episode, map);
+      snprintf(levelname, sizeof(levelname), "E%01dM%01d", episode, map);
    }
 
    return levelname;
@@ -2929,14 +2919,9 @@ void G_DeferedInitNewNum(skill_t skill, int episode, int map)
 void G_DeferedInitNew(skill_t skill, const char *levelname)
 {
    strncpy(d_mapname, levelname, 8);
-   d_map = G_GetMapForName(levelname);
+   d_map = G_GetMapForName(levelname, d_episode);
    
-   if(!(GameModeInfo->flags & GIF_MAPXY))
-   {
-      d_episode = d_map / 10;
-      d_map = d_map % 10;
-   }
-   else
+   if(GameModeInfo->flags & GIF_MAPXY)
       d_episode = 1;
    
    d_skill = skill;
@@ -2961,14 +2946,16 @@ void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, WadDirectory 
 }
 
 // killough 7/19/98: Marine's best friend :)
-static int G_GetHelpers()
+static int G_getHelpers()
 {
-   int j = M_CheckParm ("-dog");
-   
-   if(!j)
-      j = M_CheckParm ("-dogs");
+   if(M_CheckParm("-dog"))
+      return 1;
 
-   return j ? ((j+1 < myargc) ? atoi(myargv[j+1]) : 1) : default_dogs;
+   const int j = M_CheckParm("-dogs");
+   if(j != 0 && j + 1 < myargc)
+      return atoi(myargv[j + 1]);
+   else
+      return default_dogs;
 }
 
 // killough 3/1/98: function to reload all the default parameter
@@ -2990,9 +2977,9 @@ void G_ReloadDefaults()
    
    monster_infighting = default_monster_infighting; // killough 7/19/98
    
-   // dogs = netgame ? 0 : G_GetHelpers();             // killough 7/19/98
+   // dogs = netgame ? 0 : G_getHelpers();             // killough 7/19/98
    if(GameType == gt_single) // haleyjd 04/10/03
-      dogs = G_GetHelpers();
+      dogs = G_getHelpers();
    else
       dogs = 0;
    

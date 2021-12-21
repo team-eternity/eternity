@@ -321,6 +321,23 @@ menu_t menu_episode =
    MN_EpisodeDrawer            // drawer
 };
 
+//
+// Stub episode menu (for UMAPINFO)
+//
+static menuitem_t mn_episode_itemsStub[] =
+{
+   { it_end }
+};
+menu_t menu_episodeDoom2Stub =
+{
+   mn_episode_itemsStub,
+   nullptr, nullptr, nullptr,
+   48, 63,
+   0,
+   mf_skullmenu | mf_emulated,
+   MN_EpisodeDrawer
+};
+
 // console command to select episode
 
 CONSOLE_COMMAND(mn_episode, cf_notnet)
@@ -2027,7 +2044,6 @@ static menuitem_t mn_mouse_accel_and_mlook_items[] =
    {it_toggle,     "Enable mouselook",    "allowmlook" },
    {it_toggle,     "Always mouselook",    "alwaysmlook"},
    {it_binding,    "Bind mouselook key",  "mlook"      },
-   {it_toggle,     "Stretch short skies", "r_stretchsky"},
    {it_end}
 };
 
@@ -2924,6 +2940,7 @@ static menuitem_t mn_weapons_items[] =
    {it_toggle,     "Center when firing",             "r_centerfire"},
    {it_toggle,     "Recoil",                         "recoil"},
    {it_toggle,     "Weapon hotkey cycling",          "weapon_hotkey_cycling"},
+   {it_toggle,     "Cycle when holding key",         "weapon_hotkey_holding"},
    {it_toggle,     "Autoaiming",                     "autoaim"},
    {it_gap},
    {it_end},

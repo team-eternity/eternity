@@ -164,6 +164,109 @@ void CB_DrawColumn_8(cb_column_t &column)
    }
 }
 
+//
+// Sky drawing: for showing just a color above the texture
+//
+void CB_DrawSkyColumn_8(cb_column_t &column)
+{
+   int count;
+   byte *dest;
+   fixed_t frac;
+   fixed_t fracstep;
+
+   count = column.y2 - column.y1 + 1;
+   if(count <= 0) return;
+
+#ifdef RANGECHECK
+   if(column.x  < 0 || column.x  >= video.width ||
+      column.y1 < 0 || column.y2 >= video.height)
+      I_Error("CB_DrawColumn_8: %i to %i at %i\n", column.y1, column.y2, column.x);
+#endif
+
+   dest = R_ADDRESS(column.x, column.y1);
+   fracstep = column.step;
+   frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
+
+   {
+      const byte *source = static_cast<const byte *>(column.source);
+      const lighttable_t *colormap = column.colormap;
+      int heightmask = column.texheight - 1;
+
+      // Fill in the median color here
+      // Have two intermediary fade lines, using the main_tranmap structure
+      int n;
+      if(frac < -2 * FRACUNIT)
+      {
+         n = (-frac - 2 * FRACUNIT + fracstep - 1) / fracstep;
+         if(n > count)
+            n = count;
+         memset(dest, colormap[column.skycolor], n);
+         if(!(count -= n))
+            return;
+         dest += n;
+         frac += fracstep * n;
+      }
+      if(frac < -FRACUNIT)
+      {
+         n = (-frac - FRACUNIT + fracstep - 1) / fracstep;
+         if(n > count)
+            n = count;
+         memset(dest, main_tranmap[(main_tranmap[(colormap[source[0]] << 8) +
+                                                 colormap[column.skycolor]] << 8) +
+                                   colormap[column.skycolor]], n);
+         if(!(count -= n))
+            return;
+         dest += n;
+         frac += fracstep * n;
+      }
+      // Now it's on the edge
+      if(frac < 0)
+      {
+         n = (-frac + fracstep - 1) / fracstep;
+         if(n > count)
+            n = count;
+         memset(dest, main_tranmap[(colormap[source[0]] << 8) + colormap[column.skycolor]], n);
+         if(!(count -= n))
+            return;
+         dest += n;
+         frac += fracstep * n;
+      }
+
+      if(column.texheight & heightmask)
+      {
+         heightmask++;
+         heightmask <<= FRACBITS;
+
+
+         while(frac >= heightmask)
+            frac -= heightmask;
+
+         do
+         {
+            *dest = colormap[source[frac>>FRACBITS]];
+            dest += 1;                     // killough 11/98
+            if((frac += fracstep) >= heightmask)
+               frac -= heightmask;
+         }
+         while(--count);
+      }
+      else
+      {
+         while((count -= 2) >= 0) // texture height is a power of 2 -- killough
+         {
+            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
+            dest += 1;   // killough 11/98
+            frac += fracstep;
+            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
+            dest += 1;   // killough 11/98
+            frac += fracstep;
+         }
+         if(count & 1)
+            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
+      }
+   }
+}
+
 // haleyjd: experimental column drawer for masked sky textures
 // ioanch: confirmed OK, but only for basic r_draw (non-quad) mode.
 static void CB_DrawNewSkyColumn_8(cb_column_t &column)
@@ -204,16 +307,26 @@ static void CB_DrawNewSkyColumn_8(cb_column_t &column)
       const byte *source = static_cast<const byte *>(column.source);
       const lighttable_t *colormap = column.colormap;
       int heightmask = column.texheight-1;
+
+      // Skip above-areas
+      if(frac < 0)
+      {
+         int n = (-frac + fracstep - 1) / fracstep;
+         if(n > count)
+            n = count;
+         if(!(count -= n))
+            return;
+         dest += n;
+         frac += fracstep * n;
+      }
+
       if (column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
          heightmask <<= FRACBITS;
 
-         if (frac < 0)
-            while ((frac += heightmask) <  0);
-         else
-            while (frac >= heightmask)
-               frac -= heightmask;
+         while (frac >= heightmask)
+            frac -= heightmask;
 
          do
          {
@@ -1038,6 +1151,7 @@ void CB_DrawAddTRColumn_8(cb_column_t &column)
 columndrawer_t r_normal_drawer =
 {
    CB_DrawColumn_8,
+   CB_DrawSkyColumn_8,
    CB_DrawNewSkyColumn_8,
    CB_DrawTLColumn_8,
    CB_DrawTRColumn_8,
@@ -1140,6 +1254,21 @@ int R_TranslationNumForName(const char *name)
       result = (lumpnum - ns.firstLump + TRANSLATIONCOLOURS) + 1;
 
    return result;
+}
+
+//
+// Get the name from a given number of "mobjinfo colour". Returns nullptr if not found.
+//
+const char *R_TranslationNameForNum(int num)
+{
+   if(num <= TRANSLATIONCOLOURS)
+      return nullptr;
+   num -= TRANSLATIONCOLOURS + 1;
+   const WadDirectory::namespace_t &ns = wGlobalDir.getNamespace(lumpinfo_t::ns_translations);
+   if(num >= ns.numLumps)
+      return nullptr;
+   num += ns.firstLump;
+   return wGlobalDir.getLumpName(num);
 }
 
 //

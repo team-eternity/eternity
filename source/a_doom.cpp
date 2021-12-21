@@ -1245,20 +1245,26 @@ static boss_spec_t boss_specs[NUM_BOSS_SPECS] =
 void A_BossDeath(actionargs_t *actionargs)
 {
    Mobj    *mo = actionargs->actor;
-   Thinker *th;
-   line_t   junk;
    int      i;
+
+   player_t *thePlayer = nullptr;
 
    // make sure there is a player alive for victory
    for(i = 0; i < MAXPLAYERS; i++)
    {
       if(playeringame[i] && players[i].health > 0)
+      {
+         thePlayer = players + i;
          break;
+      }
    }
 
    // no one left alive, so do not end game
-   if(i == MAXPLAYERS)
+   if(i == MAXPLAYERS || !thePlayer)
       return;
+
+   // Now check the UMAPINFO bossactions
+   P_CheckCustomBossActions(*mo, *thePlayer);
 
    for(boss_spec_t &boss_spec : boss_specs)
    {
@@ -1268,7 +1274,7 @@ void A_BossDeath(actionargs_t *actionargs)
          (LevelInfo.bossSpecs & boss_spec.level_flag))
       {
          // scan the remaining thinkers to see if all bosses are dead
-         for(th = thinkercap.next; th != &thinkercap; th = th->next)
+         for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
          {
             Mobj *mo2;
             if((mo2 = thinker_cast<Mobj *>(th)))
@@ -1287,13 +1293,11 @@ void A_BossDeath(actionargs_t *actionargs)
          case BSPEC_E4M8:
          case BSPEC_MAP07_1:
             // lower floors tagged 666 to lowest neighbor
-            junk.args[0] = junk.tag = 666;
-            EV_DoFloor(&junk, lowerFloorToLowest);
+            EV_DoFloor(nullptr, 666, lowerFloorToLowest);
             break;
          case BSPEC_MAP07_2:
             // raise floors tagged 667 by shortest lower texture
-            junk.args[0] = junk.tag = 667;
-            EV_DoFloor(&junk, raiseToTexture);
+            EV_DoFloor(nullptr, 667, raiseToTexture);
             break;
          case BSPEC_E2M8:
          case BSPEC_E3M8:
@@ -1302,8 +1306,7 @@ void A_BossDeath(actionargs_t *actionargs)
             return;
          case BSPEC_E4M6:
             // open sectors tagged 666 as blazing doors
-            junk.args[0] = junk.tag = 666;
-            EV_DoDoor(&junk, blazeOpen);
+            EV_DoDoor(666, blazeOpen);
             break;
          default:
             break;
@@ -1322,8 +1325,7 @@ void A_KeenDie(actionargs_t *actionargs)
 {
    Mobj    *mo = actionargs->actor;
    Thinker *th;
-   line_t   junk;
-   
+
    A_Fall(actionargs);
 
    // scan the remaining thinkers to see if all Keens are dead
@@ -1338,8 +1340,7 @@ void A_KeenDie(actionargs_t *actionargs)
       }
    }
 
-   junk.args[0] = junk.tag = 666;
-   EV_DoDoor(&junk, doorOpen);
+   EV_DoDoor(666, doorOpen);
 }
 
 //=============================================================================
@@ -1576,7 +1577,7 @@ void A_SpawnFly(actionargs_t *actionargs)
       P_SetMobjState(newmobj, newmobj->info->seestate);
    
    // telefrag anything in this spot
-   P_TeleportMove(newmobj, newmobj->x, newmobj->y, true); // killough 8/9/98
+   P_TeleportMove(newmobj, newmobj->x, newmobj->y, TELEMOVE_BOSS); // killough 8/9/98
    
    // remove self (i.e., cube).
    mo->remove();

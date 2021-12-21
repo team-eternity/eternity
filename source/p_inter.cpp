@@ -122,6 +122,7 @@ static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num, bool ignor
 
    // If the player is doing a demo w/ EDF-weapons and the weapon should be switched from,
    // try to do so, otherwise do the legacy ammo switch
+   // FIXME: MBF21 weapon switch if strict MBF21 compat is added
    if(demo_version >= 401 &&
       (!player->readyweapon || (player->readyweapon->flags & WPF_AUTOSWITCHFROM)))
    {
@@ -231,7 +232,7 @@ static void P_consumeSpecial(player_t *activator, Mobj *special)
 {
    if(special->special)
    {
-      EV_ActivateSpecialNum(special->special, special->args, activator->mo);
+      EV_ActivateSpecialNum(special->special, special->args, activator->mo, false);
       special->special = 0;
    }
 }
@@ -619,7 +620,9 @@ bool P_GivePower(player_t *player, int power, int duration, bool additiveTime)
    }
 
    // Unless player has infinite duration cheat, set duration (killough)
-   if(player->powers[power] >= 0)
+   // We want to always set duration if the powerup is berserk, since it counts up
+   // FIXME: Infinite duration must be tracked some other way
+   if(player->powers[power] >= 0 || power == pw_strength)
       player->powers[power] = additiveTime ? players->powers[power] + duration : duration;
 
    return true;
@@ -665,7 +668,9 @@ bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
       return false;
 
    // Unless player has infinite duration cheat, set duration (MaxW stolen from killough)
-   if(player->powers[powerNum] >= 0)
+   // We want to always set duration if the powerup is berserk, since it counts up
+   // FIXME: Infinite duration must be tracked some other way
+   if(player->powers[powerNum] >= 0 || powerNum == pw_strength)
    {
       int duration = power->getInt("duration", 0);
       if(power->getInt("permanent", 0))
@@ -1050,7 +1055,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
    // during the death frame of a thing.
    P_DropItems(target, false);
 
-   if(EV_ActivateSpecialNum(target->special, target->args, target))
+   if(EV_ActivateSpecialNum(target->special, target->args, target, false))
       target->special = 0; // Stop special from executing if revived/respawned
 }
 
@@ -1509,7 +1514,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       // ignore damage in GOD mode, or with INVUL power.
       // killough 3/26/98: make god mode 100% god mode in non-compat mode
 
-      if((damage < 1000 || (!getComp(comp_god) && player->cheats&CF_GODMODE)) &&
+      if((damage < LESSER_GOD_BREACH_DAMAGE || (!getComp(comp_god) && player->cheats&CF_GODMODE)) &&
          (player->cheats&CF_GODMODE || player->powers[pw_invulnerability]))
          return;
 
@@ -1659,7 +1664,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
 
    // TODO: add fine-grained infighting control as metadata
 
-   if(source && source != target                                     // source checks
+   if(source && (source != target || vanilla_heretic)                // source checks
       && !(source->flags3 & MF3_DMGIGNORED)                          // not ignored?
       && !speciesignore                                              // species not fighting
       && (!target->threshold || (target->flags3 & MF3_NOTHRESHOLD))  // threshold?

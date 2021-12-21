@@ -190,7 +190,7 @@ default_t defaults[] =
    DEFAULT_INT("weapon_recoil", &default_weapon_recoil, &weapon_recoil, 0, 0, 1, default_t::wad_game,
                "1 to enable recoil from weapon fire"),
 
-   DEFAULT_BOOL("r_centerfire", &centerfire, nullptr, false, default_t::wad_no,
+   DEFAULT_BOOL("r_centerfire", &centerfire, nullptr, false, default_t::wad_game,
                 "0 - don't center weapon when firing, 1 - center weapon when firing"),
 
    // killough 7/19/98
@@ -221,6 +221,8 @@ default_t defaults[] =
    // killough 10/98
    DEFAULT_INT("weapon_hotkey_cycling", &weapon_hotkey_cycling, nullptr, 1, 0, 1, default_t::wad_no,
                "1 to allow in-slot weapon cycling (e.g. SSG to SG)"),
+
+   DEFAULT_BOOL("weapon_hotkey_holding", &weapon_hotkey_holding, nullptr, false, default_t::wad_game, "1 to keep switching weapon while holding hotkey"),
 
    // phares 2/25/98
    DEFAULT_INT("player_bobbing", &default_player_bobbing, &player_bobbing, 1, 0, 1, default_t::wad_game,
@@ -454,7 +456,9 @@ default_t defaults[] =
    
    DEFAULT_INT("comp_theights", &default_comp[comp_theights], &comp[comp_theights],
                0, 0, 1, default_t::wad_game, "DOOM thingtypes use inaccurate height information"),
-   
+
+   // NOTE: this defaults to OFF for better relation with freelook, but it may break wads.
+   // Any levels which depend on it to be ON will be stored in the EDF hashing.
    DEFAULT_INT("comp_planeshoot", &default_comp[comp_planeshoot], &comp[comp_planeshoot],
                0, 0, 1, default_t::wad_game, "Tracer shots cannot hit the floor or ceiling"),
 
@@ -798,8 +802,8 @@ default_t defaults[] =
    DEFAULT_INT("pevent_bfgexpl",&(particleEvents[P_EVENT_BFG_EXPLODE].enabled), nullptr,
                0, 0, 1, default_t::wad_game, "draw particle bfg explosions"),
 
-   DEFAULT_INT("stretchsky", &stretchsky, nullptr, 0, 0, 1, default_t::wad_game,
-               "stretch short sky textures for mlook"),
+   DEFAULT_INT("stretchsky", &stretchsky, nullptr, 0, 0, 1, default_t::wad_no,
+               "(deprecated; do not use)"),
 
 #ifdef _SDL_VER   
    DEFAULT_INT("showendoom", &showendoom, nullptr, 1, 0, 1, default_t::wad_game,
@@ -909,6 +913,9 @@ default_or_t HereticDefaultORs[] =
    { "comp_terrain",   0 }, // terrain active
    { "comp_soul",      1 }, // SKULLFLY objects do not bounce
    { "comp_overunder", 0 }, // 3D object clipping is on
+
+   // monsters
+   { "monster_friction", 0 }, // monsters shouldn't be affected by ice
    
    // colors
    // TODO: player color

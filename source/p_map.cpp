@@ -375,7 +375,7 @@ int P_GetMoveFactor(Mobj *mo, int *frictionp)
 //
 
 // killough 8/9/98
-bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
+bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, unsigned flags)
 {
    int xl, xh, yl, yh, bx, by;
    subsector_t *newsubsec;
@@ -383,8 +383,9 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    
    // killough 8/9/98: make telefragging more consistent, preserve compatibility
    // haleyjd 03/25/03: TELESTOMP flag handling moved here (was thing->player)
-   telefrag = (thing->flags3 & MF3_TELESTOMP) || 
-              (!getComp(comp_telefrag) ? boss : (gamemap == 30));
+   // TODO: make this an EMAPINFO flag
+   telefrag = (thing->flags3 & MF3_TELESTOMP) || !!(flags & TELEMOVE_FRAG) ||
+              (!getComp(comp_telefrag) ? !!(flags & TELEMOVE_BOSS) : (gamemap == 30));
 
    // kill anything occupying the position
    
@@ -435,10 +436,10 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
 
    // haleyjd
    // ioanch 20160114: use the final sector below
-   clip.floorpic = bottomfloorsector->srf.floor.pic;
+   clip.open.floorpic = bottomfloorsector->srf.floor.pic;
    
    // SoM 09/07/02: 3dsides monster fix
-   clip.touch3dside = 0;
+   clip.open.touch3dside = 0;
    
    validcount++;
    clip.numspechit = 0;
@@ -492,7 +493,7 @@ bool P_TeleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    bool res;
 
    ignore_inerts = false;
-   res = P_TeleportMove(thing, x, y, boss);
+   res = P_TeleportMove(thing, x, y, boss ? TELEMOVE_BOSS : 0);
    ignore_inerts = true;
    
    return res;
@@ -542,7 +543,7 @@ static bool PIT_CrossLine(line_t *ld, polyobj_t *po, void *context)
 // killough 8/1/98: used to test intersection between thing and line
 // assuming NO movement occurs -- used to avoid sticky situations.
 
-static int untouched(line_t *ld)
+static int untouched(const line_t *ld)
 {
    fixed_t x, y, tmbbox[4];
    return 
@@ -711,8 +712,11 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
    // killough 8/10/98: allow bouncing objects to pass through as missiles
    if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
    {
-      if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
+      if((ld->flags & ML_BLOCKING) ||
+         (mbf21_temp && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
       {
+         // explicitly blocking everything
+         // or blocking player
          bool result = clip.unstuck && !untouched(ld);  // killough 8/1/98: allow escape
 
          // When it's Hexen, keep side 0 even when hitting from backside
@@ -728,8 +732,13 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
 
       // killough 8/9/98: monster-blockers don't affect friends
       // SoM 9/7/02: block monsters standing on 3dmidtex only
-      if(ld->flags & ML_BLOCKMONSTERS && !(ld->flags & ML_3DMIDTEX) &&
-         P_BlockedAsMonster(*clip.thing))
+      // MaxW: Land-monster blockers gotta be factored in, too
+      if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
+         (
+            ld->flags & ML_BLOCKMONSTERS ||
+            (mbf21_temp && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
+         )
+        )
       {
          return false; // block monsters only
       }
@@ -738,38 +747,38 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
    // set openrange, opentop, openbottom
    // these define a 'window' from one sector to another across this line
    
-   P_LineOpening(ld, clip.thing);
+   clip.open = P_LineOpening(ld, clip.thing);
 
    // adjust floor & ceiling heights
    
-   if(clip.opentop < clip.zref.ceiling)
+   if(clip.open.height.ceiling < clip.zref.ceiling)
    {
-      clip.zref.ceiling = clip.opentop;
+      clip.zref.ceiling = clip.open.height.ceiling;
       clip.ceilingline = ld;
       clip.blockline = ld;
    }
 
-   if(clip.openbottom > clip.zref.floor)
+   if(clip.open.height.floor > clip.zref.floor)
    {
-      clip.zref.floor = clip.openbottom;
-      clip.zref.floorgroupid = clip.bottomgroupid;
+      clip.zref.floor = clip.open.height.floor;
+      clip.zref.floorgroupid = clip.open.bottomgroupid;
 
       clip.floorline = ld;          // killough 8/1/98: remember floor linedef
       clip.blockline = ld;
    }
 
-   if(clip.lowfloor < clip.zref.dropoff)
-      clip.zref.dropoff = clip.lowfloor;
+   if(clip.open.lowfloor < clip.zref.dropoff)
+      clip.zref.dropoff = clip.open.lowfloor;
 
    // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
    // touching 3DMidTex lines.
-   if(demo_version >= 331 && clip.touch3dside)
+   if(demo_version >= 331 && clip.open.touch3dside)
       clip.zref.dropoff = clip.zref.floor;
 
-   if(clip.opensecfloor > clip.zref.secfloor)
-      clip.zref.secfloor = clip.opensecfloor;
-   if(clip.opensecceil < clip.zref.secceil)
-      clip.zref.secceil = clip.opensecceil;
+   if(clip.open.sec.floor > clip.zref.secfloor)
+      clip.zref.secfloor = clip.open.sec.floor;
+   if(clip.open.sec.ceiling < clip.zref.secceil)
+      clip.zref.secceil = clip.open.sec.ceiling;
 
    // SoM 11/6/02: AGHAH
    if(clip.zref.floor > clip.zref.passfloor)
@@ -937,7 +946,7 @@ ItemCheckResult P_CheckThingCommon(Mobj *thing)
          return ItemCheck_pass;
 
       // see if it went over / under
-      
+
       if(clip.thing->z > thing->z + height) // haleyjd 07/06/05
          return ItemCheck_pass;    // overhead
 
@@ -951,7 +960,7 @@ ItemCheckResult P_CheckThingCommon(Mobj *thing)
          if(!P_allowMissileDamage(*clip.thing->target, *thing))
             return ItemCheck_hit;
       }
-      
+
       // haleyjd 10/15/08: rippers
       if(clip.thing->flags3 & MF3_RIP)
       {
@@ -963,19 +972,18 @@ ItemCheckResult P_CheckThingCommon(Mobj *thing)
          {
             BloodSpawner(thing, clip.thing, damage, clip.thing).spawn(BLOOD_RIP);
          }
-         
-         // TODO: ripper sound - gamemode dependent? thing dependent?
-         //S_StartSound(clip.thing, sfx_ripslop);
+
+         S_StartSound(clip.thing, clip.thing->info->ripsound);
 
          P_DamageMobj(thing, clip.thing, clip.thing->target, damage, clip.thing->info->mod);
-         
+
          if(thing->flags2 & MF2_PUSHABLE && !(clip.thing->flags3 & MF3_CANNOTPUSH))
-         { 
+         {
             // Push thing
             thing->momx += clip.thing->momx >> 2;
             thing->momy += clip.thing->momy >> 2;
          }
-         
+
          // TODO: huh?
          //numspechit = 0;
          return ItemCheck_pass;
@@ -1231,9 +1239,9 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    clip.zref.secceil = clip.zref.passceil = clip.zref.ceiling;
 
    // haleyjd
-   clip.floorpic = newsubsec->sector->srf.floor.pic;
+   clip.open.floorpic = newsubsec->sector->srf.floor.pic;
    // SoM: 09/07/02: 3dsides monster fix
-   clip.touch3dside = 0;
+   clip.open.touch3dside = 0;
    validcount++;
    clip.numspechit = 0;
 
@@ -1789,7 +1797,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       // haleyjd: CANTLEAVEFLOORPIC flag
       // ioanch 20160114: use bottom sector floorpic
       if((thing->flags2 & MF2_CANTLEAVEFLOORPIC) &&
-         (clip.floorpic != P_ExtremeSectorAtPoint(thing, surf_floor)->srf.floor.pic ||
+         (clip.open.floorpic != P_ExtremeSectorAtPoint(thing, surf_floor)->srf.floor.pic ||
           clip.zref.floor - thing->z != 0))
       {
          // thing must stay within its current floor type
@@ -2253,23 +2261,23 @@ static bool PTR_SlideTraverse(intercept_t *in, void *context)
    // set openrange, opentop, openbottom.
    // These define a 'window' from one sector to another across a line
    
-   P_LineOpening(li, slidemo);
+   clip.open = P_LineOpening(li, slidemo);
    
-   if(clip.openrange < slidemo->height)
+   if(clip.open.range < slidemo->height)
       goto isblocking;  // doesn't fit
    
-   if(clip.opentop - slidemo->z < slidemo->height)
+   if(clip.open.height.ceiling - slidemo->z < slidemo->height)
       goto isblocking;  // mobj is too high
    
-   if(clip.openbottom - slidemo->z > STEPSIZE )
+   if(clip.open.height.floor - slidemo->z > STEPSIZE )
       goto isblocking;  // too big a step up
    else if(P_Use3DClipping() &&
-           slidemo->z < clip.openbottom) // haleyjd: OVER_UNDER
+           slidemo->z < clip.open.height.floor) // haleyjd: OVER_UNDER
    { 
       // [RH] Check to make sure there's nothing in the way for the step up
       bool good;
       fixed_t savedz = slidemo->z;
-      slidemo->z = clip.openbottom;
+      slidemo->z = clip.open.height.floor;
       good = P_TestMobjZ(slidemo, clip);
       slidemo->z = savedz;
       if(!good)
@@ -2450,6 +2458,14 @@ static bombdata_t bombs[MAXBOMBS]; // bombs away!
 static bombdata_t *theBomb;        // it's the bomb, man. (the current explosion)
 
 //
+// Check if the actors are immune to each other's radius attack. This is a MBF21 feature.
+//
+inline static bool P_splashImmune(const Mobj *target, const Mobj *spot)
+{
+   return E_ThingPairValid(spot->type, target->type, TGF_NOSPLASHDAMAGE);
+}
+
+//
 // PIT_RadiusAttack
 //
 // "bombsource" is the creature that caused the explosion at "bombspot".
@@ -2466,6 +2482,9 @@ static bool PIT_RadiusAttack(Mobj *thing, void *context)
    // (missile bouncers are already excluded with MF_NOBLOCKMAP)
    
    if(!(thing->flags & (MF_SHOOTABLE | MF_BOUNCES)))
+      return true;
+
+   if(bombspot && P_splashImmune(thing, bombspot))
       return true;
 
    // haleyjd 12/22/12: Hexen check for no self-damage
@@ -2699,7 +2718,7 @@ bool P_ChangeSector(sector_t *sector, int crunch)
 // haleyjd: OVER_UNDER: pass down more information to P_ChangeSector3D
 // when 3D object clipping is enabled.
 //
-bool P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
+bool P_CheckSector(sector_t *sector, int crunch, int amt, CheckSectorPlane plane)
 {
    msecnode_t *n;
    
@@ -2709,7 +2728,7 @@ bool P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
 
    // haleyjd: call down to P_ChangeSector3D instead.
    if(P_Use3DClipping())
-      return P_ChangeSector3D(sector, crunch, amt, floorOrCeil);
+      return P_ChangeSector3D(sector, crunch, amt, plane);
    
    nofit = 0;
    crushchange = crunch;
@@ -3150,10 +3169,16 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
 }
 
 //
-// Clears all remaining Mobj references to avoid dangling references on next PU_LEVEL session.
+// Clears all remaining references to avoid dangling references on next PU_LEVEL session.
 //
-void P_ClearGlobalMobjReferences()
+void P_ClearGlobalLevelReferences()
 {
+   clip.thing = nullptr;   // this isn't reference-counted
+   clip.ceilingline = clip.blockline = clip.floorline = nullptr;
+   clip.numspechit = 0;
+   clip.open.frontsector = clip.open.backsector = nullptr;
+   clip.BlockingMobj = nullptr;  // also not ref-counted
+   clip.numportalhit = 0;
    P_ClearTarget(clip.linetarget);
 }
 

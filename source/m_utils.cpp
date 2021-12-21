@@ -19,12 +19,14 @@
 // Authors: James Haley et al.
 //
 
+#include <assert.h>
 #include "z_zone.h"
 #include "hal/i_platform.h"
 #include "doomtype.h"
 
 #include "d_main.h"    // for usermsg
 #include "i_system.h"  // for I_Error
+#include "m_qstr.h"    // for qstring
 
 //=============================================================================
 //
@@ -85,6 +87,36 @@ int M_ReadFile(char const *name, byte **buffer)
    //	  errno ? strerror(errno) : "(Unknown Error)");
    
    return -1;
+}
+
+// Returns the path to a temporary file of the given name, stored
+// inside the system temporary directory.
+//
+// The returned value must be freed with Z_Free after use.
+char *M_TempFile(const char *s)
+{
+   const char *tempdir;
+
+#ifdef _WIN32
+
+   // Check the TEMP environment variable to find the location.
+
+   tempdir = getenv("TEMP");
+
+   if(tempdir == NULL)
+   {
+      tempdir = ".";
+   }
+#else
+   // In Unix, just use /tmp.
+
+   tempdir = "/tmp";
+#endif
+
+   qstring temp(tempdir);
+   temp.pathConcatenate(s);
+
+   return temp.duplicate();
 }
 
 //
@@ -462,6 +494,93 @@ int M_PositiveModulo(int op1, int op2)
    int result = op1 % op2;
    return result < 0 ? result + abs(op2) : result;
 }
+
+//
+// Check if the map name follows the ExMy pattern (Doom 1, Heretic)
+//
+bool M_IsExMy(const char *name, int *episode, int *map)
+{
+   assert(name);
+   int state = 0;
+   int val = 0, mal = 0;
+   for(int i = 0; i < 8; ++i)
+   {
+      char c = name[i];
+      switch(state)
+      {
+         case 0:  // expect E
+            if(c != 'E')
+               return false;
+            state = 1;
+            break;
+         case 1:  // expect digit
+            if(c < '0' || c > '9')
+               return false;
+            state = 2;
+            val = c - '0';
+            break;
+         case 2:  // expect digit or M
+            if(c == 'M')
+            {
+               state = 3;
+               mal = 0;
+               break;
+            }
+            if(c < '0' || c > '9')
+               return false;
+            val = 10 * val + c - '0';
+            break;
+         case 3:  // expect level digit
+            if(c < '0' || c > '9')
+               return false;
+            state = 4;
+            mal = c - '0';
+            break;
+         case 4:  // more digits or exit
+            if(c == '\0')
+               break;
+            if(c < '0' || c > '9')
+               return false;
+            mal = 10 * mal + c - '0';
+            break;
+      }
+      if(!c)
+         break;
+   }
+   if(state == 4)
+   {
+      if(episode)
+         *episode = val;
+      if(map)
+         *map = mal;
+      return true;
+   }
+   return false;
+}
+
+//
+// Check if Doom 2, Hexen or Strife map format
+//
+bool M_IsMAPxy(const char *name, int *map)
+{
+   assert(name);
+   if(name[0] != 'M' || name[1] != 'A' || name[2] != 'P' || !isnumchar(name[3]) ||
+      !isnumchar(name[4]))
+   {
+      return false;
+   }
+   for(int i = 5; i < 8; ++i)
+   {
+      if(!name[i])
+         break;
+      if(name[i] < '0' || name[i] > '9')
+         return false;
+   }
+   if(map)
+      *map = atoi(name + 3);
+   return true;
+}
+
 
 // EOF
 

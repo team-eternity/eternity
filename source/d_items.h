@@ -54,6 +54,7 @@ enum wepflags_e : unsigned int
    WPF_FORCETOREADY   = 0x00002000, // force to readystate on receiving/losing pw_weaponlevel2
    WPF_PHOENIXRESET   = 0x00004000, // Phoenix rod tome reset behaviour
    WPF_DEPOWERSWITCH  = 0x00008000, // visually switch weapon when tome of power runs out
+   WPF_NOAUTOSWITCHTO = 0x00010000, // cannot be automatically switched to
 };
 
 //

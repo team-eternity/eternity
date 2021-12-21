@@ -855,6 +855,10 @@ static void F_FinaleEndDrawer()
    case FINALE_HTIC_DEMON:
       F_DemonScroll();
       break;
+   case FINALE_END_PIC:
+      V_DrawPatch(0, 0, &subscreen43,
+                  PatchLoader::CacheName(wGlobalDir, LevelInfo.endPic, PU_CACHE));
+      break;
    default: // ?
       break;
    }
