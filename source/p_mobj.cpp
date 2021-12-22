@@ -3429,6 +3429,36 @@ void P_FallingDamage(player_t *player)
 }
 
 //
+// Adjust player view height when foot clip changes
+//
+inline static void P_updatePlayerFloorClipViewHeight(Mobj &thing, fixed_t oldclip)
+{
+   // adjust the player's viewheight
+   if(thing.player && oldclip != thing.floorclip)
+   {
+      player_t *p = thing.player;
+
+      p->viewheight -= oldclip - thing.floorclip;
+      p->deltaviewheight = (p->pclass->viewheight - p->viewheight) / 8;
+   }
+}
+
+//
+// Adjust floor clip using vanilla Heretic's buggy logic
+//
+static void P_adjustVanillaHereticFloorClip(Mobj &thing)
+{
+   fixed_t clip;
+   fixed_t oldclip = thing.floorclip;
+   if(thing.flags2 & MF2_FOOTCLIP && (clip = E_SectorFloorClip(thing.subsector->sector)))
+      thing.floorclip = clip;
+   else
+      thing.floorclip = 0;
+
+   P_updatePlayerFloorClipViewHeight(thing, oldclip);
+}
+
+//
 // P_AdjustFloorClip
 //
 // Adapted from ZDoom source (licenced under GPLv3).
@@ -3436,6 +3466,12 @@ void P_FallingDamage(player_t *player)
 //
 void P_AdjustFloorClip(Mobj *thing)
 {
+   if(vanilla_heretic)
+   {
+      P_adjustVanillaHereticFloorClip(*thing);
+      return;
+   }
+
    fixed_t oldclip = thing->floorclip;
    fixed_t shallowestclip = 0x7fffffff;
    const msecnode_t *m;
@@ -3466,14 +3502,7 @@ void P_AdjustFloorClip(Mobj *thing)
    else
       thing->floorclip = shallowestclip;
 
-   // adjust the player's viewheight
-   if(thing->player && oldclip != thing->floorclip)
-   {
-      player_t *p = thing->player;
-
-      p->viewheight -= oldclip - thing->floorclip;
-      p->deltaviewheight = (p->pclass->viewheight - p->viewheight) / 8;
-   }
+   P_updatePlayerFloorClipViewHeight(*thing, oldclip);
 }
 
 //
