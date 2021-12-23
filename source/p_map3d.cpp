@@ -394,7 +394,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
    // haleyjd: from zdoom: OVER_UNDER
    topz = thing->z + thing->height;
 
-   // VANILLA_HERETIC: maybe disable this?
+   // VANILLA_HERETIC: disable this
    if(!vanilla_heretic &&
       !(clip.thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY|MF_NOGRAVITY)) &&
       (thing->flags & MF_SOLID))
@@ -429,7 +429,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
          }
       }
 
-      // VANILLA_HERETIC: maybe use strict comparisons here. ONLY FOR VANILLA.
+      // VANILLA_HERETIC: use strict comparisons here. ONLY FOR VANILLA.
       bool comparison;
       if(vanilla_heretic)
          comparison = clip.thing->z > topz || clip.thing->z + clip.thing->height < thing->z;
@@ -589,7 +589,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
    stepthing    = nullptr;
 
    // [RH] Fake taller height to catch stepping up into things.
-   // VANILLA_HERETIC: maybe avoid?
+   // VANILLA_HERETIC: avoid
    if(thing->player && !vanilla_heretic)
       thing->height = realheight + STEPSIZE;
 

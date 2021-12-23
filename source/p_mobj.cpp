@@ -533,7 +533,7 @@ void P_XYMovement(Mobj* mo)
       return;
    }
 
-   // VANILLA_HERETIC: maybe handle wind here?
+   // VANILLA_HERETIC: handle wind here
    if(vanilla_heretic && mo->flags3 & MF3_WINDTHRUST)
       P_hereticWind(*mo);
 
@@ -1143,7 +1143,7 @@ floater:
    }
 
    // new footclip system
-   // VANILLA_HERETIC: old footclip disabling?
+   // VANILLA_HERETIC: old footclip disabling
    if(!vanilla_heretic)
       P_AdjustFloorClip(mo);
 
@@ -1479,7 +1479,6 @@ void Mobj::Think()
    }
 
    // Heretic Wind transfer specials
-   // VANILLA_HERETIC: may need to move this in the other place at the beginning
    if(!vanilla_heretic && (flags3 & MF3_WINDTHRUST) && !(flags & MF_NOCLIP))
       P_hereticWind(*this);
 
@@ -1560,7 +1559,6 @@ void Mobj::Think()
                if(!vanilla_heretic)
                   z = onmo->z + onmo->height;
             }
-            // VANILLA_HERETIC: check if this needs adding
             if(!vanilla_heretic || player)
             {
                intflags |= MIF_ONMOBJ;
