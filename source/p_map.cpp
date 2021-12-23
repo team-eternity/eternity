@@ -983,7 +983,8 @@ ItemCheckResult P_CheckThingCommon(Mobj *thing)
          }
 
          // TODO: huh?
-         //numspechit = 0;
+         if(vanilla_heretic)
+            clip.numspechit = 0;
          return ItemCheck_pass;
       }
 
@@ -1749,7 +1750,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             fixed_t savedz = thing->z;
             bool good;
             thing->z = clip.zref.floor;
-            good = P_TestMobjZ(thing, clip);
+            good = vanilla_heretic || P_TestMobjZ(thing, clip);
             thing->z = savedz;
             if(!good && !P_checkCarryUp(*thing, clip.zref.floor))
             {

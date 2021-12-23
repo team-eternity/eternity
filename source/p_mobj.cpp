@@ -491,6 +491,16 @@ void P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move)
 }
 
 //
+// Apply Heretic wind on mobj.
+//
+inline static void P_hereticWind(Mobj &mo)
+{
+   const sector_t &sector = *mo.subsector->sector;
+   if(sector.hticPushType == SECTOR_HTIC_WIND)
+      P_ThrustMobj(&mo, sector.hticPushAngle, sector.hticPushForce);
+}
+
+//
 // P_XYMovement
 //
 // Attempts to move something if it has momentum.
@@ -521,6 +531,10 @@ void P_XYMovement(Mobj* mo)
 
       return;
    }
+
+   // VANILLA_HERETIC: handle wind here
+   if(vanilla_heretic && mo->flags3 & MF3_WINDTHRUST)
+      P_hereticWind(*mo);
 
    if(mo->momx > MAXMOVE)
       mo->momx = MAXMOVE;
@@ -1127,7 +1141,9 @@ floater:
    }
 
    // new footclip system
-   P_AdjustFloorClip(mo);
+   // VANILLA_HERETIC: old footclip disabling
+   if(!vanilla_heretic)
+      P_AdjustFloorClip(mo);
 
    if(mo->z + mo->height > mo->zref.ceiling)
    {
@@ -1447,13 +1463,8 @@ void Mobj::Think()
    }
 
    // Heretic Wind transfer specials
-   if((flags3 & MF3_WINDTHRUST) && !(flags & MF_NOCLIP))
-   {
-      sector_t *sec = subsector->sector;
-
-      if(sec->hticPushType == SECTOR_HTIC_WIND)
-         P_ThrustMobj(this, sec->hticPushAngle, sec->hticPushForce);
-   }
+   if(!vanilla_heretic && (flags3 & MF3_WINDTHRUST) && !(flags & MF_NOCLIP))
+      P_hereticWind(*this);
 
    // momentum movement
    clip.BlockingMobj = nullptr;
@@ -1525,10 +1536,14 @@ void Mobj::Think()
                      player->deltaviewheight = deltaview;
                   }
                }
-               z = onmo->z + onmo->height;
+               if(!vanilla_heretic)
+                  z = onmo->z + onmo->height;
             }
-            intflags |= MIF_ONMOBJ;
-            momz = 0;
+            if(!vanilla_heretic || player)
+            {
+               intflags |= MIF_ONMOBJ;
+               momz = 0;
+            }
 
             if(info->crashstate != NullStateNum
                && flags & MF_CORPSE
