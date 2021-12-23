@@ -204,12 +204,18 @@ static bool PIT_TestMobjZ(Mobj *thing, void *context)
 
    fixed_t blockdist = thing->radius + data.clip.thing->radius;
 
+   bool under_comp;
+   if(vanilla_heretic)
+      under_comp = data.clip.thing->z + data.clip.thing->height < thing->z;
+   else
+      under_comp = data.clip.thing->z + data.clip.thing->height <= thing->z;
+
    if(!(thing->flags & MF_SOLID) ||                      // non-solid?
       thing->flags & (MF_SPECIAL|MF_NOCLIP) || // other is special?
       data.clip.thing->flags & MF_SPECIAL ||                   // this is special?
       thing == data.clip.thing ||                              // same as self?
       data.clip.thing->z > thing->z + thing->height ||         // over?
-      data.clip.thing->z + data.clip.thing->height <= thing->z)      // under?
+      under_comp)      // under?
    {
       return true;
    }
@@ -382,13 +388,15 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
       return true;
 
    // haleyjd 1/17/00: set global hit reference
-   clip.BlockingMobj = thing;
+   if(!vanilla_heretic) // vanilla Heretic doesn't hold this info
+      clip.BlockingMobj = thing;
 
    // haleyjd: from zdoom: OVER_UNDER
    topz = thing->z + thing->height;
 
    // VANILLA_HERETIC: maybe disable this?
-   if(!(clip.thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY|MF_NOGRAVITY)) &&
+   if(!vanilla_heretic &&
+      !(clip.thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY|MF_NOGRAVITY)) &&
       (thing->flags & MF_SOLID))
    {
       // [RH] Let monsters walk on actors as well as floors
@@ -422,7 +430,12 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
       }
 
       // VANILLA_HERETIC: maybe use strict comparisons here. ONLY FOR VANILLA.
-      if(clip.thing->z >= topz || clip.thing->z + clip.thing->height <= thing->z)
+      bool comparison;
+      if(vanilla_heretic)
+         comparison = clip.thing->z > topz || clip.thing->z + clip.thing->height < thing->z;
+      else
+         comparison = clip.thing->z >= topz || clip.thing->z + clip.thing->height <= thing->z;
+      if(comparison)
       {
          if(thing->flags & MF_SPECIAL)
          {
@@ -456,12 +469,17 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
 
    // check for special pickup
 
-   if(thing->flags & MF_SPECIAL
+   if(thing->flags & MF_SPECIAL)
       // [RH] The next condition is to compensate for the extra height
       // that gets added by P_CheckPosition() so that you cannot pick
       // up things that are above your true height.
-      && thing->z < clip.thing->z + clip.thing->height - STEPSIZE)
-      return P_CheckPickUp(thing);
+   {
+      if(vanilla_heretic ||
+         thing->z < clip.thing->z + clip.thing->height - STEPSIZE)
+      {
+         return P_CheckPickUp(thing);
+      }
+   }
 
    // killough 3/16/98: Allow non-solid moving objects to move through solid
    // ones, by allowing the moving thing (tmthing) to move if it's non-solid,
@@ -572,7 +590,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
 
    // [RH] Fake taller height to catch stepping up into things.
    // VANILLA_HERETIC: maybe avoid?
-   if(thing->player)
+   if(thing->player && !vanilla_heretic)
       thing->height = realheight + STEPSIZE;
 
    // ioanch: portal aware
@@ -587,7 +605,9 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
          do
          {
             if(!P_SBlockThingsIterator(x, y, PIT_CheckThing3D, robin, groupid))
-            { 
+            {
+               if(vanilla_heretic)  // skip all the improvements in vHeretic
+                  return false;
                // [RH] If a thing can be stepped up on, we need to continue checking
                // other things in the blocks and see if we hit something that is
                // definitely blocking. Otherwise, we need to check the lines, or we
