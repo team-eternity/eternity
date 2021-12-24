@@ -1514,8 +1514,9 @@ void Mobj::Think()
          if(!(onmo = P_GetThingUnder(this)))
          {
             P_ZMovement(this);
-            // VANILLA_HERETIC: check if this needs set
-            intflags &= ~MIF_ONMOBJ;
+            // VANILLA_HERETIC: this remains stuck forever
+            if(!vanilla_heretic)
+               intflags &= ~MIF_ONMOBJ;
          }
          else
          {
