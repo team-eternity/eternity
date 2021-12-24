@@ -443,6 +443,8 @@ void HUDMessageWidget::clear()
 void HUDMessageWidget::addMessage(const char *s)
 {
    char *dest;
+   if(hud_msg_lines <= 0)
+      return;
 
    if(current_messages == hud_msg_lines) // display full
    {

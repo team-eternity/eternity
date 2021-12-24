@@ -548,6 +548,9 @@ These are features planned to debut in future versions of the Eternity Engine:
 
 Bugs Fixed (between 4.02.00 and 4.03.00):
 
++ Fixed a crash happening when setting the HUD message number of lines to 0 and
+  then picking up something.
+
 + Fixed the generalized sector types for damage not working under UDMF.
 
 + Fixed a crash happening when respawning dynamically created items which
