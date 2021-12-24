@@ -123,7 +123,7 @@ static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num, bool ignor
    // If the player is doing a demo w/ EDF-weapons and the weapon should be switched from,
    // try to do so, otherwise do the legacy ammo switch
    // FIXME: MBF21 weapon switch if strict MBF21 compat is added
-   if(demo_version >= 401 &&
+   if((demo_version >= 401 || vanilla_heretic) &&
       (!player->readyweapon || (player->readyweapon->flags & WPF_AUTOSWITCHFROM)))
    {
       // FIXME: This assumes that the powered variant has the same

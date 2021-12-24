@@ -378,9 +378,9 @@ static int weapon_preferences[NUMWEAPONS+1] =
 // this won't matter, because the raised weapon has no ammo anyway. When called
 // from G_BuildTiccmd you want to toggle to a different weapon regardless.
 //
-weapontype_t P_SwitchWeaponOld(const player_t *player)
+weapontype_t P_SwitchWeaponOldDoom(const player_t *player)
 {
-   int *prefer = weapon_preferences; // killough 3/22/98
+   const int *prefer = weapon_preferences; // killough 3/22/98
    weapontype_t currentweapon = player->readyweapon->dehnum;
    weapontype_t newweapon = currentweapon;
    int i = NUMWEAPONS + 1;   // killough 5/2/98   
@@ -484,7 +484,10 @@ bool P_CheckAmmo(player_t *player)
    
    if(demo_compatibility)
    {
-      player->pendingweapon = E_WeaponForDEHNum(P_SwitchWeaponOld(player));      // phares
+      if(vanilla_heretic)
+         player->pendingweapon = E_FindBestWeapon(player);
+      else
+         player->pendingweapon = E_WeaponForDEHNum(P_SwitchWeaponOldDoom(player));      // phares
       // Now set appropriate weapon overlay.
       // WEAPON_FIXME
       P_SetPsprite(player,ps_weapon,player->readyweapon->downstate);
