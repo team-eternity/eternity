@@ -1560,7 +1560,7 @@ void Mobj::Think()
                if(!vanilla_heretic)
                   z = onmo->z + onmo->height;
             }
-            if(!vanilla_heretic || player)
+            if(!vanilla_heretic || (player && momz < 0))
             {
                intflags |= MIF_ONMOBJ;
                momz = 0;
