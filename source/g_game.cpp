@@ -445,7 +445,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       if((!demo_compatibility && (p.attackdown & AT_PRIMARY) && !P_CheckAmmo(&p)) ||
          gameactions[ka_nextweapon])
       {
-         newweapon = P_SwitchWeaponOld(&p); // phares
+         newweapon = P_SwitchWeaponOldDoom(&p); // phares
       }
       else
       {                                 // phares 02/26/98: Added gamemode checks
