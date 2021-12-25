@@ -221,7 +221,8 @@ with any concerns.
     same  as ZDoom.
   * Added MBF21 blockplayers linedef flag
   * Added MBF21 blocklandmonsters linedef flag
-  * Added MBF21 the sector instant death generalized types
+  * Added MBF21 sector instant death generalized types
+  * Added MBF21 wall scroll specials
   * Fixed the Elevator_MoveToFloor and classic counterpart to work even if
     activator doesn't have a linedef.
   * If the SetActorPosition ACS function uses fog, make sure to spawn the fog in
