@@ -216,6 +216,12 @@ with any concerns.
 
 ** Level editing features **
 
+  * IMPORTANT: fixed the Scroll_Floor, Scroll_Ceiling and Scroll_Texture_Model
+    bits for displacement and accelerative scrolling to conform to the ZDoom
+    definitions! Please check your work in progress and adjust the fields.
+    Known released wads have been checked not to use these dynamic scrollers,
+    but if any are affected anyway, we'll add compatibility exceptions in EDF.
+    
   * Added sector actions for entering and leaving a sector, EESectorActionEnter
     and EESectorActionExit. They have doomednum 9997 and 9998 respectively, the
     same  as ZDoom.

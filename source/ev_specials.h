@@ -364,8 +364,8 @@ enum
 enum
 {
    ev_Scroll_Arg_Bits = 1,
-   ev_Scroll_Bit_Accel = 1,
-   ev_Scroll_Bit_Displace = 2,
+   ev_Scroll_Bit_Displace = 1,
+   ev_Scroll_Bit_Accel = 2,
    ev_Scroll_Bit_UseLine = 4,
    ev_Scroll_Arg_Type = 2,
    ev_Scroll_Type_Scroll = 0,
