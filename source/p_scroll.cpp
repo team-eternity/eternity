@@ -634,7 +634,7 @@ static void P_spawnDynamicWallScroller(int staticFn, line_t *l, int linenum)
       if(s != linenum)
       {
          if(byoffset)
-            Add_Scroller(ScrollThinker::sc_side, dx, dy, control, *l->sidenum, accel);
+            Add_Scroller(ScrollThinker::sc_side, dx, dy, control, lines[s].sidenum[0], accel);
          else
             Add_WallScroller(dx, dy, lines + s, control, accel);
       }
