@@ -578,13 +578,37 @@ void P_SpawnFloorParam(const line_t *l, bool acs)
 // * EV_STATIC_SCROLL_WALL_WITH
 // * EV_STATIC_SCROLL_DISPLACE_WALL
 // * EV_STATIC_SCROLL_ACCEL_WALL
+// MBF21:
+// * EV_STATIC_SCROLL_BY_OFFSETS_TAG
+// * EV_STATIC_SCROLL_BY_OFFSETS_TAG_DISPLACE
+// * EV_STATIC_SCROLL_BY_OFFSETS_TAG_ACCEL
 //
 static void P_spawnDynamicWallScroller(int staticFn, line_t *l, int linenum)
 {
-   fixed_t dx = l->dx >> SCROLL_SHIFT;  // direction and speed of scrolling
-   fixed_t dy = l->dy >> SCROLL_SHIFT;
+   fixed_t dx;  // direction and speed of scrolling
+   fixed_t dy;
+   bool byoffset;
    int control = -1;
    int accel   =  0;
+
+   switch(staticFn)
+   {
+      case EV_STATIC_SCROLL_BY_OFFSETS_TAG:
+      case EV_STATIC_SCROLL_BY_OFFSETS_TAG_DISPLACE:
+      case EV_STATIC_SCROLL_BY_OFFSETS_TAG_ACCEL:
+      {
+         const side_t &side = sides[l->sidenum[0]];
+         dx = -side.textureoffset / 8;
+         dy = side.rowoffset / 8;
+         byoffset = true;
+         break;
+      }
+      default:
+         dx = l->dx >> SCROLL_SHIFT;
+         dy = l->dy >> SCROLL_SHIFT;
+         byoffset = false;
+         break;
+   }
 
    if(staticFn == EV_STATIC_SCROLL_WALL_PARAM)
    {
@@ -608,7 +632,12 @@ static void P_spawnDynamicWallScroller(int staticFn, line_t *l, int linenum)
    for(int s = -1; (s = P_FindLineFromLineArg0(l, s)) >= 0;)
    {
       if(s != linenum)
-         Add_WallScroller(dx, dy, lines + s, control, accel);
+      {
+         if(byoffset)
+            Add_Scroller(ScrollThinker::sc_side, dx, dy, control, *l->sidenum, accel);
+         else
+            Add_WallScroller(dx, dy, lines + s, control, accel);
+      }
    }
 }
 
@@ -684,6 +713,9 @@ void P_SpawnScrollers()
       case EV_STATIC_SCROLL_DISPLACE_WALL:
       case EV_STATIC_SCROLL_WALL_WITH:
       case EV_STATIC_SCROLL_WALL_PARAM:
+      case EV_STATIC_SCROLL_BY_OFFSETS_TAG:
+      case EV_STATIC_SCROLL_BY_OFFSETS_TAG_DISPLACE:
+      case EV_STATIC_SCROLL_BY_OFFSETS_TAG_ACCEL:
          // killough 3/1/98: scroll wall according to linedef
          // (same direction and speed as scrolling floors)
          P_spawnDynamicWallScroller(staticFn, line, i);
