@@ -165,6 +165,7 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/a_general.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/a_heretic.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/a_hexen.cpp"
+      "${CMAKE_CURRENT_SOURCE_DIR}/a_mbf21.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/a_weaponsdoom.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/a_weaponsheretic.cpp"
       SOURCE_GROUP "Source Files\\\\ACS_"

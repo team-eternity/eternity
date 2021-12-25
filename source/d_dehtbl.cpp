@@ -1392,6 +1392,37 @@ void A_SelfDestruct(actionargs_t *);
 void A_TurnProjectile(actionargs_t *);
 void A_SubtractAmmo(actionargs_t *);
 
+// MaxW: MBF21 pointers
+void A_SpawnObject(actionargs_t *actionargs);
+void A_MonsterProjectile(actionargs_t *actionargs);
+void A_MonsterBulletAttack(actionargs_t *actionargs);
+void A_MonsterMeleeAttack(actionargs_t *actionargs);
+void A_RadiusDamage(actionargs_t *actionargs);
+void A_NoiseAlert(actionargs_t *actionargs);
+void A_HealChase(actionargs_t *actionargs);
+void A_SeekTracer(actionargs_t *actionargs);
+void A_FindTracer(actionargs_t *actionargs);
+void A_ClearTracer(actionargs_t *actionargs);
+void A_JumpIfHealthBelow(actionargs_t *actionargs);
+void A_JumpIfTargetInSight(actionargs_t *actionargs);
+void A_JumpIfTargetCloser(actionargs_t *actionargs);
+void A_JumpIfTracerInSight(actionargs_t *actionargs);
+void A_JumpIfTracerCloser(actionargs_t *actionargs);
+void A_JumpIfFlagsSet(actionargs_t *actionargs);
+void A_AddFlags(actionargs_t *actionargs);
+void A_RemoveFlags(actionargs_t *actionargs);
+
+void A_WeaponProjectile(actionargs_t *actionargs);
+void A_WeaponBulletAttack(actionargs_t *actionargs);
+void A_WeaponMeleeAttack(actionargs_t *actionargs);
+void A_WeaponSound(actionargs_t *actionargs);
+void A_WeaponJump(actionargs_t *actionargs);
+void A_ConsumeAmmo(actionargs_t *actionargs);
+void A_CheckAmmo(actionargs_t *actionargs);
+void A_RefireTo(actionargs_t *actionargs);
+void A_GunFlashTo(actionargs_t *actionargs);
+void A_WeaponAlert(actionargs_t *actionargs);
+
 // haleyjd 10/12/02: Heretic pointers
 void A_SpawnTeleGlitter(actionargs_t *actionargs);
 void A_SpawnTeleGlitter2(actionargs_t *);
@@ -1751,6 +1782,38 @@ deh_bexptr deh_bexptrs[] =
    // haleyjd 07/13/03: nuke specials
    POINTER(PainNukeSpec),
    POINTER(SorcNukeSpec),
+
+   // MaxW: MBF21 pointers
+   //POINTER(SpawnObject),
+   //POINTER(MonsterProjectile),
+   //POINTER(MonsterBulletAttack),
+   //POINTER(MonsterMeleeAttack),
+   //POINTER(RadiusDamage),
+   //POINTER(NoiseAlert),
+   //POINTER(HealChase),
+   //POINTER(SeekTracer),
+   //POINTER(FindTracer),
+   //POINTER(ClearTracer),
+   //POINTER(JumpIfHealthBelow),
+   //POINTER(JumpIfTargetInSight),
+   //POINTER(JumpIfTargetCloser),
+   //POINTER(JumpIfTracerInSight),
+   //POINTER(JumpIfTracerCloser),
+   //POINTER(JumpIfFlagsSet),
+   //POINTER(AddFlags),
+   //POINTER(RemoveFlags),
+
+   //POINTER(WeaponProjectile),
+   //POINTER(WeaponBulletAttack),
+   //POINTER(WeaponMeleeAttack),
+   //POINTER(WeaponSound),
+   //POINTER(WeaponJump),
+   //POINTER(ConsumeAmmo),
+   //POINTER(CheckAmmo),
+   //POINTER(RefireTo),
+   //POINTER(GunFlashTo),
+   //POINTER(WeaponAlert),
+
 
    // haleyjd: Heretic pointers
    POINTER(SpawnTeleGlitter),
