@@ -618,12 +618,14 @@ static void P_spawnDynamicWallScroller(int staticFn, line_t *l, int linenum)
       if(bits & (ev_Scroll_Bit_Accel | ev_Scroll_Bit_Displace))
          control = eindex(sides[*l->sidenum].sector - sectors);
    }
-   else
+   else switch(staticFn)
    {
-      if(staticFn == EV_STATIC_SCROLL_ACCEL_WALL)
+      case EV_STATIC_SCROLL_ACCEL_WALL:
+      case EV_STATIC_SCROLL_BY_OFFSETS_TAG_ACCEL:
          accel = 1;
-      if(staticFn == EV_STATIC_SCROLL_ACCEL_WALL ||
-         staticFn == EV_STATIC_SCROLL_DISPLACE_WALL)
+         // go on
+      case EV_STATIC_SCROLL_DISPLACE_WALL:
+      case EV_STATIC_SCROLL_BY_OFFSETS_TAG_DISPLACE:
          control = eindex(sides[*l->sidenum].sector - sectors);
    }
 
