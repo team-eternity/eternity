@@ -701,7 +701,7 @@ static void P_handleScrollByOffsetsParam(line_t &line)
       int triggernum = eindex(&line - lines);
       for(int linenum = -1; (linenum = P_FindLineFromTag(tag, linenum)) >= 0;)
          if(linenum != triggernum)
-            Add_Scroller(ScrollThinker::sc_side, delta.x, delta.y, control, line.sidenum[0], accel);
+            Add_Scroller(ScrollThinker::sc_side, delta.x, delta.y, control, lines[linenum].sidenum[0], accel);
       return;
    }
 
