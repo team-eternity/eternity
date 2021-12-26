@@ -680,10 +680,13 @@ static void P_handleScrollByOffsetsParam(line_t &line)
    qstring error;
    int flags = line.args[0];
    if(flags < 0 || (flags >= 1 && flags <= 6))
-      error.Printf(64, "Scroll_Texture_Offsets: unsupported flags %d", flags);
+      error.Printf(64, "Scroll_Texture_Offsets: unsupported edge flags %d", flags);
    int tag = line.args[1];
    int accel, control;
-   P_getAccelControl(line, line.args[2], accel, control);
+   int bits = line.args[2];
+   if(bits & ~3)
+      error.Printf(64, "Scroll_Texture_Offsets: invalid mode bits %d", bits);
+   P_getAccelControl(line, bits, accel, control);
    int divider = line.args[3];
    if(divider <= 0)
       divider = 1;
@@ -701,7 +704,10 @@ static void P_handleScrollByOffsetsParam(line_t &line)
       int triggernum = eindex(&line - lines);
       for(int linenum = -1; (linenum = P_FindLineFromTag(tag, linenum)) >= 0;)
          if(linenum != triggernum)
-            Add_Scroller(ScrollThinker::sc_side, delta.x, delta.y, control, lines[linenum].sidenum[0], accel);
+         {
+            Add_Scroller(ScrollThinker::sc_side, delta.x, delta.y, control,
+                         lines[linenum].sidenum[0], accel);
+         }
       return;
    }
 
