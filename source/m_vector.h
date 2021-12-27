@@ -259,7 +259,7 @@ struct v2float_t
       return x * other.y - other.x * y;
    }
 
-   operator bool() const
+   bool nonzero() const
    {
       return x || y;
    }

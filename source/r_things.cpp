@@ -955,7 +955,7 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
 
             if(linegen1.normal * (posf - linegen1.start) >= 0)
                return;
-            if(linegen2.normal && linegen2.normal * (posf - linegen2.start) >= 0)
+            if(linegen2.normal.nonzero() && linegen2.normal * (posf - linegen2.start) >= 0)
                return;
          }
       }
