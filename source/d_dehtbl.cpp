@@ -1784,7 +1784,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(SorcNukeSpec),
 
    // MaxW: MBF21 pointers
-   //POINTER(SpawnObject),
+   POINTER(SpawnObject),
    //POINTER(MonsterProjectile),
    //POINTER(MonsterBulletAttack),
    //POINTER(MonsterMeleeAttack),
