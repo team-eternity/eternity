@@ -172,8 +172,8 @@ static void R_clearPortalWindow(planecontext_t &context, const contextbounds_t &
 
    for(int i = 0; i < video.width; i++)
    {
-      window->top[i]    = view.height;
-      window->bottom[i] = -1.0f;
+      window->top[i]    = window->spritetop[i]    = view.height;
+      window->bottom[i] = window->spritebottom[i] = - 1.0f;
    }
 
    window->child    = nullptr;
@@ -211,9 +211,11 @@ static pwindow_t *newPortalWindow(planecontext_t &planecontext, portalcontext_t 
    {
       ret = estructalloctag(pwindow_t, 1, PU_LEVEL);
       
-      float *buf  = emalloctag(float *, 2*video.width*sizeof(float), PU_LEVEL, nullptr);
+      float *buf  = emalloctag(float *, 4*video.width*sizeof(float), PU_LEVEL, nullptr);
       ret->top    = buf;
       ret->bottom = buf + video.width;
+      ret->spritetop = buf + 2 * video.width;
+      ret->spritebottom = buf + 3 * video.width;
    }
 
    R_clearPortalWindow(planecontext, bounds, ret, noplanes);
@@ -366,7 +368,7 @@ static void R_createChildWindow(planecontext_t &planecontext, portalcontext_t &p
 //
 void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext,
                  const viewpoint_t &viewpoint,const contextbounds_t &bounds,
-                 pwindow_t *window, int x, float ytop, float ybottom)
+                 pwindow_t *window, int x, float ytop, float ybottom, float ysprtop, float ysprbot)
 {
    float windowtop, windowbottom;
 
@@ -386,6 +388,8 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext,
 
    windowtop    = window->top[x];
    windowbottom = window->bottom[x];
+   float windowsprtop = window->spritetop[x];
+   float windowsprbot = window->spritebottom[x];
 
 #ifdef RANGECHECK
    if(windowbottom > windowtop && 
@@ -409,6 +413,8 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext,
       {
          window->top[x]    = ytop;
          window->bottom[x] = ybottom;
+         window->spritetop[x] = ysprtop;
+         window->spritebottom[x] = ysprbot;
          return;
       }
 
@@ -418,7 +424,7 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext,
          if(!window->child)
             R_createChildWindow(planecontext, portalcontext, bounds, window);
 
-         R_WindowAdd(planecontext, portalcontext, viewpoint, bounds, window->child, x, ytop, ybottom);
+         R_WindowAdd(planecontext, portalcontext, viewpoint, bounds, window->child, x, ytop, ybottom, ysprtop, ysprbot);
          return;
       }
 
@@ -426,9 +432,13 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext,
       // must intersect; expand as needed
       if(ytop < windowtop)
          window->top[x] = ytop;
+      if(ysprtop < windowsprtop)
+         window->spritetop[x] = ysprtop;
 
       if(ybottom > windowbottom)
          window->bottom[x] = ybottom;
+      if(ysprbot > windowsprbot)
+         window->spritebottom[x] = ysprbot;
       return;
    }
 
@@ -439,6 +449,8 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext,
       window->minx = window->maxx = x;
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
+      window->spritetop[x] = ysprtop;
+      window->spritebottom[x] = ysprbot;
 
       // SoM 3/10/2005: store the viewz in the portal struct for later use
       window->vx = viewpoint.x;
@@ -454,6 +466,8 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext,
 
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
+      window->spritetop[x] = ysprtop;
+      window->spritebottom[x] = ysprbot;
       return;
    }
 
@@ -463,6 +477,8 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext,
 
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
+      window->spritetop[x] = ysprtop;
+      window->spritebottom[x] = ysprbot;
       return;
    }
 }
@@ -1218,7 +1234,7 @@ static void R_renderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
    portalcontext.portalrender.maxx = window->maxx;
 
    memset(spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
-   R_SetMaskedSilhouette(bounds, planecontext.ceilingclip, planecontext.floorclip);
+   R_SetMaskedSilhouette(bounds, window->spritetop, window->spritebottom);
 
    lastx  = viewpoint.x;
    lasty  = viewpoint.y;
@@ -1336,7 +1352,7 @@ static void R_renderLinkedPortal(rendercontext_t &context, pwindow_t *window)
    portalcontext.portalrender.maxx = window->maxx;
 
    memset(spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
-   R_SetMaskedSilhouette(bounds, planecontext.ceilingclip, planecontext.floorclip);
+   R_SetMaskedSilhouette(bounds, window->spritetop, window->spritebottom);
 
    lastx  = viewpoint.x;
    lasty  = viewpoint.y;
