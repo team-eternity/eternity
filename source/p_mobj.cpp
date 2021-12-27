@@ -1654,8 +1654,8 @@ void Mobj::Think()
 
    // Check mobj sprite projections before getting out
    // FIXME: may be insufficient
-   if(!removed)
-      P_checkMobjProjections(*this);
+   //if(!removed)
+   //   P_checkMobjProjections(*this);
 }
 
 //
