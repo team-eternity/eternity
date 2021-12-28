@@ -321,8 +321,6 @@ struct pwindow_t
 
    float *top;
    float *bottom;
-   float *spritetop;
-   float *spritebottom;
    int minx, maxx;
 
    R_WindowFunc  func;
@@ -341,7 +339,7 @@ struct pwindow_t
 // SoM: Cardboard
 void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext,
                  const viewpoint_t &viewpoint,const contextbounds_t &bounds,
-                 pwindow_t *window, int x, float ytop, float ybottom, float ysprtop, float ysprbot);
+                 pwindow_t *window, int x, float ytop, float ybottom);
 
 pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
                                    const viewpoint_t &viewpoint, const contextbounds_t &bounds,
