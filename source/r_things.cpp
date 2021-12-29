@@ -867,6 +867,77 @@ static void R_interpolatePSpritePosition(const pspdef_t &pspr, v2fixed_t &pos)
 }
 
 //
+// Projects the sprite back across the portal to the original layer
+//
+static void R_projectSpriteAcrossPortal(spritecontext_t &spritecontext, const vissprite_t &ovis,
+                                        const pwindow_t &pwindow, const viewpoint_t &view)
+{
+   fixed_t height = ovis.gzt - ovis.gz;
+   vissprite_t *bvis = R_newVisSprite(spritecontext);
+   *bvis = ovis;
+   if(view.angle != pwindow.vangle)
+   {
+      // rotated portal: apply the complex operation
+      v3double_t sprdelta =
+      {
+         M_FixedToDouble(ovis.gx - view.x),
+         M_FixedToDouble(ovis.gy - view.y),
+         M_FixedToDouble(ovis.gz - view.z)
+      };
+      double sprdist = hypot(hypot(sprdelta.x, sprdelta.y), sprdelta.z);
+      double sprang = atan2(sprdelta.y, sprdelta.x);
+      angle_t deltafang = pwindow.vangle - view.angle;
+      double targang = sprang - (double)deltafang / ANG180 * M_PI;
+      v3double_t targpos =
+      {
+         M_FixedToDouble(pwindow.vx),
+         M_FixedToDouble(pwindow.vy),
+         M_FixedToDouble(pwindow.vz)
+      };
+      targpos.x += sprdist * cos(targang);
+      targpos.y += sprdist * sin(targang);
+      targpos.z += sprdelta.z;
+
+      bvis->gx = M_DoubleToFixed(targpos.x);
+      bvis->gy = M_DoubleToFixed(targpos.y);
+      bvis->gz = M_DoubleToFixed(targpos.z);
+   }
+   else
+   {
+      // normal case: no rotation
+      bvis->gx += pwindow.vx - view.x;
+      bvis->gy += pwindow.vy - view.y;
+      bvis->gz += pwindow.vz - view.z;
+   }
+   bvis->gzt = bvis->gz + height;;
+   bvis->sector = eindex(R_PointInSubsector(bvis->gx, bvis->gy)->sector - sectors);
+
+   poststack_t *pstack = spritecontext.pstack;
+   vissprite_t *vissprites = spritecontext.vissprites;
+   maskedrange_t *masked = pstack[pwindow.postbspfrom].masked;
+   if(!masked) // can't have sprites on the source area
+      return;
+
+   // Now shift the mask ahead
+   int pstacksize = spritecontext.pstacksize;
+   vissprite_t mover = *bvis;
+
+   for(int i = pwindow.postbspfrom; i < pstacksize; ++i)
+   {
+      maskedrange_t *masked = pstack[i].masked;
+      if(!masked)
+         continue;
+      vissprite_t aux = vissprites[masked->lastsprite];
+      vissprites[masked->lastsprite] = mover;
+      mover = aux;
+      ++masked->lastsprite;
+      if(i > pwindow.postbspfrom)
+         ++masked->firstsprite;
+   }
+   *bvis = mover;
+}
+
+//
 // Generates a vissprite for a thing if it might be visible.
 // ioanch 20160109: added optional arguments for offsetting the sprite
 //
@@ -926,6 +997,7 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
 
    // ioanch 20160125: reject sprites in front of portal line when rendering
    // line portal
+   const pwindow_t *pwindow = nullptr;
    if(portalrender.active && portalrender.w->portal->type != R_SKYBOX)
    {
       v2fixed_t offsetpos = { thing->x, thing->y };
@@ -959,6 +1031,7 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
                return;
          }
       }
+      pwindow = portalrender.w;
    }
 
    rotx = (tempx * cb_viewpoint.cos) - (tempy * cb_viewpoint.sin);
@@ -1106,6 +1179,13 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
    // Cardboard
    vis->x1 = x1 <  bounds.fstartcolumn ? bounds.startcolumn   : intx1;
    vis->x2 = x2 >= bounds.fendcolumn   ? bounds.endcolumn - 1 : intx2;
+   if(pwindow)
+      for(int x = vis->x1; x <= vis->x2; ++x)
+         if(y1 < pwindow->top[x] || y2 > pwindow->bottom[x])
+         {
+            R_projectSpriteAcrossPortal(spritecontext, *vis, *pwindow, viewpoint);
+            break;
+         }
 
    vis->xstep = flip ? -(swidth * pstep) : swidth * pstep;
    vis->startx = flip ? swidth - 1.0f : 0.0f;
