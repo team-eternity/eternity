@@ -103,6 +103,13 @@ struct v2fixed_t
       return *this;
    }
 
+   v2fixed_t &operator /= (int scalar)
+   {
+      x /= scalar;
+      y /= scalar;
+      return *this;
+   }
+
    v2fixed_t operator-() const
    {
       return { -x, -y };

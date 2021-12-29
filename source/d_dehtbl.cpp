@@ -1785,7 +1785,7 @@ deh_bexptr deh_bexptrs[] =
 
    // MaxW: MBF21 pointers
    POINTER(SpawnObject),
-   //POINTER(MonsterProjectile),
+   POINTER(MonsterProjectile),
    //POINTER(MonsterBulletAttack),
    //POINTER(MonsterMeleeAttack),
    //POINTER(RadiusDamage),

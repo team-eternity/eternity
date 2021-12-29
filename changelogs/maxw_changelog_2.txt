@@ -169,7 +169,7 @@ Added "ripsound" EDF property, which is played when a ripper rips.
 --------------------------------------------------------------------------------
 2021/12/27
 [MBF21]
- * Added A_SpawnObject
+ * Added A_SpawnObject and A_MonsterProjectile.
 
 ================================================================================
 EOF
