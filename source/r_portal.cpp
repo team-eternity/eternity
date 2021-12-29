@@ -305,6 +305,7 @@ static pwindow_t *R_newPortalWindow(planecontext_t &planecontext, portalcontext_
 {
    pwindow_t *&windowhead = portalcontext.windowhead;
    pwindow_t *&windowlast = portalcontext.windowlast;
+   const portalrender_t &portalrender = portalcontext.portalrender;
 
    pwindow_t *ret = newPortalWindow(planecontext, portalcontext, bounds);
    
@@ -324,14 +325,27 @@ static pwindow_t *R_newPortalWindow(planecontext_t &planecontext, portalcontext_
    
    R_SetPortalFunction(ret);
    
+   // Also update the post-BSP stack reference. It always grow, since R_render*Portal always calls R_PushPost for its window.
    if(!windowhead)
+   {
       windowhead = windowlast = ret;
+      ret->postbspto = 1;
+   }
    else
    {
       windowlast->next = ret;
+
+      // increment it after the latest child of the last top-level window
+      int postbspto = windowlast->postbspto;
+      for(const pwindow_t *child = windowlast->child; child; child = child->child)
+         postbspto = child->postbspto;
+      ret->postbspto = postbspto + 1;
+
       windowlast = ret;
    }
    
+   ret->postbspfrom = portalrender.active ? portalrender.w->postbspto : 0;
+
    return ret;
 }
 
@@ -358,6 +372,8 @@ static void R_createChildWindow(planecontext_t &planecontext, portalcontext_t &p
    child->type     = parent->type;
    child->func     = parent->func;
    child->clipfunc = parent->clipfunc;
+   child->postbspfrom = parent->postbspfrom;
+   child->postbspto   = parent->postbspto + 1;  // due to how children are visited
 }
 
 //

@@ -334,6 +334,13 @@ struct pwindow_t
    pwindow_t *head, *child;
 
    planehash_t *poverlay;  // Portal overlays are now stored per window
+
+   // Post BSP stack tracing for full cross-portal sprite rendering
+   int postbspfrom;
+
+   // WARNING: the unique indices set to this value must match the order R_PushPost is called from
+   // the R_render*Portal routines!
+   int postbspto;
 };
 
 // SoM: Cardboard
