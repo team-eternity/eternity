@@ -1493,7 +1493,7 @@ static void deh_procFrame(DWFILE *fpin, char *line, MetaTable &gatheredData)
          deh_LogPrintf(" - args[%d] = %ld\n", argIndex, value);
 
          deh_createArgList(states[indexnum]);
-         E_SetArgFromNumber(states[indexnum]->args, argIndex, value);
+         E_SetArgFromNumber(states[indexnum]->args, argIndex, value, dehackedArg_e::YES);
          break;
       }
       case dehstateid_mbf21flags:

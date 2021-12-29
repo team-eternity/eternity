@@ -1491,7 +1491,7 @@ pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t
                continue;
             }
          }
-         else if(rover->line || rover->barrier.linegen)  // reject marked windows if not thru portal
+         else if(rover->line || rover->barrier.linegen.isSet())  // reject marked windows if not thru portal
             continue;
 
          return rover;

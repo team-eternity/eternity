@@ -18,10 +18,20 @@
 //----------------------------------------------------------------------------
 //
 // Purpose: MBF21 action functions
+// All of this code is derived from dsda-doom,
+// by Ryan Krafnick and Xaser Acheron, used under terms of the GPLv3.
 // Authors: Max Waine
 //
 
+#include "z_zone.h"
+
 #include "a_args.h"
+#include "a_common.h"
+#include "doomstat.h"
+#include "e_args.h"
+#include "m_vector.h"
+#include "p_mobj.h"
+#include "p_portalcross.h"
 
 //=============================================================================
 //
@@ -42,7 +52,68 @@
 //
 void A_SpawnObject(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args  = actionargs->args;
+   Mobj      *actor = actionargs->actor;
+   int        thingtype;
+   fixed_t    angle, fan;
+   fixed_t    dx, dy;
+   angle_t    an;
+   v3fixed_t  ofs, vel;
+   Mobj      *mo;
+
+   thingtype = E_ArgAsThingNumG0(args, 0);
+   if(!mbf21_temp || thingtype == -1)
+      return;
+
+   angle = E_ArgAsFixed(args, 1, 0);
+   ofs.x = E_ArgAsFixed(args, 2, 0);
+   ofs.y = E_ArgAsFixed(args, 3, 0);
+   ofs.z = E_ArgAsFixed(args, 4, 0);
+   vel.x = E_ArgAsFixed(args, 5, 0);
+   vel.y = E_ArgAsFixed(args, 6, 0);
+   vel.z = E_ArgAsFixed(args, 7, 0);
+
+   // calculate position offsets
+   an  = actor->angle + angle_t((int64_t(angle) << FRACBITS) / 360);
+   fan = an >> ANGLETOFINESHIFT;
+   dx  = FixedMul(ofs.x, finecosine[fan]) - FixedMul(ofs.y, finesine[fan]  );
+   dy  = FixedMul(ofs.x, finesine[fan]  ) + FixedMul(ofs.y, finecosine[fan]);
+
+   // calculate final horizontal position (portal aware)
+   const v2fixed_t hpos = P_LinePortalCrossing(*actor, dx, dy);
+
+   // spawn it, yo
+   mo = P_SpawnMobj(hpos.x, hpos.y, actor->z + ofs.z, thingtype);
+   if(!mo)
+      return;
+
+   // angle dangle
+   mo->angle = an;
+
+   // set velocity
+   mo->momx = FixedMul(vel.x, finecosine[fan]) - FixedMul(vel.y, finesine[fan]  );
+   mo->momy = FixedMul(vel.x, finesine[fan]  ) + FixedMul(vel.y, finecosine[fan]);
+   mo->momz = vel.z;
+
+   // if spawned object is a missile, set target+tracer
+   if(mo->info->flags & (MF_MISSILE | MF_BOUNCES))
+   {
+      // if spawner is also a missile, copy 'em
+      if(actor->info->flags & (MF_MISSILE | MF_BOUNCES))
+      {
+         P_SetTarget(&mo->target, actor->target);
+         P_SetTarget(&mo->tracer, actor->tracer);
+      }
+      // otherwise, set 'em as if a monster fired 'em
+      else
+      {
+         P_SetTarget(&mo->target, actor);
+         P_SetTarget(&mo->tracer, actor->target);
+      }
+   }
+
+   // [XA] don't bother with the dont-inherit-friendliness hack
+   // that exists in A_Spawn, 'cause WTF is that about anyway?
 }
 
 //
@@ -56,7 +127,47 @@ void A_SpawnObject(actionargs_t *actionargs)
 //
 void A_MonsterProjectile(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args  = actionargs->args;
+   Mobj      *actor = actionargs->actor;
+   int        thingtype;
+   fixed_t    angle, pitch;
+   fixed_t    spawnofs_xy, spawnofs_z;
+   angle_t    an;
+   Mobj      *mo;
+
+   thingtype = E_ArgAsThingNumG0(args, 0);
+   if(!mbf21_temp || !actor->target || thingtype == -1)
+      return;
+
+   angle       = E_ArgAsFixed(args, 1, 0);
+   pitch       = E_ArgAsFixed(args, 2, 0);
+   spawnofs_xy = E_ArgAsFixed(args, 3, 0);
+   spawnofs_z  = E_ArgAsFixed(args, 4, 0);
+
+   A_FaceTarget(actionargs);
+   mo = P_SpawnMissile(actor, actor->target, thingtype, DEFAULTMISSILEZ);
+   if(!mo)
+      return;
+
+   // adjust angle
+   mo->angle += angle_t((int64_t(angle) << 16) / 360);
+   an         = mo->angle >> ANGLETOFINESHIFT;
+   mo->momx   = FixedMul(mo->info->speed, finecosine[an]);
+   mo->momy   = FixedMul(mo->info->speed, finesine[an]);
+
+   // adjust pitch (approximated, using Doom's ye olde
+   // finetangent table; same method as monster aim)
+   mo->momz += FixedMul(mo->info->speed, DegToSlope(pitch));
+
+   // adjust position
+   an     = (actor->angle - ANG90) >> ANGLETOFINESHIFT;
+   mo->x += FixedMul(spawnofs_xy, finecosine[an]);
+   mo->y += FixedMul(spawnofs_xy, finesine[an]);
+   mo->z += spawnofs_z;
+
+   // always set the 'tracer' field, so this pointer
+   // can be used to fire seeker missiles at will.
+   P_SetTarget(&mo->tracer, actor->target);
 }
 
 //

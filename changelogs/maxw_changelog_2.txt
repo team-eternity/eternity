@@ -166,6 +166,11 @@ Added "ripsound" EDF property, which is played when a ripper rips.
  * Added support for dehacked "Melee range".
  * Added support for dehacked "Rip sound".
 
+--------------------------------------------------------------------------------
+2021/12/27
+[MBF21]
+ * Added A_SpawnObject and A_MonsterProjectile.
+
 ================================================================================
 EOF
 ================================================================================

@@ -76,7 +76,7 @@ bool E_AddArgToList(arglist_t *al, const char *value)
 // does not exist already, empty arguments will be added until that index 
 // is valid.
 //
-bool E_SetArg(arglist_t *al, int index, const char *value)
+bool E_SetArg(arglist_t *al, int index, const char *value, dehackedArg_e dehacked)
 {
    if(index >= EMAXARGS)
       return false;
@@ -99,6 +99,9 @@ bool E_SetArg(arglist_t *al, int index, const char *value)
    // any cached evaluation is now invalid
    al->values[index].type = EVALTYPE_NONE;
 
+   // track if set by dehacked or not
+   al->values[index].dehacked = dehacked == dehackedArg_e::YES;
+
    return true;
 }
 
@@ -107,13 +110,13 @@ bool E_SetArg(arglist_t *al, int index, const char *value)
 // This is for convenience in DeHackEd, which is not very smart about 
 // setting arguments.
 //
-bool E_SetArgFromNumber(arglist_t *al, int index, int value)
+bool E_SetArgFromNumber(arglist_t *al, int index, int value, dehackedArg_e dehacked)
 {
    char numbuffer[33];
 
    M_Itoa(value, numbuffer, 10);
 
-   return E_SetArg(al, index, numbuffer);
+   return E_SetArg(al, index, numbuffer, dehacked);
 }
 
 //
@@ -211,8 +214,11 @@ fixed_t E_ArgAsFixed(arglist_t *al, int index, fixed_t defvalue)
    if(eval.type != EVALTYPE_FIXED)
    {
       // calculate the value and cache it
-      eval.type    = EVALTYPE_FIXED;
-      eval.value.x = M_DoubleToFixed(strtod(al->args[index], nullptr));
+      eval.type = EVALTYPE_FIXED;
+      if(eval.dehacked)
+         eval.value.x = fixed_t(strtol(al->args[index], nullptr, 0));
+      else
+         eval.value.x = M_DoubleToFixed(strtod(al->args[index], nullptr));
    }
 
    return eval.value.x;
