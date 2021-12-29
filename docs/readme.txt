@@ -221,7 +221,7 @@ with any concerns.
     definitions! Please check your work in progress and adjust the fields.
     Known released wads have been checked not to use these dynamic scrollers,
     but if any are affected anyway, we'll add compatibility exceptions in EDF.
-    
+
   * Added sector actions for entering and leaving a sector, EESectorActionEnter
     and EESectorActionExit. They have doomednum 9997 and 9998 respectively, the
     same  as ZDoom.
@@ -229,6 +229,8 @@ with any concerns.
   * Added MBF21 blocklandmonsters linedef flag
   * Added MBF21 sector instant death generalized types
   * Added MBF21 wall scroll specials
+  * Updated the Scroll_Texture_Offsets parameterized linedef type to support the
+    MBF21 wall scroller features, using the same args as in GZDoom.
   * Fixed the Elevator_MoveToFloor and classic counterpart to work even if
     activator doesn't have a linedef.
   * If the SetActorPosition ACS function uses fog, make sure to spawn the fog in
