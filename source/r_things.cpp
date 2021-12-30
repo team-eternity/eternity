@@ -1194,13 +1194,6 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
    // Cardboard
    vis->x1 = x1 <  bounds.fstartcolumn ? bounds.startcolumn   : intx1;
    vis->x2 = x2 >= bounds.fendcolumn   ? bounds.endcolumn - 1 : intx2;
-   if(pwindow)
-      for(int x = vis->x1; x <= vis->x2; ++x)
-         if(y1 < pwindow->top[x] || y2 > pwindow->bottom[x])
-         {
-            R_projectSpriteAcrossPortal(spritecontext, *vis, *pwindow, viewpoint);
-            break;
-         }
 
    vis->xstep = flip ? -(swidth * pstep) : swidth * pstep;
    vis->startx = flip ? swidth - 1.0f : 0.0f;
@@ -1275,6 +1268,14 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
          vis->tranmaplump = rTintTableIndex;
       }
    }
+
+   if(pwindow)
+      for(int x = vis->x1; x <= vis->x2; ++x)
+         if(y1 < pwindow->top[x] || y2 > pwindow->bottom[x])
+         {
+            R_projectSpriteAcrossPortal(spritecontext, *vis, *pwindow, viewpoint);
+            break;
+         }
 }
 
 //

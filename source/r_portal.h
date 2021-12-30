@@ -337,10 +337,6 @@ struct pwindow_t
 
    // Post BSP stack tracing for full cross-portal sprite rendering
    int postbspfrom;
-
-   // WARNING: the unique indices set to this value must match the order R_PushPost is called from
-   // the R_render*Portal routines!
-   int postbspto;
 };
 
 // SoM: Cardboard
@@ -349,9 +345,11 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext,
                  pwindow_t *window, int x, float ytop, float ybottom);
 
 pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
+                                   const spritecontext_t &spritecontext,
                                    const viewpoint_t &viewpoint, const contextbounds_t &bounds,
                                    surf_e surf, const surface_t &surface);
 pwindow_t *R_GetLinePortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
+                                 const spritecontext_t &spritecontext,
                                  const viewpoint_t &viewpoint,const contextbounds_t &bounds,
                                  portal_t *portal, const seg_t *seg);
 
