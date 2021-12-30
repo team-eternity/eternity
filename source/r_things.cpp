@@ -83,6 +83,11 @@ extern int global_cmap_index; // haleyjd: NGCS
 
 #define CLIP_UNDEF (-2)
 
+enum
+{
+   MAX_ROTATIONS = 8
+};
+
 //=============================================================================
 //
 // Globals
@@ -312,11 +317,11 @@ void R_SetMaskedSilhouette(const contextbounds_t &bounds,
 //
 // Local function for R_InitSprites.
 //
-static void R_installSpriteLump(lumpinfo_t *lump, int lumpnum, unsigned frame,
+static void R_installSpriteLump(const lumpinfo_t *lump, int lumpnum, unsigned frame,
                                 unsigned rotation, bool flipped,
                                 spriteframe_t *const sprtemp, int &maxframe)
 {
-   if(frame >= MAX_SPRITE_FRAMES || rotation > 8)
+   if(frame >= MAX_SPRITE_FRAMES || rotation > MAX_ROTATIONS)
       I_Error("R_installSpriteLump: Bad frame characters in lump %s\n", lump->name);
 
    if((int)frame > maxframe)
@@ -325,7 +330,7 @@ static void R_installSpriteLump(lumpinfo_t *lump, int lumpnum, unsigned frame,
    if(rotation == 0)
    {
       // the lump should be used for all rotations
-      for(int r = 0; r < 8; r++)
+      for(int r = 0; r < MAX_ROTATIONS; r++)
       {
          if(sprtemp[frame].lump[r]==-1)
          {
@@ -468,7 +473,7 @@ static void R_initSpriteDefs(char **namelist)
                   
                case 1:
                   // must have all 8 frames
-                  for(int rotation = 0; rotation < 8; rotation++)
+                  for(int rotation = 0; rotation < MAX_ROTATIONS; rotation++)
                   {
                      if(sprtemp[frame].lump[rotation] == -1)
                      {
