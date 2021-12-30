@@ -942,9 +942,13 @@ static void R_projectSpriteAcrossPortal(spritecontext_t &spritecontext, const vi
       maskedrange_t *masked = pstack[i].masked;
       if(!masked)
          continue;
-      vissprite_t aux = vissprites[masked->lastsprite];
-      vissprites[masked->lastsprite] = mover;
-      mover = aux;
+      vissprite_t aux;
+      if(i == pwindow.postbspfrom || masked->lastsprite > masked->firstsprite)
+      {
+         aux = vissprites[masked->lastsprite];
+         vissprites[masked->lastsprite] = mover;
+         mover = aux;
+      }
       ++masked->lastsprite;
       if(i > pwindow.postbspfrom)
          ++masked->firstsprite;
