@@ -322,7 +322,10 @@ static void R_installSpriteLump(const lumpinfo_t *lump, int lumpnum, unsigned fr
                                 spriteframe_t *const sprtemp, int &maxframe)
 {
    if(frame >= MAX_SPRITE_FRAMES || rotation > MAX_ROTATIONS)
-      I_Error("R_installSpriteLump: Bad frame characters in lump %s\n", lump->name);
+   {
+      C_Printf(FC_ERROR "R_installSpriteLump: Bad frame characters in lump %s\n", lump->name);
+      return;
+   }
 
    if((int)frame > maxframe)
       maxframe = frame;
