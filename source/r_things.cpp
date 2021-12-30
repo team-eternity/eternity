@@ -460,8 +460,9 @@ static void R_initSpriteDefs(char **namelist)
          while((j = hash[j].next) >= 0);
 
          // check the frames that were found for completeness
-         if((sprites[i].numframes = ++maxframe))  // killough 1/31/98
+         if(++maxframe)  // killough 1/31/98
          {
+            bool valid = true;
             for(int frame = 0; frame < maxframe; frame++)
             {
                switch(sprtemp[frame].rotate)
@@ -480,16 +481,22 @@ static void R_initSpriteDefs(char **namelist)
                   {
                      if(sprtemp[frame].lump[rotation] == -1)
                      {
-                        I_Error ("R_InitSprites: Sprite %.8s frame %c is missing rotations\n",
+                        C_Printf(FC_ERROR "R_InitSprites: Sprite %.8s frame %c is missing rotations\n",
                                  namelist[i], frame + 'A');
+                        valid = false;
+                        break;
                      }
                   }
                   break;
                }
             }
-            // allocate space for the frames present and copy sprtemp to it
-            sprites[i].spriteframes = estructalloctag(spriteframe_t, maxframe, PU_RENDERER);
-            memcpy(sprites[i].spriteframes, sprtemp, maxframe*sizeof(spriteframe_t));
+            if(valid)
+            {
+               // allocate space for the frames present and copy sprtemp to it
+               sprites[i].numframes = maxframe;
+               sprites[i].spriteframes = estructalloctag(spriteframe_t, maxframe, PU_RENDERER);
+               memcpy(sprites[i].spriteframes, sprtemp, maxframe*sizeof(spriteframe_t));
+            }
          }
       }
       else
