@@ -738,9 +738,7 @@ void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc,
 //
 //  mfloorclip and mceilingclip should also be set.
 //
-static void R_drawVisSprite(spritecontext_t &context,
-                            const contextbounds_t &bounds,
-                            vissprite_t *vis, int x1, int x2,
+static void R_drawVisSprite(const contextbounds_t &bounds, vissprite_t *vis,
                             float *const mfloorclip, float *const mceilingclip)
 {
    column_t *tcolumn;
@@ -1511,8 +1509,7 @@ static void R_drawPSprite(const pspdef_t *psp,
    oldycenter = view.ycenter;
    view.ycenter = (view.height * 0.5f);
    
-   R_drawVisSprite(r_globalcontext.spritecontext, r_globalcontext.bounds,
-                   vis, vis->x1, vis->x2, mfloorclip, mceilingclip);
+   R_drawVisSprite(r_globalcontext.bounds, vis, mfloorclip, mceilingclip);
    
    view.ycenter = oldycenter;
 }
@@ -1892,7 +1889,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
          cliptop[x] = ptop[x - bounds.startcolumn];
    }
 
-   R_drawVisSprite(spritecontext, bounds, spr, spr->x1, spr->x2, clipbot, cliptop);
+   R_drawVisSprite(bounds, spr, clipbot, cliptop);
 }
 
 //
