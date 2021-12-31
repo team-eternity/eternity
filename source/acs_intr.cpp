@@ -110,12 +110,12 @@ ACSEnvironment::ACSEnvironment() :
    addCodeDataACS0( 64, {"W",       0, addCallFunc(ACS_CF_PolyWait)});
    addCodeDataACS0( 65, {"",        2, addCallFunc(ACS_CF_ChangeFloor)});
    addCodeDataACS0( 66, {"WWS",     0, addCallFunc(ACS_CF_ChangeFloor)});
-   addCodeDataACS0( 67, {"",        2, addCallFunc(ACS_CF_ChangeCeil)});
-   addCodeDataACS0( 68, {"WWS",     0, addCallFunc(ACS_CF_ChangeCeil)});
+   addCodeDataACS0( 67, {"",        2, addCallFunc(ACS_CF_ChangeCeiling)});
+   addCodeDataACS0( 68, {"WWS",     0, addCallFunc(ACS_CF_ChangeCeiling)});
    // 69-79: ACSVM internal codes.
    addCodeDataACS0( 80, {"",        0, addCallFunc(ACS_CF_LineSide)});
    // 81-82: ACSVM internal codes.
-   addCodeDataACS0( 83, {"",        0, addCallFunc(ACS_CF_ClrLineSpec)});
+   addCodeDataACS0( 83, {"",        0, addCallFunc(ACS_CF_ClearLineSpecial)});
    // 84-85: ACSVM internal codes.
    addCodeDataACS0( 86, {"",        0, addCallFunc(ACS_CF_EndPrint)});
    // 87-89: ACSVM internal codes.
@@ -125,20 +125,20 @@ ACSEnvironment::ACSEnvironment() :
    addCodeDataACS0( 93, {"",        0, addCallFunc(ACS_CF_Timer)});
    addCodeDataACS0( 94, {"",        2, addCallFunc(ACS_CF_SectorSound)});
    addCodeDataACS0( 95, {"",        2, addCallFunc(ACS_CF_AmbientSound)});
-   addCodeDataACS0( 96, {"",        1, addCallFunc(ACS_CF_SoundSeq)});
-   addCodeDataACS0( 97, {"",        4, addCallFunc(ACS_CF_SetLineTex)});
-   addCodeDataACS0( 98, {"",        2, addCallFunc(ACS_CF_SetLineBlock)});
+   addCodeDataACS0( 96, {"",        1, addCallFunc(ACS_CF_SoundSequence)});
+   addCodeDataACS0( 97, {"",        4, addCallFunc(ACS_CF_SetLineTexture)});
+   addCodeDataACS0( 98, {"",        2, addCallFunc(ACS_CF_SetLineBlocking)});
    addCodeDataACS0( 99, {"",        7, addCallFunc(ACS_CF_SetLineSpecial)});
    addCodeDataACS0(100, {"",        3, addCallFunc(ACS_CF_ThingSound)});
    addCodeDataACS0(101, {"",        0, addCallFunc(ACS_CF_EndPrintBold)});
    addCodeDataACS0(102, {"",        2, addCallFunc(ACS_CF_ActivatorSound)});
-   addCodeDataACS0(103, {"",        2, addCallFunc(ACS_CF_AmbientSoundLoc)});
-   addCodeDataACS0(104, {"",        2, addCallFunc(ACS_CF_SetLineBlockMon)});
+   addCodeDataACS0(103, {"",        2, addCallFunc(ACS_CF_LocalAmbientSound)});
+   addCodeDataACS0(104, {"",        2, addCallFunc(ACS_CF_SetLineMonsterBlocking)});
    // 105-118: Unused codes.
  //addCodeDATAACS0(119, {"",        0, addCallFunc(ACS_CF_ActivatorTream)});
-   addCodeDataACS0(120, {"",        0, addCallFunc(ACS_CF_ActivatorHealth)});
-   addCodeDataACS0(121, {"",        0, addCallFunc(ACS_CF_ActivatorArmor)});
-   addCodeDataACS0(122, {"",        0, addCallFunc(ACS_CF_ActivatorFrags)});
+   addCodeDataACS0(120, {"",        0, addCallFunc(ACS_CF_PlayerHealth)});
+   addCodeDataACS0(121, {"",        0, addCallFunc(ACS_CF_PlayerArmorPoints)});
+   addCodeDataACS0(122, {"",        0, addCallFunc(ACS_CF_PlayerFrags)});
    // 123-123: Unused codes.
  //addCodeDataACS0(124, {"",        0, addCallFunc(ACS_CF_BlueTeamCount)});
  //addCodeDataACS0(125, {"",        0, addCallFunc(ACS_CF_RedTeamCount)});
@@ -160,18 +160,18 @@ ACSEnvironment::ACSEnvironment() :
  //addCodeDataACS0(142, {"",        0, addCallFunc(ACS_CF_ClrInventory)});
  //addCodeDataACS0(143, {"",        2, addCallFunc(ACS_CF_AddInventory)});
  //addCodeDataACS0(144, {"WSW",     0, addCallFunc(ACS_CF_AddInventory)});
-   addCodeDataACS0(145, {"",        2, addCallFunc(ACS_CF_SubInventory)});
-   addCodeDataACS0(146, {"WSW",     0, addCallFunc(ACS_CF_SubInventory)});
-   addCodeDataACS0(147, {"",        1, addCallFunc(ACS_CF_GetInventory)});
-   addCodeDataACS0(148, {"WS",      0, addCallFunc(ACS_CF_GetInventory)});
-   addCodeDataACS0(149, {"",        6, addCallFunc(ACS_CF_SpawnPoint)});
-   addCodeDataACS0(150, {"WSWWWWW", 0, addCallFunc(ACS_CF_SpawnPoint)});
+   addCodeDataACS0(145, {"",        2, addCallFunc(ACS_CF_TakeInventory)});
+   addCodeDataACS0(146, {"WSW",     0, addCallFunc(ACS_CF_TakeInventory)});
+   addCodeDataACS0(147, {"",        1, addCallFunc(ACS_CF_CheckInventory)});
+   addCodeDataACS0(148, {"WS",      0, addCallFunc(ACS_CF_CheckInventory)});
+   addCodeDataACS0(149, {"",        6, addCallFunc(ACS_CF_Spawn)});
+   addCodeDataACS0(150, {"WSWWWWW", 0, addCallFunc(ACS_CF_Spawn)});
    addCodeDataACS0(151, {"",        4, addCallFunc(ACS_CF_SpawnSpot)});
    addCodeDataACS0(152, {"WSWWW",   0, addCallFunc(ACS_CF_SpawnSpot)});
    addCodeDataACS0(153, {"",        3, addCallFunc(ACS_CF_SetMusic)});
    addCodeDataACS0(154, {"WSWW",    0, addCallFunc(ACS_CF_SetMusic)});
-   addCodeDataACS0(155, {"",        3, addCallFunc(ACS_CF_SetMusicLoc)});
-   addCodeDataACS0(156, {"WSWW",    0, addCallFunc(ACS_CF_SetMusicLoc)});
+   addCodeDataACS0(155, {"",        3, addCallFunc(ACS_CF_LocalSetMusic)});
+   addCodeDataACS0(156, {"WSWW",    0, addCallFunc(ACS_CF_LocalSetMusic)});
    // 157-157: ACSVM internal codes.
  //addCodeDataACS0(158, {"",        1, addCallFunc(ACS_CF_PrintLocale)});
  //addCodeDataACS0(159, {"",        0, addCallFunc(ACS_CF_PrintHudMore)});
@@ -184,7 +184,7 @@ ACSEnvironment::ACSEnvironment() :
    // 167-173: ACSVM internal codes.
    addCodeDataACS0(174, {"BB",      0, addCallFunc(ACS_CF_Random)});
    // 175-179: ACSVM internal codes.
-   addCodeDataACS0(180, {"",        7, addCallFunc(ACS_CF_SetThingSpec)});
+   addCodeDataACS0(180, {"",        7, addCallFunc(ACS_CF_SetThingSpecial)});
    // 181-189: ACSVM internal codes.
  //addCodeDataACS0(190, {"",        5, addCallFunc(ACS_CF_FadeTo)});
  //addCodeDataACS0(191, {"",        9, addCallFunc(ACS_CF_FadeRange)});
@@ -192,9 +192,9 @@ ACSEnvironment::ACSEnvironment() :
  //addCodeDataACS0(193, {"",        1, addCallFunc(ACS_CF_PlayMovie)});
  //addCodeDataACS0(194, {"",        8, addCallFunc(ACS_CF_SetFloorTrig)});
  //addCodeDataACS0(195, {"",        8, addCallFunc(ACS_CF_SetCeilTrig)});
-   addCodeDataACS0(196, {"",        1, addCallFunc(ACS_CF_GetThingX)});
-   addCodeDataACS0(197, {"",        1, addCallFunc(ACS_CF_GetThingY)});
-   addCodeDataACS0(198, {"",        1, addCallFunc(ACS_CF_GetThingZ)});
+   addCodeDataACS0(196, {"",        1, addCallFunc(ACS_CF_GetActorX)});
+   addCodeDataACS0(197, {"",        1, addCallFunc(ACS_CF_GetActorY)});
+   addCodeDataACS0(198, {"",        1, addCallFunc(ACS_CF_GetActorZ)});
  //addCodeDataACS0(199, {"",        1, addCallFunc(ACS_CF_transStart)});
  //addCodeDataACS0(200, {"",        4, addCallFunc(ACS_CF_TransPalette)});
  //addCodeDataACS0(201, {"",        8, addCallFunc(ACS_CF_TransRGB)});
@@ -203,31 +203,31 @@ ACSEnvironment::ACSEnvironment() :
    // 218-219: Unused codes.
    addCodeDataACS0(220, {"",        1, addCallFunc(ACS_CF_Sin)});
    addCodeDataACS0(221, {"",        1, addCallFunc(ACS_CF_Cos)});
-   addCodeDataACS0(222, {"",        2, addCallFunc(ACS_CF_ATan2)});
+   addCodeDataACS0(222, {"",        2, addCallFunc(ACS_CF_VectorAngle)});
    addCodeDataACS0(223, {"",        1, addCallFunc(ACS_CF_CheckWeapon)});
    addCodeDataACS0(224, {"",        1, addCallFunc(ACS_CF_SetWeapon)});
    // 225-243: ACSVM internal codes.
  //addCodeDataACS0(244, {"",        2, addCallFunc(ACS_CF_SetMarineWeapon)});
-   addCodeDataACS0(245, {"",        3, addCallFunc(ACS_CF_SetThingProp)});
-   addCodeDataACS0(246, {"",        2, addCallFunc(ACS_CF_GetThingProp)});
+   addCodeDataACS0(245, {"",        3, addCallFunc(ACS_CF_SetActorProperty)});
+   addCodeDataACS0(246, {"",        2, addCallFunc(ACS_CF_GetActorProperty)});
    addCodeDataACS0(247, {"",        0, addCallFunc(ACS_CF_PlayerNumber)});
    addCodeDataACS0(248, {"",        0, addCallFunc(ACS_CF_ActivatorTID)});
  //addCodeDataACS0(249, {"",        2, addCallFunc(ACS_CF_SetMarineSprite)});
    addCodeDataACS0(250, {"",        0, addCallFunc(ACS_CF_GetScreenW)});
    addCodeDataACS0(251, {"",        0, addCallFunc(ACS_CF_GetScreenH)});
-   addCodeDataACS0(252, {"",        7, addCallFunc(ACS_CF_ThingMissile)});
+   addCodeDataACS0(252, {"",        7, addCallFunc(ACS_CF_Thing_Projectile2)});
    // 253-253: ACSVM internal codes.
  //addCodeDataACS0(254, {"",        3, addCallFunc(ACS_CF_SetHudSize)});
    addCodeDataACS0(255, {"",        1, addCallFunc(ACS_CF_GetCVar)});
    // 256-257: ACSVM internal codes.
-   addCodeDataACS0(258, {"",        0, addCallFunc(ACS_CF_LineOffsetY)});
-   addCodeDataACS0(259, {"",        1, addCallFunc(ACS_CF_GetThingFloorZ)});
-   addCodeDataACS0(260, {"",        1, addCallFunc(ACS_CF_GetThingAngle)});
+   addCodeDataACS0(258, {"",        0, addCallFunc(ACS_CF_GetLineRowOffset)});
+   addCodeDataACS0(259, {"",        1, addCallFunc(ACS_CF_GetActorFloorZ)});
+   addCodeDataACS0(260, {"",        1, addCallFunc(ACS_CF_GetActorAngle)});
    addCodeDataACS0(261, {"",        3, addCallFunc(ACS_CF_GetSectorFloorZ)});
-   addCodeDataACS0(262, {"",        3, addCallFunc(ACS_CF_GetSectorCeilZ)});
+   addCodeDataACS0(262, {"",        3, addCallFunc(ACS_CF_GetSectorCeilingZ)});
    // 263-263: ACSVM internal codes.
-   addCodeDataACS0(264, {"",        0, addCallFunc(ACS_CF_ActivatorSigil)});
-   addCodeDataACS0(265, {"",        1, addCallFunc(ACS_CF_GetLevelProp)});
+   addCodeDataACS0(264, {"",        0, addCallFunc(ACS_CF_GetSigilPieces)});
+   addCodeDataACS0(265, {"",        1, addCallFunc(ACS_CF_GetLevelInfo)});
  //addCodeDataACS0(266, {"",        2, addCallFunc(ACS_CF_ChangeSky)});
  //addCodeDataACS0(267, {"",        1, addCallFunc(ACS_CF_PlayerInGame)});
  //addCodeDataACS0(268, {"",        1, addCallFunc(ACS_CF_PlayerIsBot)});
@@ -236,43 +236,43 @@ ACSEnvironment::ACSEnvironment() :
  //addCodeDataACS0(271, {"",        1, addCallFunc(ACS_CF_GetAmmoCap)});
  //addCodeDataACS0(272, {"",        2, addCallFunc(ACS_CF_SetAmmoCap)});
    // 273-275: ACSVM internal codes.
-   addCodeDataACS0(276, {"",        2, addCallFunc(ACS_CF_SetThingAngle)});
+   addCodeDataACS0(276, {"",        2, addCallFunc(ACS_CF_SetActorAngle)});
    // 277-279: Unused codes.
-   addCodeDataACS0(280, {"",        7, addCallFunc(ACS_CF_SpawnMissile)});
-   addCodeDataACS0(281, {"",        1, addCallFunc(ACS_CF_GetSectorLight)});
-   addCodeDataACS0(282, {"",        1, addCallFunc(ACS_CF_GetThingCeilZ)});
-   addCodeDataACS0(283, {"",        5, addCallFunc(ACS_CF_SetThingPos)});
+   addCodeDataACS0(280, {"",        7, addCallFunc(ACS_CF_SpawnProjectile)});
+   addCodeDataACS0(281, {"",        1, addCallFunc(ACS_CF_GetSectorLightLevel)});
+   addCodeDataACS0(282, {"",        1, addCallFunc(ACS_CF_GetActorCeilingZ)});
+   addCodeDataACS0(283, {"",        5, addCallFunc(ACS_CF_SetActorPosition)});
  //addCodeDataACS0(284, {"",        1, addCallFunc(ACS_CF_ClrThingInv)});
  //addCodeDataACS0(285, {"",        3, addCallFunc(ACS_CF_AddThingInv)});
  //addCodeDataACS0(286, {"",        3, addCallFunc(ACS_CF_SubThingInv)});
  //addCodeDataACS0(287, {"",        2, addCallFunc(ACS_CF_GetThingInv)});
-   addCodeDataACS0(288, {"",        2, addCallFunc(ACS_CF_ThingCountStr)});
-   addCodeDataACS0(289, {"",        3, addCallFunc(ACS_CF_SpawnSpotAng)});
+   addCodeDataACS0(288, {"",        2, addCallFunc(ACS_CF_ThingCountName)});
+   addCodeDataACS0(289, {"",        3, addCallFunc(ACS_CF_SpawnSpotFacing)});
  //addCodeDataACS0(290, {"",        1, addCallFunc(ACS_CF_PlayerClass)});
    // 291-325: ACSVM internal codes.
  //addCodeDataACS0(326, {"",        2, addCallFunc(ACS_CF_GetPlayerProp)});
  //addCodeDataACS0(327, {"",        4, addCallFunc(ACS_CF_ChangeLevel)});
    addCodeDataACS0(328, {"",        5, addCallFunc(ACS_CF_SectorDamage)});
-   addCodeDataACS0(329, {"",        3, addCallFunc(ACS_CF_ReplaceTex)});
+   addCodeDataACS0(329, {"",        3, addCallFunc(ACS_CF_ReplaceTextures)});
    // 330-330: ACSVM internal codes.
-   addCodeDataACS0(331, {"",        1, addCallFunc(ACS_CF_GetThingPitch)});
-   addCodeDataACS0(332, {"",        2, addCallFunc(ACS_CF_SetThingPitch)});
+   addCodeDataACS0(331, {"",        1, addCallFunc(ACS_CF_GetActorPitch)});
+   addCodeDataACS0(332, {"",        2, addCallFunc(ACS_CF_SetActorPitch)});
  //addCodeDataACS0(333, {"",        1, addCallFunc(ACS_CF_PrintBind)});
-   addCodeDataACS0(334, {"",        3, addCallFunc(ACS_CF_SetThingState)});
-   addCodeDataACS0(335, {"",        3, addCallFunc(ACS_CF_ThingDamage)});
+   addCodeDataACS0(334, {"",        3, addCallFunc(ACS_CF_SetActorState)});
+   addCodeDataACS0(335, {"",        3, addCallFunc(ACS_CF_Thing_Damage2)});
  //addCodeDataACS0(336, {"",        1, addCallFunc(ACS_CF_UseInventory)});
  //addCodeDataACS0(337, {"",        2, addCallFunc(ACS_CF_UseThingInv)});
-   addCodeDataACS0(338, {"",        2, addCallFunc(ACS_CF_ChkThingCeilTex)});
-   addCodeDataACS0(339, {"",        2, addCallFunc(ACS_CF_ChkThingFloorTex)});
-   addCodeDataACS0(340, {"",        1, addCallFunc(ACS_CF_GetThingLight)});
+   addCodeDataACS0(338, {"",        2, addCallFunc(ACS_CF_CheckActorCeilingTexture)});
+   addCodeDataACS0(339, {"",        2, addCallFunc(ACS_CF_CheckActorFloorTexture)});
+   addCodeDataACS0(340, {"",        1, addCallFunc(ACS_CF_GetActorLightLevel)});
  //addCodeDataACS0(341, {"",        1, addCallFunc(ACS_CF_SetMugState)});
-   addCodeDataACS0(342, {"",        3, addCallFunc(ACS_CF_ThingCountSec)});
-   addCodeDataACS0(343, {"",        3, addCallFunc(ACS_CF_ThingCountSecStr)});
+   addCodeDataACS0(342, {"",        3, addCallFunc(ACS_CF_ThingCountSector)});
+   addCodeDataACS0(343, {"",        3, addCallFunc(ACS_CF_ThingCountNameSector)});
  //addCodeDataACS0(344, {"",        1, addCallFunc(ACS_CF_GetPlayerCam)});
  //addCodeDataACS0(345, {"",        7, addCallFunc(ACS_CF_MorphThing)});
  //addCodeDataACS0(346, {"",        2, addCallFunc(ACS_CF_UnmorphThing)});
    addCodeDataACS0(347, {"",        2, addCallFunc(ACS_CF_GetPlayerInput)});
-   addCodeDataACS0(348, {"",        1, addCallFunc(ACS_CF_ClassifyThing)});
+   addCodeDataACS0(348, {"",        1, addCallFunc(ACS_CF_ClassifyActor)});
    // 349-361: ACSVM internal codes.
  //addCodeDataACS0(362, {"",        8, addCallFunc(ACS_CF_TransDesat)});
    // 363-380: ACSVM internal codes.
@@ -288,48 +288,48 @@ ACSEnvironment::ACSEnvironment() :
  //addFuncDataACS0(  6, addCallFunc(ACS_CF_GetSectorUDMFFixed));
  //addFuncDataACS0(  7, addCallFunc(ACS_CF_GetSideUDMFInt));
  //addFuncDataACS0(  8, addCallFunc(ACS_CF_GetSideUDMFFixed));
-   addFuncDataACS0(  9, addCallFunc(ACS_CF_GetThingMomX));
-   addFuncDataACS0( 10, addCallFunc(ACS_CF_GetThingMomY));
-   addFuncDataACS0( 11, addCallFunc(ACS_CF_GetThingMomZ));
+   addFuncDataACS0(  9, addCallFunc(ACS_CF_GetActorVelX));
+   addFuncDataACS0( 10, addCallFunc(ACS_CF_GetActorVelY));
+   addFuncDataACS0( 11, addCallFunc(ACS_CF_GetActorVelZ));
    addFuncDataACS0( 12, addCallFunc(ACS_CF_SetActivator));
    addFuncDataACS0( 13, addCallFunc(ACS_CF_SetActivatorToTarget));
  //addFuncDataACS0( 14, addCallFunc(ACS_CF_GetThingViewHeight));
    // 15-15: ACSVM internal funcs.
  //addFuncDataACS0( 16, addCallFunc(ACS_CF_GetPlayerAir));
  //addFuncDataACS0( 17, addCallFunc(ACS_CF_SetPlayerAir));
-   addFuncDataACS0( 18, addCallFunc(ACS_CF_SetSkyDelta));
+   addFuncDataACS0( 18, addCallFunc(ACS_CF_SetSkyScrollSpeed));
  //addFuncDataACS0( 19, addCallFunc(ACS_CF_GetPlayerArmor));
-   addFuncDataACS0( 20, addCallFunc(ACS_CF_SpawnSpotF));
-   addFuncDataACS0( 21, addCallFunc(ACS_CF_SpawnSpotAngF));
-   addFuncDataACS0( 22, addCallFunc(ACS_CF_ChkThingProp));
-   addFuncDataACS0( 23, addCallFunc(ACS_CF_SetThingMom));
+   addFuncDataACS0( 20, addCallFunc(ACS_CF_SpawnSpotForced));
+   addFuncDataACS0( 21, addCallFunc(ACS_CF_SpawnSpotFacingForced));
+   addFuncDataACS0( 22, addCallFunc(ACS_CF_CheckActorProperty));
+   addFuncDataACS0( 23, addCallFunc(ACS_CF_SetActorVelocity));
  //addFuncDataACS0( 24, addCallFunc(ACS_CF_SetThingUserVar));
  //addFuncDataACS0( 25, addCallFunc(ACS_CF_GetThingUserVar));
-   addFuncDataACS0( 26, addCallFunc(ACS_CF_RadiusQuake));
-   addFuncDataACS0( 27, addCallFunc(ACS_CF_ChkThingType));
+   addFuncDataACS0( 26, addCallFunc(ACS_CF_Radius_Quake2));
+   addFuncDataACS0( 27, addCallFunc(ACS_CF_CheckActorClass));
  //addFuncDataACS0( 28, addCallFunc(ACS_CF_SetThingUserArr));
  //addFuncDataACS0( 29, addCallFunc(ACS_CF_GetThingUserArr));
-   addFuncDataACS0( 30, addCallFunc(ACS_CF_ThingSoundSeq));
+   addFuncDataACS0( 30, addCallFunc(ACS_CF_SoundSequenceOnActor));
  //addFuncDataACS0( 31, addCallFunc(ACS_CF_SectorSoundSeq));
  //addFuncDataACS0( 32, addCallFunc(ACS_CF_PolyojbSoundSeq));
    addFuncDataACS0( 33, addCallFunc(ACS_CF_GetPolyobjX));
    addFuncDataACS0( 34, addCallFunc(ACS_CF_GetPolyobjY));
    addFuncDataACS0( 35, addCallFunc(ACS_CF_CheckSight));
-   addFuncDataACS0( 36, addCallFunc(ACS_CF_SpawnPointF));
+   addFuncDataACS0( 36, addCallFunc(ACS_CF_SpawnForced));
  //addFuncDataACS0( 37, addCallFunc(ACS_CF_AnnouncerSound));
  //addFuncDataACS0( 38, addCallFunc(ACS_CF_SetPointer));
    // 39-45: ACSVM internal funcs.
    addFuncDataACS0( 46, addCallFunc(ACS_CF_UniqueTID));
    addFuncDataACS0( 47, addCallFunc(ACS_CF_IsTIDUsed));
    addFuncDataACS0( 48, addCallFunc(ACS_CF_Sqrt));
-   addFuncDataACS0( 49, addCallFunc(ACS_CF_SqrtFixed));
-   addFuncDataACS0( 50, addCallFunc(ACS_CF_Hypot));
+   addFuncDataACS0( 49, addCallFunc(ACS_CF_FixedSqrt));
+   addFuncDataACS0( 50, addCallFunc(ACS_CF_VectorLength));
  //addFuncDataACS0( 51, addCallFunc(ACS_CF_SetHudClipRect));
  //addFuncDataACS0( 52, addCallFunc(ACS_CF_SetHudWrapWidth));
  //addFuncDataACS0( 53, addCallFunc(ACS_CF_SetCVar));
  //addFuncDataACS0( 54, addCallFunc(ACS_CF_GetUserCVar));
  //addFuncDataACS0( 55, addCallFunc(ACS_CF_SetUserCVar));
-   addFuncDataACS0( 56, addCallFunc(ACS_CF_GetCVarStr));
+   addFuncDataACS0( 56, addCallFunc(ACS_CF_GetCVarString));
  //addFuncDataACS0( 57, addCallFunc(ACS_CF_SetCVarString));
  //addFuncDataACS0( 58, addCallFunc(ACS_CF_GetUserCVarString));
  //addFuncDataACS0( 59, addCallFunc(ACS_CF_SetUserCVarString));
@@ -340,16 +340,16 @@ ACSEnvironment::ACSEnvironment() :
  //addFuncDataACS0( 68, addCallFunc(ACS_CF_GetThingType));
    addFuncDataACS0( 69, addCallFunc(ACS_CF_GetWeapon));
  //addFuncDataACS0( 70, addCallFunc(ACS_CF_SoundVolume));
-   addFuncDataACS0( 71, addCallFunc(ACS_CF_PlayThingSound));
+   addFuncDataACS0( 71, addCallFunc(ACS_CF_PlayActorSound));
  //addFuncDataACS0( 72, addCallFunc(ACS_CF_SpawnDecal));
  //addFuncDataACS0( 73, addCallFunc(ACS_CF_CheckFont));
  //addFuncDataACS0( 74, addCallFunc(ACS_CF_DropItem));
-   addFuncDataACS0( 75, addCallFunc(ACS_CF_ChkThingFlag));
+   addFuncDataACS0( 75, addCallFunc(ACS_CF_CheckFlag));
  //addFuncDataACS0( 76, addCallFunc(ACS_CF_SetLineActivation));
  //addFuncDataACS0( 77, addCallFunc(ACS_CF_GetLineActivation));
  //addFuncDataACS0( 78, addCallFunc(ACS_CF_GetThingPowerupTics));
-   addFuncDataACS0( 79, addCallFunc(ACS_CF_SetThingAngleRet));
-   addFuncDataACS0( 80, addCallFunc(ACS_CF_SetThingPitchRet));
+   addFuncDataACS0( 79, addCallFunc(ACS_CF_ChangeActorAngle));
+   addFuncDataACS0( 80, addCallFunc(ACS_CF_ChangeActorPitch));
  //addFuncDataACS0( 81, addCallFunc(ACS_CF_GetArmorInfo));
  //addFuncDataACS0( 82, addCallFunc(ACS_CF_DropInventory));
  //addFuncDataACS0( 83, addCallFunc(ACS_CF_PickThing));
