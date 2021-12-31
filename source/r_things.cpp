@@ -1686,13 +1686,68 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
 {
    drawseg_t *ds;
    int        x;
-   int        r1;
-   int        r2;
-   float      dist;
-   float      fardist;
 
    for(x = spr->x1; x <= spr->x2; x++)
       clipbot[x] = cliptop[x] = CLIP_UNDEF;
+
+   //
+   // Common handler both for the optimized and basic loops
+   //
+   auto handleOverlappingDrawSeg = [](cmapcontext_t &cmapcontext,
+                                      const viewpoint_t &viewpoint,
+                                      drawseg_t *ds,
+                                      const vissprite_t *spr) {
+      float dist, fardist;
+      if(ds->dist1 > ds->dist2)
+      {
+         fardist = ds->dist2;
+         dist = ds->dist1;
+      }
+      else
+      {
+         fardist = ds->dist1;
+         dist = ds->dist2;
+      }
+
+      int r1, r2;
+      if(dist < spr->dist || (fardist < spr->dist &&
+         !R_PointOnSegSide(spr->gx, spr->gy, ds->curline)))
+      {
+         if(ds->maskedtexturecol) // masked mid texture?
+         {
+            r1 = ds->x1 < spr->x1 ? spr->x1 : ds->x1;
+            r2 = ds->x2 > spr->x2 ? spr->x2 : ds->x2;
+            R_RenderMaskedSegRange(cmapcontext, viewpoint.z, ds, r1, r2);
+         }
+         return;                // seg is behind sprite
+      }
+
+      r1 = ds->x1 < spr->x1 ? spr->x1 : ds->x1;
+      r2 = ds->x2 > spr->x2 ? spr->x2 : ds->x2;
+
+      // clip this piece of the sprite
+      // killough 3/27/98: optimized and made much shorter
+
+      // bottom sil
+      if(ds->silhouette & SIL_BOTTOM && spr->gz < ds->bsilheight)
+      {
+         for(int x = r1; x <= r2; x++)
+         {
+            if(clipbot[x] == CLIP_UNDEF)
+               clipbot[x] = ds->sprbottomclip[x];
+         }
+      }
+
+      // top sil
+      if(ds->silhouette & SIL_TOP && spr->gzt > ds->tsilheight)
+      {
+         for(int x = r1; x <= r2; x++)
+         {
+            if(cliptop[x] == CLIP_UNDEF)
+               cliptop[x] = ds->sprtopclip[x];
+         }
+      }
+   };
 
    // haleyjd 04/25/10:
    // e6y: optimization
@@ -1712,54 +1767,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
          }
          ++dsx;
 
-         if(ds->dist1 > ds->dist2)
-         {
-            fardist = ds->dist2;
-            dist = ds->dist1;
-         }
-         else
-         {
-            fardist = ds->dist1;
-            dist = ds->dist2;
-         }
-
-         if(dist < spr->dist || (fardist < spr->dist &&
-            !R_PointOnSegSide(spr->gx, spr->gy, ds->curline)))
-         {
-            if(ds->maskedtexturecol) // masked mid texture?
-            {
-               r1 = ds->x1 < spr->x1 ? spr->x1 : ds->x1;
-               r2 = ds->x2 > spr->x2 ? spr->x2 : ds->x2;
-               R_RenderMaskedSegRange(cmapcontext, viewpoint.z, ds, r1, r2);
-            }
-            continue;                // seg is behind sprite
-         }
-
-         r1 = ds->x1 < spr->x1 ? spr->x1 : ds->x1;
-         r2 = ds->x2 > spr->x2 ? spr->x2 : ds->x2;
-
-         // clip this piece of the sprite
-         // killough 3/27/98: optimized and made much shorter
-
-         // bottom sil
-         if(ds->silhouette & SIL_BOTTOM && spr->gz < ds->bsilheight)
-         {
-            for(x = r1; x <= r2; x++)
-            {
-               if(clipbot[x] == CLIP_UNDEF)
-                  clipbot[x] = ds->sprbottomclip[x];
-            }
-         }
-
-         // top sil
-         if(ds->silhouette & SIL_TOP && spr->gzt > ds->tsilheight)
-         {
-            for(x = r1; x <= r2; x++)
-            {
-               if(cliptop[x] == CLIP_UNDEF)
-                  cliptop[x] = ds->sprtopclip[x];
-            }
-         }
+         handleOverlappingDrawSeg(cmapcontext, viewpoint, ds, spr);
       }
    }
    else
@@ -1774,50 +1782,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
             (!ds->silhouette && !ds->maskedtexturecol))
             continue; // does not cover sprite
 
-         r1 = ds->x1 < spr->x1 ? spr->x1 : ds->x1;
-         r2 = ds->x2 > spr->x2 ? spr->x2 : ds->x2;
-
-         if (ds->dist1 > ds->dist2)
-         {
-            fardist = ds->dist2;
-            dist = ds->dist1;
-         }
-         else
-         {
-            fardist = ds->dist1;
-            dist = ds->dist2;
-         }
-
-         if(dist < spr->dist || (fardist < spr->dist &&
-            !R_PointOnSegSide(spr->gx, spr->gy, ds->curline)))
-         {
-            if(ds->maskedtexturecol) // masked mid texture?
-               R_RenderMaskedSegRange(cmapcontext, viewpoint.z, ds, r1, r2);
-            continue;                // seg is behind sprite
-         }
-
-         // clip this piece of the sprite
-         // killough 3/27/98: optimized and made much shorter
-
-         // bottom sil
-         if(ds->silhouette & SIL_BOTTOM && spr->gz < ds->bsilheight)
-         {
-            for(x = r1; x <= r2; x++)
-            {
-               if(clipbot[x] == CLIP_UNDEF)
-                  clipbot[x] = ds->sprbottomclip[x];
-            }
-         }
-
-         // top sil
-         if(ds->silhouette & SIL_TOP && spr->gzt > ds->tsilheight)
-         {
-            for(x = r1; x <= r2; x++)
-            {
-               if(cliptop[x] == CLIP_UNDEF)
-                  cliptop[x] = ds->sprtopclip[x];
-            }
-         }
+         handleOverlappingDrawSeg(cmapcontext, viewpoint, ds, spr);
       }
    }
 
