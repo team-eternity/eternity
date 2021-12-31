@@ -104,10 +104,10 @@ ACSEnvironment::ACSEnvironment() :
    addCodeDataACS0( 58, {"WW",      0, addCallFunc(ACS_CF_Random)});
    addCodeDataACS0( 59, {"",        2, addCallFunc(ACS_CF_ThingCount)});
    addCodeDataACS0( 60, {"WW",      0, addCallFunc(ACS_CF_ThingCount)});
-   addCodeDataACS0( 61, {"",        1, addCallFunc(ACS_CF_WaitSector)});
-   addCodeDataACS0( 62, {"W",       0, addCallFunc(ACS_CF_WaitSector)});
-   addCodeDataACS0( 63, {"",        1, addCallFunc(ACS_CF_WaitPolyObj)});
-   addCodeDataACS0( 64, {"W",       0, addCallFunc(ACS_CF_WaitPolyObj)});
+   addCodeDataACS0( 61, {"",        1, addCallFunc(ACS_CF_TagWait)});
+   addCodeDataACS0( 62, {"W",       0, addCallFunc(ACS_CF_TagWait)});
+   addCodeDataACS0( 63, {"",        1, addCallFunc(ACS_CF_PolyWait)});
+   addCodeDataACS0( 64, {"W",       0, addCallFunc(ACS_CF_PolyWait)});
    addCodeDataACS0( 65, {"",        2, addCallFunc(ACS_CF_ChangeFloor)});
    addCodeDataACS0( 66, {"WWS",     0, addCallFunc(ACS_CF_ChangeFloor)});
    addCodeDataACS0( 67, {"",        2, addCallFunc(ACS_CF_ChangeCeil)});

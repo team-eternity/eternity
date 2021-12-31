@@ -438,8 +438,8 @@ bool ACS_CF_ThingSound(ACS_CF_ARGS);
 bool ACS_CF_ThingSoundSeq(ACS_CF_ARGS);
 bool ACS_CF_Timer(ACS_CF_ARGS);
 bool ACS_CF_UniqueTID(ACS_CF_ARGS);
-bool ACS_CF_WaitPolyObj(ACS_CF_ARGS);
-bool ACS_CF_WaitSector(ACS_CF_ARGS);
+bool ACS_CF_PolyWait(ACS_CF_ARGS);
+bool ACS_CF_TagWait(ACS_CF_ARGS);
 
 // extern vars.
 

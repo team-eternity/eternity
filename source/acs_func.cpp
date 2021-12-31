@@ -2930,22 +2930,18 @@ bool ACS_CF_UniqueTID(ACS_CF_ARGS)
 }
 
 //
-// ACS_CF_WaitPolyObj
-//
 // void PolyWait(int polyid);
 //
-bool ACS_CF_WaitPolyObj(ACS_CF_ARGS)
+bool ACS_CF_PolyWait(ACS_CF_ARGS)
 {
    thread->state = {ACSVM::ThreadState::WaitTag, argV[0], ACS_TAGTYPE_POLYOBJ};
    return true;
 }
 
 //
-// ACS_CF_WaitSector
-//
 // void TagWait(int tag);
 //
-bool ACS_CF_WaitSector(ACS_CF_ARGS)
+bool ACS_CF_TagWait(ACS_CF_ARGS)
 {
    thread->state = {ACSVM::ThreadState::WaitTag, argV[0], ACS_TAGTYPE_SECTOR};
    return true;
