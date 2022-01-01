@@ -1633,6 +1633,12 @@ bool ACS_CF_SectorDamage(ACS_CF_ARGS)
    int       secnum = -1;
    sector_t *sector;
 
+   if(flags & ~(SECDAM_PLAYERS | SECDAM_NONPLAYERS | SECDAM_IN_AIR))
+   {
+      doom_warningf("SectorDamage: unsupported flags %d", flags);
+      return false;
+   }
+
    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       sector = &sectors[secnum];
