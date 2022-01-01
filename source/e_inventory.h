@@ -252,6 +252,8 @@ int E_GetItemOwnedAmount(const player_t *player, const itemeffect_t *artifact);
 // Get amount of an item owned by name
 int E_GetItemOwnedAmountName(const player_t *player, const char *name);
 
+bool E_PlayerHasPowerName(const player_t &player, const char *name);
+
 // Place an item into a player's inventory.
 bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amount = -1);
 

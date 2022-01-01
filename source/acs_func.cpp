@@ -1628,6 +1628,7 @@ bool ACS_CF_SectorDamage(ACS_CF_ARGS)
    int32_t   tag    = argV[0];
    int32_t   damage = argV[1];
    int       mod    = E_DamageTypeNumForName(thread->scopeMap->getString(argV[2])->str);
+   const char *protector = thread->scopeMap->getString(argV[3])->str;
    uint32_t  flags  = argV[4];
    int       secnum = -1;
    sector_t *sector;
@@ -1638,8 +1639,16 @@ bool ACS_CF_SectorDamage(ACS_CF_ARGS)
 
       for(Mobj *mo = sector->thinglist; mo; mo = mo->snext)
       {
-         if(mo->player && !(flags & SECDAM_PLAYERS))
-            continue;
+         if(mo->player)
+         {
+            if(!(flags & SECDAM_PLAYERS))
+               continue;
+            if(estrnonempty(protector) && (E_GetItemOwnedAmountName(mo->player, protector) > 0 ||
+                                           E_PlayerHasPowerName(*mo->player, protector)))
+            {
+               continue;
+            }
+         }
 
          if(!mo->player && !(flags & SECDAM_NONPLAYERS))
             continue;
