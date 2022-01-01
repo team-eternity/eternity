@@ -1885,7 +1885,8 @@ static void P_LoadHexenLineDefs(int lump)
    int  i;
 
    numlines = setupwad->lumpLength(lump) / sizeof(maplinedefhexen_t);
-   lines    = estructalloctag(line_t, numlines, PU_LEVEL);
+   numlinesPlusExtra = numlines + NUM_LINES_EXTRA;
+   lines    = estructalloctag(line_t, numlinesPlusExtra, PU_LEVEL);
    data     = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
 
    for(i = 0; i < numlines; ++i)
