@@ -227,6 +227,11 @@ public:
 
    // Methods
    void backupPosition();
+   // This one only backs up angle against interpolation, while leaving XYZ and portal refs alone
+   void backupAngle()
+   {
+      prevpos.angle = angle;
+   }
    void copyPosition(const Mobj *other);
    int getModifiedSpawnHealth() const;
    
