@@ -2009,8 +2009,26 @@ bool ACS_CF_SetActorPitch(ACS_CF_ARGS)
 //
 bool ACS_CF_ChangeActorPitch(ACS_CF_ARGS)
 {
+   auto athread = static_cast<ACSThread *>(thread);
+   int tid = static_cast<int>(argV[0]);
+   ACSVM::Word val = argV[1];
+   bool interpolate = argC > 2 ? !!argV[2] : false;
+
    thread->dataStk.push(0);
-   return ACS_CF_SetActorPitch(thread, argV, argC);
+
+   bool ret = ACS_SetThingProp(athread, tid, ACS_TP_Pitch, val);
+   if(ret)
+      return ret; // not ok
+
+   if(!interpolate)
+   {
+      Mobj *mo = nullptr;
+      while((mo = P_FindMobjFromTID(tid, mo, athread->info.mo)))
+         if(mo->player)
+            mo->player->prevpitch = mo->player->pitch;
+   }
+
+   return false;
 }
 
 //
