@@ -446,8 +446,9 @@ void HUDMessageWidget::addMessage(const char *s)
    if(hud_msg_lines <= 0)
       return;
 
-   if(current_messages == hud_msg_lines) // display full
+   if(current_messages >= hud_msg_lines) // display full
    {
+      current_messages = hud_msg_lines;   // cap it
       // scroll up      
       for(int i = 0; i < hud_msg_lines - 1; i++)
          strncpy(messages[i], messages[i+1], MAXHUDMSGLEN);
