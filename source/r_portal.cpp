@@ -1222,7 +1222,7 @@ static void R_renderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
    portalcontext.portalrender.maxx = window->maxx;
 
    memset(spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
-   R_SetMaskedSilhouette(bounds, planecontext.ceilingclip, planecontext.floorclip);
+//   R_SetMaskedSilhouette(bounds, planecontext.ceilingclip, planecontext.floorclip);
 
    lastx  = viewpoint.x;
    lasty  = viewpoint.y;
@@ -1255,7 +1255,7 @@ static void R_renderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
    R_RenderBSPNode(context, numnodes - 1);
 
    // Only push the overlay if this is the head window
-   R_PushPost(bspcontext, spritecontext, bounds, true, window->head == window ? window : nullptr);
+//   R_PushPost(bspcontext, spritecontext, bounds, true, window->head == window ? window : nullptr);
 
    planecontext.floorclip   = floorcliparray;
    planecontext.ceilingclip = ceilingcliparray;
@@ -1340,7 +1340,7 @@ static void R_renderLinkedPortal(rendercontext_t &context, pwindow_t *window)
    portalcontext.portalrender.maxx = window->maxx;
 
    memset(spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
-   R_SetMaskedSilhouette(bounds, planecontext.ceilingclip, planecontext.floorclip);
+//   R_SetMaskedSilhouette(bounds, planecontext.ceilingclip, planecontext.floorclip);
 
    lastx  = viewpoint.x;
    lasty  = viewpoint.y;
@@ -1373,7 +1373,7 @@ static void R_renderLinkedPortal(rendercontext_t &context, pwindow_t *window)
    R_RenderBSPNode(context, numnodes - 1);
 
    // Only push the overlay if this is the head window
-   R_PushPost(bspcontext, spritecontext, bounds, true, window->head == window ? window : nullptr);
+//   R_PushPost(bspcontext, spritecontext, bounds, true, window->head == window ? window : nullptr);
 
    planecontext.floorclip   = floorcliparray;
    planecontext.ceilingclip = ceilingcliparray;

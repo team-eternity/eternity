@@ -917,13 +917,23 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    ds_p->x1       = start;
    ds_p->x2       = stop;
    ds_p->curline  = segclip.line;
+
+   v3fixed_t point = { segclip.line->v1->x, segclip.line->v1->y, 0 };
+   point = R_ConvertFromWindow(point, portalrender.w, viewpoint);
+   ds_p->translatedline.x = point.x;
+   ds_p->translatedline.y = point.y;
+   point = { segclip.line->v2->x, segclip.line->v2->y, 0 };
+   point = R_ConvertFromWindow(point, portalrender.w, viewpoint);
+   ds_p->translatedline.dx = point.x - ds_p->translatedline.x;
+   ds_p->translatedline.dy = point.y - ds_p->translatedline.y;
+
    ds_p->dist2    = (ds_p->dist1 = segclip.dist) + segclip.diststep * (segclip.x2 - segclip.x1);
    ds_p->diststep = segclip.diststep;
    ds_p->colormap = cmapcontext.scalelight;
    ds_p->fixedcolormap = cmapcontext.fixedcolormap;
    ds_p->deltaz = 0; // init with 0
    
-   if(segclip.clipsolid)
+   if(segclip.clipsolid && !segclip.l_window)
       R_closeDSP(ds_p);
    else
    {
@@ -942,7 +952,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
          ds_p->silhouette = SIL_BOTTOM;
          ds_p->bsilheight = D_MAXINT;
       }
-      else if(segclip.backsec->srf.floor.slope)
+      else if(segclip.backsec && segclip.backsec->srf.floor.slope)
       {
          ds_p->silhouette = SIL_BOTTOM;
          ds_p->bsilheight = emax(segclip.maxfrontfloor, segclip.maxbackfloor);
@@ -957,7 +967,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
          ds_p->silhouette |= SIL_TOP;
          ds_p->tsilheight = D_MININT;
       }
-      else if(segclip.backsec->srf.ceiling.slope)
+      else if(segclip.backsec && segclip.backsec->srf.ceiling.slope)
       {
          ds_p->silhouette |= SIL_TOP;
          ds_p->tsilheight = emin(segclip.minfrontceil, segclip.minbackceil);
@@ -1013,18 +1023,25 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    if((ds_p->silhouette & SIL_TOP || segclip.maskedtex) && !ds_p->sprtopclip)
    {
       int xlen = segclip.x2 - segclip.x1 + 1;
+      const float *clip;
+      if(segclip.t_window)
+         clip = segclip.t_window->top;
+      else if(segclip.l_window)
+         clip = segclip.l_window->top;
+      else
+         clip = ceilingclip;
 
       if(segclip.markflags & SEG_MARKCOVERLAY)
       {
          for(int i = xlen; i --> 0;)
          {
             float over = overlaycclip[segclip.x1 + i];
-            float solid = ceilingclip[segclip.x1 + i];
+            float solid = clip[segclip.x1 + i];
             lastopening[i] = over > solid ? over : solid;
          }
       }
       else
-         memcpy(lastopening, ceilingclip + segclip.x1, sizeof(float) * xlen);
+         memcpy(lastopening, clip + segclip.x1, sizeof(float) * xlen);
 
       ds_p->sprtopclip = lastopening - segclip.x1;
       lastopening += xlen;
@@ -1032,18 +1049,25 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    if((ds_p->silhouette & SIL_BOTTOM || segclip.maskedtex) && !ds_p->sprbottomclip)
    {
       int xlen = segclip.x2 - segclip.x1 + 1;
+      const float *clip;
+      if(segclip.b_window)
+         clip = segclip.b_window->bottom;
+      else if(segclip.l_window)
+         clip = segclip.l_window->bottom;
+      else
+         clip = floorclip;
 
       if(segclip.markflags & SEG_MARKFOVERLAY)
       {
          for(int i = xlen; i-- > 0;)
          {
             float over = overlayfclip[segclip.x1 + i];
-            float solid = floorclip[segclip.x1 + i];
+            float solid = clip[segclip.x1 + i];
             lastopening[i] = over < solid ? over : solid;
          }
       }
       else
-         memcpy(lastopening, floorclip + segclip.x1, sizeof(float) * xlen);
+         memcpy(lastopening, clip + segclip.x1, sizeof(float) * xlen);
 
       ds_p->sprbottomclip = lastopening - segclip.x1;
       lastopening += xlen;
@@ -1062,6 +1086,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    // ioanch: also check for portalrender, and detect any columns shut by the
    // portal window, which would otherwise be ignored. Necessary for correct
    // sprite rendering.
+   // FIXME: also skip for edge portal windows?
    if(!segclip.clipsolid && (ds_p->silhouette || portalrender.active))
       R_detectClosedColumns(bspcontext, planecontext, bounds, segclip);
 

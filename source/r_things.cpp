@@ -276,7 +276,7 @@ static void R_drawParticle(const contextbounds_t &bounds, vissprite_t *vis,
                            const float *const mfloorclip, const float *const mceilingclip);
 static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext,
                               const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
-                              const contextbounds_t &bounds, particle_t *particle);
+                              const contextbounds_t &bounds, const portalrender_t &portalrender, particle_t *particle);
 
 //
 // R_SetMaskedSilhouette
@@ -838,10 +838,7 @@ static void R_drawVisSprite(const contextbounds_t &bounds, vissprite_t *vis,
    }
 }
 
-struct spritepos_t
-{
-   fixed_t x, y, z;
-};
+typedef v3fixed_t spritepos_t;
 
 // ioanch 20160109: added offset arguments
 static void R_interpolateThingPosition(Mobj *thing, spritepos_t &pos)
@@ -1209,10 +1206,12 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
    vis->heightsec = heightsec;
 
    vis->colour = thing->colour;
+   fixed_t oldz = spritepos.z;
+   spritepos = R_ConvertFromWindow(spritepos, portalrender.w, viewpoint);
    vis->gx     = spritepos.x;
    vis->gy     = spritepos.y;
    vis->gz     = spritepos.z;
-   vis->gzt    = gzt;                          // killough 3/27/98
+   vis->gzt    = gzt - oldz + spritepos.z;   // killough 3/27/98
 
    // Cardboard
    vis->x1 = x1 <  bounds.fstartcolumn ? bounds.startcolumn   : intx1;
@@ -1292,13 +1291,13 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
       }
    }
 
-   if(pwindow && pwindow->type == pw_line && !delta)
-      for(int x = vis->x1; x <= vis->x2; ++x)
-         if(y1 < pwindow->top[x] || y2 > pwindow->bottom[x])
-         {
-            R_projectSpriteAcrossPortal(spritecontext, *vis, *pwindow, viewpoint, thing);
-            break;
-         }
+//   if(pwindow && pwindow->type == pw_line && !delta)
+//      for(int x = vis->x1; x <= vis->x2; ++x)
+//         if(y1 < pwindow->top[x] || y2 > pwindow->bottom[x])
+//         {
+//            R_projectSpriteAcrossPortal(spritecontext, *vis, *pwindow, viewpoint, thing);
+//            break;
+//         }
 }
 
 //
@@ -1365,7 +1364,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
       DLListItem<particle_t> *link;
 
       for(link = sec->ptcllist; link; link = link->dllNext)
-         R_projectParticle(cmapcontext, spritecontext, viewpoint, cb_viewpoint, bounds, *link);
+         R_projectParticle(cmapcontext, spritecontext, viewpoint, cb_viewpoint, bounds, portalrender, *link);
    }
 }
 
@@ -1729,7 +1728,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
 
       int r1, r2;
       if(dist < spr->dist || (fardist < spr->dist &&
-         !R_PointOnSegSide(spr->gx, spr->gy, ds->curline)))
+         !P_PointOnDivlineSide(spr->gx, spr->gy, &ds->translatedline)))
       {
          if(ds->maskedtexturecol) // masked mid texture?
          {
@@ -2267,7 +2266,7 @@ void R_ClearParticles()
 //
 static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext,
                               const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
-                              const contextbounds_t &bounds, particle_t *particle)
+                              const contextbounds_t &bounds, const portalrender_t &portalrender, particle_t *particle)
 {
    fixed_t gzt;
    int x1, x2;
@@ -2357,10 +2356,12 @@ static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &sprit
    // store information in a vissprite
    vis = R_newVisSprite(spritecontext);
    vis->heightsec = heightsec;
-   vis->gx = particle->x;
-   vis->gy = particle->y;
-   vis->gz = particle->z;
-   vis->gzt = gzt;
+   v3fixed_t point = { particle->x, particle->y, particle->z };
+   point = R_ConvertFromWindow(point, portalrender.w, viewpoint);
+   vis->gx = point.x;
+   vis->gy = point.y;
+   vis->gz = point.z;
+   vis->gzt = gzt - particle->z + point.z;
    vis->texturemid = vis->gzt - viewpoint.z;
    vis->x1 = emax(bounds.startcolumn,   x1);
    vis->x2 = emin(bounds.endcolumn - 1, x2);

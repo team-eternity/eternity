@@ -1898,6 +1898,7 @@ static void R_1SidedLine(cmapcontext_t &cmapcontext, planecontext_t &planecontex
       }
       else
          seg.toptex = 0;
+      seg.minbackceil = beyond->srf.ceiling.height;
 
       if(seg.frontsec->srf.floor.height < beyond->srf.floor.height && side->bottomtexture)
       {
@@ -1917,7 +1918,7 @@ static void R_1SidedLine(cmapcontext_t &cmapcontext, planecontext_t &planecontex
       }
       else
          seg.bottomtex = 0;
-
+      seg.maxbackfloor = beyond->srf.floor.height;
    }
 
    bool sky = R_IsSkyFlat(side->midtexture);
