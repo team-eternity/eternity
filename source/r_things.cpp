@@ -1292,7 +1292,7 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
       }
    }
 
-   if(pwindow)
+   if(pwindow && !delta)
       for(int x = vis->x1; x <= vis->x2; ++x)
          if(y1 < pwindow->top[x] || y2 > pwindow->bottom[x])
          {
