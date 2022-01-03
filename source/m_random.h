@@ -260,6 +260,8 @@ typedef enum {
 
   pr_enviroticsend,
 
+  pr_mbf21,
+
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;
 
@@ -300,6 +302,10 @@ int P_SubRandomEx(pr_class_t pr_class, unsigned max);
 
 // Fix randoms for demos.
 void M_ClearRandom(void);
+
+// [XA] Common random formulas used by codepointers
+int P_RandomHitscanAngle(pr_class_t pr_class, fixed_t spread);
+int P_RandomHitscanSlope(pr_class_t pr_class, fixed_t spread);
 
 #endif
 

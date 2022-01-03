@@ -32,6 +32,7 @@
 #include "m_vector.h"
 #include "p_mobj.h"
 #include "p_portalcross.h"
+#include "s_sound.h"
 
 //=============================================================================
 //
@@ -174,14 +175,44 @@ void A_MonsterProjectile(actionargs_t *actionargs)
 // Generic monster bullet attack.
 //
 // args[0] -- horizontal spread (degrees, in fixed point)
-// args[1] -- bertical spread (degrees, in fixed point)
+// args[1] -- vertical spread (degrees, in fixed point)
 // args[2] -- number of bullets to fire; if not set, defaults to 1
-// args[3] -- mase damage of attack; if not set, defaults to 3
+// args[3] -- base damage of attack; if not set, defaults to 3
 // args[4] -- attack damage random multiplier; if not set, defaults to 5
 //
 void A_MonsterBulletAttack(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args  = actionargs->args;
+   Mobj      *actor = actionargs->actor;
+   fixed_t    hspread, vspread;
+   int        numbullets, damagebase, damagemod;
+   fixed_t    aimslope, slope;
+   angle_t    angle;
+   int        damage;
+
+   if(!mbf21_temp || !actor->target)
+      return;
+
+   hspread    = E_ArgAsFixed(args, 0, 0);
+   vspread    = E_ArgAsFixed(args, 1, 0);
+   numbullets = E_ArgAsInt(args, 2, 1);
+   damagebase = E_ArgAsInt(args, 3, 3);
+   damagemod  = E_ArgAsInt(args, 4, 5);
+
+   A_FaceTarget(actionargs);
+   S_StartSound(actor, actor->info->attacksound);
+
+   aimslope = P_AimLineAttack(actor, actor->angle, MISSILERANGE, 0);
+
+   for(int i = 0; i < numbullets; i++)
+   {
+      damage = (P_Random(pr_mbf21) % damagemod + 1) * damagebase;
+      angle  = int(actor->angle) + P_RandomHitscanAngle(pr_mbf21, hspread);
+      slope  = aimslope + P_RandomHitscanSlope(pr_mbf21, vspread);
+
+      P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
+   }
+
 }
 
 
