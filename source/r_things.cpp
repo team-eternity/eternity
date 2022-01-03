@@ -912,17 +912,18 @@ static void R_projectSpriteAcrossPortal(spritecontext_t &spritecontext, const vi
    ++thingprojsize;
 
    fixed_t height = ovis.gzt - ovis.gz;
+   vissprite_t ovisorig = ovis;  // must make a local copy, because of realloc
    vissprite_t *bvis = R_newVisSprite(spritecontext);
-   *bvis = ovis;
+   *bvis = ovisorig;
    bvis->isProjectionClone = true;
    if(view.angle != pwindow.vangle)
    {
       // rotated portal: apply the complex operation
       v3double_t sprdelta =
       {
-         M_FixedToDouble(ovis.gx - view.x),
-         M_FixedToDouble(ovis.gy - view.y),
-         M_FixedToDouble(ovis.gz - view.z)
+         M_FixedToDouble(ovisorig.gx - view.x),
+         M_FixedToDouble(ovisorig.gy - view.y),
+         M_FixedToDouble(ovisorig.gz - view.z)
       };
       double sprdist = hypot(hypot(sprdelta.x, sprdelta.y), sprdelta.z);
       double sprang = atan2(sprdelta.y, sprdelta.x);
