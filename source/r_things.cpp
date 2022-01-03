@@ -1887,7 +1887,8 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
       mh = M_FixedToFloat(sector->srf.ceiling.height) - cb_viewpoint.z;
       if(sector->srf.ceiling.pflags & PS_PASSABLE && sector->srf.ceiling.height < spr->gzt)
       {
-         h = eclamp(view.ycenter - (mh * spr->scale), 0.0f, view.height - 1);
+         // Add +1 to avoid overdrawing with the bottomclip of the above part
+         h = eclamp(view.ycenter - (mh * spr->scale) + 1, 0.0f, view.height - 1);
 
          for(x = spr->x1; x <= spr->x2; x++)
          {
