@@ -265,7 +265,17 @@ void A_MonsterMeleeAttack(actionargs_t *actionargs)
 //
 void A_RadiusDamage(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args  = actionargs->args;
+   Mobj      *actor = actionargs->actor;
+   int        damage, radius;
+
+   if(!mbf21_temp || !actor->state)
+      return;
+
+   damage = E_ArgAsInt(args, 0, 0);
+   radius = E_ArgAsInt(args, 1, 0);
+
+   P_RadiusAttack(actor, actor->target, damage, radius, actor->info->mod, 0);
 }
 
 //
@@ -273,7 +283,12 @@ void A_RadiusDamage(actionargs_t *actionargs)
 //
 void A_NoiseAlert(actionargs_t *actionargs)
 {
-   // TODO
+   Mobj *actor = actionargs->actor;
+
+   if(!mbf21_temp || !actor->target)
+      return;
+
+   P_NoiseAlert(actor->target, actor);
 }
 
 //
