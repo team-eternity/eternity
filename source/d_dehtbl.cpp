@@ -1806,13 +1806,13 @@ deh_bexptr deh_bexptrs[] =
    //POINTER(WeaponProjectile),
    //POINTER(WeaponBulletAttack),
    //POINTER(WeaponMeleeAttack),
-   //POINTER(WeaponSound),
+   POINTER(WeaponSound),
    //POINTER(WeaponJump),
    //POINTER(ConsumeAmmo),
    //POINTER(CheckAmmo),
    //POINTER(RefireTo),
    //POINTER(GunFlashTo),
-   //POINTER(WeaponAlert),
+   POINTER(WeaponAlert),
 
 
    // haleyjd: Heretic pointers

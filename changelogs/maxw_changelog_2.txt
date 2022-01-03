@@ -175,8 +175,8 @@ Added "ripsound" EDF property, which is played when a ripper rips.
 2022/01/03
 [MBF21]
  * Added A_SpawnObject, A_MonsterMeleeAttack, A_RadiusDamage, A_NoiseAlert,
-   A_HealChase, A_ClearTracer, A_JumpIfHealthBelow, A_JumpIfTargetCloser, and
-   A_JumpIfTracerCloser.
+   A_HealChase, A_ClearTracer, A_JumpIfHealthBelow, A_JumpIfTargetCloser,
+   A_JumpIfTracerCloser, A_WeaponSound, and A_WeaponAlert.
 
 ================================================================================
 EOF

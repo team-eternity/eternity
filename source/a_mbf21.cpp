@@ -539,16 +539,22 @@ void A_WeaponMeleeAttack(actionargs_t *actionargs)
 //
 // args[0] -- sound index to play
 // args[1] -- if nonzero, play this sound at full volume across the entire map
-// args[2] -- description
-// args[3] -- description
-// args[4] -- description
-// args[5] -- description
-// args[6] -- description
-// args[7] -- description
 //
 void A_WeaponSound(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args   = actionargs->args;
+   Mobj      *mo     = actionargs->actor;
+   player_t  *player = mo->player;
+   sfxinfo_t *sfxinfo;
+   bool fullVol;
+
+   if(!mbf21_temp || !player)
+      return;
+
+   sfxinfo = E_ArgAsSound(args, 0);
+   fullVol = E_ArgAsInt(args, 1, 0);
+   const int sound = sfxinfo ? sfxinfo->dehackednum : 0;
+   S_StartSound(fullVol ? nullptr : mo, sound);
 }
 
 //
@@ -611,7 +617,14 @@ void A_GunFlashTo(actionargs_t *actionargs)
 //
 void A_WeaponAlert(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args   = actionargs->args;
+   Mobj      *mo     = actionargs->actor;
+   player_t  *player = mo->player;
+
+   if(!mbf21_temp || !player)
+      return;
+
+   P_NoiseAlert(mo, mo);
 }
 
 // EOF
