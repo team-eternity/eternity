@@ -2202,5 +2202,47 @@ bool R_IsSkyWall(const line_t &line)
                                           line.portal->type == R_PLANE));
 }
 
+//
+// Converts a point from a portal coordinates to viewer coordinates
+//
+v3fixed_t R_ConvertFromWindow(v3fixed_t point, const pwindow_t *pwindow, const viewpoint_t &view)
+{
+   if(!pwindow)
+      return point;
+   if(view.angle != pwindow->vangle)
+   {
+      // rotated portal: apply the complex operation
+      v3double_t viewpointdelta =
+      {
+         M_FixedToDouble(point.x - view.x),
+         M_FixedToDouble(point.y - view.y),
+         M_FixedToDouble(point.z - view.z)
+      };
+      double viewpointxydist = hypot(viewpointdelta.x, viewpointdelta.y);
+      double viewpointyaw = atan2(viewpointdelta.y, viewpointdelta.x);
+      angle_t viewwindowyawdelta = pwindow->vangle - view.angle;
+      double targetyaw = viewpointyaw - (double)viewwindowyawdelta / ANG180 * M_PI;
+      v3double_t targetpoint =
+      {
+         M_FixedToDouble(pwindow->vx),
+         M_FixedToDouble(pwindow->vy),
+         M_FixedToDouble(pwindow->vz)
+      };
+      targetpoint.x += viewpointxydist * cos(targetyaw);
+      targetpoint.y += viewpointxydist * sin(targetyaw);
+      targetpoint.z += viewpointdelta.z;
+
+      return v3fixed_t {
+         M_DoubleToFixed(targetpoint.x),
+         M_DoubleToFixed(targetpoint.y),
+         M_DoubleToFixed(targetpoint.z)
+      };
+   }
+   // normal case: no rotation
+   return point + v3fixed_t {
+      pwindow->vx - view.x, pwindow->vy - view.y, pwindow->vz - view.z
+   };
+}
+
 // EOF
 

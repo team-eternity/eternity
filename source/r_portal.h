@@ -367,6 +367,8 @@ struct portalrender_t
 //   planehash_t *overlay;
 };
 
+v3fixed_t R_ConvertFromWindow(v3fixed_t point, const pwindow_t *window, const viewpoint_t &view);
+
 #endif
 
 //----------------------------------------------------------------------------
