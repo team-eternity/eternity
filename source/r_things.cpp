@@ -536,6 +536,7 @@ void R_InitSprites(char **namelist)
 void R_ClearSprites(spritecontext_t &context)
 {
    context.num_vissprite = 0; // killough
+   context.thingprojsize = 0;
 }
 
 //
@@ -883,8 +884,32 @@ static void R_interpolatePSpritePosition(const pspdef_t &pspr, v2fixed_t &pos)
 // Projects the sprite back across the portal to the original layer
 //
 static void R_projectSpriteAcrossPortal(spritecontext_t &spritecontext, const vissprite_t &ovis,
-                                        const pwindow_t &pwindow, const viewpoint_t &view)
+                                        const pwindow_t &pwindow, const viewpoint_t &view,
+                                        const Mobj *thing)
 {
+   thingproj_t *&thingproj = spritecontext.thingproj;
+   int &thingprojsize = spritecontext.thingprojsize;
+   int &thingprojalloc = spritecontext.thingprojalloc;
+
+   poststack_t *pstack = spritecontext.pstack;
+   maskedrange_t *masked = pstack[pwindow.postbspfrom].masked;
+   if(!masked) // can't have sprites on the source area
+      return;
+
+   // Make sure we don't overdraw the same thing's sprite into the same origin post-bsp stack
+   for(int i = 0; i < spritecontext.thingprojsize; ++i)
+      if(thingproj[i].thing == thing && thingproj[i].pstackpos == pwindow.postbspfrom)
+         return;
+
+   if(thingprojsize == thingprojalloc)
+   {
+      thingprojalloc = thingprojalloc ? 2 * thingprojalloc : 16;
+      thingproj = erealloc(thingproj_t *, thingproj, thingprojalloc * sizeof(thingproj_t));
+   }
+   thingproj[thingprojsize].thing = thing;
+   thingproj[thingprojsize].pstackpos = pwindow.postbspfrom;
+   ++thingprojsize;
+
    fixed_t height = ovis.gzt - ovis.gz;
    vissprite_t *bvis = R_newVisSprite(spritecontext);
    *bvis = ovis;
@@ -925,11 +950,7 @@ static void R_projectSpriteAcrossPortal(spritecontext_t &spritecontext, const vi
    bvis->gzt = bvis->gz + height;;
    bvis->sector = eindex(R_PointInSubsector(bvis->gx, bvis->gy)->sector - sectors);
 
-   poststack_t *pstack = spritecontext.pstack;
    vissprite_t *vissprites = spritecontext.vissprites;
-   maskedrange_t *masked = pstack[pwindow.postbspfrom].masked;
-   if(!masked) // can't have sprites on the source area
-      return;
 
    // Now shift the mask ahead
    int pstacksize = spritecontext.pstacksize;
@@ -1275,7 +1296,7 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
       for(int x = vis->x1; x <= vis->x2; ++x)
          if(y1 < pwindow->top[x] || y2 > pwindow->bottom[x])
          {
-            R_projectSpriteAcrossPortal(spritecontext, *vis, *pwindow, viewpoint);
+            R_projectSpriteAcrossPortal(spritecontext, *vis, *pwindow, viewpoint, thing);
             break;
          }
 }
