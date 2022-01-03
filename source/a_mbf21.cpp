@@ -34,6 +34,7 @@
 #include "m_vector.h"
 #include "p_enemy.h"
 #include "p_inter.h"
+#include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_portalcross.h"
 #include "s_sound.h"
@@ -306,7 +307,7 @@ void A_HealChase(actionargs_t *actionargs)
    int state, sound;
    sfxinfo_t *sfxinfo;
 
-   if(!mbf21_temp || !actor)
+   if(!mbf21_temp)
       return;
 
    state   = E_ArgAsStateNum(args, 0, actor);
@@ -347,7 +348,12 @@ void A_FindTracer(actionargs_t *actionargs)
 //
 void A_ClearTracer(actionargs_t *actionargs)
 {
-   // TODO
+   Mobj *actor = actionargs->actor;
+
+   if(!mbf21_temp)
+      return;
+
+   P_ClearTarget(actor->tracer);
 }
 
 //
@@ -358,7 +364,18 @@ void A_ClearTracer(actionargs_t *actionargs)
 //
 void A_JumpIfHealthBelow(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args = actionargs->args;
+   Mobj      *actor = actionargs->actor;
+   int state, health;
+
+   if(!mbf21_temp)
+      return;
+
+   state  = E_ArgAsStateNum(args, 0, actor);
+   health = E_ArgAsInt(args, 1, 0);
+
+   if(actor->health < health)
+      P_SetMobjState(actor, state);
 }
 
 //
@@ -381,7 +398,20 @@ void A_JumpIfTargetInSight(actionargs_t *actionargs)
 //
 void A_JumpIfTargetCloser(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args   = actionargs->args;
+   Mobj      *actor  = actionargs->actor;
+   Mobj      *target = actor->target;
+   int     state;
+   fixed_t distance;
+
+   if(!mbf21_temp || !target)
+      return;
+
+   state    = E_ArgAsStateNum(args, 0, actor);
+   distance = E_ArgAsFixed(args, 1, 0);
+
+   if(distance > P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor)))
+      P_SetMobjState(actor, state);
 }
 
 //
@@ -404,7 +434,23 @@ void A_JumpIfTracerInSight(actionargs_t *actionargs)
 //
 void A_JumpIfTracerCloser(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args   = actionargs->args;
+   Mobj      *actor  = actionargs->actor;
+   Mobj      *tracer = actor->tracer;
+   int     state;
+   fixed_t distance;
+
+   if(!mbf21_temp || !tracer)
+      return;
+
+   state    = E_ArgAsStateNum(args, 0, actor);
+   distance = E_ArgAsFixed(args, 1, 0);
+
+   const fixed_t dx = actor->x - getThingX(actor, actor->tracer);
+   const fixed_t dy = actor->y - getThingY(actor, actor->tracer);
+   if(distance > P_AproxDistance(dx, dy))
+      P_SetMobjState(actor, state);
+
 }
 
 //
