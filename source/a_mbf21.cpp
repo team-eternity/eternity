@@ -27,6 +27,7 @@
 
 #include "a_args.h"
 #include "a_common.h"
+#include "a_doom.h"
 #include "d_mod.h"
 #include "doomstat.h"
 #include "e_args.h"
@@ -300,7 +301,21 @@ void A_NoiseAlert(actionargs_t *actionargs)
 //
 void A_HealChase(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args = actionargs->args;
+   Mobj      *actor = actionargs->actor;
+   int state, sound;
+   sfxinfo_t *sfxinfo;
+
+   if(!mbf21_temp || !actor)
+      return;
+
+   state   = E_ArgAsStateNum(args, 0, actor);
+   sfxinfo = E_ArgAsSound(args, 1);
+   sound   = sfxinfo ? sfxinfo->dehackednum : 0;
+
+
+   if(!P_HealCorpse(actionargs, actor->info->radius, state, sound))
+      A_Chase(actionargs);
 }
 
 //

@@ -1790,7 +1790,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(MonsterMeleeAttack),
    POINTER(RadiusDamage),
    POINTER(NoiseAlert),
-   //POINTER(HealChase),
+   POINTER(HealChase),
    //POINTER(SeekTracer),
    //POINTER(FindTracer),
    //POINTER(ClearTracer),
