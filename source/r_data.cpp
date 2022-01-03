@@ -142,21 +142,15 @@ void R_InitSpriteProjSpan()
          {
             span.bottom = FLT_MAX;
             span.top = -FLT_MAX;
-            span.side = 0;
             for(int16_t lump : frame.lump)
             {
                float height = spriteheight[lump];
                auto yofs = M_FixedToFloat(spritetopoffset[lump]);
-               float side = M_FixedToFloat(emax(spritewidth[lump] -
-                                                spriteoffset[lump],
-                                                spriteoffset[lump]));
 
                if(yofs - height < span.bottom)
                   span.bottom = yofs - height;
                if(yofs > span.top)
                   span.top = yofs;
-               if(side > span.side)
-                  span.side = side;
             }
          }
          else
@@ -164,9 +158,6 @@ void R_InitSpriteProjSpan()
             int16_t lump = frame.lump[0];
             span.top = M_FixedToFloat(spritetopoffset[lump]);
             span.bottom = span.top - spriteheight[lump];
-            span.side = M_FixedToFloat(emax(spritewidth[lump] -
-                                            spriteoffset[lump],
-                                            spriteoffset[lump]));
          }
       }
    }

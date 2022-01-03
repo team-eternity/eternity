@@ -63,7 +63,6 @@ struct spritespan_t
 {
    float top;
    float bottom;
-   float side;
 };
 extern spritespan_t **r_spritespan;
 

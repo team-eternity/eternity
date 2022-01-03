@@ -121,14 +121,13 @@ struct spriteprojnode_t
    const sector_t *sector;                // sector where this appears
    v3fixed_t delta;                       // portal accumulated delta (do not
                                           // link offsets)
-   const line_t *portalline;              // portal line (if applicable)
    DLListItem<spriteprojnode_t> mobjlink; // vertical link (links separate layers)
    DLListItem<spriteprojnode_t> sectlink; // horizontal link (links separate mobjs)
    DLListItem<spriteprojnode_t> freelink; // free list link (for recycling)
 };
 
 void R_RemoveMobjProjections(Mobj *mobj);
-void R_CheckMobjProjections(Mobj *mobj, bool checklines);
+void R_CheckMobjProjections(Mobj *mobj);
 
 ///////////////////////////////////////////////////////////////////////////////
 

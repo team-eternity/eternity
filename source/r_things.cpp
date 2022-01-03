@@ -986,8 +986,7 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
                             const portalrender_t &portalrender,
                             Mobj *thing,
                             lighttable_t *const *const spritelights,
-                            v3fixed_t *delta = nullptr,
-                            const line_t *portalline = nullptr)
+                            v3fixed_t *delta = nullptr)
 {
    spritepos_t    spritepos;
    fixed_t        gzt;            // killough 3/27/98
@@ -1047,18 +1046,15 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
       v2float_t posf = v2float_t::fromFixed(offsetpos);
 
       const renderbarrier_t &barrier = portalrender.w->barrier;
-      if(portalrender.w->type == pw_line && portalrender.w->line != portalline &&
+      if(portalrender.w->type == pw_line &&
          barrier.linegen.normal * (posf - barrier.linegen.start) >= 0)
       {
          return;
       }
       if(portalrender.w->type != pw_line)
       {
-         if(portalrender.w->line && portalrender.w->line != portalline &&
-            barrier.linegen.normal * (posf - barrier.linegen.start) >= 0)
-         {
+         if(portalrender.w->line && barrier.linegen.normal * (posf - barrier.linegen.start) >= 0)
             return;
-         }
          windowlinegen_t linegen1, linegen2;
          if(R_PickNearestBoxLines(cb_viewpoint, barrier.fbox, linegen1, linegen2))
          {
@@ -1353,7 +1349,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
       {
          R_projectSprite(
             cmapcontext, spritecontext, viewpoint, cb_viewpoint, bounds, portalrender,
-            (*item)->mobj, spritelights, &(*item)->delta, (*item)->portalline
+            (*item)->mobj, spritelights, &(*item)->delta
          );
       }
    }
@@ -2046,7 +2042,6 @@ inline static void R_freeProjNode(spriteprojnode_t *node)
 {
    node->mobj = nullptr;
    node->sector = nullptr;
-   node->portalline = nullptr;
    memset(&node->delta, 0, sizeof(node->delta));
    node->mobjlink.remove();
    node->sectlink.remove();
@@ -2092,7 +2087,7 @@ static spriteprojnode_t *R_newProjNode()
 //
 inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data, v3fixed_t &delta,
                                       DLListItem<spriteprojnode_t> *&item,
-                                      DLListItem<spriteprojnode_t> **&tail, const line_t *line)
+                                      DLListItem<spriteprojnode_t> **&tail)
 {
    sector_t *sector;
 
@@ -2105,7 +2100,6 @@ inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data, v3fixe
       newnode->delta = delta;
       newnode->mobj = mobj;
       newnode->sector = sector;
-      newnode->portalline = line;
       newnode->mobjlink.insert(newnode, tail);
       newnode->sectlink.insert(newnode, &sector->spriteproj);
       tail = &newnode->mobjlink.dllNext;
@@ -2119,7 +2113,6 @@ inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data, v3fixe
          (*item)->sectlink.insert((*item), &sector->spriteproj);
       }
       (*item)->delta = delta;
-      (*item)->portalline = line;
       tail = &item->dllNext;
       item = item->dllNext;
       
@@ -2129,70 +2122,11 @@ inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data, v3fixe
 }
 
 //
-// Data passed through iterator
-//
-struct mobjprojinfo_t
-{
-   Mobj *mobj;
-   fixed_t bbox[4];
-   DLListItem<spriteprojnode_t> **item;
-   DLListItem<spriteprojnode_t> ***tail;
-   fixed_t scaledbottom, scaledtop;
-};
-
-//
-// Iterator called by R_CheckMobjProjection
-//
-static bool RIT_checkMobjProjection(const line_t &line, void *vdata)
-{
-   const auto &mpi = *static_cast<mobjprojinfo_t *>(vdata);
-   if(line.bbox[BOXLEFT] >= mpi.bbox[BOXRIGHT] ||
-      line.bbox[BOXBOTTOM] >= mpi.bbox[BOXTOP] ||
-      line.bbox[BOXRIGHT] <= mpi.bbox[BOXLEFT] ||
-      line.bbox[BOXTOP] <= mpi.bbox[BOXBOTTOM] ||
-      P_PointOnLineSidePrecise(mpi.mobj->x, mpi.mobj->y, &line) == 1 ||
-      P_BoxOnLineSide(mpi.bbox, &line) != -1 ||
-      line.intflags & MLI_MOVINGPORTAL)
-   {
-      return true;
-   }
-
-   const linkdata_t *data = nullptr, *data2 = nullptr;
-
-   if(line.pflags & PS_PASSABLE)
-      data = &line.portal->data.link;
-   else
-   {
-      if(line.extflags & EX_ML_LOWERPORTAL &&
-         line.backsector->srf.floor.pflags & PS_PASSABLE &&
-         mpi.mobj->z + mpi.scaledbottom < line.backsector->srf.floor.height)
-      {
-         data = &line.backsector->srf.floor.portal->data.link;
-      }
-      if(line.extflags & EX_ML_UPPERPORTAL &&
-         line.backsector->srf.ceiling.pflags & PS_PASSABLE &&
-         mpi.mobj->z + mpi.scaledtop > line.backsector->srf.ceiling.height)
-      {
-         data2 = &line.backsector->srf.ceiling.portal->data.link;
-      }
-   }
-   v3fixed_t v = { 0, 0, 0 };
-   if(data)
-      R_addProjNode(mpi.mobj, data, v, *mpi.item, *mpi.tail, &line);
-   if(data2)
-   {
-      v.x = v.y = v.z = 0;
-      R_addProjNode(mpi.mobj, data2, v, *mpi.item, *mpi.tail, &line);
-   }
-   return true;
-}
-
-//
 // R_CheckMobjProjections
 //
 // Looks above and below for portals and prepares projection nodes
 //
-void R_CheckMobjProjections(Mobj *mobj, bool checklines)
+void R_CheckMobjProjections(Mobj *mobj)
 {
    sector_t *sector = mobj->subsector->sector;
 
@@ -2202,8 +2136,7 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    DLListItem<spriteprojnode_t> *item = mobj->spriteproj;
 
    if(mobj->flags & MF_NOSECTOR || overflown ||
-      (!(sector->srf.floor.pflags & PS_PASSABLE) && !(sector->srf.ceiling.pflags & PS_PASSABLE) &&
-       !checklines))
+      (!(sector->srf.floor.pflags & PS_PASSABLE) && !(sector->srf.ceiling.pflags & PS_PASSABLE)))
    {
       if(item)
          R_RemoveMobjProjections(mobj);
@@ -2214,8 +2147,7 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
 
    DLListItem<spriteprojnode_t> **tail = &mobj->spriteproj;
 
-   const spritespan_t &span =
-   r_spritespan[mobj->sprite][mobj->frame & FF_FRAMEMASK];
+   const spritespan_t &span = r_spritespan[mobj->sprite][mobj->frame & FF_FRAMEMASK];
 
    fixed_t scaledtop = M_FloatToFixed(span.top * mobj->yscale + 0.5f);
    fixed_t scaledbottom = M_FloatToFixed(span.bottom * mobj->yscale - 0.5f);
@@ -2228,7 +2160,7 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    {
       // always accept first sector
       data = R_FPLink(sector);
-      sector = R_addProjNode(mobj, data, delta, item, tail, nullptr);
+      sector = R_addProjNode(mobj, data, delta, item, tail);
    }
 
    // restart from mobj's group
@@ -2240,40 +2172,8 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    {
       // always accept first sector
       data = R_CPLink(sector);
-      sector = R_addProjNode(mobj, data, delta, item, tail, nullptr);
+      sector = R_addProjNode(mobj, data, delta, item, tail);
    }
-
-   // Now check line portals
-   pLPortalMap.newSession();
-   mobjprojinfo_t mpi;
-   fixed_t xspan = M_FloatToFixed(span.side * mobj->xscale);
-   mpi.mobj = mobj;
-   if(mobj->prevpos.ldata)
-   {
-      mpi.bbox[BOXLEFT] = mobj->x - xspan;
-      mpi.bbox[BOXRIGHT] = mobj->x + xspan;
-      mpi.bbox[BOXBOTTOM] = mobj->y - xspan;
-      mpi.bbox[BOXTOP] = mobj->y + xspan;
-   }
-   else
-   {
-      mpi.bbox[BOXLEFT] = emin(mobj->x, mobj->prevpos.x) - xspan;
-      mpi.bbox[BOXRIGHT] = emax(mobj->x, mobj->prevpos.x) + xspan;
-      mpi.bbox[BOXBOTTOM] = emin(mobj->y, mobj->prevpos.y) - xspan;
-      mpi.bbox[BOXTOP] = emax(mobj->y, mobj->prevpos.y) + xspan;
-   }
-   mpi.scaledbottom = scaledbottom;
-   mpi.scaledtop = scaledtop;
-   mpi.item = &item;
-   mpi.tail = &tail;
-   int bx1 = (mpi.bbox[BOXLEFT] - bmaporgx) >> MAPBLOCKSHIFT;
-   int bx2 = (mpi.bbox[BOXRIGHT] - bmaporgx) >> MAPBLOCKSHIFT;
-   int by1 = (mpi.bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
-   int by2 = (mpi.bbox[BOXTOP] - bmaporgy) >> MAPBLOCKSHIFT;
-
-   for(int by = by1; by <= by2; ++by)
-      for(int bx = bx1; bx <= bx2; ++bx)
-         pLPortalMap.iterator(bx, by, &mpi, RIT_checkMobjProjection);
 
    // remove trailing items
    DLListItem<spriteprojnode_t> *next;

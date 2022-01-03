@@ -510,10 +510,6 @@ static void Polyobj_collectPortals(polyobj_t *po)
       if(!portal || !R_portalIsAnchored(portal))
          continue;
 
-      line.intflags |= MLI_MOVINGPORTAL;
-      if(line.beyondportalline)
-         line.beyondportalline->intflags |= MLI_MOVINGPORTAL;
-
       for(portal_t *prevPortal : portals)
       {
          if(prevPortal == portal)

@@ -798,7 +798,6 @@ static void P_buildPortalMap()
       }
    }
 
-   pLPortalMap.mapInit();
    gPortalBlockmap.mapInit();
 
    P_initSectorPortalNeighbors();
