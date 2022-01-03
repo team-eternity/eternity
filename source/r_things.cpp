@@ -150,6 +150,7 @@ struct vissprite_t
   fixed_t texturemid;
   int     patch;
   byte    drawstyle;
+  byte    isProjectionClone;  // true if it's a clone from R_projectSprite
 
   float   startx;
   float   dist, xstep;
@@ -913,6 +914,7 @@ static void R_projectSpriteAcrossPortal(spritecontext_t &spritecontext, const vi
    fixed_t height = ovis.gzt - ovis.gz;
    vissprite_t *bvis = R_newVisSprite(spritecontext);
    *bvis = ovis;
+   bvis->isProjectionClone = true;
    if(view.angle != pwindow.vangle)
    {
       // rotated portal: apply the complex operation
@@ -1200,6 +1202,7 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
 
    // store information in a vissprite
    vis = R_newVisSprite(spritecontext);
+   vis->isProjectionClone = false;
 
    // killough 3/27/98: save sector for special clipping later
    vis->heightsec = heightsec;
@@ -1862,7 +1865,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
    // killough 3/27/98: end special clipping for deep water / fake ceilings
 
    // SoM: special clipping for linked portals
-   if(useportalgroups)
+   if(useportalgroups && !spr->isProjectionClone)
    {
       float h, mh;
 
