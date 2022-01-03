@@ -282,7 +282,7 @@ int EV_ThingRaise(Mobj *actor, int tid)
       if(!P_ThingIsCorpse(mobj) || !P_CheckCorpseRaiseSpace(mobj))
          continue;
       // no raiser allowed, no friendliness transferred
-      P_RaiseCorpse(mobj, nullptr); 
+      P_RaiseCorpse(mobj, nullptr, sfx_slop); 
       success = 1;
    }
    return success;

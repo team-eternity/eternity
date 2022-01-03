@@ -31,6 +31,7 @@
 
 struct actionargs_t;
 
+bool P_HealCorpse(actionargs_t *actionargs, const int radius, const int healstate, const int healsound);
 void A_Fire(actionargs_t *actor);
 
 #endif

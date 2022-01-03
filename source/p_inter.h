@@ -60,7 +60,7 @@ void P_Whistle(Mobj *actor, int mobjtype);
 // Archvile interaction check. Used by the A_VileChase and Thing_Raise
 bool P_ThingIsCorpse(const Mobj *mobj);
 bool P_CheckCorpseRaiseSpace(Mobj *corpse);
-void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser);
+void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser, const int sound);
 
 // MaxW: 2016/07/14:
 // Used by HealThing line actions
