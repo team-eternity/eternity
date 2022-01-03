@@ -1787,7 +1787,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(SpawnObject),
    POINTER(MonsterProjectile),
    POINTER(MonsterBulletAttack),
-   //POINTER(MonsterMeleeAttack),
+   POINTER(MonsterMeleeAttack),
    //POINTER(RadiusDamage),
    //POINTER(NoiseAlert),
    //POINTER(HealChase),

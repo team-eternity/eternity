@@ -27,9 +27,12 @@
 
 #include "a_args.h"
 #include "a_common.h"
+#include "d_mod.h"
 #include "doomstat.h"
 #include "e_args.h"
 #include "m_vector.h"
+#include "p_enemy.h"
+#include "p_inter.h"
 #include "p_mobj.h"
 #include "p_portalcross.h"
 #include "s_sound.h"
@@ -226,7 +229,32 @@ void A_MonsterBulletAttack(actionargs_t *actionargs)
 //
 void A_MonsterMeleeAttack(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args  = actionargs->args;
+   Mobj      *actor = actionargs->actor;
+   int       damagebase, damagemod;
+   sfxinfo_t *hitsound;
+   fixed_t   range;
+   int       damage;
+
+   if(!mbf21_temp || !actor->target)
+      return;
+
+   damagebase = E_ArgAsInt(args, 0, 3);
+   damagemod  = E_ArgAsInt(args, 1, 8);
+   hitsound   = E_ArgAsSound(args, 2);
+   range      = E_ArgAsFixed(args, 3, actor->info->meleerange);
+
+   range += actor->target->info->radius - 20 * FRACUNIT;
+
+   A_FaceTarget(actionargs);
+   if(!P_CheckRange(actor, range))
+      return;
+
+   if(hitsound)
+      S_StartSound(actor, hitsound->dehackednum);
+
+   damage = (P_Random(pr_mbf21) % damagemod + 1) * damagebase;
+   P_DamageMobj(actor->target, actor, actor, damage, MOD_HIT);
 }
 
 //
