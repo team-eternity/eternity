@@ -334,9 +334,6 @@ struct pwindow_t
    pwindow_t *head, *child;
 
    planehash_t *poverlay;  // Portal overlays are now stored per window
-
-   // Post BSP stack tracing for full cross-portal sprite rendering
-   int postbspfrom;
 };
 
 // SoM: Cardboard
@@ -345,11 +342,9 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext,
                  pwindow_t *window, int x, float ytop, float ybottom);
 
 pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
-                                   const spritecontext_t &spritecontext,
                                    const viewpoint_t &viewpoint, const contextbounds_t &bounds,
                                    surf_e surf, const surface_t &surface);
 pwindow_t *R_GetLinePortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
-                                 const spritecontext_t &spritecontext,
                                  const viewpoint_t &viewpoint,const contextbounds_t &bounds,
                                  portal_t *portal, const seg_t *seg);
 

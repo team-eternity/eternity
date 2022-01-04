@@ -299,7 +299,7 @@ void R_CalcRenderBarrier(pwindow_t &window, const sectorbox_t &box)
    }
 }
 
-static pwindow_t *R_newPortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext, const spritecontext_t &spritecontext,
+static pwindow_t *R_newPortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
                                     const contextbounds_t &bounds,
                                     portal_t *p, const line_t *linedef, pwindowtype_e type)
 {
@@ -332,8 +332,6 @@ static pwindow_t *R_newPortalWindow(planecontext_t &planecontext, portalcontext_
       windowlast->next = ret;
       windowlast = ret;
    }
-   
-   ret->postbspfrom = spritecontext.pstacksize;
 
    return ret;
 }
@@ -361,7 +359,6 @@ static void R_createChildWindow(planecontext_t &planecontext, portalcontext_t &p
    child->type     = parent->type;
    child->func     = parent->func;
    child->clipfunc = parent->clipfunc;
-   child->postbspfrom = parent->postbspfrom;
 }
 
 //
@@ -1466,7 +1463,6 @@ static bool R_windowMatchesCurrentView(const viewpoint_t &viewpoint, const pwind
 // Get sector portal window. 
 //
 pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
-                                   const spritecontext_t &spritecontext,
                                    const viewpoint_t &viewpoint, const contextbounds_t &bounds,
                                    surf_e surf, const surface_t &surface)
 {
@@ -1504,7 +1500,7 @@ pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t
 
    // not found, so make it
    pwindow_t *window = R_newPortalWindow(
-      planecontext, portalcontext, spritecontext, bounds, surface.portal, nullptr, pw_surface[surf]
+      planecontext, portalcontext, bounds, surface.portal, nullptr, pw_surface[surf]
    );
    window->planez = surface.height;
    M_ClearBox(window->barrier.fbox);
@@ -1548,7 +1544,6 @@ static void R_updateLinePortalWindowGenerator(pwindow_t *window, const seg_t *se
 }
 
 pwindow_t *R_GetLinePortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
-                                 const spritecontext_t &spritecontext,
                                  const viewpoint_t &viewpoint, const contextbounds_t &bounds,
                                  portal_t *portal, const seg_t *seg)
 {
@@ -1567,7 +1562,7 @@ pwindow_t *R_GetLinePortalWindow(planecontext_t &planecontext, portalcontext_t &
    }
 
    // not found, so make it
-   rover = R_newPortalWindow(planecontext, portalcontext, spritecontext, bounds, portal, seg->linedef, pw_line);
+   rover = R_newPortalWindow(planecontext, portalcontext, bounds, portal, seg->linedef, pw_line);
    R_updateLinePortalWindowGenerator(rover, seg);
    return rover;
 }

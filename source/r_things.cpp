@@ -879,103 +879,6 @@ static void R_interpolatePSpritePosition(const pspdef_t &pspr, v2fixed_t &pos)
 }
 
 //
-// Projects the sprite back across the portal to the original layer
-//
-static void R_projectSpriteAcrossPortal(spritecontext_t &spritecontext, const vissprite_t &ovis,
-                                        const pwindow_t &pwindow, const viewpoint_t &view,
-                                        const Mobj *thing)
-{
-   thingproj_t *&thingproj = spritecontext.thingproj;
-   int &thingprojsize = spritecontext.thingprojsize;
-   int &thingprojalloc = spritecontext.thingprojalloc;
-
-   poststack_t *pstack = spritecontext.pstack;
-   maskedrange_t *masked = pstack[pwindow.postbspfrom].masked;
-   if(!masked) // can't have sprites on the source area
-      return;
-
-   // Make sure we don't overdraw the same thing's sprite into the same origin post-bsp stack
-   for(int i = 0; i < spritecontext.thingprojsize; ++i)
-      if(thingproj[i].thing == thing && thingproj[i].pstackpos == pwindow.postbspfrom)
-         return;
-
-   if(thingprojsize == thingprojalloc)
-   {
-      thingprojalloc = thingprojalloc ? 2 * thingprojalloc : 16;
-      thingproj = erealloc(thingproj_t *, thingproj, thingprojalloc * sizeof(thingproj_t));
-   }
-   thingproj[thingprojsize].thing = thing;
-   thingproj[thingprojsize].pstackpos = pwindow.postbspfrom;
-   ++thingprojsize;
-
-   fixed_t height = ovis.gzt - ovis.gz;
-   vissprite_t ovisorig = ovis;  // must make a local copy, because of realloc
-   vissprite_t *bvis = R_newVisSprite(spritecontext);
-   *bvis = ovisorig;
-   bvis->isProjectionClone = true;
-   if(view.angle != pwindow.vangle)
-   {
-      // rotated portal: apply the complex operation
-      v3double_t sprdelta =
-      {
-         M_FixedToDouble(ovisorig.gx - view.x),
-         M_FixedToDouble(ovisorig.gy - view.y),
-         M_FixedToDouble(ovisorig.gz - view.z)
-      };
-      double sprdist = hypot(hypot(sprdelta.x, sprdelta.y), sprdelta.z);
-      double sprang = atan2(sprdelta.y, sprdelta.x);
-      angle_t deltafang = pwindow.vangle - view.angle;
-      double targang = sprang - (double)deltafang / ANG180 * M_PI;
-      v3double_t targpos =
-      {
-         M_FixedToDouble(pwindow.vx),
-         M_FixedToDouble(pwindow.vy),
-         M_FixedToDouble(pwindow.vz)
-      };
-      targpos.x += sprdist * cos(targang);
-      targpos.y += sprdist * sin(targang);
-      targpos.z += sprdelta.z;
-
-      bvis->gx = M_DoubleToFixed(targpos.x);
-      bvis->gy = M_DoubleToFixed(targpos.y);
-      bvis->gz = M_DoubleToFixed(targpos.z);
-   }
-   else
-   {
-      // normal case: no rotation
-      bvis->gx += pwindow.vx - view.x;
-      bvis->gy += pwindow.vy - view.y;
-      bvis->gz += pwindow.vz - view.z;
-   }
-   bvis->gzt = bvis->gz + height;;
-   bvis->sector = eindex(R_PointInSubsector(bvis->gx, bvis->gy)->sector - sectors);
-
-   vissprite_t *vissprites = spritecontext.vissprites;
-
-   // Now shift the mask ahead
-   int pstacksize = spritecontext.pstacksize;
-   vissprite_t mover = *bvis;
-
-   for(int i = pwindow.postbspfrom; i < pstacksize; ++i)
-   {
-      maskedrange_t *masked = pstack[i].masked;
-      if(!masked)
-         continue;
-      vissprite_t aux;
-      if(i == pwindow.postbspfrom || masked->lastsprite > masked->firstsprite)
-      {
-         aux = vissprites[masked->lastsprite];
-         vissprites[masked->lastsprite] = mover;
-         mover = aux;
-      }
-      ++masked->lastsprite;
-      if(i > pwindow.postbspfrom)
-         ++masked->firstsprite;
-   }
-   *bvis = mover;
-}
-
-//
 // Generates a vissprite for a thing if it might be visible.
 // ioanch 20160109: added optional arguments for offsetting the sprite
 //
@@ -1290,14 +1193,6 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
          vis->tranmaplump = rTintTableIndex;
       }
    }
-
-//   if(pwindow && pwindow->type == pw_line && !delta)
-//      for(int x = vis->x1; x <= vis->x2; ++x)
-//         if(y1 < pwindow->top[x] || y2 > pwindow->bottom[x])
-//         {
-//            R_projectSpriteAcrossPortal(spritecontext, *vis, *pwindow, viewpoint, thing);
-//            break;
-//         }
 }
 
 //
