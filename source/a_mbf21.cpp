@@ -307,10 +307,10 @@ void A_HealChase(actionargs_t *actionargs)
    int state, sound;
    sfxinfo_t *sfxinfo;
 
-   if(!mbf21_temp)
+   state = E_ArgAsStateNumNI(args, 0, actor);
+   if(!mbf21_temp || state < 0)
       return;
 
-   state   = E_ArgAsStateNum(args, 0, actor);
    sfxinfo = E_ArgAsSound(args, 1);
    sound   = sfxinfo ? sfxinfo->dehackednum : 0;
 
@@ -368,10 +368,10 @@ void A_JumpIfHealthBelow(actionargs_t *actionargs)
    Mobj      *actor = actionargs->actor;
    int state, health;
 
-   if(!mbf21_temp)
+   state = E_ArgAsStateNumNI(args, 0, actor);
+   if(!mbf21_temp || state < 0)
       return;
 
-   state  = E_ArgAsStateNum(args, 0, actor);
    health = E_ArgAsInt(args, 1, 0);
 
    if(actor->health < health)
@@ -404,10 +404,10 @@ void A_JumpIfTargetCloser(actionargs_t *actionargs)
    int     state;
    fixed_t distance;
 
-   if(!mbf21_temp || !target)
+   state = E_ArgAsStateNumNI(args, 0, actor);
+   if(!mbf21_temp || !target || state < 0)
       return;
 
-   state    = E_ArgAsStateNum(args, 0, actor);
    distance = E_ArgAsFixed(args, 1, 0);
 
    if(distance > P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor)))
@@ -440,10 +440,10 @@ void A_JumpIfTracerCloser(actionargs_t *actionargs)
    int     state;
    fixed_t distance;
 
-   if(!mbf21_temp || !tracer)
+   state = E_ArgAsStateNumNI(args, 0, actor);
+   if(!mbf21_temp || !tracer || state < 0)
       return;
 
-   state    = E_ArgAsStateNum(args, 0, actor);
    distance = E_ArgAsFixed(args, 1, 0);
 
    const fixed_t dx = actor->x - getThingX(actor, actor->tracer);
@@ -468,10 +468,10 @@ void A_JumpIfFlagsSet(actionargs_t *actionargs)
    unsigned int  flags;
    unsigned int *mbf21flags;
 
-   if(!mbf21_temp || !actor)
+   state = E_ArgAsStateNumNI(args, 0, actor);
+   if(!mbf21_temp || !actor || state < 0)
       return;
 
-   state      = E_ArgAsStateNum(args, 0, actor);
    flags      = E_ArgAsInt(args, 0, 0);
    mbf21flags = E_ArgAsMBF21ThingFlags(args, 1);
 
@@ -497,7 +497,7 @@ void A_AddFlags(actionargs_t *actionargs)
    unsigned int  flags;
    unsigned int *mbf21flags;
 
-   if(!mbf21_temp || !actor)
+   if(!mbf21_temp)
       return;
 
    flags      = E_ArgAsInt(args, 0, 0);
@@ -523,7 +523,7 @@ void A_RemoveFlags(actionargs_t *actionargs)
    unsigned int  flags;
    unsigned int *mbf21flags;
 
-   if(!mbf21_temp || !actor)
+   if(!mbf21_temp)
       return;
 
    flags      = E_ArgAsInt(args, 0, 0);
@@ -617,12 +617,16 @@ void A_WeaponJump(actionargs_t *actionargs)
    arglist_t *args   = actionargs->args;
    player_t  *player = actionargs->actor->player;
    pspdef_t  *pspr   = actionargs->pspr;
+   int state;
 
    if(!mbf21_temp || !player || !pspr)
       return;
 
+   if(state = E_ArgAsStateNumNI(args, 0, player); state < 0)
+      return;
+
    if(P_Random(pr_mbf21) < E_ArgAsInt(args, 1, 0))
-      P_SetPspritePtr(player, pspr, E_ArgAsStateNum(args, 0, player));
+      P_SetPspritePtr(player, pspr, state);
 }
 
 //
