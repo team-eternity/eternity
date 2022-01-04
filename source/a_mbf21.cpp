@@ -614,7 +614,15 @@ void A_WeaponSound(actionargs_t *actionargs)
 //
 void A_WeaponJump(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args   = actionargs->args;
+   player_t  *player = actionargs->actor->player;
+   pspdef_t  *pspr   = actionargs->pspr;
+
+   if(!mbf21_temp || !player || !pspr)
+      return;
+
+   if(P_Random(pr_mbf21) < E_ArgAsInt(args, 1, 0))
+      P_SetPspritePtr(player, pspr, E_ArgAsStateNum(args, 0, player));
 }
 
 //
@@ -624,7 +632,18 @@ void A_WeaponJump(actionargs_t *actionargs)
 //
 void A_ConsumeAmmo(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args   = actionargs->args;
+   player_t  *player = actionargs->actor->player;
+   int amount;
+
+   if(!player)
+      return;
+
+   amount = E_ArgAsInt(args, 0, 0);
+   if(amount == 0)
+      amount = -1;
+
+   P_SubtractAmmo(player, amount);
 }
 
 //

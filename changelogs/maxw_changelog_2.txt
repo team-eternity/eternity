@@ -179,6 +179,11 @@ Added "ripsound" EDF property, which is played when a ripper rips.
    A_JumpIfTracerCloser, A_WeaponSound, and A_WeaponAlert, A_AddFlags,
    A_RemoveFlags, and A_JumpIfFlagsSet.
 
+--------------------------------------------------------------------------------
+2022/01/04
+[MBF21]
+ * Added A_WeaponJump and A_ConsumeAmmo.
+
 ================================================================================
 EOF
 ================================================================================
