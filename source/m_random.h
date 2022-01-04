@@ -28,6 +28,7 @@
 #define M_RANDOM_H__
 
 #include "d_keywds.h"
+#include "m_fixed.h"
 
 //#define RANDOM_LOG
 #ifdef RANDOM_LOG
