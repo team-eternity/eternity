@@ -1186,6 +1186,8 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
    // Only push the overlay if this is the head window
    if(pushpost)
       R_PushPost(bspcontext, spritecontext, bounds, true, window->head == window ? window : nullptr);
+   else
+      R_UpdatePost(bspcontext, spritecontext);
 
    planecontext.floorclip   = floorcliparray;
    planecontext.ceilingclip = ceilingcliparray;

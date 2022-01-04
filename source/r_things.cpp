@@ -545,7 +545,6 @@ void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
                 const contextbounds_t &bounds, bool pushmasked, pwindow_t *window)
 {
    drawseg_t     *&drawsegs     = bspcontext.drawsegs;
-   unsigned int   &maxdrawsegs  = bspcontext.maxdrawsegs;
    drawseg_t     *&ds_p         = bspcontext.ds_p;
    poststack_t   *&pstack       = spritecontext.pstack;
    int            &pstacksize   = spritecontext.pstacksize;
@@ -617,6 +616,16 @@ void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
       post->masked = nullptr;
 
    pstacksize++;
+}
+
+//
+// Updates the last post-BSP entry instead of pushing a new one
+//
+void R_UpdatePost(const bspcontext_t &bspcontext, spritecontext_t &spritecontext)
+{
+   poststack_t *post = spritecontext.pstack + spritecontext.pstacksize - 1;
+   post->masked->lastds = eindex(bspcontext.ds_p - bspcontext.drawsegs);
+   post->masked->lastsprite = int(spritecontext.num_vissprite);
 }
 
 //
