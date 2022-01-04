@@ -1250,6 +1250,12 @@ void R_RenderViewContext(rendercontext_t &context)
    // check for new console commands.
    //NetUpdate();
 
+   // Prepare these for post-BSP sprite-drawseg orientation
+   context.portalcontext.portalrender.postbspbasepos.x = context.view.x;
+   context.portalcontext.portalrender.postbspbasepos.y = context.view.y;
+   context.portalcontext.portalrender.postbspbasepos.z = context.view.z;
+   context.portalcontext.portalrender.postbspbaseangle = context.view.angle;
+
    // The head node is the last node output.
    R_RenderBSPNode(context, numnodes - 1);
 

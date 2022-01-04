@@ -1105,7 +1105,7 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
 
    vis->colour = thing->colour;
    fixed_t oldz = spritepos.z;
-   spritepos = R_ConvertFromWindow(spritepos, portalrender.w, viewpoint);
+   spritepos = R_ConvertFromWindow(spritepos, portalrender, viewpoint);
    vis->gx     = spritepos.x;
    vis->gy     = spritepos.y;
    vis->gz     = spritepos.z;
@@ -2247,7 +2247,7 @@ static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &sprit
    vis = R_newVisSprite(spritecontext);
    vis->heightsec = heightsec;
    v3fixed_t point = { particle->x, particle->y, particle->z };
-   point = R_ConvertFromWindow(point, portalrender.w, viewpoint);
+   point = R_ConvertFromWindow(point, portalrender, viewpoint);
    vis->gx = point.x;
    vis->gy = point.y;
    vis->gz = point.z;

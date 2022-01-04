@@ -360,9 +360,14 @@ struct portalrender_t
    R_ClipSegFunc segClipFunc;
 
 //   planehash_t *overlay;
+
+   // Reference viewpoint for the base position when combining multiple wall portals for post-BSP
+   v3fixed_t postbspbasepos;
+   angle_t postbspbaseangle;
 };
 
-v3fixed_t R_ConvertFromWindow(v3fixed_t point, const pwindow_t *window, const viewpoint_t &view);
+v3fixed_t R_ConvertFromWindow(v3fixed_t point, const portalrender_t &portalrender,
+                              const viewpoint_t &view);
 
 #endif
 

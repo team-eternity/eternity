@@ -919,11 +919,11 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    ds_p->curline  = segclip.line;
 
    v3fixed_t point = { segclip.line->v1->x, segclip.line->v1->y, 0 };
-   point = R_ConvertFromWindow(point, portalrender.w, viewpoint);
+   point = R_ConvertFromWindow(point, portalrender, viewpoint);
    ds_p->translatedline.x = point.x;
    ds_p->translatedline.y = point.y;
    point = { segclip.line->v2->x, segclip.line->v2->y, 0 };
-   point = R_ConvertFromWindow(point, portalrender.w, viewpoint);
+   point = R_ConvertFromWindow(point, portalrender, viewpoint);
    ds_p->translatedline.dx = point.x - ds_p->translatedline.x;
    ds_p->translatedline.dy = point.y - ds_p->translatedline.y;
 

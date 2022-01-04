@@ -1170,6 +1170,16 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
       cb_viewpoint.cos   = cosf(cb_viewpoint.angle);
    }
 
+   if(pushpost)
+   {
+      // Update it if we update the post-BSP stack. All subsequent wall portal windows which will
+      // NOT call pushpost and ARE added first on the window list will preserve these base positions
+      portalcontext.portalrender.postbspbasepos.x = viewpoint.x;
+      portalcontext.portalrender.postbspbasepos.y = viewpoint.y;
+      portalcontext.portalrender.postbspbasepos.z = viewpoint.z;
+      portalcontext.portalrender.postbspbaseangle = viewpoint.angle;
+   }
+
    R_incrementRenderDepth(portalcontext.renderdepth);
    R_RenderBSPNode(context, numnodes - 1);
 
@@ -1988,11 +1998,12 @@ bool R_IsSkyWall(const line_t &line)
 //
 // Converts a point from a portal coordinates to viewer coordinates
 //
-v3fixed_t R_ConvertFromWindow(v3fixed_t point, const pwindow_t *pwindow, const viewpoint_t &view)
+v3fixed_t R_ConvertFromWindow(v3fixed_t point, const portalrender_t &portalrender,
+                              const viewpoint_t &view)
 {
-   if(!pwindow)
+   if(!portalrender.active)
       return point;
-   if(view.angle != pwindow->vangle)
+   if(view.angle != portalrender.postbspbaseangle)
    {
       // rotated portal: apply the complex operation
       v3double_t viewpointdelta =
@@ -2003,13 +2014,13 @@ v3fixed_t R_ConvertFromWindow(v3fixed_t point, const pwindow_t *pwindow, const v
       };
       double viewpointxydist = hypot(viewpointdelta.x, viewpointdelta.y);
       double viewpointyaw = atan2(viewpointdelta.y, viewpointdelta.x);
-      angle_t viewwindowyawdelta = pwindow->vangle - view.angle;
+      angle_t viewwindowyawdelta = portalrender.postbspbaseangle - view.angle;
       double targetyaw = viewpointyaw - (double)viewwindowyawdelta / ANG180 * M_PI;
       v3double_t targetpoint =
       {
-         M_FixedToDouble(pwindow->vx),
-         M_FixedToDouble(pwindow->vy),
-         M_FixedToDouble(pwindow->vz)
+         M_FixedToDouble(portalrender.postbspbasepos.x),
+         M_FixedToDouble(portalrender.postbspbasepos.y),
+         M_FixedToDouble(portalrender.postbspbasepos.z)
       };
       targetpoint.x += viewpointxydist * cos(targetyaw);
       targetpoint.y += viewpointxydist * sin(targetyaw);
@@ -2023,7 +2034,9 @@ v3fixed_t R_ConvertFromWindow(v3fixed_t point, const pwindow_t *pwindow, const v
    }
    // normal case: no rotation
    return point + v3fixed_t {
-      pwindow->vx - view.x, pwindow->vy - view.y, pwindow->vz - view.z
+      portalrender.postbspbasepos.x - view.x,
+      portalrender.postbspbasepos.y - view.y,
+      portalrender.postbspbasepos.z - view.z
    };
 }
 
