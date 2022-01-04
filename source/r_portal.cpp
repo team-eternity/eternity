@@ -324,7 +324,6 @@ static pwindow_t *R_newPortalWindow(planecontext_t &planecontext, portalcontext_
    
    R_SetPortalFunction(ret);
    
-   // Also update the post-BSP stack reference. It always grow, since R_render*Portal always calls R_PushPost for its window.
    if(!windowhead)
       windowhead = windowlast = ret;
    else
