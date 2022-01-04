@@ -759,7 +759,7 @@ static void R_renderPlanePortal(rendercontext_t &context, pwindow_t *window)
       viewpoint.angle = window->vangle;
       viewpoint.sin = finesine[viewpoint.angle >> ANGLETOFINESHIFT];
       viewpoint.cos = finecosine[viewpoint.angle >> ANGLETOFINESHIFT];
-      cb_viewpoint.angle = (ANG90 - viewpoint.angle) * PI / ANG180;
+      cb_viewpoint.angle = cb_fixedAngleToFloat(viewpoint.angle);
       cb_viewpoint.sin = sinf(cb_viewpoint.angle);
       cb_viewpoint.cos = cosf(cb_viewpoint.angle);
    }
@@ -861,7 +861,7 @@ static void R_renderHorizonPortal(rendercontext_t &context, pwindow_t *window)
       viewpoint.angle = window->vangle;
       viewpoint.sin = finesine[viewpoint.angle >> ANGLETOFINESHIFT];
       viewpoint.cos = finecosine[viewpoint.angle >> ANGLETOFINESHIFT];
-      cb_viewpoint.angle = (ANG90 - viewpoint.angle) * PI / ANG180;
+      cb_viewpoint.angle = cb_fixedAngleToFloat(viewpoint.angle);
       cb_viewpoint.sin = sinf(cb_viewpoint.angle);
       cb_viewpoint.cos = cosf(cb_viewpoint.angle);
    }
@@ -1037,7 +1037,7 @@ static void R_renderSkyboxPortal(rendercontext_t &context, pwindow_t *window)
    viewpoint.sin    = finesine[viewpoint.angle >>ANGLETOFINESHIFT];
    viewpoint.cos    = finecosine[viewpoint.angle >>ANGLETOFINESHIFT];
 
-   cb_viewpoint.angle = (ANG90 - viewpoint.angle) * PI / ANG180;
+   cb_viewpoint.angle = cb_fixedAngleToFloat(viewpoint.angle);
    cb_viewpoint.sin   = (float)sin(cb_viewpoint.angle);
    cb_viewpoint.cos   = (float)cos(cb_viewpoint.angle);
 
@@ -1254,7 +1254,7 @@ static void R_renderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
    viewpoint.angle = window->vangle + R_doubleToUint32(tr.angle * ANG180 / PI);
    viewpoint.sin   = finesine[viewpoint.angle >> ANGLETOFINESHIFT];
    viewpoint.cos   = finecosine[viewpoint.angle >> ANGLETOFINESHIFT];
-   cb_viewpoint.angle = (ANG90 - viewpoint.angle) * PI / ANG180;
+   cb_viewpoint.angle = cb_fixedAngleToFloat(viewpoint.angle);
    cb_viewpoint.sin   = sinf(cb_viewpoint.angle);
    cb_viewpoint.cos   = cosf(cb_viewpoint.angle);
 
@@ -1374,7 +1374,7 @@ static void R_renderLinkedPortal(rendercontext_t &context, pwindow_t *window)
       viewpoint.angle = window->vangle;
       viewpoint.sin = finesine[viewpoint.angle >> ANGLETOFINESHIFT];
       viewpoint.cos = finecosine[viewpoint.angle >> ANGLETOFINESHIFT];
-      cb_viewpoint.angle = (ANG90 - viewpoint.angle) * PI / ANG180;
+      cb_viewpoint.angle = cb_fixedAngleToFloat(viewpoint.angle);
       cb_viewpoint.sin = sinf(cb_viewpoint.angle);
       cb_viewpoint.cos = cosf(cb_viewpoint.angle);
    }

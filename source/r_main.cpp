@@ -1055,7 +1055,7 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    cb_viewpoint.x      = M_FixedToFloat(viewpoint.x);
    cb_viewpoint.y      = M_FixedToFloat(viewpoint.y);
    cb_viewpoint.z      = M_FixedToFloat(viewpoint.z);
-   cb_viewpoint.angle  = (ANG90 - viewpoint.angle) * PI / ANG180;
+   cb_viewpoint.angle  = cb_fixedAngleToFloat(viewpoint.angle);
    cb_viewpoint.sin    = sinf(cb_viewpoint.angle);
    cb_viewpoint.cos    = cosf(cb_viewpoint.angle);
    view.pitch  = (ANG90 - viewpitch) * PI / ANG180;

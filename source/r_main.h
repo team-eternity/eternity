@@ -294,6 +294,14 @@ static inline uint32_t R_doubleToUint32(double d)
 #endif
 }
 
+//
+// Common routine to convert fixed-point angle to floating-point angle, by Cardboard's rules.
+//
+inline static float cb_fixedAngleToFloat(angle_t angle)
+{
+   return (ANG90 - angle) * PI / ANG180;
+}
+
 #endif
 
 //----------------------------------------------------------------------------
