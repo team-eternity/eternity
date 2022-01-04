@@ -1799,7 +1799,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(JumpIfTargetCloser),
    //POINTER(JumpIfTracerInSight),
    POINTER(JumpIfTracerCloser),
-   //POINTER(JumpIfFlagsSet),
+   POINTER(JumpIfFlagsSet),
    POINTER(AddFlags),
    POINTER(RemoveFlags),
 

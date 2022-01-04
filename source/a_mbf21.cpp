@@ -462,7 +462,26 @@ void A_JumpIfTracerCloser(actionargs_t *actionargs)
 //
 void A_JumpIfFlagsSet(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args  = actionargs->args;
+   Mobj      *actor = actionargs->actor;
+   int           state;
+   unsigned int  flags;
+   unsigned int *mbf21flags;
+
+   if(!mbf21_temp || !actor)
+      return;
+
+   state      = E_ArgAsStateNum(args, 0, actor);
+   flags      = E_ArgAsInt(args, 0, 0);
+   mbf21flags = E_ArgAsMBF21ThingFlags(args, 1);
+
+   if((actor->flags & flags)                      == flags &&
+      (actor->flags & mbf21flags[DEHFLAGS_MODE2]) == mbf21flags[DEHFLAGS_MODE2] &&
+      (actor->flags & mbf21flags[DEHFLAGS_MODE3]) == mbf21flags[DEHFLAGS_MODE3] &&
+      (actor->flags & mbf21flags[DEHFLAGS_MODE4]) == mbf21flags[DEHFLAGS_MODE4] &&
+      (actor->flags & mbf21flags[DEHFLAGS_MODE5]) == mbf21flags[DEHFLAGS_MODE5])
+      P_SetMobjState(actor, state);
+
 }
 
 //
@@ -481,12 +500,10 @@ void A_AddFlags(actionargs_t *actionargs)
    if(!mbf21_temp || !actor)
       return;
 
-   flags = E_ArgAsInt(args, 0, 0);
+   flags      = E_ArgAsInt(args, 0, 0);
    mbf21flags = E_ArgAsMBF21ThingFlags(args, 1);
 
-   actor->flags |= flags;
-
-   actor->flags  |= mbf21flags[DEHFLAGS_MODE1];
+   actor->flags  |= flags;
    actor->flags2 |= mbf21flags[DEHFLAGS_MODE2];
    actor->flags3 |= mbf21flags[DEHFLAGS_MODE3];
    actor->flags4 |= mbf21flags[DEHFLAGS_MODE4];
@@ -509,12 +526,10 @@ void A_RemoveFlags(actionargs_t *actionargs)
    if(!mbf21_temp || !actor)
       return;
 
-   flags = E_ArgAsInt(args, 0, 0);
+   flags      = E_ArgAsInt(args, 0, 0);
    mbf21flags = E_ArgAsMBF21ThingFlags(args, 1);
 
-   actor->flags &= ~flags;
-
-   actor->flags  &= ~mbf21flags[DEHFLAGS_MODE1];
+   actor->flags  &= ~flags;
    actor->flags2 &= ~mbf21flags[DEHFLAGS_MODE2];
    actor->flags3 &= ~mbf21flags[DEHFLAGS_MODE3];
    actor->flags4 &= ~mbf21flags[DEHFLAGS_MODE4];
