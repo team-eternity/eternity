@@ -1192,8 +1192,7 @@ R_ClipSegFunc segclipfuncs[] =
 #define NEARCLIP 0.05f
 
 static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext,
-                        portalcontext_t &portalcontext,
-                        const viewpoint_t &viewpoint,
+                        portalcontext_t &portalcontext, const viewpoint_t &viewpoint,
                         const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
                         const uint64_t visitid, cb_seg_t &seg,
                         float pstep, float i1, float i2, float textop, float texbottom,
@@ -1338,8 +1337,7 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       {
          seg.markflags |= SEG_MARKCPORTAL;
          seg.secwindow.ceiling = R_GetSectorPortalWindow(
-            planecontext, portalcontext, viewpoint, bounds, surf_ceil,
-                                                         seg.frontsec->srf.ceiling
+            planecontext, portalcontext, viewpoint, bounds, surf_ceil, seg.frontsec->srf.ceiling
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_ceil);
          R_MovePortalOverlayToWindow(cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_ceil);
@@ -1347,8 +1345,7 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       else if(!heightchange && seg.frontsec->srf.ceiling.portal == seg.backsec->srf.ceiling.portal)
       {
          seg.secwindow.ceiling = R_GetSectorPortalWindow(
-            planecontext, portalcontext, viewpoint, bounds, surf_ceil,
-                                                         seg.frontsec->srf.ceiling
+            planecontext, portalcontext, viewpoint, bounds, surf_ceil, seg.frontsec->srf.ceiling
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_ceil);
          R_MovePortalOverlayToWindow(cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_ceil);
@@ -1426,8 +1423,7 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       {
          seg.markflags |= SEG_MARKFPORTAL;
          seg.secwindow.floor = R_GetSectorPortalWindow(
-            planecontext, portalcontext, viewpoint, bounds, surf_floor,
-                                                       seg.frontsec->srf.floor
+            planecontext, portalcontext, viewpoint, bounds, surf_floor, seg.frontsec->srf.floor
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_floor);
          R_MovePortalOverlayToWindow(cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_floor);
@@ -1435,8 +1431,7 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       else if(!heightchange && seg.frontsec->srf.floor.portal == seg.backsec->srf.floor.portal)
       {
          seg.secwindow.floor = R_GetSectorPortalWindow(
-            planecontext, portalcontext, viewpoint, bounds, surf_floor,
-                                                       seg.frontsec->srf.floor
+            planecontext, portalcontext, viewpoint, bounds, surf_floor, seg.frontsec->srf.floor
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_floor);
          R_MovePortalOverlayToWindow(cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_floor);
@@ -1541,8 +1536,7 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
 }
 
 static void R_2S_Normal(cmapcontext_t &cmapcontext, planecontext_t &planecontext,
-                        portalcontext_t &portalcontext,
-                        const viewpoint_t &viewpoint,
+                        portalcontext_t &portalcontext, const viewpoint_t &viewpoint,
                         const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
                         const uint64_t visitid, cb_seg_t &seg, float pstep,
                         float i1, float i2, float textop, float texbottom)
@@ -1664,8 +1658,7 @@ static void R_2S_Normal(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       {
          seg.markflags |= SEG_MARKCPORTAL;
          seg.secwindow.ceiling = R_GetSectorPortalWindow(
-            planecontext, portalcontext, viewpoint, bounds, surf_ceil,
-                                                         seg.frontsec->srf.ceiling
+            planecontext, portalcontext, viewpoint, bounds, surf_ceil, seg.frontsec->srf.ceiling
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_ceil);
          R_MovePortalOverlayToWindow(cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_ceil);
@@ -1675,8 +1668,7 @@ static void R_2S_Normal(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       {
          // We need to do this just to transfer the plane
          seg.secwindow.ceiling = R_GetSectorPortalWindow(
-            planecontext, portalcontext, viewpoint, bounds, surf_ceil,
-                                                         seg.frontsec->srf.ceiling
+            planecontext, portalcontext, viewpoint, bounds, surf_ceil, seg.frontsec->srf.ceiling
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_ceil);
          R_MovePortalOverlayToWindow(cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_ceil);
@@ -1752,8 +1744,7 @@ static void R_2S_Normal(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       {
          seg.markflags |= SEG_MARKFPORTAL;
          seg.secwindow.floor = R_GetSectorPortalWindow(
-            planecontext, portalcontext, viewpoint, bounds, surf_floor,
-                                                       seg.frontsec->srf.floor
+            planecontext, portalcontext, viewpoint, bounds, surf_floor, seg.frontsec->srf.floor
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_floor);
          R_MovePortalOverlayToWindow(cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_floor);
@@ -1763,8 +1754,7 @@ static void R_2S_Normal(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       {
          // We need to do this just to transfer the plane
          seg.secwindow.floor = R_GetSectorPortalWindow(
-            planecontext, portalcontext, viewpoint, bounds, surf_floor,
-                                                       seg.frontsec->srf.floor
+            planecontext, portalcontext, viewpoint, bounds, surf_floor, seg.frontsec->srf.floor
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_floor);
          R_MovePortalOverlayToWindow(cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_floor);
@@ -1865,8 +1855,7 @@ static void R_2S_Normal(cmapcontext_t &cmapcontext, planecontext_t &planecontext
 // beyond is the optional sector on the other side of a polyobject/1-sided wall portal
 //
 static void R_1SidedLine(cmapcontext_t &cmapcontext, planecontext_t &planecontext,
-                         portalcontext_t &portalcontext,
-                         const viewpoint_t &viewpoint,
+                         portalcontext_t &portalcontext, const viewpoint_t &viewpoint,
                          const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
                          const uint64_t visitid, cb_seg_t &seg,
                          float pstep, float i1, float i2, float textop, float texbottom,
@@ -1948,8 +1937,7 @@ static void R_1SidedLine(cmapcontext_t &cmapcontext, planecontext_t &planecontex
    {
       seg.markflags |= SEG_MARKCPORTAL;
       seg.secwindow.ceiling = R_GetSectorPortalWindow(
-         planecontext, portalcontext, viewpoint, bounds, surf_ceil,
-                                                      seg.frontsec->srf.ceiling
+         planecontext, portalcontext, viewpoint, bounds, surf_ceil, seg.frontsec->srf.ceiling
       );
       R_updateWindowSectorBarrier(visitid, seg, surf_ceil);
       R_MovePortalOverlayToWindow(cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_ceil);
@@ -1960,8 +1948,7 @@ static void R_1SidedLine(cmapcontext_t &cmapcontext, planecontext_t &planecontex
    {
       seg.markflags |= SEG_MARKFPORTAL;
       seg.secwindow.floor = R_GetSectorPortalWindow(
-         planecontext, portalcontext, viewpoint, bounds, surf_floor,
-                                                    seg.frontsec->srf.floor
+         planecontext, portalcontext, viewpoint, bounds, surf_floor, seg.frontsec->srf.floor
       );
       R_updateWindowSectorBarrier(visitid, seg, surf_floor);
       R_MovePortalOverlayToWindow(cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_floor);

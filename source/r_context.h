@@ -113,15 +113,6 @@ struct portalcontext_t
    portalrender_t portalrender;
 };
 
-//
-// Keeps track if a thing got projected into an upper pstack position. Cleared on each frame.
-//
-struct thingproj_t
-{
-   const Mobj *thing;
-   int pstackpos;
-};
-
 struct spritecontext_t
 {
    // haleyjd 04/25/10: drawsegs optimization
@@ -139,11 +130,6 @@ struct spritecontext_t
    maskedrange_t *unusedmasked;
 
    bool *sectorvisited;
-
-   // Sprites projected to upper layers
-   thingproj_t *thingproj;
-   int thingprojsize;
-   int thingprojalloc;
 };
 
 struct viewpoint_t

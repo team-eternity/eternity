@@ -150,7 +150,6 @@ struct vissprite_t
   fixed_t texturemid;
   int     patch;
   byte    drawstyle;
-  byte    isProjectionClone;  // true if it's a clone from R_projectSprite
 
   float   startx;
   float   dist, xstep;
@@ -537,7 +536,6 @@ void R_InitSprites(char **namelist)
 void R_ClearSprites(spritecontext_t &context)
 {
    context.num_vissprite = 0; // killough
-   context.thingprojsize = 0;
 }
 
 //
@@ -937,7 +935,6 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
 
    // ioanch 20160125: reject sprites in front of portal line when rendering
    // line portal
-   const pwindow_t *pwindow = nullptr;
    if(portalrender.active && portalrender.w->portal->type != R_SKYBOX)
    {
       v2fixed_t offsetpos = { thing->x, thing->y };
@@ -968,7 +965,6 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
                return;
          }
       }
-      pwindow = portalrender.w;
    }
 
    rotx = (tempx * cb_viewpoint.cos) - (tempy * cb_viewpoint.sin);
@@ -1103,7 +1099,6 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
 
    // store information in a vissprite
    vis = R_newVisSprite(spritecontext);
-   vis->isProjectionClone = false;
 
    // killough 3/27/98: save sector for special clipping later
    vis->heightsec = heightsec;
@@ -1760,7 +1755,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
    // killough 3/27/98: end special clipping for deep water / fake ceilings
 
    // SoM: special clipping for linked portals
-   if(useportalgroups && !spr->isProjectionClone)
+   if(useportalgroups)
    {
       float h, mh;
 
