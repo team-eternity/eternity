@@ -1024,9 +1024,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    {
       int xlen = segclip.x2 - segclip.x1 + 1;
       const float *clip;
-      if(segclip.t_window)
-         clip = segclip.t_window->top;
-      else if(segclip.l_window)
+      if(segclip.l_window)
          clip = segclip.l_window->top;
       else
          clip = ceilingclip;
@@ -1050,9 +1048,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    {
       int xlen = segclip.x2 - segclip.x1 + 1;
       const float *clip;
-      if(segclip.b_window)
-         clip = segclip.b_window->bottom;
-      else if(segclip.l_window)
+      if(segclip.l_window)
          clip = segclip.l_window->bottom;
       else
          clip = floorclip;
