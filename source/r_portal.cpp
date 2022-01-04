@@ -1150,6 +1150,14 @@ static void R_showTainted(cmapcontext_t &cmapcontext, planecontext_t &planeconte
 }
 
 //
+// Check if a window portal is a strict wall type, not edge or else.
+//
+inline static bool R_windowIsWallPortal(const pwindow_t &window)
+{
+   return window.type == pw_line && window.line && window.line->portal == window.portal;
+}
+
+//
 // R_renderAnchoredPortal
 //
 static void R_renderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
@@ -1218,7 +1226,10 @@ static void R_renderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
    portalcontext.portalrender.maxx = window->maxx;
 
    memset(spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
-//   R_SetMaskedSilhouette(bounds, planecontext.ceilingclip, planecontext.floorclip);
+
+   bool pushpost = !R_windowIsWallPortal(*window);
+   if(pushpost)
+      R_SetMaskedSilhouette(bounds, planecontext.ceilingclip, planecontext.floorclip);
 
    lastx  = viewpoint.x;
    lasty  = viewpoint.y;
@@ -1251,7 +1262,8 @@ static void R_renderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
    R_RenderBSPNode(context, numnodes - 1);
 
    // Only push the overlay if this is the head window
-//   R_PushPost(bspcontext, spritecontext, bounds, true, window->head == window ? window : nullptr);
+   if(pushpost)
+      R_PushPost(bspcontext, spritecontext, bounds, true, window->head == window ? window : nullptr);
 
    planecontext.floorclip   = floorcliparray;
    planecontext.ceilingclip = ceilingcliparray;
@@ -1336,7 +1348,9 @@ static void R_renderLinkedPortal(rendercontext_t &context, pwindow_t *window)
    portalcontext.portalrender.maxx = window->maxx;
 
    memset(spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
-//   R_SetMaskedSilhouette(bounds, planecontext.ceilingclip, planecontext.floorclip);
+   bool pushpost = !R_windowIsWallPortal(*window);
+   if(pushpost)
+      R_SetMaskedSilhouette(bounds, planecontext.ceilingclip, planecontext.floorclip);
 
    lastx  = viewpoint.x;
    lasty  = viewpoint.y;
@@ -1369,7 +1383,8 @@ static void R_renderLinkedPortal(rendercontext_t &context, pwindow_t *window)
    R_RenderBSPNode(context, numnodes - 1);
 
    // Only push the overlay if this is the head window
-//   R_PushPost(bspcontext, spritecontext, bounds, true, window->head == window ? window : nullptr);
+   if(pushpost)
+      R_PushPost(bspcontext, spritecontext, bounds, true, window->head == window ? window : nullptr);
 
    planecontext.floorclip   = floorcliparray;
    planecontext.ceilingclip = ceilingcliparray;
