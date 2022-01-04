@@ -718,22 +718,138 @@ void R_InitPortals()
 //
 
 //
+// The plane portal effect
+//
+static void R_produceKaleidoscopePlane(rendercontext_t &context, const pwindow_t *window,
+                                       const sector_t *sector)
+{
+   planecontext_t  &planecontext   = context.planecontext;
+   viewpoint_t     &viewpoint      = context.view;
+   cbviewpoint_t   &cb_viewpoint   = context.cb_view;
+   const contextbounds_t &bounds   = context.bounds;
+
+   visplane_t *vplane = R_FindPlane(
+      context.cmapcontext,
+      planecontext,
+      viewpoint,
+      cb_viewpoint,
+      bounds,
+      sector->srf.ceiling.height + viewpoint.z,
+      sector->intflags & SIF_SKY && sector->sky & PL_SKYFLAT
+      ? sector->sky : sector->srf.ceiling.pic,
+      R_GetSurfaceLightLevel(surf_ceil, sector),
+      sector->srf.ceiling.offset,
+      sector->srf.ceiling.scale,
+      // haleyjd 01/05/08: flat angle
+      sector->srf.ceiling.angle + sector->srf.ceiling.baseangle,
+      sector->srf.ceiling.slope,
+      0,
+      255,
+      nullptr
+   );
+
+   vplane = R_CheckPlane(planecontext, vplane, window->minx, window->maxx);
+
+   for(int x = window->minx; x <= window->maxx; x++)
+   {
+      if(window->top[x] < window->bottom[x])
+      {
+         vplane->top[x]    = (int)window->top[x];
+         vplane->bottom[x] = (int)window->bottom[x];
+      }
+   }
+}
+
+//
+// The horizon portal effect
+//
+static void R_produceHorizonPlanes(rendercontext_t &context, const pwindow_t *window,
+                                   const sector_t *sector)
+{
+   planecontext_t  &planecontext   = context.planecontext;
+   viewpoint_t     &viewpoint      = context.view;
+   cbviewpoint_t   &cb_viewpoint   = context.cb_view;
+   const contextbounds_t &bounds   = context.bounds;
+
+   // haleyjd 01/05/08: angles
+   const float angles[surf_NUM] = {
+      sector->srf.floor.baseangle + sector->srf.ceiling.angle,
+      sector->srf.ceiling.baseangle + sector->srf.ceiling.angle
+   };
+
+   visplane_t *topplane = R_FindPlane(
+      context.cmapcontext,
+      planecontext,
+      viewpoint,
+      cb_viewpoint,
+      bounds,
+      sector->srf.ceiling.height,
+      sector->intflags & SIF_SKY && sector->sky & PL_SKYFLAT
+      ? sector->sky : sector->srf.ceiling.pic,
+      R_GetSurfaceLightLevel(surf_ceil, sector),
+      sector->srf.ceiling.offset,
+      sector->srf.ceiling.scale,
+      angles[surf_ceil],
+      nullptr, 0, 255, nullptr
+   );
+   visplane_t *bottomplane = R_FindPlane(
+      context.cmapcontext,
+      planecontext,
+      viewpoint,
+      cb_viewpoint,
+      bounds,
+      sector->srf.floor.height,
+      R_IsSkyFlat(sector->srf.floor.pic) && sector->sky & PL_SKYFLAT
+      ? sector->sky : sector->srf.floor.pic,
+      R_GetSurfaceLightLevel(surf_floor, sector),
+      sector->srf.floor.offset,
+      sector->srf.floor.scale,
+      angles[surf_floor],
+      nullptr, 0, 255, nullptr
+   );
+
+   topplane = R_CheckPlane(planecontext, topplane, window->minx, window->maxx);
+   bottomplane = R_CheckPlane(planecontext, bottomplane, window->minx, window->maxx);
+
+   for(int x = window->minx; x <= window->maxx; x++)
+   {
+      if(window->top[x] > window->bottom[x])
+         continue;
+
+      if(window->top[x]    <= view.ycenter - 1.0f &&
+         window->bottom[x] >= view.ycenter)
+      {
+         topplane->top[x]       = (int)window->top[x];
+         topplane->bottom[x]    = centery - 1;
+         bottomplane->top[x]    = centery;
+         bottomplane->bottom[x] = (int)window->bottom[x];
+      }
+      else if(window->top[x] <= view.ycenter - 1.0f)
+      {
+         topplane->top[x]    = (int)window->top[x];
+         topplane->bottom[x] = (int)window->bottom[x];
+      }
+      else if(window->bottom[x] > view.ycenter - 1.0f)
+      {
+         bottomplane->top[x]    = (int)window->top[x];
+         bottomplane->bottom[x] = (int)window->bottom[x];
+      }
+   }
+}
+
+//
 // R_renderPlanePortal
 //
-static void R_renderPlanePortal(rendercontext_t &context, pwindow_t *window)
+static void R_renderPrimitivePortal(rendercontext_t &context, pwindow_t *window)
 {
    viewpoint_t     &viewpoint      = context.view;
    cbviewpoint_t   &cb_viewpoint   = context.cb_view;
-   planecontext_t  &planecontext   = context.planecontext;
-   portalcontext_t &portalcontext  = context.portalcontext;
    spritecontext_t &spritecontext  = context.spritecontext;
    const contextbounds_t &bounds   = context.bounds;
 
-   visplane_t *vplane;
-   int x;
    portal_t *portal = window->portal;
 
-   if(portal->type != R_PLANE)
+   if(portal->type != R_PLANE && portal->type != R_HORIZON)
       return;
 
    if(window->maxx < window->minx)
@@ -765,36 +881,10 @@ static void R_renderPlanePortal(rendercontext_t &context, pwindow_t *window)
    }
 
    const sector_t *sector = portal->data.sector;
-   vplane = R_FindPlane(
-      context.cmapcontext,
-      planecontext,
-      viewpoint,
-      cb_viewpoint,
-      bounds,
-      sector->srf.ceiling.height + viewpoint.z,
-      sector->intflags & SIF_SKY && sector->sky & PL_SKYFLAT
-      ? sector->sky : sector->srf.ceiling.pic,
-      R_GetSurfaceLightLevel(surf_ceil, sector),
-      sector->srf.ceiling.offset,
-      sector->srf.ceiling.scale,
-      // haleyjd 01/05/08: flat angle
-      sector->srf.ceiling.angle + sector->srf.ceiling.baseangle,
-      sector->srf.ceiling.slope,
-      0,
-      255,
-      nullptr
-   );
-
-   vplane = R_CheckPlane(planecontext, vplane, window->minx, window->maxx);
-
-   for(x = window->minx; x <= window->maxx; x++)
-   {
-      if(window->top[x] < window->bottom[x])
-      {
-         vplane->top[x]    = (int)window->top[x];
-         vplane->bottom[x] = (int)window->bottom[x];
-      }
-   }
+   if(portal->type == R_PLANE)
+      R_produceKaleidoscopePlane(context, window, sector);
+   else
+      R_produceHorizonPlanes(context, window, sector);
 
    if(window->head == window && window->poverlay)
       R_PushPost(context.bspcontext, spritecontext, bounds, false, window);
@@ -813,144 +903,7 @@ static void R_renderPlanePortal(rendercontext_t &context, pwindow_t *window)
    cb_viewpoint.cos   = (float)cos(cb_viewpoint.angle);
 
    if(window->child)
-      R_renderPlanePortal(context, window->child);
-}
-
-//
-// R_renderHorizonPortal
-//
-static void R_renderHorizonPortal(rendercontext_t &context, pwindow_t *window)
-{
-   viewpoint_t     &viewpoint      = context.view;
-   cbviewpoint_t   &cb_viewpoint   = context.cb_view;
-   planecontext_t  &planecontext   = context.planecontext;
-   spritecontext_t &spritecontext  = context.spritecontext;
-   const contextbounds_t &bounds   = context.bounds;
-
-   fixed_t lastx, lasty, lastz; // SoM 3/10/2005
-   angle_t lastangle;
-   float   lastxf, lastyf, lastzf;
-   float   lastanglef;
-   visplane_t *topplane, *bottomplane;
-   int x;
-   portal_t *portal = window->portal;
-
-   if(portal->type != R_HORIZON)
-      return;
-
-   if(window->maxx < window->minx)
-      return;
-
-   lastx  = viewpoint.x;
-   lasty  = viewpoint.y;
-   lastz  = viewpoint.z;
-   lastxf = cb_viewpoint.x;
-   lastyf = cb_viewpoint.y;
-   lastzf = cb_viewpoint.z;
-   lastangle  = viewpoint.angle;
-   lastanglef = cb_viewpoint.angle;
-
-   viewpoint.x = window->vx;
-   viewpoint.y = window->vy;
-   viewpoint.z = window->vz;
-   cb_viewpoint.x = M_FixedToFloat(viewpoint.x);
-   cb_viewpoint.y = M_FixedToFloat(viewpoint.y);
-   cb_viewpoint.z = M_FixedToFloat(viewpoint.z);
-   if(window->vangle != viewpoint.angle)
-   {
-      viewpoint.angle = window->vangle;
-      viewpoint.sin = finesine[viewpoint.angle >> ANGLETOFINESHIFT];
-      viewpoint.cos = finecosine[viewpoint.angle >> ANGLETOFINESHIFT];
-      cb_viewpoint.angle = cb_fixedAngleToFloat(viewpoint.angle);
-      cb_viewpoint.sin = sinf(cb_viewpoint.angle);
-      cb_viewpoint.cos = cosf(cb_viewpoint.angle);
-   }
-
-   const sector_t *sector = portal->data.sector;
-   // haleyjd 01/05/08: angles
-   
-   const float angles[surf_NUM] = {
-      sector->srf.floor.baseangle + sector->srf.ceiling.angle,
-      sector->srf.ceiling.baseangle + sector->srf.ceiling.angle
-   };
-      
-   topplane = R_FindPlane(
-      context.cmapcontext,
-      planecontext,
-      viewpoint,
-      cb_viewpoint,
-      bounds,
-      sector->srf.ceiling.height,
-      sector->intflags & SIF_SKY && sector->sky & PL_SKYFLAT 
-      ? sector->sky : sector->srf.ceiling.pic,
-      R_GetSurfaceLightLevel(surf_ceil, sector),
-      sector->srf.ceiling.offset,
-      sector->srf.ceiling.scale,
-      angles[surf_ceil],
-      nullptr, 0, 255, nullptr
-   );
-   bottomplane = R_FindPlane(
-      context.cmapcontext,
-      planecontext,
-      viewpoint,
-      cb_viewpoint,
-      bounds,
-      sector->srf.floor.height,
-      R_IsSkyFlat(sector->srf.floor.pic) && sector->sky & PL_SKYFLAT
-      ? sector->sky : sector->srf.floor.pic,
-      R_GetSurfaceLightLevel(surf_floor, sector),
-      sector->srf.floor.offset,
-      sector->srf.floor.scale,
-      angles[surf_floor],
-      nullptr, 0, 255, nullptr
-   );
-
-   topplane = R_CheckPlane(planecontext, topplane, window->minx, window->maxx);
-   bottomplane = R_CheckPlane(planecontext, bottomplane, window->minx, window->maxx);
-
-   for(x = window->minx; x <= window->maxx; x++)
-   {
-      if(window->top[x] > window->bottom[x])
-         continue;
-
-      if(window->top[x]    <= view.ycenter - 1.0f && 
-         window->bottom[x] >= view.ycenter)
-      {
-         topplane->top[x]       = (int)window->top[x];
-         topplane->bottom[x]    = centery - 1;
-         bottomplane->top[x]    = centery;
-         bottomplane->bottom[x] = (int)window->bottom[x];
-      }
-      else if(window->top[x] <= view.ycenter - 1.0f)
-      {
-         topplane->top[x]    = (int)window->top[x];
-         topplane->bottom[x] = (int)window->bottom[x];
-      }
-      else if(window->bottom[x] > view.ycenter - 1.0f)
-      {
-         bottomplane->top[x]    = (int)window->top[x];
-         bottomplane->bottom[x] = (int)window->bottom[x];
-      }
-   }
-
-   if(window->head == window && window->poverlay)
-      R_PushPost(context.bspcontext, spritecontext, bounds, false, window);
-
-   viewpoint.x  = lastx;
-   viewpoint.y  = lasty;
-   viewpoint.z  = lastz;
-   viewpoint.angle = lastangle;
-   viewpoint.sin   = finesine[viewpoint.angle >> ANGLETOFINESHIFT];
-   viewpoint.cos   = finecosine[viewpoint.angle >> ANGLETOFINESHIFT];
-   cb_viewpoint.x = lastxf;
-   cb_viewpoint.y = lastyf;
-   cb_viewpoint.z = lastzf;
-   cb_viewpoint.angle = lastanglef;
-   cb_viewpoint.sin   = (float)sin(cb_viewpoint.angle);
-   cb_viewpoint.cos   = (float)cos(cb_viewpoint.angle);
-
-   if(window->child)
-      R_renderHorizonPortal(context, window->child);
+      R_renderPrimitivePortal(context, window->child);
 }
 
 //=============================================================================
@@ -1336,11 +1289,8 @@ static void R_SetPortalFunction(pwindow_t *window)
    switch(window->portal->type)
    {
    case R_PLANE:
-      window->func     = R_renderPlanePortal;
-      window->clipfunc = nullptr;
-      break;
    case R_HORIZON:
-      window->func     = R_renderHorizonPortal;
+      window->func     = R_renderPrimitivePortal;
       window->clipfunc = nullptr;
       break;
    case R_SKYBOX:
