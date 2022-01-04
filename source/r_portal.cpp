@@ -838,6 +838,43 @@ static void R_produceHorizonPlanes(rendercontext_t &context, const pwindow_t *wi
 }
 
 //
+// Stores the view before rendering portal
+//
+struct savedview_t
+{
+   v3fixed_t pos;
+   v3float_t posf;
+   angle_t angle;
+   float anglef;
+};
+
+inline static savedview_t R_getLastView(const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint)
+{
+   savedview_t last = {};
+   last.pos = { viewpoint.x, viewpoint.y, viewpoint.z };
+   last.posf = { cb_viewpoint.x, cb_viewpoint.y, cb_viewpoint.z };
+   last.angle = viewpoint.angle;
+   last.anglef = cb_viewpoint.angle;
+   return last;
+}
+
+inline static void R_restoreLastView(const savedview_t &last, viewpoint_t &viewpoint, cbviewpoint_t &cb_viewpoint)
+{
+   viewpoint.x  = last.pos.x;
+   viewpoint.y  = last.pos.y;
+   viewpoint.z  = last.pos.z;
+   viewpoint.angle = last.angle;
+   viewpoint.sin   = finesine[viewpoint.angle >> ANGLETOFINESHIFT];
+   viewpoint.cos   = finecosine[viewpoint.angle >> ANGLETOFINESHIFT];
+   cb_viewpoint.x = last.posf.x;
+   cb_viewpoint.y = last.posf.y;
+   cb_viewpoint.z = last.posf.z;
+   cb_viewpoint.angle = last.anglef;
+   cb_viewpoint.sin   = (float)sin(cb_viewpoint.angle);
+   cb_viewpoint.cos   = (float)cos(cb_viewpoint.angle);
+}
+
+//
 // R_renderPlanePortal
 //
 static void R_renderPrimitivePortal(rendercontext_t &context, pwindow_t *window)
@@ -847,7 +884,7 @@ static void R_renderPrimitivePortal(rendercontext_t &context, pwindow_t *window)
    spritecontext_t &spritecontext  = context.spritecontext;
    const contextbounds_t &bounds   = context.bounds;
 
-   portal_t *portal = window->portal;
+   const portal_t *portal = window->portal;
 
    if(portal->type != R_PLANE && portal->type != R_HORIZON)
       return;
@@ -855,14 +892,7 @@ static void R_renderPrimitivePortal(rendercontext_t &context, pwindow_t *window)
    if(window->maxx < window->minx)
       return;
 
-   const fixed_t lastx = viewpoint.x;
-   const fixed_t lasty = viewpoint.y;
-   const fixed_t lastz = viewpoint.z;
-   const float lastxf  = cb_viewpoint.x;
-   const float lastyf  = cb_viewpoint.y;
-   const float lastzf  = cb_viewpoint.z;
-   const angle_t lastangle = viewpoint.angle;
-   const float lastanglef  = cb_viewpoint.angle;
+   const savedview_t last = R_getLastView(viewpoint, cb_viewpoint);
 
    viewpoint.x = window->vx;
    viewpoint.y = window->vy;
@@ -889,18 +919,7 @@ static void R_renderPrimitivePortal(rendercontext_t &context, pwindow_t *window)
    if(window->head == window && window->poverlay)
       R_PushPost(context.bspcontext, spritecontext, bounds, false, window);
 
-   viewpoint.x  = lastx;
-   viewpoint.y  = lasty;
-   viewpoint.z  = lastz;
-   viewpoint.angle = lastangle;
-   viewpoint.sin   = finesine[viewpoint.angle >> ANGLETOFINESHIFT];
-   viewpoint.cos   = finecosine[viewpoint.angle >> ANGLETOFINESHIFT];
-   cb_viewpoint.x = lastxf;
-   cb_viewpoint.y = lastyf;
-   cb_viewpoint.z = lastzf;
-   cb_viewpoint.angle = lastanglef;
-   cb_viewpoint.sin   = (float)sin(cb_viewpoint.angle);
-   cb_viewpoint.cos   = (float)cos(cb_viewpoint.angle);
+   R_restoreLastView(last, viewpoint, cb_viewpoint);
 
    if(window->child)
       R_renderPrimitivePortal(context, window->child);
@@ -1015,10 +1034,6 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
    spritecontext_t &spritecontext  = context.spritecontext;
    const contextbounds_t &bounds   = context.bounds;
 
-   fixed_t lastx, lasty, lastz;
-   angle_t lastangle;
-   float   lastxf, lastyf, lastzf;
-   float   lastanglef;
    portal_t *portal = window->portal;
 
    if(portal->type != R_ANCHORED && portal->type != R_TWOWAY && portal->type != R_LINKED && portal->type != R_SKYBOX)
@@ -1077,14 +1092,7 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
    if(pushpost)
       R_SetMaskedSilhouette(bounds, planecontext.ceilingclip, planecontext.floorclip);
 
-   lastx  = viewpoint.x;
-   lasty  = viewpoint.y;
-   lastz  = viewpoint.z;
-   lastxf = cb_viewpoint.x;
-   lastyf = cb_viewpoint.y;
-   lastzf = cb_viewpoint.z;
-   lastangle  = viewpoint.angle;
-   lastanglef = cb_viewpoint.angle;
+   savedview_t last = R_getLastView(viewpoint, cb_viewpoint);
 
    // SoM 3/10/2005: Use the coordinates stored in the portal struct
    if(portal->type == R_SKYBOX)
@@ -1154,18 +1162,7 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
    planecontext.floorclip   = floorcliparray;
    planecontext.ceilingclip = ceilingcliparray;
 
-   viewpoint.x  = lastx;
-   viewpoint.y  = lasty;
-   viewpoint.z  = lastz;
-   viewpoint.angle = lastangle;
-   viewpoint.sin   = finesine[viewpoint.angle >> ANGLETOFINESHIFT];
-   viewpoint.cos   = finecosine[viewpoint.angle >> ANGLETOFINESHIFT];
-   cb_viewpoint.x = lastxf;
-   cb_viewpoint.y = lastyf;
-   cb_viewpoint.z = lastzf;
-   cb_viewpoint.angle = lastanglef;
-   cb_viewpoint.sin   = (float)sin(cb_viewpoint.angle);
-   cb_viewpoint.cos   = (float)cos(cb_viewpoint.angle);
+   R_restoreLastView(last, viewpoint, cb_viewpoint);
 
    if(window->child)
       R_renderWorldPortal(context, window->child);
