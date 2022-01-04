@@ -299,6 +299,14 @@ void R_CalcRenderBarrier(pwindow_t &window, const sectorbox_t &box)
    }
 }
 
+//
+// Check if a window portal is a strict wall type, not edge or else.
+//
+inline static bool R_windowIsWallPortal(const pwindow_t &window)
+{
+   return window.type == pw_line && window.line && window.line->portal == window.portal;
+}
+
 static pwindow_t *R_newPortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
                                     const contextbounds_t &bounds,
                                     portal_t *p, const line_t *linedef, pwindowtype_e type)
@@ -328,8 +336,26 @@ static pwindow_t *R_newPortalWindow(planecontext_t &planecontext, portalcontext_
       windowhead = windowlast = ret;
    else
    {
-      windowlast->next = ret;
-      windowlast = ret;
+      // Must place wall portals early, because they don't push the post-BSP stack
+      if(R_windowIsWallPortal(*ret))
+      {
+         const portalrender_t &portalrender = portalcontext.portalrender;
+         if(portalrender.active)
+         {
+            ret->next = portalrender.w->next;
+            portalrender.w->next = ret;
+         }
+         else
+         {
+            ret->next = windowhead;
+            windowhead = ret;
+         }
+      }
+      else
+      {
+         windowlast->next = ret;
+         windowlast = ret;
+      }
    }
 
    return ret;
@@ -1011,14 +1037,6 @@ static void R_showTainted(cmapcontext_t &cmapcontext, planecontext_t &planeconte
          count--;
       }
    }
-}
-
-//
-// Check if a window portal is a strict wall type, not edge or else.
-//
-inline static bool R_windowIsWallPortal(const pwindow_t &window)
-{
-   return window.type == pw_line && window.line && window.line->portal == window.portal;
 }
 
 //
