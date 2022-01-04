@@ -473,7 +473,24 @@ void A_JumpIfFlagsSet(actionargs_t *actionargs)
 //
 void A_AddFlags(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args   = actionargs->args;
+   Mobj      *actor  = actionargs->actor;
+   unsigned int  flags;
+   unsigned int *mbf21flags;
+
+   if(!mbf21_temp || !actor)
+      return;
+
+   flags = E_ArgAsInt(args, 0, 0);
+   mbf21flags = E_ArgAsMBF21ThingFlags(args, 1);
+
+   actor->flags |= flags;
+
+   actor->flags  |= mbf21flags[DEHFLAGS_MODE1];
+   actor->flags2 |= mbf21flags[DEHFLAGS_MODE2];
+   actor->flags3 |= mbf21flags[DEHFLAGS_MODE3];
+   actor->flags4 |= mbf21flags[DEHFLAGS_MODE4];
+   actor->flags5 |= mbf21flags[DEHFLAGS_MODE5];
 }
 
 //
@@ -484,7 +501,24 @@ void A_AddFlags(actionargs_t *actionargs)
 //
 void A_RemoveFlags(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args   = actionargs->args;
+   Mobj      *actor  = actionargs->actor;
+   unsigned int  flags;
+   unsigned int *mbf21flags;
+
+   if(!mbf21_temp || !actor)
+      return;
+
+   flags = E_ArgAsInt(args, 0, 0);
+   mbf21flags = E_ArgAsMBF21ThingFlags(args, 1);
+
+   actor->flags &= ~flags;
+
+   actor->flags  &= ~mbf21flags[DEHFLAGS_MODE1];
+   actor->flags2 &= ~mbf21flags[DEHFLAGS_MODE2];
+   actor->flags3 &= ~mbf21flags[DEHFLAGS_MODE3];
+   actor->flags4 &= ~mbf21flags[DEHFLAGS_MODE4];
+   actor->flags5 &= ~mbf21flags[DEHFLAGS_MODE5];
 }
 
 //=============================================================================

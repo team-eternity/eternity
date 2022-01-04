@@ -1800,8 +1800,8 @@ deh_bexptr deh_bexptrs[] =
    //POINTER(JumpIfTracerInSight),
    POINTER(JumpIfTracerCloser),
    //POINTER(JumpIfFlagsSet),
-   //POINTER(AddFlags),
-   //POINTER(RemoveFlags),
+   POINTER(AddFlags),
+   POINTER(RemoveFlags),
 
    //POINTER(WeaponProjectile),
    //POINTER(WeaponBulletAttack),

@@ -1111,6 +1111,11 @@ static unsigned int *deh_parseFlagsCombinedRemapped(
    return flagset->results;
 }
 
+unsigned int *deh_RemapMBF21ThingTypeFlags(const unsigned int flags)
+{
+   return deh_remapFlags(flags, &dehacked_mbf21flags, dehacked_mbf21mobjflags_remappings);
+}
+
 static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value, MetaTable &gatheredData)
 {
    mobjinfo_t *mi;
