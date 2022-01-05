@@ -545,7 +545,6 @@ void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
                 const contextbounds_t &bounds, bool pushmasked, pwindow_t *window)
 {
    drawseg_t     *&drawsegs     = bspcontext.drawsegs;
-   unsigned int   &maxdrawsegs  = bspcontext.maxdrawsegs;
    drawseg_t     *&ds_p         = bspcontext.ds_p;
    poststack_t   *&pstack       = spritecontext.pstack;
    int            &pstacksize   = spritecontext.pstacksize;
