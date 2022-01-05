@@ -833,7 +833,6 @@ static void R_produceHorizonPlanes(rendercontext_t &context, const pwindow_t *wi
       angles[surf_floor],
       nullptr, 0, 255, nullptr
    );
-
    topplane = R_CheckPlane(planecontext, topplane, window->minx, window->maxx);
    bottomplane = R_CheckPlane(planecontext, bottomplane, window->minx, window->maxx);
 
