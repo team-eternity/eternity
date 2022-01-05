@@ -93,6 +93,7 @@ dehflags_t   *deh_ParseFlagCombined(const char *name);
 void          deh_ParseFlags(dehflagset_t *dehflags, char **strval);
 unsigned int  deh_ParseFlagsSingle(const char *strval, int mode);
 unsigned int *deh_ParseFlagsCombined(const char *strval);
+unsigned int *deh_RemapMBF21ThingTypeFlags(const unsigned int flags);
 
 // deh queue stuff
 void D_DEHQueueInit(void);

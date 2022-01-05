@@ -170,6 +170,19 @@ Added "ripsound" EDF property, which is played when a ripper rips.
 2021/12/27
 [MBF21]
  * Added A_SpawnObject and A_MonsterProjectile.
+ 
+--------------------------------------------------------------------------------
+2022/01/03
+[MBF21]
+ * Added A_SpawnObject, A_MonsterMeleeAttack, A_RadiusDamage, A_NoiseAlert,
+   A_HealChase, A_ClearTracer, A_JumpIfHealthBelow, A_JumpIfTargetCloser,
+   A_JumpIfTracerCloser, A_WeaponSound, and A_WeaponAlert, A_AddFlags,
+   A_RemoveFlags, and A_JumpIfFlagsSet.
+
+--------------------------------------------------------------------------------
+2022/01/04
+[MBF21]
+ * Added A_WeaponJump and A_ConsumeAmmo.
 
 ================================================================================
 EOF

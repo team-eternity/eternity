@@ -774,6 +774,50 @@ unsigned int *E_ArgAsThingFlags(arglist_t *al, int index)
 }
 
 //
+// Gets the arg value at index i as a set of thing flag masks, if such argument
+// exists. The evaluated value will be cached so that it can be returned on
+// subsequent calls. If the arg does not exist, nullptr is returned.
+//
+unsigned int *E_ArgAsMBF21ThingFlags(arglist_t *al, int index)
+{
+
+   // if the arglist doesn't exist or doesn't hold this many arguments,
+   // return the default value.
+   if(!al || index >= al->numargs)
+      return nullptr;
+
+   evalcache_t &eval = al->values[index];
+
+   if(eval.type != EVALTYPE_THINGFLAG)
+   {
+      char *pos = nullptr;
+      long num;
+
+      eval.type = EVALTYPE_THINGFLAG;
+
+      // see if this is a string or an integer
+      num = strtol(al->args[index], &pos, 0);
+
+      if(estrempty(pos))
+      {
+         // it's an integer to remap
+         unsigned int *flagvals = deh_RemapMBF21ThingTypeFlags(num);
+
+         memcpy(eval.value.flags, flagvals, MAXFLAGFIELDS * sizeof(unsigned int));
+      }
+      else if(estrnonempty(al->args[index]))
+         I_Error("E_ArgAsMBF21ThingFlags: MBF21 flags codepointers should not be called from EDF");
+      else
+      {
+         // empty string is zero
+         memset(eval.value.flags, 0, MAXFLAGFIELDS * sizeof(unsigned int));
+      }
+   }
+
+   return eval.value.flags;
+}
+
+//
 // Gets the arg value at index i as a flag mask, if such argument  exists,
 // using the specified flagset. The evaluated value will be cached
 // so that it can be returned on subsequent calls. If the arg does not

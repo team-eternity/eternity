@@ -592,36 +592,37 @@ void A_SkelFist(actionargs_t *actionargs)
 // Arch-Vile
 //
 
-static Mobj    *corpsehit;
-static Mobj    *vileobj;
-static fixed_t  viletryx;
-static fixed_t  viletryy;
+static struct vileContext_t
+{
+   Mobj    *corpsehit;
+   Mobj    *vileobj;
+   fixed_t  viletryx;
+   fixed_t  viletryy;
+   int      viletryradius;
+} vileContext;
 
-//
-// PIT_VileCheck
 //
 // Detect a corpse that could be raised.
 //
-static bool PIT_VileCheck(Mobj *thing, void *context)
+static bool PIT_vileCheck(Mobj *thing, void *context)
 {
    int maxdist;
-   int vileType = E_SafeThingType(MT_VILE);
-   
+
    // ioanch 20160221: call functions
    if(!P_ThingIsCorpse(thing))
       return true;
-   
-   maxdist = thing->info->radius + mobjinfo[vileType]->radius;
-   
-   if(D_abs(getThingX(vileobj, thing) - viletryx) > maxdist ||
-      D_abs(getThingY(vileobj, thing) - viletryy) > maxdist)
+
+   maxdist = thing->info->radius + vileContext.viletryradius;
+
+   if(D_abs(getThingX(vileContext.vileobj, thing) - vileContext.viletryx) > maxdist ||
+      D_abs(getThingY(vileContext.vileobj, thing) - vileContext.viletryy) > maxdist)
       return true;                // not actually touching
 
    // ioanch 20160108: since now it's portal aware, make sure that corpses
    // from different group ids are seen. This restriction doesn't apply for
    // single layer areas.
-   if(vileobj->groupid != R_NOGROUP && thing->groupid != R_NOGROUP &&
-      vileobj->groupid != thing->groupid && !P_CheckSight(vileobj, thing))
+   if(vileContext.vileobj->groupid != R_NOGROUP && thing->groupid != R_NOGROUP &&
+      vileContext.vileobj->groupid != thing->groupid && !P_CheckSight(vileContext.vileobj, thing))
    {
       return true;
    }
@@ -638,69 +639,98 @@ static bool PIT_VileCheck(Mobj *thing, void *context)
    //        if ((thing->height == 0) && (thing->radius == 0))         //   |
    //            return true;                                          // phares
 
-   corpsehit = thing;
+   vileContext.corpsehit = thing;
 
    // Exit (return false) if the function returns true!
-   return !P_CheckCorpseRaiseSpace(corpsehit);
+   return !P_CheckCorpseRaiseSpace(vileContext.corpsehit);
 }
 
+struct healContext_t
+{
+   actionargs_t *actionargs;
+   int           healstate;
+   int           healsound;
+};
+
 //
-// A_VileChase
+// Check for ressurecting a body (split out from A_VileChase)
 //
-// Check for ressurecting a body
-//
-void A_VileChase(actionargs_t *actionargs)
+bool P_HealCorpse(actionargs_t *actionargs, const int radius, const int healstate, const int healsound)
 {
    Mobj *actor = actionargs->actor;
 
    if(actor->movedir != DI_NODIR)
    {
+      healContext_t healContext = {};
+
       // check for corpses to raise
-      viletryx =
-         actor->x + actor->info->speed*xspeed[actor->movedir];
-      viletryy =
-         actor->y + actor->info->speed*yspeed[actor->movedir];
+      vileContext.viletryx = actor->x + actor->info->speed*xspeed[actor->movedir];
+      vileContext.viletryy = actor->y + actor->info->speed*yspeed[actor->movedir];
 
       // ioanch 20160108: make resurrection portal aware
       fixed_t bbox[4];
-      bbox[BOXLEFT] = viletryx - MAXRADIUS*2;
-      bbox[BOXBOTTOM] = viletryy - MAXRADIUS*2;
-      bbox[BOXRIGHT] = viletryx + MAXRADIUS*2;
-      bbox[BOXTOP] = viletryy + MAXRADIUS*2;
-      vileobj = actor;
+      bbox[BOXLEFT]   = vileContext.viletryx - MAXRADIUS*2;
+      bbox[BOXBOTTOM] = vileContext.viletryy - MAXRADIUS*2;
+      bbox[BOXRIGHT]  = vileContext.viletryx + MAXRADIUS*2;
+      bbox[BOXTOP]    = vileContext.viletryy + MAXRADIUS*2;
+      vileContext.vileobj       = actor;
+      vileContext.viletryradius = radius;
 
-      if(!P_TransPortalBlockWalker(bbox, actor->groupid, true, actionargs, 
+      healContext.actionargs = actionargs;
+      healContext.healstate  = healstate;
+      healContext.healsound  = healsound;
+
+      return !P_TransPortalBlockWalker(
+         bbox, actor->groupid, true, &healContext,
          [](int x, int y, int groupid, void *data) -> bool
-      {
-         // get the variables back
-         auto actionargs = static_cast<actionargs_t *>(data);
-         Mobj *actor = actionargs->actor;
-
-         if(!P_BlockThingsIterator(x, y, groupid, PIT_VileCheck))
          {
-            // got one!
-            Mobj *temp = actor->target;
-            actor->target = corpsehit;
-            A_FaceTarget(actionargs);
-            actor->target = temp;
+            // get the variables back
+            auto          healContext = static_cast<healContext_t *>(data);
+            actionargs_t *actionargs  = healContext->actionargs;
+            int           healstate   = healContext->healstate;
+            int           healsound   = healContext->healsound;
+            Mobj *actor = actionargs->actor;
 
-            // ioanch 20160220: allow custom state
-            const state_t *healstate = E_GetStateForMobjInfo(actor->info, 
-                                                               METASTATE_HEAL);
-            if(healstate && healstate->index != NullStateNum)
-               P_SetMobjState(actor, healstate->index);
-            else
-               P_SetMobjState(actor, S_VILE_HEAL1);   // Doom behaviour
+            if(!P_BlockThingsIterator(x, y, groupid, PIT_vileCheck))
+            {
+               // got one!
+               Mobj *temp = actor->target;
+               actor->target = vileContext.corpsehit;
+               A_FaceTarget(actionargs);
+               actor->target = temp;
 
-            // ioanch 20160221: call function
-            P_RaiseCorpse(corpsehit, actor);
-            return false;
+               P_SetMobjState(actor, healstate);
+
+               // ioanch 20160221: call function
+               P_RaiseCorpse(vileContext.corpsehit, actor, healsound);
+               return false;
+            }
+            return true;
          }
-         return true;
-      }))
-         return;  // if the block returned false, exit
+      );  // if the block returned false, a thing was successfully raised
    }
-   A_Chase(actionargs);  // Return to normal attack.
+
+   return false;
+}
+
+//
+// Check for ressurecting a body
+//
+void A_VileChase(actionargs_t *actionargs)
+{
+   Mobj       *actor    = actionargs->actor;
+   int         vileType = E_SafeThingType(MT_VILE);
+   int         healStateNum;
+
+   // ioanch 20160220: allow custom state
+   const state_t *healState = E_GetStateForMobjInfo(actor->info, METASTATE_HEAL);
+   if(healState && healState->index != NullStateNum)
+      healStateNum = healState->index;
+   else
+      healStateNum = S_VILE_HEAL1;   // Doom behaviour
+
+   if(!P_HealCorpse(actionargs, mobjinfo[vileType]->radius, healStateNum, sfx_slop))
+      A_Chase(actionargs);  // Return to normal attack.
 }
 
 //

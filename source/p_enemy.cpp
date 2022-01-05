@@ -165,14 +165,14 @@ void P_NoiseAlert(Mobj *target, Mobj *emitter)
 }
 
 //
-// P_CheckMeleeRange
+// A generalised form of P_CheckMeleeRange
 //
-bool P_CheckMeleeRange(Mobj *actor)
+bool P_CheckRange(Mobj *actor, fixed_t range)
 {
    Mobj *pl = actor->target;
-   if (!pl)
-       return false;
-   
+   if(!pl)
+      return false;
+
    // haleyjd 02/15/02: revision of joel's fix for z height check
    if(P_Use3DClipping())
    {
@@ -188,14 +188,29 @@ bool P_CheckMeleeRange(Mobj *actor)
    tx = getThingX(actor, pl);
    ty = getThingY(actor, pl);
 
-   fixed_t range = actor->info->meleerange;
-   if(GameModeInfo->monsterMeleeRange == meleecalc_doom)
-      range += pl->info->radius - 20 * FRACUNIT;
 
    return  // killough 7/18/98: friendly monsters don't attack other friends
       pl && !(actor->flags & pl->flags & MF_FRIEND) &&
       (P_AproxDistance(tx - actor->x, ty - actor->y) < range) &&
       P_CheckSight(actor, actor->target);
+
+}
+
+//
+// P_CheckMeleeRange
+//
+bool P_CheckMeleeRange(Mobj *actor)
+{
+   Mobj *pl = actor->target;
+   if(!pl)
+      return false;
+
+   fixed_t range = actor->info->meleerange;
+   if(GameModeInfo->monsterMeleeRange == meleecalc_doom)
+      range += pl->info->radius - 20 * FRACUNIT;
+
+   return P_CheckRange(actor, range);
+
 }
 
 //

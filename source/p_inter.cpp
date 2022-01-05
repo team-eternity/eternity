@@ -1845,9 +1845,9 @@ bool P_CheckCorpseRaiseSpace(Mobj *corpse)
 // ioanch 20160221
 // Resurrects a dead monster. Assumes the previous two functions returned true
 //
-void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser)
+void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser, const int healsound)
 {
-   S_StartSound(corpse, sfx_slop);
+   S_StartSound(corpse, healsound);
    const mobjinfo_t *info = corpse->info;
 
    // haleyjd 09/26/04: need to restore monster skins here

@@ -1111,6 +1111,11 @@ static unsigned int *deh_parseFlagsCombinedRemapped(
    return flagset->results;
 }
 
+unsigned int *deh_RemapMBF21ThingTypeFlags(const unsigned int flags)
+{
+   return deh_remapFlags(flags, &dehacked_mbf21flags, dehacked_mbf21mobjflags_remappings);
+}
+
 static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value, MetaTable &gatheredData)
 {
    mobjinfo_t *mi;
@@ -1916,7 +1921,7 @@ static void deh_procWeapon(DWFILE *fpin, char *line, MetaTable &gatheredData)
          break;
       case dehweaponid_mbf21flags:
       {
-         unsigned int *flagMasks = deh_calcMBF21FlagMasks(dehacked_mbf21mobjflags_remappings);
+         unsigned int *flagMasks = deh_calcMBF21FlagMasks(dehacked_mbf21weaponflags_remappings);
          weaponinfo.flags &= ~flagMasks[0];
 
          if(!value)
