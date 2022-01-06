@@ -55,6 +55,9 @@ function(eternity_set_xcode_attributes TARGET)
     XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME                  YES
 
     XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS ${CMAKE_SOURCE_DIR}/macosx/eternity/eternity.entitlements
+
+    XCODE_ATTRIBUTE_GCC_GENERATE_DEBUGGING_SYMBOLS           YES
+    XCODE_ATTRIBUTE_STRIP_INSTALLED_PRODUCT                  NO
   )
 endfunction()
 
