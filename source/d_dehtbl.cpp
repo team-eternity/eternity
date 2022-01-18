@@ -1809,7 +1809,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(WeaponSound),
    POINTER(WeaponJump),
    POINTER(ConsumeAmmo),
-   //POINTER(CheckAmmo),
+   POINTER(CheckAmmo),
    //POINTER(RefireTo),
    //POINTER(GunFlashTo),
    POINTER(WeaponAlert),

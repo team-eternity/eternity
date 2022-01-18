@@ -31,6 +31,7 @@
 #include "d_mod.h"
 #include "doomstat.h"
 #include "e_args.h"
+#include "e_inventory.h"
 #include "m_vector.h"
 #include "p_enemy.h"
 #include "p_inter.h"
@@ -663,7 +664,41 @@ void A_ConsumeAmmo(actionargs_t *actionargs)
 //
 void A_CheckAmmo(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args   = actionargs->args;
+   player_t  *player = actionargs->actor->player;
+   pspdef_t  *pspr   = actionargs->pspr;
+   int state;
+   int checkamount;
+   const weaponinfo_t *weapon;
+   int                 ammoamount;
+   const itemeffect_t *ammotype;
+
+   if(!mbf21_temp || !player || !pspr)
+      return;
+
+   weapon = player->readyweapon;
+
+   if(state = E_ArgAsStateNumNI(args, 0, player); state < 0)
+      return;
+
+   if(player->attackdown & AT_SECONDARY)
+   {
+      checkamount = E_ArgAsInt(args, 1, weapon->ammopershot);
+      ammotype = weapon->ammo;
+   }
+   else
+   {
+      checkamount = E_ArgAsInt(args, 1, weapon->ammopershot_alt);
+      ammotype = weapon->ammo_alt;
+   }
+
+   if(!ammotype) // no-ammo weapon?
+      return;
+
+   ammoamount = E_GetItemOwnedAmount(player, ammotype);
+
+   if(ammoamount < checkamount)
+      P_SetPspritePtr(player, pspr, state);
 }
 
 //
