@@ -1811,7 +1811,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(ConsumeAmmo),
    POINTER(CheckAmmo),
    POINTER(RefireTo),
-   //POINTER(GunFlashTo),
+   POINTER(GunFlashTo),
    POINTER(WeaponAlert),
 
 

@@ -30,9 +30,11 @@
 #include "a_doom.h"
 #include "d_event.h"
 #include "d_mod.h"
+#include "d_player.h"
 #include "doomstat.h"
 #include "e_args.h"
 #include "e_inventory.h"
+#include "e_player.h"
 #include "m_vector.h"
 #include "p_enemy.h"
 #include "p_inter.h"
@@ -747,7 +749,21 @@ void A_RefireTo(actionargs_t *actionargs)
 //
 void A_GunFlashTo(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args   = actionargs->args;
+   player_t  *player = actionargs->actor->player;
+   pspdef_t  *pspr   = actionargs->pspr;
+   int  state;
+
+   if(!mbf21_temp || !player || !pspr)
+      return;
+
+   if(state = E_ArgAsStateNumNI(args, 0, player); state < 0)
+      return;
+
+   if(!E_ArgAsInt(args, 1, 0))
+      P_SetMobjState(actionargs->actor, player->pclass->altattack);
+
+   P_SetPspritePtr(player, pspr, state);
 }
 
 //
