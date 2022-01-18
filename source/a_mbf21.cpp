@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright(C) 2021 James Haley, Max Waine, et al.
 //
@@ -425,6 +425,30 @@ static void A_jumpIfMobjInSight(actionargs_t *actionargs, Mobj * Mobj::*field)
 }
 
 //
+// Generalised A_JumpIfTargetCloser and A_JumpIfTracerCloser
+//
+static void A_jumpIfMobjCloser(actionargs_t *actionargs, Mobj *Mobj:: *field)
+{
+   arglist_t *args   = actionargs->args;
+   Mobj      *actor  = actionargs->actor;
+   Mobj      *mobj   = actor->*field;
+   int     state;
+   fixed_t distance;
+
+
+   state = E_ArgAsStateNumNI(args, 0, actor);
+   if(!mbf21_temp || !mobj || state < 0)
+      return;
+
+   distance = E_ArgAsFixed(args, 1, 0);
+
+   const fixed_t dx = actor->x - getThingX(actor, mobj);
+   const fixed_t dy = actor->y - getThingY(actor, mobj);
+   if(distance > P_AproxDistance(dx, dy))
+      P_SetMobjState(actor, state);
+}
+
+//
 // Jumps to a state if caller's target is in line-of-sight.
 //
 // args[0] -- state to jump to
@@ -444,20 +468,7 @@ void A_JumpIfTargetInSight(actionargs_t *actionargs)
 //
 void A_JumpIfTargetCloser(actionargs_t *actionargs)
 {
-   arglist_t *args   = actionargs->args;
-   Mobj      *actor  = actionargs->actor;
-   Mobj      *target = actor->target;
-   int     state;
-   fixed_t distance;
-
-   state = E_ArgAsStateNumNI(args, 0, actor);
-   if(!mbf21_temp || !target || state < 0)
-      return;
-
-   distance = E_ArgAsFixed(args, 1, 0);
-
-   if(distance > P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor)))
-      P_SetMobjState(actor, state);
+   A_jumpIfMobjCloser(actionargs, &Mobj::target);
 }
 
 //
@@ -480,22 +491,7 @@ void A_JumpIfTracerInSight(actionargs_t *actionargs)
 //
 void A_JumpIfTracerCloser(actionargs_t *actionargs)
 {
-   arglist_t *args   = actionargs->args;
-   Mobj      *actor  = actionargs->actor;
-   Mobj      *tracer = actor->tracer;
-   int     state;
-   fixed_t distance;
-
-   state = E_ArgAsStateNumNI(args, 0, actor);
-   if(!mbf21_temp || !tracer || state < 0)
-      return;
-
-   distance = E_ArgAsFixed(args, 1, 0);
-
-   const fixed_t dx = actor->x - getThingX(actor, actor->tracer);
-   const fixed_t dy = actor->y - getThingY(actor, actor->tracer);
-   if(distance > P_AproxDistance(dx, dy))
-      P_SetMobjState(actor, state);
+   A_jumpIfMobjCloser(actionargs, &Mobj::tracer);
 
 }
 
