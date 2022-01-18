@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright(C) 2021 James Haley, Max Waine, et al.
 //
@@ -28,6 +28,7 @@
 #include "a_args.h"
 #include "a_common.h"
 #include "a_doom.h"
+#include "d_event.h"
 #include "d_mod.h"
 #include "doomstat.h"
 #include "e_args.h"
@@ -709,7 +710,33 @@ void A_CheckAmmo(actionargs_t *actionargs)
 //
 void A_RefireTo(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args   = actionargs->args;
+   player_t  *player = actionargs->actor->player;
+   pspdef_t  *pspr   = actionargs->pspr;
+   int  state;
+   bool noammocheck;
+
+   if(!mbf21_temp || !player || !pspr)
+      return;
+
+   if(state = E_ArgAsStateNumNI(args, 0, player); state < 0)
+      return;
+
+   noammocheck = !!E_ArgAsInt(args, 1, 0);
+
+   if(player->pendingweapon == nullptr && player->health)
+   {
+      if((player->cmd.buttons & BT_ATTACK) && !(player->attackdown & AT_SECONDARY))
+      {
+         if(noammocheck || P_WeaponHasAmmo(player, player->readyweapon))
+            P_SetPspritePtr(player, pspr, state);
+      }
+      else if((player->cmd.buttons & BTN_ATTACK_ALT) && !(player->attackdown & AT_PRIMARY))
+      {
+         if(noammocheck || P_WeaponHasAmmoAlt(player, player->readyweapon))
+            P_SetPspritePtr(player, pspr, state);
+      }
+   }
 }
 
 //

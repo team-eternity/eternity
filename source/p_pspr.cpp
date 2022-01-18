@@ -216,7 +216,7 @@ bool P_WeaponHasAmmo(const player_t *player, const weaponinfo_t *weapon)
 //
 // MaxW: 2018/01/03: Test if a player has alt ammo for a weapon
 //
-static bool P_WeaponHasAmmoAlt(player_t *player, weaponinfo_t *weapon)
+bool P_WeaponHasAmmoAlt(const player_t *player, const weaponinfo_t *weapon)
 {
    itemeffect_t *ammoType = weapon->ammo_alt;
 
@@ -903,8 +903,7 @@ static void A_reFireNew(actionargs_t *actionargs)
       P_FireWeapon(player);
    }
    else if((player->cmd.buttons & BTN_ATTACK_ALT) && player->pendingweapon == nullptr &&
-            player->health &&
-            !(player->attackdown & AT_PRIMARY))
+            player->health && !(player->attackdown & AT_PRIMARY))
    {
       player->refire++;
       P_fireWeaponAlt(player);

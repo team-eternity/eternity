@@ -97,6 +97,7 @@ void P_SetPspritePtr(const player_t *player, pspdef_t *psp, statenum_t stnum);
 void P_SetPsprite(player_t *player, int position, statenum_t stnum);
 
 bool P_WeaponHasAmmo(const player_t *player, const weaponinfo_t *weapon);
+bool P_WeaponHasAmmoAlt(const player_t *player, const weaponinfo_t *weapon);
 
 int P_NextWeapon(const player_t *player, uint8_t *slotindex = nullptr);
 int P_PrevWeapon(const player_t *player, uint8_t *slotindex = nullptr);
