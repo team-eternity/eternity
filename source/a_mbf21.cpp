@@ -221,7 +221,6 @@ void A_MonsterBulletAttack(actionargs_t *actionargs)
 
       P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
    }
-
 }
 
 
@@ -648,7 +647,34 @@ void A_WeaponProjectile(actionargs_t *actionargs)
 //
 void A_WeaponBulletAttack(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args   = actionargs->args;
+   Mobj      *actor  = actionargs->actor;
+   player_t  *player = actor->player;
+   fixed_t    hspread, vspread;
+   int        numbullets, damagebase, damagemod;
+   fixed_t    slope;
+   angle_t    angle;
+   int        damage;
+
+   if(!mbf21_temp || !player)
+      return;
+
+   hspread    = E_ArgAsFixed(args, 0, 0);
+   vspread    = E_ArgAsFixed(args, 1, 0);
+   numbullets = E_ArgAsInt(args, 2, 1);
+   damagebase = E_ArgAsInt(args, 3, 3);
+   damagemod  = E_ArgAsInt(args, 4, 5);
+
+   P_BulletSlope(actor);
+
+   for(int i = 0; i < numbullets; i++)
+   {
+      damage = (P_Random(pr_mbf21) % damagemod + 1) * damagebase;
+      angle  = int(actor->angle) + P_RandomHitscanAngle(pr_mbf21, hspread);
+      slope  = bulletslope + P_RandomHitscanSlope(pr_mbf21, vspread);
+
+      P_LineAttack(actor, angle, MISSILERANGE, slope, damage);
+   }
 }
 
 //

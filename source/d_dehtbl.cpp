@@ -1804,7 +1804,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(RemoveFlags),
 
    POINTER(WeaponProjectile),
-   //POINTER(WeaponBulletAttack),
+   POINTER(WeaponBulletAttack),
    //POINTER(WeaponMeleeAttack),
    POINTER(WeaponSound),
    POINTER(WeaponJump),
