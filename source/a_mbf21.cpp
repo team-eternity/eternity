@@ -1,4 +1,4 @@
-﻿//
+//
 // The Eternity Engine
 // Copyright(C) 2021 James Haley, Max Waine, et al.
 //
@@ -648,7 +648,7 @@ void A_ConsumeAmmo(actionargs_t *actionargs)
    if(amount == 0)
    {
       if(player->readyweapon->flags & WPF_DISABLEAPS)
-         amount == 1; // default to 1 if ammo-per-shot was never set
+         amount = 1; // default to 1 if ammo-per-shot was never set
       else
          amount = -1;
    }
