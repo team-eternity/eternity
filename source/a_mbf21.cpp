@@ -1,4 +1,4 @@
-﻿//
+//
 // The Eternity Engine
 // Copyright(C) 2021 James Haley, Max Waine, et al.
 //
@@ -383,6 +383,48 @@ void A_JumpIfHealthBelow(actionargs_t *actionargs)
 }
 
 //
+// Generalised A_JumpIfTargetInSight and A_JumpIfTracerInSight
+//
+static void A_jumpIfMobjInSight(actionargs_t *actionargs, Mobj * Mobj::*field)
+{
+   arglist_t *args  = actionargs->args;
+   Mobj      *actor = actionargs->actor;
+   Mobj      *mobj  = actor->*field;
+   int state;
+
+   if(!mbf21_temp || actionargs->pspr || !mobj)
+      return;
+
+   fixed_t ffov = E_ArgAsFixed(args, 1, 0);
+
+   // check fov if one is specified
+   if(ffov > 0)
+   {
+      const angle_t fov    = FixedToAngle(ffov);
+      const angle_t tang   = P_PointToAngle(actor->x, actor->y, getThingX(actor, mobj), getThingY(actor, mobj));
+      const angle_t minang = actor->angle - FixedToAngle(fov) / 2;
+      const angle_t maxang = actor->angle + FixedToAngle(fov) / 2;
+
+      // if the angles are backward, compare differently
+      if((minang > maxang) ? tang < minang && tang > maxang
+                           : tang < minang || tang > maxang)
+      {
+         return;
+      }
+   }
+
+   // check line of sight
+   if(!P_CheckSight(actor, mobj))
+      return;
+
+   // prepare to jump!
+   if(state = E_ArgAsStateNumNI(args, 0, actor); state < 0)
+      return;
+
+   P_SetMobjState(actor, state);
+}
+
+//
 // Jumps to a state if caller's target is in line-of-sight.
 //
 // args[0] -- state to jump to
@@ -391,7 +433,7 @@ void A_JumpIfHealthBelow(actionargs_t *actionargs)
 //
 void A_JumpIfTargetInSight(actionargs_t *actionargs)
 {
-   // TODO
+   A_jumpIfMobjInSight(actionargs, &Mobj::target);
 }
 
 //
@@ -427,7 +469,7 @@ void A_JumpIfTargetCloser(actionargs_t *actionargs)
 //
 void A_JumpIfTracerInSight(actionargs_t *actionargs)
 {
-   // TODO
+   A_jumpIfMobjInSight(actionargs, &Mobj::tracer);
 }
 
 //

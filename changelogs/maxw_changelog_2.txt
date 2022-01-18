@@ -187,7 +187,8 @@ Added "ripsound" EDF property, which is played when a ripper rips.
 --------------------------------------------------------------------------------
 2022/01/18
 [MBF21]
- * Added A_CheckAmmo, A_RefireTo, and A_GunFlashTo.
+ * Added A_CheckAmmo, A_RefireTo, A_GunFlashTo, A_JumpIfTargetInSight, and
+   A_JumpIfTracerInSight.
 
 ================================================================================
 EOF
