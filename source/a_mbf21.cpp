@@ -571,11 +571,17 @@ void A_JumpIfFlagsSet(actionargs_t *actionargs)
    flags      = E_ArgAsInt(args, 0, 0);
    mbf21flags = E_ArgAsMBF21ThingFlags(args, 1);
 
-   if((actor->flags & flags)                      == flags &&
-      (actor->flags & mbf21flags[DEHFLAGS_MODE2]) == mbf21flags[DEHFLAGS_MODE2] &&
-      (actor->flags & mbf21flags[DEHFLAGS_MODE3]) == mbf21flags[DEHFLAGS_MODE3] &&
-      (actor->flags & mbf21flags[DEHFLAGS_MODE4]) == mbf21flags[DEHFLAGS_MODE4] &&
-      (actor->flags & mbf21flags[DEHFLAGS_MODE5]) == mbf21flags[DEHFLAGS_MODE5])
+   if((actor->flags & flags) == flags &&
+      (
+         !mbf21flags ||
+         (
+            (actor->flags & mbf21flags[DEHFLAGS_MODE2]) == mbf21flags[DEHFLAGS_MODE2] &&
+            (actor->flags & mbf21flags[DEHFLAGS_MODE3]) == mbf21flags[DEHFLAGS_MODE3] &&
+            (actor->flags & mbf21flags[DEHFLAGS_MODE4]) == mbf21flags[DEHFLAGS_MODE4] &&
+            (actor->flags & mbf21flags[DEHFLAGS_MODE5]) == mbf21flags[DEHFLAGS_MODE5]
+         )
+      )
+   )
       P_SetMobjState(actor, state);
 
 }
@@ -600,10 +606,13 @@ void A_AddFlags(actionargs_t *actionargs)
    mbf21flags = E_ArgAsMBF21ThingFlags(args, 1);
 
    actor->flags  |= flags;
-   actor->flags2 |= mbf21flags[DEHFLAGS_MODE2];
-   actor->flags3 |= mbf21flags[DEHFLAGS_MODE3];
-   actor->flags4 |= mbf21flags[DEHFLAGS_MODE4];
-   actor->flags5 |= mbf21flags[DEHFLAGS_MODE5];
+   if(mbf21flags)
+   {
+      actor->flags2 |= mbf21flags[DEHFLAGS_MODE2];
+      actor->flags3 |= mbf21flags[DEHFLAGS_MODE3];
+      actor->flags4 |= mbf21flags[DEHFLAGS_MODE4];
+      actor->flags5 |= mbf21flags[DEHFLAGS_MODE5];
+   }
 }
 
 //
@@ -625,11 +634,14 @@ void A_RemoveFlags(actionargs_t *actionargs)
    flags      = E_ArgAsInt(args, 0, 0);
    mbf21flags = E_ArgAsMBF21ThingFlags(args, 1);
 
-   actor->flags  &= ~flags;
-   actor->flags2 &= ~mbf21flags[DEHFLAGS_MODE2];
-   actor->flags3 &= ~mbf21flags[DEHFLAGS_MODE3];
-   actor->flags4 &= ~mbf21flags[DEHFLAGS_MODE4];
-   actor->flags5 &= ~mbf21flags[DEHFLAGS_MODE5];
+   actor->flags &= ~flags;
+   if(mbf21flags)
+   {
+      actor->flags2 &= ~mbf21flags[DEHFLAGS_MODE2];
+      actor->flags3 &= ~mbf21flags[DEHFLAGS_MODE3];
+      actor->flags4 &= ~mbf21flags[DEHFLAGS_MODE4];
+      actor->flags5 &= ~mbf21flags[DEHFLAGS_MODE5];
+   }
 }
 
 //=============================================================================

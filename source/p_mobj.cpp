@@ -3377,7 +3377,7 @@ Mobj* P_SpawnMissileWithDest(Mobj* source, Mobj* dest, mobjtype_t type,
 }
 
 //
-// A mix of P_HticTracer from a_heretic.cpp from here,
+// A mix of P_HticTracer from our a_heretic.cpp,
 // and P_SeekerMissile from dsda-doom (GPLv2+, credit to Ryan Krafnick)
 //
 bool P_SeekerMissile(Mobj *actor, const angle_t threshold, const angle_t maxturn, const seekcenter_e seekcenter)
