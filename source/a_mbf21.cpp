@@ -875,7 +875,7 @@ void A_ConsumeAmmo(actionargs_t *actionargs)
          amount = -1;
    }
 
-   P_SubtractAmmo(player, amount);
+   P_SubtractAmmoAmount(player, amount);
 }
 
 //

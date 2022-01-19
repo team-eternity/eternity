@@ -533,6 +533,35 @@ void P_SubtractAmmo(const player_t *player, int compat_amt)
    E_RemoveInventoryItem(player, ammo, amount);
 }
 
+//
+// As above but it always subtracts a specific amount
+//
+void P_SubtractAmmoAmount(const player_t *player, int amount)
+{
+   weaponinfo_t *weapon = player->readyweapon;
+   itemeffect_t *ammo;
+
+   if(demo_version >= 401 && (player->attackdown & AT_ITEM))
+      return;
+   else if(demo_version >= 401 && (player->attackdown & AT_SECONDARY))
+   {
+      ammo = weapon->ammo_alt;
+      if(amount < 0)
+         amount = weapon->ammopershot_alt;
+   }
+   else
+   {
+      ammo = weapon->ammo;
+      if(amount < 0)
+         amount = weapon->ammopershot;
+   }
+
+   if(player->cheats & CF_INFAMMO || !ammo)
+      return;
+
+   E_RemoveInventoryItem(player, ammo, amount);
+}
+
 int lastshottic; // killough 3/22/98
 
 //

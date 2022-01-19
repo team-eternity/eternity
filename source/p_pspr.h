@@ -105,6 +105,7 @@ int P_PrevWeapon(const player_t *player, uint8_t *slotindex = nullptr);
 weapontype_t P_SwitchWeaponOldDoom(const player_t *player);
 bool P_CheckAmmo(player_t *player);
 void P_SubtractAmmo(const player_t *player, int compat_amt);
+void P_SubtractAmmoAmount(const player_t *player, int amount);
 void P_SetupPsprites(player_t *curplayer);
 void P_MovePsprites(player_t *curplayer);
 void P_DropWeapon(player_t *player);
