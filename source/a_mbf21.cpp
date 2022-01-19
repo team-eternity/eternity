@@ -385,7 +385,8 @@ void A_JumpIfHealthBelow(actionargs_t *actionargs)
 //
 // Generalised A_JumpIfTargetInSight and A_JumpIfTracerInSight
 //
-static void A_jumpIfMobjInSight(actionargs_t *actionargs, Mobj * Mobj::*field)
+template<Mobj *Mobj:: *field>
+static void A_jumpIfMobjInSight(actionargs_t *actionargs)
 {
    arglist_t *args  = actionargs->args;
    Mobj      *actor = actionargs->actor;
@@ -427,7 +428,8 @@ static void A_jumpIfMobjInSight(actionargs_t *actionargs, Mobj * Mobj::*field)
 //
 // Generalised A_JumpIfTargetCloser and A_JumpIfTracerCloser
 //
-static void A_jumpIfMobjCloser(actionargs_t *actionargs, Mobj *Mobj:: *field)
+template<Mobj *Mobj:: *field>
+static void A_jumpIfMobjCloser(actionargs_t *actionargs)
 {
    arglist_t *args   = actionargs->args;
    Mobj      *actor  = actionargs->actor;
@@ -457,7 +459,7 @@ static void A_jumpIfMobjCloser(actionargs_t *actionargs, Mobj *Mobj:: *field)
 //
 void A_JumpIfTargetInSight(actionargs_t *actionargs)
 {
-   A_jumpIfMobjInSight(actionargs, &Mobj::target);
+   A_jumpIfMobjInSight<&Mobj::target>(actionargs);
 }
 
 //
@@ -468,7 +470,7 @@ void A_JumpIfTargetInSight(actionargs_t *actionargs)
 //
 void A_JumpIfTargetCloser(actionargs_t *actionargs)
 {
-   A_jumpIfMobjCloser(actionargs, &Mobj::target);
+   A_jumpIfMobjCloser<&Mobj::target>(actionargs);
 }
 
 //
@@ -480,7 +482,7 @@ void A_JumpIfTargetCloser(actionargs_t *actionargs)
 //
 void A_JumpIfTracerInSight(actionargs_t *actionargs)
 {
-   A_jumpIfMobjInSight(actionargs, &Mobj::tracer);
+   A_jumpIfMobjInSight<&Mobj::tracer>(actionargs);
 }
 
 //
@@ -491,7 +493,7 @@ void A_JumpIfTracerInSight(actionargs_t *actionargs)
 //
 void A_JumpIfTracerCloser(actionargs_t *actionargs)
 {
-   A_jumpIfMobjCloser(actionargs, &Mobj::tracer);
+   A_jumpIfMobjCloser<&Mobj::tracer>(actionargs);
 
 }
 
