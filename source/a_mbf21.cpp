@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright(C) 2021 James Haley, Max Waine, et al.
 //
@@ -354,7 +354,49 @@ void A_SeekTracer(actionargs_t *actionargs)
 //
 void A_FindTracer(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args  = actionargs->args;
+   Mobj      *actor = actionargs->actor;
+   angle_t    fov;
+   fixed_t    range;
+
+   if(!mbf21_temp || actor->tracer)
+      return;
+
+   fov   = FixedToAngle(E_ArgAsFixed(args, 0, 0));
+   range = E_ArgAsInt(args, 0, 10) * MAPBLOCKSIZE;
+
+   if(fov == 0)
+      fov = ANG360;
+
+   angle_t minang = actor->angle - fov / 2;
+   angle_t maxang = actor->angle + fov / 2;
+
+   // Code based on A_BouncingBFG
+   for(int i = 1; i < 40; i++)  // offset angles from its attack angle
+   {
+      // Angle fans outward, preferring nearer angles
+      angle_t an = actor->angle;
+      if(i & 2)
+         an += (fov / 40) * (i / 2);
+      else
+         an -= (fov / 40) * (i / 2);
+
+      P_AimLineAttack(actor, an, range, true);
+
+      // don't aim for shooter, or for friends of shooter
+      if(clip.linetarget)
+      {
+         if(clip.linetarget == actor->target ||
+            (clip.linetarget->flags & actor->target->flags & MF_FRIEND))
+            continue;
+
+         if(clip.linetarget)
+         {
+            P_SetTarget<Mobj>(&actor->tracer, clip.linetarget);
+            return;
+         }
+      }
+   }
 }
 
 //
@@ -928,7 +970,7 @@ void A_GunFlashTo(actionargs_t *actionargs)
    if(!E_ArgAsInt(args, 1, 0))
       P_SetMobjState(actionargs->actor, player->pclass->altattack);
 
-   P_SetPspritePtr(player, pspr, state);
+   P_SetPsprite(player, ps_flash, state);
 }
 
 //

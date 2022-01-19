@@ -1792,7 +1792,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(NoiseAlert),
    POINTER(HealChase),
    POINTER(SeekTracer),
-   //POINTER(FindTracer),
+   POINTER(FindTracer),
    POINTER(ClearTracer),
    POINTER(JumpIfHealthBelow),
    POINTER(JumpIfTargetInSight),

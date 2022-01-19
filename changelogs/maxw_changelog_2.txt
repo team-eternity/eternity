@@ -194,7 +194,7 @@ Added "ripsound" EDF property, which is played when a ripper rips.
 --------------------------------------------------------------------------------
 2022/01/18
 [MBF21]
- * Added A_SeekTracer.
+ * Added A_SeekTracer and A_FindTracer.
 
 ================================================================================
 EOF
