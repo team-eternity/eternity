@@ -1,4 +1,4 @@
-﻿//
+//
 // The Eternity Engine
 // Copyright(C) 2021 James Haley, Max Waine, et al.
 //
@@ -275,7 +275,7 @@ void A_RadiusDamage(actionargs_t *actionargs)
    Mobj      *actor = actionargs->actor;
    int        damage, radius;
 
-   if(!mbf21_temp || !actor->state)
+   if(!mbf21_temp)
       return;
 
    damage = E_ArgAsInt(args, 0, 0);
@@ -335,7 +335,7 @@ void A_SeekTracer(actionargs_t *actionargs)
    Mobj      *actor = actionargs->actor;
    fixed_t    threshold, maxturnangle;
 
-   if(!mbf21_temp || !actor->state)
+   if(!mbf21_temp)
       return;
 
    threshold    = FixedToAngle(E_ArgAsFixed(args, 0, 0));
@@ -403,7 +403,7 @@ static void A_jumpIfMobjInSight(actionargs_t *actionargs)
    Mobj      *mobj  = actor->*field;
    int state;
 
-   if(!mbf21_temp || actionargs->pspr || !mobj)
+   if(!mbf21_temp || !mobj)
       return;
 
    fixed_t ffov = E_ArgAsFixed(args, 1, 0);
