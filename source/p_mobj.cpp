@@ -3460,8 +3460,10 @@ bool P_SeekerMissile(Mobj *actor, const angle_t threshold, const angle_t maxturn
 
       // aim for centre of dest thing?
       if(seekcenter == seekcenter_e::yes)
-         actor->momz += dest->height / 2;
+         actor->momz += (dest->height / 2) / dist;
    }
+
+   return true;
 }
 
 //=============================================================================
