@@ -41,6 +41,7 @@
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_portalcross.h"
+#include "r_main.h"
 #include "s_sound.h"
 
 //=============================================================================
@@ -688,7 +689,55 @@ void A_WeaponBulletAttack(actionargs_t *actionargs)
 //
 void A_WeaponMeleeAttack(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args   = actionargs->args;
+   Mobj      *actor  = actionargs->actor;
+   player_t  *player = actor->player;
+   int       damagebase, damagedice, zerkfactor;
+   sfxinfo_t *hitsound;
+   fixed_t   range;
+   int       damage;
+   angle_t   angle;
+   fixed_t   slope;
+
+   if(!mbf21_temp || !player)
+      return;
+
+   damagebase = E_ArgAsInt(args, 0, 2);
+   damagedice = E_ArgAsInt(args, 1, 10);
+   zerkfactor = E_ArgAsFixed(args, 2, FRACUNIT);
+   hitsound   = E_ArgAsSound(args, 3);
+   range      = E_ArgAsFixed(args, 4, 0);
+
+   if(range == 0)
+      range = player->mo->info->meleerange;
+
+   damage = (P_Random(pr_mbf21) % damagedice + 1) * damagebase;
+   if(player->powers[pw_strength])
+      damage = (damage * zerkfactor) >> FRACBITS;
+
+
+   // slight randomization; weird vanillaism here. :P
+   angle = player->mo->angle;
+   angle += P_SubRandom(pr_mbf21) << 18;
+
+   // make autoaim prefer enemies
+   slope = P_AimLineAttack(player->mo, angle, range, true);
+   if(!clip.linetarget)
+      slope = P_AimLineAttack(player->mo, angle, range, 0);
+
+   // attack, dammit!
+   P_LineAttack(player->mo, angle, range, slope, damage);
+
+   // missed? ah, welp.
+   if(!clip.linetarget)
+      return;
+
+   if(hitsound)
+      P_WeaponSoundInfo(actor, hitsound);
+
+   // turn to face target
+   actor->angle = R_PointToAngle2(actor->x, actor->y, clip.linetarget->x, clip.linetarget->y);
+
 }
 
 //

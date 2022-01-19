@@ -1805,7 +1805,7 @@ deh_bexptr deh_bexptrs[] =
 
    POINTER(WeaponProjectile),
    POINTER(WeaponBulletAttack),
-   //POINTER(WeaponMeleeAttack),
+   POINTER(WeaponMeleeAttack),
    POINTER(WeaponSound),
    POINTER(WeaponJump),
    POINTER(ConsumeAmmo),
