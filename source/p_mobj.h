@@ -439,6 +439,13 @@ bool  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
 void  P_ExplodeMissile(Mobj *, const sector_t *topedgesec);     // killough
 bool P_CheckPortalTeleport(Mobj *mobj);
 
+enum class seekcenter_e : bool
+{
+   no = false,
+   yes = true,
+};
+bool P_SeekerMissile(Mobj *actor, const angle_t threshold, const angle_t maxturn, const seekcenter_e seekcenter);
+
 //
 // Blood spawning
 //

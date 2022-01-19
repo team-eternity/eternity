@@ -202,78 +202,13 @@ void A_HticDrop(actionargs_t *actionargs)
    A_Fall(actionargs);
 }
 
+//
+// Function to maintain Heretic-style seekers
+// TODO: Replace all P_HticTracer called with P_SeekerMissile calls?
+//
 static void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
 {
-   angle_t exact, diff;
-   Mobj   *dest;
-   bool    dir;
-  
-   // adjust direction
-   dest = actor->tracer;
-   
-   if(!dest || dest->health <= 0)
-      return;
-
-   // ioanch 20151230: portal aware
-   fixed_t dx = getThingX(actor, dest);
-   fixed_t dy = getThingY(actor, dest);
-   fixed_t dz = getThingZ(actor, dest);
-
-   exact = P_PointToAngle(actor->x, actor->y, dx, dy);
-
-   if(exact > actor->angle)
-   {
-      diff = exact - actor->angle;
-      dir = true;
-   }
-   else
-   {
-      diff = actor->angle - exact;
-      dir = false;
-   }
-
-   // if > 180, invert angle and direction
-   if(diff > 0x80000000)
-   {
-      diff = 0xFFFFFFFF - diff;
-      dir = !dir;
-   }
-
-   // apply limiting parameters
-   if(diff > threshold)
-   {
-      diff >>= 1;
-      if(diff > maxturn)
-         diff = maxturn;
-   }
-
-   // turn clockwise or counterclockwise
-   if(dir)
-      actor->angle += diff;
-   else
-      actor->angle -= diff;
-
-   // directly from above
-   diff = actor->angle>>ANGLETOFINESHIFT;
-   actor->momx = FixedMul(actor->info->speed, finecosine[diff]);
-   actor->momy = FixedMul(actor->info->speed, finesine[diff]);
-
-   // adjust z only when significant height difference exists
-   if(actor->z + actor->height < dz ||
-      dz  + dest->height  < actor->z)
-   {
-      // directly from above
-      fixed_t dist = P_AproxDistance(dx - actor->x, dy - actor->y);
-      
-      dist = dist / actor->info->speed;
-      
-      if(dist < 1)
-         dist = 1;
-
-      // momentum is set to equal slope rather than having some
-      // added to it
-      actor->momz = (dz - actor->z) / dist;
-   }
+   P_SeekerMissile(actor, threshold, maxturn, seekcenter_e::no);
 }
 
 //

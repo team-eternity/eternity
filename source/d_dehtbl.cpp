@@ -1791,7 +1791,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(RadiusDamage),
    POINTER(NoiseAlert),
    POINTER(HealChase),
-   //POINTER(SeekTracer),
+   POINTER(SeekTracer),
    //POINTER(FindTracer),
    POINTER(ClearTracer),
    POINTER(JumpIfHealthBelow),

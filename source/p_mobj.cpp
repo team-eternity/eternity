@@ -3376,6 +3376,94 @@ Mobj* P_SpawnMissileWithDest(Mobj* source, Mobj* dest, mobjtype_t type,
    return P_SpawnMissileEx(missileinfo);
 }
 
+//
+// A mix of P_HticTracer from a_heretic.cpp from here,
+// and P_SeekerMissile from dsda-doom (GPLv2+, credit to Ryan Krafnick)
+//
+bool P_SeekerMissile(Mobj *actor, const angle_t threshold, const angle_t maxturn, const seekcenter_e seekcenter)
+{
+   angle_t exact, diff;
+   Mobj   *dest;
+   bool    dir;
+
+   // adjust direction
+   dest = actor->tracer;
+
+   if(!dest)
+      return false;
+
+   // clear target field if target died
+   if(!(dest->flags & MF_SHOOTABLE))
+   {
+      P_ClearTarget(actor->tracer);
+      return false;
+   }
+
+   // ioanch 20151230: portal aware
+   fixed_t dx = getThingX(actor, dest);
+   fixed_t dy = getThingY(actor, dest);
+   fixed_t dz = getThingZ(actor, dest);
+
+   exact = P_PointToAngle(actor->x, actor->y, dx, dy);
+
+   if(exact > actor->angle)
+   {
+      diff = exact - actor->angle;
+      dir = true;
+   }
+   else
+   {
+      diff = actor->angle - exact;
+      dir = false;
+   }
+
+   // if > 180, invert angle and direction
+   if(diff > 0x80000000)
+   {
+      diff = 0xFFFFFFFF - diff;
+      dir = !dir;
+   }
+
+   // apply limiting parameters
+   if(diff > threshold)
+   {
+      diff >>= 1;
+      if(diff > maxturn)
+         diff = maxturn;
+   }
+
+   // turn clockwise or counterclockwise
+   if(dir)
+      actor->angle += diff;
+   else
+      actor->angle -= diff;
+
+   // directly from above
+   diff = actor->angle>>ANGLETOFINESHIFT;
+   actor->momx = FixedMul(actor->info->speed, finecosine[diff]);
+   actor->momy = FixedMul(actor->info->speed, finesine[diff]);
+
+   // adjust z only when significant height difference exists
+   if(actor->z + actor->height < dz || dz  + dest->height  < actor->z || seekcenter == seekcenter_e::yes)
+   {
+      // directly from above
+      fixed_t dist = P_AproxDistance(dx - actor->x, dy - actor->y);
+
+      dist = dist / actor->info->speed;
+
+      if(dist < 1)
+         dist = 1;
+
+      // momentum is set to equal slope rather than having some
+      // added to it
+      actor->momz = (dz - actor->z) / dist;
+
+      // aim for centre of dest thing?
+      if(seekcenter == seekcenter_e::yes)
+         actor->momz += dest->height / 2;
+   }
+}
+
 //=============================================================================
 //
 // New Eternity mobj functions

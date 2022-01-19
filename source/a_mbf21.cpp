@@ -331,7 +331,17 @@ void A_HealChase(actionargs_t *actionargs)
 //
 void A_SeekTracer(actionargs_t *actionargs)
 {
-   // TODO
+   arglist_t *args  = actionargs->args;
+   Mobj      *actor = actionargs->actor;
+   fixed_t    threshold, maxturnangle;
+
+   if(!mbf21_temp || !actor->state)
+      return;
+
+   threshold    = FixedToAngle(E_ArgAsFixed(args, 0, 0));
+   maxturnangle = FixedToAngle(E_ArgAsFixed(args, 1, 0));
+
+   P_SeekerMissile(actor, threshold, maxturnangle, seekcenter_e::yes);
 }
 
 //
@@ -385,7 +395,7 @@ void A_JumpIfHealthBelow(actionargs_t *actionargs)
 //
 // Generalised A_JumpIfTargetInSight and A_JumpIfTracerInSight
 //
-template<Mobj *Mobj:: *field>
+template<Mobj *Mobj::*field>
 static void A_jumpIfMobjInSight(actionargs_t *actionargs)
 {
    arglist_t *args  = actionargs->args;
@@ -428,7 +438,7 @@ static void A_jumpIfMobjInSight(actionargs_t *actionargs)
 //
 // Generalised A_JumpIfTargetCloser and A_JumpIfTracerCloser
 //
-template<Mobj *Mobj:: *field>
+template<Mobj *Mobj::*field>
 static void A_jumpIfMobjCloser(actionargs_t *actionargs)
 {
    arglist_t *args   = actionargs->args;

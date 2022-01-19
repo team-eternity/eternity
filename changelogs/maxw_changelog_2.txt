@@ -191,6 +191,11 @@ Added "ripsound" EDF property, which is played when a ripper rips.
    A_JumpIfTargetInSight, A_JumpIfTracerInSight,
    A_WeaponProjectile, A_WeaponBulletAttack and A_WeaponMeleeAttack.
 
+--------------------------------------------------------------------------------
+2022/01/18
+[MBF21]
+ * Added A_SeekTracer.
+
 ================================================================================
 EOF
 ================================================================================
