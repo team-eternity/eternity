@@ -1348,7 +1348,7 @@ static bool P_CheckDropOffMBF(Mobj *thing, int dropoff)
       if(getComp(comp_dropoff))
       {
          // haleyjd: note missing 202 compatibility... WOOPS!
-         if(clip.zref.floor - clip.zref.dropoff > STEPSIZE)
+         if(!dropoff && (clip.zref.floor - clip.zref.dropoff > STEPSIZE))
             return false;
       }
       else if(!dropoff || (dropoff == 2 &&
