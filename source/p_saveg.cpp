@@ -1124,8 +1124,11 @@ void P_SetNewTarget(Mobj **mop, Mobj *targ)
 static void P_ArchiveRNG(SaveArchive &arc)
 {
    arc << rng.rndindex << rng.prndindex;
-
-   P_ArchiveArray<unsigned int>(arc, rng.seed, NUMPRCLASS);
+   // Protection for existing affected savegames...
+   if(arc.saveVersion() <= 12)
+      P_ArchiveArray<unsigned int>(arc, rng.seed, pr_mbf21);
+   else
+      P_ArchiveArray<unsigned int>(arc, rng.seed, NUMPRCLASS);
 }
 
 //
