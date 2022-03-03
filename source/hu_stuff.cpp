@@ -27,6 +27,7 @@
 //
 //----------------------------------------------------------------------------
 
+#include "m_misc.h"
 #include "z_zone.h"
 #include "i_system.h"
 
@@ -207,6 +208,7 @@ static void HU_InitLevelTime();
 static void HU_InitLevelName();
 static void HU_InitChat();
 static void HU_InitCoords();
+static void HU_InitStats();
 
 //
 // HU_InitNativeWidgets
@@ -214,7 +216,7 @@ static void HU_InitCoords();
 // Sets up all the native widgets. Called from HU_Init below at startup.
 //
 static void HU_InitNativeWidgets()
-{   
+{
    HU_InitMsgWidget();
    HU_InitCrossHair();
    HU_InitWarnings();
@@ -223,6 +225,7 @@ static void HU_InitNativeWidgets()
    HU_InitLevelName();
    HU_InitChat();
    HU_InitCoords();
+   HU_InitStats();
 
    // HUD_FIXME: generalize?
    HU_FragsInit();
@@ -318,7 +321,7 @@ bool HU_Responder(const event_t *ev)
 {
    if(ev->data1 == KEYD_LALT)
       altdown = (ev->type == ev_keydown);
-   
+
    // only the chat widget can respond to events (for now at least)
    return HU_ChatRespond(ev);
 }
@@ -396,14 +399,14 @@ void HUDMessageWidget::drawer()
    vtd.screen      = &vbscreenyscaled;
    vtd.flags       = VTXT_FIXEDCOLOR;
    vtd.fixedColNum = mess_colour;
-   
+
    // go down a bit if chat active
    vtd.y = chat_active ? hud_font->absh : 0;
-   
+
    for(int i = 0; i < current_messages; i++)
    {
       char *msg = messages[i];
-      
+
       // haleyjd 12/26/02: center messages in proper gamemodes
       // haleyjd 08/26/12: center also if in widescreen modes
       // MaxW: 2019/09/08: Respect user's alignment setting
@@ -416,7 +419,7 @@ void HUDMessageWidget::drawer()
       }
       else
          vtd.x = 0;
-      
+
       vtd.s = msg;
 
       V_FontWriteTextEx(vtd);
@@ -449,13 +452,13 @@ void HUDMessageWidget::addMessage(const char *s)
    if(current_messages >= hud_msg_lines) // display full
    {
       current_messages = hud_msg_lines;   // cap it
-      // scroll up      
+      // scroll up
       for(int i = 0; i < hud_msg_lines - 1; i++)
          strncpy(messages[i], messages[i+1], MAXHUDMSGLEN);
-      
+
       dest = messages[hud_msg_lines - 1];
    }
-   else 
+   else
    {
       // add one to the end
       dest = messages[current_messages];
@@ -480,7 +483,7 @@ static void HU_InitMsgWidget()
    msg_widget.setType(WIDGET_MISC);
 
    // add to hash
-   HUDWidget::AddWidgetToHash(&msg_widget);   
+   HUDWidget::AddWidgetToHash(&msg_widget);
 }
 
 //
@@ -626,14 +629,14 @@ void HUDOpenSocketWidget::init()
 // Sets up the open socket warning patch widget.
 //
 static void HU_InitWarnings()
-{   
+{
    // set up socket
    opensocket_widget.setName("_HU_OpenSocketWidget");
    opensocket_widget.setType(WIDGET_PATCH);
 
    // add to hash
    HUDWidget::AddWidgetToHash(&opensocket_widget);
- 
+
    opensocket_widget.init();
 }
 
@@ -671,11 +674,11 @@ public:
                   const char *pmsg)
    {
       x = px;
-      y = py;   
-      
+      y = py;
+
       if(!(font = E_FontForNum(fontNum)))
          font = hud_font;
-      
+
       cleartic = pcleartic >= 0 ? pcleartic : 0;
       flags    = pflags;
 
@@ -726,7 +729,7 @@ void HUDTextWidget::drawer()
    if(message && (!cleartic || leveltime < cleartic))
    {
       edefstructvar(vtextdraw_t, vdt);
-      
+
       vdt.font   = font;
       vdt.s      = message;
       vdt.x      = x;
@@ -760,7 +763,7 @@ void HUDTextWidget::clear()
       efree(alloc);
       alloc = nullptr;
    }
-   
+
    message  = nullptr;
    cleartic = 0;
 }
@@ -770,7 +773,7 @@ void HUDTextWidget::clear()
 //
 // Adds a dynamically allocated text widget to the hash table.
 // For scripting.
-// 
+//
 static void HU_DynamicTextWidget(const char *name, int x, int y, int font,
                                  char *message, int cleartic, int flags)
 {
@@ -837,15 +840,15 @@ void HU_CenterMessage(const char *s)
       qstr += centermsg_color;
       centermsg_color = nullptr;
    }
-   
+
    qstr += s;
-  
+
    centermessage_widget.setMessage(qstr.constPtr(),
       (SCREENWIDTH - V_FontStringWidth(hud_font, s)) / 2,
       (SCREENHEIGHT - V_FontStringHeight(hud_font, s) -
        ((scaledwindow.height == SCREENHEIGHT) ? 0 : st_height - 8)) / 2,
        leveltime + (message_timer * 35) / 1000);
-   
+
    // print message to console also
    C_Printf("%s\n", s);
 }
@@ -913,18 +916,18 @@ void HUDCrossHairWidget::ticker()
    // default to no target
    color = notargetcolour;
 
-   // fast as possible: don't bother with this crap if the crosshair 
-   // isn't going to be displayed anyway   
+   // fast as possible: don't bother with this crap if the crosshair
+   // isn't going to be displayed anyway
    if(!crosshairnum || !crosshair_hilite || crosshairs[crosshairnum-1] == -1)
       return;
 
    // search for targets
-   
+
    // ioanch 20160101: don't let P_AimLineAttack change global trace.attackrange
    fixed_t oldAttackRange = trace.attackrange;
    Mobj *oldLineTarget = clip.linetarget;
    P_AimLineAttack(players[displayplayer].mo,
-                   players[displayplayer].mo->angle, 
+                   players[displayplayer].mo->angle,
                    16*64*FRACUNIT, false);
    trace.attackrange = oldAttackRange;
 
@@ -932,12 +935,12 @@ void HUDCrossHairWidget::ticker()
    {
       // target found
       color = targetcolour; // default
-      
+
       // haleyjd 06/06/09: some special behaviors
       if(clip.linetarget->flags & MF_FRIEND)
          color = friendcolour;
 
-      if(((clip.linetarget->flags  & MF_SHADOW || 
+      if(((clip.linetarget->flags  & MF_SHADOW ||
            clip.linetarget->flags3 & MF3_GHOST) && M_Random() & 0x0F) ||
          clip.linetarget->flags4 & MF4_TOTALINVISIBLE)
       {
@@ -1002,7 +1005,7 @@ static void HU_InitCrossHair()
    // haleyjd TODO: support user-added crosshairs
    crosshairs[0] = W_CheckNumForName("CROSS1");
    crosshairs[1] = W_CheckNumForName("CROSS2");
-   
+
    notargetcolour = cr_red;
    targetcolour   = cr_green;
    friendcolour   = cr_blue;
@@ -1064,20 +1067,20 @@ void HUDLevelTimeWidget::ticker()
 {
    static char timestr[32];
    int seconds;
-   
+
    if(!HU_allowMapWidget() || !hu_showtime)
    {
       message = nullptr;
       return;
    }
-   
+
    seconds = leveltime / 35;
    timestr[0] = '\0';
-   
-   psnprintf(timestr, sizeof(timestr), "%c%02i:%02i:%02i", 
+
+   psnprintf(timestr, sizeof(timestr), "%c%02i:%02i:%02i",
              hu_timecolor + 128, seconds/3600, (seconds%3600)/60, seconds%60);
-   
-   message = timestr;        
+
+   message = timestr;
 }
 
 //
@@ -1206,7 +1209,7 @@ char chatinput[100] = "";
 void HUDChatWidget::ticker()
 {
    static char tempchatmsg[128];
-   
+
    if(chat_active)
    {
       psnprintf(tempchatmsg, sizeof(tempchatmsg), "%s_", chatinput);
@@ -1247,8 +1250,8 @@ static bool HU_ChatRespond(const event_t *ev)
 
    // haleyjd 06/11/08: get HUD actions
    int action = G_KeyResponder(ev, kac_hud);
-   
-   if(ev->data1 == KEYD_RSHIFT) 
+
+   if(ev->data1 == KEYD_RSHIFT)
       shiftdown = (ev->type == ev_keydown);
    (void)shiftdown;
 
@@ -1260,8 +1263,8 @@ static bool HU_ChatRespond(const event_t *ev)
 
    if(!chat_active)
    {
-      if(ev->data1 == key_chat && netgame) 
-      {       
+      if(ev->data1 == key_chat && netgame)
+      {
          chat_active = true; // activate chat
          chatinput[0] = 0;   // empty input string
          if(ectype::isPrint(ev->data1))
@@ -1276,7 +1279,7 @@ static bool HU_ChatRespond(const event_t *ev)
       discardinput = false;
       return true;
    }
-  
+
    if(altdown && ev->type == ev_keydown &&
       ev->data1 >= '0' && ev->data1 <= '9')
    {
@@ -1288,19 +1291,19 @@ static bool HU_ChatRespond(const event_t *ev)
       chat_active = false;
       return true;
    }
-  
+
    if(ev->data1 == KEYD_ESCAPE)    // kill chat
    {
       chat_active = false;
       return true;
    }
-  
+
    if(ev->data1 == KEYD_BACKSPACE && chatinput[0])
    {
       chatinput[strlen(chatinput)-1] = 0;      // remove last char
       return true;
    }
-  
+
    if(ev->data1 == KEYD_ENTER)
    {
       char tempstr[100];
@@ -1315,7 +1318,7 @@ static bool HU_ChatRespond(const event_t *ev)
 
    if(ev->type == ev_text)
       ch = ev->data1;
-   
+
    if(ectype::isPrint(ch))
    {
       psnprintf(chatinput, sizeof(chatinput), "%s%c", chatinput, ch);
@@ -1421,7 +1424,7 @@ void HUDCoordWidget::ticker()
 {
    player_t *plyr;
    fixed_t x, y, z;
-   
+
    static char coordxstr[16];
    static char coordystr[16];
    static char coordzstr[16];
@@ -1489,6 +1492,110 @@ static void HU_InitCoords()
    coordy_widget.initProps(HUDCoordWidget::COORDTYPE_Y);
    coordz_widget.initProps(HUDCoordWidget::COORDTYPE_Z);
    coorda_widget.initProps(HUDCoordWidget::COORDTYPE_A);
+}
+
+////////////////////////////////////////////////////////////////////////
+//
+// HUD level stats widget
+//
+
+class HUDStatWidget : public HUDTextWidget
+{
+public:
+    enum
+    {
+        STATTYPE_KILLS,
+        STATTYPE_ITEMS,
+        STATTYPE_SECRETS
+    };
+
+    virtual void ticker();
+
+    void initProps(int st)
+    {
+        statType = st;
+
+        x = 0;
+        switch (st)
+        {
+        case STATTYPE_KILLS:
+            y = 8;
+            break;
+        case STATTYPE_ITEMS:
+            y = 17;
+            break;
+        case STATTYPE_SECRETS:
+            y = 25;
+            break;
+        default:
+            break;
+        };
+
+        message = nullptr;
+        font = hud_font;
+        cleartic = 0;
+    }
+
+protected:
+    int statType;
+};
+
+static HUDStatWidget statkill_widget;
+static HUDStatWidget statitem_widget;
+static HUDStatWidget statsecr_widget;
+
+void HUDStatWidget::ticker()
+{
+    static char statkillstr[16];
+    static char statitemstr[16];
+    static char statsecrstr[16];
+
+    if (!HU_allowMapWidget())
+    {
+        message = nullptr;
+        return;
+    }
+
+    player_t *plr = &players[displayplayer];
+
+    if (statType == STATTYPE_KILLS)
+    {
+        snprintf(statkillstr, sizeof(statkillstr), "K %i/%i", plr->killcount, totalkills);
+        message = statkillstr;
+    }
+    else if (statType == STATTYPE_ITEMS)
+    {
+        snprintf(statitemstr, sizeof(statitemstr), "I %i/%i", plr->itemcount, totalitems);
+        message = statitemstr;
+    }
+    else if (statType == STATTYPE_SECRETS && !hud_hidestatus)
+    {
+        snprintf(statsecrstr, sizeof(statsecrstr), "S %i/%i", plr->secretcount, totalsecret);
+        message = statsecrstr;
+    }
+    else
+    {
+        message = nullptr;
+    }
+}
+
+static void HU_InitStats()
+{
+    statkill_widget.setName("_HU_StatKillWidget");
+    statitem_widget.setName("_HU_StatItemWidget");
+    statsecr_widget.setName("_HU_StatSecrWidget");
+
+    statkill_widget.setType(WIDGET_TEXT);
+    statitem_widget.setType(WIDGET_TEXT);
+    statsecr_widget.setType(WIDGET_TEXT);
+
+    HUDWidget::AddWidgetToHash(&statkill_widget);
+    HUDWidget::AddWidgetToHash(&statitem_widget);
+    HUDWidget::AddWidgetToHash(&statsecr_widget);
+
+    statkill_widget.initProps(HUDStatWidget::STATTYPE_KILLS);
+    statitem_widget.initProps(HUDStatWidget::STATTYPE_ITEMS);
+    statsecr_widget.initProps(HUDStatWidget::STATTYPE_SECRETS);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1582,7 +1689,7 @@ CONSOLE_VARIABLE(hu_messagecolor, mess_colour, 0) {}
 CONSOLE_NETCMD(say, cf_netvar, netcmd_chat)
 {
    S_StartInterfaceSound(GameModeInfo->c_ChatSound);
-   
+
    doom_printf("%s: %s", players[Console.cmdsrc].name, Console.args.constPtr());
 }
 
@@ -1664,7 +1771,7 @@ static cell AMX_NATIVE_CALL sm_newpatchwidget(AMX *amx, cell *params)
       efree(name);
       return -1;
    }
-   
+
    HU_DynamicPatchWidget(name, params[3], params[4], params[5], params[6], patch);
 
    efree(name);
@@ -1778,7 +1885,7 @@ static cell AMX_NATIVE_CALL sm_getwidgettext(AMX *amx, cell *params)
 
    size   = (int)params[3];
    packed = (int)params[4];
-   
+
    // resolve address of destination buffer
    if((err = amx_GetAddr(amx, params[2], &deststr)) != AMX_ERR_NONE)
    {
@@ -1796,14 +1903,14 @@ static cell AMX_NATIVE_CALL sm_getwidgettext(AMX *amx, cell *params)
    if((widget = HU_WidgetForName(name)) && widget->type == WIDGET_TEXT)
    {
       char *tempbuf = emalloc(char *, size+1);
-      
+
       tw = (hu_textwidget_t *)widget;
 
       if(tw->message)
          psnprintf(tempbuf, size+1, "%s", tw->message);
       else
          tempbuf[0] = '\0';
-      
+
       amx_SetString(deststr, tempbuf, packed, 0);
 
       efree(tempbuf);
@@ -1910,7 +2017,7 @@ static cell AMX_NATIVE_CALL sm_gethudmode(AMX *amx, cell *params)
    if(hud_enabled && hud_overlaylayout > 0) // Boom HUD enabled, return style
       return (cell)hud_overlaylayout + 1;
    else if(viewwindow.height == video.height)         // Fullscreen (no HUD)
-      return 0;			
+      return 0;
    else                                    // Vanilla style status bar
       return 1;
 }
