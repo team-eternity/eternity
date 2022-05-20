@@ -117,10 +117,6 @@ struct invbarstate_t {
    int  ArtifactFlash;
 };
 
-// These defines are in degrees:
-#define MAXPITCHUP   45
-#define MAXPITCHDOWN 45
-
 enum attacktype_e : unsigned int
 {
    AT_NONE      = 0,
@@ -245,6 +241,7 @@ struct wbplayerstruct_t
 struct wbstartstruct_t
 {
   int         epsd;   // episode # (0-2)
+  int         nextEpisode; // next episode (0-based) in case of custom level info
 
   // if true, splash the secret level
   bool        didsecret;

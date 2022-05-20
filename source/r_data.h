@@ -28,6 +28,7 @@
 #define R_DATA_H__
 
 // Required for: DLListItem
+#include "doomtype.h"
 #include "m_dllist.h"
 
 enum
@@ -84,6 +85,8 @@ typedef enum
    TF_ANIMATED  = 0x08u,
    // Set if texture width is non-power-of-two
    TF_WIDTHNP2  = 0x10u,
+   // Set if texture was loaded in non-vanilla ways (i.e. not by TEXTUREx/PNAMES)
+   TF_NONVANILLA = 0x20u,
 } texflag_e;
 
 struct texture_t
@@ -174,6 +177,7 @@ int R_CheckForWall(const char *name);
 void R_InitTranMap(bool force);      // killough 3/6/98: translucency initialization
 void R_InitSubMap(bool force);
 int  R_ColormapNumForName(const char *name);      // killough 4/4/98
+const char *R_ColormapNameForNum(int index);
 
 // haleyjd: new global colormap method
 void R_SetGlobalLevelColormap(void);

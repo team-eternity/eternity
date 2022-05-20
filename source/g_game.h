@@ -22,6 +22,7 @@
 #define G_GAME_H__
 
 // Required for byte
+#include "doomdef.h"
 #include "doomtype.h"
 
 struct event_t;
@@ -34,7 +35,7 @@ class  WadDirectory;
 //
 
 char *G_GetNameForMap(int episode, int map);
-int   G_GetMapForName(const char *name);
+int   G_GetMapForName(const char *name, int &episode);
 
 bool G_Responder(const event_t *ev);
 bool G_CheckDemoStatus();

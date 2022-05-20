@@ -216,7 +216,7 @@ bool P_WeaponHasAmmo(const player_t *player, const weaponinfo_t *weapon)
 //
 // MaxW: 2018/01/03: Test if a player has alt ammo for a weapon
 //
-static bool P_WeaponHasAmmoAlt(player_t *player, weaponinfo_t *weapon)
+bool P_WeaponHasAmmoAlt(const player_t *player, const weaponinfo_t *weapon)
 {
    itemeffect_t *ammoType = weapon->ammo_alt;
 
@@ -378,9 +378,9 @@ static int weapon_preferences[NUMWEAPONS+1] =
 // this won't matter, because the raised weapon has no ammo anyway. When called
 // from G_BuildTiccmd you want to toggle to a different weapon regardless.
 //
-weapontype_t P_SwitchWeaponOld(const player_t *player)
+weapontype_t P_SwitchWeaponOldDoom(const player_t *player)
 {
-   int *prefer = weapon_preferences; // killough 3/22/98
+   const int *prefer = weapon_preferences; // killough 3/22/98
    weapontype_t currentweapon = player->readyweapon->dehnum;
    weapontype_t newweapon = currentweapon;
    int i = NUMWEAPONS + 1;   // killough 5/2/98   
@@ -484,7 +484,10 @@ bool P_CheckAmmo(player_t *player)
    
    if(demo_compatibility)
    {
-      player->pendingweapon = E_WeaponForDEHNum(P_SwitchWeaponOld(player));      // phares
+      if(vanilla_heretic)
+         player->pendingweapon = E_FindBestWeapon(player);
+      else
+         player->pendingweapon = E_WeaponForDEHNum(P_SwitchWeaponOldDoom(player));      // phares
       // Now set appropriate weapon overlay.
       // WEAPON_FIXME
       P_SetPsprite(player,ps_weapon,player->readyweapon->downstate);
@@ -527,6 +530,35 @@ void P_SubtractAmmo(const player_t *player, int compat_amt)
       return;
 
    
+   E_RemoveInventoryItem(player, ammo, amount);
+}
+
+//
+// As above but it always subtracts a specific amount
+//
+void P_SubtractAmmoAmount(const player_t *player, int amount)
+{
+   weaponinfo_t *weapon = player->readyweapon;
+   itemeffect_t *ammo;
+
+   if(demo_version >= 401 && (player->attackdown & AT_ITEM))
+      return;
+   else if(demo_version >= 401 && (player->attackdown & AT_SECONDARY))
+   {
+      ammo = weapon->ammo_alt;
+      if(amount < 0)
+         amount = weapon->ammopershot_alt;
+   }
+   else
+   {
+      ammo = weapon->ammo;
+      if(amount < 0)
+         amount = weapon->ammopershot;
+   }
+
+   if(player->cheats & CF_INFAMMO || !ammo)
+      return;
+
    E_RemoveInventoryItem(player, ammo, amount);
 }
 
@@ -900,8 +932,7 @@ static void A_reFireNew(actionargs_t *actionargs)
       P_FireWeapon(player);
    }
    else if((player->cmd.buttons & BTN_ATTACK_ALT) && player->pendingweapon == nullptr &&
-            player->health &&
-            !(player->attackdown & AT_PRIMARY))
+            player->health && !(player->attackdown & AT_PRIMARY))
    {
       player->refire++;
       P_fireWeaponAlt(player);

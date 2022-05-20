@@ -659,7 +659,7 @@ thingtype HereticTeleFog : Mobj, -1, 334
 
 thingtype HereticBlood : Mobj, -1, 335
 {
-  cflags NOBLOCKMAP|NOSPLASH
+  cflags NOBLOCKMAP
 
   firstdecoratestate S_HTICBLOOD1
   states
@@ -2852,6 +2852,7 @@ thingtype HereticBlasterSmoke : Mobj, -1, 421
 thingtype HereticRipper : HereticMissile, -1, 422
 {
   compatname Ripper
+  ripsound   ht_ripslop
   deathsound ht_hrnhit
   speed      14.0
   radius     8.0

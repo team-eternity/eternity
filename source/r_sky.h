@@ -37,7 +37,7 @@
 // Necessary height of sky to prevent stretching for looking up
 enum
 {
-   SKY_FREELOOK_HEIGHT = 260,
+   SKY_FREELOOK_HEIGHT = 200,
 };
 
 // haleyjd: information on sky flats
@@ -63,9 +63,10 @@ struct skytexture_t
    int     height;     // true height of texture
    fixed_t texturemid; // vertical offset
    skytexture_t *next; // next skytexture in hash chain
+   byte medianColor; // median color for fading high pitch view of sky
 };
 
-extern int stretchsky;
+extern int stretchsky;  // DEPRECATED
 
 // init sky at start of level
 void R_StartSky();

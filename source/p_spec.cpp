@@ -1090,7 +1090,7 @@ void P_CrossSpecialLine(line_t *line, int side, Mobj *thing, polyobj_t *poly)
 {
    // EV_SPECIALS TODO: This function should return success or failure to 
    // the caller.
-   EV_ActivateSpecialLineWithSpac(line, side, thing, poly, SPAC_CROSS);
+   EV_ActivateSpecialLineWithSpac(line, side, thing, poly, SPAC_CROSS, false);
 }
 
 //
@@ -1109,7 +1109,7 @@ void P_ShootSpecialLine(Mobj *thing, line_t *line, int side)
 {
    // EV_SPECIALS TODO: This function should return success or failure to 
    // the caller.
-   EV_ActivateSpecialLineWithSpac(line, side, thing, nullptr, SPAC_IMPACT);
+   EV_ActivateSpecialLineWithSpac(line, side, thing, nullptr, SPAC_IMPACT, false);
 }
 
 //
@@ -1117,11 +1117,42 @@ void P_ShootSpecialLine(Mobj *thing, line_t *line, int side)
 //
 void P_PushSpecialLine(Mobj &thing, line_t &line, int side)
 {
-   EV_ActivateSpecialLineWithSpac(&line, side, &thing, nullptr, SPAC_PUSH);
+   EV_ActivateSpecialLineWithSpac(&line, side, &thing, nullptr, SPAC_PUSH, false);
 }
 
         // sf: changed to enable_nuke for console
 int enable_nuke = 1;  // killough 12/98: nukage disabling cheat
+
+//
+// Handle MBF21 instant death sector for player
+//
+static void P_runInstantDeathSector(player_t *player, const sector_t *sector)
+{
+   bool exit = !!(sector->damageflags & (SDMG_INSTAEXITNORMAL | SDMG_INSTAEXITSECRET));
+   bool kill;
+   if(!enable_nuke)  // allow the nuke cheat to eliminate the insta-deaths without exit
+      kill = exit;
+   else
+   {
+      kill = sector->damageflags & SDMG_IGNORESUIT || (!player->powers[pw_ironfeet] &&
+                                                       !player->powers[pw_invulnerability]);
+   }
+   if(!kill)
+      return;
+
+   P_DamageMobj(player->mo, nullptr, nullptr, GOD_BREACH_DAMAGE, sector->damagemod);
+   if(!exit)
+      return;
+
+   // Must also "kill" the other players before exiting
+   for(int i = 0; i < MAXPLAYERS; ++i)
+      if(playeringame[i] && players[i].mo != player->mo)
+         P_DamageMobj(player->mo, nullptr, nullptr, GOD_BREACH_DAMAGE, sector->damagemod);
+   if(sector->damageflags & SDMG_INSTAEXITSECRET)
+      G_SecretExitLevel();
+   else
+      G_ExitLevel();
+}
 
 //
 // P_PlayerInSpecialSector
@@ -1168,9 +1199,11 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
 
    // Has hit ground
 
-   // haleyjd 12/31/08: generalized sector damage engine
-   if(enable_nuke && sector->damage > 0) // killough 12/98: nukage disabling cheat
+   if(mbf21_temp && sector->flags & SECF_INSTANTDEATH)
+      P_runInstantDeathSector(player, sector);
+   else if(enable_nuke && sector->damage > 0) // killough 12/98: nukage disabling cheat
    {
+      // haleyjd 12/31/08: generalized sector damage engine
       if(!player->powers[pw_ironfeet]          ||  // no rad suit?
          sector->leakiness >= 256              ||  // ignores suit?
          (sector->leakiness > 0                &&  // suit leaks?
@@ -1903,8 +1936,22 @@ static void P_SpawnFriction()
 // haleyjd 02/27/07: rewritten to get rid of Raven code and to speed up in the
 // same manner as P_FindLineFromLineTag by using in-table tag hash.
 //
-line_t *P_FindLine(int tag, int *searchPosition)
+// ioanch 20211010: return defaultline if provided and tag is zero.
+//
+line_t *P_FindLine(int tag, int *searchPosition, line_t *defaultLine)
 {
+   if(defaultLine && !tag)
+   {
+      if(*searchPosition == eindex(defaultLine - lines))
+      {
+         // Don't loop over; make sure to still provide valid output
+         *searchPosition = -1;
+         return nullptr;
+      }
+      *searchPosition = eindex(defaultLine - lines);
+      return defaultLine;
+   }
+
    line_t *line = nullptr;
    
    int start = 
@@ -1983,7 +2030,7 @@ void P_SetLineID(line_t *line, int id)
 // the sector special (not all sector flags may be considered to be such).
 
 #define SPECIALFLAGSMASK \
-   (SECF_SECRET|SECF_FRICTION|SECF_PUSH|SECF_KILLSOUND|SECF_KILLMOVESOUND)
+   (SECF_SECRET|SECF_FRICTION|SECF_PUSH|SECF_KILLSOUND|SECF_KILLMOVESOUND|SECF_INSTANTDEATH)
 
 //
 // P_SetupSpecialTransfer
@@ -3312,11 +3359,10 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          {
             // SoM 3-10-04: Two different anchor linedef codes so I can tag
             // two anchored portals to the same sector.
-            if((lines[s].special != anchortype &&
-                !(lines[s].extflags &
-                  (EX_ML_LOWERPORTAL | EX_ML_UPPERPORTAL))) ||
-               line == &lines[s] ||
-               lines[s].frontsector == nullptr)
+            if((lines[s].special != anchortype && (anchorfunc != EV_STATIC_PORTAL_LINKED_L2L_ANCHOR ||
+                                                   !(lines[s].extflags & (EX_ML_LOWERPORTAL |
+                                                                          EX_ML_UPPERPORTAL)))) ||
+               line == &lines[s] || lines[s].frontsector == nullptr)
             {
                continue;
             }

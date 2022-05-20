@@ -34,6 +34,7 @@
 #include "e_hash.h"
 #include "m_compare.h"
 #include "m_swap.h"
+#include "m_utils.h"
 #include "p_setup.h"
 #include "p_skin.h"
 #include "r_data.h"
@@ -575,6 +576,7 @@ static int R_ReadTextureNamespace(int texnum)
 
       texture = textures[texnum] = R_AllocTexStruct(lump->name, width, height, 1);
       texture->index = texnum;
+      texture->flags |= TF_NONVANILLA;
 
       auto component = texture->components;
       component->originx = 0;
@@ -948,7 +950,7 @@ static void FinishTexture(texture_t *tex)
    }
    
    // Allocate column pointers
-   tex->columns = ecalloctag(texcol_t **, sizeof(texcol_t **), tex->width, PU_RENDERER, nullptr);
+   tex->columns = ecalloctag(texcol_t **, sizeof(texcol_t *), tex->width, PU_RENDERER, nullptr);
    
    // Build the columns based on mask info
    maskp = tempmask.buffer;
@@ -1086,8 +1088,8 @@ texture_t *R_CacheTexture(int num)
 //
 static void R_checkerBoardTexture(texture_t *tex)
 {
-   // allocate buffer
-   tex->bufferalloc = emalloctag(byte *, 64*64 + 8, PU_RENDERER, nullptr);
+   // allocate buffer (also allow some slack space _after_ the buffer)
+   tex->bufferalloc = emalloctag(byte *, 64*64 + 16, PU_RENDERER, nullptr);
    tex->bufferdata = tex->bufferalloc + 8;
 
    // allocate column pointers
@@ -1548,7 +1550,7 @@ const byte *R_GetRawColumn(int tex, int32_t col)
 
    // haleyjd 05/28/14: support non-power-of-two widths
    if(t->flags & TF_WIDTHNP2)
-      col = (col % t->width) * t->height;
+      col = M_PositiveModPositiveRight(col, t->width) * t->height;
    else
       col = (col & t->widthmask) * t->height;
 
@@ -1570,7 +1572,8 @@ const texcol_t *R_GetMaskedColumn(int tex, int32_t col)
       R_CacheTexture(tex);
 
    // haleyjd 05/28/14: support non-power-of-two widths
-   return t->columns[(t->flags & TF_WIDTHNP2) ? col % t->width : col & t->widthmask];
+   return t->columns[(t->flags & TF_WIDTHNP2) ? M_PositiveModPositiveRight(col, t->width) :
+                                                col & t->widthmask];
 }
 
 //

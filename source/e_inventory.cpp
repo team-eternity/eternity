@@ -2191,6 +2191,18 @@ int E_GetItemOwnedAmountName(const player_t *player, const char *name)
    return (slot ? slot->amount : 0);
 }
 
+//
+// Check if player has power by name
+//
+bool E_PlayerHasPowerName(const player_t &player, const char *name)
+{
+   if(estrempty(name))
+      return false;
+   int num = E_StrToNumLinear(powerStrings, NUMPOWERS, name);
+   if(num == NUMPOWERS)
+      return false;
+   return !!player.powers[num];
+}
 
 //
 // E_GiveInventoryItem

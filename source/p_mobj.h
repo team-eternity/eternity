@@ -227,6 +227,11 @@ public:
 
    // Methods
    void backupPosition();
+   // This one only backs up angle against interpolation, while leaving XYZ and portal refs alone
+   void backupAngle()
+   {
+      prevpos.angle = angle;
+   }
    void copyPosition(const Mobj *other);
    int getModifiedSpawnHealth() const;
    
@@ -433,6 +438,13 @@ Mobj *P_SpawnMapThing(mapthing_t *mt);
 bool  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
 void  P_ExplodeMissile(Mobj *, const sector_t *topedgesec);     // killough
 bool P_CheckPortalTeleport(Mobj *mobj);
+
+enum class seekcenter_e : bool
+{
+   no = false,
+   yes = true,
+};
+bool P_SeekerMissile(Mobj *actor, const angle_t threshold, const angle_t maxturn, const seekcenter_e seekcenter);
 
 //
 // Blood spawning
@@ -735,6 +747,7 @@ enum mobjflags4_e : unsigned int
 enum mobjflags5_e : unsigned int
 {
    MF5_NOTAUTOAIMED       = 0x00000001, // can't be autoaimed (for real)
+   MF5_FULLVOLSOUNDS      = 0x00000002, // full-volume see/death sounds
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

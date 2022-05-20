@@ -348,8 +348,11 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       // killough 8/10/98: allow bouncing objects to pass through as missiles
       if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
       {
-         if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
+         if((ld->flags & ML_BLOCKING) ||
+            (mbf21_temp && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
          {
+            // explicitly blocking everything
+            // or blocking player
             bool result = clip.unstuck && !untouchedViaOffset(ld, link);
             if(!result && pushhit && ld->special &&
                full_demo_version >= make_full_version(401, 0))
@@ -362,8 +365,13 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
 
          // killough 8/9/98: monster-blockers don't affect friends
          // SoM 9/7/02: block monsters standing on 3dmidtex only
-         if(ld->flags & ML_BLOCKMONSTERS && !(ld->flags & ML_3DMIDTEX) &&
-            P_BlockedAsMonster(*clip.thing))
+         // MaxW: Land-monster blockers gotta be factored in, too
+         if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
+            (
+               ld->flags & ML_BLOCKMONSTERS ||
+               (mbf21_temp && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
+               )
+            )
          {
             return false; // block monsters only
          }
@@ -381,14 +389,21 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       }
       if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
       {
-         if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
+         if((ld->flags & ML_BLOCKING) ||
+            (mbf21_temp && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
          {
+            // explicitly blocking everything
+            // or blocking player
             P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop, 
                pushhit);
             return true;
          }
-         if(ld->flags & ML_BLOCKMONSTERS && !(ld->flags & ML_3DMIDTEX) &&
-            P_BlockedAsMonster(*clip.thing))
+         if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
+            (
+               ld->flags & ML_BLOCKMONSTERS ||
+               (mbf21_temp && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
+               )
+            )
          {
             P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop, 
                pushhit);

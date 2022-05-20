@@ -165,6 +165,10 @@ struct maplinedefhexen_t
 // is one of the first ever created, so it may have something to do with that.
 #define ML_RESERVED             2048
 
+// MBF21
+#define ML_BLOCKLANDMONSTERS    4096
+#define ML_BLOCKPLAYERS         8192
+
 // haleyjd 01/22/11: internal line flags
 enum
 {
@@ -173,6 +177,11 @@ enum
    MLI_CEILINGPORTALCOPIED = 0x04, // ioanch 20160219: for type 385
    MLI_1SPORTALLINE = 0x08,   // wall portal from a single-sided line
    MLI_MOVINGPORTAL = 0x10,   // line is on a moving portal
+};
+
+enum
+{
+   SDI_VERTICALLYSCROLLING = 0x0001,   // sidedef is targeted for vertical scrolling (needed by skies)
 };
 
 // Sector definition, from editing.

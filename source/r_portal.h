@@ -287,9 +287,9 @@ struct windowlinegen_t
       normal.y = line->ny;
    }
 
-   operator bool() const
+   bool isSet() const
    {
-      return start || delta || normal;
+      return start.nonzero() || delta.nonzero() || normal.nonzero();
    }
 };
 

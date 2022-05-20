@@ -31,6 +31,7 @@
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "cam_sight.h"
+#include "d_gi.h"
 #include "d_main.h"
 #include "d_net.h"
 #include "doomdef.h"
@@ -492,10 +493,12 @@ void P_WalkTicker()
       else
       {
          walkcamera.pitch -= look << 16;
-         if(walkcamera.pitch < -ANGLE_1*MAXPITCHUP)
-            walkcamera.pitch = -ANGLE_1*MAXPITCHUP;
-         else if(walkcamera.pitch > ANGLE_1*MAXPITCHDOWN)
-            walkcamera.pitch = ANGLE_1*MAXPITCHDOWN;
+         int maxpitchup = GameModeInfo->lookPitchUp;
+         int maxpitchdown = GameModeInfo->lookPitchDown;
+         if(walkcamera.pitch < -ANGLE_1*maxpitchup)
+            walkcamera.pitch = -ANGLE_1*maxpitchup;
+         else if(walkcamera.pitch > ANGLE_1*maxpitchdown)
+            walkcamera.pitch = ANGLE_1*maxpitchdown;
       }
    }
 

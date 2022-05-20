@@ -1040,10 +1040,12 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    }
 
    // Bound the pitch here
-   if(viewpitch < -ANGLE_1 * MAXPITCHUP)
-      viewpitch = -ANGLE_1 * MAXPITCHUP;
-   else if(viewpitch > ANGLE_1 * MAXPITCHDOWN)
-      viewpitch = ANGLE_1 * MAXPITCHDOWN;
+   int maxpitchup = GameModeInfo->lookPitchUp;
+   int maxpitchdown = GameModeInfo->lookPitchDown;
+   if(viewpitch < -ANGLE_1 * maxpitchup)
+      viewpitch = -ANGLE_1 * maxpitchup;
+   else if(viewpitch > ANGLE_1 * maxpitchdown)
+      viewpitch = ANGLE_1 * maxpitchdown;
 
    extralight = player->extralight;
    viewpoint.sin = finesine[viewpoint.angle>>ANGLETOFINESHIFT];
@@ -1053,7 +1055,7 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    cb_viewpoint.x      = M_FixedToFloat(viewpoint.x);
    cb_viewpoint.y      = M_FixedToFloat(viewpoint.y);
    cb_viewpoint.z      = M_FixedToFloat(viewpoint.z);
-   cb_viewpoint.angle  = (ANG90 - viewpoint.angle) * PI / ANG180;
+   cb_viewpoint.angle  = cb_fixedAngleToFloat(viewpoint.angle);
    cb_viewpoint.sin    = sinf(cb_viewpoint.angle);
    cb_viewpoint.cos    = cosf(cb_viewpoint.angle);
    view.pitch  = (ANG90 - viewpitch) * PI / ANG180;
@@ -1590,7 +1592,7 @@ CONSOLE_VARIABLE(r_showhom, autodetect_hom, 0)
    doom_printf("hom detection %s", autodetect_hom ? "on" : "off");
 }
 
-CONSOLE_VARIABLE(r_stretchsky, stretchsky, 0) {}
+CONSOLE_VARIABLE(r_stretchsky, stretchsky, 0) {}   // DEPRECATED
 CONSOLE_VARIABLE(r_swirl, r_swirl, 0) {}
 
 CONSOLE_VARIABLE(r_trans, general_translucency, 0)

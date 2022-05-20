@@ -121,7 +121,7 @@ typedef enum {
 #define MTF_PSX_SPECTRE   (32|64|128)
 
 // Strife flags
-#define MTF_STRIFE_STAND       32
+#define MTF_STRIFE_STAND       32   // WARNING: this is already in MTF_EX_STAND
 #define MTF_STRIFE_FRIEND      64
 #define MTF_STRIFE_TRANSLUCENT 256
 #define MTF_STRIFE_MVCIS       512
@@ -418,12 +418,6 @@ typedef enum {
 //
 
 #define isnumchar(c) ((c) >= '0' && (c) <= '9')
-#define isExMy(s)                                       \
-   ((s)[0] == 'E' && (s)[2] == 'M' &&                   \
-    isnumchar((s)[1]) && isnumchar((s)[3]) && !(s)[4])
-#define isMAPxy(s)                                      \
-   ((s)[0] == 'M' && (s)[1] == 'A' && (s)[2] == 'P' &&  \
-    isnumchar((s)[3]) && isnumchar((s)[4]) && !(s)[5])
 
 #define HTIC_GHOST_TRANS 26624
 

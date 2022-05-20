@@ -39,6 +39,10 @@ int E_SafeState(int dehnum);                //    fallback version
 int E_SafeStateName(const char *name);      //    fallback by name
 int E_StateNumForName(const char *name);    // mnemonic lookup
 int E_GetStateNumForName(const char *name); //    fatal error version
+int E_StateNumForNameIncludingDecorate(const char *name);   // Full lookup for saves
+int E_StateNumForNameOnlyDecorate(const char *name);
+
+void E_AddDecorateStateNameToHash(state_t *st); // called from e_dstate
 
 int E_SafeStateNameOrLabel(const mobjinfo_t *mi, const char *name);
 

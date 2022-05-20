@@ -105,6 +105,10 @@ struct intercept_t
 typedef bool (*traverser_t)(intercept_t *in, void *context);
 
 fixed_t P_AproxDistance(fixed_t dx, fixed_t dy);
+inline static fixed_t P_AproxDistance(v2fixed_t dv)
+{
+   return P_AproxDistance(dv.x, dv.y);
+}
 
 int P_PointOnLineSideClassic(fixed_t x, fixed_t y, const line_t *line);
 int P_PointOnLineSidePrecise(fixed_t x, fixed_t y, const line_t *line);
@@ -176,6 +180,9 @@ bool P_ShootThing(const intercept_t *in,
                   int damage);
 bool P_CheckThingAimAvailability(const Mobj *th, const Mobj *source, bool aimflagsmask);
 bool P_CheckThingAimSlopes(const Mobj *th, fixed_t origindist, fixed_t infrac, linetracer_t &atrace);
+
+v2fixed_t P_GetSafeLineNormal(const line_t &line);
+bool P_SegmentIntersectsSector(v2fixed_t v1, v2fixed_t v2, const sector_t &sector);
 
 extern linetracer_t trace;
 

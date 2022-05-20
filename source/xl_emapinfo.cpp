@@ -224,13 +224,15 @@ bool XLEMapInfoParser::doStateExpectHeader(XLTokenizer &tokenizer)
 enum multivalkw_e
 {
    MVKW_LEVELACTION,
+   MVKW_LEVELACTION_BOSSDEATH,
    MVKW_NUMKEYWORDS
 };
 
 // Keywords which allow multiple values
 static const char *multiValKeywords[MVKW_NUMKEYWORDS] =
 {
-   "levelaction"
+   "levelaction",
+   "levelaction-bossdeath"
 };
 
 // Expecting a MapInfo keyword
@@ -440,7 +442,9 @@ void XL_BuildInterEMapInfo()
       if(*str)
          info.levelpic = str;
 
-      // TODO: enterpic not implemented yet
+      str = level->getString("enterpic", "");
+      if(*str)
+         info.enterpic = str;
 
       str = level->getString("interpic", "");
       if(*str)

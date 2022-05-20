@@ -374,7 +374,7 @@ int P_GetMoveFactor(Mobj *mo, int *frictionp)
 //
 
 // killough 8/9/98
-bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
+bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, unsigned flags)
 {
    int xl, xh, yl, yh, bx, by;
    subsector_t *newsubsec;
@@ -382,8 +382,9 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    
    // killough 8/9/98: make telefragging more consistent, preserve compatibility
    // haleyjd 03/25/03: TELESTOMP flag handling moved here (was thing->player)
-   telefrag = (thing->flags3 & MF3_TELESTOMP) || 
-              (!getComp(comp_telefrag) ? boss : (gamemap == 30));
+   // TODO: make this an EMAPINFO flag
+   telefrag = (thing->flags3 & MF3_TELESTOMP) || !!(flags & TELEMOVE_FRAG) ||
+              (!getComp(comp_telefrag) ? !!(flags & TELEMOVE_BOSS) : (gamemap == 30));
 
    // kill anything occupying the position
    
@@ -491,7 +492,7 @@ bool P_TeleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    bool res;
 
    ignore_inerts = false;
-   res = P_TeleportMove(thing, x, y, boss);
+   res = P_TeleportMove(thing, x, y, boss ? TELEMOVE_BOSS : 0);
    ignore_inerts = true;
    
    return res;
@@ -754,8 +755,11 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
    // killough 8/10/98: allow bouncing objects to pass through as missiles
    if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
    {
-      if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
+      if((ld->flags & ML_BLOCKING) ||
+         (mbf21_temp && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
       {
+         // explicitly blocking everything
+         // or blocking player
          bool result = clip.unstuck && !untouched(ld);  // killough 8/1/98: allow escape
 
          // When it's Hexen, keep side 0 even when hitting from backside
@@ -771,8 +775,13 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
 
       // killough 8/9/98: monster-blockers don't affect friends
       // SoM 9/7/02: block monsters standing on 3dmidtex only
-      if(ld->flags & ML_BLOCKMONSTERS && !(ld->flags & ML_3DMIDTEX) &&
-         P_BlockedAsMonster(*clip.thing))
+      // MaxW: Land-monster blockers gotta be factored in, too
+      if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
+         (
+            ld->flags & ML_BLOCKMONSTERS ||
+            (mbf21_temp && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
+         )
+        )
       {
          return false; // block monsters only
       }
@@ -962,7 +971,7 @@ ItemCheckResult P_CheckThingCommon(Mobj *thing)
          return ItemCheck_pass;
 
       // see if it went over / under
-      
+
       if(clip.thing->z > thing->z + height) // haleyjd 07/06/05
          return ItemCheck_pass;    // overhead
 
@@ -976,7 +985,7 @@ ItemCheckResult P_CheckThingCommon(Mobj *thing)
          if(!P_allowMissileDamage(*clip.thing->target, *thing))
             return ItemCheck_hit;
       }
-      
+
       // haleyjd 10/15/08: rippers
       if(clip.thing->flags3 & MF3_RIP)
       {
@@ -988,21 +997,21 @@ ItemCheckResult P_CheckThingCommon(Mobj *thing)
          {
             BloodSpawner(thing, clip.thing, damage, clip.thing).spawn(BLOOD_RIP);
          }
-         
-         // TODO: ripper sound - gamemode dependent? thing dependent?
-         //S_StartSound(clip.thing, sfx_ripslop);
+
+         S_StartSound(clip.thing, clip.thing->info->ripsound);
 
          P_DamageMobj(thing, clip.thing, clip.thing->target, damage, clip.thing->info->mod);
-         
+
          if(thing->flags2 & MF2_PUSHABLE && !(clip.thing->flags3 & MF3_CANNOTPUSH))
-         { 
+         {
             // Push thing
             thing->momx += clip.thing->momx >> 2;
             thing->momy += clip.thing->momy >> 2;
          }
-         
+
          // TODO: huh?
-         //numspechit = 0;
+         if(vanilla_heretic)
+            clip.numspechit = 0;
          return ItemCheck_pass;
       }
 
@@ -1422,7 +1431,7 @@ static bool P_CheckDropOffMBF(Mobj *thing, int dropoff)
       if(getComp(comp_dropoff))
       {
          // haleyjd: note missing 202 compatibility... WOOPS!
-         if(clip.zref.floor - clip.zref.dropoff > STEPSIZE)
+         if(!dropoff && (clip.zref.floor - clip.zref.dropoff > STEPSIZE))
             return false;
       }
       else if(!dropoff || (dropoff == 2 &&
@@ -1824,7 +1833,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             fixed_t savedz = thing->z;
             bool good;
             thing->z = clip.zref.floor;
-            good = P_TestMobjZ(thing, clip);
+            good = vanilla_heretic || P_TestMobjZ(thing, clip);
             thing->z = savedz;
             if(!good && !P_checkCarryUp(*thing, clip.zref.floor))
             {
@@ -2529,6 +2538,14 @@ static bombdata_t bombs[MAXBOMBS]; // bombs away!
 static bombdata_t *theBomb;        // it's the bomb, man. (the current explosion)
 
 //
+// Check if the actors are immune to each other's radius attack. This is a MBF21 feature.
+//
+inline static bool P_splashImmune(const Mobj *target, const Mobj *spot)
+{
+   return E_ThingPairValid(spot->type, target->type, TGF_NOSPLASHDAMAGE);
+}
+
+//
 // PIT_RadiusAttack
 //
 // "bombsource" is the creature that caused the explosion at "bombspot".
@@ -2545,6 +2562,9 @@ static bool PIT_RadiusAttack(Mobj *thing, void *context)
    // (missile bouncers are already excluded with MF_NOBLOCKMAP)
    
    if(!(thing->flags & (MF_SHOOTABLE | MF_BOUNCES)))
+      return true;
+
+   if(bombspot && P_splashImmune(thing, bombspot))
       return true;
 
    // haleyjd 12/22/12: Hexen check for no self-damage
@@ -3229,10 +3249,16 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
 }
 
 //
-// Clears all remaining Mobj references to avoid dangling references on next PU_LEVEL session.
+// Clears all remaining references to avoid dangling references on next PU_LEVEL session.
 //
-void P_ClearGlobalMobjReferences()
+void P_ClearGlobalLevelReferences()
 {
+   clip.thing = nullptr;   // this isn't reference-counted
+   clip.ceilingline = clip.blockline = clip.floorline = nullptr;
+   clip.numspechit = 0;
+   clip.open.frontsector = clip.open.backsector = nullptr;
+   clip.BlockingMobj = nullptr;  // also not ref-counted
+   clip.numportalhit = 0;
    P_ClearTarget(clip.linetarget);
 }
 

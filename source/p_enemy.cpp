@@ -57,6 +57,7 @@
 #include "p_maputl.h"
 #include "p_mobjcol.h"
 #include "p_partcl.h"
+#include "p_portal.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
@@ -90,11 +91,9 @@ static Mobj *current_actor;
 //
 // killough 5/5/98: reformatted, cleaned up
 //
-static void P_RecursiveSound(sector_t *sec, int soundblocks,
+static void P_RecursiveSound(sector_t *sec, const int soundblocks,
                              Mobj *soundtarget)
 {
-   int i;
-   
    // wake up all monsters in this sector
    if(sec->validcount == validcount &&
       sec->soundtraversed <= soundblocks+1)
@@ -104,51 +103,22 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
    sec->soundtraversed = soundblocks+1;
    P_SetTarget<Mobj>(&sec->soundtarget, soundtarget);    // killough 11/98
 
-   if(sec->srf.floor.pflags & PS_PASSSOUND)
+   // Check the floor and ceiling portals
+   for(surf_e surf : SURFS)
    {
-      // Ok, because the same portal can be used on many sectors and even
-      // lines, the portal structure won't tell you what sector is on the
-      // other side of the portal. SO
-      sector_t *other;
-      line_t *check = sec->lines[0];
+      if(!(sec->srf[surf].pflags & PS_PASSSOUND))
+         continue;
 
-      other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + R_FPLink(sec)->delta.x,
-                            ((check->v1->y + check->v2->y) / 2) + R_FPLink(sec)->delta.y)->sector;
-
-      P_RecursiveSound(other, soundblocks, soundtarget);
-   }
-   
-   if(sec->srf.ceiling.pflags & PS_PASSSOUND)
-   {
-      // Ok, because the same portal can be used on many sectors and even 
-      // lines, the portal structure won't tell you what sector is on the 
-      // other side of the portal. SO
-      sector_t *other;
-      line_t *check = sec->lines[0];
-
-      other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + R_CPLink(sec)->delta.x,
-                            ((check->v1->y + check->v2->y) / 2) + R_CPLink(sec)->delta.y)->sector;
-
-      P_RecursiveSound(other, soundblocks, soundtarget);
+      int neighcount;
+      const int *neighlist = P_GetSectorPortalNeighbors(*sec, surf, &neighcount);
+      for(int i = 0; i < neighcount; ++i)
+         P_RecursiveSound(&sectors[neighlist[i]], soundblocks, soundtarget);
    }
 
-   for(i=0; i<sec->linecount; i++)
+   for(int i = 0; i < sec->linecount; i++)
    {
       sector_t *other;
-      line_t *check = sec->lines[i];
-      
-      if(check->pflags & PS_PASSSOUND)
-      {
-         sector_t *iother;
-
-         iother = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + check->portal->data.link.delta.x,
-                            ((check->v1->y + check->v2->y) / 2) + check->portal->data.link.delta.y)->sector;
-
-         P_RecursiveSound(iother, soundblocks, soundtarget);
-      }
+      const line_t *check = sec->lines[i];
       if(!(check->flags & ML_TWOSIDED))
          continue;
 
@@ -156,6 +126,22 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
 
       if(clip.open.range <= 0)
          continue;       // closed door
+
+      // Only for front-facing wall portals
+
+      // NOTE: edge portals don't need any handling, because the sound propagates through the
+      // expanded line opening naturally to the sector behind, after which it can propagate through
+      // the sector portal.
+      if(check->pflags & PS_PASSSOUND && check->frontsector == sec)
+      {
+         v2fixed_t mid = { check->v1->x + check->dx / 2, check->v1->y + check->dy / 2};
+         v2fixed_t nudge = P_GetSafeLineNormal(*check) / (1 << (FRACBITS - 8));
+
+         sector_t *iother = R_PointInSubsector(mid - nudge +
+                                               v2fixed_t(check->portal->data.link.delta))->sector;
+
+         P_RecursiveSound(iother, soundblocks, soundtarget);
+      }
 
       other=sides[check->sidenum[sides[check->sidenum[0]].sector==sec]].sector;
       
@@ -179,14 +165,14 @@ void P_NoiseAlert(Mobj *target, Mobj *emitter)
 }
 
 //
-// P_CheckMeleeRange
+// A generalised form of P_CheckMeleeRange
 //
-bool P_CheckMeleeRange(Mobj *actor)
+bool P_CheckRange(Mobj *actor, fixed_t range)
 {
    Mobj *pl = actor->target;
-   if (!pl)
-       return false;
-   
+   if(!pl)
+      return false;
+
    // haleyjd 02/15/02: revision of joel's fix for z height check
    if(P_Use3DClipping())
    {
@@ -202,13 +188,29 @@ bool P_CheckMeleeRange(Mobj *actor)
    tx = getThingX(actor, pl);
    ty = getThingY(actor, pl);
 
-   fixed_t range = GameModeInfo->monsterMeleeRange == meleecalc_raven ?
-   MELEERANGE : MELEERANGE - 20 * FRACUNIT + pl->info->radius;
 
    return  // killough 7/18/98: friendly monsters don't attack other friends
       pl && !(actor->flags & pl->flags & MF_FRIEND) &&
       (P_AproxDistance(tx - actor->x, ty - actor->y) < range) &&
       P_CheckSight(actor, actor->target);
+
+}
+
+//
+// P_CheckMeleeRange
+//
+bool P_CheckMeleeRange(Mobj *actor)
+{
+   Mobj *pl = actor->target;
+   if(!pl)
+      return false;
+
+   fixed_t range = actor->info->meleerange;
+   if(GameModeInfo->monsterMeleeRange == meleecalc_doom)
+      range += pl->info->radius - 20 * FRACUNIT;
+
+   return P_CheckRange(actor, range);
+
 }
 
 //
@@ -341,7 +343,6 @@ bool P_CheckMissileRange(Mobj *actor)
 static bool P_IsOnLift(const Mobj *actor)
 {
    const sector_t *sec = actor->subsector->sector;
-   line_t line;
 
    // Short-circuit: it's on a lift which is active.
    if(thinker_cast<PlatThinker *>(sec->srf.floor.data) != nullptr)
@@ -350,9 +351,9 @@ static bool P_IsOnLift(const Mobj *actor)
    // Check to see if it's in a sector which can be 
    // activated as a lift.
    // ioanch 20160303: use args[0]
-   if((line.args[0] = sec->tag))
+   if(sec->tag)
    {
-      for(int l = -1; (l = P_FindLineFromLineArg0(&line, l)) >= 0;)
+      for(int l = -1; (l = P_FindLineFromTag(sec->tag, l)) >= 0;)
       {
          // FIXME: I'm still keeping the old code because I don't know of any MBF
          // demos which can verify all of this. If you're confident you found one,
@@ -888,8 +889,8 @@ void P_NewChaseDir(Mobj *actor)
                if(monster_backing &&
                   actor->info->missilestate != NullStateNum && 
                   !(actor->flags2 & MF2_NOSTRAFE) &&
-                  ((target->info->missilestate == NullStateNum && dist < MELEERANGE*2) ||
-                   (target->player && dist < MELEERANGE*3 &&
+                  ((target->info->missilestate == NullStateNum && dist < target->info->meleerange * 2) ||
+                   (target->player && dist < target->info->meleerange * 3 &&
                     target->player->readyweapon->flags & WPF_FLEEMELEE)))
                {
                   // Back away from melee attacker
@@ -928,8 +929,8 @@ static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
    // haleyjd 11/14/02: Heretic ghost effects
    if(mo->flags3 & MF3_GHOST)
    {
-      if(P_AproxDistance(mox - actor->x, moy - actor->y) > 2*MELEERANGE 
-         && P_AproxDistance(mo->momx, mo->momy) < 5*FRACUNIT)
+      if(P_AproxDistance(mox - actor->x, moy - actor->y) > SNEAKRANGE &&
+         P_AproxDistance(mo->momx, mo->momy) < 5 * FRACUNIT)
       {
          // when distant and moving slow, target is considered
          // to be "sneaking"
@@ -942,10 +943,8 @@ static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
 
    if(!allaround)
    {
-      angle_t an = P_PointToAngle(actor->x, actor->y, 
-                                   mox, moy) - actor->angle;
-      if(an > ANG90 && an < ANG270 &&
-         P_AproxDistance(mox-actor->x, moy-actor->y) > MELEERANGE)
+      const angle_t an = P_PointToAngle(actor->x, actor->y, mox, moy) - actor->angle;
+      if(an > ANG90 && an < ANG270 && P_AproxDistance(mox-actor->x, moy-actor->y) > WAKEUPRANGE)
          return false;
    }
 
@@ -1434,7 +1433,7 @@ void P_BossTeleport(bossteleport_t *bt)
    prevy = boss->y;
    prevz = boss->z;
 
-   if(P_TeleportMove(boss, targ->x, targ->y, false))
+   if(P_TeleportMove(boss, targ->x, targ->y, 0))
    {
       if(bt->hereThere <= BOSSTELE_BOTH && bt->hereThere != BOSSTELE_NONE)
       {
@@ -1967,7 +1966,7 @@ static void P_ResurrectPlayer()
       p->health = p->pclass->initialhealth;
       P_SpawnPlayer(&mthing);
       oldmo->player = nullptr;
-      P_TeleportMove(p->mo, p->mo->x, p->mo->y, true);
+      P_TeleportMove(p->mo, p->mo->x, p->mo->y, TELEMOVE_BOSS);
    }
 }
 

@@ -51,6 +51,7 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "p_saveg.h"
+#include "p_saveid.h"
 #include "p_enemy.h"
 #include "p_xenemy.h"
 #include "p_portal.h"
@@ -207,6 +208,62 @@ void SaveArchive::writeLString(const char *str, size_t len)
    }
    else
       I_Error("SaveArchive::writeLString: cannot deserialize!\n");
+}
+
+//
+// Archives a string that will be cached. Any equivalent values will only be referenced by an integer ID
+//
+void SaveArchive::archiveCachedString(qstring &string)
+{
+   if(isSaving())
+   {
+      // look up strings by content to get their ID
+      CachedString *cache = mStringTable.objectForKey(string.constPtr());
+      if(!cache)
+      {
+         cache = new CachedString;
+         mCacheStringHolder.add(cache);
+
+         cache->identifier = mNextCachedStringID;
+         cache->string = string;
+         ++mNextCachedStringID;
+         mStringTable.addObject(cache);
+
+         // Write both the new ID and the content
+         auto localID = static_cast<int32_t>(cache->identifier);
+         *this << localID;
+         qstring localString = string;
+         localString.archive(*this);
+      }
+      else
+      {
+         // We have it cached already
+         auto localID = static_cast<int32_t>(cache->identifier);
+         *this << localID;
+      }
+   }
+   else
+   {
+      // Loading
+      int32_t id;
+      *this << id;
+      CachedString *cache = mIdTable.objectForKey(id);   // look up strings by ID
+      if(!cache)
+      {
+         cache = new CachedString;
+         mCacheStringHolder.add(cache);
+
+         cache->identifier = id;
+         cache->string.archive(*this);
+         mIdTable.addObject(cache);
+
+         string = cache->string;
+      }
+      else
+      {
+         string = cache->string;
+      }
+   }
 }
 
 #define SAVE_MIN_SIZEOF_SIZE_T 4
@@ -394,7 +451,7 @@ SaveArchive &SaveArchive::operator << (line_t *&ln)
       loadfile->readSint32(linenum);
       if(linenum == -1) // Some line pointers can be nullptr
          ln = nullptr;
-      else if(linenum < 0 || linenum >= numlines)
+      else if(linenum < 0 || linenum >= numlinesPlusExtra)
       {
          I_Error("SaveArchive: line num %d out of range\n", linenum);
       }
@@ -530,18 +587,10 @@ static void P_ArchivePSprite(SaveArchive &arc, pspdef_t &pspr)
       arc << pspr.renderpos.x << pspr.renderpos.y;
 
    if(arc.isSaving())
-   {
-      int statenum = pspr.state ? pspr.state->index : -1;
-      arc << statenum;
-   }
+      Archive_PSpriteState_Save(arc, pspr.state);
    else
    {
-      int statenum = -1;
-      arc << statenum;
-      if(statenum != -1) // TODO: bounds-check!
-         pspr.state = states[statenum];
-      else
-         pspr.state = nullptr;
+      pspr.state = Archive_PSpriteState_Load(arc);
       pspr.backupPosition();
    }
 }
@@ -735,33 +784,63 @@ static void P_ArchiveWorld(SaveArchive &arc)
       // haleyjd 08/30/09: intflags
       // haleyjd 03/02/09: save sector damage properties
       // haleyjd 08/30/09: save floorpic/ceilingpic as ints
+      surface_t &floor = sec->srf.floor;
+      surface_t &ceiling = sec->srf.ceiling;
 
-      arc << sec->srf.floor.height << sec->srf.ceiling.height
-          << sec->friction << sec->movefactor
-          << sec->topmap << sec->midmap << sec->bottommap
-          << sec->flags << sec->intflags
+      arc << floor.height << ceiling.height << sec->friction << sec->movefactor;
+      Archive_Colormap(arc, sec->topmap);
+      Archive_Colormap(arc, sec->midmap);
+      Archive_Colormap(arc, sec->bottommap);
+      arc << sec->flags;
+      if(arc.saveVersion() <= 11 && arc.isLoading())
+      {
+         // Adjust for the INSTANTDEATH flag inserted in the middle
+         sec->flags = (sec->flags &            (SECF_INSTANTDEATH - 1)) |
+                     ((sec->flags & ~((unsigned)SECF_INSTANTDEATH - 1)) << 1);
+      }
+      arc << sec->intflags
           << sec->damage << sec->damageflags << sec->leakiness << sec->damagemask
-          << sec->damagemod
-          << sec->srf.floor.pic << sec->srf.ceiling.pic
-          << sec->lightlevel << sec->oldlightlevel
-          << sec->srf.floor.lightdelta << sec->srf.ceiling.lightdelta
+          << sec->damagemod;
+      Archive_Flat(arc, floor.pic);
+      Archive_Flat(arc, ceiling.pic);
+      arc << sec->lightlevel << sec->oldlightlevel << floor.lightdelta << ceiling.lightdelta
           << sec->special << sec->tag; // needed?   yes -- transfer types -- killough
+      if(arc.saveVersion() >= 10)
+      {
+         // surf.data handled elsewhere
+         // surf.scale, .baseangle, .lightsec, .(attached), .pflags, .portal invariant
+         // surf.heightf derivative, same with .slope Z.
+         // surf.terrain invariant
+
+         // nexttag, firsttag invariant because tag is also invariant
+         // soundtarget handled elsewhere
+         // blockbox, soundorg, csoundorg invariant
+         // validcount, thinglist, spriteproj dynamic
+         // heightsec, sky invariant
+         // touching_thinglist dynamic
+         // linecount, lines, groupid, hticPushType, hticPushAngle, hticPushForce invariant
+         arc << floor.offset << ceiling.offset << floor.angle << ceiling.angle
+             << sec->soundtraversed << sec->stairlock << sec->prevsec << sec->nextsec;
+
+         arc << sec->sndSeqID;   // currently the ID is always stable, no need for name
+      }
 
       if(arc.isLoading())
       {
          // jff 2/22/98 now three thinker fields, not two
-         sec->srf.ceiling.data = nullptr;
-         sec->srf.floor.data = nullptr;
+         ceiling.data = nullptr;
+         floor.data = nullptr;
          sec->soundtarget  = nullptr;
 
          // SoM: update the heights
-         P_SetSectorHeight(*sec, surf_floor, sec->srf.floor.height);
-         P_SetSectorHeight(*sec, surf_ceil, sec->srf.ceiling.height);
+         P_SetSectorHeight(*sec, surf_floor, floor.height);
+         P_SetSectorHeight(*sec, surf_ceil, ceiling.height);
       }
    }
 
    // do lines
-   for(i = 0, li = lines; i < numlines; ++i, ++li)
+   int numlinesSave = arc.saveVersion() >= 11 ? numlinesPlusExtra : numlines;
+   for(i = 0, li = lines; i < numlinesSave; ++i, ++li)
    {
       int j;
 
@@ -770,6 +849,9 @@ static void P_ArchiveWorld(SaveArchive &arc)
 
       if((arc.saveVersion() >= 1))
          arc << li->extflags;
+
+      if(arc.saveVersion() >= 10)
+         arc << li->intflags;
 
       for(j = 0; j < 2; j++)
       {
@@ -780,17 +862,26 @@ static void P_ArchiveWorld(SaveArchive &arc)
             // killough 10/98: save full sidedef offsets,
             // preserving fractional scroll offsets
             
-            arc << si->textureoffset << si->rowoffset
-                << si->toptexture << si->bottomtexture << si->midtexture;
+            arc << si->textureoffset << si->rowoffset;
+            Archive_Texture(arc, si->toptexture);
+            Archive_Texture(arc, si->bottomtexture);
+            Archive_Texture(arc, si->midtexture);
          }
       }
    }
+
+   // do sides
+   if(arc.saveVersion() >= 8)
+      for(i = 0, si = sides; i < numsides; ++i, ++si)
+         arc << si->intflags;
 
    // killough 3/26/98: Save boss brain state
    arc << brain.easy;
 
    // haleyjd 08/30/09: save state of lightning engine
-   arc << NextLightningFlash << LightningFlash << LevelSky << LevelTempSky;
+   arc << NextLightningFlash << LightningFlash;
+   Archive_Texture(arc, LevelSky);
+   Archive_Texture(arc, LevelTempSky);
 
    // ioanch: musinfo stuff
    S_MusInfoArchive(arc);
@@ -1033,8 +1124,11 @@ void P_SetNewTarget(Mobj **mop, Mobj *targ)
 static void P_ArchiveRNG(SaveArchive &arc)
 {
    arc << rng.rndindex << rng.prndindex;
-
-   P_ArchiveArray<unsigned int>(arc, rng.seed, NUMPRCLASS);
+   // Protection for existing affected savegames...
+   if(arc.saveVersion() <= 12)
+      P_ArchiveArray<unsigned int>(arc, rng.seed, pr_mbf21);
+   else
+      P_ArchiveArray<unsigned int>(arc, rng.seed, NUMPRCLASS);
 }
 
 //
@@ -1355,7 +1449,8 @@ static void P_ArchiveButtons(SaveArchive &arc)
    // my recent rewrite of the button code.
    for(int i = 0; i < numsaved; i++)
    {
-      arc << buttonlist[i].btexture << buttonlist[i].btimer
+      Archive_Texture(arc, buttonlist[i].btexture);
+      arc << buttonlist[i].btimer
           << buttonlist[i].dopopout << buttonlist[i].line
           << buttonlist[i].side     << buttonlist[i].where
           << buttonlist[i].switchindex;

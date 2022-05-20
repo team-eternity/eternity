@@ -103,6 +103,13 @@ struct v2fixed_t
       return *this;
    }
 
+   v2fixed_t &operator /= (int scalar)
+   {
+      x /= scalar;
+      y /= scalar;
+      return *this;
+   }
+
    v2fixed_t operator-() const
    {
       return { -x, -y };
@@ -134,6 +141,21 @@ struct v2fixed_t
    v2fixed_t fixedMul(const fixed_t scalar) const
    {
       return { FixedMul(x, scalar), FixedMul(y, scalar) };
+   }
+
+   v2fixed_t fixedDiv(const fixed_t scalar) const
+   {
+      return { FixedDiv(x, scalar), FixedDiv(y, scalar) };
+   }
+
+   v2fixed_t operator / (int scalar) const
+   {
+      return { x / scalar, y / scalar };
+   }
+
+   v2fixed_t operator * (int scalar) const
+   {
+      return { x * scalar, y * scalar };
    }
 };
 
@@ -244,7 +266,7 @@ struct v2float_t
       return x * other.y - other.x * y;
    }
 
-   operator bool() const
+   bool nonzero() const
    {
       return x || y;
    }

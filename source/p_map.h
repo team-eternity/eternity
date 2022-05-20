@@ -47,6 +47,12 @@ struct sector_t;
 #define MELEERANGE   (64 * FRACUNIT)
 #define MISSILERANGE (32 * 64 * FRACUNIT)
 
+#define FPMELEERANGE (64.0)
+
+// a couple of explicit constants for non-melee things that used to use MELEERANGE
+#define WAKEUPRANGE     (64*FRACUNIT)
+#define SNEAKRANGE      (128*FRACUNIT)
+
 // MAXRADIUS is for precalculated sector block boxes the spider demon
 // is larger, but we do not have any moving sectors nearby
 #define MAXRADIUS    (32 * FRACUNIT)
@@ -109,8 +115,14 @@ ItemCheckResult P_CheckThingCommon(Mobj *thing);
 // Teleportation
 //
 
+enum
+{
+   TELEMOVE_BOSS = 1,
+   TELEMOVE_FRAG = 2,
+};
+
 // killough 8/9/98: extra argument for telefragging
-bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y,bool boss);
+bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, unsigned flags);
 
 // haleyjd 06/06/05: new function that won't stick the thing inside inert objects
 bool P_TeleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss);
@@ -310,7 +322,7 @@ void P_PushClipStack();
 // Pops the tm stack, storing the discarded element for later re-insertion.
 void P_PopClipStack();
 
-void P_ClearGlobalMobjReferences();
+void P_ClearGlobalLevelReferences();
 
 bool P_OnGroundOrThing(const Mobj &mobj);
 

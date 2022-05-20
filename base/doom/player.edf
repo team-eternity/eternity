@@ -55,7 +55,7 @@ weaponinfo Fist : DoomWeapon, 0
 
   selectionorder 9.0
 
-  flags        FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM
+  flags        FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM|NOAUTOSWITCHTO
   mod          Fist
   recoil       10.0
 
@@ -86,7 +86,7 @@ weaponinfo Pistol : DoomWeapon, 1
   ammotype     AmmoClip
   ammouse      1
 
-  selectionorder 8.0
+  selectionorder 5.0
 
   flags        SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM
   mod          Pistol
@@ -276,7 +276,7 @@ weaponinfo BFG9000 : DoomWeapon, 6
   ammotype     AmmoCell
   ammouse      40
 
-  selectionorder 5.0
+  selectionorder 8.0
 
   flags        NOAUTOFIRE|SILENCEABLE|DISABLEAPS|NOTSHAREWARE
   recoil       100.0
@@ -333,7 +333,7 @@ weaponinfo Chainsaw : DoomWeapon, 7
 
   selectionorder 6.0
 
-  flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS
+  flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS|NOAUTOSWITCHTO
   mod          Chainsaw
   upsound      sawup
   readysound   sawidl

@@ -1225,6 +1225,8 @@ unsigned int WadDirectory::LumpNameHash(const char *s)
 {
    using namespace ectype;
    unsigned int hash;
+   if(!*s)
+      return 0;
 
    (void) ((hash =        toUpper(s[0]), s[1]) &&
            (hash = hash*3+toUpper(s[1]), s[2]) &&

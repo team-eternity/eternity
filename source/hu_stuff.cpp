@@ -443,9 +443,12 @@ void HUDMessageWidget::clear()
 void HUDMessageWidget::addMessage(const char *s)
 {
    char *dest;
+   if(hud_msg_lines <= 0)
+      return;
 
-   if(current_messages == hud_msg_lines) // display full
+   if(current_messages >= hud_msg_lines) // display full
    {
+      current_messages = hud_msg_lines;   // cap it
       // scroll up      
       for(int i = 0; i < hud_msg_lines - 1; i++)
          strncpy(messages[i], messages[i+1], MAXHUDMSGLEN);
@@ -1435,22 +1438,22 @@ void HUDCoordWidget::ticker()
 
    if(coordType == COORDTYPE_X)
    {
-      sprintf(coordxstr, "%cX: %-5d", hu_coordscolor + 128, x >> FRACBITS);
+      snprintf(coordxstr, sizeof(coordxstr), "%cX: %-5d", hu_coordscolor + 128, x >> FRACBITS);
       message = coordxstr;
    }
    else if(coordType == COORDTYPE_Y)
    {
-      sprintf(coordystr, "%cY: %-5d", hu_coordscolor + 128, y >> FRACBITS);
+      snprintf(coordystr, sizeof(coordystr), "%cY: %-5d", hu_coordscolor + 128, y >> FRACBITS);
       message = coordystr;
    }
    else if(coordType == COORDTYPE_Z)
    {
-      sprintf(coordzstr, "%cZ: %-5d", hu_coordscolor + 128, z >> FRACBITS);
+      snprintf(coordzstr, sizeof(coordzstr), "%cZ: %-5d", hu_coordscolor + 128, z >> FRACBITS);
       message = coordzstr;
    }
    else
    {
-      sprintf(coordastr, "%cA: %-.0f", hu_coordscolor + 128,
+      snprintf(coordastr, sizeof(coordastr), "%cA: %-.0f", hu_coordscolor + 128,
               static_cast<double>(plyr->mo->angle) / ANGLE_1);
       message = coordastr;
    }
@@ -1570,7 +1573,10 @@ CONSOLE_VARIABLE(hu_obitcolor, obcolour, 0) {}
 CONSOLE_VARIABLE(hu_crosshair, crosshairnum, 0) {}
 CONSOLE_VARIABLE(hu_crosshair_hilite, crosshair_hilite, 0) {}
 CONSOLE_VARIABLE(hu_crosshair_scale, crosshair_scale, 0) {}
-CONSOLE_VARIABLE(hu_messages, showMessages, 0) {}
+CONSOLE_VARIABLE(hu_messages, showMessages, 0)
+{
+   doom_printf("%s", DEH_String(showMessages ? "MSGON" : "MSGOFF"));
+}
 CONSOLE_VARIABLE(hu_messagealignment, mess_align, 0) {}
 CONSOLE_VARIABLE(hu_messagecolor, mess_colour, 0) {}
 CONSOLE_NETCMD(say, cf_netvar, netcmd_chat)

@@ -29,6 +29,7 @@
 #include "r_main.h"
 #include "p_info.h"
 #include "p_saveg.h"
+#include "p_saveid.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "r_data.h"
@@ -317,9 +318,9 @@ void CeilingThinker::serialize(SaveArchive &arc)
 {
    Super::serialize(arc);
 
-   arc << type << bottomheight << topheight << speed << oldspeed
-       << crush << special << texture << direction << inStasis << tag 
-       << olddirection;
+   arc << type << bottomheight << topheight << speed << oldspeed << crush << special;
+   Archive_Flat(arc, texture);
+   arc << direction << inStasis << tag << olddirection;
 
    if((arc.saveVersion() >= 3))
       arc << upspeed << crushflags;
@@ -361,7 +362,7 @@ bool CeilingThinker::reTriggerVerticalDoor(bool player)
 // Passed the linedef activating the function and the type of function desired
 // returns true if a thinker started
 //
-int EV_DoCeiling(const line_t *line, ceiling_e type)
+int EV_DoCeiling(const line_t *line, int tag, ceiling_e type)
 {
    int       secnum = -1;
    int       rtn = 0;
@@ -377,13 +378,13 @@ int EV_DoCeiling(const line_t *line, ceiling_e type)
    case silentCrushAndRaise:
    case crushAndRaise:
       //jff 4/5/98 return if activated
-      rtn = P_ActivateInStasisCeiling(line, line->args[0]);
+      rtn = P_ActivateInStasisCeiling(line, tag);
    default:
       break;
    }
   
    // affects all sectors with the same tag as the linedef
-   while((secnum = P_FindSectorFromLineArg0(line,secnum)) >= 0)
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       sec = &sectors[secnum];
       
@@ -538,7 +539,7 @@ int P_ActivateInStasisCeiling(const line_t *line, int tag, bool manual)
    for(cl = activeceilings; cl; cl = cl->next)
    {
       CeilingThinker *ceiling = cl->ceiling;
-      if(((manual && line->backsector == ceiling->sector) ||
+      if(((manual && line && line->backsector == ceiling->sector) ||
          (!manual && ceiling->tag == tag)) && ceiling->direction == 0)
       {
          resumeceiling(ceiling);

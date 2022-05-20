@@ -87,7 +87,7 @@ const char *E_BuildDefaultFn(const char *filename);
 
 // misc utilities
 int E_EnableNumForName(const char *name, E_Enable_t *enables);
-int E_StrToNumLinear(const char **strings, int numstrings, const char *value);
+int E_StrToNumLinear(const char *const *const strings, int numstrings, const char *const value);
 unsigned int E_ParseFlags(const char *str, dehflagset_t *flagset);
 const char *E_ExtractPrefix(const char *value, char *prefixbuf, int buflen);
 void E_ReplaceString(char *&dest, char *newvalue);

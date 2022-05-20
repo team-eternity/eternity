@@ -138,6 +138,11 @@ constexpr int NUMSTATECHAINS = 2003;
 static EHashTable<state_t, ENCStringHashKey, 
                   &state_t::name, &state_t::namelinks> state_namehash(NUMSTATECHAINS);
 
+// hash of decorate states. Needed for savegame integrity check but otherwise not desired in 
+// state_namehash
+static EHashTable<state_t, ENCStringHashKey, &state_t::name, &state_t::namelinks> 
+                  decstate_namehash(NUMSTATECHAINS);
+
 // hash by DeHackEd number
 static EHashTable<state_t, EIntHashKey, 
                   &state_t::dehnum, &state_t::numlinks> state_numhash(NUMSTATECHAINS);
@@ -205,6 +210,34 @@ int E_StateNumForName(const char *name)
       ret = st->index;
 
    return ret;
+}
+
+//
+// Same as above, but also covers decorate states. Only used for savegame integrity.
+//
+int E_StateNumForNameIncludingDecorate(const char *name)
+{
+   const state_t *st = state_namehash.objectForKey(name);
+   if(st)
+      return st->index;
+   st = decstate_namehash.objectForKey(name);
+   if(st)
+      return st->index;
+   return -1;
+}
+// Or only Decorate
+int E_StateNumForNameOnlyDecorate(const char *name)
+{
+   const state_t *st = decstate_namehash.objectForKey(name);
+   return st ? st->index : -1;
+}
+
+//
+// Stores a Decorate state to its special hash
+//
+void E_AddDecorateStateNameToHash(state_t *st)
+{
+   decstate_namehash.addObject(st);
 }
 
 //
@@ -1417,7 +1450,7 @@ static void E_processFrameBlock(cfg_t *sec, unsigned int index)
    }
 
    edecstateout_t *dso; 
-   if((dso = E_ParseDecorateStates(states, firststate)))
+   if((dso = E_ParseDecorateStates("fb{}", states, firststate)))
    {
       // warn if there are killstates, as these have no meaning
       if(dso->numkillstates)
