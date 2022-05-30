@@ -363,7 +363,7 @@ void A_FindTracer(actionargs_t *actionargs)
       return;
 
    fov   = FixedToAngle(E_ArgAsFixed(args, 0, 0));
-   range = E_ArgAsInt(args, 0, 10) * MAPBLOCKSIZE;
+   range = E_ArgAsInt(args, 1, 10) * MAPBLOCKSIZE;
 
    if(fov == 0)
       fov = ANG360;
