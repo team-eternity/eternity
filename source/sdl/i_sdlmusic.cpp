@@ -411,13 +411,13 @@ static int paused_midi_volume;
 //
 static void I_SDLPauseSong(int handle)
 {
-//#if defined(_WIN32)
-//   if(serverMidiPlaying)
-//   {
-//      I_MidiRPCPauseSong();
-//      return;
-//   }
-//#endif
+#if defined(_WIN32)
+   if(winMIDISteamRegistered)
+   {
+      I_WIN_PauseSong(music);
+      return;
+   }
+#endif
 
    if(CHECK_MUSIC(handle))
    {
@@ -442,13 +442,13 @@ static void I_SDLPauseSong(int handle)
 //
 static void I_SDLResumeSong(int handle)
 {
-//#if defined(_WIN32)
-//   if(serverMidiPlaying)
-//   {
-//      I_MidiRPCResumeSong();
-//      return;
-//   }
-//#endif
+#if defined(_WIN32)
+   if(winMIDISteamRegistered)
+   {
+      I_WIN_ResumeSong(music);
+      return;
+   }
+#endif
 
    if(CHECK_MUSIC(handle))
    {

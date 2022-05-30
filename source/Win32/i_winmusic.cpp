@@ -419,6 +419,28 @@ void I_WIN_PlaySong(bool looping)
       MidiErrorMessageBox(mmr);
 }
 
+void I_WIN_PauseSong(void *handle)
+{
+   MMRESULT mmr;
+
+   mmr = midiStreamPause(hMidiStream);
+   if(mmr != MMSYSERR_NOERROR)
+   {
+      MidiErrorMessageBox(mmr);
+   }
+}
+
+void I_WIN_ResumeSong(void *handle)
+{
+   MMRESULT mmr;
+
+   mmr = midiStreamRestart(hMidiStream);
+   if(mmr != MMSYSERR_NOERROR)
+   {
+      MidiErrorMessageBox(mmr);
+   }
+}
+
 bool I_WIN_RegisterSong(void *data, int size)
 {
    midi_file_t *file;
