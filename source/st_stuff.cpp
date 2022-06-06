@@ -45,6 +45,7 @@
 #include "m_random.h"
 #include "p_skin.h"
 #include "r_main.h"
+#include "r_patch.h"
 #include "s_sound.h"
 #include "sounds.h"
 #include "st_lib.h"
@@ -397,7 +398,7 @@ static void ST_refreshBackground()
 {
    if(st_statusbaron)
    {
-      V_DrawPatch(ST_X, ST_FY, &subscreen43, sbar);
+      V_DrawPatch(ST_X + (vbscreenyscaled.unscaledw - sbar->width) / 2, ST_FY, &vbscreenyscaled, sbar);
 
       // killough 3/7/98: make face background change with displayplayer
       // haleyjd 01/12/04: changed translation handling
