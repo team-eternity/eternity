@@ -395,7 +395,7 @@ weapontype_t P_SwitchWeaponOldDoom(const player_t *player)
       switch(*prefer++)
       {
       case 1:
-         if(!player->powers[pw_strength])  // allow chainsaw override
+         if(!player->powers[pw_strength].isActive())  // allow chainsaw override
             break;
       case 0:
          newweapon = wp_fist;
@@ -583,7 +583,7 @@ static void P_FireWeapon(player_t *player)
 
    // haleyjd 04/06/03: silencer powerup
    // haleyjd 09/14/07: per-weapon silencer, always silent support
-   if(!(weapon->flags & WPF_SILENCEABLE && player->powers[pw_silencer]) &&
+   if(!(weapon->flags & WPF_SILENCEABLE && player->powers[pw_silencer].isActive()) &&
       !(weapon->flags & WPF_SILENT))
       P_NoiseAlert(player->mo, player->mo);
 
@@ -608,7 +608,7 @@ static void P_fireWeaponAlt(player_t *player)
 
    // haleyjd 04/06/03: silencer powerup
    // haleyjd 09/14/07: per-weapon silencer, always silent support
-   if(!(weapon->flags & WPF_SILENCEABLE && player->powers[pw_silencer]) &&
+   if(!(weapon->flags & WPF_SILENCEABLE && player->powers[pw_silencer].isActive()) &&
       !(weapon->flags & WPF_SILENT))
       P_NoiseAlert(player->mo, player->mo);
 
@@ -794,7 +794,7 @@ void P_WeaponSoundInfo(Mobj *mo, sfxinfo_t *sound)
    params.sfx = sound;
    params.setNormalDefaults(mo);
 
-   if(mo->player && mo->player->powers[pw_silencer] &&
+   if(mo->player && mo->player->powers[pw_silencer].isActive() &&
       mo->player->readyweapon->flags & WPF_SILENCEABLE)
       params.volumeScale = WEAPON_VOLUME_SILENCED;
 
@@ -810,7 +810,7 @@ void P_WeaponSound(Mobj *mo, int sfx_id)
 {
    int volume = 127;
 
-   if(mo->player && mo->player->powers[pw_silencer] &&
+   if(mo->player && mo->player->powers[pw_silencer].isActive() &&
       mo->player->readyweapon->flags & WPF_SILENCEABLE)
       volume = WEAPON_VOLUME_SILENCED;
 
@@ -1575,7 +1575,7 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
    damage = dmgfactor * ((P_Random(pr_custompunch)%dmgmod) + 1);
 
    // apply berzerk multiplier
-   if(player->powers[pw_strength])
+   if(player->powers[pw_strength].isActive())
       damage *= berzerkmul;
 
    // decrement ammo if appropriate

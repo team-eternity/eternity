@@ -131,7 +131,7 @@ static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num, bool ignor
       if(weaponinfo_t *const wp = E_FindBestBetterWeaponUsingAmmo(player, ammo); wp)
       {
          weaponinfo_t *sister = wp->sisterWeapon;
-         if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
+         if(player->powers[pw_weaponlevel2].isActive() && E_IsPoweredVariant(sister))
             player->pendingweapon = sister;
          else
             player->pendingweapon = wp;
@@ -423,7 +423,7 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
          weaponinfo_t *sister = wp->sisterWeapon;
          player->pendingweapon = wp;
          player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
-         if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
+         if(player->powers[pw_weaponlevel2].isActive() && E_IsPoweredVariant(sister))
             player->pendingweapon = sister;
       }
       E_GiveWeapon(player, wp);
@@ -574,7 +574,7 @@ bool P_GiveArmor(player_t *player, const itemeffect_t *effect)
 //
 // Rewritten by Lee Killough
 //
-bool P_GivePower(player_t *player, int power, int duration, bool additiveTime)
+bool P_GivePower(player_t *player, int power, int duration, bool permament, bool additiveTime)
 {
    switch(power)
    {
@@ -582,7 +582,7 @@ bool P_GivePower(player_t *player, int power, int duration, bool additiveTime)
       player->mo->flags |= MF_SHADOW;
       break;
    case pw_allmap:
-      if(player->powers[pw_allmap])
+      if(player->powers[pw_allmap].isActive())
          return false;
       break;
    case pw_totalinvis:   // haleyjd: total invisibility
@@ -593,11 +593,11 @@ bool P_GivePower(player_t *player, int power, int duration, bool additiveTime)
       player->mo->flags3 |= MF3_GHOST;
       break;
    case pw_silencer:
-      if(player->powers[pw_silencer])
+      if(player->powers[pw_silencer].isActive())
          return false;
       break;
    case pw_flight:       // haleyjd: flight
-      if(player->powers[pw_flight] < 0 || player->powers[pw_flight] > 4 * 32)
+      if(player->powers[pw_flight].tics < 0 || player->powers[pw_flight].tics > 4 * 32)
          return false;
       P_PlayerStartFlight(player, true);
       break;
@@ -620,10 +620,13 @@ bool P_GivePower(player_t *player, int power, int duration, bool additiveTime)
    }
 
    // Unless player has infinite duration cheat, set duration (killough)
-   // We want to always set duration if the powerup is berserk, since it counts up
-   // FIXME: Infinite duration must be tracked some other way
-   if(player->powers[power] >= 0 || power == pw_strength)
-      player->powers[power] = additiveTime ? players->powers[power] + duration : duration;
+   if(!player->powers[power].infinite)
+   {
+      if(permament)
+         player->powers[power] = { 0, true };
+      else
+         player->powers[power].tics = additiveTime ? players->powers[power].tics + duration : duration;
+   }
 
    return true;
 }
@@ -664,24 +667,23 @@ bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
 
    // EDF_FEATURES_FIXME: Strength counts up. Also should additivetime imply overridesself?
    if(!power->getInt("overridesself", 0) &&
-      (player->powers[powerNum] >  4 * 32 || player->powers[powerNum] < 0))
+      (player->powers[powerNum].tics >  4 * 32 || player->powers[powerNum].tics < 0))
       return false;
 
    // Unless player has infinite duration cheat, set duration (MaxW stolen from killough)
-   // We want to always set duration if the powerup is berserk, since it counts up
-   // FIXME: Infinite duration must be tracked some other way
-   if(player->powers[powerNum] >= 0 || powerNum == pw_strength)
+   if(!player->powers[powerNum].infinite)
    {
+      bool permanent = false;
       int duration = power->getInt("duration", 0);
       if(power->getInt("permanent", 0))
-         duration = -1;
+         permanent = true;
       else
       {
          duration = duration * TICRATE; // Duration is given in seconds
          additiveTime = power->getInt("additivetime", 0) ? true : false;
       }
 
-      return P_GivePower(player, powerNum, duration, additiveTime);
+      return P_GivePower(player, powerNum, duration, permanent, additiveTime);
    }
 
    return true;
@@ -1009,8 +1011,8 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
       }
 
       target->flags  &= ~MF_SOLID;
-      target->player->powers[pw_flight]       = 0;
-      target->player->powers[pw_weaponlevel2] = 0;
+      target->player->powers[pw_flight]       = { 0, false };
+      target->player->powers[pw_weaponlevel2] = { 0, false };
       P_PlayerStopFlight(target->player);  // haleyjd: stop flying
 
       G_DemoLog("%d\tdeath player %d ", gametic,
@@ -1265,7 +1267,7 @@ static bool P_touchPoweredMaceBall(dmgspecdata_t *dmgspec)
       return false;
    else if(player)
    {
-      if(player->powers[pw_invulnerability])
+      if(player->powers[pw_invulnerability].isActive())
          return false;
 
       // HACK ALERT: Attempt to automatically use chaos device
@@ -1405,7 +1407,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       damage >>= 1;   // take half damage in trainer mode
 
    if(source && source->player && (GameModeInfo->flags & GIF_BERZERKISPENTA) &&
-      source->player->powers[pw_strength])
+      source->player->powers[pw_strength].isActive())
       damage *= 5;
 
    // haleyjd 08/01/04: dmgspecial -- special inflictor types
@@ -1515,7 +1517,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       // killough 3/26/98: make god mode 100% god mode in non-compat mode
 
       if((damage < LESSER_GOD_BREACH_DAMAGE || (!getComp(comp_god) && player->cheats&CF_GODMODE)) &&
-         (player->cheats&CF_GODMODE || player->powers[pw_invulnerability]))
+         (player->cheats&CF_GODMODE || player->powers[pw_invulnerability].isActive()))
          return;
 
       if(player->armorfactor && player->armordivisor)

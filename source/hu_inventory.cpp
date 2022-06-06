@@ -160,10 +160,10 @@ void HU_BuffsDraw(int leftoffset, int rightoffset)
    if(GameModeInfo->type != Game_Heretic)
       return;  // currently only enabled for Heretic. Other games will need it too
    const player_t &plyr = players[displayplayer];
-   if(plyr.powers[pw_flight])
+   if(plyr.powers[pw_flight].isActive())
    {
       // Blink the wings when the player is almost out
-      if(plyr.powers[pw_flight] > (4 * 32) || !(plyr.powers[pw_flight] & 16))
+      if(plyr.powers->infinite || plyr.powers[pw_flight].tics > (4 * 32) || !(plyr.powers[pw_flight].tics & 16))
       {
          int frame = (leveltime / 3) & 15;
          if(plyr.mo->flags4 & MF4_FLY)
@@ -199,9 +199,10 @@ void HU_BuffsDraw(int leftoffset, int rightoffset)
       }
    }
 
-   if(plyr.powers[pw_weaponlevel2])
+   if(plyr.powers[pw_weaponlevel2].isActive())
    {
-      if(plyr.powers[pw_weaponlevel2] > (4 * 32) || !(plyr.powers[pw_weaponlevel2] & 16))
+      if(plyr.powers[pw_weaponlevel2].infinite ||
+         plyr.powers[pw_weaponlevel2].tics > (4 * 32) || !(plyr.powers[pw_weaponlevel2].tics & 16))
       {
          const int frame = (leveltime / 3) & 15;
          V_DrawPatch(vbscreenyscaled.unscaledw - 20, 17 + rightoffset, &vbscreenyscaled,

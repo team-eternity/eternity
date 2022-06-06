@@ -728,8 +728,12 @@ static void P_ArchivePlayers(SaveArchive &arc)
          }
          P_ArchiveArray<inventoryslot_t>(arc, p.inventory, inventorySize);
 
-         for(int &power : p.powers)
-            arc << power;
+         for(powerduration_t &power : p.powers)
+         {
+            arc << power.tics;
+            if(arc.saveVersion() >= 14)
+               arc << power.infinite;
+         }
 
          for(j = 0; j < MAXPLAYERS; j++)
             arc << p.frags[j];

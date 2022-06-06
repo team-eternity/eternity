@@ -856,7 +856,7 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
 
          if(mo->momz < -23*FRACUNIT)
          {
-            if(!mo->player->powers[pw_invulnerability] &&
+            if(!mo->player->powers[pw_invulnerability].isActive() &&
                !(mo->player->cheats & CF_GODMODE))
                P_FallingDamage(mo->player);
             else
@@ -1505,7 +1505,7 @@ void Mobj::Think()
             if(demo_version >= 333 && onmo->info->topdamage > 0)
             {
                if(!(leveltime & onmo->info->topdamagemask) &&
-                  (!player || !player->powers[pw_ironfeet]))
+                  (!player || !player->powers[pw_ironfeet].isActive()))
                {
                   P_DamageMobj(this, onmo, onmo,
                                onmo->info->topdamage, 
@@ -3249,7 +3249,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type, unsigned flags,
 
    th = P_SpawnMobj(x, y, z, type);
 
-   if(source->player && source->player->powers[pw_silencer] &&
+   if(source->player && source->player->powers[pw_silencer].isActive() &&
       source->player->readyweapon->flags & WPF_SILENCEABLE)
    {
       S_StartSoundAtVolume(th, th->info->seesound, WEAPON_VOLUME_SILENCED, 

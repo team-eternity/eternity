@@ -66,7 +66,7 @@ void A_Punch(actionargs_t *actionargs)
    if(!player)
       return;
    
-   if(player->powers[pw_strength])
+   if(player->powers[pw_strength].isActive())
       damage *= 10;
    
    angle = mo->angle;

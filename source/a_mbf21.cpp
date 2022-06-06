@@ -778,7 +778,7 @@ void A_WeaponMeleeAttack(actionargs_t *actionargs)
       range = player->mo->info->meleerange;
 
    damage = (P_Random(pr_mbf21) % damagedice + 1) * damagebase;
-   if(player->powers[pw_strength])
+   if(player->powers[pw_strength].isActive())
       damage = (damage * zerkfactor) >> FRACBITS;
 
 

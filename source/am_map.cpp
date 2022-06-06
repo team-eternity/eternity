@@ -1781,7 +1781,7 @@ static void AM_drawWalls()
                AM_drawMline(&l, mapcolor_prtl);
             }
          }
-         else if(plr->powers[pw_allmap]) // computermap visible lines
+         else if(plr->powers[pw_allmap].isActive()) // computermap visible lines
          {
             // now draw the lines only visible because the player has computermap
             if(!AM_dontDraw(*line)) // invisible flag lines do not show
@@ -1905,7 +1905,7 @@ static void AM_drawWalls()
             }
          }
       } 
-      else if(plr->powers[pw_allmap]) // computermap visible lines
+      else if(plr->powers[pw_allmap].isActive()) // computermap visible lines
       {
          // now draw the lines only visible because the player has computermap
          if(!AM_dontDraw(*line)) // invisible flag lines do not show
@@ -2184,7 +2184,7 @@ static void AM_drawPlayers()
 
       // haleyjd: add total invisibility
       
-      if(p->powers[pw_invisibility] || p->powers[pw_totalinvis])
+      if(p->powers[pw_invisibility].isActive() || p->powers[pw_totalinvis].isActive())
          color = 246; // *close* to black
       else
       {

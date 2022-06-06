@@ -651,7 +651,7 @@ static void ST_updateFaceWidget()
    if(priority < ST_PRIORITY_RAMPAGE)
    {
       // invulnerability
-      if((plyr->cheats & CF_GODMODE) || plyr->powers[pw_invulnerability])
+      if((plyr->cheats & CF_GODMODE) || plyr->powers[pw_invulnerability].isActive())
       {
          priority = ST_PRIORITY_GODMODE;
          
@@ -781,17 +781,18 @@ static void ST_doPaletteStuff()
    byte *pal;
    int  cnt = plyr->damagecount;
 
-   if(plyr->powers[pw_strength])
+   if(plyr->powers[pw_strength].isActive())
    {
       if(!(GameModeInfo->flags & GIF_BERZERKISPENTA))
       {
          // slowly fade the berzerk out
-         int bzc = 12 - (plyr->powers[pw_strength] >> 6);
+         int bzc = 12 - (plyr->powers[pw_strength].tics >> 6);
          if(bzc > cnt)
             cnt = bzc;
       }
-      else if((plyr->powers[pw_strength] < -4 * 32 || (plyr->powers[pw_strength] & 8)) &&
-              plyr->powers[pw_strength] && cnt == 0)
+      else if(plyr->powers[pw_strength].infinite ||
+              ((plyr->powers[pw_strength].tics < -4 * 32 || (plyr->powers[pw_strength].tics & 8)) &&
+               plyr->powers[pw_strength].isActive() && cnt == 0))
          cnt = 1;
    }
 
@@ -809,8 +810,9 @@ static void ST_doPaletteStuff()
          palette = NUMBONUSPALS-1;
       palette += STARTBONUSPALS;
    }
-   else if(plyr->powers[pw_ironfeet] > 4*32 || 
-           plyr->powers[pw_ironfeet] & 8)
+   else if(plyr->powers[pw_ironfeet].infinite ||
+           plyr->powers[pw_ironfeet].tics > 4*32 ||
+           plyr->powers[pw_ironfeet].tics & 8)
       palette = RADIATIONPAL;
    else
       palette = 0;
