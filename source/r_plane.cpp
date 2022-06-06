@@ -419,6 +419,13 @@ static void R_calcSlope(const cbviewpoint_t &cb_viewpoint, visplane_t *pl)
    double xoffsf = fmod(pl->xoffsf, xl / pl->scale.x);
    double yoffsf = fmod(pl->yoffsf, yl / pl->scale.y);
 
+   // P, M, and N are basically three points on the plane which then become two directional vectors:
+   // (M = M - P, N = N - P) and then the cross product between the origin vector P and the directional vectors M,
+   // and N then are used to define this coordinate space translation
+
+   // There are various nuances along the way to define things in terms of 64x64 texture space and into screen space,
+   // but that's the gist of it
+
    v3double_t P;
    P.x = -xoffsf * tcos - yoffsf * tsin;
    P.z = -xoffsf * tsin + yoffsf * tcos;

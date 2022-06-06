@@ -622,6 +622,12 @@ struct spritedef_t
 // SoM: Information used in texture mapping sloped planes
 struct rslope_t
 {
+   // A is a vector, which represents how movement through x and y screen space changes the u texture coordinate
+   // B is a vector, which represents how movement through x and y screen space changes the v texture coordinate
+
+   // Alternatively: A maps screen coordinates to u coords, B maps screen coordinates to v coords,
+   //                and C maps screen coordinates to inverse plane distances
+
    v3double_t A, B, C;
    double     zat, plight, shade;
 };
