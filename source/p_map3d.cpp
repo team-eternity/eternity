@@ -189,7 +189,7 @@ static bool PIT_TestMobjZ(Mobj *thing, void *context)
       under_comp = data.clip.thing->z + data.clip.thing->height <= thing->z;
 
    if(!(thing->flags & MF_SOLID) ||                      // non-solid?
-      thing->flags & (MF_SPECIAL|MF_NOCLIP) || // other is special?
+      thing->flags & (MF_SPECIAL|MF_NOCLIP|MF_CORPSE) || // other is special?
       data.clip.thing->flags & MF_SPECIAL ||                   // this is special?
       thing == data.clip.thing ||                              // same as self?
       data.clip.thing->z > thing->z + thing->height ||         // over?
