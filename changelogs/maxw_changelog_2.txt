@@ -208,8 +208,8 @@ Fixed Lost Souls spawned inside the player making them pop up.
 2022/06/11
 Fixed weapondeltas setting weapon means of death to none if not specified in the
 delta.
-Added rendering for translucent and additive slopes (this does not cover masked
-slopes).
+Added rendering for translucent and additive slopes, as well as their masked
+variants.
 
 ================================================================================
 EOF
