@@ -204,6 +204,11 @@ Added support for widescreen status bars.
 2022/06/10
 Fixed Lost Souls spawned inside the player making them pop up.
 
+--------------------------------------------------------------------------------
+2022/06/11
+Fixed weapondeltas setting weapon means of death to none if not specified in the
+delta.
+
 ================================================================================
 EOF
 ================================================================================

@@ -1409,7 +1409,7 @@ static void E_processWeapon(weapontype_t i, cfg_t *const weaponsec, cfg_t *pcfg,
       tempstr = cfg_getstr(weaponsec, ITEM_WPN_MOD);
       wp.mod = E_DamageTypeNumForName(tempstr);
    }
-   else
+   else if(def && !inherits)
       wp.mod = MOD_UNKNOWN;
 
    // process combined flags first
