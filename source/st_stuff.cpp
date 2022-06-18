@@ -398,7 +398,11 @@ static void ST_refreshBackground()
 {
    if(st_statusbaron)
    {
-      V_DrawPatch(ST_X + (vbscreenyscaled.unscaledw - sbar->width) / 2, ST_FY, &vbscreenyscaled, sbar);
+      V_DrawPatch(
+         ST_X + (vbscreenyscaled.unscaledw - sbar->width) / 2 + sbar->leftoffset,
+         ST_FY + sbar->topoffset,
+         &vbscreenyscaled, sbar
+      );
 
       // killough 3/7/98: make face background change with displayplayer
       // haleyjd 01/12/04: changed translation handling
