@@ -211,6 +211,11 @@ delta.
 Added rendering for translucent and additive slopes, as well as their masked
 variants.
 
+--------------------------------------------------------------------------------
+2022/06/18
+Made it so Doom extended spawn nums only get converted if no thingtype exist for
+a given doomednum.
+
 ================================================================================
 EOF
 ================================================================================

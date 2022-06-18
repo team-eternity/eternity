@@ -426,6 +426,8 @@ enum bloodaction_e : int
    NUMBLOODACTIONS
 };
 
+int P_FindDoomedNum(int type);
+
 void  P_RespawnSpecials();
 Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
                   bool nolastlook = false);
