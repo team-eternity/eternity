@@ -789,8 +789,6 @@ if(MSVC)
    if(NOT MSVC_VERSION LESS  "1914")
       target_compile_options(eternity PUBLIC "/std:c++17")
    endif()
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-   target_link_libraries(eternity stdc++fs)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
@@ -798,6 +796,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 if(APPLE)
    eternity_set_xcode_attributes(eternity)
+endif()
+
+# Flatpak support
+option(BUILD_FLATPAK "Build with flatpak-friendly settings." OFF)
+if(BUILD_FLATPAK)
+   target_compile_definitions(eternity PRIVATE BUILD_FLATPAK)
 endif()
 
 install(TARGETS eternity

@@ -74,7 +74,9 @@ bool I_CreateDirectory(const qstring &path)
 //
 const char *I_PlatformInstallDirectory()
 {
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
+#ifdef BUILD_FLATPAK
+   return "/app/share/eternity/base";
+#elif EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
    struct stat sbuf;
 
    // Prefer /usr/local, but fall back to just /usr.
