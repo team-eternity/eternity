@@ -216,6 +216,11 @@ variants.
 Made it so Doom extended spawn nums only get converted if no thingtype exist for
 a given doomednum.
 
+--------------------------------------------------------------------------------
+2022/06/25
+Fixed enemies walking off onto other enemies if the floor height matched the
+height at the top of the enemy being walked on to.
+
 ================================================================================
 EOF
 ================================================================================

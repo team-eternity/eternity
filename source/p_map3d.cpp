@@ -375,7 +375,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
    // VANILLA_HERETIC: disable this
    if(!vanilla_heretic &&
       !(clip.thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY|MF_NOGRAVITY)) &&
-      (thing->flags & MF_SOLID))
+      (thing->flags & MF_SOLID) && (thing->flags5 & MF5_ACTLIKEBRIDGE))
    {
       // [RH] Let monsters walk on actors as well as floors
       if(((clip.thing->flags & MF_COUNTKILL) || (clip.thing->flags3 & MF3_KILLABLE)) &&

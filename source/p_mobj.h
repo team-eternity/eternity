@@ -750,6 +750,7 @@ enum mobjflags5_e : unsigned int
 {
    MF5_NOTAUTOAIMED       = 0x00000001, // can't be autoaimed (for real)
    MF5_FULLVOLSOUNDS      = 0x00000002, // full-volume see/death sounds
+   MF5_ACTLIKEBRIDGE      = 0x00000004, // unmoved by sector actions, and pickups can sit atop
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh
