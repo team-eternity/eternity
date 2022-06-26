@@ -50,6 +50,7 @@
 #include "hu_inventory.h"
 #include "hu_stuff.h"
 #include "hu_over.h"
+#include "m_misc.h"
 #include "m_qstr.h"
 #include "m_random.h"
 #include "m_swap.h"
@@ -207,6 +208,7 @@ static void HU_InitLevelTime();
 static void HU_InitLevelName();
 static void HU_InitChat();
 static void HU_InitCoords();
+static void HU_InitStats();
 
 //
 // HU_InitNativeWidgets
@@ -223,6 +225,7 @@ static void HU_InitNativeWidgets()
    HU_InitLevelName();
    HU_InitChat();
    HU_InitCoords();
+   HU_InitStats();
 
    // HUD_FIXME: generalize?
    HU_FragsInit();
@@ -1324,7 +1327,7 @@ static bool HU_ChatRespond(const event_t *ev)
    return false;
 }
 
-//=============================================================================
+//==============================================================================
 //
 // Automap coordinate display
 //
@@ -1353,52 +1356,18 @@ public:
    {
       coordType = ct;
 
-      // HTIC_FIXME: Handle through GameModeInfo directly?
-      if(GameModeInfo->type == Game_Heretic)
-      {
-         x = 20;
-         switch(coordType)
-         {
-         case COORDTYPE_X:
-            y = 10;
-            break;
-         case COORDTYPE_Y:
-            y = 19;
-            break;
-         case COORDTYPE_Z:
-            y = 28;
-            break;
-         case COORDTYPE_A:
-            y = 37;
-            break;
-         default:
-            break;
-         }
-      }
-      else
-      {
-         x = SCREENWIDTH - 64;
-         switch(coordType)
-         {
-         case COORDTYPE_X:
-            y = 8;
-            break;
-         case COORDTYPE_Y:
-            y = 17;
-            break;
-         case COORDTYPE_Z:
-            y = 25;
-            break;
-         case COORDTYPE_A:
-            y = 33;
-            break;
-         default:
-            break;
-         }
-      }
       message  = nullptr;
       font     = hud_font;
       cleartic = 0;
+
+      x = SCREENWIDTH - 64;
+      y = SCREENHEIGHT / 2 + font->absh * (coordType - 2);
+
+      // HTIC_FIXME: Handle through GameModeInfo directly?
+      if(GameModeInfo->type == Game_Heretic)
+         y -= 42 / 2;
+      else
+         y -= ST_HEIGHT / 2;
    }
 };
 
@@ -1489,6 +1458,103 @@ static void HU_InitCoords()
    coordy_widget.initProps(HUDCoordWidget::COORDTYPE_Y);
    coordz_widget.initProps(HUDCoordWidget::COORDTYPE_Z);
    coorda_widget.initProps(HUDCoordWidget::COORDTYPE_A);
+}
+
+//==============================================================================
+//
+// HUD level stats widget
+//
+// This code is derived from Eternity's Github pull 563 by Joshua Woodie
+//
+
+class HUDStatWidget : public HUDTextWidget
+{
+public:
+   enum
+   {
+      STATTYPE_KILLS,
+      STATTYPE_ITEMS,
+      STATTYPE_SECRETS
+   };
+
+   virtual void ticker();
+
+   void initProps(int st)
+   {
+      statType = st;
+
+      if(!(GameModeInfo->flags & GIF_HUDSTATBARNAME))
+         x = 20;
+      else
+         x = 0;
+
+      y = 8 + statType * hud_font->absh;
+
+      message  = nullptr;
+      font     = hud_font;
+      cleartic = 0;
+   }
+
+protected:
+   int statType;
+};
+
+static HUDStatWidget statkill_widget;
+static HUDStatWidget statitem_widget;
+static HUDStatWidget statsecr_widget;
+
+void HUDStatWidget::ticker()
+{
+   static char statkillstr[64];
+   static char statitemstr[64];
+   static char statsecrstr[64];
+
+   if(!HU_allowMapWidget())
+   {
+      message = nullptr;
+      return;
+   }
+
+   player_t *plr = &players[displayplayer];
+
+   if(statType == STATTYPE_KILLS)
+   {
+      snprintf(statkillstr, sizeof(statkillstr), "K: %i/%i", plr->killcount, totalkills);
+      message = statkillstr;
+   }
+   else if(statType == STATTYPE_ITEMS)
+   {
+      snprintf(statitemstr, sizeof(statitemstr), "I: %i/%i", plr->itemcount, totalitems);
+      message = statitemstr;
+   }
+   else if(statType == STATTYPE_SECRETS && !hud_hidestatus)
+   {
+      snprintf(statsecrstr, sizeof(statsecrstr), "S: %i/%i", plr->secretcount, totalsecret);
+      message = statsecrstr;
+   }
+   else
+   {
+      message = nullptr;
+   }
+}
+
+static void HU_InitStats()
+{
+   statkill_widget.setName("_HU_StatKillWidget");
+   statitem_widget.setName("_HU_StatItemWidget");
+   statsecr_widget.setName("_HU_StatSecrWidget");
+
+   statkill_widget.setType(WIDGET_TEXT);
+   statitem_widget.setType(WIDGET_TEXT);
+   statsecr_widget.setType(WIDGET_TEXT);
+
+   HUDWidget::AddWidgetToHash(&statkill_widget);
+   HUDWidget::AddWidgetToHash(&statitem_widget);
+   HUDWidget::AddWidgetToHash(&statsecr_widget);
+
+   statkill_widget.initProps(HUDStatWidget::STATTYPE_KILLS);
+   statitem_widget.initProps(HUDStatWidget::STATTYPE_ITEMS);
+   statsecr_widget.initProps(HUDStatWidget::STATTYPE_SECRETS);
 }
 
 ////////////////////////////////////////////////////////////////////////

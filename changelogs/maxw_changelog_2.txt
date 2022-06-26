@@ -221,6 +221,10 @@ a given doomednum.
 Fixed enemies walking off onto other enemies if the floor height matched the
 height at the top of the enemy being walked on to.
 
+--------------------------------------------------------------------------------
+2022/06/26
+Added level stats to automap display.
+
 ================================================================================
 EOF
 ================================================================================
