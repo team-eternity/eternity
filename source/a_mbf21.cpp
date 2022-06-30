@@ -156,7 +156,7 @@ void A_MonsterProjectile(actionargs_t *actionargs)
    spawnofs_z  = E_ArgAsFixed(args, 4, 0);
 
    A_FaceTarget(actionargs);
-   mo = P_SpawnMissile(actor, actor->target, thingtype, DEFAULTMISSILEZ);
+   mo = P_SpawnMissile(actor, actor->target, thingtype, actor->z + DEFAULTMISSILEZ);
    if(!mo)
       return;
 
