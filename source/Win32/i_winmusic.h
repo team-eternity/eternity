@@ -21,6 +21,8 @@
 
 bool I_WIN_InitMusic();
 void I_WIN_PlaySong(bool looping);
+void I_WIN_PauseSong(void *handle);
+void I_WIN_ResumeSong(void *handle);
 void I_WIN_StopSong();
 void I_WIN_SetMusicVolume(int volume);
 bool I_WIN_RegisterSong(void *data, int size);

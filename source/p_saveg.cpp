@@ -728,8 +728,12 @@ static void P_ArchivePlayers(SaveArchive &arc)
          }
          P_ArchiveArray<inventoryslot_t>(arc, p.inventory, inventorySize);
 
-         for(int &power : p.powers)
-            arc << power;
+         for(powerduration_t &power : p.powers)
+         {
+            arc << power.tics;
+            if(arc.saveVersion() >= 14)
+               arc << power.infinite;
+         }
 
          for(j = 0; j < MAXPLAYERS; j++)
             arc << p.frags[j];
@@ -1642,6 +1646,11 @@ void P_LoadGame(const char *filename)
 
    try
    {
+      WadDirectory *tmp_g_dir = g_dir;
+      WadDirectory *tmp_d_dir = d_dir;
+
+      int     tmp_gamemap         = gamemap;
+      int     tmp_gameepisode     = gameepisode;
       int     tmp_compatibility   = compatibility;
       skill_t tmp_gameskill       = gameskill;
       int     tmp_inmanageddir    = inmanageddir;
@@ -1753,6 +1762,10 @@ void P_LoadGame(const char *filename)
          if(checksum != rchecksum && !forced_loadgame)
          {
             // If we don't restore some state things will go very awry
+            g_dir           = tmp_g_dir;
+            d_dir           = tmp_d_dir;
+            gamemap         = tmp_gamemap;
+            gameepisode     = tmp_gameepisode;
             compatibility   = tmp_compatibility;
             gameskill       = tmp_gameskill;
             inmanageddir    = tmp_inmanageddir;

@@ -189,7 +189,7 @@ static bool PIT_TestMobjZ(Mobj *thing, void *context)
       under_comp = data.clip.thing->z + data.clip.thing->height <= thing->z;
 
    if(!(thing->flags & MF_SOLID) ||                      // non-solid?
-      thing->flags & (MF_SPECIAL|MF_NOCLIP) || // other is special?
+      thing->flags & (MF_SPECIAL|MF_NOCLIP|MF_CORPSE) || // other is special?
       data.clip.thing->flags & MF_SPECIAL ||                   // this is special?
       thing == data.clip.thing ||                              // same as self?
       data.clip.thing->z > thing->z + thing->height ||         // over?
@@ -375,7 +375,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
    // VANILLA_HERETIC: disable this
    if(!vanilla_heretic &&
       !(clip.thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY|MF_NOGRAVITY)) &&
-      (thing->flags & MF_SOLID))
+      (thing->flags & MF_SOLID) && (thing->flags5 & MF5_ACTLIKEBRIDGE))
    {
       // [RH] Let monsters walk on actors as well as floors
       if(((clip.thing->flags & MF_COUNTKILL) || (clip.thing->flags3 & MF3_KILLABLE)) &&

@@ -156,7 +156,7 @@ void A_MonsterProjectile(actionargs_t *actionargs)
    spawnofs_z  = E_ArgAsFixed(args, 4, 0);
 
    A_FaceTarget(actionargs);
-   mo = P_SpawnMissile(actor, actor->target, thingtype, DEFAULTMISSILEZ);
+   mo = P_SpawnMissile(actor, actor->target, thingtype, actor->z + DEFAULTMISSILEZ);
    if(!mo)
       return;
 
@@ -363,7 +363,7 @@ void A_FindTracer(actionargs_t *actionargs)
       return;
 
    fov   = FixedToAngle(E_ArgAsFixed(args, 0, 0));
-   range = E_ArgAsInt(args, 0, 10) * MAPBLOCKSIZE;
+   range = E_ArgAsInt(args, 1, 10) * MAPBLOCKSIZE;
 
    if(fov == 0)
       fov = ANG360;
@@ -778,7 +778,7 @@ void A_WeaponMeleeAttack(actionargs_t *actionargs)
       range = player->mo->info->meleerange;
 
    damage = (P_Random(pr_mbf21) % damagedice + 1) * damagebase;
-   if(player->powers[pw_strength])
+   if(player->powers[pw_strength].isActive())
       damage = (damage * zerkfactor) >> FRACBITS;
 
 

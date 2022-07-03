@@ -174,6 +174,8 @@ static bool PIT_StompThing3D(Mobj *thing, void *context)
    if(thing == clip.thing)
       return true;
 
+   // TODO: Refer to `[RH] Z-Check` in p_map.cpp in ZDoom?
+
    // Don't stomp what you ain't touchin'!
    if(clip.thing->z >= thing->z + thing->height ||
       thing->z >= clip.thing->z + clip.thing->height)

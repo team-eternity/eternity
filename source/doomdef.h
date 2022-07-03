@@ -227,13 +227,13 @@ typedef enum {
 } powertype_t;
 
 // Power up durations (how many seconds till expiration).
-typedef enum {
+enum powerduration_e {
   INVULNTICS  = (30*TICRATE),
   INVISTICS   = (60*TICRATE),
   INFRATICS   = (120*TICRATE),
   IRONTICS    = (60*TICRATE),
   FLIGHTTICS  = (60*TICRATE),  // flight tics, for Heretic
-} powerduration_t;
+};
 
 // DOOM keyboard definition.
 // This is the stuff configured by Setup.Exe.

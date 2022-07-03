@@ -426,6 +426,8 @@ enum bloodaction_e : int
    NUMBLOODACTIONS
 };
 
+int P_FindDoomedNum(int type);
+
 void  P_RespawnSpecials();
 Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
                   bool nolastlook = false);
@@ -748,6 +750,7 @@ enum mobjflags5_e : unsigned int
 {
    MF5_NOTAUTOAIMED       = 0x00000001, // can't be autoaimed (for real)
    MF5_FULLVOLSOUNDS      = 0x00000002, // full-volume see/death sounds
+   MF5_ACTLIKEBRIDGE      = 0x00000004, // unmoved by sector actions, and pickups can sit atop
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

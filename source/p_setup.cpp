@@ -3984,12 +3984,16 @@ void P_ConvertDoomExtendedSpawnNum(mapthing_t *mthing)
 {
    int16_t num = mthing->type;
 
-   if(num >= 6005 && num <= 6089)
-      num -= 6000;
-   else if(num >= 6201 && num <= 6249)
-      num -= 4200;
-   else if(num >= 6301 && num <= 6306)
-      num -= 3300;
+   // Only convert doomednum if there's no existing thingtype for this one
+   if(const int typenum = P_FindDoomedNum(num); typenum == -1 || typenum == NUMMOBJTYPES)
+   {
+      if(num >= 6005 && num <= 6089)
+         num -= 6000;
+      else if(num >= 6201 && num <= 6249)
+         num -= 4200;
+      else if(num >= 6301 && num <= 6306)
+         num -= 3300;
+   }
 
    mthing->type = num;
 }

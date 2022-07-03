@@ -486,7 +486,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
             if(newweapon==wp_fist && E_PlayerOwnsWeaponForDEHNum(&p, wp_chainsaw) &&
                !E_WeaponIsCurrentDEHNum(&p, wp_chainsaw) &&
                (E_WeaponIsCurrentDEHNum(&p, wp_fist) ||
-                !p.powers[pw_strength] ||
+                !p.powers[pw_strength].isActive() ||
                 P_WeaponPreferred(wp_chainsaw, wp_fist)))
             {
                newweapon = wp_chainsaw;
@@ -1685,7 +1685,7 @@ static void G_PlayerFinishLevel(int player)
    player_t *p = &players[player];
 
    // INVENTORY_TODO: convert powers to inventory
-   if(p->powers[pw_weaponlevel2] && E_IsPoweredVariant(p->readyweapon))
+   if(p->powers[pw_weaponlevel2].isActive() && E_IsPoweredVariant(p->readyweapon))
       p->readyweapon = p->readyweapon->sisterWeapon;
    memset(p->powers, 0, sizeof p->powers);
 

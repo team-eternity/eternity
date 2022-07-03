@@ -128,6 +128,15 @@ enum attacktype_e : unsigned int
    AT_ALL = (AT_PRIMARY + AT_SECONDARY),
 };
 
+struct powerduration_t
+{
+   int  tics;
+   bool infinite;
+
+   inline bool isActive() const { return tics != 0 || infinite; }
+   inline bool shouldCount() const { return tics != 0 && !infinite; }
+};
+
 //
 // Extended player object info: player_t
 //
@@ -162,7 +171,7 @@ struct player_t
    int            armordivisor; // haleyjd 07/29/13: denominator for armor save calculation
 
    // Power ups. invinc and invis are tic counters.
-   int            powers[NUMPOWERS];
+   powerduration_t powers[NUMPOWERS];
   
    // Frags, kills of other players.
    int            frags[MAXPLAYERS];

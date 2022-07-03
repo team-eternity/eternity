@@ -195,6 +195,35 @@ Added "ripsound" EDF property, which is played when a ripper rips.
 2022/01/18
 [MBF21]
  * Added A_SeekTracer and A_FindTracer.
+ 
+--------------------------------------------------------------------------------
+2022/06/06
+Added support for widescreen status bars.
+
+--------------------------------------------------------------------------------
+2022/06/10
+Fixed Lost Souls spawned inside the player making them pop up.
+
+--------------------------------------------------------------------------------
+2022/06/11
+Fixed weapondeltas setting weapon means of death to none if not specified in the
+delta.
+Added rendering for translucent and additive slopes, as well as their masked
+variants.
+
+--------------------------------------------------------------------------------
+2022/06/18
+Made it so Doom extended spawn nums only get converted if no thingtype exist for
+a given doomednum.
+
+--------------------------------------------------------------------------------
+2022/06/25
+Fixed enemies walking off onto other enemies if the floor height matched the
+height at the top of the enemy being walked on to.
+
+--------------------------------------------------------------------------------
+2022/06/26
+Added level stats to automap display.
 
 ================================================================================
 EOF
