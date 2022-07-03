@@ -1177,6 +1177,77 @@ bool Check_Sides(Mobj *actor, int x, int y, mobjtype_t type)
 //
 
 //
+// P_CheckPosition basics. Returns the sector in the designated area.
+//
+void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter,
+   const sector_t *&bottomsector, const sector_t *&topsector)
+{
+   inter.thing = &thing;
+
+   inter.x = x;
+   inter.y = y;
+
+   inter.bbox[BOXTOP] = y + thing.radius;
+   inter.bbox[BOXBOTTOM] = y - thing.radius;
+   inter.bbox[BOXRIGHT] = x + thing.radius;
+   inter.bbox[BOXLEFT] = x - thing.radius;
+
+   inter.floorline = inter.blockline = inter.ceilingline = nullptr;  // killough 8/1/98
+
+   // Whether object can get out of a sticky situation:
+   inter.unstuck = thing.player &&          // only players
+      thing.player->mo == &thing &&       // not voodoo dolls
+      demo_version >= 203;                // not under old demos
+
+   sector_t &sector = *R_PointInSubsector(x, y)->sector;
+
+   // The base floor / ceiling is from the subsector
+   // that contains the point.
+   // Any contacted lines the step closer together
+   // will adjust them.
+
+   // ioanch 20160110: portal aware floor and ceiling z detection
+   bottomsector = &sector;
+   if(demo_version >= 333 && sector.srf.floor.pflags & PS_PASSABLE &&
+      !(thing.flags & MF_NOCLIP))
+   {
+      v2fixed_t totaldelta;
+      bottomsector = P_ExtremeSectorAtPoint(x, y, surf_floor, &sector, &totaldelta);
+      inter.zref.floor = inter.zref.dropoff =
+         bottomsector->srf.floor.getZAt(x + totaldelta.x, y + totaldelta.y);
+      inter.zref.floorgroupid = bottomsector->groupid;
+   }
+   else
+   {
+      inter.zref.floor = inter.zref.dropoff = sector.srf.floor.getZAt(x, y);
+      inter.zref.floorgroupid = sector.groupid;
+   }
+
+   topsector = &sector;
+   if(demo_version >= 333 && sector.srf.ceiling.pflags & PS_PASSABLE &&
+      !(thing.flags & MF_NOCLIP))
+   {
+      v2fixed_t totaldelta;
+      topsector = P_ExtremeSectorAtPoint(x, y, surf_ceil, &sector, &totaldelta);
+      inter.zref.ceiling = topsector->srf.ceiling.getZAt(x + totaldelta.x, y + totaldelta.y);
+   }
+   else
+      inter.zref.ceiling = sector.srf.ceiling.height;
+
+   inter.zref.secfloor = inter.zref.passfloor = inter.zref.floor;
+   inter.zref.secceil = inter.zref.passceil = inter.zref.ceiling;
+
+   // haleyjd
+   // ioanch 20160114: use bottom sector
+   inter.open.floorpic = bottomsector->srf.floor.pic;
+   // SoM: 09/07/02: 3dsides monster fix
+   inter.open.touch3dside = 0;
+   validcount++;
+
+   inter.numspechit = 0;
+}
+
+//
 // P_CheckPosition
 // This is purely informative, nothing is modified
 // (except things picked up).
@@ -1208,43 +1279,9 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    // haleyjd: OVER_UNDER
    if(P_Use3DClipping())
       return P_CheckPosition3D(thing, x, y, pushhit);
-   
-   clip.thing = thing;
-   
-   clip.x = x;
-   clip.y = y;
-   
-   clip.bbox[BOXTOP]    = y + clip.thing->radius;
-   clip.bbox[BOXBOTTOM] = y - clip.thing->radius;
-   clip.bbox[BOXRIGHT]  = x + clip.thing->radius;
-   clip.bbox[BOXLEFT]   = x - clip.thing->radius;
-   
-   newsubsec = R_PointInSubsector(x,y);
-   clip.floorline = clip.blockline = clip.ceilingline = nullptr; // killough 8/1/98
 
-   // Whether object can get out of a sticky situation:
-   clip.unstuck = thing->player &&          // only players
-      thing->player->mo == thing &&       // not voodoo dolls
-      demo_version >= 203;                // not under old demos
-
-   // The base floor / ceiling is from the subsector
-   // that contains the point.
-   // Any contacted lines the step closer together
-   // will adjust them.
-
-   clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.height;
-   clip.zref.floorgroupid = newsubsec->sector->groupid;
-   clip.zref.ceiling = newsubsec->sector->srf.ceiling.height;
-
-   clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;
-   clip.zref.secceil = clip.zref.passceil = clip.zref.ceiling;
-
-   // haleyjd
-   clip.open.floorpic = newsubsec->sector->srf.floor.pic;
-   // SoM: 09/07/02: 3dsides monster fix
-   clip.open.touch3dside = 0;
-   validcount++;
-   clip.numspechit = 0;
+   const sector_t *sector;
+   P_GetClipBasics(*thing, x, y, clip, sector, sector);
 
    if(clip.thing->flags & MF_NOCLIP)
       return true;
