@@ -475,75 +475,16 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
 //
 bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit) 
 {
-   subsector_t *newsubsec;
-   fixed_t thingdropoffz;
-
-   // haleyjd: from zdoom:
-   Mobj  *thingblocker;
-   fixed_t realheight = thing->height;
+   const fixed_t realheight = thing->height;
 
 #ifdef RANGECHECK
    if(GameModeInfo->type == Game_DOOM && demo_version < 329)
       I_Error("P_CheckPosition3D: called in an old demo!\n");
 #endif
 
-   clip.thing = thing;
-   
-   clip.x = x;
-   clip.y = y;
-   
-   clip.bbox[BOXTOP]    = y + clip.thing->radius;
-   clip.bbox[BOXBOTTOM] = y - clip.thing->radius;
-   clip.bbox[BOXRIGHT]  = x + clip.thing->radius;
-   clip.bbox[BOXLEFT]   = x - clip.thing->radius;
-   
-   newsubsec = R_PointInSubsector(x,y);
-   clip.floorline = clip.blockline = clip.ceilingline = nullptr; // killough 8/1/98
-
-   // Whether object can get out of a sticky situation:
-   clip.unstuck = thing->player &&        // only players
-      thing->player->mo == thing;        // not voodoo dolls
-
-   // The base floor / ceiling is from the subsector
-   // that contains the point.
-   // Any contacted lines the step closer together
-   // will adjust them.
-
-   // ioanch 20160110: portal aware floor and ceiling z detection
-   const sector_t *bottomsector = newsubsec->sector;
-   if(demo_version >= 333 && newsubsec->sector->srf.floor.pflags & PS_PASSABLE &&
-      !(clip.thing->flags & MF_NOCLIP))
-   {
-      bottomsector = P_ExtremeSectorAtPoint(x, y, surf_floor, newsubsec->sector);
-      clip.zref.floor = clip.zref.dropoff = bottomsector->srf.floor.height;
-      clip.zref.floorgroupid = bottomsector->groupid;
-   }
-   else
-   {
-      clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.height;
-      clip.zref.floorgroupid = newsubsec->sector->groupid;
-   }
-
-   if(demo_version >= 333 && newsubsec->sector->srf.ceiling.pflags & PS_PASSABLE &&
-      !(clip.thing->flags & MF_NOCLIP))
-   {
-      clip.zref.ceiling = P_ExtremeSectorAtPoint(x, y, surf_ceil,
-         newsubsec->sector)->srf.ceiling.height;
-   }
-   else
-      clip.zref.ceiling = newsubsec->sector->srf.ceiling.height;
-
-   clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;
-   clip.zref.secceil = clip.zref.passceil = clip.zref.ceiling;
-
-   // haleyjd
-   // ioanch 20160114: use bottom sector
-   clip.open.floorpic = bottomsector->srf.floor.pic;
-   // SoM: 09/07/02: 3dsides monster fix
-   clip.open.touch3dside = 0;
-   validcount++;
-   
-   clip.numspechit = 0;
+   const sector_t *bottomsector;
+   const sector_t *topsector;
+   P_GetClipBasics(*thing, x, y, clip, bottomsector, topsector);
 
    // haleyjd 06/28/06: skullfly check from zdoom
    if(clip.thing->flags & MF_NOCLIP && !(clip.thing->flags & MF_SKULLFLY))
@@ -563,7 +504,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
    bbox[BOXTOP] = clip.bbox[BOXTOP] + MAXRADIUS;
    
    clip.BlockingMobj = nullptr; // haleyjd 1/17/00: global hit reference
-   thingblocker = nullptr;
+   Mobj *thingblocker = nullptr;
    stepthing    = nullptr;
 
    // [RH] Fake taller height to catch stepping up into things.
@@ -646,7 +587,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
 
    memcpy(bbox, clip.bbox, sizeof(bbox));
    
-   thingdropoffz = clip.zref.floor;
+   const fixed_t thingdropoffz = clip.zref.floor;
 
    // WARNING: This may be a point of contention because we LOSE floorgroupid
    // If we HAVE problems, then we need to write down the dropoffgroupid into clip

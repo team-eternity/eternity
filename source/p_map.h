@@ -30,6 +30,7 @@
 #include "m_surf.h"
 #include "tables.h"
 
+struct doom_mapinter_t;
 struct line_t;
 struct mobjinfo_t;
 struct msecnode_t;
@@ -74,6 +75,9 @@ extern bool donut_emulation;    // haleyjd 10/16/09
 
 // killough 3/15/98: add fourth argument to P_TryMove
 bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff);
+
+void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter,
+                     const sector_t *&bottomsector, const sector_t *&topsector);
 
 bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit = nullptr);
 

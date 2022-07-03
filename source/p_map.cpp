@@ -1262,7 +1262,6 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter,
 //  early out on solid lines?
 //
 // out:
-//  newsubsec
 //  zref.floor
 //  zref.ceiling
 //  tmdropoffz
@@ -1274,7 +1273,6 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter,
 bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit) 
 {
    int xl, xh, yl, yh, bx, by;
-   subsector_t *newsubsec;
 
    // haleyjd: OVER_UNDER
    if(P_Use3DClipping())
