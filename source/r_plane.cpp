@@ -191,71 +191,6 @@ static void R_planeLight(cb_plane_t &plane)
 }
 
 //
-// BASIC PRIMITIVE
-//
-static void R_mapPlane(const R_FlatFunc flatfunc, const R_SlopeFunc, cb_span_t &span,
-                       cb_slopespan_t &, const cb_plane_t &plane, int y, int x1, int x2)
-{
-   float dy, xstep, ystep, realy, slope;
-
-#ifdef RANGECHECK
-   if(x2 < x1 || x1 < 0 || x2 >= viewwindow.width || y < 0 || y >= viewwindow.height)
-      I_Error("R_mapPlane: %i, %i at %i\n", x1, x2, y);
-#endif
-  
-   // SoM: because ycenter is an actual row of pixels (and it isn't really the 
-   // center row because there are an even number of rows) some corrections need
-   // to be made depending on where the row lies relative to the ycenter row.
-   if(view.ycenter == y)
-      dy = 0.01f;
-   else if(y < view.ycenter)
-      dy = (float)fabs(view.ycenter - y) - 1;
-   else
-      dy = (float)fabs(view.ycenter - y) + 1;
-
-   slope = (float)fabs(plane.height / dy);
-   realy = slope * view.yfoc;
-
-   xstep = plane.pviewcos * slope * view.focratio * plane.xscale;
-   ystep = plane.pviewsin * slope * view.focratio * plane.yscale;
-
-   // Use fast hack routine for portable double->uint32 conversion
-   // iff we know host endianness, otherwise use Mozilla routine
-   {
-      const double xfrac = (
-         ((plane.pviewx + plane.xoffset) * plane.xscale) +
-         (plane.pviewsin * realy * plane.xscale) +
-         ((static_cast<double>(x1) - view.xcenter) * xstep)
-      ) * plane.fixedunitx;
-
-      span.xfrac = R_doubleToUint32(xfrac);
-
-      const double yfrac = (
-         ((-plane.pviewy + plane.yoffset) * plane.yscale) +
-         (-plane.pviewcos * realy * plane.yscale) +
-         ((static_cast<double>(x1) - view.xcenter) * ystep)
-      ) * plane.fixedunity;
-
-      span.yfrac = R_doubleToUint32(yfrac);
-
-      span.xstep = R_doubleToUint32(xstep * plane.fixedunitx);
-      span.ystep = R_doubleToUint32(ystep * plane.fixedunity);
-   }
-
-   // killough 2/28/98: Add offsets
-   if((span.colormap = plane.fixedcolormap) == nullptr) // haleyjd 10/16/06
-      span.colormap = plane.colormap + R_spanLight(plane, realy) * 256;
-   
-   span.y  = y;
-   span.x1 = x1;
-   span.x2 = x2;
-   span.source = plane.source;
-   
-   // BIG FLATS
-   flatfunc(span);
-}
-
-//
 // R_slopeLights
 //
 static void R_slopeLights(const cb_plane_t &plane, int len, double startcmap, double endcmap)
@@ -298,6 +233,131 @@ static void R_slopeLights(const cb_plane_t &plane, int len, double startcmap, do
 
       map += step;
    }
+}
+
+//
+// SoM: Calculates the rslope info from information in the plane struct
+// TODO: Optimise
+//
+static void R_calcPlane(const cbviewpoint_t &cb_viewpoint, visplane_t *pl)
+{
+   // This is where the crap gets calculated. Yay
+   double         xl, yl, tsin, tcos;
+   rslope_t *rslope = &pl->rslope;
+
+   tsin = sin(pl->angle);
+   tcos = cos(pl->angle);
+
+   if(pl->picnum & PL_SKYFLAT)
+      xl = yl = 64;  // just choose a default, it won't matter
+   else
+   {
+      const texture_t *tex = textures[texturetranslation[pl->picnum]];
+      xl = tex->width;
+      yl = tex->height;
+   }
+
+   // SoM: To change the origin of rotation, add an offset to P.x and P.z
+   // SoM: Add offsets? YAH!
+
+   // Need to reduce them to the visible range, because otherwise it may overflow
+   double xoffsf = fmod(pl->xoffsf, xl / pl->scale.x);
+   double yoffsf = fmod(pl->yoffsf, yl / pl->scale.y);
+
+   // See R_calcSlope for an explanation of P, M, and N
+
+   v3double_t P;
+   P.x = -xoffsf * tcos - yoffsf * tsin;
+   P.z = -xoffsf * tsin + yoffsf * tcos;
+   P.y = pl->heightf;
+
+   v3double_t M;
+   M.x = P.x - xl * tsin;
+   M.z = P.z + xl * tcos;
+   M.y = pl->heightf;
+
+   v3double_t N;
+   N.x = P.x + yl * tcos;
+   N.z = P.z + yl * tsin;
+   N.y = pl->heightf;
+
+   M_TranslateVec3(cb_viewpoint, &P);
+   M_TranslateVec3(cb_viewpoint, &M);
+   M_TranslateVec3(cb_viewpoint, &N);
+
+   M_SubVec3(&M, &M, &P);
+   M_SubVec3(&N, &N, &P);
+
+   // M and N always have 0 as their y for flat planes
+
+   M_CrossProduct3(&rslope->A, &P, &N);
+   M_CrossProduct3(&rslope->B, &P, &M);
+   M_CrossProduct3(&rslope->C, &M, &N);
+
+   // This is helpful for removing some of the muls when calculating light.
+
+   rslope->A.x *= 0.5f;
+   rslope->A.y *= 0.5f / view.focratio;
+   rslope->A.z *= 0.5f;
+
+   rslope->B.x *= 0.5f;
+   rslope->B.y *= 0.5f / view.focratio;
+   rslope->B.z *= 0.5f;
+
+   rslope->C.x *= 0.5f;
+   rslope->C.y *= 0.5f / view.focratio;
+   rslope->C.z *= 0.5f;
+
+   rslope->zat = pl->heightf;
+
+   rslope->plight = (slopevis * view.tan / float(xl * yl)) / (rslope->zat - pl->viewzf);
+   rslope->shade = 256.0 * 2.0 - (pl->lightlevel + 16.0) * 256.0 / 128.0;
+}
+
+
+//
+// BASIC PRIMITIVE
+//
+static void R_mapPlane(const R_FlatFunc flatfunc, const R_SlopeFunc slopefunc, cb_span_t &span,
+                       cb_slopespan_t &slopespan, const cb_plane_t &plane, int x, int y1, int y2)
+{
+   rslope_t *slope = plane.slope;
+   int count = y2 - y1;
+   v3double_t s;
+   double map1, map2;
+
+   s.x = x - view.xcenter;
+   s.y = y1 - view.ycenter + 1;
+   s.z = view.xfoc;
+
+   const float invZ = float(plane.tex->width) * float(plane.tex->height) * 0.5f / view.focratio;
+
+   slopespan.iufrac = M_DotVec3(&s, &slope->A) * double(plane.tex->width)  * double(plane.yscale);
+   slopespan.ivfrac = M_DotVec3(&s, &slope->B) * double(plane.tex->height) * double(plane.xscale);
+   slopespan.idfrac = s.y * invZ;
+
+   slopespan.iustep = slope->A.y * double(plane.tex->width) * double(plane.yscale);
+   slopespan.ivstep = slope->B.y * double(plane.tex->height) * double(plane.xscale);
+   slopespan.idstep = invZ;
+
+   slopespan.source = plane.source;
+   slopespan.x = x;
+   slopespan.y1 = y1;
+   slopespan.y2 = y2;
+
+   // Setup lighting
+
+   map1 = 256.0 - (slope->shade - slope->plight * slopespan.idfrac);
+   if(count > 0)
+   {
+      double id = slopespan.idfrac + slopespan.idstep * (y2 - y1);
+      map2 = 256.0 - (slope->shade - slope->plight * id);
+   }
+   else
+      map2 = map1;
+   R_slopeLights(plane, y2 - y1 + 1, (256.0 - map1), (256.0 - map2));
+
+   slopefunc(slopespan, span);
 }
 
 //
@@ -717,6 +777,7 @@ visplane_t *R_FindPlane(cmapcontext_t &cmapcontext,
       check->viewxf =  cb_viewpoint.x * tcos + cb_viewpoint.y * tsin;
       check->viewyf = -cb_viewpoint.x * tsin + cb_viewpoint.y * tcos;
       check->viewzf =  cb_viewpoint.z;
+      R_calcPlane(cb_viewpoint, check);
    }
    
    {
@@ -1152,10 +1213,8 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
       else
          span.fg2rgb = span.bg2rgb = nullptr;
 
-      if(pl->pslope)
          plane.slope = &pl->rslope;
-      else
-         plane.slope = nullptr;
+
          
       {
          int rw, rh;
@@ -1218,25 +1277,12 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
 
       R_planeLight(plane);
 
-      plane.MapFunc = (plane.slope == nullptr ? R_mapPlane : R_mapSlope);
+      plane.MapFunc = (pl->pslope == nullptr ? R_mapPlane : R_mapSlope);
 
-      if(plane.slope == nullptr)
+      for(int x = pl->minx; x <= stop; x++)
       {
-         for(int x = pl->minx; x <= stop; x++)
-         {
-            R_makeSpans(
-               flatfunc, slopefunc, span, slopespan, plane, spanstart, x,
-               pl->top[x - 1], pl->bottom[x - 1], pl->top[x], pl->bottom[x]
-            );
-         }
-      }
-      else
-      {
-         for(int x = pl->minx; x <= stop; x++)
-         {
-            if(pl->top[x] <= pl->bottom[x])
-               plane.MapFunc(flatfunc, slopefunc, span, slopespan, plane, x, pl->top[x], pl->bottom[x]);
-         }
+         if(pl->top[x] <= pl->bottom[x])
+            plane.MapFunc(flatfunc, slopefunc, span, slopespan, plane, x, pl->top[x], pl->bottom[x]);
       }
    }
 }
