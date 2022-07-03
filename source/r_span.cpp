@@ -629,6 +629,7 @@ struct Sampler
    }
 #endif
 
+// FIXME: These may need to be removed and the span drawers made 100% accurate
 #define SPANJUMP 16
 #define INTERPSTEP (0.0625f)
 
@@ -643,11 +644,11 @@ static inline void R_drawSlopeUnmasked_8(const cb_slopespan_t &slopespan, const 
    int count;
    fixed_t mapindex = 0;
 
-   if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
+   if((count = slopespan.y2 - slopespan.y1 + 1) < 0)
       return;
 
    byte *src  = (byte *)slopespan.source;
-   byte *dest = R_ADDRESS(slopespan.x1, slopespan.y);
+   byte *dest = R_ADDRESS(slopespan.x, slopespan.y1);
 
    while(count >= SPANJUMP)
    {
@@ -676,7 +677,7 @@ static inline void R_drawSlopeUnmasked_8(const cb_slopespan_t &slopespan, const 
       {
          colormap = cb_slopespan_t::colormap[mapindex++];
          *dest = Sampler::Sample(colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]], *dest, span);
-         dest  += linesize;
+         dest  += 1;
          ufrac += ustep;
          vfrac += vstep;
       }
@@ -710,7 +711,7 @@ static inline void R_drawSlopeUnmasked_8(const cb_slopespan_t &slopespan, const 
       {
          colormap = cb_slopespan_t::colormap[mapindex++];
          *dest = Sampler::Sample(colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]], *dest, span);
-         dest  += linesize;
+         dest  += 1;
          ufrac += ustep;
          vfrac += vstep;
       }
@@ -728,11 +729,11 @@ static inline void R_drawSlopeUnmasked_8_GEN(const cb_slopespan_t &slopespan, co
    int count;
    fixed_t mapindex = 0;
 
-   if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
+   if((count = slopespan.y2 - slopespan.y1 + 1) < 0)
       return;
 
    byte *src  = (byte *)slopespan.source;
-   byte *dest = R_ADDRESS(slopespan.x1, slopespan.y);
+   byte *dest = R_ADDRESS(slopespan.x, slopespan.y1);
 
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
@@ -765,7 +766,7 @@ static inline void R_drawSlopeUnmasked_8_GEN(const cb_slopespan_t &slopespan, co
       {
          colormap = cb_slopespan_t::colormap[mapindex++];
          *dest = Sampler::Sample(colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]], *dest, span);
-         dest  += linesize;
+         dest  += 1;
          ufrac += ustep;
          vfrac += vstep;
       }
@@ -799,7 +800,7 @@ static inline void R_drawSlopeUnmasked_8_GEN(const cb_slopespan_t &slopespan, co
       {
          colormap = cb_slopespan_t::colormap[mapindex++];
          *dest = Sampler::Sample(colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]], *dest, span);
-         dest  += linesize;
+         dest  += 1;
          ufrac += ustep;
          vfrac += vstep;
       }
@@ -863,11 +864,11 @@ static inline void R_drawSlopeMasked_8(const cb_slopespan_t &slopespan, const cb
    int count;
    fixed_t mapindex = 0;
 
-   if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
+   if((count = slopespan.y2 - slopespan.y1 + 1) < 0)
       return;
 
    byte *src  = (byte *)slopespan.source;
-   byte *dest = R_ADDRESS(slopespan.x1, slopespan.y);
+   byte *dest = R_ADDRESS(slopespan.x, slopespan.y1);
 
    const byte *alpham = (byte *)span.alphamask;
    unsigned int i;
@@ -902,7 +903,7 @@ static inline void R_drawSlopeMasked_8(const cb_slopespan_t &slopespan, const cb
          i = ((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask);
          if(MASK(alpham, i))
             *dest = Sampler::Sample(colormap[src[i]], *dest, span);
-         dest  += linesize;
+         dest  += 1;
          ufrac += ustep;
          vfrac += vstep;
       }
@@ -938,7 +939,7 @@ static inline void R_drawSlopeMasked_8(const cb_slopespan_t &slopespan, const cb
          i = ((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask);
          if(MASK(alpham, i))
             *dest = Sampler::Sample(colormap[src[i]], *dest, span);
-         dest  += linesize;
+         dest  += 1;
          ufrac += ustep;
          vfrac += vstep;
       }
@@ -956,11 +957,11 @@ static inline void R_drawSlopeMasked_8_GEN(const cb_slopespan_t &slopespan, cons
    int count;
    fixed_t mapindex = 0;
 
-   if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
+   if((count = slopespan.y2 - slopespan.y1 + 1) < 0)
       return;
 
    byte *src  = (byte *)slopespan.source;
-   byte *dest = R_ADDRESS(slopespan.x1, slopespan.y);
+   byte *dest = R_ADDRESS(slopespan.x, slopespan.y1);
 
    const byte *alpham = (byte *)span.alphamask;
    unsigned int i;
@@ -998,7 +999,7 @@ static inline void R_drawSlopeMasked_8_GEN(const cb_slopespan_t &slopespan, cons
          i = ((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask);
          if(MASK(alpham, i))
             *dest = Sampler::Sample(colormap[src[i]], *dest, span);
-         dest  += linesize;
+         dest  += 1;
          ufrac += ustep;
          vfrac += vstep;
       }
@@ -1034,7 +1035,7 @@ static inline void R_drawSlopeMasked_8_GEN(const cb_slopespan_t &slopespan, cons
          i = ((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask);
          if(MASK(alpham, i))
             *dest = Sampler::Sample(colormap[src[i]], *dest, span);
-         dest  += linesize;
+         dest  += 1;
          ufrac += ustep;
          vfrac += vstep;
       }

@@ -152,7 +152,7 @@ VALLOCATION(spanstart)
 
 VALLOCATION(slopespan)
 {
-   size_t size = sizeof(lighttable_t *) * w;
+   size_t size = sizeof(lighttable_t *) * h;
    cb_slopespan_t::colormap = ecalloctag(lighttable_t **, 1, size, PU_VALLOC, nullptr);
 }
 
@@ -264,8 +264,8 @@ static void R_slopeLights(const cb_plane_t &plane, int len, double startcmap, do
    fixed_t map, map2, step;
 
 #ifdef RANGECHECK
-   if(len > video.width)
-      I_Error("R_slopeLights: len > video.width (%d)\n", len);
+   if(len > video.height)
+      I_Error("R_slopeLights: len > video.height (%d)\n", len);
 #endif
 
    if(plane.fixedcolormap)
@@ -305,15 +305,15 @@ static void R_slopeLights(const cb_plane_t &plane, int len, double startcmap, do
 //
 static void R_mapSlope(const R_FlatFunc, const R_SlopeFunc slopefunc,
                        cb_span_t &span, cb_slopespan_t &slopespan, const cb_plane_t &plane,
-                       int y, int x1, int x2)
+                       int x, int y1, int y2)
 {
    rslope_t *slope = plane.slope;
-   int count = x2 - x1;
+   int count = y2 - y1;
    v3double_t s;
    double map1, map2;
 
-   s.x = x1 - view.xcenter;
-   s.y = y - view.ycenter + 1;
+   s.x = x - view.xcenter;
+   s.y = y1 - view.ycenter + 1;
    s.z = view.xfoc;
 
    slopespan.iufrac = M_DotVec3(&s, &slope->A) * static_cast<double>(plane.tex->width) *
@@ -322,29 +322,29 @@ static void R_mapSlope(const R_FlatFunc, const R_SlopeFunc slopefunc,
                       static_cast<double>(plane.xscale);
    slopespan.idfrac = M_DotVec3(&s, &slope->C);
 
-   slopespan.iustep = slope->A.x * static_cast<double>(plane.tex->width) *
+   slopespan.iustep = slope->A.y * static_cast<double>(plane.tex->width) *
                       static_cast<double>(plane.yscale);
-   slopespan.ivstep = slope->B.x * static_cast<double>(plane.tex->height) *
+   slopespan.ivstep = slope->B.y * static_cast<double>(plane.tex->height) *
                       static_cast<double>(plane.xscale);
-   slopespan.idstep = slope->C.x;
+   slopespan.idstep = slope->C.y;
 
    slopespan.source = plane.source;
-   slopespan.x1 = x1;
-   slopespan.x2 = x2;
-   slopespan.y = y;
+   slopespan.x  = x;
+   slopespan.y1 = y1;
+   slopespan.y2 = y2;
 
    // Setup lighting
 
    map1 = 256.0 - (slope->shade - slope->plight * slopespan.idfrac);
    if(count > 0)
    {
-      double id = slopespan.idfrac + slopespan.idstep * (x2 - x1);
+      double id = slopespan.idfrac + slopespan.idstep * (y2 - y1);
       map2 = 256.0 - (slope->shade - slope->plight * id);
    }
    else
       map2 = map1;
 
-   R_slopeLights(plane, x2 - x1 + 1, (256.0 - map1), (256.0 - map2));
+   R_slopeLights(plane, y2 - y1 + 1, (256.0 - map1), (256.0 - map2));
 
    slopefunc(slopespan, span);
 }
@@ -1220,12 +1220,23 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
 
       plane.MapFunc = (plane.slope == nullptr ? R_mapPlane : R_mapSlope);
 
-      for(int x = pl->minx; x <= stop; x++)
+      if(plane.slope == nullptr)
       {
-         R_makeSpans(
-            flatfunc, slopefunc, span, slopespan, plane, spanstart, x,
-            pl->top[x - 1], pl->bottom[x - 1], pl->top[x], pl->bottom[x]
-         );
+         for(int x = pl->minx; x <= stop; x++)
+         {
+            R_makeSpans(
+               flatfunc, slopefunc, span, slopespan, plane, spanstart, x,
+               pl->top[x - 1], pl->bottom[x - 1], pl->top[x], pl->bottom[x]
+            );
+         }
+      }
+      else
+      {
+         for(int x = pl->minx; x <= stop; x++)
+         {
+            if(pl->top[x] <= pl->bottom[x])
+               plane.MapFunc(flatfunc, slopefunc, span, slopespan, plane, x, pl->top[x], pl->bottom[x]);
+         }
       }
    }
 }

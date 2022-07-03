@@ -96,7 +96,7 @@ struct cb_span_t
 
 struct cb_slopespan_t
 {
-   int y, x1, x2;
+   int x, y1, y2;
 
    double iufrac, ivfrac, idfrac;
    double iustep, ivstep, idstep;
