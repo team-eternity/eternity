@@ -1289,7 +1289,6 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter,
 //  early out on solid lines?
 //
 // out:
-//  newsubsec
 //  zref.floor
 //  zref.ceiling
 //  tmdropoffz
