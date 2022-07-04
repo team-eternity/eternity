@@ -570,6 +570,12 @@ static void R_DrawSpanAddMasked_8_GEN(const cb_span_t &span)
 // Slope span drawers
 //
 
+enum class maskedSlope_e : bool
+{
+   NO = false,
+   YES = true
+};
+
 struct Sampler
 {
    struct Solid
@@ -632,8 +638,25 @@ struct Sampler
 #define SPANJUMP 16
 #define INTERPSTEP (0.0625f)
 
-template<typename Sampler, int xshift, int xmask, int ymask>
-static inline void R_drawSlopeUnmasked_8(const cb_slopespan_t &slopespan, const cb_span_t &span)
+#define DO_SLOPE_SAMPLE() \
+   do                                                                               \
+   {                                                                                \
+      colormap = cb_slopespan_t::colormap[mapindex++];                              \
+      const unsigned int i = ((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask); \
+      if constexpr(masked == maskedSlope_e::NO)                                     \
+         *dest = Sampler::Sample(colormap[src[i]], *dest, span);                    \
+      else                                                                          \
+      {                                                                             \
+         if(MASK(alpham, i))                                                        \
+            *dest = Sampler::Sample(colormap[src[i]], *dest, span);                 \
+      }                                                                             \
+      dest  += linesize;                                                            \
+      ufrac += ustep;                                                               \
+      vfrac += vstep;                                                               \
+   } while(false)
+
+template<maskedSlope_e masked, typename Sampler, int xshift, int xmask, int ymask>
+static inline void R_drawSlope_8(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
    double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
    double ius = slopespan.iustep, ivs = slopespan.ivstep;
@@ -648,6 +671,8 @@ static inline void R_drawSlopeUnmasked_8(const cb_slopespan_t &slopespan, const 
 
    byte *src  = (byte *)slopespan.source;
    byte *dest = R_ADDRESS(slopespan.x1, slopespan.y);
+
+   const byte *alpham = static_cast<const byte *>(span.alphamask);
 
    while(count >= SPANJUMP)
    {
@@ -674,11 +699,7 @@ static inline void R_drawSlopeUnmasked_8(const cb_slopespan_t &slopespan, const 
       incount = SPANJUMP;
       while(incount--)
       {
-         colormap = cb_slopespan_t::colormap[mapindex++];
-         *dest = Sampler::Sample(colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]], *dest, span);
-         dest  += linesize;
-         ufrac += ustep;
-         vfrac += vstep;
+         DO_SLOPE_SAMPLE();
       }
 
       count -= SPANJUMP;
@@ -708,17 +729,13 @@ static inline void R_drawSlopeUnmasked_8(const cb_slopespan_t &slopespan, const 
       incount = count;
       while(incount--)
       {
-         colormap = cb_slopespan_t::colormap[mapindex++];
-         *dest = Sampler::Sample(colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]], *dest, span);
-         dest  += linesize;
-         ufrac += ustep;
-         vfrac += vstep;
+         DO_SLOPE_SAMPLE();
       }
    }
 }
 
-template<typename Sampler>
-static inline void R_drawSlopeUnmasked_8_GEN(const cb_slopespan_t &slopespan, const cb_span_t &span)
+template<maskedSlope_e masked, typename Sampler>
+static inline void R_drawSlope_8_GEN(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
    double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
    double ius = slopespan.iustep, ivs = slopespan.ivstep;
@@ -733,6 +750,8 @@ static inline void R_drawSlopeUnmasked_8_GEN(const cb_slopespan_t &slopespan, co
 
    byte *src  = (byte *)slopespan.source;
    byte *dest = R_ADDRESS(slopespan.x1, slopespan.y);
+
+   const byte *alpham = static_cast<const byte *>(span.alphamask);
 
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
@@ -763,11 +782,7 @@ static inline void R_drawSlopeUnmasked_8_GEN(const cb_slopespan_t &slopespan, co
       incount = SPANJUMP;
       while(incount--)
       {
-         colormap = cb_slopespan_t::colormap[mapindex++];
-         *dest = Sampler::Sample(colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]], *dest, span);
-         dest  += linesize;
-         ufrac += ustep;
-         vfrac += vstep;
+         DO_SLOPE_SAMPLE();
       }
 
       count -= SPANJUMP;
@@ -797,11 +812,7 @@ static inline void R_drawSlopeUnmasked_8_GEN(const cb_slopespan_t &slopespan, co
       incount = count;
       while(incount--)
       {
-         colormap = cb_slopespan_t::colormap[mapindex++];
-         *dest = Sampler::Sample(colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]], *dest, span);
-         dest  += linesize;
-         ufrac += ustep;
-         vfrac += vstep;
+         DO_SLOPE_SAMPLE();
       }
    }
 }
@@ -809,12 +820,12 @@ static inline void R_drawSlopeUnmasked_8_GEN(const cb_slopespan_t &slopespan, co
 template<int xshift, int xmask, int ymask>
 static void R_drawSlopeSolid_8(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
-   R_drawSlopeUnmasked_8<Sampler::Solid, xshift, xmask, ymask>(slopespan, span);
+   R_drawSlope_8<maskedSlope_e::NO, Sampler::Solid, xshift, xmask, ymask>(slopespan, span);
 }
 
 static void R_drawSlopeSolid_8_GEN(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
-   R_drawSlopeUnmasked_8_GEN<Sampler::Solid>(slopespan, span);
+   R_drawSlope_8_GEN<maskedSlope_e::NO, Sampler::Solid>(slopespan, span);
 }
 
 //==============================================================================
@@ -825,12 +836,12 @@ static void R_drawSlopeSolid_8_GEN(const cb_slopespan_t &slopespan, const cb_spa
 template<int xshift, int xmask, int ymask>
 static void R_drawSlopeTL_8(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
-   R_drawSlopeUnmasked_8<Sampler::Translucent, xshift, xmask, ymask>(slopespan, span);
+   R_drawSlope_8<maskedSlope_e::NO, Sampler::Translucent, xshift, xmask, ymask>(slopespan, span);
 }
 
 static void R_drawSlopeTL_8_GEN(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
-   R_drawSlopeUnmasked_8_GEN<Sampler::Translucent>(slopespan, span);
+   R_drawSlope_8_GEN<maskedSlope_e::NO, Sampler::Translucent>(slopespan, span);
 }
 
 // Additive blending
@@ -838,12 +849,12 @@ static void R_drawSlopeTL_8_GEN(const cb_slopespan_t &slopespan, const cb_span_t
 template<int xshift, int xmask, int ymask>
 static void R_drawSlopeAdd_8(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
-   R_drawSlopeUnmasked_8<Sampler::Additive, xshift, xmask, ymask>(slopespan, span);
+   R_drawSlope_8<maskedSlope_e::NO, Sampler::Additive, xshift, xmask, ymask>(slopespan, span);
 }
 
 static void R_drawSlopeAdd_8_GEN(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
-   R_drawSlopeUnmasked_8_GEN<Sampler::Additive>(slopespan, span);
+   R_drawSlope_8_GEN<maskedSlope_e::NO, Sampler::Additive>(slopespan, span);
 }
 
 //==============================================================================
@@ -852,226 +863,37 @@ static void R_drawSlopeAdd_8_GEN(const cb_slopespan_t &slopespan, const cb_span_
 // already transparent there)
 //
 
-template<typename Sampler, int xshift, int xmask, int ymask>
-static inline void R_drawSlopeMasked_8(const cb_slopespan_t &slopespan, const cb_span_t &span)
-{
-   double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
-   double ius = slopespan.iustep, ivs = slopespan.ivstep;
-   double id  = slopespan.idfrac, ids = slopespan.idstep;
-
-   byte *colormap;
-   int count;
-   fixed_t mapindex = 0;
-
-   if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
-      return;
-
-   byte *src  = (byte *)slopespan.source;
-   byte *dest = R_ADDRESS(slopespan.x1, slopespan.y);
-
-   const byte *alpham = (byte *)span.alphamask;
-   unsigned int i;
-
-   while(count >= SPANJUMP)
-   {
-      double ustart, uend;
-      double vstart, vend;
-      double mulstart, mulend;
-      unsigned int ustep, vstep, ufrac, vfrac;
-      int incount;
-
-      mulstart = 65536.0f / id;
-      id += ids * SPANJUMP;
-      mulend = 65536.0f / id;
-
-      ufrac = static_cast<unsigned int>(ustart = iu * mulstart);
-      vfrac = static_cast<unsigned int>(vstart = iv * mulstart);
-      iu += ius * SPANJUMP;
-      iv += ivs * SPANJUMP;
-      uend = iu * mulend;
-      vend = iv * mulend;
-
-      ustep = static_cast<unsigned int>((uend - ustart) * INTERPSTEP);
-      vstep = static_cast<unsigned int>((vend - vstart) * INTERPSTEP);
-
-      incount = SPANJUMP;
-      while(incount--)
-      {
-         // TODO: Unroll? Check to see if unrolling is any faster, though
-         colormap = cb_slopespan_t::colormap[mapindex++];
-         i = ((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask);
-         if(MASK(alpham, i))
-            *dest = Sampler::Sample(colormap[src[i]], *dest, span);
-         dest  += linesize;
-         ufrac += ustep;
-         vfrac += vstep;
-      }
-
-      count -= SPANJUMP;
-   }
-   if(count > 0)
-   {
-      double ustart, uend;
-      double vstart, vend;
-      double mulstart, mulend;
-      unsigned int ustep, vstep, ufrac, vfrac;
-      int incount;
-
-      mulstart = 65536.0f / id;
-      id += ids * count;
-      mulend = 65536.0f / id;
-
-      ufrac = static_cast<unsigned int>(ustart = iu * mulstart);
-      vfrac = static_cast<unsigned int>(vstart = iv * mulstart);
-      iu += ius * count;
-      iv += ivs * count;
-      uend = iu * mulend;
-      vend = iv * mulend;
-
-      ustep = static_cast<unsigned int>((uend - ustart) / count);
-      vstep = static_cast<unsigned int>((vend - vstart) / count);
-
-      incount = count;
-      while(incount--)
-      {
-         colormap = cb_slopespan_t::colormap[mapindex++];
-         i = ((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask);
-         if(MASK(alpham, i))
-            *dest = Sampler::Sample(colormap[src[i]], *dest, span);
-         dest  += linesize;
-         ufrac += ustep;
-         vfrac += vstep;
-      }
-   }
-}
-
-template<typename Sampler>
-static inline void R_drawSlopeMasked_8_GEN(const cb_slopespan_t &slopespan, const cb_span_t &span)
-{
-   double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
-   double ius = slopespan.iustep, ivs = slopespan.ivstep;
-   double id  = slopespan.idfrac, ids = slopespan.idstep;
-
-   byte *colormap;
-   int count;
-   fixed_t mapindex = 0;
-
-   if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
-      return;
-
-   byte *src  = (byte *)slopespan.source;
-   byte *dest = R_ADDRESS(slopespan.x1, slopespan.y);
-
-   const byte *alpham = (byte *)span.alphamask;
-   unsigned int i;
-
-   unsigned int xshift = span.xshift;
-   unsigned int xmask  = span.xmask;
-   unsigned int ymask  = span.ymask;
-
-   while(count >= SPANJUMP)
-   {
-      double ustart, uend;
-      double vstart, vend;
-      double mulstart, mulend;
-      unsigned int ustep, vstep, ufrac, vfrac;
-      int incount;
-
-      mulstart = 65536.0f / id;
-      id += ids * SPANJUMP;
-      mulend = 65536.0f / id;
-
-      ufrac = static_cast<unsigned int>(ustart = iu * mulstart);
-      vfrac = static_cast<unsigned int>(vstart = iv * mulstart);
-      iu += ius * SPANJUMP;
-      iv += ivs * SPANJUMP;
-      uend = iu * mulend;
-      vend = iv * mulend;
-
-      ustep = static_cast<unsigned int>((uend - ustart) * INTERPSTEP);
-      vstep = static_cast<unsigned int>((vend - vstart) * INTERPSTEP);
-
-      incount = SPANJUMP;
-      while(incount--)
-      {
-         colormap = cb_slopespan_t::colormap[mapindex++];
-         i = ((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask);
-         if(MASK(alpham, i))
-            *dest = Sampler::Sample(colormap[src[i]], *dest, span);
-         dest  += linesize;
-         ufrac += ustep;
-         vfrac += vstep;
-      }
-
-      count -= SPANJUMP;
-   }
-   if(count > 0)
-   {
-      double ustart, uend;
-      double vstart, vend;
-      double mulstart, mulend;
-      unsigned int ustep, vstep, ufrac, vfrac;
-      int incount;
-
-      mulstart = 65536.0f / id;
-      id += ids * count;
-      mulend = 65536.0f / id;
-
-      ufrac = static_cast<unsigned int>(ustart = iu * mulstart);
-      vfrac = static_cast<unsigned int>(vstart = iv * mulstart);
-      iu += ius * count;
-      iv += ivs * count;
-      uend = iu * mulend;
-      vend = iv * mulend;
-
-      ustep = static_cast<unsigned int>((uend - ustart) / count);
-      vstep = static_cast<unsigned int>((vend - vstart) / count);
-
-      incount = count;
-      while(incount--)
-      {
-         colormap = cb_slopespan_t::colormap[mapindex++];
-         i = ((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask);
-         if(MASK(alpham, i))
-            *dest = Sampler::Sample(colormap[src[i]], *dest, span);
-         dest  += linesize;
-         ufrac += ustep;
-         vfrac += vstep;
-      }
-   }
-}
-
 template<int xshift, int xmask, int ymask>
 static void R_drawSlopeSolidMasked_8(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
-   R_drawSlopeMasked_8<Sampler::Solid, xshift, xmask, ymask>(slopespan, span);
+   R_drawSlope_8<maskedSlope_e::YES, Sampler::Solid, xshift, xmask, ymask>(slopespan, span);
 }
 
 static void R_drawSlopeSolidMasked_8_GEN(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
-   R_drawSlopeMasked_8_GEN<Sampler::Solid>(slopespan, span);
+   R_drawSlope_8_GEN<maskedSlope_e::YES, Sampler::Solid>(slopespan, span);
 }
 
 template<int xshift, int xmask, int ymask>
 static void R_drawSlopeTLMasked_8(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
-   R_drawSlopeMasked_8<Sampler::Translucent, xshift, xmask, ymask>(slopespan, span);
+   R_drawSlope_8<maskedSlope_e::YES, Sampler::Translucent, xshift, xmask, ymask>(slopespan, span);
 }
 
 static void R_drawSlopeTLMasked_8_GEN(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
-   R_drawSlopeMasked_8_GEN<Sampler::Translucent>(slopespan, span);
+   R_drawSlope_8_GEN<maskedSlope_e::YES, Sampler::Translucent>(slopespan, span);
 }
 
 template<int xshift, int xmask, int ymask>
 static void R_drawSlopeAddMasked_8(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
-   R_drawSlopeMasked_8<Sampler::Additive, xshift, xmask, ymask>(slopespan, span);
+   R_drawSlope_8<maskedSlope_e::YES, Sampler::Additive, xshift, xmask, ymask>(slopespan, span);
 }
 
 static void R_drawSlopeAddMasked_8_GEN(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
-   R_drawSlopeMasked_8_GEN<Sampler::Additive>(slopespan, span);
+   R_drawSlope_8_GEN<maskedSlope_e::YES, Sampler::Additive>(slopespan, span);
 }
 
 

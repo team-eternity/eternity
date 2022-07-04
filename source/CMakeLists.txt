@@ -778,7 +778,7 @@ endif()
 
 if(MSVC)
    target_compile_options(eternity PUBLIC
-                          "/MP" "/utf-8")
+                          "$<$<CONFIG:Debug>:/ZI>" "/MP" "/utf-8")
 
     if(NOT CMAKE_GENERATOR_TOOLSET MATCHES "_xp")
         target_compile_options(eternity PUBLIC "/permissive-")
