@@ -225,7 +225,7 @@ static void R_mapPlane(const R_FlatFunc flatfunc, const R_SlopeFunc, cb_span_t &
       const double xfrac = (
          ((plane.pviewx + plane.xoffset) * plane.xscale) +
          (plane.pviewsin * realy * plane.xscale) +
-         ((static_cast<double>(x1) - view.xcenter) * xstep)
+         ((double(x1) - view.xcenter) * xstep)
       ) * plane.fixedunitx;
 
       span.xfrac = R_doubleToUint32(xfrac);
@@ -233,7 +233,7 @@ static void R_mapPlane(const R_FlatFunc flatfunc, const R_SlopeFunc, cb_span_t &
       const double yfrac = (
          ((-plane.pviewy + plane.yoffset) * plane.yscale) +
          (-plane.pviewcos * realy * plane.yscale) +
-         ((static_cast<double>(x1) - view.xcenter) * ystep)
+         ((double(x1) - view.xcenter) * ystep)
       ) * plane.fixedunity;
 
       span.yfrac = R_doubleToUint32(yfrac);
@@ -316,16 +316,12 @@ static void R_mapSlope(const R_FlatFunc, const R_SlopeFunc slopefunc,
    s.y = y - view.ycenter + 1;
    s.z = view.xfoc;
 
-   slopespan.iufrac = M_DotVec3(&s, &slope->A) * static_cast<double>(plane.tex->width) *
-                      static_cast<double>(plane.yscale);
-   slopespan.ivfrac = M_DotVec3(&s, &slope->B) * static_cast<double>(plane.tex->height) *
-                      static_cast<double>(plane.xscale);
+   slopespan.iufrac = M_DotVec3(&s, &slope->A) * double(plane.tex->width) * double(plane.yscale);
+   slopespan.ivfrac = M_DotVec3(&s, &slope->B) * double(plane.tex->height) * double(plane.xscale);
    slopespan.idfrac = M_DotVec3(&s, &slope->C);
 
-   slopespan.iustep = slope->A.x * static_cast<double>(plane.tex->width) *
-                      static_cast<double>(plane.yscale);
-   slopespan.ivstep = slope->B.x * static_cast<double>(plane.tex->height) *
-                      static_cast<double>(plane.xscale);
+   slopespan.iustep = slope->A.x * double(plane.tex->width) * double(plane.yscale);
+   slopespan.ivstep = slope->B.x * double(plane.tex->height) * double(plane.xscale);
    slopespan.idstep = slope->C.x;
 
    slopespan.source = plane.source;
