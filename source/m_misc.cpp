@@ -402,7 +402,7 @@ default_t defaults[] =
                0, 0, 1, default_t::wad_game, "Monsters get stuck on doortracks"),
 
    DEFAULT_INT("comp_pursuit", &default_comp[comp_pursuit], &comp[comp_pursuit],
-               0, 0, 1, default_t::wad_game, "Monsters don't give up pursuit of targets"),
+               1, 0, 1, default_t::wad_game, "Monsters don't give up pursuit of targets"),
 
    DEFAULT_INT("comp_vile", &default_comp[comp_vile], &comp[comp_vile],
                1, 0, 1, default_t::wad_game, "Arch-Vile resurrects invincible ghosts"),
