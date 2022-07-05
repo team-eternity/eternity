@@ -1,0 +1,132 @@
+//
+// Visual C++ Hint File for Eternity Engine
+//
+// All defines are copied from Eternity verbatim
+// and so are under the GPLv3.
+//
+
+//
+// d_keywds.h
+//
+
+#define E_FORMAT_STRING(p) _Printf_format_string_ p
+#define E_PRINTF(f, a)
+
+//
+// e_rtti.h
+//
+
+#define RTTI_VIRTUAL_CONSTRUCTOR(name) \
+   virtual name *newObject() const { return new name ; }
+
+#define RTTI_ABSTRACT_CONSTRUCTOR(name) \
+   virtual name *newObject() const { return nullptr; }
+
+#define DECLARE_RTTI_TYPE_CTOR(name, inherited, ctor) \
+public:                                               \
+   typedef inherited Super;                           \
+   class Type : public Super::Type                    \
+   {                                                  \
+   protected:                                         \
+      Type(char const *pName, Super::Type *pParent)   \
+       : Super::Type( pName, pParent ) {}             \
+   public:                                            \
+      typedef name Class;                             \
+      friend class name;                              \
+      ctor                                            \
+   };                                                 \
+   static Type StaticType;                            \
+   virtual const Type *getDynamicType() const override\
+   {                                                  \
+      return &StaticType;                             \
+   }                                                  \
+private:
+
+#define DECLARE_RTTI_TYPE(name, inherited) \
+   DECLARE_RTTI_TYPE_CTOR(name, inherited, RTTI_VIRTUAL_CONSTRUCTOR(name))
+
+#define DECLARE_ABSTRACT_TYPE(name, inherited) \
+   DECLARE_RTTI_TYPE_CTOR(name, inherited, RTTI_ABSTRACT_CONSTRUCTOR(name))
+
+#define IMPLEMENT_RTTI_TYPE(name) \
+name::Type name::StaticType(#name, &Super::StaticType);
+
+
+//
+// p_tick.h
+//
+
+#define DECLARE_THINKER_TYPE(name, inherited) DECLARE_RTTI_TYPE(name, inherited)
+#define IMPLEMENT_THINKER_TYPE(name) IMPLEMENT_RTTI_TYPE(name)
+
+//
+// c_runcmd.h
+//
+
+#define CONSOLE_COMMAND(name, flags)                     \
+   static void Handler_ ## name(void);                   \
+   static command_t Cmd_ ## name = { # name, ct_command, \
+                  flags, nullptr, Handler_ ## name,      \
+                  0, nullptr };                          \
+   static CCmdRegistry regCmd ## name (&Cmd_ ## name);   \
+   static void Handler_ ## name(void)
+
+#define CONSOLE_VARIABLE(name, variable, flags)                \
+   static void Handler_ ## name(void);                         \
+   static command_t Cmd_ ## name = { # name, ct_variable,      \
+                   flags, &var_ ## variable, Handler_ ## name, \
+                   0, nullptr };                               \
+   static CCmdRegistry regCmd ## name (&Cmd_ ## name);         \
+   static void Handler_ ## name(void)
+
+#define CONSOLE_NETCMD(name, flags, netcmd)              \
+   static void Handler_ ## name(void);                   \
+   static command_t Cmd_ ## name = { # name, ct_command, \
+                  (flags) | cf_netvar, nullptr,          \
+                  Handler_ ## name, netcmd, nullptr };   \
+   static CCmdRegistry regCmd ## name (&Cmd_ ## name);   \
+   static void Handler_ ## name()
+
+#define CONSOLE_NETVAR(name, variable, flags, netcmd)      \
+   static void Handler_ ## name(void);                     \
+   static command_t Cmd_ ## name = { # name, ct_variable,  \
+                   cf_netvar | (flags), &var_ ## variable, \
+                   Handler_ ## name, netcmd, nullptr };    \
+   static CCmdRegistry regCmd ## name (&Cmd_ ## name);     \
+   static void Handler_ ## name(void)
+
+#define CONSOLE_CONST(name, variable)                         \
+    static command_t Cmd_ ## name = { # name, ct_constant, 0, \
+       &var_ ## variable, nullptr, 0, nullptr };              \
+    static CCmdRegistry regCmd ## name (&Cmd_ ## name);
+
+#define VARIABLE(name, defaultvar, type, min, max, strings)  \
+        variable_t var_ ## name = { &name, defaultvar,       \
+                  type, min, max, strings, 0, 0, nullptr, nullptr};
+
+#define VARIABLE_INT(name, defaultvar, min, max, strings)    \
+        variable_t var_ ## name = variable_t::makeInt(&name, defaultvar, min, max, strings);
+
+#define VARIABLE_STRING(name, defaultvar, max)               \
+        variable_t var_ ## name = variable_t::makeString(&name, defaultvar, max);
+
+#define VARIABLE_CHARARRAY(name, defaultvar, max)            \
+        variable_t var_ ## name = { name, defaultvar,        \
+                  vt_chararray, 0, max, nullptr, 0, 0, nullptr, nullptr};
+
+#define VARIABLE_BOOLEAN(name, defaultvar, strings)          \
+        variable_t var_ ## name = variable_t::makeBoolInt(&name, defaultvar, strings);
+
+#define VARIABLE_TOGGLE(name, defaultvar, strings)           \
+        variable_t var_ ## name = variable_t::makeBool(&name, defaultvar, strings);
+
+#define VARIABLE_FLOAT(name, defaultvar, min, max)           \
+        variable_t var_ ## name = variable_t::makeDouble(&name, defaultvar, min, max);
+
+// basic variable_t creators for constants.
+
+#define CONST_INT(name)                                      \
+        variable_t var_ ## name = variable_t::makeConstInt(&name);
+
+#define CONST_STRING(name)                                   \
+        variable_t var_ ## name = variable_t::makeConstString(&name);
