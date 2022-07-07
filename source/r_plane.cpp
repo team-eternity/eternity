@@ -850,7 +850,7 @@ static void R_makeSpans(const R_FlatFunc flatfunc, const R_SlopeFunc slopefunc,
 //
 // Get the sky column from input parms. Shared by the sky drawers here.
 //
-inline static int32_t R_getSkyColum(angle_t an, int x, angle_t flip, int offset)
+inline static int32_t R_getSkyColumn(angle_t an, int x, angle_t flip, int offset)
 {
    return ((((an + xtoviewangle[x]) ^ flip) / (1 << (ANGLETOSKYSHIFT - FRACBITS))) + offset)
          / FRACUNIT;
@@ -899,7 +899,7 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    {
       if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
       {
-         column.source = R_GetRawColumn(skyTexture2, R_getSkyColum(an, x, 0, offset2));
+         column.source = R_GetRawColumn(skyTexture2, R_getSkyColumn(an, x, 0, offset2));
 
          colfunc(column);
       }
@@ -919,7 +919,7 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    {
       if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
       {
-         column.source = R_GetRawColumn(skyTexture, R_getSkyColum(an, x, 0, offset));
+         column.source = R_GetRawColumn(skyTexture, R_getSkyColumn(an, x, 0, offset));
 
          colfunc(column);
       }
@@ -1046,7 +1046,7 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
 
       if(column.y1 <= column.y2)
       {
-         column.source = R_GetRawColumn(texture, R_getSkyColum(an, x, flip, offset));
+         column.source = R_GetRawColumn(texture, R_getSkyColumn(an, x, flip, offset));
          colfunc(column);
       }
    }
