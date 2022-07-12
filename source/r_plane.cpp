@@ -859,7 +859,7 @@ inline static int32_t R_getSkyColumn(angle_t an, int x, angle_t flip, int offset
 // haleyjd: moved here from r_newsky.c
 static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visplane_t *pl)
 {
-   cb_column_t column = {};
+   cb_column_t column{};
 
    R_ColumnFunc colfunc = r_column_engine->DrawColumn;
 
@@ -950,7 +950,7 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
 
    angle_t an = viewangle;
 
-   cb_column_t column = {};
+   cb_column_t column{};
    bool tilevert = false;
    if(pl->picnum & PL_SKYFLAT)
    {
@@ -1080,9 +1080,9 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
       int        stop, light;
       int        stylenum;
 
-      cb_span_t      span      = {};
-      cb_slopespan_t slopespan = {};
-      cb_plane_t     plane     = {};
+      cb_span_t      span{};
+      cb_slopespan_t slopespan{};
+      cb_plane_t     plane{};
 
       R_FlatFunc  flatfunc  = R_Throw;
       R_SlopeFunc slopefunc = R_ThrowSlope;

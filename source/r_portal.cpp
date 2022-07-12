@@ -849,7 +849,7 @@ struct savedview_t
 
 inline static savedview_t R_getLastView(const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint)
 {
-   savedview_t last = {};
+   savedview_t last{};
    last.pos = { viewpoint.x, viewpoint.y, viewpoint.z };
    last.posf = { cb_viewpoint.x, cb_viewpoint.y, cb_viewpoint.z };
    last.angle = viewpoint.angle;

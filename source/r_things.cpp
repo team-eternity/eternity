@@ -748,7 +748,7 @@ static void R_drawVisSprite(const contextbounds_t &bounds, vissprite_t *vis,
    float     baseclip = 0;
    int       w;
 
-   cb_column_t column = {};
+   cb_column_t column{};
 
    if(vis->patch == -1)
    {

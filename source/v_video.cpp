@@ -403,7 +403,7 @@ void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch,
 			            bool flipped)
 {
    PatchInfo pi;
-   cb_patch_column_t patchcol = {};
+   cb_patch_column_t patchcol{};
 
    pi.x = x;
    pi.y = y;
@@ -429,7 +429,7 @@ void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch,
                            byte *outr, bool flipped)
 {
    PatchInfo pi;
-   cb_patch_column_t patchcol = {};
+   cb_patch_column_t patchcol{};
 
    pi.x = x;
    pi.y = y;
@@ -456,7 +456,7 @@ void V_DrawPatchTranslatedLit(int x, int y, VBuffer *buffer, patch_t *patch,
                               byte *outr, byte *lighttable, bool flipped)
 {
    PatchInfo pi;
-   cb_patch_column_t patchcol = {};
+   cb_patch_column_t patchcol{};
 
    pi.x = x;
    pi.y = y;
@@ -502,7 +502,7 @@ void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch,
                    byte *outr, int tl)
 {
    PatchInfo pi;
-   cb_patch_column_t patchcol = {};
+   cb_patch_column_t patchcol{};
 
    // is invisible?
    if(tl == 0)
@@ -551,7 +551,7 @@ void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch,
                     byte *outr, int tl)
 {
    PatchInfo pi;
-   cb_patch_column_t patchcol = {};
+   cb_patch_column_t patchcol{};
 
    // if translucency is off, fall back to translated
    if(!general_translucency)
