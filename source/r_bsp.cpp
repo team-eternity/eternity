@@ -2188,7 +2188,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 {
    const portalrender_t &portalrender = portalcontext.portalrender;
 
-   sector_t tempsec{};
+   sector_t tempsec; // If this being uninitialised causes future issues then add `static thread_local`
 
    float x1, x2;
    float i1, i2, pstep;
