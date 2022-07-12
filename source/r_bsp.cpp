@@ -501,7 +501,7 @@ const sector_t *R_FakeFlat(const fixed_t viewz, const sector_t *sec, sector_t *t
    {
       // SoM: This was moved here for use with portals
       // Replace sector being drawn, with a copy to be hacked
-      *tempsec = *sec;
+      memcpy(tempsec, sec, sizeof(sector_t));
    }
 
    if(sec->heightsec != -1)
