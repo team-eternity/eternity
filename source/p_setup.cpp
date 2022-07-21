@@ -724,11 +724,9 @@ static void P_LoadSectors(int lumpnum)
 }
 
 //
-// P_CreateSectorInterps
-//
 // haleyjd 01/05/14: Create sector interpolation structures.
 //
-static void P_CreateSectorInterps()
+static void P_createSectorInterps()
 {
    sectorinterps = estructalloctag(sectorinterp_t, numsectors, PU_LEVEL);
 
@@ -738,6 +736,17 @@ static void P_CreateSectorInterps()
       sectorinterps[i].prevceilingheight  = sectors[i].srf.ceiling.height;
       sectorinterps[i].prevfloorheightf   = sectors[i].srf.floor.heightf;
       sectorinterps[i].prevceilingheightf = sectors[i].srf.ceiling.heightf;
+
+      if(sectors[i].srf.floor.slope)
+      {
+         sectorinterps[i].prevfloorslopez  = sectors[i].srf.floor.slope->o.z;
+         sectorinterps[i].prevfloorslopezf = sectors[i].srf.floor.slope->of.z;
+      }
+      if(sectors[i].srf.ceiling.slope)
+      {
+         sectorinterps[i].prevceilingslopez  = sectors[i].srf.ceiling.slope->o.z;
+         sectorinterps[i].prevceilingslopezf = sectors[i].srf.ceiling.slope->of.z;
+      }
    }
 }
 
@@ -3717,9 +3726,6 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // possible error: missing flats
    CHECK_ERROR();
 
-   // haleyjd 01/05/14: create sector interpolation data
-   P_CreateSectorInterps();
-
    // IOANCH 20151212: UDMF
    if(isUdmf)
       udmf.loadSidedefs();
@@ -3872,6 +3878,10 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    // SoM: Deferred specials that need to be spawned after P_SpawnSpecials
    P_SpawnDeferredSpecials(setupSettings);
+
+   // haleyjd 01/05/14: create sector interpolation data
+   // MaxW: After specials are spawned so slope data is set
+   P_createSectorInterps();
 
    // haleyjd
    P_InitLightning();
