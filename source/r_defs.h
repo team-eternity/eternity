@@ -224,15 +224,9 @@ struct sectorinterp_t
    float   backceilingheightf;
 
    // as the above sets of values, but for slope origin Z
-   // FIXME: Should we bother with the fixed_t properties?
-   // TODO: Should this be put into a separate struct and referenced by pointers?
-   fixed_t prevfloorslopez;
-   fixed_t prevceilingslopez;
    float   prevfloorslopezf;
    float   prevceilingslopezf;
 
-   fixed_t backfloorslopez;
-   fixed_t backceilingslopez;
    float   backfloorslopezf;
    float   backceilingslopezf;
 };

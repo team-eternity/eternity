@@ -265,15 +265,9 @@ void P_SaveSectorPositions()
       si.prevceilingheightf = sec.srf.ceiling.heightf;
 
       if(sec.srf.floor.slope)
-      {
-         si.prevfloorslopez  = sec.srf.floor.slope->o.z;
          si.prevfloorslopezf = sec.srf.floor.slope->of.z;
-      }
       if(sec.srf.ceiling.slope)
-      {
-         si.prevceilingslopez  = sec.srf.ceiling.slope->o.z;
          si.prevceilingslopezf = sec.srf.ceiling.slope->of.z;
-      }
    }
 }
 
@@ -290,15 +284,9 @@ void P_SaveSectorPosition(const sector_t &sec)
    si.prevceilingheightf = sec.srf.ceiling.heightf;
 
    if(sec.srf.floor.slope)
-   {
-      si.prevfloorslopez  = sec.srf.floor.slope->o.z;
       si.prevfloorslopezf = sec.srf.floor.slope->of.z;
-   }
    if(sec.srf.ceiling.slope)
-   {
-      si.prevceilingslopez  = sec.srf.ceiling.slope->o.z;
       si.prevceilingslopezf = sec.srf.ceiling.slope->of.z;
-   }
 }
 
 //

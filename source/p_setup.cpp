@@ -738,15 +738,9 @@ static void P_createSectorInterps()
       sectorinterps[i].prevceilingheightf = sectors[i].srf.ceiling.heightf;
 
       if(sectors[i].srf.floor.slope)
-      {
-         sectorinterps[i].prevfloorslopez  = sectors[i].srf.floor.slope->o.z;
          sectorinterps[i].prevfloorslopezf = sectors[i].srf.floor.slope->of.z;
-      }
       if(sectors[i].srf.ceiling.slope)
-      {
-         sectorinterps[i].prevceilingslopez  = sectors[i].srf.ceiling.slope->o.z;
          sectorinterps[i].prevceilingslopezf = sectors[i].srf.ceiling.slope->of.z;
-      }
    }
 }
 
