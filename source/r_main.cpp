@@ -919,12 +919,12 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
             sec.srf.ceiling.heightf = M_FixedToFloat(sec.srf.ceiling.height);
 
             // as above, but only for slope origin Z
-            if(pslope_t *slope = sec.srf.floor.slope; slope && si.prevfloorheight != sec.srf.floor.height)
+            if(pslope_t *slope = sec.srf.floor.slope; slope && si.prevfloorslopezf != slope->of.z)
             {
                si.backfloorslopezf = slope->of.z;
                slope->of.z = lerpCoordf(view.lerp, si.prevfloorslopezf, slope->of.z);
             }
-            if(pslope_t *slope = sec.srf.ceiling.slope; si.prevceilingheight != sec.srf.ceiling.height)
+            if(pslope_t *slope = sec.srf.ceiling.slope; slope && si.prevceilingslopezf != slope->of.z)
             {
                si.backceilingslopezf = slope->of.z;
                slope->of.z = lerpCoordf(view.lerp, si.prevceilingslopezf, slope->of.z);
