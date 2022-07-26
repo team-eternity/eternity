@@ -427,7 +427,7 @@ void A_SorcererRise(actionargs_t *actionargs)
    mo->angle = actor->angle;
 
    // transfer friendliness
-   mo->flags = (mo->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
+   P_transferFriendship(*mo, *actor);
 
    // add to appropriate thread
    mo->updateThinker();
@@ -556,12 +556,12 @@ void A_Srcr2Attack(actionargs_t *actionargs)
       mo = P_SpawnMissileAngle(actor, sor2fx2Type, 
                                actor->angle - ANG45, 
                                FRACUNIT / 2, z);
-      mo->flags = (mo->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
+      P_transferFriendship(*mo, *actor);
       
       mo = P_SpawnMissileAngle(actor, sor2fx2Type,
                                actor->angle + ANG45, 
                                FRACUNIT / 2, z);
-      mo->flags = (mo->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
+      P_transferFriendship(*mo, *actor);
    }
    else
    {
@@ -607,7 +607,7 @@ void A_GenWizard(actionargs_t *actionargs)
    }
 
    // transfer friendliness
-   mo->flags = (mo->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
+   P_transferFriendship(*mo, *actor);
 
    // add to appropriate thread
    mo->updateThinker();

@@ -1250,7 +1250,7 @@ void P_NightmareRespawn(Mobj* mobj)
       mo->flags |= MF_AMBUSH;
 
    // killough 11/98: transfer friendliness from deceased
-   mo->flags = (mo->flags & ~MF_FRIEND) | (mobj->flags & MF_FRIEND);
+   P_transferFriendship(*mo, *mobj);
 
    mo->reactiontime = 18;
 

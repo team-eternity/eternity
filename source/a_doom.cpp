@@ -1153,7 +1153,7 @@ static void A_painShootSkull(Mobj *actor, const angle_t angle, int thingType,
    }                                                                // phares
 
    // killough 7/20/98: PEs shoot lost souls with the same friendliness
-   newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
+   P_transferFriendship(*newmobj, *actor);
 
    // killough 8/29/98: add to appropriate thread
    newmobj->updateThinker();
@@ -1521,7 +1521,7 @@ void A_BrainSpit(actionargs_t *actionargs)
    newmobj->reactiontime = (int16_t)(((targ->y-mo->y)/newmobj->momy)/newmobj->state->tics);
 
    // killough 7/18/98: brain friendliness is transferred
-   newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (mo->flags & MF_FRIEND);
+   P_transferFriendship(*newmobj, *mo);
    
    // killough 8/29/98: add to appropriate thread
    newmobj->updateThinker();
@@ -1598,7 +1598,7 @@ void A_SpawnFly(actionargs_t *actionargs)
    newmobj = P_SpawnMobj(targ->x, targ->y, targ->z, type);
    
    // killough 7/18/98: brain friendliness is transferred
-   newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (mo->flags & MF_FRIEND);
+   P_transferFriendship(*newmobj, *mo);
 
    // killough 8/29/98: add to appropriate thread
    newmobj->updateThinker();

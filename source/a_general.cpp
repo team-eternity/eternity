@@ -187,7 +187,7 @@ void A_Spawn(actionargs_t *actionargs)
                      (mo->state->misc2 << FRACBITS) + mo->z,
                      thingtype);
       if(newmobj)
-         newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (mo->flags & MF_FRIEND);
+         P_transferFriendship(*newmobj, *mo);
    }
 }
 
@@ -1320,7 +1320,7 @@ void A_ThingSummon(actionargs_t *actionargs)
    }                                                         
    
    // spawn thing with same friendliness
-   newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
+   P_transferFriendship(*newmobj, *actor);
 
    // killough 8/29/98: add to appropriate thread
    newmobj->updateThinker();
