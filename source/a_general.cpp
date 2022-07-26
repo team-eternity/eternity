@@ -593,6 +593,7 @@ void A_SpawnEx(actionargs_t *actionargs)
       mo->remove();
    else
    {
+      P_transferFriendship(*mo, *actor);
       mo->angle = angle;
       mo->momx = xvel;
       mo->momy = yvel;
