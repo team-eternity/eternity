@@ -81,6 +81,15 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter,
 
 bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit = nullptr);
 
+//
+// Context for PIT_CheckLine
+//
+struct pitcheckline_t
+{
+   PODCollection<line_t *> *pushhit;   // list of pushed lines
+   bool haveslopes;  // mark this if any slope got detected
+};
+
 bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context);  // ioanch: used in the code
 
 void P_SlideMove(Mobj *mo);

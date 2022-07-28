@@ -40,6 +40,7 @@
 #include "m_compare.h"
 #include "p_info.h"
 #include "p_inter.h"
+#include "p_map.h"
 #include "p_map3d.h"
 #include "p_mobjcol.h"
 #include "p_portal.h"
@@ -668,15 +669,59 @@ bool P_BlockedAsMonster(const Mobj &mo)
 }
 
 //
+// Given a line opening structure and a linedef, update a clip structure
+//
+static void P_updateFromOpening(const lineopening_t &open, const line_t *ld,
+                                doom_mapinter_t &inter)
+{
+   if(open.height.ceiling < inter.zref.ceiling)
+   {
+      inter.zref.ceiling = open.height.ceiling;
+      inter.ceilingline = ld;
+      inter.blockline = ld;
+   }
+
+   if(open.height.floor > inter.zref.floor)
+   {
+      inter.zref.floor = open.height.floor;
+      inter.zref.floorgroupid = open.bottomgroupid;
+
+      inter.floorline = ld;          // killough 8/1/98: remember floor linedef
+      inter.blockline = ld;
+   }
+
+   if(open.lowfloor < inter.zref.dropoff)
+      inter.zref.dropoff = open.lowfloor;
+
+   // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
+   // touching 3DMidTex lines.
+   if(demo_version >= 331 && open.touch3dside)
+      inter.zref.dropoff = inter.zref.floor;
+
+   if(open.sec.floor > inter.zref.secfloor)
+      inter.zref.secfloor = open.sec.floor;
+   if(open.sec.ceiling < inter.zref.secceil)
+      inter.zref.secceil = open.sec.ceiling;
+
+   // SoM 11/6/02: AGHAH
+   if(inter.zref.floor > inter.zref.passfloor)
+      inter.zref.passfloor = inter.zref.floor;
+   if(inter.zref.ceiling < inter.zref.passceil)
+      inter.zref.passceil = inter.zref.ceiling;
+}
+
+//
 // PIT_CheckLine
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted
 //
 bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
 {
-   auto pushhit = static_cast<PODCollection<line_t *> *>(context);
-   if(clip.bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   || 
-      clip.bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  || 
+   auto pcl = static_cast<pitcheckline_t *>(context);
+   PODCollection<line_t *> *pushhit = pcl->pushhit;
+
+   if(clip.bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   ||
+      clip.bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  ||
       clip.bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] || 
       clip.bbox[BOXBOTTOM] >= ld->bbox[BOXTOP])
       return true; // didn't hit it
@@ -746,49 +791,31 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
 
    // set openrange, opentop, openbottom
    // these define a 'window' from one sector to another across this line
-   
-   clip.open = P_LineOpening(ld, clip.thing);
 
-   // adjust floor & ceiling heights
-   
-   if(clip.open.height.ceiling < clip.zref.ceiling)
+   // At this point we have backsector
+
+   if(ld->frontsector->srf.floor.slope || ld->frontsector->srf.ceiling.slope ||
+      ld->backsector->srf.floor.slope || ld->backsector->srf.ceiling.slope)
    {
-      clip.zref.ceiling = clip.open.height.ceiling;
-      clip.ceilingline = ld;
-      clip.blockline = ld;
+      // Find the two intersections with the bounding box
+      v2fixed_t i1, i2;
+      P_ExactBoxLinePoints(clip.bbox, *ld, i1, i2);
+
+      // Update from both openings
+      P_updateFromOpening(P_LineOpening(ld, clip.thing, &i1), ld, clip);
+      P_updateFromOpening(P_LineOpening(ld, clip.thing, &i2), ld, clip);
+
+      pcl->haveslopes = true;
+   }
+   else
+   {
+      // Assign to "clip" for compatibility
+      clip.open = P_LineOpening(ld, clip.thing);
+      P_updateFromOpening(clip.open, ld, clip);
    }
 
-   if(clip.open.height.floor > clip.zref.floor)
-   {
-      clip.zref.floor = clip.open.height.floor;
-      clip.zref.floorgroupid = clip.open.bottomgroupid;
-
-      clip.floorline = ld;          // killough 8/1/98: remember floor linedef
-      clip.blockline = ld;
-   }
-
-   if(clip.open.lowfloor < clip.zref.dropoff)
-      clip.zref.dropoff = clip.open.lowfloor;
-
-   // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
-   // touching 3DMidTex lines.
-   if(demo_version >= 331 && clip.open.touch3dside)
-      clip.zref.dropoff = clip.zref.floor;
-
-   if(clip.open.sec.floor > clip.zref.secfloor)
-      clip.zref.secfloor = clip.open.sec.floor;
-   if(clip.open.sec.ceiling < clip.zref.secceil)
-      clip.zref.secceil = clip.open.sec.ceiling;
-
-   // SoM 11/6/02: AGHAH
-   if(clip.zref.floor > clip.zref.passfloor)
-      clip.zref.passfloor = clip.zref.floor;
-   if(clip.zref.ceiling < clip.zref.passceil)
-      clip.zref.passceil = clip.zref.ceiling;
-
-   // ioanch 20160113: moved to a special function
    P_CollectSpechits(ld, pushhit);
-   
+
    return true;
 }
 
@@ -1320,12 +1347,32 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    if(!vanilla_heretic)
       validcount++;
 
+   pitcheckline_t pcl = {};
+   pcl.pushhit = pushhit;
+   pcl.haveslopes = sector->srf.floor.slope || sector->srf.ceiling.slope;
    for(bx = xl; bx <= xh; bx++)
    {
       for(by = yl; by <= yh; by++)
       {
-         if(!P_BlockLinesIterator(bx, by, PIT_CheckLine, R_NOGROUP, pushhit))
+         if(!P_BlockLinesIterator(bx, by, PIT_CheckLine, R_NOGROUP, &pcl))
             return false; // doesn't fit
+      }
+   }
+
+   if(pcl.haveslopes)
+   {
+      // Now also check the corners!
+      v2fixed_t corners[4] =
+      {
+         { clip.bbox[BOXLEFT], clip.bbox[BOXBOTTOM] },
+         { clip.bbox[BOXLEFT], clip.bbox[BOXTOP] },
+         { clip.bbox[BOXRIGHT], clip.bbox[BOXTOP] },
+         { clip.bbox[BOXRIGHT], clip.bbox[BOXBOTTOM] },
+      };
+      for(v2fixed_t corner : corners)
+      {
+         lineopening_t open = P_SlopeOpening(corner);
+         P_updateFromOpening(open, nullptr, clip);
       }
    }
 

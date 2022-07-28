@@ -601,8 +601,12 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
       gGroupVisit[clip.thing->groupid] = true;
    }
 
+   pitcheckline_t pcl = {};
+   pcl.pushhit = pushhit;
+   pcl.haveslopes = bottomsector->srf.floor.slope || topsector->srf.ceiling.slope;
+
    // ioanch 20160112: portal-aware
-   if(!P_TransPortalBlockWalker(bbox, thing->groupid, true, pushhit, 
+   if(!P_TransPortalBlockWalker(bbox, thing->groupid, true, &pcl,
       [](int x, int y, int groupid, void *data) -> bool
    {
       // ioanch 20160112: try 3D portal check-line
@@ -619,7 +623,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
    {
       // they will not change the spechit list
       if(gGroupVisit[clip.portalhit[i].ld->frontsector->groupid])
-         if(!PIT_CheckLine3D(clip.portalhit[i].ld, clip.portalhit[i].po, pushhit))
+         if(!PIT_CheckLine3D(clip.portalhit[i].ld, clip.portalhit[i].po, &pcl))
             return false;
    }
 

@@ -33,6 +33,7 @@
 #include "e_exdata.h"
 #include "ev_specials.h"
 #include "m_bbox.h"
+#include "m_compare.h"
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_maputl.h"
@@ -113,6 +114,85 @@ int P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld)
         (P_PointOnLineSide(tmbox[BOXLEFT], tmbox[BOXBOTTOM], ld)) ==
         (p = P_PointOnLineSide(tmbox[BOXRIGHT], tmbox[BOXTOP], ld)) ? p : -1;
     }
+}
+
+//
+// Assuming P_BoxOnLineSide returned -1 and the line is not outside the box, find the inter-
+// section points. If any point is outside the line, then just use the endpoint of the line.
+//
+void P_ExactBoxLinePoints(const fixed_t *tmbox, const line_t &line, v2fixed_t &i1,
+                          v2fixed_t &i2)
+{
+   //
+   // Helper function to get the mid value between left and right depending on two ratios
+   //
+   auto findMiddle = [](fixed_t dstart, fixed_t dend, fixed_t min, fixed_t max)
+   {
+      if(dstart < dend) // safeguard against microscopic dstart or dend
+         return max - FixedMul(max - min, FixedDiv(dend, dstart + dend));
+      return min + FixedMul(max - min, FixedDiv(dstart, dstart + dend));
+   };
+
+   switch(line.slopetype)
+   {
+      case ST_HORIZONTAL:
+         i1 = { emax(tmbox[BOXLEFT], line.bbox[BOXLEFT]), line.v1->y };
+         i2 = { emin(tmbox[BOXRIGHT], line.bbox[BOXRIGHT]), line.v1->y };
+         return;
+      case ST_VERTICAL:
+         i1 = { line.v1->x, emax(tmbox[BOXBOTTOM], line.bbox[BOXBOTTOM]) };
+         i2 = { line.v1->x, emin(tmbox[BOXTOP], line.bbox[BOXTOP]) };
+         return;
+      default:
+         break;
+   }
+
+   divline_t dl;
+   v2fixed_t corners[2];
+   if(line.slopetype == ST_POSITIVE)
+   {
+      dl = {{ line.bbox[BOXLEFT], line.bbox[BOXBOTTOM] },
+         { line.bbox[BOXRIGHT] - line.bbox[BOXLEFT],
+            line.bbox[BOXTOP] - line.bbox[BOXBOTTOM] }};
+      corners[0] = { tmbox[BOXLEFT], tmbox[BOXBOTTOM] };
+      corners[1] = { tmbox[BOXRIGHT], tmbox[BOXTOP] };
+   }
+   else
+   {
+      dl = {{ line.bbox[BOXLEFT], line.bbox[BOXTOP] },
+         { line.bbox[BOXRIGHT] - line.bbox[BOXLEFT],
+            line.bbox[BOXBOTTOM] - line.bbox[BOXTOP] }};
+      corners[0] = { tmbox[BOXLEFT], tmbox[BOXTOP] };
+      corners[1] = { tmbox[BOXRIGHT], tmbox[BOXBOTTOM] };
+   }
+   fixed_t dstart, dend;
+   dstart = corners[0].x - dl.x;
+   dend = dl.x + dl.dx - corners[0].x;
+   i1.x = corners[0].x;
+   i1.y = findMiddle(dstart, dend, dl.y, dl.y + dl.dy);
+   if((dstart ^ dend) < 0 || i1.y < tmbox[BOXBOTTOM] || i1.y > tmbox[BOXTOP])
+   {
+      dstart = corners[0].y - dl.y;
+      dend = dl.y + dl.dy - corners[0].y;
+      i1.x = findMiddle(dstart, dend, dl.x, dl.x + dl.dx);
+      i1.y = corners[0].y;
+   }
+   if(i1.x < line.bbox[BOXLEFT] || i1.y < line.bbox[BOXBOTTOM] || i1.y > line.bbox[BOXTOP])
+      i1 = dl.v;
+
+   dstart = corners[1].y - dl.y;
+   dend = dl.y + dl.dy - corners[1].y;
+   i2.x = findMiddle(dstart, dend, dl.x, dl.x + dl.dx);
+   i2.y = corners[1].y;
+   if(i1.x < tmbox[BOXLEFT] || i1.x > tmbox[BOXRIGHT])
+   {
+      dstart = corners[1].x - dl.x;
+      dend = dl.x + dl.dx - corners[1].x;
+      i2.x = corners[1].x;
+      i2.y = findMiddle(dstart, dend, dl.y, dl.y + dl.dy);
+   }
+   if(i2.x > line.bbox[BOXRIGHT] || i2.y < line.bbox[BOXBOTTOM] || i2.y > line.bbox[BOXTOP])
+      i2 = dl.v + dl.dv;
 }
 
 //
@@ -293,6 +373,24 @@ fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1)
          return 0;
       return fixed_t((int64_t(v1->x - v2->x) * v1->dy - int64_t(v1->y - v2->y) * v1->dx) / den);
    }
+}
+
+//
+// Get opening on a point, against slopes
+//
+lineopening_t P_SlopeOpening(v2fixed_t pos)
+{
+   const sector_t &sector = *R_PointInSubsector(pos.x, pos.y)->sector;
+   lineopening_t open = {};
+   open.height.floor = sector.srf.floor.getZAt(pos);
+   open.height.ceiling = sector.srf.ceiling.getZAt(pos);
+   open.sec = open.height; // do not consider 3dmidtex here
+   open.range = open.height.ceiling - open.height.floor;
+   open.bottomgroupid = sector.groupid;
+   open.lowfloor = open.height.floor;
+   open.floorpic = sector.srf.floor.pic;
+   open.touch3dside = 0;
+   return open;
 }
 
 //
