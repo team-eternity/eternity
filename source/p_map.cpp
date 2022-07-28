@@ -1207,7 +1207,7 @@ bool Check_Sides(Mobj *actor, int x, int y, mobjtype_t type)
 // P_CheckPosition basics. Returns the sector in the designated area.
 //
 void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter,
-                     const sector_t *&bottomsector, const sector_t *&topsector)
+   const sector_t *&bottomsector, const sector_t *&topsector)
 {
    inter.thing = &thing;
 
@@ -1241,7 +1241,7 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter,
       v2fixed_t totaldelta;
       bottomsector = P_ExtremeSectorAtPoint(x, y, surf_floor, &sector, &totaldelta);
       inter.zref.floor = inter.zref.dropoff =
-            bottomsector->srf.floor.getZAt(x + totaldelta.x, y + totaldelta.y);
+         bottomsector->srf.floor.getZAt(x + totaldelta.x, y + totaldelta.y);
       inter.zref.floorgroupid = bottomsector->groupid;
    }
    else
