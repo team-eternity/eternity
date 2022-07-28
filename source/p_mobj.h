@@ -809,6 +809,14 @@ inline static bool P_mobjOnSurface(const Mobj &mobj)
                                         mobj.flags & MF_SPAWNCEILING && mobj.flags & MF_NOGRAVITY);
 }
 
+//
+// Common procedure to copy a spawner's friendship status to a spawnee
+//
+inline static void P_transferFriendship(Mobj &target, const Mobj &source)
+{
+   target.flags = (target.flags & ~MF_FRIEND) | (source.flags & MF_FRIEND);
+}
+
 #endif
 
 //----------------------------------------------------------------------------

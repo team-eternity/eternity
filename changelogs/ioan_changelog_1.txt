@@ -8,6 +8,11 @@ Since v4.02.00 "Forseti"
 ========================
 
 --------------------------------------------------------------------------------
+26.07.2022
+
+BUGFIX: A_SpawnEx was not transferring the FRIEND flag.
+
+--------------------------------------------------------------------------------
 06.11.2021
 
 FEATURE: Introduced UMAPINFO (cross-port map definition) lump support for

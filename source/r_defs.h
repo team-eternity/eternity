@@ -222,6 +222,13 @@ struct sectorinterp_t
    fixed_t backceilingheight;
    float   backfloorheightf;
    float   backceilingheightf;
+
+   // as the above sets of values, but for slope origin Z
+   float   prevfloorslopezf;
+   float   prevceilingslopezf;
+
+   float   backfloorslopezf;
+   float   backceilingslopezf;
 };
 
 //
