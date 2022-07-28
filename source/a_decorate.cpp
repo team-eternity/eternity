@@ -649,5 +649,49 @@ void A_SeekerMissile(actionargs_t *actionargs)
    }
 }
 
+//
+// A_ChangeVelocity flag info
+//
+enum changevel_flags : unsigned int
+{
+   CVF_RELATIVE = 0x00000001,
+   CVF_REPLACE  = 0x00000002,
+};
+static dehflags_t changevel_flaglist[] =
+{
+   { "CVF_RELATIVE", CVF_RELATIVE },
+   { "CVF_REPLACE",  CVF_REPLACE  },
+   { nullptr,    0            }
+};
+static dehflagset_t changevel_flagset =
+{
+   changevel_flaglist, // flaglist
+   0,                      // mode
+};
+
+static const char *kwds_changevel_ptr[] =
+{
+   "AAPTR_DEFAULT",
+};
+
+static argkeywd_t changevelptrkwds = { kwds_changevel_ptr, earrlen(kwds_changevel_ptr) };
+
+//
+// Changes current velocity
+// A_ChangeVelocity(x, y, z, flags, ptr)
+//
+void A_ChangeVelocity(actionargs_t *actionargs)
+{
+   arglist_t *args  = actionargs->args;
+   const v3fixed_t vel =
+   {
+      E_ArgAsFixed(args, 0, 0),
+      E_ArgAsFixed(args, 1, 0),
+      E_ArgAsFixed(args, 2, 0),
+   };
+   unsigned flags = E_ArgAsFlags(args, 3, &changevel_flagset);
+   E_ArgAsKwd(<#arglist_t *al#>, <#int index#>, <#const argkeywd_t *kw#>, <#int defvalue#>)
+}
+
 // EOF
 
