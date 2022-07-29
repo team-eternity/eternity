@@ -554,6 +554,18 @@ static int untouched(const line_t *ld)
      (tmbbox[BOXBOTTOM] = y-clip.thing->radius) >= ld->bbox[BOXTOP] ||
      P_BoxOnLineSide(tmbbox, ld) != -1;
 }
+static int untouched(const line_t *ld, const linkoffset_t *link)
+{
+   fixed_t x, y, tmbbox[4];
+   return
+     (tmbbox[BOXRIGHT] = (x = clip.thing->x + link->x) + clip.thing->radius) <=
+     ld->bbox[BOXLEFT] ||
+     (tmbbox[BOXLEFT] = x - clip.thing->radius) >= ld->bbox[BOXRIGHT] ||
+     (tmbbox[BOXTOP] = (y = clip.thing->y + link->y) + clip.thing->radius) <=
+     ld->bbox[BOXBOTTOM] ||
+     (tmbbox[BOXBOTTOM] = y - clip.thing->radius) >= ld->bbox[BOXTOP] ||
+     P_BoxOnLineSide(tmbbox, ld) != -1;
+}
 
 //
 // SpechitOverrun
@@ -711,6 +723,68 @@ static void P_updateFromOpening(const lineopening_t &open, const line_t *ld,
 }
 
 //
+// Handle mid-texture solid line interaction with clip.thing.
+// Returns true if PIT_CheckLine[3D] should return "output".
+//
+bool P_CheckLineBlocksThing(line_t *ld, const linkoffset_t *link,
+                            PODCollection<line_t *> *pushhit, bool &output)
+{
+   if(!link)
+      link = &zerolink;
+
+   // killough 7/24/98: allow player to move out of 1s wall, to prevent sticking
+   // haleyjd 04/30/11: treat block-everything lines like they're 1S
+   if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL)) // one sided line
+   {
+      clip.blockline = ld;
+      bool result = clip.unstuck && !untouched(ld, link) &&
+         FixedMul(clip.x-clip.thing->x,ld->dy) > FixedMul(clip.y-clip.thing->y,ld->dx);
+      if(!result && pushhit && ld->special &&
+         full_demo_version >= make_full_version(401, 0))
+      {
+         pushhit->add(ld);
+      }
+      output = result;
+      return true;
+   }
+
+   // killough 8/10/98: allow bouncing objects to pass through as missiles
+   if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
+   {
+      if((ld->flags & ML_BLOCKING) ||
+         (mbf21_temp && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
+      {
+         // explicitly blocking everything
+         // or blocking player
+         bool result = clip.unstuck && !untouched(ld, link);
+         if(!result && pushhit && ld->special &&
+            full_demo_version >= make_full_version(401, 0))
+         {
+            pushhit->add(ld);
+         }
+         output = result;
+         return true;
+      }
+      // killough 8/1/98: allow escape
+
+      // killough 8/9/98: monster-blockers don't affect friends
+      // SoM 9/7/02: block monsters standing on 3dmidtex only
+      // MaxW: Land-monster blockers gotta be factored in, too
+      if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
+         (
+            ld->flags & ML_BLOCKMONSTERS ||
+            (mbf21_temp && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
+            )
+         )
+      {
+         output = false;
+         return true; // block monsters only
+      }
+   }
+   return false;  // not returning
+}
+
+//
 // PIT_CheckLine
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted
@@ -739,55 +813,9 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
    // so two special lines that are only 8 pixels apart
    // could be crossed in either order.
 
-   // killough 7/24/98: allow player to move out of 1s wall, to prevent sticking
-   // haleyjd 04/30/11: treat block-everything lines like they're 1S
-   if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL)) // one sided line
-   {
-      clip.blockline = ld;
-      bool result = clip.unstuck && !untouched(ld) &&
-         FixedMul(clip.x-clip.thing->x,ld->dy) > FixedMul(clip.y-clip.thing->y,ld->dx);
-      if(!result && pushhit && ld->special &&
-         full_demo_version >= make_full_version(401, 0))
-      {
-         pushhit->add(ld);
-      }
-      return result;
-   }
-
-   // killough 8/10/98: allow bouncing objects to pass through as missiles
-   if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
-   {
-      if((ld->flags & ML_BLOCKING) ||
-         (mbf21_temp && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
-      {
-         // explicitly blocking everything
-         // or blocking player
-         bool result = clip.unstuck && !untouched(ld);  // killough 8/1/98: allow escape
-
-         // When it's Hexen, keep side 0 even when hitting from backside
-         if(!result && pushhit && ld->special &&
-            full_demo_version >= make_full_version(401, 0))
-         {
-            pushhit->add(ld);
-         }
-         // TODO: add the other push special checks.
-         // TODO: add for P_Map3D and P_PortalClip CPP files.
-         return result;
-      }
-
-      // killough 8/9/98: monster-blockers don't affect friends
-      // SoM 9/7/02: block monsters standing on 3dmidtex only
-      // MaxW: Land-monster blockers gotta be factored in, too
-      if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
-         (
-            ld->flags & ML_BLOCKMONSTERS ||
-            (mbf21_temp && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
-         )
-        )
-      {
-         return false; // block monsters only
-      }
-   }
+   bool thingblock;
+   if(P_CheckLineBlocksThing(ld, nullptr, pushhit, thingblock))
+      return thingblock;
 
    // set openrange, opentop, openbottom
    // these define a 'window' from one sector to another across this line

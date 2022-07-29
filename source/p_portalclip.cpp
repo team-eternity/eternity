@@ -42,24 +42,6 @@
 #include "r_portal.h"
 
 //
-// untouchedViaPortals
-//
-// ioanch 20160112: linked portal aware version of untouched from p_map.cpp
-//
-static int untouchedViaOffset(line_t *ld, const linkoffset_t *link)
-{
-   fixed_t x, y, tmbbox[4];
-   return
-     (tmbbox[BOXRIGHT] = (x = clip.thing->x + link->x) + clip.thing->radius) <=
-     ld->bbox[BOXLEFT] ||
-     (tmbbox[BOXLEFT] = x - clip.thing->radius) >= ld->bbox[BOXRIGHT] ||
-     (tmbbox[BOXTOP] = (y = clip.thing->y + link->y) + clip.thing->radius) <=
-     ld->bbox[BOXBOTTOM] ||
-     (tmbbox[BOXBOTTOM] = y - clip.thing->radius) >= ld->bbox[BOXTOP] ||
-     P_BoxOnLineSide(tmbbox, ld) != -1;
-}
-
-//
 // P_getLineHeights
 //
 // ioanch 20160112: helper function to get line extremities
@@ -331,51 +313,11 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    if(linebottom <= thingz && linetop >= thingtopz)
    {
       // classic Doom behaviour
-      if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL)) // one sided line
-      {
-         clip.blockline = ld;
-         bool result = clip.unstuck && !untouchedViaOffset(ld, link) &&
-            FixedMul(clip.x - clip.thing->x, ld->dy) >
-            FixedMul(clip.y - clip.thing->y, ld->dx);
-         if(!result && pushhit && ld->special &&
-            full_demo_version >= make_full_version(401, 0))
-         {
-            pushhit->add(ld);
-         }
-         return result;
-      }
 
       // killough 8/10/98: allow bouncing objects to pass through as missiles
-      if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
-      {
-         if((ld->flags & ML_BLOCKING) ||
-            (mbf21_temp && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
-         {
-            // explicitly blocking everything
-            // or blocking player
-            bool result = clip.unstuck && !untouchedViaOffset(ld, link);
-            if(!result && pushhit && ld->special &&
-               full_demo_version >= make_full_version(401, 0))
-            {
-               pushhit->add(ld);
-            }
-            return result;
-         }
-         // killough 8/1/98: allow escape
-
-         // killough 8/9/98: monster-blockers don't affect friends
-         // SoM 9/7/02: block monsters standing on 3dmidtex only
-         // MaxW: Land-monster blockers gotta be factored in, too
-         if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
-            (
-               ld->flags & ML_BLOCKMONSTERS ||
-               (mbf21_temp && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
-               )
-            )
-         {
-            return false; // block monsters only
-         }
-      }
+      bool thingblock;
+      if(P_CheckLineBlocksThing(ld, link, pushhit, thingblock))
+         return thingblock;
    }
    else
    {

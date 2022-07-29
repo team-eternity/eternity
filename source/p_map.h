@@ -26,6 +26,7 @@
 #ifndef P_MAP_H__
 #define P_MAP_H__
 
+#include "linkoffs.h"
 #include "m_collection.h"
 #include "m_surf.h"
 #include "tables.h"
@@ -80,6 +81,8 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter,
                      const sector_t *&bottomsector, const sector_t *&topsector);
 
 bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit = nullptr);
+bool P_CheckLineBlocksThing(line_t *ld, const linkoffset_t *link,
+                            PODCollection<line_t *> *pushhit, bool &output);
 
 //
 // Context for PIT_CheckLine
