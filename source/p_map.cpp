@@ -721,7 +721,7 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
    PODCollection<line_t *> *pushhit = pcl->pushhit;
 
    if(clip.bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   ||
-      clip.bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  || 
+      clip.bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  ||
       clip.bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] || 
       clip.bbox[BOXBOTTOM] >= ld->bbox[BOXTOP])
       return true; // didn't hit it
