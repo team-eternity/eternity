@@ -722,7 +722,7 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
 
    if(clip.bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   ||
       clip.bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  ||
-      clip.bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] || 
+      clip.bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] ||
       clip.bbox[BOXBOTTOM] >= ld->bbox[BOXTOP])
       return true; // didn't hit it
 
