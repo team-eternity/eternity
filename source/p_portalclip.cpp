@@ -126,15 +126,15 @@ static void P_blockingLineDifferentLevel(line_t *ld, fixed_t thingz,
                                          PODCollection<line_t *> *pushhit)
 {
    fixed_t linemid = linetop / 2 + linebottom / 2;
-   bool moveup = thingmid >= linemid;
+   surf_e towards = thingmid >= linemid ? surf_ceil : surf_floor;
 
-   if(!moveup && linebottom < clip.zref.ceiling)
+   if(towards == surf_floor && linebottom < clip.zref.ceiling)
    {
       clip.zref.ceiling = linebottom;
       clip.ceilingline = ld;
       clip.blockline = ld;
    }
-   if(moveup && linetop > clip.zref.floor)
+   if(towards == surf_ceil && linetop > clip.zref.floor)
    {
       clip.zref.floor = linetop;
       clip.zref.floorgroupid = ld->frontsector->groupid;
@@ -143,7 +143,7 @@ static void P_blockingLineDifferentLevel(line_t *ld, fixed_t thingz,
    }
 
    fixed_t lowfloor;
-   if(!ld->backsector || !moveup)   // if line is 1-sided or above thing
+   if(!ld->backsector || towards == surf_floor)   // if line is 1-sided or above thing
       lowfloor = linebottom;
    else if(linebottom == ld->backsector->srf.floor.height)
       lowfloor = ld->frontsector->srf.floor.height;
@@ -156,14 +156,14 @@ static void P_blockingLineDifferentLevel(line_t *ld, fixed_t thingz,
       clip.zref.dropoff = lowfloor;
 
    // ioanch: only change if postpone is false by now
-   if(moveup && linetop > clip.zref.secfloor)
+   if(towards == surf_ceil && linetop > clip.zref.secfloor)
       clip.zref.secfloor = linetop;
-   if(!moveup && linebottom < clip.zref.secceil)
+   if(towards == surf_floor && linebottom < clip.zref.secceil)
       clip.zref.secceil = linebottom;
 
-   if(moveup && clip.zref.floor > clip.zref.passfloor)
+   if(towards == surf_ceil && clip.zref.floor > clip.zref.passfloor)
       clip.zref.passfloor = clip.zref.floor;
-   if(!moveup && clip.zref.ceiling < clip.zref.passceil)
+   if(towards == surf_floor && clip.zref.ceiling < clip.zref.passceil)
       clip.zref.passceil = clip.zref.ceiling;
 
    // We need now to collect spechits for push activation.
