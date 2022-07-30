@@ -120,7 +120,7 @@ static void P_addPortalHitLine(line_t *ld, polyobj_t *po)
 //
 // ioanch 20160112: Call this if there's a blocking line at a different level
 //
-static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thingz, 
+static void P_blockingLineDifferentLevel(line_t *ld, fixed_t thingz,
                                          fixed_t thingmid, fixed_t thingtopz,
                                          fixed_t linebottom, fixed_t linetop, 
                                          PODCollection<line_t *> *pushhit)
@@ -325,7 +325,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       // same conditions as above
       if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL))
       {
-         P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop, 
+         P_blockingLineDifferentLevel(ld, thingz, thingmid, thingtopz, linebottom, linetop,
             pushhit);
          return true;
       }
@@ -336,7 +336,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
          {
             // explicitly blocking everything
             // or blocking player
-            P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop, 
+            P_blockingLineDifferentLevel(ld, thingz, thingmid, thingtopz, linebottom, linetop,
                pushhit);
             return true;
          }
@@ -347,7 +347,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
                )
             )
          {
-            P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop, 
+            P_blockingLineDifferentLevel(ld, thingz, thingmid, thingtopz, linebottom, linetop,
                pushhit);
             return true;
          }
