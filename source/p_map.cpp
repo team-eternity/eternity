@@ -1289,7 +1289,7 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter,
       inter.zref.ceiling = topsector->srf.ceiling.getZAt(x + totaldelta.x, y + totaldelta.y);
    }
    else
-      inter.zref.ceiling = sector.srf.ceiling.height;
+      inter.zref.ceiling = sector.srf.ceiling.getZAt(x, y);
 
    inter.zref.secfloor = inter.zref.passfloor = inter.zref.floor;
    inter.zref.secceil = inter.zref.passceil = inter.zref.ceiling;
