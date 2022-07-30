@@ -829,9 +829,11 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
       v2fixed_t i1, i2;
       P_ExactBoxLinePoints(clip.bbox, *ld, i1, i2);
 
-      // Update from both openings
-      P_updateFromOpening(P_LineOpening(ld, clip.thing, &i1), ld, clip);
-      P_updateFromOpening(P_LineOpening(ld, clip.thing, &i2), ld, clip);
+      // Use the smallest opening from both points
+      lineopening_t lo = P_LineOpening(ld, clip.thing, &i1);
+      lo.intersect(P_LineOpening(ld, clip.thing, &i2));
+
+      P_updateFromOpening(lo, ld, clip);
 
       pcl->haveslopes = true;
    }
@@ -1397,11 +1399,11 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
          { clip.bbox[BOXRIGHT], clip.bbox[BOXTOP] },
          { clip.bbox[BOXRIGHT], clip.bbox[BOXBOTTOM] },
       };
-      for(v2fixed_t corner : corners)
-      {
-         lineopening_t open = P_SlopeOpening(corner);
-         P_updateFromOpening(open, nullptr, clip);
-      }
+      lineopening_t open = P_SlopeOpening(corners[0]);
+      open.intersect(P_SlopeOpening(corners[1]));
+      open.intersect(P_SlopeOpening(corners[2]));
+      open.intersect(P_SlopeOpening(corners[3]));
+      P_updateFromOpening(open, nullptr, clip);
    }
 
    return true;

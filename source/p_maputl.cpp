@@ -613,6 +613,31 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
 }
 
 //
+// Reduces this opening by the other, raising the floor and lowering the ceiling a necessary.
+//
+void lineopening_t::intersect(const lineopening_t &other)
+{
+   if(other.height.floor > height.floor)
+   {
+      height.floor = other.height.floor;
+      bottomgroupid = other.bottomgroupid;
+      floorpic = other.floorpic;
+      touch3dside = other.touch3dside;
+   }
+   if(other.height.ceiling < height.ceiling)
+      height.ceiling = other.height.ceiling;
+   range = height.ceiling - height.floor;
+
+   if(other.sec.floor > sec.floor)
+      sec.floor = other.sec.floor;
+   if(other.sec.ceiling < sec.ceiling)
+      sec.ceiling = other.sec.ceiling;
+
+   if(other.lowfloor < lowfloor)
+      lowfloor = other.lowfloor;
+}
+
+//
 // THING POSITION SETTING
 //
 

@@ -238,6 +238,8 @@ struct zrefs_t
 //
 struct lineopening_t
 {
+   void intersect(const lineopening_t &other);
+
    Surfaces<fixed_t> height;  // bottom/top of line opening
    Surfaces<fixed_t> sec;  // SoM 11/3/02: considering only sector floor/ceiling
    fixed_t range; // height of opening: top - bottom
