@@ -238,12 +238,6 @@ struct zrefs_t
 //
 struct lineopening_t
 {
-   // moved front and back outside P_LineOpening and changed -- phares 3/7/98
-   // them to these so we can pick up the new friction value
-   // in PIT_CheckLine()
-   const sector_t *frontsector;  // made global
-   const sector_t *backsector;   // made global
-
    Surfaces<fixed_t> height;  // bottom/top of line opening
    Surfaces<fixed_t> sec;  // SoM 11/3/02: considering only sector floor/ceiling
    fixed_t range; // height of opening: top - bottom
