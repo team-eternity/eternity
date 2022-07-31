@@ -954,7 +954,8 @@ static void E_TerrainHit(const ETerrain *terrain, Mobj *thing, fixed_t z, const 
 //
 // Get the information for the thing's floor terrain. Also gets the resulting z value
 //
-static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sector, fixed_t *z)
+static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sector, v2fixed_t pos,
+                                         fixed_t *z)
 {
    // override with sector terrain if one is specified
    const ETerrain *terrain = sector.srf.floor.terrain;
@@ -971,8 +972,8 @@ static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sect
 
    if(z)
    {
-      *z = sector.heightsec != -1 ? sectors[sector.heightsec].srf.floor.height :
-                                    sector.srf.floor.height;
+      *z = sector.heightsec != -1 ? sectors[sector.heightsec].srf.floor.getZAt(pos) :
+                                    sector.srf.floor.getZAt(pos);
    }
    return *terrain;
 }
@@ -985,7 +986,7 @@ static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sect
 bool E_HitWater(Mobj *thing, const sector_t *sector)
 {
    fixed_t z;
-   const ETerrain &terrain = E_getFloorTerrain(*thing, *sector, &z);
+   const ETerrain &terrain = E_getFloorTerrain(*thing, *sector, {thing->x, thing->y}, &z);
 
    // ioanch 20160116: also use "sector" as a parameter in case it's in another group
    E_TerrainHit(&terrain, thing, z, sector);
@@ -1061,7 +1062,7 @@ bool E_WouldHitFloorWater(const Mobj &thing)
       return false;
 
    const sector_t &sector = *m->m_sector;
-   const ETerrain &terrain = E_getFloorTerrain(thing, sector, nullptr);
+   const ETerrain &terrain = E_getFloorTerrain(thing, sector, v2fixed_t(), nullptr);
    return terrain.liquid;
 }
 
