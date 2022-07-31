@@ -759,7 +759,10 @@ ETerrain *E_GetThingFloorType(const Mobj *thing)
       fixed_t z = thing->zref.floor;
       for(m = thing->touching_sectorlist; m; m = m->m_tnext)
       {
-         if(z == m->m_sector->srf.floor.height)
+         // Handle sloped floors a bit differently, using the designated floorsector
+         if(m->m_sector->srf.floor.slope && m->m_sector == thing->zref.floorsector)
+            break;
+         if(!m->m_sector->srf.floor.slope && z == m->m_sector->srf.floor.height)
             break;
       }
 
