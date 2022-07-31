@@ -489,7 +489,15 @@ SaveArchive &SaveArchive::operator << (zrefs_t &zref)
 {
    *this << zref.floor << zref.ceiling << zref.dropoff << zref.secfloor << zref.secceil
          << zref.passfloor << zref.passceil;
-   // TODO: (NEW SAVE VERSION) archive floor slope
+   if(saveVersion() >= 15)
+   {
+      int32_t val;
+      if(isSaving())
+         val = zref.floorsector ? eindex(zref.floorsector - ::sectors) : -1;
+      *this << val;
+      if(isLoading())
+         zref.floorsector = val >= 0 ? sectors + val : nullptr;
+   }
    return *this;
 }
 
