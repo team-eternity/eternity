@@ -83,6 +83,7 @@ static pslope_t *P_MakeSlope(const v3float_t &o, const v2float_t &d,
 
       ret->normalf = d1 % d2;
       ret->normalf /= ret->normalf.abs();
+      ret->normal = v3fixed_t::floatToFixed(ret->normalf);
    }
 
    //
@@ -501,6 +502,29 @@ float P_DistFromPlanef(const v3float_t *point, const v3float_t *pori,
    return (point->x - pori->x) * pnormal->x + 
           (point->y - pori->y) * pnormal->y +
           (point->z - pori->z) * pnormal->z;
+}
+
+static fixed_t P_DistFromPlane(const v3fixed_t &point, const v3fixed_t &pori,
+                               const v3fixed_t &pnormal)
+{
+   return FixedMul(point.x - pori.x, pnormal.x) +
+          FixedMul(point.y - pori.y, pnormal.y) +
+          FixedMul(point.z - pori.z, pnormal.z);
+}
+
+//
+// Compares two slopes using playsim compatible fields. It's the playsim-safe counterpart of
+// R_CompareSlopes
+//
+bool P_SlopesEqual(const pslope_t &s1, const pslope_t &s2)
+{
+   // Apply the same safety epsilon here as in R_CompareSlopes
+   static constexpr fixed_t epsilon = FRACUNIT >> 10;
+
+   return &s1 == &s2 || (D_abs(s1.normal.x - s2.normal.x) < epsilon &&
+                         D_abs(s1.normal.y - s2.normal.y) < epsilon &&
+                         D_abs(s1.normal.z - s2.normal.z) < epsilon &&
+                         D_abs(P_DistFromPlane(s2.o, s1.o, s1.normal)) < epsilon);
 }
 
 //

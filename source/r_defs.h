@@ -159,6 +159,7 @@ struct pslope_t
    v3float_t of;
 
    // The normal of the 3d plane the slope creates.
+   v3fixed_t normal;
    v3float_t normalf;
 
    // 2-Dimensional vector (x, y) normalized. Used to determine distance from
