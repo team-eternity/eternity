@@ -530,31 +530,7 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
 //
 void tracelineopening_t::calculate(const line_t *linedef)
 {
-   if(linedef->sidenum[1] == -1)
-   {
-      openrange = 0;
-      return;
-   }
-
-   const sector_t *front = linedef->frontsector;
-   const sector_t *back = linedef->backsector;
-
-   const sector_t *beyond = linedef->intflags & MLI_1SPORTALLINE &&
-      linedef->beyondportalline ? linedef->beyondportalline->frontsector : nullptr;
-   if(beyond)
-      back = beyond;
-
-   // no need to apply the portal hack (1024 units) here fortunately
-   if(linedef->extflags & EX_ML_UPPERPORTAL && back->srf.ceiling.pflags & PS_PASSABLE)
-      open.ceiling = front->srf.ceiling.height;
-   else
-      open.ceiling = emin(front->srf.ceiling.height, back->srf.ceiling.height);
-
-   if(linedef->extflags & EX_ML_LOWERPORTAL && back->srf.floor.pflags & PS_PASSABLE)
-      open.floor = front->srf.floor.height;
-   else
-      open.floor = emax(front->srf.floor.height, back->srf.floor.height);
-   openrange = open.ceiling - open.floor;
+   calculateAtPoint(*linedef, v2fixed_t(linedef->soundorg.x, linedef->soundorg.y));
 }
 
 //
