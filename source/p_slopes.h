@@ -31,6 +31,20 @@ struct line_t;
 struct pslope_t;
 struct v3float_t;
 
+//
+// Holds a sector slopes' vertical heights. For each map sector there's a slopeheight
+//
+struct slopeheight_t
+{
+   fixed_t floordelta;     // difference from bottom slope tip to floorheight
+   fixed_t ceilingdelta;   // difference from top slope tip to ceilingheight
+   fixed_t touchheight;    // difference from ceilingheight to floorheight when planes touch
+};
+
+extern slopeheight_t *pSlopeHeights;
+
+void P_InitSlopeHeights();
+
 // P_MakeLineNormal
 // Calculates a 2D normal for the given line and stores it in the line
 void P_MakeLineNormal(line_t *line);

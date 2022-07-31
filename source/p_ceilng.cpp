@@ -30,6 +30,7 @@
 #include "p_info.h"
 #include "p_saveg.h"
 #include "p_saveid.h"
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "r_data.h"
@@ -407,7 +408,8 @@ int EV_DoCeiling(const line_t *line, int tag, ceiling_e type)
       case fastCrushAndRaise:
          ceiling->crush = 10;
          ceiling->topheight = sec->srf.ceiling.height;
-         ceiling->bottomheight = sec->srf.floor.height + (8*FRACUNIT);
+         ceiling->bottomheight = sec->srf.floor.height + (8*FRACUNIT)
+            + pSlopeHeights[secnum].touchheight;
          ceiling->direction = plat_down;
          ceiling->speed = CEILSPEED * 2;
          break;
@@ -419,7 +421,7 @@ int EV_DoCeiling(const line_t *line, int tag, ceiling_e type)
          ceiling->topheight = sec->srf.ceiling.height;
       case lowerAndCrush:
       case lowerToFloor:
-         ceiling->bottomheight = sec->srf.floor.height;
+         ceiling->bottomheight = sec->srf.floor.height + pSlopeHeights[secnum].touchheight;
          if(type != lowerToFloor)
             ceiling->bottomheight += 8*FRACUNIT;
          ceiling->direction = plat_down;

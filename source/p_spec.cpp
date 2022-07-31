@@ -1690,6 +1690,8 @@ void P_SpawnDeferredSpecials(UDMFSetupSettings &setupSettings)
       else
          sec->intflags &= ~SIF_PORTALBOX;
    }
+
+   P_InitSlopeHeights();
 }
 
 // haleyjd 04/11/10:

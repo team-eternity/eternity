@@ -37,6 +37,8 @@
 #include "r_state.h"
 #include "v_misc.h"
 
+slopeheight_t *pSlopeHeights;
+
 //
 // P_MakeSlope
 //
@@ -111,6 +113,73 @@ static pslope_t *P_CopySlope(const pslope_t *src, const surface_t &surface)
    ret->surfaceZOffsetF = ret->of.z - surface.heightf;
 
    return ret;
+}
+
+//
+// Called from P_SpawnSpecials, sets up the slope height list.
+//
+void P_InitSlopeHeights()
+{
+   pSlopeHeights = estructalloctag(slopeheight_t, numsectors, PU_LEVEL);
+   for(int i = 0; i < numsectors; ++i)
+   {
+      const sector_t &sector = sectors[i];
+      if((!sector.srf.floor.slope && !sector.srf.ceiling.slope) || !sector.linecount)
+         continue;
+
+      if(sector.srf.floor.slope)
+      {
+         fixed_t maxz = D_MININT;
+         for(int j = 0; j < sector.linecount; ++j)
+         {
+            const line_t &line = *sector.lines[j];
+            fixed_t z = P_GetZAt(sector.srf.floor.slope, line.v1->x, line.v1->y);
+            if(z > maxz)
+               maxz = z;
+            z = P_GetZAt(sector.srf.floor.slope, line.v2->x, line.v2->y);
+            if(z > maxz)
+               maxz = z;
+         }
+         pSlopeHeights[i].floordelta = maxz - sector.srf.floor.height;
+      }
+      if(sector.srf.ceiling.slope)
+      {
+         fixed_t minz = D_MAXINT;
+         for(int j = 0; j < sector.linecount; ++j)
+         {
+            const line_t &line = *sector.lines[j];
+            fixed_t z = P_GetZAt(sector.srf.ceiling.slope, line.v1->x, line.v1->y);
+            if(z < minz)
+               minz = z;
+            z = P_GetZAt(sector.srf.ceiling.slope, line.v2->x, line.v2->y);
+            if(z < minz)
+               minz = z;
+         }
+         pSlopeHeights[i].ceilingdelta = minz - sector.srf.ceiling.height;
+      }
+      if(!sector.srf.ceiling.slope)
+         pSlopeHeights[i].touchheight = pSlopeHeights[i].floordelta;
+      else if(!sector.srf.floor.slope)
+         pSlopeHeights[i].touchheight = -pSlopeHeights[i].ceilingdelta;
+      else
+      {
+         fixed_t mindiff = D_MAXINT;
+         for(int j = 0; j < sector.linecount; ++j)
+         {
+            const line_t &line = *sector.lines[j];
+            fixed_t zc = P_GetZAt(sector.srf.ceiling.slope, line.v1->x, line.v1->y);
+            fixed_t zf = P_GetZAt(sector.srf.floor.slope, line.v1->x, line.v1->y);
+            if(zc - zf < mindiff)
+               mindiff = zc - zf;
+            zc = P_GetZAt(sector.srf.ceiling.slope, line.v2->x, line.v2->y);
+            zf = P_GetZAt(sector.srf.floor.slope, line.v2->x, line.v2->y);
+            if(zc - zf < mindiff)
+               mindiff = zc - zf;
+         }
+         pSlopeHeights[i].touchheight = sector.srf.ceiling.height - sector.srf.floor.height
+                                                                  - mindiff;
+      }
+   }
 }
 
 //
