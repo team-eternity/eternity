@@ -133,6 +133,8 @@ static void P_blockingLineDifferentLevel(line_t *ld, fixed_t thingz,
    {
       clip.zref.floor = linetop;
       clip.zref.floorgroupid = ld->frontsector->groupid;
+      clip.zref.floorsector = nullptr;
+
       clip.floorline = ld;
       clip.blockline = ld;
    }
@@ -364,6 +366,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    {
       clip.open.height.ceiling = linebottom;
       clip.open.height.floor = D_MININT;
+      clip.open.floorsector = nullptr;
       clip.open.sec.ceiling = linebottom;
       clip.open.sec.floor = D_MININT;
       lineclipflags &= ~LINECLIP_UNDERPORTAL;
@@ -404,6 +407,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    {
       clip.zref.floor = clip.open.height.floor;
       clip.zref.floorgroupid = clip.open.bottomgroupid;
+      clip.zref.floorsector = clip.open.floorsector;
       clip.floorline = ld;          // killough 8/1/98: remember floor linedef
       clip.blockline = ld;
    }

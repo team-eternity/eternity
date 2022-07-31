@@ -2005,6 +2005,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
    const sector_t *extremesector = P_ExtremeSectorAtPoint(mobj, surf_floor);
    mobj->zref.dropoff = mobj->zref.floor = extremesector->srf.floor.getZAt(x, y);
    mobj->zref.floorgroupid = extremesector->groupid;
+   mobj->zref.floorsector = extremesector;
    mobj->zref.ceiling = P_ExtremeSectorAtPoint(mobj, surf_ceil)->srf.ceiling.getZAt(x, y);
 
    mobj->z = 

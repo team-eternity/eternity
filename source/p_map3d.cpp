@@ -384,6 +384,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
          stepthing = thing;
          clip.zref.floor = topz;
          clip.zref.floorgroupid = thing->groupid;
+         clip.zref.floorsector = nullptr;  // no slopes on things
       }
    }
 
@@ -504,7 +505,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
    bbox[BOXTOP] = clip.bbox[BOXTOP] + MAXRADIUS;
    
    clip.BlockingMobj = nullptr; // haleyjd 1/17/00: global hit reference
-   Mobj *thingblocker = nullptr;
+   Mobj *thingblocker = nullptr; // haleyjd: from zdoom:
    stepthing    = nullptr;
 
    // [RH] Fake taller height to catch stepping up into things.
