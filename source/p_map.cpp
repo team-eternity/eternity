@@ -417,11 +417,13 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, unsigned flags)
       bottomfloorsector = P_ExtremeSectorAtPoint(x, y, surf_floor, newsubsec->sector, &totaldelta);
       clip.zref.floor = clip.zref.dropoff = bottomfloorsector->srf.floor.getZAt(x + totaldelta.x, y + totaldelta.y);
       clip.zref.floorgroupid = bottomfloorsector->groupid;
+      clip.zref.floorslope = bottomfloorsector->srf.floor.slope;
    }
    else
    {
       clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.getZAt(x, y);
       clip.zref.floorgroupid = newsubsec->sector->groupid;
+      clip.zref.floorslope = newsubsec->sector->srf.floor.slope;
    }
 
     //newsubsec->sector->ceilingheight + clip.thing->height;
@@ -698,6 +700,7 @@ static void P_updateFromOpening(const lineopening_t &open, const line_t *ld,
    {
       inter.zref.floor = open.height.floor;
       inter.zref.floorgroupid = open.bottomgroupid;
+      // TODO: obtain open's floor slope
 
       inter.floorline = ld;          // killough 8/1/98: remember floor linedef
       inter.blockline = ld;
@@ -1274,11 +1277,13 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter,
       inter.zref.floor = inter.zref.dropoff =
          bottomsector->srf.floor.getZAt(x + totaldelta.x, y + totaldelta.y);
       inter.zref.floorgroupid = bottomsector->groupid;
+      inter.zref.floorslope = bottomsector->srf.floor.slope;
    }
    else
    {
       inter.zref.floor = inter.zref.dropoff = sector.srf.floor.getZAt(x, y);
       inter.zref.floorgroupid = sector.groupid;
+      inter.zref.floorslope = sector.srf.floor.slope;
    }
 
    topsector = &sector;
@@ -3290,6 +3295,7 @@ void P_ClearGlobalLevelReferences()
    clip.numspechit = 0;
    clip.BlockingMobj = nullptr;  // also not ref-counted
    clip.numportalhit = 0;
+   clip.zref.floorslope = nullptr;
    P_ClearTarget(clip.linetarget);
 }
 

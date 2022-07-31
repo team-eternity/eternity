@@ -503,6 +503,7 @@ SaveArchive &SaveArchive::operator << (zrefs_t &zref)
 {
    *this << zref.floor << zref.ceiling << zref.dropoff << zref.secfloor << zref.secceil
          << zref.passfloor << zref.passceil;
+   // TODO: (NEW SAVE VERSION) archive floor slope
    return *this;
 }
 

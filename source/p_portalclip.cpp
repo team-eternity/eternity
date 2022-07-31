@@ -133,6 +133,9 @@ static void P_blockingLineDifferentLevel(line_t *ld, fixed_t thingz,
    {
       clip.zref.floor = linetop;
       clip.zref.floorgroupid = ld->frontsector->groupid;
+      // TODO: we'll need to handle sloped portals one day
+      clip.zref.floorslope = nullptr;
+
       clip.floorline = ld;
       clip.blockline = ld;
    }
@@ -404,6 +407,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    {
       clip.zref.floor = clip.open.height.floor;
       clip.zref.floorgroupid = clip.open.bottomgroupid;
+      // TODO: floor slope
       clip.floorline = ld;          // killough 8/1/98: remember floor linedef
       clip.blockline = ld;
    }
