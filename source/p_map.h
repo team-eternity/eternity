@@ -37,7 +37,6 @@ struct mobjinfo_t;
 struct msecnode_t;
 struct player_t;
 struct polyobj_t; // ioanch 20160122
-struct pslope_t;
 struct sector_t;
 
 //=============================================================================
@@ -220,8 +219,9 @@ struct zrefs_t
    // killough 11/98: the lowest floor over all contacted Sectors.
    fixed_t dropoff;
 
-   // Sometimes we need to know if we're on top of a floor slope
-   const pslope_t *floorslope;
+   // Sometimes we need to know if we're on top of a floor slope. To that end, we need the complete
+   // floor sector reference
+   const sector_t *floorsector;
 
    int floorgroupid;
 

@@ -476,7 +476,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       fixed_t y = actor->y;
       fixed_t floorz = actor->zref.floor;
       int floorgroupid = actor->zref.floorgroupid;
-      const pslope_t *floorslope = actor->zref.floorslope;
+      const sector_t *floorsector = actor->zref.floorsector;
       fixed_t ceilingz = actor->zref.ceiling;
       fixed_t dropoffz = actor->zref.dropoff;
       
@@ -492,7 +492,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
          actor->y = y;
          actor->zref.floor = floorz;
          actor->zref.floorgroupid = floorgroupid;
-         actor->zref.floorslope = floorslope;
+         actor->zref.floorsector = floorsector;
          actor->zref.ceiling = ceilingz;
          actor->zref.dropoff = dropoffz;
          P_SetThingPosition(actor);

@@ -134,7 +134,7 @@ static void P_blockingLineDifferentLevel(line_t *ld, fixed_t thingz,
       clip.zref.floor = linetop;
       clip.zref.floorgroupid = ld->frontsector->groupid;
       // TODO: we'll need to handle sloped portals one day
-      clip.zref.floorslope = nullptr;
+      clip.zref.floorsector = nullptr;
 
       clip.floorline = ld;
       clip.blockline = ld;
