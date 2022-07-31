@@ -413,13 +413,14 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, unsigned flags)
     //newsubsec->sector->floorheight - clip.thing->height;
    if(demo_version >= 333 && newsubsec->sector->srf.floor.pflags & PS_PASSABLE)
    {
-      bottomfloorsector = P_ExtremeSectorAtPoint(x, y, surf_floor, newsubsec->sector);
-      clip.zref.floor = clip.zref.dropoff = bottomfloorsector->srf.floor.height;
+      v2fixed_t totaldelta;
+      bottomfloorsector = P_ExtremeSectorAtPoint(x, y, surf_floor, newsubsec->sector, &totaldelta);
+      clip.zref.floor = clip.zref.dropoff = bottomfloorsector->srf.floor.getZAt(x + totaldelta.x, y + totaldelta.y);
       clip.zref.floorgroupid = bottomfloorsector->groupid;
    }
    else
    {
-      clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.height;
+      clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.getZAt(x, y);
       clip.zref.floorgroupid = newsubsec->sector->groupid;
    }
 
@@ -552,6 +553,18 @@ static int untouched(const line_t *ld)
      (tmbbox[BOXLEFT] = x-clip.thing->radius) >= ld->bbox[BOXRIGHT] ||
      (tmbbox[BOXTOP] = (y=clip.thing->y)+clip.thing->radius) <= ld->bbox[BOXBOTTOM] ||
      (tmbbox[BOXBOTTOM] = y-clip.thing->radius) >= ld->bbox[BOXTOP] ||
+     P_BoxOnLineSide(tmbbox, ld) != -1;
+}
+static int untouched(const line_t *ld, const linkoffset_t *link)
+{
+   fixed_t x, y, tmbbox[4];
+   return
+     (tmbbox[BOXRIGHT] = (x = clip.thing->x + link->x) + clip.thing->radius) <=
+     ld->bbox[BOXLEFT] ||
+     (tmbbox[BOXLEFT] = x - clip.thing->radius) >= ld->bbox[BOXRIGHT] ||
+     (tmbbox[BOXTOP] = (y = clip.thing->y + link->y) + clip.thing->radius) <=
+     ld->bbox[BOXBOTTOM] ||
+     (tmbbox[BOXBOTTOM] = y - clip.thing->radius) >= ld->bbox[BOXTOP] ||
      P_BoxOnLineSide(tmbbox, ld) != -1;
 }
 
@@ -711,6 +724,68 @@ static void P_updateFromOpening(const lineopening_t &open, const line_t *ld,
 }
 
 //
+// Handle mid-texture solid line interaction with clip.thing.
+// Returns true if PIT_CheckLine[3D] should return "output".
+//
+bool P_CheckLineBlocksThing(line_t *ld, const linkoffset_t *link,
+                            PODCollection<line_t *> *pushhit, bool &output)
+{
+   if(!link)
+      link = &zerolink;
+
+   // killough 7/24/98: allow player to move out of 1s wall, to prevent sticking
+   // haleyjd 04/30/11: treat block-everything lines like they're 1S
+   if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL)) // one sided line
+   {
+      clip.blockline = ld;
+      bool result = clip.unstuck && !untouched(ld, link) &&
+         FixedMul(clip.x-clip.thing->x,ld->dy) > FixedMul(clip.y-clip.thing->y,ld->dx);
+      if(!result && pushhit && ld->special &&
+         full_demo_version >= make_full_version(401, 0))
+      {
+         pushhit->add(ld);
+      }
+      output = result;
+      return true;
+   }
+
+   // killough 8/10/98: allow bouncing objects to pass through as missiles
+   if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
+   {
+      if((ld->flags & ML_BLOCKING) ||
+         (mbf21_temp && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
+      {
+         // explicitly blocking everything
+         // or blocking player
+         bool result = clip.unstuck && !untouched(ld, link);
+         if(!result && pushhit && ld->special &&
+            full_demo_version >= make_full_version(401, 0))
+         {
+            pushhit->add(ld);
+         }
+         output = result;
+         return true;
+      }
+      // killough 8/1/98: allow escape
+
+      // killough 8/9/98: monster-blockers don't affect friends
+      // SoM 9/7/02: block monsters standing on 3dmidtex only
+      // MaxW: Land-monster blockers gotta be factored in, too
+      if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
+         (
+            ld->flags & ML_BLOCKMONSTERS ||
+            (mbf21_temp && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
+            )
+         )
+      {
+         output = false;
+         return true; // block monsters only
+      }
+   }
+   return false;  // not returning
+}
+
+//
 // PIT_CheckLine
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted
@@ -739,55 +814,9 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
    // so two special lines that are only 8 pixels apart
    // could be crossed in either order.
 
-   // killough 7/24/98: allow player to move out of 1s wall, to prevent sticking
-   // haleyjd 04/30/11: treat block-everything lines like they're 1S
-   if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL)) // one sided line
-   {
-      clip.blockline = ld;
-      bool result = clip.unstuck && !untouched(ld) &&
-         FixedMul(clip.x-clip.thing->x,ld->dy) > FixedMul(clip.y-clip.thing->y,ld->dx);
-      if(!result && pushhit && ld->special &&
-         full_demo_version >= make_full_version(401, 0))
-      {
-         pushhit->add(ld);
-      }
-      return result;
-   }
-
-   // killough 8/10/98: allow bouncing objects to pass through as missiles
-   if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
-   {
-      if((ld->flags & ML_BLOCKING) ||
-         (mbf21_temp && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
-      {
-         // explicitly blocking everything
-         // or blocking player
-         bool result = clip.unstuck && !untouched(ld);  // killough 8/1/98: allow escape
-
-         // When it's Hexen, keep side 0 even when hitting from backside
-         if(!result && pushhit && ld->special &&
-            full_demo_version >= make_full_version(401, 0))
-         {
-            pushhit->add(ld);
-         }
-         // TODO: add the other push special checks.
-         // TODO: add for P_Map3D and P_PortalClip CPP files.
-         return result;
-      }
-
-      // killough 8/9/98: monster-blockers don't affect friends
-      // SoM 9/7/02: block monsters standing on 3dmidtex only
-      // MaxW: Land-monster blockers gotta be factored in, too
-      if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
-         (
-            ld->flags & ML_BLOCKMONSTERS ||
-            (mbf21_temp && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
-         )
-        )
-      {
-         return false; // block monsters only
-      }
-   }
+   bool thingblock;
+   if(P_CheckLineBlocksThing(ld, nullptr, pushhit, thingblock))
+      return thingblock;
 
    // set openrange, opentop, openbottom
    // these define a 'window' from one sector to another across this line
@@ -801,9 +830,11 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
       v2fixed_t i1, i2;
       P_ExactBoxLinePoints(clip.bbox, *ld, i1, i2);
 
-      // Update from both openings
-      P_updateFromOpening(P_LineOpening(ld, clip.thing, &i1), ld, clip);
-      P_updateFromOpening(P_LineOpening(ld, clip.thing, &i2), ld, clip);
+      // Use the smallest opening from both points
+      lineopening_t lo = P_LineOpening(ld, clip.thing, &i1);
+      lo.intersect(P_LineOpening(ld, clip.thing, &i2));
+
+      P_updateFromOpening(lo, ld, clip);
 
       pcl->haveslopes = true;
    }
@@ -1259,7 +1290,7 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter,
       inter.zref.ceiling = topsector->srf.ceiling.getZAt(x + totaldelta.x, y + totaldelta.y);
    }
    else
-      inter.zref.ceiling = sector.srf.ceiling.height;
+      inter.zref.ceiling = sector.srf.ceiling.getZAt(x, y);
 
    inter.zref.secfloor = inter.zref.passfloor = inter.zref.floor;
    inter.zref.secceil = inter.zref.passceil = inter.zref.ceiling;
@@ -1369,11 +1400,11 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
          { clip.bbox[BOXRIGHT], clip.bbox[BOXTOP] },
          { clip.bbox[BOXRIGHT], clip.bbox[BOXBOTTOM] },
       };
-      for(v2fixed_t corner : corners)
-      {
-         lineopening_t open = P_SlopeOpening(corner);
-         P_updateFromOpening(open, nullptr, clip);
-      }
+      lineopening_t open = P_SlopeOpening(corners[0]);
+      open.intersect(P_SlopeOpening(corners[1]));
+      open.intersect(P_SlopeOpening(corners[2]));
+      open.intersect(P_SlopeOpening(corners[3]));
+      P_updateFromOpening(open, nullptr, clip);
    }
 
    return true;
@@ -3257,7 +3288,6 @@ void P_ClearGlobalLevelReferences()
    clip.thing = nullptr;   // this isn't reference-counted
    clip.ceilingline = clip.blockline = clip.floorline = nullptr;
    clip.numspechit = 0;
-   clip.open.frontsector = clip.open.backsector = nullptr;
    clip.BlockingMobj = nullptr;  // also not ref-counted
    clip.numportalhit = 0;
    P_ClearTarget(clip.linetarget);

@@ -801,7 +801,7 @@ unsigned int *E_ArgAsMBF21ThingFlags(arglist_t *al, int index)
       if(estrempty(pos))
       {
          // it's an integer to remap
-         unsigned int *flagvals = deh_RemapMBF21ThingTypeFlags(num);
+         unsigned int *flagvals = deh_RemapMBF21ThingTypeFlags(static_cast<unsigned>(num));
 
          memcpy(eval.value.flags, flagvals, MAXFLAGFIELDS * sizeof(unsigned int));
       }

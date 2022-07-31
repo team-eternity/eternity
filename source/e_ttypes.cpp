@@ -747,16 +747,16 @@ void E_InitTerrainTypes(void)
 // haleyjd 10/16/10: Except that's never been sufficient. So in 
 // newer versions return the appropriate floor's type.
 //
-ETerrain *E_GetThingFloorType(Mobj *thing, bool usefloorz)
+ETerrain *E_GetThingFloorType(const Mobj *thing)
 {
    ETerrain *terrain = nullptr;
    
    if(full_demo_version >= make_full_version(339, 21))
    {
-      msecnode_t *m = nullptr;
+      const msecnode_t *m = nullptr;
 
       // determine what touched sector the thing is standing on
-      fixed_t z = usefloorz ? thing->zref.floor : thing->z;
+      fixed_t z = thing->zref.floor;
       for(m = thing->touching_sectorlist; m; m = m->m_tnext)
       {
          if(z == m->m_sector->srf.floor.height)

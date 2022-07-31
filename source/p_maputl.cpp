@@ -425,17 +425,17 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
    {
       *lineclipflags = 0;
    }
-   open.frontsector = linedef->frontsector;
-   open.backsector = linedef->backsector;
+   const sector_t *openfrontsector = linedef->frontsector;
+   const sector_t *openbacksector = linedef->backsector;
    sector_t *beyond = linedef->intflags & MLI_1SPORTALLINE && linedef->beyondportalline ?
       linedef->beyondportalline->frontsector : nullptr;
    if(beyond)
-      open.backsector = beyond;
+      openbacksector = beyond;
 
    // SoM: ok, new plan. The only way a 2s line should give a lowered floor or hightened ceiling
    // z is if both sides of that line have the same portal.
-   const surface_t &frontceiling = open.frontsector->srf.ceiling;
-   const surface_t &backceiling = open.backsector->srf.ceiling;
+   const surface_t &frontceiling = openfrontsector->srf.ceiling;
+   const surface_t &backceiling = openbacksector->srf.ceiling;
    {
       if(mo && demo_version >= 333 &&
          ((frontceiling.pflags & PS_PASSABLE && backceiling.pflags & PS_PASSABLE &&
@@ -463,8 +463,8 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
       backcz  = backceiling.getZAt(point);
    }
 
-   const surface_t &frontfloor = open.frontsector->srf.floor;
-   const surface_t &backfloor = open.backsector->srf.floor;
+   const surface_t &frontfloor = openfrontsector->srf.floor;
+   const surface_t &backfloor = openbacksector->srf.floor;
    {
       if(mo && demo_version >= 333 &&
          ((frontfloor.pflags & PS_PASSABLE && backfloor.pflags & PS_PASSABLE &&
@@ -482,17 +482,17 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
          {
             *lineclipflags |= LINECLIP_ABOVEPORTAL;
             frontfloorz = frontfloor.getZAt(point);
-            frontfloorgroupid = open.frontsector->groupid;
+            frontfloorgroupid = openfrontsector->groupid;
             backfloorz  = backfloor.getZAt(point);
-            backfloorgroupid = open.backsector->groupid;
+            backfloorgroupid = openbacksector->groupid;
          }
       }
       else
       {
          frontfloorz = frontfloor.getZAt(point);
-         frontfloorgroupid = open.frontsector->groupid;
+         frontfloorgroupid = openfrontsector->groupid;
          backfloorz  = backfloor.getZAt(point);
-         backfloorgroupid = open.backsector->groupid;
+         backfloorgroupid = openbacksector->groupid;
       }
 
       frontfz = frontfloor.getZAt(point);
@@ -610,6 +610,31 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
 
    open.range = open.height.ceiling - open.height.floor;
    return open;
+}
+
+//
+// Reduces this opening by the other, raising the floor and lowering the ceiling a necessary.
+//
+void lineopening_t::intersect(const lineopening_t &other)
+{
+   if(other.height.floor > height.floor)
+   {
+      height.floor = other.height.floor;
+      bottomgroupid = other.bottomgroupid;
+      floorpic = other.floorpic;
+      touch3dside = other.touch3dside;
+   }
+   if(other.height.ceiling < height.ceiling)
+      height.ceiling = other.height.ceiling;
+   range = height.ceiling - height.floor;
+
+   if(other.sec.floor > sec.floor)
+      sec.floor = other.sec.floor;
+   if(other.sec.ceiling < sec.ceiling)
+      sec.ceiling = other.sec.ceiling;
+
+   if(other.lowfloor < lowfloor)
+      lowfloor = other.lowfloor;
 }
 
 //
