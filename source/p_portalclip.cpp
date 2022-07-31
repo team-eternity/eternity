@@ -367,6 +367,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    {
       clip.open.height.ceiling = linebottom;
       clip.open.height.floor = D_MININT;
+      clip.open.floorsector = nullptr;
       clip.open.sec.ceiling = linebottom;
       clip.open.sec.floor = D_MININT;
       lineclipflags &= ~LINECLIP_UNDERPORTAL;
@@ -387,6 +388,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
 
       clip.open.height.floor = linetop;
       clip.open.height.ceiling = D_MAXINT;
+      // TODO: use the portal slope now for floorsector
       clip.open.sec.floor = linetop;
       clip.open.sec.ceiling = D_MAXINT;
       lineclipflags &= ~LINECLIP_ABOVEPORTAL;
@@ -407,7 +409,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    {
       clip.zref.floor = clip.open.height.floor;
       clip.zref.floorgroupid = clip.open.bottomgroupid;
-      // TODO: floor slope
+      clip.zref.floorsector = clip.open.floorsector;
       clip.floorline = ld;          // killough 8/1/98: remember floor linedef
       clip.blockline = ld;
    }

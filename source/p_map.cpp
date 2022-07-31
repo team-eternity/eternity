@@ -700,7 +700,7 @@ static void P_updateFromOpening(const lineopening_t &open, const line_t *ld,
    {
       inter.zref.floor = open.height.floor;
       inter.zref.floorgroupid = open.bottomgroupid;
-      // TODO: obtain open's floor slope
+      inter.zref.floorsector = open.floorsector;
 
       inter.floorline = ld;          // killough 8/1/98: remember floor linedef
       inter.blockline = ld;

@@ -389,6 +389,7 @@ lineopening_t P_SlopeOpening(v2fixed_t pos)
    open.bottomgroupid = sector.groupid;
    open.lowfloor = open.height.floor;
    open.floorpic = sector.srf.floor.pic;
+   open.floorsector = &sector;
    open.touch3dside = 0;
    return open;
 }
@@ -512,6 +513,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
       open.height.floor = frontfloorz;
       open.bottomgroupid = frontfloorgroupid;
       open.lowfloor = frontfloorz;
+      open.floorsector = openfrontsector;
       if(!portaldetect || !(frontfloor.pflags & PS_PASSABLE))
          open.floorpic = frontfloor.pic;
    }
@@ -520,6 +522,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
       open.height.floor = frontfloorz;
       open.bottomgroupid = frontfloorgroupid;
       open.lowfloor = backfloorz;
+      open.floorsector = openfrontsector;
       // haleyjd
       if(!portaldetect || !(frontfloor.pflags & PS_PASSABLE))
          open.floorpic = frontfloor.pic;
@@ -529,6 +532,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
       open.height.floor = backfloorz;
       open.bottomgroupid = backfloorgroupid;
       open.lowfloor = frontfloorz;
+      open.floorsector = openbacksector;
       // haleyjd
       if(!portaldetect || !(backfloor.pflags & PS_PASSABLE))
          open.floorpic = backfloor.pic;
@@ -595,6 +599,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
          {
             open.height.floor = textop;
             open.bottomgroupid = linedef->frontsector->groupid;
+            open.floorsector = nullptr;   // not on a slope now
          }
          // ioanch 20160318: mark if 3dmidtex affects clipping
          // Also don't flag lines that are offset into the floor/ceiling
@@ -623,6 +628,7 @@ void lineopening_t::intersect(const lineopening_t &other)
       bottomgroupid = other.bottomgroupid;
       floorpic = other.floorpic;
       touch3dside = other.touch3dside;
+      floorsector = other.floorsector;
    }
    if(other.height.ceiling < height.ceiling)
       height.ceiling = other.height.ceiling;
