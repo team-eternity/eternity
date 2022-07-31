@@ -1011,6 +1011,19 @@ void E_ExplosionHitWater(Mobj *thing, int damage)
 }
 
 //
+// Check if thing is standing on given sector, compatible with slopes and non-slopes
+//
+static bool E_standingOn(const sector_t &sector, const Mobj &thing)
+{
+   if(!sector.srf.floor.slope && thing.z == sector.srf.floor.height)
+      return true;
+   // Different handling for sloped floors
+   if(sector.srf.floor.slope && thing.z <= thing.zref.floor && thing.zref.floorsector == &sector)
+      return true;
+   return false;
+}
+
+//
 // E_HitFloor
 //
 // Called when a thing hits a floor.
@@ -1021,16 +1034,8 @@ bool E_HitFloor(Mobj *thing)
 
    // determine what touched sector the thing is standing on
    for(m = thing->touching_sectorlist; m; m = m->m_tnext)
-   {
-      if(!m->m_sector->srf.floor.slope && thing->z == m->m_sector->srf.floor.height)
+      if(E_standingOn(*m->m_sector, *thing))
          break;
-      // Different handling for sloped floors
-      if(m->m_sector->srf.floor.slope && thing->z <= thing->zref.floor &&
-         thing->zref.floorsector == m->m_sector)
-      {
-         break;
-      }
-   }
 
    // not on a floor or dealing with deep water, return solid
    // deep water splashes are handled in P_MobjThinker now
@@ -1048,7 +1053,7 @@ bool E_WouldHitFloorWater(const Mobj &thing)
 {
    const msecnode_t *m;
    for(m = thing.touching_sectorlist; m; m = m->m_tnext)
-      if(thing.z == m->m_sector->srf.floor.height)
+      if(E_standingOn(*m->m_sector, thing))
          break;
 
    // NOTE: same conditions as E_HitFloor
