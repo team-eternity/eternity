@@ -1022,8 +1022,14 @@ bool E_HitFloor(Mobj *thing)
    // determine what touched sector the thing is standing on
    for(m = thing->touching_sectorlist; m; m = m->m_tnext)
    {
-      if(thing->z == m->m_sector->srf.floor.height)
+      if(!m->m_sector->srf.floor.slope && thing->z == m->m_sector->srf.floor.height)
          break;
+      // Different handling for sloped floors
+      if(m->m_sector->srf.floor.slope && thing->z <= thing->zref.floor &&
+         thing->zref.floorsector == m->m_sector)
+      {
+         break;
+      }
    }
 
    // not on a floor or dealing with deep water, return solid
