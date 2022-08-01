@@ -29,6 +29,7 @@
 #include "p_map.h"
 #include "p_portal.h"
 #include "p_sector.h"
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "r_defs.h"
 #include "r_state.h"
@@ -306,10 +307,11 @@ result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest,
    // jff 02/04/98 keep ceiling from moving thru floors
    // jff 2/22/98 weaken check to demo_compatibility
    // killough 10/98: add comp flag
-   if(getComp(comp_floors) || dest > sector->srf.floor.height)
+   fixed_t floorlimit = sector->srf.floor.height + pSlopeHeights[sector - sectors].touchheight;
+   if(getComp(comp_floors) || dest > floorlimit)
       destheight = dest;
    else
-      destheight = sector->srf.floor.height;
+      destheight = floorlimit;
 
    if(sector->srf.ceiling.height - speed < destheight)
    {
