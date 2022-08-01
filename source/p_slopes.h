@@ -43,7 +43,7 @@ struct slopeheight_t
 
 extern slopeheight_t *pSlopeHeights;
 
-void P_InitSlopeHeights();
+void P_PostProcessSlopes();
 
 // P_MakeLineNormal
 // Calculates a 2D normal for the given line and stores it in the line

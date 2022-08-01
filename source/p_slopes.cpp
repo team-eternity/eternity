@@ -31,6 +31,7 @@
 #include "ev_specials.h"
 #include "i_system.h"
 #include "m_bbox.h"
+#include "p_map3d.h"
 #include "p_slopes.h"
 #include "p_spec.h"
 #include "r_defs.h"
@@ -116,9 +117,9 @@ static pslope_t *P_CopySlope(const pslope_t *src, const surface_t &surface)
 }
 
 //
-// Called from P_SpawnSpecials, sets up the slope height list.
+// Sets up the slope height list per sector.
 //
-void P_InitSlopeHeights()
+static void P_initSlopeHeights()
 {
    pSlopeHeights = estructalloctag(slopeheight_t, numsectors, PU_LEVEL);
    for(int i = 0; i < numsectors; ++i)
@@ -180,6 +181,34 @@ void P_InitSlopeHeights()
                                                                   - mindiff;
       }
    }
+}
+
+//
+// After we spawn slopes, we need to update all map spawned things to fit their sloped positions
+//
+void P_repositionThingsOnSlopes()
+{
+   for(int i = 0; i < numsectors; ++i)
+   {
+      const sector_t &sector = sectors[i];
+      if(!sector.srf.floor.slope && !sector.srf.ceiling.slope)
+         continue;
+      for(Mobj *mo = sector.thinglist; mo; mo = mo->snext)
+      {
+         P_CheckPositionExt(mo, mo->x, mo->y, mo->z);
+         mo->zref = clip.zref;   // Update the Z references so they reposition vertically to slopes
+      }
+   }
+}
+
+//
+// Called from P_SpawnDeferredSpecials, this performs extra setup on slopes after they've been
+// spawned.
+//
+void P_PostProcessSlopes()
+{
+   P_initSlopeHeights();
+   P_repositionThingsOnSlopes();
 }
 
 //

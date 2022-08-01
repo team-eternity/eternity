@@ -1691,7 +1691,7 @@ void P_SpawnDeferredSpecials(UDMFSetupSettings &setupSettings)
          sec->intflags &= ~SIF_PORTALBOX;
    }
 
-   P_InitSlopeHeights();
+   P_PostProcessSlopes();
 }
 
 // haleyjd 04/11/10:
