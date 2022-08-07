@@ -761,7 +761,12 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
 // monsters to free themselves without making them tend to
 // hang over dropoffs.
 
-static fixed_t dropoff_deltax, dropoff_deltay, floorz;
+struct avoiddropoff_t
+{
+   v2fixed_t delta;
+   fixed_t floorz;
+};
+static avoiddropoff_t avoiddropoff; // currently we change global state
 
 static bool PIT_AvoidDropoff(line_t *line, polyobj_t *po, void *context)
 {
@@ -779,7 +784,7 @@ static bool PIT_AvoidDropoff(line_t *line, polyobj_t *po, void *context)
       // The monster must contact one of the two floors,
       // and the other must be a tall dropoff (more than 24).
 
-      if(back == floorz && front < floorz - STEPSIZE)
+      if(back == avoiddropoff.floorz && front < avoiddropoff.floorz - STEPSIZE)
       {
          // front side dropoff
          angle = P_PointToAngle(0,0,line->dx,line->dy);
@@ -787,7 +792,7 @@ static bool PIT_AvoidDropoff(line_t *line, polyobj_t *po, void *context)
       else
       {
          // back side dropoff
-         if(front == floorz && back < floorz - STEPSIZE)
+         if(front == avoiddropoff.floorz && back < avoiddropoff.floorz - STEPSIZE)
             angle = P_PointToAngle(line->dx,line->dy,0,0);
          else
             return true;
@@ -795,8 +800,8 @@ static bool PIT_AvoidDropoff(line_t *line, polyobj_t *po, void *context)
 
       // Move away from dropoff at a standard speed.
       // Multiple contacted linedefs are cumulative (e.g. hanging over corner)
-      dropoff_deltax -= finesine[angle >> ANGLETOFINESHIFT]*32;
-      dropoff_deltay += finecosine[angle >> ANGLETOFINESHIFT]*32;
+      avoiddropoff.delta.x -= finesine[angle >> ANGLETOFINESHIFT]*32;
+      avoiddropoff.delta.y += finecosine[angle >> ANGLETOFINESHIFT]*32;
    }
 
    return true;
@@ -815,9 +820,9 @@ static fixed_t P_AvoidDropoff(Mobj *actor)
    int xl=((clip.bbox[BOXLEFT]  = actor->x-actor->radius)-bmaporgx)>>MAPBLOCKSHIFT;
    int bx, by;
 
-   floorz = actor->z;            // remember floor height
+   avoiddropoff.floorz = actor->z;            // remember floor height
 
-   dropoff_deltax = dropoff_deltay = 0;
+   avoiddropoff.delta = {};
 
    // check lines
 
@@ -830,7 +835,7 @@ static fixed_t P_AvoidDropoff(Mobj *actor)
    }
    
    // Non-zero if movement prescribed
-   return dropoff_deltax | dropoff_deltay;
+   return avoiddropoff.delta.x | avoiddropoff.delta.y;
 }
 
 //
@@ -860,7 +865,7 @@ void P_NewChaseDir(Mobj *actor)
           !(actor->intflags & MIF_ONMOBJ)) && // haleyjd: OVER_UNDER
          !getComp(comp_dropoff) && P_AvoidDropoff(actor)) // Move away from dropoff
       {
-         P_DoNewChaseDir(actor, dropoff_deltax, dropoff_deltay);
+         P_DoNewChaseDir(actor, avoiddropoff.delta.x, avoiddropoff.delta.y);
          
          // If moving away from dropoff, set movecount to 1 so that 
          // small steps are taken to get monster away from dropoff.
