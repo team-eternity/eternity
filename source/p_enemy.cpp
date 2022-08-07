@@ -24,51 +24,37 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
 
 // Some action functions are still needed here.
 #include "a_args.h"
 #include "a_common.h"
 #include "a_doom.h"
 
-#include "a_small.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_gi.h"
-#include "d_io.h"
 #include "d_mod.h"
 #include "doomstat.h"
 #include "e_args.h"
-#include "e_lib.h"
 #include "e_player.h"
-#include "e_sound.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
 #include "ev_specials.h"
-#include "g_game.h"
 #include "m_bbox.h"
 #include "metaapi.h"
-#include "p_anim.h"      // haleyjd
 #include "p_enemy.h"
 #include "p_inter.h"
-#include "p_map.h"
 #include "p_map3d.h"
-#include "p_maputl.h"
 #include "p_mobjcol.h"
 #include "p_partcl.h"
 #include "p_portal.h"
 #include "p_setup.h"
 #include "p_spec.h"
-#include "p_tick.h"
-#include "r_defs.h"
 #include "r_main.h"
-#include "r_pcheck.h"
 #include "r_portal.h"
 #include "r_state.h"
 #include "s_sound.h"
-#include "sounds.h"
-#include "w_wad.h"
 
 extern fixed_t FloatBobOffsets[64]; // haleyjd: Float Bobbing
 
