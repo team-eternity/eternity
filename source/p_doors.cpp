@@ -165,7 +165,7 @@ void VerticalDoorThinker::Think()
       res = T_MoveCeilingDown(sector, speed, bottomheight, -1);
 
       // killough 10/98: implement gradual lighting effects
-      if(lighttag && topheight - sector->srf.floor.height)
+      if(lighttag && topheight - bottomheight)
       {
          EV_LightTurnOnPartway(lighttag, FixedDiv(sector->srf.ceiling.height - bottomheight,
                                                   topheight - bottomheight));
