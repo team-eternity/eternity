@@ -287,6 +287,7 @@ static registry_value_t steamInstallValue =
 static const char *steamInstallSubDirs[] =
 {
    "doom 2\\base",
+   "doom 2\\finaldoombase"
    "final doom\\base",
    "ultimate doom\\base",
    "hexen\\base",
@@ -296,9 +297,12 @@ static const char *steamInstallSubDirs[] =
 };
 
 // Master Levels
-// Special thanks to Gez for getting the installation path.
 // (NB: as above, add "steamapps\\common\\")
-static const char *steamMasterLevelsPath = "Master Levels of Doom\\master\\wads";
+static const char *steamMasterLevelsSubDirs[] =
+{
+   "Master Levels of Doom\\master\\wads", // Special thanks to Gez for getting this installation path.
+   "doom 2\\masterbase\\master\\wads",
+};
 
 // Hexen 95, from the Towers of Darkness collection.
 // Special thanks to GreyGhost for finding the registry keys it creates.
@@ -740,15 +744,19 @@ static void D_findMasterLevels()
    // Check for the Steam install path
    if(D_getRegistryString(steamInstallValue, str))
    {
-      str.pathConcatenate("\\steamapps\\common");
-      str.pathConcatenate(steamMasterLevelsPath);
-
-      if(!stat(str.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
+      for(size_t i = 0; i < earrlen(steamMasterLevelsSubDirs); i++)
       {
-         w_masterlevelsdirname = str.duplicate(PU_STATIC);
+         qstring newPath{ str };
+         newPath.pathConcatenate("\\steamapps\\common");
+         newPath.pathConcatenate(steamMasterLevelsSubDirs[i]);
 
-         // Got it.
-         return;
+         if(!stat(newPath.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
+         {
+            w_masterlevelsdirname = newPath.duplicate(PU_STATIC);
+
+            // Got it.
+            return;
+         }
       }
    }
 
