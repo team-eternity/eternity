@@ -21,8 +21,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef _STEAM_H_
 #define _STEAM_H_
 
-//#include "d_io.h"
-#include "m_qstr.h"
+#include "d_io.h"
+//#include "m_qstr.h"
 
 #define DOOM2_STEAM_APPID 2300
 
@@ -34,12 +34,12 @@ typedef enum {
 typedef struct steamgame_s {
    int      appid;
    char    *subdir;
-   qstring  library;
-   //char   library[PATH_MAX];
+   //qstring  library;
+   char   library[PATH_MAX];
 } steamgame_t;
 
 bool           Steam_FindGame(steamgame_t *game, int appid);
 bool           Steam_ResolvePath(char *path, size_t pathsize, const steamgame_t *game);
-steamversion_t Steam_ChooseQuakeVersion();
+//steamversion_t Steam_ChooseQuakeVersion();
 
 #endif /*_STEAM_H */

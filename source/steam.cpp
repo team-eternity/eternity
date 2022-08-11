@@ -24,6 +24,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 // steam.cpp -- steam config parsing
 
+#include "z_zone.h"
+
+#include "d_dwfile.h"
+#include "m_ctype.h"
 #include "steam.h"
 
 //#ifdef __APPLE__
@@ -53,27 +57,27 @@ Parses a quoted string (potentially with escape sequences)
 static char *VDB_ParseString(char **buf)
 {
    char *ret, *write;
-   while(q_isspace(**buf))
+   while(ectype::isSpace(**buf))
       ++*buf;
 
    if(**buf != '"')
-      return NULL;
+      return nullptr;
 
    write = ret = ++*buf;
    for(;;)
    {
       if(!**buf) // premature end of buffer
-         return NULL;
+         return nullptr;
 
       if(**buf == '\\') // escape sequence
       {
          ++*buf;
          switch(**buf)
          {
-            case '\'':   *write++ = '\''; break;
+            case '\'':  *write++ = '\''; break;
             case '"':   *write++ = '"';  break;
             case '?':   *write++ = '\?'; break;
-            case '\\':   *write++ = '\\'; break;
+            case '\\':  *write++ = '\\'; break;
             case 'a':   *write++ = '\a'; break;
             case 'b':   *write++ = '\b'; break;
             case 'f':   *write++ = '\f'; break;
@@ -82,7 +86,7 @@ static char *VDB_ParseString(char **buf)
             case 't':   *write++ = '\t'; break;
             case 'v':   *write++ = '\v'; break;
             default:   // unsupported sequence
-               return NULL;
+               return nullptr;
          }
          ++*buf;
          continue;
@@ -113,7 +117,7 @@ static bool VDB_ParseEntry(char **buf, vdbcontext_t *ctx)
 {
    char *name;
 
-   while(q_isspace(**buf))
+   while(ectype::isSpace(**buf))
       ++*buf;
    if(!**buf) // end of buffer
       return true;
@@ -122,7 +126,7 @@ static bool VDB_ParseEntry(char **buf, vdbcontext_t *ctx)
    if(!name)
       return false;
 
-   while(q_isspace(**buf))
+   while(ectype::isSpace(**buf))
       ++*buf;
 
    if(**buf == '"') // key-value pair
@@ -137,13 +141,13 @@ static bool VDB_ParseEntry(char **buf, vdbcontext_t *ctx)
    if(**buf == '{') // node
    {
       ++*buf;
-      if(ctx->depth == countof(ctx->path))
+      if(ctx->depth == earrlen(ctx->path))
          return false;
       ctx->path[ctx->depth++] = name;
 
       while(**buf)
       {
-         while(q_isspace(**buf))
+         while(ectype::isSpace(**buf))
             ++*buf;
 
          if(**buf == '}')
@@ -253,9 +257,9 @@ static char *Steam_ReadLibFolders()
 {
    char path[MAX_OSPATH];
    if(!Sys_GetSteamDir(path, sizeof(path)))
-      return NULL;
-   if((size_t) q_strlcat(path, "/config/libraryfolders.vdf", sizeof(path)) >= sizeof(path))
-      return NULL;
+      return nullptr;
+   if((size_t)q_strlcat(path, "/config/libraryfolders.vdf", sizeof(path)) >= sizeof(path))
+      return nullptr;
    return (char *)COM_LoadMallocFile_TextMode_OSPath(path, NULL);
 }
 
@@ -276,20 +280,20 @@ bool Steam_FindGame(steamgame_t *game, int appid)
    bool           ret = false;
 
    game->appid = appid;
-   game->subdir = NULL;
+   game->subdir = nullptr;
    game->library[0] = 0;
 
    steamcfg = Steam_ReadLibFolders();
    if(!steamcfg)
       return false;
 
-   q_snprintf(appidstr, sizeof(appidstr), "%d", appid);
+   snprintf(appidstr, sizeof(appidstr), "%d", appid);
    memset(&libparser, 0, sizeof(libparser));
    libparser.appid = appidstr;
    if(!VDB_Parse(steamcfg, VDB_OnLibFolderProperty, &libparser))
       goto done_cfg;
 
-   if((size_t) q_snprintf(path, sizeof(path), "%s/steamapps/appmanifest_%s.acf", libparser.result, appidstr) >= sizeof (path))
+   if((size_t)snprintf(path, sizeof(path), "%s/steamapps/appmanifest_%s.acf", libparser.result, appidstr) >= sizeof (path))
       goto done_cfg;
 
    manifest = (char *)COM_LoadMallocFile_TextMode_OSPath(path, NULL);
@@ -303,7 +307,7 @@ bool Steam_FindGame(steamgame_t *game, int appid)
    liblen = strlen(libparser.result);
    sublen = strlen(acfparser.result);
 
-   if(liblen + 1 + sublen + 1 > countof(game->library))
+   if(liblen + 1 + sublen + 1 > earrlen(game->library))
       goto done_manifest;
 
    memcpy(game->library, libparser.result, liblen + 1);
@@ -330,7 +334,7 @@ bool Steam_ResolvePath(char *path, size_t pathsize, const steamgame_t *game)
 {
    return
       game->subdir &&
-      (size_t)q_snprintf(path, pathsize, "%s/steamapps/common/%s", game->library, game->subdir) < pathsize
+      (size_t)snprintf(path, pathsize, "%s/steamapps/common/%s", game->library, game->subdir) < pathsize
    ;
 }
 
@@ -355,7 +359,7 @@ between the original version and the 2021 rerelease
 //
 //   memset(&messagebox, 0, sizeof(messagebox));
 //   messagebox.buttons = buttons;
-//   messagebox.numbuttons = countof(buttons);
+//   messagebox.numbuttons = earrlen(buttons);
 //#if SDL_VERSION_ATLEAST(2, 0, 12)
 //   messagebox.flags = SDL_MESSAGEBOX_BUTTONS_LEFT_TO_RIGHT;
 //#endif
