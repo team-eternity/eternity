@@ -55,25 +55,21 @@ bool Steam_GetDir(qstring &dirout)
 }
 #endif // defined(EE_FEATURE_REGISTRYSCAN)
 
+struct vdbcontext_t;
 
-typedef struct vdbcontext_s vdbcontext_t;
-typedef void (*vdbcallback_t) (vdbcontext_t *ctx, const char *key, const char *value);
+using vdbcallback_t = void (*)(vdbcontext_t *ctx, const char *key, const char *value);
 
-struct vdbcontext_s
+struct vdbcontext_t
 {
-   void         *userdata;
-   vdbcallback_t   callback;
+   void          *userdata;
+   vdbcallback_t  callback;
    int            depth;
-   const char      *path[256];
+   const char    *path[256];
 };
 
-/*
-========================
-VDB_ParseString
-
-Parses a quoted string (potentially with escape sequences)
-========================
-*/
+//
+// Parses a quoted string (potentially with escape sequences)
+//
 static char *VDB_ParseString(char **buf)
 {
    char *ret, *write;
@@ -126,13 +122,9 @@ static char *VDB_ParseString(char **buf)
    return ret;
 }
 
-/*
-========================
-VDB_ParseEntry
-
-Parses either a simple key/value pair or a node
-========================
-*/
+//
+// Parses either a simple key/value pair or a node
+//
 static bool VDB_ParseEntry(char **buf, vdbcontext_t *ctx)
 {
    char *name;
@@ -195,16 +187,12 @@ static bool VDB_ParseEntry(char **buf, vdbcontext_t *ctx)
    return false;
 }
 
-/*
-========================
-VDB_Parse
-
-Parses the given buffer in-place, calling the specified callback for each key/value pair
-========================
-*/
+//
+// Parses the given buffer in-place, calling the specified callback for each key/value pair
+//
 static bool VDB_Parse(char *buf, vdbcallback_t callback, void *userdata)
 {
-   vdbcontext_t ctx;
+   vdbcontext_t ctx{ };
    ctx.userdata = userdata;
    ctx.callback = callback;
    ctx.depth = 0;
@@ -216,22 +204,19 @@ static bool VDB_Parse(char *buf, vdbcallback_t callback, void *userdata)
    return true;
 }
 
-/*
-========================
-Steam library folder config parsing
-
-Examines all steam library folders and returns the path of the one containing the game with the given appid
-========================
-*/
-typedef struct {
+//
+// Examines all steam library folders and returns the path of the one containing the game with the given appid
+//
+struct libsparser_t
+{
    const char   *appid;
    const char   *current;
    const char   *result;
-} libsparser_t;
+};
 
 static void VDB_OnLibFolderProperty(vdbcontext_t *ctx, const char *key, const char *value)
 {
-   libsparser_t *parser = (libsparser_t *)ctx->userdata;
+   libsparser_t *parser = static_cast<libsparser_t *>(ctx->userdata);
    int idx;
 
    if(ctx->depth >= 2 && !strcmp(ctx->path[0], "libraryfolders") && sscanf(ctx->path[1], "%d", &idx) == 1)
@@ -248,31 +233,24 @@ static void VDB_OnLibFolderProperty(vdbcontext_t *ctx, const char *key, const ch
    }
 }
 
-/*
-========================
-Steam application manifest parsing
-
-Finds the path relative to the library folder
-========================
-*/
-typedef struct {
+//
+// Finds the path relative to the library folder
+//
+struct acfparser_t
+{
    const char *result;
-} acfparser_t;
+};
 
 static void ACF_OnManifestProperty(vdbcontext_t *ctx, const char *key, const char *value)
 {
-   acfparser_t *parser = (acfparser_t *)ctx->userdata;
+   acfparser_t *parser = static_cast<acfparser_t *>(ctx->userdata);
    if(ctx->depth == 1 && !strcmp(key, "installdir") && !strcmp(ctx->path[0], "AppState"))
       parser->result = value;
 }
 
-/*
-========================
-LoadMallocFile_TextMode
-
-Returns malloc'ed buffer for a given file path
-========================
-*/
+//
+// Returns malloc'ed buffer for a given file path
+//
 static char *LoadMallocFile_TextMode(const char *path)
 {
    DWFILE  dwfile;
@@ -283,13 +261,9 @@ static char *LoadMallocFile_TextMode(const char *path)
    return ret;
 }
 
-/*
-========================
-Steam_ReadLibFolders
-
-Returns malloc'ed buffer with Steam library folders config
-========================
-*/
+//
+// Returns malloc'ed buffer with Steam library folders config
+//
 static char *Steam_ReadLibFolders()
 {
    qstring path;
@@ -302,13 +276,9 @@ static char *Steam_ReadLibFolders()
    return LoadMallocFile_TextMode(path.constPtr());
 }
 
-/*
-========================
-Steam_FindGame
-
-Finds the Steam library and subdirectory for the given appid
-========================
-*/
+//
+// Finds the Steam library and subdirectory for the given appid
+//
 bool Steam_FindGame(steamgame_t *game, int appid)
 {
    char           appidstr[32];
@@ -366,13 +336,9 @@ done_cfg:
    return ret;
 }
 
-/*
-========================
-Steam_ResolvePath
-
-Fills in the OS path where the game is installed
-========================
-*/
+//
+// Fills in the OS path where the game is installed
+//
 bool Steam_ResolvePath(qstring &path, const steamgame_t *game)
 {
    if(game->subdir)
