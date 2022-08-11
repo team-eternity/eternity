@@ -107,6 +107,7 @@ function(eternity_target_sources _TARGET)
          "${CMAKE_CURRENT_BINARY_DIR}/Eternity.rc"
          SOURCE_GROUP "Source Files\\\\Win32\\\\Win32 Headers"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_fnames.h"
+         "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_registry.h"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_winmusic.h"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_winversion.h"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_xinput.h"

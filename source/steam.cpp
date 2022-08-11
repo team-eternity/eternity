@@ -1,28 +1,29 @@
-/*
-ironwail
-Copyright (C) 2022 A. Drexler
-
-The Eternity Engine
-Copyright(C) 2022 James Haley, Max Waine, et al.
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
-*/
+//
+// ironwail
+// Copyright (C) 2022 A. Drexler
+//
+// The Eternity Engine
+// Copyright(C) 2022 James Haley, Max Waine, et al.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//
+// See the GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+//
 
 // steam.cpp -- steam config parsing
+
+#ifdef EE_FEATURE_REGISTRYSCAN
 
 #include "z_zone.h"
 
@@ -30,11 +31,30 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "m_ctype.h"
 #include "steam.h"
 
-//#ifdef __APPLE__
-//#include "SDL2/SDL.h"
-//#else
-//#include "SDL.h"
-//#endif
+#ifdef EE_FEATURE_REGISTRYSCAN
+
+#include "Win32/i_registry.h"
+
+// Steam Install Path Registry Key
+static const registry_value_t steamInstallValue =
+{
+   HKEY_LOCAL_MACHINE,
+   SOFTWARE_KEY "\\Valve\\Steam",
+   "InstallPath"
+};
+
+bool Steam_GetDir(qstring &dirout)
+{
+   return I_GetRegistryString(steamInstallValue, dirout);
+}
+
+#else
+bool Steam_GetDir(qstring &dirout)
+{
+   return false;
+}
+#endif // defined(EE_FEATURE_REGISTRYSCAN)
+
 
 typedef struct vdbcontext_s vdbcontext_t;
 typedef void (*vdbcallback_t) (vdbcontext_t *ctx, const char *key, const char *value);
@@ -248,6 +268,23 @@ static void ACF_OnManifestProperty(vdbcontext_t *ctx, const char *key, const cha
 
 /*
 ========================
+LoadMallocFile_TextMode
+
+Returns malloc'ed buffer for a given file path
+========================
+*/
+static char *LoadMallocFile_TextMode(const char *path)
+{
+   DWFILE  dwfile;
+   char   *ret;
+   dwfile.openFile(path, "rt");
+   ret = ecalloc(char *, dwfile.fileLength() + 1, 1);
+   dwfile.read(ret, dwfile.fileLength(), 1);
+   return ret;
+}
+
+/*
+========================
 Steam_ReadLibFolders
 
 Returns malloc'ed buffer with Steam library folders config
@@ -255,12 +292,14 @@ Returns malloc'ed buffer with Steam library folders config
 */
 static char *Steam_ReadLibFolders()
 {
-   char path[MAX_OSPATH];
-   if(!Sys_GetSteamDir(path, sizeof(path)))
+   qstring path;
+
+   if(!Steam_GetDir(path))
       return nullptr;
-   if((size_t)q_strlcat(path, "/config/libraryfolders.vdf", sizeof(path)) >= sizeof(path))
+   path.pathConcatenate("config/libraryfolders.vdf");
+   if(path.length() > PATH_MAX)
       return nullptr;
-   return (char *)COM_LoadMallocFile_TextMode_OSPath(path, NULL);
+   return LoadMallocFile_TextMode(path.constPtr());
 }
 
 /*
@@ -272,7 +311,9 @@ Finds the Steam library and subdirectory for the given appid
 */
 bool Steam_FindGame(steamgame_t *game, int appid)
 {
-   char           appidstr[32], path[MAX_OSPATH];
+   char           appidstr[32];
+   qstring        path;
+   int            pathprintlen;
    char          *steamcfg, *manifest;
    libsparser_t   libparser;
    acfparser_t    acfparser;
@@ -293,10 +334,12 @@ bool Steam_FindGame(steamgame_t *game, int appid)
    if(!VDB_Parse(steamcfg, VDB_OnLibFolderProperty, &libparser))
       goto done_cfg;
 
-   if((size_t)snprintf(path, sizeof(path), "%s/steamapps/appmanifest_%s.acf", libparser.result, appidstr) >= sizeof (path))
+   pathprintlen = path.Printf(PATH_MAX, "%s/steamapps/appmanifest_%s.acf", libparser.result, appidstr);
+   if(pathprintlen < 0)
       goto done_cfg;
+   path.normalizeSlashes();
 
-   manifest = (char *)COM_LoadMallocFile_TextMode_OSPath(path, NULL);
+   manifest = LoadMallocFile_TextMode(path.constPtr());
    if(!manifest)
       goto done_cfg;
 
@@ -316,9 +359,9 @@ bool Steam_FindGame(steamgame_t *game, int appid)
    ret = true;
 
 done_manifest:
-   free(manifest);
+   efree(manifest);
 done_cfg:
-   free(steamcfg);
+   efree(steamcfg);
 
    return ret;
 }
@@ -330,58 +373,23 @@ Steam_ResolvePath
 Fills in the OS path where the game is installed
 ========================
 */
-bool Steam_ResolvePath(char *path, size_t pathsize, const steamgame_t *game)
+bool Steam_ResolvePath(qstring &path, const steamgame_t *game)
 {
-   return
-      game->subdir &&
-      (size_t)snprintf(path, pathsize, "%s/steamapps/common/%s", game->library, game->subdir) < pathsize
-   ;
+   if(game->subdir)
+   {
+      path.Printf(0, "%s/steamapps/common/%s", game->library, game->subdir);
+      path.normalizeSlashes();
+
+      return path.length() < PATH_MAX;
+   }
+
+   return false;
 }
 
-/*
-========================
-Steam_ChooseQuakeVersion
+// TODO: Allow loading from `rerelease\DOOM II_Data\StreamingAssets`?
+// If so, bring back Steam_ChooseQuakeVersion from ironwail.
 
-Shows a simple message box asking the user to choose
-between the original version and the 2021 rerelease
-========================
-*/
-//steamversion_t Steam_ChooseQuakeVersion()
-//{
-//#ifdef _WIN32
-//   static const SDL_MessageBoxButtonData buttons[] =
-//   {
-//      { SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, STEAM_VERSION_REMASTERED, "Remastered" },
-//      { 0, STEAM_VERSION_ORIGINAL, "Original" },
-//   };
-//   SDL_MessageBoxData messagebox;
-//   int choice = -1;
-//
-//   memset(&messagebox, 0, sizeof(messagebox));
-//   messagebox.buttons = buttons;
-//   messagebox.numbuttons = earrlen(buttons);
-//#if SDL_VERSION_ATLEAST(2, 0, 12)
-//   messagebox.flags = SDL_MESSAGEBOX_BUTTONS_LEFT_TO_RIGHT;
-//#endif
-//   messagebox.title = "";
-//   messagebox.message = "Which Quake version would you like to play?";
-//
-//   if(SDL_ShowMessageBox(&messagebox, &choice) < 0)
-//   {
-//      Sys_Printf("Steam_ChooseQuakeVersion: %s\n", SDL_GetError());
-//      return STEAM_VERSION_REMASTERED;
-//   }
-//
-//   if(choice == -1)
-//   {
-//      SDL_Quit();
-//      exit(0);
-//   }
-//
-//   return (steamversion_t)choice;
-//#else
-//   // FIXME: Original version can't be played on OS's with case-sensitive file systems
-//   // (due to id1 being named "Id1" and pak0.pak "PAK0.PAK")
-//   return STEAM_VERSION_REMASTERED;
-//#endif
-//}
+#endif // defined(EE_FEATURE_REGISTRYSCAN)
+
+// EOF
+
