@@ -38,9 +38,9 @@ typedef struct steamgame_s {
    char  library[PATH_MAX];
 } steamgame_t;
 
-bool           Steam_GetDir(qstring &dirout);
-bool           Steam_FindGame(steamgame_t *game, int appid);
-bool           Steam_ResolvePath(qstring &path, const steamgame_t *game);
+bool Steam_GetDir(qstring &dirout);
+bool Steam_FindGame(steamgame_t *game, int appid);
+bool Steam_ResolvePath(qstring &path, const steamgame_t *game);
 
 #endif // defined(EE_FEATURE_REGISTRYSCAN)
 

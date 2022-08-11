@@ -192,7 +192,7 @@ static bool VDB_ParseEntry(char **buf, vdbcontext_t *ctx)
 //
 static bool VDB_Parse(char *buf, vdbcallback_t callback, void *userdata)
 {
-   vdbcontext_t ctx{ };
+   vdbcontext_t ctx{};
    ctx.userdata = userdata;
    ctx.callback = callback;
    ctx.depth = 0;
@@ -251,29 +251,36 @@ static void ACF_OnManifestProperty(vdbcontext_t *ctx, const char *key, const cha
 //
 // Returns malloc'ed buffer for a given file path
 //
-static char *LoadMallocFile_TextMode(const char *path)
+static bool LoadFile_TextMode(qstring &outstr, const char *path)
 {
    DWFILE  dwfile;
-   char   *ret;
+   qstring tempText;
+
    dwfile.openFile(path, "rt");
-   ret = ecalloc(char *, dwfile.fileLength() + 1, 1);
-   dwfile.read(ret, dwfile.fileLength(), 1);
-   return ret;
+   if(!dwfile.isOpen())
+      return false;
+
+   tempText.initCreateSize(dwfile.fileLength() + 1);
+   dwfile.read(tempText.getBuffer(), dwfile.fileLength(), 1);
+   outstr = tempText.constPtr();
+   return true;
 }
 
 //
 // Returns malloc'ed buffer with Steam library folders config
 //
-static char *Steam_ReadLibFolders()
+static bool Steam_ReadLibFolders(qstring &steamcfg)
 {
    qstring path;
 
    if(!Steam_GetDir(path))
-      return nullptr;
+      return false;
    path.pathConcatenate("config/libraryfolders.vdf");
    if(path.length() > PATH_MAX)
-      return nullptr;
-   return LoadMallocFile_TextMode(path.constPtr());
+      return false;
+
+   LoadFile_TextMode(steamcfg, path.constPtr());
+   return true;
 }
 
 //
@@ -281,59 +288,47 @@ static char *Steam_ReadLibFolders()
 //
 bool Steam_FindGame(steamgame_t *game, int appid)
 {
-   char           appidstr[32];
-   qstring        path;
-   int            pathprintlen;
-   char          *steamcfg, *manifest;
-   libsparser_t   libparser;
-   acfparser_t    acfparser;
-   size_t         liblen, sublen;
-   bool           ret = false;
+   char         appidstr[32];
+   qstring      path;
+   qstring      steamcfg, manifest;
+   libsparser_t libparser;
+   acfparser_t  acfparser;
+   size_t       liblen, sublen;
 
+   *game       = {};
    game->appid = appid;
-   game->subdir = nullptr;
-   game->library[0] = 0;
 
-   steamcfg = Steam_ReadLibFolders();
-   if(!steamcfg)
+   if(!Steam_ReadLibFolders(steamcfg))
       return false;
 
    snprintf(appidstr, sizeof(appidstr), "%d", appid);
-   memset(&libparser, 0, sizeof(libparser));
+   libparser = {};
    libparser.appid = appidstr;
-   if(!VDB_Parse(steamcfg, VDB_OnLibFolderProperty, &libparser))
-      goto done_cfg;
+   if(!VDB_Parse(steamcfg.getBuffer(), VDB_OnLibFolderProperty, &libparser))
+      return false;
 
-   pathprintlen = path.Printf(PATH_MAX, "%s/steamapps/appmanifest_%s.acf", libparser.result, appidstr);
-   if(pathprintlen < 0)
-      goto done_cfg;
+   if(path.Printf(PATH_MAX, "%s/steamapps/appmanifest_%s.acf", libparser.result, appidstr) < 0)
+      return false;
    path.normalizeSlashes();
 
-   manifest = LoadMallocFile_TextMode(path.constPtr());
-   if(!manifest)
-      goto done_cfg;
+   if(!LoadFile_TextMode(manifest, path.constPtr()))
+      return false;
 
    memset(&acfparser, 0, sizeof(acfparser));
-   if(!VDB_Parse(manifest, ACF_OnManifestProperty, &acfparser))
-      goto done_manifest;
+   if(!VDB_Parse(manifest.getBuffer(), ACF_OnManifestProperty, &acfparser))
+      return false;
 
    liblen = strlen(libparser.result);
    sublen = strlen(acfparser.result);
 
    if(liblen + 1 + sublen + 1 > earrlen(game->library))
-      goto done_manifest;
+      return false;
 
    memcpy(game->library, libparser.result, liblen + 1);
    game->subdir = game->library + liblen + 1;
    memcpy(game->subdir, acfparser.result, sublen + 1);
-   ret = true;
 
-done_manifest:
-   efree(manifest);
-done_cfg:
-   efree(steamcfg);
-
-   return ret;
+   return true;
 }
 
 //
