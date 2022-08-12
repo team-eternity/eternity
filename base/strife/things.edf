@@ -2850,7 +2850,7 @@ thingtype Computer : Mobj, 7782
   "@
 }
 
-thingtype InvMed1 : Mobj, 7101
+thingtype InvMed1 : Mobj, 7911
 {
   //speakerid/conversationid 125
   //namepointer Med_patch
@@ -2867,7 +2867,7 @@ thingtype InvMed1 : Mobj, 7101
   "@
 }
 
-thingtype InvMed2 : Mobj, 7102
+thingtype InvMed2 : Mobj, 7912
 {
   //speakerid/conversationid 126
   //namepointer Medical_kit
@@ -2926,7 +2926,7 @@ thingtype DegninOre : Mobj, 7659
   "@
 }
 
-thingtype InvArmor2 : Mobj, 7109
+thingtype InvArmor2 : Mobj, 7919
 {
   //speakerid/conversationid 129
   //namepointer Metal_Armor
@@ -2943,7 +2943,7 @@ thingtype InvArmor2 : Mobj, 7109
   "@
 }
 
-thingtype InvArmor1 : Mobj, 7108
+thingtype InvArmor1 : Mobj, 7918
 {
   //speakerid/conversationid 130
   //namepointer Leather_Armor
@@ -2960,7 +2960,7 @@ thingtype InvArmor1 : Mobj, 7108
   "@
 }
 
-thingtype Misc22 : Mobj, 7104
+thingtype Misc22 : Mobj, 7914
 {
   //speakerid/conversationid 131
 
@@ -3397,7 +3397,7 @@ thingtype NewKey5 : Mobj
   "@
 }
 
-thingtype InvShadowArmor : Mobj, 7114
+thingtype InvShadowArmor : Mobj, 7924
 {
   //speakerid/conversationid 160
   //namepointer Shadow_armor
@@ -3417,7 +3417,7 @@ thingtype InvShadowArmor : Mobj, 7114
   "@
 }
 
-thingtype InvSuit : Mobj, 7115
+thingtype InvSuit : Mobj, 7925
 {
   //speakerid/conversationid 161
   //namepointer Environmental_Suit
@@ -3466,7 +3466,7 @@ thingtype QuestGuardUniform : Mobj, 7652
   "@
 }
 
-thingtype InvSupermap : Mobj, 7116
+thingtype InvSupermap : Mobj, 7926
 {
   //speakerid/conversationid 164
   //namepointer map
@@ -3481,7 +3481,7 @@ thingtype InvSupermap : Mobj, 7116
   "@
 }
 
-thingtype InvRadar : Mobj, 7117
+thingtype InvRadar : Mobj, 7927
 {
   //speakerid/conversationid 165
   //namepointer scanner
