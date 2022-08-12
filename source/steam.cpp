@@ -23,6 +23,7 @@
 
 // steam.cpp -- steam config parsing
 
+// TODO: Enable on Linux, maybe Mac
 #ifdef EE_FEATURE_REGISTRYSCAN
 
 #include "z_zone.h"
@@ -51,6 +52,7 @@ bool Steam_GetDir(qstring &dirout)
 #else
 bool Steam_GetDir(qstring &dirout)
 {
+   // TODO: Take Sys_GetSteamDir from ironwail and allow this for Linux and Mac too
    return false;
 }
 #endif // defined(EE_FEATURE_REGISTRYSCAN)

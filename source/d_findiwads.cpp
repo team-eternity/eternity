@@ -178,26 +178,32 @@ static const char *gogInstallSubDirs[] =
 // Master Levels from GOG.com. These are installed with Doom II
 static const char *gogMasterLevelsPath = "master\\wads";
 
-// Steam install directory subdirs
-// (NB: add "steamapps\\common\\" as a prefix)
-static const char *steamInstallSubDirs[] =
+struct steamdir_t
 {
-   "doom 2\\base",
-   "doom 2\\finaldoombase"
-   "final doom\\base",
-   "ultimate doom\\base",
-   "hexen\\base",
-   "hexen deathkings of the dark citadel\\base",
-   "heretic shadow of the serpent riders\\base",
-   "DOOM 3 BFG Edition\\base\\wads",
+   const char *game;
+   const char *waddir;
+};
+
+// Steam install directory subdirs
+// (NB: add "steamapps\\common\\" as a prefix if using Steam_GetDir)
+static const steamdir_t steamInstallSubDirs[] =
+{
+   { "doom 2",                               "base"          },
+   { "doom 2",                               "finaldoombase" },
+   { "final doom",                           "base"          },
+   { "ultimate doom",                        "base"          },
+   { "hexen",                                "base"          },
+   { "hexen deathkings of the dark citadel", "base"          },
+   { "heretic shadow of the serpent riders", "base"          },
+   { "DOOM 3 BFG Edition",                   "base/wads"     },
 };
 
 // Master Levels
-// (NB: as above, add "steamapps\\common\\")
-static const char *steamMasterLevelsSubDirs[] =
+// (NB: as above, add "steamapps\\common\\" if using Steam_GetDir)
+static steamdir_t steamMasterLevelsSubDirs[] =
 {
-   "Master Levels of Doom\\master\\wads", // Special thanks to Gez for getting this installation path.
-   "doom 2\\masterbase\\master\\wads",
+   { "Master Levels of Doom", "master/wads"              } , // Special thanks to Gez for getting this installation path.
+   { "doom 2",                "masterbase/master/wads"   },
 };
 
 // Hexen 95, from the Towers of Darkness collection.
@@ -299,25 +305,26 @@ static void D_addSteamPaths(Collection<qstring> &paths)
    steamgame_t steamdoom2;
    if(Steam_FindGame(&steamdoom2, DOOM2_STEAM_APPID) && Steam_ResolvePath(str, &steamdoom2))
    {
-      for(size_t i = 0; i < earrlen(steamInstallSubDirs); i++)
+      for(const steamdir_t &currSubDir : steamInstallSubDirs)
       {
          qstring &newPath = paths.addNew();
 
          newPath = str;
          // Strip everything before the first slash off of the string to concatenate
-         newPath.pathConcatenate(strstr(steamInstallSubDirs[i], "\\") + 1);
+         newPath.pathConcatenate(currSubDir.waddir);
       }
    }
 
    if(Steam_GetDir(str))
    {
-      for(size_t i = 0; i < earrlen(steamInstallSubDirs); i++)
+      for(const steamdir_t &currSubDir : steamInstallSubDirs)
       {
          qstring &newPath = paths.addNew();
 
          newPath = str;
          newPath.pathConcatenate("\\steamapps\\common");
-         newPath.pathConcatenate(steamInstallSubDirs[i]);
+         newPath.pathConcatenate(currSubDir.game);
+         newPath.pathConcatenate(currSubDir.waddir);
       }
    }
 }
@@ -658,7 +665,7 @@ static void D_findMasterLevels()
       {
          qstring newPath{ str };
          // Strip everything before the first slash off of the string to concatenate
-         newPath.pathConcatenate(strstr(steamMasterLevelsSubDirs[i], "\\") + 1);
+         newPath.pathConcatenate(steamMasterLevelsSubDirs[i].waddir);
 
          if(!stat(newPath.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
          {
@@ -673,11 +680,12 @@ static void D_findMasterLevels()
    // Check for the overall Steam install path
    if(Steam_GetDir(str))
    {
-      for(size_t i = 0; i < earrlen(steamMasterLevelsSubDirs); i++)
+      for(const steamdir_t &currSubDir :steamMasterLevelsSubDirs)
       {
          qstring newPath{ str };
          newPath.pathConcatenate("\\steamapps\\common");
-         newPath.pathConcatenate(steamMasterLevelsSubDirs[i]);
+         newPath.pathConcatenate(currSubDir.game);
+         newPath.pathConcatenate(currSubDir.waddir);
 
          if(!stat(newPath.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
          {

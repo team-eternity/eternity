@@ -20,23 +20,20 @@
 #ifndef _STEAM_H_
 #define _STEAM_H_
 
-#ifdef EE_FEATURE_REGISTRYSCAN
+// TODO: Enable on Linux, maybe Mac
+#if defined(EE_FEATURE_REGISTRYSCAN)
 
 #include "d_io.h"
 #include "m_qstr.h"
 
 #define DOOM2_STEAM_APPID 2300
 
-typedef enum {
-   STEAM_VERSION_ORIGINAL,
-   STEAM_VERSION_REMASTERED,
-} steamversion_t;
-
-typedef struct steamgame_s {
+struct steamgame_t
+{
    int   appid;
    char *subdir;
    char  library[PATH_MAX];
-} steamgame_t;
+};
 
 bool Steam_GetDir(qstring &dirout);
 bool Steam_FindGame(steamgame_t *game, int appid);
