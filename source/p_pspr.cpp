@@ -107,8 +107,8 @@ void P_SetPspritePtr(const player_t *player, pspdef_t *psp, statenum_t stnum)
          if(state->misc1)
          {
             // coordinate set
-            psp->sx = state->misc1 << FRACBITS;
-            psp->sy = state->misc2 << FRACBITS;
+            psp->playpos.x = psp->renderpos.x = state->misc1 << FRACBITS;
+            psp->playpos.y = psp->renderpos.y = state->misc2 << FRACBITS;
             if(!(state->flags & STATEF_INTERPOLATE))
                psp->backupPosition();
          }
@@ -117,15 +117,15 @@ void P_SetPspritePtr(const player_t *player, pspdef_t *psp, statenum_t stnum)
       {
          if(state->misc1)
          {
-            psp->sx = state->misc1 << FRACBITS;
+            psp->playpos.x = psp->renderpos.x = state->misc1 << FRACBITS;
             if(!(state->flags & STATEF_INTERPOLATE))
-               psp->prevpos.x = psp->sx;
+               psp->prevpos.x = psp->renderpos.x;
          }
          if(state->misc2)
          {
-            psp->sy = state->misc2 << FRACBITS;
+            psp->playpos.y = psp->renderpos.y =  state->misc2 << FRACBITS;
             if(!(state->flags & STATEF_INTERPOLATE))
-               psp->prevpos.y = psp->sy;
+               psp->prevpos.y = psp->renderpos.y;
          }
       }
 
@@ -189,7 +189,7 @@ static void P_BringUpWeapon(player_t *player)
       player->pendingweaponslot = nullptr;
    
       // killough 12/98: prevent pistol from starting visibly at bottom of screen:
-      player->psprites[ps_weapon].sy = demo_version >= 203 ? 
+      player->psprites[ps_weapon].playpos.y = player->psprites[ps_weapon].renderpos.y = demo_version >= 203 ?
          WEAPONBOTTOM+FRACUNIT*2 : WEAPONBOTTOM;
    
       P_SetPsprite(player, ps_weapon, newstate);
@@ -216,7 +216,7 @@ bool P_WeaponHasAmmo(const player_t *player, const weaponinfo_t *weapon)
 //
 // MaxW: 2018/01/03: Test if a player has alt ammo for a weapon
 //
-static bool P_WeaponHasAmmoAlt(player_t *player, weaponinfo_t *weapon)
+bool P_WeaponHasAmmoAlt(const player_t *player, const weaponinfo_t *weapon)
 {
    itemeffect_t *ammoType = weapon->ammo_alt;
 
@@ -378,9 +378,9 @@ static int weapon_preferences[NUMWEAPONS+1] =
 // this won't matter, because the raised weapon has no ammo anyway. When called
 // from G_BuildTiccmd you want to toggle to a different weapon regardless.
 //
-weapontype_t P_SwitchWeaponOld(const player_t *player)
+weapontype_t P_SwitchWeaponOldDoom(const player_t *player)
 {
-   int *prefer = weapon_preferences; // killough 3/22/98
+   const int *prefer = weapon_preferences; // killough 3/22/98
    weapontype_t currentweapon = player->readyweapon->dehnum;
    weapontype_t newweapon = currentweapon;
    int i = NUMWEAPONS + 1;   // killough 5/2/98   
@@ -395,7 +395,7 @@ weapontype_t P_SwitchWeaponOld(const player_t *player)
       switch(*prefer++)
       {
       case 1:
-         if(!player->powers[pw_strength])  // allow chainsaw override
+         if(!player->powers[pw_strength].isActive())  // allow chainsaw override
             break;
       case 0:
          newweapon = wp_fist;
@@ -484,7 +484,10 @@ bool P_CheckAmmo(player_t *player)
    
    if(demo_compatibility)
    {
-      player->pendingweapon = E_WeaponForDEHNum(P_SwitchWeaponOld(player));      // phares
+      if(vanilla_heretic)
+         player->pendingweapon = E_FindBestWeapon(player);
+      else
+         player->pendingweapon = E_WeaponForDEHNum(P_SwitchWeaponOldDoom(player));      // phares
       // Now set appropriate weapon overlay.
       // WEAPON_FIXME
       P_SetPsprite(player,ps_weapon,player->readyweapon->downstate);
@@ -530,6 +533,35 @@ void P_SubtractAmmo(const player_t *player, int compat_amt)
    E_RemoveInventoryItem(player, ammo, amount);
 }
 
+//
+// As above but it always subtracts a specific amount
+//
+void P_SubtractAmmoAmount(const player_t *player, int amount)
+{
+   weaponinfo_t *weapon = player->readyweapon;
+   itemeffect_t *ammo;
+
+   if(demo_version >= 401 && (player->attackdown & AT_ITEM))
+      return;
+   else if(demo_version >= 401 && (player->attackdown & AT_SECONDARY))
+   {
+      ammo = weapon->ammo_alt;
+      if(amount < 0)
+         amount = weapon->ammopershot_alt;
+   }
+   else
+   {
+      ammo = weapon->ammo;
+      if(amount < 0)
+         amount = weapon->ammopershot;
+   }
+
+   if(player->cheats & CF_INFAMMO || !ammo)
+      return;
+
+   E_RemoveInventoryItem(player, ammo, amount);
+}
+
 int lastshottic; // killough 3/22/98
 
 //
@@ -551,7 +583,7 @@ static void P_FireWeapon(player_t *player)
 
    // haleyjd 04/06/03: silencer powerup
    // haleyjd 09/14/07: per-weapon silencer, always silent support
-   if(!(weapon->flags & WPF_SILENCEABLE && player->powers[pw_silencer]) &&
+   if(!(weapon->flags & WPF_SILENCEABLE && player->powers[pw_silencer].isActive()) &&
       !(weapon->flags & WPF_SILENT))
       P_NoiseAlert(player->mo, player->mo);
 
@@ -576,7 +608,7 @@ static void P_fireWeaponAlt(player_t *player)
 
    // haleyjd 04/06/03: silencer powerup
    // haleyjd 09/14/07: per-weapon silencer, always silent support
-   if(!(weapon->flags & WPF_SILENCEABLE && player->powers[pw_silencer]) &&
+   if(!(weapon->flags & WPF_SILENCEABLE && player->powers[pw_silencer].isActive()) &&
       !(weapon->flags & WPF_SILENT))
       P_NoiseAlert(player->mo, player->mo);
 
@@ -601,7 +633,7 @@ static bool P_executeWeaponState(player_t *player, const int weaponinfo_t::*stat
 // Try to execute a weapon states if the user inputs that.
 // Returns true if a state is executed, and false otherwise.
 //
-static bool P_tryExecuteWeaponState(player_t *player)
+static bool P_tryExecuteWeaponState(player_t *player, pspdef_t *psp)
 {
    if(player->cmd.buttons & BT_ATTACK)
    {
@@ -609,6 +641,11 @@ static bool P_tryExecuteWeaponState(player_t *player)
       {
          player->attackdown = AT_PRIMARY;
          P_FireWeapon(player);
+         if(centerfire)
+         {
+            psp->renderpos = { FRACUNIT, WEAPONTOP };
+            psp->backupPosition();
+         }
          return true;
       }
    }
@@ -618,6 +655,11 @@ static bool P_tryExecuteWeaponState(player_t *player)
       {
          player->attackdown = AT_SECONDARY;
          P_fireWeaponAlt(player);
+         if(centerfire)
+         {
+            psp->renderpos = { FRACUNIT, WEAPONTOP };
+            psp->backupPosition();
+         }
          return true;
       }
    }
@@ -752,7 +794,7 @@ void P_WeaponSoundInfo(Mobj *mo, sfxinfo_t *sound)
    params.sfx = sound;
    params.setNormalDefaults(mo);
 
-   if(mo->player && mo->player->powers[pw_silencer] &&
+   if(mo->player && mo->player->powers[pw_silencer].isActive() &&
       mo->player->readyweapon->flags & WPF_SILENCEABLE)
       params.volumeScale = WEAPON_VOLUME_SILENCED;
 
@@ -768,7 +810,7 @@ void P_WeaponSound(Mobj *mo, int sfx_id)
 {
    int volume = 127;
 
-   if(mo->player && mo->player->powers[pw_silencer] &&
+   if(mo->player && mo->player->powers[pw_silencer].isActive() &&
       mo->player->readyweapon->flags & WPF_SILENCEABLE)
       volume = WEAPON_VOLUME_SILENCED;
 
@@ -818,8 +860,11 @@ void A_WeaponReady(actionargs_t *actionargs)
    // according flag is set.
    if(player->readyweapon->readysound &&
       psp->state->index == player->readyweapon->readystate &&
-      (!(player->readyweapon->flags & WPF_READYSNDHALF) || M_VHereticPRandom(pr_wpnreadysnd) < 128))
+      (!(player->readyweapon->flags & WPF_READYSNDHALF) || M_VHereticPRandom(pr_wpnreadysnd) < 128) &&
+      !(player->readyweapon->intflags & WIF_SUPPRESSREADYSOUND))
+   {
       S_StartSoundName(player->mo, player->readyweapon->readysound);
+   }
 
    // WEAPON_FIXME: chainsaw particulars (haptic feedback)
    if(E_WeaponIsCurrentDEHNum(player, wp_chainsaw) && psp->state == states[E_SafeState(S_SAW)])
@@ -843,7 +888,7 @@ void A_WeaponReady(actionargs_t *actionargs)
    // certain weapons do not auto fire
    if(demo_version >= 401)
    {
-      if(P_tryExecuteWeaponState(player))
+      if(P_tryExecuteWeaponState(player, psp))
          return;
    }
    else if(player->cmd.buttons & BT_ATTACK)
@@ -852,6 +897,11 @@ void A_WeaponReady(actionargs_t *actionargs)
       {
          player->attackdown = AT_PRIMARY;
          P_FireWeapon(player);
+         if(centerfire)
+         {
+            psp->renderpos = { FRACUNIT, WEAPONTOP };
+            psp->backupPosition();
+         }
          return;
       }
    }
@@ -860,9 +910,9 @@ void A_WeaponReady(actionargs_t *actionargs)
 
    // bob the weapon based on movement speed
    int angle = (128*leveltime) & FINEMASK;
-   psp->sx = FRACUNIT + FixedMul(player->bob, finecosine[angle]);
+   psp->playpos.x = psp->renderpos.x = FRACUNIT + FixedMul(player->bob, finecosine[angle]);
    angle &= FINEANGLES/2-1;
-   psp->sy = WEAPONTOP + FixedMul(player->bob, finesine[angle]);
+   psp->playpos.y = psp->renderpos.y = WEAPONTOP + FixedMul(player->bob, finesine[angle]);
 }
 
 static void A_reFireNew(actionargs_t *actionargs)
@@ -882,8 +932,7 @@ static void A_reFireNew(actionargs_t *actionargs)
       P_FireWeapon(player);
    }
    else if((player->cmd.buttons & BTN_ATTACK_ALT) && player->pendingweapon == nullptr &&
-            player->health &&
-            !(player->attackdown & AT_PRIMARY))
+            player->health && !(player->attackdown & AT_PRIMARY))
    {
       player->refire++;
       P_fireWeaponAlt(player);
@@ -969,22 +1018,23 @@ void A_Lower(actionargs_t *actionargs)
    if(!(psp = actionargs->pspr))
       return;
 
-   psp->sy += lowerspeed;
-   
+   psp->playpos.y += lowerspeed;
+   psp->renderpos.y = psp->playpos.y;
+
    // Is already down.
-   if(psp->sy < WEAPONBOTTOM)
+   if(psp->playpos.y < WEAPONBOTTOM)
       return;
 
    // Player is dead.
    if(player->playerstate == PST_DEAD)
    {
-      psp->sy = WEAPONBOTTOM;
+      psp->playpos.y = psp->renderpos.y = WEAPONBOTTOM;
       return;      // don't bring weapon back up
    }
 
    // The old weapon has been lowered off the screen,
    // so change the weapon and start raising it
-   
+
    if(!player->health)
    {      // Player is dead, so keep the weapon off screen.
       P_SetPsprite(player,  ps_weapon, NullStateNum);
@@ -1018,19 +1068,20 @@ void A_Raise(actionargs_t *actionargs)
 
    if(!(psp = actionargs->pspr))
       return;
-   
-   psp->sy -= raisespeed;
-   
-   if(psp->sy > WEAPONTOP)
+
+   psp->playpos.y -= raisespeed;
+   psp->renderpos.y = psp->playpos.y;
+
+   if(psp->playpos.y > WEAPONTOP)
       return;
-   
-   psp->sy = WEAPONTOP;
-   
+
+   psp->playpos.y = psp->renderpos.y = WEAPONTOP;
+
    // The weapon has been raised all the way,
    //  so change to the ready state.
-   
+
    newstate = player->readyweapon->readystate;
-   
+
    P_SetPsprite(player, ps_weapon, newstate);
 }
 
@@ -1056,7 +1107,7 @@ void P_WeaponRecoil(player_t *player)
    }
 
    // haleyjd 06/05/13: if weapon is flagged for it, do haptic recoil effect here.
-   if(player == &players[consoleplayer] && (readyweapon->flags & WPF_HAPTICRECOIL))
+   if(player == &players[consoleplayer] && (readyweapon->flags & WPF_NOHAPTICRECOIL) == 0)
       I_StartHaptic(HALHapticInterface::EFFECT_FIRE, readyweapon->hapticrecoil, readyweapon->haptictime);
 }
 
@@ -1235,10 +1286,10 @@ void P_MovePsprites(player_t *player)
          P_SetPsprite(player, i, psp->state->nextstate);
    }
    
-   player->psprites[ps_flash].sx = player->psprites[ps_weapon].sx;
-   player->psprites[ps_flash].sy = player->psprites[ps_weapon].sy;
+   player->psprites[ps_flash].playpos   = player->psprites[ps_weapon].playpos;
+   player->psprites[ps_flash].renderpos = player->psprites[ps_weapon].renderpos;
    // also preserve interpolation
-   player->psprites[ps_flash].prevpos = player->psprites[ps_weapon].prevpos;
+   player->psprites[ps_flash].prevpos   = player->psprites[ps_weapon].prevpos;
 }
 
 //===============================
@@ -1524,7 +1575,7 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
    damage = dmgfactor * ((P_Random(pr_custompunch)%dmgmod) + 1);
 
    // apply berzerk multiplier
-   if(player->powers[pw_strength])
+   if(player->powers[pw_strength].isActive())
       damage *= berzerkmul;
 
    // decrement ammo if appropriate

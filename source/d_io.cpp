@@ -78,7 +78,7 @@ char *DWFILE::getStr(char *buf, size_t n)
    else
    {  // copy buffer
       char *p = buf;
-      while(n > 1 && *inp && size && (n--, size--, *p++ = *inp++) != '\n')
+      while(n > 1 && size && *inp && (n--, size--, *p++ = *inp++) != '\n')
          ;
       *p = 0;
    }
@@ -93,7 +93,7 @@ char *DWFILE::getStr(char *buf, size_t n)
 int DWFILE::atEof() const
 {
    return (type == DWF_FILE) ? 
-           feof((FILE *)inp) : !*inp || size <= 0;
+           feof((FILE *)inp) : size <= 0 || !*inp;;
 }
 
 //

@@ -67,7 +67,7 @@ const char *E_ModFieldName(const char *base, const emod_t *mod);
 // EDF-only stuff
 #ifdef NEED_EDF_DEFINITIONS
 
-#define EDF_SEC_MOD "damagetype"
+constexpr const char EDF_SEC_MOD[] = "damagetype";
 
 extern cfg_opt_t edf_dmgtype_opts[];
 

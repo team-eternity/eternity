@@ -1,0 +1,69 @@
+1
+Master Levels for Doom II
+YOU HAVE ASSAULTED AND TRIUMPHED OVER THE\nMOST VICIOUS REALMS THAT THE DEMENTED\nMINDS OF OUR DESIGNERS COULD DEVISE. THE\nHAVOC YOU LEFT BEHIND YOU AS YOU SMASHED\nYOUR WAY THROUGH THE MASTER LEVELS IS\nMUTE TRIBUTE TO YOUR PROWESS. YOU HAVE\nEARNED THE TITLE OF MASTER OF DESTRUCTION.
+22
+masterlevels.wad
+22
+Attack
+1
+30
+Canyon
+2
+90
+The Catwalk
+3
+120
+The Combine
+4
+120
+The Fistula
+5
+90
+The Garrison
+6
+150
+Titan Manor
+7
+120
+Paradox
+8
+120
+Subspace
+9
+270
+Subterra
+10
+90
+Trapped On Titan
+11
+210
+Virgil's Lead
+12
+150
+Minos' Judgement
+13
+150
+Bloodsea Keep
+14
+150
+Mephisto's Maosoleum
+15
+210
+Nessus
+16
+150
+Geryon
+17
+420
+Vesperas
+18
+150
+Black Tower
+19
+210
+The Express Elevator To Hell
+20
+150
+Bad Dream
+21
+240

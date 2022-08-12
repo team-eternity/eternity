@@ -64,49 +64,50 @@
 // Data Tables
 //
 
-#define ITEM_FONT_ID     "id"
-#define ITEM_FONT_START  "start"
-#define ITEM_FONT_END    "end"
-#define ITEM_FONT_CY     "linesize"
-#define ITEM_FONT_SPACE  "spacesize"
-#define ITEM_FONT_DW     "widthdelta"
-#define ITEM_FONT_ABSH   "tallestchar"
-#define ITEM_FONT_CW     "centerwidth"
-#define ITEM_FONT_LFMT   "linearformat"
-#define ITEM_FONT_LLUMP  "linearlump"
-#define ITEM_FONT_REQUAN "requantize"
-#define ITEM_FONT_FILTER "filter"
-#define ITEM_FONT_COLOR  "colorable"
-#define ITEM_FONT_UPPER  "uppercase"
-#define ITEM_FONT_CENTER "blockcentered"
-#define ITEM_FONT_POFFS  "patchnumoffset"
-#define ITEM_FONT_COLORD "defaultcolor"
-#define ITEM_FONT_COLORN "normalcolor"
-#define ITEM_FONT_COLORH "highlightcolor"
-#define ITEM_FONT_COLORE "errorcolor"
-#define ITEM_FONT_COLORS "colortables"
+constexpr const char ITEM_FONT_ID[]     = "id";
+constexpr const char ITEM_FONT_START[]  = "start";
+constexpr const char ITEM_FONT_END[]    = "end";
+constexpr const char ITEM_FONT_CY[]     = "linesize";
+constexpr const char ITEM_FONT_SPACE[]  = "spacesize";
+constexpr const char ITEM_FONT_DW[]     = "widthdelta";
+constexpr const char ITEM_FONT_ABSH[]   = "tallestchar";
+constexpr const char ITEM_FONT_CW[]     = "centerwidth";
+constexpr const char ITEM_FONT_LFMT[]   = "linearformat";
+constexpr const char ITEM_FONT_LLUMP[]  = "linearlump";
+constexpr const char ITEM_FONT_REQUAN[] = "requantize";
+constexpr const char ITEM_FONT_FILTER[] = "filter";
+constexpr const char ITEM_FONT_COLOR[]  = "colorable";
+constexpr const char ITEM_FONT_UPPER[]  = "uppercase";
+constexpr const char ITEM_FONT_CENTER[] = "blockcentered";
+constexpr const char ITEM_FONT_USPACE[] = "usespacesize";
+constexpr const char ITEM_FONT_POFFS[]  = "patchnumoffset";
+constexpr const char ITEM_FONT_COLORD[] = "defaultcolor";
+constexpr const char ITEM_FONT_COLORN[] = "normalcolor";
+constexpr const char ITEM_FONT_COLORH[] = "highlightcolor";
+constexpr const char ITEM_FONT_COLORE[] = "errorcolor";
+constexpr const char ITEM_FONT_COLORS[] = "colortables";
 
-#define ITEM_FILTER_CHARS "chars"
-#define ITEM_FILTER_START "start"
-#define ITEM_FILTER_END   "end"
-#define ITEM_FILTER_MASK  "mask"
+constexpr const char ITEM_FILTER_CHARS[] = "chars";
+constexpr const char ITEM_FILTER_START[] = "start";
+constexpr const char ITEM_FILTER_END[]   = "end";
+constexpr const char ITEM_FILTER_MASK[]  = "mask";
 
-#define ITEM_COLOR_BRICK   "brick"
-#define ITEM_COLOR_TAN     "tan"
-#define ITEM_COLOR_GRAY    "gray"
-#define ITEM_COLOR_GREEN   "green"
-#define ITEM_COLOR_BROWN   "brown"
-#define ITEM_COLOR_GOLD    "gold"
-#define ITEM_COLOR_RED     "red"
-#define ITEM_COLOR_BLUE    "blue"
-#define ITEM_COLOR_ORANGE  "orange"
-#define ITEM_COLOR_YELLOW  "yellow"
-#define ITEM_COLOR_CUSTOM1 "custom1"
-#define ITEM_COLOR_CUSTOM2 "custom2"
-#define ITEM_COLOR_CUSTOM3 "custom3"
-#define ITEM_COLOR_CUSTOM4 "custom4"
+constexpr const char ITEM_COLOR_BRICK[]   = "brick";
+constexpr const char ITEM_COLOR_TAN[]     = "tan";
+constexpr const char ITEM_COLOR_GRAY[]    = "gray";
+constexpr const char ITEM_COLOR_GREEN[]   = "green";
+constexpr const char ITEM_COLOR_BROWN[]   = "brown";
+constexpr const char ITEM_COLOR_GOLD[]    = "gold";
+constexpr const char ITEM_COLOR_RED[]     = "red";
+constexpr const char ITEM_COLOR_BLUE[]    = "blue";
+constexpr const char ITEM_COLOR_ORANGE[]  = "orange";
+constexpr const char ITEM_COLOR_YELLOW[]  = "yellow";
+constexpr const char ITEM_COLOR_CUSTOM1[] = "custom1";
+constexpr const char ITEM_COLOR_CUSTOM2[] = "custom2";
+constexpr const char ITEM_COLOR_CUSTOM3[] = "custom3";
+constexpr const char ITEM_COLOR_CUSTOM4[] = "custom4";
 
-#define ITEM_DELTA_NAME    "name"
+constexpr const char ITEM_DELTA_NAME[]    = "name";
 
 static cfg_opt_t filter_opts[] =
 {
@@ -176,6 +177,7 @@ static cfg_opt_t color_opts[] =
    CFG_BOOL(ITEM_FONT_COLOR,  false,      CFGF_NONE), \
    CFG_BOOL(ITEM_FONT_UPPER,  false,      CFGF_NONE), \
    CFG_BOOL(ITEM_FONT_CENTER, false,      CFGF_NONE), \
+   CFG_BOOL(ITEM_FONT_USPACE, false,      CFGF_NONE), \
    CFG_BOOL(ITEM_FONT_REQUAN, false,      CFGF_NONE), \
                                                       \
    CFG_END()
@@ -473,7 +475,8 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt,
    font->cy    = font->lsize;
    font->dw    = 0;
    font->absh  = font->lsize;
-   font->space = font->lsize;
+   if(!font->useSpaceSize)
+      font->space = font->lsize;
 
    // set flags
    font->centered = false; // not block-centered
@@ -773,14 +776,12 @@ static void E_loadTranslation(vfont_t *font, int index, const char *lumpname)
 // EDF Processing
 //
 
-#define IS_SET(sec, name) (def || cfg_size(sec, name) > 0)
-
 //
 // E_ProcessFont
 //
 // Processes a single EDF font object.
 //
-static void E_ProcessFont(cfg_t *sec, bool delta)
+static void E_ProcessFont(cfg_t *const sec, bool delta)
 {
    vfont_t *font;
    const char *tempstr;
@@ -799,10 +800,14 @@ static void E_ProcessFont(cfg_t *sec, bool delta)
    // processed before, or in other words, this is a new font by name.
    // Otherwise, this definition's fields are treated additively over the
    // existing font's data.
-   bool def = !(font->linear || font->numfilters);
+   const bool def = !(font->linear || font->numfilters);
+
+   const auto IS_SET = [sec, def](const char *const name) -> bool {
+      return def || cfg_size(sec, name) > 0;
+   };
 
    // process start
-   if(IS_SET(sec, ITEM_FONT_START))
+   if(IS_SET(ITEM_FONT_START))
    {
       char *pos = nullptr;
       tempstr = cfg_getstr(sec, ITEM_FONT_START);
@@ -817,7 +822,7 @@ static void E_ProcessFont(cfg_t *sec, bool delta)
    }
 
    // process end
-   if(IS_SET(sec, ITEM_FONT_END))
+   if(IS_SET(ITEM_FONT_END))
    {
       char *pos = nullptr;
       tempstr = cfg_getstr(sec, ITEM_FONT_END);
@@ -832,61 +837,64 @@ static void E_ProcessFont(cfg_t *sec, bool delta)
    }
 
    // process linebreak height
-   if(IS_SET(sec, ITEM_FONT_CY))
+   if(IS_SET(ITEM_FONT_CY))
       font->cy = cfg_getint(sec, ITEM_FONT_CY);
 
    // process space size
-   if(IS_SET(sec, ITEM_FONT_SPACE))
+   if(IS_SET(ITEM_FONT_SPACE))
       font->space = cfg_getint(sec, ITEM_FONT_SPACE);
 
    // process width delta
-   if(IS_SET(sec, ITEM_FONT_DW))
+   if(IS_SET(ITEM_FONT_DW))
       font->dw = cfg_getint(sec, ITEM_FONT_DW);
 
    // process absolute height (tallest character)
-   if(IS_SET(sec, ITEM_FONT_ABSH))
+   if(IS_SET(ITEM_FONT_ABSH))
       font->absh = cfg_getint(sec, ITEM_FONT_ABSH);
 
    // process centered width
-   if(IS_SET(sec, ITEM_FONT_CW))
+   if(IS_SET(ITEM_FONT_CW))
       font->cw = cfg_getint(sec, ITEM_FONT_CW);
 
    // process colorable flag
-   if(IS_SET(sec, ITEM_FONT_COLOR))
+   if(IS_SET(ITEM_FONT_COLOR))
       font->color = cfg_getbool(sec, ITEM_FONT_COLOR);
 
    // process uppercase flag
-   if(IS_SET(sec, ITEM_FONT_UPPER))
+   if(IS_SET(ITEM_FONT_UPPER))
       font->upper = cfg_getbool(sec, ITEM_FONT_UPPER);
 
    // process blockcentered flag
-   if(IS_SET(sec, ITEM_FONT_CENTER))
+   if(IS_SET(ITEM_FONT_CENTER))
       font->centered = cfg_getbool(sec, ITEM_FONT_CENTER);
+
+   if(IS_SET(ITEM_FONT_USPACE))
+      font->useSpaceSize = cfg_getbool(sec, ITEM_FONT_USPACE);
 
    // haleyjd 09/06/12: colors
    // default color
-   if(IS_SET(sec, ITEM_FONT_COLORD))
+   if(IS_SET(ITEM_FONT_COLORD))
    {
       E_setFontColor(sec, font, ITEM_FONT_COLORD,
          &vfont_t::colorDefault, &gamemodeinfo_t::defTextTrans);
    }
 
    // normal color
-   if(IS_SET(sec, ITEM_FONT_COLORN))
+   if(IS_SET(ITEM_FONT_COLORN))
    {
       E_setFontColor(sec, font, ITEM_FONT_COLORN, 
          &vfont_t::colorNormal, &gamemodeinfo_t::colorNormal);
    }
    
    // high color
-   if(IS_SET(sec, ITEM_FONT_COLORH))
+   if(IS_SET(ITEM_FONT_COLORH))
    {
       E_setFontColor(sec, font, ITEM_FONT_COLORH, 
          &vfont_t::colorHigh, &gamemodeinfo_t::colorHigh);
    }
 
    // error color
-   if(IS_SET(sec, ITEM_FONT_COLORE))
+   if(IS_SET(ITEM_FONT_COLORE))
    {
       E_setFontColor(sec, font, ITEM_FONT_COLORE, 
          &vfont_t::colorError, &gamemodeinfo_t::colorError);

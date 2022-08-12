@@ -37,6 +37,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "ev_specials.h"
 #include "m_compare.h"
 #include "metaapi.h"
 #include "p_enemy.h"
@@ -90,7 +91,7 @@ void P_MakeSeeSound(Mobj *actor, pr_class_t rngnum)
       }
       
       // haleyjd: generalize to all bosses
-      if(actor->flags2 & MF2_BOSS)
+      if((actor->flags2 & MF2_BOSS) || (actor->flags5 & MF5_FULLVOLSOUNDS))
          emitter = nullptr;
 
       S_StartSound(emitter, sound);
@@ -545,7 +546,7 @@ void A_Scream(actionargs_t *actionargs)
 
    // Check for bosses.
    // haleyjd: generalize to all bosses
-   if(actor->flags2 & MF2_BOSS)
+   if((actor->flags2 & MF2_BOSS) || (actor->flags5 & MF5_FULLVOLSOUNDS))
       S_StartSound(nullptr, sound); // full volume
    else
       S_StartSound(actor, sound);
@@ -708,7 +709,8 @@ void A_Explode(actionargs_t *actionargs)
    P_RadiusAttack(thingy, thingy->target, 128, 128, thingy->info->mod, 0);
 
    // ioanch 20160116: portal aware Z
-   // VANILLA_HERETIC: apply the same check as in vanilla
+   // VANILLA_HERETIC: apply the same check as in vanilla.
+   // NOTE: no slopes in vanilla, no need to go more complex than "floor height".
    if(!vanilla_heretic || thingy->zref.floor == thingy->subsector->sector->srf.floor.height)
       E_ExplosionHitWater(thingy, 128);
 }
@@ -809,6 +811,43 @@ void A_RestoreSpecialThing2(actionargs_t *actionargs)
 
    thing->flags |= MF_SPECIAL;
    P_SetMobjState(thing, thing->info->spawnstate);
+}
+
+//
+// Executes any potential boss-death actions. Triggered by A_BossDeath and A_HticBossDeath. Player
+// life is not checked here, due to different game rules. A player reference is needed anyway to
+// know who should be the activator.
+//
+void P_CheckCustomBossActions(const Mobj &mo, const player_t &player)
+{
+   bool deathchecked = false;
+   for(levelaction_t *action = LevelInfo.actions; action; action = action->next)
+   {
+      // the non-boss-only ones are handled in LevelActionThinker
+      if(!(action->flags & levelaction_t::BOSS_ONLY))
+         continue;
+      if(mo.type != action->mobjtype)
+         continue;
+      // scan the remaining thinkers to see if all bosses are dead
+      if(!deathchecked)
+         for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+         {
+            Mobj *mo2;
+            if((mo2 = thinker_cast<Mobj *>(th)))
+               if(mo2 != &mo && mo2->type == mo.type && mo2->health > 0)
+                  return;         // other boss not dead; quit
+         }
+      deathchecked = true;  // mark not to check twice
+      if(action->flags & levelaction_t::CLASSIC_SPECIAL)
+         EV_ActivateSpecialNum(action->special, action->args, player.mo, true);
+      else
+      {
+         ev_action_t *evaction = EV_UDMFEternityActionForSpecial(action->special);
+         if(evaction)
+            EV_ActivateAction(evaction, action->args, player.mo);
+      }
+
+   }
 }
 
 // EOF

@@ -446,7 +446,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
 //
 bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
 {
-   return EV_ActivateSpecialLineWithSpac(line, side, thing, nullptr, SPAC_USE);
+   return EV_ActivateSpecialLineWithSpac(line, side, thing, nullptr, SPAC_USE, false);
 }
 
 //----------------------------------------------------------------------------

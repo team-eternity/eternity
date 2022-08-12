@@ -259,6 +259,26 @@ int R_ColormapNumForName(const char *name)
    return i;
 }
 
+//
+// Get name of colormap from index. Returns nullptr if nothing.
+//
+const char *R_ColormapNameForNum(int index)
+{
+   if(index < 0)
+      return nullptr;
+   if(index == 0)
+      return "COLORMAP";
+   if(r_numglobalmaps > 1 && index == 1)
+      return "FOGMAP";
+   index -= r_numglobalmaps;
+   const WadDirectory::namespace_t &ns = wGlobalDir.getNamespace(lumpinfo_t::ns_colormaps);
+   if(index >= ns.numLumps)
+      return nullptr;
+   index += firstcolormaplump;
+   if(index >= 0 && index < wGlobalDir.getNumLumps())
+      return wGlobalDir.getLumpName(index);
+   return nullptr;
+}
 
 int tran_filter_pct = 66;       // filter percent
 

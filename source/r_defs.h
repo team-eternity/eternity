@@ -103,15 +103,16 @@ enum
    SECF_PUSH               = 0x00000004,  // bit 9 of generalized special
    SECF_KILLSOUND          = 0x00000008,  // bit A of generalized special
    SECF_KILLMOVESOUND      = 0x00000010,  // bit B of generalized special
+   SECF_INSTANTDEATH       = 0x00000020,  // bit C of generalized special (MBF21)
 
    // Hexen phased lighting
-   SECF_PHASEDLIGHT        = 0x00000020,  // spawned with sequence start special
-   SECF_LIGHTSEQUENCE      = 0x00000040,  // spawned with sequence special
-   SECF_LIGHTSEQALT        = 0x00000080,  // spawned with sequence alt special
+   SECF_PHASEDLIGHT        = 0x00000040,  // spawned with sequence start special
+   SECF_LIGHTSEQUENCE      = 0x00000080,  // spawned with sequence special
+   SECF_LIGHTSEQALT        = 0x00000100,  // spawned with sequence alt special
 
    // UDMF given
-   SECF_FLOORLIGHTABSOLUTE = 0x00000100,  // lightfloor is set absolutely
-   SECF_CEILLIGHTABSOLUTE  = 0x00000200,  // lightceiling is set absolutely
+   SECF_FLOORLIGHTABSOLUTE = 0x00000200,  // lightfloor is set absolutely
+   SECF_CEILLIGHTABSOLUTE  = 0x00000400,  // lightceiling is set absolutely
 };
 
 // haleyjd 12/31/08: sector damage flags
@@ -122,6 +123,8 @@ enum
    SDMG_ENDGODMODE = 0x00000004, // turns off god mode if on
    SDMG_EXITLEVEL  = 0x00000008, // exits when player health <= 10
    SDMG_TERRAINHIT = 0x00000010, // damage causes a terrain hit
+   SDMG_INSTAEXITNORMAL = 0x00000020,  // exits to next map (only for MBF21 instadeath)
+   SDMG_INSTAEXITSECRET = 0x00000040,  // exits to secret map (only for MBF21 instadeath)
 };
 
 // haleyjd 08/30/09: internal sector flags
@@ -151,7 +154,7 @@ enum
 struct pslope_t
 {
    // --- Information used in clipping/projection ---
-   // Origin vector for the plane
+   // Origin vector for the plane. Z is always the host sector's floor height.
    v3fixed_t o;
    v3float_t of;
 
@@ -166,6 +169,18 @@ struct pslope_t
    // The rate at which z changes based on distance from the origin plane.
    fixed_t zdelta;
    float   zdeltaf;
+
+   //
+   // IMPORTANT
+   //
+   // The following are references to the containing sector. They work simply because we follow the
+   // rule that each sector may have its own slope, no slopes are shared. If we decide to share
+   // slopes, we MUST make sure to decouple the following fields from pslope_t
+   //
+
+   // Offset of this slope's origin from surface's height, set on sector assignment and kept constant
+   fixed_t surfaceZOffset;
+   float surfaceZOffsetF;  // floating-point variant
 };
 
 //
@@ -175,18 +190,22 @@ struct pslope_t
 #define NUMLINEARGS 5
 
 // sector action flags
-enum
+enum sectoractionflags_e : unsigned int
 {
-   SEC_ACTION_ENTER = 0x00000001
+   SEC_ACTION_NOTREPEAT  = 0x00000001,
+   SEC_ACTION_PROJECTILE = 0x00000002,
+   SEC_ACTION_MONSTER    = 0x00000004,
+   SEC_ACTION_NOPLAYER   = 0x00000008,
+   SEC_ACTION_ENTER      = 0x00000010,
+   SEC_ACTION_EXIT       = 0x00000020,
 };
 
 struct sectoraction_t
 {
    DLListItem<sectoraction_t> links;
 
-   int special;
-   int args[NUMLINEARGS];
-   int actionflags;
+   Mobj *mo;
+   int   actionflags;
 };
 
 // sector interpolation values
@@ -203,6 +222,13 @@ struct sectorinterp_t
    fixed_t backceilingheight;
    float   backfloorheightf;
    float   backceilingheightf;
+
+   // as the above sets of values, but for slope origin Z
+   float   prevfloorslopezf;
+   float   prevceilingslopezf;
+
+   float   backfloorslopezf;
+   float   backceilingslopezf;
 };
 
 //
@@ -281,6 +307,12 @@ struct surface_t
 
    // haleyjd 10/17/10: terrain type overrides
    ETerrain *terrain;
+
+   fixed_t getZAt(fixed_t x, fixed_t y) const;
+   inline fixed_t getZAt(v2fixed_t v) const
+   {
+      return getZAt(v.x, v.y);
+   }
 };
 
 //
@@ -391,6 +423,7 @@ struct side_t
   int16_t toptexture;      // Texture indices. We do not maintain names here. 
   int16_t bottomtexture;
   int16_t midtexture;
+  uint16_t intflags; // keep intflags here (we may also afford to edit "special")
   sector_t* sector;      // Sector the SideDef is facing.
 
   // killough 4/4/98, 4/11/98: highest referencing special linedef's type,
@@ -596,6 +629,12 @@ struct spritedef_t
 // SoM: Information used in texture mapping sloped planes
 struct rslope_t
 {
+   // A is a vector, which represents how movement through x and y screen space changes the u texture coordinate
+   // B is a vector, which represents how movement through x and y screen space changes the v texture coordinate
+
+   // Alternatively: A maps screen coordinates to u coords, B maps screen coordinates to v coords,
+   //                and C maps screen coordinates to inverse plane distances
+
    v3double_t A, B, C;
    double     zat, plight, shade;
 };

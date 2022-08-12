@@ -15,8 +15,8 @@ includeifenabled("strife/fonts.edf",  "STRIFE");
 ifdisabled(STRIFE)
 font ee_consolefont
 {
-   id = 4;
-   linearlump = "CONCHARS";
+   id         4
+   linearlump CONCHARS
 }
 endif()
 

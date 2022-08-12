@@ -51,9 +51,11 @@ weaponinfo DoomWeapon
 
 weaponinfo Fist : DoomWeapon, 0
 {
+  ammouse      1
+
   selectionorder 9.0
 
-  flags        FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM
+  flags        FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM|NOAUTOSWITCHTO
   mod          Fist
   recoil       10.0
 
@@ -84,9 +86,9 @@ weaponinfo Pistol : DoomWeapon, 1
   ammotype     AmmoClip
   ammouse      1
 
-  selectionorder 8.0
+  selectionorder 5.0
 
-  flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL|AUTOSWITCHFROM
+  flags        SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM
   mod          Pistol
   recoil       10.0
   hapticrecoil 1
@@ -123,7 +125,7 @@ weaponinfo Shotgun : DoomWeapon, 2
 
   selectionorder 4.0
 
-  flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL
+  flags        SILENCEABLE|DISABLEAPS
   mod          Shotgun
   recoil       30.0
   hapticrecoil 3
@@ -164,7 +166,7 @@ weaponinfo Chaingun : DoomWeapon, 3
 
   selectionorder 3.0
 
-  flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL
+  flags        SILENCEABLE|DISABLEAPS
   mod          Chaingun
   recoil       10.0
   hapticrecoil 1
@@ -202,7 +204,7 @@ weaponinfo RocketLauncher : DoomWeapon, 4
 
   selectionorder 7.0
 
-  flags        NOAUTOFIRE|DISABLEAPS|SILENCEABLE|HAPTICRECOIL
+  flags        NOAUTOFIRE|DISABLEAPS|SILENCEABLE
   recoil       100.0
   hapticrecoil 6
   haptictime   8
@@ -239,7 +241,7 @@ weaponinfo PlasmaRifle : DoomWeapon, 5
 
   selectionorder 1.0
 
-  flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL|NOTSHAREWARE
+  flags        SILENCEABLE|DISABLEAPS|NOTSHAREWARE
   recoil       20.0
   hapticrecoil 2
   haptictime   1
@@ -274,9 +276,9 @@ weaponinfo BFG9000 : DoomWeapon, 6
   ammotype     AmmoCell
   ammouse      40
 
-  selectionorder 5.0
+  selectionorder 8.0
 
-  flags        NOAUTOFIRE|SILENCEABLE|DISABLEAPS|HAPTICRECOIL|NOTSHAREWARE
+  flags        NOAUTOFIRE|SILENCEABLE|DISABLEAPS|NOTSHAREWARE
   recoil       100.0
   hapticrecoil 10
   haptictime   10
@@ -327,9 +329,11 @@ weaponinfo OldBFG : BFG9000
 
 weaponinfo Chainsaw : DoomWeapon, 7
 {
+  ammouse      1
+
   selectionorder 6.0
 
-  flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS
+  flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS|NOAUTOSWITCHTO
   mod          Chainsaw
   upsound      sawup
   readysound   sawidl
@@ -360,7 +364,7 @@ weaponinfo SuperShotgun : DoomWeapon, 8
 
   selectionorder 2.0
 
-  flags        SILENCEABLE|HAPTICRECOIL|DISABLEAPS
+  flags        SILENCEABLE|DISABLEAPS
   mod          SShotgun
   recoil       80.0
   hapticrecoil 5

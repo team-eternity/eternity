@@ -32,10 +32,12 @@
 #include "d_mod.h"
 #include "doomdef.h"
 #include "doomstat.h"
+#include "e_edf.h"
 #include "e_exdata.h"
 #include "e_inventory.h"
 #include "e_player.h"
 #include "e_puff.h"
+#include "e_sprite.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
@@ -58,6 +60,7 @@
 #include "p_portal.h"
 #include "p_portalcross.h"
 #include "p_saveg.h"
+#include "p_saveid.h"
 #include "p_sector.h"
 #include "p_skin.h"
 #include "p_tick.h"
@@ -74,6 +77,7 @@
 #include "st_stuff.h"
 #include "v_misc.h"
 #include "v_video.h"
+#include "w_wad.h"
 
 // Local constants (ioanch)
 // Bounding box distance to avoid and get away from edge portals
@@ -442,14 +446,14 @@ void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec)
    {
       const sector_t *ceilingsector = P_ExtremeSectorAtPoint(mo, surf_ceil);
       if((ceilingsector->intflags & SIF_SKY ||
-         R_IsSkyLikePortalCeiling(*ceilingsector)) &&
+         R_IsSkyLikePortalSurface(ceilingsector->srf.ceiling)) &&
          mo->z >= ceilingsector->srf.ceiling.height - P_ThingInfoHeight(mo->info))
       {
          mo->remove(); // don't explode on the actual sky itself
          return;
       }
       if(topedgesec && demo_version >= 342 && (topedgesec->intflags & SIF_SKY ||
-         R_IsSkyLikePortalCeiling(*topedgesec)) &&
+         R_IsSkyLikePortalSurface(topedgesec->srf.ceiling)) &&
          mo->z >= topedgesec->srf.ceiling.height - P_ThingInfoHeight(mo->info))
       {
          mo->remove(); // don't explode on the edge
@@ -487,6 +491,16 @@ void P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move)
 }
 
 //
+// Apply Heretic wind on mobj.
+//
+inline static void P_hereticWind(Mobj &mo)
+{
+   const sector_t &sector = *mo.subsector->sector;
+   if(sector.hticPushType == SECTOR_HTIC_WIND)
+      P_ThrustMobj(&mo, sector.hticPushAngle, sector.hticPushForce);
+}
+
+//
 // P_XYMovement
 //
 // Attempts to move something if it has momentum.
@@ -517,6 +531,10 @@ void P_XYMovement(Mobj* mo)
 
       return;
    }
+
+   // VANILLA_HERETIC: handle wind here
+   if(vanilla_heretic && mo->flags3 & MF3_WINDTHRUST)
+      P_hereticWind(*mo);
 
    if(mo->momx > MAXMOVE)
       mo->momx = MAXMOVE;
@@ -654,7 +672,7 @@ void P_XYMovement(Mobj* mo)
                (clip.ceilingline->backsector->intflags & SIF_SKY || 
                (demo_version >= 342 && 
                   clip.ceilingline->extflags & EX_ML_UPPERPORTAL &&
-                  R_IsSkyLikePortalCeiling(*clip.ceilingline->backsector))))
+                  R_IsSkyLikePortalSurface(clip.ceilingline->backsector->srf.ceiling))))
             {
                if (demo_compatibility ||  // killough
                   mo->z > clip.ceilingline->backsector->srf.ceiling.height)
@@ -842,7 +860,7 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
          }
          else if(mo->momz < -23*FRACUNIT)
          {
-            if(!mo->player->powers[pw_invulnerability] &&
+            if(!mo->player->powers[pw_invulnerability].isActive() &&
                !(mo->player->cheats & CF_GODMODE))
                P_FallingDamage(mo->player);
             else
@@ -850,10 +868,10 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
          }
          else if(mo->momz < -12*FRACUNIT)
             S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
-         else if(onthing || !E_GetThingFloorType(mo, true)->liquid)
+         else if(onthing || !E_GetThingFloorType(mo)->liquid)
             S_StartSound(mo, GameModeInfo->playerSounds[sk_plfeet]);
       }
-      else if(onthing || !E_GetThingFloorType(mo, true)->liquid)
+      else if(onthing || !E_GetThingFloorType(mo)->liquid)
          S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
    }
 }
@@ -975,7 +993,7 @@ static void P_ZMovement(Mobj* mo)
             (clip.ceilingline->backsector->intflags & SIF_SKY ||
             (demo_version >= 342 &&
                clip.ceilingline->extflags & EX_ML_UPPERPORTAL &&
-               R_IsSkyLikePortalCeiling(*clip.ceilingline->backsector))))
+               R_IsSkyLikePortalSurface(clip.ceilingline->backsector->srf.ceiling))))
          {
             mo->remove();  // don't explode on skies
          }
@@ -1066,7 +1084,6 @@ floater:
          mo->momz = 0;
       }
 
-      fixed_t oldz = mo->z;
       mo->z = mo->zref.floor;
 
       if(moving_down && initial_mo_z != mo->zref.floor)
@@ -1096,13 +1113,11 @@ floater:
          }
          return;
       }
+
       // VANILLA_HERETIC: crash bug emulation here
       // Also make sure it happens under the same conditions on coming here
-      if(vanilla_heretic && mo->info->crashstate != NullStateNum && mo->flags & MF_CORPSE &&
-         oldz != mo->z)
-      {
+      if(vanilla_heretic && mo->info->crashstate != NullStateNum && mo->flags & MF_CORPSE)
          P_SetMobjState(mo, mo->info->crashstate);
-      }
    }
    else if(mo->flags4 & MF4_FLY)
    {
@@ -1127,7 +1142,9 @@ floater:
    }
 
    // new footclip system
-   P_AdjustFloorClip(mo);
+   // VANILLA_HERETIC: old footclip disabling
+   if(!vanilla_heretic)
+      P_AdjustFloorClip(mo);
 
    if(mo->z + mo->height > mo->zref.ceiling)
    {
@@ -1237,7 +1254,7 @@ void P_NightmareRespawn(Mobj* mobj)
       mo->flags |= MF_AMBUSH;
 
    // killough 11/98: transfer friendliness from deceased
-   mo->flags = (mo->flags & ~MF_FRIEND) | (mobj->flags & MF_FRIEND);
+   P_transferFriendship(*mo, *mobj);
 
    mo->reactiontime = 18;
 
@@ -1447,13 +1464,8 @@ void Mobj::Think()
    }
 
    // Heretic Wind transfer specials
-   if((flags3 & MF3_WINDTHRUST) && !(flags & MF_NOCLIP))
-   {
-      sector_t *sec = subsector->sector;
-
-      if(sec->hticPushType == SECTOR_HTIC_WIND)
-         P_ThrustMobj(this, sec->hticPushAngle, sec->hticPushForce);
-   }
+   if(!vanilla_heretic && (flags3 & MF3_WINDTHRUST) && !(flags & MF_NOCLIP))
+      P_hereticWind(*this);
 
    // momentum movement
    clip.BlockingMobj = nullptr;
@@ -1486,7 +1498,9 @@ void Mobj::Think()
          if(!(onmo = P_GetThingUnder(this)))
          {
             P_ZMovement(this);
-            intflags &= ~MIF_ONMOBJ;
+            // VANILLA_HERETIC: this remains stuck forever
+            if(!vanilla_heretic)
+               intflags &= ~MIF_ONMOBJ;
          }
          else
          {
@@ -1495,7 +1509,7 @@ void Mobj::Think()
             if(demo_version >= 333 && onmo->info->topdamage > 0)
             {
                if(!(leveltime & onmo->info->topdamagemask) &&
-                  (!player || !player->powers[pw_ironfeet]))
+                  (!player || !player->powers[pw_ironfeet].isActive()))
                {
                   P_DamageMobj(this, onmo, onmo,
                                onmo->info->topdamage, 
@@ -1525,10 +1539,14 @@ void Mobj::Think()
                      player->deltaviewheight = deltaview;
                   }
                }
-               z = onmo->z + onmo->height;
+               if(!vanilla_heretic)
+                  z = onmo->z + onmo->height;
             }
-            intflags |= MIF_ONMOBJ;
-            momz = 0;
+            if(!vanilla_heretic || (player && momz < 0))
+            {
+               intflags |= MIF_ONMOBJ;
+               momz = 0;
+            }
 
             if(info->crashstate != NullStateNum
                && flags & MF_CORPSE
@@ -1657,9 +1675,13 @@ void Mobj::serialize(SaveArchive &arc)
    Super::serialize(arc);
 
    // Basic Properties
+   qstring fieldname;
+
+   // Identity
+   Archive_MobjType(arc, type);
+
    arc 
-      // Identity
-      << type << tid
+      << tid
       // Position
       << angle                                             // Angles
       << momx << momy << momz                              // Momenta
@@ -1673,18 +1695,31 @@ void Mobj::serialize(SaveArchive &arc)
       << effects                                           // Particle flags
       << intflags                                          // Internal flags
       // Basic metrics (copied to Mobj from mobjinfo)
-      << radius << height << health << damage
-      // State info (copied to Mobj from state)
-      << sprite << frame << tics
+      << radius << height << health << damage;
+
+   // State info (copied to Mobj from state)
+   // sprite
+   Archive_SpriteNum(arc, sprite);
+
+   arc
+      << frame << tics
       // Movement logic and clipping
       << validcount                                        // Traversals
       << movedir << movecount << strafecount               // Movement
       << reactiontime << threshold << pursuecount          // Attack AI
       << lastlook                                          // More AI
-      << gear                                              // Lee's torque
-      // Appearance
-      << colour                                            // Translations
-      << translucency << tranmap << alphavelocity          // Alpha blending
+      << gear;                                             // Lee's torque
+
+   // Appearance
+   // Translations
+   Archive_ColorTranslation(arc, colour);
+
+   // Alpha blending
+   arc << translucency;
+   Archive_TranslucencyMap(arc, tranmap);
+
+   arc
+      << alphavelocity
       << xscale << yscale                                  // Scaling
       // Inventory related fields
       << dropamount
@@ -1696,14 +1731,15 @@ void Mobj::serialize(SaveArchive &arc)
 
    // Arrays
    P_ArchiveArray<int>(arc, counters, NUMMOBJCOUNTERS); // Counters
-   P_ArchiveArray<int>(arc, args,     NUMMTARGS);       // Arguments 
+   P_ArchiveArray<int>(arc, args,     NUMMTARGS);       // Arguments
 
    if(arc.isSaving()) // Saving
    {
       unsigned int temp, targetNum, tracerNum, enemyNum;
 
       // Basic serializable pointers (state, player)
-      arc << state->index;
+      Archive_MobjState_Save(arc, *state);
+      
       temp = static_cast<unsigned>(player ? player - players + 1 : 0);
       arc << temp;
 
@@ -1720,11 +1756,16 @@ void Mobj::serialize(SaveArchive &arc)
       // Restore basic pointers
       int temp;
 
-      arc << temp; // State index
-      state = states[temp];
-      
+      state = &Archive_MobjState_Load(arc);
+
       // haleyjd 07/23/09: this must be before skin setting!
-      info = mobjinfo[type]; 
+      // Check bounds
+      if(type < 0 || type >= NUMMOBJTYPES)
+      {
+         C_Printf("Mobj::serialize: invalid type %d\n", type);
+         type = UnknownThingType;
+      }
+      info = mobjinfo[type];
 
       arc << temp; // Player number
       if(temp)
@@ -1965,10 +2006,14 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
 
    // killough 11/98: for tracking dropoffs
    // ioanch 20160201: fix zref.floor and zref.ceiling to be portal-aware
-   const sector_t *extremesector = P_ExtremeSectorAtPoint(mobj, surf_floor);
-   mobj->zref.dropoff = mobj->zref.floor = extremesector->srf.floor.height;
+   v2fixed_t totaldelta;
+   const sector_t *extremesector = P_ExtremeSectorAtPoint(mobj, surf_floor, &totaldelta);
+   mobj->zref.dropoff = mobj->zref.floor = extremesector->srf.floor.getZAt(x + totaldelta.x,
+                                                                           y + totaldelta.y);
    mobj->zref.floorgroupid = extremesector->groupid;
-   mobj->zref.ceiling = P_ExtremeSectorAtPoint(mobj, surf_ceil)->srf.ceiling.height;
+   mobj->zref.floorsector = extremesector;
+   extremesector = P_ExtremeSectorAtPoint(mobj, surf_ceil, &totaldelta);
+   mobj->zref.ceiling = extremesector->srf.ceiling.getZAt(x + totaldelta.x, y + totaldelta.y);
 
    mobj->z = 
       (z == ONFLOORZ ? mobj->zref.floor : z == ONCEILINGZ ? mobj->zref.ceiling - mobj->height : z);
@@ -2159,6 +2204,18 @@ void P_RespawnSpecials()
       return;
 
    mthing = &itemrespawnque[iquetail];
+    
+   // find which type to spawn
+
+   // killough 8/23/98: use table for faster lookup
+   i = P_FindDoomedNum(mthing->type);
+
+   if(i == -1 || i == NUMMOBJTYPES)
+   {
+      // No spawn point? Don't try to respawn (otherwise it would crash).
+      iquetail = (iquetail + 1) & (ITEMQUESIZE - 1);
+      return;
+   }
 
    x = mthing->x;
    y = mthing->y;
@@ -2167,11 +2224,6 @@ void P_RespawnSpecials()
    ss = R_PointInSubsector(x,y);
    mo = P_SpawnMobj(x, y, ss->sector->srf.floor.height, E_SafeThingType(MT_IFOG));
    S_StartSound(mo, sfx_itmbk);
-
-   // find which type to spawn
-
-   // killough 8/23/98: use table for faster lookup
-   i = P_FindDoomedNum(mthing->type);
 
    // spawn it
    z = mobjinfo[i]->flags & MF_SPAWNCEILING ? ONCEILINGZ : ONFLOORZ;
@@ -2611,6 +2663,12 @@ spawnit:
       mobj->intflags |= MIF_MUSICCHANGER;
       mobj->args[0] = mthing->type - 14100;
    }
+
+   // MaxW: If the thing inherits from EESectorActionProto then we need to make
+   // a new sector action for this Mobj
+   if(mobjinfo[i]->parent &&
+      mobjinfo[i]->parent->index == E_GetThingNumForName("EESectorActionProto"))
+      P_NewSectorActionFromMobj(mobj);
 
    mobj->backupPosition();
 
@@ -3199,7 +3257,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type, unsigned flags,
 
    th = P_SpawnMobj(x, y, z, type);
 
-   if(source->player && source->player->powers[pw_silencer] &&
+   if(source->player && source->player->powers[pw_silencer].isActive() &&
       source->player->readyweapon->flags & WPF_SILENCEABLE)
    {
       S_StartSoundAtVolume(th, th->info->seesound, WEAPON_VOLUME_SILENCED, 
@@ -3326,6 +3384,96 @@ Mobj* P_SpawnMissileWithDest(Mobj* source, Mobj* dest, mobjtype_t type,
    return P_SpawnMissileEx(missileinfo);
 }
 
+//
+// A mix of P_HticTracer from our a_heretic.cpp,
+// and P_SeekerMissile from dsda-doom (GPLv2+, credit to Ryan Krafnick)
+//
+bool P_SeekerMissile(Mobj *actor, const angle_t threshold, const angle_t maxturn, const seekcenter_e seekcenter)
+{
+   angle_t exact, diff;
+   Mobj   *dest;
+   bool    dir;
+
+   // adjust direction
+   dest = actor->tracer;
+
+   if(!dest)
+      return false;
+
+   // clear target field if target died
+   if(!(dest->flags & MF_SHOOTABLE))
+   {
+      P_ClearTarget(actor->tracer);
+      return false;
+   }
+
+   // ioanch 20151230: portal aware
+   fixed_t dx = getThingX(actor, dest);
+   fixed_t dy = getThingY(actor, dest);
+   fixed_t dz = getThingZ(actor, dest);
+
+   exact = P_PointToAngle(actor->x, actor->y, dx, dy);
+
+   if(exact > actor->angle)
+   {
+      diff = exact - actor->angle;
+      dir = true;
+   }
+   else
+   {
+      diff = actor->angle - exact;
+      dir = false;
+   }
+
+   // if > 180, invert angle and direction
+   if(diff > 0x80000000)
+   {
+      diff = 0xFFFFFFFF - diff;
+      dir = !dir;
+   }
+
+   // apply limiting parameters
+   if(diff > threshold)
+   {
+      diff >>= 1;
+      if(diff > maxturn)
+         diff = maxturn;
+   }
+
+   // turn clockwise or counterclockwise
+   if(dir)
+      actor->angle += diff;
+   else
+      actor->angle -= diff;
+
+   // directly from above
+   diff = actor->angle>>ANGLETOFINESHIFT;
+   actor->momx = FixedMul(actor->info->speed, finecosine[diff]);
+   actor->momy = FixedMul(actor->info->speed, finesine[diff]);
+
+   // adjust z only when significant height difference exists
+   if(actor->z + actor->height < dz || dz  + dest->height  < actor->z || seekcenter == seekcenter_e::yes)
+   {
+      // directly from above
+      fixed_t dist = P_AproxDistance(dx - actor->x, dy - actor->y);
+
+      dist = dist / actor->info->speed;
+
+      if(dist < 1)
+         dist = 1;
+
+      // momentum is set to equal slope rather than having some
+      // added to it
+      actor->momz = (dz - actor->z) / dist;
+
+      // aim for centre of dest thing?
+      if(seekcenter == seekcenter_e::yes)
+         actor->momz += (dest->height / 2) / dist;
+   }
+
+   return true;
+}
+
 //=============================================================================
 //
 // New Eternity mobj functions
@@ -3393,6 +3541,36 @@ void P_FallingDamage(player_t *player)
 }
 
 //
+// Adjust player view height when foot clip changes
+//
+inline static void P_updatePlayerFloorClipViewHeight(Mobj &thing, fixed_t oldclip)
+{
+   // adjust the player's viewheight
+   if(thing.player && oldclip != thing.floorclip)
+   {
+      player_t *p = thing.player;
+
+      p->viewheight -= oldclip - thing.floorclip;
+      p->deltaviewheight = (p->pclass->viewheight - p->viewheight) / 8;
+   }
+}
+
+//
+// Adjust floor clip using vanilla Heretic's buggy logic
+//
+static void P_adjustVanillaHereticFloorClip(Mobj &thing)
+{
+   fixed_t clip;
+   fixed_t oldclip = thing.floorclip;
+   if(thing.flags2 & MF2_FOOTCLIP && (clip = E_SectorFloorClip(thing.subsector->sector)))
+      thing.floorclip = clip;
+   else
+      thing.floorclip = 0;
+
+   P_updatePlayerFloorClipViewHeight(thing, oldclip);
+}
+
+//
 // P_AdjustFloorClip
 //
 // Adapted from ZDoom source (licenced under GPLv3).
@@ -3400,6 +3578,12 @@ void P_FallingDamage(player_t *player)
 //
 void P_AdjustFloorClip(Mobj *thing)
 {
+   if(vanilla_heretic)
+   {
+      P_adjustVanillaHereticFloorClip(*thing);
+      return;
+   }
+
    fixed_t oldclip = thing->floorclip;
    fixed_t shallowestclip = 0x7fffffff;
    const msecnode_t *m;
@@ -3430,14 +3614,7 @@ void P_AdjustFloorClip(Mobj *thing)
    else
       thing->floorclip = shallowestclip;
 
-   // adjust the player's viewheight
-   if(thing->player && oldclip != thing->floorclip)
-   {
-      player_t *p = thing->player;
-
-      p->viewheight -= oldclip - thing->floorclip;
-      p->deltaviewheight = (p->pclass->viewheight - p->viewheight) / 8;
-   }
+   P_updatePlayerFloorClipViewHeight(*thing, oldclip);
 }
 
 //
@@ -3479,6 +3656,21 @@ void P_ChangeThingHeights(void)
             mo->height = P_ThingInfoHeight(mo->info);
       }
    }
+}
+
+//
+// Checks if mobj fits floor and ceiling of its current location. Used by the pain elemental
+// lost soul spawning when !comp_skull, and by newer summoning actions.
+//
+bool P_CheckFloorCeilingForSpawning(const Mobj &mobj)
+{
+   v2fixed_t floorpos, ceilingpos;
+   const sector_t *floorsector = P_ExtremeSectorAtPoint(&mobj, surf_floor, &floorpos);
+   const sector_t *ceilingsector = P_ExtremeSectorAtPoint(&mobj, surf_ceil, &ceilingpos);
+   floorpos += v2fixed_t{ mobj.x, mobj.y };
+   ceilingpos += v2fixed_t{ mobj.x, mobj.y };
+   return mobj.z <= ceilingsector->srf.ceiling.getZAt(ceilingpos) - mobj.height && 
+      mobj.z >= floorsector->srf.floor.getZAt(floorpos);
 }
 
 //

@@ -117,10 +117,6 @@ struct invbarstate_t {
    int  ArtifactFlash;
 };
 
-// These defines are in degrees:
-#define MAXPITCHUP   45
-#define MAXPITCHDOWN 45
-
 enum attacktype_e : unsigned int
 {
    AT_NONE      = 0,
@@ -130,6 +126,15 @@ enum attacktype_e : unsigned int
    AT_UNKNOWN   = 8,
 
    AT_ALL = (AT_PRIMARY + AT_SECONDARY),
+};
+
+struct powerduration_t
+{
+   int  tics;
+   bool infinite;
+
+   inline bool isActive() const { return tics != 0 || infinite; }
+   inline bool shouldCount() const { return tics != 0 && !infinite; }
 };
 
 //
@@ -166,7 +171,7 @@ struct player_t
    int            armordivisor; // haleyjd 07/29/13: denominator for armor save calculation
 
    // Power ups. invinc and invis are tic counters.
-   int            powers[NUMPOWERS];
+   powerduration_t powers[NUMPOWERS];
   
    // Frags, kills of other players.
    int            frags[MAXPLAYERS];
@@ -245,6 +250,7 @@ struct wbplayerstruct_t
 struct wbstartstruct_t
 {
   int         epsd;   // episode # (0-2)
+  int         nextEpisode; // next episode (0-based) in case of custom level info
 
   // if true, splash the secret level
   bool        didsecret;

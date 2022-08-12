@@ -16,6 +16,8 @@
 ## Boston, MA  02110-1301  USA
 ##
 
+include(EternityResources)
+
 function(eternity_copy_libs TARGET)
   set(ETERNITY_DLLS "")
 
@@ -48,6 +50,20 @@ function(eternity_copy_libs TARGET)
     list(APPEND ETERNITY_DLLS "${SDL2_NET_DLL_DIR}/SDL2_net.dll")
   endif()
 
+  if(APPLE)
+    list(APPEND ETERNITY_FWS SDL2.framework)
+    list(APPEND ETERNITY_FWS SDL2_mixer.framework)
+    list(APPEND ETERNITY_FWS SDL2_net.framework)
+
+    foreach(ETERNITY_FW ${ETERNITY_FWS})
+    add_custom_command(
+      TARGET ${TARGET} POST_BUILD
+      COMMAND ${CMAKE_SOURCE_DIR}/macosx/copy_frameworks_to_product.sh ${CMAKE_BINARY_DIR}/${ETERNITY_FW} $<TARGET_FILE_DIR:${TARGET}>
+      VERBATIM
+    )
+    endforeach()
+  endif()
+
   # Copy library files to target directory.
   foreach(ETERNITY_DLL ${ETERNITY_DLLS})
     add_custom_command(TARGET ${TARGET} POST_BUILD
@@ -57,8 +73,14 @@ function(eternity_copy_libs TARGET)
 endfunction()
 
 function(eternity_copy_base_and_user TARGET)
+  eternity_build_resources(${TARGET})
+
+  # TODO: Use rm instead of remove_directory in a few years when we can assume people will have CMake 3.17
+  #       across the board.
   add_custom_command(TARGET ${TARGET} POST_BUILD
     COMMAND "${CMAKE_COMMAND}" -E copy_directory "${CMAKE_SOURCE_DIR}/base" "$<TARGET_FILE_DIR:${TARGET}>/base"
+    COMMAND "${CMAKE_COMMAND}" -E remove_directory "$<TARGET_FILE_DIR:${TARGET}>/base/doom/res"
+    COMMAND "${CMAKE_COMMAND}" -E remove_directory "$<TARGET_FILE_DIR:${TARGET}>/base/heretic/res"
     VERBATIM)
 
   add_custom_command(TARGET ${TARGET} POST_BUILD

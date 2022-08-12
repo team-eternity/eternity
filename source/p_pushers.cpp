@@ -87,7 +87,7 @@
 // at run-time, the effect will not occur. The controlling sector for
 // types 1 & 2 is the sector containing the PUSH/PULL Thing.
 
-#define PUSH_FACTOR 7
+static constexpr int PUSH_FACTOR = 7;
 
 //
 // Add_Pusher

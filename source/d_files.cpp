@@ -26,8 +26,8 @@
 #if __cplusplus >= 201703L || _MSC_VER >= 1914
 #include "hal/i_platform.h"
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
-#include "hal/i_directory.h"
-namespace fs = fsStopgap;
+#include "filesystem.hpp"
+namespace fs = ghc::filesystem;
 #else
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -552,12 +552,6 @@ void D_NewWadLumps(int source)
       if(lumpinfo[i]->source != source)
          continue;
 
-      // new sound
-      if(!strncmp(lumpinfo[i]->name, "DSCHGUN",8)) // chaingun sound
-      {
-         S_Chgun();
-         continue;
-      }
       // haleyjd 03/26/11: sounds are not handled here any more
       // haleyjd 04/10/11: music is not handled here now either
 

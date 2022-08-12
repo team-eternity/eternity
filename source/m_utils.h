@@ -29,6 +29,7 @@
 
 bool  M_WriteFile(const char *name, void *source, size_t length);
 int   M_ReadFile(const char *name, byte **buffer);
+char *M_TempFile(const char *s);
 char *M_LoadStringFromFile(const char *filename);
 
 // haleyjd: Portable versions of common non-standard C functions, as well as
@@ -53,6 +54,19 @@ void   M_ExtractFileBase(const char *, char *);               // killough
 char  *M_AddDefaultExtension(char *, const char *);           // killough 1/18/98
 void   M_NormalizeSlashes(char *);                            // killough 11/98
 char  *M_SafeFilePath(const char *pbasepath, const char *newcomponent);
+
+int M_PositiveModulo(int op1, int op2);
+
+//
+// This one assumes op2 > 0. Needed to avoid calling abs if we guarantee op2 > 0
+//
+inline static int M_PositiveModPositiveRight(int op1, int op2)
+{
+   return (op1 % op2 + op2) % op2;
+}
+
+bool M_IsExMy(const char *name, int *episode, int *map);
+bool M_IsMAPxy(const char *name, int *map);
 
 #endif
 

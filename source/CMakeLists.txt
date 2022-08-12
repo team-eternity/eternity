@@ -18,6 +18,7 @@
 ##
 
 include(EternityCopyFiles)
+include(EternityMacProperties)
 
 ################################################################################
 ######################### Set Project Source  ##################################
@@ -71,12 +72,14 @@ function(eternity_target_compile_definitions _TARGET)
    # Library search flags.
    if(OPENGL_LIBRARY)
       target_compile_definitions("${_TARGET}" PRIVATE EE_FEATURE_OPENGL)
+      if(APPLE)
+         # Recommended by the compiler if I want to silence those warnings
+         target_compile_definitions("${_TARGET}" PRIVATE GL_SILENCE_DEPRECATION)
+      endif()
    endif()
 
    # Build specific flags.
-   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-      target_compile_definitions("${_TARGET}" PRIVATE _DEBUG RANGECHECK INSTRUMENTED ZONEIDCHECK)
-   endif()
+    target_compile_definitions("${_TARGET}" PRIVATE $<$<CONFIG:Debug>:_DEBUG;RANGECHECK;INSTRUMENTED;ZONEIDCHECK>)
 
    # System specific flags.
    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -87,7 +90,7 @@ function(eternity_target_compile_definitions _TARGET)
       target_compile_definitions("${_TARGET}" PRIVATE EE_FEATURE_REGISTRYSCAN)
 
       if(MSVC)
-         target_compile_definitions("${_TARGET}" PRIVATE EE_FEATURE_MIDIRPC EE_FEATURE_XINPUT)
+         target_compile_definitions("${_TARGET}" PRIVATE EE_FEATURE_XINPUT)
       endif()
    endif()
 endfunction()
@@ -104,44 +107,36 @@ function(eternity_target_sources _TARGET)
          "${CMAKE_CURRENT_BINARY_DIR}/Eternity.rc"
          SOURCE_GROUP "Source Files\\\\Win32\\\\Win32 Headers"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_fnames.h"
+         "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_registry.h"
+         "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_winmusic.h"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_winversion.h"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_xinput.h"
+         "${CMAKE_CURRENT_SOURCE_DIR}/Win32/midifile.h"
          SOURCE_GROUP "Source Files\\\\Win32\\\\Win32 Source"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_exception.cpp"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_fnames.cpp"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_w32gui.cpp"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_w32main.cpp"
+         "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_winmusic.cpp"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_xinput.cpp"
+         "${CMAKE_CURRENT_SOURCE_DIR}/Win32/midifile.cpp"
       )
-      if(MSVC)
-         if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-            add_custom_command(OUTPUT midiproc_c.c midiproc_s.c midiproc.h
-            COMMAND midl -Oicf -W1 -Zp8 /env amd64 /protocol dce /app_config /out ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../midiproc/midiproc.idl
-            MAIN_DEPENDENCY ../midiproc/midiproc.idl)
-         elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
-            add_custom_command(OUTPUT midiproc_c.c midiproc_s.c midiproc.h
-               COMMAND midl -Oicf -W1 -Zp8 /env win32 /protocol dce /app_config /out ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../midiproc/midiproc.idl
-               MAIN_DEPENDENCY ../midiproc/midiproc.idl)
-         endif()
-         target_include_directories("${_TARGET}" PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-
-         add_sources(
-            SOURCE_GROUP "Source Files\\\\SDL\\\\midiproc"
-            "${CMAKE_CURRENT_BINARY_DIR}/midiproc_c.c"
-         )
-
-         target_include_directories("${_TARGET}" PRIVATE Win32/)
-         target_include_directories("${_TARGET}" PRIVATE ../midiproc/)
-      endif()
    endif()
 
    # macOS has no unique files currently
-   #if(APPLE)
-   #   include_directories(sdl/macosx/)
-   #   target_sources("${_TARGET}" PRIVATE
-   #      sdl/macosx/
-   #   )
-   #endif(APPLE)
+   if(APPLE)
+      if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/filesystem.hpp)
+         message(STATUS "Downloading gulrak filesystem to replace the C++17 one")
+         file(
+            DOWNLOAD "https://github.com/gulrak/filesystem/releases/download/v1.5.4/filesystem.hpp"
+            ${CMAKE_CURRENT_BINARY_DIR}/filesystem.hpp
+            EXPECTED_HASH SHA256=c7642621f4aabf073683e73ce3210a9d2f33e5a19544cef941138ac76b86a1ce
+         )
+      endif()
+
+      # Add the base binary dir for the SDL2 symlink added from ExternalLibraries
+      target_include_directories("${_TARGET}" PRIVATE ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+   endif(APPLE)
 
    if(LINUX)
       target_include_directories("${_TARGET}" PRIVATE linux/)
@@ -171,6 +166,7 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/a_general.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/a_heretic.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/a_hexen.cpp"
+      "${CMAKE_CURRENT_SOURCE_DIR}/a_mbf21.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/a_weaponsdoom.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/a_weaponsheretic.cpp"
       SOURCE_GROUP "Source Files\\\\ACS_"
@@ -400,6 +396,7 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/m_fcvt.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/m_fixed.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/m_hash.h"
+      "${CMAKE_CURRENT_SOURCE_DIR}/m_intmap.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/m_misc.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/m_qstr.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/m_qstrkeys.h"
@@ -420,6 +417,7 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/m_debug.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/m_fcvt.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/m_hash.cpp"
+      "${CMAKE_CURRENT_SOURCE_DIR}/m_intmap.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/m_misc.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/m_qstr.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/m_queue.cpp"
@@ -439,11 +437,13 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/autopalette.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/info.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/psnprntf.h"
+      "${CMAKE_CURRENT_SOURCE_DIR}/steam.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/tables.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/version.h"
       SOURCE_GROUP "Source Files\\\\Misc\\\\Misc Source"
       "${CMAKE_CURRENT_SOURCE_DIR}/info.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/psnprntf.cpp"
+      "${CMAKE_CURRENT_SOURCE_DIR}/steam.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/tables.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/version.cpp"
       SOURCE_GROUP "Source Files\\\\Mn_\\\\Mn_ Headers"
@@ -473,6 +473,9 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/p_enemy.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_hubs.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_info.h"
+      "${CMAKE_CURRENT_SOURCE_DIR}/p_info_emap.h"
+      "${CMAKE_CURRENT_SOURCE_DIR}/p_info_umap.h"
+      "${CMAKE_CURRENT_SOURCE_DIR}/p_info_zdmap.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_inter.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_map.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_map3d.h"
@@ -487,6 +490,7 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/p_pspr.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_pushers.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_saveg.h"
+      "${CMAKE_CURRENT_SOURCE_DIR}/p_saveid.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_scroll.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_sector.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_setup.h"
@@ -509,6 +513,9 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/p_genlin.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_hubs.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_info.cpp"
+      "${CMAKE_CURRENT_SOURCE_DIR}/p_info_emap.cpp"
+      "${CMAKE_CURRENT_SOURCE_DIR}/p_info_umap.cpp"
+      "${CMAKE_CURRENT_SOURCE_DIR}/p_info_zdmap.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_inter.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_lights.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_map.cpp"
@@ -525,6 +532,7 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/p_pspr.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_pushers.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_saveg.cpp"
+      "${CMAKE_CURRENT_SOURCE_DIR}/p_saveid.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_scroll.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_sector.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_setup.cpp"
@@ -594,7 +602,6 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/s_sound.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/sounds.cpp"
       SOURCE_GROUP "Source Files\\\\SDL\\\\SDL Headers"
-      "${CMAKE_CURRENT_SOURCE_DIR}/sdl/i_midirpc.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/i_net.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/sdl/i_sdlgamepads.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/sdl/i_sdlgl2d.h"
@@ -606,7 +613,6 @@ function(eternity_target_sources _TARGET)
       SOURCE_GROUP "Source Files\\\\SDL\\\\SDL Source"
       "${CMAKE_CURRENT_SOURCE_DIR}/sdl/i_input.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/sdl/i_main.cpp"
-      "${CMAKE_CURRENT_SOURCE_DIR}/sdl/i_midirpc.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/sdl/i_net.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/sdl/i_pcsound.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/sdl/i_picker.cpp"
@@ -719,7 +725,7 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/xl_scripts.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/xl_sndinfo.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/xl_umapinfo.h"
-      SOURCE_GROUP "Source Files\\\\X_\\\\XL_ Source"
+      SOURCE_GROUP "Source Files\\\\XL_\\\\XL_ Source"
       "${CMAKE_CURRENT_SOURCE_DIR}/xl_animdefs.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/xl_emapinfo.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/xl_mapinfo.cpp"
@@ -755,16 +761,32 @@ eternity_copy_base_and_user(eternity)
 target_include_directories(eternity PRIVATE ${SDL2_INCLUDE_DIR} ${SDL2_MIXER_INCLUDE_DIR} ${SDL2_NET_INCLUDE_DIR})
 target_link_libraries(eternity ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY} ${SDL2_NET_LIBRARY} acsvm png_static snes_spc ADLMIDI_static)
 
+if(APPLE)
+   eternity_set_mac_library_output()
+   # Fix the lookup to the SDL2 frameworks
+   set_target_properties(eternity PROPERTIES LINK_FLAGS "-Wl,-F\"${CMAKE_BINARY_DIR}\"")
+   set_target_properties(eternity PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE
+                                             INSTALL_RPATH "@loader_path")
+endif()
+
 if(OPENGL_LIBRARY)
    target_link_libraries(eternity ${OPENGL_LIBRARY})
 endif()
 
-if(MSVC)
-   target_link_libraries(eternity rpcrt4)
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+   target_link_libraries(eternity winmm)
+endif()
 
+# Flatpak support
+option(BUILD_FLATPAK "Build with flatpak-friendly settings." OFF)
+if(BUILD_FLATPAK)
+   target_compile_definitions(eternity PRIVATE BUILD_FLATPAK)
+endif()
+
+if(MSVC)
    target_compile_options(eternity PUBLIC
-                          "/MP" "/utf-8")
-                          
+                          "$<$<CONFIG:Debug>:/ZI>" "/MP" "/utf-8")
+
     if(NOT CMAKE_GENERATOR_TOOLSET MATCHES "_xp")
         target_compile_options(eternity PUBLIC "/permissive-")
     endif()
@@ -780,12 +802,15 @@ if(MSVC)
    if(NOT MSVC_VERSION LESS  "1914")
       target_compile_options(eternity PUBLIC "/std:c++17")
    endif()
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT BUILD_FLATPAK)
    target_link_libraries(eternity stdc++fs)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   target_link_libraries(eternity version)
+endif()
+if(APPLE)
+   eternity_set_xcode_attributes(eternity)
 endif()
 
 install(TARGETS eternity

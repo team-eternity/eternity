@@ -108,6 +108,7 @@ extern node_t           *nodes;
 extern fnode_t          *fnodes;
 
 extern int              numlines;
+extern int              numlinesPlusExtra;
 extern line_t           *lines;
 
 extern int              numsides;

@@ -142,8 +142,7 @@ struct variable_t;
 // Simpler macro for int. You do not need to specify the type.
 //
 #define VARIABLE_INT(name, defaultvar, min, max, strings)    \
-        variable_t var_ ## name = { &name, defaultvar,       \
-                        vt_int, min, max, strings, 0, 0, nullptr, nullptr };
+        variable_t var_ ## name = variable_t::makeInt(&name, defaultvar, min, max, strings);
 
 //
 // VARIABLE_STRING
@@ -151,8 +150,7 @@ struct variable_t;
 // Simplified to create strings: 'max' is the maximum string length
 //
 #define VARIABLE_STRING(name, defaultvar, max)               \
-        variable_t var_ ## name = { &name, defaultvar,       \
-                  vt_string, 0, max, nullptr, 0, 0, nullptr, nullptr};
+        variable_t var_ ## name = variable_t::makeString(&name, defaultvar, max);
 
 //
 // VARIABLE_CHARARRAY
@@ -171,8 +169,7 @@ struct variable_t;
 // haleyjd 07/05/10: For real booleans, use vt_toggle type with VARIABLE_TOGGLE
 //
 #define VARIABLE_BOOLEAN(name, defaultvar, strings)          \
-        variable_t var_ ## name = { &name, defaultvar,       \
-                  vt_int, 0, 1, strings, 0, 0, nullptr, nullptr };
+        variable_t var_ ## name = variable_t::makeBoolInt(&name, defaultvar, strings);
 
 //
 // VARIABLE_TOGGLE
@@ -180,8 +177,7 @@ struct variable_t;
 // haleyjd: for actual C++ "bool" variables.
 //
 #define VARIABLE_TOGGLE(name, defaultvar, strings)           \
-        variable_t var_ ## name = { &name, defaultvar,       \
-                   vt_toggle, 0, 1, strings, 0, 0, nullptr, nullptr };
+        variable_t var_ ## name = variable_t::makeBool(&name, defaultvar, strings);
 
 //
 // VARIABLE_FLOAT
@@ -189,18 +185,15 @@ struct variable_t;
 // haleyjd 04/21/10: support for vt_float
 //
 #define VARIABLE_FLOAT(name, defaultvar, min, max)           \
-        variable_t var_ ## name = { &name, defaultvar,       \
-                  vt_float, 0, 0, nullptr, min, max, nullptr, nullptr };
+        variable_t var_ ## name = variable_t::makeDouble(&name, defaultvar, min, max);
 
 // basic variable_t creators for constants.
 
 #define CONST_INT(name)                                      \
-        variable_t var_ ## name = { &name, nullptr,          \
-                  vt_int, -1, -1, nullptr, 0, 0, nullptr, nullptr };
+        variable_t var_ ## name = variable_t::makeConstInt(&name);
 
 #define CONST_STRING(name)                                   \
-        variable_t var_ ## name = { &name, nullptr,          \
-                  vt_string, -1, -1, nullptr, 0, 0, nullptr, nullptr };
+        variable_t var_ ## name = variable_t::makeConstString(&name);
 
 //=============================================================================
 //
@@ -258,7 +251,60 @@ enum
 //
 
 struct variable_t
-{  
+{
+   // Static type-safe factories
+   template<typename T>
+   static variable_t makeInt(T *target, T *defaultTarget, int min, int max,
+                             const char **strings)
+   {
+      static_assert(sizeof(T) == sizeof(int), "Type T must be int-like");
+      return { target, defaultTarget, vt_int, min, max, strings, 0, 0, nullptr, nullptr };
+   }
+   // Stupid boilerplate though
+   template<typename T>
+   static variable_t makeInt(T *target, std::nullptr_t, int min, int max, const char **strings)
+   {
+      static_assert(sizeof(T) == sizeof(int), "Type T must be int-like");
+      return { target, nullptr, vt_int, min, max, strings, 0, 0, nullptr, nullptr };
+   }
+
+   // String variable factory
+   static variable_t makeString(char **target, char **defaultTarget, int max)
+   {
+      return { target, defaultTarget, vt_string, 0, max, nullptr, 0, 0, nullptr, nullptr };
+   }
+
+   // Boolean as int
+   static variable_t makeBoolInt(int *target, int *defaultTarget, const char **strings)
+   {
+      return { target, defaultTarget, vt_int, 0, 1, strings, 0, 0, nullptr, nullptr };
+   }
+
+   // Real boolean
+   static variable_t makeBool(bool *target, bool *defaultTarget, const char **strings)
+   {
+      return { target, defaultTarget, vt_toggle, 0, 1, strings, 0, 0, nullptr, nullptr };
+   }
+
+   // Floating point
+   static variable_t makeDouble(double *target, double *defaultTarget, double min, double max)
+   {
+      return { target, defaultTarget, vt_float, 0, 0, nullptr, min, max, nullptr, nullptr };
+   }
+
+   // Constants
+   template<typename T>
+   static variable_t makeConstInt(T *target)
+   {
+      static_assert(sizeof(T) == sizeof(int), "Type T must be int-like");
+      return { target, nullptr, vt_int, -1, -1, nullptr, 0, 0, nullptr, nullptr };
+   }
+   static variable_t makeConstString(char **target)
+   {
+      return { target, nullptr, vt_string, -1, -1, nullptr, 0, 0, nullptr, nullptr };
+   }
+
+
   void *variable;        // NB: for strings, this is char ** not char *
   void *v_default;       // the default 
   int type;              // vt_?? variable type: int, string

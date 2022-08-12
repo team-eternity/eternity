@@ -30,34 +30,11 @@
 #include "e_exdata.h"
 #include "m_bbox.h"
 #include "polyobj.h"
-#include "p_info.h"
-#include "p_map.h"
-#include "p_maputl.h"
 #include "p_portal.h"
 #include "p_portalclip.h"
 #include "p_portalcross.h"
-#include "p_spec.h"
-#include "r_defs.h"
 #include "r_main.h"
 #include "r_portal.h"
-
-//
-// untouchedViaPortals
-//
-// ioanch 20160112: linked portal aware version of untouched from p_map.cpp
-//
-static int untouchedViaOffset(line_t *ld, const linkoffset_t *link)
-{
-   fixed_t x, y, tmbbox[4];
-   return
-     (tmbbox[BOXRIGHT] = (x = clip.thing->x + link->x) + clip.thing->radius) <=
-     ld->bbox[BOXLEFT] ||
-     (tmbbox[BOXLEFT] = x - clip.thing->radius) >= ld->bbox[BOXRIGHT] ||
-     (tmbbox[BOXTOP] = (y = clip.thing->y + link->y) + clip.thing->radius) <=
-     ld->bbox[BOXBOTTOM] ||
-     (tmbbox[BOXBOTTOM] = y - clip.thing->radius) >= ld->bbox[BOXTOP] ||
-     P_BoxOnLineSide(tmbbox, ld) != -1;
-}
 
 //
 // P_getLineHeights
@@ -138,30 +115,32 @@ static void P_addPortalHitLine(line_t *ld, polyobj_t *po)
 //
 // ioanch 20160112: Call this if there's a blocking line at a different level
 //
-static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thingz, 
+static void P_blockingLineDifferentLevel(line_t *ld, fixed_t thingz,
                                          fixed_t thingmid, fixed_t thingtopz,
                                          fixed_t linebottom, fixed_t linetop, 
                                          PODCollection<line_t *> *pushhit)
 {
    fixed_t linemid = linetop / 2 + linebottom / 2;
-   bool moveup = thingmid >= linemid;
+   surf_e towards = thingmid >= linemid ? surf_ceil : surf_floor;
 
-   if(!moveup && linebottom < clip.zref.ceiling)
+   if(towards == surf_floor && linebottom < clip.zref.ceiling)
    {
       clip.zref.ceiling = linebottom;
       clip.ceilingline = ld;
       clip.blockline = ld;
    }
-   if(moveup && linetop > clip.zref.floor)
+   if(towards == surf_ceil && linetop > clip.zref.floor)
    {
       clip.zref.floor = linetop;
       clip.zref.floorgroupid = ld->frontsector->groupid;
+      clip.zref.floorsector = nullptr;
+
       clip.floorline = ld;
       clip.blockline = ld;
    }
 
    fixed_t lowfloor;
-   if(!ld->backsector || !moveup)   // if line is 1-sided or above thing
+   if(!ld->backsector || towards == surf_floor)   // if line is 1-sided or above thing
       lowfloor = linebottom;
    else if(linebottom == ld->backsector->srf.floor.height)
       lowfloor = ld->frontsector->srf.floor.height;
@@ -174,14 +153,14 @@ static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thin
       clip.zref.dropoff = lowfloor;
 
    // ioanch: only change if postpone is false by now
-   if(moveup && linetop > clip.zref.secfloor)
+   if(towards == surf_ceil && linetop > clip.zref.secfloor)
       clip.zref.secfloor = linetop;
-   if(!moveup && linebottom < clip.zref.secceil)
+   if(towards == surf_floor && linebottom < clip.zref.secceil)
       clip.zref.secceil = linebottom;
 
-   if(moveup && clip.zref.floor > clip.zref.passfloor)
+   if(towards == surf_ceil && clip.zref.floor > clip.zref.passfloor)
       clip.zref.passfloor = clip.zref.floor;
-   if(!moveup && clip.zref.ceiling < clip.zref.passceil)
+   if(towards == surf_floor && clip.zref.ceiling < clip.zref.passceil)
       clip.zref.passceil = clip.zref.ceiling;
 
    // We need now to collect spechits for push activation.
@@ -201,6 +180,9 @@ static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thin
 //
 bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
 {
+   auto pcl = static_cast<pitcheckline_t *>(context);
+   PODCollection<line_t *> *pushhit = pcl->pushhit;
+
    if(!useportalgroups || full_demo_version < make_full_version(340, 48))
       return PIT_CheckLine(ld, po, context);
 
@@ -325,47 +307,14 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       }
    }
 
-   auto pushhit = static_cast<PODCollection<line_t *> *>(context);
    if(linebottom <= thingz && linetop >= thingtopz)
    {
       // classic Doom behaviour
-      if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL)) // one sided line
-      {
-         clip.blockline = ld;
-         bool result = clip.unstuck && !untouchedViaOffset(ld, link) &&
-            FixedMul(clip.x - clip.thing->x, ld->dy) >
-            FixedMul(clip.y - clip.thing->y, ld->dx);
-         if(!result && pushhit && ld->special &&
-            full_demo_version >= make_full_version(401, 0))
-         {
-            pushhit->add(ld);
-         }
-         return result;
-      }
 
       // killough 8/10/98: allow bouncing objects to pass through as missiles
-      if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
-      {
-         if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
-         {
-            bool result = clip.unstuck && !untouchedViaOffset(ld, link);
-            if(!result && pushhit && ld->special &&
-               full_demo_version >= make_full_version(401, 0))
-            {
-               pushhit->add(ld);
-            }
-            return result;
-         }
-         // killough 8/1/98: allow escape
-
-         // killough 8/9/98: monster-blockers don't affect friends
-         // SoM 9/7/02: block monsters standing on 3dmidtex only
-         if(ld->flags & ML_BLOCKMONSTERS && !(ld->flags & ML_3DMIDTEX) &&
-            P_BlockedAsMonster(*clip.thing))
-         {
-            return false; // block monsters only
-         }
-      }
+      bool thingblock;
+      if(P_CheckLineBlocksThing(ld, link, pushhit, thingblock))
+         return thingblock;
    }
    else
    {
@@ -373,22 +322,29 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       // same conditions as above
       if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL))
       {
-         P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop, 
+         P_blockingLineDifferentLevel(ld, thingz, thingmid, thingtopz, linebottom, linetop,
             pushhit);
          return true;
       }
       if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
       {
-         if(ld->flags & ML_BLOCKING)           // explicitly blocking everything
+         if((ld->flags & ML_BLOCKING) ||
+            (mbf21_temp && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
          {
-            P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop, 
+            // explicitly blocking everything
+            // or blocking player
+            P_blockingLineDifferentLevel(ld, thingz, thingmid, thingtopz, linebottom, linetop,
                pushhit);
             return true;
          }
-         if(ld->flags & ML_BLOCKMONSTERS && !(ld->flags & ML_3DMIDTEX) &&
-            P_BlockedAsMonster(*clip.thing))
+         if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
+            (
+               ld->flags & ML_BLOCKMONSTERS ||
+               (mbf21_temp && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
+               )
+            )
          {
-            P_blockingLineDifferentLevel(ld, po, thingz, thingmid, thingtopz, linebottom, linetop, 
+            P_blockingLineDifferentLevel(ld, thingz, thingmid, thingtopz, linebottom, linetop,
                pushhit);
             return true;
          }
@@ -397,7 +353,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
 
    // better detection of in-portal lines
    uint32_t lineclipflags = 0;
-   P_LineOpening(ld, clip.thing, true, &lineclipflags);
+   clip.open = P_LineOpening(ld, clip.thing, nullptr, true, &lineclipflags);
 
    // now apply correction to openings in case thing is positioned differently
    bool samegroupid = clip.thing->groupid == linegroupid;
@@ -406,32 +362,33 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    bool underportal = !!(lineclipflags & LINECLIP_UNDERPORTAL);
 
    if(!samegroupid && !aboveportal && thingz < linebottom && 
-      thingmid < (linebottom + clip.openbottom) / 2)
+      thingmid < (linebottom + clip.open.height.floor) / 2)
    {
-      clip.opentop = linebottom;
-      clip.openbottom = D_MININT;
-      clip.opensecceil = linebottom;
-      clip.opensecfloor = D_MININT;
+      clip.open.height.ceiling = linebottom;
+      clip.open.height.floor = D_MININT;
+      clip.open.floorsector = nullptr;
+      clip.open.sec.ceiling = linebottom;
+      clip.open.sec.floor = D_MININT;
       lineclipflags &= ~LINECLIP_UNDERPORTAL;
    }
    if(!samegroupid && !underportal && thingtopz > linetop &&
-      thingmid >= (linetop + clip.opentop) / 2)
+      thingmid >= (linetop + clip.open.height.ceiling) / 2)
    {
       // adjust the lowfloor to the real observed value, to prevent
       // wrong dropoffz
       if(ld->backsector &&
-         ((clip.opensecceil == ld->backsector->srf.ceiling.height &&
-         clip.opensecfloor == ld->frontsector->srf.floor.height) ||
-         (clip.opensecceil == ld->frontsector->srf.ceiling.height &&
-         clip.opensecfloor == ld->backsector->srf.floor.height)))
+         ((clip.open.sec.ceiling == ld->backsector->srf.ceiling.height &&
+         clip.open.sec.floor == ld->frontsector->srf.floor.height) ||
+         (clip.open.sec.ceiling == ld->frontsector->srf.ceiling.height &&
+         clip.open.sec.floor == ld->backsector->srf.floor.height)))
       {
-         clip.lowfloor = clip.opensecfloor;
+         clip.open.lowfloor = clip.open.sec.floor;
       }
 
-      clip.openbottom = linetop;
-      clip.opentop = D_MAXINT;
-      clip.opensecfloor = linetop;
-      clip.opensecceil = D_MAXINT;
+      clip.open.height.floor = linetop;
+      clip.open.height.ceiling = D_MAXINT;
+      clip.open.sec.floor = linetop;
+      clip.open.sec.ceiling = D_MAXINT;
       lineclipflags &= ~LINECLIP_ABOVEPORTAL;
    }
 
@@ -439,17 +396,18 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    // ioanch 20160315: don't forget about 3dmidtex on the same group ID if they
    // decrease the opening
    if((!underportal || (lineclipflags & LINECLIP_UNDER3DMIDTEX)) 
-      && clip.opentop < clip.zref.ceiling)
+      && clip.open.height.ceiling < clip.zref.ceiling)
    {
-      clip.zref.ceiling = clip.opentop;
+      clip.zref.ceiling = clip.open.height.ceiling;
       clip.ceilingline = ld;
       clip.blockline = ld;
    }
    if((!aboveportal || (lineclipflags & LINECLIP_OVER3DMIDTEX)) 
-      && clip.openbottom > clip.zref.floor)
+      && clip.open.height.floor > clip.zref.floor)
    {
-      clip.zref.floor = clip.openbottom;
-      clip.zref.floorgroupid = clip.bottomgroupid;
+      clip.zref.floor = clip.open.height.floor;
+      clip.zref.floorgroupid = clip.open.bottomgroupid;
+      clip.zref.floorsector = clip.open.floorsector;
       clip.floorline = ld;          // killough 8/1/98: remember floor linedef
       clip.blockline = ld;
    }
@@ -461,20 +419,20 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    // as each layer is explored, if there really is a gap, and accidental
    // detail downstairs will not count, considering the linetop would always
    // be below any dropfloorz upstairs.
-   if(clip.lowfloor < clip.zref.dropoff && (samegroupid || linetop >= clip.zref.dropoff))
+   if(clip.open.lowfloor < clip.zref.dropoff && (samegroupid || linetop >= clip.zref.dropoff))
    {
-      clip.zref.dropoff = clip.lowfloor;
+      clip.zref.dropoff = clip.open.lowfloor;
    }
 
    // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
    // touching 3DMidTex lines.
-   if(demo_version >= 331 && clip.touch3dside)
+   if(demo_version >= 331 && clip.open.touch3dside)
       clip.zref.dropoff = clip.zref.floor;
 
-   if(!aboveportal && clip.opensecfloor > clip.zref.secfloor)
-      clip.zref.secfloor = clip.opensecfloor;
-   if(!underportal && clip.opensecceil < clip.zref.secceil)
-      clip.zref.secceil = clip.opensecceil;
+   if(!aboveportal && clip.open.sec.floor > clip.zref.secfloor)
+      clip.zref.secfloor = clip.open.sec.floor;
+   if(!underportal && clip.open.sec.ceiling < clip.zref.secceil)
+      clip.zref.secceil = clip.open.sec.ceiling;
 
    // SoM 11/6/02: AGHAH
    if(clip.zref.floor > clip.zref.passfloor)

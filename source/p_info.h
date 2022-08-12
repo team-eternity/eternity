@@ -24,9 +24,12 @@
 #include "doomdef.h"
 #include "r_defs.h"  // needed for NUMLINEARGS
 
+class qstring;
 class WadDirectory;
 
-void P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname);
+struct finalerule_t;
+
+bool P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname, qstring *error);
 
 void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
                       int next, int secr, bool finale, const char *intertext,
@@ -58,13 +61,25 @@ enum
    INFO_SECMAP_SMMU
 };
 
+enum
+{
+   SKYROWOFFSET_DEFAULT = INT_MIN,
+};
+
 // levelaction structures
 struct levelaction_t
 {
+   enum  // flags, tucked here for scope reasons.
+   {
+      BOSS_ONLY = 1,       // activated in A_BossDeath instead of LevelActionThinker
+      CLASSIC_SPECIAL = 2  // use classic non-parameterized special instead of Hexen
+   };
+
    int special;
    int mobjtype;
    int args[NUMLINEARGS];
    levelaction_t *next;
+   unsigned flags;
 };
 
 //
@@ -105,6 +120,7 @@ struct LevelInfo_t
    bool finaleEarly;            // finale is before intermission
    bool endOfGame;              // DOOM II: last map, trigger cast call
    bool useEDFInterName;        // use an intermission map name from EDF
+   const char *endPic;          // pic to use for the "end pic" finale type
 
    // level transfer stuff
    const char *nextLevel;     // name of next map for normal exit
@@ -131,6 +147,10 @@ struct LevelInfo_t
    bool hasLightning;         // map has lightning flashes?
    fixed_t skyDelta;          // double-sky scroll speeds (units/tic)
    fixed_t sky2Delta;
+   int skyRowOffset;          // sky row offset
+   int sky2RowOffset;         // sky-2 row offset: may want better control if height different
+
+   bool enableBoomSkyHack;    // Hack to disable the Boom sky visual compatibility
 
    // gameplay options
    bool disableJump;          // if true, jumping is disabled
@@ -140,8 +160,8 @@ struct LevelInfo_t
    const char *creator;       // creator: name of who made this map
 
    // attached scripts
-   char *acsScriptLump;       // name of ACS script lump, for DOOM-format maps
-   char *extraData;           // name of ExtraData lump
+   const char *acsScriptLump;       // name of ACS script lump, for DOOM-format maps
+   const char *extraData;           // name of ExtraData lump
    bool  acsOpenDelay;        // delay open scripts?
 
    // per-level sound replacements
@@ -189,6 +209,10 @@ void P_StrifeDefaultLevelName(levelnamedata_t &lnd);
 
 // ioanch
 bool P_LevelIsVanillaHexen();
+void P_EnsureDefaultStoryText(bool secret);
+
+const finalerule_t *P_DetermineEpisodeFinaleRule(bool checkmap);
+void P_SetFinaleFromRule(const finalerule_t *rule, bool changeFinaleEarly, bool changeText);
 
 #endif
 

@@ -39,6 +39,15 @@ compatibilityhacks
   on comp_pain
 }
 
+# Bullets should not hit sector planes
+compatibilityhacks
+{
+  hashes
+  4f6f564dc1111b1404b2eb98592bb004  // btsx_e1 map21
+
+  on comp_planeshoot
+}
+
 # Necessary ghosts
 compatibilityhacks
 {

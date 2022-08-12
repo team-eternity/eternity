@@ -128,6 +128,15 @@ set(ZLIB_SRCS
     uncompr.c
     zutil.c
 )
+if(APPLE)
+    # At least on macOS these aren't needed
+    list(REMOVE_ITEM ZLIB_SRCS
+        gzclose.c
+        gzlib.c
+        gzread.c
+        gzwrite.c
+    )
+endif()
 
 # parse the full version number from zlib.h and include in ZLIB_FULL_VERSION
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/zlib.h _zlib_h_contents)

@@ -168,7 +168,7 @@ static bool MN_PopupResponder(event_t *ev, int action)
          // haleyjd 02/24/02: restore saved menuactive state
          menuactive = popupMenuActive;
          // kill message
-         MN_PopWidget();
+         MN_PopWidget(consumeText_e::NO);
          S_StartInterfaceSound(menuSounds[MN_SND_DEACTIVATE]);
       }
       break;

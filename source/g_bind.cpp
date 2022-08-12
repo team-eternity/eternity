@@ -165,6 +165,7 @@ keyaction_t keyactions[NUMKEYACTIONS] =
    { "map_mark",          kac_map,     at_variable },
    { "map_clear",         kac_map,     at_variable },
    { "map_grid",          kac_map,     at_variable },
+   { "map_overlay",       kac_map,     at_variable },
 
    // Console Actions
 

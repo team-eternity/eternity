@@ -25,8 +25,8 @@
 #if __cplusplus >= 201703L || _MSC_VER >= 1914
 #include "hal/i_platform.h"
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
-#include "hal/i_directory.h"
-namespace fs = fsStopgap;
+#include "filesystem.hpp"
+namespace fs = ghc::filesystem;
 #else
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -1225,6 +1225,8 @@ unsigned int WadDirectory::LumpNameHash(const char *s)
 {
    using namespace ectype;
    unsigned int hash;
+   if(!*s)
+      return 0;
 
    (void) ((hash =        toUpper(s[0]), s[1]) &&
            (hash = hash*3+toUpper(s[1]), s[2]) &&

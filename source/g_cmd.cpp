@@ -233,6 +233,9 @@ CONSOLE_NETVAR(bobbing, player_bobbing, cf_server, netcmd_bobbing) {}
 VARIABLE_BOOLEAN(weapon_hotkey_cycling, nullptr, onoff);
 CONSOLE_VARIABLE(weapon_hotkey_cycling, weapon_hotkey_cycling, 0) {}
 
+VARIABLE_TOGGLE(weapon_hotkey_holding, nullptr, onoff);
+CONSOLE_VARIABLE(weapon_hotkey_holding, weapon_hotkey_holding, 0) {}
+
 // turbo scale
 
 int turbo_scale = 100;
@@ -449,7 +452,7 @@ VARIABLE_BOOLEAN(smooth_turning, nullptr,       onoff);
 CONSOLE_VARIABLE(smooth_turning, smooth_turning, 0) {}
 
 // SoM: mouse accel
-int default_mouse_accel_type = ACCELTYPE_NONE;
+acceltype_e default_mouse_accel_type = ACCELTYPE_NONE;
 const char *accel_options[]={ "off", "linear", "choco", "custom" };
 VARIABLE_INT(mouseAccel_type, &default_mouse_accel_type,
              ACCELTYPE_NONE, ACCELTYPE_MAX, accel_options);
@@ -464,8 +467,8 @@ double default_mouse_accel_value = 2.0;
 VARIABLE_FLOAT(mouseAccel_value, &default_mouse_accel_value, 0.0, 100.0);
 CONSOLE_VARIABLE(mouse_accel_value, mouseAccel_value, 0) {}
 
-VARIABLE_BOOLEAN(novert, nullptr, onoff);
-CONSOLE_VARIABLE(mouse_novert, novert, 0) {}
+VARIABLE_BOOLEAN(mouse_vert, nullptr, onoff);
+CONSOLE_VARIABLE(mouse_vert, mouse_vert, 0) {}
 
 VARIABLE_INT(mouseb_dblc1, nullptr, -1, 2, nullptr);
 CONSOLE_VARIABLE(mouseb_dblc1, mouseb_dblc1, 0) {}

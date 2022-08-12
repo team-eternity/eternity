@@ -63,15 +63,15 @@
 //
 
 // Splashes
-#define NUMSPLASHCHAINS 37
+constexpr int NUMSPLASHCHAINS = 37;
 static ETerrainSplash *SplashChains[NUMSPLASHCHAINS];
 
 // Terrain
-#define NUMTERRAINCHAINS 37
+constexpr int NUMTERRAINCHAINS = 37;
 static ETerrain *TerrainChains[NUMTERRAINCHAINS];
 
 // Floors
-#define NUMFLOORCHAINS 37
+constexpr int NUMFLOORCHAINS = 37;
 static EFloor *FloorChains[NUMFLOORCHAINS];
 
 static int numsplashes;
@@ -83,18 +83,18 @@ static int numfloors;
 //
 
 // Splash Keywords
-#define ITEM_SPLASH_SMALLCLASS "smallclass"
-#define ITEM_SPLASH_SMALLCLIP  "smallclip"
-#define ITEM_SPLASH_SMALLSOUND "smallsound"
-#define ITEM_SPLASH_BASECLASS  "baseclass"
-#define ITEM_SPLASH_CHUNKCLASS "chunkclass"
-#define ITEM_SPLASH_XVELSHIFT  "chunkxvelshift"
-#define ITEM_SPLASH_YVELSHIFT  "chunkyvelshift"
-#define ITEM_SPLASH_ZVELSHIFT  "chunkzvelshift"
-#define ITEM_SPLASH_BASEZVEL   "chunkbasezvel"
-#define ITEM_SPLASH_SOUND      "sound"
+constexpr const char ITEM_SPLASH_SMALLCLASS[] = "smallclass";
+constexpr const char ITEM_SPLASH_SMALLCLIP[]  = "smallclip";
+constexpr const char ITEM_SPLASH_SMALLSOUND[] = "smallsound";
+constexpr const char ITEM_SPLASH_BASECLASS[]  = "baseclass";
+constexpr const char ITEM_SPLASH_CHUNKCLASS[] = "chunkclass";
+constexpr const char ITEM_SPLASH_XVELSHIFT[]  = "chunkxvelshift";
+constexpr const char ITEM_SPLASH_YVELSHIFT[]  = "chunkyvelshift";
+constexpr const char ITEM_SPLASH_ZVELSHIFT[]  = "chunkzvelshift";
+constexpr const char ITEM_SPLASH_BASEZVEL[]   = "chunkbasezvel";
+constexpr const char ITEM_SPLASH_SOUND[]      = "sound";
 
-#define ITEM_SPLASHDELTA_NAME "name"
+constexpr const char ITEM_SPLASHDELTA_NAME[] = "name";
 
 // Splash Options
 #define COMMON_SPLASH_OPTIONS                                  \
@@ -123,19 +123,19 @@ cfg_opt_t edf_spldelta_opts[] =
 };
 
 // Terrain Keywords
-#define ITEM_TERRAIN_SPLASH   "splash"
-#define ITEM_TERRAIN_DMGAMT   "damageamount"
-#define ITEM_TERRAIN_DMGTYPE  "damagetype"
-#define ITEM_TERRAIN_DMGMASK  "damagetimemask"
-#define ITEM_TERRAIN_FOOTCLIP "footclip"
-#define ITEM_TERRAIN_LIQUID   "liquid"
-#define ITEM_TERRAIN_SPALERT  "splashalert"
-#define ITEM_TERRAIN_USECOLS  "useptclcolors"
-#define ITEM_TERRAIN_COL1     "ptclcolor1"
-#define ITEM_TERRAIN_COL2     "ptclcolor2"
-#define ITEM_TERRAIN_MINVER   "minversion"
+constexpr const char ITEM_TERRAIN_SPLASH[]   = "splash";
+constexpr const char ITEM_TERRAIN_DMGAMT[]   = "damageamount";
+constexpr const char ITEM_TERRAIN_DMGTYPE[]  = "damagetype";
+constexpr const char ITEM_TERRAIN_DMGMASK[]  = "damagetimemask";
+constexpr const char ITEM_TERRAIN_FOOTCLIP[] = "footclip";
+constexpr const char ITEM_TERRAIN_LIQUID[]   = "liquid";
+constexpr const char ITEM_TERRAIN_SPALERT[]  = "splashalert";
+constexpr const char ITEM_TERRAIN_USECOLS[]  = "useptclcolors";
+constexpr const char ITEM_TERRAIN_COL1[]     = "ptclcolor1";
+constexpr const char ITEM_TERRAIN_COL2[]     = "ptclcolor2";
+constexpr const char ITEM_TERRAIN_MINVER[]   = "minversion";
 
-#define ITEM_TERDELTA_NAME "name"
+constexpr const char ITEM_TERDELTA_NAME[] = "name";
 
 // Terrain Options
 cfg_opt_t edf_terrn_opts[] =
@@ -177,8 +177,8 @@ cfg_opt_t edf_terdelta_opts[] =
 };
 
 // Floor Keywords
-#define ITEM_FLOOR_FLAT    "flat"
-#define ITEM_FLOOR_TERRAIN "terrain"
+constexpr const char ITEM_FLOOR_FLAT[]    = "flat";
+constexpr const char ITEM_FLOOR_TERRAIN[] = "terrain";
 
 // Floor Options
 cfg_opt_t edf_floor_opts[] =
@@ -221,8 +221,6 @@ static void E_AddSplashToHash(ETerrainSplash *splash)
    ++numsplashes;
 }
 
-#define IS_SET(name) (def || cfg_size(cfg, (name)) > 0)
-
 //
 // E_ProcessSplash
 //
@@ -232,11 +230,15 @@ static void E_AddSplashToHash(ETerrainSplash *splash)
 // new one created. This will allow terrain lumps to have additive
 // behavior over EDF.
 //
-static void E_ProcessSplash(cfg_t *cfg, bool def)
+static void E_ProcessSplash(cfg_t *const cfg, const bool def)
 {
    const char *tempstr;
    ETerrainSplash *newSplash;
    bool newsp = false;
+
+   const auto IS_SET = [cfg, def](const char *const name) -> bool {
+      return def || cfg_size(cfg, (name)) > 0;
+   };
 
    // init name and add to hash table
    if(def)
@@ -404,11 +406,15 @@ static void E_AddTerrainToHash(ETerrain *terrain)
    ++numterrains;
 }
 
-static void E_ProcessTerrain(cfg_t *cfg, bool def)
+static void E_ProcessTerrain(cfg_t *const cfg, const bool def)
 {
    const char *tempstr;
    ETerrain *newTerrain;
    bool newtr = false;
+
+   const auto IS_SET = [cfg, def](const char *const name) -> bool {
+      return def || cfg_size(cfg, (name)) > 0;
+   };
 
    // init name and add to hash table
    if(def)
@@ -741,19 +747,22 @@ void E_InitTerrainTypes(void)
 // haleyjd 10/16/10: Except that's never been sufficient. So in 
 // newer versions return the appropriate floor's type.
 //
-ETerrain *E_GetThingFloorType(Mobj *thing, bool usefloorz)
+ETerrain *E_GetThingFloorType(const Mobj *thing)
 {
    ETerrain *terrain = nullptr;
    
    if(full_demo_version >= make_full_version(339, 21))
    {
-      msecnode_t *m = nullptr;
+      const msecnode_t *m = nullptr;
 
       // determine what touched sector the thing is standing on
+      fixed_t z = thing->zref.floor;
       for(m = thing->touching_sectorlist; m; m = m->m_tnext)
       {
-         fixed_t z = usefloorz ? thing->zref.floor : thing->z;
-         if(z == m->m_sector->srf.floor.height)
+         // Handle sloped floors a bit differently, using the designated floorsector
+         if(m->m_sector->srf.floor.slope && m->m_sector == thing->zref.floorsector)
+            break;
+         if(!m->m_sector->srf.floor.slope && z == m->m_sector->srf.floor.height)
             break;
       }
 
@@ -772,6 +781,8 @@ ETerrain *E_GetThingFloorType(Mobj *thing, bool usefloorz)
       if(!(terrain = thing->subsector->sector->srf.floor.terrain))
          terrain = TerrainTypes[thing->subsector->sector->srf.floor.pic];
    }
+
+   I_Assert(!!terrain, "Unexpected null terrain\n");
    
    if(demo_version < terrain->minversion || getComp(comp_terrain))
       terrain = &solid;
@@ -943,7 +954,8 @@ static void E_TerrainHit(const ETerrain *terrain, Mobj *thing, fixed_t z, const 
 //
 // Get the information for the thing's floor terrain. Also gets the resulting z value
 //
-static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sector, fixed_t *z)
+static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sector, v2fixed_t pos,
+                                         fixed_t *z)
 {
    // override with sector terrain if one is specified
    const ETerrain *terrain = sector.srf.floor.terrain;
@@ -960,8 +972,8 @@ static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sect
 
    if(z)
    {
-      *z = sector.heightsec != -1 ? sectors[sector.heightsec].srf.floor.height :
-                                    sector.srf.floor.height;
+      *z = sector.heightsec != -1 ? sectors[sector.heightsec].srf.floor.getZAt(pos) :
+                                    sector.srf.floor.getZAt(pos);
    }
    return *terrain;
 }
@@ -974,7 +986,7 @@ static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sect
 bool E_HitWater(Mobj *thing, const sector_t *sector)
 {
    fixed_t z;
-   const ETerrain &terrain = E_getFloorTerrain(*thing, *sector, &z);
+   const ETerrain &terrain = E_getFloorTerrain(*thing, *sector, {thing->x, thing->y}, &z);
 
    // ioanch 20160116: also use "sector" as a parameter in case it's in another group
    E_TerrainHit(&terrain, thing, z, sector);
@@ -1000,6 +1012,19 @@ void E_ExplosionHitWater(Mobj *thing, int damage)
 }
 
 //
+// Check if thing is standing on given sector, compatible with slopes and non-slopes
+//
+static bool E_standingOn(const sector_t &sector, const Mobj &thing)
+{
+   if(!sector.srf.floor.slope && thing.z == sector.srf.floor.height)
+      return true;
+   // Different handling for sloped floors
+   if(sector.srf.floor.slope && thing.z <= thing.zref.floor && thing.zref.floorsector == &sector)
+      return true;
+   return false;
+}
+
+//
 // E_HitFloor
 //
 // Called when a thing hits a floor.
@@ -1010,10 +1035,8 @@ bool E_HitFloor(Mobj *thing)
 
    // determine what touched sector the thing is standing on
    for(m = thing->touching_sectorlist; m; m = m->m_tnext)
-   {
-      if(thing->z == m->m_sector->srf.floor.height)
+      if(E_standingOn(*m->m_sector, *thing))
          break;
-   }
 
    // not on a floor or dealing with deep water, return solid
    // deep water splashes are handled in P_MobjThinker now
@@ -1031,7 +1054,7 @@ bool E_WouldHitFloorWater(const Mobj &thing)
 {
    const msecnode_t *m;
    for(m = thing.touching_sectorlist; m; m = m->m_tnext)
-      if(thing.z == m->m_sector->srf.floor.height)
+      if(E_standingOn(*m->m_sector, thing))
          break;
 
    // NOTE: same conditions as E_HitFloor
@@ -1039,7 +1062,7 @@ bool E_WouldHitFloorWater(const Mobj &thing)
       return false;
 
    const sector_t &sector = *m->m_sector;
-   const ETerrain &terrain = E_getFloorTerrain(thing, sector, nullptr);
+   const ETerrain &terrain = E_getFloorTerrain(thing, sector, v2fixed_t(), nullptr);
    return terrain.liquid;
 }
 

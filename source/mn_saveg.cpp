@@ -24,8 +24,8 @@
 #if __cplusplus >= 201703L || _MSC_VER >= 1914
 #include "hal/i_platform.h"
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
-#include "hal/i_directory.h"
-namespace fs = fsStopgap;
+#include "filesystem.hpp"
+namespace fs = ghc::filesystem;
 #else
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -33,6 +33,14 @@ namespace fs = std::filesystem;
 #else
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
+#endif
+
+#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
+#define START_UTF8() setlocale(LC_ALL, ".65001")
+#define END_UTF8()   setlocale(LC_ALL, "C")
+#else
+#define START_UTF8()
+#define END_UTF8()
 #endif
 
 #include "z_zone.h"
@@ -255,7 +263,10 @@ static void MN_readSaveStrings()
       if(ent.is_directory() || !savePath.has_stem() || !savePath.has_extension() || savePath.extension() != ".dsg")
          continue;
 
-      if(!loadFile.openFile(pathStr.constPtr(), InBuffer::NENDIAN))
+      START_UTF8();
+      const bool fileLoaded = !loadFile.openFile(pathStr.constPtr(), InBuffer::NENDIAN);
+      END_UTF8();
+      if(fileLoaded)
          continue;
 
       qstring savename(savePath.stem().generic_u8string().c_str());
@@ -268,14 +279,16 @@ static void MN_readSaveStrings()
       newSlot.fileNum = savename.toInt();
 
       // file time
+      START_UTF8();
       struct stat statbuf;
       if(!stat(pathStr.constPtr(), &statbuf))
       {
-         char timeStr[SAVESTRINGSIZE + 1];
+         char timeStr[64 + 1];
          strftime(timeStr, sizeof(timeStr), "%a. %b %d %Y\n%r", localtime(&statbuf.st_mtime));
          newSlot.fileTime    = statbuf.st_mtime;
          newSlot.fileTimeStr = timeStr;
       }
+      END_UTF8();
 
       // description
       memset(description, 0, sizeof(description));
@@ -388,7 +401,7 @@ static void MN_drawSaveInfo(int slotIndex)
       char temp[32 + 1];
       const char *const mapName = saveSlot.mapName.constPtr();
 
-      snprintf(temp, sizeof(temp), "%d", saveSlot.skill);
+      snprintf(temp, sizeof(temp), "%d", saveSlot.skill + 1); // Accursed people and their 1-indexing
       MN_WriteTextColored("map:",   GameModeInfo->infoColor, x + 4,         y + (lineh * 3) + 4);
       MN_WriteTextColored(mapName,  GameModeInfo->infoColor, x + namew + 4, y + (lineh * 3) + 4);
       MN_WriteTextColored("skill:", GameModeInfo->infoColor, x + 4,         y + (lineh * 4) + 4);
@@ -492,11 +505,15 @@ static void MN_loadGameDrawer()
       }
       else
       {
+         text = e_saveSlots[i].description;
          if(loadID.slot == i)
+         {
+            const int skull_x = menu_loadgame.x + 1 + MN_StringWidth(text.constPtr());
+            MN_DrawSmallPtr(skull_x, y);
             color = GameModeInfo->selectColor;
+         }
          else
             color = GameModeInfo->unselectColor;
-         text = e_saveSlots[i].description;
       }
 
       MN_WriteTextColored(text.constPtr(), color, menu_loadgame.x, y);
@@ -609,10 +626,10 @@ CONSOLE_COMMAND(quickload, 0)
       return;
    }
 
+   MN_readSaveStrings();
    if(quickID.slot < 0)
    {
       quickID.slot = -2; // means to pick a slot now
-      MN_readSaveStrings();
       MN_StartMenu(GameModeInfo->loadMenu);
       return;
    }
@@ -701,6 +718,8 @@ static void MN_saveGameDrawer()
                V_FontStringWidth(menu_font, desc_buffer.constPtr()) + V_FontMinWidth(menu_font) <= MAXSAVESTRINGWIDTH)
                text += '_';
          }
+         const int skull_x = menu_loadgame.x + 1 + MN_StringWidth(text.constPtr());
+         MN_DrawSmallPtr(skull_x, y);
       }
       MN_WriteTextColored(text.constPtr(), color, menu_savegame.x, y);
       y += lheight;
@@ -730,6 +749,8 @@ static void MN_saveGameDrawer()
                   V_FontStringWidth(menu_font, desc_buffer.constPtr()) + V_FontMinWidth(menu_font) <= MAXSAVESTRINGWIDTH)
                   text += '_';
             }
+            const int skull_x = menu_loadgame.x + 1 + MN_StringWidth(text.constPtr());
+            MN_DrawSmallPtr(skull_x, y);
          }
          else
             color = GameModeInfo->unselectColor;
@@ -905,10 +926,10 @@ CONSOLE_COMMAND(quicksave, 0)
    if(gamestate != GS_LEVEL)
       return;
 
+   MN_readSaveStrings();
    if(quickID.slot < 0)
    {
       quickID.slot = -2; // means to pick a slot now
-      MN_readSaveStrings();
       MN_StartMenu(GameModeInfo->saveMenu);
       return;
    }

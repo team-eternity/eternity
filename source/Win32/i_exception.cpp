@@ -333,7 +333,7 @@ static void PrintHeader(void)
 #endif
 
    LogPrintf(
-      _T("Engine version: %s\r\n\r\n"),
+      _T("Engine version: %s\r\nDate compiled: " __DATE__ "\r\n\r\n"),
       ee_wmCaption
    );
 }

@@ -156,8 +156,8 @@
 //
 
 #define DOOM_GIFLAGS \
-   (GIF_FLIGHTINERTIA | GIF_HASEXITSOUNDS | GIF_CLASSICMENUS | GIF_SKILL5RESPAWN | \
-    GIF_SKILL5WARNING | GIF_HUDSTATBARNAME | GIF_DOOMWEAPONOFFSET)
+   (GIF_PRBOOMTALLSKY | GIF_FLIGHTINERTIA | GIF_HASEXITSOUNDS | GIF_CLASSICMENUS | \
+    GIF_SKILL5RESPAWN | GIF_SKILL5WARNING | GIF_HUDSTATBARNAME | GIF_DOOMWEAPONOFFSET)
 
 #define HERETIC_GIFLAGS \
    (GIF_MNBIGFONT | GIF_SAVESOUND | GIF_HASADVISORY | GIF_SHADOWTITLES | \
@@ -168,6 +168,7 @@
 #define STRIFE_GIFLAGS \
    (GIF_MAPXY | GIF_HUDSTATBARNAME | GIF_DOOMWEAPONOFFSET) // STRIFE_FIXME: This is probably wrong
 
+extern menu_t menu_episode, menu_episodeDoom2Stub, menu_hepisode;
 // globals
 
 // holds the address of the gamemodeinfo_t for the current gamemode,
@@ -1223,6 +1224,7 @@ static gamemodeinfo_t giDoomSW =
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
    &menu_newgame,    // newGameMenu
+   &menu_episode,    // episodeMenu
    nullptr,          // menuStartMap
    doomMenuSounds,   // menuSounds
    S_TBALL1,         // transFrame
@@ -1281,6 +1283,8 @@ static gamemodeinfo_t giDoomSW =
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
    nullptr,          // autoFlightArtifact
+   45,               // lookPitchUp
+   45,               // lookPitchDown
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1350,6 +1354,7 @@ static gamemodeinfo_t giDoomReg =
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
    &menu_newgame,    // newGameMenu
+   &menu_episode,    // episodeMenu
    nullptr,          // menuStartMap
    doomMenuSounds,   // menuSounds
    S_TBALL1,         // transFrame
@@ -1408,6 +1413,8 @@ static gamemodeinfo_t giDoomReg =
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
    nullptr,          // autoFlightArtifact
+   45,               // lookPitchUp
+   45,               // lookPitchDown
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1477,6 +1484,7 @@ static gamemodeinfo_t giDoomRetail =
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
    &menu_newgame,    // newGameMenu
+   &menu_episode,    // episodeMenu
    nullptr,          // menuStartMap
    doomMenuSounds,   // menuSounds
    S_TBALL1,         // transFrame
@@ -1535,6 +1543,8 @@ static gamemodeinfo_t giDoomRetail =
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
    nullptr,          // autoFlightArtifact
+   45,               // lookPitchUp
+   45,               // lookPitchDown
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1604,6 +1614,7 @@ static gamemodeinfo_t giDoomCommercial =
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
    &menu_newgame,    // newGameMenu
+   &menu_episodeDoom2Stub, // episodeMenu
    nullptr,          // menuStartMap
    doomMenuSounds,   // menuSounds
    S_TBALL1,         // transFrame
@@ -1662,6 +1673,8 @@ static gamemodeinfo_t giDoomCommercial =
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
    nullptr,          // autoFlightArtifact
+   45,               // lookPitchUp
+   45,               // lookPitchDown
 
    INTERPIC_DOOM,     // interPic
    mus_dm2int,        // interMusNum
@@ -1731,6 +1744,7 @@ static gamemodeinfo_t giHereticSW =
    &menu_savegame,  // saveMenu
    &menu_loadgame,  // loadMenu
    &menu_hnewgame,   // newGameMenu
+   &menu_hepisode,   // episodeMenu
    nullptr,          // menuStartMap
    hticMenuSounds,   // menuSounds
    S_MUMMYFX1_1,     // transFrame
@@ -1789,6 +1803,8 @@ static gamemodeinfo_t giHereticSW =
    meleecalc_raven,     // monsterMeleeRange
    32 * FRACUNIT,     // itemHeight
    "ArtiFly",         // autoFlightArtifact
+   32,               // lookPitchUp
+   32,               // lookPitchDown
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
@@ -1862,6 +1878,7 @@ static gamemodeinfo_t giHereticReg =
    &menu_savegame,  // saveMenu
    &menu_loadgame,  // loadMenu
    &menu_hnewgame,   // newGameMenu
+   &menu_hepisode,   // episodeMenu
    nullptr,          // menuStartMap
    hticMenuSounds,   // menuSounds
    S_MUMMYFX1_1,     // transFrame
@@ -1920,6 +1937,8 @@ static gamemodeinfo_t giHereticReg =
    meleecalc_raven,     // monsterMeleeRange
    32 * FRACUNIT,     // itemHeight
    "ArtiFly",         // autoFlightArtifact
+   32,               // lookPitchUp
+   32,               // lookPitchDown
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum

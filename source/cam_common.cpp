@@ -528,32 +528,39 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
 //
 // Stores data into a LineOpening struct
 //
-void lineopening_t::calculate(const line_t *linedef)
+void tracelineopening_t::calculate(const line_t *linedef)
 {
-   if(linedef->sidenum[1] == -1)
+   calculateAtPoint(*linedef, v2fixed_t(linedef->soundorg.x, linedef->soundorg.y));
+}
+
+//
+// Calculates opening for a given zero-volume point. Needed for slopes.
+//
+void tracelineopening_t::calculateAtPoint(const line_t &line, v2fixed_t pos)
+{
+   if(line.sidenum[1] == -1)
    {
       openrange = 0;
       return;
    }
 
-   const sector_t *front = linedef->frontsector;
-   const sector_t *back = linedef->backsector;
+   const sector_t *front = line.frontsector;
+   const sector_t *back = line.backsector;
 
-   const sector_t *beyond = linedef->intflags & MLI_1SPORTALLINE &&
-      linedef->beyondportalline ? linedef->beyondportalline->frontsector : nullptr;
+   const sector_t *beyond = line.intflags & MLI_1SPORTALLINE && line.beyondportalline ?
+      line.beyondportalline->frontsector : nullptr;
    if(beyond)
       back = beyond;
 
-   // no need to apply the portal hack (1024 units) here fortunately
-   if(linedef->extflags & EX_ML_UPPERPORTAL && back->srf.ceiling.pflags & PS_PASSABLE)
-      open.ceiling = front->srf.ceiling.height;
+   if(line.extflags & EX_ML_UPPERPORTAL && back->srf.ceiling.pflags & PS_PASSABLE)
+      open.ceiling = front->srf.ceiling.getZAt(pos);
    else
-      open.ceiling = emin(front->srf.ceiling.height, back->srf.ceiling.height);
+      open.ceiling = emin(front->srf.ceiling.getZAt(pos), back->srf.ceiling.getZAt(pos));
 
-   if(linedef->extflags & EX_ML_LOWERPORTAL && back->srf.floor.pflags & PS_PASSABLE)
-      open.floor = front->srf.floor.height;
+   if(line.extflags & EX_ML_LOWERPORTAL && back->srf.floor.pflags & PS_PASSABLE)
+      open.floor = front->srf.floor.getZAt(pos);
    else
-      open.floor = emax(front->srf.floor.height, back->srf.floor.height);
+      open.floor = emax(front->srf.floor.getZAt(pos), back->srf.floor.getZAt(pos));
    openrange = open.ceiling - open.floor;
 }
 

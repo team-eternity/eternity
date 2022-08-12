@@ -121,9 +121,10 @@ typedef enum {
 #define MTF_PSX_SPECTRE   (32|64|128)
 
 // Strife flags
-#define MTF_STRIFE_ALLY        64
-#define MTF_STRIFE_TRANS      128
-#define MTF_STRIFE_INVIS      256
+#define MTF_STRIFE_STAND       32   // WARNING: this is already in MTF_EX_STAND
+#define MTF_STRIFE_FRIEND      64
+#define MTF_STRIFE_TRANSLUCENT 256
+#define MTF_STRIFE_MVCIS       512
 
 //
 // ioanch 20151218: mapthing_t::extOptions (extended) flags: needed by UDMF
@@ -137,6 +138,9 @@ enum
    // will appear on skill 5 if MTF_HARD is not set
    // will not appear on skill 5 if MTF_HARD is set
    MTF_EX_NIGHTMARE_TOGGLE = 2,
+
+   // Strife standing monster
+   MTF_EX_STAND = 4,
 };
 
 // sf: sector flags, not me =)
@@ -148,7 +152,7 @@ enum
 // a macro to find out whether to make moving sounds in a sector
 #define silentmove(s) ((s)->flags & SECF_KILLMOVESOUND)
 
-typedef enum 
+enum skill_t : int
 {
   sk_none=-1, //jff 3/24/98 create unpicked skill setting
   sk_baby=0,
@@ -156,7 +160,7 @@ typedef enum
   sk_medium,
   sk_hard,
   sk_nightmare
-} skill_t;
+};
 
 //
 // Key cards.
@@ -223,13 +227,13 @@ typedef enum {
 } powertype_t;
 
 // Power up durations (how many seconds till expiration).
-typedef enum {
+enum powerduration_e {
   INVULNTICS  = (30*TICRATE),
   INVISTICS   = (60*TICRATE),
   INFRATICS   = (120*TICRATE),
   IRONTICS    = (60*TICRATE),
   FLIGHTTICS  = (60*TICRATE),  // flight tics, for Heretic
-} powerduration_t;
+};
 
 // DOOM keyboard definition.
 // This is the stuff configured by Setup.Exe.
@@ -414,12 +418,6 @@ typedef enum {
 //
 
 #define isnumchar(c) ((c) >= '0' && (c) <= '9')
-#define isExMy(s)                                       \
-   ((s)[0] == 'E' && (s)[2] == 'M' &&                   \
-    isnumchar((s)[1]) && isnumchar((s)[3]) && !(s)[4])
-#define isMAPxy(s)                                      \
-   ((s)[0] == 'M' && (s)[1] == 'A' && (s)[2] == 'P' &&  \
-    isnumchar((s)[3]) && isnumchar((s)[4]) && !(s)[5])
 
 #define HTIC_GHOST_TRANS 26624
 

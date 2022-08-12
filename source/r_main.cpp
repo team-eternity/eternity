@@ -27,6 +27,7 @@
 
 #include "z_zone.h"
 
+#include "am_map.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_deh.h"
@@ -916,6 +917,18 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
             sec.srf.ceiling.height = lerpCoord(view.lerp, si.prevceilingheight, sec.srf.ceiling.height);
             sec.srf.floor.heightf = M_FixedToFloat(sec.srf.floor.height);
             sec.srf.ceiling.heightf = M_FixedToFloat(sec.srf.ceiling.height);
+
+            // as above, but only for slope origin Z
+            if(pslope_t *slope = sec.srf.floor.slope; slope && si.prevfloorslopezf != slope->of.z)
+            {
+               si.backfloorslopezf = slope->of.z;
+               slope->of.z = lerpCoordf(view.lerp, si.prevfloorslopezf, slope->of.z);
+            }
+            if(pslope_t *slope = sec.srf.ceiling.slope; slope && si.prevceilingslopezf != slope->of.z)
+            {
+               si.backceilingslopezf = slope->of.z;
+               slope->of.z = lerpCoordf(view.lerp, si.prevceilingslopezf, slope->of.z);
+            }
          }
          else
             si.interpolated = false;
@@ -930,10 +943,15 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
          // restore backed up heights
          if(si.interpolated)
          {
-            sec.srf.floor.height = si.backfloorheight;
-            sec.srf.floor.heightf = si.backfloorheightf;
-            sec.srf.ceiling.height = si.backceilingheight;
+            sec.srf.floor.height    = si.backfloorheight;
+            sec.srf.floor.heightf   = si.backfloorheightf;
+            sec.srf.ceiling.height  = si.backceilingheight;
             sec.srf.ceiling.heightf = si.backceilingheightf;
+
+            if(pslope_t *slope = sec.srf.floor.slope; slope)
+               slope->of.z = si.backfloorslopezf;
+            if(pslope_t *slope = sec.srf.ceiling.slope; slope)
+               slope->of.z = si.backceilingslopezf;
          }
       }
       break;
@@ -1039,10 +1057,12 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    }
 
    // Bound the pitch here
-   if(viewpitch < -ANGLE_1 * MAXPITCHUP)
-      viewpitch = -ANGLE_1 * MAXPITCHUP;
-   else if(viewpitch > ANGLE_1 * MAXPITCHDOWN)
-      viewpitch = ANGLE_1 * MAXPITCHDOWN;
+   int maxpitchup = GameModeInfo->lookPitchUp;
+   int maxpitchdown = GameModeInfo->lookPitchDown;
+   if(viewpitch < -ANGLE_1 * maxpitchup)
+      viewpitch = -ANGLE_1 * maxpitchup;
+   else if(viewpitch > ANGLE_1 * maxpitchdown)
+      viewpitch = ANGLE_1 * maxpitchdown;
 
    extralight = player->extralight;
    viewpoint.sin = finesine[viewpoint.angle>>ANGLETOFINESHIFT];
@@ -1052,7 +1072,7 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    cb_viewpoint.x      = M_FixedToFloat(viewpoint.x);
    cb_viewpoint.y      = M_FixedToFloat(viewpoint.y);
    cb_viewpoint.z      = M_FixedToFloat(viewpoint.z);
-   cb_viewpoint.angle  = (ANG90 - viewpoint.angle) * PI / ANG180;
+   cb_viewpoint.angle  = cb_fixedAngleToFloat(viewpoint.angle);
    cb_viewpoint.sin    = sinf(cb_viewpoint.angle);
    cb_viewpoint.cos    = cosf(cb_viewpoint.angle);
    view.pitch  = (ANG90 - viewpitch) * PI / ANG180;
@@ -1589,7 +1609,7 @@ CONSOLE_VARIABLE(r_showhom, autodetect_hom, 0)
    doom_printf("hom detection %s", autodetect_hom ? "on" : "off");
 }
 
-CONSOLE_VARIABLE(r_stretchsky, stretchsky, 0) {}
+CONSOLE_VARIABLE(r_stretchsky, stretchsky, 0) {}   // DEPRECATED
 CONSOLE_VARIABLE(r_swirl, r_swirl, 0) {}
 
 CONSOLE_VARIABLE(r_trans, general_translucency, 0)
@@ -1623,6 +1643,8 @@ CONSOLE_VARIABLE(screensize, screenSize, cf_buffered)
          HU_DisableHUD();
          break;
       }
+      if(automapactive)
+         AM_UpdateWindowHeight(screenSize == 8);
    }
 }
 

@@ -97,53 +97,27 @@ cpack -G RPM
 cpack -G STGZ
 ----
 
-Building with Xcode
-~~~~~~~~~~~~~~~~~~~
-You need Mac OS X 10.7 or more to run Eternity.
+Building with CMake (macOS Xcode)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+You need Mac OS X 10.9 or more to run Eternity.
 
-* Open Xcode and load macosx/EternityEngine.xcodeproj. This builds the main game
-executable. Any dependencies should be automatically downloaded.
+For macOS, currently only the Xcode generator is supported.
 
-* If you want to build the full package, open 
-macosx/launcher/EternityLaunch.xcodeproj. It depends on EternityEngine.xcodeproj
-to generate the executable which gets bundled in the user-friendly app package.
+----
+cmake .. -G Xcode
+----
 
-* To actually make distributable app builds, don't use the master Git branch.
-Instead go to the "release-mac" branch, updating it from master as necessary.
-First you need to produce a release Eternity executable. Load
-EternityEngine.xcodeproj and build an archive. Export it as a folder release and
-copy the "eternity" executable into macosx/builds/ (create the "builds" 
-subdirectory if missing). Now close EternityEngine.xcodeproj and open
-EternityLaunch.xcodeproj. You'll need to replace my code signing with yours, or 
-keep it unsigned if you're not enrolled in Apple's developer programme. Build
-an archive and export it as a developer ID signed application (or unsigned).
-You will then obtain a valid .app package.
+Or preferably use the CMake GUI app.
 
+After that, open "Eternity Engine.xcodeproj". Inside it you'll have two targets of
+interest:
 
-Building with Homebrew (OS X Mavericks and up)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The benefit of Homebrew compilation is that you don't need to "install"
-Eternity like a standard Mac application. However, this will require some
-extra work. You will also need to run Eternity as you would in Unix.
+. eternity: the direct game executable. Suitable for debugging the main game.
+. EternityLauncher: the full app bundle. Suitable for release builds.
 
-These instructions are written with the assumption that the user has
-already set up Homebrew and the required dependencies. Please note that as
-of the latest Mavericks updates, GCC is no longer required. If you are
-using an older cmake release folder, you will need to create a new one.
+NOTE 1: CPack isn't currently supported on macOS for Eternity. Use the Xcode IDE to
+produce a distributable app bundle.
 
-* You will need the following libraries:
-+
- cmake
- sdl2
- sdl2_mixer
- sdl2_net
- libogg
- libvorbis
- flac
- libmpeg2
- libmodplug
-
-* Follow the cmake instructions.
-+
- cmake .. -DCMAKE_BUILD_TYPE=Release
- make
+NOTE 2: As of now, all SDL dependencies are downloaded during the CMake configuration
+process. Eternity will _not_ link to whatever you may have installed to a central
+location from Homebrew, other package managers or source-built.

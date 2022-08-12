@@ -545,7 +545,7 @@ void D_DrawWings()
 
    if(gamestate == GS_LEVEL && !MN_CheckFullScreen())
    {
-      if(scaledwindow.height != SCREENHEIGHT || automapactive)
+      if(scaledwindow.height != SCREENHEIGHT || (automapactive && !automap_overlay))
       {
          unsigned int bottom   = SCREENHEIGHT - 1;
          unsigned int statbarh = static_cast<unsigned int>(GameModeInfo->StatusBar->height);
@@ -603,7 +603,7 @@ static void D_Display()
          if(oldgamestate != GS_LEVEL)
             R_FillBackScreen(scaledwindow); // draw the pattern into the back screen
 
-         if(automapactive)
+         if(automapactive && !automap_overlay)
          {
             AM_Drawer();
          }
@@ -611,6 +611,8 @@ static void D_Display()
          {
             R_DrawViewBorder();    // redraw border
             R_RenderPlayerView(&players[displayplayer], camera);
+            if(automapactive && automap_overlay)
+               AM_Drawer();
          }
          
          ST_Drawer(scaledwindow.height == SCREENHEIGHT);  // killough 11/98
@@ -648,7 +650,8 @@ static void D_Display()
          int width = patch->width;
          int x = (SCREENWIDTH - width) / 2 + patch->leftoffset;
          // SoM 2-4-04: ANYRES
-         int y = 4 + (automapactive ? 0 : scaledwindow.y);
+
+         int y = 4 + (automapactive && !automap_overlay ? 0 : scaledwindow.y);
          
          V_DrawPatch(x, y, &subscreen43, patch);
       }
@@ -1806,6 +1809,9 @@ static void D_DoomInit()
       C_Update();
 
    idmusnum = -1; //jff 3/17/98 insure idmus number is blank
+
+   // Load OPTIONS that are safe to read at startup
+   M_LoadOptions(default_t::wad_startup);
 
 #if 0
    // check for a driver that wants intermission stats

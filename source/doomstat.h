@@ -43,14 +43,14 @@ struct doomcom_t;
 struct doomdata_t;
 struct mapthing_t;
 
-typedef enum
+enum bfg_t : int
 {
   bfg_normal,
   bfg_classic,
   bfg_11k,
   bfg_bouncing, // haleyjd
   bfg_burst,    // haleyjd
-} bfg_t;
+};
 
 enum acceltype_e : int
 {
@@ -100,6 +100,7 @@ extern int demo_subversion;
 #define demo_compatibility (demo_version < 200) /* killough 11/98: macroized */
 #define ancient_demo       (demo_version < 5)   /* haleyjd  03/17: for old demos */
 #define vanilla_heretic    (ancient_demo && GameModeInfo->type == Game_Heretic)
+#define mbf21_temp         (demo_version >= 403) /* MaxW: 2021: TODO: Sort this out once MBF21 demo compat ends up in */
 
 // haleyjd 10/16/10: full version macros
 #define make_full_version(v, sv) ((v << 8) | sv)
@@ -219,10 +220,13 @@ extern  bool deathmatch;
 //  but are not (yet) supported with Linux
 //  (e.g. no sound volume adjustment with menu.
 
+// Maximum value for any volume
+constexpr int SND_MAXVOLUME = 15;
+
 // These are not used, but should be (menu).
 // From m_menu.c:
-//  Sound FX volume has default, 0 - 15
-//  Music volume has default, 0 - 15
+//  Sound FX volume has default, 0 - SND_MAXVOLUME
+//  Music volume has default, 0 - SND_MAXVOLUME
 // These are multiplied by 8.
 extern int snd_SfxVolume;      // maximum volume for sound
 extern int snd_MusicVolume;    // maximum volume for music
@@ -248,6 +252,7 @@ extern int snd_DesiredSfxDevice;
 extern  bool statusbaractive;
 
 extern  bool automapactive; // In AutoMap mode?
+extern  bool automap_overlay; // automap is in overlay mode?
 extern  bool menuactive;    // Menu overlayed?
 extern  int  paused;        // Game Pause?
 extern  int  hud_active;    //jff 2/17/98 toggles heads-up status display
@@ -416,6 +421,8 @@ extern int flashing_hom; // killough 10/98
 
 extern int weapon_hotkey_cycling;   // killough 10/98
 
+extern bool weapon_hotkey_holding;  // ioanch 20211113
+
 //=======================================================
 //
 // haleyjd: Eternity Stuff
@@ -438,12 +445,12 @@ extern int forceFlipPan;
 // and deathmatch variables being used to mean multiple things
 // haleyjd 04/14/03: deathmatch type is now controlled via dmflags
 
-typedef enum
+enum gametype_t : int
 {
    gt_single,
    gt_coop,
    gt_dm,
-} gametype_t;
+};
 
 extern gametype_t GameType, DefaultGameType;
 

@@ -354,7 +354,7 @@ void MN_SetLeftSmallPtr(int x, int y, int height)
 //
 void MN_SetRightSmallPtr(int x, int y, int width, int height)
 {
-   smallptr_coords[1][0] = x + width + 2;
+   smallptr_coords[1][0] = x + width + 1;
    smallptr_coords[1][1] = y + ((height - smallptr_dims[1]) / 2);
 }
 

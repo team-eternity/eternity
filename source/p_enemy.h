@@ -69,6 +69,7 @@ extern struct brain_s {         // killough 3/26/98: global state of boss brain
   int easy;
 } brain;
 
+bool P_CheckRange(Mobj *actor, fixed_t range);
 bool P_CheckMeleeRange(Mobj *actor);
 
 // haleyjd 07/13/03: editable boss brain spawn types

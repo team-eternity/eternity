@@ -21,6 +21,7 @@ Charles Gunyon
 Feature and Patch Contributors
 ------------------------------
 4mer
+Afterglow
 Anders Astrand
 Cephaler
 Gez
@@ -68,10 +69,10 @@ BOOM, by TeamTNT
    Rand Phares
    Ty Halderman
    Stan Gula
-   
+
 MBF - "Marine's Best Friend"
    Lee Killough
-   
+
 SMMU - "Smack My Marine Up"
    Simon "fraggle" Howard
 
@@ -88,20 +89,20 @@ BSP 5.2
 
 Chocolate Doom
    Simon Howard
-   
+
 Doom64 EX
    Samuel Villarreal
 
 Odamex
    "Dr. Sean" Leonard
-                              
+
 PrBoom
    Colin Phipps
    Florian Schulze
 
 PrBoom-Plus
    Andrey Budko
-   
+
 Quake 2 Source, Quake 3 Source
    id Software
    Gilles Vollant
@@ -110,20 +111,25 @@ ZDoom
    Randy Heit
    Graf Zahl
    Braden Obrzut
-   
+
+Woof!
+   Roman Fomin
+
+ironwail
+    Andrei Drexler
 
 Libraries/Code Utilized
 -----------------------
 
 DJGPP libc
    DJ Delorie et al.
-   
+
 Freeverb - Public Domain Reverb Engine
    Jezar at Dreampoint Design and Engineering
 
 libConfuse Parser Library
    Martin Hedenfalk
-   
+
 libpng
    Glenn Randers-Pehrson, Andreas Dilger, Guy Eric Schalnat, et al.
 
@@ -141,7 +147,7 @@ snes_spc 0.9.0
 
 SpiderMonkey 1.8.0
    Mozilla Foundation; Brendan Eich et al.
-   
+
 Three-Band EQ and Rational-tanh Clipper
    Neil C / Etanza Systems, cschueler
 

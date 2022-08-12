@@ -55,6 +55,8 @@ void AM_Stop(void);
 
 void AM_Start();
 
+void AM_UpdateWindowHeight(bool fullscreen);
+
 //jff 4/16/98 make externally available
 
 void AM_clearMarks(void);

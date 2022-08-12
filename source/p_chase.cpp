@@ -31,6 +31,7 @@
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "cam_sight.h"
+#include "d_gi.h"
 #include "d_main.h"
 #include "d_net.h"
 #include "doomdef.h"
@@ -130,13 +131,15 @@ static bool P_checkSectorPortal(fixed_t z, fixed_t frac, const sector_t *sector,
 //
 // Check if it's an edge portal
 //
-static bool P_checkEdgePortal(const line_t *li, fixed_t z, fixed_t frac, chasetraverse_t &traverse)
+static bool P_checkEdgePortal(const line_t *li, fixed_t x, fixed_t y, fixed_t z, fixed_t frac,
+                              chasetraverse_t &traverse)
 {
    for(surf_e surf : SURFS)
    {
+      // TODO: sloped edge portals (what?!)
       if(li->extflags & e_edgePortalFlags[surf] && li->backsector->srf[surf].pflags & PS_PASSABLE &&
          isOuter(surf, z, P_PortalZ(li->backsector->srf[surf])) &&
-         !isOuter(surf, z, li->frontsector->srf[surf].height))
+         !isOuter(surf, z, li->frontsector->srf[surf].getZAt(x, y)))
       {
          traverse.intersection = trace.dl.v + trace.dl.dv.fixedMul(frac);
          traverse.link = &li->backsector->srf[surf].portal->data.link;
@@ -228,15 +231,16 @@ static bool PTR_chaseTraverse(intercept_t *in, void *context)
 
          // Check for edge portals here
          if(!(li->flags & ML_BLOCKING) && mysector == li->frontsector &&
-            P_checkEdgePortal(li, z, in->frac, traverse))
+            P_checkEdgePortal(li, x, y, z, in->frac, traverse))
          {
             return false;
          }
 
-         if((li->flags & ML_BLOCKING) ||
-            (othersector->srf.floor.height >z) || (othersector->srf.ceiling.height <z)
-            || (othersector->srf.ceiling.height -othersector->srf.floor.height
-                < 40*FRACUNIT));          // hit
+         if(li->flags & ML_BLOCKING || othersector->srf.floor.getZAt(x, y) > z ||
+            othersector->srf.ceiling.getZAt(x, y) < z ||
+            othersector->srf.ceiling.getZAt(x, y) - othersector->srf.floor.getZAt(x, y) < 40 * FRACUNIT)
+         {
+         }          // hit
          else
             return !P_checkLinePortal(li, z, in->frac, traverse);
       }
@@ -304,8 +308,8 @@ static void P_GetChasecamTarget()
 
    const subsector_t *ss = R_PointInSubsector(pCamTarget.x, pCamTarget.y);
 
-   fixed_t floorheight = ss->sector->srf.floor.height;
-   fixed_t ceilingheight = ss->sector->srf.ceiling.height;
+   fixed_t floorheight = ss->sector->srf.floor.getZAt(v2fixed_t(pCamTarget));
+   fixed_t ceilingheight = ss->sector->srf.ceiling.getZAt(v2fixed_t(pCamTarget));
 
    // don't aim above the ceiling or below the floor
    if(!(ss->sector->srf.floor.pflags & PS_PASSABLE) && pCamTarget.z < floorheight + 10 * FRACUNIT)
@@ -492,10 +496,12 @@ void P_WalkTicker()
       else
       {
          walkcamera.pitch -= look << 16;
-         if(walkcamera.pitch < -ANGLE_1*MAXPITCHUP)
-            walkcamera.pitch = -ANGLE_1*MAXPITCHUP;
-         else if(walkcamera.pitch > ANGLE_1*MAXPITCHDOWN)
-            walkcamera.pitch = ANGLE_1*MAXPITCHDOWN;
+         int maxpitchup = GameModeInfo->lookPitchUp;
+         int maxpitchdown = GameModeInfo->lookPitchDown;
+         if(walkcamera.pitch < -ANGLE_1*maxpitchup)
+            walkcamera.pitch = -ANGLE_1*maxpitchup;
+         else if(walkcamera.pitch > ANGLE_1*maxpitchdown)
+            walkcamera.pitch = ANGLE_1*maxpitchdown;
       }
    }
 
@@ -556,19 +562,24 @@ void P_WalkTicker()
 
    subsector_t *subsec = R_PointInSubsector(walkcamera.x, walkcamera.y);
 
+   v2fixed_t topdelta, bottomdelta;
+
    const sector_t *topsector = P_ExtremeSectorAtPoint(walkcamera.x, walkcamera.y, surf_ceil, 
-      subsec->sector);
+      subsec->sector, &topdelta);
    const sector_t *bottomsector = P_ExtremeSectorAtPoint(walkcamera.x, walkcamera.y, surf_floor,
-      subsec->sector);
+      subsec->sector, &bottomdelta);
 
    if(!walkcamera.flying)
    {
       // keep on the ground
-      walkcamera.z = bottomsector->srf.floor.height + 41 * FRACUNIT;
+      walkcamera.z = bottomsector->srf.floor.getZAt(walkcamera.x + bottomdelta.x,
+                                                    walkcamera.y + bottomdelta.y) + 41 * FRACUNIT;
    }
 
-   fixed_t maxheight = topsector->srf.ceiling.height - 8*FRACUNIT;
-   fixed_t minheight = bottomsector->srf.floor.height + 4*FRACUNIT;
+   fixed_t maxheight = topsector->srf.ceiling.getZAt(walkcamera.x + topdelta.x,
+                                                     walkcamera.y + topdelta.y) - 8*FRACUNIT;
+   fixed_t minheight = bottomsector->srf.floor.getZAt(walkcamera.x + bottomdelta.x,
+                                                      walkcamera.y + bottomdelta.y) + 4*FRACUNIT;
 
    if(walkcamera.z > maxheight)
       walkcamera.z = maxheight;
@@ -594,7 +605,7 @@ void P_ResetWalkcam()
    
    // haleyjd
    sec = R_PointInSubsector(walkcamera.x, walkcamera.y)->sector;
-   walkcamera.z = sec->srf.floor.height + 41*FRACUNIT;
+   walkcamera.z = sec->srf.floor.getZAt(walkcamera.x, walkcamera.y) + 41*FRACUNIT;
    walkcamera.groupid = sec->groupid;
 
    walkcamera.backupPosition();
@@ -673,7 +684,7 @@ void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
 
       camparams.cx       = v->x;
       camparams.cy       = v->y;
-      camparams.cz       = sec->srf.floor.height;
+      camparams.cz       = sec->srf.floor.getZAt(target->x, target->y);
       camparams.cheight  = 41 * FRACUNIT;
       camparams.cgroupid = sec->groupid;
       camparams.prev     = nullptr;
@@ -738,7 +749,7 @@ void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target)
                                     followtarget->x, followtarget->y);
 
    subsec = R_PointInSubsector(followcam.x, followcam.y);
-   followcam.z = subsec->sector->srf.floor.height + 41*FRACUNIT;
+   followcam.z = subsec->sector->srf.floor.getZAt(followcam.x, followcam.y) + 41*FRACUNIT;
 
    P_setFollowPitch();
    followcam.backupPosition();
@@ -762,7 +773,7 @@ bool P_FollowCamTicker()
                                     followtarget->x, followtarget->y);
 
    subsec = R_PointInSubsector(followcam.x, followcam.y);
-   followcam.z       = subsec->sector->srf.floor.height + 41*FRACUNIT;
+   followcam.z       = subsec->sector->srf.floor.getZAt(followcam.x, followcam.y) + 41*FRACUNIT;
    followcam.groupid = subsec->sector->groupid;
    P_setFollowPitch();
 

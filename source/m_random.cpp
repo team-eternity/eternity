@@ -234,6 +234,40 @@ void M_ClearRandom()
    rng.prndindex = rng.rndindex = 0;     // clear two compatibility indices
 }
 
+// [XA] Common random formulas used by codepointers
+
+// Outputs a random angle between (-spread, spread), as an int ('cause it can be negative).
+//   spread: Maximum angle (degrees, in fixed point -- not BAM!)
+//
+int P_RandomHitscanAngle(pr_class_t pr_class, fixed_t spread)
+{
+   int t;
+   int64_t spread_bam;
+
+   // FixedToAngle doesn't work for negative numbers,
+   // so for convenience take just the absolute value.
+   spread_bam = (spread < 0 ? FixedToAngle(-spread) : FixedToAngle(spread));
+   t = P_Random(pr_class);
+   return int((spread_bam * (t - P_Random(pr_class))) / 255);
+}
+
+//
+// Outputs a random angle between (-spread, spread), converted to values used for slope
+//   spread: Maximum vertical angle (degrees, in fixed point -- not BAM!)
+//
+int P_RandomHitscanSlope(pr_class_t pr_class, fixed_t spread)
+{
+   const int angle = P_RandomHitscanAngle(pr_class, spread);
+
+   // clamp it, yo
+   if(angle > ANG90)
+      return finetangent[0];
+   else if(-angle > ANG90)
+      return finetangent[FINEANGLES / 2 - 1];
+   else
+      return finetangent[(ANG90 - angle) >> ANGLETOFINESHIFT];
+}
+
 #if 0
 static cell AMX_NATIVE_CALL sm_random(AMX *amx, cell *params)
 {

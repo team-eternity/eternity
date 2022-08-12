@@ -250,7 +250,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
            *GameModeInfo->menuStartMap &&
            W_CheckNumForName(GameModeInfo->menuStartMap) >= 0)
    {
-      G_DeferedInitNew((skill_t)defaultskill, GameModeInfo->menuStartMap);
+      G_DeferedInitNew(defaultskill, GameModeInfo->menuStartMap);
       MN_ClearMenus();
    }
    else
@@ -319,6 +319,23 @@ menu_t menu_episode =
    0,                          // select episode 1
    mf_skullmenu | mf_emulated, // skull menu
    MN_EpisodeDrawer            // drawer
+};
+
+//
+// Stub episode menu (for UMAPINFO)
+//
+static menuitem_t mn_episode_itemsStub[] =
+{
+   { it_end }
+};
+menu_t menu_episodeDoom2Stub =
+{
+   mn_episode_itemsStub,
+   nullptr, nullptr, nullptr,
+   48, 63,
+   0,
+   mf_skullmenu | mf_emulated,
+   MN_EpisodeDrawer
 };
 
 // console command to select episode
@@ -1992,7 +2009,7 @@ static menuitem_t mn_mouse_items[] =
    {it_info,       "Miscellaneous"},
    {it_toggle,     "Invert mouse",                  "invertmouse"    },
    {it_toggle,     "Smooth turning",                "smooth_turning" },
-   {it_toggle,     "No vertical mouse movement",    "mouse_novert"   },
+   {it_toggle,     "Vertical mouse movement",       "mouse_vert"   },
 #ifdef _SDL_VER
    {it_toggle,     "Window grabs mouse",            "i_grabmouse"    },
 #endif
@@ -2031,7 +2048,6 @@ static menuitem_t mn_mouse_accel_and_mlook_items[] =
    {it_toggle,     "Enable mouselook",    "allowmlook" },
    {it_toggle,     "Always mouselook",    "alwaysmlook"},
    {it_binding,    "Bind mouselook key",  "mlook"      },
-   {it_toggle,     "Stretch short skies", "r_stretchsky"},
    {it_end}
 };
 
@@ -2928,6 +2944,7 @@ static menuitem_t mn_weapons_items[] =
    {it_toggle,     "Center when firing",             "r_centerfire"},
    {it_toggle,     "Recoil",                         "recoil"},
    {it_toggle,     "Weapon hotkey cycling",          "weapon_hotkey_cycling"},
+   {it_toggle,     "Cycle when holding key",         "weapon_hotkey_holding"},
    {it_toggle,     "Autoaiming",                     "autoaim"},
    {it_gap},
    {it_end},
@@ -3480,6 +3497,7 @@ static menuitem_t mn_automapkeys_items[] =
    {it_binding, "Mark spot",            "map_mark"},
    {it_binding, "Clear spots",          "map_clear"},
    {it_binding, "Show grid",            "map_grid"},
+   {it_binding, "Overlay mode",         "map_overlay"},
    {it_end}
 };
 

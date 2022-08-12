@@ -45,6 +45,7 @@
 #include "m_random.h"
 #include "p_skin.h"
 #include "r_main.h"
+#include "r_patch.h"
 #include "s_sound.h"
 #include "sounds.h"
 #include "st_lib.h"
@@ -397,7 +398,11 @@ static void ST_refreshBackground()
 {
    if(st_statusbaron)
    {
-      V_DrawPatch(ST_X, ST_FY, &subscreen43, sbar);
+      V_DrawPatch(
+         ST_X + (vbscreenyscaled.unscaledw - sbar->width) / 2 + sbar->leftoffset,
+         ST_FY + sbar->topoffset,
+         &vbscreenyscaled, sbar
+      );
 
       // killough 3/7/98: make face background change with displayplayer
       // haleyjd 01/12/04: changed translation handling
@@ -650,7 +655,7 @@ static void ST_updateFaceWidget()
    if(priority < ST_PRIORITY_RAMPAGE)
    {
       // invulnerability
-      if((plyr->cheats & CF_GODMODE) || plyr->powers[pw_invulnerability])
+      if((plyr->cheats & CF_GODMODE) || plyr->powers[pw_invulnerability].isActive())
       {
          priority = ST_PRIORITY_GODMODE;
          
@@ -780,12 +785,19 @@ static void ST_doPaletteStuff()
    byte *pal;
    int  cnt = plyr->damagecount;
 
-   if(plyr->powers[pw_strength])
+   if(plyr->powers[pw_strength].isActive())
    {
-      // slowly fade the berzerk out
-      int bzc = 12 - (plyr->powers[pw_strength]>>6);
-      if(bzc > cnt)
-         cnt = bzc;
+      if(!(GameModeInfo->flags & GIF_BERZERKISPENTA))
+      {
+         // slowly fade the berzerk out
+         int bzc = 12 - (plyr->powers[pw_strength].tics >> 6);
+         if(bzc > cnt)
+            cnt = bzc;
+      }
+      else if(plyr->powers[pw_strength].infinite ||
+              ((plyr->powers[pw_strength].tics < -4 * 32 || (plyr->powers[pw_strength].tics & 8)) &&
+               plyr->powers[pw_strength].isActive() && cnt == 0))
+         cnt = 1;
    }
 
    if(cnt)
@@ -802,8 +814,9 @@ static void ST_doPaletteStuff()
          palette = NUMBONUSPALS-1;
       palette += STARTBONUSPALS;
    }
-   else if(plyr->powers[pw_ironfeet] > 4*32 || 
-           plyr->powers[pw_ironfeet] & 8)
+   else if(plyr->powers[pw_ironfeet].infinite ||
+           plyr->powers[pw_ironfeet].tics > 4*32 ||
+           plyr->powers[pw_ironfeet].tics & 8)
       palette = RADIATIONPAL;
    else
       palette = 0;
@@ -1087,15 +1100,15 @@ void ST_Drawer(bool fullscreen)
    // haleyjd: test whether fullscreen graphical hud is enabled
    bool fshud = hud_enabled && hud_overlaylayout == HUD_GRAPHICAL;
 
-   st_statusbaron  = !fullscreen || automapactive || fshud;
-   st_backgroundon = !fullscreen || automapactive;
+   st_statusbaron  = !fullscreen || (automapactive && !automap_overlay) || fshud;
+   st_backgroundon = !fullscreen || (automapactive && !automap_overlay);
 
    ST_doPaletteStuff();  // Do red-/gold-shifts from damage/items
 
    // sf: draw nothing in fullscreen
    // tiny bit faster and also removes the problem of status bar
    // percent '%' signs being drawn in fullscreen
-   if(fullscreen && !automapactive)
+   if(fullscreen && (!automapactive || automap_overlay))
    {
       // haleyjd: call game mode's fullscreen drawer when 
       // hud is enabled and hud_overlaystyle is "graphical"

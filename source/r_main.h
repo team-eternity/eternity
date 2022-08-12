@@ -27,11 +27,7 @@
 #define R_MAIN_H__
 
 // NEEDED BY R_doubleToUint32 below
-#ifdef __APPLE__
-#include "SDL2/SDL_endian.h"
-#else
 #include "SDL_endian.h"
-#endif
 
 #include "tables.h"
 
@@ -296,6 +292,14 @@ static inline uint32_t R_doubleToUint32(double d)
 
    return (uint32_t)(d >= 0 ? d : d + two32);
 #endif
+}
+
+//
+// Common routine to convert fixed-point angle to floating-point angle, by Cardboard's rules.
+//
+inline static float cb_fixedAngleToFloat(angle_t angle)
+{
+   return (ANG90 - angle) * PI / ANG180;
 }
 
 #endif

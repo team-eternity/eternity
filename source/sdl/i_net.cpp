@@ -32,11 +32,7 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifdef __APPLE__
-#include "SDL2_net/SDL_net.h"
-#else
 #include "SDL_net.h"
-#endif
 
 #include "../z_zone.h"  /* memory allocation wrappers -- killough */
 

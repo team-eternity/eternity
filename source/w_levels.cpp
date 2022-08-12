@@ -53,7 +53,7 @@
 // Externs
 //
 
-extern int defaultskill;
+extern skill_t defaultskill;
 
 //=============================================================================
 //
@@ -306,9 +306,9 @@ const char *W_GetManagedDirFN(WadDirectory *waddir)
 // map is not guaranteed to be valid; code in P_SetupLevel is expected to deal
 // with that possibility.
 //
-static char *W_FindMapInLevelWad(WadDirectory *dir, bool mapxy)
+static const char *W_FindMapInLevelWad(WadDirectory *dir, bool mapxy)
 {
-   char *name = nullptr;
+   const char *name = nullptr;
    int          numlumps = dir->getNumLumps();
    lumpinfo_t **lumpinfo = dir->getLumpInfo();
 
@@ -318,10 +318,10 @@ static char *W_FindMapInLevelWad(WadDirectory *dir, bool mapxy)
 
       if(mapxy)
       {
-         if(isMAPxy(lump->name))
+         if(M_IsMAPxy(lump->name, nullptr))
             name = lump->name;
       }
-      else if(isExMy(lump->name))
+      else if(M_IsExMy(lump->name, nullptr, nullptr))
          name = lump->name;
    }
 

@@ -50,6 +50,7 @@
 #include "hu_inventory.h"
 #include "hu_stuff.h"
 #include "hu_over.h"
+#include "m_misc.h"
 #include "m_qstr.h"
 #include "m_random.h"
 #include "m_swap.h"
@@ -84,6 +85,14 @@ char *hud_fontname;
 static bool HU_ChatRespond(const event_t *ev);
 
 //=============================================================================
+
+//
+// True if to allow automap widget. Overlay mode is stricter.
+//
+inline static bool HU_allowMapWidget()
+{
+   return automapactive && !automap_overlay;
+}
 
 // widget hash table
 HUDWidget *HUDWidget::hu_chains[NUMWIDGETCHAINS];
@@ -199,6 +208,7 @@ static void HU_InitLevelTime();
 static void HU_InitLevelName();
 static void HU_InitChat();
 static void HU_InitCoords();
+static void HU_InitStats();
 
 //
 // HU_InitNativeWidgets
@@ -215,6 +225,7 @@ static void HU_InitNativeWidgets()
    HU_InitLevelName();
    HU_InitChat();
    HU_InitCoords();
+   HU_InitStats();
 
    // HUD_FIXME: generalize?
    HU_FragsInit();
@@ -435,9 +446,12 @@ void HUDMessageWidget::clear()
 void HUDMessageWidget::addMessage(const char *s)
 {
    char *dest;
+   if(hud_msg_lines <= 0)
+      return;
 
-   if(current_messages == hud_msg_lines) // display full
+   if(current_messages >= hud_msg_lines) // display full
    {
+      current_messages = hud_msg_lines;   // cap it
       // scroll up      
       for(int i = 0; i < hud_msg_lines - 1; i++)
          strncpy(messages[i], messages[i+1], MAXHUDMSGLEN);
@@ -698,7 +712,7 @@ void HUDTextWidget::drawer()
 {
    // Do not ever draw automap-only widgets if not in automap mode.
    // This fixes a long-standing bug automatically.
-   if(flags & TW_AUTOMAP_ONLY && !automapactive)
+   if(flags & TW_AUTOMAP_ONLY && !HU_allowMapWidget())
       return;
 
    // 10/08/05: boxed message support
@@ -952,7 +966,7 @@ void HUDCrossHairWidget::drawer()
 
    // haleyjd 03/03/07: don't display while showing a center message
    if(!crosshairnum || crosshairs[crosshairnum - 1] == -1 ||
-      viewcamera || automapactive || centermessage_widget.cleartic > leveltime)
+      viewcamera || (automapactive && !automap_overlay) || centermessage_widget.cleartic > leveltime)
       return;
 
    patch = PatchLoader::CacheNum(wGlobalDir, crosshairs[crosshairnum - 1], PU_CACHE);
@@ -964,7 +978,7 @@ void HUDCrossHairWidget::drawer()
    if(!crosshair_scale)
    {
       drawx  = (video.width  + 1 - w) / 2;
-      drawy  = (video.height + 1 - h) / 2;
+      drawy  = viewwindow.y + (viewwindow.height + 1 - h) / 2;
       buffer = &vbscreenfullres;
    }
    else
@@ -1054,7 +1068,7 @@ void HUDLevelTimeWidget::ticker()
    static char timestr[32];
    int seconds;
    
-   if(!automapactive || !hu_showtime)
+   if(!HU_allowMapWidget() || !hu_showtime)
    {
       message = nullptr;
       return;
@@ -1149,7 +1163,7 @@ int hu_levelnamecolor;
 //
 void HUDLevelNameWidget::ticker()
 {
-   message = automapactive ? LevelInfo.levelName : nullptr;
+   message = HU_allowMapWidget() ? LevelInfo.levelName : nullptr;
    color   = hu_levelnamecolor + 1;
 }
 
@@ -1313,7 +1327,7 @@ static bool HU_ChatRespond(const event_t *ev)
    return false;
 }
 
-//=============================================================================
+//==============================================================================
 //
 // Automap coordinate display
 //
@@ -1342,52 +1356,18 @@ public:
    {
       coordType = ct;
 
-      // HTIC_FIXME: Handle through GameModeInfo directly?
-      if(GameModeInfo->type == Game_Heretic)
-      {
-         x = 20;
-         switch(coordType)
-         {
-         case COORDTYPE_X:
-            y = 10;
-            break;
-         case COORDTYPE_Y:
-            y = 19;
-            break;
-         case COORDTYPE_Z:
-            y = 28;
-            break;
-         case COORDTYPE_A:
-            y = 37;
-            break;
-         default:
-            break;
-         }
-      }
-      else
-      {
-         x = SCREENWIDTH - 64;
-         switch(coordType)
-         {
-         case COORDTYPE_X:
-            y = 8;
-            break;
-         case COORDTYPE_Y:
-            y = 17;
-            break;
-         case COORDTYPE_Z:
-            y = 25;
-            break;
-         case COORDTYPE_A:
-            y = 33;
-            break;
-         default:
-            break;
-         }
-      }
       message  = nullptr;
       font     = hud_font;
       cleartic = 0;
+
+      x = SCREENWIDTH - 64;
+      y = SCREENHEIGHT / 2 + font->absh * (coordType - 2);
+
+      // HTIC_FIXME: Handle through GameModeInfo directly?
+      if(GameModeInfo->type == Game_Heretic)
+         y -= 42 / 2;
+      else
+         y -= ST_HEIGHT / 2;
    }
 };
 
@@ -1416,7 +1396,7 @@ void HUDCoordWidget::ticker()
    static char coordzstr[16];
    static char coordastr[16];
 
-   if(!hu_alwaysshowcoords && (!automapactive || !hu_showcoords))
+   if(!hu_alwaysshowcoords && (!HU_allowMapWidget() || !hu_showcoords))
    {
       message = nullptr;
       return;
@@ -1427,22 +1407,22 @@ void HUDCoordWidget::ticker()
 
    if(coordType == COORDTYPE_X)
    {
-      sprintf(coordxstr, "%cX: %-5d", hu_coordscolor + 128, x >> FRACBITS);
+      snprintf(coordxstr, sizeof(coordxstr), "%cX: %-5d", hu_coordscolor + 128, x >> FRACBITS);
       message = coordxstr;
    }
    else if(coordType == COORDTYPE_Y)
    {
-      sprintf(coordystr, "%cY: %-5d", hu_coordscolor + 128, y >> FRACBITS);
+      snprintf(coordystr, sizeof(coordystr), "%cY: %-5d", hu_coordscolor + 128, y >> FRACBITS);
       message = coordystr;
    }
    else if(coordType == COORDTYPE_Z)
    {
-      sprintf(coordzstr, "%cZ: %-5d", hu_coordscolor + 128, z >> FRACBITS);
+      snprintf(coordzstr, sizeof(coordzstr), "%cZ: %-5d", hu_coordscolor + 128, z >> FRACBITS);
       message = coordzstr;
    }
    else
    {
-      sprintf(coordastr, "%cA: %-.0f", hu_coordscolor + 128,
+      snprintf(coordastr, sizeof(coordastr), "%cA: %-.0f", hu_coordscolor + 128,
               static_cast<double>(plyr->mo->angle) / ANGLE_1);
       message = coordastr;
    }
@@ -1478,6 +1458,103 @@ static void HU_InitCoords()
    coordy_widget.initProps(HUDCoordWidget::COORDTYPE_Y);
    coordz_widget.initProps(HUDCoordWidget::COORDTYPE_Z);
    coorda_widget.initProps(HUDCoordWidget::COORDTYPE_A);
+}
+
+//==============================================================================
+//
+// HUD level stats widget
+//
+// This code is derived from Eternity's Github pull 563 by Joshua Woodie
+//
+
+class HUDStatWidget : public HUDTextWidget
+{
+public:
+   enum
+   {
+      STATTYPE_KILLS,
+      STATTYPE_ITEMS,
+      STATTYPE_SECRETS
+   };
+
+   virtual void ticker();
+
+   void initProps(int st)
+   {
+      statType = st;
+
+      if(!(GameModeInfo->flags & GIF_HUDSTATBARNAME))
+         x = 20;
+      else
+         x = 0;
+
+      y = 8 + statType * hud_font->absh;
+
+      message  = nullptr;
+      font     = hud_font;
+      cleartic = 0;
+   }
+
+protected:
+   int statType;
+};
+
+static HUDStatWidget statkill_widget;
+static HUDStatWidget statitem_widget;
+static HUDStatWidget statsecr_widget;
+
+void HUDStatWidget::ticker()
+{
+   static char statkillstr[64];
+   static char statitemstr[64];
+   static char statsecrstr[64];
+
+   if(!HU_allowMapWidget())
+   {
+      message = nullptr;
+      return;
+   }
+
+   player_t *plr = &players[displayplayer];
+
+   if(statType == STATTYPE_KILLS)
+   {
+      snprintf(statkillstr, sizeof(statkillstr), "K: %i/%i", plr->killcount, totalkills);
+      message = statkillstr;
+   }
+   else if(statType == STATTYPE_ITEMS)
+   {
+      snprintf(statitemstr, sizeof(statitemstr), "I: %i/%i", plr->itemcount, totalitems);
+      message = statitemstr;
+   }
+   else if(statType == STATTYPE_SECRETS && !hud_hidestatus)
+   {
+      snprintf(statsecrstr, sizeof(statsecrstr), "S: %i/%i", plr->secretcount, totalsecret);
+      message = statsecrstr;
+   }
+   else
+   {
+      message = nullptr;
+   }
+}
+
+static void HU_InitStats()
+{
+   statkill_widget.setName("_HU_StatKillWidget");
+   statitem_widget.setName("_HU_StatItemWidget");
+   statsecr_widget.setName("_HU_StatSecrWidget");
+
+   statkill_widget.setType(WIDGET_TEXT);
+   statitem_widget.setType(WIDGET_TEXT);
+   statsecr_widget.setType(WIDGET_TEXT);
+
+   HUDWidget::AddWidgetToHash(&statkill_widget);
+   HUDWidget::AddWidgetToHash(&statitem_widget);
+   HUDWidget::AddWidgetToHash(&statsecr_widget);
+
+   statkill_widget.initProps(HUDStatWidget::STATTYPE_KILLS);
+   statitem_widget.initProps(HUDStatWidget::STATTYPE_ITEMS);
+   statsecr_widget.initProps(HUDStatWidget::STATTYPE_SECRETS);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1555,14 +1632,17 @@ VARIABLE_INT(hu_coordscolor,         nullptr, 0, CR_BUILTIN,    textcolours);
 
 VARIABLE_BOOLEAN(hud_msg_scrollup,  nullptr,            yesno);
 VARIABLE_TOGGLE(crosshair_hilite,   nullptr,            onoff);
-VARIABLE_BOOLEAN(crosshair_scale,   nullptr,            onoff);
+VARIABLE_TOGGLE(crosshair_scale,    nullptr,            onoff);
 
 CONSOLE_VARIABLE(hu_obituaries, obituaries, 0) {}
 CONSOLE_VARIABLE(hu_obitcolor, obcolour, 0) {}
 CONSOLE_VARIABLE(hu_crosshair, crosshairnum, 0) {}
 CONSOLE_VARIABLE(hu_crosshair_hilite, crosshair_hilite, 0) {}
 CONSOLE_VARIABLE(hu_crosshair_scale, crosshair_scale, 0) {}
-CONSOLE_VARIABLE(hu_messages, showMessages, 0) {}
+CONSOLE_VARIABLE(hu_messages, showMessages, 0)
+{
+   doom_printf("%s", DEH_String(showMessages ? "MSGON" : "MSGOFF"));
+}
 CONSOLE_VARIABLE(hu_messagealignment, mess_align, 0) {}
 CONSOLE_VARIABLE(hu_messagecolor, mess_colour, 0) {}
 CONSOLE_NETCMD(say, cf_netvar, netcmd_chat)

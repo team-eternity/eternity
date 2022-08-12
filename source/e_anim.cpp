@@ -31,23 +31,23 @@
 #include "m_qstrkeys.h"
 #include "r_ripple.h"
 
-#define ITEM_ANIM_FLAT   "flat"
-#define ITEM_ANIM_WALL   "wall"
-#define ITEM_ANIM_ENDPIC "lastpic"
-#define ITEM_ANIM_TICS   "tics"
-#define ITEM_ANIM_FLAGS  "flags"
+constexpr const char ITEM_ANIM_FLAT[]   = "flat";
+constexpr const char ITEM_ANIM_WALL[]   = "wall";
+constexpr const char ITEM_ANIM_ENDPIC[] = "lastpic";
+constexpr const char ITEM_ANIM_TICS[]   = "tics";
+constexpr const char ITEM_ANIM_FLAGS[]  = "flags";
 
-#define ITEM_ANIM_PIC    "pic"
+constexpr const char ITEM_ANIM_PIC[]    = "pic";
 
-#define ITEM_PIC_NAME  "name"
-#define ITEM_PIC_TICS  "tics"
-#define ITEM_PIC_RAND  "random"
-#define ITEM_PIC_FLAGS "flags"
+constexpr const char ITEM_PIC_NAME[]  = "name";
+constexpr const char ITEM_PIC_TICS[]  = "tics";
+constexpr const char ITEM_PIC_RAND[]  = "random";
+constexpr const char ITEM_PIC_FLAGS[] = "flags";
 
-#define ITEM_RAND_MIN "min"
-#define ITEM_RAND_MAX "max"
+constexpr const char ITEM_RAND_MIN[] = "min";
+constexpr const char ITEM_RAND_MAX[] = "max";
 
-#define NUMANIMCHAINS 67
+constexpr int NUMANIMCHAINS = 67;
 
 //
 // Random has two parameters

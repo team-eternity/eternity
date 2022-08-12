@@ -658,7 +658,7 @@ const sector_t *R_FakeFlat(const fixed_t viewz, const sector_t *sec, sector_t *t
             tempsec->srf.ceiling.pflags = 0;
          }
          else
-            P_SetCeilingHeight(tempsec, R_CPLink(sec)->planez);
+            P_SetSectorHeight(*tempsec, surf_ceil, R_CPLink(sec)->planez);
          sec = tempsec;
       }
       else if(!(sec->srf.ceiling.pflags & PS_VISIBLE))
@@ -678,7 +678,7 @@ const sector_t *R_FakeFlat(const fixed_t viewz, const sector_t *sec, sector_t *t
             tempsec->srf.floor.pflags = 0;
          }
          else
-            P_SetFloorHeight(tempsec, R_FPLink(sec)->planez);
+            P_SetSectorHeight(*tempsec, surf_floor, R_FPLink(sec)->planez);
             
          sec = tempsec;
       }
@@ -2188,7 +2188,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 {
    const portalrender_t &portalrender = portalcontext.portalrender;
 
-   sector_t tempsec;
+   sector_t tempsec; // If this being uninitialised causes future issues then add `static thread_local`
 
    float x1, x2;
    float i1, i2, pstep;
@@ -2197,8 +2197,6 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    const side_t *side;
    float floorx1, floorx2;
    const vertex_t *v1, *v2;
-
-   tempsec = {};
 
    // ioanch 20160125: reject segs in front of line when rendering line portal
    if(portalrender.active && portalrender.w->portal->type != R_SKYBOX)
@@ -2847,6 +2845,11 @@ static void R_addDynaSegs(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, 
 //
 static void R_subsector(rendercontext_t &context, const int num)
 {
+#ifdef RANGECHECK
+   if(num >= numsubsectors)
+      I_Error("R_subsector: ss %i with numss = %i\n", num, numsubsectors);
+#endif
+
    bspcontext_t    &bspcontext     = context.bspcontext;
    cmapcontext_t   &cmapcontext    = context.cmapcontext;
    planecontext_t  &planecontext   = context.planecontext;
@@ -2872,15 +2875,7 @@ static void R_subsector(rendercontext_t &context, const int num)
    bool        visible;
    v3float_t   cam;
 
-   cb_seg_t    seg;
-
-#ifdef RANGECHECK
-   if(num >= numsubsectors)
-      I_Error("R_subsector: ss %i with numss = %i\n", num, numsubsectors);
-#endif
-
-   // haleyjd 09/22/07: clear seg structure
-   seg = {};
+   cb_seg_t    seg{}; // haleyjd 09/22/07: clear seg structure
 
    sub = &subsectors[num];
    seg.frontsec = sub->sector;

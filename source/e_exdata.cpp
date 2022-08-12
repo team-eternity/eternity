@@ -54,6 +54,7 @@
 #include "doomstat.h"
 #include "ev_specials.h"
 #include "m_qstr.h"
+#include "m_utils.h"
 #include "p_info.h"
 #include "p_mobj.h"
 #include "p_portal.h"
@@ -70,78 +71,78 @@
 static mapthing_t *EDThings;
 static unsigned int numEDMapThings;
 
-#define NUMMTCHAINS 1021
+constexpr int NUMMTCHAINS = 1021;
 static unsigned int mapthing_chains[NUMMTCHAINS];
 
 static maplinedefext_t *EDLines;
 static unsigned int numEDLines;
 
-#define NUMLDCHAINS 1021
+constexpr int NUMLDCHAINS = 1021;
 static unsigned int linedef_chains[NUMLDCHAINS];
 
 static mapsectorext_t *EDSectors;
 static unsigned int numEDSectors;
 
-#define NUMSECCHAINS 1021
+constexpr int NUMSECCHAINS = 1021;
 static unsigned int sector_chains[NUMSECCHAINS];
 
 // ExtraData section names
-#define SEC_MAPTHING "mapthing"
-#define SEC_LINEDEF  "linedef"
-#define SEC_SECTOR   "sector"
+constexpr const char SEC_MAPTHING[] = "mapthing";
+constexpr const char SEC_LINEDEF[]  = "linedef";
+constexpr const char SEC_SECTOR[]   = "sector";
 
 // ExtraData field names
 // mapthing fields:
-#define FIELD_NUM     "recordnum"
-#define FIELD_TID     "tid"
-#define FIELD_TYPE    "type"
-#define FIELD_OPTIONS "options"
-#define FIELD_ARGS    "args"
-#define FIELD_HEIGHT  "height"
-#define FIELD_SPECIAL "special"
+constexpr const char FIELD_NUM[]     = "recordnum";
+constexpr const char FIELD_TID[]     = "tid";
+constexpr const char FIELD_TYPE[]    = "type";
+constexpr const char FIELD_OPTIONS[] = "options";
+constexpr const char FIELD_ARGS[]    = "args";
+constexpr const char FIELD_HEIGHT[]  = "height";
+constexpr const char FIELD_SPECIAL[] = "special";
 
 // linedef fields:
-#define FIELD_LINE_NUM       "recordnum"
-#define FIELD_LINE_PORTALID  "portalid"
-#define FIELD_LINE_SPECIAL   "special"
-#define FIELD_LINE_TAG       "tag"
-#define FIELD_LINE_EXTFLAGS  "extflags"
-#define FIELD_LINE_ARGS      "args"
-#define FIELD_LINE_ID        "id"
-#define FIELD_LINE_ALPHA     "alpha"
+constexpr const char FIELD_LINE_NUM[]       = "recordnum";
+constexpr const char FIELD_LINE_PORTALID[]  = "portalid";
+constexpr const char FIELD_LINE_SPECIAL[]   = "special";
+constexpr const char FIELD_LINE_TAG[]       = "tag";
+constexpr const char FIELD_LINE_EXTFLAGS[]  = "extflags";
+constexpr const char FIELD_LINE_ARGS[]      = "args";
+constexpr const char FIELD_LINE_ID[]        = "id";
+constexpr const char FIELD_LINE_ALPHA[]     = "alpha";
 
 // sector fields:
-#define FIELD_SECTOR_NUM            "recordnum"
-#define FIELD_SECTOR_FLAGS          "flags"
-#define FIELD_SECTOR_FLAGSADD       "flags.add"
-#define FIELD_SECTOR_FLAGSREM       "flags.remove"
-#define FIELD_SECTOR_DAMAGE         "damage"
-#define FIELD_SECTOR_DAMAGEMASK     "damagemask"
-#define FIELD_SECTOR_DAMAGEMOD      "damagemod"
-#define FIELD_SECTOR_DAMAGEFLAGS    "damageflags"
-#define FIELD_SECTOR_DMGFLAGSADD    "damageflags.add"
-#define FIELD_SECTOR_DMGFLAGSREM    "damageflags.remove"
-#define FIELD_SECTOR_FLOORTERRAIN   "floorterrain"
-#define FIELD_SECTOR_FLOORANGLE     "floorangle"
-#define FIELD_SECTOR_FLOOROFFSETX   "flooroffsetx"
-#define FIELD_SECTOR_FLOOROFFSETY   "flooroffsety"
-#define FIELD_SECTOR_FLOORSCALEX    "floorscalex"
-#define FIELD_SECTOR_FLOORSCALEY    "floorscaley"
-#define FIELD_SECTOR_CEILINGTERRAIN "ceilingterrain"
-#define FIELD_SECTOR_CEILINGANGLE   "ceilingangle"
-#define FIELD_SECTOR_CEILINGOFFSETX "ceilingoffsetx"
-#define FIELD_SECTOR_CEILINGOFFSETY "ceilingoffsety"
-#define FIELD_SECTOR_CEILINGSCALEX  "ceilingscalex"
-#define FIELD_SECTOR_CEILINGSCALEY  "ceilingscaley"
-#define FIELD_SECTOR_TOPMAP         "colormaptop"
-#define FIELD_SECTOR_MIDMAP         "colormapmid"
-#define FIELD_SECTOR_BOTTOMMAP      "colormapbottom"
-#define FIELD_SECTOR_PORTALFLAGS_F  "portalflags.floor"
-#define FIELD_SECTOR_PORTALFLAGS_C  "portalflags.ceiling"
-#define FIELD_SECTOR_OVERLAYALPHA_F "overlayalpha.floor"
-#define FIELD_SECTOR_OVERLAYALPHA_C "overlayalpha.ceiling"
-#define FIELD_SECTOR_PORTALID_F     "portalid.floor"
-#define FIELD_SECTOR_PORTALID_C     "portalid.ceiling"
+constexpr const char FIELD_SECTOR_NUM[]            = "recordnum";
+constexpr const char FIELD_SECTOR_FLAGS[]          = "flags";
+constexpr const char FIELD_SECTOR_FLAGSADD[]       = "flags.add";
+constexpr const char FIELD_SECTOR_FLAGSREM[]       = "flags.remove";
+constexpr const char FIELD_SECTOR_DAMAGE[]         = "damage";
+constexpr const char FIELD_SECTOR_DAMAGEMASK[]     = "damagemask";
+constexpr const char FIELD_SECTOR_DAMAGEMOD[]      = "damagemod";
+constexpr const char FIELD_SECTOR_DAMAGEFLAGS[]    = "damageflags";
+constexpr const char FIELD_SECTOR_DMGFLAGSADD[]    = "damageflags.add";
+constexpr const char FIELD_SECTOR_DMGFLAGSREM[]    = "damageflags.remove";
+constexpr const char FIELD_SECTOR_FLOORTERRAIN[]   = "floorterrain";
+constexpr const char FIELD_SECTOR_FLOORANGLE[]     = "floorangle";
+constexpr const char FIELD_SECTOR_FLOOROFFSETX[]   = "flooroffsetx";
+constexpr const char FIELD_SECTOR_FLOOROFFSETY[]   = "flooroffsety";
+constexpr const char FIELD_SECTOR_FLOORSCALEX[]    = "floorscalex";
+constexpr const char FIELD_SECTOR_FLOORSCALEY[]    = "floorscaley";
+constexpr const char FIELD_SECTOR_CEILINGTERRAIN[] = "ceilingterrain";
+constexpr const char FIELD_SECTOR_CEILINGANGLE[]   = "ceilingangle";
+constexpr const char FIELD_SECTOR_CEILINGOFFSETX[] = "ceilingoffsetx";
+constexpr const char FIELD_SECTOR_CEILINGOFFSETY[] = "ceilingoffsety";
+constexpr const char FIELD_SECTOR_CEILINGSCALEX[]  = "ceilingscalex";
+constexpr const char FIELD_SECTOR_CEILINGSCALEY[]  = "ceilingscaley";
+constexpr const char FIELD_SECTOR_TOPMAP[]         = "colormaptop";
+constexpr const char FIELD_SECTOR_MIDMAP[]         = "colormapmid";
+constexpr const char FIELD_SECTOR_BOTTOMMAP[]      = "colormapbottom";
+constexpr const char FIELD_SECTOR_PORTALFLAGS_F[]  = "portalflags.floor";
+constexpr const char FIELD_SECTOR_PORTALFLAGS_C[]  = "portalflags.ceiling";
+constexpr const char FIELD_SECTOR_OVERLAYALPHA_F[] = "overlayalpha.floor";
+constexpr const char FIELD_SECTOR_OVERLAYALPHA_C[] = "overlayalpha.ceiling";
+constexpr const char FIELD_SECTOR_PORTALID_F[]     = "portalid.floor";
+constexpr const char FIELD_SECTOR_PORTALID_C[]     = "portalid.ceiling";
 
 // mapthing options and related data structures
 
@@ -181,6 +182,21 @@ static dehflagset_t mt_flagset =
 {
    mapthingflags, // flaglist
    0,             // mode
+};
+
+//
+// Apparently it's safe to mix known with unknown flags, so we're going to use both basic and
+// extended flags from the same flag string
+//
+static dehflags_t mapthingflags_ex[] =
+{
+   { "STANDING", MTF_EX_STAND },
+   { nullptr, 0 }
+};
+static dehflagset_t mt_flagset_ex =
+{
+   mapthingflags_ex,
+   0,
 };
 
 // linedef options and related data structures
@@ -363,7 +379,7 @@ static void E_ParseArg(const char *str, int *dest)
 static unsigned int E_EDThingForRecordNum(int recnum)
 {
    unsigned int num;
-   int key = recnum % NUMMTCHAINS;
+   int key = M_PositiveModulo(recnum, NUMMTCHAINS);
 
    num = mapthing_chains[key];
    while(num != numEDMapThings && EDThings[num].recordnum != recnum)
@@ -478,7 +494,7 @@ static void E_ProcessEDThings(cfg_t *cfg)
          I_Error("E_ProcessEDThings: duplicate record number %d\n", tempint);
 
       // hash this ExtraData mapthing record by its recordnum field
-      tempint = EDThings[i].recordnum % NUMMTCHAINS;
+      tempint = M_PositiveModulo(EDThings[i].recordnum, NUMMTCHAINS);
       EDThings[i].next = mapthing_chains[tempint];
       mapthing_chains[tempint] = i;
 
@@ -497,10 +513,12 @@ static void E_ProcessEDThings(cfg_t *cfg)
       // options
       tempstr = cfg_getstr(thingsec, FIELD_OPTIONS);
       if(*tempstr == '\0')
-         EDThings[i].options = 0;
+         EDThings[i].options = EDThings[i].extOptions = 0;
       else
+      {
          EDThings[i].options = (int16_t)(E_ParseFlags(tempstr, &mt_flagset));
-      EDThings[i].extOptions = 0;   // ioanch: not set by ExtraData
+         EDThings[i].extOptions = (uint32_t)(E_ParseFlags(tempstr, &mt_flagset_ex));
+      }
 
       // extended fields
 
@@ -536,7 +554,7 @@ static void E_ProcessEDThings(cfg_t *cfg)
 static unsigned int E_EDLineForRecordNum(int recnum)
 {
    unsigned int num;
-   int key = recnum % NUMLDCHAINS;
+   int key = M_PositiveModulo(recnum, NUMLDCHAINS);
 
    num = linedef_chains[key];
    while(num != numEDLines && EDLines[num].recordnum != recnum)
@@ -1159,7 +1177,7 @@ static void E_ProcessEDLines(cfg_t *cfg)
          I_Error("E_ProcessEDLines: duplicate record number %d\n", tempint);
 
       // hash this ExtraData linedef record by its recordnum field
-      tempint = EDLines[i].recordnum % NUMLDCHAINS;
+      tempint = M_PositiveModulo(EDLines[i].recordnum, NUMLDCHAINS);
       EDLines[i].next = linedef_chains[tempint];
       linedef_chains[tempint] = i;
 
@@ -1216,7 +1234,7 @@ static void E_ProcessEDLines(cfg_t *cfg)
 static unsigned int E_EDSectorForRecordNum(int recnum)
 {
    unsigned int num;
-   int key = recnum % NUMSECCHAINS;
+   int key = M_PositiveModulo(recnum, NUMSECCHAINS);
 
    num = sector_chains[key];
    while(num != numEDSectors && EDSectors[num].recordnum != recnum)
@@ -1295,7 +1313,7 @@ static void E_ProcessEDSectors(cfg_t *cfg)
          I_Error("E_ProcessEDSectors: duplicate record number %d\n", tempint);
 
       // hash this ExtraData sector record by its recordnum field
-      tempint = sec->recordnum % NUMSECCHAINS;
+      tempint = M_PositiveModulo(sec->recordnum, NUMSECCHAINS);
       sec->next = sector_chains[tempint];
       sector_chains[tempint] = i;
 
@@ -1658,8 +1676,8 @@ void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
       sector->leakiness = 5;
    if(sector->damageflags & SDMG_IGNORESUIT)
       sector->leakiness = 256;
-   sector->damageflags &= ~(SDMG_LEAKYSUIT | SDMG_IGNORESUIT);
-   // delete the flags
+   // NOTE: no real need to delete these flags even if we use leakiness. Instead, we really should
+   // keep the flags because now the MBF21 instant death special uses them.
 
    // flat offsets
    sector->srf.floor.offset = v2fixed_t::doubleToFixed(edsector->surface.floor.offset);
@@ -1699,9 +1717,9 @@ void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
    sector->srf.ceiling.pflags = (edsector->surface.ceiling.pflags | (edsector->surface.ceiling.alpha << PO_OPACITYSHIFT));
    
    if(sector->srf.floor.portal)
-      P_CheckFPortalState(sector);
+      P_CheckSectorPortalState(*sector, surf_floor);
    if(sector->srf.ceiling.portal)
-      P_CheckCPortalState(sector);
+      P_CheckSectorPortalState(*sector, surf_ceil);
    
    setupSettings.setSectorPortals(eindex(sector - sectors), edsector->surface.ceiling.portalid,
                                   edsector->surface.floor.portalid);

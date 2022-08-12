@@ -29,12 +29,15 @@
 //
 //-----------------------------------------------------------------------------
 
+#include <algorithm>
 #include "z_zone.h"
+#include "autopalette.h"
 #include "i_system.h"
 #include "doomstat.h"
 #include "r_sky.h"
 #include "r_data.h"
 #include "p_info.h"
+#include "v_video.h"
 #include "w_wad.h"
 #include "d_gi.h"
 
@@ -98,9 +101,52 @@ void R_StartSky()
 //
 
 // the sky texture hash table
-skytexture_t *skytextures[NUMSKYCHAINS];
+static skytexture_t *skytextures[NUMSKYCHAINS];
 
 #define skytexturekey(a) ((a) % NUMSKYCHAINS)
+
+//
+// Returns a texture's top median (actually 1/3 for empiric reasons) color for sky fading to color.
+//
+static byte R_getMedianTopColor(int texturenum)
+{
+   const texture_t *texture = textures[texturenum];
+   I_Assert(texture != nullptr, "Missing texture");
+
+   const byte *texbuffer = texture->bufferdata;
+   if(!texture->bufferalloc || !texbuffer)
+      texbuffer = R_GetLinearBuffer(texturenum);
+   I_Assert(texbuffer != nullptr, "Couldn't make texbuffer");
+
+   struct rgb_t
+   {
+      int r, g, b;
+      inline int sum() { return r*r + g*g + b*b; }
+   };
+
+   PODCollection<rgb_t> topcolors;
+   AutoPalette pal(wGlobalDir);
+   const byte *playpal = pal.get();
+
+   for(int x = 0; x < texture->width; ++x)
+   {
+      rgb_t rgb;
+      int palindex = 3 * texbuffer[x * texture->height];
+      rgb.r = playpal[palindex];
+      rgb.g = playpal[palindex + 1];
+      rgb.b = playpal[palindex + 2];
+      topcolors.add(rgb);
+   }
+
+   std::sort(topcolors.begin(), topcolors.end(), [](rgb_t c1, rgb_t c2)
+   {
+      return c1.sum() < c2.sum();
+   });
+   rgb_t medianrgb = topcolors[topcolors.getLength() / 3];
+
+   // We now have the average colour.
+   return V_FindBestColor(playpal, medianrgb.r, medianrgb.g, medianrgb.b);
+}
 
 //
 // R_AddSkyTexture
@@ -113,17 +159,26 @@ static skytexture_t *R_AddSkyTexture(int texturenum)
    int key;
 
    // SoM: The new texture system handles tall patches in textures.
-   newSky = emalloctag(skytexture_t *, sizeof(skytexture_t), PU_STATIC, nullptr);
+   newSky = ecalloctag(skytexture_t *, 1, sizeof(skytexture_t), PU_STATIC, nullptr);
 
    // 02/11/04: only if patch height is greater than texture height
    // should we use it
    newSky->texturenum = texturenum;
    newSky->height = textures[texturenum]->height;
-   
-   if(newSky->height >= 200)
-      newSky->texturemid = 200*FRACUNIT;
+
+   // Determine the median color now
+   newSky->medianColor = R_getMedianTopColor(texturenum);
+
+   // Preserve visual compatibility with certain Boom-compatible wads with tall sky textures
+   if(newSky->height >= SKY_FREELOOK_HEIGHT &&
+      (!LevelInfo.enableBoomSkyHack || !(GameModeInfo->flags & GIF_PRBOOMTALLSKY) ||
+       textures[texturenum]->flags & TF_NONVANILLA))
+   {
+      // 200px is the minimum freelook compatible sky height
+      newSky->texturemid = SKY_FREELOOK_HEIGHT * FRACUNIT;
+   }
    else
-      newSky->texturemid = 100*FRACUNIT;
+      newSky->texturemid = (SCREENHEIGHT / 2) *FRACUNIT; // shorter skies draw like Doom
 
    key = skytexturekey(texturenum);
 

@@ -86,6 +86,7 @@ struct vfont_t
    bool  color;        // supports color translations?
    bool  upper;        // uses uppercase only?
    bool  centered;     // characters are centered in position?
+   bool  useSpaceSize; // use step for a blank space instead of the space character
 
    patch_t **fontgfx;  // graphics patches for font (not owned)
 

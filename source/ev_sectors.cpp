@@ -931,7 +931,7 @@ static ev_sectorbinding_t *EV_BindingForSectorSpecial(int special)
 //
 // Test if a sector special is generalized
 //
-bool EV_IsGenSectorSpecial(int special)
+static bool EV_IsGenSectorSpecial(int special)
 {
    // UDMF (based on ZDoom's) sector specials
    if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
@@ -965,6 +965,39 @@ static void EV_setGeneralizedSectorFlags(sector_t *sector)
    sector->flags |= (special & GENSECTOFLAGSMASK) >> SECRET_SHIFT;
 }
 
+static void EV_applyGeneralizedDamage(sector_t *sector, bool udmf)
+{
+   // Apply slime damage UNLESS the MBF21 insta-death bit is set, which changes rules
+   // convert damage
+   int damagetype = (sector->special >> (udmf ? UDMF_BOOM_SHIFT : 0) & DAMAGE_MASK) >> DAMAGE_SHIFT;
+   bool instadeath = mbf21_temp && sector->flags & SECF_INSTANTDEATH;
+   // Don't just make a new nukage type with GOD_BREACH_DAMAGE, because most subtypes work 
+   // differently
+
+   switch(damagetype)
+   {
+   case 1:
+      if(instadeath)
+         sector->damageflags |= SDMG_IGNORESUIT;
+      else
+         EV_SectorDamageNukage(sector); // 5 per 32 tics
+      break;
+   case 2:
+      if(instadeath)
+         sector->damageflags |= SDMG_INSTAEXITNORMAL | SDMG_IGNORESUIT;
+      else
+         EV_SectorDamageHellSlime(sector); // 10 per 32 tics
+      break;
+   case 3:
+      if(instadeath)
+         sector->damageflags |= SDMG_INSTAEXITSECRET | SDMG_IGNORESUIT;
+      else
+         EV_SectorDamageSuperHellSlime(sector); // 20 per 32 tics w/LEAKYSUIT
+   default:
+      break;
+   }
+}
+
 //
 // EV_initGeneralizedSector
 //
@@ -984,6 +1017,8 @@ static void EV_initGeneralizedSector(sector_t *sector)
    // UDMF format handled right here
    if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
    {
+      EV_applyGeneralizedDamage(sector, true);
+
       // mask it by the smallest 8 bits
       auto binding = EV_UDMFEternityBindingForSectorSpecial(sector->special
                                                             & UDMF_SEC_MASK);
@@ -992,22 +1027,7 @@ static void EV_initGeneralizedSector(sector_t *sector)
       return;
    }
 
-   // convert damage
-   int damagetype = (sector->special & DAMAGE_MASK) >> DAMAGE_SHIFT;
-
-   switch(damagetype)
-   {
-   case 1:
-      EV_SectorDamageNukage(sector); // 5 per 32 tics
-      break;
-   case 2:
-      EV_SectorDamageHellSlime(sector); // 10 per 32 tics
-      break;
-   case 3:
-      EV_SectorDamageSuperHellSlime(sector); // 20 per 32 tics w/LEAKYSUIT
-   default:
-      break;
-   }
+   EV_applyGeneralizedDamage(sector, false);
 
    // apply "light" specials (some are allowed that are not lighting specials)
    auto binding = EV_GenBindingForSectorSpecial(sector->special);

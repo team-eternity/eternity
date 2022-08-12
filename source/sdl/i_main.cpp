@@ -19,15 +19,9 @@
 // Authors: James Haley, Max Waine
 //
 
-#ifdef __APPLE__
-#include "SDL2/SDL.h"
-#include "SDL2_net/SDL_net.h"
-#include "SDL2_mixer/SDL_mixer.h"
-#else
 #include "SDL.h"
 #include "SDL_net.h"
 #include "SDL_mixer.h"
-#endif
 
 #include "../z_zone.h"
 #include "../doomdef.h"
@@ -36,8 +30,12 @@
 #include "../d_main.h"
 #include "../i_system.h"
 
-#ifdef HAVE_XLOCALE_H
+#if (EE_CURRENT_PLATFORM != EE_PLATFORM_WINDOWS)
+#if __has_include(<xlocale.h>)
 #include <xlocale.h>
+#elif __has_include(<locale.h>)
+#include <locale.h>
+#endif
 #endif
 
 // main Tweaks for Windows Platforms
@@ -83,7 +81,7 @@ int main(int argc, char **argv)
       SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
 #endif
 
-#ifdef HAVE_XLOCALE_H
+#if (EE_CURRENT_PLATFORM != EE_PLATFORM_WINDOWS) && (__has_include(<xlocale.h>) || __has_include(<locale.h>))
    // We need to prevent any calling terminal from changing Eternity's locale
    // Unconfirmed if needed in Windows. If so, it should be added there too.
    uselocale(newlocale(LC_ALL_MASK, "C", NULL));

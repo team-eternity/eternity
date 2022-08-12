@@ -71,7 +71,7 @@ private:
    bool checkPortalSector(const sector_t *sector, fixed_t totalfrac, fixed_t partialfrac,
                           const divline_t &trace);
    void checkEdgePortals(const line_t *li, fixed_t totaldist, const divline_t &trace,
-                         fixed_t frac);
+                         fixed_t frac, v2fixed_t edgepos);
    fixed_t recurse(State &newstate, fixed_t partialfrac, fixed_t *outSlope, Mobj **outTarget,
                    fixed_t *outDist, const linkdata_t &data) const;
 
@@ -119,8 +119,8 @@ AimContext::AimContext(const Mobj *t1, angle_t inangle, fixed_t distance,
       else
       {
          fixed_t topangle, bottomangle;
-         topangle = pitch - ANGLE_1 * MAXPITCHUP;
-         bottomangle = pitch + ANGLE_1 * MAXPITCHDOWN;
+         topangle = pitch - ANGLE_1 * AUTOAIM_PITCH_DEGREES;
+         bottomangle = pitch + ANGLE_1 * AUTOAIM_PITCH_DEGREES;
 
          state.slope.ceiling = finetangent[(ANG90 - topangle) >> ANGLETOFINESHIFT];
          state.slope.floor = finetangent[(ANG90 - bottomangle) >> ANGLETOFINESHIFT];
@@ -132,8 +132,8 @@ AimContext::AimContext(const Mobj *t1, angle_t inangle, fixed_t distance,
 //
 // AimContext::checkPortalSector
 //
-bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fixed_t partialfrac,
-                                   const divline_t &trace)
+bool AimContext::checkPortalSector(const sector_t *sector, const fixed_t totaldist,
+                                   const fixed_t partialfrac, const divline_t &trace)
 {
    for(surf_e surf : SURFS)
    {
@@ -143,31 +143,33 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
       if(isOuter(surf, slope, 0) && surface.pflags & PS_PASSABLE &&
          (newfromid = surface.portal->data.link.toid) != state.groupid)
       {
-         fixed_t linehitz = state.c.z + FixedMul(slope, totalfrac);
+         fixed_t linehitz = state.c.z + FixedMul(slope, totaldist);
          fixed_t planez = P_PortalZ(surface);
          if(isOuter(surf, linehitz, planez))
          {
             // get x and y of position
             v2fixed_t v;
+            fixed_t newtotaldist = totaldist;
+            fixed_t newpartialfrac = partialfrac;
             if(linehitz == state.c.z)
             {
                // handle this edge case: put point right on line
-               v = trace.v + trace.dv.fixedMul(partialfrac);
+               v = trace.v + trace.dv.fixedMul(newpartialfrac);
             }
             else
             {
                // add a unit just to ensure that it enters the sector
                fixed_t fixedratio = FixedDiv(planez - state.c.z, linehitz - state.c.z);
                // update z frac
-               totalfrac = FixedMul(fixedratio, totalfrac);
+               newtotaldist = FixedMul(fixedratio, newtotaldist);
                // retrieve the xy frac using the origin frac
-               partialfrac = FixedDiv(totalfrac - state.origindist, attackrange);
+               newpartialfrac = FixedDiv(newtotaldist - state.origindist, attackrange);
 
-               v = trace.v + trace.dv.fixedMul(partialfrac + 1);
+               v = trace.v + trace.dv.fixedMul(newpartialfrac + 1);
             }
 
             // don't allow if it's going back
-            if(partialfrac + 1 > 0 && R_PointInSubsector(v)->sector == sector)
+            if(newpartialfrac + 1 > 0 && R_PointInSubsector(v)->sector == sector)
             {
                fixed_t outSlope;
                Mobj *outTarget = nullptr;
@@ -177,14 +179,14 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
                newstate.c.x = v.x;
                newstate.c.y = v.y;
                newstate.groupid = newfromid;
-               newstate.origindist = totalfrac;
+               newstate.origindist = newtotaldist;
                // don't allow the opposite slope to keep going forth
                newstate.slope[!surf] = state.slope[!surf];
                if(isOuter(!surf, newstate.slope[!surf], 0))
                   newstate.slope[!surf] = 0;
                newstate.reclevel = state.reclevel + 1;
 
-               if(recurse(newstate, partialfrac, &outSlope, &outTarget, &outDist,
+               if(recurse(newstate, newpartialfrac, &outSlope, &outTarget, &outDist,
                           surface.portal->data.link))
                {
                   if(outTarget && (!linetarget || outDist < targetdist))
@@ -226,7 +228,7 @@ fixed_t AimContext::recurse(State &newstate, fixed_t partialfrac, fixed_t *outSl
 // Check if hitting an edge portal line
 //
 void AimContext::checkEdgePortals(const line_t *li, fixed_t totaldist, const divline_t &trace,
-                                  fixed_t frac)
+                                  fixed_t frac, v2fixed_t edgepos)
 {
    if(!li->backsector || P_PointOnLineSidePrecise(trace.x, trace.y, li) != 0 || frac <= 0)
       return;
@@ -235,7 +237,7 @@ void AimContext::checkEdgePortals(const line_t *li, fixed_t totaldist, const div
    {
       const surface_t &surface = li->backsector->srf[surf];
       fixed_t contextslope = state.slope[surf];
-      fixed_t refslope = FixedDiv(surface.height - state.c.z, totaldist);
+      fixed_t refslope = FixedDiv(surface.getZAt(edgepos) - state.c.z, totaldist);
 
       if(li->extflags & e_edgePortalFlags[surf] && surface.pflags & PS_PASSABLE &&
          !isInner(surf, contextslope, refslope))
@@ -292,8 +294,9 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
       if(!(li->flags & ML_TWOSIDED) || li->extflags & EX_ML_BLOCKALL)
          return false;
 
-      lineopening_t lo = { 0 };
-      lo.calculate(li);
+      v2fixed_t edgepos = trace.v + trace.dv.fixedMul(in->frac);
+      tracelineopening_t lo = { 0 };
+      lo.calculateAtPoint(*li, edgepos);
 
       if(lo.openrange <= 0)
          return false;
@@ -305,7 +308,7 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
       {
          const surface_t &surface = sector->srf[surf];
          const surface_t &otherSurface = osector->srf[surf];
-         if(surface.height != otherSurface.height ||
+         if(surface.getZAt(edgepos) != otherSurface.getZAt(edgepos) ||
             (surface.pflags & PS_PASSABLE) != (otherSurface.pflags & PS_PASSABLE))
          {
             slope = FixedDiv(lo.open[surf] - context.state.c.z, totaldist);
@@ -318,7 +321,7 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
          return false;
 
       // Check for edge portals, but don't stop looking
-      context.checkEdgePortals(li, totaldist, trace, in->frac);
+      context.checkEdgePortals(li, totaldist, trace, in->frac, edgepos);
 
       if(li->pflags & PS_PASSABLE && P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 &&
          in->frac > 0)

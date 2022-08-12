@@ -60,6 +60,31 @@ if(WIN32 AND (NOT DEFINED SDL2_LIBRARY OR NOT DEFINED SDL2_INCLUDE_DIR))
    endif()
 endif()
 
+if(APPLE)
+   execute_process(
+      COMMAND ${CMAKE_SOURCE_DIR}/macosx/download_sdl.sh
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+   )
+   set(SDL2_LIBRARY "-framework SDL2" CACHE FILEPATH "")
+   set(SDL2_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/SDL2.Framework/Headers CACHE FILEPATH "")
+
+   set(SDL2_MAIN_LIBRARY "" CACHE FILEPATH "")
+
+   set(SDL2_MIXER_LIBRARY "-framework SDL2_mixer" CACHE FILEPATH "")
+   set(SDL2_MIXER_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/SDL2_mixer.Framework/Headers CACHE FILEPATH "")
+
+   set(SDL2_NET_LIBRARY "-framework SDL2_net" CACHE FILEPATH "")
+   set(SDL2_NET_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/SDL2_net.Framework/Headers CACHE FILEPATH "")
+
+   # Needed for access
+   if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/SDL2)
+      file(
+         CREATE_LINK ${CMAKE_CURRENT_BINARY_DIR}/SDL2.Framework/Headers
+               ${CMAKE_CURRENT_BINARY_DIR}/SDL2 SYMBOLIC
+      )
+   endif()
+endif()
+
 find_package(SDL2)
 
 if(SDL2_FOUND)

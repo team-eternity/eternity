@@ -150,7 +150,7 @@ typedef int (*cfg_callback_t)(cfg_t *cfg, cfg_opt_t *opt,
                               const char *value, void *result);
 
 /** Error reporting function. */
-typedef void (*cfg_errfunc_t)(cfg_t *cfg, const char *fmt, va_list ap);
+using cfg_errfunc_t = void (*)(const cfg_t *const cfg, const char *fmt, va_list ap);
 
 /** Lexer open callback */
 typedef int (*cfg_lexfunc_t)(cfg_t *cfg, const char *data, int size);
@@ -480,7 +480,7 @@ cfg_lexfunc_t cfg_set_lexer_callback(cfg_t *cfg, cfg_lexfunc_t lexfunc);
 /** Show a parser error. Any user-defined error reporting function is called.
  * @see cfg_set_error_function
  */
-void          cfg_error(cfg_t *cfg, E_FORMAT_STRING(const char *fmt), ...) E_PRINTF(2, 3);
+void          cfg_error(const cfg_t *const cfg, E_FORMAT_STRING(const char *fmt), ...) E_PRINTF(2, 3);
 
 /** Returns the value of an integer option. This is the same as
  * calling cfg_getnint with index 0.
@@ -550,7 +550,7 @@ bool          cfg_getbool(cfg_t *cfg, const char *name);
  * with that name, 0 is returned. Note that there can be no default
  * values for a section.
  */
-cfg_t *       cfg_getsec(cfg_t *cfg, const char *name);
+cfg_t *       cfg_getsec(const cfg_t *const cfg, const char *name);
 
 /** Returns the value of a multi-valued property. The returned value is
  * another cfg_t structure that can be used in following calls to
@@ -591,7 +591,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value);
  * @param cfg The configuration file context.
  * @param name The name of the option.
  */
-unsigned int  cfg_size(cfg_t *cfg, const char *name);
+unsigned int  cfg_size(const cfg_t *const cfg, const char *name);
 
 /** Indexed version of cfg_getfloat().
  * @param cfg The configuration file context.
@@ -625,7 +625,7 @@ bool          cfg_getnbool(cfg_t *cfg, const char *name, unsigned int index);
  * @param index Index of values. Zero based.
  * @see cfg_getsec
  */
-cfg_t *       cfg_getnsec(cfg_t *cfg, const char *name, unsigned int index);
+cfg_t *       cfg_getnsec(const cfg_t *const cfg, const char *name, unsigned int index);
 
 /** Return a section given the title.
  *
@@ -701,7 +701,7 @@ int cfg_parse_boolean(const char *s);
  * @return Returns a pointer to the option, or nullptr if the option is
  * not found (an error message is also printed).
  */
-cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name);
+cfg_opt_t *cfg_getopt(const cfg_t *const cfg, const char *name);
 
 /** Set a value of an integer option.
  *
