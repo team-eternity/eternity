@@ -3674,3 +3674,524 @@ thingtype InvCommunicator : Mobj, 7806
   "@
 }
 
+thingtype AGren : Mobj, 7752
+{
+  //speakerid/conversationid 177
+  //namepointer HE-Grenade_Rounds
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    GRN1 A -1
+    stop
+  "@
+}
+
+thingtype APGren : Mobj, 7753
+{
+  //speakerid/conversationid 178
+  //namepointer Phosphorus-Grenade_Rounds
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    GRN2 A -1
+    stop
+  "@
+}
+
+thingtype AClip : Mobj, 7907
+{
+  //speakerid/conversationid 179
+  //namepointer clip_of_bullets
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    BLIT A -1
+    stop
+  "@
+}
+
+thingtype AAmmoBox : Mobj, 7948
+{
+  //speakerid/conversationid 180
+  //namepointer ammo
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    BLIT A -1
+    stop
+  "@
+}
+
+thingtype AMini : Mobj, 7910
+{
+  //speakerid/conversationid 181
+  //namepointer mini_missiles
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    MSSL A -1
+    stop
+  "@
+}
+
+thingtype AMiniBox : Mobj, 7946
+{
+  //speakerid/conversationid 182
+  //namepointer crate_of_missiles
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    ROKT A -1
+    stop
+  "@
+}
+
+thingtype ACell : Mobj, 7947
+{
+  //speakerid/conversationid 183
+  //namepointer energy_pod
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    BRY1 AB 6
+    loop
+  "@
+}
+
+thingtype APCell : Mobj, 7617
+{
+  //speakerid/conversationid 184
+  //namepointer energy_pack
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    CPAC AB 6
+    loop
+  "@
+}
+
+thingtype APArow : Mobj, 7715
+{
+  //speakerid/conversationid 185
+  //namepointer poison_bolts
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    PQRL A -1
+    stop
+  "@
+}
+
+thingtype AArow : Mobj, 7714
+{
+  //speakerid/conversationid 186
+  //namepointer electric_bolts
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    XQRL A -1
+    stop
+  "@
+}
+
+thingtype InvSatchel : Mobj, 7783
+{
+  //speakerid/conversationid 187
+  //namepointer ammo_satchel
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    BKPK A -1
+    stop
+  "@
+}
+
+thingtype Pulse : Mobj, 7902
+{
+  //speakerid/conversationid 188
+  //namepointer assault_gun
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    RIFL A -1
+    stop
+  "@
+}
+
+thingtype RifleStand : Mobj, 7906
+{
+  //speakerid/conversationid 189
+  //namepointer assault_gun
+
+  cflags SPECIAL // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    RIFL B -1
+    stop
+  "@
+}
+
+thingtype Flamethrower : Mobj, 7905
+{
+  //speakerid/conversationid 190
+  //namepointer flame_thrower
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    FLAM A -1
+    stop
+  "@
+}
+
+thingtype TokenFlamethrowerParts : Mobj
+{
+  //speakerid/conversationid 191
+  //namepointer flame_thrower_parts
+
+  cflags SPECIAL // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    BFLM A -1
+    stop
+  "@
+}
+
+thingtype MissileLauncher : Mobj, 7903
+{
+  //speakerid/conversationid 192
+  //namepointer mini_missile_launcher
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    MMSL A -1
+    stop
+  "@
+}
+
+thingtype Blaster : Mobj, 7904
+{
+  //speakerid/conversationid 193
+  //namepointer mauler
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    TRPD A -1
+    stop
+  "@
+}
+
+thingtype Crossbow : Mobj, 7901
+{
+  //speakerid/conversationid 194
+  //namepointer crossbow
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    CBOW A -1
+    stop
+  "@
+}
+
+thingtype GrenadeLauncher : Mobj, 7754
+{
+  //speakerid/conversationid 195
+  //namepointer Grenade_launcher
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    GRND A -1
+    stop
+  "@
+}
+
+thingtype SigilA : Mobj, 7677
+{
+  //speakerid/conversationid 196
+  //namepointer SIGIL
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    SIGL A -1
+    stop
+  "@
+}
+
+thingtype SigilB : Mobj, 7678
+{
+  //speakerid/conversationid 197
+  //namepointer SIGIL
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    SIGL B -1
+    stop
+  "@
+}
+
+thingtype SigilC : Mobj, 7679
+{
+  //speakerid/conversationid 198
+  //namepointer SIGIL
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    SIGL C -1
+    stop
+  "@
+}
+
+thingtype SigilD : Mobj, 7680
+{
+  //speakerid/conversationid 199
+  //namepointer SIGIL
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    SIGL D -1
+    stop
+  "@
+}
+
+thingtype SigilE : Mobj, 7681
+{
+  //speakerid/conversationid 200
+  //namepointer SIGIL
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    SIGL E -1
+    stop
+  "@
+}
+
+thingtype PowerCrystal : Mobj, 7692
+{
+  //speakerid/conversationid 201
+
+  spawnhealth 50
+  painchance  255
+  speed       14
+
+  deathsound  explod
+  activesound reactr
+
+  mass        99999999
+
+  cflags SOLID|SPECIAL|NOGRAVITY|NOBLOOD // STRIFE_TODO: MF_GIVEQUEST|MF_NODIALOG  // SVE_TODO: MF2_NOSTONECOLD|MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    CRYS A 16 // STRIFE_TODO: A_ActiveSound
+    CRYS B 5 // STRIFE_TODO: A_ActiveSound
+    CRYS CDE 4 // STRIFE_TODO: A_ActiveSound
+    loop
+  Death:
+    BOOM A 1 bright // STRIFE_TODO: A_CrystalRadiusAtk
+    BOOM B 3 bright // STRIFE_TODO: A_QuestMsg
+    BOOM C 2 bright // STRIFE_TODO: A_CrystalExplode
+    BOOM D 3 bright // STRIFE_TODO: A_SpawnSparkPuff
+    BOOM EF 3 bright
+    BOOM G 3 bright // STRIFE_TODO: A_SpawnSparkPuff
+    BOOM H 1 bright // STRIFE_TODO: A_CrystalRadiusAtk
+    BOOM I 3 bright
+    BOOM JKL 3 bright // STRIFE_TODO: A_SpawnSparkPuff
+    BOOM MN 3 bright
+    BOOM O 3 bright // STRIFE_TODO: A_SpawnSparkPuff
+    BOOM PQRST 3 bright
+    BOOM U 3 bright // STRIFE_TODO: A_ExtraLightOff
+    BOOM VWXY 3
+    stop
+  "@
+}
+
+// STRIFE_FIXME: Should A_RandomWalk be replaced w/ a new codepointer called A_Wander?
+thingtype Rat : Mobj, 7685
+{
+  //speakerid/conversationid 202
+  //namepointer rat_buddy
+
+  spawnhealth 5
+  speed       13
+
+  seesound    ratact
+  deathsound  ratact
+  activesound ratact
+
+  radius      10.0
+
+  cflags NOBLOOD|COUNTKILL // STRIFE_TODO: MF_NODIALOG  // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    RATT A 10 A_Look
+    loop
+  See:
+    RATT AABB 4 A_Chase
+    loop
+  Melee:
+    RATT A 8 A_RandomWalk
+    RATT B 4 A_RandomWalk
+    goto See
+  Death:
+    MEAT Q 700
+    stop
+  "@
+}
+
+thingtype Misc05 : Mobj, 7682
+{
+  //speakerid/conversationid 203
+
+  spawnhealth 10
+
+  deathsound  wbrldt
+
+  radius      10.0
+  height      32.0
+
+  cflags SOLID|SHOOTABLE|NOBLOOD // STRIFE_TODO: MF_NODIALOG  // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    BARW A -1
+    stop
+  Death:
+    BARW B 2 A_Scream
+    BARW C 2
+    BARW D 2 A_Fall
+    BARW EFG 2
+    BARW H -1
+    stop
+  "@
+}
+
+thingtype Misc06 : Mobj, 7694
+{
+  //speakerid/conversationid 204
+
+  spawnhealth 30
+
+  deathsound  barexp
+
+  radius      10.0
+  height      32.0
+
+  cflags SOLID|SHOOTABLE|NOBLOOD // STRIFE_TODO: MF_NODIALOG  // SVE_TODO: MF2_NOREBELATTACK|MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    BART A -1
+    stop
+  Death:
+    BART B 2 bright A_Scream
+    BART CD 2 bright
+    BART E 2 bright A_Fall
+    BART F 2 bright // STRIFE_TODO: A_DeathExplode2
+    BART GHI 2 bright
+    BART JK 3 bright
+    BART L -1
+    stop
+  "@
+}
+
+thingtype Misc15 : Mobj, 7808
+{
+  //speakerid/conversationid 205
+
+  spawnhealth 99999999
+  painchance  255
+
+  painsound   mtalht
+
+  radius      10.0
+  height      72.0
+  mass        9999999
+
+  cflags SOLID|SHOOTABLE|NOBLOOD // STRIFE_TODO: MF_NODIALOG  // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    HOGN A 2 // STRIFE_TODO: A_ZombieInSpecialSector
+    loop
+  Pain:
+    HOGN B 1 // STRIFE_TODO: A_ZombieInSpecialSector
+    HOGN C 1 A_Pain
+    goto Spawn
+  "@
+}
+
