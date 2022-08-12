@@ -699,7 +699,7 @@ void P_StrifeDefaultLevelName(levelnamedata_t &lnd)
 {
    int strifeupperbound = 34; // STRIFE_TODO: SVE bonuses
 
-   if(isMAPxy(gamemapname) && gamemap > 0 && gamemap <= strifeupperbound)
+   if(M_IsMAPxy(gamemapname, nullptr) && gamemap > 0 && gamemap <= strifeupperbound)
       lnd.bexName = GameModeInfo->levelNames[gamemap - 1];
 }
 

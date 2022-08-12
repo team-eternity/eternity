@@ -4088,8 +4088,17 @@ void P_ConvertStrifeThing(mapthing_t *mthing)
    mthing->type = num;
 
    // Strife flag handling
-   // STRIFE_TODO: Remap flags below to different flags? Handle this /somehow/. MTF_EX_ stuff probably.
-   mthing->options &= ~(MTF_STRIFE_ALLY | MTF_STRIFE_TRANS | MTF_STRIFE_INVIS);
+
+   const bool strifeFriend = mthing->options & MTF_STRIFE_STAND;
+   const bool strifeAmbush = mthing->options & MTF_STRIFE_AMBUSH;
+
+   // STRIFE_TODO: Remap unhandled flags below to different flags? Handle this /somehow/. MTF_EX_ stuff probably.
+   mthing->options &= ~(MTF_STRIFE_STAND | MTF_STRIFE_AMBUSH | MTF_STRIFE_FRIEND | MTF_STRIFE_TRANSLUCENT | MTF_STRIFE_MVCIS);
+
+   if(strifeFriend)
+      mthing->extOptions |= MTF_EX_STAND;
+   if(strifeAmbush)
+      mthing->options |= MTF_AMBUSH;
 }
 
 #define DEN_PSXCHAIN   64

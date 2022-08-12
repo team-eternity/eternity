@@ -153,6 +153,7 @@ thingtype Merchant : Mobj
 thingtype WeaponSmith : Merchant, 7716
 {
   //speakerid/conversationid 2
+  //namepointer Weapon_Smith
 
   painsound   pespna
 }
@@ -160,6 +161,7 @@ thingtype WeaponSmith : Merchant, 7716
 thingtype BarKeep : WeaponSmith, 7672
 {
   //speakerid/conversationid 3
+  //namepointer Bar_Keep
 
   painsound   ambbar
   activesound ambppl
@@ -170,6 +172,7 @@ thingtype BarKeep : WeaponSmith, 7672
 thingtype Armorer : WeaponSmith, 7673
 {
   //speakerid/conversationid 4
+  //namepointer Armorer
 
   painsound   pespna
 
@@ -179,6 +182,7 @@ thingtype Armorer : WeaponSmith, 7673
 thingtype Medic : WeaponSmith, 7674
 {
   //speakerid/conversationid 5
+  //namepointer Medic
 
   painsound   pespna
 
@@ -648,6 +652,8 @@ thingtype KneelingGuy : Mobj, 7804
 // STRIFE_FIXME: Should A_RandomWalk be replaced w/ a new codepointer called A_Wander?
 thingtype Beggar : Mobj
 {
+  //namepointer Beggar
+
   spawnhealth 20
   painchance  250
   speed       3
@@ -729,6 +735,8 @@ thingtype Beggar5 : Beggar, 7758
 // STRIFE_FIXME: Should A_RandomWalk be replaced w/ a new codepointer called A_Wander?
 thingtype Rebel : Mobj
 {
+  //namepointer Rebel
+
   spawnhealth 60
   painchance  250
   speed       8
@@ -820,6 +828,7 @@ thingtype Rebel6 : Rebel, 7751
 thingtype RLeader : Mobj, 7664
 {
   //speakerid/conversationid 49
+  //namepointer MACIL
 
   spawnhealth 95
   painchance  250
@@ -969,6 +978,8 @@ thingtype Reaver : Mobj, 7951
 // STRIFE_FIXME: Should A_RandomWalk be replaced w/ a new codepointer called A_Wander?
 thingtype Guard : Mobj
 {
+  //namepointer ACOLYTE
+
   spawnhealth 70
   painchance  150
   speed       7
@@ -1146,6 +1157,7 @@ thingtype ShadowGuard : Guard, 7658
 thingtype PGuard : Mobj, 7953
 {
   //speakerid/conversationid 62
+  //namepointer TEMPLAR
 
   spawnhealth 300
   painchance  100
@@ -1313,6 +1325,7 @@ thingtype Bishop : Mobj, 7787
 thingtype Oracle : Mobj, 7799
 {
   //speakerid/conversationid 65
+  //namepointer ORACLE
 
   spawnhealth 1
 
@@ -1340,6 +1353,7 @@ thingtype Oracle : Mobj, 7799
 thingtype Priest : Mobj, 7612
 {
   //speakerid/conversationid 66
+  //namepointer PRIEST
 
   spawnhealth 800
   speed       10
@@ -2839,6 +2853,7 @@ thingtype Computer : Mobj, 7782
 thingtype InvMed1 : Mobj, 7101
 {
   //speakerid/conversationid 125
+  //namepointer Med_patch
 
   mass  20
 
@@ -2855,6 +2870,7 @@ thingtype InvMed1 : Mobj, 7101
 thingtype InvMed2 : Mobj, 7102
 {
   //speakerid/conversationid 126
+  //namepointer Medical_kit
 
   mass  15
 
@@ -2871,6 +2887,7 @@ thingtype InvMed2 : Mobj, 7102
 thingtype InvMed3 : Mobj, 7683
 {
   //speakerid/conversationid 127
+  //namepointer Surgery_Kit
 
   mass  5
 
@@ -2888,6 +2905,7 @@ thingtype InvMed3 : Mobj, 7683
 thingtype DegninOre : Mobj, 7659
 {
   //speakerid/conversationid 128
+  //namepointer Degnin_Ore
 
   mass   10
 
@@ -2911,6 +2929,7 @@ thingtype DegninOre : Mobj, 7659
 thingtype InvArmor2 : Mobj, 7109
 {
   //speakerid/conversationid 129
+  //namepointer Metal_Armor
 
   mass  3
 
@@ -2927,6 +2946,7 @@ thingtype InvArmor2 : Mobj, 7109
 thingtype InvArmor1 : Mobj, 7108
 {
   //speakerid/conversationid 130
+  //namepointer Leather_Armor
 
   mass  5
 
@@ -2971,6 +2991,7 @@ thingtype Misc11 : Mobj, 7764
 thingtype KeyBase : Mobj, 7830
 {
   //speakerid/conversationid 133
+  //namepointer Base_Key
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -2985,6 +3006,7 @@ thingtype KeyBase : Mobj, 7830
 thingtype GovsKey : Mobj
 {
   //speakerid/conversationid 134
+  //namepointer Govs_Key
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -2999,6 +3021,7 @@ thingtype GovsKey : Mobj
 thingtype KeyTravel : Mobj, 7785
 {
   //speakerid/conversationid 135
+  //namepointer Passcard
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3013,6 +3036,7 @@ thingtype KeyTravel : Mobj, 7785
 thingtype KeyIDBlue : Mobj, 7784
 {
   //speakerid/conversationid 136
+  //namepointer ID_Badge
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3027,6 +3051,7 @@ thingtype KeyIDBlue : Mobj, 7784
 thingtype PrisonKey : Mobj
 {
   //speakerid/conversationid 137
+  //namepointer Prison_Key
 
   speed 11
 
@@ -3043,6 +3068,7 @@ thingtype PrisonKey : Mobj
 thingtype KeyHand : Mobj, 7691
 {
   //speakerid/conversationid 138
+  //namepointer Severed_Hand
 
   speed 12
 
@@ -3059,6 +3085,7 @@ thingtype KeyHand : Mobj, 7691
 thingtype Power1Key : Mobj
 {
   //speakerid/conversationid 139
+  //namepointer Power1_Key
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3073,6 +3100,7 @@ thingtype Power1Key : Mobj
 thingtype Power2Key : Mobj
 {
   //speakerid/conversationid 140
+  //namepointer Power2_Key
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3087,6 +3115,7 @@ thingtype Power2Key : Mobj
 thingtype Power3Key : Mobj
 {
   //speakerid/conversationid 141
+  //namepointer Power3_Key
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3101,6 +3130,7 @@ thingtype Power3Key : Mobj
 thingtype KeyGold : Mobj, 7640
 {
   //speakerid/conversationid 142
+  //namepointer Gold_Key
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3115,6 +3145,7 @@ thingtype KeyGold : Mobj, 7640
 thingtype KeyIDGold : Mobj, 7640
 {
   //speakerid/conversationid 143
+  //namepointer ID_Card
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3129,6 +3160,7 @@ thingtype KeyIDGold : Mobj, 7640
 thingtype KeySilver : Mobj, 7638
 {
   //speakerid/conversationid 144
+  //namepointer Silver_Key
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3140,9 +3172,10 @@ thingtype KeySilver : Mobj, 7638
   "@
 }
 
-thingtype KeySilver : Mobj, 7661
+thingtype KeyOracle : Mobj, 7661
 {
   //speakerid/conversationid 145
+  //namepointer Oracle_Key
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3157,6 +3190,7 @@ thingtype KeySilver : Mobj, 7661
 thingtype MilitaryID : Mobj
 {
   //speakerid/conversationid 146
+  //namepointer Military_ID
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3171,6 +3205,7 @@ thingtype MilitaryID : Mobj
 thingtype KeyOrder : Mobj, 7686
 {
   //speakerid/conversationid 147
+  //namepointer Order_Key
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3185,6 +3220,7 @@ thingtype KeyOrder : Mobj, 7686
 thingtype KeyWarehouse : Mobj, 7766
 {
   //speakerid/conversationid 148
+  //namepointer Warehouse_Key
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3199,6 +3235,7 @@ thingtype KeyWarehouse : Mobj, 7766
 thingtype KeyBrass : Mobj, 7639
 {
   //speakerid/conversationid 149
+  //namepointer Brass_Key
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3213,6 +3250,7 @@ thingtype KeyBrass : Mobj, 7639
 thingtype KeyRedCrystal : Mobj, 7792
 {
   //speakerid/conversationid 150
+  //namepointer Red_Crystal_Key
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3227,6 +3265,7 @@ thingtype KeyRedCrystal : Mobj, 7792
 thingtype KeyBlueCrystal : Mobj, 7793
 {
   //speakerid/conversationid 151
+  //namepointer Blue_Crystal_Key
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3241,6 +3280,7 @@ thingtype KeyBlueCrystal : Mobj, 7793
 thingtype KeyChapel : Mobj, 7795
 {
   //speakerid/conversationid 152
+  //namepointer Chapel_Key
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3255,6 +3295,7 @@ thingtype KeyChapel : Mobj, 7795
 thingtype CatacombKey : Mobj
 {
   //speakerid/conversationid 153
+  //namepointer Catacomb_Key
 
   cflags SPECIAL|NOTDMATCH // STRIFE_TODO: MF_GIVEQUEST, SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3269,6 +3310,7 @@ thingtype CatacombKey : Mobj
 thingtype SecurityKey : Mobj
 {
   //speakerid/conversationid 154
+  //namepointer Security_Key
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3283,6 +3325,7 @@ thingtype SecurityKey : Mobj
 thingtype KeyCore : Mobj, 7836
 {
   //speakerid/conversationid 155
+  //namepointer Core_Key
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3297,6 +3340,7 @@ thingtype KeyCore : Mobj, 7836
 thingtype KeyMauler : Mobj, 7836
 {
   //speakerid/conversationid 156
+  //namepointer Mauler_Key
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3311,6 +3355,7 @@ thingtype KeyMauler : Mobj, 7836
 thingtype KeyFactory : Mobj, 7834
 {
   //speakerid/conversationid 157
+  //namepointer Factory_Key
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3325,6 +3370,7 @@ thingtype KeyFactory : Mobj, 7834
 thingtype KeyMine : Mobj, 7835
 {
   //speakerid/conversationid 158
+  //namepointer MINE_KEY
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3339,6 +3385,7 @@ thingtype KeyMine : Mobj, 7835
 thingtype NewKey5 : Mobj
 {
   //speakerid/conversationid 159
+  //namepointer New_Key5
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3353,6 +3400,7 @@ thingtype NewKey5 : Mobj
 thingtype InvShadowArmor : Mobj, 7114
 {
   //speakerid/conversationid 160
+  //namepointer Shadow_armor
 
   mass  2
 
@@ -3372,6 +3420,7 @@ thingtype InvShadowArmor : Mobj, 7114
 thingtype InvSuit : Mobj, 7115
 {
   //speakerid/conversationid 161
+  //namepointer Environmental_Suit
 
   mass  5
 
@@ -3388,6 +3437,7 @@ thingtype InvSuit : Mobj, 7115
 thingtype QuestUniform : Mobj, 7690
 {
   //speakerid/conversationid 162
+  //namepointer Guard_Uniform
 
   speed 15
 
@@ -3404,6 +3454,7 @@ thingtype QuestUniform : Mobj, 7690
 thingtype QuestGuardUniform : Mobj, 7652
 {
   //speakerid/conversationid 163
+  //namepointer Officer's_Uniform
 
   cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
 
@@ -3418,6 +3469,7 @@ thingtype QuestGuardUniform : Mobj, 7652
 thingtype InvSupermap : Mobj, 7116
 {
   //speakerid/conversationid 164
+  //namepointer map
 
   cflags SPECIAL
 
@@ -3432,6 +3484,7 @@ thingtype InvSupermap : Mobj, 7116
 thingtype InvRadar : Mobj, 7117
 {
   //speakerid/conversationid 165
+  //namepointer scanner
 
   mass   3
 
@@ -3448,6 +3501,7 @@ thingtype InvRadar : Mobj, 7117
 thingtype Beacon : Mobj, 7610
 {
   //speakerid/conversationid 166
+  //namepointer Teleporter_Beacon
 
   radius 16.0
   mass   3
@@ -3469,6 +3523,7 @@ thingtype Beacon : Mobj, 7610
 thingtype InvTargeter : Mobj, 7807
 {
   //speakerid/conversationid 167
+  //namepointer Targeter
 
   mass   5
 
@@ -3485,6 +3540,7 @@ thingtype InvTargeter : Mobj, 7807
 thingtype Mony1 : Mobj, 7693
 {
   //speakerid/conversationid 168
+  //namepointer coin
 
   mass   2147483647
 
@@ -3501,6 +3557,7 @@ thingtype Mony1 : Mobj, 7693
 thingtype Mony10 : Mobj, 7738
 {
   //speakerid/conversationid 169
+  //namepointer 10_gold
 
   cflags SPECIAL|DROPPED|NOTDMATCH
 
@@ -3515,6 +3572,7 @@ thingtype Mony10 : Mobj, 7738
 thingtype Mony25 : Mobj, 7739
 {
   //speakerid/conversationid 170
+  //namepointer 25_gold
 
   cflags SPECIAL|DROPPED|NOTDMATCH
 
@@ -3529,6 +3587,7 @@ thingtype Mony25 : Mobj, 7739
 thingtype Mony50 : Mobj, 7740
 {
   //speakerid/conversationid 171
+  //namepointer 50_gold
 
   cflags SPECIAL|DROPPED|NOTDMATCH
 
@@ -3543,6 +3602,7 @@ thingtype Mony50 : Mobj, 7740
 thingtype Mony300 : StrifeToken
 {
   //speakerid/conversationid 172
+  //namepointer 300_gold
 
   cflags SPECIAL|DROPPED // STRIFE_TODO: MF_GIVEQUEST
 }
@@ -3550,6 +3610,7 @@ thingtype Mony300 : StrifeToken
 thingtype TokenRing : Mobj
 {
   //speakerid/conversationid 173
+  //namepointer ring
 
   speed  1
 
@@ -3566,6 +3627,7 @@ thingtype TokenRing : Mobj
 thingtype InvChalice : Mobj, 7805
 {
   //speakerid/conversationid 174
+  //namepointer Offering_Chalice
 
   speed  2
   radius 10.0
@@ -3583,6 +3645,7 @@ thingtype InvChalice : Mobj, 7805
 thingtype TokenEar : Mobj
 {
   //speakerid/conversationid 175
+  //namepointer ear
 
   speed  9
 
@@ -3599,6 +3662,7 @@ thingtype TokenEar : Mobj
 thingtype InvCommunicator : Mobj, 7806
 {
   //speakerid/conversationid 176
+  //namepointer Communicator
 
   cflags SPECIAL|NOTDMATCH
 

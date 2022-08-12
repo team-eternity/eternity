@@ -2008,6 +2008,7 @@ static gamemodeinfo_t giStrifeReg =
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
    &menu_newgame,    // newGameMenu
+   nullptr,          // episodeMenu
    nullptr,          // menuStartMap
    strfMenuSounds,   // menuSounds
    S_TBALL1,         // transFrame
@@ -2066,6 +2067,8 @@ static gamemodeinfo_t giStrifeReg =
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
    nullptr,          // autoFlightArtifact
+   32,               // lookPitchUp
+   32,               // lookPitchDown
 
    INTERPIC_DOOM,     // interPic
    smus_None,         // interMusNum

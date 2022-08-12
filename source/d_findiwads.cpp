@@ -569,6 +569,10 @@ static void D_determineIWADVersion(const qstring &fullpath)
          break;
       }
       break;
+   case strifereg:
+      if(estrempty(gi_path_strife))
+         var = &gi_path_strife;
+      break;
    default:
       break;
    }
