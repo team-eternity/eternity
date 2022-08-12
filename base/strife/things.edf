@@ -4144,7 +4144,7 @@ thingtype Misc06 : Mobj, 7694
 
   spawnhealth 30
 
-  deathsound  barexp
+  deathsound  st_barexp
 
   radius      10.0
   height      32.0
@@ -4195,3 +4195,1504 @@ thingtype Misc15 : Mobj, 7808
   "@
 }
 
+thingtype Light14 : Mobj, 7695
+{
+  //speakerid/conversationid 206
+
+  radius      4.0
+
+  cflags NOBLOCKMAP // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    LITS A -1 bright
+    stop
+  "@
+}
+
+thingtype Light13 : Mobj, 7696
+{
+  //speakerid/conversationid 207
+
+  radius      4.0
+
+  cflags NOBLOCKMAP // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    LITB A -1 bright
+    stop
+  "@
+}
+
+thingtype Light12 : Mobj, 7697
+{
+  //speakerid/conversationid 208
+
+  radius      4.0
+
+  cflags NOBLOCKMAP // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    LITG A -1 bright
+    stop
+  "@
+}
+
+thingtype Light18 : Mobj, 7928
+{
+  //speakerid/conversationid 209
+
+  radius      16.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    LITE A -1 bright
+    stop
+  "@
+}
+
+thingtype Pillar2 : Mobj, 7648
+{
+  //speakerid/conversationid 210
+
+  radius      128.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    MONI A -1
+    stop
+  "@
+}
+
+thingtype Pillar3 : Mobj, 7654
+{
+  //speakerid/conversationid 211
+
+  radius      16.0
+  height      128.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    STEL A -1
+    stop
+  "@
+}
+
+thingtype Pillar4 : Mobj, 7655
+{
+  //speakerid/conversationid 212
+
+  radius      16.0
+  height      80.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    STLA A -1
+    stop
+  "@
+}
+
+thingtype Pillar5 : Mobj, 7656
+{
+  //speakerid/conversationid 213
+
+  radius      16.0
+  height      40.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    HUGE A 4
+    HUGE BCD 5
+    loop
+  "@
+}
+
+thingtype Pillar6 : Mobj, 7657
+{
+  //speakerid/conversationid 214
+
+  radius      16.0
+  height      40.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    HUGE A 4
+    HUGE BCD 5
+    loop
+  "@
+}
+
+thingtype Pillar7 : Mobj, 7827
+{
+  //speakerid/conversationid 215
+
+  activesound amaln2
+
+  radius      24.0
+  height      192.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    APOW A 4 // STRIFE_TODO: A_ActiveSound
+    loop
+  "@
+}
+
+thingtype Cave2 : Mobj, 7698
+{
+  //speakerid/conversationid 216
+
+  radius      16.0
+  height      54.0
+
+  cflags SOLID|SPAWNCEILING|NOGRAVITY // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    STLG C -1
+    stop
+  "@
+}
+
+thingtype Cave3 : Mobj, 7761
+{
+  //speakerid/conversationid 217
+
+  radius      16.0
+  height      40.0
+
+  cflags SOLID|SPAWNCEILING|NOGRAVITY // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    STLG A -1
+    stop
+  "@
+}
+
+thingtype Cave4 : Mobj, 7760
+{
+  //speakerid/conversationid 218
+
+  radius      16.0
+  height      40.0
+
+  cflags SOLID|SPAWNCEILING|NOGRAVITY // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    STLG B -1
+    stop
+  "@
+}
+
+thingtype Cave6 : Mobj, 7759
+{
+  //speakerid/conversationid 219
+
+  radius      16.0
+  height      128.0
+
+  cflags SOLID|SPAWNCEILING|NOGRAVITY // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    STLG D -1
+    stop
+  "@
+}
+
+thingtype Cave7 : Mobj, 7762
+{
+  //speakerid/conversationid 220
+
+  radius      16.0
+  height      128.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    STLG E -1
+    stop
+  "@
+}
+
+thingtype Cave5 : Mobj, 7763
+{
+  //speakerid/conversationid 221
+
+  radius      16.0
+  height      25.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    STLG F -1
+    stop
+  "@
+}
+
+thingtype Light2 : Mobj, 7634
+{
+  //speakerid/conversationid 222
+
+  //cflags // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    CNDL A -1 bright
+    stop
+  "@
+}
+
+thingtype Light3 : Mobj, 7635
+{
+  //speakerid/conversationid 223
+
+  radius      16.0
+  height      40.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    CLBR A -1 bright
+    stop
+  "@
+}
+
+thingtype Misc03 : Mobj, 7703
+{
+  //speakerid/conversationid 224
+
+  activesound wdrip
+
+  cflags NOBLOCKMAP
+
+  states
+  @"
+  Spawn:
+    DRIP A 6 // STRIFE_TODO: A_ActiveSound
+    DRIP BC 4
+    DRIP D 4 // STRIFE_TODO: A_ActiveSound
+    DRIP EF 4
+    DRIP G 4 // STRIFE_TODO: A_ActiveSound
+    DRIP H 4
+    loop
+  "@
+}
+
+thingtype Misc13 : Mobj, 7704
+{
+  //speakerid/conversationid 225
+
+  activesound wfall
+
+  cflags NOBLOCKMAP
+
+  states
+  @"
+  Spawn:
+    SPLH ABC 4
+    SPLH D 8
+    SPLH EFG 4
+    SPLH H 4 // STRIFE_TODO: A_ActiveSound
+    loop
+  "@
+}
+
+thingtype Misc02 : Mobj, 7653
+{
+  //speakerid/conversationid 226
+
+  height      1.0
+
+  cflags NOBLOCKMAP|SPAWNCEILING|NOGRAVITY
+
+  states
+  @"
+  Spawn:
+    CDRP A 10
+    CDRP BCD 8
+    loop
+  "@
+}
+
+thingtype Misc07 : Mobj, 7712
+{
+  //speakerid/conversationid 227
+
+  activesound wsplsh
+
+  cflags NOBLOCKMAP // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    WTFT ABC 4
+    WTFT D 4 // STRIFE_TODO: A_ActiveSound
+    loop
+  "@
+}
+
+thingtype Bio2 : Mobj, 7713
+{
+  //speakerid/conversationid 228
+
+  radius      16.0
+  height      56.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    HERT ABC 4 bright
+    loop
+  "@
+}
+
+thingtype TeleportStand : Mobj, 7623
+{
+  //speakerid/conversationid 229
+
+  cflags NOBLOCKMAP // STRIFE_TODO: MF_SHADOW for strife  // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    TELP ABCD 3 bright
+    loop
+  "@
+}
+
+thingtype DeadThing1 : Mobj, 7622
+{
+  //speakerid/conversationid 230
+
+  //cflags // SVE_TODO: MF2_DRAWBILLBOARD
+
+  // Using SVE's fixed spawnstate
+  states
+  @"
+  Spawn:
+    ROB2 P -1 // STRIFE_TODO: Strife's A_BossDeath
+    stop
+  "@
+}
+
+thingtype DeadThing2 : Mobj, 7615
+{
+  //speakerid/conversationid 231
+
+  //cflags // SVE_TODO: MF2_DRAWBILLBOARD
+
+  // Using SVE's fixed spawnstate
+  states
+  @"
+  Spawn:
+    PLAY P -1
+    stop
+  "@
+}
+
+thingtype DeadThing3 : Mobj, 7618
+{
+  //speakerid/conversationid 232
+
+  //cflags // SVE_TODO: MF2_DRAWBILLBOARD
+
+  // Using SVE's fixed spawnstate
+  states
+  @"
+  Spawn:
+    PEAS N -1
+    stop
+  "@
+}
+
+thingtype DeadThing4 : Mobj, 7621
+{
+  //speakerid/conversationid 233
+
+  //cflags // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    AGRD N -1
+    stop
+  "@
+}
+
+thingtype DeadThing5 : Mobj, 7620
+{
+  //speakerid/conversationid 234
+
+  //cflags // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    ROB1 R -1
+    stop
+  "@
+}
+
+thingtype DeadThing6 : Mobj, 7619
+{
+  //speakerid/conversationid 235
+
+  //cflags // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    HMN1 N -1
+    stop
+  "@
+}
+
+thingtype Bio1 : Mobj, 7812
+{
+  //speakerid/conversationid 236
+
+  //cflags // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    SACR A -1
+    stop
+  "@
+}
+
+thingtype Gibs : Mobj, 7654
+{
+  //speakerid/conversationid 237
+
+  //cflags // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    DEAD A -1
+    stop
+  "@
+}
+
+thingtype Misc04 : Mobj, 7670
+{
+  //speakerid/conversationid 238
+
+  radius      16.0
+  height      48.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    BARL ABCD 4 bright
+    loop
+  "@
+}
+
+thingtype Light11 : Mobj, 7705
+{
+  //speakerid/conversationid 239
+
+  activesound smfire
+
+  radius      16.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    BOWL A 4 bright // STRIFE_TODO: A_ActiveSound
+    BOWL BCD 4 bright
+    loop
+  "@
+}
+
+thingtype Light10 : Mobj, 7706
+{
+  //speakerid/conversationid 240
+
+  activesound smfire
+
+  radius      10.0
+  height      32.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    BRAZ A 4 bright // STRIFE_TODO: A_ActiveSound
+    BRAZ BCD 4 bright
+    loop
+  "@
+}
+
+thingtype Light9 : Mobj, 7707
+{
+  //speakerid/conversationid 241
+
+  activesound smfire
+
+  radius      0.0
+
+  cflags NOBLOCKMAP // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    TRCH A 4 bright // STRIFE_TODO: A_ActiveSound
+    TRCH BCD 4 bright
+    loop
+  "@
+}
+
+thingtype Light8 : Mobj, 7708
+{
+  //speakerid/conversationid 242
+
+  radius      0.0
+
+  cflags NOBLOCKMAP // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    TRHO A -1
+    stop
+  "@
+}
+
+thingtype Misc14 : Mobj, 7709
+{
+  //speakerid/conversationid 243
+
+  height      93.0
+
+  cflags NOBLOCKMAP|SPAWNCEILING|NOGRAVITY // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    CHAN A -1
+    stop
+  "@
+}
+
+thingtype Light1 : Mobj, 7628
+{
+  //speakerid/conversationid 244
+
+  height      3.0
+
+  cflags NOBLOCKMAP|SPAWNCEILING|NOGRAVITY // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    CAGE A -1
+    stop
+  "@
+}
+
+thingtype Pillar8 : Mobj, 7710
+{
+  //speakerid/conversationid 245
+
+  height      64.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    STAT A -1
+    stop
+  "@
+}
+
+thingtype Pillar9 : Mobj, 7644
+{
+  //speakerid/conversationid 246
+
+  height      56.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    DSTA A -1
+    stop
+  "@
+}
+
+thingtype Light15 : Mobj, 7711
+{
+  //speakerid/conversationid 247
+
+  radius      4.0
+  height      72.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    LTRH ABCD 4 bright
+    loop
+  "@
+}
+
+thingtype Light4 : Mobj, 7643
+{
+  //speakerid/conversationid 248
+
+  radius      3.0
+  height      80.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    LAMP A -1
+    stop
+  "@
+}
+
+thingtype Light5 : Mobj, 7646
+{
+  //speakerid/conversationid 249
+
+  radius      3.0
+  height      80.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    LANT A -1
+    stop
+  "@
+}
+
+thingtype Rock1 : Mobj, 7699
+{
+  //speakerid/conversationid 250
+
+  cflags NOBLOCKMAP
+
+  states
+  @"
+  Spawn:
+    ROK1 A -1
+    stop
+  "@
+}
+
+thingtype Rock2 : Mobj, 7700
+{
+  //speakerid/conversationid 251
+
+  cflags NOBLOCKMAP
+
+  states
+  @"
+  Spawn:
+    ROK2 A -1
+    stop
+  "@
+}
+
+thingtype Rock3 : Mobj, 7701
+{
+  //speakerid/conversationid 252
+
+  cflags NOBLOCKMAP // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    ROK3 A -1
+    stop
+  "@
+}
+
+thingtype Rock4 : Mobj, 7701
+{
+  //speakerid/conversationid 253
+
+  cflags NOBLOCKMAP // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    ROK4 A -1
+    stop
+  "@
+}
+
+thingtype Tree7 : Mobj, 7815
+{
+  //speakerid/conversationid 254
+
+  activesound  wriver
+
+  cflags NOBLOCKMAP // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    LOGG ABCD 5 // STRIFE_TODO: A_ActiveSound
+    loop
+  "@
+}
+
+thingtype Rubble1 : Mobj, 7629
+{
+  //speakerid/conversationid 255
+
+  cflags NOBLOCKMAP|NOCLIP // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    RUB1 A -1
+    stop
+  "@
+}
+
+thingtype Rubble2 : Mobj, 7630
+{
+  //speakerid/conversationid 256
+
+  cflags NOBLOCKMAP|NOCLIP // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    RUB2 A -1
+    stop
+  "@
+}
+
+thingtype Rubble3 : Mobj, 7631
+{
+  //speakerid/conversationid 257
+
+  cflags NOBLOCKMAP|NOCLIP // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    RUB3 A -1
+    stop
+  "@
+}
+
+thingtype Rubble4 : Mobj, 7632
+{
+  //speakerid/conversationid 257
+
+  cflags NOBLOCKMAP|NOCLIP // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    RUB4 A -1
+    stop
+  "@
+}
+
+thingtype Rubble5 : Mobj, 7636
+{
+  //speakerid/conversationid 258
+
+  cflags NOBLOCKMAP|NOCLIP // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    RUB5 A -1
+    stop
+  "@
+}
+
+thingtype Rubble6 : Mobj, 7637
+{
+  //speakerid/conversationid 259
+
+  cflags NOBLOCKMAP|NOCLIP // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    RUB6 A -1
+    stop
+  "@
+}
+
+thingtype Rubble7 : Mobj, 7641
+{
+  //speakerid/conversationid 261
+
+  cflags NOBLOCKMAP|NOCLIP // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    RUB7 A -1
+    stop
+  "@
+}
+
+thingtype Rubble8 : Mobj, 7642
+{
+  //speakerid/conversationid 262
+
+  cflags NOBLOCKMAP|NOCLIP // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    RUB8 A -1
+    stop
+  "@
+}
+
+thingtype Misc08 : Mobj, 7717
+{
+  //speakerid/conversationid 263
+
+  cflags SOLID|SPAWNCEILING|NOGRAVITY // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    CRAB A -1
+    stop
+  "@
+}
+
+thingtype Light6 : Mobj, 7647
+{
+  //speakerid/conversationid 264
+
+  activesound smfire
+
+  radius      10.0
+  height      72.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    LMPC A 4 bright // STRIFE_TODO: A_ActiveSound
+    LMPC BCD 4 bright
+    loop
+  "@
+}
+
+thingtype Light7 : Mobj, 7650
+{
+  //speakerid/conversationid 265
+
+  activesound smfire
+
+  radius      10.0
+  height      80.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    LOGS A 4 bright // STRIFE_TODO: A_ActiveSound
+    LOGS BCD 4 bright
+    loop
+  "@
+}
+
+thingtype Tree2 : Mobj, 7651
+{
+  //speakerid/conversationid 266
+
+  radius      15.0
+  height      109.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    TREE A -1
+    stop
+  "@
+}
+
+thingtype Tree3 : Mobj, 7802
+{
+  //speakerid/conversationid 267
+
+  radius      15.0
+  height      109.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    TREE B -1
+    stop
+  "@
+}
+
+thingtype Tree4 : Mobj, 7803
+{
+  //speakerid/conversationid 268
+
+  radius      15.0
+  height      64.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    TREE C -1
+    stop
+  "@
+}
+
+thingtype Tree1 : Mobj, 7633
+{
+  //speakerid/conversationid 269
+
+  radius      15.0
+  height      80.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    TRE1 A -1
+    stop
+  "@
+}
+
+thingtype Tree6 : Mobj, 7660
+{
+  //speakerid/conversationid 270
+
+  radius      15.0
+  height      40.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    BUSH A -1
+    stop
+  "@
+}
+
+thingtype Tree5 : Mobj, 7662
+{
+  //speakerid/conversationid 271
+
+  height      64.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    SHRB A -1
+    stop
+  "@
+}
+
+thingtype Cave1 : Mobj, 7663
+{
+  //speakerid/conversationid 272
+
+  height      64.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    STAK A -1
+    stop
+  "@
+}
+
+thingtype Pillar1 : Mobj, 7669
+{
+  //speakerid/conversationid 273
+
+  radius      16.0
+  height      128.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    BAR1 A -1
+    stop
+  "@
+}
+
+thingtype Misc10 : Mobj, 7765
+{
+  //speakerid/conversationid 274
+
+  radius      12.0
+  height      24.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    VASE A -1
+    stop
+  "@
+}
+
+thingtype Misc09 : Mobj, 7788
+{
+  //speakerid/conversationid 275
+
+  radius      12.0
+  height      32.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    VASE B -1
+    stop
+  "@
+}
+
+thingtype Misc17 : Mobj, 7789
+{
+  //speakerid/conversationid 276
+
+  radius      6.0
+  height      24.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    STOL A -1
+    stop
+  "@
+}
+
+thingtype Misc18 : Mobj, 7790
+{
+  //speakerid/conversationid 277
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    POT1 A -1
+    stop
+  "@
+}
+
+thingtype Misc19 : Mobj, 7791
+{
+  //speakerid/conversationid 278
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    TUB1 A -1
+    stop
+  "@
+}
+
+thingtype Misc20 : Mobj, 7794
+{
+  //speakerid/conversationid 279
+
+  radius      16.0
+  height      32.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    ANVL A -1
+    stop
+  "@
+}
+
+thingtype Light16 : Mobj, 7796
+{
+  //speakerid/conversationid 280
+
+  radius      11.0
+  height      64.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    TLMP A -1
+    stop
+  "@
+}
+
+thingtype Light17 : Mobj, 7797
+{
+  //speakerid/conversationid 281
+
+  radius      8.0
+  height      64.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    TLMP B -1
+    stop
+  "@
+}
+
+thingtype Misc21 : Mobj, 7668
+{
+  //speakerid/conversationid 282
+
+  radius      24.0
+  height      40.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    TRAY A -1
+    stop
+  "@
+}
+
+thingtype Misc12 : Mobj, 7828
+{
+  //speakerid/conversationid 283
+
+  radius      12.0
+  height      24.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    AFED A -1
+    stop
+  "@
+}
+
+thingtype Misc26 : Mobj, 7816
+{
+  //speakerid/conversationid 284
+
+  radius      24.0
+  height      96.0
+
+  cflags NOBLOCKMAP // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    SBAN A -1
+    stop
+  "@
+}
+
+thingtype Misc23 : Mobj, 7817
+{
+  //speakerid/conversationid 285
+
+  cflags NOBLOCKMAP // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    BOTR A -1
+    stop
+  "@
+}
+
+thingtype Misc24 : Mobj, 7818
+{
+  //speakerid/conversationid 286
+
+  cflags NOBLOCKMAP // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    HATR A -1
+    stop
+  "@
+}
+
+thingtype Misc25 : Mobj, 7819
+{
+  //speakerid/conversationid 287
+
+  cflags NOBLOCKMAP // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    TOPR A -1
+    stop
+  "@
+}
+
+thingtype Coupling : Mobj, 7820
+{
+  //speakerid/conversationid 288
+
+  spawnhealth 40
+  speed       6
+
+  radius      17.0
+  height      64.0
+  mass        999999
+
+  cflags SOLID|SHOOTABLE|DROPPED|NOBLOOD|NOTDMATCH // STRIFE_TODO: MF_GIVEQUEST|MF_NODIALOG  // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    COUP AB 5
+    loop
+  "@
+}
+
+thingtype CouplingBroken : Mobj, 7826
+{
+  //speakerid/conversationid 289
+  //namepointer BROKEN_POWER_COUPLING
+
+  spawnhealth 40
+  speed       8 // Using SVE's fixed speed (as opposed to 512*FRACUNIT)
+
+  radius      16.0
+  mass        1
+
+  cflags SPECIAL|DROPPED // STRIFE_TODO: MF_GIVEQUEST  // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    COUP AB 5
+    loop
+  "@
+}
+
+thingtype Pillar10 : Mobj, 7821
+{
+  //speakerid/conversationid 290
+
+  activesound amaln5
+
+  radius      16.0
+  height      128.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    BUBB A 4 // STRIFE_TODO: A_ActiveSound
+    loop
+  "@
+}
+
+thingtype Pillar11 : Mobj, 7822
+{
+  //speakerid/conversationid 291
+
+  activesound amaln6
+
+  radius      16.0
+  height      72.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    BUBF A 4 // STRIFE_TODO: A_ActiveSound
+    loop
+  "@
+}
+
+thingtype Pillar12 : Mobj, 7823
+{
+  //speakerid/conversationid 292
+
+  activesound amaln4
+
+  radius      16.0
+  height      72.0
+
+  cflags SOLID|SPAWNCEILING|NOGRAVITY // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    BUBF A 4 // STRIFE_TODO: A_ActiveSound
+    loop
+  "@
+}
+
+thingtype Pillar13 : Mobj, 7824
+{
+  //speakerid/conversationid 293
+
+  activesound amaln3
+
+  radius      16.0
+  height      128.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    ASPR A 4 // STRIFE_TODO: A_ActiveSound
+    loop
+  "@
+}
+
+thingtype Light19 : Mobj, 7825
+{
+  //speakerid/conversationid 294
+
+  activesound amaln1
+
+  radius      32.0
+  height      56.0
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    SPDL ABC 5 // STRIFE_TODO: A_ActiveSound
+    loop
+  "@
+}
+
+thingtype Meat : Mobj
+{
+  //speakerid/conversationid 295
+
+  cflags NOBLOCKMAP|NOCLIP // SVE_TODO: MF2_MARKDECAL
+
+  states
+  @"
+  Spawn:
+    MEAT A 700
+    stop
+  "@
+}
+
+thingtype Junk : Mobj
+{
+  //speakerid/conversationid 296
+
+  cflags NOBLOCKMAP|NOCLIP
+
+  states
+  @"
+  Spawn:
+    JUNK A 700
+    stop
+  "@
+}
+
+thingtype BurnDrop : Mobj
+{
+  //speakerid/conversationid 297
+
+  cflags NOBLOCKMAP|NOCLIP
+
+  states
+  @"
+  Spawn:
+    FFOT ABCD 9
+    stop
+  "@
+}
