@@ -127,6 +127,7 @@ enum gogkeys_e
    GOG_KEY_DOOM2,
    GOG_KEY_FINAL,
    GOG_KEY_DOOM3BFG,
+   GOG_KEY_SVE,
    GOG_KEY_MAX
 };
 
@@ -161,12 +162,19 @@ static registry_value_t gogInstallValues[GOG_KEY_MAX+1] =
      "PATH"
    },
 
+   // Strife: Veteran Edition
+   {
+     HKEY_LOCAL_MACHINE,
+     SOFTWARE_KEY "\\GOG.com\\Games\\1432899949",
+     "PATH"
+   },
+
    // terminating entry
    { nullptr, nullptr, nullptr }
 };
 
 // The paths loaded from the GOG.com keys have several subdirectories.
-// Ultimate Doom is stored straight in its top directory.
+// Ultimate Doom and SVE are stored straight in their top directories.
 static const char *gogInstallSubDirs[] =
 {
    "doom2",
@@ -250,7 +258,7 @@ static void D_addGogPaths(Collection<qstring> &paths)
 
       if(I_GetRegistryString(*regval, str))
       {
-         // Ultimate Doom is in the root installation path
+         // Ultimate Doom and SVE are in their root installation paths
          paths.add(str);
 
          for(size_t i = 0; i < earrlen(gogInstallSubDirs); i++)
@@ -285,6 +293,7 @@ static const steamdir_t steamInstallSubDirs[] =
    { HEXDD_STEAM_APPID,      "base"          },
    { SOSR_STEAM_APPID,       "base"          },
    { DOOM3_BFG_STEAM_APPID,  "base/wads"     },
+   { SVE_STEAM_APPID,        nullptr         },
 };
 
 // Master Levels
