@@ -37,7 +37,6 @@ namespace fs = std::experimental::filesystem;
 #endif
 
 #include "z_zone.h"
-#include "z_auto.h"
 
 #include "doomstat.h"
 #include "d_io.h"
@@ -49,6 +48,8 @@ namespace fs = std::experimental::filesystem;
 #include "m_qstr.h"
 #include "w_levels.h"
 
+#include "steam.h"
+
 //=============================================================================
 //
 // Code for reading registry keys
@@ -59,107 +60,10 @@ namespace fs = std::experimental::filesystem;
 
 #ifdef EE_FEATURE_REGISTRYSCAN
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
-//
-// Static data on a registry key to be read.
-//
-struct registry_value_t
-{
-   HKEY root;         // registry root (ie. HKEY_LOCAL_MACHINE)
-   const char *path;  // registry path
-   const char *value; // registry key
-};
-
-//
-// This class represents an open registry key. The key handle will be closed
-// when an instance of this class falls out of scope.
-//
-class AutoRegKey
-{
-protected:
-   HKEY key;
-   bool valid;
-
-public:
-   // Constructor. Open the key described by rval.
-   explicit AutoRegKey(const registry_value_t &rval) : valid(false)
-   {
-      if(!RegOpenKeyEx(rval.root, rval.path, 0, KEY_READ, &key))
-         valid = true;
-   }
-
-   // Disallow copying
-   AutoRegKey(const AutoRegKey &) = delete;
-   AutoRegKey &operator = (const AutoRegKey &) = delete;
-
-   // Destructor. Close the key handle, if it is valid.
-   ~AutoRegKey()
-   {
-      if(valid)
-      {
-         RegCloseKey(key);
-         key   = nullptr;
-         valid = false;
-      }
-   }
-
-   // Test if the key is open.
-   bool operator ! () const { return !valid; }
-
-   // Query the key value using the Win32 API RegQueryValueEx.
-   LONG queryValueEx(LPCTSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType,
-                     LPBYTE lpData, LPDWORD lpcbData)
-   {
-      return RegQueryValueEx(key, lpValueName, lpReserved, lpType, lpData, lpcbData);
-   }
-};
-
-//
-// Open the registry key described by regval and retrieve its value, assuming
-// it is a REG_SZ (null-terminated string value). If successful, the results
-// are stored in qstring "str". Otherwise, the qstring is unmodified.
-//
-static bool D_getRegistryString(const registry_value_t &regval, qstring &str)
-{
-   DWORD  len;
-   DWORD  valtype;
-   LPBYTE result;
-
-   // Open the key (directory where the value is stored)
-   AutoRegKey key(regval);
-   if(!key)
-      return false;
-   
-   // Find the type and length of the string
-   if(key.queryValueEx(regval.value, nullptr, &valtype, nullptr, &len))
-      return false;
-
-   // Only accept strings
-   if(valtype != REG_SZ)
-      return false;
-
-   // Allocate a buffer for the value and read the value
-   ZAutoBuffer buffer(len, true);
-   result = buffer.getAs<LPBYTE>();
-
-   if(key.queryValueEx(regval.value, nullptr, &valtype, result, &len))
-      return false;
-
-   str = reinterpret_cast<char *>(result);
-
-   return true;
-}
+#include "Win32/i_registry.h"
 
 // Prefix of uninstall value strings
 #define UNINSTALLER_STRING "\\uninstl.exe /S "
-
-#if _WIN64
-#define SOFTWARE_KEY "Software\\Wow6432Node"
-#else
-#define SOFTWARE_KEY "Software"
-#endif
 
 // CD Installer Locations
 static registry_value_t cdUninstallValues[] =
@@ -274,36 +178,6 @@ static const char *gogInstallSubDirs[] =
 // Master Levels from GOG.com. These are installed with Doom II
 static const char *gogMasterLevelsPath = "master\\wads";
 
-// Steam Install Path Registry Key
-static registry_value_t steamInstallValue =
-{
-   HKEY_LOCAL_MACHINE,
-   SOFTWARE_KEY "\\Valve\\Steam",
-   "InstallPath"
-};
-
-// Steam install directory subdirs
-// (NB: add "steamapps\\common\\" as a prefix)
-static const char *steamInstallSubDirs[] =
-{
-   "doom 2\\base",
-   "doom 2\\finaldoombase"
-   "final doom\\base",
-   "ultimate doom\\base",
-   "hexen\\base",
-   "hexen deathkings of the dark citadel\\base",
-   "heretic shadow of the serpent riders\\base",
-   "DOOM 3 BFG Edition\\base\\wads",
-};
-
-// Master Levels
-// (NB: as above, add "steamapps\\common\\")
-static const char *steamMasterLevelsSubDirs[] =
-{
-   "Master Levels of Doom\\master\\wads", // Special thanks to Gez for getting this installation path.
-   "doom 2\\masterbase\\master\\wads",
-};
-
 // Hexen 95, from the Towers of Darkness collection.
 // Special thanks to GreyGhost for finding the registry keys it creates.
 // TODO: There's no code to load this right now, since EE doesn't support 
@@ -328,7 +202,7 @@ static void D_addUninstallPaths(Collection<qstring> &paths)
    {
       qstring str;
 
-      if(D_getRegistryString(*regval, str))
+      if(I_GetRegistryString(*regval, str))
       {
          size_t uninstpos = str.find(UNINSTALLER_STRING);
          if(uninstpos != qstring::npos)
@@ -350,7 +224,7 @@ static void D_addCollectorsEdition(Collection<qstring> &paths)
 {
    qstring str;
 
-   if(D_getRegistryString(collectorsEditionValue, str))
+   if(I_GetRegistryString(collectorsEditionValue, str))
    {
       for(size_t i = 0; i < earrlen(collectorsEditionSubDirs); i++)
       {
@@ -374,7 +248,7 @@ static void D_addGogPaths(Collection<qstring> &paths)
    {
       qstring str;
 
-      if(D_getRegistryString(*regval, str))
+      if(I_GetRegistryString(*regval, str))
       {
          // Ultimate Doom is in the root installation path
          paths.add(str);
@@ -392,28 +266,65 @@ static void D_addGogPaths(Collection<qstring> &paths)
    }
 }
 
+#endif // defined(EE_FEATURE_REGISTRYSCAN)
+
+struct steamdir_t
+{
+   int         appid;
+   const char *waddir;
+};
+
+// Steam install directory subdirs
+static const steamdir_t steamInstallSubDirs[] =
+{
+   { DOOM2_STEAM_APPID,      "base"          },
+   { DOOM2_STEAM_APPID,      "finaldoombase" },
+   { FINAL_DOOM_STEAM_APPID, "base"          },
+   { UDOOM_STEAM_APPID,      "base"          },
+   { HEXEN_STEAM_APPID,      "base"          },
+   { HEXDD_STEAM_APPID,      "base"          },
+   { SOSR_STEAM_APPID,       "base"          },
+   { DOOM3_BFG_STEAM_APPID,  "base/wads"     },
+};
+
+// Master Levels
+static const steamdir_t steamMasterLevelsSubDirs[] =
+{
+   { MASTER_LEVELS_STEAM_APPID, "master/wads"            } , // Special thanks to Gez for getting this installation path.
+   { DOOM2_STEAM_APPID,         "masterbase/master/wads" },
+};
+
 //
-// Add all possible Steam paths if the Steam install path is defined in
-// the registry
+// Add all possible Steam paths if the Steam client path can be found
 //
 static void D_addSteamPaths(Collection<qstring> &paths)
 {
    qstring str;
 
-   if(D_getRegistryString(steamInstallValue, str))
+   for(const int appid : STEAM_APPIDS)
    {
-      for(size_t i = 0; i < earrlen(steamInstallSubDirs); i++)
+      steamgame_t steamGame;
+      if(Steam_FindGame(&steamGame, appid) && Steam_ResolvePath(str, &steamGame))
       {
-         qstring &newPath = paths.addNew();
-         
-         newPath = str;
-         newPath.pathConcatenate("\\steamapps\\common");
-         newPath.pathConcatenate(steamInstallSubDirs[i]);
+         for(const steamdir_t &currSubDir : steamInstallSubDirs)
+         {
+            if(currSubDir.appid != appid)
+               continue;
+
+            qstring &newPath = paths.addNew();
+
+            newPath = str;
+            if(currSubDir.waddir)
+            {
+               // Strip everything before the first slash off of the string to concatenate
+               newPath.pathConcatenate(currSubDir.waddir);
+            }
+            else
+               newPath.normalizeSlashes();
+         }
       }
    }
 }
-
-#endif
 
 // Default DOS install paths for IWADs
 static const char *dosInstallPaths[] =
@@ -522,12 +433,12 @@ static void D_collectIWADPaths(Collection<qstring> &paths)
    // Add DOS locations
    D_addDOSPaths(paths);
 
+   // Steam
+   D_addSteamPaths(paths);
+
 #ifdef EE_FEATURE_REGISTRYSCAN
    // Add registry paths
 
-   // Steam
-   D_addSteamPaths(paths);
-   
    // Collector's Edition
    D_addCollectorsEdition(paths);
 
@@ -740,28 +651,35 @@ static void D_findMasterLevels()
    if(estrnonempty(w_masterlevelsdirname))
       return;
 
-#ifdef EE_FEATURE_REGISTRYSCAN
-   // Check for the Steam install path
-   if(D_getRegistryString(steamInstallValue, str))
+   // Check for any Steam install path
+   for(const int appid : STEAM_APPIDS)
    {
-      for(size_t i = 0; i < earrlen(steamMasterLevelsSubDirs); i++)
+      steamgame_t steamGame;
+      if(Steam_FindGame(&steamGame, appid) && Steam_ResolvePath(str, &steamGame))
       {
-         qstring newPath{ str };
-         newPath.pathConcatenate("\\steamapps\\common");
-         newPath.pathConcatenate(steamMasterLevelsSubDirs[i]);
-
-         if(!stat(newPath.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
+         for(const steamdir_t &currSubDir : steamMasterLevelsSubDirs)
          {
-            w_masterlevelsdirname = newPath.duplicate(PU_STATIC);
+            if(currSubDir.appid != appid)
+               continue;
 
-            // Got it.
-            return;
+            qstring newPath{ str };
+            // Strip everything before the first slash off of the string to concatenate
+            newPath.pathConcatenate(currSubDir.waddir);
+
+            if(!stat(newPath.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
+            {
+               w_masterlevelsdirname = newPath.duplicate(PU_STATIC);
+
+               // Got it.
+               return;
+            }
          }
       }
    }
 
+#ifdef EE_FEATURE_REGISTRYSCAN
    // Check for GOG.com Doom II install path
-   if(D_getRegistryString(gogInstallValues[GOG_KEY_DOOM2], str))
+   if(I_GetRegistryString(gogInstallValues[GOG_KEY_DOOM2], str))
    {
       str.pathConcatenate(gogMasterLevelsPath);
 
