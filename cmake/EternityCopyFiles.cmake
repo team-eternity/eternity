@@ -81,6 +81,7 @@ function(eternity_copy_base_and_user TARGET)
     COMMAND "${CMAKE_COMMAND}" -E copy_directory "${CMAKE_SOURCE_DIR}/base" "$<TARGET_FILE_DIR:${TARGET}>/base"
     COMMAND "${CMAKE_COMMAND}" -E remove_directory "$<TARGET_FILE_DIR:${TARGET}>/base/doom/res"
     COMMAND "${CMAKE_COMMAND}" -E remove_directory "$<TARGET_FILE_DIR:${TARGET}>/base/heretic/res"
+    COMMAND "${CMAKE_COMMAND}" -E remove_directory "$<TARGET_FILE_DIR:${TARGET}>/base/strife/res"
     VERBATIM)
 
   add_custom_command(TARGET ${TARGET} POST_BUILD

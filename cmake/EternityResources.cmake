@@ -17,7 +17,7 @@
 ##
 
 function(eternity_build_resources TARGET)
-  foreach(GAME IN ITEMS "doom" "heretic")
+  foreach(GAME IN ITEMS "doom" "heretic" "strife")
     set(RESOURCE_FILE "${CMAKE_SOURCE_DIR}/base/${GAME}/eternity.pke")
     file(GLOB_RECURSE ETERNITY_GAME_RESOURCES LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/base/${GAME}/res/*")
     if(UNIX AND NOT APPLE)

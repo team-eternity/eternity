@@ -49,6 +49,12 @@ base/heretic/Eternity.cfg
 base/heretic/keys.csc
 base/heretic/music
 base/heretic/*.bak
+base/strife/eternity.pke
+base/strife/keys.csc
+base/strife/Eternity.cfg
+base/strife/tranmap.dat
+base/strife/*.dsg
+base/strife/*.bak
 base/plutonia/keys.csc
 base/plutonia/tranmap.dat
 base/plutonia/*.dsg
