@@ -1171,8 +1171,13 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
    // TODO: waterzones should damage whenever you're in them
    // Falling, not all the way down yet?
    // Sector specials don't apply in mid-air
-   if(player->mo->z != sector->srf.floor.height)
+   if(!sector->srf.floor.slope && player->mo->z != sector->srf.floor.height)
       return;
+   if(sector->srf.floor.slope && (player->mo->z != player->mo->zref.floor ||
+                                  player->mo->zref.floorsector != sector))
+   {
+      return;
+   }
 
    // haleyjd 12/28/08: We handle secrets uniformly now, through the
    // sector flags field. We also keep track of former secret status
@@ -1685,6 +1690,8 @@ void P_SpawnDeferredSpecials(UDMFSetupSettings &setupSettings)
       else
          sec->intflags &= ~SIF_PORTALBOX;
    }
+
+   P_PostProcessSlopes();
 }
 
 // haleyjd 04/11/10:

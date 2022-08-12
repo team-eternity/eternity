@@ -2002,11 +2002,14 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
 
    // killough 11/98: for tracking dropoffs
    // ioanch 20160201: fix zref.floor and zref.ceiling to be portal-aware
-   const sector_t *extremesector = P_ExtremeSectorAtPoint(mobj, surf_floor);
-   mobj->zref.dropoff = mobj->zref.floor = extremesector->srf.floor.getZAt(x, y);
+   v2fixed_t totaldelta;
+   const sector_t *extremesector = P_ExtremeSectorAtPoint(mobj, surf_floor, &totaldelta);
+   mobj->zref.dropoff = mobj->zref.floor = extremesector->srf.floor.getZAt(x + totaldelta.x,
+                                                                           y + totaldelta.y);
    mobj->zref.floorgroupid = extremesector->groupid;
    mobj->zref.floorsector = extremesector;
-   mobj->zref.ceiling = P_ExtremeSectorAtPoint(mobj, surf_ceil)->srf.ceiling.getZAt(x, y);
+   extremesector = P_ExtremeSectorAtPoint(mobj, surf_ceil, &totaldelta);
+   mobj->zref.ceiling = extremesector->srf.ceiling.getZAt(x + totaldelta.x, y + totaldelta.y);
 
    mobj->z = 
       (z == ONFLOORZ ? mobj->zref.floor : z == ONCEILINGZ ? mobj->zref.ceiling - mobj->height : z);

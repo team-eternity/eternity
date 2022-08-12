@@ -140,7 +140,7 @@ static void IN_StartCamera()
       intercam.pitch = 0;
 
       subsector_t *subsec = R_PointInSubsector(intercam.x, intercam.y);
-      intercam.z = subsec->sector->srf.floor.height + 41*FRACUNIT;
+      intercam.z = subsec->sector->srf.floor.getZAt(intercam.x, intercam.y) + 41*FRACUNIT;
 
       intercam.backupPosition();
       

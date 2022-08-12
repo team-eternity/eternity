@@ -27,29 +27,23 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
 
 // Need gamepad and timer HALs
 #include "hal/i_gamepads.h"
 #include "hal/i_timer.h"
 
-#include "a_small.h"
 #include "acs_intr.h"
 #include "am_map.h"
 #include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
 #include "d_deh.h"              // Ty 3/27/98 deh declarations
-#include "d_event.h"
 #include "d_gi.h"
-#include "d_io.h"
 #include "d_main.h"
 #include "d_net.h"
 #include "doomstat.h"
-#include "dstrings.h"
 #include "e_inventory.h"
 #include "e_player.h"
-#include "e_states.h"
 #include "e_things.h"
 #include "e_weapons.h"
 #include "f_finale.h"
@@ -62,34 +56,23 @@
 #include "m_argv.h"
 #include "m_buffer.h"
 #include "m_cheat.h"
-#include "m_collection.h"
 #include "m_misc.h"
-#include "m_random.h"
 #include "m_shots.h"
 #include "m_utils.h"
 #include "metaapi.h"
 #include "mn_engin.h"
-#include "mn_menus.h"
 #include "p_chase.h"
 #include "p_hubs.h"
 #include "p_info.h"
-#include "p_inter.h"
-#include "p_map.h"
 #include "p_maputl.h"
+#include "p_portalcross.h"
 #include "p_saveg.h"
 #include "p_setup.h"
-#include "p_tick.h"
 #include "p_user.h"
 #include "hu_stuff.h"
 #include "hu_frags.h" // haleyjd
-#include "r_data.h"
-#include "r_draw.h"
 #include "r_main.h"
-#include "r_sky.h"
-#include "r_things.h" // haleyjd
-#include "s_sndseq.h"
 #include "s_sound.h"
-#include "sounds.h"
 #include "st_stuff.h"
 #include "v_misc.h"
 #include "version.h"
@@ -2674,10 +2657,11 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
          break;
       }
    }
+   v2fixed_t pos = P_LinePortalCrossing(x, y, 20 * mtcos, 20 * mtsin);
 
-   mo = P_SpawnMobj(x + 20 * mtcos,
-                    y + 20 * mtsin,
-                    ss->sector->srf.floor.height +
+   // Use the correct XY and Z positions respectively
+   mo = P_SpawnMobj(pos.x, pos.y,
+                    ss->sector->srf.floor.getZAt(x + 20 * mtcos, y + 20 * mtsin) +
                        GameModeInfo->teleFogHeight,
                     E_SafeThingName(GameModeInfo->teleFogType));
 

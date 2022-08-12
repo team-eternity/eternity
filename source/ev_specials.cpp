@@ -79,7 +79,7 @@ inline static bool EV_ClearSwitchOnFail(void)
 // haleyjd 12/02/12: split off 3DMidTex switch range testing into its own
 // independent routine.
 //
-static bool EV_Check3DMidTexSwitch(line_t *line, Mobj *thing, int side)
+static bool EV_Check3DMidTexSwitch(const line_t *line, const Mobj *thing, int side)
 {
    int     sidenum = line->sidenum[side];
    side_t *sidedef = nullptr;

@@ -667,8 +667,11 @@ bool P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y, fixed_t z)
       if(mo->flags2 & MF2_FLOATBOB)
          z -= FloatBobOffsets[(mo->floatbob + leveltime - 1) & 63];
 
-      if(z < newsubsec->sector->srf.floor.height || z + mo->height > newsubsec->sector->srf.ceiling.height)
+      if(z < newsubsec->sector->srf.floor.getZAt(x, y) ||
+         z + mo->height > newsubsec->sector->srf.ceiling.getZAt(x, y))
+      {
          return false;
+      }
    }
    
    return xygood;
