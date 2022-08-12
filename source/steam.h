@@ -20,13 +20,36 @@
 #ifndef _STEAM_H_
 #define _STEAM_H_
 
-// TODO: Enable on Linux, maybe Mac
-#if defined(EE_FEATURE_REGISTRYSCAN)
-
 #include "d_io.h"
 #include "m_qstr.h"
 
-#define DOOM2_STEAM_APPID 2300
+constexpr int UDOOM_STEAM_APPID      = 2280;
+constexpr int FINAL_DOOM_STEAM_APPID = 2290;
+constexpr int DOOM2_STEAM_APPID      = 2300;
+constexpr int DOOM3_BFG_STEAM_APPID  = 208200;
+
+constexpr int MASTER_LEVELS_STEAM_APPID = 9160;
+
+constexpr int HEXEN_STEAM_APPID   = 2360;
+constexpr int HEXDD_STEAM_APPID   = 2370;
+constexpr int SOSR_STEAM_APPID    = 2390;
+
+constexpr int SVE_STEAM_APPID = 317040;
+
+constexpr int STEAM_APPIDS[] =
+{
+   UDOOM_STEAM_APPID,
+   FINAL_DOOM_STEAM_APPID,
+   DOOM2_STEAM_APPID,
+   DOOM3_BFG_STEAM_APPID,
+   MASTER_LEVELS_STEAM_APPID,
+
+   HEXEN_STEAM_APPID,
+   HEXDD_STEAM_APPID,
+   SOSR_STEAM_APPID,
+
+   SVE_STEAM_APPID,
+};
 
 struct steamgame_t
 {
@@ -38,7 +61,5 @@ struct steamgame_t
 bool Steam_GetDir(qstring &dirout);
 bool Steam_FindGame(steamgame_t *game, int appid);
 bool Steam_ResolvePath(qstring &path, const steamgame_t *game);
-
-#endif // defined(EE_FEATURE_REGISTRYSCAN)
 
 #endif // defined(_STEAM_H)

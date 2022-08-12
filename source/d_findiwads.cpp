@@ -178,34 +178,6 @@ static const char *gogInstallSubDirs[] =
 // Master Levels from GOG.com. These are installed with Doom II
 static const char *gogMasterLevelsPath = "master\\wads";
 
-struct steamdir_t
-{
-   const char *game;
-   const char *waddir;
-};
-
-// Steam install directory subdirs
-// (NB: add "steamapps\\common\\" as a prefix if using Steam_GetDir)
-static const steamdir_t steamInstallSubDirs[] =
-{
-   { "doom 2",                               "base"          },
-   { "doom 2",                               "finaldoombase" },
-   { "final doom",                           "base"          },
-   { "ultimate doom",                        "base"          },
-   { "hexen",                                "base"          },
-   { "hexen deathkings of the dark citadel", "base"          },
-   { "heretic shadow of the serpent riders", "base"          },
-   { "DOOM 3 BFG Edition",                   "base/wads"     },
-};
-
-// Master Levels
-// (NB: as above, add "steamapps\\common\\" if using Steam_GetDir)
-static steamdir_t steamMasterLevelsSubDirs[] =
-{
-   { "Master Levels of Doom", "master/wads"              } , // Special thanks to Gez for getting this installation path.
-   { "doom 2",                "masterbase/master/wads"   },
-};
-
 // Hexen 95, from the Towers of Darkness collection.
 // Special thanks to GreyGhost for finding the registry keys it creates.
 // TODO: There's no code to load this right now, since EE doesn't support 
@@ -294,42 +266,65 @@ static void D_addGogPaths(Collection<qstring> &paths)
    }
 }
 
+#endif // defined(EE_FEATURE_REGISTRYSCAN)
+
+struct steamdir_t
+{
+   int         appid;
+   const char *waddir;
+};
+
+// Steam install directory subdirs
+static const steamdir_t steamInstallSubDirs[] =
+{
+   { DOOM2_STEAM_APPID,      "base"          },
+   { DOOM2_STEAM_APPID,      "finaldoombase" },
+   { FINAL_DOOM_STEAM_APPID, "base"          },
+   { UDOOM_STEAM_APPID,      "base"          },
+   { HEXEN_STEAM_APPID,      "base"          },
+   { HEXDD_STEAM_APPID,      "base"          },
+   { SOSR_STEAM_APPID,       "base"          },
+   { DOOM3_BFG_STEAM_APPID,  "base/wads"     },
+};
+
+// Master Levels
+static const steamdir_t steamMasterLevelsSubDirs[] =
+{
+   { MASTER_LEVELS_STEAM_APPID, "master/wads"            } , // Special thanks to Gez for getting this installation path.
+   { DOOM2_STEAM_APPID,         "masterbase/master/wads" },
+};
+
 //
-// Add all possible Steam paths if the Steam install path is defined in
-// the registry
+// Add all possible Steam paths if the Steam client path can be found
 //
 static void D_addSteamPaths(Collection<qstring> &paths)
 {
    qstring str;
 
-   steamgame_t steamdoom2;
-   if(Steam_FindGame(&steamdoom2, DOOM2_STEAM_APPID) && Steam_ResolvePath(str, &steamdoom2))
+   for(const int appid : STEAM_APPIDS)
    {
-      for(const steamdir_t &currSubDir : steamInstallSubDirs)
+      steamgame_t steamGame;
+      if(Steam_FindGame(&steamGame, appid) && Steam_ResolvePath(str, &steamGame))
       {
-         qstring &newPath = paths.addNew();
+         for(const steamdir_t &currSubDir : steamInstallSubDirs)
+         {
+            if(currSubDir.appid != appid)
+               continue;
 
-         newPath = str;
-         // Strip everything before the first slash off of the string to concatenate
-         newPath.pathConcatenate(currSubDir.waddir);
-      }
-   }
+            qstring &newPath = paths.addNew();
 
-   if(Steam_GetDir(str))
-   {
-      for(const steamdir_t &currSubDir : steamInstallSubDirs)
-      {
-         qstring &newPath = paths.addNew();
-
-         newPath = str;
-         newPath.pathConcatenate("\\steamapps\\common");
-         newPath.pathConcatenate(currSubDir.game);
-         newPath.pathConcatenate(currSubDir.waddir);
+            newPath = str;
+            if(currSubDir.waddir)
+            {
+               // Strip everything before the first slash off of the string to concatenate
+               newPath.pathConcatenate(currSubDir.waddir);
+            }
+            else
+               newPath.normalizeSlashes();
+         }
       }
    }
 }
-
-#endif
 
 // Default DOS install paths for IWADs
 static const char *dosInstallPaths[] =
@@ -438,12 +433,12 @@ static void D_collectIWADPaths(Collection<qstring> &paths)
    // Add DOS locations
    D_addDOSPaths(paths);
 
+   // Steam
+   D_addSteamPaths(paths);
+
 #ifdef EE_FEATURE_REGISTRYSCAN
    // Add registry paths
 
-   // Steam
-   D_addSteamPaths(paths);
-   
    // Collector's Edition
    D_addCollectorsEdition(paths);
 
@@ -656,47 +651,33 @@ static void D_findMasterLevels()
    if(estrnonempty(w_masterlevelsdirname))
       return;
 
+   // Check for any Steam install path
+   for(const int appid : STEAM_APPIDS)
+   {
+      steamgame_t steamGame;
+      if(Steam_FindGame(&steamGame, appid) && Steam_ResolvePath(str, &steamGame))
+      {
+         for(const steamdir_t &currSubDir : steamMasterLevelsSubDirs)
+         {
+            if(currSubDir.appid != appid)
+               continue;
+
+            qstring newPath{ str };
+            // Strip everything before the first slash off of the string to concatenate
+            newPath.pathConcatenate(currSubDir.waddir);
+
+            if(!stat(newPath.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
+            {
+               w_masterlevelsdirname = newPath.duplicate(PU_STATIC);
+
+               // Got it.
+               return;
+            }
+         }
+      }
+   }
+
 #ifdef EE_FEATURE_REGISTRYSCAN
-   // Check for the Doom 2 Steam install path
-   steamgame_t steamdoom2;
-   if(Steam_FindGame(&steamdoom2, DOOM2_STEAM_APPID) && Steam_ResolvePath(str, &steamdoom2))
-   {
-      for(size_t i = 0; i < earrlen(steamMasterLevelsSubDirs); i++)
-      {
-         qstring newPath{ str };
-         // Strip everything before the first slash off of the string to concatenate
-         newPath.pathConcatenate(steamMasterLevelsSubDirs[i].waddir);
-
-         if(!stat(newPath.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
-         {
-            w_masterlevelsdirname = newPath.duplicate(PU_STATIC);
-
-            // Got it.
-            return;
-         }
-      }
-   }
-
-   // Check for the overall Steam install path
-   if(Steam_GetDir(str))
-   {
-      for(const steamdir_t &currSubDir :steamMasterLevelsSubDirs)
-      {
-         qstring newPath{ str };
-         newPath.pathConcatenate("\\steamapps\\common");
-         newPath.pathConcatenate(currSubDir.game);
-         newPath.pathConcatenate(currSubDir.waddir);
-
-         if(!stat(newPath.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
-         {
-            w_masterlevelsdirname = newPath.duplicate(PU_STATIC);
-
-            // Got it.
-            return;
-         }
-      }
-   }
-
    // Check for GOG.com Doom II install path
    if(I_GetRegistryString(gogInstallValues[GOG_KEY_DOOM2], str))
    {

@@ -23,9 +23,6 @@
 
 // steam.cpp -- steam config parsing
 
-// TODO: Enable on Linux, maybe Mac
-#ifdef EE_FEATURE_REGISTRYSCAN
-
 #include "z_zone.h"
 
 #include "d_dwfile.h"
@@ -49,10 +46,16 @@ bool Steam_GetDir(qstring &dirout)
    return I_GetRegistryString(steamInstallValue, dirout);
 }
 
-#else
+#elif (EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX) || (EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX)
 bool Steam_GetDir(qstring &dirout)
 {
    // TODO: Take Sys_GetSteamDir from ironwail and allow this for Linux and Mac too
+   // See https://github.com/andrei-drexler/ironwail/blob/eeec028/Quake/sys_sdl_unix.c#L249
+   return false;
+}
+#else
+bool Steam_GetDir(qstring &dirout)
+{
    return false;
 }
 #endif // defined(EE_FEATURE_REGISTRYSCAN)
@@ -351,8 +354,6 @@ bool Steam_ResolvePath(qstring &path, const steamgame_t *game)
 
 // TODO: Allow loading from `rerelease\DOOM II_Data\StreamingAssets`?
 // If so, bring back Steam_ChooseQuakeVersion from ironwail.
-
-#endif // defined(EE_FEATURE_REGISTRYSCAN)
 
 // EOF
 

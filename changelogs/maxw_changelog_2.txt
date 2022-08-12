@@ -229,6 +229,15 @@ Added level stats to automap display.
 2022/07/22
 Added interpolation to slope movement.
 
+--------------------------------------------------------------------------------
+2022/08/10
+Update auto-detecting Doom 2 and Final Doom WADs for Steam.
+
+--------------------------------------------------------------------------------
+2022/08/12
+Update auto-detecting of Steam WADs to support non-default Steam library game
+install locations.
+
 ================================================================================
 EOF
 ================================================================================
