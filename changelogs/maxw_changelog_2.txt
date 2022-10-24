@@ -238,6 +238,11 @@ Update auto-detecting Doom 2 and Final Doom WADs for Steam.
 Update auto-detecting of Steam WADs to support non-default Steam library game
 install locations.
 
+--------------------------------------------------------------------------------
+2022/09/24
+Added the cvar "map_antialias" which toggles whether or not lines get drawn with
+anti-aliasing.
+
 ================================================================================
 EOF
 ================================================================================

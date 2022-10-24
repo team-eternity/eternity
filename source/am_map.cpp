@@ -92,6 +92,9 @@ int mapportal_overlay;
 //jff 3/9/98 add option to not show secret sectors until entered
 int map_secret_after;
 
+// Antialias map drawing
+bool map_antialias;
+
 //jff 4/3/98 add symbols for "no-color" for disable and "black color" for black
 #define NC 0
 #define BC 247
@@ -1506,7 +1509,12 @@ static void AM_drawMline(mline_t *ml, int color)
       color=0;
    
    if(AM_clipMline(ml, &fl))
-      AM_drawFlineWu(&fl, color); // draws it on frame buffer using fb coords
+   {
+      if(map_antialias)
+         AM_drawFlineWu(&fl, color); // draws it on frame buffer using fb coords
+      else
+         AM_drawFline(&fl, color); // draws it on frame buffer using fb coords
+   }
 }
 
 //
@@ -2448,6 +2456,9 @@ CONSOLE_VARIABLE(am_dynasegs_bysubsec, am_dynasegs_bysubsec, 0) {}
 
 VARIABLE_TOGGLE(am_drawsegs, nullptr, onoff);
 CONSOLE_VARIABLE(am_drawsegs, am_drawsegs, 0) {}
+
+VARIABLE_TOGGLE(map_antialias, nullptr, yesno);
+CONSOLE_VARIABLE(map_antialias, map_antialias, 0) {}
 
 //----------------------------------------------------------------------------
 //

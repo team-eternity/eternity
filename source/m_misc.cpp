@@ -668,7 +668,10 @@ default_t defaults[] =
 
    DEFAULT_INT("map_point_coord", &map_point_coordinates, nullptr, 1, 0, 1, default_t::wad_game,
                "1 to show automap pointer coordinates in non-follow mode"),
-   
+
+   DEFAULT_BOOL("map_antialias", &map_antialias, nullptr, true, default_t::wad_no,
+                "enable smooth automap line drawing"),
+
    //jff 3/9/98 add option to not show secrets til after found
    // killough change default, to avoid spoilers and preserve Doom mystery
    // show secret after gotten
