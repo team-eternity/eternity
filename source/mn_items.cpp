@@ -968,7 +968,7 @@ static MenuItemInfo       mn_info;
 static MenuItemSlider     mn_slider;
 static MenuItemBigSlider  mn_bigslider;
 static MenuItemAutomap    mn_automap;
-static MenuItemAutomap    mn_automap_opt;
+static MenuItemAutomapOpt mn_automap_opt;
 static MenuItemBinding    mn_binding;
 static MenuItem           mn_end;
 
