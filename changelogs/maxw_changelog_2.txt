@@ -245,7 +245,8 @@ anti-aliasing.
 
 --------------------------------------------------------------------------------
 2022/11/13
-Change background colour to not use the cross graphic for index 0.
+Change some automap colours to not use the cross graphic for index 0 if they
+aren't optional. Change default Doom automap background colour to index 0.
 
 ================================================================================
 EOF

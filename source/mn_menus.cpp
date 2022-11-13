@@ -2789,13 +2789,13 @@ static menuitem_t mn_automapcolbgl_items[] =
    {it_info,         "Background and Lines", nullptr, nullptr, MENUITEM_CENTERED},
    {it_gap},
    {it_automap,      "Background color",             "mapcolor_back"},
-   {it_automap_opt,  "Crosshair",                    "mapcolor_hair"},
-   {it_automap_opt,  "Grid",                         "mapcolor_grid"},
-   {it_automap_opt,  "One-sided walls",              "mapcolor_wall"},
+   {it_automap,      "Crosshair",                    "mapcolor_hair"},
+   {it_automap,      "Grid",                         "mapcolor_grid"},
+   {it_automap,      "One-sided walls",              "mapcolor_wall"},
    {it_automap_opt,  "Teleporter",                   "mapcolor_tele"},
    {it_automap_opt,  "Secret area boundary",         "mapcolor_secr"},
    {it_automap_opt,  "Exit",                         "mapcolor_exit"},
-   {it_automap_opt,  "Unseen line",                  "mapcolor_unsn"},
+   {it_automap,      "Unseen line",                  "mapcolor_unsn"},
    {it_end}
 };
 
@@ -2805,8 +2805,8 @@ static menuitem_t mn_automapcoldoor_items[] =
    {it_gap},
    {it_info,         "Floor and Ceiling Lines", nullptr, nullptr, MENUITEM_CENTERED},
    {it_gap},
-   {it_automap_opt,  "Change in floor height",   "mapcolor_fchg"},
-   {it_automap_opt,  "Change in ceiling height", "mapcolor_cchg"},
+   {it_automap,  "Change in floor height",   "mapcolor_fchg"},
+   {it_automap,  "Change in ceiling height", "mapcolor_cchg"},
    {it_automap_opt,  "Floor and ceiling equal",  "mapcolor_clsd"},
    {it_automap_opt,  "No change in height",      "mapcolor_flat"},
    {it_automap_opt,  "Red locked door",          "mapcolor_rdor"},
@@ -2821,12 +2821,12 @@ static menuitem_t mn_automapcolsprite_items[] =
    {it_gap},
    {it_info,         "Sprites", nullptr, nullptr, MENUITEM_CENTERED},
    {it_gap},
-   {it_automap_opt,  "Normal objects",  "mapcolor_sprt"},
-   {it_automap_opt,  "Friends",         "mapcolor_frnd"},
-   {it_automap_opt,  "Player arrow",    "mapcolor_sngl"},
-   {it_automap_opt,  "Red key",         "mapcolor_rkey"},
-   {it_automap_opt,  "Yellow key",      "mapcolor_ykey"},
-   {it_automap_opt,  "Blue key",        "mapcolor_bkey"},
+   {it_automap,      "Normal objects",  "mapcolor_sprt"},
+   {it_automap,      "Friends",         "mapcolor_frnd"},
+   {it_automap,      "Player arrow",    "mapcolor_sngl"},
+   {it_automap,      "Red key",         "mapcolor_rkey"},
+   {it_automap,      "Yellow key",      "mapcolor_ykey"},
+   {it_automap,      "Blue key",        "mapcolor_bkey"},
    {it_end}
 };
 

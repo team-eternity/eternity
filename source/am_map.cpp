@@ -95,10 +95,6 @@ int map_secret_after;
 // Antialias map drawing
 bool map_antialias;
 
-//jff 4/3/98 add symbols for "no-color" for disable and "black color" for black
-#define NC 0
-#define BC 247
-
 // drawing stuff
 #define FB    0
 
@@ -1494,9 +1490,8 @@ static void AM_drawFlineWu(fline_t *fl, int color)
 // Clip lines, draw visible parts of lines.
 //
 // Passed the map coordinates of the line, and the color to draw it
-// Color -1 is special and prevents drawing. Color 247 is special and
-// is translated to black, allowing Color 0 to represent feature disable
-// in the defaults file.
+// Color -1 is special and prevents drawing. Color 0 to represent feature disable
+// in the defaults file for lines whose drawing can be disabled in the first place.
 // Returns nothing.
 //
 static void AM_drawMline(mline_t *ml, int color)
@@ -1505,8 +1500,6 @@ static void AM_drawMline(mline_t *ml, int color)
    
    if(color == -1)  // jff 4/3/98 allow not drawing any sort of line
       return;       // by setting its color to -1
-   if(color == 247) // jff 4/3/98 if color is 247 (xparent), use black
-      color=0;
    
    if(AM_clipMline(ml, &fl))
    {
