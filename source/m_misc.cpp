@@ -559,7 +559,7 @@ default_t defaults[] =
    //jff 1/7/98 defaults for automap colors
    //jff 4/3/98 remove -1 in lower range, 0 now disables new map features
    // black //jff 4/6/98 new black
-   DEFAULT_INT("mapcolor_back", &mapcolor_back, nullptr, 247, 0, 255, default_t::wad_game,
+   DEFAULT_INT("mapcolor_back", &mapcolor_back, nullptr, 0, 0, 255, default_t::wad_game,
                "color used as background for automap"),
    
    // dk gray
