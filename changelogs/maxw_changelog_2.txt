@@ -243,6 +243,10 @@ install locations.
 Added the cvar "map_antialias" which toggles whether or not lines get drawn with
 anti-aliasing.
 
+--------------------------------------------------------------------------------
+2022/11/13
+Change background colour to not use the cross graphic for index 0.
+
 ================================================================================
 EOF
 ================================================================================
