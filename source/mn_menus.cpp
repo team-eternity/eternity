@@ -245,7 +245,36 @@ CONSOLE_COMMAND(mn_newgame, 0)
 
    // haleyjd 05/14/06: check for episode menu override now
    if(mn_episode_override)
-      MN_StartMenu(mn_episode_override);
+   {
+      int episodeIndex = -1;
+
+      // Figure out if we should skip the episode menu override due to it containing only a
+      // single episode, and nothing else
+      for(int i = 0; mn_episode_override->menuitems[i].type != it_end; i++)
+      {
+         menuitem_t *item = &mn_episode_override->menuitems[i];
+         if(item->type == it_runcmd)
+         {
+            if (!strnicmp("mn_start_mapname", item->data, strlen("mn_start_mapname")) && episodeIndex == -1)
+               episodeIndex = i;
+            else
+            {
+               episodeIndex = -1;
+               break;
+            }
+         }
+         else if(item->type != it_title && item->type != it_gap && item->type != it_info)
+         {
+            episodeIndex = -1;
+            break;
+         }
+      }
+
+      if(episodeIndex >= 0)
+         C_RunTextCmd(mn_episode_override->menuitems[episodeIndex].data);
+      else
+         MN_StartMenu(mn_episode_override);
+      }
    else if(GameModeInfo->menuStartMap &&
            *GameModeInfo->menuStartMap &&
            W_CheckNumForName(GameModeInfo->menuStartMap) >= 0)
