@@ -255,7 +255,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
          menuitem_t *item = &mn_episode_override->menuitems[i];
          if(item->type == it_runcmd)
          {
-            if (!strnicmp("mn_start_mapname", item->data, strlen("mn_start_mapname")) && episodeIndex == -1)
+            if(!strncasecmp("mn_start_mapname", item->data, strlen("mn_start_mapname")) && episodeIndex == -1)
                episodeIndex = i;
             else
             {
