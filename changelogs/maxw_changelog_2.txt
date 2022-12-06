@@ -248,6 +248,10 @@ anti-aliasing.
 Change some automap colours to not use the cross graphic for index 0 if they
 aren't optional. Change default Doom automap background colour to index 0.
 
+--------------------------------------------------------------------------------
+2022/12/06
+Fixed qsave command to work even if no save slot had been selected before.
+
 ================================================================================
 EOF
 ================================================================================
