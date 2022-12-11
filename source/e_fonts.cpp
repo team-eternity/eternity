@@ -959,9 +959,10 @@ static void E_ProcessFont(cfg_t *const sec, bool delta)
 
       if(delta && font->linear)
       {
-         // TODO: Make E_UnloadLinearFont one day, we already have E_DisposePatches
-         E_EDFLoggedErr(2, "E_ProcessFont: fontdelta of font '%s' cannot change a linear "
-                           "font to filter-based (currently).\n", font->name);
+         if(font->data && !E_IsLinearLumpUsed(font, font->data))
+            efree(font->data);
+         font->data  = nullptr;
+         font->linear = false;
       }
 
       // at least one filter is required; if this font is being modified, it 
