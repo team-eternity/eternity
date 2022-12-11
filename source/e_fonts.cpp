@@ -48,12 +48,14 @@
 #include "mn_engin.h"
 #include "r_draw.h"
 #include "v_font.h"
+#include "v_image.h"
 #include "v_misc.h"
 #include "v_patch.h"
 #include "v_patchfmt.h"
 #include "v_png.h"
 #include "v_video.h"
 #include "w_wad.h"
+#include "z_auto.h"
 
 #include "e_lib.h"
 #include "e_edf.h"
@@ -932,16 +934,35 @@ static void E_ProcessFont(cfg_t *const sec, bool delta)
 
       bool requantize = false;
       int format;
-      const char *fmtstr;
       tempstr = cfg_getstr(sec, ITEM_FONT_LLUMP);
 
-      // get also the linear format
-      fmtstr = cfg_getstr(sec, ITEM_FONT_LFMT);
+      // try intuit the font's image format
+      ZAutoBuffer lumpBuffer;
+      vimgformat_e vfmt = FORMAT_INVALID;
+      int lumpnum = W_GetNumForName(tempstr);
+      int size    = W_LumpLength(lumpnum);
+      wGlobalDir.cacheLumpAuto(lumpnum, lumpBuffer);
+      vfmt = VImageManager::detectResourceFormat(lumpBuffer.get(), lumpBuffer.getSize());
 
-      format = E_StrToNumLinear(fontfmts, NUM_FONT_FMTS, fmtstr);
+      switch(vfmt)
+      {
+      case FORMAT_LINEAR:
+         format = FONT_FMT_LINEAR;
+         break;
+      case FORMAT_PATCH:
+         format = FONT_FMT_PATCH;
+         break;
+      case FORMAT_PNG:
+         format = FONT_FMT_PNG;
+         break;
+      case FORMAT_INVALID:
+      default:
+         format = NUM_FONT_FMTS;
+         break;
+      }
 
       if(format == NUM_FONT_FMTS)
-         E_EDFLoggedErr(2, "E_ProcessFont: invalid linear format '%s'\n", fmtstr);
+         E_EDFLoggedErr(2, "E_ProcessFont: couldn't detect format of linearlump of font '%s'\n", tempstr);
 
       // check for requantization flag (for PNGs)
       requantize = cfg_getbool(sec, ITEM_FONT_REQUAN);

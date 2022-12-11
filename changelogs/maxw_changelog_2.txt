@@ -255,6 +255,8 @@ Fixed qsave command to work even if no save slot had been selected before.
 --------------------------------------------------------------------------------
 2022/12/11
 Made fontdeltas able to change linear fonts to filter-based fonts.
+Deprecated "linearlump" from fonts, which now does nothing. Font format is now
+automatically detected.
 
 ================================================================================
 EOF
