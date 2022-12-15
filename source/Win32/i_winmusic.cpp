@@ -101,12 +101,12 @@ static bool update_volume = false;
 static DWORD timediv;
 static DWORD tempo;
 
-static UINT MidiDevice;
+static UINT      MidiDevice;
 static HMIDISTRM hMidiStream;
-static MIDIHDR MidiStreamHdr;
-static HANDLE hBufferReturnEvent;
-static HANDLE hExitEvent;
-static HANDLE hPlayerThread;
+static MIDIHDR   MidiStreamHdr;
+static HANDLE    hBufferReturnEvent;
+static HANDLE    hExitEvent;
+static HANDLE    hPlayerThread;
 
 // MS GS Wavetable Synth Device ID.
 static int ms_gs_synth = MIDI_MAPPER;
@@ -115,19 +115,19 @@ static int ms_gs_synth = MIDI_MAPPER;
 static int emidi_device;
 
 static char **winmm_devices;
-static int winmm_devices_num;
+static int    winmm_devices_num;
 
 // This is a reduced Windows MIDIEVENT structure for MEVT_F_SHORT
 // type of events.
 
-typedef struct
+struct native_event_t
 {
    DWORD dwDeltaTime;
    DWORD dwStreamID; // always 0
    DWORD dwEvent;
-} native_event_t;
+};
 
-typedef struct
+struct win_midi_track_t
 {
    midi_track_iter_t *iter;
    unsigned int elapsed_time;
@@ -139,9 +139,9 @@ typedef struct
    bool emidi_program;
    bool emidi_volume;
    int emidi_loop_count;
-} win_midi_track_t;
+};
 
-typedef struct
+struct win_midi_song_t
 {
    midi_file_t *file;
    win_midi_track_t *tracks;
@@ -152,18 +152,18 @@ typedef struct
    bool ff_loop;
    bool ff_restart;
    bool rpg_loop;
-} win_midi_song_t;
+};
 
 static win_midi_song_t song;
 
 #define BUFFER_INITIAL_SIZE 1024
 
-typedef struct
+struct buffer_t
 {
    byte *data;
    unsigned int size;
    unsigned int position;
-} buffer_t;
+};
 
 static buffer_t buffer;
 
@@ -197,14 +197,10 @@ static void MidiError(const char *prefix, DWORD dwError)
 
 // midiStream callback.
 
-static void CALLBACK MidiStreamProc(HMIDIOUT hMidi, UINT uMsg,
-   DWORD_PTR dwInstance, DWORD_PTR dwParam1,
-   DWORD_PTR dwParam2)
+static void CALLBACK MidiStreamProc(HMIDIOUT hMidi, UINT uMsg, DWORD_PTR dwInstance, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
 {
    if(uMsg == MOM_DONE)
-   {
       SetEvent(hBufferReturnEvent);
-   }
 }
 
 static void AllocateBuffer(const unsigned int size)
@@ -216,9 +212,7 @@ static void AllocateBuffer(const unsigned int size)
    {
       mmr = midiOutUnprepareHeader((HMIDIOUT)hMidiStream, hdr, sizeof(MIDIHDR));
       if(mmr != MMSYSERR_NOERROR)
-      {
          MidiError("midiOutUnprepareHeader", mmr);
-      }
    }
 
    buffer.size = PADDED_SIZE(size);
@@ -229,9 +223,7 @@ static void AllocateBuffer(const unsigned int size)
    hdr->dwBufferLength = buffer.size;
    mmr = midiOutPrepareHeader((HMIDIOUT)hMidiStream, hdr, sizeof(MIDIHDR));
    if(mmr != MMSYSERR_NOERROR)
-   {
       MidiError("midiOutPrepareHeader", mmr);
-   }
 }
 
 static void WriteBufferPad()
@@ -244,9 +236,7 @@ static void WriteBufferPad()
 static void WriteBuffer(const byte *ptr, unsigned int size)
 {
    if(buffer.position + size >= buffer.size)
-   {
       AllocateBuffer(size + buffer.size * 2);
-   }
 
    memcpy(buffer.data + buffer.position, ptr, size);
    buffer.position += size;
@@ -257,32 +247,30 @@ static void StreamOut()
    MIDIHDR *hdr = &MidiStreamHdr;
    MMRESULT mmr;
 
-   hdr->lpData = (LPSTR)buffer.data;
+   hdr->lpData          = reinterpret_cast<LPSTR>(buffer.data);
    hdr->dwBytesRecorded = buffer.position;
 
    mmr = midiStreamOut(hMidiStream, hdr, sizeof(MIDIHDR));
    if(mmr != MMSYSERR_NOERROR)
-   {
       MidiError("midiStreamOut", mmr);
-   }
 }
 
 static void SendShortMsg(int time, int status, int channel, int param1, int param2)
 {
    native_event_t native_event;
    native_event.dwDeltaTime = time;
-   native_event.dwStreamID = 0;
-   native_event.dwEvent = MAKE_EVT(status | channel, param1, param2, MEVT_SHORTMSG);
-   WriteBuffer((byte *)&native_event, sizeof(native_event_t));
+   native_event.dwStreamID  = 0;
+   native_event.dwEvent     = MAKE_EVT(status | channel, param1, param2, MEVT_SHORTMSG);
+   WriteBuffer(reinterpret_cast<byte *>(&native_event), sizeof(native_event_t));
 }
 
 static void SendLongMsg(int time, const byte *ptr, int length)
 {
    native_event_t native_event;
    native_event.dwDeltaTime = time;
-   native_event.dwStreamID = 0;
-   native_event.dwEvent = MAKE_EVT(length, 0, 0, MEVT_LONGMSG);
-   WriteBuffer((byte *)&native_event, sizeof(native_event_t));
+   native_event.dwStreamID  = 0;
+   native_event.dwEvent     = MAKE_EVT(length, 0, 0, MEVT_LONGMSG);
+   WriteBuffer(reinterpret_cast<byte *>(&native_event), sizeof(native_event_t));
    WriteBuffer(ptr, length);
    WriteBufferPad();
 }
@@ -291,15 +279,15 @@ static void SendNOPMsg(int time)
 {
    native_event_t native_event;
    native_event.dwDeltaTime = time;
-   native_event.dwStreamID = 0;
-   native_event.dwEvent = MAKE_EVT(0, 0, 0, MEVT_NOP);
-   WriteBuffer((byte *)&native_event, sizeof(native_event_t));
+   native_event.dwStreamID  = 0;
+   native_event.dwEvent     = MAKE_EVT(0, 0, 0, MEVT_NOP);
+   WriteBuffer(reinterpret_cast<byte *>(&native_event), sizeof(native_event_t));
 }
 
 static void SendDelayMsg(int time_ms)
 {
    // Convert ms to ticks (see "Standard MIDI Files 1.0" page 14).
-   int time_ticks = (float)time_ms * 1000 * timediv / tempo + 0.5f;
+   int time_ticks = int(float(time_ms) * 1000 * timediv / tempo + 0.5f);
    SendNOPMsg(time_ticks);
 }
 
@@ -307,46 +295,35 @@ static void UpdateTempo(int time, midi_event_t *event)
 {
    native_event_t native_event;
 
-   tempo = MAKE_EVT(event->data.meta.data[2], event->data.meta.data[1],
-      event->data.meta.data[0], 0);
+   tempo = MAKE_EVT(event->data.meta.data[2], event->data.meta.data[1], event->data.meta.data[0], 0);
 
    native_event.dwDeltaTime = time;
-   native_event.dwStreamID = 0;
-   native_event.dwEvent = MAKE_EVT(tempo, 0, 0, MEVT_TEMPO);
-   WriteBuffer((byte *)&native_event, sizeof(native_event_t));
+   native_event.dwStreamID  = 0;
+   native_event.dwEvent     = MAKE_EVT(tempo, 0, 0, MEVT_TEMPO);
+   WriteBuffer(reinterpret_cast<byte *>(&native_event), sizeof(native_event_t));
 }
 
 static void SendVolumeMsg(int time, int channel, int volume)
 {
-   int scaled_volume = volume * volume_factor + 0.5f;
-   SendShortMsg(time, MIDI_EVENT_CONTROLLER, channel,
-      MIDI_CONTROLLER_VOLUME_MSB, scaled_volume);
+   int scaled_volume = int(volume * volume_factor + 0.5f);
+   SendShortMsg(time, MIDI_EVENT_CONTROLLER, channel, MIDI_CONTROLLER_VOLUME_MSB, scaled_volume);
    channel_volume[channel] = volume;
 }
 
 static void UpdateVolume()
 {
-   int i;
-
-   for(i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
-   {
+   for(int i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
       SendVolumeMsg(0, i, channel_volume[i]);
-   }
 }
 
 static void ResetVolume()
 {
-   int i;
-
-   for(i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
-   {
+   for(int i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
       SendVolumeMsg(0, i, DEFAULT_VOLUME);
-   }
 }
 
 static void ResetReverb(int reset_type)
 {
-   int i;
    int reverb = winmm_reverb_level;
 
    if(reverb == -1 && reset_type == RESET_TYPE_NONE)
@@ -357,16 +334,13 @@ static void ResetReverb(int reset_type)
 
    if(reverb > -1)
    {
-      for(i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
-      {
+      for(int i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
          SendShortMsg(0, MIDI_EVENT_CONTROLLER, i, MIDI_CONTROLLER_REVERB, reverb);
-      }
    }
 }
 
 static void ResetChorus(int reset_type)
 {
-   int i;
    int chorus = winmm_chorus_level;
 
    if(chorus == -1 && reset_type == RESET_TYPE_NONE)
@@ -377,18 +351,14 @@ static void ResetChorus(int reset_type)
 
    if(chorus > -1)
    {
-      for(i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
-      {
+      for(int i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
          SendShortMsg(0, MIDI_EVENT_CONTROLLER, i, MIDI_CONTROLLER_CHORUS, chorus);
-      }
    }
 }
 
 static void ResetControllers()
 {
-   int i;
-
-   for(i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
+   for(int i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
    {
       // Reset commonly used controllers.
       SendShortMsg(0, MIDI_EVENT_CONTROLLER, i, MIDI_CONTROLLER_RESET_ALL_CTRLS, 0);
@@ -401,9 +371,7 @@ static void ResetControllers()
 
 static void ResetPitchBendSensitivity()
 {
-   int i;
-
-   for(i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
+   for(int i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
    {
       // Set RPN MSB/LSB to pitch bend sensitivity.
       SendShortMsg(0, MIDI_EVENT_CONTROLLER, i, MIDI_CONTROLLER_RPN_LSB, 0);
@@ -421,10 +389,9 @@ static void ResetPitchBendSensitivity()
 
 static void ResetDevice()
 {
-   int i;
    int reset_type;
 
-   for(i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
+   for(int i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
    {
       // Stop sound prior to reset to prevent volume spikes.
       SendShortMsg(0, MIDI_EVENT_CONTROLLER, i, MIDI_CONTROLLER_ALL_NOTES_OFF, 0);
@@ -520,9 +487,7 @@ static void ResetDevice()
 
    // Send delay after reset. This is for hardware devices only (e.g. SC-55).
    if(winmm_reset_delay > 0)
-   {
       SendDelayMsg(winmm_reset_delay);
-   }
 }
 
 static bool IsSysExReset(const byte *msg, int length)
@@ -647,7 +612,7 @@ static void SendSysExMsg(int time, const byte *data, int length)
    native_event.dwDeltaTime = time;
    native_event.dwStreamID = 0;
    native_event.dwEvent = MAKE_EVT(length + sizeof(byte), 0, 0, MEVT_LONGMSG);
-   WriteBuffer((byte *)&native_event, sizeof(native_event_t));
+   WriteBuffer(reinterpret_cast<byte *>(&native_event), sizeof(native_event_t));
    WriteBuffer(&event_type, sizeof(byte));
    WriteBuffer(data, length);
    WriteBufferPad();
@@ -675,14 +640,12 @@ static void SendProgramMsg(int time, int channel, int program,
    switch((int)fallback->type)
    {
    case FALLBACK_BANK_MSB:
-      SendShortMsg(time, MIDI_EVENT_CONTROLLER, channel,
-         MIDI_CONTROLLER_BANK_SELECT_MSB, fallback->value);
+      SendShortMsg(time, MIDI_EVENT_CONTROLLER, channel, MIDI_CONTROLLER_BANK_SELECT_MSB, fallback->value);
       SendShortMsg(0, MIDI_EVENT_PROGRAM_CHANGE, channel, program, 0);
       break;
 
    case FALLBACK_DRUMS:
-      SendShortMsg(time, MIDI_EVENT_PROGRAM_CHANGE, channel,
-         fallback->value, 0);
+      SendShortMsg(time, MIDI_EVENT_PROGRAM_CHANGE, channel, fallback->value, 0);
       break;
 
    default:
@@ -693,9 +656,7 @@ static void SendProgramMsg(int time, int channel, int program,
 
 static void SetLoopPoint()
 {
-   unsigned int i;
-
-   for(i = 0; i < song.num_tracks; ++i)
+   for(unsigned int i = 0; i < song.num_tracks; ++i)
    {
       MIDI_SetLoopPoint(song.tracks[i].iter);
       song.tracks[i].saved_end_of_track = song.tracks[i].end_of_track;
@@ -719,24 +680,19 @@ static void CheckFFLoop(midi_event_t *event)
    }
 }
 
-static bool AddToBuffer(unsigned int delta_time, midi_event_t *event,
-   win_midi_track_t *track)
+static bool AddToBuffer(unsigned int delta_time, midi_event_t *event, win_midi_track_t *track)
 {
-   unsigned int i;
    unsigned int flag;
    int count;
    midi_fallback_t fallback = { FALLBACK_NONE, 0 };
 
    if(use_fallback)
-   {
       MIDI_CheckFallback(event, &fallback);
-   }
 
    switch((int)event->event_type)
    {
    case MIDI_EVENT_SYSEX:
-      SendSysExMsg(delta_time, event->data.sysex.data,
-         event->data.sysex.length);
+      SendSysExMsg(delta_time, event->data.sysex.data, event->data.sysex.length);
       return false;
 
    case MIDI_EVENT_META:
@@ -777,14 +733,9 @@ static bool AddToBuffer(unsigned int delta_time, midi_event_t *event,
       {
       case MIDI_CONTROLLER_VOLUME_MSB:
          if(track->emidi_volume)
-         {
             SendNOPMsg(delta_time);
-         }
          else
-         {
-            SendVolumeMsg(delta_time, event->data.channel.channel,
-               event->data.channel.param2);
-         }
+            SendVolumeMsg(delta_time, event->data.channel.channel, event->data.channel.param2);
          break;
 
       case MIDI_CONTROLLER_VOLUME_LSB:
@@ -794,17 +745,21 @@ static bool AddToBuffer(unsigned int delta_time, midi_event_t *event,
       case MIDI_CONTROLLER_BANK_SELECT_LSB:
          if(fallback.type == FALLBACK_BANK_LSB)
          {
-            SendShortMsg(delta_time, MIDI_EVENT_CONTROLLER,
+            SendShortMsg(
+               delta_time, MIDI_EVENT_CONTROLLER,
                event->data.channel.channel,
                MIDI_CONTROLLER_BANK_SELECT_LSB,
-               fallback.value);
+               fallback.value
+            );
          }
          else
          {
-            SendShortMsg(delta_time, MIDI_EVENT_CONTROLLER,
+            SendShortMsg(
+               delta_time, MIDI_EVENT_CONTROLLER,
                event->data.channel.channel,
                MIDI_CONTROLLER_BANK_SELECT_LSB,
-               event->data.channel.param2);
+               event->data.channel.param2
+            );
          }
          break;
 
@@ -816,12 +771,12 @@ static bool AddToBuffer(unsigned int delta_time, midi_event_t *event,
             if(flag == EMIDI_DEVICE_ALL)
             {
                track->emidi_device_flags = UINT_MAX;
-               track->emidi_designated = true;
+               track->emidi_designated   = true;
             }
             else if(flag <= EMIDI_DEVICE_ULTRASOUND)
             {
                track->emidi_device_flags |= 1 << flag;
-               track->emidi_designated = true;
+               track->emidi_designated    = true;
             }
          }
          SendNOPMsg(delta_time);
@@ -829,9 +784,7 @@ static bool AddToBuffer(unsigned int delta_time, midi_event_t *event,
 
       case EMIDI_CONTROLLER_TRACK_EXCLUSION:
          if(song.rpg_loop)
-         {
             SetLoopPoint();
-         }
          else if(track->elapsed_time < timediv)
          {
             flag = event->data.channel.param2;
@@ -839,13 +792,11 @@ static bool AddToBuffer(unsigned int delta_time, midi_event_t *event,
             if(!track->emidi_designated)
             {
                track->emidi_device_flags = UINT_MAX;
-               track->emidi_designated = true;
+               track->emidi_designated   = true;
             }
 
             if(flag <= EMIDI_DEVICE_ULTRASOUND)
-            {
                track->emidi_device_flags &= ~(1 << flag);
-            }
          }
          SendNOPMsg(delta_time);
          break;
@@ -854,26 +805,20 @@ static bool AddToBuffer(unsigned int delta_time, midi_event_t *event,
          if(track->emidi_program || track->elapsed_time < timediv)
          {
             track->emidi_program = true;
-            SendProgramMsg(delta_time, event->data.channel.channel,
-               event->data.channel.param2, &fallback);
+            SendProgramMsg(delta_time, event->data.channel.channel, event->data.channel.param2, &fallback);
          }
          else
-         {
             SendNOPMsg(delta_time);
-         }
          break;
 
       case EMIDI_CONTROLLER_VOLUME:
          if(track->emidi_volume || track->elapsed_time < timediv)
          {
             track->emidi_volume = true;
-            SendVolumeMsg(delta_time, event->data.channel.channel,
-               event->data.channel.param2);
+            SendVolumeMsg(delta_time, event->data.channel.channel, event->data.channel.param2);
          }
          else
-         {
             SendNOPMsg(delta_time);
-         }
          break;
 
       case EMIDI_CONTROLLER_LOOP_BEGIN:
@@ -888,14 +833,10 @@ static bool AddToBuffer(unsigned int delta_time, midi_event_t *event,
          if(event->data.channel.param2 == EMIDI_LOOP_FLAG)
          {
             if(track->emidi_loop_count != 0)
-            {
                MIDI_RestartAtLoopPoint(track->iter);
-            }
 
             if(track->emidi_loop_count > 0)
-            {
                track->emidi_loop_count--;
-            }
          }
          SendNOPMsg(delta_time);
          break;
@@ -903,7 +844,7 @@ static bool AddToBuffer(unsigned int delta_time, midi_event_t *event,
       case EMIDI_CONTROLLER_GLOBAL_LOOP_BEGIN:
          count = event->data.channel.param2;
          count = (count == 0) ? (-1) : count;
-         for(i = 0; i < song.num_tracks; ++i)
+         for(unsigned int i = 0; i < song.num_tracks; ++i)
          {
             song.tracks[i].emidi_loop_count = count;
             MIDI_SetLoopPoint(song.tracks[i].iter);
@@ -914,27 +855,25 @@ static bool AddToBuffer(unsigned int delta_time, midi_event_t *event,
       case EMIDI_CONTROLLER_GLOBAL_LOOP_END:
          if(event->data.channel.param2 == EMIDI_LOOP_FLAG)
          {
-            for(i = 0; i < song.num_tracks; ++i)
+            for(unsigned int i = 0; i < song.num_tracks; ++i)
             {
                if(song.tracks[i].emidi_loop_count != 0)
-               {
                   MIDI_RestartAtLoopPoint(song.tracks[i].iter);
-               }
 
                if(song.tracks[i].emidi_loop_count > 0)
-               {
                   song.tracks[i].emidi_loop_count--;
-               }
             }
          }
          SendNOPMsg(delta_time);
          break;
 
       default:
-         SendShortMsg(delta_time, MIDI_EVENT_CONTROLLER,
+         SendShortMsg(
+            delta_time, MIDI_EVENT_CONTROLLER,
             event->data.channel.channel,
             event->data.channel.param1,
-            event->data.channel.param2);
+            event->data.channel.param2
+         );
          break;
       }
       break;
@@ -943,28 +882,27 @@ static bool AddToBuffer(unsigned int delta_time, midi_event_t *event,
    case MIDI_EVENT_NOTE_ON:
    case MIDI_EVENT_AFTERTOUCH:
    case MIDI_EVENT_PITCH_BEND:
-      SendShortMsg(delta_time, event->event_type,
+      SendShortMsg(
+         delta_time, event->event_type,
          event->data.channel.channel,
          event->data.channel.param1,
-         event->data.channel.param2);
+         event->data.channel.param2
+      );
       break;
 
    case MIDI_EVENT_PROGRAM_CHANGE:
       if(track->emidi_program)
-      {
          SendNOPMsg(delta_time);
-      }
       else
-      {
-         SendProgramMsg(delta_time, event->data.channel.channel,
-            event->data.channel.param1, &fallback);
-      }
+         SendProgramMsg(delta_time, event->data.channel.channel, event->data.channel.param1, &fallback);
       break;
 
    case MIDI_EVENT_CHAN_AFTERTOUCH:
-      SendShortMsg(delta_time, MIDI_EVENT_CHAN_AFTERTOUCH,
+      SendShortMsg(
+         delta_time, MIDI_EVENT_CHAN_AFTERTOUCH,
          event->data.channel.channel,
-         event->data.channel.param1, 0);
+         event->data.channel.param1, 0
+      );
       break;
 
    default:
@@ -977,9 +915,7 @@ static bool AddToBuffer(unsigned int delta_time, midi_event_t *event,
 
 static void RestartLoop()
 {
-   unsigned int i;
-
-   for(i = 0; i < song.num_tracks; ++i)
+   for(unsigned int i = 0; i < song.num_tracks; ++i)
    {
       MIDI_RestartAtLoopPoint(song.tracks[i].iter);
       song.tracks[i].end_of_track = song.tracks[i].saved_end_of_track;
@@ -990,30 +926,27 @@ static void RestartLoop()
 
 static void RestartTracks()
 {
-   unsigned int i;
-
-   for(i = 0; i < song.num_tracks; ++i)
+   for(unsigned int i = 0; i < song.num_tracks; ++i)
    {
       MIDI_RestartIterator(song.tracks[i].iter);
-      song.tracks[i].elapsed_time = 0;
-      song.tracks[i].end_of_track = false;
+      song.tracks[i].elapsed_time       = 0;
+      song.tracks[i].end_of_track       = false;
       song.tracks[i].emidi_device_flags = 0;
-      song.tracks[i].emidi_designated = false;
-      song.tracks[i].emidi_program = false;
-      song.tracks[i].emidi_volume = false;
-      song.tracks[i].emidi_loop_count = 0;
+      song.tracks[i].emidi_designated   = false;
+      song.tracks[i].emidi_program      = false;
+      song.tracks[i].emidi_volume       = false;
+      song.tracks[i].emidi_loop_count   = 0;
    }
    song.elapsed_time = 0;
 }
 
 static bool IsRPGLoop()
 {
-   unsigned int i;
-   unsigned int num_rpg_events = 0;
-   unsigned int num_emidi_events = 0;
-   midi_event_t *event = nullptr;
+   unsigned int  num_rpg_events   = 0;
+   unsigned int  num_emidi_events = 0;
+   midi_event_t *event            = nullptr;
 
-   for(i = 0; i < song.num_tracks; ++i)
+   for(unsigned int i = 0; i < song.num_tracks; ++i)
    {
       while(MIDI_GetNextEvent(song.tracks[i].iter, &event))
       {
@@ -1046,7 +979,6 @@ static bool IsRPGLoop()
 
 static void FillBuffer()
 {
-   unsigned int i;
    int num_events;
 
    buffer.position = 0;
@@ -1055,7 +987,7 @@ static void FillBuffer()
    {
       ResetDevice();
       StreamOut();
-      song.rpg_loop = IsRPGLoop();
+      song.rpg_loop    = IsRPGLoop();
       initial_playback = false;
       return;
    }
@@ -1070,18 +1002,17 @@ static void FillBuffer()
 
    for(num_events = 0; num_events < STREAM_MAX_EVENTS; )
    {
-      midi_event_t *event = nullptr;
+      midi_event_t     *event = nullptr;
       win_midi_track_t *track = nullptr;
-      unsigned int min_time = UINT_MAX;
+      unsigned int min_time   = UINT_MAX;
       unsigned int delta_time;
 
       // Find next event across all tracks.
-      for(i = 0; i < song.num_tracks; ++i)
+      for(unsigned int i = 0; i < song.num_tracks; ++i)
       {
          if(!song.tracks[i].end_of_track)
          {
-            unsigned int time = song.tracks[i].elapsed_time +
-               MIDI_GetDeltaTime(song.tracks[i].iter);
+            unsigned int time = song.tracks[i].elapsed_time + MIDI_GetDeltaTime(song.tracks[i].iter);
             if(time < min_time)
             {
                min_time = time;
@@ -1138,9 +1069,7 @@ static void FillBuffer()
    }
 
    if(num_events)
-   {
       StreamOut();
-   }
 }
 
 // The Windows API documentation states: "Applications should not call any
@@ -1168,18 +1097,14 @@ static DWORD WINAPI PlayerProc()
 
 static void GetDevices()
 {
-   int i;
-
    if(winmm_devices_num)
-   {
       return;
-   }
 
    winmm_devices_num = midiOutGetNumDevs();
 
    winmm_devices = emalloc(char **, winmm_devices_num * sizeof(*winmm_devices));
 
-   for(i = 0; i < winmm_devices_num; ++i)
+   for(int i = 0; i < winmm_devices_num; ++i)
    {
       MIDIOUTCAPS caps;
       MMRESULT mmr;
@@ -1190,12 +1115,8 @@ static void GetDevices()
          winmm_devices[i] = estrdup(caps.szPname);
 
          // is this device MS GS Synth?
-         if(caps.wMid == MM_MICROSOFT &&
-            caps.wPid == MM_MSFT_GENERIC_MIDISYNTH &&
-            caps.wTechnology == MOD_SWSYNTH)
-         {
+         if(caps.wMid == MM_MICROSOFT && caps.wPid == MM_MSFT_GENERIC_MIDISYNTH && caps.wTechnology == MOD_SWSYNTH)
             ms_gs_synth = i;
-         }
       }
    }
 }
@@ -1221,24 +1142,22 @@ bool I_WIN_InitMusic(int device)
          }
       }
       if(i == winmm_devices_num)
-      {
          device = 0;
-      }
    }
 
    if(winmm_devices_num)
    {
       if(device >= winmm_devices_num)
-      {
          device = 0;
-      }
       winmm_device = winmm_devices[device];
-      MidiDevice = device;
+      MidiDevice   = device;
    }
 
-   mmr = midiStreamOpen(&hMidiStream, &MidiDevice, (DWORD)1,
-      (DWORD_PTR)MidiStreamProc, (DWORD_PTR)nullptr,
-      CALLBACK_FUNCTION);
+   mmr = midiStreamOpen(
+      &hMidiStream, &MidiDevice, DWORD(1),
+      reinterpret_cast<DWORD_PTR>(MidiStreamProc), reinterpret_cast<DWORD_PTR>(nullptr),
+      CALLBACK_FUNCTION
+   );
    if(mmr != MMSYSERR_NOERROR)
    {
       MidiError("midiStreamOpen", mmr);
@@ -1248,7 +1167,7 @@ bool I_WIN_InitMusic(int device)
    AllocateBuffer(BUFFER_INITIAL_SIZE);
 
    hBufferReturnEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-   hExitEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+   hExitEvent         = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 
    MIDI_InitFallback();
 
@@ -1269,15 +1188,13 @@ void I_WIN_SetMusicVolume(int volume)
 
    last_volume = volume;
 
-   volume_factor = sqrtf((float)volume / 15);
+   volume_factor = sqrtf(float(volume) / 15);
 
    update_volume = (song.file != nullptr);
 }
 
 void I_WIN_StopSong()
 {
-   MMRESULT mmr;
-
    if(!hPlayerThread)
    {
       return;
@@ -1288,62 +1205,42 @@ void I_WIN_StopSong()
    CloseHandle(hPlayerThread);
    hPlayerThread = nullptr;
 
-   mmr = midiStreamStop(hMidiStream);
-   if(mmr != MMSYSERR_NOERROR)
-   {
+   if(const MMRESULT mmr = midiStreamStop(hMidiStream); mmr != MMSYSERR_NOERROR)
       MidiError("midiStreamStop", mmr);
-   }
 }
 
 void I_WIN_PlaySong(bool looping)
 {
-   MMRESULT mmr;
-
    song.looping = looping;
 
-   hPlayerThread = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)PlayerProc, 0, 0, 0);
+   hPlayerThread = CreateThread(nullptr, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(PlayerProc), 0, 0, 0);
    SetThreadPriority(hPlayerThread, THREAD_PRIORITY_TIME_CRITICAL);
 
    initial_playback = true;
 
    SetEvent(hBufferReturnEvent);
 
-   mmr = midiStreamRestart(hMidiStream);
-   if(mmr != MMSYSERR_NOERROR)
-   {
+   if(const MMRESULT mmr = midiStreamRestart(hMidiStream); mmr != MMSYSERR_NOERROR)
       MidiError("midiStreamRestart", mmr);
-   }
 }
 
 void I_WIN_PauseSong()
 {
-   MMRESULT mmr;
-
-   mmr = midiStreamPause(hMidiStream);
-   if(mmr != MMSYSERR_NOERROR)
-   {
+   if(const MMRESULT mmr = midiStreamPause(hMidiStream); mmr != MMSYSERR_NOERROR)
       MidiError("midiStreamPause", mmr);
-   }
 }
 
 void I_WIN_ResumeSong()
 {
-   MMRESULT mmr;
-
-   mmr = midiStreamRestart(hMidiStream);
-   if(mmr != MMSYSERR_NOERROR)
-   {
+   if(const MMRESULT mmr = midiStreamRestart(hMidiStream); mmr != MMSYSERR_NOERROR)
       MidiError("midiStreamRestart", mmr);
-   }
 }
 
 bool I_WIN_RegisterSong(void *data, int len)
 {
-   unsigned int i;
-
    MIDIPROPTIMEDIV prop_timediv;
-   MIDIPROPTEMPO prop_tempo;
-   MMRESULT mmr;
+   MIDIPROPTEMPO   prop_tempo;
+   MMRESULT        mmr;
 
    // We verified it's a MIDI (or converted to it from MUS) before passing in.
    SDL_RWops *rw = SDL_RWFromMem(data, len);
@@ -1357,8 +1254,7 @@ bool I_WIN_RegisterSong(void *data, int len)
 
    prop_timediv.cbStruct = sizeof(MIDIPROPTIMEDIV);
    prop_timediv.dwTimeDiv = MIDI_GetFileTimeDivision(song.file);
-   mmr = midiStreamProperty(hMidiStream, (LPBYTE)&prop_timediv,
-      MIDIPROP_SET | MIDIPROP_TIMEDIV);
+   mmr = midiStreamProperty(hMidiStream, reinterpret_cast<LPBYTE>(&prop_timediv), MIDIPROP_SET | MIDIPROP_TIMEDIV);
    if(mmr != MMSYSERR_NOERROR)
    {
       MidiError("midiStreamProperty", mmr);
@@ -1369,8 +1265,7 @@ bool I_WIN_RegisterSong(void *data, int len)
    // Set initial tempo.
    prop_tempo.cbStruct = sizeof(MIDIPROPTIMEDIV);
    prop_tempo.dwTempo = 500000; // 120 BPM
-   mmr = midiStreamProperty(hMidiStream, (LPBYTE)&prop_tempo,
-      MIDIPROP_SET | MIDIPROP_TEMPO);
+   mmr = midiStreamProperty(hMidiStream, reinterpret_cast<LPBYTE>(&prop_tempo), MIDIPROP_SET | MIDIPROP_TEMPO);
    if(mmr != MMSYSERR_NOERROR)
    {
       MidiError("midiStreamProperty", mmr);
@@ -1379,11 +1274,9 @@ bool I_WIN_RegisterSong(void *data, int len)
    tempo = prop_tempo.dwTempo;
 
    song.num_tracks = MIDI_NumTracks(song.file);
-   song.tracks = estructalloc(win_midi_track_t, song.num_tracks);
-   for(i = 0; i < song.num_tracks; ++i)
-   {
+   song.tracks     = estructalloc(win_midi_track_t, song.num_tracks);
+   for(unsigned int i = 0; i < song.num_tracks; ++i)
       song.tracks[i].iter = MIDI_IterateTrack(song.file, i);
-   }
 
    ResetEvent(hBufferReturnEvent);
    ResetEvent(hExitEvent);
@@ -1395,8 +1288,7 @@ void I_WIN_UnRegisterSong()
 {
    if(song.tracks)
    {
-      int i;
-      for(i = 0; i < MIDI_NumTracks(song.file); ++i)
+      for(unsigned int i = 0; i < MIDI_NumTracks(song.file); ++i)
       {
          MIDI_FreeIterator(song.tracks[i].iter);
          song.tracks[i].iter = nullptr;
@@ -1409,13 +1301,13 @@ void I_WIN_UnRegisterSong()
       MIDI_FreeFile(song.file);
       song.file = nullptr;
    }
-   song.elapsed_time = 0;
+   song.elapsed_time       = 0;
    song.saved_elapsed_time = 0;
-   song.num_tracks = 0;
-   song.looping = false;
-   song.ff_loop = false;
-   song.ff_restart = false;
-   song.rpg_loop = false;
+   song.num_tracks         = 0;
+   song.looping            = false;
+   song.ff_loop            = false;
+   song.ff_restart         = false;
+   song.rpg_loop           = false;
 }
 
 void I_WIN_ShutdownMusic()
@@ -1423,9 +1315,7 @@ void I_WIN_ShutdownMusic()
    MMRESULT mmr;
 
    if(!hMidiStream)
-   {
       return;
-   }
 
    I_WIN_StopSong();
    I_WIN_UnRegisterSong();
@@ -1436,36 +1326,27 @@ void I_WIN_ShutdownMusic()
    StreamOut();
    mmr = midiStreamRestart(hMidiStream);
    if(mmr != MMSYSERR_NOERROR)
-   {
       MidiError("midiStreamRestart", mmr);
-   }
    WaitForSingleObject(hBufferReturnEvent, INFINITE);
 
    mmr = midiStreamStop(hMidiStream);
    if(mmr != MMSYSERR_NOERROR)
-   {
       MidiError("midiStreamStop", mmr);
-   }
 
    if(buffer.data)
    {
-      mmr = midiOutUnprepareHeader((HMIDIOUT)hMidiStream, &MidiStreamHdr,
-         sizeof(MIDIHDR));
+      mmr = midiOutUnprepareHeader((HMIDIOUT)hMidiStream, &MidiStreamHdr, sizeof(MIDIHDR));
       if(mmr != MMSYSERR_NOERROR)
-      {
          MidiError("midiOutUnprepareHeader", mmr);
-      }
       efree(buffer.data);
-      buffer.data = nullptr;
-      buffer.size = 0;
+      buffer.data     = nullptr;
+      buffer.size     = 0;
       buffer.position = 0;
    }
 
    mmr = midiStreamClose(hMidiStream);
    if(mmr != MMSYSERR_NOERROR)
-   {
       MidiError("midiStreamClose", mmr);
-   }
    hMidiStream = nullptr;
 
    CloseHandle(hBufferReturnEvent);
@@ -1484,9 +1365,7 @@ static int I_WIN_DeviceList(const char *devices[], int size, int *current_device
    {
       devices[i] = winmm_devices[i];
       if(winmm_device == winmm_devices[i])
-      {
          *current_device = i;
-      }
    }
 
    return i;
