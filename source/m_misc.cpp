@@ -71,6 +71,10 @@
 #include "adlmidi.h"
 #endif
 
+#ifdef _WIN32
+#include "Win32/i_winmusic.h"
+#endif
+
 
 //
 // DEFAULTS
@@ -887,6 +891,22 @@ default_t defaults[] =
 
    DEFAULT_INT("snd_bank", &adlmidi_bank, nullptr, 72, 0, BANKS_MAX, default_t::wad_startup,
                "sound bank used for ADLMIDI"),
+#endif
+
+#ifdef _WIN32
+   DEFAULT_INT("winmm_reset_type", &winmm_reset_type, nullptr,
+               RESET_TYPE_DEFAULT, RESET_TYPE_DEFAULT, RESET_TYPE_XG, default_t::wad_no,
+               "SysEx reset for native MIDI (-1 = Default, 0 = None, 1 = GS, 2 = GM, 3 = GM2, 4 = XG)"),
+
+   DEFAULT_INT("winmm_reset_delay", &winmm_reset_delay, nullptr, 0, 0, 2000, default_t::wad_no,
+               "Delay after reset for native MIDI (milliseconds)"),
+
+   DEFAULT_INT("winmm_reverb_level", &winmm_reverb_level, nullptr, -1, -1, 127, default_t::wad_no,
+               "Reverb send level for native MIDI (-1 = Default, 0 = Off, 127 = Max)"),
+
+   DEFAULT_INT("winmm_chorus_level", &winmm_chorus_level, nullptr, -1, -1, 127, default_t::wad_no,
+               "Chorus send level for native MIDI (-1 = Default, 0 = Off, 127 = Max)"),
+
 #endif
 
 

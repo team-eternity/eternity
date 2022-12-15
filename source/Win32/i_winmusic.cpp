@@ -35,31 +35,42 @@
 
 #include "z_zone.h"
 
+#include "c_runcmd.h"
 #include "doomtype.h"
 #include "i_sound.h"
 #include "i_system.h"
-//#include "m_misc2.h"
-//#include "memio.h"
+#include "i_winmusic.h"
 #include "mmus2mid.h"
 #include "m_qstr.h"
 #include "midifile.h"
 #include "midifallback.h"
 
-int winmm_reset_type = -1;
-int winmm_reset_delay = 0;
+const char *reset_type_names[] =
+{
+   "Default",
+   "None",
+   "GS",
+   "GM",
+   "GM2",
+   "XG",
+};
+
+int winmm_reset_type   = RESET_TYPE_DEFAULT;
+int winmm_reset_delay  =  0;
 int winmm_reverb_level = -1;
 int winmm_chorus_level = -1;
 
 qstring winmm_device;
 
-enum
-{
-   RESET_TYPE_NONE,
-   RESET_TYPE_GS,
-   RESET_TYPE_GM,
-   RESET_TYPE_GM2,
-   RESET_TYPE_XG,
-};
+VARIABLE_INT(winmm_reset_type,   nullptr, RESET_TYPE_DEFAULT, RESET_TYPE_XG, reset_type_names);
+VARIABLE_INT(winmm_reset_delay,  nullptr,                  0,          2000,          nullptr);
+VARIABLE_INT(winmm_reverb_level, nullptr,                 -1,           127,          nullptr);
+VARIABLE_INT(winmm_chorus_level, nullptr,                 -1,           127,          nullptr);
+
+CONSOLE_VARIABLE(winmm_reset_type,   winmm_reset_type,   0) {}
+CONSOLE_VARIABLE(winmm_reset_delay,  winmm_reset_delay,  0) {}
+CONSOLE_VARIABLE(winmm_reverb_level, winmm_reverb_level, 0) {}
+CONSOLE_VARIABLE(winmm_chorus_level, winmm_chorus_level, 0) {}
 
 static const byte gs_reset[] = {
     0xF0, 0x41, 0x10, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41, 0xF7

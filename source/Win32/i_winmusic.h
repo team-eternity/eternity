@@ -19,6 +19,21 @@
 #ifndef __I_WINMUSIC__
 #define __I_WINMUSIC__
 
+enum
+{
+   RESET_TYPE_DEFAULT,
+   RESET_TYPE_NONE,
+   RESET_TYPE_GS,
+   RESET_TYPE_GM,
+   RESET_TYPE_GM2,
+   RESET_TYPE_XG,
+};
+
+extern int winmm_reset_type;
+extern int winmm_reset_delay;
+extern int winmm_reverb_level;
+extern int winmm_chorus_level;
+
 bool I_WIN_InitMusic(int device);
 void I_WIN_PlaySong(bool looping);
 void I_WIN_PauseSong();
