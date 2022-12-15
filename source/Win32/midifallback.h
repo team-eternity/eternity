@@ -1,5 +1,6 @@
 //
 // Copyright(C) 2022 ceski
+// Copyright(C) 2022 James Haley et al.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -11,28 +12,30 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// DESCRIPTION:
-//      MIDI instrument fallback support
+//----------------------------------------------------------------------------
+//
+// Purpose: MIDI instrument fallback support
+// Authors: ceski
 //
 
 
 #include "doomtype.h"
 #include "midifile.h"
 
-typedef enum midi_fallback_type_t
+enum midi_fallback_type_e
 {
    FALLBACK_NONE,
    FALLBACK_BANK_MSB,
    FALLBACK_BANK_LSB,
    FALLBACK_DRUMS,
-} midi_fallback_type_t;
+};
 
-typedef struct midi_fallback_t
+struct midi_fallback_t
 {
    midi_fallback_type_t type;
    byte value;
-} midi_fallback_t;
+};
 
 void MIDI_CheckFallback(midi_event_t *event, midi_fallback_t *fallback);
-void MIDI_ResetFallback(void);
-void MIDI_InitFallback(void);
+void MIDI_ResetFallback();
+void MIDI_InitFallback();
