@@ -111,6 +111,7 @@ function(eternity_target_sources _TARGET)
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_winmusic.h"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_winversion.h"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_xinput.h"
+         "${CMAKE_CURRENT_SOURCE_DIR}/Win32/midifallback.h"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/midifile.h"
          SOURCE_GROUP "Source Files\\\\Win32\\\\Win32 Source"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_exception.cpp"
@@ -119,6 +120,7 @@ function(eternity_target_sources _TARGET)
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_w32main.cpp"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_winmusic.cpp"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_xinput.cpp"
+         "${CMAKE_CURRENT_SOURCE_DIR}/Win32/midifallback.cpp"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/midifile.cpp"
       )
    endif()

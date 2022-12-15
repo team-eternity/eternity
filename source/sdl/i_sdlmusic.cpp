@@ -343,7 +343,7 @@ static int I_SDLInitMusic(void)
       success = 1;
 
 #if defined(_WIN32)
-   winMIDIStreamOpened = I_WIN_InitMusic();
+   winMIDIStreamOpened = I_WIN_InitMusic(DEFAULT_MIDI_DEVICE);
 #endif
 
    return success;
@@ -414,7 +414,7 @@ static void I_SDLPauseSong(int handle)
 #if defined(_WIN32)
    if(winMIDISteamRegistered)
    {
-      I_WIN_PauseSong(music);
+      I_WIN_PauseSong();
       return;
    }
 #endif
@@ -445,7 +445,7 @@ static void I_SDLResumeSong(int handle)
 #if defined(_WIN32)
    if(winMIDISteamRegistered)
    {
-      I_WIN_ResumeSong(music);
+      I_WIN_ResumeSong();
       return;
    }
 #endif
