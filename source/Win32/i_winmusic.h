@@ -19,10 +19,10 @@
 #ifndef __I_WINMUSIC__
 #define __I_WINMUSIC__
 
-bool I_WIN_InitMusic();
+bool I_WIN_InitMusic(int device);
 void I_WIN_PlaySong(bool looping);
-void I_WIN_PauseSong(void *handle);
-void I_WIN_ResumeSong(void *handle);
+void I_WIN_PauseSong();
+void I_WIN_ResumeSong();
 void I_WIN_StopSong();
 void I_WIN_SetMusicVolume(int volume);
 bool I_WIN_RegisterSong(void *data, int size);

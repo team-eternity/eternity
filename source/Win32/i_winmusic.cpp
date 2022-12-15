@@ -1,6 +1,7 @@
 //
 // Copyright(C) 2021-2022 Roman Fomin
 // Copyright(C) 2022 ceski
+// Copyright(C) 2022 James Haley et al.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -11,12 +12,20 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// DESCRIPTION:
-//      Windows native MIDI
+//----------------------------------------------------------------------------
+//
+// Purpose: Windows native MIDI
+// Authors: Roman Fomin, ceski, Max Waine
+//
 
+#include "SDL.h"
 
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
+
 #include <windows.h>
 #include <mmsystem.h>
 #include <mmreg.h>
@@ -24,12 +33,15 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "z_zone.h"
+
 #include "doomtype.h"
 #include "i_sound.h"
 #include "i_system.h"
-#include "m_misc2.h"
-#include "memio.h"
-#include "mus2mid.h"
+//#include "m_misc2.h"
+//#include "memio.h"
+#include "mmus2mid.h"
+#include "m_qstr.h"
 #include "midifile.h"
 #include "midifallback.h"
 
@@ -38,7 +50,7 @@ int winmm_reset_delay = 0;
 int winmm_reverb_level = -1;
 int winmm_chorus_level = -1;
 
-char *winmm_device = "";
+qstring winmm_device;
 
 enum
 {
@@ -68,12 +80,12 @@ static const byte xg_system_on[] = {
 static const byte ff_loopStart[] = { 'l', 'o', 'o', 'p', 'S', 't', 'a', 'r', 't' };
 static const byte ff_loopEnd[] = { 'l', 'o', 'o', 'p', 'E', 'n', 'd' };
 
-static boolean use_fallback;
+static bool use_fallback;
 
 #define DEFAULT_VOLUME 100
 static int channel_volume[MIDI_CHANNELS_PER_TRACK];
 static float volume_factor = 0.0f;
-static boolean update_volume = false;
+static bool update_volume = false;
 
 static DWORD timediv;
 static DWORD tempo;
@@ -109,12 +121,12 @@ typedef struct
    midi_track_iter_t *iter;
    unsigned int elapsed_time;
    unsigned int saved_elapsed_time;
-   boolean end_of_track;
-   boolean saved_end_of_track;
+   bool end_of_track;
+   bool saved_end_of_track;
    unsigned int emidi_device_flags;
-   boolean emidi_designated;
-   boolean emidi_program;
-   boolean emidi_volume;
+   bool emidi_designated;
+   bool emidi_program;
+   bool emidi_volume;
    int emidi_loop_count;
 } win_midi_track_t;
 
@@ -125,10 +137,10 @@ typedef struct
    unsigned int elapsed_time;
    unsigned int saved_elapsed_time;
    unsigned int num_tracks;
-   boolean looping;
-   boolean ff_loop;
-   boolean ff_restart;
-   boolean rpg_loop;
+   bool looping;
+   bool ff_loop;
+   bool ff_restart;
+   bool rpg_loop;
 } win_midi_song_t;
 
 static win_midi_song_t song;
@@ -152,7 +164,7 @@ static buffer_t buffer;
 
 #define PADDED_SIZE(x) (((x) + sizeof(DWORD) - 1) & ~(sizeof(DWORD) - 1))
 
-static boolean initial_playback = false;
+static bool initial_playback = false;
 
 // Message box for midiStream errors.
 
@@ -164,14 +176,12 @@ static void MidiError(const char *prefix, DWORD dwError)
    mmr = midiOutGetErrorText(dwError, (LPSTR)szErrorBuf, MAXERRORLENGTH);
    if(mmr == MMSYSERR_NOERROR)
    {
-      char *msg = M_StringJoin(prefix, ": ", szErrorBuf, NULL);
-      MessageBox(NULL, msg, "midiStream Error", MB_ICONEXCLAMATION);
-      free(msg);
+      qstring msg;
+      msg.Printf(0, "%s: %s", prefix, szErrorBuf);
+      MessageBox(NULL, msg.constPtr(), "midiStream Error", MB_ICONEXCLAMATION);
    }
    else
-   {
       fprintf(stderr, "%s: Unknown midiStream error.\n", prefix);
-   }
 }
 
 // midiStream callback.
@@ -201,7 +211,7 @@ static void AllocateBuffer(const unsigned int size)
    }
 
    buffer.size = PADDED_SIZE(size);
-   buffer.data = I_Realloc(buffer.data, buffer.size);
+   buffer.data = erealloc(byte *, buffer.data, buffer.size);
 
    hdr->lpData = (LPSTR)buffer.data;
    hdr->dwBytesRecorded = 0;
@@ -213,7 +223,7 @@ static void AllocateBuffer(const unsigned int size)
    }
 }
 
-static void WriteBufferPad(void)
+static void WriteBufferPad()
 {
    unsigned int padding = PADDED_SIZE(buffer.position);
    memset(buffer.data + buffer.position, 0, padding - buffer.position);
@@ -231,7 +241,7 @@ static void WriteBuffer(const byte *ptr, unsigned int size)
    buffer.position += size;
 }
 
-static void StreamOut(void)
+static void StreamOut()
 {
    MIDIHDR *hdr = &MidiStreamHdr;
    MMRESULT mmr;
@@ -303,7 +313,7 @@ static void SendVolumeMsg(int time, int channel, int volume)
    channel_volume[channel] = volume;
 }
 
-static void UpdateVolume(void)
+static void UpdateVolume()
 {
    int i;
 
@@ -313,7 +323,7 @@ static void UpdateVolume(void)
    }
 }
 
-static void ResetVolume(void)
+static void ResetVolume()
 {
    int i;
 
@@ -363,7 +373,7 @@ static void ResetChorus(int reset_type)
    }
 }
 
-static void ResetControllers(void)
+static void ResetControllers()
 {
    int i;
 
@@ -378,7 +388,7 @@ static void ResetControllers(void)
    }
 }
 
-static void ResetPitchBendSensitivity(void)
+static void ResetPitchBendSensitivity()
 {
    int i;
 
@@ -398,7 +408,7 @@ static void ResetPitchBendSensitivity(void)
    }
 }
 
-static void ResetDevice(void)
+static void ResetDevice()
 {
    int i;
    int reset_type;
@@ -504,7 +514,7 @@ static void ResetDevice(void)
    }
 }
 
-static boolean IsSysExReset(const byte *msg, int length)
+static bool IsSysExReset(const byte *msg, int length)
 {
    if(length < 5)
    {
@@ -610,7 +620,7 @@ static boolean IsSysExReset(const byte *msg, int length)
 static void SendSysExMsg(int time, const byte *data, int length)
 {
    native_event_t native_event;
-   boolean is_sysex_reset;
+   bool is_sysex_reset;
    const byte event_type = MIDI_EVENT_SYSEX;
 
    is_sysex_reset = IsSysExReset(data, length);
@@ -670,7 +680,7 @@ static void SendProgramMsg(int time, int channel, int program,
    }
 }
 
-static void SetLoopPoint(void)
+static void SetLoopPoint()
 {
    unsigned int i;
 
@@ -698,7 +708,7 @@ static void CheckFFLoop(midi_event_t *event)
    }
 }
 
-static boolean AddToBuffer(unsigned int delta_time, midi_event_t *event,
+static bool AddToBuffer(unsigned int delta_time, midi_event_t *event,
    win_midi_track_t *track)
 {
    unsigned int i;
@@ -954,7 +964,7 @@ static boolean AddToBuffer(unsigned int delta_time, midi_event_t *event,
    return true;
 }
 
-static void RestartLoop(void)
+static void RestartLoop()
 {
    unsigned int i;
 
@@ -967,7 +977,7 @@ static void RestartLoop(void)
    song.elapsed_time = song.saved_elapsed_time;
 }
 
-static void RestartTracks(void)
+static void RestartTracks()
 {
    unsigned int i;
 
@@ -985,12 +995,12 @@ static void RestartTracks(void)
    song.elapsed_time = 0;
 }
 
-static boolean IsRPGLoop(void)
+static bool IsRPGLoop()
 {
    unsigned int i;
    unsigned int num_rpg_events = 0;
    unsigned int num_emidi_events = 0;
-   midi_event_t *event = NULL;
+   midi_event_t *event = nullptr;
 
    for(i = 0; i < song.num_tracks; ++i)
    {
@@ -1023,7 +1033,7 @@ static boolean IsRPGLoop(void)
    return (num_rpg_events == 1 && num_emidi_events == 0);
 }
 
-static void FillBuffer(void)
+static void FillBuffer()
 {
    unsigned int i;
    int num_events;
@@ -1049,8 +1059,8 @@ static void FillBuffer(void)
 
    for(num_events = 0; num_events < STREAM_MAX_EVENTS; )
    {
-      midi_event_t *event = NULL;
-      win_midi_track_t *track = NULL;
+      midi_event_t *event = nullptr;
+      win_midi_track_t *track = nullptr;
       unsigned int min_time = UINT_MAX;
       unsigned int delta_time;
 
@@ -1070,7 +1080,7 @@ static void FillBuffer(void)
       }
 
       // No more events. Restart or stop song.
-      if(track == NULL)
+      if(track == nullptr)
       {
          if(song.elapsed_time)
          {
@@ -1126,7 +1136,7 @@ static void FillBuffer(void)
 // multimedia functions from inside the callback function, as doing so can
 // cause a deadlock." We use thread to avoid possible deadlocks.
 
-static DWORD WINAPI PlayerProc(void)
+static DWORD WINAPI PlayerProc()
 {
    HANDLE events[2] = { hBufferReturnEvent, hExitEvent };
 
@@ -1145,7 +1155,7 @@ static DWORD WINAPI PlayerProc(void)
    return 0;
 }
 
-static void GetDevices(void)
+static void GetDevices()
 {
    int i;
 
@@ -1156,7 +1166,7 @@ static void GetDevices(void)
 
    winmm_devices_num = midiOutGetNumDevs();
 
-   winmm_devices = malloc(winmm_devices_num * sizeof(*winmm_devices));
+   winmm_devices = emalloc(char **, winmm_devices_num * sizeof(*winmm_devices));
 
    for(i = 0; i < winmm_devices_num; ++i)
    {
@@ -1166,7 +1176,7 @@ static void GetDevices(void)
       mmr = midiOutGetDevCaps(i, &caps, sizeof(caps));
       if(mmr == MMSYSERR_NOERROR)
       {
-         winmm_devices[i] = M_StringDuplicate(caps.szPname);
+         winmm_devices[i] = estrdup(caps.szPname);
 
          // is this device MS GS Synth?
          if(caps.wMid == MM_MICROSOFT &&
@@ -1179,7 +1189,7 @@ static void GetDevices(void)
    }
 }
 
-static boolean I_WIN_InitMusic(int device)
+bool I_WIN_InitMusic(int device)
 {
    MMRESULT mmr;
 
@@ -1193,7 +1203,7 @@ static boolean I_WIN_InitMusic(int device)
 
       for(i = 0; i < winmm_devices_num; ++i)
       {
-         if(!strcasecmp(winmm_devices[i], winmm_device))
+         if(winmm_device == winmm_devices[i])
          {
             device = i;
             break;
@@ -1216,7 +1226,7 @@ static boolean I_WIN_InitMusic(int device)
    }
 
    mmr = midiStreamOpen(&hMidiStream, &MidiDevice, (DWORD)1,
-      (DWORD_PTR)MidiStreamProc, (DWORD_PTR)NULL,
+      (DWORD_PTR)MidiStreamProc, (DWORD_PTR)nullptr,
       CALLBACK_FUNCTION);
    if(mmr != MMSYSERR_NOERROR)
    {
@@ -1226,17 +1236,17 @@ static boolean I_WIN_InitMusic(int device)
 
    AllocateBuffer(BUFFER_INITIAL_SIZE);
 
-   hBufferReturnEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-   hExitEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+   hBufferReturnEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+   hExitEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 
    MIDI_InitFallback();
 
-   printf("Windows MIDI Init: Using '%s'.\n", winmm_device);
+   printf("Windows MIDI Init: Using '%s'.\n", winmm_device.constPtr());
 
    return true;
 }
 
-static void I_WIN_SetMusicVolume(int volume)
+void I_WIN_SetMusicVolume(int volume)
 {
    static int last_volume = -1;
 
@@ -1250,10 +1260,10 @@ static void I_WIN_SetMusicVolume(int volume)
 
    volume_factor = sqrtf((float)volume / 15);
 
-   update_volume = (song.file != NULL);
+   update_volume = (song.file != nullptr);
 }
 
-static void I_WIN_StopSong(void *handle)
+void I_WIN_StopSong()
 {
    MMRESULT mmr;
 
@@ -1265,7 +1275,7 @@ static void I_WIN_StopSong(void *handle)
    SetEvent(hExitEvent);
    WaitForSingleObject(hPlayerThread, INFINITE);
    CloseHandle(hPlayerThread);
-   hPlayerThread = NULL;
+   hPlayerThread = nullptr;
 
    mmr = midiStreamStop(hMidiStream);
    if(mmr != MMSYSERR_NOERROR)
@@ -1274,14 +1284,13 @@ static void I_WIN_StopSong(void *handle)
    }
 }
 
-static void I_WIN_PlaySong(void *handle, boolean looping)
+void I_WIN_PlaySong(bool looping)
 {
    MMRESULT mmr;
 
    song.looping = looping;
 
-   hPlayerThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)PlayerProc,
-      0, 0, 0);
+   hPlayerThread = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)PlayerProc, 0, 0, 0);
    SetThreadPriority(hPlayerThread, THREAD_PRIORITY_TIME_CRITICAL);
 
    initial_playback = true;
@@ -1295,7 +1304,7 @@ static void I_WIN_PlaySong(void *handle, boolean looping)
    }
 }
 
-static void I_WIN_PauseSong(void *handle)
+void I_WIN_PauseSong()
 {
    MMRESULT mmr;
 
@@ -1306,7 +1315,7 @@ static void I_WIN_PauseSong(void *handle)
    }
 }
 
-static void I_WIN_ResumeSong(void *handle)
+void I_WIN_ResumeSong()
 {
    MMRESULT mmr;
 
@@ -1317,7 +1326,7 @@ static void I_WIN_ResumeSong(void *handle)
    }
 }
 
-static void *I_WIN_RegisterSong(void *data, int len)
+bool I_WIN_RegisterSong(void *data, int len)
 {
    unsigned int i;
 
@@ -1325,39 +1334,14 @@ static void *I_WIN_RegisterSong(void *data, int len)
    MIDIPROPTEMPO prop_tempo;
    MMRESULT mmr;
 
-   if(IsMid(data, len))
-   {
-      song.file = MIDI_LoadFile(data, len);
-   }
-   else
-   {
-      // Assume a MUS file and try to convert
-      MEMFILE *instream;
-      MEMFILE *outstream;
-      void *outbuf;
-      size_t outbuf_len;
+   // We verified it's a MIDI (or converted to it from MUS) before passing in.
+   SDL_RWops *rw = SDL_RWFromMem(data, len);
+   song.file = MIDI_LoadFile(rw);
 
-      instream = mem_fopen_read(data, len);
-      outstream = mem_fopen_write();
-
-      if(mus2mid(instream, outstream) == 0)
-      {
-         mem_get_buf(outstream, &outbuf, &outbuf_len);
-         song.file = MIDI_LoadFile(outbuf, outbuf_len);
-      }
-      else
-      {
-         song.file = NULL;
-      }
-
-      mem_fclose(instream);
-      mem_fclose(outstream);
-   }
-
-   if(song.file == NULL)
+   if(song.file == nullptr)
    {
       fprintf(stderr, "I_WIN_RegisterSong: Failed to load MID.\n");
-      return NULL;
+      return false;
    }
 
    prop_timediv.cbStruct = sizeof(MIDIPROPTIMEDIV);
@@ -1367,7 +1351,7 @@ static void *I_WIN_RegisterSong(void *data, int len)
    if(mmr != MMSYSERR_NOERROR)
    {
       MidiError("midiStreamProperty", mmr);
-      return NULL;
+      return false;
    }
    timediv = prop_timediv.dwTimeDiv;
 
@@ -1379,12 +1363,12 @@ static void *I_WIN_RegisterSong(void *data, int len)
    if(mmr != MMSYSERR_NOERROR)
    {
       MidiError("midiStreamProperty", mmr);
-      return NULL;
+      return false;
    }
    tempo = prop_tempo.dwTempo;
 
    song.num_tracks = MIDI_NumTracks(song.file);
-   song.tracks = calloc(song.num_tracks, sizeof(win_midi_track_t));
+   song.tracks = estructalloc(win_midi_track_t, song.num_tracks);
    for(i = 0; i < song.num_tracks; ++i)
    {
       song.tracks[i].iter = MIDI_IterateTrack(song.file, i);
@@ -1393,10 +1377,10 @@ static void *I_WIN_RegisterSong(void *data, int len)
    ResetEvent(hBufferReturnEvent);
    ResetEvent(hExitEvent);
 
-   return (void *)1;
+   return true;
 }
 
-static void I_WIN_UnRegisterSong(void *handle)
+void I_WIN_UnRegisterSong()
 {
    if(song.tracks)
    {
@@ -1404,15 +1388,15 @@ static void I_WIN_UnRegisterSong(void *handle)
       for(i = 0; i < MIDI_NumTracks(song.file); ++i)
       {
          MIDI_FreeIterator(song.tracks[i].iter);
-         song.tracks[i].iter = NULL;
+         song.tracks[i].iter = nullptr;
       }
-      free(song.tracks);
-      song.tracks = NULL;
+      efree(song.tracks);
+      song.tracks = nullptr;
    }
    if(song.file)
    {
       MIDI_FreeFile(song.file);
-      song.file = NULL;
+      song.file = nullptr;
    }
    song.elapsed_time = 0;
    song.saved_elapsed_time = 0;
@@ -1423,7 +1407,7 @@ static void I_WIN_UnRegisterSong(void *handle)
    song.rpg_loop = false;
 }
 
-static void I_WIN_ShutdownMusic(void)
+void I_WIN_ShutdownMusic()
 {
    MMRESULT mmr;
 
@@ -1432,8 +1416,8 @@ static void I_WIN_ShutdownMusic(void)
       return;
    }
 
-   I_WIN_StopSong(NULL);
-   I_WIN_UnRegisterSong(NULL);
+   I_WIN_StopSong();
+   I_WIN_UnRegisterSong();
 
    // Reset device at shutdown.
    buffer.position = 0;
@@ -1460,8 +1444,8 @@ static void I_WIN_ShutdownMusic(void)
       {
          MidiError("midiOutUnprepareHeader", mmr);
       }
-      free(buffer.data);
-      buffer.data = NULL;
+      efree(buffer.data);
+      buffer.data = nullptr;
       buffer.size = 0;
       buffer.position = 0;
    }
@@ -1471,7 +1455,7 @@ static void I_WIN_ShutdownMusic(void)
    {
       MidiError("midiStreamClose", mmr);
    }
-   hMidiStream = NULL;
+   hMidiStream = nullptr;
 
    CloseHandle(hBufferReturnEvent);
    CloseHandle(hExitEvent);
@@ -1488,7 +1472,7 @@ static int I_WIN_DeviceList(const char *devices[], int size, int *current_device
    for(i = 0; i < winmm_devices_num && i < size; ++i)
    {
       devices[i] = winmm_devices[i];
-      if(!strcasecmp(winmm_devices[i], winmm_device))
+      if(winmm_device == winmm_devices[i])
       {
          *current_device = i;
       }
@@ -1497,16 +1481,7 @@ static int I_WIN_DeviceList(const char *devices[], int size, int *current_device
    return i;
 }
 
-music_module_t music_win_module =
-{
-    I_WIN_InitMusic,
-    I_WIN_ShutdownMusic,
-    I_WIN_SetMusicVolume,
-    I_WIN_PauseSong,
-    I_WIN_ResumeSong,
-    I_WIN_RegisterSong,
-    I_WIN_PlaySong,
-    I_WIN_StopSong,
-    I_WIN_UnRegisterSong,
-    I_WIN_DeviceList,
-};
+#endif // _WIN32
+
+// EOF
+

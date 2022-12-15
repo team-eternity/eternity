@@ -32,7 +32,7 @@ enum midi_fallback_type_e
 
 struct midi_fallback_t
 {
-   midi_fallback_type_t type;
+   midi_fallback_type_e type;
    byte value;
 };
 

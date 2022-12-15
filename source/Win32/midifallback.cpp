@@ -45,7 +45,7 @@ static const byte drums_table[128] = {
 static byte variation[128][128];
 static byte bank_msb[MIDI_CHANNELS_PER_TRACK];
 static byte drum_map[MIDI_CHANNELS_PER_TRACK];
-static boolean selected[MIDI_CHANNELS_PER_TRACK];
+static bool selected[MIDI_CHANNELS_PER_TRACK];
 
 static void UpdateDrumMap(byte *msg, unsigned int length)
 {
@@ -94,8 +94,7 @@ static void UpdateDrumMap(byte *msg, unsigned int length)
    }
 }
 
-static boolean GetProgramFallback(byte idx, byte program,
-   midi_fallback_t *fallback)
+static bool GetProgramFallback(byte idx, byte program, midi_fallback_t *fallback)
 {
    if(drum_map[idx] == 0) // Normal channel
    {

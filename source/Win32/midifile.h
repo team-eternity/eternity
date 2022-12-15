@@ -105,7 +105,7 @@ enum emidi_device_t
    EMIDI_DEVICE_ALL           = 0x7F,
 };
 
-enum
+enum emidi_controller_e
 {
    EMIDI_CONTROLLER_TRACK_DESIGNATION = 0x6E,
    EMIDI_CONTROLLER_TRACK_EXCLUSION   = 0x6F,
@@ -115,7 +115,7 @@ enum
    EMIDI_CONTROLLER_LOOP_END          = 0x75,
    EMIDI_CONTROLLER_GLOBAL_LOOP_BEGIN = 0x76,
    EMIDI_CONTROLLER_GLOBAL_LOOP_END   = 0x77,
-} emidi_controller_t;
+};
 
 struct midi_meta_event_data_t
 {
