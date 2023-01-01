@@ -1036,6 +1036,8 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
    R_ColumnFunc colfunc = tilevert ? r_column_engine->DrawColumn :
                                      r_column_engine->DrawSkyColumn;
 
+   // We need the translucency map to exist because we fade the sky to a single color when looking
+   // above it.
    if (!main_tranmap)
       R_InitTranMap(false);
 
