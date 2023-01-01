@@ -1583,11 +1583,11 @@ static gamemodeinfo_t giDoomCommercial =
    "DSSECRET",         // secretSoundName
    sfx_itmbk,          // defSecretSound
 
-   3,              // switchEpisode
-   &Doom2SkyData,  // skyData
-   nullptr,        // TextureHacks
-   DoomSkyFlats,   // skyFlats
-   &giPsprNoScale, // pspriteGlobalScale
+   3,                   // switchEpisode
+   &Doom2SkyData,       // skyData
+   R_Doom2TextureHacks, // TextureHacks
+   DoomSkyFlats,        // skyFlats
+   &giPsprNoScale,      // pspriteGlobalScale
 
    nullptr,          // defaultORs
 
