@@ -3036,9 +3036,9 @@ static void P_padRejectArray(byte *array, unsigned int len)
 
    // Values to pad the REJECT array with:
 
-   unsigned int rejectpad[4] =
+   uint32_t rejectpad[4] =
    {
-      static_cast<unsigned int>(((gTotalLinesForRejectOverflow * 4 + 3) & ~3)
+      static_cast<uint32_t>(((gTotalLinesForRejectOverflow * 4 + 3) & ~3)
                                 + 24),      // Size
       0,                                    // Part of z_zone block header
       50,                                   // PU_LEVEL
@@ -3108,13 +3108,12 @@ static void P_LoadReject(int lump)
       {
          byte *temp = (byte *)(setupwad->cacheLumpNum(lump, PU_CACHE));
          memcpy(rejectmatrix, temp, size);
-
-         // ioanch 20160309: REJECT overflow fix. From chocolate-doom (by
-         // fraggle):
-         // Also only do it if MBF or less
-         if(demo_version <= 203)
-            P_padRejectArray(rejectmatrix + size, expectedsize - size);
       }
+      // ioanch 20160309: REJECT overflow fix. From chocolate-doom (by
+      // fraggle):
+      // Also only do it if MBF or less
+      if(demo_version <= 203)
+         P_padRejectArray(rejectmatrix + size, expectedsize - size);
    }
 
    // warn on too-large rejects, but do nothing special.
