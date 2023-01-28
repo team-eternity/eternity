@@ -258,6 +258,10 @@ Made fontdeltas able to change linear fonts to filter-based fonts.
 Deprecated "linearlump" from fonts, which now does nothing. Font format is now
 automatically detected.
 
+--------------------------------------------------------------------------------
+2023/01/28
+Added support for ZDoom compressed nodes.
+
 ================================================================================
 EOF
 ================================================================================
