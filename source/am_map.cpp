@@ -2453,6 +2453,9 @@ CONSOLE_VARIABLE(am_drawsegs, am_drawsegs, 0) {}
 VARIABLE_TOGGLE(map_antialias, nullptr, yesno);
 CONSOLE_VARIABLE(map_antialias, map_antialias, 0) {}
 
+VARIABLE_TOGGLE(automap_overlay, nullptr, onoff);
+CONSOLE_VARIABLE(am_overlay, automap_overlay, 0) {}
+
 //----------------------------------------------------------------------------
 //
 // $Log: am_map.c,v $

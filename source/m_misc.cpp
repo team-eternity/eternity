@@ -676,6 +676,9 @@ default_t defaults[] =
    DEFAULT_BOOL("map_antialias", &map_antialias, nullptr, true, default_t::wad_no,
                 "enable smooth automap line drawing"),
 
+   DEFAULT_BOOL("am_overlay", &automap_overlay, nullptr, false, default_t::wad_no, 
+                "overlay automap on top of view"),
+
    //jff 3/9/98 add option to not show secrets til after found
    // killough change default, to avoid spoilers and preserve Doom mystery
    // show secret after gotten

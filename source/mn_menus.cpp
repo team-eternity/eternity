@@ -2815,6 +2815,8 @@ static menuitem_t mn_automapcolbgl_items[] =
 {
    {it_title,        "Automap",              nullptr, "m_auto"},
    {it_gap},
+   {it_toggle,       "Overlay automap",                 "am_overlay"},
+   {it_gap},
    {it_info,         "Background and Lines", nullptr, nullptr, MENUITEM_CENTERED},
    {it_gap},
    {it_automap,      "Background color",             "mapcolor_back"},
@@ -2877,7 +2879,7 @@ menu_t menu_automapcol1 =
    &menu_automapcol2,      // next page
    &menu_automapcol1,      // rootpage
    200, 15,                // x,y
-   4,                      // starting item
+   2,                      // starting item
    mf_background,          // fullscreen
    nullptr,
    mn_automap_names,       // TOC stuff
