@@ -28,7 +28,7 @@ function(check_lib_needs_downloading LIBRARY INCLUDE_DIR)
 
    if(DEFINED ${LIBRARY} AND NOT EXISTS ${${LIBRARY}})
       set(DOWNLOAD_LIB TRUE PARENT_SCOPE)
-      #eturn()
+      return()
   endif()
 
    if(DEFINED ${INCLUDE_DIR} AND NOT EXISTS ${${INCLUDE_DIR}})
