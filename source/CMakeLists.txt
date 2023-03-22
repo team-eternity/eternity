@@ -802,6 +802,10 @@ if(MSVC)
    endif()
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT BUILD_FLATPAK)
    target_link_libraries(eternity stdc++fs)
+# TODO: REMOVE THIS ELSEIF AFTER DONE WITH THREADSAN
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND "${CMAKE_BUILD_TYPE}" STREQUAL "RelWithDebInfo")
+   target_compile_options(eternity PRIVATE -fsanitize=thread)
+   target_link_options(eternity PRIVATE -fsanitize=thread)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")

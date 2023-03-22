@@ -248,10 +248,8 @@ static default_t sysdefaults[] =
    DEFAULT_BOOL("i_forcefeedback", &i_forcefeedback, nullptr, true, default_t::wad_no,
                 "1 to enable force feedback through gamepads where supported"),
 
-#if 0
    DEFAULT_INT("r_numcontexts", &r_numcontexts, nullptr, 1, 1, UL, default_t::wad_no,
                "Amount of renderer threads to run"),
-#endif
 
 #ifdef _SDL_VER
    DEFAULT_INT("displaynum", &displaynum, nullptr, 0, 0, UL, default_t::wad_no,

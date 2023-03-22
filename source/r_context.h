@@ -166,8 +166,7 @@ struct rendercontext_t
 // It doesn't contribute to r_numcontexts
 inline rendercontext_t r_globalcontext;
 
-inline constexpr int r_numcontexts = 1;
-//inline int r_numcontexts; // RESTORE TO THIS EVENTUALLY
+inline int r_numcontexts;
 
 rendercontext_t &R_GetContext(int context);
 void R_FreeContexts();

@@ -246,8 +246,7 @@ void R_RunContexts()
    }
 }
 
-#if 0
-VARIABLE_BOOLEAN(temp_dgafaboutyourcpu, nullptr, yesno);
+VARIABLE_TOGGLE(temp_dgafaboutyourcpu, nullptr, yesno);
 CONSOLE_VARIABLE(r_gofast, temp_dgafaboutyourcpu, cf_buffered) {}
 
 VARIABLE_INT(r_numcontexts, nullptr, 0, UL, nullptr);
@@ -267,7 +266,6 @@ CONSOLE_VARIABLE(r_numcontexts, r_numcontexts, cf_buffered)
 
    I_SetMode();
 }
-#endif
 
 // EOF
 
