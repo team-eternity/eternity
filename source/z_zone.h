@@ -178,30 +178,65 @@ void Z_PrintZoneHeap();
 
 void Z_DumpCore();
 
+struct ZoneHeapPimpl;
+
 //
-// This class represents an instance of the zone heap. Previously much
-// of this was statics in z_native.cpp but thread-local tagged memory
-// demands that what was global state is now per-instance.
+// This class represents an instance of the zone heap. It might be
+// single or multiple-consumer. Previously much of this was statics
+// in z_native.cpp but thread-local tagged memory demands that what
+// was global state is now per-instance.
 //
-class ZoneHeap
+class ZoneHeapBase
 {
-private:
+protected:
    struct memblock_t* m_blockbytag[PU_MAX]; // used for tracking all zone blocks
 
+   friend struct ZoneHeapPimpl;
+   ZoneHeapPimpl *pImpl;
+
 public:
-   void* malloc(size_t size, int tag, void** ptr, const char*, int);
-   void  free(void* ptr, const char*, int);
-   void  freeTags(int lowtag, int hightag, const char*, int);
-   void  changeTag(void* ptr, int tag, const char*, int);
-   void* calloc(size_t n, size_t n2, int tag, void** user, const char*, int);
-   void* realloc(void* p, size_t n, int tag, void** user, const char*, int);
-   char* strdup(const char* s, int tag, void** user, const char*, int);
-   void  freeAllocAuto();
-   void* allocAuto(size_t n, const char* file, int line); // Not alloca because defines
-   void* reallocAuto(void* ptr, size_t n, const char* file, int line);
-   char* strdupAuto(const char* s, const char* file, int line);
-   void  checkHeap(const char*, int);
-   int   checkTag(void*, const char*, int);
+   ZoneHeapBase();
+   ~ZoneHeapBase();
+
+   virtual void *malloc(size_t size, int tag, void **ptr, const char *, int);
+   virtual void  free(void *ptr, const char *, int);
+   virtual void  freeTags(int lowtag, int hightag, const char *, int);
+   virtual void  changeTag(void *ptr, int tag, const char *, int);
+   virtual void *calloc(size_t n, size_t n2, int tag, void **user, const char *, int);
+   virtual void *realloc(void *p, size_t n, int tag, void **user, const char *, int);
+   virtual char *strdup(const char *s, int tag, void **user, const char *, int);
+   virtual void  freeAllocAuto();
+   virtual void *allocAuto(size_t n, const char *file, int line); // Not alloca because defines
+   virtual void *reallocAuto(void *ptr, size_t n, const char *file, int line);
+   virtual char *strdupAuto(const char *s, const char *file, int line);
+   virtual void  checkHeap(const char *, int);
+   virtual int   checkTag(void *, const char *, int);
+};
+
+//
+// Single-consumer zone heap (thread-local).
+//
+class ZoneHeap final : public ZoneHeapBase { };
+
+//
+// Multiple-consumer zone heap (shared).
+//
+class ZoneHeapThreadSafe final : public ZoneHeapBase
+{
+public:
+   virtual void *malloc(size_t size, int tag, void **ptr, const char *, int) override;
+   virtual void  free(void *ptr, const char *, int) override;
+   virtual void  freeTags(int lowtag, int hightag, const char *, int) override;
+   virtual void  changeTag(void *ptr, int tag, const char *, int) override;
+   virtual void *calloc(size_t n, size_t n2, int tag, void **user, const char *, int) override;
+   virtual void *realloc(void *p, size_t n, int tag, void **user, const char *, int) override;
+   virtual char *strdup(const char *s, int tag, void **user, const char *, int) override;
+   virtual void  freeAllocAuto() override;
+   virtual void *allocAuto(size_t n, const char *file, int line) override; // Not alloca because defines
+   virtual void *reallocAuto(void *ptr, size_t n, const char *file, int line) override;
+   virtual char *strdupAuto(const char *s, const char *file, int line) override;
+   virtual void  checkHeap(const char *, int) override;
+   virtual int   checkTag(void *, const char *, int) override;
 };
 
 //
@@ -240,7 +275,8 @@ public:
    static void FreeTags(int lowtag, int hightag);
 };
 
-extern ZoneHeap z_globalheap;
+// Has to be inline otherwise initialisation order causes stuff to use z_globalheap before its mutex exists
+inline ZoneHeapThreadSafe z_globalheap;
 
 #endif
 
