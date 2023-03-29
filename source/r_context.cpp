@@ -166,8 +166,8 @@ void R_InitContexts(const int width)
 
       context.bufferindex = currentcontext;
 
-      context.bounds.fstartcolumn = float(currentcontext)     * contextwidth;
-      context.bounds.fendcolumn   = float(currentcontext + 1) * contextwidth;
+      context.bounds.fstartcolumn = roundf(float(currentcontext)     * contextwidth);
+      context.bounds.fendcolumn   = roundf(float(currentcontext + 1) * contextwidth);
       context.bounds.startcolumn  = int(roundf(context.bounds.fstartcolumn));
       context.bounds.endcolumn    = int(roundf(context.bounds.fendcolumn));
       context.bounds.numcolumns   = context.bounds.endcolumn - context.bounds.startcolumn;
@@ -216,8 +216,8 @@ void R_UpdateContextBounds()
    {
       rendercontext_t &context = renderdatas[currentcontext].context;
 
-      context.bounds.fstartcolumn = float(currentcontext)     * contextwidth;
-      context.bounds.fendcolumn   = float(currentcontext + 1) * contextwidth;
+      context.bounds.fstartcolumn = roundf(float(currentcontext)     * contextwidth);
+      context.bounds.fendcolumn   = roundf(float(currentcontext + 1) * contextwidth);
       context.bounds.startcolumn  = int(roundf(context.bounds.fstartcolumn));
       context.bounds.endcolumn    = int(roundf(context.bounds.fendcolumn));
       context.bounds.numcolumns   = context.bounds.endcolumn - context.bounds.startcolumn;
