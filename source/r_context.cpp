@@ -102,6 +102,7 @@ void R_FreeContexts()
       for(int currentcontext = 0; currentcontext < prev_numcontexts; currentcontext++)
          R_freeData(renderdatas[currentcontext]);
       efree(renderdatas);
+      renderdatas = nullptr;
    }
 }
 
