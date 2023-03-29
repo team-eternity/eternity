@@ -304,12 +304,12 @@ void Z_Init()
 //
 
 //
-// Private implementation structure for the ZoneHeap class. Because I am not
-// about to expose the entire engine to <mutex> if I can help it.
+// Wrapper class for std::mutex, just since I don't want <mutex> included in
+// every single source file.
 //
-struct ZoneHeapPimpl
+struct ZoneHeapMutex
 {
-   std::mutex zoneheap_mutex;
+   std::mutex mutex;
 };
 
 //
@@ -318,7 +318,7 @@ struct ZoneHeapPimpl
 ZoneHeapBase::ZoneHeapBase() :
    m_blockbytag()
 {
-   pImpl = new ZoneHeapPimpl();
+   m_mutex = new ZoneHeapMutex();
 }
 
 //
@@ -326,7 +326,7 @@ ZoneHeapBase::ZoneHeapBase() :
 //
 ZoneHeapBase::~ZoneHeapBase()
 {
-   delete(pImpl);
+   delete(m_mutex);
 }
 
 //=============================================================================
@@ -1006,79 +1006,79 @@ char *ZoneHeapBase::strdupAuto(const char *s, const char *file, int line)
 
 void *ZoneHeapThreadSafe::malloc(size_t size, int tag, void **user, const char *file, int line)
 {
-   std::lock_guard lock(pImpl->zoneheap_mutex);
+   std::lock_guard lock(m_mutex->mutex);
    return ZoneHeapBase::malloc(size, tag, user, file, line);
 }
 
 void ZoneHeapThreadSafe::free(void *ptr, const char *file, int line)
 {
-   std::lock_guard lock(pImpl->zoneheap_mutex);
+   std::lock_guard lock(m_mutex->mutex);
    ZoneHeapBase::free(ptr, file, line);
 }
 
 void ZoneHeapThreadSafe::freeTags(int lowtag, int hightag, const char *file, int line)
 {
-   std::lock_guard lock(pImpl->zoneheap_mutex);
+   std::lock_guard lock(m_mutex->mutex);
    ZoneHeapBase::freeTags(lowtag, hightag, file, line);
 }
 
 void ZoneHeapThreadSafe::changeTag(void *ptr, int tag, const char *file, int line)
 {
-   std::lock_guard lock(pImpl->zoneheap_mutex);
+   std::lock_guard lock(m_mutex->mutex);
    ZoneHeapBase::changeTag(ptr, tag, file, line);
 }
 
 void *ZoneHeapThreadSafe::calloc(size_t n, size_t n2, int tag, void **user, const char *file, int line)
 {
-   std::lock_guard lock(pImpl->zoneheap_mutex);
+   std::lock_guard lock(m_mutex->mutex);
    return ZoneHeapBase::calloc(n, n2, tag, user, file, line);
 }
 
 void *ZoneHeapThreadSafe::realloc(void *p, size_t n, int tag, void **user, const char *file, int line)
 {
-   std::lock_guard lock(pImpl->zoneheap_mutex);
+   std::lock_guard lock(m_mutex->mutex);
    return ZoneHeapBase::realloc(p, n, tag, user, file, line);
 }
 
 char *ZoneHeapThreadSafe::strdup(const char *s, int tag, void **user, const char *file, int line)
 {
-   std::lock_guard lock(pImpl->zoneheap_mutex);
+   std::lock_guard lock(m_mutex->mutex);
    return ZoneHeapBase::strdup(s, tag, user, file, line);
 }
 
 void ZoneHeapThreadSafe::freeAllocAuto()
 {
-   std::lock_guard lock(pImpl->zoneheap_mutex);
+   std::lock_guard lock(m_mutex->mutex);
    ZoneHeapBase::freeAllocAuto();
 }
 
 void *ZoneHeapThreadSafe::allocAuto(size_t n, const char *file, int line)
 {
-   std::lock_guard lock(pImpl->zoneheap_mutex);
+   std::lock_guard lock(m_mutex->mutex);
    return ZoneHeapBase::allocAuto(n, file, line);
 }
 
 void *ZoneHeapThreadSafe::reallocAuto(void *ptr, size_t n, const char *file, int line)
 {
-   std::lock_guard lock(pImpl->zoneheap_mutex);
+   std::lock_guard lock(m_mutex->mutex);
    return ZoneHeapBase::reallocAuto(ptr, n, file, line);
 }
 
 char *ZoneHeapThreadSafe::strdupAuto(const char* s, const char* file, int line)
 {
-   std::lock_guard lock(pImpl->zoneheap_mutex);
+   std::lock_guard lock(m_mutex->mutex);
    return ZoneHeapBase::strdupAuto(s, file, line);
 }
 
 void ZoneHeapThreadSafe::checkHeap(const char *file, int line)
 {
-   std::lock_guard lock(pImpl->zoneheap_mutex);
+   std::lock_guard lock(m_mutex->mutex);
    ZoneHeapBase::checkHeap(file, line);
 }
 
 int ZoneHeapThreadSafe::checkTag(void *ptr, const char *file, int line)
 {
-   std::lock_guard lock(pImpl->zoneheap_mutex);
+   std::lock_guard lock(m_mutex->mutex);
    return ZoneHeapBase::checkTag(ptr, file, line);
 }
 

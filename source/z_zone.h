@@ -178,7 +178,7 @@ void Z_PrintZoneHeap();
 
 void Z_DumpCore();
 
-struct ZoneHeapPimpl;
+struct ZoneHeapMutex;
 
 //
 // This class represents an instance of the zone heap. It might be
@@ -189,10 +189,8 @@ struct ZoneHeapPimpl;
 class ZoneHeapBase
 {
 protected:
-   struct memblock_t* m_blockbytag[PU_MAX]; // used for tracking all zone blocks
-
-   friend struct ZoneHeapPimpl;
-   ZoneHeapPimpl *pImpl;
+   struct memblock_t *m_blockbytag[PU_MAX]; // used for tracking all zone blocks
+   ZoneHeapMutex     *m_mutex;
 
 public:
    ZoneHeapBase();
@@ -200,7 +198,7 @@ public:
 
    virtual void *malloc(size_t size, int tag, void **ptr, const char *, int);
    virtual void  free(void *ptr, const char *, int);
-   virtual void  freeTags(int lowtag, int hightag, const char *, int);
+   virtual void  freeTags(int lowtag, int hightag, const char *, int); // THREAD_FIXME: Make only part of ZoneHeapThreadSafe?
    virtual void  changeTag(void *ptr, int tag, const char *, int);
    virtual void *calloc(size_t n, size_t n2, int tag, void **user, const char *, int);
    virtual void *realloc(void *p, size_t n, int tag, void **user, const char *, int);
