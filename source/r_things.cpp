@@ -679,6 +679,89 @@ static void R_drawMaskedColumn(const R_ColumnFunc colfunc,
 }
 
 //
+// Thread-safe column drawer for R_DrawNewMaskedColumn:
+// This fixes "sparklies" by making an extra draw call for a maximum of two pixels,
+// drawing a singular pixel where sparklies may occur (if they will occur at all),
+// and then removing those pixels from main column drawing.
+//
+static inline void R_drawNewMaskedColumnThreadSafe(
+   const R_ColumnFunc colfunc, cb_column_t &column, const texture_t *const tex, const texcol_t *tcol)
+{
+   const byte *const texend     = tex->bufferdata + tex->width * tex->height + 1;
+   const byte *const localstart = tex->bufferdata + tcol->ptroff;
+   const byte *const last       = localstart + tcol->len;
+
+   if(last < texend && last > tex->bufferdata && column.y2)
+   {
+      const int orig   = column.y1;
+      column.y1        = column.y2;
+      column.source    = &last[-1];
+      column.texheight = 1;
+
+      colfunc(column);
+
+      column.y1        = orig;
+      column.source    = localstart;
+      column.texheight = 0;
+
+      column.y2 -= 1;
+   }
+
+   const fixed_t frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * column.step);
+   if(((frac >> FRACBITS) & (column.texheight - 1)) < 0)
+   {
+      const int orig   = column.y2;
+      column.y2        = column.y1;
+      column.source    = &localstart[0];
+      column.texheight = 1;
+
+      colfunc(column);
+
+      column.y2        = orig;
+      column.source    = localstart;
+      column.texheight = 0;
+
+      column.y1 += 1;
+   }
+
+   // Drawn by either DrawColumn, DrawTLColumn, DrawAddColumn, or DrawFlexColumn.
+   colfunc(column);
+}
+
+#if 0
+//
+// As the above function, but mutates the data of the texture temporarily. This /should/ be faster but is
+// not thread-safe and in actual testing didn't appear to perform any better. Due to lack of performance
+// improvements relative to R_drawNewMaskedColumnThreadSafe it will not be dynamically dispatched to if
+// appropriate, since it doesn't seem worthwhile.
+//
+static inline void R_drawNewMaskedColumnSingleThread(
+   const R_ColumnFunc colfunc, cb_column_t &column, const texture_t *const tex, const texcol_t *tcol)
+{
+   const byte *const texend = tex->bufferdata + tex->width * tex->height + 1;
+   byte *const localstart   = tex->bufferdata + tcol->ptroff;
+   byte *const last         = localstart + tcol->len;
+
+   byte orig = 0;
+   if(last < texend && last > tex->bufferdata)
+   {
+      orig = *last;
+      *last = last[-1];
+   }
+
+   byte origstart = localstart[-1];
+   localstart[-1] = *localstart;
+
+   // Drawn by either DrawColumn, DrawTLColumn, DrawAddColumn, or DrawFlexColumn.
+   colfunc(column);
+   if(last < texend && last > tex->bufferdata)
+      *last = orig;
+   localstart[-1] = origstart;
+
+}
+#endif
+
+//
 // R_DrawNewMaskedColumn
 //
 void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc,
@@ -687,11 +770,9 @@ void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc,
                            const float *const mfloorclip, const float *const mceilingclip)
 {
    float y1, y2;
-   fixed_t basetexturemid = column.texmid;
-   
-   column.texheight = 0; // killough 11/98
+   const fixed_t basetexturemid = column.texmid;
 
-   const byte *const texend = tex->bufferdata + tex->width * tex->height + 1;
+   column.texheight = 0; // killough 11/98
 
    while(tcol)
    {
@@ -705,27 +786,10 @@ void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc,
       // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
       if(column.y1 <= column.y2 && column.y2 < viewwindow.height)
       {
-         byte *localstart = tex->bufferdata + tcol->ptroff;
-         column.source = localstart;
+         column.source = tex->bufferdata + tcol->ptroff;
          column.texmid = basetexturemid - (tcol->yoff << FRACBITS);
 
-         byte *const last = localstart + tcol->len;
-         byte orig = 0;
-         if(last < texend && last > tex->bufferdata)
-         {
-            orig = *last;
-            *last = last[-1];
-         }
-
-         byte origstart = localstart[-1];
-         localstart[-1] = *localstart;
-
-         // Drawn by either R_DrawColumn
-         //  or (SHADOW) R_DrawFuzzColumn.
-         colfunc(column);
-         if(last < texend && last > tex->bufferdata)
-            *last = orig;
-         localstart[-1] = origstart;
+         R_drawNewMaskedColumnThreadSafe(colfunc, column, tex, tcol);
       }
 
       tcol = tcol->next;
