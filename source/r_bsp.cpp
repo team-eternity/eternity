@@ -2188,7 +2188,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 {
    const portalrender_t &portalrender = portalcontext.portalrender;
 
-   sector_t tempsec; // If this being uninitialised causes future issues then add `static thread_local`
+   static thread_local sector_t tempsec;
 
    float x1, x2;
    float i1, i2, pstep;
@@ -2197,6 +2197,8 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    const side_t *side;
    float floorx1, floorx2;
    const vertex_t *v1, *v2;
+
+   tempsec = {}; // Seemingly not necessary, but here for safety
 
    // ioanch 20160125: reject segs in front of line when rendering line portal
    if(portalrender.active && portalrender.w->portal->type != R_SKYBOX)
@@ -2863,10 +2865,11 @@ static void R_subsector(rendercontext_t &context, const int num)
 
    const portalrender_t &portalrender = portalcontext.portalrender;
 
+   static thread_local sector_t tempsec; // killough 3/7/98: deep water hack
+
    int         count;
    const seg_t *line;
    subsector_t *sub;
-   sector_t    tempsec;              // killough 3/7/98: deep water hack
    int         floorlightlevel;      // killough 3/16/98: set floor lightlevel
    int         ceilinglightlevel;    // killough 4/11/98
    float       floorangle;           // haleyjd 01/05/08: plane angles
@@ -2876,6 +2879,8 @@ static void R_subsector(rendercontext_t &context, const int num)
    v3float_t   cam;
 
    cb_seg_t    seg{}; // haleyjd 09/22/07: clear seg structure
+
+   tempsec = {}; // Seemingly not necessary, but here for safety
 
    sub = &subsectors[num];
    seg.frontsec = sub->sector;

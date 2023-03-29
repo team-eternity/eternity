@@ -66,10 +66,11 @@ void R_FinishMappingLines()
 void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
                             const fixed_t viewz, drawseg_t *ds, int x1, int x2)
 {
+   static thread_local sector_t tempsec; // killough 4/13/98
+
    const texcol_t *col;
    int      lightnum;
    int      texnum;
-   sector_t tempsec;      // killough 4/13/98
    float    dist, diststep;
    float    scale, scalestep;
    float    texmidf;
@@ -79,6 +80,8 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
 
    cb_column_t column{};
    cb_seg_t    segclip{};
+
+   tempsec = {}; // Seemingly not necessary, but here for safety
 
    // Calculate light table.
    // Use different light tables
