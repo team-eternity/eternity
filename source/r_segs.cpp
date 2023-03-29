@@ -25,6 +25,8 @@
 
 // 4/25/98, 5/2/98 killough: reformatted, beautified
 
+#include "concurrentqueue/concurrentqueue.h"
+
 #include "z_zone.h"
 #include "i_system.h"
 
@@ -44,6 +46,19 @@
 #include "r_state.h"
 #include "r_things.h"
 #include "w_wad.h"
+
+static moodycamel::ConcurrentQueue<intptr_t> g_linesToMap;
+
+//
+// Take all the lines to map after multithreaded contexts are done,
+// and apply the mapped flag to them.
+//
+void R_FinishMappingLines()
+{
+   intptr_t lineIndex = -1;
+   while(g_linesToMap.try_dequeue(lineIndex))
+      lines[lineIndex].flags |= ML_MAPPED;
+}
 
 //
 // R_RenderMaskedSegRange
@@ -834,7 +849,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    }
 
    if(!(segclip.line->linedef->flags & (ML_MAPPED | ML_DONTDRAW)))
-      segclip.line->linedef->flags |= ML_MAPPED;
+      g_linesToMap.enqueue(intptr_t(segclip.line->linedef - lines));
 
    if(clipx1)
    {

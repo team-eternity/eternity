@@ -60,6 +60,7 @@
 #include "r_portal.h"
 #include "r_ripple.h"
 #include "r_things.h"
+#include "r_segs.h"
 #include "r_sky.h"
 #include "r_state.h"
 #include "s_sound.h"
@@ -1331,6 +1332,8 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
       R_RenderViewContext(r_globalcontext);
    else
       R_RunContexts();
+
+   R_FinishMappingLines();
 
    if(quake)
       player->mo->flags2 = savedflags;

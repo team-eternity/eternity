@@ -36,6 +36,8 @@ struct planecontext_t;
 struct portalcontext_t;
 struct viewpoint_t;
 
+void R_FinishMappingLines();
+
 void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
                             const fixed_t viewz, drawseg_t *ds, int x1, int x2);
 void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,

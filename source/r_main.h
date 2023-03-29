@@ -108,6 +108,8 @@ inline static subsector_t *R_PointInSubsector(v2fixed_t v)
 struct camera_t;
 struct player_t;
 
+void R_AddMappedLine(const intptr_t lineIndex);
+
 void R_RenderViewContext(rendercontext_t &context);
 void R_RenderPlayerView(player_t *player, camera_t *viewcamera);
 
