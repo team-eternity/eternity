@@ -300,37 +300,6 @@ void Z_Init()
 
 //=============================================================================
 //
-// Zone Heap Class Management
-//
-
-//
-// Wrapper class for std::mutex, just since I don't want <mutex> included in
-// every single source file.
-//
-struct ZoneHeapMutex
-{
-   std::mutex mutex;
-};
-
-//
-// Constructor, uses system new
-//
-ZoneHeapBase::ZoneHeapBase() :
-   m_blockbytag()
-{
-   m_mutex = new ZoneHeapMutex();
-}
-
-//
-// Destructor, uses system delete
-//
-ZoneHeapBase::~ZoneHeapBase()
-{
-   delete(m_mutex);
-}
-
-//=============================================================================
-//
 // Core Memory Management Routines
 //
 
@@ -997,6 +966,37 @@ void *ZoneHeapBase::reallocAuto(void *ptr, size_t n, const char *file, int line)
 char *ZoneHeapBase::strdupAuto(const char *s, const char *file, int line)
 {
    return strcpy(static_cast<char*>(ZoneHeapBase::allocAuto(strlen(s) + 1, file, line)), s);
+}
+
+//=============================================================================
+//
+// Thread-safe Zone Heap Class Management
+//
+
+//
+// Wrapper class for std::mutex, just since I don't want <mutex> included in
+// every single source file.
+//
+struct ZoneHeapMutex
+{
+   std::recursive_mutex mutex;
+};
+
+//
+// Constructor, uses system new
+//
+ZoneHeapThreadSafe::ZoneHeapThreadSafe() :
+   ZoneHeapBase()
+{
+   m_mutex = new ZoneHeapMutex();
+}
+
+//
+// Destructor, uses system delete
+//
+ZoneHeapThreadSafe::~ZoneHeapThreadSafe()
+{
+   delete(m_mutex);
 }
 
 //=============================================================================

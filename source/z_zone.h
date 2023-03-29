@@ -190,12 +190,8 @@ class ZoneHeapBase
 {
 protected:
    struct memblock_t *m_blockbytag[PU_MAX]; // used for tracking all zone blocks
-   ZoneHeapMutex     *m_mutex;
 
 public:
-   ZoneHeapBase();
-   ~ZoneHeapBase();
-
    virtual void *malloc(size_t size, int tag, void **ptr, const char *, int);
    virtual void  free(void *ptr, const char *, int);
    virtual void  freeTags(int lowtag, int hightag, const char *, int); // THREAD_FIXME: Make only part of ZoneHeapThreadSafe?
@@ -221,7 +217,14 @@ class ZoneHeap final : public ZoneHeapBase { };
 //
 class ZoneHeapThreadSafe final : public ZoneHeapBase
 {
+private:
+   ZoneHeapMutex *m_mutex;
+
 public:
+   ZoneHeapThreadSafe();
+   ~ZoneHeapThreadSafe();
+
+
    virtual void *malloc(size_t size, int tag, void **ptr, const char *, int) override;
    virtual void  free(void *ptr, const char *, int) override;
    virtual void  freeTags(int lowtag, int hightag, const char *, int) override;
