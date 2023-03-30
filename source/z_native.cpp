@@ -1064,7 +1064,7 @@ void *ZoneHeapThreadSafe::reallocAuto(void *ptr, size_t n, const char *file, int
    return ZoneHeapBase::reallocAuto(ptr, n, file, line);
 }
 
-char *ZoneHeapThreadSafe::strdupAuto(const char* s, const char* file, int line)
+char *ZoneHeapThreadSafe::strdupAuto(const char *s, const char *file, int line)
 {
    std::lock_guard lock(m_mutex->mutex);
    return ZoneHeapBase::strdupAuto(s, file, line);
