@@ -67,10 +67,9 @@ byte *renderscreen;            // haleyjd
 //  translate a limited part to another
 //  (color ramps used for  suit colors).
 //
- 
-byte *tranmap;          // translucency filter maps 256x256   // phares 
-byte *main_tranmap;     // killough 4/11/98
-byte *main_submap;      // haleyjd 11/30/13
+
+byte *main_tranmap; // killough 4/11/98
+byte *main_submap;  // haleyjd 11/30/13
 
 int rTintTableIndex;
 
@@ -376,7 +375,7 @@ static void CB_DrawNewSkyColumn_8(cb_column_t &column)
 // actual code differences are.
 
 #define SRCPIXEL \
-   tranmap[(*dest<<8)+colormap[source[(frac>>FRACBITS) & heightmask]]]
+   column.tranmap[(*dest<<8)+colormap[source[(frac>>FRACBITS) & heightmask]]]
 
 void CB_DrawTLColumn_8(cb_column_t &column)
 {
@@ -417,7 +416,7 @@ void CB_DrawTLColumn_8(cb_column_t &column)
 
          do
          {
-            *dest = tranmap[(*dest<<8) + colormap[source[frac>>FRACBITS]]]; // phares
+            *dest = column.tranmap[(*dest<<8) + colormap[source[frac>>FRACBITS]]]; // phares
             dest += 1;          // killough 11/98
             if((frac += fracstep) >= heightmask)
                frac -= heightmask;
@@ -444,10 +443,10 @@ void CB_DrawTLColumn_8(cb_column_t &column)
 #undef SRCPIXEL
 
 #define SRCPIXEL \
-   tranmap[(*dest<<8) + colormap[column.translation[source[frac>>FRACBITS]]]]
+   column.tranmap[(*dest<<8) + colormap[column.translation[source[frac>>FRACBITS]]]]
 
 #define SRCPIXEL_MASK \
-   tranmap[(*dest<<8) + \
+   column.tranmap[(*dest<<8) + \
       colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]]
 
 //

@@ -182,7 +182,7 @@ const char *R_ColormapNameForNum(int index);
 // haleyjd: new global colormap method
 void R_SetGlobalLevelColormap(void);
 
-extern byte *main_tranmap, *main_submap, *tranmap;
+extern byte *main_tranmap, *main_submap;
 
 extern int r_precache;
 

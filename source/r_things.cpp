@@ -834,14 +834,11 @@ static void R_drawVisSprite(const contextbounds_t &bounds, vissprite_t *vis,
    column.translevel = vis->translucency;
    column.translevel += 1;
    if(vis->tranmaplump >= 0)
-   {
-      tranmap = static_cast<byte *>(wGlobalDir.cacheLumpNum(vis->tranmaplump,
-                                                            PU_CACHE));
-   }
+      column.tranmap = static_cast<byte *>(wGlobalDir.cacheLumpNum(vis->tranmaplump, PU_CACHE)); // THREAD_FIXME
    else if(vis->drawstyle == VS_DRAWSTYLE_SUB)
-      tranmap = main_submap;
+      column.tranmap = main_submap;
    else
-      tranmap = main_tranmap; // killough 4/11/98   
+      column.tranmap = main_tranmap; // killough 4/11/98   
    
    // haleyjd: faster selection for drawstyles
    const R_ColumnFunc colfunc = r_column_engine->ByVisSpriteStyle[vis->drawstyle][!!vis->colour];

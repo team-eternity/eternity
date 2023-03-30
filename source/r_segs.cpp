@@ -99,9 +99,9 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
       {
          colfunc = r_column_engine->DrawTLColumn;
          if(linedef->tranlump > 0)
-            tranmap = (byte *)(wGlobalDir.cacheLumpNum(linedef->tranlump-1, PU_STATIC));
+            column.tranmap = (byte *)(wGlobalDir.cacheLumpNum(linedef->tranlump-1, PU_STATIC)); // THREAD_FIXME
          else
-            tranmap = main_tranmap;
+            column.tranmap = main_tranmap;
       }
       else // haleyjd 11/11/10: flex/additive translucency for linedefs
       {
@@ -219,7 +219,7 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
 
    // Except for main_tranmap, mark others purgable at this point
    if(linedef->tranlump > 0 && general_translucency)
-      Z_ChangeTag(tranmap, PU_CACHE); // killough 4/11/98
+      Z_ChangeTag(column.tranmap, PU_CACHE); // killough 4/11/98 // THREAD_FIXME: Maybe delete?
 }
 
 
