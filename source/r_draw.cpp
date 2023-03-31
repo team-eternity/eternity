@@ -93,7 +93,16 @@ static constexpr int fuzzoffset[FUZZTABLE] =
   1,1,0,1,1,0,1
 };
 
-static thread_local int fuzzpos = 0;
+// One value per column. Inherently thread-safe for column drawing,
+// and appears the same regardless of thread count.
+static int *fuzzpos;
+
+VALLOCATION(solidsegs)
+{
+   fuzzpos = emalloctag(int *, w * sizeof(int), PU_VALLOC, nullptr);
+   for(int x = 0; x < w; x++)
+      fuzzpos[x] = M_RangeRandomEx(0, FUZZTABLE - 1);
+}
 
 //
 // A column is a vertical slice/span from a wall texture that,
@@ -544,7 +553,7 @@ void CB_DrawTLTRColumn_8(cb_column_t &column)
    colormap[6*256+dest[(offset)]]
 
 #define SRCPIXEL \
-   COLORFUZZ(fuzzoffset[fuzzpos] ? 1 : -1)
+   COLORFUZZ(fuzzoffset[fuzzpos[column.x]] ? 1 : -1)
 
 void CB_DrawFuzzColumn_8(cb_column_t &column)
 {
@@ -568,8 +577,8 @@ void CB_DrawFuzzColumn_8(cb_column_t &column)
       // Instead of +1/-1 render top pixels with +1/0 to avoid underrun.
       if(column.y1 == 0)
       {
-         *dest = COLORFUZZ(fuzzoffset[fuzzpos] ? 1 : 0);
-         if(++fuzzpos == FUZZTABLE) fuzzpos = 0;
+         *dest = COLORFUZZ(fuzzoffset[fuzzpos[column.x]] ? 1 : 0);
+         if(++fuzzpos[column.x] == FUZZTABLE) fuzzpos[column.x] = 0;
          dest += 1;
          count -= 1;
       }
@@ -580,25 +589,25 @@ void CB_DrawFuzzColumn_8(cb_column_t &column)
       while((count -= 2) >= 0) // texture height is a power of 2 -- killough
       {
          *dest = SRCPIXEL;
-         if(++fuzzpos == FUZZTABLE) fuzzpos = 0;
+         if(++fuzzpos[column.x] == FUZZTABLE) fuzzpos[column.x] = 0;
          dest += 1;   // killough 11/98
 
          *dest = SRCPIXEL;
-         if(++fuzzpos == FUZZTABLE) fuzzpos = 0;
+         if(++fuzzpos[column.x] == FUZZTABLE) fuzzpos[column.x] = 0;
          dest += 1;   // killough 11/98
       }
       if(count & 1)
       {
          *dest = SRCPIXEL;
-         if(++fuzzpos == FUZZTABLE) fuzzpos = 0;
+         if(++fuzzpos[column.x] == FUZZTABLE) fuzzpos[column.x] = 0;
          dest += 1;
       }
 
       // Instead of +1/-1 render bottom pixels with 0/-1 to avoid overrun.
       if(column.y2 == viewwindow.height - 1)
       {
-         *dest = COLORFUZZ(fuzzoffset[fuzzpos] ? 0 : -1);
-         if(++fuzzpos == FUZZTABLE) fuzzpos = 0;
+         *dest = COLORFUZZ(fuzzoffset[fuzzpos[column.x]] ? 0 : -1);
+         if(++fuzzpos[column.x] == FUZZTABLE) fuzzpos[column.x] = 0;
       }
    }
 }
