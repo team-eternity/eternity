@@ -164,12 +164,6 @@ extern byte *main_submap;  // haleyjd 11/30/13
 #define R_ADDRESS(px, py) \
    (renderscreen + (viewwindow.y + (py)) + linesize * (viewwindow.x + (px)))
 
-#define FUZZTABLE 50 
-#define FUZZOFF (SCREENWIDTH)
-
-extern const int fuzzoffset[];
-extern int fuzzpos;
-
 // Cardboard
 struct cb_column_t
 {
