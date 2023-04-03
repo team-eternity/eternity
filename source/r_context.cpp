@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright(C) 2020 James Haley, Max Waine, et al.
+// Copyright(C) 2023 James Haley, Max Waine, et al.
 // Copyright(C) 2020 Ethan Watson
 //
 // This program is free software: you can redistribute it and/or modify
@@ -91,6 +91,11 @@ void R_freeData(renderdata_t &data)
       i_haltimer.Sleep(1);
 
    R_freeContext(data.context);
+
+   // Free actual thread
+   while(!data.thread.joinable())
+      i_haltimer.Sleep(1);
+   data.thread.join();
 }
 
 void R_FreeContexts()
