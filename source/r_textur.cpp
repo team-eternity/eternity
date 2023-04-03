@@ -1101,6 +1101,7 @@ static void FinishTexture(texture_t *tex)
 // R_CacheTexture
 // 
 // Caches a texture in memory, building it from component parts.
+// THREAD_FIXME: We have to remove all calls to this in renderer threads ideally
 //
 texture_t *R_CacheTexture(int num)
 {

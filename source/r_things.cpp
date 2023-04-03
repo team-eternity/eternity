@@ -1988,6 +1988,7 @@ void R_DrawPostBSP(rendercontext_t &context)
 ///////////////////////////////////////////////////////////////////////////////
 //
 // ioanch 20160109: sprite projection through sector portals
+// THREAD_FIXME: This whole system needs to be made multithread-friendly somehow
 //
 
 // recycle bin of spriteproj objects

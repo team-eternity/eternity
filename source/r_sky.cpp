@@ -152,6 +152,7 @@ static byte R_getMedianTopColor(int texturenum)
 // R_AddSkyTexture
 //
 // Constructs a skytexture_t and adds it to the hash table
+// THREAD_FIXME: This function seems to be thread-unsafe
 //
 static skytexture_t *R_AddSkyTexture(int texturenum)
 {
@@ -194,6 +195,7 @@ static skytexture_t *R_AddSkyTexture(int texturenum)
 //
 // Looks for the specified skytexture_t with the given texturenum
 // in the hash table. If it doesn't exist, it'll be created now.
+// THREAD_FIXME: This function seems to be thread-unsafe
 // 
 skytexture_t *R_GetSkyTexture(int texturenum)
 {

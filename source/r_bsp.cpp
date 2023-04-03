@@ -2748,6 +2748,7 @@ static void R_interpolateVertex(dynavertex_t &v, v2fixed_t &org, v2float_t &forg
 
 //
 // Recurse through a polynode mini-BSP
+// THREAD_FIXME: The temporary seg mutation here isn't thread-safe
 //
 static void R_renderPolyNode(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,
                              portalcontext_t &portalcontext,
@@ -2821,14 +2822,6 @@ static void R_addDynaSegs(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, 
                           cb_seg_t &seg,
                           subsector_t *sub)
 {
-   bool needbsp = (!sub->bsp || sub->bsp->dirty);
-
-   if(needbsp)
-   {
-      if(sub->bsp)
-         R_FreeDynaBSP(sub->bsp);
-      sub->bsp = R_BuildDynaBSP(sub);
-   }
    if(sub->bsp)
    {
       R_renderPolyNode(
@@ -3076,6 +3069,29 @@ static void R_subsector(rendercontext_t &context, const int num)
          bspcontext, cmapcontext, planecontext, portalcontext,
          viewpoint, cb_viewpoint, bounds, visitid, seg, line++, false
       );
+   }
+}
+
+//
+// Pre-rendering setup
+//
+void R_PreRenderBSP()
+{
+   for(int p = 0; p < numPolyObjects; p++)
+   {
+      for(int ss = 0; ss < PolyObjects[p].numDSS; ss++)
+      {
+         subsector_t *sub = PolyObjects[p].dynaSubsecs[ss];
+
+         bool needbsp = (!sub->bsp || sub->bsp->dirty);
+
+         if(needbsp)
+         {
+            if(sub->bsp)
+               R_FreeDynaBSP(sub->bsp);
+            sub->bsp = R_BuildDynaBSP(sub);
+         }
+      }
    }
 }
 

@@ -50,6 +50,7 @@ bool R_SetupPortalClipsegs(bspcontext_t &context, const contextbounds_t &bounds,
 void R_ClearClipSegs(bspcontext_t &context);
 void R_ClearDrawSegs(bspcontext_t &context);
 
+void R_PreRenderBSP();
 void R_RenderBSPNode(rendercontext_t &context, int bspnum);
 
 // killough 4/13/98: fake floors/ceilings for deep water / fake ceilings:
