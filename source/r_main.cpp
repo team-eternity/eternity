@@ -1327,6 +1327,8 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    else
       player->mo->intflags &= ~MIF_HIDDENBYQUAKE;  // zero it otherwise
 
+   R_PreRenderBSP();
+
    // We don't need to multithread if we only have one context
    if(r_numcontexts == 1)
       R_RenderViewContext(r_globalcontext);
