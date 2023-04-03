@@ -50,6 +50,7 @@
 #include "m_argv.h"
 #include "m_bbox.h"
 #include "m_binary.h"
+#include "m_collection.h"
 #include "m_hash.h"
 #include "p_anim.h"  // haleyjd: lightning
 #include "p_chase.h"
@@ -774,9 +775,7 @@ static void P_createSectorBoundingBoxes()
 }
 
 //
-// P_propagateSoundZone
-//
-// haleyjd 01/12/14: Recursive routine to propagate a sound zone from a
+// Iterative routine to propagate a sound zone from a
 // sector to all its neighboring sectors which border it by a 2S line which
 // is not marked as a sound boundary.
 //
@@ -786,23 +785,34 @@ static void P_propagateSoundZone(sector_t *sector, int zoneid)
    if(sector->soundzone == zoneid)
       return;
 
-   // set the zone to the sector
-   sector->soundzone = zoneid;
+   PODCollection<sector_t *> stack;
+   stack.add(sector);
 
-   // iterate on the sector linedef list to find neighboring sectors
-   for(int ln = 0; ln < sector->linecount; ln++)
+   while(!stack.isEmpty())
    {
-      auto line = sector->lines[ln];
+      sector_t *sec = stack.pop();
 
-      // must be 2S and not a zone boundary line
-      if(!line->backsector || (line->extflags & EX_ML_ZONEBOUNDARY))
-         continue;
+      if(sec->soundzone == zoneid)
+         return;
 
-      auto next = ((line->backsector != sector) ? line->backsector : line->frontsector);
+      // set the zone to the sector
+      sec->soundzone = zoneid;
 
-      // if not already in the same sound zone, propagate recursively.
-      if(next->soundzone != zoneid)
-         P_propagateSoundZone(next, zoneid);
+      // iterate on the sector linedef list to find neighboring sectors
+      for(int ln = 0; ln < sec->linecount; ln++)
+      {
+         auto line = sec->lines[ln];
+
+         // must be 2S and not a zone boundary line
+         if(!line->backsector || (line->extflags & EX_ML_ZONEBOUNDARY))
+            continue;
+
+         auto next = ((line->backsector != sec) ? line->backsector : line->frontsector);
+
+         // if not already in the same sound zone, propagate iteratively.
+         if(next->soundzone != zoneid)
+            stack.add(next);
+      }
    }
 }
 
