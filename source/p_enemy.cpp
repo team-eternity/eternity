@@ -42,6 +42,7 @@
 #include "e_ttypes.h"
 #include "ev_specials.h"
 #include "m_bbox.h"
+#include "m_collection.h"
 #include "metaapi.h"
 #include "p_enemy.h"
 #include "p_inter.h"
@@ -69,16 +70,13 @@ static Mobj *current_actor;
 //
 
 //
-// P_RecursiveSound
-//
 // Called by P_NoiseAlert.
 // Recursively traverse adjacent sectors,
 // sound blocking lines cut off traversal.
 //
 // killough 5/5/98: reformatted, cleaned up
 //
-static void P_RecursiveSound(sector_t *sec, const int soundblocks,
-                             Mobj *soundtarget)
+static void P_recursiveSound(sector_t *sec, const int soundblocks, Mobj *soundtarget)
 {
    // wake up all monsters in this sector
    if(sec->validcount == validcount &&
@@ -98,7 +96,7 @@ static void P_RecursiveSound(sector_t *sec, const int soundblocks,
       int neighcount;
       const int *neighlist = P_GetSectorPortalNeighbors(*sec, surf, &neighcount);
       for(int i = 0; i < neighcount; ++i)
-         P_RecursiveSound(&sectors[neighlist[i]], soundblocks, soundtarget);
+         P_recursiveSound(&sectors[neighlist[i]], soundblocks, soundtarget);
    }
 
    for(int i = 0; i < sec->linecount; i++)
@@ -126,15 +124,94 @@ static void P_RecursiveSound(sector_t *sec, const int soundblocks,
          sector_t *iother = R_PointInSubsector(mid - nudge +
                                                v2fixed_t(check->portal->data.link.delta))->sector;
 
-         P_RecursiveSound(iother, soundblocks, soundtarget);
+         P_recursiveSound(iother, soundblocks, soundtarget);
       }
 
       other=sides[check->sidenum[sides[check->sidenum[0]].sector==sec]].sector;
-      
+
       if(!(check->flags & ML_SOUNDBLOCK))
-         P_RecursiveSound(other, soundblocks, soundtarget);
+         P_recursiveSound(other, soundblocks, soundtarget);
       else if(!soundblocks)
-         P_RecursiveSound(other, 1, soundtarget);
+         P_recursiveSound(other, 1, soundtarget);
+   }
+}
+
+//
+// Called by P_NoiseAlert.
+// Iteratively traverse adjacent sectors, sound blocking lines cut off traversal.
+// Gated off by demo check since I don't trust replacing P_RecursiveSoun with an
+// iterative version to not break demos.
+//
+static void P_iterativeSound(sector_t *sec, const int soundblocks, Mobj *soundtarget)
+{
+   struct soundIteratorContext_t
+   {
+      sector_t *stack;
+      int soundblocks;
+   };
+
+   PODCollection<soundIteratorContext_t> stack;
+   stack.add({ sec, soundblocks });
+
+   while(!stack.isEmpty())
+   {
+      auto [sec, soundblocks] = stack.pop();
+
+      // wake up all monsters in this sector
+      if(sec->validcount == validcount && sec->soundtraversed <= soundblocks + 1)
+         continue; // already flooded
+
+      sec->validcount = validcount;
+      sec->soundtraversed = soundblocks + 1;
+      P_SetTarget<Mobj>(&sec->soundtarget, soundtarget);    // killough 11/98
+
+      // Check the floor and ceiling portals
+      for(surf_e surf : SURFS)
+      {
+         if(!(sec->srf[surf].pflags & PS_PASSSOUND))
+            continue;
+
+         int neighcount;
+         const int *neighlist = P_GetSectorPortalNeighbors(*sec, surf, &neighcount);
+         for(int i = 0; i < neighcount; ++i)
+            stack.add({ &sectors[neighlist[i]], soundblocks });
+      }
+
+      for(int i = 0; i < sec->linecount; i++)
+      {
+         sector_t *other;
+         const line_t *check = sec->lines[i];
+         if(!(check->flags & ML_TWOSIDED))
+            continue;
+
+         clip.open = P_LineOpening(check, nullptr);
+
+         if(clip.open.range <= 0)
+            continue; // closed door
+
+         // Only for front-facing wall portals
+
+         // NOTE: edge portals don't need any handling, because the sound propagates through the
+         // expanded line opening naturally to the sector behind, after which it can propagate through
+         // the sector portal.
+         if(check->pflags & PS_PASSSOUND && check->frontsector == sec)
+         {
+            v2fixed_t mid = { check->v1->x + check->dx / 2, check->v1->y + check->dy / 2 };
+            v2fixed_t nudge = P_GetSafeLineNormal(*check) / (1 << (FRACBITS - 8));
+
+            sector_t *iother = R_PointInSubsector(mid - nudge +
+               v2fixed_t(check->portal->data.link.delta))->sector;
+
+            stack.add({ iother, soundblocks });
+         }
+
+         other = sides[check->sidenum[sides[check->sidenum[0]].sector == sec]].sector;
+
+         if(!(check->flags & ML_SOUNDBLOCK))
+            stack.add({ other, soundblocks });
+         else if(!soundblocks)
+            stack.add({ other, 1 });
+      }
    }
 }
 
@@ -147,7 +224,10 @@ static void P_RecursiveSound(sector_t *sec, const int soundblocks,
 void P_NoiseAlert(Mobj *target, Mobj *emitter)
 {
    validcount++;
-   P_RecursiveSound(emitter->subsector->sector, 0, target);
+   if(demo_version >= 403)
+      P_iterativeSound(emitter->subsector->sector, 0, target);
+   else
+      P_recursiveSound(emitter->subsector->sector, 0, target);
 }
 
 //
