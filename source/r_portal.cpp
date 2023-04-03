@@ -107,7 +107,8 @@ VALLOCATION(portals)
    }
 
    R_ForEachContext([](rendercontext_t &basecontext) {
-      portalcontext_t &context = basecontext.portalcontext;
+      portalcontext_t &context =  basecontext.portalcontext;
+      ZoneHeap        &heap    = *basecontext.heap;
 
       // free portal window structures on the main list
       planehash_t *hash;
@@ -125,8 +126,8 @@ VALLOCATION(portals)
             if((hash = child->poverlay))
                for(int i = 0; i < hash->chaincount; ++i)
                   hash->chains[i] = nullptr;
-            efree(child->top);
-            efree(child);
+            zhfree(heap, child->top);
+            zhfree(heap, child);
             child = next;
          }
 
@@ -135,8 +136,8 @@ VALLOCATION(portals)
          if((hash = rover->poverlay))
             for(int i = 0; i < hash->chaincount; ++i)
                hash->chains[i] = nullptr;
-         efree(rover->top);
-         efree(rover);
+         zhfree(heap, rover->top);
+         zhfree(heap, rover);
          rover = next;
       }
 
@@ -148,8 +149,8 @@ VALLOCATION(portals)
          if((hash = rover->poverlay))
             for(int i = 0; i < hash->chaincount; ++i)
                hash->chains[i] = nullptr;
-         efree(rover->top);
-         efree(rover);
+         zhfree(heap, rover->top);
+         zhfree(heap, rover);
          rover = next;
       }
 
@@ -196,7 +197,7 @@ static void R_clearPortalWindow(planecontext_t &context, const contextbounds_t &
 }
 
 static pwindow_t *newPortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
-                                  const contextbounds_t &bounds, bool noplanes = false)
+                                  ZoneHeap &heap, const contextbounds_t &bounds, bool noplanes = false)
 {
    pwindow_t *&unusedhead = portalcontext.unusedhead;
 
@@ -209,15 +210,15 @@ static pwindow_t *newPortalWindow(planecontext_t &planecontext, portalcontext_t 
    }
    else
    {
-      ret = estructalloctag(pwindow_t, 1, PU_LEVEL);
-      
-      float *buf  = emalloctag(float *, 2*video.width*sizeof(float), PU_LEVEL, nullptr);
+      ret = zhstructalloctag(heap, pwindow_t, 1, PU_LEVEL);
+
+      float *buf  = zhmalloctag(heap, float *, 2*video.width*sizeof(float), PU_LEVEL, nullptr);
       ret->top    = buf;
       ret->bottom = buf + video.width;
    }
 
    R_clearPortalWindow(planecontext, bounds, ret, noplanes);
-   
+
    return ret;
 }
 
@@ -300,13 +301,13 @@ void R_CalcRenderBarrier(pwindow_t &window, const sectorbox_t &box)
 }
 
 static pwindow_t *R_newPortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
-                                    const contextbounds_t &bounds,
+                                    ZoneHeap &heap, const contextbounds_t &bounds,
                                     portal_t *p, const line_t *linedef, pwindowtype_e type)
 {
    pwindow_t *&windowhead = portalcontext.windowhead;
    pwindow_t *&windowlast = portalcontext.windowlast;
 
-   pwindow_t *ret = newPortalWindow(planecontext, portalcontext, bounds);
+   pwindow_t *ret = newPortalWindow(planecontext, portalcontext, heap, bounds);
    
    ret->portal = p;
    ret->line   = linedef;
@@ -340,14 +341,14 @@ static pwindow_t *R_newPortalWindow(planecontext_t &planecontext, portalcontext_
 // have one child.
 //
 static void R_createChildWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
-                                const contextbounds_t &bounds, pwindow_t *parent)
+                                ZoneHeap &heap, const contextbounds_t &bounds, pwindow_t *parent)
 {
 #ifdef RANGECHECK
    if(parent->child)
       I_Error("R_createChildWindow: child portal displaced\n");
 #endif
 
-   auto child = newPortalWindow(planecontext, portalcontext, bounds, true);
+   auto child = newPortalWindow(planecontext, portalcontext, heap, bounds, true);
 
    parent->child   = child;
    child->head     = parent->head;
@@ -364,7 +365,7 @@ static void R_createChildWindow(planecontext_t &planecontext, portalcontext_t &p
 // Adds a column to a portal for rendering. A child portal may
 // be created.
 //
-void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext,
+void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, ZoneHeap &heap,
                  const viewpoint_t &viewpoint,const contextbounds_t &bounds,
                  pwindow_t *window, int x, float ytop, float ybottom)
 {
@@ -416,9 +417,9 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext,
       if(ytop > windowbottom || ybottom < windowtop)
       {
          if(!window->child)
-            R_createChildWindow(planecontext, portalcontext, bounds, window);
+            R_createChildWindow(planecontext, portalcontext, heap, bounds, window);
 
-         R_WindowAdd(planecontext, portalcontext, viewpoint, bounds, window->child, x, ytop, ybottom);
+         R_WindowAdd(planecontext, portalcontext, heap, viewpoint, bounds, window->child, x, ytop, ybottom);
          return;
       }
 
@@ -1219,7 +1220,7 @@ static bool R_windowMatchesCurrentView(const viewpoint_t &viewpoint, const pwind
 //
 // Get sector portal window. 
 //
-pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
+pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext, ZoneHeap &heap,
                                    const viewpoint_t &viewpoint, const contextbounds_t &bounds,
                                    surf_e surf, const surface_t &surface)
 {
@@ -1257,7 +1258,7 @@ pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t
 
    // not found, so make it
    pwindow_t *window = R_newPortalWindow(
-      planecontext, portalcontext, bounds, surface.portal, nullptr, pw_surface[surf]
+      planecontext, portalcontext, heap, bounds, surface.portal, nullptr, pw_surface[surf]
    );
    window->planez = surface.height;
    M_ClearBox(window->barrier.fbox);
@@ -1300,7 +1301,7 @@ static void R_updateLinePortalWindowGenerator(pwindow_t *window, const seg_t *se
    R_calcRenderBarrier(window->portal, window->linegen, window->barrier.linegen);
 }
 
-pwindow_t *R_GetLinePortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
+pwindow_t *R_GetLinePortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext, ZoneHeap &heap,
                                  const viewpoint_t &viewpoint, const contextbounds_t &bounds,
                                  portal_t *portal, const seg_t *seg)
 {
@@ -1319,7 +1320,7 @@ pwindow_t *R_GetLinePortalWindow(planecontext_t &planecontext, portalcontext_t &
    }
 
    // not found, so make it
-   rover = R_newPortalWindow(planecontext, portalcontext, bounds, portal, seg->linedef, pw_line);
+   rover = R_newPortalWindow(planecontext, portalcontext, heap, bounds, portal, seg->linedef, pw_line);
    R_updateLinePortalWindowGenerator(rover, seg);
    return rover;
 }

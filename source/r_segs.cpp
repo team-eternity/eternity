@@ -231,7 +231,7 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
 // CALLED: CORE LOOPING ROUTINE.
 //
 static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecontext,
-                            portalcontext_t &portalcontext,
+                            portalcontext_t &portalcontext, ZoneHeap &heap,
                             const R_ColumnFunc colfunc, const viewpoint_t &viewpoint,
                             const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
                             drawseg_t *const ds_p, cb_seg_t &segclip)
@@ -310,7 +310,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
             if(segclip.markflags & SEG_MARKCPORTAL)
             {
                R_WindowAdd(
-                  planecontext, portalcontext, viewpoint, bounds,
+                  planecontext, portalcontext, heap, viewpoint, bounds,
                   segclip.secwindow.ceiling, i, (float)cliptop, (float)line
                );
                ceilingclip[i] = (float)t;
@@ -350,7 +350,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
             if(segclip.markflags & SEG_MARKFPORTAL)
             {
                R_WindowAdd(
-                  planecontext, portalcontext, viewpoint, bounds,
+                  planecontext, portalcontext, heap, viewpoint, bounds,
                   segclip.secwindow.floor, i, (float)line, (float)clipbot
                );
                floorclip[i] = (float)b;
@@ -439,14 +439,14 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                   }
 
                   R_WindowAdd(
-                     planecontext, portalcontext, viewpoint, bounds,
+                     planecontext, portalcontext, heap, viewpoint, bounds,
                      segclip.l_window, i, ceilingclip[i], floorclip[i]
                   );
                }
                else
                {
                   R_WindowAdd(
-                     planecontext, portalcontext, viewpoint, bounds,
+                     planecontext, portalcontext, heap, viewpoint, bounds,
                      segclip.l_window, i, (float)t, (float)b
                   );
                }
@@ -478,7 +478,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                if(column.y2 >= column.y1)
                {
                   R_WindowAdd(
-                     planecontext, portalcontext, viewpoint, bounds,
+                     planecontext, portalcontext, heap, viewpoint, bounds,
                      segclip.t_window, i,
                      static_cast<float>(column.y1), static_cast<float>(column.y2)
                   );
@@ -520,7 +520,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                if(column.y2 >= column.y1)
                {
                   R_WindowAdd(
-                     planecontext, portalcontext, viewpoint, bounds,
+                     planecontext, portalcontext, heap, viewpoint, bounds,
                      segclip.b_window, i,
                      static_cast<float>(column.y1), static_cast<float>(column.y2)
                   );
@@ -558,7 +558,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
             if(segclip.l_window)
             {
                R_WindowAdd(
-                  planecontext, portalcontext, viewpoint, bounds,
+                  planecontext, portalcontext, heap, viewpoint, bounds,
                   segclip.l_window, i, ceilingclip[i], floorclip[i]
                );
                ceilingclip[i] = view.height - 1.0f;
@@ -579,7 +579,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
       else if(segclip.l_window)
       {
          R_WindowAdd(
-            planecontext, portalcontext, viewpoint, bounds,
+            planecontext, portalcontext, heap, viewpoint, bounds,
             segclip.l_window, i, (float)t, (float)b
          );
          ceilingclip[i] = view.height - 1.0f;
@@ -792,7 +792,7 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 //  between start and stop pixels (inclusive).
 //
 void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,
-                      portalcontext_t &portalcontext,
+                      portalcontext_t &portalcontext, ZoneHeap &heap,
                       const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                       const contextbounds_t &bounds,
                       const cb_seg_t &seg, const int start, const int stop)
@@ -1019,7 +1019,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    {
       const R_ColumnFunc colfunc = r_column_engine->DrawColumn;
       R_renderSegLoop(
-         cmapcontext, planecontext, portalcontext, colfunc, viewpoint, cb_viewpoint, bounds, ds_p, segclip
+         cmapcontext, planecontext, portalcontext, heap, colfunc, viewpoint, cb_viewpoint, bounds, ds_p, segclip
       );
    }
    else

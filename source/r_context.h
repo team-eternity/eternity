@@ -32,8 +32,6 @@
 #include "r_lighting.h"
 #include "r_portal.h"
 
-class ZoneHeap;
-
 struct cliprange_t;
 struct drawseg_t;
 struct drawsegs_xrange_t;
@@ -41,6 +39,7 @@ struct maskedrange_t;
 struct poststack_t;
 struct pwindow_t;
 struct vissprite_t;
+class  ZoneHeap;
 
 struct contextbounds_t
 {

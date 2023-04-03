@@ -28,8 +28,6 @@
 
 #define MAX_SPRITE_FRAMES 29          /* Macroized -- killough 1/25/98 */
 
-class ZoneHeap;
-
 struct line_t;
 struct sector_t;
 struct particle_t;
@@ -44,6 +42,7 @@ struct cbviewpoint_t;
 struct bspcontext_t;
 struct cmapcontext_t;
 struct rendercontext_t;
+class  ZoneHeap;
 
 using R_ColumnFunc = void (*)(cb_column_t &);
 

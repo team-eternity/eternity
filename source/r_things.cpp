@@ -214,7 +214,8 @@ static int numParticles;
 VALLOCATION(pstack)
 {
    R_ForEachContext([](rendercontext_t &basecontext) {
-      spritecontext_t &context = basecontext.spritecontext;
+      spritecontext_t &context =  basecontext.spritecontext;
+      ZoneHeap        &heap    = *basecontext.heap;
 
       poststack_t   *&pstack       = context.pstack;
       int            &pstacksize   = context.pstacksize;
@@ -228,13 +229,13 @@ VALLOCATION(pstack)
          {
             if(pstack[i].masked)
             {
-               efree(pstack[i].masked->ceilingclip);
-               efree(pstack[i].masked);
+               zhfree(heap, pstack[i].masked->ceilingclip);
+               zhfree(heap, pstack[i].masked);
             }
          }
 
          // free the pstack
-         efree(pstack);
+         zhfree(heap, pstack);
       }
 
       // free the maskedrange freelist 
@@ -242,8 +243,8 @@ VALLOCATION(pstack)
       while(mr)
       {
          maskedrange_t *next = mr->next;
-         efree(mr->ceilingclip);
-         efree(mr);
+         zhfree(heap, mr->ceilingclip);
+         zhfree(heap, mr);
          mr = next;
       }
 

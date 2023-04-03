@@ -74,14 +74,15 @@
 VALLOCATION(mainhash)
 {
    R_ForEachContext([](rendercontext_t &basecontext) {
-      planecontext_t &context = basecontext.planecontext;
+      planecontext_t &context =  basecontext.planecontext;
+      ZoneHeap       &heap    = *basecontext.heap;
 
       context.freetail = nullptr;
       context.freehead = &context.freetail;
       context.floorplane = context.ceilingplane = nullptr;
 
-      context.mainchains = ecalloctag(
-         visplane_t **, MAINHASHCHAINS, sizeof(visplane_t *), PU_VALLOC, nullptr
+      context.mainchains = zhcalloctag(
+         heap, visplane_t **, MAINHASHCHAINS, sizeof(visplane_t *), PU_VALLOC, nullptr
       );
       context.mainhash = { MAINHASHCHAINS, context.mainchains, nullptr };
    });
@@ -102,7 +103,7 @@ VALLOCATION(openings)
 {
    R_ForEachContext([w, h](rendercontext_t &context)
    {
-      context.planecontext.openings    = ecalloctag(float *, w * h, sizeof(float), PU_VALLOC, nullptr);
+      context.planecontext.openings    = zhcalloctag(*context.heap, float *, w * h, sizeof(float), PU_VALLOC, nullptr);
       context.planecontext.lastopening = context.planecontext.openings;
    });
 }
@@ -142,7 +143,7 @@ VALLOCATION(overlayfclip)
 VALLOCATION(spanstart)
 {
    R_ForEachContext([h](rendercontext_t &context) {
-      context.planecontext.spanstart = ecalloctag(int *, h, sizeof(int), PU_VALLOC, nullptr);
+      context.planecontext.spanstart = zhcalloctag(*context.heap, int *, h, sizeof(int), PU_VALLOC, nullptr);
    });
 }
 
