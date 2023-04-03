@@ -32,6 +32,8 @@
 #include "r_lighting.h"
 #include "r_portal.h"
 
+class ZoneHeap;
+
 struct cliprange_t;
 struct drawseg_t;
 struct drawsegs_xrange_t;
@@ -156,6 +158,10 @@ struct rendercontext_t
    planecontext_t  planecontext;
    portalcontext_t portalcontext;
    spritecontext_t spritecontext;
+
+   // Hi-ho, the mem'ry o!
+   // The heap stands alone.
+   ZoneHeap *heap;
 
    contextbounds_t bounds;
    viewpoint_t     view;

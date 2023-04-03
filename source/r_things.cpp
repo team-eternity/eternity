@@ -1610,7 +1610,7 @@ static void R_SortVisSprites()
 //
 // Sorts only a subset of the vissprites, for portal rendering.
 //
-static void R_sortVisSpriteRange(spritecontext_t &context, int first, int last)
+static void R_sortVisSpriteRange(spritecontext_t &context, ZoneHeap &heap, int first, int last)
 {
    vissprite_t  *&vissprites          = context.vissprites;
    vissprite_t **&vissprite_ptrs      = context.vissprite_ptrs;
@@ -1629,10 +1629,10 @@ static void R_sortVisSpriteRange(spritecontext_t &context, int first, int last)
       
       if(num_vissprite_ptrs < numsprites*2)
       {
-         efree(vissprite_ptrs);  // better than realloc -- no preserving needed
+         zhfree(heap, vissprite_ptrs);  // better than realloc -- no preserving needed
          num_vissprite_ptrs = num_vissprite_alloc * 2;
-         vissprite_ptrs = emalloc(vissprite_t **, 
-                                  num_vissprite_ptrs * sizeof *vissprite_ptrs);
+         vissprite_ptrs = zhmalloc(heap, vissprite_t **,
+                                   num_vissprite_ptrs * sizeof *vissprite_ptrs);
       }
 
       while(--i >= 0)
@@ -1876,6 +1876,8 @@ void R_DrawPostBSP(rendercontext_t &context)
    spritecontext_t &spritecontext = context.spritecontext;
    planecontext_t  &planecontext  = context.planecontext;
 
+   ZoneHeap        &heap          = *context.heap;
+
    drawseg_t *const drawsegs     = bspcontext.drawsegs;
    const unsigned   maxdrawsegs  = bspcontext.maxdrawsegs;
    poststack_t    *&pstack       = spritecontext.pstack;
@@ -1903,7 +1905,7 @@ void R_DrawPostBSP(rendercontext_t &context)
             unsigned int       &drawsegs_xrange_size  = spritecontext.drawsegs_xrange_size;
             int                &drawsegs_xrange_count = spritecontext.drawsegs_xrange_count;
 
-            R_sortVisSpriteRange(spritecontext, firstsprite, lastsprite);
+            R_sortVisSpriteRange(spritecontext, *context.heap, firstsprite, lastsprite);
 
             // haleyjd 04/25/10: 
             // e6y
@@ -1917,8 +1919,8 @@ void R_DrawPostBSP(rendercontext_t &context)
                {
                   // haleyjd: fix reallocation to track 2x size
                   drawsegs_xrange_size =  2 * (maxdrawsegs+1);
-                  drawsegs_xrange = 
-                     erealloc(drawsegs_xrange_t *, drawsegs_xrange, 
+                  drawsegs_xrange =
+                     zhrealloc(heap, drawsegs_xrange_t *, drawsegs_xrange,
                               drawsegs_xrange_size * sizeof(*drawsegs_xrange));
                }
                for(ds = drawsegs + lastds; ds-- > drawsegs + firstds; )

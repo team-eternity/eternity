@@ -64,20 +64,15 @@ rendercontext_t &R_GetContext(int index)
 }
 
 //
-// Frees up the dynamically allocated members of a context that aren't tagged PU_VALLOC
-// Also tidies up threads of that context's data
+// Frees up the context's heap, which frees /all/ data tied to the context
 //
 void R_freeContext(rendercontext_t &context)
 {
-   // THREAD_FIXME: Verify this catches everything
-   if(context.spritecontext.drawsegs_xrange)
-      efree(context.spritecontext.drawsegs_xrange);
-   if(context.spritecontext.vissprites)
-      efree(context.spritecontext.vissprites);
-   if(context.spritecontext.vissprite_ptrs)
-      efree(context.spritecontext.vissprite_ptrs);
-   if(context.spritecontext.sectorvisited)
-      efree(context.spritecontext.sectorvisited);
+   if(context.heap)
+   {
+      delete context.heap;
+      context.heap = nullptr;
+   }
 }
 
 //
@@ -152,12 +147,17 @@ void R_InitContexts(const int width)
    r_globalcontext.bounds.fendcolumn   = float(width);
    r_globalcontext.bounds.numcolumns   = width;
 
+   r_globalcontext.heap = new ZoneHeap();
+
    if(r_numcontexts == 1)
    {
       r_globalcontext.portalcontext.portalrender = { false, MAX_SCREENWIDTH, 0 };
 
       if(numsectors && gamestate == GS_LEVEL)
-         r_globalcontext.spritecontext.sectorvisited = ecalloctag(bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
+      {
+         r_globalcontext.spritecontext.sectorvisited =
+            zhcalloctag(*r_globalcontext.heap, bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
+      }
 
       return;
    }
@@ -178,10 +178,12 @@ void R_InitContexts(const int width)
       context.bounds.endcolumn    = int(roundf(context.bounds.fendcolumn));
       context.bounds.numcolumns   = context.bounds.endcolumn - context.bounds.startcolumn;
 
+      context.heap = new ZoneHeap();
+
       context.portalcontext.portalrender = { false, MAX_SCREENWIDTH, 0 };
 
       if(numsectors && gamestate == GS_LEVEL)
-         context.spritecontext.sectorvisited = ecalloctag(bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
+         context.spritecontext.sectorvisited = zhcalloctag(*context.heap, bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
 
       // Wait until this context's thread is done running before creating a new one
       while(renderdatas[currentcontext].running.load())

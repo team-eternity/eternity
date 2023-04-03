@@ -104,6 +104,39 @@ void *Z_SysCalloc(size_t n1, size_t n2);
 void *Z_SysRealloc(void *ptr, size_t size);
 void  Z_SysFree(void *p);
 
+//
+// Context-specific Heap alloc Macros
+//
+#define zhmalloc(zoneheap, type, n) \
+   static_cast<type>((zoneheap).malloc(n, PU_STATIC, 0, __FILE__, __LINE__))
+
+#define zhmalloctag(zoneheap, type, n1, tag, user) \
+   static_cast<type>((zoneheap).malloc(n1, tag, user, __FILE__, __LINE__))
+
+#define zhcalloc(zoneheap, type, n1, n2) \
+   static_cast<type>((zoneheap).calloc(n1, n2, PU_STATIC, 0, __FILE__, __LINE__))
+
+#define zhcalloctag(zoneheap, type, n1, n2, tag, user) \
+   static_cast<type>((zoneheap).calloc(n1, n2, tag, user, __FILE__, __LINE__))
+
+#define zhrealloc(zoneheap, type, p, n) \
+   static_cast<type>((zoneheap).realloc(p, n, PU_STATIC, 0, __FILE__, __LINE__))
+
+#define zhrealloctag(zoneheap, type, p, n, tag, user) \
+   static_cast<type>((zoneheap).realloc(p, n, tag, user, __FILE__, __LINE__))
+
+#define zhstructalloc(zoneheap, type, n) \
+   static_cast<type *>((zoneheap).calloc(n, sizeof(type), PU_STATIC, 0, __FILE__, __LINE__))
+
+#define zhstructalloctag(zoneheap, type, n, tag) \
+   static_cast<type *>((zoneheap).calloc(n, sizeof(type), tag, 0, __FILE__, __LINE__))
+
+#define zhstrdup(zoneheap, s) (zoneheap).strdup(s, PU_STATIC, 0, __FILE__, __LINE__)
+
+#define zhfree(zoneheap, p)   (zoneheap).free(p, __FILE__, __LINE__)
+
+// Global Heap alloc Macros
+
 #define Z_Free(a)          z_globalheap.free       (a,      __FILE__,__LINE__)
 #define Z_FreeTags(a,b)    z_globalheap.freeTags   (a,b,    __FILE__,__LINE__)
 #define Z_ChangeTag(a,b)   z_globalheap.changeTag  (a,b,    __FILE__,__LINE__)
@@ -118,33 +151,16 @@ void  Z_SysFree(void *p);
 #define Z_CheckHeap()      z_globalheap.checkHeap  (        __FILE__,__LINE__)
 #define Z_CheckTag(a)      z_globalheap.checkTag   (a,      __FILE__,__LINE__)
 
-#define emalloc(type, n) \
-   static_cast<type>(z_globalheap.malloc(n, PU_STATIC, 0, __FILE__, __LINE__))
-
-#define emalloctag(type, n1, tag, user) \
-   static_cast<type>(z_globalheap.malloc(n1, tag, user, __FILE__, __LINE__))
-
-#define ecalloc(type, n1, n2) \
-   static_cast<type>(z_globalheap.calloc(n1, n2, PU_STATIC, 0, __FILE__, __LINE__))
-
-#define ecalloctag(type, n1, n2, tag, user) \
-   static_cast<type>(z_globalheap.calloc(n1, n2, tag, user, __FILE__, __LINE__))
-
-#define erealloc(type, p, n) \
-   static_cast<type>(z_globalheap.realloc(p, n, PU_STATIC, 0, __FILE__, __LINE__))
-
-#define erealloctag(type, p, n, tag, user) \
-   static_cast<type>(z_globalheap.realloc(p, n, tag, user, __FILE__, __LINE__))
-
-#define estructalloc(type, n) \
-   static_cast<type *>(z_globalheap.calloc(n, sizeof(type), PU_STATIC, 0, __FILE__, __LINE__))
-
-#define estructalloctag(type, n, tag) \
-   static_cast<type *>(z_globalheap.calloc(n, sizeof(type), tag, 0, __FILE__, __LINE__))
-
-#define estrdup(s) z_globalheap.strdup(s, PU_STATIC, 0, __FILE__, __LINE__)
-
-#define efree(p)   z_globalheap.free(p, __FILE__, __LINE__)
+#define emalloc(type, n)                    zhmalloc(z_globalheap, type, n)
+#define emalloctag(type, n1, tag, user)     zhmalloctag(z_globalheap, type, n1, tag, user)
+#define ecalloc(type, n1, n2)               zhcalloc(z_globalheap, type, n1, n2)
+#define ecalloctag(type, n1, n2, tag, user) zhcalloctag(z_globalheap, type, n1, n2, tag, user)
+#define erealloc(type, p, n)                zhrealloc(z_globalheap, type, p, n)
+#define erealloctag(type, p, n, tag, user)  zhrealloctag(z_globalheap, type, p, n, tag, user)
+#define estructalloc(type, n)               zhstructalloc(z_globalheap, type, n)
+#define estructalloctag(type, n, tag)       zhstructalloctag(z_globalheap, type, n, tag)
+#define estrdup(s)                          zhstrdup(z_globalheap, s)
+#define efree(p)                            zhfree(z_globalheap, p)
 
 //
 // Globally useful macros
@@ -210,7 +226,11 @@ public:
 //
 // Single-consumer zone heap (thread-local).
 //
-class ZoneHeap final : public ZoneHeapBase { };
+class ZoneHeap final : public ZoneHeapBase
+{
+public:
+   ~ZoneHeap() { freeTags(PU_STATIC, PU_CACHE, __FILE__, __LINE__); }; // THREAD_FIXME: Check this is correct
+};
 
 //
 // Multiple-consumer zone heap (shared).
