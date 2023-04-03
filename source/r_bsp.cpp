@@ -3048,7 +3048,7 @@ static void R_subsector(rendercontext_t &context, const int num)
    // like passing it as an argument.
 
    R_AddSprites(
-      context.cmapcontext, spritecontext, viewpoint, cb_viewpoint, bounds,
+      context.cmapcontext, spritecontext, *context.heap, viewpoint, cb_viewpoint, bounds,
       portalrender, sub->sector, (floorlightlevel + ceilinglightlevel) / 2
    );
 

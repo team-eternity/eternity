@@ -916,7 +916,7 @@ static void R_renderPrimitivePortal(rendercontext_t &context, pwindow_t *window)
       R_produceHorizonPlanes(context, window, sector);
 
    if(window->head == window && window->poverlay)
-      R_PushPost(context.bspcontext, spritecontext, bounds, false, window);
+      R_PushPost(context.bspcontext, spritecontext, *context.heap, bounds, false, window);
 
    R_restoreLastView(last, viewpoint, cb_viewpoint);
 
@@ -1144,7 +1144,7 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
    R_RenderBSPNode(context, numnodes - 1);
 
    // Only push the overlay if this is the head window
-   R_PushPost(bspcontext, spritecontext, bounds, true, window->head == window ? window : nullptr);
+   R_PushPost(bspcontext, spritecontext, *context.heap, bounds, true, window->head == window ? window : nullptr);
 
    planecontext.floorclip   = floorcliparray;
    planecontext.ceilingclip = ceilingcliparray;

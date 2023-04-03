@@ -273,7 +273,7 @@ VALLOCATION(clipbot)
 // Forward declarations:
 static void R_drawParticle(const contextbounds_t &bounds, vissprite_t *vis,
                            const float *const mfloorclip, const float *const mceilingclip);
-static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext,
+static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
                               const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                               const contextbounds_t &bounds, particle_t *particle);
 
@@ -541,7 +541,7 @@ void R_ClearSprites(spritecontext_t &context)
 //
 // Pushes a new element on the post-BSP stack.
 //
-void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
+void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
                 const contextbounds_t &bounds, bool pushmasked, pwindow_t *window)
 {
    drawseg_t     *&drawsegs     = bspcontext.drawsegs;
@@ -556,7 +556,7 @@ void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
    if(pstacksize == pstackmax)
    {
       pstackmax += 10;
-      pstack = erealloc(poststack_t *, pstack, sizeof(poststack_t) * pstackmax);
+      pstack = zhrealloc(heap, poststack_t *, pstack, sizeof(poststack_t) * pstackmax);
    }
    
    post = pstack + pstacksize;
@@ -585,9 +585,9 @@ void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
       }
       else
       {
-         post->masked = estructalloc(maskedrange_t, 1);
+         post->masked = zhstructalloc(heap, maskedrange_t, 1);
 
-         float *buf = emalloc(float *, 2 * bounds.numcolumns * sizeof(float));
+         float *buf = zhmalloc(heap, float *, 2 * bounds.numcolumns * sizeof(float));
          post->masked->ceilingclip = buf;
          post->masked->floorclip   = buf + bounds.numcolumns;
       }
@@ -621,7 +621,7 @@ void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
 //
 // Creates a new vissprite if needed, or recycles an unused one.
 //
-static vissprite_t *R_newVisSprite(spritecontext_t &context)
+static vissprite_t *R_newVisSprite(spritecontext_t &context, ZoneHeap &heap)
 {
    vissprite_t *&vissprites          = context.vissprites;
    size_t       &num_vissprite       = context.num_vissprite;
@@ -630,7 +630,7 @@ static vissprite_t *R_newVisSprite(spritecontext_t &context)
    if(num_vissprite >= num_vissprite_alloc)             // killough
    {
       num_vissprite_alloc = num_vissprite_alloc ? num_vissprite_alloc*2 : 128;
-      vissprites = erealloc(vissprite_t *, vissprites, num_vissprite_alloc*sizeof(*vissprites));
+      vissprites = zhrealloc(heap, vissprite_t *, vissprites, num_vissprite_alloc*sizeof(*vissprites));
    }
 
    return vissprites + num_vissprite++;
@@ -942,6 +942,7 @@ static void R_interpolatePSpritePosition(const pspdef_t &pspr, v2fixed_t &pos)
 //
 static void R_projectSprite(cmapcontext_t &cmapcontext,
                             spritecontext_t &spritecontext,
+                            ZoneHeap &heap,
                             const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                             const contextbounds_t &bounds,
                             const portalrender_t &portalrender,
@@ -1162,7 +1163,7 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
    }
 
    // store information in a vissprite
-   vis = R_newVisSprite(spritecontext);
+   vis = R_newVisSprite(spritecontext, heap);
 
    // killough 3/27/98: save sector for special clipping later
    vis->heightsec = heightsec;
@@ -1258,6 +1259,7 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
 //
 void R_AddSprites(cmapcontext_t &cmapcontext,
                   spritecontext_t &spritecontext,
+                  ZoneHeap &heap,
                   const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                   const contextbounds_t &bounds,
                   const portalrender_t &portalrender,
@@ -1292,7 +1294,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
    for(thing = sec->thinglist; thing; thing = thing->snext)
    {
       R_projectSprite(
-         cmapcontext, spritecontext, viewpoint,
+         cmapcontext, spritecontext, heap, viewpoint,
          cb_viewpoint, bounds, portalrender, thing, spritelights
       );
    }
@@ -1303,7 +1305,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
       if(!((*item)->mobj->intflags & MIF_HIDDENBYQUAKE))
       {
          R_projectSprite(
-            cmapcontext, spritecontext, viewpoint, cb_viewpoint, bounds, portalrender,
+            cmapcontext, spritecontext, heap, viewpoint, cb_viewpoint, bounds, portalrender,
             (*item)->mobj, spritelights, &(*item)->delta, (*item)->portalline
          );
       }
@@ -1316,7 +1318,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
       DLListItem<particle_t> *link;
 
       for(link = sec->ptcllist; link; link = link->dllNext)
-         R_projectParticle(cmapcontext, spritecontext, viewpoint, cb_viewpoint, bounds, *link);
+         R_projectParticle(cmapcontext, spritecontext, heap, viewpoint, cb_viewpoint, bounds, *link);
    }
 }
 
@@ -1988,7 +1990,6 @@ void R_DrawPostBSP(rendercontext_t &context)
 ///////////////////////////////////////////////////////////////////////////////
 //
 // ioanch 20160109: sprite projection through sector portals
-// THREAD_FIXME: This whole system needs to be made multithread-friendly somehow
 //
 
 // recycle bin of spriteproj objects
@@ -2317,7 +2318,7 @@ void R_ClearParticles()
 //
 // R_projectParticle
 //
-static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext,
+static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
                               const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                               const contextbounds_t &bounds, particle_t *particle)
 {
@@ -2407,7 +2408,7 @@ static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &sprit
    }
 
    // store information in a vissprite
-   vis = R_newVisSprite(spritecontext);
+   vis = R_newVisSprite(spritecontext, heap);
    vis->heightsec = heightsec;
    vis->gx = particle->x;
    vis->gy = particle->y;

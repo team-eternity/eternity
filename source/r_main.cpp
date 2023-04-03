@@ -1277,7 +1277,7 @@ void R_RenderViewContext(rendercontext_t &context)
    R_SetMaskedSilhouette(context.bounds, nullptr, nullptr);
 
    // Push the first element on the Post-BSP stack
-   R_PushPost(context.bspcontext, context.spritecontext, context.bounds, true, nullptr);
+   R_PushPost(context.bspcontext, context.spritecontext, *context.heap, context.bounds, true, nullptr);
 
    // SoM 12/9/03: render the portals.
    R_RenderPortals(context);
