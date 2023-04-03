@@ -424,9 +424,6 @@ void ZoneHeapBase::freeTags(int lowtag, int hightag, const char *file, int line)
 {
    memblock_t *block;
 
-   // haleyjd 03/30/2011: delete ZoneObjects of the same tags as well
-   ZoneObject::FreeTags(lowtag, hightag);
-
    if(lowtag <= PU_FREE)
       lowtag = PU_FREE+1;
 
@@ -1019,6 +1016,11 @@ void ZoneHeapThreadSafe::free(void *ptr, const char *file, int line)
 void ZoneHeapThreadSafe::freeTags(int lowtag, int hightag, const char *file, int line)
 {
    std::lock_guard lock(m_mutex->mutex);
+
+   // haleyjd 03/30/2011: delete ZoneObjects of the same tags as well
+   // MaxW: 2023/03/31: But only if we're freeing tags from the global zone heap!
+   ZoneObject::FreeTags(lowtag, hightag);
+
    ZoneHeapBase::freeTags(lowtag, hightag, file, line);
 }
 
