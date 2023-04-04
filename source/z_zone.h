@@ -230,6 +230,37 @@ class ZoneHeap final : public ZoneHeapBase
 {
 public:
    ~ZoneHeap() { freeTags(PU_STATIC, PU_CACHE, __FILE__, __LINE__); }; // THREAD_FIXME: Check this is correct
+
+   // TODO: Re-enable when C++20 is a thing and kill the zh macros
+   // THREAD_FIXME: Guard against any and all PU_STATIC (and maybe PU_PERMANENT) allocations?
+   //template <typename T>
+   //inline T *malloc(const size_t size, const int tag, void **user = nullptr,
+   //   const std::source_location loc = std::source_location::current())
+   //{
+   //   return static_cast<T *>(ZoneHeapBase::malloc(size, tag, user, loc.file_name(), loc.line()));
+   //}
+   //template <typename T>
+   //inline T *calloc(size_t n, size_t n2, int tag, void **user = nullptr,
+   //   const std::source_location loc = std::source_location::current())
+   //{
+   //   return static_cast<T *>(ZoneHeapBase::calloc(n, n2, tag, user, loc.file_name(), loc.line()));
+   //}
+   //template <typename T>
+   //inline T *realloc(void *p, size_t n, int tag, void **user = nullptr,
+   //   const std::source_location loc = std::source_location::current())
+   //{
+   //   return static_cast<T *>(ZoneHeapBase::realloc(p, n, tag, user, loc.file_name(), loc.line()));
+   //}
+   //template <typename T>
+   //inline T *allocAuto(size_t n, const std::source_location loc = std::source_location::current())
+   //{
+   //   return static_cast<T *>(ZoneHeapBase::allocAuto(n, loc.file_name(), loc.line()));
+   //}
+   //template <typename T>
+   //inline T *reallocAuto(void *ptr, size_t n, const std::source_location loc = std::source_location::current())
+   //{
+   //   return static_cast<T *>(ZoneHeapBase::reallocAuto(ptr, n, ptr, loc.file_name(), loc.line()));
+   //}
 };
 
 //
