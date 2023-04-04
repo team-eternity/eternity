@@ -614,7 +614,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
 // SoM: This function is needed in multiple places now to fix some cases
 // of sprites showing up behind walls in some portal areas.
 //
-static void R_checkDSAlloc(bspcontext_t &context)
+static void R_checkDSAlloc(bspcontext_t &context, ZoneHeap &heap)
 {
    drawseg_t   *&drawsegs    = context.drawsegs;
    unsigned int &maxdrawsegs = context.maxdrawsegs;
@@ -624,7 +624,7 @@ static void R_checkDSAlloc(bspcontext_t &context)
    if(ds_p == drawsegs + maxdrawsegs)
    {
       unsigned int newmax = maxdrawsegs ? maxdrawsegs * 2 : 128;
-      drawsegs    = erealloc(drawseg_t *, drawsegs, sizeof(drawseg_t) * newmax);
+      drawsegs    = zhrealloc(heap, drawseg_t *, drawsegs, sizeof(drawseg_t) * newmax);
       ds_p        = drawsegs + maxdrawsegs;
       maxdrawsegs = newmax;
    }
@@ -646,7 +646,7 @@ static void R_closeDSP(drawseg_t *const ds_p)
 
 #define NEXTDSP(model, newx1) \
    ds_p++; \
-   R_checkDSAlloc(bspcontext); \
+   R_checkDSAlloc(bspcontext, heap); \
    *ds_p = model; \
    ds_p->x1 = newx1; \
    ds_p->dist1 += segclip.diststep * (newx1 - model.x1)
@@ -661,10 +661,8 @@ static void R_closeDSP(drawseg_t *const ds_p)
 // new closed regions are then added to the solidsegs array to speed up 
 // rejection of new segs trying to render to closed areas of clipping space.
 //
-static void R_detectClosedColumns(bspcontext_t &bspcontext,
-                                  planecontext_t &planecontext,
-                                  [[maybe_unused]] const contextbounds_t &bounds,
-                                  cb_seg_t &segclip)
+static void R_detectClosedColumns(bspcontext_t &bspcontext, planecontext_t &planecontext, ZoneHeap &heap,
+                                  [[maybe_unused]] const contextbounds_t &bounds, cb_seg_t &segclip)
 {
    drawseg_t      *&ds_p        = bspcontext.ds_p;
    float     *const floorclip   = planecontext.floorclip;
@@ -930,7 +928,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
 
    // drawsegs need to be taken care of here
-   R_checkDSAlloc(bspcontext);
+   R_checkDSAlloc(bspcontext, heap);
 
    ds_p->x1       = start;
    ds_p->x2       = stop;
@@ -1081,7 +1079,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    // portal window, which would otherwise be ignored. Necessary for correct
    // sprite rendering.
    if(!segclip.clipsolid && (ds_p->silhouette || portalrender.active))
-      R_detectClosedColumns(bspcontext, planecontext, bounds, segclip);
+      R_detectClosedColumns(bspcontext, planecontext, heap, bounds, segclip);
 
    ++ds_p;
 }

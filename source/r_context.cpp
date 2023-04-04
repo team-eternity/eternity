@@ -196,7 +196,8 @@ void R_RefreshContexts()
 {
    if(r_numcontexts == 1)
    {
-      r_globalcontext.spritecontext.sectorvisited = ecalloctag(bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
+      r_globalcontext.spritecontext.sectorvisited =
+         zhcalloctag(*r_globalcontext.heap, bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
       return;
    }
 
@@ -204,7 +205,7 @@ void R_RefreshContexts()
    {
       rendercontext_t &context = renderdatas[currentcontext].context;
 
-      context.spritecontext.sectorvisited = ecalloctag(bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
+      context.spritecontext.sectorvisited = zhcalloctag(*context.heap, bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
    }
 }
 
