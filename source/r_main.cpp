@@ -1262,7 +1262,6 @@ void R_RenderViewContext(rendercontext_t &context)
    R_ClearClipSegs(context.bspcontext);
    R_ClearDrawSegs(context.bspcontext);
    R_ClearPlanes(context.planecontext, context.bounds);
-   R_ClearPortals(context.planecontext.freehead);
    R_ClearSprites(context.spritecontext);
 
    // check for new console commands.
@@ -1297,8 +1296,7 @@ void R_RenderViewContext(rendercontext_t &context)
 
 static int render_ticker = 0;
 
-// haleyjd: temporary debug
-extern void R_UntaintPortals();
+extern void R_UntaintAndClearPortals();
 
 //
 // Primary renderer entry point.
@@ -1310,8 +1308,8 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 
    R_SetupFrame(player, camerapoint);
 
-   // haleyjd: untaint portals
-   R_UntaintPortals();
+   // Untaint and clear portals
+   R_UntaintAndClearPortals();
 
    if(autodetect_hom)
       R_HOMdrawer();

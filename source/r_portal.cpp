@@ -1160,7 +1160,7 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
 // R_UntaintPortals
 //
 // haleyjd: temporary debug (maybe)
-// Clears the tainted count for all portals to zero.
+// Clears the tainted count for all portals to zero and clears them.
 // This allows the renderer to keep track of how many times a portal has been
 // rendered during a frame. If that count exceeds a given limit (which is
 // currently somewhat arbitrarily set to the screen width), the renderer will
@@ -1170,7 +1170,7 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
 // anchored portals in two-way situations. Only anchored portals and skyboxes
 // are susceptible to this problem.
 //
-void R_UntaintPortals()
+void R_UntaintAndClearPortals()
 {
    portal_t *r;
 
@@ -1178,6 +1178,10 @@ void R_UntaintPortals()
    {
       r->tainted = 0;
    }
+
+   R_ForEachContext([](rendercontext_t &context) {
+      R_ClearPortals(context.planecontext.freehead);
+   });
 }
 
 static void R_SetPortalFunction(pwindow_t *window)
