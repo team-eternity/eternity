@@ -153,8 +153,7 @@ VALLOCATION(spanstart)
 
 VALLOCATION(slopespan)
 {
-   size_t size = sizeof(lighttable_t *) * w;
-   cb_slopespan_t::colormap = ecalloctag(lighttable_t **, 1, size, PU_VALLOC, nullptr);
+   cb_slopespan_t::colormap = ecalloctag(lighttable_t **, w, sizeof(lighttable_t *), PU_VALLOC, nullptr);
 }
 
 float slopevis; // SoM: used in slope lighting
@@ -259,10 +258,11 @@ static void R_mapPlane(const R_FlatFunc flatfunc, const R_SlopeFunc, cb_span_t &
 //
 // R_slopeLights
 //
-static void R_slopeLights(const cb_plane_t &plane, int len, double startcmap, double endcmap)
+static void R_slopeLights(const cb_plane_t &plane, int x1, int x2, double startcmap, double endcmap)
 {
    int i;
    fixed_t map, map2, step;
+   const int len = x2 - x1 + 1;
 
 #ifdef RANGECHECK
    if(len > video.width)
@@ -272,7 +272,7 @@ static void R_slopeLights(const cb_plane_t &plane, int len, double startcmap, do
    if(plane.fixedcolormap)
    {
       for(i = 0; i < len; i++)
-         cb_slopespan_t::colormap[i] = plane.fixedcolormap;
+         cb_slopespan_t::colormap[i + x1] = plane.fixedcolormap;
       return;
    }
 
@@ -291,11 +291,11 @@ static void R_slopeLights(const cb_plane_t &plane, int len, double startcmap, do
       index -= (extralight * LIGHTBRIGHT);
 
       if(index < 0)
-         cb_slopespan_t::colormap[i] = (byte *)(plane.colormap);
+         cb_slopespan_t::colormap[i + x1] = (byte *)(plane.colormap);
       else if(index >= NUMCOLORMAPS)
-         cb_slopespan_t::colormap[i] = (byte *)(plane.colormap + ((NUMCOLORMAPS - 1) * 256));
+         cb_slopespan_t::colormap[i + x1] = (byte *)(plane.colormap + ((NUMCOLORMAPS - 1) * 256));
       else
-         cb_slopespan_t::colormap[i] = (byte *)(plane.colormap + (index * 256));
+         cb_slopespan_t::colormap[i + x1] = (byte *)(plane.colormap + (index * 256));
 
       map += step;
    }
@@ -341,7 +341,7 @@ static void R_mapSlope(const R_FlatFunc, const R_SlopeFunc slopefunc,
    else
       map2 = map1;
 
-   R_slopeLights(plane, x2 - x1 + 1, (256.0 - map1), (256.0 - map2));
+   R_slopeLights(plane, x1, x2, (256.0 - map1), (256.0 - map2));
 
    slopefunc(slopespan, span);
 }

@@ -664,7 +664,7 @@ static inline void R_drawSlope_8(const cb_slopespan_t &slopespan, const cb_span_
 
    byte *colormap;
    int count;
-   fixed_t mapindex = 0;
+   fixed_t mapindex = slopespan.x1;
 
    if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
       return;
@@ -743,7 +743,7 @@ static inline void R_drawSlope_8_GEN(const cb_slopespan_t &slopespan, const cb_s
 
    byte *colormap;
    int count;
-   fixed_t mapindex = 0;
+   fixed_t mapindex = slopespan.x1;
 
    if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
       return;
