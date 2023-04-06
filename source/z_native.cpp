@@ -42,6 +42,7 @@
 #include "i_system.h"
 #include "doomstat.h"
 #include "m_argv.h"
+#include "r_context.h"
 
 //=============================================================================
 //
@@ -1022,6 +1023,11 @@ void ZoneHeapThreadSafe::freeTags(int lowtag, int hightag, const char *file, int
    ZoneObject::FreeTags(lowtag, hightag);
 
    ZoneHeapBase::freeTags(lowtag, hightag, file, line);
+
+   // Free up the same tags in all the context-specific heaps, too
+   R_ForEachContext([lowtag, hightag, file, line](rendercontext_t &context) {
+      context.heap->freeTags(lowtag, hightag, file, line);
+   });
 }
 
 void ZoneHeapThreadSafe::changeTag(void *ptr, int tag, const char *file, int line)
