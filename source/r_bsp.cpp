@@ -1347,7 +1347,7 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
             planecontext, portalcontext, heap, viewpoint, bounds, surf_ceil, seg.frontsec->srf.ceiling
          );
          R_updateWindowSectorBarrier(portalcontext, visitid, seg, surf_ceil);
-         R_MovePortalOverlayToWindow(cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_ceil);
+         R_MovePortalOverlayToWindow(cmapcontext, planecontext, heap, viewpoint, cb_viewpoint, bounds, seg, surf_ceil);
       }
       else if(!heightchange && seg.frontsec->srf.ceiling.portal == seg.backsec->srf.ceiling.portal)
       {
@@ -1355,7 +1355,7 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
             planecontext, portalcontext, heap, viewpoint, bounds, surf_ceil, seg.frontsec->srf.ceiling
          );
          R_updateWindowSectorBarrier(portalcontext, visitid, seg, surf_ceil);
-         R_MovePortalOverlayToWindow(cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_ceil);
+         R_MovePortalOverlayToWindow(cmapcontext, planecontext, heap, viewpoint, cb_viewpoint, bounds, seg, surf_ceil);
          seg.secwindow.ceiling = nullptr;
       }
       else
@@ -1433,7 +1433,7 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
             planecontext, portalcontext, heap, viewpoint, bounds, surf_floor, seg.frontsec->srf.floor
          );
          R_updateWindowSectorBarrier(portalcontext, visitid, seg, surf_floor);
-         R_MovePortalOverlayToWindow(cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_floor);
+         R_MovePortalOverlayToWindow(cmapcontext, planecontext, heap, viewpoint, cb_viewpoint, bounds, seg, surf_floor);
       }
       else if(!heightchange && seg.frontsec->srf.floor.portal == seg.backsec->srf.floor.portal)
       {
@@ -1441,7 +1441,7 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
             planecontext, portalcontext, heap, viewpoint, bounds, surf_floor, seg.frontsec->srf.floor
          );
          R_updateWindowSectorBarrier(portalcontext, visitid, seg, surf_floor);
-         R_MovePortalOverlayToWindow(cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_floor);
+         R_MovePortalOverlayToWindow(cmapcontext, planecontext, heap, viewpoint, cb_viewpoint, bounds, seg, surf_floor);
          seg.secwindow.floor = nullptr;
       }
       else
@@ -1669,7 +1669,7 @@ static void R_2S_Normal(cmapcontext_t &cmapcontext, planecontext_t &planecontext
             planecontext, portalcontext, heap, viewpoint, bounds, surf_ceil, seg.frontsec->srf.ceiling
          );
          R_updateWindowSectorBarrier(portalcontext, visitid, seg, surf_ceil);
-         R_MovePortalOverlayToWindow(cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_ceil);
+         R_MovePortalOverlayToWindow(cmapcontext, planecontext, heap, viewpoint, cb_viewpoint, bounds, seg, surf_ceil);
       }
       else if(seg.frontsec->srf.ceiling.portal == seg.backsec->srf.ceiling.portal &&
               seg.frontsec->srf.ceiling.height == seg.backsec->srf.ceiling.height)
@@ -1679,7 +1679,7 @@ static void R_2S_Normal(cmapcontext_t &cmapcontext, planecontext_t &planecontext
             planecontext, portalcontext, heap, viewpoint, bounds, surf_ceil, seg.frontsec->srf.ceiling
          );
          R_updateWindowSectorBarrier(portalcontext, visitid, seg, surf_ceil);
-         R_MovePortalOverlayToWindow(cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_ceil);
+         R_MovePortalOverlayToWindow(cmapcontext, planecontext, heap, viewpoint, cb_viewpoint, bounds, seg, surf_ceil);
          seg.secwindow.ceiling = nullptr;
       }
       else
@@ -1755,7 +1755,7 @@ static void R_2S_Normal(cmapcontext_t &cmapcontext, planecontext_t &planecontext
             planecontext, portalcontext, heap, viewpoint, bounds, surf_floor, seg.frontsec->srf.floor
          );
          R_updateWindowSectorBarrier(portalcontext, visitid, seg, surf_floor);
-         R_MovePortalOverlayToWindow(cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_floor);
+         R_MovePortalOverlayToWindow(cmapcontext, planecontext, heap, viewpoint, cb_viewpoint, bounds, seg, surf_floor);
       }
       else if(seg.frontsec->srf.floor.height == seg.backsec->srf.floor.height &&
               seg.frontsec->srf.floor.portal == seg.backsec->srf.floor.portal)
@@ -1765,7 +1765,7 @@ static void R_2S_Normal(cmapcontext_t &cmapcontext, planecontext_t &planecontext
             planecontext, portalcontext, heap, viewpoint, bounds, surf_floor, seg.frontsec->srf.floor
          );
          R_updateWindowSectorBarrier(portalcontext, visitid, seg, surf_floor);
-         R_MovePortalOverlayToWindow(cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_floor);
+         R_MovePortalOverlayToWindow(cmapcontext, planecontext, heap, viewpoint, cb_viewpoint, bounds, seg, surf_floor);
          seg.secwindow.floor = nullptr;
       }
       else
@@ -1948,7 +1948,7 @@ static void R_1SidedLine(cmapcontext_t &cmapcontext, planecontext_t &planecontex
          planecontext, portalcontext, heap, viewpoint, bounds, surf_ceil, seg.frontsec->srf.ceiling
       );
       R_updateWindowSectorBarrier(portalcontext, visitid, seg, surf_ceil);
-      R_MovePortalOverlayToWindow(cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_ceil);
+      R_MovePortalOverlayToWindow(cmapcontext, planecontext, heap, viewpoint, cb_viewpoint, bounds, seg, surf_ceil);
    }
 
    if(seg.frontsec->srf.floor.portal && (seg.frontsec->srf.floor.portal->type < R_TWOWAY ||
@@ -1959,7 +1959,7 @@ static void R_1SidedLine(cmapcontext_t &cmapcontext, planecontext_t &planecontex
          planecontext, portalcontext, heap, viewpoint, bounds, surf_floor, seg.frontsec->srf.floor
       );
       R_updateWindowSectorBarrier(portalcontext, visitid, seg, surf_floor);
-      R_MovePortalOverlayToWindow(cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_floor);
+      R_MovePortalOverlayToWindow(cmapcontext, planecontext, heap, viewpoint, cb_viewpoint, bounds, seg, surf_floor);
    }
 
    if(seg.plane.ceiling != nullptr)
@@ -2906,6 +2906,7 @@ static void R_subsector(rendercontext_t &context, const int num)
       seg.plane.floor = visible && seg.frontsec->srf.floor.pflags & PS_OVERLAY ?
         R_FindPlane(cmapcontext,
                     planecontext,
+                    heap,
                     viewpoint,
                     cb_viewpoint,
                     bounds,
@@ -2928,6 +2929,7 @@ static void R_subsector(rendercontext_t &context, const int num)
           sectors[seg.frontsec->heightsec].intflags & SIF_SKY)) ?
         R_FindPlane(cmapcontext,
                     planecontext,
+                    heap,
                     viewpoint,
                     cb_viewpoint,
                     bounds,
@@ -2964,6 +2966,7 @@ static void R_subsector(rendercontext_t &context, const int num)
       seg.plane.ceiling = visible && seg.frontsec->srf.ceiling.pflags & PS_OVERLAY ?
         R_FindPlane(cmapcontext,
                     planecontext,
+                    heap,
                     viewpoint,
                     cb_viewpoint,
                     bounds,
@@ -2986,6 +2989,7 @@ static void R_subsector(rendercontext_t &context, const int num)
          R_IsSkyFlat(sectors[seg.frontsec->heightsec].srf.floor.pic))) ?
         R_FindPlane(cmapcontext,
                     planecontext,
+                    heap,
                     viewpoint,
                     cb_viewpoint,
                     bounds,

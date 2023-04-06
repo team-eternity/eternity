@@ -217,8 +217,8 @@ portal_t *R_GetHorizonPortal(const sector_t *sector);
 
 portal_t *R_GetPlanePortal(const sector_t *sector);
 
-void R_MovePortalOverlayToWindow(cmapcontext_t &cmapcontext, planecontext_t &context, const viewpoint_t &viewpoint,
-                                 const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
+void R_MovePortalOverlayToWindow(cmapcontext_t &cmapcontext, planecontext_t &planecontext, ZoneHeap &heap,
+                                 const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
                                  cb_seg_t &seg, surf_e surf);
 void R_ClearPortals(visplane_t **&freehead);
 void R_RenderPortals(rendercontext_t &context);

@@ -158,7 +158,7 @@ VALLOCATION(portals)
    });
 }
 
-static void R_RenderPortalNOP(rendercontext_t &context, pwindow_t *window)
+static void R_renderPortalNOP(rendercontext_t &context, pwindow_t *window)
 {
    I_Error("R_RenderPortalNOP called\n");
 }
@@ -182,7 +182,7 @@ static void R_clearPortalWindow(planecontext_t &context, const contextbounds_t &
    window->portal   = nullptr;
    window->line     = nullptr;
    window->linegen  = {};
-   window->func     = R_RenderPortalNOP;
+   window->func     = R_renderPortalNOP;
    window->clipfunc = nullptr;
    window->vx = window->vy = window->vz = 0;
    window->vangle = 0;
@@ -723,8 +723,8 @@ void R_InitPortals()
 //
 // The plane portal effect
 //
-static void R_produceKaleidoscopePlane(rendercontext_t &context, const pwindow_t *window,
-                                       const sector_t *sector)
+static void R_produceKaleidoscopePlane(rendercontext_t &context, ZoneHeap &heap,
+                                       const pwindow_t *window, const sector_t *sector)
 {
    planecontext_t  &planecontext   = context.planecontext;
    viewpoint_t     &viewpoint      = context.view;
@@ -734,6 +734,7 @@ static void R_produceKaleidoscopePlane(rendercontext_t &context, const pwindow_t
    visplane_t *vplane = R_FindPlane(
       context.cmapcontext,
       planecontext,
+      heap,
       viewpoint,
       cb_viewpoint,
       bounds,
@@ -751,7 +752,7 @@ static void R_produceKaleidoscopePlane(rendercontext_t &context, const pwindow_t
       nullptr
    );
 
-   vplane = R_CheckPlane(planecontext, vplane, window->minx, window->maxx);
+   vplane = R_CheckPlane(planecontext, heap, vplane, window->minx, window->maxx);
 
    for(int x = window->minx; x <= window->maxx; x++)
    {
@@ -766,8 +767,8 @@ static void R_produceKaleidoscopePlane(rendercontext_t &context, const pwindow_t
 //
 // The horizon portal effect
 //
-static void R_produceHorizonPlanes(rendercontext_t &context, const pwindow_t *window,
-                                   const sector_t *sector)
+static void R_produceHorizonPlanes(rendercontext_t &context, ZoneHeap &heap,
+                                   const pwindow_t *window, const sector_t *sector)
 {
    planecontext_t  &planecontext   = context.planecontext;
    viewpoint_t     &viewpoint      = context.view;
@@ -783,6 +784,7 @@ static void R_produceHorizonPlanes(rendercontext_t &context, const pwindow_t *wi
    visplane_t *topplane = R_FindPlane(
       context.cmapcontext,
       planecontext,
+      heap,
       viewpoint,
       cb_viewpoint,
       bounds,
@@ -798,6 +800,7 @@ static void R_produceHorizonPlanes(rendercontext_t &context, const pwindow_t *wi
    visplane_t *bottomplane = R_FindPlane(
       context.cmapcontext,
       planecontext,
+      heap,
       viewpoint,
       cb_viewpoint,
       bounds,
@@ -810,8 +813,8 @@ static void R_produceHorizonPlanes(rendercontext_t &context, const pwindow_t *wi
       angles[surf_floor],
       nullptr, 0, 255, nullptr
    );
-   topplane = R_CheckPlane(planecontext, topplane, window->minx, window->maxx);
-   bottomplane = R_CheckPlane(planecontext, bottomplane, window->minx, window->maxx);
+   topplane = R_CheckPlane(planecontext, heap, topplane, window->minx, window->maxx);
+   bottomplane = R_CheckPlane(planecontext, heap, bottomplane, window->minx, window->maxx);
 
    for(int x = window->minx; x <= window->maxx; x++)
    {
@@ -884,6 +887,7 @@ static void R_renderPrimitivePortal(rendercontext_t &context, pwindow_t *window)
    viewpoint_t     &viewpoint      = context.view;
    cbviewpoint_t   &cb_viewpoint   = context.cb_view;
    spritecontext_t &spritecontext  = context.spritecontext;
+   ZoneHeap        &heap           = *context.heap;
    const contextbounds_t &bounds   = context.bounds;
 
    const portal_t *portal = window->portal;
@@ -914,9 +918,9 @@ static void R_renderPrimitivePortal(rendercontext_t &context, pwindow_t *window)
 
    const sector_t *sector = portal->data.sector;
    if(portal->type == R_PLANE)
-      R_produceKaleidoscopePlane(context, window, sector);
+      R_produceKaleidoscopePlane(context, heap, window, sector);
    else
-      R_produceHorizonPlanes(context, window, sector);
+      R_produceHorizonPlanes(context, heap, window, sector);
 
    if(window->head == window && window->poverlay)
       R_PushPost(context.bspcontext, spritecontext, *context.heap, bounds, false, window);
@@ -941,7 +945,7 @@ extern void R_ClearSlopeMark(float *const slopemark, int minx, int maxx, pwindow
 
 extern int    showtainted;
 
-static void R_showTainted(cmapcontext_t &cmapcontext, planecontext_t &planecontext,
+static void R_showTainted(cmapcontext_t &cmapcontext, planecontext_t &planecontext, ZoneHeap &heap,
                           const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                           const contextbounds_t &bounds, pwindow_t *window)
 {
@@ -953,17 +957,17 @@ static void R_showTainted(cmapcontext_t &cmapcontext, planecontext_t &planeconte
       float floorangle = sector->srf.floor.baseangle + sector->srf.floor.angle;
       float ceilingangle = sector->srf.ceiling.baseangle + sector->srf.ceiling.angle;
       visplane_t *topplane = R_FindPlane(
-         cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, sector->srf.ceiling.height,
+         cmapcontext, planecontext, heap, viewpoint, cb_viewpoint, bounds, sector->srf.ceiling.height,
          sector->srf.ceiling.pic, sector->lightlevel, sector->srf.ceiling.offset,
          sector->srf.ceiling.scale, ceilingangle, nullptr, 0, 255, nullptr
       );
       visplane_t *bottomplane = R_FindPlane(
-         cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, sector->srf.floor.height,
+         cmapcontext, planecontext, heap, viewpoint, cb_viewpoint, bounds, sector->srf.floor.height,
          sector->srf.floor.pic, sector->lightlevel, sector->srf.floor.offset,
          sector->srf.floor.scale, floorangle, nullptr, 0, 255, nullptr
       );
-      topplane    = R_CheckPlane(planecontext, topplane, window->minx, window->maxx);
-      bottomplane = R_CheckPlane(planecontext, bottomplane, window->minx, window->maxx);
+      topplane    = R_CheckPlane(planecontext, heap, topplane, window->minx, window->maxx);
+      bottomplane = R_CheckPlane(planecontext, heap, bottomplane, window->minx, window->maxx);
 
       for(int x = window->minx; x <= window->maxx; x++)
       {
@@ -1026,6 +1030,7 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
    planecontext_t  &planecontext   = context.planecontext;
    portalcontext_t &portalcontext  = context.portalcontext;
    spritecontext_t &spritecontext  = context.spritecontext;
+   ZoneHeap        &heap           = *context.heap;
    const contextbounds_t &bounds   = context.bounds;
 
    portal_t *portal = window->portal;
@@ -1040,7 +1045,7 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
    // haleyjd: temporary debug
    if(anchored && portal->tainted > PORTAL_RECURSION_LIMIT)
    {
-      R_showTainted(context.cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, window);
+      R_showTainted(context.cmapcontext, planecontext, heap, viewpoint, cb_viewpoint, bounds, window);
 
       portal->tainted++;
       int maker = portal->type == R_LINKED ? portal->data.link.maker : portal->data.anchor.maker;
@@ -1206,7 +1211,7 @@ static void R_SetPortalFunction(pwindow_t *window)
       window->clipfunc = segclipfuncs[window->type];
       break;
    default:
-      window->func     = R_RenderPortalNOP;
+      window->func     = R_renderPortalNOP;
       window->clipfunc = nullptr;
       break;
    }
@@ -1334,8 +1339,8 @@ pwindow_t *R_GetLinePortalWindow(planecontext_t &planecontext, portalcontext_t &
 //
 // Moves portal overlay to window, clearing data from portal.
 //
-void R_MovePortalOverlayToWindow(cmapcontext_t &cmapcontext, planecontext_t &planecontext, const viewpoint_t &viewpoint,
-                                 const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
+void R_MovePortalOverlayToWindow(cmapcontext_t &cmapcontext, planecontext_t &planecontext, ZoneHeap &heap,
+                                 const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
                                  cb_seg_t &seg, surf_e surf)
 {
 //   const portal_t *portal = isceiling ? seg.c_portal : seg.f_portal;
@@ -1344,7 +1349,7 @@ void R_MovePortalOverlayToWindow(cmapcontext_t &cmapcontext, planecontext_t &pla
    if(plane)
    {
       plane = R_FindPlane(
-         cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, plane->height, plane->picnum,
+         cmapcontext, planecontext, heap, viewpoint, cb_viewpoint, bounds, plane->height, plane->picnum,
          plane->lightlevel, plane->offs, plane->scale, plane->angle,
          plane->pslope, plane->bflags, plane->opacity, window->head->poverlay);
    }

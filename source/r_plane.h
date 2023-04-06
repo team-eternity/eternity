@@ -57,10 +57,8 @@ planehash_t *R_NewPlaneHash(int chaincount);
 void R_ClearPlaneHash(visplane_t **&freehead, planehash_t *table);
 
 
-visplane_t *R_FindPlane(cmapcontext_t &cmapcontext,
-                        planecontext_t &planecontext,
-                        const viewpoint_t &viewpoint,
-                        const cbviewpoint_t &cb_viewpoint,
+visplane_t *R_FindPlane(cmapcontext_t &cmapcontext, planecontext_t &planecontext, ZoneHeap &heap,
+                        const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                         const contextbounds_t &bounds,
                         fixed_t height,
                         int picnum,
@@ -73,8 +71,8 @@ visplane_t *R_FindPlane(cmapcontext_t &cmapcontext,
                         byte opacity,        // SoM: Opacity for translucent planes
                         planehash_t *table); // SoM: Table. Can be nullptr
 
-visplane_t *R_DupPlane(planecontext_t &context, const visplane_t *pl, int start, int stop);
-visplane_t *R_CheckPlane(planecontext_t &context, visplane_t *pl, int start, int stop);
+visplane_t *R_DupPlane(planecontext_t &context, ZoneHeap &heap, const visplane_t *pl, int start, int stop);
+visplane_t *R_CheckPlane(planecontext_t &context, ZoneHeap &heap, visplane_t *pl, int start, int stop);
 
 bool R_CompareSlopes(const pslope_t *s1, const pslope_t *s2);
 bool R_CompareSlopesFlipped(const pslope_t *s1, const pslope_t *s2);

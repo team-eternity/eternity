@@ -563,7 +563,7 @@ void R_ClearPlanes(planecontext_t &context, const contextbounds_t &bounds)
 //
 // New function, by Lee Killough
 //
-static visplane_t *new_visplane(planecontext_t &context,
+static visplane_t *new_visplane(planecontext_t &context, ZoneHeap &heap,
                                 unsigned hash, planehash_t *table)
 {
    visplane_t *&freetail  = context.freetail;
@@ -572,7 +572,13 @@ static visplane_t *new_visplane(planecontext_t &context,
    visplane_t *check = freetail;
 
    if(!check)
-      check = ecalloctag(visplane_t *, 1, sizeof *check, PU_VALLOC, nullptr);
+   {
+      // THREAD_FIXME: Temporary until all planehash tables are context-specific
+      if(table == &context.mainhash)
+         check = zhcalloctag(heap, visplane_t *, 1, sizeof * check, PU_VALLOC, nullptr);
+      else
+         check = ecalloctag(visplane_t *, 1, sizeof * check, PU_VALLOC, nullptr);
+   }
    else
       if(!(freetail = freetail->next))
          freehead = &freetail;
@@ -588,7 +594,11 @@ static visplane_t *new_visplane(planecontext_t &context,
 
       // THREAD_TODO: Try make this use context.numcolumns again
       check->max_width = static_cast<unsigned int>(video.width);
-      paddedTop        = ecalloctag(int *, 2 * (video.width + 2), sizeof(int), PU_VALLOC, nullptr);
+      // THREAD_FIXME: Temporary until all planehash tables are context-specific
+      if(table == &context.mainhash)
+         paddedTop = zhcalloctag(heap, int *, 2 * (video.width + 2), sizeof(int), PU_VALLOC, nullptr);
+      else
+         paddedTop = ecalloctag(int *, 2 * (video.width + 2), sizeof(int), PU_VALLOC, nullptr);
       paddedBottom     = paddedTop + video.width + 2;
 
       check->top    = paddedTop    + 1;
@@ -602,8 +612,7 @@ static visplane_t *new_visplane(planecontext_t &context,
 // killough 2/28/98: Add offsets
 // haleyjd 01/05/08: Add angle
 //
-visplane_t *R_FindPlane(cmapcontext_t &cmapcontext,
-                        planecontext_t &planecontext,
+visplane_t *R_FindPlane(cmapcontext_t &cmapcontext, planecontext_t &planecontext, ZoneHeap &heap,
                         const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                         const contextbounds_t &bounds,
                         fixed_t height, int picnum, int lightlevel,
@@ -665,7 +674,7 @@ visplane_t *R_FindPlane(cmapcontext_t &cmapcontext,
         return check;
    }
 
-   check = new_visplane(planecontext, hash, table);         // killough
+   check = new_visplane(planecontext, heap, hash, table);         // killough
 
    check->height = height;
    check->picnum = picnum;
@@ -730,11 +739,11 @@ visplane_t *R_FindPlane(cmapcontext_t &cmapcontext,
 // From PrBoom+
 // cph 2003/04/18 - create duplicate of existing visplane and set initial range
 //
-visplane_t *R_DupPlane(planecontext_t &context, const visplane_t *pl, int start, int stop)
+visplane_t *R_DupPlane(planecontext_t &context, ZoneHeap &heap, const visplane_t *pl, int start, int stop)
 {
    planehash_t *table = pl->table;
    unsigned hash = visplane_hash(pl->picnum, pl->lightlevel, pl->height, table->chaincount);
-   visplane_t *new_pl = new_visplane(context, hash, table);
+   visplane_t *new_pl = new_visplane(context, heap, hash, table);
 
    new_pl->height = pl->height;
    new_pl->picnum = pl->picnum;
@@ -785,7 +794,7 @@ visplane_t *R_DupPlane(planecontext_t &context, const visplane_t *pl, int start,
 //
 // R_CheckPlane
 //
-visplane_t *R_CheckPlane(planecontext_t &context, visplane_t *pl, int start, int stop)
+visplane_t *R_CheckPlane(planecontext_t &context, ZoneHeap &heap, visplane_t *pl, int start, int stop)
 {
    int intrl, intrh, unionl, unionh, x;
    
@@ -820,7 +829,7 @@ visplane_t *R_CheckPlane(planecontext_t &context, visplane_t *pl, int start, int
       pl->maxx = unionh;
    }
    else
-      pl = R_DupPlane(context, pl, start, stop);
+      pl = R_DupPlane(context, heap, pl, start, stop);
 
    return pl;
 }
