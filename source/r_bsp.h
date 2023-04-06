@@ -37,6 +37,7 @@ struct contextbounds_t;
 struct portalrender_t;
 struct cbviewpoint_t;
 struct rendercontext_t;
+struct rpolynode_t;
 
 // SoM: mark a range of the screen as being solid (closed).
 // these marks are then added to the solidsegs list by R_addLine after all segments
@@ -49,6 +50,8 @@ bool R_SetupPortalClipsegs(bspcontext_t &context, const contextbounds_t &bounds,
 
 void R_ClearClipSegs(bspcontext_t &context);
 void R_ClearDrawSegs(bspcontext_t &context);
+
+void R_ForEachPolyNode(void (*func)(rpolynode_t *bsp));
 
 void R_PreRenderBSP();
 void R_RenderBSPNode(rendercontext_t &context, int bspnum);

@@ -53,6 +53,7 @@
 #include "r_bsp.h"
 #include "r_context.h"
 #include "r_draw.h"
+#include "r_dynabsp.h"
 #include "r_dynseg.h"
 #include "r_interpolate.h"
 #include "r_main.h"
@@ -1006,6 +1007,62 @@ static void R_setScrollInterpolationState(secinterpstate_e state)
 }
 
 //
+// Interpolate a rendering view point based on the player's location.
+//
+static void R_interpolateVertex(dynavertex_t &v, v2fixed_t &org, v2float_t &forg)
+{
+   org.x  = v.x;
+   org.y  = v.y;
+   forg.x = v.fx;
+   forg.y = v.fy;
+   v.x    = lerpCoord(view.lerp, v.backup.x, v.x);
+   v.y    = lerpCoord(view.lerp, v.backup.y, v.y);
+   v.fx   = M_FixedToFloat(v.x);
+   v.fy   = M_FixedToFloat(v.y);
+}
+
+//
+// Interpolates polyobject dynasegs
+//
+static void R_setDynaSegInterpolationState(secinterpstate_e state)
+{
+   switch(state)
+   {
+      case SEC_INTERPOLATE:
+         R_ForEachPolyNode([](rpolynode_t *node) {
+            dynaseg_t &dynaseg = *node->partition;
+            seg_t     *seg     = &node->partition->seg;
+
+            R_interpolateVertex(*seg->dyv1, dynaseg.prev.org[0], dynaseg.prev.forg[0]);
+            R_interpolateVertex(*seg->dyv2, dynaseg.prev.org[1], dynaseg.prev.forg[1]);
+
+            dynaseg.prev.len    = seg->len;
+            dynaseg.prev.offset = seg->offset;
+            seg->len            = lerpCoordf(view.lerp, dynaseg.prevlen, seg->len);
+            seg->offset         = lerpCoordf(view.lerp, dynaseg.prevofs, seg->offset);
+         });
+         break;
+      case SEC_NORMAL:
+         R_ForEachPolyNode([](rpolynode_t *node) {
+            seginterp_t &prev = node->partition->prev;
+            seg_t       *seg  = &node->partition->seg;
+
+            seg->offset = prev.offset;
+            seg->len    = prev.len;
+            seg->v1->x  = prev.org[0].x;
+            seg->v1->y  = prev.org[0].y;
+            seg->v2->x  = prev.org[1].x;
+            seg->v2->y  = prev.org[1].y;
+            seg->v1->fx = prev.forg[0].x;
+            seg->v1->fy = prev.forg[0].y;
+            seg->v2->fx = prev.forg[1].x;
+            seg->v2->fy = prev.forg[1].y;
+         });
+         break;
+   }
+}
+
+//
 // R_GetLerp
 //
 fixed_t R_GetLerp(bool ignorepause)
@@ -1080,11 +1137,14 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    view.lerp   = lerp;
    view.sector = R_PointInSubsector(viewpoint.x, viewpoint.y)->sector;
 
+   R_PreRenderBSP();
+
    // set interpolated sector heights
    if(view.lerp != FRACUNIT)
    {
       R_setSectorInterpolationState(SEC_INTERPOLATE);
       R_setScrollInterpolationState(SEC_INTERPOLATE);
+      R_setDynaSegInterpolationState(SEC_INTERPOLATE);
    }
 
    // y shearing
@@ -1325,8 +1385,6 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    else
       player->mo->intflags &= ~MIF_HIDDENBYQUAKE;  // zero it otherwise
 
-   R_PreRenderBSP();
-
    // We don't need to multithread if we only have one context
    if(r_numcontexts == 1)
       R_RenderViewContext(r_globalcontext);
@@ -1352,6 +1410,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    {
       R_setSectorInterpolationState(SEC_NORMAL);
       R_setScrollInterpolationState(SEC_NORMAL);
+      R_setDynaSegInterpolationState(SEC_NORMAL);
    }
    
    // Check for new console commands.

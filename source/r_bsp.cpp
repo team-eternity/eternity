@@ -2735,28 +2735,7 @@ static bool R_checkBBox(const viewpoint_t &viewpoint,
 }
 
 //
-// R_interpolateViewPoint
-//
-// Interpolate a rendering view point based on the player's location.
-//
-static void R_interpolateVertex(dynavertex_t &v, v2fixed_t &org, v2float_t &forg)
-{
-   org.x = v.x;
-   org.y = v.y;
-   forg.x = v.fx;
-   forg.y = v.fy;
-   if(view.lerp != FRACUNIT)
-   {
-      v.x = lerpCoord(view.lerp, v.backup.x, v.x);
-      v.y = lerpCoord(view.lerp, v.backup.y, v.y);
-      v.fx = M_FixedToFloat(v.x);
-      v.fy = M_FixedToFloat(v.y);
-   }
-}
-
-//
 // Recurse through a polynode mini-BSP
-// THREAD_FIXME: The temporary seg mutation here isn't thread-safe
 //
 static void R_renderPolyNode(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,
                              portalcontext_t &portalcontext, ZoneHeap &heap,
@@ -2768,7 +2747,7 @@ static void R_renderPolyNode(bspcontext_t &bspcontext, cmapcontext_t &cmapcontex
    while(node)
    {
       int side = R_PointOnDynaSegSide(node->partition, cb_viewpoint.x, cb_viewpoint.y);
-      
+
       // render frontspace
       R_renderPolyNode(
          bspcontext, cmapcontext, planecontext, portalcontext, heap,
@@ -2776,35 +2755,10 @@ static void R_renderPolyNode(bspcontext_t &bspcontext, cmapcontext_t &cmapcontex
       );
 
       // render partition seg
-      v2fixed_t org[2];
-      v2float_t forg[2];
-      const dynaseg_t &dynaseg = *node->partition;
-      seg_t *seg = &node->partition->seg;
-      R_interpolateVertex(*seg->dyv1, org[0], forg[0]);
-      R_interpolateVertex(*seg->dyv2, org[1], forg[1]);
-
-      float orglen = seg->len; 
-      float orgofs = seg->offset;
-      if(view.lerp != FRACUNIT)
-      {
-         seg->len = lerpCoordf(view.lerp, dynaseg.prevlen, seg->len);
-         seg->offset = lerpCoordf(view.lerp, dynaseg.prevofs, seg->offset);
-      }
-
       R_addLine(
          bspcontext, cmapcontext, planecontext, portalcontext, heap,
-         viewpoint, cb_viewpoint, bounds, visitid, cbseg, seg, true
+         viewpoint, cb_viewpoint, bounds, visitid, cbseg, &node->partition->seg, true
       );
-      seg->offset = orgofs;
-      seg->len = orglen;
-      seg->v1->x = org[0].x;
-      seg->v1->y = org[0].y;
-      seg->v2->x = org[1].x;
-      seg->v2->y = org[1].y;
-      seg->v1->fx = forg[0].x;
-      seg->v1->fy = forg[0].y;
-      seg->v2->fx = forg[1].x;
-      seg->v2->fy = forg[1].y;
 
       // continue to render backspace
       node = node->children[side^1];
@@ -3079,6 +3033,37 @@ static void R_subsector(rendercontext_t &context, const int num)
          bspcontext, cmapcontext, planecontext, portalcontext, heap,
          viewpoint, cb_viewpoint, bounds, visitid, seg, line++, false
       );
+   }
+}
+
+//
+// Actually iterate over all the nodes in an rpolynod_t tree
+//
+void R_forEachPolyNodeRecursive(void (*func)(rpolynode_t *node), rpolynode_t *root)
+{
+   if(!root)
+      return;
+
+   func(root);
+
+   R_forEachPolyNodeRecursive(func, root->children[0]);
+   R_forEachPolyNodeRecursive(func, root->children[1]);
+}
+
+//
+// Iterate over every subsector's root rpolynode_t
+//
+void R_ForEachPolyNode(void (*func)(rpolynode_t *node))
+{
+   for(int p = 0; p < numPolyObjects; p++)
+   {
+      for(int ss = 0; ss < PolyObjects[p].numDSS; ss++)
+      {
+         subsector_t *sub = PolyObjects[p].dynaSubsecs[ss];
+
+         if(sub->bsp)
+            R_forEachPolyNodeRecursive(func, sub->bsp->root);
+      }
    }
 }
 
