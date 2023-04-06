@@ -524,8 +524,10 @@ static void R_calculateTransform(int markerlinenum, int anchorlinenum,
 //
 // See r_main.cpp's R_incrementFrameid to see why this exists
 //
-static void R_incrementRenderDepth(uint16_t &renderdepth)
+static void R_incrementRenderDepth(portalcontext_t &context)
 {
+   sectorboxvisit_t *&visitids    = context.visitids;
+   uint16_t          &renderdepth = context.renderdepth;
    renderdepth++;
 
    if(!renderdepth)
@@ -540,7 +542,7 @@ static void R_incrementRenderDepth(uint16_t &renderdepth)
 
       // Do as the description says...
       for(int i = 0; i < numsectors; ++i)
-         pSectorBoxes[i].visitid.floor = pSectorBoxes[i].visitid.ceiling = 0;
+         visitids[i].floor = visitids[i].ceiling = 0;
    }
 }
 
@@ -1141,7 +1143,7 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
       cb_viewpoint.cos   = cosf(cb_viewpoint.angle);
    }
 
-   R_incrementRenderDepth(portalcontext.renderdepth);
+   R_incrementRenderDepth(portalcontext);
    R_RenderBSPNode(context, numnodes - 1);
 
    // Only push the overlay if this is the head window

@@ -28,6 +28,7 @@
 #ifndef R_CONTEXT_H__
 #define R_CONTEXT_H__
 
+#include "m_surf.h"
 #include "r_defs.h"
 #include "r_lighting.h"
 #include "r_portal.h"
@@ -38,8 +39,11 @@ struct drawsegs_xrange_t;
 struct maskedrange_t;
 struct poststack_t;
 struct pwindow_t;
+struct sectorbox_t;
 struct vissprite_t;
 class  ZoneHeap;
+
+using sectorboxvisit_t = Surfaces<uint64_t>;
 
 struct contextbounds_t
 {
@@ -105,6 +109,8 @@ struct portalcontext_t
    uint16_t renderdepth; // THREAD_TODO: Rename this, it's a misnomer
 
    pwindow_t *unusedhead, *windowhead, *windowlast;
+
+   sectorboxvisit_t *visitids; // THREAD_FIXME: Does this go here?
 
    // This flag is set when a portal is being rendered. This flag is checked in
    // r_bsp.c when rendering camera portals (skybox, anchored, linked) so that an

@@ -79,6 +79,7 @@
 #include "s_musinfo.h"
 #include "s_sndseq.h"
 #include "s_sound.h"
+#include "v_alloc.h"
 #include "v_misc.h"
 #include "v_video.h"
 #include "w_levels.h"
@@ -216,6 +217,13 @@ static WadDirectory *setupwad;
 
 // Current level's hash digest, for showing on console
 static qstring p_currentLevelHashDigest;
+
+static void P_createSectorBoundingBoxVisitIDs();
+
+VALLOCATION(sectorboxvisits)
+{
+   P_createSectorBoundingBoxVisitIDs();
+}
 
 //
 // ShortToLong
@@ -750,11 +758,24 @@ static void P_createSectorInterps()
 }
 
 //
+// Creates the context-local visit IDs for the sector bound boxes
+//
+static void P_createSectorBoundingBoxVisitIDs()
+{
+   R_ForEachContext([](rendercontext_t &context) {
+      context.portalcontext.visitids = zhcalloctag(
+         *context.heap, sectorboxvisit_t *, numsectors, sizeof(sectorboxvisit_t *), PU_LEVEL, nullptr
+      );
+   });
+}
+
+//
 // Setup sector bounding boxes
 //
 static void P_createSectorBoundingBoxes()
 {
    pSectorBoxes = estructalloctag(sectorbox_t, numsectors, PU_LEVEL);
+   P_createSectorBoundingBoxVisitIDs();
 
    for(int i = 0; i < numsectors; ++i)
    {

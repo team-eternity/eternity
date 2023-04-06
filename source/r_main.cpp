@@ -768,8 +768,11 @@ static void R_incrementFrameid()
       frameid = 1;
 
       // Do as the description says...
-      for(int i = 0; i < numsectors; ++i)
-         pSectorBoxes[i].visitid.floor = pSectorBoxes[i].visitid.ceiling = 0;
+      R_ForEachContext([](rendercontext_t &context) {
+         sectorboxvisit_t *visitids = context.portalcontext.visitids;
+         for(int i = 0; i < numsectors; ++i)
+            visitids[i].floor = visitids[i].ceiling = 0;
+      });
    }
 }
 
