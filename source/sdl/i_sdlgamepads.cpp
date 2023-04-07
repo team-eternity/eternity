@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2017 James Haley, Max Waine, et al.
+// The Eternity Engine
+// Copyright (C) 2023 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,30 +15,34 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+// Purpose:Implementation of SDL classes for Gamepads and Joysticks
+// Authors: James Haley, Max Waine
 //
-// DESCRIPTION:  
-//    Implementation of SDL classes for Gamepads and Joysticks
-//
-//-----------------------------------------------------------------------------
 
 #ifdef __APPLE__
 #include "SDL2/SDL.h"
+#include "SDL2/SDL_gamecontroller.h"
 #else
 #include "SDL.h"
+#include "SDL_gamecontroller.h"
 #endif
 
 #include "../z_zone.h"
+#include "../doomdef.h"
 
 #include "i_sdlgamepads.h"
 
+// Assertions
+static_assert(HALGamePad::MAXBUTTONS >= SDL_CONTROLLER_BUTTON_MAX);
+static_assert(HALGamePad::MAXAXES >= SDL_CONTROLLER_AXIS_MAX);
+
 // Module-private globals
 
-// SDL_Joystick structure for the currently open joystick device (if any).
+// SDL_GameController structure for the currently open GameController device (if any).
 // Singleton resource.
-static SDL_Joystick *joystick;
+static SDL_GameController *gamecontroller;
 
-// Index of active SDL joystick structure. -1 while not valid.
+// Index of active SDL GameController structure. -1 while not valid.
 static int activeIdx = -1;
 
 //=============================================================================
@@ -62,28 +65,35 @@ bool SDLGamePadDriver::initialize()
 //
 // SDLGamePadDriver::shutdown
 //
-// Perform shutdown actions for SDL joystick support.
+// Perform shutdown actions for SDL GameController support.
 //
 void SDLGamePadDriver::shutdown()
 {
-   // if the joystick is still active, shut it down.
-   if(joystick)
+   // if the GameController is still active, shut it down.
+   if(gamecontroller)
    {
-      SDL_JoystickClose(joystick);
-      joystick = nullptr;
+      SDL_GameControllerClose(gamecontroller);
+      gamecontroller = nullptr;
    }
 }
 
 //
 // SDLGamePadDriver::enumerateDevices
 //
-// Instantiate SDLGamePad objects for all supported joystick
+// Instantiate SDLGamePad objects for all supported GameController
 // devices.
 //
 void SDLGamePadDriver::enumerateDevices()
 {
-   int numpads = SDL_NumJoysticks();
+   int numpads = 0;
    SDLGamePad *sdlDev;
+
+   for(int i = 0; i < SDL_NumJoysticks(); i++)
+   {
+      // Use only valid gamepads
+      if(SDL_IsGameController(i))
+         numpads++;
+   }
 
    for(int i = 0; i < numpads; i++)
    {
@@ -102,13 +112,13 @@ SDLGamePadDriver i_sdlGamePadDriver;
 
 IMPLEMENT_RTTI_TYPE(SDLGamePad)
 
-// 
+//
 // Constructor
 //
-SDLGamePad::SDLGamePad(int idx) 
+SDLGamePad::SDLGamePad(int idx)
    : Super(), sdlIndex(idx)
 {
-   name << "SDL " << SDL_JoystickNameForIndex(sdlIndex);
+   name << "SDL " << SDL_GameControllerNameForIndex(sdlIndex);
    num = i_sdlGamePadDriver.getBaseDeviceNum() + sdlIndex;
 }
 
@@ -119,17 +129,16 @@ SDLGamePad::SDLGamePad(int idx)
 //
 bool SDLGamePad::select()
 {
-   if(joystick) // one is still open? (should not happen)
+   if(gamecontroller) // one is still open? (should not happen)
       return false;
 
    // remember who is in use internally
    activeIdx = sdlIndex;
 
-   if((joystick = SDL_JoystickOpen(sdlIndex)) != nullptr)
+   if((gamecontroller = SDL_GameControllerOpen(sdlIndex)) != nullptr)
    {
-      numAxes    = SDL_JoystickNumAxes(joystick);
-      numButtons = SDL_JoystickNumButtons(joystick);
-      numHats    = SDL_JoystickNumHats(joystick);
+      numAxes    = SDL_CONTROLLER_AXIS_MAX;
+      numButtons = SDL_CONTROLLER_BUTTON_MAX;
       return true;
    }
    else
@@ -139,18 +148,18 @@ bool SDLGamePad::select()
 //
 // SDLGamePad::deselect
 //
-// Remove this joystick from its status as the active input device.
+// Remove this GameController from its status as the active input device.
 //
 void SDLGamePad::deselect()
 {
    if(activeIdx != sdlIndex) // should not happen
       return;
 
-   if(joystick)
+   if(gamecontroller)
    {
-      SDL_JoystickClose(joystick);
-      joystick  = nullptr;
-      activeIdx = -1;
+      SDL_GameControllerClose(gamecontroller);
+      gamecontroller = nullptr;
+      activeIdx      = -1;
    }
 }
 
@@ -161,32 +170,19 @@ void SDLGamePad::deselect()
 //
 void SDLGamePad::poll()
 {
-   SDL_JoystickUpdate();
+   SDL_GameControllerUpdate();
 
    // save old button and axis states
    backupState();
 
    // get button states
-   for(int i = 0; i < numButtons && i < MAXBUTTONS; i++)
-      state.buttons[i] = !!SDL_JoystickGetButton(joystick, i);
-   for(int i = 0; i < numHats && i < MAXHATS; i++)
-   {
-      Uint8 sdlhat = SDL_JoystickGetHat(joystick, i);
-      state.hats[i] = 0;
-      if(sdlhat & SDL_HAT_RIGHT)
-         state.hats[i] |= HAT_RIGHT;
-      if(sdlhat & SDL_HAT_UP)
-         state.hats[i] |= HAT_UP;
-      if(sdlhat & SDL_HAT_LEFT)
-         state.hats[i] |= HAT_LEFT;
-      if(sdlhat & SDL_HAT_DOWN)
-         state.hats[i] |= HAT_DOWN;
-   }
+   for(int i = 0; i < numButtons && i < SDL_CONTROLLER_BUTTON_MAX; i++)
+      state.buttons[i] = !!SDL_GameControllerGetButton(gamecontroller, SDL_GameControllerButton(i));
 
    // get axis states
-   for(int i = 0; i < numAxes && i < MAXAXES; i++)
+   for(int i = 0; i < numAxes && i < SDL_CONTROLLER_AXIS_MAX; i++)
    {
-      Sint16 val = SDL_JoystickGetAxis(joystick, i);
+      Sint16 val = SDL_GameControllerGetAxis(gamecontroller, SDL_GameControllerAxis(i));
 
       if(val > i_joysticksens || val < -i_joysticksens)
       {

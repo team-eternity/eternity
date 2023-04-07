@@ -294,38 +294,30 @@ struct keyname_t
    { KEYD_KPPLUS,     "kp_plus"    },
    { KEYD_KPENTER,    "kp_enter"   },
    { KEYD_KPEQUALS,   "kp_equals"  },
-   { KEYD_JOY01,      "joy1"       },
-   { KEYD_JOY02,      "joy2"       },
-   { KEYD_JOY03,      "joy3"       },
-   { KEYD_JOY04,      "joy4"       },
-   { KEYD_JOY05,      "joy5"       },
-   { KEYD_JOY06,      "joy6"       },
-   { KEYD_JOY07,      "joy7"       },
-   { KEYD_JOY08,      "joy8"       },
-   { KEYD_JOY09,      "joy9"       },
-   { KEYD_JOY10,      "joy10"      },
-   { KEYD_JOY11,      "joy11"      },
-   { KEYD_JOY12,      "joy12"      },
-   { KEYD_JOY13,      "joy13"      },
-   { KEYD_JOY14,      "joy14"      },
-   { KEYD_JOY15,      "joy15"      },
-   { KEYD_JOY16,      "joy16"      },
-   { KEYD_HAT1RIGHT,  "hat1right"  },
-   { KEYD_HAT1UP,     "hat1up"     },
-   { KEYD_HAT1LEFT,   "hat1left"   },
-   { KEYD_HAT1DOWN,   "hat1down"   },
-   { KEYD_HAT2RIGHT,  "hat2right"  },
-   { KEYD_HAT2UP,     "hat2up"     },
-   { KEYD_HAT2LEFT,   "hat2left"   },
-   { KEYD_HAT2DOWN,   "hat2down"   },
-   { KEYD_HAT3RIGHT,  "hat3right"  },
-   { KEYD_HAT3UP,     "hat3up"     },
-   { KEYD_HAT3LEFT,   "hat3left"   },
-   { KEYD_HAT3DOWN,   "hat3down"   },
-   { KEYD_HAT4RIGHT,  "hat4right"  },
-   { KEYD_HAT4UP,     "hat4up"     },
-   { KEYD_HAT4LEFT,   "hat4left"   },
-   { KEYD_HAT4DOWN,   "hat4down"   },
+   { KEYD_JOY_A,             "joy1"  },
+   { KEYD_JOY_B,             "joy2"  },
+   { KEYD_JOY_X,             "joy3"  },
+   { KEYD_JOY_Y,             "joy4"  },
+   { KEYD_JOY_BACK,          "joy5"  },
+   { KEYD_JOY_GUIDE,         "joy6"  },
+   { KEYD_JOY_START,         "joy7"  },
+   { KEYD_JOY_LEFTSTICK,     "joy8"  },
+   { KEYD_JOY_RIGHTSTICK,    "joy9"  },
+   { KEYD_JOY_LEFTSHOULDER,  "joy10" },
+   { KEYD_JOY_RIGHTSHOULDER, "joy11" },
+   { KEYD_JOY_DPAD_UP,       "joy12" },
+   { KEYD_JOY_DPAD_DOWN,     "joy13" },
+   { KEYD_JOY_DPAD_LEFT,     "joy14" },
+   { KEYD_JOY_DPAD_RIGHT,    "joy15" },
+   { KEYD_JOY_LEFTTRIGGER,   "joy16" },
+   { KEYD_JOY_RIGHTTRIGGER,  "joy17" },
+   { KEYD_JOY_TOUCHPAD,      "joy18" },
+   { KEYD_JOY_SOCIAL,        "joy19" },
+   { KEYD_JOY_19,            "joy20" },
+   { KEYD_JOY_20,            "joy21" },
+   { KEYD_JOY_21,            "joy22" },
+   { KEYD_JOY_22,            "joy23" },
+   { KEYD_JOY_23,            "joy24" },
    { KEYD_AXISON01,   "axis1"      },
    { KEYD_AXISON02,   "axis2"      },
    { KEYD_AXISON03,   "axis3"      },
@@ -797,19 +789,10 @@ static void G_clearGamepadBindings()
    // clear button bindings
    for(int key = 0; key < HALGamePad::MAXBUTTONS; key++)
    {
-      int vkc = KEYD_JOY01 + key;
+      int vkc = KEYD_JOY_BASE + key;
 
       for(keyaction_t *&binding : keybindings[vkc].bindings)
          binding = nullptr;
-   }
-
-   // clear hats
-   for(int hat = 0; hat < HALGamePad::MAXHATS; hat++)
-   {
-      int vkc = KEYD_HAT1RIGHT + 4 * hat;
-      for(int i = 0; i < 4; ++i)
-         for(keyaction_t *&binding : keybindings[vkc + i].bindings)
-            binding = nullptr;
    }
 
    // clear axis actions, orientations, and trigger bindings

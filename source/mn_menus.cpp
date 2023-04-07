@@ -2273,10 +2273,8 @@ struct mn_padtestdata_t
 {
    bool  buttonStates[HALGamePad::MAXBUTTONS];
    float axisStates[HALGamePad::MAXAXES];
-   uint8_t hatStates[HALGamePad::MAXHATS];
    int   numButtons;
    int   numAxes;
-   int   numHats;
 };
 
 static mn_padtestdata_t mn_padtestdata;
@@ -2349,32 +2347,6 @@ static void MN_padTestDrawer()
       }
    }
 
-   // draw hats
-   y += 2 * lineHeight;
-   x = 8;
-   MN_WriteText("Hats:", x, y);
-   y += MN_StringHeight("Hats:") + 4;
-   char hatinfos[4] = { 'L', 'R', 'U', 'D' };
-   uint8_t hatflags[4] = { HALGamePad::HAT_LEFT, HALGamePad::HAT_RIGHT, 
-                           HALGamePad::HAT_UP, HALGamePad::HAT_DOWN };
-   for(int i = 0; i < mn_padtestdata.numHats && HALGamePad::MAXHATS; i++)
-   {
-      for(int j = 0; j < 4; ++j)
-      {
-         int color = mn_padtestdata.hatStates[i] & hatflags[j] ? GameModeInfo->selectColor
-                                                               : GameModeInfo->infoColor;
-         qstr.clear() << "H" << (i + 1) << hatinfos[j];
-         MN_WriteTextColored(qstr.constPtr(), color, x, y);
-         x += MN_StringWidth(qstr.constPtr()) + 8;
-
-         if(x > 300 && (i != mn_padtestdata.numHats - 1 || j != 3))
-         {
-            x = 8;
-            y += lineHeight;
-         }
-      }
-   }
-
    const char *help = "Press ESC on keyboard to exit";
    x = 160 - MN_StringWidth(help) / 2;
    y += 2 * lineHeight;
@@ -2394,20 +2366,16 @@ static void MN_padTestTicker()
    {
       mn_padtestdata.numAxes = 0;
       mn_padtestdata.numButtons = 0;
-      mn_padtestdata.numHats = 0;
       return; // woops!?
    }
 
    mn_padtestdata.numAxes    = gamepad->numAxes;
    mn_padtestdata.numButtons = gamepad->numButtons;
-   mn_padtestdata.numHats    = gamepad->numHats;
 
    for(int i = 0; i < mn_padtestdata.numAxes && i < HALGamePad::MAXAXES; i++)
       mn_padtestdata.axisStates[i]   = gamepad->state.axes[i];
    for(int i = 0; i < mn_padtestdata.numButtons && i < HALGamePad::MAXBUTTONS; i++)
       mn_padtestdata.buttonStates[i] = gamepad->state.buttons[i];
-   for(int i = 0; i < mn_padtestdata.numHats && i < HALGamePad::MAXHATS; i++)
-      mn_padtestdata.hatStates[i]    = gamepad->state.hats[i];
 }
 
 //

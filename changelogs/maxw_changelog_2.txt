@@ -270,6 +270,11 @@ Finished moving to New Zealand.
 2023/03/04
 Fixed crashes due to sound zone propagation through too many sectors.
 
+--------------------------------------------------------------------------------
+2023/03/07
+Overhauled SDL game input to be consistent across controllers.
+Added SDL game input controller preset.
+
 ================================================================================
 EOF
 ================================================================================

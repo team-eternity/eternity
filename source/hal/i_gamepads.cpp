@@ -88,14 +88,12 @@ IMPLEMENT_RTTI_TYPE(HALGamePad)
 // Constructor
 //
 HALGamePad::HALGamePad()
-   : Super(), num(-1), name(), numAxes(0), numButtons(0), numHats()
+   : Super(), num(-1), name(), numAxes(0), numButtons(0)
 {
    for(bool &button : state.buttons)
       button = false;
    for(float &axis : state.axes)
       axis = 0.0;
-   for(uint8_t &hat : state.hats)
-      hat = 0;
 
    backupState();
 }
@@ -113,8 +111,6 @@ void HALGamePad::backupState()
       state.prevbuttons[i] = state.buttons[i];
    for(i = 0; i < MAXAXES; i++)
       state.prevaxes[i] = state.axes[i];
-   for(i = 0; i < MAXHATS; i++)
-      state.prevhats[i] = state.hats[i];
 }
 
 //=============================================================================

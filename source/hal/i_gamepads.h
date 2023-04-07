@@ -130,31 +130,19 @@ public:
    qstring name;        // Device name
    int     numAxes;     // Number of axes supported
    int     numButtons;  // Number of buttons supported
-   int     numHats;     // Number of hats supported
 
    enum
    {
       // In interest of efficiency, we have caps on the number of device inputs
       // we will monitor.
       MAXAXES = 8,
-      MAXBUTTONS = 16,
-      MAXHATS = 4,
-   };
-
-   enum
-   {
-      HAT_RIGHT = 1,
-      HAT_UP = 2,
-      HAT_LEFT = 4,
-      HAT_DOWN = 8,
+      MAXBUTTONS = 24,
    };
 
    struct padstate_t
    {
       bool  prevbuttons[MAXBUTTONS]; // backed-up previous button states
       bool  buttons[MAXBUTTONS];     // current button states
-      uint8_t prevhats[MAXHATS];  // previous hats
-      uint8_t hats[MAXHATS];      // max hats
       float prevaxes[MAXAXES];       // backed-up previous axis states
       float axes[MAXAXES];           // normalized axis states (-1.0 : 1.0)
    };
