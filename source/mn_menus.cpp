@@ -2181,6 +2181,7 @@ static void MN_buildProfileTables()
       {
          qstring fullname;
          qstring base;
+         qstring desc;
          lumpinfo_t *lump = wni.current();
 
          if(lump->lfn)
@@ -2194,7 +2195,10 @@ static void MN_buildProfileTables()
 
          fullname.extractFileBase(base);
 
-         mn_prof_desc[i] = base.duplicate();
+         desc = base;
+         desc.replace("_", ' ');
+
+         mn_prof_desc[i] = desc.duplicate();
 
          base.makeQuoted();
          base.insert("g_padprofile ", 0);
