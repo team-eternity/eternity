@@ -634,6 +634,12 @@ void SDLHapticInterface::pauseEffects(bool effectsPaused)
 //
 void SDLHapticInterface::updateEffects()
 {
+#if SDL_VERSION_ATLEAST(2, 0, 18)
+   // Don't try updating if controller doesn't have rumble
+   if(SDL_GameControllerHasRumble(gamecontroller) == SDL_FALSE)
+      return;
+#endif
+
    // paused?
    if(pauseState)
    {
