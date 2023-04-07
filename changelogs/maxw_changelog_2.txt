@@ -275,6 +275,7 @@ Fixed crashes due to sound zone propagation through too many sectors.
 Overhauled SDL game controller input to be consistent across controllers.
 Added SDL controller input preset.
 Added vibration support to SDL controllers.
+Added ability to use the IWAD picker with controllers, as well as exit ENDOOM.
 
 ================================================================================
 EOF

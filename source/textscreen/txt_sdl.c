@@ -609,6 +609,10 @@ signed int TXT_GetChar(void)
 
         switch (ev.type)
         {
+            case SDL_CONTROLLERBUTTONDOWN:
+                return TXT_MOUSE_LEFT;
+                break;
+
             case SDL_MOUSEBUTTONDOWN:
                 if (ev.button.button < TXT_MAX_MOUSE_BUTTONS)
                 {

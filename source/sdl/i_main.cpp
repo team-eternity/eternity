@@ -94,7 +94,7 @@ int main(int argc, char **argv)
    Uint32 initflags = (M_CheckParm("-nodraw") &&
                        (M_CheckParm("-nosound") || (M_CheckParm("-nosfx") &&
                                                     M_CheckParm("-nomusic")))) ?
-   SDL_INIT_JOYSTICK : SDL_INIT_VIDEO | SDL_INIT_JOYSTICK;
+   SDL_INIT_JOYSTICK : SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER;
    if(SDL_Init(initflags) == -1)
    {
       printf("Failed to initialize SDL library: %s\n", SDL_GetError());
