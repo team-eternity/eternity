@@ -137,6 +137,8 @@ static void R_contextThreadFunc(renderdata_t *data)
 //
 void R_InitContexts(const int width)
 {
+   r_hascontexts = true;
+
    prev_numcontexts = r_numcontexts;
 
    r_globalcontext = {};
@@ -194,6 +196,9 @@ void R_InitContexts(const int width)
 
 void R_RefreshContexts()
 {
+   if(!r_hascontexts)
+      return;
+
    if(r_numcontexts == 1)
    {
       r_globalcontext.spritecontext.sectorvisited =

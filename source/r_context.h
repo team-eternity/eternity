@@ -177,7 +177,8 @@ struct rendercontext_t
 // It doesn't contribute to r_numcontexts
 inline rendercontext_t r_globalcontext;
 
-inline int r_numcontexts;
+inline int  r_numcontexts;
+inline bool r_hascontexts;
 
 rendercontext_t &R_GetContext(int context);
 void R_FreeContexts();
@@ -189,6 +190,9 @@ void R_RunContexts();
 template<typename F>
 void R_ForEachContext(F &&f)
 {
+   if(!r_hascontexts)
+      return;
+
    f(r_globalcontext);
 
    if(r_numcontexts > 1)
