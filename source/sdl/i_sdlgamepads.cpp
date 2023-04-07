@@ -56,8 +56,6 @@ static int activeIdx = -1;
 //
 
 //
-// SDLGamePadDriver::initialize
-//
 // Start up the SDL gamepad driver.
 //
 bool SDLGamePadDriver::initialize()
@@ -65,8 +63,6 @@ bool SDLGamePadDriver::initialize()
    return true;
 }
 
-//
-// SDLGamePadDriver::shutdown
 //
 // Perform shutdown actions for SDL GameController support.
 //
@@ -81,8 +77,6 @@ void SDLGamePadDriver::shutdown()
 }
 
 //
-// SDLGamePadDriver::enumerateDevices
-//
 // Instantiate SDLGamePad objects for all supported GameController
 // devices.
 //
@@ -95,13 +89,16 @@ void SDLGamePadDriver::enumerateDevices()
    {
       // Use only valid gamepads
       if(SDL_IsGameController(i))
-         numpads++;
-   }
+      {
+         // Skip this controller if it can't be opened
+         if(SDL_GameController *temp = SDL_GameControllerOpen(i); !temp)
+            continue;
+         else
+            SDL_GameControllerClose(temp);
 
-   for(int i = 0; i < numpads; i++)
-   {
-      sdlDev = new SDLGamePad(i);
-      addDevice(sdlDev);
+         sdlDev = new SDLGamePad(i);
+         addDevice(sdlDev);
+      }
    }
 }
 
@@ -126,8 +123,6 @@ SDLGamePad::SDLGamePad(int idx)
 }
 
 //
-// SDLGamePad::select
-//
 // Select this gamepad as the active input device for the game engine.
 //
 bool SDLGamePad::select()
@@ -149,8 +144,6 @@ bool SDLGamePad::select()
 }
 
 //
-// SDLGamePad::deselect
-//
 // Remove this GameController from its status as the active input device.
 //
 void SDLGamePad::deselect()
@@ -166,8 +159,6 @@ void SDLGamePad::deselect()
    }
 }
 
-//
-// SDLGamePad::poll
 //
 // Refresh input state data by polling the device.
 //
