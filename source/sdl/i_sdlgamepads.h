@@ -50,6 +50,26 @@ public:
 extern SDLGamePadDriver i_sdlGamePadDriver;
 
 //
+// Exposes support for force feedback effects through SDL gamepads.
+//
+class SDLHapticInterface : public HALHapticInterface
+{
+   DECLARE_RTTI_TYPE(SDLHapticInterface, HALHapticInterface)
+
+protected:
+   bool pauseState;
+
+   void zeroState();
+
+public:
+   SDLHapticInterface();
+   virtual void startEffect(effect_e effect, int data1, int data2);
+   virtual void pauseEffects(bool effectsPaused);
+   virtual void updateEffects();
+   virtual void clearEffects();
+};
+
+//
 // SDLGamePad
 //
 // Implements the abstract HAL gamepad class, for devices that are driven by
@@ -61,6 +81,7 @@ class SDLGamePad : public HALGamePad
 
 protected:
    int sdlIndex; // SDL gamepad number
+   SDLHapticInterface haptics;
 
 public:
    SDLGamePad(int idx = 0);
@@ -68,6 +89,8 @@ public:
    virtual bool select() override;
    virtual void deselect() override;
    virtual void poll() override;
+
+   virtual HALHapticInterface *getHapticInterface() { return &haptics; }
 };
 
 #endif

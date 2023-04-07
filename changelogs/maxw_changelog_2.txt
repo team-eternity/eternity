@@ -272,8 +272,9 @@ Fixed crashes due to sound zone propagation through too many sectors.
 
 --------------------------------------------------------------------------------
 2023/03/07
-Overhauled SDL game input to be consistent across controllers.
-Added SDL game input controller preset.
+Overhauled SDL game controller input to be consistent across controllers.
+Added SDL controller input preset.
+Added vibration support to SDL controllers.
 
 ================================================================================
 EOF
