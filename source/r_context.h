@@ -43,8 +43,6 @@ struct sectorbox_t;
 struct vissprite_t;
 class  ZoneHeap;
 
-using sectorboxvisit_t = Surfaces<uint64_t>;
-
 struct contextbounds_t
 {
    int   startcolumn, endcolumn; // for(int x = startcolumn; x < endcolumn; x++)
