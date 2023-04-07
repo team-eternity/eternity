@@ -134,10 +134,10 @@ struct halpaddriveritem_t
 //
 static halpaddriveritem_t halPadDriverTable[] =
 {
-   // SDL 1.2 MMSYSTEM Driver
+   // SDL 2.0 Driver
    {
       0,
-      "SDL MMSYSTEM",
+      "SDL",
 #ifdef _SDL_VER
       &i_sdlGamePadDriver,
 #else
