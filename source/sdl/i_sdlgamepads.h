@@ -44,7 +44,7 @@ public:
    virtual bool initialize();
    virtual void shutdown();
    virtual void enumerateDevices();
-   virtual int  getBaseDeviceNum() { return 0x10000; }
+   virtual int  getBaseDeviceNum() { return 0; }
 };
 
 extern SDLGamePadDriver i_sdlGamePadDriver;

@@ -35,8 +35,8 @@
 
 class HALGamePad;
 
-// Joystick device number, for config file
-extern int i_joysticknum;
+extern bool i_joystickenabled; // Use joysticks at all
+extern int  i_joysticknum;     // Joystick device number, for config file
 
 // Joystick turning sensitvity
 extern double i_joyturnsens;

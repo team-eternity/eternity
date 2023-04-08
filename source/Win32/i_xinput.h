@@ -46,7 +46,7 @@ public:
    virtual bool initialize();
    virtual void shutdown();
    virtual void enumerateDevices();
-   virtual int  getBaseDeviceNum() { return 0; }
+   virtual int  getBaseDeviceNum() { return 0x10000; }
 };
 
 extern XInputGamePadDriver i_xinputGamePadDriver;

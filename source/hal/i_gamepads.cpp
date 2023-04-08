@@ -38,8 +38,8 @@
 
 // Globals
 
-// current device number -- saved in config file
-int i_joysticknum;
+bool i_joystickenabled; // if joysticks are enabled -- saved in config file
+int  i_joysticknum;     // current device number -- saved in config file
 
 // Module-private data
 
@@ -163,8 +163,6 @@ static halpaddriveritem_t halPadDriverTable[] =
 };
 
 //
-// I_SelectDefaultGamePad
-//
 // Select the gamepad configured in the configuration file, if it can be
 // found. Otherwise, nothing will happen and activePad will remain nullptr.
 //
@@ -179,7 +177,7 @@ bool I_SelectDefaultGamePad()
       activePad = nullptr;
    }
 
-   if(i_joysticknum >= 0)
+   if(i_joystickenabled)
    {
       // search through the master directory for a pad with this number
       PODCollection<HALGamePad *>::iterator itr = masterGamePadList.begin();
@@ -196,7 +194,7 @@ bool I_SelectDefaultGamePad()
 
    // Select the device if it was found.
    if(pad)
-   {      
+   {
       if(pad->select())
          activePad = pad;
    }
@@ -326,13 +324,22 @@ HALGamePad *I_GetActivePad()
    return activePad;
 }
 
-// haleyjd 04/15/02: windows joystick commands
+// Joystick command, disables joysticks if set to -1
 CONSOLE_COMMAND(i_joystick, 0)
 {
    if(Console.argc != 1)
       return;
 
+   // Disable joystick if value is -1
    i_joysticknum = Console.argv[0]->toInt();
+   if(i_joysticknum < 0)
+   {
+      i_joystickenabled = false;
+      i_joysticknum     = 0;
+   }
+   else
+      i_joystickenabled = true;
+
    I_SelectDefaultGamePad();
 }
 
