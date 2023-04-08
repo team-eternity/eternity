@@ -1281,7 +1281,8 @@ static menuitem_t mn_options_items[] =
    {it_gap},
    {it_info,   "Input/Output"},
    {it_runcmd, "Key bindings",          "mn_bindings" },
-   {it_runcmd, "Mouse / Gamepad",       "mn_mouse"    },
+   {it_runcmd, "Mouse Options",         "mn_mouse"    },
+   {it_runcmd, "Gamepad Options",       "mn_gamepad"  },
    {it_runcmd, "Video Options",         "mn_video"    },
    {it_runcmd, "Sound Options",         "mn_sound"    },
    {it_gap},
@@ -1994,29 +1995,23 @@ menu_t menu_soundeq =
 
 /////////////////////////////////////////////////////////////////
 //
-// Mouse & Joystick Options
+// Mouse Options
 //
 
-static const char *mn_mousejoy_names[] =
+static const char *mn_mouse_names[] =
 {
    "Mouse Settings",
    "Acceleration / Mouselook",
-   "Gamepad Settings",
-   "Gamepad Axis Settings",
    nullptr
 };
 
 extern menu_t menu_mouse;
 extern menu_t menu_mouse_accel_and_mlook;
-extern menu_t menu_joystick;
-extern menu_t menu_joystick_axes;
 
-static menu_t *mn_mousejoy_pages[] =
+static menu_t *mn_mouse_pages[] =
 {
    &menu_mouse,
    &menu_mouse_accel_and_mlook,
-   &menu_joystick,
-   &menu_joystick_axes,
    nullptr
 };
 
@@ -2051,8 +2046,8 @@ menu_t menu_mouse =
    2,                            // first selectable
    mf_background,                // full-screen menu
    nullptr,                      // no drawer
-   mn_mousejoy_names,            // TOC stuff
-   mn_mousejoy_pages,
+   mn_mouse_names,            // TOC stuff
+   mn_mouse_pages,
 };
 
 CONSOLE_COMMAND(mn_mouse, 0)
@@ -2080,19 +2075,43 @@ menu_t menu_mouse_accel_and_mlook =
 {
    mn_mouse_accel_and_mlook_items, // menu items
    &menu_mouse,                    // previous page
-   &menu_joystick,                 // next page
+   nullptr,                        // next page
    &menu_mouse,                    // rootpage
    200, 15,                        // x, y offset
    3,                              // first selectable
    mf_background,                  // full-screen menu
    nullptr,                        // no drawer
-   mn_mousejoy_names,              // TOC stuff
-   mn_mousejoy_pages,
+   mn_mouse_names,                 // TOC stuff
+   mn_mouse_pages,
 };
+
+/////////////////////////////////////////////////////////////////
+//
+// Gamepad Options
+//
+
+extern menu_t menu_gamepad;
+extern menu_t menu_gamepad_axes;
+
+static const char *mn_gamepad_names[] =
+{
+   "Gamepad Settings",
+   "Gamepad Axis Settings",
+   nullptr
+};
+
+static menu_t *mn_gamepad_pages[] =
+{
+   &menu_gamepad,
+   &menu_gamepad_axes,
+   nullptr
+};
+
+
 
 //------------------------------------------------------------------------
 //
-// Joystick Configuration Menu
+// Gamepad Configuration Menu
 //
 
 static const char **mn_js_desc;
@@ -2101,7 +2120,7 @@ static const char **mn_js_cmds;
 static void MN_BuildJSTables()
 {
    static bool menu_built = false;
-   
+
    // don't build multiple times
    if(!menu_built)
    {
@@ -2121,8 +2140,8 @@ static void MN_BuildJSTables()
       {
          HALGamePad *pad = I_GetGamePad(jsnum);
 
-         mn_js_desc[jsnum + 1] = pad->name.duplicate(PU_STATIC);         
-         
+         mn_js_desc[jsnum + 1] = pad->name.duplicate(PU_STATIC);
+
          tempstr.Printf(0, "i_joystick %i", pad->num);
          mn_js_cmds[jsnum + 1] = tempstr.duplicate(PU_STATIC);
       }
@@ -2226,7 +2245,7 @@ CONSOLE_COMMAND(mn_profiles, cf_hidden)
    MN_ShowBoxWidget();
 }
 
-static menuitem_t mn_joystick_items[] =
+static menuitem_t mn_gamepad_items[] =
 {
    { it_title,        "Gamepad Settings",          nullptr, nullptr  },
    { it_gap                                                          },
@@ -2237,28 +2256,28 @@ static menuitem_t mn_joystick_items[] =
    { it_info,         "Settings"                                     },
    { it_runcmd,       "Load profile...",           "mn_profiles"     },
    { it_variable,     "Turn sensitivity",          "i_joyturnsens"   },
-   { it_variable,     "SDL axis dead zone",        "i_joysticksens"  },
+   { it_variable,     "Gamepad axis dead zone",    "i_joysticksens"  },
    { it_toggle,       "Force feedback",            "i_forcefeedback" },
    { it_end                                                          }
 };
 
-menu_t menu_joystick =
+menu_t menu_gamepad =
 {
-   mn_joystick_items,
-   &menu_mouse_accel_and_mlook,    // previous page
-   &menu_joystick_axes,            // next page
-   &menu_mouse,                    // rootpage
+   mn_gamepad_items,
+   nullptr,                        // previous page
+   &menu_gamepad_axes,             // next page
+   &menu_gamepad,                    // rootpage
    200, 15,                        // x,y offset
    2,                              // start on first selectable
    mf_background,                  // full-screen menu
    nullptr,                        // no drawer
-   mn_mousejoy_names,              // TOC stuff
-   mn_mousejoy_pages,
+   mn_gamepad_names,               // TOC stuff
+   mn_gamepad_pages,
 };
 
-CONSOLE_COMMAND(mn_joymenu, 0)
-{   
-   MN_StartMenu(&menu_joystick);
+CONSOLE_COMMAND(mn_gamepad, 0)
+{
+   MN_StartMenu(&menu_gamepad);
 }
 
 //-----------------------------------------------------------------------------
@@ -2419,14 +2438,14 @@ CONSOLE_COMMAND(mn_padtest, 0)
 
 //------------------------------------------------------------------------
 //
-// Joystick Axis Configuration Menu
+// Gamepad Axis Configuration Menu
 //
 
 //
 // The menu content. NOTE: this is only for show and keeping content; otherwise it gets dynamically
 // updated
 //
-static menuitem_t mn_joystick_axes_placeholder[] =
+static menuitem_t mn_gamepad_axes_placeholder[] =
 {
    { it_title,        "Gamepad Axis Settings",     nullptr, nullptr  },
    { it_gap                                                          },
@@ -2434,24 +2453,24 @@ static menuitem_t mn_joystick_axes_placeholder[] =
    { it_end                                                          },
 };
 
-menu_t menu_joystick_axes =
+menu_t menu_gamepad_axes =
 {
-   mn_joystick_axes_placeholder,
-   &menu_joystick,                 // previous page
+   mn_gamepad_axes_placeholder,
+   &menu_gamepad,                  // previous page
    nullptr,                        // next page
-   &menu_mouse,                    // rootpage
+   &menu_gamepad,                  // rootpage
    200, 15,                        // x,y offset
    2,                              // start on first selectable
    mf_background,                  // full-screen menu
    nullptr,                        // no drawer
-   mn_mousejoy_names,              // TOC stuff
-   mn_mousejoy_pages,
+   mn_gamepad_names,               // TOC stuff
+   mn_gamepad_pages,
 };
 
 //
-// Called when the current joystick is changed
+// Called when the current gamepad is changed
 //
-void MN_UpdateJoystickMenus()
+void MN_UpdateGamepadMenus()
 {
    struct menuentry_t
    {
@@ -2463,15 +2482,15 @@ void MN_UpdateJoystickMenus()
    static const menu_t basemenu =
    {
       nullptr,
-      &menu_joystick,
+      &menu_gamepad,
       nullptr,
-      &menu_mouse,
+      &menu_gamepad,
       200, 15,
       2,
       mf_background,
       nullptr,
-      mn_mousejoy_names,
-      mn_mousejoy_pages
+      mn_gamepad_names,
+      mn_gamepad_pages
    };
 
    HALGamePad *pad = I_GetActivePad();
@@ -2485,8 +2504,8 @@ void MN_UpdateJoystickMenus()
          { it_end }
       };
 
-      menu_joystick_axes = basemenu;
-      menu_joystick_axes.menuitems = noitems;
+      menu_gamepad_axes = basemenu;
+      menu_gamepad_axes.menuitems = noitems;
       return;
    }
 
@@ -2550,16 +2569,16 @@ void MN_UpdateJoystickMenus()
    }
    for(int i = 0; i < numpages; ++i)
       pages[i].menuitems = pageitems[i].items;
-   pages[0].prevpage = &menu_joystick;
+   pages[0].prevpage = &menu_gamepad;
    for(int i = 1; i < numpages; ++i)
       pages[i].prevpage = &pages[i - 1];
    for(int i = 0; i < numpages - 1; ++i)
       pages[i].nextpage = &pages[i + 1];
 
-   // HACK: just copy the first page into menu_joystick_axes. It will be a duplicate, yes, but
+   // HACK: just copy the first page into menu_gamepad_axes. It will be a duplicate, yes, but
    // the TOC looks for this global object, and we don't want to mess with the C-like TOC structure
    // here
-   menu_joystick_axes = pages[0];
+   menu_gamepad_axes = pages[0];
 }
 
 //=============================================================================
@@ -3584,6 +3603,7 @@ static void MN_InitSearchStr()
 // haleyjd: searchable menus
 extern menu_t menu_movekeys;
 extern menu_t menu_mouse;
+extern menu_t menu_gamepad;
 extern menu_t menu_video;
 extern menu_t menu_sound;
 extern menu_t menu_compat1;
@@ -3601,6 +3621,7 @@ static menu_t *mn_search_menus[] =
 {
    &menu_movekeys,
    &menu_mouse,
+   &menu_gamepad,
    &menu_video,
    &menu_sound,
    &menu_compat1,

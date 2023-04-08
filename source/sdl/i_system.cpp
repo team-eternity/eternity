@@ -88,7 +88,7 @@ void I_Init()
    I_InitHALTimer();
 
    // haleyjd 04/15/02: initialize joystick
-   I_InitGamePads(MN_UpdateJoystickMenus);
+   I_InitGamePads(MN_UpdateGamepadMenus);
  
    atexit(I_Shutdown);
    
