@@ -33,10 +33,7 @@
 #include "../hal/i_gamepads.h"
 
 //
-// SDLGamePadDriver
-//
-// Implements the abstract HAL gamepad/joystick interface for SDL's MMSYSTEM
-// based gamepad support.
+// Implements the abstract HAL gamepad/joystick interface for SDL's GameController gamepad support.
 //
 class SDLGamePadDriver : public HALGamePadDriver
 {
@@ -69,8 +66,6 @@ public:
    virtual void clearEffects();
 };
 
-//
-// SDLGamePad
 //
 // Implements the abstract HAL gamepad class, for devices that are driven by
 // the SDL DirectInput driver.

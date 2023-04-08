@@ -2401,10 +2401,11 @@ static void MN_padTestTicker()
    for(int i = 0; i < mn_padtestdata.numButtons && i < HALGamePad::MAXBUTTONS; i++)
    {
       mn_padtestdata.buttonStates[i] = gamepad->state.buttons[i];
+
+      // kill the widget if any button is held for 5 seconds
       if(mn_padtestdata.buttonStates[i])
       {
          mn_padtestdata.buttonLengths[i]++;
-         // kill the widget if any button is held for 5 seconds
          if(mn_padtestdata.buttonLengths[i] > TICRATE * 5)
          {
             S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);

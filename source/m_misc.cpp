@@ -165,7 +165,7 @@ default_t defaults[] =
                  "Joystick turning sensitivity"),
    // joystick sensitivity
    DEFAULT_INT("i_joysticksens", &i_joysticksens, nullptr, 7849, 0, 32767, default_t::wad_no,
-               "SDL MMSYSTEM joystick sensitivity"),
+               "SDL joystick sensitivity"),
 
    DEFAULT_INT("s_precache", &s_precache, nullptr, 0, 0, 1, default_t::wad_no,
                "precache sounds at startup"),

@@ -52,7 +52,7 @@ static int activeIdx = -1;
 //
 // SDLGamePadDriver
 //
-// Implements support for SDL MMSYSTEM gamepad devices.
+// Implements support for SDL gamepad devices.
 //
 
 //
@@ -194,7 +194,7 @@ void SDLGamePad::poll()
 static constexpr const char *stringForAxis[SDL_CONTROLLER_AXIS_MAX] =
 {
    "Left X",
-   "Left X",
+   "Left Y",
    "Right X",
    "Right Y",
    "Left Trigger",
@@ -342,8 +342,6 @@ void SDLBaseEffect::ClearEffectsList()
 // Effect Classes
 //
 
-//
-// SDLLinearEffect
 //
 // Tracks a single-motor effect that starts at a given strength and moves up or
 // down to another strength with a linear slope over the time period.

@@ -93,7 +93,7 @@ protected:
    static inline constexpr const char *stringForAxis[6] =
    {
       "Left X",
-      "Left X",
+      "Left Y",
       "Right X",
       "Right Y",
       "Left Trigger",
