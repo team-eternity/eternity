@@ -34,7 +34,8 @@ bind joy2 flip
 bind joy3 jump
 bind joy4 map_toggle
 
-// Gameplay: Right trigger
+// Gameplay: LT/RT
+bind axis5 run
 bind axis6 attack
 
 // Gameplay: LB/RB
