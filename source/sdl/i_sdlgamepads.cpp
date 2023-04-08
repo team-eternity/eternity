@@ -191,6 +191,28 @@ void SDLGamePad::poll()
    }
 }
 
+static constexpr const char *stringForAxis[SDL_CONTROLLER_AXIS_MAX] =
+{
+   "Left X",
+   "Left X",
+   "Right X",
+   "Right Y",
+   "Left Trigger",
+   "Right Trigger",
+};
+
+//
+// Gets a name for a SDL_GameControllerAxis (if possible)
+//
+const char *SDLGamePad::getAxisName(const int axis)
+{
+   const SDL_GameControllerAxis controllerAxis = SDL_GameControllerAxis(axis);
+   if(controllerAxis > SDL_CONTROLLER_AXIS_INVALID && controllerAxis < SDL_CONTROLLER_AXIS_MAX)
+      return stringForAxis[axis];
+   else
+      return Super::getAxisName(axis);
+}
+
 //=============================================================================
 //
 // SDLHapticInterface Effects

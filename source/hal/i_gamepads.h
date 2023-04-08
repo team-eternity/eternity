@@ -32,6 +32,7 @@
 #include "../e_rtti.h"
 #include "../m_collection.h"
 #include "../m_qstr.h"
+#include "../psnprntf.h"
 
 class HALGamePad;
 
@@ -115,10 +116,15 @@ protected:
 public:
    HALGamePad();
 
+   // In interest of efficiency, we have caps on the number of device inputs
+   // we will monitor.
+   static inline constexpr int MAXAXES = 8;
+   static inline constexpr int MAXBUTTONS = 24;
+
    // Selection
    virtual bool select()   = 0; // Select as the input device
    virtual void deselect() = 0; // Deselect from input device status
-   
+
    // Input
    virtual void poll() = 0;     // Refresh all input state data
 
@@ -131,12 +137,15 @@ public:
    int     numAxes;     // Number of axes supported
    int     numButtons;  // Number of buttons supported
 
-   enum
+   virtual const char *getAxisName(const int axis)
    {
-      // In interest of efficiency, we have caps on the number of device inputs
-      // we will monitor.
-      MAXAXES = 8,
-      MAXBUTTONS = 24,
+      static char output[16];
+      if(axis >= 0 && axis < MAXAXES)
+         psnprintf(output, sizeof(output), "Axis %d", axis);
+      else
+         strncpy(output, "Invalid axis", 16);
+
+      return output;
    };
 
    struct padstate_t

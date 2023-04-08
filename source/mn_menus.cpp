@@ -2290,6 +2290,7 @@ CONSOLE_COMMAND(mn_gamepad, 0)
 //
 struct mn_padtestdata_t
 {
+   int   buttonLengths[HALGamePad::MAXBUTTONS];
    bool  buttonStates[HALGamePad::MAXBUTTONS];
    float axisStates[HALGamePad::MAXAXES];
    int   numButtons;
@@ -2366,10 +2367,14 @@ static void MN_padTestDrawer()
       }
    }
 
-   const char *help = "Press ESC on keyboard to exit";
-   x = 160 - MN_StringWidth(help) / 2;
+   const char *help1 = "Press ESC on keyboard or hold any";
+   x = 160 - MN_StringWidth(help1) / 2;
    y += 2 * lineHeight;
-   MN_WriteTextColored(help, GameModeInfo->infoColor, x, y);
+   MN_WriteTextColored(help1, GameModeInfo->infoColor, x, y);
+   const char *help2 = "controller button 5 seconds to exit";
+   x = 160 - MN_StringWidth(help2) / 2;
+   y += lineHeight;
+   MN_WriteTextColored(help2, GameModeInfo->infoColor, x, y);
 }
 
 //
@@ -2392,9 +2397,23 @@ static void MN_padTestTicker()
    mn_padtestdata.numButtons = gamepad->numButtons;
 
    for(int i = 0; i < mn_padtestdata.numAxes && i < HALGamePad::MAXAXES; i++)
-      mn_padtestdata.axisStates[i]   = gamepad->state.axes[i];
+      mn_padtestdata.axisStates[i] = gamepad->state.axes[i];
    for(int i = 0; i < mn_padtestdata.numButtons && i < HALGamePad::MAXBUTTONS; i++)
+   {
       mn_padtestdata.buttonStates[i] = gamepad->state.buttons[i];
+      if(mn_padtestdata.buttonStates[i])
+      {
+         mn_padtestdata.buttonLengths[i]++;
+         // kill the widget if any button is held for 5 seconds
+         if(mn_padtestdata.buttonLengths[i] > TICRATE * 5)
+         {
+            S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+            MN_PopWidget();
+         }
+      }
+      else
+         mn_padtestdata.buttonLengths[i] = 0;
+   }
 }
 
 //
@@ -2417,8 +2436,8 @@ static bool MN_padTestResponder(event_t *ev, int action)
    return true;
 }
 
-static menuwidget_t padtest_widget = 
-{ 
+static menuwidget_t padtest_widget =
+{
    MN_padTestDrawer,
    MN_padTestResponder,
    MN_padTestTicker,
@@ -2432,6 +2451,9 @@ CONSOLE_COMMAND(mn_padtest, 0)
       MN_ErrorMsg("No active gamepad");
       return;
    }
+
+   for(int i = 0; i < HALGamePad::MAXBUTTONS; i++)
+      mn_padtestdata.buttonLengths[i] = 0;
 
    MN_PushWidget(&padtest_widget);
 }
@@ -2516,13 +2538,13 @@ void MN_UpdateGamepadMenus()
    for(int i = 0; i < pad->numAxes; ++i)
    {
       menuentry_t &entry = entries.addNew();
-      snprintf(entry.label, sizeof(entry.label), "Axis %d action", i + 1);
+      snprintf(entry.label, sizeof(entry.label), "%s action", pad->getAxisName(i));
       snprintf(entry.variable, sizeof(entry.variable), "g_axisaction%d", i + 1);
    }
    for(int i = 0; i < pad->numAxes; ++i)
    {
       menuentry_t &entry = entries.addNew();
-      snprintf(entry.label, sizeof(entry.label), "Axis %d orientation", i + 1);
+      snprintf(entry.label, sizeof(entry.label), "%s orientation", pad->getAxisName(i));
       snprintf(entry.variable, sizeof(entry.variable), "g_axisorientation%d", i + 1);
    }
    // TODO: add the options from Descent Rebirth

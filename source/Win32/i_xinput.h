@@ -90,14 +90,35 @@ protected:
    float normAxis(int value, int threshold, int maxvalue);
    void  normAxisPair(float &axisx, float &axisy, int threshold, int min, int max);
 
+   static inline constexpr const char *stringForAxis[6] =
+   {
+      "Left X",
+      "Left X",
+      "Right X",
+      "Right Y",
+      "Left Trigger",
+      "Right Trigger",
+   };
+
 public:
    XInputGamePad(unsigned long userIdx = 0);
 
    virtual bool select();
    virtual void deselect();
    virtual void poll();
-   
+
    virtual HALHapticInterface *getHapticInterface() { return &haptics; }
+
+   //
+   // Gets a name for an axis (if possible)
+   //
+   virtual const char *getAxisName(const int axis) override
+   {
+      if(axis >= 0 && axis < 6)
+         return stringForAxis[axis];
+      else
+         return Super::getAxisName(axis);
+   }
 };
 
 #endif
