@@ -395,52 +395,8 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    }
 
    // update stuff
-   // ioanch 20160315: don't forget about 3dmidtex on the same group ID if they
-   // decrease the opening
-   if((!underportal || (lineclipflags & LINECLIP_UNDER3DMIDTEX)) 
-      && clip.open.height.ceiling < clip.zref.ceiling)
-   {
-      clip.zref.ceiling = clip.open.height.ceiling;
-      clip.ceilingline = ld;
-      clip.blockline = ld;
-   }
-   if((!aboveportal || (lineclipflags & LINECLIP_OVER3DMIDTEX)) 
-      && clip.open.height.floor > clip.zref.floor)
-   {
-      clip.zref.floor = clip.open.height.floor;
-      clip.zref.floorgroupid = clip.open.bottomgroupid;
-      clip.zref.floorsector = clip.open.floorsector;
-      clip.floorline = ld;          // killough 8/1/98: remember floor linedef
-      clip.blockline = ld;
-   }
-
-   // ioanch 20160116: this is crazy. If the lines belong in separate groups,
-   // make sure to only decrease dropoffz if the line top really reaches the
-   // current value of dropoffz. Since layers get explored progressively from
-   // top to bottom (when going down), dropoffz will then gradually fall down
-   // as each layer is explored, if there really is a gap, and accidental
-   // detail downstairs will not count, considering the linetop would always
-   // be below any dropfloorz upstairs.
-   if(clip.open.lowfloor < clip.zref.dropoff && (samegroupid || linetop >= clip.zref.dropoff))
-   {
-      clip.zref.dropoff = clip.open.lowfloor;
-   }
-
-   // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
-   // touching 3DMidTex lines.
-   if(demo_version >= 331 && clip.open.touch3dside)
-      clip.zref.dropoff = clip.zref.floor;
-
-   if(!aboveportal && clip.open.sec.floor > clip.zref.secfloor)
-      clip.zref.secfloor = clip.open.sec.floor;
-   if(!underportal && clip.open.sec.ceiling < clip.zref.secceil)
-      clip.zref.secceil = clip.open.sec.ceiling;
-
-   // SoM 11/6/02: AGHAH
-   if(clip.zref.floor > clip.zref.passfloor)
-      clip.zref.passfloor = clip.zref.floor;
-   if(clip.zref.ceiling < clip.zref.passceil)
-      clip.zref.passceil = clip.zref.ceiling;
+   P_UpdateFromOpening(clip.open, ld, clip, underportal, aboveportal, lineclipflags, samegroupid, 
+      linetop);
 
    // ioanch: only allow spechits if on contact or simply same group.
    // Line portals however are ONLY collected if on the same group
