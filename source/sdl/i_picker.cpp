@@ -41,6 +41,8 @@ static WadDirectory  pickwad;       // private directory for startup.wad
 static int           currentiwad;   // currently selected IWAD
 static bool         *haveIWADArray; // valid IWADs, passed here from d_main.c
 
+static SDL_GameController **controllers; // All controllers
+
 extern int           displaynum;  // What number display to place windows on
 
 // name of title screen lumps in startup.wad
@@ -308,6 +310,32 @@ static void I_Pick_Drawer(void)
 //
 
 //
+// Temporarily open all controllers
+//
+static void I_Pick_InitControllers()
+{
+   controllers = ecalloc(SDL_GameController **, SDL_NumJoysticks(), sizeof(SDL_GameController *));;
+   for(int i = 0; i < SDL_NumJoysticks(); i++)
+   {
+      if(SDL_IsGameController(i))
+         controllers[i] = SDL_GameControllerOpen(i);
+   }
+}
+
+//
+// Close the previously-opened controllers
+//
+static void I_Pick_CloseControllers()
+{
+   for(int i = 0; i < SDL_NumJoysticks(); i++)
+   {
+      if(controllers[i])
+         SDL_GameControllerClose(controllers[i]);
+   }
+   efree(controllers);
+}
+
+//
 // I_Pick_DoLeft
 //
 // Called for left arrow keydown and mouse click events. Moves the IWAD 
@@ -490,6 +518,30 @@ static void I_Pick_MainLoop(void)
                break;
             }
             break;
+         case SDL_CONTROLLERBUTTONDOWN:
+            switch(ev.cbutton.button)
+            {
+            case SDL_CONTROLLER_BUTTON_Y:
+               I_Pick_DoAbort();
+               break;
+            case SDL_CONTROLLER_BUTTON_A:
+            case SDL_CONTROLLER_BUTTON_B:
+            case SDL_CONTROLLER_BUTTON_X:
+            case SDL_CONTROLLER_BUTTON_START:
+               doloop = false;
+               break;
+            case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+               I_Pick_DoLeft();
+               break;
+            case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+               I_Pick_DoRight();
+               break;
+            default:
+               break;
+            }
+            break;
          default:
             break;
          }
@@ -604,11 +656,17 @@ int I_Pick_DoPicker(bool haveIWADs[], int startchoice)
    // set window title to currently selected game
    SDL_SetWindowTitle(pickwindow, titles[currentiwad]);
 
+   // initialise controllers for input handling
+   I_Pick_InitControllers();
+
    // run the program
    I_Pick_MainLoop();
 
    // user is finished, free stuff and get everything back to normal
    I_Pick_Shutdown();
+
+   // close the controllers since we're done with them for now
+   I_Pick_CloseControllers();
 
    // the currently selected file is returned to d_main.c
    return currentiwad;

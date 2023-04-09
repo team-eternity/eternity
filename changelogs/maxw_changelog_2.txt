@@ -238,6 +238,45 @@ Update auto-detecting Doom 2 and Final Doom WADs for Steam.
 Update auto-detecting of Steam WADs to support non-default Steam library game
 install locations.
 
+--------------------------------------------------------------------------------
+2022/09/24
+Added the cvar "map_antialias" which toggles whether or not lines get drawn with
+anti-aliasing.
+
+--------------------------------------------------------------------------------
+2022/11/13
+Change some automap colours to not use the cross graphic for index 0 if they
+aren't optional. Change default Doom automap background colour to index 0.
+
+--------------------------------------------------------------------------------
+2022/12/06
+Fixed qsave command to work even if no save slot had been selected before.
+
+--------------------------------------------------------------------------------
+2022/12/11
+Made fontdeltas able to change linear fonts to filter-based fonts.
+Deprecated "linearlump" from fonts, which now does nothing. Font format is now
+automatically detected.
+
+--------------------------------------------------------------------------------
+2023/01/28
+Added support for ZDoom compressed nodes.
+
+--------------------------------------------------------------------------------
+2023/02/18
+Finished moving to New Zealand.
+
+--------------------------------------------------------------------------------
+2023/03/04
+Fixed crashes due to sound zone propagation through too many sectors.
+
+--------------------------------------------------------------------------------
+2023/03/07
+Overhauled SDL game controller input to be consistent across controllers.
+Added SDL controller input preset.
+Added vibration support to SDL controllers.
+Added ability to use the IWAD picker with controllers, as well as exit ENDOOM.
+
 ================================================================================
 EOF
 ================================================================================

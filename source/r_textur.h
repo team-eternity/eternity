@@ -30,6 +30,7 @@ struct texture_t;
 
 // Needed by GameModeInfo
 void R_DoomTextureHacks(texture_t *);
+void R_Doom2TextureHacks(texture_t *);
 void R_HticTextureHacks(texture_t *);
 
 #endif

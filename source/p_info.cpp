@@ -48,6 +48,7 @@
 
 #include "z_zone.h"
 
+#include "c_io.h"
 #include "d_deh.h"
 #include "d_dehtbl.h"
 #include "d_gi.h"
@@ -68,6 +69,7 @@
 #include "p_setup.h"
 #include "r_sky.h"
 #include "s_sound.h"
+#include "v_misc.h"
 #include "w_levels.h"
 #include "w_wad.h"
 #include "xl_emapinfo.h"
@@ -1376,21 +1378,21 @@ void P_EnsureDefaultStoryText(bool secret)
 }
 
 //
-// Check level info and fail early in case of severe errors
+// Check level info for strings illegal to be over 8 characters. Truncate them.
 //
-static bool P_validateLevelInfo(qstring *errorOut)
+static void P_truncateLevelInfoNames()
 {
-   qstring error;
+   // For any lump names assumed to be at most 8 characters, truncate them (it's a common author
+   // error, like in vel_aex, to have mapinfo names longer than the actual lumps).
 
-   // For any lump names assumed to be at most 8 characters, signal error if they surpass it.
-   // Only remove these limitations if the rest of the code guarantees it can handle longer names.
+   // But remove these limitations if the rest of the code guarantees it can handle longer names.
 
    //
    // Lump string information: holds its address and user readable description
    //
    struct LumpStringInfo
    {
-      const char *infoField;
+      const char **infoField;
       const char *description;
    };
 
@@ -1399,42 +1401,39 @@ static bool P_validateLevelInfo(qstring *errorOut)
    // * Textures and flats are fine, however, so they're not limited here.
    LumpStringInfo eightCharMaxFields[] =
    {
-      { LevelInfo.interPic, "intermission background" },
-      { LevelInfo.interTextLump, "story text lump" },
-      { LevelInfo.interTextSLump, "secret story text lump" },
-      { LevelInfo.backDrop, "story text back drop" },
-      { LevelInfo.interMusic, "story text music" },
-      { LevelInfo.levelPic, "intermission level name graphic" },
-      { LevelInfo.nextLevelPic, "intermission next level name graphic" },
-      { LevelInfo.nextSecretPic, "intermission next secret level name graphic" },
-      { LevelInfo.nextLevel, "next level name" },
-      { LevelInfo.nextSecret, "next secret level name" },
-      { LevelInfo.musicName, "music name" },
-      { LevelInfo.colorMap, "color map name" },
-      { LevelInfo.outdoorFog, "outdoor fog name" },
-      { LevelInfo.acsScriptLump, "ACS script lump" },
-      { LevelInfo.extraData, "ExtraData lump" },
+      { &LevelInfo.interPic, "intermission background" },
+      { &LevelInfo.interTextLump, "story text lump" },
+      { &LevelInfo.interTextSLump, "secret story text lump" },
+      { &LevelInfo.backDrop, "story text back drop" },
+      { &LevelInfo.interMusic, "story text music" },
+      { &LevelInfo.levelPic, "intermission level name graphic" },
+      { &LevelInfo.nextLevelPic, "intermission next level name graphic" },
+      { &LevelInfo.nextSecretPic, "intermission next secret level name graphic" },
+      { &LevelInfo.nextLevel, "next level name" },
+      { &LevelInfo.nextSecret, "next secret level name" },
+      { &LevelInfo.musicName, "music name" },
+      { &LevelInfo.colorMap, "color map name" },
+      { &LevelInfo.outdoorFog, "outdoor fog name" },
+      { &LevelInfo.acsScriptLump, "ACS script lump" },
+      { &LevelInfo.extraData, "ExtraData lump" },
       // skyName is fine! Apart from TXTRCONV which isn't crashy.
       // Same for: altSkyName,
    };
 
    for(const LumpStringInfo &info : eightCharMaxFields)
    {
-      if(info.infoField && strlen(info.infoField) > 8)
+      if(*info.infoField && strlen(*info.infoField) > 8)
       {
-         error = qstring("Invalid ") + info.description + ": " + info.infoField +
-               ". Must not be longer than 8 characters.";
-         break;
+         C_Printf(FC_ERROR "Truncating %s '%s' to 8 characters\n", info.description,
+                  *info.infoField);
+         // NOTE: we can't overwrite the strings due to constness, but we can define new ones.
+         char *newData = ecalloctag(char *, 9, 1, PU_LEVEL, nullptr);
+         memcpy(newData, *info.infoField, 8);
+         // NOTE: we can't free const pointers, but fortunately it won't leak, because the old data
+         // will be purged at the end of the level.
+         *info.infoField = newData;
       }
    }
-
-   if(!error.empty())
-   {
-      if(errorOut)
-         *errorOut = error;
-      return false;
-   }
-   return true;
 }
 
 //=============================================================================
@@ -1508,8 +1507,7 @@ bool P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname, qstring
    if(!foundEEMapInfo)
       P_ApplyHexenMapInfo();
 
-   if(!P_validateLevelInfo(error))
-      return false;
+   P_truncateLevelInfoNames();
 
    // haleyjd: call post-processing routines
    P_LoadInterTextLumps();

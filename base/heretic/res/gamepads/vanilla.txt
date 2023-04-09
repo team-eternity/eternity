@@ -1,0 +1,7 @@
+bind joy1 attack
+bind joy2 strafe
+bind joy3 speed
+bind joy4 use
+
+g_axisaction1 turn
+g_axisaction2 move

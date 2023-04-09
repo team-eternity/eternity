@@ -195,8 +195,6 @@ VImage *VImageManager::generateDefaultResource(int expectedWidth, int expectedHe
 }
 
 //
-// VImageManager::resourceIsPatch
-//
 // Protected method.
 // Format detection for DOOM's patch_t image format.
 //
@@ -214,15 +212,15 @@ bool VImageManager::resourceIsPatch(void *data, size_t size)
    int16_t top    = GetBinaryWord(header);
 
    // Check for sane header values
-   if(width < 0     || width > 4096 || height < 0     || height > 4096 ||
-      left  < -2000 || left  > 2000 || top    < -2000 || top    > 2000)
+   if(width <= 0     || width >= 4096 || height <= 0     || height >= 4096 ||
+      left  <= -2000 || left  >= 2000 || top    <= -2000 || top    >= 2000)
       return false; // invalid or very unlikely graphic size
 
    // Number of bytes needed for columnofs
    size_t numBytesNeeded = width * 4;
    if(size - 8 < numBytesNeeded)
       return false; // invalid columnofs table size
-   
+
    // Verify all columns
    for(int i = 0; i < width; i++)
    {
@@ -249,8 +247,6 @@ bool VImageManager::resourceIsPatch(void *data, size_t size)
 }
 
 //
-// VImageManager::resourceIsPNG
-//
 // Format detection for standard PNG images.
 //
 bool VImageManager::resourceIsPNG(void *data, size_t size)
@@ -264,8 +260,6 @@ bool VImageManager::resourceIsPNG(void *data, size_t size)
 }
 
 //
-// VImageManager::resourceIsLinear
-//
 // This will accept any non-empty data source, so it is the lowest priority.
 //
 bool VImageManager::resourceIsLinear(void *data, size_t size)
@@ -273,8 +267,6 @@ bool VImageManager::resourceIsLinear(void *data, size_t size)
    return (size != 0);
 }
 
-//
-// V_linearOptimalSize
 //
 // Try to find the most rectangular size for a linear raw graphic, preferring
 // a wider width than height when the graphic is not square.
@@ -294,8 +286,6 @@ static void V_linearOptimalSize(size_t lumpsize, int &w, int &h)
    w = static_cast<int>(lumpsize / h);
 }
 
-//
-// VImageManager::determineLinearDimensions
 //
 // Linear graphics do not have size information in their header so in some
 // situations the dimensions to use must be determined manually. For historical
@@ -377,14 +367,12 @@ void VImageManager::determineLinearDimensions(void *data, size_t size,
 }
 
 //
-// VImageManager::detectResourceFormat
-//
 // Protected method.
 // Given the raw image data, detect what actual format it is in.
 //
 vimgformat_e VImageManager::detectResourceFormat(void *data, size_t size)
 {
-   typedef bool (VImageManager::*fmtmethod_t)(void *, size_t);
+   using fmtmethod_t = bool (*)(void *, size_t);
 
    static fmtmethod_t methods[3] =
    {
@@ -403,18 +391,16 @@ vimgformat_e VImageManager::detectResourceFormat(void *data, size_t size)
 
    for(size_t i = 0; i < earrlen(methods); i++)
    {
-      if((this->*(methods[i]))(data, size))
+      if((*(methods[i]))(data, size))
       {
          fmt = fmts[i];
          break;
       }
    }
-   
+
    return fmt;
 }
 
-//
-// VImageManager::loadResource
 //
 // Loads resource from a wad directory by lump number. Optional parameters
 // allow storage of information in the image about what was expected by the

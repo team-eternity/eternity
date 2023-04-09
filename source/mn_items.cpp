@@ -816,6 +816,11 @@ class MenuItemAutomap : public MenuItem
    DECLARE_RTTI_TYPE(MenuItemAutomap, MenuItem)
 
 public:
+   virtual void handleIndex0(const int amcolor, const int ix, const int iy)
+   {
+      // No cross patch for non-optional colours
+   }
+
    virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
    {
       int ix = item->x;
@@ -848,21 +853,43 @@ public:
       // draw it
       V_DrawBlock(ix + MENU_GAP_SIZE, iy - 1, &subscreen43, BLOCK_SIZE, BLOCK_SIZE, block);
 
-      // draw patch w/cross
-      if(!amcolor)
-      {
-         V_DrawPatch(ix + MENU_GAP_SIZE + 1, iy, &subscreen43,
-                     PatchLoader::CacheName(wGlobalDir, "M_PALNO", PU_CACHE));
-      }
+      handleIndex0(amcolor, ix, iy);
    }
 
    virtual void onConfirm(menuitem_t *item) override
    {
-      MN_SelectColour(item->data);
+      MN_SelectColor(item->data, mapColorType_e::mandatory);
    }
 };
 
 IMPLEMENT_RTTI_TYPE(MenuItemAutomap)
+
+//=============================================================================
+//
+// Optional Automap Color
+//
+// As above, but index 0 means that it is not rendered.
+//
+
+class MenuItemAutomapOpt : public MenuItemAutomap
+{
+   DECLARE_RTTI_TYPE(MenuItemAutomapOpt, MenuItemAutomap)
+
+public:
+   virtual void handleIndex0(const int amcolor, const int ix, const int iy) override
+   {
+      // draw patch w/cross
+      if(!amcolor)
+         V_DrawPatch(ix + MENU_GAP_SIZE + 1, iy, &subscreen43, PatchLoader::CacheName(wGlobalDir, "M_PALNO", PU_CACHE));
+   }
+
+   virtual void onConfirm(menuitem_t* item) override
+   {
+      MN_SelectColor(item->data, mapColorType_e::optional);
+   }
+};
+
+IMPLEMENT_RTTI_TYPE(MenuItemAutomapOpt)
 
 //=============================================================================
 //
@@ -941,6 +968,7 @@ static MenuItemInfo       mn_info;
 static MenuItemSlider     mn_slider;
 static MenuItemBigSlider  mn_bigslider;
 static MenuItemAutomap    mn_automap;
+static MenuItemAutomapOpt mn_automap_opt;
 static MenuItemBinding    mn_binding;
 static MenuItem           mn_end;
 
@@ -956,6 +984,7 @@ MenuItem *MenuItemInstanceForType[it_numtypes] =
    &mn_slider,      // it_slider
    &mn_bigslider,   // it_bigslider
    &mn_automap,     // it_automap
+   &mn_automap_opt, // it_automap_opt
    &mn_binding,     // it_binding
    &mn_end          // it_end
 };

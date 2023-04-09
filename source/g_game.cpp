@@ -2043,11 +2043,17 @@ void G_SaveGame(int slot, const char *description)
 {
    savegameslot = slot;
    strcpy(savedescription, description);
-   if(demo_version >= 403 && !netgame)
-      gameaction = ga_savegame;
-   else if(slot <= 8)
+   // FIXME: This system sucks. We should kill sendsave eventually.
+   if(!netgame)
+   {
+      if(demo_version >= 403 || slot >= 8)
+         gameaction = ga_savegame;
+      else
+         sendsave = true;
+   }
+   else if(slot < 8)
       sendsave = true;
-   else if(netgame)
+   else
       doom_printf("Can't save game with slot >= 8 during netgame");
    hub_changelevel = false;
 }

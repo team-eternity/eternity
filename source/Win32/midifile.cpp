@@ -77,6 +77,7 @@ struct midi_track_iter_t
 {
    midi_track_t *track;
    unsigned int position;
+   unsigned int loop_point;
 };
 
 struct midi_file_t
@@ -598,8 +599,9 @@ midi_track_iter_t *MIDI_IterateTrack(midi_file_t *file, unsigned int track)
       I_Error("MIDI_IterateTrack: Track number greater than or equal to number of tracks\n");
 
    iter = estructalloc(midi_track_iter_t, 1);
-   iter->track    = &file->tracks[track];
-   iter->position = 0;
+   iter->track      = &file->tracks[track];
+   iter->position   = 0;
+   iter->loop_point = 0;
 
    return iter;
 }
@@ -658,7 +660,18 @@ unsigned int MIDI_GetFileTimeDivision(midi_file_t *file)
 
 void MIDI_RestartIterator(midi_track_iter_t *iter)
 {
-   iter->position = 0;
+   iter->position   = 0;
+   iter->loop_point = 0;
+}
+
+void MIDI_SetLoopPoint(midi_track_iter_t *iter)
+{
+   iter->loop_point = iter->position;
+}
+
+void MIDI_RestartAtLoopPoint(midi_track_iter_t *iter)
+{
+   iter->position = iter->loop_point;
 }
 
 // EOF
