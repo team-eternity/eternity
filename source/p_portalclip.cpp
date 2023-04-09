@@ -36,6 +36,19 @@
 #include "r_main.h"
 #include "r_portal.h"
 
+template<surf_e S>
+inline static bool P_surfacePastPortal(const surface_t &surface)
+{
+   return surface.pflags & PS_PASSABLE && !(surface.pflags & PF_ATTACHEDPORTAL) && 
+      isInner<S>(surface.portal->data.link.planez, surface.height);
+}
+
+template<surf_e S>
+inline static fixed_t P_visibleHeight(const surface_t &surface)
+{
+   return P_surfacePastPortal<S>(surface) ? surface.portal->data.link.planez : surface.height;
+}
+
 //
 // P_getLineHeights
 //
@@ -44,50 +57,16 @@
 static void P_getLineHeights(const line_t *ld, fixed_t &linebottom,
                              fixed_t &linetop)
 {
-   if(ld->frontsector->srf.floor.pflags & PS_PASSABLE &&
-      !(ld->frontsector->srf.floor.pflags & PF_ATTACHEDPORTAL) &&
-      ld->frontsector->srf.floor.portal->data.link.planez > ld->frontsector->srf.floor.height)
-   {
-      linebottom = ld->frontsector->srf.floor.portal->data.link.planez;
-   }
-   else
-      linebottom = ld->frontsector->srf.floor.height;
-
-   if(ld->frontsector->srf.ceiling.pflags & PS_PASSABLE &&
-      !(ld->frontsector->srf.ceiling.pflags & PF_ATTACHEDPORTAL) &&
-      ld->frontsector->srf.ceiling.portal->data.link.planez <
-      ld->frontsector->srf.ceiling.height)
-   {
-      linetop = ld->frontsector->srf.ceiling.portal->data.link.planez;
-   }
-   else
-      linetop = ld->frontsector->srf.ceiling.height;
+   linebottom = P_visibleHeight<surf_floor>(ld->frontsector->srf.floor);
+   linetop = P_visibleHeight<surf_ceil>(ld->frontsector->srf.ceiling);
 
    if(ld->backsector)
    {
-      fixed_t bottomback;
-      if(ld->backsector->srf.floor.pflags & PS_PASSABLE &&
-         !(ld->backsector->srf.floor.pflags & PF_ATTACHEDPORTAL) &&
-         ld->backsector->srf.floor.portal->data.link.planez >
-         ld->backsector->srf.floor.height)
-      {
-         bottomback = ld->backsector->srf.floor.portal->data.link.planez;
-      }
-      else
-         bottomback = ld->backsector->srf.floor.height;
+      fixed_t bottomback = P_visibleHeight<surf_floor>(ld->backsector->srf.floor);
       if(bottomback < linebottom)
          linebottom = bottomback;
 
-      fixed_t topback;
-      if(ld->backsector->srf.ceiling.pflags & PS_PASSABLE &&
-         !(ld->backsector->srf.ceiling.pflags & PF_ATTACHEDPORTAL) &&
-         ld->backsector->srf.ceiling.portal->data.link.planez <
-         ld->backsector->srf.ceiling.height)
-      {
-         topback = ld->backsector->srf.ceiling.portal->data.link.planez;
-      }
-      else
-         topback = ld->backsector->srf.ceiling.height;
+      fixed_t topback = P_visibleHeight<surf_ceil>(ld->backsector->srf.ceiling);
       if(topback > linetop)
          linetop = topback;
    }
