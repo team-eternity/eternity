@@ -238,7 +238,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       i2.x += FixedMul(FRACUNIT >> 12, finecosine[angle >> ANGLETOFINESHIFT]);
       i2.y += FixedMul(FRACUNIT >> 12, finesine[angle >> ANGLETOFINESHIFT]);
 
-      uint8_t floorceiling = 0;
+      surf_e floorceiling = surf_NUM;	// "none" value
       const sector_t *reachedsec;
       fixed_t linemid = (linebottom + linetop) / 2;
 
@@ -275,12 +275,12 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
 
       // Cap the line bottom and top if it's a line from another portal
       fixed_t planez;
-      if(floorceiling == sector_t::floor &&
+      if(floorceiling == surf_floor &&
          linebottom < (planez = P_PortalZ(surf_ceil, *reachedsec)))
       {
          linebottom = planez;
       }
-      if(floorceiling == sector_t::ceiling &&
+      if(floorceiling == surf_ceil &&
          linetop > (planez = P_PortalZ(surf_floor, *reachedsec)))
       {
          linetop = planez;
