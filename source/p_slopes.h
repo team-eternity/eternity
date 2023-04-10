@@ -77,6 +77,8 @@ float P_DistFromPlanef(const v3float_t *point, const v3float_t *pori,
 
 bool P_SlopesEqual(const pslope_t &s1, const pslope_t &s2);
 
+bool P_AnySlope(const line_t &line);
+
 #endif
 
 // EOF

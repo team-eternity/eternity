@@ -625,6 +625,12 @@ bool P_SlopesEqual(const pslope_t &s1, const pslope_t &s2)
                          D_abs(P_DistFromPlane(s2.o, s1.o, s1.normal)) < epsilon);
 }
 
+bool P_AnySlope(const line_t &line)
+{
+   return line.frontsector->srf.floor.slope || line.frontsector->srf.ceiling.slope ||
+      (line.backsector && (line.backsector->srf.floor.slope || line.backsector->srf.ceiling.slope));
+}
+
 //
 // Get height of a potentially sloped surface
 //

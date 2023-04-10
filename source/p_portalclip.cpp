@@ -29,24 +29,31 @@
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "m_bbox.h"
+#include "m_compare.h"
 #include "polyobj.h"
 #include "p_portal.h"
 #include "p_portalclip.h"
 #include "p_portalcross.h"
+#include "p_slopes.h"
 #include "r_main.h"
 #include "r_portal.h"
 
+struct lineheights_t
+{
+   fixed_t bottomend, bottomedge, topedge, topend;
+};
+
 template<surf_e S>
-inline static bool P_surfacePastPortal(const surface_t &surface)
+inline static bool P_surfacePastPortal(const surface_t &surface, v2fixed_t pos)
 {
    return surface.pflags & PS_PASSABLE && !(surface.pflags & PF_ATTACHEDPORTAL) && 
-      isInner<S>(surface.portal->data.link.planez, surface.height);
+      isInner<S>(surface.portal->data.link.planez, surface.getZAt(pos));
 }
 
 template<surf_e S>
-inline static fixed_t P_visibleHeight(const surface_t &surface)
+inline static fixed_t P_visibleHeight(const surface_t &surface, v2fixed_t pos)
 {
-   return P_surfacePastPortal<S>(surface) ? surface.portal->data.link.planez : surface.height;
+   return P_surfacePastPortal<S>(surface, pos) ? surface.portal->data.link.planez : surface.getZAt(pos);
 }
 
 //
@@ -54,22 +61,34 @@ inline static fixed_t P_visibleHeight(const surface_t &surface)
 //
 // ioanch 20160112: helper function to get line extremities
 //
-static void P_getLineHeights(const line_t *ld, fixed_t &linebottom,
-                             fixed_t &linetop)
+static lineheights_t P_getLineHeights(const line_t *ld, v2fixed_t pos)
 {
-   linebottom = P_visibleHeight<surf_floor>(ld->frontsector->srf.floor);
-   linetop = P_visibleHeight<surf_ceil>(ld->frontsector->srf.ceiling);
+   edefstructvar(lineheights_t, result);
+   result.bottomend = P_visibleHeight<surf_floor>(ld->frontsector->srf.floor, pos);
+   result.topend = P_visibleHeight<surf_ceil>(ld->frontsector->srf.ceiling, pos);
 
    if(ld->backsector)
    {
-      fixed_t bottomback = P_visibleHeight<surf_floor>(ld->backsector->srf.floor);
-      if(bottomback < linebottom)
-         linebottom = bottomback;
+      fixed_t bottomback = P_visibleHeight<surf_floor>(ld->backsector->srf.floor, pos);
+      if(bottomback < result.bottomend)
+      {
+         result.bottomedge = result.bottomend;
+         result.bottomend = bottomback;
+      }
 
-      fixed_t topback = P_visibleHeight<surf_ceil>(ld->backsector->srf.ceiling);
-      if(topback > linetop)
-         linetop = topback;
+      fixed_t topback = P_visibleHeight<surf_ceil>(ld->backsector->srf.ceiling, pos);
+      if(topback > result.topend)
+      {
+         result.topedge = result.topend;
+         result.topend = topback;
+      }
    }
+   else
+   {
+      result.bottomedge = D_MAXINT;
+      result.topedge = D_MININT;
+   }
+   return result;
 }
 
 //
@@ -96,21 +115,22 @@ static void P_addPortalHitLine(line_t *ld, polyobj_t *po)
 //
 static void P_blockingLineDifferentLevel(line_t *ld, fixed_t thingz,
                                          fixed_t thingmid, fixed_t thingtopz,
-                                         fixed_t linebottom, fixed_t linetop, 
+                                         fixed_t linebottommin, fixed_t linebottommax, 
+                                         fixed_t linetopmin, fixed_t linetopmax,
                                          PODCollection<line_t *> *pushhit)
 {
-   fixed_t linemid = linetop / 2 + linebottom / 2;
+   fixed_t linemid = linetopmin / 2 + linebottommax / 2;
    surf_e towards = thingmid >= linemid ? surf_ceil : surf_floor;
 
-   if(towards == surf_floor && linebottom < clip.zref.ceiling)
+   if(towards == surf_floor && linebottommin < clip.zref.ceiling)
    {
-      clip.zref.ceiling = linebottom;
+      clip.zref.ceiling = linebottommin;
       clip.ceilingline = ld;
       clip.blockline = ld;
    }
-   if(towards == surf_ceil && linetop > clip.zref.floor)
+   if(towards == surf_ceil && linetopmax > clip.zref.floor)
    {
-      clip.zref.floor = linetop;
+      clip.zref.floor = linetopmax;
       clip.zref.floorgroupid = ld->frontsector->groupid;
       // TODO: we'll need to handle sloped portals one day
       clip.zref.floorsector = nullptr;
@@ -121,14 +141,14 @@ static void P_blockingLineDifferentLevel(line_t *ld, fixed_t thingz,
 
    fixed_t lowfloor;
    if(!ld->backsector || towards == surf_floor)   // if line is 1-sided or above thing
-      lowfloor = linebottom;
+      lowfloor = linebottommin;
    else if(linebottom == ld->backsector->srf.floor.height)
       lowfloor = ld->frontsector->srf.floor.height;
    else
       lowfloor = ld->backsector->srf.floor.height;
    // 2-sided and below the thing: pick the higher floor ^^^
 
-   // SAME TRICK AS BELOW!
+   // SAME TRICK AS IN P_UpdateFromOpening!
    if(lowfloor < clip.zref.dropoff && linetop >= clip.zref.dropoff)
       clip.zref.dropoff = lowfloor;
 
@@ -184,16 +204,42 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    if(P_BoxOnLineSide(bbox, ld) != -1)
       return true; // didn't hit it
 
-   fixed_t linetop, linebottom;
+   // Have ranges due to possible slopes
+   lineheights_t outerheights, innerheights;
    if(po)
    {
-      const sector_t *midsector = R_PointInSubsector(po->centerPt.x,
-                                                     po->centerPt.y)->sector;
-      linebottom = midsector->srf.floor.height;
-      linetop = midsector->srf.ceiling.height;
+      // NOTE: this may need to be better supported
+
+      v2fixed_t center = { po->centerPt.x, po->centerPt.y };
+      const sector_t *midsector = R_PointInSubsector(center)->sector;
+
+      outerheights.bottomend = innerheights.bottomend = midsector->srf.floor.getZAt(center);
+      outerheights.topend = innerheights.topend = midsector->srf.ceiling.getZAt(center);
+      outerheights.bottomedge = innerheights.bottomedge = D_MAXINT;
+      outerheights.topedge = innerheights.topedge = D_MININT;
+   }
+   else if(P_AnySlope(*ld))
+   {
+      v2fixed_t i1, i2;
+      P_ExactBoxLinePoints(clip.bbox, *ld, i1, i2);
+      lineheights_t heights[2];
+      heights[0] = P_getLineHeights(ld, i1);
+      heights[1] = P_getLineHeights(ld, i2);
+
+      outerheights.bottomend = emin(heights[0].bottomend, heights[1].bottomend);
+      outerheights.bottomedge = emin(heights[0].bottomedge, heights[1].bottomedge);
+      outerheights.topedge = emax(heights[0].topedge, heights[1].topedge);
+      outerheights.topend = emax(heights[0].topend, heights[1].topend);
+      innerheights.bottomend = emax(heights[0].bottomend, heights[1].bottomend);
+      innerheights.bottomedge = emax(heights[0].bottomedge, heights[1].bottomedge);
+      innerheights.topedge = emin(heights[0].topedge, heights[1].topedge);
+      innerheights.topend = emin(heights[0].topend, heights[1].topend);
    }
    else
-      P_getLineHeights(ld, linebottom, linetop);
+   {
+      outerheights = P_getLineHeights(ld, v2fixed_t{});
+      innerheights = outerheights;
+   }
 
    // values to set on exit:
    // clip.ceilingz
@@ -240,7 +286,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
 
       surf_e floorceiling = surf_NUM;	// "none" value
       const sector_t *reachedsec;
-      fixed_t linemid = (linebottom + linetop) / 2;
+      fixed_t linemid = (innerheights.bottomend + innerheights.topend) / 2;
 
       if(!(reachedsec =
            P_PointReachesGroupVertically(i2.x, i2.y, linemid, linegroupid,
@@ -275,19 +321,33 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
 
       // Cap the line bottom and top if it's a line from another portal
       fixed_t planez;
-      if(floorceiling == surf_floor &&
-         linebottom < (planez = P_PortalZ(surf_ceil, *reachedsec)))
+      if(floorceiling == surf_floor)
       {
-         linebottom = planez;
+         planez = P_PortalZ(surf_ceil, *reachedsec);
+         if(outerheights.bottomend < planez)
+            outerheights.bottomend = planez;
+         if(innerheights.bottomend < planez)
+            innerheights.bottomend = planez;
+         if(outerheights.bottomedge < planez)
+            outerheights.bottomedge = planez;
+         if(innerheights.bottomedge < planez)
+            innerheights.bottomedge = planez;
       }
-      if(floorceiling == surf_ceil &&
-         linetop > (planez = P_PortalZ(surf_floor, *reachedsec)))
+      if(floorceiling == surf_ceil)
       {
-         linetop = planez;
+         planez = P_PortalZ(surf_floor, *reachedsec);
+         if(outerheights.topend > planez)
+            outerheights.topend = planez;
+         if(innerheights.topend > planez)
+            innerheights.topend = planez;
+         if(outerheights.topedge > planez)
+            outerheights.topedge = planez;
+         if(innerheights.topedge > planez)
+            innerheights.topedge = planez;
       }
    }
 
-   if(linebottom <= thingz && linetop >= thingtopz)
+   if(linebottommax <= thingz && linetopmin >= thingtopz)
    {
       // classic Doom behaviour
 

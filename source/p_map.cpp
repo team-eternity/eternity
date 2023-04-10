@@ -48,6 +48,7 @@
 #include "p_portalclip.h"
 #include "p_portalcross.h"
 #include "p_setup.h"
+#include "p_slopes.h"
 #include "p_skin.h"
 #include "p_spec.h"
 #include "r_main.h"
@@ -839,8 +840,7 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
 
    // At this point we have backsector
 
-   if(ld->frontsector->srf.floor.slope || ld->frontsector->srf.ceiling.slope ||
-      ld->backsector->srf.floor.slope || ld->backsector->srf.ceiling.slope)
+   if(P_AnySlope(*ld))
    {
       // Find the two intersections with the bounding box
       v2fixed_t i1, i2;
