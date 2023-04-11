@@ -251,6 +251,7 @@ struct lineopening_t
    fixed_t lowfloor; // lowest floorheight involved
    int floorpic;  // haleyjd: for CANTLEAVEFLOORPIC flag
    const sector_t *floorsector;  // for floor slope detection
+   const sector_t *ceilsector;   // needed for certain dropoff checks when having slopes
 
    // SoM 09/07/02: Solution to problem of monsters walking on 3dsides
    // haleyjd: values for tmtouch3dside:

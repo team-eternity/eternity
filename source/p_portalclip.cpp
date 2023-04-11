@@ -41,6 +41,7 @@
 struct lineheights_t
 {
    fixed_t bottomend, bottomedge, topedge, topend;
+   const sector_t *bottomedgesector, *topedgesector;
 };
 
 template<surf_e S>
@@ -73,20 +74,33 @@ static lineheights_t P_getLineHeights(const line_t *ld, v2fixed_t pos)
       if(bottomback < result.bottomend)
       {
          result.bottomedge = result.bottomend;
+         result.bottomedgesector = ld->frontsector;
          result.bottomend = bottomback;
+      }
+      else
+      {
+         result.bottomedge = bottomback;
+         result.bottomedgesector = ld->backsector;
       }
 
       fixed_t topback = P_visibleHeight<surf_ceil>(ld->backsector->srf.ceiling, pos);
       if(topback > result.topend)
       {
          result.topedge = result.topend;
+         result.topedgesector = ld->frontsector;
          result.topend = topback;
+      }
+      else
+      {
+         result.topedge = topback;
+         result.topedgesector = ld->backsector;
       }
    }
    else
    {
-      result.bottomedge = D_MAXINT;
-      result.topedge = D_MININT;
+      result.bottomedge = result.topend;
+      result.topedge = result.bottomend;
+      // sectors null
    }
    return result;
 }
@@ -204,6 +218,9 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
 
    // Have ranges due to possible slopes
    lineheights_t outerheights, innerheights;
+   bool haveSlopes = P_AnySlope(*ld);
+   v2fixed_t i1{}, i2{};
+   bool calculatedSlopes = false;
    if(po)
    {
       // NOTE: this may need to be better supported
@@ -216,9 +233,9 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       outerheights.bottomedge = innerheights.bottomedge = D_MAXINT;
       outerheights.topedge = innerheights.topedge = D_MININT;
    }
-   else if(P_AnySlope(*ld))
+   else if(haveSlopes)
    {
-      v2fixed_t i1, i2;
+      calculatedSlopes = true;
       P_ExactBoxLinePoints(clip.bbox, *ld, i1, i2);
       lineheights_t heights[2];
       heights[0] = P_getLineHeights(ld, i1);
@@ -390,10 +407,20 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    }
 
    // TODO: check the sloped line points here
-
    // better detection of in-portal lines
    uint32_t lineclipflags = 0;
-   clip.open = P_LineOpening(ld, clip.thing, nullptr, true, &lineclipflags);
+
+   if(haveSlopes)
+   {
+      if(!calculatedSlopes)   // may have already calculated them when checking cross-portal heights
+         P_ExactBoxLinePoints(clip.bbox, *ld, i1, i2);
+     
+      // Use the smallest opening from both points
+      clip.open = P_LineOpening(ld, clip.thing, &i1, true, &lineclipflags);
+      clip.open.intersect(P_LineOpening(ld, clip.thing, &i2, true, &lineclipflags));
+   }
+   else
+      clip.open = P_LineOpening(ld, clip.thing, nullptr, true, &lineclipflags);
 
    // now apply correction to openings in case thing is positioned differently
    bool samegroupid = clip.thing->groupid == linegroupid;
@@ -401,48 +428,64 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    bool aboveportal = !!(lineclipflags & LINECLIP_ABOVEPORTAL);
    bool underportal = !!(lineclipflags & LINECLIP_UNDERPORTAL);
 
-   if(!samegroupid && !aboveportal && thingz < linebottom && 
-      thingmid < (linebottom + clip.open.height.floor) / 2)
+   if(!samegroupid && !aboveportal && thingz < innerheights.bottomend && 
+      thingmid < (outerheights.bottomend + clip.open.height.floor) / 2)
    {
-      clip.open.height.ceiling = linebottom;
+      clip.open.height.ceiling = outerheights.bottomend;
       clip.open.height.floor = D_MININT;
       clip.open.floorsector = nullptr;
-      clip.open.sec.ceiling = linebottom;
+      clip.open.sec.ceiling = outerheights.bottomend;
       clip.open.sec.floor = D_MININT;
       lineclipflags &= ~LINECLIP_UNDERPORTAL;
    }
-   if(!samegroupid && !underportal && thingtopz > linetop &&
-      thingmid >= (linetop + clip.open.height.ceiling) / 2)
+   if(!samegroupid && !underportal && thingtopz > innerheights.topend &&
+      thingmid >= (outerheights.topend + clip.open.height.ceiling) / 2)
    {
       // adjust the lowfloor to the real observed value, to prevent
       // wrong dropoffz
-      if(ld->backsector &&
-         ((clip.open.sec.ceiling == ld->backsector->srf.ceiling.height &&
-         clip.open.sec.floor == ld->frontsector->srf.floor.height) ||
-         (clip.open.sec.ceiling == ld->frontsector->srf.ceiling.height &&
-         clip.open.sec.floor == ld->backsector->srf.floor.height)))
+      if(ld->backsector)
       {
-         clip.open.lowfloor = clip.open.sec.floor;
+         if(!haveSlopes)
+         {
+            if((clip.open.sec.ceiling == ld->backsector->srf.ceiling.height &&
+               clip.open.sec.floor == ld->frontsector->srf.floor.height) ||
+               (clip.open.sec.ceiling == ld->frontsector->srf.ceiling.height &&
+                  clip.open.sec.floor == ld->backsector->srf.floor.height))
+            {
+               clip.open.lowfloor = clip.open.sec.floor;
+            }
+         }
+         else
+         {
+            // Different treatment due to complexity
+            if((innerheights.topedgesector == ld->backsector && 
+               innerheights.bottomedgesector == ld->frontsector) || 
+               (innerheights.topedgesector == ld->frontsector && 
+                  innerheights.bottomedgesector == ld->backsector))
+            {
+               clip.open.lowfloor = outerheights.bottomedge;
+            }
+         }
       }
 
-      clip.open.height.floor = linetop;
+      clip.open.height.floor = outerheights.topend;
       clip.open.height.ceiling = D_MAXINT;
-      // TODO: use the portal slope now for floorsector
-      clip.open.sec.floor = linetop;
+      clip.open.ceilsector = nullptr;
+      clip.open.sec.floor = outerheights.topend;
       clip.open.sec.ceiling = D_MAXINT;
       lineclipflags &= ~LINECLIP_ABOVEPORTAL;
    }
 
    // update stuff
    P_UpdateFromOpening(clip.open, ld, clip, underportal, aboveportal, lineclipflags, samegroupid, 
-      linetop);
+      outerheights.topend);
 
    // ioanch: only allow spechits if on contact or simply same group.
    // Line portals however are ONLY collected if on the same group
 
    // if contacted a special line, add it to the list
 
-   if(samegroupid || (linetop > thingz && linebottom < thingtopz && 
+   if(samegroupid || (outerheights.topend > thingz && outerheights.bottomend < thingtopz && 
       !(ld->pflags & PS_PASSABLE)))
    {
       P_CollectSpechits(ld, pushhit);
