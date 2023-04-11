@@ -3981,8 +3981,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    P_InitLightning();
 
    // preload graphics
-   if(precache)
-      R_PrecacheLevel();
+   R_PrecacheLevel();
 
    R_SetViewSize(screenSize+3); //sf
 

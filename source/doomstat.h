@@ -337,9 +337,6 @@ extern  char   *userpath;
 extern  char   *basegamepath;
 extern  char   *usergamepath;
 
-// if true, load all graphics at level load
-extern  bool precache;
-
 // wipegamestate can be set to -1
 //  to force a wipe on the next draw
 extern  gamestate_t     wipegamestate;

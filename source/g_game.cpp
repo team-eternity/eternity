@@ -128,7 +128,6 @@ bool            democontinue;
 bool            demorecording;
 bool            demoplayback;
 bool            singledemo;           // quit after playing a demo from cmdline
-bool            precache = true;      // if true, load all graphics at start
 wbstartstruct_t wminfo;               // parms for world map / intermission
 bool            haswolflevels = false;// jff 4/18/98 wolf levels present
 byte            *savebuffer;
@@ -1307,10 +1306,6 @@ static byte *G_ReadDemoHeader(byte *demo_p)
 
    if(gameaction != ga_loadgame)      // killough 12/98: support -loadgame
    {
-      // killough 2/22/98:
-      // Do it anyway for timing demos, to reduce timing noise
-      precache = timingdemo;
-      
       // haleyjd: choose appropriate G_InitNew based on version
       if(full_demo_version >= make_full_version(329, 5))
          G_InitNew(skill, gamemapname);
@@ -1371,7 +1366,6 @@ void G_DoPlayDemo(void)
    if(!(demo_p = G_ReadDemoHeader(demobuffer)))
       return;
 
-   precache = true;
    usergame = false;
    demoplayback = true;
    
