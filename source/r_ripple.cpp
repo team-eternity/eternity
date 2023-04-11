@@ -47,7 +47,7 @@
 // 1 cycle per 32 units (2 in 64)
 #define SWIRLFACTOR2 (8192/32)
 
-static byte *normalflat;
+static thread_local byte *normalflat;
 int r_swirl;       // hack
 
 #if 0
@@ -68,8 +68,6 @@ static void R_DrawLines(void)
 #define SPEED 40
 
 
-//
-// R_DistortedFlat
 //
 // Generates a distorted flat from a normal one using a two-dimensional
 // sine wave pattern.
@@ -105,7 +103,7 @@ byte *R_DistortedFlat(int texnum, bool usegametic)
    // Already swirled this one?
    if(reftime == swirltic && lasttex == texnum)
       return distortedflat;
-      
+
    lasttex = texnum;
 
    // built this tic?

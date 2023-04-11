@@ -1651,11 +1651,11 @@ const byte *R_GetRawColumn(int tex, int32_t col)
    else
       col = (col & t->widthmask) * t->height;
 
+   if(!t->bufferalloc)
+      I_Error("R_GetRawColumn: Texture %s not already cached\n", t->name);
+
    // Lee Killough, eat your heart out! ... well this isn't really THAT bad...
-   return (t->flags & TF_SWIRLY) ?
-          R_DistortedFlat(tex) + col :
-          !t->bufferalloc ? R_GetLinearBuffer(tex) + col :
-          t->bufferdata + col;
+   return (t->flags & TF_SWIRLY) ? R_DistortedFlat(tex) + col : t->bufferdata + col;
 }
 
 //
@@ -1664,13 +1664,12 @@ const byte *R_GetRawColumn(int tex, int32_t col)
 const texcol_t *R_GetMaskedColumn(int tex, int32_t col)
 {
    const texture_t *t = textures[tex];
-   
+
    if(!t->bufferalloc)
-      R_CacheTexture(tex);
+      I_Error("R_GetMaskedColumn: Texture %s not already cached\n", t->name);
 
    // haleyjd 05/28/14: support non-power-of-two widths
-   return t->columns[(t->flags & TF_WIDTHNP2) ? M_PositiveModPositiveRight(col, t->width) :
-                                                col & t->widthmask];
+   return t->columns[(t->flags & TF_WIDTHNP2) ? M_PositiveModPositiveRight(col, t->width) : col & t->widthmask];
 }
 
 //
@@ -1679,7 +1678,7 @@ const texcol_t *R_GetMaskedColumn(int tex, int32_t col)
 const byte *R_GetLinearBuffer(int tex)
 {
    const texture_t *t = textures[tex];
-   
+
    if(!t->bufferalloc)
       R_CacheTexture(tex);
 
