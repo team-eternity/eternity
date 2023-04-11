@@ -270,6 +270,13 @@ Finished moving to New Zealand.
 2023/03/04
 Fixed crashes due to sound zone propagation through too many sectors.
 
+--------------------------------------------------------------------------------
+2023/03/07
+Overhauled SDL game controller input to be consistent across controllers.
+Added SDL controller input preset.
+Added vibration support to SDL controllers.
+Added ability to use the IWAD picker with controllers, as well as exit ENDOOM.
+
 ================================================================================
 EOF
 ================================================================================

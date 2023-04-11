@@ -152,16 +152,20 @@ default_t defaults[] =
    DEFAULT_INT("music_card", &mus_card, nullptr, MUS_DEFAULT, MUS_MIN, MUS_MAX, default_t::wad_no,
                MUS_DESCR),
 
-   // haleyjd 04/15/02: SDL joystick device number
-   DEFAULT_INT("joystick_num", &i_joysticknum, nullptr, -1, -1, UL, default_t::wad_no,
-               "SDL joystick device number, -1 to disable"),
+   // If joysticks are enabled
+   DEFAULT_BOOL("i_joystickenabled", &i_joystickenabled, nullptr, true, default_t::wad_no,
+               "0 - disable joystick, 1 - enable joystick"),
+
+   // joystick device number
+   DEFAULT_INT("i_joysticknum", &i_joysticknum, nullptr, 0, 0, UL, default_t::wad_no,
+               "Joystick device number"),
 
    // joystick turn sensitivity
    DEFAULT_FLOAT("i_joyturnsens", &i_joyturnsens, nullptr, 1.0, 0, 10000, default_t::wad_no,
                  "Joystick turning sensitivity"),
    // joystick sensitivity
    DEFAULT_INT("i_joysticksens", &i_joysticksens, nullptr, 7849, 0, 32767, default_t::wad_no,
-               "SDL MMSYSTEM joystick sensitivity"),
+               "SDL joystick sensitivity"),
 
    DEFAULT_INT("s_precache", &s_precache, nullptr, 0, 0, 1, default_t::wad_no,
                "precache sounds at startup"),

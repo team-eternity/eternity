@@ -32,11 +32,12 @@
 #include "../e_rtti.h"
 #include "../m_collection.h"
 #include "../m_qstr.h"
+#include "../psnprntf.h"
 
 class HALGamePad;
 
-// Joystick device number, for config file
-extern int i_joysticknum;
+extern bool i_joystickenabled; // Use joysticks at all
+extern int  i_joysticknum;     // Joystick device number, for config file
 
 // Joystick turning sensitvity
 extern double i_joyturnsens;
@@ -115,10 +116,15 @@ protected:
 public:
    HALGamePad();
 
+   // In interest of efficiency, we have caps on the number of device inputs
+   // we will monitor.
+   static inline constexpr int MAXAXES = 8;
+   static inline constexpr int MAXBUTTONS = 24;
+
    // Selection
    virtual bool select()   = 0; // Select as the input device
    virtual void deselect() = 0; // Deselect from input device status
-   
+
    // Input
    virtual void poll() = 0;     // Refresh all input state data
 
@@ -130,31 +136,22 @@ public:
    qstring name;        // Device name
    int     numAxes;     // Number of axes supported
    int     numButtons;  // Number of buttons supported
-   int     numHats;     // Number of hats supported
 
-   enum
+   virtual const char *getAxisName(const int axis)
    {
-      // In interest of efficiency, we have caps on the number of device inputs
-      // we will monitor.
-      MAXAXES = 8,
-      MAXBUTTONS = 16,
-      MAXHATS = 4,
-   };
+      static char output[16];
+      if(axis >= 0 && axis < MAXAXES)
+         psnprintf(output, sizeof(output), "Axis %d", axis);
+      else
+         strncpy(output, "Invalid axis", 16);
 
-   enum
-   {
-      HAT_RIGHT = 1,
-      HAT_UP = 2,
-      HAT_LEFT = 4,
-      HAT_DOWN = 8,
+      return output;
    };
 
    struct padstate_t
    {
       bool  prevbuttons[MAXBUTTONS]; // backed-up previous button states
       bool  buttons[MAXBUTTONS];     // current button states
-      uint8_t prevhats[MAXHATS];  // previous hats
-      uint8_t hats[MAXHATS];      // max hats
       float prevaxes[MAXAXES];       // backed-up previous axis states
       float axes[MAXAXES];           // normalized axis states (-1.0 : 1.0)
    };
