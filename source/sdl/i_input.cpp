@@ -283,7 +283,7 @@ static void I_JoystickEvents()
          if(padstate->axes[axis] == 0.0)
             ev.type = ev_keyup;
 
-         ev.data1 = KEYD_AXISON01 + axis;
+         ev.data1 = KEYD_AXIS_LEFT_X + axis;
          D_PostEvent(&ev);
       }
 
