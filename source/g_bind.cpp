@@ -294,39 +294,72 @@ struct keyname_t
    { KEYD_KPPLUS,     "kp_plus"    },
    { KEYD_KPENTER,    "kp_enter"   },
    { KEYD_KPEQUALS,   "kp_equals"  },
-   { KEYD_JOY_A,              "joy1"  },
-   { KEYD_JOY_B,              "joy2"  },
-   { KEYD_JOY_X,              "joy3"  },
-   { KEYD_JOY_Y,              "joy4"  },
-   { KEYD_JOY_BACK,           "joy5"  },
-   { KEYD_JOY_GUIDE,          "joy6"  },
-   { KEYD_JOY_START,          "joy7"  },
-   { KEYD_JOY_STICK_LEFT,     "joy8"  },
-   { KEYD_JOY_STICK_RIGHT,    "joy9"  },
-   { KEYD_JOY_SHOULDER_LEFT,  "joy10" },
-   { KEYD_JOY_SHOULDER_RIGHT, "joy11" },
-   { KEYD_JOY_DPAD_UP,        "joy12" },
-   { KEYD_JOY_DPAD_DOWN,      "joy13" },
-   { KEYD_JOY_DPAD_LEFT,      "joy14" },
-   { KEYD_JOY_DPAD_RIGHT,     "joy15" },
-   { KEYD_JOY_MISC1,          "joy16" },  // Xbox Series X share, PS5 microphone, Switch Pro capture button
+   { KEYD_JOY_A,              "joy_a"              },
+   { KEYD_JOY_B,              "joy_b"              },
+   { KEYD_JOY_X,              "joy_x"              },
+   { KEYD_JOY_Y,              "joy_y"              },
+   { KEYD_JOY_BACK,           "joy_back"           },
+   { KEYD_JOY_GUIDE,          "joy_guide"          },
+   { KEYD_JOY_START,          "joy_start"          },
+   { KEYD_JOY_STICK_LEFT,     "joy_stick_left"     },
+   { KEYD_JOY_STICK_RIGHT,    "joy_stick_right"    },
+   { KEYD_JOY_SHOULDER_LEFT,  "joy_shoulder_left"  },
+   { KEYD_JOY_SHOULDER_RIGHT, "joy_shoulder_right" },
+   { KEYD_JOY_DPAD_UP,        "joy_dpad_up"        },
+   { KEYD_JOY_DPAD_DOWN,      "joy_dpad_down"      },
+   { KEYD_JOY_DPAD_LEFT,      "joy_dpad_left"      },
+   { KEYD_JOY_DPAD_RIGHT,     "joy_dpad_right"     },
+   { KEYD_JOY_MISC1,          "joy_misc1"          }, // see doomdef.h
    { KEYD_JOY_MISC2,          "joy17" },
    { KEYD_JOY_MISC3,          "joy18" },
    { KEYD_JOY_MISC4,          "joy19" },
    { KEYD_JOY_MISC5,          "joy20" },
-   { KEYD_JOY_TOUCHPAD,       "joy21" },
+   { KEYD_JOY_TOUCHPAD,       "joy_touchpad"       },
    { KEYD_JOY_21,             "joy22" },
    { KEYD_JOY_22,             "joy23" },
    { KEYD_JOY_23,             "joy24" },
-   { KEYD_AXISON01,   "axis1"      },
-   { KEYD_AXISON02,   "axis2"      },
-   { KEYD_AXISON03,   "axis3"      },
-   { KEYD_AXISON04,   "axis4"      },
-   { KEYD_AXISON05,   "axis5"      },
-   { KEYD_AXISON06,   "axis6"      },
+   { KEYD_AXISON01,           "joy_left_x"         },
+   { KEYD_AXISON02,           "joy_left_y"         },
+   { KEYD_AXISON03,           "joy_right_x"        },
+   { KEYD_AXISON04,           "joy_right_y"        },
+   { KEYD_AXISON05,           "joy_trigger_left"   },
+   { KEYD_AXISON06,           "joy_trigger_right"  },
    { KEYD_AXISON07,   "axis7"      },
    { KEYD_AXISON08,   "axis8"      },
 };
+
+struct altkeyname_t
+{
+   const char *name;
+   int keyCode;
+} altKeyNames[] =
+{
+   { "joy1",   KEYD_JOY_A,              },
+   { "joy2",   KEYD_JOY_B,              },
+   { "joy3",   KEYD_JOY_X,              },
+   { "joy4",   KEYD_JOY_Y,              },
+   { "joy5",   KEYD_JOY_BACK,           },
+   { "joy6",   KEYD_JOY_GUIDE,          },
+   { "joy7",   KEYD_JOY_START,          },
+   { "joy8",   KEYD_JOY_STICK_LEFT,     },
+   { "joy9",   KEYD_JOY_STICK_RIGHT,    },
+   { "joy10",  KEYD_JOY_SHOULDER_LEFT,  },
+   { "joy11",  KEYD_JOY_SHOULDER_RIGHT, },
+   { "joy12",  KEYD_JOY_DPAD_UP,        },
+   { "joy13",  KEYD_JOY_DPAD_DOWN,      },
+   { "joy14",  KEYD_JOY_DPAD_LEFT,      },
+   { "joy15",  KEYD_JOY_DPAD_RIGHT,     },
+   { "joy16",  KEYD_JOY_MISC1,          }, // see doomdef.h
+   { "joy21",  KEYD_JOY_TOUCHPAD,       },
+   { "axis1",  KEYD_AXISON01,           },
+   { "axis2",  KEYD_AXISON02,           },
+   { "axis3",  KEYD_AXISON03,           },
+   { "axis4",  KEYD_AXISON04,           },
+   { "axis5",  KEYD_AXISON05,           },
+   { "axis6",  KEYD_AXISON06,           },
+};
+
+constexpr size_t numAltKeyNames = earrlen(altKeyNames);
 
 //
 // G_InitKeyBindings
@@ -452,6 +485,11 @@ static int G_KeyForName(const char *name)
    {
       if(!strcasecmp(keybindings[i].name, name))
          return ectype::toLower(i);
+   }
+   for(int i = 0; i < numAltKeyNames; i++)
+   {
+      if(!strcasecmp(altKeyNames[i].name, name))
+         return ectype::toLower(altKeyNames[i].keyCode);
    }
 
    return -1;
