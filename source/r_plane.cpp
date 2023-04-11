@@ -474,12 +474,10 @@ static void R_calcSlope(const cbviewpoint_t &cb_viewpoint, visplane_t *pl)
 }
 
 //
-// R_NewPlaneHash
-//
 // Allocates and returns a new planehash_t object. The hash object is allocated
 // PU_LEVEL
 //
-planehash_t *R_NewPlaneHash(int chaincount)
+planehash_t *R_NewPlaneHash(ZoneHeap &heap, int chaincount)
 {
    planehash_t*  ret;
    int           i;
@@ -494,9 +492,9 @@ planehash_t *R_NewPlaneHash(int chaincount)
       chaincount = c;
    }
    
-   ret = emalloctag(planehash_t *, sizeof(planehash_t), PU_LEVEL, nullptr);
+   ret = zhmalloctag(heap, planehash_t *, sizeof(planehash_t), PU_LEVEL, nullptr);
    ret->chaincount = chaincount;
-   ret->chains = emalloctag(visplane_t **, sizeof(visplane_t *) * chaincount, PU_LEVEL, nullptr);
+   ret->chains = zhmalloctag(heap, visplane_t **, sizeof(visplane_t *) * chaincount, PU_LEVEL, nullptr);
    ret->next = nullptr;
    
    for(i = 0; i < chaincount; i++)
@@ -573,11 +571,7 @@ static visplane_t *new_visplane(planecontext_t &context, ZoneHeap &heap,
 
    if(!check)
    {
-      // THREAD_FIXME: Temporary until all planehash tables are context-specific
-      if(table == &context.mainhash)
-         check = zhcalloctag(heap, visplane_t *, 1, sizeof * check, PU_VALLOC, nullptr);
-      else
-         check = ecalloctag(visplane_t *, 1, sizeof * check, PU_VALLOC, nullptr);
+      check = zhcalloctag(heap, visplane_t *, 1, sizeof * check, PU_VALLOC, nullptr);
    }
    else
       if(!(freetail = freetail->next))
@@ -594,11 +588,7 @@ static visplane_t *new_visplane(planecontext_t &context, ZoneHeap &heap,
 
       // THREAD_TODO: Try make this use context.numcolumns again
       check->max_width = static_cast<unsigned int>(video.width);
-      // THREAD_FIXME: Temporary until all planehash tables are context-specific
-      if(table == &context.mainhash)
-         paddedTop = zhcalloctag(heap, int *, 2 * (video.width + 2), sizeof(int), PU_VALLOC, nullptr);
-      else
-         paddedTop = ecalloctag(int *, 2 * (video.width + 2), sizeof(int), PU_VALLOC, nullptr);
+      paddedTop = zhcalloctag(heap, int *, 2 * (video.width + 2), sizeof(int), PU_VALLOC, nullptr);
       paddedBottom     = paddedTop + video.width + 2;
 
       check->top    = paddedTop    + 1;
@@ -1272,14 +1262,14 @@ VALLOCATION(overlaySets)
 //
 // Gets a free portal overlay plane set
 //
-planehash_t *R_NewOverlaySet(planecontext_t &context)
+planehash_t *R_NewOverlaySet(planecontext_t &context, ZoneHeap &heap)
 {
    planehash_t *&r_overlayfreesets = context.r_overlayfreesets;
 
    planehash_t *set;
    if(!r_overlayfreesets)
    {
-      set = R_NewPlaneHash(131);
+      set = R_NewPlaneHash(heap, 131);
       return set;
    }
    set = r_overlayfreesets;

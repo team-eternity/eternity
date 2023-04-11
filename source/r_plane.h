@@ -35,6 +35,7 @@ struct planehash_t;
 struct rslope_t;
 struct texture_t;
 struct viewpoint_t;
+class  ZoneHeap;
 
 // killough 10/98: special mask indicates sky flat comes from sidedef
 #define PL_SKYFLAT (0x80000000)
@@ -53,7 +54,7 @@ void R_DrawPlanes(cmapcontext_t &context, planehash_t &mainhash,
                   int *const spanstart, const angle_t viewangle, planehash_t *table);
 
 // Planehash stuff
-planehash_t *R_NewPlaneHash(int chaincount);
+planehash_t *R_NewPlaneHash(ZoneHeap &heap, int chaincount);
 void R_ClearPlaneHash(visplane_t **&freehead, planehash_t *table);
 
 
@@ -137,7 +138,7 @@ struct cb_plane_t
 };
 
 
-planehash_t *R_NewOverlaySet(planecontext_t &context);
+planehash_t *R_NewOverlaySet(planecontext_t &context, ZoneHeap &heap);
 void R_FreeOverlaySet(planehash_t *&r_overlayfreesets, planehash_t *set);
 void R_MapInitOverlaySets();
 

@@ -2919,7 +2919,7 @@ static void R_subsector(rendercontext_t &context, const int num)
                     floorangle, seg.frontsec->srf.floor.slope,
                     seg.frontsec->srf.floor.pflags,
                     fpalpha,
-                    seg.portal.floor->poverlay) : nullptr;
+                    portalcontext.portalstates[seg.portal.floor->index].poverlay) : nullptr;
    }
    else
    {
@@ -2979,7 +2979,7 @@ static void R_subsector(rendercontext_t &context, const int num)
                     ceilingangle, seg.frontsec->srf.ceiling.slope,
                     seg.frontsec->srf.ceiling.pflags,
                     cpalpha,
-                    seg.portal.ceiling->poverlay) : nullptr;
+                    portalcontext.portalstates[seg.portal.ceiling->index].poverlay) : nullptr;
    }
    else
    {

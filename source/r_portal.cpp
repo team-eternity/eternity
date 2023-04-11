@@ -87,6 +87,7 @@ static PODCollection<portalentry_t> gPortals;   // defined portals
 //
 
 static portal_t *portals = nullptr, *last = nullptr;
+static int numportals = 0;
 
 //
 // VALLOCATION(portals)
@@ -95,17 +96,6 @@ static portal_t *portals = nullptr, *last = nullptr;
 //
 VALLOCATION(portals)
 {
-   planehash_t *hash;
-   for(portal_t *p = portals; p; p = p->next)
-   {
-      // clear portal overlay visplane hash tables
-      if((hash = p->poverlay))
-      {
-         for(int i = 0; i < hash->chaincount; i++)
-            hash->chains[i] = nullptr;
-      }
-   }
-
    R_ForEachContext([](rendercontext_t &basecontext) {
       portalcontext_t &context =  basecontext.portalcontext;
       ZoneHeap        &heap    = *basecontext.heap;
@@ -165,8 +155,8 @@ static void R_renderPortalNOP(rendercontext_t &context, pwindow_t *window)
 
 static void R_SetPortalFunction(pwindow_t *window);
 
-static void R_clearPortalWindow(planecontext_t &context, const contextbounds_t &bounds,
-                                pwindow_t *window, bool noplanes)
+static void R_clearPortalWindow(planecontext_t &context, ZoneHeap &heap,
+                                const contextbounds_t &bounds, pwindow_t *window, bool noplanes)
 {
    window->maxx = bounds.startcolumn;
    window->minx = bounds.endcolumn - 1;
@@ -190,7 +180,7 @@ static void R_clearPortalWindow(planecontext_t &context, const contextbounds_t &
    if(!noplanes)
    {
       if(!window->poverlay)
-         window->poverlay = R_NewOverlaySet(context);
+         window->poverlay = R_NewOverlaySet(context, heap);
       else
          R_ClearPlaneHash(context.freehead, window->poverlay);
    }
@@ -217,7 +207,7 @@ static pwindow_t *newPortalWindow(planecontext_t &planecontext, portalcontext_t 
       ret->bottom = buf + video.width;
    }
 
-   R_clearPortalWindow(planecontext, bounds, ret, noplanes);
+   R_clearPortalWindow(planecontext, heap, bounds, ret, noplanes);
 
    return ret;
 }
@@ -469,23 +459,25 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
 }
 
 //
-// R_CreatePortal
-//
 // Function to internally create a new portal.
 //
-static portal_t *R_CreatePortal()
+static portal_t *R_createPortal()
 {
    portal_t *ret = estructalloctag(portal_t, 1, PU_LEVEL);
 
    if(!portals)
+   {
       portals = last = ret;
+      ret->index = 0;
+   }
    else
    {
+      ret->index = last->index + 1;
       last->next = ret;
       last = ret;
    }
-   
-   ret->poverlay  = R_NewPlaneHash(131);
+   numportals = last->index + 1;
+
    ret->globaltex = 1;
 
    return ret;
@@ -547,8 +539,6 @@ static void R_incrementRenderDepth(portalcontext_t &context)
 }
 
 //
-// R_GetAnchoredPortal
-//
 // Either finds a matching existing anchored portal matching the
 // parameters, or creates a new one. Used in p_spec.c.
 //
@@ -574,18 +564,13 @@ portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum,
       return rover;
    }
 
-   ret = R_CreatePortal();
+   ret = R_createPortal();
    ret->type = R_ANCHORED;
    ret->data.anchor = adata;
-
-   // haleyjd: temporary debug
-   ret->tainted = 0;
 
    return ret;
 }
 
-//
-// R_GetTwoWayPortal
 //
 // Either finds a matching existing two-way anchored portal matching the
 // parameters, or creates a new one. Used in p_spec.c.
@@ -612,12 +597,9 @@ portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum,
       return rover;
    }
 
-   ret = R_CreatePortal();
+   ret = R_createPortal();
    ret->type = R_TWOWAY;
    ret->data.anchor = adata;
-
-   // haleyjd: temporary debug
-   ret->tainted = 0;
 
    return ret;
 }
@@ -631,7 +613,13 @@ const portal_t *R_GetPortalHead()
 }
 
 //
-// R_GetSkyBoxPortal
+// Returns the number of allocated portals.
+//
+int R_GetNumPortals()
+{
+   return numportals;
+}
+
 //
 // Either finds a portal for the provided camera object, or creates
 // a new one for it. Used in p_spec.c.
@@ -648,7 +636,7 @@ portal_t *R_GetSkyBoxPortal(Mobj *camera)
       return rover;
    }
 
-   ret = R_CreatePortal();
+   ret = R_createPortal();
    ret->type = R_SKYBOX;
    ret->data.camera = camera;
    return ret;
@@ -668,7 +656,7 @@ portal_t *R_GetHorizonPortal(const sector_t *sector)
       return rover;
    }
 
-   portal_t *ret = R_CreatePortal();
+   portal_t *ret = R_createPortal();
    ret->type = R_HORIZON;
    ret->data.sector = sector;
    return ret;
@@ -689,14 +677,12 @@ portal_t *R_GetPlanePortal(const sector_t *sector)
       return rover;
    }
 
-   portal_t *ret = R_CreatePortal();
+   portal_t *ret = R_createPortal();
    ret->type = R_PLANE;
    ret->data.sector = sector;
    return ret;
 }
 
-//
-// R_InitPortals
 //
 // Called before P_SetupLevel to reset the portal list.
 // Portals are allocated at PU_LEVEL cache level, so they'll
@@ -705,6 +691,7 @@ portal_t *R_GetPlanePortal(const sector_t *sector)
 void R_InitPortals()
 {
    portals = last = nullptr;
+   numportals = 0;
    R_ForEachContext([](rendercontext_t &basecontext) {
       portalcontext_t &context = basecontext.portalcontext;
 
@@ -1033,7 +1020,8 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
    ZoneHeap        &heap           = *context.heap;
    const contextbounds_t &bounds   = context.bounds;
 
-   portal_t *portal = window->portal;
+   portal_t      *portal      = window->portal;
+   portalstate_t *portalstate = &context.portalcontext.portalstates[portal->index];
 
    if(portal->type != R_ANCHORED && portal->type != R_TWOWAY && portal->type != R_LINKED && portal->type != R_SKYBOX)
       return;
@@ -1043,15 +1031,15 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
 
    bool anchored = portal->type != R_SKYBOX;
    // haleyjd: temporary debug
-   if(anchored && portal->tainted > PORTAL_RECURSION_LIMIT)
+   if(anchored && portalstate->tainted > PORTAL_RECURSION_LIMIT)
    {
       R_showTainted(context.cmapcontext, planecontext, heap, viewpoint, cb_viewpoint, bounds, window);
 
-      portal->tainted++;
+      portalstate->tainted++;
       int maker = portal->type == R_LINKED ? portal->data.link.maker : portal->data.anchor.maker;
-      doom_warningf("Refused to draw portal (line=%i) (t=%d)", maker, portal->tainted);
+      doom_warningf("Refused to draw portal (line=%i) (t=%d)", maker, portalstate->tainted);
       return;
-   } 
+   }
 
 #ifdef RANGECHECK
    for(int i = 0; i < video.width; i++)
@@ -1075,7 +1063,7 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
    R_ClearSlopeMark(bspcontext.slopemark, window->minx, window->maxx, window->type);
 
    // haleyjd: temporary debug
-   portal->tainted++;
+   portalstate->tainted++;
 
    planecontext.floorclip   = window->bottom;
    planecontext.ceilingclip = window->top;
@@ -1179,15 +1167,15 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
 //
 void R_UntaintAndClearPortals()
 {
-   portal_t *r;
-
-   for(r = portals; r; r = r->next)
-   {
-      r->tainted = 0;
-   }
-
    R_ForEachContext([](rendercontext_t &context) {
-      R_ClearPortals(context.planecontext.freehead);
+      visplane_t **&freehead = context.planecontext.freehead;
+      portalcontext_t &portalcontext = context.portalcontext;
+
+      for(int i = 0; i < portalcontext.numportalstates; i++)
+      {
+         portalcontext.portalstates[i].tainted = 0;
+         R_ClearPlaneHash(freehead, portalcontext.portalstates[i].poverlay);
+      }
    });
 }
 
@@ -1358,22 +1346,6 @@ void R_MovePortalOverlayToWindow(cmapcontext_t &cmapcontext, planecontext_t &pla
 }
 
 //
-// R_ClearPortals
-//
-// Called at the start of each frame
-//
-void R_ClearPortals(visplane_t **&freehead)
-{
-   portal_t *r = portals;
-   
-   while(r)
-   {
-      R_ClearPlaneHash(freehead, r->poverlay);
-      r = r->next;
-   }
-}
-
-//
 // Primary portal rendering function.
 //
 void R_RenderPortals(rendercontext_t &context)
@@ -1530,12 +1502,9 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
       return rover;
    }
 
-   ret = R_CreatePortal();
+   ret = R_createPortal();
    ret->type = R_LINKED;
    ret->data.link = ldata;
-
-   // haleyjd: temporary debug
-   ret->tainted = 0;
 
    return ret;
 }

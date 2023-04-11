@@ -174,6 +174,8 @@ struct anchordata_t
 // kind of portal.
 struct portal_t
 {
+   int index;
+
    rportaltype_e type;
 
    union portaldata_u
@@ -186,14 +188,17 @@ struct portal_t
 
    // See: portalflag_e
    int    flags;
-   
+
    // Planes that makeup a blended overlay
    int          globaltex;
-   planehash_t *poverlay;
 
    portal_t *next;
+};
 
-   // haleyjd: temporary debug
+// Context-specific portal info.
+struct portalstate_t
+{
+   planehash_t *poverlay;
    int16_t tainted;
 };
 
@@ -206,6 +211,7 @@ inline static bool R_portalIsAnchored(const portal_t *portal)
 }
 
 const portal_t *R_GetPortalHead();
+int R_GetNumPortals();
 
 portal_t *R_GetSkyBoxPortal(Mobj *camera);
 portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum,
@@ -220,7 +226,6 @@ portal_t *R_GetPlanePortal(const sector_t *sector);
 void R_MovePortalOverlayToWindow(cmapcontext_t &cmapcontext, planecontext_t &planecontext, ZoneHeap &heap,
                                  const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
                                  cb_seg_t &seg, surf_e surf);
-void R_ClearPortals(visplane_t **&freehead);
 void R_RenderPortals(rendercontext_t &context);
 
 portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,

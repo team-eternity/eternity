@@ -34,6 +34,7 @@
 #include "r_portal.h"
 
 struct cliprange_t;
+struct contextportalinfo_t;
 struct drawseg_t;
 struct drawsegs_xrange_t;
 struct maskedrange_t;
@@ -109,6 +110,9 @@ struct portalcontext_t
    pwindow_t *unusedhead, *windowhead, *windowlast;
 
    sectorboxvisit_t *visitids; // THREAD_FIXME: Does this go here?
+
+   int            numportalstates;
+   portalstate_t *portalstates;
 
    // This flag is set when a portal is being rendered. This flag is checked in
    // r_bsp.c when rendering camera portals (skybox, anchored, linked) so that an

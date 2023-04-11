@@ -37,6 +37,7 @@
 #include "r_context.h"
 #include "r_draw.h"
 #include "r_main.h"
+#include "r_plane.h"
 #include "r_state.h"
 #include "v_misc.h"
 
@@ -133,6 +134,20 @@ static void R_contextThreadFunc(renderdata_t *data)
 }
 
 //
+// Allocates a context's PU_LEVEL data
+//
+void R_AllocateContextLevelData(rendercontext_t &context)
+{
+   context.spritecontext.sectorvisited = zhcalloctag(*context.heap, bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
+
+   context.portalcontext.numportalstates = R_GetNumPortals();
+   context.portalcontext.portalstates =
+      zhstructalloctag(*context.heap, portalstate_t, context.portalcontext.numportalstates, PU_LEVEL);
+   for(int i = 0; i < context.portalcontext.numportalstates; i++)
+      context.portalcontext.portalstates[i].poverlay = R_NewPlaneHash(*context.heap, 131);
+}
+
+//
 // Initialises all the render contexts
 //
 void R_InitContexts(const int width)
@@ -156,10 +171,7 @@ void R_InitContexts(const int width)
       r_globalcontext.portalcontext.portalrender = { false, MAX_SCREENWIDTH, 0 };
 
       if(numsectors && gamestate == GS_LEVEL)
-      {
-         r_globalcontext.spritecontext.sectorvisited =
-            zhcalloctag(*r_globalcontext.heap, bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
-      }
+         R_AllocateContextLevelData(r_globalcontext);
 
       return;
    }
@@ -185,7 +197,7 @@ void R_InitContexts(const int width)
       context.portalcontext.portalrender = { false, MAX_SCREENWIDTH, 0 };
 
       if(numsectors && gamestate == GS_LEVEL)
-         context.spritecontext.sectorvisited = zhcalloctag(*context.heap, bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
+         R_AllocateContextLevelData(context);
 
       // Wait until this context's thread is done running before creating a new one
       while(renderdatas[currentcontext].running.load())
@@ -201,17 +213,12 @@ void R_RefreshContexts()
 
    if(r_numcontexts == 1)
    {
-      r_globalcontext.spritecontext.sectorvisited =
-         zhcalloctag(*r_globalcontext.heap, bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
+      R_AllocateContextLevelData(r_globalcontext);
       return;
    }
 
    for(int currentcontext = 0; currentcontext < r_numcontexts; currentcontext++)
-   {
-      rendercontext_t &context = renderdatas[currentcontext].context;
-
-      context.spritecontext.sectorvisited = zhcalloctag(*context.heap, bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
-   }
+      R_AllocateContextLevelData(renderdatas[currentcontext].context);
 }
 
 void R_UpdateContextBounds()
