@@ -72,6 +72,9 @@ extern int stretchsky;  // DEPRECATED
 void R_StartSky();
 
 // sky texture info hashing functions
+void R_CacheSkyTexture(int);
+void R_CacheIfSkyTexture(int, int);
+void R_CacheSkyTextureAnimFrame(int, int);
 skytexture_t *R_GetSkyTexture(int);
 void R_ClearSkyTextures();
 

@@ -60,6 +60,7 @@
 #include "p_xenemy.h"
 #include "r_data.h"
 #include "r_main.h"
+#include "r_sky.h"
 #include "r_state.h"
 #include "s_sndseq.h"
 #include "v_misc.h"
@@ -1576,6 +1577,9 @@ bool ACS_CF_ReplaceTextures(ACS_CF_ARGS)
    int      oldtex = R_FindWall(thread->scopeMap->getString(argV[0])->str);
    int      newtex = R_FindWall(thread->scopeMap->getString(argV[1])->str);
    uint32_t flags  = argV[2];
+
+   R_CacheTexture(newtex);
+   R_CacheIfSkyTexture(oldtex, newtex);
 
    // If doing anything to lines.
    if((flags & RETEX_NOT_LINE) != RETEX_NOT_LINE)

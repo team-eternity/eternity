@@ -88,9 +88,15 @@ void R_StartSky()
    skyflat_t *sky2 = R_SkyFlatForIndex(1);
 
    if(sky1)
+   {
       sky1->texture = R_FindWall(LevelInfo.skyName);
+      R_CacheSkyTexture(sky1->texture);
+   }
    if(sky2)
+   {
       sky2->texture = R_FindWall(LevelInfo.sky2Name);
+      R_CacheSkyTexture(sky2->texture);
+   }
 }
 
 //
@@ -149,12 +155,9 @@ static byte R_getMedianTopColor(int texturenum)
 }
 
 //
-// R_AddSkyTexture
-//
 // Constructs a skytexture_t and adds it to the hash table
-// THREAD_FIXME: This function seems to be thread-unsafe
 //
-static skytexture_t *R_AddSkyTexture(int texturenum)
+static skytexture_t *R_addSkyTexture(int texturenum)
 {
    skytexture_t *newSky;
    int key;
@@ -191,18 +194,12 @@ static skytexture_t *R_AddSkyTexture(int texturenum)
 }
 
 //
-// R_GetSkyTexture
+// Try to find a sky texture for a given texturenum
 //
-// Looks for the specified skytexture_t with the given texturenum
-// in the hash table. If it doesn't exist, it'll be created now.
-// THREAD_FIXME: This function seems to be thread-unsafe
-// 
-skytexture_t *R_GetSkyTexture(int texturenum)
+static skytexture_t *R_findSkyTexture(int texturenum)
 {
-   int key;
    skytexture_t *target = nullptr;
-
-   key = skytexturekey(texturenum);
+   const int     key    = skytexturekey(texturenum);
 
    if(skytextures[key])
    {
@@ -221,11 +218,88 @@ skytexture_t *R_GetSkyTexture(int texturenum)
       }
    }
 
-   return target ? target : R_AddSkyTexture(texturenum);
+   return target;
 }
 
 //
-// R_ClearSkyTextures
+// Caches a single sky texture, ignoring animations
+//
+static void R_cacheSingleSkyTexture(int texturenum)
+{
+#ifdef RANGECHECK
+   if(texturenum < 0 || texturenum >= texturecount)
+      I_Error("R_CacheSkyTexture: invalid texture num %i\n", texturenum);
+#endif
+
+   skytexture_t *skytexture = R_findSkyTexture(texturenum);
+
+   if(skytexture)
+      return; // No need to cache
+
+   skytexture = R_addSkyTexture(texturenum);
+}
+
+//
+// Caches a sky texture and its current animation frame if applicable
+// Never to be called from within a render context
+//
+void R_CacheSkyTexture(int texturenum)
+{
+   R_cacheSingleSkyTexture(texturenum);
+
+   texture_t *texture = textures[texturenum];
+   if(texture->flags & TF_ANIMATED)
+      R_cacheSingleSkyTexture(texturetranslation[texturenum]);
+}
+
+//
+// Caches the an updated sky texture if a base texture is a sky texture
+//
+void R_CacheIfSkyTexture(int basetexturenum, int nexttexturenum)
+{
+#ifdef RANGECHECK
+   if(basetexturenum < 0 || basetexturenum >= texturecount)
+      I_Error("R_CacheIfSkyTexture: invalid base animated texture num %i\n", basetexturenum);
+   if(nexttexturenum < 0 || nexttexturenum >= texturecount)
+      I_Error("R_CacheIfSkyTexture: invalid next animated texture num %i\n", nexttexturenum);
+#endif
+
+   texture_t *basetexture = textures[basetexturenum];
+   if(!!R_findSkyTexture(basetexturenum))
+      R_CacheSkyTexture(nexttexturenum);
+}
+
+//
+// As R_CacheIfSkyTexture but only caches is the base texture is animated
+//
+void R_CacheSkyTextureAnimFrame(int basetexturenum, int nexttexturenum)
+{
+#ifdef RANGECHECK
+   if(basetexturenum < 0 || basetexturenum >= texturecount)
+      I_Error("R_CacheSkyTextureAnimFrame: invalid base animated texture num %i\n", basetexturenum);
+   if(nexttexturenum < 0 || nexttexturenum >= texturecount)
+      I_Error("R_CacheSkyTextureAnimFrame: invalid next animated texture num %i\n", nexttexturenum);
+#endif
+
+   texture_t *basetexture = textures[basetexturenum];
+   if(!!R_findSkyTexture(basetexturenum) && basetexture->flags & TF_ANIMATED)
+      R_CacheSkyTexture(nexttexturenum);
+}
+
+//
+// Looks for the specified skytexture_t with the given texturenum
+// in the hash table. It should have been created beforehand.
+//
+skytexture_t *R_GetSkyTexture(int texturenum)
+{
+   skytexture_t *target = R_findSkyTexture(texturenum);
+
+   if(!target)
+      I_Error("R_GetSkyTexture: Failed to get sky texture for texturenum %i\n", texturenum);
+
+   return target;
+}
+
 //
 // Must be called from R_InitData to clear out old texture numbers.
 // Otherwise the data will be corrupt and meaningless.

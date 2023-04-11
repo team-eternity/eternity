@@ -407,6 +407,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
       if(switchlist[i] == texTop) // if an upper texture
       {
          sides[sidenum].toptexture = switchlist[i^1]; // chg texture
+         R_CacheTexture(switchlist[i ^ 1]);
          
          P_StartButton(sidenum, line, sector, top, switchlist[i], BUTTONTIME,
                        !!useAgain, sound, i); // start timer
@@ -416,6 +417,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
       else if(switchlist[i] == texMid) // if a normal texture
       {
          sides[sidenum].midtexture = switchlist[i^1]; // chg texture
+         R_CacheTexture(switchlist[i ^ 1]);
          
          P_StartButton(sidenum, line, sector, middle, switchlist[i], BUTTONTIME,
                        !!useAgain, sound, i); // start timer
@@ -425,6 +427,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
       else if(switchlist[i] == texBot) // if a lower texture
       {
          sides[sidenum].bottomtexture = switchlist[i^1]; //chg texture
+         R_CacheTexture(switchlist[i ^ 1]);
          
          P_StartButton(sidenum, line, sector, bottom, switchlist[i], BUTTONTIME,
                        !!useAgain, sound, i); // start timer
