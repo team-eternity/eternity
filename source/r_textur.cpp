@@ -1641,7 +1641,7 @@ const char *level_error = nullptr;
 //
 // R_GetRawColumn
 //
-const byte *R_GetRawColumn(int tex, int32_t col)
+const byte *R_GetRawColumn(ZoneHeap &heap, int tex, int32_t col)
 {
    const texture_t *t = textures[tex];
 
@@ -1655,7 +1655,7 @@ const byte *R_GetRawColumn(int tex, int32_t col)
       I_Error("R_GetRawColumn: Texture %s not already cached\n", t->name);
 
    // Lee Killough, eat your heart out! ... well this isn't really THAT bad...
-   return (t->flags & TF_SWIRLY) ? R_DistortedFlat(tex) + col : t->bufferdata + col;
+   return (t->flags & TF_SWIRLY) ? R_DistortedFlat(heap, tex) + col : t->bufferdata + col;
 }
 
 //

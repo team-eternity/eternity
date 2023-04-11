@@ -857,7 +857,7 @@ inline static int32_t R_getSkyColumn(angle_t an, int x, angle_t flip, int offset
 }
 
 // haleyjd: moved here from r_newsky.c
-static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visplane_t *pl)
+static void do_draw_newsky(cmapcontext_t &context, ZoneHeap &heap, const angle_t viewangle, visplane_t *pl)
 {
    cb_column_t column{};
 
@@ -899,7 +899,7 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    {
       if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
       {
-         column.source = R_GetRawColumn(skyTexture2, R_getSkyColumn(an, x, 0, offset2));
+         column.source = R_GetRawColumn(heap, skyTexture2, R_getSkyColumn(an, x, 0, offset2));
 
          colfunc(column);
       }
@@ -919,7 +919,7 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    {
       if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
       {
-         column.source = R_GetRawColumn(skyTexture, R_getSkyColumn(an, x, 0, offset));
+         column.source = R_GetRawColumn(heap, skyTexture, R_getSkyColumn(an, x, 0, offset));
 
          colfunc(column);
       }
@@ -936,7 +936,7 @@ static const int MultiplyDeBruijnBitPosition2[32] =
 //
 // Drawing sky as a background texture instead of a visplane.
 //
-static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *skyflat)
+static void R_drawSky(ZoneHeap &heap, angle_t viewangle, const visplane_t *pl, const skyflat_t *skyflat)
 {
    int texture;
    int offset = 0;
@@ -1051,7 +1051,7 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
 
       if(column.y1 <= column.y2)
       {
-         column.source = R_GetRawColumn(texture, R_getSkyColumn(an, x, flip, offset));
+         column.source = R_GetRawColumn(heap, texture, R_getSkyColumn(an, x, flip, offset));
          colfunc(column);
       }
    }
@@ -1061,7 +1061,7 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
 // New function, by Lee Killough
 // haleyjd 08/30/02: slight restructuring to use hashed sky texture info cache.
 //
-static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
+static void do_draw_plane(cmapcontext_t &context, ZoneHeap &heap, int *const spanstart,
                           const angle_t viewangle, visplane_t *pl)
 {
    if(!(pl->minx <= pl->maxx))
@@ -1071,14 +1071,14 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
    if(R_IsSkyFlat(pl->picnum) && LevelInfo.doubleSky)
    {
       // NOTE: MBF sky transfers change pl->picnum so it won't go here if set to transfer.
-      do_draw_newsky(context, viewangle, pl);
+      do_draw_newsky(context, heap, viewangle, pl);
       return;
    }
    
    skyflat_t *skyflat = R_SkyFlatForPicnum(pl->picnum);
    
    if(skyflat || pl->picnum & PL_SKYFLAT)  // sky flat
-      R_drawSky(viewangle, pl, skyflat);
+      R_drawSky(heap, viewangle, pl, skyflat);
    else // regular flat
    {  
       texture_t *tex;
@@ -1100,7 +1100,7 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
       if((r_swirl && textures[picnum]->flags & TF_ANIMATED)
          || textures[pl->picnum]->flags & TF_SWIRLY)
       {
-         plane.source = R_DistortedFlat(picnum);
+         plane.source = R_DistortedFlat(heap, picnum);
          tex = plane.tex = textures[picnum];
       }
       else
@@ -1235,7 +1235,7 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
 // Called after the BSP has been traversed and walls have rendered. This 
 // function is also now used to render portal overlays.
 //
-void R_DrawPlanes(cmapcontext_t &context, planehash_t &mainhash,
+void R_DrawPlanes(cmapcontext_t &context, ZoneHeap &heap, planehash_t &mainhash,
                   int *const spanstart, const angle_t viewangle, planehash_t *table)
 {
    visplane_t *pl;
@@ -1247,7 +1247,7 @@ void R_DrawPlanes(cmapcontext_t &context, planehash_t &mainhash,
    for(i = 0; i < table->chaincount; ++i)
    {
       for(pl = table->chains[i]; pl; pl = pl->next)
-         do_draw_plane(context, spanstart, viewangle, pl);
+         do_draw_plane(context, heap, spanstart, viewangle, pl);
    }
 }
 

@@ -72,19 +72,19 @@ static void R_DrawLines(void)
 // Generates a distorted flat from a normal one using a two-dimensional
 // sine wave pattern.
 //
-byte *R_DistortedFlat(int texnum, bool usegametic)
+byte *R_DistortedFlat(ZoneHeap &heap, int texnum, bool usegametic)
 {
-   static int lasttex = -1;
-   static int swirltic = -1;
-   static int *offset;
-   static int offsetSize;
-   static byte *distortedflat;
-   static int lastsize;
+   static thread_local int   lasttex  = -1;
+   static thread_local int   swirltic = -1;
+   static thread_local int  *offset;
+   static thread_local int   offsetSize;
+   static thread_local byte *distortedflat;
+   static thread_local int   lastsize;
 
    int i;
    int reftime = usegametic ? gametic : leveltime;
    int leveltic = reftime;
-   texture_t *tex = R_GetTexture(texnum);
+   const texture_t *tex = R_GetTexture(texnum);
    const byte *flatmask = tex->flags & TF_MASKED ?
          tex->bufferdata + tex->width * tex->height : nullptr; // also change the trailing mask
 
@@ -97,8 +97,8 @@ byte *R_DistortedFlat(int texnum, bool usegametic)
    if(cursize * 2 > offsetSize)
    {
       offsetSize = cursize * 4;
-      offset = erealloc(int *, offset, offsetSize * sizeof(*offset));
-      distortedflat = erealloc(byte *, distortedflat, offsetSize * sizeof(*distortedflat));
+      offset = zhrealloc(heap, int *, offset, offsetSize * sizeof(*offset));
+      distortedflat = zhrealloc(heap, byte *, distortedflat, offsetSize * sizeof(*distortedflat));
    }
    // Already swirled this one?
    if(reftime == swirltic && lasttex == texnum)

@@ -1345,7 +1345,7 @@ void R_RenderViewContext(rendercontext_t &context)
    R_RenderPortals(context);
 
    R_DrawPlanes(
-      context.cmapcontext, context.planecontext.mainhash,
+      context.cmapcontext, *context.heap, context.planecontext.mainhash,
       context.planecontext.spanstart, context.view.angle, nullptr
    );
 

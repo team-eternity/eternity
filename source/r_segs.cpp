@@ -408,7 +408,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                      if(column.y2 >= column.y1)
                      {
                         column.texmid = segclip.toptexmid;
-                        column.source = R_GetRawColumn(segclip.toptex, (int)texx);
+                        column.source = R_GetRawColumn(heap, segclip.toptex, (int)texx);
                         column.texheight = segclip.toptexh;
                         colfunc(column);
                         ceilingclip[i] = (float)(column.y2 + 1);
@@ -427,7 +427,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                      if(column.y2 >= column.y1)
                      {
                         column.texmid = segclip.bottomtexmid;
-                        column.source = R_GetRawColumn(segclip.bottomtex, (int)texx);
+                        column.source = R_GetRawColumn(heap, segclip.bottomtex, (int)texx);
                         column.texheight = segclip.bottomtexh;
                         colfunc(column);
                         floorclip[i] = (float)(column.y1 - 1);
@@ -460,7 +460,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
 
                column.texmid = segclip.midtexmid;
 
-               column.source = R_GetRawColumn(segclip.midtex, (int)texx);
+               column.source = R_GetRawColumn(heap, segclip.midtex, (int)texx);
                column.texheight = segclip.midtexh;
 
                colfunc(column);
@@ -497,7 +497,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                {
                   column.texmid = segclip.toptexmid;
 
-                  column.source = R_GetRawColumn(segclip.toptex, (int)texx);
+                  column.source = R_GetRawColumn(heap, segclip.toptex, (int)texx);
                   column.texheight = segclip.toptexh;
 
                   colfunc(column);
@@ -539,7 +539,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                {
                   column.texmid = segclip.bottomtexmid;
 
-                  column.source = R_GetRawColumn(segclip.bottomtex, (int)texx);
+                  column.source = R_GetRawColumn(heap, segclip.bottomtex, (int)texx);
                   column.texheight = segclip.bottomtexh;
 
                   colfunc(column);

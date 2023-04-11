@@ -1979,7 +1979,7 @@ void R_DrawPostBSP(rendercontext_t &context)
             r_column_engine->ResetBuffer();
             
          R_DrawPlanes(
-            context.cmapcontext,
+            context.cmapcontext, *context.heap,
             planecontext.mainhash, planecontext.spanstart,
             context.view.angle, pstack[pstacksize].overlay
          );
