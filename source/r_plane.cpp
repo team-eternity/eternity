@@ -1106,7 +1106,7 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
       else
       {
          // SoM: Handled outside
-         tex = plane.tex = R_CacheTexture(picnum);
+         tex = plane.tex = R_GetTexture(picnum);
          plane.source = tex->bufferdata;
       }
 

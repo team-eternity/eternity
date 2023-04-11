@@ -86,7 +86,7 @@ byte *R_DistortedFlat(int texnum, bool usegametic)
    int i;
    int reftime = usegametic ? gametic : leveltime;
    int leveltic = reftime;
-   texture_t *tex = R_CacheTexture(texnum);
+   texture_t *tex = R_GetTexture(texnum);
    const byte *flatmask = tex->flags & TF_MASKED ?
          tex->bufferdata + tex->width * tex->height : nullptr; // also change the trailing mask
 

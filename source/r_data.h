@@ -138,7 +138,8 @@ const byte *R_GetLinearBuffer(int tex);
 
 // Cache a given texture
 // Returns the texture for chaining.
-texture_t *R_CacheTexture(int num);
+texture_t *R_GetTexture(int num);
+void R_CacheTexture(int num);
 
 // SoM: all textures/flats are now stored in a single array (textures)
 // Walls start from wallstart to (wallstop - 1) and flats go from flatstart 
