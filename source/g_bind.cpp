@@ -318,12 +318,12 @@ struct keyname_t
    { KEYD_JOY_21,             "joy22"              },
    { KEYD_JOY_22,             "joy23"              },
    { KEYD_JOY_23,             "joy24"              },
-   { KEYD_AXISON01,           "joy_left_x"         },
-   { KEYD_AXISON02,           "joy_left_y"         },
-   { KEYD_AXISON03,           "joy_right_x"        },
-   { KEYD_AXISON04,           "joy_right_y"        },
-   { KEYD_AXISON05,           "joy_trigger_left"   },
-   { KEYD_AXISON06,           "joy_trigger_right"  },
+   { KEYD_AXIS_LEFT_X,        "joy_left_x"         },
+   { KEYD_AXIS_LEFT_Y,        "joy_left_y"         },
+   { KEYD_AXIS_RIGHT_X,       "joy_right_x"        },
+   { KEYD_AXIS_RIGHT_Y,       "joy_right_y"        },
+   { KEYD_AXIS_TRIGGER_LEFT,  "joy_trigger_left"   },
+   { KEYD_AXIS_TRIGGER_RIGHT, "joy_trigger_right"  },
    { KEYD_AXISON07,           "axis7"              },
    { KEYD_AXISON08,           "axis8"              },
 };
@@ -351,12 +351,12 @@ struct altkeyname_t
    { "joy15",  KEYD_JOY_DPAD_RIGHT,     },
    { "joy16",  KEYD_JOY_MISC1,          }, // see doomdef.h
    { "joy21",  KEYD_JOY_TOUCHPAD,       },
-   { "axis1",  KEYD_AXISON01,           },
-   { "axis2",  KEYD_AXISON02,           },
-   { "axis3",  KEYD_AXISON03,           },
-   { "axis4",  KEYD_AXISON04,           },
-   { "axis5",  KEYD_AXISON05,           },
-   { "axis6",  KEYD_AXISON06,           },
+   { "axis1",  KEYD_AXIS_LEFT_X,        },
+   { "axis2",  KEYD_AXIS_LEFT_Y,        },
+   { "axis3",  KEYD_AXIS_RIGHT_X,       },
+   { "axis4",  KEYD_AXIS_RIGHT_Y,       },
+   { "axis5",  KEYD_AXIS_TRIGGER_LEFT,  },
+   { "axis6",  KEYD_AXIS_TRIGGER_RIGHT, },
 };
 
 constexpr size_t numAltKeyNames = earrlen(altKeyNames);
@@ -839,7 +839,7 @@ static void G_clearGamepadBindings()
       axisActions[axis] = axis_none;
       axisOrientation[axis] = 0;     // zero is agnostic
 
-      int vkc = KEYD_AXISON01 + axis;
+      int vkc = KEYD_AXIS_BASE + axis;
 
       for(keyaction_t *&binding : keybindings[vkc].bindings)
          binding = nullptr;
