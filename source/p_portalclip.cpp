@@ -115,22 +115,22 @@ static void P_addPortalHitLine(line_t *ld, polyobj_t *po)
 //
 static void P_blockingLineDifferentLevel(line_t *ld, fixed_t thingz,
                                          fixed_t thingmid, fixed_t thingtopz,
-                                         fixed_t linebottommin, fixed_t linebottommax, 
-                                         fixed_t linetopmin, fixed_t linetopmax,
+                                         const lineheights_t &innerheights,
+                                         const lineheights_t &outerheights,
                                          PODCollection<line_t *> *pushhit)
 {
-   fixed_t linemid = linetopmin / 2 + linebottommax / 2;
+   fixed_t linemid = innerheights.topend / 2 + innerheights.bottomend / 2;
    surf_e towards = thingmid >= linemid ? surf_ceil : surf_floor;
 
-   if(towards == surf_floor && linebottommin < clip.zref.ceiling)
+   if(towards == surf_floor && outerheights.bottomend < clip.zref.ceiling)
    {
-      clip.zref.ceiling = linebottommin;
+      clip.zref.ceiling = outerheights.bottomend;
       clip.ceilingline = ld;
       clip.blockline = ld;
    }
-   if(towards == surf_ceil && linetopmax > clip.zref.floor)
+   if(towards == surf_ceil && outerheights.topend > clip.zref.floor)
    {
-      clip.zref.floor = linetopmax;
+      clip.zref.floor = outerheights.topend;
       clip.zref.floorgroupid = ld->frontsector->groupid;
       // TODO: we'll need to handle sloped portals one day
       clip.zref.floorsector = nullptr;
@@ -141,22 +141,19 @@ static void P_blockingLineDifferentLevel(line_t *ld, fixed_t thingz,
 
    fixed_t lowfloor;
    if(!ld->backsector || towards == surf_floor)   // if line is 1-sided or above thing
-      lowfloor = linebottommin;
-   else if(linebottom == ld->backsector->srf.floor.height)
-      lowfloor = ld->frontsector->srf.floor.height;
+      lowfloor = outerheights.bottomend;
    else
-      lowfloor = ld->backsector->srf.floor.height;
-   // 2-sided and below the thing: pick the higher floor ^^^
+      lowfloor = outerheights.bottomedge; // 2-sided and below the thing: pick the higher floor
 
    // SAME TRICK AS IN P_UpdateFromOpening!
-   if(lowfloor < clip.zref.dropoff && linetop >= clip.zref.dropoff)
+   if(lowfloor < clip.zref.dropoff && outerheights.topend >= clip.zref.dropoff)
       clip.zref.dropoff = lowfloor;
 
    // ioanch: only change if postpone is false by now
-   if(towards == surf_ceil && linetop > clip.zref.secfloor)
-      clip.zref.secfloor = linetop;
-   if(towards == surf_floor && linebottom < clip.zref.secceil)
-      clip.zref.secceil = linebottom;
+   if(towards == surf_ceil && outerheights.topend > clip.zref.secfloor)
+      clip.zref.secfloor = outerheights.topend;
+   if(towards == surf_floor && outerheights.bottomend < clip.zref.secceil)
+      clip.zref.secceil = outerheights.bottomend;
 
    if(towards == surf_ceil && clip.zref.floor > clip.zref.passfloor)
       clip.zref.passfloor = clip.zref.floor;
@@ -166,7 +163,8 @@ static void P_blockingLineDifferentLevel(line_t *ld, fixed_t thingz,
    // We need now to collect spechits for push activation.
    if(pushhit && full_demo_version >= make_full_version(401, 0) &&
       (clip.thing->groupid == ld->frontsector->groupid ||
-      (linetop > thingz && linebottom < thingtopz && !(ld->pflags & PS_PASSABLE))))
+      (outerheights.topend > thingz && outerheights.bottomend < thingtopz &&
+       !(ld->pflags & PS_PASSABLE))))
    {
       pushhit->add(ld);
    }
@@ -347,7 +345,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       }
    }
 
-   if(linebottommax <= thingz && linetopmin >= thingtopz)
+   if(innerheights.bottomend <= thingz && innerheights.topend >= thingtopz)
    {
       // classic Doom behaviour
 
@@ -362,8 +360,8 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       // same conditions as above
       if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL))
       {
-         P_blockingLineDifferentLevel(ld, thingz, thingmid, thingtopz, linebottom, linetop,
-            pushhit);
+         P_blockingLineDifferentLevel(ld, thingz, thingmid, thingtopz, innerheights, outerheights,
+                                      pushhit);
          return true;
       }
       if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
@@ -373,8 +371,8 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
          {
             // explicitly blocking everything
             // or blocking player
-            P_blockingLineDifferentLevel(ld, thingz, thingmid, thingtopz, linebottom, linetop,
-               pushhit);
+            P_blockingLineDifferentLevel(ld, thingz, thingmid, thingtopz, innerheights,
+                                         outerheights, pushhit);
             return true;
          }
          if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
@@ -384,12 +382,14 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
                )
             )
          {
-            P_blockingLineDifferentLevel(ld, thingz, thingmid, thingtopz, linebottom, linetop,
-               pushhit);
+            P_blockingLineDifferentLevel(ld, thingz, thingmid, thingtopz, innerheights,
+                                         outerheights, pushhit);
             return true;
          }
       }
    }
+
+   // TODO: check the sloped line points here
 
    // better detection of in-portal lines
    uint32_t lineclipflags = 0;
