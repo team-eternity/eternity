@@ -27,11 +27,9 @@
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
 #include "filesystem.hpp"
 namespace fs = ghc::filesystem;
-using u8string = std::string;
 #else
 #include <filesystem>
 namespace fs = std::filesystem;
-using u8string = std::u8string;
 #endif
 #else
 #include <experimental/filesystem>
@@ -399,7 +397,7 @@ static void D_addSubDirectories(Collection<qstring> &paths, const char *base)
    const fs::directory_iterator itr(base);
    for(const fs::directory_entry &ent : itr)
    {
-      const u8string filename = ent.path().filename().generic_u8string();
+      const auto filename = ent.path().filename().generic_u8string();
 
       if(ent.exists() && ent.is_directory())
          paths.add(qstring(reinterpret_cast<const char *>(filename.c_str()))); // C++20_FIXME: Cast to make C++20 builds compile
