@@ -89,9 +89,8 @@ void R_freeData(renderdata_t &data)
    R_freeContext(data.context);
 
    // Free actual thread
-   while(!data.thread.joinable())
-      i_haltimer.Sleep(1);
-   data.thread.join();
+   if(data.thread.joinable())
+      data.thread.join();
 }
 
 void R_FreeContexts()
@@ -202,7 +201,8 @@ void R_InitContexts(const int width)
       // Wait until this context's thread is done running before creating a new one
       while(renderdatas[currentcontext].running.load())
          i_haltimer.Sleep(1);
-      renderdatas[currentcontext].thread = std::thread(&R_contextThreadFunc, &renderdatas[currentcontext]);
+      if(currentcontext < r_numcontexts - 1)
+         renderdatas[currentcontext].thread = std::thread(&R_contextThreadFunc, &renderdatas[currentcontext]);
    }
 }
 
@@ -255,7 +255,16 @@ void R_RunContexts()
    int finishedcontexts = 0;
 
    for(int currentcontext = 0; currentcontext < r_numcontexts; currentcontext++)
-      renderdatas[currentcontext].framewaiting.store(true);
+   {
+      if(currentcontext < r_numcontexts - 1)
+         renderdatas[currentcontext].framewaiting.store(true);
+      else
+      {
+         // The last context can be rendered on the main thread
+         R_RenderViewContext(renderdatas[currentcontext].context);
+         finishedcontexts++;
+      }
+   }
 
    while(finishedcontexts != r_numcontexts)
    {
