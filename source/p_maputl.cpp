@@ -427,7 +427,7 @@ lineopening_t P_SlopeOpeningPortalAware(v2fixed_t pos)
 // ioanch 20160113: added portal detection (optional)
 //
 lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed_t *ppoint,
-   bool portaldetect, uint32_t *lineclipflags)
+                            bool portaldetect, uint32_t *lineclipflags)
 {
    // keep track of lineopening_t from "clip", for compatibility's sake
    lineopening_t open = clip.open;
@@ -464,9 +464,9 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
    {
       if(mo && demo_version >= 333 &&
          ((frontceiling.pflags & PS_PASSABLE && backceiling.pflags & PS_PASSABLE &&
-            frontceiling.portal == backceiling.portal) ||
-            (frontceiling.pflags & PS_PASSABLE && linedef->pflags & PS_PASSABLE &&
-               frontceiling.portal->data.link.delta == linedef->portal->data.link.delta)))
+           frontceiling.portal == backceiling.portal) ||
+          (frontceiling.pflags & PS_PASSABLE && linedef->pflags & PS_PASSABLE &&
+           frontceiling.portal->data.link.delta == linedef->portal->data.link.delta)))
       {
          // also handle line portal + ceiling portal, for edge portals
          if(!portaldetect) // ioanch
@@ -475,17 +475,17 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
          {
             *lineclipflags |= LINECLIP_UNDERPORTAL;
             frontceilz = frontceiling.getZAt(point);
-            backceilz = backceiling.getZAt(point);
+            backceilz  = backceiling.getZAt(point);
          }
       }
       else
       {
          frontceilz = frontceiling.getZAt(point);
-         backceilz = backceiling.getZAt(point);
+         backceilz  = backceiling.getZAt(point);
       }
 
       frontcz = frontceiling.getZAt(point);
-      backcz = backceiling.getZAt(point);
+      backcz  = backceiling.getZAt(point);
    }
 
    const surface_t &frontfloor = openfrontsector->srf.floor;
@@ -493,9 +493,9 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
    {
       if(mo && demo_version >= 333 &&
          ((frontfloor.pflags & PS_PASSABLE && backfloor.pflags & PS_PASSABLE &&
-            frontfloor.portal == backfloor.portal) ||
-            (frontfloor.pflags & PS_PASSABLE && linedef->pflags & PS_PASSABLE &&
-               frontfloor.portal->data.link.delta == linedef->portal->data.link.delta)))
+           frontfloor.portal == backfloor.portal) ||
+          (frontfloor.pflags & PS_PASSABLE && linedef->pflags & PS_PASSABLE &&
+           frontfloor.portal->data.link.delta == linedef->portal->data.link.delta)))
       {
          if(!portaldetect)  // ioanch
          {
@@ -508,7 +508,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
             *lineclipflags |= LINECLIP_ABOVEPORTAL;
             frontfloorz = frontfloor.getZAt(point);
             frontfloorgroupid = openfrontsector->groupid;
-            backfloorz = backfloor.getZAt(point);
+            backfloorz  = backfloor.getZAt(point);
             backfloorgroupid = openbacksector->groupid;
          }
       }
@@ -516,7 +516,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
       {
          frontfloorz = frontfloor.getZAt(point);
          frontfloorgroupid = openfrontsector->groupid;
-         backfloorz = backfloor.getZAt(point);
+         backfloorz  = backfloor.getZAt(point);
          backfloorgroupid = openbacksector->groupid;
       }
 

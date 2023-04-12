@@ -379,7 +379,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL))
       {
          P_blockingLineDifferentLevel(ld, thingz, thingmid, thingtopz, innerheights, outerheights,
-                                      pushhit);
+            pushhit);
          return true;
       }
       if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
@@ -390,7 +390,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
             // explicitly blocking everything
             // or blocking player
             P_blockingLineDifferentLevel(ld, thingz, thingmid, thingtopz, innerheights,
-                                         outerheights, pushhit);
+               outerheights, pushhit);
             return true;
          }
          if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
@@ -401,7 +401,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
             )
          {
             P_blockingLineDifferentLevel(ld, thingz, thingmid, thingtopz, innerheights,
-                                         outerheights, pushhit);
+               outerheights, pushhit);
             return true;
          }
       }
