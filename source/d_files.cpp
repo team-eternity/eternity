@@ -614,7 +614,9 @@ static int D_CheckBasePath(const qstring &qpath)
          const fs::directory_iterator itr(path);
          for(const fs::directory_entry &ent : itr)
          {
-            const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
+            const qstring filename = qstring(
+               reinterpret_cast<const char *>(ent.path().filename().generic_u8string().c_str())
+            ).toLower(); // C++20_FIXME: Cast to make C++20 builds compile
 
             if(filename == "startup.wad")
                ++score;
@@ -800,7 +802,9 @@ static int D_CheckUserPath(const qstring &qpath)
          const fs::directory_iterator itr(path);
          for(const fs::directory_entry &ent : itr)
          {
-            const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
+            const qstring filename = qstring(
+               reinterpret_cast<const char *>(ent.path().filename().generic_u8string().c_str())
+            ).toLower(); // C++20_FIXME: Cast to make C++20 builds compile
 
             if(filename == "doom")
                ++score;
@@ -1202,8 +1206,10 @@ void D_GameAutoloadWads()
       {
          if(ent.path().extension() == ".wad")
          {
-            fn = M_SafeFilePath(autoload_dirname.constPtr(),
-                                ent.path().filename().generic_u8string().c_str());
+            fn = M_SafeFilePath(
+               autoload_dirname.constPtr(),
+               reinterpret_cast<const char *>(ent.path().filename().generic_u8string().c_str())
+            ); // C++20_FIXME: Cast to make C++20 builds compile
             D_AddFile(fn, lumpinfo_t::ns_global, nullptr, 0, DAF_NONE);
          }
       }
@@ -1228,8 +1234,10 @@ void D_GameAutoloadDEH()
          if(const fs::path extension = ent.path().extension();
             extension == ".deh" || extension == ".bex")
          {
-            fn = M_SafeFilePath(autoload_dirname.constPtr(),
-                                ent.path().filename().generic_u8string().c_str());
+            fn = M_SafeFilePath(
+               autoload_dirname.constPtr(),
+               reinterpret_cast<const char *>(ent.path().filename().generic_u8string().c_str())
+            ); // C++20_FIXME: Cast to make C++20 builds compile
             D_QueueDEH(fn, 0);
          }
       }
@@ -1252,8 +1260,10 @@ void D_GameAutoloadCSC()
       {
          if(ent.path().extension() == ".csc")
          {
-            fn = M_SafeFilePath(autoload_dirname.constPtr(),
-                                ent.path().filename().generic_u8string().c_str());
+            fn = M_SafeFilePath(
+               autoload_dirname.constPtr(),
+               reinterpret_cast<const char *>(ent.path().filename().generic_u8string().c_str())
+            ); // C++20_FIXME: Cast to make C++20 builds compile
             C_RunScriptFromFile(fn);
          }
       }
