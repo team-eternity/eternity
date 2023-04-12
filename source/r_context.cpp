@@ -26,6 +26,7 @@
 //
 
 #include <atomic>
+#include <semaphore>
 #include <thread>
 
 #include "c_io.h"
@@ -43,18 +44,17 @@
 
 struct renderdata_t
 {
-   rendercontext_t  context;
-   std::thread      thread;
-   std::atomic_bool running;
-   std::atomic_bool shouldquit;
-   std::atomic_bool framewaiting;
-   std::atomic_bool framefinished;
+   rendercontext_t       context;
+   std::thread           thread;
+   std::binary_semaphore shouldrun;
+   std::atomic_bool      running;
+   std::atomic_bool      shouldquit;
+   std::atomic_bool      framewaiting;
+   std::atomic_bool      framefinished;
 };
 
 static renderdata_t *renderdatas      = nullptr;
 static int           prev_numcontexts = 0;
-
-static bool          temp_dgafaboutyourcpu = true; // THREAD_FIXME: DELETE THIS
 
 //
 // Grabs a given render context
@@ -118,15 +118,10 @@ static void R_contextThreadFunc(renderdata_t *data)
    {
       if(data->framewaiting.exchange(false))
       {
+         data->shouldrun.acquire();
          R_RenderViewContext(data->context);
          data->framefinished.store(true);
-         // THREAD_TODO: Wait here an appropriate amount of time once FPS limiting is in
       }
-
-      if(temp_dgafaboutyourcpu)
-         std::this_thread::yield(); // I YIELD MY TIME, FUCK YOU!
-      else
-         i_haltimer.Sleep(1);
    }
 
    data->running.exchange(false);
@@ -202,7 +197,10 @@ void R_InitContexts(const int width)
       while(renderdatas[currentcontext].running.load())
          i_haltimer.Sleep(1);
       if(currentcontext < r_numcontexts - 1)
+      {
+         new(&renderdatas[currentcontext].shouldrun) std::binary_semaphore(0);
          renderdatas[currentcontext].thread = std::thread(&R_contextThreadFunc, &renderdatas[currentcontext]);
+      }
    }
 }
 
@@ -257,7 +255,10 @@ void R_RunContexts()
    for(int currentcontext = 0; currentcontext < r_numcontexts; currentcontext++)
    {
       if(currentcontext < r_numcontexts - 1)
+      {
          renderdatas[currentcontext].framewaiting.store(true);
+         renderdatas[currentcontext].shouldrun.release();
+      }
       else
       {
          // The last context can be rendered on the main thread
@@ -275,9 +276,6 @@ void R_RunContexts()
       }
    }
 }
-
-VARIABLE_TOGGLE(temp_dgafaboutyourcpu, nullptr, yesno);
-CONSOLE_VARIABLE(r_gofast, temp_dgafaboutyourcpu, cf_buffered) {}
 
 VARIABLE_INT(r_numcontexts, nullptr, 0, UL, nullptr);
 CONSOLE_VARIABLE(r_numcontexts, r_numcontexts, cf_buffered)
