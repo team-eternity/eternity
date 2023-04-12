@@ -27,9 +27,11 @@
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
 #include "filesystem.hpp"
 namespace fs = ghc::filesystem;
+using u8string = std::string;
 #else
 #include <filesystem>
 namespace fs = std::filesystem;
+using u8string = std::u8string;
 #endif
 #else
 #include <experimental/filesystem>
@@ -397,10 +399,10 @@ static void D_addSubDirectories(Collection<qstring> &paths, const char *base)
    const fs::directory_iterator itr(base);
    for(const fs::directory_entry &ent : itr)
    {
-      std::string filename = ent.path().filename().generic_u8string();
+      const u8string filename = ent.path().filename().generic_u8string();
 
       if(ent.exists() && ent.is_directory())
-         paths.add(qstring(ent.path().filename().generic_u8string().c_str()));
+         paths.add(qstring(reinterpret_cast<const char *>(filename.c_str()))); // C++20_FIXME: Cast to make C++20 builds compile
    }
 }
 
@@ -595,14 +597,18 @@ void D_CheckPathForIWADs(const qstring &path)
    const fs::directory_iterator itr(path.constPtr());
    for(const fs::directory_entry &ent : itr)
    {
-      const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
+      const qstring filename = qstring(
+         reinterpret_cast<const char *>(ent.path().filename().generic_u8string().c_str())
+      ).toLower(); // C++20_FIXME: Cast to make C++20 builds compile
       for(int i = 0; i < nstandard_iwads; i++)
       {
          if(filename == standard_iwads[i] + 1)
          {
             // found one.
             // determine if we want to store this path.
-            D_determineIWADVersion(qstring(ent.path().generic_u8string().c_str()));
+            D_determineIWADVersion(
+               qstring(reinterpret_cast<const char *>(ent.path().generic_u8string().c_str()))
+            ); // C++20_FIXME: Cast to make C++20 builds compile
 
             break; // break inner loop
          }
@@ -634,7 +640,9 @@ static void D_checkForNoRest()
       const fs::directory_iterator itr(nrvpath.constPtr());
       for(const fs::directory_entry &ent : itr)
       {
-         const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
+         const qstring filename = qstring(
+            reinterpret_cast<const char *>(ent.path().filename().generic_u8string().c_str())
+         ).toLower();
          if(filename == "nerve.wad")
          {
             nrvpath.pathConcatenate(filename);
