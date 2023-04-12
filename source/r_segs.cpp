@@ -81,8 +81,6 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
    cb_column_t column{};
    cb_seg_t    segclip{};
 
-   tempsec = {}; // Seemingly not necessary, but here for safety
-
    // Calculate light table.
    // Use different light tables
    //   for horizontal / vertical / diagonal. Diagonal?

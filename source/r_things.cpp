@@ -2446,7 +2446,7 @@ static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &sprit
       else
       {
          lighttable_t **ltable;
-         sector_t tmpsec;
+         static thread_local sector_t tmpsec;
          int floorlightlevel, ceilinglightlevel, lightnum, index;
 
          R_FakeFlat(viewpoint.z, sector, &tmpsec, &floorlightlevel, &ceilinglightlevel, false);

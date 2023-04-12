@@ -2207,8 +2207,6 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    float floorx1, floorx2;
    const vertex_t *v1, *v2;
 
-   tempsec = {}; // Seemingly not necessary, but here for safety
-
    // ioanch 20160125: reject segs in front of line when rendering line portal
    if(portalrender.active && portalrender.w->portal->type != R_SKYBOX)
    {
@@ -2837,8 +2835,6 @@ static void R_subsector(rendercontext_t &context, const int num)
    v3float_t   cam;
 
    cb_seg_t    seg{}; // haleyjd 09/22/07: clear seg structure
-
-   tempsec = {}; // Seemingly not necessary, but here for safety
 
    sub = &subsectors[num];
    seg.frontsec = sub->sector;
