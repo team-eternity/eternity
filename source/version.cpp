@@ -40,7 +40,7 @@ const char version_name[] = "Glitnir";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = u8"Eternity Engine v4.03.00 \"Glitnir\"";
+const char ee_wmCaption[] = "Eternity Engine v4.03.00 \"Glitnir\"";
 #endif
 
 // haleyjd: Eternity release history
