@@ -258,7 +258,7 @@ static void MN_readSaveStrings()
       InBuffer    loadFile;
       SaveArchive arc(&loadFile);
       fs::path    savePath(ent.path());
-      qstring     pathStr(savePath.generic_u8string().c_str());
+      qstring     pathStr(reinterpret_cast<const char *>(savePath.generic_u8string().c_str())); // C++20_FIXME: Cast to make C++20 builds compile
 
       if(ent.is_directory() || !savePath.has_stem() || !savePath.has_extension() || savePath.extension() != ".dsg")
          continue;
@@ -269,7 +269,7 @@ static void MN_readSaveStrings()
       if(fileLoaded)
          continue;
 
-      qstring savename(savePath.stem().generic_u8string().c_str());
+      qstring savename(reinterpret_cast<const char *>(savePath.stem().generic_u8string().c_str())); // C++20_FIXME: Cast to make C++20 builds compile
       if(savename.strNCaseCmp(savegamename, strlen(savegamename)))
          continue;
 

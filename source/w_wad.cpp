@@ -27,9 +27,11 @@
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
 #include "filesystem.hpp"
 namespace fs = ghc::filesystem;
+using u8string = std::string;
 #else
 #include <filesystem>
 namespace fs = std::filesystem;
+using u8string = std::u8string;
 #endif
 #else
 #include <experimental/filesystem>
@@ -761,9 +763,9 @@ int WadDirectory::addDirectory(const char *dirpath)
    for(const fs::directory_entry &ent : itr)
    {
       edefstructvar(dirfile_t, newfile);
-      const std::string filename = ent.path().filename().generic_u8string();
+      const u8string filename = ent.path().filename().generic_u8string();
 
-      newfile.fullfn = M_SafeFilePath(dirpath, filename.c_str());
+      newfile.fullfn = M_SafeFilePath(dirpath, reinterpret_cast<const char *>(filename.c_str())); // C++20_FIXME: Cast to make C++20 builds compile
 
       if(ent.exists()) // check for existence
       {
@@ -887,14 +889,14 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
    const fs::directory_iterator itr(dir);
    for(const fs::directory_entry &ent : itr)
    {
-       std::string filename = ent.path().filename().generic_u8string();
+      u8string filename = ent.path().filename().generic_u8string();
 
       // Skip UNIX hidden files and directory tree entries
       if(filename[0] == '.')
          continue;
 
       path = base;
-      path.pathConcatenate(subpath).pathConcatenate(filename.c_str());
+      path.pathConcatenate(subpath).pathConcatenate(reinterpret_cast<const char *>(filename.c_str())); // C++20_FIXME: Cast to make C++20 builds compile
 
       if(ent.exists()) // check for existence
       {
@@ -904,7 +906,7 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
             {
                // we need to go deeper.
                path = subpath;
-               path.pathConcatenate(filename.c_str());
+               path.pathConcatenate(reinterpret_cast<const char *>(filename.c_str())); // C++20_FIXME: Cast to make C++20 builds compile
                W_recurseFiles(paths, base, path.constPtr(), prevPaths, depth + 1);
             }
          }
@@ -915,7 +917,7 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
 
             adf.path = path;
             path = subpath;
-            path.pathConcatenate(filename.c_str());
+            path.pathConcatenate(reinterpret_cast<const char *>(filename.c_str())); // C++20_FIXME: Cast to make C++20 builds compile
 
             // Normalize the subpath
             path.toLower();
