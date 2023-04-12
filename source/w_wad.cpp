@@ -27,9 +27,11 @@
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
 #include "filesystem.hpp"
 namespace fs = ghc::filesystem;
+using u8string = std::string;
 #else
 #include <filesystem>
 namespace fs = std::filesystem;
+using u8string = std::u8string;
 #endif
 #else
 #include <experimental/filesystem>
@@ -761,7 +763,7 @@ int WadDirectory::addDirectory(const char *dirpath)
    for(const fs::directory_entry &ent : itr)
    {
       edefstructvar(dirfile_t, newfile);
-      const std::u8string filename = ent.path().filename().generic_u8string();
+      const u8string filename = ent.path().filename().generic_u8string();
 
       newfile.fullfn = M_SafeFilePath(dirpath, reinterpret_cast<const char *>(filename.c_str())); // C++20_FIXME: Cast to make C++20 builds compile
 
@@ -887,7 +889,7 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
    const fs::directory_iterator itr(dir);
    for(const fs::directory_entry &ent : itr)
    {
-       std::u8string filename = ent.path().filename().generic_u8string();
+      u8string filename = ent.path().filename().generic_u8string();
 
       // Skip UNIX hidden files and directory tree entries
       if(filename[0] == '.')
