@@ -35,6 +35,7 @@
 #include "m_misc.h"
 #include "hal/i_timer.h"
 #include "i_video.h"
+#include "m_compare.h"
 #include "r_context.h"
 #include "r_draw.h"
 #include "r_main.h"
@@ -280,7 +281,7 @@ void R_RunContexts()
 VARIABLE_INT(r_numcontexts, nullptr, 0, UL, nullptr);
 CONSOLE_VARIABLE(r_numcontexts, r_numcontexts, cf_buffered)
 {
-   const int maxcontexts = std::thread::hardware_concurrency();
+   const int maxcontexts = emax(std::thread::hardware_concurrency() - 1, 1u);
 
    if(r_numcontexts == 0)
       r_numcontexts = maxcontexts - 1; // allow scrolling left from 1 to maxcontexts
