@@ -102,11 +102,11 @@ struct cliprange_t
 // have anything to do with visplanes, but it had everything to do with these
 // clip posts.
 
-#define MAXSEGS (w/2+1)   /* killough 1/11/98, 2/8/98 */
+#define MAXSEGS (basecontext.bounds.numcolumns/2+1)   /* killough 1/11/98, 2/8/98 */
 
 VALLOCATION(solidsegs)
 {
-   R_ForEachContext([w](rendercontext_t &basecontext) {
+   R_ForEachContext([](rendercontext_t &basecontext) {
       bspcontext_t &context =  basecontext.bspcontext;
       ZoneHeap     &heap    = *basecontext.heap;
 
@@ -2628,7 +2628,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 }
 
 
-static const int checkcoord[12][4] = // killough -- static const
+static constexpr int checkcoord[12][4] = // killough -- static const
 {
    {3,0,2,1},
    {3,0,2,0},
@@ -2650,7 +2650,7 @@ static const int checkcoord[12][4] = // killough -- static const
 static bool R_checkBBox(const viewpoint_t &viewpoint,
                         const contextbounds_t &bounds,
                         const cliprange_t *const solidsegs,
-                        const fixed_t *bspcoord) // killough 1/28/98: static
+                        const fixed_t *const bspcoord) // killough 1/28/98: static
 {
    int     boxpos, boxx, boxy;
    fixed_t x1, x2, y1, y2;
@@ -2781,7 +2781,7 @@ static void R_addDynaSegs(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, 
                           const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                           const contextbounds_t &bounds, const uint64_t visitid,
                           cb_seg_t &seg,
-                          subsector_t *sub)
+                          const subsector_t *sub)
 {
    if(sub->bsp)
    {
