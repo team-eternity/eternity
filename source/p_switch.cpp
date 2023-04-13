@@ -41,6 +41,7 @@
 #include "p_spec.h"
 #include "r_data.h"
 #include "r_main.h"
+#include "r_sky.h"
 #include "r_state.h"
 #include "s_sound.h"
 #include "sounds.h"
@@ -408,30 +409,31 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
       {
          sides[sidenum].toptexture = switchlist[i^1]; // chg texture
          R_CacheTexture(switchlist[i ^ 1]);
-         
+         R_CacheIfSkyTexture(switchlist[i], switchlist[i ^ 1]); // Sky transfers are only off of top textures
+
          P_StartButton(sidenum, line, sector, top, switchlist[i], BUTTONTIME,
                        !!useAgain, sound, i); // start timer
-         
+
          return;
       }
       else if(switchlist[i] == texMid) // if a normal texture
       {
          sides[sidenum].midtexture = switchlist[i^1]; // chg texture
          R_CacheTexture(switchlist[i ^ 1]);
-         
+
          P_StartButton(sidenum, line, sector, middle, switchlist[i], BUTTONTIME,
                        !!useAgain, sound, i); // start timer
-         
+
          return;
       }
       else if(switchlist[i] == texBot) // if a lower texture
       {
          sides[sidenum].bottomtexture = switchlist[i^1]; //chg texture
          R_CacheTexture(switchlist[i ^ 1]);
-         
+
          P_StartButton(sidenum, line, sector, bottom, switchlist[i], BUTTONTIME,
                        !!useAgain, sound, i); // start timer
-         
+
          return;
       }
    }
