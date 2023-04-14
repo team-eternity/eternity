@@ -102,20 +102,33 @@ struct cliprange_t
 // have anything to do with visplanes, but it had everything to do with these
 // clip posts.
 
-#define MAXSEGS (basecontext.bounds.numcolumns/2+1)   /* killough 1/11/98, 2/8/98 */
+#define MAXSEGS (w/2+r_numcontexts)   /* killough 1/11/98, 2/8/98 */
+
+static cliprange_t *g_solidsegs = nullptr;
 
 VALLOCATION(solidsegs)
 {
-   R_ForEachContext([](rendercontext_t &basecontext) {
-      bspcontext_t &context =  basecontext.bspcontext;
-      ZoneHeap     &heap    = *basecontext.heap;
+   g_solidsegs = ecalloctag(cliprange_t *, MAXSEGS * 2, sizeof(cliprange_t), PU_VALLOC, nullptr);
 
-      cliprange_t *buf = zhcalloctag(heap, cliprange_t *, MAXSEGS * 2, sizeof(cliprange_t), PU_VALLOC, nullptr);
+   r_globalcontext.bspcontext.solidsegs = g_solidsegs;
+   r_globalcontext.bspcontext.addedsegs = g_solidsegs + (r_globalcontext.bounds.numcolumns / 2 + 1);
 
-      context.solidsegs = buf;
-      context.addedsegs = buf + MAXSEGS;
-      context.addend    = context.addedsegs;
-   });
+   if(r_numcontexts > 1)
+   {
+      cliprange_t *buf = g_solidsegs;
+      for(int i = 0; i < r_numcontexts; i++)
+      {
+         rendercontext_t &basecontext = R_GetContext(i);
+         bspcontext_t    &context     = basecontext.bspcontext;
+         ZoneHeap        &heap        = *basecontext.heap;
+         const int        CONTEXTSEGS = basecontext.bounds.numcolumns / 2 + 1;
+
+         context.solidsegs  = buf;
+         buf               += CONTEXTSEGS;
+         context.addedsegs  = buf;
+         buf               += CONTEXTSEGS;
+      }
+   }
 }
 
 
@@ -375,6 +388,31 @@ static void R_clipPassWallSegment(bspcontext_t &bspcontext, cmapcontext_t &cmapc
       bspcontext, cmapcontext, planecontext, portalcontext, heap,
       viewpoint, cb_viewpoint, bounds, seg, start->last + 1, x2
    );
+}
+
+//
+// Sets up the solid seg pointers
+//
+void R_SetupSolidSegs()
+{
+   r_globalcontext.bspcontext.solidsegs = g_solidsegs;
+   r_globalcontext.bspcontext.addedsegs = g_solidsegs + (r_globalcontext.bounds.numcolumns / 2 + 1);
+
+   if(r_numcontexts > 1)
+   {
+      cliprange_t *buf = g_solidsegs;
+      for(int i = 0; i < r_numcontexts; i++)
+      {
+         rendercontext_t &basecontext = R_GetContext(i);
+         bspcontext_t    &context     = basecontext.bspcontext;
+         const int        CONTEXTSEGS = basecontext.bounds.numcolumns / 2 + 1;
+
+         context.solidsegs  = buf;
+         buf               += CONTEXTSEGS;
+         context.addedsegs  = buf;
+         buf               += CONTEXTSEGS;
+      }
+   }
 }
 
 //

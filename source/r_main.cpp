@@ -1094,6 +1094,7 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    R_SetColumnEngine();
    R_SetSpanEngine();
    R_incrementFrameid(); // Cardboard
+
    
    viewplayer = player;
    viewcamera = camera;
@@ -1140,6 +1141,7 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    view.lerp   = lerp;
    view.sector = R_PointInSubsector(viewpoint.x, viewpoint.y)->sector;
 
+   R_SetupSolidSegs();
    R_PreRenderBSP();
 
    // set interpolated sector heights
