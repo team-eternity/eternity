@@ -1322,7 +1322,7 @@ void R_RenderViewContext(rendercontext_t &context)
    context.portalcontext.renderdepth = 0;
 
    // Clear buffers.
-   R_ClearClipSegs(context.bspcontext);
+   R_ClearClipSegs(context.bspcontext, context.bounds);
    R_ClearDrawSegs(context.bspcontext);
    R_ClearPlanes(context.planecontext, context.bounds);
    R_ClearSprites(context.spritecontext);

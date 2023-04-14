@@ -380,11 +380,11 @@ static void R_clipPassWallSegment(bspcontext_t &bspcontext, cmapcontext_t &cmapc
 //
 // R_ClearClipSegs
 //
-void R_ClearClipSegs(bspcontext_t &context)
+void R_ClearClipSegs(bspcontext_t &context, const contextbounds_t &bounds)
 {
-   context.solidsegs[0].first     = D_MININT + 1;
-   context.solidsegs[0].last      = -1;
-   context.solidsegs[1].first = viewwindow.width;
+   context.solidsegs[0].first = D_MININT + 1;
+   context.solidsegs[0].last  = bounds.startcolumn - 1;
+   context.solidsegs[1].first = bounds.endcolumn;
    context.solidsegs[1].last  = D_MAXINT - 1;
    context.newend = context.solidsegs+2;
    context.addend = context.addedsegs;
@@ -403,7 +403,7 @@ bool R_SetupPortalClipsegs(bspcontext_t &context, const contextbounds_t &bounds,
    int i = minx, stop = maxx + 1;
    cliprange_t *solidseg = solidsegs;
    
-   R_ClearClipSegs(context);
+   R_ClearClipSegs(context, bounds);
 
    // SoM: This should be done here instead of having an additional loop
    portalrender.miny = (float)(video.height);
@@ -2828,18 +2828,18 @@ static void R_subsector(rendercontext_t &context, const int num)
 
    static thread_local sector_t tempsec; // killough 3/7/98: deep water hack
 
-   int         count;
-   const seg_t *line;
-   subsector_t *sub;
-   int         floorlightlevel;      // killough 3/16/98: set floor lightlevel
-   int         ceilinglightlevel;    // killough 4/11/98
-   float       floorangle;           // haleyjd 01/05/08: plane angles
-   float       ceilingangle;
+   int                count;
+   const seg_t       *line;
+   const subsector_t *sub;
+   int                floorlightlevel;      // killough 3/16/98: set floor lightlevel
+   int                ceilinglightlevel;    // killough 4/11/98
+   float              floorangle;           // haleyjd 01/05/08: plane angles
+   float              ceilingangle;
 
-   bool        visible;
-   v3float_t   cam;
+   bool               visible;
+   v3float_t          cam;
 
-   cb_seg_t    seg{}; // haleyjd 09/22/07: clear seg structure
+   cb_seg_t           seg{}; // haleyjd 09/22/07: clear seg structure
 
    sub = &subsectors[num];
    seg.frontsec = sub->sector;

@@ -48,7 +48,7 @@ bool R_SetupPortalClipsegs(bspcontext_t &context, const contextbounds_t &bounds,
                            portalrender_t &portalrender,
                            int minx, int maxx, const float *top, const float *bottom);
 
-void R_ClearClipSegs(bspcontext_t &context);
+void R_ClearClipSegs(bspcontext_t &context, const contextbounds_t &bounds);
 void R_ClearDrawSegs(bspcontext_t &context);
 
 void R_ForEachPolyNode(void (*func)(rpolynode_t *bsp));
