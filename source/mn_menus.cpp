@@ -1726,6 +1726,7 @@ static menuitem_t mn_sysvideo_items[] =
    { it_gap },
    { it_info,     "Rendering"                                    },
    { it_slider,   "Screen size",              "screensize"       },
+   { it_toggle,   "Renderer threads",         "r_numcontexts"    },
    { it_toggle,   "HOM detector flashes",     "r_homflash"       },
    { it_toggle,   "Translucency",             "r_trans"          },
    { it_variable, "Opacity percentage",       "r_tranpct"        },
