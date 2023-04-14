@@ -597,7 +597,9 @@ byte *R_DistortedFlat(ZoneHeap &heap, int, bool);
 //
 void V_DrawDistortedBackground(const char *patchname, VBuffer *back_dest)
 {
-   const byte *src = R_DistortedFlat(*r_globalcontext.heap, R_FindFlat(patchname), true);
+   const int patchNum = R_FindFlat(patchname);
+   R_CacheTexture(patchNum);
+   const byte *src = R_DistortedFlat(*r_globalcontext.heap, patchNum, true);
 
    back_dest->TileBlock64(back_dest, src);
 }
