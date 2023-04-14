@@ -2627,20 +2627,19 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
 }
 
-
 static constexpr int checkcoord[12][4] = // killough -- static const
 {
-   {3,0,2,1},
-   {3,0,2,0},
-   {3,1,2,0},
-   {0},
-   {2,0,2,1},
-   {0,0,0,0},
-   {3,1,3,0},
-   {0},
-   {2,0,3,1},
-   {2,1,3,1},
-   {2,1,3,0}
+   { BOXRIGHT, BOXTOP,    BOXLEFT, BOXBOTTOM }, // 0
+   { BOXRIGHT, BOXTOP,    BOXLEFT, BOXTOP    }, // 1
+   { BOXRIGHT, BOXBOTTOM, BOXLEFT, BOXTOP    }, // 2
+   { 0 },                                       // 3, never happens
+   { BOXLEFT,  BOXTOP,    BOXLEFT, BOXBOTTOM }, // 4
+   { 0,        0,         0,       0,        }, // 5, special case (return true)
+   { BOXRIGHT, BOXBOTTOM, BOXRIGHT,BOXTOP    }, // 6
+   { 0 },                                       // 7, never happens
+   { BOXLEFT,  BOXTOP,    BOXRIGHT,BOXBOTTOM }, // 8
+   { BOXLEFT,  BOXBOTTOM, BOXRIGHT,BOXBOTTOM }, // 9
+   { BOXLEFT,  BOXBOTTOM, BOXRIGHT,BOXTOP    }  // 10
 };
 
 //
@@ -2657,6 +2656,12 @@ static bool R_checkBBox(const viewpoint_t &viewpoint,
    angle_t angle1, angle2, span, tspan;
    int     sx1, sx2;
    const cliprange_t *start;
+
+   // 0,0 | 1,0 | 2,0   |  0  |  1  |  2
+   //  ---|-----|---    |  ---|-----|---
+   // 0,1 | 1,1 | 2,1   |  4  |  5  |  6
+   //  ---|-----|---    |  ---|-----|---
+   // 0,2 | 1,2 | 2,2   |  8  |  9  |  10
 
    // Find the corners of the box
    // that define the edges from current viewpoint.
