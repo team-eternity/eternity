@@ -1329,7 +1329,7 @@ void A_ThingSummon(actionargs_t *actionargs)
    // Check for movements.
    // killough 3/15/98: don't jump over dropoffs:
 
-   if(!P_TryMove(newmobj, newmobj->x, newmobj->y, false))
+   if(!P_TryMove(newmobj, newmobj->x, newmobj->y, false, false))
    {
       actionargs_t dieaction;
 

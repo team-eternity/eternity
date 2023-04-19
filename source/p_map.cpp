@@ -1675,8 +1675,9 @@ static bool P_checkCarryUp(Mobj &thing, fixed_t floorz)
 // crossing special lines unless MF_TELEPORT is set.
 //
 // killough 3/15/98: allow dropoff as option
+// ioanch 20230419: add slope functionality from Odamex
 //
-bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
+bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, bool sticktoslope)
 {
    fixed_t oldx, oldy, oldz;
    int oldgroupid;
@@ -1692,6 +1693,8 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    on3dmidtex = (thing->zref.passfloor == thing->zref.floor &&
                  thing->zref.passfloor != thing->zref.secfloor &&
                  thing->z == thing->zref.floor);
+
+   // NOTE: currently not going to change testz here unlike Odamex.
    
    clip.felldown = clip.floatok = false;               // killough 11/98
 
@@ -1818,6 +1821,13 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       return false;   // solid wall or thing
    }
 
+   // As in Odamex, prepare to move the thing vertically onto the slope
+   fixed_t testz;
+   if(sticktoslope && clip.zref.floorsector && clip.zref.floorsector == thing->zref.floorsector)
+      testz = clip.zref.floor;
+   else
+      testz = thing->z;
+
    if(!(thing->flags & MF_NOCLIP))
    {
       bool ret = clip.unstuck 
@@ -1838,7 +1848,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       // mobj must lower to fit
       clip.floatok = true;
       if(!(thing->flags & MF_TELEPORT) && !(thing->flags4 & MF4_FLY) &&
-         clip.zref.ceiling - thing->z < thing->height)
+         clip.zref.ceiling - testz < thing->height)
       {
          if(!ret)
             P_RunPushSpechits(*thing, pushhit);
@@ -1849,14 +1859,14 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       // of lines that are contacted when the player presses into them
       if(thing->flags4 & MF4_FLY)
       {
-         if(thing->z + thing->height > clip.zref.ceiling)
+         if(testz + thing->height > clip.zref.ceiling)
          {
             thing->momz = -8*FRACUNIT;
             thing->intflags |= MIF_CLEARMOMZ;
             P_RunPushSpechits(*thing, pushhit);
             return false;
          }
-         else if(thing->z < clip.zref.floor &&
+         else if(testz < clip.zref.floor &&
                  clip.zref.floor - clip.zref.dropoff > STEPSIZE) // TODO: dropoff max
          {
             thing->momz = 8*FRACUNIT;
@@ -1869,13 +1879,13 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       if(!(thing->flags & MF_TELEPORT) && !(thing->flags3 & MF3_FLOORMISSILE))
       {
          // too big a step up
-         if(clip.zref.floor - thing->z > STEPSIZE)
+         if(clip.zref.floor - testz > STEPSIZE)
          {
             if(!ret)
                P_RunPushSpechits(*thing, pushhit);
             return ret;
          }
-         else if(P_Use3DClipping() && thing->z < clip.zref.floor)
+         else if(P_Use3DClipping() && testz < clip.zref.floor)
          { 
             // TODO: make sure to add projectile impact checking if MISSILE
             // haleyjd: OVER_UNDER:
@@ -1910,14 +1920,14 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 
       if(thing->flags & MF_BOUNCES &&    // killough 8/13/98
          !(thing->flags & (MF_MISSILE|MF_NOGRAVITY)) &&
-         !sentient(thing) && clip.zref.floor - thing->z > 16*FRACUNIT)
+         !sentient(thing) && clip.zref.floor - testz > 16*FRACUNIT)
       {
          P_RunPushSpechits(*thing, pushhit);
          return false; // too big a step up for bouncers under gravity
       }
 
       // killough 11/98: prevent falling objects from going up too many steps
-      if(thing->intflags & MIF_FALLING && clip.zref.floor - thing->z >
+      if(thing->intflags & MIF_FALLING && clip.zref.floor - testz >
          FixedMul(thing->momx,thing->momx)+FixedMul(thing->momy,thing->momy))
       {
          // ioanch: don't push in this case, as the force is presumably too low.
@@ -1928,7 +1938,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       // ioanch 20160114: use bottom sector floorpic
       if((thing->flags2 & MF2_CANTLEAVEFLOORPIC) &&
          (clip.open.floorpic != P_ExtremeSectorAtPoint(thing, surf_floor)->srf.floor.pic ||
-          clip.zref.floor - thing->z != 0))
+          clip.zref.floor - testz != 0))
       {
          // thing must stay within its current floor type
          // ioanch: don't push
@@ -1948,6 +1958,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    thing->zref = clip.zref;   // killough 11/98: keep track of dropoffs
    thing->x = x;
    thing->y = y;
+   thing->z = testz;
    P_SetThingPosition(thing);
 
    if(crossoutcome.lastpassed)
@@ -2580,8 +2591,9 @@ void P_SlideMove(Mobj *mo)
          // haleyjd: yet another compatibility fix by cph -- the
          // fix is only necessary for boom v2.01
 
-         if(!P_TryMove(mo, mo->x, mo->y + mo->momy, true))
-            if(!P_TryMove(mo, mo->x + mo->momx, mo->y, true))	      
+         // TODO: use slopes
+         if(!P_TryMove(mo, mo->x, mo->y + mo->momy, true, false))
+            if(!P_TryMove(mo, mo->x + mo->momx, mo->y, true, false))	      
                if(demo_version == 201)
                   mo->momx = mo->momy = 0;
                
@@ -2597,7 +2609,8 @@ void P_SlideMove(Mobj *mo)
          
          // killough 3/15/98: Allow objects to drop off ledges
          
-         if(!P_TryMove(mo, mo->x+newx, mo->y+newy, true))
+         // TODO: use slopes
+         if(!P_TryMove(mo, mo->x+newx, mo->y+newy, true, false))
             goto stairstep;
       }
 
@@ -2628,8 +2641,9 @@ void P_SlideMove(Mobj *mo)
          if(D_abs(mo->player->momy) > D_abs(tmymove))
             mo->player->momy = tmymove;
       }
+      // TODO: use slopes
    }  // killough 3/15/98: Allow objects to drop off ledges:
-   while(!P_TryMove(mo, mo->x+tmxmove, mo->y+tmymove, true));
+   while(!P_TryMove(mo, mo->x+tmxmove, mo->y+tmymove, true, false));
 }
 
 //

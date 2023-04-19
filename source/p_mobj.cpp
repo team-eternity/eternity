@@ -579,7 +579,8 @@ void P_XYMovement(Mobj* mo)
 
       // killough 3/15/98: Allow objects to drop off
 
-      if(!P_TryMove(mo, ptryx, ptryy, true))
+      // TODO: use slopes
+      if(!P_TryMove(mo, ptryx, ptryy, true, false))
       {
          // blocked move
 
@@ -1322,8 +1323,9 @@ static const line_t *P_avoidPortalEdges(Mobj &mobj, surf_e surf)
       box[BOXRIGHT] = displace.x + AVOID_EDGE_PORTAL_RANGE;
       box[BOXTOP] = displace.y + AVOID_EDGE_PORTAL_RANGE;
    }
+   // TODO: check if needed to consider slopes
    if(displace.x != mobj.x || displace.y != mobj.y)
-      P_TryMove(&mobj, displace.x, displace.y, 1);
+      P_TryMove(&mobj, displace.x, displace.y, 1, false);
 
    return crossedge;
 }
@@ -3076,7 +3078,7 @@ bool P_CheckMissileSpawn(Mobj* th)
       return ok;
 
    // killough 3/15/98: no dropoff (really = don't care for missiles)
-   if(!P_TryMove(th, th->x, th->y, false))
+   if(!P_TryMove(th, th->x, th->y, false, false))
    {
       P_ExplodeMissile(th, nullptr);
       ok = false;

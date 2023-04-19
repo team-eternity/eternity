@@ -1161,7 +1161,7 @@ static void A_painShootSkull(Mobj *actor, const angle_t angle, int thingType,
    // Check for movements.
    // killough 3/15/98: don't jump over dropoffs:
 
-   if(!P_TryMove(newmobj, newmobj->x, newmobj->y, false))
+   if(!P_TryMove(newmobj, newmobj->x, newmobj->y, false, false))
    {
       // kill it immediately
       P_DamageMobj(newmobj, actor, actor, GOD_BREACH_DAMAGE, MOD_UNKNOWN);

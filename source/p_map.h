@@ -75,7 +75,7 @@ extern bool donut_emulation;    // haleyjd 10/16/09
 //
 
 // killough 3/15/98: add fourth argument to P_TryMove
-bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff);
+bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff, bool sticktoslope);
 
 void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter,
                      const sector_t *&bottomsector, const sector_t *&topsector);

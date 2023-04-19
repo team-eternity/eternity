@@ -943,7 +943,7 @@ static bool Polyobj_clipThings(polyobj_t *po, line_t *line,
                         mo->x += FixedMul(vec->x, 72090);   // FRACUNIT * 1.1
                         mo->y += FixedMul(vec->y, 72090);
                      }
-                     if(!P_TryMove(mo, pos.x, pos.y, true))
+                     if(!P_TryMove(mo, pos.x, pos.y, true, false))
                      {
                         mo->x = pos.x;
                         mo->y = pos.y;
@@ -1072,7 +1072,7 @@ static void Polyobj_moveObjectsInside(const polyobj_t &po, fixed_t dx, fixed_t d
    {
       bool p = false;
       if(!imm.onground || imm.mobj->zref.floorgroupid != imm.mobj->groupid)
-         p = P_TryMove(imm.mobj, imm.mobj->x + dx, imm.mobj->y + dy, 1);
+         p = P_TryMove(imm.mobj, imm.mobj->x + dx, imm.mobj->y + dy, 1, false);
 
       if(!p)
       {
@@ -1211,7 +1211,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
             // We got one which we may want to move
             if(P_mobjOnSurface(*pt.thing) && pt.thing->zref.floorgroupid == pt.interiorgroupid)
             {
-               if(!P_TryMove(pt.thing, pt.thing->x + x, pt.thing->y + y, 1))
+               if(!P_TryMove(pt.thing, pt.thing->x + x, pt.thing->y + y, 1, false))
                {
                   P_CheckPosition(pt.thing, pt.thing->x, pt.thing->y);
                   pt.thing->zref = clip.zref;   // If couldn't move, still adjust Z references
