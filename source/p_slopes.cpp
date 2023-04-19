@@ -572,7 +572,7 @@ void P_CopySectorSlope(line_t *line, int staticFn)
 //
 // Returns the height of the sloped plane at (x, y) as a fixed_t
 //
-fixed_t P_GetZAt(pslope_t *slope, fixed_t x, fixed_t y)
+fixed_t P_GetZAt(const pslope_t *slope, fixed_t x, fixed_t y)
 {
    fixed_t dist = FixedMul(x - slope->o.x, slope->d.x) +
                   FixedMul(y - slope->o.y, slope->d.y);

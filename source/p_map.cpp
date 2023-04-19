@@ -2225,6 +2225,77 @@ static bool P_ThingHeightClip(Mobj *thing)
 }
 
 //
+// Based on Odamex's slope implementation, checks if a thing is going to walk on a slope and adjust
+// xmove and ymove
+//
+bool P_CheckSlopeWalk(const Mobj &thing, fixed_t &xmove, fixed_t &ymove)
+{
+   if(thing.flags & MF_NOGRAVITY || !thing.zref.floorsector)
+      return false;
+
+   const pslope_t *slope = thing.zref.floorsector->srf.floor.slope;
+   if(!slope)
+      return false;
+
+   // NOTE: we won't check if the floor slope sector is the same as the center point sector, since
+   // we want slope clipping to consider the whole bounding box (this will avoid bumpy lines)
+
+   fixed_t floorheight = thing.zref.floor;   // NOTE: in EE the resting position is zref.floor
+
+   // NOTE: this check is from Odamex
+   if(thing.z - floorheight > FRACUNIT)
+      return false;
+
+   // Use the normal to determine if movement goes up or down the slope
+   // NOTE: just use the move-delta and the XY normal projection.
+
+   v2fixed_t dest = {thing.x + xmove, thing.y + ymove};
+   v2fixed_t corner;
+   corner.x = ((slope->normal.x < 0) - (slope->normal.x > 0)) * thing.radius;
+   corner.y = ((slope->normal.y < 0) - (slope->normal.y > 0)) * thing.radius;
+   fixed_t destzdelta = thing.z - P_GetZAt(slope, dest.x + corner.x, dest.y + corner.y);
+
+   if(destzdelta < 0)
+   {
+      // walking up the slope
+      // NOTE: use zdelta instead of normal.z, since it's more precise for comparison.
+      // Experimentally we've seen in Odamex that 1:1 slopes are *inclusively* considered steep.
+      if(D_abs(slope->zdelta) >= FRACUNIT)   // steep slope
+      {
+         // Can't climb
+         // NOTES:
+         // 1. Also include semi-noclip (TELEPORT) objects, since they're also supposed to walk up
+         //    any cliffs.
+         // 2. Currently no dedicated spectator player, we just have walkcam, which is no-clip.
+         if(thing.flags & (MF_NOCLIP | MF_TELEPORT))
+            return true;
+
+         // TODO: all trickery with the slope mashup
+         return false;
+      }
+
+      // Adjust movement to be along the slope surface
+      xmove -= FixedMul(slope->normal.x, destzdelta);
+      ymove -= FixedMul(slope->normal.y, destzdelta);
+      return true;
+   }
+   if(destzdelta > 0)
+   {
+      // Walking down the slope
+      if(floorheight == thing.z)
+      {
+         // Adjust movement to be along the slope surface
+         xmove += FixedMul(slope->normal.x, destzdelta);
+         ymove += FixedMul(slope->normal.y, destzdelta);
+         return true;
+      }
+   }
+
+
+   return false;
+}
+
+//
 // SLIDE MOVE
 // Allows the player to slide along any angled walls.
 //
