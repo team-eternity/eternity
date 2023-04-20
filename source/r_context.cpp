@@ -189,7 +189,7 @@ void R_InitContexts(const int width)
 
       context.heap = new ZoneHeap();
 
-      context.portalcontext.portalrender = { false, MAX_SCREENWIDTH, 0 };
+      context.portalcontext.portalrender = { false, MAX_SCREENWIDTH, 0 }; // THREAD_FIXME: Adjust?
 
       if(numsectors && gamestate == GS_LEVEL)
          R_AllocateContextLevelData(context);
