@@ -713,6 +713,10 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
       inter.blockline = ld;
    }
 
+   // Make sure to prioritize non-sloped floors if multiple sectors give the same floor Z
+   if(open.height.floor == inter.zref.floor && open.floorsector && !open.floorsector->srf.floor.slope)
+      inter.zref.floorsector = open.floorsector;
+
    // ioanch 20160116: this is crazy. If the lines belong in separate groups,
    // make sure to only decrease dropoffz if the line top really reaches the
    // current value of dropoffz. Since layers get explored progressively from
