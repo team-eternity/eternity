@@ -1397,6 +1397,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
       R_RunContexts();
 
    R_FinishMappingLines();
+   R_ClearBadSpritesAndFrames();
 
    if(quake)
       player->mo->flags2 = savedflags;

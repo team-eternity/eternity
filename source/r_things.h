@@ -74,6 +74,8 @@ struct poststack_t
 void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
                 const contextbounds_t &bounds, bool pushmasked, pwindow_t *window);
 
+void R_ClearBadSpritesAndFrames();
+
 // SoM: Cardboard
 void R_SetMaskedSilhouette(const contextbounds_t &bounds,
                            const float *top, const float *bottom);

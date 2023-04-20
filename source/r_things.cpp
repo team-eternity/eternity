@@ -22,6 +22,8 @@
 // Authors: Stephen McGranahan, James Haley, Ioan Chera, Max Waine
 //
 
+#include "concurrentqueue/concurrentqueue.h"
+
 #include "z_zone.h"
 #include "i_system.h"
 
@@ -185,6 +187,9 @@ struct drawsegs_xrange_t
 // Statics
 //
 
+static moodycamel::ConcurrentQueue<Mobj *> g_badSpriteNumberMobjs;
+static moodycamel::ConcurrentQueue<Mobj *> g_badFrameMobjs;
+
 // top and bottom of portal silhouette
 static float *portaltop;
 static float *portalbottom;
@@ -277,6 +282,48 @@ static void R_drawParticle(const contextbounds_t &bounds, vissprite_t *vis,
 static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
                               const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                               const contextbounds_t &bounds, particle_t *particle);
+
+//
+// Blank out mobjs with bad frames or sprite numbers after rendering player view
+//
+void R_ClearBadSpritesAndFrames()
+{
+   Mobj *mobj;
+   while(g_badSpriteNumberMobjs.try_dequeue(mobj))
+   {
+      if((!mobj->state || (mobj->state && mobj->state->sprite == blankSpriteNum && mobj->state->frame == 0)) &&
+         mobj->sprite == blankSpriteNum && mobj->frame == 0)
+         continue; // Same sprite already flagged as an issue this call, skip
+
+      doom_printf(FC_ERROR "Bad sprite number %i for thingtype %s\n", mobj->sprite, mobj->info->name);
+
+      // blank the thing's state sprite and frame so that this error does not
+      // occur perpetually, flooding the message widget and console.
+      if(mobj->state)
+      {
+         mobj->state->sprite = blankSpriteNum;
+         mobj->state->frame  = 0;
+      }
+      mobj->sprite = blankSpriteNum;
+      mobj->frame  = 0;
+   }
+
+   while(g_badFrameMobjs.try_dequeue(mobj))
+   {
+      if((!mobj->state || (mobj->state && mobj->state->sprite == blankSpriteNum && mobj->state->frame == 0)) &&
+         mobj->sprite == blankSpriteNum && mobj->frame == 0)
+         continue; // Same sprite already flagged as an issue this call, skip
+
+      doom_printf(FC_ERROR "Bad frame %i for sprite %s", mobj->frame & FF_FRAMEMASK, spritelist[mobj->sprite]);
+      if(mobj->state)
+      {
+         mobj->state->sprite = blankSpriteNum;
+         mobj->state->frame  = 0;
+      }
+      mobj->sprite = blankSpriteNum;
+      mobj->frame  = 0;
+   }
+}
 
 //
 // R_SetMaskedSilhouette
@@ -900,7 +947,7 @@ static void R_drawVisSprite(const contextbounds_t &bounds, vissprite_t *vis,
 typedef v3fixed_t spritepos_t;
 
 // ioanch 20160109: added offset arguments
-static void R_interpolateThingPosition(Mobj *thing, spritepos_t &pos)
+static void R_interpolateThingPosition(const Mobj *const thing, spritepos_t &pos)
 {
    if(view.lerp == FRACUNIT)
    {
@@ -947,7 +994,7 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
                             const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                             const contextbounds_t &bounds,
                             const portalrender_t &portalrender,
-                            Mobj *thing,
+                            const Mobj *const thing,
                             lighttable_t *const *const spritelights,
                             v3fixed_t *delta = nullptr,
                             const line_t *portalline = nullptr)
@@ -1038,43 +1085,22 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
    // decide which patch to use for sprite relative to player
    if((unsigned int)thing->sprite >= (unsigned int)numsprites)
    {
-      // haleyjd 08/12/02: modified error handling
-      doom_printf(FC_ERROR "Bad sprite number %i for thingtype %s\n", thing->sprite, thing->info->name);
-
-      // blank the thing's state sprite and frame so that this error does not
-      // occur perpetually, flooding the message widget and console.
-      if(thing->state)
-      {
-         thing->state->sprite = blankSpriteNum;
-         thing->state->frame  = 0;
-      }
-      thing->sprite = blankSpriteNum;
-      thing->frame  = 0;
+      g_badSpriteNumberMobjs.enqueue(const_cast<Mobj *>(thing));
       return;
    }
 
    sprdef = &sprites[thing->sprite];
-   
-   if(((thing->frame&FF_FRAMEMASK) >= sprdef->numframes) ||
+
+   if(((thing->frame & FF_FRAMEMASK) >= sprdef->numframes) ||
       !(sprdef->spriteframes) ||
       sprdef->spriteframes[thing->frame & FF_FRAMEMASK].rotate == -1)
    {
-      // haleyjd 08/12/02: modified error handling
-      doom_printf(FC_ERROR "Bad frame %i for sprite %s",
-                  thing->frame & FF_FRAMEMASK, 
-                  spritelist[thing->sprite]);
-      if(thing->state)
-      {
-         thing->state->sprite = blankSpriteNum;
-         thing->state->frame  = 0;
-      }
-      thing->sprite = blankSpriteNum;
-      thing->frame  = 0;
+      g_badFrameMobjs.enqueue(const_cast<Mobj *>(thing));
       return;
    }
 
    sprframe = &sprdef->spriteframes[thing->frame & FF_FRAMEMASK];
-   
+
    if(sprframe->rotate)
    {
       // SoM: Use old rotation code
