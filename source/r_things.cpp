@@ -1292,6 +1292,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
                   const portalrender_t &portalrender,
                   sector_t* sec, int lightlevel)
 {
+   Mobj          *thing;
    int            lightnum;
    lighttable_t **spritelights;
 
@@ -1302,39 +1303,28 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
 
    if(spritecontext.sectorvisited[sec - sectors])
       return;
-
+   
+   // Well, now it will be done.
+   spritecontext.sectorvisited[sec - sectors] = true;
+   
    lightnum = (lightlevel >> LIGHTSEGSHIFT)+(extralight * LIGHTBRIGHT);
-
+   
    if(lightnum < 0)
       spritelights = cmapcontext.scalelight[0];
    else if(lightnum >= LIGHTLEVELS)
       spritelights = cmapcontext.scalelight[LIGHTLEVELS-1];
    else
       spritelights = cmapcontext.scalelight[lightnum];
-
-   // Handle all things in (and touching) sector that haven't already been drawn this BSP traversal.
-   for(const msecnode_t *sectorNode = sec->touching_thinglist; sectorNode; sectorNode = sectorNode->m_snext)
+   
+   // Handle all things in sector.
+   
+   for(thing = sec->thinglist; thing; thing = thing->snext)
    {
-      const Mobj *const thing = sectorNode->m_thing;
-
-      const msecnode_t *tsectorNode;
-      for(tsectorNode = thing->touching_sectorlist; tsectorNode; tsectorNode = tsectorNode->m_snext)
-      {
-         if(spritecontext.sectorvisited[tsectorNode->m_sector - sectors])
-            break;
-      }
-
-      if(tsectorNode)
-         continue; // Already rendered sector this sprite is in
-
       R_projectSprite(
          cmapcontext, spritecontext, heap, viewpoint,
          cb_viewpoint, bounds, portalrender, thing, spritelights
       );
    }
-
-   // Mark sector as visited now to avoid needing to check if tsectorNode->m_sector is sec.
-   spritecontext.sectorvisited[sec - sectors] = true;
 
    // ioanch 20160109: handle partial sprite projections
    for(auto item = sec->spriteproj; item; item = item->dllNext)
