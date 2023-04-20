@@ -553,6 +553,8 @@ void P_XYMovement(Mobj* mo)
    oldy = mo->y; // when on ice & up against wall. These will be compared
                  // to your x,y values later to see if you were able to move
 
+   bool sticktoslope = P_CheckSlopeWalk(*mo, xmove, ymove);
+
    do
    {
       fixed_t ptryx, ptryy;
@@ -579,8 +581,7 @@ void P_XYMovement(Mobj* mo)
 
       // killough 3/15/98: Allow objects to drop off
 
-      // TODO: use slopes
-      if(!P_TryMove(mo, ptryx, ptryy, true, false))
+      if(!P_TryMove(mo, ptryx, ptryy, true, sticktoslope))
       {
          // blocked move
 
@@ -706,6 +707,12 @@ void P_XYMovement(Mobj* mo)
             mo->momx = mo->momy = 0;
          }
       }
+      if(xmove | ymove)
+      {
+         // Continue checking if we should stick to the slope.
+         v2fixed_t dummy = {xmove, ymove};
+         sticktoslope = P_CheckSlopeWalk(*mo, dummy.x, dummy.y);
+      }
    }
    while(xmove | ymove);
 
@@ -724,17 +731,6 @@ void P_XYMovement(Mobj* mo)
    // no friction for missiles or skulls ever
    if(mo->flags & (MF_MISSILE | MF_SKULLFLY))
       return;
-
-   // TRICK: if on a slope and slightly off the ground, check if gravity would pull mo down, and do
-   // it, so that players will be able to go down slopes without sliding endlessly.
-   // NOTE: uncertain if this is the right solution, and may need tuning.
-   if(mo->zref.floorsector && mo->zref.floorsector->srf.floor.slope)
-   {
-      fixed_t tempz = mo->z;
-      P_ZMovementTest(mo);
-      if(mo->z > mo->zref.floor)
-         mo->z = tempz;
-   }
    
    // no friction when airborne
    // haleyjd: OVER_UNDER

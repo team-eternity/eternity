@@ -95,6 +95,8 @@ struct pitcheckline_t
 
 bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context);  // ioanch: used in the code
 
+bool P_CheckSlopeWalk(const Mobj &thing, fixed_t &xmove, fixed_t &ymove);
+
 void P_SlideMove(Mobj *mo);
 
 // ioanch

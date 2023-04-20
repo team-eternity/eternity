@@ -529,16 +529,16 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       speed = 1;      // always give the monster a little bit of speed
    }
 
-   tryx = actor->x + (deltax = speed * xspeed[actor->movedir]);
-   tryy = actor->y + (deltay = speed * yspeed[actor->movedir]);
+   deltax = speed * xspeed[actor->movedir];
+   deltay = speed * yspeed[actor->movedir];
+   bool sticktoslope = P_CheckSlopeWalk(*actor, deltax, deltay);
+   tryx = actor->x + deltax;
+   tryy = actor->y + deltay;
 
    // killough 12/98: rearrange, fix potential for stickiness on ice
 
    if(friction <= ORIG_FRICTION)
-   {
-      // TODO: make them use slopes
-      try_ok = P_TryMove(actor, tryx, tryy, dropoff, false);
-   }
+      try_ok = P_TryMove(actor, tryx, tryy, dropoff, sticktoslope);
    else
    {
       fixed_t x = actor->x;
@@ -548,8 +548,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       const sector_t *floorsector = actor->zref.floorsector;
       fixed_t ceilingz = actor->zref.ceiling;
       fixed_t dropoffz = actor->zref.dropoff;
-      // TODO: make them use slopes
-      try_ok = P_TryMove(actor, tryx, tryy, dropoff, false);
+      try_ok = P_TryMove(actor, tryx, tryy, dropoff, sticktoslope);
       
       // killough 10/98:
       // Let normal momentum carry them, instead of steptoeing them across ice.
