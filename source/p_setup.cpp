@@ -1384,7 +1384,7 @@ static byte *P_decompressData(byte *&data, int &len)
       I_Error("P_decompressData: Error during decompression\n");
 
    data = output;
-   len  = zstream->total_out;
+   len  = static_cast<int>(zstream->total_out);
 
    if(inflateEnd(zstream) != Z_OK)
       I_Error("P_decompressData: Error during decompression shut-down\n");

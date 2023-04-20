@@ -60,10 +60,10 @@ protected:
 
 public:
    SDLHapticInterface();
-   virtual void startEffect(effect_e effect, int data1, int data2);
-   virtual void pauseEffects(bool effectsPaused);
-   virtual void updateEffects();
-   virtual void clearEffects();
+   virtual void startEffect(effect_e effect, int data1, int data2) override;
+   virtual void pauseEffects(bool effectsPaused) override;
+   virtual void updateEffects() override;
+   virtual void clearEffects() override;
 };
 
 //

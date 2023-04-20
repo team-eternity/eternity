@@ -251,6 +251,7 @@ struct lineopening_t
    fixed_t lowfloor; // lowest floorheight involved
    int floorpic;  // haleyjd: for CANTLEAVEFLOORPIC flag
    const sector_t *floorsector;  // for floor slope detection
+   const sector_t *ceilsector;   // needed for certain dropoff checks when having slopes
 
    // SoM 09/07/02: Solution to problem of monsters walking on 3dsides
    // haleyjd: values for tmtouch3dside:
@@ -290,6 +291,8 @@ struct doom_mapinter_t
    const line_t *blockline;   // killough 8/11/98: blocking linedef
    const line_t *floorline;   // killough 8/1/98: Highest touched floor
 
+   // TODO: equivalent blocking slopes maybe!
+
    Mobj      *linetarget;  // who got hit (or nullptr)
 
    // keep track of special lines as they are hit,
@@ -327,6 +330,9 @@ void P_PopClipStack();
 void P_ClearGlobalLevelReferences();
 
 bool P_OnGroundOrThing(const Mobj &mobj);
+void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapinter_t &inter,
+   bool underportal, bool aboveportal, uint32_t lineclipflags,
+   bool samegroupid, fixed_t linetop);
 
 extern doom_mapinter_t  clip;  // haleyjd 04/16/10: made global, renamed
 extern doom_mapinter_t *pClip; // haleyjd 04/16/10: renamed

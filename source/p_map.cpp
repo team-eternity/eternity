@@ -45,8 +45,10 @@
 #include "p_mobjcol.h"
 #include "p_portal.h"
 #include "p_portalblockmap.h"
+#include "p_portalclip.h"
 #include "p_portalcross.h"
 #include "p_setup.h"
+#include "p_slopes.h"
 #include "p_skin.h"
 #include "p_spec.h"
 #include "r_main.h"
@@ -686,17 +688,22 @@ bool P_BlockedAsMonster(const Mobj &mo)
 //
 // Given a line opening structure and a linedef, update a clip structure
 //
-static void P_updateFromOpening(const lineopening_t &open, const line_t *ld,
-                                doom_mapinter_t &inter)
+void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapinter_t &inter, 
+                         bool underportal, bool aboveportal, uint32_t lineclipflags, 
+                         bool samegroupid, fixed_t linetop)
 {
-   if(open.height.ceiling < inter.zref.ceiling)
+   // ioanch 20160315: don't forget about 3dmidtex on the same group ID if they
+   // decrease the opening
+   if((!underportal || (lineclipflags & LINECLIP_UNDER3DMIDTEX)) && 
+      open.height.ceiling < inter.zref.ceiling)
    {
       inter.zref.ceiling = open.height.ceiling;
       inter.ceilingline = ld;
       inter.blockline = ld;
    }
 
-   if(open.height.floor > inter.zref.floor)
+   if((!aboveportal || (lineclipflags & LINECLIP_OVER3DMIDTEX)) && 
+      open.height.floor > inter.zref.floor)
    {
       inter.zref.floor = open.height.floor;
       inter.zref.floorgroupid = open.bottomgroupid;
@@ -706,7 +713,14 @@ static void P_updateFromOpening(const lineopening_t &open, const line_t *ld,
       inter.blockline = ld;
    }
 
-   if(open.lowfloor < inter.zref.dropoff)
+   // ioanch 20160116: this is crazy. If the lines belong in separate groups,
+   // make sure to only decrease dropoffz if the line top really reaches the
+   // current value of dropoffz. Since layers get explored progressively from
+   // top to bottom (when going down), dropoffz will then gradually fall down
+   // as each layer is explored, if there really is a gap, and accidental
+   // detail downstairs will not count, considering the linetop would always
+   // be below any dropfloorz upstairs.
+   if(open.lowfloor < inter.zref.dropoff && (samegroupid || linetop >= inter.zref.dropoff))
       inter.zref.dropoff = open.lowfloor;
 
    // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
@@ -714,9 +728,9 @@ static void P_updateFromOpening(const lineopening_t &open, const line_t *ld,
    if(demo_version >= 331 && open.touch3dside)
       inter.zref.dropoff = inter.zref.floor;
 
-   if(open.sec.floor > inter.zref.secfloor)
+   if(!aboveportal && open.sec.floor > inter.zref.secfloor)
       inter.zref.secfloor = open.sec.floor;
-   if(open.sec.ceiling < inter.zref.secceil)
+   if(!underportal && open.sec.ceiling < inter.zref.secceil)
       inter.zref.secceil = open.sec.ceiling;
 
    // SoM 11/6/02: AGHAH
@@ -826,8 +840,7 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
 
    // At this point we have backsector
 
-   if(ld->frontsector->srf.floor.slope || ld->frontsector->srf.ceiling.slope ||
-      ld->backsector->srf.floor.slope || ld->backsector->srf.ceiling.slope)
+   if(P_AnySlope(*ld))
    {
       // Find the two intersections with the bounding box
       v2fixed_t i1, i2;
@@ -837,7 +850,7 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
       lineopening_t lo = P_LineOpening(ld, clip.thing, &i1);
       lo.intersect(P_LineOpening(ld, clip.thing, &i2));
 
-      P_updateFromOpening(lo, ld, clip);
+      P_UpdateFromOpening(lo, ld, clip, false, false, 0, true, 0);
 
       pcl->haveslopes = true;
    }
@@ -845,7 +858,7 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
    {
       // Assign to "clip" for compatibility
       clip.open = P_LineOpening(ld, clip.thing);
-      P_updateFromOpening(clip.open, ld, clip);
+      P_UpdateFromOpening(clip.open, ld, clip, false, false, 0, true, 0);
    }
 
    P_CollectSpechits(ld, pushhit);
@@ -1409,7 +1422,7 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
       open.intersect(P_SlopeOpening(corners[1]));
       open.intersect(P_SlopeOpening(corners[2]));
       open.intersect(P_SlopeOpening(corners[3]));
-      P_updateFromOpening(open, nullptr, clip);
+      P_UpdateFromOpening(open, nullptr, clip, false, false, 0, true, 0);
    }
 
    return true;

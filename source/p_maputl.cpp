@@ -37,6 +37,7 @@
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_maputl.h"
+#include "p_portalcross.h"
 #include "p_portalclip.h"
 #include "p_setup.h"
 #include "p_spec.h"
@@ -390,6 +391,29 @@ lineopening_t P_SlopeOpening(v2fixed_t pos)
    open.lowfloor = open.height.floor;
    open.floorpic = sector.srf.floor.pic;
    open.floorsector = &sector;
+   open.ceilsector = &sector;
+   open.touch3dside = 0;
+   return open;
+}
+
+lineopening_t P_SlopeOpeningPortalAware(v2fixed_t pos)
+{
+   v2fixed_t floorpos;
+   const sector_t *floorsector = P_ExtremeSectorAtPoint(pos.x, pos.y, surf_floor, nullptr, &floorpos);
+   floorpos += pos;
+   v2fixed_t ceilpos;
+   const sector_t *ceilsector = P_ExtremeSectorAtPoint(pos.x, pos.y, surf_ceil, nullptr, &ceilpos);
+   ceilpos += pos;
+   lineopening_t open = {};
+   open.height.floor = floorsector->srf.floor.getZAt(floorpos);
+   open.height.ceiling = ceilsector->srf.ceiling.getZAt(ceilpos);
+   open.sec = open.height;
+   open.range = open.height.ceiling - open.height.floor;
+   open.bottomgroupid = floorsector->groupid;
+   open.lowfloor = open.height.floor;
+   open.floorpic = floorsector->srf.floor.pic;
+   open.floorsector = floorsector;
+   open.ceilsector = ceilsector;
    open.touch3dside = 0;
    return open;
 }
@@ -501,11 +525,20 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
    }
 
    if(linedef->extflags & EX_ML_UPPERPORTAL && backceiling.pflags & PS_PASSABLE)
+   {
       open.height.ceiling = frontceilz;
+      open.ceilsector = openfrontsector;
+   }
    else if(frontceilz < backceilz)
+   {
       open.height.ceiling = frontceilz;
+      open.ceilsector = openfrontsector;
+   }
    else
+   {
       open.height.ceiling = backceilz;
+      open.ceilsector = openbacksector;
+   }
 
    // ioanch 20160114: don't change floorpic if portaldetect is on
    if(linedef->extflags & EX_ML_LOWERPORTAL && backfloor.pflags & PS_PASSABLE)
@@ -587,7 +620,10 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
       if(mo->z + (P_ThingInfoHeight(mo->info) / 2) < texmid)
       {
          if(texbot < open.height.ceiling)
+         {
             open.height.ceiling = texbot;
+            open.ceilsector = nullptr; // not under a slope now
+         }
          // ioanch 20160318: mark if 3dmidtex affects clipping
          // Also don't flag lines that are offset into the floor/ceiling
          if(portaldetect && (texbot < frontceiling.getZAt(point) || texbot < backceiling.getZAt(point)))
@@ -631,7 +667,10 @@ void lineopening_t::intersect(const lineopening_t &other)
       floorsector = other.floorsector;
    }
    if(other.height.ceiling < height.ceiling)
+   {
       height.ceiling = other.height.ceiling;
+      ceilsector = other.ceilsector;
+   }
    range = height.ceiling - height.floor;
 
    if(other.sec.floor > sec.floor)
