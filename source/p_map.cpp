@@ -2268,7 +2268,12 @@ bool P_CheckSlopeWalk(const Mobj &thing, fixed_t &xmove, fixed_t &ymove)
    v2fixed_t corner;
    corner.x = ((slope->normal.x < 0) - (slope->normal.x > 0)) * thing.radius;
    corner.y = ((slope->normal.y < 0) - (slope->normal.y > 0)) * thing.radius;
-   fixed_t destzdelta = thing.z - P_GetZAt(slope, dest.x + corner.x, dest.y + corner.y);
+   v2fixed_t checkpos = dest + corner;
+   const linkoffset_t *link = P_GetLinkOffset(thing.groupid, thing.zref.floorsector->groupid);
+   checkpos.x += link->x;
+   checkpos.y += link->y;
+
+   fixed_t destzdelta = thing.z - P_GetZAt(slope, checkpos.x, checkpos.y);
 
    if(destzdelta < 0)
    {
