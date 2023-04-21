@@ -83,6 +83,8 @@ struct renderdata_t
    std::atomic_bool      shouldquit;
    std::atomic_bool      framewaiting;
    std::atomic_bool      framefinished;
+
+   const char           *errormessage;
 };
 
 static renderdata_t *renderdatas      = nullptr;
@@ -139,6 +141,33 @@ void R_FreeContexts()
 }
 
 //
+// Handler installed to I_Error while running contexts
+//
+static void R_handleContextError(char *errmsg)
+{
+   // The error message needs clearing because otherwise if the main thread
+   // I_Errors while doing R_runData then I_Error won't output our desired message
+   qstring temp{ errmsg };
+   *errmsg = 0;
+   throw temp;
+}
+
+//
+// Tries to render the view context for a data, catching any possible errors
+//
+static void R_runData(renderdata_t *data)
+{
+   try
+   {
+      R_RenderViewContext(data->context);
+   }
+   catch(qstring &errorMessage)
+   {
+      data->errormessage = errorMessage.duplicate();
+   }
+}
+
+//
 // This function is always going on in the background
 // so that threads don't need to constantly be spawned
 //
@@ -146,12 +175,12 @@ static void R_contextThreadFunc(renderdata_t *data)
 {
    data->running.exchange(true);
 
-   while(!data->shouldquit.load())
+   while(!data->shouldquit.load() && !data->errormessage)
    {
       if(data->framewaiting.exchange(false))
       {
          data->shouldrun.acquire();
-         R_RenderViewContext(data->context);
+         R_runData(data);
          data->framefinished.store(true);
       }
    }
@@ -284,6 +313,8 @@ void R_RunContexts()
 {
    int finishedcontexts = 0;
 
+   I_SetErrorHandler(R_handleContextError);
+
    for(int currentcontext = 0; currentcontext < r_numcontexts; currentcontext++)
    {
       if(currentcontext < r_numcontexts - 1)
@@ -294,7 +325,7 @@ void R_RunContexts()
       else
       {
          // The last context can be rendered on the main thread
-         R_RenderViewContext(renderdatas[currentcontext].context);
+         R_runData(&renderdatas[currentcontext]);
          finishedcontexts++;
       }
    }
@@ -307,6 +338,26 @@ void R_RunContexts()
             finishedcontexts++;
       }
    }
+
+   I_SetErrorHandler(nullptr);
+
+   // Check for errors
+   bool    hasError = false;
+   qstring errorMessage{ "R_RunContexts: Error in context(s):\n" };
+   for(int currentcontext = 0; currentcontext < r_numcontexts; currentcontext++)
+   {
+      if(renderdatas[currentcontext].errormessage)
+      {
+         errorMessage << "\t" << currentcontext + 1 << ": " << renderdatas[currentcontext].errormessage;
+         if(!errorMessage.endsWith('\n'))
+            errorMessage << "\n";
+
+         hasError = true;
+      }
+   }
+
+   if(hasError)
+      I_Error(errorMessage.constPtr());
 }
 
 VARIABLE_INT(r_numcontexts, nullptr, 0, UL, nullptr);

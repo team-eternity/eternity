@@ -98,10 +98,10 @@ void I_Init()
       I_InitSound();
 }
 
+static i_errhandler_t i_error_handler;  // special handler for I_Error run before exiting
+static thread_local char errmsg[2048];  // buffer of error message -- killough
 
-static char errmsg[2048];  // buffer of error message -- killough
-
-static int has_exited;
+static bool has_exited;
 
 enum
 {
@@ -129,7 +129,7 @@ static bool speedyexit = false;
 //
 void I_Quit(void)
 {
-   has_exited = 1;   /* Prevent infinitely recursive exits -- killough */
+   has_exited = true;   /* Prevent infinitely recursive exits -- killough */
    
    // haleyjd 06/05/10: not in fatal error situations; causes heap calls
    if(error_exitcode < I_ERRORLEVEL_FATAL && demorecording)
@@ -215,7 +215,7 @@ void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...)
 
       if(!has_exited)    // If it hasn't exited yet, exit now -- killough
       {
-         has_exited = 1; // Prevent infinitely recursive exits -- killough
+         has_exited = true; // Prevent infinitely recursive exits -- killough
          exit(-1);
       }
       else
@@ -243,11 +243,19 @@ void I_ExitWithMessage(E_FORMAT_STRING(const char *msg), ...)
       va_end(argptr);
    }
 
-   if(!has_exited)    // If it hasn't exited yet, exit now -- killough
+   if(!has_exited)       // If it hasn't exited yet, exit now -- killough
    {
-      has_exited = 1; // Prevent infinitely recursive exits -- killough
+      has_exited = true; // Prevent infinitely recursive exits -- killough
       exit(0);
    }
+}
+
+//
+// Set a special handler for I_Error that runs prior to exiting
+//
+void I_SetErrorHandler(const i_errhandler_t handler)
+{
+   i_error_handler = handler;
 }
 
 //
@@ -268,10 +276,13 @@ void I_Error(E_FORMAT_STRING(const char *error), ...)
       pvsnprintf(errmsg, sizeof(errmsg), error, argptr);
       va_end(argptr);
    }
-   
-   if(!has_exited)    // If it hasn't exited yet, exit now -- killough
+
+   if(i_error_handler)
+      i_error_handler(errmsg);
+
+   if(!has_exited)       // If it hasn't exited yet, exit now -- killough
    {
-      has_exited = 1; // Prevent infinitely recursive exits -- killough
+      has_exited = true; // Prevent infinitely recursive exits -- killough
       exit(-1);
    }
    else
@@ -294,7 +305,7 @@ void I_ErrorVA(E_FORMAT_STRING(const char *error), va_list args)
 
    if(!has_exited)
    {
-      has_exited = 1;
+      has_exited = true;
       exit(-1);
    }
    else
