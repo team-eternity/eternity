@@ -1074,6 +1074,7 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
    portalcontext.portalrender.maxx = window->maxx;
 
    memset(spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
+   R_ClearMarkedSprites(spritecontext, heap);
 
    R_SetMaskedSilhouette(bounds, planecontext.ceilingclip, planecontext.floorclip);
 

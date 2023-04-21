@@ -97,6 +97,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
                   sector_t *sec, int); // killough 9/18/98
 void R_InitSprites(char **namelist);
 void R_ClearSprites(spritecontext_t &context);
+void R_ClearMarkedSprites(spritecontext_t &context, ZoneHeap &heap);
 void R_DrawPostBSP(rendercontext_t &context);
 void R_DrawPlayerSprites();
 void R_ClearParticles(void);

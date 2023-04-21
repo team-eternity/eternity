@@ -1321,6 +1321,7 @@ angle_t R_WadToAngle(int wadangle)
 void R_RenderViewContext(rendercontext_t &context)
 {
    memset(context.spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
+   R_ClearMarkedSprites(context.spritecontext, *context.heap);
    context.portalcontext.renderdepth = 0;
 
    // Clear buffers.

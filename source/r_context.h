@@ -42,7 +42,15 @@ struct poststack_t;
 struct pwindow_t;
 struct sectorbox_t;
 struct vissprite_t;
+class  Mobj;
 class  ZoneHeap;
+
+// THREAD_FIXME: Make like planehash_t
+struct drawnsprite_t
+{
+   const Mobj *thing;
+   drawnsprite_t *next;
+};
 
 struct contextbounds_t
 {
@@ -122,6 +130,8 @@ struct portalcontext_t
    portalrender_t portalrender;
 };
 
+inline constexpr int NUMSPRITEMARKS = 1021;
+
 struct spritecontext_t
 {
    // haleyjd 04/25/10: drawsegs optimization
@@ -137,6 +147,8 @@ struct spritecontext_t
    int            pstacksize;
    int            pstackmax;
    maskedrange_t *unusedmasked;
+
+   drawnsprite_t *drawnSpriteHash[NUMSPRITEMARKS];
 
    bool *sectorvisited;
 };

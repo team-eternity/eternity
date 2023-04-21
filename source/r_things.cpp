@@ -22,6 +22,8 @@
 // Authors: Stephen McGranahan, James Haley, Ioan Chera, Max Waine
 //
 
+#include <functional>
+
 #include "concurrentqueue/concurrentqueue.h"
 
 #include "z_zone.h"
@@ -587,6 +589,25 @@ void R_ClearSprites(spritecontext_t &context)
 }
 
 //
+// Called at frame start or world portal render start.
+//
+void R_ClearMarkedSprites(spritecontext_t &context, ZoneHeap &heap)
+{
+   for(drawnsprite_t *&chain : context.drawnSpriteHash)
+   {
+      drawnsprite_t *mark = chain;
+      while(mark)
+      {
+         drawnsprite_t *next = mark->next;
+         zhfree(heap, mark);
+         mark = next;
+      }
+      chain = nullptr;
+   }
+}
+
+
+//
 // Pushes a new element on the post-BSP stack.
 //
 void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
@@ -985,6 +1006,40 @@ static void R_interpolatePSpritePosition(const pspdef_t &pspr, v2fixed_t &pos)
 }
 
 //
+// haleyjd 01/22/11: determine special drawstyles
+//
+static inline byte R_getDrawStyle(const Mobj *const thing, int *tranmaplump)
+{
+   if(thing->flags & MF_SHADOW)
+      return VS_DRAWSTYLE_SHADOW;
+   else if(general_translucency)
+   {
+      if(thing->tranmap >= 0)
+      {
+         if(tranmaplump)
+            *tranmaplump = thing->tranmap;
+         return VS_DRAWSTYLE_TRANMAP;
+      }
+      else if(thing->flags3 & MF3_TLSTYLEADD)
+         return VS_DRAWSTYLE_ADD;
+      else if(thing->flags4 & MF4_TLSTYLESUB)
+         return VS_DRAWSTYLE_SUB;
+      else if(uint16_t(thing->translucency - 1) < FRACUNIT - 1)
+         return VS_DRAWSTYLE_ALPHA;
+      else if(thing->flags & MF_TRANSLUCENT)
+         return VS_DRAWSTYLE_TRANMAP;
+      else if(rTintTableIndex != -1 && thing->flags3 & MF3_GHOST)
+      {
+         if(tranmaplump)
+            *tranmaplump = rTintTableIndex;
+         return VS_DRAWSTYLE_TRANMAP;
+      }
+   }
+
+   return VS_DRAWSTYLE_NORMAL;
+}
+
+//
 // Generates a vissprite for a thing if it might be visible.
 // ioanch 20160109: added optional arguments for offsetting the sprite
 //
@@ -1254,30 +1309,48 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
 
    vis->drawstyle = VS_DRAWSTYLE_NORMAL;
 
-   // haleyjd 01/22/11: determine special drawstyles
-   if(thing->flags & MF_SHADOW)
-      vis->drawstyle = VS_DRAWSTYLE_SHADOW;
-   else if(general_translucency)
+   vis->drawstyle = R_getDrawStyle(thing, &vis->tranmaplump);
+}
+
+//
+// Checks if a specially-rendered sprite has already been rendered
+// and adds it to the marked sprite hash table if it hasn't
+//
+static inline bool R_checkAndMarkSprite(spritecontext_t &spritecontext,
+                                        ZoneHeap &heap,
+                                        const Mobj *const thing)
+{
+   // THREAD_FIXME: Check if overdraw is still faster than hashing later on
+   if(R_getDrawStyle(thing, nullptr) == VS_DRAWSTYLE_NORMAL)
+      return false;
+
+   size_t thing_hash = std::hash<const Mobj *>{}(thing) % NUMSPRITEMARKS;
+   drawnsprite_t *prevSprite;
+   drawnsprite_t *drawnSprite = spritecontext.drawnSpriteHash[thing_hash];
+   if(drawnSprite)
    {
-      if(thing->tranmap >= 0)
+      while(drawnSprite)
       {
-         vis->drawstyle = VS_DRAWSTYLE_TRANMAP;
-         vis->tranmaplump = thing->tranmap;
+         if(drawnSprite->thing == thing)
+            break;
+         prevSprite = drawnSprite;
+         drawnSprite = drawnSprite->next;
       }
-      else if(thing->flags3 & MF3_TLSTYLEADD)
-         vis->drawstyle = VS_DRAWSTYLE_ADD;
-      else if(thing->flags4 & MF4_TLSTYLESUB)
-         vis->drawstyle = VS_DRAWSTYLE_SUB;
-      else if(vis->translucency < FRACUNIT - 1)
-         vis->drawstyle = VS_DRAWSTYLE_ALPHA;
-      else if(thing->flags & MF_TRANSLUCENT)
-         vis->drawstyle = VS_DRAWSTYLE_TRANMAP;
-      else if(rTintTableIndex != -1 && thing->flags3 & MF3_GHOST)
-      {
-         vis->drawstyle = VS_DRAWSTYLE_TRANMAP;
-         vis->tranmaplump = rTintTableIndex;
-      }
+
+      // Exited early, meaning already rendered
+      if(drawnSprite)
+         return true;
+
+      prevSprite->next = zhstructalloc(heap, drawnsprite_t, 1);
+      prevSprite->next->thing = thing;
    }
+   else
+   {
+      spritecontext.drawnSpriteHash[thing_hash] = zhstructalloc(heap, drawnsprite_t, 1);
+      spritecontext.drawnSpriteHash[thing_hash]->thing = thing;
+   }
+
+   return false;
 }
 
 //
@@ -1292,7 +1365,6 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
                   const portalrender_t &portalrender,
                   sector_t* sec, int lightlevel)
 {
-   Mobj          *thing;
    int            lightnum;
    lighttable_t **spritelights;
 
@@ -1303,27 +1375,48 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
 
    if(spritecontext.sectorvisited[sec - sectors])
       return;
-   
+
    // Well, now it will be done.
    spritecontext.sectorvisited[sec - sectors] = true;
-   
+
    lightnum = (lightlevel >> LIGHTSEGSHIFT)+(extralight * LIGHTBRIGHT);
-   
+
    if(lightnum < 0)
       spritelights = cmapcontext.scalelight[0];
    else if(lightnum >= LIGHTLEVELS)
       spritelights = cmapcontext.scalelight[LIGHTLEVELS-1];
    else
       spritelights = cmapcontext.scalelight[lightnum];
-   
-   // Handle all things in sector.
-   
-   for(thing = sec->thinglist; thing; thing = thing->snext)
+
+   // Even though the default way of rendering isn't as "correct"
+   // the single-threaded performance gains are too significant to ignore
+   // THREAD_FIXME: Allow users to always do this as an option?
+   if(r_numcontexts == 1)
    {
-      R_projectSprite(
-         cmapcontext, spritecontext, heap, viewpoint,
-         cb_viewpoint, bounds, portalrender, thing, spritelights
-      );
+      // Handle all things in sector.
+      for(const Mobj *thing = sec->thinglist; thing; thing = thing->snext)
+      {
+         R_projectSprite(
+            cmapcontext, spritecontext, heap, viewpoint,
+            cb_viewpoint, bounds, portalrender, thing, spritelights
+         );
+      }
+   }
+   else
+   {
+      // Handle all things in (and touching) sector that haven't already been drawn this BSP traversal.
+      for(const msecnode_t *sectorNode = sec->touching_thinglist; sectorNode; sectorNode = sectorNode->m_snext)
+      {
+         const Mobj *const thing = sectorNode->m_thing;
+
+         if(R_checkAndMarkSprite(spritecontext, heap, thing))
+            continue;
+
+         R_projectSprite(
+            cmapcontext, spritecontext, heap, viewpoint,
+            cb_viewpoint, bounds, portalrender, thing, spritelights
+         );
+      }
    }
 
    // ioanch 20160109: handle partial sprite projections
