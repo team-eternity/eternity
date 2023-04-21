@@ -26,7 +26,6 @@
 //
 
 #include <atomic>
-#include <semaphore>
 #include <thread>
 
 #include "c_io.h"
@@ -43,11 +42,43 @@
 #include "r_state.h"
 #include "v_misc.h"
 
+//
+// Binary semaphore for render threads
+//
+class RenderThreadSemaphore
+{
+   std::atomic_ptrdiff_t counter;
+
+public:
+   RenderThreadSemaphore() : counter(0)
+   {
+   }
+
+   void release()
+   {
+      if(counter == 0)
+         counter += 1;
+      else
+         throw;
+   }
+
+   void acquire()
+   {
+      bool exchanged = false;
+      while(!exchanged)
+      {
+         ptrdiff_t currCounter = counter;
+         if(currCounter)
+            exchanged = counter.compare_exchange_strong(currCounter, currCounter - 1);
+      }
+   }
+};
+
 struct renderdata_t
 {
    rendercontext_t       context;
    std::thread           thread;
-   std::binary_semaphore shouldrun;
+   RenderThreadSemaphore shouldrun;
    std::atomic_bool      running;
    std::atomic_bool      shouldquit;
    std::atomic_bool      framewaiting;
@@ -199,7 +230,7 @@ void R_InitContexts(const int width)
          i_haltimer.Sleep(1);
       if(currentcontext < r_numcontexts - 1)
       {
-         new(&renderdatas[currentcontext].shouldrun) std::binary_semaphore(0);
+         new(&renderdatas[currentcontext].shouldrun) RenderThreadSemaphore();
          renderdatas[currentcontext].thread = std::thread(&R_contextThreadFunc, &renderdatas[currentcontext]);
       }
    }
