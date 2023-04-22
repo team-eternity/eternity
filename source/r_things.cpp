@@ -1313,17 +1313,13 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
 }
 
 //
-// Checks if a specially-rendered sprite has already been rendered
+// Checks if a sprite has already been rendered
 // and adds it to the marked sprite hash table if it hasn't
 //
 static inline bool R_checkAndMarkSprite(spritecontext_t &spritecontext,
                                         ZoneHeap &heap,
                                         const Mobj *const thing)
 {
-   // THREAD_FIXME: Check if overdraw is still faster than hashing later on
-   if(R_getDrawStyle(thing, nullptr) == VS_DRAWSTYLE_NORMAL)
-      return false;
-
    size_t thing_hash = std::hash<const Mobj *>{}(thing) % NUMSPRITEMARKS;
    drawnsprite_t *prevSprite;
    drawnsprite_t *drawnSprite = spritecontext.drawnSpriteHash[thing_hash];
