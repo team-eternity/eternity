@@ -97,7 +97,7 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
       {
          colfunc = r_column_engine->DrawTLColumn;
          if(linedef->tranlump > 0)
-            column.tranmap = (byte *)(wGlobalDir.cacheLumpNum(linedef->tranlump-1, PU_STATIC)); // THREAD_FIXME
+            column.tranmap = static_cast<byte *>(wGlobalDir.getCachedLumpNum(linedef->tranlump-1));
          else
             column.tranmap = main_tranmap;
       }
@@ -214,10 +214,6 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
          maskedtexturecol[column.x] = FLT_MAX;
       }
    }
-
-   // Except for main_tranmap, mark others purgable at this point
-   if(linedef->tranlump > 0 && general_translucency)
-      Z_ChangeTag(column.tranmap, PU_CACHE); // killough 4/11/98 // THREAD_FIXME: Maybe delete?
 }
 
 

@@ -903,7 +903,7 @@ static void R_drawVisSprite(const contextbounds_t &bounds, vissprite_t *vis,
    column.translevel = vis->translucency;
    column.translevel += 1;
    if(vis->tranmaplump >= 0)
-      column.tranmap = static_cast<byte *>(wGlobalDir.cacheLumpNum(vis->tranmaplump, PU_CACHE)); // THREAD_FIXME
+      column.tranmap = static_cast<byte *>(wGlobalDir.getCachedLumpNum(vis->tranmaplump));
    else if(vis->drawstyle == VS_DRAWSTYLE_SUB)
       column.tranmap = main_submap;
    else

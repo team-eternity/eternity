@@ -2149,6 +2149,8 @@ static int E_TranMapCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
       *target = -1;
       return 0;
    }
+   else
+      wGlobalDir.cacheLumpNum(trnum, PU_CACHE);
    *target = trnum;
 
    return 0;

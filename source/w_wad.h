@@ -321,6 +321,7 @@ public:
    int   lumpLength(int lump) const;
    void  readLump(int lump, void *dest,
                   const WadLumpLoader *lfmt = nullptr) const;
+   void *getCachedLumpNum(int lump, const WadLumpLoader *lfmt = nullptr) const;
    void *cacheLumpNum(int lump, int tag,
                       const WadLumpLoader *lfmt = nullptr) const;
    void *cacheLumpName(const char *name, int tag,

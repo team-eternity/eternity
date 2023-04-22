@@ -210,7 +210,7 @@ protected:
 public:
    virtual void *malloc(size_t size, int tag, void **ptr, const char *, int);
    virtual void  free(void *ptr, const char *, int);
-   virtual void  freeTags(int lowtag, int hightag, const char *, int); // THREAD_FIXME: Make only part of ZoneHeapThreadSafe?
+   virtual void  freeTags(int lowtag, int hightag, const char *, int);
    virtual void  changeTag(void *ptr, int tag, const char *, int);
    virtual void *calloc(size_t n, size_t n2, int tag, void **user, const char *, int);
    virtual void *realloc(void *p, size_t n, int tag, void **user, const char *, int);
@@ -232,7 +232,7 @@ public:
 class ZoneHeap final : public ZoneHeapBase
 {
 public:
-   ~ZoneHeap() { freeTags(PU_STATIC, PU_CACHE, __FILE__, __LINE__); }; // THREAD_FIXME: Check this is correct
+   ~ZoneHeap() { freeTags(PU_STATIC, PU_CACHE, __FILE__, __LINE__); };
 
    // TODO: Re-enable when C++20 is a thing and kill the zh macros
    // THREAD_FIXME: Guard against any and all PU_STATIC (and maybe PU_PERMANENT) allocations?

@@ -1348,7 +1348,7 @@ void P_UpdateSpecials()
          }
 
          // Cache new animation and make a sky texture if required
-         R_CacheTexture(texturetranslation[i]); // THREAD_FIXME: Can this go only in the else?
+         R_CacheTexture(texturetranslation[i]);
          R_CacheSkyTextureAnimFrame(prev, texturetranslation[i]);
       }
    }
