@@ -1320,7 +1320,7 @@ static inline bool R_checkAndMarkSprite(spritecontext_t &spritecontext,
                                         ZoneHeap &heap,
                                         const Mobj *const thing)
 {
-   size_t thing_hash = std::hash<const Mobj *>{}(thing) % NUMSPRITEMARKS;
+   const size_t thing_hash = std::hash<const Mobj *>{}(thing) % NUMSPRITEMARKS;
    drawnsprite_t *prevSprite;
    drawnsprite_t *drawnSprite = spritecontext.drawnSpriteHash[thing_hash];
    if(drawnSprite)

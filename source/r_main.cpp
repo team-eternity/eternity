@@ -452,7 +452,7 @@ static void R_InitTextureMapping()
 
    // SoM: Thanks to 'Randi' of Zdoom fame!
    slopet = (float)tan((90.0f + (float)fov / 2.0f) * PI / 180.0f);
-   slopevis = 8.0f * slopet * 16.0f * 320.0f / (float)view.width; // THREAD_FIXME: context.fendcolumn?
+   slopevis = 8.0f * slopet * 16.0f * 320.0f / (float)view.width;
 
    // SoM: rewrote old LUT generation code to work with variable FOV
    i = 0;
