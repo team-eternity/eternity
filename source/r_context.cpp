@@ -183,6 +183,8 @@ static void R_contextThreadFunc(renderdata_t *data)
          R_runData(data);
          data->framefinished.store(true);
       }
+
+      std::this_thread::yield();
    }
 
    data->running.exchange(false);
