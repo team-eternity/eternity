@@ -2541,6 +2541,7 @@ void P_SlideMove(Mobj *mo)
    
    slidemo = mo; // the object that's sliding
    
+   bool sticktoslope;
    do
    {
       fixed_t leadx, leady, trailx, traily;
@@ -2600,11 +2601,16 @@ void P_SlideMove(Mobj *mo)
          // haleyjd: yet another compatibility fix by cph -- the
          // fix is only necessary for boom v2.01
 
-         // TODO: use slopes
-         if(!P_TryMove(mo, mo->x, mo->y + mo->momy, true, false))
-            if(!P_TryMove(mo, mo->x + mo->momx, mo->y, true, false))	      
+         v2fixed_t move = {0, mo->momy};
+         sticktoslope = P_CheckSlopeWalk(*mo, move.x, move.y);
+         if(!P_TryMove(mo, mo->x + move.x, mo->y + move.y, true, sticktoslope))
+         {
+            move = {mo->momx, 0};
+            sticktoslope = P_CheckSlopeWalk(*mo, move.x, move.y);
+            if(!P_TryMove(mo, mo->x + move.x, mo->y + move.y, true, sticktoslope))
                if(demo_version == 201)
                   mo->momx = mo->momy = 0;
+         }
                
          break;
       }
@@ -2618,8 +2624,9 @@ void P_SlideMove(Mobj *mo)
          
          // killough 3/15/98: Allow objects to drop off ledges
          
-         // TODO: use slopes
-         if(!P_TryMove(mo, mo->x+newx, mo->y+newy, true, false))
+         // FIXME: are we gonna use slopes here too?
+         sticktoslope = P_CheckSlopeWalk(*mo, newx, newy);
+         if(!P_TryMove(mo, mo->x+newx, mo->y+newy, true, sticktoslope))
             goto stairstep;
       }
 
@@ -2650,9 +2657,10 @@ void P_SlideMove(Mobj *mo)
          if(D_abs(mo->player->momy) > D_abs(tmymove))
             mo->player->momy = tmymove;
       }
-      // TODO: use slopes
+
+      sticktoslope = P_CheckSlopeWalk(*mo, tmxmove, tmymove);
    }  // killough 3/15/98: Allow objects to drop off ledges:
-   while(!P_TryMove(mo, mo->x+tmxmove, mo->y+tmymove, true, false));
+   while(!P_TryMove(mo, mo->x+tmxmove, mo->y+tmymove, true, sticktoslope));
 }
 
 //
