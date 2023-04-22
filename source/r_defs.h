@@ -422,9 +422,12 @@ struct side_t
 {
   fixed_t textureoffset; // add this to the calculated texture column
   fixed_t rowoffset;     // add this to the calculated texture top
-  int16_t toptexture;      // Texture indices. We do not maintain names here. 
-  int16_t bottomtexture;
-  int16_t midtexture;
+
+  // Texture indices. We do not maintain names here.
+  int16_t toptexture;    // MUST BE CACHED IF MODIFIED AT RUNTIME
+  int16_t bottomtexture; // MUST BE CACHED IF MODIFIED AT RUNTIME
+  int16_t midtexture;    // MUST BE CACHED IF MODIFIED AT RUNTIME
+
   uint16_t intflags; // keep intflags here (we may also afford to edit "special")
   sector_t* sector;      // Sector the SideDef is facing.
 
@@ -463,7 +466,7 @@ struct line_t
    sector_t *frontsector;  // Front and back sector.
    sector_t *backsector; 
    int validcount;         // if == validcount, already checked
-   int tranlump;           // killough 4/11/98: translucency filter, -1 == none
+   int tranlump;           // killough 4/11/98: translucency filter, -1 == none: MUST BE CACHED IF MODIFIED AT RUNTIME
    int firsttag, nexttag;  // killough 4/17/98: improves searches for tags.
    PointThinker soundorg;  // haleyjd 04/19/09: line sound origin
    int intflags;           // haleyjd 01/22/11: internal flags
