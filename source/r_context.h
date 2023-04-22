@@ -45,7 +45,6 @@ struct vissprite_t;
 class  Mobj;
 class  ZoneHeap;
 
-// THREAD_FIXME: Make like planehash_t
 struct drawnsprite_t
 {
    const Mobj *thing;
