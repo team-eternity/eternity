@@ -74,6 +74,17 @@ void R_DoomTLStyle();
 
 void R_ResetTrans();
 
+// Enumeration for sprite projection style
+enum
+{
+   R_SPRPROJSTYLE_DEFAULT,
+   R_SPRPROJSTYLE_FAST,
+   R_SPRPROJSTYLE_THOROUGH,
+   R_SPRPROJSTYLE_NUM
+};
+
+inline int r_sprprojstyle;
+
 //
 // Utility functions.
 //

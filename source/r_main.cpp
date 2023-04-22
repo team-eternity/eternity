@@ -1598,6 +1598,7 @@ static const char *ptranstr[]   = { "none", "smooth", "general" };
 static const char *coleng[]     = { "normal" };
 static const char *spaneng[]    = { "highprecision" };
 static const char *tlstylestr[] = { "opaque", "boom", "additive" };
+static const char *sprprojstr[] = { "default", "fast", "thorough" };
 
 VARIABLE_BOOLEAN(lefthanded, nullptr,               handedstr);
 VARIABLE_BOOLEAN(r_blockmap, nullptr,               onoff);
@@ -1617,13 +1618,14 @@ VARIABLE_INT(fov, nullptr, 20, 179, nullptr);
 // SoM: Portal tainted
 VARIABLE_BOOLEAN(showtainted, nullptr,              onoff);
 
-VARIABLE_INT(tran_filter_pct,     nullptr, 0, 100,                  nullptr);
-VARIABLE_INT(screenSize,          nullptr, 0, 8,                    nullptr);
-VARIABLE_INT(usegamma,            nullptr, 0, 4,                    nullptr);
-VARIABLE_INT(particle_trans,      nullptr, 0, 2,                    ptranstr);
-VARIABLE_INT(r_column_engine_num, nullptr, 0, NUMCOLUMNENGINES - 1, coleng);
-VARIABLE_INT(r_span_engine_num,   nullptr, 0, NUMSPANENGINES - 1,   spaneng);
-VARIABLE_INT(r_tlstyle,           nullptr, 0, R_TLSTYLE_NUM - 1,    tlstylestr);
+VARIABLE_INT(tran_filter_pct,     nullptr, 0, 100,                    nullptr);
+VARIABLE_INT(screenSize,          nullptr, 0, 8,                      nullptr);
+VARIABLE_INT(usegamma,            nullptr, 0, 4,                      nullptr);
+VARIABLE_INT(particle_trans,      nullptr, 0, 2,                      ptranstr);
+VARIABLE_INT(r_column_engine_num, nullptr, 0, NUMCOLUMNENGINES - 1,   coleng);
+VARIABLE_INT(r_span_engine_num,   nullptr, 0, NUMSPANENGINES - 1,     spaneng);
+VARIABLE_INT(r_tlstyle,           nullptr, 0, R_TLSTYLE_NUM - 1,      tlstylestr);
+VARIABLE_INT(r_sprprojstyle,      nullptr, 0, R_SPRPROJSTYLE_NUM - 1, sprprojstr);
 
 CONSOLE_VARIABLE(r_fov, fov, 0)
 {
@@ -1733,6 +1735,8 @@ CONSOLE_VARIABLE(r_tlstyle, r_tlstyle, 0)
 {
    R_DoomTLStyle();
 }
+
+CONSOLE_VARIABLE(r_sprprojstyle, r_sprprojstyle, 0) {}
 
 CONSOLE_VARIABLE(r_boomcolormaps, r_boomcolormaps, 0) {}
 

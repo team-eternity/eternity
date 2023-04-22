@@ -1731,6 +1731,7 @@ static menuitem_t mn_sysvideo_items[] =
    { it_toggle,   "Translucency",             "r_trans"          },
    { it_variable, "Opacity percentage",       "r_tranpct"        },
    { it_toggle,   "Stock Doom object style",  "r_tlstyle"        },
+   { it_toggle,   "Sprite projection style",  "r_sprprojstyle"   },
    { it_gap },
    { it_info,     "Framerate"   },
    { it_toggle,   "Uncapped framerate",       "d_fastrefresh"    },
