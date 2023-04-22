@@ -221,6 +221,9 @@ public:
    virtual char *strdupAuto(const char *s, const char *file, int line);
    virtual void  checkHeap(const char *, int);
    virtual int   checkTag(void *, const char *, int);
+
+   void print(const char *filename);
+   void dumpCore(const char *filename);
 };
 
 //

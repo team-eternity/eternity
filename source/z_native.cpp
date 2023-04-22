@@ -42,6 +42,7 @@
 #include "i_system.h"
 #include "doomstat.h"
 #include "m_argv.h"
+#include "m_qstr.h"
 #include "r_context.h"
 
 //=============================================================================
@@ -659,12 +660,10 @@ int ZoneHeapBase::checkTag(void *ptr, const char *file, int line)
 }
 
 //
-// Z_PrintZoneHeap
+// Print a single zone heap to file
 //
-void Z_PrintZoneHeap(void)
+void ZoneHeapBase::print(const char *filename)
 {
-   // THREAD_FIXME: Fix and re-enable
-#if 0
    memblock_t *block;
    int lowtag;
    FILE *outfile;
@@ -681,13 +680,13 @@ void Z_PrintZoneHeap(void)
 #endif
       ;
 
-   outfile = fopen("heap.txt", "w");
+   outfile = fopen(filename, "w");
    if(!outfile)
       return;
 
    for(lowtag = PU_FREE; lowtag < PU_MAX; ++lowtag)
    {
-      for(block = blockbytag[lowtag]; block; block = block->next)
+      for(block = m_blockbytag[lowtag]; block; block = block->next)
       {
          fprintf(outfile, fmtstr, block,
 #if defined(ZONEIDCHECK)
@@ -718,18 +717,13 @@ void Z_PrintZoneHeap(void)
    }
 
    fclose(outfile);
-#endif
 }
 
 //
-// Z_DumpCore
+// Write a single zone heap to file
 //
-// haleyjd 03/18/07: Write the zone heap to file
-//
-void Z_DumpCore()
+void ZoneHeapBase::dumpCore(const char *filename)
 {
-   // THREAD_FIXME: Fix and re-enable
-#if 0
    static const char *namefortag[PU_MAX] =
    {
       "PU_FREE",
@@ -752,13 +746,13 @@ void Z_DumpCore()
 
    for(tag = PU_FREE+1; tag < PU_MAX; tag++)
    {
-      for(block = blockbytag[tag]; block; block = block->next)
+      for(block = m_blockbytag[tag]; block; block = block->next)
          ++numentries;
    }
 
    dirlen = numentries * 64; // crazy PAK format...
 
-   FILE *f = fopen("coredump.pak", "wb");
+   FILE *f = fopen(filename, "wb");
    if(!f)
       return;
    fwrite("PACK",  4,              1, f);
@@ -768,16 +762,14 @@ void Z_DumpCore()
    uint32_t offs = 12 + 64 * numentries;
    for(tag = PU_FREE+1; tag < PU_MAX; tag++)
    {
-      for(block = blockbytag[tag]; block; block = block->next)
+      for(block = m_blockbytag[tag]; block; block = block->next)
       {
          char     name[56];
          uint32_t filepos = offs;
          uint32_t filelen = (uint32_t)(block->size);
 
          memset(name, 0, sizeof(name));
-         sprintf(name, "/%s/%p", 
-                 block->tag < PU_MAX ? namefortag[block->tag] : "UNKNOWN",
-                 block);
+         sprintf(name, "/%s/%p", block->tag < PU_MAX ? namefortag[block->tag] : "UNKNOWN", block);
          fwrite(name,     sizeof(name),    1, f);
          fwrite(&filepos, sizeof(filepos), 1, f);
          fwrite(&filelen, sizeof(filelen), 1, f);
@@ -788,12 +780,45 @@ void Z_DumpCore()
 
    for(tag = PU_FREE+1; tag < PU_MAX; tag++)
    {
-      for(block = blockbytag[tag]; block; block = block->next)
+      for(block = m_blockbytag[tag]; block; block = block->next)
          fwrite(((byte *)block + header_size), block->size, 1, f);
    }
 
    fclose(f);
-#endif
+}
+
+//
+// Prints all the zone heaps to their own files
+//
+void Z_PrintZoneHeap()
+{
+   z_globalheap.dumpCore("heap_global.txt");
+
+   R_ForEachContext([](rendercontext_t &context) {
+      qstring filename;
+      if(context.bufferindex == -1)
+         filename = "heap_context_global.txt";
+      else
+         filename.Printf(0, "heap_context_%d.txt", context.bufferindex);
+      context.heap->print(filename.constPtr());
+   });
+}
+
+//
+// Dumps all the zone heaps to their own files
+//
+void Z_DumpCore()
+{
+   z_globalheap.dumpCore("coredump_global.pak");
+
+   R_ForEachContext([](rendercontext_t &context) {
+      qstring filename;
+      if(context.bufferindex == -1)
+         filename = "coredump_context_global.pak";
+      else
+         filename.Printf(0, "coredump_context_%d.pak", context.bufferindex);
+      context.heap->dumpCore(filename.constPtr());
+   });
 }
 
 //=============================================================================
