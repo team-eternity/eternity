@@ -498,7 +498,7 @@ static void D_showMemStats()
       if(tag != PU_MAX)
       {
          psnprintf(
-            buffer, sizeof(buffer), "%s: %9zu %7.02f%%",
+            buffer, sizeof(buffer), "%s: %10zu %7.02f%%",
             cachelevels[i].name, memorybytag[tag], memorybytag[tag] * s
          );
          V_FontWriteText(font, buffer, 1, static_cast<int>(1 + i*font->cy));
@@ -506,7 +506,7 @@ static void D_showMemStats()
       else
       {
          psnprintf(
-            buffer, sizeof(buffer), "%s: %9zu %7.02f%%",
+            buffer, sizeof(buffer), "%s: %10zu %7.02f%%",
             cachelevels[i].name, total_memory, 100.0f
          );
          V_FontWriteText(font, buffer, 1, static_cast<int>(1 + i*font->cy));
