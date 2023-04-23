@@ -186,8 +186,7 @@ void doom_printf(E_FORMAT_STRING(const char *), ...) E_PRINTF(1, 2);
 void doom_warningf(E_FORMAT_STRING(const char *), ...) E_PRINTF(1, 2);
 
 #ifdef INSTRUMENTED
-extern size_t memorybytag[PU_MAX]; // haleyjd  04/01/11
-extern int printstats;             // killough 08/23/98
+extern int printstats;
 #endif
 
 void Z_PrintZoneHeap();
@@ -207,6 +206,10 @@ class ZoneHeapBase
 protected:
    struct memblock_t *m_blockbytag[PU_MAX]; // used for tracking all zone blocks
 
+#ifdef INSTRUMENTED
+   size_t m_memorybytag[PU_MAX];
+#endif
+
 public:
    virtual void *malloc(size_t size, int tag, void **ptr, const char *, int);
    virtual void  free(void *ptr, const char *, int);
@@ -224,6 +227,10 @@ public:
 
    void print(const char *filename);
    void dumpCore(const char *filename);
+
+#ifdef INSTRUMENTED
+   inline size_t memoryForTag(const int tag) { return m_memorybytag[tag]; }
+#endif
 };
 
 //

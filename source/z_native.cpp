@@ -211,7 +211,6 @@ static void Z_IDCheck(bool err, const char *errmsg,
 //
 
 // statistics for evaluating performance
-INSTRUMENT(size_t memorybytag[PU_MAX]); // haleyjd 04/02/11: track by tag
 INSTRUMENT(int printstats = 0);         // killough 8/23/98
 
 // haleyjd 04/02/11: Instrumentation output has been moved to d_main.cpp and
@@ -344,7 +343,7 @@ void *ZoneHeapBase::malloc(size_t size, int tag, void **user, const char *file, 
    m_blockbytag[tag] = block;
    block->prev = &m_blockbytag[tag];
 
-   INSTRUMENT(memorybytag[tag] += block->size);
+   INSTRUMENT(m_memorybytag[tag] += block->size);
    INSTRUMENT(block->file = file);
    INSTRUMENT(block->line = line);
 
@@ -401,7 +400,7 @@ void ZoneHeapBase::free(void *p, const char *file, int line)
 #endif
                      );
       }
-      INSTRUMENT(memorybytag[block->tag] -= block->size);
+      INSTRUMENT(m_memorybytag[block->tag] -= block->size);
       block->tag = PU_FREE;       // Mark block freed
 
       // scramble memory -- weed out any bugs
@@ -487,8 +486,8 @@ void ZoneHeapBase::changeTag(void *ptr, int tag, const char *file, int line)
    block->prev = &m_blockbytag[tag];
    m_blockbytag[tag] = block;
 
-   INSTRUMENT(memorybytag[block->tag] -= block->size);
-   INSTRUMENT(memorybytag[tag] += block->size);
+   INSTRUMENT(m_memorybytag[block->tag] -= block->size);
+   INSTRUMENT(m_memorybytag[tag] += block->size);
 
    block->tag = tag;
 
@@ -540,7 +539,7 @@ void *ZoneHeapBase::realloc(void *ptr, size_t n, int tag, void **user,
    block->next = nullptr;
    block->prev = nullptr;
 
-   INSTRUMENT(memorybytag[block->tag] -= block->size);
+   INSTRUMENT(m_memorybytag[block->tag] -= block->size);
 
    if(!(newblock = (memblock_t *)(std::realloc(block, n + header_size))))
    {
@@ -583,7 +582,7 @@ void *ZoneHeapBase::realloc(void *ptr, size_t n, int tag, void **user,
    m_blockbytag[tag] = block;
    block->prev = &m_blockbytag[tag];
 
-   INSTRUMENT(memorybytag[tag] += block->size);
+   INSTRUMENT(m_memorybytag[tag] += block->size);
    INSTRUMENT(block->file = file);
    INSTRUMENT(block->line = line);
 
