@@ -21,11 +21,16 @@
 // Purpose: Renderer context
 // Some code is derived from Rum & Raisin Doom, by Ethan Watson, used under
 // terms of the GPLv3.
+// BasicSemaphore and RenderThreadSemaphore are based on
+// code from https://vorbrodt.blog/2019/02/05/fast-semaphore/.
+// I can't find a licence for it.
 //
 // Authors: Max Waine
 //
 
 #include <atomic>
+#include <condition_variable>
+#include <mutex>
 #include <thread>
 
 #include "c_io.h"
@@ -43,35 +48,70 @@
 #include "v_misc.h"
 
 //
-// Binary semaphore for render threads
+// Basic semaphore used by RenderThreadSemaphore
+//
+class BasicSemaphore
+{
+public:
+   BasicSemaphore(ptrdiff_t count) noexcept
+      : m_count(count)
+   {
+   }
+
+   void release() noexcept
+   {
+      {
+         std::unique_lock<std::mutex> lock(m_mutex);
+         m_count++;
+      }
+      m_cv.notify_one();
+   }
+
+   void acquire() noexcept
+   {
+      std::unique_lock<std::mutex> lock(m_mutex);
+      m_cv.wait(lock, [&]() -> bool {
+         return m_count != 0;
+      });
+      m_count--;
+   }
+
+private:
+   ptrdiff_t               m_count;
+   std::mutex              m_mutex;
+   std::condition_variable m_cv;
+};
+
+//
+// Fast semaphore for render threads
 //
 class RenderThreadSemaphore
 {
-   std::atomic_ptrdiff_t counter;
-
 public:
-   RenderThreadSemaphore() : counter(0)
+   RenderThreadSemaphore(ptrdiff_t count) noexcept
+      : m_count(count), m_semaphore(0)
    {
    }
 
    void release()
    {
-      if(counter == 0)
-         counter += 1;
-      else
-         throw;
+      std::atomic_thread_fence(std::memory_order_release);
+      ptrdiff_t count = m_count.fetch_add(1, std::memory_order_relaxed);
+      if(count < 0)
+         m_semaphore.release();
    }
 
    void acquire()
    {
-      bool exchanged = false;
-      while(!exchanged)
-      {
-         ptrdiff_t currCounter = counter;
-         if(currCounter)
-            exchanged = counter.compare_exchange_strong(currCounter, currCounter - 1);
-      }
+      ptrdiff_t count = m_count.fetch_sub(1, std::memory_order_relaxed);
+      if(count < 1)
+         m_semaphore.acquire();
+      std::atomic_thread_fence(std::memory_order_acquire);
    }
+
+private:
+   std::atomic<ptrdiff_t> m_count;
+   BasicSemaphore         m_semaphore;
 };
 
 struct renderdata_t
@@ -261,7 +301,7 @@ void R_InitContexts(const int width)
          i_haltimer.Sleep(1);
       if(currentcontext < r_numcontexts - 1)
       {
-         new(&renderdatas[currentcontext].shouldrun) RenderThreadSemaphore();
+         new(&renderdatas[currentcontext].shouldrun) RenderThreadSemaphore(0);
          renderdatas[currentcontext].thread = std::thread(&R_contextThreadFunc, &renderdatas[currentcontext]);
       }
    }
