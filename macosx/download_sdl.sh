@@ -73,6 +73,7 @@ check_sdl() {
     fi
 }
 
-check_sdl SDL2.framework https://www.libsdl.org/release SDL2-2.0.16.dmg
+check_sdl SDL2.framework https://github.com/libsdl-org/SDL/releases/download/release-2.26.5 SDL2-2.26.5.dmg
+# TODO: update these too. Maybe get rid of mixer_sign
 check_sdl SDL2_mixer.framework https://www.libsdl.org/projects/SDL_mixer/release SDL2_mixer-2.0.4.dmg mixer_sign
 check_sdl SDL2_net.framework https://www.libsdl.org/projects/SDL_net/release SDL2_net-2.0.1.dmg
