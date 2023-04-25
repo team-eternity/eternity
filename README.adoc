@@ -99,7 +99,7 @@ cpack -G STGZ
 
 Building with CMake (macOS Xcode)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-You need Mac OS X 10.9 or more to run Eternity.
+You need Mac OS X 10.13 or more to run Eternity.
 
 For macOS, currently only the Xcode generator is supported.
 

@@ -1,10 +1,10 @@
 
 /* pngget.c - retrieval of values from info struct
  *
- * Last changed in libpng 1.6.35 [July 15, 2018]
+ * Copyright (c) 2018 Cosmin Truta
  * Copyright (c) 1998-2002,2004,2006-2018 Glenn Randers-Pehrson
- * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
- * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
+ * Copyright (c) 1996-1997 Andreas Dilger
+ * Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.
  *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
@@ -1151,7 +1151,7 @@ png_get_unknown_chunks(png_const_structrp png_ptr, png_inforp info_ptr,
 
 #ifdef PNG_READ_RGB_TO_GRAY_SUPPORTED
 png_byte PNGAPI
-png_get_rgb_to_gray_status (png_const_structrp png_ptr)
+png_get_rgb_to_gray_status(png_const_structrp png_ptr)
 {
    return (png_byte)(png_ptr ? png_ptr->rgb_to_gray_status : 0);
 }
@@ -1192,27 +1192,27 @@ png_get_compression_buffer_size(png_const_structrp png_ptr)
 /* These functions were added to libpng 1.2.6 and were enabled
  * by default in libpng-1.4.0 */
 png_uint_32 PNGAPI
-png_get_user_width_max (png_const_structrp png_ptr)
+png_get_user_width_max(png_const_structrp png_ptr)
 {
    return (png_ptr ? png_ptr->user_width_max : 0);
 }
 
 png_uint_32 PNGAPI
-png_get_user_height_max (png_const_structrp png_ptr)
+png_get_user_height_max(png_const_structrp png_ptr)
 {
    return (png_ptr ? png_ptr->user_height_max : 0);
 }
 
 /* This function was added to libpng 1.4.0 */
 png_uint_32 PNGAPI
-png_get_chunk_cache_max (png_const_structrp png_ptr)
+png_get_chunk_cache_max(png_const_structrp png_ptr)
 {
    return (png_ptr ? png_ptr->user_chunk_cache_max : 0);
 }
 
 /* This function was added to libpng 1.4.1 */
 png_alloc_size_t PNGAPI
-png_get_chunk_malloc_max (png_const_structrp png_ptr)
+png_get_chunk_malloc_max(png_const_structrp png_ptr)
 {
    return (png_ptr ? png_ptr->user_chunk_malloc_max : 0);
 }
@@ -1221,13 +1221,13 @@ png_get_chunk_malloc_max (png_const_structrp png_ptr)
 /* These functions were added to libpng 1.4.0 */
 #ifdef PNG_IO_STATE_SUPPORTED
 png_uint_32 PNGAPI
-png_get_io_state (png_const_structrp png_ptr)
+png_get_io_state(png_const_structrp png_ptr)
 {
    return png_ptr->io_state;
 }
 
 png_uint_32 PNGAPI
-png_get_io_chunk_type (png_const_structrp png_ptr)
+png_get_io_chunk_type(png_const_structrp png_ptr)
 {
    return png_ptr->chunk_name;
 }

@@ -22,8 +22,8 @@
 cmake_minimum_required(VERSION 3.11)
 
 # Must be before project()
-# Can't set anything below 10.9 now. Xcode will show a warning if I attempt 10.7 like before
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum macOS deployment version")
+# Can't set anything below 10.13 now.
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum macOS deployment version")
 
 project("Eternity Engine"
         VERSION 4.3.0
