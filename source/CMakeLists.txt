@@ -127,15 +127,6 @@ function(eternity_target_sources _TARGET)
 
    # macOS has no unique files currently
    if(APPLE)
-      if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/filesystem.hpp)
-         message(STATUS "Downloading gulrak filesystem to replace the C++17 one")
-         file(
-            DOWNLOAD "https://github.com/gulrak/filesystem/releases/download/v1.5.14/filesystem.hpp"
-            ${CMAKE_CURRENT_BINARY_DIR}/filesystem.hpp
-            EXPECTED_HASH SHA256=522791c2a2f1959193fdff61f4668c5ba894459753170b2246971272ee8ddc47
-         )
-      endif()
-
       # Add the base binary dir for the SDL2 symlink added from ExternalLibraries
       target_include_directories("${_TARGET}" PRIVATE ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR})
    endif(APPLE)
