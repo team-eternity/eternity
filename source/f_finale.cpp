@@ -698,7 +698,7 @@ static void F_BunnyScroll()
       laststage = stage;
    }
    
-   sprintf(name,"END%i", stage);
+   snprintf(name, sizeof(name), "END%i", stage);
    V_DrawPatch((SCREENWIDTH - 13 * 8) / 2, 
                (SCREENHEIGHT - 8 * 8) / 2, &subscreen43, 
                PatchLoader::CacheName(wGlobalDir, name, PU_CACHE));

@@ -76,7 +76,7 @@ void ST_DrawSmallHereticNumber(int val, int x, int y, bool fullscreen)
       // know enough about coding to change this hard limit.
       if(val > 99999)
          val = 99999;
-      sprintf(buf, "%d", val);
+      snprintf(buf, sizeof(buf), "%d", val);
       x -= static_cast<int>(4 * (strlen(buf)));
       for(char *rover = buf; *rover; rover++)
       {
@@ -132,7 +132,7 @@ static void ST_HticInit()
       char lumpname[9];
 
       memset(lumpname, 0, 9);
-      sprintf(lumpname, "IN%d", i);
+      snprintf(lumpname, sizeof(lumpname), "IN%d", i);
 
       efree(invnums[i]);
       invnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
@@ -144,7 +144,7 @@ static void ST_HticInit()
       char lumpname[9];
 
       memset(lumpname, 0, 9);
-      sprintf(lumpname, "SMALLIN%d", i);
+      snprintf(lumpname, sizeof(lumpname), "SMALLIN%d", i);
 
       smallinvnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
 
@@ -163,7 +163,7 @@ static void ST_HticInit()
    {
       extern patch_t *keys[];
       char namebuf[9];
-      sprintf(namebuf, "STKEYS%d", i);
+      snprintf(namebuf, sizeof(namebuf), "STKEYS%d", i);
 
       efree(keys[i]);
       keys[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);

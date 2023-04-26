@@ -1498,7 +1498,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
       
       // killough 2/22/98: "proprietary" version string :-)
       memset(name2, 0, sizeof(name2));
-      sprintf(name2, VERSIONID);
+      snprintf(name2, sizeof(name2), VERSIONID);
    
       arc.archiveCString(name2, VERSIONSIZE);
 

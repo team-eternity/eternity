@@ -351,7 +351,7 @@ static void MN_FindHelpScreens(void)
    {
       char tempstr[10];
 
-      sprintf(tempstr, "HELP%.02i", custom);
+      snprintf(tempstr, sizeof(tempstr), "HELP%.02i", custom);
       AddHelpScreen(tempstr);
    }
    
@@ -685,7 +685,7 @@ static bool MN_MapColourResponder(event_t *ev, int action)
    if(action == ka_menu_confirm)
    {
       static char tempstr[128];
-      sprintf(tempstr, "%i", selected_colour);
+      snprintf(tempstr, sizeof(tempstr), "%i", selected_colour);
      
       // run command
       C_RunCommand(colour_command, tempstr);
