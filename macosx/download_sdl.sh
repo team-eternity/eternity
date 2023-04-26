@@ -29,7 +29,7 @@ check_sdl() {
 
     if [ ! -d "$framework" ]; then
         echo "No $framework added; downloading DMG."
-        curl -O -J "$url_base/$dmg_name"
+        curl -LO -J "$url_base/$dmg_name"
         hdiutil attach "$dmg_name" -mountpoint sdlmount
         rm "$framework" || echo "No garbage $framework found, no need to clear it."
         cp -R "sdlmount/$framework" .
@@ -74,6 +74,5 @@ check_sdl() {
 }
 
 check_sdl SDL2.framework https://github.com/libsdl-org/SDL/releases/download/release-2.26.5 SDL2-2.26.5.dmg
-# TODO: update these too. Maybe get rid of mixer_sign
-check_sdl SDL2_mixer.framework https://www.libsdl.org/projects/SDL_mixer/release SDL2_mixer-2.0.4.dmg mixer_sign
-check_sdl SDL2_net.framework https://www.libsdl.org/projects/SDL_net/release SDL2_net-2.0.1.dmg
+check_sdl SDL2_mixer.framework https://github.com/libsdl-org/SDL_mixer/releases/download/release-2.6.3 SDL2_mixer-2.6.3.dmg
+check_sdl SDL2_net.framework https://github.com/libsdl-org/SDL_net/releases/download/release-2.2.0 SDL2_net-2.2.0.dmg
