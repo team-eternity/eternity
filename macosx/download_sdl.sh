@@ -74,5 +74,9 @@ check_sdl() {
 }
 
 check_sdl SDL2.framework https://github.com/libsdl-org/SDL/releases/download/release-2.26.5 SDL2-2.26.5.dmg
-check_sdl SDL2_mixer.framework https://github.com/libsdl-org/SDL_mixer/releases/download/release-2.6.3 SDL2_mixer-2.6.3.dmg
+
+# WARNING: this is a temporary build made by slouken to contain MIDI support, crucial for DOOM. It
+# may disappear at any moment. See this issue: https://github.com/libsdl-org/SDL_mixer/issues/419
+check_sdl SDL2_mixer.framework https://www.libsdl.org/tmp SDL2_mixer-2.7.0.dmg
+
 check_sdl SDL2_net.framework https://github.com/libsdl-org/SDL_net/releases/download/release-2.2.0 SDL2_net-2.2.0.dmg
