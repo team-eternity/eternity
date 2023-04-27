@@ -140,9 +140,17 @@ static void VerifySDLVersions()
    // must update these when SDL is updated.
    static SDL_version ex_vers[3] =
    {
+      // NOTE: currently only the macOS SDL versions needed updating. Leave Windows alone for now.
+      // NOTE: it's quite possible that Linux distros will have totally different versions installed.
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
       { 2, 26, 5 }, // SDL
       { 2, 7, 0 }, // SDL_mixer
       { 2, 2, 0 }, // SDL_net
+#else
+      { 2, 0, 7 }, // SDL
+      { 2, 0, 2 }, // SDL_mixer
+      { 2, 0, 1 }, // SDL_net
+#endif
    };
 
    // test SDL
