@@ -454,7 +454,7 @@ CONSOLE_VARIABLE(r_numcontexts, r_numcontexts, cf_buffered)
    const int maxcontexts = emax(std::thread::hardware_concurrency(), 1u);
 
    if(r_numcontexts == 0)
-      r_numcontexts = maxcontexts - 1; // allow scrolling left from 1 to maxcontexts
+      r_numcontexts = maxcontexts; // allow scrolling left from 1 to maxcontexts
    else if(r_numcontexts == maxcontexts + 1)
       r_numcontexts = 1; // allow scrolling right from maxcontexts to 1
    else if(r_numcontexts > maxcontexts)
