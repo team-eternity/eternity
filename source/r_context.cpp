@@ -37,6 +37,7 @@
 #include "c_runcmd.h"
 #include "doomstat.h"
 #include "m_misc.h"
+#include "hal/i_platform.h"
 #include "hal/i_timer.h"
 #include "i_video.h"
 #include "m_compare.h"
@@ -46,6 +47,13 @@
 #include "r_plane.h"
 #include "r_state.h"
 #include "v_misc.h"
+
+#if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) && !defined(_DEBUG)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
+extern int __cdecl I_W32ExceptionHandler(PEXCEPTION_POINTERS ep);
+#endif
 
 //
 // Basic semaphore used by RenderThreadSemaphore
@@ -125,7 +133,18 @@ struct renderdata_t
    std::atomic_bool      framefinished;
 
    const char           *errormessage;
+   std::atomic_bool      fatalerror;
 };
+
+#if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) && !defined(_DEBUG)
+#define R_runData R_runDataInner
+#endif
+
+static void R_runData(renderdata_t *data);
+
+#if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) && !defined(_DEBUG)
+#undef R_runData
+#endif
 
 static renderdata_t *renderdatas      = nullptr;
 static int           prev_numcontexts = 0;
@@ -192,20 +211,19 @@ static void R_handleContextError(char *errmsg)
    throw temp;
 }
 
-//
-// Tries to render the view context for a data, catching any possible errors
-//
+#if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) && !defined(_DEBUG)
 static void R_runData(renderdata_t *data)
 {
-   try
+   __try
    {
-      R_RenderViewContext(data->context);
+      R_runDataInner(data);
    }
-   catch(qstring &errorMessage)
+   __except(I_W32ExceptionHandler(GetExceptionInformation()))
    {
-      data->errormessage = errorMessage.duplicate();
+      data->fatalerror = true;
    }
 }
+#endif
 
 //
 // This function is always going on in the background
@@ -388,6 +406,15 @@ void R_RunContexts()
    qstring errorMessage{ "R_RunContexts: Error in context(s):\n" };
    for(int currentcontext = 0; currentcontext < r_numcontexts; currentcontext++)
    {
+      if(renderdatas[currentcontext].fatalerror)
+      {
+         I_FatalError(
+            0,
+            "Exception caught in R_RunContexts: see CRASHLOG.TXT for info, and in the "
+            "same directory please upload eternity.dmp along with the crash log\n"
+         );
+      }
+
       if(renderdatas[currentcontext].errormessage)
       {
          errorMessage << "\t" << currentcontext + 1 << ": " << renderdatas[currentcontext].errormessage;
@@ -400,6 +427,25 @@ void R_RunContexts()
 
    if(hasError)
       I_Error(errorMessage.constPtr());
+}
+
+#if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) && !defined(_DEBUG)
+#define R_runData R_runDataInner
+#endif
+
+//
+// Tries to render the view context for a data, catching any possible errors
+//
+static void R_runData(renderdata_t *data)
+{
+   try
+   {
+      R_RenderViewContext(data->context);
+   }
+   catch(qstring &errorMessage)
+   {
+      data->errormessage = errorMessage.duplicate();
+   }
 }
 
 VARIABLE_INT(r_numcontexts, nullptr, 0, UL, nullptr);

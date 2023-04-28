@@ -44,6 +44,8 @@
 #pragma warning(pop)
 #endif
 
+#include <atomic>
+
 #include "../d_keywds.h"
 #include "../version.h"
 
@@ -64,6 +66,8 @@
 //
 // Data
 //
+
+static std::atomic_bool exceptionHandled;
 
 static TCHAR  moduleFileName[MAX_PATH * 2];
 static TCHAR  moduleName[MAX_PATH * 2];
@@ -907,6 +911,11 @@ int __cdecl I_W32ExceptionHandler(PEXCEPTION_POINTERS ep)
       return EXCEPTION_CONTINUE_SEARCH;
 
    exceptionCaught = 1;
+
+   // Only handle the first overall exception
+   bool handleException = false;
+   if(!exceptionHandled.compare_exchange_strong(handleException, true))
+      return EXCEPTION_EXECUTE_HANDLER;
 
    // set exception and context pointers
    exceptionRecord = ep->ExceptionRecord;
