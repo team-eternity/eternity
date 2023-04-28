@@ -426,7 +426,7 @@ void R_RunContexts()
    }
 
    if(hasError)
-      I_Error(errorMessage.constPtr());
+      I_Error("%s", errorMessage.constPtr());
 }
 
 #if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) && !defined(_DEBUG)
