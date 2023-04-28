@@ -451,7 +451,7 @@ static void R_runData(renderdata_t *data)
 VARIABLE_INT(r_numcontexts, nullptr, 0, UL, nullptr);
 CONSOLE_VARIABLE(r_numcontexts, r_numcontexts, cf_buffered)
 {
-   const int maxcontexts = emax(std::thread::hardware_concurrency() - 1, 1u);
+   const int maxcontexts = emax(std::thread::hardware_concurrency(), 1u);
 
    if(r_numcontexts == 0)
       r_numcontexts = maxcontexts - 1; // allow scrolling left from 1 to maxcontexts
