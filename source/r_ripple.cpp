@@ -36,6 +36,7 @@
 #include "r_data.h"
 #include "r_draw.h"
 #include "w_wad.h"
+#include "v_alloc.h"
 #include "v_video.h"
 #include "z_zone.h"
 
@@ -67,6 +68,23 @@ static void R_DrawLines(void)
 #define AMP2 2
 #define SPEED 40
 
+// THREAD_FIXME: Move into a context?
+static thread_local int   lasttex = -1;
+static thread_local int   swirltic = -1;
+static thread_local int *offset;
+static thread_local int   offsetSize;
+static thread_local byte *distortedflat;
+static thread_local int   lastsize;
+
+VALLOCATION(distortedflat)
+{
+   lasttex       = -1;
+   swirltic      = -1;
+   offset        = nullptr;
+   offsetSize    = 0;
+   distortedflat = nullptr;
+   lastsize      = 0;
+}
 
 //
 // Generates a distorted flat from a normal one using a two-dimensional
@@ -74,13 +92,6 @@ static void R_DrawLines(void)
 //
 byte *R_DistortedFlat(ZoneHeap &heap, int texnum, bool usegametic)
 {
-   static thread_local int   lasttex  = -1;
-   static thread_local int   swirltic = -1;
-   static thread_local int  *offset;
-   static thread_local int   offsetSize;
-   static thread_local byte *distortedflat;
-   static thread_local int   lastsize;
-
    int i;
    int reftime = usegametic ? gametic : leveltime;
    int leveltic = reftime;
