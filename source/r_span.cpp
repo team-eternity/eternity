@@ -686,15 +686,17 @@ static inline void R_drawSlope_8(const cb_slopespan_t &slopespan, const cb_span_
       id += ids * SPANJUMP;
       mulend = 65536.0f / id;
 
-      ufrac = static_cast<unsigned int>(ustart = iu * mulstart);
-      vfrac = static_cast<unsigned int>(vstart = iv * mulstart);
+      // IMPORTANT: use this function to properly handle negative numbers. Merely casting is
+      // non-standard between CPUs and will glitch out.
+      ufrac = R_doubleToUint32(ustart = iu * mulstart);
+      vfrac = R_doubleToUint32(vstart = iv * mulstart);
       iu += ius * SPANJUMP;
       iv += ivs * SPANJUMP;
       uend = iu * mulend;
       vend = iv * mulend;
 
-      ustep = static_cast<unsigned int>((uend - ustart) * INTERPSTEP);
-      vstep = static_cast<unsigned int>((vend - vstart) * INTERPSTEP);
+      ustep = R_doubleToUint32((uend - ustart) * INTERPSTEP);
+      vstep = R_doubleToUint32((vend - vstart) * INTERPSTEP);
 
       incount = SPANJUMP;
       while(incount--)
@@ -716,15 +718,15 @@ static inline void R_drawSlope_8(const cb_slopespan_t &slopespan, const cb_span_
       id += ids * count;
       mulend = 65536.0f / id;
 
-      ufrac = static_cast<unsigned int>(ustart = iu * mulstart);
-      vfrac = static_cast<unsigned int>(vstart = iv * mulstart);
+      ufrac = R_doubleToUint32(ustart = iu * mulstart);
+      vfrac = R_doubleToUint32(vstart = iv * mulstart);
       iu += ius * count;
       iv += ivs * count;
       uend = iu * mulend;
       vend = iv * mulend;
 
-      ustep = static_cast<unsigned int>((uend - ustart) / count);
-      vstep = static_cast<unsigned int>((vend - vstart) / count);
+      ustep = R_doubleToUint32((uend - ustart) / count);
+      vstep = R_doubleToUint32((vend - vstart) / count);
 
       incount = count;
       while(incount--)
@@ -769,15 +771,15 @@ static inline void R_drawSlope_8_GEN(const cb_slopespan_t &slopespan, const cb_s
       id += ids * SPANJUMP;
       mulend = 65536.0f / id;
 
-      ufrac = static_cast<unsigned int>(ustart = iu * mulstart);
-      vfrac = static_cast<unsigned int>(vstart = iv * mulstart);
+      ufrac = R_doubleToUint32(ustart = iu * mulstart);
+      vfrac = R_doubleToUint32(vstart = iv * mulstart);
       iu += ius * SPANJUMP;
       iv += ivs * SPANJUMP;
       uend = iu * mulend;
       vend = iv * mulend;
 
-      ustep = static_cast<unsigned int>((uend - ustart) * INTERPSTEP);
-      vstep = static_cast<unsigned int>((vend - vstart) * INTERPSTEP);
+      ustep = R_doubleToUint32((uend - ustart) * INTERPSTEP);
+      vstep = R_doubleToUint32((vend - vstart) * INTERPSTEP);
 
       incount = SPANJUMP;
       while(incount--)
@@ -799,15 +801,15 @@ static inline void R_drawSlope_8_GEN(const cb_slopespan_t &slopespan, const cb_s
       id += ids * count;
       mulend = 65536.0f / id;
 
-      ufrac = static_cast<unsigned int>(ustart = iu * mulstart);
-      vfrac = static_cast<unsigned int>(vstart = iv * mulstart);
+      ufrac = R_doubleToUint32(ustart = iu * mulstart);
+      vfrac = R_doubleToUint32(vstart = iv * mulstart);
       iu += ius * count;
       iv += ivs * count;
       uend = iu * mulend;
       vend = iv * mulend;
 
-      ustep = static_cast<unsigned int>((uend - ustart) / count);
-      vstep = static_cast<unsigned int>((vend - vstart) / count);
+      ustep = R_doubleToUint32((uend - ustart) / count);
+      vstep = R_doubleToUint32((vend - vstart) / count);
 
       incount = count;
       while(incount--)
