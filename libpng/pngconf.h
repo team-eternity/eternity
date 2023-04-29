@@ -1,11 +1,12 @@
 
-/* pngconf.h - machine configurable file for libpng
+/* pngconf.h - machine-configurable file for libpng
  *
- * libpng version 1.6.35, July 15, 2018
+ * libpng version 1.6.39
  *
+ * Copyright (c) 2018-2022 Cosmin Truta
  * Copyright (c) 1998-2002,2004,2006-2016,2018 Glenn Randers-Pehrson
- * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
- * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
+ * Copyright (c) 1996-1997 Andreas Dilger
+ * Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.
  *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
@@ -57,14 +58,13 @@
 
 #endif /* PNG_BUILDING_SYMBOL_TABLE */
 
-/* Prior to 1.6.0 it was possible to turn off 'const' in declarations using
- * PNG_NO_CONST; this is no longer supported except for data declarations which
- * apparently still cause problems in 2011 on some compilers.
+/* Prior to 1.6.0, it was possible to turn off 'const' in declarations,
+ * using PNG_NO_CONST.  This is no longer supported.
  */
 #define PNG_CONST const /* backward compatibility only */
 
-/* This controls optimization of the reading of 16-bit and 32-bit values
- * from PNG files.  It can be set on a per-app-file basis - it
+/* This controls optimization of the reading of 16-bit and 32-bit
+ * values from PNG files.  It can be set on a per-app-file basis: it
  * just changes whether a macro is used when the function is called.
  * The library builder sets the default; if read functions are not
  * built into the library the macro implementation is forced on.
@@ -180,8 +180,8 @@
  * compiler-specific macros to the values required to change the calling
  * conventions of the various functions.
  */
-#if defined(_Windows) || defined(_WINDOWS) || defined(WIN32) ||\
-    defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__)
+#if defined(_WIN32) || defined(__WIN32__) || defined(__NT__) || \
+    defined(__CYGWIN__)
   /* Windows system (DOS doesn't support DLLs).  Includes builds under Cygwin or
    * MinGW on any architecture currently supported by Windows.  Also includes
    * Watcom builds but these need special treatment because they are not

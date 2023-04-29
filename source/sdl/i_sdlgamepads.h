@@ -85,7 +85,7 @@ public:
    virtual void deselect() override;
    virtual void poll() override;
 
-   virtual HALHapticInterface *getHapticInterface() { return &haptics; }
+   virtual HALHapticInterface *getHapticInterface() override { return &haptics; }
 
    virtual const char *getAxisName(const int axis) override;
 };

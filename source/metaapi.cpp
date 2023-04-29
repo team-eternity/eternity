@@ -242,7 +242,7 @@ const char *MetaObject::toString() const
          byte val = *data++;
          char bytes[4] = { 0 };
 
-         sprintf(bytes, "%02x ", val);
+         snprintf(bytes, sizeof(bytes), "%02x ", val);
 
          qstr += bytes;
       }

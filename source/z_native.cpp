@@ -768,7 +768,8 @@ void ZoneHeapBase::dumpCore(const char *filename)
          uint32_t filelen = (uint32_t)(block->size);
 
          memset(name, 0, sizeof(name));
-         sprintf(name, "/%s/%p", block->tag < PU_MAX ? namefortag[block->tag] : "UNKNOWN", block);
+         snprintf(name, sizeof(name), "/%s/%p",
+                  block->tag < PU_MAX ? namefortag[block->tag] : "UNKNOWN", block);
          fwrite(name,     sizeof(name),    1, f);
          fwrite(&filepos, sizeof(filepos), 1, f);
          fwrite(&filelen, sizeof(filelen), 1, f);

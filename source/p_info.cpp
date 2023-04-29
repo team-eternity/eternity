@@ -606,7 +606,7 @@ static void SynthLevelName(SynthType_e levelNameType)
    // is deterministic since gamemapname is 8 chars long
    static char newlevelstr[25];
 
-   sprintf(newlevelstr, synthNames[levelNameType], gamemapname);
+   snprintf(newlevelstr, sizeof(newlevelstr), synthNames[levelNameType], gamemapname);
    
    LevelInfo.levelName = newlevelstr;
 }

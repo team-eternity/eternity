@@ -412,7 +412,7 @@ static void D_InitPlayers()
       // FIXME / TODO: BRAINDEAD!
       if(i != consoleplayer)
       {
-         sprintf(players[i].name, "player %i", i+1);
+         snprintf(players[i].name, sizeof(players[i].name), "player %i", i+1);
          players[i].colormap = i % TRANSLATIONCOLOURS;
       }
 
