@@ -235,8 +235,8 @@ static default_t sysdefaults[] =
    DEFAULT_INT("gl_colordepth", &cfg_gl_colordepth, nullptr, 32, 16, 32, default_t::wad_no,
                "GL backend screen bitdepth (16, 24, or 32)"),
 
-   DEFAULT_INT("gl_filter_type", &cfg_gl_filter_type, nullptr, CFG_GL_LINEAR,
-               0, CFG_GL_NUMFILTERS-1, default_t::wad_no, 
+   DEFAULT_INT("gl_filter_type", &cfg_gl_filter_type, nullptr, CFG_GL_NEAREST,
+               0, CFG_GL_NUMFILTERS-1, default_t::wad_no,
                "GL2D texture filtering type (0 = GL_LINEAR, 1 = GL_NEAREST)"),
 
    DEFAULT_BOOL("d_fastrefresh", &d_fastrefresh, nullptr, true, default_t::wad_no,
