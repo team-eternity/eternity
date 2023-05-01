@@ -186,6 +186,9 @@ void R_freeData(renderdata_t &data)
       data.thread.join();
 }
 
+//
+// Frees up all contexts (and renderdatas by way of R_freeData)
+//
 void R_FreeContexts()
 {
    R_freeContext(r_globalcontext);
@@ -212,6 +215,9 @@ static void R_handleContextError(char *errmsg)
 }
 
 #if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) && !defined(_DEBUG)
+//
+// In release builds we need to catch exceptions in render threads too
+//
 static void R_runData(renderdata_t *data)
 {
    __try
@@ -325,6 +331,9 @@ void R_InitContexts(const int width)
    }
 }
 
+//
+// Perform level setup for all contexts
+//
 void R_RefreshContexts()
 {
    if(!r_hascontexts)
@@ -340,6 +349,9 @@ void R_RefreshContexts()
       R_AllocateContextLevelData(renderdatas[currentcontext].context);
 }
 
+//
+// Sets the bounds (start and end columns, and column count) of all the contexts
+//
 void R_UpdateContextBounds()
 {
    if(r_numcontexts == 1)
@@ -362,6 +374,41 @@ void R_UpdateContextBounds()
       context.bounds.endcolumn    = int(roundf(context.bounds.fendcolumn));
       context.bounds.numcolumns   = context.bounds.endcolumn - context.bounds.startcolumn;
    }
+}
+
+//
+// Checks if any of the contexts encountered an error while running,
+// either an ordinary one (in which case errormessage will be set) or
+// a fatal error
+//
+static void R_checkForContextErrors()
+{
+   // Check for errors
+   bool    hasError = false;
+   qstring errorMessage{ "R_RunContexts: Error in context(s):\n" };
+   for(int currentcontext = 0; currentcontext < r_numcontexts; currentcontext++)
+   {
+      if(renderdatas[currentcontext].fatalerror)
+      {
+         I_FatalError(
+            0,
+            "Exception caught in R_RunContexts: see CRASHLOG.TXT for info, and in the "
+            "same directory please upload eternity.dmp along with the crash log\n"
+         );
+      }
+
+      if(renderdatas[currentcontext].errormessage)
+      {
+         errorMessage << "\t" << currentcontext + 1 << ": " << renderdatas[currentcontext].errormessage;
+         if(!errorMessage.endsWith('\n'))
+            errorMessage << "\n";
+
+         hasError = true;
+      }
+   }
+
+   if(hasError)
+      I_Error("%s", errorMessage.constPtr());
 }
 
 //
@@ -401,32 +448,7 @@ void R_RunContexts()
 
    I_SetErrorHandler(nullptr);
 
-   // Check for errors
-   bool    hasError = false;
-   qstring errorMessage{ "R_RunContexts: Error in context(s):\n" };
-   for(int currentcontext = 0; currentcontext < r_numcontexts; currentcontext++)
-   {
-      if(renderdatas[currentcontext].fatalerror)
-      {
-         I_FatalError(
-            0,
-            "Exception caught in R_RunContexts: see CRASHLOG.TXT for info, and in the "
-            "same directory please upload eternity.dmp along with the crash log\n"
-         );
-      }
-
-      if(renderdatas[currentcontext].errormessage)
-      {
-         errorMessage << "\t" << currentcontext + 1 << ": " << renderdatas[currentcontext].errormessage;
-         if(!errorMessage.endsWith('\n'))
-            errorMessage << "\n";
-
-         hasError = true;
-      }
-   }
-
-   if(hasError)
-      I_Error("%s", errorMessage.constPtr());
+   R_checkForContextErrors();
 }
 
 #if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) && !defined(_DEBUG)
