@@ -773,6 +773,8 @@ if(BUILD_FLATPAK)
 endif()
 
 if(MSVC)
+   set_property(TARGET eternity PROPERTY VS_DPI_AWARE "PerMonitor")
+
    target_compile_options(eternity PUBLIC
                           "$<$<CONFIG:Debug>:/ZI>" "/MP" "/utf-8")
 
@@ -786,7 +788,8 @@ if(MSVC)
 
    target_link_options(eternity PUBLIC
                        "/DYNAMICBASE:NO" "/SAFESEH:NO"
-                       "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:/MAP:$(OutDir)$(TargetName).map>")
+                       "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:/MAP:$(OutDir)$(TargetName).map>"
+                       "$<$<CONFIG:Release>:/DEBUG>")
 
    if(NOT MSVC_VERSION LESS  "1914")
       target_compile_options(eternity PUBLIC "/std:c++17")

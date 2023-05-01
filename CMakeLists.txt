@@ -19,7 +19,7 @@
 ##
 ################################################################################
 ######################### CMake Configuration ##################################
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.16)
 
 # Must be before project()
 # Can't set anything below 10.15 now (10.13 would have worked, but we want std::filesystem)

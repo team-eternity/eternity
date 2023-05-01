@@ -237,7 +237,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    {
       calculatedSlopes = true;
       pcl->haveslopes = true;
-      P_ExactBoxLinePoints(clip.bbox, *ld, i1, i2);
+      P_ExactBoxLinePoints(bbox, *ld, i1, i2);
       lineheights_t heights[2];
       heights[0] = P_getLineHeights(ld, i1);
       heights[1] = P_getLineHeights(ld, i2);
@@ -415,7 +415,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    {
       pcl->haveslopes = true;
       if(!calculatedSlopes)   // may have already calculated them when checking cross-portal heights
-         P_ExactBoxLinePoints(clip.bbox, *ld, i1, i2);
+         P_ExactBoxLinePoints(bbox, *ld, i1, i2);
      
       // Use the smallest opening from both points
       clip.open = P_LineOpening(ld, clip.thing, &i1, true, &lineclipflags);

@@ -277,6 +277,11 @@ Added SDL controller input preset.
 Added vibration support to SDL controllers.
 Added ability to use the IWAD picker with controllers, as well as exit ENDOOM.
 
+--------------------------------------------------------------------------------
+2023/05/01
+Fixed issue where non-keyboard inputs would sometimes be ignored while holding
+down any keyboard keys.
+
 ================================================================================
 EOF
 ================================================================================
