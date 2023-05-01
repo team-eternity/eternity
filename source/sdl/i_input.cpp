@@ -623,7 +623,8 @@ static void I_GetEvent(SDL_Window *window)
       case SDL_MOUSEBUTTONDOWN:
          if(!usemouse)
             continue;
-         d_event.type =  ev_keydown;
+         d_event.type   = ev_keydown;
+         d_event.repeat = false;
 
          switch(ev.button.button)
          {
@@ -690,6 +691,8 @@ static void I_GetEvent(SDL_Window *window)
             I_AddDeferredEvent(tempevent, gametic + 1);
             break;
          }
+
+         break;
 
       case SDL_MOUSEBUTTONUP:
          if(!usemouse)
