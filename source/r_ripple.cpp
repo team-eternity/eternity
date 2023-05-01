@@ -68,7 +68,6 @@ static void R_DrawLines(void)
 #define AMP2 2
 #define SPEED 40
 
-// THREAD_FIXME: Move into a context?
 static thread_local int   lasttex = -1;
 static thread_local int   swirltic = -1;
 static thread_local int *offset;

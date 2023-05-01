@@ -516,13 +516,13 @@ static void R_calculateTransform(int markerlinenum, int anchorlinenum,
 //
 // See r_main.cpp's R_incrementFrameid to see why this exists
 //
-static void R_incrementRenderDepth(portalcontext_t &context)
+static void R_incrementWorldPortalID(portalcontext_t &context)
 {
-   sectorboxvisit_t *&visitids    = context.visitids;
-   uint16_t          &renderdepth = context.renderdepth;
-   renderdepth++;
+   sectorboxvisit_t *&visitids      = context.visitids;
+   uint16_t          &worldportalid = context.windowid;
+   worldportalid++;
 
-   if(!renderdepth)
+   if(!worldportalid)
    {
       // it wrapped!
       C_Printf(
@@ -530,7 +530,7 @@ static void R_incrementRenderDepth(portalcontext_t &context)
          "portals for a context in a single frame. Wow... Just wow...\a\n"
       );
 
-      renderdepth = 1;
+      worldportalid = 1;
 
       // Do as the description says...
       for(int i = 0; i < numsectors; ++i)
@@ -1137,7 +1137,7 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
       cb_viewpoint.cos   = cosf(cb_viewpoint.angle);
    }
 
-   R_incrementRenderDepth(portalcontext);
+   R_incrementWorldPortalID(portalcontext);
    R_RenderBSPNode(context, numnodes - 1);
 
    // Only push the overlay if this is the head window

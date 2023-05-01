@@ -107,11 +107,11 @@ struct planecontext_t
 
 struct portalcontext_t
 {
-   uint16_t renderdepth; // THREAD_TODO: Rename this, it's a misnomer
+   uint16_t windowid;
 
    pwindow_t *unusedhead, *windowhead, *windowlast;
 
-   sectorboxvisit_t *visitids; // THREAD_FIXME: Does this go here?
+   sectorboxvisit_t *visitids;
 
    int            numportalstates;
    portalstate_t *portalstates;

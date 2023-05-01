@@ -673,7 +673,6 @@ visplane_t *R_FindPlane(cmapcontext_t &cmapcontext, planecontext_t &planecontext
    check->height = height;
    check->picnum = picnum;
    check->lightlevel = lightlevel;
-   // THREAD_TODO: Verify it should be these two values and not viewwindow.width and -1
    check->minx = bounds.endcolumn;     // Was SCREENWIDTH -- killough 11/98
    check->maxx = bounds.startcolumn - 1;
    check->offs = offs;               // killough 2/28/98: Save offsets

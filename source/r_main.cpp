@@ -770,8 +770,7 @@ static void R_incrementFrameid()
       // Do as the description says...
       R_ForEachContext([](rendercontext_t &context) {
          sectorboxvisit_t *visitids = context.portalcontext.visitids;
-         for(int i = 0; i < numsectors; ++i)
-            visitids[i].floor = visitids[i].ceiling = 0;
+         memset(visitids, 0, sizeof(*visitids) * numsectors);
       });
    }
 }
@@ -782,7 +781,7 @@ static void R_incrementFrameid()
 uint64_t R_GetVisitID(const rendercontext_t &context)
 {
    const uint64_t upper32 =
-      (uint64_t(context.portalcontext.renderdepth) << 16) | uint64_t(uint16_t(context.bufferindex));
+      (uint64_t(context.portalcontext.windowid) << 16) | uint64_t(uint16_t(context.bufferindex));
    return (upper32 << 32) | uint64_t(frameid);
 }
 
@@ -1322,7 +1321,7 @@ void R_RenderViewContext(rendercontext_t &context)
 {
    memset(context.spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
    R_ClearMarkedSprites(context.spritecontext, *context.heap);
-   context.portalcontext.renderdepth = 0;
+   context.portalcontext.windowid = 0;
 
    // Clear buffers.
    R_ClearClipSegs(context.bspcontext, context.bounds);
