@@ -398,7 +398,7 @@ public:
    virtual const char *getHelpString(menuitem_t *item, char *msgbuffer) override
    {
       const char *key = G_FirstBoundKey("menu_confirm");
-      psnprintf(msgbuffer, 64, "press %s to execute", key);
+      psnprintf(msgbuffer, 64, "Press %s to execute", key);
       return msgbuffer;
    }
 
@@ -554,7 +554,7 @@ class MenuItemSlidable : public MenuItemValued
 public:
    virtual const char *getHelpString(menuitem_t *item, char *msgbuffer) override
    {
-      return "use left/right to change value";
+      return "Use left/right to change value";
    }
 
    virtual void onLeft(menuitem_t *item, bool altdown, bool shiftdown) override
@@ -659,7 +659,7 @@ public:
          (item->var->type == vt_int && item->var->max - item->var->min == 1))
       {
          const char *key = G_FirstBoundKey("menu_confirm");
-         psnprintf(msgbuffer, 64, "press %s to change", key);
+         psnprintf(msgbuffer, 64, "Press %s to change", key);
          return msgbuffer;
       }
       else
