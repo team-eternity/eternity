@@ -517,6 +517,8 @@ static void I_GetEvent(SDL_Window *window)
 
    while(SDL_PollEvent(&ev))
    {
+      d_event = { ev_keydown, 0, 0, 0, false };
+
       // haleyjd 10/08/05: from Chocolate DOOM
       if(!window_focused &&
          (ev.type == SDL_MOUSEMOTION     ||
@@ -623,8 +625,7 @@ static void I_GetEvent(SDL_Window *window)
       case SDL_MOUSEBUTTONDOWN:
          if(!usemouse)
             continue;
-         d_event.type   = ev_keydown;
-         d_event.repeat = false;
+         d_event.type =  ev_keydown;
 
          switch(ev.button.button)
          {

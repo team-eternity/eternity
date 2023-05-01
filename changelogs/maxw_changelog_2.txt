@@ -279,7 +279,8 @@ Added ability to use the IWAD picker with controllers, as well as exit ENDOOM.
 
 --------------------------------------------------------------------------------
 2023/05/01
-Fixed issue where mouse button inputs would sometimes be ignored.
+Fixed issue where non-keyboard inputs would sometimes be ignored while holding
+down any keyboard keys.
 
 ================================================================================
 EOF
