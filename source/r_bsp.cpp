@@ -2788,7 +2788,7 @@ static void R_renderPolyNode(bspcontext_t &bspcontext, cmapcontext_t &cmapcontex
 {
    while(node)
    {
-      int side = R_PointOnDynaSegSide(node->partition, cb_viewpoint.x, cb_viewpoint.y);
+      const int side = R_PointOnDynaSegSide(node->partition, cb_viewpoint.x, cb_viewpoint.y);
 
       // render frontspace
       R_renderPolyNode(
@@ -2803,7 +2803,7 @@ static void R_renderPolyNode(bspcontext_t &bspcontext, cmapcontext_t &cmapcontex
       );
 
       // continue to render backspace
-      node = node->children[side^1];
+      node = node->children[side ^ 1];
    }
 }
 

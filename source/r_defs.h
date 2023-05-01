@@ -48,12 +48,13 @@ struct dynavertex_t;
 
 // Silhouette, needed for clipping Segs (mainly)
 // and sprites representing things.
-#define SIL_NONE    0
-#define SIL_BOTTOM  1
-#define SIL_TOP     2
-#define SIL_BOTH    3
-
-#define MAXDRAWSEGS   256
+enum silhouette_e : byte
+{
+   SIL_NONE = 0,
+   SIL_BOTTOM,
+   SIL_TOP,
+   SIL_BOTH,
+};
 
 extern int r_blockmap;
 
@@ -662,9 +663,9 @@ struct visplane_t
    visplane_t *next;        // Next visplane in hash chain -- killough
    int picnum, lightlevel, minx, maxx;
    fixed_t height;
-   lighttable_t *(*colormap)[MAXLIGHTZ];
-   lighttable_t *fullcolormap;   // SoM: Used by slopes.
-   lighttable_t *fixedcolormap;  // haleyjd 10/16/06
+   const lighttable_t *const (*colormap)[MAXLIGHTZ];
+   const lighttable_t *fullcolormap;   // SoM: Used by slopes.
+   const lighttable_t *fixedcolormap;  // haleyjd 10/16/06
    v2fixed_t offs;         // killough 2/28/98: Support scrolling flats
    v2float_t scale;
 

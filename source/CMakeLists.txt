@@ -432,7 +432,6 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/steam.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/tables.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/version.h"
-      "${CMAKE_CURRENT_SOURCE_DIR}/concurrentqueue/concurrentqueue.h"
       SOURCE_GROUP "Source Files\\\\Misc\\\\Misc Source"
       "${CMAKE_CURRENT_SOURCE_DIR}/info.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/psnprntf.cpp"

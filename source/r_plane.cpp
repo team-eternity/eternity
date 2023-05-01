@@ -157,7 +157,7 @@ VALLOCATION(spanstart)
 
 VALLOCATION(slopespan)
 {
-   cb_slopespan_t::colormap = ecalloctag(lighttable_t **, w, sizeof(lighttable_t *), PU_VALLOC, nullptr);
+   cb_slopespan_t::colormap = ecalloctag(const lighttable_t **, w, sizeof(const lighttable_t *), PU_VALLOC, nullptr);
 }
 
 float slopevis; // SoM: used in slope lighting
@@ -312,7 +312,7 @@ static void R_mapSlope(const R_FlatFunc, const R_SlopeFunc slopefunc,
                        cb_span_t &span, cb_slopespan_t &slopespan, const cb_plane_t &plane,
                        int y, int x1, int x2)
 {
-   rslope_t *slope = plane.slope;
+   const rslope_t *slope = plane.slope;
    int count = x2 - x1;
    v3double_t s;
    double map1, map2;
@@ -1042,7 +1042,7 @@ static void R_drawSky(ZoneHeap &heap, angle_t viewangle, const visplane_t *pl, c
 
    // We need the translucency map to exist because we fade the sky to a single color when looking
    // above it.
-   if (!main_tranmap)
+   if(!main_tranmap)
       R_InitTranMap(false);
 
    // killough 10/98: Use sky scrolling offset, and possibly flip picture
@@ -1084,10 +1084,10 @@ static void do_draw_plane(cmapcontext_t &context, ZoneHeap &heap, int *const spa
    if(skyflat || pl->picnum & PL_SKYFLAT)  // sky flat
       R_drawSky(heap, viewangle, pl, skyflat);
    else // regular flat
-   {  
-      texture_t *tex;
-      int        stop, light;
-      int        stylenum;
+   {
+      const texture_t *tex;
+      int stop, light;
+      int stylenum;
 
       cb_span_t      span{};
       cb_slopespan_t slopespan{};
@@ -1096,7 +1096,7 @@ static void do_draw_plane(cmapcontext_t &context, ZoneHeap &heap, int *const spa
       R_FlatFunc  flatfunc  = R_Throw;
       R_SlopeFunc slopefunc = R_ThrowSlope;
 
-      int picnum = texturetranslation[pl->picnum];
+      const int picnum = texturetranslation[pl->picnum];
 
       // haleyjd 05/19/06: rewritten to avoid crashes
       // ioanch: apply swirly if original (pl->picnum) has the flag. This is so

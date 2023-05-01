@@ -162,7 +162,7 @@ struct vissprite_t
 
   // for color translation and shadow draw, maxbright frames as well
         // sf: also coloured lighting
-  lighttable_t *colormap;
+  const lighttable_t *colormap;
   int colour;   //sf: translated colour
 
   // killough 3/27/98: height sector for underwater/fake ceiling support
@@ -182,6 +182,13 @@ struct drawsegs_xrange_t
 {
    int x1, x2;
    drawseg_t *user;
+};
+
+// Already-drawn sprite hashing
+struct drawnsprite_t
+{
+   const Mobj *thing;
+   drawnsprite_t *next;
 };
 
 //=============================================================================
@@ -1050,8 +1057,8 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
                             const contextbounds_t &bounds,
                             const portalrender_t &portalrender,
                             const Mobj *const thing,
-                            lighttable_t *const *const spritelights,
-                            v3fixed_t *delta = nullptr,
+                            const lighttable_t *const *const spritelights,
+                            const v3fixed_t *const delta = nullptr,
                             const line_t *portalline = nullptr)
 {
    spritepos_t    spritepos;
@@ -1361,8 +1368,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
                   const portalrender_t &portalrender,
                   sector_t* sec, int lightlevel)
 {
-   int            lightnum;
-   lighttable_t **spritelights;
+   const lighttable_t *const *spritelights;
 
    // BSP is traversed by subsector.
    // A sector might have been split into several
@@ -1375,7 +1381,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
    // Well, now it will be done.
    spritecontext.sectorvisited[sec - sectors] = true;
 
-   lightnum = (lightlevel >> LIGHTSEGSHIFT)+(extralight * LIGHTBRIGHT);
+   const int lightnum = (lightlevel >> LIGHTSEGSHIFT)+(extralight * LIGHTBRIGHT);
 
    if(lightnum < 0)
       spritelights = cmapcontext.scalelight[0];
@@ -1441,7 +1447,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
 // Draws player gun sprites.
 //
 static void R_drawPSprite(const pspdef_t *psp,
-                          lighttable_t *const *const spritelights,
+                          const lighttable_t *const *const spritelights,
                           float *const mfloorclip, float *const mceilingclip)
 {
    float         tx;
@@ -1614,7 +1620,7 @@ void R_DrawPlayerSprites()
    const pspdef_t *psp;
    sector_t tmpsec;
    int floorlightlevel, ceilinglightlevel;
-   lighttable_t **spritelights;
+   const lighttable_t *const *spritelights;
    
    // sf: psprite switch
    if(!showpsprites || viewcamera) return;
@@ -2559,7 +2565,7 @@ static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &sprit
       }
       else
       {
-         lighttable_t **ltable;
+         const lighttable_t *const *ltable;
          static thread_local sector_t tmpsec;
          int floorlightlevel, ceilinglightlevel, lightnum, index;
 

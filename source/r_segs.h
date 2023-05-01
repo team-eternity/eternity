@@ -58,22 +58,22 @@ struct drawseg_t
    const seg_t *curline;
    int x1, x2;
    float dist1, dist2, diststep;
-   fixed_t bsilheight;                   // do not clip sprites above this
-   fixed_t tsilheight;                   // do not clip sprites below this
+   fixed_t bsilheight; // do not clip sprites above this
+   fixed_t tsilheight; // do not clip sprites below this
 
    // sf: colormap to be used when drawing the drawseg
    // for coloured lighting
-   lighttable_t *(*colormap)[MAXLIGHTSCALE];
-   lighttable_t *fixedcolormap;
+   const lighttable_t *const (*colormap)[MAXLIGHTSCALE];
+   const lighttable_t *fixedcolormap;
 
    // Pointers to lists for sprite clipping,
    // all three adjusted so [x1] is first value.
    const float *sprtopclip, *sprbottomclip;
    float *maskedtexturecol;
 
-   byte silhouette;                      // 0=none, 1=bottom, 2=top, 3=both
+   byte silhouette; // 0=none, 1=bottom, 2=top, 3=both
 
-   fixed_t deltaz;   // z offset if seen behind anchored portals
+   fixed_t deltaz; // z offset if seen behind anchored portals
 };
 
 #endif

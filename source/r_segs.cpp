@@ -75,7 +75,7 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
    float    scale, scalestep;
    float    texmidf;
    line_t  *linedef;
-   lighttable_t **wlight;
+   const lighttable_t *const *wlight;
    float   *maskedtexturecol;
 
    cb_column_t column{};

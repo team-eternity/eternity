@@ -82,9 +82,9 @@ struct cb_span_t
 {
    int x1, x2, y;
    unsigned xfrac, yfrac, xstep, ystep;
-   void *source;
-   lighttable_t *colormap;
-   unsigned int *fg2rgb, *bg2rgb; // haleyjd 06/20/08: tl lookups
+   const void *source;
+   const lighttable_t *colormap;
+   const unsigned int *fg2rgb, *bg2rgb; // haleyjd 06/20/08: tl lookups
 
    // SoM: some values for the generalizede span drawers
    unsigned int xshift, xmask, yshift, ymask;
@@ -100,9 +100,9 @@ struct cb_slopespan_t
    double iufrac, ivfrac, idfrac;
    double iustep, ivstep, idstep;
 
-   void *source;
+   const void *source;
 
-   static inline lighttable_t **colormap;
+   static inline const lighttable_t **colormap;
 };
 
 using R_FlatFunc  = void (*)(const cb_span_t &);
@@ -123,16 +123,16 @@ struct cb_plane_t
    
    int lightlevel;
    float startmap;
-   lighttable_t **planezlight;
-   lighttable_t *colormap;
-   lighttable_t *fixedcolormap;
+   const lighttable_t *const *planezlight;
+   const lighttable_t *colormap;
+   const lighttable_t *fixedcolormap;
 
    // SoM: Texture that covers the plane
-   texture_t *tex;
-   void      *source;
+   const texture_t *tex;
+   const void      *source;
 
    // SoM: slopes.
-   rslope_t *slope;
+   const rslope_t *slope;
 
    R_MapFunc MapFunc;
 };

@@ -35,6 +35,7 @@
 
 struct cliprange_t;
 struct contextportalinfo_t;
+struct drawnsprite_t;
 struct drawseg_t;
 struct drawsegs_xrange_t;
 struct maskedrange_t;
@@ -44,12 +45,6 @@ struct sectorbox_t;
 struct vissprite_t;
 class  Mobj;
 class  ZoneHeap;
-
-struct drawnsprite_t
-{
-   const Mobj *thing;
-   drawnsprite_t *next;
-};
 
 struct contextbounds_t
 {
@@ -78,12 +73,12 @@ struct bspcontext_t
 struct cmapcontext_t
 {
    // killough 3/20/98: Allow colormaps to be dynamic (e.g. underwater)
-   lighttable_t *(*scalelight)[MAXLIGHTSCALE];
-   lighttable_t *(*zlight)[MAXLIGHTZ];
-   lighttable_t *fullcolormap;
+   const lighttable_t *const (*scalelight)[MAXLIGHTSCALE];
+   const lighttable_t *const (*zlight)[MAXLIGHTZ];
+   const lighttable_t *fullcolormap;
    // killough 3/20/98, 4/4/98: end dynamic colormaps
 
-   lighttable_t *fixedcolormap;
+   const lighttable_t *fixedcolormap;
 };
 
 struct planecontext_t

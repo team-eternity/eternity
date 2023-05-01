@@ -226,7 +226,7 @@ struct cb_seg_t
    bool f_portalignore, c_portalignore;
 
    // 8 bit tables
-   lighttable_t **walllights;
+   const lighttable_t *const *walllights;
 
    const side_t *side;
    const sector_t *frontsec, *backsec;
