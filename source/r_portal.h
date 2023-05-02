@@ -238,6 +238,7 @@ bool R_IsSkyWall(const line_t &line);
 void R_SpawnQuickLinePortal(line_t &line);
 void R_DefinePortal(const line_t &line);
 void R_ApplyPortals(sector_t &sector, int portalceiling, int portalfloor);
+void R_FindPairPortalLines(line_t &line);
 void R_ApplyPortal(line_t &line, int portal);
 
 //=============================================================================

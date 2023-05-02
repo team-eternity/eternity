@@ -2872,6 +2872,8 @@ void P_SetPortal(sector_t *sec, line_t *line, portal_t *portal, portal_effect ef
    case portal_lineonly:
       line->portal = portal;
       P_CheckLPortalState(line);
+      if(R_portalIsAnchored(portal))
+         R_FindPairPortalLines(*line);
       break;
    default:
       I_Error("P_SetPortal: unknown portal effect\n");

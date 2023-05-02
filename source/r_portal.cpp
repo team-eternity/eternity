@@ -1538,7 +1538,7 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
 //
 // Actually pairs the lines. Make sure to call from both lines
 //
-static void R_pairPortalLines(line_t &line, line_t &pline)
+static void R_pairPortalLines(line_t &line, line_t &pline, bool flipped)
 {
    line.beyondportalline = &pline;  // used with MLI_1SPORTALLINE
    if(!line.backsector)
@@ -1565,6 +1565,12 @@ static void R_pairPortalLines(line_t &line, line_t &pline)
       {
          line.portal->data.anchor.polyportalpartner = pline.portal;
          pline.portal->data.anchor.polyportalpartner = line.portal;
+         line.portal->data.anchor.transform.sourceline = &line;
+         line.portal->data.anchor.transform.targetline = &pline;
+         line.portal->data.anchor.transform.flipped = flipped;
+         pline.portal->data.anchor.transform.sourceline = &pline;
+         pline.portal->data.anchor.transform.targetline = &line;
+         pline.portal->data.anchor.transform.flipped = flipped;
       }
    }
 }
@@ -1652,8 +1658,8 @@ void R_SpawnQuickLinePortal(line_t &line)
    P_SetPortal(line.frontsector, &line, portals[0], portal_lineonly);
    P_SetPortal(otherline->frontsector, otherline, portals[1], portal_lineonly);
 
-   R_pairPortalLines(line, *otherline);
-   R_pairPortalLines(*otherline, line);
+   R_pairPortalLines(line, *otherline, true);
+   R_pairPortalLines(*otherline, line, true);
 
    // Now delete the special
    line.special = 0;
@@ -1860,7 +1866,7 @@ void R_ApplyPortals(sector_t &sector, int portalceiling, int portalfloor)
 // Bonds two portal lines for some features depending on it to work. Does 
 // blockmap search to find the partner.
 //
-static void R_findPairPortalLines(line_t &line)
+void R_FindPairPortalLines(line_t &line)
 {
    v2fixed_t tv1 = { line.v1->x, line.v1->y };
    v2fixed_t tv2 = { line.v2->x, line.v2->y };
@@ -1908,7 +1914,12 @@ static void R_findPairPortalLines(line_t &line)
                continue;
             }
 
-            R_pairPortalLines(line, pline);
+            bool flipped;
+            if(D_abs(pline.v2->x - tv1.x) <= FRACUNIT / 16)
+               flipped = true;
+            else
+               flipped = false;
+            R_pairPortalLines(line, pline, flipped);
             return;
          }
       }
@@ -1924,8 +1935,6 @@ void R_ApplyPortal(line_t &line, int portal)
          if(entry.id == portal)
          {
             P_SetPortal(line.frontsector, &line, entry.portal, portal_lineonly);
-            if(R_portalIsAnchored(entry.portal))
-               R_findPairPortalLines(line);
             return;
          }
 }
