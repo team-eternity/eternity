@@ -279,8 +279,13 @@ Added ability to use the IWAD picker with controllers, as well as exit ENDOOM.
 
 --------------------------------------------------------------------------------
 2023/05/01
-Fixed issue where non-keyboard inputs would sometimes be ignored while holding
-down any keyboard keys.
+Fixed non-keyboard inputs would sometimes being ignored while holding down any
+keyboard keys.
+
+--------------------------------------------------------------------------------
+2023/05/02
+Fixed instances where scrolling through weapons wouldn't work if the next weapon
+to be scrolled to is the same as the currently-equipped weapon.
 
 ================================================================================
 EOF
