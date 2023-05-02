@@ -47,10 +47,6 @@ include(GNUInstallDirs)
 # Useful if zlib is being built alongside this as a sub-project.
 option(PNG_BUILD_ZLIB "Custom zlib Location, else find_package is used" OFF)
 
-# needed packages
-set(ZLIB_LIBRARY zlibstatic)
-set(ZLIB_INCLUDE_DIR ../zlib)
-
 if(NOT PNG_BUILD_ZLIB)
   find_package(ZLIB REQUIRED)
   include_directories(${ZLIB_INCLUDE_DIRS})
