@@ -1095,7 +1095,6 @@ static void FillBuffer()
             }
             else if(song.looping)
             {
-               RestartTracks();
                for(unsigned int i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
                   SendShortMsg(0, MIDI_EVENT_CONTROLLER, i, MIDI_CONTROLLER_RESET_ALL_CTRLS, 0);
 
