@@ -21,6 +21,10 @@
 // DESCRIPTION:  
 //    SDL Timer Implementation
 //
+// Some of this code is taken from Woof!'s i_timer.c, authored by Roman Fomin
+// and Fabian Greffrath, and used under terms of the GPLv2+.
+//
+//
 //-----------------------------------------------------------------------------
 
 #include "SDL.h"
@@ -40,38 +44,17 @@
 // Most of the following has been rewritten by Lee Killough
 //
 
-static Uint32 basetime = 0;
+static Uint64 basecounter = 0;
+static Uint64 basefreq    = 0;
 
-//
-// I_SDLGetTime_RealTime
-//
-static int I_SDLGetTime_RealTime()
+static int MSToTic(uint32_t time)
 {
-   Uint32 t = SDL_GetTicks();
-
-   // e6y: removing startup delay
-   if(!basetime)
-      basetime = t;
-
-   // milliseconds since SDL initialization
-   return (int)(((t - basetime) * TICRATE) / 1000);
+   return time * TICRATE / 1000;
 }
 
-//
-// I_SDLGetTime_Scaled
-//
-static int I_SDLGetTime_Scaled()
+static uint64_t TicToCounter(int tic)
 {
-   return (int)(((int64_t)I_SDLGetTime_RealTime() * I_GetTime_Scale) >> CLOCK_BITS);
-}
-
-//
-// I_SDLGetTime_FastDemo
-//
-static int I_SDLGetTime_FastDemo()
-{
-   static int fasttic;
-   return fasttic++;
+   return uint64_t(tic) * basefreq / TICRATE;
 }
 
 //
@@ -81,7 +64,42 @@ static int I_SDLGetTime_FastDemo()
 //
 static unsigned int I_SDLGetTicks()
 {
-   return SDL_GetTicks();
+   const Uint64 counter = SDL_GetPerformanceCounter();
+
+   if(basecounter == 0)
+      basecounter = counter;
+
+   return int(((counter - basecounter) * 1000ull) / basefreq);
+}
+
+//
+// I_SDLGetTime_RealTime
+//
+static int I_SDLGetTime_RealTime()
+{
+   return MSToTic(I_SDLGetTicks());
+}
+
+//
+// I_SDLGetTime_Scaled
+//
+static int I_SDLGetTime_Scaled()
+{
+   const Uint64 counter = SDL_GetPerformanceCounter() * realtic_clock_rate / 100;
+
+   if(basecounter == 0)
+      basecounter = counter;
+
+   return int(((counter - basecounter) * 1000ull) / basefreq);
+}
+
+//
+// I_SDLGetTime_FastDemo
+//
+static int I_SDLGetTime_FastDemo()
+{
+   static int fasttic;
+   return fasttic++;
 }
 
 //
@@ -181,6 +199,8 @@ static void I_SDLSaveMS()
 //
 void I_SDLInitTimer()
 {
+   basefreq = SDL_GetPerformanceFrequency();
+
    // initialize GetTime, which gets time in gametics
    // killough 4/14/98: Adjustable speedup based on realtic_clock_rate
    if(fastdemo)
