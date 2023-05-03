@@ -44,13 +44,13 @@
 #pragma pack(push, 1)
 #endif
 
-struct chunk_header_t
+struct PACKED_PREFIX chunk_header_t PACKED_SUFFIX
 {
    byte chunk_id[4];
    unsigned int chunk_size;
 };
 
-struct midi_header_t
+struct PACKED_PREFIX midi_header_t PACKED_SUFFIX
 {
    chunk_header_t chunk_header;
    unsigned short format_type;
