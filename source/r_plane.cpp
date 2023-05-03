@@ -96,7 +96,7 @@ constexpr unsigned int visplane_hash(const unsigned int picnum, const unsigned i
    return ((picnum * 3) + lightlevel + (height * 7)) % chains;
 }
 
-static float *g_openings = nullptr;
+float *g_openings = nullptr;
 
 // killough 8/1/98: set static number of openings to be large enough
 // (a static limit is okay in this case and avoids difficulties in r_segs.c)

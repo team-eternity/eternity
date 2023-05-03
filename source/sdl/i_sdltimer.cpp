@@ -72,6 +72,19 @@ static unsigned int I_SDLGetTicks()
    return int(((counter - basecounter) * 1000ull) / basefreq);
 }
 
+//
+// Return time in microseconds
+//
+static uint64_t I_SDLGetTimeUS()
+{
+   const Uint64 counter = SDL_GetPerformanceCounter();
+
+   if(basecounter == 0)
+      basecounter = counter;
+
+   return ((counter - basecounter) * 1000000ull) / basefreq;
+}
+
 static int time_scale = 100;
 
 //
@@ -235,6 +248,7 @@ void I_SDLInitTimer()
    // initialize constant methods
    i_haltimer.GetRealTime  = I_SDLGetTime_RealTime;
    i_haltimer.GetTicks     = I_SDLGetTicks;
+   i_haltimer.GetTimeUS    = I_SDLGetTimeUS;
    i_haltimer.Sleep        = I_SDLSleep;
    i_haltimer.StartDisplay = I_SDLStartDisplay;
    i_haltimer.EndDisplay   = I_SDLEndDisplay;

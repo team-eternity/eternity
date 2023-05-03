@@ -663,7 +663,7 @@ void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHe
       {
          post->masked = zhstructalloc(heap, maskedrange_t, 1);
 
-         float *buf = zhmalloc(heap, float *, 2 * bounds.numcolumns * sizeof(float)); // THREAD_FIXME: May not be load-balance friendly?
+         float *buf = zhmalloc(heap, float *, 2 * viewwindow.width * sizeof(float));
          post->masked->ceilingclip = buf;
          post->masked->floorclip   = buf + bounds.numcolumns;
       }

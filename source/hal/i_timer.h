@@ -39,6 +39,7 @@ typedef void         (*HAL_ChangeClockRateFunc)();
 
 typedef int          (*HAL_GetTimeFunc)();
 typedef unsigned int (*HAL_GetTicksFunc)();
+typedef uint64_t     (*HAL_GetTimeUSFunc)();
 typedef void         (*HAL_SleepFunc)(int);
 typedef void         (*HAL_StartDisplayFunc)();
 typedef void         (*HAL_EndDisplayFunc)();
@@ -58,6 +59,7 @@ struct HALTimer
    HAL_GetTimeFunc         GetTime;         // get time in gametics, possibly scaled
    HAL_GetTimeFunc         GetRealTime;     // get time in gametics regardless of scaling
    HAL_GetTicksFunc        GetTicks;        // get time in milliseconds
+   HAL_GetTimeUSFunc       GetTimeUS;       // get time in microseconds
    HAL_SleepFunc           Sleep;           // sleep for time in milliseconds
    HAL_StartDisplayFunc    StartDisplay;    // call at beginning of drawing for interpolation
    HAL_EndDisplayFunc      EndDisplay;      // call at end of drawing for interpolation

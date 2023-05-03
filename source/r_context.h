@@ -179,6 +179,8 @@ struct rendercontext_t
    contextbounds_t bounds;
    viewpoint_t     view;
    cbviewpoint_t   cb_view;
+
+   int64_t duration;
 };
 
 // The global context is for single-threaded things that still require a context

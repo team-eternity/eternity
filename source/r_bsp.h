@@ -26,6 +26,9 @@
 #ifndef R_BSP_H__
 #define R_BSP_H__
 
+#include "m_surf.h"
+#include "r_defs.h"
+
 struct windowlinegen_t;
 struct drawseg_t;
 struct line_t;
@@ -38,6 +41,11 @@ struct portalrender_t;
 struct cbviewpoint_t;
 struct rendercontext_t;
 struct rpolynode_t;
+
+struct cliprange_t
+{
+   int first, last;
+};
 
 // SoM: mark a range of the screen as being solid (closed).
 // these marks are then added to the solidsegs list by R_addLine after all segments

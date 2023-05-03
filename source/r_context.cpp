@@ -41,6 +41,7 @@
 #include "hal/i_timer.h"
 #include "i_video.h"
 #include "m_compare.h"
+#include "r_bsp.h"
 #include "r_context.h"
 #include "r_draw.h"
 #include "r_main.h"
@@ -411,6 +412,57 @@ static void R_checkForContextErrors()
       I_Error("%s", errorMessage.constPtr());
 }
 
+extern float *g_openings;
+extern cliprange_t *g_solidsegs;
+
+static void R_loadBalance()
+{
+   if(r_numcontexts == 1)
+      return;
+
+   uint64_t totalTime = 0;
+   for(int i = 0; i < r_numcontexts; i++)
+      totalTime += renderdatas[i].context.duration;
+
+   double desiredTimePerContext = double(totalTime) / r_numcontexts;
+   double lastTime = 0.0;
+   int column = 0;
+   cliprange_t *buf = g_solidsegs;
+   for(int i = 0; i < r_numcontexts; i++)
+   {
+      rendercontext_t &context = renderdatas[i].context;
+
+      const double timePerColumn = double(context.duration) / context.bounds.numcolumns;
+      const double targetTime    = lastTime + desiredTimePerContext;
+      double timeEnd = lastTime;
+
+      context.bounds.fstartcolumn = float(column);
+      context.bounds.startcolumn  = column;
+
+      while(timeEnd < targetTime && column != viewwindow.width)
+      {
+         column++;
+         timeEnd += timePerColumn;
+      }
+      lastTime = timeEnd;
+
+      context.bounds.fendcolumn = float(column);
+      context.bounds.endcolumn  = column;
+
+      context.bounds.numcolumns = context.bounds.endcolumn - context.bounds.startcolumn;
+
+      context.planecontext.openings = g_openings + context.bounds.startcolumn * viewwindow.height;
+      context.planecontext.lastopening = context.planecontext.openings;
+
+      const int CONTEXTSEGS = context.bounds.numcolumns / 2 + 1;
+
+      context.bspcontext.solidsegs = buf;
+      buf += CONTEXTSEGS;
+      context.bspcontext.addedsegs = buf;
+      buf += CONTEXTSEGS;
+   }
+}
+
 //
 // Runs all the contexts by setting the waiting-for-frame atomics bool to true,
 // then waits for the frame-finished-rendering atomic bools to be true
@@ -449,6 +501,8 @@ void R_RunContexts()
    I_SetErrorHandler(nullptr);
 
    R_checkForContextErrors();
+
+   R_loadBalance();
 }
 
 #if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) && !defined(_DEBUG)

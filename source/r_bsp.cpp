@@ -33,6 +33,7 @@
 #include "p_maputl.h"   // ioanch 20160125
 #include "p_portal.h"
 #include "p_slopes.h"
+#include "r_bsp.h"
 #include "r_context.h"
 #include "r_data.h"
 #include "r_draw.h"
@@ -80,12 +81,6 @@ void R_ClearDrawSegs(bspcontext_t &context)
 // clip based on solidsegs because the first solidseg is from MININT,
 // context.startcolumn - 1 to context.endcolumn, MAXINT
 
-struct cliprange_t
-{
-  int first, last;
-};
-
-
 // 1/11/98: Lee Killough
 //
 // This fixes many strange venetian blinds crashes, which occurred when a scan
@@ -104,7 +99,7 @@ struct cliprange_t
 
 #define MAXSEGS (w/2+r_numcontexts)   /* killough 1/11/98, 2/8/98 */
 
-static cliprange_t *g_solidsegs = nullptr;
+cliprange_t *g_solidsegs = nullptr;
 
 VALLOCATION(solidsegs)
 {
@@ -120,7 +115,6 @@ VALLOCATION(solidsegs)
       {
          rendercontext_t &basecontext = R_GetContext(i);
          bspcontext_t    &context     = basecontext.bspcontext;
-         ZoneHeap        &heap        = *basecontext.heap;
          const int        CONTEXTSEGS = basecontext.bounds.numcolumns / 2 + 1;
 
          context.solidsegs  = buf;

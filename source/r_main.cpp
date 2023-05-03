@@ -1319,6 +1319,8 @@ angle_t R_WadToAngle(int wadangle)
 //
 void R_RenderViewContext(rendercontext_t &context)
 {
+   const int64_t starttime = i_haltimer.GetTimeUS();
+
    memset(context.spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
    R_ClearMarkedSprites(context.spritecontext, *context.heap);
    context.portalcontext.windowid = 0;
@@ -1357,6 +1359,8 @@ void R_RenderViewContext(rendercontext_t &context)
    // Draw Post-BSP elements such as sprites, masked textures, and portal
    // overlays
    R_DrawPostBSP(context);
+
+   context.duration = i_haltimer.GetTimeUS() - starttime;
 }
 
 static int render_ticker = 0;
