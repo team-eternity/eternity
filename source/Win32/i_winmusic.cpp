@@ -177,19 +177,22 @@ static buffer_t buffer;
 
 static bool initial_playback = false;
 
-// Message box for midiStream errors.
+// Check for midiStream errors.
 
 static void MidiError(const char *prefix, DWORD dwError)
 {
-   char szErrorBuf[MAXERRORLENGTH];
+   wchar_t werror[MAXERRORLENGTH];
    MMRESULT mmr;
 
-   mmr = midiOutGetErrorText(dwError, (LPSTR)szErrorBuf, MAXERRORLENGTH);
+   mmr = midiOutGetErrorTextW(dwError, (LPWSTR)werror, MAXERRORLENGTH);
    if(mmr == MMSYSERR_NOERROR)
    {
-      qstring msg;
-      msg.Printf(0, "%s: %s", prefix, szErrorBuf);
-      MessageBox(NULL, msg.constPtr(), "midiStream Error", MB_ICONEXCLAMATION);
+      const int len = WideCharToMultiByte(CP_UTF8, 0, werror, -1, NULL, 0, NULL, NULL);
+      char *error = ecalloc(char *, len, 1);
+      WideCharToMultiByte(CP_UTF8, 0, werror, -1, error, len, nullptr, nullptr);
+
+      fprintf(stderr, "%s: %s.\n", prefix, error);
+      efree(error);
    }
    else
       fprintf(stderr, "%s: Unknown midiStream error.\n", prefix);
