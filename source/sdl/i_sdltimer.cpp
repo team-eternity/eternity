@@ -72,12 +72,29 @@ static unsigned int I_SDLGetTicks()
    return int(((counter - basecounter) * 1000ull) / basefreq);
 }
 
+static int time_scale = 100;
+
+//
+// Gets the current performance counter, but for scaled time
+//
+static uint64_t I_SDLGetPerfCounter_Scaled()
+{
+   uint64_t counter;
+
+   counter = SDL_GetPerformanceCounter() * time_scale / 100;
+
+   if(basecounter == 0)
+      basecounter = counter;
+
+   return counter - basecounter;
+}
+
 //
 // As above but for scaled time
 //
 static unsigned int I_SDLGetTicks_Scaled()
 {
-   const Uint64 counter = SDL_GetPerformanceCounter() * realtic_clock_rate / 100;
+   const Uint64 counter = SDL_GetPerformanceCounter() * time_scale / 100;
 
    if(basecounter == 0)
       basecounter = counter;
@@ -141,7 +158,7 @@ static float        rendertic_msec;
 //
 static void I_SDLSetMSec()
 {
-   rendertic_msec = (float)realtic_clock_rate * TICRATE / 100000.0f;
+   rendertic_msec = (float)time_scale * TICRATE / 100000.0f;
 }
 
 //
@@ -207,7 +224,8 @@ static void I_SDLSaveMS()
 //
 void I_SDLInitTimer()
 {
-   basefreq = SDL_GetPerformanceFrequency();
+   basefreq   = SDL_GetPerformanceFrequency();
+   time_scale = realtic_clock_rate;
 
    // initialize GetTime, which gets time in gametics
    // killough 4/14/98: Adjustable speedup based on realtic_clock_rate
@@ -242,6 +260,10 @@ void I_SDLChangeClockRate()
 {
    if(fastdemo)
       return;
+
+   const uint64_t counter = I_SDLGetPerfCounter_Scaled();
+   time_scale = realtic_clock_rate;
+   basecounter += (I_SDLGetPerfCounter_Scaled() - counter);
 
    if(I_GetTime_Scale != CLOCK_UNIT)
       i_haltimer.GetTime = I_SDLGetTime_Scaled;
