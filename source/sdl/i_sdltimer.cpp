@@ -90,7 +90,7 @@ static uint64_t I_SDLGetPerfCounter_Scaled()
 }
 
 //
-// As above but for scaled time
+// As I_SDLGetTicks but for scaled time
 //
 static unsigned int I_SDLGetTicks_Scaled()
 {
