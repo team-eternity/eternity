@@ -73,6 +73,19 @@ static unsigned int I_SDLGetTicks()
 }
 
 //
+// As above but for scaled time
+//
+static unsigned int I_SDLGetTicks_Scaled()
+{
+   const Uint64 counter = SDL_GetPerformanceCounter() * realtic_clock_rate / 100;
+
+   if(basecounter == 0)
+      basecounter = counter;
+
+   return int(((counter - basecounter) * 1000ull) / basefreq);
+}
+
+//
 // I_SDLGetTime_RealTime
 //
 static int I_SDLGetTime_RealTime()
@@ -85,12 +98,7 @@ static int I_SDLGetTime_RealTime()
 //
 static int I_SDLGetTime_Scaled()
 {
-   const Uint64 counter = SDL_GetPerformanceCounter() * realtic_clock_rate / 100;
-
-   if(basecounter == 0)
-      basecounter = counter;
-
-   return int(((counter - basecounter) * 1000ull) / basefreq);
+   return MSToTic(I_SDLGetTicks_Scaled());
 }
 
 //
