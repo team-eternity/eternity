@@ -40,8 +40,6 @@
 //
 inline bool I_IsWindowsVistaOrHigher()
 {
-#pragma comment(lib, "version.lib")
-
    static const CHAR kernel32[] = "\\kernel32.dll";
    CHAR *path;
    void *ver, *block;

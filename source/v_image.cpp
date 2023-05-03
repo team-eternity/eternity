@@ -34,9 +34,6 @@
 #include "v_image.h"
 #include "z_auto.h"
 
-// Need libpng
-#include "png.h"
-
 //=============================================================================
 //
 // VPalette
@@ -251,12 +248,13 @@ bool VImageManager::resourceIsPatch(void *data, size_t size)
 //
 bool VImageManager::resourceIsPNG(void *data, size_t size)
 {
+   constexpr byte PNG_SIGNATURE[8] = { 137, 80, 78, 71, 13, 10, 26, 10 };
+
    // check minimum size (need at least a bit more than the header)
    if(size <= 8)
       return false;
 
-   // libpng can sort out the rest
-   return !png_sig_cmp((png_const_bytep)data, 0, 8);
+   return !memcmp(data, PNG_SIGNATURE, sizeof(PNG_SIGNATURE));
 }
 
 //

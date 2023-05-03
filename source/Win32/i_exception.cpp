@@ -28,7 +28,7 @@
 //
 //-----------------------------------------------------------------------------
 
-#if defined(_WIN32)
+#if defined(_MSC_VER)
 
 #include <windows.h>
 #include <tchar.h>

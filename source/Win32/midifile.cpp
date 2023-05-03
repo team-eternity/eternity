@@ -44,19 +44,19 @@
 #pragma pack(push, 1)
 #endif
 
-struct chunk_header_t
+struct PACKED_PREFIX chunk_header_t
 {
    byte chunk_id[4];
    unsigned int chunk_size;
-};
+} PACKED_SUFFIX;
 
-struct midi_header_t
+struct PACKED_PREFIX midi_header_t
 {
    chunk_header_t chunk_header;
    unsigned short format_type;
    unsigned short num_tracks;
    unsigned short time_division;
-};
+} PACKED_SUFFIX;
 
 // haleyjd 09/09/10: packing off.
 #ifdef _MSC_VER
@@ -575,18 +575,6 @@ midi_file_t *MIDI_LoadFile(SDL_RWops *stream)
 unsigned int MIDI_NumTracks(midi_file_t *file)
 {
    return file->num_tracks;
-}
-
-// Get the number of events in a MIDI file.
-
-unsigned int MIDI_NumEvents(midi_file_t *file)
-{
-   unsigned int num_events = 0;
-
-   for(unsigned int i = 0; i < file->num_tracks; ++i)
-      num_events += file->tracks[i].num_events;
-
-   return num_events;
 }
 
 // Start iterating over the events in a track.

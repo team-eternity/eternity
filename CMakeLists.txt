@@ -131,9 +131,15 @@ set(WITH_CPP_EXTRAS ON)
 add_subdirectory(adlmidi)
 
 add_subdirectory(zlib)
-add_subdirectory(libpng)
 add_subdirectory(snes_spc)
 add_subdirectory(source)
+
+set(ZLIB_LIBRARY zlibstatic)
+set(ZLIB_INCLUDE_DIR ../zlib)
+set(PNG_SHARED OFF)
+set(PNG_EXECUTABLES OFF)
+set(PNG_TESTS OFF)
+add_subdirectory(libpng)
 
 if(WIN32 AND MSVC)
    add_subdirectory(eecrashreport)
