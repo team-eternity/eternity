@@ -107,9 +107,11 @@ function(eternity_target_sources _TARGET)
          "${CMAKE_CURRENT_BINARY_DIR}/Eternity.rc"
          SOURCE_GROUP "Source Files\\\\Win32\\\\Win32 Headers"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_fnames.h"
+         "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_registry.h"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_winmusic.h"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_winversion.h"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_xinput.h"
+         "${CMAKE_CURRENT_SOURCE_DIR}/Win32/midifallback.h"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/midifile.h"
          SOURCE_GROUP "Source Files\\\\Win32\\\\Win32 Source"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_exception.cpp"
@@ -118,21 +120,13 @@ function(eternity_target_sources _TARGET)
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_w32main.cpp"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_winmusic.cpp"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_xinput.cpp"
+         "${CMAKE_CURRENT_SOURCE_DIR}/Win32/midifallback.cpp"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/midifile.cpp"
       )
    endif()
 
    # macOS has no unique files currently
    if(APPLE)
-      if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/filesystem.hpp)
-         message(STATUS "Downloading gulrak filesystem to replace the C++17 one")
-         file(
-            DOWNLOAD "https://github.com/gulrak/filesystem/releases/download/v1.5.4/filesystem.hpp"
-            ${CMAKE_CURRENT_BINARY_DIR}/filesystem.hpp
-            EXPECTED_HASH SHA256=c7642621f4aabf073683e73ce3210a9d2f33e5a19544cef941138ac76b86a1ce
-         )
-      endif()
-
       # Add the base binary dir for the SDL2 symlink added from ExternalLibraries
       target_include_directories("${_TARGET}" PRIVATE ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR})
    endif(APPLE)
@@ -435,11 +429,13 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/autopalette.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/info.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/psnprntf.h"
+      "${CMAKE_CURRENT_SOURCE_DIR}/steam.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/tables.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/version.h"
       SOURCE_GROUP "Source Files\\\\Misc\\\\Misc Source"
       "${CMAKE_CURRENT_SOURCE_DIR}/info.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/psnprntf.cpp"
+      "${CMAKE_CURRENT_SOURCE_DIR}/steam.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/tables.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/version.cpp"
       SOURCE_GROUP "Source Files\\\\Mn_\\\\Mn_ Headers"
@@ -757,7 +753,7 @@ target_link_libraries(eternity ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY} ${SDL2_NET_
 if(APPLE)
    eternity_set_mac_library_output()
    # Fix the lookup to the SDL2 frameworks
-   set_target_properties(eternity PROPERTIES LINK_FLAGS "-Wl,-F${CMAKE_BINARY_DIR}")
+   set_target_properties(eternity PROPERTIES LINK_FLAGS "-Wl,-F\"${CMAKE_BINARY_DIR}\"")
    set_target_properties(eternity PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE
                                              INSTALL_RPATH "@loader_path")
 endif()
@@ -770,9 +766,17 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
    target_link_libraries(eternity winmm)
 endif()
 
+# Flatpak support
+option(BUILD_FLATPAK "Build with flatpak-friendly settings." OFF)
+if(BUILD_FLATPAK)
+   target_compile_definitions(eternity PRIVATE BUILD_FLATPAK)
+endif()
+
 if(MSVC)
+   set_property(TARGET eternity PROPERTY VS_DPI_AWARE "PerMonitor")
+
    target_compile_options(eternity PUBLIC
-                          "/MP" "/utf-8")
+                          "$<$<CONFIG:Debug>:/ZI>" "/MP" "/utf-8")
 
     if(NOT CMAKE_GENERATOR_TOOLSET MATCHES "_xp")
         target_compile_options(eternity PUBLIC "/permissive-")
@@ -784,12 +788,13 @@ if(MSVC)
 
    target_link_options(eternity PUBLIC
                        "/DYNAMICBASE:NO" "/SAFESEH:NO"
-                       "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:/MAP:$(OutDir)$(TargetName).map>")
+                       "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:/MAP:$(OutDir)$(TargetName).map>"
+                       "$<$<CONFIG:Release>:/DEBUG>")
 
    if(NOT MSVC_VERSION LESS  "1914")
       target_compile_options(eternity PUBLIC "/std:c++17")
    endif()
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT BUILD_FLATPAK)
    target_link_libraries(eternity stdc++fs)
 endif()
 

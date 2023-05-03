@@ -85,7 +85,7 @@ bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle, bool al
 
    if((player = thing->player))
    {
-      if(player->powers[pw_flight] && aboveFloor)
+      if(player->powers[pw_flight].isActive() && aboveFloor)
       {
          thing->z = thing->zref.floor + aboveFloor;
          if(thing->z + thing->height > thing->zref.ceiling)
@@ -120,7 +120,7 @@ bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle, bool al
    S_StartSound(P_SpawnMobj(pos.x, pos.y, thing->z + fogDelta, fogNum), GameModeInfo->teleSound);
 
    // Freeze player for ~.5s, but only if they don't have tome active
-   if(thing->player && !thing->player->powers[pw_weaponlevel2])
+   if(thing->player && !thing->player->powers[pw_weaponlevel2].isActive())
       thing->reactiontime = 18;
    thing->angle = angle;
    if(thing->flags & MF_MISSILE)

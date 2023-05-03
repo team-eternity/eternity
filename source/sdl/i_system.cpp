@@ -77,9 +77,6 @@ static SDL_Keymod oldmod; // SoM 3/20/2002: save old modifier key state
 void I_Shutdown()
 {
    SDL_SetModState(oldmod);
-   
-   // haleyjd 04/15/02: shutdown joystick
-   I_ShutdownGamePads();
 }
 
 //
@@ -91,7 +88,7 @@ void I_Init()
    I_InitHALTimer();
 
    // haleyjd 04/15/02: initialize joystick
-   I_InitGamePads(MN_UpdateJoystickMenus);
+   I_InitGamePads(MN_UpdateGamepadMenus);
  
    atexit(I_Shutdown);
    
@@ -146,6 +143,9 @@ void I_Quit(void)
    // affecting functions. MUST FIX.
    else if(!speedyexit) // MaxW: The user didn't Alt+F4
       I_EndDoom();
+
+   // Shutdown joystick (after ENDOOM so user can still input to exit it)
+   I_ShutdownGamePads();
 
    // SoM: 7/5/2002: Why I didn't remember this in the first place I'll never know.
    // haleyjd 10/09/05: moved down here

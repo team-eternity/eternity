@@ -44,19 +44,19 @@
 #pragma pack(push, 1)
 #endif
 
-struct chunk_header_t
+struct PACKED_PREFIX chunk_header_t
 {
    byte chunk_id[4];
    unsigned int chunk_size;
-};
+} PACKED_SUFFIX;
 
-struct midi_header_t
+struct PACKED_PREFIX midi_header_t
 {
    chunk_header_t chunk_header;
    unsigned short format_type;
    unsigned short num_tracks;
    unsigned short time_division;
-};
+} PACKED_SUFFIX;
 
 // haleyjd 09/09/10: packing off.
 #ifdef _MSC_VER
@@ -77,6 +77,7 @@ struct midi_track_iter_t
 {
    midi_track_t *track;
    unsigned int position;
+   unsigned int loop_point;
 };
 
 struct midi_file_t
@@ -576,18 +577,6 @@ unsigned int MIDI_NumTracks(midi_file_t *file)
    return file->num_tracks;
 }
 
-// Get the number of events in a MIDI file.
-
-unsigned int MIDI_NumEvents(midi_file_t *file)
-{
-   unsigned int num_events = 0;
-
-   for(unsigned int i = 0; i < file->num_tracks; ++i)
-      num_events += file->tracks[i].num_events;
-
-   return num_events;
-}
-
 // Start iterating over the events in a track.
 
 midi_track_iter_t *MIDI_IterateTrack(midi_file_t *file, unsigned int track)
@@ -598,8 +587,9 @@ midi_track_iter_t *MIDI_IterateTrack(midi_file_t *file, unsigned int track)
       I_Error("MIDI_IterateTrack: Track number greater than or equal to number of tracks\n");
 
    iter = estructalloc(midi_track_iter_t, 1);
-   iter->track    = &file->tracks[track];
-   iter->position = 0;
+   iter->track      = &file->tracks[track];
+   iter->position   = 0;
+   iter->loop_point = 0;
 
    return iter;
 }
@@ -658,112 +648,19 @@ unsigned int MIDI_GetFileTimeDivision(midi_file_t *file)
 
 void MIDI_RestartIterator(midi_track_iter_t *iter)
 {
-   iter->position = 0;
+   iter->position   = 0;
+   iter->loop_point = 0;
 }
 
-#ifdef TEST
-
-static char *MIDI_EventTypeToString(midi_event_type_t event_type)
+void MIDI_SetLoopPoint(midi_track_iter_t *iter)
 {
-   switch(event_type)
-   {
-   case MIDI_EVENT_NOTE_OFF:
-      return "MIDI_EVENT_NOTE_OFF";
-   case MIDI_EVENT_NOTE_ON:
-      return "MIDI_EVENT_NOTE_ON";
-   case MIDI_EVENT_AFTERTOUCH:
-      return "MIDI_EVENT_AFTERTOUCH";
-   case MIDI_EVENT_CONTROLLER:
-      return "MIDI_EVENT_CONTROLLER";
-   case MIDI_EVENT_PROGRAM_CHANGE:
-      return "MIDI_EVENT_PROGRAM_CHANGE";
-   case MIDI_EVENT_CHAN_AFTERTOUCH:
-      return "MIDI_EVENT_CHAN_AFTERTOUCH";
-   case MIDI_EVENT_PITCH_BEND:
-      return "MIDI_EVENT_PITCH_BEND";
-   case MIDI_EVENT_SYSEX:
-      return "MIDI_EVENT_SYSEX";
-   case MIDI_EVENT_SYSEX_SPLIT:
-      return "MIDI_EVENT_SYSEX_SPLIT";
-   case MIDI_EVENT_META:
-      return "MIDI_EVENT_META";
-
-   default:
-      return "(unknown)";
-   }
+   iter->loop_point = iter->position;
 }
 
-void PrintTrack(midi_track_t *track)
+void MIDI_RestartAtLoopPoint(midi_track_iter_t *iter)
 {
-   midi_event_t *event;
-
-   for(int i = 0; i < track->num_events; ++i)
-   {
-      event = &track->events[i];
-
-      if(event->delta_time > 0)
-      {
-         printf("Delay: %u ticks\n", event->delta_time);
-      }
-
-      printf("Event type: %s (%i)\n",
-         MIDI_EventTypeToString(event->event_type),
-         event->event_type);
-
-      switch(event->event_type)
-      {
-      case MIDI_EVENT_NOTE_OFF:
-      case MIDI_EVENT_NOTE_ON:
-      case MIDI_EVENT_AFTERTOUCH:
-      case MIDI_EVENT_CONTROLLER:
-      case MIDI_EVENT_PROGRAM_CHANGE:
-      case MIDI_EVENT_CHAN_AFTERTOUCH:
-      case MIDI_EVENT_PITCH_BEND:
-         printf("\tChannel: %u\n", event->data.channel.channel);
-         printf("\tParameter 1: %u\n", event->data.channel.param1);
-         printf("\tParameter 2: %u\n", event->data.channel.param2);
-         break;
-
-      case MIDI_EVENT_SYSEX:
-      case MIDI_EVENT_SYSEX_SPLIT:
-         printf("\tLength: %u\n", event->data.sysex.length);
-         break;
-
-      case MIDI_EVENT_META:
-         printf("\tMeta type: %u\n", event->data.meta.type);
-         printf("\tLength: %u\n", event->data.meta.length);
-         break;
-      }
-   }
+   iter->position = iter->loop_point;
 }
 
-int main(int argc, char *argv[])
-{
-   midi_file_t *file;
-
-   if(argc < 2)
-   {
-      printf("Usage: %s <filename>\n", argv[0]);
-      exit(1);
-   }
-
-   file = MIDI_LoadFile(argv[1]);
-
-   if(file == nullptr)
-   {
-      printf("Failed to open %s\n", argv[1]);
-      exit(1);
-   }
-
-   for(unsigned int i = 0; i < file->num_tracks; ++i)
-   {
-      printf("\n== Track %u ==\n\n", i);
-
-      PrintTrack(&file->tracks[i]);
-   }
-
-   return 0;
-}
-
-#endif
+// EOF
 

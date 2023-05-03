@@ -39,6 +39,7 @@
 #include "e_lib.h"
 #include "e_player.h"
 #include "e_sound.h"
+#include "e_sprite.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_weapons.h"
@@ -403,6 +404,7 @@ static dehflags_t deh_mobjflags[] =
    // flags5 bits
   {"NOTAUTOAIMED",       0x00000001, 4}, // can't be autoaimed (for real)
   {"FULLVOLSOUNDS",      0x00000002, 4}, // full-volume see/death sounds
+  {"ACTLIKEBRIDGE",      0x00000004, 4}, // unmoved by sector actions, and pickups can sit atop
 
   { nullptr,             0 }             // nullptr terminator
 };
@@ -2390,7 +2392,7 @@ static void deh_procText(DWFILE *fpin, char *line, MetaTable &gatheredData)
             // haleyjd 03/11/03: can now use the original
             // sprnames[i] = estrdup(sprnames[i]);
 
-            strncpy(sprnames[i],&inbuffer[fromlen],tolen);
+            E_UpdateSpriteName(sprnames[i], &inbuffer[fromlen], tolen);
             found = true;
             break;  // only one will match--quit early
          }
@@ -2720,7 +2722,7 @@ static void deh_procBexSprites(DWFILE *fpin, char *line, MetaTable &gatheredData
 
             // haleyjd 03/11/03: can now use original due to EDF
             // sprnames[rover] = estrdup(candidate);
-            strncpy(sprnames[rover], candidate, 4);
+            E_UpdateSpriteName(sprnames[rover], candidate, 4);
             break;
          }
          rover++;

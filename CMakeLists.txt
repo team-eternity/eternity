@@ -19,11 +19,11 @@
 ##
 ################################################################################
 ######################### CMake Configuration ##################################
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.16)
 
 # Must be before project()
-# Can't set anything below 10.9 now. Xcode will show a warning if I attempt 10.7 like before
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum macOS deployment version")
+# Can't set anything below 10.15 now (10.13 would have worked, but we want std::filesystem)
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum macOS deployment version")
 
 project("Eternity Engine"
         VERSION 4.3.0
@@ -131,9 +131,15 @@ set(WITH_CPP_EXTRAS ON)
 add_subdirectory(adlmidi)
 
 add_subdirectory(zlib)
-add_subdirectory(libpng)
 add_subdirectory(snes_spc)
 add_subdirectory(source)
+
+set(ZLIB_LIBRARY zlibstatic)
+set(ZLIB_INCLUDE_DIR ../zlib)
+set(PNG_SHARED OFF)
+set(PNG_EXECUTABLES OFF)
+set(PNG_TESTS OFF)
+add_subdirectory(libpng)
 
 if(WIN32 AND MSVC)
    add_subdirectory(eecrashreport)

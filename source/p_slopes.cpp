@@ -31,11 +31,14 @@
 #include "ev_specials.h"
 #include "i_system.h"
 #include "m_bbox.h"
+#include "p_map3d.h"
 #include "p_slopes.h"
 #include "p_spec.h"
 #include "r_defs.h"
 #include "r_state.h"
 #include "v_misc.h"
+
+slopeheight_t *pSlopeHeights;
 
 //
 // P_MakeSlope
@@ -83,6 +86,7 @@ static pslope_t *P_MakeSlope(const v3float_t &o, const v2float_t &d,
 
       ret->normalf = d1 % d2;
       ret->normalf /= ret->normalf.abs();
+      ret->normal = v3fixed_t::floatToFixed(ret->normalf);
    }
 
    //
@@ -111,6 +115,101 @@ static pslope_t *P_CopySlope(const pslope_t *src, const surface_t &surface)
    ret->surfaceZOffsetF = ret->of.z - surface.heightf;
 
    return ret;
+}
+
+//
+// Sets up the slope height list per sector.
+//
+static void P_initSlopeHeights()
+{
+   pSlopeHeights = estructalloctag(slopeheight_t, numsectors, PU_LEVEL);
+   for(int i = 0; i < numsectors; ++i)
+   {
+      const sector_t &sector = sectors[i];
+      if((!sector.srf.floor.slope && !sector.srf.ceiling.slope) || !sector.linecount)
+         continue;
+
+      if(sector.srf.floor.slope)
+      {
+         fixed_t maxz = D_MININT;
+         for(int j = 0; j < sector.linecount; ++j)
+         {
+            const line_t &line = *sector.lines[j];
+            fixed_t z = P_GetZAt(sector.srf.floor.slope, line.v1->x, line.v1->y);
+            if(z > maxz)
+               maxz = z;
+            z = P_GetZAt(sector.srf.floor.slope, line.v2->x, line.v2->y);
+            if(z > maxz)
+               maxz = z;
+         }
+         pSlopeHeights[i].floordelta = maxz - sector.srf.floor.height;
+      }
+      if(sector.srf.ceiling.slope)
+      {
+         fixed_t minz = D_MAXINT;
+         for(int j = 0; j < sector.linecount; ++j)
+         {
+            const line_t &line = *sector.lines[j];
+            fixed_t z = P_GetZAt(sector.srf.ceiling.slope, line.v1->x, line.v1->y);
+            if(z < minz)
+               minz = z;
+            z = P_GetZAt(sector.srf.ceiling.slope, line.v2->x, line.v2->y);
+            if(z < minz)
+               minz = z;
+         }
+         pSlopeHeights[i].ceilingdelta = minz - sector.srf.ceiling.height;
+      }
+      if(!sector.srf.ceiling.slope)
+         pSlopeHeights[i].touchheight = pSlopeHeights[i].floordelta;
+      else if(!sector.srf.floor.slope)
+         pSlopeHeights[i].touchheight = -pSlopeHeights[i].ceilingdelta;
+      else
+      {
+         fixed_t mindiff = D_MAXINT;
+         for(int j = 0; j < sector.linecount; ++j)
+         {
+            const line_t &line = *sector.lines[j];
+            fixed_t zc = P_GetZAt(sector.srf.ceiling.slope, line.v1->x, line.v1->y);
+            fixed_t zf = P_GetZAt(sector.srf.floor.slope, line.v1->x, line.v1->y);
+            if(zc - zf < mindiff)
+               mindiff = zc - zf;
+            zc = P_GetZAt(sector.srf.ceiling.slope, line.v2->x, line.v2->y);
+            zf = P_GetZAt(sector.srf.floor.slope, line.v2->x, line.v2->y);
+            if(zc - zf < mindiff)
+               mindiff = zc - zf;
+         }
+         pSlopeHeights[i].touchheight = sector.srf.ceiling.height - sector.srf.floor.height
+                                                                  - mindiff;
+      }
+   }
+}
+
+//
+// After we spawn slopes, we need to update all map spawned things to fit their sloped positions
+//
+void P_repositionThingsOnSlopes()
+{
+   for(int i = 0; i < numsectors; ++i)
+   {
+      const sector_t &sector = sectors[i];
+      if(!sector.srf.floor.slope && !sector.srf.ceiling.slope)
+         continue;
+      for(Mobj *mo = sector.thinglist; mo; mo = mo->snext)
+      {
+         P_CheckPositionExt(mo, mo->x, mo->y, mo->z);
+         mo->zref = clip.zref;   // Update the Z references so they reposition vertically to slopes
+      }
+   }
+}
+
+//
+// Called from P_SpawnDeferredSpecials, this performs extra setup on slopes after they've been
+// spawned.
+//
+void P_PostProcessSlopes()
+{
+   P_initSlopeHeights();
+   P_repositionThingsOnSlopes();
 }
 
 //
@@ -501,6 +600,35 @@ float P_DistFromPlanef(const v3float_t *point, const v3float_t *pori,
    return (point->x - pori->x) * pnormal->x + 
           (point->y - pori->y) * pnormal->y +
           (point->z - pori->z) * pnormal->z;
+}
+
+static fixed_t P_DistFromPlane(const v3fixed_t &point, const v3fixed_t &pori,
+                               const v3fixed_t &pnormal)
+{
+   return FixedMul(point.x - pori.x, pnormal.x) +
+          FixedMul(point.y - pori.y, pnormal.y) +
+          FixedMul(point.z - pori.z, pnormal.z);
+}
+
+//
+// Compares two slopes using playsim compatible fields. It's the playsim-safe counterpart of
+// R_CompareSlopes
+//
+bool P_SlopesEqual(const pslope_t &s1, const pslope_t &s2)
+{
+   // Apply the same safety epsilon here as in R_CompareSlopes
+   static constexpr fixed_t epsilon = FRACUNIT >> 10;
+
+   return &s1 == &s2 || (D_abs(s1.normal.x - s2.normal.x) < epsilon &&
+                         D_abs(s1.normal.y - s2.normal.y) < epsilon &&
+                         D_abs(s1.normal.z - s2.normal.z) < epsilon &&
+                         D_abs(P_DistFromPlane(s2.o, s1.o, s1.normal)) < epsilon);
+}
+
+bool P_AnySlope(const line_t &line)
+{
+   return line.frontsector->srf.floor.slope || line.frontsector->srf.ceiling.slope ||
+      (line.backsector && (line.backsector->srf.floor.slope || line.backsector->srf.ceiling.slope));
 }
 
 //

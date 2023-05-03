@@ -24,51 +24,38 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
 
 // Some action functions are still needed here.
 #include "a_args.h"
 #include "a_common.h"
 #include "a_doom.h"
 
-#include "a_small.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_gi.h"
-#include "d_io.h"
 #include "d_mod.h"
 #include "doomstat.h"
 #include "e_args.h"
-#include "e_lib.h"
 #include "e_player.h"
-#include "e_sound.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
 #include "ev_specials.h"
-#include "g_game.h"
 #include "m_bbox.h"
+#include "m_collection.h"
 #include "metaapi.h"
-#include "p_anim.h"      // haleyjd
 #include "p_enemy.h"
 #include "p_inter.h"
-#include "p_map.h"
 #include "p_map3d.h"
-#include "p_maputl.h"
 #include "p_mobjcol.h"
 #include "p_partcl.h"
 #include "p_portal.h"
 #include "p_setup.h"
 #include "p_spec.h"
-#include "p_tick.h"
-#include "r_defs.h"
 #include "r_main.h"
-#include "r_pcheck.h"
 #include "r_portal.h"
 #include "r_state.h"
 #include "s_sound.h"
-#include "sounds.h"
-#include "w_wad.h"
 
 extern fixed_t FloatBobOffsets[64]; // haleyjd: Float Bobbing
 
@@ -83,16 +70,13 @@ static Mobj *current_actor;
 //
 
 //
-// P_RecursiveSound
-//
 // Called by P_NoiseAlert.
 // Recursively traverse adjacent sectors,
 // sound blocking lines cut off traversal.
 //
 // killough 5/5/98: reformatted, cleaned up
 //
-static void P_RecursiveSound(sector_t *sec, const int soundblocks,
-                             Mobj *soundtarget)
+static void P_recursiveSound(sector_t *sec, const int soundblocks, Mobj *soundtarget)
 {
    // wake up all monsters in this sector
    if(sec->validcount == validcount &&
@@ -112,7 +96,7 @@ static void P_RecursiveSound(sector_t *sec, const int soundblocks,
       int neighcount;
       const int *neighlist = P_GetSectorPortalNeighbors(*sec, surf, &neighcount);
       for(int i = 0; i < neighcount; ++i)
-         P_RecursiveSound(&sectors[neighlist[i]], soundblocks, soundtarget);
+         P_recursiveSound(&sectors[neighlist[i]], soundblocks, soundtarget);
    }
 
    for(int i = 0; i < sec->linecount; i++)
@@ -140,15 +124,94 @@ static void P_RecursiveSound(sector_t *sec, const int soundblocks,
          sector_t *iother = R_PointInSubsector(mid - nudge +
                                                v2fixed_t(check->portal->data.link.delta))->sector;
 
-         P_RecursiveSound(iother, soundblocks, soundtarget);
+         P_recursiveSound(iother, soundblocks, soundtarget);
       }
 
       other=sides[check->sidenum[sides[check->sidenum[0]].sector==sec]].sector;
-      
+
       if(!(check->flags & ML_SOUNDBLOCK))
-         P_RecursiveSound(other, soundblocks, soundtarget);
+         P_recursiveSound(other, soundblocks, soundtarget);
       else if(!soundblocks)
-         P_RecursiveSound(other, 1, soundtarget);
+         P_recursiveSound(other, 1, soundtarget);
+   }
+}
+
+//
+// Called by P_NoiseAlert.
+// Iteratively traverse adjacent sectors, sound blocking lines cut off traversal.
+// Gated off by demo check since I don't trust replacing P_RecursiveSoun with an
+// iterative version to not break demos.
+//
+static void P_iterativeSound(sector_t *sec, const int soundblocks, Mobj *soundtarget)
+{
+   struct soundIteratorContext_t
+   {
+      sector_t *stack;
+      int soundblocks;
+   };
+
+   PODCollection<soundIteratorContext_t> stack;
+   stack.add({ sec, soundblocks });
+
+   while(!stack.isEmpty())
+   {
+      auto [sec, soundblocks] = stack.pop();
+
+      // wake up all monsters in this sector
+      if(sec->validcount == validcount && sec->soundtraversed <= soundblocks + 1)
+         continue; // already flooded
+
+      sec->validcount = validcount;
+      sec->soundtraversed = soundblocks + 1;
+      P_SetTarget<Mobj>(&sec->soundtarget, soundtarget);    // killough 11/98
+
+      // Check the floor and ceiling portals
+      for(surf_e surf : SURFS)
+      {
+         if(!(sec->srf[surf].pflags & PS_PASSSOUND))
+            continue;
+
+         int neighcount;
+         const int *neighlist = P_GetSectorPortalNeighbors(*sec, surf, &neighcount);
+         for(int i = 0; i < neighcount; ++i)
+            stack.add({ &sectors[neighlist[i]], soundblocks });
+      }
+
+      for(int i = 0; i < sec->linecount; i++)
+      {
+         sector_t *other;
+         const line_t *check = sec->lines[i];
+         if(!(check->flags & ML_TWOSIDED))
+            continue;
+
+         clip.open = P_LineOpening(check, nullptr);
+
+         if(clip.open.range <= 0)
+            continue; // closed door
+
+         // Only for front-facing wall portals
+
+         // NOTE: edge portals don't need any handling, because the sound propagates through the
+         // expanded line opening naturally to the sector behind, after which it can propagate through
+         // the sector portal.
+         if(check->pflags & PS_PASSSOUND && check->frontsector == sec)
+         {
+            v2fixed_t mid = { check->v1->x + check->dx / 2, check->v1->y + check->dy / 2 };
+            v2fixed_t nudge = P_GetSafeLineNormal(*check) / (1 << (FRACBITS - 8));
+
+            sector_t *iother = R_PointInSubsector(mid - nudge +
+               v2fixed_t(check->portal->data.link.delta))->sector;
+
+            stack.add({ iother, soundblocks });
+         }
+
+         other = sides[check->sidenum[sides[check->sidenum[0]].sector == sec]].sector;
+
+         if(!(check->flags & ML_SOUNDBLOCK))
+            stack.add({ other, soundblocks });
+         else if(!soundblocks)
+            stack.add({ other, 1 });
+      }
    }
 }
 
@@ -161,7 +224,10 @@ static void P_RecursiveSound(sector_t *sec, const int soundblocks,
 void P_NoiseAlert(Mobj *target, Mobj *emitter)
 {
    validcount++;
-   P_RecursiveSound(emitter->subsector->sector, 0, target);
+   if(demo_version >= 403)
+      P_iterativeSound(emitter->subsector->sector, 0, target);
+   else
+      P_recursiveSound(emitter->subsector->sector, 0, target);
 }
 
 //
@@ -476,6 +542,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       fixed_t y = actor->y;
       fixed_t floorz = actor->zref.floor;
       int floorgroupid = actor->zref.floorgroupid;
+      const sector_t *floorsector = actor->zref.floorsector;
       fixed_t ceilingz = actor->zref.ceiling;
       fixed_t dropoffz = actor->zref.dropoff;
       
@@ -491,6 +558,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
          actor->y = y;
          actor->zref.floor = floorz;
          actor->zref.floorgroupid = floorgroupid;
+         actor->zref.floorsector = floorsector;
          actor->zref.ceiling = ceilingz;
          actor->zref.dropoff = dropoffz;
          P_SetThingPosition(actor);
@@ -759,7 +827,12 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
 // monsters to free themselves without making them tend to
 // hang over dropoffs.
 
-static fixed_t dropoff_deltax, dropoff_deltay, floorz;
+struct avoiddropoff_t
+{
+   v2fixed_t delta;
+   fixed_t floorz;
+};
+static avoiddropoff_t avoiddropoff; // currently we change global state
 
 static bool PIT_AvoidDropoff(line_t *line, polyobj_t *po, void *context)
 {
@@ -777,7 +850,7 @@ static bool PIT_AvoidDropoff(line_t *line, polyobj_t *po, void *context)
       // The monster must contact one of the two floors,
       // and the other must be a tall dropoff (more than 24).
 
-      if(back == floorz && front < floorz - STEPSIZE)
+      if(back == avoiddropoff.floorz && front < avoiddropoff.floorz - STEPSIZE)
       {
          // front side dropoff
          angle = P_PointToAngle(0,0,line->dx,line->dy);
@@ -785,7 +858,7 @@ static bool PIT_AvoidDropoff(line_t *line, polyobj_t *po, void *context)
       else
       {
          // back side dropoff
-         if(front == floorz && back < floorz - STEPSIZE)
+         if(front == avoiddropoff.floorz && back < avoiddropoff.floorz - STEPSIZE)
             angle = P_PointToAngle(line->dx,line->dy,0,0);
          else
             return true;
@@ -793,8 +866,8 @@ static bool PIT_AvoidDropoff(line_t *line, polyobj_t *po, void *context)
 
       // Move away from dropoff at a standard speed.
       // Multiple contacted linedefs are cumulative (e.g. hanging over corner)
-      dropoff_deltax -= finesine[angle >> ANGLETOFINESHIFT]*32;
-      dropoff_deltay += finecosine[angle >> ANGLETOFINESHIFT]*32;
+      avoiddropoff.delta.x -= finesine[angle >> ANGLETOFINESHIFT]*32;
+      avoiddropoff.delta.y += finecosine[angle >> ANGLETOFINESHIFT]*32;
    }
 
    return true;
@@ -813,9 +886,9 @@ static fixed_t P_AvoidDropoff(Mobj *actor)
    int xl=((clip.bbox[BOXLEFT]  = actor->x-actor->radius)-bmaporgx)>>MAPBLOCKSHIFT;
    int bx, by;
 
-   floorz = actor->z;            // remember floor height
+   avoiddropoff.floorz = actor->z;            // remember floor height
 
-   dropoff_deltax = dropoff_deltay = 0;
+   avoiddropoff.delta = {};
 
    // check lines
 
@@ -828,7 +901,7 @@ static fixed_t P_AvoidDropoff(Mobj *actor)
    }
    
    // Non-zero if movement prescribed
-   return dropoff_deltax | dropoff_deltay;
+   return avoiddropoff.delta.x | avoiddropoff.delta.y;
 }
 
 //
@@ -858,7 +931,7 @@ void P_NewChaseDir(Mobj *actor)
           !(actor->intflags & MIF_ONMOBJ)) && // haleyjd: OVER_UNDER
          !getComp(comp_dropoff) && P_AvoidDropoff(actor)) // Move away from dropoff
       {
-         P_DoNewChaseDir(actor, dropoff_deltax, dropoff_deltay);
+         P_DoNewChaseDir(actor, avoiddropoff.delta.x, avoiddropoff.delta.y);
          
          // If moving away from dropoff, set movecount to 1 so that 
          // small steps are taken to get monster away from dropoff.

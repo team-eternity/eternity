@@ -416,7 +416,7 @@ void V_InitSubScreenModernHUD()
    {
       subwidth  = vbscreensquarepx.height * 16 / 9;
       offset    = (vbscreensquarepx.width - subwidth) / 2;
-      unscaledw = int(round(vbscreensquarepx.unscaledh * 16.0 / 9.0));
+      unscaledw = int(floor(vbscreensquarepx.unscaledh * 16.0 / 9.0)) & ~1;
       unscaledh = vbscreensquarepx.unscaledh;
    }
    else if(vbscreen.getVirtualAspectRatio() == 4 * FRACUNIT / 3 && vbscreen.getRealAspectRatio() != vbscreen.getVirtualAspectRatio())
@@ -432,7 +432,7 @@ void V_InitSubScreenModernHUD()
 
       subwidth  = vbscreen.width;
       offset    = 0;
-      unscaledw = int(round(vbscreensquarepx.unscaledh * scaleaspect));
+      unscaledw = int(floor(vbscreensquarepx.unscaledh * scaleaspect)) & ~1;
       unscaledh = vbscreensquarepx.unscaledh;
    }
 
@@ -462,7 +462,7 @@ static void V_initSubScreen43()
       offset   = (vbscreen.width - subwidth) / 2;
 
       const double scaleaspect = 1.2 * double(vbscreen.width) / double(vbscreen.height);
-      unscaledw                = int(round(SCREENHEIGHT * scaleaspect));
+      unscaledw                = int(floor(SCREENHEIGHT * scaleaspect)) & ~1;
 
       // FIXME(?): vbscreenyscaled doesn't work if unscaledw is larger than vbscreen.width,
       // which happens if the vbscreen.height < SCREENHEIGHT * 1.2 (roughly)

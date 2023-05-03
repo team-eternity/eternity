@@ -2201,7 +2201,7 @@ bool E_PlayerHasPowerName(const player_t &player, const char *name)
    int num = E_StrToNumLinear(powerStrings, NUMPOWERS, name);
    if(num == NUMPOWERS)
       return false;
-   return !!player.powers[num];
+   return !!player.powers[num].isActive();
 }
 
 //

@@ -73,7 +73,7 @@ protected:
    OutBuffer *savefile;        // valid when saving
    InBuffer  *loadfile;        // valid when loading
 
-   static constexpr int WRITE_SAVE_VERSION = 12; // Version of saves that EE writes
+   static constexpr int WRITE_SAVE_VERSION = 15; // Version of saves that EE writes
    int read_save_version;                       // Version of currently-read save
 
 
@@ -157,7 +157,15 @@ public:
 template <typename T>
 void P_ArchiveArray(SaveArchive &arc, T *ptrArray, int numElements)
 {
-   for(int i = 0; i < numElements; i++)
+   // Make sure to also archive the array length, because on later Eternity versions we may grow these arrays.
+   int numElementsActual = numElements;
+   if(arc.saveVersion() >= 13)
+   {
+      arc << numElementsActual;
+      if(numElementsActual > numElements)
+         numElementsActual = numElements; // prevent crashing anyway.
+   }
+   for(int i = 0; i < numElementsActual; i++)
       arc << ptrArray[i];
 }
 

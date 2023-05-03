@@ -143,25 +143,17 @@ void XLTokenizer::doStateInToken()
       --idx;   // backup, next call will handle it in STATE_SCAN.
       state = STATE_DONE;
       break;
-   default: 
-      if(c == '#' && (flags & TF_HASHCOMMENTS))
+   default:
+      if((c == '#' && flags & TF_HASHCOMMENTS) ||
+         (c == '/' && input[idx+1] == '/' && flags & TF_SLASHCOMMENTS) ||
+         (flags & TF_OPERATORS && !token.empty() &&
+          XL_isIdentifierChar(c) != XL_isIdentifierChar(token[0])) ||
+         (c == '"' && tokentype == TOKEN_KEYWORD))
       {
          // hashes may conditionally be supported as comments
-         --idx;
-         state = STATE_DONE;
-         break;
-      }
-      else if(c == '/' && input[idx+1] == '/' && (flags & TF_SLASHCOMMENTS))
-      {
          // double slashes may conditionally be supported as comments
-         --idx;
-         state = STATE_DONE;
-         break;
-      }
-      else if(flags & TF_OPERATORS && !token.empty() &&
-              XL_isIdentifierChar(c) != XL_isIdentifierChar(token[0]))
-      {
          // operators and identifiers are separate
+         // starting strings next to keywords should be detected
          --idx;
          state = STATE_DONE;
          break;

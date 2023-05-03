@@ -693,7 +693,7 @@ void G_AddChatMacros()
       // now the command
       command = estructalloc(command_t, 1);
 
-      sprintf(tempstr, "chatmacro%i", i);
+      snprintf(tempstr, sizeof(tempstr), "chatmacro%i", i);
       command->name     = estrdup(tempstr);
       command->type     = ct_variable;
       command->flags    = 0;

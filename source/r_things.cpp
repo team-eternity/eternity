@@ -758,7 +758,7 @@ static void R_drawVisSprite(const contextbounds_t &bounds, vissprite_t *vis,
    float     baseclip = 0;
    int       w;
 
-   cb_column_t column = {};
+   cb_column_t column{};
 
    if(vis->patch == -1)
    {
@@ -1392,15 +1392,17 @@ static void R_drawPSprite(const pspdef_t *psp,
 
    vis->drawstyle = VS_DRAWSTYLE_NORMAL;
    
-   if(viewplayer->powers[pw_invisibility] > 4*32 || 
-      viewplayer->powers[pw_invisibility] & 8)
+   if(viewplayer->powers[pw_invisibility].infinite ||
+      viewplayer->powers[pw_invisibility].tics > 4*32 ||
+      viewplayer->powers[pw_invisibility].tics & 8)
    {
       // sf: shadow draw now detected by flags
       vis->drawstyle = VS_DRAWSTYLE_SHADOW;         // shadow draw
       vis->colormap  = colormaps[global_cmap_index]; // haleyjd: NGCS -- was 0
    }
-   else if((viewplayer->powers[pw_ghost] > 4*32 || // haleyjd: ghost
-            viewplayer->powers[pw_ghost] & 8) &&
+   else if((viewplayer->powers[pw_ghost].infinite ||
+            viewplayer->powers[pw_ghost].tics > 4*32 || // haleyjd: ghost
+            viewplayer->powers[pw_ghost].tics & 8) &&
            general_translucency)
    {
       if(rTintTableIndex != -1)

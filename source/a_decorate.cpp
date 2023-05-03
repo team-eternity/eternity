@@ -538,7 +538,7 @@ void A_SeekerMissile(actionargs_t *actionargs)
    const angle_t maxTurnAngle = eclamp<angle_t>(E_ArgAsAngle(args, 1, ANG90), 0, ANG90);
    const unsigned int flags   = E_ArgAsFlags(args, 2, &seekermissile_flagset);
    const int     chance       = E_ArgAsInt(args, 3, 50);
-   const fixed_t distance     = E_ArgAsFixed(args, 4, 10 << FRACBITS) * 64;
+   const fixed_t distance     = E_ArgAsFixed(args, 4, 10 << FRACBITS) * MAPBLOCKUNITS;
 
    const fixed_t speed = [flags, actor] {
       if(!(flags & SMF_CURSPEED))

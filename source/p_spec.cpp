@@ -1134,8 +1134,8 @@ static void P_runInstantDeathSector(player_t *player, const sector_t *sector)
       kill = exit;
    else
    {
-      kill = sector->damageflags & SDMG_IGNORESUIT || (!player->powers[pw_ironfeet] &&
-                                                       !player->powers[pw_invulnerability]);
+      kill = sector->damageflags & SDMG_IGNORESUIT || (!player->powers[pw_ironfeet].isActive() &&
+                                                       !player->powers[pw_invulnerability].isActive());
    }
    if(!kill)
       return;
@@ -1171,8 +1171,13 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
    // TODO: waterzones should damage whenever you're in them
    // Falling, not all the way down yet?
    // Sector specials don't apply in mid-air
-   if(player->mo->z != sector->srf.floor.height)
+   if(!sector->srf.floor.slope && player->mo->z != sector->srf.floor.height)
       return;
+   if(sector->srf.floor.slope && (player->mo->z != player->mo->zref.floor ||
+                                  player->mo->zref.floorsector != sector))
+   {
+      return;
+   }
 
    // haleyjd 12/28/08: We handle secrets uniformly now, through the
    // sector flags field. We also keep track of former secret status
@@ -1204,9 +1209,9 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
    else if(enable_nuke && sector->damage > 0) // killough 12/98: nukage disabling cheat
    {
       // haleyjd 12/31/08: generalized sector damage engine
-      if(!player->powers[pw_ironfeet]          ||  // no rad suit?
-         sector->leakiness >= 256              ||  // ignores suit?
-         (sector->leakiness > 0                &&  // suit leaks?
+      if(!player->powers[pw_ironfeet].isActive() ||  // no rad suit?
+         sector->leakiness >= 256                ||  // ignores suit?
+         (sector->leakiness > 0                  &&  // suit leaks?
           (P_Random(pr_slimehurt) < sector->leakiness))
         )
       {
@@ -1264,7 +1269,7 @@ void P_PlayerOnSpecialFlat(const player_t *player)
    if(player->mo->z != floorz)
       return;
 
-   terrain = E_GetThingFloorType(player->mo, true);
+   terrain = E_GetThingFloorType(player->mo);
 
    if(enable_nuke && // haleyjd: allow nuke cheat to disable terrain damage too
       terrain->damageamount && !(leveltime & terrain->damagetimemask))
@@ -1685,6 +1690,8 @@ void P_SpawnDeferredSpecials(UDMFSetupSettings &setupSettings)
       else
          sec->intflags &= ~SIF_PORTALBOX;
    }
+
+   P_PostProcessSlopes();
 }
 
 // haleyjd 04/11/10:

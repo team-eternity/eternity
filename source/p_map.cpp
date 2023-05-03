@@ -40,12 +40,15 @@
 #include "m_compare.h"
 #include "p_info.h"
 #include "p_inter.h"
+#include "p_map.h"
 #include "p_map3d.h"
 #include "p_mobjcol.h"
 #include "p_portal.h"
 #include "p_portalblockmap.h"
+#include "p_portalclip.h"
 #include "p_portalcross.h"
 #include "p_setup.h"
+#include "p_slopes.h"
 #include "p_skin.h"
 #include "p_spec.h"
 #include "r_main.h"
@@ -172,6 +175,8 @@ static bool PIT_StompThing3D(Mobj *thing, void *context)
    // don't clip against self
    if(thing == clip.thing)
       return true;
+
+   // TODO: Refer to `[RH] Z-Check` in p_map.cpp in ZDoom?
 
    // Don't stomp what you ain't touchin'!
    if(clip.thing->z >= thing->z + thing->height ||
@@ -410,14 +415,17 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, unsigned flags)
     //newsubsec->sector->floorheight - clip.thing->height;
    if(demo_version >= 333 && newsubsec->sector->srf.floor.pflags & PS_PASSABLE)
    {
-      bottomfloorsector = P_ExtremeSectorAtPoint(x, y, surf_floor, newsubsec->sector);
-      clip.zref.floor = clip.zref.dropoff = bottomfloorsector->srf.floor.height;
+      v2fixed_t totaldelta;
+      bottomfloorsector = P_ExtremeSectorAtPoint(x, y, surf_floor, newsubsec->sector, &totaldelta);
+      clip.zref.floor = clip.zref.dropoff = bottomfloorsector->srf.floor.getZAt(x + totaldelta.x, y + totaldelta.y);
       clip.zref.floorgroupid = bottomfloorsector->groupid;
+      clip.zref.floorsector = bottomfloorsector;
    }
    else
    {
-      clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.height;
+      clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.getZAt(x, y);
       clip.zref.floorgroupid = newsubsec->sector->groupid;
+      clip.zref.floorsector = newsubsec->sector;
    }
 
     //newsubsec->sector->ceilingheight + clip.thing->height;
@@ -551,6 +559,18 @@ static int untouched(const line_t *ld)
      (tmbbox[BOXBOTTOM] = y-clip.thing->radius) >= ld->bbox[BOXTOP] ||
      P_BoxOnLineSide(tmbbox, ld) != -1;
 }
+static int untouched(const line_t *ld, const linkoffset_t *link)
+{
+   fixed_t x, y, tmbbox[4];
+   return
+     (tmbbox[BOXRIGHT] = (x = clip.thing->x + link->x) + clip.thing->radius) <=
+     ld->bbox[BOXLEFT] ||
+     (tmbbox[BOXLEFT] = x - clip.thing->radius) >= ld->bbox[BOXRIGHT] ||
+     (tmbbox[BOXTOP] = (y = clip.thing->y + link->y) + clip.thing->radius) <=
+     ld->bbox[BOXBOTTOM] ||
+     (tmbbox[BOXBOTTOM] = y - clip.thing->radius) >= ld->bbox[BOXTOP] ||
+     P_BoxOnLineSide(tmbbox, ld) != -1;
+}
 
 //
 // SpechitOverrun
@@ -666,16 +686,135 @@ bool P_BlockedAsMonster(const Mobj &mo)
 }
 
 //
+// Given a line opening structure and a linedef, update a clip structure
+//
+void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapinter_t &inter, 
+                         bool underportal, bool aboveportal, uint32_t lineclipflags, 
+                         bool samegroupid, fixed_t linetop)
+{
+   // ioanch 20160315: don't forget about 3dmidtex on the same group ID if they
+   // decrease the opening
+   if((!underportal || (lineclipflags & LINECLIP_UNDER3DMIDTEX)) && 
+      open.height.ceiling < inter.zref.ceiling)
+   {
+      inter.zref.ceiling = open.height.ceiling;
+      inter.ceilingline = ld;
+      inter.blockline = ld;
+   }
+
+   if((!aboveportal || (lineclipflags & LINECLIP_OVER3DMIDTEX)) && 
+      open.height.floor > inter.zref.floor)
+   {
+      inter.zref.floor = open.height.floor;
+      inter.zref.floorgroupid = open.bottomgroupid;
+      inter.zref.floorsector = open.floorsector;
+
+      inter.floorline = ld;          // killough 8/1/98: remember floor linedef
+      inter.blockline = ld;
+   }
+
+   // ioanch 20160116: this is crazy. If the lines belong in separate groups,
+   // make sure to only decrease dropoffz if the line top really reaches the
+   // current value of dropoffz. Since layers get explored progressively from
+   // top to bottom (when going down), dropoffz will then gradually fall down
+   // as each layer is explored, if there really is a gap, and accidental
+   // detail downstairs will not count, considering the linetop would always
+   // be below any dropfloorz upstairs.
+   if(open.lowfloor < inter.zref.dropoff && (samegroupid || linetop >= inter.zref.dropoff))
+      inter.zref.dropoff = open.lowfloor;
+
+   // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
+   // touching 3DMidTex lines.
+   if(demo_version >= 331 && open.touch3dside)
+      inter.zref.dropoff = inter.zref.floor;
+
+   if(!aboveportal && open.sec.floor > inter.zref.secfloor)
+      inter.zref.secfloor = open.sec.floor;
+   if(!underportal && open.sec.ceiling < inter.zref.secceil)
+      inter.zref.secceil = open.sec.ceiling;
+
+   // SoM 11/6/02: AGHAH
+   if(inter.zref.floor > inter.zref.passfloor)
+      inter.zref.passfloor = inter.zref.floor;
+   if(inter.zref.ceiling < inter.zref.passceil)
+      inter.zref.passceil = inter.zref.ceiling;
+}
+
+//
+// Handle mid-texture solid line interaction with clip.thing.
+// Returns true if PIT_CheckLine[3D] should return "output".
+//
+bool P_CheckLineBlocksThing(line_t *ld, const linkoffset_t *link,
+                            PODCollection<line_t *> *pushhit, bool &output)
+{
+   if(!link)
+      link = &zerolink;
+
+   // killough 7/24/98: allow player to move out of 1s wall, to prevent sticking
+   // haleyjd 04/30/11: treat block-everything lines like they're 1S
+   if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL)) // one sided line
+   {
+      clip.blockline = ld;
+      bool result = clip.unstuck && !untouched(ld, link) &&
+         FixedMul(clip.x-clip.thing->x,ld->dy) > FixedMul(clip.y-clip.thing->y,ld->dx);
+      if(!result && pushhit && ld->special &&
+         full_demo_version >= make_full_version(401, 0))
+      {
+         pushhit->add(ld);
+      }
+      output = result;
+      return true;
+   }
+
+   // killough 8/10/98: allow bouncing objects to pass through as missiles
+   if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
+   {
+      if((ld->flags & ML_BLOCKING) ||
+         (mbf21_temp && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
+      {
+         // explicitly blocking everything
+         // or blocking player
+         bool result = clip.unstuck && !untouched(ld, link);
+         if(!result && pushhit && ld->special &&
+            full_demo_version >= make_full_version(401, 0))
+         {
+            pushhit->add(ld);
+         }
+         output = result;
+         return true;
+      }
+      // killough 8/1/98: allow escape
+
+      // killough 8/9/98: monster-blockers don't affect friends
+      // SoM 9/7/02: block monsters standing on 3dmidtex only
+      // MaxW: Land-monster blockers gotta be factored in, too
+      if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
+         (
+            ld->flags & ML_BLOCKMONSTERS ||
+            (mbf21_temp && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
+            )
+         )
+      {
+         output = false;
+         return true; // block monsters only
+      }
+   }
+   return false;  // not returning
+}
+
+//
 // PIT_CheckLine
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted
 //
 bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
 {
-   auto pushhit = static_cast<PODCollection<line_t *> *>(context);
-   if(clip.bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   || 
-      clip.bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  || 
-      clip.bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] || 
+   auto pcl = static_cast<pitcheckline_t *>(context);
+   PODCollection<line_t *> *pushhit = pcl->pushhit;
+
+   if(clip.bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   ||
+      clip.bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  ||
+      clip.bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] ||
       clip.bbox[BOXBOTTOM] >= ld->bbox[BOXTOP])
       return true; // didn't hit it
 
@@ -692,101 +831,38 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
    // so two special lines that are only 8 pixels apart
    // could be crossed in either order.
 
-   // killough 7/24/98: allow player to move out of 1s wall, to prevent sticking
-   // haleyjd 04/30/11: treat block-everything lines like they're 1S
-   if(!ld->backsector || (ld->extflags & EX_ML_BLOCKALL)) // one sided line
-   {
-      clip.blockline = ld;
-      bool result = clip.unstuck && !untouched(ld) &&
-         FixedMul(clip.x-clip.thing->x,ld->dy) > FixedMul(clip.y-clip.thing->y,ld->dx);
-      if(!result && pushhit && ld->special &&
-         full_demo_version >= make_full_version(401, 0))
-      {
-         pushhit->add(ld);
-      }
-      return result;
-   }
-
-   // killough 8/10/98: allow bouncing objects to pass through as missiles
-   if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
-   {
-      if((ld->flags & ML_BLOCKING) ||
-         (mbf21_temp && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
-      {
-         // explicitly blocking everything
-         // or blocking player
-         bool result = clip.unstuck && !untouched(ld);  // killough 8/1/98: allow escape
-
-         // When it's Hexen, keep side 0 even when hitting from backside
-         if(!result && pushhit && ld->special &&
-            full_demo_version >= make_full_version(401, 0))
-         {
-            pushhit->add(ld);
-         }
-         // TODO: add the other push special checks.
-         // TODO: add for P_Map3D and P_PortalClip CPP files.
-         return result;
-      }
-
-      // killough 8/9/98: monster-blockers don't affect friends
-      // SoM 9/7/02: block monsters standing on 3dmidtex only
-      // MaxW: Land-monster blockers gotta be factored in, too
-      if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
-         (
-            ld->flags & ML_BLOCKMONSTERS ||
-            (mbf21_temp && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
-         )
-        )
-      {
-         return false; // block monsters only
-      }
-   }
+   bool thingblock;
+   if(P_CheckLineBlocksThing(ld, nullptr, pushhit, thingblock))
+      return thingblock;
 
    // set openrange, opentop, openbottom
    // these define a 'window' from one sector to another across this line
-   
-   clip.open = P_LineOpening(ld, clip.thing);
 
-   // adjust floor & ceiling heights
-   
-   if(clip.open.height.ceiling < clip.zref.ceiling)
+   // At this point we have backsector
+
+   if(P_AnySlope(*ld))
    {
-      clip.zref.ceiling = clip.open.height.ceiling;
-      clip.ceilingline = ld;
-      clip.blockline = ld;
+      // Find the two intersections with the bounding box
+      v2fixed_t i1, i2;
+      P_ExactBoxLinePoints(clip.bbox, *ld, i1, i2);
+
+      // Use the smallest opening from both points
+      lineopening_t lo = P_LineOpening(ld, clip.thing, &i1);
+      lo.intersect(P_LineOpening(ld, clip.thing, &i2));
+
+      P_UpdateFromOpening(lo, ld, clip, false, false, 0, true, 0);
+
+      pcl->haveslopes = true;
+   }
+   else
+   {
+      // Assign to "clip" for compatibility
+      clip.open = P_LineOpening(ld, clip.thing);
+      P_UpdateFromOpening(clip.open, ld, clip, false, false, 0, true, 0);
    }
 
-   if(clip.open.height.floor > clip.zref.floor)
-   {
-      clip.zref.floor = clip.open.height.floor;
-      clip.zref.floorgroupid = clip.open.bottomgroupid;
-
-      clip.floorline = ld;          // killough 8/1/98: remember floor linedef
-      clip.blockline = ld;
-   }
-
-   if(clip.open.lowfloor < clip.zref.dropoff)
-      clip.zref.dropoff = clip.open.lowfloor;
-
-   // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
-   // touching 3DMidTex lines.
-   if(demo_version >= 331 && clip.open.touch3dside)
-      clip.zref.dropoff = clip.zref.floor;
-
-   if(clip.open.sec.floor > clip.zref.secfloor)
-      clip.zref.secfloor = clip.open.sec.floor;
-   if(clip.open.sec.ceiling < clip.zref.secceil)
-      clip.zref.secceil = clip.open.sec.ceiling;
-
-   // SoM 11/6/02: AGHAH
-   if(clip.zref.floor > clip.zref.passfloor)
-      clip.zref.passfloor = clip.zref.floor;
-   if(clip.zref.ceiling < clip.zref.passceil)
-      clip.zref.passceil = clip.zref.ceiling;
-
-   // ioanch 20160113: moved to a special function
    P_CollectSpechits(ld, pushhit);
-   
+
    return true;
 }
 
@@ -1175,6 +1251,79 @@ bool Check_Sides(Mobj *actor, int x, int y, mobjtype_t type)
 //
 
 //
+// P_CheckPosition basics. Returns the sector in the designated area.
+//
+void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter,
+   const sector_t *&bottomsector, const sector_t *&topsector)
+{
+   inter.thing = &thing;
+
+   inter.x = x;
+   inter.y = y;
+
+   inter.bbox[BOXTOP] = y + thing.radius;
+   inter.bbox[BOXBOTTOM] = y - thing.radius;
+   inter.bbox[BOXRIGHT] = x + thing.radius;
+   inter.bbox[BOXLEFT] = x - thing.radius;
+
+   inter.floorline = inter.blockline = inter.ceilingline = nullptr;  // killough 8/1/98
+
+   // Whether object can get out of a sticky situation:
+   inter.unstuck = thing.player &&          // only players
+      thing.player->mo == &thing &&       // not voodoo dolls
+      demo_version >= 203;                // not under old demos
+
+   sector_t &sector = *R_PointInSubsector(x, y)->sector;
+
+   // The base floor / ceiling is from the subsector
+   // that contains the point.
+   // Any contacted lines the step closer together
+   // will adjust them.
+
+   // ioanch 20160110: portal aware floor and ceiling z detection
+   bottomsector = &sector;
+   if(demo_version >= 333 && sector.srf.floor.pflags & PS_PASSABLE &&
+      !(thing.flags & MF_NOCLIP))
+   {
+      v2fixed_t totaldelta;
+      bottomsector = P_ExtremeSectorAtPoint(x, y, surf_floor, &sector, &totaldelta);
+      inter.zref.floor = inter.zref.dropoff =
+         bottomsector->srf.floor.getZAt(x + totaldelta.x, y + totaldelta.y);
+      inter.zref.floorgroupid = bottomsector->groupid;
+      inter.zref.floorsector = bottomsector;
+   }
+   else
+   {
+      inter.zref.floor = inter.zref.dropoff = sector.srf.floor.getZAt(x, y);
+      inter.zref.floorgroupid = sector.groupid;
+      inter.zref.floorsector = &sector;
+   }
+
+   topsector = &sector;
+   if(demo_version >= 333 && sector.srf.ceiling.pflags & PS_PASSABLE &&
+      !(thing.flags & MF_NOCLIP))
+   {
+      v2fixed_t totaldelta;
+      topsector = P_ExtremeSectorAtPoint(x, y, surf_ceil, &sector, &totaldelta);
+      inter.zref.ceiling = topsector->srf.ceiling.getZAt(x + totaldelta.x, y + totaldelta.y);
+   }
+   else
+      inter.zref.ceiling = sector.srf.ceiling.getZAt(x, y);
+
+   inter.zref.secfloor = inter.zref.passfloor = inter.zref.floor;
+   inter.zref.secceil = inter.zref.passceil = inter.zref.ceiling;
+
+   // haleyjd
+   // ioanch 20160114: use bottom sector
+   inter.open.floorpic = bottomsector->srf.floor.pic;
+   // SoM: 09/07/02: 3dsides monster fix
+   inter.open.touch3dside = 0;
+   validcount++;
+
+   inter.numspechit = 0;
+}
+
+//
 // P_CheckPosition
 // This is purely informative, nothing is modified
 // (except things picked up).
@@ -1189,7 +1338,6 @@ bool Check_Sides(Mobj *actor, int x, int y, mobjtype_t type)
 //  early out on solid lines?
 //
 // out:
-//  newsubsec
 //  zref.floor
 //  zref.ceiling
 //  tmdropoffz
@@ -1201,48 +1349,13 @@ bool Check_Sides(Mobj *actor, int x, int y, mobjtype_t type)
 bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit) 
 {
    int xl, xh, yl, yh, bx, by;
-   subsector_t *newsubsec;
 
    // haleyjd: OVER_UNDER
    if(P_Use3DClipping())
       return P_CheckPosition3D(thing, x, y, pushhit);
-   
-   clip.thing = thing;
-   
-   clip.x = x;
-   clip.y = y;
-   
-   clip.bbox[BOXTOP]    = y + clip.thing->radius;
-   clip.bbox[BOXBOTTOM] = y - clip.thing->radius;
-   clip.bbox[BOXRIGHT]  = x + clip.thing->radius;
-   clip.bbox[BOXLEFT]   = x - clip.thing->radius;
-   
-   newsubsec = R_PointInSubsector(x,y);
-   clip.floorline = clip.blockline = clip.ceilingline = nullptr; // killough 8/1/98
 
-   // Whether object can get out of a sticky situation:
-   clip.unstuck = thing->player &&          // only players
-      thing->player->mo == thing &&       // not voodoo dolls
-      demo_version >= 203;                // not under old demos
-
-   // The base floor / ceiling is from the subsector
-   // that contains the point.
-   // Any contacted lines the step closer together
-   // will adjust them.
-
-   clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.height;
-   clip.zref.floorgroupid = newsubsec->sector->groupid;
-   clip.zref.ceiling = newsubsec->sector->srf.ceiling.height;
-
-   clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;
-   clip.zref.secceil = clip.zref.passceil = clip.zref.ceiling;
-
-   // haleyjd
-   clip.open.floorpic = newsubsec->sector->srf.floor.pic;
-   // SoM: 09/07/02: 3dsides monster fix
-   clip.open.touch3dside = 0;
-   validcount++;
-   clip.numspechit = 0;
+   const sector_t *sector;
+   P_GetClipBasics(*thing, x, y, clip, sector, sector);
 
    if(clip.thing->flags & MF_NOCLIP)
       return true;
@@ -1283,13 +1396,33 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    if(!vanilla_heretic)
       validcount++;
 
+   pitcheckline_t pcl = {};
+   pcl.pushhit = pushhit;
+   pcl.haveslopes = sector->srf.floor.slope || sector->srf.ceiling.slope;
    for(bx = xl; bx <= xh; bx++)
    {
       for(by = yl; by <= yh; by++)
       {
-         if(!P_BlockLinesIterator(bx, by, PIT_CheckLine, R_NOGROUP, pushhit))
+         if(!P_BlockLinesIterator(bx, by, PIT_CheckLine, R_NOGROUP, &pcl))
             return false; // doesn't fit
       }
+   }
+
+   if(pcl.haveslopes)
+   {
+      // Now also check the corners!
+      v2fixed_t corners[4] =
+      {
+         { clip.bbox[BOXLEFT], clip.bbox[BOXBOTTOM] },
+         { clip.bbox[BOXLEFT], clip.bbox[BOXTOP] },
+         { clip.bbox[BOXRIGHT], clip.bbox[BOXTOP] },
+         { clip.bbox[BOXRIGHT], clip.bbox[BOXBOTTOM] },
+      };
+      lineopening_t open = P_SlopeOpening(corners[0]);
+      open.intersect(P_SlopeOpening(corners[1]));
+      open.intersect(P_SlopeOpening(corners[2]));
+      open.intersect(P_SlopeOpening(corners[3]));
+      P_UpdateFromOpening(open, nullptr, clip, false, false, 0, true, 0);
    }
 
    return true;
@@ -1348,7 +1481,7 @@ static bool P_CheckDropOffMBF(Mobj *thing, int dropoff)
       if(getComp(comp_dropoff))
       {
          // haleyjd: note missing 202 compatibility... WOOPS!
-         if(clip.zref.floor - clip.zref.dropoff > STEPSIZE)
+         if(!dropoff && (clip.zref.floor - clip.zref.dropoff > STEPSIZE))
             return false;
       }
       else if(!dropoff || (dropoff == 2 &&
@@ -3173,9 +3306,9 @@ void P_ClearGlobalLevelReferences()
    clip.thing = nullptr;   // this isn't reference-counted
    clip.ceilingline = clip.blockline = clip.floorline = nullptr;
    clip.numspechit = 0;
-   clip.open.frontsector = clip.open.backsector = nullptr;
    clip.BlockingMobj = nullptr;  // also not ref-counted
    clip.numportalhit = 0;
+   clip.zref.floorsector = nullptr;
    P_ClearTarget(clip.linetarget);
 }
 

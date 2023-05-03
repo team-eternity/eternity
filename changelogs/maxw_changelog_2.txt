@@ -184,6 +184,113 @@ Added "ripsound" EDF property, which is played when a ripper rips.
 [MBF21]
  * Added A_WeaponJump and A_ConsumeAmmo.
 
+--------------------------------------------------------------------------------
+2022/01/18
+[MBF21]
+ * Added A_CheckAmmo, A_RefireTo, A_GunFlashTo,
+   A_JumpIfTargetInSight, A_JumpIfTracerInSight,
+   A_WeaponProjectile, A_WeaponBulletAttack and A_WeaponMeleeAttack.
+
+--------------------------------------------------------------------------------
+2022/01/18
+[MBF21]
+ * Added A_SeekTracer and A_FindTracer.
+ 
+--------------------------------------------------------------------------------
+2022/06/06
+Added support for widescreen status bars.
+
+--------------------------------------------------------------------------------
+2022/06/10
+Fixed Lost Souls spawned inside the player making them pop up.
+
+--------------------------------------------------------------------------------
+2022/06/11
+Fixed weapondeltas setting weapon means of death to none if not specified in the
+delta.
+Added rendering for translucent and additive slopes, as well as their masked
+variants.
+
+--------------------------------------------------------------------------------
+2022/06/18
+Made it so Doom extended spawn nums only get converted if no thingtype exist for
+a given doomednum.
+
+--------------------------------------------------------------------------------
+2022/06/25
+Fixed enemies walking off onto other enemies if the floor height matched the
+height at the top of the enemy being walked on to.
+
+--------------------------------------------------------------------------------
+2022/06/26
+Added level stats to automap display.
+
+--------------------------------------------------------------------------------
+2022/07/22
+Added interpolation to slope movement.
+
+--------------------------------------------------------------------------------
+2022/08/10
+Update auto-detecting Doom 2 and Final Doom WADs for Steam.
+
+--------------------------------------------------------------------------------
+2022/08/12
+Update auto-detecting of Steam WADs to support non-default Steam library game
+install locations.
+
+--------------------------------------------------------------------------------
+2022/09/24
+Added the cvar "map_antialias" which toggles whether or not lines get drawn with
+anti-aliasing.
+
+--------------------------------------------------------------------------------
+2022/11/13
+Change some automap colours to not use the cross graphic for index 0 if they
+aren't optional. Change default Doom automap background colour to index 0.
+
+--------------------------------------------------------------------------------
+2022/12/06
+Fixed qsave command to work even if no save slot had been selected before.
+
+--------------------------------------------------------------------------------
+2022/12/11
+Made fontdeltas able to change linear fonts to filter-based fonts.
+Deprecated "linearlump" from fonts, which now does nothing. Font format is now
+automatically detected.
+
+--------------------------------------------------------------------------------
+2023/01/28
+Added support for ZDoom compressed nodes.
+
+--------------------------------------------------------------------------------
+2023/02/18
+Finished moving to New Zealand.
+
+--------------------------------------------------------------------------------
+2023/03/04
+Fixed crashes due to sound zone propagation through too many sectors.
+
+--------------------------------------------------------------------------------
+2023/03/07
+Overhauled SDL game controller input to be consistent across controllers.
+Added SDL controller input preset.
+Added vibration support to SDL controllers.
+Added ability to use the IWAD picker with controllers, as well as exit ENDOOM.
+
+--------------------------------------------------------------------------------
+2023/05/01
+Fixed non-keyboard inputs would sometimes being ignored while holding down any
+keyboard keys.
+
+--------------------------------------------------------------------------------
+2023/05/02
+Fixed instances where scrolling through weapons wouldn't work if the next weapon
+to be scrolled to is the same as the currently-equipped weapon.
+
+--------------------------------------------------------------------------------
+2023/05/03
+Improved frame pacing with interpolation.
+
 ================================================================================
 EOF
 ================================================================================

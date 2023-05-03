@@ -225,7 +225,7 @@ static void R_mapPlane(const R_FlatFunc flatfunc, const R_SlopeFunc, cb_span_t &
       const double xfrac = (
          ((plane.pviewx + plane.xoffset) * plane.xscale) +
          (plane.pviewsin * realy * plane.xscale) +
-         ((static_cast<double>(x1) - view.xcenter) * xstep)
+         ((double(x1) - view.xcenter) * xstep)
       ) * plane.fixedunitx;
 
       span.xfrac = R_doubleToUint32(xfrac);
@@ -233,7 +233,7 @@ static void R_mapPlane(const R_FlatFunc flatfunc, const R_SlopeFunc, cb_span_t &
       const double yfrac = (
          ((-plane.pviewy + plane.yoffset) * plane.yscale) +
          (-plane.pviewcos * realy * plane.yscale) +
-         ((static_cast<double>(x1) - view.xcenter) * ystep)
+         ((double(x1) - view.xcenter) * ystep)
       ) * plane.fixedunity;
 
       span.yfrac = R_doubleToUint32(yfrac);
@@ -316,16 +316,12 @@ static void R_mapSlope(const R_FlatFunc, const R_SlopeFunc slopefunc,
    s.y = y - view.ycenter + 1;
    s.z = view.xfoc;
 
-   slopespan.iufrac = M_DotVec3(&s, &slope->A) * static_cast<double>(plane.tex->width) *
-                      static_cast<double>(plane.yscale);
-   slopespan.ivfrac = M_DotVec3(&s, &slope->B) * static_cast<double>(plane.tex->height) *
-                      static_cast<double>(plane.xscale);
+   slopespan.iufrac = M_DotVec3(&s, &slope->A) * double(plane.tex->width) * double(plane.yscale);
+   slopespan.ivfrac = M_DotVec3(&s, &slope->B) * double(plane.tex->height) * double(plane.xscale);
    slopespan.idfrac = M_DotVec3(&s, &slope->C);
 
-   slopespan.iustep = slope->A.x * static_cast<double>(plane.tex->width) *
-                      static_cast<double>(plane.yscale);
-   slopespan.ivstep = slope->B.x * static_cast<double>(plane.tex->height) *
-                      static_cast<double>(plane.xscale);
+   slopespan.iustep = slope->A.x * double(plane.tex->width) * double(plane.yscale);
+   slopespan.ivstep = slope->B.x * double(plane.tex->height) * double(plane.xscale);
    slopespan.idstep = slope->C.x;
 
    slopespan.source = plane.source;
@@ -418,6 +414,13 @@ static void R_calcSlope(const cbviewpoint_t &cb_viewpoint, visplane_t *pl)
    // Need to reduce them to the visible range, because otherwise it may overflow
    double xoffsf = fmod(pl->xoffsf, xl / pl->scale.x);
    double yoffsf = fmod(pl->yoffsf, yl / pl->scale.y);
+
+   // P, M, and N are basically three points on the plane which then become two directional vectors:
+   // (M = M - P, N = N - P) and then the cross product between the origin vector P and the directional vectors M,
+   // and N then are used to define this coordinate space translation
+
+   // There are various nuances along the way to define things in terms of 64x64 texture space and into screen space,
+   // but that's the gist of it
 
    v3double_t P;
    P.x = -xoffsf * tcos - yoffsf * tsin;
@@ -847,7 +850,7 @@ static void R_makeSpans(const R_FlatFunc flatfunc, const R_SlopeFunc slopefunc,
 //
 // Get the sky column from input parms. Shared by the sky drawers here.
 //
-inline static int32_t R_getSkyColum(angle_t an, int x, angle_t flip, int offset)
+inline static int32_t R_getSkyColumn(angle_t an, int x, angle_t flip, int offset)
 {
    return ((((an + xtoviewangle[x]) ^ flip) / (1 << (ANGLETOSKYSHIFT - FRACBITS))) + offset)
          / FRACUNIT;
@@ -856,7 +859,7 @@ inline static int32_t R_getSkyColum(angle_t an, int x, angle_t flip, int offset)
 // haleyjd: moved here from r_newsky.c
 static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visplane_t *pl)
 {
-   cb_column_t column = {};
+   cb_column_t column{};
 
    R_ColumnFunc colfunc = r_column_engine->DrawColumn;
 
@@ -896,7 +899,7 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    {
       if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
       {
-         column.source = R_GetRawColumn(skyTexture2, R_getSkyColum(an, x, 0, offset2));
+         column.source = R_GetRawColumn(skyTexture2, R_getSkyColumn(an, x, 0, offset2));
 
          colfunc(column);
       }
@@ -916,7 +919,7 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    {
       if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
       {
-         column.source = R_GetRawColumn(skyTexture, R_getSkyColum(an, x, 0, offset));
+         column.source = R_GetRawColumn(skyTexture, R_getSkyColumn(an, x, 0, offset));
 
          colfunc(column);
       }
@@ -947,7 +950,7 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
 
    angle_t an = viewangle;
 
-   cb_column_t column = {};
+   cb_column_t column{};
    bool tilevert = false;
    if(pl->picnum & PL_SKYFLAT)
    {
@@ -1033,6 +1036,11 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
    R_ColumnFunc colfunc = tilevert ? r_column_engine->DrawColumn :
                                      r_column_engine->DrawSkyColumn;
 
+   // We need the translucency map to exist because we fade the sky to a single color when looking
+   // above it.
+   if (!main_tranmap)
+      R_InitTranMap(false);
+
    // killough 10/98: Use sky scrolling offset, and possibly flip picture
    for(int x = pl->minx; x <= pl->maxx; x++)
    {
@@ -1043,7 +1051,7 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
 
       if(column.y1 <= column.y2)
       {
-         column.source = R_GetRawColumn(texture, R_getSkyColum(an, x, flip, offset));
+         column.source = R_GetRawColumn(texture, R_getSkyColumn(an, x, flip, offset));
          colfunc(column);
       }
    }
@@ -1077,9 +1085,9 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
       int        stop, light;
       int        stylenum;
 
-      cb_span_t      span      = {};
-      cb_slopespan_t slopespan = {};
-      cb_plane_t     plane     = {};
+      cb_span_t      span{};
+      cb_slopespan_t slopespan{};
+      cb_plane_t     plane{};
 
       R_FlatFunc  flatfunc  = R_Throw;
       R_SlopeFunc slopefunc = R_ThrowSlope;

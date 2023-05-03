@@ -37,6 +37,7 @@
 #include "e_lib.h"
 #include "e_hash.h"
 #include "e_sprite.h"
+#include "i_system.h"
 
 // Data
 
@@ -72,6 +73,33 @@ int E_SpriteNumForName(const char *name)
       spritenum = obj->num;
 
    return spritenum;
+}
+
+//
+// Updates the name of a given sprite, overwriting the old name
+//
+void E_UpdateSpriteName(const char *oldname, const char *newname, const int newlen)
+{
+   constexpr int SPRITE_NAME_LENGTH = int(earrlen(esprite_t::name) - 1);
+
+   if(!strcmp(oldname, newname))
+      return;
+
+   esprite_t *obj = spritehash.objectForKey(oldname);
+   if(!obj)
+      return;
+
+   if(newlen > SPRITE_NAME_LENGTH)
+   {
+      I_Error(
+         "E_UpdateSpriteName: Attempted to set sprite name to %s, which is longer than the maximum of %d characters\n",
+         newname, SPRITE_NAME_LENGTH
+      );
+   }
+
+   spritehash.removeObject(obj);
+   strncpy(obj->name, newname, newlen);
+   spritehash.addObject(obj);
 }
 
 //

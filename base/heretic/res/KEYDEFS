@@ -72,3 +72,5 @@ bind f11 "gamma /"
 bind mouse1 "attack"
 bind mouse2 "strafe"
 bind mouse3 "forward"
+
+g_padprofile sdl_controller

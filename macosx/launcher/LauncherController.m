@@ -1718,12 +1718,28 @@ iwadMightBe:
       {
          NSArray *archArr;
          NSString *archStr;
-         
+
+         // Be extra defensive
          archArr = [defaults stringArrayForKey:aKey];
+         if(!archArr)
+            return;
          for(archStr in archArr)
          {
-            [self performSelector:aMessage withObject:[NSURL URLWithString:archStr]];
-	//			NSString *sss;
+            NSURL *url = nil;
+            if(archStr)
+            {
+               @try
+               {
+                  url = [NSURL URLWithString:archStr];
+               }
+               @catch(NSException *)
+               {
+                  continue;
+               }
+            }
+            if(!url)
+               continue;
+            [self performSelector:aMessage withObject:url];
          }
       };
 		

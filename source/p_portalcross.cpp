@@ -632,7 +632,7 @@ bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
 sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
                                         int cgroupid, int tgroupid,
                                         sector_t *csector, fixed_t midzhint,
-                                        uint8_t *floorceiling)
+                                        surf_e *surf)
 {
    if(cgroupid == tgroupid)
       return csector;
@@ -647,23 +647,17 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
       memset(groupVisit, 0, sizeof(*groupVisit) * P_PortalGroupCount());
    groupVisit[cgroupid] = true;
 
-   uint8_t fcflag[2];
-
    surf_e surfs[2];
 
    if(midzhint < cmidz)
    {
       surfs[0] = surf_floor;
       surfs[1] = surf_ceil;
-      fcflag[0] = sector_t::floor;
-      fcflag[1] = sector_t::ceiling;
    }
    else
    {
       surfs[0] = surf_ceil;
       surfs[1] = surf_floor;
-      fcflag[0] = sector_t::ceiling;
-      fcflag[1] = sector_t::floor;
    }
 
    sector_t *sector;
@@ -685,8 +679,8 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
          groupid = sector->groupid;
          if(groupid == tgroupid)
          {
-            if(floorceiling)
-               *floorceiling = fcflag[i];
+            if(surf)
+               *surf = surfs[i];
             return sector;
          }
          if(groupVisit[groupid])

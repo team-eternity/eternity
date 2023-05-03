@@ -24,39 +24,26 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
 
-#include "a_small.h"
 #include "acs_intr.h"
 #include "am_map.h"
 #include "c_io.h"
 #include "d_dehtbl.h"
-#include "d_event.h"
 #include "d_files.h"
-#include "d_gi.h"
-#include "d_main.h"
 #include "d_net.h"
 #include "doomstat.h"
-#include "e_edf.h"
 #include "e_inventory.h"
-#include "e_player.h"
 #include "e_weapons.h"
 #include "g_dmflag.h"
 #include "g_game.h"
-#include "m_argv.h"
 #include "m_buffer.h"
-#include "m_random.h"
 #include "p_info.h"
-#include "p_maputl.h"
 #include "p_spec.h"
-#include "p_tick.h"
 #include "p_saveg.h"
 #include "p_saveid.h"
 #include "p_enemy.h"
-#include "p_xenemy.h"
 #include "p_portal.h"
 #include "p_hubs.h"
-#include "p_skin.h"
 #include "p_setup.h"
 #include "r_draw.h"
 #include "r_main.h"
@@ -65,7 +52,6 @@
 #include "s_sndseq.h"
 #include "st_stuff.h"
 #include "v_misc.h"
-#include "v_video.h"
 #include "version.h"
 #include "w_levels.h"
 #include "w_wad.h"
@@ -503,6 +489,15 @@ SaveArchive &SaveArchive::operator << (zrefs_t &zref)
 {
    *this << zref.floor << zref.ceiling << zref.dropoff << zref.secfloor << zref.secceil
          << zref.passfloor << zref.passceil;
+   if(saveVersion() >= 15)
+   {
+      int32_t val;
+      if(isSaving())
+         val = zref.floorsector ? eindex(zref.floorsector - ::sectors) : -1;
+      *this << val;
+      if(isLoading())
+         zref.floorsector = val >= 0 ? sectors + val : nullptr;
+   }
    return *this;
 }
 
@@ -728,8 +723,12 @@ static void P_ArchivePlayers(SaveArchive &arc)
          }
          P_ArchiveArray<inventoryslot_t>(arc, p.inventory, inventorySize);
 
-         for(int &power : p.powers)
-            arc << power;
+         for(powerduration_t &power : p.powers)
+         {
+            arc << power.tics;
+            if(arc.saveVersion() >= 14)
+               arc << power.infinite;
+         }
 
          for(j = 0; j < MAXPLAYERS; j++)
             arc << p.frags[j];
@@ -1124,8 +1123,11 @@ void P_SetNewTarget(Mobj **mop, Mobj *targ)
 static void P_ArchiveRNG(SaveArchive &arc)
 {
    arc << rng.rndindex << rng.prndindex;
-
-   P_ArchiveArray<unsigned int>(arc, rng.seed, NUMPRCLASS);
+   // Protection for existing affected savegames...
+   if(arc.saveVersion() <= 12)
+      P_ArchiveArray<unsigned int>(arc, rng.seed, pr_mbf21);
+   else
+      P_ArchiveArray<unsigned int>(arc, rng.seed, NUMPRCLASS);
 }
 
 //
@@ -1496,7 +1498,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
       
       // killough 2/22/98: "proprietary" version string :-)
       memset(name2, 0, sizeof(name2));
-      sprintf(name2, VERSIONID);
+      snprintf(name2, sizeof(name2), VERSIONID);
    
       arc.archiveCString(name2, VERSIONSIZE);
 
@@ -1639,6 +1641,11 @@ void P_LoadGame(const char *filename)
 
    try
    {
+      WadDirectory *tmp_g_dir = g_dir;
+      WadDirectory *tmp_d_dir = d_dir;
+
+      int     tmp_gamemap         = gamemap;
+      int     tmp_gameepisode     = gameepisode;
       int     tmp_compatibility   = compatibility;
       skill_t tmp_gameskill       = gameskill;
       int     tmp_inmanageddir    = inmanageddir;
@@ -1750,6 +1757,10 @@ void P_LoadGame(const char *filename)
          if(checksum != rchecksum && !forced_loadgame)
          {
             // If we don't restore some state things will go very awry
+            g_dir           = tmp_g_dir;
+            d_dir           = tmp_d_dir;
+            gamemap         = tmp_gamemap;
+            gameepisode     = tmp_gameepisode;
             compatibility   = tmp_compatibility;
             gameskill       = tmp_gameskill;
             inmanageddir    = tmp_inmanageddir;

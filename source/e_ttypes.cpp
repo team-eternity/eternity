@@ -747,19 +747,22 @@ void E_InitTerrainTypes(void)
 // haleyjd 10/16/10: Except that's never been sufficient. So in 
 // newer versions return the appropriate floor's type.
 //
-ETerrain *E_GetThingFloorType(Mobj *thing, bool usefloorz)
+ETerrain *E_GetThingFloorType(const Mobj *thing)
 {
    ETerrain *terrain = nullptr;
    
    if(full_demo_version >= make_full_version(339, 21))
    {
-      msecnode_t *m = nullptr;
+      const msecnode_t *m = nullptr;
 
       // determine what touched sector the thing is standing on
-      fixed_t z = usefloorz ? thing->zref.floor : thing->z;
+      fixed_t z = thing->zref.floor;
       for(m = thing->touching_sectorlist; m; m = m->m_tnext)
       {
-         if(z == m->m_sector->srf.floor.height)
+         // Handle sloped floors a bit differently, using the designated floorsector
+         if(m->m_sector->srf.floor.slope && m->m_sector == thing->zref.floorsector)
+            break;
+         if(!m->m_sector->srf.floor.slope && z == m->m_sector->srf.floor.height)
             break;
       }
 
@@ -951,7 +954,8 @@ static void E_TerrainHit(const ETerrain *terrain, Mobj *thing, fixed_t z, const 
 //
 // Get the information for the thing's floor terrain. Also gets the resulting z value
 //
-static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sector, fixed_t *z)
+static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sector, v2fixed_t pos,
+                                         fixed_t *z)
 {
    // override with sector terrain if one is specified
    const ETerrain *terrain = sector.srf.floor.terrain;
@@ -968,8 +972,8 @@ static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sect
 
    if(z)
    {
-      *z = sector.heightsec != -1 ? sectors[sector.heightsec].srf.floor.height :
-                                    sector.srf.floor.height;
+      *z = sector.heightsec != -1 ? sectors[sector.heightsec].srf.floor.getZAt(pos) :
+                                    sector.srf.floor.getZAt(pos);
    }
    return *terrain;
 }
@@ -982,7 +986,7 @@ static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sect
 bool E_HitWater(Mobj *thing, const sector_t *sector)
 {
    fixed_t z;
-   const ETerrain &terrain = E_getFloorTerrain(*thing, *sector, &z);
+   const ETerrain &terrain = E_getFloorTerrain(*thing, *sector, {thing->x, thing->y}, &z);
 
    // ioanch 20160116: also use "sector" as a parameter in case it's in another group
    E_TerrainHit(&terrain, thing, z, sector);
@@ -1008,6 +1012,19 @@ void E_ExplosionHitWater(Mobj *thing, int damage)
 }
 
 //
+// Check if thing is standing on given sector, compatible with slopes and non-slopes
+//
+static bool E_standingOn(const sector_t &sector, const Mobj &thing)
+{
+   if(!sector.srf.floor.slope && thing.z == sector.srf.floor.height)
+      return true;
+   // Different handling for sloped floors
+   if(sector.srf.floor.slope && thing.z <= thing.zref.floor && thing.zref.floorsector == &sector)
+      return true;
+   return false;
+}
+
+//
 // E_HitFloor
 //
 // Called when a thing hits a floor.
@@ -1018,10 +1035,8 @@ bool E_HitFloor(Mobj *thing)
 
    // determine what touched sector the thing is standing on
    for(m = thing->touching_sectorlist; m; m = m->m_tnext)
-   {
-      if(thing->z == m->m_sector->srf.floor.height)
+      if(E_standingOn(*m->m_sector, *thing))
          break;
-   }
 
    // not on a floor or dealing with deep water, return solid
    // deep water splashes are handled in P_MobjThinker now
@@ -1039,7 +1054,7 @@ bool E_WouldHitFloorWater(const Mobj &thing)
 {
    const msecnode_t *m;
    for(m = thing.touching_sectorlist; m; m = m->m_tnext)
-      if(thing.z == m->m_sector->srf.floor.height)
+      if(E_standingOn(*m->m_sector, thing))
          break;
 
    // NOTE: same conditions as E_HitFloor
@@ -1047,7 +1062,7 @@ bool E_WouldHitFloorWater(const Mobj &thing)
       return false;
 
    const sector_t &sector = *m->m_sector;
-   const ETerrain &terrain = E_getFloorTerrain(thing, sector, nullptr);
+   const ETerrain &terrain = E_getFloorTerrain(thing, sector, v2fixed_t(), nullptr);
    return terrain.liquid;
 }
 

@@ -97,6 +97,7 @@ void P_SetPspritePtr(const player_t *player, pspdef_t *psp, statenum_t stnum);
 void P_SetPsprite(player_t *player, int position, statenum_t stnum);
 
 bool P_WeaponHasAmmo(const player_t *player, const weaponinfo_t *weapon);
+bool P_WeaponHasAmmoAlt(const player_t *player, const weaponinfo_t *weapon);
 
 int P_NextWeapon(const player_t *player, uint8_t *slotindex = nullptr);
 int P_PrevWeapon(const player_t *player, uint8_t *slotindex = nullptr);
@@ -104,6 +105,7 @@ int P_PrevWeapon(const player_t *player, uint8_t *slotindex = nullptr);
 weapontype_t P_SwitchWeaponOldDoom(const player_t *player);
 bool P_CheckAmmo(player_t *player);
 void P_SubtractAmmo(const player_t *player, int compat_amt);
+void P_SubtractAmmoAmount(const player_t *player, int amount);
 void P_SetupPsprites(player_t *curplayer);
 void P_MovePsprites(player_t *curplayer);
 void P_DropWeapon(player_t *player);

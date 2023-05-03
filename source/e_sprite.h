@@ -41,6 +41,7 @@ void    E_ProcessSprites(cfg_t *cfg);
 bool E_ProcessSingleSprite(const char *sprname);
 
 int E_SpriteNumForName(const char *name);
+void E_UpdateSpriteName(const char *oldname, const char *newname, const int newlen);
 
 #endif
 

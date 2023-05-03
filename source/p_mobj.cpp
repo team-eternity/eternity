@@ -856,7 +856,7 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
 
          if(mo->momz < -23*FRACUNIT)
          {
-            if(!mo->player->powers[pw_invulnerability] &&
+            if(!mo->player->powers[pw_invulnerability].isActive() &&
                !(mo->player->cheats & CF_GODMODE))
                P_FallingDamage(mo->player);
             else
@@ -864,10 +864,10 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
          }
          else if(mo->momz < -12*FRACUNIT)
             S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
-         else if(onthing || !E_GetThingFloorType(mo, true)->liquid)
+         else if(onthing || !E_GetThingFloorType(mo)->liquid)
             S_StartSound(mo, GameModeInfo->playerSounds[sk_plfeet]);
       }
-      else if(onthing || !E_GetThingFloorType(mo, true)->liquid)
+      else if(onthing || !E_GetThingFloorType(mo)->liquid)
          S_StartSound(mo, GameModeInfo->playerSounds[sk_oof]);
    }
 }
@@ -1250,7 +1250,7 @@ void P_NightmareRespawn(Mobj* mobj)
       mo->flags |= MF_AMBUSH;
 
    // killough 11/98: transfer friendliness from deceased
-   mo->flags = (mo->flags & ~MF_FRIEND) | (mobj->flags & MF_FRIEND);
+   P_transferFriendship(*mo, *mobj);
 
    mo->reactiontime = 18;
 
@@ -1505,7 +1505,7 @@ void Mobj::Think()
             if(demo_version >= 333 && onmo->info->topdamage > 0)
             {
                if(!(leveltime & onmo->info->topdamagemask) &&
-                  (!player || !player->powers[pw_ironfeet]))
+                  (!player || !player->powers[pw_ironfeet].isActive()))
                {
                   P_DamageMobj(this, onmo, onmo,
                                onmo->info->topdamage, 
@@ -2002,10 +2002,14 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
 
    // killough 11/98: for tracking dropoffs
    // ioanch 20160201: fix zref.floor and zref.ceiling to be portal-aware
-   const sector_t *extremesector = P_ExtremeSectorAtPoint(mobj, surf_floor);
-   mobj->zref.dropoff = mobj->zref.floor = extremesector->srf.floor.height;
+   v2fixed_t totaldelta;
+   const sector_t *extremesector = P_ExtremeSectorAtPoint(mobj, surf_floor, &totaldelta);
+   mobj->zref.dropoff = mobj->zref.floor = extremesector->srf.floor.getZAt(x + totaldelta.x,
+                                                                           y + totaldelta.y);
    mobj->zref.floorgroupid = extremesector->groupid;
-   mobj->zref.ceiling = P_ExtremeSectorAtPoint(mobj, surf_ceil)->srf.ceiling.height;
+   mobj->zref.floorsector = extremesector;
+   extremesector = P_ExtremeSectorAtPoint(mobj, surf_ceil, &totaldelta);
+   mobj->zref.ceiling = extremesector->srf.ceiling.getZAt(x + totaldelta.x, y + totaldelta.y);
 
    mobj->z = 
       (z == ONFLOORZ ? mobj->zref.floor : z == ONCEILINGZ ? mobj->zref.ceiling - mobj->height : z);
@@ -3249,7 +3253,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type, unsigned flags,
 
    th = P_SpawnMobj(x, y, z, type);
 
-   if(source->player && source->player->powers[pw_silencer] &&
+   if(source->player && source->player->powers[pw_silencer].isActive() &&
       source->player->readyweapon->flags & WPF_SILENCEABLE)
    {
       S_StartSoundAtVolume(th, th->info->seesound, WEAPON_VOLUME_SILENCED, 
@@ -3374,6 +3378,96 @@ Mobj* P_SpawnMissileWithDest(Mobj* source, Mobj* dest, mobjtype_t type,
    missileinfo.z      = srcz;
 
    return P_SpawnMissileEx(missileinfo);
+}
+
+//
+// A mix of P_HticTracer from our a_heretic.cpp,
+// and P_SeekerMissile from dsda-doom (GPLv2+, credit to Ryan Krafnick)
+//
+bool P_SeekerMissile(Mobj *actor, const angle_t threshold, const angle_t maxturn, const seekcenter_e seekcenter)
+{
+   angle_t exact, diff;
+   Mobj   *dest;
+   bool    dir;
+
+   // adjust direction
+   dest = actor->tracer;
+
+   if(!dest)
+      return false;
+
+   // clear target field if target died
+   if(!(dest->flags & MF_SHOOTABLE))
+   {
+      P_ClearTarget(actor->tracer);
+      return false;
+   }
+
+   // ioanch 20151230: portal aware
+   fixed_t dx = getThingX(actor, dest);
+   fixed_t dy = getThingY(actor, dest);
+   fixed_t dz = getThingZ(actor, dest);
+
+   exact = P_PointToAngle(actor->x, actor->y, dx, dy);
+
+   if(exact > actor->angle)
+   {
+      diff = exact - actor->angle;
+      dir = true;
+   }
+   else
+   {
+      diff = actor->angle - exact;
+      dir = false;
+   }
+
+   // if > 180, invert angle and direction
+   if(diff > 0x80000000)
+   {
+      diff = 0xFFFFFFFF - diff;
+      dir = !dir;
+   }
+
+   // apply limiting parameters
+   if(diff > threshold)
+   {
+      diff >>= 1;
+      if(diff > maxturn)
+         diff = maxturn;
+   }
+
+   // turn clockwise or counterclockwise
+   if(dir)
+      actor->angle += diff;
+   else
+      actor->angle -= diff;
+
+   // directly from above
+   diff = actor->angle>>ANGLETOFINESHIFT;
+   actor->momx = FixedMul(actor->info->speed, finecosine[diff]);
+   actor->momy = FixedMul(actor->info->speed, finesine[diff]);
+
+   // adjust z only when significant height difference exists
+   if(actor->z + actor->height < dz || dz  + dest->height  < actor->z || seekcenter == seekcenter_e::yes)
+   {
+      // directly from above
+      fixed_t dist = P_AproxDistance(dx - actor->x, dy - actor->y);
+
+      dist = dist / actor->info->speed;
+
+      if(dist < 1)
+         dist = 1;
+
+      // momentum is set to equal slope rather than having some
+      // added to it
+      actor->momz = (dz - actor->z) / dist;
+
+      // aim for centre of dest thing?
+      if(seekcenter == seekcenter_e::yes)
+         actor->momz += (dest->height / 2) / dist;
+   }
+
+   return true;
 }
 
 //=============================================================================

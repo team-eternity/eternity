@@ -33,9 +33,11 @@
 #include "e_exdata.h"
 #include "ev_specials.h"
 #include "m_bbox.h"
+#include "m_compare.h"
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_maputl.h"
+#include "p_portalcross.h"
 #include "p_portalclip.h"
 #include "p_setup.h"
 #include "p_spec.h"
@@ -113,6 +115,85 @@ int P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld)
         (P_PointOnLineSide(tmbox[BOXLEFT], tmbox[BOXBOTTOM], ld)) ==
         (p = P_PointOnLineSide(tmbox[BOXRIGHT], tmbox[BOXTOP], ld)) ? p : -1;
     }
+}
+
+//
+// Assuming P_BoxOnLineSide returned -1 and the line is not outside the box, find the inter-
+// section points. If any point is outside the line, then just use the endpoint of the line.
+//
+void P_ExactBoxLinePoints(const fixed_t *tmbox, const line_t &line, v2fixed_t &i1,
+                          v2fixed_t &i2)
+{
+   //
+   // Helper function to get the mid value between left and right depending on two ratios
+   //
+   auto findMiddle = [](fixed_t dstart, fixed_t dend, fixed_t min, fixed_t max)
+   {
+      if(dstart < dend) // safeguard against microscopic dstart or dend
+         return max - FixedMul(max - min, FixedDiv(dend, dstart + dend));
+      return min + FixedMul(max - min, FixedDiv(dstart, dstart + dend));
+   };
+
+   switch(line.slopetype)
+   {
+      case ST_HORIZONTAL:
+         i1 = { emax(tmbox[BOXLEFT], line.bbox[BOXLEFT]), line.v1->y };
+         i2 = { emin(tmbox[BOXRIGHT], line.bbox[BOXRIGHT]), line.v1->y };
+         return;
+      case ST_VERTICAL:
+         i1 = { line.v1->x, emax(tmbox[BOXBOTTOM], line.bbox[BOXBOTTOM]) };
+         i2 = { line.v1->x, emin(tmbox[BOXTOP], line.bbox[BOXTOP]) };
+         return;
+      default:
+         break;
+   }
+
+   divline_t dl;
+   v2fixed_t corners[2];
+   if(line.slopetype == ST_POSITIVE)
+   {
+      dl = {{ line.bbox[BOXLEFT], line.bbox[BOXBOTTOM] },
+         { line.bbox[BOXRIGHT] - line.bbox[BOXLEFT],
+            line.bbox[BOXTOP] - line.bbox[BOXBOTTOM] }};
+      corners[0] = { tmbox[BOXLEFT], tmbox[BOXBOTTOM] };
+      corners[1] = { tmbox[BOXRIGHT], tmbox[BOXTOP] };
+   }
+   else
+   {
+      dl = {{ line.bbox[BOXLEFT], line.bbox[BOXTOP] },
+         { line.bbox[BOXRIGHT] - line.bbox[BOXLEFT],
+            line.bbox[BOXBOTTOM] - line.bbox[BOXTOP] }};
+      corners[0] = { tmbox[BOXLEFT], tmbox[BOXTOP] };
+      corners[1] = { tmbox[BOXRIGHT], tmbox[BOXBOTTOM] };
+   }
+   fixed_t dstart, dend;
+   dstart = corners[0].x - dl.x;
+   dend = dl.x + dl.dx - corners[0].x;
+   i1.x = corners[0].x;
+   i1.y = findMiddle(dstart, dend, dl.y, dl.y + dl.dy);
+   if((dstart ^ dend) < 0 || i1.y < tmbox[BOXBOTTOM] || i1.y > tmbox[BOXTOP])
+   {
+      dstart = corners[0].y - dl.y;
+      dend = dl.y + dl.dy - corners[0].y;
+      i1.x = findMiddle(dstart, dend, dl.x, dl.x + dl.dx);
+      i1.y = corners[0].y;
+   }
+   if(i1.x < line.bbox[BOXLEFT] || i1.y < line.bbox[BOXBOTTOM] || i1.y > line.bbox[BOXTOP])
+      i1 = dl.v;
+
+   dstart = corners[1].y - dl.y;
+   dend = dl.y + dl.dy - corners[1].y;
+   i2.x = findMiddle(dstart, dend, dl.x, dl.x + dl.dx);
+   i2.y = corners[1].y;
+   if(i1.x < tmbox[BOXLEFT] || i1.x > tmbox[BOXRIGHT])
+   {
+      dstart = corners[1].x - dl.x;
+      dend = dl.x + dl.dx - corners[1].x;
+      i2.x = corners[1].x;
+      i2.y = findMiddle(dstart, dend, dl.y, dl.y + dl.dy);
+   }
+   if(i2.x > line.bbox[BOXRIGHT] || i2.y < line.bbox[BOXBOTTOM] || i2.y > line.bbox[BOXTOP])
+      i2 = dl.v + dl.dv;
 }
 
 //
@@ -296,6 +377,48 @@ fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1)
 }
 
 //
+// Get opening on a point, against slopes
+//
+lineopening_t P_SlopeOpening(v2fixed_t pos)
+{
+   const sector_t &sector = *R_PointInSubsector(pos.x, pos.y)->sector;
+   lineopening_t open = {};
+   open.height.floor = sector.srf.floor.getZAt(pos);
+   open.height.ceiling = sector.srf.ceiling.getZAt(pos);
+   open.sec = open.height; // do not consider 3dmidtex here
+   open.range = open.height.ceiling - open.height.floor;
+   open.bottomgroupid = sector.groupid;
+   open.lowfloor = open.height.floor;
+   open.floorpic = sector.srf.floor.pic;
+   open.floorsector = &sector;
+   open.ceilsector = &sector;
+   open.touch3dside = 0;
+   return open;
+}
+
+lineopening_t P_SlopeOpeningPortalAware(v2fixed_t pos)
+{
+   v2fixed_t floorpos;
+   const sector_t *floorsector = P_ExtremeSectorAtPoint(pos.x, pos.y, surf_floor, nullptr, &floorpos);
+   floorpos += pos;
+   v2fixed_t ceilpos;
+   const sector_t *ceilsector = P_ExtremeSectorAtPoint(pos.x, pos.y, surf_ceil, nullptr, &ceilpos);
+   ceilpos += pos;
+   lineopening_t open = {};
+   open.height.floor = floorsector->srf.floor.getZAt(floorpos);
+   open.height.ceiling = ceilsector->srf.ceiling.getZAt(ceilpos);
+   open.sec = open.height;
+   open.range = open.height.ceiling - open.height.floor;
+   open.bottomgroupid = floorsector->groupid;
+   open.lowfloor = open.height.floor;
+   open.floorpic = floorsector->srf.floor.pic;
+   open.floorsector = floorsector;
+   open.ceilsector = ceilsector;
+   open.touch3dside = 0;
+   return open;
+}
+
+//
 // P_LineOpening
 //
 // Sets opentop and openbottom to the window
@@ -327,17 +450,17 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
    {
       *lineclipflags = 0;
    }
-   open.frontsector = linedef->frontsector;
-   open.backsector = linedef->backsector;
+   const sector_t *openfrontsector = linedef->frontsector;
+   const sector_t *openbacksector = linedef->backsector;
    sector_t *beyond = linedef->intflags & MLI_1SPORTALLINE && linedef->beyondportalline ?
       linedef->beyondportalline->frontsector : nullptr;
    if(beyond)
-      open.backsector = beyond;
+      openbacksector = beyond;
 
    // SoM: ok, new plan. The only way a 2s line should give a lowered floor or hightened ceiling
    // z is if both sides of that line have the same portal.
-   const surface_t &frontceiling = open.frontsector->srf.ceiling;
-   const surface_t &backceiling = open.backsector->srf.ceiling;
+   const surface_t &frontceiling = openfrontsector->srf.ceiling;
+   const surface_t &backceiling = openbacksector->srf.ceiling;
    {
       if(mo && demo_version >= 333 &&
          ((frontceiling.pflags & PS_PASSABLE && backceiling.pflags & PS_PASSABLE &&
@@ -365,8 +488,8 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
       backcz  = backceiling.getZAt(point);
    }
 
-   const surface_t &frontfloor = open.frontsector->srf.floor;
-   const surface_t &backfloor = open.backsector->srf.floor;
+   const surface_t &frontfloor = openfrontsector->srf.floor;
+   const surface_t &backfloor = openbacksector->srf.floor;
    {
       if(mo && demo_version >= 333 &&
          ((frontfloor.pflags & PS_PASSABLE && backfloor.pflags & PS_PASSABLE &&
@@ -384,17 +507,17 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
          {
             *lineclipflags |= LINECLIP_ABOVEPORTAL;
             frontfloorz = frontfloor.getZAt(point);
-            frontfloorgroupid = open.frontsector->groupid;
+            frontfloorgroupid = openfrontsector->groupid;
             backfloorz  = backfloor.getZAt(point);
-            backfloorgroupid = open.backsector->groupid;
+            backfloorgroupid = openbacksector->groupid;
          }
       }
       else
       {
          frontfloorz = frontfloor.getZAt(point);
-         frontfloorgroupid = open.frontsector->groupid;
+         frontfloorgroupid = openfrontsector->groupid;
          backfloorz  = backfloor.getZAt(point);
-         backfloorgroupid = open.backsector->groupid;
+         backfloorgroupid = openbacksector->groupid;
       }
 
       frontfz = frontfloor.getZAt(point);
@@ -402,11 +525,20 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
    }
 
    if(linedef->extflags & EX_ML_UPPERPORTAL && backceiling.pflags & PS_PASSABLE)
+   {
       open.height.ceiling = frontceilz;
+      open.ceilsector = openfrontsector;
+   }
    else if(frontceilz < backceilz)
+   {
       open.height.ceiling = frontceilz;
+      open.ceilsector = openfrontsector;
+   }
    else
+   {
       open.height.ceiling = backceilz;
+      open.ceilsector = openbacksector;
+   }
 
    // ioanch 20160114: don't change floorpic if portaldetect is on
    if(linedef->extflags & EX_ML_LOWERPORTAL && backfloor.pflags & PS_PASSABLE)
@@ -414,6 +546,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
       open.height.floor = frontfloorz;
       open.bottomgroupid = frontfloorgroupid;
       open.lowfloor = frontfloorz;
+      open.floorsector = openfrontsector;
       if(!portaldetect || !(frontfloor.pflags & PS_PASSABLE))
          open.floorpic = frontfloor.pic;
    }
@@ -422,6 +555,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
       open.height.floor = frontfloorz;
       open.bottomgroupid = frontfloorgroupid;
       open.lowfloor = backfloorz;
+      open.floorsector = openfrontsector;
       // haleyjd
       if(!portaldetect || !(frontfloor.pflags & PS_PASSABLE))
          open.floorpic = frontfloor.pic;
@@ -431,6 +565,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
       open.height.floor = backfloorz;
       open.bottomgroupid = backfloorgroupid;
       open.lowfloor = frontfloorz;
+      open.floorsector = openbacksector;
       // haleyjd
       if(!portaldetect || !(backfloor.pflags & PS_PASSABLE))
          open.floorpic = backfloor.pic;
@@ -485,7 +620,10 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
       if(mo->z + (P_ThingInfoHeight(mo->info) / 2) < texmid)
       {
          if(texbot < open.height.ceiling)
+         {
             open.height.ceiling = texbot;
+            open.ceilsector = nullptr; // not under a slope now
+         }
          // ioanch 20160318: mark if 3dmidtex affects clipping
          // Also don't flag lines that are offset into the floor/ceiling
          if(portaldetect && (texbot < frontceiling.getZAt(point) || texbot < backceiling.getZAt(point)))
@@ -497,6 +635,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
          {
             open.height.floor = textop;
             open.bottomgroupid = linedef->frontsector->groupid;
+            open.floorsector = nullptr;   // not on a slope now
          }
          // ioanch 20160318: mark if 3dmidtex affects clipping
          // Also don't flag lines that are offset into the floor/ceiling
@@ -512,6 +651,35 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
 
    open.range = open.height.ceiling - open.height.floor;
    return open;
+}
+
+//
+// Reduces this opening by the other, raising the floor and lowering the ceiling a necessary.
+//
+void lineopening_t::intersect(const lineopening_t &other)
+{
+   if(other.height.floor > height.floor)
+   {
+      height.floor = other.height.floor;
+      bottomgroupid = other.bottomgroupid;
+      floorpic = other.floorpic;
+      touch3dside = other.touch3dside;
+      floorsector = other.floorsector;
+   }
+   if(other.height.ceiling < height.ceiling)
+   {
+      height.ceiling = other.height.ceiling;
+      ceilsector = other.ceilsector;
+   }
+   range = height.ceiling - height.floor;
+
+   if(other.sec.floor > sec.floor)
+      sec.floor = other.sec.floor;
+   if(other.sec.ceiling < sec.ceiling)
+      sec.ceiling = other.sec.ceiling;
+
+   if(other.lowfloor < lowfloor)
+      lowfloor = other.lowfloor;
 }
 
 //

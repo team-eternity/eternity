@@ -159,6 +159,7 @@ struct pslope_t
    v3float_t of;
 
    // The normal of the 3d plane the slope creates.
+   v3fixed_t normal;
    v3float_t normalf;
 
    // 2-Dimensional vector (x, y) normalized. Used to determine distance from
@@ -222,6 +223,13 @@ struct sectorinterp_t
    fixed_t backceilingheight;
    float   backfloorheightf;
    float   backceilingheightf;
+
+   // as the above sets of values, but for slope origin Z
+   float   prevfloorslopezf;
+   float   prevceilingslopezf;
+
+   float   backfloorslopezf;
+   float   backceilingslopezf;
 };
 
 //
@@ -622,6 +630,12 @@ struct spritedef_t
 // SoM: Information used in texture mapping sloped planes
 struct rslope_t
 {
+   // A is a vector, which represents how movement through x and y screen space changes the u texture coordinate
+   // B is a vector, which represents how movement through x and y screen space changes the v texture coordinate
+
+   // Alternatively: A maps screen coordinates to u coords, B maps screen coordinates to v coords,
+   //                and C maps screen coordinates to inverse plane distances
+
    v3double_t A, B, C;
    double     zat, plight, shade;
 };

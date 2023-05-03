@@ -62,8 +62,8 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
    lighttable_t **wlight;
    float   *maskedtexturecol;
 
-   cb_column_t column  = {};
-   cb_seg_t    segclip = {};
+   cb_column_t column{};
+   cb_seg_t    segclip{};
 
    // Calculate light table.
    // Use different light tables
@@ -218,17 +218,6 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                             const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
                             drawseg_t *const ds_p, cb_seg_t &segclip)
 {
-   float     *const floorclip   = planecontext.floorclip;
-   float     *const ceilingclip = planecontext.ceilingclip;
-
-   int t, b, line;
-   int cliptop, clipbot;
-   int i;
-   float texx;
-   float basescale;
-
-   cb_column_t column = {};
-
 #ifdef RANGECHECK
    if(segclip.x1 < bounds.startcolumn || segclip.x2 >= bounds.endcolumn || segclip.x1 > segclip.x2)
    {
@@ -238,6 +227,17 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
               static_cast<int>(segclip.line->linedef - lines));
    }
 #endif
+
+   float     *const floorclip   = planecontext.floorclip;
+   float     *const ceilingclip = planecontext.ceilingclip;
+
+   int t, b, line;
+   int cliptop, clipbot;
+   int i;
+   float texx;
+   float basescale;
+
+   cb_column_t column{};
 
 
    visplane_t *skyplane = nullptr;

@@ -709,7 +709,8 @@ void A_Explode(actionargs_t *actionargs)
    P_RadiusAttack(thingy, thingy->target, 128, 128, thingy->info->mod, 0);
 
    // ioanch 20160116: portal aware Z
-   // VANILLA_HERETIC: apply the same check as in vanilla
+   // VANILLA_HERETIC: apply the same check as in vanilla.
+   // NOTE: no slopes in vanilla, no need to go more complex than "floor height".
    if(!vanilla_heretic || thingy->zref.floor == thingy->subsector->sector->srf.floor.height)
       E_ExplosionHitWater(thingy, 128);
 }

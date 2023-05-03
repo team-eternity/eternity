@@ -24,7 +24,9 @@
 // Authors: Max Waine
 //
 
-#ifdef _MSC_VER
+#include "../hal/i_platform.h"
+
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>

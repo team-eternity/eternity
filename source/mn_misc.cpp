@@ -351,7 +351,7 @@ static void MN_FindHelpScreens(void)
    {
       char tempstr[10];
 
-      sprintf(tempstr, "HELP%.02i", custom);
+      snprintf(tempstr, sizeof(tempstr), "HELP%.02i", custom);
       AddHelpScreen(tempstr);
    }
    
@@ -617,7 +617,8 @@ int selected_colour;
 
 #define HIGHLIGHT_COLOUR (GameModeInfo->whiteIndex)
 
-static void MN_MapColourDrawer()
+template <mapColorType_e mapColorType>
+static void MN_mapColorDrawer()
 {
    patch_t *patch;
    int x, y;
@@ -653,10 +654,10 @@ static void MN_MapColourDrawer()
    // draw block
    V_DrawBlock(x, y, &subscreen43, BLOCK_SIZE, BLOCK_SIZE, block);
 
-   if(!selected_colour)
+   if constexpr(mapColorType == mapColorType_e::optional)
    {
-      V_DrawPatch(x+1, y+1, &subscreen43, 
-                  PatchLoader::CacheName(wGlobalDir, "M_PALNO", PU_CACHE));
+      if(!selected_colour)
+         V_DrawPatch(x+1, y+1, &subscreen43, PatchLoader::CacheName(wGlobalDir, "M_PALNO", PU_CACHE));
    }
 }
 
@@ -684,7 +685,7 @@ static bool MN_MapColourResponder(event_t *ev, int action)
    if(action == ka_menu_confirm)
    {
       static char tempstr[128];
-      sprintf(tempstr, "%i", selected_colour);
+      snprintf(tempstr, sizeof(tempstr), "%i", selected_colour);
      
       // run command
       C_RunCommand(colour_command, tempstr);
@@ -702,17 +703,22 @@ static bool MN_MapColourResponder(event_t *ev, int action)
    return true; // always eat key
 }
 
-menuwidget_t colour_widget = 
+template <mapColorType_e mapColorType>
+menuwidget_t colour_widget =
 {
-   MN_MapColourDrawer, 
+   MN_mapColorDrawer<mapColorType>,
    MN_MapColourResponder,
    nullptr,
    true
 };
 
-void MN_SelectColour(const char *variable_name)
+void MN_SelectColor(const char *variable_name, const mapColorType_e color_type)
 {
-   MN_PushWidget(&colour_widget);
+   if(color_type == mapColorType_e::mandatory)
+      MN_PushWidget(&colour_widget<mapColorType_e::mandatory>);
+   else
+      MN_PushWidget(&colour_widget<mapColorType_e::optional>);
+
    colour_command = C_GetCmdForName(variable_name);
    selected_colour = *(int *)colour_command->variable->variable;
 }

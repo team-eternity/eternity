@@ -134,6 +134,8 @@ int P_BoxOnDivlineSideFloat(const float *box, v2float_t start, v2float_t delta);
 lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo,
                             const v2fixed_t *ppoint = nullptr, bool portaldetect = false,
                             uint32_t *lineclipflags = nullptr);
+lineopening_t P_SlopeOpening(v2fixed_t pos);
+lineopening_t P_SlopeOpeningPortalAware(v2fixed_t pos);
 
 void P_UnsetThingPosition(Mobj *thing);
 void P_SetThingPosition(Mobj *thing);
@@ -147,6 +149,10 @@ inline static bool P_BlockThingsIterator(int x, int y, bool func(Mobj *, void *)
    // ioanch 20160108: avoid code duplication
    return P_BlockThingsIterator(x, y, R_NOGROUP, func, context);
 }
+
+void P_ExactBoxLinePoints(const fixed_t *tmbox, const line_t &line, v2fixed_t &i1,
+                          v2fixed_t &i2);
+
 bool ThingIsOnLine(const Mobj *t, const line_t *l);  // killough 3/15/98
 bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
                     int flags, traverser_t trav, void *context = nullptr);

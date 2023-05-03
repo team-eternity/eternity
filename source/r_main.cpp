@@ -917,6 +917,18 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
             sec.srf.ceiling.height = lerpCoord(view.lerp, si.prevceilingheight, sec.srf.ceiling.height);
             sec.srf.floor.heightf = M_FixedToFloat(sec.srf.floor.height);
             sec.srf.ceiling.heightf = M_FixedToFloat(sec.srf.ceiling.height);
+
+            // as above, but only for slope origin Z
+            if(pslope_t *slope = sec.srf.floor.slope; slope && si.prevfloorslopezf != slope->of.z)
+            {
+               si.backfloorslopezf = slope->of.z;
+               slope->of.z = lerpCoordf(view.lerp, si.prevfloorslopezf, slope->of.z);
+            }
+            if(pslope_t *slope = sec.srf.ceiling.slope; slope && si.prevceilingslopezf != slope->of.z)
+            {
+               si.backceilingslopezf = slope->of.z;
+               slope->of.z = lerpCoordf(view.lerp, si.prevceilingslopezf, slope->of.z);
+            }
          }
          else
             si.interpolated = false;
@@ -931,10 +943,15 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
          // restore backed up heights
          if(si.interpolated)
          {
-            sec.srf.floor.height = si.backfloorheight;
-            sec.srf.floor.heightf = si.backfloorheightf;
-            sec.srf.ceiling.height = si.backceilingheight;
+            sec.srf.floor.height    = si.backfloorheight;
+            sec.srf.floor.heightf   = si.backfloorheightf;
+            sec.srf.ceiling.height  = si.backceilingheight;
             sec.srf.ceiling.heightf = si.backceilingheightf;
+
+            if(pslope_t *slope = sec.srf.floor.slope; slope)
+               slope->of.z = si.backfloorslopezf;
+            if(pslope_t *slope = sec.srf.ceiling.slope; slope)
+               slope->of.z = si.backceilingslopezf;
          }
       }
       break;

@@ -875,7 +875,7 @@ struct savedview_t
 
 inline static savedview_t R_getLastView(const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint)
 {
-   savedview_t last = {};
+   savedview_t last{};
    last.pos = { viewpoint.x, viewpoint.y, viewpoint.z };
    last.posf = { cb_viewpoint.x, cb_viewpoint.y, cb_viewpoint.z };
    last.angle = viewpoint.angle;
@@ -1123,6 +1123,8 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
 
       // SoM: The viewangle should also be offset by the skybox camera angle.
       viewpoint.angle += portal->data.camera->angle;
+      if(portalcontext.portalrender.active)
+         viewpoint.angle += portalcontext.portalrender.w->vangle - viewpoint.angle;
       viewpoint.sin    = finesine[viewpoint.angle >>ANGLETOFINESHIFT];
       viewpoint.cos    = finecosine[viewpoint.angle >>ANGLETOFINESHIFT];
 
