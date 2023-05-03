@@ -287,6 +287,10 @@ keyboard keys.
 Fixed instances where scrolling through weapons wouldn't work if the next weapon
 to be scrolled to is the same as the currently-equipped weapon.
 
+--------------------------------------------------------------------------------
+2023/05/03
+Improved frame pacing with interpolation.
+
 ================================================================================
 EOF
 ================================================================================

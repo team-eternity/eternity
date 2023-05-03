@@ -168,16 +168,7 @@ static void I_SDLSetMSec()
 //
 static fixed_t I_SDLGetTimeFrac()
 {
-   fixed_t frac = FRACUNIT;
-
-   if(!singletics && rendertic_step != 0)
-   {
-      unsigned int now = SDL_GetTicks();
-      frac = (fixed_t)((now - rendertic_start + displaytime) * FRACUNIT / rendertic_step);
-      frac = eclamp(frac, 0, FRACUNIT);
-   }
-
-   return frac;
+   return I_SDLGetTicks_Scaled() * TICRATE % 1000 * FRACUNIT / 1000;
 }
 
 //

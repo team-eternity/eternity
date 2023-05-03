@@ -475,6 +475,9 @@ void C_Drawer(void)
    int real_height;
    static int oldscreenheight = 0;
    static int oldscreenwidth = 0;
+   static int lastprevheight = 0;
+   static int lastcurrheight = 0;
+   static double lastlerp = 0.0;
 
    if(!consoleactive && !Console.prev_height)
       return;   // dont draw if not active
@@ -490,12 +493,23 @@ void C_Drawer(void)
 
    // fullscreen console for fullscreen mode
    if(gamestate == GS_CONSOLE)
-      Console.current_height = cback.scaled ? SCREENHEIGHT : cback.height;
+      Console.current_height = Console.prev_height = cback.scaled ? SCREENHEIGHT : cback.height;
 
-   double lerp = M_FixedToDouble(R_GetLerp(true)); // don't rely on FixedMul and small integers
+   double lerp = M_FixedToDouble(R_GetLerp(true)); // don't rely on FixedMul and small integers;
+
+   // We need to handle situations where lerp might decrease between two frames in a single tic
+   if(lastcurrheight == lastprevheight)
+      lastlerp = 0.0;
+   else if(lastprevheight == Console.prev_height && lerp < lastlerp)
+      lerp += lastlerp;
+
    int currentHeight = eclamp(int(round(Console.prev_height +
                                         lerp * (Console.current_height - Console.prev_height))), 1,
                               SCREENHEIGHT);
+
+   lastprevheight = Console.prev_height;
+   lastcurrheight = Console.current_height;
+   lastlerp       = lerp;
 
    real_height = 
       cback.scaled ? cback.y2lookup[currentHeight - 1] + 1 :currentHeight;
