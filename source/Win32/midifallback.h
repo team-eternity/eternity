@@ -18,6 +18,8 @@
 // Authors: ceski
 //
 
+#ifndef MIDIFALLBACK_H
+#define MIDIFALLBACK_H
 
 #include "doomtype.h"
 #include "midifile.h"
@@ -36,6 +38,11 @@ struct midi_fallback_t
    byte value;
 };
 
-void MIDI_CheckFallback(midi_event_t *event, midi_fallback_t *fallback);
+void MIDI_CheckFallback(const midi_event_t *event, midi_fallback_t *fallback);
 void MIDI_ResetFallback();
 void MIDI_InitFallback();
+
+#endif
+
+// EOF
+
