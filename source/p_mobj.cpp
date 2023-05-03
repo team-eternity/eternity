@@ -1409,8 +1409,8 @@ IMPLEMENT_THINKER_TYPE(Mobj)
 inline static void P_checkMobjProjections(Mobj &mobj)
 {
    uint32_t spritecomp = mobj.sprite << 16 | (mobj.frame & 0xffff);
-   bool xychanged = mobj.x != mobj.sprojlast.pos.x || mobj.y != mobj.sprojlast.pos.y ||
-                    mobj.xscale != mobj.sprojlast.xscale;
+   bool xychanged = mobj.x != mobj.sprojlast.pos.x ||
+   mobj.y != mobj.sprojlast.pos.y || mobj.xscale != mobj.sprojlast.xscale;
 
    if(useportalgroups && (mobj.z != mobj.sprojlast.pos.z || xychanged ||
                           spritecomp != mobj.sprojlast.sprite ||
