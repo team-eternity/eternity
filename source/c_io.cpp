@@ -357,11 +357,11 @@ bool C_Responder(event_t *ev)
       return true;
    }
 
-   if(!consoleactive) 
+   if(!consoleactive)
       return false;
-   
-   // not til its stopped moving
-   if(Console.current_target < Console.current_height) 
+
+   // not till it's stopped moving or stopped turning around
+   if(Console.current_target < Console.current_height || Console.current_height < Console.prev_height)
       return false;
 
    switch(action)
