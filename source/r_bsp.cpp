@@ -747,36 +747,32 @@ int R_FakeFlatSpriteLighting(const fixed_t viewz, const sector_t *sec)
    {
       const sector_t *s = &sectors[sec->heightsec];
 
-      // haleyjd 01/07/14: get from view.sector due to interpolation
+      // Get from view.sector due to interpolation
       const int  heightsec = view.sector->heightsec;
       const bool underwater = (heightsec != -1 && viewz <= sectors[heightsec].srf.floor.height);
 
-      // killough 11/98: prevent sudden light changes from non-water sectors:
-      if(underwater)
+      // Prevent sudden light changes from non-water sectors:
+      if(underwater ||
+         (heightsec != -1 && viewz >= sectors[heightsec].srf.ceiling.height &&
+          sec->srf.ceiling.height > s->srf.ceiling.height))
       {
-         floorlightlevel =
-            (s->flags & SECF_FLOORLIGHTABSOLUTE ? 0 : s->srf.floor.lightsec == -1 ?
-               s->lightlevel : sectors[s->srf.floor.lightsec].lightlevel)
-            + s->srf.floor.lightdelta;
+         floorlightlevel = s->srf.floor.lightdelta;
+         if(!(s->flags & SECF_FLOORLIGHTABSOLUTE))
+         {
+            if(s->srf.floor.lightsec == -1)
+               floorlightlevel += s->lightlevel;
+            else
+               floorlightlevel += sectors[s->srf.floor.lightsec].lightlevel;
+         }
 
-         ceilinglightlevel =
-            (s->flags & SECF_CEILLIGHTABSOLUTE ? 0 : s->srf.ceiling.lightsec == -1 ?
-               s->lightlevel : sectors[s->srf.ceiling.lightsec].lightlevel)
-            + s->srf.ceiling.lightdelta;
-      }
-      else if(heightsec != -1 &&
-         viewz >= sectors[heightsec].srf.ceiling.height &&
-         sec->srf.ceiling.height > s->srf.ceiling.height)
-      {
-         floorlightlevel =
-            (s->flags & SECF_FLOORLIGHTABSOLUTE ? 0 : s->srf.floor.lightsec == -1 ?
-               s->lightlevel : sectors[s->srf.floor.lightsec].lightlevel)
-            + s->srf.floor.lightdelta;
-
-         ceilinglightlevel =
-            (s->flags & SECF_CEILLIGHTABSOLUTE ? 0 : s->srf.ceiling.lightsec == -1 ?
-               s->lightlevel : sectors[s->srf.ceiling.lightsec].lightlevel)
-            + s->srf.ceiling.lightdelta;
+         ceilinglightlevel = s->srf.ceiling.lightdelta;
+         if(!(s->flags & SECF_CEILLIGHTABSOLUTE))
+         {
+            if(s->srf.ceiling.lightsec == -1)
+               ceilinglightlevel += s->lightlevel;
+            else
+               ceilinglightlevel += sectors[s->srf.ceiling.lightsec].lightlevel;
+         }
       }
    }
 
