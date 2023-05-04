@@ -225,7 +225,6 @@ void I_ShutdownGraphics()
 {
    if(in_graphics_mode)
    {
-      R_FreeContexts();
       i_video_driver->ShutdownGraphics();
       in_graphics_mode = false;
       in_textmode = true;

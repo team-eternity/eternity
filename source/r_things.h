@@ -42,6 +42,7 @@ struct cbviewpoint_t;
 struct bspcontext_t;
 struct cmapcontext_t;
 struct rendercontext_t;
+class  ZoneHeap;
 
 using R_ColumnFunc = void (*)(cb_column_t &);
 
@@ -70,8 +71,10 @@ struct poststack_t
    maskedrange_t *masked;
 };
 
-void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
+void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
                 const contextbounds_t &bounds, bool pushmasked, pwindow_t *window);
+
+void R_ClearBadSpritesAndFrames();
 
 // SoM: Cardboard
 void R_SetMaskedSilhouette(const contextbounds_t &bounds,
@@ -87,12 +90,14 @@ void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc,
                            const float *const mfloorclip, const float *const mceilingclip);
 void R_AddSprites(cmapcontext_t &cmapcontext,
                   spritecontext_t &spritecontext,
+                  ZoneHeap &heap,
                   const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                   const contextbounds_t &bounds,
                   const portalrender_t &portalrender,
                   sector_t *sec, int); // killough 9/18/98
 void R_InitSprites(char **namelist);
 void R_ClearSprites(spritecontext_t &context);
+void R_ClearMarkedSprites(spritecontext_t &context, ZoneHeap &heap);
 void R_DrawPostBSP(rendercontext_t &context);
 void R_DrawPlayerSprites();
 void R_ClearParticles(void);

@@ -1098,15 +1098,31 @@ static void FinishTexture(texture_t *tex)
 }
 
 //
-// R_CacheTexture
-// 
+// Gets a cached texture, which MUST exist at this stage.
+//
+texture_t *R_GetTexture(int num)
+{
+#ifdef RANGECHECK
+   if(num < 0 || num >= texturecount)
+      I_Error("R_GetTexture: invalid texture num %i\n", num);
+#endif
+
+   texture_t *tex = textures[num];
+   if(tex->bufferalloc)
+      return tex;
+   else
+      I_Error("R_GetTexture: Texture %s is not cached\n", tex->name);
+
+}
+
+//
 // Caches a texture in memory, building it from component parts.
 //
-texture_t *R_CacheTexture(int num)
+void R_CacheTexture(int num)
 {
    texture_t  *tex;
    int        i;
-   
+
 #ifdef RANGECHECK
    if(num < 0 || num >= texturecount)
       I_Error("R_CacheTexture: invalid texture num %i\n", num);
@@ -1114,8 +1130,8 @@ texture_t *R_CacheTexture(int num)
 
    tex = textures[num];
    if(tex->bufferalloc)
-      return tex;
-   
+      return;
+
    // SoM: This situation would most certainly require an abort.
    if(tex->ccount == 0)
    {
@@ -1127,21 +1143,21 @@ texture_t *R_CacheTexture(int num)
    // 1. There is no buffer, and there are no columns which means the texture
    //    has never been built before and needs a full treatment
    // 2. There is no buffer, but there are columns which means that the buffer
-   //    (PU_CACHE) has been freed but the columns (PU_RENDERER) have not. 
+   //    (PU_CACHE) has been freed but the columns (PU_RENDERER) have not.
    //    This case means we only have to rebuilt the buffer.
 
-   // Start the texture. Check the size of the mask buffer if needed.   
+   // Start the texture. Check the size of the mask buffer if needed.
    StartTexture(tex, tex->columns == nullptr);
-   
+
    // Add the components to the buffer/mask
    for(i = 0; i < tex->ccount; i++)
    {
       tcomponent_t *component = tex->components + i;
-      
+
       // SoM: Do NOT add lumps with a -1 lumpnum
       if(component->lump == -1)
          continue;
-         
+
       switch(component->type)
       {
       case TC_FLAT:
@@ -1159,7 +1175,7 @@ texture_t *R_CacheTexture(int num)
    FinishTexture(tex);
    Z_ChangeTag(tex->bufferalloc, PU_CACHE);
 
-   return tex;
+   return;
 }
 
 //
@@ -1625,7 +1641,7 @@ const char *level_error = nullptr;
 //
 // R_GetRawColumn
 //
-const byte *R_GetRawColumn(int tex, int32_t col)
+const byte *R_GetRawColumn(ZoneHeap &heap, int tex, int32_t col)
 {
    const texture_t *t = textures[tex];
 
@@ -1635,11 +1651,11 @@ const byte *R_GetRawColumn(int tex, int32_t col)
    else
       col = (col & t->widthmask) * t->height;
 
+   if(!t->bufferalloc)
+      I_Error("R_GetRawColumn: Texture %s not already cached\n", t->name);
+
    // Lee Killough, eat your heart out! ... well this isn't really THAT bad...
-   return (t->flags & TF_SWIRLY) ?
-          R_DistortedFlat(tex) + col :
-          !t->bufferalloc ? R_GetLinearBuffer(tex) + col :
-          t->bufferdata + col;
+   return (t->flags & TF_SWIRLY) ? R_DistortedFlat(heap, tex) + col : t->bufferdata + col;
 }
 
 //
@@ -1648,13 +1664,12 @@ const byte *R_GetRawColumn(int tex, int32_t col)
 const texcol_t *R_GetMaskedColumn(int tex, int32_t col)
 {
    const texture_t *t = textures[tex];
-   
+
    if(!t->bufferalloc)
-      R_CacheTexture(tex);
+      I_Error("R_GetMaskedColumn: Texture %s not already cached\n", t->name);
 
    // haleyjd 05/28/14: support non-power-of-two widths
-   return t->columns[(t->flags & TF_WIDTHNP2) ? M_PositiveModPositiveRight(col, t->width) :
-                                                col & t->widthmask];
+   return t->columns[(t->flags & TF_WIDTHNP2) ? M_PositiveModPositiveRight(col, t->width) : col & t->widthmask];
 }
 
 //
@@ -1663,7 +1678,7 @@ const texcol_t *R_GetMaskedColumn(int tex, int32_t col)
 const byte *R_GetLinearBuffer(int tex)
 {
    const texture_t *t = textures[tex];
-   
+
    if(!t->bufferalloc)
       R_CacheTexture(tex);
 

@@ -74,14 +74,15 @@
 VALLOCATION(mainhash)
 {
    R_ForEachContext([](rendercontext_t &basecontext) {
-      planecontext_t &context = basecontext.planecontext;
+      planecontext_t &context =  basecontext.planecontext;
+      ZoneHeap       &heap    = *basecontext.heap;
 
       context.freetail = nullptr;
       context.freehead = &context.freetail;
       context.floorplane = context.ceilingplane = nullptr;
 
-      context.mainchains = ecalloctag(
-         visplane_t **, MAINHASHCHAINS, sizeof(visplane_t *), PU_VALLOC, nullptr
+      context.mainchains = zhcalloctag(
+         heap, visplane_t **, MAINHASHCHAINS, sizeof(visplane_t *), PU_VALLOC, nullptr
       );
       context.mainhash = { MAINHASHCHAINS, context.mainchains, nullptr };
    });
@@ -95,14 +96,18 @@ constexpr unsigned int visplane_hash(const unsigned int picnum, const unsigned i
    return ((picnum * 3) + lightlevel + (height * 7)) % chains;
 }
 
+static float *g_openings = nullptr;
+
 // killough 8/1/98: set static number of openings to be large enough
 // (a static limit is okay in this case and avoids difficulties in r_segs.c)
-// THREAD_FIXME: Can openings somehow be de-contextified? I feel like it should be possible.
 VALLOCATION(openings)
 {
+
+   g_openings = ecalloctag(float *, w * h, sizeof(float), PU_VALLOC, nullptr);
+
    R_ForEachContext([w, h](rendercontext_t &context)
    {
-      context.planecontext.openings    = ecalloctag(float *, w * h, sizeof(float), PU_VALLOC, nullptr);
+      context.planecontext.openings    = g_openings + context.bounds.startcolumn * h;
       context.planecontext.lastopening = context.planecontext.openings;
    });
 }
@@ -142,7 +147,7 @@ VALLOCATION(overlayfclip)
 VALLOCATION(spanstart)
 {
    R_ForEachContext([h](rendercontext_t &context) {
-      context.planecontext.spanstart = ecalloctag(int *, h, sizeof(int), PU_VALLOC, nullptr);
+      context.planecontext.spanstart = zhcalloctag(*context.heap, int *, h, sizeof(int), PU_VALLOC, nullptr);
    });
 }
 
@@ -152,8 +157,7 @@ VALLOCATION(spanstart)
 
 VALLOCATION(slopespan)
 {
-   size_t size = sizeof(lighttable_t *) * w;
-   cb_slopespan_t::colormap = ecalloctag(lighttable_t **, 1, size, PU_VALLOC, nullptr);
+   cb_slopespan_t::colormap = ecalloctag(const lighttable_t **, w, sizeof(const lighttable_t *), PU_VALLOC, nullptr);
 }
 
 float slopevis; // SoM: used in slope lighting
@@ -258,10 +262,11 @@ static void R_mapPlane(const R_FlatFunc flatfunc, const R_SlopeFunc, cb_span_t &
 //
 // R_slopeLights
 //
-static void R_slopeLights(const cb_plane_t &plane, int len, double startcmap, double endcmap)
+static void R_slopeLights(const cb_plane_t &plane, int x1, int x2, double startcmap, double endcmap)
 {
    int i;
    fixed_t map, map2, step;
+   const int len = x2 - x1 + 1;
 
 #ifdef RANGECHECK
    if(len > video.width)
@@ -271,7 +276,7 @@ static void R_slopeLights(const cb_plane_t &plane, int len, double startcmap, do
    if(plane.fixedcolormap)
    {
       for(i = 0; i < len; i++)
-         cb_slopespan_t::colormap[i] = plane.fixedcolormap;
+         cb_slopespan_t::colormap[i + x1] = plane.fixedcolormap;
       return;
    }
 
@@ -290,11 +295,11 @@ static void R_slopeLights(const cb_plane_t &plane, int len, double startcmap, do
       index -= (extralight * LIGHTBRIGHT);
 
       if(index < 0)
-         cb_slopespan_t::colormap[i] = (byte *)(plane.colormap);
+         cb_slopespan_t::colormap[i + x1] = (byte *)(plane.colormap);
       else if(index >= NUMCOLORMAPS)
-         cb_slopespan_t::colormap[i] = (byte *)(plane.colormap + ((NUMCOLORMAPS - 1) * 256));
+         cb_slopespan_t::colormap[i + x1] = (byte *)(plane.colormap + ((NUMCOLORMAPS - 1) * 256));
       else
-         cb_slopespan_t::colormap[i] = (byte *)(plane.colormap + (index * 256));
+         cb_slopespan_t::colormap[i + x1] = (byte *)(plane.colormap + (index * 256));
 
       map += step;
    }
@@ -307,7 +312,7 @@ static void R_mapSlope(const R_FlatFunc, const R_SlopeFunc slopefunc,
                        cb_span_t &span, cb_slopespan_t &slopespan, const cb_plane_t &plane,
                        int y, int x1, int x2)
 {
-   rslope_t *slope = plane.slope;
+   const rslope_t *slope = plane.slope;
    int count = x2 - x1;
    v3double_t s;
    double map1, map2;
@@ -340,7 +345,7 @@ static void R_mapSlope(const R_FlatFunc, const R_SlopeFunc slopefunc,
    else
       map2 = map1;
 
-   R_slopeLights(plane, x2 - x1 + 1, (256.0 - map1), (256.0 - map2));
+   R_slopeLights(plane, x1, x2, (256.0 - map1), (256.0 - map2));
 
    slopefunc(slopespan, span);
 }
@@ -473,12 +478,10 @@ static void R_calcSlope(const cbviewpoint_t &cb_viewpoint, visplane_t *pl)
 }
 
 //
-// R_NewPlaneHash
-//
 // Allocates and returns a new planehash_t object. The hash object is allocated
 // PU_LEVEL
 //
-planehash_t *R_NewPlaneHash(int chaincount)
+planehash_t *R_NewPlaneHash(ZoneHeap &heap, int chaincount)
 {
    planehash_t*  ret;
    int           i;
@@ -493,9 +496,9 @@ planehash_t *R_NewPlaneHash(int chaincount)
       chaincount = c;
    }
    
-   ret = emalloctag(planehash_t *, sizeof(planehash_t), PU_LEVEL, nullptr);
+   ret = zhmalloctag(heap, planehash_t *, sizeof(planehash_t), PU_LEVEL, nullptr);
    ret->chaincount = chaincount;
-   ret->chains = emalloctag(visplane_t **, sizeof(visplane_t *) * chaincount, PU_LEVEL, nullptr);
+   ret->chains = zhmalloctag(heap, visplane_t **, sizeof(visplane_t *) * chaincount, PU_LEVEL, nullptr);
    ret->next = nullptr;
    
    for(i = 0; i < chaincount; i++)
@@ -562,7 +565,7 @@ void R_ClearPlanes(planecontext_t &context, const contextbounds_t &bounds)
 //
 // New function, by Lee Killough
 //
-static visplane_t *new_visplane(planecontext_t &context,
+static visplane_t *new_visplane(planecontext_t &context, ZoneHeap &heap,
                                 unsigned hash, planehash_t *table)
 {
    visplane_t *&freetail  = context.freetail;
@@ -571,7 +574,9 @@ static visplane_t *new_visplane(planecontext_t &context,
    visplane_t *check = freetail;
 
    if(!check)
-      check = ecalloctag(visplane_t *, 1, sizeof *check, PU_VALLOC, nullptr);
+   {
+      check = zhcalloctag(heap, visplane_t *, 1, sizeof * check, PU_VALLOC, nullptr);
+   }
    else
       if(!(freetail = freetail->next))
          freehead = &freetail;
@@ -587,7 +592,7 @@ static visplane_t *new_visplane(planecontext_t &context,
 
       // THREAD_TODO: Try make this use context.numcolumns again
       check->max_width = static_cast<unsigned int>(video.width);
-      paddedTop        = ecalloctag(int *, 2 * (video.width + 2), sizeof(int), PU_VALLOC, nullptr);
+      paddedTop = zhcalloctag(heap, int *, 2 * (video.width + 2), sizeof(int), PU_VALLOC, nullptr);
       paddedBottom     = paddedTop + video.width + 2;
 
       check->top    = paddedTop    + 1;
@@ -601,8 +606,7 @@ static visplane_t *new_visplane(planecontext_t &context,
 // killough 2/28/98: Add offsets
 // haleyjd 01/05/08: Add angle
 //
-visplane_t *R_FindPlane(cmapcontext_t &cmapcontext,
-                        planecontext_t &planecontext,
+visplane_t *R_FindPlane(cmapcontext_t &cmapcontext, planecontext_t &planecontext, ZoneHeap &heap,
                         const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                         const contextbounds_t &bounds,
                         fixed_t height, int picnum, int lightlevel,
@@ -664,12 +668,11 @@ visplane_t *R_FindPlane(cmapcontext_t &cmapcontext,
         return check;
    }
 
-   check = new_visplane(planecontext, hash, table);         // killough
+   check = new_visplane(planecontext, heap, hash, table);         // killough
 
    check->height = height;
    check->picnum = picnum;
    check->lightlevel = lightlevel;
-   // THREAD_TODO: Verify it should be these two values and not viewwindow.width and -1
    check->minx = bounds.endcolumn;     // Was SCREENWIDTH -- killough 11/98
    check->maxx = bounds.startcolumn - 1;
    check->offs = offs;               // killough 2/28/98: Save offsets
@@ -729,11 +732,11 @@ visplane_t *R_FindPlane(cmapcontext_t &cmapcontext,
 // From PrBoom+
 // cph 2003/04/18 - create duplicate of existing visplane and set initial range
 //
-visplane_t *R_DupPlane(planecontext_t &context, const visplane_t *pl, int start, int stop)
+visplane_t *R_DupPlane(planecontext_t &context, ZoneHeap &heap, const visplane_t *pl, int start, int stop)
 {
    planehash_t *table = pl->table;
    unsigned hash = visplane_hash(pl->picnum, pl->lightlevel, pl->height, table->chaincount);
-   visplane_t *new_pl = new_visplane(context, hash, table);
+   visplane_t *new_pl = new_visplane(context, heap, hash, table);
 
    new_pl->height = pl->height;
    new_pl->picnum = pl->picnum;
@@ -784,7 +787,7 @@ visplane_t *R_DupPlane(planecontext_t &context, const visplane_t *pl, int start,
 //
 // R_CheckPlane
 //
-visplane_t *R_CheckPlane(planecontext_t &context, visplane_t *pl, int start, int stop)
+visplane_t *R_CheckPlane(planecontext_t &context, ZoneHeap &heap, visplane_t *pl, int start, int stop)
 {
    int intrl, intrh, unionl, unionh, x;
    
@@ -819,7 +822,7 @@ visplane_t *R_CheckPlane(planecontext_t &context, visplane_t *pl, int start, int
       pl->maxx = unionh;
    }
    else
-      pl = R_DupPlane(context, pl, start, stop);
+      pl = R_DupPlane(context, heap, pl, start, stop);
 
    return pl;
 }
@@ -857,7 +860,7 @@ inline static int32_t R_getSkyColumn(angle_t an, int x, angle_t flip, int offset
 }
 
 // haleyjd: moved here from r_newsky.c
-static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visplane_t *pl)
+static void do_draw_newsky(cmapcontext_t &context, ZoneHeap &heap, const angle_t viewangle, visplane_t *pl)
 {
    cb_column_t column{};
 
@@ -899,7 +902,7 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    {
       if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
       {
-         column.source = R_GetRawColumn(skyTexture2, R_getSkyColumn(an, x, 0, offset2));
+         column.source = R_GetRawColumn(heap, skyTexture2, R_getSkyColumn(an, x, 0, offset2));
 
          colfunc(column);
       }
@@ -919,7 +922,7 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    {
       if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
       {
-         column.source = R_GetRawColumn(skyTexture, R_getSkyColumn(an, x, 0, offset));
+         column.source = R_GetRawColumn(heap, skyTexture, R_getSkyColumn(an, x, 0, offset));
 
          colfunc(column);
       }
@@ -936,7 +939,7 @@ static const int MultiplyDeBruijnBitPosition2[32] =
 //
 // Drawing sky as a background texture instead of a visplane.
 //
-static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *skyflat)
+static void R_drawSky(ZoneHeap &heap, angle_t viewangle, const visplane_t *pl, const skyflat_t *skyflat)
 {
    int texture;
    int offset = 0;
@@ -1038,7 +1041,7 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
 
    // We need the translucency map to exist because we fade the sky to a single color when looking
    // above it.
-   if (!main_tranmap)
+   if(!main_tranmap)
       R_InitTranMap(false);
 
    // killough 10/98: Use sky scrolling offset, and possibly flip picture
@@ -1051,7 +1054,7 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
 
       if(column.y1 <= column.y2)
       {
-         column.source = R_GetRawColumn(texture, R_getSkyColumn(an, x, flip, offset));
+         column.source = R_GetRawColumn(heap, texture, R_getSkyColumn(an, x, flip, offset));
          colfunc(column);
       }
    }
@@ -1061,7 +1064,7 @@ static void R_drawSky(angle_t viewangle, const visplane_t *pl, const skyflat_t *
 // New function, by Lee Killough
 // haleyjd 08/30/02: slight restructuring to use hashed sky texture info cache.
 //
-static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
+static void do_draw_plane(cmapcontext_t &context, ZoneHeap &heap, int *const spanstart,
                           const angle_t viewangle, visplane_t *pl)
 {
    if(!(pl->minx <= pl->maxx))
@@ -1071,19 +1074,19 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
    if(R_IsSkyFlat(pl->picnum) && LevelInfo.doubleSky)
    {
       // NOTE: MBF sky transfers change pl->picnum so it won't go here if set to transfer.
-      do_draw_newsky(context, viewangle, pl);
+      do_draw_newsky(context, heap, viewangle, pl);
       return;
    }
    
    skyflat_t *skyflat = R_SkyFlatForPicnum(pl->picnum);
    
    if(skyflat || pl->picnum & PL_SKYFLAT)  // sky flat
-      R_drawSky(viewangle, pl, skyflat);
+      R_drawSky(heap, viewangle, pl, skyflat);
    else // regular flat
-   {  
-      texture_t *tex;
-      int        stop, light;
-      int        stylenum;
+   {
+      const texture_t *tex;
+      int stop, light;
+      int stylenum;
 
       cb_span_t      span{};
       cb_slopespan_t slopespan{};
@@ -1092,7 +1095,7 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
       R_FlatFunc  flatfunc  = R_Throw;
       R_SlopeFunc slopefunc = R_ThrowSlope;
 
-      int picnum = texturetranslation[pl->picnum];
+      const int picnum = texturetranslation[pl->picnum];
 
       // haleyjd 05/19/06: rewritten to avoid crashes
       // ioanch: apply swirly if original (pl->picnum) has the flag. This is so
@@ -1100,13 +1103,13 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
       if((r_swirl && textures[picnum]->flags & TF_ANIMATED)
          || textures[pl->picnum]->flags & TF_SWIRLY)
       {
-         plane.source = R_DistortedFlat(picnum);
+         plane.source = R_DistortedFlat(heap, picnum);
          tex = plane.tex = textures[picnum];
       }
       else
       {
          // SoM: Handled outside
-         tex = plane.tex = R_CacheTexture(picnum);
+         tex = plane.tex = R_GetTexture(picnum);
          plane.source = tex->bufferdata;
       }
 
@@ -1235,7 +1238,7 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
 // Called after the BSP has been traversed and walls have rendered. This 
 // function is also now used to render portal overlays.
 //
-void R_DrawPlanes(cmapcontext_t &context, planehash_t &mainhash,
+void R_DrawPlanes(cmapcontext_t &context, ZoneHeap &heap, planehash_t &mainhash,
                   int *const spanstart, const angle_t viewangle, planehash_t *table)
 {
    visplane_t *pl;
@@ -1247,7 +1250,7 @@ void R_DrawPlanes(cmapcontext_t &context, planehash_t &mainhash,
    for(i = 0; i < table->chaincount; ++i)
    {
       for(pl = table->chains[i]; pl; pl = pl->next)
-         do_draw_plane(context, spanstart, viewangle, pl);
+         do_draw_plane(context, heap, spanstart, viewangle, pl);
    }
 }
 
@@ -1262,14 +1265,14 @@ VALLOCATION(overlaySets)
 //
 // Gets a free portal overlay plane set
 //
-planehash_t *R_NewOverlaySet(planecontext_t &context)
+planehash_t *R_NewOverlaySet(planecontext_t &context, ZoneHeap &heap)
 {
    planehash_t *&r_overlayfreesets = context.r_overlayfreesets;
 
    planehash_t *set;
    if(!r_overlayfreesets)
    {
-      set = R_NewPlaneHash(131);
+      set = R_NewPlaneHash(heap, 131);
       return set;
    }
    set = r_overlayfreesets;

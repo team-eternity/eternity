@@ -1646,6 +1646,27 @@ void WadDirectory::readLump(int lump, void *dest,
 }
 
 //
+// As WadDirectory::cacheLumpNum but calls I_Error if it fails
+// and doesn't do anything with tags.
+//
+void *WadDirectory::getCachedLumpNum(int lump, const WadLumpLoader *lfmt) const
+{
+   lumpinfo_t::lumpformat fmt = lumpinfo_t::fmt_default;
+
+   if(lfmt)
+      fmt = lfmt->formatIndex();
+
+   // haleyjd 08/14/02: again, should not be RANGECHECK only
+   if(lump < 0 || lump >= numlumps)
+      I_Error("WadDirectory::getCachedLumpNum: %i >= numlumps\n", lump);
+
+   if(!(lumpinfo[lump]->cache[fmt]))
+      I_Error("WadDirectory::getCachedLumpNum %s not cached\n", getLumpName(lump));
+
+   return lumpinfo[lump]->cache[fmt];
+}
+
+//
 // W_CacheLumpNum
 //
 // killough 4/25/98: simplified

@@ -864,6 +864,9 @@ default_t defaults[] =
 
    DEFAULT_INT("r_tlstyle", &r_tlstyle, nullptr, 1, 0, R_TLSTYLE_NUM - 1, default_t::wad_game,
                "Doom object translucency style (0 = none, 1 = Boom, 2 = new)"),
+
+   DEFAULT_INT("r_sprprojstyle", &r_sprprojstyle, nullptr, 0, 0, R_SPRPROJSTYLE_NUM - 1, default_t::wad_no,
+               "Sprite projection style (0 = default, 1 = fast, 2 = thorough)"),
    
    DEFAULT_INT("spechits_emulation", &spechits_emulation, nullptr, 0, 0, 2, default_t::wad_no,
                "0 = off, 1 = emulate like Chocolate Doom, 2 = emulate like PrBoom+"),

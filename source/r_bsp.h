@@ -37,6 +37,7 @@ struct contextbounds_t;
 struct portalrender_t;
 struct cbviewpoint_t;
 struct rendercontext_t;
+struct rpolynode_t;
 
 // SoM: mark a range of the screen as being solid (closed).
 // these marks are then added to the solidsegs list by R_addLine after all segments
@@ -47,14 +48,19 @@ bool R_SetupPortalClipsegs(bspcontext_t &context, const contextbounds_t &bounds,
                            portalrender_t &portalrender,
                            int minx, int maxx, const float *top, const float *bottom);
 
-void R_ClearClipSegs(bspcontext_t &context);
+void R_SetupSolidSegs();
+void R_ClearClipSegs(bspcontext_t &context, const contextbounds_t &bounds);
 void R_ClearDrawSegs(bspcontext_t &context);
 
+void R_ForEachPolyNode(void (*func)(rpolynode_t *bsp));
+
+void R_PreRenderBSP();
 void R_RenderBSPNode(rendercontext_t &context, int bspnum);
 
 // killough 4/13/98: fake floors/ceilings for deep water / fake ceilings:
 int R_GetSurfaceLightLevel(surf_e surf, const sector_t *sec);
 const sector_t *R_FakeFlat(const fixed_t, const sector_t *, sector_t *, int *, int *, bool);
+int R_FakeFlatSpriteLighting(const fixed_t viewz, const sector_t *sec);
 bool R_PickNearestBoxLines(const cbviewpoint_t &cb_viewpoint,
                            const float fbox[4], windowlinegen_t &linegen1,
                            windowlinegen_t &linegen2, slopetype_t *slope = nullptr);

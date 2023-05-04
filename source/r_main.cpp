@@ -53,6 +53,7 @@
 #include "r_bsp.h"
 #include "r_context.h"
 #include "r_draw.h"
+#include "r_dynabsp.h"
 #include "r_dynseg.h"
 #include "r_interpolate.h"
 #include "r_main.h"
@@ -60,6 +61,7 @@
 #include "r_portal.h"
 #include "r_ripple.h"
 #include "r_things.h"
+#include "r_segs.h"
 #include "r_sky.h"
 #include "r_state.h"
 #include "s_sound.h"
@@ -450,7 +452,7 @@ static void R_InitTextureMapping()
 
    // SoM: Thanks to 'Randi' of Zdoom fame!
    slopet = (float)tan((90.0f + (float)fov / 2.0f) * PI / 180.0f);
-   slopevis = 8.0f * slopet * 16.0f * 320.0f / (float)view.width; // THREAD_FIXME: context.fendcolumn?
+   slopevis = 8.0f * slopet * 16.0f * 320.0f / (float)view.width;
 
    // SoM: rewrote old LUT generation code to work with variable FOV
    i = 0;
@@ -766,8 +768,10 @@ static void R_incrementFrameid()
       frameid = 1;
 
       // Do as the description says...
-      for(int i = 0; i < numsectors; ++i)
-         pSectorBoxes[i].visitid.floor = pSectorBoxes[i].visitid.ceiling = 0;
+      R_ForEachContext([](rendercontext_t &context) {
+         sectorboxvisit_t *visitids = context.portalcontext.visitids;
+         memset(visitids, 0, sizeof(*visitids) * numsectors);
+      });
    }
 }
 
@@ -777,7 +781,7 @@ static void R_incrementFrameid()
 uint64_t R_GetVisitID(const rendercontext_t &context)
 {
    const uint64_t upper32 =
-      (uint64_t(context.portalcontext.renderdepth) << 16) | uint64_t(uint16_t(context.bufferindex));
+      (uint64_t(context.portalcontext.windowid) << 16) | uint64_t(uint16_t(context.bufferindex));
    return (upper32 << 32) | uint64_t(frameid);
 }
 
@@ -1005,6 +1009,62 @@ static void R_setScrollInterpolationState(secinterpstate_e state)
 }
 
 //
+// Interpolate a rendering view point based on the player's location.
+//
+static void R_interpolateVertex(dynavertex_t &v, v2fixed_t &org, v2float_t &forg)
+{
+   org.x  = v.x;
+   org.y  = v.y;
+   forg.x = v.fx;
+   forg.y = v.fy;
+   v.x    = lerpCoord(view.lerp, v.backup.x, v.x);
+   v.y    = lerpCoord(view.lerp, v.backup.y, v.y);
+   v.fx   = M_FixedToFloat(v.x);
+   v.fy   = M_FixedToFloat(v.y);
+}
+
+//
+// Interpolates polyobject dynasegs
+//
+static void R_setDynaSegInterpolationState(secinterpstate_e state)
+{
+   switch(state)
+   {
+      case SEC_INTERPOLATE:
+         R_ForEachPolyNode([](rpolynode_t *node) {
+            dynaseg_t &dynaseg = *node->partition;
+            seg_t     *seg     = &node->partition->seg;
+
+            R_interpolateVertex(*seg->dyv1, dynaseg.prev.org[0], dynaseg.prev.forg[0]);
+            R_interpolateVertex(*seg->dyv2, dynaseg.prev.org[1], dynaseg.prev.forg[1]);
+
+            dynaseg.prev.len    = seg->len;
+            dynaseg.prev.offset = seg->offset;
+            seg->len            = lerpCoordf(view.lerp, dynaseg.prevlen, seg->len);
+            seg->offset         = lerpCoordf(view.lerp, dynaseg.prevofs, seg->offset);
+         });
+         break;
+      case SEC_NORMAL:
+         R_ForEachPolyNode([](rpolynode_t *node) {
+            seginterp_t &prev = node->partition->prev;
+            seg_t       *seg  = &node->partition->seg;
+
+            seg->offset = prev.offset;
+            seg->len    = prev.len;
+            seg->v1->x  = prev.org[0].x;
+            seg->v1->y  = prev.org[0].y;
+            seg->v2->x  = prev.org[1].x;
+            seg->v2->y  = prev.org[1].y;
+            seg->v1->fx = prev.forg[0].x;
+            seg->v1->fy = prev.forg[0].y;
+            seg->v2->fx = prev.forg[1].x;
+            seg->v2->fy = prev.forg[1].y;
+         });
+         break;
+   }
+}
+
+//
 // R_GetLerp
 //
 fixed_t R_GetLerp(bool ignorepause)
@@ -1033,6 +1093,7 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    R_SetColumnEngine();
    R_SetSpanEngine();
    R_incrementFrameid(); // Cardboard
+
    
    viewplayer = player;
    viewcamera = camera;
@@ -1079,11 +1140,15 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    view.lerp   = lerp;
    view.sector = R_PointInSubsector(viewpoint.x, viewpoint.y)->sector;
 
+   R_SetupSolidSegs();
+   R_PreRenderBSP();
+
    // set interpolated sector heights
    if(view.lerp != FRACUNIT)
    {
       R_setSectorInterpolationState(SEC_INTERPOLATE);
       R_setScrollInterpolationState(SEC_INTERPOLATE);
+      R_setDynaSegInterpolationState(SEC_INTERPOLATE);
    }
 
    // y shearing
@@ -1255,13 +1320,13 @@ angle_t R_WadToAngle(int wadangle)
 void R_RenderViewContext(rendercontext_t &context)
 {
    memset(context.spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
-   context.portalcontext.renderdepth = 0;
+   R_ClearMarkedSprites(context.spritecontext, *context.heap);
+   context.portalcontext.windowid = 0;
 
    // Clear buffers.
-   R_ClearClipSegs(context.bspcontext);
+   R_ClearClipSegs(context.bspcontext, context.bounds);
    R_ClearDrawSegs(context.bspcontext);
    R_ClearPlanes(context.planecontext, context.bounds);
-   R_ClearPortals(context.planecontext.freehead);
    R_ClearSprites(context.spritecontext);
 
    // check for new console commands.
@@ -1276,13 +1341,13 @@ void R_RenderViewContext(rendercontext_t &context)
    R_SetMaskedSilhouette(context.bounds, nullptr, nullptr);
 
    // Push the first element on the Post-BSP stack
-   R_PushPost(context.bspcontext, context.spritecontext, context.bounds, true, nullptr);
+   R_PushPost(context.bspcontext, context.spritecontext, *context.heap, context.bounds, true, nullptr);
 
    // SoM 12/9/03: render the portals.
    R_RenderPortals(context);
 
    R_DrawPlanes(
-      context.cmapcontext, context.planecontext.mainhash,
+      context.cmapcontext, *context.heap, context.planecontext.mainhash,
       context.planecontext.spanstart, context.view.angle, nullptr
    );
 
@@ -1296,8 +1361,7 @@ void R_RenderViewContext(rendercontext_t &context)
 
 static int render_ticker = 0;
 
-// haleyjd: temporary debug
-extern void R_UntaintPortals();
+extern void R_UntaintAndClearPortals();
 
 //
 // Primary renderer entry point.
@@ -1309,8 +1373,8 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 
    R_SetupFrame(player, camerapoint);
 
-   // haleyjd: untaint portals
-   R_UntaintPortals();
+   // Untaint and clear portals
+   R_UntaintAndClearPortals();
 
    if(autodetect_hom)
       R_HOMdrawer();
@@ -1332,6 +1396,9 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    else
       R_RunContexts();
 
+   R_FinishMappingLines();
+   R_ClearBadSpritesAndFrames();
+
    if(quake)
       player->mo->flags2 = savedflags;
 
@@ -1349,6 +1416,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    {
       R_setSectorInterpolationState(SEC_NORMAL);
       R_setScrollInterpolationState(SEC_NORMAL);
+      R_setDynaSegInterpolationState(SEC_NORMAL);
    }
    
    // Check for new console commands.
@@ -1529,6 +1597,7 @@ static const char *ptranstr[]   = { "none", "smooth", "general" };
 static const char *coleng[]     = { "normal" };
 static const char *spaneng[]    = { "highprecision" };
 static const char *tlstylestr[] = { "opaque", "boom", "additive" };
+static const char *sprprojstr[] = { "default", "fast", "thorough" };
 
 VARIABLE_BOOLEAN(lefthanded, nullptr,               handedstr);
 VARIABLE_BOOLEAN(r_blockmap, nullptr,               onoff);
@@ -1548,13 +1617,14 @@ VARIABLE_INT(fov, nullptr, 20, 179, nullptr);
 // SoM: Portal tainted
 VARIABLE_BOOLEAN(showtainted, nullptr,              onoff);
 
-VARIABLE_INT(tran_filter_pct,     nullptr, 0, 100,                  nullptr);
-VARIABLE_INT(screenSize,          nullptr, 0, 8,                    nullptr);
-VARIABLE_INT(usegamma,            nullptr, 0, 4,                    nullptr);
-VARIABLE_INT(particle_trans,      nullptr, 0, 2,                    ptranstr);
-VARIABLE_INT(r_column_engine_num, nullptr, 0, NUMCOLUMNENGINES - 1, coleng);
-VARIABLE_INT(r_span_engine_num,   nullptr, 0, NUMSPANENGINES - 1,   spaneng);
-VARIABLE_INT(r_tlstyle,           nullptr, 0, R_TLSTYLE_NUM - 1,    tlstylestr);
+VARIABLE_INT(tran_filter_pct,     nullptr, 0, 100,                    nullptr);
+VARIABLE_INT(screenSize,          nullptr, 0, 8,                      nullptr);
+VARIABLE_INT(usegamma,            nullptr, 0, 4,                      nullptr);
+VARIABLE_INT(particle_trans,      nullptr, 0, 2,                      ptranstr);
+VARIABLE_INT(r_column_engine_num, nullptr, 0, NUMCOLUMNENGINES - 1,   coleng);
+VARIABLE_INT(r_span_engine_num,   nullptr, 0, NUMSPANENGINES - 1,     spaneng);
+VARIABLE_INT(r_tlstyle,           nullptr, 0, R_TLSTYLE_NUM - 1,      tlstylestr);
+VARIABLE_INT(r_sprprojstyle,      nullptr, 0, R_SPRPROJSTYLE_NUM - 1, sprprojstr);
 
 CONSOLE_VARIABLE(r_fov, fov, 0)
 {
@@ -1664,6 +1734,8 @@ CONSOLE_VARIABLE(r_tlstyle, r_tlstyle, 0)
 {
    R_DoomTLStyle();
 }
+
+CONSOLE_VARIABLE(r_sprprojstyle, r_sprprojstyle, 0) {}
 
 CONSOLE_VARIABLE(r_boomcolormaps, r_boomcolormaps, 0) {}
 

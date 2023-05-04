@@ -74,6 +74,17 @@ void R_DoomTLStyle();
 
 void R_ResetTrans();
 
+// Enumeration for sprite projection style
+enum
+{
+   R_SPRPROJSTYLE_DEFAULT,
+   R_SPRPROJSTYLE_FAST,
+   R_SPRPROJSTYLE_THOROUGH,
+   R_SPRPROJSTYLE_NUM
+};
+
+inline int r_sprprojstyle;
+
 //
 // Utility functions.
 //
@@ -107,6 +118,8 @@ inline static subsector_t *R_PointInSubsector(v2fixed_t v)
 
 struct camera_t;
 struct player_t;
+
+void R_AddMappedLine(const intptr_t lineIndex);
 
 void R_RenderViewContext(rendercontext_t &context);
 void R_RenderPlayerView(player_t *player, camera_t *viewcamera);
@@ -213,7 +226,7 @@ struct cb_seg_t
    bool f_portalignore, c_portalignore;
 
    // 8 bit tables
-   lighttable_t **walllights;
+   const lighttable_t *const *walllights;
 
    const side_t *side;
    const sector_t *frontsec, *backsec;

@@ -79,6 +79,7 @@
 #include "s_musinfo.h"
 #include "s_sndseq.h"
 #include "s_sound.h"
+#include "v_alloc.h"
 #include "v_misc.h"
 #include "v_video.h"
 #include "w_levels.h"
@@ -92,13 +93,12 @@ extern const char *level_error;
 //
 // Miscellaneous constants
 //
-enum
-{
-   // vertex distance limit over which NOT to fix slime trails. Useful for
-   // the new vanilla Doom rendering trick discovered by Linguica. Link here:
-   // http://www.doomworld.com/vb/doom-editing/74354-stupid-bsp-tricks/
-   LINGUORTAL_THRESHOLD = 8 * FRACUNIT,   
-};
+
+// vertex distance limit over which NOT to fix slime trails. Useful for
+// the new vanilla Doom rendering trick discovered by Linguica. Link here:
+// http://www.doomworld.com/vb/doom-editing/74354-stupid-bsp-tricks/
+constexpr fixed_t LINGUORTAL_THRESHOLD = 8 * FRACUNIT;
+
 
 //
 // ZNodeType
@@ -216,6 +216,13 @@ static WadDirectory *setupwad;
 
 // Current level's hash digest, for showing on console
 static qstring p_currentLevelHashDigest;
+
+static void P_createSectorBoundingBoxVisitIDs();
+
+VALLOCATION(sectorboxvisits)
+{
+   P_createSectorBoundingBoxVisitIDs();
+}
 
 //
 // ShortToLong
@@ -750,11 +757,22 @@ static void P_createSectorInterps()
 }
 
 //
+// Creates the context-local visit IDs for the sector bound boxes
+//
+static void P_createSectorBoundingBoxVisitIDs()
+{
+   R_ForEachContext([](rendercontext_t &context) {
+      context.portalcontext.visitids = zhstructalloctag(*context.heap, sectorboxvisit_t, numsectors, PU_LEVEL);
+   });
+}
+
+//
 // Setup sector bounding boxes
 //
 static void P_createSectorBoundingBoxes()
 {
    pSectorBoxes = estructalloctag(sectorbox_t, numsectors, PU_LEVEL);
+   P_createSectorBoundingBoxVisitIDs();
 
    for(int i = 0; i < numsectors; ++i)
    {
@@ -2070,6 +2088,9 @@ static void P_LoadLineDefs2()
       {                       // killough 4/11/98: handle special types
       case EV_STATIC_TRANSLUCENT: // killough 4/11/98: translucent 2s textures
          lump = sides[*ld->sidenum].special; // translucency from sidedef
+         if(lump > 0)
+            wGlobalDir.cacheLumpNum(lump - 1, PU_CACHE);
+
          if(!ld->args[0])                    // if tag == 0,
             ld->tranlump = lump;             // affect this linedef only
          else
@@ -3962,8 +3983,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    P_InitLightning();
 
    // preload graphics
-   if(precache)
-      R_PrecacheLevel();
+   R_PrecacheLevel();
 
    R_SetViewSize(screenSize+3); //sf
 
