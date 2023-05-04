@@ -291,6 +291,24 @@ to be scrolled to is the same as the currently-equipped weapon.
 2023/05/03
 Improved frame pacing with interpolation.
 
+--------------------------------------------------------------------------------
+2023/05/04
+Added multithreaded renderer. New console variables:
+ * r_numcontexts: Video Options > Page 2 > Renderer Threads. This does what it
+   says on the tin. The higher the number, the more render contexts there are.
+   This number ranges from 1 to however many threads your CPU supports. Your
+   physical thread count is a sensible value for it.
+ * r_sprprojstyle: Video Options > Page 2 > Sprite Projection Style.
+   This has three settings, Default, Fast, and Thorough.
+  * Default means Fast for 1 thread, or Thorough for more than 1 thread.
+  * Fast is the classic Doom sprite projection style—if a subsector isn't
+    visible in a given render context then it won't be renderered. This may
+    cause sprites to have a cut-off appearance between the boundaries of render
+    context windows. It can be faster than Thorough in more sprite-heavy scenes.
+   * Thorough will (generally) eliminate the issues seen in Fast. This can cause
+     a reduction in performance in more heavy scenes compared to Fast, in your
+     average vanilla WAD you're not likely to notice much of a difference.
+
 ================================================================================
 EOF
 ================================================================================
