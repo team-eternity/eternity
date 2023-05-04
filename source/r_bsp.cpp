@@ -733,6 +733,57 @@ const sector_t *R_FakeFlat(const fixed_t viewz, const sector_t *sec, sector_t *t
 }
 
 //
+// As R_FakeFlat but it only calculates the overall lighting (for sprites)
+//
+int R_FakeFlatSpriteLighting(const fixed_t viewz, const sector_t *sec)
+{
+   if(!sec)
+      return 0;
+
+   int floorlightlevel   = R_GetSurfaceLightLevel(surf_floor, sec);
+   int ceilinglightlevel = R_GetSurfaceLightLevel(surf_ceil, sec);
+
+   if(sec->heightsec != -1)
+   {
+      const sector_t *s = &sectors[sec->heightsec];
+
+      // haleyjd 01/07/14: get from view.sector due to interpolation
+      const int  heightsec = view.sector->heightsec;
+      const bool underwater = (heightsec != -1 && viewz <= sectors[heightsec].srf.floor.height);
+
+      // killough 11/98: prevent sudden light changes from non-water sectors:
+      if(underwater)
+      {
+         floorlightlevel =
+            (s->flags & SECF_FLOORLIGHTABSOLUTE ? 0 : s->srf.floor.lightsec == -1 ?
+               s->lightlevel : sectors[s->srf.floor.lightsec].lightlevel)
+            + s->srf.floor.lightdelta;
+
+         ceilinglightlevel =
+            (s->flags & SECF_CEILLIGHTABSOLUTE ? 0 : s->srf.ceiling.lightsec == -1 ?
+               s->lightlevel : sectors[s->srf.ceiling.lightsec].lightlevel)
+            + s->srf.ceiling.lightdelta;
+      }
+      else if(heightsec != -1 &&
+         viewz >= sectors[heightsec].srf.ceiling.height &&
+         sec->srf.ceiling.height > s->srf.ceiling.height)
+      {
+         floorlightlevel =
+            (s->flags & SECF_FLOORLIGHTABSOLUTE ? 0 : s->srf.floor.lightsec == -1 ?
+               s->lightlevel : sectors[s->srf.floor.lightsec].lightlevel)
+            + s->srf.floor.lightdelta;
+
+         ceilinglightlevel =
+            (s->flags & SECF_CEILLIGHTABSOLUTE ? 0 : s->srf.ceiling.lightsec == -1 ?
+               s->lightlevel : sectors[s->srf.ceiling.lightsec].lightlevel)
+            + s->srf.ceiling.lightdelta;
+      }
+   }
+
+   return (floorlightlevel + ceilinglightlevel) / 2;
+}
+
+//
 // R_ClipSegToPortal
 //
 // SoM 3/14/2005: This function will reject segs that are completely 

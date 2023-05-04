@@ -1417,12 +1417,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
          // otherwise the lighting behaviour will look incorrect
          const lighttable_t *const *mobjspritelights;
          {
-            static thread_local sector_t tempsec;
-
-            int mobjfloorlightlevel, mobjceilinglightlevel;
-            // TODO: Make this use a pared down version of R_FakeFlat that only deals with light levels
-            R_FakeFlat(viewpoint.z, thing->subsector->sector, &tempsec, &mobjfloorlightlevel, &mobjceilinglightlevel, false);
-            const int mobjlightlevel = (mobjfloorlightlevel + mobjceilinglightlevel) / 2;
+            const int mobjlightlevel = R_FakeFlatSpriteLighting(viewpoint.z, thing->subsector->sector);
             const int mobjlightnum   = (mobjlightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
 
             if(mobjlightnum < 0)
