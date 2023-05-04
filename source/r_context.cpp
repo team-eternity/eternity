@@ -128,9 +128,13 @@ struct renderdata_t
    std::thread           thread;
    RenderThreadSemaphore shouldrun;
    std::atomic_bool      running;
-   std::atomic_bool      shouldquit;
-   std::atomic_bool      framewaiting;
-   std::atomic_bool      framefinished;
+   bool                  parallel;
+
+   std::condition_variable checkframe;
+   std::mutex              checkmutex;
+   bool                    shouldquit;
+   bool                    framewaiting;
+   bool                    framefinished;
 
    const char           *errormessage;
    std::atomic_bool      fatalerror;
@@ -174,7 +178,12 @@ void R_freeContext(rendercontext_t &context)
 //
 void R_freeData(renderdata_t &data)
 {
-   data.shouldquit.store(true);
+   if(data.parallel)
+   {
+      std::lock_guard lock(data.checkmutex);
+      data.shouldquit = true;
+      data.checkframe.notify_one();
+   }
 
    while(data.running.load())
       i_haltimer.Sleep(1);
@@ -239,19 +248,26 @@ static void R_contextThreadFunc(renderdata_t *data)
 {
    data->running.exchange(true);
 
-   while(!data->shouldquit.load() && !data->errormessage)
+   while(!data->shouldquit && !data->errormessage)
    {
-      if(data->framewaiting.exchange(false))
+      std::unique_lock lock(data->checkmutex);
+
+      data->checkframe.wait(lock, [&data] { return data->framewaiting || data->shouldquit; });
+      if(data->framewaiting)
       {
+         data->framewaiting = false;
          data->shouldrun.acquire();
          R_runData(data);
-         data->framefinished.store(true);
+         data->framefinished = true;
       }
 
+      lock.unlock();
+      data->checkframe.notify_one();
       std::this_thread::yield();
    }
 
    data->running.exchange(false);
+   data->checkframe.notify_one();
 }
 
 //
@@ -325,7 +341,10 @@ void R_InitContexts(const int width)
          i_haltimer.Sleep(1);
       if(currentcontext < r_numcontexts - 1)
       {
+         renderdatas[currentcontext].parallel = true;
          new(&renderdatas[currentcontext].shouldrun) RenderThreadSemaphore(0);
+         new(&renderdatas[currentcontext].checkframe) std::condition_variable();
+         new(&renderdatas[currentcontext].checkmutex) std::mutex();
          renderdatas[currentcontext].thread = std::thread(&R_contextThreadFunc, &renderdatas[currentcontext]);
       }
    }
@@ -426,7 +445,9 @@ void R_RunContexts()
    {
       if(currentcontext < r_numcontexts - 1)
       {
-         renderdatas[currentcontext].framewaiting.store(true);
+         std::lock_guard lock(renderdatas[currentcontext].checkmutex);
+         renderdatas[currentcontext].framewaiting = true;
+         renderdatas[currentcontext].checkframe.notify_one();
          renderdatas[currentcontext].shouldrun.release();
       }
       else
@@ -439,10 +460,11 @@ void R_RunContexts()
 
    while(finishedcontexts != r_numcontexts)
    {
-      for(int currentcontext = 0; currentcontext < r_numcontexts; currentcontext++)
+      for(int currentcontext = 0; currentcontext < r_numcontexts - 1; currentcontext++)
       {
-         if(renderdatas[currentcontext].framefinished.exchange(false))
-            finishedcontexts++;
+         std::unique_lock lock(renderdatas[currentcontext].checkmutex);
+         renderdatas[currentcontext].checkframe.wait(lock, [currentcontext] { return renderdatas[currentcontext].framefinished; });
+         finishedcontexts++;
       }
    }
 
