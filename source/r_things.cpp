@@ -1413,9 +1413,25 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
          if(R_checkAndMarkSprite(spritecontext, heap, thing))
             continue;
 
+         const lighttable_t *const *mobjspritelights;
+
+         // We have to recalculate the sprite lights for the current mobj based on their root sector
+         // otherwise the lighting behaviour will look incorrect
+         const int mobjfloorlightlevel   = R_GetSurfaceLightLevel(surf_floor, thing->subsector->sector);
+         const int mobjceilinglightlevel = R_GetSurfaceLightLevel(surf_ceil,  thing->subsector->sector);;
+         const int mobjlightlevel        = (mobjfloorlightlevel + mobjceilinglightlevel) / 2;
+         const int mobjlightnum          = (lightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
+
+         if(mobjlightnum < 0)
+            mobjspritelights = cmapcontext.scalelight[0];
+         else if(mobjlightnum >= LIGHTLEVELS)
+            mobjspritelights = cmapcontext.scalelight[LIGHTLEVELS - 1];
+         else
+            mobjspritelights = cmapcontext.scalelight[mobjlightnum];
+
          R_projectSprite(
             cmapcontext, spritecontext, heap, viewpoint,
-            cb_viewpoint, bounds, portalrender, thing, spritelights
+            cb_viewpoint, bounds, portalrender, thing, mobjspritelights
          );
       }
    }
