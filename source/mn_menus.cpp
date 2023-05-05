@@ -2270,7 +2270,7 @@ menu_t menu_gamepad =
    &menu_gamepad_axes,             // next page
    &menu_gamepad,                    // rootpage
    200, 15,                        // x,y offset
-   2,                              // start on first selectable
+   3,                              // start on first selectable
    mf_background,                  // full-screen menu
    nullptr,                        // no drawer
    mn_gamepad_names,               // TOC stuff
