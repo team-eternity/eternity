@@ -135,13 +135,15 @@ add_subdirectory(snes_spc)
 add_subdirectory(source)
 
 if(WIN32)
-   set(ZLIB_LIBRARY   zlibstatic CACHE STRING "zlib library name" FORCE)
-   set(ZLIB_LIBRARIES zlibstatic CACHE STRING "zlib library names" FORCE)
-   set(ZLIB_INCLUDE_DIR  ${CMAKE_SOURCE_DIR}/zlib CACHE STRING "zlib include directory" FORCE)
-   set(ZLIB_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/zlib CACHE STRING "zlib include directories" FORCE)
+   set(PNG_BUILD_ZLI﻿B OFF CACHE BOOL "Custom zlib location" FORCE)
+
+   set(ZLIB_LIBRARY zlibstatic CACHE STRING "zlib library name" FORCE)
+   set(ZLIB_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/zlib CACHE STRING "zlib include directory" FORCE)
+   find_package(ZLIB REQUIRED)
+
    set(PNG_SHARED OFF CACHE BOOL "Build shared pnglib" FORCE)
    set(PNG_EXECUTABLES OFF CACHE BOOL "Build libpng executables" FORCE)
-   set(PNG_TESTS OFF)
+   set(PNG_TESTS OFF CACHE BOOL "Build libpng tests" FORCE)
 endif()
 add_subdirectory(libpng)
 
