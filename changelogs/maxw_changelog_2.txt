@@ -309,6 +309,10 @@ Added multithreaded renderer. New console variables:
      a reduction in performance in more heavy scenes compared to Fast, in your
      average vanilla WAD you're not likely to notice much of a difference.
 
+Split i_joysticksens into i_joy_deadzone_left, i_joy_deadzone_right, and
+i_joy_deadzone_trigger.
+Normalised SDL gamepad axis inputs to start from 0 at the end of the deadzone.
+
 ================================================================================
 EOF
 ================================================================================

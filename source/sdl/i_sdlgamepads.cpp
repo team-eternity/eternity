@@ -29,7 +29,9 @@
 
 #include "../z_zone.h"
 #include "../doomdef.h"
+#include "../m_compare.h"
 #include "../m_dllist.h"
+#include "../m_vector.h"
 
 #include "i_gamepads.h"
 #include "i_sdlgamepads.h"
@@ -160,6 +162,53 @@ void SDLGamePad::deselect()
 }
 
 //
+// Normalize an analog axis value after clipping to the minimum threshold value.
+//
+float SDLGamePad::normAxis(float value, int threshold, int maxvalue)
+{
+   if(abs(value) > threshold)
+      return float(value) / maxvalue;
+   else
+      return 0.0f;
+}
+
+//
+// Normalize a bonded pair of analog axes.
+//
+void SDLGamePad::normAxisPair(float &axisx, float &axisy, int threshold, int min, int max)
+{
+   v2float_t   vec      = { axisx, axisy };
+
+   // put components into the range of -1.0 to 1.0
+   vec.x = (axisx - min) * 2.0f / (max - min) - 1.0f;
+   vec.y = (axisy - min) * 2.0f / (max - min) - 1.0f;
+
+   const float magnitude = M_MagnitudeVec2(vec);
+   const float deadzone  = float(threshold) / max;
+   if(magnitude <= deadzone)
+   {
+      axisx = 0.0f;
+      axisy = 0.0f;
+   }
+   else
+   {
+      M_NormalizeVec2(vec);
+
+      // rescale to smooth edge of deadzone
+      vec.x /= magnitude;
+      vec.y /= magnitude;
+      vec.x *= ((magnitude - deadzone) / (1 - deadzone));
+      vec.y *= ((magnitude - deadzone) / (1 - deadzone));
+
+      eclamp(vec.x, -1.0f, 1.0f);
+      eclamp(vec.y, -1.0f, 1.0f);
+
+      axisx = vec.x;
+      axisy = vec.y;
+   }
+}
+
+//
 // Refresh input state data by polling the device.
 //
 void SDLGamePad::poll()
@@ -175,20 +224,13 @@ void SDLGamePad::poll()
 
    // get axis states
    for(int i = 0; i < numAxes && i < SDL_CONTROLLER_AXIS_MAX; i++)
-   {
-      Sint16 val = SDL_GameControllerGetAxis(gamecontroller, SDL_GameControllerAxis(i));
+      state.axes[i] = SDL_GameControllerGetAxis(gamecontroller, SDL_GameControllerAxis(i));
 
-      if(val > i_joysticksens || val < -i_joysticksens)
-      {
-         // unbias on the low end, so that +32767 means 1.0
-         if(val == -32768)
-            val = -32767;
+   normAxisPair(state.axes[SDL_CONTROLLER_AXIS_LEFTX],  state.axes[SDL_CONTROLLER_AXIS_LEFTY],  i_joy_deadzone_left,  -32768, 32767);
+   normAxisPair(state.axes[SDL_CONTROLLER_AXIS_RIGHTX], state.axes[SDL_CONTROLLER_AXIS_RIGHTY], i_joy_deadzone_right, -32768, 32767);
 
-         state.axes[i] = static_cast<float>(val) / 32767.0f;
-      }
-      else
-         state.axes[i] = 0.0f;
-   }
+   state.axes[SDL_CONTROLLER_AXIS_TRIGGERLEFT]  = normAxis(state.axes[SDL_CONTROLLER_AXIS_TRIGGERLEFT],  i_joy_deadzone_trigger, 32767);
+   state.axes[SDL_CONTROLLER_AXIS_TRIGGERRIGHT] = normAxis(state.axes[SDL_CONTROLLER_AXIS_TRIGGERRIGHT], i_joy_deadzone_trigger, 32767);
 }
 
 static constexpr const char *stringForAxis[SDL_CONTROLLER_AXIS_MAX] =

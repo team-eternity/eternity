@@ -163,9 +163,15 @@ default_t defaults[] =
    // joystick turn sensitivity
    DEFAULT_FLOAT("i_joyturnsens", &i_joyturnsens, nullptr, 1.0, 0, 10000, default_t::wad_no,
                  "Joystick turning sensitivity"),
-   // joystick sensitivity
-   DEFAULT_INT("i_joysticksens", &i_joysticksens, nullptr, 7849, 0, 32767, default_t::wad_no,
-               "SDL joystick sensitivity"),
+   // gamepad left thumbstick sensitivity
+   DEFAULT_INT("i_joy_deadzone_left", &i_joy_deadzone_left, nullptr, 7849, 0, 32767, default_t::wad_no,
+               "SDL gamepad left thumbstick sensitivity"),
+   // gamepad right thumbstick sensitivity
+   DEFAULT_INT("i_joy_deadzone_right", &i_joy_deadzone_right, nullptr, 8689, 0, 32767, default_t::wad_no,
+               "SDL gamepad right thumbstick sensitivity"),
+   // gamepad right thumbstick sensitivity
+   DEFAULT_INT("i_joy_deadzone_right", &i_joy_deadzone_right, nullptr, 3855, 0, 32767, default_t::wad_no,
+               "SDL gamepad trigger sensitivity"),
 
    DEFAULT_INT("s_precache", &s_precache, nullptr, 0, 0, 1, default_t::wad_no,
                "precache sounds at startup"),

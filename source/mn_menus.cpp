@@ -2249,18 +2249,20 @@ CONSOLE_COMMAND(mn_profiles, cf_hidden)
 
 static menuitem_t mn_gamepad_items[] =
 {
-   { it_title,        "Gamepad Settings",          nullptr, nullptr  },
-   { it_gap                                                          },
-   { it_info,         "Devices"                                      },
-   { it_runcmd,       "Select gamepad...",         "mn_joysticks"    },
-   { it_runcmd,       "Test gamepad...",           "mn_padtest"      },
-   { it_gap                                                          },
-   { it_info,         "Settings"                                     },
-   { it_runcmd,       "Load profile...",           "mn_profiles"     },
-   { it_variable,     "Turn sensitivity",          "i_joyturnsens"   },
-   { it_variable,     "Gamepad axis dead zone",    "i_joysticksens"  },
-   { it_toggle,       "Force feedback",            "i_forcefeedback" },
-   { it_end                                                          }
+   { it_title,        "Gamepad Settings",             nullptr, nullptr          },
+   { it_gap                                                                     },
+   { it_info,         "Devices"                                                 },
+   { it_runcmd,       "Select gamepad...",            "mn_joysticks"            },
+   { it_runcmd,       "Test gamepad...",              "mn_padtest"              },
+   { it_gap                                                                     },
+   { it_info,         "Settings"                                                },
+   { it_runcmd,       "Load profile...",              "mn_profiles"             },
+   { it_variable,     "Turn sensitivity",             "i_joyturnsens"           },
+   { it_variable,     "Gamepad l. stick dead zone",   "i_joy_deadzone_left"     },
+   { it_variable,     "Gamepad r. stick dead zone",   "i_joy_deadzone_right"    },
+   { it_variable,     "Gamepad trigger dead zone",    "i_joy_deadzone_trigger"  },
+   { it_toggle,       "Force feedback",               "i_forcefeedback"         },
+   { it_end                                                                           }
 };
 
 menu_t menu_gamepad =
