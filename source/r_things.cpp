@@ -2257,53 +2257,6 @@ struct mobjprojinfo_t
 };
 
 //
-// Iterator called by R_CheckMobjProjection
-//
-static bool RIT_checkMobjProjection(const line_t &line, void *vdata)
-{
-   const auto &mpi = *static_cast<mobjprojinfo_t *>(vdata);
-   if(line.bbox[BOXLEFT] >= mpi.bbox[BOXRIGHT] ||
-      line.bbox[BOXBOTTOM] >= mpi.bbox[BOXTOP] ||
-      line.bbox[BOXRIGHT] <= mpi.bbox[BOXLEFT] ||
-      line.bbox[BOXTOP] <= mpi.bbox[BOXBOTTOM] ||
-      P_PointOnLineSidePrecise(mpi.mobj->x, mpi.mobj->y, &line) == 1 ||
-      P_BoxOnLineSide(mpi.bbox, &line) != -1 ||
-      line.intflags & MLI_MOVINGPORTAL)
-   {
-      return true;
-   }
-
-   const linkdata_t *data = nullptr, *data2 = nullptr;
-
-   if(line.pflags & PS_PASSABLE)
-      data = &line.portal->data.link;
-   else
-   {
-      if(line.extflags & EX_ML_LOWERPORTAL &&
-         line.backsector->srf.floor.pflags & PS_PASSABLE &&
-         mpi.mobj->z + mpi.scaledbottom < line.backsector->srf.floor.height)
-      {
-         data = &line.backsector->srf.floor.portal->data.link;
-      }
-      if(line.extflags & EX_ML_UPPERPORTAL &&
-         line.backsector->srf.ceiling.pflags & PS_PASSABLE &&
-         mpi.mobj->z + mpi.scaledtop > line.backsector->srf.ceiling.height)
-      {
-         data2 = &line.backsector->srf.ceiling.portal->data.link;
-      }
-   }
-   v3fixed_t v = { 0, 0, 0 };
-   if(data)
-      R_addProjNode(mpi.mobj, data, v, *mpi.item, *mpi.tail, &line);
-   if(data2)
-   {
-      v.x = v.y = v.z = 0;
-      R_addProjNode(mpi.mobj, data2, v, *mpi.item, *mpi.tail, &line);
-   }
-   return true;
-}
-
-//
 // R_CheckMobjProjections
 //
 // Looks above and below for portals and prepares projection nodes
@@ -2357,46 +2310,6 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
       // always accept first sector
       data = R_CPLink(sector);
       sector = R_addProjNode(mobj, data, delta, item, tail, nullptr);
-   }
-
-   // Now check line portals
-   pLPortalMap.newSession();
-   mobjprojinfo_t mpi;
-   fixed_t xspan = M_FloatToFixed(span.side * mobj->xscale);
-   mpi.mobj = mobj;
-   if(mobj->prevpos.ldata)
-   {
-      mpi.bbox[BOXLEFT] = mobj->x - xspan;
-      mpi.bbox[BOXRIGHT] = mobj->x + xspan;
-      mpi.bbox[BOXBOTTOM] = mobj->y - xspan;
-      mpi.bbox[BOXTOP] = mobj->y + xspan;
-   }
-   else
-   {
-      mpi.bbox[BOXLEFT] = emin(mobj->x, mobj->prevpos.x) - xspan;
-      mpi.bbox[BOXRIGHT] = emax(mobj->x, mobj->prevpos.x) + xspan;
-      mpi.bbox[BOXBOTTOM] = emin(mobj->y, mobj->prevpos.y) - xspan;
-      mpi.bbox[BOXTOP] = emax(mobj->y, mobj->prevpos.y) + xspan;
-   }
-   mpi.scaledbottom = scaledbottom;
-   mpi.scaledtop = scaledtop;
-   mpi.item = &item;
-   mpi.tail = &tail;
-   int bx1 = (mpi.bbox[BOXLEFT] - bmaporgx) >> MAPBLOCKSHIFT;
-   int bx2 = (mpi.bbox[BOXRIGHT] - bmaporgx) >> MAPBLOCKSHIFT;
-   int by1 = (mpi.bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
-   int by2 = (mpi.bbox[BOXTOP] - bmaporgy) >> MAPBLOCKSHIFT;
-
-   for(int by = by1; by <= by2; ++by)
-      for(int bx = bx1; bx <= bx2; ++bx)
-         pLPortalMap.iterator(bx, by, &mpi, RIT_checkMobjProjection);
-
-   // remove trailing items
-   DLListItem<spriteprojnode_t> *next;
-   for(; item; item = next)
-   {
-      next = item->dllNext;
-      R_freeProjNode(item->dllObject);
    }
 }
 

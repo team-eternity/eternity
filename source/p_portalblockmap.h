@@ -102,35 +102,9 @@ private:
    void checkLinkSector(const sector_t &sector, const portal_t *portal, surf_e surf, int mapindex);
 };
 
-//
-// Line portal blockmap: stores just the portal linedefs (both wall and edge) on the blockmap.
-// Does NOT store the polyportals (yet). Usable ONLY for rendering purposes because of this.
-//
-class StaticLinedefPortalBlockmap
-{
-public:
-   StaticLinedefPortalBlockmap() : mValidcount(0), mValids(nullptr)
-   {
-   }
-
-   void mapInit();
-   void newSession()
-   {
-      ++mValidcount;
-   }
-   bool iterator(int x, int y, void *data,
-      bool(*func)(const line_t &, void *data)) const;
-
-private:
-   IntListMap mMap;
-   int mValidcount;
-   int *mValids;
-};
-
 bool P_BlockHasLinkedPortals(int index, bool includesectors);
 
 extern PortalBlockmap gPortalBlockmap;
-extern StaticLinedefPortalBlockmap pLPortalMap;
 
 #endif
 
