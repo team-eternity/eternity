@@ -1783,6 +1783,25 @@ static void R_sortVisSpriteRange(spritecontext_t &context, ZoneHeap &heap, int f
    }
 }
 
+#if 0
+      // Original handleOverlappingDrawSeg start code
+      float dist, fardist;
+      if(ds->dist1 > ds->dist2)
+      {
+         fardist = ds->dist2;
+         dist = ds->dist1;
+      }
+      else
+      {
+         fardist = ds->dist1;
+         dist = ds->dist2;
+      }
+
+      int r1, r2;
+      if(dist < spr->dist || (fardist < spr->dist &&
+                              !R_PointOnSegSide(spr->gx, spr->gy, ds->curline)))
+#endif
+
 //
 // Draws a sprite within a given drawseg range, for portals.
 //
@@ -1806,21 +1825,24 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
                                       const viewpoint_t &viewpoint,
                                       drawseg_t *ds,
                                       const vissprite_t *spr) {
-      float dist, fardist;
-      if(ds->dist1 > ds->dist2)
-      {
-         fardist = ds->dist2;
-         dist = ds->dist1;
-      }
-      else
-      {
-         fardist = ds->dist1;
-         dist = ds->dist2;
-      }
+      // Shout out to ksgws of ACE Engine for the code from here to the if(s1)!
+      uint32_t s1, s2;
+      divline_t sprite_clip;
+      const seg_t *seg = ds->curline;
+
+      sprite_clip.x  = spr->gx;
+      sprite_clip.y  = spr->gy;
+      sprite_clip.dx = viewpoint.sin;
+      sprite_clip.dy = -viewpoint.cos;
+
+      s1 = P_PointOnDivlineSide(seg->v1->x, seg->v1->y, &sprite_clip);
+      s2 = P_PointOnDivlineSide(seg->v2->x, seg->v2->y, &sprite_clip);
+
+      if(s1 != s2)
+         s1 = !R_PointOnSegSide(spr->gx, spr->gy, ds->curline);
 
       int r1, r2;
-      if(dist < spr->dist || (fardist < spr->dist &&
-                              !R_PointOnSegSide(spr->gx, spr->gy, ds->curline)))
+      if(s1)
       {
          if(ds->maskedtexturecol) // masked mid texture?
          {
