@@ -781,7 +781,7 @@ static void R_incrementFrameid()
 uint64_t R_GetVisitID(const rendercontext_t &context)
 {
    const uint64_t upper32 =
-      (uint64_t(context.portalcontext.windowid) << 16) | uint64_t(uint16_t(context.bufferindex));
+      (uint64_t(context.portalcontext.worldwindowid) << 16) | uint64_t(uint16_t(context.bufferindex));
    return (upper32 << 32) | uint64_t(frameid);
 }
 
@@ -1321,7 +1321,7 @@ void R_RenderViewContext(rendercontext_t &context)
 {
    memset(context.spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
    R_ClearMarkedSprites(context.spritecontext, *context.heap);
-   context.portalcontext.windowid = 0;
+   context.portalcontext.worldwindowid = 0;
 
    // Clear buffers.
    R_ClearClipSegs(context.bspcontext, context.bounds);
@@ -1332,6 +1332,8 @@ void R_RenderViewContext(rendercontext_t &context)
    // check for new console commands.
    //NetUpdate();
 
+   context.portalcontext.postbspwindowid = 1;   // reset to 1 on frame
+   
    // The head node is the last node output.
    R_RenderBSPNode(context, numnodes - 1);
 

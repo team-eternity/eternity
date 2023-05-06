@@ -107,7 +107,8 @@ struct planecontext_t
 
 struct portalcontext_t
 {
-   uint16_t windowid;
+   int postbspwindowid;  // this one increments for ALL windows, since all of them trigger R_PushPost
+   uint16_t worldwindowid;
 
    pwindow_t *unusedhead, *windowhead, *windowlast;
 

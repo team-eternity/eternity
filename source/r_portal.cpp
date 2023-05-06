@@ -177,6 +177,7 @@ static void R_clearPortalWindow(planecontext_t &context, ZoneHeap &heap,
    window->vx = window->vy = window->vz = 0;
    window->vangle = 0;
    window->maskedindex = -1;
+   window->parentmasked = 0;  // default to the main view
    memset(&window->barrier, 0, sizeof(window->barrier));
    if(!noplanes)
    {
@@ -209,6 +210,11 @@ static pwindow_t *newPortalWindow(planecontext_t &planecontext, portalcontext_t 
    }
 
    R_clearPortalWindow(planecontext, heap, bounds, ret, noplanes);
+   
+   // This grows in sync with the calls of P_PostBSP during window unwinding (R_RenderPortals). nextwindowindex gets reset to 1 before we start a rendering
+   ret->maskedindex = portalcontext.postbspwindowid++;
+   ret->parentmasked = portalcontext.portalrender.active ?
+         portalcontext.portalrender.w->maskedindex : 0;
 
    return ret;
 }
@@ -520,7 +526,7 @@ static void R_calculateTransform(int markerlinenum, int anchorlinenum,
 static void R_incrementWorldPortalID(portalcontext_t &context)
 {
    sectorboxvisit_t *&visitids      = context.visitids;
-   uint16_t          &worldportalid = context.windowid;
+   uint16_t          &worldportalid = context.worldwindowid;
    worldportalid++;
 
    if(!worldportalid)
@@ -1144,13 +1150,10 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
    R_RenderBSPNode(context, numnodes - 1);
 
    // Set parent-masked only if this is a line portal window
-   int parentmasked = window->type == pw_line ? portalcontext.portalrender.active ?
-         portalcontext.portalrender.w->maskedindex : 0 : -1;
+   int parentmasked = window->type == pw_line ? window->parentmasked : -1;
    
    // Only push the overlay if this is the head window
    R_PushPost(bspcontext, spritecontext, *context.heap, bounds, true, window->head == window ? window : nullptr, parentmasked);
-   // Save the maskedindex as we push the post
-   window->maskedindex = spritecontext.pstacksize - 1;
 
    planecontext.floorclip   = floorcliparray;
    planecontext.ceilingclip = ceilingcliparray;
