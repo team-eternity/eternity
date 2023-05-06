@@ -2038,8 +2038,8 @@ void R_updateParentPostStack(rendercontext_t &context,
    maskedrange_t *masked = pstack[postindex].masked;
    I_Assert(masked, "Expected masked");
    memmove(vissprites + masked->lastsprite + newadd, vissprites + masked->lastsprite,
-           num_vissprite - newadd - masked->lastsprite);
-   memcpy(vissprites + masked->lastsprite, &sprites[0], newadd);
+           (num_vissprite - newadd - masked->lastsprite) * sizeof(*vissprites));
+   memcpy(vissprites + masked->lastsprite, &sprites[0], newadd * sizeof(*vissprites));
    masked->lastsprite += newadd;
    for(int i = postindex + 1; i < pstacksize; ++i)
       if(pstack[i].masked)
