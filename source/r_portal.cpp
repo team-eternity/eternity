@@ -917,7 +917,7 @@ static void R_renderPrimitivePortal(rendercontext_t &context, pwindow_t *window)
       R_produceHorizonPlanes(context, heap, window, sector);
 
    if(window->head == window && window->poverlay)
-      R_PushPost(context.bspcontext, spritecontext, *context.heap, bounds, false, window, -1);  // not interested on tracking post parent here
+      R_PushPost(context.bspcontext, spritecontext, *context.heap, bounds, false, window, -1, {});  // not interested on tracking post parent here
 
    R_restoreLastView(last, viewpoint, cb_viewpoint);
 
@@ -1149,11 +1149,11 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
    R_incrementWorldPortalID(portalcontext);
    R_RenderBSPNode(context, numnodes - 1);
 
-   // Set parent-masked only if this is a line portal window
-   int parentmasked = window->type == pw_line ? window->parentmasked : -1;
+   // Set parent-masked only if this is a LINKED line portal window
+   int parentmasked = window->type == pw_line && window->portal->type == R_LINKED ? window->parentmasked : -1;
    
    // Only push the overlay if this is the head window
-   R_PushPost(bspcontext, spritecontext, *context.heap, bounds, true, window->head == window ? window : nullptr, parentmasked);
+   R_PushPost(bspcontext, spritecontext, *context.heap, bounds, true, window->head == window ? window : nullptr, parentmasked, window->portal->type == R_LINKED ? window->portal->data.link.delta : v3fixed_t{});
 
    planecontext.floorclip   = floorcliparray;
    planecontext.ceilingclip = ceilingcliparray;

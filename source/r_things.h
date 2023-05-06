@@ -63,6 +63,7 @@ struct maskedrange_t
    
    // ioanch: for updating the stack list
    int parentrange;
+   v3fixed_t parentdelta;  // needed to update the vissprite gx/gy/gz
    
    // for unused head
    struct maskedrange_t *next;
@@ -75,7 +76,7 @@ struct poststack_t
 };
 
 void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
-                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window, int parentmasked);
+                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window, int parentmasked, const v3fixed_t &parentdelta);
 
 void R_ClearBadSpritesAndFrames();
 
