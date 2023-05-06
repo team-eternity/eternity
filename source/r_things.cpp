@@ -1793,7 +1793,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
                                   const contextbounds_t &bounds,
                                   drawseg_t *const drawsegs,
                                   vissprite_t *spr, int firstds, int lastds,
-                                  float *ptop, float *pbottom)
+                                  float *ptop, float *pbottom, bool &hitwindow)
 {
    drawseg_t *ds;
    int        x;
@@ -2007,9 +2007,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
          cliptop[x] = ptop[x - bounds.startcolumn];
    }
 
-   bool hitwindow = false;
    R_drawVisSprite(bounds, spr, clipbot, cliptop, pbottom - bounds.startcolumn, ptop - bounds.startcolumn, &hitwindow);
-   // TODO: check if hit portal and modify the vissprite list and postBSP stack
 }
 
 //
@@ -2084,13 +2082,20 @@ void R_DrawPostBSP(rendercontext_t &context)
 
             for(int i = lastsprite - firstsprite; --i >= 0; )
             {
+               bool hitwindow = false;
                R_drawSpriteInDSRange(
                   context.cmapcontext,
                   spritecontext,
                   context.view, context.cb_view, context.bounds, drawsegs,
                   spritecontext.vissprite_ptrs[i], firstds, lastds,
-                  masked->ceilingclip, masked->floorclip
+                  masked->ceilingclip, masked->floorclip, hitwindow
                );         // killough
+               if(hitwindow)
+               {
+                  // TODO: hit the window. Check if we're currently in a wall portal and determine
+                  // its parent post BSP stack
+                  
+               }
             }
          }
 
