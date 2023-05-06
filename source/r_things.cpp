@@ -713,14 +713,17 @@ static vissprite_t *R_newVisSprite(spritecontext_t &context, ZoneHeap &heap)
 }
 
 //
-// Used for sprites and masked mid textures.
+// Used for sprites.
 // Masked means: partly transparent, i.e. stored
 //  in posts/runs of opaque pixels.
+//
+// NOTE: hitwindow is assumed to be valid and set to false IF portalbottom and portaltop are valid.
 //
 static void R_drawMaskedColumn(const R_ColumnFunc colfunc,
                                cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
                                column_t *tcolumn,
-                               const float *const mfloorclip, const float *const mceilingclip)
+                               const float *const mfloorclip, const float *const mceilingclip,
+                               const float *windowbottom, const float *windowtop, bool *hitwindow)
 {
    float y1, y2;
    fixed_t basetexturemid = column.texmid;
@@ -735,9 +738,24 @@ static void R_drawMaskedColumn(const R_ColumnFunc colfunc,
       // calculate unclipped screen coordinates for post
       y1 = maskedcolumn.ytop + (maskedcolumn.scale * top);
       y2 = y1 + (maskedcolumn.scale * tcolumn->length) - 1;
-
-      column.y1 = (int)(y1 < mceilingclip[column.x] ? mceilingclip[column.x] : y1);
-      column.y2 = (int)(y2 > mfloorclip[column.x]   ? mfloorclip[column.x]   : y2);
+      
+      if(y1 < mceilingclip[column.x])
+      {
+         column.y1 = (int)mceilingclip[column.x];
+         if(windowtop && mceilingclip[column.x] == windowtop[column.x])
+            *hitwindow = true;
+      }
+      else
+         column.y1 = (int)y1;
+      
+      if(y2 > mfloorclip[column.x])
+      {
+         column.y2 = (int)mfloorclip[column.x];
+         if(windowbottom && mfloorclip[column.x] == windowbottom[column.x])
+            *hitwindow = true;
+      }
+      else
+         column.y2 = (int)y2;
 
       // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
       if(column.y1 <= column.y2 && column.y2 < viewwindow.height)
@@ -878,7 +896,8 @@ void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc,
 //  mfloorclip and mceilingclip should also be set.
 //
 static void R_drawVisSprite(const contextbounds_t &bounds, vissprite_t *vis,
-                            float *const mfloorclip, float *const mceilingclip)
+                            float *const mfloorclip, float *const mceilingclip,
+                            const float *windowbottom, const float *windowtop, bool *hitwindow)
 {
    column_t *tcolumn;
    int       texturecolumn;
@@ -953,7 +972,7 @@ static void R_drawVisSprite(const contextbounds_t &bounds, vissprite_t *vis,
             continue;
          
          tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
-         R_drawMaskedColumn(colfunc, column, maskedcolumn, tcolumn, mfloorclip, mceilingclip);
+         R_drawMaskedColumn(colfunc, column, maskedcolumn, tcolumn, mfloorclip, mceilingclip, windowbottom, windowtop, hitwindow);
       }
    }
    else
@@ -967,7 +986,7 @@ static void R_drawVisSprite(const contextbounds_t &bounds, vissprite_t *vis,
             continue;
          
          tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
-         R_drawMaskedColumn(colfunc, column, maskedcolumn, tcolumn, mfloorclip, mceilingclip);
+         R_drawMaskedColumn(colfunc, column, maskedcolumn, tcolumn, mfloorclip, mceilingclip, windowbottom, windowtop, hitwindow);
       }
    }
 }
@@ -1621,7 +1640,7 @@ static void R_drawPSprite(const pspdef_t *psp,
    oldycenter = view.ycenter;
    view.ycenter = (view.height * 0.5f);
    
-   R_drawVisSprite(r_globalcontext.bounds, vis, mfloorclip, mceilingclip);
+   R_drawVisSprite(r_globalcontext.bounds, vis, mfloorclip, mceilingclip, nullptr, nullptr, nullptr);
    
    view.ycenter = oldycenter;
 }
@@ -1708,42 +1727,6 @@ static void msort(vissprite_t **s, vissprite_t **t, int n)
       }
    }
 }
-
-#if 0
-//
-// R_SortVisSprites
-//
-// Rewritten by Lee Killough to avoid using unnecessary
-// linked lists, and to use faster sorting algorithm.
-//
-static void R_SortVisSprites()
-{
-   if(num_vissprite)
-   {
-      int i = num_vissprite;
-      
-      // If we need to allocate more pointers for the vissprites,
-      // allocate as many as were allocated for sprites -- killough
-      // killough 9/22/98: allocate twice as many
-      
-      if(num_vissprite_ptrs < num_vissprite*2)
-      {
-         efree(vissprite_ptrs);  // better than realloc -- no preserving needed
-         num_vissprite_ptrs = num_vissprite_alloc * 2;
-         vissprite_ptrs = emalloc(vissprite_t **, 
-                                  num_vissprite_ptrs * sizeof *vissprite_ptrs);
-      }
-
-      while(--i >= 0)
-         vissprite_ptrs[i] = vissprites+i;
-
-      // killough 9/22/98: replace qsort with merge sort, since the keys
-      // are roughly in order to begin with, due to BSP rendering.
-      
-      msort(vissprite_ptrs, vissprite_ptrs + num_vissprite, num_vissprite);
-   }
-}
-#endif
 
 //
 // Sorts only a subset of the vissprites, for portal rendering.
@@ -2024,7 +2007,9 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
          cliptop[x] = ptop[x - bounds.startcolumn];
    }
 
-   R_drawVisSprite(bounds, spr, clipbot, cliptop);
+   bool hitwindow = false;
+   R_drawVisSprite(bounds, spr, clipbot, cliptop, pbottom - bounds.startcolumn, ptop - bounds.startcolumn, &hitwindow);
+   // TODO: check if hit portal and modify the vissprite list and postBSP stack
 }
 
 //
