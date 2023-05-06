@@ -176,6 +176,7 @@ static void R_clearPortalWindow(planecontext_t &context, ZoneHeap &heap,
    window->clipfunc = nullptr;
    window->vx = window->vy = window->vz = 0;
    window->vangle = 0;
+   window->maskedindex = -1;
    memset(&window->barrier, 0, sizeof(window->barrier));
    if(!noplanes)
    {
@@ -910,7 +911,7 @@ static void R_renderPrimitivePortal(rendercontext_t &context, pwindow_t *window)
       R_produceHorizonPlanes(context, heap, window, sector);
 
    if(window->head == window && window->poverlay)
-      R_PushPost(context.bspcontext, spritecontext, *context.heap, bounds, false, window);
+      R_PushPost(context.bspcontext, spritecontext, *context.heap, bounds, false, window, -1);  // not interested on tracking post parent here
 
    R_restoreLastView(last, viewpoint, cb_viewpoint);
 
@@ -1142,8 +1143,14 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
    R_incrementWorldPortalID(portalcontext);
    R_RenderBSPNode(context, numnodes - 1);
 
+   // Set parent-masked only if this is a line portal window
+   int parentmasked = window->type == pw_line ? portalcontext.portalrender.active ?
+         portalcontext.portalrender.w->maskedindex : 0 : -1;
+   
    // Only push the overlay if this is the head window
-   R_PushPost(bspcontext, spritecontext, *context.heap, bounds, true, window->head == window ? window : nullptr);
+   R_PushPost(bspcontext, spritecontext, *context.heap, bounds, true, window->head == window ? window : nullptr, parentmasked);
+   // Save the maskedindex as we push the post
+   window->maskedindex = spritecontext.pstacksize - 1;
 
    planecontext.floorclip   = floorcliparray;
    planecontext.ceilingclip = ceilingcliparray;

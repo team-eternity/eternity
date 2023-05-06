@@ -618,7 +618,7 @@ void R_ClearMarkedSprites(spritecontext_t &context, ZoneHeap &heap)
 // Pushes a new element on the post-BSP stack.
 //
 void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
-                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window)
+                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window, int parentmasked)
 {
    drawseg_t     *&drawsegs     = bspcontext.drawsegs;
    drawseg_t     *&ds_p         = bspcontext.ds_p;
@@ -684,6 +684,8 @@ void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHe
 
       post->masked->lastds     = int(ds_p - drawsegs);
       post->masked->lastsprite = int(spritecontext.num_vissprite);
+      
+      post->masked->parentrange = parentmasked;
 
       memcpy(post->masked->ceilingclip, portaltop    + bounds.startcolumn, sizeof(*portaltop)    * bounds.numcolumns);
       memcpy(post->masked->floorclip,   portalbottom + bounds.startcolumn, sizeof(*portalbottom) * bounds.numcolumns);

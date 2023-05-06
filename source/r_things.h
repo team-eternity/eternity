@@ -61,6 +61,9 @@ struct maskedrange_t
    float *floorclip;
    float *ceilingclip;
    
+   // ioanch: for updating the stack list
+   int parentrange;
+   
    // for unused head
    struct maskedrange_t *next;
 };
@@ -72,7 +75,7 @@ struct poststack_t
 };
 
 void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
-                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window);
+                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window, int parentmasked);
 
 void R_ClearBadSpritesAndFrames();
 
