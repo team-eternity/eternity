@@ -795,7 +795,7 @@ if(MSVC)
       target_compile_options(eternity PUBLIC "/std:c++17")
    endif()
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT BUILD_FLATPAK)
-   target_link_libraries(eternity stdc++fs)
+   target_link_libraries(eternity stdc++fs pthread)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
