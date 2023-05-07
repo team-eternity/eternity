@@ -73,7 +73,7 @@ void A_SpawnObject(actionargs_t *actionargs)
    Mobj      *mo;
 
    thingtype = E_ArgAsThingNumG0(args, 0);
-   if(!mbf21_temp || thingtype == -1)
+   if(!mbf21_demo || thingtype == -1)
       return;
 
    angle = E_ArgAsFixed(args, 1, 0);
@@ -147,7 +147,7 @@ void A_MonsterProjectile(actionargs_t *actionargs)
    Mobj      *mo;
 
    thingtype = E_ArgAsThingNumG0(args, 0);
-   if(!mbf21_temp || !actor->target || thingtype == -1)
+   if(!mbf21_demo || !actor->target || thingtype == -1)
       return;
 
    angle       = E_ArgAsFixed(args, 1, 0);
@@ -200,7 +200,7 @@ void A_MonsterBulletAttack(actionargs_t *actionargs)
    angle_t    angle;
    int        damage;
 
-   if(!mbf21_temp || !actor->target)
+   if(!mbf21_demo || !actor->target)
       return;
 
    hspread    = E_ArgAsFixed(args, 0, 0);
@@ -242,7 +242,7 @@ void A_MonsterMeleeAttack(actionargs_t *actionargs)
    fixed_t   range;
    int       damage;
 
-   if(!mbf21_temp || !actor->target)
+   if(!mbf21_demo || !actor->target)
       return;
 
    damagebase = E_ArgAsInt(args, 0, 3);
@@ -275,7 +275,7 @@ void A_RadiusDamage(actionargs_t *actionargs)
    Mobj      *actor = actionargs->actor;
    int        damage, radius;
 
-   if(!mbf21_temp)
+   if(!mbf21_demo)
       return;
 
    damage = E_ArgAsInt(args, 0, 0);
@@ -291,7 +291,7 @@ void A_NoiseAlert(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
 
-   if(!mbf21_temp || !actor->target)
+   if(!mbf21_demo || !actor->target)
       return;
 
    P_NoiseAlert(actor->target, actor);
@@ -312,7 +312,7 @@ void A_HealChase(actionargs_t *actionargs)
    sfxinfo_t *sfxinfo;
 
    state = E_ArgAsStateNumNI(args, 0, actor);
-   if(!mbf21_temp || state < 0)
+   if(!mbf21_demo || state < 0)
       return;
 
    sfxinfo = E_ArgAsSound(args, 1);
@@ -335,7 +335,7 @@ void A_SeekTracer(actionargs_t *actionargs)
    Mobj      *actor = actionargs->actor;
    fixed_t    threshold, maxturnangle;
 
-   if(!mbf21_temp)
+   if(!mbf21_demo)
       return;
 
    threshold    = FixedToAngle(E_ArgAsFixed(args, 0, 0));
@@ -359,7 +359,7 @@ void A_FindTracer(actionargs_t *actionargs)
    angle_t    fov;
    fixed_t    range;
 
-   if(!mbf21_temp || actor->tracer)
+   if(!mbf21_demo || actor->tracer)
       return;
 
    fov   = FixedToAngle(E_ArgAsFixed(args, 0, 0));
@@ -406,7 +406,7 @@ void A_ClearTracer(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
 
-   if(!mbf21_temp)
+   if(!mbf21_demo)
       return;
 
    P_ClearTarget(actor->tracer);
@@ -425,7 +425,7 @@ void A_JumpIfHealthBelow(actionargs_t *actionargs)
    int state, health;
 
    state = E_ArgAsStateNumNI(args, 0, actor);
-   if(!mbf21_temp || state < 0)
+   if(!mbf21_demo || state < 0)
       return;
 
    health = E_ArgAsInt(args, 1, 0);
@@ -445,7 +445,7 @@ static void A_jumpIfMobjInSight(actionargs_t *actionargs)
    Mobj      *mobj  = actor->*field;
    int state;
 
-   if(!mbf21_temp || !mobj)
+   if(!mbf21_demo || !mobj)
       return;
 
    fixed_t ffov = E_ArgAsFixed(args, 1, 0);
@@ -491,7 +491,7 @@ static void A_jumpIfMobjCloser(actionargs_t *actionargs)
 
 
    state = E_ArgAsStateNumNI(args, 0, actor);
-   if(!mbf21_temp || !mobj || state < 0)
+   if(!mbf21_demo || !mobj || state < 0)
       return;
 
    distance = E_ArgAsFixed(args, 1, 0);
@@ -565,7 +565,7 @@ void A_JumpIfFlagsSet(actionargs_t *actionargs)
    unsigned int *mbf21flags;
 
    state = E_ArgAsStateNumNI(args, 0, actor);
-   if(!mbf21_temp || !actor || state < 0)
+   if(!mbf21_demo || !actor || state < 0)
       return;
 
    flags      = E_ArgAsInt(args, 0, 0);
@@ -599,7 +599,7 @@ void A_AddFlags(actionargs_t *actionargs)
    unsigned int  flags;
    unsigned int *mbf21flags;
 
-   if(!mbf21_temp)
+   if(!mbf21_demo)
       return;
 
    flags      = E_ArgAsInt(args, 0, 0);
@@ -628,7 +628,7 @@ void A_RemoveFlags(actionargs_t *actionargs)
    unsigned int  flags;
    unsigned int *mbf21flags;
 
-   if(!mbf21_temp)
+   if(!mbf21_demo)
       return;
 
    flags      = E_ArgAsInt(args, 0, 0);
@@ -670,7 +670,7 @@ void A_WeaponProjectile(actionargs_t *actionargs)
    Mobj      *mo;
 
    thingtype = E_ArgAsThingNumG0(args, 0);
-   if(!mbf21_temp || !player || thingtype == -1)
+   if(!mbf21_demo || !player || thingtype == -1)
       return;
 
    angle       = E_ArgAsFixed(args, 1, 0);
@@ -723,7 +723,7 @@ void A_WeaponBulletAttack(actionargs_t *actionargs)
    angle_t    angle;
    int        damage;
 
-   if(!mbf21_temp || !player)
+   if(!mbf21_demo || !player)
       return;
 
    hspread    = E_ArgAsFixed(args, 0, 0);
@@ -765,7 +765,7 @@ void A_WeaponMeleeAttack(actionargs_t *actionargs)
    angle_t   angle;
    fixed_t   slope;
 
-   if(!mbf21_temp || !player)
+   if(!mbf21_demo || !player)
       return;
 
    damagebase = E_ArgAsInt(args, 0, 2);
@@ -820,7 +820,7 @@ void A_WeaponSound(actionargs_t *actionargs)
    sfxinfo_t *sfxinfo;
    bool fullVol;
 
-   if(!mbf21_temp || !player)
+   if(!mbf21_demo || !player)
       return;
 
    sfxinfo = E_ArgAsSound(args, 0);
@@ -842,7 +842,7 @@ void A_WeaponJump(actionargs_t *actionargs)
    pspdef_t  *pspr   = actionargs->pspr;
    int state;
 
-   if(!mbf21_temp || !player || !pspr)
+   if(!mbf21_demo || !player || !pspr)
       return;
 
    if(state = E_ArgAsStateNumNI(args, 0, player); state < 0)
@@ -895,7 +895,7 @@ void A_CheckAmmo(actionargs_t *actionargs)
    int                 ammoamount;
    const itemeffect_t *ammotype;
 
-   if(!mbf21_temp || !player || !pspr)
+   if(!mbf21_demo || !player || !pspr)
       return;
 
    weapon = player->readyweapon;
@@ -937,7 +937,7 @@ void A_RefireTo(actionargs_t *actionargs)
    int  state;
    bool noammocheck;
 
-   if(!mbf21_temp || !player || !pspr)
+   if(!mbf21_demo || !player || !pspr)
       return;
 
    if(state = E_ArgAsStateNumNI(args, 0, player); state < 0)
@@ -973,7 +973,7 @@ void A_GunFlashTo(actionargs_t *actionargs)
    pspdef_t  *pspr   = actionargs->pspr;
    int  state;
 
-   if(!mbf21_temp || !player || !pspr)
+   if(!mbf21_demo || !player || !pspr)
       return;
 
    if(state = E_ArgAsStateNumNI(args, 0, player); state < 0)
@@ -995,7 +995,7 @@ void A_WeaponAlert(actionargs_t *actionargs)
    Mobj      *mo     = actionargs->actor;
    player_t  *player = mo->player;
 
-   if(!mbf21_temp || !player)
+   if(!mbf21_demo || !player)
       return;
 
    P_NoiseAlert(mo, mo);

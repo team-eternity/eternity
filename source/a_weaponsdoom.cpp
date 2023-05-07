@@ -74,7 +74,7 @@ void A_Punch(actionargs_t *actionargs)
    // haleyjd 08/05/04: use new function
    angle += P_SubRandom(pr_punchangle) << 18;
 
-   range = mbf21_temp ? player->mo->info->meleerange : MELEERANGE;
+   range = mbf21_demo ? player->mo->info->meleerange : MELEERANGE;
 
    slope = P_DoAutoAim(mo, angle, range);
 
@@ -103,7 +103,7 @@ void A_Saw(actionargs_t *actionargs)
    // haleyjd 08/05/04: use new function
    angle += P_SubRandom(pr_saw) << 18;
 
-   range = (mbf21_temp ? mo->info->meleerange : MELEERANGE) + 1;
+   range = (mbf21_demo ? mo->info->meleerange : MELEERANGE) + 1;
 
    // Use meleerange + 1 so that the puff doesn't skip the flash
    slope = P_DoAutoAim(mo, angle, range);

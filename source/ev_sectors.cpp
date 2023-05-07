@@ -930,7 +930,7 @@ static void EV_applyGeneralizedDamage(sector_t *sector, bool udmf)
    // Apply slime damage UNLESS the MBF21 insta-death bit is set, which changes rules
    // convert damage
    int damagetype = (sector->special >> (udmf ? UDMF_BOOM_SHIFT : 0) & DAMAGE_MASK) >> DAMAGE_SHIFT;
-   bool instadeath = mbf21_temp && sector->flags & SECF_INSTANTDEATH;
+   bool instadeath = mbf21_demo && sector->flags & SECF_INSTANTDEATH;
    // Don't just make a new nukage type with GOD_BREACH_DAMAGE, because most subtypes work 
    // differently
 

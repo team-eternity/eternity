@@ -1205,7 +1205,7 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
 
    // Has hit ground
 
-   if(mbf21_temp && sector->flags & SECF_INSTANTDEATH)
+   if(mbf21_demo && sector->flags & SECF_INSTANTDEATH)
       P_runInstantDeathSector(player, sector);
    else if(enable_nuke && sector->damage > 0) // killough 12/98: nukage disabling cheat
    {

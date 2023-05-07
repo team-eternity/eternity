@@ -770,7 +770,7 @@ bool P_CheckLineBlocksThing(line_t *ld, const linkoffset_t *link,
    if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
    {
       if((ld->flags & ML_BLOCKING) ||
-         (mbf21_temp && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
+         (mbf21_demo && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
       {
          // explicitly blocking everything
          // or blocking player
@@ -791,7 +791,7 @@ bool P_CheckLineBlocksThing(line_t *ld, const linkoffset_t *link,
       if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
          (
             ld->flags & ML_BLOCKMONSTERS ||
-            (mbf21_temp && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
+            (mbf21_demo && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
             )
          )
       {
