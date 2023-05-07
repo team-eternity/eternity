@@ -491,7 +491,7 @@ bool P_CheckAmmo(player_t *player)
    // MaxW: 2023: FUCK YOU. WE'RE CHANGING THE FUCKING PENDINGWEAPON HERE,
    //  OTHERWISE WEIRD SHIT HAPPENS IN NETPLAY WITH REPICKED WEAPONS WHEN
    //  YOU RUN OUT OF GODDAMN AMMO.
-   if(demo_version >= 403)
+   if(demo_version >= 401)
    {
       weaponinfo_t *temp = E_FindBestWeapon(player);
       player->pendingweapon = temp;
