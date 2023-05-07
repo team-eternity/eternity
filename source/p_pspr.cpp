@@ -487,7 +487,16 @@ bool P_CheckAmmo(player_t *player)
    // for Boom games we cannot do this, and have different player
    // preferences across demos or networks, so we have to use the
    // G_BuildTiccmd() interface instead of making the switch here.
-   
+
+   // MaxW: 2023: FUCK YOU. WE'RE CHANGING THE FUCKING PENDINGWEAPON HERE,
+   //  OTHERWISE WEIRD SHIT HAPPENS IN NETPLAY WITH REPICKED WEAPONS WHEN
+   //  YOU RUN OUT OF GODDAMN AMMO.
+   if(demo_version >= 403)
+   {
+      weaponinfo_t *temp = E_FindBestWeapon(player);
+      player->pendingweapon = temp;
+      player->pendingweaponslot = E_FindFirstWeaponSlot(player, temp);
+   }
    if(demo_compatibility)
    {
       if(vanilla_heretic)

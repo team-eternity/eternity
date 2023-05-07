@@ -363,7 +363,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
       newweapon = -1;
 
-      if((p.attackdown && !P_CheckAmmo(&p)) || gameactions[ka_nextweapon])
+      if(gameactions[ka_nextweapon])
       {
          weaponinfo_t *temp = E_FindBestWeapon(&p);
          if(temp == nullptr)
