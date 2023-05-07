@@ -385,7 +385,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
       {
          if((ld->flags & ML_BLOCKING) ||
-            (mbf21_temp && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
+            (mbf21_demo && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
          {
             // explicitly blocking everything
             // or blocking player
@@ -396,7 +396,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
          if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
             (
                ld->flags & ML_BLOCKMONSTERS ||
-               (mbf21_temp && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
+               (mbf21_demo && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
                )
             )
          {
