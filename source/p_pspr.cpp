@@ -488,9 +488,9 @@ bool P_CheckAmmo(player_t *player)
    // preferences across demos or networks, so we have to use the
    // G_BuildTiccmd() interface instead of making the switch here.
 
-   // MaxW: 2023: FUCK YOU. WE'RE CHANGING THE FUCKING PENDINGWEAPON HERE,
-   //  OTHERWISE WEIRD SHIT HAPPENS IN NETPLAY WITH REPICKED WEAPONS WHEN
-   //  YOU RUN OUT OF GODDAMN AMMO.
+   // MaxW: 2023: We need to change pengingweapon here otherwise
+   //  otherwise players will switch to the same weapon twice when
+   //  they run out of ammo in netgames.
    if(demo_version >= 401)
    {
       weaponinfo_t *temp = E_FindBestWeapon(player);
