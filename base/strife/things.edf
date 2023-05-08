@@ -53,10 +53,10 @@ thingtype StrifePlayer : Mobj
     PLAY P 700
     goto DeathLoop
   XDeath:
-    RGIB A 5 // STRIFE_TODO: A_BodyParts
+    RGIB A 5 A_BodyParts
     RGIB B 5 A_XScream
     RGIB C 5 A_Fall
-    RGIB DEFG 5 //A_BodyParts
+    RGIB DEFG 5 A_BodyParts
   DeathLoop:
     RGIB H 1400 // STRIFE_TODO: A_CheckPlayerDone
     loop
@@ -245,10 +245,10 @@ thingtype Peasant : Mobj
     PEAS N 1400
     stop
   XDeath:
-    GIBS M 5 // STRIFE_TODO: A_BodyParts
+    GIBS M 5 A_BodyParts
     GIBS N 5 A_XScream
     GIBS O 5 A_Fall
-    GIBS PQRS 4 // STRIFE_TODO: A_BodyParts
+    GIBS PQRS 4 A_BodyParts
     GIBS T 4
     GIBS U 5
     GIBS V 1400
@@ -449,10 +449,10 @@ thingtype Zombie : Mobj, 7769
     AGRD A 5 // // STRIFE_TODO: A_ZombieInSpecialSector
     loop
   Death:
-    GIBS M 5 // STRIFE_TODO: A_BodyParts
+    GIBS M 5 A_BodyParts
     GIBS N 5 A_XScream
     GIBS O 5 A_Fall
-    GIBS PQRS 4 // STRIFE_TODO: A_BodyParts
+    GIBS PQRS 4 A_BodyParts
     GIBS T 4
     GIBS U 5
     GIBS V 1400
@@ -479,10 +479,10 @@ thingtype Becoming : Mobj, 7801
     stop
   Death:
     GIBS A 5 A_Fall
-    GIBS BC 5 // STRIFE_TODO: A_BodyParts
-    GIBS D 4 // STRIFE_TODO: A_BodyParts
+    GIBS BC 5 A_BodyParts
+    GIBS D 4 A_BodyParts
     GIBS E 4 A_XScream
-    GIBS F 4 // STRIFE_TODO: A_BodyParts
+    GIBS F 4 A_BodyParts
     GIBS G 4
     GIBS H 4
     GIBS I 5
@@ -696,10 +696,10 @@ thingtype Beggar : Mobj
     BEGR N -1
     stop
   XDeath:
-    BEGR F 5 // STRIFE_TODO: A_BodyParts
+    BEGR F 5 A_BodyParts
     GIBS N 5 A_XScream
     GIBS O 5 A_Fall
-    GIBS PQRS 4 // STRIFE_TODO: A_BodyParts
+    GIBS PQRS 4 A_BodyParts
     GIBS T 4
     GIBS U 5
     GIBS V 1400
@@ -784,10 +784,10 @@ thingtype Rebel : Mobj
     HMN1 N -1
     stop
   XDeath:
-    RGIB A 4 // STRIFE_TODO: A_BodyParts
+    RGIB A 4 A_BodyParts
     RGIB B 4 A_XScream
     RGIB C 3 A_Fall
-    RGIB DEF 3 // STRIFE_TODO: A_BodyParts
+    RGIB DEF 3 A_BodyParts
     RGIB G 3
     RGIB H 1400
     stop
@@ -964,11 +964,11 @@ thingtype Reaver : Mobj, 7951
     ROB1 R -1
     stop
   XDeath:
-    ROB1 L 5 bright // STRIFE_TODO: A_BodyParts
+    ROB1 L 5 bright A_BodyParts
     ROB1 M 5 bright A_XScream
-    ROB1 N 5 bright // STRIFE_TODO: A_BodyParts
+    ROB1 N 5 bright A_BodyParts
     ROB1 O 5 bright A_Fall
-    ROB1 P 5 bright // STRIFE_TODO: A_BodyParts
+    ROB1 P 5 bright A_BodyParts
     ROB1 Q 5 bright // STRIFE_TODO: A_DeathExplode3
     ROB1 R -1
     stop
@@ -1034,10 +1034,10 @@ thingtype Guard : Mobj
     goto DeathJump
   XDeath:
     GIBS A 5 A_Fall
-    GIBS BC 5 // STRIFE_TODO: A_BodyParts
-    GIBS D 4 // STRIFE_TODO: A_BodyParts
+    GIBS BC 5 A_BodyParts
+    GIBS D 4 A_BodyParts
     GIBS E 4 A_XScream
-    GIBS F 4 // STRIFE_TODO: A_BodyParts
+    GIBS F 4 A_BodyParts
     GIBS G 4
     GIBS H 4
     GIBS I 5
@@ -1203,12 +1203,12 @@ thingtype PGuard : Mobj, 7953
     PGRD H 8 // A_TemplarMauler
     goto See
   Death:
-    PGRD I 4 bright // STRIFE_TODO: A_BodyParts
+    PGRD I 4 bright A_BodyParts
     PGRD J 4 bright A_Scream
-    PGRD K 4 bright // STRIFE_TODO: A_BodyParts
+    PGRD K 4 bright A_BodyParts
     PGRD L 4 bright A_Fall
     PGRD MN 4 bright
-    PGRD O 4 // STRIFE_TODO: A_BodyParts
+    PGRD O 4 A_BodyParts
     PGRD PQR 4
     PGRD "STUVWXYZ[" 3
     PGRD "\" -1
@@ -1257,12 +1257,12 @@ thingtype Crusader : Mobj, 7955
     goto See
   Death:
     ROB2 G 3 A_Scream
-    ROB2 H 6 // STRIFE_TODO: A_BodyParts
-    ROB2 I 4 bright // STRIFE_TODO: A_BodyParts
+    ROB2 H 6 A_BodyParts
+    ROB2 I 4 bright A_BodyParts
     ROB2 J 4 bright // STRIFE_TODO: A_DeathExplode2
     ROB2 K 4 bright A_Fall
     ROB2 L 4 // STRIFE_TODO: A_DeathExplode2
-    ROB2 MN 4 // STRIFE_TODO: A_BodyParts
+    ROB2 MN 4 A_BodyParts
     ROB2 O 4 // STRIFE_TODO: A_DeathExplode2
     ROB2 P -1 // STRIFE_TODO: Strife's A_BossDeath
     stop
@@ -1305,18 +1305,18 @@ thingtype Bishop : Mobj, 7787
   Death:
     MLDR G 3 bright
     MLDR H 5 A_Scream
-    MLDR I 4 bright // STRIFE_TODO: A_BodyParts
+    MLDR I 4 bright A_BodyParts
     MLDR J 4 bright // STRIFE_TODO: A_DeathExplode2
     MLDR KL 4 bright
     MLDR M 4 bright A_Fall
     MLDR N 4 bright
-    MLDR O 4 bright // STRIFE_TODO: A_BodyParts
+    MLDR O 4 bright A_BodyParts
     MLDR P 4 bright
-    MLDR Q 4 bright // STRIFE_TODO: A_BodyParts
+    MLDR Q 4 bright A_BodyParts
     MLDR R 4 bright
-    MLDR S 4 bright // STRIFE_TODO: A_BodyParts
+    MLDR S 4 bright A_BodyParts
     MLDR T 4 bright
-    MLDR U 4 bright // STRIFE_TODO: A_BodyParts
+    MLDR U 4 bright A_BodyParts
     MLDR V 4 // STRIFE_TODO: A_SpawnSpectreB
     stop
   "@
@@ -1714,7 +1714,7 @@ thingtype SubEntity : Mobj
   Death:
     MDTH A 3 bright A_Scream
     MDTH B 3 bright A_Fall
-    MDTH CDEFGHIJKLMN 3 bright // STRIFE_TODO: A_BodyParts
+    MDTH CDEFGHIJKLMN 3 bright A_BodyParts
     MDTH O 3 bright // STRIFE_TODO: Strife's A_BossDeath
     stop
   "@
@@ -2011,9 +2011,9 @@ thingtype Sentinel : Mobj, 7956
     loop
   Death:
     SEWR D 7 A_Fall
-    SEWR E 8 bright // STRIFE_TODO: A_BodyParts
+    SEWR E 8 bright A_BodyParts
     SEWR F 5 bright A_Scream
-    SEWR GH 4 bright // STRIFE_TODO: A_BodyParts
+    SEWR GH 4 bright A_BodyParts
     SEWR I 4
     // The single state below is vanilla-only
     SEWR J 5
@@ -2021,8 +2021,8 @@ thingtype Sentinel : Mobj, 7956
     //SEWR J 44
     //SEWR H 4 bright
     //SEWR K 3 bright
-    //SEWR L 3 bright // STRIFE_TODO: A_BodyParts
-    //JUNK G 35 // STRIFE_TODO: A_BodyParts
+    //SEWR L 3 bright A_BodyParts
+    //JUNK G 35 A_BodyParts
     stop
   "@
 }
@@ -2132,21 +2132,21 @@ thingtype Inquisitor : Mobj, 7616
     ROB3 IH 4 bright // STRIFE_TODO: A_InqFly
     goto Fly+1
   Death:
-    ROB3 L 4 // STRIFE_TODO: A_BodyParts
+    ROB3 L 4 A_BodyParts
     ROB3 M 4 A_Scream
-    ROB3 N 4 // STRIFE_TODO: A_BodyParts
+    ROB3 N 4 A_BodyParts
     ROB3 O 4 bright // STRIFE_TODO: A_DeathExplode1
-    ROB3 P 4 bright // STRIFE_TODO: A_BodyParts
+    ROB3 P 4 bright A_BodyParts
     ROB3 Q 4 bright A_Fall
-    ROB3 RSTUV 4 // STRIFE_TODO: A_BodyParts
+    ROB3 RSTUV 4 A_BodyParts
     ROB3 W 4 bright // STRIFE_TODO: A_DeathExplode1
-    ROB3 XY 4 bright // STRIFE_TODO: A_BodyParts
-    ROB3 "Z[" 4 // STRIFE_TODO: A_BodyParts
-    ROB3 "\" 3 // STRIFE_TODO: A_BodyParts
+    ROB3 XY 4 bright A_BodyParts
+    ROB3 "Z[" 4 A_BodyParts
+    ROB3 "\" 3 A_BodyParts
     ROB3 "]" 3 bright // STRIFE_TODO: A_DeathExplode1
     RBB3 A 3 bright // STRIFE_TODO: A_InqTossArm
-    RBB3 B 3 bright // STRIFE_TODO: A_BodyParts
-    RBB3 CD 3 // STRIFE_TODO: A_BodyParts
+    RBB3 B 3 bright A_BodyParts
+    RBB3 CD 3 A_BodyParts
     RBB3 E -1 // STRIFE_TODO: Strife's A_BossDeath
     stop
   "@
@@ -2220,11 +2220,11 @@ thingtype Programmer : Mobj, 7671
     PRGR J 5 bright // STRIFE_TODO: A_ProgrammerAttack
     goto SeeLoop
   Death:
-    PRGR L 7 bright // STRIFE_TODO: A_BodyParts
+    PRGR L 7 bright A_BodyParts
     PRGR M 7 bright A_Scream
-    PRGR N 7 bright // STRIFE_TODO: A_BodyParts
+    PRGR N 7 bright A_BodyParts
     PRGR O 7 bright A_Fall
-    PRGR P 7 bright // STRIFE_TODO: A_BodyParts
+    PRGR P 7 bright A_BodyParts
     PRGR Q 7 bright // STRIFE_TODO: A_ProgrammerDie
     PRGR R 7 bright
     PRGR S 6 bright
@@ -2804,7 +2804,7 @@ thingtype Gate : Mobj, 7645
     PSTN B 4 bright A_Fall
     PSTN C 4 bright // STRIFE_TODO: A_QuestMsg
     PSTN D 4 bright // STRIFE_TODO: A_SpawnSparkPuff
-    PSTN E 4 bright // STRIFE_TODO: A_BodyParts
+    PSTN E 4 bright A_BodyParts
     PSTN F 4 bright
     PSTN G 4 bright // STRIFE_TODO: A_SpawnSparkPuff
     PSTN H 4
@@ -2837,7 +2837,7 @@ thingtype Computer : Mobj, 7782
     SECR E 5 bright // STRIFE_TODO: A_SpawnSparkPuff
     SECR F 5 bright A_Fall
     SECR G 5 bright // STRIFE_TODO: A_QuestMsg
-    SECR H 5 bright // STRIFE_TODO: A_BodyParts
+    SECR H 5 bright A_BodyParts
     SECR I 5 bright // STRIFE_TODO: A_SpawnSparkPuff
     SECR J 5
     SECR K 5 // STRIFE_TODO: A_SpawnSparkPuff
@@ -5655,7 +5655,7 @@ thingtype Light19 : Mobj, 7825
   "@
 }
 
-thingtype Meat : Mobj
+thingtype Meat : Mobj, -1, 501
 {
   //speakerid/conversationid 295
 
@@ -5666,10 +5666,64 @@ thingtype Meat : Mobj
   Spawn:
     MEAT A 700
     stop
+  SpawnB:
+    MEAT B 700
+    stop
+  SpawnC:
+    MEAT C 700
+    stop
+  SpawnD:
+    MEAT D 700
+    stop
+  SpawnE:
+    MEAT E 700
+    stop
+  SpawnF:
+    MEAT F 700
+    stop
+  SpawnG:
+    MEAT G 700
+    stop
+  SpawnH:
+    MEAT H 700
+    stop
+  SpawnI:
+    MEAT I 700
+    stop
+  SpawnK:
+    MEAT K 700
+    stop
+  SpawnL:
+    MEAT L 700
+    stop
+  SpawnM:
+    MEAT M 700
+    stop
+  SpawnN:
+    MEAT N 700
+    stop
+  SpawnO:
+    MEAT O 700
+    stop
+  SpawnP:
+    MEAT P 700
+    stop
+  SpawnQ:
+    MEAT Q 700
+    stop
+  SpawnR:
+    MEAT R 700
+    stop
+  SpawnS:
+    MEAT S 700
+    stop
+  SpawnT:
+    MEAT T 700
+    stop
   "@
 }
 
-thingtype Junk : Mobj
+thingtype Junk : Mobj, -1, 502
 {
   //speakerid/conversationid 296
 
@@ -5679,6 +5733,60 @@ thingtype Junk : Mobj
   @"
   Spawn:
     JUNK A 700
+    stop
+  SpawnB:
+    JUNK B 700
+    stop
+  SpawnC:
+    JUNK C 700
+    stop
+  SpawnD:
+    JUNK D 700
+    stop
+  SpawnE:
+    JUNK E 700
+    stop
+  SpawnF:
+    JUNK F 700
+    stop
+  SpawnG:
+    JUNK G 700
+    stop
+  SpawnH:
+    JUNK H 700
+    stop
+  SpawnI:
+    JUNK I 700
+    stop
+  SpawnK:
+    JUNK K 700
+    stop
+  SpawnL:
+    JUNK L 700
+    stop
+  SpawnM:
+    JUNK M 700
+    stop
+  SpawnN:
+    JUNK N 700
+    stop
+  SpawnO:
+    JUNK O 700
+    stop
+  SpawnP:
+    JUNK P 700
+    stop
+  SpawnQ:
+    JUNK Q 700
+    stop
+  SpawnR:
+    JUNK R 700
+    stop
+  SpawnS:
+    JUNK S 700
+    stop
+  SpawnT:
+    JUNK T 700
     stop
   "@
 }

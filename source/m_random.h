@@ -263,6 +263,8 @@ typedef enum {
 
    pr_mbf21,
 
+   pr_bodyparts,               // A_BodyParts
+
    NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;
 

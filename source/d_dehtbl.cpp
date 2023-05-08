@@ -1635,6 +1635,9 @@ void A_GauntletAttack(actionargs_t *);
 void A_HticArtiTele(actionargs_t *);
 void A_HticSpawnFireBomb(actionargs_t *);
 
+// Strife pointers
+void A_BodyParts(actionargs_t *);
+
 // haleyjd 10/04/08: Hexen pointers
 #if 0
 void A_SetInvulnerable(Mobj *mo);
@@ -2026,6 +2029,9 @@ deh_bexptr deh_bexptrs[] =
    // MaxW: 2018/01/02: Heretic artifact use pointers
    POINTER(HticArtiTele),
    POINTER(HticSpawnFireBomb),
+
+   // Strife pointers
+   POINTER(BodyParts),
 
    // haleyjd 10/04/08: Hexen pointers
 #if 0

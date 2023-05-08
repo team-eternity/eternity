@@ -325,6 +325,10 @@ enum
    MT_MACEFX4,
    MT_PHOENIXFX2,
 
+   // Strife things
+   MT_MEAT = 501,
+   MT_JUNK = 502,
+
    // Start Eternity TC New Things
 
    MT_FOGPATCHS = 228,
