@@ -414,6 +414,73 @@ static void R_DetectTextureFormat(texturelump_t *tlump)
 }
 
 //
+// R_Doom2TextureHacks
+//
+// GameModeInfo routine to fix up bad Doom II textures
+//
+void R_Doom2TextureHacks(texture_t *t)
+{
+   if(t->ccount == 8 &&
+      t->height == 128 &&
+      t->components[5].originy == -16 &&
+      t->components[6].originy == -1 &&
+      strcmp(t->name, "BROWN144") == 0)
+   {
+      t->components[5].originy = t->components[6].originy = 0;
+   }
+   else if(t->ccount == 3 &&
+      t->height == 72 &&
+      t->components[0].originy == -8 &&
+      strcmp(t->name, "GRAY2") == 0)
+   {
+      t->components[0].originy = 0;
+   }
+   else if(t->ccount == 5 &&
+      t->height == 128 &&
+      t->components[2].originy == -16 &&
+      t->components[3].originy == -16 &&
+      strcmp(t->name, "GRAYVINE") == 0)
+   {
+      t->components[2].originy = t->components[3].originy = 0;
+   }
+   else if(t->ccount == 2 &&
+      t->height == 16 &&
+      t->components[0].originy == -112 &&
+      strcmp(t->name, "STEP2") == 0)
+   {
+      t->components[0].originy = 0;
+   }
+   else if(t->ccount == 5 &&
+      t->height == 128 &&
+      t->components[3].originy == -16 &&
+      strcmp(t->name, "SW1DIRT") == 0)
+   {
+      t->components[3].originy = 0;
+   }
+   else if(t->ccount == 5 &&
+      t->height == 128 &&
+      t->components[3].originy == -1 &&
+      strcmp(t->name, "SW2DIRT") == 0)
+   {
+      t->components[3].originy = 0;
+   }
+   else if(t->ccount == 3 &&
+      t->height == 128 &&
+      t->components[0].originy == -16 &&
+      (strcmp(t->name, "SW1VINE") == 0 || strcmp(t->name, "SW2VINE") == 0))
+   {
+      t->components[0].originy = 0;
+   }
+   else if(t->ccount == 2 &&
+      t->height == 128 &&
+      t->components[0].originy == -27 &&
+      strcmp(t->name, "TEKWALL1") == 0)
+   {
+      t->components[0].originy = 0;
+   }
+}
+
+//
 // R_DoomTextureHacks
 //
 // GameModeInfo routine to fix up bad Doom textures
@@ -423,30 +490,44 @@ void R_DoomTextureHacks(texture_t *t)
    // Adapted from Zdoom's FMultiPatchTexture::CheckForHacks
    if(t->ccount == 1 &&
       t->height == 128 &&
-      t->name[0] == 'S' &&
-      t->name[1] == 'K' &&
-      t->name[2] == 'Y' &&
-      t->name[3] == '1' &&
-      t->name[4] == 0)
+      strcmp(t->name, "SKY1") == 0)
    {
       t->components->originy = 0;
    }
-
-   // BIGDOOR7 in Doom also has patches at y offset -4 instead of 0.
-   if(t->ccount == 2 &&
+   else if(t->ccount == 2 &&
       t->height == 128 &&
       t->components[0].originy == -4 &&
       t->components[1].originy == -4 &&
-      t->name[0] == 'B' &&
-      t->name[1] == 'I' &&
-      t->name[2] == 'G' &&
-      t->name[3] == 'D' &&
-      t->name[4] == 'O' &&
-      t->name[5] == 'O' &&
-      t->name[6] == 'R' &&
-      t->name[7] == '7')
+      strcmp(t->name, "BIGDOOR7") == 0)
    {
       t->components[0].originy = t->components[1].originy = 0;
+   }
+   else if(t->ccount == 8 &&
+      t->height == 128 &&
+      t->components[5].originy == -16 &&
+      t->components[6].originy == -1 &&
+      strcmp(t->name, "BROWN144") == 0)
+   {
+      t->components[5].originy = t->components[6].originy = 0;
+   }
+   else if(t->ccount == 4 &&
+      t->height == 128 &&
+      t->components[2].originy == -2 &&
+      t->components[3].originy == -2 &&
+      strcmp(t->name, "COMPOHSO") == 0)
+   {
+      t->components[2].originy = t->components[3].originy = 0;
+   }
+   else if(t->ccount == 1 &&
+      t->height == 128 &&
+      t->components[0].originy == -8 &&
+      strcmp(t->name, "TEKWALL5") == 0)
+   {
+      t->components[0].originy = 0;
+   }
+   else
+   {
+      R_Doom2TextureHacks(t);
    }
 }
 
@@ -1017,15 +1098,31 @@ static void FinishTexture(texture_t *tex)
 }
 
 //
-// R_CacheTexture
-// 
+// Gets a cached texture, which MUST exist at this stage.
+//
+texture_t *R_GetTexture(int num)
+{
+#ifdef RANGECHECK
+   if(num < 0 || num >= texturecount)
+      I_Error("R_GetTexture: invalid texture num %i\n", num);
+#endif
+
+   texture_t *tex = textures[num];
+   if(tex->bufferalloc)
+      return tex;
+   else
+      I_Error("R_GetTexture: Texture %s is not cached\n", tex->name);
+
+}
+
+//
 // Caches a texture in memory, building it from component parts.
 //
-texture_t *R_CacheTexture(int num)
+void R_CacheTexture(int num)
 {
    texture_t  *tex;
    int        i;
-   
+
 #ifdef RANGECHECK
    if(num < 0 || num >= texturecount)
       I_Error("R_CacheTexture: invalid texture num %i\n", num);
@@ -1033,8 +1130,8 @@ texture_t *R_CacheTexture(int num)
 
    tex = textures[num];
    if(tex->bufferalloc)
-      return tex;
-   
+      return;
+
    // SoM: This situation would most certainly require an abort.
    if(tex->ccount == 0)
    {
@@ -1046,21 +1143,21 @@ texture_t *R_CacheTexture(int num)
    // 1. There is no buffer, and there are no columns which means the texture
    //    has never been built before and needs a full treatment
    // 2. There is no buffer, but there are columns which means that the buffer
-   //    (PU_CACHE) has been freed but the columns (PU_RENDERER) have not. 
+   //    (PU_CACHE) has been freed but the columns (PU_RENDERER) have not.
    //    This case means we only have to rebuilt the buffer.
 
-   // Start the texture. Check the size of the mask buffer if needed.   
+   // Start the texture. Check the size of the mask buffer if needed.
    StartTexture(tex, tex->columns == nullptr);
-   
+
    // Add the components to the buffer/mask
    for(i = 0; i < tex->ccount; i++)
    {
       tcomponent_t *component = tex->components + i;
-      
+
       // SoM: Do NOT add lumps with a -1 lumpnum
       if(component->lump == -1)
          continue;
-         
+
       switch(component->type)
       {
       case TC_FLAT:
@@ -1078,7 +1175,7 @@ texture_t *R_CacheTexture(int num)
    FinishTexture(tex);
    Z_ChangeTag(tex->bufferalloc, PU_CACHE);
 
-   return tex;
+   return;
 }
 
 //
@@ -1544,7 +1641,7 @@ const char *level_error = nullptr;
 //
 // R_GetRawColumn
 //
-const byte *R_GetRawColumn(int tex, int32_t col)
+const byte *R_GetRawColumn(ZoneHeap &heap, int tex, int32_t col)
 {
    const texture_t *t = textures[tex];
 
@@ -1554,11 +1651,11 @@ const byte *R_GetRawColumn(int tex, int32_t col)
    else
       col = (col & t->widthmask) * t->height;
 
+   if(!t->bufferalloc)
+      I_Error("R_GetRawColumn: Texture %s not already cached\n", t->name);
+
    // Lee Killough, eat your heart out! ... well this isn't really THAT bad...
-   return (t->flags & TF_SWIRLY) ?
-          R_DistortedFlat(tex) + col :
-          !t->bufferalloc ? R_GetLinearBuffer(tex) + col :
-          t->bufferdata + col;
+   return (t->flags & TF_SWIRLY) ? R_DistortedFlat(heap, tex) + col : t->bufferdata + col;
 }
 
 //
@@ -1567,13 +1664,12 @@ const byte *R_GetRawColumn(int tex, int32_t col)
 const texcol_t *R_GetMaskedColumn(int tex, int32_t col)
 {
    const texture_t *t = textures[tex];
-   
+
    if(!t->bufferalloc)
-      R_CacheTexture(tex);
+      I_Error("R_GetMaskedColumn: Texture %s not already cached\n", t->name);
 
    // haleyjd 05/28/14: support non-power-of-two widths
-   return t->columns[(t->flags & TF_WIDTHNP2) ? M_PositiveModPositiveRight(col, t->width) :
-                                                col & t->widthmask];
+   return t->columns[(t->flags & TF_WIDTHNP2) ? M_PositiveModPositiveRight(col, t->width) : col & t->widthmask];
 }
 
 //
@@ -1582,7 +1678,7 @@ const texcol_t *R_GetMaskedColumn(int tex, int32_t col)
 const byte *R_GetLinearBuffer(int tex)
 {
    const texture_t *t = textures[tex];
-   
+
    if(!t->bufferalloc)
       R_CacheTexture(tex);
 

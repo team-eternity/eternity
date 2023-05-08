@@ -22,6 +22,10 @@
 // Authors: Stephen McGranahan, James Haley, Ioan Chera, Max Waine
 //
 
+#include <functional>
+
+#include "concurrentqueue/concurrentqueue.h"
+
 #include "z_zone.h"
 #include "i_system.h"
 
@@ -158,7 +162,7 @@ struct vissprite_t
 
   // for color translation and shadow draw, maxbright frames as well
         // sf: also coloured lighting
-  lighttable_t *colormap;
+  const lighttable_t *colormap;
   int colour;   //sf: translated colour
 
   // killough 3/27/98: height sector for underwater/fake ceiling support
@@ -180,10 +184,20 @@ struct drawsegs_xrange_t
    drawseg_t *user;
 };
 
+// Already-drawn sprite hashing
+struct drawnsprite_t
+{
+   const Mobj *thing;
+   drawnsprite_t *next;
+};
+
 //=============================================================================
 //
 // Statics
 //
+
+static moodycamel::ConcurrentQueue<Mobj *> g_badSpriteNumberMobjs;
+static moodycamel::ConcurrentQueue<Mobj *> g_badFrameMobjs;
 
 // top and bottom of portal silhouette
 static float *portaltop;
@@ -214,7 +228,8 @@ static int numParticles;
 VALLOCATION(pstack)
 {
    R_ForEachContext([](rendercontext_t &basecontext) {
-      spritecontext_t &context = basecontext.spritecontext;
+      spritecontext_t &context =  basecontext.spritecontext;
+      ZoneHeap        &heap    = *basecontext.heap;
 
       poststack_t   *&pstack       = context.pstack;
       int            &pstacksize   = context.pstacksize;
@@ -228,13 +243,13 @@ VALLOCATION(pstack)
          {
             if(pstack[i].masked)
             {
-               efree(pstack[i].masked->ceilingclip);
-               efree(pstack[i].masked);
+               zhfree(heap, pstack[i].masked->ceilingclip);
+               zhfree(heap, pstack[i].masked);
             }
          }
 
          // free the pstack
-         efree(pstack);
+         zhfree(heap, pstack);
       }
 
       // free the maskedrange freelist 
@@ -242,8 +257,8 @@ VALLOCATION(pstack)
       while(mr)
       {
          maskedrange_t *next = mr->next;
-         efree(mr->ceilingclip);
-         efree(mr);
+         zhfree(heap, mr->ceilingclip);
+         zhfree(heap, mr);
          mr = next;
       }
 
@@ -273,9 +288,51 @@ VALLOCATION(clipbot)
 // Forward declarations:
 static void R_drawParticle(const contextbounds_t &bounds, vissprite_t *vis,
                            const float *const mfloorclip, const float *const mceilingclip);
-static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext,
+static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
                               const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                               const contextbounds_t &bounds, particle_t *particle);
+
+//
+// Blank out mobjs with bad frames or sprite numbers after rendering player view
+//
+void R_ClearBadSpritesAndFrames()
+{
+   Mobj *mobj;
+   while(g_badSpriteNumberMobjs.try_dequeue(mobj))
+   {
+      if((!mobj->state || (mobj->state && mobj->state->sprite == blankSpriteNum && mobj->state->frame == 0)) &&
+         mobj->sprite == blankSpriteNum && mobj->frame == 0)
+         continue; // Same sprite already flagged as an issue this call, skip
+
+      doom_printf(FC_ERROR "Bad sprite number %i for thingtype %s\n", mobj->sprite, mobj->info->name);
+
+      // blank the thing's state sprite and frame so that this error does not
+      // occur perpetually, flooding the message widget and console.
+      if(mobj->state)
+      {
+         mobj->state->sprite = blankSpriteNum;
+         mobj->state->frame  = 0;
+      }
+      mobj->sprite = blankSpriteNum;
+      mobj->frame  = 0;
+   }
+
+   while(g_badFrameMobjs.try_dequeue(mobj))
+   {
+      if((!mobj->state || (mobj->state && mobj->state->sprite == blankSpriteNum && mobj->state->frame == 0)) &&
+         mobj->sprite == blankSpriteNum && mobj->frame == 0)
+         continue; // Same sprite already flagged as an issue this call, skip
+
+      doom_printf(FC_ERROR "Bad frame %i for sprite %s", mobj->frame & FF_FRAMEMASK, spritelist[mobj->sprite]);
+      if(mobj->state)
+      {
+         mobj->state->sprite = blankSpriteNum;
+         mobj->state->frame  = 0;
+      }
+      mobj->sprite = blankSpriteNum;
+      mobj->frame  = 0;
+   }
+}
 
 //
 // R_SetMaskedSilhouette
@@ -539,9 +596,28 @@ void R_ClearSprites(spritecontext_t &context)
 }
 
 //
+// Called at frame start or world portal render start.
+//
+void R_ClearMarkedSprites(spritecontext_t &context, ZoneHeap &heap)
+{
+   for(drawnsprite_t *&chain : context.drawnSpriteHash)
+   {
+      drawnsprite_t *mark = chain;
+      while(mark)
+      {
+         drawnsprite_t *next = mark->next;
+         zhfree(heap, mark);
+         mark = next;
+      }
+      chain = nullptr;
+   }
+}
+
+
+//
 // Pushes a new element on the post-BSP stack.
 //
-void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
+void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
                 const contextbounds_t &bounds, bool pushmasked, pwindow_t *window)
 {
    drawseg_t     *&drawsegs     = bspcontext.drawsegs;
@@ -556,7 +632,7 @@ void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
    if(pstacksize == pstackmax)
    {
       pstackmax += 10;
-      pstack = erealloc(poststack_t *, pstack, sizeof(poststack_t) * pstackmax);
+      pstack = zhrealloc(heap, poststack_t *, pstack, sizeof(poststack_t) * pstackmax);
    }
    
    post = pstack + pstacksize;
@@ -585,9 +661,9 @@ void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
       }
       else
       {
-         post->masked = estructalloc(maskedrange_t, 1);
+         post->masked = zhstructalloc(heap, maskedrange_t, 1);
 
-         float *buf = emalloc(float *, 2 * bounds.numcolumns * sizeof(float));
+         float *buf = zhmalloc(heap, float *, 2 * bounds.numcolumns * sizeof(float)); // THREAD_FIXME: May not be load-balance friendly?
          post->masked->ceilingclip = buf;
          post->masked->floorclip   = buf + bounds.numcolumns;
       }
@@ -621,7 +697,7 @@ void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
 //
 // Creates a new vissprite if needed, or recycles an unused one.
 //
-static vissprite_t *R_newVisSprite(spritecontext_t &context)
+static vissprite_t *R_newVisSprite(spritecontext_t &context, ZoneHeap &heap)
 {
    vissprite_t *&vissprites          = context.vissprites;
    size_t       &num_vissprite       = context.num_vissprite;
@@ -630,7 +706,7 @@ static vissprite_t *R_newVisSprite(spritecontext_t &context)
    if(num_vissprite >= num_vissprite_alloc)             // killough
    {
       num_vissprite_alloc = num_vissprite_alloc ? num_vissprite_alloc*2 : 128;
-      vissprites = erealloc(vissprite_t *, vissprites, num_vissprite_alloc*sizeof(*vissprites));
+      vissprites = zhrealloc(heap, vissprite_t *, vissprites, num_vissprite_alloc*sizeof(*vissprites));
    }
 
    return vissprites + num_vissprite++;
@@ -679,6 +755,89 @@ static void R_drawMaskedColumn(const R_ColumnFunc colfunc,
 }
 
 //
+// Thread-safe column drawer for R_DrawNewMaskedColumn:
+// This fixes "sparklies" by making an extra draw call for a maximum of two pixels,
+// drawing a singular pixel where sparklies may occur (if they will occur at all),
+// and then removing those pixels from main column drawing.
+//
+static inline void R_drawNewMaskedColumnThreadSafe(
+   const R_ColumnFunc colfunc, cb_column_t &column, const texture_t *const tex, const texcol_t *tcol)
+{
+   const byte *const texend     = tex->bufferdata + tex->width * tex->height + 1;
+   const byte *const localstart = tex->bufferdata + tcol->ptroff;
+   const byte *const last       = localstart + tcol->len;
+
+   if(last < texend && last > tex->bufferdata && column.y2)
+   {
+      const int orig   = column.y1;
+      column.y1        = column.y2;
+      column.source    = &last[-1];
+      column.texheight = 1;
+
+      colfunc(column);
+
+      column.y1        = orig;
+      column.source    = localstart;
+      column.texheight = 0;
+
+      column.y2 -= 1;
+   }
+
+   const fixed_t frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * column.step);
+   if(((frac >> FRACBITS) & (column.texheight - 1)) < 0)
+   {
+      const int orig   = column.y2;
+      column.y2        = column.y1;
+      column.source    = &localstart[0];
+      column.texheight = 1;
+
+      colfunc(column);
+
+      column.y2        = orig;
+      column.source    = localstart;
+      column.texheight = 0;
+
+      column.y1 += 1;
+   }
+
+   // Drawn by either DrawColumn, DrawTLColumn, DrawAddColumn, or DrawFlexColumn.
+   colfunc(column);
+}
+
+#if 0
+//
+// As the above function, but mutates the data of the texture temporarily. This /should/ be faster but is
+// not thread-safe and in actual testing didn't appear to perform any better. Due to lack of performance
+// improvements relative to R_drawNewMaskedColumnThreadSafe it will not be dynamically dispatched to if
+// appropriate, since it doesn't seem worthwhile.
+//
+static inline void R_drawNewMaskedColumnSingleThread(
+   const R_ColumnFunc colfunc, cb_column_t &column, const texture_t *const tex, const texcol_t *tcol)
+{
+   const byte *const texend = tex->bufferdata + tex->width * tex->height + 1;
+   byte *const localstart   = tex->bufferdata + tcol->ptroff;
+   byte *const last         = localstart + tcol->len;
+
+   byte orig = 0;
+   if(last < texend && last > tex->bufferdata)
+   {
+      orig = *last;
+      *last = last[-1];
+   }
+
+   byte origstart = localstart[-1];
+   localstart[-1] = *localstart;
+
+   // Drawn by either DrawColumn, DrawTLColumn, DrawAddColumn, or DrawFlexColumn.
+   colfunc(column);
+   if(last < texend && last > tex->bufferdata)
+      *last = orig;
+   localstart[-1] = origstart;
+
+}
+#endif
+
+//
 // R_DrawNewMaskedColumn
 //
 void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc,
@@ -687,11 +846,9 @@ void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc,
                            const float *const mfloorclip, const float *const mceilingclip)
 {
    float y1, y2;
-   fixed_t basetexturemid = column.texmid;
-   
-   column.texheight = 0; // killough 11/98
+   const fixed_t basetexturemid = column.texmid;
 
-   const byte *const texend = tex->bufferdata + tex->width * tex->height + 1;
+   column.texheight = 0; // killough 11/98
 
    while(tcol)
    {
@@ -705,27 +862,10 @@ void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc,
       // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
       if(column.y1 <= column.y2 && column.y2 < viewwindow.height)
       {
-         byte *localstart = tex->bufferdata + tcol->ptroff;
-         column.source = localstart;
+         column.source = tex->bufferdata + tcol->ptroff;
          column.texmid = basetexturemid - (tcol->yoff << FRACBITS);
 
-         byte *const last = localstart + tcol->len;
-         byte orig = 0;
-         if(last < texend && last > tex->bufferdata)
-         {
-            orig = *last;
-            *last = last[-1];
-         }
-
-         byte origstart = localstart[-1];
-         localstart[-1] = *localstart;
-
-         // Drawn by either R_DrawColumn
-         //  or (SHADOW) R_DrawFuzzColumn.
-         colfunc(column);
-         if(last < texend && last > tex->bufferdata)
-            *last = orig;
-         localstart[-1] = origstart;
+         R_drawNewMaskedColumnThreadSafe(colfunc, column, tex, tcol);
       }
 
       tcol = tcol->next;
@@ -770,14 +910,11 @@ static void R_drawVisSprite(const contextbounds_t &bounds, vissprite_t *vis,
    column.translevel = vis->translucency;
    column.translevel += 1;
    if(vis->tranmaplump >= 0)
-   {
-      tranmap = static_cast<byte *>(wGlobalDir.cacheLumpNum(vis->tranmaplump,
-                                                            PU_CACHE));
-   }
+      column.tranmap = static_cast<byte *>(wGlobalDir.getCachedLumpNum(vis->tranmaplump));
    else if(vis->drawstyle == VS_DRAWSTYLE_SUB)
-      tranmap = main_submap;
+      column.tranmap = main_submap;
    else
-      tranmap = main_tranmap; // killough 4/11/98   
+      column.tranmap = main_tranmap; // killough 4/11/98   
    
    // haleyjd: faster selection for drawstyles
    const R_ColumnFunc colfunc = r_column_engine->ByVisSpriteStyle[vis->drawstyle][!!vis->colour];
@@ -838,7 +975,7 @@ static void R_drawVisSprite(const contextbounds_t &bounds, vissprite_t *vis,
 typedef v3fixed_t spritepos_t;
 
 // ioanch 20160109: added offset arguments
-static void R_interpolateThingPosition(Mobj *thing, spritepos_t &pos)
+static void R_interpolateThingPosition(const Mobj *const thing, spritepos_t &pos)
 {
    if(view.lerp == FRACUNIT)
    {
@@ -876,17 +1013,52 @@ static void R_interpolatePSpritePosition(const pspdef_t &pspr, v2fixed_t &pos)
 }
 
 //
+// haleyjd 01/22/11: determine special drawstyles
+//
+static inline byte R_getDrawStyle(const Mobj *const thing, int *tranmaplump)
+{
+   if(thing->flags & MF_SHADOW)
+      return VS_DRAWSTYLE_SHADOW;
+   else if(general_translucency)
+   {
+      if(thing->tranmap >= 0)
+      {
+         if(tranmaplump)
+            *tranmaplump = thing->tranmap;
+         return VS_DRAWSTYLE_TRANMAP;
+      }
+      else if(thing->flags3 & MF3_TLSTYLEADD)
+         return VS_DRAWSTYLE_ADD;
+      else if(thing->flags4 & MF4_TLSTYLESUB)
+         return VS_DRAWSTYLE_SUB;
+      else if(uint16_t(thing->translucency - 1) < FRACUNIT - 1)
+         return VS_DRAWSTYLE_ALPHA;
+      else if(thing->flags & MF_TRANSLUCENT)
+         return VS_DRAWSTYLE_TRANMAP;
+      else if(rTintTableIndex != -1 && thing->flags3 & MF3_GHOST)
+      {
+         if(tranmaplump)
+            *tranmaplump = rTintTableIndex;
+         return VS_DRAWSTYLE_TRANMAP;
+      }
+   }
+
+   return VS_DRAWSTYLE_NORMAL;
+}
+
+//
 // Generates a vissprite for a thing if it might be visible.
 // ioanch 20160109: added optional arguments for offsetting the sprite
 //
 static void R_projectSprite(cmapcontext_t &cmapcontext,
                             spritecontext_t &spritecontext,
+                            ZoneHeap &heap,
                             const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                             const contextbounds_t &bounds,
                             const portalrender_t &portalrender,
-                            Mobj *thing,
-                            lighttable_t *const *const spritelights,
-                            v3fixed_t *delta = nullptr,
+                            const Mobj *const thing,
+                            const lighttable_t *const *const spritelights,
+                            const v3fixed_t *const delta = nullptr,
                             const line_t *portalline = nullptr)
 {
    spritepos_t    spritepos;
@@ -975,43 +1147,22 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
    // decide which patch to use for sprite relative to player
    if((unsigned int)thing->sprite >= (unsigned int)numsprites)
    {
-      // haleyjd 08/12/02: modified error handling
-      doom_printf(FC_ERROR "Bad sprite number %i for thingtype %s\n", thing->sprite, thing->info->name);
-
-      // blank the thing's state sprite and frame so that this error does not
-      // occur perpetually, flooding the message widget and console.
-      if(thing->state)
-      {
-         thing->state->sprite = blankSpriteNum;
-         thing->state->frame  = 0;
-      }
-      thing->sprite = blankSpriteNum;
-      thing->frame  = 0;
+      g_badSpriteNumberMobjs.enqueue(const_cast<Mobj *>(thing));
       return;
    }
 
    sprdef = &sprites[thing->sprite];
-   
-   if(((thing->frame&FF_FRAMEMASK) >= sprdef->numframes) ||
+
+   if(((thing->frame & FF_FRAMEMASK) >= sprdef->numframes) ||
       !(sprdef->spriteframes) ||
       sprdef->spriteframes[thing->frame & FF_FRAMEMASK].rotate == -1)
    {
-      // haleyjd 08/12/02: modified error handling
-      doom_printf(FC_ERROR "Bad frame %i for sprite %s",
-                  thing->frame & FF_FRAMEMASK, 
-                  spritelist[thing->sprite]);
-      if(thing->state)
-      {
-         thing->state->sprite = blankSpriteNum;
-         thing->state->frame  = 0;
-      }
-      thing->sprite = blankSpriteNum;
-      thing->frame  = 0;
+      g_badFrameMobjs.enqueue(const_cast<Mobj *>(thing));
       return;
    }
 
    sprframe = &sprdef->spriteframes[thing->frame & FF_FRAMEMASK];
-   
+
    if(sprframe->rotate)
    {
       // SoM: Use old rotation code
@@ -1101,7 +1252,7 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
    }
 
    // store information in a vissprite
-   vis = R_newVisSprite(spritecontext);
+   vis = R_newVisSprite(spritecontext, heap);
 
    // killough 3/27/98: save sector for special clipping later
    vis->heightsec = heightsec;
@@ -1165,30 +1316,44 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
 
    vis->drawstyle = VS_DRAWSTYLE_NORMAL;
 
-   // haleyjd 01/22/11: determine special drawstyles
-   if(thing->flags & MF_SHADOW)
-      vis->drawstyle = VS_DRAWSTYLE_SHADOW;
-   else if(general_translucency)
+   vis->drawstyle = R_getDrawStyle(thing, &vis->tranmaplump);
+}
+
+//
+// Checks if a sprite has already been rendered
+// and adds it to the marked sprite hash table if it hasn't
+//
+static inline bool R_checkAndMarkSprite(spritecontext_t &spritecontext,
+                                        ZoneHeap &heap,
+                                        const Mobj *const thing)
+{
+   const size_t thing_hash = std::hash<const Mobj *>{}(thing) % NUMSPRITEMARKS;
+   drawnsprite_t *prevSprite;
+   drawnsprite_t *drawnSprite = spritecontext.drawnSpriteHash[thing_hash];
+   if(drawnSprite)
    {
-      if(thing->tranmap >= 0)
+      while(drawnSprite)
       {
-         vis->drawstyle = VS_DRAWSTYLE_TRANMAP;
-         vis->tranmaplump = thing->tranmap;
+         if(drawnSprite->thing == thing)
+            break;
+         prevSprite = drawnSprite;
+         drawnSprite = drawnSprite->next;
       }
-      else if(thing->flags3 & MF3_TLSTYLEADD)
-         vis->drawstyle = VS_DRAWSTYLE_ADD;
-      else if(thing->flags4 & MF4_TLSTYLESUB)
-         vis->drawstyle = VS_DRAWSTYLE_SUB;
-      else if(vis->translucency < FRACUNIT - 1)
-         vis->drawstyle = VS_DRAWSTYLE_ALPHA;
-      else if(thing->flags & MF_TRANSLUCENT)
-         vis->drawstyle = VS_DRAWSTYLE_TRANMAP;
-      else if(rTintTableIndex != -1 && thing->flags3 & MF3_GHOST)
-      {
-         vis->drawstyle = VS_DRAWSTYLE_TRANMAP;
-         vis->tranmaplump = rTintTableIndex;
-      }
+
+      // Exited early, meaning already rendered
+      if(drawnSprite)
+         return true;
+
+      prevSprite->next = zhstructalloc(heap, drawnsprite_t, 1);
+      prevSprite->next->thing = thing;
    }
+   else
+   {
+      spritecontext.drawnSpriteHash[thing_hash] = zhstructalloc(heap, drawnsprite_t, 1);
+      spritecontext.drawnSpriteHash[thing_hash]->thing = thing;
+   }
+
+   return false;
 }
 
 //
@@ -1197,14 +1362,13 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
 //
 void R_AddSprites(cmapcontext_t &cmapcontext,
                   spritecontext_t &spritecontext,
+                  ZoneHeap &heap,
                   const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                   const contextbounds_t &bounds,
                   const portalrender_t &portalrender,
                   sector_t* sec, int lightlevel)
 {
-   Mobj          *thing;
-   int            lightnum;
-   lighttable_t **spritelights;
+   const lighttable_t *const *spritelights;
 
    // BSP is traversed by subsector.
    // A sector might have been split into several
@@ -1213,27 +1377,62 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
 
    if(spritecontext.sectorvisited[sec - sectors])
       return;
-   
+
    // Well, now it will be done.
    spritecontext.sectorvisited[sec - sectors] = true;
-   
-   lightnum = (lightlevel >> LIGHTSEGSHIFT)+(extralight * LIGHTBRIGHT);
-   
+
+   const int lightnum = (lightlevel >> LIGHTSEGSHIFT)+(extralight * LIGHTBRIGHT);
+
    if(lightnum < 0)
       spritelights = cmapcontext.scalelight[0];
    else if(lightnum >= LIGHTLEVELS)
       spritelights = cmapcontext.scalelight[LIGHTLEVELS-1];
    else
       spritelights = cmapcontext.scalelight[lightnum];
-   
-   // Handle all things in sector.
-   
-   for(thing = sec->thinglist; thing; thing = thing->snext)
+
+   // Even though the default way of rendering isn't as "correct"
+   // the single-threaded performance gains are too significant to ignore
+   if((r_numcontexts == 1 && r_sprprojstyle == R_SPRPROJSTYLE_DEFAULT) || r_sprprojstyle == R_SPRPROJSTYLE_FAST)
    {
-      R_projectSprite(
-         cmapcontext, spritecontext, viewpoint,
-         cb_viewpoint, bounds, portalrender, thing, spritelights
-      );
+      // Handle all things in sector.
+      for(const Mobj *thing = sec->thinglist; thing; thing = thing->snext)
+      {
+         R_projectSprite(
+            cmapcontext, spritecontext, heap, viewpoint,
+            cb_viewpoint, bounds, portalrender, thing, spritelights
+         );
+      }
+   }
+   else
+   {
+      // Handle all things in (and touching) sector that haven't already been drawn this BSP traversal.
+      for(const msecnode_t *sectorNode = sec->touching_thinglist; sectorNode; sectorNode = sectorNode->m_snext)
+      {
+         const Mobj *const thing = sectorNode->m_thing;
+
+         if(R_checkAndMarkSprite(spritecontext, heap, thing))
+            continue;
+
+         // We have to recalculate the sprite lights for the current mobj based on their root sector
+         // otherwise the lighting behaviour will look incorrect
+         const lighttable_t *const *mobjspritelights;
+         {
+            const int mobjlightlevel = R_FakeFlatSpriteLighting(viewpoint.z, thing->subsector->sector);
+            const int mobjlightnum   = (mobjlightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
+
+            if(mobjlightnum < 0)
+               mobjspritelights = cmapcontext.scalelight[0];
+            else if(mobjlightnum >= LIGHTLEVELS)
+               mobjspritelights = cmapcontext.scalelight[LIGHTLEVELS - 1];
+            else
+               mobjspritelights = cmapcontext.scalelight[mobjlightnum];
+         }
+
+         R_projectSprite(
+            cmapcontext, spritecontext, heap, viewpoint,
+            cb_viewpoint, bounds, portalrender, thing, mobjspritelights
+         );
+      }
    }
 
    // ioanch 20160109: handle partial sprite projections
@@ -1242,7 +1441,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
       if(!((*item)->mobj->intflags & MIF_HIDDENBYQUAKE))
       {
          R_projectSprite(
-            cmapcontext, spritecontext, viewpoint, cb_viewpoint, bounds, portalrender,
+            cmapcontext, spritecontext, heap, viewpoint, cb_viewpoint, bounds, portalrender,
             (*item)->mobj, spritelights, &(*item)->delta, (*item)->portalline
          );
       }
@@ -1255,7 +1454,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
       DLListItem<particle_t> *link;
 
       for(link = sec->ptcllist; link; link = link->dllNext)
-         R_projectParticle(cmapcontext, spritecontext, viewpoint, cb_viewpoint, bounds, *link);
+         R_projectParticle(cmapcontext, spritecontext, heap, viewpoint, cb_viewpoint, bounds, *link);
    }
 }
 
@@ -1263,7 +1462,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
 // Draws player gun sprites.
 //
 static void R_drawPSprite(const pspdef_t *psp,
-                          lighttable_t *const *const spritelights,
+                          const lighttable_t *const *const spritelights,
                           float *const mfloorclip, float *const mceilingclip)
 {
    float         tx;
@@ -1436,7 +1635,7 @@ void R_DrawPlayerSprites()
    const pspdef_t *psp;
    sector_t tmpsec;
    int floorlightlevel, ceilinglightlevel;
-   lighttable_t **spritelights;
+   const lighttable_t *const *spritelights;
    
    // sf: psprite switch
    if(!showpsprites || viewcamera) return;
@@ -1549,7 +1748,7 @@ static void R_SortVisSprites()
 //
 // Sorts only a subset of the vissprites, for portal rendering.
 //
-static void R_sortVisSpriteRange(spritecontext_t &context, int first, int last)
+static void R_sortVisSpriteRange(spritecontext_t &context, ZoneHeap &heap, int first, int last)
 {
    vissprite_t  *&vissprites          = context.vissprites;
    vissprite_t **&vissprite_ptrs      = context.vissprite_ptrs;
@@ -1568,10 +1767,10 @@ static void R_sortVisSpriteRange(spritecontext_t &context, int first, int last)
       
       if(num_vissprite_ptrs < numsprites*2)
       {
-         efree(vissprite_ptrs);  // better than realloc -- no preserving needed
+         zhfree(heap, vissprite_ptrs);  // better than realloc -- no preserving needed
          num_vissprite_ptrs = num_vissprite_alloc * 2;
-         vissprite_ptrs = emalloc(vissprite_t **, 
-                                  num_vissprite_ptrs * sizeof *vissprite_ptrs);
+         vissprite_ptrs = zhmalloc(heap, vissprite_t **,
+                                   num_vissprite_ptrs * sizeof *vissprite_ptrs);
       }
 
       while(--i >= 0)
@@ -1583,6 +1782,25 @@ static void R_sortVisSpriteRange(spritecontext_t &context, int first, int last)
       msort(vissprite_ptrs, vissprite_ptrs + numsprites, numsprites);
    }
 }
+
+#if 0
+      // Original handleOverlappingDrawSeg start code
+      float dist, fardist;
+      if(ds->dist1 > ds->dist2)
+      {
+         fardist = ds->dist2;
+         dist = ds->dist1;
+      }
+      else
+      {
+         fardist = ds->dist1;
+         dist = ds->dist2;
+      }
+
+      int r1, r2;
+      if(dist < spr->dist || (fardist < spr->dist &&
+                              !R_PointOnSegSide(spr->gx, spr->gy, ds->curline)))
+#endif
 
 //
 // Draws a sprite within a given drawseg range, for portals.
@@ -1607,21 +1825,24 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
                                       const viewpoint_t &viewpoint,
                                       drawseg_t *ds,
                                       const vissprite_t *spr) {
-      float dist, fardist;
-      if(ds->dist1 > ds->dist2)
-      {
-         fardist = ds->dist2;
-         dist = ds->dist1;
-      }
-      else
-      {
-         fardist = ds->dist1;
-         dist = ds->dist2;
-      }
+      // Shout out to ksgws of ACE Engine for the code from here to the if(s1)!
+      uint32_t s1, s2;
+      divline_t sprite_clip;
+      const seg_t *seg = ds->curline;
+
+      sprite_clip.x  = spr->gx;
+      sprite_clip.y  = spr->gy;
+      sprite_clip.dx = viewpoint.sin;
+      sprite_clip.dy = -viewpoint.cos;
+
+      s1 = P_PointOnDivlineSide(seg->v1->x, seg->v1->y, &sprite_clip);
+      s2 = P_PointOnDivlineSide(seg->v2->x, seg->v2->y, &sprite_clip);
+
+      if(s1 != s2)
+         s1 = !R_PointOnSegSide(spr->gx, spr->gy, ds->curline);
 
       int r1, r2;
-      if(dist < spr->dist || (fardist < spr->dist &&
-                              !R_PointOnSegSide(spr->gx, spr->gy, ds->curline)))
+      if(s1)
       {
          if(ds->maskedtexturecol) // masked mid texture?
          {
@@ -1815,6 +2036,8 @@ void R_DrawPostBSP(rendercontext_t &context)
    spritecontext_t &spritecontext = context.spritecontext;
    planecontext_t  &planecontext  = context.planecontext;
 
+   ZoneHeap        &heap          = *context.heap;
+
    drawseg_t *const drawsegs     = bspcontext.drawsegs;
    const unsigned   maxdrawsegs  = bspcontext.maxdrawsegs;
    poststack_t    *&pstack       = spritecontext.pstack;
@@ -1842,7 +2065,7 @@ void R_DrawPostBSP(rendercontext_t &context)
             unsigned int       &drawsegs_xrange_size  = spritecontext.drawsegs_xrange_size;
             int                &drawsegs_xrange_count = spritecontext.drawsegs_xrange_count;
 
-            R_sortVisSpriteRange(spritecontext, firstsprite, lastsprite);
+            R_sortVisSpriteRange(spritecontext, *context.heap, firstsprite, lastsprite);
 
             // haleyjd 04/25/10: 
             // e6y
@@ -1856,8 +2079,8 @@ void R_DrawPostBSP(rendercontext_t &context)
                {
                   // haleyjd: fix reallocation to track 2x size
                   drawsegs_xrange_size =  2 * (maxdrawsegs+1);
-                  drawsegs_xrange = 
-                     erealloc(drawsegs_xrange_t *, drawsegs_xrange, 
+                  drawsegs_xrange =
+                     zhrealloc(heap, drawsegs_xrange_t *, drawsegs_xrange,
                               drawsegs_xrange_size * sizeof(*drawsegs_xrange));
                }
                for(ds = drawsegs + lastds; ds-- > drawsegs + firstds; )
@@ -1913,7 +2136,7 @@ void R_DrawPostBSP(rendercontext_t &context)
             r_column_engine->ResetBuffer();
             
          R_DrawPlanes(
-            context.cmapcontext,
+            context.cmapcontext, *context.heap,
             planecontext.mainhash, planecontext.spanstart,
             context.view.angle, pstack[pstacksize].overlay
          );
@@ -2253,7 +2476,7 @@ void R_ClearParticles()
 //
 // R_projectParticle
 //
-static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext,
+static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
                               const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                               const contextbounds_t &bounds, particle_t *particle)
 {
@@ -2343,7 +2566,7 @@ static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &sprit
    }
 
    // store information in a vissprite
-   vis = R_newVisSprite(spritecontext);
+   vis = R_newVisSprite(spritecontext, heap);
    vis->heightsec = heightsec;
    vis->gx = particle->x;
    vis->gy = particle->y;
@@ -2379,8 +2602,8 @@ static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &sprit
       }
       else
       {
-         lighttable_t **ltable;
-         sector_t tmpsec;
+         const lighttable_t *const *ltable;
+         static thread_local sector_t tmpsec;
          int floorlightlevel, ceilinglightlevel, lightnum, index;
 
          R_FakeFlat(viewpoint.z, sector, &tmpsec, &floorlightlevel, &ceilinglightlevel, false);

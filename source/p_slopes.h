@@ -75,6 +75,10 @@ float P_GetZAtf(pslope_t *slope, float x, float y);
 float P_DistFromPlanef(const v3float_t *point, const v3float_t *pori, 
                        const v3float_t *pnormal);
 
+bool P_SlopesEqual(const pslope_t &s1, const pslope_t &s2);
+
+bool P_AnySlope(const line_t &line);
+
 #endif
 
 // EOF

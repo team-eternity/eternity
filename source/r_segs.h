@@ -35,11 +35,14 @@ struct drawseg_t;
 struct planecontext_t;
 struct portalcontext_t;
 struct viewpoint_t;
+class  ZoneHeap;
+
+void R_FinishMappingLines();
 
 void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
                             const fixed_t viewz, drawseg_t *ds, int x1, int x2);
 void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,
-                      portalcontext_t &portalcontext,
+                      portalcontext_t &portalcontext, ZoneHeap &heap,
                       const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                       const contextbounds_t &bounds,
                       const cb_seg_t &seg, const int start, const int stop);
@@ -55,22 +58,22 @@ struct drawseg_t
    const seg_t *curline;
    int x1, x2;
    float dist1, dist2, diststep;
-   fixed_t bsilheight;                   // do not clip sprites above this
-   fixed_t tsilheight;                   // do not clip sprites below this
+   fixed_t bsilheight; // do not clip sprites above this
+   fixed_t tsilheight; // do not clip sprites below this
 
    // sf: colormap to be used when drawing the drawseg
    // for coloured lighting
-   lighttable_t *(*colormap)[MAXLIGHTSCALE];
-   lighttable_t *fixedcolormap;
+   const lighttable_t *const (*colormap)[MAXLIGHTSCALE];
+   const lighttable_t *fixedcolormap;
 
    // Pointers to lists for sprite clipping,
    // all three adjusted so [x1] is first value.
-   float *sprtopclip, *sprbottomclip;
+   const float *sprtopclip, *sprbottomclip;
    float *maskedtexturecol;
 
-   byte silhouette;                      // 0=none, 1=bottom, 2=top, 3=both
+   byte silhouette; // 0=none, 1=bottom, 2=top, 3=both
 
-   fixed_t deltaz;   // z offset if seen behind anchored portals
+   fixed_t deltaz; // z offset if seen behind anchored portals
 };
 
 #endif

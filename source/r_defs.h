@@ -48,12 +48,13 @@ struct dynavertex_t;
 
 // Silhouette, needed for clipping Segs (mainly)
 // and sprites representing things.
-#define SIL_NONE    0
-#define SIL_BOTTOM  1
-#define SIL_TOP     2
-#define SIL_BOTH    3
-
-#define MAXDRAWSEGS   256
+enum silhouette_e : byte
+{
+   SIL_NONE = 0,
+   SIL_BOTTOM,
+   SIL_TOP,
+   SIL_BOTH,
+};
 
 extern int r_blockmap;
 
@@ -159,6 +160,7 @@ struct pslope_t
    v3float_t of;
 
    // The normal of the 3d plane the slope creates.
+   v3fixed_t normal;
    v3float_t normalf;
 
    // 2-Dimensional vector (x, y) normalized. Used to determine distance from
@@ -238,8 +240,9 @@ struct sectorbox_t
 {
    fixed_t box[4];      // bounding box per sector
    float fbox[4];
-   Surfaces<uint64_t> visitid;   // updated to avoid visiting more than once
 };
+
+using sectorboxvisit_t = Surfaces<uint64_t>;
 
 //
 // Sound Zones
@@ -420,9 +423,12 @@ struct side_t
 {
   fixed_t textureoffset; // add this to the calculated texture column
   fixed_t rowoffset;     // add this to the calculated texture top
-  int16_t toptexture;      // Texture indices. We do not maintain names here. 
-  int16_t bottomtexture;
-  int16_t midtexture;
+
+  // Texture indices. We do not maintain names here.
+  int16_t toptexture;    // MUST BE CACHED IF MODIFIED AT RUNTIME
+  int16_t bottomtexture; // MUST BE CACHED IF MODIFIED AT RUNTIME
+  int16_t midtexture;    // MUST BE CACHED IF MODIFIED AT RUNTIME
+
   uint16_t intflags; // keep intflags here (we may also afford to edit "special")
   sector_t* sector;      // Sector the SideDef is facing.
 
@@ -461,7 +467,7 @@ struct line_t
    sector_t *frontsector;  // Front and back sector.
    sector_t *backsector; 
    int validcount;         // if == validcount, already checked
-   int tranlump;           // killough 4/11/98: translucency filter, -1 == none
+   int tranlump;           // killough 4/11/98: translucency filter, -1 == none: MUST BE CACHED IF MODIFIED AT RUNTIME
    int firsttag, nexttag;  // killough 4/17/98: improves searches for tags.
    PointThinker soundorg;  // haleyjd 04/19/09: line sound origin
    int intflags;           // haleyjd 01/22/11: internal flags
@@ -657,9 +663,9 @@ struct visplane_t
    visplane_t *next;        // Next visplane in hash chain -- killough
    int picnum, lightlevel, minx, maxx;
    fixed_t height;
-   lighttable_t *(*colormap)[MAXLIGHTZ];
-   lighttable_t *fullcolormap;   // SoM: Used by slopes.
-   lighttable_t *fixedcolormap;  // haleyjd 10/16/06
+   const lighttable_t *const (*colormap)[MAXLIGHTZ];
+   const lighttable_t *fullcolormap;   // SoM: Used by slopes.
+   const lighttable_t *fixedcolormap;  // haleyjd 10/16/06
    v2fixed_t offs;         // killough 2/28/98: Support scrolling flats
    v2float_t scale;
 

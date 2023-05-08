@@ -1,0 +1,17 @@
+bind joy1 attack
+bind joy1 menu_confirm
+bind joy2 speed
+bind joy2 menu_previous
+bind joy3 strafe
+bind joy4 use
+bind joy5 weapondown
+bind joy5 menu_up
+bind joy6 moveleft
+bind joy6 menu_left
+bind joy7 weaponup
+bind joy7 menu_down
+bind joy8 moveright
+bind joy8 menu_right
+g_axisaction1 turn
+g_axisaction2 move
+g_axisorientation2 -1

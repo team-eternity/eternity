@@ -24,13 +24,8 @@
 #include <memory>
 #if __cplusplus >= 201703L || _MSC_VER >= 1914
 #include "hal/i_platform.h"
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
-#include "filesystem.hpp"
-namespace fs = ghc::filesystem;
-#else
 #include <filesystem>
 namespace fs = std::filesystem;
-#endif
 #else
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
@@ -761,9 +756,9 @@ int WadDirectory::addDirectory(const char *dirpath)
    for(const fs::directory_entry &ent : itr)
    {
       edefstructvar(dirfile_t, newfile);
-      const std::string filename = ent.path().filename().generic_u8string();
+      const auto filename = ent.path().filename().generic_u8string();
 
-      newfile.fullfn = M_SafeFilePath(dirpath, filename.c_str());
+      newfile.fullfn = M_SafeFilePath(dirpath, reinterpret_cast<const char *>(filename.c_str())); // C++20_FIXME: Cast to make C++20 builds compile
 
       if(ent.exists()) // check for existence
       {
@@ -887,14 +882,14 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
    const fs::directory_iterator itr(dir);
    for(const fs::directory_entry &ent : itr)
    {
-       std::string filename = ent.path().filename().generic_u8string();
+      auto filename = ent.path().filename().generic_u8string();
 
       // Skip UNIX hidden files and directory tree entries
       if(filename[0] == '.')
          continue;
 
       path = base;
-      path.pathConcatenate(subpath).pathConcatenate(filename.c_str());
+      path.pathConcatenate(subpath).pathConcatenate(reinterpret_cast<const char *>(filename.c_str())); // C++20_FIXME: Cast to make C++20 builds compile
 
       if(ent.exists()) // check for existence
       {
@@ -904,7 +899,7 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
             {
                // we need to go deeper.
                path = subpath;
-               path.pathConcatenate(filename.c_str());
+               path.pathConcatenate(reinterpret_cast<const char *>(filename.c_str())); // C++20_FIXME: Cast to make C++20 builds compile
                W_recurseFiles(paths, base, path.constPtr(), prevPaths, depth + 1);
             }
          }
@@ -915,7 +910,7 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
 
             adf.path = path;
             path = subpath;
-            path.pathConcatenate(filename.c_str());
+            path.pathConcatenate(reinterpret_cast<const char *>(filename.c_str())); // C++20_FIXME: Cast to make C++20 builds compile
 
             // Normalize the subpath
             path.toLower();
@@ -1648,6 +1643,27 @@ void WadDirectory::readLump(int lump, void *dest,
       if(code == WadLumpLoader::CODE_FATAL)
          I_Error("WadDirectory::readLump: lump %s is malformed\n", lptr->name);
    }
+}
+
+//
+// As WadDirectory::cacheLumpNum but calls I_Error if it fails
+// and doesn't do anything with tags.
+//
+void *WadDirectory::getCachedLumpNum(int lump, const WadLumpLoader *lfmt) const
+{
+   lumpinfo_t::lumpformat fmt = lumpinfo_t::fmt_default;
+
+   if(lfmt)
+      fmt = lfmt->formatIndex();
+
+   // haleyjd 08/14/02: again, should not be RANGECHECK only
+   if(lump < 0 || lump >= numlumps)
+      I_Error("WadDirectory::getCachedLumpNum: %i >= numlumps\n", lump);
+
+   if(!(lumpinfo[lump]->cache[fmt]))
+      I_Error("WadDirectory::getCachedLumpNum %s not cached\n", getLumpName(lump));
+
+   return lumpinfo[lump]->cache[fmt];
 }
 
 //

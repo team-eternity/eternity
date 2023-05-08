@@ -120,7 +120,7 @@ extern int mapcolor_prtl;
 extern int mapportal_overlay; // julian: changed to int 
                               // (size problem, could lead to memory error)
 
-extern bool map_draw_nodelines;
+extern bool map_antialias; // do antialiased line drawing
 
 #endif
 

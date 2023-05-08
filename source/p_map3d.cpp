@@ -628,6 +628,23 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
             return false;
    }
 
+   if(pcl.haveslopes)
+   {
+      // Now also check the corners!
+      v2fixed_t corners[4] =
+      {
+         { clip.bbox[BOXLEFT], clip.bbox[BOXBOTTOM] },
+         { clip.bbox[BOXLEFT], clip.bbox[BOXTOP] },
+         { clip.bbox[BOXRIGHT], clip.bbox[BOXTOP] },
+         { clip.bbox[BOXRIGHT], clip.bbox[BOXBOTTOM] },
+      };
+      lineopening_t open = P_SlopeOpeningPortalAware(corners[0]);
+      open.intersect(P_SlopeOpeningPortalAware(corners[1]));
+      open.intersect(P_SlopeOpeningPortalAware(corners[2]));
+      open.intersect(P_SlopeOpeningPortalAware(corners[3]));
+      P_UpdateFromOpening(open, nullptr, clip, false, false, 0, true, 0);
+   }
+
    if(clip.zref.ceiling - clip.zref.floor < thing->height)
       return false;
          

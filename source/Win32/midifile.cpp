@@ -44,19 +44,19 @@
 #pragma pack(push, 1)
 #endif
 
-struct chunk_header_t
+struct PACKED_PREFIX chunk_header_t
 {
    byte chunk_id[4];
    unsigned int chunk_size;
-};
+} PACKED_SUFFIX;
 
-struct midi_header_t
+struct PACKED_PREFIX midi_header_t
 {
    chunk_header_t chunk_header;
    unsigned short format_type;
    unsigned short num_tracks;
    unsigned short time_division;
-};
+} PACKED_SUFFIX;
 
 // haleyjd 09/09/10: packing off.
 #ifdef _MSC_VER
@@ -77,6 +77,7 @@ struct midi_track_iter_t
 {
    midi_track_t *track;
    unsigned int position;
+   unsigned int loop_point;
 };
 
 struct midi_file_t
@@ -576,18 +577,6 @@ unsigned int MIDI_NumTracks(midi_file_t *file)
    return file->num_tracks;
 }
 
-// Get the number of events in a MIDI file.
-
-unsigned int MIDI_NumEvents(midi_file_t *file)
-{
-   unsigned int num_events = 0;
-
-   for(unsigned int i = 0; i < file->num_tracks; ++i)
-      num_events += file->tracks[i].num_events;
-
-   return num_events;
-}
-
 // Start iterating over the events in a track.
 
 midi_track_iter_t *MIDI_IterateTrack(midi_file_t *file, unsigned int track)
@@ -598,8 +587,9 @@ midi_track_iter_t *MIDI_IterateTrack(midi_file_t *file, unsigned int track)
       I_Error("MIDI_IterateTrack: Track number greater than or equal to number of tracks\n");
 
    iter = estructalloc(midi_track_iter_t, 1);
-   iter->track    = &file->tracks[track];
-   iter->position = 0;
+   iter->track      = &file->tracks[track];
+   iter->position   = 0;
+   iter->loop_point = 0;
 
    return iter;
 }
@@ -658,7 +648,18 @@ unsigned int MIDI_GetFileTimeDivision(midi_file_t *file)
 
 void MIDI_RestartIterator(midi_track_iter_t *iter)
 {
-   iter->position = 0;
+   iter->position   = 0;
+   iter->loop_point = 0;
+}
+
+void MIDI_SetLoopPoint(midi_track_iter_t *iter)
+{
+   iter->loop_point = iter->position;
+}
+
+void MIDI_RestartAtLoopPoint(midi_track_iter_t *iter)
+{
+   iter->position = iter->loop_point;
 }
 
 // EOF

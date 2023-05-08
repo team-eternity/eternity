@@ -158,14 +158,8 @@ protected:
    
    VImage *generateDefaultResource(int expectedWidth, int expectedHeight);
 
-   bool resourceIsPatch (void *data, size_t size);
-   bool resourceIsPNG   (void *data, size_t size);
-   bool resourceIsLinear(void *data, size_t size);
-
    void determineLinearDimensions(void *data, size_t size, int &w, int &h,
       int ew, int eh, vimgformathint_e expectedFormat);
-
-   vimgformat_e detectResourceFormat(void *data, size_t size);
 
 public:
    VImageManager();
@@ -181,6 +175,12 @@ public:
 
    // Resource lookup
    bool hasResource(int lumpnum) const;
+
+   static bool resourceIsPatch (void *data, size_t size);
+   static bool resourceIsPNG   (void *data, size_t size);
+   static bool resourceIsLinear(void *data, size_t size);
+
+   static vimgformat_e detectResourceFormat(void *data, size_t size);
 };
 
 #endif

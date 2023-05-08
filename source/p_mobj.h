@@ -276,7 +276,7 @@ public:
    mobjinfo_t *info;   // mobjinfo[mobj->type]
 
    int colour; // sf: the sprite colour
-   int tranmap;   // the translucency map
+   int tranmap;   // the translucency map: MUST BE CACHED IF MODIFIED AT RUNTIME
 
    // INVENTORY_FIXME: eliminate union
    union

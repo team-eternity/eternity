@@ -23,13 +23,8 @@
 
 #if __cplusplus >= 201703L || _MSC_VER >= 1914
 #include "hal/i_platform.h"
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
-#include "filesystem.hpp"
-namespace fs = ghc::filesystem;
-#else
 #include <filesystem>
 namespace fs = std::filesystem;
-#endif
 #else
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
@@ -258,7 +253,7 @@ static void MN_readSaveStrings()
       InBuffer    loadFile;
       SaveArchive arc(&loadFile);
       fs::path    savePath(ent.path());
-      qstring     pathStr(savePath.generic_u8string().c_str());
+      qstring     pathStr(reinterpret_cast<const char *>(savePath.generic_u8string().c_str())); // C++20_FIXME: Cast to make C++20 builds compile
 
       if(ent.is_directory() || !savePath.has_stem() || !savePath.has_extension() || savePath.extension() != ".dsg")
          continue;
@@ -269,7 +264,7 @@ static void MN_readSaveStrings()
       if(fileLoaded)
          continue;
 
-      qstring savename(savePath.stem().generic_u8string().c_str());
+      qstring savename(reinterpret_cast<const char *>(savePath.stem().generic_u8string().c_str())); // C++20_FIXME: Cast to make C++20 builds compile
       if(savename.strNCaseCmp(savegamename, strlen(savegamename)))
          continue;
 
@@ -379,6 +374,9 @@ static void MN_readSaveStrings()
       MN_updateSaveID(quickID, -1);
 }
 
+//
+// Draw the currently selected save's info (map name, skill, date saved, and if it's too old to load)
+//
 static void MN_drawSaveInfo(int slotIndex)
 {
    const int x = SAVEBOXWIDTH;
@@ -423,6 +421,10 @@ static void MN_drawSaveInfo(int slotIndex)
    }
 }
 
+//
+// Get the minimum and maximum slot indices to display based on the current select slot,
+// minimum total slot, and number of slots
+//
 static void MN_getMinAndMaxSlot(int &min, int &max, const int slot, const int minSlot, const int numSlots)
 {
    min = slot - NUMSAVEBOXLINES / 2;
@@ -436,6 +438,50 @@ static void MN_getMinAndMaxSlot(int &min, int &max, const int slot, const int mi
       if(min < minSlot)
          min = minSlot;
    }
+}
+
+enum class promptQuickSave_e : bool
+{
+   no  = false,
+   yes = true
+};
+
+//
+// Try to quicksave, either with or without a confirmation prompt
+//
+static void MN_quickSave(const promptQuickSave_e prompt)
+{
+   static auto performQuickSave = []() {
+      G_SaveGame(e_saveSlots[quickID.slot].fileNum, e_saveSlots[quickID.slot].description.constPtr());
+   };
+
+   char tempstring[80];
+
+   if(!usergame && (!demoplayback || netgame))  // killough 10/98
+   {
+      S_StartInterfaceSound(GameModeInfo->playerSounds[sk_oof]);
+      return;
+   }
+
+   if(gamestate != GS_LEVEL)
+      return;
+
+   MN_readSaveStrings();
+   if(quickID.slot < 0)
+   {
+      quickID.slot = -2; // means to pick a slot now
+      MN_StartMenu(GameModeInfo->saveMenu);
+      return;
+   }
+
+   if(prompt == promptQuickSave_e::yes)
+   {
+      psnprintf(tempstring, sizeof(tempstring), s_QSPROMPT,
+                e_saveSlots[quickID.slot].description.constPtr());
+      MN_QuestionFunc(tempstring, performQuickSave);
+   }
+   else
+      performQuickSave();
 }
 
 /////////////////////////////////////////////////////////////////
@@ -915,33 +961,12 @@ CONSOLE_COMMAND(mn_save, 0)
 // use console commands
 CONSOLE_COMMAND(quicksave, 0)
 {
-   char tempstring[80];
-
-   if(!usergame && (!demoplayback || netgame))  // killough 10/98
-   {
-      S_StartInterfaceSound(GameModeInfo->playerSounds[sk_oof]);
-      return;
-   }
-
-   if(gamestate != GS_LEVEL)
-      return;
-
-   MN_readSaveStrings();
-   if(quickID.slot < 0)
-   {
-      quickID.slot = -2; // means to pick a slot now
-      MN_StartMenu(GameModeInfo->saveMenu);
-      return;
-   }
-
-   psnprintf(tempstring, sizeof(tempstring), s_QSPROMPT,
-             e_saveSlots[quickID.slot].description.constPtr());
-   MN_Question(tempstring, "qsave");
+   MN_quickSave(promptQuickSave_e::yes);
 }
 
 CONSOLE_COMMAND(qsave, cf_hidden)
 {
-   G_SaveGame(e_saveSlots[quickID.slot].fileNum, e_saveSlots[quickID.slot].description.constPtr());
+   MN_quickSave(promptQuickSave_e::no);
 }
 
 //VARIABLE_STRING(save_game_desc, nullptr, SAVESTRINGSIZE);

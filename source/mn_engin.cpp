@@ -343,7 +343,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
 //
 void MN_SetLeftSmallPtr(int x, int y, int height)
 {
-   smallptr_coords[0][0] = x - (smallptr_dims[0] + 1);
+   smallptr_coords[0][0] = x - (smallptr_dims[0] + 2);
    smallptr_coords[0][1] = y + ((height - smallptr_dims[1]) / 2);
 }
 
@@ -354,7 +354,7 @@ void MN_SetLeftSmallPtr(int x, int y, int height)
 //
 void MN_SetRightSmallPtr(int x, int y, int width, int height)
 {
-   smallptr_coords[1][0] = x + width + 1;
+   smallptr_coords[1][0] = x + width + 2;
    smallptr_coords[1][1] = y + ((height - smallptr_dims[1]) / 2);
 }
 

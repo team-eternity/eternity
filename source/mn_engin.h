@@ -63,7 +63,7 @@ enum
 };
 
 // item types
-enum
+enum menuitemtype_e
 {
    it_gap,              // empty line
    it_runcmd,           // run console command
@@ -75,7 +75,8 @@ enum
    it_slider,           // slider
    it_bigslider,        // big slider -- haleyjd 08/30/06
    it_automap,          // an automap colour
-   it_binding,		// haleyjd: a key binding
+   it_automap_opt,      // an optional automap colour
+   it_binding,		      // haleyjd: a key binding
    it_end,              // last menuitem in the list
 
    it_numtypes          // number of item types

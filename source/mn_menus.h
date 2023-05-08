@@ -24,7 +24,7 @@
 void MN_InitMenus();
 void MN_LinkClassicMenus(int link);
 
-void MN_UpdateJoystickMenus();
+void MN_UpdateGamepadMenus();
 
 void MN_DoomNewGame();
 void MN_Doom2NewGame();

@@ -31,6 +31,8 @@
 #include "doomtype.h"
 #include "m_dllist.h"
 
+class ZoneHeap;
+
 enum
 {
     // Flag applied on sector_t topmap/midmap/bottommap when colormap should 
@@ -130,7 +132,7 @@ struct texture_t
 // SoM: This is replaced with two functions. For solid walls/skies, we only 
 // need the raw column data (direct buffer ptr). For masked mid-textures, we
 // need to return columns from the column list
-const byte *R_GetRawColumn(int tex, int32_t col);
+const byte *R_GetRawColumn(ZoneHeap &heap, int tex, int32_t col);
 const texcol_t *R_GetMaskedColumn(int tex, int32_t col);
 
 // SoM: This function returns the linear texture buffer (recache if needed)
@@ -138,7 +140,8 @@ const byte *R_GetLinearBuffer(int tex);
 
 // Cache a given texture
 // Returns the texture for chaining.
-texture_t *R_CacheTexture(int num);
+texture_t *R_GetTexture(int num);
+void R_CacheTexture(int num);
 
 // SoM: all textures/flats are now stored in a single array (textures)
 // Walls start from wallstart to (wallstop - 1) and flats go from flatstart 
@@ -182,7 +185,7 @@ const char *R_ColormapNameForNum(int index);
 // haleyjd: new global colormap method
 void R_SetGlobalLevelColormap(void);
 
-extern byte *main_tranmap, *main_submap, *tranmap;
+extern byte *main_tranmap, *main_submap;
 
 extern int r_precache;
 

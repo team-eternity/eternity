@@ -433,7 +433,10 @@ bool UDMFParser::loadLinedefs(UDMFSetupSettings &setupSettings)
                if(special < 0 || W_LumpLength(special) != 65536)
                   ld->tranlump = 0;
                else
+               {
                   ld->tranlump = special + 1;
+                  wGlobalDir.cacheLumpNum(special, PU_CACHE);
+               }
             }
             else
                ld->tranlump = 0;

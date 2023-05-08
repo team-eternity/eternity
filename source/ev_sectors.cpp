@@ -490,6 +490,20 @@ static void EV_SectorHexenLightSeqAlt(sector_t *sector)
 }
 
 //
+// Strife Sector Types
+//
+
+//
+// Sets up Strife instant kill flag.
+// * Strife: 15
+// * EE UDMF: 115
+//
+static void EV_SectorStrifeInstantKill(sector_t *sector)
+{
+   sector->flags |= SECF_INSTANTDEATH;
+}
+
+//
 // PSX Sector Types
 //
 
@@ -736,16 +750,16 @@ static ev_sectorbinding_t UDMFEternitySectorBindings[] =
    {  79, EV_SectorHticFrictionLow},
    {  80, EV_SectorDamageSuperHellSlime },
    {  81, EV_SectorLightFireFlicker },
-   {  82, EV_SectorHticDamageLavaWimpy},
-   {  83, EV_SectorHticDamageLavaHefty},
-   {  84, EV_SectorHticScrollEastLavaDamage},
-   {  85, EV_SectorHticDamageSludge},
+   {  82, EV_SectorHticDamageLavaWimpy },
+   {  83, EV_SectorHticDamageLavaHefty },
+   {  84, EV_SectorHticScrollEastLavaDamage },
+   {  85, EV_SectorHticDamageSludge },
    // Need to look for the appropriate specials for this initial block,
    // as some of these may have appropriate functions already there.
    // TODO: 87 Outside Fog
    // TODO: 104 5% Damage + Light On + Off Randomly
    // TODO: 105 Delayed damage weak
-   // TODO: 115 Instant death
+   { 115, EV_SectorStrifeInstantKill },
    // TODO: 116 Delayed damage strong
    // TODO: 118 Carry player by tag
    // TODO: 195 Hidden
@@ -970,7 +984,7 @@ static void EV_applyGeneralizedDamage(sector_t *sector, bool udmf)
    // Apply slime damage UNLESS the MBF21 insta-death bit is set, which changes rules
    // convert damage
    int damagetype = (sector->special >> (udmf ? UDMF_BOOM_SHIFT : 0) & DAMAGE_MASK) >> DAMAGE_SHIFT;
-   bool instadeath = mbf21_temp && sector->flags & SECF_INSTANTDEATH;
+   bool instadeath = mbf21_demo && sector->flags & SECF_INSTANTDEATH;
    // Don't just make a new nukage type with GOD_BREACH_DAMAGE, because most subtypes work 
    // differently
 

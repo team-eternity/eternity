@@ -135,6 +135,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo,
                             const v2fixed_t *ppoint = nullptr, bool portaldetect = false,
                             uint32_t *lineclipflags = nullptr);
 lineopening_t P_SlopeOpening(v2fixed_t pos);
+lineopening_t P_SlopeOpeningPortalAware(v2fixed_t pos);
 
 void P_UnsetThingPosition(Mobj *thing);
 void P_SetThingPosition(Mobj *thing);

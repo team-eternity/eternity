@@ -77,7 +77,7 @@ char *temp_hubfile(void)
    
    new_tmpfilename = emalloc(char *, 10);
    
-   sprintf(new_tmpfilename, "smmu%i.tmp", tmpfilenum++);
+   snprintf(new_tmpfilename, 10, "smmu%i.tmp", tmpfilenum++);
    
    return new_tmpfilename;  
 }

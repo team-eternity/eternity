@@ -50,6 +50,7 @@
 #include "m_argv.h"
 #include "m_bbox.h"
 #include "m_binary.h"
+#include "m_collection.h"
 #include "m_hash.h"
 #include "p_anim.h"  // haleyjd: lightning
 #include "p_chase.h"
@@ -78,24 +79,26 @@
 #include "s_musinfo.h"
 #include "s_sndseq.h"
 #include "s_sound.h"
+#include "v_alloc.h"
 #include "v_misc.h"
 #include "v_video.h"
 #include "w_levels.h"
 #include "w_wad.h"
 #include "z_auto.h"
 
+#include "../zlib/zlib.h"
+
 extern const char *level_error;
 
 //
 // Miscellaneous constants
 //
-enum
-{
-   // vertex distance limit over which NOT to fix slime trails. Useful for
-   // the new vanilla Doom rendering trick discovered by Linguica. Link here:
-   // http://www.doomworld.com/vb/doom-editing/74354-stupid-bsp-tricks/
-   LINGUORTAL_THRESHOLD = 8 * FRACUNIT,   
-};
+
+// vertex distance limit over which NOT to fix slime trails. Useful for
+// the new vanilla Doom rendering trick discovered by Linguica. Link here:
+// http://www.doomworld.com/vb/doom-editing/74354-stupid-bsp-tricks/
+constexpr fixed_t LINGUORTAL_THRESHOLD = 8 * FRACUNIT;
+
 
 //
 // ZNodeType
@@ -105,14 +108,16 @@ enum
 enum ZNodeType
 {
    ZNodeType_Invalid,
-   ZNodeType_Uncompressed_Normal,
-   ZNodeType_Uncompressed_GL,
-   ZNodeType_Uncompressed_GL2,
-   ZNodeType_Uncompressed_GL3,
-   ZNodeType_Compressed_Normal,
-   ZNodeType_Compressed_GL,
-   ZNodeType_Compressed_GL2,
-   ZNodeType_Compressed_GL3,
+   ZNodeType_Normal,
+   ZNodeType_GL,
+   ZNodeType_GL2,
+   ZNodeType_GL3,
+};
+
+struct znodeSignature_t
+{
+   ZNodeType type;
+   bool      compressed;
 };
 
 //
@@ -211,6 +216,13 @@ static WadDirectory *setupwad;
 
 // Current level's hash digest, for showing on console
 static qstring p_currentLevelHashDigest;
+
+static void P_createSectorBoundingBoxVisitIDs();
+
+VALLOCATION(sectorboxvisits)
+{
+   P_createSectorBoundingBoxVisitIDs();
+}
 
 //
 // ShortToLong
@@ -745,11 +757,22 @@ static void P_createSectorInterps()
 }
 
 //
+// Creates the context-local visit IDs for the sector bound boxes
+//
+static void P_createSectorBoundingBoxVisitIDs()
+{
+   R_ForEachContext([](rendercontext_t &context) {
+      context.portalcontext.visitids = zhstructalloctag(*context.heap, sectorboxvisit_t, numsectors, PU_LEVEL);
+   });
+}
+
+//
 // Setup sector bounding boxes
 //
 static void P_createSectorBoundingBoxes()
 {
    pSectorBoxes = estructalloctag(sectorbox_t, numsectors, PU_LEVEL);
+   P_createSectorBoundingBoxVisitIDs();
 
    for(int i = 0; i < numsectors; ++i)
    {
@@ -770,9 +793,7 @@ static void P_createSectorBoundingBoxes()
 }
 
 //
-// P_propagateSoundZone
-//
-// haleyjd 01/12/14: Recursive routine to propagate a sound zone from a
+// Iterative routine to propagate a sound zone from a
 // sector to all its neighboring sectors which border it by a 2S line which
 // is not marked as a sound boundary.
 //
@@ -782,23 +803,34 @@ static void P_propagateSoundZone(sector_t *sector, int zoneid)
    if(sector->soundzone == zoneid)
       return;
 
-   // set the zone to the sector
-   sector->soundzone = zoneid;
+   PODCollection<sector_t *> stack;
+   stack.add(sector);
 
-   // iterate on the sector linedef list to find neighboring sectors
-   for(int ln = 0; ln < sector->linecount; ln++)
+   while(!stack.isEmpty())
    {
-      auto line = sector->lines[ln];
+      sector_t *sec = stack.pop();
 
-      // must be 2S and not a zone boundary line
-      if(!line->backsector || (line->extflags & EX_ML_ZONEBOUNDARY))
-         continue;
+      if(sec->soundzone == zoneid)
+         return;
 
-      auto next = ((line->backsector != sector) ? line->backsector : line->frontsector);
+      // set the zone to the sector
+      sec->soundzone = zoneid;
 
-      // if not already in the same sound zone, propagate recursively.
-      if(next->soundzone != zoneid)
-         P_propagateSoundZone(next, zoneid);
+      // iterate on the sector linedef list to find neighboring sectors
+      for(int ln = 0; ln < sec->linecount; ln++)
+      {
+         auto line = sec->lines[ln];
+
+         // must be 2S and not a zone boundary line
+         if(!line->backsector || (line->extflags & EX_ML_ZONEBOUNDARY))
+            continue;
+
+         auto next = ((line->backsector != sec) ? line->backsector : line->frontsector);
+
+         // if not already in the same sound zone, propagate iteratively.
+         if(next->soundzone != zoneid)
+            stack.add(next);
+      }
    }
 }
 
@@ -1024,7 +1056,7 @@ static bool P_CheckForDeePBSPv4Nodes(int lumpnum)
 
 //=============================================================================
 //
-// haleyjd 06/14/10: ZDoom uncompressed nodes support
+// ZDoom nodes support
 //
 
 //
@@ -1032,7 +1064,7 @@ static bool P_CheckForDeePBSPv4Nodes(int lumpnum)
 // IOANCH 20151213: modified to use the NODES lump num and return the signature
 // Also added actual node lump, if it's SSECTORS in a classic map
 //
-static ZNodeType P_checkForZDoomNodes(int nodelumpnum, int *actualNodeLump, bool udmf)
+static znodeSignature_t P_checkForZDoomNodes(int nodelumpnum, int *actualNodeLump, bool udmf)
 {
    const void *data;
    
@@ -1048,10 +1080,10 @@ static ZNodeType P_checkForZDoomNodes(int nodelumpnum, int *actualNodeLump, bool
          *actualNodeLump = nodelumpnum - ML_NODES + ML_SSECTORS;
          glNodesFallback = true;
          if(setupwad->lumpLength(*actualNodeLump) < 4)
-            return ZNodeType_Invalid;
+            return { ZNodeType_Invalid };
       }
       else
-         return ZNodeType_Invalid;
+         return { ZNodeType_Invalid };
    }
 
    // haleyjd: load at PU_CACHE and it may stick around for later.
@@ -1063,13 +1095,13 @@ static ZNodeType P_checkForZDoomNodes(int nodelumpnum, int *actualNodeLump, bool
       {
          // only classic maps with NODES having XNOD
          C_Printf("ZDoom uncompressed normal nodes detected\n");
-         return ZNodeType_Uncompressed_Normal;
+         return { ZNodeType_Normal, false };
       }
       if(!memcmp(data, "ZNOD", 4))
       {
          // Warn but don't quit (ZNOD may be accidental)
-         C_Printf("Warning: ZNOD header detected; ZDBSP compressed nodes are not supported\n");
-         return ZNodeType_Invalid;
+         C_Printf("ZDoom compressed normal nodes detected\n");
+         return { ZNodeType_Normal, true };
       }
    }
 
@@ -1079,28 +1111,37 @@ static ZNodeType P_checkForZDoomNodes(int nodelumpnum, int *actualNodeLump, bool
       if(!memcmp(data, "XGLN", 4))
       {
          C_Printf("ZDoom uncompressed GL nodes version 1 detected\n");
-         return ZNodeType_Uncompressed_GL;
+         return { ZNodeType_GL, false };
       }
       if(!memcmp(data, "XGL2", 4))
       {
          C_Printf("ZDoom uncompressed GL nodes version 2 detected\n");
-         return ZNodeType_Uncompressed_GL2;
+         return { ZNodeType_GL2, false };
       }
       if(!memcmp(data, "XGL3", 4))
       {
          C_Printf("ZDoom uncompressed GL nodes version 3 detected\n");
-         return ZNodeType_Uncompressed_GL3;
+         return { ZNodeType_GL3, false };
       }
-      if(!memcmp(data, "ZGLN", 4) || !memcmp(data, "ZGL2", 4) || !memcmp(data, "ZGL3", 4))
+      if(!memcmp(data, "ZGLN", 4))
       {
-         // Warn but don't quit (ZGL* may be accidental)
-         C_Printf("Warning: ZGL* header detected; ZDBSP compressed nodes are not supported\n");
-         return ZNodeType_Invalid;
+         C_Printf("ZDoom compressed GL nodes version 1 detected\n");
+         return { ZNodeType_GL, true };
+      }
+      if(!memcmp(data, "ZGL2", 4))
+      {
+         C_Printf("ZDoom compressed GL nodes version 2 detected\n");
+         return { ZNodeType_GL2, true };
+      }
+      if(!memcmp(data, "ZGL3", 4))
+      {
+         C_Printf("ZDoom compressed GL nodes version 3 detected\n");
+         return { ZNodeType_GL3, true };
       }
    }
 
 
-   return ZNodeType_Invalid;
+   return { ZNodeType_Invalid };
 }
 
 //
@@ -1180,7 +1221,7 @@ static void R_calcSegOffset(seg_t *lseg, const line_t *line, int side)
 // Loads segs from ZDoom uncompressed nodes
 // IOANCH 20151217: use signature
 //
-static void P_LoadZSegs(byte *data, ZNodeType signature)
+static void P_LoadZSegs(byte *data, ZNodeType type)
 {
    // IOANCH TODO: read the segs according to signature
    int i;
@@ -1203,7 +1244,7 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
       //::segs[actualSegIndex] = ::segs[i];
       
       // IOANCH: increment current subsector if applicable
-      if(signature != ZNodeType_Uncompressed_Normal)
+      if(type != ZNodeType_Normal)
       {
          if(actualSegIndex >= ss->firstline + ss->numlines)
          {
@@ -1215,7 +1256,7 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
 
       // haleyjd: FIXME - see no verification of vertex indices
       v1 = ml.v1 = GetBinaryUDWord(data);
-      if(signature == ZNodeType_Uncompressed_Normal)   // IOANCH: only set directly for nonGL
+      if(type == ZNodeType_Normal)   // IOANCH: only set directly for nonGL
          v2 = ml.v2 = GetBinaryUDWord(data);
       else
       {
@@ -1233,14 +1274,13 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
       }
       
       // IOANCH
-      if(signature == ZNodeType_Uncompressed_Normal || signature == ZNodeType_Uncompressed_GL)
+      if(type == ZNodeType_Normal || type == ZNodeType_GL)
          ml.linedef = GetBinaryUWord(data);
       else
          ml.linedef = GetBinaryUDWord(data);
       ml.side    = *data++;
       
-      if((signature == ZNodeType_Uncompressed_GL && ml.linedef == 0xffff)
-         || ((signature == ZNodeType_Uncompressed_GL2 || signature == ZNodeType_Uncompressed_GL3) 
+      if((type == ZNodeType_GL && ml.linedef == 0xffff) || ((type == ZNodeType_GL2 || type == ZNodeType_GL3)
              && ml.linedef == 0xffffffff))
       {
          --actualSegIndex;
@@ -1269,7 +1309,7 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
          li->backsector = nullptr;
 
       li->v1 = &vertexes[v1];
-      if(signature == ZNodeType_Uncompressed_Normal)
+      if(type == ZNodeType_Normal)
          li->v2 = &vertexes[v2];
       else
       {
@@ -1299,6 +1339,61 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
    ::numsegs = actualSegIndex;
 }
 
+// P_decompressData adapted from dsda-doom
+// Copyright (C) 2023 Ryan Krafnick
+// Used under terms of the GPLv2+
+
+//
+// Decompress ZDoom compressed nodes
+//
+static byte *P_decompressData(byte *&data, int &len)
+{
+   byte     *output;
+   int       outlen, err;
+   z_stream *zstream;
+
+   // first estimate for compression rate:
+   // output buffer size == 2.5 * input size
+   outlen = int(2.5 * len);
+   output = emalloc(byte *, outlen);
+
+   // initialize stream state for decompression
+   zstream = emalloc(z_stream *, sizeof(*zstream));
+   memset(zstream, 0, sizeof(*zstream));
+
+   // Evidently next_in is the wrong type for legacy reasons
+   zstream->next_in   = data;
+   zstream->avail_in  = len;
+   zstream->next_out  = output;
+   zstream->avail_out = outlen;
+
+   if(inflateInit(zstream) != Z_OK)
+      I_Error("P_decompressData: Error during decompression initialization\n");
+
+   // resize if output buffer runs full
+   while((err = inflate(zstream, Z_SYNC_FLUSH)) == Z_OK)
+   {
+      int outlen_old = outlen;
+      outlen = 2 * outlen_old;
+      output = erealloc(byte *, output, outlen);
+      zstream->next_out = output + outlen_old;
+      zstream->avail_out = outlen - outlen_old;
+   }
+
+   if(err != Z_STREAM_END)
+      I_Error("P_decompressData: Error during decompression\n");
+
+   data = output;
+   len  = static_cast<int>(zstream->total_out);
+
+   if(inflateEnd(zstream) != Z_OK)
+      I_Error("P_decompressData: Error during decompression shut-down\n");
+
+   efree(zstream);
+
+   return output;
+}
+
 #define CheckZNodesOverflow(size, count) \
    CheckZNodesOverflowFN(&(size), (count)); \
    if(level_error) \
@@ -1315,9 +1410,10 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
 // ioanch: 20151221: fixed some memory leaks. Also moved the bounds checks 
 // before attempting to allocate memory, so the app won't terminate.
 //
-static void P_LoadZNodes(int lump, ZNodeType signature)
+static void P_LoadZNodes(int lump, znodeSignature_t signature)
 {
    byte *data, *lumpptr;
+   byte *decompressed = nullptr;
    unsigned int i;
    int len;
 
@@ -1333,6 +1429,9 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
    // skip header
    CheckZNodesOverflow(len, 4);
    data += 4;
+
+   if(signature.compressed)
+      decompressed = P_decompressData(data, len);
 
    // Read extra vertices added during node building
    CheckZNodesOverflow(len, sizeof(orgVerts));  
@@ -1418,14 +1517,14 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
 
    // IOANCH 20151217: set reading size
    int totalSegSize;
-   if(signature == ZNodeType_Uncompressed_Normal || signature == ZNodeType_Uncompressed_GL)
+   if(signature.type == ZNodeType_Normal || signature.type == ZNodeType_GL)
       totalSegSize = numsegs * 11; // haleyjd: hardcoded original structure size
    else
       totalSegSize = numsegs * 13; // IOANCH: DWORD linedef
    
    CheckZNodesOverflow(len, totalSegSize);
    segs = estructalloctag(seg_t, numsegs, PU_LEVEL);
-   P_LoadZSegs(data, signature);
+   P_LoadZSegs(data, signature.type);
    
    data += totalSegSize;
    
@@ -1444,7 +1543,7 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
       node_t *no = nodes + i;
       mapnode_znod_t mn;
 
-      if(signature == ZNodeType_Uncompressed_GL3)
+      if(signature.type == ZNodeType_GL3)
       {
          mn.x32  = GetBinaryDWord(data);
          mn.y32  = GetBinaryDWord(data);
@@ -1466,7 +1565,7 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
       for(j = 0; j < 2; j++)
          mn.children[j] = GetBinaryDWord(data);
 
-      if(signature == ZNodeType_Uncompressed_GL3)
+      if(signature.type == ZNodeType_GL3)
       {
          no->x = mn.x32;
          no->y = mn.y32;
@@ -1500,6 +1599,8 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
    }
 
    Z_Free(lumpptr);
+   if(decompressed)
+      efree(decompressed);
 }
 
 //
@@ -1990,6 +2091,9 @@ static void P_LoadLineDefs2()
       {                       // killough 4/11/98: handle special types
       case EV_STATIC_TRANSLUCENT: // killough 4/11/98: translucent 2s textures
          lump = sides[*ld->sidenum].special; // translucency from sidedef
+         if(lump > 0)
+            wGlobalDir.cacheLumpNum(lump - 1, PU_CACHE);
+
          if(!ld->args[0])                    // if tag == 0,
             ld->tranlump = lump;             // affect this linedef only
          else
@@ -3039,9 +3143,9 @@ static void P_padRejectArray(byte *array, unsigned int len)
 
    // Values to pad the REJECT array with:
 
-   unsigned int rejectpad[4] =
+   uint32_t rejectpad[4] =
    {
-      static_cast<unsigned int>(((gTotalLinesForRejectOverflow * 4 + 3) & ~3)
+      static_cast<uint32_t>(((gTotalLinesForRejectOverflow * 4 + 3) & ~3)
                                 + 24),      // Size
       0,                                    // Part of z_zone block header
       50,                                   // PU_LEVEL
@@ -3111,13 +3215,12 @@ static void P_LoadReject(int lump)
       {
          byte *temp = (byte *)(setupwad->cacheLumpNum(lump, PU_CACHE));
          memcpy(rejectmatrix, temp, size);
-
-         // ioanch 20160309: REJECT overflow fix. From chocolate-doom (by
-         // fraggle):
-         // Also only do it if MBF or less
-         if(demo_version <= 203)
-            P_padRejectArray(rejectmatrix + size, expectedsize - size);
       }
+      // ioanch 20160309: REJECT overflow fix. From chocolate-doom (by
+      // fraggle):
+      // Also only do it if MBF or less
+      if(demo_version <= 203)
+         P_padRejectArray(rejectmatrix + size, expectedsize - size);
    }
 
    // warn on too-large rejects, but do nothing special.
@@ -3772,13 +3875,12 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    R_PointOnSide = R_PointOnSideClassic;  // set classic function unless otherwise set later
 
    // IOANCH: at this point, mgla.nodes is valid. Check ZDoom node signature too
-   ZNodeType znodeSignature;
    int actualNodeLump = -1;
-   if((znodeSignature = P_checkForZDoomNodes(mgla.nodes, 
-      &actualNodeLump, isUdmf)) != ZNodeType_Invalid && actualNodeLump >= 0)
+   znodeSignature_t znodeSignature = P_checkForZDoomNodes(mgla.nodes, &actualNodeLump, isUdmf);
+   if(znodeSignature.type != ZNodeType_Invalid && actualNodeLump >= 0)
    {
       P_LoadZNodes(actualNodeLump, znodeSignature);
-      if(znodeSignature == ZNodeType_Uncompressed_GL3)
+      if(znodeSignature.type == ZNodeType_GL3)
          R_PointOnSide = R_PointOnSidePrecise;
 
       CHECK_ERROR();
@@ -3884,8 +3986,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    P_InitLightning();
 
    // preload graphics
-   if(precache)
-      R_PrecacheLevel();
+   R_PrecacheLevel();
 
    R_SetViewSize(screenSize+3); //sf
 

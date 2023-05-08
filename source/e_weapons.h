@@ -186,7 +186,7 @@ struct weaponslot_t
 {
    weaponinfo_t *weapon;           // weapon in the slot
    uint8_t       slotindex;        // index of the slot
-   BDListItem<weaponslot_t> links; // link to next weapon in the same slot
+   BDListItem<weaponslot_t> links; // link to next weapon in the same slot, dummy link is (empty) list head
 };
 
 extern WeaponSlotTree *weaponslots[];

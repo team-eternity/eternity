@@ -258,12 +258,12 @@ int P_NextWeapon(const player_t *player, uint8_t *slotindex)
    const weaponinfo_t             *newweapon     = player->readyweapon;
    const weaponslot_t             *newweaponslot = player->readyweaponslot;
    const BDListItem<weaponslot_t> *newweaponlink;
-   bool                            ammototry;
 
    if(newweaponslot == nullptr)
       newweaponslot = P_findFirstNonNullWeaponSlot(player);
    newweaponlink = &newweaponslot->links;
 
+   bool ownsweapon, canfireweapon, sameweapon, sameweaponslot;
    do
    {
       newweaponlink = newweaponlink->bdPrev;
@@ -284,10 +284,13 @@ int P_NextWeapon(const player_t *player, uint8_t *slotindex)
             firsttime = false;
          }
       }
-      ammototry = P_WeaponHasAmmo(player, newweapon);
+
+      ownsweapon     = E_PlayerOwnsWeapon(player, newweapon);
+      canfireweapon  = P_WeaponHasAmmo(player, newweapon);
+      sameweapon     = newweapon->id == currentweapon->id;
+      sameweaponslot = &newweaponslot->links == newweaponlink;
    }
-   while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
-         newweapon->id != currentweapon->id);
+   while(((!ownsweapon || !canfireweapon) && !sameweapon) || (sameweapon && !sameweaponslot));
 
    if(demo_version >= 401)
    {
@@ -317,12 +320,12 @@ int P_PrevWeapon(const player_t *player, uint8_t *slotindex)
    const weaponinfo_t             *newweapon     = player->readyweapon;
    const weaponslot_t             *newweaponslot = player->readyweaponslot;
    const BDListItem<weaponslot_t> *newweaponlink;
-   bool                            ammototry;
 
    if(newweaponslot == nullptr)
       newweaponslot = P_findFirstNonNullWeaponSlot(player);
    newweaponlink = &newweaponslot->links;
 
+   bool ownsweapon, canfireweapon, sameweapon, sameweaponslot;
    do
    {
       newweaponlink = newweaponlink->bdNext;
@@ -343,10 +346,13 @@ int P_PrevWeapon(const player_t *player, uint8_t *slotindex)
          }
 
       }
-      ammototry = P_WeaponHasAmmo(player, newweapon);
+
+      ownsweapon     = E_PlayerOwnsWeapon(player, newweapon);
+      canfireweapon  = P_WeaponHasAmmo(player, newweapon);
+      sameweapon     = newweapon->id == currentweapon->id;
+      sameweaponslot = &newweaponslot->links == newweaponlink;
    }
-   while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
-         newweapon->id != currentweapon->id);
+   while(((!ownsweapon || !canfireweapon) && !sameweapon) || (sameweapon && !sameweaponslot));
 
    if(demo_version >= 401)
    {
@@ -481,7 +487,16 @@ bool P_CheckAmmo(player_t *player)
    // for Boom games we cannot do this, and have different player
    // preferences across demos or networks, so we have to use the
    // G_BuildTiccmd() interface instead of making the switch here.
-   
+
+   // MaxW: 2023: We need to change pengingweapon here otherwise
+   //  otherwise players will switch to the same weapon twice when
+   //  they run out of ammo in netgames.
+   if(demo_version >= 401)
+   {
+      weaponinfo_t *temp = E_FindBestWeapon(player);
+      player->pendingweapon = temp;
+      player->pendingweaponslot = E_FindFirstWeaponSlot(player, temp);
+   }
    if(demo_compatibility)
    {
       if(vanilla_heretic)

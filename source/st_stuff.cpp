@@ -382,7 +382,7 @@ static void ST_drawSmallNumber(int val, int x, int y)
       // know enough about coding to change this hard limit.
       if(val > 99999)
          val = 99999;
-      sprintf(buf, "%d", val);
+      snprintf(buf, sizeof(buf), "%d", val);
       x -= static_cast<int>(4 * (strlen(buf)));
       for(char *rover = buf; *rover; rover++)
       {
@@ -1187,9 +1187,9 @@ static void ST_loadGraphics()
    // Load the numbers, tall and short
    for(i = 0; i < 10; i++)
    {
-      sprintf(namebuf, "STTNUM%d", i);
+      snprintf(namebuf, sizeof(namebuf), "STTNUM%d", i);
       tallnum[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
-      sprintf(namebuf, "STYSNUM%d", i);
+      snprintf(namebuf, sizeof(namebuf), "STYSNUM%d", i);
       shortnum[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 
@@ -1200,7 +1200,7 @@ static void ST_loadGraphics()
    // key cards
    for(i = 0; i < NUMCARDS+3; i++)  //jff 2/23/98 show both keys too
    {
-      sprintf(namebuf, "STKEYS%d", i);
+      snprintf(namebuf, sizeof(namebuf), "STKEYS%d", i);
       keys[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 
@@ -1210,7 +1210,7 @@ static void ST_loadGraphics()
    // arms ownership widgets
    for(i = 0; i < 6; i++)
    {
-      sprintf(namebuf, "STGNUM%d", i+2);
+      snprintf(namebuf, sizeof(namebuf), "STGNUM%d", i+2);
 
       // gray #
       arms[i][0] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
@@ -1233,7 +1233,7 @@ static void ST_loadGraphics()
    fs_armorb = PatchLoader::CacheName(wGlobalDir, "HU_FARM2", PU_STATIC);
    for(i = 0; i < 4; ++i)
    {
-      sprintf(namebuf, "HU_FAMM%d", i);
+      snprintf(namebuf, sizeof(namebuf), "HU_FAMM%d", i);
       fs_ammo[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 

@@ -35,6 +35,7 @@ struct planehash_t;
 struct rslope_t;
 struct texture_t;
 struct viewpoint_t;
+class  ZoneHeap;
 
 // killough 10/98: special mask indicates sky flat comes from sidedef
 #define PL_SKYFLAT (0x80000000)
@@ -49,18 +50,16 @@ extern float *overlayfclip, *overlaycclip;
 
 void R_ClearPlanes(planecontext_t &context, const contextbounds_t &bounds);
 void R_ClearOverlayClips(const contextbounds_t &bounds);
-void R_DrawPlanes(cmapcontext_t &context, planehash_t &mainhash,
+void R_DrawPlanes(cmapcontext_t &context, ZoneHeap &heap, planehash_t &mainhash,
                   int *const spanstart, const angle_t viewangle, planehash_t *table);
 
 // Planehash stuff
-planehash_t *R_NewPlaneHash(int chaincount);
+planehash_t *R_NewPlaneHash(ZoneHeap &heap, int chaincount);
 void R_ClearPlaneHash(visplane_t **&freehead, planehash_t *table);
 
 
-visplane_t *R_FindPlane(cmapcontext_t &cmapcontext,
-                        planecontext_t &planecontext,
-                        const viewpoint_t &viewpoint,
-                        const cbviewpoint_t &cb_viewpoint,
+visplane_t *R_FindPlane(cmapcontext_t &cmapcontext, planecontext_t &planecontext, ZoneHeap &heap,
+                        const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                         const contextbounds_t &bounds,
                         fixed_t height,
                         int picnum,
@@ -73,8 +72,8 @@ visplane_t *R_FindPlane(cmapcontext_t &cmapcontext,
                         byte opacity,        // SoM: Opacity for translucent planes
                         planehash_t *table); // SoM: Table. Can be nullptr
 
-visplane_t *R_DupPlane(planecontext_t &context, const visplane_t *pl, int start, int stop);
-visplane_t *R_CheckPlane(planecontext_t &context, visplane_t *pl, int start, int stop);
+visplane_t *R_DupPlane(planecontext_t &context, ZoneHeap &heap, const visplane_t *pl, int start, int stop);
+visplane_t *R_CheckPlane(planecontext_t &context, ZoneHeap &heap, visplane_t *pl, int start, int stop);
 
 bool R_CompareSlopes(const pslope_t *s1, const pslope_t *s2);
 bool R_CompareSlopesFlipped(const pslope_t *s1, const pslope_t *s2);
@@ -83,9 +82,9 @@ struct cb_span_t
 {
    int x1, x2, y;
    unsigned xfrac, yfrac, xstep, ystep;
-   void *source;
-   lighttable_t *colormap;
-   unsigned int *fg2rgb, *bg2rgb; // haleyjd 06/20/08: tl lookups
+   const void *source;
+   const lighttable_t *colormap;
+   const unsigned int *fg2rgb, *bg2rgb; // haleyjd 06/20/08: tl lookups
 
    // SoM: some values for the generalizede span drawers
    unsigned int xshift, xmask, yshift, ymask;
@@ -101,9 +100,9 @@ struct cb_slopespan_t
    double iufrac, ivfrac, idfrac;
    double iustep, ivstep, idstep;
 
-   void *source;
+   const void *source;
 
-   static inline lighttable_t **colormap;
+   static inline const lighttable_t **colormap;
 };
 
 using R_FlatFunc  = void (*)(const cb_span_t &);
@@ -124,22 +123,22 @@ struct cb_plane_t
    
    int lightlevel;
    float startmap;
-   lighttable_t **planezlight;
-   lighttable_t *colormap;
-   lighttable_t *fixedcolormap;
+   const lighttable_t *const *planezlight;
+   const lighttable_t *colormap;
+   const lighttable_t *fixedcolormap;
 
    // SoM: Texture that covers the plane
-   texture_t *tex;
-   void      *source;
+   const texture_t *tex;
+   const void      *source;
 
    // SoM: slopes.
-   rslope_t *slope;
+   const rslope_t *slope;
 
    R_MapFunc MapFunc;
 };
 
 
-planehash_t *R_NewOverlaySet(planecontext_t &context);
+planehash_t *R_NewOverlaySet(planecontext_t &context, ZoneHeap &heap);
 void R_FreeOverlaySet(planehash_t *&r_overlayfreesets, planehash_t *set);
 void R_MapInitOverlaySets();
 

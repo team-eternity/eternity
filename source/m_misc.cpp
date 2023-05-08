@@ -71,6 +71,10 @@
 #include "adlmidi.h"
 #endif
 
+#ifdef _WIN32
+#include "Win32/i_winmusic.h"
+#endif
+
 
 //
 // DEFAULTS
@@ -148,16 +152,26 @@ default_t defaults[] =
    DEFAULT_INT("music_card", &mus_card, nullptr, MUS_DEFAULT, MUS_MIN, MUS_MAX, default_t::wad_no,
                MUS_DESCR),
 
-   // haleyjd 04/15/02: SDL joystick device number
-   DEFAULT_INT("joystick_num", &i_joysticknum, nullptr, -1, -1, UL, default_t::wad_no,
-               "SDL joystick device number, -1 to disable"),
+   // If joysticks are enabled
+   DEFAULT_BOOL("i_joystickenabled", &i_joystickenabled, nullptr, true, default_t::wad_no,
+               "0 - disable joystick, 1 - enable joystick"),
+
+   // joystick device number
+   DEFAULT_INT("i_joysticknum", &i_joysticknum, nullptr, 0, 0, UL, default_t::wad_no,
+               "Joystick device number"),
 
    // joystick turn sensitivity
    DEFAULT_FLOAT("i_joyturnsens", &i_joyturnsens, nullptr, 1.0, 0, 10000, default_t::wad_no,
                  "Joystick turning sensitivity"),
-   // joystick sensitivity
-   DEFAULT_INT("i_joysticksens", &i_joysticksens, nullptr, 7849, 0, 32767, default_t::wad_no,
-               "SDL MMSYSTEM joystick sensitivity"),
+   // gamepad left thumbstick sensitivity
+   DEFAULT_INT("i_joy_deadzone_left", &i_joy_deadzone_left, nullptr, 7849, 0, 32767, default_t::wad_no,
+               "SDL gamepad left thumbstick sensitivity"),
+   // gamepad right thumbstick sensitivity
+   DEFAULT_INT("i_joy_deadzone_right", &i_joy_deadzone_right, nullptr, 8689, 0, 32767, default_t::wad_no,
+               "SDL gamepad right thumbstick sensitivity"),
+   // gamepad right thumbstick sensitivity
+   DEFAULT_INT("i_joy_deadzone_right", &i_joy_deadzone_right, nullptr, 3855, 0, 32767, default_t::wad_no,
+               "SDL gamepad trigger sensitivity"),
 
    DEFAULT_INT("s_precache", &s_precache, nullptr, 0, 0, 1, default_t::wad_no,
                "precache sounds at startup"),
@@ -559,7 +573,7 @@ default_t defaults[] =
    //jff 1/7/98 defaults for automap colors
    //jff 4/3/98 remove -1 in lower range, 0 now disables new map features
    // black //jff 4/6/98 new black
-   DEFAULT_INT("mapcolor_back", &mapcolor_back, nullptr, 247, 0, 255, default_t::wad_game,
+   DEFAULT_INT("mapcolor_back", &mapcolor_back, nullptr, 0, 0, 255, default_t::wad_game,
                "color used as background for automap"),
    
    // dk gray
@@ -668,7 +682,13 @@ default_t defaults[] =
 
    DEFAULT_INT("map_point_coord", &map_point_coordinates, nullptr, 1, 0, 1, default_t::wad_game,
                "1 to show automap pointer coordinates in non-follow mode"),
-   
+
+   DEFAULT_BOOL("map_antialias", &map_antialias, nullptr, true, default_t::wad_no,
+                "enable smooth automap line drawing"),
+
+   DEFAULT_BOOL("am_overlay", &automap_overlay, nullptr, false, default_t::wad_no, 
+                "overlay automap on top of view"),
+
    //jff 3/9/98 add option to not show secrets til after found
    // killough change default, to avoid spoilers and preserve Doom mystery
    // show secret after gotten
@@ -850,6 +870,9 @@ default_t defaults[] =
 
    DEFAULT_INT("r_tlstyle", &r_tlstyle, nullptr, 1, 0, R_TLSTYLE_NUM - 1, default_t::wad_game,
                "Doom object translucency style (0 = none, 1 = Boom, 2 = new)"),
+
+   DEFAULT_INT("r_sprprojstyle", &r_sprprojstyle, nullptr, 0, 0, R_SPRPROJSTYLE_NUM - 1, default_t::wad_no,
+               "Sprite projection style (0 = default, 1 = fast, 2 = thorough)"),
    
    DEFAULT_INT("spechits_emulation", &spechits_emulation, nullptr, 0, 0, 2, default_t::wad_no,
                "0 = off, 1 = emulate like Chocolate Doom, 2 = emulate like PrBoom+"),
@@ -884,6 +907,22 @@ default_t defaults[] =
 
    DEFAULT_INT("snd_bank", &adlmidi_bank, nullptr, 72, 0, BANKS_MAX, default_t::wad_startup,
                "sound bank used for ADLMIDI"),
+#endif
+
+#ifdef _WIN32
+   DEFAULT_INT("winmm_reset_type", &winmm_reset_type, nullptr,
+               RESET_TYPE_DEFAULT, RESET_TYPE_DEFAULT, RESET_TYPE_XG, default_t::wad_no,
+               "SysEx reset for native MIDI (-1 = Default, 0 = None, 1 = GS, 2 = GM, 3 = GM2, 4 = XG)"),
+
+   DEFAULT_INT("winmm_reset_delay", &winmm_reset_delay, nullptr, 0, 0, 2000, default_t::wad_no,
+               "Delay after reset for native MIDI (milliseconds)"),
+
+   DEFAULT_INT("winmm_reverb_level", &winmm_reverb_level, nullptr, -1, -1, 127, default_t::wad_no,
+               "Reverb send level for native MIDI (-1 = Default, 0 = Off, 127 = Max)"),
+
+   DEFAULT_INT("winmm_chorus_level", &winmm_chorus_level, nullptr, -1, -1, 127, default_t::wad_no,
+               "Chorus send level for native MIDI (-1 = Default, 0 = Off, 127 = Max)"),
+
 #endif
 
 

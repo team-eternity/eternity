@@ -23,6 +23,8 @@ SDL2_mixer.framework
 SDL2_net.framework
 .idea
 .vscode
+.vs
+CMakeSettings.json
 *.VC.db
 vc2017/Debug/
 .dir-locals.el

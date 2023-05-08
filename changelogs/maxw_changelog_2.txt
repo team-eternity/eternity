@@ -238,6 +238,81 @@ Update auto-detecting Doom 2 and Final Doom WADs for Steam.
 Update auto-detecting of Steam WADs to support non-default Steam library game
 install locations.
 
+--------------------------------------------------------------------------------
+2022/09/24
+Added the cvar "map_antialias" which toggles whether or not lines get drawn with
+anti-aliasing.
+
+--------------------------------------------------------------------------------
+2022/11/13
+Change some automap colours to not use the cross graphic for index 0 if they
+aren't optional. Change default Doom automap background colour to index 0.
+
+--------------------------------------------------------------------------------
+2022/12/06
+Fixed qsave command to work even if no save slot had been selected before.
+
+--------------------------------------------------------------------------------
+2022/12/11
+Made fontdeltas able to change linear fonts to filter-based fonts.
+Deprecated "linearlump" from fonts, which now does nothing. Font format is now
+automatically detected.
+
+--------------------------------------------------------------------------------
+2023/01/28
+Added support for ZDoom compressed nodes.
+
+--------------------------------------------------------------------------------
+2023/02/18
+Finished moving to New Zealand.
+
+--------------------------------------------------------------------------------
+2023/03/04
+Fixed crashes due to sound zone propagation through too many sectors.
+
+--------------------------------------------------------------------------------
+2023/03/07
+Overhauled SDL game controller input to be consistent across controllers.
+Added SDL controller input preset.
+Added vibration support to SDL controllers.
+Added ability to use the IWAD picker with controllers, as well as exit ENDOOM.
+
+--------------------------------------------------------------------------------
+2023/05/01
+Fixed non-keyboard inputs would sometimes being ignored while holding down any
+keyboard keys.
+
+--------------------------------------------------------------------------------
+2023/05/02
+Fixed instances where scrolling through weapons wouldn't work if the next weapon
+to be scrolled to is the same as the currently-equipped weapon.
+
+--------------------------------------------------------------------------------
+2023/05/03
+Improved frame pacing with interpolation.
+
+--------------------------------------------------------------------------------
+2023/05/04
+Added multithreaded renderer. New console variables:
+ * r_numcontexts: Video Options > Page 2 > Renderer Threads. This does what it
+   says on the tin. The higher the number, the more render contexts there are.
+   This number ranges from 1 to however many threads your CPU supports. Your
+   physical thread count is a sensible value for it.
+ * r_sprprojstyle: Video Options > Page 2 > Sprite Projection Style.
+   This has three settings, Default, Fast, and Thorough.
+  * Default means Fast for 1 thread, or Thorough for more than 1 thread.
+  * Fast is the classic Doom sprite projection style—if a subsector isn't
+    visible in a given render context then it won't be renderered. This may
+    cause sprites to have a cut-off appearance between the boundaries of render
+    context windows. It can be faster than Thorough in more sprite-heavy scenes.
+   * Thorough will (generally) eliminate the issues seen in Fast. This can cause
+     a reduction in performance in more heavy scenes compared to Fast, in your
+     average vanilla WAD you're not likely to notice much of a difference.
+
+Split i_joysticksens into i_joy_deadzone_left, i_joy_deadzone_right, and
+i_joy_deadzone_trigger.
+Normalised SDL gamepad axis inputs to start from 0 at the end of the deadzone.
+
 ================================================================================
 EOF
 ================================================================================

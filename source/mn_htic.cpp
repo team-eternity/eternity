@@ -91,7 +91,7 @@ void MN_HInitSkull()
 
    for(int i = 0; i < NUM_HSKULL; i++)
    {
-      sprintf(tempstr, "M_SKL%.2d", i);
+      snprintf(tempstr, sizeof(tempstr), "M_SKL%.2d", i);
       HSkullLumpNums[i] = W_GetNumForName(tempstr);         
    }
 }
