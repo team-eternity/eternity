@@ -1756,6 +1756,11 @@ CONSOLE_COMMAND(r_changesky, 0)
 
    int texnum = R_CheckForWall(name.constPtr());
    skyflat_t *sky1 = R_SkyFlatForIndex(index);
+   if(texnum != -1)
+   {
+      R_CacheTexture(texnum);
+      R_CacheSkyTexture(texnum);
+   }
 
    if(sky1 && texnum != -1)
       sky1->texture = texnum;
