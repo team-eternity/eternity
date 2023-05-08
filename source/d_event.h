@@ -34,84 +34,84 @@
 // Input event types.
 enum evtype_t : int
 {
-  ev_keydown,
-  ev_keyup,
-  ev_mouse,
-  ev_joystick,
-  ev_text
+   ev_keydown,
+   ev_keyup,
+   ev_mouse,
+   ev_joystick,
+   ev_text
 };
 
 // Event structure.
 struct event_t
 {
-  evtype_t  type;
-  int       data1;     // keys / mouse/joystick buttons
-  double    data2;     // mouse/joystick x move
-  double    data3;     // mouse/joystick y move
-  bool      repeat;    // true if this input is a repeat
+   evtype_t  type;
+   int       data1;     // keys / mouse/joystick buttons
+   double    data2;     // mouse/joystick x move
+   double    data3;     // mouse/joystick y move
+   bool      repeat;    // true if this input is a repeat
 };
- 
-typedef enum
+
+enum gameaction_t
 {
-  ga_nothing,
-  ga_loadlevel,
-  ga_newgame,
-  ga_loadgame,
-  ga_savegame,
-  ga_playdemo,
-  ga_completed,
-  ga_victory,
-  ga_worlddone,
-  ga_screenshot
-} gameaction_t;
+   ga_nothing,
+   ga_loadlevel,
+   ga_newgame,
+   ga_loadgame,
+   ga_savegame,
+   ga_playdemo,
+   ga_completed,
+   ga_victory,
+   ga_worlddone,
+   ga_screenshot
+};
 
 //
 // Button/action code definitions.
 //
-typedef enum
+enum buttoncode_t
 {
-  // Press "Fire".
-  BT_ATTACK       = 1,
+   // Press "Fire".
+   BT_ATTACK       = 1,
 
-  // Use button, to open doors, activate switches.
-  BT_USE          = 2,
+   // Use button, to open doors, activate switches.
+   BT_USE          = 2,
 
-  // Flag: game events, not really buttons.
-  BT_SPECIAL      = 128,
-  //  BT_SPECIALMASK  = 3,   killough 9/29/98: unused now
-    
-  // Flag, weapon change pending.
-  // If true, the next 4 bits hold weapon num.
-  BT_CHANGE       = 4,
+   // Flag: game events, not really buttons.
+   BT_SPECIAL      = 128,
+   //  BT_SPECIALMASK  = 3,   killough 9/29/98: unused now
 
-  // The 4bit weapon mask and shift, convenience.
-  // ioanch 20160426: added demo compat weapon mask
-  BT_WEAPONMASK_OLD = (8+16+32),
-  BT_WEAPONMASK   = (8+16+32+64), // extended to pick up SSG        // phares
-  BT_WEAPONSHIFT  = 3,
+   // Flag, weapon change pending.
+   // If true, the next 4 bits hold weapon num.
+   BT_CHANGE       = 4,
 
-  // Pause the game.
-  BTS_PAUSE       = 1,
+   // The 4bit weapon mask and shift, convenience.
+   // ioanch 20160426: added demo compat weapon mask
+   BT_WEAPONMASK_OLD = (8+16+32),
+   BT_WEAPONMASK   = (8+16+32+64), // extended to pick up SSG        // phares
+   BT_WEAPONSHIFT  = 3,
 
-  // Save the game at each console.
-  BTS_SAVEGAME    = 2,
+   // Pause the game.
+   BTS_PAUSE       = 1,
 
-  // Savegame slot numbers occupy the second byte of buttons.    
-  BTS_SAVEMASK    = (4+8+16),
-  BTS_SAVESHIFT   = 2,
+   // Save the game at each console.
+   BTS_SAVEGAME    = 2,
 
-  // New buttons, used in v4.01+, as the old weapon bits (5 of them!) are unused
+   // Savegame slot numbers occupy the second byte of buttons.
+   BTS_SAVEMASK    = (4+8+16),
+   BTS_SAVESHIFT   = 2,
 
-  // Press "Alt-fire".
-  BTN_ATTACK_ALT  = 4,
+   // New buttons, used in v4.01+, as the old weapon bits (5 of them!) are unused
 
-  // Next weapon button
-  BTN_WEAPON_UP   = 8,
+   // Press "Alt-fire".
+   BTN_ATTACK_ALT  = 4,
 
-  // Previous weapon button
-  BTN_WEAPON_DOWN = 16,
+   // Next weapon button
+   BTN_WEAPON_UP   = 8,
 
-} buttoncode_t;
+   // Previous weapon button
+   BTN_WEAPON_DOWN = 16,
+
+};
 
 //
 // Player action code definitions (jumping etc) -- joek 12/22/07

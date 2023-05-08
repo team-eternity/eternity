@@ -4259,7 +4259,7 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingLowerRaise)
 //
 DEFINE_ACTION(EV_ActionHealThing)
 {
-  return EV_HealThing(instance->actor, instance->args[0], instance->args[1]);
+   return EV_HealThing(instance->actor, instance->args[0], instance->args[1]);
 }
 
 //

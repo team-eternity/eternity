@@ -93,13 +93,13 @@ struct linetracer_t
 
 struct intercept_t
 {
-  fixed_t     frac;           // along trace line
-  bool        isaline;
-  union d_u
-  {
-    Mobj   *thing;
-    line_t *line;
-  } d;
+   fixed_t     frac;           // along trace line
+   bool        isaline;
+   union d_u
+   {
+      Mobj   *thing;
+      line_t *line;
+   } d;
 };
 
 typedef bool (*traverser_t)(intercept_t *in, void *context);

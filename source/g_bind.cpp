@@ -963,7 +963,7 @@ void G_SaveDefaults()
       return;
    }
 
-  // write key bindings
+   // write key bindings
 
    for(doomkey_t &keybinding : keybindings)
    {

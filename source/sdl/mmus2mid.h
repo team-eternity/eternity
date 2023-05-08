@@ -26,18 +26,18 @@
 
 // error codes
 
-typedef enum
+enum error_code_t
 {
-  MUSDATACOR,    // MUS data corrupt 
-  TOOMCHAN,      // Too many channels 
-  MEMALLOC,      // Memory allocation error 
-  MUSDATAMT,     // MUS file empty 
-  BADMUSCTL,     // MUS event 5 or 7 found 
-  BADSYSEVT,     // MUS system event not in 10-14 range 
-  BADCTLCHG,     // MUS control change larger than 9 
-  TRACKOVF,      // MIDI track exceeds allocation 
-  BADMIDHDR,     // bad midi header detected 
-} error_code_t;
+   MUSDATACOR,    // MUS data corrupt
+   TOOMCHAN,      // Too many channels
+   MEMALLOC,      // Memory allocation error
+   MUSDATAMT,     // MUS file empty
+   BADMUSCTL,     // MUS event 5 or 7 found
+   BADSYSEVT,     // MUS system event not in 10-14 range
+   BADCTLCHG,     // MUS control change larger than 9
+   TRACKOVF,      // MIDI track exceeds allocation
+   BADMIDHDR,     // bad midi header detected
+};
 
 // some names for integers of various sizes, all unsigned 
 typedef uint8_t  UBYTE;  // a one-byte int 

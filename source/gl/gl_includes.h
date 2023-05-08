@@ -35,18 +35,18 @@
 
 // haleyjd: Borrowed from SDL for cross-platform support
 #ifdef _WIN32
- #define WIN32_LEAN_AND_MEAN
- #ifndef NOMINMAX
-  #define NOMINMAX       /* Don't define min() and max() */
- #endif
- #include <windows.h>
+   #define WIN32_LEAN_AND_MEAN
+   #ifndef NOMINMAX
+      #define NOMINMAX       /* Don't define min() and max() */
+   #endif
+   #include <windows.h>
 #endif
 #if defined(__MACOSX__) || defined(__APPLE__)
- #include <OpenGL/gl.h>  /* Header File For The OpenGL Library */
+   #include <OpenGL/gl.h>  /* Header File For The OpenGL Library */
 #elif defined(__MACOS__)
- #include <gl.h>         /* Header File For The OpenGL Library */
+   #include <gl.h>         /* Header File For The OpenGL Library */
 #else
- #include <GL/gl.h>      /* Header File For The OpenGL Library */
+   #include <GL/gl.h>      /* Header File For The OpenGL Library */
 #endif
 
 #endif

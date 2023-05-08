@@ -65,8 +65,9 @@ void P_NoiseAlert (Mobj *target, Mobj *emmiter);
 void P_SpawnBrainTargets();     // killough 3/26/98: spawn icon landings
 void P_SpawnSorcSpots();        // haleyjd 11/19/02: spawn dsparil spots
 
-extern struct brain_s {         // killough 3/26/98: global state of boss brain
-  int easy;
+extern struct brain_s // killough 3/26/98: global state of boss brain
+{
+   int easy;
 } brain;
 
 bool P_CheckRange(Mobj *actor, fixed_t range);

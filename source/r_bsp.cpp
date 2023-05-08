@@ -82,7 +82,7 @@ void R_ClearDrawSegs(bspcontext_t &context)
 
 struct cliprange_t
 {
-  int first, last;
+   int first, last;
 };
 
 
