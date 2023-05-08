@@ -1109,8 +1109,8 @@ static ev_binding_t *EV_UDMFEternityBindingForSpecial(int special)
 
    EV_initUDMFEternitySpecHash(); // ensure table is initialized
 
-  // Try UDMFEternity's bindings first. If nothing is found, defer to Hexen's 
-  // bindings.
+   // Try UDMFEternity's bindings first. If nothing is found, defer to Hexen's 
+   // bindings.
    if(!(bind = UDMFEternitySpecHash.objectForKey(special)))
       bind = HexenSpecHash.objectForKey(special);
 
@@ -1164,8 +1164,8 @@ static ev_binding_t *EV_ACSBindingForSpecial(int special)
 
    EV_initACSSpecHash(); // ensure table is initialized
 
-  // Try ACS's bindings first. If nothing is found, defer to UDMFEternity's 
-  // bindings, then to Hexen's.
+   // Try ACS's bindings first. If nothing is found, defer to UDMFEternity's 
+   // bindings, then to Hexen's.
    if(!(bind = ACSSpecHash.objectForKey(special)))
    {
       if(!(bind = UDMFEternitySpecHash.objectForKey(special)))

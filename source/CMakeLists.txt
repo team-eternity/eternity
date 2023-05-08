@@ -803,7 +803,7 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT BUILD_FLATPAK)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-  target_link_libraries(eternity version)
+   target_link_libraries(eternity version)
 endif()
 if(APPLE)
    eternity_set_xcode_attributes(eternity)

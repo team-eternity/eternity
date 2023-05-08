@@ -34,12 +34,13 @@
 // haleyjd: uhh, no. Include it in the files, not in another header.
 
 // Identify language to use, software localization.
-typedef enum {
-  english,
-  french,
-  german,
-  unknown
-} Language_t;
+enum Language_t
+{
+   english,
+   french,
+   german,
+   unknown
+};
 
 //
 // For resize of screen, at start of game.
@@ -83,16 +84,17 @@ typedef enum {
 // The current state of the game: whether we are playing, gazing
 // at the intermission screen, the game final animation, or a demo.
 
-typedef enum {
-  GS_NOSTATE = -1, // haleyjd: for C++ conversion, initial value of oldgamestate
-  GS_LEVEL,
-  GS_INTERMISSION,
-  GS_FINALE,
-  GS_DEMOSCREEN,
-  GS_CONSOLE,
-  GS_STARTUP, // haleyjd: value given to gamestate during startup to avoid thinking it's GS_LEVEL
-  GS_LOADING  // haleyjd: value given to gamestate during level load
-} gamestate_t;
+enum gamestate_t
+{
+   GS_NOSTATE = -1, // haleyjd: for C++ conversion, initial value of oldgamestate
+   GS_LEVEL,
+   GS_INTERMISSION,
+   GS_FINALE,
+   GS_DEMOSCREEN,
+   GS_CONSOLE,
+   GS_STARTUP, // haleyjd: value given to gamestate during startup to avoid thinking it's GS_LEVEL
+   GS_LOADING  // haleyjd: value given to gamestate during level load
+};
 
 //
 // Difficulty/skill settings/filters.
@@ -157,85 +159,88 @@ enum
 
 enum skill_t : int
 {
-  sk_none=-1, //jff 3/24/98 create unpicked skill setting
-  sk_baby=0,
-  sk_easy,
-  sk_medium,
-  sk_hard,
-  sk_nightmare
+   sk_none = -1, //jff 3/24/98 create unpicked skill setting
+   sk_baby = 0,
+   sk_easy,
+   sk_medium,
+   sk_hard,
+   sk_nightmare
 };
 
 //
 // Key cards.
 //
 
-typedef enum {
-  it_bluecard,
-  it_yellowcard,
-  it_redcard,
-  it_blueskull,
-  it_yellowskull,
-  it_redskull,
-  NUMCARDS
-} card_t;
+enum card_t
+{
+   it_bluecard,
+   it_yellowcard,
+   it_redcard,
+   it_blueskull,
+   it_yellowskull,
+   it_redskull,
+   NUMCARDS
+};
 
 // The defined weapons, including a marker
 // indicating user has not changed weapon.
-enum 
+enum
 {
-  wp_fist,
-  wp_pistol,
-  wp_shotgun,
-  wp_chaingun,
-  wp_missile,
-  wp_plasma,
-  wp_bfg,
-  wp_chainsaw,
-  wp_supershotgun,
+   wp_fist,
+   wp_pistol,
+   wp_shotgun,
+   wp_chaingun,
+   wp_missile,
+   wp_plasma,
+   wp_bfg,
+   wp_chainsaw,
+   wp_supershotgun,
 
-  NUMWEAPONS,
-  wp_nochange              // No pending weapon change.
+   NUMWEAPONS,
+   wp_nochange              // No pending weapon change.
 };
 
 typedef int weapontype_t;
 
 // Ammunition types defined.
-enum 
+enum
 {
-  am_clip,    // Pistol / chaingun ammo.
-  am_shell,   // Shotgun / double barreled shotgun.
-  am_cell,    // Plasma rifle, BFG.
-  am_misl,    // Missile launcher.
-  
-  NUMAMMO,
-  am_noammo   // Unlimited for chainsaw / fist.
+   am_clip,    // Pistol / chaingun ammo.
+   am_shell,   // Shotgun / double barreled shotgun.
+   am_cell,    // Plasma rifle, BFG.
+   am_misl,    // Missile launcher.
+
+   NUMAMMO,
+   am_noammo   // Unlimited for chainsaw / fist.
 };
 typedef int ammotype_t;
 
 // Power up artifacts.
-typedef enum {
-  pw_invulnerability,
-  pw_strength,
-  pw_invisibility,
-  pw_ironfeet,
-  pw_allmap,
-  pw_infrared,
-  pw_totalinvis,  // haleyjd: total invisibility
-  pw_ghost,       // haleyjd: heretic ghost
-  pw_silencer,    // haleyjd: silencer
-  pw_flight,      // haleyjd: flight
-  pw_torch,       // haleyjd: infrared w/flicker
-  pw_weaponlevel2, //  MaxW: powered-up weapons (tome of power)
-  NUMPOWERS
-} powertype_t;
+enum powertype_t
+{
+   pw_invulnerability,
+   pw_strength,
+   pw_invisibility,
+   pw_ironfeet,
+   pw_allmap,
+   pw_infrared,
+   pw_totalinvis,  // haleyjd: total invisibility
+   pw_ghost,       // haleyjd: heretic ghost
+   pw_silencer,    // haleyjd: silencer
+   pw_flight,      // haleyjd: flight
+   pw_torch,       // haleyjd: infrared w/flicker
+   pw_weaponlevel2, //  MaxW: powered-up weapons (tome of power)
+   NUMPOWERS
+};
 
 // Power up durations (how many seconds till expiration).
-enum powerduration_e {
-  INVULNTICS  = (30*TICRATE),
-  INVISTICS   = (60*TICRATE),
-  INFRATICS   = (120*TICRATE),
-  IRONTICS    = (60*TICRATE),
-  FLIGHTTICS  = (60*TICRATE),  // flight tics, for Heretic
+enum powerduration_e
+{
+   INVULNTICS  = ( 30  * TICRATE),
+   INVISTICS   = ( 60  * TICRATE),
+   INFRATICS   = ( 120 * TICRATE),
+   IRONTICS    = ( 60  * TICRATE),
+   FLIGHTTICS  = ( 60  * TICRATE),  // flight tics, for Heretic
 };
 
 // DOOM keyboard definition.
@@ -376,19 +381,20 @@ enum keycode_e
 // Defines Setup Screen groups that config variables appear in.
 // Used when resetting the defaults for every item in a Setup group.
 
-typedef enum {
-  ss_none,
-  ss_keys,
-  ss_weap,
-  ss_stat,
-  ss_auto,
-  ss_enem,
-  ss_mess,
-  ss_chat,
-  ss_gen,       // killough 10/98
-  ss_comp,      // killough 10/98
-  ss_max
-} ss_types;
+enum ss_types
+{
+   ss_none,
+   ss_keys,
+   ss_weap,
+   ss_stat,
+   ss_auto,
+   ss_enem,
+   ss_mess,
+   ss_chat,
+   ss_gen,       // killough 10/98
+   ss_comp,      // killough 10/98
+   ss_max
+};
 
 // phares 3/20/98:
 //

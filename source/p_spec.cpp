@@ -96,11 +96,11 @@ bool secret_notification_enabled = true;
 //
 struct anim_t
 {
-  bool        istexture;
-  int         picnum;
-  int         basepic;
-  int         numpics;
-  int         speed;
+   bool        istexture;
+   int         picnum;
+   int         basepic;
+   int         numpics;
+   int         speed;
 };
 
 //

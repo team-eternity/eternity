@@ -79,15 +79,15 @@ struct haldriveritem_t
 };
 
 // Help string for system.cfg:
-const char *const i_videohelpstr = 
-  "Select video backend (-1 = default"
+const char *const i_videohelpstr =
+   "Select video backend (-1 = default"
 #ifdef _SDL_VER
-  ", 0 = SDL Default"
+   ", 0 = SDL Default"
 #ifdef EE_FEATURE_OPENGL
-  ", 1 = SDL GL2D"
+   ", 1 = SDL GL2D"
 #endif
 #endif
-  ")";
+   ")";
 
 // Driver table
 static haldriveritem_t halVideoDriverTable[VDR_MAXDRIVERS] =

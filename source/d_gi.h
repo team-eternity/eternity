@@ -240,36 +240,36 @@ enum
 
 // Game mode handling - identify IWAD version
 //  to handle IWAD dependent animations etc.
-typedef enum 
+enum GameMode_t
 {
-  shareware,    // DOOM 1 shareware, E1, M9
-  registered,   // DOOM 1 registered, E3, M27
-  commercial,   // DOOM 2 retail, E1, M34
-  retail,       // DOOM 1 retail, E4, M36
-  hereticsw,    // Heretic shareware
-  hereticreg,   // Heretic full
+   shareware,    // DOOM 1 shareware, E1, M9
+   registered,   // DOOM 1 registered, E3, M27
+   commercial,   // DOOM 2 retail, E1, M34
+   retail,       // DOOM 1 retail, E4, M36
+   hereticsw,    // Heretic shareware
+   hereticreg,   // Heretic full
   strifereg,    // Strife: Quest for the Sigil
-  indetermined, // Incomplete or corrupted IWAD
-  NumGameModes
-} GameMode_t;
+   indetermined, // Incomplete or corrupted IWAD
+   NumGameModes
+};
 
 // Mission packs
-typedef enum
+enum GameMission_t
 {
-  doom,         // DOOM 1
-  doom2,        // DOOM 2
-  pack_tnt,     // TNT mission pack
-  pack_plut,    // Plutonia pack
-  pack_disk,    // Disk version
-  pack_hacx,    // HacX stand-alone IWAD
-  pack_psx,     // PSX Doom
-  heretic,      // Heretic
-  hticbeta,     // Heretic Beta Version
-  hticsosr,     // Heretic - Shadow of the Serpent Riders
+   doom,         // DOOM 1
+   doom2,        // DOOM 2
+   pack_tnt,     // TNT mission pack
+   pack_plut,    // Plutonia pack
+   pack_disk,    // Disk version
+   pack_hacx,    // HacX stand-alone IWAD
+   pack_psx,     // PSX Doom
+   heretic,      // Heretic
+   hticbeta,     // Heretic Beta Version
+   hticsosr,     // Heretic - Shadow of the Serpent Riders
   strifeqfts,   // Strife: Quest for the Sigil
-  none,
-  NumGameMissions
-} GameMission_t;
+   none,
+   NumGameMissions
+};
 
 //
 // Game Mode Types

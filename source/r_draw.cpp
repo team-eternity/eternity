@@ -84,13 +84,13 @@ static constexpr int FUZZTABLE = 50;
 
 static constexpr int fuzzoffset[FUZZTABLE] =
 {
-  1,0,1,0,1,1,0,
-  1,1,0,1,1,1,0,
-  1,1,1,0,0,0,0,
-  1,0,0,1,1,1,1,0,
-  1,0,1,1,0,0,1,
-  1,0,0,0,0,1,1,
-  1,1,0,1,1,0,1
+   1,0,1,0,1,1,0,
+   1,1,0,1,1,1,0,
+   1,1,1,0,0,0,0,
+   1,0,0,1,1,1,1,0,
+   1,0,1,1,0,0,1,
+   1,0,0,0,0,1,1,
+   1,1,0,1,1,0,1
 };
 
 // One value per column. Inherently thread-safe for column drawing,

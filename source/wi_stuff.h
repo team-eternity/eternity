@@ -30,13 +30,13 @@
 
 // States for the intermission
 
-typedef enum
+enum stateenum_t
 {
-  NoState = -1,
-  StatCount,
-  ShowNextLoc,
-  IntrEnding, // haleyjd 03/16/06: fix for bug fraggle found
-} stateenum_t;
+   NoState = -1,
+   StatCount,
+   ShowNextLoc,
+   IntrEnding, // haleyjd 03/16/06: fix for bug fraggle found
+};
 
 // haleyjd: DOOM intermission object
 extern interfns_t DoomIntermission;

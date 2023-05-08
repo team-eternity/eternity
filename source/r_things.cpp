@@ -133,11 +133,11 @@ int        particle_trans;
 
 struct maskdraw_t
 {
-  int x1;
-  int x2;
-  int column;
-  int topclip;
-  int bottomclip;
+   int x1;
+   int x2;
+   int column;
+   int topclip;
+   int bottomclip;
 };
 
 //
@@ -148,33 +148,32 @@ struct maskdraw_t
 //
 struct vissprite_t
 {
-  int     x1, x2;
-  fixed_t gx, gy;              // for line side calculation
-  fixed_t gz, gzt;             // global bottom / top for silhouette clipping
-  fixed_t texturemid;
-  int     patch;
-  byte    drawstyle;
+   int     x1, x2;
+   fixed_t gx, gy;              // for line side calculation
+   fixed_t gz, gzt;             // global bottom / top for silhouette clipping
+   fixed_t texturemid;
+   int     patch;
+   byte    drawstyle;
 
-  float   startx;
-  float   dist, xstep;
-  float   ytop, ybottom;
-  float   scale;
+   float   startx;
+   float   dist, xstep;
+   float   ytop, ybottom;
+   float   scale;
 
-  // for color translation and shadow draw, maxbright frames as well
-        // sf: also coloured lighting
-  const lighttable_t *colormap;
-  int colour;   //sf: translated colour
+   // for color translation and shadow draw, maxbright frames as well
+         // sf: also coloured lighting
+   const lighttable_t *colormap;
+   int colour;   //sf: translated colour
 
-  // killough 3/27/98: height sector for underwater/fake ceiling support
-  int heightsec;
+   // killough 3/27/98: height sector for underwater/fake ceiling support
+   int heightsec;
 
-  uint16_t translucency; // haleyjd: zdoom-style translucency
-  int tranmaplump;
+   uint16_t translucency; // haleyjd: zdoom-style translucency
+   int tranmaplump;
 
-  fixed_t footclip; // haleyjd: foot clipping
+   fixed_t footclip; // haleyjd: foot clipping
 
-  int    sector; // SoM: sector the sprite is in.
-
+   int    sector; // SoM: sector the sprite is in.
 };
 
 // haleyjd 04/25/10: drawsegs optimization

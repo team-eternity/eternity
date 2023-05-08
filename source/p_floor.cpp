@@ -1194,9 +1194,8 @@ int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
 //
 // jff 2/22/98 new type to move floor and ceiling in parallel
 //
-int EV_DoElevator
-( const line_t *line, const Mobj *mo, const polyobj_t *po, int tag,
-  elevator_e    elevtype, fixed_t speed, fixed_t amount, bool isParam )
+int EV_DoElevator(const line_t *line, const Mobj *mo, const polyobj_t *po, int tag,
+                  elevator_e    elevtype, fixed_t speed, fixed_t amount, bool isParam)
 {
    int                   secnum;
    int                   rtn;

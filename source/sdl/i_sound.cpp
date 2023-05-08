@@ -87,12 +87,12 @@ void I_UpdateSoundParams(int handle, int vol, int sep, int pitch)
 //
 void I_SetSfxVolume(int volume)
 {
-  // Identical to DOS.
-  // Basically, this should propagate
-  //  the menu/config file setting
-  //  to the state variable used in
-  //  the mixing.
-  
+   // Identical to DOS.
+   // Basically, this should propagate
+   //  the menu/config file setting
+   //  to the state variable used in
+   //  the mixing.
+
    snd_SfxVolume = volume;
 }
 

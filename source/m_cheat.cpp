@@ -325,10 +325,10 @@ static void cheat_k(const void *arg)
 
 static void cheat_kfa(const void *arg)
 {
-  cheat_k(arg);
-  cheat_fa(arg);
+   cheat_k(arg);
+   cheat_fa(arg);
 
-  doom_printf(STSTR_KFAADDED);
+   doom_printf(STSTR_KFAADDED);
 }
 
 static void cheat_noclip(const void *arg)

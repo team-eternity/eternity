@@ -84,25 +84,25 @@ enum menuitemtype_e
 
 struct menuitem_t
 {
-  int type; // item types
-  
-  const char *description;  // the describing name of this item
+   int type; // item types
 
-  // useful data for the item:
-  // console command if console
-  // variable name if variable, etc
-  const char *data;         
+   const char *description;  // the describing name of this item
 
-  const char *patch; // patch to use or nullptr
+   // useful data for the item:
+   // console command if console
+   // variable name if variable, etc
+   const char *data;
 
-  unsigned int flags;   // haleyjd 03/29/05: menu item flags
+   const char *patch; // patch to use or nullptr
 
-  /*** internal stuff used by menu code ***/
-  int x, y;
-  variable_t *var;        // ptr to console variable
-  char *dyndescription;   // for EDF use only
-  char *dyndata;
-  char *dynpatch;
+   unsigned int flags;   // haleyjd 03/29/05: menu item flags
+
+   /*** internal stuff used by menu code ***/
+   int x, y;
+   variable_t *var;        // ptr to console variable
+   char *dyndescription;   // for EDF use only
+   char *dyndata;
+   char *dynpatch;
 };
 
 // haleyjd 10/07/05: Menu engine changes:
@@ -174,12 +174,12 @@ struct menu_t
 
 struct menuwidget_t
 {
-  void (*drawer)();
-  bool (*responder)(event_t *ev, int);
-  void (*ticker)();   // haleyjd 05/29/06
-  bool fullscreen;    // haleyjd: optimization for fullscreen widgets
-  
-  menuwidget_t *prev; // haleyjd 08/31/12: previous on stack, if any
+   void (*drawer)();
+   bool (*responder)(event_t *ev, int);
+   void (*ticker)();   // haleyjd 05/29/06
+   bool fullscreen;    // haleyjd: optimization for fullscreen widgets
+
+   menuwidget_t *prev; // haleyjd 08/31/12: previous on stack, if any
 };
 
 enum class consumeText_e : bool

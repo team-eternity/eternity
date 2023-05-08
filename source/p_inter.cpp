@@ -556,19 +556,19 @@ bool P_GiveArmor(player_t *player, const itemeffect_t *effect)
 }
 
 /*
-  pw_invulnerability,
-  pw_strength,
-  pw_invisibility,
-  pw_ironfeet,
-  pw_allmap,
-  pw_infrared,
-  pw_totalinvis,  // haleyjd: total invisibility
-  pw_ghost,       // haleyjd: heretic ghost
-  pw_silencer,    // haleyjd: silencer
-  pw_flight,      // haleyjd: flight
-  pw_torch,       // haleyjd: infrared w/flicker
-  pw_weaponlevel2 // MaxW: power up weapons (e.g.: tome of power)
-  NUMPOWERS
+   pw_invulnerability,
+   pw_strength,
+   pw_invisibility,
+   pw_ironfeet,
+   pw_allmap,
+   pw_infrared,
+   pw_totalinvis,  // haleyjd: total invisibility
+   pw_ghost,       // haleyjd: heretic ghost
+   pw_silencer,    // haleyjd: silencer
+   pw_flight,      // haleyjd: flight
+   pw_torch,       // haleyjd: infrared w/flicker
+   pw_weaponlevel2 // MaxW: power up weapons (e.g.: tome of power)
+   NUMPOWERS
 */
 
 //
