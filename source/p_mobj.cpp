@@ -2364,6 +2364,21 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
       return E_SpawnMapThingExt(mthing);
    }
 
+   constexpr int STRIFE_PLAYER5 = 7600 + 5;
+   if(mthing->type >= STRIFE_PLAYER5 && mthing->type < STRIFE_PLAYER5 + 4)
+      return nullptr; // STRIFE_FIXME
+
+   constexpr int STRIFE_RIFT_START = 7600 + 118;
+   if(mthing->type >= STRIFE_RIFT_START && mthing->type < STRIFE_RIFT_START + 10)
+   {
+      // initialize riftSpots
+      const int riftSpotNum = mthing->type - STRIFE_RIFT_START;
+
+      // STRIFE_FIXME
+      return nullptr;
+   }
+   // STRIFE_TODO: mystery array of 90xx objects
+
    // killough 11/98: clear flags unused by Doom
    //
    // We clear the flags unused in Doom if we see flag mask 256 set, since

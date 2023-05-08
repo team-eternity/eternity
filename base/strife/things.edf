@@ -333,7 +333,7 @@ thingtype Peasant6A : Peasant, 7667
   translation TR_STCS2
 }
 
-thingtype Peasant6B : Peasant, 7735
+thingtype Peasant6B : Peasant, 7736
 {
   //speakerid/conversationid 16
 
@@ -341,7 +341,7 @@ thingtype Peasant6B : Peasant, 7735
   translation TR_STCS2
 }
 
-thingtype Peasant6C : Peasant, 7736
+thingtype Peasant6C : Peasant, 7737
 {
   //speakerid/conversationid 17
 
