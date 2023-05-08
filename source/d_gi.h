@@ -248,7 +248,7 @@ enum GameMode_t
    retail,       // DOOM 1 retail, E4, M36
    hereticsw,    // Heretic shareware
    hereticreg,   // Heretic full
-  strifereg,    // Strife: Quest for the Sigil
+   strifereg,    // Strife: Quest for the Sigil
    indetermined, // Incomplete or corrupted IWAD
    NumGameModes
 };
@@ -266,7 +266,7 @@ enum GameMission_t
    heretic,      // Heretic
    hticbeta,     // Heretic Beta Version
    hticsosr,     // Heretic - Shadow of the Serpent Riders
-  strifeqfts,   // Strife: Quest for the Sigil
+   strifeqfts,   // Strife: Quest for the Sigil
    none,
    NumGameMissions
 };
