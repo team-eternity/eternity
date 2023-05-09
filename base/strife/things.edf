@@ -5804,3 +5804,259 @@ thingtype BurnDrop : Mobj
     stop
   "@
 }
+
+thingtype TokenAmmo : StrifeToken
+{
+  //speakerid/conversationid 298
+  //namepointer Ammo
+
+  cflags SPECIAL
+}
+
+thingtype TokenHealth : StrifeToken
+{
+  //speakerid/conversationid 299
+  //namepointer Health
+
+  cflags SPECIAL
+}
+
+thingtype Token : StrifeToken
+{
+  //speakerid/conversationid 300
+  //namepointer info
+}
+
+thingtype TokenAlarm : StrifeToken
+{
+  //speakerid/conversationid 301
+  //namepointer alarm
+
+  cflags SPECIAL
+}
+
+thingtype TokenDoor1 : StrifeToken
+{
+  //speakerid/conversationid 302
+
+  cflags SPECIAL
+}
+
+thingtype TokenShopClose : StrifeToken
+{
+  //speakerid/conversationid 303
+
+  cflags SPECIAL
+}
+
+thingtype TokenPrisonPass : StrifeToken
+{
+  //speakerid/conversationid 304
+  //namepointer Prison_pass
+
+  cflags SPECIAL // STRIFE_TODO: MF_GIVEQUEST
+}
+
+thingtype TokenDoor3 : StrifeToken
+{
+  //speakerid/conversationid 305
+
+  cflags SPECIAL
+}
+
+thingtype TokenStamina : StrifeToken
+{
+  //speakerid/conversationid 306
+
+  cflags SPECIAL
+}
+
+thingtype TokenNewAccuracy : StrifeToken
+{
+  //speakerid/conversationid 307
+
+  cflags SPECIAL
+}
+
+thingtype TokenReport : StrifeToken
+{
+  //speakerid/conversationid 308
+  //namepointer report
+
+  cflags SPECIAL
+}
+
+thingtype TokenToughness : StrifeToken
+{
+  //speakerid/conversationid 309
+  //namepointer Toughness
+
+  cflags SPECIAL
+}
+
+thingtype TokenAccuracy : StrifeToken
+{
+  //speakerid/conversationid 310
+  //namepointer Accuracy
+
+  cflags SPECIAL
+}
+
+thingtype TokenOraclePass : StrifeToken
+{
+  //speakerid/conversationid 311
+  //namepointer Oracle_Pass
+
+  cflags SPECIAL // STRIFE_TODO: MF_GIVEQUEST
+}
+
+thingtype TokenQuest1 : StrifeToken
+{
+  //speakerid/conversationid 312
+}
+thingtype TokenQuest2 : StrifeToken
+{
+  //speakerid/conversationid 313
+}
+thingtype TokenQuest3 : StrifeToken
+{
+  //speakerid/conversationid 314
+}
+thingtype TokenQuest4 : StrifeToken
+{
+  //speakerid/conversationid 315
+  //namepointer quest4
+}
+thingtype TokenQuest5 : StrifeToken
+{
+  //speakerid/conversationid 316
+  //namepointer quest5
+}
+thingtype TokenQuest6 : StrifeToken
+{
+  //speakerid/conversationid 317
+  //namepointer quest6
+}
+thingtype TokenQuest7 : StrifeToken
+{
+  //speakerid/conversationid 318
+}
+thingtype TokenQuest8 : StrifeToken
+{
+  //speakerid/conversationid 319
+}
+thingtype TokenQuest9 : StrifeToken
+{
+  //speakerid/conversationid 320
+}
+thingtype TokenQuest10 : StrifeToken
+{
+  //speakerid/conversationid 321
+}
+thingtype TokenQuest11 : StrifeToken
+{
+  //speakerid/conversationid 322
+}
+thingtype TokenQuest12 : StrifeToken
+{
+  //speakerid/conversationid 323
+}
+thingtype TokenQuest13 : StrifeToken
+{
+  //speakerid/conversationid 324
+}
+
+thingtype TokenCrystal : StrifeToken
+{
+  //speakerid/conversationid 325
+  //namepointer You've_Blown_Up_the_Crystal
+}
+
+thingtype TokenQuest15 : StrifeToken
+{
+  //speakerid/conversationid 326
+}
+
+thingtype TokenGateQuest : StrifeToken
+{
+  //speakerid/conversationid 327
+  //namepointer You've_Blown_Up_the_Gates
+}
+
+thingtype TokenQuest17 : StrifeToken
+{
+  //speakerid/conversationid 328
+}
+thingtype TokenQuest18 : StrifeToken
+{
+  //speakerid/conversationid 329
+}
+thingtype TokenQuest19 : StrifeToken
+{
+  //speakerid/conversationid 330
+}
+thingtype TokenQuest20 : StrifeToken
+{
+  //speakerid/conversationid 331
+}
+
+thingtype TokenBishop : StrifeToken
+{
+  //speakerid/conversationid 332
+  //namepointer You_Killed_the_Bishop!
+}
+
+thingtype TokenQuest22 : StrifeToken
+{
+  //speakerid/conversationid 333
+}
+
+thingtype TokenOracle : StrifeToken
+{
+  //speakerid/conversationid 334
+  //namepointer You've_Killed_The_Oracle!
+}
+
+thingtype TokenMacil : StrifeToken
+{
+  //speakerid/conversationid 335
+  //namepointer You_Killed_Macil!
+}
+
+thingtype TokenQuest25 : StrifeToken
+{
+  //speakerid/conversationid 336
+}
+
+thingtype TokenLoremaster : StrifeToken
+{
+  //speakerid/conversationid 337
+  //namepointer You've_Killed_The_Loremaster!
+}
+
+thingtype SecrQuest : StrifeToken
+{
+  //speakerid/conversationid 338
+  //namepointer You've_Blown_Up_the_Computer
+}
+
+thingtype TokenQuest28 : StrifeToken
+{
+  //speakerid/conversationid 339
+}
+thingtype TokenQuest29 : StrifeToken
+{
+  //speakerid/conversationid 340
+}
+thingtype TokenQuest30 : StrifeToken
+{
+  //speakerid/conversationid 341
+}
+thingtype TokenQuest31 : StrifeToken
+{
+  //speakerid/conversationid 342
+}
+thingtype SlideShow : StrifeToken
+{
+  //speakerid/conversationid 343
+}
