@@ -464,6 +464,7 @@ void R_RunContexts()
       {
          std::unique_lock lock(renderdatas[currentcontext].checkmutex);
          renderdatas[currentcontext].checkframe.wait(lock, [currentcontext] { return renderdatas[currentcontext].framefinished; });
+         renderdatas[currentcontext].framefinished = false;
          finishedcontexts++;
       }
    }
