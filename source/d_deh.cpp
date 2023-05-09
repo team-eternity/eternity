@@ -408,6 +408,9 @@ static dehflags_t deh_mobjflags[] =
    { "GIVEQUEST",          0x00000010, 4 }, // for players, count as quest item
    { "NODIALOG",           0x00000020, 4 }, // can NPC talk?
    { "STAND",              0x00000040, 4 }, // stand around until alerted
+   { "TRANSLUCENT25",      0x00000080, 4 }, // 25% translucency
+   { "TRANSLUCENT75",      0x00000100, 4 }, // 75% translucency
+   { "SPECTRAL",           0x00000200, 4 }, // spectral entity, only damaged by spectral missiles
    { nullptr,             0 }             // nullptr terminator
 };
 

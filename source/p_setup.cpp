@@ -4190,16 +4190,25 @@ void P_ConvertStrifeThing(mapthing_t *mthing)
 
    // Strife flag handling
 
-   const bool strifeStand  = mthing->options & MTF_STRIFE_STAND;
-   const bool strifeAmbush = mthing->options & MTF_STRIFE_AMBUSH;
+   const bool strifeStand       = mthing->options & MTF_STRIFE_STAND;
+   const bool strifeAmbush      = mthing->options & MTF_STRIFE_AMBUSH;
+   const bool strifeFriend      = mthing->options & MTF_STRIFE_FRIEND;
+   const bool strifeTranslucent = mthing->options & MTF_STRIFE_TRANSLUCENT;
+   const bool strifeMVis        = mthing->options & MTF_STRIFE_MVIS;
 
    // STRIFE_TODO: Remap unhandled flags below to different flags? Handle this /somehow/. MTF_EX_ stuff probably.
-   mthing->options &= ~(MTF_STRIFE_STAND | MTF_STRIFE_AMBUSH | MTF_STRIFE_FRIEND | MTF_STRIFE_TRANSLUCENT | MTF_STRIFE_MVCIS);
+   mthing->options &= ~(MTF_STRIFE_STAND | MTF_STRIFE_AMBUSH | MTF_STRIFE_FRIEND | MTF_STRIFE_TRANSLUCENT | MTF_STRIFE_MVIS);
 
    if(strifeStand)
       mthing->extOptions |= MTF_EX_STAND;
    if(strifeAmbush)
-      mthing->options |= MTF_AMBUSH;
+      mthing->options    |= MTF_AMBUSH;
+   if(strifeFriend)
+      mthing->extOptions |= MTF_EX_ALLY;
+   if(strifeTranslucent)
+      mthing->extOptions |= MTF_EX_TRANSLUCENT_25;
+   if(strifeMVis)
+      mthing->extOptions |= MTF_EX_TRANSLUCENT_75;
 }
 
 #define DEN_PSXCHAIN   64

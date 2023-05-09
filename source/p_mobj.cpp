@@ -2644,6 +2644,12 @@ spawnit:
    // Strife mapthing flags
    if(mthing->extOptions & MTF_EX_STAND)
       mobj->flags5 |= MF5_STAND;
+   if(mthing->extOptions & MTF_EX_ALLY)
+      mobj->flags5 |= MF5_ALLY;
+   if(mthing->extOptions & MTF_EX_TRANSLUCENT_25)
+      mobj->flags5 |= MF5_TRANSLUCENT25;
+   if(mthing->extOptions & MTF_EX_TRANSLUCENT_75)
+      mobj->flags5 |= MF5_TRANSLUCENT75;
 
    // haleyjd: set environment sequence # for first 100 types
    if(mthing->type >= 1200 && mthing->type < 1300)

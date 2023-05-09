@@ -882,7 +882,7 @@ thingtype RLeader2 : RLeader, 7800
   deathsound  pespna
   activesound rebact
 
-  // STRIFE_TODO: addflags MF_SPECTRAL
+  cflags      SPECTRAL
 
   states
   @"
@@ -906,7 +906,7 @@ thingtype MissileSmoke : Mobj
 
   //seesound rflite STRIFE_TODO
 
-  cflags NOBLOCKMAP|NOGRAVITY // STRIFE_TODO: MF_SHADOW for Strife
+  cflags NOBLOCKMAP|NOGRAVITY|TRANSLUCENT25
 
   states
   @"
@@ -1426,7 +1426,7 @@ thingtype Spectre : Mobj
   height      64.0
   mass        1000
 
-  cflags      SPECIAL|SOLID|SHOOTABLE|NOGRAVITY|COUNTKILL|NOTDMATCH|GIVEQUEST|NODIALOG // STRIFE_TODO: MF_MVIS|MF_SPECTRAL Strife's MF_SHADOW
+  cflags      SPECIAL|SOLID|SHOOTABLE|NOGRAVITY|COUNTKILL|NOTDMATCH|GIVEQUEST|NODIALOG|TRANSLUCENT25|TRANSLUCENT75|SPECTRAL
 
   states
   @"
@@ -1619,7 +1619,7 @@ thingtype Entity : Mobj, 7728
   height      200.0
   mass        1000
 
-  cflags      SPECIAL|SOLID|SHOOTABLE|NOGRAVITY|COUNTKILL|NOTDMATCH|GIVEQUEST|NODIALOG // STRIFE_TODO: MF_MVIS|MF_SPECTRAL Strife's MF_SHADOW
+  cflags      SPECIAL|SOLID|SHOOTABLE|NOGRAVITY|COUNTKILL|NOTDMATCH|GIVEQUEST|NODIALOG|TRANSLUCENT25|TRANSLUCENT75|SPECTRAL
 
   states
   @"
@@ -1683,7 +1683,7 @@ thingtype SubEntity : Mobj
   height      200.0
   mass        1000
 
-  cflags      SPECIAL|SOLID|SHOOTABLE|NOGRAVITY|COUNTKILL|NOTDMATCH|GIVEQUEST|NODIALOG // STRIFE_TODO: MF_MVIS|MF_SPECTRAL Strife's MF_SHADOW
+  cflags      SPECIAL|SOLID|SHOOTABLE|NOGRAVITY|COUNTKILL|NOTDMATCH|GIVEQUEST|NODIALOG|TRANSLUCENT25|TRANSLUCENT75|SPECTRAL
 
   states
   @"
@@ -1791,7 +1791,7 @@ thingtype SigilBShot : SigilShotBase
 
   damage 70
 
-  addflags NOGRAVITY|DROPOFF|MISSILE // STRIFE_TODO: MF_SPECTRAL
+  addflags NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT25
 
   states
   @"
@@ -1820,7 +1820,7 @@ thingtype SigilCShot : SigilShotBase
 
   damage 70
 
-  addflags NOGRAVITY|DROPOFF|MISSILE // STRIFE_TODO: MF_SPECTRAL
+  addflags NOGRAVITY|DROPOFF|MISSILE|SPECTRAL
 
   states
   @"
@@ -1869,7 +1869,7 @@ thingtype SigilEShot : SigilShotBase
 
   damage 130
 
-  addflags NOGRAVITY|DROPOFF|MISSILE // STRIFE_TODO: MF_SPECTRAL
+  addflags NOGRAVITY|DROPOFF|MISSILE|SPECTRAL
 
   states
   @"
@@ -1900,7 +1900,7 @@ thingtype SigilAZapLeft : SigilShotBase
 
   damage 100
 
-  addflags NOGRAVITY|DROPOFF|MISSILE // STRIFE_TODO: MF_SPECTRAL
+  addflags NOGRAVITY|DROPOFF|MISSILE|SPECTRAL
 
   states
   @"
@@ -1931,7 +1931,7 @@ thingtype SigilAGround : SigilShotBase
 
   speed        18.0
 
-  //STRIFE_TODO: addflags Strife's MF_SHADOW
+  cflags       SPECTRAL
 
   states
   @"
@@ -1954,7 +1954,7 @@ thingtype SigilDShot : SigilShotBase
 
   damage   120
 
-  addflags NOGRAVITY|DROPOFF|MISSILE // STRIFE_TODO: Strife's MF_SPECTRAL
+  addflags NOGRAVITY|DROPOFF|MISSILE|SPECTRAL
 
   states
   @"
@@ -2660,7 +2660,7 @@ thingtype StrifePuff : Mobj
 {
   //speakerid/conversationid 115
 
-  cflags NOBLOCKMAP|NOGRAVITY // STRIFE_TODO: Strife's MF_SHADOW
+  cflags NOBLOCKMAP|NOGRAVITY|TRANSLUCENT25
 
   states
   @"
@@ -2704,7 +2704,7 @@ thingtype TFog : Mobj
 {
   //speakerid/conversationid 118
 
-  cflags NOBLOCKMAP|NOGRAVITY // STRIFE_TODO: Strife's MF_SHADOW
+  cflags NOBLOCKMAP|NOGRAVITY|TRANSLUCENT25
 
   states
   @"
@@ -2718,7 +2718,7 @@ thingtype IFog : Mobj
 {
   //speakerid/conversationid 119
 
-  cflags NOBLOCKMAP|NOGRAVITY // STRIFE_TODO: Strife's MF_SHADOW
+  cflags NOBLOCKMAP|NOGRAVITY|TRANSLUCENT25
 
   states
   @"
@@ -4593,7 +4593,7 @@ thingtype TeleportStand : Mobj, 7623
 {
   //speakerid/conversationid 229
 
-  cflags NOBLOCKMAP // STRIFE_TODO: MF_SHADOW for strife  // SVE_TODO: MF2_DRAWBILLBOARD
+  cflags NOBLOCKMAP|TRANSLUCENT25  // SVE_TODO: MF2_DRAWBILLBOARD
 
   states
   @"

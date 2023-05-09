@@ -755,6 +755,9 @@ enum mobjflags5_e : unsigned int
    MF5_GIVEQUEST          = 0x00000010, // villsa [STRIFE] for players, count as quest item
    MF5_NODIALOG           = 0x00000020, // villsa [STRIFE] can NPC talk?
    MF5_STAND              = 0x00000040, // villsa [STRIFE] stand around until alerted
+   MF5_TRANSLUCENT25      = 0x00000080, // villsa [STRIFE] 25% translucency
+   MF5_TRANSLUCENT75      = 0x00000100, // villsa [STRIFE] 75% translucency
+   MF5_SPECTRAL           = 0x00000200, // villsa [STRIFE] spectral entity, only damaged by spectral missiles
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

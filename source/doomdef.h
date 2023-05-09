@@ -128,7 +128,7 @@ enum gamestate_t
 #define MTF_STRIFE_FRIEND      64
 // 128 is unknown
 #define MTF_STRIFE_TRANSLUCENT 256
-#define MTF_STRIFE_MVCIS       512
+#define MTF_STRIFE_MVIS        512
 // 1024 is unknown
 
 //
@@ -146,6 +146,15 @@ enum
 
    // Strife standing monster
    MTF_EX_STAND = 4,
+
+   // Strife ally
+   MTF_EX_ALLY = 8,
+
+   // Strife 25% translucent
+   MTF_EX_TRANSLUCENT_25 = 16,
+
+   // Strife 75% translucent
+   MTF_EX_TRANSLUCENT_75 = 32,
 };
 
 // sf: sector flags, not me =)
