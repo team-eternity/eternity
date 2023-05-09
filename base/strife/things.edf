@@ -208,7 +208,8 @@ thingtype Peasant : Mobj
 
   cflags       SOLID|SHOOTABLE|JUSTHIT|COUNTKILL // SVE_TODO: MF2_NOSTONECOLD|MF2_NOREBELATTACK|MF2_DRAWBILLBOARD
 
-  states @"
+  states
+  @"
   Spawn:
     PEAS A 10 // STRIFE_TODO: A_FriendLook
     loop
@@ -6059,4 +6060,154 @@ thingtype TokenQuest31 : StrifeToken
 thingtype SlideShow : StrifeToken
 {
   //speakerid/conversationid 343
+}
+
+//
+// [SVE]
+//
+
+thingtype BloodGore : Mobj, -1, 503
+{
+  //speakerid/conversationid 344
+
+  cflags NOBLOCKMAP // SVE_TODO: MF2_NOTHINGBLOCK|MF2_MARKDECAL
+
+  states
+  @"
+  Spawn:
+    SPRY ABCDEF 3
+    SPRY G 2
+    stop
+  "@
+}
+
+thingtype InvBlueChalice : Mobj, 7970
+{
+  //speakerid/conversationid 345
+  //namepointer Offering_Chalice
+
+  cflags SPECIAL|DROPPED // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    RELB A -1 bright
+    stop
+  "@
+}
+
+thingtype CTCFlagspotBlue : Mobj, 5130
+{
+  //speakerid/conversationid 346
+  //namepointer Blue_Flag_Spot
+
+  radius 16.0
+
+  cflags SPECIAL // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    FLGB A 1 bright
+    FLGB A 0 bright // SVE_TODO: A_FlagStandSpawn
+  CheckLoop:
+    FLGB A 1 bright // SVE_TODO: A_FlagStandCheck
+    loop
+  "@
+}
+
+thingtype CTCFlagspotRed : Mobj, 5131
+{
+  //speakerid/conversationid 347
+  //namepointer Red_Flag_Spot
+
+  radius 16.0
+
+  cflags SPECIAL // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    FLGR A 1 bright
+    FLGR A 0 bright // SVE_TODO: A_FlagStandSpawn
+  CheckLoop:
+    FLGR A 1 bright // SVE_TODO: A_FlagStandCheck
+    loop
+  "@
+}
+
+thingtype AztecArtiRed : Mobj, 7966
+{
+  //speakerid/conversationid 348
+  //namepointer Red_Talisman
+
+  radius 16.0
+
+  cflags SPECIAL|DROPPED // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    FLGR A -1 bright
+    stop
+  "@
+}
+
+thingtype AztecArtiGreen : Mobj, 7967
+{
+  //speakerid/conversationid 349
+  //namepointer Green_Talisman
+
+  radius 16.0
+
+  cflags SPECIAL|DROPPED // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    FLGG A -1 bright
+    stop
+  "@
+}
+
+thingtype AztecArtiBlue : Mobj, 7968
+{
+  //speakerid/conversationid 350
+  //namepointer Blue_Talisman
+
+  radius 16.0
+
+  cflags SPECIAL|DROPPED // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    FLGB A -1 bright
+    stop
+  "@
+}
+
+thingtype TokenDoor4 : StrifeToken
+{
+  //speakerid/conversationid 351
+
+  cflags SPECIAL
+}
+
+thingtype OreSpawner : Mobj, 7975
+{
+  // speakerid/conversationid 352
+
+  spawnhealth 20
+
+  activesound st_telept
+
+  cflags NOSECTOR
+
+  states
+  @"
+  Spawn:
+    PLAY A 175 // SVE_TODO: A_OreSpawner
+    loop
+  "@
 }

@@ -67,18 +67,17 @@ void A_BodyParts(actionargs_t *actionargs)
       mo->momy = FixedMul(finesine[an], (P_Random(pr_bodyparts) & 0x0f) << FRACBITS);
       mo->momz = (P_Random(pr_bodyparts) & 0x0f) << FRACBITS;
 
-      // SVE_TODO
       // [SVE] svillarreal - even more ludicrous gore
-      //if(d_maxgore && !(actor->flags & MF_NOBLOOD))
-      //{
-      //   Mobj *gore = P_SpawnMobj(actor->x, actor->y, actor->z + (32 * FRACUNIT), MT_BLOOD_GORE);
-      //
-      //   gore->angle = mo->angle;
-      //
-      //   gore->momx = mo->momx;
-      //   gore->momy = mo->momy;
-      //   gore->momz = mo->momz;
-      //}
+      if(d_maxgore && !(actor->flags & MF_NOBLOOD))
+      {
+         Mobj *gore = P_SpawnMobj(actor->x, actor->y, actor->z + (32 * FRACUNIT), E_SafeThingType(MT_BLOOD_GORE));
+
+         gore->angle = mo->angle;
+
+         gore->momx = mo->momx;
+         gore->momy = mo->momy;
+         gore->momz = mo->momz;
+      }
    } while(--numchunks > 0);
 }
 

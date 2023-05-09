@@ -327,7 +327,8 @@ enum
 
    // Strife things
    MT_MEAT = 501,
-   MT_JUNK = 502,
+   MT_JUNK,
+   MT_BLOOD_GORE,
 
    // Start Eternity TC New Things
 
