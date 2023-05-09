@@ -29,11 +29,73 @@
 #include "e_things.h"
 #include "info.h"
 #include "m_random.h"
+#include "p_enemy.h"
+#include "p_info.h"
 #include "p_mobj.h"
+#include "r_defs.h"
 
 // STRIFE_TODO: Implement for real
 static bool classicmode = false;
 static bool d_maxgore = false;
+
+//
+// [STRIFE] New function
+// haleyjd 09/05/10: Action function used mostly by mundane characters such as
+// peasants.
+//
+void A_FriendLook(actionargs_t *actionargs)
+{
+   Mobj *actor       = actionargs->actor;
+   Mobj *soundtarget = actor->subsector->sector->soundtarget;
+
+   actor->threshold = 0;
+
+   // SVE_TODO
+   // [SVE]: Capture the Chalice
+   //if(actor->type == MT_REBEL1 && deathmatch)
+   //{
+   //   P_allyFindCTCTarget(actor, true);
+   //   if(actor->target)
+   //      return;
+   //}
+   //else
+   if(soundtarget && soundtarget->flags & MF_SHOOTABLE)
+   {
+      // Handle allies, except on maps 3 and 34 (Front Base/Movement Base)
+      if((actor->flags5 & MF5_ALLY) == (soundtarget->flags5 & MF5_ALLY) && !LevelInfo.idleAllies)
+      {
+         // STRIFE-TODO: Needs serious verification.
+         if(P_LookForPlayers(actor, actor->flags5 & MF5_GIVEQUEST))
+         {
+            P_SetMobjState(actor, actor->info->seestate);
+            actor->flags5 |= MF5_NODIALOG;
+            return;
+         }
+      }
+      else
+      {
+         P_SetTarget(&actor->target, soundtarget);
+
+         if(!(actor->flags & MF_AMBUSH) || P_CheckSight(actor, actor->target))
+         {
+            actor->threshold = 10;
+            P_SetMobjState(actor, actor->info->seestate);
+            return;
+         }
+      }
+   }
+
+   // do some idle animation
+   if(P_Random(pr_friendlook) < 30)
+   {
+      int t = P_Random(pr_friendlook);
+      P_SetMobjState(actor, (t & 1) + actor->info->spawnstate + 1);
+   }
+
+   // wander around a bit
+   if(!(actor->flags5 & MF5_STAND) && P_Random(pr_friendlook) < 40)
+      P_SetMobjState(actor, actor->info->spawnstate + 3);
+}
 
 //
 // villsa [STRIFE] new codepointer

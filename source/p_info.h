@@ -154,6 +154,7 @@ struct LevelInfo_t
 
    // gameplay options
    bool disableJump;          // if true, jumping is disabled
+   bool idleAllies;           // if true, Strife allies will stand idle
 
    // misc
    int gravity;               // gravity factor

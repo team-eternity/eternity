@@ -28,7 +28,7 @@ thingtype StrifePlayer : Mobj
   radius       18.0
   height       56.0
 
-  cflags SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH|FOOTCLIP|SLIDE|WINDTHRUST|PASSMOBJ // STRIFE_TODO: MF_ALLY
+  cflags SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH|FOOTCLIP|SLIDE|WINDTHRUST|PASSMOBJ|ALLY
 
   states
   @"
@@ -73,7 +73,7 @@ thingtype ForceFieldGuard : StrifeToken, 7625
   height      1.0
   mass        10000
 
-  cflags SHOOTABLE|NOSECTOR // STRIFE_TODO: MF_NODIALOG
+  cflags SHOOTABLE|NOSECTOR|NODIALOG
 
   states
   @"
@@ -113,7 +113,7 @@ thingtype Merchant : Mobj
     goto Spawn
   // Ordinary States
   Spawn:
-    MRST A 10 // STRIFE_TODO: A_FriendLook
+    MRST A 10 A_FriendLook
     loop
   Idle1:
     MRLK A 30 // STRIFE_TODO: A_ActiveSound
@@ -211,7 +211,7 @@ thingtype Peasant : Mobj
   states
   @"
   Spawn:
-    PEAS A 10 // STRIFE_TODO: A_FriendLook
+    PEAS A 10 A_FriendLook
     loop
   See:
   Idle1:
@@ -471,7 +471,7 @@ thingtype Becoming : Mobj, 7801
 
   radius        16.0 // [SVE]: made smaller due to bizarre bug on MAP27
 
-  cflags SOLID|SHOOTABLE|COUNTKILL // STRIFE_TODO: MF_NODIALOG, SVE_TODO: MF2_DRAWBILLBOARD|MF2_IGNORENOMONSTERS
+  cflags SOLID|SHOOTABLE|COUNTKILL|NODIALOG // SVE_TODO: MF2_DRAWBILLBOARD|MF2_IGNORENOMONSTERS
 
   states
   @"
@@ -669,7 +669,7 @@ thingtype Beggar : Mobj
   states
   @"
   Spawn:
-    BEGR A 10 // STRIFE_TODO: A_FriendLook
+    BEGR A 10 A_FriendLook
   See:
   Idle1:
     BEGR A 4 A_RandomWalk
@@ -749,12 +749,12 @@ thingtype Rebel : Mobj
 
   height       56.0
 
-  cflags       SOLID|SHOOTABLE|COUNTKILL // STRIFE_TODO: MF_ALLY, SVE_TODO: MF2_NOSTONECOLD|MF2_DRAWBILLBOARD
+  cflags       SOLID|SHOOTABLE|COUNTKILL|ALLY // SVE_TODO: MF2_NOSTONECOLD|MF2_DRAWBILLBOARD
 
   states
   @"
   Spawn:
-    HMN1 P 5 // STRIFE_TODO: A_FriendLook
+    HMN1 P 5 A_FriendLook
     loop
   Idle1:
     HMN1 Q 8
@@ -846,7 +846,7 @@ thingtype RLeader : Mobj, 7664
   states
   @"
   Spawn:
-    LEDR C 5 // STRIFE_TODO: A_FriendLook
+    LEDR C 5 A_FriendLook
     loop
   Idle1:
     LEDR A 8
@@ -932,7 +932,7 @@ thingtype Reaver : Mobj, 7951
   height      60.0
   mass        500
 
-  cflags      SOLID|SHOOTABLE|NOBLOOD|COUNTKILL // STRIFE_TODO: MF_NODIALOG, SVE_TODO: MF2_DRAWBILLBOARD
+  cflags      SOLID|SHOOTABLE|NOBLOOD|COUNTKILL|NODIALOG // SVE_TODO: MF2_DRAWBILLBOARD
 
   states
   @"
@@ -1000,7 +1000,7 @@ thingtype Guard : Mobj
   states
   @"
   Spawn:
-    AGRD A 5 // STRIFE_TODO: A_FriendLook
+    AGRD A 5 A_FriendLook
     loop
   Idle1:
     AGRD B 8 // STRIFE_TODO: A_ShadowOff
@@ -1177,7 +1177,7 @@ thingtype PGuard : Mobj, 7953
   states
   @"
   Spawn:
-    PGRD A 5 // STRIFE_TODO: A_FriendLook
+    PGRD A 5 A_FriendLook
     loop
   Idle1:
     PGRD B 10
@@ -1234,7 +1234,7 @@ thingtype Crusader : Mobj, 7955
   height      56.0
   mass        400
 
-  cflags      SOLID|SHOOTABLE|NOBLOOD|COUNTKILL // STRIFE_TODO: MF_NODIALOG, SVE_TODO: MF2_DRAWBILLBOARD
+  cflags      SOLID|SHOOTABLE|NOBLOOD|COUNTKILL|NODIALOG // SVE_TODO: MF2_DRAWBILLBOARD
 
   states
   @"
@@ -1287,7 +1287,7 @@ thingtype Bishop : Mobj, 7787
   height      56.0
   mass        400
 
-  cflags      SOLID|SHOOTABLE|NOBLOOD|COUNTKILL|NOTDMATCH // STRIFE_TODO: MF_NODIALOG, SVE_TODO: MF2_DRAWBILLBOARD
+  cflags      SOLID|SHOOTABLE|NOBLOOD|COUNTKILL|NOTDMATCH|NODIALOG // SVE_TODO: MF2_DRAWBILLBOARD
 
   states
   @"
@@ -1368,7 +1368,7 @@ thingtype Priest : Mobj, 7612
   radius      15.0
   height      16.0
 
-  cflags      SOLID|SHOOTABLE|NOGRAVITY|FLOAT|NOBLOOD|COUNTKILL|NOTDMATCH // STRIFE_TODO: MF_GIVEQUEST|MF_NODIALOG, SVE_TODO: MF2_DRAWBILLBOARD
+  cflags      SOLID|SHOOTABLE|NOGRAVITY|FLOAT|NOBLOOD|COUNTKILL|NOTDMATCH|GIVEQUEST|NODIALOG // SVE_TODO: MF2_DRAWBILLBOARD
 
   states
   @"
@@ -1426,7 +1426,7 @@ thingtype Spectre : Mobj
   height      64.0
   mass        1000
 
-  cflags      SPECIAL|SOLID|SHOOTABLE|NOGRAVITY|COUNTKILL|NOTDMATCH // STRIFE_TODO: MF_GIVEQUEST|MF_NODIALOG|MF_MVIS|MF_SPECTRAL Strife's MF_SHADOW
+  cflags      SPECIAL|SOLID|SHOOTABLE|NOGRAVITY|COUNTKILL|NOTDMATCH|GIVEQUEST|NODIALOG // STRIFE_TODO: MF_MVIS|MF_SPECTRAL Strife's MF_SHADOW
 
   states
   @"
@@ -1619,7 +1619,7 @@ thingtype Entity : Mobj, 7728
   height      200.0
   mass        1000
 
-  cflags      SPECIAL|SOLID|SHOOTABLE|NOGRAVITY|COUNTKILL|NOTDMATCH // STRIFE_TODO: MF_GIVEQUEST|MF_NODIALOG|MF_MVIS|MF_SPECTRAL Strife's MF_SHADOW
+  cflags      SPECIAL|SOLID|SHOOTABLE|NOGRAVITY|COUNTKILL|NOTDMATCH|GIVEQUEST|NODIALOG // STRIFE_TODO: MF_MVIS|MF_SPECTRAL Strife's MF_SHADOW
 
   states
   @"
@@ -1683,7 +1683,7 @@ thingtype SubEntity : Mobj
   height      200.0
   mass        1000
 
-  cflags      SPECIAL|SOLID|SHOOTABLE|NOGRAVITY|COUNTKILL|NOTDMATCH // STRIFE_TODO: MF_GIVEQUEST|MF_NODIALOG|MF_MVIS|MF_SPECTRAL Strife's MF_SHADOW
+  cflags      SPECIAL|SOLID|SHOOTABLE|NOGRAVITY|COUNTKILL|NOTDMATCH|GIVEQUEST|NODIALOG // STRIFE_TODO: MF_MVIS|MF_SPECTRAL Strife's MF_SHADOW
 
   states
   @"
@@ -1991,7 +1991,7 @@ thingtype Sentinel : Mobj, 7956
   height      53.0
   mass        300
 
-  cflags      SOLID|SHOOTABLE|SPAWNCEILING|NOGRAVITY|FLOAT|NOBLOOD|COUNTKILL // STRIFE_TODO: MF_GIVEQUEST|MF_NODIALOG, SVE_TODO: MF2_DRAWBILLBOARD
+  cflags      SOLID|SHOOTABLE|SPAWNCEILING|NOGRAVITY|FLOAT|NOBLOOD|COUNTKILL|GIVEQUEST|NODIALOG // SVE_TODO: MF2_DRAWBILLBOARD
 
   states
   @"
@@ -2044,7 +2044,7 @@ thingtype Stalker : Mobj, 7786
   radius      31.0
   height      25.0
 
-  cflags      SOLID|SHOOTABLE|SPAWNCEILING|NOGRAVITY|DROPOFF|NOBLOOD|COUNTKILL // STRIFE_TODO: MF_NODIALOG, SVE_TODO: MF2_DRAWBILLBOARD
+  cflags      SOLID|SHOOTABLE|SPAWNCEILING|NOGRAVITY|DROPOFF|NOBLOOD|COUNTKILL|NODIALOG // SVE_TODO: MF2_DRAWBILLBOARD
 
   states
   @"
@@ -2189,7 +2189,7 @@ thingtype Programmer : Mobj, 7671
 
   damage      4
 
-  cflags      SOLID|SHOOTABLE|NOGRAVITY|FLOAT|NOBLOOD|COUNTKILL|NOTDMATH // STRIFE_TODO: MF_GIVEQUEST, SVE_TODO: MF2_DRAWBILLBOARD
+  cflags      SOLID|SHOOTABLE|NOGRAVITY|FLOAT|NOBLOOD|COUNTKILL|NOTDMATH|GIVEQUEST // SVE_TODO: MF2_DRAWBILLBOARD
 
   states
   @"
@@ -2735,7 +2735,7 @@ thingtype Misc01 : Mobj, 7624
 {
   //speakerid/conversationid 121
 
-  cflags NOBLOCKMAP|SPAWNCEILING|NOGRAVITY // STRIFE_TODO: MF_STAND
+  cflags NOBLOCKMAP|SPAWNCEILING|NOGRAVITY|STAND
 
   states
   @"
@@ -2759,7 +2759,7 @@ thingtype Turret : Mobj, 7627
 
   mass        10000000
 
-  cflags      SHOOTABLE|SPAWNCEILING|NOGRAVITY|NOBLOOD|COUNTKILL // STRIFE_TODO: MF_STAND
+  cflags      SHOOTABLE|SPAWNCEILING|NOGRAVITY|NOBLOOD|COUNTKILL|STAND
 
   states
   @"
@@ -2793,7 +2793,7 @@ thingtype Gate : Mobj, 7645
   height      76.0
   mass        10000000
 
-  cflags      SOLID|SHOOTABLE|NOBLOOD // STRIFE_TODO: MF_GIVEQUEST|MF_NODIALOG, SVE_TODO: MF2_NOSTONECOLD|MF2_DRAWBILLBOARD
+  cflags      SOLID|SHOOTABLE|NOBLOOD|GIVEQUEST|NODIALOG // SVE_TODO: MF2_NOSTONECOLD|MF2_DRAWBILLBOARD
 
   states
   @"
@@ -2827,7 +2827,7 @@ thingtype Computer : Mobj, 7782
   height      128.0
   mass        100000
 
-  cflags      SOLID|SHOOTABLE|NOBLOOD // STRIFE_TODO: MF_GIVEQUEST|MF_NODIALOG, SVE_TODO: MF2_NOSTONECOLD|MF2_DRAWBILLBOARD
+  cflags      SOLID|SHOOTABLE|NOBLOOD|GIVEQUEST|NODIALOG // SVE_TODO: MF2_NOSTONECOLD|MF2_DRAWBILLBOARD
 
   states
   @"
@@ -3056,7 +3056,7 @@ thingtype PrisonKey : Mobj
 
   speed 11
 
-  cflags SPECIAL|NOTDMATCH // STRIFE_TODO: MF_GIVEQUEST, SVE_TODO: MF2_DRAWOUTLINE
+  cflags SPECIAL|NOTDMATCH|GIVEQUEST // STRIFE_TODO: SVE_TODO: MF2_DRAWOUTLINE
 
   states
   @"
@@ -3073,7 +3073,7 @@ thingtype KeyHand : Mobj, 7691
 
   speed 12
 
-  cflags SPECIAL|NOTDMATCH // STRIFE_TODO: MF_GIVEQUEST, SVE_TODO: MF2_DRAWOUTLINE
+  cflags SPECIAL|NOTDMATCH|GIVEQUEST // SVE_TODO: MF2_DRAWOUTLINE
 
   states
   @"
@@ -3298,7 +3298,7 @@ thingtype CatacombKey : Mobj
   //speakerid/conversationid 153
   //namepointer Catacomb_Key
 
-  cflags SPECIAL|NOTDMATCH // STRIFE_TODO: MF_GIVEQUEST, SVE_TODO: MF2_DRAWOUTLINE
+  cflags SPECIAL|NOTDMATCH|GIVEQUEST // SVE_TODO: MF2_DRAWOUTLINE
 
   states
   @"
@@ -3442,7 +3442,7 @@ thingtype QuestUniform : Mobj, 7690
 
   speed 15
 
-  cflags SPECIAL // STRIFE_TODO: MF_GIVEQUEST, SVE_TODO: MF2_DRAWOUTLINE
+  cflags SPECIAL|GIVEQUEST // SVE_TODO: MF2_DRAWOUTLINE
 
   states
   @"
@@ -3605,7 +3605,7 @@ thingtype Mony300 : StrifeToken
   //speakerid/conversationid 172
   //namepointer 300_gold
 
-  cflags SPECIAL|DROPPED // STRIFE_TODO: MF_GIVEQUEST
+  cflags SPECIAL|DROPPED|GIVEQUEST
 }
 
 thingtype TokenRing : Mobj
@@ -3615,7 +3615,7 @@ thingtype TokenRing : Mobj
 
   speed  1
 
-  cflags SPECIAL|NOTDMATCH // STRIFE_TODO: MF_GIVEQUEST, SVE_TODO: MF2_DRAWOUTLINE
+  cflags SPECIAL|NOTDMATCH|GIVEQUEST // SVE_TODO: MF2_DRAWOUTLINE
 
   states
   @"
@@ -3633,7 +3633,7 @@ thingtype InvChalice : Mobj, 7805
   speed  2
   radius 10.0
 
-  cflags SPECIAL|DROPPED // STRIFE_TODO: MF_GIVEQUEST, SVE_TODO: MF2_DRAWBILLBOARD
+  cflags SPECIAL|DROPPED|GIVEQUEST // SVE_TODO: MF2_DRAWBILLBOARD
 
   states
   @"
@@ -3650,7 +3650,7 @@ thingtype TokenEar : Mobj
 
   speed  9
 
-  cflags SPECIAL // STRIFE_TODO: MF_GIVEQUEST, SVE_TODO: MF2_DRAWBILLBOARD
+  cflags SPECIAL|GIVEQUEST // SVE_TODO: MF2_DRAWBILLBOARD
 
   states
   @"
@@ -4048,7 +4048,7 @@ thingtype PowerCrystal : Mobj, 7692
 
   mass        99999999
 
-  cflags SOLID|SPECIAL|NOGRAVITY|NOBLOOD // STRIFE_TODO: MF_GIVEQUEST|MF_NODIALOG  // SVE_TODO: MF2_NOSTONECOLD|MF2_DRAWBILLBOARD
+  cflags SOLID|SPECIAL|NOGRAVITY|NOBLOOD|GIVEQUEST|NODIALOG // SVE_TODO: MF2_NOSTONECOLD|MF2_DRAWBILLBOARD
 
   states
   @"
@@ -4091,7 +4091,7 @@ thingtype Rat : Mobj, 7685
 
   radius      10.0
 
-  cflags NOBLOOD|COUNTKILL // STRIFE_TODO: MF_NODIALOG  // SVE_TODO: MF2_DRAWBILLBOARD
+  cflags NOBLOOD|COUNTKILL|NODIALOG // SVE_TODO: MF2_DRAWBILLBOARD
 
   states
   @"
@@ -4122,7 +4122,7 @@ thingtype Misc05 : Mobj, 7682
   radius      10.0
   height      32.0
 
-  cflags SOLID|SHOOTABLE|NOBLOOD // STRIFE_TODO: MF_NODIALOG  // SVE_TODO: MF2_DRAWBILLBOARD
+  cflags SOLID|SHOOTABLE|NOBLOOD|NODIALOG // SVE_TODO: MF2_DRAWBILLBOARD
 
   states
   @"
@@ -4150,7 +4150,7 @@ thingtype Misc06 : Mobj, 7694
   radius      10.0
   height      32.0
 
-  cflags SOLID|SHOOTABLE|NOBLOOD // STRIFE_TODO: MF_NODIALOG  // SVE_TODO: MF2_NOREBELATTACK|MF2_DRAWBILLBOARD
+  cflags SOLID|SHOOTABLE|NOBLOOD|NODIALOG // SVE_TODO: MF2_NOREBELATTACK|MF2_DRAWBILLBOARD
 
   states
   @"
@@ -4182,7 +4182,7 @@ thingtype Misc15 : Mobj, 7808
   height      72.0
   mass        9999999
 
-  cflags SOLID|SHOOTABLE|NOBLOOD // STRIFE_TODO: MF_NODIALOG  // SVE_TODO: MF2_DRAWBILLBOARD
+  cflags SOLID|SHOOTABLE|NOBLOOD|NODIALOG // SVE_TODO: MF2_DRAWBILLBOARD
 
   states
   @"
@@ -5530,7 +5530,7 @@ thingtype Coupling : Mobj, 7820
   height      64.0
   mass        999999
 
-  cflags SOLID|SHOOTABLE|DROPPED|NOBLOOD|NOTDMATCH // STRIFE_TODO: MF_GIVEQUEST|MF_NODIALOG  // SVE_TODO: MF2_DRAWBILLBOARD
+  cflags SOLID|SHOOTABLE|DROPPED|NOBLOOD|NOTDMATCH|GIVEQUEST|NODIALOG // SVE_TODO: MF2_DRAWBILLBOARD
 
   states
   @"
@@ -5551,7 +5551,7 @@ thingtype CouplingBroken : Mobj, 7826
   radius      16.0
   mass        1
 
-  cflags SPECIAL|DROPPED // STRIFE_TODO: MF_GIVEQUEST  // SVE_TODO: MF2_DRAWBILLBOARD
+  cflags SPECIAL|DROPPED|GIVEQUEST // SVE_TODO: MF2_DRAWBILLBOARD
 
   states
   @"
@@ -5855,7 +5855,7 @@ thingtype TokenPrisonPass : StrifeToken
   //speakerid/conversationid 304
   //namepointer Prison_pass
 
-  cflags SPECIAL // STRIFE_TODO: MF_GIVEQUEST
+  cflags SPECIAL|GIVEQUEST
 }
 
 thingtype TokenDoor3 : StrifeToken
@@ -5908,7 +5908,7 @@ thingtype TokenOraclePass : StrifeToken
   //speakerid/conversationid 311
   //namepointer Oracle_Pass
 
-  cflags SPECIAL // STRIFE_TODO: MF_GIVEQUEST
+  cflags SPECIAL|GIVEQUEST
 }
 
 thingtype TokenQuest1 : StrifeToken

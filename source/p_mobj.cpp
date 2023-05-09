@@ -2641,6 +2641,10 @@ spawnit:
       mobj->tics = -1; // don't go through state transitions
    }
 
+   // Strife mapthing flags
+   if(mthing->extOptions & MTF_EX_STAND)
+      mobj->flags5 |= MF5_STAND;
+
    // haleyjd: set environment sequence # for first 100 types
    if(mthing->type >= 1200 && mthing->type < 1300)
       mobj->args[0] = mthing->type - 1200;

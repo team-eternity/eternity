@@ -264,6 +264,7 @@ typedef enum {
    pr_mbf21,
 
    pr_bodyparts,               // A_BodyParts
+   pr_friendlook,              // A_FriendLook
 
    NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;

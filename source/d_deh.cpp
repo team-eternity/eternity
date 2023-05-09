@@ -404,7 +404,10 @@ static dehflags_t deh_mobjflags[] =
    { "NOTAUTOAIMED",       0x00000001, 4 }, // can't be autoaimed (for real)
    { "FULLVOLSOUNDS",      0x00000002, 4 }, // full-volume see/death sounds
    { "ACTLIKEBRIDGE",      0x00000004, 4 }, // unmoved by sector actions, and pickups can sit atop
-
+   { "ALLY",               0x00000008, 4 }, // friendly towards player with matching flag
+   { "GIVEQUEST",          0x00000010, 4 }, // for players, count as quest item
+   { "NODIALOG",           0x00000020, 4 }, // can NPC talk?
+   { "STAND",              0x00000040, 4 }, // stand around until alerted
    { nullptr,             0 }             // nullptr terminator
 };
 

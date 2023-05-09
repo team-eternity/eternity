@@ -1636,6 +1636,7 @@ void A_HticArtiTele(actionargs_t *);
 void A_HticSpawnFireBomb(actionargs_t *);
 
 // Strife pointers
+void A_FriendLook(actionargs_t *);
 void A_BodyParts(actionargs_t *);
 
 // haleyjd 10/04/08: Hexen pointers
@@ -2031,6 +2032,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(HticSpawnFireBomb),
 
    // Strife pointers
+   POINTER(FriendLook),
    POINTER(BodyParts),
 
    // haleyjd 10/04/08: Hexen pointers
