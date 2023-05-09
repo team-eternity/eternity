@@ -400,7 +400,7 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
 
 // restart map (shorthand for doing the map command to the same level)
 
-CONSOLE_NETCMD(restartmap, cf_server, netcmd_restartmap)
+CONSOLE_NETCMD(restartmap, cf_server|cf_level, netcmd_restartmap)
 {
    G_DeferedInitNew(gameskill, gamemapname);
 }
