@@ -1260,6 +1260,8 @@ void R_InitTranslationTables()
    rTintTableIndex = wGlobalDir.checkNumForName("TINTTAB");
    if(rTintTableIndex != -1 && wGlobalDir.lumpLength(rTintTableIndex) < 256 * 256)
       rTintTableIndex = -1;   // bad length
+   else if(rTintTableIndex != -1)
+      wGlobalDir.cacheLumpNum(rTintTableIndex, PU_CACHE);
 }
 
 //
