@@ -177,6 +177,7 @@ enum
    MLI_CEILINGPORTALCOPIED = 0x04, // ioanch 20160219: for type 385
    MLI_1SPORTALLINE = 0x08,   // wall portal from a single-sided line
    MLI_MOVINGPORTAL = 0x10,   // line is on a moving portal
+   MLI_TRANMAPINVERSE = 0x20, // line is drawn with an inverse tranmap lookup
 };
 
 enum

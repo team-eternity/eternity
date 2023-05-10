@@ -70,19 +70,20 @@ using R_ColumnFunc = void (*)(cb_column_t &);
 //
 struct columndrawer_t
 {
-   R_ColumnFunc DrawColumn;       // normal
-   R_ColumnFunc DrawSkyColumn;    // sky column (uses median color)
-   R_ColumnFunc DrawNewSkyColumn; // double-sky drawing (index 0 = transparent)
-   R_ColumnFunc DrawTLColumn;     // translucent
-   R_ColumnFunc DrawTRColumn;     // translated
-   R_ColumnFunc DrawTLTRColumn;   // translucent/translated
-   R_ColumnFunc DrawFuzzColumn;   // spectre fuzz
-   R_ColumnFunc DrawFlexColumn;   // flex translucent
-   R_ColumnFunc DrawFlexTRColumn; // flex translucent/translated
-   R_ColumnFunc DrawAddColumn;    // additive flextran
-   R_ColumnFunc DrawAddTRColumn;  // additive flextran/translated
+   R_ColumnFunc DrawColumn;          // normal
+   R_ColumnFunc DrawSkyColumn;       // sky column (uses median color)
+   R_ColumnFunc DrawNewSkyColumn;    // double-sky drawing (index 0 = transparent)
+   R_ColumnFunc DrawTLColumn;        // translucent
+   R_ColumnFunc DrawTLInverseColumn; // translucent (inverse lookup)
+   R_ColumnFunc DrawTRColumn;        // translated
+   R_ColumnFunc DrawTLTRColumn;      // translucent/translated
+   R_ColumnFunc DrawFuzzColumn;      // spectre fuzz
+   R_ColumnFunc DrawFlexColumn;      // flex translucent
+   R_ColumnFunc DrawFlexTRColumn;    // flex translucent/translated
+   R_ColumnFunc DrawAddColumn;       // additive flextran
+   R_ColumnFunc DrawAddTRColumn;     // additive flextran/translated
 
-   void       (*ResetBuffer)();   // reset function (may be null)
+   void       (*ResetBuffer)();      // reset function (may be null)
 
    R_ColumnFunc ByVisSpriteStyle[VS_NUMSTYLES][2];
 };

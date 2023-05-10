@@ -95,7 +95,10 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
    {
       if(linedef->tranlump >= 0)
       {
-         colfunc = r_column_engine->DrawTLColumn;
+         if(linedef->intflags & MLI_TRANMAPINVERSE)
+            colfunc = r_column_engine->DrawTLInverseColumn;
+         else
+            colfunc = r_column_engine->DrawTLColumn;
          if(linedef->tranlump > 0)
             column.tranmap = static_cast<byte *>(wGlobalDir.getCachedLumpNum(linedef->tranlump-1));
          else

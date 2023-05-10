@@ -72,6 +72,7 @@
 #include "r_context.h"
 #include "r_data.h"
 #include "r_defs.h"
+#include "r_draw.h"
 #include "r_dynseg.h"
 #include "r_main.h"
 #include "r_sky.h"
@@ -2085,15 +2086,12 @@ static void P_LoadLineDefs2()
             ; // STRIFE_TODO
          if(ld->flags & ML_STRIFE_BLOCKFLOATERS)
             ; // STRIFE_TODO
-         if(ld->flags & ML_STRIFE_TRANSPARENT1)
+         if(ld->flags & ML_STRIFE_TRANSPARENT1 && rXLATableIndex != -1)
+            ld->tranlump = rXLATableIndex + 1;
+         if(ld->flags & ML_STRIFE_TRANSPARENT2 && rXLATableIndex != -1)
          {
-            ld->extflags |= EX_ML_ADDITIVE;
-            ld->alpha = 0.25f;
-         }
-         if(ld->flags & ML_STRIFE_TRANSPARENT2)
-         {
-            ld->extflags |= EX_ML_ADDITIVE;
-            ld->alpha = 0.75f;
+            ld->tranlump = rXLATableIndex + 1;
+            ld->intflags |= MLI_TRANMAPINVERSE;
          }
       }
 

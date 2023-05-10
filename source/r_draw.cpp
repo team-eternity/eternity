@@ -1182,6 +1182,7 @@ columndrawer_t r_normal_drawer =
    CB_DrawSkyColumn_8,
    CB_DrawNewSkyColumn_8,
    CB_DrawTLColumn_8<8, 0>,
+   CB_DrawTLColumn_8<0, 8>,
    CB_DrawTRColumn_8,
    CB_DrawTLTRColumn_8<8, 0>,
    CB_DrawFuzzColumn_8,
