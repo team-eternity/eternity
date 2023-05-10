@@ -1854,6 +1854,11 @@ void P_InitLineDef(line_t *ld)
 #define ML_PSX_MIDTRANSLUCENT 0x400
 #define ML_PSX_MIDSOLID       0x800
 
+constexpr uint16_t ML_STRIFE_JUMPOVER = 0x0200;
+constexpr uint16_t ML_STRIFE_BLOCKFLOATERS = 0x0400;
+constexpr uint16_t ML_STRIFE_TRANSPARENT1  = 0x0800;
+constexpr uint16_t ML_STRIFE_TRANSPARENT2  = 0x1000;
+
 //
 // P_PostProcessLineFlags
 //
@@ -2072,6 +2077,24 @@ static void P_LoadLineDefs2()
          }
 
          ld->flags &= 0x1FF; // clear all extended flags
+      }
+
+      if(LevelInfo.levelType == LI_TYPE_STRIFE)
+      {
+         if(ld->flags & ML_STRIFE_JUMPOVER)
+            ; // STRIFE_TODO
+         if(ld->flags & ML_STRIFE_BLOCKFLOATERS)
+            ; // STRIFE_TODO
+         if(ld->flags & ML_STRIFE_TRANSPARENT1)
+         {
+            ld->extflags |= EX_ML_ADDITIVE;
+            ld->alpha = 0.25f;
+         }
+         if(ld->flags & ML_STRIFE_TRANSPARENT2)
+         {
+            ld->extflags |= EX_ML_ADDITIVE;
+            ld->alpha = 0.75f;
+         }
       }
 
       // haleyjd 05/02/06: Reserved line flag. If set, we must clear all

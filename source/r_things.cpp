@@ -1040,6 +1040,15 @@ static inline byte R_getDrawStyle(const Mobj *const thing, int *tranmaplump)
             *tranmaplump = rTintTableIndex;
          return VS_DRAWSTYLE_TRANMAP;
       }
+      else if(rXLATableIndex != -1 && thing->flags5 & MF5_TRANSLUCENT25)
+      {
+         if(tranmaplump)
+            *tranmaplump = rXLATableIndex;
+         if(thing->flags5 & MF5_TRANSLUCENT75)
+            return VS_DRAWSTYLE_TRANMAP_INVERSE;
+         else
+            return VS_DRAWSTYLE_TRANMAP;
+      }
    }
 
    return VS_DRAWSTYLE_NORMAL;

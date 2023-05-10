@@ -72,6 +72,7 @@ byte *main_tranmap; // killough 4/11/98
 byte *main_submap;  // haleyjd 11/30/13
 
 int rTintTableIndex;
+int rXLATableIndex;
 
 //
 // R_DrawColumn
@@ -386,8 +387,9 @@ static void CB_DrawNewSkyColumn_8(cb_column_t &column)
 // actual code differences are.
 
 #define SRCPIXEL \
-   column.tranmap[(*dest<<8)+colormap[source[(frac>>FRACBITS) & heightmask]]]
+   column.tranmap[(*dest << destshift) + (colormap[source[(frac>>FRACBITS) & heightmask]] << sourceshift)]
 
+template<int destshift, int sourceshift>
 void CB_DrawTLColumn_8(cb_column_t &column)
 {
    int count;
@@ -427,7 +429,7 @@ void CB_DrawTLColumn_8(cb_column_t &column)
 
          do
          {
-            *dest = column.tranmap[(*dest<<8) + colormap[source[frac>>FRACBITS]]]; // phares
+            *dest = column.tranmap[(*dest << destshift) + (colormap[source[frac >> FRACBITS]] << sourceshift)]; // phares
             dest += 1;          // killough 11/98
             if((frac += fracstep) >= heightmask)
                frac -= heightmask;
@@ -454,15 +456,16 @@ void CB_DrawTLColumn_8(cb_column_t &column)
 #undef SRCPIXEL
 
 #define SRCPIXEL \
-   column.tranmap[(*dest<<8) + colormap[column.translation[source[frac>>FRACBITS]]]]
+   column.tranmap[(*dest << destshift) + (colormap[column.translation[source[frac >> FRACBITS]]] << sourceshift)]
 
 #define SRCPIXEL_MASK \
-   column.tranmap[(*dest<<8) + \
-      colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]]
+   column.tranmap[(*dest << destshift) + \
+      (colormap[column.translation[source[(frac >> FRACBITS) & heightmask]]] << sourceshift)]
 
 //
 // haleyjd 02/08/05: BOOM TL/Tlated was neglected.
 //
+template<int destshift, int sourceshift>
 void CB_DrawTLTRColumn_8(cb_column_t &column)
 {
    int count;
@@ -1178,9 +1181,9 @@ columndrawer_t r_normal_drawer =
    CB_DrawColumn_8,
    CB_DrawSkyColumn_8,
    CB_DrawNewSkyColumn_8,
-   CB_DrawTLColumn_8,
+   CB_DrawTLColumn_8<8, 0>,
    CB_DrawTRColumn_8,
-   CB_DrawTLTRColumn_8,
+   CB_DrawTLTRColumn_8<8, 0>,
    CB_DrawFuzzColumn_8,
    CB_DrawFlexColumn_8,
    CB_DrawFlexTRColumn_8,
@@ -1191,12 +1194,13 @@ columndrawer_t r_normal_drawer =
 
    {
       // Normal              Translated
-      { CB_DrawColumn_8,     CB_DrawTRColumn_8     }, // NORMAL
-      { CB_DrawFuzzColumn_8, CB_DrawFuzzColumn_8   }, // SHADOW
-      { CB_DrawFlexColumn_8, CB_DrawFlexTRColumn_8 }, // ALPHA
-      { CB_DrawAddColumn_8,  CB_DrawAddTRColumn_8  }, // ADD
-      { CB_DrawTLColumn_8,   CB_DrawTLTRColumn_8   }, // SUB
-      { CB_DrawTLColumn_8,   CB_DrawTLTRColumn_8   }, // TRANMAP
+      { CB_DrawColumn_8,         CB_DrawTRColumn_8          }, // NORMAL
+      { CB_DrawFuzzColumn_8,     CB_DrawFuzzColumn_8        }, // SHADOW
+      { CB_DrawFlexColumn_8,     CB_DrawFlexTRColumn_8      }, // ALPHA
+      { CB_DrawAddColumn_8,      CB_DrawAddTRColumn_8       }, // ADD
+      { CB_DrawTLColumn_8<8, 0>, CB_DrawTLTRColumn_8<8, 0>  }, // SUB
+      { CB_DrawTLColumn_8<8, 0>, CB_DrawTLTRColumn_8<8, 0>  }, // TRANMAP
+      { CB_DrawTLColumn_8<0, 8>, CB_DrawTLTRColumn_8<0, 8>  }, // TRANMAP_INVERSE
    },
 };
 
@@ -1262,6 +1266,12 @@ void R_InitTranslationTables()
       rTintTableIndex = -1;   // bad length
    else if(rTintTableIndex != -1)
       wGlobalDir.cacheLumpNum(rTintTableIndex, PU_CACHE);
+
+   rXLATableIndex = wGlobalDir.checkNumForName("XLATAB");
+   if(rXLATableIndex != -1 && wGlobalDir.lumpLength(rXLATableIndex) < 256 * 256)
+      rXLATableIndex = -1;   // bad length
+   else if(rXLATableIndex != -1)
+      wGlobalDir.cacheLumpNum(rXLATableIndex, PU_CACHE);
 }
 
 //

@@ -51,12 +51,13 @@ extern rrect_t viewwindow;
 // haleyjd 01/22/11: vissprite drawstyles
 enum
 {
-   VS_DRAWSTYLE_NORMAL,  // Normal
-   VS_DRAWSTYLE_SHADOW,  // Spectre draw
-   VS_DRAWSTYLE_ALPHA,   // Flex translucent
-   VS_DRAWSTYLE_ADD,     // Additive flex translucent
-   VS_DRAWSTYLE_SUB,     // Static SUBMAP translucent
-   VS_DRAWSTYLE_TRANMAP, // Static TRANMAP translucent
+   VS_DRAWSTYLE_NORMAL,          // Normal
+   VS_DRAWSTYLE_SHADOW,          // Spectre draw
+   VS_DRAWSTYLE_ALPHA,           // Flex translucent
+   VS_DRAWSTYLE_ADD,             // Additive flex translucent
+   VS_DRAWSTYLE_SUB,             // Static SUBMAP translucent
+   VS_DRAWSTYLE_TRANMAP,         // Static TRANMAP translucent
+   VS_DRAWSTYLE_TRANMAP_INVERSE, // Static TRANMAP translucent (inverse lookup)
    VS_NUMSTYLES
 };
 
@@ -100,6 +101,7 @@ void R_VideoEraseScaled(unsigned int x, unsigned int y, unsigned int w, unsigned
 extern byte **translationtables; // haleyjd 01/12/04: now ptr-to-ptr
 
 extern int rTintTableIndex;   // check if we have a TINTTAB lump in the directory
+extern int rXLATableIndex;    // check if we have an XLATAB lump in the directory
 
 // haleyjd 06/22/08: Span styles enumeration
 enum
