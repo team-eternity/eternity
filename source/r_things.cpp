@@ -1313,8 +1313,6 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
       vis->colormap = spritelights[index];
    }
 
-   vis->drawstyle = VS_DRAWSTYLE_NORMAL;
-
    vis->drawstyle = R_getDrawStyle(thing, &vis->tranmaplump);
 }
 
