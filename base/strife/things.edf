@@ -2700,7 +2700,7 @@ thingtype BloodDeath : Mobj
   "@
 }
 
-thingtype TFog : Mobj
+thingtype StrifeTeleFog : Mobj
 {
   //speakerid/conversationid 118
 
@@ -2714,7 +2714,7 @@ thingtype TFog : Mobj
   "@
 }
 
-thingtype IFog : Mobj
+thingtype StrifeItemFog : Mobj
 {
   //speakerid/conversationid 119
 

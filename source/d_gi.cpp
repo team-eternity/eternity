@@ -2049,7 +2049,7 @@ static gamemodeinfo_t giStrifeReg =
    1,                // numEpisodes
    NullExitRules,    // exitRules
    "BulletPuff",     // puffType
-   "DoomTeleFog",    // teleFogType
+   "StrifeTeleFog",  // teleFogType
    0,                // teleFogHeight
    sfx_stelept,      // teleSound
    100,              // thrustFactor
