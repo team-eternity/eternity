@@ -839,9 +839,14 @@ bool MN_Responder(event_t *ev)
    if(ev->type == ev_keydown && input_command)
    {
       if(action == ka_menu_toggle) // cancel input
+      {
+         mn_lastSelectTic = mn_lastScrollTic = gametic;
          input_command = nullptr;
+      }
       else if(action == ka_menu_confirm)
       {
+         mn_lastSelectTic = mn_lastScrollTic = gametic;
+
          if(input_buffer.length() || (input_command->flags & cf_allowblank))
          {
             if(input_buffer.length())
@@ -1024,6 +1029,8 @@ bool MN_Responder(event_t *ev)
    
    if(action == ka_menu_confirm)
    {
+      mn_lastSelectTic = mn_lastScrollTic = gametic;
+
       menuitem_t *menuItem      = &current_menu->menuitems[current_menu->selected];
       MenuItem   *menuItemClass = MenuItemInstanceForType[menuItem->type];
      

@@ -174,21 +174,44 @@ static void MN_truncateInput(qstring &qstr, int x)
 }
 
 //
-// MN_truncateValue
+// As MN_truncateValue but it purely truncates, no dots
+//
+static void MN_truncateValueNoDots(qstring &qstr, int x)
+{
+   const int width = MN_StringWidth(qstr.constPtr());
+
+   if(x + width > SCREENWIDTH) // too wide to fit?
+   {
+      const char *start = qstr.constPtr();
+      const char *end   = qstr.bufferAt(qstr.length());
+
+      int subbed_width = 0;
+      while(end != start && (x + width - subbed_width > SCREENWIDTH))
+      {
+         subbed_width += V_FontCharWidth(menu_font, *end);
+         --end;
+      }
+
+      // truncate the value at end position, and concatenate dots
+      if(end != start)
+         qstr.truncate(end - start);
+   }
+}
+
 //
 // haleyjd 10/18/10: Avoid long values going off screen, as it is unsightly
 //
 static void MN_truncateValue(qstring &qstr, int x)
 {
    int width = MN_StringWidth(qstr.constPtr());
-   
-   if(x + width > SCREENWIDTH - 8) // too wide to fit?
-   {
-      int subbed_width = 0;
-      int leftbound = (SCREENWIDTH - 8) - MN_StringWidth("...");
-      const char *start = qstr.constPtr();
-      const char *end   = qstr.bufferAt(qstr.length() - 1);
 
+   if(x + width > SCREENWIDTH) // too wide to fit?
+   {
+      const char *start     = qstr.constPtr();
+      const char *end       = qstr.bufferAt(qstr.length());
+      const int   leftbound = SCREENWIDTH - MN_StringWidth("...");
+
+      int subbed_width = 0;
       while(end != start && (x + width - subbed_width > leftbound))
       {
          subbed_width += V_FontCharWidth(menu_font, *end);
@@ -202,6 +225,36 @@ static void MN_truncateValue(qstring &qstr, int x)
          qstr += "...";
       }
    }
+}
+
+//
+// Scroll a value that goes of the screen but we want to see all of
+//
+void MN_scrollValue(qstring &qstr, const int x)
+{
+   const int valueWidth  = MN_StringWidth(qstr.constPtr());
+   const int textOverrun = emax(int(ceilf(float((x + valueWidth) - SCREENWIDTH) / menu_font->cw)), 0);
+   if(textOverrun)
+   {
+      int textOffset = emax((gametic - (mn_lastSelectTic + TICRATE)) / 12, 0);
+      if(textOffset > textOverrun)
+      {
+         textOffset = textOverrun;
+         if(gametic - mn_lastScrollTic > TICRATE * 2)
+         {
+            mn_lastSelectTic = gametic;
+            mn_lastScrollTic = gametic;
+         }
+
+      }
+      else
+         mn_lastScrollTic = gametic;
+
+      if(textOffset)
+         qstr.erase(0, textOffset);
+   }
+
+   MN_truncateValueNoDots(qstr, x);
 }
 
 // sliders
@@ -523,10 +576,8 @@ public:
 
 
       // display input buffer if inputting new var value
-      int textOffset;
       if(input_command && item->var == input_command->variable)
       {
-         textOffset = 0;
          varvalue = MN_GetInputBuffer();
          varvalue += '_';
          MN_truncateInput(varvalue, x);
@@ -534,32 +585,14 @@ public:
       else
       {
          varvalue = C_VariableStringValue(item->var);
-
-         // scroll the variable text if necessary
-         const int varWidth    = V_FontStringWidth(menu_font, varvalue.constPtr());
-         const int textOverrun = emax(int(ceilf(float((x + varWidth) - subscreen43.unscaledw) / menu_font->cw)), 0);
-         if(selected && textOverrun)
-         {
-            textOffset = emax((gametic - (mn_lastSelectTic + TICRATE)) / 12, 0);
-            if(textOffset > textOverrun)
-            {
-               textOffset = textOverrun;
-               if(gametic - mn_lastScrollTic > TICRATE * 2)
-               {
-                  mn_lastSelectTic = gametic;
-                  mn_lastScrollTic = gametic;
-               }
-
-            }
-            else
-               mn_lastScrollTic = gametic;
-         }
+         if(selected)
+            MN_scrollValue(varvalue, x);
          else
-            textOffset = 0;
+            MN_truncateValue(varvalue, x);
       }
 
       // draw it
-      MN_WriteTextColored(varvalue.bufferAt(textOffset), color, x, y);
+      MN_WriteTextColored(varvalue.constPtr(), color, x, y);
    }
 
    virtual void onConfirm(menuitem_t *item) override
@@ -1006,31 +1039,13 @@ public:
       if(alignment == ALIGNMENT_LEFT)
          x += desc_width;
 
-      // scroll the binding text if necessary
-      const int bindWidth   = V_FontStringWidth(menu_font, boundkeys.constPtr());
-      const int textOverrun = emax(int(ceilf(float((x + bindWidth) - subscreen43.unscaledw) / menu_font->cw)), 0);
-      int textOffset;
-      if(selected && textOverrun)
-      {
-         textOffset = emax((gametic - (mn_lastSelectTic + TICRATE)) / 12, 0);
-         if(textOffset > textOverrun)
-         {
-            textOffset = textOverrun;
-            if(gametic - mn_lastScrollTic > TICRATE * 2)
-            {
-               mn_lastSelectTic = gametic;
-               mn_lastScrollTic = gametic;
-            }
-
-         }
-         else
-            mn_lastScrollTic = gametic;
-      }
+      if(selected)
+         MN_scrollValue(boundkeys, x);
       else
-         textOffset = 0;
+         MN_truncateValue(boundkeys, x);
 
       // write variable value text
-      MN_WriteTextColored(boundkeys.bufferAt(textOffset), color, x, y);
+      MN_WriteTextColored(boundkeys.constPtr(), color, x, y);
    }
 
    virtual void onConfirm(menuitem_t *item) override
