@@ -90,6 +90,10 @@ vfont_t *menu_font_normal;
 char *mn_background;
 const char *mn_background_flat;
 
+// scrolling text
+int mn_lastSelectTic = 0;
+int mn_lastScrollTic = 0;
+
 //=============================================================================
 //
 // Static Declarations and Data
@@ -935,6 +939,8 @@ bool MN_Responder(event_t *ev)
 
    if(action == ka_menu_up)
    {
+      mn_lastSelectTic = mn_lastScrollTic = gametic;
+
       bool cancelsnd = false;
 
       // skip gaps
@@ -979,6 +985,8 @@ bool MN_Responder(event_t *ev)
   
    if(action == ka_menu_down)
    {
+      mn_lastSelectTic = mn_lastScrollTic = gametic;
+
       bool cancelsnd = false;
       
       do
@@ -1128,6 +1136,7 @@ bool MN_Responder(event_t *ev)
             {
                // found a matching item!
                current_menu->selected = n;
+               mn_lastSelectTic = mn_lastScrollTic = gametic;
                return true; // eat key
             }
          }
@@ -1163,6 +1172,8 @@ void MN_ActivateMenu()
 //
 void MN_StartMenu(menu_t *menu)
 {
+   mn_lastSelectTic = mn_lastScrollTic = gametic;
+
    if(!menuactive)
    {
       MN_ActivateMenu();
@@ -1198,6 +1209,8 @@ void MN_StartMenu(menu_t *menu)
 //
 static void MN_PageMenu(menu_t *newpage)
 {
+   mn_lastSelectTic = mn_lastScrollTic = gametic;
+
    if(!menuactive)
       return;
 
@@ -1220,6 +1233,8 @@ static void MN_PageMenu(menu_t *newpage)
 //
 void MN_PrevMenu()
 {
+   mn_lastSelectTic = mn_lastScrollTic = gametic;
+
    if(--menu_history_num < 0)
       MN_ClearMenus();
    else

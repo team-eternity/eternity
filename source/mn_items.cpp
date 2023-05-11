@@ -496,6 +496,72 @@ public:
       }
    }
 
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
+   {
+      qstring varvalue;
+      int x = item->x;
+      int y = item->y;
+
+      if(drawing_menu->flags & mf_background)
+      {
+         // include gap on fullscreen menus
+         if(item->flags & MENUITEM_LALIGNED)
+            x = 8 + drawing_menu->widest_width + 16; // haleyjd: use widest_width
+         else
+            x += MENU_GAP_SIZE;
+
+         // adjust colour for different coloured variables
+         if(color == GameModeInfo->unselectColor)
+            color = GameModeInfo->variableColor;
+      }
+
+      if(alignment == ALIGNMENT_LEFT)
+         x += desc_width;
+
+      // create variable description; use console variable descriptions.
+      MN_GetItemVariable(item);
+
+
+      // display input buffer if inputting new var value
+      int textOffset;
+      if(input_command && item->var == input_command->variable)
+      {
+         textOffset = 0;
+         varvalue = MN_GetInputBuffer();
+         varvalue += '_';
+         MN_truncateInput(varvalue, x);
+      }
+      else
+      {
+         varvalue = C_VariableStringValue(item->var);
+
+         // scroll the variable text if necessary
+         const int varWidth    = V_FontStringWidth(menu_font, varvalue.constPtr());
+         const int textOverrun = emax(int(ceilf(float((x + varWidth) - subscreen43.unscaledw) / menu_font->cw)), 0);
+         if(color == GameModeInfo->selectColor && textOverrun)
+         {
+            textOffset = emax((gametic - (mn_lastSelectTic + TICRATE)) / 12, 0);
+            if(textOffset > textOverrun)
+            {
+               textOffset = textOverrun;
+               if(gametic - mn_lastScrollTic > TICRATE * 2)
+               {
+                  mn_lastSelectTic = gametic;
+                  mn_lastScrollTic = gametic;
+               }
+
+            }
+            else
+               mn_lastScrollTic = gametic;
+         }
+         else
+            textOffset = 0;
+      }
+
+      // draw it
+      MN_WriteTextColored(varvalue.bufferAt(textOffset), color, x, y);
+   }
+
    virtual void onConfirm(menuitem_t *item) override
    {
       qstring &input_buffer = MN_GetInputBuffer();
@@ -921,21 +987,9 @@ public:
 
    virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
    {
-      static menuitem_t *lastItem;
-      static int         lastChangeTic;
-      static int         lastScrollTic;
-
       qstring boundkeys;
       int x = item->x;
       int y = item->y;
-
-      // new selected binding
-      if(color == GameModeInfo->selectColor && lastItem != item)
-      {
-         lastItem      = item;
-         lastChangeTic = gametic;
-         lastScrollTic = gametic;
-      }
 
       G_BoundKeys(item->data, boundkeys);
 
@@ -958,19 +1012,19 @@ public:
       int textOffset;
       if(color == GameModeInfo->selectColor && textOverrun)
       {
-         textOffset = emax((gametic - (lastChangeTic + TICRATE)) / 12, 0);
+         textOffset = emax((gametic - (mn_lastSelectTic + TICRATE)) / 12, 0);
          if(textOffset > textOverrun)
          {
             textOffset = textOverrun;
-            if(gametic - lastScrollTic > TICRATE * 2)
+            if(gametic - mn_lastScrollTic > TICRATE * 2)
             {
-               lastChangeTic = gametic;
-               lastScrollTic = gametic;
+               mn_lastSelectTic = gametic;
+               mn_lastScrollTic = gametic;
             }
 
          }
          else
-            lastScrollTic = gametic;
+            mn_lastScrollTic = gametic;
       }
       else
          textOffset = 0;
