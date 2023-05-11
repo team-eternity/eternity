@@ -2726,7 +2726,7 @@ static void MN_HUDPg2Drawer(void)
 
    if(patch)
    {
-      VBuffer &buffer = crosshair_scale ? vbscreenfullres : subscreen43;
+      VBuffer &buffer = crosshair_scale ? subscreen43 : vbscreenfullres;
 
       const int16_t w  = patch->width;
       const int16_t h  = patch->height;
