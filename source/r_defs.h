@@ -668,6 +668,7 @@ struct rslope_t
 struct visplane_t
 {
    visplane_t *next;        // Next visplane in hash chain -- killough
+   int         chainnum;    // The index of this visplane's hash chain, for optimisation
    int picnum, lightlevel, minx, maxx;
    fixed_t height;
    const lighttable_t *const (*colormap)[MAXLIGHTZ];
