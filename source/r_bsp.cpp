@@ -502,7 +502,7 @@ endclosed:
 //
 // Get surface light level based on rules
 //
-int R_GetSurfaceLightLevel(surf_e surf, const sector_t *sec)
+int R_GetSurfaceLightLevel(surf_e surf, const rendersector_t *sec)
 {
    return (sec->flags & secf_surfLightAbsolute[surf] ? 0 : sec->srf[surf].lightsec == -1 ?
       sec->lightlevel : sectors[sec->srf[surf].lightsec].lightlevel) + sec->srf[surf].lightdelta;
@@ -523,8 +523,8 @@ int R_GetSurfaceLightLevel(surf_e surf, const sector_t *sec)
 
 extern camera_t *camera; // haleyjd
 
-const sector_t *R_FakeFlat(const fixed_t viewz, const sector_t *sec, sector_t *tempsec,
-                           int *floorlightlevel, int *ceilinglightlevel, bool back)
+const rendersector_t *R_FakeFlat(const fixed_t viewz, const rendersector_t *sec, rendersector_t *tempsec,
+                                 int *floorlightlevel, int *ceilinglightlevel, bool back)
 {
    if(!sec)
       return nullptr;
@@ -2282,7 +2282,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 {
    const portalrender_t &portalrender = portalcontext.portalrender;
 
-   static thread_local sector_t tempsec;
+   static thread_local rendersector_t tempsec;
 
    float x1, x2;
    float i1, i2, pstep;
@@ -2911,7 +2911,7 @@ static void R_subsector(rendercontext_t &context, const int num)
 
    const portalrender_t &portalrender = portalcontext.portalrender;
 
-   static thread_local sector_t tempsec; // killough 3/7/98: deep water hack
+   static thread_local rendersector_t tempsec; // killough 3/7/98: deep water hack
 
    int                count;
    const seg_t       *line;

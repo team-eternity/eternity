@@ -66,7 +66,7 @@ void R_FinishMappingLines()
 void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
                             const fixed_t viewz, drawseg_t *ds, int x1, int x2)
 {
-   static thread_local sector_t tempsec; // killough 4/13/98
+   static thread_local rendersector_t tempsec; // killough 4/13/98
 
    const texcol_t *col;
    int      lightnum;

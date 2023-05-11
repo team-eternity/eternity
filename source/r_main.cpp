@@ -1199,7 +1199,7 @@ bool r_boomcolormaps;
 //
 // Get sector colormap based on the view area constant
 //
-static int R_getSectorColormap(const sector_t &sector, ViewArea viewarea)
+static int R_getSectorColormap(const rendersector_t &sector, ViewArea viewarea)
 {
    switch(viewarea)
    {
@@ -1218,7 +1218,7 @@ static int R_getSectorColormap(const sector_t &sector, ViewArea viewarea)
 // instead of from its heightsec if it has one (heightsec colormaps are
 // transferred to their affected sectors at level setup now).
 //
-void R_SectorColormap(cmapcontext_t &context, const fixed_t viewz, const sector_t *s)
+void R_SectorColormap(cmapcontext_t &context, const fixed_t viewz, const rendersector_t *s)
 {
    int colormapIndex = 0;
    bool boomStyleOverride = false;

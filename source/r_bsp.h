@@ -38,6 +38,7 @@ struct portalrender_t;
 struct cbviewpoint_t;
 struct rendercontext_t;
 struct rpolynode_t;
+struct rendersector_t;
 
 // SoM: mark a range of the screen as being solid (closed).
 // these marks are then added to the solidsegs list by R_addLine after all segments
@@ -58,8 +59,8 @@ void R_PreRenderBSP();
 void R_RenderBSPNode(rendercontext_t &context, int bspnum);
 
 // killough 4/13/98: fake floors/ceilings for deep water / fake ceilings:
-int R_GetSurfaceLightLevel(surf_e surf, const sector_t *sec);
-const sector_t *R_FakeFlat(const fixed_t, const sector_t *, sector_t *, int *, int *, bool);
+int R_GetSurfaceLightLevel(surf_e surf, const rendersector_t *sec);
+const rendersector_t *R_FakeFlat(const fixed_t, const rendersector_t *, rendersector_t *, int *, int *, bool);
 int R_FakeFlatSpriteLighting(const fixed_t viewz, const sector_t *sec);
 bool R_PickNearestBoxLines(const cbviewpoint_t &cb_viewpoint,
                            const float fbox[4], windowlinegen_t &linegen1,
