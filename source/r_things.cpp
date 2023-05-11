@@ -2136,7 +2136,8 @@ void R_DrawPostBSP(rendercontext_t &context)
                   clone.gy -= masked->parentdelta.y;
                   clone.gz -= masked->parentdelta.z;
                   clone.gzt -= masked->parentdelta.z;
-                  clone.sector = eindex(R_PointInSubsector(clone.gx, clone.gy)->sector - sectors);
+                  // NOTE: keep the same sector as the original! sector is only used for sector 
+                  // portal sprite clipping, and we want the same clipping in case of edge portals!
                   clones.add(clone);
                }
             }
