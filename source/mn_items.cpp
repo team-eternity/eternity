@@ -28,7 +28,9 @@
 #include "c_runcmd.h"
 #include "d_dehtbl.h"
 #include "d_gi.h"
+#include "doomstat.h"
 #include "g_bind.h"
+#include "m_compare.h"
 #include "m_qstr.h"
 #include "mn_engin.h"
 #include "mn_items.h"
@@ -919,9 +921,21 @@ public:
 
    virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
    {
+      static menuitem_t *lastItem;
+      static int         lastChangeTic;
+      static int         lastScrollTic;
+
       qstring boundkeys;
       int x = item->x;
       int y = item->y;
+
+      // new selected binding
+      if(color == GameModeInfo->selectColor && lastItem != item)
+      {
+         lastItem      = item;
+         lastChangeTic = gametic;
+         lastScrollTic = gametic;
+      }
 
       G_BoundKeys(item->data, boundkeys);
 
@@ -935,9 +949,34 @@ public:
             color = GameModeInfo->variableColor;
       }
 
+      if(alignment == ALIGNMENT_LEFT)
+         x += desc_width;
+
+      // scroll the binding text if necessary
+      const int bindWidth   = V_FontStringWidth(menu_font, boundkeys.constPtr());
+      const int textOverrun = emax(int(ceilf(float((x + bindWidth) - subscreen43.unscaledw) / menu_font->cw)), 0);
+      int textOffset;
+      if(color == GameModeInfo->selectColor && textOverrun)
+      {
+         textOffset = emax((gametic - (lastChangeTic + TICRATE)) / 12, 0);
+         if(textOffset > textOverrun)
+         {
+            textOffset = textOverrun;
+            if(gametic - lastScrollTic > TICRATE * 2)
+            {
+               lastChangeTic = gametic;
+               lastScrollTic = gametic;
+            }
+
+         }
+         else
+            lastScrollTic = gametic;
+      }
+      else
+         textOffset = 0;
+
       // write variable value text
-      MN_WriteTextColored(boundkeys.constPtr(), color, 
-                          x + (alignment == ALIGNMENT_LEFT ? desc_width : 0), y);
+      MN_WriteTextColored(boundkeys.bufferAt(textOffset), color, x, y);
    }
 
    virtual void onConfirm(menuitem_t *item) override
