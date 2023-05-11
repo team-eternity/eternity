@@ -427,7 +427,7 @@ class MenuItemValued : public MenuItem
    DECLARE_RTTI_TYPE(MenuItemValued, MenuItem)
 
 public:
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) override
    {
       qstring varvalue;
       int x = item->x;
@@ -496,7 +496,7 @@ public:
       }
    }
 
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) override
    {
       qstring varvalue;
       int x = item->x;
@@ -538,7 +538,7 @@ public:
          // scroll the variable text if necessary
          const int varWidth    = V_FontStringWidth(menu_font, varvalue.constPtr());
          const int textOverrun = emax(int(ceilf(float((x + varWidth) - subscreen43.unscaledw) / menu_font->cw)), 0);
-         if(color == GameModeInfo->selectColor && textOverrun)
+         if(selected && textOverrun)
          {
             textOffset = emax((gametic - (mn_lastSelectTic + TICRATE)) / 12, 0);
             if(textOffset > textOverrun)
@@ -765,7 +765,7 @@ class MenuItemSlider : public MenuItemSlidable
    DECLARE_RTTI_TYPE(MenuItemSlider, MenuItemSlidable)
 
 public:
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) override
    {
       variable_t *var;
       int x = item->x;
@@ -850,7 +850,7 @@ public:
       return false;
    }
 
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) override
    {
       int x = item->x;
       int y = item->y;
@@ -889,7 +889,7 @@ public:
       // No cross patch for non-optional colours
    }
 
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) override
    {
       int ix = item->x;
       int iy = item->y;
@@ -985,7 +985,7 @@ public:
       }
    }
 
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) override
    {
       qstring boundkeys;
       int x = item->x;
@@ -1010,7 +1010,7 @@ public:
       const int bindWidth   = V_FontStringWidth(menu_font, boundkeys.constPtr());
       const int textOverrun = emax(int(ceilf(float((x + bindWidth) - subscreen43.unscaledw) / menu_font->cw)), 0);
       int textOffset;
-      if(color == GameModeInfo->selectColor && textOverrun)
+      if(selected && textOverrun)
       {
          textOffset = emax((gametic - (mn_lastSelectTic + TICRATE)) / 12, 0);
          if(textOffset > textOverrun)

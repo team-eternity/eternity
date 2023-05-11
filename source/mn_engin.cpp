@@ -273,11 +273,9 @@ static void MN_initializeMenu(menu_t *menu)
 }
 
 //
-// MN_DrawMenuItem
+// Draw a menu item. Returns the height in pixels
 //
-// draw a menu item. returns the height in pixels
-//
-static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
+static int MN_drawMenuItem(menuitem_t *item, int x, int y, int color, bool selected)
 {
    int desc_width = 0;
    int alignment;
@@ -308,7 +306,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
 
       return item_height;
    }
- 
+
    // draw an alternate patch?
 
    // haleyjd: gamemodes that use big menu font don't use pics, ever
@@ -318,7 +316,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
       // haleyjd 05/16/04: hack for traditional menu support;
       // this was hard-coded in the old system
       if(drawing_menu->flags & mf_emulated)
-         item_height = EMULATED_ITEM_SIZE; 
+         item_height = EMULATED_ITEM_SIZE;
 
       return item_height; // if returned true, we are done.
    }
@@ -327,7 +325,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
    menuItemClass->drawDescription(item, item_height, desc_width, alignment, color);
 
    // draw other data: variable data etc.
-   menuItemClass->drawData(item, color, alignment, desc_width);
+   menuItemClass->drawData(item, color, alignment, desc_width, selected);
 
    if(drawing_menu->flags & mf_emulated)
       item_height = EMULATED_ITEM_SIZE;
@@ -515,7 +513,7 @@ void MN_DrawMenu(menu_t *menu)
       }
       
       // draw item
-      item_height = MN_DrawMenuItem(mi, menu->x, y, item_color);
+      item_height = MN_drawMenuItem(mi, menu->x, y, item_color, menu->selected == itemnum);
       
       // if selected item, draw skull / pointer next to it
       if(menu->selected == itemnum)

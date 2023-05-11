@@ -46,7 +46,7 @@ public:
    virtual bool drawPatchForItem(menuitem_t *item, int &item_height, int alignment);
    virtual void drawDescription(menuitem_t *item, int &item_height, int &item_width,
                                 int alignment, int color);
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) {}
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) {}
    virtual const char *getHelpString(menuitem_t *item, char *msgbuffer) { return ""; }
    virtual void onConfirm(menuitem_t *item) {}
    virtual void onLeft(menuitem_t *item, bool altdown, bool shiftdown) {}
