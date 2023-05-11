@@ -3455,7 +3455,7 @@ static menuitem_t mn_function_items[] =
    {it_binding, "Quit",                 "mn_quit"},
    {it_binding, "Gamma correction",     "gamma /"},
    {it_gap},
-   {it_binding, "Join (-recordfromto)", "joindemo"},
+   {it_binding, "Join demo",            "joindemo"},
    {it_end}
 };
 
