@@ -3627,21 +3627,21 @@ static void G_BeginRecordingOld()
 }
 
 /*
-  haleyjd 06/17/01: new demo format changes
+   haleyjd 06/17/01: new demo format changes
 
-  1. The old version field is now always written as 255
-  2. The signature has been changed to the null-term'd string ETERN
-  3. The version and new subversion are written immediately following
+   1. The old version field is now always written as 255
+   2. The signature has been changed to the null-term'd string ETERN
+   3. The version and new subversion are written immediately following
      the signature
-  4. cmd->updownangle is now recorded and read back appropriately
+   4. cmd->updownangle is now recorded and read back appropriately
 
-  12/14/01:
-  5. gamemapname is recorded and will be used on loading demos
+   12/14/01:
+   5. gamemapname is recorded and will be used on loading demos
 
-  Note that the demo-reading code still handles the "sacred" formats
-  for DOOM, BOOM and MBF, so purists don't need to have heart attacks.
-  However, only new Eternity-format demos can be written, and these
-  will not be compatible with other engines.
+   Note that the demo-reading code still handles the "sacred" formats
+   for DOOM, BOOM and MBF, so purists don't need to have heart attacks.
+   However, only new Eternity-format demos can be written, and these
+   will not be compatible with other engines.
 */
 // NETCODE_FIXME -- DEMO_FIXME: Yet more demo writing.
 

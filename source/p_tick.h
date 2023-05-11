@@ -191,14 +191,14 @@ template<typename T> void P_ClearTarget(T *&mop)
 }
 
 // killough 8/29/98: threads of thinkers, for more efficient searches
-typedef enum 
+enum th_class
 {
-  th_delete,  // haleyjd 11/09/06: giant bug fix
-  th_misc,
-  th_friends,
-  th_enemies,
-  NUMTHCLASS
-} th_class;
+   th_delete,  // haleyjd 11/09/06: giant bug fix
+   th_misc,
+   th_friends,
+   th_enemies,
+   NUMTHCLASS
+};
 
 extern Thinker thinkerclasscap[];
 

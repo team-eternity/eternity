@@ -196,10 +196,10 @@ CONSOLE_COMMAND(delay, 0)
 
 CONSOLE_COMMAND(flood, 0)
 {
-  int a;
+   int a;
 
-  for(a = 0; a < 300; a++)
-    C_Printf("%c\n", a%64 + 32);
+   for(a = 0; a < 300; a++)
+      C_Printf("%c\n", a%64 + 32);
 }
 
 CONSOLE_COMMAND(quote, 0) {}

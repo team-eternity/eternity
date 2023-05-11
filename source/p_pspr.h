@@ -68,26 +68,26 @@ struct sfxinfo_t;
 // coordinates are given for a 320*200 view screen.
 //
 
-typedef enum
+enum psprnum_t
 {
-  ps_weapon,
-  ps_flash,
-  NUMPSPRITES
-} psprnum_t;
+   ps_weapon,
+   ps_flash,
+   NUMPSPRITES
+};
 
 struct pspdef_t
 {
-  state_t *state;       // a nullptr state means not active
-  int     tics;
-  v2fixed_t prevpos;
-  v2fixed_t playpos;
-  v2fixed_t renderpos;
-  int trans;
+   state_t *state;       // a nullptr state means not active
+   int     tics;
+   v2fixed_t prevpos;
+   v2fixed_t playpos;
+   v2fixed_t renderpos;
+   int trans;
 
-  void backupPosition()
-  {
-     prevpos = renderpos;
-  }
+   void backupPosition()
+   {
+      prevpos = renderpos;
+   }
 };
 
 int P_WeaponPreferred(int w1, int w2);

@@ -930,10 +930,10 @@ static void do_draw_newsky(cmapcontext_t &context, ZoneHeap &heap, const angle_t
 }
 
 // Log base 2 LUT
-static const int MultiplyDeBruijnBitPosition2[32] = 
+static const int MultiplyDeBruijnBitPosition2[32] =
 {
-  0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 
-  31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
+   0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
+   31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
 };
 
 //

@@ -400,7 +400,7 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
 
 // restart map (shorthand for doing the map command to the same level)
 
-CONSOLE_NETCMD(restartmap, cf_server, netcmd_restartmap)
+CONSOLE_NETCMD(restartmap, cf_server|cf_level, netcmd_restartmap)
 {
    G_DeferedInitNew(gameskill, gamemapname);
 }
@@ -773,35 +773,35 @@ void G_AddAutoloadFiles()
 // names given to cmds
 const char *comp_strings[] =
 {
-  "telefrag",
-  "dropoff",
-  "vile",
-  "pain",
-  "skull",
-  "blazing",
-  "doorlight",
-  "model",
-  "god",
-  "falloff",
-  "floors",
-  "skymap",
-  "pursuit",
-  "doorstuck",
-  "staylift",
-  "zombie",
-  "stairs",
-  "infcheat",
-  "zerotags",
-  "terrain",    // haleyjd: TerrainTypes
-  "respawnfix", //          Nightmare respawn location fix
-  "fallingdmg", //          Players take falling damage
-  "soul",       //          Lost soul bouncing
-  "theights",   //          Thing heights fix
-  "overunder",  //          10/19/02: z checking
-  "planeshoot", //          09/22/07: plane shooting
-  "special",    //          08/29/09: special failure behavior
-  "ninja",      //          04/18/10: ninja spawn
-  "aircontrol"
+   "telefrag",
+   "dropoff",
+   "vile",
+   "pain",
+   "skull",
+   "blazing",
+   "doorlight",
+   "model",
+   "god",
+   "falloff",
+   "floors",
+   "skymap",
+   "pursuit",
+   "doorstuck",
+   "staylift",
+   "zombie",
+   "stairs",
+   "infcheat",
+   "zerotags",
+   "terrain",    // haleyjd: TerrainTypes
+   "respawnfix", //          Nightmare respawn location fix
+   "fallingdmg", //          Players take falling damage
+   "soul",       //          Lost soul bouncing
+   "theights",   //          Thing heights fix
+   "overunder",  //          10/19/02: z checking
+   "planeshoot", //          09/22/07: plane shooting
+   "special",    //          08/29/09: special failure behavior
+   "ninja",      //          04/18/10: ninja spawn
+   "aircontrol"
 };
 
 static void Handler_CompTHeights()

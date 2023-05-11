@@ -203,46 +203,46 @@ struct variable_t;
 // cmdtype values
 enum
 {
-  c_typed,        // typed at console
-  c_menu,
-  c_netcmd,
-  c_script,	  // haleyjd: started by command script
-  C_CMDTYPES
+   c_typed,        // typed at console
+   c_menu,
+   c_netcmd,
+   c_script,	  // haleyjd: started by command script
+   C_CMDTYPES
 };
 
 // command type
 enum
 {
-  ct_command,
-  ct_variable,
-  ct_constant,
-  ct_end
+   ct_command,
+   ct_variable,
+   ct_constant,
+   ct_end
 };
 
 // command flags
 enum
 {
-  cf_notnet       = 0x001, // not in netgames
-  cf_netonly      = 0x002, // only in netgames
-  cf_server       = 0x004, // server only 
-  cf_handlerset   = 0x008, // if set, the handler sets the variable,
-                           // not c_runcmd.c itself
-  cf_netvar       = 0x010, // sync with other pcs
-  cf_level        = 0x020, // only works in levels
-  cf_hidden       = 0x040, // hidden in cmdlist
-  cf_buffered     = 0x080, // buffer command: wait til all screen
-                           // rendered before running command
-  cf_allowblank   = 0x100, // string variable allows empty value
+   cf_notnet       = 0x001, // not in netgames
+   cf_netonly      = 0x002, // only in netgames
+   cf_server       = 0x004, // server only
+   cf_handlerset   = 0x008, // if set, the handler sets the variable,
+                            // not c_runcmd.c itself
+   cf_netvar       = 0x010, // sync with other pcs
+   cf_level        = 0x020, // only works in levels
+   cf_hidden       = 0x040, // hidden in cmdlist
+   cf_buffered     = 0x080, // buffer command: wait til all screen
+                            // rendered before running command
+   cf_allowblank   = 0x100, // string variable allows empty value
 };
 
 // variable types
 enum
 {
-  vt_int,       // normal integer 
-  vt_float,     // decimal
-  vt_string,    // string
-  vt_chararray, // char array -- haleyjd 03/13/06
-  vt_toggle     // boolean (for real bool-type variables)
+   vt_int,       // normal integer
+   vt_float,     // decimal
+   vt_string,    // string
+   vt_chararray, // char array -- haleyjd 03/13/06
+   vt_toggle     // boolean (for real bool-type variables)
 };
 
 //=============================================================================
@@ -305,36 +305,36 @@ struct variable_t
    }
 
 
-  void *variable;        // NB: for strings, this is char ** not char *
-  void *v_default;       // the default 
-  int type;              // vt_?? variable type: int, string
-  int min;               // minimum value or string length
-  int max;               // maximum value/length
-  const char **defines;  // strings representing the value: eg "on" not "1"
-  double dmin;           // haleyjd 04/21/10: min for double vars
-  double dmax;           //                   max for double vars
-  
-  default_t *cfgDefault; // haleyjd 07/04/10: pointer to config default
-  command_t *command;           // haleyjd 08/15/10: parent command
+   void *variable;        // NB: for strings, this is char ** not char *
+   void *v_default;       // the default
+   int type;              // vt_?? variable type: int, string
+   int min;               // minimum value or string length
+   int max;               // maximum value/length
+   const char **defines;  // strings representing the value: eg "on" not "1"
+   double dmin;           // haleyjd 04/21/10: min for double vars
+   double dmax;           //                   max for double vars
+
+   default_t *cfgDefault; // haleyjd 07/04/10: pointer to config default
+   command_t *command;           // haleyjd 08/15/10: parent command
 };
 
 struct command_t
 {
-  const char *name;
-  int type;              // ct_?? command type
-  int flags;             // cf_??
-  variable_t *variable;
-  void (*handler)(void); // handler
-  int netcmd;            // network command number
-  command_t *next;       // for hashing
+   const char *name;
+   int type;              // ct_?? command type
+   int flags;             // cf_??
+   variable_t *variable;
+   void (*handler)(void); // handler
+   int netcmd;            // network command number
+   command_t *next;       // for hashing
 };
 
 struct alias_t
 {
-  char *name;
-  char *command;
-  
-  alias_t *next; // haleyjd 04/14/03
+   char *name;
+   char *command;
+
+   alias_t *next; // haleyjd 04/14/03
 };
 
 //=============================================================================

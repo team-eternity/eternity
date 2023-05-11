@@ -1338,7 +1338,7 @@ static void ST_unloadGraphics()
 
 void ST_unloadData()
 {
-  ST_unloadGraphics();
+   ST_unloadGraphics();
 }
 
 #endif

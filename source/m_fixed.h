@@ -64,7 +64,7 @@ inline static int D_abs(int x)
 //
 inline static fixed_t FixedMul(fixed_t a, fixed_t b)
 {
-  return (fixed_t)((int64_t) a*b >> FRACBITS);
+   return (fixed_t)((int64_t) a*b >> FRACBITS);
 }
 
 //
@@ -72,8 +72,8 @@ inline static fixed_t FixedMul(fixed_t a, fixed_t b)
 //
 inline static fixed_t FixedDiv(fixed_t a, fixed_t b)
 {
-  return (D_abs(a)>>14) >= D_abs(b) ? ((a^b)>>31) ^ D_MAXINT :
-    (fixed_t)(((int64_t) a << FRACBITS) / b);
+   return (D_abs(a)>>14) >= D_abs(b) ? ((a^b)>>31) ^ D_MAXINT :
+      (fixed_t)(((int64_t) a << FRACBITS) / b);
 }
 
 // SoM: this is only the case for 16.16 bit fixed point. If a different 

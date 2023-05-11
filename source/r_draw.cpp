@@ -84,13 +84,13 @@ static constexpr int FUZZTABLE = 50;
 
 static constexpr int fuzzoffset[FUZZTABLE] =
 {
-  1,0,1,0,1,1,0,
-  1,1,0,1,1,1,0,
-  1,1,1,0,0,0,0,
-  1,0,0,1,1,1,1,0,
-  1,0,1,1,0,0,1,
-  1,0,0,0,0,1,1,
-  1,1,0,1,1,0,1
+   1,0,1,0,1,1,0,
+   1,1,0,1,1,1,0,
+   1,1,1,0,0,0,0,
+   1,0,0,1,1,1,1,0,
+   1,0,1,1,0,0,1,
+   1,0,0,0,0,1,1,
+   1,1,0,1,1,0,1
 };
 
 // One value per column. Inherently thread-safe for column drawing,
@@ -1260,6 +1260,8 @@ void R_InitTranslationTables()
    rTintTableIndex = wGlobalDir.checkNumForName("TINTTAB");
    if(rTintTableIndex != -1 && wGlobalDir.lumpLength(rTintTableIndex) < 256 * 256)
       rTintTableIndex = -1;   // bad length
+   else if(rTintTableIndex != -1)
+      wGlobalDir.cacheLumpNum(rTintTableIndex, PU_CACHE);
 }
 
 //

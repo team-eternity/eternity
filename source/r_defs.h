@@ -421,33 +421,33 @@ struct sector_t
 
 struct side_t
 {
-  fixed_t textureoffset; // add this to the calculated texture column
-  fixed_t rowoffset;     // add this to the calculated texture top
+   fixed_t textureoffset; // add this to the calculated texture column
+   fixed_t rowoffset;     // add this to the calculated texture top
 
-  // Texture indices. We do not maintain names here.
-  int16_t toptexture;    // MUST BE CACHED IF MODIFIED AT RUNTIME
-  int16_t bottomtexture; // MUST BE CACHED IF MODIFIED AT RUNTIME
-  int16_t midtexture;    // MUST BE CACHED IF MODIFIED AT RUNTIME
+   // Texture indices. We do not maintain names here.
+   int16_t toptexture;    // MUST BE CACHED IF MODIFIED AT RUNTIME
+   int16_t bottomtexture; // MUST BE CACHED IF MODIFIED AT RUNTIME
+   int16_t midtexture;    // MUST BE CACHED IF MODIFIED AT RUNTIME
 
-  uint16_t intflags; // keep intflags here (we may also afford to edit "special")
-  sector_t* sector;      // Sector the SideDef is facing.
+   uint16_t intflags; // keep intflags here (we may also afford to edit "special")
+   sector_t* sector;      // Sector the SideDef is facing.
 
-  // killough 4/4/98, 4/11/98: highest referencing special linedef's type,
-  // or lump number of special effect. Allows texture names to be overloaded
-  // for other functions.
-  int special;
+   // killough 4/4/98, 4/11/98: highest referencing special linedef's type,
+   // or lump number of special effect. Allows texture names to be overloaded
+   // for other functions.
+   int special;
 };
 
 //
 // Move clipping aid for LineDefs.
 //
-typedef enum
+enum slopetype_t
 {
-  ST_HORIZONTAL,
-  ST_VERTICAL,
-  ST_POSITIVE,
-  ST_NEGATIVE
-} slopetype_t;
+   ST_HORIZONTAL,
+   ST_VERTICAL,
+   ST_POSITIVE,
+   ST_NEGATIVE
+};
 
 struct seg_t;
 
@@ -500,13 +500,13 @@ struct rpolybsp_t;
 //
 struct subsector_t
 {
-  sector_t *sector;
+   sector_t *sector;
 
-  // haleyjd 06/19/06: converted from short to long for 65535 segs
-  int    numlines, firstline;
+   // haleyjd 06/19/06: converted from short to long for 65535 segs
+   int    numlines, firstline;
 
-  DLListItem<rpolyobj_t> *polyList; // haleyjd 05/15/08: list of polyobj fragments
-  rpolybsp_t *bsp;                  // haleyjd 05/05/13: sub-BSP tree
+   DLListItem<rpolyobj_t> *polyList; // haleyjd 05/15/08: list of polyobj fragments
+   rpolybsp_t *bsp;                  // haleyjd 05/05/13: sub-BSP tree
 };
 
 // phares 3/14/98
@@ -527,13 +527,13 @@ struct subsector_t
 
 struct msecnode_t
 {
-  sector_t   *m_sector; // a sector containing this object
-  Mobj       *m_thing;  // this object
-  msecnode_t *m_tprev;  // prev msecnode_t for this thing
-  msecnode_t *m_tnext;  // next msecnode_t for this thing
-  msecnode_t *m_sprev;  // prev msecnode_t for this sector
-  msecnode_t *m_snext;  // next msecnode_t for this sector
-  bool        visited;  // killough 4/4/98, 4/7/98: used in search algorithms
+   sector_t   *m_sector; // a sector containing this object
+   Mobj       *m_thing;  // this object
+   msecnode_t *m_tprev;  // prev msecnode_t for this thing
+   msecnode_t *m_tnext;  // next msecnode_t for this thing
+   msecnode_t *m_sprev;  // prev msecnode_t for this sector
+   msecnode_t *m_snext;  // next msecnode_t for this sector
+   bool        visited;  // killough 4/4/98, 4/7/98: used in search algorithms
 };
 
 //
@@ -541,24 +541,24 @@ struct msecnode_t
 //
 struct seg_t
 {
-  union 
-  {
-    struct { vertex_t *v1, *v2; };
-    struct { dynavertex_t *dyv1, *dyv2; };
-  };
-  float     offset;
-  side_t   *sidedef;
-  line_t   *linedef;
-  
-  // Sector references.
-  // Could be retrieved from linedef, too
-  // (but that would be slower -- killough)
-  // backsector is nullptr for one sided lines
+   union
+   {
+      struct { vertex_t *v1, *v2; };
+      struct { dynavertex_t *dyv1, *dyv2; };
+   };
+   float     offset;
+   side_t   *sidedef;
+   line_t   *linedef;
 
-  sector_t *frontsector, *backsector;
+   // Sector references.
+   // Could be retrieved from linedef, too
+   // (but that would be slower -- killough)
+   // backsector is nullptr for one sided lines
 
-  // SoM: Precached seg length in float format
-  float  len;
+   sector_t *frontsector, *backsector;
+
+   // SoM: Precached seg length in float format
+   float  len;
 };
 
 //
@@ -607,17 +607,16 @@ struct fnode_t
 
 struct spriteframe_t
 {
-  // If false use 0 for any position.
-  // Note: as eight entries are available,
-  //  we might as well insert the same name eight times.
-  int rotate;
+   // If false use 0 for any position.
+   // Note: as eight entries are available,
+   //  we might as well insert the same name eight times.
+   int rotate;
 
-  // Lump to use for view angles 0-7.
-  int16_t lump[8];
+   // Lump to use for view angles 0-7.
+   int16_t lump[8];
 
-  // Flip bit (1 = flip) to use for view angles 0-7.
-  byte  flip[8];
-
+   // Flip bit (1 = flip) to use for view angles 0-7.
+   byte  flip[8];
 };
 
 //
@@ -627,8 +626,8 @@ struct spriteframe_t
 
 struct spritedef_t
 {
-  int numframes;
-  spriteframe_t *spriteframes;
+   int numframes;
+   spriteframe_t *spriteframes;
 };
 
 

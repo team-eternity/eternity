@@ -89,22 +89,22 @@
 //=============================================================================
 //
 // Memblock Structure
-// 
+//
 
 struct memblock_t
 {
 #ifdef ZONEIDCHECK
-  unsigned int id;
+   unsigned int id;
 #endif
 
-  struct memblock_t *next,**prev;
-  size_t size;
-  void **user;
-  unsigned char tag;
+   struct memblock_t *next,**prev;
+   size_t size;
+   void **user;
+   unsigned char tag;
 
 #ifdef INSTRUMENTED
-  const char *file;
-  int line;
+   const char *file;
+   int line;
 #endif
 };
 

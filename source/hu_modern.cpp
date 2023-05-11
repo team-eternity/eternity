@@ -291,7 +291,7 @@ void ModernHUD::Setup()
    for(auto &data : drawerdata)
       data.enabled = true; // turn em all on
 
-  // turn off status if we aren't using it
+   // turn off status if we aren't using it
    if(hud_hidestatus)
       drawerdata[ol_status].enabled = false;
 

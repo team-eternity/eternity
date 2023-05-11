@@ -55,16 +55,16 @@ qstring   incomingmsg[MAXPLAYERS];
 command_t *c_netcmds[NUMNETCMDS];
 
 /*
-  haleyjd: fixed a bug here
+   haleyjd: fixed a bug here
 
-  default_name was being set equal to a string on the C heap,
-  and then free()'d in the player name console command handler --
-  but of course free() is redefined to Z_Free(), and you can't do
-  that -- similar to the bug that was crashing the savegame menu,
-  but this one caused a segfault, and only occasionally, because
-  of Z_Free's faulty assumption that a pointer will be in valid 
-  address space to test the zone id, even if its not a ptr to a
-  zone block.
+   default_name was being set equal to a string on the C heap,
+   and then free()'d in the player name console command handler --
+   but of course free() is redefined to Z_Free(), and you can't do
+   that -- similar to the bug that was crashing the savegame menu,
+   but this one caused a segfault, and only occasionally, because
+   of Z_Free's faulty assumption that a pointer will be in valid
+   address space to test the zone id, even if its not a ptr to a
+   zone block.
 */
 char *default_name; // = "player";
 int default_colour;
@@ -157,13 +157,13 @@ void C_SendCmd(int dest, int cmdnum, E_FORMAT_STRING(const char *s), ...)
 
 void C_NetInit(void)
 {
-  int i;
-  
-  for(i = 0; i < MAXPLAYERS; ++i)
-  {
-     incomingdest[i] = -1;
-     incomingmsg[i].initCreate();
-  }  
+   int i;
+
+   for(i = 0; i < MAXPLAYERS; ++i)
+   {
+      incomingdest[i] = -1;
+      incomingmsg[i].initCreate();
+   }
 }
 
 static void C_DealWithChar(unsigned char c, int source);
@@ -229,37 +229,37 @@ char *G_GetNameForMap(int episode, int map);
 
 void C_SendNetData()
 {
-  C_SetConsole();
+   C_SetConsole();
 
-  // display message according to what we're about to do
+   // display message according to what we're about to do
 
-  C_Printf(consoleplayer ?
-           FC_HI "Please Wait" FC_NORMAL " Receiving game data..\n" :
-           FC_HI "Please Wait" FC_NORMAL " Sending game data..\n");
+   C_Printf(consoleplayer ?
+            FC_HI "Please Wait" FC_NORMAL " Receiving game data..\n" :
+            FC_HI "Please Wait" FC_NORMAL " Sending game data..\n");
 
 
-  // go thru all hash chains, check for net sync variables
-  for(command_t *command : cmdroots)
-  {
-     while(command)
-     {
-        if(command->type == ct_variable && command->flags & cf_netvar &&
-           (consoleplayer == 0 || !(command->flags & cf_server)))
-        {
-           C_UpdateVar(command);
-        }
-        command = command->next;
-     }
-  }
+   // go thru all hash chains, check for net sync variables
+   for(command_t *command : cmdroots)
+   {
+      while(command)
+      {
+         if(command->type == ct_variable && command->flags & cf_netvar &&
+            (consoleplayer == 0 || !(command->flags & cf_server)))
+         {
+            C_UpdateVar(command);
+         }
+         command = command->next;
+      }
+   }
 
-  demo_insurance = 1;      // always use 1 in multiplayer
+   demo_insurance = 1;      // always use 1 in multiplayer
 
-  if(consoleplayer == 0)      // if server, send command to warp to map
-  {
-     char tempstr[100];
-     snprintf(tempstr, earrlen(tempstr), "map %s", startlevel);
-     C_RunTextCmd(tempstr);
-  }
+   if(consoleplayer == 0)      // if server, send command to warp to map
+   {
+      char tempstr[100];
+      snprintf(tempstr, earrlen(tempstr), "map %s", startlevel);
+      C_RunTextCmd(tempstr);
+   }
 }
 
 //
@@ -267,11 +267,11 @@ void C_SendNetData()
 //
 void C_UpdateVar(command_t *command)
 {
-  char tempstr[100];
-  
-  snprintf(tempstr, sizeof(tempstr), "\"%s\"", C_VariableValue(command->variable) );
-  
-  C_SendCmd(CN_BROADCAST, command->netcmd, "%s", tempstr);
+   char tempstr[100];
+
+   snprintf(tempstr, sizeof(tempstr), "\"%s\"", C_VariableValue(command->variable) );
+
+   C_SendCmd(CN_BROADCAST, command->netcmd, "%s", tempstr);
 }
 
 // EOF

@@ -320,13 +320,13 @@ void V_FPSTicker()
 //
 static void V_ClassicFPSDrawer()
 {
-  static int lasttic;
-  
-  int i = i_haltimer.GetTime();
-  int tics = i - lasttic;
-  lasttic = i;
-  if (tics > 20)
-    tics = 20;
+   static int lasttic;
+
+   int i = i_haltimer.GetTime();
+   int tics = i - lasttic;
+   lasttic = i;
+   if(tics > 20)
+      tics = 20;
 
    // SoM: ANYRES
    if(vbscreen.scaled)

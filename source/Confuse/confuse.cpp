@@ -59,7 +59,7 @@ const char *confuse_author    = "Martin Hedenfalk <mhe@home.se>";
 #define cfg_assert(test) ((void)0)
 #else
 #define cfg_assert(test) \
-  ((void)((test)||(my_assert(#test, __FILE__, __LINE__),0)))
+   ((void)((test)||(my_assert(#test, __FILE__, __LINE__),0)))
 #endif
 
 #define STATE_CONTINUE 0

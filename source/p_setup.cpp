@@ -1173,27 +1173,27 @@ struct mapseg_znod_t
 // IOANCH: modified to support XGL3 nodes
 struct mapnode_znod_t
 {
-  union
-  {
-     struct
-     {
-        int16_t x;  // Partition line from (x,y) to x+dx,y+dy)
-        int16_t y;
-        int16_t dx;
-        int16_t dy;             
-     };
-     struct
-     {
-        int32_t x32;  // Partition line from (x,y) to x+dx,y+dy)
-        int32_t y32;
-        int32_t dx32;
-        int32_t dy32;             
-     };
-  };
-  // Bounding box for each child, clip against view frustum.
-  int16_t bbox[2][4];
-  // If NF_SUBSECTOR its a subsector, else it's a node of another subtree.
-  int32_t children[2];
+   union
+   {
+      struct
+      {
+         int16_t x;  // Partition line from (x,y) to x+dx,y+dy)
+         int16_t y;
+         int16_t dx;
+         int16_t dy;
+      };
+      struct
+      {
+         int32_t x32;  // Partition line from (x,y) to x+dx,y+dy)
+         int32_t y32;
+         int32_t dx32;
+         int32_t dy32;
+      };
+   };
+   // Bounding box for each child, clip against view frustum.
+   int16_t bbox[2][4];
+   // If NF_SUBSECTOR its a subsector, else it's a node of another subtree.
+   int32_t children[2];
 };
 
 //

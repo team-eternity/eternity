@@ -186,23 +186,23 @@ default_t *M_FindDefaultForCVar(variable_t *var);
 
 // haleyjd 06/24/02: platform-dependent macros for sound/music defaults
 #if defined(_SDL_VER)
-  #define SND_DEFAULT -1
-  #define SND_MIN     -1
-  #define SND_MAX      1
-  #define SND_DESCR    "code to select digital sound; -1 is SDL sound, 0 is no sound, 1 is PC speaker emulation"
-  #define MUS_DEFAULT -1
-  #define MUS_MIN     -1
-  #define MUS_MAX      0
-  #define MUS_DESCR    "code to select music device; -1 is SDL_mixer, 0 is no music"
+   #define SND_DEFAULT -1
+   #define SND_MIN     -1
+   #define SND_MAX      1
+   #define SND_DESCR    "code to select digital sound; -1 is SDL sound, 0 is no sound, 1 is PC speaker emulation"
+   #define MUS_DEFAULT -1
+   #define MUS_MIN     -1
+   #define MUS_MAX      0
+   #define MUS_DESCR    "code to select music device; -1 is SDL_mixer, 0 is no music"
 #else
-  #define SND_DEFAULT  0
-  #define SND_MIN      0
-  #define SND_MAX      0
-  #define SND_DESCR    "no sound driver available for this platform"
-  #define MUS_DEFAULT  0
-  #define MUS_MIN      0
-  #define MUS_MAX      0
-  #define MUS_DESCR    "no midi driver available for this platform"
+   #define SND_DEFAULT  0
+   #define SND_MIN      0
+   #define SND_MAX      0
+   #define SND_DESCR    "no sound driver available for this platform"
+   #define MUS_DEFAULT  0
+   #define MUS_MIN      0
+   #define MUS_MAX      0
+   #define MUS_DESCR    "no midi driver available for this platform"
 #endif
 
 #ifdef HAVE_ADLMIDILIB

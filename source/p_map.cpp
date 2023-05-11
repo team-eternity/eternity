@@ -3282,15 +3282,15 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
          node = node->m_tnext;
    }
 
-  /* cph -
-   * This is the strife we get into for using global variables. 
-   *  clip.thing is being used by several different functions calling
-   *  P_BlockThingIterator, including functions that can be called 
-   *  *from* P_BlockThingIterator. Using a global clip.thing is not 
-   *  reentrant. OTOH for Boom/MBF demos we have to preserve the buggy 
-   *  behaviour. Fun. We restore its previous value unless we're in a 
-   *  Boom/MBF demo. -- haleyjd: add SMMU too :)
-   */
+   // cph -
+   // This is the strife we get into for using global variables.
+   //  clip.thing is being used by several different functions calling
+   //  P_BlockThingIterator, including functions that can be called
+   //  *from* P_BlockThingIterator. Using a global clip.thing is not
+   //  reentrant. OTOH for Boom/MBF demos we have to preserve the buggy
+   //  behaviour. Fun. We restore its previous value unless we're in a
+   //  Boom/MBF demo. -- haleyjd: add SMMU too :)
+   //
 
    if(demo_version < 200 || demo_version >= 329)
       P_PopClipStack();

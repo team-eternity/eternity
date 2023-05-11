@@ -64,18 +64,18 @@
 // known platforms with itoa -- you can add yours here, but it
 // isn't absolutely necessary
 #ifndef EE_HAVE_ITOA
-  #ifdef DJGPP
-    #define EE_HAVE_ITOA
-    #define ITOA_NAME itoa
-  #endif
-  #ifdef _MSC_VER
-    #define EE_HAVE_ITOA
-    #define ITOA_NAME _itoa
-  #endif
-  #ifdef __MINGW32__
-    #define EE_HAVE_ITOA
-    #define ITOA_NAME itoa
-  #endif
+   #ifdef DJGPP
+      #define EE_HAVE_ITOA
+      #define ITOA_NAME itoa
+   #endif
+   #ifdef _MSC_VER
+      #define EE_HAVE_ITOA
+      #define ITOA_NAME _itoa
+   #endif
+   #ifdef __MINGW32__
+      #define EE_HAVE_ITOA
+      #define ITOA_NAME itoa
+   #endif
 #endif
 
 #ifdef _MSC_VER
