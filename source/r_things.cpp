@@ -174,6 +174,10 @@ struct vissprite_t
    fixed_t footclip; // haleyjd: foot clipping
 
    int    sector; // SoM: sector the sprite is in.
+
+   // if it's a clone, this is the portal which made it. Needed to properly draw the clone _on top
+   // of_ the portal.
+   const line_t *cloningLine;
 };
 
 // haleyjd 04/25/10: drawsegs optimization
@@ -617,7 +621,8 @@ void R_ClearMarkedSprites(spritecontext_t &context, ZoneHeap &heap)
 // Pushes a new element on the post-BSP stack.
 //
 void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
-                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window, int parentmasked, const v3fixed_t &parentdelta)
+                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window, 
+                const maskedparent_t &parent)
 {
    drawseg_t     *&drawsegs     = bspcontext.drawsegs;
    drawseg_t     *&ds_p         = bspcontext.ds_p;
@@ -684,8 +689,7 @@ void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHe
       post->masked->lastds     = int(ds_p - drawsegs);
       post->masked->lastsprite = int(spritecontext.num_vissprite);
       
-      post->masked->parentrange = parentmasked;
-      post->masked->parentdelta = parentdelta;
+      post->masked->parent = parent;
 
       memcpy(post->masked->ceilingclip, portaltop    + bounds.startcolumn, sizeof(*portaltop)    * bounds.numcolumns);
       memcpy(post->masked->floorclip,   portalbottom + bounds.startcolumn, sizeof(*portalbottom) * bounds.numcolumns);
@@ -1842,7 +1846,12 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
       s2 = P_PointOnDivlineSide(seg->v2->x, seg->v2->y, &sprite_clip);
 
       if(s1 != s2)
-         s1 = !R_PointOnSegSide(spr->gx, spr->gy, ds->curline);
+      {
+         if(spr->cloningLine == ds->curline->linedef)
+            s1 = 1;  // make it show always behind
+         else
+            s1 = !R_PointOnSegSide(spr->gx, spr->gy, ds->curline);
+      }
 
       int r1, r2;
       if(s1)
@@ -2156,31 +2165,38 @@ void R_DrawPostBSP(rendercontext_t &context)
                   sprite, firstds, lastds,
                   masked->ceilingclip, masked->floorclip, hitinfo
                );         // killough
-               if(hitinfo.hit && masked->parentrange >= 0 && (hitinfo.minx > sprite->x1 ||
-                                                              hitinfo.maxx < sprite->x2))
+               if(hitinfo.hit && masked->parent.index >= 0 && (hitinfo.minx > sprite->x1 ||
+                                                               hitinfo.maxx < sprite->x2))
                {
                   vissprite_t clone = *sprite;
-                  clone.gx -= masked->parentdelta.x;
-                  clone.gy -= masked->parentdelta.y;
-                  clone.gz -= masked->parentdelta.z;
-                  clone.gzt -= masked->parentdelta.z;
-                  if(hitinfo.maxx >= hitinfo.minx)
+                  // TODO: also think of sector portals (pros/cons)
+                  I_Assert(masked->parent.portal, "If parentrange must also have parentportal");
+                  if(masked->parent.portal->type == R_LINKED)
                   {
-                     if(hitinfo.minx > sprite->x1)
-                        clone.x2 = hitinfo.minx - 1;
-                     else if(hitinfo.maxx < sprite->x2)
-                     {
-                        clone.x1 = hitinfo.maxx + 1;
-                        clone.startx += clone.xstep * (hitinfo.maxx - sprite->x1);
-                     }
+                     const v3fixed_t &delta = masked->parent.portal->data.link.delta;
+                     clone.gx -= delta.x;
+                     clone.gy -= delta.y;
+                     clone.gz -= delta.z;
+                     clone.gzt -= delta.z;
+                     clone.cloningLine = masked->parent.line;
                   }
+                  //if(hitinfo.maxx >= hitinfo.minx)
+                  //{
+                  //   if(hitinfo.minx > sprite->x1)
+                  //      clone.x2 = hitinfo.minx - 1;
+                  //   else if(hitinfo.maxx < sprite->x2)
+                  //   {
+                  //      clone.x1 = hitinfo.maxx + 1;
+                  //      clone.startx += clone.xstep * (hitinfo.maxx - sprite->x1);
+                  //   }
+                  //}
                   // NOTE: keep the same sector as the original! sector is only used for sector 
                   // portal sprite clipping, and we want the same clipping in case of edge portals!
                   clones.add(clone);
                }
             }
-            if(masked->parentrange >= 0 && !clones.isEmpty())
-               R_updateParentPostStack(context, clones, masked->parentrange);
+            if(masked->parent.index >= 0 && !clones.isEmpty())
+               R_updateParentPostStack(context, clones, masked->parent.index);
          }
 
          // render any remaining masked mid textures

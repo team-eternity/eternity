@@ -36,6 +36,7 @@ struct pwindow_t;
 struct cb_column_t;
 struct spritecontext_t;
 struct contextbounds_t;
+struct portal_t;
 struct portalrender_t;
 struct viewpoint_t;
 struct cbviewpoint_t;
@@ -51,6 +52,14 @@ using R_ColumnFunc = void (*)(cb_column_t &);
 extern float *zeroarray;
 extern float *screenheightarray;
 
+// Data for rendering sprites across linedef portals correctly
+struct maskedparent_t
+{
+   int index;              // index of maskedrange_t rendered on top of current one
+   const line_t *line;     // linedef of portal, which can be either wall or edge
+   const portal_t *portal; // the portal, as it's not a straightforward pointer from line
+};
+
 // SoM 12/13/03: the stack for use with portals
 struct maskedrange_t
 {
@@ -62,8 +71,7 @@ struct maskedrange_t
    float *ceilingclip;
    
    // ioanch: for updating the stack list
-   int parentrange;
-   v3fixed_t parentdelta;  // needed to update the vissprite gx/gy/gz
+   maskedparent_t parent;
    
    // for unused head
    struct maskedrange_t *next;
@@ -76,7 +84,8 @@ struct poststack_t
 };
 
 void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
-                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window, int parentmasked, const v3fixed_t &parentdelta);
+                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window, 
+                const maskedparent_t &parent);
 
 void R_ClearBadSpritesAndFrames();
 
