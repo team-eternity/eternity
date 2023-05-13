@@ -1178,7 +1178,7 @@ static int P_GetPortalState(const portal_t *portal, int sflags, bool obscured)
    return ret;
 }
 
-void P_CheckSectorPortalState(sector_t &sector, surf_e type)
+void P_CheckSectorPortalState(rendersector_t &sector, surf_e type)
 {
    surface_t &surface = sector.srf[type];
    if(!surface.portal)
@@ -1207,7 +1207,7 @@ void P_CheckLPortalState(line_t *line)
 // This function will set the floor or ceiling height, and update
 // the float version of the floor or ceiling height as well. It also updates portals.
 //
-void P_SetSectorHeight(sector_t &sec, surf_e surf, fixed_t h)
+void P_SetSectorHeight(rendersector_t &sec, surf_e surf, fixed_t h)
 {
    surface_t &surface = sec.srf[surf];
    surface.height = h;

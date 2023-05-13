@@ -174,21 +174,44 @@ static void MN_truncateInput(qstring &qstr, int x)
 }
 
 //
-// MN_truncateValue
+// As MN_truncateValue but it purely truncates, no dots
+//
+static void MN_truncateValueNoDots(qstring &qstr, int x)
+{
+   const int width = MN_StringWidth(qstr.constPtr());
+
+   if(x + width > SCREENWIDTH) // too wide to fit?
+   {
+      const char *start = qstr.constPtr();
+      const char *end   = qstr.bufferAt(qstr.length());
+
+      int subbed_width = 0;
+      while(end != start && (x + width - subbed_width > SCREENWIDTH))
+      {
+         subbed_width += V_FontCharWidth(menu_font, *end);
+         --end;
+      }
+
+      // truncate the value at end position, and concatenate dots
+      if(end != start)
+         qstr.truncate(end - start);
+   }
+}
+
 //
 // haleyjd 10/18/10: Avoid long values going off screen, as it is unsightly
 //
 static void MN_truncateValue(qstring &qstr, int x)
 {
    int width = MN_StringWidth(qstr.constPtr());
-   
-   if(x + width > SCREENWIDTH - 8) // too wide to fit?
-   {
-      int subbed_width = 0;
-      int leftbound = (SCREENWIDTH - 8) - MN_StringWidth("...");
-      const char *start = qstr.constPtr();
-      const char *end   = qstr.bufferAt(qstr.length() - 1);
 
+   if(x + width > SCREENWIDTH) // too wide to fit?
+   {
+      const char *start     = qstr.constPtr();
+      const char *end       = qstr.bufferAt(qstr.length());
+      const int   leftbound = SCREENWIDTH - MN_StringWidth("...");
+
+      int subbed_width = 0;
       while(end != start && (x + width - subbed_width > leftbound))
       {
          subbed_width += V_FontCharWidth(menu_font, *end);
@@ -202,6 +225,36 @@ static void MN_truncateValue(qstring &qstr, int x)
          qstr += "...";
       }
    }
+}
+
+//
+// Scroll a value that goes of the screen but we want to see all of
+//
+void MN_scrollValue(qstring &qstr, const int x)
+{
+   const int valueWidth  = MN_StringWidth(qstr.constPtr());
+   const int textOverrun = emax(int(ceilf(float((x + valueWidth) - SCREENWIDTH) / menu_font->cw)), 0);
+   if(textOverrun)
+   {
+      int textOffset = emax((gametic - (mn_lastSelectTic + TICRATE)) / 12, 0);
+      if(textOffset > textOverrun)
+      {
+         textOffset = textOverrun;
+         if(gametic - mn_lastScrollTic > TICRATE * 2)
+         {
+            mn_lastSelectTic = gametic;
+            mn_lastScrollTic = gametic;
+         }
+
+      }
+      else
+         mn_lastScrollTic = gametic;
+
+      if(textOffset)
+         qstr.erase(0, textOffset);
+   }
+
+   MN_truncateValueNoDots(qstr, x);
 }
 
 // sliders
@@ -427,7 +480,7 @@ class MenuItemValued : public MenuItem
    DECLARE_RTTI_TYPE(MenuItemValued, MenuItem)
 
 public:
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) override
    {
       qstring varvalue;
       int x = item->x;
@@ -494,6 +547,52 @@ public:
          psnprintf(msgbuffer, 64, "Press %s to change", key);
          return msgbuffer;
       }
+   }
+
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) override
+   {
+      qstring varvalue;
+      int x = item->x;
+      int y = item->y;
+
+      if(drawing_menu->flags & mf_background)
+      {
+         // include gap on fullscreen menus
+         if(item->flags & MENUITEM_LALIGNED)
+            x = 8 + drawing_menu->widest_width + 16; // haleyjd: use widest_width
+         else
+            x += MENU_GAP_SIZE;
+
+         // adjust colour for different coloured variables
+         if(color == GameModeInfo->unselectColor)
+            color = GameModeInfo->variableColor;
+      }
+
+      if(alignment == ALIGNMENT_LEFT)
+         x += desc_width;
+
+      // create variable description; use console variable descriptions.
+      MN_GetItemVariable(item);
+
+
+      // display input buffer if inputting new var value
+      if(input_command && item->var == input_command->variable)
+      {
+         varvalue = MN_GetInputBuffer();
+         varvalue += '_';
+         MN_truncateInput(varvalue, x);
+      }
+      else
+      {
+         varvalue = C_VariableStringValue(item->var);
+         if(selected)
+            MN_scrollValue(varvalue, x);
+         else
+            MN_truncateValue(varvalue, x);
+      }
+
+      // draw it
+      MN_WriteTextColored(varvalue.constPtr(), color, x, y);
    }
 
    virtual void onConfirm(menuitem_t *item) override
@@ -699,7 +798,7 @@ class MenuItemSlider : public MenuItemSlidable
    DECLARE_RTTI_TYPE(MenuItemSlider, MenuItemSlidable)
 
 public:
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) override
    {
       variable_t *var;
       int x = item->x;
@@ -784,7 +883,7 @@ public:
       return false;
    }
 
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) override
    {
       int x = item->x;
       int y = item->y;
@@ -823,7 +922,7 @@ public:
       // No cross patch for non-optional colours
    }
 
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) override
    {
       int ix = item->x;
       int iy = item->y;
@@ -919,23 +1018,11 @@ public:
       }
    }
 
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) override
    {
-      static menuitem_t *lastItem;
-      static int         lastChangeTic;
-      static int         lastScrollTic;
-
       qstring boundkeys;
       int x = item->x;
       int y = item->y;
-
-      // new selected binding
-      if(color == GameModeInfo->selectColor && lastItem != item)
-      {
-         lastItem      = item;
-         lastChangeTic = gametic;
-         lastScrollTic = gametic;
-      }
 
       G_BoundKeys(item->data, boundkeys);
 
@@ -952,31 +1039,13 @@ public:
       if(alignment == ALIGNMENT_LEFT)
          x += desc_width;
 
-      // scroll the binding text if necessary
-      const int bindWidth   = V_FontStringWidth(menu_font, boundkeys.constPtr());
-      const int textOverrun = emax(int(ceilf(float((x + bindWidth) - subscreen43.unscaledw) / menu_font->cw)), 0);
-      int textOffset;
-      if(color == GameModeInfo->selectColor && textOverrun)
-      {
-         textOffset = emax((gametic - (lastChangeTic + TICRATE)) / 12, 0);
-         if(textOffset > textOverrun)
-         {
-            textOffset = textOverrun;
-            if(gametic - lastScrollTic > TICRATE * 2)
-            {
-               lastChangeTic = gametic;
-               lastScrollTic = gametic;
-            }
-
-         }
-         else
-            lastScrollTic = gametic;
-      }
+      if(selected)
+         MN_scrollValue(boundkeys, x);
       else
-         textOffset = 0;
+         MN_truncateValue(boundkeys, x);
 
       // write variable value text
-      MN_WriteTextColored(boundkeys.bufferAt(textOffset), color, x, y);
+      MN_WriteTextColored(boundkeys.constPtr(), color, x, y);
    }
 
    virtual void onConfirm(menuitem_t *item) override

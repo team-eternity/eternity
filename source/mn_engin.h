@@ -276,6 +276,8 @@ extern char *mn_bigfontname;
 extern char *mn_normalfontname;
 extern char *mn_background;
 extern const char *mn_background_flat;
+extern int mn_lastSelectTic;
+extern int mn_lastScrollTic;
 
 extern vfont_t *menu_font;
 extern vfont_t *menu_font_big;

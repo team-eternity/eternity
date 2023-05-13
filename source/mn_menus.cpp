@@ -2726,30 +2726,17 @@ static void MN_HUDPg2Drawer(void)
 
    if(patch)
    {
-      int16_t w  = patch->width;
-      int16_t h  = patch->height;
-      int16_t to = patch->topoffset;
-      int16_t lo = patch->leftoffset;
+      VBuffer &buffer = crosshair_scale ? subscreen43 : vbscreenfullres;
 
-      if(!crosshair_scale)
-      {
-         const double x_ratio = video.width  / SCREENWIDTH;
-         const double y_ratio = video.height / SCREENHEIGHT;
+      const int16_t w  = patch->width;
+      const int16_t h  = patch->height;
+      const int16_t to = patch->topoffset;
+      const int16_t lo = patch->leftoffset;
 
-         V_DrawPatchTL(
-            subscreen43.x1lookup[270 + 12] + subscreen43.subx - (w >> 1) + lo,
-            subscreen43.y1lookup[y + 12] + subscreen43.suby - (h >> 1) + to,
-            &vbscreenfullres, patch, colrngs[CR_RED], FTRANLEVEL
-         );
-      }
-      else
-      {
-         V_DrawPatchTL(
-            270 + 12 - (w >> 1) + lo,
-            y + 12 - (h >> 1) + to,
-            &subscreen43, patch, colrngs[CR_RED], FTRANLEVEL
-         );
-      }
+      const int crossX = buffer.mapXFromOther(270 + 12, subscreen43) - (w >> 1) + lo;
+      const int crossY = buffer.mapYFromOther(y   + 12, subscreen43) - (h >> 1) + to;
+
+      V_DrawPatchTL(crossX, crossY, &buffer, patch, colrngs[CR_RED], FTRANLEVEL);
    }
 }
 

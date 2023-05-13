@@ -461,5 +461,45 @@ fixed_t VBuffer::getVirtualAspectRatio() const
       return getRealAspectRatio();
 }
 
+//
+// Maps an unscaled x value from one buffer to this one.
+//
+int VBuffer::mapXFromOther(const int x, const VBuffer &other) const
+{
+   if(&other == this)
+      return x;
+
+   float screenX = float(other.subx - this->subx);
+   if(other.scaled)
+      screenX += float(other.x1lookup[x]);
+   else
+      screenX += float(x);
+
+   if(!this->scaled)
+      return int(screenX);
+   else
+      return int(screenX * this->unscaledw / this->width);
+}
+
+//
+// Maps an unscaled y value from one buffer to this one.
+//
+int VBuffer::mapYFromOther(const int y, const VBuffer &other) const
+{
+   if(&other == this)
+      return y;
+
+   float screenY = float(other.suby - this->suby);
+   if(other.scaled)
+      screenY += float(other.y1lookup[y]);
+   else
+      screenY += float(y);
+
+   if(!this->scaled)
+      return int(screenY);
+   else
+      return int(screenY * this->unscaledh / this->height);
+}
+
 // EOF
 

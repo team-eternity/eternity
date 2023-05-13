@@ -37,7 +37,7 @@ extern int demo_version;
 //
 // haleyjd 3/17/08: Convenience routine to clean some shit up.
 //
-inline static linkdata_t *R_FPLink(const sector_t *s)
+inline static linkdata_t *R_FPLink(const rendersector_t *s)
 {
    return &(s->srf.floor.portal->data.link);
 }
@@ -47,7 +47,7 @@ inline static linkdata_t *R_FPLink(const sector_t *s)
 //
 // ditto
 //
-inline static linkdata_t *R_CPLink(const sector_t *s)
+inline static linkdata_t *R_CPLink(const rendersector_t *s)
 {
    return &(s->srf.ceiling.portal->data.link);
 }
@@ -55,7 +55,7 @@ inline static linkdata_t *R_CPLink(const sector_t *s)
 //
 // Generic version
 //
-inline static const linkdata_t *R_PLink(surf_e surf, const sector_t &s)
+inline static const linkdata_t *R_PLink(surf_e surf, const rendersector_t &s)
 {
    return &s.srf[surf].portal->data.link;
 }

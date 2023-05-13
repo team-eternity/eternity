@@ -90,6 +90,10 @@ vfont_t *menu_font_normal;
 char *mn_background;
 const char *mn_background_flat;
 
+// scrolling text
+int mn_lastSelectTic = 0;
+int mn_lastScrollTic = 0;
+
 //=============================================================================
 //
 // Static Declarations and Data
@@ -269,11 +273,9 @@ static void MN_initializeMenu(menu_t *menu)
 }
 
 //
-// MN_DrawMenuItem
+// Draw a menu item. Returns the height in pixels
 //
-// draw a menu item. returns the height in pixels
-//
-static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
+static int MN_drawMenuItem(menuitem_t *item, int x, int y, int color, bool selected)
 {
    int desc_width = 0;
    int alignment;
@@ -304,7 +306,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
 
       return item_height;
    }
- 
+
    // draw an alternate patch?
 
    // haleyjd: gamemodes that use big menu font don't use pics, ever
@@ -314,7 +316,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
       // haleyjd 05/16/04: hack for traditional menu support;
       // this was hard-coded in the old system
       if(drawing_menu->flags & mf_emulated)
-         item_height = EMULATED_ITEM_SIZE; 
+         item_height = EMULATED_ITEM_SIZE;
 
       return item_height; // if returned true, we are done.
    }
@@ -323,7 +325,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
    menuItemClass->drawDescription(item, item_height, desc_width, alignment, color);
 
    // draw other data: variable data etc.
-   menuItemClass->drawData(item, color, alignment, desc_width);
+   menuItemClass->drawData(item, color, alignment, desc_width, selected);
 
    if(drawing_menu->flags & mf_emulated)
       item_height = EMULATED_ITEM_SIZE;
@@ -511,7 +513,7 @@ void MN_DrawMenu(menu_t *menu)
       }
       
       // draw item
-      item_height = MN_DrawMenuItem(mi, menu->x, y, item_color);
+      item_height = MN_drawMenuItem(mi, menu->x, y, item_color, menu->selected == itemnum);
       
       // if selected item, draw skull / pointer next to it
       if(menu->selected == itemnum)
@@ -837,9 +839,14 @@ bool MN_Responder(event_t *ev)
    if(ev->type == ev_keydown && input_command)
    {
       if(action == ka_menu_toggle) // cancel input
+      {
+         mn_lastSelectTic = mn_lastScrollTic = gametic;
          input_command = nullptr;
+      }
       else if(action == ka_menu_confirm)
       {
+         mn_lastSelectTic = mn_lastScrollTic = gametic;
+
          if(input_buffer.length() || (input_command->flags & cf_allowblank))
          {
             if(input_buffer.length())
@@ -935,6 +942,8 @@ bool MN_Responder(event_t *ev)
 
    if(action == ka_menu_up)
    {
+      mn_lastSelectTic = mn_lastScrollTic = gametic;
+
       bool cancelsnd = false;
 
       // skip gaps
@@ -979,6 +988,8 @@ bool MN_Responder(event_t *ev)
   
    if(action == ka_menu_down)
    {
+      mn_lastSelectTic = mn_lastScrollTic = gametic;
+
       bool cancelsnd = false;
       
       do
@@ -1018,6 +1029,8 @@ bool MN_Responder(event_t *ev)
    
    if(action == ka_menu_confirm)
    {
+      mn_lastSelectTic = mn_lastScrollTic = gametic;
+
       menuitem_t *menuItem      = &current_menu->menuitems[current_menu->selected];
       MenuItem   *menuItemClass = MenuItemInstanceForType[menuItem->type];
      
@@ -1128,6 +1141,7 @@ bool MN_Responder(event_t *ev)
             {
                // found a matching item!
                current_menu->selected = n;
+               mn_lastSelectTic = mn_lastScrollTic = gametic;
                return true; // eat key
             }
          }
@@ -1163,6 +1177,8 @@ void MN_ActivateMenu()
 //
 void MN_StartMenu(menu_t *menu)
 {
+   mn_lastSelectTic = mn_lastScrollTic = gametic;
+
    if(!menuactive)
    {
       MN_ActivateMenu();
@@ -1198,6 +1214,8 @@ void MN_StartMenu(menu_t *menu)
 //
 static void MN_PageMenu(menu_t *newpage)
 {
+   mn_lastSelectTic = mn_lastScrollTic = gametic;
+
    if(!menuactive)
       return;
 
@@ -1220,6 +1238,8 @@ static void MN_PageMenu(menu_t *newpage)
 //
 void MN_PrevMenu()
 {
+   mn_lastSelectTic = mn_lastScrollTic = gametic;
+
    if(--menu_history_num < 0)
       MN_ClearMenus();
    else

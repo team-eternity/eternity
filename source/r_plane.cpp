@@ -568,18 +568,15 @@ void R_ClearPlanes(planecontext_t &context, const contextbounds_t &bounds)
 static visplane_t *new_visplane(planecontext_t &context, ZoneHeap &heap,
                                 unsigned hash, planehash_t *table)
 {
-   visplane_t *&freetail  = context.freetail;
+   visplane_t  *&freetail = context.freetail;
    visplane_t **&freehead = context.freehead;
 
    visplane_t *check = freetail;
 
    if(!check)
-   {
       check = zhcalloctag(heap, visplane_t *, 1, sizeof * check, PU_VALLOC, nullptr);
-   }
-   else
-      if(!(freetail = freetail->next))
-         freehead = &freetail;
+   else if(!(freetail = freetail->next))
+      freehead = &freetail;
 
    check->next = table->chains[hash];
    table->chains[hash] = check;
@@ -598,7 +595,9 @@ static visplane_t *new_visplane(planecontext_t &context, ZoneHeap &heap,
       check->top    = paddedTop    + 1;
       check->bottom = paddedBottom + 1;
    }
-   
+
+   check->chainnum = hash;
+
    return check;
 }
 
@@ -734,9 +733,8 @@ visplane_t *R_FindPlane(cmapcontext_t &cmapcontext, planecontext_t &planecontext
 //
 visplane_t *R_DupPlane(planecontext_t &context, ZoneHeap &heap, const visplane_t *pl, int start, int stop)
 {
-   planehash_t *table = pl->table;
-   unsigned hash = visplane_hash(pl->picnum, pl->lightlevel, pl->height, table->chaincount);
-   visplane_t *new_pl = new_visplane(context, heap, hash, table);
+   planehash_t *table  = pl->table;
+   visplane_t  *new_pl = new_visplane(context, heap, pl->chainnum, table);
 
    new_pl->height = pl->height;
    new_pl->picnum = pl->picnum;

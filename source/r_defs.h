@@ -319,10 +319,43 @@ struct surface_t
 };
 
 //
+// All sector_t properties required for rendering
+// MUST BE TRIVIALLY CONSTRUCTABLE
+//
+struct rendersector_t
+{
+   // Keep name short because it's very frequently used.
+   Surfaces<surface_t> srf;
+
+   int16_t lightlevel;
+
+   // killough 3/7/98: support flat heights drawn at another sector's heights
+   int heightsec;    // other sector, or -1 if no other sector
+
+   int bottommap, midmap, topmap; // killough 4/4/98: dynamic colormaps
+
+   // killough 10/98: support skies coming from sidedefs. Allows scrolling
+   // skies and other effects. No "level info" kind of lump is needed,
+   // because you can use an arbitrary number of skies per level with this
+   // method. This field only applies when skyflatnum is used for floorpic
+   // or ceilingpic, because the rest of Doom needs to know which is sky
+   // and which isn't, etc.
+
+   int sky;
+
+   int groupid;
+
+   // haleyjd 12/28/08: sector flags, for ED/UDMF use. Replaces stupid BOOM
+   // generalized sector types outside of DOOM-format maps.
+   unsigned int flags;
+   unsigned int intflags; // internal flags
+};
+
+//
 // The SECTORS record, at runtime.
 // Stores things/mobjs.
 //
-struct sector_t
+struct sector_t : rendersector_t
 {
    // flag set for various uses
    enum
@@ -331,10 +364,6 @@ struct sector_t
       ceiling = 2
    };
 
-   // Keep name short because it's very frequently used.
-   Surfaces<surface_t> srf;
-
-   int16_t lightlevel;
    int16_t special;
    int16_t tag;
    int16_t leakiness;       // ioanch (UDMF): probability / 256 that the suit will leak
@@ -361,28 +390,12 @@ struct sector_t
    int prevsec;     // -1 or number of sector for previous step
    int nextsec;     // -1 or number of next step sector
 
-   // killough 3/7/98: support flat heights drawn at another sector's heights
-   int heightsec;    // other sector, or -1 if no other sector
-   
-   int bottommap, midmap, topmap; // killough 4/4/98: dynamic colormaps
-   
-   // killough 10/98: support skies coming from sidedefs. Allows scrolling
-   // skies and other effects. No "level info" kind of lump is needed, 
-   // because you can use an arbitrary number of skies per level with this
-   // method. This field only applies when skyflatnum is used for floorpic
-   // or ceilingpic, because the rest of Doom needs to know which is sky
-   // and which isn't, etc.
-   
-   int sky;
-   
    // list of mobjs that are at least partially in the sector
    // thinglist is a subset of touching_thinglist
    msecnode_t *touching_thinglist;               // phares 3/14/98  
    
    int linecount;
    line_t **lines;
-
-   int groupid;
 
    // haleyjd 03/12/03: Heretic wind specials
    int     hticPushType;
@@ -394,11 +407,6 @@ struct sector_t
 
    DLListItem<particle_t> *ptcllist; // haleyjd 02/20/04: list of particles in sector
 
-   // haleyjd 12/28/08: sector flags, for ED/UDMF use. Replaces stupid BOOM
-   // generalized sector types outside of DOOM-format maps.
-   unsigned int flags;
-   unsigned int intflags; // internal flags
-   
    // haleyjd 12/31/08: sector damage properties
    int damage;      // if > 0, sector is damaging
    int damagemask;  // damage is done when !(leveltime % mask)
@@ -660,6 +668,7 @@ struct rslope_t
 struct visplane_t
 {
    visplane_t *next;        // Next visplane in hash chain -- killough
+   int         chainnum;    // The index of this visplane's hash chain, for optimisation
    int picnum, lightlevel, minx, maxx;
    fixed_t height;
    const lighttable_t *const (*colormap)[MAXLIGHTZ];

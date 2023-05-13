@@ -90,6 +90,7 @@ inline int r_sprprojstyle;
 //
 
 struct node_t;
+struct rendersector_t;
 struct seg_t;
 struct subsector_t;
 struct sector_t;
@@ -105,7 +106,7 @@ angle_t R_PointToAngle(const fixed_t viewx, const fixed_t viewy, const fixed_t x
 angle_t R_PointToAngle2(fixed_t pviewx, fixed_t pviewy, fixed_t x, fixed_t y);
 subsector_t *R_PointInSubsector(fixed_t x, fixed_t y);
 fixed_t R_GetLerp(bool ignorepause);
-void R_SectorColormap(cmapcontext_t &context, const fixed_t viewz, const sector_t *s);
+void R_SectorColormap(cmapcontext_t &context, const fixed_t viewz, const rendersector_t *s);
 
 inline static subsector_t *R_PointInSubsector(v2fixed_t v)
 {
@@ -229,7 +230,7 @@ struct cb_seg_t
    const lighttable_t *const *walllights;
 
    const side_t *side;
-   const sector_t *frontsec, *backsec;
+   const rendersector_t *frontsec, *backsec;
    Surfaces<visplane_t *> plane;
    const seg_t *line;
 
