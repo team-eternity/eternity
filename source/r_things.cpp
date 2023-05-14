@@ -1319,6 +1319,7 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
    }
 
    vis->drawstyle = R_getDrawStyle(thing, &vis->tranmaplump);
+   vis->cloningLine = nullptr;
 }
 
 //
