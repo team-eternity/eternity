@@ -718,15 +718,6 @@ static vissprite_t *R_newVisSprite(spritecontext_t &context, ZoneHeap &heap)
    return vissprites + num_vissprite++;
 }
 
-// Information when drawing sprite, if it hits a portal window by clipping
-struct windowhitinfo_t
-{
-   const float *bottom;
-   const float *top;
-   bool hit;
-   int minx, maxx;
-};
-
 //
 // Used for sprites.
 // Masked means: partly transparent, i.e. stored
@@ -737,7 +728,7 @@ struct windowhitinfo_t
 static bool R_drawMaskedColumn(const R_ColumnFunc colfunc,
                                cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
                                column_t *tcolumn,
-                               const float *const mfloorclip, const float *const mceilingclip, windowhitinfo_t *hitinfo)
+                               const float *const mfloorclip, const float *const mceilingclip)
 {
    float y1, y2;
    fixed_t basetexturemid = column.texmid;
@@ -755,20 +746,12 @@ static bool R_drawMaskedColumn(const R_ColumnFunc colfunc,
       y2 = y1 + (maskedcolumn.scale * tcolumn->length) - 1;
       
       if(y1 < mceilingclip[column.x])
-      {
          column.y1 = (int)mceilingclip[column.x];
-         if(hitinfo && mceilingclip[column.x] == hitinfo->top[column.x])
-            hitinfo->hit = true;
-      }
       else
          column.y1 = (int)y1;
       
       if(y2 > mfloorclip[column.x])
-      {
          column.y2 = (int)mfloorclip[column.x];
-         if(hitinfo && mfloorclip[column.x] == hitinfo->bottom[column.x])
-            hitinfo->hit = true;
-      }
       else
          column.y2 = (int)y2;
 
@@ -913,7 +896,7 @@ void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc,
 //  mfloorclip and mceilingclip should also be set.
 //
 static void R_drawVisSprite(const contextbounds_t &bounds, vissprite_t *vis,
-                            float *const mfloorclip, float *const mceilingclip, windowhitinfo_t *hitinfo)
+                            float *const mfloorclip, float *const mceilingclip)
 {
    column_t *tcolumn;
    int       texturecolumn;
@@ -988,13 +971,7 @@ static void R_drawVisSprite(const contextbounds_t &bounds, vissprite_t *vis,
             continue;
          
          tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
-         if(R_drawMaskedColumn(colfunc, column, maskedcolumn, tcolumn, mfloorclip, mceilingclip, hitinfo) && hitinfo)
-         {
-            if(column.x > hitinfo->maxx)
-               hitinfo->maxx = column.x;
-            if(column.x < hitinfo->minx)
-               hitinfo->minx = column.x;
-         }
+         R_drawMaskedColumn(colfunc, column, maskedcolumn, tcolumn, mfloorclip, mceilingclip);
       }
    }
    else
@@ -1008,13 +985,7 @@ static void R_drawVisSprite(const contextbounds_t &bounds, vissprite_t *vis,
             continue;
          
          tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
-         if(R_drawMaskedColumn(colfunc, column, maskedcolumn, tcolumn, mfloorclip, mceilingclip, hitinfo) && hitinfo)
-         {
-            if(column.x > hitinfo->maxx)
-               hitinfo->maxx = column.x;
-            if(column.x < hitinfo->minx)
-               hitinfo->minx = column.x;
-         }
+         R_drawMaskedColumn(colfunc, column, maskedcolumn, tcolumn, mfloorclip, mceilingclip);
       }
    }
 }
@@ -1664,7 +1635,7 @@ static void R_drawPSprite(const pspdef_t *psp,
    oldycenter = view.ycenter;
    view.ycenter = (view.height * 0.5f);
    
-   R_drawVisSprite(r_globalcontext.bounds, vis, mfloorclip, mceilingclip, nullptr);
+   R_drawVisSprite(r_globalcontext.bounds, vis, mfloorclip, mceilingclip);
    
    view.ycenter = oldycenter;
 }
@@ -1817,7 +1788,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
                                   const contextbounds_t &bounds,
                                   drawseg_t *const drawsegs,
                                   vissprite_t *spr, int firstds, int lastds,
-                                  float *ptop, float *pbottom, windowhitinfo_t &hitinfo)
+                                  float *ptop, float *pbottom)
 {
    drawseg_t *ds;
    int        x;
@@ -2033,9 +2004,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
          cliptop[x] = ptop[x - bounds.startcolumn];
    }
    
-   hitinfo.bottom = pbottom - bounds.startcolumn;
-   hitinfo.top = ptop - bounds.startcolumn;
-   R_drawVisSprite(bounds, spr, clipbot, cliptop, &hitinfo);
+   R_drawVisSprite(bounds, spr, clipbot, cliptop);
 }
 
 // Given a set of new sprites, add them on the parent post-BSP stack entry with given index, while
@@ -2151,9 +2120,6 @@ void R_DrawPostBSP(rendercontext_t &context)
             clones.makeEmpty();
             for(int i = lastsprite - firstsprite; --i >= 0; )
             {
-               windowhitinfo_t hitinfo{};
-               hitinfo.minx = INT_MAX;
-               hitinfo.maxx = INT_MIN;
                vissprite_t *sprite = spritecontext.vissprite_ptrs[i];
 
                const maskedparent_t &parent = masked->parent;
@@ -2188,19 +2154,14 @@ void R_DrawPostBSP(rendercontext_t &context)
                   }
                }
                
-               //if(!move)
-               {
-                  R_drawSpriteInDSRange(
-                     context.cmapcontext,
-                     spritecontext,
-                     context.view, context.cb_view, context.bounds, drawsegs,
-                     sprite, firstds, lastds,
-                     masked->ceilingclip, masked->floorclip, hitinfo
-                  );         // killough
-               }
+               R_drawSpriteInDSRange(
+                  context.cmapcontext,
+                  spritecontext,
+                  context.view, context.cb_view, context.bounds, drawsegs,
+                  sprite, firstds, lastds,
+                  masked->ceilingclip, masked->floorclip
+               );         // killough
                if(move && movex2 >= movex1)
-               //if(hitinfo.hit && masked->parent.index >= 0 && (hitinfo.minx > sprite->x1 ||
-               //                                                hitinfo.maxx < sprite->x2))
                {
                   vissprite_t clone = *sprite;
                   // TODO: also think of sector portals (pros/cons)
@@ -2213,16 +2174,6 @@ void R_DrawPostBSP(rendercontext_t &context)
                   clone.x1 = movex1;
                   clone.x2 = movex2;
                   clone.startx = movestartx;
-                  //if(hitinfo.maxx >= hitinfo.minx)
-                  //{
-                  //   if(hitinfo.minx > sprite->x1)
-                  //      clone.x2 = hitinfo.minx - 1;
-                  //   else if(hitinfo.maxx < sprite->x2)
-                  //   {
-                  //      clone.x1 = hitinfo.maxx + 1;
-                  //      clone.startx += clone.xstep * (hitinfo.maxx - sprite->x1);
-                  //   }
-                  //}
                   // NOTE: keep the same sector as the original! sector is only used for sector 
                   // portal sprite clipping, and we want the same clipping in case of edge portals!
                   clones.add(clone);
