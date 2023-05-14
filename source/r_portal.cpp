@@ -366,7 +366,7 @@ static void R_createChildWindow(planecontext_t &planecontext, portalcontext_t &p
 //
 void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, ZoneHeap &heap,
                  const viewpoint_t &viewpoint,const contextbounds_t &bounds,
-                 pwindow_t *window, int x, float ytop, float ybottom)
+                 pwindow_t *window, int x, float dist, float ytop, float ybottom)
 {
    float windowtop, windowbottom;
 
@@ -418,7 +418,7 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
          if(!window->child)
             R_createChildWindow(planecontext, portalcontext, heap, bounds, window);
 
-         R_WindowAdd(planecontext, portalcontext, heap, viewpoint, bounds, window->child, x, ytop, ybottom);
+         R_WindowAdd(planecontext, portalcontext, heap, viewpoint, bounds, window->child, x, dist, ytop, ybottom);
          return;
       }
 
@@ -437,6 +437,7 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
       // Portal is empty so place the column anywhere (first column added to 
       // the portal)
       window->minx = window->maxx = x;
+      window->dist1 = window->dist2 = dist;
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
 
@@ -451,6 +452,7 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
    if(x > window->maxx)
    {
       window->maxx = x;
+      window->dist2 = dist;
 
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
@@ -460,6 +462,7 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
    if(x < window->minx)
    {
       window->minx = x;
+      window->dist1 = dist;
 
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
