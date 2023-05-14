@@ -723,9 +723,7 @@ static vissprite_t *R_newVisSprite(spritecontext_t &context, ZoneHeap &heap)
 // Masked means: partly transparent, i.e. stored
 //  in posts/runs of opaque pixels.
 //
-// NOTE: hitwindow is assumed to be valid and set to false IF portalbottom and portaltop are valid.
-//
-static bool R_drawMaskedColumn(const R_ColumnFunc colfunc,
+static void R_drawMaskedColumn(const R_ColumnFunc colfunc,
                                cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
                                column_t *tcolumn,
                                const float *const mfloorclip, const float *const mceilingclip)
@@ -734,7 +732,6 @@ static bool R_drawMaskedColumn(const R_ColumnFunc colfunc,
    fixed_t basetexturemid = column.texmid;
    
    column.texheight = 0; // killough 11/98
-   bool drawn = false;
 
    int top = 0;
    while(tcolumn->topdelta != 0xff)
@@ -744,16 +741,9 @@ static bool R_drawMaskedColumn(const R_ColumnFunc colfunc,
       // calculate unclipped screen coordinates for post
       y1 = maskedcolumn.ytop + (maskedcolumn.scale * top);
       y2 = y1 + (maskedcolumn.scale * tcolumn->length) - 1;
-      
-      if(y1 < mceilingclip[column.x])
-         column.y1 = (int)mceilingclip[column.x];
-      else
-         column.y1 = (int)y1;
-      
-      if(y2 > mfloorclip[column.x])
-         column.y2 = (int)mfloorclip[column.x];
-      else
-         column.y2 = (int)y2;
+
+      column.y1 = (int)(y1 < mceilingclip[column.x] ? mceilingclip[column.x] : y1);
+      column.y2 = (int)(y2 > mfloorclip[column.x] ? mfloorclip[column.x] : y2);
 
       // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
       if(column.y1 <= column.y2 && column.y2 < viewwindow.height)
@@ -762,14 +752,12 @@ static bool R_drawMaskedColumn(const R_ColumnFunc colfunc,
          column.texmid = basetexturemid - (top << FRACBITS);
 
          colfunc(column);
-         drawn = true;
       }
 
       tcolumn = (column_t *)((byte *)tcolumn + tcolumn->length + 4);
    }
 
    column.texmid = basetexturemid;
-   return drawn;
 }
 
 //
