@@ -215,8 +215,7 @@ static pwindow_t *newPortalWindow(planecontext_t &planecontext, portalcontext_t 
    
    // This grows in sync with the calls of P_PostBSP during window unwinding (R_RenderPortals). nextwindowindex gets reset to 1 before we start a rendering
    ret->maskedindex = portalcontext.postbspwindowid++;
-   ret->parentmasked = portalcontext.portalrender.active ?
-         portalcontext.portalrender.w->maskedindex : 0;
+   ret->parentmasked = -1;
 
    return ret;
 }
@@ -446,6 +445,13 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
       window->vy = viewpoint.y;
       window->vz = viewpoint.z;
       window->vangle = viewpoint.angle;
+
+      // Once window is visible, assign the parent-masked.
+      if(window->parentmasked == -1 && ybottom >= ytop)
+      {
+         window->parentmasked = portalcontext.portalrender.active ?
+            portalcontext.portalrender.w->maskedindex : 0;
+      }
       return;
    }
 
@@ -456,6 +462,11 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
 
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
+      if(window->parentmasked == -1 && ybottom >= ytop)
+      {
+         window->parentmasked = portalcontext.portalrender.active ?
+            portalcontext.portalrender.w->maskedindex : 0;
+      }
       return;
    }
 
@@ -466,6 +477,11 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
 
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
+      if(window->parentmasked == -1 && ybottom >= ytop)
+      {
+         window->parentmasked = portalcontext.portalrender.active ?
+            portalcontext.portalrender.w->maskedindex : 0;
+      }
       return;
    }
 }
