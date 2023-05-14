@@ -134,7 +134,7 @@ static void G_QuitDoom()
       i_haltimer.Sleep(1500);
    }
 
-   exit(0);
+   I_Exit(0);
 }
 
 CONSOLE_COMMAND(quit, 0)

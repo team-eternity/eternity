@@ -108,7 +108,7 @@ static void P_ClearHubsAtExit(void)
    
    if(atexit_set) return;   // already set
    
-   atexit(P_ClearHubs);
+   I_AtExit(P_ClearHubs);
    
    atexit_set = true;
 }
