@@ -38,7 +38,11 @@ enum evtype_t : int
    ev_keyup,
    ev_mouse,
    ev_joystick,
-   ev_text
+   ev_text,
+
+   // Quit event. Triggered when the user clicks the "close" button
+   // to terminate the application.
+   ev_quit,
 };
 
 // Event structure.
