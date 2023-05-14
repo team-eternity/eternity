@@ -1160,6 +1160,7 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
    
    maskedparent_t parent = {};
    parent.index = window->type == pw_line && window->portal->type == R_LINKED ? window->parentmasked : -1;
+   parent.curindex = window->maskedindex;
    // Set parent-masked portal only if this is a LINKED line portal window
    // TODO: also handle anchored/twoway
    if(window->portal->type == R_LINKED)
@@ -1400,12 +1401,6 @@ void R_RenderPortals(rendercontext_t &context)
 
       if(windowhead->maxx >= windowhead->minx)
          windowhead->func(context, windowhead);
-      else  
-      {
-         // FIXME: we need to push an empty post now in order to be in sync with the window creation. Normally we shouldn't
-         R_PushPost(context.bspcontext, context.spritecontext, *context.heap, context.bounds, false, 
-                    nullptr, {});
-      }
 
       portalrender.active = false;
       portalrender.w = nullptr;

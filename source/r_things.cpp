@@ -690,6 +690,14 @@ void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHe
       post->masked->lastsprite = int(spritecontext.num_vissprite);
       
       post->masked->parent = parent;
+      for(i = pstacksize - 1; i >= 0; i--)
+      {
+         if(pstack[i].masked && pstack[i].masked->parent.curindex == post->masked->parent.index)
+         {
+            post->masked->parent.index = i;
+            break;
+         }
+      }
 
       memcpy(post->masked->ceilingclip, portaltop    + bounds.startcolumn, sizeof(*portaltop)    * bounds.numcolumns);
       memcpy(post->masked->floorclip,   portalbottom + bounds.startcolumn, sizeof(*portalbottom) * bounds.numcolumns);
