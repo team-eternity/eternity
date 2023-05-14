@@ -2112,19 +2112,18 @@ void R_DrawPostBSP(rendercontext_t &context)
                vissprite_t *sprite = spritecontext.vissprite_ptrs[i];
 
                const maskedparent_t &parent = masked->parent;
-               bool move = false;
-               int movex1 = 0, movex2 = 0;
+               int movex1 = 0, movex2 = -1;
                float movestartx = 0;
+               bool skip = false;
                if(parent.index >= 0 && parent.portal->type == R_LINKED && parent.dist1 != FLT_MAX && 
-                  parent.dist2 != FLT_MAX && 
-                  (parent.dist1 - sprite->dist) * (sprite->dist - parent.dist2) >= 0)
+                  parent.dist2 != FLT_MAX && (sprite->dist > parent.dist1 || 
+                                              sprite->dist > parent.dist2))
                {
                   float xinter = parent.minx + (parent.maxx - parent.minx) * 
                      (sprite->dist - parent.dist1) / (parent.dist2 - parent.dist1);
 
                   if(xinter >= sprite->x1 && xinter <= sprite->x2)
                   {
-                     move = true;
                      if(parent.dist1 > parent.dist2)
                      {
                         movex1 = (int)xinter + 1;
@@ -2141,16 +2140,26 @@ void R_DrawPostBSP(rendercontext_t &context)
                         sprite->x1 = (int)xinter;
                      }
                   }
+                  else if(sprite->dist > parent.dist1 && sprite->dist > parent.dist2)
+                  {
+                     skip = true;
+                     movex1 = sprite->x1;
+                     movex2 = sprite->x2;
+                     movestartx = sprite->startx;
+                  }
                }
                
-               R_drawSpriteInDSRange(
-                  context.cmapcontext,
-                  spritecontext,
-                  context.view, context.cb_view, context.bounds, drawsegs,
-                  sprite, firstds, lastds,
-                  masked->ceilingclip, masked->floorclip
-               );         // killough
-               if(move && movex2 >= movex1)
+               if(!skip)
+               {
+                  R_drawSpriteInDSRange(
+                     context.cmapcontext,
+                     spritecontext,
+                     context.view, context.cb_view, context.bounds, drawsegs,
+                     sprite, firstds, lastds,
+                     masked->ceilingclip, masked->floorclip
+                  );         // killough
+               }
+               if(movex2 > movex1)
                {
                   vissprite_t clone = *sprite;
                   // TODO: also think of sector portals (pros/cons)
