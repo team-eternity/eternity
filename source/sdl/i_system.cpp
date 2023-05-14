@@ -176,9 +176,6 @@ void I_Quit(void)
    // sf : rearrange this so the errmsg doesn't get messed up
    if(error_exitcode >= I_ERRORLEVEL_MESSAGE)
       puts(errmsg);   // killough 8/8/98
-
-   // FIXME: TEMPORARILY disabled on MacOS because of some crash in SDL_Renderer
-   // affecting functions. MUST FIX.
    else if(!speedyexit) // MaxW: The user didn't Alt+F4
       I_EndDoom();
 
