@@ -178,6 +178,8 @@ static void R_clearPortalWindow(planecontext_t &context, ZoneHeap &heap,
    window->vangle = 0;
    window->maskedindex = -1;
    window->parentmasked = 0;  // default to the main view
+   window->dist1 = FLT_MAX;   // init invalid values"
+   window->dist2 = FLT_MAX;
    memset(&window->barrier, 0, sizeof(window->barrier));
    if(!noplanes)
    {
@@ -1161,6 +1163,10 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
    {
       parent.portal = window->portal;
       parent.line = window->line;
+      parent.dist1 = window->dist1;
+      parent.dist2 = window->dist2;
+      parent.minx = window->minx;
+      parent.maxx = window->maxx;
    }
    
    // Only push the overlay if this is the head window

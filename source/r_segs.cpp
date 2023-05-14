@@ -270,6 +270,12 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
    if(cmapcontext.fixedcolormap)
       column.colormap = cmapcontext.fixedcolormap;
 
+   auto updateWindowDist = [&segclip](pwindow_t *window) {
+      if(window->dist1 == FLT_MAX)
+         window->dist1 = segclip.dist;
+      window->dist2 = segclip.dist;
+   };
+
    for(i = segclip.x1; i <= segclip.x2; i++)
    {
       cliptop = (int)ceilingclip[i];
@@ -308,6 +314,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                   segclip.secwindow.ceiling, i, (float)cliptop, (float)line
                );
                ceilingclip[i] = (float)t;
+               updateWindowDist(segclip.secwindow.ceiling);
             }
             else if(segclip.plane.ceiling && segclip.markflags & SEG_MARKCEILING)
             {
@@ -348,6 +355,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                   segclip.secwindow.floor, i, (float)line, (float)clipbot
                );
                floorclip[i] = (float)b;
+               updateWindowDist(segclip.secwindow.floor);
             }
             else if(segclip.plane.floor && segclip.markflags & SEG_MARKFLOOR)
             {
@@ -436,6 +444,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                      planecontext, portalcontext, heap, viewpoint, bounds,
                      segclip.l_window, i, ceilingclip[i], floorclip[i]
                   );
+                  updateWindowDist(segclip.l_window);
                }
                else
                {
@@ -443,6 +452,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                      planecontext, portalcontext, heap, viewpoint, bounds,
                      segclip.l_window, i, (float)t, (float)b
                   );
+                  updateWindowDist(segclip.l_window);
                }
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
@@ -476,6 +486,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                      segclip.t_window, i,
                      static_cast<float>(column.y1), static_cast<float>(column.y2)
                   );
+                  updateWindowDist(segclip.t_window);
                   ceilingclip[i] = static_cast<float>(column.y2 + 1);
                }
                else
@@ -518,6 +529,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                      segclip.b_window, i,
                      static_cast<float>(column.y1), static_cast<float>(column.y2)
                   );
+                  updateWindowDist(segclip.b_window);
                   floorclip[i] = static_cast<float>(column.y1 - 1);
                }
                else
@@ -555,6 +567,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                   planecontext, portalcontext, heap, viewpoint, bounds,
                   segclip.l_window, i, ceilingclip[i], floorclip[i]
                );
+               updateWindowDist(segclip.l_window);
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
             }
@@ -576,6 +589,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
             planecontext, portalcontext, heap, viewpoint, bounds,
             segclip.l_window, i, (float)t, (float)b
          );
+         updateWindowDist(segclip.l_window);
          ceilingclip[i] = view.height - 1.0f;
          floorclip[i] = 0.0f;
       }

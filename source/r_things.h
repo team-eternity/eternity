@@ -58,6 +58,8 @@ struct maskedparent_t
    int index;              // index of maskedrange_t rendered on top of current one
    const line_t *line;     // linedef of portal, which can be either wall or edge
    const portal_t *portal; // the portal, as it's not a straightforward pointer from line
+   float dist1, dist2;     // for checking if intersecting sprite
+   int minx, maxx;
 };
 
 // SoM 12/13/03: the stack for use with portals

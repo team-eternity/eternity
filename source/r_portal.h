@@ -329,6 +329,7 @@ struct pwindow_t
    float *top;
    float *bottom;
    int minx, maxx;
+   float dist1, dist2;  // useful for sprite clipping
 
    R_WindowFunc  func;
    R_ClipSegFunc clipfunc;

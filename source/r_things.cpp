@@ -2155,28 +2155,64 @@ void R_DrawPostBSP(rendercontext_t &context)
                hitinfo.minx = INT_MAX;
                hitinfo.maxx = INT_MIN;
                vissprite_t *sprite = spritecontext.vissprite_ptrs[i];
-               R_drawSpriteInDSRange(
-                  context.cmapcontext,
-                  spritecontext,
-                  context.view, context.cb_view, context.bounds, drawsegs,
-                  sprite, firstds, lastds,
-                  masked->ceilingclip, masked->floorclip, hitinfo
-               );         // killough
-               if(hitinfo.hit && masked->parent.index >= 0 && (hitinfo.minx > sprite->x1 ||
-                                                               hitinfo.maxx < sprite->x2))
+
+               const maskedparent_t &parent = masked->parent;
+               bool move = false;
+               int movex1 = 0, movex2 = 0;
+               float movestartx = 0;
+               if(parent.index >= 0 && parent.portal->type == R_LINKED && parent.dist1 != FLT_MAX && 
+                  parent.dist2 != FLT_MAX && 
+                  (parent.dist1 - sprite->dist) * (sprite->dist - parent.dist2) >= 0)
+               {
+                  float xinter = parent.minx + (parent.maxx - parent.minx) * 
+                     (sprite->dist - parent.dist1) / (parent.dist2 - parent.dist1);
+
+                  if(xinter >= sprite->x1 && xinter <= sprite->x2)
+                  {
+                     move = true;
+                     if(parent.dist1 > parent.dist2)
+                     {
+                        movex1 = (int)xinter + 1;
+                        movestartx = sprite->startx + sprite->xstep * ((int)xinter + 1 - sprite->x1);
+                        movex2 = sprite->x2;
+                        sprite->x2 = (int)xinter;
+                     }
+                     else
+                     {
+                        movex1 = sprite->x1;
+                        movestartx = sprite->startx;
+                        movex2 = (int)xinter - 1;
+                        sprite->startx += sprite->xstep * ((int)xinter - sprite->x1);
+                        sprite->x1 = (int)xinter;
+                     }
+                  }
+               }
+               
+               //if(!move)
+               {
+                  R_drawSpriteInDSRange(
+                     context.cmapcontext,
+                     spritecontext,
+                     context.view, context.cb_view, context.bounds, drawsegs,
+                     sprite, firstds, lastds,
+                     masked->ceilingclip, masked->floorclip, hitinfo
+                  );         // killough
+               }
+               if(move && movex2 >= movex1)
+               //if(hitinfo.hit && masked->parent.index >= 0 && (hitinfo.minx > sprite->x1 ||
+               //                                                hitinfo.maxx < sprite->x2))
                {
                   vissprite_t clone = *sprite;
                   // TODO: also think of sector portals (pros/cons)
-                  I_Assert(masked->parent.portal, "If parentrange must also have parentportal");
-                  if(masked->parent.portal->type == R_LINKED)
-                  {
-                     const v3fixed_t &delta = masked->parent.portal->data.link.delta;
-                     clone.gx -= delta.x;
-                     clone.gy -= delta.y;
-                     clone.gz -= delta.z;
-                     clone.gzt -= delta.z;
-                     clone.cloningLine = masked->parent.line;
-                  }
+                  const v3fixed_t &delta = parent.portal->data.link.delta;
+                  clone.gx -= delta.x;
+                  clone.gy -= delta.y;
+                  clone.gz -= delta.z;
+                  clone.gzt -= delta.z;
+                  clone.cloningLine = parent.line;
+                  clone.x1 = movex1;
+                  clone.x2 = movex2;
+                  clone.startx = movestartx;
                   //if(hitinfo.maxx >= hitinfo.minx)
                   //{
                   //   if(hitinfo.minx > sprite->x1)
