@@ -1400,6 +1400,12 @@ void R_RenderPortals(rendercontext_t &context)
 
       if(windowhead->maxx >= windowhead->minx)
          windowhead->func(context, windowhead);
+      else  
+      {
+         // FIXME: we need to push an empty post now in order to be in sync with the window creation. Normally we shouldn't
+         R_PushPost(context.bspcontext, context.spritecontext, *context.heap, context.bounds, false, 
+                    nullptr, {});
+      }
 
       portalrender.active = false;
       portalrender.w = nullptr;
