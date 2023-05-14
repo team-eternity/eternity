@@ -1845,13 +1845,10 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
       s1 = P_PointOnDivlineSide(seg->v1->x, seg->v1->y, &sprite_clip);
       s2 = P_PointOnDivlineSide(seg->v2->x, seg->v2->y, &sprite_clip);
 
-      if(s1 != s2)
-      {
-         if(spr->cloningLine == ds->curline->linedef)
-            s1 = 1;  // make it show always behind
-         else
-            s1 = !R_PointOnSegSide(spr->gx, spr->gy, ds->curline);
-      }
+      if(spr->cloningLine == ds->curline->linedef)
+         s1 = 1;
+      else if(s1 != s2)
+         s1 = !R_PointOnSegSide(spr->gx, spr->gy, ds->curline);
 
       int r1, r2;
       if(s1)
