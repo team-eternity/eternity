@@ -1076,9 +1076,7 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
    float tx1, tx2, tz1, tz2;
    float idist;
    float swidth, stopoffset, sleftoffset;
-   float x1, x2, y1, y2;
    float pstep = 0.0f;
-   int   intx1, intx2;
 
    // haleyjd 04/18/99: MF2_DONTDRAW
    //         09/01/02: zdoom-style translucency
@@ -1191,16 +1189,16 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
    idist = 1.0f / roty;
    distxscale = idist * view.xfoc;
 
-   x1 = view.xcenter + (tx1 * distxscale);
-   if(x1 >= bounds.fendcolumn)
+   const float x1 = view.xcenter + (tx1 * distxscale);
+   if(x1 >= bounds.fendcolumn || (portalrender.active && x1 > portalrender.maxx))
       return;
 
-   x2 = view.xcenter + (tx2 * distxscale);
-   if(x2 < bounds.fstartcolumn)
+   const float x2 = view.xcenter + (tx2 * distxscale);
+   if(x2 < bounds.fstartcolumn || (portalrender.active && x2 < portalrender.minx))
       return;
 
-   intx1 = (int)(x1 + 0.999f);
-   intx2 = (int)(x2 - 0.001f);
+   const int intx1 = (int)(x1 + 0.999f);
+   const int intx2 = (int)(x2 - 0.001f);
 
    distyscale = idist * view.yfoc;
    // SoM: forgot about footclipping
@@ -1211,13 +1209,13 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
       floorclip = 0;
    }
    tz1 = thing->yscale * stopoffset + M_FixedToFloat(spritepos.z - floorclip) - cb_viewpoint.z;
-   y1  = view.ycenter - (tz1 * distyscale);
-   if(y1 >= view.height)
+   const float y1  = view.ycenter - (tz1 * distyscale);
+   if(y1 >= view.height || (portalrender.active && y1 > portalrender.maxy))
       return;
 
    tz2 = tz1 - spriteheight[lump] * thing->yscale;
-   y2  = view.ycenter - (tz2 * distyscale) - 1.0f;
-   if(y2 < 0.0f)
+   const float y2  = view.ycenter - (tz2 * distyscale) - 1.0f;
+   if(y2 < 0.0f || (portalrender.active && y2 < portalrender.miny))
       return;
 
    if(x2 >= x1)
