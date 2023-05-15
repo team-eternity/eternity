@@ -55,7 +55,7 @@ extern float *screenheightarray;
 // Data for rendering sprites across linedef portals correctly
 struct maskedparent_t
 {
-   int index;              // index of maskedrange_t rendered on top of current one
+   bool fromlineportal;    // whether it's from line portal
    int curindex;           // current index, needed to keep track
    const line_t *line;     // linedef of portal, which can be either wall or edge
    const portal_t *portal; // the portal, as it's not a straightforward pointer from line

@@ -1322,6 +1322,7 @@ void R_RenderViewContext(rendercontext_t &context)
    memset(context.spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
    R_ClearMarkedSprites(context.spritecontext, *context.heap);
    context.portalcontext.worldwindowid = 0;
+   context.portalcontext.numrelations = 0;
 
    // Clear buffers.
    R_ClearClipSegs(context.bspcontext, context.bounds);
@@ -1344,7 +1345,7 @@ void R_RenderViewContext(rendercontext_t &context)
 
    // Push the first element on the Post-BSP stack
    R_PushPost(context.bspcontext, context.spritecontext, *context.heap, context.bounds, true,
-              nullptr, { -1 });
+              nullptr, { false });
 
    // SoM 12/9/03: render the portals.
    R_RenderPortals(context);

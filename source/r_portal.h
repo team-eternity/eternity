@@ -345,7 +345,6 @@ struct pwindow_t
    
    // post BSP index for this window.
    int maskedindex;
-   int parentmasked;
 };
 
 // SoM: Cardboard

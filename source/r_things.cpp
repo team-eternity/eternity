@@ -690,14 +690,6 @@ void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHe
       post->masked->lastsprite = int(spritecontext.num_vissprite);
       
       post->masked->parent = parent;
-      for(i = pstacksize - 1; i >= 0; i--)
-      {
-         if(pstack[i].masked && pstack[i].masked->parent.curindex == post->masked->parent.index)
-         {
-            post->masked->parent.index = i;
-            break;
-         }
-      }
 
       memcpy(post->masked->ceilingclip, portaltop    + bounds.startcolumn, sizeof(*portaltop)    * bounds.numcolumns);
       memcpy(post->masked->floorclip,   portalbottom + bounds.startcolumn, sizeof(*portalbottom) * bounds.numcolumns);
@@ -2006,39 +1998,62 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
 
 // Given a set of new sprites, add them on the parent post-BSP stack entry with given index, while
 // also updating subsequent entries.
-void R_updateParentPostStack(rendercontext_t &context,
-                             const PODCollection<vissprite_t> &sprites, int postindex)
+void R_updateParentPostStacks(rendercontext_t &context, const PODCollection<vissprite_t> &sprites, 
+                              const maskedparent_t &current)
 {
    spritecontext_t &spritecontext =  context.spritecontext;
    ZoneHeap        &heap          = *context.heap;
+   portalcontext_t &portalcontext =  context.portalcontext;
    
    vissprite_t *&vissprites          = spritecontext.vissprites;
    size_t       &num_vissprite       = spritecontext.num_vissprite;
    size_t       &num_vissprite_alloc = spritecontext.num_vissprite_alloc;
    poststack_t *&pstack              = spritecontext.pstack;
    int          &pstacksize          = spritecontext.pstacksize;
-   
-   int newadd = (int)sprites.getLength();
-   num_vissprite += newadd;
-   if(num_vissprite > num_vissprite_alloc)
+   if(pstacksize <= 0)
+      return;
+
+   int                     numrelations = portalcontext.numrelations;
+   const windowrelation_t *relations    = portalcontext.relations;
+
+   for(int i = 0; i < numrelations; ++i)
    {
-      num_vissprite_alloc = newadd + (num_vissprite_alloc ? 2 * num_vissprite_alloc : 128);
-      vissprites = zhrealloc(heap, vissprite_t *, vissprites, num_vissprite_alloc * sizeof(*vissprites));
-   }
-   
-   // Now we have newadd empty sprites. Let's do them
-   maskedrange_t *masked = pstack[postindex].masked;
-   I_Assert(masked, "Expected masked");
-   memmove(vissprites + masked->lastsprite + newadd, vissprites + masked->lastsprite,
-           (num_vissprite - newadd - masked->lastsprite) * sizeof(*vissprites));
-   memcpy(vissprites + masked->lastsprite, &sprites[0], newadd * sizeof(*vissprites));
-   masked->lastsprite += newadd;
-   for(int i = postindex + 1; i < pstacksize; ++i)
-      if(pstack[i].masked)
+      const windowrelation_t &relation = relations[i];
+      if(relation.current != current.curindex)
+         continue;
+      int postindex = relation.parent;
+      int j;
+      for(j = pstacksize - 1; j >= 0; --j)
+         if(pstack[j].masked && pstack[j].masked->parent.curindex == postindex)
+         {
+            postindex = j;
+            break;
+         }
+      if(j < 0)
+         return;
+
+      int newadd = (int)sprites.getLength();
+      num_vissprite += newadd;
+      if(num_vissprite > num_vissprite_alloc)
       {
-         pstack[i].masked->firstsprite += newadd;
-         pstack[i].masked->lastsprite += newadd;
+         num_vissprite_alloc = newadd + (num_vissprite_alloc ? 2 * num_vissprite_alloc : 128);
+         vissprites = zhrealloc(heap, vissprite_t *, vissprites, num_vissprite_alloc * sizeof(*vissprites));
       }
+
+      // Now we have newadd empty sprites. Let's do them
+      maskedrange_t *masked = pstack[postindex].masked;
+      I_Assert(masked, "Expected masked");
+      memmove(vissprites + masked->lastsprite + newadd, vissprites + masked->lastsprite,
+              (num_vissprite - newadd - masked->lastsprite) * sizeof(*vissprites));
+      memcpy(vissprites + masked->lastsprite, &sprites[0], newadd * sizeof(*vissprites));
+      masked->lastsprite += newadd;
+      for(int i = postindex + 1; i < pstacksize; ++i)
+         if(pstack[i].masked)
+         {
+            pstack[i].masked->firstsprite += newadd;
+            pstack[i].masked->lastsprite += newadd;
+         }
+   }
 }
 
 //
@@ -2123,7 +2138,7 @@ void R_DrawPostBSP(rendercontext_t &context)
                int movex1 = 0, movex2 = -1;
                float movestartx = 0;
                bool skip = false;
-               if(parent.index >= 0 && parent.portal->type == R_LINKED && parent.dist1 != FLT_MAX && 
+               if(parent.fromlineportal && parent.portal->type == R_LINKED && parent.dist1 != FLT_MAX && 
                   parent.dist2 != FLT_MAX && (sprite->dist > parent.dist1 || 
                                               sprite->dist > parent.dist2))
                {
@@ -2185,8 +2200,8 @@ void R_DrawPostBSP(rendercontext_t &context)
                   clones.add(clone);
                }
             }
-            if(masked->parent.index >= 0 && !clones.isEmpty())
-               R_updateParentPostStack(context, clones, masked->parent.index);
+            if(masked->parent.fromlineportal && !clones.isEmpty())
+               R_updateParentPostStacks(context, clones, masked->parent);
          }
 
          // render any remaining masked mid textures

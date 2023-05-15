@@ -177,7 +177,6 @@ static void R_clearPortalWindow(planecontext_t &context, ZoneHeap &heap,
    window->vx = window->vy = window->vz = 0;
    window->vangle = 0;
    window->maskedindex = -1;
-   window->parentmasked = 0;  // default to the main view
    window->dist1 = FLT_MAX;   // init invalid values"
    window->dist2 = FLT_MAX;
    memset(&window->barrier, 0, sizeof(window->barrier));
@@ -215,7 +214,6 @@ static pwindow_t *newPortalWindow(planecontext_t &planecontext, portalcontext_t 
    
    // This grows in sync with the calls of P_PostBSP during window unwinding (R_RenderPortals). nextwindowindex gets reset to 1 before we start a rendering
    ret->maskedindex = portalcontext.postbspwindowid++;
-   ret->parentmasked = -1;
 
    return ret;
 }
@@ -359,6 +357,41 @@ static void R_createChildWindow(planecontext_t &planecontext, portalcontext_t &p
    child->clipfunc = parent->clipfunc;
 }
 
+static void R_addParentRelation(ZoneHeap &heap, portalcontext_t &portalcontext, const pwindow_t &window)
+{
+   const portalrender_t &portalrender = portalcontext.portalrender;
+   int &numrelations = portalcontext.numrelations;
+   int &relationalloc = portalcontext.relationalloc;
+   windowrelation_t *&relations = portalcontext.relations;
+
+   int parent = portalrender.active ? portalrender.w->maskedindex : 0;
+   for(int i = 0; i < numrelations; ++i)
+   {
+      windowrelation_t &relation = relations[i];
+      if(relations[i].current == window.maskedindex && relations[i].parent == parent)
+      {
+         if(i)
+         {
+            // Move the found relation to the beginning so we don't spend too much time looking for
+            // it next time.
+            windowrelation_t temp = relations[0];
+            relations[0] = relation;
+            relation = temp;
+         }
+         return;
+      }
+   }
+   // Not found, so add
+   if(numrelations >= relationalloc)
+   {
+      relationalloc = relationalloc ? 2 * relationalloc : 16;
+      relations = zhrealloc(heap, windowrelation_t *, relations, relationalloc * sizeof(*relations));
+   }
+   relations[numrelations].current = window.maskedindex;
+   relations[numrelations].parent = parent;
+   ++numrelations;
+}
+
 //
 // Adds a column to a portal for rendering. A child portal may
 // be created.
@@ -428,6 +461,8 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
 
       if(ybottom > windowbottom)
          window->bottom[x] = ybottom;
+
+      R_addParentRelation(heap, portalcontext, *window);
       return;
    }
 
@@ -447,11 +482,7 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
       window->vangle = viewpoint.angle;
 
       // Once window is visible, assign the parent-masked.
-      if(window->parentmasked == -1 && ybottom >= ytop)
-      {
-         window->parentmasked = portalcontext.portalrender.active ?
-            portalcontext.portalrender.w->maskedindex : 0;
-      }
+      R_addParentRelation(heap, portalcontext, *window);
       return;
    }
 
@@ -462,11 +493,7 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
 
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
-      if(window->parentmasked == -1 && ybottom >= ytop)
-      {
-         window->parentmasked = portalcontext.portalrender.active ?
-            portalcontext.portalrender.w->maskedindex : 0;
-      }
+      R_addParentRelation(heap, portalcontext, *window);
       return;
    }
 
@@ -477,11 +504,7 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
 
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
-      if(window->parentmasked == -1 && ybottom >= ytop)
-      {
-         window->parentmasked = portalcontext.portalrender.active ?
-            portalcontext.portalrender.w->maskedindex : 0;
-      }
+      R_addParentRelation(heap, portalcontext, *window);
       return;
    }
 }
@@ -940,7 +963,7 @@ static void R_renderPrimitivePortal(rendercontext_t &context, pwindow_t *window)
    if(window->head == window && window->poverlay)
    {
       // not interested on tracking post masked parent here
-      R_PushPost(context.bspcontext, spritecontext, *context.heap, bounds, false, window, { -1 });
+      R_PushPost(context.bspcontext, spritecontext, *context.heap, bounds, false, window, { false });
    }
 
    R_restoreLastView(last, viewpoint, cb_viewpoint);
@@ -1175,7 +1198,7 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
 
    
    maskedparent_t parent = {};
-   parent.index = window->type == pw_line && window->portal->type == R_LINKED ? window->parentmasked : -1;
+   parent.fromlineportal = window->type == pw_line && window->portal->type == R_LINKED;
    parent.curindex = window->maskedindex;
    // Set parent-masked portal only if this is a LINKED line portal window
    // TODO: also handle anchored/twoway
