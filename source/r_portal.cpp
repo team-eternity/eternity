@@ -365,17 +365,18 @@ static void R_addParentRelation(ZoneHeap &heap, portalcontext_t &portalcontext, 
    windowrelation_t *&relations = portalcontext.relations;
 
    int parent = portalrender.active ? portalrender.w->maskedindex : 0;
-   for(int i = 0; i < numrelations; ++i)
+   int lastindex = numrelations - 1;
+   for(int i = lastindex; i >= 0; --i)
    {
       windowrelation_t &relation = relations[i];
       if(relations[i].current == window.maskedindex && relations[i].parent == parent)
       {
-         if(i)
+         if(i < lastindex)
          {
-            // Move the found relation to the beginning so we don't spend too much time looking for
+            // Move the found relation to the end so we don't spend too much time looking for
             // it next time.
-            windowrelation_t temp = relations[0];
-            relations[0] = relation;
+            windowrelation_t temp = relations[lastindex];
+            relations[lastindex] = relation;
             relation = temp;
          }
          return;

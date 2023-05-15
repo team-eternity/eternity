@@ -2016,7 +2016,7 @@ void R_updateParentPostStacks(rendercontext_t &context, const PODCollection<viss
    int                     numrelations = portalcontext.numrelations;
    const windowrelation_t *relations    = portalcontext.relations;
 
-   for(int i = 0; i < numrelations; ++i)
+   for(int i = numrelations - 1; i >= 0; --i)
    {
       const windowrelation_t &relation = relations[i];
       if(relation.current != current.curindex)
