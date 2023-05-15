@@ -435,6 +435,7 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
 
    if(x <= window->maxx && x >= window->minx)
    {
+      R_addParentRelation(heap, portalcontext, *window);
       // column falls inside the range of the portal.
 
       // check to see if the portal column isn't occupied
@@ -463,7 +464,7 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
       if(ybottom > windowbottom)
          window->bottom[x] = ybottom;
 
-      R_addParentRelation(heap, portalcontext, *window);
+      
       return;
    }
 
