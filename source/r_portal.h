@@ -329,7 +329,10 @@ struct pwindow_t
    float *top;
    float *bottom;
    int minx, maxx;
-   float dist1, dist2;  // useful for sprite clipping
+
+   // These are needed for sprite wall portal clipping and rendering
+   float x1frac, x2frac;
+   float dist1, dist2;
 
    R_WindowFunc  func;
    R_ClipSegFunc clipfunc;
@@ -350,7 +353,7 @@ struct pwindow_t
 // SoM: Cardboard
 void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, ZoneHeap &heap,
                  const viewpoint_t &viewpoint,const contextbounds_t &bounds,
-                 pwindow_t *window, int x, float dist, float ytop, float ybottom);
+                 pwindow_t *window, int x, const cb_seg_t &seg, float ytop, float ybottom);
 
 pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext, ZoneHeap &heap,
                                    const viewpoint_t &viewpoint, const contextbounds_t &bounds,

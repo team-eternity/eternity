@@ -2142,7 +2142,7 @@ void R_DrawPostBSP(rendercontext_t &context)
                   parent.dist2 != FLT_MAX && (sprite->dist > parent.dist1 || 
                                               sprite->dist > parent.dist2))
                {
-                  float xinter = parent.minx + (parent.maxx - parent.minx) * 
+                  float xinter = parent.x1frac + (parent.x2frac - parent.x1frac) * 
                      (sprite->dist - parent.dist1) / (parent.dist2 - parent.dist1);
 
                   if(xinter >= sprite->x1 && xinter <= sprite->x2)

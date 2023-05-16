@@ -177,6 +177,8 @@ static void R_clearPortalWindow(planecontext_t &context, ZoneHeap &heap,
    window->vx = window->vy = window->vz = 0;
    window->vangle = 0;
    window->maskedindex = -1;
+   window->x1frac = FLT_MAX;
+   window->x2frac = -FLT_MAX;
    window->dist1 = FLT_MAX;   // init invalid values"
    window->dist2 = FLT_MAX;
    memset(&window->barrier, 0, sizeof(window->barrier));
@@ -399,7 +401,7 @@ static void R_addParentRelation(ZoneHeap &heap, portalcontext_t &portalcontext, 
 //
 void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, ZoneHeap &heap,
                  const viewpoint_t &viewpoint,const contextbounds_t &bounds,
-                 pwindow_t *window, int x, float dist, float ytop, float ybottom)
+                 pwindow_t *window, int x, const cb_seg_t &seg, float ytop, float ybottom)
 {
    float windowtop, windowbottom;
 
@@ -433,9 +435,22 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
    if(ybottom < 0.0f || ytop >= view.height)
       return;
 
+   R_addParentRelation(heap, portalcontext, *window);
+
+   // Apply precise and full seg x and dist info for portal sprite rendering
+   if(seg.x1frac < window->x1frac)
+   {
+      window->x1frac = seg.x1frac;
+      window->dist1 = seg.dist;
+   }
+   if(seg.x2frac > window->x2frac)
+   {
+      window->x2frac = seg.x2frac;
+      window->dist2 = seg.dist2;
+   }
+
    if(x <= window->maxx && x >= window->minx)
    {
-      R_addParentRelation(heap, portalcontext, *window);
       // column falls inside the range of the portal.
 
       // check to see if the portal column isn't occupied
@@ -452,7 +467,7 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
          if(!window->child)
             R_createChildWindow(planecontext, portalcontext, heap, bounds, window);
 
-         R_WindowAdd(planecontext, portalcontext, heap, viewpoint, bounds, window->child, x, dist, ytop, ybottom);
+         R_WindowAdd(planecontext, portalcontext, heap, viewpoint, bounds, window->child, x, seg, ytop, ybottom);
          return;
       }
 
@@ -473,7 +488,6 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
       // Portal is empty so place the column anywhere (first column added to 
       // the portal)
       window->minx = window->maxx = x;
-      window->dist1 = window->dist2 = dist;
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
 
@@ -483,30 +497,24 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
       window->vz = viewpoint.z;
       window->vangle = viewpoint.angle;
 
-      // Once window is visible, assign the parent-masked.
-      R_addParentRelation(heap, portalcontext, *window);
       return;
    }
 
    if(x > window->maxx)
    {
       window->maxx = x;
-      window->dist2 = dist;
 
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
-      R_addParentRelation(heap, portalcontext, *window);
       return;
    }
 
    if(x < window->minx)
    {
       window->minx = x;
-      window->dist1 = dist;
 
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
-      R_addParentRelation(heap, portalcontext, *window);
       return;
    }
 }
@@ -1210,8 +1218,8 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
       parent.line = window->line;
       parent.dist1 = window->dist1;
       parent.dist2 = window->dist2;
-      parent.minx = window->minx;
-      parent.maxx = window->maxx;
+      parent.x1frac = window->x1frac;
+      parent.x2frac = window->x2frac;
    }
    
    // Only push the overlay if this is the head window
