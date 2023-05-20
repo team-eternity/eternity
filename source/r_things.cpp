@@ -2445,10 +2445,12 @@ void R_ScanForSpritesOverlappingWallPortals(const portalcontext_t &portalcontext
                                             const spritecontext_t &spritecontext)
 {
    const poststack_t *pstack = spritecontext.pstack;
-   int pstacksize = spritecontext.pstacksize;
-   const maskedrange_t &masked = *pstack[pstacksize - 1].masked;
-   const vissprite_t *vissprites = spritecontext.vissprites;
 
+   int pstacksize = spritecontext.pstacksize;
+   I_Assert(pstacksize >= 1, "Stack size insufficient");
+   const maskedrange_t &masked = *pstack[pstacksize - 1].masked;
+
+   vissprite_t *vissprites = spritecontext.vissprites;
    const pwindow_t *windowhead = portalcontext.windowhead;
 
    for(int i = masked.firstsprite; i <= masked.lastsprite; ++i)
@@ -2458,7 +2460,8 @@ void R_ScanForSpritesOverlappingWallPortals(const portalcontext_t &portalcontext
          if(window->type != pw_line || window->portal->type != R_LINKED)
             continue;
          // NOTE: line windows can't have children, so skip that detail
-         int xinter = R_spriteIntersectsForegroundWindow(vissprites[i], *window);
+         vissprite_t &sprite = vissprites[i];
+         int xinter = R_spriteIntersectsForegroundWindow(sprite, *window);
          if(xinter != INT_MIN)
          {
             if(xinter == INT_MAX)
@@ -2467,7 +2470,16 @@ void R_ScanForSpritesOverlappingWallPortals(const portalcontext_t &portalcontext
             }
             else
             {
-               // TODO: cut off sprite and make a new one or prepare it.
+               // TODO: prepare a new sprite beyond the portal
+               if(window->dist1 > window->dist2)
+               {
+                  sprite.startx += sprite.xstep * (xinter - sprite.x1);
+                  sprite.x1 = xinter;
+               }
+               else
+               {
+                  sprite.x2 = xinter;
+               }
             }
          }
       }
