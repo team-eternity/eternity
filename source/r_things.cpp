@@ -2411,7 +2411,7 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
 // Check if sprite intersects window
 // Returns INT_MIN if it doesn't intersect.
 // Returns INT_MAX if the sprite is completely into the window
-int R_SpriteIntersectsForegroundWindow(const vissprite_t &sprite, const pwindow_t &window)
+static int R_spriteIntersectsForegroundWindow(const vissprite_t &sprite, const pwindow_t &window)
 {
    // Sprite is either in front of window or not visually intersecting it anyway
    // IMPORTANT: dist is actually inverted. Think of dist as drawing size. If bigger, it's closer,
@@ -2439,6 +2439,39 @@ int R_SpriteIntersectsForegroundWindow(const vissprite_t &sprite, const pwindow_
       return INT_MAX;   // redraw beyond
    }
    return INT_MIN;   // no intersection
+}
+
+void R_ScanForSpritesOverlappingWallPortals(const portalcontext_t &portalcontext,
+                                            const spritecontext_t &spritecontext)
+{
+   const poststack_t *pstack = spritecontext.pstack;
+   int pstacksize = spritecontext.pstacksize;
+   const maskedrange_t &masked = *pstack[pstacksize - 1].masked;
+   const vissprite_t *vissprites = spritecontext.vissprites;
+
+   const pwindow_t *windowhead = portalcontext.windowhead;
+
+   for(int i = masked.firstsprite; i <= masked.lastsprite; ++i)
+   {
+      for(const pwindow_t *window = windowhead; window; window = window->next)
+      {
+         if(window->type != pw_line || window->portal->type != R_LINKED)
+            continue;
+         // NOTE: line windows can't have children, so skip that detail
+         int xinter = R_spriteIntersectsForegroundWindow(vissprites[i], *window);
+         if(xinter != INT_MIN)
+         {
+            if(xinter == INT_MAX)
+            {
+               // TODO: handle case where sprite is completely beyond portal.
+            }
+            else
+            {
+               // TODO: cut off sprite and make a new one or prepare it.
+            }
+         }
+      }
+   }
 }
 
 //=============================================================================

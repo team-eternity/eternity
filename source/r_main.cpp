@@ -1347,29 +1347,7 @@ void R_RenderViewContext(rendercontext_t &context)
    R_PushPost(context.bspcontext, context.spritecontext, *context.heap, context.bounds, true,
               nullptr, { false });
 
-   {
-      const poststack_t *pstack = context.spritecontext.pstack;
-      int pstacksize = context.spritecontext.pstacksize;
-      const maskedrange_t &masked = *pstack[pstacksize - 1].masked;
-      const vissprite_t *vissprites = context.spritecontext.vissprites;
-
-      const pwindow_t *windowhead = context.portalcontext.windowhead;
-
-      for(int i = masked.firstsprite; i <= masked.lastsprite; ++i)
-      {
-         for(const pwindow_t *window = windowhead; window; window = window->next)
-         {
-            if(window->type != pw_line || window->portal->type != R_LINKED)
-               continue;
-            // NOTE: line windows can't have children, so skip that detail
-            int xinter = R_SpriteIntersectsForegroundWindow(vissprites[i], *window);
-            if(xinter != INT_MIN)
-            {
-               // TODO: move this elsewhere
-            }
-         }
-      }
-   }
+   R_ScanForSpritesOverlappingWallPortals(context.portalcontext, context.spritecontext);
 
    // SoM 12/9/03: render the portals.
    R_RenderPortals(context);

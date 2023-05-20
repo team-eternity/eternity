@@ -37,6 +37,7 @@ struct cb_column_t;
 struct spritecontext_t;
 struct contextbounds_t;
 struct portal_t;
+struct portalcontext_t;
 struct portalrender_t;
 struct viewpoint_t;
 struct cbviewpoint_t;
@@ -121,7 +122,8 @@ void R_ClearParticles(void);
 void R_InitParticles(void);
 particle_t *newParticle(void);
 
-int R_SpriteIntersectsForegroundWindow(const vissprite_t &sprite, const pwindow_t &window);
+void R_ScanForSpritesOverlappingWallPortals(const portalcontext_t &portalcontext,
+                                            const spritecontext_t &spritecontext);
 
 struct cb_maskedcolumn_t
 {
