@@ -43,6 +43,7 @@ struct cbviewpoint_t;
 struct bspcontext_t;
 struct cmapcontext_t;
 struct rendercontext_t;
+struct vissprite_t;
 class  ZoneHeap;
 
 using R_ColumnFunc = void (*)(cb_column_t &);
@@ -120,7 +121,7 @@ void R_ClearParticles(void);
 void R_InitParticles(void);
 particle_t *newParticle(void);
 
-int R_SpriteIntersectsWindow(const vissprite_t &sprite, const pwindow_t &window);
+int R_SpriteIntersectsForegroundWindow(const vissprite_t &sprite, const pwindow_t &window);
 
 struct cb_maskedcolumn_t
 {
