@@ -120,6 +120,8 @@ void R_ClearParticles(void);
 void R_InitParticles(void);
 particle_t *newParticle(void);
 
+int R_SpriteIntersectsWindow(const vissprite_t &sprite, const pwindow_t &window);
+
 struct cb_maskedcolumn_t
 {
    float ytop;

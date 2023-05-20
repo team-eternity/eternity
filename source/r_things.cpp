@@ -2152,20 +2152,20 @@ void R_DrawPostBSP(rendercontext_t &context)
                         movex1 = (int)xinter + 1;
                         movestartx = sprite->startx + sprite->xstep * ((int)xinter + 1 - sprite->x1);
                         movex2 = sprite->x2;
-                        sprite->x2 = (int)xinter;
+                        // sprite->x2 = (int)xinter;
                      }
                      else
                      {
                         movex1 = sprite->x1;
                         movestartx = sprite->startx;
                         movex2 = (int)xinter - 1;
-                        sprite->startx += sprite->xstep * ((int)xinter - sprite->x1);
-                        sprite->x1 = (int)xinter;
+                        // sprite->startx += sprite->xstep * ((int)xinter - sprite->x1);
+                        // sprite->x1 = (int)xinter;
                      }
                   }
                   else if(sprite->dist > parent.dist1 && sprite->dist > parent.dist2)
                   {
-                     skip = true;
+                     // skip = true;
                      movex1 = sprite->x1;
                      movex2 = sprite->x2;
                      movestartx = sprite->startx;
@@ -2200,8 +2200,8 @@ void R_DrawPostBSP(rendercontext_t &context)
                   clones.add(clone);
                }
             }
-            if(masked->parent.fromlineportal && !clones.isEmpty())
-               R_updateParentPostStacks(context, clones, masked->parent);
+            // if(masked->parent.fromlineportal && !clones.isEmpty())
+            //    R_updateParentPostStacks(context, clones, masked->parent);
          }
 
          // render any remaining masked mid textures
@@ -2406,6 +2406,21 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
       data = R_CPLink(sector);
       sector = R_addProjNode(mobj, data, delta, item, tail, nullptr);
    }
+}
+
+// Check if sprite intersects window
+// TODO: also return if it completely goes past one
+// TODO: actually do it correctly.
+int R_SpriteIntersectsWindow(const vissprite_t &sprite, const pwindow_t &window)
+{
+   if(sprite.dist <= window.dist1 && sprite.dist <= window.dist2)
+      return INT_MIN;
+
+   float xinter = window.x1frac + (window.x2frac - window.x1frac) * (sprite.dist - window.dist1) /
+         (window.dist2 - window.dist1);
+
+   if(xinter >= sprite.x1 && xinter <= sprite.x2)
+      return static_cast<int>(roundf(xinter));
 }
 
 //=============================================================================

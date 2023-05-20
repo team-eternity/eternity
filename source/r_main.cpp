@@ -1347,6 +1347,23 @@ void R_RenderViewContext(rendercontext_t &context)
    R_PushPost(context.bspcontext, context.spritecontext, *context.heap, context.bounds, true,
               nullptr, { false });
 
+   {
+      const poststack_t *pstack = context.spritecontext.pstack;
+      int pstacksize = context.spritecontext.pstacksize;
+      const maskedrange_t &masked = *pstack[pstacksize - 1].masked;
+
+      const pwindow_t *windowhead = context.portalcontext.windowhead;
+
+      for(int i = masked.firstsprite; i <= masked.lastsprite; ++i)
+      {
+         const pwindow_t *next;
+         for(const pwindow_t *window = windowhead; window; window = next)
+         {
+
+         }
+      }
+   }
+
    // SoM 12/9/03: render the portals.
    R_RenderPortals(context);
 
