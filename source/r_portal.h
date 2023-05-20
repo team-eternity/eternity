@@ -354,6 +354,7 @@ struct pwindow_t
 void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, ZoneHeap &heap,
                  const viewpoint_t &viewpoint,const contextbounds_t &bounds,
                  pwindow_t *window, int x, const cb_seg_t &seg, float ytop, float ybottom);
+bool R_WindowMatchesCurrentView(const viewpoint_t &viewpoint, const pwindow_t *window);
 
 pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext, ZoneHeap &heap,
                                    const viewpoint_t &viewpoint, const contextbounds_t &bounds,

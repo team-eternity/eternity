@@ -1347,7 +1347,8 @@ void R_RenderViewContext(rendercontext_t &context)
    R_PushPost(context.bspcontext, context.spritecontext, *context.heap, context.bounds, true,
               nullptr, { false });
 
-   R_ScanForSpritesOverlappingWallPortals(context.portalcontext, context.spritecontext);
+   R_ScanForSpritesOverlappingWallPortals(context.view, context.portalcontext,
+                                          context.spritecontext);
 
    // SoM 12/9/03: render the portals.
    R_RenderPortals(context);

@@ -2441,7 +2441,8 @@ static int R_spriteIntersectsForegroundWindow(const vissprite_t &sprite, const p
    return INT_MIN;   // no intersection
 }
 
-void R_ScanForSpritesOverlappingWallPortals(const portalcontext_t &portalcontext,
+void R_ScanForSpritesOverlappingWallPortals(const viewpoint_t &viewpoint,
+                                            const portalcontext_t &portalcontext,
                                             const spritecontext_t &spritecontext)
 {
    const poststack_t *pstack = spritecontext.pstack;
@@ -2453,12 +2454,17 @@ void R_ScanForSpritesOverlappingWallPortals(const portalcontext_t &portalcontext
    vissprite_t *vissprites = spritecontext.vissprites;
    const pwindow_t *windowhead = portalcontext.windowhead;
 
+   const portalrender_t &portalrender = portalcontext.portalrender;
+
    for(int i = masked.firstsprite; i <= masked.lastsprite; ++i)
    {
       for(const pwindow_t *window = windowhead; window; window = window->next)
       {
-         if(window->type != pw_line || window->portal->type != R_LINKED)
+         if((portalrender.active && window == portalrender.w) || window->type != pw_line ||
+            window->portal->type != R_LINKED || !R_WindowMatchesCurrentView(viewpoint, window))
+         {
             continue;
+         }
          // NOTE: line windows can't have children, so skip that detail
          vissprite_t &sprite = vissprites[i];
          int xinter = R_spriteIntersectsForegroundWindow(sprite, *window);
