@@ -782,6 +782,9 @@ void P_UnsetThingPosition(Mobj *thing)
 
 static void P_linkSpriteProj(const Mobj &thing)
 {
+   if(!gPortalBlockmap.isInit)   // TODO: defer it for later
+      return;
+
    // TODO: don't link (and unlink) if DONTDRAW
    I_Assert(sprites && spritewidth && spriteoffset, "We don't have sprites defined here!");
    const spritedef_t &sprdef = sprites[thing.sprite];

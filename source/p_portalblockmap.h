@@ -79,6 +79,8 @@ public:
    {
       return mBlocks[index];
    }
+   
+   bool isInit = false;
 
 private:
    //

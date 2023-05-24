@@ -70,6 +70,7 @@ void PortalBlockmap::mapInit()
       checkLinkSector(sector, sector.srf.ceiling.portal, surf_ceil, i);
    }
    mInitializing = false;
+   isInit = true;
 }
 
 //
