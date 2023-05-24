@@ -707,6 +707,17 @@ void P_initSectorPortalNeighbors()
    gSectorNeighborsThroughPortals.load(neighs[surf_floor], neighs[surf_ceil]);
 }
 
+static void P_linkDeferredThingsToPortals()
+{
+   for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+   {
+      Mobj *mo = thinker_cast<Mobj *>(th);
+      if(!mo)
+         continue;
+      P_LinkSpriteProj(*mo);
+   }
+}
+
 //
 // P_buildPortalMap
 //
@@ -801,6 +812,8 @@ static void P_buildPortalMap()
    gPortalBlockmap.mapInit();
 
    P_initSectorPortalNeighbors();
+   
+   P_linkDeferredThingsToPortals();
 }
 
 //

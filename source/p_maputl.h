@@ -137,6 +137,8 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo,
 lineopening_t P_SlopeOpening(v2fixed_t pos);
 lineopening_t P_SlopeOpeningPortalAware(v2fixed_t pos);
 
+void P_LinkSpriteProj(const Mobj &thing);
+
 void P_UnsetThingPosition(Mobj *thing);
 void P_SetThingPosition(Mobj *thing);
 bool P_BlockLinesIterator (int x, int y, bool func(line_t *, polyobj_t *, void *),

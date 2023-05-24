@@ -780,9 +780,9 @@ void P_UnsetThingPosition(Mobj *thing)
    }
 }
 
-static void P_linkSpriteProj(const Mobj &thing)
+void P_LinkSpriteProj(const Mobj &thing)
 {
-   if(!gPortalBlockmap.isInit)   // TODO: defer it for later
+   if(!gPortalBlockmap.isInit)   // defer it for later
       return;
 
    // TODO: don't link (and unlink) if DONTDRAW
@@ -902,7 +902,7 @@ void P_SetThingPosition(Mobj *thing)
          EV_ActivateSectorAction(prevss->sector, thing, SEAC_EXIT);
       }
       
-      P_linkSpriteProj(*thing);
+      P_LinkSpriteProj(*thing);
 
       // ioanch: link to portals
       // TODO: unlink on unset
