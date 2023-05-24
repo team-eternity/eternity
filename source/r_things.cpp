@@ -2532,12 +2532,13 @@ void R_LinkSpriteProj(Mobj &thing)
       const line_t **cutter;
       v2fixed_t coord;
       v3fixed_t delta;
+      int groupid;
    };
    
    PODCollection<item_t> queue;
    size_t queuepos = 0;
    
-   queue.add({&thing.portalspritecutter, {thing.x, thing.y}, {0, 0, 0}});
+   queue.add({&thing.portalspritecutter, {thing.x, thing.y}, {0, 0, 0}, thing.groupid});
 
    while(queuepos < queue.getLength())
    {
@@ -2566,12 +2567,9 @@ void R_LinkSpriteProj(Mobj &thing)
                   continue;
                const line_t *line = entry.line;
                I_Assert(line, "No line found at %d!", index);
-               if(P_BoxOnLineSide(bbox, line) != -1)
+               if(line->frontsector->groupid != item.groupid || P_BoxOnLineSide(bbox, line) != -1)
                   continue;
                I_Assert(entry.ldata, "No linkdata at %d!", index);
-               // TODO: add the sprite projection here
-               // What to add:
-               // - produce another projection
                
                v2fixed_t newcoord = {
                   item.coord.x + entry.ldata->delta.x,
@@ -2599,6 +2597,7 @@ void R_LinkSpriteProj(Mobj &thing)
                *item.cutter = line;
                spriteprojnode_t *node = R_newProjNode();
                node->mobj = &thing;
+               // FIXME: wrong sector
                sector_t *sector = R_PointInSubsector(newcoord.x, newcoord.y)->sector;
                node->sector = sector;
                node->delta = newdelta;
@@ -2607,7 +2606,7 @@ void R_LinkSpriteProj(Mobj &thing)
                node->mobjlink.insert(node, &thing.spriteproj);
                node->sectlink.insert(node, &sector->spriteproj);
                
-               queue.add({&node->cutterline, newcoord, newdelta});
+               queue.add({&node->cutterline, newcoord, newdelta, sector->groupid});
             }
          }
       }
