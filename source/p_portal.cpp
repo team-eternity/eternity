@@ -714,7 +714,7 @@ static void P_linkDeferredThingsToPortals()
       Mobj *mo = thinker_cast<Mobj *>(th);
       if(!mo)
          continue;
-      P_LinkSpriteProj(*mo);
+      R_LinkSpriteProj(*mo);
    }
 }
 

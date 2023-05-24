@@ -2492,6 +2492,78 @@ void R_ScanForSpritesOverlappingWallPortals(const viewpoint_t &viewpoint,
    }
 }
 
+void R_LinkSpriteProj(Mobj &thing)
+{
+   if(!gPortalBlockmap.isInit)   // defer it for later
+      return;
+
+   // TODO: don't link (and unlink) if DONTDRAW
+   I_Assert(sprites && spritewidth && spriteoffset, "We don't have sprites defined here!");
+   const spritedef_t &sprdef = sprites[thing.sprite];
+   const spriteframe_t &sprframe = sprdef.spriteframes[thing.frame & FF_FRAMEMASK];
+   fixed_t maxradius;
+   if(sprframe.rotate)
+   {
+      float maxradiusfloat = 0;
+      for(int lump : sprframe.lump)
+      {
+         I_Assert(lump >= 0 && lump < numspritelumps, "Bad index %d", lump);
+         fixed_t swidth = spritewidth[lump];
+         fixed_t sleftoffset = spriteoffset[lump];
+         float radius = M_FixedToFloat(emax(sleftoffset, swidth - sleftoffset)) * thing.xscale;
+         if(radius > maxradiusfloat)
+            maxradiusfloat = radius;
+      }
+      maxradius = M_FloatToFixed(maxradiusfloat);
+   }
+   else
+   {
+      int lump = sprframe.lump[0];
+      I_Assert(lump >= 0 && lump < numspritelumps, "Bad index %d", lump);
+      fixed_t swidth = spritewidth[lump];
+      fixed_t sleftoffset = spriteoffset[lump];
+      maxradius = emax(sleftoffset, swidth - sleftoffset);
+   }
+   
+   // We got maxradius. Now we can have the bounding box
+   fixed_t bbox[4];
+   bbox[BOXTOP] = thing.y + maxradius;
+   bbox[BOXBOTTOM] = thing.y - maxradius;
+   bbox[BOXLEFT] = thing.x - maxradius;
+   bbox[BOXRIGHT] = thing.x + maxradius;
+   
+   int bx1 = eclamp(bbox[BOXLEFT] - bmaporgx & MAPBLOCKSIZE - 1, 0, bmapwidth - 1);
+   int bx2 = eclamp(bbox[BOXRIGHT] - bmaporgx & MAPBLOCKSIZE - 1, 0, bmapwidth - 1);
+   int by1 = eclamp(bbox[BOXBOTTOM] - bmaporgy & MAPBLOCKSIZE - 1, 0, bmapheight - 1);
+   int by2 = eclamp(bbox[BOXTOP] - bmaporgy & MAPBLOCKSIZE - 1, 0, bmapheight - 1);
+   
+   for(int by = by1; by <= by2; ++by)
+   {
+      for(int bx = bx1; bx <= bx2; ++bx)
+      {
+         int index = by * bmapwidth + bx;
+         const PODCollection<portalblockentry_t> &list = gPortalBlockmap[index];
+         for(const portalblockentry_t &entry : list)
+         {
+            if(entry.type != portalblocktype_e::line)
+               continue;
+            const line_t *line = entry.line;
+            I_Assert(line, "No line found at %d!", index);
+            if(P_BoxOnLineSide(bbox, line) != -1)
+               continue;
+            I_Assert(entry.ldata, "No linkdata at %d!", index);
+            // TODO: add the sprite projection here
+            // What to add:
+            // - produce another projection
+            
+            // mark this sprite with line
+            thing.portalspritecutter = line;
+            
+         }
+      }
+   }
+}
+
 //=============================================================================
 //
 // haleyjd 09/30/01
