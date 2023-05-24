@@ -2571,10 +2571,6 @@ void R_LinkSpriteProj(Mobj &thing)
                   continue;
                I_Assert(entry.ldata, "No linkdata at %d!", index);
                
-               v2fixed_t newcoord = {
-                  item.coord.x + entry.ldata->delta.x,
-                  item.coord.y + entry.ldata->delta.y
-               };
                v3fixed_t newdelta = item.delta + entry.ldata->delta;
                if(!newdelta)
                   continue;
@@ -2597,7 +2593,18 @@ void R_LinkSpriteProj(Mobj &thing)
                *item.cutter = line;
                spriteprojnode_t *node = R_newProjNode();
                node->mobj = &thing;
-               // FIXME: wrong sector
+               
+               v2float_t mirrorcoord;
+               mirrorcoord.x = M_FixedToFloat(item.coord.x);
+               mirrorcoord.y = M_FixedToFloat(item.coord.y);
+               v2float_t v1tocoord = {mirrorcoord.x - line->v1->fx, mirrorcoord.y - line->v1->fy};
+               float normdist = line->nx * v1tocoord.x + line->ny * v1tocoord.y;
+               mirrorcoord -= v2float_t{line->nx, line->ny} * (normdist * 2);
+               v2fixed_t newcoord = {
+                  M_FloatToFixed(mirrorcoord.x) + entry.ldata->delta.x,
+                  M_FloatToFixed(mirrorcoord.y) + entry.ldata->delta.y
+               };
+
                sector_t *sector = R_PointInSubsector(newcoord.x, newcoord.y)->sector;
                node->sector = sector;
                node->delta = newdelta;

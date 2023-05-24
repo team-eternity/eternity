@@ -258,6 +258,13 @@ struct v2float_t
       y += other.y;
       return *this;
    }
+   
+   v2float_t &operator -= (const v2float_t other)
+   {
+      x -= other.x;
+      y -= other.y;
+      return *this;
+   }
 
    //
    // Z of cross product assuming these two vectors have z=0. Uses the corkscrew rule. Useful to
