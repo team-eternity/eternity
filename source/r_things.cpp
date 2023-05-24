@@ -2456,7 +2456,7 @@ void R_ScanForSpritesOverlappingWallPortals(const viewpoint_t &viewpoint,
 
    const portalrender_t &portalrender = portalcontext.portalrender;
 
-   for(int i = masked.firstsprite; i <= masked.lastsprite; ++i)
+   for(int i = masked.firstsprite; i < masked.lastsprite; ++i)
    {
       for(const pwindow_t *window = windowhead; window; window = window->next)
       {
