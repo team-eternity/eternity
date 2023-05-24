@@ -2303,7 +2303,7 @@ static spriteprojnode_t *R_newProjNode()
 //
 inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data, v3fixed_t &delta,
                                       DLListItem<spriteprojnode_t> *&item,
-                                      DLListItem<spriteprojnode_t> **&tail, const line_t *line)
+                                      DLListItem<spriteprojnode_t> **&tail)
 {
    sector_t *sector;
 
@@ -2316,7 +2316,7 @@ inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data, v3fixe
       newnode->delta = delta;
       newnode->mobj = mobj;
       newnode->sector = sector;
-      newnode->portalline = line;
+      newnode->portalline = nullptr;   // null for this
       newnode->mobjlink.insert(newnode, tail);
       newnode->sectlink.insert(newnode, &sector->spriteproj);
       tail = &newnode->mobjlink.dllNext;
@@ -2330,7 +2330,7 @@ inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data, v3fixe
          (*item)->sectlink.insert((*item), &sector->spriteproj);
       }
       (*item)->delta = delta;
-      (*item)->portalline = line;
+      (*item)->portalline = nullptr;   // null for this
       tail = &item->dllNext;
       item = item->dllNext;
       
@@ -2392,7 +2392,7 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    {
       // always accept first sector
       data = R_FPLink(sector);
-      sector = R_addProjNode(mobj, data, delta, item, tail, nullptr);
+      sector = R_addProjNode(mobj, data, delta, item, tail);
    }
 
    // restart from mobj's group
@@ -2404,7 +2404,7 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    {
       // always accept first sector
       data = R_CPLink(sector);
-      sector = R_addProjNode(mobj, data, delta, item, tail, nullptr);
+      sector = R_addProjNode(mobj, data, delta, item, tail);
    }
 }
 
@@ -2526,39 +2526,74 @@ void R_LinkSpriteProj(Mobj &thing)
    }
    
    // We got maxradius. Now we can have the bounding box
-   fixed_t bbox[4];
-   bbox[BOXTOP] = thing.y + maxradius;
-   bbox[BOXBOTTOM] = thing.y - maxradius;
-   bbox[BOXLEFT] = thing.x - maxradius;
-   bbox[BOXRIGHT] = thing.x + maxradius;
    
-   int bx1 = eclamp(bbox[BOXLEFT] - bmaporgx & MAPBLOCKSIZE - 1, 0, bmapwidth - 1);
-   int bx2 = eclamp(bbox[BOXRIGHT] - bmaporgx & MAPBLOCKSIZE - 1, 0, bmapwidth - 1);
-   int by1 = eclamp(bbox[BOXBOTTOM] - bmaporgy & MAPBLOCKSIZE - 1, 0, bmapheight - 1);
-   int by2 = eclamp(bbox[BOXTOP] - bmaporgy & MAPBLOCKSIZE - 1, 0, bmapheight - 1);
-   
-   for(int by = by1; by <= by2; ++by)
+   struct item_t
    {
-      for(int bx = bx1; bx <= bx2; ++bx)
+      const line_t **cutter;
+      v2fixed_t coord;
+      Mobj *thing;
+   };
+   
+   PODCollection<item_t> queue;
+   size_t queuepos = 0;
+   
+   queue.add({
+      &thing.portalspritecutter,
+      {thing.x, thing.y},
+   });
+
+   while(queuepos < queue.getLength())
+   {
+      const item_t &item = queue[queuepos++];
+      
+      fixed_t bbox[4];
+      bbox[BOXTOP] = item.coord.y + maxradius;
+      bbox[BOXBOTTOM] = item.coord.y - maxradius;
+      bbox[BOXLEFT] = item.coord.x - maxradius;
+      bbox[BOXRIGHT] = item.coord.x + maxradius;
+      
+      int bx1 = eclamp(bbox[BOXLEFT] - bmaporgx & MAPBLOCKSIZE - 1, 0, bmapwidth - 1);
+      int bx2 = eclamp(bbox[BOXRIGHT] - bmaporgx & MAPBLOCKSIZE - 1, 0, bmapwidth - 1);
+      int by1 = eclamp(bbox[BOXBOTTOM] - bmaporgy & MAPBLOCKSIZE - 1, 0, bmapheight - 1);
+      int by2 = eclamp(bbox[BOXTOP] - bmaporgy & MAPBLOCKSIZE - 1, 0, bmapheight - 1);
+         
+      for(int by = by1; by <= by2; ++by)
       {
-         int index = by * bmapwidth + bx;
-         const PODCollection<portalblockentry_t> &list = gPortalBlockmap[index];
-         for(const portalblockentry_t &entry : list)
+         for(int bx = bx1; bx <= bx2; ++bx)
          {
-            if(entry.type != portalblocktype_e::line)
-               continue;
-            const line_t *line = entry.line;
-            I_Assert(line, "No line found at %d!", index);
-            if(P_BoxOnLineSide(bbox, line) != -1)
-               continue;
-            I_Assert(entry.ldata, "No linkdata at %d!", index);
-            // TODO: add the sprite projection here
-            // What to add:
-            // - produce another projection
-            
-            // mark this sprite with line
-            thing.portalspritecutter = line;
-            
+            int index = by * bmapwidth + bx;
+            const PODCollection<portalblockentry_t> &list = gPortalBlockmap[index];
+            for(const portalblockentry_t &entry : list)
+            {
+               if(entry.type != portalblocktype_e::line)
+                  continue;
+               const line_t *line = entry.line;
+               I_Assert(line, "No line found at %d!", index);
+               if(P_BoxOnLineSide(bbox, line) != -1)
+                  continue;
+               I_Assert(entry.ldata, "No linkdata at %d!", index);
+               // TODO: add the sprite projection here
+               // What to add:
+               // - produce another projection
+               
+               // mark this sprite with line
+               *item.cutter = line;
+               spriteprojnode_t *node = R_newProjNode();
+               node->mobj = &thing;
+               v2fixed_t newcoord = {
+                  item.coord.x + entry.ldata->delta.x,
+                  item.coord.y + entry.ldata->delta.y
+               };
+               sector_t *sector = R_PointInSubsector(newcoord.x, newcoord.y)->sector;
+               node->sector = sector;
+               node->delta = entry.ldata->delta;
+               node->portalline = line;
+               node->cutterline = nullptr;
+               node->mobjlink.insert(node, &thing.spriteproj);
+               node->sectlink.insert(node, &sector->spriteproj);
+               
+               queue.add({&node->cutterline, newcoord});
+            }
          }
       }
    }
