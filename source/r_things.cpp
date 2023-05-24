@@ -2599,6 +2599,17 @@ void R_LinkSpriteProj(Mobj &thing)
    }
 }
 
+void R_UnlinkSpriteProj(Mobj &thing)
+{
+   DLListItem<spriteprojnode_t> *next;
+   for(DLListItem<spriteprojnode_t> *node = thing.spriteproj; node; node = next)
+   {
+      next = node->dllNext;
+      if((*node)->portalline)
+         R_freeProjNode(*node);
+   }
+}
+
 //=============================================================================
 //
 // haleyjd 09/30/01

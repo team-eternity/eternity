@@ -760,6 +760,8 @@ void P_UnsetThingPosition(Mobj *thing)
       
       thing->old_sectorlist = thing->touching_sectorlist;
       thing->touching_sectorlist = nullptr; // to be restored by P_SetThingPosition
+      
+      R_UnlinkSpriteProj(*thing);
    }
 
    if(!(thing->flags & MF_NOBLOCKMAP))
@@ -835,10 +837,8 @@ void P_SetThingPosition(Mobj *thing)
          EV_ActivateSectorAction(prevss->sector, thing, SEAC_EXIT);
       }
       
-      R_LinkSpriteProj(*thing);
-
       // ioanch: link to portals
-      // TODO: unlink on unset
+      R_LinkSpriteProj(*thing);
    }
 
    // link into blockmap

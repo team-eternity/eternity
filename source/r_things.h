@@ -124,6 +124,7 @@ particle_t *newParticle(void);
 
 
 void R_LinkSpriteProj(Mobj &thing);
+void R_UnlinkSpriteProj(Mobj &thing);
 
 void R_ScanForSpritesOverlappingWallPortals(const viewpoint_t &viewpoint,
                                             const portalcontext_t &portalcontext,
