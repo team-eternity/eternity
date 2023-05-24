@@ -38,6 +38,11 @@ struct v3fixed_t
    {
       return { x + other.x, y + other.y, z + other.z };
    }
+   
+   bool operator ! () const
+   {
+      return !x && !y && !z;
+   }
 
    bool operator == (const v3fixed_t &other) const
    {

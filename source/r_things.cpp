@@ -2531,15 +2531,13 @@ void R_LinkSpriteProj(Mobj &thing)
    {
       const line_t **cutter;
       v2fixed_t coord;
+      v3fixed_t delta;
    };
    
    PODCollection<item_t> queue;
    size_t queuepos = 0;
    
-   queue.add({
-      &thing.portalspritecutter,
-      {thing.x, thing.y},
-   });
+   queue.add({&thing.portalspritecutter, {thing.x, thing.y}, {0, 0, 0}});
 
    while(queuepos < queue.getLength())
    {
@@ -2575,23 +2573,41 @@ void R_LinkSpriteProj(Mobj &thing)
                // What to add:
                // - produce another projection
                
-               // mark this sprite with line
-               *item.cutter = line;
-               spriteprojnode_t *node = R_newProjNode();
-               node->mobj = &thing;
                v2fixed_t newcoord = {
                   item.coord.x + entry.ldata->delta.x,
                   item.coord.y + entry.ldata->delta.y
                };
+               v3fixed_t newdelta = item.delta + entry.ldata->delta;
+               if(!newdelta)
+                  continue;
+               
+               bool already = false;
+               for(const DLListItem<spriteprojnode_t> *checknode = thing.spriteproj; checknode;
+                   checknode = checknode->dllNext)
+               {
+                  if((*checknode)->delta == newdelta) // FIXME: also check if line proj?
+                  {
+                     already = true;
+                     break;
+                  }
+               }
+               
+               if(already)
+                  continue;
+               
+               // mark this sprite with line
+               *item.cutter = line;
+               spriteprojnode_t *node = R_newProjNode();
+               node->mobj = &thing;
                sector_t *sector = R_PointInSubsector(newcoord.x, newcoord.y)->sector;
                node->sector = sector;
-               node->delta = entry.ldata->delta;
+               node->delta = newdelta;
                node->portalline = line;
                node->cutterline = nullptr;
                node->mobjlink.insert(node, &thing.spriteproj);
                node->sectlink.insert(node, &sector->spriteproj);
                
-               queue.add({&node->cutterline, newcoord});
+               queue.add({&node->cutterline, newcoord, newdelta});
             }
          }
       }
