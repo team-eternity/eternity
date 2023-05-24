@@ -2531,7 +2531,6 @@ void R_LinkSpriteProj(Mobj &thing)
    {
       const line_t **cutter;
       v2fixed_t coord;
-      Mobj *thing;
    };
    
    PODCollection<item_t> queue;
@@ -2552,10 +2551,10 @@ void R_LinkSpriteProj(Mobj &thing)
       bbox[BOXLEFT] = item.coord.x - maxradius;
       bbox[BOXRIGHT] = item.coord.x + maxradius;
       
-      int bx1 = eclamp(bbox[BOXLEFT] - bmaporgx & MAPBLOCKSIZE - 1, 0, bmapwidth - 1);
-      int bx2 = eclamp(bbox[BOXRIGHT] - bmaporgx & MAPBLOCKSIZE - 1, 0, bmapwidth - 1);
-      int by1 = eclamp(bbox[BOXBOTTOM] - bmaporgy & MAPBLOCKSIZE - 1, 0, bmapheight - 1);
-      int by2 = eclamp(bbox[BOXTOP] - bmaporgy & MAPBLOCKSIZE - 1, 0, bmapheight - 1);
+      int bx1 = eclamp((bbox[BOXLEFT] - bmaporgx) / MAPBLOCKSIZE, 0, bmapwidth - 1);
+      int bx2 = eclamp((bbox[BOXRIGHT] - bmaporgx) / MAPBLOCKSIZE, 0, bmapwidth - 1);
+      int by1 = eclamp((bbox[BOXBOTTOM] - bmaporgy) / MAPBLOCKSIZE, 0, bmapheight - 1);
+      int by2 = eclamp((bbox[BOXTOP] - bmaporgy) / MAPBLOCKSIZE, 0, bmapheight - 1);
          
       for(int by = by1; by <= by2; ++by)
       {
