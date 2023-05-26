@@ -1320,6 +1320,33 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
 
    vis->drawstyle = R_getDrawStyle(thing, &vis->tranmaplump);
    vis->cloningLine = nullptr;
+   
+   if(thing->portalspritecutter)
+   {
+      // TODO:
+      // - calculate x and dist of cutter
+      // - check intersection here
+      
+      // Get the dist and x of line (don't consider view limits)
+      const vertex_t &v1 = *thing->portalspritecutter->v1;
+      const vertex_t &v2 = *thing->portalspritecutter->v2;
+      v2float_t temp = {v1.fx - cb_viewpoint.x, v1.fy - cb_viewpoint.y};
+      v2float_t t1 = {
+         temp.x * cb_viewpoint.cos - temp.y * cb_viewpoint.sin,
+         temp.y * cb_viewpoint.cos + temp.x * cb_viewpoint.sin,
+      };
+      temp = {v2.fx - cb_viewpoint.x, v2.fy - cb_viewpoint.y};
+      v2float_t t2 = {
+         temp.x * cb_viewpoint.cos - temp.y * cb_viewpoint.sin,
+         temp.y * cb_viewpoint.cos + temp.x * cb_viewpoint.sin,
+      };
+      float dist1 = 1.0f / t1.y;
+      float dist2 = 1.0f / t2.y;
+      float x1 = view.xcenter + t1.x * dist1 * view.xfoc;
+      float x2 = view.xcenter + t2.x * dist2 * view.xfoc;
+      
+      // TODO: check intersection
+   }
 }
 
 //
