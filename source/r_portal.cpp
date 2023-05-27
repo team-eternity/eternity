@@ -1226,7 +1226,7 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
    R_PushPost(bspcontext, spritecontext, *context.heap, bounds, true, 
               window->head == window ? window : nullptr, parent);
 
-   R_ScanForSpritesOverlappingWallPortals(viewpoint, portalcontext, spritecontext);
+//   R_ScanForSpritesOverlappingWallPortals(viewpoint, portalcontext, spritecontext);
 
    planecontext.floorclip   = floorcliparray;
    planecontext.ceilingclip = ceilingcliparray;

@@ -1064,8 +1064,7 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
                             const portalrender_t &portalrender,
                             const Mobj *const thing,
                             const lighttable_t *const *const spritelights,
-                            const v3fixed_t *const delta = nullptr,
-                            const line_t *portalline = nullptr)
+                            const spriteprojnode_t *spriteproj = nullptr)
 {
    spritepos_t    spritepos;
    fixed_t        gzt;            // killough 3/27/98
@@ -1093,11 +1092,11 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
    // haleyjd 01/05/14: interpolate thing positions
    // ioanch 20160109: portal rendering
    R_interpolateThingPosition(thing, spritepos);
-   if(delta)
+   if(spriteproj)
    {
-      spritepos.x += delta->x;
-      spritepos.y += delta->y;
-      spritepos.z += delta->z;
+      spritepos.x += spriteproj->delta.x;
+      spritepos.y += spriteproj->delta.y;
+      spritepos.z += spriteproj->delta.z;
    }
 
    // SoM: Cardboard translate the mobj coords and just project the sprite.
@@ -1114,22 +1113,22 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
    if(portalrender.active && portalrender.w->portal->type != R_SKYBOX)
    {
       v2fixed_t offsetpos = { thing->x, thing->y };
-      if(delta)
+      if(spriteproj)
       {
-         offsetpos.x += delta->x;
-         offsetpos.y += delta->y;
+         offsetpos.x += spriteproj->delta.x;
+         offsetpos.y += spriteproj->delta.y;
       }
       v2float_t posf = v2float_t::fromFixed(offsetpos);
 
       const renderbarrier_t &barrier = portalrender.w->barrier;
-      if(portalrender.w->type == pw_line && portalrender.w->line != portalline &&
+      if(portalrender.w->type == pw_line && (!spriteproj || portalrender.w->line != spriteproj->portalline) &&
          barrier.linegen.normal * (posf - barrier.linegen.start) >= 0)
       {
          return;
       }
       if(portalrender.w->type != pw_line)
       {
-         if(portalrender.w->line && portalrender.w->line != portalline &&
+         if(portalrender.w->line && (!spriteproj || portalrender.w->line != spriteproj->portalline) &&
             barrier.linegen.normal * (posf - barrier.linegen.start) >= 0)
          {
             return;
@@ -1237,7 +1236,7 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
 
    // ioanch 20160109: offset sprites always use the R_PointInSubsector
-   sec = (view.lerp == FRACUNIT && !delta ? thing->subsector->sector :
+   sec = (view.lerp == FRACUNIT && !spriteproj ? thing->subsector->sector :
           R_PointInSubsector(spritepos.x, spritepos.y)->sector);
    heightsec = sec->heightsec;
 
@@ -1321,15 +1320,17 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
    vis->drawstyle = R_getDrawStyle(thing, &vis->tranmaplump);
    vis->cloningLine = nullptr;
    
-   if(thing->portalspritecutter)
+   const line_t *cutter = spriteproj ? spriteproj->cutterline : thing->portalspritecutter;
+   
+   if(cutter)
    {
       // TODO:
       // - calculate x and dist of cutter
       // - check intersection here
       
       // Get the dist and x of line (don't consider view limits)
-      const vertex_t &v1 = *thing->portalspritecutter->v1;
-      const vertex_t &v2 = *thing->portalspritecutter->v2;
+      const vertex_t &v1 = *cutter->v1;
+      const vertex_t &v2 = *cutter->v2;
       v2float_t temp = {v1.fx - cb_viewpoint.x, v1.fy - cb_viewpoint.y};
       v2float_t t1 = {
          temp.x * cb_viewpoint.cos - temp.y * cb_viewpoint.sin,
@@ -1500,7 +1501,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
       {
          R_projectSprite(
             cmapcontext, spritecontext, heap, viewpoint, cb_viewpoint, bounds, portalrender,
-            (*item)->mobj, spritelights, &(*item)->delta, (*item)->portalline
+            (*item)->mobj, spritelights, *item
          );
       }
    }
