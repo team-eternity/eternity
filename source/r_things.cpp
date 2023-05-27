@@ -1345,7 +1345,35 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
       float x1 = view.xcenter + t1.x * dist1 * view.xfoc;
       float x2 = view.xcenter + t2.x * dist2 * view.xfoc;
       
-      // TODO: check intersection
+      // NOTE: v1--->v2 is always the portal direction. If flipped (x1 > x2) then the portal is facing the opposite direction
+      bool flipped = x1 > x2;
+      bool cutleft = dist1 > dist2;
+      if(flipped)
+      {
+         float aux = dist1;
+         dist1 = dist2;
+         dist2 = aux;
+         aux = x1;
+         x1 = x2;
+         x2 = aux;
+         cutleft = !cutleft;
+      }
+      
+      if(vis->x1 < x2 && vis->x2 > x1 && (vis->dist - dist1) * (vis->dist - dist2) < 0)
+      {
+         // we have visual intersection
+         float xinter = x1 + (x2 - x1) * (vis->dist - dist1) / (dist2 - dist1);
+         if(xinter >= vis->x1 && xinter <= vis->x2)
+         {
+            if(cutleft)
+            {
+               vis->startx += vis->xstep * ((int)xinter - vis->x1);
+               vis->x1 = (int)xinter;
+            }
+            else
+               vis->x2 = (int)xinter;
+         }
+      }
    }
 }
 
