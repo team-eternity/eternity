@@ -1052,6 +1052,84 @@ static inline byte R_getDrawStyle(const Mobj *const thing, int *tranmaplump)
    return VS_DRAWSTYLE_NORMAL;
 }
 
+static void R_cutSpriteByNearbyLinePortal(vissprite_t *vis, const line_t *cutter, const cbviewpoint_t &cb_viewpoint)
+{
+   // TODO:
+   // - calculate x and dist of cutter
+   // - check intersection here
+   
+   // Get the dist and x of line (don't consider view limits)
+   const vertex_t &v1 = *cutter->v1;
+   const vertex_t &v2 = *cutter->v2;
+   v2float_t temp = {v1.fx - cb_viewpoint.x, v1.fy - cb_viewpoint.y};
+   v2float_t t1 = {
+      temp.x * cb_viewpoint.cos - temp.y * cb_viewpoint.sin,
+      temp.y * cb_viewpoint.cos + temp.x * cb_viewpoint.sin,
+   };
+   temp = {v2.fx - cb_viewpoint.x, v2.fy - cb_viewpoint.y};
+   v2float_t t2 = {
+      temp.x * cb_viewpoint.cos - temp.y * cb_viewpoint.sin,
+      temp.y * cb_viewpoint.cos + temp.x * cb_viewpoint.sin,
+   };
+   
+   // make it closer than sprite which has 1.0f threshold
+   static const float nearclip = 0.5f;
+   
+   if(t1.y < nearclip)
+   {
+      float move, movey;
+      if(t2.y < nearclip)   // quick quit
+         return;
+      
+      movey = nearclip - t1.y;
+      move = movey * ((t2.x - t1.x) / (t2.y - t1.y));
+      t1.x += move;
+      t1.y = nearclip;
+   }
+   if(t2.y < nearclip)
+   {
+      float move, movey;
+      movey = nearclip - t2.y;
+      move = movey * ((t2.x - t1.x) / (t2.y - t1.y));
+      t2.x += move;
+      t2.y = nearclip;
+   }
+   
+   float dist1 = 1.0f / t1.y;
+   float dist2 = 1.0f / t2.y;
+   float x1 = view.xcenter + t1.x * dist1 * view.xfoc;
+   float x2 = view.xcenter + t2.x * dist2 * view.xfoc;
+   
+   // NOTE: v1--->v2 is always the portal direction. If flipped (x1 > x2) then the portal is facing the opposite direction
+   bool flipped = x1 > x2;
+   if(flipped)
+   {
+      float aux = dist1;
+      dist1 = dist2;
+      dist2 = aux;
+      aux = x1;
+      x1 = x2;
+      x2 = aux;
+   }
+   bool cutleft = flipped ^ (dist1 > dist2);
+   
+   if(vis->x1 < x2 && vis->x2 > x1 && (vis->dist - dist1) * (vis->dist - dist2) < 0)
+   {
+      // we have visual intersection
+      float xinter = x1 + (x2 - x1) * (vis->dist - dist1) / (dist2 - dist1);
+      if(xinter >= vis->x1 && xinter <= vis->x2)
+      {
+         if(cutleft)
+         {
+            vis->startx += vis->xstep * ((int)xinter - vis->x1);
+            vis->x1 = (int)xinter;
+         }
+         else
+            vis->x2 = (int)xinter;
+      }
+   }
+}
+
 //
 // Generates a vissprite for a thing if it might be visible.
 // ioanch 20160109: added optional arguments for offsetting the sprite
@@ -1323,59 +1401,7 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
    const line_t *cutter = spriteproj ? spriteproj->cutterline : thing->portalspritecutter;
    
    if(cutter)
-   {
-      // TODO:
-      // - calculate x and dist of cutter
-      // - check intersection here
-      
-      // Get the dist and x of line (don't consider view limits)
-      const vertex_t &v1 = *cutter->v1;
-      const vertex_t &v2 = *cutter->v2;
-      v2float_t temp = {v1.fx - cb_viewpoint.x, v1.fy - cb_viewpoint.y};
-      v2float_t t1 = {
-         temp.x * cb_viewpoint.cos - temp.y * cb_viewpoint.sin,
-         temp.y * cb_viewpoint.cos + temp.x * cb_viewpoint.sin,
-      };
-      temp = {v2.fx - cb_viewpoint.x, v2.fy - cb_viewpoint.y};
-      v2float_t t2 = {
-         temp.x * cb_viewpoint.cos - temp.y * cb_viewpoint.sin,
-         temp.y * cb_viewpoint.cos + temp.x * cb_viewpoint.sin,
-      };
-      float dist1 = 1.0f / t1.y;
-      float dist2 = 1.0f / t2.y;
-      float x1 = view.xcenter + t1.x * dist1 * view.xfoc;
-      float x2 = view.xcenter + t2.x * dist2 * view.xfoc;
-      
-      // NOTE: v1--->v2 is always the portal direction. If flipped (x1 > x2) then the portal is facing the opposite direction
-      bool flipped = x1 > x2;
-      bool cutleft = dist1 > dist2;
-      if(flipped)
-      {
-         float aux = dist1;
-         dist1 = dist2;
-         dist2 = aux;
-         aux = x1;
-         x1 = x2;
-         x2 = aux;
-         cutleft = !cutleft;
-      }
-      
-      if(vis->x1 < x2 && vis->x2 > x1 && (vis->dist - dist1) * (vis->dist - dist2) < 0)
-      {
-         // we have visual intersection
-         float xinter = x1 + (x2 - x1) * (vis->dist - dist1) / (dist2 - dist1);
-         if(xinter >= vis->x1 && xinter <= vis->x2)
-         {
-            if(cutleft)
-            {
-               vis->startx += vis->xstep * ((int)xinter - vis->x1);
-               vis->x1 = (int)xinter;
-            }
-            else
-               vis->x2 = (int)xinter;
-         }
-      }
-   }
+      R_cutSpriteByNearbyLinePortal(vis, cutter, cb_viewpoint);
 }
 
 //
