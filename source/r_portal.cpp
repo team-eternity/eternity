@@ -176,7 +176,6 @@ static void R_clearPortalWindow(planecontext_t &context, ZoneHeap &heap,
    window->clipfunc = nullptr;
    window->vx = window->vy = window->vz = 0;
    window->vangle = 0;
-   window->maskedindex = -1;
    window->x1frac = FLT_MAX;
    window->x2frac = -FLT_MAX;
    window->dist1 = FLT_MAX;   // init invalid values"
@@ -213,9 +212,6 @@ static pwindow_t *newPortalWindow(planecontext_t &planecontext, portalcontext_t 
    }
 
    R_clearPortalWindow(planecontext, heap, bounds, ret, noplanes);
-   
-   // This grows in sync with the calls of P_PostBSP during window unwinding (R_RenderPortals). nextwindowindex gets reset to 1 before we start a rendering
-   ret->maskedindex = portalcontext.postbspwindowid++;
 
    return ret;
 }
@@ -359,42 +355,6 @@ static void R_createChildWindow(planecontext_t &planecontext, portalcontext_t &p
    child->clipfunc = parent->clipfunc;
 }
 
-static void R_addParentRelation(ZoneHeap &heap, portalcontext_t &portalcontext, const pwindow_t &window)
-{
-   const portalrender_t &portalrender = portalcontext.portalrender;
-   int &numrelations = portalcontext.numrelations;
-   int &relationalloc = portalcontext.relationalloc;
-   windowrelation_t *&relations = portalcontext.relations;
-
-   int parent = portalrender.active ? portalrender.w->maskedindex : 0;
-   int lastindex = numrelations - 1;
-   for(int i = lastindex; i >= 0; --i)
-   {
-      windowrelation_t &relation = relations[i];
-      if(relations[i].current == window.maskedindex && relations[i].parent == parent)
-      {
-         if(i < lastindex)
-         {
-            // Move the found relation to the end so we don't spend too much time looking for
-            // it next time.
-            windowrelation_t temp = relations[lastindex];
-            relations[lastindex] = relation;
-            relation = temp;
-         }
-         return;
-      }
-   }
-   // Not found, so add
-   if(numrelations >= relationalloc)
-   {
-      relationalloc = relationalloc ? 2 * relationalloc : 16;
-      relations = zhrealloc(heap, windowrelation_t *, relations, relationalloc * sizeof(*relations));
-   }
-   relations[numrelations].current = window.maskedindex;
-   relations[numrelations].parent = parent;
-   ++numrelations;
-}
-
 //
 // Adds a column to a portal for rendering. A child portal may
 // be created.
@@ -434,8 +394,6 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
 
    if(ybottom < 0.0f || ytop >= view.height)
       return;
-
-   R_addParentRelation(heap, portalcontext, *window);
 
    // Apply precise and full seg x and dist info for portal sprite rendering
    if(seg.x1frac < window->x1frac)
@@ -973,7 +931,7 @@ static void R_renderPrimitivePortal(rendercontext_t &context, pwindow_t *window)
    if(window->head == window && window->poverlay)
    {
       // not interested on tracking post masked parent here
-      R_PushPost(context.bspcontext, spritecontext, *context.heap, bounds, false, window, { false });
+      R_PushPost(context.bspcontext, spritecontext, *context.heap, bounds, false, window);
    }
 
    R_restoreLastView(last, viewpoint, cb_viewpoint);
@@ -1205,26 +1163,10 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
 
    R_incrementWorldPortalID(portalcontext);
    R_RenderBSPNode(context, numnodes - 1);
-
-   
-   maskedparent_t parent = {};
-   parent.fromlineportal = window->type == pw_line && window->portal->type == R_LINKED;
-   parent.curindex = window->maskedindex;
-   // Set parent-masked portal only if this is a LINKED line portal window
-   // TODO: also handle anchored/twoway
-   if(window->portal->type == R_LINKED)
-   {
-      parent.portal = window->portal;
-      parent.line = window->line;
-      parent.dist1 = window->dist1;
-      parent.dist2 = window->dist2;
-      parent.x1frac = window->x1frac;
-      parent.x2frac = window->x2frac;
-   }
    
    // Only push the overlay if this is the head window
    R_PushPost(bspcontext, spritecontext, *context.heap, bounds, true, 
-              window->head == window ? window : nullptr, parent);
+              window->head == window ? window : nullptr);
 
 //   R_ScanForSpritesOverlappingWallPortals(viewpoint, portalcontext, spritecontext);
 

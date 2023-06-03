@@ -621,8 +621,7 @@ void R_ClearMarkedSprites(spritecontext_t &context, ZoneHeap &heap)
 // Pushes a new element on the post-BSP stack.
 //
 void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
-                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window, 
-                const maskedparent_t &parent)
+                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window)
 {
    drawseg_t     *&drawsegs     = bspcontext.drawsegs;
    drawseg_t     *&ds_p         = bspcontext.ds_p;
@@ -689,8 +688,6 @@ void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHe
       post->masked->lastds     = int(ds_p - drawsegs);
       post->masked->lastsprite = int(spritecontext.num_vissprite);
       
-      post->masked->parent = parent;
-
       memcpy(post->masked->ceilingclip, portaltop    + bounds.startcolumn, sizeof(*portaltop)    * bounds.numcolumns);
       memcpy(post->masked->floorclip,   portalbottom + bounds.startcolumn, sizeof(*portalbottom) * bounds.numcolumns);
    }
@@ -2402,57 +2399,6 @@ static int R_spriteIntersectsForegroundWindow(const vissprite_t &sprite, const p
       return INT_MAX;   // redraw beyond
    }
    return INT_MIN;   // no intersection
-}
-
-void R_ScanForSpritesOverlappingWallPortals(const viewpoint_t &viewpoint,
-                                            const portalcontext_t &portalcontext,
-                                            const spritecontext_t &spritecontext)
-{
-   const poststack_t *pstack = spritecontext.pstack;
-
-   int pstacksize = spritecontext.pstacksize;
-   I_Assert(pstacksize >= 1, "Stack size insufficient");
-   const maskedrange_t &masked = *pstack[pstacksize - 1].masked;
-
-   vissprite_t *vissprites = spritecontext.vissprites;
-   const pwindow_t *windowhead = portalcontext.windowhead;
-
-   const portalrender_t &portalrender = portalcontext.portalrender;
-
-   for(int i = masked.firstsprite; i < masked.lastsprite; ++i)
-   {
-      for(const pwindow_t *window = windowhead; window; window = window->next)
-      {
-         if((portalrender.active && window == portalrender.w) || window->type != pw_line ||
-            window->portal->type != R_LINKED || !R_WindowMatchesCurrentView(viewpoint, window))
-         {
-            continue;
-         }
-         // NOTE: line windows can't have children, so skip that detail
-         vissprite_t &sprite = vissprites[i];
-         int xinter = R_spriteIntersectsForegroundWindow(sprite, *window);
-         if(xinter != INT_MIN)
-         {
-            if(xinter == INT_MAX)
-            {
-               // TODO: handle case where sprite is completely beyond portal.
-            }
-            else
-            {
-               // TODO: prepare a new sprite beyond the portal
-               if(window->dist1 > window->dist2)
-               {
-                  sprite.startx += sprite.xstep * (xinter - sprite.x1);
-                  sprite.x1 = xinter;
-               }
-               else
-               {
-                  sprite.x2 = xinter;
-               }
-            }
-         }
-      }
-   }
 }
 
 void R_LinkSpriteProj(Mobj &thing)

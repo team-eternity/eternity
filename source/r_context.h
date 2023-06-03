@@ -105,15 +105,9 @@ struct planecontext_t
    int *spanstart;
 };
 
-struct windowrelation_t
-{
-   int current;
-   int parent;
-};
 
 struct portalcontext_t
 {
-   int postbspwindowid;  // this one increments for ALL windows, since all of them trigger R_PushPost
    uint16_t worldwindowid;
 
    pwindow_t *unusedhead, *windowhead, *windowlast;
@@ -130,7 +124,6 @@ struct portalcontext_t
 
    portalrender_t portalrender;
 
-   windowrelation_t *relations;
    int numrelations;
    int relationalloc;
 };

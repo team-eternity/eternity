@@ -1333,8 +1333,6 @@ void R_RenderViewContext(rendercontext_t &context)
    // check for new console commands.
    //NetUpdate();
 
-   context.portalcontext.postbspwindowid = 1;   // reset to 1 on frame
-   
    // The head node is the last node output.
    R_RenderBSPNode(context, numnodes - 1);
 
@@ -1345,10 +1343,7 @@ void R_RenderViewContext(rendercontext_t &context)
 
    // Push the first element on the Post-BSP stack
    R_PushPost(context.bspcontext, context.spritecontext, *context.heap, context.bounds, true,
-              nullptr, { false });
-
-   R_ScanForSpritesOverlappingWallPortals(context.view, context.portalcontext,
-                                          context.spritecontext);
+              nullptr);
 
    // SoM 12/9/03: render the portals.
    R_RenderPortals(context);

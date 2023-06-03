@@ -54,16 +54,6 @@ using R_ColumnFunc = void (*)(cb_column_t &);
 extern float *zeroarray;
 extern float *screenheightarray;
 
-// Data for rendering sprites across linedef portals correctly
-struct maskedparent_t
-{
-   bool fromlineportal;    // whether it's from line portal
-   int curindex;           // current index, needed to keep track
-   const line_t *line;     // linedef of portal, which can be either wall or edge
-   const portal_t *portal; // the portal, as it's not a straightforward pointer from line
-   float dist1, dist2;     // for checking if intersecting sprite
-   float x1frac, x2frac;
-};
 
 // SoM 12/13/03: the stack for use with portals
 struct maskedrange_t
@@ -74,9 +64,6 @@ struct maskedrange_t
    // SoM: Cardboard
    float *floorclip;
    float *ceilingclip;
-   
-   // ioanch: for updating the stack list
-   maskedparent_t parent;
    
    // for unused head
    struct maskedrange_t *next;
@@ -89,8 +76,7 @@ struct poststack_t
 };
 
 void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
-                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window, 
-                const maskedparent_t &parent);
+                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window);
 
 void R_ClearBadSpritesAndFrames();
 
@@ -125,10 +111,6 @@ particle_t *newParticle(void);
 
 void R_LinkSpriteProj(Mobj &thing);
 void R_UnlinkSpriteProj(Mobj &thing);
-
-void R_ScanForSpritesOverlappingWallPortals(const viewpoint_t &viewpoint,
-                                            const portalcontext_t &portalcontext,
-                                            const spritecontext_t &spritecontext);
 
 struct cb_maskedcolumn_t
 {

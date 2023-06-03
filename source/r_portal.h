@@ -345,9 +345,6 @@ struct pwindow_t
    pwindow_t *head, *child;
 
    planehash_t *poverlay;  // Portal overlays are now stored per window
-   
-   // post BSP index for this window.
-   int maskedindex;
 };
 
 // SoM: Cardboard
