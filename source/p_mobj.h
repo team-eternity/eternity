@@ -244,7 +244,6 @@ public:
    // ioanch 20160109: sprite projection chains
    DLListItem<spriteprojnode_t> *spriteproj;
    sprojlast_t sprojlast; // coordinates after last check. Initially "invalid"
-   const line_t *portalspritecutter;
 
    //More drawing info: to determine current sprite.
    angle_t     angle;  // orientation

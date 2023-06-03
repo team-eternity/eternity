@@ -153,7 +153,7 @@ struct spriteprojnode_t
    v3fixed_t delta;                       // portal accumulated delta (do not
                                           // link offsets)
    const line_t *portalline;              // portal line (if applicable)
-   const line_t *cutterline;              // cutting line when another portal is behind
+   const spriteprojnode_t *parent;        // parent in the tree (null if it's mobj) - LINE only
    DLListItem<spriteprojnode_t> mobjlink; // vertical link (links separate layers)
    DLListItem<spriteprojnode_t> sectlink; // horizontal link (links separate mobjs)
    DLListItem<spriteprojnode_t> freelink; // free list link (for recycling)

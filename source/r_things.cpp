@@ -1397,11 +1397,18 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
 
    vis->drawstyle = R_getDrawStyle(thing, &vis->tranmaplump);
    vis->cloningLine = nullptr;
-   
-   const line_t *cutter = spriteproj ? spriteproj->cutterline : thing->portalspritecutter;
-   
-   if(cutter)
-      R_cutSpriteByNearbyLinePortal(vis, cutter, cb_viewpoint);
+
+   for(const DLListItem<spriteprojnode_t> *prenode = thing->spriteproj; prenode;
+       prenode = prenode->dllNext)
+   {
+      const spriteprojnode_t *pre = prenode->dllObject;
+      if(!pre->portalline || pre == spriteproj)
+         continue;
+      if((spriteproj && pre->parent == spriteproj) || (!pre->parent && pre->mobj == thing))
+      {
+         R_cutSpriteByNearbyLinePortal(vis, pre->portalline, cb_viewpoint);
+      }
+   }
 }
 
 //
@@ -2611,7 +2618,7 @@ void R_LinkSpriteProj(Mobj &thing)
    
    struct item_t
    {
-      const line_t **cutter;
+      const spriteprojnode_t *parent;
       v2fixed_t coord;
       v3fixed_t delta;
       int groupid;
@@ -2619,8 +2626,8 @@ void R_LinkSpriteProj(Mobj &thing)
    
    PODCollection<item_t> queue;
    size_t queuepos = 0;
-   
-   queue.add({&thing.portalspritecutter, {thing.x, thing.y}, {0, 0, 0}, thing.groupid});
+
+   queue.add({nullptr, {thing.x, thing.y}, {0, 0, 0}, thing.groupid});
 
    while(queuepos < queue.getLength())
    {
@@ -2670,9 +2677,7 @@ void R_LinkSpriteProj(Mobj &thing)
                
                if(already)
                   continue;
-               
-               // mark this sprite with line
-               *item.cutter = line;
+
                spriteprojnode_t *node = R_newProjNode();
                node->mobj = &thing;
                
@@ -2691,11 +2696,11 @@ void R_LinkSpriteProj(Mobj &thing)
                node->sector = sector;
                node->delta = newdelta;
                node->portalline = line;
-               node->cutterline = nullptr;
+               node->parent = item.parent;
                node->mobjlink.insert(node, &thing.spriteproj);
                node->sectlink.insert(node, &sector->spriteproj);
-               
-               queue.add({&node->cutterline, newcoord, newdelta, sector->groupid});
+
+               queue.add({node, newcoord, newdelta, sector->groupid});
             }
          }
       }
