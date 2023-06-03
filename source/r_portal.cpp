@@ -357,7 +357,7 @@ static void R_createChildWindow(planecontext_t &planecontext, portalcontext_t &p
 //
 void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, ZoneHeap &heap,
                  const viewpoint_t &viewpoint,const contextbounds_t &bounds,
-                 pwindow_t *window, int x, const cb_seg_t &seg, float ytop, float ybottom)
+                 pwindow_t *window, int x, float ytop, float ybottom)
 {
    float windowtop, windowbottom;
 
@@ -409,7 +409,7 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
          if(!window->child)
             R_createChildWindow(planecontext, portalcontext, heap, bounds, window);
 
-         R_WindowAdd(planecontext, portalcontext, heap, viewpoint, bounds, window->child, x, seg, ytop, ybottom);
+         R_WindowAdd(planecontext, portalcontext, heap, viewpoint, bounds, window->child, x, ytop, ybottom);
          return;
       }
 
@@ -420,8 +420,6 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
 
       if(ybottom > windowbottom)
          window->bottom[x] = ybottom;
-
-      
       return;
    }
 
@@ -438,7 +436,6 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
       window->vy = viewpoint.y;
       window->vz = viewpoint.z;
       window->vangle = viewpoint.angle;
-
       return;
    }
 
@@ -913,10 +910,7 @@ static void R_renderPrimitivePortal(rendercontext_t &context, pwindow_t *window)
       R_produceHorizonPlanes(context, heap, window, sector);
 
    if(window->head == window && window->poverlay)
-   {
-      // not interested on tracking post masked parent here
       R_PushPost(context.bspcontext, spritecontext, *context.heap, bounds, false, window);
-   }
 
    R_restoreLastView(last, viewpoint, cb_viewpoint);
 
@@ -1147,12 +1141,9 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
 
    R_incrementWorldPortalID(portalcontext);
    R_RenderBSPNode(context, numnodes - 1);
-   
-   // Only push the overlay if this is the head window
-   R_PushPost(bspcontext, spritecontext, *context.heap, bounds, true, 
-              window->head == window ? window : nullptr);
 
-//   R_ScanForSpritesOverlappingWallPortals(viewpoint, portalcontext, spritecontext);
+   // Only push the overlay if this is the head window
+   R_PushPost(bspcontext, spritecontext, *context.heap, bounds, true, window->head == window ? window : nullptr);
 
    planecontext.floorclip   = floorcliparray;
    planecontext.ceilingclip = ceilingcliparray;
@@ -1220,7 +1211,7 @@ static void R_SetPortalFunction(pwindow_t *window)
 //
 // Checks if window matches current view, if set
 //
-bool R_WindowMatchesCurrentView(const viewpoint_t &viewpoint, const pwindow_t *window)
+static bool R_windowMatchesCurrentView(const viewpoint_t &viewpoint, const pwindow_t *window)
 {
    if(window->minx > window->maxx)  // Empty window won't have initialized coordinates, so skip
       return true;
@@ -1250,7 +1241,7 @@ pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t
 
    for(pwindow_t *rover = portalcontext.windowhead; rover; rover = rover->next)
       if(rover->portal == surface.portal && rover->type == pw_surface[surf] &&
-         rover->planez == surface.height && R_WindowMatchesCurrentView(viewpoint, rover))
+         rover->planez == surface.height && R_windowMatchesCurrentView(viewpoint, rover))
       {
          // If within a line-bounded portal, keep track of that too           )
          if(portalrender.active)
@@ -1321,7 +1312,7 @@ pwindow_t *R_GetLinePortalWindow(planecontext_t &planecontext, portalcontext_t &
    while(rover)
    {
       if(rover->portal == portal && rover->type == pw_line && rover->line == seg->linedef &&
-         R_WindowMatchesCurrentView(viewpoint, rover))
+         R_windowMatchesCurrentView(viewpoint, rover))
       {
          R_updateLinePortalWindowGenerator(rover, seg);
          return rover;

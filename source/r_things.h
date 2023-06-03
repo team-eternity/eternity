@@ -36,15 +36,12 @@ struct pwindow_t;
 struct cb_column_t;
 struct spritecontext_t;
 struct contextbounds_t;
-struct portal_t;
-struct portalcontext_t;
 struct portalrender_t;
 struct viewpoint_t;
 struct cbviewpoint_t;
 struct bspcontext_t;
 struct cmapcontext_t;
 struct rendercontext_t;
-struct vissprite_t;
 class  ZoneHeap;
 
 using R_ColumnFunc = void (*)(cb_column_t &);
@@ -53,7 +50,6 @@ using R_ColumnFunc = void (*)(cb_column_t &);
 
 extern float *zeroarray;
 extern float *screenheightarray;
-
 
 // SoM 12/13/03: the stack for use with portals
 struct maskedrange_t
@@ -107,7 +103,6 @@ void R_DrawPlayerSprites();
 void R_ClearParticles(void);
 void R_InitParticles(void);
 particle_t *newParticle(void);
-
 
 void R_LinkSpriteProj(Mobj &thing);
 void R_UnlinkSpriteProj(Mobj &thing);
