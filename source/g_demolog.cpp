@@ -28,6 +28,7 @@
 #include "g_demolog.h"
 #include "m_argv.h"
 #include "m_qstr.h"
+#include "i_system.h"
 
 FILE *demoLogFile;
 
@@ -61,7 +62,7 @@ void G_DemoLogInit(const char *path)
       fprintf(demoLogFile, "%s ", argstring.constPtr());
    }
    fprintf(demoLogFile, "\n");
-   atexit(G_demoLogAtExit);
+   I_AtExit(G_demoLogAtExit);
 }
 
 //

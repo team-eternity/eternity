@@ -313,7 +313,6 @@ void I_StartFrame()
 // Mouse
 //
 
-extern void MN_QuitDoom();
 extern acceltype_e mouseAccel_type;
 extern int mouseAccel_threshold;
 extern double mouseAccel_value;
@@ -730,7 +729,10 @@ static void I_getEvent(SDL_Window *window)
          break;
       }
       case SDL_QUIT:
-         MN_QuitDoom();
+         {
+            static const event_t event_quit = { ev_quit };
+            D_PostEvent(&event_quit);
+         }
          break;
 
       case SDL_WINDOWEVENT:

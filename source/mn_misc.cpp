@@ -153,11 +153,15 @@ static bool MN_PopupResponder(event_t *ev, int action)
    int *menuSounds = GameModeInfo->menuSounds;
    char ch;
    
-   if(ev->type != ev_keydown && ev->type != ev_text)
+   if(ev->type != ev_keydown && ev->type != ev_text && ev->type != ev_quit)
       return false;
 
    if(ev->type == ev_text)
       ch = ectype::toLower(ev->data1);
+   else if (ev->type == ev_quit && menuactive &&
+            popup_message_type == popup_question &&
+            !strcmp(popup_message_command, "quit"))
+      ch = 'y';
    else if(!ectype::isPrint(ev->data1))
       ch = ev->data1;
    else

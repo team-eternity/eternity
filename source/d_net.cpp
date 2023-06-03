@@ -548,7 +548,7 @@ void D_CheckNetGame()
    D_InitPlayers();      
    
    C_NetInit();
-   atexit(D_QuitNetGame);       // killough
+   I_AtExit(D_QuitNetGame);       // killough
 }
 
 void D_InitNetGame()

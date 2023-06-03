@@ -614,7 +614,7 @@ void I_InitGraphics()
    // enter graphics mode
    //
    
-   atexit(I_ShutdownGraphics);
+   I_AtExit(I_ShutdownGraphics);
    
    I_SetMode();
    
