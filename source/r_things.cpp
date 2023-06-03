@@ -2368,39 +2368,6 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    }
 }
 
-// Check if sprite intersects window
-// Returns INT_MIN if it doesn't intersect.
-// Returns INT_MAX if the sprite is completely into the window
-static int R_spriteIntersectsForegroundWindow(const vissprite_t &sprite, const pwindow_t &window)
-{
-   // Sprite is either in front of window or not visually intersecting it anyway
-   // IMPORTANT: dist is actually inverted. Think of dist as drawing size. If bigger, it's closer,
-   // and dist is greater.
-   if((sprite.dist >= window.dist1 && sprite.dist >= window.dist2) ||
-      (sprite.x2 < window.x1frac || sprite.x1 > window.x2frac))
-   {
-      return INT_MIN;
-   }
-   
-   if(sprite.dist <= window.dist1 && sprite.dist <= window.dist2)
-      return INT_MAX;   // redraw sprite into portal elsewhere (equality case covered by INT_MIN)
-
-   // NOTE: at this point the window dist1 and dist2 can't be equal any longer.
-   
-   float xinter = window.x1frac + (window.x2frac - window.x1frac) * (sprite.dist - window.dist1) /
-                                                    (window.dist2 - window.dist1);
-
-   if(xinter >= sprite.x1 && xinter <= sprite.x2)
-      return static_cast<int>(roundf(xinter));  // got an intersection point
-   
-   if((xinter < sprite.x1 && window.dist1 < window.dist2) ||
-      (xinter > sprite.x2 && window.dist1 > window.dist2))
-   {
-      return INT_MAX;   // redraw beyond
-   }
-   return INT_MIN;   // no intersection
-}
-
 void R_LinkSpriteProj(Mobj &thing)
 {
    if(!gPortalBlockmap.isInit)   // defer it for later

@@ -105,10 +105,9 @@ struct planecontext_t
    int *spanstart;
 };
 
-
 struct portalcontext_t
 {
-   uint16_t worldwindowid;
+   uint16_t windowid;
 
    pwindow_t *unusedhead, *windowhead, *windowlast;
 
@@ -123,9 +122,6 @@ struct portalcontext_t
    // in portals.
 
    portalrender_t portalrender;
-
-   int numrelations;
-   int relationalloc;
 };
 
 inline constexpr int NUMSPRITEMARKS = 1021;

@@ -176,10 +176,6 @@ static void R_clearPortalWindow(planecontext_t &context, ZoneHeap &heap,
    window->clipfunc = nullptr;
    window->vx = window->vy = window->vz = 0;
    window->vangle = 0;
-   window->x1frac = FLT_MAX;
-   window->x2frac = -FLT_MAX;
-   window->dist1 = FLT_MAX;   // init invalid values"
-   window->dist2 = FLT_MAX;
    memset(&window->barrier, 0, sizeof(window->barrier));
    if(!noplanes)
    {
@@ -395,18 +391,6 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, Z
    if(ybottom < 0.0f || ytop >= view.height)
       return;
 
-   // Apply precise and full seg x and dist info for portal sprite rendering
-   if(seg.x1frac < window->x1frac)
-   {
-      window->x1frac = seg.x1frac;
-      window->dist1 = seg.dist;
-   }
-   if(seg.x2frac > window->x2frac)
-   {
-      window->x2frac = seg.x2frac;
-      window->dist2 = seg.dist2;
-   }
-
    if(x <= window->maxx && x >= window->minx)
    {
       // column falls inside the range of the portal.
@@ -538,7 +522,7 @@ static void R_calculateTransform(int markerlinenum, int anchorlinenum,
 static void R_incrementWorldPortalID(portalcontext_t &context)
 {
    sectorboxvisit_t *&visitids      = context.visitids;
-   uint16_t          &worldportalid = context.worldwindowid;
+   uint16_t          &worldportalid = context.windowid;
    worldportalid++;
 
    if(!worldportalid)

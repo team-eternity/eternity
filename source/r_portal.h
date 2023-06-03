@@ -330,10 +330,6 @@ struct pwindow_t
    float *bottom;
    int minx, maxx;
 
-   // These are needed for sprite wall portal clipping and rendering
-   float x1frac, x2frac;
-   float dist1, dist2;
-
    R_WindowFunc  func;
    R_ClipSegFunc clipfunc;
 

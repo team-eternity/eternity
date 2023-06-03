@@ -781,7 +781,7 @@ static void R_incrementFrameid()
 uint64_t R_GetVisitID(const rendercontext_t &context)
 {
    const uint64_t upper32 =
-      (uint64_t(context.portalcontext.worldwindowid) << 16) | uint64_t(uint16_t(context.bufferindex));
+      (uint64_t(context.portalcontext.windowid) << 16) | uint64_t(uint16_t(context.bufferindex));
    return (upper32 << 32) | uint64_t(frameid);
 }
 
@@ -1321,8 +1321,7 @@ void R_RenderViewContext(rendercontext_t &context)
 {
    memset(context.spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
    R_ClearMarkedSprites(context.spritecontext, *context.heap);
-   context.portalcontext.worldwindowid = 0;
-   context.portalcontext.numrelations = 0;
+   context.portalcontext.windowid = 0;
 
    // Clear buffers.
    R_ClearClipSegs(context.bspcontext, context.bounds);
@@ -1342,8 +1341,7 @@ void R_RenderViewContext(rendercontext_t &context)
    R_SetMaskedSilhouette(context.bounds, nullptr, nullptr);
 
    // Push the first element on the Post-BSP stack
-   R_PushPost(context.bspcontext, context.spritecontext, *context.heap, context.bounds, true,
-              nullptr);
+   R_PushPost(context.bspcontext, context.spritecontext, *context.heap, context.bounds, true, nullptr);
 
    // SoM 12/9/03: render the portals.
    R_RenderPortals(context);
