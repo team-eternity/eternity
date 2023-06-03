@@ -227,7 +227,7 @@ void I_InitSound(void)
          i_sounddriver = &i_sdlsound_driver;
          if(i_sounddriver->InitSound())
          {
-            atexit(I_ShutdownSound);  
+            I_AtExit(I_ShutdownSound);
             snd_init = true;
          }
          break;
@@ -236,7 +236,7 @@ void I_InitSound(void)
          i_sounddriver = &i_pcsound_driver;
          if(i_sounddriver->InitSound())
          {
-            atexit(I_ShutdownSound);
+            I_AtExit(I_ShutdownSound);
             snd_init = true;
          }
          break;
@@ -291,7 +291,7 @@ void I_InitMusic(void)
       i_musicdriver = &i_sdlmusicdriver;
       if(i_musicdriver->InitMusic())
       {
-         atexit(I_ShutdownMusic);
+         I_AtExit(I_ShutdownMusic);
          mus_init = true;
       }
       break;

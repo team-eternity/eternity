@@ -775,6 +775,8 @@ qstring &MN_GetInputBuffer()
    return input_buffer;
 }
 
+extern void MN_QuitDoom();
+
 //
 // MN_Responder
 //
@@ -791,6 +793,17 @@ bool MN_Responder(event_t *ev)
    static unsigned lastacceptedtime = 0;
 
    memset(tempstr, 0, sizeof(tempstr));
+
+   // "close" button pressed on window?
+   if (ev->type == ev_quit)
+   {
+      // give the quit menu widget a chance to interpret this as a confirmation
+      if(current_menuwidget && current_menuwidget->responder(ev, ka_nothing))
+         return true;
+
+      MN_QuitDoom();
+      return true;
+   }
 
    // haleyjd 07/03/04: call G_KeyResponder with kac_menu to filter
    // for menu-class actions

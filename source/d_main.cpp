@@ -1281,7 +1281,7 @@ static void D_DoomInit()
 
    startupmsg("Z_Init", "Init zone memory allocation daemon.");
    Z_Init();
-   atexit(I_Quit);
+   I_AtExit(I_Quit);
 
    FindResponseFile(); // Append response file arguments to command-line
 

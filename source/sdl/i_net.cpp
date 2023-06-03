@@ -504,7 +504,7 @@ void I_InitNetwork(void)
    
    SDLNet_Init();
    
-   atexit(I_QuitNetwork);
+   I_AtExit(I_QuitNetwork);
    
    i++;
    while(++i < myargc && myargv[i][0] != '-')

@@ -337,7 +337,7 @@ static int I_SDLInitMusic(void)
    if(!snd_init)
    {
       if((success = I_SDLInitSoundForMusic()))
-         atexit(I_SDLShutdownSoundForMusic);
+         I_AtExit(I_SDLShutdownSoundForMusic);
    }
    else
       success = 1;

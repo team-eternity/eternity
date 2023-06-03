@@ -36,11 +36,11 @@
 #include "SDL_syswm.h"
 
 #include "../d_keywds.h"
+#include "../i_system.h"
 
 extern void I_W32InitExceptionHandler(void);
 extern int __cdecl I_W32ExceptionHandler(PEXCEPTION_POINTERS ep);
 extern int common_main(int argc, char **argv);
-extern void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...) E_PRINTF(2, 3);
 
 int disable_sysmenu;
 
@@ -72,7 +72,7 @@ static void I_tweakConsole()
    {
       HMENU hMenu = GetSystemMenu(hwnd, FALSE);
       EnableMenuItem(hMenu, SC_CLOSE, MF_DISABLED|MF_GRAYED);
-      atexit(I_untweakConsole);
+      I_AtExit(I_untweakConsole);
    }
    SetConsoleTitle("Eternity Engine System Console");
 #endif

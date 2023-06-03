@@ -35,6 +35,12 @@ struct SDL_Window;
 
 using i_errhandler_t = void (*)(char *errmsg);
 
+typedef void (*atexit_func_t)(void);
+// Schedule a function to be called when the program exits.
+void I_AtExit(atexit_func_t func);
+
+void I_Exit(int status);
+
 // Called by DoomMain.
 void I_Init();
 

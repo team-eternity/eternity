@@ -55,6 +55,44 @@
 extern int waitAtExit;
 #endif
 
+struct atexit_listentry_t
+{
+   atexit_func_t func;
+   atexit_listentry_t *next;
+};
+
+static atexit_listentry_t *exit_funcs = NULL;
+
+void I_AtExit(atexit_func_t func)
+{
+   atexit_listentry_t *entry;
+
+   entry = (atexit_listentry_t *)malloc(sizeof(*entry));
+
+   entry->func = func;
+   entry->next = exit_funcs;
+   exit_funcs = entry;
+}
+
+void I_Exit(int status)
+{
+   atexit_listentry_t *entry, *next;
+
+   // Run through all exit functions
+
+   entry = exit_funcs;
+
+   while (entry != NULL)
+   {
+      entry->func();
+      next = entry->next;
+      free(entry);
+      entry = next;
+   }
+
+   exit(status);
+}
+
 //
 // I_BaseTiccmd
 //
@@ -90,7 +128,7 @@ void I_Init()
    // haleyjd 04/15/02: initialize joystick
    I_InitGamePads(MN_UpdateGamepadMenus);
  
-   atexit(I_Shutdown);
+   I_AtExit(I_Shutdown);
    
    // killough 2/21/98: avoid sound initialization if no sound & no music
    extern bool nomusicparm, nosfxparm;
@@ -138,9 +176,6 @@ void I_Quit(void)
    // sf : rearrange this so the errmsg doesn't get messed up
    if(error_exitcode >= I_ERRORLEVEL_MESSAGE)
       puts(errmsg);   // killough 8/8/98
-
-   // FIXME: TEMPORARILY disabled on MacOS because of some crash in SDL_Renderer
-   // affecting functions. MUST FIX.
    else if(!speedyexit) // MaxW: The user didn't Alt+F4
       I_EndDoom();
 
@@ -179,7 +214,7 @@ void I_QuitFast()
 {
    puts("Eternity quit quickly.");
    speedyexit = true;
-   exit(0);
+   I_Exit(0);
 }
 
 //
@@ -246,7 +281,7 @@ void I_ExitWithMessage(E_FORMAT_STRING(const char *msg), ...)
    if(!has_exited)       // If it hasn't exited yet, exit now -- killough
    {
       has_exited = true; // Prevent infinitely recursive exits -- killough
-      exit(0);
+      I_Exit(0);
    }
 }
 

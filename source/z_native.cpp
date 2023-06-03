@@ -294,7 +294,7 @@ static void Z_Close()
 
 void Z_Init()
 {
-   atexit(Z_Close);            // exit handler
+   I_AtExit(Z_Close);            // exit handler
 
    Z_LogPrintf("Initialized zone heap (using native implementation)\n");
 }
