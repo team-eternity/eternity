@@ -1120,6 +1120,14 @@ static void R_cutSpriteByNearbyLinePortal(vissprite_t *vis, const line_t *cutter
    }
    bool cutleft = flipped ^ (dist1 > dist2);
    
+   if((!flipped && vis->dist <= dist1 && vis->dist <= dist2) ||
+      (flipped && vis->dist > dist1 && vis->dist > dist2))
+   {
+      vis->x1 = 1;
+      vis->x2 = 0;   // disable
+      return;
+   }
+   
    if(vis->x1 < x2 && vis->x2 > x1 && (vis->dist - dist1) * (vis->dist - dist2) < 0)
    {
       // we have visual intersection
@@ -1132,14 +1140,14 @@ static void R_cutSpriteByNearbyLinePortal(vissprite_t *vis, const line_t *cutter
             vis->x1 = (int)xinter;
          }
          else
-            vis->x2 = (int)xinter;
+            vis->x2 = (int)xinter - 1;
       }
-      else if(xinter < vis->x1 && (vis->dist < dist2) ^ flipped)
+      else if(xinter < vis->x1 && ((vis->dist < dist2) ^ flipped))
       {
          vis->x1 = 1;
          vis->x2 = 0;   // disable it
       }
-      else if(xinter > vis->x2 && (vis->dist < dist1) ^ flipped)
+      else if(xinter > vis->x2 && ((vis->dist < dist1) ^ flipped))
       {
          vis->x1 = 1;
          vis->x2 = 0;   // disable it
@@ -1415,9 +1423,6 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
    vis->drawstyle = R_getDrawStyle(thing, &vis->tranmaplump);
    vis->cloningLine = nullptr;
 
-   int prevx1 = vis->x1;
-   int prevx2 = vis->x2;
-   
    for(const DLListItem<spriteprojnode_t> *prenode = thing->spriteproj; prenode;
        prenode = prenode->dllNext)
    {
@@ -1433,12 +1438,6 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
    {
       R_cutSpriteByNearbyLinePortal(vis, spriteproj->portalline, cb_viewpoint,
                                     &spriteproj->directdelta);
-      // If it's a portal split which didn't get cut, then we need to avoid drawing it
-      if(vis->x1 == prevx1 && vis->x2 == prevx2)
-      {
-         vis->x1 = 1;
-         vis->x2 = 0;
-      }
    }
 }
 
