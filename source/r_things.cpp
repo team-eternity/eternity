@@ -2521,7 +2521,10 @@ void R_LinkSpriteProj(Mobj &thing)
                node->mobjlink.insert(node, &thing.spriteproj);
                node->sectlink.insert(node, &sector->spriteproj);
 
-               queue.add({node, newcoord, newdelta, sector->groupid});
+               queue.add({node, {
+                  item.coord.x + entry.ldata->delta.x,
+                  item.coord.y + entry.ldata->delta.y
+               }, newdelta, sector->groupid});
             }
          }
       }
