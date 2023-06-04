@@ -229,6 +229,7 @@ manual_floor:
             {
                if(fd->changeOnStart)
                {
+                  R_CacheIfSkyTexture(sec->srf.floor.pic, msec->srf.floor.pic);
                   sec->srf.floor.pic = msec->srf.floor.pic;
                   switch(fd->change_type)
                   {
@@ -276,6 +277,7 @@ manual_floor:
             {
                if(fd->changeOnStart)
                {
+                  R_CacheIfSkyTexture(sec->srf.floor.pic, line->frontsector->srf.floor.pic);
                   sec->srf.floor.pic = line->frontsector->srf.floor.pic;
                   switch(fd->change_type)
                   {

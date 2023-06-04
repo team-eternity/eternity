@@ -262,7 +262,7 @@ static const unsigned secf_surfLightAbsolute[surf_NUM] = {
 struct surface_t
 {
    fixed_t height;
-   int pic;
+   int pic; // MUST BE CACHED IF MODIFIED AT RUNTIME
 
    // thinker_t for reversable actions
    // jff 2/22/98 make thinkers on

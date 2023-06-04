@@ -42,6 +42,7 @@
 #include "sounds.h"
 #include "r_data.h"
 #include "r_main.h"
+#include "r_sky.h"
 #include "r_state.h"
 #include "t_plane.h"
 
@@ -173,6 +174,8 @@ void FloorMoveThinker::Think()
          {
          case donutRaise:
             P_TransferSectorSpecial(sector, &special);
+            R_CacheTexture(texture);
+            R_CacheIfSkyTexture(sector->srf.floor.pic, texture);
             sector->srf.floor.pic = texture;
             break;
          case genFloorChgT:
@@ -181,6 +184,8 @@ void FloorMoveThinker::Think()
             P_TransferSectorSpecial(sector, &special);
             //fall thru
          case genFloorChg:
+            R_CacheTexture(texture);
+            R_CacheIfSkyTexture(sector->srf.floor.pic, texture);
             sector->srf.floor.pic = texture;
             break;
          default:
@@ -194,6 +199,8 @@ void FloorMoveThinker::Think()
          case lowerAndChange:
             //jff add to fix bug in special transfers from changes
             P_TransferSectorSpecial(sector, &special);
+            R_CacheTexture(texture);
+            R_CacheIfSkyTexture(sector->srf.floor.pic, texture);
             sector->srf.floor.pic = texture;
             break;
          case genFloorChgT:
@@ -202,6 +209,8 @@ void FloorMoveThinker::Think()
             P_TransferSectorSpecial(sector, &special);
             //fall thru
          case genFloorChg:
+            R_CacheTexture(texture);
+            R_CacheIfSkyTexture(sector->srf.floor.pic, texture);
             sector->srf.floor.pic = texture;
             break;
          default:
@@ -584,6 +593,7 @@ int EV_DoFloor(const line_t *line, int tag, floor_e floortype )
             floor->sector->srf.floor.height + 24 * FRACUNIT;
          if(line)
          {
+            R_CacheIfSkyTexture(sec->srf.floor.pic, line->frontsector->srf.floor.pic);
             sec->srf.floor.pic = line->frontsector->srf.floor.pic;
             //jff 3/14/98 transfer both old and new special
             P_DirectTransferSectorSpecial(line->frontsector, sec);
@@ -734,6 +744,7 @@ int EV_DoChange(const line_t *line, int tag, change_e changetype, bool isParam)
       switch(changetype)
       {
       case trigChangeOnly:
+         R_CacheIfSkyTexture(sec->srf.floor.pic, line->frontsector->srf.floor.pic);
          sec->srf.floor.pic = line->frontsector->srf.floor.pic;
          P_DirectTransferSectorSpecial(line->frontsector, sec);
          break;
@@ -741,6 +752,7 @@ int EV_DoChange(const line_t *line, int tag, change_e changetype, bool isParam)
          secm = P_FindModelFloorSector(sec->srf.floor.height,secnum);
          if(secm) // if no model, no change
          {
+            R_CacheIfSkyTexture(sec->srf.floor.pic, secm->srf.floor.pic);
             sec->srf.floor.pic = secm->srf.floor.pic;
             P_DirectTransferSectorSpecial(secm, sec);
          }
@@ -1472,8 +1484,13 @@ void P_ChangeFloorTex(const char *name, int tag)
 
    flatnum = R_FindFlat(name);
 
+   R_CacheTexture(flatnum);
+
    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
+   {
+      R_CacheIfSkyTexture(sectors[secnum].srf.floor.pic, flatnum);
       sectors[secnum].srf.floor.pic = flatnum;
+   }
 }
 
 //=============================================================================
