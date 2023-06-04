@@ -1049,21 +1049,31 @@ static inline byte R_getDrawStyle(const Mobj *const thing, int *tranmaplump)
    return VS_DRAWSTYLE_NORMAL;
 }
 
-static void R_cutSpriteByNearbyLinePortal(vissprite_t *vis, const line_t *cutter, const cbviewpoint_t &cb_viewpoint)
+static void R_cutSpriteByNearbyLinePortal(vissprite_t *vis, const line_t *cutter, const cbviewpoint_t &cb_viewpoint, const v3fixed_t *cutterdelta)
 {
    // TODO:
    // - calculate x and dist of cutter
    // - check intersection here
    
    // Get the dist and x of line (don't consider view limits)
-   const vertex_t &v1 = *cutter->v1;
-   const vertex_t &v2 = *cutter->v2;
+   const vertex_t &v1 = cutterdelta ? *cutter->v2 : *cutter->v1;
+   const vertex_t &v2 = cutterdelta ? *cutter->v1 : *cutter->v2;
    v2float_t temp = {v1.fx - cb_viewpoint.x, v1.fy - cb_viewpoint.y};
+   if(cutterdelta)
+   {
+      temp.x += M_FixedToFloat(cutterdelta->x);
+      temp.y += M_FixedToFloat(cutterdelta->y);
+   }
    v2float_t t1 = {
       temp.x * cb_viewpoint.cos - temp.y * cb_viewpoint.sin,
       temp.y * cb_viewpoint.cos + temp.x * cb_viewpoint.sin,
    };
    temp = {v2.fx - cb_viewpoint.x, v2.fy - cb_viewpoint.y};
+   if(cutterdelta)
+   {
+      temp.x += M_FixedToFloat(cutterdelta->x);
+      temp.y += M_FixedToFloat(cutterdelta->y);
+   }
    v2float_t t2 = {
       temp.x * cb_viewpoint.cos - temp.y * cb_viewpoint.sin,
       temp.y * cb_viewpoint.cos + temp.x * cb_viewpoint.sin,
@@ -1123,6 +1133,16 @@ static void R_cutSpriteByNearbyLinePortal(vissprite_t *vis, const line_t *cutter
          }
          else
             vis->x2 = (int)xinter;
+      }
+      else if(xinter < vis->x1 && (vis->dist < dist2) ^ flipped)
+      {
+         vis->x1 = 1;
+         vis->x2 = 0;   // disable it
+      }
+      else if(xinter > vis->x2 && (vis->dist < dist1) ^ flipped)
+      {
+         vis->x1 = 1;
+         vis->x2 = 0;   // disable it
       }
    }
 }
@@ -1395,6 +1415,9 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
    vis->drawstyle = R_getDrawStyle(thing, &vis->tranmaplump);
    vis->cloningLine = nullptr;
 
+   int prevx1 = vis->x1;
+   int prevx2 = vis->x2;
+   
    for(const DLListItem<spriteprojnode_t> *prenode = thing->spriteproj; prenode;
        prenode = prenode->dllNext)
    {
@@ -1403,7 +1426,18 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
          continue;
       if((spriteproj && pre->parent == spriteproj) || (!pre->parent && pre->mobj == thing))
       {
-         R_cutSpriteByNearbyLinePortal(vis, pre->portalline, cb_viewpoint);
+         R_cutSpriteByNearbyLinePortal(vis, pre->portalline, cb_viewpoint, nullptr);
+      }
+   }
+   if(spriteproj && spriteproj->portalline)
+   {
+      R_cutSpriteByNearbyLinePortal(vis, spriteproj->portalline, cb_viewpoint,
+                                    &spriteproj->directdelta);
+      // If it's a portal split which didn't get cut, then we need to avoid drawing it
+      if(vis->x1 == prevx1 && vis->x2 == prevx2)
+      {
+         vis->x1 = 1;
+         vis->x2 = 0;
       }
    }
 }
@@ -2483,6 +2517,7 @@ void R_LinkSpriteProj(Mobj &thing)
                node->sector = sector;
                node->delta = newdelta;
                node->portalline = line;
+               node->directdelta = entry.ldata->delta;
                node->parent = item.parent;
                node->mobjlink.insert(node, &thing.spriteproj);
                node->sectlink.insert(node, &sector->spriteproj);
