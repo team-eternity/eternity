@@ -34,6 +34,7 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "r_main.h"
+#include "r_sky.h"
 #include "r_state.h"
 #include "s_sndseq.h"
 #include "s_sound.h"
@@ -326,7 +327,10 @@ bool EV_DoPlat(const line_t *line, int tag, plattype_e type, int amount )
       case raiseToNearestAndChange:
          plat->speed   = PLATSPEED/2;
          if(line)
+         {
+            R_CacheIfSkyTexture(sec->srf.floor.pic, sides[line->sidenum[0]].sector->srf.floor.pic);
             sec->srf.floor.pic = sides[line->sidenum[0]].sector->srf.floor.pic;
+         }
          plat->high    = P_FindNextHighestFloor(sec,sec->srf.floor.height);
          plat->wait    = 0;
          plat->status  = PlatThinker::up;
@@ -338,7 +342,10 @@ bool EV_DoPlat(const line_t *line, int tag, plattype_e type, int amount )
       case raiseAndChange:
          plat->speed   = PLATSPEED/2;
          if(line)
+         {
+            R_CacheIfSkyTexture(sec->srf.floor.pic, sides[line->sidenum[0]].sector->srf.floor.pic);
             sec->srf.floor.pic = sides[line->sidenum[0]].sector->srf.floor.pic;
+         }
          plat->high    = sec->srf.floor.height + amount*FRACUNIT;
          plat->wait    = 0;
          plat->status  = PlatThinker::up;
@@ -538,7 +545,10 @@ manual_plat:
          plat->status = PlatThinker::up;
          platTypeStr = "EEPlatRaise";
          if(line)
+         {
+            R_CacheIfSkyTexture(sec->srf.floor.pic, sides[line->sidenum[0]].sector->srf.floor.pic);
             sec->srf.floor.pic = sides[line->sidenum[0]].sector->srf.floor.pic;
+         }
          plat->high   = sec->srf.floor.height + args[2] * 8 * FRACUNIT;
          plat->wait = 0; // We need to override the earlier setting of this
          if(plat->high < sec->srf.floor.height)
@@ -551,7 +561,10 @@ manual_plat:
          plat->rnctype = static_cast<PlatThinker::rnctype_e>(args[2]);
          platTypeStr = "EEPlatRaise";
          if(line)
+         {
+            R_CacheIfSkyTexture(sec->srf.floor.pic, sides[line->sidenum[0]].sector->srf.floor.pic);
             sec->srf.floor.pic = sides[line->sidenum[0]].sector->srf.floor.pic;
+         }
          plat->high = P_FindNextHighestFloor(sec, sec->srf.floor.height);
          plat->wait = 0; // We need to override the earlier setting of this
          P_ZeroSectorSpecial(sec);

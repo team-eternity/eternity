@@ -87,6 +87,9 @@ void P_SetSectorCeilingPic(sector_t *sector, int pic)
    // clear sky flag
    sector->intflags &= ~SIF_SKY;
 
+   R_CacheTexture(pic);
+   R_CacheIfSkyTexture(sector->srf.ceiling.pic, pic);
+
    sector->srf.ceiling.pic = pic;
 
    // reset the sky flag
@@ -740,9 +743,13 @@ void P_ChangeCeilingTex(const char *name, int tag)
 
    if((flatnum = R_CheckForFlat(name)) == -1)
       return;
+   R_CacheTexture(flatnum);
 
    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
+   {
+      R_CacheIfSkyTexture(sectors[secnum].srf.ceiling.pic, flatnum);
       P_SetSectorCeilingPic(&sectors[secnum], flatnum);
+   }
 }
 
 //=============================================================================
