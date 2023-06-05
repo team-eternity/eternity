@@ -1429,7 +1429,8 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
       const spriteprojnode_t *pre = prenode->dllObject;
       if(!pre->portalline || pre == spriteproj)
          continue;
-      if((spriteproj && pre->parent == spriteproj) || (!pre->parent && pre->mobj == thing))
+      if((spriteproj && pre->parent == spriteproj) ||
+         (!spriteproj && !pre->parent && pre->mobj == thing))
       {
          R_cutSpriteByNearbyLinePortal(vis, pre->portalline, cb_viewpoint, nullptr);
       }
