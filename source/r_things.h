@@ -131,6 +131,7 @@ struct spriteprojnode_t
                                           // link offsets)
    const line_t *portalline;              // portal line (if applicable)
    v3fixed_t directdelta;                 // delta only for current portal line
+   v2fixed_t shiftedcoord;                // if line, coordinates shifted in front of target portal
    const spriteprojnode_t *parent;        // parent in the tree (null if it's mobj) - LINE only
    DLListItem<spriteprojnode_t> mobjlink; // vertical link (links separate layers)
    DLListItem<spriteprojnode_t> sectlink; // horizontal link (links separate mobjs)

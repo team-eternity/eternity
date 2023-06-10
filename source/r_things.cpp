@@ -1364,8 +1364,16 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
    vis->heightsec = heightsec;
 
    vis->colour = thing->colour;
-   vis->gx     = spritepos.x;
-   vis->gy     = spritepos.y;
+   if(spriteproj && spriteproj->portalline)
+   {
+      vis->gx = spriteproj->shiftedcoord.x;
+      vis->gy = spriteproj->shiftedcoord.y;
+   }
+   else
+   {
+      vis->gx     = spritepos.x;
+      vis->gy     = spritepos.y;
+   }
    vis->gz     = spritepos.z;
    vis->gzt    = gzt;                          // killough 3/27/98
 
@@ -2502,18 +2510,19 @@ void R_LinkSpriteProj(Mobj &thing)
                spriteprojnode_t *node = R_newProjNode();
                node->mobj = &thing;
                
-               v2float_t mirrorcoord;
-               mirrorcoord.x = M_FixedToFloat(item.coord.x);
-               mirrorcoord.y = M_FixedToFloat(item.coord.y);
-               v2float_t v1tocoord = {mirrorcoord.x - line->v1->fx, mirrorcoord.y - line->v1->fy};
+               v2float_t shiftedcoord;
+               shiftedcoord.x = M_FixedToFloat(item.coord.x);
+               shiftedcoord.y = M_FixedToFloat(item.coord.y);
+               v2float_t v1tocoord = {shiftedcoord.x - line->v1->fx, shiftedcoord.y - line->v1->fy};
                float normdist = line->nx * v1tocoord.x + line->ny * v1tocoord.y;
-               mirrorcoord -= v2float_t{line->nx, line->ny} * (normdist * 2);
+               shiftedcoord -= v2float_t{line->nx, line->ny} * (normdist + 1);
                v2fixed_t newcoord = {
-                  M_FloatToFixed(mirrorcoord.x) + entry.ldata->delta.x,
-                  M_FloatToFixed(mirrorcoord.y) + entry.ldata->delta.y
+                  M_FloatToFixed(shiftedcoord.x) + entry.ldata->delta.x,
+                  M_FloatToFixed(shiftedcoord.y) + entry.ldata->delta.y
                };
 
                sector_t *sector = R_PointInSubsector(newcoord.x, newcoord.y)->sector;
+               node->shiftedcoord = newcoord;
                node->sector = sector;
                node->delta = newdelta;
                node->portalline = line;
