@@ -905,13 +905,13 @@ void A_CheckAmmo(actionargs_t *actionargs)
 
    if(player->attackdown & AT_SECONDARY)
    {
-      checkamount = E_ArgAsInt(args, 1, weapon->ammopershot);
-      ammotype = weapon->ammo;
+      checkamount = E_ArgAsInt(args, 1, weapon->ammopershot_alt);
+      ammotype = weapon->ammo_alt;
    }
    else
    {
-      checkamount = E_ArgAsInt(args, 1, weapon->ammopershot_alt);
-      ammotype = weapon->ammo_alt;
+      checkamount = E_ArgAsInt(args, 1, weapon->ammopershot);
+      ammotype = weapon->ammo;
    }
 
    if(!ammotype) // no-ammo weapon?

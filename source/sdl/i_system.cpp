@@ -318,7 +318,7 @@ void I_Error(E_FORMAT_STRING(const char *error), ...)
    if(!has_exited)       // If it hasn't exited yet, exit now -- killough
    {
       has_exited = true; // Prevent infinitely recursive exits -- killough
-      exit(-1);
+      I_Exit(-1);
    }
    else
       I_FatalError(I_ERR_ABORT, "I_Error: double faulted\n");
@@ -341,7 +341,7 @@ void I_ErrorVA(E_FORMAT_STRING(const char *error), va_list args)
    if(!has_exited)
    {
       has_exited = true;
-      exit(-1);
+      I_Exit(-1);
    }
    else
       I_FatalError(I_ERR_ABORT, "I_ErrorVA: double faulted\n");
