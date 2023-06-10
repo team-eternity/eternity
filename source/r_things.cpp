@@ -1128,7 +1128,8 @@ static void R_cutSpriteByNearbyLinePortal(vissprite_t *vis, const line_t *cutter
       return;
    }
    
-   if(vis->x1 < x2 && vis->x2 > x1 && (vis->dist - dist1) * (vis->dist - dist2) < 0)
+   // Presence of cutterdelta means this is a spriteproj, which may need to be completely cut
+   if(((vis->x1 < x2 && vis->x2 > x1) || cutterdelta) && (vis->dist - dist1) * (vis->dist - dist2) < 0)
    {
       // we have visual intersection
       float xinter = x1 + (x2 - x1) * (vis->dist - dist1) / (dist2 - dist1);
