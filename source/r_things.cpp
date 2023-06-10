@@ -1340,8 +1340,13 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
 
    // ioanch 20160109: offset sprites always use the R_PointInSubsector
-   sec = (view.lerp == FRACUNIT && !spriteproj ? thing->subsector->sector :
-          R_PointInSubsector(spritepos.x, spritepos.y)->sector);
+   if(spriteproj && spriteproj->portalline)
+      sec = R_PointInSubsector(spriteproj->shiftedcoord)->sector;
+   else
+   {
+      sec = (view.lerp == FRACUNIT && !spriteproj ? thing->subsector->sector :
+             R_PointInSubsector(spritepos.x, spritepos.y)->sector);
+   }
    heightsec = sec->heightsec;
 
    if(heightsec != -1) // only clip things which are in special sectors
@@ -1390,7 +1395,10 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
 
    vis->ytop = y1;
    vis->ybottom = y2;
-   vis->sector = int(sec - sectors); // haleyjd: use interpolated sector
+   if(spriteproj && spriteproj->portalline)
+      vis->sector = eindex(spriteproj->mobj->subsector->sector - sectors);
+   else
+      vis->sector = int(sec - sectors); // haleyjd: use interpolated sector
 
    //if(x1 < vis->x1)
       vis->startx += vis->xstep * (vis->x1 - x1);
@@ -2282,6 +2290,16 @@ void R_RemoveMobjProjections(Mobj *mobj)
    }
    mobj->spriteproj = nullptr;
 }
+static void R_removeSectorMobjProjections(Mobj *mobj)
+{
+   DLListItem<spriteprojnode_t> *proj, *next;
+   for(proj = mobj->spriteproj; proj; proj = next)
+   {
+      next = proj->dllNext;
+      if(!proj->dllObject->portalline)
+         R_freeProjNode(proj->dllObject);
+   }
+}
 
 //
 // R_newProjNode
@@ -2336,7 +2354,8 @@ inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data, v3fixe
       (*item)->portalline = nullptr;   // null for this
       tail = &item->dllNext;
       item = item->dllNext;
-      
+      while(item && item->dllObject->portalline)
+         item = item->dllNext;
    }
    
    return sector;
@@ -2367,13 +2386,15 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    (mobj->frame & FF_FRAMEMASK) >= sprites[mobj->sprite].numframes;
 
    DLListItem<spriteprojnode_t> *item = mobj->spriteproj;
+   while(item && item->dllObject->portalline)
+      item = item->dllNext;
 
    if(mobj->flags & MF_NOSECTOR || overflown ||
       (!(sector->srf.floor.pflags & PS_PASSABLE) && !(sector->srf.ceiling.pflags & PS_PASSABLE) &&
        !checklines))
    {
       if(item)
-         R_RemoveMobjProjections(mobj);
+         R_removeSectorMobjProjections(mobj);
       return;
    }
 
