@@ -97,6 +97,7 @@ constexpr unsigned int visplane_hash(const unsigned int picnum, const unsigned i
 }
 
 static float *g_openings = nullptr;
+static float *g_skews    = nullptr;
 
 // killough 8/1/98: set static number of openings to be large enough
 // (a static limit is okay in this case and avoids difficulties in r_segs.c)
@@ -104,11 +105,14 @@ VALLOCATION(openings)
 {
 
    g_openings = ecalloctag(float *, w * h, sizeof(float), PU_VALLOC, nullptr);
+   g_skews    = ecalloctag(float *, w * h, sizeof(float), PU_VALLOC, nullptr);
 
    R_ForEachContext([w, h](rendercontext_t &context)
    {
       context.planecontext.openings    = g_openings + context.bounds.startcolumn * h;
       context.planecontext.lastopening = context.planecontext.openings;
+      context.planecontext.skews       = g_skews + context.bounds.startcolumn * h;
+      context.planecontext.lastskew = context.planecontext.skews;
    });
 }
 
@@ -559,6 +563,7 @@ void R_ClearPlanes(planecontext_t &context, const contextbounds_t &bounds)
    R_ClearPlaneHash(context.freehead, &context.mainhash);
 
    context.lastopening = context.openings;
+   context.lastskew    = context.skews;
 }
 
 

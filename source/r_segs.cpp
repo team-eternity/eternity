@@ -208,7 +208,8 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
          col = R_GetMaskedColumn(texnum, (int)(maskedtexturecol[column.x]));
          R_DrawNewMaskedColumn(
             colfunc, column, maskedcolumn,
-            textures[texnum], col, ds->sprbottomclip, ds->sprtopclip
+            textures[texnum], col, ds->sprbottomclip, ds->sprtopclip,
+            ds->maskedtextureskew[column.x]
          );
 
          maskedtexturecol[column.x] = FLT_MAX;
@@ -371,6 +372,11 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
 
          if(ds_p->maskedtexturecol)
             ds_p->maskedtexturecol[i] = texx;
+
+         if(ds_p->maskedtextureskew)
+         {
+            ds_p->maskedtextureskew[i] = segclip.bottomzstep * (segclip.len * basescale) + segclip.bottomz;
+         }
 
          // calculate lighting
          // SoM: ANYRES
@@ -640,12 +646,13 @@ static void R_checkDSAlloc(bspcontext_t &context, ZoneHeap &heap)
 static void R_closeDSP(drawseg_t *const ds_p)
 {
 
-   ds_p->silhouette       = SIL_BOTH;
-   ds_p->sprtopclip       = screenheightarray;
-   ds_p->sprbottomclip    = zeroarray;
-   ds_p->bsilheight       = D_MAXINT;
-   ds_p->tsilheight       = D_MININT;
-   ds_p->maskedtexturecol = nullptr;
+   ds_p->silhouette        = SIL_BOTH;
+   ds_p->sprtopclip        = screenheightarray;
+   ds_p->sprbottomclip     = zeroarray;
+   ds_p->bsilheight        = D_MAXINT;
+   ds_p->tsilheight        = D_MININT;
+   ds_p->maskedtexturecol  = nullptr;
+   ds_p->maskedtextureskew = nullptr;
 }
 
 #define NEXTDSP(model, newx1) \
@@ -750,7 +757,7 @@ static void R_detectClosedColumns(bspcontext_t &bspcontext, planecontext_t &plan
 #undef NEXTDSP
 #undef SETX2
 
-static void R_storeTextureColumns(float *const maskedtexturecol, cb_seg_t &segclip)
+static void R_storeTextureColumns(float *const maskedtexturecol, float *const maskedtextureskew, cb_seg_t &segclip)
 {
    int i;
    float texx;
@@ -763,6 +770,8 @@ static void R_storeTextureColumns(float *const maskedtexturecol, cb_seg_t &segcl
 
       if(maskedtexturecol)
          maskedtexturecol[i] = texx;
+      if(maskedtextureskew)
+         maskedtextureskew[i] = segclip.bottomzstep * (segclip.len * basescale) + segclip.bottomz;
 
       segclip.len  += segclip.lenstep;
       segclip.dist += segclip.diststep;
@@ -801,6 +810,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 {
    drawseg_t           *&ds_p         = bspcontext.ds_p;
    float               *&lastopening  = planecontext.lastopening;
+   float               *&lastskew     = planecontext.lastskew;
    const portalrender_t &portalrender = portalcontext.portalrender;
 
    float clipx1;
@@ -987,22 +997,32 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
       {
          int i;
          float *mtc;
+         float *mts;
          int xlen;
          xlen = segclip.x2 - segclip.x1 + 1;
 
-         ds_p->maskedtexturecol = lastopening - segclip.x1;
+         ds_p->maskedtexturecol  = lastopening - segclip.x1;
+         ds_p->maskedtextureskew = lastskew - segclip.x1;
          if(portalrender.active)
             ds_p->deltaz = viewpoint.z - portalrender.w->vz;
          
          mtc = lastopening;
+         mts = lastskew;
 
          for(i = 0; i < xlen; i++)
+         {
             mtc[i] = FLT_MAX;
+            mts[i] = 0.0f;
+         }
 
          lastopening += xlen;
+         lastskew    += xlen;
       }
       else
+      {
          ds_p->maskedtexturecol = nullptr;
+         ds_p->maskedtextureskew = nullptr;
+      }
    }
 
    usesegloop = !seg.backsec        || 
@@ -1025,7 +1045,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
       );
    }
    else
-      R_storeTextureColumns(ds_p->maskedtexturecol, segclip);
+      R_storeTextureColumns(ds_p->maskedtexturecol, ds_p->maskedtextureskew, segclip);
 
    // store clipping arrays
    float *const floorclip   = planecontext.floorclip;

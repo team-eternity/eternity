@@ -70,6 +70,7 @@ struct drawseg_t
    // all three adjusted so [x1] is first value.
    const float *sprtopclip, *sprbottomclip;
    float *maskedtexturecol;
+   float *maskedtextureskew;
 
    byte silhouette; // 0=none, 1=bottom, 2=top, 3=both
 
