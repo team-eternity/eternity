@@ -588,6 +588,7 @@ struct seg_t
    // backsector is nullptr for one sided lines
 
    sector_t *frontsector, *backsector;
+   bool      frontside;
 
    // SoM: Precached seg length in float format
    float  len;

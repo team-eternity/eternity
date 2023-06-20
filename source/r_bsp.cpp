@@ -1339,7 +1339,8 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
 
       seg.minbackceil = M_FloatToFixed(z1 < z2 ? z1 : z2);
 
-      if(seg.side->topSkewType() == SKEW_SOLID_BACK || seg.side->middleSkewType() == SKEW_MASKED_BACK_CEILING)
+      if((seg.line->frontside && (seg.side->topSkewType() == SKEW_SOLID_BACK || seg.side->middleSkewType() == SKEW_MASKED_BACK_CEILING)) ||
+         (!seg.line->frontside && (seg.side->topSkewType() == SKEW_SOLID_FRONT || seg.side->middleSkewType() == SKEW_MASKED_FRONT_CEILING)))
       {
          seg.topzstep = zstep;
          seg.topz = z1 > z2 ? z1 : z2;
@@ -1350,8 +1351,6 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       seg.high = view.ycenter - ((seg.backsec->srf.ceiling.heightf - cb_viewpoint.z) * i1) - 1.0f;
       seg.high2 = view.ycenter - ((seg.backsec->srf.ceiling.heightf - cb_viewpoint.z) * i2) - 1.0f;
       seg.minbackceil = seg.backsec->srf.ceiling.height;
-      seg.topzstep = 0.0f;
-      seg.topz = 0.0f;
    }
 
    seg.highstep = (seg.high2 - seg.high) * pstep;
@@ -1374,7 +1373,8 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
 
       seg.maxbackfloor = M_FloatToFixed(z1 > z2 ? z1 : z2);
 
-      if(seg.side->bottomSkewType() == SKEW_SOLID_BACK || seg.side->middleSkewType() == SKEW_MASKED_BACK_FLOOR)
+      if((seg.line->frontside && (seg.side->bottomSkewType() == SKEW_SOLID_BACK || seg.side->middleSkewType() == SKEW_MASKED_BACK_FLOOR)) ||
+         (!seg.line->frontside && (seg.side->bottomSkewType() == SKEW_SOLID_FRONT || seg.side->middleSkewType() == SKEW_MASKED_FRONT_FLOOR)))
       {
          seg.bottomzstep = zstep;
          seg.bottomz = realz1 < realz2 ? realz1 : realz2;
@@ -1385,8 +1385,6 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       seg.low = view.ycenter - ((seg.backsec->srf.floor.heightf - cb_viewpoint.z) * i1);
       seg.low2 = view.ycenter - ((seg.backsec->srf.floor.heightf - cb_viewpoint.z) * i2);
       seg.maxbackfloor = seg.backsec->srf.floor.height;
-      seg.bottomzstep = 0.0f;
-      seg.bottomz = 0.0f;
    }
 
    seg.lowstep = (seg.low2 - seg.low) * pstep;
@@ -2586,7 +2584,8 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
       seg.minfrontceil = M_FloatToFixed(z1 < z2 ? z1 : z2);
 
-      if(seg.side->topSkewType() == SKEW_SOLID_FRONT || seg.side->middleSkewType() == SKEW_MASKED_FRONT_CEILING)
+      if((seg.line->frontside && (seg.side->topSkewType() == SKEW_SOLID_FRONT || seg.side->middleSkewType() == SKEW_MASKED_FRONT_CEILING)) ||
+         (!seg.line->frontside && (seg.side->topSkewType() == SKEW_SOLID_BACK || seg.side->middleSkewType() == SKEW_MASKED_BACK_CEILING)))
       {
          seg.topzstep = zstep;
          seg.topz = z1 > z2 ? z1 : z2;
@@ -2597,8 +2596,6 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
       seg.top = view.ycenter - ((seg.frontsec->srf.ceiling.heightf - cb_viewpoint.z) * i1);
       seg.top2 = view.ycenter - ((seg.frontsec->srf.ceiling.heightf - cb_viewpoint.z) * i2);
       seg.minfrontceil = seg.frontsec->srf.ceiling.height;
-      seg.topzstep = 0.0f;
-      seg.topz = 0.0f;
    }
    seg.topstep = (seg.top2 - seg.top) * pstep;
 
@@ -2618,7 +2615,8 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
       seg.maxfrontfloor = M_FloatToFixed(z1 > z2 ? z1 : z2);
 
-      if(seg.side->bottomSkewType() == SKEW_SOLID_FRONT || seg.side->middleSkewType() == SKEW_MASKED_FRONT_FLOOR)
+      if((seg.line->frontside && seg.side->bottomSkewType() == SKEW_SOLID_FRONT || seg.side->middleSkewType() == SKEW_MASKED_FRONT_FLOOR) ||
+         (!seg.line->frontside && seg.side->bottomSkewType() == SKEW_SOLID_BACK || seg.side->middleSkewType() == SKEW_MASKED_BACK_FLOOR))
       {
          seg.bottomzstep = zstep;
          seg.bottomz = realz1 < realz2 ? realz1 : realz2;
@@ -2629,8 +2627,6 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
       seg.bottom  = view.ycenter - ((seg.frontsec->srf.floor.heightf - cb_viewpoint.z) * i1) - 1.0f;
       seg.bottom2 = view.ycenter - ((seg.frontsec->srf.floor.heightf - cb_viewpoint.z) * i2) - 1.0f;
       seg.maxfrontfloor = seg.frontsec->srf.floor.height;
-      seg.bottomzstep = 0.0f;
-      seg.bottomz = 0.0f;
    }
 
    seg.bottomstep = (seg.bottom2 - seg.bottom) * pstep;
