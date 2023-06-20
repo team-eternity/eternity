@@ -1324,11 +1324,12 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
 
    if(seg.backsec->srf.ceiling.slope)
    {
-      float z1, z2, zstep;
+      float realz1, realz2, z1, z2, zstep;
 
-      z1 = P_GetZAtf(seg.backsec->srf.ceiling.slope, v1->fx, v1->fy);
-      z2 = P_GetZAtf(seg.backsec->srf.ceiling.slope, v2->fx, v2->fy);
+      realz1 = z1 = P_GetZAtf(seg.backsec->srf.ceiling.slope, v1->fx, v1->fy);
+      realz2 = z2 = P_GetZAtf(seg.backsec->srf.ceiling.slope, v2->fx, v2->fy);
       zstep = (z2 - z1) / seg.line->len;
+
 
       z1 += lclip1 * zstep;
       z2 -= (seg.line->len - lclip2) * zstep;
@@ -1337,12 +1338,20 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       seg.high2 = view.ycenter - ((z2 - cb_viewpoint.z) * i2) - 1.0f;
 
       seg.minbackceil = M_FloatToFixed(z1 < z2 ? z1 : z2);
+
+      //if(seg.side.flags & SDF_SKEWUPPER)
+      {
+         seg.topzstep = zstep;
+         seg.topz = z1 > z2 ? z1 : z2;
+      }
    }
    else
    {
       seg.high = view.ycenter - ((seg.backsec->srf.ceiling.heightf - cb_viewpoint.z) * i1) - 1.0f;
       seg.high2 = view.ycenter - ((seg.backsec->srf.ceiling.heightf - cb_viewpoint.z) * i2) - 1.0f;
       seg.minbackceil = seg.backsec->srf.ceiling.height;
+      seg.topzstep = 0.0f;
+      seg.topz = 0.0f;
    }
 
    seg.highstep = (seg.high2 - seg.high) * pstep;
@@ -1352,10 +1361,10 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
 
    if(seg.backsec->srf.floor.slope)
    {
-      float z1, z2, zstep;
+      float realz1, realz2, z1, z2, zstep;
 
-      z1 = P_GetZAtf(seg.backsec->srf.floor.slope, v1->fx, v1->fy);
-      z2 = P_GetZAtf(seg.backsec->srf.floor.slope, v2->fx, v2->fy);
+      realz1 = z1 = P_GetZAtf(seg.backsec->srf.floor.slope, v1->fx, v1->fy);
+      realz2 = z2 = P_GetZAtf(seg.backsec->srf.floor.slope, v2->fx, v2->fy);
       zstep = (z2 - z1) / seg.line->len;
 
       z1 += lclip1 * zstep;
@@ -1364,12 +1373,20 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       seg.low2 = view.ycenter - ((z2 - cb_viewpoint.z) * i2);
 
       seg.maxbackfloor = M_FloatToFixed(z1 > z2 ? z1 : z2);
+
+      //if(seg.side.flags & SDF_SKEWLOWER)
+      {
+         seg.bottomzstep = zstep;
+         seg.bottomz = realz1 < realz2 ? realz1 : realz2;
+      }
    }
    else
    {
       seg.low = view.ycenter - ((seg.backsec->srf.floor.heightf - cb_viewpoint.z) * i1);
       seg.low2 = view.ycenter - ((seg.backsec->srf.floor.heightf - cb_viewpoint.z) * i2);
       seg.maxbackfloor = seg.backsec->srf.floor.height;
+      seg.bottomzstep = 0.0f;
+      seg.bottomz = 0.0f;
    }
 
    seg.lowstep = (seg.low2 - seg.low) * pstep;
@@ -2555,11 +2572,12 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
    if(seg.frontsec->srf.ceiling.slope)
    {
-      float z1, z2, zstep;
+      float realz1, realz2, z1, z2, zstep;
 
-      z1 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, v1->fx, v1->fy);
-      z2 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, v2->fx, v2->fy);
+      realz1 = z1 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, v1->fx, v1->fy);
+      realz2 = z2 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, v2->fx, v2->fy);
       zstep = (z2 - z1) / seg.line->len;
+
 
       z1 += lclip1 * zstep;
       z2 -= (seg.line->len - lclip2) * zstep;
@@ -2567,22 +2585,30 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
       seg.top2 = view.ycenter - ((z2 - cb_viewpoint.z) * i2);
 
       seg.minfrontceil = M_FloatToFixed(z1 < z2 ? z1 : z2);
+
+      //if(seg.side.flags & SDF_SKEWUPPER)
+      {
+         seg.topzstep = zstep;
+         seg.topz = z1 > z2 ? z1 : z2;
+      }
    }
    else
    {
       seg.top = view.ycenter - ((seg.frontsec->srf.ceiling.heightf - cb_viewpoint.z) * i1);
       seg.top2 = view.ycenter - ((seg.frontsec->srf.ceiling.heightf - cb_viewpoint.z) * i2);
       seg.minfrontceil = seg.frontsec->srf.ceiling.height;
+      seg.topzstep = 0.0f;
+      seg.topz = 0.0f;
    }
    seg.topstep = (seg.top2 - seg.top) * pstep;
 
 
    if(seg.frontsec->srf.floor.slope)
    {
-      float z1, z2, zstep;
+      float realz1, realz2, z1, z2, zstep;
 
-      z1 = P_GetZAtf(seg.frontsec->srf.floor.slope, v1->fx, v1->fy);
-      z2 = P_GetZAtf(seg.frontsec->srf.floor.slope, v2->fx, v2->fy);
+      realz1 = z1 = P_GetZAtf(seg.frontsec->srf.floor.slope, v1->fx, v1->fy);
+      realz2 = z2 = P_GetZAtf(seg.frontsec->srf.floor.slope, v2->fx, v2->fy);
       zstep = (z2 - z1) / seg.line->len;
 
       z1 += lclip1 * zstep;
@@ -2591,17 +2617,25 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
       seg.bottom2 = view.ycenter - ((z2 - cb_viewpoint.z) * i2) - 1.0f;
 
       seg.maxfrontfloor = M_FloatToFixed(z1 > z2 ? z1 : z2);
+
+      //if(seg.side.flags & SDF_SKEWLOWER)
+      {
+         seg.bottomzstep = zstep;
+         seg.bottomz = realz1 < realz2 ? realz1 : realz2;
+      }
    }
    else
    {      
       seg.bottom  = view.ycenter - ((seg.frontsec->srf.floor.heightf - cb_viewpoint.z) * i1) - 1.0f;
       seg.bottom2 = view.ycenter - ((seg.frontsec->srf.floor.heightf - cb_viewpoint.z) * i2) - 1.0f;
       seg.maxfrontfloor = seg.frontsec->srf.floor.height;
+      seg.bottomzstep = 0.0f;
+      seg.bottomz = 0.0f;
    }
 
    seg.bottomstep = (seg.bottom2 - seg.bottom) * pstep;
 
-   // Get these from the actual sectors because R_FakeFlat could have changed the actual heights.
+   // Get these from the actual sectors because R_FakeFlat could havve changed the actual heights.
    textop    = seg.line->frontsector->srf.ceiling.heightf - cb_viewpoint.z;
    texbottom = seg.line->frontsector->srf.floor.heightf - cb_viewpoint.z;
 

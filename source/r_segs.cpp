@@ -453,6 +453,10 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                column.y2 = b;
 
                column.texmid = segclip.midtexmid;
+               //if(segclip.side.flags & SDF_SKEWMIDDLETOUPPER)
+                  //column.texmid += M_FloatToFixed(segclip.topzstep * (segclip.len * basescale) + segclip.topz);
+               //else if(segclip.side.flags & SDF_SKEWMIDDLETOLOWWER
+                  //column.texmid += M_FloatToFixed(segclip.bottomzstep * (segclip.len * basescale) + segclip.bottomz);
 
                column.source = R_GetRawColumn(heap, segclip.midtex, (int)texx);
                column.texheight = segclip.midtexh;
@@ -490,6 +494,9 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                if(column.y2 >= column.y1)
                {
                   column.texmid = segclip.toptexmid;
+
+                  //if(segclip.side.flags & SDF_SKEWUPPER)
+                     column.texmid += M_FloatToFixed(segclip.topzstep * (segclip.len * basescale) + segclip.topz);
 
                   column.source = R_GetRawColumn(heap, segclip.toptex, (int)texx);
                   column.texheight = segclip.toptexh;
@@ -532,6 +539,9 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                if(column.y2 >= column.y1)
                {
                   column.texmid = segclip.bottomtexmid;
+
+                  //if(segclip.side.flags & SDF_SKEWLOWER)
+                     column.texmid += M_FloatToFixed(segclip.bottomzstep * (segclip.len * basescale) + segclip.bottomz);
 
                   column.source = R_GetRawColumn(heap, segclip.bottomtex, (int)texx);
                   column.texheight = segclip.bottomtexh;
