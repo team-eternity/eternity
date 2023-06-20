@@ -1339,7 +1339,7 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
 
       seg.minbackceil = M_FloatToFixed(z1 < z2 ? z1 : z2);
 
-      //if(seg.side.flags & SDF_SKEWUPPER)
+      if(seg.side->topSkewType() == SKEW_SOLID_BACK || seg.side->middleSkewType() == SKEW_MASKED_BACK_CEILING)
       {
          seg.topzstep = zstep;
          seg.topz = z1 > z2 ? z1 : z2;
@@ -1374,7 +1374,7 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
 
       seg.maxbackfloor = M_FloatToFixed(z1 > z2 ? z1 : z2);
 
-      //if(seg.side.flags & SDF_SKEWLOWER)
+      if(seg.side->bottomSkewType() == SKEW_SOLID_BACK || seg.side->middleSkewType() == SKEW_MASKED_BACK_FLOOR)
       {
          seg.bottomzstep = zstep;
          seg.bottomz = realz1 < realz2 ? realz1 : realz2;
@@ -2586,7 +2586,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
       seg.minfrontceil = M_FloatToFixed(z1 < z2 ? z1 : z2);
 
-      //if(seg.side.flags & SDF_SKEWUPPER)
+      if(seg.side->topSkewType() == SKEW_SOLID_FRONT || seg.side->middleSkewType() == SKEW_MASKED_FRONT_CEILING)
       {
          seg.topzstep = zstep;
          seg.topz = z1 > z2 ? z1 : z2;
@@ -2618,7 +2618,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
       seg.maxfrontfloor = M_FloatToFixed(z1 > z2 ? z1 : z2);
 
-      //if(seg.side.flags & SDF_SKEWLOWER)
+      if(seg.side->bottomSkewType() == SKEW_SOLID_FRONT || seg.side->middleSkewType() == SKEW_MASKED_FRONT_FLOOR)
       {
          seg.bottomzstep = zstep;
          seg.bottomz = realz1 < realz2 ? realz1 : realz2;

@@ -375,7 +375,24 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
 
          if(ds_p->maskedtextureskew)
          {
-            ds_p->maskedtextureskew[i] = segclip.bottomzstep * (segclip.len * basescale) + segclip.bottomz;
+            switch(segclip.side->middleSkewType())
+            {
+            case SKEW_MASKED_FRONT_FLOOR:
+               ds_p->maskedtextureskew[i] = segclip.bottomzstep * (segclip.len * basescale) + segclip.bottomz;
+               break;
+            case SKEW_MASKED_FRONT_CEILING:
+               ds_p->maskedtextureskew[i] = segclip.topzstep * (segclip.len * basescale) + segclip.topz;
+               break;
+            case SKEW_MASKED_BACK_FLOOR:
+               ds_p->maskedtextureskew[i] = segclip.bottomzstep * (segclip.len * basescale) + segclip.bottomz;
+               break;
+            case SKEW_MASKED_BACK_CEILING:
+               ds_p->maskedtextureskew[i] = segclip.topzstep * (segclip.len * basescale) + segclip.topz;
+               break;
+            case SKEW_MASKED_NONE: [[fallthrough]];
+            default:
+               break;
+            }
          }
 
          // calculate lighting
@@ -459,10 +476,24 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                column.y2 = b;
 
                column.texmid = segclip.midtexmid;
-               //if(segclip.side.flags & SDF_SKEWMIDDLETOUPPER)
-                  //column.texmid += M_FloatToFixed(segclip.topzstep * (segclip.len * basescale) + segclip.topz);
-               //else if(segclip.side.flags & SDF_SKEWMIDDLETOLOWWER
-                  //column.texmid += M_FloatToFixed(segclip.bottomzstep * (segclip.len * basescale) + segclip.bottomz);
+               switch(segclip.side->middleSkewType())
+               {
+               case SKEW_MASKED_FRONT_FLOOR:
+                  column.texmid += M_FloatToFixed(segclip.bottomzstep * (segclip.len * basescale) + segclip.bottomz);
+                  break;
+               case SKEW_MASKED_FRONT_CEILING:
+                  column.texmid += M_FloatToFixed(segclip.topzstep * (segclip.len * basescale) + segclip.topz);
+                  break;
+               case SKEW_MASKED_BACK_FLOOR:
+                  column.texmid += M_FloatToFixed(segclip.bottomzstep * (segclip.len * basescale) + segclip.bottomz);
+                  break;
+               case SKEW_MASKED_BACK_CEILING:
+                  column.texmid += M_FloatToFixed(segclip.topzstep * (segclip.len * basescale) + segclip.topz);
+                  break;
+               case SKEW_MASKED_NONE: [[fallthrough]];
+               default:
+                  break;
+               }
 
                column.source = R_GetRawColumn(heap, segclip.midtex, (int)texx);
                column.texheight = segclip.midtexh;
@@ -501,7 +532,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                {
                   column.texmid = segclip.toptexmid;
 
-                  //if(segclip.side.flags & SDF_SKEWUPPER)
+                  if(segclip.topzstep && segclip.side->topSkewType() != SKEW_SOLID_NONE)
                      column.texmid += M_FloatToFixed(segclip.topzstep * (segclip.len * basescale) + segclip.topz);
 
                   column.source = R_GetRawColumn(heap, segclip.toptex, (int)texx);
@@ -546,7 +577,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                {
                   column.texmid = segclip.bottomtexmid;
 
-                  //if(segclip.side.flags & SDF_SKEWLOWER)
+                  if(segclip.bottomzstep && segclip.side->bottomSkewType() != SKEW_SOLID_NONE)
                      column.texmid += M_FloatToFixed(segclip.bottomzstep * (segclip.len * basescale) + segclip.bottomz);
 
                   column.source = R_GetRawColumn(heap, segclip.bottomtex, (int)texx);
