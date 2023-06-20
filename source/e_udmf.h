@@ -305,6 +305,8 @@ private:
       qstring texturebottom;
       qstring texturemiddle;
 
+      qstring skew_bottom_type, skew_middle_type, skew_top_type;
+
       int sector;
 
       bool sset;

@@ -146,6 +146,26 @@ enum
    SECTOR_HTIC_WIND     // created by types 40-51
 };
 
+// Solid seg skew types
+enum
+{
+   SKEW_SOLID_NONE = 0,
+   SKEW_SOLID_FRONT,
+   SKEW_SOLID_BACK,
+   NUMSOLIDSKEWTYPES
+};
+
+// Masked seg skew types
+enum
+{
+   SKEW_MASKED_NONE = 0,
+   SKEW_MASKED_FRONT_FLOOR,
+   SKEW_MASKED_FRONT_CEILING,
+   SKEW_MASKED_BACK_FLOOR,
+   SKEW_MASKED_BACK_CEILING,
+   NUMMASKEDSKEWTYPES
+};
+
 //
 // Slope Structures
 //
@@ -444,6 +464,10 @@ struct side_t
    // or lump number of special effect. Allows texture names to be overloaded
    // for other functions.
    int special;
+
+   inline int topSkewType()    const { return (intflags & SDI_SKEW_TOP_MASK)    >> SDI_SKEW_TOP_SHIFT;    }
+   inline int bottomSkewType() const { return (intflags & SDI_SKEW_BOTTOM_MASK) >> SDI_SKEW_BOTTOM_SHIFT; }
+   inline int middleSkewType() const { return (intflags & SDI_SKEW_MIDDLE_MASK) >> SDK_SKEW_MIDDLE_SHIFT; }
 };
 
 //

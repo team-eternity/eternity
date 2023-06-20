@@ -63,6 +63,22 @@ static const char *udmfscrolltypes[NUMSCROLLTYPES] =
    "both"
 };
 
+static constexpr const char *udmfsolidskewtypes[NUMSOLIDSKEWTYPES] =
+{
+   "none",
+   "front",
+   "back",
+};
+
+static constexpr const char *udmfmaskedskewtypes[NUMMASKEDSKEWTYPES] =
+{
+   "none",
+   "front_floor",
+   "front_ceiling",
+   "back_floor",
+   "back_ceiling",
+};
+
 //
 // Initializes the internal structure with the sector count
 //
@@ -460,6 +476,13 @@ bool UDMFParser::loadSidedefs2()
       {
          sd->textureoffset = usd.offsetx;
          sd->rowoffset = usd.offsety;
+
+         const int skewTopType    = E_StrToNumLinear(udmfsolidskewtypes,  NUMSOLIDSKEWTYPES,  usd.skew_top_type.constPtr());
+         const int skewBottomType = E_StrToNumLinear(udmfsolidskewtypes,  NUMSOLIDSKEWTYPES,  usd.skew_bottom_type.constPtr());
+         const int skewMiddleType = E_StrToNumLinear(udmfmaskedskewtypes, NUMMASKEDSKEWTYPES, usd.skew_middle_type.constPtr());
+         sd->intflags |= ((skewTopType    == NUMSOLIDSKEWTYPES ? 0 : skewTopType)     << SDI_SKEW_TOP_SHIFT);
+         sd->intflags |= ((skewBottomType == NUMSOLIDSKEWTYPES  ? 0 : skewBottomType) << SDI_SKEW_BOTTOM_SHIFT);
+         sd->intflags |= ((skewMiddleType == NUMMASKEDSKEWTYPES ? 0 : skewMiddleType) << SDK_SKEW_MIDDLE_SHIFT);
       }
       else
       {
@@ -692,6 +715,9 @@ enum token_e
    t_sideback,
    t_sidefront,
    t_single,
+   t_skew_bottom_type,
+   t_skew_middle_type,
+   t_skew_top_type,
    t_skill1,
    t_skill2,
    t_skill3,
@@ -847,6 +873,9 @@ static keytoken_t gTokenList[] =
    TOKEN(sideback),
    TOKEN(sidefront),
    TOKEN(single),
+   TOKEN(skew_bottom_type),
+   TOKEN(skew_middle_type),
+   TOKEN(skew_top_type),
    TOKEN(skill1),
    TOKEN(skill2),
    TOKEN(skill3),
@@ -1126,6 +1155,18 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                   REQUIRE_INT(sidedef, sector, sset);
                   default:
                      break;
+               }
+
+               if(mNamespace == namespace_Eternity)
+               {
+                  switch(kt->token)
+                  {
+                     READ_STRING(sidedef, skew_bottom_type);
+                     READ_STRING(sidedef, skew_middle_type);
+                     READ_STRING(sidedef, skew_top_type);
+                  default:
+                     break;
+                  }
                }
             }
             else if(vertex)
