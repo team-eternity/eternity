@@ -243,9 +243,9 @@ struct cb_seg_t
    fixed_t maxfrontfloor, minfrontceil, maxbackfloor, minbackceil;
 
    // Z step for top and bottom for skewing textures relative to slopes
-   float topzstep, bottomzstep;
+   float topzstep, bottomzstep, middlezstep;
 
-   float bottomz, topz;
+   float bottomz, topz, middlez;
 
    // If nonzero, require f_sky1 rendering
    int skyflat;
