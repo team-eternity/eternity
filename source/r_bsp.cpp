@@ -1344,7 +1344,7 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
          (!seg.line->frontside && seg.side->topSkewType() == SKEW_SOLID_FRONT))
       {
          seg.topzstep = zstep;
-         if(zstep > 0.0f)
+         if(!signbit(zstep))
             seg.topz = emin(realz1, realz2);
          else
             seg.topz = emax(realz1, realz2);
@@ -1354,7 +1354,7 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
          (!seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_FRONT_CEILING))
       {
          seg.middlezstep = zstep;
-         if(zstep > 0.0f)
+         if(!signbit(zstep))
             seg.middlez = emin(realz1, realz2);
          else
             seg.middlez = emax(realz1, realz2);
@@ -1393,7 +1393,7 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
          (!seg.line->frontside && seg.side->bottomSkewType() == SKEW_SOLID_FRONT))
       {
          seg.bottomzstep = zstep;
-         if(zstep > 0.0f)
+         if(!signbit(zstep))
             seg.bottomz = emin(realz1, realz2);
          else
             seg.bottomz = emax(realz1, realz2);
@@ -1403,7 +1403,7 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
          (!seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_FRONT_FLOOR))
       {
          seg.middlezstep = zstep;
-         if(zstep > 0.0f)
+         if(!signbit(zstep))
             seg.middlez = emin(realz1, realz2);
          else
             seg.middlez = emax(realz1, realz2);
@@ -2617,7 +2617,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
          (!seg.line->frontside && seg.side->topSkewType() == SKEW_SOLID_BACK))
       {
          seg.topzstep = zstep;
-         if(zstep > 0.0f)
+         if(!signbit(zstep))
             seg.topz = emin(realz1, realz2);
          else
             seg.topz = emax(realz1, realz2);
@@ -2627,7 +2627,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
          (!seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_BACK_CEILING))
       {
          seg.middlezstep = zstep;
-         if(zstep > 0.0f)
+         if(!signbit(zstep))
             seg.middlez = emin(realz1, realz2);
          else
             seg.middlez = emax(realz1, realz2);
@@ -2661,7 +2661,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
          (!seg.line->frontside && seg.side->bottomSkewType() == SKEW_SOLID_BACK))
       {
          seg.bottomzstep = zstep;
-         if(zstep > 0.0f)
+         if(!signbit(zstep))
             seg.bottomz = emin(realz1, realz2);
          else
             seg.bottomz = emax(realz1, realz2);
@@ -2671,7 +2671,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
          (!seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_BACK_FLOOR))
       {
          seg.middlezstep = zstep;
-         if(zstep > 0.0f)
+         if(!signbit(zstep))
             seg.middlez = emin(realz1, realz2);
          else
             seg.middlez = emax(realz1, realz2);
