@@ -1343,14 +1343,14 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
          (!seg.line->frontside && seg.side->topSkewType() == SKEW_SOLID_FRONT))
       {
          seg.topzstep = zstep;
-         seg.topz = z1 > z2 ? z1 : z2;
+         seg.topz = realz1 > realz2 ? realz1 : realz2;
       }
 
       if((seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_BACK_CEILING) ||
          (!seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_FRONT_CEILING))
       {
          seg.middlezstep = zstep;
-         seg.middlez = z1 > z2 ? z1 : z2;
+         seg.middlez = realz1 > realz2 ? realz1 : realz2;
       }
 
 
@@ -2604,14 +2604,14 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
          (!seg.line->frontside && seg.side->topSkewType() == SKEW_SOLID_BACK))
       {
          seg.topzstep = zstep;
-         seg.topz = z1 > z2 ? z1 : z2;
+         seg.topz = realz1 > realz2 ? realz1 : realz2;
       }
 
       if((seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_FRONT_CEILING) ||
          (!seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_BACK_CEILING))
       {
          seg.middlezstep = zstep;
-         seg.middlez = z1 > z2 ? z1 : z2;
+         seg.middlez = realz1 > realz2 ? realz1 : realz2;
       }
    }
    else
