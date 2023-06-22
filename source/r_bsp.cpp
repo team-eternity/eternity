@@ -1326,6 +1326,10 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
    if(seg.backsec->srf.ceiling.slope)
    {
       float realz1, realz2, z1, z2, zstep;
+      float sidez1, sidez2;
+
+      sidez1 = P_GetZAtf(seg.backsec->srf.ceiling.slope, seg.line->v1->fx, seg.line->v1->fy);
+      sidez2 = P_GetZAtf(seg.backsec->srf.ceiling.slope, seg.line->v2->fx, seg.line->v2->fy);
 
       realz1 = z1 = P_GetZAtf(seg.backsec->srf.ceiling.slope, v1->fx, v1->fy);
       realz2 = z2 = P_GetZAtf(seg.backsec->srf.ceiling.slope, v2->fx, v2->fy);
@@ -1345,9 +1349,9 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       {
          seg.topzstep = zstep;
          if(!signbit(zstep))
-            seg.topz = emin(realz1, realz2);
+            seg.topz = emin(realz1, realz2) - emin(sidez1, sidez2);
          else
-            seg.topz = emax(realz1, realz2);
+            seg.topz = emax(realz1, realz2) - emax(sidez1, sidez2);
       }
 
       if((seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_BACK_CEILING) ||
@@ -1355,9 +1359,9 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       {
          seg.middlezstep = zstep;
          if(!signbit(zstep))
-            seg.middlez = emin(realz1, realz2);
+            seg.middlez = emin(realz1, realz2) - emin(sidez1, sidez2);
          else
-            seg.middlez = emax(realz1, realz2);
+            seg.middlez = emax(realz1, realz2) - emax(sidez1, sidez2);
       }
 
 
@@ -1377,6 +1381,11 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
    if(seg.backsec->srf.floor.slope)
    {
       float realz1, realz2, z1, z2, zstep;
+      float sidez1, sidez2;
+
+      sidez1 = P_GetZAtf(seg.backsec->srf.floor.slope, seg.line->v1->fx, seg.line->v1->fy);
+      sidez2 = P_GetZAtf(seg.backsec->srf.floor.slope, seg.line->v2->fx, seg.line->v2->fy);
+
 
       realz1 = z1 = P_GetZAtf(seg.backsec->srf.floor.slope, v1->fx, v1->fy);
       realz2 = z2 = P_GetZAtf(seg.backsec->srf.floor.slope, v2->fx, v2->fy);
@@ -1394,9 +1403,9 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       {
          seg.bottomzstep = zstep;
          if(!signbit(zstep))
-            seg.bottomz = emin(realz1, realz2);
+            seg.bottomz = emin(realz1, realz2) - emin(sidez1, sidez2);
          else
-            seg.bottomz = emax(realz1, realz2);
+            seg.bottomz = emax(realz1, realz2) - emax(sidez1, sidez2);
       }
 
       if((seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_BACK_FLOOR) ||
@@ -1404,9 +1413,9 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       {
          seg.middlezstep = zstep;
          if(!signbit(zstep))
-            seg.middlez = emin(realz1, realz2);
+            seg.middlez = emin(realz1, realz2) - emin(sidez1, sidez2);
          else
-            seg.middlez = emax(realz1, realz2);
+            seg.middlez = emax(realz1, realz2) - emax(sidez1, sidez2);
       }
    }
    else
@@ -2600,6 +2609,10 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    if(seg.frontsec->srf.ceiling.slope)
    {
       float realz1, realz2, z1, z2, zstep;
+      float sidez1, sidez2;
+
+      sidez1 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, seg.line->v1->fx, seg.line->v1->fy);
+      sidez2 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, seg.line->v2->fx, seg.line->v2->fy);
 
       realz1 = z1 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, v1->fx, v1->fy);
       realz2 = z2 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, v2->fx, v2->fy);
@@ -2618,9 +2631,9 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
       {
          seg.topzstep = zstep;
          if(!signbit(zstep))
-            seg.topz = emin(realz1, realz2);
+            seg.topz = emin(realz1, realz2) - emin(sidez1, sidez2);
          else
-            seg.topz = emax(realz1, realz2);
+            seg.topz = emax(realz1, realz2) - emax(sidez1, sidez2);
       }
 
       if((seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_FRONT_CEILING) ||
@@ -2628,9 +2641,9 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
       {
          seg.middlezstep = zstep;
          if(!signbit(zstep))
-            seg.middlez = emin(realz1, realz2);
+            seg.middlez = emin(realz1, realz2) - emin(sidez1, sidez2);
          else
-            seg.middlez = emax(realz1, realz2);
+            seg.middlez = emax(realz1, realz2) - emax(sidez1, sidez2);
       }
    }
    else
@@ -2645,6 +2658,11 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    if(seg.frontsec->srf.floor.slope)
    {
       float realz1, realz2, z1, z2, zstep;
+      float sidez1, sidez2;
+
+      sidez1 = P_GetZAtf(seg.frontsec->srf.floor.slope, seg.line->v1->fx, seg.line->v1->fy);
+      sidez2 = P_GetZAtf(seg.frontsec->srf.floor.slope, seg.line->v2->fx, seg.line->v2->fy);
+
 
       realz1 = z1 = P_GetZAtf(seg.frontsec->srf.floor.slope, v1->fx, v1->fy);
       realz2 = z2 = P_GetZAtf(seg.frontsec->srf.floor.slope, v2->fx, v2->fy);
@@ -2662,9 +2680,9 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
       {
          seg.bottomzstep = zstep;
          if(!signbit(zstep))
-            seg.bottomz = emin(realz1, realz2);
+            seg.bottomz = emin(realz1, realz2) - emin(sidez1, sidez2);
          else
-            seg.bottomz = emax(realz1, realz2);
+            seg.bottomz = emax(realz1, realz2) - emax(sidez1, sidez2);
       }
 
       if((seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_FRONT_FLOOR) ||
@@ -2672,9 +2690,9 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
       {
          seg.middlezstep = zstep;
          if(!signbit(zstep))
-            seg.middlez = emin(realz1, realz2);
+            seg.middlez = emin(realz1, realz2) - emin(sidez1, sidez2);
          else
-            seg.middlez = emax(realz1, realz2);
+            seg.middlez = emax(realz1, realz2) - emax(sidez1, sidez2);
       }
    }
    else
