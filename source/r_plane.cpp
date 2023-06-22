@@ -977,11 +977,11 @@ static void R_drawSky(ZoneHeap &heap, angle_t viewangle, const visplane_t *pl, c
       // However, the offset is scaled very small, so that it
       // allows a long-period of sky rotation.
 
-      an += s->textureoffset;
+      an += s->offset_base_x;
 
       // Vertical offset allows careful sky positioning.
 
-      column.texmid = s->rowoffset - 28*FRACUNIT;
+      column.texmid = s->offset_base_y - 28*FRACUNIT;
 
       // Adjust it upwards to make sure the fade-to-color effect doesn't happen too early
       tilevert = !!(s->intflags & SDI_VERTICALLYSCROLLING);

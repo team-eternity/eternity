@@ -2225,8 +2225,8 @@ static void P_LoadSideDefs2(int lumpnum)
       side_t *sd = sides + i;
       int secnum;
 
-      sd->textureoffset = GetBinaryWord(data) << FRACBITS;
-      sd->rowoffset     = GetBinaryWord(data) << FRACBITS; 
+      sd->offset_base_x = GetBinaryWord(data) << FRACBITS;
+      sd->offset_base_y = GetBinaryWord(data) << FRACBITS; 
 
       // haleyjd 05/26/10: read texture names into buffers
       GetBinaryString(data, toptexture,    8);

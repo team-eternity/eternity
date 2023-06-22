@@ -2561,8 +2561,8 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
    side = line->sidedef;
    
-   seg.toffsetx = M_FixedToFloat(side->textureoffset) + line->offset;
-   seg.toffsety = M_FixedToFloat(side->rowoffset);
+   seg.toffsetx = M_FixedToFloat(side->offset_base_x) + line->offset;
+   seg.toffsety = M_FixedToFloat(side->offset_base_y);
 
    if(seg.toffsetx < 0)
    {

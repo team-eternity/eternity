@@ -971,8 +971,8 @@ static void R_setScrollInterpolationState(secinterpstate_e state)
    {
       case SEC_INTERPOLATE:
          P_ForEachScrolledSide([](side_t *side, v2fixed_t offset) {
-            side->textureoffset += lerpCoord(view.lerp, -offset.x, 0);
-            side->rowoffset += lerpCoord(view.lerp, -offset.y, 0);
+            side->offset_base_x += lerpCoord(view.lerp, -offset.x, 0);
+            side->offset_base_y += lerpCoord(view.lerp, -offset.y, 0);
          });
          P_ForEachScrolledSector([](sector_t *sector, bool isceiling, v2fixed_t offset) {
             if(isceiling)
@@ -989,8 +989,8 @@ static void R_setScrollInterpolationState(secinterpstate_e state)
          break;
       case SEC_NORMAL:
          P_ForEachScrolledSide([](side_t *side, v2fixed_t offset) {
-            side->textureoffset -= lerpCoord(view.lerp, -offset.x, 0);
-            side->rowoffset -= lerpCoord(view.lerp, -offset.y, 0);
+            side->offset_base_x -= lerpCoord(view.lerp, -offset.x, 0);
+            side->offset_base_y -= lerpCoord(view.lerp, -offset.y, 0);
          });
          P_ForEachScrolledSector([](sector_t *sector, bool isceiling, v2fixed_t offset) {
             if(isceiling)

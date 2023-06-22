@@ -106,12 +106,12 @@ static bool EV_Check3DMidTexSwitch(const line_t *line, const Mobj *thing, int si
 
       if(line->flags & ML_DONTPEGBOTTOM)
       {
-         texbot = sidedef->rowoffset + openbottom;
+         texbot = sidedef->offset_base_y + openbottom;
          textop = texbot + textures[sidedef->midtexture]->heightfrac;
       }
       else
       {
-         textop = opentop + sidedef->rowoffset;
+         textop = opentop + sidedef->offset_base_y;
          texbot = textop - textures[sidedef->midtexture]->heightfrac;
       }
 

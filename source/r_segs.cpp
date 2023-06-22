@@ -163,7 +163,7 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
       column.texmid = column.texmid - viewz;
    }
 
-   column.texmid += segclip.line->sidedef->rowoffset - ds->deltaz;
+   column.texmid += segclip.line->sidedef->offset_base_y - ds->deltaz;
    
    // SoM 10/19/02: deep water colormap fixes
    //if (fixedcolormap)

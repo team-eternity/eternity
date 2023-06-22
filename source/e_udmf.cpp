@@ -474,8 +474,8 @@ bool UDMFParser::loadSidedefs2()
 
       if(mNamespace == namespace_Eternity)
       {
-         sd->textureoffset = usd.offsetx;
-         sd->rowoffset = usd.offsety;
+         sd->offset_base_x = usd.offsetx;
+         sd->offset_base_y = usd.offsety;
 
          const int skewTopType    = E_StrToNumLinear(udmfsolidskewtypes,  NUMSOLIDSKEWTYPES,  usd.skew_top_type.constPtr());
          const int skewBottomType = E_StrToNumLinear(udmfsolidskewtypes,  NUMSOLIDSKEWTYPES,  usd.skew_bottom_type.constPtr());
@@ -486,8 +486,8 @@ bool UDMFParser::loadSidedefs2()
       }
       else
       {
-         sd->textureoffset = usd.offsetx << FRACBITS;
-         sd->rowoffset = usd.offsety << FRACBITS;
+         sd->offset_base_x = usd.offsetx << FRACBITS;
+         sd->offset_base_y = usd.offsety << FRACBITS;
       }
       if(usd.sector < 0 || usd.sector >= numsectors)
       {
