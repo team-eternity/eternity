@@ -480,7 +480,7 @@ bool UDMFParser::loadSidedefs2()
          const int skewTopType    = E_StrToNumLinear(udmfsolidskewtypes,  NUMSOLIDSKEWTYPES,  usd.skew_top_type.constPtr());
          const int skewBottomType = E_StrToNumLinear(udmfsolidskewtypes,  NUMSOLIDSKEWTYPES,  usd.skew_bottom_type.constPtr());
          const int skewMiddleType = E_StrToNumLinear(udmfmaskedskewtypes, NUMMASKEDSKEWTYPES, usd.skew_middle_type.constPtr());
-         sd->intflags |= ((skewTopType    == NUMSOLIDSKEWTYPES ? 0 : skewTopType)     << SDI_SKEW_TOP_SHIFT);
+         sd->intflags |= ((skewTopType    == NUMSOLIDSKEWTYPES  ? 0 : skewTopType)    << SDI_SKEW_TOP_SHIFT);
          sd->intflags |= ((skewBottomType == NUMSOLIDSKEWTYPES  ? 0 : skewBottomType) << SDI_SKEW_BOTTOM_SHIFT);
          sd->intflags |= ((skewMiddleType == NUMMASKEDSKEWTYPES ? 0 : skewMiddleType) << SDK_SKEW_MIDDLE_SHIFT);
       }
