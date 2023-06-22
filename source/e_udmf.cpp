@@ -477,6 +477,13 @@ bool UDMFParser::loadSidedefs2()
          sd->offset_base_x = usd.offsetx;
          sd->offset_base_y = usd.offsety;
 
+         sd->offset_bottom_x = usd.offsetx_bottom;
+         sd->offset_bottom_y = usd.offsety_bottom;
+         sd->offset_mid_x    = usd.offsetx_mid;
+         sd->offset_mid_y    = usd.offsety_mid;
+         sd->offset_top_x    = usd.offsetx_top;
+         sd->offset_top_y    = usd.offsety_top;
+
          const int skewTopType    = E_StrToNumLinear(udmfsolidskewtypes,  NUMSOLIDSKEWTYPES,  usd.skew_top_type.constPtr());
          const int skewBottomType = E_StrToNumLinear(udmfsolidskewtypes,  NUMSOLIDSKEWTYPES,  usd.skew_bottom_type.constPtr());
          const int skewMiddleType = E_StrToNumLinear(udmfmaskedskewtypes, NUMMASKEDSKEWTYPES, usd.skew_middle_type.constPtr());
@@ -677,6 +684,12 @@ enum token_e
    t_monsteruse,
    t_offsetx,
    t_offsety,
+   t_offsetx_bottom,
+   t_offsety_bottom,
+   t_offsetx_mid,
+   t_offsety_mid,
+   t_offsetx_top,
+   t_offsety_top,
    t_phasedlight,
    t_polycross,
    t_portal,
@@ -835,6 +848,12 @@ static keytoken_t gTokenList[] =
    TOKEN(monsteruse),
    TOKEN(offsetx),
    TOKEN(offsety),
+   TOKEN(offsetx_bottom),
+   TOKEN(offsety_bottom),
+   TOKEN(offsetx_mid),
+   TOKEN(offsety_mid),
+   TOKEN(offsetx_top),
+   TOKEN(offsety_top),
    TOKEN(polycross),
    TOKEN(portal),
    TOKEN(portalceiling),
@@ -1161,6 +1180,13 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                {
                   switch(kt->token)
                   {
+                     READ_FIXED(sidedef, offsetx_bottom);
+                     READ_FIXED(sidedef, offsety_bottom);
+                     READ_FIXED(sidedef, offsetx_mid);
+                     READ_FIXED(sidedef, offsety_mid);
+                     READ_FIXED(sidedef, offsetx_top);
+                     READ_FIXED(sidedef, offsety_top);
+
                      READ_STRING(sidedef, skew_bottom_type);
                      READ_STRING(sidedef, skew_middle_type);
                      READ_STRING(sidedef, skew_top_type);

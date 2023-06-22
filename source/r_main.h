@@ -202,7 +202,11 @@ struct cb_seg_t
 {
    int x1, x2;
    float x1frac, x2frac;
-   float toffset_base_x, toffset_base_y;
+
+   float toffset_base_x,   toffset_base_y;
+   float toffset_top_x,    toffset_top_y;
+   float toffset_mid_x,    toffset_mid_y;
+   float toffset_bottom_x, toffset_bottom_y;
 
    float dist, dist2, diststep;
    float len, len2, lenstep;

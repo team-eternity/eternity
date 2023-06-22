@@ -449,8 +449,15 @@ struct sector_t : rendersector_t
 
 struct side_t
 {
-   fixed_t offset_base_x; // add this to the calculated texture column
-   fixed_t offset_base_y; // add this to the calculated texture top
+   fixed_t offset_base_x;   // add this to the calculated texture column
+   fixed_t offset_base_y;   // add this to the calculated texture top
+
+   fixed_t offset_top_x;    // x offset for toptexture only
+   fixed_t offset_top_y;    // y offset for toptexture only
+   fixed_t offset_bottom_x; // x offset for bottomtexture only
+   fixed_t offset_bottom_y; // y offset for bottomtexture only
+   fixed_t offset_mid_x;    // x offset for midtexture only
+   fixed_t offset_mid_y;    // y offset for midtexture only
 
    // Texture indices. We do not maintain names here.
    int16_t toptexture;    // MUST BE CACHED IF MODIFIED AT RUNTIME

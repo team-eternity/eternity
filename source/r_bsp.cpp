@@ -1535,9 +1535,9 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       seg.toptexh = textures[side->toptexture]->height;
 
       if(seg.line->linedef->flags & ML_DONTPEGTOP)
-         seg.toptexmid = M_FloatToFixed(textop + seg.toffset_base_y); // SCALE_TODO: Y scale-factor here
+         seg.toptexmid = M_FloatToFixed(textop + seg.toffset_base_y + seg.toffset_top_y); // SCALE_TODO: Y scale-factor here
       else
-         seg.toptexmid = M_FloatToFixed(texhigh + seg.toptexh + seg.toffset_base_y); // SCALE_TODO: Y scale-factor here
+         seg.toptexmid = M_FloatToFixed(texhigh + seg.toptexh + seg.toffset_base_y + seg.toffset_top_y); // SCALE_TODO: Y scale-factor here
    }
    else
       seg.toptex = 0;
@@ -1640,9 +1640,9 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       seg.bottomtexh = textures[side->bottomtexture]->height;
 
       if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-         seg.bottomtexmid = M_FloatToFixed(textop + seg.toffset_base_y); // SCALE_TODO: Y scale-factor here
+         seg.bottomtexmid = M_FloatToFixed(textop + seg.toffset_base_y + seg.toffset_bottom_y); // SCALE_TODO: Y scale-factor here
       else
-         seg.bottomtexmid = M_FloatToFixed(texlow + seg.toffset_base_y); // SCALE_TODO: Y scale-factor here
+         seg.bottomtexmid = M_FloatToFixed(texlow + seg.toffset_base_y + seg.toffset_bottom_y); // SCALE_TODO: Y scale-factor here
    }
    else
       seg.bottomtex = 0;
@@ -1841,9 +1841,9 @@ static void R_2S_Normal(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       seg.toptexh = textures[side->toptexture]->height;
 
       if(seg.line->linedef->flags & ML_DONTPEGTOP)
-         seg.toptexmid = M_FloatToFixed(textop + seg.toffset_base_y); // SCALE_TODO: Y scale-factor here
+         seg.toptexmid = M_FloatToFixed(textop + seg.toffset_base_y + seg.toffset_top_y); // SCALE_TODO: Y scale-factor here
       else
-         seg.toptexmid = M_FloatToFixed(texhigh + seg.toptexh + seg.toffset_base_y); // SCALE_TODO: Y scale-factor here
+         seg.toptexmid = M_FloatToFixed(texhigh + seg.toptexh + seg.toffset_base_y + seg.toffset_top_y); // SCALE_TODO: Y scale-factor here
    }
    else
       seg.toptex = 0;
@@ -1955,9 +1955,9 @@ static void R_2S_Normal(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       seg.bottomtexh = textures[side->bottomtexture]->height;
 
       if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-         seg.bottomtexmid = M_FloatToFixed(textop + seg.toffset_base_y); // SCALE_TODO: Y scale-factor here
+         seg.bottomtexmid = M_FloatToFixed(textop + seg.toffset_base_y + seg.toffset_bottom_y); // SCALE_TODO: Y scale-factor here
       else
-         seg.bottomtexmid = M_FloatToFixed(texlow + seg.toffset_base_y); // SCALE_TODO: Y scale-factor here
+         seg.bottomtexmid = M_FloatToFixed(texlow + seg.toffset_base_y + seg.toffset_bottom_y); // SCALE_TODO: Y scale-factor here
    }
    else
       seg.bottomtex = 0;
@@ -2024,9 +2024,9 @@ static void R_1SidedLine(cmapcontext_t &cmapcontext, planecontext_t &planecontex
          float texhigh = beyond->srf.ceiling.heightf - cb_viewpoint.z;
 
          if(seg.line->linedef->flags & ML_DONTPEGTOP)
-            seg.toptexmid = M_FloatToFixed(textop + seg.toffset_base_y); // SCALE_TODO: Y scale-factor here
+            seg.toptexmid = M_FloatToFixed(textop + seg.toffset_base_y + seg.toffset_top_y); // SCALE_TODO: Y scale-factor here
          else
-            seg.toptexmid = M_FloatToFixed(texhigh + seg.toptexh + seg.toffset_base_y); // SCALE_TODO: Y scale-factor here
+            seg.toptexmid = M_FloatToFixed(texhigh + seg.toptexh + seg.toffset_base_y + seg.toffset_top_y); // SCALE_TODO: Y scale-factor here
 
          seg.high  = view.ycenter - ((beyond->srf.ceiling.heightf - cb_viewpoint.z) * i1) - 1.0f;
          seg.high2 = view.ycenter - ((beyond->srf.ceiling.heightf - cb_viewpoint.z) * i2) - 1.0f;
@@ -2043,9 +2043,9 @@ static void R_1SidedLine(cmapcontext_t &cmapcontext, planecontext_t &planecontex
          float texlow = beyond->srf.floor.heightf - cb_viewpoint.z;
 
          if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-            seg.bottomtexmid = M_FloatToFixed(textop + seg.toffset_base_y); // SCALE_TODO: Y scale-factor here
+            seg.bottomtexmid = M_FloatToFixed(textop + seg.toffset_base_y + seg.toffset_bottom_y); // SCALE_TODO: Y scale-factor here
          else
-            seg.bottomtexmid = M_FloatToFixed(texlow + seg.toffset_base_y); // SCALE_TODO: Y scale-factor here
+            seg.bottomtexmid = M_FloatToFixed(texlow + seg.toffset_base_y + seg.toffset_bottom_y); // SCALE_TODO: Y scale-factor here
 
          seg.low  = view.ycenter - ((beyond->srf.floor.heightf - cb_viewpoint.z) * i1);
          seg.low2 = view.ycenter - ((beyond->srf.floor.heightf - cb_viewpoint.z) * i2);
@@ -2063,9 +2063,9 @@ static void R_1SidedLine(cmapcontext_t &cmapcontext, planecontext_t &planecontex
       seg.midtexh  = textures[side->midtexture]->height;
 
       if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-         seg.midtexmid = M_FloatToFixed(texbottom + seg.midtexh + seg.toffset_base_y); // SCALE_TODO: Y scale-factor here
+         seg.midtexmid = M_FloatToFixed(texbottom + seg.midtexh + seg.toffset_base_y + seg.toffset_mid_y); // SCALE_TODO: Y scale-factor here
       else
-         seg.midtexmid = M_FloatToFixed(textop + seg.toffset_base_y); // SCALE_TODO: Y scale-factor here
+         seg.midtexmid = M_FloatToFixed(textop + seg.toffset_base_y + seg.toffset_mid_y); // SCALE_TODO: Y scale-factor here
       seg.skyflat = 0;
    }
    else
@@ -2323,6 +2323,37 @@ static bool R_allowBehindSectorPortal(const cbviewpoint_t &cb_viewpoint,
 }
 
 //
+// Adjust texture offsets to avoid texel issues, see comment in function.
+//
+static float R_getAdjustedXOffset(float toffset_x, const float toffset_base_x, const int16_t texture)
+{
+   if(toffset_base_x + toffset_x < 0.0f && texture)
+   {
+      // SoM: ok, this was driving me crazy. It seems that when the offset is
+      // less than 0, the fractional part will cause the texel at
+      // 0 + abs(seg.toffset_base_x) to double and it will strip the first texel to
+      // one column. This is because -64 + ANY FRACTION is going to cast to 63
+      // and when you cast -0.999 through 0.999 it will cast to 0. The first
+      // step is to find the largest texture width on the line to make sure all
+      // the textures will start at the same column when the offsets are
+      // adjusted.
+
+      float maxtexw = float(textures[texture]->widthmask);
+
+      // Then adjust the offset to zero or the first positive value that will
+      // repeat correctly with the largest texture on the line.
+      if(maxtexw)
+      {
+         maxtexw++;
+         while(toffset_base_x + toffset_x < 0.0f)
+            toffset_x += maxtexw;
+      }
+   }
+
+   return toffset_x;
+}
+
+//
 // Clips the given segment
 // and adds any visible pieces to the line list.
 //
@@ -2564,35 +2595,16 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    seg.toffset_base_x = M_FixedToFloat(side->offset_base_x) + line->offset;
    seg.toffset_base_y = M_FixedToFloat(side->offset_base_y);
 
-   if(seg.toffset_base_x < 0)
-   {
-      float maxtexw = 0.0f;
+   seg.toffset_top_x    = M_FixedToFloat(side->offset_top_x);
+   seg.toffset_top_y    = M_FixedToFloat(side->offset_top_y);
+   seg.toffset_mid_x    = M_FixedToFloat(side->offset_mid_x);
+   seg.toffset_mid_y    = M_FixedToFloat(side->offset_mid_y);
+   seg.toffset_bottom_x = M_FixedToFloat(side->offset_bottom_x);
+   seg.toffset_bottom_y = M_FixedToFloat(side->offset_bottom_y);
 
-      // SoM: ok, this was driving me crazy. It seems that when the offset is 
-      // less than 0, the fractional part will cause the texel at 
-      // 0 + abs(seg.toffset_base_x) to double and it will strip the first texel to
-      // one column. This is because -64 + ANY FRACTION is going to cast to 63
-      // and when you cast -0.999 through 0.999 it will cast to 0. The first 
-      // step is to find the largest texture width on the line to make sure all
-      // the textures will start at the same column when the offsets are 
-      // adjusted.
-
-      if(side->toptexture)
-         maxtexw = (float)textures[side->toptexture]->widthmask;
-      if(side->midtexture && textures[side->midtexture]->widthmask > maxtexw)
-         maxtexw = (float)textures[side->midtexture]->widthmask;
-      if(side->bottomtexture && textures[side->bottomtexture]->widthmask > maxtexw)
-         maxtexw = (float)textures[side->bottomtexture]->widthmask;
-
-      // Then adjust the offset to zero or the first positive value that will 
-      // repeat correctly with the largest texture on the line.
-      if(maxtexw)
-      {
-         maxtexw++;
-         while(seg.toffset_base_x < 0.0f) 
-            seg.toffset_base_x += maxtexw;
-      }
-   }
+   seg.toffset_top_x    = R_getAdjustedXOffset(seg.toffset_top_x,    seg.toffset_base_x, side->toptexture);
+   seg.toffset_mid_x    = R_getAdjustedXOffset(seg.toffset_mid_x,    seg.toffset_base_x, side->midtexture);
+   seg.toffset_bottom_x = R_getAdjustedXOffset(seg.toffset_bottom_x, seg.toffset_base_x, side->bottomtexture);
 
    seg.dist = i1;
    seg.dist2 = i2;

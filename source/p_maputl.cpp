@@ -596,12 +596,12 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
       
       if(linedef->flags & ML_DONTPEGBOTTOM)
       {
-         texbot = side->offset_base_y + obot;
+         texbot = side->offset_base_y + side->offset_mid_y + obot;
          textop = texbot + textures[side->midtexture]->heightfrac;
       }
       else
       {
-         textop = otop + side->offset_base_y;
+         textop = otop + side->offset_base_y + side->offset_mid_y;
          texbot = textop - textures[side->midtexture]->heightfrac;
       }
       texmid = (textop + texbot)/2;
