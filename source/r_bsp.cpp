@@ -1328,8 +1328,8 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       float realz1, realz2, z1, z2, zstep;
       float sidez1, sidez2;
 
-      sidez1 = P_GetZAtf(seg.backsec->srf.ceiling.slope, seg.line->v1->fx, seg.line->v1->fy);
-      sidez2 = P_GetZAtf(seg.backsec->srf.ceiling.slope, seg.line->v2->fx, seg.line->v2->fy);
+      sidez1 = P_GetZAtf(seg.backsec->srf.ceiling.slope, seg.line->linedef->v1->fx, seg.line->linedef->v1->fy);
+      sidez2 = P_GetZAtf(seg.backsec->srf.ceiling.slope, seg.line->linedef->v2->fx, seg.line->linedef->v2->fy);
 
       realz1 = z1 = P_GetZAtf(seg.backsec->srf.ceiling.slope, v1->fx, v1->fy);
       realz2 = z2 = P_GetZAtf(seg.backsec->srf.ceiling.slope, v2->fx, v2->fy);
@@ -1383,8 +1383,8 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       float realz1, realz2, z1, z2, zstep;
       float sidez1, sidez2;
 
-      sidez1 = P_GetZAtf(seg.backsec->srf.floor.slope, seg.line->v1->fx, seg.line->v1->fy);
-      sidez2 = P_GetZAtf(seg.backsec->srf.floor.slope, seg.line->v2->fx, seg.line->v2->fy);
+      sidez1 = P_GetZAtf(seg.backsec->srf.floor.slope, seg.line->linedef->v1->fx, seg.line->linedef->v1->fy);
+      sidez2 = P_GetZAtf(seg.backsec->srf.floor.slope, seg.line->linedef->v2->fx, seg.line->linedef->v2->fy);
 
 
       realz1 = z1 = P_GetZAtf(seg.backsec->srf.floor.slope, v1->fx, v1->fy);
@@ -2611,8 +2611,8 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
       float realz1, realz2, z1, z2, zstep;
       float sidez1, sidez2;
 
-      sidez1 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, seg.line->v1->fx, seg.line->v1->fy);
-      sidez2 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, seg.line->v2->fx, seg.line->v2->fy);
+      sidez1 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, seg.line->linedef->v1->fx, seg.line->linedef->v1->fy);
+      sidez2 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, seg.line->linedef->v2->fx, seg.line->linedef->v2->fy);
 
       realz1 = z1 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, v1->fx, v1->fy);
       realz2 = z2 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, v2->fx, v2->fy);
@@ -2660,8 +2660,8 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
       float realz1, realz2, z1, z2, zstep;
       float sidez1, sidez2;
 
-      sidez1 = P_GetZAtf(seg.frontsec->srf.floor.slope, seg.line->v1->fx, seg.line->v1->fy);
-      sidez2 = P_GetZAtf(seg.frontsec->srf.floor.slope, seg.line->v2->fx, seg.line->v2->fy);
+      sidez1 = P_GetZAtf(seg.frontsec->srf.floor.slope, seg.line->linedef->v1->fx, seg.line->linedef->v1->fy);
+      sidez2 = P_GetZAtf(seg.frontsec->srf.floor.slope, seg.line->linedef->v2->fx, seg.line->linedef->v2->fy);
 
 
       realz1 = z1 = P_GetZAtf(seg.frontsec->srf.floor.slope, v1->fx, v1->fy);
