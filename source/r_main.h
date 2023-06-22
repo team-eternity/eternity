@@ -242,10 +242,9 @@ struct cb_seg_t
    // Extreme plane point Z for sloped sectors: used for sprite-clipping silhouettes.
    fixed_t maxfrontfloor, minfrontceil, maxbackfloor, minbackceil;
 
-   // Z step for top and bottom for skewing textures relative to slopes
-   float topzstep, bottomzstep, middlezstep;
-
-   float bottomz, topz, middlez;
+   // Skew-related values
+   float skew_top_step, skew_mid_step, skew_step_bottom;
+   float skew_top_baseoffset, skew_mid_baseoffset, skew_bottom_baseoffset;
 
    // If nonzero, require f_sky1 rendering
    int skyflat;

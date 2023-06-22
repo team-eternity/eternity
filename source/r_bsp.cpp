@@ -1347,21 +1347,21 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       if((seg.line->frontside && seg.side->topSkewType() == SKEW_SOLID_BACK) ||
          (!seg.line->frontside && seg.side->topSkewType() == SKEW_SOLID_FRONT))
       {
-         seg.topzstep = zstep;
+         seg.skew_top_step = zstep;
          if(!signbit(zstep))
-            seg.topz = emin(realz1, realz2) - emin(sidez1, sidez2);
+            seg.skew_top_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
          else
-            seg.topz = emax(realz1, realz2) - emax(sidez1, sidez2);
+            seg.skew_top_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
       }
 
       if((seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_BACK_CEILING) ||
          (!seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_FRONT_CEILING))
       {
-         seg.middlezstep = zstep;
+         seg.skew_mid_step = zstep;
          if(!signbit(zstep))
-            seg.middlez = emin(realz1, realz2) - emin(sidez1, sidez2);
+            seg.skew_mid_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
          else
-            seg.middlez = emax(realz1, realz2) - emax(sidez1, sidez2);
+            seg.skew_mid_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
       }
 
 
@@ -1401,21 +1401,21 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       if((seg.line->frontside && seg.side->bottomSkewType() == SKEW_SOLID_BACK) ||
          (!seg.line->frontside && seg.side->bottomSkewType() == SKEW_SOLID_FRONT))
       {
-         seg.bottomzstep = zstep;
+         seg.skew_step_bottom = zstep;
          if(!signbit(zstep))
-            seg.bottomz = emin(realz1, realz2) - emin(sidez1, sidez2);
+            seg.skew_bottom_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
          else
-            seg.bottomz = emax(realz1, realz2) - emax(sidez1, sidez2);
+            seg.skew_bottom_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
       }
 
       if((seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_BACK_FLOOR) ||
          (!seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_FRONT_FLOOR))
       {
-         seg.middlezstep = zstep;
+         seg.skew_mid_step = zstep;
          if(!signbit(zstep))
-            seg.middlez = emin(realz1, realz2) - emin(sidez1, sidez2);
+            seg.skew_mid_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
          else
-            seg.middlez = emax(realz1, realz2) - emax(sidez1, sidez2);
+            seg.skew_mid_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
       }
    }
    else
@@ -2629,21 +2629,21 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
       if((seg.line->frontside && seg.side->topSkewType() == SKEW_SOLID_FRONT) ||
          (!seg.line->frontside && seg.side->topSkewType() == SKEW_SOLID_BACK))
       {
-         seg.topzstep = zstep;
+         seg.skew_top_step = zstep;
          if(!signbit(zstep))
-            seg.topz = emin(realz1, realz2) - emin(sidez1, sidez2);
+            seg.skew_top_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
          else
-            seg.topz = emax(realz1, realz2) - emax(sidez1, sidez2);
+            seg.skew_top_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
       }
 
       if((seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_FRONT_CEILING) ||
          (!seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_BACK_CEILING))
       {
-         seg.middlezstep = zstep;
+         seg.skew_mid_step = zstep;
          if(!signbit(zstep))
-            seg.middlez = emin(realz1, realz2) - emin(sidez1, sidez2);
+            seg.skew_mid_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
          else
-            seg.middlez = emax(realz1, realz2) - emax(sidez1, sidez2);
+            seg.skew_mid_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
       }
    }
    else
@@ -2678,21 +2678,21 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
       if((seg.line->frontside && seg.side->bottomSkewType() == SKEW_SOLID_FRONT) ||
          (!seg.line->frontside && seg.side->bottomSkewType() == SKEW_SOLID_BACK))
       {
-         seg.bottomzstep = zstep;
+         seg.skew_step_bottom = zstep;
          if(!signbit(zstep))
-            seg.bottomz = emin(realz1, realz2) - emin(sidez1, sidez2);
+            seg.skew_bottom_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
          else
-            seg.bottomz = emax(realz1, realz2) - emax(sidez1, sidez2);
+            seg.skew_bottom_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
       }
 
       if((seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_FRONT_FLOOR) ||
          (!seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_BACK_FLOOR))
       {
-         seg.middlezstep = zstep;
+         seg.skew_mid_step = zstep;
          if(!signbit(zstep))
-            seg.middlez = emin(realz1, realz2) - emin(sidez1, sidez2);
+            seg.skew_mid_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
          else
-            seg.middlez = emax(realz1, realz2) - emax(sidez1, sidez2);
+            seg.skew_mid_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
       }
    }
    else
