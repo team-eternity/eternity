@@ -377,6 +377,8 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
          {
             if(segclip.skew_mid_step && segclip.side->middleSkewType() != SKEW_MASKED_NONE)
                ds_p->maskedtextureskew[i] = segclip.skew_mid_step * (segclip.len * basescale) + segclip.skew_mid_baseoffset;
+            else
+               ds_p->maskedtextureskew[i] = 0.0f; // Don't think this is strictly necessary but do this for safety.
          }
 
          // calculate lighting
@@ -772,7 +774,12 @@ static void R_storeTextureColumns(float *const maskedtexturecol, float *const ma
       if(maskedtexturecol)
          maskedtexturecol[i] = texx;
       if(maskedtextureskew)
-         maskedtextureskew[i] = segclip.skew_step_bottom * (segclip.len * basescale) + segclip.skew_bottom_baseoffset;
+      {
+         if(segclip.skew_mid_step && segclip.side->middleSkewType() != SKEW_MASKED_NONE)
+            maskedtextureskew[i] = segclip.skew_mid_step * (segclip.len * basescale) + segclip.skew_mid_baseoffset;
+         else
+            maskedtextureskew[i] = 0.0f; // Don't think this is strictly necessary but do this for safety.
+      }
 
       segclip.len  += segclip.lenstep;
       segclip.dist += segclip.diststep;
