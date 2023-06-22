@@ -368,7 +368,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
          column.step = M_FloatToFixed(basescale); // SCALE_TODO: Y scale-factor here
          column.x = i;
 
-         texx = segclip.len * basescale + segclip.toffsetx; // SCALE_TODO: X scale-factor here
+         texx = segclip.len * basescale + segclip.toffset_base_x; // SCALE_TODO: X scale-factor here
 
          if(ds_p->maskedtexturecol)
             ds_p->maskedtexturecol[i] = texx;
@@ -769,7 +769,7 @@ static void R_storeTextureColumns(float *const maskedtexturecol, float *const ma
    for(i = segclip.x1; i <= segclip.x2; i++)
    {
       basescale = 1.0f / (segclip.dist * view.yfoc);
-      texx = segclip.len * basescale + segclip.toffsetx;
+      texx = segclip.len * basescale + segclip.toffset_base_x;
 
       if(maskedtexturecol)
          maskedtexturecol[i] = texx;
