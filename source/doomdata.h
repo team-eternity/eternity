@@ -179,9 +179,19 @@ enum
    MLI_MOVINGPORTAL = 0x10,   // line is on a moving portal
 };
 
+// internal sidedef flags
 enum
 {
    SDI_VERTICALLYSCROLLING = 0x0001,   // sidedef is targeted for vertical scrolling (needed by skies)
+
+   SDI_SKEW_TOP_MASK       = 0x0006,   // top solid seg skew type: bits 2 and 3
+   SDI_SKEW_TOP_SHIFT      = 1,
+
+   SDI_SKEW_BOTTOM_MASK    = 0x0018,   // bottom solid seg skew type: bits 4 and 5
+   SDI_SKEW_BOTTOM_SHIFT   = 3,
+
+   SDI_SKEW_MIDDLE_MASK    = 0x00E0,   // middle masked seg skew type: bits 6, 7, and 8
+   SDK_SKEW_MIDDLE_SHIFT   = 5,
 };
 
 // Sector definition, from editing.

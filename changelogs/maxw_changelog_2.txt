@@ -313,6 +313,21 @@ Split i_joysticksens into i_joy_deadzone_left, i_joy_deadzone_right, and
 i_joy_deadzone_trigger.
 Normalised SDL gamepad axis inputs to start from 0 at the end of the deadzone.
 
+--------------------------------------------------------------------------------
+2023/06/24
+Added texture skewing sidedef properties for the Eternity UDMF namespace.
+Allows textures the match the sloping of slope on the front or back of the
+current line texture.
+ * skew_bottom_type, skew_top_type: Can be any of "none", "front", or "back".
+ * skew_middle_type: Can be any of "none", "front_floor", "front_ceiling",
+                     "back_floor", or "back_ceiling".
+
+Added per-texture offset sidedef proeprties for the Eternity UDMF namespace.
+These have the same names as the ones that ZDoom's UDMF namespace uses.
+All properties are read in as decimal numbers (into fixed-point internally).
+ * offsetx_bottom, offsety_bottom, offsetx_mid,
+   offsety_mid, offsetx_top, offsety_top.
+
 ================================================================================
 EOF
 ================================================================================

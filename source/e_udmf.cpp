@@ -63,6 +63,22 @@ static const char *udmfscrolltypes[NUMSCROLLTYPES] =
    "both"
 };
 
+static constexpr const char *udmfsolidskewtypes[NUMSOLIDSKEWTYPES] =
+{
+   "none",
+   "front",
+   "back",
+};
+
+static constexpr const char *udmfmaskedskewtypes[NUMMASKEDSKEWTYPES] =
+{
+   "none",
+   "front_floor",
+   "front_ceiling",
+   "back_floor",
+   "back_ceiling",
+};
+
 //
 // Initializes the internal structure with the sector count
 //
@@ -458,13 +474,27 @@ bool UDMFParser::loadSidedefs2()
 
       if(mNamespace == namespace_Eternity)
       {
-         sd->textureoffset = usd.offsetx;
-         sd->rowoffset = usd.offsety;
+         sd->offset_base_x = usd.offsetx;
+         sd->offset_base_y = usd.offsety;
+
+         sd->offset_bottom_x = usd.offsetx_bottom;
+         sd->offset_bottom_y = usd.offsety_bottom;
+         sd->offset_mid_x    = usd.offsetx_mid;
+         sd->offset_mid_y    = usd.offsety_mid;
+         sd->offset_top_x    = usd.offsetx_top;
+         sd->offset_top_y    = usd.offsety_top;
+
+         const int skewTopType    = E_StrToNumLinear(udmfsolidskewtypes,  NUMSOLIDSKEWTYPES,  usd.skew_top_type.constPtr());
+         const int skewBottomType = E_StrToNumLinear(udmfsolidskewtypes,  NUMSOLIDSKEWTYPES,  usd.skew_bottom_type.constPtr());
+         const int skewMiddleType = E_StrToNumLinear(udmfmaskedskewtypes, NUMMASKEDSKEWTYPES, usd.skew_middle_type.constPtr());
+         sd->intflags |= ((skewTopType    == NUMSOLIDSKEWTYPES  ? 0 : skewTopType)    << SDI_SKEW_TOP_SHIFT);
+         sd->intflags |= ((skewBottomType == NUMSOLIDSKEWTYPES  ? 0 : skewBottomType) << SDI_SKEW_BOTTOM_SHIFT);
+         sd->intflags |= ((skewMiddleType == NUMMASKEDSKEWTYPES ? 0 : skewMiddleType) << SDK_SKEW_MIDDLE_SHIFT);
       }
       else
       {
-         sd->textureoffset = usd.offsetx << FRACBITS;
-         sd->rowoffset = usd.offsety << FRACBITS;
+         sd->offset_base_x = usd.offsetx << FRACBITS;
+         sd->offset_base_y = usd.offsety << FRACBITS;
       }
       if(usd.sector < 0 || usd.sector >= numsectors)
       {
@@ -654,6 +684,12 @@ enum token_e
    t_monsteruse,
    t_offsetx,
    t_offsety,
+   t_offsetx_bottom,
+   t_offsety_bottom,
+   t_offsetx_mid,
+   t_offsety_mid,
+   t_offsetx_top,
+   t_offsety_top,
    t_phasedlight,
    t_polycross,
    t_portal,
@@ -692,6 +728,9 @@ enum token_e
    t_sideback,
    t_sidefront,
    t_single,
+   t_skew_bottom_type,
+   t_skew_middle_type,
+   t_skew_top_type,
    t_skill1,
    t_skill2,
    t_skill3,
@@ -809,6 +848,12 @@ static keytoken_t gTokenList[] =
    TOKEN(monsteruse),
    TOKEN(offsetx),
    TOKEN(offsety),
+   TOKEN(offsetx_bottom),
+   TOKEN(offsety_bottom),
+   TOKEN(offsetx_mid),
+   TOKEN(offsety_mid),
+   TOKEN(offsetx_top),
+   TOKEN(offsety_top),
    TOKEN(polycross),
    TOKEN(portal),
    TOKEN(portalceiling),
@@ -847,6 +892,9 @@ static keytoken_t gTokenList[] =
    TOKEN(sideback),
    TOKEN(sidefront),
    TOKEN(single),
+   TOKEN(skew_bottom_type),
+   TOKEN(skew_middle_type),
+   TOKEN(skew_top_type),
    TOKEN(skill1),
    TOKEN(skill2),
    TOKEN(skill3),
@@ -1027,12 +1075,20 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
       if(result == result_Assignment && mInBlock)
       {
 
-#define REQUIRE_INT(obj, field, flag) case t_##field: requireInt(obj->field, obj->flag); break
 #define READ_NUMBER(obj, field) case t_##field: readNumber(obj->field); break
 #define READ_BOOL(obj, field) case t_##field: readBool(obj->field); break
 #define READ_STRING(obj, field) case t_##field: readString(obj->field); break
 #define READ_FIXED(obj, field) case t_##field: readFixed(obj->field); break
+#define REQUIRE_INT(obj, field, flag) case t_##field: requireInt(obj->field, obj->flag); break
+#define REQUIRE_STRING(obj, field, flag) case t_##field: requireString(obj->field, obj->flag); break
 #define REQUIRE_FIXED(obj, field, flag) case t_##field: requireFixed(obj->field, obj->flag); break
+
+#define READ_ETERNITY_FIXED_ELSE_NUMBER(obj, field) case t_##field:\
+   if(mNamespace == namespace_Eternity) \
+         readFixed(obj->field); \
+      else \
+         readNumber(obj->field); \
+   break
 
          const keytoken_t *kt = gTokenTable.objectForKey(mKey.constPtr());
          if(kt)
@@ -1057,18 +1113,10 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                   READ_BOOL(linedef, blocksound);
                   READ_BOOL(linedef, dontdraw);
                   READ_BOOL(linedef, mapped);
-                  case t_passuse:
-                        readBool(linedef->passuse);
-                     break;
-                  case t_translucent:
-                        readBool(linedef->translucent);
-                     break;
-                  case t_jumpover:
-                        readBool(linedef->jumpover);
-                     break;
-                  case t_blockfloaters:
-                        readBool(linedef->blockfloaters);
-                     break;
+                  READ_BOOL(linedef, passuse);
+                  READ_BOOL(linedef, translucent);
+                  READ_BOOL(linedef, jumpover);
+                  READ_BOOL(linedef, blockfloaters);
                   READ_NUMBER(linedef, special);
                   case t_arg0: readNumber(linedef->arg[0]); break;
                   case t_arg1: readNumber(linedef->arg[1]); break;
@@ -1108,24 +1156,33 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
             {
                switch(kt->token)
                {
-                  case t_offsetx:
-                     if(mNamespace == namespace_Eternity)
-                        readFixed(sidedef->offsetx);
-                     else
-                        readNumber(sidedef->offsetx);
-                     break;
-                  case t_offsety:
-                     if(mNamespace == namespace_Eternity)
-                        readFixed(sidedef->offsety);
-                     else
-                        readNumber(sidedef->offsety);
-                     break;
+                  READ_ETERNITY_FIXED_ELSE_NUMBER(sidedef, offsetx);
+                  READ_ETERNITY_FIXED_ELSE_NUMBER(sidedef, offsety);
                   READ_STRING(sidedef, texturetop);
                   READ_STRING(sidedef, texturebottom);
                   READ_STRING(sidedef, texturemiddle);
                   REQUIRE_INT(sidedef, sector, sset);
                   default:
                      break;
+               }
+
+               if(mNamespace == namespace_Eternity)
+               {
+                  switch(kt->token)
+                  {
+                     READ_FIXED(sidedef, offsetx_bottom);
+                     READ_FIXED(sidedef, offsety_bottom);
+                     READ_FIXED(sidedef, offsetx_mid);
+                     READ_FIXED(sidedef, offsety_mid);
+                     READ_FIXED(sidedef, offsetx_top);
+                     READ_FIXED(sidedef, offsety_top);
+
+                     READ_STRING(sidedef, skew_bottom_type);
+                     READ_STRING(sidedef, skew_middle_type);
+                     READ_STRING(sidedef, skew_top_type);
+                  default:
+                     break;
+                  }
                }
             }
             else if(vertex)
@@ -1139,28 +1196,15 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
             {
                switch(kt->token)
                {
-                  case t_texturefloor:
-                     requireString(sector->texturefloor, sector->tfloorset);
-                     break;
-                  case t_textureceiling:
-                     requireString(sector->textureceiling, sector->tceilset);
-                     break;
+                  REQUIRE_STRING(sector, texturefloor, tfloorset);
+                  REQUIRE_STRING(sector, textureceiling, tceilset);
                   READ_NUMBER(sector, lightlevel);
                   READ_NUMBER(sector, special);
                   case t_id:
                      readNumber(sector->identifier);
                      break;
-                  case t_heightfloor:
-                     if(mNamespace != namespace_Eternity)
-                        readNumber(sector->heightfloor);
-                     else
-                        readFixed(sector->heightfloor);
-                     break;
-                  case t_heightceiling:
-                     if(mNamespace != namespace_Eternity)
-                        readNumber(sector->heightceiling);
-                     else
-                        readFixed(sector->heightceiling);
+                  READ_ETERNITY_FIXED_ELSE_NUMBER(sector, heightfloor);
+                  READ_ETERNITY_FIXED_ELSE_NUMBER(sector, heightceiling);
                   default:
                      break;
                }
@@ -1275,9 +1319,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                   READ_BOOL(thing, strifeally);
                   READ_BOOL(thing, translucent);
                   READ_BOOL(thing, invisible);
-                  case t_special:
-                        readNumber(thing->special);
-                     break;
+                  READ_NUMBER(thing, special);
                   case t_arg0:
                         readNumber(thing->arg[0]);
                      break;

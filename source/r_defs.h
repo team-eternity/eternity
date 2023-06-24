@@ -146,6 +146,26 @@ enum
    SECTOR_HTIC_WIND     // created by types 40-51
 };
 
+// Solid seg skew types
+enum
+{
+   SKEW_SOLID_NONE = 0,
+   SKEW_SOLID_FRONT,
+   SKEW_SOLID_BACK,
+   NUMSOLIDSKEWTYPES
+};
+
+// Masked seg skew types
+enum
+{
+   SKEW_MASKED_NONE = 0,
+   SKEW_MASKED_FRONT_FLOOR,
+   SKEW_MASKED_FRONT_CEILING,
+   SKEW_MASKED_BACK_FLOOR,
+   SKEW_MASKED_BACK_CEILING,
+   NUMMASKEDSKEWTYPES
+};
+
 //
 // Slope Structures
 //
@@ -429,8 +449,15 @@ struct sector_t : rendersector_t
 
 struct side_t
 {
-   fixed_t textureoffset; // add this to the calculated texture column
-   fixed_t rowoffset;     // add this to the calculated texture top
+   fixed_t offset_base_x;   // add this to the calculated texture column
+   fixed_t offset_base_y;   // add this to the calculated texture top
+
+   fixed_t offset_top_x;    // x offset for toptexture only
+   fixed_t offset_top_y;    // y offset for toptexture only
+   fixed_t offset_bottom_x; // x offset for bottomtexture only
+   fixed_t offset_bottom_y; // y offset for bottomtexture only
+   fixed_t offset_mid_x;    // x offset for midtexture only
+   fixed_t offset_mid_y;    // y offset for midtexture only
 
    // Texture indices. We do not maintain names here.
    int16_t toptexture;    // MUST BE CACHED IF MODIFIED AT RUNTIME
@@ -444,6 +471,10 @@ struct side_t
    // or lump number of special effect. Allows texture names to be overloaded
    // for other functions.
    int special;
+
+   inline int topSkewType()    const { return (intflags & SDI_SKEW_TOP_MASK)    >> SDI_SKEW_TOP_SHIFT;    }
+   inline int bottomSkewType() const { return (intflags & SDI_SKEW_BOTTOM_MASK) >> SDI_SKEW_BOTTOM_SHIFT; }
+   inline int middleSkewType() const { return (intflags & SDI_SKEW_MIDDLE_MASK) >> SDK_SKEW_MIDDLE_SHIFT; }
 };
 
 //
@@ -564,6 +595,7 @@ struct seg_t
    // backsector is nullptr for one sided lines
 
    sector_t *frontsector, *backsector;
+   bool      frontside;
 
    // SoM: Precached seg length in float format
    float  len;

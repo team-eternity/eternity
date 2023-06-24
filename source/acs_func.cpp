@@ -1064,6 +1064,25 @@ bool ACS_CF_GetPolyobjY(ACS_CF_ARGS)
 }
 
 //
+// ACS_CF_SetPolyobjXY
+//
+// void SetPolyobjXY(int po, fixed x, fixed y);
+//
+bool ACS_CF_SetPolyobjXY(ACS_CF_ARGS)
+{
+   polyobj_t* po = Polyobj_GetForNum(argV[0]);
+   fixed_t x = argV[1];
+   fixed_t y = argV[2];
+
+   if (po)
+      Polyobj_MoveToXY(po, x, y);
+
+   thread->dataStk.push(0);
+
+   return false;
+}
+
+//
 // ACS_CF_GetScreenH
 //
 // int GetScreenHeight(void);
@@ -1338,7 +1357,7 @@ bool ACS_CF_IsTIDUsed(ACS_CF_ARGS)
 bool ACS_CF_GetLineRowOffset(ACS_CF_ARGS)
 {
    auto info = &static_cast<ACSThread *>(thread)->info;
-   thread->dataStk.push(info->line ? sides[info->line->sidenum[0]].rowoffset >> FRACBITS : 0);
+   thread->dataStk.push(info->line ? sides[info->line->sidenum[0]].offset_base_y >> FRACBITS : 0);
    return false;
 }
 

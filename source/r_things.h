@@ -87,7 +87,8 @@ struct texcol_t;
 void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc,
                            cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
                            const texture_t *tex, const texcol_t *tcolumn,
-                           const float *const mfloorclip, const float *const mceilingclip);
+                           const float *const mfloorclip, const float *const mceilingclip,
+                           const float skew);
 void R_AddSprites(cmapcontext_t &cmapcontext,
                   spritecontext_t &spritecontext,
                   ZoneHeap &heap,

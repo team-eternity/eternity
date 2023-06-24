@@ -359,6 +359,7 @@ bool ACS_CF_GetLineY(ACS_CF_ARGS);
 bool ACS_CF_GetPlayerInput(ACS_CF_ARGS);
 bool ACS_CF_GetPolyobjX(ACS_CF_ARGS);
 bool ACS_CF_GetPolyobjY(ACS_CF_ARGS);
+bool ACS_CF_SetPolyobjXY(ACS_CF_ARGS);
 bool ACS_CF_GetScreenH(ACS_CF_ARGS);
 bool ACS_CF_GetScreenW(ACS_CF_ARGS);
 bool ACS_CF_GetSectorCeilingZ(ACS_CF_ARGS);

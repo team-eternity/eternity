@@ -2202,8 +2202,8 @@ bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta,
       if(!(line->flags & (ML_TWOSIDED|ML_3DMIDTEX)) || line->sidenum[1] == -1)
          continue;
 
-      sides[line->sidenum[0]].rowoffset += delta;
-      sides[line->sidenum[1]].rowoffset += delta;
+      sides[line->sidenum[0]].offset_base_y += delta;
+      sides[line->sidenum[1]].offset_base_y += delta;
       P_AddScrolledSide(&sides[line->sidenum[0]], 0, delta);
       P_AddScrolledSide(&sides[line->sidenum[1]], 0, delta);
    }
