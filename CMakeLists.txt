@@ -132,8 +132,8 @@ add_subdirectory(adlmidi)
 
 add_subdirectory(zlib)
 add_subdirectory(snes_spc)
-add_subdirectory(source)
 
+# WARNING: this section must be before add_subdirectory(libpng)
 if(WIN32)
    set(PNG_BUILD_ZLIB ON CACHE BOOL "Custom zlib location" FORCE)
 
@@ -146,6 +146,10 @@ if(WIN32)
    set(PNG_TESTS OFF CACHE BOOL "Build libpng tests" FORCE)
 endif()
 add_subdirectory(libpng)
+
+# WARNING: add_subdirectory(source) must be below libpng, otherwise the png_static isn't found on Mac.
+add_subdirectory(source)
+
 
 if(WIN32 AND MSVC)
    find_package(MFC)
