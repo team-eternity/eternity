@@ -1357,7 +1357,7 @@ bool ACS_CF_IsTIDUsed(ACS_CF_ARGS)
 bool ACS_CF_GetLineRowOffset(ACS_CF_ARGS)
 {
    auto info = &static_cast<ACSThread *>(thread)->info;
-   thread->dataStk.push(info->line ? sides[info->line->sidenum[0]].rowoffset >> FRACBITS : 0);
+   thread->dataStk.push(info->line ? sides[info->line->sidenum[0]].offset_base_y >> FRACBITS : 0);
    return false;
 }
 

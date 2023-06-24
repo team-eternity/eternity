@@ -96,6 +96,7 @@ struct planecontext_t
    planehash_t *r_overlayfreesets;
 
    float *openings, *lastopening;
+   float *skews, *lastskew;
 
    // SoM 12/8/03: floorclip and ceilingclip changed to pointers so they can be set
    // to the clipping arrays of portals.

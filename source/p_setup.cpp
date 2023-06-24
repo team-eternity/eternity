@@ -430,7 +430,8 @@ static void P_LoadSegs(int lump)
          return;
       }
 
-      li->sidedef = &sides[ldef->sidenum[side]];
+      li->frontside   = side == 0;
+      li->sidedef     = &sides[ldef->sidenum[side]];
       li->frontsector = sides[ldef->sidenum[side]].sector;
 
       // killough 5/3/98: ignore 2s flag if second sidedef missing:
@@ -502,7 +503,8 @@ static void P_LoadSegs_V4(int lump)
          return;
       }
 
-      li->sidedef = &sides[ldef->sidenum[side]];
+      li->frontside   = side == 0;
+      li->sidedef     = &sides[ldef->sidenum[side]];
       li->frontsector = sides[ldef->sidenum[side]].sector;
 
       // killough 5/3/98: ignore 2s flag if second sidedef missing:
@@ -1299,6 +1301,7 @@ static void P_LoadZSegs(byte *data, ZNodeType type)
       if(side != 0 && side != 1)
          side = 1;
 
+      li->frontside   = side == 0;
       li->sidedef     = &sides[ldef->sidenum[side]];
       li->frontsector =  sides[ldef->sidenum[side]].sector;
 
@@ -2222,8 +2225,8 @@ static void P_LoadSideDefs2(int lumpnum)
       side_t *sd = sides + i;
       int secnum;
 
-      sd->textureoffset = GetBinaryWord(data) << FRACBITS;
-      sd->rowoffset     = GetBinaryWord(data) << FRACBITS; 
+      sd->offset_base_x = GetBinaryWord(data) << FRACBITS;
+      sd->offset_base_y = GetBinaryWord(data) << FRACBITS; 
 
       // haleyjd 05/26/10: read texture names into buffers
       GetBinaryString(data, toptexture,    8);

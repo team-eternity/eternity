@@ -842,7 +842,8 @@ static inline void R_drawNewMaskedColumnSingleThread(
 void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc,
                            cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
                            const texture_t *const tex, const texcol_t *tcol,
-                           const float *const mfloorclip, const float *const mceilingclip)
+                           const float *const mfloorclip, const float *const mceilingclip,
+                           const float skew)
 {
    float y1, y2;
    const fixed_t basetexturemid = column.texmid;
@@ -852,17 +853,17 @@ void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc,
    while(tcol)
    {
       // calculate unclipped screen coordinates for post
-      y1 = maskedcolumn.ytop + (maskedcolumn.scale * tcol->yoff);
+      y1 = maskedcolumn.ytop + (maskedcolumn.scale * (tcol->yoff - skew));
       y2 = y1 + (maskedcolumn.scale * tcol->len) - 1;
 
-      column.y1 = (int)(y1 < mceilingclip[column.x] ? mceilingclip[column.x] : y1);
-      column.y2 = (int)(y2 > mfloorclip[column.x]   ? mfloorclip[column.x]   : y2);
+      column.y1 = (int)((y1 < mceilingclip[column.x] ? mceilingclip[column.x] : y1));
+      column.y2 = (int)((y2 > mfloorclip[column.x]   ? mfloorclip[column.x]   : y2));
 
       // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
       if(column.y1 <= column.y2 && column.y2 < viewwindow.height)
       {
          column.source = tex->bufferdata + tcol->ptroff;
-         column.texmid = basetexturemid - (tcol->yoff << FRACBITS);
+         column.texmid = basetexturemid + M_FloatToFixed(skew) - (tcol->yoff << FRACBITS);
 
          R_drawNewMaskedColumnThreadSafe(colfunc, column, tex, tcol);
       }

@@ -202,7 +202,11 @@ struct cb_seg_t
 {
    int x1, x2;
    float x1frac, x2frac;
-   float toffsetx, toffsety;
+
+   float toffset_base_x,   toffset_base_y;
+   float toffset_top_x,    toffset_top_y;
+   float toffset_mid_x,    toffset_mid_y;
+   float toffset_bottom_x, toffset_bottom_y;
 
    float dist, dist2, diststep;
    float len, len2, lenstep;
@@ -241,6 +245,10 @@ struct cb_seg_t
 
    // Extreme plane point Z for sloped sectors: used for sprite-clipping silhouettes.
    fixed_t maxfrontfloor, minfrontceil, maxbackfloor, minbackceil;
+
+   // Skew-related values
+   float skew_top_step, skew_mid_step, skew_step_bottom;
+   float skew_top_baseoffset, skew_mid_baseoffset, skew_bottom_baseoffset;
 
    // If nonzero, require f_sky1 rendering
    int skyflat;

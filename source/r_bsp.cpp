@@ -29,6 +29,7 @@
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "m_bbox.h"
+#include "m_compare.h"
 #include "p_chase.h"
 #include "p_maputl.h"   // ioanch 20160125
 #include "p_portal.h"
@@ -1324,11 +1325,16 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
 
    if(seg.backsec->srf.ceiling.slope)
    {
-      float z1, z2, zstep;
+      float realz1, realz2, z1, z2, zstep;
+      float sidez1, sidez2;
 
-      z1 = P_GetZAtf(seg.backsec->srf.ceiling.slope, v1->fx, v1->fy);
-      z2 = P_GetZAtf(seg.backsec->srf.ceiling.slope, v2->fx, v2->fy);
+      sidez1 = P_GetZAtf(seg.backsec->srf.ceiling.slope, seg.line->linedef->v1->fx, seg.line->linedef->v1->fy);
+      sidez2 = P_GetZAtf(seg.backsec->srf.ceiling.slope, seg.line->linedef->v2->fx, seg.line->linedef->v2->fy);
+
+      realz1 = z1 = P_GetZAtf(seg.backsec->srf.ceiling.slope, v1->fx, v1->fy);
+      realz2 = z2 = P_GetZAtf(seg.backsec->srf.ceiling.slope, v2->fx, v2->fy);
       zstep = (z2 - z1) / seg.line->len;
+
 
       z1 += lclip1 * zstep;
       z2 -= (seg.line->len - lclip2) * zstep;
@@ -1337,6 +1343,28 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       seg.high2 = view.ycenter - ((z2 - cb_viewpoint.z) * i2) - 1.0f;
 
       seg.minbackceil = M_FloatToFixed(z1 < z2 ? z1 : z2);
+
+      if((seg.line->frontside && seg.side->topSkewType() == SKEW_SOLID_BACK) ||
+         (!seg.line->frontside && seg.side->topSkewType() == SKEW_SOLID_FRONT))
+      {
+         seg.skew_top_step = zstep;
+         if(!signbit(zstep))
+            seg.skew_top_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
+         else
+            seg.skew_top_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
+      }
+
+      if((seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_BACK_CEILING) ||
+         (!seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_FRONT_CEILING))
+      {
+         seg.skew_mid_step = zstep;
+         if(!signbit(zstep))
+            seg.skew_mid_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
+         else
+            seg.skew_mid_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
+      }
+
+
    }
    else
    {
@@ -1352,10 +1380,15 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
 
    if(seg.backsec->srf.floor.slope)
    {
-      float z1, z2, zstep;
+      float realz1, realz2, z1, z2, zstep;
+      float sidez1, sidez2;
 
-      z1 = P_GetZAtf(seg.backsec->srf.floor.slope, v1->fx, v1->fy);
-      z2 = P_GetZAtf(seg.backsec->srf.floor.slope, v2->fx, v2->fy);
+      sidez1 = P_GetZAtf(seg.backsec->srf.floor.slope, seg.line->linedef->v1->fx, seg.line->linedef->v1->fy);
+      sidez2 = P_GetZAtf(seg.backsec->srf.floor.slope, seg.line->linedef->v2->fx, seg.line->linedef->v2->fy);
+
+
+      realz1 = z1 = P_GetZAtf(seg.backsec->srf.floor.slope, v1->fx, v1->fy);
+      realz2 = z2 = P_GetZAtf(seg.backsec->srf.floor.slope, v2->fx, v2->fy);
       zstep = (z2 - z1) / seg.line->len;
 
       z1 += lclip1 * zstep;
@@ -1364,6 +1397,26 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       seg.low2 = view.ycenter - ((z2 - cb_viewpoint.z) * i2);
 
       seg.maxbackfloor = M_FloatToFixed(z1 > z2 ? z1 : z2);
+
+      if((seg.line->frontside && seg.side->bottomSkewType() == SKEW_SOLID_BACK) ||
+         (!seg.line->frontside && seg.side->bottomSkewType() == SKEW_SOLID_FRONT))
+      {
+         seg.skew_step_bottom = zstep;
+         if(!signbit(zstep))
+            seg.skew_bottom_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
+         else
+            seg.skew_bottom_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
+      }
+
+      if((seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_BACK_FLOOR) ||
+         (!seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_FRONT_FLOOR))
+      {
+         seg.skew_mid_step = zstep;
+         if(!signbit(zstep))
+            seg.skew_mid_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
+         else
+            seg.skew_mid_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
+      }
    }
    else
    {
@@ -1482,9 +1535,9 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       seg.toptexh = textures[side->toptexture]->height;
 
       if(seg.line->linedef->flags & ML_DONTPEGTOP)
-         seg.toptexmid = M_FloatToFixed(textop + seg.toffsety); // SCALE_TODO: Y scale-factor here
+         seg.toptexmid = M_FloatToFixed(textop + seg.toffset_base_y + seg.toffset_top_y); // SCALE_TODO: Y scale-factor here
       else
-         seg.toptexmid = M_FloatToFixed(texhigh + seg.toptexh + seg.toffsety); // SCALE_TODO: Y scale-factor here
+         seg.toptexmid = M_FloatToFixed(texhigh + seg.toptexh + seg.toffset_base_y + seg.toffset_top_y); // SCALE_TODO: Y scale-factor here
    }
    else
       seg.toptex = 0;
@@ -1587,9 +1640,9 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       seg.bottomtexh = textures[side->bottomtexture]->height;
 
       if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-         seg.bottomtexmid = M_FloatToFixed(textop + seg.toffsety); // SCALE_TODO: Y scale-factor here
+         seg.bottomtexmid = M_FloatToFixed(textop + seg.toffset_base_y + seg.toffset_bottom_y); // SCALE_TODO: Y scale-factor here
       else
-         seg.bottomtexmid = M_FloatToFixed(texlow + seg.toffsety); // SCALE_TODO: Y scale-factor here
+         seg.bottomtexmid = M_FloatToFixed(texlow + seg.toffset_base_y + seg.toffset_bottom_y); // SCALE_TODO: Y scale-factor here
    }
    else
       seg.bottomtex = 0;
@@ -1788,9 +1841,9 @@ static void R_2S_Normal(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       seg.toptexh = textures[side->toptexture]->height;
 
       if(seg.line->linedef->flags & ML_DONTPEGTOP)
-         seg.toptexmid = M_FloatToFixed(textop + seg.toffsety); // SCALE_TODO: Y scale-factor here
+         seg.toptexmid = M_FloatToFixed(textop + seg.toffset_base_y + seg.toffset_top_y); // SCALE_TODO: Y scale-factor here
       else
-         seg.toptexmid = M_FloatToFixed(texhigh + seg.toptexh + seg.toffsety); // SCALE_TODO: Y scale-factor here
+         seg.toptexmid = M_FloatToFixed(texhigh + seg.toptexh + seg.toffset_base_y + seg.toffset_top_y); // SCALE_TODO: Y scale-factor here
    }
    else
       seg.toptex = 0;
@@ -1902,9 +1955,9 @@ static void R_2S_Normal(cmapcontext_t &cmapcontext, planecontext_t &planecontext
       seg.bottomtexh = textures[side->bottomtexture]->height;
 
       if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-         seg.bottomtexmid = M_FloatToFixed(textop + seg.toffsety); // SCALE_TODO: Y scale-factor here
+         seg.bottomtexmid = M_FloatToFixed(textop + seg.toffset_base_y + seg.toffset_bottom_y); // SCALE_TODO: Y scale-factor here
       else
-         seg.bottomtexmid = M_FloatToFixed(texlow + seg.toffsety); // SCALE_TODO: Y scale-factor here
+         seg.bottomtexmid = M_FloatToFixed(texlow + seg.toffset_base_y + seg.toffset_bottom_y); // SCALE_TODO: Y scale-factor here
    }
    else
       seg.bottomtex = 0;
@@ -1971,9 +2024,9 @@ static void R_1SidedLine(cmapcontext_t &cmapcontext, planecontext_t &planecontex
          float texhigh = beyond->srf.ceiling.heightf - cb_viewpoint.z;
 
          if(seg.line->linedef->flags & ML_DONTPEGTOP)
-            seg.toptexmid = M_FloatToFixed(textop + seg.toffsety); // SCALE_TODO: Y scale-factor here
+            seg.toptexmid = M_FloatToFixed(textop + seg.toffset_base_y + seg.toffset_top_y); // SCALE_TODO: Y scale-factor here
          else
-            seg.toptexmid = M_FloatToFixed(texhigh + seg.toptexh + seg.toffsety); // SCALE_TODO: Y scale-factor here
+            seg.toptexmid = M_FloatToFixed(texhigh + seg.toptexh + seg.toffset_base_y + seg.toffset_top_y); // SCALE_TODO: Y scale-factor here
 
          seg.high  = view.ycenter - ((beyond->srf.ceiling.heightf - cb_viewpoint.z) * i1) - 1.0f;
          seg.high2 = view.ycenter - ((beyond->srf.ceiling.heightf - cb_viewpoint.z) * i2) - 1.0f;
@@ -1990,9 +2043,9 @@ static void R_1SidedLine(cmapcontext_t &cmapcontext, planecontext_t &planecontex
          float texlow = beyond->srf.floor.heightf - cb_viewpoint.z;
 
          if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-            seg.bottomtexmid = M_FloatToFixed(textop + seg.toffsety); // SCALE_TODO: Y scale-factor here
+            seg.bottomtexmid = M_FloatToFixed(textop + seg.toffset_base_y + seg.toffset_bottom_y); // SCALE_TODO: Y scale-factor here
          else
-            seg.bottomtexmid = M_FloatToFixed(texlow + seg.toffsety); // SCALE_TODO: Y scale-factor here
+            seg.bottomtexmid = M_FloatToFixed(texlow + seg.toffset_base_y + seg.toffset_bottom_y); // SCALE_TODO: Y scale-factor here
 
          seg.low  = view.ycenter - ((beyond->srf.floor.heightf - cb_viewpoint.z) * i1);
          seg.low2 = view.ycenter - ((beyond->srf.floor.heightf - cb_viewpoint.z) * i2);
@@ -2010,9 +2063,9 @@ static void R_1SidedLine(cmapcontext_t &cmapcontext, planecontext_t &planecontex
       seg.midtexh  = textures[side->midtexture]->height;
 
       if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-         seg.midtexmid = M_FloatToFixed(texbottom + seg.midtexh + seg.toffsety); // SCALE_TODO: Y scale-factor here
+         seg.midtexmid = M_FloatToFixed(texbottom + seg.midtexh + seg.toffset_base_y + seg.toffset_mid_y); // SCALE_TODO: Y scale-factor here
       else
-         seg.midtexmid = M_FloatToFixed(textop + seg.toffsety); // SCALE_TODO: Y scale-factor here
+         seg.midtexmid = M_FloatToFixed(textop + seg.toffset_base_y + seg.toffset_mid_y); // SCALE_TODO: Y scale-factor here
       seg.skyflat = 0;
    }
    else
@@ -2270,6 +2323,37 @@ static bool R_allowBehindSectorPortal(const cbviewpoint_t &cb_viewpoint,
 }
 
 //
+// Adjust texture offsets to avoid texel issues, see comment in function.
+//
+static float R_getAdjustedXOffset(float toffset_x, const float toffset_base_x, const int16_t texture)
+{
+   if(toffset_base_x + toffset_x < 0.0f && texture)
+   {
+      // SoM: ok, this was driving me crazy. It seems that when the offset is
+      // less than 0, the fractional part will cause the texel at
+      // 0 + abs(seg.toffset_base_x) to double and it will strip the first texel to
+      // one column. This is because -64 + ANY FRACTION is going to cast to 63
+      // and when you cast -0.999 through 0.999 it will cast to 0. The first
+      // step is to find the largest texture width on the line to make sure all
+      // the textures will start at the same column when the offsets are
+      // adjusted.
+
+      float maxtexw = float(textures[texture]->widthmask);
+
+      // Then adjust the offset to zero or the first positive value that will
+      // repeat correctly with the largest texture on the line.
+      if(maxtexw)
+      {
+         maxtexw++;
+         while(toffset_base_x + toffset_x < 0.0f)
+            toffset_x += maxtexw;
+      }
+   }
+
+   return toffset_x;
+}
+
+//
 // Clips the given segment
 // and adds any visible pieces to the line list.
 //
@@ -2508,38 +2592,19 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
    side = line->sidedef;
    
-   seg.toffsetx = M_FixedToFloat(side->textureoffset) + line->offset;
-   seg.toffsety = M_FixedToFloat(side->rowoffset);
+   seg.toffset_base_x = M_FixedToFloat(side->offset_base_x) + line->offset;
+   seg.toffset_base_y = M_FixedToFloat(side->offset_base_y);
 
-   if(seg.toffsetx < 0)
-   {
-      float maxtexw = 0.0f;
+   seg.toffset_top_x    = M_FixedToFloat(side->offset_top_x);
+   seg.toffset_top_y    = M_FixedToFloat(side->offset_top_y);
+   seg.toffset_mid_x    = M_FixedToFloat(side->offset_mid_x);
+   seg.toffset_mid_y    = M_FixedToFloat(side->offset_mid_y);
+   seg.toffset_bottom_x = M_FixedToFloat(side->offset_bottom_x);
+   seg.toffset_bottom_y = M_FixedToFloat(side->offset_bottom_y);
 
-      // SoM: ok, this was driving me crazy. It seems that when the offset is 
-      // less than 0, the fractional part will cause the texel at 
-      // 0 + abs(seg.toffsetx) to double and it will strip the first texel to
-      // one column. This is because -64 + ANY FRACTION is going to cast to 63
-      // and when you cast -0.999 through 0.999 it will cast to 0. The first 
-      // step is to find the largest texture width on the line to make sure all
-      // the textures will start at the same column when the offsets are 
-      // adjusted.
-
-      if(side->toptexture)
-         maxtexw = (float)textures[side->toptexture]->widthmask;
-      if(side->midtexture && textures[side->midtexture]->widthmask > maxtexw)
-         maxtexw = (float)textures[side->midtexture]->widthmask;
-      if(side->bottomtexture && textures[side->bottomtexture]->widthmask > maxtexw)
-         maxtexw = (float)textures[side->bottomtexture]->widthmask;
-
-      // Then adjust the offset to zero or the first positive value that will 
-      // repeat correctly with the largest texture on the line.
-      if(maxtexw)
-      {
-         maxtexw++;
-         while(seg.toffsetx < 0.0f) 
-            seg.toffsetx += maxtexw;
-      }
-   }
+   seg.toffset_top_x    = R_getAdjustedXOffset(seg.toffset_top_x,    seg.toffset_base_x, side->toptexture);
+   seg.toffset_mid_x    = R_getAdjustedXOffset(seg.toffset_mid_x,    seg.toffset_base_x, side->midtexture);
+   seg.toffset_bottom_x = R_getAdjustedXOffset(seg.toffset_bottom_x, seg.toffset_base_x, side->bottomtexture);
 
    seg.dist = i1;
    seg.dist2 = i2;
@@ -2555,11 +2620,16 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
    if(seg.frontsec->srf.ceiling.slope)
    {
-      float z1, z2, zstep;
+      float realz1, realz2, z1, z2, zstep;
+      float sidez1, sidez2;
 
-      z1 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, v1->fx, v1->fy);
-      z2 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, v2->fx, v2->fy);
+      sidez1 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, seg.line->linedef->v1->fx, seg.line->linedef->v1->fy);
+      sidez2 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, seg.line->linedef->v2->fx, seg.line->linedef->v2->fy);
+
+      realz1 = z1 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, v1->fx, v1->fy);
+      realz2 = z2 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, v2->fx, v2->fy);
       zstep = (z2 - z1) / seg.line->len;
+
 
       z1 += lclip1 * zstep;
       z2 -= (seg.line->len - lclip2) * zstep;
@@ -2567,6 +2637,26 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
       seg.top2 = view.ycenter - ((z2 - cb_viewpoint.z) * i2);
 
       seg.minfrontceil = M_FloatToFixed(z1 < z2 ? z1 : z2);
+
+      if((seg.line->frontside && seg.side->topSkewType() == SKEW_SOLID_FRONT) ||
+         (!seg.line->frontside && seg.side->topSkewType() == SKEW_SOLID_BACK))
+      {
+         seg.skew_top_step = zstep;
+         if(!signbit(zstep))
+            seg.skew_top_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
+         else
+            seg.skew_top_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
+      }
+
+      if((seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_FRONT_CEILING) ||
+         (!seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_BACK_CEILING))
+      {
+         seg.skew_mid_step = zstep;
+         if(!signbit(zstep))
+            seg.skew_mid_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
+         else
+            seg.skew_mid_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
+      }
    }
    else
    {
@@ -2579,10 +2669,15 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
    if(seg.frontsec->srf.floor.slope)
    {
-      float z1, z2, zstep;
+      float realz1, realz2, z1, z2, zstep;
+      float sidez1, sidez2;
 
-      z1 = P_GetZAtf(seg.frontsec->srf.floor.slope, v1->fx, v1->fy);
-      z2 = P_GetZAtf(seg.frontsec->srf.floor.slope, v2->fx, v2->fy);
+      sidez1 = P_GetZAtf(seg.frontsec->srf.floor.slope, seg.line->linedef->v1->fx, seg.line->linedef->v1->fy);
+      sidez2 = P_GetZAtf(seg.frontsec->srf.floor.slope, seg.line->linedef->v2->fx, seg.line->linedef->v2->fy);
+
+
+      realz1 = z1 = P_GetZAtf(seg.frontsec->srf.floor.slope, v1->fx, v1->fy);
+      realz2 = z2 = P_GetZAtf(seg.frontsec->srf.floor.slope, v2->fx, v2->fy);
       zstep = (z2 - z1) / seg.line->len;
 
       z1 += lclip1 * zstep;
@@ -2591,6 +2686,26 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
       seg.bottom2 = view.ycenter - ((z2 - cb_viewpoint.z) * i2) - 1.0f;
 
       seg.maxfrontfloor = M_FloatToFixed(z1 > z2 ? z1 : z2);
+
+      if((seg.line->frontside && seg.side->bottomSkewType() == SKEW_SOLID_FRONT) ||
+         (!seg.line->frontside && seg.side->bottomSkewType() == SKEW_SOLID_BACK))
+      {
+         seg.skew_step_bottom = zstep;
+         if(!signbit(zstep))
+            seg.skew_bottom_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
+         else
+            seg.skew_bottom_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
+      }
+
+      if((seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_FRONT_FLOOR) ||
+         (!seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_BACK_FLOOR))
+      {
+         seg.skew_mid_step = zstep;
+         if(!signbit(zstep))
+            seg.skew_mid_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
+         else
+            seg.skew_mid_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
+      }
    }
    else
    {      
@@ -2601,7 +2716,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
    seg.bottomstep = (seg.bottom2 - seg.bottom) * pstep;
 
-   // Get these from the actual sectors because R_FakeFlat could have changed the actual heights.
+   // Get these from the actual sectors because R_FakeFlat could havve changed the actual heights.
    textop    = seg.line->frontsector->srf.ceiling.heightf - cb_viewpoint.z;
    texbottom = seg.line->frontsector->srf.floor.heightf - cb_viewpoint.z;
 
