@@ -174,10 +174,6 @@ struct vissprite_t
    fixed_t footclip; // haleyjd: foot clipping
 
    int    sector; // SoM: sector the sprite is in.
-
-   // if it's a clone, this is the portal which made it. Needed to properly draw the clone _on top
-   // of_ the portal.
-   const line_t *cloningLine;
 };
 
 // haleyjd 04/25/10: drawsegs optimization
@@ -1052,10 +1048,6 @@ static inline byte R_getDrawStyle(const Mobj *const thing, int *tranmaplump)
 
 static void R_cutSpriteByNearbyLinePortal(vissprite_t *vis, const line_t *cutter, const cbviewpoint_t &cb_viewpoint, const v3fixed_t *cutterdelta)
 {
-   // TODO:
-   // - calculate x and dist of cutter
-   // - check intersection here
-   
    // Get the dist and x of line (don't consider view limits)
    const vertex_t &v1 = cutterdelta ? *cutter->v2 : *cutter->v1;
    const vertex_t &v2 = cutterdelta ? *cutter->v1 : *cutter->v2;
@@ -1439,8 +1431,8 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
    }
 
    vis->drawstyle = R_getDrawStyle(thing, &vis->tranmaplump);
-   vis->cloningLine = nullptr;
 
+   // NOTE: currently we can't suppor
    for(const DLListItem<spriteprojnode_t> *prenode = thing->spriteproj; prenode;
        prenode = prenode->dllNext)
    {
@@ -1943,9 +1935,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
       s1 = P_PointOnDivlineSide(seg->v1->x, seg->v1->y, &sprite_clip);
       s2 = P_PointOnDivlineSide(seg->v2->x, seg->v2->y, &sprite_clip);
 
-      if(spr->cloningLine == ds->curline->linedef)
-         s1 = 1;
-      else if(s1 != s2)
+      if(s1 != s2)
          s1 = !R_PointOnSegSide(spr->gx, spr->gy, ds->curline);
 
       int r1, r2;
