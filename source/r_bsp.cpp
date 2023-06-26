@@ -1363,8 +1363,6 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
          else
             seg.skew_mid_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
       }
-
-
    }
    else
    {
@@ -2591,7 +2589,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
       pstep = 1.0f;
 
    side = line->sidedef;
-   
+
    seg.toffset_base_x = M_FixedToFloat(side->offset_base_x) + line->offset;
    seg.toffset_base_y = M_FixedToFloat(side->offset_base_y);
 
@@ -2605,6 +2603,9 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    seg.toffset_top_x    = R_getAdjustedXOffset(seg.toffset_top_x,    seg.toffset_base_x, side->toptexture);
    seg.toffset_mid_x    = R_getAdjustedXOffset(seg.toffset_mid_x,    seg.toffset_base_x, side->midtexture);
    seg.toffset_bottom_x = R_getAdjustedXOffset(seg.toffset_bottom_x, seg.toffset_base_x, side->bottomtexture);
+
+   seg.skew_top_step       = seg.skew_mid_step       = seg.skew_step_bottom       = 0.0f;
+   seg.skew_top_baseoffset = seg.skew_mid_baseoffset = seg.skew_bottom_baseoffset = 0.0f;
 
    seg.dist = i1;
    seg.dist2 = i2;
