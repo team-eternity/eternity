@@ -328,6 +328,16 @@ All properties are read in as decimal numbers (into fixed-point internally).
  * offsetx_bottom, offsety_bottom, offsetx_mid,
    offsety_mid, offsetx_top, offsety_top.
 
+--------------------------------------------------------------------------------
+2023/06/26
+Added sidedef lighting properties for the Eternity UDMF namespace.
+This allows for separate lighting on top/middle/bottom textures, as well as
+overall sidedef lighting. These have the same names as the ones that ZDoom's
+UDMF namespace uses. The light_* properties are integers and the lightabsolute_*
+properties are booleans.
+ * light_base, light_top, light_mid, light_bottom
+ * lightabsolute, lightabsolute_top, lightabsolute_mid, lightabsolute_bottom
+
 ================================================================================
 EOF
 ================================================================================

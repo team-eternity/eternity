@@ -124,10 +124,24 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
    segclip.backsec  = segclip.line->backsector;
 
    texnum = texturetranslation[segclip.line->sidedef->midtexture];
-   
+
    // killough 4/13/98: get correct lightlevel for 2s normal textures
-   lightnum = (R_FakeFlat(viewz, segclip.frontsec, &tempsec, nullptr, nullptr, false)
-               ->lightlevel >> LIGHTSEGSHIFT)+(extralight * LIGHTBRIGHT);
+   if(segclip.line->sidedef->flags & SDF_LIGHT_MID_ABSOLUTE)
+      lightnum = segclip.line->sidedef->light_mid >> LIGHTSEGSHIFT;
+   else
+   {
+      if(segclip.line->sidedef->flags & SDF_LIGHT_BASE_ABSOLUTE)
+         lightnum = segclip.line->sidedef->light_base >> LIGHTSEGSHIFT;
+      else
+      {
+         lightnum = R_FakeFlat(viewz, segclip.frontsec, &tempsec, nullptr, nullptr, false)->lightlevel >> LIGHTSEGSHIFT;
+         lightnum += segclip.line->sidedef->light_base >> LIGHTSEGSHIFT;
+      }
+      lightnum += segclip.line->sidedef->light_mid >> LIGHTSEGSHIFT;
+
+   }
+   lightnum += (extralight * LIGHTBRIGHT);
+
 
    // haleyjd 08/11/00: optionally skip this to evenly apply colormap
    if(LevelInfo.unevenLight)
@@ -217,6 +231,26 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
    }
 }
 
+
+static const lighttable_t *R_calculateLighting(cmapcontext_t &cmapcontext, const lighttable_t *const *walllights, const float dist)
+{
+   // calculate lighting
+   // SoM: ANYRES
+   if(!cmapcontext.fixedcolormap)
+   {
+      // SoM: it took me about 5 solid minutes of looking at the old doom code
+      // and running test levels through it to do the math and get 2560 as the
+      // light distance factor.
+      int index = int(dist * 2560.0f);
+
+      if(index >= MAXLIGHTSCALE)
+         index = MAXLIGHTSCALE - 1;
+
+      return walllights[index];
+   }
+
+   return nullptr;
+}
 
 
 
@@ -361,8 +395,6 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
       
       if(segclip.segtextured)
       {
-         int index;
-
          basescale = 1.0f / (segclip.dist * view.yfoc);
 
          column.step = M_FloatToFixed(basescale); // SCALE_TODO: Y scale-factor here
@@ -381,21 +413,6 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                ds_p->maskedtextureskew[i] = 0.0f; // Don't think this is strictly necessary but do this for safety.
          }
 
-         // calculate lighting
-         // SoM: ANYRES
-         if(!cmapcontext.fixedcolormap)
-         {
-            // SoM: it took me about 5 solid minutes of looking at the old doom code
-            // and running test levels through it to do the math and get 2560 as the
-            // light distance factor.
-            index = (int)(segclip.dist * 2560.0f);
-         
-            if(index >=  MAXLIGHTSCALE)
-               index = MAXLIGHTSCALE - 1;
-
-            column.colormap = segclip.walllights[index];
-         }
-
          if(!segclip.twosided)
          {
             if(segclip.l_window)
@@ -410,6 +427,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                      column.y2 = (int)(segclip.high > floorclip[i] ? floorclip[i] : segclip.high);
                      if(column.y2 >= column.y1)
                      {
+                        column.colormap = R_calculateLighting(cmapcontext, segclip.walllights_top, segclip.dist);
                         column.texmid = segclip.toptexmid;
                         column.source = R_GetRawColumn(heap, segclip.toptex, int(texx + segclip.toffset_top_x));
                         column.texheight = segclip.toptexh;
@@ -429,6 +447,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                      column.y2 = b;
                      if(column.y2 >= column.y1)
                      {
+                        column.colormap = R_calculateLighting(cmapcontext, segclip.walllights_bottom, segclip.dist);
                         column.texmid = segclip.bottomtexmid;
                         column.source = R_GetRawColumn(heap, segclip.bottomtex, int(texx + segclip.toffset_bottom_x));
                         column.texheight = segclip.bottomtexh;
@@ -461,6 +480,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                column.y1 = t;
                column.y2 = b;
 
+               column.colormap = R_calculateLighting(cmapcontext, segclip.walllights_mid, segclip.dist);
                column.texmid = segclip.midtexmid;
                if(segclip.skew_mid_step && (segclip.side->middleSkewType() == SKEW_MASKED_FRONT_FLOOR ||
                                             segclip.side->middleSkewType() == SKEW_MASKED_FRONT_CEILING))
@@ -502,6 +522,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
 
                if(column.y2 >= column.y1)
                {
+                  column.colormap = R_calculateLighting(cmapcontext, segclip.walllights_top, segclip.dist);
                   column.texmid = segclip.toptexmid;
 
                   if(segclip.skew_top_step && segclip.side->topSkewType() != SKEW_SOLID_NONE)
@@ -547,6 +568,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
 
                if(column.y2 >= column.y1)
                {
+                  column.colormap = R_calculateLighting(cmapcontext, segclip.walllights_bottom, segclip.dist);
                   column.texmid = segclip.bottomtexmid;
 
                   if(segclip.skew_step_bottom && segclip.side->bottomSkewType() != SKEW_SOLID_NONE)
@@ -929,23 +951,52 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    // OPTIMIZE: get rid of LIGHTSEGSHIFT globally
    if(!cmapcontext.fixedcolormap)
    {
-      int lightnum = (segclip.frontsec->lightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
+      struct {
+         const lighttable_t *const **walllight;
+         const int16_t               light;
+         const uint16_t              absoluteflag;
+      } walllights[3] =
+      {
+         { &segclip.walllights_top,    segclip.line->sidedef->light_top,    SDF_LIGHT_TOP_ABSOLUTE    },
+         { &segclip.walllights_mid,    segclip.line->sidedef->light_mid,    SDF_LIGHT_MID_ABSOLUTE    },
+         { &segclip.walllights_bottom, segclip.line->sidedef->light_bottom, SDF_LIGHT_BOTTOM_ABSOLUTE },
+      };
 
-      // haleyjd 08/11/00: optionally skip this to evenly apply colormap
-      if(LevelInfo.unevenLight)
-      {  
-         if(segclip.line->linedef->v1->y == segclip.line->linedef->v2->y)
-            lightnum -= LIGHTBRIGHT;
-         else if(segclip.line->linedef->v1->x == segclip.line->linedef->v2->x)
-            lightnum += LIGHTBRIGHT;
+      for(auto &walllight : walllights)
+      {
+         int lightnum;
+         if(segclip.line->sidedef->flags & walllight.absoluteflag)
+            lightnum = walllight.light >> LIGHTSEGSHIFT;
+         else
+         {
+            if(segclip.line->sidedef->flags & SDF_LIGHT_BASE_ABSOLUTE)
+               lightnum = segclip.line->sidedef->light_base >> LIGHTSEGSHIFT;
+            else
+            {
+               lightnum = segclip.frontsec->lightlevel >> LIGHTSEGSHIFT;
+               lightnum += segclip.line->sidedef->light_base >> LIGHTSEGSHIFT;
+            }
+            lightnum += walllight.light >> LIGHTSEGSHIFT;
+
+         }
+         lightnum += extralight * LIGHTBRIGHT;
+
+         // haleyjd 08/11/00: optionally skip this to evenly apply colormap
+         if(LevelInfo.unevenLight)
+         {
+            if(segclip.line->linedef->v1->y == segclip.line->linedef->v2->y)
+               lightnum -= LIGHTBRIGHT;
+            else if(segclip.line->linedef->v1->x == segclip.line->linedef->v2->x)
+               lightnum += LIGHTBRIGHT;
+         }
+
+         if(lightnum < 0)
+            *walllight.walllight = cmapcontext.scalelight[0];
+         else if(lightnum >= LIGHTLEVELS)
+            *walllight.walllight = cmapcontext.scalelight[LIGHTLEVELS - 1];
+         else
+            *walllight.walllight = cmapcontext.scalelight[lightnum];
       }
-
-      if(lightnum < 0)
-         segclip.walllights = cmapcontext.scalelight[0];
-      else if(lightnum >= LIGHTLEVELS)
-         segclip.walllights = cmapcontext.scalelight[LIGHTLEVELS-1];
-      else
-         segclip.walllights = cmapcontext.scalelight[lightnum];
    }
 
 

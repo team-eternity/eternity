@@ -194,6 +194,15 @@ enum
    SDK_SKEW_MIDDLE_SHIFT   = 5,
 };
 
+// sidedef flags
+enum
+{
+   SDF_LIGHT_BASE_ABSOLUTE   = 0x0001,
+   SDF_LIGHT_TOP_ABSOLUTE    = 0x0002,
+   SDF_LIGHT_MID_ABSOLUTE    = 0x0004,
+   SDF_LIGHT_BOTTOM_ABSOLUTE = 0x0008,
+};
+
 // Sector definition, from editing.
 struct mapsector_t
 {

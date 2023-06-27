@@ -484,6 +484,15 @@ bool UDMFParser::loadSidedefs2()
          sd->offset_top_x    = usd.offsetx_top;
          sd->offset_top_y    = usd.offsety_top;
 
+         sd->light_base           = usd.light;
+         sd->light_top            = usd.light_top;
+         sd->light_mid            = usd.light_mid;
+         sd->light_bottom         = usd.light_bottom;
+         sd->flags |= (usd.lightabsolute        ? SDF_LIGHT_BASE_ABSOLUTE   : 0);
+         sd->flags |= (usd.lightabsolute_top    ? SDF_LIGHT_TOP_ABSOLUTE    : 0);
+         sd->flags |= (usd.lightabsolute_mid    ? SDF_LIGHT_MID_ABSOLUTE    : 0);
+         sd->flags |= (usd.lightabsolute_bottom ? SDF_LIGHT_BOTTOM_ABSOLUTE : 0);
+
          const int skewTopType    = E_StrToNumLinear(udmfsolidskewtypes,  NUMSOLIDSKEWTYPES,  usd.skew_top_type.constPtr());
          const int skewBottomType = E_StrToNumLinear(udmfsolidskewtypes,  NUMSOLIDSKEWTYPES,  usd.skew_bottom_type.constPtr());
          const int skewMiddleType = E_StrToNumLinear(udmfmaskedskewtypes, NUMMASKEDSKEWTYPES, usd.skew_middle_type.constPtr());
@@ -666,6 +675,14 @@ enum token_e
    t_invisible,
    t_jumpover,
    t_leakiness,
+   t_light,
+   t_light_top,
+   t_light_mid,
+   t_light_bottom,
+   t_lightabsolute,
+   t_lightabsolute_top,
+   t_lightabsolute_mid,
+   t_lightabsolute_bottom,
    t_lightceiling,
    t_lightceilingabsolute,
    t_lightfloor,
@@ -830,6 +847,14 @@ static keytoken_t gTokenList[] =
    TOKEN(invisible),
    TOKEN(jumpover),
    TOKEN(leakiness),
+   TOKEN(light),
+   TOKEN(light_top),
+   TOKEN(light_mid),
+   TOKEN(light_bottom),
+   TOKEN(lightabsolute),
+   TOKEN(lightabsolute_top),
+   TOKEN(lightabsolute_mid),
+   TOKEN(lightabsolute_bottom),
    TOKEN(lightceiling),
    TOKEN(lightceilingabsolute),
    TOKEN(lightfloor),
@@ -1176,6 +1201,15 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_FIXED(sidedef, offsety_mid);
                      READ_FIXED(sidedef, offsetx_top);
                      READ_FIXED(sidedef, offsety_top);
+
+                     READ_NUMBER(sidedef, light);
+                     READ_NUMBER(sidedef, light_top);
+                     READ_NUMBER(sidedef, light_mid);
+                     READ_NUMBER(sidedef, light_bottom);
+                     READ_BOOL(sidedef, lightabsolute);
+                     READ_BOOL(sidedef, lightabsolute_top);
+                     READ_BOOL(sidedef, lightabsolute_mid);
+                     READ_BOOL(sidedef, lightabsolute_bottom);
 
                      READ_STRING(sidedef, skew_bottom_type);
                      READ_STRING(sidedef, skew_middle_type);

@@ -459,6 +459,11 @@ struct side_t
    fixed_t offset_mid_x;    // x offset for midtexture only
    fixed_t offset_mid_y;    // y offset for midtexture only
 
+   int16_t light_base;   // light offset for sidedef (or overall if flag is set)
+   int16_t light_top;    // light offset for top texture (or overall if flag is set)
+   int16_t light_mid;    // light offset for mid texture (or overall if flag is set)
+   int16_t light_bottom; // light offset for bottom texture (or overall if flag is set)
+
    // Texture indices. We do not maintain names here.
    int16_t toptexture;    // MUST BE CACHED IF MODIFIED AT RUNTIME
    int16_t bottomtexture; // MUST BE CACHED IF MODIFIED AT RUNTIME
@@ -471,6 +476,8 @@ struct side_t
    // or lump number of special effect. Allows texture names to be overloaded
    // for other functions.
    int special;
+
+   uint16_t flags;
 
    inline int topSkewType()    const { return (intflags & SDI_SKEW_TOP_MASK)    >> SDI_SKEW_TOP_SHIFT;    }
    inline int bottomSkewType() const { return (intflags & SDI_SKEW_BOTTOM_MASK) >> SDI_SKEW_BOTTOM_SHIFT; }

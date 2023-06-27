@@ -307,6 +307,9 @@ private:
 
       qstring skew_bottom_type, skew_middle_type, skew_top_type;
 
+      int light, light_top, light_mid, light_bottom;
+      bool lightabsolute, lightabsolute_top, lightabsolute_mid, lightabsolute_bottom;
+
       int sector;
 
       bool sset;
