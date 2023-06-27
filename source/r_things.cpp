@@ -766,7 +766,12 @@ static inline void R_drawNewMaskedColumnThreadSafe(
    const byte *const localstart = tex->bufferdata + tcol->ptroff;
    const byte *const last       = localstart + tcol->len;
 
-   if(last < texend && last > tex->bufferdata && column.y2)
+   const fixed_t     srcfrac  = column.texmid + int((column.y1 - view.ycenter + 1) * column.step);
+   const int         count    = column.y2 - column.y1 + 1;
+   const fixed_t     lastfrac = srcfrac + column.step * count;
+   const byte *const lastdraw = localstart + (lastfrac >> FRACBITS);
+
+   if(lastdraw == last && last < texend && last > tex->bufferdata && column.y2)
    {
       const int orig   = column.y1;
       column.y1        = column.y2;
@@ -782,8 +787,7 @@ static inline void R_drawNewMaskedColumnThreadSafe(
       column.y2 -= 1;
    }
 
-   const fixed_t frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * column.step);
-   if(((frac >> FRACBITS) & (column.texheight - 1)) < 0)
+   if(((srcfrac >> FRACBITS) & (column.texheight - 1)) < 0)
    {
       const int orig   = column.y2;
       column.y2        = column.y1;
