@@ -62,6 +62,7 @@
 #include "p_mobjcol.h"
 #include "p_partcl.h"
 #include "p_portal.h"
+#include "p_portalblockmap.h"
 #include "p_scroll.h"
 #include "p_setup.h"
 #include "p_skin.h"
@@ -3514,6 +3515,9 @@ static void P_PreZoneFreeLevel()
 
    // Clear all global references
    P_ClearGlobalLevelReferences();
+
+   // Clear the portal blockmap
+   gPortalBlockmap.mapDeinit();
 }
 
 //

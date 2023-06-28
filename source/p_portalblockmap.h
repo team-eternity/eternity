@@ -72,6 +72,10 @@ class PortalBlockmap final
 {
 public:
    void mapInit();
+   void mapDeinit()
+   {
+      isInit = false;
+   }
    void unlinkLine(const line_t &line);
    void linkLine(const line_t &line);
 
