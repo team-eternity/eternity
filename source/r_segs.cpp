@@ -249,7 +249,7 @@ static const lighttable_t *R_calculateLighting(cmapcontext_t &cmapcontext, const
       return walllights[index];
    }
 
-   return nullptr;
+   return cmapcontext.fixedcolormap;
 }
 
 
