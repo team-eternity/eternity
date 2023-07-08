@@ -91,7 +91,7 @@ void SDLVideoDriver::FinishUpdate()
    // Don't update the screen if the window isn't visible.
    // Not doing this breaks under Windows when we alt-tab away 
    // while fullscreen.   
-   if(!(SDL_GetWindowFlags(window) & SDL_WINDOW_SHOWN))
+   if(!(SDL_GetWindowFlags(window) & SDL_WINDOW_SHOWN) || I_IsViewOccluded())
       return;
 
    if(setpalette)

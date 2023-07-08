@@ -584,7 +584,9 @@ void D_DrawWings()
 //
 static void D_Display()
 {
-   if(nodrawers)                // for comparative timing / profiling
+   // nodrawers: for comparative timing / profiling
+   // view occluded: for saving power when Eternity is out of sight
+   if(nodrawers || I_IsViewOccluded())
       return;
 
    i_haltimer.StartDisplay();

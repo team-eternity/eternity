@@ -30,6 +30,11 @@
 // Need platform defines
 #include "i_platform.h"
 
+#include "SDL.h"
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+#include "../macos/i_macwindow.h"
+#endif
+
 #include "../am_map.h"
 #include "../c_runcmd.h"
 #include "../d_gi.h"
@@ -674,6 +679,17 @@ int I_VideoLetterboxOffset(int h, int hl)
 void I_ToggleFullscreen()
 {
    C_RunTextCmd("togglefullscreen");
+}
+
+bool I_IsViewOccluded()
+{
+   if(!i_video_driver)
+      return true;
+   
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+   return I_IsMacViewOccluded(i_video_driver->window);
+#endif
+   return false;
 }
 
 /************************

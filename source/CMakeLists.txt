@@ -125,10 +125,13 @@ function(eternity_target_sources _TARGET)
       )
    endif()
 
-   # macOS has no unique files currently
    if(APPLE)
       # Add the base binary dir for the SDL2 symlink added from ExternalLibraries
       target_include_directories("${_TARGET}" PRIVATE ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+      target_sources("${_TARGET}" PRIVATE
+         macos/i_macwindow.h
+         macos/i_macwindow.mm
+      )
    endif(APPLE)
 
    if(LINUX)
