@@ -88,24 +88,11 @@ include(Packaging)
 ################################################################################
 ######################### Documentation  #######################################
 
-# Generate RADME.txt via simple copy.
+# Generate README.txt via simple copy.
 configure_file(
-   ${CMAKE_SOURCE_DIR}/README.adoc
+   ${CMAKE_SOURCE_DIR}/README.md
    ${CMAKE_BINARY_DIR}/README.txt
    COPYONLY)
-
-# If present on system, use asciidoc to generate README.html.
-find_program(ASCIIDOC_EXE asciidoc)
-if(ASCIIDOC_EXE)
-   message(STATUS "Found asciidoc: ${ASCIIDOC_EXE}")
-   add_custom_target(readme-asciidoc ALL
-      COMMAND "${ASCIIDOC_EXE}"
-         --backend=html
-         --out-file=${CMAKE_BINARY_DIR}/README.html
-         ${CMAKE_SOURCE_DIR}/README.adoc
-      SOURCES ${CMAKE_SOURCE_DIR}/README.adoc
-      )
-endif()
 
 ################################################################################
 ############ Compiler: Features, Warnings, Hardening, Optimisation  ############
