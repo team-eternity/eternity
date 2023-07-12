@@ -184,14 +184,14 @@ enum
 {
    SDI_VERTICALLYSCROLLING = 0x0001,   // sidedef is targeted for vertical scrolling (needed by skies)
 
-   SDI_SKEW_TOP_MASK       = 0x0006,   // top solid seg skew type: bits 2 and 3
+   SDI_SKEW_TOP_MASK       = 0x000E,   // top solid seg skew type: bits 2, 3, and 4
    SDI_SKEW_TOP_SHIFT      = 1,
 
-   SDI_SKEW_BOTTOM_MASK    = 0x0018,   // bottom solid seg skew type: bits 4 and 5
-   SDI_SKEW_BOTTOM_SHIFT   = 3,
+   SDI_SKEW_BOTTOM_MASK    = 0x0070,   // bottom solid seg skew type: bits 5, 6, and 7
+   SDI_SKEW_BOTTOM_SHIFT   = 4,
 
-   SDI_SKEW_MIDDLE_MASK    = 0x00E0,   // middle masked seg skew type: bits 6, 7, and 8
-   SDK_SKEW_MIDDLE_SHIFT   = 5,
+   SDI_SKEW_MIDDLE_MASK    = 0x0380,   // middle masked seg skew type: bits 8, 9, and 10
+   SDI_SKEW_MIDDLE_SHIFT   = 7,
 };
 
 // sidedef flags

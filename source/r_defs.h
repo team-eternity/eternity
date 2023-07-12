@@ -146,25 +146,18 @@ enum
    SECTOR_HTIC_WIND     // created by types 40-51
 };
 
-// Solid seg skew types
-enum
+// Seg skew types
+enum skewType_e
 {
-   SKEW_SOLID_NONE = 0,
-   SKEW_SOLID_FRONT,
-   SKEW_SOLID_BACK,
-   NUMSOLIDSKEWTYPES
+   SKEW_NONE = 0,
+   SKEW_FRONT_FLOOR,
+   SKEW_FRONT_CEILING,
+   SKEW_BACK_FLOOR,
+   SKEW_BACK_CEILING,
+   NUMSKEWTYPES
 };
 
-// Masked seg skew types
-enum
-{
-   SKEW_MASKED_NONE = 0,
-   SKEW_MASKED_FRONT_FLOOR,
-   SKEW_MASKED_FRONT_CEILING,
-   SKEW_MASKED_BACK_FLOOR,
-   SKEW_MASKED_BACK_CEILING,
-   NUMMASKEDSKEWTYPES
-};
+constexpr int SKEW_FRONT_TO_BACK = SKEW_BACK_FLOOR - SKEW_FRONT_FLOOR;
 
 //
 // Slope Structures
@@ -481,7 +474,7 @@ struct side_t
 
    inline int topSkewType()    const { return (intflags & SDI_SKEW_TOP_MASK)    >> SDI_SKEW_TOP_SHIFT;    }
    inline int bottomSkewType() const { return (intflags & SDI_SKEW_BOTTOM_MASK) >> SDI_SKEW_BOTTOM_SHIFT; }
-   inline int middleSkewType() const { return (intflags & SDI_SKEW_MIDDLE_MASK) >> SDK_SKEW_MIDDLE_SHIFT; }
+   inline int middleSkewType() const { return (intflags & SDI_SKEW_MIDDLE_MASK) >> SDI_SKEW_MIDDLE_SHIFT; }
 };
 
 //

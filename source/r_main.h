@@ -249,7 +249,7 @@ struct cb_seg_t
    fixed_t maxfrontfloor, minfrontceil, maxbackfloor, minbackceil;
 
    // Skew-related values
-   float skew_top_step, skew_mid_step, skew_step_bottom;
+   float skew_top_step, skew_mid_step, skew_bottom_step;
    float skew_top_baseoffset, skew_mid_baseoffset, skew_bottom_baseoffset;
 
    // If nonzero, require f_sky1 rendering

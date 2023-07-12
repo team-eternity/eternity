@@ -63,14 +63,7 @@ static const char *udmfscrolltypes[NUMSCROLLTYPES] =
    "both"
 };
 
-static constexpr const char *udmfsolidskewtypes[NUMSOLIDSKEWTYPES] =
-{
-   "none",
-   "front",
-   "back",
-};
-
-static constexpr const char *udmfmaskedskewtypes[NUMMASKEDSKEWTYPES] =
+static constexpr const char *udmfskewtypes[NUMSKEWTYPES] =
 {
    "none",
    "front_floor",
@@ -493,12 +486,28 @@ bool UDMFParser::loadSidedefs2()
          sd->flags |= (usd.lightabsolute_mid    ? SDF_LIGHT_MID_ABSOLUTE    : 0);
          sd->flags |= (usd.lightabsolute_bottom ? SDF_LIGHT_BOTTOM_ABSOLUTE : 0);
 
-         const int skewTopType    = E_StrToNumLinear(udmfsolidskewtypes,  NUMSOLIDSKEWTYPES,  usd.skew_top_type.constPtr());
-         const int skewBottomType = E_StrToNumLinear(udmfsolidskewtypes,  NUMSOLIDSKEWTYPES,  usd.skew_bottom_type.constPtr());
-         const int skewMiddleType = E_StrToNumLinear(udmfmaskedskewtypes, NUMMASKEDSKEWTYPES, usd.skew_middle_type.constPtr());
-         sd->intflags |= ((skewTopType    == NUMSOLIDSKEWTYPES  ? 0 : skewTopType)    << SDI_SKEW_TOP_SHIFT);
-         sd->intflags |= ((skewBottomType == NUMSOLIDSKEWTYPES  ? 0 : skewBottomType) << SDI_SKEW_BOTTOM_SHIFT);
-         sd->intflags |= ((skewMiddleType == NUMMASKEDSKEWTYPES ? 0 : skewMiddleType) << SDK_SKEW_MIDDLE_SHIFT);
+         const int skewTopType    = E_StrToNumLinear(udmfskewtypes, NUMSKEWTYPES, usd.skew_top_type.constPtr());
+         const int skewBottomType = E_StrToNumLinear(udmfskewtypes, NUMSKEWTYPES, usd.skew_bottom_type.constPtr());
+         const int skewMiddleType = E_StrToNumLinear(udmfskewtypes, NUMSKEWTYPES, usd.skew_middle_type.constPtr());
+         sd->intflags |= ((skewTopType    == NUMSKEWTYPES ? 0 : skewTopType)    << SDI_SKEW_TOP_SHIFT);
+         sd->intflags |= ((skewBottomType == NUMSKEWTYPES ? 0 : skewBottomType) << SDI_SKEW_BOTTOM_SHIFT);
+         sd->intflags |= ((skewMiddleType == NUMSKEWTYPES ? 0 : skewMiddleType) << SDI_SKEW_MIDDLE_SHIFT);
+
+         // TODO: Remove later probably
+         if(usd.skew_top_type.length() && skewTopType == NUMSKEWTYPES)
+         {
+            if(usd.skew_top_type == "front")
+               sd->intflags |= SKEW_FRONT_CEILING << SDI_SKEW_TOP_SHIFT;
+            else if(usd.skew_top_type == "back")
+               sd->intflags |= SKEW_BACK_CEILING << SDI_SKEW_TOP_SHIFT;
+         }
+         if(usd.skew_bottom_type.length() && skewBottomType == NUMSKEWTYPES)
+         {
+            if(usd.skew_bottom_type == "front")
+               sd->intflags |= SKEW_FRONT_FLOOR << SDI_SKEW_BOTTOM_SHIFT;
+            else if(usd.skew_bottom_type == "back")
+               sd->intflags |= SKEW_BACK_FLOOR << SDI_SKEW_BOTTOM_SHIFT;
+         }
       }
       else
       {

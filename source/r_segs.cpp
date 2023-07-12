@@ -407,7 +407,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
 
          if(ds_p->maskedtextureskew)
          {
-            if(segclip.skew_mid_step && segclip.side->middleSkewType() != SKEW_MASKED_NONE)
+            if(segclip.skew_mid_step && segclip.side->middleSkewType() != SKEW_NONE)
                ds_p->maskedtextureskew[i] = segclip.skew_mid_step * (segclip.len * basescale) + segclip.skew_mid_baseoffset;
             else
                ds_p->maskedtextureskew[i] = 0.0f; // Don't think this is strictly necessary but do this for safety.
@@ -482,8 +482,8 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
 
                column.colormap = R_calculateLighting(cmapcontext, segclip.walllights_mid, segclip.dist);
                column.texmid = segclip.midtexmid;
-               if(segclip.skew_mid_step && (segclip.side->middleSkewType() == SKEW_MASKED_FRONT_FLOOR ||
-                                            segclip.side->middleSkewType() == SKEW_MASKED_FRONT_CEILING))
+               if(segclip.skew_mid_step && (segclip.side->middleSkewType() == SKEW_FRONT_FLOOR ||
+                                            segclip.side->middleSkewType() == SKEW_FRONT_CEILING))
                   column.texmid += M_FloatToFixed(segclip.skew_mid_step * (segclip.len * basescale) + segclip.skew_mid_baseoffset);
 
 
@@ -525,7 +525,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                   column.colormap = R_calculateLighting(cmapcontext, segclip.walllights_top, segclip.dist);
                   column.texmid = segclip.toptexmid;
 
-                  if(segclip.skew_top_step && segclip.side->topSkewType() != SKEW_SOLID_NONE)
+                  if(segclip.skew_top_step && segclip.side->topSkewType() != SKEW_NONE)
                      column.texmid += M_FloatToFixed(segclip.skew_top_step * (segclip.len * basescale) + segclip.skew_top_baseoffset);
 
                   column.source = R_GetRawColumn(heap, segclip.toptex, int(texx + segclip.toffset_top_x));
@@ -571,8 +571,8 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                   column.colormap = R_calculateLighting(cmapcontext, segclip.walllights_bottom, segclip.dist);
                   column.texmid = segclip.bottomtexmid;
 
-                  if(segclip.skew_step_bottom && segclip.side->bottomSkewType() != SKEW_SOLID_NONE)
-                     column.texmid += M_FloatToFixed(segclip.skew_step_bottom * (segclip.len * basescale) + segclip.skew_bottom_baseoffset);
+                  if(segclip.skew_bottom_step && segclip.side->bottomSkewType() != SKEW_NONE)
+                     column.texmid += M_FloatToFixed(segclip.skew_bottom_step * (segclip.len * basescale) + segclip.skew_bottom_baseoffset);
 
                   column.source = R_GetRawColumn(heap, segclip.bottomtex, int(texx + segclip.toffset_bottom_x));
                   column.texheight = segclip.bottomtexh;
@@ -797,7 +797,7 @@ static void R_storeTextureColumns(float *const maskedtexturecol, float *const ma
          maskedtexturecol[i] = texx;
       if(maskedtextureskew)
       {
-         if(segclip.skew_mid_step && segclip.side->middleSkewType() != SKEW_MASKED_NONE)
+         if(segclip.skew_mid_step && segclip.side->middleSkewType() != SKEW_NONE)
             maskedtextureskew[i] = segclip.skew_mid_step * (segclip.len * basescale) + segclip.skew_mid_baseoffset;
          else
             maskedtextureskew[i] = 0.0f; // Don't think this is strictly necessary but do this for safety.

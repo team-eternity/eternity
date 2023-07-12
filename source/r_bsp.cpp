@@ -1283,6 +1283,45 @@ R_ClipSegFunc segclipfuncs[] =
 
 #define NEARCLIP 0.05f
 
+enum class frontSector_e : bool { yes = true, no = false };
+template <frontSector_e frontSector>
+static void R_skewSeg(cb_seg_t &seg, const skewType_e skewType, const float zstep,
+                      const float realz1, const float realz2, const float sidez1, const float sidez2)
+{
+   constexpr int frontAdd = frontSector == frontSector_e::yes ? 0 : SKEW_FRONT_TO_BACK;
+   constexpr int backAdd  = frontSector == frontSector_e::yes ? SKEW_FRONT_TO_BACK : 0;
+
+   if((seg.line->frontside  && seg.side->topSkewType() == skewType + frontAdd) ||
+      (!seg.line->frontside && seg.side->topSkewType() == skewType + backAdd))
+   {
+      seg.skew_top_step = zstep;
+      if(!signbit(zstep))
+         seg.skew_top_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
+      else
+         seg.skew_top_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
+   }
+
+   if((seg.line->frontside  && seg.side->middleSkewType() == skewType + frontAdd) ||
+      (!seg.line->frontside && seg.side->middleSkewType() == skewType + backAdd))
+   {
+      seg.skew_mid_step = zstep;
+      if(!signbit(zstep))
+         seg.skew_mid_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
+      else
+         seg.skew_mid_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
+   }
+
+   if((seg.line->frontside  && seg.side->bottomSkewType() == skewType + frontAdd) ||
+      (!seg.line->frontside && seg.side->bottomSkewType() == skewType + backAdd))
+   {
+      seg.skew_bottom_step = zstep;
+      if(!signbit(zstep))
+         seg.skew_bottom_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
+      else
+         seg.skew_bottom_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
+   }
+}
+
 static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext,
                         portalcontext_t &portalcontext, ZoneHeap &heap,
                         const viewpoint_t &viewpoint,
@@ -1344,25 +1383,7 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
 
       seg.minbackceil = M_FloatToFixed(z1 < z2 ? z1 : z2);
 
-      if((seg.line->frontside && seg.side->topSkewType() == SKEW_SOLID_BACK) ||
-         (!seg.line->frontside && seg.side->topSkewType() == SKEW_SOLID_FRONT))
-      {
-         seg.skew_top_step = zstep;
-         if(!signbit(zstep))
-            seg.skew_top_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
-         else
-            seg.skew_top_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
-      }
-
-      if((seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_BACK_CEILING) ||
-         (!seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_FRONT_CEILING))
-      {
-         seg.skew_mid_step = zstep;
-         if(!signbit(zstep))
-            seg.skew_mid_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
-         else
-            seg.skew_mid_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
-      }
+      R_skewSeg<frontSector_e::no>(seg, SKEW_FRONT_CEILING, zstep, realz1, realz2, sidez1, sidez2);
    }
    else
    {
@@ -1396,25 +1417,7 @@ static void R_2S_Sloped(cmapcontext_t &cmapcontext, planecontext_t &planecontext
 
       seg.maxbackfloor = M_FloatToFixed(z1 > z2 ? z1 : z2);
 
-      if((seg.line->frontside && seg.side->bottomSkewType() == SKEW_SOLID_BACK) ||
-         (!seg.line->frontside && seg.side->bottomSkewType() == SKEW_SOLID_FRONT))
-      {
-         seg.skew_step_bottom = zstep;
-         if(!signbit(zstep))
-            seg.skew_bottom_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
-         else
-            seg.skew_bottom_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
-      }
-
-      if((seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_BACK_FLOOR) ||
-         (!seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_FRONT_FLOOR))
-      {
-         seg.skew_mid_step = zstep;
-         if(!signbit(zstep))
-            seg.skew_mid_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
-         else
-            seg.skew_mid_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
-      }
+      R_skewSeg<frontSector_e::no>(seg, SKEW_FRONT_FLOOR, zstep, realz1, realz2, sidez1, sidez2);
    }
    else
    {
@@ -2604,7 +2607,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    seg.toffset_mid_x    = R_getAdjustedXOffset(seg.toffset_mid_x,    seg.toffset_base_x, side->midtexture);
    seg.toffset_bottom_x = R_getAdjustedXOffset(seg.toffset_bottom_x, seg.toffset_base_x, side->bottomtexture);
 
-   seg.skew_top_step       = seg.skew_mid_step       = seg.skew_step_bottom       = 0.0f;
+   seg.skew_top_step       = seg.skew_mid_step       = seg.skew_bottom_step       = 0.0f;
    seg.skew_top_baseoffset = seg.skew_mid_baseoffset = seg.skew_bottom_baseoffset = 0.0f;
 
    seg.dist = i1;
@@ -2639,25 +2642,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
       seg.minfrontceil = M_FloatToFixed(z1 < z2 ? z1 : z2);
 
-      if((seg.line->frontside && seg.side->topSkewType() == SKEW_SOLID_FRONT) ||
-         (!seg.line->frontside && seg.side->topSkewType() == SKEW_SOLID_BACK))
-      {
-         seg.skew_top_step = zstep;
-         if(!signbit(zstep))
-            seg.skew_top_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
-         else
-            seg.skew_top_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
-      }
-
-      if((seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_FRONT_CEILING) ||
-         (!seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_BACK_CEILING))
-      {
-         seg.skew_mid_step = zstep;
-         if(!signbit(zstep))
-            seg.skew_mid_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
-         else
-            seg.skew_mid_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
-      }
+      R_skewSeg<frontSector_e::yes>(seg, SKEW_FRONT_CEILING, zstep, realz1, realz2, sidez1, sidez2);
    }
    else
    {
@@ -2688,25 +2673,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
       seg.maxfrontfloor = M_FloatToFixed(z1 > z2 ? z1 : z2);
 
-      if((seg.line->frontside && seg.side->bottomSkewType() == SKEW_SOLID_FRONT) ||
-         (!seg.line->frontside && seg.side->bottomSkewType() == SKEW_SOLID_BACK))
-      {
-         seg.skew_step_bottom = zstep;
-         if(!signbit(zstep))
-            seg.skew_bottom_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
-         else
-            seg.skew_bottom_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
-      }
-
-      if((seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_FRONT_FLOOR) ||
-         (!seg.line->frontside && seg.side->middleSkewType() == SKEW_MASKED_BACK_FLOOR))
-      {
-         seg.skew_mid_step = zstep;
-         if(!signbit(zstep))
-            seg.skew_mid_baseoffset = emin(realz1, realz2) - emin(sidez1, sidez2);
-         else
-            seg.skew_mid_baseoffset = emax(realz1, realz2) - emax(sidez1, sidez2);
-      }
+      R_skewSeg<frontSector_e::yes>(seg, SKEW_FRONT_FLOOR, zstep, realz1, realz2, sidez1, sidez2);
    }
    else
    {      
