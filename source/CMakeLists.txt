@@ -132,6 +132,11 @@ function(eternity_target_sources _TARGET)
          macos/i_macwindow.h
          macos/i_macwindow.mm
       )
+      find_library(FOUNDATION_FRAMEWORK Foundation)
+      MESSAGE(${FOUNDATION_FRAMEWORK})
+      target_link_libraries(eternity ${FOUNDATION_FRAMEWORK})
+      find_library(COCOA_FRAMEWORK Cocoa)
+      target_link_libraries(eternity ${COCOA_FRAMEWORK})
    endif(APPLE)
 
    if(LINUX)
