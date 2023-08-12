@@ -1038,6 +1038,10 @@ ItemCheckResult P_CheckThingCommon(Mobj *thing)
       // haleyjd 10/15/08: rippers
       if(clip.thing->flags3 & MF3_RIP)
       {
+         if (!(thing->flags & MF_SHOOTABLE))
+         {
+            return !(thing->flags & MF_SOLID) ? ItemCheck_pass : ItemCheck_hit;
+         }
          damage = ((P_Random(pr_rip) & 3) + 2) * clip.thing->damage;
 
          if(!(thing->flags & MF_NOBLOOD) &&
