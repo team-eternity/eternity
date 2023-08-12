@@ -7,6 +7,11 @@ Dates are in dd.mm.yyyy format. Most recent update is first.
 Since v4.02.00 "Forseti"
 ========================
 --------------------------------------------------------------------------------
+12.08.2023
+
+FEATURE: Added support for Heretic powered Dragon Claw.
+
+--------------------------------------------------------------------------------
 24.06.2023
 
 IMPROVEMENT: wall portal sprite rendering is smoother now. Edge portals still 
