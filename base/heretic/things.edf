@@ -2943,9 +2943,9 @@ thingtype HereticHornRodFX2 : HereticMissile, -1, 444
   @"
   Spawn:
     FX00 C 3 bright
-    FX00 D 3 bright // A_SkullRodPL2Seek
+    FX00 D 3 bright A_SkullRodPL2Seek
     FX00 E 3 bright
-    FX00 F 3 bright // A_SkullRodPL2Seek
+    FX00 F 3 bright A_SkullRodPL2Seek
     loop
   Death:
     FX00 H 5 bright // A_AddPlayerRain

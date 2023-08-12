@@ -523,11 +523,27 @@ void A_FireSkullRodPL2(actionargs_t* actionargs)
    P_SubtractAmmo(player, deathmatch ? 1 : -1);
    const int tnum = E_SafeThingType(MT_HORNRODFX2);
 
-   const Mobj* mo = P_SpawnPlayerMissile(player->mo, tnum, SPM_ADDSLOPETOZ);
+   Mobj* mo = P_SpawnPlayerMissile(player->mo, tnum, SPM_ADDSLOPETOZ);
 
-   // TODO: give it the player num ID and autoaim target
+   if (netgame)
+   {
+      int pindex = eindex(player - players);
+      if (pindex < 0 || pindex >= (int)earrlen(players))
+         pindex = 0; // just for safety
+      mo->counters[2] = pindex;
+   }
+   else
+      mo->counters[2] = 2;
+
+   if (clip.linetarget)
+      P_SetTarget(&mo->tracer, clip.linetarget);
 
    S_StartSound(mo, sfx_hrnpow);
+}
+
+void A_SkullRodPL2Seek(actionargs_t* actionargs)
+{
+   P_SeekerMissile(actionargs->actor, HTICANGLE_1 * 10, HTICANGLE_1 * 20, seekcenter_e::no);
 }
 
 void A_FirePhoenixPL1(actionargs_t *actionargs)
