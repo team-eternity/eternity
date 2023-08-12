@@ -1126,15 +1126,15 @@ frame S_HORNRODATK1_2 { +decorate }
 frame S_HORNRODATK1_3 { +decorate }
 
 // Powered Hellstaff
-// frame S_HORNRODATK2_1 { +decorate }
-// frame S_HORNRODATK2_2 { +decorate }
-// frame S_HORNRODATK2_3 { +decorate }
-// frame S_HORNRODATK2_4 { +decorate }
-// frame S_HORNRODATK2_5 { +decorate }
-// frame S_HORNRODATK2_6 { +decorate }
-// frame S_HORNRODATK2_7 { +decorate }
-// frame S_HORNRODATK2_8 { +decorate }
-// frame S_HORNRODATK2_9 { +decorate }
+frame S_HORNRODATK2_1 { +decorate }
+frame S_HORNRODATK2_2 { +decorate }
+frame S_HORNRODATK2_3 { +decorate }
+frame S_HORNRODATK2_4 { +decorate }
+frame S_HORNRODATK2_5 { +decorate }
+frame S_HORNRODATK2_6 { +decorate }
+frame S_HORNRODATK2_7 { +decorate }
+frame S_HORNRODATK2_8 { +decorate }
+frame S_HORNRODATK2_9 { +decorate }
 
 // GoldWand
 frame S_GOLDWANDREADY  { +decorate }
