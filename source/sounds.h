@@ -531,7 +531,8 @@ enum sfxenum_t
    sfx_blshit,
    sfx_hnoway,
    sfx_ramphit,
-   sfx_hrnpow
+   sfx_hrnpow,
+   sfx_ramrain,
 
    // haleyjd 11/05/03: NUMSFX is a variable now
    // NUMSFX

@@ -979,6 +979,14 @@ sound ht_hrnpow
   pitchvariance Heretic
 }
 
+sound ht_ramrain
+{
+  lump          "ramrain"
+  priority      96
+  dehackednum   421
+  pitchvariance Heretic
+}
+
 sound ht_ripslop
 {
   lump          "ripslop"

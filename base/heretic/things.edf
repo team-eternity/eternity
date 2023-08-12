@@ -2931,6 +2931,7 @@ thingtype HereticHornRodFX1 : HereticMissile, -1, 425
 thingtype HereticHornRodFX2 : HereticMissile, -1, 444
 {
   compatname HornRodFX2
+  spawnhealth 140
   speed 22.0
   radius 12.0
   height 8.0
@@ -2953,7 +2954,7 @@ thingtype HereticHornRodFX2 : HereticMissile, -1, 444
     FX00 J 4 bright
     FX00 KLM 3 bright
     FX00 G 1 A_HideInCeiling
-    FX00 G 1 // A_SkullRodStorm
+    FX00 G 1 A_SkullRodStorm
     goto Death+7
   "@
 }

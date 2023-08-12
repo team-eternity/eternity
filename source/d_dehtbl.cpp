@@ -1518,6 +1518,7 @@ void A_FireSkullRodPL1(actionargs_t *);
 void A_FireSkullRodPL2(actionargs_t*);
 void A_SkullRodPL2Seek(actionargs_t*);
 void A_AddPlayerRain(actionargs_t*);
+void A_SkullRodStorm(actionargs_t*);
 void A_HideInCeiling(actionargs_t*);
 void A_FirePhoenixPL1(actionargs_t *);
 void A_InitPhoenixPL2(actionargs_t *);
@@ -1916,6 +1917,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(FireSkullRodPL2),
    POINTER(SkullRodPL2Seek),
    POINTER(AddPlayerRain),
+   POINTER(SkullRodStorm),
    POINTER(HideInCeiling),
    POINTER(FirePhoenixPL1),
    POINTER(InitPhoenixPL2),

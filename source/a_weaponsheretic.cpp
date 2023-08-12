@@ -530,10 +530,10 @@ void A_FireSkullRodPL2(actionargs_t* actionargs)
       int pindex = eindex(player - players);
       if (pindex < 0 || pindex >= (int)earrlen(players))
          pindex = 0; // just for safety
-      mo->counters[2] = pindex;
+      mo->counters[1] = pindex;
    }
    else
-      mo->counters[2] = 2;
+      mo->counters[1] = 2;
 
    if (clip.linetarget)
       P_SetTarget(&mo->tracer, clip.linetarget);
@@ -553,16 +553,19 @@ struct playerrain_t
 
 static playerrain_t* playerrains;   // dynamically allocated with PU_LEVEL because it holds Mobj refs
 
+inline static bool P_checkPlayerForRain(int playerNum)
+{
+   return playerNum >= 0 && playerNum < (int)earrlen(players) && playeringame[playerNum] && 
+      players[playerNum].health > 0;
+}
+
 void A_AddPlayerRain(actionargs_t* actionargs)
 {
    Mobj* actor = actionargs->actor;
    if (!actor)
       return;
-   int playerNum = netgame ? actor->counters[2] : 0;
-   if (playerNum < 0 || playerNum >= (int)earrlen(players) || !playeringame[playerNum])
-      return;
-   const player_t& player = players[playerNum];
-   if (player.health <= 0)
+   int playerNum = netgame ? actor->counters[1] : 0;
+   if (!P_checkPlayerForRain(playerNum))
       return;
    if (!playerrains)
       playerrains = estructalloctag(playerrain_t, earrlen(players), PU_LEVEL);
@@ -594,6 +597,35 @@ void A_HideInCeiling(actionargs_t* actionargs)
    if (!actor)
       return;
    actor->z = actor->zref.ceiling + 4 * FRACUNIT;
+}
+
+void A_SkullRodStorm(actionargs_t* actionargs)
+{
+   Mobj* actor = actionargs->actor;
+   if (!actor)
+      return;
+   if (actor->health-- == 0)
+   {
+      int playerNum = netgame ? actor->counters[1] : 0;
+      actor->remove();
+      if (!playerrains || !P_checkPlayerForRain(playerNum))
+         return;
+      if (playerrains->rains[0] == actor)
+         P_ClearTarget(playerrains->rains[0]);
+      if (playerrains->rains[1] == actor)
+         P_ClearTarget(playerrains->rains[1]);
+      return;
+   }
+   if (P_Random(pr_rodstormfudge) < 25)
+      return;
+   v2fixed_t pos = {
+      actor->x + ((P_Random(pr_rodstormspawn) & 127) - 64) * FRACUNIT,
+      actor->y + ((P_Random(pr_rodstormspawn) & 127) - 64) * FRACUNIT
+   };
+   // TODO: spawn the mobj player-dependent
+   if (!(actor->counters[0] & 31))
+      S_StartSound(actor, sfx_ramrain);
+   actor->counters[0]++;
 }
 
 void A_FirePhoenixPL1(actionargs_t *actionargs)
