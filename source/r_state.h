@@ -68,7 +68,6 @@ struct spritespan_t
 extern spritespan_t **r_spritespan;
 
 extern lighttable_t **colormaps;         // killough 3/20/98, 4/4/98
-extern lighttable_t  *fullcolormap;      // killough 3/20/98
 
 extern int firstflat;
 
@@ -109,6 +108,7 @@ extern node_t           *nodes;
 extern fnode_t          *fnodes;
 
 extern int              numlines;
+extern int              numlinesPlusExtra;
 extern line_t           *lines;
 
 extern int              numsides;
@@ -120,18 +120,11 @@ extern int              numthings;
 //
 // POV data.
 //
-extern fixed_t          viewx;
-extern fixed_t          viewy;
-extern fixed_t          viewz;
-extern angle_t          viewangle;
 extern const player_t   *viewplayer;
 extern camera_t         *viewcamera;
 extern angle_t          clipangle;
 extern int              viewangletox[FINEANGLES/2];
 extern angle_t          *xtoviewangle;  // killough 2/8/98
-
-extern visplane_t       *floorplane;
-extern visplane_t       *ceilingplane;
 
 #endif
 

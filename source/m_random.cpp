@@ -30,9 +30,28 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "d_gi.h"
 #include "doomstat.h"
 #include "m_random.h"
 #include "a_small.h"
+
+#ifdef RANDOM_LOG
+void M_RandomLog(E_FORMAT_STRING(const char *format), ...)
+{
+   static FILE *f;
+   if(!f)
+      f = fopen("randomlog.txt", "wt");
+   if(f)
+   {
+     fprintf(f, "%d:", gametic);
+     va_list ap;
+     va_start(ap, format);
+     vfprintf(f, format, ap);
+     va_end(ap);
+     fflush(f);
+   }
+}
+#endif
 
 //
 // M_Random
@@ -75,6 +94,11 @@ int P_Random(pr_class_t pr_class)
    //
    // All of this RNG stuff is tricky as far as demo sync goes --
    // it's like playing with explosives :) Lee
+
+   if(pr_class != pr_misc)
+   {
+      M_RandomLog("%d\n", pr_class);
+   }
 
    int compat; 
 
@@ -165,6 +189,14 @@ int P_RangeRandom(pr_class_t pr_class, int min, int max)
 }
 
 //
+// Heretic demo compatibility switch
+//
+int M_VHereticPRandom(pr_class_t pr_class)
+{
+   return vanilla_heretic ? P_Random(pr_class) : M_Random();
+}
+
+//
 // P_RangeRandomEx
 //
 // haleyjd 03/16/09: as above, but works for large ranges.
@@ -181,7 +213,8 @@ unsigned int P_RangeRandomEx(pr_class_t pr_class,
 //
 int P_SubRandomEx(pr_class_t pr_class, unsigned max)
 {
-   int temp = P_RandomEx(pr_class) % max;
+   max++; // max has to be 1 more than the supplied arg to function as expected
+   const int temp = P_RandomEx(pr_class) % max;
    return temp - static_cast<int>(P_RandomEx(pr_class) % max);
 }
 
@@ -199,6 +232,40 @@ void M_ClearRandom()
    for(unsigned int &currseed : rng.seed)         // go through each pr_class and set
       currseed = seed *= 69069ul;        // each starting seed differently
    rng.prndindex = rng.rndindex = 0;     // clear two compatibility indices
+}
+
+// [XA] Common random formulas used by codepointers
+
+// Outputs a random angle between (-spread, spread), as an int ('cause it can be negative).
+//   spread: Maximum angle (degrees, in fixed point -- not BAM!)
+//
+int P_RandomHitscanAngle(pr_class_t pr_class, fixed_t spread)
+{
+   int t;
+   int64_t spread_bam;
+
+   // FixedToAngle doesn't work for negative numbers,
+   // so for convenience take just the absolute value.
+   spread_bam = (spread < 0 ? FixedToAngle(-spread) : FixedToAngle(spread));
+   t = P_Random(pr_class);
+   return int((spread_bam * (t - P_Random(pr_class))) / 255);
+}
+
+//
+// Outputs a random angle between (-spread, spread), converted to values used for slope
+//   spread: Maximum vertical angle (degrees, in fixed point -- not BAM!)
+//
+int P_RandomHitscanSlope(pr_class_t pr_class, fixed_t spread)
+{
+   const int angle = P_RandomHitscanAngle(pr_class, spread);
+
+   // clamp it, yo
+   if(angle > ANG90)
+      return finetangent[0];
+   else if(-angle > ANG90)
+      return finetangent[FINEANGLES / 2 - 1];
+   else
+      return finetangent[(ANG90 - angle) >> ANGLETOFINESHIFT];
 }
 
 #if 0
@@ -224,7 +291,7 @@ AMX_NATIVE_INFO random_Natives[] =
 {
    { "_P_Random", sm_random  },
    { "_M_Random", sm_mrandom },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 

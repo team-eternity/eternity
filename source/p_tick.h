@@ -64,8 +64,8 @@ protected:
 public:
    // Constructor
    Thinker() 
-      : Super(), references(0), removed(false), ordinal(0), prev(NULL),
-        next(NULL), cprev(NULL), cnext(NULL)
+      : Super(), references(0), removed(false), ordinal(0), prev(nullptr),
+        next(nullptr), cprev(nullptr), cnext(nullptr)
    {
    }
 
@@ -128,14 +128,14 @@ template<typename T> inline T thinker_cast(Thinker *th)
    typedef typename std::remove_pointer<T>::type base_type;
 
    return (th && !th->isRemoved() && th->isDescendantOf(&base_type::StaticType)) ?
-      static_cast<T>(th) : NULL;
+      static_cast<T>(th) : nullptr;
 }
 template<typename T> inline T thinker_cast(const Thinker *th)
 {
    typedef typename std::remove_pointer<T>::type base_type;
 
    return (th && !th->isRemoved() && th->isDescendantOf(&base_type::StaticType)) ?
-   static_cast<T>(th) : NULL;
+   static_cast<T>(th) : nullptr;
 }
 
 
@@ -160,7 +160,7 @@ template<typename T> T *P_NextThinker(T *th)
          return th;
    }
 
-   return NULL;
+   return nullptr;
 }
 
 //
@@ -179,7 +179,7 @@ template<typename T> void P_SetTarget(T **mop, T *targ)
 {
    if(*mop)             // If there was a target already, decrease its refcount
       (*mop)->delReference();
-   if((*mop = targ))    // Set new target and if non-NULL, increase its counter
+   if((*mop = targ))    // Set new target and if non-nullptr, increase its counter
       targ->addReference();
 }
 
@@ -191,14 +191,14 @@ template<typename T> void P_ClearTarget(T *&mop)
 }
 
 // killough 8/29/98: threads of thinkers, for more efficient searches
-typedef enum 
+enum th_class
 {
-  th_delete,  // haleyjd 11/09/06: giant bug fix
-  th_misc,
-  th_friends,
-  th_enemies,
-  NUMTHCLASS
-} th_class;
+   th_delete,  // haleyjd 11/09/06: giant bug fix
+   th_misc,
+   th_friends,
+   th_enemies,
+   NUMTHCLASS
+};
 
 extern Thinker thinkerclasscap[];
 

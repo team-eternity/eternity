@@ -24,6 +24,8 @@
 void MN_InitMenus();
 void MN_LinkClassicMenus(int link);
 
+void MN_UpdateGamepadMenus();
+
 void MN_DoomNewGame();
 void MN_Doom2NewGame();
 
@@ -44,6 +46,7 @@ enum
    AR_5TO3,
    AR_WSVGA,  // 128:75 (1024x600 mode)
    AR_16TO9,
+   AR_21TO9,
    AR_NUMASPECTRATIOS
 };
 
@@ -51,6 +54,7 @@ enum
 enum
 {
    MN_WINDOWED,
+   MN_FULLSCREEN_DESKTOP,
    MN_FULLSCREEN,
    MN_NUMSCREENTYPES
 };

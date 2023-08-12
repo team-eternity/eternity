@@ -90,7 +90,7 @@ static char *input_point;      // left-most point you see of the command line
 static int pgup_down=0, pgdn_down=0;
 
 // haleyjd 09/07/03: true logging capability
-static FILE *console_log = NULL;
+static FILE *console_log = nullptr;
 
 // SoM: Use the new VBuffer system
 static VBuffer cback;
@@ -199,6 +199,9 @@ void C_Init()
    
    // sf: stupid american spellings =)
    C_NewAlias("color", "colour %opt");
+
+   // MaxW: Aliases for benefit of ZDoom users familiar w/ its ccmds
+   C_NewAlias("stopmus", "s_stopmusic %opt");
    
    C_updateInputPoint();
    
@@ -354,11 +357,11 @@ bool C_Responder(event_t *ev)
       return true;
    }
 
-   if(!consoleactive) 
+   if(!consoleactive)
       return false;
-   
-   // not til its stopped moving
-   if(Console.current_target < Console.current_height) 
+
+   // not till it's stopped moving or stopped turning around
+   if(Console.current_target < Console.current_height || Console.current_height < Console.prev_height)
       return false;
 
    switch(action)
@@ -472,6 +475,9 @@ void C_Drawer(void)
    int real_height;
    static int oldscreenheight = 0;
    static int oldscreenwidth = 0;
+   static int lastprevheight = 0;
+   static int lastcurrheight = 0;
+   static double lastlerp = 0.0;
 
    if(!consoleactive && !Console.prev_height)
       return;   // dont draw if not active
@@ -487,12 +493,23 @@ void C_Drawer(void)
 
    // fullscreen console for fullscreen mode
    if(gamestate == GS_CONSOLE)
-      Console.current_height = cback.scaled ? SCREENHEIGHT : cback.height;
+      Console.current_height = Console.prev_height = cback.scaled ? SCREENHEIGHT : cback.height;
 
-   double lerp = M_FixedToDouble(R_GetLerp(true)); // don't rely on FixedMul and small integers
+   double lerp = M_FixedToDouble(R_GetLerp(true)); // don't rely on FixedMul and small integers;
+
+   // We need to handle situations where lerp might decrease between two frames in a single tic
+   if(lastcurrheight == lastprevheight)
+      lastlerp = 0.0;
+   else if(lastprevheight == Console.prev_height && lerp < lastlerp)
+      lerp += lastlerp;
+
    int currentHeight = eclamp(int(round(Console.prev_height +
                                         lerp * (Console.current_height - Console.prev_height))), 1,
                               SCREENHEIGHT);
+
+   lastprevheight = Console.prev_height;
+   lastcurrheight = Console.current_height;
+   lastlerp       = lerp;
 
    real_height = 
       cback.scaled ? cback.y2lookup[currentHeight - 1] + 1 :currentHeight;
@@ -749,7 +766,7 @@ static void C_AppendToLog(const char *text);
 // work better with any new console message buffering system that
 // is designed.
 //
-void C_Printf(const char *s, ...)
+void C_Printf(E_FORMAT_STRING(const char *s), ...)
 {
    char tempstr[1024];
    va_list args;
@@ -873,7 +890,7 @@ void C_CloseConsoleLog(void)
    if(console_log)
       fclose(console_log);
 
-   console_log = NULL;
+   console_log = nullptr;
 }
 
 //
@@ -960,7 +977,7 @@ static cell AMX_NATIVE_CALL sm_c_print(AMX *amx, cell *params)
    int numparams = (int)(params[0] / sizeof(cell));
 
    // create a string table
-   msgs = (char **)(Z_Calloc(numparams, sizeof(char *), PU_STATIC, NULL));
+   msgs = (char **)(Z_Calloc(numparams, sizeof(char *), PU_STATIC, nullptr));
 
    for(i = 1; i <= numparams; i++)
    {      
@@ -983,7 +1000,7 @@ static cell AMX_NATIVE_CALL sm_c_print(AMX *amx, cell *params)
       // get length of string
       amx_StrLen(cstr, &len);
 
-      msgs[i-1] = (char *)(Z_Malloc(len + 1, PU_STATIC, NULL));
+      msgs[i-1] = (char *)(Z_Malloc(len + 1, PU_STATIC, nullptr));
 
       // convert from small string to C string
       amx_GetString(msgs[i-1], cstr, 0);
@@ -994,7 +1011,7 @@ static cell AMX_NATIVE_CALL sm_c_print(AMX *amx, cell *params)
       totallen += (int)strlen(msgs[i]);
   
    // create complete message
-   msg = (char *)(Z_Calloc(1, totallen + 1, PU_STATIC, NULL));
+   msg = (char *)(Z_Calloc(1, totallen + 1, PU_STATIC, nullptr));
 
    for(i = 0; i < numparams; i++)
       strcat(msg, msgs[i]);
@@ -1038,7 +1055,7 @@ AMX_NATIVE_INFO cons_io_Natives[] =
    { "_ConsolePrint", sm_c_print },
    { "_ConsoleHR",    sm_consolehr },
    { "_ConsoleBeep",  sm_consolebeep },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 
@@ -1058,7 +1075,7 @@ static void Egg()
       {
          byte *s = egg + ((y % 44 * 42) + (x % 42));
          if(*s)
-            cback.data[y * video.width + x] = *s;
+            cback.data[x * video.height + y] = *s;
       }
    }
 

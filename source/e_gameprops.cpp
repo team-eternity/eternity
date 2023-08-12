@@ -41,6 +41,7 @@
 
 #include "e_edf.h"
 #include "e_gameprops.h"
+#include "e_inventory.h"
 #include "e_lib.h"
 #include "e_sound.h"
 #include "e_states.h"
@@ -51,58 +52,62 @@
 // Data Tables
 //
 
-#define ITEM_GPROP_FLAGSADD    "flags.add"
-#define ITEM_GPROP_FLAGSREM    "flags.remove"
-#define ITEM_GPROP_MFLAGSADD   "missionflags.add"
-#define ITEM_GPROP_MFLAGSREM   "missionflags.remove"
-#define ITEM_GPROP_TITLETICS   "demo.titletics"
-#define ITEM_GPROP_ADVISORTICS "demo.advisortics"
-#define ITEM_GPROP_PAGETICS    "demo.pagetics"
-#define ITEM_GPROP_MENUBKGND   "menu.background"
-#define ITEM_GPROP_TRANSFRAME  "menu.transframe"
-#define ITEM_GPROP_MENUSKVASND "menu.skvattacksound"
-#define ITEM_GPROP_MENUOFFSET  "menu.offset"
-#define ITEM_GPROP_MENUPTR1    "menu.pointer1"
-#define ITEM_GPROP_MENUPTR2    "menu.pointer2"
-#define ITEM_GPROP_BORDERFLAT  "border.flat"
-#define ITEM_GPROP_BORDERTL    "border.topleft"
-#define ITEM_GPROP_BORDERTOP   "border.top"
-#define ITEM_GPROP_BORDERTR    "border.topright"
-#define ITEM_GPROP_BORDERLEFT  "border.left"
-#define ITEM_GPROP_BORDERRIGHT "border.right"
-#define ITEM_GPROP_BORDERBL    "border.bottomleft"
-#define ITEM_GPROP_BORDERBOTT  "border.bottom"
-#define ITEM_GPROP_BORDERBR    "border.bottomright"
-#define ITEM_GPROP_CCHARSPERLN "console.charsperline"
-#define ITEM_GPROP_CBELLSOUND  "console.bellsound"
-#define ITEM_GPROP_CCHATSOUND  "console.chatsound"
-#define ITEM_GPROP_CBACKDROP   "console.backdrop"
-#define ITEM_GPROP_PAUSEPATCH  "hud.pausepatch"
-#define ITEM_GPROP_PUFFTYPE    "game.pufftype"
-#define ITEM_GPROP_TELEFOGTYPE "game.telefogtype"
-#define ITEM_GPROP_TELEFOGHT   "game.telefogheight"
-#define ITEM_GPROP_TELESOUND   "game.telesound"
-#define ITEM_GPROP_THRUSTFACTR "game.thrustfactor"
-#define ITEM_GPROP_DEFPCLASS   "game.defpclass"
-#define ITEM_GPROP_FINTYPE     "game.endgamefinaletype"
-#define ITEM_GPROP_SKILLMUL    "game.skillammomultiplier"
-#define ITEM_GPROP_MELEECALC   "game.monstermeleerange"
-#define ITEM_GPROP_ITEMHEIGHT  "game.itemheight"
-#define ITEM_GPROP_FINALEX     "finale.text.x"
-#define ITEM_GPROP_FINALEY     "finale.text.y"
-#define ITEM_GPROP_CASTTITLEY  "castcall.title.y"
-#define ITEM_GPROP_CASTNAMEY   "castcall.name.y"
-#define ITEM_GPROP_INTERPIC    "intermission.pic"
-#define ITEM_GPROP_DEFMUSNAME  "sound.defaultmusname"
-#define ITEM_GPROP_DEFSNDNAME  "sound.defaultsndname"
-#define ITEM_GPROP_TITLEMUSNAME "sound.titlemusic"
-#define ITEM_GPROP_CREDITBKGND "credit.background"
-#define ITEM_GPROP_CREDITY     "credit.y"
-#define ITEM_GPROP_CREDITTSTEP "credit.titlestep"
-#define ITEM_GPROP_ENDTEXTNAME "exit.endtextname"
-#define ITEM_GPROP_BLOODNORM   "blood.defaultnormal"
-#define ITEM_GPROP_BLOODRIP    "blood.defaultrip"
-#define ITEM_GPROP_BLOODCRUSH  "blood.defaultcrush"
+constexpr const char ITEM_GPROP_FLAGSADD[]     = "flags.add";
+constexpr const char ITEM_GPROP_FLAGSREM[]     = "flags.remove";
+constexpr const char ITEM_GPROP_MFLAGSADD[]    = "missionflags.add";
+constexpr const char ITEM_GPROP_MFLAGSREM[]    = "missionflags.remove";
+constexpr const char ITEM_GPROP_TITLETICS[]    = "demo.titletics";
+constexpr const char ITEM_GPROP_ADVISORTICS[]  = "demo.advisortics";
+constexpr const char ITEM_GPROP_PAGETICS[]     = "demo.pagetics";
+constexpr const char ITEM_GPROP_MENUBKGND[]    = "menu.background";
+constexpr const char ITEM_GPROP_TRANSFRAME[]   = "menu.transframe";
+constexpr const char ITEM_GPROP_MENUSKVASND[]  = "menu.skvattacksound";
+constexpr const char ITEM_GPROP_MENUOFFSET[]   = "menu.offset";
+constexpr const char ITEM_GPROP_MENUPTR1[]     = "menu.pointer1";
+constexpr const char ITEM_GPROP_MENUPTR2[]     = "menu.pointer2";
+constexpr const char ITEM_GPROP_MENUSTRTMAP[]  = "menu.startmap";
+constexpr const char ITEM_GPROP_BORDERFLAT[]   = "border.flat";
+constexpr const char ITEM_GPROP_BORDERTL[]     = "border.topleft";
+constexpr const char ITEM_GPROP_BORDERTOP[]    = "border.top";
+constexpr const char ITEM_GPROP_BORDERTR[]     = "border.topright";
+constexpr const char ITEM_GPROP_BORDERLEFT[]   = "border.left";
+constexpr const char ITEM_GPROP_BORDERRIGHT[]  = "border.right";
+constexpr const char ITEM_GPROP_BORDERBL[]     = "border.bottomleft";
+constexpr const char ITEM_GPROP_BORDERBOTT[]   = "border.bottom";
+constexpr const char ITEM_GPROP_BORDERBR[]     = "border.bottomright";
+constexpr const char ITEM_GPROP_CCHARSPERLN[]  = "console.charsperline";
+constexpr const char ITEM_GPROP_CBELLSOUND[]   = "console.bellsound";
+constexpr const char ITEM_GPROP_CCHATSOUND[]   = "console.chatsound";
+constexpr const char ITEM_GPROP_CBACKDROP[]    = "console.backdrop";
+constexpr const char ITEM_GPROP_PAUSEPATCH[]   = "hud.pausepatch";
+constexpr const char ITEM_GPROP_PUFFTYPE[]     = "game.pufftype";
+constexpr const char ITEM_GPROP_TELEFOGTYPE[]  = "game.telefogtype";
+constexpr const char ITEM_GPROP_TELEFOGHT[]    = "game.telefogheight";
+constexpr const char ITEM_GPROP_TELESOUND[]    = "game.telesound";
+constexpr const char ITEM_GPROP_THRUSTFACTR[]  = "game.thrustfactor";
+constexpr const char ITEM_GPROP_DEFPCLASS[]    = "game.defpclass";
+constexpr const char ITEM_GPROP_FINTYPE[]      = "game.endgamefinaletype";
+constexpr const char ITEM_GPROP_SKILLMUL[]     = "game.skillammomultiplier";
+constexpr const char ITEM_GPROP_MELEECALC[]    = "game.monstermeleerange";
+constexpr const char ITEM_GPROP_ITEMHEIGHT[]   = "game.itemheight";
+constexpr const char ITEM_GPROP_AUTOFLIGHT[]   = "game.autoflightartifact";
+constexpr const char ITEM_GPROP_LOOKPITCHUP[]  = "game.lookpitchup";
+constexpr const char ITEM_GPROP_LOOKPITCHDN[]  = "game.lookpitchdown";
+constexpr const char ITEM_GPROP_FINALEX[]      = "finale.text.x";
+constexpr const char ITEM_GPROP_FINALEY[]      = "finale.text.y";
+constexpr const char ITEM_GPROP_CASTTITLEY[]   = "castcall.title.y";
+constexpr const char ITEM_GPROP_CASTNAMEY[]    = "castcall.name.y";
+constexpr const char ITEM_GPROP_INTERPIC[]     = "intermission.pic";
+constexpr const char ITEM_GPROP_DEFMUSNAME[]   = "sound.defaultmusname";
+constexpr const char ITEM_GPROP_DEFSNDNAME[]   = "sound.defaultsndname";
+constexpr const char ITEM_GPROP_TITLEMUSNAME[] =  "sound.titlemusic";
+constexpr const char ITEM_GPROP_CREDITBKGND[]  = "credit.background";
+constexpr const char ITEM_GPROP_CREDITY[]      = "credit.y";
+constexpr const char ITEM_GPROP_CREDITTSTEP[]  = "credit.titlestep";
+constexpr const char ITEM_GPROP_ENDTEXTNAME[]  = "exit.endtextname";
+constexpr const char ITEM_GPROP_BLOODNORM[]    = "blood.defaultnormal";
+constexpr const char ITEM_GPROP_BLOODRIP[]     = "blood.defaultrip";
+constexpr const char ITEM_GPROP_BLOODCRUSH[]   = "blood.defaultcrush";
 
 // Dynamic string numbers
 enum
@@ -124,6 +129,7 @@ enum
    GI_STR_DEFPCLASS,
    GI_STR_PUFFTYPE,
    GI_STR_TELEFOGTYPE,
+   GI_STR_AUTOFLIGHT,
    GI_STR_INTERPIC,
    GI_STR_DEFMUSNAME,
    GI_STR_DEFSNDNAME,
@@ -133,8 +139,18 @@ enum
    GI_STR_BLOODNORM,
    GI_STR_BLOODRIP,
    GI_STR_BLOODCRUSH,
+   GI_STR_MENUSTRTMAP,
 
    GI_STR_NUMSTRS
+};
+
+//
+// Limits
+//
+enum
+{
+   // The engine is unstable if look pitch + autoaim > 90 degrees, and y-shearing becomes excessive
+   LOOKPITCH_MAX = 45
 };
 
 // Keep track of the dynamic string values assigned into GameModeInfo
@@ -152,7 +168,8 @@ static const char *finaleTypeStrs[FINALE_NUMFINALES] =
    "htic_water",
    "htic_demon",
    "psx_udoom",
-   "psx_doom2"
+   "psx_doom2",
+   "endpic"
 };
 
 // GameModeInfo flags
@@ -175,7 +192,10 @@ static dehflags_t gmi_flags[] =
    { "IMPACTBLOOD",    GIF_IMPACTBLOOD    },
    { "CHEATSOUND",     GIF_CHEATSOUND     },
    { "CHASEFAST",      GIF_CHASEFAST      },
-   { NULL,             0                  }
+   { "DOOMWEAPONOFFSET", GIF_DOOMWEAPONOFFSET },
+   { "INVALWAYSOPEN",  GIF_INVALWAYSOPEN  },
+   { "BERZERKISPENTA", GIF_BERZERKISPENTA },
+   { nullptr,          0                  }
 };
 
 static dehflagset_t gmi_flagset =
@@ -196,7 +216,7 @@ static dehflags_t mission_flags[] =
    { "NOGDHIGH",       MI_NOGDHIGH       },
    { "ALLOWEXITTAG",   MI_ALLOWEXITTAG   },
    { "ALLOWSECRETTAG", MI_ALLOWSECRETTAG },
-   { NULL,             0                 }
+   { nullptr,          0                 }
 };
 
 static dehflagset_t mission_flagset =
@@ -227,6 +247,7 @@ cfg_opt_t edf_game_opts[] =
    CFG_INT(ITEM_GPROP_MENUOFFSET,  0,    CFGF_NONE),
    CFG_STR(ITEM_GPROP_MENUPTR1,    "",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_MENUPTR2,    "",   CFGF_NONE),
+   CFG_STR(ITEM_GPROP_MENUSTRTMAP, "",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_BORDERFLAT,  "",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_BORDERTL,    "",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_BORDERTOP,   "",   CFGF_NONE),
@@ -251,6 +272,9 @@ cfg_opt_t edf_game_opts[] =
    CFG_FLOAT(ITEM_GPROP_SKILLMUL,  0,    CFGF_NONE),
    CFG_STR(ITEM_GPROP_MELEECALC,   "",   CFGF_NONE),
    CFG_FLOAT(ITEM_GPROP_ITEMHEIGHT, 0,   CFGF_NONE),
+   CFG_STR(ITEM_GPROP_AUTOFLIGHT,  "",   CFGF_NONE),
+   CFG_INT(ITEM_GPROP_LOOKPITCHUP, 0,    CFGF_NONE),
+   CFG_INT(ITEM_GPROP_LOOKPITCHDN, 0,    CFGF_NONE),
    CFG_INT(ITEM_GPROP_FINALEX,     0,    CFGF_NONE),
    CFG_INT(ITEM_GPROP_FINALEY,     0,    CFGF_NONE),
    CFG_INT(ITEM_GPROP_CASTTITLEY,  0,    CFGF_NONE),
@@ -289,15 +313,17 @@ static void E_setDynamicString(const char *&dest, int index, const char *value)
    dest = dynamicStrings[index];
 }
 
-#define IS_SET(name) (cfg_size(props, name) > 0)
-
 //
 // E_processGamePropsBlock
 //
 // Process a single gameproperties block.
 //
-static void E_processGamePropsBlock(cfg_t *props)
+static void E_processGamePropsBlock(cfg_t *const props)
 {
+   const auto IS_SET = [props](const char *const name) -> bool {
+      return cfg_size(props, name) > 0;
+   };
+
    // Flags
 
    if(IS_SET(ITEM_GPROP_FLAGSADD))
@@ -381,6 +407,12 @@ static void E_processGamePropsBlock(cfg_t *props)
    {
       E_setDynamicString(GameModeInfo->menuCursor->patches[1], GI_STR_MENUPTR2,
                          cfg_getstr(props, ITEM_GPROP_MENUPTR2));
+   }
+
+   if(IS_SET(ITEM_GPROP_MENUSTRTMAP))
+   {
+      E_setDynamicString(GameModeInfo->menuStartMap, GI_STR_MENUSTRTMAP,
+         cfg_getstr(props, ITEM_GPROP_MENUSTRTMAP));
    }
 
    // Border Properties
@@ -538,6 +570,33 @@ static void E_processGamePropsBlock(cfg_t *props)
    }
    if(IS_SET(ITEM_GPROP_ITEMHEIGHT))
       GameModeInfo->itemHeight = M_DoubleToFixed(cfg_getfloat(props, ITEM_GPROP_ITEMHEIGHT));
+
+   if(IS_SET(ITEM_GPROP_AUTOFLIGHT))
+   {
+      const char *name = cfg_getstr(props, ITEM_GPROP_AUTOFLIGHT);
+      if(E_ItemEffectForName(name))
+         E_setDynamicString(GameModeInfo->autoFlightArtifact, GI_STR_AUTOFLIGHT, name);
+   }
+   if(IS_SET(ITEM_GPROP_LOOKPITCHUP))
+   {
+      int val = cfg_getint(props, ITEM_GPROP_LOOKPITCHUP);
+      if(val < 0 || val > LOOKPITCH_MAX)
+      {
+         E_EDFLoggedErr(2, "%s: Invalid %s value %d: must be in the 0-%d range\n", __func__,
+                        ITEM_GPROP_LOOKPITCHUP, val, LOOKPITCH_MAX);
+      }
+      GameModeInfo->lookPitchUp = val;
+   }
+   if(IS_SET(ITEM_GPROP_LOOKPITCHDN))
+   {
+      int val = cfg_getint(props, ITEM_GPROP_LOOKPITCHDN);
+      if(val < 0 || val > LOOKPITCH_MAX)
+      {
+         E_EDFLoggedErr(2, "%s: Invalid %s value %d: must be in the 0-%d range\n", __func__,
+                        ITEM_GPROP_LOOKPITCHDN, val, LOOKPITCH_MAX);
+      }
+      GameModeInfo->lookPitchDown = val;
+   }
 
    // Finale Properties
 

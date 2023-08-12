@@ -400,15 +400,119 @@ left, or centred.
 
 -------------------------------------------------------------------------------
 2019/11/03
-Made FoV save in configs.
-
--------------------------------------------------------------------------------
-2019/11/03
 Fixed cfg saving ignoring symlinks (and just overwriting the link).
 
 -------------------------------------------------------------------------------
 2019/11/23
 Fixed crashing if the CONSOLE lump isn't a valid graphic.
+
+-------------------------------------------------------------------------------
+2020/02/29
+Extended A_PainAttack to have ZDoom's parameters.
+Extended A_PainDie to have thingtype arg.
+
+-------------------------------------------------------------------------------
+2020/03/04
+Extended -file to search DOOMWADPATH directories if required.
+
+-------------------------------------------------------------------------------
+2020/03/10
+Add "clearrebornitems" flag for playerdeltas. Fix rebornitem allocation logic.
+
+-------------------------------------------------------------------------------
+2020/03/21
+Parameterise A_Turn to be able to take a constant value, or using a counter
+as either a BAM or degrees.
+Add A_TurnProjectile which is A_Turn but updates momentum for projectiles.
+
+-------------------------------------------------------------------------------
+2020/04/12
+Added support for stereo WAVs (8 and 16 bit). Additionally relax WAV loading,
+so that WAVs with incorret chunk size will successfully load.
+Allowed 0-tic initial states if the states are DECORATE, and don't have their
+duration modified—or aren't made the spawnstate of a thing—by dehacked.
+
+-------------------------------------------------------------------------------
+2020/04/26
+Added A_SeekerMissile, based on the ZDoom wiki docs for the same codepointer.
+Added A_CounterDiceRoll, which can do a TTRPG-style damage dice calculation.
+Made midiproc shut down if Eternity isn't running.
+
+-------------------------------------------------------------------------------
+2020/05/05
+Added console command "s_stopmusic" as well as the alias "stopmus".
+
+-------------------------------------------------------------------------------
+2020/05/17
+Made "summon" console command check thing num for compat name if no thing is
+found for the regular name.
+
+-------------------------------------------------------------------------------
+2020/06/21
+Increased repeat backspace speed. Before it only accepted a repeat input
+every 120ms.
+Made it so if Eternity sets its Windows mixer volume it will not use the volume
+it was set to during its runtime.
+
+-------------------------------------------------------------------------------
+2020/07/07
+Added turning sensitivity for joysticks.
+
+-------------------------------------------------------------------------------
+2020/07/10
+Added the vast majority of dehacked extensions made by Doom Retro. Allow
+non-contiguous sprite frames (e.g. TROO G is missing but F and H are present).
+
+-------------------------------------------------------------------------------
+2020/07/11
+Extend dehacked to be able to set drop item.
+
+-------------------------------------------------------------------------------
+2020/07/12
+Made it so your aim is always the centre of the actual non-HUD viewport. This
+removes the need to move the crosshair up/down depending on player pitch.
+Split "Fullscreen Desktop" into its own option for favoured screen type.
+
+-------------------------------------------------------------------------------
+2020/07/18
+Fixed replacing music when both tracks have a length of 4 (after the "D_").
+Thanks to JadingTsunami for the code fix and esselfortium for reporting the bug
+with a minimum failing case.
+
+-------------------------------------------------------------------------------
+2020/08/29
+Changed my age from 23 to 24. Made empty weapons in the BOOM-style HUDs brown
+in colour.
+
+-------------------------------------------------------------------------------
+2020/09/07
+Fixed SpawnProjectile speed. Add SetSectorDamage (ACS function). Add ACS
+variant of Sector_SetFriction.
+
+-------------------------------------------------------------------------------
+2020/09/11
+Extended line flags are now archived. Saves now have a version, allowing
+backwards compatibility.
+
+-------------------------------------------------------------------------------
+2020/09/19
+Added secret notifications. The defaults are DSITMBK for Doom and CHAT for
+Heretic. They can be overriden by providing a "DSSECRET" lump, or "DSYEAH" in
+Strife (when Strife is a thing).
+
+-------------------------------------------------------------------------------
+2020/09/22
+Secret notifications are now toggleable on/off via the "secret_notification"
+console variable.
+
+-------------------------------------------------------------------------------
+2020/10/11
+Changed monsters_remember & monster_avoid_hazards to 0 by default.
+
+-------------------------------------------------------------------------------
+2020/10/13
+Added a folder selector popup on Windows for when no IWADs are found.
+Added the 200 DEHEXTRA sounds.
 
 ================================================================================
 EOF

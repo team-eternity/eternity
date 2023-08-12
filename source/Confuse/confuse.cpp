@@ -59,7 +59,7 @@ const char *confuse_author    = "Martin Hedenfalk <mhe@home.se>";
 #define cfg_assert(test) ((void)0)
 #else
 #define cfg_assert(test) \
-  ((void)((test)||(my_assert(#test, __FILE__, __LINE__),0)))
+   ((void)((test)||(my_assert(#test, __FILE__, __LINE__),0)))
 #endif
 
 #define STATE_CONTINUE 0
@@ -91,8 +91,8 @@ static char *cfg_strndup(const char *s, size_t n)
 {
    char *r;
    
-   if(s == 0)
-      return 0;
+   if(s == nullptr)
+      return nullptr;
    
    r = ecalloc(char *, 1, n + 1);
    strncpy(r, s, n);
@@ -105,10 +105,10 @@ static char *cfg_strndup(const char *s, size_t n)
 // Option Retrieval
 //
 
-cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name)
+cfg_opt_t *cfg_getopt(const cfg_t *const cfg, const char *name)
 {
    int i;
-   cfg_t *sec = cfg;
+   const cfg_t *sec = cfg;
    
    cfg_assert(cfg && cfg->name && name);
 
@@ -124,11 +124,11 @@ cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name)
       {
          secname = cfg_strndup(name, len);
          sec = cfg_getsec(sec, secname);
-         if(sec == 0)
+         if(sec == nullptr)
             cfg_error(cfg, "no such option '%s'\n", secname);
          efree(secname);
-         if(sec == 0)
-            return 0;
+         if(sec == nullptr)
+            return nullptr;
       }
       name += len;
       name += strspn(name, "|");
@@ -152,7 +152,7 @@ cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name)
       }
    }
    cfg_error(cfg, "no such option '%s'\n", name);
-   return 0;
+   return nullptr;
 }
 
 //
@@ -171,7 +171,7 @@ cfg_opt_t *cfg_gettitleopt(cfg_t *cfg)
    }
    
    cfg_error(cfg, "section '%s' does not define title properties\n", cfg->name);
-   return 0;
+   return nullptr;
 }
 
 const char *cfg_title(cfg_t *cfg)
@@ -179,7 +179,7 @@ const char *cfg_title(cfg_t *cfg)
    return cfg->title;
 }
 
-unsigned int cfg_size(cfg_t *cfg, const char *name)
+unsigned int cfg_size(const cfg_t *const cfg, const char *name)
 {
    cfg_opt_t *opt = cfg_getopt(cfg, name);
    if(opt)
@@ -282,7 +282,7 @@ const char *cfg_getnstr(cfg_t *cfg, const char *name, unsigned int index)
          return opt->values[index]->string;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 const char *cfg_getstr(cfg_t *cfg, const char *name)
@@ -295,10 +295,10 @@ char *cfg_getstrdup(cfg_t *cfg, const char *name)
    // haleyjd 12/31/11: get a dynamic copy of a string
    const char *value = cfg_getstr(cfg, name);
 
-   return value ? estrdup(value) : NULL;
+   return value ? estrdup(value) : nullptr;
 }
 
-cfg_t *cfg_getnsec(cfg_t *cfg, const char *name, unsigned int index)
+cfg_t *cfg_getnsec(const cfg_t *const cfg, const char *name, unsigned int index)
 {
    cfg_opt_t *opt = cfg_getopt(cfg, name);
    
@@ -309,7 +309,7 @@ cfg_t *cfg_getnsec(cfg_t *cfg, const char *name, unsigned int index)
       cfg_assert(index < opt->nvalues);
       return opt->values[index]->section;
    }
-   return 0;
+   return nullptr;
 }
 
 cfg_t *cfg_gettsec(cfg_t *cfg, const char *name, const char *title)
@@ -334,10 +334,10 @@ cfg_t *cfg_gettsec(cfg_t *cfg, const char *name, const char *title)
             return sec;
       }
    }
-   return 0;
+   return nullptr;
 }
 
-cfg_t *cfg_getsec(cfg_t *cfg, const char *name)
+cfg_t *cfg_getsec(const cfg_t *const cfg, const char *name)
 {
    return cfg_getnsec(cfg, name, 0);
 }
@@ -359,7 +359,7 @@ cfg_t *cfg_getnmvprop(cfg_t *cfg, const char *name, unsigned int index)
       cfg_assert(index < opt->nvalues);
       return opt->values[index]->section;
    }
-   return 0;
+   return nullptr;
 }
 
 //
@@ -428,7 +428,7 @@ cfg_t *cfg_gettitleprops(cfg_t *cfg)
       cfg_assert(opt->values);
       return opt->values[0]->section;
    }
-   return 0;
+   return nullptr;
 }
 
 //=============================================================================
@@ -473,7 +473,7 @@ int cfg_parse_boolean(const char *s)
 
 cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
 {
-   cfg_value_t *val = 0;
+   cfg_value_t *val = nullptr;
    int b;
    char *s;
    double f;
@@ -495,7 +495,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
       if(opt->nvalues == 0 || is_set(CFGF_MULTI, opt->flags) ||
          is_set(CFGF_LIST, opt->flags))
       {
-         val = 0;
+         val = nullptr;
          if(opt->type == CFGT_SEC && is_set(CFGF_TITLE, opt->flags))
          {
             unsigned int ii;
@@ -517,7 +517,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
                }
             }
          }
-         if(val == 0)
+         if(val == nullptr)
             val = cfg_addval(opt);
       }
       else
@@ -530,7 +530,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
       if(opt->cb)
       {
          if((*opt->cb)(cfg, opt, value, &i) != 0)
-            return 0;
+            return nullptr;
          val->number = i;
       } 
       else 
@@ -541,14 +541,14 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
          {            
             cfg_error(cfg, "invalid integer value '%s' for option '%s'\n",
                       value, opt->name);
-            return 0;
+            return nullptr;
          }
          if(errno == ERANGE) 
          {
             cfg_error(cfg,
                "integer value '%s' for option '%s' is out of range\n",
                value, opt->name);
-            return 0;
+            return nullptr;
          }
       }
       break;
@@ -556,7 +556,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
       if(opt->cb)
       {
          if((*opt->cb)(cfg, opt, value, &f) != 0)
-            return 0;
+            return nullptr;
          val->fpnumber = f;
       } 
       else 
@@ -567,14 +567,14 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
             cfg_error(cfg,
                "invalid floating point value for option '%s'\n",
                opt->name);
-            return 0;
+            return nullptr;
          }
          if(errno == ERANGE)
          {
             cfg_error(cfg,
                "floating point value for option '%s' is out of range\n",
                opt->name);
-            return 0;
+            return nullptr;
          }
       }
       break;
@@ -584,9 +584,9 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
          efree(val->string);
       if(opt->cb)
       {
-         s = 0;
+         s = nullptr;
          if((*opt->cb)(cfg, opt, value, &s) != 0)
-            return 0;
+            return nullptr;
          val->string = estrdup(s);
       } else
          val->string = estrdup(value);
@@ -604,7 +604,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
       val->section->filename  = cfg->filename;
       val->section->line      = cfg->line;
       val->section->errfunc   = cfg->errfunc;
-      val->section->title     = value ? estrdup(value) : NULL;
+      val->section->title     = value ? estrdup(value) : nullptr;
       // haleyjd 01/02/12: make the old section a displaced version of the
       // new one, so that it can remain accessible
       val->section->displaced = oldsection;
@@ -613,7 +613,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
       if(opt->cb)
       {
          if((*opt->cb)(cfg, opt, value, &b) != 0)
-            return 0;
+            return nullptr;
       } 
       else
       {
@@ -622,7 +622,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
          {
             cfg_error(cfg, "invalid boolean value for option '%s'\n",
                opt->name);
-            return 0;
+            return nullptr;
          }
       }
       val->boolean = !!b;
@@ -631,7 +631,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
       if(opt->cb)
       {
          if((*opt->cb)(cfg, opt, value, &i) != 0)
-            return 0;
+            return nullptr;
          val->number = i;
       }
       else
@@ -660,7 +660,7 @@ void cfg_free_value(cfg_opt_t *opt)
 {
    unsigned int i;
    
-   if(opt == 0)
+   if(opt == nullptr)
       return;
    
    for(i = 0; i < opt->nvalues; i++)
@@ -672,7 +672,7 @@ void cfg_free_value(cfg_opt_t *opt)
       efree(opt->values[i]);
    }
    efree(opt->values);
-   opt->values = 0;
+   opt->values = nullptr;
    opt->nvalues = 0;
 }
 
@@ -706,7 +706,7 @@ cfg_lexfunc_t cfg_set_lexer_callback(cfg_t *cfg, cfg_lexfunc_t lexfunc)
    return old;
 }
 
-void cfg_error(cfg_t *cfg, const char *fmt, ...)
+void cfg_error(const cfg_t *const cfg, E_FORMAT_STRING(const char *fmt), ...)
 {
    va_list ap;
    
@@ -800,7 +800,7 @@ struct cfg_pstate_t
       if(opttitle)
       {
          efree(opttitle);
-         opttitle = 0;
+         opttitle = nullptr;
       }
    }
 };
@@ -852,7 +852,7 @@ static int cfg_pstate_expectoption(cfg_t *cfg, int level, cfg_pstate_t &pstate)
       return STATE_ERROR;
    }         
 
-   if((pstate.opt = cfg_getopt(cfg, mytext)) == 0) // haleyjd
+   if((pstate.opt = cfg_getopt(cfg, mytext)) == nullptr) // haleyjd
       return STATE_ERROR;
 
    switch(pstate.opt->type)
@@ -869,7 +869,7 @@ static int cfg_pstate_expectoption(cfg_t *cfg, int level, cfg_pstate_t &pstate)
       break;
 
    case CFGT_FLAG: // haleyjd: flag options, which are simple keywords
-      if(cfg_setopt(cfg, pstate.opt, mytext) == 0)
+      if(cfg_setopt(cfg, pstate.opt, mytext) == nullptr)
          return STATE_ERROR;
       // remain in STATE_EXPECT_OPTION
       break;
@@ -914,7 +914,7 @@ static int cfg_pstate_expectassign(cfg_t *cfg, int level, cfg_pstate_t &pstate)
    {
       pstate.val = cfg_setopt(cfg, pstate.opt, pstate.opttitle);
       efree(pstate.opttitle);
-      pstate.opttitle = 0;
+      pstate.opttitle = nullptr;
       if(!pstate.val || !pstate.val->section || !pstate.val->section->opts)
          return STATE_ERROR;
 
@@ -978,7 +978,7 @@ static int cfg_pstate_expectvalue(cfg_t *cfg, int level, cfg_pstate_t &pstate)
    if(pstate.opt->type == CFGT_STRFUNC)
       pstate.next_state = STATE_EXPECT_PAREN;
 
-   if(cfg_setopt(cfg, pstate.opt, mytext) == 0)
+   if(cfg_setopt(cfg, pstate.opt, mytext) == nullptr)
       return STATE_ERROR;
 
    pstate.state = pstate.next_state;
@@ -1092,7 +1092,7 @@ static int cfg_pstate_expectsecbrace(cfg_t *cfg, int level, cfg_pstate_t &pstate
       if(pstate.backupOpt)
       {
          pstate.opt = pstate.backupOpt;
-         pstate.backupOpt = 0;
+         pstate.backupOpt = nullptr;
       }
 
       if(pstate.tok != '{')
@@ -1106,14 +1106,14 @@ static int cfg_pstate_expectsecbrace(cfg_t *cfg, int level, cfg_pstate_t &pstate
       if(pstate.titleParentVal)
       {
          pstate.val = pstate.titleParentVal;
-         pstate.titleParentVal = 0;
+         pstate.titleParentVal = nullptr;
       }
       else
       {
          // Get new value
          pstate.val = cfg_setopt(cfg, pstate.opt, pstate.opttitle);
          efree(pstate.opttitle);
-         pstate.opttitle = 0;
+         pstate.opttitle = nullptr;
          if(!pstate.val)
             return STATE_ERROR;
       }
@@ -1281,7 +1281,7 @@ static int cfg_pstate_expectlookfor(cfg_t *cfg, int level, cfg_pstate_t &pstate)
    if(pstate.found_func == true)
    {
       pstate.opt = cfg_getopt(cfg, mytext);
-      if(pstate.opt == 0)
+      if(pstate.opt == nullptr)
          return STATE_ERROR;
 
       if(pstate.opt->type == CFGT_FUNC)
@@ -1405,12 +1405,12 @@ cfg_t *cfg_init(cfg_opt_t *opts, cfg_flag_t flags)
    cfg->name     = "root";
    cfg->opts     = opts;
    cfg->flags    = flags;
-   cfg->filename = 0;
+   cfg->filename = nullptr;
    cfg->line     = 0;
    cfg->lumpnum  = -1;   // haleyjd
-   cfg->errfunc  = 0;
-   cfg->lexfunc  = 0;    // haleyjd
-   cfg->lookfor  = NULL; // haleyjd
+   cfg->errfunc  = nullptr;
+   cfg->lexfunc  = nullptr; // haleyjd
+   cfg->lookfor  = nullptr; // haleyjd
 
    // haleyjd: removed ENABLE_NLS
 
@@ -1434,7 +1434,7 @@ int cfg_parse_dwfile(cfg_t *cfg, const char *filename, DWFILE *file)
       efree(cfg->filename);
 
    cfg->filename = cfg_tilde_expand(filename);
-   if(cfg->filename == 0)
+   if(cfg->filename == nullptr)
    {
       cfg_error(cfg, "%s: can't expand home directory\n", filename);
       return CFG_FILE_ERROR;
@@ -1493,14 +1493,14 @@ void cfg_free(cfg_t *cfg)
 {
    int i;
    
-   if(cfg == 0)
+   if(cfg == nullptr)
       return;
 
    // haleyjd 01/02/12: free any displaced section(s) recursively
    if(cfg->displaced)
    {
       cfg_free(cfg->displaced);
-      cfg->displaced = 0;
+      cfg->displaced = nullptr;
    }
    
    for(i = 0; cfg->opts[i].name; i++)
@@ -1528,7 +1528,7 @@ int cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
       return 1;
    }
 
-   if(!(data = cfg_lexer_mustopen(cfg, argv[0], -1, NULL)))
+   if(!(data = cfg_lexer_mustopen(cfg, argv[0], -1, nullptr)))
       return 1;
 
    return cfg_lexer_include(cfg, data, argv[0], -1);
@@ -1541,7 +1541,7 @@ int cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
 static cfg_value_t *cfg_getval(cfg_opt_t *opt, unsigned int index)
 {
-   cfg_value_t *val = 0;
+   cfg_value_t *val = nullptr;
 
    cfg_assert(index == 0 || is_set(CFGF_LIST, opt->flags));
 
@@ -1650,7 +1650,7 @@ void cfg_opt_setnstr(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    val = cfg_getval(opt, index);
    if(val->string) // haleyjd: !
       efree(val->string);
-   val->string = value ? estrdup(value) : 0;
+   val->string = value ? estrdup(value) : nullptr;
 }
 
 void cfg_setnstr(cfg_t *cfg, const char *name, const char *value,
@@ -1735,10 +1735,10 @@ static void cfg_addlistptr_internal(cfg_t *cfg, cfg_opt_t *opt,
 {
    const cfg_type_t type = opt->type; // haleyjd: a little compiler sugar ;)
    unsigned int i;
-   const int     *intptr    = 0;
-   const double  *doubleptr = 0;
-   const bool    *boolptr   = 0;
-   const char   **strptr    = 0;
+   const int     *intptr    = nullptr;
+   const double  *doubleptr = nullptr;
+   const bool    *boolptr   = nullptr;
+   const char   **strptr    = nullptr;
 
    switch(type)
    {

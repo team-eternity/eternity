@@ -25,8 +25,8 @@
 #ifndef E_PUFF_H_
 #define E_PUFF_H_
 
-#define EDF_SEC_PUFFTYPE "pufftype"
-#define EDF_SEC_PUFFDELTA "puffdelta"
+constexpr const char EDF_SEC_PUFFTYPE[]  = "pufftype";
+constexpr const char EDF_SEC_PUFFDELTA[] = "puffdelta";
 
 #include "metaapi.h"
 
@@ -46,10 +46,11 @@ extern MetaKeyIndex keyPuffUpSpeed;
 extern MetaKeyIndex keyPuffZSpread;
 extern MetaKeyIndex keyPuffPunchHack;
 extern MetaKeyIndex keyPuffParticles;
-extern MetaKeyIndex keyPuffAlwaysPuff;
+extern MetaKeyIndex keyPuffPuffOnActors;
 extern MetaKeyIndex keyPuffBloodless;
 extern MetaKeyIndex keyPuffLocalThrust;
 extern MetaKeyIndex keyPuffRandomTics;
+extern MetaKeyIndex keyPuffTargetShooter;
 
 extern cfg_opt_t edf_puff_opts[];
 extern cfg_opt_t edf_puff_delta_opts[];

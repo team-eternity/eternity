@@ -22,6 +22,7 @@
 #define G_GAME_H__
 
 // Required for byte
+#include "doomdef.h"
 #include "doomtype.h"
 
 struct event_t;
@@ -34,7 +35,7 @@ class  WadDirectory;
 //
 
 char *G_GetNameForMap(int episode, int map);
-int   G_GetMapForName(const char *name);
+int   G_GetMapForName(const char *name, int &episode);
 
 bool G_Responder(const event_t *ev);
 bool G_CheckDemoStatus();
@@ -48,6 +49,7 @@ void G_DeferedPlayDemo(const char *demo);
 void G_TimeDemo(const char *name, bool showmenu);
 void G_LoadGame(const char *name, int slot, bool is_command); // killough 5/15/98
 void G_ForcedLoadGame();                      // killough 5/15/98: forced loadgames
+void G_LoadGameErr(const char *msg);
 void G_SaveGame(int slot, const char *description); // Called by M_Responder.
 void G_RecordDemo(const char *name);                // Only called by startup code.
 void G_RecordDemoContinue(const char *in, const char *name);
@@ -88,7 +90,7 @@ int G_TotalFoundSecrets();
 void doom_printf(E_FORMAT_STRING(const char *), ...) E_PRINTF(1, 2);
 
         // sf: player_printf
-void player_printf(const player_t *player, const char *s, ...);
+void player_printf(const player_t *player, E_FORMAT_STRING(const char *s), ...) E_PRINTF(2, 3);
 
 // killough 5/2/98: moved from m_misc.c:
 
@@ -108,7 +110,7 @@ extern int mouseb_dblc2;  // causes a use action
 
 //extern angle_t consoleangle;
 
-extern int  defaultskill;     // jff 3/24/98 default skill
+extern skill_t defaultskill;     // jff 3/24/98 default skill
 extern bool haswolflevels;    // jff 4/18/98 wolf levels present
 extern bool demorecording;    // killough 12/98
 extern bool forced_loadgame;
@@ -118,20 +120,30 @@ extern char gamemapname[9];
 extern int  bodyquesize, default_bodyquesize; // killough 2/8/98, 10/98
 extern int  animscreenshot;       // animated screenshots
 
-extern int cooldemo;
+//
+// Cool demo setting
+//
+enum class CoolDemo: int
+{
+   off,
+   random,
+   follow
+};
+
+extern CoolDemo cooldemo;
 extern bool hub_changelevel;
 
 extern bool scriptSecret;   // haleyjd
 
 extern bool sendpause;
 
-extern int novert; // haleyjd
+extern int mouse_vert; // haleyjd
 extern int smooth_turning;
 
 #define VERSIONSIZE   16
 
 // killough 2/22/98: version id string format for savegames
-#define VERSIONID "MBF %d"
+#define VERSIONID "EE"
 
 extern WadDirectory *g_dir;
 extern WadDirectory *d_dir;

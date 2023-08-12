@@ -153,6 +153,15 @@ public:
 
    T *begin() const { return ptrArray; }
    T *end()   const { return ptrArray + length; }
+
+   T &back()
+   {
+      return ptrArray[length - 1];
+   }
+   const T &back() const
+   {
+      return ptrArray[length - 1];
+   }
 };
 
 //
@@ -476,6 +485,31 @@ public:
       // placement copy construct new item
       ::new (&this->ptrArray[this->length]) T(newItem);
       
+      ++this->length;
+   }
+   void add(T &&newItem)
+   {
+      if(this->length >= this->numalloc)
+      {
+         size_t newnumalloc = this->numalloc + (this->length ? this->length : 32);
+
+         if(newnumalloc > this->numalloc)
+         {
+            T *newItems = ecalloc(T *, newnumalloc, sizeof(T));
+            for(size_t i = 0; i < this->length; i++)
+            {
+               ::new (&newItems[i]) T(std::move(this->ptrArray[i]));
+               this->ptrArray[i].~T();
+            }
+            efree(this->ptrArray);
+            this->ptrArray = newItems;
+            this->numalloc = newnumalloc;
+         }
+      }
+
+      // placement copy construct new item
+      ::new (&this->ptrArray[this->length]) T(std::move(newItem));
+
       ++this->length;
    }
 

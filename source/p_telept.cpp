@@ -70,7 +70,7 @@ static void P_dropToFloor(Mobj *thing, player_t *player)
 // P_Teleport from Heretic, but made to be more generic and Eternity-ready
 // FIXME: This should be made more generic, so that other stuff can benefit from it
 //
-bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle)
+bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle, bool alwaysfrag)
 {
    fixed_t oldx, oldy, oldz, aboveFloor, fogDelta;
    player_t *player;
@@ -80,12 +80,12 @@ bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle)
    oldy = thing->y;
    oldz = thing->z;
    aboveFloor = thing->z - thing->zref.floor;
-   if(!P_TeleportMove(thing, x, y, false))
+   if(!P_TeleportMove(thing, x, y, alwaysfrag ? TELEMOVE_FRAG : 0))
       return false;
 
    if((player = thing->player))
    {
-      if(player->powers[pw_flight] && aboveFloor)
+      if(player->powers[pw_flight].isActive() && aboveFloor)
       {
          thing->z = thing->zref.floor + aboveFloor;
          if(thing->z + thing->height > thing->zref.ceiling)
@@ -107,18 +107,20 @@ bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle)
    else
       P_dropToFloor(thing, nullptr);
 
+   if(thing->player == players + displayplayer)
+      P_ResetChasecam();
+
    // Spawn teleport fog at source and destination
    const int fogNum = E_SafeThingName(GameModeInfo->teleFogType);
    fogDelta = thing->flags & MF_MISSILE ? 0 : GameModeInfo->teleFogHeight;
    S_StartSound(P_SpawnMobj(oldx, oldy, oldz + fogDelta, fogNum),
                 GameModeInfo->teleSound);
    an = angle >> ANGLETOFINESHIFT;
-   S_StartSound(P_SpawnMobj(x + 20 * finecosine[an], y + 20 * finesine[an],
-                           thing->z + fogDelta, fogNum),
-                GameModeInfo->teleSound);
+   v2fixed_t pos = P_LinePortalCrossing(x, y, 20 * finecosine[an], 20 * finesine[an]);
+   S_StartSound(P_SpawnMobj(pos.x, pos.y, thing->z + fogDelta, fogNum), GameModeInfo->teleSound);
 
    // Freeze player for ~.5s, but only if they don't have tome active
-   if(thing->player && !thing->player->powers[pw_weaponlevel2])
+   if(thing->player && !thing->player->powers[pw_weaponlevel2].isActive())
       thing->reactiontime = 18;
    thing->angle = angle;
    if(thing->flags & MF_MISSILE)
@@ -130,6 +132,10 @@ bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle)
    else
       thing->momx = thing->momy = thing->momz = 0;
 
+   // killough 10/98: kill all bobbing momentum too
+   if(player)
+      player->momx = player->momy = 0;
+
    thing->backupPosition();
    P_AdjustFloorClip(thing);
 
@@ -137,19 +143,33 @@ bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle)
 }
 
 //
+// Gets the telefog coordinates for an arrival telefog, which must be in front of the thing
+//
+v3fixed_t P_GetArrivalTelefogLocation(v3fixed_t landing, angle_t angle)
+{
+   v2fixed_t pos = P_LinePortalCrossing(landing.x, landing.y, 
+                                        20 * finecosine[angle >> ANGLETOFINESHIFT], 
+                                        20 * finesine[angle >> ANGLETOFINESHIFT]);
+   return { pos.x, pos.y, landing.z + GameModeInfo->teleFogHeight };
+}
+
+//
 // ioanch 20160330
 // General teleportation routine. Needed because it's reused by Hexen's teleport
 //
-static int P_Teleport(Mobj *thing, const Mobj *landing)
+static int P_Teleport(Mobj *thing, const Mobj *landing, bool alwaysfrag)
 {
+   if(GameModeInfo->type == Game_Heretic)
+      return P_HereticTeleport(thing, landing->x, landing->y, landing->angle, alwaysfrag);
+
    fixed_t oldx = thing->x, oldy = thing->y, oldz = thing->z;
    player_t *player = thing->player;
             
    // killough 5/12/98: exclude voodoo dolls:
    if(player && player->mo != thing)
-      player = NULL;
+      player = nullptr;
 
-   if(!P_TeleportMove(thing, landing->x, landing->y, false)) // killough 8/9/98
+   if(!P_TeleportMove(thing, landing->x, landing->y, alwaysfrag ? TELEMOVE_FRAG : 0)) // killough 8/9/98
       return 0;
 
    P_dropToFloor(thing, player);
@@ -170,13 +190,11 @@ static int P_Teleport(Mobj *thing, const Mobj *landing)
 
    // spawn teleport fog and emit sound at destination
    // ioanch 20160229: portal aware
-   v2fixed_t pos = P_LinePortalCrossing(landing->x, landing->y,
-      20 * finecosine[landing->angle >> ANGLETOFINESHIFT],
-      20 * finesine[landing->angle >> ANGLETOFINESHIFT]);
-   S_StartSound(P_SpawnMobj(pos.x, pos.y,
-                              thing->z + GameModeInfo->teleFogHeight, 
-                              E_SafeThingName(GameModeInfo->teleFogType)),
-                  GameModeInfo->teleSound);
+   v3fixed_t landingFogPos = P_GetArrivalTelefogLocation({ landing->x, landing->y, thing->z },
+                                                         landing->angle);
+   S_StartSound(P_SpawnMobj(landingFogPos.x, landingFogPos.y, landingFogPos.z, 
+                            E_SafeThingName(GameModeInfo->teleFogType)), 
+                GameModeInfo->teleSound);
             
    thing->backupPosition();
    P_AdjustFloorClip(thing);
@@ -244,7 +262,7 @@ static int P_SilentTeleport(Mobj *thing, const line_t *line,
    player_t *player = thing->player;
 
    // Attempt to teleport, aborting if blocked
-   if(!P_TeleportMove(thing, m->x, m->y, false)) // killough 8/9/98
+   if(!P_TeleportMove(thing, m->x, m->y, parms.alwaysfrag ? TELEMOVE_FRAG : 0)) // killough 8/9/98
       return 0;
 
    // Rotate thing according to difference in angles
@@ -300,7 +318,7 @@ static int P_SilentTeleport(Mobj *thing, const line_t *line,
 // killough 5/3/98: reformatted, cleaned up
 // ioanch 20160330: modified not to use line parameter
 //
-int EV_Teleport(int tag, int side, Mobj *thing)
+int EV_Teleport(int tag, int side, Mobj *thing, bool alwaysfrag)
 {
    Thinker *thinker;
    Mobj    *m;
@@ -325,7 +343,7 @@ int EV_Teleport(int tag, int side, Mobj *thing)
          if(m->type == E_ThingNumForDEHNum(MT_TELEPORTMAN) &&
             m->subsector->sector-sectors == i)
          {
-            return P_Teleport(thing, m);
+            return P_Teleport(thing, m, alwaysfrag);
          }
       }
    }
@@ -355,7 +373,7 @@ static const Mobj *P_pickRandomLanding(int tid, int tag)
 //
 // ioanch 20160329: param teleport (Teleport special)
 //
-int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing)
+int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing, bool alwaysfrag)
 {
    // don't teleport missiles
    // Don't teleport if hit back of line,
@@ -367,12 +385,12 @@ int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing)
    {
       const Mobj *mobj = P_pickRandomLanding(tid, tag);
       if(mobj)
-         return P_Teleport(thing, mobj);
+         return P_Teleport(thing, mobj, alwaysfrag);
       return 0;
    }
 
    // no TID: act like classic Doom
-   return EV_Teleport(tag, side, thing);
+   return EV_Teleport(tag, side, thing, alwaysfrag);
 }
 
 //
@@ -442,7 +460,7 @@ int EV_ParamSilentTeleport(int tid, const line_t *line, int tag, int side,
 #define FUDGEFACTOR 10
 // ioanch 20160424: added lineid as a separate arg
 int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing,
-                          bool reverse)
+                          bool reverse, bool alwaysfrag)
 {
    int i;
    line_t *l;
@@ -482,11 +500,11 @@ int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing,
          // Whether this is a player, and if so, a pointer to its player_t.
          // Voodoo dolls are excluded by making sure thing->player->mo==thing.
          player_t *player = thing->player && thing->player->mo == thing ?
-            thing->player : NULL;
+            thing->player : nullptr;
 
          // Whether walking towards first side of exit linedef steps down
          int stepdown =
-            l->frontsector->floorheight < l->backsector->floorheight;
+            l->frontsector->srf.floor.height < l->backsector->srf.floor.height;
 
          // Height of thing above ground
          fixed_t z = thing->z - thing->zref.floor;
@@ -525,21 +543,21 @@ int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing,
          }
 
          // Attempt to teleport, aborting if blocked
-         if(!P_TeleportMove(thing, x, y, false)) // killough 8/9/98
+         if(!P_TeleportMove(thing, x, y, alwaysfrag ? TELEMOVE_FRAG : 0)) // killough 8/9/98
             return 0;
 
          // Adjust z position to be same height above ground as before.
          // Ground level at the exit is measured as the higher of the
          // two floor heights at the exit linedef.
-         thing->z = z + sides[l->sidenum[stepdown]].sector->floorheight;
-         
+         thing->z = z + sides[l->sidenum[stepdown]].sector->srf.floor.height;
+
          // Rotate thing's orientation according to difference in linedef angles
          thing->angle += angle;
-         
+
          // Momentum of thing crossing teleporter linedef
          x = thing->momx;
          y = thing->momy;
-         
+
          // Rotate thing's momentum to come out of exit just like it entered
          thing->momx = FixedMul(x, c) - FixedMul(y, s);
          thing->momy = FixedMul(y, c) + FixedMul(x, s);

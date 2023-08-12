@@ -48,7 +48,7 @@ public:
    state_t *state;      // the state
 
    // Default constructor
-   MetaState() : Super(), state(NULL)
+   MetaState() : Super(), state(nullptr)
    {
    }
 

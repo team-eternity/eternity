@@ -1,0 +1,86 @@
+#
+# Gameplay compatibility for maps which didn't have certain settings
+#
+
+# enable jumping for mods before this was disabled by default
+compatibilityhacks
+{
+  hashes
+  22A66807262CF8D8C75061B6914F7758, // e2l11 map01
+  ADC5B1D395B0267C4BFE6BDEF3E8C12F  // vaprdemo map01
+
+  off comp_jump
+}
+
+# comp_model solves the "shortest lower texture" ambiguity
+compatibilityhacks
+{
+  hashes
+  941E4CB56EE4184E0B1ED43486AB0BBF, // av map07
+  6D4156EE0D12B77AD143A37C4D3DCF98, // dmonfear map22
+  60733BDD1AA3F4B2262ADC79B2E1B5AB, // mm_allup map29
+  F84AB4557464A383E93F37CD3A82AC48, // mm2 map03
+  1497894956B3C8EBE8A240B7FDD99C6A, // mm2 map25
+  9F2BE080A33F775294BD78822456924E, // nukemine (doom) e1m4
+  CD31793D3A4B00231B124C0C23649644, // strain map02
+  19094AEB53D12EFC8E0568424F659F11, // strain map31
+  0EECBF37B328C9CAAF20DED4949A4157, // sudtic e2m6
+  4ACE0644883BDA0CBA254FA02C9ACF83  // teutic e3m4
+
+  on comp_model
+}
+
+# Pain elemental lost soul limit
+compatibilityhacks
+{
+  hashes
+  811A0C97777A198BC9B2BB558CB46E6A  // hr map19
+
+  on comp_pain
+}
+
+# Bullets should not hit sector planes
+compatibilityhacks
+{
+  hashes
+  4f6f564dc1111b1404b2eb98592bb004  // btsx_e1 map21
+
+  on comp_planeshoot
+}
+
+# Necessary ghosts
+compatibilityhacks
+{
+  hashes
+  0AE745A3AB86D15FB2FB74489962C421, // 6pack2 map02
+  01899825FFEAE016D39C02A7DA4B218F, // archie (doom2) map01
+  CBDFEFAC579A62DE8F1B48CA4A09D381, // darkside (doom2) map01, gather2 map05
+  6DA6FCBA8089161BDEC6A1D3F6C8D60F, // eternal map25
+  5379C080299EB961792B50AD96821543, // Hell to pay map14
+  7837B5334A277F107515D649BCEFB682, // Hell to pay map22
+  145C4DFCF843F2B92C73036BA0E1D98A, // hr map26
+  2EEB1E12FA9F9545DE9D99990A4A78E5, // icarus map24
+  A81E2734F735A82720D8E0F1442BA0C9, // impgod map01
+  1E998262EE319B7D088E01DE782E6B41, // mayhem13 map05
+  65A53A09A09525AE42EA210BF879CD37, // pl2 map32
+  9E5724BC6135AA6F86EE54FD4D91F1E2, // proj-x map14
+  2499CF9A9351BE9BC4E9C66FC9F291A7, // requiem map23
+  C7A2FAFB0AFB2632C50AD625CDB50E51, // reverie map18
+  1D9F3AFDC2517C2E450491ED13896712, // seej map01
+  2EA635C6B6AEC76B6BC77448DAB22F9A, // squadron map21
+  3CA5493FEFF2E27BFD4181E6C4A3C2BF  // wtrfront map01
+
+  on comp_vile
+}
+
+# Some mods expect the skull key graphics to override the keycards
+compatibilityhacks
+{
+  hashes
+  C749D8A5B6C5FC3B37CAE3617FC7C402, // aoddoom1, aodtcup1 e3m5, aoddoom2, aodtcup2 map05
+  F24F25C6572F3399BA700A1C2592CE6A, // aodtclv1 e3m5, aodtclv2 map05
+  38742692698535B84DBEC5FEB84F3565, // aodtclv1mac e3m5, aodtclv2mac map05
+  16EED57FEA2D6DEC797200296EB89E4B  // aodtcmacup1 e3m5, aodtcmacup2 map05
+
+  on sts_traditional_keys
+}

@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2013 Simon Howard et al.
+// The Eternity Engine
+// Copyright(C) 2021 James Haley, Simon Howard et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,14 +17,11 @@
 //
 //--------------------------------------------------------------------------
 //
-// Menus
+// Purpose: The actual menus: Structs and handler functions (if any),
+//          console commands to activate each menu
 //
-// the actual menus: structs and handler functions (if any)
-// console commands to activate each menu
+// Authors: Simon Howard, James Haley, Max Waine, Devin Acker
 //
-// By Simon Howard
-//
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 
@@ -67,6 +63,7 @@
 #include "p_skin.h"
 #include "r_defs.h"
 #include "r_draw.h"
+#include "r_main.h"
 #include "r_patch.h"
 #include "r_state.h"
 #include "s_sound.h"
@@ -86,7 +83,6 @@ extern menu_t menu_newmission;
 extern menu_t menu_main;
 extern menu_t menu_episode;
 extern menu_t menu_d2episode;
-extern menu_t menu_startmap;
 
 int screenSize;      // screen size
 
@@ -94,15 +90,7 @@ char *mn_demoname;           // demo to play
 
 // haleyjd: moved these up here to fix Z_Free error
 
-// haleyjd: was 7
-#define SAVESLOTS 8
-
-char *savegamenames[SAVESLOTS];
-
 char *mn_start_mapname;
-
-// haleyjd: keep track of valid save slots
-bool savegamepresent[SAVESLOTS];
 
 static void MN_InitCustomMenu();
 static void MN_InitSearchStr();
@@ -113,13 +101,6 @@ void MN_InitMenus()
    mn_demoname = estrdup("demo1");
    mn_wadname  = estrdup("");
    mn_start_mapname = estrdup(""); // haleyjd 05/14/06
-   
-   // haleyjd: initialize via zone memory
-   for(int i = 0; i < SAVESLOTS; i++)
-   {
-      savegamenames[i]   = estrdup("");
-      savegamepresent[i] = false;
-   }
 
    MN_InitCustomMenu();      // haleyjd 03/14/06
    MN_InitSearchStr();       // haleyjd 03/15/06
@@ -160,7 +141,7 @@ static menuitem_t mn_main_items[] =
 menu_t menu_main =
 {
    mn_main_items,
-   NULL, NULL, NULL,           // pages
+   nullptr, nullptr, nullptr, // pages
    97, 64,
    0,
    mf_skullmenu | mf_emulated, // 08/30/06: use emulated flag
@@ -180,7 +161,7 @@ static menuitem_t mn_main_doom2_items[] =
 menu_t menu_main_doom2 =
 {
    mn_main_doom2_items,
-   NULL, NULL, NULL,           // pages
+   nullptr, nullptr, nullptr, // pages
    97, 72,
    0,
    mf_skullmenu | mf_emulated, // 08/30/06: use emulated flag
@@ -194,7 +175,7 @@ char *start_mapname; // local copy of ptr to cvar value
 
 extern menu_t *mn_episode_override;
 
-VARIABLE_STRING(mn_start_mapname,    NULL,   9);
+VARIABLE_STRING(mn_start_mapname,    nullptr,9);
 CONSOLE_VARIABLE(mn_start_mapname, mn_start_mapname, cf_handlerset)
 {
    int lumpnum;
@@ -248,7 +229,7 @@ void MN_Doom2NewGame()
 // mn_newgame
 // 
 // called from main menu:
-// starts menu according to use_startmap, gametype and modifiedgame
+// starts menu according to menuStartMap, gametype and modifiedgame
 //
 CONSOLE_COMMAND(mn_newgame, 0)
 {
@@ -260,16 +241,49 @@ CONSOLE_COMMAND(mn_newgame, 0)
 
    // haleyjd 05/14/06: reset episode/level selection variables
    start_episode = 1;
-   start_mapname = NULL;
+   start_mapname = nullptr;
 
    // haleyjd 05/14/06: check for episode menu override now
    if(mn_episode_override)
    {
-      MN_StartMenu(mn_episode_override);
-      return;
+      int episodeIndex = -1;
+
+      // Figure out if we should skip the episode menu override due to it containing only a
+      // single episode, and nothing else
+      for(int i = 0; mn_episode_override->menuitems[i].type != it_end; i++)
+      {
+         menuitem_t *item = &mn_episode_override->menuitems[i];
+         if(item->type == it_runcmd)
+         {
+            if(!strncasecmp("mn_start_mapname", item->data, strlen("mn_start_mapname")) && episodeIndex == -1)
+               episodeIndex = i;
+            else
+            {
+               episodeIndex = -1;
+               break;
+            }
+         }
+         else if(item->type != it_title && item->type != it_gap && item->type != it_info)
+         {
+            episodeIndex = -1;
+            break;
+         }
+      }
+
+      if(episodeIndex >= 0)
+         C_RunTextCmd(mn_episode_override->menuitems[episodeIndex].data);
+      else
+         MN_StartMenu(mn_episode_override);
+      }
+   else if(GameModeInfo->menuStartMap &&
+           *GameModeInfo->menuStartMap &&
+           W_CheckNumForName(GameModeInfo->menuStartMap) >= 0)
+   {
+      G_DeferedInitNew(defaultskill, GameModeInfo->menuStartMap);
+      MN_ClearMenus();
    }
-   
-   GameModeInfo->OnNewGame();
+   else
+      GameModeInfo->OnNewGame();
 }
 
 // menu item to quit doom:
@@ -329,11 +343,28 @@ static menuitem_t mn_episode_items[] =
 menu_t menu_episode =
 {
    mn_episode_items,           // menu items
-   NULL, NULL, NULL,           // pages
+   nullptr, nullptr, nullptr,  // pages
    48, 63,                     // x, y offsets
    0,                          // select episode 1
    mf_skullmenu | mf_emulated, // skull menu
    MN_EpisodeDrawer            // drawer
+};
+
+//
+// Stub episode menu (for UMAPINFO)
+//
+static menuitem_t mn_episode_itemsStub[] =
+{
+   { it_end }
+};
+menu_t menu_episodeDoom2Stub =
+{
+   mn_episode_itemsStub,
+   nullptr, nullptr, nullptr,
+   48, 63,
+   0,
+   mf_skullmenu | mf_emulated,
+   MN_EpisodeDrawer
 };
 
 // console command to select episode
@@ -443,7 +474,7 @@ static menuitem_t mn_dm2ep_items[] =
 menu_t menu_d2episode =
 {
    mn_dm2ep_items,             // menu items
-   NULL, NULL, NULL,           // pages
+   nullptr, nullptr, nullptr,  // pages
    48, 63,                     // x, y offsets
    0,                          // select episode 1
    mf_skullmenu | mf_emulated, // skull menu
@@ -528,27 +559,27 @@ static menuitem_t mn_newgame_items[] =
 menu_t menu_newgame =
 {
    mn_newgame_items,   // menu items
-   NULL, NULL, NULL,   // pages
-   48, 63,             // x,y offsets
-   0,                        // starting item (overridden by open method)
-   mf_skullmenu|mf_emulated, // is a skull menu
+   nullptr, nullptr, nullptr, // pages
+   48, 63,                    // x,y offsets
+   0,                         // starting item (overridden by open method)
+   mf_skullmenu|mf_emulated,  // is a skull menu
    MN_DrawNewGame,     // drawer method
-   NULL, NULL,         // toc
+   nullptr, nullptr,   // toc
    0,                  // gap override
    MN_openNewGameMenu, // open method
 };
 
 menu_t menu_newmission =
 {
-   mn_newmission_items,      // items - see above
-   NULL, NULL, NULL,         // pages
-   48, 63,                   // x, y
-   0,                        // starting item
-   mf_skullmenu|mf_emulated, // flags
-   MN_DrawNewGame,           // drawer
-   NULL, NULL,               // toc
-   0,                        // gap override
-   MN_openNewGameMenu,       // open method
+   mn_newmission_items,       // items - see above
+   nullptr, nullptr, nullptr, // pages
+   48, 63,                    // x, y
+   0,                         // starting item
+   mf_skullmenu|mf_emulated,  // flags
+   MN_DrawNewGame,            // drawer
+   nullptr, nullptr,          // toc
+   0,                         // gap override
+   MN_openNewGameMenu,        // open method
 };
 
 static void MN_DoNightmare()
@@ -603,38 +634,6 @@ CONSOLE_COMMAND(newgame, cf_notnet)
    MN_ClearMenus();
 }
 
-//////////////////////////////////////////////////
-//
-// First-time Query menu to use start map
-//
-
-static menuitem_t mn_startmap_items[] =
-{
-   {it_title,  "New Game",          NULL,                  "M_NEWG"},
-   {it_gap},
-   {it_info,   "Eternity includes a 'start map' to let"},
-   {it_info,   "you start new games from in a level."},
-   {it_gap},
-   {it_info,   "In the future would you rather:"},
-   {it_gap},
-   {it_runcmd, "Use the start map", "use_startmap 1; mn_newgame"},
-   {it_runcmd, "Use the menu",      "use_startmap 0; mn_newgame"},
-   {it_end}
-};
-
-menu_t menu_startmap =
-{
-   mn_startmap_items,    // menu items
-   NULL, NULL, NULL,     // pages
-   40, 15,               // x,y offsets
-   7,                    // starting item: start map
-   mf_leftaligned | mf_background, 
-};
-
-const char *str_startmap[] = {"ask", "no", "yes"};
-VARIABLE_INT(use_startmap, NULL, -1, 1, str_startmap);
-CONSOLE_VARIABLE(use_startmap, use_startmap, 0) {}
-
 
 ////////////////////////////////////////////////
 //
@@ -646,7 +645,7 @@ CONSOLE_VARIABLE(use_startmap, use_startmap, 0) {}
 
 static menuitem_t mn_demos_items[] =
 {
-   {it_title,      "Demos",                  NULL,             "m_demos"},
+   {it_title,      "Demos",                  nullptr,          "m_demos"},
    {it_gap},
    {it_info,       "Play Demo"},
    {it_variable,   "Demo name",              "mn_demoname"},
@@ -668,14 +667,14 @@ static menuitem_t mn_demos_items[] =
 
 menu_t menu_demos = 
 {
-   mn_demos_items,    // menu items
-   NULL, NULL, NULL,  // pages
-   200, 15,           // x,y
-   3,                 // start item
-   mf_background,     // full screen
+   mn_demos_items,             // menu items
+   nullptr, nullptr, nullptr,  // pages
+   200, 15,                    // x,y
+   3,                          // start item
+   mf_background,              // full screen
 };
 
-VARIABLE_STRING(mn_demoname,     NULL,           12);
+VARIABLE_STRING(mn_demoname,     nullptr,        12);
 CONSOLE_VARIABLE(mn_demoname,    mn_demoname,     0) {}
 
 CONSOLE_COMMAND(mn_demos, cf_notnet)
@@ -703,7 +702,7 @@ static const char *mn_wad_names[] =
    "IWAD Paths - DOOM",
    "IWAD Paths - Raven",
    "IWAD Paths - Freedoom / Mission Packs",
-   NULL
+   nullptr
 };
 
 static menu_t *mn_wad_pages[] =
@@ -713,102 +712,97 @@ static menu_t *mn_wad_pages[] =
    &menu_wadiwads1,
    &menu_wadiwads2,
    &menu_wadiwads3,
-   NULL
+   nullptr
 };
 
 static menuitem_t mn_loadwad_items[] =
 {
-   {it_title,    "Load Wad",               NULL,                "M_WAD"},
+   {it_title,    "Load Wad",               nullptr,             "M_WAD"},
    {it_gap},
-   {it_info,     "File Selection",         NULL,                NULL, MENUITEM_CENTERED },
+   {it_info,     "File Selection",         nullptr,             nullptr, MENUITEM_CENTERED },
    {it_gap},
-   {it_variable, "Wad name:",              "mn_wadname",        NULL, MENUITEM_LALIGNED },
-   {it_variable, "Wad directory:",         "wad_directory",     NULL, MENUITEM_LALIGNED },
-   {it_runcmd,   "Select wad...",          "mn_selectwad",      NULL, MENUITEM_LALIGNED },
+   {it_variable, "Wad name:",              "mn_wadname",        nullptr, MENUITEM_LALIGNED },
+   {it_variable, "Wad directory:",         "wad_directory",     nullptr, MENUITEM_LALIGNED },
+   {it_runcmd,   "Select wad...",          "mn_selectwad",      nullptr, MENUITEM_LALIGNED },
    {it_gap},
-   {it_runcmd,   "Load wad",               "mn_loadwaditem",    NULL, MENUITEM_CENTERED },
+   {it_runcmd,   "Load wad",               "mn_loadwaditem",    nullptr, MENUITEM_CENTERED },
    {it_gap},
-   {it_info,     "Master Levels",          NULL,                NULL, MENUITEM_CENTERED },
+   {it_info,     "Master Levels",          nullptr,             nullptr, MENUITEM_CENTERED },
    {it_gap},
-   {it_variable, "Master Levels dir:",     "master_levels_dir", NULL, MENUITEM_LALIGNED },
-   {it_runcmd,   "Play Master Levels...",  "w_masterlevels",    NULL, MENUITEM_LALIGNED },
+   {it_variable, "Master Levels dir:",     "master_levels_dir", nullptr, MENUITEM_LALIGNED },
+   {it_runcmd,   "Play Master Levels...",  "w_masterlevels",    nullptr, MENUITEM_LALIGNED },
    {it_end},
 };
 
 static menuitem_t mn_wadmisc_items[] =
 {
-   {it_title,    "Wad Options",          NULL,                   "M_WADOPT"},
+   {it_title,    "Wad Options",          nullptr,                "M_WADOPT"},
    {it_gap},
-   // FIXME: startmap restoration?
-   //{it_info,     "Misc Settings",        NULL,                   NULL, MENUITEM_CENTERED },
-   //{it_gap},
-   //{it_toggle,   "Use start map",        "use_startmap" },
-   //{it_gap},
-   {it_info,     "Autoloaded Files",     NULL,                   NULL, MENUITEM_CENTERED },
+   {it_info,     "Autoloaded Files",     nullptr,                nullptr, MENUITEM_CENTERED },
    {it_gap},
-   {it_variable, "WAD file 1:",          "auto_wad_1",           NULL, MENUITEM_LALIGNED },
-   {it_variable, "WAD file 2:",          "auto_wad_2",           NULL, MENUITEM_LALIGNED },
-   {it_variable, "DEH file 1:",          "auto_deh_1",           NULL, MENUITEM_LALIGNED },
-   {it_variable, "DEH file 2:",          "auto_deh_2",           NULL, MENUITEM_LALIGNED },
-   {it_variable, "CSC file 1:",          "auto_csc_1",           NULL, MENUITEM_LALIGNED },
-   {it_variable, "CSC file 2:",          "auto_csc_2",           NULL, MENUITEM_LALIGNED },
+   {it_variable, "WAD file 1:",          "auto_wad_1",           nullptr, MENUITEM_LALIGNED },
+   {it_variable, "WAD file 2:",          "auto_wad_2",           nullptr, MENUITEM_LALIGNED },
+   {it_variable, "DEH file 1:",          "auto_deh_1",           nullptr, MENUITEM_LALIGNED },
+   {it_variable, "DEH file 2:",          "auto_deh_2",           nullptr, MENUITEM_LALIGNED },
+   {it_variable, "CSC file 1:",          "auto_csc_1",           nullptr, MENUITEM_LALIGNED },
+   {it_variable, "CSC file 2:",          "auto_csc_2",           nullptr, MENUITEM_LALIGNED },
    {it_end},
 };
 
 static menuitem_t mn_wadiwad1_items[] =
 {
-   {it_title,    "Wad Options",         NULL,                     "M_WADOPT"},
+   {it_title,    "Wad Options",         nullptr,                  "M_WADOPT"},
    {it_gap},
-   {it_info,     "IWAD Paths - DOOM",   NULL,                     NULL, MENUITEM_CENTERED },
+   {it_info,     "IWAD Paths - DOOM",   nullptr,                  nullptr, MENUITEM_CENTERED },
    {it_gap}, 
-   {it_variable, "DOOM (SW):",          "iwad_doom_shareware",    NULL, MENUITEM_LALIGNED },
-   {it_variable, "DOOM (Reg):",         "iwad_doom",              NULL, MENUITEM_LALIGNED },
-   {it_variable, "Ultimate DOOM:",      "iwad_ultimate_doom",     NULL, MENUITEM_LALIGNED },
-   {it_variable, "DOOM II:",            "iwad_doom2",             NULL, MENUITEM_LALIGNED },
-   {it_variable, "Evilution:",          "iwad_tnt",               NULL, MENUITEM_LALIGNED },
-   {it_variable, "Plutonia:",           "iwad_plutonia",          NULL, MENUITEM_LALIGNED },
-   {it_variable, "HACX:",               "iwad_hacx",              NULL, MENUITEM_LALIGNED },
+   {it_variable, "DOOM (SW):",          "iwad_doom_shareware",    nullptr, MENUITEM_LALIGNED },
+   {it_variable, "DOOM (Reg):",         "iwad_doom",              nullptr, MENUITEM_LALIGNED },
+   {it_variable, "Ultimate DOOM:",      "iwad_ultimate_doom",     nullptr, MENUITEM_LALIGNED },
+   {it_variable, "DOOM II:",            "iwad_doom2",             nullptr, MENUITEM_LALIGNED },
+   {it_variable, "Evilution:",          "iwad_tnt",               nullptr, MENUITEM_LALIGNED },
+   {it_variable, "Plutonia:",           "iwad_plutonia",          nullptr, MENUITEM_LALIGNED },
+   {it_variable, "HACX:",               "iwad_hacx",              nullptr, MENUITEM_LALIGNED },
    {it_end}
 };
 
 static menuitem_t mn_wadiwad2_items[] =
 {
-   {it_title,    "Wad Options",         NULL,                     "M_WADOPT"},
+   {it_title,    "Wad Options",         nullptr,                  "M_WADOPT"},
    {it_gap},
-   {it_info,     "IWAD Paths - Raven",  NULL,                     NULL, MENUITEM_CENTERED },
+   {it_info,     "IWAD Paths - Raven",  nullptr,                  nullptr, MENUITEM_CENTERED },
    {it_gap}, 
-   {it_variable, "Heretic (SW):",       "iwad_heretic_shareware", NULL, MENUITEM_LALIGNED },
-   {it_variable, "Heretic (Reg):",      "iwad_heretic",           NULL, MENUITEM_LALIGNED },
-   {it_variable, "Heretic SoSR:",       "iwad_heretic_sosr",      NULL, MENUITEM_LALIGNED },
+   {it_variable, "Heretic (SW):",       "iwad_heretic_shareware", nullptr, MENUITEM_LALIGNED },
+   {it_variable, "Heretic (Reg):",      "iwad_heretic",           nullptr, MENUITEM_LALIGNED },
+   {it_variable, "Heretic SoSR:",       "iwad_heretic_sosr",      nullptr, MENUITEM_LALIGNED },
    {it_end}
 };
 
 static menuitem_t mn_wadiwad3_items[] =
 {
-   {it_title,    "Wad Options",             NULL,             "M_WADOPT"},
+   {it_title,    "Wad Options",             nullptr,          "M_WADOPT"},
    {it_gap},
-   {it_info,     "IWAD Paths - Freedoom",   NULL,             NULL, MENUITEM_CENTERED },
+   {it_info,     "IWAD Paths - Freedoom",   nullptr,          nullptr, MENUITEM_CENTERED },
    {it_gap}, 
-   {it_variable, "Freedoom Phase 1:",       "iwad_freedoomu", NULL, MENUITEM_LALIGNED },
-   {it_variable, "Freedoom Phase 2:",       "iwad_freedoom",  NULL, MENUITEM_LALIGNED },
-   {it_variable, "FreeDM:",                 "iwad_freedm",    NULL, MENUITEM_LALIGNED },
+   {it_variable, "Freedoom Phase 1:",       "iwad_freedoomu", nullptr, MENUITEM_LALIGNED },
+   {it_variable, "Freedoom Phase 2:",       "iwad_freedoom",  nullptr, MENUITEM_LALIGNED },
+   {it_variable, "FreeDM:",                 "iwad_freedm",    nullptr, MENUITEM_LALIGNED },
    {it_gap},
-   {it_info,     "Mission Packs",           NULL,            NULL, MENUITEM_CENTERED },
+   {it_info,     "Mission Packs",           nullptr,         nullptr, MENUITEM_CENTERED },
    {it_gap}, 
-   {it_variable, "No Rest for the Living:", "w_norestpath",  NULL, MENUITEM_LALIGNED },
+   {it_variable, "No Rest for the Living:", "w_norestpath",  nullptr, MENUITEM_LALIGNED },
    {it_end}
 };
 
 menu_t menu_loadwad =
 {
    mn_loadwad_items,            // menu items
-   NULL, 
+   nullptr,
    &menu_wadmisc,               // pages
    &menu_loadwad,               // rootpage
    120, 15,                     // x,y offsets
    4,                           // starting item
    mf_background,               // full screen 
-   NULL,
+   nullptr,
    mn_wad_names,
    mn_wad_pages,
 };
@@ -822,7 +816,7 @@ menu_t menu_wadmisc =
    200, 15,
    4,
    mf_background,
-   NULL,
+   nullptr,
    mn_wad_names,
    mn_wad_pages,
 };
@@ -836,7 +830,7 @@ menu_t menu_wadiwads1 =
    200, 15,
    4,
    mf_background,
-   NULL,
+   nullptr,
    mn_wad_names,
    mn_wad_pages,
 };
@@ -850,7 +844,7 @@ menu_t menu_wadiwads2 =
    200, 15,
    4,
    mf_background,
-   NULL,
+   nullptr,
    mn_wad_names,
    mn_wad_pages,
 };
@@ -859,12 +853,12 @@ menu_t menu_wadiwads3 =
 {
    mn_wadiwad3_items,
    &menu_wadiwads2,
-   NULL,
+   nullptr,
    &menu_loadwad,
    200, 15,
    4,
    mf_background,
-   NULL,
+   nullptr,
    mn_wad_names,
    mn_wad_pages,
 };
@@ -885,7 +879,7 @@ static const char *mn_gset_names[] =
    "monsters / boom features",
    "deathmatch flags",
    "chat macros",
-   NULL,
+   nullptr,
 };
 
 extern menu_t menu_gamesettings;
@@ -899,12 +893,12 @@ static menu_t *mn_gset_pages[] =
    &menu_advanced,
    &menu_dmflags,
    &menu_chatmacros,
-   NULL,
+   nullptr,
 };
 
 static menuitem_t mn_gamesettings_items[] =
 {
-   {it_title,    "Game Settings",        NULL,       "M_GSET"},
+   {it_title,    "Game Settings",        nullptr,    "M_GSET"},
    {it_gap},
    {it_info,     "General"},
    {it_toggle,   "game type",                  "gametype"},
@@ -920,19 +914,19 @@ static menuitem_t mn_gamesettings_items[] =
 menu_t menu_gamesettings =
 {
    mn_gamesettings_items,
-   NULL, 
+   nullptr,
    &menu_advanced,               // pages
    &menu_gamesettings,           // rootpage
    164, 15,
    3,                            // start
    mf_background,                // full screen
-   NULL,                         // no drawer
+   nullptr,                      // no drawer
    mn_gset_names,                // TOC stuff
    mn_gset_pages,
 };
 
         // level to start on
-VARIABLE_STRING(startlevel,    NULL,   9);
+VARIABLE_STRING(startlevel,    nullptr,9);
 CONSOLE_VARIABLE(startlevel, startlevel, cf_handlerset)
 {
    const char *newvalue;
@@ -949,7 +943,7 @@ CONSOLE_VARIABLE(startlevel, startlevel, cf_handlerset)
    {
       if(startlevel)
          Z_Free(startlevel);
-      startlevel = Z_Strdup(newvalue, PU_STATIC, 0);
+      startlevel = Z_Strdup(newvalue, PU_STATIC, nullptr);
    }
 }
 
@@ -966,7 +960,7 @@ CONSOLE_COMMAND(mn_gset, 0)            // just setting options from menu
 
 static menuitem_t mn_advanced_items[] =
 {
-   {it_title,    "Game Settings",              NULL,             "M_GSET"},
+   {it_title,    "Game Settings",              nullptr,          "M_GSET"},
    {it_gap},
    {it_info,     "Monsters"},
    {it_toggle,   "no monsters",                "nomonsters"},
@@ -989,7 +983,7 @@ menu_t menu_advanced =
    200, 15,
    3,                            // start
    mf_background,                // full screen
-   NULL,                         // no drawer
+   nullptr,                      // no drawer
    mn_gset_names,                // TOC stuff
    mn_gset_pages,
 };
@@ -1030,7 +1024,7 @@ enum
 
 static menuitem_t mn_dmflags_items[DMF_NUMITEMS] =
 {
-   { it_title,    "Deathmatch Flags",           NULL,            "M_DMFLAG"},
+   { it_title,    "Deathmatch Flags",           nullptr,         "M_DMFLAG"},
    { it_gap },
    { it_runcmd,   "Items respawn",              "mn_dfitem"      },
    { it_runcmd,   "Weapons stay",               "mn_dfweapstay"  },
@@ -1040,7 +1034,7 @@ static menuitem_t mn_dmflags_items[DMF_NUMITEMS] =
    { it_runcmd,   "Instagib",                   "mn_dfinstagib"  },
    { it_runcmd,   "Keep items on respawn",      "mn_dfkeepitems" },
    { it_gap },
-   { it_info,     "dmflags =",                  NULL,            NULL, MENUITEM_CENTERED },
+   { it_info,     "dmflags =",                  nullptr,         nullptr, MENUITEM_CENTERED },
    { it_end }
 };
 
@@ -1087,7 +1081,7 @@ static void MN_DMFlagsDrawer()
 
    menuitem = &(menu_dmflags.menuitems[DMF_MENU_DMFLAGS]);
    // draw dmflags value
-   psnprintf(buf, sizeof(buf), "%c%lu", GameModeInfo->infoColor, dmflags);
+   psnprintf(buf, sizeof(buf), "%c%u", GameModeInfo->infoColor, dmflags);
    V_FontWriteText(menu_font, buf, menuitem->x + 4, menuitem->y, &subscreen43);
 }
 
@@ -1095,7 +1089,7 @@ static void toggle_dm_flag(unsigned int flag)
 {
    char cmdbuf[64];
    dmflags ^= flag;
-   psnprintf(cmdbuf, sizeof(cmdbuf), "dmflags %lu", dmflags);
+   psnprintf(cmdbuf, sizeof(cmdbuf), "dmflags %u", dmflags);
    C_RunTextCmd(cmdbuf);
 }
 
@@ -1141,7 +1135,7 @@ CONSOLE_COMMAND(mn_dfkeepitems, cf_server|cf_hidden)
 
 static menuitem_t mn_chatmacros_items[] =
 {
-   {it_title,    "Chat Macros", NULL,         "M_CHATM"},
+   {it_title,    "Chat Macros", nullptr,      "M_CHATM"},
    {it_gap},
    {it_variable, "0:",          "chatmacro0"},
    {it_variable, "1:",          "chatmacro1"},
@@ -1160,12 +1154,12 @@ menu_t menu_chatmacros =
 {
    mn_chatmacros_items,
    &menu_dmflags, 
-   NULL,                                 // pages
+   nullptr,                              // pages
    &menu_gamesettings,                   // rootpage
    25, 15,                               // x, y offset
    2,                                    // chatmacro0 at start
    mf_background,                        // full-screen
-   NULL,                                 // no drawer
+   nullptr,                              // no drawer
    mn_gset_names,                        // TOC stuff
    mn_gset_pages,
 };
@@ -1186,7 +1180,7 @@ static void MN_PlayerDrawer(void);
 
 static menuitem_t mn_player_items[] =
 {
-   {it_title,          "Player Setup",         NULL,         "M_PLAYER"},
+   {it_title,          "Player Setup",         nullptr,      "M_PLAYER"},
    {it_gap},
    {it_variable,       "player name",          "name"},
    {it_toggle,         "player color",         "colour"},
@@ -1200,7 +1194,7 @@ static menuitem_t mn_player_items[] =
 menu_t menu_player =
 {
    mn_player_items,
-   NULL, NULL, NULL,                     // pages
+   nullptr, nullptr, nullptr,            // pages
    180, 5,                               // x, y offset
    2,                                    // chatmacro0 at start
    mf_background,                        // full-screen
@@ -1247,7 +1241,7 @@ void MN_PlayerDrawer()
        patch,
        players[consoleplayer].colormap ?
           translationtables[(players[consoleplayer].colormap - 1)] :
-          NULL,
+          nullptr,
        false
       );
 }
@@ -1255,381 +1249,6 @@ void MN_PlayerDrawer()
 CONSOLE_COMMAND(mn_player, 0)
 {
    MN_StartMenu(&menu_player);
-}
-
-
-/////////////////////////////////////////////////////////////////
-//
-// Load Game
-//
-
-//
-// NETCODE_FIXME: Ensure that loading/saving are handled properly in
-// netgames when it comes to the menus. Some deficiencies have already
-// been caught in the past, so some may still exist.
-//
-
-// haleyjd: numerous fixes here from 8-17 version of SMMU
-
-#define SAVESTRINGSIZE  24
-
-// load/save box patches
-patch_t *patch_left, *patch_mid, *patch_right;
-
-static void MN_SaveGame()
-{
-   int save_slot = 
-      static_cast<int>((char **)(Console.command->variable->variable) - savegamenames);
-   
-   if(gamestate != GS_LEVEL) 
-      return; // only save in level
-   
-   if(save_slot < 0 || save_slot >= SAVESLOTS)
-      return; // sanity check
-   
-   G_SaveGame(save_slot, savegamenames[save_slot]);
-   MN_ClearMenus();
-   
-   // haleyjd 02/23/02: restored from MBF
-   if(quickSaveSlot == -2)
-      quickSaveSlot = save_slot;
-   
-   // haleyjd: keep track of valid saveslots
-   savegamepresent[save_slot] = true;
-
-   // haleyjd 10/08/08: GIF_SAVESOUND flag
-   if(GameModeInfo->flags & GIF_SAVESOUND)
-      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
-}
-
-// create the savegame console commands
-void MN_CreateSaveCmds()
-{
-   for(int i = 0; i < SAVESLOTS; i++)  // haleyjd
-   {
-      command_t  *save_command;
-      variable_t *save_variable;
-      char tempstr[16];
-
-      // create the variable first
-      save_variable = estructalloc(variable_t, 1);
-      save_variable->variable  = &savegamenames[i];
-      save_variable->v_default = NULL;
-      save_variable->type      = vt_string;      // string value
-      save_variable->min       = 0;
-      save_variable->max       = SAVESTRINGSIZE;
-      save_variable->defines   = NULL;
-      
-      // now the command
-      save_command = estructalloc(command_t, 1);
-      
-      sprintf(tempstr, "savegame_%i", i);
-      save_command->name     = estrdup(tempstr);
-      save_command->type     = ct_variable;
-      save_command->flags    = 0;
-      save_command->variable = save_variable;
-      save_command->handler  = MN_SaveGame;
-      save_command->netcmd   = 0;
-      
-      C_AddCommand(save_command); // hook into cmdlist
-   }
-}
-
-
-//
-// MN_ReadSaveStrings
-//  read the strings from the savegame files
-// based on the mbf sources
-//
-static void MN_ReadSaveStrings()
-{
-   for(int i = 0; i < SAVESLOTS; i++)
-   {
-      char *name = NULL;    // killough 3/22/98
-      size_t len;
-      char description[SAVESTRINGSIZE+1]; // sf
-      FILE *fp;  // killough 11/98: change to use stdio
-
-      len = M_StringAlloca(&name, 2, 26, basesavegame, savegamename);
-
-      G_SaveGameName(name, len, i);
-
-      // haleyjd: fraggle got rid of this - perhaps cause of the crash?
-      //          I've re-implemented it below to try to resolve the
-      //          zoneid check error -- bingo, along with new init code.
-      // if(savegamenames[i])
-      //  Z_Free(savegamenames[i]);
-
-      fp = fopen(name,"rb");
-      if(!fp)
-      {   // Ty 03/27/98 - externalized:
-         // haleyjd
-         if(savegamenames[i])
-            Z_Free(savegamenames[i]);
-         savegamenames[i] = Z_Strdup(DEH_String("EMPTYSTRING"), PU_STATIC, 0);
-         continue;
-      }
-
-      memset(description, 0, sizeof(description));
-      if(fread(description, SAVESTRINGSIZE, 1, fp) < 1)
-         doom_printf("%s", FC_ERROR "Warning: savestring read failed");
-      if(savegamenames[i])
-         Z_Free(savegamenames[i]);
-      savegamenames[i] = Z_Strdup(description, PU_STATIC, 0);  // haleyjd
-      savegamepresent[i] = true;
-      fclose(fp);
-   }
-}
-
-static void MN_DrawSaveLoadBorder(int x, int y)
-{
-   patch_left  = PatchLoader::CacheName(wGlobalDir, "M_LSLEFT", PU_STATIC);
-   patch_mid   = PatchLoader::CacheName(wGlobalDir, "M_LSCNTR", PU_STATIC);
-   patch_right = PatchLoader::CacheName(wGlobalDir, "M_LSRGHT", PU_STATIC);
-
-   V_DrawPatch(x - 8, y + 7, &subscreen43, patch_left);
-   
-   for(int i = 0; i < 24; i++)
-   {
-      V_DrawPatch(x, y + 7, &subscreen43, patch_mid);
-      x += 8;
-   }
-   
-   V_DrawPatch(x, y + 7, &subscreen43, patch_right);
-
-   // haleyjd: make purgable
-   Z_ChangeTag(patch_left,  PU_CACHE);
-   Z_ChangeTag(patch_mid,   PU_CACHE);
-   Z_ChangeTag(patch_right, PU_CACHE);
-}
-
-static void MN_LoadGameDrawer();
-
-// haleyjd: all saveslot names changed to be consistent
-
-static menuitem_t mn_loadgame_items[] =
-{
-   {it_runcmd, "save slot 0",       "mn_load 0"},
-   {it_runcmd, "save slot 1",       "mn_load 1"},
-   {it_runcmd, "save slot 2",       "mn_load 2"},
-   {it_runcmd, "save slot 3",       "mn_load 3"},
-   {it_runcmd, "save slot 4",       "mn_load 4"},
-   {it_runcmd, "save slot 5",       "mn_load 5"},
-   {it_runcmd, "save slot 6",       "mn_load 6"},
-   {it_runcmd, "save slot 7",       "mn_load 7"},
-   {it_end}
-};
-
-menu_t menu_loadgame =
-{
-   mn_loadgame_items,
-   NULL, NULL, NULL,                 // pages
-   80, 44,                           // x, y
-   0,                                // starting slot
-   mf_skullmenu | mf_emulated,       // skull menu
-   MN_LoadGameDrawer,
-};
-
-
-static void MN_LoadGameDrawer()
-{
-   static char *emptystr = NULL;
-
-   V_DrawPatch(72, 18, &subscreen43, PatchLoader::CacheName(wGlobalDir, "M_LOADG", PU_CACHE));
-
-   if(!emptystr)
-      emptystr = estrdup(DEH_String("EMPTYSTRING"));
-   
-   for(int i = 0;  i < SAVESLOTS; i++)
-   {
-      MN_DrawSaveLoadBorder(menu_loadgame.x, menu_loadgame.y + i*16);
-      menu_loadgame.menuitems[i].description =
-         savegamenames[i] ? savegamenames[i] : emptystr;
-   }
-}
-
-CONSOLE_COMMAND(mn_loadgame, 0)
-{
-   if(netgame && !demoplayback)
-   {
-      MN_Alert("%s", DEH_String("LOADNET"));
-      return;
-   }
-   
-   // haleyjd 02/23/02: restored from MBF
-   if(demorecording) // killough 5/26/98: exclude during demo recordings
-   {
-      MN_Alert("you can't load a game\n"
-               "while recording a demo!\n\n" PRESSKEY);
-      return;
-   }
-   
-   MN_ReadSaveStrings();  // get savegame descriptions
-   MN_StartMenu(GameModeInfo->loadMenu);
-}
-
-CONSOLE_COMMAND(mn_load, 0)
-{
-   char *name;     // killough 3/22/98
-   int slot;
-   size_t len;
-   
-   if(Console.argc < 1)
-      return;
-   
-   slot = Console.argv[0]->toInt();
-   
-   // haleyjd 08/25/02: giant bug here
-   if(!savegamepresent[slot])
-   {
-      MN_Alert("You can't load an empty game!\n%s", DEH_String("PRESSKEY"));
-      return;     // empty slot
-   }
-
-   len = M_StringAlloca(&name, 2, 26, basesavegame, savegamename);
-   
-   G_SaveGameName(name, len, slot);
-   G_LoadGame(name, slot, false);
-   
-   MN_ClearMenus();
-
-   // haleyjd 10/08/08: GIF_SAVESOUND flag
-   if(GameModeInfo->flags & GIF_SAVESOUND)
-      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
-}
-
-// haleyjd 02/23/02: Quick Load -- restored from MBF and converted
-// to use console commands
-CONSOLE_COMMAND(quickload, 0)
-{
-   char tempstring[80];
-   
-   if(netgame && !demoplayback)
-   {
-      MN_Alert("%s", DEH_String("QLOADNET"));
-      return;
-   }
-
-   if(demorecording)
-   {
-      MN_Alert("you can't quickload\n"
-               "while recording a demo!\n\n" PRESSKEY);
-      return;
-   }
-
-   if(quickSaveSlot < 0)
-   {
-      MN_Alert("%s", DEH_String("QSAVESPOT"));
-      return;
-   }
-   
-   psnprintf(tempstring, sizeof(tempstring), s_QLPROMPT,
-             savegamenames[quickSaveSlot]);
-   MN_Question(tempstring, "qload");
-}
-
-CONSOLE_COMMAND(qload, cf_hidden)
-{
-   char *name = NULL;     // killough 3/22/98
-   size_t len;
-
-   len = M_StringAlloca(&name, 2, 26, basesavegame, savegamename);
-   
-   G_SaveGameName(name, len, quickSaveSlot);
-   G_LoadGame(name, quickSaveSlot, false);
-}
-
-/////////////////////////////////////////////////////////////////
-//
-// Save Game
-//
-
-static void MN_SaveGameDrawer();
-
-// haleyjd: fixes continue here from 8-17 build
-
-static menuitem_t mn_savegame_items[] =
-{
-   {it_variable, "",                          "savegame_0"},
-   {it_variable, "",                          "savegame_1"},
-   {it_variable, "",                          "savegame_2"},
-   {it_variable, "",                          "savegame_3"},
-   {it_variable, "",                          "savegame_4"},
-   {it_variable, "",                          "savegame_5"},
-   {it_variable, "",                          "savegame_6"},
-   {it_variable, "",                          "savegame_7"},
-   {it_end}
-};
-
-menu_t menu_savegame = 
-{
-   mn_savegame_items,
-   NULL, NULL, NULL,                 // pages
-   80, 44,                           // x, y
-   0,                                // starting slot
-   mf_skullmenu | mf_emulated,       // skull menu
-   MN_SaveGameDrawer,
-};
-
-static void MN_SaveGameDrawer()
-{
-   V_DrawPatch(72, 18, &subscreen43, PatchLoader::CacheName(wGlobalDir, "M_SAVEG", PU_CACHE));
-
-   for(int i = 0; i < SAVESLOTS; i++)
-      MN_DrawSaveLoadBorder(menu_savegame.x, menu_savegame.y + 16*i);
-}
-
-CONSOLE_COMMAND(mn_savegame, 0)
-{
-   // haleyjd 02/23/02: restored from MBF
-   // killough 10/6/98: allow savegames during single-player demo 
-   // playback
-   
-   if(!usergame && (!demoplayback || netgame))
-   {
-      MN_Alert("%s", DEH_String("SAVEDEAD")); // Ty 03/27/98 - externalized
-      return;
-   }
-   
-   if(gamestate != GS_LEVEL)
-      return;    // only save in levels
-   
-   MN_ReadSaveStrings();
-
-   MN_StartMenu(GameModeInfo->saveMenu);
-}
-
-// haleyjd 02/23/02: Quick Save -- restored from MBF, converted to
-// use console commands
-CONSOLE_COMMAND(quicksave, 0)
-{
-   char tempstring[80];
-
-   if(!usergame && (!demoplayback || netgame))  // killough 10/98
-   {
-      S_StartInterfaceSound(GameModeInfo->playerSounds[sk_oof]);
-      return;
-   }
-   
-   if(gamestate != GS_LEVEL)
-      return;
-  
-   if(quickSaveSlot < 0)
-   {
-      quickSaveSlot = -2; // means to pick a slot now
-      MN_ReadSaveStrings();
-      MN_StartMenu(GameModeInfo->saveMenu);
-      return;
-   }
-   
-   psnprintf(tempstring, sizeof(tempstring), s_QSPROMPT,
-             savegamenames[quickSaveSlot]);
-   MN_Question(tempstring, "qsave");
-}
-
-CONSOLE_COMMAND(qsave, cf_hidden)
-{
-   G_SaveGame(quickSaveSlot, savegamenames[quickSaveSlot]);
 }
 
 /////////////////////////////////////////////////////////////////
@@ -1646,23 +1265,24 @@ static const char *mn_optionpg_names[] =
 {
    "io / game options / widgets",
    "multiplayer / files / menus / info",
-   NULL
+   nullptr
 };
 
 static menu_t *mn_options_pages[] =
 {
    &menu_options,
    &menu_optionsp2,
-   NULL
+   nullptr
 };
 
 static menuitem_t mn_options_items[] =
 {
-   {it_title,  "Options",               NULL,             "M_OPTION"},
+   {it_title,  "Options",               nullptr,          "M_OPTION"},
    {it_gap},
    {it_info,   "Input/Output"},
    {it_runcmd, "Key bindings",          "mn_bindings" },
-   {it_runcmd, "Mouse / Gamepad",       "mn_mouse"    },
+   {it_runcmd, "Mouse Options",         "mn_mouse"    },
+   {it_runcmd, "Gamepad Options",       "mn_gamepad"  },
    {it_runcmd, "Video Options",         "mn_video"    },
    {it_runcmd, "Sound Options",         "mn_sound"    },
    {it_gap},
@@ -1680,7 +1300,7 @@ static menuitem_t mn_options_items[] =
 
 static menuitem_t mn_optionsp2_items[] =
 {
-   {it_title,  "Options",                NULL,             "M_OPTION"},
+   {it_title,  "Options",                nullptr,          "M_OPTION"},
    {it_gap},
    {it_info,   "Multiplayer"},
    {it_runcmd, "Player Setup",           "mn_player"  },
@@ -1703,13 +1323,13 @@ static menuitem_t mn_optionsp2_items[] =
 menu_t menu_options =
 {
    mn_options_items,
-   NULL, 
+   nullptr,
    &menu_optionsp2,                      // pages
    &menu_options,                        // rootpage
    100, 15,                              // x,y offsets
    3,                                    // starting item: first selectable
    mf_background|mf_centeraligned,       // draw background: not a skull menu
-   NULL,                                 // no drawer
+   nullptr,                              // no drawer
    mn_optionpg_names,                    // TOC stuff
    mn_options_pages
 };
@@ -1739,12 +1359,12 @@ menu_t menu_optionsp2 =
 {
    mn_optionsp2_items,
    &menu_options,
-   NULL,
+   nullptr,
    &menu_options, // rootpage
    100, 15,
    3,
    mf_background|mf_centeraligned,
-   NULL,
+   nullptr,
    mn_optionpg_names,
    mn_options_pages
 };
@@ -1771,18 +1391,18 @@ int mn_favaspectratio;
 
 static const char *aspect_ratio_desc[] =
 {
-   "Legacy", "5:4", "4:3", "3:2", "16:10", "5:3", "WSVGA", "16:9"
+   "Legacy", "5:4", "4:3", "3:2", "16:10", "5:3", "WSVGA", "16:9", "21:9"
 };
 
-VARIABLE_INT(mn_favaspectratio, NULL, 0, AR_NUMASPECTRATIOS-1, aspect_ratio_desc);
+VARIABLE_INT(mn_favaspectratio, nullptr, 0, AR_NUMASPECTRATIOS-1, aspect_ratio_desc);
 CONSOLE_VARIABLE(mn_favaspectratio, mn_favaspectratio, 0) {}
 
 // haleyjd 06/19/11: user's favored fullscreen/window setting
 int mn_favscreentype;
 
-static const char *screen_type_desc[] = { "windowed", "fullscreen" };
+static const char *screen_type_desc[] = { "windowed", "fs desktop", "exclusive fs" };
 
-VARIABLE_INT(mn_favscreentype, NULL, 0, MN_NUMSCREENTYPES-1, screen_type_desc);
+VARIABLE_INT(mn_favscreentype, nullptr, 0, MN_NUMSCREENTYPES-1, screen_type_desc);
 CONSOLE_VARIABLE(mn_favscreentype, mn_favscreentype, 0) {}
 
 // Video mode lists, per aspect ratio
@@ -1797,7 +1417,7 @@ static const char *legacyModes[] =
    "960x600",  // x3
    "960x720",  // x3 with aspect ratio correction
    "1280x960", // x4 with aspect ratio correction  
-   NULL
+   nullptr
 };
 
 // 5:4 modes (1.25 / 0.8)
@@ -1810,7 +1430,7 @@ static const char *fiveFourModes[] =
    "1280x1024", // Most common 5:4 mode (name?)
    "1400x1120",
    "1600x1280",
-   NULL
+   nullptr
 };
 
 // 4:3 modes (1.333... / 0.75)
@@ -1823,7 +1443,7 @@ static const char *fourThreeModes[] =
    "1400x1050", // SXGA+
    "1600x1200", // UGA
    "2048x1536", // QXGA
-   NULL
+   nullptr
 };
 
 // 3:2 modes (1.5 / 0.666...)
@@ -1836,7 +1456,7 @@ static const char *threeTwoModes[] =
    "1280x854",
    "1440x960",
    "1680x1120",
-   NULL
+   nullptr
 };
 
 // 16:10 modes (1.6 / 0.625)
@@ -1848,7 +1468,7 @@ static const char *sixteenTenModes[] =
    "1920x1200", // WUXGA
    "2560x1600", // WQXGA
    "2880x1800", // Apple Retina Display (current max resolution)
-   NULL
+   nullptr
 };
 
 // 5:3 modes (1.666... / 0.6)
@@ -1861,14 +1481,14 @@ static const char *fiveThreeModes[] =
    "1400x840",
    "1600x960",
    "2560x1536",
-   NULL
+   nullptr
 };
 
 // "WSVGA" modes (128:75 or 16:9.375: 1.70666... / 0.5859375)
 static const char *wsvgaModes[] =
 {
    "1024x600", // WSVGA (common netbook resolution)
-   NULL
+   nullptr
 };
 
 // 16:9 modes (1.777... / 0.5625)
@@ -1882,7 +1502,16 @@ static const char *sixteenNineModes[] =
    "1920x1080", // HD1080
    "2048x1152",
    "2880x1620",
-   NULL
+   nullptr
+};
+
+// 21:9 modes (2.333... / 0.428571...)
+static const char *twentyoneNineModes[] =
+{
+   "1720x720",
+   "2560x1080",
+   "3440x1440",
+   nullptr
 };
 
 // TODO: Not supported as menu choices yet:
@@ -1891,48 +1520,52 @@ static const char *sixteenNineModes[] =
 
 static const char **resListForAspectRatio[AR_NUMASPECTRATIOS] =
 {
-   legacyModes,      // Low-res 16:10, 4:3 modes and their multiples
-   fiveFourModes,    // 5:4 - very square
-   fourThreeModes,   // 4:3 (standard CRT)
-   threeTwoModes,    // 3:2 (similar to European TV)
-   sixteenTenModes,  // 16:10, common LCD widescreen monitors
-   fiveThreeModes,   // 5:3 
-   wsvgaModes,       // 128:75 (or 16:9.375), common netbook resolution
-   sixteenNineModes  // 16:9, consumer HD widescreen TVs/monitors
+   legacyModes,        // Low-res 16:10, 4:3 modes and their multiples
+   fiveFourModes,      // 5:4 - very square
+   fourThreeModes,     // 4:3 (standard CRT)
+   threeTwoModes,      // 3:2 (similar to European TV)
+   sixteenTenModes,    // 16:10, common LCD widescreen monitors
+   fiveThreeModes,     // 5:3 
+   wsvgaModes,         // 128:75 (or 16:9.375), common netbook resolution
+   sixteenNineModes,   // 16:9, consumer HD widescreen TVs/monitors
+   twentyoneNineModes, // 21:9, consumder HD ultrawide TVs/monitors
 };
 
 static int mn_vidmode_num;
 static char **mn_vidmode_desc;
 static char **mn_vidmode_cmds;
 
-//
-// MN_BuildVidmodeTables
+enum class tableType_e
+{
+   VIDEO_MODE,
+   RESOLUTION
+};
+
 //
 // haleyjd 06/19/11: Resurrected and restructured to allow choosing modes
 // from the precomposited lists above based on the user's favorite aspect
 // ratio and fullscreen/windowed settings.
 //
-static void MN_BuildVidmodeTables()
+static void MN_BuildVidmodeTables(const tableType_e type)
 {
    int useraspect = mn_favaspectratio;
    int userfs     = mn_favscreentype;
-   const char **reslist = NULL;
-   int i = 0;
-   int nummodes;
+   const char **reslist = nullptr;
+   int offset = 0;
 
    if(mn_vidmode_desc)
    {
-      for(i = 0; i < mn_vidmode_num; i++)
+      for(int i = 0; i < mn_vidmode_num; i++)
          efree(mn_vidmode_desc[i]);
       efree(mn_vidmode_desc);
-      mn_vidmode_desc = NULL;
+      mn_vidmode_desc = nullptr;
    }
    if(mn_vidmode_cmds)
    {
-      for(i = 0; i < mn_vidmode_num; i++)
+      for(int i = 0; i < mn_vidmode_num; i++)
          efree(mn_vidmode_cmds[i]);
       efree(mn_vidmode_cmds);
-      mn_vidmode_cmds = NULL;
+      mn_vidmode_cmds = nullptr;
    }
 
    // pick the list of resolutions to use
@@ -1942,50 +1575,78 @@ static void MN_BuildVidmodeTables()
       reslist = resListForAspectRatio[AR_LEGACY]; // A safe pick.
 
    // count the modes on that list
-   while(reslist[i])
-      ++i;
+   mn_vidmode_num = 0;
+   while(reslist[mn_vidmode_num])
+      mn_vidmode_num++;
 
-   nummodes = i;
+   if(type == tableType_e::RESOLUTION)
+   {
+      mn_vidmode_num++;
+      offset = 1;
+   }
 
    // allocate arrays
-   mn_vidmode_desc = ecalloc(char **, i+1, sizeof(const char *));
-   mn_vidmode_cmds = ecalloc(char **, i+1, sizeof(const char *));
+   mn_vidmode_desc = ecalloc(char **, mn_vidmode_num+1, sizeof(const char *));
+   mn_vidmode_cmds = ecalloc(char **, mn_vidmode_num+1, sizeof(const char *));
 
-   for(i = 0; i < nummodes; i++)
+   if(type == tableType_e::RESOLUTION)
+   {
+      mn_vidmode_desc[0] = estrdup("native");
+      mn_vidmode_cmds[0] = estrdup("i_resolution native");
+   }
+
+   const char *cmdstr = (type == tableType_e::RESOLUTION) ? "i_resolution" : "i_videomode";
+   for(int i = offset; i < mn_vidmode_num; i++)
    {
       qstring cmd, description;
 
-      description = reslist[i];
-      switch(userfs)
+      description = reslist[i - offset];
+      if(type == tableType_e::VIDEO_MODE)
       {
-      case MN_FULLSCREEN:
-         description += 'f';
-         break;
-      case MN_WINDOWED:
-      default:
-         description += 'w';
-         break;
+         switch(userfs)
+         {
+         case MN_FULLSCREEN:
+            description += 'f';
+            break;
+         case MN_FULLSCREEN_DESKTOP:
+            description += 'd';
+            break;
+         case MN_WINDOWED:
+         default:
+            description += 'w';
+            break;
+         }
       }
 
       // set the mode description
       mn_vidmode_desc[i] = description.duplicate();
-      
-      cmd << "i_videomode " << description;
-      
+
+      cmd << cmdstr << " " << description;
+
       mn_vidmode_cmds[i] = cmd.duplicate();
    }
 
    // null-terminate the lists
-   mn_vidmode_desc[nummodes] = NULL;
-   mn_vidmode_cmds[nummodes] = NULL;
+   mn_vidmode_desc[mn_vidmode_num] = nullptr;
+   mn_vidmode_cmds[mn_vidmode_num] = nullptr;
+}
+
+CONSOLE_COMMAND(mn_resolution, cf_hidden)
+{
+   MN_BuildVidmodeTables(tableType_e::RESOLUTION);
+
+   MN_SetupBoxWidget("Choose a Resolution",
+                     (const char **)mn_vidmode_desc, boxwidget_command, nullptr,
+                     (const char **)mn_vidmode_cmds);
+   MN_ShowBoxWidget();
 }
 
 CONSOLE_COMMAND(mn_vidmode, cf_hidden)
 {
-   MN_BuildVidmodeTables();
+   MN_BuildVidmodeTables(tableType_e::VIDEO_MODE);
 
    MN_SetupBoxWidget("Choose a Video Mode", 
-                     (const char **)mn_vidmode_desc, 1, NULL, 
+                     (const char **)mn_vidmode_desc, boxwidget_command, nullptr,
                      (const char **)mn_vidmode_cmds);
    MN_ShowBoxWidget();
 }
@@ -2008,7 +1669,7 @@ static const char *mn_vidpage_names[] =
    "System / Console",
    "Particles",
    "Advanced / OpenGL",
-   NULL
+   nullptr
 };
 
 static menu_t *mn_vidpage_menus[] =
@@ -2018,74 +1679,41 @@ static menu_t *mn_vidpage_menus[] =
    &menu_video_pg2,
    &menu_particles,
    &menu_vidadv,
-   NULL
+   nullptr
 };
-
-static void MN_VideoModeDrawer();
 
 static menuitem_t mn_video_items[] =
 {
-   {it_title,        "Video Options",           NULL, "m_video"},
+   {it_title,        "Video Options",           nullptr, "m_video"     },
    {it_gap},
    {it_info,         "Mode"                                            },
    {it_runcmd,       "Choose a mode...",        "mn_vidmode"           },
    {it_variable,     "Video mode",              "i_videomode"          },
+   {it_runcmd,       "Choose a resolution...",  "mn_resolution"        },
+   {it_variable,     "Renderer resolution",     "i_resolution"         },
    {it_toggle,       "Favorite aspect ratio",   "mn_favaspectratio"    },
+   {it_gap},
+   {it_info,         "Display Properties"                              },
    {it_toggle,       "Favorite screen mode",    "mn_favscreentype"     },
    {it_toggle,       "Display number",          "displaynum"           },
    {it_toggle,       "Vertical sync",           "v_retrace"            },
    {it_slider,       "Gamma correction",        "gamma"                },
-   {it_gap},
-   {it_info,         "Rendering"                                       },
-   {it_slider,       "Screen size",             "screensize"           },
-   {it_toggle,       "HOM detector flashes",    "r_homflash"           },
-   {it_toggle,       "Translucency",            "r_trans"              },
-   {it_variable,     "Opacity percentage",      "r_tranpct"            },
    {it_end}
 };
 
 menu_t menu_video =
 {
    mn_video_items,
-   NULL,                 // prev page
+   nullptr,              // prev page
    &menu_sysvideo,       // next page
    &menu_video,          // rootpage
    200, 15,              // x,y offset
    3,                    // start on first selectable
    mf_background,        // full-screen menu
-   MN_VideoModeDrawer,
+   nullptr,
    mn_vidpage_names,
    mn_vidpage_menus
 };
-
-static void MN_VideoModeDrawer()
-{
-   int lump, y;
-   patch_t *patch;
-   spritedef_t *sprdef;
-   spriteframe_t *sprframe;
-   int frame = E_SafeState(GameModeInfo->transFrame);
-
-   // draw an imp fireball
-
-   // don't draw anything before the menu has been initialized
-   if(!(menu_video.menuitems[14].flags & MENUITEM_POSINIT))
-      return;
-   
-   sprdef = &sprites[states[frame]->sprite];
-   // haleyjd 08/15/02
-   if(!(sprdef->spriteframes))
-      return;
-   sprframe = &sprdef->spriteframes[0];
-   lump = sprframe->lump[0];
-   
-   patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
-   
-   // approximately center box on "translucency" item in menu
-   y = menu_video.menuitems[14].y - 5;
-   V_DrawBox(270, y, 20, 20);
-   V_DrawPatchTL(282, y + 12, &subscreen43, patch, NULL, FTRANLEVEL);
-}
 
 CONSOLE_COMMAND(mn_video, 0)
 {
@@ -2094,21 +1722,29 @@ CONSOLE_COMMAND(mn_video, 0)
 
 static menuitem_t mn_sysvideo_items[] =
 {
-   { it_title,  "Video Options",            NULL, "m_video" },
+   { it_title,  "Video Options",            nullptr, "m_video" },
    { it_gap },
-   { it_info,   "Framerate"   },
-   { it_toggle, "Uncapped framerate",       "d_fastrefresh" },
-   { it_toggle, "Interpolation",            "d_interpolate" },
+   { it_info,     "Rendering"                                    },
+   { it_slider,   "Screen size",              "screensize"       },
+   { it_toggle,   "Renderer threads",         "r_numcontexts"    },
+   { it_toggle,   "HOM detector flashes",     "r_homflash"       },
+   { it_toggle,   "Translucency",             "r_trans"          },
+   { it_variable, "Opacity percentage",       "r_tranpct"        },
+   { it_toggle,   "Stock Doom object style",  "r_tlstyle"        },
+   { it_toggle,   "Sprite projection style",  "r_sprprojstyle"   },
    { it_gap },
-   { it_info,   "Screenshots"},
-   { it_toggle, "Screenshot format",        "shot_type"     },
-   { it_toggle, "Gamma correct shots",      "shot_gamma"    },
+   { it_info,     "Framerate"   },
+   { it_toggle,   "Uncapped framerate",       "d_fastrefresh"    },
+   { it_toggle,   "Interpolation",            "d_interpolate"    },
    { it_gap },
-   { it_info,   "Screen Wipe" },
-   { it_toggle, "Wipe style",               "wipetype"      },
-   { it_toggle, "Game waits for wipe",      "wipewait"      },
+   { it_info,     "Screen Wipe" },
+   { it_toggle,   "Wipe style",               "wipetype"         },
+   { it_toggle,   "Game waits for wipe",      "wipewait"         },
    { it_end }
 };
+
+
+static void MN_SysVideoModeDrawer();
 
 menu_t menu_sysvideo =
 {
@@ -2119,14 +1755,53 @@ menu_t menu_sysvideo =
    200, 15,              // x,y offset
    3,                    // start on first selectable
    mf_background,        // full-screen menu
-   NULL,
+   MN_SysVideoModeDrawer,
    mn_vidpage_names,
    mn_vidpage_menus
 };
 
+static void MN_SysVideoModeDrawer()
+{
+   int lump, y;
+   patch_t *patch;
+   spritedef_t *sprdef;
+   spriteframe_t *sprframe;
+   int frame = E_SafeState(GameModeInfo->transFrame);
+
+   // draw an imp fireball
+
+   // don't draw anything before the menu has been initialized
+   if(!(menu_sysvideo.menuitems[5].flags & MENUITEM_POSINIT))
+      return;
+
+   sprdef = &sprites[states[frame]->sprite];
+   // haleyjd 08/15/02
+   if(!(sprdef->spriteframes))
+      return;
+   sprframe = &sprdef->spriteframes[0];
+   lump = sprframe->lump[0];
+
+   patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
+
+   // approximately center box on "translucency" item in menu
+   y = menu_video.menuitems[5].y - 5;
+   V_DrawBox(270, y, 20, 20);
+   if(r_tlstyle == R_TLSTYLE_BOOM)
+      V_DrawPatchTL(282, y + 12, &subscreen43, patch, nullptr, FTRANLEVEL);
+   else if(r_tlstyle == R_TLSTYLE_NEW)
+      V_DrawPatchAdd(282, y + 12, &subscreen43, patch, nullptr, FTRANLEVEL);
+   else
+      V_DrawPatch(282, y + 12, &subscreen43, patch);
+}
+
+
 static menuitem_t mn_video_page2_items[] =
 {
-   {it_title,    "Video Options",           NULL, "m_video"},
+   {it_title,    "Video Options",           nullptr, "m_video"},
+   {it_gap },
+   {it_info,     "Screenshots"},
+   {it_toggle,   "Screenshot format",       "shot_type"},
+   {it_toggle,   "Gamma correct shots",     "shot_gamma"},
    {it_gap},
    {it_info,     "System"},
    {it_toggle,   "DOS-like startup",        "textmode_startup"},
@@ -2151,14 +1826,14 @@ menu_t menu_video_pg2 =
    200, 15,              // x,y offset
    3,                    // start on first selectable
    mf_background,        // full-screen menu
-   NULL,
+   nullptr,
    mn_vidpage_names,
    mn_vidpage_menus
 };
 
 static menuitem_t mn_particles_items[] =
 {
-   {it_title,  "Video Options", NULL,              "m_video"},
+   {it_title,  "Video Options", nullptr,           "m_video"},
    {it_gap},
    {it_info,   "Particles"},
    {it_toggle, "Render particle effects",  "draw_particles"},
@@ -2184,7 +1859,7 @@ menu_t menu_particles =
    200, 15,              // x,y offset
    3,                    // start on first selectable
    mf_background,        // full-screen menu
-   NULL,
+   nullptr,
    mn_vidpage_names,
    mn_vidpage_menus
 };
@@ -2197,7 +1872,7 @@ CONSOLE_COMMAND(mn_particle, 0)
 // Advanced video option items
 static menuitem_t mn_vidadv_items[] =
 {
-   { it_title,    "Video Options",    NULL,                "m_video" },
+   { it_title,    "Video Options",    nullptr,             "m_video" },
    { it_gap },
    { it_info,     "Advanced"},
    { it_toggle,   "Video driver",             "i_videodriverid"    },
@@ -2216,12 +1891,12 @@ menu_t menu_vidadv =
 {
    mn_vidadv_items,      // menu items
    &menu_particles,      // previous page
-   NULL,                 // next page
+   nullptr,              // next page
    &menu_video,          // rootpage
    200, 15,              // x,y offset
    3,                    // start on first selectable
    mf_background,        // full-screen menu
-   NULL,
+   nullptr,
    mn_vidpage_names,
    mn_vidpage_menus
 };
@@ -2239,19 +1914,19 @@ static const char *mn_sndpage_names[] =
 {
    "Volume / Setup / Misc",
    "Equalizer",
-   NULL
+   nullptr
 };
 
 static menu_t *mn_sndpage_menus[] =
 {
    &menu_sound,
    &menu_soundeq,
-   NULL
+   nullptr
 };
 
 static menuitem_t mn_sound_items[] =
 {
-   {it_title,      "Sound Options",       NULL, "m_sound"},
+   {it_title,      "Sound Options",       nullptr, "m_sound"},
    {it_gap},
    {it_info,       "Volume"},
    {it_slider,     "Sfx volume",                   "sfx_volume"},
@@ -2276,13 +1951,13 @@ static menuitem_t mn_sound_items[] =
 menu_t menu_sound =
 {
    mn_sound_items,
-   NULL,                 // previous page
+   nullptr,              // previous page
    &menu_soundeq,        // next page
    &menu_sound,          // root page
    180, 15,              // x, y offset
    3,                    // first selectable
    mf_background,        // full-screen menu
-   NULL,
+   nullptr,
    mn_sndpage_names,
    mn_sndpage_menus
 };
@@ -2294,7 +1969,7 @@ CONSOLE_COMMAND(mn_sound, 0)
 
 static menuitem_t mn_soundeq_items[] =
 {
-   { it_title,      "Sound Options",          NULL, "m_sound" },
+   { it_title,      "Sound Options",          nullptr, "m_sound" },
    { it_gap },
    { it_info,       "Equalizer"                               },
    { it_slider,     "Low band gain",          "s_lowgain"     },
@@ -2310,44 +1985,41 @@ menu_t menu_soundeq =
 {
    mn_soundeq_items,
    &menu_sound,          // previous page
-   NULL,                 // next page
+   nullptr,              // next page
    &menu_sound,          // root page
    180, 15,              // x, y offset
    3,                    // first selectable
    mf_background,        // full-screen menu
-   NULL,
+   nullptr,
    mn_sndpage_names,
    mn_sndpage_menus
 };
 
 /////////////////////////////////////////////////////////////////
 //
-// Mouse & Joystick Options
+// Mouse Options
 //
 
-static const char *mn_mousejoy_names[] =
+static const char *mn_mouse_names[] =
 {
    "Mouse Settings",
    "Acceleration / Mouselook",
-   "Gamepad Settings",
-   NULL
+   nullptr
 };
 
 extern menu_t menu_mouse;
 extern menu_t menu_mouse_accel_and_mlook;
-extern menu_t menu_joystick;
 
-static menu_t *mn_mousejoy_pages[] =
+static menu_t *mn_mouse_pages[] =
 {
    &menu_mouse,
    &menu_mouse_accel_and_mlook,
-   &menu_joystick,
-   NULL
+   nullptr
 };
 
 static menuitem_t mn_mouse_items[] =
 {
-   {it_title,      "Mouse Settings",                NULL, "M_MOUSE"  },
+   {it_title,      "Mouse Settings",                nullptr, "M_MOUSE"  },
    {it_gap},
    {it_toggle,     "Enable mouse",                  "i_usemouse"     },
    {it_gap},
@@ -2359,7 +2031,7 @@ static menuitem_t mn_mouse_items[] =
    {it_info,       "Miscellaneous"},
    {it_toggle,     "Invert mouse",                  "invertmouse"    },
    {it_toggle,     "Smooth turning",                "smooth_turning" },
-   {it_toggle,     "Novert emulation",              "mouse_novert"   },
+   {it_toggle,     "Vertical mouse movement",       "mouse_vert"   },
 #ifdef _SDL_VER
    {it_toggle,     "Window grabs mouse",            "i_grabmouse"    },
 #endif
@@ -2369,15 +2041,15 @@ static menuitem_t mn_mouse_items[] =
 menu_t menu_mouse =
 {
    mn_mouse_items,               // menu items
-   NULL,                         // previous page
+   nullptr,                      // previous page
    &menu_mouse_accel_and_mlook,  // next page
    &menu_mouse,                  // rootpage
    200, 15,                      // x, y offset
    2,                            // first selectable
    mf_background,                // full-screen menu
-   NULL,                         // no drawer
-   mn_mousejoy_names,            // TOC stuff
-   mn_mousejoy_pages,
+   nullptr,                      // no drawer
+   mn_mouse_names,            // TOC stuff
+   mn_mouse_pages,
 };
 
 CONSOLE_COMMAND(mn_mouse, 0)
@@ -2387,7 +2059,7 @@ CONSOLE_COMMAND(mn_mouse, 0)
 
 static menuitem_t mn_mouse_accel_and_mlook_items[] =
 {
-   {it_title,      "Mouse Settings",       NULL,   "M_MOUSE"},
+   {it_title,      "Mouse Settings",       nullptr,"M_MOUSE"},
    {it_gap},
    {it_info,       "Acceleration"},
    {it_toggle,     "Type",                "mouse_accel_type"},
@@ -2397,7 +2069,7 @@ static menuitem_t mn_mouse_accel_and_mlook_items[] =
    {it_info,       "Mouselook"},
    {it_toggle,     "Enable mouselook",    "allowmlook" },
    {it_toggle,     "Always mouselook",    "alwaysmlook"},
-   {it_toggle,     "Stretch short skies", "r_stretchsky"},
+   {it_binding,    "Bind mouselook key",  "mlook"      },
    {it_end}
 };
 
@@ -2405,19 +2077,43 @@ menu_t menu_mouse_accel_and_mlook =
 {
    mn_mouse_accel_and_mlook_items, // menu items
    &menu_mouse,                    // previous page
-   &menu_joystick,                 // next page
+   nullptr,                        // next page
    &menu_mouse,                    // rootpage
    200, 15,                        // x, y offset
    3,                              // first selectable
    mf_background,                  // full-screen menu
-   NULL,                           // no drawer
-   mn_mousejoy_names,              // TOC stuff
-   mn_mousejoy_pages,
+   nullptr,                        // no drawer
+   mn_mouse_names,                 // TOC stuff
+   mn_mouse_pages,
 };
+
+/////////////////////////////////////////////////////////////////
+//
+// Gamepad Options
+//
+
+extern menu_t menu_gamepad;
+extern menu_t menu_gamepad_axes;
+
+static const char *mn_gamepad_names[] =
+{
+   "Gamepad Settings",
+   "Gamepad Axis Settings",
+   nullptr
+};
+
+static menu_t *mn_gamepad_pages[] =
+{
+   &menu_gamepad,
+   &menu_gamepad_axes,
+   nullptr
+};
+
+
 
 //------------------------------------------------------------------------
 //
-// Joystick Configuration Menu
+// Gamepad Configuration Menu
 //
 
 static const char **mn_js_desc;
@@ -2426,7 +2122,7 @@ static const char **mn_js_cmds;
 static void MN_BuildJSTables()
 {
    static bool menu_built = false;
-   
+
    // don't build multiple times
    if(!menu_built)
    {
@@ -2446,15 +2142,15 @@ static void MN_BuildJSTables()
       {
          HALGamePad *pad = I_GetGamePad(jsnum);
 
-         mn_js_desc[jsnum + 1] = pad->name.duplicate(PU_STATIC);         
-         
+         mn_js_desc[jsnum + 1] = pad->name.duplicate(PU_STATIC);
+
          tempstr.Printf(0, "i_joystick %i", pad->num);
          mn_js_cmds[jsnum + 1] = tempstr.duplicate(PU_STATIC);
       }
 
       // add a null terminator to the end of the list
-      mn_js_desc[numpads + 1] = NULL;
-      mn_js_cmds[numpads + 1] = NULL;
+      mn_js_desc[numpads + 1] = nullptr;
+      mn_js_cmds[numpads + 1] = nullptr;
 
       menu_built = true;
    }
@@ -2476,7 +2172,7 @@ CONSOLE_COMMAND(mn_joysticks, cf_hidden)
              "Choose a Gamepad\n\nCurrent device:\n  %s",
              drv_name);
 
-   MN_SetupBoxWidget(title, mn_js_desc, 1, NULL, mn_js_cmds);
+   MN_SetupBoxWidget(title, mn_js_desc, boxwidget_command, nullptr, mn_js_cmds);
    MN_ShowBoxWidget();
 }
 
@@ -2495,7 +2191,7 @@ static void MN_buildProfileTables()
       if(!numProfiles)
          return;
 
-      // allocate arrays - +1 size for NULL termination
+      // allocate arrays - +1 size for nullptr termination
       mn_prof_desc = ecalloc(const char **, (numProfiles + 1), sizeof(char *));
       mn_prof_cmds = ecalloc(const char **, (numProfiles + 1), sizeof(char *));
 
@@ -2506,6 +2202,7 @@ static void MN_buildProfileTables()
       {
          qstring fullname;
          qstring base;
+         qstring desc;
          lumpinfo_t *lump = wni.current();
 
          if(lump->lfn)
@@ -2519,15 +2216,18 @@ static void MN_buildProfileTables()
 
          fullname.extractFileBase(base);
 
-         mn_prof_desc[i] = base.duplicate();
+         desc = base;
+         desc.replace("_", ' ');
+
+         mn_prof_desc[i] = desc.duplicate();
 
          base.makeQuoted();
          base.insert("g_padprofile ", 0);
          mn_prof_cmds[i] = base.duplicate();
       }
 
-      mn_prof_desc[numProfiles] = NULL;
-      mn_prof_cmds[numProfiles] = NULL;
+      mn_prof_desc[numProfiles] = nullptr;
+      mn_prof_cmds[numProfiles] = nullptr;
 
       menu_built = true;
    }
@@ -2543,42 +2243,45 @@ CONSOLE_COMMAND(mn_profiles, cf_hidden)
       return;
    }
 
-   MN_SetupBoxWidget("Choose a Profile: ", mn_prof_desc, 1, NULL, mn_prof_cmds);
+   MN_SetupBoxWidget("Choose a Profile: ", mn_prof_desc, boxwidget_command, nullptr, mn_prof_cmds);
    MN_ShowBoxWidget();
 }
 
-static menuitem_t mn_joystick_items[] =
+static menuitem_t mn_gamepad_items[] =
 {
-   { it_title,        "Gamepad Settings",          NULL,   NULL      },
-   { it_gap                                                          },
-   { it_info,         "Devices"                                      },
-   { it_runcmd,       "Select gamepad...",         "mn_joysticks"    },
-   { it_runcmd,       "Test gamepad...",           "mn_padtest"      },
-   { it_gap                                                          },
-   { it_info,         "Settings"                                     },
-   { it_runcmd,       "Load profile...",           "mn_profiles"     },
-   { it_variable,     "SDL sensitivity",           "i_joysticksens"  },
-   { it_variable,     "Force feedback",            "i_forcefeedback" },
-   { it_end                                                          }
+   { it_title,        "Gamepad Settings",             nullptr, nullptr          },
+   { it_gap                                                                     },
+   { it_info,         "Devices"                                                 },
+   { it_runcmd,       "Select gamepad...",            "mn_joysticks"            },
+   { it_runcmd,       "Test gamepad...",              "mn_padtest"              },
+   { it_gap                                                                     },
+   { it_info,         "Settings"                                                },
+   { it_runcmd,       "Load profile...",              "mn_profiles"             },
+   { it_variable,     "Turn sensitivity",             "i_joyturnsens"           },
+   { it_variable,     "Gamepad l. stick dead zone",   "i_joy_deadzone_left"     },
+   { it_variable,     "Gamepad r. stick dead zone",   "i_joy_deadzone_right"    },
+   { it_variable,     "Gamepad trigger dead zone",    "i_joy_deadzone_trigger"  },
+   { it_toggle,       "Force feedback",               "i_forcefeedback"         },
+   { it_end                                                                           }
 };
 
-menu_t menu_joystick =
+menu_t menu_gamepad =
 {
-   mn_joystick_items,
-   &menu_mouse_accel_and_mlook,    // previous page
-   NULL,                           // next page
-   &menu_mouse,                    // rootpage
+   mn_gamepad_items,
+   nullptr,                        // previous page
+   &menu_gamepad_axes,             // next page
+   &menu_gamepad,                    // rootpage
    200, 15,                        // x,y offset
-   2,                              // start on first selectable
+   3,                              // start on first selectable
    mf_background,                  // full-screen menu
-   NULL,                           // no drawer
-   mn_mousejoy_names,              // TOC stuff
-   mn_mousejoy_pages,
+   nullptr,                        // no drawer
+   mn_gamepad_names,               // TOC stuff
+   mn_gamepad_pages,
 };
 
-CONSOLE_COMMAND(mn_joymenu, 0)
-{   
-   MN_StartMenu(&menu_joystick);
+CONSOLE_COMMAND(mn_gamepad, 0)
+{
+   MN_StartMenu(&menu_gamepad);
 }
 
 //-----------------------------------------------------------------------------
@@ -2591,6 +2294,7 @@ CONSOLE_COMMAND(mn_joymenu, 0)
 //
 struct mn_padtestdata_t
 {
+   int   buttonLengths[HALGamePad::MAXBUTTONS];
    bool  buttonStates[HALGamePad::MAXBUTTONS];
    float axisStates[HALGamePad::MAXAXES];
    int   numButtons;
@@ -2635,7 +2339,7 @@ static void MN_padTestDrawer()
          mn_padtestdata.axisStates[i] < 0 ? GameModeInfo->unselectColor :
          GameModeInfo->infoColor;
 
-      qstr.clear() << "A" << (i + 1);
+      qstr.Printf(16, "A%d=%.2f", i + 1, mn_padtestdata.axisStates[i]);
       MN_WriteTextColored(qstr.constPtr(), color, x, y);
       x += MN_StringWidth(qstr.constPtr()) + 8;
 
@@ -2667,10 +2371,14 @@ static void MN_padTestDrawer()
       }
    }
 
-   const char *help = "Press ESC on keyboard to exit";
-   x = 160 - MN_StringWidth(help) / 2;
+   const char *help1 = "Press ESC on keyboard or hold any";
+   x = 160 - MN_StringWidth(help1) / 2;
    y += 2 * lineHeight;
-   MN_WriteTextColored(help, GameModeInfo->infoColor, x, y);
+   MN_WriteTextColored(help1, GameModeInfo->infoColor, x, y);
+   const char *help2 = "controller button 5 seconds to exit";
+   x = 160 - MN_StringWidth(help2) / 2;
+   y += lineHeight;
+   MN_WriteTextColored(help2, GameModeInfo->infoColor, x, y);
 }
 
 //
@@ -2693,9 +2401,24 @@ static void MN_padTestTicker()
    mn_padtestdata.numButtons = gamepad->numButtons;
 
    for(int i = 0; i < mn_padtestdata.numAxes && i < HALGamePad::MAXAXES; i++)
-      mn_padtestdata.axisStates[i]   = gamepad->state.axes[i];
+      mn_padtestdata.axisStates[i] = gamepad->state.axes[i];
    for(int i = 0; i < mn_padtestdata.numButtons && i < HALGamePad::MAXBUTTONS; i++)
+   {
       mn_padtestdata.buttonStates[i] = gamepad->state.buttons[i];
+
+      // kill the widget if any button is held for 5 seconds
+      if(mn_padtestdata.buttonStates[i])
+      {
+         mn_padtestdata.buttonLengths[i]++;
+         if(mn_padtestdata.buttonLengths[i] > TICRATE * 5)
+         {
+            S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+            MN_PopWidget();
+         }
+      }
+      else
+         mn_padtestdata.buttonLengths[i] = 0;
+   }
 }
 
 //
@@ -2718,8 +2441,8 @@ static bool MN_padTestResponder(event_t *ev, int action)
    return true;
 }
 
-static menuwidget_t padtest_widget = 
-{ 
+static menuwidget_t padtest_widget =
+{
    MN_padTestDrawer,
    MN_padTestResponder,
    MN_padTestTicker,
@@ -2734,7 +2457,155 @@ CONSOLE_COMMAND(mn_padtest, 0)
       return;
    }
 
+   for(int i = 0; i < HALGamePad::MAXBUTTONS; i++)
+      mn_padtestdata.buttonLengths[i] = 0;
+
    MN_PushWidget(&padtest_widget);
+}
+
+//------------------------------------------------------------------------
+//
+// Gamepad Axis Configuration Menu
+//
+
+//
+// The menu content. NOTE: this is only for show and keeping content; otherwise it gets dynamically
+// updated
+//
+static menuitem_t mn_gamepad_axes_placeholder[] =
+{
+   { it_title,        "Gamepad Axis Settings",     nullptr, nullptr  },
+   { it_gap                                                          },
+   { it_info,         "Not configured", nullptr, nullptr, MENUITEM_CENTERED }, // DUMMY
+   { it_end                                                          },
+};
+
+menu_t menu_gamepad_axes =
+{
+   mn_gamepad_axes_placeholder,
+   &menu_gamepad,                  // previous page
+   nullptr,                        // next page
+   &menu_gamepad,                  // rootpage
+   200, 15,                        // x,y offset
+   2,                              // start on first selectable
+   mf_background,                  // full-screen menu
+   nullptr,                        // no drawer
+   mn_gamepad_names,               // TOC stuff
+   mn_gamepad_pages,
+};
+
+//
+// Called when the current gamepad is changed
+//
+void MN_UpdateGamepadMenus()
+{
+   struct menuentry_t
+   {
+      char label[32];
+      char variable[32];
+   };
+
+   static const menuitem_t title = { it_title, "Gamepad Axis Settings" };
+   static const menu_t basemenu =
+   {
+      nullptr,
+      &menu_gamepad,
+      nullptr,
+      &menu_gamepad,
+      200, 15,
+      2,
+      mf_background,
+      nullptr,
+      mn_gamepad_names,
+      mn_gamepad_pages
+   };
+
+   HALGamePad *pad = I_GetActivePad();
+   if(!pad || !pad->numAxes)
+   {
+      static menuitem_t noitems[] =
+      {
+         title,
+         { it_gap },
+         { it_info, "No gamepad selected.", nullptr, nullptr, MENUITEM_CENTERED },
+         { it_end }
+      };
+
+      menu_gamepad_axes = basemenu;
+      menu_gamepad_axes.menuitems = noitems;
+      return;
+   }
+
+   // All collections need to be static
+   static PODCollection<menuentry_t> entries;
+   entries.makeEmpty();
+
+   for(int i = 0; i < pad->numAxes; ++i)
+   {
+      menuentry_t &entry = entries.addNew();
+      snprintf(entry.label, sizeof(entry.label), "%s action", pad->getAxisName(i));
+      snprintf(entry.variable, sizeof(entry.variable), "g_axisaction%d", i + 1);
+   }
+   for(int i = 0; i < pad->numAxes; ++i)
+   {
+      menuentry_t &entry = entries.addNew();
+      snprintf(entry.label, sizeof(entry.label), "%s orientation", pad->getAxisName(i));
+      snprintf(entry.variable, sizeof(entry.variable), "g_axisorientation%d", i + 1);
+   }
+   // TODO: add the options from Descent Rebirth
+
+   enum
+   {
+      PER_PAGE = 16
+   };
+
+   struct menuitemtable_t
+   {
+      menuitem_t items[PER_PAGE + 3];
+   };
+
+   static PODCollection<menu_t> pages;
+   static PODCollection<menuitemtable_t> pageitems;
+   pages.clear();
+   pageitems.clear();
+
+   int numpages = (static_cast<int>(entries.getLength()) - 1) / PER_PAGE + 1;
+   for(int i = 0; i < numpages; ++i)
+   {
+      menu_t &page = pages.addNew();
+      menuitemtable_t &content = pageitems.addNew();
+
+      content.items[0] = title;
+      content.items[1] = { it_gap };
+      for(int j = 0; j < PER_PAGE; ++j)
+      {
+         int entryindex = i * PER_PAGE + j;
+         if(entryindex >= static_cast<int>(entries.getLength()))
+            break;
+         content.items[2 + j] =
+         {
+            it_toggle,
+            entries[entryindex].label,
+            entries[entryindex].variable
+         };
+      }
+      content.items[PER_PAGE + 2] = { it_end };
+
+      // Defer menuitems/prevpage/nextpage for after collection finish
+      page = basemenu;
+   }
+   for(int i = 0; i < numpages; ++i)
+      pages[i].menuitems = pageitems[i].items;
+   pages[0].prevpage = &menu_gamepad;
+   for(int i = 1; i < numpages; ++i)
+      pages[i].prevpage = &pages[i - 1];
+   for(int i = 0; i < numpages - 1; ++i)
+      pages[i].nextpage = &pages[i + 1];
+
+   // HACK: just copy the first page into menu_gamepad_axes. It will be a duplicate, yes, but
+   // the TOC looks for this global object, and we don't want to mess with the C-like TOC structure
+   // here
+   menu_gamepad_axes = pages[0];
 }
 
 //=============================================================================
@@ -2748,7 +2619,7 @@ static const char *mn_hud_names[] =
 {
    "messages / BOOM HUD",
    "crosshair / automap / misc",
-   NULL
+   nullptr
 };
 
 extern menu_t menu_hud;
@@ -2758,12 +2629,12 @@ static menu_t *mn_hud_pages[] =
 {
    &menu_hud,
    &menu_hud_pg2,
-   NULL
+   nullptr
 };
 
 static menuitem_t mn_hud_items[] =
 {
-   {it_title,      "HUD Settings",         NULL,      "m_hud"},
+   {it_title,      "HUD Settings",         nullptr,   "m_hud"},
    {it_gap},
    {it_info,       "Message Options"},
    {it_toggle,     "Messages",                     "hu_messages"         },
@@ -2784,11 +2655,12 @@ static menuitem_t mn_hud_items[] =
 
 static menuitem_t mn_hud_pg2_items[] =
 {
-   {it_title,      "HUD Settings",         NULL,      "m_hud"},
+   {it_title,      "HUD Settings",         nullptr,   "m_hud"},
    {it_gap},
    {it_info,       "Crosshair Options"},
    {it_toggle,     "Crosshair type",               "hu_crosshair"},
    {it_toggle,     "Monster highlighting",         "hu_crosshair_hilite"},
+   {it_toggle,     "Crosshair scaling",            "hu_crosshair_scale"},
    {it_gap},
    {it_info,       "Automap Options"},
    {it_toggle,     "Show coords widget",           "hu_showcoords"},
@@ -2806,13 +2678,13 @@ static menuitem_t mn_hud_pg2_items[] =
 menu_t menu_hud =
 {
    mn_hud_items,
-   NULL, 
+   nullptr, 
    &menu_hud_pg2,         // next page
    &menu_hud,             // rootpage
    200, 15,               // x,y offset
    3,
    mf_background,
-   NULL,                  // no drawer
+   nullptr,               // no drawer
    mn_hud_names,          // TOC stuff
    mn_hud_pages,
 };
@@ -2821,7 +2693,7 @@ menu_t menu_hud_pg2 =
 {
    mn_hud_pg2_items,
    &menu_hud,             // previous page
-   NULL,                  // next page
+   nullptr,               // next page
    &menu_hud,             // rootpage
    200, 15,               // x,y offset
    3,
@@ -2836,7 +2708,7 @@ extern int crosshairs[CROSSHAIRS];
 static void MN_HUDPg2Drawer(void)
 {
    int y;
-   patch_t *patch = NULL;
+   patch_t *patch = nullptr;
    int xhairnum = crosshairnum - 1;
 
    // draw the player's crosshair
@@ -2854,14 +2726,17 @@ static void MN_HUDPg2Drawer(void)
 
    if(patch)
    {
-      int16_t w  = patch->width;
-      int16_t h  = patch->height;
-      int16_t to = patch->topoffset;
-      int16_t lo = patch->leftoffset;
+      VBuffer &buffer = crosshair_scale ? subscreen43 : vbscreenfullres;
 
-      V_DrawPatchTL(270 + 12 - (w >> 1) + lo, 
-                    y + 12 - (h >> 1) + to, 
-                    &subscreen43, patch, colrngs[CR_RED], FTRANLEVEL);
+      const int16_t w  = patch->width;
+      const int16_t h  = patch->height;
+      const int16_t to = patch->topoffset;
+      const int16_t lo = patch->leftoffset;
+
+      const int crossX = buffer.mapXFromOther(270 + 12, subscreen43) - (w >> 1) + lo;
+      const int crossY = buffer.mapYFromOther(y   + 12, subscreen43) - (h >> 1) + to;
+
+      V_DrawPatchTL(crossX, crossY, &buffer, patch, colrngs[CR_RED], FTRANLEVEL);
    }
 }
 
@@ -2878,7 +2753,7 @@ CONSOLE_COMMAND(mn_hud, 0)
 
 static menuitem_t mn_statusbar_items[] =
 {
-   {it_title,      "Status Bar",           NULL,           "M_STATUS"},
+   {it_title,      "Status Bar",           nullptr,        "M_STATUS"},
    {it_gap},
    {it_toggle,     "Numbers like DOOM",            "st_rednum"},
    {it_toggle,     "Percent sign grey",            "st_graypct"},
@@ -2901,7 +2776,7 @@ static menuitem_t mn_statusbar_items[] =
 menu_t menu_statusbar =
 {
    mn_statusbar_items,
-   NULL, NULL, NULL,       // pages
+   nullptr, nullptr, nullptr,    // pages
    200, 15,
    2,
    mf_background,
@@ -2929,7 +2804,7 @@ static const char *mn_automap_names[] =
    "floor and ceiling lines",
    "sprites",
    "portals",
-   NULL
+   nullptr
 };
 
 static menu_t *mn_automap_pages[] =
@@ -2938,78 +2813,80 @@ static menu_t *mn_automap_pages[] =
    &menu_automapcol2,
    &menu_automapcol3,
    &menu_automap4,
-   NULL
+   nullptr
 };
 
 static menuitem_t mn_automapcolbgl_items[] =
 {
-   {it_title,    "Automap",              NULL, "m_auto"},
+   {it_title,        "Automap",              nullptr, "m_auto"},
    {it_gap},
-   {it_info,     "Background and Lines", NULL, NULL, MENUITEM_CENTERED},
+   {it_toggle,       "Overlay automap",                 "am_overlay"},
    {it_gap},
-   {it_automap,  "Background color",             "mapcolor_back"},
-   {it_automap,  "Crosshair",                    "mapcolor_hair"},
-   {it_automap,  "Grid",                         "mapcolor_grid"},
-   {it_automap,  "One-sided walls",              "mapcolor_wall"},
-   {it_automap,  "Teleporter",                   "mapcolor_tele"},
-   {it_automap,  "Secret area boundary",         "mapcolor_secr"},
-   {it_automap,  "Exit",                         "mapcolor_exit"},
-   {it_automap,  "Unseen line",                  "mapcolor_unsn"},
+   {it_info,         "Background and Lines", nullptr, nullptr, MENUITEM_CENTERED},
+   {it_gap},
+   {it_automap,      "Background color",             "mapcolor_back"},
+   {it_automap,      "Crosshair",                    "mapcolor_hair"},
+   {it_automap,      "Grid",                         "mapcolor_grid"},
+   {it_automap,      "One-sided walls",              "mapcolor_wall"},
+   {it_automap_opt,  "Teleporter",                   "mapcolor_tele"},
+   {it_automap_opt,  "Secret area boundary",         "mapcolor_secr"},
+   {it_automap_opt,  "Exit",                         "mapcolor_exit"},
+   {it_automap,      "Unseen line",                  "mapcolor_unsn"},
    {it_end}
 };
 
 static menuitem_t mn_automapcoldoor_items[] =
 {
-   {it_title,    "Automap",        NULL, "m_auto"},
+   {it_title,        "Automap",        nullptr, "m_auto"},
    {it_gap},
-   {it_info,     "Floor and Ceiling Lines", NULL, NULL, MENUITEM_CENTERED},
+   {it_info,         "Floor and Ceiling Lines", nullptr, nullptr, MENUITEM_CENTERED},
    {it_gap},
    {it_automap,  "Change in floor height",   "mapcolor_fchg"},
    {it_automap,  "Change in ceiling height", "mapcolor_cchg"},
-   {it_automap,  "Floor and ceiling equal",  "mapcolor_clsd"},
-   {it_automap,  "No change in height",      "mapcolor_flat"},
-   {it_automap,  "Red locked door",          "mapcolor_rdor"},
-   {it_automap,  "Yellow locked door",       "mapcolor_ydor"},
-   {it_automap,  "Blue locked door",         "mapcolor_bdor"},
+   {it_automap_opt,  "Floor and ceiling equal",  "mapcolor_clsd"},
+   {it_automap_opt,  "No change in height",      "mapcolor_flat"},
+   {it_automap_opt,  "Red locked door",          "mapcolor_rdor"},
+   {it_automap_opt,  "Yellow locked door",       "mapcolor_ydor"},
+   {it_automap_opt,  "Blue locked door",         "mapcolor_bdor"},
    {it_end}
 };
 
 static menuitem_t mn_automapcolsprite_items[] =
 {
-   {it_title,    "Automap", NULL, "m_auto"},
+   {it_title,        "Automap", nullptr, "m_auto"},
    {it_gap},
-   {it_info,     "Sprites", NULL, NULL, MENUITEM_CENTERED},
+   {it_info,         "Sprites", nullptr, nullptr, MENUITEM_CENTERED},
    {it_gap},
-   {it_automap,  "Normal objects",  "mapcolor_sprt"},
-   {it_automap,  "Friends",         "mapcolor_frnd"},
-   {it_automap,  "Player arrow",    "mapcolor_sngl"},
-   {it_automap,  "Red key",         "mapcolor_rkey"},
-   {it_automap,  "Yellow key",      "mapcolor_ykey"},
-   {it_automap,  "Blue key",        "mapcolor_bkey"},
+   {it_automap,      "Normal objects",  "mapcolor_sprt"},
+   {it_automap,      "Friends",         "mapcolor_frnd"},
+   {it_automap,      "Player arrow",    "mapcolor_sngl"},
+   {it_automap,      "Red key",         "mapcolor_rkey"},
+   {it_automap,      "Yellow key",      "mapcolor_ykey"},
+   {it_automap,      "Blue key",        "mapcolor_bkey"},
    {it_end}
 };
 
 static menuitem_t mn_automapportal_items[] =
 {
-   {it_title,    "Automap", NULL, "m_auto"},
+   {it_title,        "Automap", nullptr, "m_auto"},
    {it_gap},
-   {it_info,     "Portals", NULL, NULL, MENUITEM_CENTERED},
+   {it_info,         "Portals", nullptr, nullptr, MENUITEM_CENTERED},
    {it_gap},
-   {it_toggle,   "Overlay linked portals", "mapportal_overlay"},
-   {it_automap,  "Overlay line color",     "mapcolor_prtl"},
+   {it_toggle,       "Overlay linked portals", "mapportal_overlay"},
+   {it_automap_opt,  "Overlay line color",     "mapcolor_prtl"},
    {it_end},
 };
 
 menu_t menu_automapcol1 = 
 {
    mn_automapcolbgl_items,
-   NULL,                   // previous page
+   nullptr,                // previous page
    &menu_automapcol2,      // next page
    &menu_automapcol1,      // rootpage
    200, 15,                // x,y
-   4,                      // starting item
+   2,                      // starting item
    mf_background,          // fullscreen
-   NULL,
+   nullptr,
    mn_automap_names,       // TOC stuff
    mn_automap_pages,
 };
@@ -3023,7 +2900,7 @@ menu_t menu_automapcol2 =
    200, 15,                 // x,y
    4,                       // starting item
    mf_background,           // fullscreen
-   NULL,
+   nullptr,
    mn_automap_names,        // TOC stuff
    mn_automap_pages,
 };
@@ -3037,7 +2914,7 @@ menu_t menu_automapcol3 =
    200, 15,                   // x,y
    4,                         // starting item
    mf_background,             // fullscreen
-   NULL,
+   nullptr,
    mn_automap_names,          // TOC stuff
    mn_automap_pages,
 };
@@ -3046,12 +2923,12 @@ menu_t menu_automap4 =
 {
    mn_automapportal_items,
    &menu_automapcol3,         // previous page
-   NULL,                      // next page
+   nullptr,                   // next page
    &menu_automapcol1,         // rootpage
    200, 15,                   // x,y
    4,                         // starting item
    mf_background,             // fullscreen
-   NULL,
+   nullptr,
    mn_automap_names,          // TOC stuff
    mn_automap_pages,
 };
@@ -3079,25 +2956,27 @@ extern menu_t menu_weapons;
 static const char *mn_weapons_names[] =
 {
    "options",
-   NULL
+   nullptr
 };
 
 static menu_t *mn_weapons_pages[] =
 {
    &menu_weapons,
-   NULL
+   nullptr
 };
 
 static menuitem_t mn_weapons_items[] =
 {
-   {it_title,      "Weapons",                NULL, "M_WEAP"},
+   {it_title,      "Weapons",                nullptr, "M_WEAP"},
    {it_gap},
-   {it_info,       "Options", NULL, NULL, MENUITEM_CENTERED},
+   {it_info,       "Options", nullptr, nullptr, MENUITEM_CENTERED},
    {it_gap},
    {it_toggle,     "Bfg type",                       "bfgtype"},
    {it_toggle,     "Bobbing",                        "bobbing"},
+   {it_toggle,     "Center when firing",             "r_centerfire"},
    {it_toggle,     "Recoil",                         "recoil"},
    {it_toggle,     "Weapon hotkey cycling",          "weapon_hotkey_cycling"},
+   {it_toggle,     "Cycle when holding key",         "weapon_hotkey_holding"},
    {it_toggle,     "Autoaiming",                     "autoaim"},
    {it_gap},
    {it_end},
@@ -3106,13 +2985,13 @@ static menuitem_t mn_weapons_items[] =
 menu_t menu_weapons =
 {
    mn_weapons_items,
-   NULL, 
-   NULL,                                // next page
+   nullptr,
+   nullptr,                             // next page
    &menu_weapons,                       // rootpage
    200, 15,                             // x,y offset
    4,                                   // starting item
    mf_background,                       // full screen
-   NULL,                                // no drawer
+   nullptr,                             // no drawer
    mn_weapons_names,                    // TOC stuff
    mn_weapons_pages,
 };
@@ -3138,7 +3017,7 @@ static const char *mn_compat_contents[] =
    "players / monster ai",
    "simulation",
    "maps",
-   NULL
+   nullptr
 };
 
 static menu_t *mn_compat_pages[] =
@@ -3146,22 +3025,22 @@ static menu_t *mn_compat_pages[] =
    &menu_compat1,
    &menu_compat2,
    &menu_compat3,
-   NULL
+   nullptr
 };
 
 
 static menuitem_t mn_compat1_items[] =
 {
-   { it_title,  "Compatibility", NULL, "m_compat" },
+   { it_title,  "Compatibility", nullptr, "m_compat" },
    { it_gap },   
-   { it_info,   "Players",                NULL, NULL, MENUITEM_CENTERED },
+   { it_info,   "Players",           nullptr, nullptr, MENUITEM_CENTERED },
    { it_toggle, "God mode is not absolute",            "comp_god"       },
    { it_toggle, "Powerup cheats are time limited",     "comp_infcheat"  },
    { it_toggle, "Sky is normal when invulnerable",     "comp_skymap"    },
    { it_toggle, "Zombie players can exit levels",      "comp_zombie"    },
    { it_toggle, "Disable unintended player jumping", "comp_aircontrol"},
    { it_gap },
-   { it_info,   "Monster AI",             NULL, NULL, MENUITEM_CENTERED },
+   { it_info,   "Monster AI",        nullptr, nullptr, MENUITEM_CENTERED },
    { it_toggle, "Arch-viles can create ghosts",        "comp_vile"      },
    { it_toggle, "Pain elemental lost souls limited",   "comp_pain"      },
    { it_toggle, "Lost souls get stuck in walls",       "comp_skull"     },
@@ -3175,9 +3054,9 @@ static menuitem_t mn_compat1_items[] =
  
 static menuitem_t mn_compat2_items[] =
 { 
-   { it_title,  "Compatibility", NULL, "m_compat" },
+   { it_title,  "Compatibility", nullptr, "m_compat" },
    { it_gap },   
-   { it_info,   "Simulation",              NULL, NULL, MENUITEM_CENTERED },
+   { it_info,   "Simulation",        nullptr, nullptr, MENUITEM_CENTERED },
    { it_toggle, "Actors get stuck over dropoffs",      "comp_dropoff"    },
    { it_toggle, "Actors never fall off ledges",        "comp_falloff"    },
    { it_toggle, "Spawncubes telefrag on MAP30 only",   "comp_telefrag"   },
@@ -3193,9 +3072,9 @@ static menuitem_t mn_compat2_items[] =
 
 static menuitem_t mn_compat3_items[] =
 {
-   { it_title,  "Compatibility", NULL, "m_compat" },
+   { it_title,  "Compatibility", nullptr, "m_compat" },
    { it_gap },
-   { it_info,   "Maps",                    NULL, NULL, MENUITEM_CENTERED },
+   { it_info,   "Maps",              nullptr, nullptr, MENUITEM_CENTERED },
    { it_toggle, "Turbo doors make two closing sounds",  "comp_blazing"   },
    { it_toggle, "Disable tagged door light fading",     "comp_doorlight" },
    { it_toggle, "Use DOOM stairbuilding method",        "comp_stairs"    },
@@ -3208,14 +3087,14 @@ static menuitem_t mn_compat3_items[] =
 
 menu_t menu_compat1 =
 {
-   mn_compat1_items,    // items
-   NULL, &menu_compat2, // pages
-   &menu_compat1,       // rootpage
-   270, 5,              // x,y
-   3,                   // starting item
-   mf_background,       // full screen
-   NULL,                // no drawer
-   mn_compat_contents,  // TOC arrays
+   mn_compat1_items,       // items
+   nullptr, &menu_compat2, // pages
+   &menu_compat1,          // rootpage
+   270, 5,                 // x,y
+   3,                      // starting item
+   mf_background,          // full screen
+   nullptr,                // no drawer
+   mn_compat_contents,     // TOC arrays
    mn_compat_pages,
 };
 
@@ -3228,21 +3107,21 @@ menu_t menu_compat2 =
    270, 5,              // x,y
    3,                   // starting item
    mf_background,       // full screen
-   NULL,                // no drawer
+   nullptr,             // no drawer
    mn_compat_contents,  // TOC arrays
    mn_compat_pages,
 };
 
 menu_t menu_compat3 =
 {
-   mn_compat3_items,    // items
-   &menu_compat2, NULL, // pages
-   &menu_compat1,       // rootpage
-   270, 5,              // x, y
-   3,                   // starting item
-   mf_background,       // full screen
-   NULL,                // no drawer
-   mn_compat_contents,  // TOC arrays
+   mn_compat3_items,       // items
+   &menu_compat2, nullptr, // pages
+   &menu_compat1,          // rootpage
+   270, 5,                 // x, y
+   3,                      // starting item
+   mf_background,          // full screen
+   nullptr,                // no drawer
+   mn_compat_contents,     // TOC arrays
    mn_compat_pages,
 };
 
@@ -3258,7 +3137,7 @@ CONSOLE_COMMAND(mn_compat, 0)
 
 static menuitem_t mn_enemies_items[] =
 {
-   {it_title,      "Enemies",              NULL,      "m_enem"},
+   {it_title,      "Enemies",              nullptr,   "m_enem"},
    {it_gap},
    {it_info,       "Monster options"},
    {it_toggle,     "Monsters remember target",     "mon_remember"},
@@ -3279,10 +3158,10 @@ static menuitem_t mn_enemies_items[] =
 menu_t menu_enemies =
 {
    mn_enemies_items,
-   NULL, NULL, NULL,      // pages
-   220,15,                // x,y offset
-   3,                     // starting item
-   mf_background          // full screen
+   nullptr, nullptr, nullptr, // pages
+   220,15,                    // x,y offset
+   3,                         // starting item
+   mf_background              // full screen
 };
 
 CONSOLE_COMMAND(mn_enemies, 0)
@@ -3305,7 +3184,7 @@ static const char *mn_binding_contentnames[] =
    "menu keys",
    "automap keys",
    "console keys",
-   NULL
+   nullptr
 };
 
 // all in this file, but require a forward prototype
@@ -3328,7 +3207,7 @@ static menu_t *mn_binding_contentpages[] =
    &menu_menukeys,
    &menu_automapkeys,
    &menu_consolekeys,
-   NULL
+   nullptr
 };
 
 static menuitem_t menu_bindings_items[] =
@@ -3417,13 +3296,13 @@ static menuitem_t mn_advkeys_items[] =
 menu_t menu_movekeys =
 {
    mn_movekeys_items,
-   NULL,                    // previous page
+   nullptr,                 // previous page
    &menu_advkeys,           // next page
    nullptr,                 // rootpage
    150, 15,                 // x,y offsets
    2,
    mf_background,           // draw background: not a skull menu
-   NULL,                    // no drawer
+   nullptr,                 // no drawer
    mn_binding_contentnames, // table of contents arrays
    mn_binding_contentpages,
 };
@@ -3437,7 +3316,7 @@ menu_t menu_advkeys =
    150, 15,                 // x,y offsets
    2,
    mf_background,           // draw background: not a skull menu
-   NULL,                    // no drawer
+   nullptr,                 // no drawer
    mn_binding_contentnames, // table of contents arrays
    mn_binding_contentpages,
 };
@@ -3485,7 +3364,7 @@ menu_t menu_weaponbindings =
    150, 15,                 // x,y offsets
    2,
    mf_background,           // draw background: not a skull menu
-   NULL,                    // no drawer
+   nullptr,                 // no drawer
    mn_binding_contentnames, // table of contents arrays
    mn_binding_contentpages,
 };
@@ -3533,7 +3412,7 @@ menu_t menu_envinvbindings =
    150, 15,                 // x,y offsets
    4,
    mf_background,           // draw background: not a skull menu
-   NULL,                    // no drawer
+   nullptr,                 // no drawer
    mn_binding_contentnames, // table of contents arrays
    mn_binding_contentpages,
 };
@@ -3563,7 +3442,7 @@ static menuitem_t mn_function_items[] =
    {it_binding, "Quit",                 "mn_quit"},
    {it_binding, "Gamma correction",     "gamma /"},
    {it_gap},
-   {it_binding, "Join (-recordfromto)", "joindemo"},
+   {it_binding, "Join demo",            "joindemo"},
    {it_end}
 };
 
@@ -3576,7 +3455,7 @@ menu_t menu_funcbindings =
    150, 15,                 // x,y offsets
    2,
    mf_background,           // draw background: not a skull menu
-   NULL,                    // no drawer
+   nullptr,                 // no drawer
    mn_binding_contentnames, // table of contents arrays
    mn_binding_contentpages,
 };
@@ -3619,7 +3498,7 @@ menu_t menu_menukeys =
    150, 15,                 // x,y offsets
    2,
    mf_background,           // draw background: not a skull menu
-   NULL,                    // no drawer
+   nullptr,                 // no drawer
    mn_binding_contentnames, // table of contents arrays
    mn_binding_contentpages,
 };
@@ -3650,6 +3529,7 @@ static menuitem_t mn_automapkeys_items[] =
    {it_binding, "Mark spot",            "map_mark"},
    {it_binding, "Clear spots",          "map_clear"},
    {it_binding, "Show grid",            "map_grid"},
+   {it_binding, "Overlay mode",         "map_overlay"},
    {it_end}
 };
 
@@ -3662,7 +3542,7 @@ menu_t menu_automapkeys =
    150, 15,                 // x,y offsets
    2,
    mf_background,           // draw background: not a skull menu
-   NULL,                    // no drawer
+   nullptr,                 // no drawer
    mn_binding_contentnames, // table of contents arrays
    mn_binding_contentpages,
 };
@@ -3696,12 +3576,12 @@ menu_t menu_consolekeys =
 {
    mn_consolekeys_items,
    &menu_automapkeys,       // previous page
-   NULL,                    // next page
+   nullptr,                 // next page
    nullptr,                 // rootpage
    150, 15,                 // x,y offsets
    2,
    mf_background,           // draw background: not a skull menu
-   NULL,                    // no drawer
+   nullptr,                 // no drawer
    mn_binding_contentnames, // table of contents arrays
    mn_binding_contentpages,
 };
@@ -3722,11 +3602,11 @@ static char *mn_searchstr;
 static menuitem_t *lastMatch;
 
 
-VARIABLE_STRING(mn_searchstr, NULL, 32);
+VARIABLE_STRING(mn_searchstr, nullptr, 32);
 CONSOLE_VARIABLE(mn_searchstr, mn_searchstr, 0)
 {
    // any change to mn_searchstr resets the search index
-   lastMatch = NULL;
+   lastMatch = nullptr;
 }
 
 static void MN_InitSearchStr()
@@ -3737,6 +3617,7 @@ static void MN_InitSearchStr()
 // haleyjd: searchable menus
 extern menu_t menu_movekeys;
 extern menu_t menu_mouse;
+extern menu_t menu_gamepad;
 extern menu_t menu_video;
 extern menu_t menu_sound;
 extern menu_t menu_compat1;
@@ -3754,6 +3635,7 @@ static menu_t *mn_search_menus[] =
 {
    &menu_movekeys,
    &menu_mouse,
+   &menu_gamepad,
    &menu_video,
    &menu_sound,
    &menu_compat1,
@@ -3766,7 +3648,7 @@ static menu_t *mn_search_menus[] =
    &menu_gamesettings,
    &menu_loadwad,
    &menu_demos,
-   NULL
+   nullptr
 };
 
 CONSOLE_COMMAND(mn_search, 0)
@@ -3838,7 +3720,7 @@ CONSOLE_COMMAND(mn_search, 0)
 
    if(lastMatch) // if doing a valid search, reset it now
    {
-      lastMatch = NULL;
+      lastMatch = nullptr;
       MN_ErrorMsg("Reached end of search");
    }
    else
@@ -3847,7 +3729,7 @@ CONSOLE_COMMAND(mn_search, 0)
 
 static menuitem_t mn_menus_items[] =
 {
-   {it_title,    "Menu Options",   NULL, "M_MENUS"},
+   {it_title,    "Menu Options",   nullptr, "M_MENUS"},
    {it_gap},
    {it_info,     "General"},
    {it_toggle,   "Toggle key backs up",    "mn_toggleisback"},
@@ -3865,13 +3747,13 @@ static menuitem_t mn_menus_items[] =
 menu_t menu_menuopts =
 {
    mn_menus_items,
-   NULL,                    // prev page
-   NULL,                    // next page
-   NULL,                    // root page
+   nullptr,                 // prev page
+   nullptr,                 // next page
+   nullptr,                 // root page
    200, 15,                 // x,y offsets
    3,                       // first item
    mf_background,           // draw background: not a skull menu
-   NULL,                    // no drawer
+   nullptr,                 // no drawer
 };
 
 CONSOLE_COMMAND(mn_menus, 0)
@@ -3895,13 +3777,13 @@ static menuitem_t mn_config_items[] =
 menu_t menu_config =
 {
    mn_config_items,
-   NULL,
-   NULL,
-   NULL,
+   nullptr,
+   nullptr,
+   nullptr,
    200, 15,
    3,
    mf_background,
-   NULL,
+   nullptr,
 };
 
 CONSOLE_COMMAND(mn_config, 0)
@@ -3981,7 +3863,7 @@ void MN_LinkClassicMenus(int link)
    }
 }
 
-VARIABLE_BOOLEAN(mn_classic_menus, NULL, yesno);
+VARIABLE_BOOLEAN(mn_classic_menus, nullptr, yesno);
 CONSOLE_VARIABLE(mn_classic_menus, mn_classic_menus, 0) 
 {
    MN_LinkClassicMenus(mn_classic_menus);
@@ -4026,7 +3908,7 @@ static void MN_OldOptionsDrawer()
 menu_t menu_old_options =
 {
    mn_old_option_items,
-   NULL, NULL, NULL,           // pages
+   nullptr, nullptr, nullptr,  // pages
    60, 37,
    0,
    mf_skullmenu | mf_emulated,
@@ -4066,7 +3948,7 @@ static void MN_OldSoundDrawer()
 menu_t menu_old_sound =
 {
    mn_old_sound_items,
-   NULL, NULL, NULL,
+   nullptr, nullptr, nullptr,
    80, 64,
    0,
    mf_skullmenu | mf_emulated,

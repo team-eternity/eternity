@@ -42,6 +42,7 @@
 #include "../doomstat.h"
 #include "../m_misc.h"
 #include "../m_syscfg.h"
+#include "../mn_menus.h"
 #include "../g_demolog.h"
 #include "../g_game.h"
 #include "../w_wad.h"
@@ -53,6 +54,44 @@
 #ifdef _SDL_VER
 extern int waitAtExit;
 #endif
+
+struct atexit_listentry_t
+{
+   atexit_func_t func;
+   atexit_listentry_t *next;
+};
+
+static atexit_listentry_t *exit_funcs = NULL;
+
+void I_AtExit(atexit_func_t func)
+{
+   atexit_listentry_t *entry;
+
+   entry = (atexit_listentry_t *)malloc(sizeof(*entry));
+
+   entry->func = func;
+   entry->next = exit_funcs;
+   exit_funcs = entry;
+}
+
+void I_Exit(int status)
+{
+   atexit_listentry_t *entry, *next;
+
+   // Run through all exit functions
+
+   entry = exit_funcs;
+
+   while (entry != NULL)
+   {
+      entry->func();
+      next = entry->next;
+      free(entry);
+      entry = next;
+   }
+
+   exit(status);
+}
 
 //
 // I_BaseTiccmd
@@ -76,9 +115,6 @@ static SDL_Keymod oldmod; // SoM 3/20/2002: save old modifier key state
 void I_Shutdown()
 {
    SDL_SetModState(oldmod);
-   
-   // haleyjd 04/15/02: shutdown joystick
-   I_ShutdownGamePads();
 }
 
 //
@@ -90,9 +126,9 @@ void I_Init()
    I_InitHALTimer();
 
    // haleyjd 04/15/02: initialize joystick
-   I_InitGamePads();
+   I_InitGamePads(MN_UpdateGamepadMenus);
  
-   atexit(I_Shutdown);
+   I_AtExit(I_Shutdown);
    
    // killough 2/21/98: avoid sound initialization if no sound & no music
    extern bool nomusicparm, nosfxparm;
@@ -100,10 +136,10 @@ void I_Init()
       I_InitSound();
 }
 
+static i_errhandler_t i_error_handler;  // special handler for I_Error run before exiting
+static thread_local char errmsg[2048];  // buffer of error message -- killough
 
-static char errmsg[2048];  // buffer of error message -- killough
-
-static int has_exited;
+static bool has_exited;
 
 enum
 {
@@ -131,7 +167,7 @@ static bool speedyexit = false;
 //
 void I_Quit(void)
 {
-   has_exited = 1;   /* Prevent infinitely recursive exits -- killough */
+   has_exited = true;   /* Prevent infinitely recursive exits -- killough */
    
    // haleyjd 06/05/10: not in fatal error situations; causes heap calls
    if(error_exitcode < I_ERRORLEVEL_FATAL && demorecording)
@@ -140,13 +176,11 @@ void I_Quit(void)
    // sf : rearrange this so the errmsg doesn't get messed up
    if(error_exitcode >= I_ERRORLEVEL_MESSAGE)
       puts(errmsg);   // killough 8/8/98
-
-   // FIXME: TEMPORARILY disabled on MacOS because of some crash in SDL_Renderer
-   // affecting functions. MUST FIX.
-#if EE_CURRENT_PLATFORM != EE_PLATFORM_MACOSX
    else if(!speedyexit) // MaxW: The user didn't Alt+F4
       I_EndDoom();
-#endif
+
+   // Shutdown joystick (after ENDOOM so user can still input to exit it)
+   I_ShutdownGamePads();
 
    // SoM: 7/5/2002: Why I didn't remember this in the first place I'll never know.
    // haleyjd 10/09/05: moved down here
@@ -180,7 +214,7 @@ void I_QuitFast()
 {
    puts("Eternity quit quickly.");
    speedyexit = true;
-   exit(0);
+   I_Exit(0);
 }
 
 //
@@ -189,7 +223,7 @@ void I_QuitFast()
 // haleyjd 05/21/10: Call this for super-evil errors such as heap corruption,
 // system-related problems, etc.
 //
-void I_FatalError(int code, const char *error, ...)
+void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...)
 {
    // Flag a fatal error, so that some shutdown code will not be executed;
    // chiefly, saving the configuration files, which can malfunction in
@@ -216,7 +250,7 @@ void I_FatalError(int code, const char *error, ...)
 
       if(!has_exited)    // If it hasn't exited yet, exit now -- killough
       {
-         has_exited = 1; // Prevent infinitely recursive exits -- killough
+         has_exited = true; // Prevent infinitely recursive exits -- killough
          exit(-1);
       }
       else
@@ -230,7 +264,7 @@ void I_FatalError(int code, const char *error, ...)
 // haleyjd 06/05/10: exit with a message which is not technically an error. The
 // code used to call I_Error for this, but it wasn't semantically correct.
 //
-void I_ExitWithMessage(const char *msg, ...)
+void I_ExitWithMessage(E_FORMAT_STRING(const char *msg), ...)
 {
    // do not demote error level
    if(error_exitcode < I_ERRORLEVEL_MESSAGE)
@@ -244,11 +278,19 @@ void I_ExitWithMessage(const char *msg, ...)
       va_end(argptr);
    }
 
-   if(!has_exited)    // If it hasn't exited yet, exit now -- killough
+   if(!has_exited)       // If it hasn't exited yet, exit now -- killough
    {
-      has_exited = 1; // Prevent infinitely recursive exits -- killough
-      exit(0);
+      has_exited = true; // Prevent infinitely recursive exits -- killough
+      I_Exit(0);
    }
+}
+
+//
+// Set a special handler for I_Error that runs prior to exiting
+//
+void I_SetErrorHandler(const i_errhandler_t handler)
+{
+   i_error_handler = handler;
 }
 
 //
@@ -256,7 +298,7 @@ void I_ExitWithMessage(const char *msg, ...)
 //
 // Normal error reporting / exit routine.
 //
-void I_Error(const char *error, ...) // killough 3/20/98: add const
+void I_Error(E_FORMAT_STRING(const char *error), ...)
 {
    // do not demote error level
    if(error_exitcode < I_ERRORLEVEL_NORMAL)
@@ -269,11 +311,14 @@ void I_Error(const char *error, ...) // killough 3/20/98: add const
       pvsnprintf(errmsg, sizeof(errmsg), error, argptr);
       va_end(argptr);
    }
-   
-   if(!has_exited)    // If it hasn't exited yet, exit now -- killough
+
+   if(i_error_handler)
+      i_error_handler(errmsg);
+
+   if(!has_exited)       // If it hasn't exited yet, exit now -- killough
    {
-      has_exited = 1; // Prevent infinitely recursive exits -- killough
-      exit(-1);
+      has_exited = true; // Prevent infinitely recursive exits -- killough
+      I_Exit(-1);
    }
    else
       I_FatalError(I_ERR_ABORT, "I_Error: double faulted\n");
@@ -284,7 +329,7 @@ void I_Error(const char *error, ...) // killough 3/20/98: add const
 //
 // haleyjd: varargs version of I_Error used chiefly by libConfuse.
 //
-void I_ErrorVA(const char *error, va_list args)
+void I_ErrorVA(E_FORMAT_STRING(const char *error), va_list args)
 {
    // do not demote error level
    if(error_exitcode < I_ERRORLEVEL_NORMAL)
@@ -295,8 +340,8 @@ void I_ErrorVA(const char *error, va_list args)
 
    if(!has_exited)
    {
-      has_exited = 1;
-      exit(-1);
+      has_exited = true;
+      I_Exit(-1);
    }
    else
       I_FatalError(I_ERR_ABORT, "I_ErrorVA: double faulted\n");
@@ -386,17 +431,17 @@ int I_CheckAbort()
  *************************/
 int leds_always_off;
 
-VARIABLE_BOOLEAN(leds_always_off, NULL,     yesno);
+VARIABLE_BOOLEAN(leds_always_off, nullptr,  yesno);
 CONSOLE_VARIABLE(i_ledsoff, leds_always_off, 0) {}
 
 #ifdef _SDL_VER
-VARIABLE_BOOLEAN(waitAtExit, NULL, yesno);
+VARIABLE_BOOLEAN(waitAtExit, nullptr, yesno);
 CONSOLE_VARIABLE(i_waitatexit, waitAtExit, 0) {}
 
-VARIABLE_BOOLEAN(showendoom, NULL, yesno);
+VARIABLE_BOOLEAN(showendoom, nullptr, yesno);
 CONSOLE_VARIABLE(i_showendoom, showendoom, 0) {}
 
-VARIABLE_INT(endoomdelay, NULL, 35, 3500, NULL);
+VARIABLE_INT(endoomdelay, nullptr, 35, 3500, nullptr);
 CONSOLE_VARIABLE(i_endoomdelay, endoomdelay, 0) {}
 #endif
 

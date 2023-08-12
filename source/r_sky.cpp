@@ -29,12 +29,15 @@
 //
 //-----------------------------------------------------------------------------
 
+#include <algorithm>
 #include "z_zone.h"
+#include "autopalette.h"
 #include "i_system.h"
 #include "doomstat.h"
 #include "r_sky.h"
 #include "r_data.h"
 #include "p_info.h"
+#include "v_video.h"
 #include "w_wad.h"
 #include "d_gi.h"
 
@@ -85,9 +88,15 @@ void R_StartSky()
    skyflat_t *sky2 = R_SkyFlatForIndex(1);
 
    if(sky1)
+   {
       sky1->texture = R_FindWall(LevelInfo.skyName);
+      R_CacheSkyTexture(sky1->texture);
+   }
    if(sky2)
+   {
       sky2->texture = R_FindWall(LevelInfo.sky2Name);
+      R_CacheSkyTexture(sky2->texture);
+   }
 }
 
 //
@@ -98,32 +107,82 @@ void R_StartSky()
 //
 
 // the sky texture hash table
-skytexture_t *skytextures[NUMSKYCHAINS];
+static skytexture_t *skytextures[NUMSKYCHAINS];
 
 #define skytexturekey(a) ((a) % NUMSKYCHAINS)
 
 //
-// R_AddSkyTexture
+// Returns a texture's top median (actually 1/3 for empiric reasons) color for sky fading to color.
+//
+static byte R_getMedianTopColor(int texturenum)
+{
+   const texture_t *texture = textures[texturenum];
+   I_Assert(texture != nullptr, "Missing texture");
+
+   const byte *texbuffer = texture->bufferdata;
+   if(!texture->bufferalloc || !texbuffer)
+      texbuffer = R_GetLinearBuffer(texturenum);
+   I_Assert(texbuffer != nullptr, "Couldn't make texbuffer");
+
+   struct rgb_t
+   {
+      int r, g, b;
+      inline int sum() { return r*r + g*g + b*b; }
+   };
+
+   PODCollection<rgb_t> topcolors;
+   AutoPalette pal(wGlobalDir);
+   const byte *playpal = pal.get();
+
+   for(int x = 0; x < texture->width; ++x)
+   {
+      rgb_t rgb;
+      int palindex = 3 * texbuffer[x * texture->height];
+      rgb.r = playpal[palindex];
+      rgb.g = playpal[palindex + 1];
+      rgb.b = playpal[palindex + 2];
+      topcolors.add(rgb);
+   }
+
+   std::sort(topcolors.begin(), topcolors.end(), [](rgb_t c1, rgb_t c2)
+   {
+      return c1.sum() < c2.sum();
+   });
+   rgb_t medianrgb = topcolors[topcolors.getLength() / 3];
+
+   // We now have the average colour.
+   return V_FindBestColor(playpal, medianrgb.r, medianrgb.g, medianrgb.b);
+}
+
 //
 // Constructs a skytexture_t and adds it to the hash table
 //
-static skytexture_t *R_AddSkyTexture(int texturenum)
+static skytexture_t *R_addSkyTexture(int texturenum)
 {
    skytexture_t *newSky;
    int key;
 
    // SoM: The new texture system handles tall patches in textures.
-   newSky = (skytexture_t *)(Z_Malloc(sizeof(skytexture_t), PU_STATIC, NULL));
+   newSky = ecalloctag(skytexture_t *, 1, sizeof(skytexture_t), PU_STATIC, nullptr);
 
    // 02/11/04: only if patch height is greater than texture height
    // should we use it
    newSky->texturenum = texturenum;
    newSky->height = textures[texturenum]->height;
-   
-   if(newSky->height >= 200)
-      newSky->texturemid = 200*FRACUNIT;
+
+   // Determine the median color now
+   newSky->medianColor = R_getMedianTopColor(texturenum);
+
+   // Preserve visual compatibility with certain Boom-compatible wads with tall sky textures
+   if(newSky->height >= SKY_FREELOOK_HEIGHT &&
+      (!LevelInfo.enableBoomSkyHack || !(GameModeInfo->flags & GIF_PRBOOMTALLSKY) ||
+       textures[texturenum]->flags & TF_NONVANILLA))
+   {
+      // 200px is the minimum freelook compatible sky height
+      newSky->texturemid = SKY_FREELOOK_HEIGHT * FRACUNIT;
+   }
    else
-      newSky->texturemid = 100*FRACUNIT;
+      newSky->texturemid = (SCREENHEIGHT / 2) *FRACUNIT; // shorter skies draw like Doom
 
    key = skytexturekey(texturenum);
 
@@ -135,17 +194,12 @@ static skytexture_t *R_AddSkyTexture(int texturenum)
 }
 
 //
-// R_GetSkyTexture
+// Try to find a sky texture for a given texturenum
 //
-// Looks for the specified skytexture_t with the given texturenum
-// in the hash table. If it doesn't exist, it'll be created now.
-// 
-skytexture_t *R_GetSkyTexture(int texturenum)
+static skytexture_t *R_findSkyTexture(int texturenum)
 {
-   int key;
-   skytexture_t *target = NULL;
-
-   key = skytexturekey(texturenum);
+   skytexture_t *target = nullptr;
+   const int     key    = skytexturekey(texturenum);
 
    if(skytextures[key])
    {
@@ -164,11 +218,88 @@ skytexture_t *R_GetSkyTexture(int texturenum)
       }
    }
 
-   return target ? target : R_AddSkyTexture(texturenum);
+   return target;
 }
 
 //
-// R_ClearSkyTextures
+// Caches a single sky texture, ignoring animations
+//
+static void R_cacheSingleSkyTexture(int texturenum)
+{
+#ifdef RANGECHECK
+   if(texturenum < 0 || texturenum >= texturecount)
+      I_Error("R_CacheSkyTexture: invalid texture num %i\n", texturenum);
+#endif
+
+   skytexture_t *skytexture = R_findSkyTexture(texturenum);
+
+   if(skytexture)
+      return; // No need to cache
+
+   skytexture = R_addSkyTexture(texturenum);
+}
+
+//
+// Caches a sky texture and its current animation frame if applicable
+// Never to be called from within a render context
+//
+void R_CacheSkyTexture(int texturenum)
+{
+   R_cacheSingleSkyTexture(texturenum);
+
+   texture_t *texture = textures[texturenum];
+   if(texture->flags & TF_ANIMATED)
+      R_cacheSingleSkyTexture(texturetranslation[texturenum]);
+}
+
+//
+// Caches the an updated sky texture if a base texture is a sky texture
+//
+void R_CacheIfSkyTexture(int basetexturenum, int nexttexturenum)
+{
+#ifdef RANGECHECK
+   if(basetexturenum < 0 || basetexturenum >= texturecount)
+      I_Error("R_CacheIfSkyTexture: invalid base animated texture num %i\n", basetexturenum);
+   if(nexttexturenum < 0 || nexttexturenum >= texturecount)
+      I_Error("R_CacheIfSkyTexture: invalid next animated texture num %i\n", nexttexturenum);
+#endif
+
+   texture_t *basetexture = textures[basetexturenum];
+   if(!!R_findSkyTexture(basetexturenum))
+      R_CacheSkyTexture(nexttexturenum);
+}
+
+//
+// As R_CacheIfSkyTexture but only caches is the base texture is animated
+//
+void R_CacheSkyTextureAnimFrame(int basetexturenum, int nexttexturenum)
+{
+#ifdef RANGECHECK
+   if(basetexturenum < 0 || basetexturenum >= texturecount)
+      I_Error("R_CacheSkyTextureAnimFrame: invalid base animated texture num %i\n", basetexturenum);
+   if(nexttexturenum < 0 || nexttexturenum >= texturecount)
+      I_Error("R_CacheSkyTextureAnimFrame: invalid next animated texture num %i\n", nexttexturenum);
+#endif
+
+   texture_t *basetexture = textures[basetexturenum];
+   if(!!R_findSkyTexture(basetexturenum) && basetexture->flags & TF_ANIMATED)
+      R_CacheSkyTexture(nexttexturenum);
+}
+
+//
+// Looks for the specified skytexture_t with the given texturenum
+// in the hash table. It should have been created beforehand.
+//
+skytexture_t *R_GetSkyTexture(int texturenum)
+{
+   skytexture_t *target = R_findSkyTexture(texturenum);
+
+   if(!target)
+      I_Error("R_GetSkyTexture: Failed to get sky texture for texturenum %i\n", texturenum);
+
+   return target;
+}
+
 //
 // Must be called from R_InitData to clear out old texture numbers.
 // Otherwise the data will be corrupt and meaningless.
@@ -192,7 +323,7 @@ void R_ClearSkyTextures()
          }
       }
 
-      skytextures[i] = NULL;
+      skytextures[i] = nullptr;
    }
 }
 

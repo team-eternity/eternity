@@ -67,18 +67,18 @@ static menuitem_t mn_hmain_items[] =
 {
    // 'heretic' title and skulls drawn by the drawer
    
-   { it_runcmd, "New Game",  "mn_newgame",  NULL },
-   { it_runcmd, "Options",   "mn_options",  NULL },
-   { it_runcmd, "Load Game", "mn_loadgame", NULL },
-   { it_runcmd, "Save Game", "mn_savegame", NULL },
-   { it_runcmd, "Quit Game", "mn_quit",     NULL },
+   { it_runcmd, "New Game",  "mn_newgame",  nullptr },
+   { it_runcmd, "Options",   "mn_options",  nullptr },
+   { it_runcmd, "Load Game", "mn_loadgame", nullptr },
+   { it_runcmd, "Save Game", "mn_savegame", nullptr },
+   { it_runcmd, "Quit Game", "mn_quit",     nullptr },
    { it_end }
 };
 
 menu_t menu_hmain =
 {
    mn_hmain_items,            // menu items
-   NULL, NULL, NULL,          // pages
+   nullptr, nullptr, nullptr, // pages
    100, 56,                   // x, y offsets
    0,                         // start with 'new game' selected
    mf_skullmenu | mf_bigfont, // a skull menu
@@ -91,7 +91,7 @@ void MN_HInitSkull()
 
    for(int i = 0; i < NUM_HSKULL; i++)
    {
-      sprintf(tempstr, "M_SKL%.2d", i);
+      snprintf(tempstr, sizeof(tempstr), "M_SKL%.2d", i);
       HSkullLumpNums[i] = W_GetNumForName(tempstr);         
    }
 }
@@ -116,20 +116,20 @@ static void MN_HMainMenuDrawer()
 
 static menuitem_t mn_hepisode_items[] =
 {
-   { it_info,   "Which Episode?",       NULL,         NULL },
+   { it_info,   "Which Episode?",       nullptr,      nullptr },
    { it_gap },
-   { it_runcmd, "City of the Damned",   "mn_hepis 1", NULL },
-   { it_runcmd, "Hell's Maw",           "mn_hepis 2", NULL },
-   { it_runcmd, "The Dome of D'Sparil", "mn_hepis 3", NULL },
-   { it_runcmd, "The Ossuary",          "mn_hepis 4", NULL },
-   { it_runcmd, "The Stagnant Demesne", "mn_hepis 5", NULL },
+   { it_runcmd, "City of the Damned",   "mn_hepis 1", nullptr },
+   { it_runcmd, "Hell's Maw",           "mn_hepis 2", nullptr },
+   { it_runcmd, "The Dome of D'Sparil", "mn_hepis 3", nullptr },
+   { it_runcmd, "The Ossuary",          "mn_hepis 4", nullptr },
+   { it_runcmd, "The Stagnant Demesne", "mn_hepis 5", nullptr },
    { it_end }
 };
 
 menu_t menu_hepisode =
 {
    mn_hepisode_items,         // menu items
-   NULL, NULL, NULL,          // pages
+   nullptr, nullptr, nullptr, // pages
    38, 26,                    // x,y offsets
    2,                         // starting item: city of the damned
    mf_skullmenu | mf_bigfont, // is a skull menu
@@ -151,20 +151,20 @@ void MN_HticNewGame()
 
 static menuitem_t mn_hnewgame_items[] =
 {
-   { it_info,   "Choose Skill Level",          NULL,        NULL },
+   { it_info,   "Choose Skill Level",          nullptr,     nullptr },
    { it_gap },
-   { it_runcmd, "Thou needeth a wet nurse",    "newgame 0", NULL },
-   { it_runcmd, "Yellowbellies-r-us",          "newgame 1", NULL },
-   { it_runcmd, "Bringest them oneth",         "newgame 2", NULL },
-   { it_runcmd, "Thou art a smite-meister",    "newgame 3", NULL },
-   { it_runcmd, "Black plague possesses thee", "newgame 4", NULL },
+   { it_runcmd, "Thou needeth a wet nurse",    "newgame 0", nullptr },
+   { it_runcmd, "Yellowbellies-r-us",          "newgame 1", nullptr },
+   { it_runcmd, "Bringest them oneth",         "newgame 2", nullptr },
+   { it_runcmd, "Thou art a smite-meister",    "newgame 3", nullptr },
+   { it_runcmd, "Black plague possesses thee", "newgame 4", nullptr },
    { it_end }
 };
 
 menu_t menu_hnewgame =
 {
    mn_hnewgame_items,         // menu items
-   NULL, NULL, NULL,          // pages
+   nullptr, nullptr, nullptr, // pages
    38, 26,                    // x,y offsets
    4,                         // starting item: bringest them oneth
    mf_skullmenu | mf_bigfont, // is a skull menu
@@ -187,137 +187,6 @@ CONSOLE_COMMAND(mn_hepis, cf_notnet)
    }
    
    MN_StartMenu(&menu_hnewgame);
-}
-
-static menuitem_t mn_hsavegame_items[] =
-{
-   { it_variable, "", "savegame_0" },
-   { it_gap },
-   { it_variable, "", "savegame_1" },
-   { it_gap },
-   { it_variable, "", "savegame_2" },
-   { it_gap },
-   { it_variable, "", "savegame_3" },
-   { it_gap },
-   { it_variable, "", "savegame_4" },
-   { it_gap },
-   { it_variable, "", "savegame_5" },
-   { it_gap },
-   { it_variable, "", "savegame_6" },
-   { it_gap },
-   { it_variable, "", "savegame_7" },
-   { it_end }
-};
-
-static void MN_HSaveDrawer();
-
-#define HSAVEGAME_BOX_X 70
-#define HSAVEGAME_BOX_Y 30
-#define HSAVEGAME_X (HSAVEGAME_BOX_X + 5)
-#define HSAVEGAME_Y (HSAVEGAME_BOX_Y + 5)
-
-menu_t menu_hsavegame =
-{
-   mn_hsavegame_items,            // items
-   NULL, NULL, NULL,              // pages
-   HSAVEGAME_X, HSAVEGAME_Y,      // x, y
-   0,                             // starting index
-   mf_skullmenu | mf_leftaligned, // flags
-   MN_HSaveDrawer,                // drawer
-   NULL, NULL,                    // contents stuff
-   11                             // gap size override
-};
-
-static void MN_HSaveDrawer()
-{
-   const char *title = "Save Game";
-
-   V_FontWriteText(menu_font_big, title, 
-                   160 - V_FontStringWidth(menu_font_big, title) / 2, 10,
-                   &subscreen43);
-
-   int x = HSAVEGAME_BOX_X;
-   int y = HSAVEGAME_BOX_Y;
-
-   for(int i = 0; i < 8; i++)
-   {
-      V_DrawPatch(x, y, &subscreen43, 
-                  PatchLoader::CacheName(wGlobalDir, "M_FSLOT", PU_CACHE));
-      y += 20;
-   }
-}
-
-static menuitem_t mn_hloadgame_items[] =
-{
-   { it_runcmd, "", "mn_load 0" },
-   { it_gap },
-   { it_runcmd, "", "mn_load 1" },
-   { it_gap },
-   { it_runcmd, "", "mn_load 2" },
-   { it_gap },
-   { it_runcmd, "", "mn_load 3" },
-   { it_gap },
-   { it_runcmd, "", "mn_load 4" },
-   { it_gap },
-   { it_runcmd, "", "mn_load 5" },
-   { it_gap },
-   { it_runcmd, "", "mn_load 6" },
-   { it_gap },
-   { it_runcmd, "", "mn_load 7" },
-   { it_end }
-};
-
-static void MN_HLoadDrawer();
-
-#define HLOADGAME_BOX_X 70
-#define HLOADGAME_BOX_Y 30
-#define HLOADGAME_X (HLOADGAME_BOX_X + 5)
-#define HLOADGAME_Y (HLOADGAME_BOX_Y + 5)
-
-menu_t menu_hloadgame =
-{
-   mn_hloadgame_items,            // items
-   NULL, NULL, NULL,              // pages
-   HLOADGAME_X, HLOADGAME_Y,      // x, y
-   0,                             // starting index
-   mf_skullmenu | mf_leftaligned, // flags
-   MN_HLoadDrawer,                // drawer
-   NULL, NULL,                    // contents stuff
-   11                             // gap size override
-};
-
-#define SAVESLOTS 8
-
-extern char *savegamenames[];
-
-static void MN_HLoadDrawer()
-{
-   const char *title = "Load Game";
-   static char *emptystr = NULL;
-
-   if(!emptystr)
-      emptystr = estrdup(DEH_String("EMPTYSTRING"));
-
-   V_FontWriteText(menu_font_big, title, 
-                   160 - V_FontStringWidth(menu_font_big, title) / 2, 10, 
-                   &subscreen43);
-
-   int x = HLOADGAME_BOX_X;
-   int y = HLOADGAME_BOX_Y;
-
-   for(int i = 0; i < 8; i++)
-   {
-      V_DrawPatch(x, y, &subscreen43, 
-                  PatchLoader::CacheName(wGlobalDir, "M_FSLOT", PU_CACHE));
-      y += 20;
-   }
-
-   // this is lame
-   for(int i = 0, j = 0; i < SAVESLOTS; i++, j += 2)
-   {
-      menu_hloadgame.menuitems[j].description =
-         savegamenames[i] ? savegamenames[i] : emptystr;
-   }
 }
 
 // EOF

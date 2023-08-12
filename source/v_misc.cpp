@@ -34,10 +34,12 @@
 #include "doomstat.h"
 #include "e_fonts.h"
 #include "hal/i_timer.h"
+#include "hu_over.h"
 #include "i_system.h"
 #include "i_video.h"
 #include "m_qstr.h"
 #include "m_swap.h"
+#include "r_context.h"
 #include "r_main.h" // haleyjd
 #include "r_patch.h"
 #include "r_state.h"
@@ -72,7 +74,7 @@ cb_video_t video =
    FRACUNIT,
    1.0f, 1.0f, 1.0f, 1.0f, 
    false,
-   {NULL, NULL, NULL, NULL}
+   {nullptr, nullptr, nullptr, nullptr}
 };
 
 //=============================================================================
@@ -96,7 +98,7 @@ void V_DrawBox(int x, int y, int w, int h)
    V_DrawPatch(x, y, &subscreen43, bgp[0]);    // ul
    for(j = x+xs; j < x+w-xs; j += xs)       // uc
       V_DrawPatch(j, y, &subscreen43, bgp[1]);
-   V_DrawPatchShadowed(j, y, &subscreen43, bgp[2], NULL, 65536);    // ur
+   V_DrawPatchShadowed(j, y, &subscreen43, bgp[2], nullptr, 65536);    // ur
    
    // middle rows
    for(i = y+ys; i < y+h-ys; i += ys)
@@ -104,14 +106,14 @@ void V_DrawBox(int x, int y, int w, int h)
       V_DrawPatch(x, i, &subscreen43, bgp[3]);    // cl
       for(j = x+xs; j < x+w-xs; j += xs)       // cc
          V_DrawPatch(j, i, &subscreen43, bgp[4]);
-      V_DrawPatchShadowed(j, i, &subscreen43, bgp[5], NULL, 65536);    // cr
+      V_DrawPatchShadowed(j, i, &subscreen43, bgp[5], nullptr, 65536);    // cr
    }
    
    // bottom row
-   V_DrawPatchShadowed(x, i, &subscreen43, bgp[6], NULL, 65536);
+   V_DrawPatchShadowed(x, i, &subscreen43, bgp[6], nullptr, 65536);
    for(j = x+xs; j < x+w-xs; j += xs)
-      V_DrawPatchShadowed(j, i, &subscreen43, bgp[7], NULL, 65536);
-   V_DrawPatchShadowed(j, i, &subscreen43, bgp[8], NULL, 65536);
+      V_DrawPatchShadowed(j, i, &subscreen43, bgp[7], nullptr, 65536);
+   V_DrawPatchShadowed(j, i, &subscreen43, bgp[8], nullptr, 65536);
 }
 
 static void V_InitBox()
@@ -216,7 +218,7 @@ void V_LoadingIncrease()
    else
       V_DrawLoading();
 
-   if(loading_amount == loading_total) loading_message = NULL;
+   if(loading_amount == loading_total) loading_message = nullptr;
 }
 
 //
@@ -318,13 +320,13 @@ void V_FPSTicker()
 //
 static void V_ClassicFPSDrawer()
 {
-  static int lasttic;
-  
-  int i = i_haltimer.GetTime();
-  int tics = i - lasttic;
-  lasttic = i;
-  if (tics > 20)
-    tics = 20;
+   static int lasttic;
+
+   int i = i_haltimer.GetTime();
+   int tics = i - lasttic;
+   lasttic = i;
+   if(tics > 20)
+      tics = 20;
 
    // SoM: ANYRES
    if(vbscreen.scaled)
@@ -385,17 +387,60 @@ static void V_TextFPSDrawer()
 // automatic scaling.
 //
 
-VBuffer vbscreen;        // vbscreen encapsulates the primary video surface
-VBuffer backscreen1;     // backscreen1 is a temporary buffer for in_lude, border
-VBuffer backscreen2;     // backscreen2 is a temporary buffer for screenshots
-VBuffer backscreen3;     // backscreen3 is a temporary buffer for f_wipe
-VBuffer subscreen43;     // provides a 4:3 sub-surface on vbscreen
-VBuffer vbscreenyscaled; // fits whole vbscreen but stretches pixels vertically by 20%
+VBuffer vbscreen;          // vbscreen encapsulates the primary video surface
+VBuffer vbscreensquarepx;  // like vbscreen but without aspect-ratio correction
+VBuffer backscreen1;       // backscreen1 is a temporary buffer for in_lude, border
+VBuffer backscreen2;       // backscreen2 is a temporary buffer for screenshots
+VBuffer backscreen3;       // backscreen3 is a temporary buffer for f_wipe
+VBuffer subscreen43;       // provides a 4:3 sub-surface on vbscreen
+VBuffer vbscreenyscaled;   // fits whole vbscreen but stretches pixels vertically by 20%
+VBuffer vbscreenfullres;   // hi-res unscaled screen for whatever you wanna draw 1:1
+VBuffer vbscreenmodernhud; // fits whole vbscreen or 16:9 subscreem, but with square pixels
+
 
 static bool vbscreenneedsfree = false;
 
 //
-// V_initSubScreen43
+// Initialise or update the Modern HUD's subscreen
+//
+void V_InitSubScreenModernHUD()
+{
+   V_UnsetScaling(&vbscreenmodernhud);
+
+   int subwidth;
+   int offset;
+   int unscaledw;
+   int unscaledh;
+
+   if(vbscreensquarepx.getRealAspectRatio() >= 16 * FRACUNIT / 9 && hud_restrictoverlaywidth)
+   {
+      subwidth  = vbscreensquarepx.height * 16 / 9;
+      offset    = (vbscreensquarepx.width - subwidth) / 2;
+      unscaledw = int(floor(vbscreensquarepx.unscaledh * 16.0 / 9.0)) & ~1;
+      unscaledh = vbscreensquarepx.unscaledh;
+   }
+   else if(vbscreen.getVirtualAspectRatio() == 4 * FRACUNIT / 3 && vbscreen.getRealAspectRatio() != vbscreen.getVirtualAspectRatio())
+   {
+      offset    = 0;
+      subwidth  = vbscreen.width;
+      unscaledw = vbscreen.unscaledw;
+      unscaledh = vbscreen.unscaledh;
+   }
+   else
+   {
+      const double scaleaspect = double(vbscreen.width) / double(vbscreen.height);
+
+      subwidth  = vbscreen.width;
+      offset    = 0;
+      unscaledw = int(floor(vbscreensquarepx.unscaledh * scaleaspect)) & ~1;
+      unscaledh = vbscreensquarepx.unscaledh;
+   }
+
+
+   V_InitSubVBuffer(&vbscreenmodernhud, &vbscreen, offset, 0, subwidth, vbscreen.height);
+   V_SetScaling(&vbscreenmodernhud, unscaledw, unscaledh);
+}
+
 //
 // Initialize a 4:3 subscreen on top of the vbscreen VBuffer.
 //
@@ -416,10 +461,13 @@ static void V_initSubScreen43()
       subwidth = vbscreen.height * 4 / 3;
       offset   = (vbscreen.width - subwidth) / 2;
 
-      const double scaleaspect = 1.2 * static_cast<double>(vbscreen.width) /
-                                 static_cast<double>(vbscreen.height);
-      unscaledw = static_cast<int>(round(SCREENHEIGHT * scaleaspect));
+      const double scaleaspect = 1.2 * double(vbscreen.width) / double(vbscreen.height);
+      unscaledw                = int(floor(SCREENHEIGHT * scaleaspect)) & ~1;
 
+      // FIXME(?): vbscreenyscaled doesn't work if unscaledw is larger than vbscreen.width,
+      // which happens if the vbscreen.height < SCREENHEIGHT * 1.2 (roughly)
+      if(unscaledw > vbscreen.width)
+         unscaledw = vbscreen.width;
       // FIXME(?): our scaling code cannot handle a subscreen smaller than 320x200
       if(subwidth < SCREENWIDTH)
       {
@@ -443,31 +491,42 @@ static void V_InitScreenVBuffer()
    if(vbscreenneedsfree)
    {
       V_FreeVBuffer(&vbscreen);
+      V_FreeVBuffer(&vbscreensquarepx);
       V_FreeVBuffer(&backscreen1);
       V_FreeVBuffer(&backscreen2);
       V_FreeVBuffer(&backscreen3);
       V_FreeVBuffer(&subscreen43);
       V_FreeVBuffer(&vbscreenyscaled);
+      V_FreeVBuffer(&vbscreenmodernhud);
+      V_FreeVBuffer(&vbscreenfullres);
    }
    else
       vbscreenneedsfree = true;
 
-   V_InitVBufferFrom(&vbscreen, video.width, video.height, video.pitch, 
+   V_InitVBufferFrom(&vbscreen, video.width, video.height, video.pitch,
                      video.bitdepth, video.screens[0]);
    V_SetScaling(&vbscreen, SCREENWIDTH, SCREENHEIGHT);
 
-   V_InitVBufferFrom(&backscreen1, video.width, video.height, video.width, 
+   V_InitVBufferFrom(&vbscreensquarepx, video.width, video.height, video.pitch,
+                     video.bitdepth, video.screens[0]);
+   V_SetScaling(&vbscreensquarepx, SCREENWIDTH, int(SCREENHEIGHT * 1.2));
+
+   V_InitVBufferFrom(&vbscreenfullres, video.width, video.height, video.pitch,
+                     video.bitdepth, video.screens[0]);
+
+   V_InitVBufferFrom(&backscreen1, video.width, video.height, video.height,
                      video.bitdepth, video.screens[1]);
    V_SetScaling(&backscreen1, SCREENWIDTH, SCREENHEIGHT);
 
    // Only vbscreen and backscreen1 need scaling set.
-   V_InitVBufferFrom(&backscreen2, video.width, video.height, video.width, 
+   V_InitVBufferFrom(&backscreen2, video.width, video.height, video.height,
                      video.bitdepth, video.screens[2]);
-   V_InitVBufferFrom(&backscreen3, video.width, video.height, video.width, 
+   V_InitVBufferFrom(&backscreen3, video.width, video.height, video.height,
                      video.bitdepth, video.screens[3]);
 
-   // Init subscreen43
+   // Init subscreen43 and subscreenmodernhud
    V_initSubScreen43();
+   V_InitSubScreenModernHUD();
 }
 
 //
@@ -478,9 +537,11 @@ static void V_InitScreenVBuffer()
 //
 void V_Init()
 {
-   static byte *s = NULL;
+   static byte *s = nullptr;
    
    int size = video.width * video.height;
+
+   R_InitContexts(video.width);
 
    // haleyjd 04/29/13: purge and reallocate all VAllocItem instances
    VAllocItem::FreeAllocs();
@@ -504,7 +565,7 @@ void V_Init()
 // Tiles a 64 x 64 flat over the entirety of the provided VBuffer
 // surface. Used by menus, intermissions, finales, etc.
 //
-void V_DrawBackgroundCached(byte *src, VBuffer *back_dest)
+void V_DrawBackgroundCached(const byte *src, VBuffer *back_dest)
 {
    back_dest->TileBlock64(back_dest, src);
 }
@@ -515,7 +576,7 @@ void V_DrawBackgroundCached(byte *src, VBuffer *back_dest)
 void V_DrawBackground(const char *patchname, VBuffer *back_dest)
 {
    int         tnum = R_FindFlat(patchname) - flatstart;
-   byte        *src;
+   const byte *src;
    
    // SoM: Extra protection, I don't think this should ever actually happen.
    if(tnum < 0 || tnum >= numflats)   
@@ -526,7 +587,7 @@ void V_DrawBackground(const char *patchname, VBuffer *back_dest)
    back_dest->TileBlock64(back_dest, src);
 }
 
-byte *R_DistortedFlat(int, bool);
+byte *R_DistortedFlat(ZoneHeap &heap, int, bool);
 
 //
 // V_DrawDistortedBackground
@@ -536,8 +597,10 @@ byte *R_DistortedFlat(int, bool);
 //
 void V_DrawDistortedBackground(const char *patchname, VBuffer *back_dest)
 {
-   byte *src = R_DistortedFlat(R_FindFlat(patchname), true);
-   
+   const int patchNum = R_FindFlat(patchname);
+   R_CacheTexture(patchNum);
+   const byte *src = R_DistortedFlat(*r_globalcontext.heap, patchNum, true);
+
    back_dest->TileBlock64(back_dest, src);
 }
 
@@ -564,7 +627,7 @@ void V_InitMisc()
 //
 
 const char *str_ticker[] = { "off", "chart", "classic", "text" };
-VARIABLE_INT(v_ticker, NULL, 0, 3,  str_ticker);
+VARIABLE_INT(v_ticker, nullptr, 0, 3,  str_ticker);
 
 CONSOLE_COMMAND(v_fontcolors, 0)
 {
@@ -593,8 +656,7 @@ CONSOLE_COMMAND(v_fontcolors, 0)
       return;
    }
 
-   path = userpath;
-   path.pathConcatenate(Console.argv[1]->constPtr());
+   path = userpath / *Console.argv[1];
 
    if((f = fopen(path.constPtr(), "w")))
    {
@@ -629,8 +691,7 @@ CONSOLE_COMMAND(v_dumppatch, 0)
    }
 
    lump = Console.argv[0]->constPtr();
-   filename = usergamepath;
-   filename.pathConcatenate(Console.argv[1]->constPtr());
+   filename = usergamepath / *Console.argv[1];
    filename.addDefaultExtension(".png");
 
    fillcolor = Console.argv[2]->toInt();

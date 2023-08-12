@@ -24,51 +24,38 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
 
 // Some action functions are still needed here.
 #include "a_args.h"
 #include "a_common.h"
 #include "a_doom.h"
 
-#include "a_small.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_gi.h"
-#include "d_io.h"
 #include "d_mod.h"
 #include "doomstat.h"
 #include "e_args.h"
-#include "e_lib.h"
 #include "e_player.h"
-#include "e_sound.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
 #include "ev_specials.h"
-#include "g_game.h"
 #include "m_bbox.h"
+#include "m_collection.h"
 #include "metaapi.h"
-#include "p_anim.h"      // haleyjd
 #include "p_enemy.h"
-#include "p_info.h"
 #include "p_inter.h"
-#include "p_map.h"
 #include "p_map3d.h"
-#include "p_maputl.h"
 #include "p_mobjcol.h"
 #include "p_partcl.h"
+#include "p_portal.h"
 #include "p_setup.h"
 #include "p_spec.h"
-#include "p_tick.h"
-#include "r_defs.h"
 #include "r_main.h"
-#include "r_pcheck.h"
 #include "r_portal.h"
 #include "r_state.h"
 #include "s_sound.h"
-#include "sounds.h"
-#include "w_wad.h"
 
 extern fixed_t FloatBobOffsets[64]; // haleyjd: Float Bobbing
 
@@ -83,19 +70,14 @@ static Mobj *current_actor;
 //
 
 //
-// P_RecursiveSound
-//
 // Called by P_NoiseAlert.
 // Recursively traverse adjacent sectors,
 // sound blocking lines cut off traversal.
 //
 // killough 5/5/98: reformatted, cleaned up
 //
-static void P_RecursiveSound(sector_t *sec, int soundblocks,
-                             Mobj *soundtarget)
+static void P_recursiveSound(sector_t *sec, const int soundblocks, Mobj *soundtarget)
 {
-   int i;
-   
    // wake up all monsters in this sector
    if(sec->validcount == validcount &&
       sec->soundtraversed <= soundblocks+1)
@@ -105,73 +87,131 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
    sec->soundtraversed = soundblocks+1;
    P_SetTarget<Mobj>(&sec->soundtarget, soundtarget);    // killough 11/98
 
-#ifdef R_LINKEDPORTALS
-   if(sec->f_pflags & PS_PASSSOUND)
+   // Check the floor and ceiling portals
+   for(surf_e surf : SURFS)
    {
-      // Ok, because the same portal can be used on many sectors and even
-      // lines, the portal structure won't tell you what sector is on the
-      // other side of the portal. SO
-      sector_t *other;
-      line_t *check = sec->lines[0];
+      if(!(sec->srf[surf].pflags & PS_PASSSOUND))
+         continue;
 
-      other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) 
-                             + R_FPLink(sec)->deltax,
-                            ((check->v1->y + check->v2->y) / 2) 
-                             + R_FPLink(sec)->deltay)->sector;
-
-      P_RecursiveSound(other, soundblocks, soundtarget);
+      int neighcount;
+      const int *neighlist = P_GetSectorPortalNeighbors(*sec, surf, &neighcount);
+      for(int i = 0; i < neighcount; ++i)
+         P_recursiveSound(&sectors[neighlist[i]], soundblocks, soundtarget);
    }
-   
-   if(sec->c_pflags & PS_PASSSOUND)
-   {
-      // Ok, because the same portal can be used on many sectors and even 
-      // lines, the portal structure won't tell you what sector is on the 
-      // other side of the portal. SO
-      sector_t *other;
-      line_t *check = sec->lines[0];
 
-      other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) 
-                             + R_CPLink(sec)->deltax,
-                            ((check->v1->y + check->v2->y) / 2) 
-                             + R_CPLink(sec)->deltay)->sector;
-
-      P_RecursiveSound(other, soundblocks, soundtarget);
-   }
-#endif
-
-   for(i=0; i<sec->linecount; i++)
+   for(int i = 0; i < sec->linecount; i++)
    {
       sector_t *other;
-      line_t *check = sec->lines[i];
-      
-#ifdef R_LINKEDPORTALS
-      if(check->pflags & PS_PASSSOUND)
-      {
-         sector_t *iother;
-
-         iother = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + check->portal->data.link.deltax,
-                            ((check->v1->y + check->v2->y) / 2) + check->portal->data.link.deltay)->sector;
-
-         P_RecursiveSound(iother, soundblocks, soundtarget);
-      }
-#endif
+      const line_t *check = sec->lines[i];
       if(!(check->flags & ML_TWOSIDED))
          continue;
 
-      P_LineOpening(check, NULL);
-      
-      if(clip.openrange <= 0)
+      clip.open = P_LineOpening(check, nullptr);
+
+      if(clip.open.range <= 0)
          continue;       // closed door
 
+      // Only for front-facing wall portals
+
+      // NOTE: edge portals don't need any handling, because the sound propagates through the
+      // expanded line opening naturally to the sector behind, after which it can propagate through
+      // the sector portal.
+      if(check->pflags & PS_PASSSOUND && check->frontsector == sec)
+      {
+         v2fixed_t mid = { check->v1->x + check->dx / 2, check->v1->y + check->dy / 2};
+         v2fixed_t nudge = P_GetSafeLineNormal(*check) / (1 << (FRACBITS - 8));
+
+         sector_t *iother = R_PointInSubsector(mid - nudge +
+                                               v2fixed_t(check->portal->data.link.delta))->sector;
+
+         P_recursiveSound(iother, soundblocks, soundtarget);
+      }
+
       other=sides[check->sidenum[sides[check->sidenum[0]].sector==sec]].sector;
-      
+
       if(!(check->flags & ML_SOUNDBLOCK))
-         P_RecursiveSound(other, soundblocks, soundtarget);
+         P_recursiveSound(other, soundblocks, soundtarget);
       else if(!soundblocks)
-         P_RecursiveSound(other, 1, soundtarget);
+         P_recursiveSound(other, 1, soundtarget);
+   }
+}
+
+//
+// Called by P_NoiseAlert.
+// Iteratively traverse adjacent sectors, sound blocking lines cut off traversal.
+// Gated off by demo check since I don't trust replacing P_RecursiveSoun with an
+// iterative version to not break demos.
+//
+static void P_iterativeSound(sector_t *sec, const int soundblocks, Mobj *soundtarget)
+{
+   struct soundIteratorContext_t
+   {
+      sector_t *stack;
+      int soundblocks;
+   };
+
+   PODCollection<soundIteratorContext_t> stack;
+   stack.add({ sec, soundblocks });
+
+   while(!stack.isEmpty())
+   {
+      auto [sec, soundblocks] = stack.pop();
+
+      // wake up all monsters in this sector
+      if(sec->validcount == validcount && sec->soundtraversed <= soundblocks + 1)
+         continue; // already flooded
+
+      sec->validcount = validcount;
+      sec->soundtraversed = soundblocks + 1;
+      P_SetTarget<Mobj>(&sec->soundtarget, soundtarget);    // killough 11/98
+
+      // Check the floor and ceiling portals
+      for(surf_e surf : SURFS)
+      {
+         if(!(sec->srf[surf].pflags & PS_PASSSOUND))
+            continue;
+
+         int neighcount;
+         const int *neighlist = P_GetSectorPortalNeighbors(*sec, surf, &neighcount);
+         for(int i = 0; i < neighcount; ++i)
+            stack.add({ &sectors[neighlist[i]], soundblocks });
+      }
+
+      for(int i = 0; i < sec->linecount; i++)
+      {
+         sector_t *other;
+         const line_t *check = sec->lines[i];
+         if(!(check->flags & ML_TWOSIDED))
+            continue;
+
+         clip.open = P_LineOpening(check, nullptr);
+
+         if(clip.open.range <= 0)
+            continue; // closed door
+
+         // Only for front-facing wall portals
+
+         // NOTE: edge portals don't need any handling, because the sound propagates through the
+         // expanded line opening naturally to the sector behind, after which it can propagate through
+         // the sector portal.
+         if(check->pflags & PS_PASSSOUND && check->frontsector == sec)
+         {
+            v2fixed_t mid = { check->v1->x + check->dx / 2, check->v1->y + check->dy / 2 };
+            v2fixed_t nudge = P_GetSafeLineNormal(*check) / (1 << (FRACBITS - 8));
+
+            sector_t *iother = R_PointInSubsector(mid - nudge +
+               v2fixed_t(check->portal->data.link.delta))->sector;
+
+            stack.add({ iother, soundblocks });
+         }
+
+         other = sides[check->sidenum[sides[check->sidenum[0]].sector == sec]].sector;
+
+         if(!(check->flags & ML_SOUNDBLOCK))
+            stack.add({ other, soundblocks });
+         else if(!soundblocks)
+            stack.add({ other, 1 });
+      }
    }
 }
 
@@ -184,18 +224,21 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
 void P_NoiseAlert(Mobj *target, Mobj *emitter)
 {
    validcount++;
-   P_RecursiveSound(emitter->subsector->sector, 0, target);
+   if(demo_version >= 403)
+      P_iterativeSound(emitter->subsector->sector, 0, target);
+   else
+      P_recursiveSound(emitter->subsector->sector, 0, target);
 }
 
 //
-// P_CheckMeleeRange
+// A generalised form of P_CheckMeleeRange
 //
-bool P_CheckMeleeRange(Mobj *actor)
+bool P_CheckRange(Mobj *actor, fixed_t range)
 {
    Mobj *pl = actor->target;
-   if (!pl)
-       return false;
-   
+   if(!pl)
+      return false;
+
    // haleyjd 02/15/02: revision of joel's fix for z height check
    if(P_Use3DClipping())
    {
@@ -208,21 +251,32 @@ bool P_CheckMeleeRange(Mobj *actor)
 
    // ioanch 20151225: make it linked-portal aware
    fixed_t tx, ty;
-#ifdef R_LINKEDPORTALS
    tx = getThingX(actor, pl);
    ty = getThingY(actor, pl);
-#else
-   tx = pl->x;
-   ty = pl->y;
-#endif
 
-   fixed_t range = GameModeInfo->monsterMeleeRange == meleecalc_raven ?
-   MELEERANGE : MELEERANGE - 20 * FRACUNIT + pl->info->radius;
 
    return  // killough 7/18/98: friendly monsters don't attack other friends
       pl && !(actor->flags & pl->flags & MF_FRIEND) &&
       (P_AproxDistance(tx - actor->x, ty - actor->y) < range) &&
       P_CheckSight(actor, actor->target);
+
+}
+
+//
+// P_CheckMeleeRange
+//
+bool P_CheckMeleeRange(Mobj *actor)
+{
+   Mobj *pl = actor->target;
+   if(!pl)
+      return false;
+
+   fixed_t range = actor->info->meleerange;
+   if(GameModeInfo->monsterMeleeRange == meleecalc_doom)
+      range += pl->info->radius - 20 * FRACUNIT;
+
+   return P_CheckRange(actor, range);
+
 }
 
 //
@@ -244,13 +298,8 @@ bool P_HitFriend(Mobj *actor)
       angle_t angle;
       fixed_t dist, tx, ty;
 
-#ifdef R_LINKEDPORTALS
       tx = getTargetX(actor);
       ty = getTargetY(actor);
-#else
-      tx = actor->target->x;
-      ty = actor->target->y;
-#endif
       angle = P_PointToAngle(actor->x, actor->y, tx, ty);
       dist  = P_AproxDistance(actor->x - tx, actor->y - ty);
 
@@ -303,13 +352,8 @@ bool P_CheckMissileRange(Mobj *actor)
       return false;       // do not attack yet
 
    // OPTIMIZE: get this from a global checksight
-#ifdef R_LINKEDPORTALS
    dist = P_AproxDistance(actor->x - getTargetX(actor),
                           actor->y - getTargetY(actor)) - 64*FRACUNIT;
-#else
-   dist = P_AproxDistance(actor->x - actor->target->x,
-                          actor->y - actor->target->y) - 64*FRACUNIT;
-#endif
 
    if(actor->info->meleestate == NullStateNum)
       dist -= 128*FRACUNIT;       // no melee attack, so fire more
@@ -334,6 +378,8 @@ bool P_CheckMissileRange(Mobj *actor)
 
    if(actor->flags2 & MF2_RANGEHALF)
       dist >>= 1;
+   if(actor->flags4 & MF4_RANGEEIGHTH)
+      dist >>= 3;
 
    if(dist > 200)
       dist = 200;
@@ -363,18 +409,17 @@ bool P_CheckMissileRange(Mobj *actor)
 static bool P_IsOnLift(const Mobj *actor)
 {
    const sector_t *sec = actor->subsector->sector;
-   line_t line;
 
    // Short-circuit: it's on a lift which is active.
-   if(thinker_cast<PlatThinker *>(sec->floordata) != NULL)
+   if(thinker_cast<PlatThinker *>(sec->srf.floor.data) != nullptr)
       return true;
 
    // Check to see if it's in a sector which can be 
    // activated as a lift.
    // ioanch 20160303: use args[0]
-   if((line.args[0] = sec->tag))
+   if(sec->tag)
    {
-      for(int l = -1; (l = P_FindLineFromLineArg0(&line, l)) >= 0;)
+      for(int l = -1; (l = P_FindLineFromTag(sec->tag, l)) >= 0;)
       {
          // FIXME: I'm still keeping the old code because I don't know of any MBF
          // demos which can verify all of this. If you're confident you found one,
@@ -420,7 +465,7 @@ static int P_IsUnderDamage(Mobj *actor)
 
    for(seclist = actor->touching_sectorlist; seclist; seclist = seclist->m_tnext)
    {
-      if((cl = thinker_cast<CeilingThinker *>(seclist->m_sector->ceilingdata)) &&
+      if((cl = thinker_cast<CeilingThinker *>(seclist->m_sector->srf.ceiling.data)) &&
          !cl->inStasis)
          dir |= cl->direction;
    }
@@ -456,8 +501,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
    // let gravity drop them down, unless they're moving down a step.
    if(P_Use3DClipping())
    {
-      if(!(actor->flags & MF_FLOAT) && actor->z > actor->zref.floor &&
-         !(actor->intflags & MIF_ONMOBJ))
+      if(!(actor->flags & MF_FLOAT) && !P_OnGroundOrThing(*actor))
       {
          if (actor->z > actor->zref.floor + STEPSIZE)
             return false;
@@ -497,6 +541,8 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       fixed_t x = actor->x;
       fixed_t y = actor->y;
       fixed_t floorz = actor->zref.floor;
+      int floorgroupid = actor->zref.floorgroupid;
+      const sector_t *floorsector = actor->zref.floorsector;
       fixed_t ceilingz = actor->zref.ceiling;
       fixed_t dropoffz = actor->zref.dropoff;
       
@@ -511,6 +557,8 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
          actor->x = x;
          actor->y = y;
          actor->zref.floor = floorz;
+         actor->zref.floorgroupid = floorgroupid;
+         actor->zref.floorsector = floorsector;
          actor->zref.ceiling = ceilingz;
          actor->zref.dropoff = dropoffz;
          P_SetThingPosition(actor);
@@ -588,7 +636,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       clip.numspechit = 0;
 
       // haleyjd 04/11/10: wider compatibility range
-      if(!good || comp[comp_doorstuck]) // v1.9, or BOOM 2.01 compatibility
+      if(!good || getComp(comp_doorstuck)) // v1.9, or BOOM 2.01 compatibility
          return good;
       else if(demo_version == 202) // BOOM 2.02
          return (P_Random(pr_trywalk) & 3);
@@ -607,7 +655,8 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
 
    // killough 11/98: fall more slowly, under gravity, if felldown==true
    // haleyjd: OVER_UNDER: not while in 3D clipping mode
-   if(!P_Use3DClipping())
+   // VANILLA_HERETIC: inferior 3D clipping engine
+   if(!P_Use3DClipping() || vanilla_heretic)
    {
       if(!(actor->flags & MF_FLOAT) && (!clip.felldown || demo_version < 203))
       {
@@ -632,7 +681,7 @@ bool P_SmartMove(Mobj *actor)
    int on_lift, dropoff = 0, under_damage;
 
    // killough 9/12/98: Stay on a lift if target is on one
-   on_lift = !comp[comp_staylift] && target && target->health > 0 &&
+   on_lift = !getComp(comp_staylift) && target && target->health > 0 &&
       target->subsector->sector->tag==actor->subsector->sector->tag &&
       P_IsOnLift(actor);
 
@@ -649,13 +698,7 @@ bool P_SmartMove(Mobj *actor)
    if((actor->flags2 & MF2_JUMPDOWN || (actor->type == HelperThing)) &&
       target && dog_jumping &&
       !((target->flags ^ actor->flags) & MF_FRIEND) &&
-#ifdef R_LINKEDPORTALS
-      P_AproxDistance(actor->x - getTargetX(actor),
-                      actor->y - getTargetY(actor)) < FRACUNIT*144 &&
-#else
-      P_AproxDistance(actor->x - target->x,
-                      actor->y - target->y) < FRACUNIT*144 &&
-#endif      
+      P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor)) < FRACUNIT*144 &&
       P_Random(pr_dropoff) < 235)
    {
       dropoff = 2;
@@ -784,9 +827,14 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
 // monsters to free themselves without making them tend to
 // hang over dropoffs.
 
-static fixed_t dropoff_deltax, dropoff_deltay, floorz;
+struct avoiddropoff_t
+{
+   v2fixed_t delta;
+   fixed_t floorz;
+};
+static avoiddropoff_t avoiddropoff; // currently we change global state
 
-static bool PIT_AvoidDropoff(line_t *line, polyobj_s *po, void *context)
+static bool PIT_AvoidDropoff(line_t *line, polyobj_t *po, void *context)
 {
    if(line->backsector                          && // Ignore one-sided linedefs
       clip.bbox[BOXRIGHT]  > line->bbox[BOXLEFT]   &&
@@ -795,14 +843,14 @@ static bool PIT_AvoidDropoff(line_t *line, polyobj_s *po, void *context)
       clip.bbox[BOXBOTTOM] < line->bbox[BOXTOP]    &&
       P_BoxOnLineSide(clip.bbox, line) == -1)
    {
-      fixed_t front = line->frontsector->floorheight;
-      fixed_t back  = line->backsector->floorheight;
+      fixed_t front = line->frontsector->srf.floor.height;
+      fixed_t back  = line->backsector->srf.floor.height;
       angle_t angle;
 
       // The monster must contact one of the two floors,
       // and the other must be a tall dropoff (more than 24).
 
-      if(back == floorz && front < floorz - STEPSIZE)
+      if(back == avoiddropoff.floorz && front < avoiddropoff.floorz - STEPSIZE)
       {
          // front side dropoff
          angle = P_PointToAngle(0,0,line->dx,line->dy);
@@ -810,7 +858,7 @@ static bool PIT_AvoidDropoff(line_t *line, polyobj_s *po, void *context)
       else
       {
          // back side dropoff
-         if(front == floorz && back < floorz - STEPSIZE)
+         if(front == avoiddropoff.floorz && back < avoiddropoff.floorz - STEPSIZE)
             angle = P_PointToAngle(line->dx,line->dy,0,0);
          else
             return true;
@@ -818,8 +866,8 @@ static bool PIT_AvoidDropoff(line_t *line, polyobj_s *po, void *context)
 
       // Move away from dropoff at a standard speed.
       // Multiple contacted linedefs are cumulative (e.g. hanging over corner)
-      dropoff_deltax -= finesine[angle >> ANGLETOFINESHIFT]*32;
-      dropoff_deltay += finecosine[angle >> ANGLETOFINESHIFT]*32;
+      avoiddropoff.delta.x -= finesine[angle >> ANGLETOFINESHIFT]*32;
+      avoiddropoff.delta.y += finecosine[angle >> ANGLETOFINESHIFT]*32;
    }
 
    return true;
@@ -838,9 +886,9 @@ static fixed_t P_AvoidDropoff(Mobj *actor)
    int xl=((clip.bbox[BOXLEFT]  = actor->x-actor->radius)-bmaporgx)>>MAPBLOCKSHIFT;
    int bx, by;
 
-   floorz = actor->z;            // remember floor height
+   avoiddropoff.floorz = actor->z;            // remember floor height
 
-   dropoff_deltax = dropoff_deltay = 0;
+   avoiddropoff.delta = {};
 
    // check lines
 
@@ -853,7 +901,7 @@ static fixed_t P_AvoidDropoff(Mobj *actor)
    }
    
    // Non-zero if movement prescribed
-   return dropoff_deltax | dropoff_deltay;
+   return avoiddropoff.delta.x | avoiddropoff.delta.y;
 }
 
 //
@@ -864,13 +912,8 @@ static fixed_t P_AvoidDropoff(Mobj *actor)
 void P_NewChaseDir(Mobj *actor)
 {
    Mobj *target = actor->target;
-#ifdef R_LINKEDPORTALS
    fixed_t deltax = getTargetX(actor) - actor->x;
    fixed_t deltay = getTargetY(actor) - actor->y;
-#else
-   fixed_t deltax = target->x - actor->x;
-   fixed_t deltay = target->y - actor->y;
-#endif
 
    // killough 8/8/98: sometimes move away from target, keeping distance
    //
@@ -886,9 +929,9 @@ void P_NewChaseDir(Mobj *actor)
          !(actor->flags & (MF_DROPOFF|MF_FLOAT)) &&
          (!P_Use3DClipping() || 
           !(actor->intflags & MIF_ONMOBJ)) && // haleyjd: OVER_UNDER
-         !comp[comp_dropoff] && P_AvoidDropoff(actor)) // Move away from dropoff
+         !getComp(comp_dropoff) && P_AvoidDropoff(actor)) // Move away from dropoff
       {
-         P_DoNewChaseDir(actor, dropoff_deltax, dropoff_deltay);
+         P_DoNewChaseDir(actor, avoiddropoff.delta.x, avoiddropoff.delta.y);
          
          // If moving away from dropoff, set movecount to 1 so that 
          // small steps are taken to get monster away from dropoff.
@@ -919,8 +962,8 @@ void P_NewChaseDir(Mobj *actor)
                if(monster_backing &&
                   actor->info->missilestate != NullStateNum && 
                   !(actor->flags2 & MF2_NOSTRAFE) &&
-                  ((target->info->missilestate == NullStateNum && dist < MELEERANGE*2) ||
-                   (target->player && dist < MELEERANGE*3 &&
+                  ((target->info->missilestate == NullStateNum && dist < target->info->meleerange * 2) ||
+                   (target->player && dist < target->info->meleerange * 3 &&
                     target->player->readyweapon->flags & WPF_FLEEMELEE)))
                {
                   // Back away from melee attacker
@@ -959,27 +1002,32 @@ static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
    // haleyjd 11/14/02: Heretic ghost effects
    if(mo->flags3 & MF3_GHOST)
    {
-      if(P_AproxDistance(mox - actor->x, moy - actor->y) > 2*MELEERANGE 
-         && P_AproxDistance(mo->momx, mo->momy) < 5*FRACUNIT)
+      if(P_AproxDistance(mox - actor->x, moy - actor->y) > SNEAKRANGE &&
+         P_AproxDistance(mo->momx, mo->momy) < 5 * FRACUNIT)
       {
          // when distant and moving slow, target is considered
          // to be "sneaking"
          return false;
       }
-      if(P_Random(pr_ghostsneak) < 225)
+      // VANILLA_HERETIC: move this check _after_ P_CheckSight for demo compatibility
+      if(!vanilla_heretic && P_Random(pr_ghostsneak) < 225)
          return false;
    }
 
    if(!allaround)
    {
-      angle_t an = P_PointToAngle(actor->x, actor->y, 
-                                   mox, moy) - actor->angle;
-      if(an > ANG90 && an < ANG270 &&
-         P_AproxDistance(mox-actor->x, moy-actor->y) > MELEERANGE)
+      const angle_t an = P_PointToAngle(actor->x, actor->y, mox, moy) - actor->angle;
+      if(an > ANG90 && an < ANG270 && P_AproxDistance(mox-actor->x, moy-actor->y) > WAKEUPRANGE)
          return false;
    }
 
-   return P_CheckSight(actor, mo);
+   if(!P_CheckSight(actor, mo))
+      return false;
+
+   if(vanilla_heretic && mo->flags3 & MF3_GHOST && P_Random(pr_ghostsneak) < 225)
+      return false;
+
+   return true;
 }
 
 int p_lastenemyroar;
@@ -1153,6 +1201,8 @@ bool P_LookForPlayers(Mobj *actor, int allaround)
    stopc = demo_version < 203 && !demo_compatibility && monsters_remember ?
            MAXPLAYERS : 2;       // killough 9/9/98
 
+   bool unseen[MAXPLAYERS] = {};
+
    for(;; actor->lastlook = (actor->lastlook + 1) & (MAXPLAYERS - 1))
    {
       if(!playeringame[actor->lastlook])
@@ -1175,7 +1225,7 @@ bool P_LookForPlayers(Mobj *actor, int allaround)
                // would ideally remain balanced (lastenemy already has a ref
                // from actor, so it's only moving to target).
                actor->target = actor->lastenemy;
-               actor->lastenemy = NULL;
+               actor->lastenemy = nullptr;
                return true;
             }
          }
@@ -1188,14 +1238,17 @@ bool P_LookForPlayers(Mobj *actor, int allaround)
       if(player->health <= 0)
          continue;               // dead
       
-      if(!P_IsVisible(actor, player->mo, allaround))
+      if(unseen[actor->lastlook] || !P_IsVisible(actor, player->mo, allaround))
+      {
+         unseen[actor->lastlook] = true;
          continue;
+      }
       
       P_SetTarget<Mobj>(&actor->target, player->mo);
 
       // killough 9/9/98: give monsters a threshold towards getting players
       // (we don't want it to be too easy for a player with dogs :)
-      if(demo_version >= 203 && !comp[comp_pursuit])
+      if(demo_version >= 203 && !getComp(comp_pursuit))
          actor->threshold = 60;
       
       return true;
@@ -1224,7 +1277,7 @@ static bool P_LookForMonsters(Mobj *actor, int allaround)
       if(actor->target != actor->lastenemy)
          P_LastEnemyRoar(actor);
       P_SetTarget<Mobj>(&actor->target, actor->lastenemy);
-      P_SetTarget<Mobj>(&actor->lastenemy, NULL);
+      P_SetTarget<Mobj>(&actor->lastenemy, nullptr);
       return true;
    }
 
@@ -1363,7 +1416,7 @@ bool P_HelpFriend(Mobj *actor)
 // haleyjd 08/07/04: generalized code to make a thing skullfly.
 // actor->target must be valid.
 //
-void P_SkullFly(Mobj *actor, fixed_t speed)
+void P_SkullFly(Mobj *actor, fixed_t speed, bool useSeeState)
 {
    Mobj *dest;
    angle_t an;
@@ -1371,13 +1424,17 @@ void P_SkullFly(Mobj *actor, fixed_t speed)
 
    dest = actor->target;
    actor->flags |= MF_SKULLFLY;
+   if(useSeeState)
+      actor->intflags |= MIF_SKULLFLYSEE;
+   else
+      actor->intflags &= ~MIF_SKULLFLYSEE;
 
    actionargs_t actionargs;
 
    actionargs.actiontype = actionargs_t::MOBJFRAME;
    actionargs.actor      = actor;
    actionargs.args       = ESAFEARGS(actor);
-   actionargs.pspr       = NULL;
+   actionargs.pspr       = nullptr;
 
    A_FaceTarget(&actionargs);
    an = actor->angle >> ANGLETOFINESHIFT;
@@ -1427,7 +1484,7 @@ void P_BossTeleport(bossteleport_t *bt)
          // ioanch 20151230: portal aware
          x = getThingX(boss, targ);
          y = getThingY(boss, targ);
-         if(P_AproxDistance(boss->x - x, boss->y - y) > bt->minDistance)
+         if(P_AproxDistance(boss->x - x, boss->y - y) >= bt->minDistance)
          {
             foundSpot = true;
             break;
@@ -1449,10 +1506,9 @@ void P_BossTeleport(bossteleport_t *bt)
    prevy = boss->y;
    prevz = boss->z;
 
-   if(P_TeleportMove(boss, targ->x, targ->y, false))
+   if(P_TeleportMove(boss, targ->x, targ->y, 0))
    {
-      if(bt->hereThere <= BOSSTELE_BOTH &&
-         bt->hereThere != BOSSTELE_NONE)
+      if(bt->hereThere <= BOSSTELE_BOTH && bt->hereThere != BOSSTELE_NONE)
       {
          Mobj *mo = P_SpawnMobj(prevx, prevy, prevz + bt->zpamt, bt->fxtype);
          S_StartSound(mo, bt->soundNum);
@@ -1462,8 +1518,7 @@ void P_BossTeleport(bossteleport_t *bt)
          P_SetMobjState(boss, bt->state);
       S_StartSound(boss, bt->soundNum);
 
-      if(bt->hereThere >= BOSSTELE_BOTH &&
-         bt->hereThere != BOSSTELE_NONE)
+      if(bt->hereThere >= BOSSTELE_BOTH && bt->hereThere != BOSSTELE_NONE)
          P_SpawnMobj(boss->x, boss->y, boss->z + bt->zpamt, bt->fxtype);
 
       boss->z = boss->zref.floor;
@@ -1539,7 +1594,7 @@ void A_PlayerStartScript(actionargs_t *actionargs)
 void A_FogSpawn(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
 
    if(actor->counters[0]-- > 0)
      return;
@@ -1687,18 +1742,21 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
          newmobj->flags2 = res[1];
          newmobj->flags3 = res[2];
          newmobj->flags4 = res[3];
+         newmobj->flags5 = res[4];
          break;
       case 1: // add flags
          newmobj->flags  |= res[0];
          newmobj->flags2 |= res[1];
          newmobj->flags3 |= res[2];
          newmobj->flags4 |= res[3];
+         newmobj->flags5 |= res[4];
          break;
       case 2: // rem flags
          newmobj->flags  &= ~res[0];
          newmobj->flags2 &= ~res[1];
          newmobj->flags3 &= ~res[2];
          newmobj->flags4 &= ~res[3];
+         newmobj->flags5 &= ~res[4];
          break;
       default:
          break;
@@ -1718,7 +1776,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
          fireargs.actiontype = actionargs_t::MOBJFRAME;
          fireargs.actor      = newmobj;
          fireargs.args       = ESAFEARGS(newmobj);
-         fireargs.pspr       = NULL;
+         fireargs.pspr       = nullptr;
 
          A_Fire(&fireargs);
       }
@@ -1790,7 +1848,7 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
 {
    int type;
    int flagsmode = -1;
-   const char *flags = NULL;
+   const char *flags = nullptr;
 
    if(!Console.argc)
    {
@@ -1812,7 +1870,8 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
          flagsmode = 2; // remove
    }
 
-   if((type = E_ThingNumForName(Console.argv[0]->constPtr())) == -1)
+   if((type = E_ThingNumForName(Console.argv[0]->constPtr())) == -1 &&
+      (type = E_ThingNumForCompatName(Console.argv[0]->constPtr())) == -1)
    {
       C_Printf("unknown thing type\n");
       return;
@@ -1901,7 +1960,7 @@ CONSOLE_COMMAND(mdk, cf_notnet|cf_level)
 {
    player_t *plyr = &players[consoleplayer];
    fixed_t slope;
-   int damage = 10000;
+   int damage = GOD_BREACH_DAMAGE;
 
    slope = P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, false);
 
@@ -1917,7 +1976,7 @@ CONSOLE_COMMAND(mdkbomb, cf_notnet|cf_level)
 {
    player_t *plyr = &players[consoleplayer];
    fixed_t slope;
-   int damage = 10000;
+   int damage = GOD_BREACH_DAMAGE;
 
    for(int i = 0; i < 60; i++)  // offset angles from its attack angle
    {
@@ -1979,8 +2038,8 @@ static void P_ResurrectPlayer()
 
       p->health = p->pclass->initialhealth;
       P_SpawnPlayer(&mthing);
-      oldmo->player = NULL;
-      P_TeleportMove(p->mo, p->mo->x, p->mo->y, true);
+      oldmo->player = nullptr;
+      P_TeleportMove(p->mo, p->mo->x, p->mo->y, TELEMOVE_BOSS);
    }
 }
 
@@ -1989,7 +2048,7 @@ CONSOLE_COMMAND(resurrect, cf_notnet|cf_level)
    P_ResurrectPlayer();
 }
 
-VARIABLE_BOOLEAN(p_lastenemyroar, NULL, onoff);
+VARIABLE_BOOLEAN(p_lastenemyroar, nullptr, onoff);
 CONSOLE_VARIABLE(p_lastenemyroar, p_lastenemyroar, 0) {}
 
 //----------------------------------------------------------------------------

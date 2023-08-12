@@ -34,6 +34,12 @@
 // The sky map is 256*128*4 maps.
 #define ANGLETOSKYSHIFT         22
 
+// Necessary height of sky to prevent stretching for looking up
+enum
+{
+   SKY_FREELOOK_HEIGHT = 200,
+};
+
 // haleyjd: information on sky flats
 struct skyflat_t
 {
@@ -57,17 +63,18 @@ struct skytexture_t
    int     height;     // true height of texture
    fixed_t texturemid; // vertical offset
    skytexture_t *next; // next skytexture in hash chain
+   byte medianColor; // median color for fading high pitch view of sky
 };
 
-// the sky texture hashtable
-extern skytexture_t *skytextures[NUMSKYCHAINS];
-
-extern int stretchsky;
+extern int stretchsky;  // DEPRECATED
 
 // init sky at start of level
 void R_StartSky();
 
 // sky texture info hashing functions
+void R_CacheSkyTexture(int);
+void R_CacheIfSkyTexture(int, int);
+void R_CacheSkyTextureAnimFrame(int, int);
 skytexture_t *R_GetSkyTexture(int);
 void R_ClearSkyTextures();
 

@@ -32,14 +32,20 @@
 #include "../e_rtti.h"
 #include "../m_collection.h"
 #include "../m_qstr.h"
+#include "../psnprntf.h"
 
 class HALGamePad;
 
-// Joystick device number, for config file
-extern int i_joysticknum;
+extern bool i_joystickenabled; // Use joysticks at all
+extern int  i_joysticknum;     // Joystick device number, for config file
 
-// Generic sensitivity value, for drivers that need it
-extern int i_joysticksens;
+// Joystick turning sensitvity
+extern double i_joyturnsens;
+
+// Generic sensitivity values, for drivers that need them
+extern int i_joy_deadzone_left;
+extern int i_joy_deadzone_right;
+extern int i_joy_deadzone_trigger;
 
 //
 // HALGamePadDriver
@@ -112,15 +118,20 @@ protected:
 public:
    HALGamePad();
 
+   // In interest of efficiency, we have caps on the number of device inputs
+   // we will monitor.
+   static inline constexpr int MAXAXES = 8;
+   static inline constexpr int MAXBUTTONS = 24;
+
    // Selection
    virtual bool select()   = 0; // Select as the input device
    virtual void deselect() = 0; // Deselect from input device status
-   
+
    // Input
    virtual void poll() = 0;     // Refresh all input state data
 
    // Haptic interface
-   virtual HALHapticInterface *getHapticInterface() { return NULL; }
+   virtual HALHapticInterface *getHapticInterface() { return nullptr; }
 
    // Data
    int     num;         // Device number
@@ -128,12 +139,15 @@ public:
    int     numAxes;     // Number of axes supported
    int     numButtons;  // Number of buttons supported
 
-   enum
+   virtual const char *getAxisName(const int axis)
    {
-      // In interest of efficiency, we have caps on the number of device inputs
-      // we will monitor.
-      MAXAXES = 8,
-      MAXBUTTONS = 16
+      static char output[16];
+      if(axis >= 0 && axis < MAXAXES)
+         psnprintf(output, sizeof(output), "Axis %d", axis);
+      else
+         strncpy(output, "Invalid axis", 16);
+
+      return output;
    };
 
    struct padstate_t
@@ -148,8 +162,10 @@ public:
 
 // Global interface
 
+typedef void (*gamePadChangeCallback_t)();
+
 bool I_SelectDefaultGamePad();
-void I_InitGamePads();
+void I_InitGamePads(gamePadChangeCallback_t callback);
 void I_ShutdownGamePads();
 HALGamePad::padstate_t *I_PollActiveGamePad();
 

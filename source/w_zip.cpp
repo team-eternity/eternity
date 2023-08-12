@@ -269,7 +269,7 @@ ZipFile::~ZipFile()
 
       // free the lump directory
       efree(lumps);
-      lumps    = NULL;
+      lumps    = nullptr;
       numLumps = 0;
    }
 
@@ -285,14 +285,14 @@ ZipFile::~ZipFile()
          efree(zw.buffer); // free the in-memory wad file
          efree(&zw);       // free the ZipWad structure
       }
-      wads = NULL;
+      wads = nullptr;
    }
 
    // close the disk file if it is open
    if(file)
    {
       fclose(file);
-      file = NULL;
+      file = nullptr;
    }
 }
 
@@ -410,7 +410,8 @@ bool ZipFile::readCentralDirEntry(InBuffer &fin, ZipLump &lump, bool &skip)
 
    // Is this lump an embedded wad file?
    const char *dotpos = strrchr(lump.name, '.');
-   if(dotpos && !strncmp(dotpos, ".wad", 4))
+   // Must block macOS archiving artifacts
+   if(dotpos && strncmp(lump.name, "__macosx/", 9) && !strncmp(dotpos, ".wad", 4))
       lump.flags |= LF_ISEMBEDDEDWAD;
 
    return true;
@@ -514,7 +515,7 @@ void ZipFile::checkForWadFiles(WadDirectory &parentDir)
       ZipWad *zipwad = estructalloc(ZipWad, 1);
 
       zipwad->size   = static_cast<size_t>(lumps[i].size);
-      zipwad->buffer = Z_Malloc(zipwad->size, PU_STATIC, NULL);
+      zipwad->buffer = Z_Malloc(zipwad->size, PU_STATIC, nullptr);
 
       lumps[i].read(zipwad->buffer);
 
@@ -627,8 +628,8 @@ public:
    {
       int code;
       
-      zlStream.zalloc = NULL;
-      zlStream.zfree  = NULL;
+      zlStream.zalloc = nullptr;
+      zlStream.zfree  = nullptr;
 
       buffer();
       

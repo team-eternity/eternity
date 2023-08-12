@@ -63,17 +63,17 @@ void SectorThinker::serialize(SaveArchive &arc)
       switch(getAttachPoint())
       {
       case ATTACH_FLOOR:
-         sector->floordata = this;
+         sector->srf.floor.data = this;
          break;
       case ATTACH_CEILING:
-         sector->ceilingdata = this;
+         sector->srf.ceiling.data = this;
          break;
       case ATTACH_FLOORCEILING:
-         sector->floordata   = this;
-         sector->ceilingdata = this;
+         sector->srf.floor.data = this;
+         sector->srf.ceiling.data = this;
          break;
       case ATTACH_LIGHT:
-         sector->lightingdata = this;
+         // NOTE: light thinkers don't exist
          break;
       default:
          break;
@@ -87,20 +87,37 @@ void SectorThinker::serialize(SaveArchive &arc)
 //
 
 //
-// P_NewSectorActionFromMobj
-//
 // Adds the Mobj's special to the sector
 //
 void P_NewSectorActionFromMobj(Mobj *actor)
 {
-#if 0
    sectoraction_t *newAction = estructalloc(sectoraction_t, 1);
 
-   if(actor->type == E_ThingNumForName("EESectorActionEnter"))
+   newAction->mo = actor;
+   if(actor->type == E_ThingNumForName("EESectorActionExit"))
+      newAction->actionflags = SEC_ACTION_EXIT;
+   else if(actor->type == E_ThingNumForName("EESectorActionEnter"))
+      newAction->actionflags = SEC_ACTION_ENTER;
+   else
    {
-      // TODO
+      efree(newAction);
+      return;
    }
-#endif
+
+   // TODO: Gate off for certain actions that this doesn't apply to if/when they get added
+   if(actor->spawnpoint.options & MTF_AMBUSH)
+      newAction->actionflags |= SEC_ACTION_MONSTER;
+   if(actor->spawnpoint.options & MTF_DORMANT)
+      newAction->actionflags |= SEC_ACTION_PROJECTILE;
+   if(actor->spawnpoint.options & MTF_FRIEND)
+      newAction->actionflags |= SEC_ACTION_NOPLAYER;
+   if(actor->spawnpoint.extOptions & MTF_EX_STAND)
+      newAction->actionflags |= SEC_ACTION_NOTREPEAT;
+
+   sector_t *sec = actor->subsector->sector;
+   newAction->links.insert(newAction, &(sec->actions));
+   if(sec->actions->dllNext)
+      sec->actions->dllData = sec->actions->dllNext->dllData + 1;
 }
 
 //
@@ -128,9 +145,9 @@ int EV_SectorSetRotation(const line_t *line, int tag, int floorangle,
    {
       sector = sectors + secnum;
    manualtrig:
-      sector->floorangle = static_cast<float>
+      sector->srf.floor.angle = static_cast<float>
          (E_NormalizeFlatAngle(floorangle) * PI / 180.0f);
-      sector->ceilingangle = static_cast<float>
+      sector->srf.ceiling.angle = static_cast<float>
          (E_NormalizeFlatAngle(ceilingangle) * PI / 180.0f);
       if(manual)
          return 1;
@@ -164,8 +181,8 @@ int EV_SectorSetCeilingPanning(const line_t *line, int tag, fixed_t xoffs,
    {
       sector = sectors + secnum;
    manualtrig:
-      sector->ceiling_xoffs = xoffs;
-      sector->ceiling_yoffs = yoffs;
+      sector->srf.ceiling.offset.x = xoffs;
+      sector->srf.ceiling.offset.y = yoffs;
       if(manual)
          return 1;
    }
@@ -198,8 +215,8 @@ int EV_SectorSetFloorPanning(const line_t *line, int tag, fixed_t xoffs,
    {
       sector = sectors + secnum;
    manualtrig:
-      sector->floor_xoffs = xoffs;
-      sector->floor_yoffs = yoffs;
+      sector->srf.floor.offset.x = xoffs;
+      sector->srf.floor.offset.y = yoffs;
       if(manual)
          return 1;
    }
@@ -242,10 +259,15 @@ void P_SaveSectorPositions()
       auto &si  = sectorinterps[i];
       auto &sec = sectors[i];
 
-      si.prevfloorheight    = sec.floorheight;
-      si.prevfloorheightf   = sec.floorheightf;
-      si.prevceilingheight  = sec.ceilingheight;
-      si.prevceilingheightf = sec.ceilingheightf;
+      si.prevfloorheight    = sec.srf.floor.height;
+      si.prevfloorheightf   = sec.srf.floor.heightf;
+      si.prevceilingheight  = sec.srf.ceiling.height;
+      si.prevceilingheightf = sec.srf.ceiling.heightf;
+
+      if(sec.srf.floor.slope)
+         si.prevfloorslopezf = sec.srf.floor.slope->of.z;
+      if(sec.srf.ceiling.slope)
+         si.prevceilingslopezf = sec.srf.ceiling.slope->of.z;
    }
 }
 
@@ -255,10 +277,16 @@ void P_SaveSectorPositions()
 void P_SaveSectorPosition(const sector_t &sec)
 {
    auto &si = sectorinterps[&sec - sectors];
-   si.prevfloorheight = sec.floorheight;
-   si.prevfloorheightf = sec.floorheightf;
-   si.prevceilingheight = sec.ceilingheight;
-   si.prevceilingheightf = sec.ceilingheightf;
+
+   si.prevfloorheight    = sec.srf.floor.height;
+   si.prevfloorheightf   = sec.srf.floor.heightf;
+   si.prevceilingheight  = sec.srf.ceiling.height;
+   si.prevceilingheightf = sec.srf.ceiling.heightf;
+
+   if(sec.srf.floor.slope)
+      si.prevfloorslopezf = sec.srf.floor.slope->of.z;
+   if(sec.srf.ceiling.slope)
+      si.prevceilingslopezf = sec.srf.ceiling.slope->of.z;
 }
 
 //
@@ -270,12 +298,16 @@ void P_SaveSectorPosition(const sector_t &sec, ssurftype_e surf)
    switch(surf)
    {
       case ssurf_floor:
-         si.prevfloorheight = sec.floorheight;
-         si.prevfloorheightf = sec.floorheightf;
+         si.prevfloorheight = sec.srf.floor.height;
+         si.prevfloorheightf = sec.srf.floor.heightf;
+         if(sec.srf.floor.slope)
+            si.prevfloorslopezf = sec.srf.floor.slope->of.z;
          break;
       case ssurf_ceiling:
-         si.prevceilingheight = sec.ceilingheight;
-         si.prevceilingheightf = sec.ceilingheightf;
+         si.prevceilingheight = sec.srf.ceiling.height;
+         si.prevceilingheightf = sec.srf.ceiling.heightf;
+         if(sec.srf.ceiling.slope)
+            si.prevceilingslopezf = sec.srf.ceiling.slope->of.z;
          break;
    }
 }

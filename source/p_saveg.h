@@ -26,6 +26,23 @@
 #ifndef __P_SAVEG__
 #define __P_SAVEG__
 
+#include "e_hash.h"
+#include "m_collection.h"
+#include "m_qstrkeys.h"
+
+//
+// Cached string, stored in an EHashTable
+//
+class CachedString : public ZoneObject
+{
+public:
+   qstring string;   // this is also the key
+   int identifier;   // can't use "id" due to objective-C reserved use.
+
+   DLListItem<CachedString> stringLink;
+   DLListItem<CachedString> idLink;
+};
+
 // Persistent storage/archiving.
 // These are the load / save game routines.
 
@@ -43,19 +60,46 @@ struct zrefs_t;
 
 class SaveArchive
 {
+private:
+   // The string table for this save archive. Mapped both by string and by ID, depending on use
+   EHashTable<CachedString, ENCQStrHashKey, &CachedString::string, &CachedString::stringLink>
+      mStringTable;
+   EHashTable<CachedString, EIntHashKey, &CachedString::identifier, &CachedString::idLink>
+      mIdTable;
+   int mNextCachedStringID = 0;
+   PODCollection<CachedString *> mCacheStringHolder;  // to be cleared on destruction
+
 protected:
    OutBuffer *savefile;        // valid when saving
    InBuffer  *loadfile;        // valid when loading
 
+   static constexpr int WRITE_SAVE_VERSION = 16; // Version of saves that EE writes
+   int read_save_version;                        // Version of currently-read save
+
+
 public:
    explicit SaveArchive(OutBuffer *pSaveFile);
    explicit SaveArchive(InBuffer  *pLoadFile);
+   ~SaveArchive()
+   {
+      for(CachedString *string : mCacheStringHolder)
+         delete string;
+   }
 
    // Accessors
    bool isSaving()  const   { return (savefile != nullptr); }
    bool isLoading() const   { return (loadfile != nullptr); }
    OutBuffer *getSaveFile() { return savefile; }
    InBuffer  *getLoadFile() { return loadfile; }
+
+   int saveVersion() const
+   {
+      if(savefile)
+         return WRITE_SAVE_VERSION;
+      else if(loadfile)
+         return read_save_version;
+      return -1;
+   }
 
    // Methods
    void archiveCString(char *str,  size_t maxLen);
@@ -66,13 +110,22 @@ public:
    // during loading.
    void writeLString(const char *str, size_t len = 0);
 
+   void archiveCachedString(qstring &str);
+
    // archive a size_t
    void archiveSize(size_t &value);
+
+   // read in the version number
+   bool readSaveVersion();
+   // write out the version number
+   void writeSaveVersion();
 
    // Operators
    // Similar to ZDoom's FArchive class, these are symmetric - they are used
    // both for reading and writing.
    // Basic types:
+   SaveArchive &operator << (int64_t  &x);
+   SaveArchive &operator << (uint64_t &x);
    SaveArchive &operator << (int32_t  &x);
    SaveArchive &operator << (uint32_t &x);
    SaveArchive &operator << (int16_t  &x);
@@ -104,7 +157,15 @@ public:
 template <typename T>
 void P_ArchiveArray(SaveArchive &arc, T *ptrArray, int numElements)
 {
-   for(int i = 0; i < numElements; i++)
+   // Make sure to also archive the array length, because on later Eternity versions we may grow these arrays.
+   int numElementsActual = numElements;
+   if(arc.saveVersion() >= 13)
+   {
+      arc << numElementsActual;
+      if(numElementsActual > numElements)
+         numElementsActual = numElements; // prevent crashing anyway.
+   }
+   for(int i = 0; i < numElementsActual; i++)
       arc << ptrArray[i];
 }
 

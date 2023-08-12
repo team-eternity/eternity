@@ -28,7 +28,9 @@
 #include "c_runcmd.h"
 #include "d_dehtbl.h"
 #include "d_gi.h"
+#include "doomstat.h"
 #include "g_bind.h"
+#include "m_compare.h"
 #include "m_qstr.h"
 #include "mn_engin.h"
 #include "mn_items.h"
@@ -172,21 +174,44 @@ static void MN_truncateInput(qstring &qstr, int x)
 }
 
 //
-// MN_truncateValue
+// As MN_truncateValue but it purely truncates, no dots
+//
+static void MN_truncateValueNoDots(qstring &qstr, int x)
+{
+   const int width = MN_StringWidth(qstr.constPtr());
+
+   if(x + width > SCREENWIDTH) // too wide to fit?
+   {
+      const char *start = qstr.constPtr();
+      const char *end   = qstr.bufferAt(qstr.length());
+
+      int subbed_width = 0;
+      while(end != start && (x + width - subbed_width > SCREENWIDTH))
+      {
+         subbed_width += V_FontCharWidth(menu_font, *end);
+         --end;
+      }
+
+      // truncate the value at end position, and concatenate dots
+      if(end != start)
+         qstr.truncate(end - start);
+   }
+}
+
 //
 // haleyjd 10/18/10: Avoid long values going off screen, as it is unsightly
 //
 static void MN_truncateValue(qstring &qstr, int x)
 {
    int width = MN_StringWidth(qstr.constPtr());
-   
-   if(x + width > SCREENWIDTH - 8) // too wide to fit?
-   {
-      int subbed_width = 0;
-      int leftbound = (SCREENWIDTH - 8) - MN_StringWidth("...");
-      const char *start = qstr.constPtr();
-      const char *end   = qstr.bufferAt(qstr.length() - 1);
 
+   if(x + width > SCREENWIDTH) // too wide to fit?
+   {
+      const char *start     = qstr.constPtr();
+      const char *end       = qstr.bufferAt(qstr.length());
+      const int   leftbound = SCREENWIDTH - MN_StringWidth("...");
+
+      int subbed_width = 0;
       while(end != start && (x + width - subbed_width > leftbound))
       {
          subbed_width += V_FontCharWidth(menu_font, *end);
@@ -200,6 +225,36 @@ static void MN_truncateValue(qstring &qstr, int x)
          qstr += "...";
       }
    }
+}
+
+//
+// Scroll a value that goes of the screen but we want to see all of
+//
+void MN_scrollValue(qstring &qstr, const int x)
+{
+   const int valueWidth  = MN_StringWidth(qstr.constPtr());
+   const int textOverrun = emax(int(ceilf(float((x + valueWidth) - SCREENWIDTH) / menu_font->cw)), 0);
+   if(textOverrun)
+   {
+      int textOffset = emax((gametic - (mn_lastSelectTic + TICRATE)) / 12, 0);
+      if(textOffset > textOverrun)
+      {
+         textOffset = textOverrun;
+         if(gametic - mn_lastScrollTic > TICRATE * 2)
+         {
+            mn_lastSelectTic = gametic;
+            mn_lastScrollTic = gametic;
+         }
+
+      }
+      else
+         mn_lastScrollTic = gametic;
+
+      if(textOffset)
+         qstr.erase(0, textOffset);
+   }
+
+   MN_truncateValueNoDots(qstr, x);
 }
 
 // sliders
@@ -398,7 +453,7 @@ public:
    virtual const char *getHelpString(menuitem_t *item, char *msgbuffer) override
    {
       const char *key = G_FirstBoundKey("menu_confirm");
-      psnprintf(msgbuffer, 64, "press %s to execute", key);
+      psnprintf(msgbuffer, 64, "Press %s to execute", key);
       return msgbuffer;
    }
 
@@ -425,7 +480,7 @@ class MenuItemValued : public MenuItem
    DECLARE_RTTI_TYPE(MenuItemValued, MenuItem)
 
 public:
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) override
    {
       qstring varvalue;
       int x = item->x;
@@ -494,6 +549,52 @@ public:
       }
    }
 
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) override
+   {
+      qstring varvalue;
+      int x = item->x;
+      int y = item->y;
+
+      if(drawing_menu->flags & mf_background)
+      {
+         // include gap on fullscreen menus
+         if(item->flags & MENUITEM_LALIGNED)
+            x = 8 + drawing_menu->widest_width + 16; // haleyjd: use widest_width
+         else
+            x += MENU_GAP_SIZE;
+
+         // adjust colour for different coloured variables
+         if(color == GameModeInfo->unselectColor)
+            color = GameModeInfo->variableColor;
+      }
+
+      if(alignment == ALIGNMENT_LEFT)
+         x += desc_width;
+
+      // create variable description; use console variable descriptions.
+      MN_GetItemVariable(item);
+
+
+      // display input buffer if inputting new var value
+      if(input_command && item->var == input_command->variable)
+      {
+         varvalue = MN_GetInputBuffer();
+         varvalue += '_';
+         MN_truncateInput(varvalue, x);
+      }
+      else
+      {
+         varvalue = C_VariableStringValue(item->var);
+         if(selected)
+            MN_scrollValue(varvalue, x);
+         else
+            MN_truncateValue(varvalue, x);
+      }
+
+      // draw it
+      MN_WriteTextColored(varvalue.constPtr(), color, x, y);
+   }
+
    virtual void onConfirm(menuitem_t *item) override
    {
       qstring &input_buffer = MN_GetInputBuffer();
@@ -554,7 +655,7 @@ class MenuItemSlidable : public MenuItemValued
 public:
    virtual const char *getHelpString(menuitem_t *item, char *msgbuffer) override
    {
-      return "use left/right to change value";
+      return "Use left/right to change value";
    }
 
    virtual void onLeft(menuitem_t *item, bool altdown, bool shiftdown) override
@@ -659,7 +760,7 @@ public:
          (item->var->type == vt_int && item->var->max - item->var->min == 1))
       {
          const char *key = G_FirstBoundKey("menu_confirm");
-         psnprintf(msgbuffer, 64, "press %s to change", key);
+         psnprintf(msgbuffer, 64, "Press %s to change", key);
          return msgbuffer;
       }
       else
@@ -697,7 +798,7 @@ class MenuItemSlider : public MenuItemSlidable
    DECLARE_RTTI_TYPE(MenuItemSlider, MenuItemSlidable)
 
 public:
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) override
    {
       variable_t *var;
       int x = item->x;
@@ -782,7 +883,7 @@ public:
       return false;
    }
 
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) override
    {
       int x = item->x;
       int y = item->y;
@@ -816,7 +917,12 @@ class MenuItemAutomap : public MenuItem
    DECLARE_RTTI_TYPE(MenuItemAutomap, MenuItem)
 
 public:
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
+   virtual void handleIndex0(const int amcolor, const int ix, const int iy)
+   {
+      // No cross patch for non-optional colours
+   }
+
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) override
    {
       int ix = item->x;
       int iy = item->y;
@@ -848,21 +954,43 @@ public:
       // draw it
       V_DrawBlock(ix + MENU_GAP_SIZE, iy - 1, &subscreen43, BLOCK_SIZE, BLOCK_SIZE, block);
 
-      // draw patch w/cross
-      if(!amcolor)
-      {
-         V_DrawPatch(ix + MENU_GAP_SIZE + 1, iy, &subscreen43,
-                     PatchLoader::CacheName(wGlobalDir, "M_PALNO", PU_CACHE));
-      }
+      handleIndex0(amcolor, ix, iy);
    }
 
    virtual void onConfirm(menuitem_t *item) override
    {
-      MN_SelectColour(item->data);
+      MN_SelectColor(item->data, mapColorType_e::mandatory);
    }
 };
 
 IMPLEMENT_RTTI_TYPE(MenuItemAutomap)
+
+//=============================================================================
+//
+// Optional Automap Color
+//
+// As above, but index 0 means that it is not rendered.
+//
+
+class MenuItemAutomapOpt : public MenuItemAutomap
+{
+   DECLARE_RTTI_TYPE(MenuItemAutomapOpt, MenuItemAutomap)
+
+public:
+   virtual void handleIndex0(const int amcolor, const int ix, const int iy) override
+   {
+      // draw patch w/cross
+      if(!amcolor)
+         V_DrawPatch(ix + MENU_GAP_SIZE + 1, iy, &subscreen43, PatchLoader::CacheName(wGlobalDir, "M_PALNO", PU_CACHE));
+   }
+
+   virtual void onConfirm(menuitem_t* item) override
+   {
+      MN_SelectColor(item->data, mapColorType_e::optional);
+   }
+};
+
+IMPLEMENT_RTTI_TYPE(MenuItemAutomapOpt)
 
 //=============================================================================
 //
@@ -876,7 +1004,21 @@ class MenuItemBinding : public MenuItem
    DECLARE_RTTI_TYPE(MenuItemBinding, MenuItem)
 
 public:
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
+   virtual const char *getHelpString(menuitem_t *item, char *msgbuffer) override
+   {
+      extern menuwidget_t binding_widget;
+
+      if(current_menuwidget == &binding_widget)
+         return "Press any input to bind/unbind";
+      else
+      {
+         const char *key = G_FirstBoundKey("menu_confirm");
+         psnprintf(msgbuffer, 64, "Press %s to start binding/unbinding", key);
+         return msgbuffer;
+      }
+   }
+
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) override
    {
       qstring boundkeys;
       int x = item->x;
@@ -894,9 +1036,16 @@ public:
             color = GameModeInfo->variableColor;
       }
 
+      if(alignment == ALIGNMENT_LEFT)
+         x += desc_width;
+
+      if(selected)
+         MN_scrollValue(boundkeys, x);
+      else
+         MN_truncateValue(boundkeys, x);
+
       // write variable value text
-      MN_WriteTextColored(boundkeys.constPtr(), color, 
-                          x + (alignment == ALIGNMENT_LEFT ? desc_width : 0), y);
+      MN_WriteTextColored(boundkeys.constPtr(), color, x, y);
    }
 
    virtual void onConfirm(menuitem_t *item) override
@@ -927,6 +1076,7 @@ static MenuItemInfo       mn_info;
 static MenuItemSlider     mn_slider;
 static MenuItemBigSlider  mn_bigslider;
 static MenuItemAutomap    mn_automap;
+static MenuItemAutomapOpt mn_automap_opt;
 static MenuItemBinding    mn_binding;
 static MenuItem           mn_end;
 
@@ -942,6 +1092,7 @@ MenuItem *MenuItemInstanceForType[it_numtypes] =
    &mn_slider,      // it_slider
    &mn_bigslider,   // it_bigslider
    &mn_automap,     // it_automap
+   &mn_automap_opt, // it_automap_opt
    &mn_binding,     // it_binding
    &mn_end          // it_end
 };

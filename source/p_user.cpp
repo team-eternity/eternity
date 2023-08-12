@@ -191,7 +191,7 @@ void P_CalcHeight(player_t *player)
    }
 
    // haleyjd 06/05/12: flying players
-   if(player->mo->flags4 & MF4_FLY && !onground)
+   if(player->mo->flags4 & MF4_FLY && !P_OnGroundOrThing(*player->mo))
       player->bob = FRACUNIT / 2;
 
    if(!onground || player->cheats & CF_NOMOMENTUM)
@@ -259,11 +259,11 @@ void P_CalcHeight(player_t *player)
 //
 // haleyjd 06/05/12: flying logic for players
 //
-static void P_PlayerFlight(player_t *player, ticcmd_t *cmd)
+static void P_PlayerFlight(player_t *player, const ticcmd_t *cmd)
 {
    int fly = cmd->fly;
 
-   if(fly && player->powers[pw_flight])
+   if(fly && player->powers[pw_flight].isActive())
    {
       if(fly != FLIGHT_CENTER)
       {
@@ -275,9 +275,11 @@ static void P_PlayerFlight(player_t *player, ticcmd_t *cmd)
       else
          P_PlayerStopFlight(player);
    }
-   // TODO:
-   // else
-   // * If have a flight-granting powerup, activate it now
+   else if(fly > 0 && estrnonempty(GameModeInfo->autoFlightArtifact) &&
+           E_GetItemOwnedAmountName(player, GameModeInfo->autoFlightArtifact) >= 1)
+   {
+      E_TryUseItem(player, E_ItemIDForName(GameModeInfo->autoFlightArtifact));
+   }
 
    if(player->mo->flags4 & MF4_FLY)
    {
@@ -291,6 +293,10 @@ static void P_PlayerFlight(player_t *player, ticcmd_t *cmd)
       {
          player->mo->momz = player->flyheight * FRACUNIT;
          player->flyheight /= 2;
+         // When flyheight turns to 0 from this location, mark it to become 0 instead of letting it
+         // be subject to P_ZMovement flying friction.
+         if(!(GameModeInfo->flags & GIF_FLIGHTINERTIA) && !player->flyheight)
+            player->mo->intflags |= MIF_CLEARMOMZ;
       }
    }
 }
@@ -304,17 +310,14 @@ static void P_PlayerFlight(player_t *player, ticcmd_t *cmd)
 //
 void P_MovePlayer(player_t* player)
 {
-   ticcmd_t *cmd = &player->cmd;
+   const ticcmd_t *cmd = &player->cmd;
    Mobj *mo = player->mo;
    
    mo->angle += cmd->angleturn << 16;
    
    // haleyjd: OVER_UNDER
    // 06/05/12: flying players
-   onground = 
-      mo->z <= mo->zref.floor ||
-      (P_Use3DClipping() && mo->intflags & MIF_ONMOBJ) || 
-      (mo->flags4 & MF4_FLY);
+   onground = P_OnGroundOrThing(*mo) || (mo->flags4 & MF4_FLY);
    
    // killough 10/98:
    //
@@ -429,12 +432,8 @@ void P_DeathThink(player_t *player)
       player->momx = player->momy = 0;
    }
    else
-   {
-      onground = player->mo->z <= player->mo->zref.floor ||
-                    (P_Use3DClipping() &&
-                     player->mo->intflags & MIF_ONMOBJ);
-   }
-   
+      onground = P_OnGroundOrThing(*player->mo);
+
    P_CalcHeight(player);
    
    if(player->attacker && player->attacker != player->mo)
@@ -501,7 +500,7 @@ static void P_HereticCurrent(player_t *player)
    // determine what touched sector the player is standing on
    for(m = thing->touching_sectorlist; m; m = m->m_tnext)
    {
-      if(thing->z == m->m_sector->floorheight)
+      if(thing->z == m->m_sector->srf.floor.height)
          break;
    }
 
@@ -523,8 +522,9 @@ static void P_doTorchFlicker(player_t *player)
 {
    // if infinite duration, or just starting, set fixedcolormap
    // if it's out of range of the torch effect
-   if(player->powers[pw_torch] < 0 ||
-      player->powers[pw_torch] >= INFRATICS - 1)
+   if(player->powers[pw_torch].infinite ||
+      player->powers[pw_torch].tics < 0 ||
+      player->powers[pw_torch].tics >= INFRATICS - 1)
    {
       if(!player->fixedcolormap || player->fixedcolormap > 7)
          player->fixedcolormap = 1;
@@ -571,20 +571,19 @@ enum
 static int P_PlayerLightSourceType(player_t *player)
 {
    // infrared is higher priority than torch
-   if(player->powers[pw_infrared])
+   if(player->powers[pw_infrared].isActive())
       return PLS_LIGHTAMP;
-   else if(player->powers[pw_torch])
+   else if(player->powers[pw_torch].isActive())
       return PLS_TORCH;
    else
       return PLS_NONE;
 }
 
 //
-// P_PlayerLightTics
-//
 // haleyjd 08/31/13: get the player's light power tics
+// MaxW: 2021/06/05: It now gets the duration struct
 //
-static int P_PlayerLightTics(player_t *player)
+static powerduration_t P_playerLightDuration(player_t *player)
 {
    switch(P_PlayerLightSourceType(player))
    {
@@ -593,7 +592,7 @@ static int P_PlayerLightTics(player_t *player)
    case PLS_TORCH:
       return player->powers[pw_torch];
    default:
-      return 0;
+      return { 0, false };
    }
 }
 
@@ -630,7 +629,7 @@ void P_PlayerThink(player_t *player)
 
    cmd = &player->cmd;
 
-   if(cmd->itemID && demo_version >= 401)
+   if(cmd->itemID && (demo_version >= 401 || vanilla_heretic))
       E_TryUseItem(player, cmd->itemID - 1); // ticcmd ID is off by one
 
    if(player->mo->flags & MF_JUSTATTACKED)
@@ -663,10 +662,16 @@ void P_PlayerThink(player_t *player)
          else
          {
             player->pitch -= look << 16;
-            if(player->pitch < -ANGLE_1*MAXPITCHUP)
-               player->pitch = -ANGLE_1*MAXPITCHUP;
-            else if(player->pitch > ANGLE_1*MAXPITCHDOWN)
-               player->pitch = ANGLE_1*MAXPITCHDOWN;
+            int maxpitchup = GameModeInfo->lookPitchUp;
+            int maxpitchdown = GameModeInfo->lookPitchDown;
+            if(player->pitch < -ANGLE_1*maxpitchup)
+               player->pitch = -ANGLE_1*maxpitchup;
+            else if(player->pitch > ANGLE_1*maxpitchdown)
+               player->pitch = ANGLE_1*maxpitchdown;
+
+            // Eternity previously had ±32˚ pitch range
+            if(demo_version >= 300 && demo_version <= 402)
+               player->pitch = eclamp(player->pitch, -ANGLE_1 * 32, ANGLE_1 * 32);
          }
       }
    }
@@ -720,7 +725,7 @@ void P_PlayerThink(player_t *player)
    P_CalcHeight(player); // Determines view height and bobbing
    
    // haleyjd: are we falling? might need to scream :->
-   if(!comp[comp_fallingdmg] && demo_version >= 329)
+   if(!getComp(comp_fallingdmg) && demo_version >= 329)
    {  
       if(player->mo->momz >= 0)
          player->mo->intflags &= ~MIF_SCREAMED;
@@ -738,7 +743,7 @@ void P_PlayerThink(player_t *player)
    // going to affect you, like painful floors.
 
    // ioanch 20160116: portal aware
-   sector_t *sector = P_ExtremeSectorAtPoint(player->mo, false);
+   sector_t *sector = P_ExtremeSectorAtPoint(player->mo, surf_floor);
    if(P_SectorIsSpecial(sector))
       P_PlayerInSpecialSector(player, sector);
 
@@ -755,13 +760,13 @@ void P_PlayerThink(player_t *player)
    if(cmd->buttons & BT_SPECIAL)
       cmd->buttons = 0;
 
-   if(demo_version >= 401)
+   if(demo_version >= 401 || vanilla_heretic)
    {
       if(cmd->weaponID)
       {
          weaponinfo_t *wp = E_WeaponForID(cmd->weaponID - 1); // weaponID is off by one
          weaponinfo_t *sister = wp->sisterWeapon;
-         if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
+         if(player->powers[pw_weaponlevel2].isActive() && E_IsPoweredVariant(sister))
             player->pendingweapon = sister;
          else
             player->pendingweapon = wp;
@@ -792,7 +797,7 @@ void P_PlayerThink(player_t *player)
 
          if(newweapon == wp_fist && E_PlayerOwnsWeaponForDEHNum(player, wp_chainsaw) &&
             (!E_WeaponIsCurrentDEHNum(player, wp_chainsaw) ||
-             !player->powers[pw_strength]))
+             !player->powers[pw_strength].tics))
             newweapon = wp_chainsaw;
          if(enable_ssg &&
             newweapon == wp_shotgun &&
@@ -843,54 +848,54 @@ void P_PlayerThink(player_t *player)
 
    // Strength counts up to diminish fade.
 
-   if(player->powers[pw_strength])
-      player->powers[pw_strength]++;
+   if(player->powers[pw_strength].shouldCount())
+      player->powers[pw_strength].tics++;
 
    // killough 1/98: Make idbeholdx toggle:
 
-   if(player->powers[pw_invulnerability] > 0) // killough
-      player->powers[pw_invulnerability]--;
+   if(player->powers[pw_invulnerability].shouldCount())
+      player->powers[pw_invulnerability].tics--;
 
-   if(player->powers[pw_invisibility] > 0)
+   if(player->powers[pw_invisibility].shouldCount())
    {
-      if(!--player->powers[pw_invisibility] )
+      if(!--player->powers[pw_invisibility].tics)
          player->mo->flags &= ~MF_SHADOW;
    }
 
-   if(player->powers[pw_infrared] > 0)        // killough
-      player->powers[pw_infrared]--;
+   if(player->powers[pw_infrared].shouldCount())
+      player->powers[pw_infrared].tics--;
 
    // haleyjd: torch
-   if(player->powers[pw_torch] > 0)
-      player->powers[pw_torch]--;
+   if(player->powers[pw_torch].shouldCount())
+      player->powers[pw_torch].tics--;
 
-   if(player->powers[pw_ironfeet] > 0)        // killough
-      player->powers[pw_ironfeet]--;
+   if(player->powers[pw_ironfeet].shouldCount())
+      player->powers[pw_ironfeet].tics--;
 
-   if(player->powers[pw_ghost] > 0)        // haleyjd
+   if(player->powers[pw_ghost].shouldCount())
    {
-      if(!--player->powers[pw_ghost])
+      if(!--player->powers[pw_ghost].tics)
          player->mo->flags3 &= ~MF3_GHOST;
    }
 
-   if(player->powers[pw_totalinvis] > 0) // haleyjd
+   if(player->powers[pw_totalinvis].shouldCount())
    {
-      if(!--player->powers[pw_totalinvis])
+      if(!--player->powers[pw_totalinvis].tics)
       {
          player->mo->flags2 &= ~MF2_DONTDRAW;
          player->mo->flags4 &= ~MF4_TOTALINVISIBLE;
       }
    }
 
-   if(player->powers[pw_flight] > 0) // haleyjd 06/05/12
+   if(player->powers[pw_flight].shouldCount())
    {
-      if(!--player->powers[pw_flight])
+      if(!--player->powers[pw_flight].tics)
          P_PlayerStopFlight(player);
    }
 
-   if(player->powers[pw_weaponlevel2] > 0) // MaxW: 2018/01/02
+   if(player->powers[pw_weaponlevel2].shouldCount())
    {
-      if(!--player->powers[pw_weaponlevel2])
+      if(!--player->powers[pw_weaponlevel2].tics)
       {
          // switch back to normal weapon if need be
          if(E_IsPoweredVariant(player->readyweapon))
@@ -926,22 +931,25 @@ void P_PlayerThink(player_t *player)
       player->bonuscount--;
 
    // get length of time left on any active lighting powerup
-   int lighttics   = P_PlayerLightTics(player);
-   int lightsource = P_PlayerLightSourceType(player);
+   powerduration_t lightduration = P_playerLightDuration(player);
+   int             lightsource   = P_PlayerLightSourceType(player);
 
    // Handling colormaps.
-   if(player->powers[pw_invulnerability])
+   if(player->powers[pw_invulnerability].isActive())
    {
-      if(player->powers[pw_invulnerability] > 4*32 || 
-         player->powers[pw_invulnerability] & 8)
+      if(player->powers[pw_invulnerability].infinite ||
+         player->powers[pw_invulnerability].tics > 4 * 32 ||
+         player->powers[pw_invulnerability].tics & 8)
          player->fixedcolormap = INVERSECOLORMAP;
       else
          player->fixedcolormap = 0;
    }
    else if(lightsource != PLS_NONE)
    {
-      if(lighttics > 0 && lighttics <= 4*32) // fading out?
-         player->fixedcolormap = ((lighttics & 8) != 0);
+      if(lightduration.infinite)
+         player->fixedcolormap = 1;
+      else if(lightduration.tics > 0 && lightduration.tics <= 4 * 32) // fading out?
+         player->fixedcolormap = ((lightduration.tics & 8) != 0);
       else
       {
          // haleyjd: if player has a torch, do flickering
@@ -984,7 +992,7 @@ void P_SetPlayerAttacker(player_t *player, Mobj *attacker)
 //
 void P_PlayerStartFlight(player_t *player, bool thrustup)
 {
-   if(full_demo_version < make_full_version(340, 23))
+   if(full_demo_version < make_full_version(340, 23) && !vanilla_heretic)
       return;
 
    player->mo->flags4 |= MF4_FLY;
@@ -1003,7 +1011,7 @@ void P_PlayerStartFlight(player_t *player, bool thrustup)
 //
 void P_PlayerStopFlight(player_t *player)
 {
-   if(full_demo_version < make_full_version(340, 23))
+   if(full_demo_version < make_full_version(340, 23) && !vanilla_heretic)
       return;
 
    player->mo->flags4 &= ~MF4_FLY;
@@ -1044,7 +1052,7 @@ static cell AMX_NATIVE_CALL sm_getplayername(AMX *amx, cell *params)
 AMX_NATIVE_INFO user_Natives[] =
 {
    { "_GetPlayerName", sm_getplayername },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 

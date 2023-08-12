@@ -79,15 +79,14 @@ typedef inventoryslot_t * inventory_t;
 //
 // Player states.
 //
-enum 
+enum
 {
-  // Playing or camping.
-  PST_LIVE,
-  // Dead on the ground, view follows killer.
-  PST_DEAD,
-  // Ready to restart/respawn???
-  PST_REBORN            
-
+   // Playing or camping.
+   PST_LIVE,
+   // Dead on the ground, view follows killer.
+   PST_DEAD,
+   // Ready to restart/respawn???
+   PST_REBORN
 };
 
 typedef int playerstate_t;
@@ -95,19 +94,19 @@ typedef int playerstate_t;
 //
 // Player internal flags, for cheats and debug.
 //
-typedef enum
+enum cheat_t
 {
-  // No clipping, walk through barriers.
-  CF_NOCLIP           = 1,
-  // No damage, no health loss.
-  CF_GODMODE          = 2,
-  // Not really a cheat, just a debug aid.
-  CF_NOMOMENTUM       = 4,
-  // haleyjd 03/18/03: infinite ammo
-  CF_INFAMMO          = 8,
-  // haleyjd 12/29/10: immortality cheat
-  CF_IMMORTAL         = 0x10,
-} cheat_t;
+   // No clipping, walk through barriers.
+   CF_NOCLIP           = 1,
+   // No damage, no health loss.
+   CF_GODMODE          = 2,
+   // Not really a cheat, just a debug aid.
+   CF_NOMOMENTUM       = 4,
+   // haleyjd 03/18/03: infinite ammo
+   CF_INFAMMO          = 8,
+   // haleyjd 12/29/10: immortality cheat
+   CF_IMMORTAL         = 0x10,
+};
 
 
 // TODO: Maybe re-add curpos
@@ -116,10 +115,6 @@ struct invbarstate_t {
    bool inventory;  // inventory is currently being viewed?
    int  ArtifactFlash;
 };
-
-// These defines are in degrees:
-#define MAXPITCHUP   32
-#define MAXPITCHDOWN 32
 
 enum attacktype_e : unsigned int
 {
@@ -130,6 +125,15 @@ enum attacktype_e : unsigned int
    AT_UNKNOWN   = 8,
 
    AT_ALL = (AT_PRIMARY + AT_SECONDARY),
+};
+
+struct powerduration_t
+{
+   int  tics;
+   bool infinite;
+
+   inline bool isActive() const { return tics != 0 || infinite; }
+   inline bool shouldCount() const { return tics != 0 && !infinite; }
 };
 
 //
@@ -166,7 +170,7 @@ struct player_t
    int            armordivisor; // haleyjd 07/29/13: denominator for armor save calculation
 
    // Power ups. invinc and invis are tic counters.
-   int            powers[NUMPOWERS];
+   powerduration_t powers[NUMPOWERS];
   
    // Frags, kills of other players.
    int            frags[MAXPLAYERS];
@@ -203,7 +207,7 @@ struct player_t
    int            newtorch;      // haleyjd 08/31/13: change torch level?
    int            torchdelta;    // haleyjd 08/31/13: amount to change torch level
 
-   Mobj          *attacker;      // Who did damage (NULL for floors/ceilings).
+   Mobj          *attacker;      // Who did damage (nullptr for floors/ceilings).
 
    int            colormap;      // colorshift for player sprites
 
@@ -230,54 +234,53 @@ struct player_t
 //
 struct wbplayerstruct_t
 {
-  bool        in;     // whether the player is in game
-    
-  // Player stats, kills, collected items etc.
-  int         skills;
-  int         sitems;
-  int         ssecret;
-  int         stime; 
-  int         frags[4];
-  int         score;  // current score on entry, modified on return
-  
+   bool        in;     // whether the player is in game
+
+   // Player stats, kills, collected items etc.
+   int         skills;
+   int         sitems;
+   int         ssecret;
+   int         stime;
+   int         frags[4];
+   int         score;  // current score on entry, modified on return
 };
 
 struct wbstartstruct_t
 {
-  int         epsd;   // episode # (0-2)
+   int         epsd;   // episode # (0-2)
+   int         nextEpisode; // next episode (0-based) in case of custom level info
 
-  // if true, splash the secret level
-  bool        didsecret;
+   // if true, splash the secret level
+   bool        didsecret;
 
-  // haleyjd: if player is going to secret map
-  bool        gotosecret;
-    
-  // previous and next levels, origin 0
-  int         last;
-  int         next;
-  bool        nextexplicit; // true if next was set by g_destmap
-    
-  // Explicit level-info stuff
-  const char *li_lastlevelname;
-  const char *li_nextlevelname;
-  const char *li_lastlevelpic;
-  const char *li_nextlevelpic;
-  const char *li_lastexitpic;
-  const char *li_nextenterpic;
+   // haleyjd: if player is going to secret map
+   bool        gotosecret;
 
-  int         maxkills;
-  int         maxitems;
-  int         maxsecret;
-  int         maxfrags;
+   // previous and next levels, origin 0
+   int         last;
+   int         next;
+   bool        nextexplicit; // true if next was set by g_destmap
 
-  // the par time
-  int         partime;
-    
-  // index of this player in game
-  int         pnum;   
+   // Explicit level-info stuff
+   const char *li_lastlevelname;
+   const char *li_nextlevelname;
+   const char *li_lastlevelpic;
+   const char *li_nextlevelpic;
+   const char *li_lastexitpic;
+   const char *li_nextenterpic;
 
-  wbplayerstruct_t    plyr[MAXPLAYERS];
+   int         maxkills;
+   int         maxitems;
+   int         maxsecret;
+   int         maxfrags;
 
+   // the par time
+   int         partime;
+
+   // index of this player in game
+   int         pnum;
+
+   wbplayerstruct_t    plyr[MAXPLAYERS];
 };
 
 

@@ -27,6 +27,8 @@
 #ifndef MN_EMENU_H__
 #define MN_EMENU_H__
 
+struct menu_t;
+
 #ifdef NEED_EDF_DEFINITIONS
 
 #define EDF_SEC_MENU "menu"
@@ -36,6 +38,8 @@ extern cfg_opt_t edf_menu_opts[];
 void MN_ProcessMenus(cfg_t *cfg);
 
 #endif
+
+extern menu_t *mn_episode_override;
 
 menu_t *MN_DynamicMenuForName(const char *name);
 void    MN_AddDynaMenuCommands(void);

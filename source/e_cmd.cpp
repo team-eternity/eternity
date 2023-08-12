@@ -167,7 +167,7 @@ CONSOLE_COMMAND(e_thingtype, 0)
 //
 static void E_dumpMetaTableToConsole(const MetaTable *meta)
 {
-   const MetaObject *obj = NULL;
+   const MetaObject *obj = nullptr;
 
    while((obj = meta->tableIterator(obj)))
    {
@@ -289,7 +289,7 @@ CONSOLE_COMMAND(e_dumpstate, 0)
             state->name, 
             state->dehnum,
             state->index,
-            (state->flags & STATEF_DECORATE) ? "true" : "false",
+            (state->flags & STATEFI_DECORATE) ? "true" : "false",
             state->sprite, 
             state->frame & FF_FRAMEMASK,
             state->frame & FF_FULLBRIGHT ? "true" : "false",
@@ -356,7 +356,7 @@ CONSOLE_COMMAND(e_playsound, 0)
    C_Printf("Sound info: %s:%s:%d\n", 
             params.sfx->mnemonic, params.sfx->name, params.sfx->dehackednum);
 
-   S_StartSfxInfo(params.setNormalDefaults(NULL));
+   S_StartSfxInfo(params.setNormalDefaults(nullptr));
 }
 
 CONSOLE_COMMAND(e_listmapthings, cf_level)
@@ -538,7 +538,7 @@ AMX_NATIVE_INFO edf_Natives[] =
    { "_ThingNumForName",   sm_thingnumforname },
    { "_ThingNumForDEHNum", sm_thingnumfordehnum },
    { "_ThingUnknown",      sm_unknownthing },
-   { NULL,                NULL }
+   { nullptr,              nullptr }
 };
 
 #endif

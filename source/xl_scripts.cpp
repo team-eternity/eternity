@@ -103,7 +103,7 @@ void XLTokenizer::doStateScan()
          state     = STATE_INBRACKETS;
          break;
       }
-      else if(c == '$') // detect $ keywords
+      else if(c == '$' || flags & TF_STRINGSQUOTED) // detect $ keywords (or without $ if flagged)
          tokentype = TOKEN_KEYWORD;
       else
          tokentype = TOKEN_STRING;
@@ -143,25 +143,17 @@ void XLTokenizer::doStateInToken()
       --idx;   // backup, next call will handle it in STATE_SCAN.
       state = STATE_DONE;
       break;
-   default: 
-      if(c == '#' && (flags & TF_HASHCOMMENTS))
+   default:
+      if((c == '#' && flags & TF_HASHCOMMENTS) ||
+         (c == '/' && input[idx+1] == '/' && flags & TF_SLASHCOMMENTS) ||
+         (flags & TF_OPERATORS && !token.empty() &&
+          XL_isIdentifierChar(c) != XL_isIdentifierChar(token[0])) ||
+         (c == '"' && tokentype == TOKEN_KEYWORD))
       {
          // hashes may conditionally be supported as comments
-         --idx;
-         state = STATE_DONE;
-         break;
-      }
-      else if(c == '/' && input[idx+1] == '/' && (flags & TF_SLASHCOMMENTS))
-      {
          // double slashes may conditionally be supported as comments
-         --idx;
-         state = STATE_DONE;
-         break;
-      }
-      else if(flags & TF_OPERATORS && !token.empty() &&
-              XL_isIdentifierChar(c) != XL_isIdentifierChar(token[0]))
-      {
          // operators and identifiers are separate
+         // starting strings next to keywords should be detected
          --idx;
          state = STATE_DONE;
          break;
@@ -376,7 +368,7 @@ void XLParser::parseLump(WadDirectory &dir, lumpinfo_t *lump, bool global)
    if(lumpdata)
    {
       efree(lumpdata);
-      lumpdata = NULL;
+      lumpdata = nullptr;
    }
 
    // can't parse empty lumps
@@ -469,6 +461,9 @@ static void XL_buildInterMapInfo()
    // Then, override with EMAPINFO
    XL_BuildInterEMapInfo();
 
+   // Episode menu from UMAPINFO
+   XL_BuildUMapInfoEpisodes();
+
    // FIXME: MAPINFO is meant only for Hexen, which doesn't have Doom-style in-
    // termission anyway. But maybe we should use its fields.
 }
@@ -490,8 +485,7 @@ void XL_ParseHexenScripts()
    XL_ParseMusInfo();  // Risen3D:  MUSINFO
    XL_ParseAnimDefs();  // Hexen: ANIMDEFS
 
-   // FIXME: do this when it's time, not now yet.
-// XL_ParseUMapInfo();  // Universal MAPINFO new format
+   XL_ParseUMapInfo();  // Universal MAPINFO new format
 
    XL_buildInterMapInfo();
 }

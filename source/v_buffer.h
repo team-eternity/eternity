@@ -33,22 +33,22 @@
 #include "m_fixed.h"
 
 #define VBADDRESS(vb, x, y) \
-   ((vb)->data + (vb)->pitch * (y) + (vb)->pixelsize * (x))
+   ((vb)->data + (vb)->pitch * (x) + (vb)->pixelsize * (y))
 
 struct VBuffer
 {
    int  width;
    int  height;
-   int  pitch, pixelsize;
+   int  pitch, pixelsize; // This is TRANSPOSED, PRE-TRANSFORMED pitch
 
    byte *data; // video memory
    bool  owndata;
    int   subx, suby;
 
-   void (*BlockDrawer)(int, int, VBuffer *, int, int, byte *);
+   void (*BlockDrawer)(int, int, VBuffer *, int, int, const byte *);
    void (*MaskedBlockDrawer)(int, int, VBuffer *, int, int, int, 
-                             byte *, byte *);
-   void (*TileBlock64)(VBuffer *, byte *);
+                             const byte *, byte *);
+   void (*TileBlock64)(VBuffer *, const byte *);
 
    // SoM: Include the screen size
    bool  scaled, freelookups;
@@ -65,7 +65,10 @@ struct VBuffer
 
    fixed_t getRealAspectRatio()    const;
    fixed_t getVirtualAspectRatio() const;
-}; 
+
+   int mapXFromOther(const int x, const VBuffer &other) const;
+   int mapYFromOther(const int y, const VBuffer &other) const;
+};
 
 // V_InitVBuffer
 // Initializes the given vbuffer and allocates pixeldata for it.

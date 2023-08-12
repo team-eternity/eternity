@@ -31,7 +31,7 @@
 
 #ifdef NEED_EDF_DEFINITIONS
 
-#define SEC_SPRITE "spritenames"
+constexpr const char SEC_SPRITE[] = "spritenames";
 
 void    E_ProcessSprites(cfg_t *cfg);
 
@@ -41,6 +41,7 @@ void    E_ProcessSprites(cfg_t *cfg);
 bool E_ProcessSingleSprite(const char *sprname);
 
 int E_SpriteNumForName(const char *name);
+void E_UpdateSpriteName(const char *oldname, const char *newname, const int newlen);
 
 #endif
 

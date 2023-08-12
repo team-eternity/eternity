@@ -27,15 +27,23 @@
 #ifndef MN_MISC_H__
 #define MN_MISC_H__
 
+#include "d_keywds.h"
+
 // pop-up messages
 
-void MN_Alert(const char *message, ...);
+void MN_Alert(E_FORMAT_STRING(const char *message), ...) E_PRINTF(1, 2);
 void MN_Question(const char *message, const char *command);
 void MN_QuestionFunc(const char *message, void (*handler)(void));
 
 // map colour selection
 
-void MN_SelectColour(const char *variable_name);
+enum class mapColorType_e : bool
+{
+   mandatory,
+   optional
+};
+
+void MN_SelectColor(const char *variable_name, const mapColorType_e color_type);
 
 #endif /* MN_MISC_H__ */
 

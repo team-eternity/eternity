@@ -1,7 +1,5 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2020 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,14 +17,10 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+// Purpose: Freeverb algorithm implementation
+//          Based on original public domain implementation by Jezar at Dreampoint
+// Authors: James Haley, Max Waine
 //
-// DESCRIPTION:
-//
-//  Freeverb algorithm implementation
-//  Based on original public domain implementation by Jezar at Dreampoint
-//
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 
@@ -257,33 +251,33 @@ public:
 
 struct EQSTATE
 {
-  // Filter #1 (Low band)
+   // Filter #1 (Low band)
 
-  double  lf;       // Frequency
-  double  f1p0;     // Poles ...
-  double  f1p1;    
-  double  f1p2;
-  double  f1p3;
+   double  lf;       // Frequency
+   double  f1p0;     // Poles ...
+   double  f1p1;
+   double  f1p2;
+   double  f1p3;
 
-  // Filter #2 (High band)
+   // Filter #2 (High band)
 
-  double  hf;       // Frequency
-  double  f2p0;     // Poles ...
-  double  f2p1;
-  double  f2p2;
-  double  f2p3;
+   double  hf;       // Frequency
+   double  f2p0;     // Poles ...
+   double  f2p1;
+   double  f2p2;
+   double  f2p3;
 
-  // Sample history buffer
+   // Sample history buffer
 
-  double  sdm1;     // Sample data minus 1
-  double  sdm2;     //                   2
-  double  sdm3;     //                   3
+   double  sdm1;     // Sample data minus 1
+   double  sdm2;     //                   2
+   double  sdm3;     //                   3
 
-  // Gain Controls
+   // Gain Controls
 
-  double  lg;       // low  gain
-  double  mg;       // mid  gain
-  double  hg;       // high gain
+   double  lg;       // low  gain
+   double  mg;       // mid  gain
+   double  hg;       // high gain
 };
 
 struct eqparams_t
@@ -729,13 +723,11 @@ void S_ReverbSetState(ereverb_t *ereverb)
 }
 
 //
-// S_ProcessReverb
-//
 // Mix the reverb engine's output into the input sound stream.
 //
-void S_ProcessReverb(float *stream, int samples)
+void S_ProcessReverb(float *stream, const int samples, const int skip)
 {
-   reverb.processMix(stream, stream+1, stream, stream+1, samples, 2);
+   reverb.processMix(stream, stream+1, stream, stream+1, samples, skip);
 }
 
 //

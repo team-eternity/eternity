@@ -20,7 +20,6 @@
 
 // The textscreen API itself doesn't need SDL; however, SDL needs its
 // headers included where main() is defined.
-
 #include "SDL.h"
 
 // Event callback function type: a function of this type can be used

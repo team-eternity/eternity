@@ -30,6 +30,8 @@
 #include "doomtype.h" // for byte
 #include "m_fixed.h"  // for fixed_t
 
+#define NUM_LINES_EXTRA 1  // number of extra lines for hackish purposes
+
 class  Mobj;
 struct seg_t;
 
@@ -49,10 +51,8 @@ class WadDirectory;
 // IOANCH 20151213: modify P_CheckLevel to support one extra parameter
 struct maplumpindex_t;
  // haleyjd: now used in d_main.c
-int P_CheckLevel(WadDirectory *dir, int lumpnum, 
+int P_CheckLevel(const WadDirectory *dir, int lumpnum, 
                  maplumpindex_t *mgla = nullptr, bool *udmf = nullptr);
-int P_CheckLevelName(WadDirectory *dir, const char *mapname);
-int P_CheckLevelMapNum(WadDirectory *dir, int mapnum);
 
 void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask, skill_t skill);
 void P_Init();                   // Called by startup code.
@@ -96,28 +96,27 @@ enum
 };
 
 extern bool     newlevel;
-extern int      doom1level;
 extern char     levelmapname[10];
 
 #if 0
-typedef struct                          // Standard OLO stuff, put in WADs
-{       
-  unsigned char header[3];                 // Header
-  unsigned char space1;
-  unsigned char extend;
-  unsigned char space2;
-  
-  // Standard
-  unsigned char levelwarp;
-  unsigned char lastlevel;
-  unsigned char deathmatch;
-  unsigned char skill_level;
-  unsigned char nomonsters;
-  unsigned char respawn;
-  unsigned char fast;
+struct olo_t                                // Standard OLO stuff, put in WADs
+{
+   unsigned char header[3];                 // Header
+   unsigned char space1;
+   unsigned char extend;
+   unsigned char space2;
 
-  unsigned char levelname[32][32];
-} olo_t;
+   // Standard
+   unsigned char levelwarp;
+   unsigned char lastlevel;
+   unsigned char deathmatch;
+   unsigned char skill_level;
+   unsigned char nomonsters;
+   unsigned char respawn;
+   unsigned char fast;
+
+   unsigned char levelname[32][32];
+};
 
 extern olo_t olo;
 extern int olo_loaded;

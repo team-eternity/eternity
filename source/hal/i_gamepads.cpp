@@ -38,8 +38,8 @@
 
 // Globals
 
-// current device number -- saved in config file
-int i_joysticknum;
+bool i_joystickenabled; // if joysticks are enabled -- saved in config file
+int  i_joysticknum;     // current device number -- saved in config file
 
 // Module-private data
 
@@ -49,13 +49,24 @@ static PODCollection<HALGamePad *> masterGamePadList;
 // Currently selected and active gamepad object, if any.
 static HALGamePad *activePad;
 
+static gamePadChangeCallback_t gamePadChangeCallback;
+
 // Generic sensitivity values, for drivers that need them
-int i_joysticksens;
+double i_joyturnsens;
+int    i_joy_deadzone_left;
+int    i_joy_deadzone_right;
+int    i_joy_deadzone_trigger;
 
 // haleyjd 04/15/02: joystick sensitivity variables
-VARIABLE_INT(i_joysticksens, NULL, 0, 32767, NULL);
+VARIABLE_FLOAT(i_joyturnsens,        nullptr, 0.0, 100.0);
+VARIABLE_INT(i_joy_deadzone_left,    nullptr, 0, 32767, nullptr);
+VARIABLE_INT(i_joy_deadzone_right,   nullptr, 0, 32767, nullptr);
+VARIABLE_INT(i_joy_deadzone_trigger, nullptr, 0, 32767, nullptr);
 
-CONSOLE_VARIABLE(i_joysticksens, i_joysticksens, 0) {}
+CONSOLE_VARIABLE(i_joyturnsens, i_joyturnsens, 0) {}
+CONSOLE_VARIABLE(i_joy_deadzone_left,    i_joy_deadzone_left,    0) {}
+CONSOLE_VARIABLE(i_joy_deadzone_right,   i_joy_deadzone_right,   0) {}
+CONSOLE_VARIABLE(i_joy_deadzone_trigger, i_joy_deadzone_trigger, 0) {}
 
 //=============================================================================
 //
@@ -129,14 +140,14 @@ struct halpaddriveritem_t
 //
 static halpaddriveritem_t halPadDriverTable[] =
 {
-   // SDL 1.2 MMSYSTEM Driver
+   // SDL 2.0 Driver
    {
       0,
-      "SDL MMSYSTEM",
+      "SDL",
 #ifdef _SDL_VER
       &i_sdlGamePadDriver,
 #else
-      NULL,
+      nullptr,
 #endif
       false
    },
@@ -148,33 +159,31 @@ static halpaddriveritem_t halPadDriverTable[] =
 #ifdef EE_FEATURE_XINPUT
       &i_xinputGamePadDriver,
 #else
-      NULL,
+      nullptr,
 #endif
       false
    },
 
    // Terminating entry
-   { -1, NULL, NULL, false }
+   { -1, nullptr, nullptr, false }
 };
 
 //
-// I_SelectDefaultGamePad
-//
 // Select the gamepad configured in the configuration file, if it can be
-// found. Otherwise, nothing will happen and activePad will remain NULL.
+// found. Otherwise, nothing will happen and activePad will remain nullptr.
 //
 bool I_SelectDefaultGamePad()
 {
-   HALGamePad *pad = NULL;
+   HALGamePad *pad = nullptr;
 
    // Deselect any active device first.
    if(activePad)
    {
       activePad->deselect();
-      activePad = NULL;
+      activePad = nullptr;
    }
 
-   if(i_joysticknum >= 0)
+   if(i_joystickenabled)
    {
       // search through the master directory for a pad with this number
       PODCollection<HALGamePad *>::iterator itr = masterGamePadList.begin();
@@ -191,12 +200,15 @@ bool I_SelectDefaultGamePad()
 
    // Select the device if it was found.
    if(pad)
-   {      
+   {
       if(pad->select())
          activePad = pad;
    }
 
-   return (activePad != NULL);
+   if(gamePadChangeCallback)
+      gamePadChangeCallback();
+
+   return (activePad != nullptr);
 }
 
 //
@@ -240,10 +252,11 @@ void I_EnumerateGamePads()
 // implementing gamepad drivers in the current build will be initialized in
 // turn and the master list of available devices will be built.
 //
-void I_InitGamePads()
+void I_InitGamePads(gamePadChangeCallback_t callback)
 {
    // Initialize all supported gamepad drivers
    halpaddriveritem_t *item = halPadDriverTable;
+   gamePadChangeCallback = callback;
 
    while(item->name)
    {
@@ -280,7 +293,7 @@ void I_ShutdownGamePads()
 // I_PollActiveGamePad
 //
 // Get input from the currently active gamepad, if any.
-// Returns NULL if there is no device active.
+// Returns nullptr if there is no device active.
 //
 HALGamePad::padstate_t *I_PollActiveGamePad()
 {
@@ -290,7 +303,7 @@ HALGamePad::padstate_t *I_PollActiveGamePad()
       return &activePad->state;
    }
    else
-      return NULL;
+      return nullptr;
 }
 
 //
@@ -317,13 +330,22 @@ HALGamePad *I_GetActivePad()
    return activePad;
 }
 
-// haleyjd 04/15/02: windows joystick commands
+// Joystick command, disables joysticks if set to -1
 CONSOLE_COMMAND(i_joystick, 0)
 {
    if(Console.argc != 1)
       return;
 
+   // Disable joystick if value is -1
    i_joysticknum = Console.argv[0]->toInt();
+   if(i_joysticknum < 0)
+   {
+      i_joystickenabled = false;
+      i_joysticknum     = 0;
+   }
+   else
+      i_joystickenabled = true;
+
    I_SelectDefaultGamePad();
 }
 
@@ -400,7 +422,7 @@ void I_ClearHaptics()
       hhi->clearEffects();
 }
 
-VARIABLE_TOGGLE(i_forcefeedback, NULL, onoff);
+VARIABLE_TOGGLE(i_forcefeedback, nullptr, onoff);
 CONSOLE_VARIABLE(i_forcefeedback, i_forcefeedback, 0)
 {
    // stop any running effects immediately if false

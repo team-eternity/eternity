@@ -34,7 +34,9 @@
 struct ev_action_t;
 struct line_t;
 class  Mobj;
-struct polyobj_s;
+struct polyobj_t;
+struct sector_t;
+struct sectoraction_t;
 
 // Action flags
 enum EVActionFlags
@@ -63,16 +65,22 @@ enum EVActionFlags
 // Data related to an instance of a special activation.
 struct ev_instance_t
 {
-   Mobj      *actor;   // actor, if any
-   line_t    *line;    // line, if any
-   int        special; // special to activate (may == line->special)
-   int       *args;    // arguments (may point to line->args)
-   int        tag;     // tag (may == line->args[0])
-   int        side;    // side of activation
-   int        spac;    // special activation type
-   int        gentype; // generalized type, if is generalized (-1 otherwise)
-   int        genspac; // generalized activation type, if generalized
-   polyobj_s *poly;    // possible polyobject activator
+   Mobj           *actor;        // actor, if any
+   line_t         *line;         // line, if any
+   sectoraction_t *sectoraction; // sectoraction, if any
+   int             special;      // special to activate (may == line->special)
+   const int      *args;         // arguments (may point to line->args)
+   int             tag;          // tag (may == line->args[0])
+   int             side;         // side of activation
+   union
+   {
+      int spac; // special activation type
+      int seac; // sector  activation type
+   };
+   int             gentype;      // generalized type, if is generalized (-1 otherwise)
+   int             genspac;      // generalized activation type, if generalized
+   polyobj_t      *poly;         // possible polyobject activator
+   bool byALineEffect;           // true if activated by A_LineEffect
 };
 
 //
@@ -185,12 +193,14 @@ ev_binding_t *EV_HexenBindingForSpecial(int special);
 // Binding for Name
 ev_binding_t *EV_DOOMBindingForName(const char *name);
 ev_binding_t *EV_HexenBindingForName(const char *name);
+ev_binding_t *EV_UDMFEternityBindingForName(const char *name);
 ev_binding_t *EV_BindingForName(const char *name);
 
 // Action for Special 
 ev_action_t  *EV_DOOMActionForSpecial(int special);
 ev_action_t  *EV_HereticActionForSpecial(int special);
 ev_action_t  *EV_HexenActionForSpecial(int special);
+ev_action_t  *EV_UDMFEternityActionForSpecial(int special);
 ev_action_t  *EV_ACSActionForSpecial(int special);
 ev_action_t  *EV_ActionForSpecial(int special);
 
@@ -205,12 +215,17 @@ int EV_LockDefIDForLine(const line_t *line);
 
 // Testing
 bool EV_IsParamLineSpec(int special);
+bool EV_CheckGenSpecialSpac(int special, int spac);
+bool EV_CheckActionIntrinsicSpac(const ev_action_t &action, int spac);
+int EV_GenTypeForSpecial(int special);
 
 // Activation
-bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, polyobj_s *poly, int spac);
-bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing);
-int  EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing, polyobj_s *poly);
+bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, polyobj_t *poly, int spac, bool byALineEffect);
+bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing, bool nonParamOnly);
+int  EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing, polyobj_t *poly);
 bool EV_ActivateAction(ev_action_t *action, int *args, Mobj *thing);
+
+int EV_ActivateSectorAction(sector_t *sector, Mobj *thing, int seac);
 
 //
 // Static Init Line Types
@@ -322,6 +337,10 @@ enum
    EV_STATIC_PORTAL_LINE_PARAM_QUICK,       // 491
    EV_STATIC_PORTAL_DEFINE,                 // 492
    EV_STATIC_SLOPE_PARAM_TAG,               // 493
+   EV_STATIC_SCROLL_BY_OFFSETS_PARAM,       // 503
+   EV_STATIC_SCROLL_BY_OFFSETS_TAG,         // 1024 (MBF21)
+   EV_STATIC_SCROLL_BY_OFFSETS_TAG_DISPLACE,// 1025 (MBF21)
+   EV_STATIC_SCROLL_BY_OFFSETS_TAG_ACCEL,   // 1026 (MBF21)
 
    EV_STATIC_MAX
 };
@@ -346,8 +365,8 @@ enum
 enum
 {
    ev_Scroll_Arg_Bits = 1,
-   ev_Scroll_Bit_Accel = 1,
-   ev_Scroll_Bit_Displace = 2,
+   ev_Scroll_Bit_Displace = 1,
+   ev_Scroll_Bit_Accel = 2,
    ev_Scroll_Bit_UseLine = 4,
    ev_Scroll_Arg_Type = 2,
    ev_Scroll_Type_Scroll = 0,

@@ -60,7 +60,7 @@ public:
    enum
    {
       TOKEN_NONE,       // Nothing identified yet
-      TOKEN_KEYWORD,    // Starts with a $; otherwise, same as a string
+      TOKEN_KEYWORD,    // Starts with a $ (or without quotes if specified); or same as a string
       TOKEN_STRING,     // Generic string token; ex: 92 foobar
       TOKEN_EOF,        // End of input
       TOKEN_LINEBREAK,  // '\n' character, only a token when TF_LINEBREAKS is enabled
@@ -78,6 +78,7 @@ public:
       TF_SLASHCOMMENTS = 0x00000008, // supports double-slash comments
       TF_OPERATORS     = 0x00000010, // C-style identifiers, no space operators
       TF_ESCAPESTRINGS = 0x00000020, // Add support for escaping strings
+      TF_STRINGSQUOTED = 0x00000040, // Strings must be quoted, otherwise they're keywords
    };
 
 protected:
@@ -138,7 +139,7 @@ protected:
 public:
    // Constructors
    explicit XLParser(const char *pLumpname) 
-      : lumpname(pLumpname), lumpdata(NULL), waddir(NULL)
+      : lumpname(pLumpname), lumpdata(nullptr), waddir(nullptr)
    {
    }
 
@@ -149,7 +150,7 @@ public:
       if(lumpdata)
       {
          efree(lumpdata);
-         lumpdata = NULL;
+         lumpdata = nullptr;
       }
    }
 

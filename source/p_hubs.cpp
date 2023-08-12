@@ -53,8 +53,7 @@
 
 #define MAXHUBLEVELS 128
 
-typedef struct hublevel_s hublevel_t;
-struct hublevel_s
+struct hublevel_t
 {
    char levelname[8];
    char *tmpfile;        // temporary file holding the saved level
@@ -78,7 +77,7 @@ char *temp_hubfile(void)
    
    new_tmpfilename = emalloc(char *, 10);
    
-   sprintf(new_tmpfilename, "smmu%i.tmp", tmpfilenum++);
+   snprintf(new_tmpfilename, 10, "smmu%i.tmp", tmpfilenum++);
    
    return new_tmpfilename;  
 }
@@ -109,7 +108,7 @@ static void P_ClearHubsAtExit(void)
    
    if(atexit_set) return;   // already set
    
-   atexit(P_ClearHubs);
+   I_AtExit(P_ClearHubs);
    
    atexit_set = true;
 }
@@ -131,13 +130,13 @@ static hublevel_t *HublevelForName(char *name)
          return &hub_levels[i];
    }
    
-   return NULL;  // not found
+   return nullptr;  // not found
 }
 
 static hublevel_t *AddHublevel(char *levelname)
 {
    strncpy(hub_levels[num_hub_levels].levelname, levelname, 8);
-   hub_levels[num_hub_levels].tmpfile = NULL;
+   hub_levels[num_hub_levels].tmpfile = nullptr;
    
    return &hub_levels[num_hub_levels++];
 }

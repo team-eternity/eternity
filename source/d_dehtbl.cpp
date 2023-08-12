@@ -27,20 +27,17 @@
 //--------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
 
+#include "d_deh.h"
 #include "d_dehtbl.h"
 #include "d_io.h"
-#include "d_mod.h"
-#include "doomdef.h"
-#include "doomtype.h"
 #include "dhticstr.h"  // haleyjd
 #include "dstrings.h"  // to get initial text values
-#include "e_lib.h"
-#include "info.h"
+#include "e_things.h"
 #include "m_argv.h"
-#include "m_fixed.h"
 #include "m_queue.h"
+#include "metaapi.h"
+#include "p_mobj.h"
 #include "sounds.h"
 
 //
@@ -526,6 +523,9 @@ static const char *s_OB_GRENADE = OB_GRENADE;
 static const char *s_OB_TELEFRAG = OB_TELEFRAG;
 static const char *s_OB_QUAKE = OB_QUAKE;
 
+// misc new strings
+static const char *s_SECRETMESSAGE = SECRETMESSAGE;
+
 // Ty 05/03/98 - externalized
 const char *savegamename;
 
@@ -1008,6 +1008,7 @@ dehstr_t deh_strlookup[] =
    { &s_OB_GRENADE,        "OB_GRENADE"        },
    { &s_OB_TELEFRAG,       "OB_TELEFRAG"       },
    { &s_OB_QUAKE,          "OB_QUAKE"          },
+   { &s_SECRETMESSAGE,     "SECRETMESSAGE"     },
 };
 
 static size_t deh_numstrlookup = earrlen(deh_strlookup);
@@ -1018,85 +1019,85 @@ const char *deh_newlevel = "NEWLEVEL";
 
 const char *mapnames[] =  // DOOM shareware/registered/retail (Ultimate) names.
 {
-  "HUSTR_E1M1",
-  "HUSTR_E1M2",
-  "HUSTR_E1M3",
-  "HUSTR_E1M4",
-  "HUSTR_E1M5",
-  "HUSTR_E1M6",
-  "HUSTR_E1M7",
-  "HUSTR_E1M8",
-  "HUSTR_E1M9",
+   "HUSTR_E1M1",
+   "HUSTR_E1M2",
+   "HUSTR_E1M3",
+   "HUSTR_E1M4",
+   "HUSTR_E1M5",
+   "HUSTR_E1M6",
+   "HUSTR_E1M7",
+   "HUSTR_E1M8",
+   "HUSTR_E1M9",
 
-  "HUSTR_E2M1",
-  "HUSTR_E2M2",
-  "HUSTR_E2M3",
-  "HUSTR_E2M4",
-  "HUSTR_E2M5",
-  "HUSTR_E2M6",
-  "HUSTR_E2M7",
-  "HUSTR_E2M8",
-  "HUSTR_E2M9",
+   "HUSTR_E2M1",
+   "HUSTR_E2M2",
+   "HUSTR_E2M3",
+   "HUSTR_E2M4",
+   "HUSTR_E2M5",
+   "HUSTR_E2M6",
+   "HUSTR_E2M7",
+   "HUSTR_E2M8",
+   "HUSTR_E2M9",
 
-  "HUSTR_E3M1",
-  "HUSTR_E3M2",
-  "HUSTR_E3M3",
-  "HUSTR_E3M4",
-  "HUSTR_E3M5",
-  "HUSTR_E3M6",
-  "HUSTR_E3M7",
-  "HUSTR_E3M8",
-  "HUSTR_E3M9",
+   "HUSTR_E3M1",
+   "HUSTR_E3M2",
+   "HUSTR_E3M3",
+   "HUSTR_E3M4",
+   "HUSTR_E3M5",
+   "HUSTR_E3M6",
+   "HUSTR_E3M7",
+   "HUSTR_E3M8",
+   "HUSTR_E3M9",
 
-  "HUSTR_E4M1",
-  "HUSTR_E4M2",
-  "HUSTR_E4M3",
-  "HUSTR_E4M4",
-  "HUSTR_E4M5",
-  "HUSTR_E4M6",
-  "HUSTR_E4M7",
-  "HUSTR_E4M8",
-  "HUSTR_E4M9",
+   "HUSTR_E4M1",
+   "HUSTR_E4M2",
+   "HUSTR_E4M3",
+   "HUSTR_E4M4",
+   "HUSTR_E4M5",
+   "HUSTR_E4M6",
+   "HUSTR_E4M7",
+   "HUSTR_E4M8",
+   "HUSTR_E4M9",
 };
 
 const char *mapnames2[] = // DOOM 2 map names.
 {
-  "HUSTR_1",
-  "HUSTR_2",
-  "HUSTR_3",
-  "HUSTR_4",
-  "HUSTR_5",
-  "HUSTR_6",
-  "HUSTR_7",
-  "HUSTR_8",
-  "HUSTR_9",
-  "HUSTR_10",
-  "HUSTR_11",
+   "HUSTR_1",
+   "HUSTR_2",
+   "HUSTR_3",
+   "HUSTR_4",
+   "HUSTR_5",
+   "HUSTR_6",
+   "HUSTR_7",
+   "HUSTR_8",
+   "HUSTR_9",
+   "HUSTR_10",
+   "HUSTR_11",
 
-  "HUSTR_12",
-  "HUSTR_13",
-  "HUSTR_14",
-  "HUSTR_15",
-  "HUSTR_16",
-  "HUSTR_17",
-  "HUSTR_18",
-  "HUSTR_19",
-  "HUSTR_20",
+   "HUSTR_12",
+   "HUSTR_13",
+   "HUSTR_14",
+   "HUSTR_15",
+   "HUSTR_16",
+   "HUSTR_17",
+   "HUSTR_18",
+   "HUSTR_19",
+   "HUSTR_20",
 
-  "HUSTR_21",
-  "HUSTR_22",
-  "HUSTR_23",
-  "HUSTR_24",
-  "HUSTR_25",
-  "HUSTR_26",
-  "HUSTR_27",
-  "HUSTR_28",
-  "HUSTR_29",
-  "HUSTR_30",
+   "HUSTR_21",
+   "HUSTR_22",
+   "HUSTR_23",
+   "HUSTR_24",
+   "HUSTR_25",
+   "HUSTR_26",
+   "HUSTR_27",
+   "HUSTR_28",
+   "HUSTR_29",
+   "HUSTR_30",
 
-  "HUSTR_31",
-  "HUSTR_32",
-  "HUSTR_33"  // For Betray, in BFG Edition IWAD
+   "HUSTR_31",
+   "HUSTR_32",
+   "HUSTR_33"  // For Betray, in BFG Edition IWAD
 };
 
 const char *mapnamesp[] = // Plutonia WAD map names.
@@ -1329,6 +1330,7 @@ void A_Nailbomb(actionargs_t *);
 // haleyjd: start new eternity action functions
 void A_SpawnAbove(actionargs_t *);
 void A_SpawnGlitter(actionargs_t *);
+void A_SpawnEx(actionargs_t *);
 void A_SetFlags(actionargs_t *);
 void A_UnSetFlags(actionargs_t *);
 void A_BetaSkullAttack(actionargs_t *);
@@ -1358,6 +1360,7 @@ void A_CounterSwitchEx(actionargs_t *);
 void A_SetCounter(actionargs_t *);
 void A_CopyCounter(actionargs_t *);
 void A_CounterOp(actionargs_t *);
+void A_CounterDiceRoll(actionargs_t *);
 void A_SetTics(actionargs_t *);
 void A_AproxDistance(actionargs_t *);
 void A_ShowMessage(actionargs_t *);
@@ -1378,12 +1381,47 @@ void A_CasingThrust(actionargs_t *);
 void A_JumpIfNoAmmo(actionargs_t *);
 void A_CheckReloadEx(actionargs_t *);
 void A_DetonateEx(actionargs_t *);
+void A_MushroomEx(actionargs_t *);
 void A_HideThing(actionargs_t *);
 void A_UnHideThing(actionargs_t *);
 void A_RestoreArtifact(actionargs_t *);
 void A_RestoreSpecialThing1(actionargs_t *);
 void A_RestoreSpecialThing2(actionargs_t *);
 void A_SargAttack12(actionargs_t *actionargs);
+void A_SelfDestruct(actionargs_t *);
+void A_TurnProjectile(actionargs_t *);
+void A_SubtractAmmo(actionargs_t *);
+
+// MaxW: MBF21 pointers
+void A_SpawnObject(actionargs_t *actionargs);
+void A_MonsterProjectile(actionargs_t *actionargs);
+void A_MonsterBulletAttack(actionargs_t *actionargs);
+void A_MonsterMeleeAttack(actionargs_t *actionargs);
+void A_RadiusDamage(actionargs_t *actionargs);
+void A_NoiseAlert(actionargs_t *actionargs);
+void A_HealChase(actionargs_t *actionargs);
+void A_SeekTracer(actionargs_t *actionargs);
+void A_FindTracer(actionargs_t *actionargs);
+void A_ClearTracer(actionargs_t *actionargs);
+void A_JumpIfHealthBelow(actionargs_t *actionargs);
+void A_JumpIfTargetInSight(actionargs_t *actionargs);
+void A_JumpIfTargetCloser(actionargs_t *actionargs);
+void A_JumpIfTracerInSight(actionargs_t *actionargs);
+void A_JumpIfTracerCloser(actionargs_t *actionargs);
+void A_JumpIfFlagsSet(actionargs_t *actionargs);
+void A_AddFlags(actionargs_t *actionargs);
+void A_RemoveFlags(actionargs_t *actionargs);
+
+void A_WeaponProjectile(actionargs_t *actionargs);
+void A_WeaponBulletAttack(actionargs_t *actionargs);
+void A_WeaponMeleeAttack(actionargs_t *actionargs);
+void A_WeaponSound(actionargs_t *actionargs);
+void A_WeaponJump(actionargs_t *actionargs);
+void A_ConsumeAmmo(actionargs_t *actionargs);
+void A_CheckAmmo(actionargs_t *actionargs);
+void A_RefireTo(actionargs_t *actionargs);
+void A_GunFlashTo(actionargs_t *actionargs);
+void A_WeaponAlert(actionargs_t *actionargs);
 
 // haleyjd 10/12/02: Heretic pointers
 void A_SpawnTeleGlitter(actionargs_t *actionargs);
@@ -1477,7 +1515,6 @@ void A_FireBlasterPL1(actionargs_t *);
 void A_FireSkullRodPL1(actionargs_t *);
 void A_FirePhoenixPL1(actionargs_t *);
 void A_InitPhoenixPL2(actionargs_t *);
-void A_ShutdownPhoenixPL2(actionargs_t *);
 void A_FirePhoenixPL2(actionargs_t *);
 void A_GauntletAttack(actionargs_t *);
 
@@ -1566,9 +1603,10 @@ void A_AlertMonsters(actionargs_t *);
 void A_CheckPlayerDone(actionargs_t *);
 void A_FadeIn(actionargs_t *);
 void A_FadeOut(actionargs_t *);
-void A_PlaySoundEx(actionargs_t *mo);
+void A_PlaySoundEx(actionargs_t *);
 void A_SetSpecial(actionargs_t *);
-void A_Jump(actionargs_t *actor);
+void A_Jump(actionargs_t *);
+void A_SeekerMissile(actionargs_t *);
 
 // eternity tc ptrs: TODO: remove these?
 void A_FogSpawn(actionargs_t *);
@@ -1679,6 +1717,7 @@ deh_bexptr deh_bexptrs[] =
    // haleyjd: start new eternity codeptrs
    POINTER(SpawnAbove),
    POINTER(SpawnGlitter),
+   POINTER(SpawnEx),
    POINTER(StartScript),
    POINTER(StartScriptNamed),
    POINTER(PlayerStartScript),
@@ -1708,6 +1747,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(SetCounter),
    POINTER(CopyCounter),
    POINTER(CounterOp),
+   POINTER(CounterDiceRoll),
    POINTER(SetTics),
    POINTER(AproxDistance),
    POINTER(ShowMessage),
@@ -1728,16 +1768,52 @@ deh_bexptr deh_bexptrs[] =
    POINTER(JumpIfNoAmmo),
    POINTER(CheckReloadEx),
    POINTER(DetonateEx),
+   POINTER(MushroomEx),
    POINTER(HideThing),
    POINTER(UnHideThing),
    POINTER(RestoreArtifact),
    POINTER(RestoreSpecialThing1),
    POINTER(RestoreSpecialThing2),
    POINTER(SargAttack12),
+   POINTER(SelfDestruct),
+   POINTER(TurnProjectile),
+   POINTER(SubtractAmmo),
 
    // haleyjd 07/13/03: nuke specials
    POINTER(PainNukeSpec),
    POINTER(SorcNukeSpec),
+
+   // MaxW: MBF21 pointers
+   POINTER(SpawnObject),
+   POINTER(MonsterProjectile),
+   POINTER(MonsterBulletAttack),
+   POINTER(MonsterMeleeAttack),
+   POINTER(RadiusDamage),
+   POINTER(NoiseAlert),
+   POINTER(HealChase),
+   POINTER(SeekTracer),
+   POINTER(FindTracer),
+   POINTER(ClearTracer),
+   POINTER(JumpIfHealthBelow),
+   POINTER(JumpIfTargetInSight),
+   POINTER(JumpIfTargetCloser),
+   POINTER(JumpIfTracerInSight),
+   POINTER(JumpIfTracerCloser),
+   POINTER(JumpIfFlagsSet),
+   POINTER(AddFlags),
+   POINTER(RemoveFlags),
+
+   POINTER(WeaponProjectile),
+   POINTER(WeaponBulletAttack),
+   POINTER(WeaponMeleeAttack),
+   POINTER(WeaponSound),
+   POINTER(WeaponJump),
+   POINTER(ConsumeAmmo),
+   POINTER(CheckAmmo),
+   POINTER(RefireTo),
+   POINTER(GunFlashTo),
+   POINTER(WeaponAlert),
+
 
    // haleyjd: Heretic pointers
    POINTER(SpawnTeleGlitter),
@@ -1832,7 +1908,6 @@ deh_bexptr deh_bexptrs[] =
    POINTER(FirePhoenixPL1),
    POINTER(InitPhoenixPL2),
    POINTER(FirePhoenixPL2),
-   POINTER(ShutdownPhoenixPL2),
    POINTER(GauntletAttack),
 
    // MaxW: 2018/01/02: Heretic artifact use pointers
@@ -1923,13 +1998,14 @@ deh_bexptr deh_bexptrs[] =
    POINTER(SetSpecial),
    POINTER(SetTranslucent),
    POINTER(Jump),
+   POINTER(SeekerMissile),
 
    // ETERNITY TC ptrs -- TODO: eliminate these
    POINTER(FogSpawn),
    POINTER(FogMove),
 
-   // This NULL entry must be the last in the list
-   { NULL, "NULL" } // Ty 05/16/98
+   // This nullptr entry must be the last in the list
+   { nullptr, "NULL" } // Ty 05/16/98
 };
 
 // haleyjd 03/14/03: Just because its null-terminated doesn't mean 
@@ -2048,7 +2124,7 @@ dehstr_t *D_GetBEXStr(const char *string)
 
    // hash chain empty -- not found
    if(bexstrhashchains[key] == deh_numstrlookup)
-      return NULL;
+      return nullptr;
 
    dehstr = &deh_strlookup[bexstrhashchains[key]];
 
@@ -2057,7 +2133,7 @@ dehstr_t *D_GetBEXStr(const char *string)
    {
       // end of hash chain -- not found
       if(dehstr->bnext == deh_numstrlookup)
-         return NULL;
+         return nullptr;
       else
          dehstr = &deh_strlookup[dehstr->bnext];
    }
@@ -2082,7 +2158,7 @@ dehstr_t *D_GetDEHStr(const char *string)
 
    // hash chain empty -- not found
    if(dehstrhashchains[key] == deh_numstrlookup)
-      return NULL;
+      return nullptr;
 
    dehstr = &deh_strlookup[dehstrhashchains[key]];
 
@@ -2091,7 +2167,7 @@ dehstr_t *D_GetDEHStr(const char *string)
    {
       // end of hash chain -- not found
       if(dehstr->dnext == deh_numstrlookup)
-         return NULL;
+         return nullptr;
       else
          dehstr = &deh_strlookup[dehstr->dnext];
    }
@@ -2111,9 +2187,9 @@ const char *DEH_String(const char *mnemonic)
 {
    dehstr_t *dehstr;
 
-   // allow NULL mnemonic to return NULL
-   if(mnemonic == NULL)
-      return NULL;
+   // allow nullptr mnemonic to return nullptr
+   if(mnemonic == nullptr)
+      return nullptr;
 
    // 05/31/08: modified to return mnemonic on unknown string
    if(!(dehstr = D_GetBEXStr(mnemonic)))
@@ -2195,7 +2271,7 @@ deh_bexptr *D_GetBexPtr(const char *mnemonic)
 
    // is chain empty?
    if(bexcpchains[key] == -1)
-      return NULL; // doesn't exist
+      return nullptr; // doesn't exist
 
    bexptr = &deh_bexptrs[bexcpchains[key]];
 
@@ -2203,7 +2279,7 @@ deh_bexptr *D_GetBexPtr(const char *mnemonic)
    {
       // end of hash chain?
       if(bexptr->next == -1)
-         return NULL; // doesn't exist
+         return nullptr; // doesn't exist
       else
          bexptr = &deh_bexptrs[bexptr->next];
    }
@@ -2251,28 +2327,28 @@ void D_BuildBEXTables()
 
    // haleyjd 03/11/03: must be dynamic now
    // 10/17/03: allocate all the names through a single pointer
-   spritestr = (char *)(Z_Calloc(NUMSPRITES, 5, PU_STATIC, NULL));
+   spritestr = ecalloctag(char *, NUMSPRITES, 5, PU_STATIC, nullptr);
 
-   deh_spritenames = (char **)(Z_Malloc((NUMSPRITES+1)*sizeof(char *),PU_STATIC,0));
+   deh_spritenames = emalloctag(char **, (NUMSPRITES+1)*sizeof(char *),PU_STATIC, nullptr);
 
    for(i = 0; i < NUMSPRITES; ++i)
    {
       deh_spritenames[i] = spritestr + i * 5;
       strncpy(deh_spritenames[i], sprnames[i], 4);
    }
-   deh_spritenames[NUMSPRITES] = NULL;
+   deh_spritenames[NUMSPRITES] = nullptr;
 
    // 09/07/05: allocate all music names through one pointer
-   musicstr = (char *)(Z_Calloc(NUMMUSIC, 7, PU_STATIC, 0));
+   musicstr = ecalloctag(char *, NUMMUSIC, 7, PU_STATIC, nullptr);
 
-   deh_musicnames = (char **)(Z_Malloc((NUMMUSIC+1)*sizeof(char *), PU_STATIC, 0));
+   deh_musicnames = emalloctag(char **, (NUMMUSIC+1)*sizeof(char *), PU_STATIC, nullptr);
 
    for(i = 1; i < NUMMUSIC; ++i)
    {
       deh_musicnames[i] = musicstr + i * 7;
       strncpy(deh_musicnames[i], S_music[i].name, 6);
    }
-   deh_musicnames[0] = deh_musicnames[NUMMUSIC] = NULL;
+   deh_musicnames[0] = deh_musicnames[NUMMUSIC] = nullptr;
 }
 
 //
@@ -2284,13 +2360,13 @@ void D_BuildBEXTables()
 // all at once. This allows EDF to be extended for loading from
 // wad files.
 
-typedef struct dehqueueitem_s
+struct dehqueueitem_t
 {
    mqueueitem_t mqitem; // this must be first
 
    char name[PATH_MAX+1];
-   int  lumpnum;   
-} dehqueueitem_t;
+   int  lumpnum;
+};
 
 static mqueue_t dehqueue;
 
@@ -2327,8 +2403,9 @@ void D_QueueDEH(const char *filename, int lumpnum)
 
 // DeHackEd support - Ty 03/09/97
 // killough 10/98:
-// Add lump number as third argument, for use when filename==NULL
-void ProcessDehFile(const char *filename, const char *outfilename, int lump);
+// Add lump number as third argument, for use when filename==nullptr
+void ProcessDehFile(const char *filename, const char *outfilename, int lump,
+                    MetaTable &gatheredData);
 
 // killough 10/98: support -dehout filename
 // cph - made const, don't cache results
@@ -2340,7 +2417,78 @@ static const char *D_dehout()
    if(!p)
       p = M_CheckParm("-bexout");
    
-   return (p && ++p < myargc) ? myargv[p] : NULL;
+   return (p && ++p < myargc) ? myargv[p] : nullptr;
+}
+
+//
+// Use gathered data. Handle some of the Dehacked changes here, since they need to be safely handled
+// only once, in case the DEHACKED definition has the same thing multiple times.
+//
+static void D_useGatheredData(const MetaTable &gatheredData)
+{
+   struct tgfmapping_t
+   {
+      const char *key;
+      unsigned flag;
+      bool inclusive;
+      void (*negativeHandler)(mobjtype_t type, int val); // applied if val < 0
+      void (*generalHandler)(mobjtype_t type, int val);  // applied all the time
+   };
+
+   static const tgfmapping_t mappings[] =
+   {
+      {
+         DEH_KEY_SPLASH_GROUP,
+         TGF_NOSPLASHDAMAGE,
+         true,
+         [](mobjtype_t type, int val) {
+            I_Error("DEHACKED: Bad \"Splash group\" %d for \"%s\"", val, mobjinfo[type]->name);
+         },
+         nullptr
+      },
+      {
+         DEH_KEY_PROJECTILE_GROUP,
+         TGF_PROJECTILEALLIANCE,
+         false,
+         [](mobjtype_t type, int val) {
+            mobjinfo[type]->flags4 |= MF4_HARMSPECIESMISSILE;
+         },
+         nullptr
+      },
+      {
+         DEH_KEY_INFIGHTING_GROUP,
+         TGF_DAMAGEIGNORE,
+         true,
+         [](mobjtype_t type, int val) {
+            I_Error("DEHACKED: Bad \"Infighting group\" %d for \"%s\"", val, mobjinfo[type]->name);
+         },
+         [](mobjtype_t type, int val) {
+            mobjinfo[type]->flags4 |= MF4_NOSPECIESINFIGHT;
+         }
+      }
+   };
+
+   const MetaObject *obj = nullptr;
+   while((obj = gatheredData.tableIterator(obj)))
+   {
+      const MetaTable *table = static_cast<const MetaTable *>(obj);
+      mobjtype_t type = E_GetThingNumForName(table->getKey());
+
+      // Override thing groups with whatever got set in Dehacked
+      for(const tgfmapping_t &mapping : mappings)
+      {
+         int val = table->getInt(mapping.key, D_MININT);
+         if(val == D_MININT)
+            continue;
+         E_RemoveFromExistingThingPairs(type, mapping.flag);
+         if(val < 0)
+            mapping.negativeHandler(type, val);
+         else
+            E_AddToMBF21ThingGroup(val, mapping.flag, type, mapping.inclusive);
+         if(mapping.generalHandler)
+            mapping.generalHandler(type, val);
+      }
+   }
 }
 
 //
@@ -2355,6 +2503,7 @@ void D_ProcessDEHQueue()
    // has preserved the proper processing order.
 
    mqueueitem_t *rover;
+   MetaTable gatheredData;
 
    while((rover = M_QueueIterator(&dehqueue)))
    {
@@ -2364,16 +2513,20 @@ void D_ProcessDEHQueue()
       // it's a file
       if(dqitem->lumpnum != -1)
       {
-         ProcessDehFile(NULL, D_dehout(), dqitem->lumpnum);
+         ProcessDehFile(nullptr, D_dehout(), dqitem->lumpnum, gatheredData);
       }
       else
       {
-         ProcessDehFile(dqitem->name, D_dehout(), 0);
+         ProcessDehFile(dqitem->name, D_dehout(), 0, gatheredData);
       }
    }
 
    // free the elements and reset the queue
    M_QueueFree(&dehqueue);
+
+   // Handle gathered data
+   D_useGatheredData(gatheredData);
+   gatheredData.clearTable();
 }
 
 // EOF

@@ -162,6 +162,8 @@ void P_AnimateSurfaces()
    {
       if(!--had.tics)
       {
+         const int prev = texturetranslation[had.index];
+
          if(had.currentFrameDef == had.endFrameDef)
             had.currentFrameDef = had.startFrameDef;
          else
@@ -172,6 +174,10 @@ void P_AnimateSurfaces()
          else
             had.tics = hfd.tics;
          texturetranslation[had.index] = hfd.index;
+
+         // Cache new animation and make a sky texture if required
+         R_CacheTexture(hfd.index);
+         R_CacheSkyTextureAnimFrame(prev, hfd.index);
 
          // Set TF_SWIRLY on the *source* texture index. This gives fine control
          // over one's sequence without affecting unrelated surfaces.
@@ -339,7 +345,7 @@ static cell AMX_NATIVE_CALL sm_lightning(AMX *amx, cell *params)
 AMX_NATIVE_INFO panim_Natives[] =
 {
    { "_ForceLightning", sm_lightning },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 

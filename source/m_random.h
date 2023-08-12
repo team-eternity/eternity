@@ -27,6 +27,17 @@
 #ifndef M_RANDOM_H__
 #define M_RANDOM_H__
 
+#include "d_keywds.h"
+#include "m_fixed.h"
+
+//#define RANDOM_LOG
+#ifdef RANDOM_LOG
+void M_RandomLog(E_FORMAT_STRING(const char *format), ...) E_PRINTF(1, 2);
+#else
+#define M_RandomLog(...)
+#endif
+
+
 // killough 1/19/98: rewritten to use to use a better random number generator
 // in the new engine, although the old one is available for compatibility.
 
@@ -50,206 +61,219 @@
 // sync. Do not remove entries simply because they become unused later.
 
 typedef enum {
-  pr_skullfly,                // #1
-  pr_damage,                  // #2
-  pr_crush,                   // #3
-  pr_genlift,                 // #4
-  pr_killtics,                // #5
-  pr_damagemobj,              // #6
-  pr_painchance,              // #7
-  pr_lights,                  // #8
-  pr_explode,                 // #9
-  pr_respawn,                 // #10
-  pr_lastlook,                // #11
-  pr_spawnthing,              // #12
-  pr_spawnpuff,               // #13
-  pr_spawnblood,              // #14
-  pr_missile,                 // #15
-  pr_shadow,                  // #16
-  pr_plats,                   // #17
-  pr_punch,                   // #18
-  pr_punchangle,              // #19
-  pr_saw,                     // #20
-  pr_plasma,                  // #21
-  pr_gunshot,                 // #22
-  pr_misfire,                 // #23
-  pr_shotgun,                 // #24
-  pr_bfg,                     // #25
-  pr_slimehurt,               // #26
-  pr_dmspawn,                 // #27
-  pr_missrange,               // #28
-  pr_trywalk,                 // #29
-  pr_newchase,                // #30
-  pr_newchasedir,             // #31
-  pr_see,                     // #32
-  pr_facetarget,              // #33
-  pr_posattack,               // #34
-  pr_sposattack,              // #35
-  pr_cposattack,              // #36
-  pr_spidrefire,              // #37
-  pr_troopattack,             // #38
-  pr_sargattack,              // #39
-  pr_headattack,              // #40
-  pr_bruisattack,             // #41
-  pr_tracer,                  // #42
-  pr_skelfist,                // #43
-  pr_scream,                  // #44
-  pr_brainscream,             // #45
-  pr_cposrefire,              // #46
-  pr_brainexp,                // #47
-  pr_spawnfly,                // #48
-  pr_misc,                    // #49
-  pr_all_in_one,              // #50
-  // Start new entries -- add new entries below
-  pr_opendoor,                // #51
-  pr_targetsearch,            // #52
-  pr_friends,                 // #53
-  pr_threshold,               // #54
-  pr_skiptarget,              // #55
-  pr_enemystrafe,             // #56
-  pr_avoidcrush,              // #57
-  pr_stayonlift,              // #58
-  pr_helpfriend,              // #59
-  pr_dropoff,                 // #60
-  pr_randomjump,              // #61
-  pr_defect,                  // #62
-  pr_script,                  // #63: FraggleScript
-  // End of new entries
+   pr_skullfly,                // #0
+   pr_damage,                  // #1
+   pr_crush,                   // #2
+   pr_genlift,                 // #3
+   pr_killtics,                // #4
+   pr_damagemobj,              // #5
+   pr_painchance,              // #6
+   pr_lights,                  // #7
+   pr_explode,                 // #8
+   pr_respawn,                 // #9
+   pr_lastlook,                // #10
+   pr_spawnthing,              // #11
+   pr_spawnpuff,               // #12
+   pr_spawnblood,              // #13
+   pr_missile,                 // #14
+   pr_shadow,                  // #15
+   pr_plats,                   // #16
+   pr_punch,                   // #17
+   pr_punchangle,              // #18
+   pr_saw,                     // #19
+   pr_plasma,                  // #20
+   pr_gunshot,                 // #21
+   pr_misfire,                 // #22
+   pr_shotgun,                 // #23
+   pr_bfg,                     // #24
+   pr_slimehurt,               // #25
+   pr_dmspawn,                 // #26
+   pr_missrange,               // #27
+   pr_trywalk,                 // #28
+   pr_newchase,                // #29
+   pr_newchasedir,             // #30
+   pr_see,                     // #31
+   pr_facetarget,              // #32
+   pr_posattack,               // #33
+   pr_sposattack,              // #34
+   pr_cposattack,              // #35
+   pr_spidrefire,              // #36
+   pr_troopattack,             // #37
+   pr_sargattack,              // #38
+   pr_headattack,              // #39
+   pr_bruisattack,             // #40
+   pr_tracer,                  // #41
+   pr_skelfist,                // #42
+   pr_scream,                  // #43
+   pr_brainscream,             // #44
+   pr_cposrefire,              // #45
+   pr_brainexp,                // #46
+   pr_spawnfly,                // #47
+   pr_misc,                    // #48
+   pr_all_in_one,              // #49
+   // Start new entries -- add new entries below
+   pr_opendoor,                // #50
+   pr_targetsearch,            // #51
+   pr_friends,                 // #52
+   pr_threshold,               // #53
+   pr_skiptarget,              // #54
+   pr_enemystrafe,             // #55
+   pr_avoidcrush,              // #56
+   pr_stayonlift,              // #57
+   pr_helpfriend,              // #58
+   pr_dropoff,                 // #59
+   pr_randomjump,              // #60
+   pr_defect,                  // #61
+   pr_script,                  // #62: FraggleScript
+   // End of new entries
 
-  // Start Eternity classes
-  pr_minatk1,   // Minotaur attacks
-  pr_minatk2,
-  pr_minatk3,
-  pr_mindist,
-  pr_mffire,
-  pr_settics,   // SetTics codepointer
-  pr_volcano,   // Heretic volcano stuff
-  pr_svolcano,  // ditto
-  pr_clrattack,
-  pr_splash,    // TerrainTypes
-  pr_lightning, // lightning flashes
-  pr_nextflash,
-  pr_cloudpick,
-  pr_fogangle,
-  pr_fogcount,
-  pr_fogfloat,
-  pr_floathealth, // floatbobbing seed
-  pr_subtics,     // A_SubTics
-  pr_centauratk,  // A_CentaurAttack
-  pr_dropequip,   // A_DropEquipment
-  pr_bishop1,
-  pr_steamspawn, // steam spawn codepointer 
-  pr_mincharge,  // minotaur inflictor special
-  pr_reflect,    // missile reflection
-  pr_tglitz,     // teleglitter z coord
-  pr_bishop2,
-  pr_custombullets, // parameterized pointers
-  pr_custommisfire,
-  pr_custompunch,
-  pr_tglit,      // teleglitter spawn
-  pr_spawnfloat, // random spawn float z flag
-  pr_mumpunch,   // mummy punches
-  pr_mumpunch2,  
-  pr_hdrop1,     // heretic item drops
-  pr_hdrop2,     
-  pr_hdropmom,   
-  pr_clinkatk,   // clink scratch
-  pr_ghostsneak, // random failure to sight ghost player
-  pr_wizatk,     // wizard attack
-  pr_lookact,    // make seesound instead of active sound
-  pr_sorctele1,  // d'sparil stuff
-  pr_sorctele2,  
-  pr_sorfx1xpl,  
-  pr_soratk1,    
-  pr_soratk2,    
-  pr_bluespark,  
-  pr_podpain,    // pod pain
-  pr_makepod,    // pod spawn
-  pr_knightat1,  // knight scratch
-  pr_knightat2,  // knight projectile choice
-  pr_dripblood,  // for A_DripBlood
-  pr_beastbite,  // beast bite
-  pr_puffy,      // beast ball puff spawn
-  pr_sorc1atk,   // sorcerer serpent attack
-  pr_monbullets, // BulletAttack ptr
-  pr_monmisfire,
-  pr_setcounter, // SetCounter ptr
-  pr_madmelee,   // Heretic mad fighting after player death
-  pr_whirlwind,  // Whirlwind inflictor
-  pr_lichmelee,  // Iron Lich attacks
-  pr_lichattack, 
-  pr_whirlseek,  // Whirlwind seeking
-  pr_impcharge,  // Imp charge attack
-  pr_impmelee,   // Imp melee attack
-  pr_impmelee2,  // Leader imp melee
-  pr_impcrash,   // Imp crash
-  pr_rndwnewdir, // RandomWalk rngs
-  pr_rndwmovect,
-  pr_rndwspawn,
-  pr_weapsetctr, // WeaponSetCtr
-  pr_quake,      // T_QuakeThinker
-  pr_quakedmg,   // quake damage
-  pr_skullpop,   // Heretic skull flying
-  pr_centaurdef, // A_CentaurDefend
-  pr_bishop3,
-  pr_spawnblur,  // A_SpawnBlur
-  pr_chaosbite,  // A_DemonAttack1
-  pr_wraithm,    // A_WraithMelee
-  pr_wraithd, 
-  pr_wraithfx2,
-  pr_wraithfx3,
-  pr_wraithfx4a,
-  pr_wraithfx4b,
-  pr_wraithfx4c,
-  pr_ettin,
-  pr_affritrock,  // A_AffritSpawnRock
-  pr_smbounce,    // A_SmBounce
-  pr_affrits,     // A_AffritSplotch
-  pr_icelook,     // A_IceGuyLook
-  pr_icelook2,
-  pr_icechase,    // A_IceGuyChase
-  pr_icechase2, 
-  pr_dragonfx,    // A_DragonFX2
-  pr_dropmace,    // A_DropMace
-  pr_rip,         // ripper missile damage
-  pr_casing,      // A_CasingThrust
-  pr_genrefire,   // A_GenRefire
-  pr_decjump,     // A_Jump
-  pr_decjump2,
-  pr_spotspawn,   // For use with MobjCollection::spawnAtRandom
-  pr_moverandom,  // For use with MobjCollection::moveToRandom
-  pr_ravenblood,  // Raven blood spawning
-  pr_ripperblood, // Ripper blood spawning
-  pr_rogueblood,  // Strife blood spawning
-  pr_drawblood,   // Missile blood-drawing chance
-  pr_hexenteleport,  // ioanch 20160329: used by Hexen teleporters
-  pr_goldwand,    // A_FireGoldWandPL1
-  pr_goldwand2,   // A_FireGoldWandPL2
-  pr_skullrod,    // A_FireSkullRodPL1
-  pr_blaster,     // A_FireBlasterPL1
-  pr_staff,       // A_StaffAttackPL1
-  pr_staff2,      // A_StaffAttackPL2
-  pr_staffangle,
-  pr_gauntlets,   // A_GauntletAttack
-  pr_gauntletsangle,
-  pr_boltspark,   // A_BoltSpark
-  pr_firemace,    // A_FireMacePL1
-  pr_phoenixrod2, // A_FirePhoenixPL2
+   // Start Eternity classes
+   pr_minatk1,   // Minotaur attacks
+   pr_minatk2,
+   pr_minatk3,
+   pr_mindist,
+   pr_mffire,
+   pr_settics,   // SetTics codepointer
+   pr_volcano,   // Heretic volcano stuff
+   pr_svolcano,  // ditto
+   pr_clrattack,
+   pr_splash,    // TerrainTypes
+   pr_lightning, // lightning flashes
+   pr_nextflash,
+   pr_cloudpick,
+   pr_fogangle,
+   pr_fogcount,
+   pr_fogfloat,
+   pr_floathealth, // floatbobbing seed
+   pr_subtics,     // A_SubTics
+   pr_centauratk,  // A_CentaurAttack
+   pr_dropequip,   // A_DropEquipment
+   pr_bishop1,
+   pr_steamspawn, // steam spawn codepointer
+   pr_mincharge,  // minotaur inflictor special
+   pr_reflect,    // missile reflection
+   pr_tglitz,     // teleglitter z coord
+   pr_bishop2,
+   pr_custombullets, // parameterized pointers
+   pr_custommisfire,
+   pr_custompunch,
+   pr_tglit,      // teleglitter spawn
+   pr_spawnfloat, // random spawn float z flag
+   pr_mumpunch,   // mummy punches
+   pr_mumpunch2,
+   pr_hdrop1,     // heretic item drops
+   pr_hdrop2,
+   pr_hdropmom,
+   pr_clinkatk,   // clink scratch
+   pr_ghostsneak, // random failure to sight ghost player
+   pr_wizatk,     // wizard attack
+   pr_lookact,    // make seesound instead of active sound
+   pr_sorctele1,  // d'sparil stuff
+   pr_sorctele2,
+   pr_sorfx1xpl,
+   pr_soratk1,
+   pr_soratk2,
+   pr_bluespark,
+   pr_podpain,    // pod pain
+   pr_makepod,    // pod spawn
+   pr_knightat1,  // knight scratch
+   pr_knightat2,  // knight projectile choice
+   pr_dripblood,  // for A_DripBlood
+   pr_beastbite,  // beast bite
+   pr_puffy,      // beast ball puff spawn
+   pr_sorc1atk,   // sorcerer serpent attack
+   pr_monbullets, // BulletAttack ptr
+   pr_monmisfire,
+   pr_setcounter, // SetCounter ptr
+   pr_madmelee,   // Heretic mad fighting after player death
+   pr_whirlwind,  // Whirlwind inflictor
+   pr_lichmelee,  // Iron Lich attacks
+   pr_lichattack,
+   pr_whirlseek,  // Whirlwind seeking
+   pr_impcharge,  // Imp charge attack
+   pr_impmelee,   // Imp melee attack
+   pr_impmelee2,  // Leader imp melee
+   pr_impcrash,   // Imp crash
+   pr_rndwnewdir, // RandomWalk rngs
+   pr_rndwmovect,
+   pr_rndwspawn,
+   pr_weapsetctr, // WeaponSetCtr
+   pr_quake,      // T_QuakeThinker
+   pr_quakedmg,   // quake damage
+   pr_skullpop,   // Heretic skull flying
+   pr_centaurdef, // A_CentaurDefend
+   pr_bishop3,
+   pr_spawnblur,  // A_SpawnBlur
+   pr_chaosbite,  // A_DemonAttack1
+   pr_wraithm,    // A_WraithMelee
+   pr_wraithd,
+   pr_wraithfx2,
+   pr_wraithfx3,
+   pr_wraithfx4a,
+   pr_wraithfx4b,
+   pr_wraithfx4c,
+   pr_ettin,
+   pr_affritrock,  // A_AffritSpawnRock
+   pr_smbounce,    // A_SmBounce
+   pr_affrits,     // A_AffritSplotch
+   pr_icelook,     // A_IceGuyLook
+   pr_icelook2,
+   pr_icechase,    // A_IceGuyChase
+   pr_icechase2,
+   pr_dragonfx,    // A_DragonFX2
+   pr_dropmace,    // A_DropMace
+   pr_rip,         // ripper missile damage
+   pr_casing,      // A_CasingThrust
+   pr_genrefire,   // A_GenRefire
+   pr_decjump,     // A_Jump
+   pr_decjump2,
+   pr_spotspawn,   // For use with MobjCollection::spawnAtRandom
+   pr_moverandom,  // For use with MobjCollection::moveToRandom
+   pr_ravenblood,  // Raven blood spawning
+   pr_ripperblood, // Ripper blood spawning
+   pr_rogueblood,  // Strife blood spawning
+   pr_drawblood,   // Missile blood-drawing chance
+   pr_hexenteleport,  // ioanch 20160329: used by Hexen teleporters
+   pr_goldwand,    // A_FireGoldWandPL1
+   pr_goldwand2,   // A_FireGoldWandPL2
+   pr_skullrod,    // A_FireSkullRodPL1
+   pr_blaster,     // A_FireBlasterPL1
+   pr_staff,       // A_StaffAttackPL1
+   pr_staff2,      // A_StaffAttackPL2
+   pr_staffangle,
+   pr_gauntlets,   // A_GauntletAttack
+   pr_gauntletsangle,
+   pr_boltspark,   // A_BoltSpark
+   pr_firemace,    // A_FireMacePL1
+   pr_phoenixrod2, // A_FirePhoenixPL2
 
-  pr_hereticartiteleport, // A_ArtiTele
-  pr_puffblood,   // P_shootThing draw blood when Heretic-like puff is defined
-  pr_nailbombshoot,  // A_Nailbomb random damage
-  pr_fasttrailchance,         // [XA] 02/22/2020: Fast projectile trail spawn-chance
+   pr_hereticartiteleport, // A_ArtiTele
+   pr_puffblood,   // P_shootThing draw blood when Heretic-like puff is defined
+   pr_nailbombshoot,  // A_Nailbomb random damage
+   pr_chainwiggle, // ST_HticTicker
+   pr_envirospot,
+   pr_envirotics,
 
-  NUMPRCLASS                  // MUST be last item in list
+   pr_spawnexchance,           // [XA] 02/28/2020: A_SpawnEx spawnchance
+   pr_seekermissile,           // A_SeekerMissile
+
+   pr_wpnreadysnd,
+
+   pr_enviroticsend,
+
+   pr_mbf21,
+
+   pr_fasttrailchance,         // [XA] 02/22/2020: Fast projectile trail spawn-chance
+
+   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;
 
 // The random number generator's state.
-typedef struct rng_s
+struct rng_t
 {
    unsigned int  seed[NUMPRCLASS];      // Each block's random seed
    int rndindex, prndindex;             // For compatibility support
-} rng_t;
+};
 
 extern rng_t rng;                      // The rng's state
 
@@ -269,6 +293,8 @@ int P_RangeRandom(pr_class_t pr_class, int min, int max);
 
 #define M_RangeRandom(min, max) P_RangeRandom(pr_misc, (min), (max))
 
+int M_VHereticPRandom(pr_class_t pr_class);
+
 // haleyjd 03/16/09: extended random functions
 unsigned int P_RandomEx(pr_class_t);
 unsigned int P_RangeRandomEx(pr_class_t, unsigned int, unsigned int);
@@ -279,6 +305,10 @@ int P_SubRandomEx(pr_class_t pr_class, unsigned max);
 
 // Fix randoms for demos.
 void M_ClearRandom(void);
+
+// [XA] Common random formulas used by codepointers
+int P_RandomHitscanAngle(pr_class_t pr_class, fixed_t spread);
+int P_RandomHitscanSlope(pr_class_t pr_class, fixed_t spread);
 
 #endif
 

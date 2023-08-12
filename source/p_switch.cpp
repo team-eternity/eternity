@@ -41,6 +41,7 @@
 #include "p_spec.h"
 #include "r_data.h"
 #include "r_main.h"
+#include "r_sky.h"
 #include "r_state.h"
 #include "s_sound.h"
 #include "sounds.h"
@@ -58,8 +59,8 @@ static int numswitches;                           // killough
 static Collection<qstring> switchsounds;
 static Collection<qstring> offswitchsounds;
 
-button_t *buttonlist     = NULL; // haleyjd 04/16/08: made dynamic
-int      numbuttonsalloc = 0;    // haleyjd 04/16/08: number allocated
+button_t *buttonlist     = nullptr; // haleyjd 04/16/08: made dynamic
+int      numbuttonsalloc = 0;       // haleyjd 04/16/08: number allocated
 
 //
 // Being given an EDF switch, check if we have SWITCHES entries which can be
@@ -407,28 +408,32 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
       if(switchlist[i] == texTop) // if an upper texture
       {
          sides[sidenum].toptexture = switchlist[i^1]; // chg texture
-         
+         R_CacheTexture(switchlist[i ^ 1]);
+         R_CacheIfSkyTexture(switchlist[i], switchlist[i ^ 1]); // Sky transfers are only off of top textures
+
          P_StartButton(sidenum, line, sector, top, switchlist[i], BUTTONTIME,
                        !!useAgain, sound, i); // start timer
-         
+
          return;
       }
       else if(switchlist[i] == texMid) // if a normal texture
       {
          sides[sidenum].midtexture = switchlist[i^1]; // chg texture
-         
+         R_CacheTexture(switchlist[i ^ 1]);
+
          P_StartButton(sidenum, line, sector, middle, switchlist[i], BUTTONTIME,
                        !!useAgain, sound, i); // start timer
-         
+
          return;
       }
       else if(switchlist[i] == texBot) // if a lower texture
       {
          sides[sidenum].bottomtexture = switchlist[i^1]; //chg texture
-         
+         R_CacheTexture(switchlist[i ^ 1]);
+
          P_StartButton(sidenum, line, sector, bottom, switchlist[i], BUTTONTIME,
                        !!useAgain, sound, i); // start timer
-         
+
          return;
       }
    }
@@ -446,7 +451,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
 //
 bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
 {
-   return EV_ActivateSpecialLineWithSpac(line, side, thing, nullptr, SPAC_USE);
+   return EV_ActivateSpecialLineWithSpac(line, side, thing, nullptr, SPAC_USE, false);
 }
 
 //----------------------------------------------------------------------------

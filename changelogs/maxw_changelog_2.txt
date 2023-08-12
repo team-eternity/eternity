@@ -1,0 +1,342 @@
+================================================================================
+Changes since Eternity Engine v4.01.00
+================================================================================
+
+--------------------------------------------------------------------------------
+2020/10/16
+Increased visplane hash chain amount again, which should increase FPS in super
+nasty scenes.
+
+--------------------------------------------------------------------------------
+2020/10/24
+Added the ability to scale set the renderer's resolution independent of window
+size.
+
+--------------------------------------------------------------------------------
+2020/10/27
+Default so that holding run whilst autorun is on makes you walk (runiswalk).
+
+--------------------------------------------------------------------------------
+2020/11/03
+Made the backbuffer everything is rendered to transposed. This improves
+rendering times in some cases, and opens the door to many more optimisations.
+The old quad buffer column drawer has been deleted.
+
+--------------------------------------------------------------------------------
+2020/11/08
+Added tall patch support to masked columns (e.g.: sprites, masked midtexes).
+
+--------------------------------------------------------------------------------
+2020/11/11
+Added a provisional fix for intercept traversal when some intercepts are in
+front of the player on the map, but behind them relatively (due to portals).
+Made SetThingSpecial actually set the thing's special in addition to args.
+
+--------------------------------------------------------------------------------
+2020/11/12
+Fixed blockmap generation errors when the 0th vertex has the largest x or yo
+co-ordinates.
+
+--------------------------------------------------------------------------------
+2020/11/17
+Fixed slope rendering in weird niche circumstances with high scale values.
+
+--------------------------------------------------------------------------------
+2020/11/22
+Fixed Eternity hard-locking if a dynavertex has the same position after
+interpolation.
+
+================================================================================
+Changes since Eternity Engine v4.02.00
+================================================================================
+
+--------------------------------------------------------------------------------
+2021/02/14
+Added RANGEEIGHTH flag for thingtypes, required for Strife compat. It cuts
+considered distance to target by eight, giving a way higher missile attack
+probability.
+Added spawn type param to A_FatAttack codepointers.
+Made thing-based obituaries use deh or EDF strings if they start with $.
+
+--------------------------------------------------------------------------------
+2021/02/15
+Added cvar "hu_crosshair_scale" which can toggle scaling of the crosshair off or
+on. It's saved in the config as "crosshair_scale".
+
+--------------------------------------------------------------------------------
+2021/02/26
+Fixed an issue where crushers would desync and permanently close when saving and
+loading.
+
+--------------------------------------------------------------------------------
+2021/03/04
+Added an option to centre weapons when firing. It's in the weapons menu.
+
+--------------------------------------------------------------------------------
+2021/03/07
+Re-introduce a warning for potentially-incompatible savegames.
+
+--------------------------------------------------------------------------------
+2021/03/21
+Overhaul save and load menus. You can now have an arbitrary amount of savegames,
+can delete selected savegames with the delete key, and info on the save like
+when it was saved, what map it's on, etc. Saves in the list are sorted from most
+recent to least recent. Quickload now allows you to select a quicksave slot if
+one isn't already selected.
+Credit goes to Devin Acker (Revenant) for the idea and initial code for that
+ended up defining the layout and such that I went with for this.
+
+Fixed the modern HUD being stretched horizontally.
+Restricted the modern HUD to a 16:9 subscreen (if at 16:9 or wider aspect). Can
+be toggled on/off with the cvar "hu_restrictoverlaywidth".
+
+--------------------------------------------------------------------------------
+2021/04/02
+Fixed screen going black when streaming on Discord.
+
+--------------------------------------------------------------------------------
+2021/04/17
+Allowed certain OPTIONS to be read at startup.
+
+--------------------------------------------------------------------------------
+2021/04/17
+Fixed Chainsaw and Fist not being switched away from if dehacked made them use
+ammo.
+
+--------------------------------------------------------------------------------
+2021/05/10
+Added sector actions for entering and leaving a sector, EESectorActionEnter and
+EESectorActionExit. They have doomednum 9997 and 9998 respectively, the same as
+ZDoom.
+
+--------------------------------------------------------------------------------
+2021/04/19
+Made the menus use the console font by default.
+
+--------------------------------------------------------------------------------
+2021/05/22
+Holding down weapon switch weapons no longer rotates between all weapons in that
+slot automatically.
+
+--------------------------------------------------------------------------------
+2021/09/02
+[MBF21]
+ * Added blockplayers linedef flag.
+ * Added blocklandmonsters linedef flag.
+
+--------------------------------------------------------------------------------
+2021/09/21
+Fixed -dog. Made it so -dogs only works if it's not the last command-line arg.
+
+--------------------------------------------------------------------------------
+2021/09/25
+[MBF21]
+ * Added support for dehacked frames Args[6-8] (1-5 were already present).
+
+--------------------------------------------------------------------------------
+2021/11/07
+[MBF21] 
+ * Added support for the FULLVOLSOUNDS thing flag, which makes see and death
+   sounds maximum volume.
+ * Added dehacked support for thingtype "MBF21 Bits".
+ * Added dehacked support for "Fast speed".
+ 
+ --------------------------------------------------------------------------------
+2021/11/20
+Add NOAUTOSWITCHTO weapon flag, which forbids a weapon for being automatically
+switched to when weapon is picked up on a "worse" weapon.
+[MBF21]
+ * Added support for dehacked weapon flags.
+ 
+--------------------------------------------------------------------------------
+2021/11/25
+[MBF21]
+ * Added support for dehacked frame flags.
+
+--------------------------------------------------------------------------------
+2021/11/28
+Removed midiproc, as Eternity is now using a solution based on Woof!'s code,
+by Roman Fomin, which removes the need for a separate MIDI playback application.
+
+--------------------------------------------------------------------------------
+2021/12/02
+Added "meleerange" EDF property. It's a float, like radius and height.
+Added "ripsound" EDF property, which is played when a ripper rips.
+[MBF21]
+ * Added support for dehacked "Melee range".
+ * Added support for dehacked "Rip sound".
+
+--------------------------------------------------------------------------------
+2021/12/27
+[MBF21]
+ * Added A_SpawnObject and A_MonsterProjectile.
+ 
+--------------------------------------------------------------------------------
+2022/01/03
+[MBF21]
+ * Added A_SpawnObject, A_MonsterMeleeAttack, A_RadiusDamage, A_NoiseAlert,
+   A_HealChase, A_ClearTracer, A_JumpIfHealthBelow, A_JumpIfTargetCloser,
+   A_JumpIfTracerCloser, A_WeaponSound, and A_WeaponAlert, A_AddFlags,
+   A_RemoveFlags, and A_JumpIfFlagsSet.
+
+--------------------------------------------------------------------------------
+2022/01/04
+[MBF21]
+ * Added A_WeaponJump and A_ConsumeAmmo.
+
+--------------------------------------------------------------------------------
+2022/01/18
+[MBF21]
+ * Added A_CheckAmmo, A_RefireTo, A_GunFlashTo,
+   A_JumpIfTargetInSight, A_JumpIfTracerInSight,
+   A_WeaponProjectile, A_WeaponBulletAttack and A_WeaponMeleeAttack.
+
+--------------------------------------------------------------------------------
+2022/01/18
+[MBF21]
+ * Added A_SeekTracer and A_FindTracer.
+ 
+--------------------------------------------------------------------------------
+2022/06/06
+Added support for widescreen status bars.
+
+--------------------------------------------------------------------------------
+2022/06/10
+Fixed Lost Souls spawned inside the player making them pop up.
+
+--------------------------------------------------------------------------------
+2022/06/11
+Fixed weapondeltas setting weapon means of death to none if not specified in the
+delta.
+Added rendering for translucent and additive slopes, as well as their masked
+variants.
+
+--------------------------------------------------------------------------------
+2022/06/18
+Made it so Doom extended spawn nums only get converted if no thingtype exist for
+a given doomednum.
+
+--------------------------------------------------------------------------------
+2022/06/25
+Fixed enemies walking off onto other enemies if the floor height matched the
+height at the top of the enemy being walked on to.
+
+--------------------------------------------------------------------------------
+2022/06/26
+Added level stats to automap display.
+
+--------------------------------------------------------------------------------
+2022/07/22
+Added interpolation to slope movement.
+
+--------------------------------------------------------------------------------
+2022/08/10
+Update auto-detecting Doom 2 and Final Doom WADs for Steam.
+
+--------------------------------------------------------------------------------
+2022/08/12
+Update auto-detecting of Steam WADs to support non-default Steam library game
+install locations.
+
+--------------------------------------------------------------------------------
+2022/09/24
+Added the cvar "map_antialias" which toggles whether or not lines get drawn with
+anti-aliasing.
+
+--------------------------------------------------------------------------------
+2022/11/13
+Change some automap colours to not use the cross graphic for index 0 if they
+aren't optional. Change default Doom automap background colour to index 0.
+
+--------------------------------------------------------------------------------
+2022/12/06
+Fixed qsave command to work even if no save slot had been selected before.
+
+--------------------------------------------------------------------------------
+2022/12/11
+Made fontdeltas able to change linear fonts to filter-based fonts.
+Deprecated "linearlump" from fonts, which now does nothing. Font format is now
+automatically detected.
+
+--------------------------------------------------------------------------------
+2023/01/28
+Added support for ZDoom compressed nodes.
+
+--------------------------------------------------------------------------------
+2023/02/18
+Finished moving to New Zealand.
+
+--------------------------------------------------------------------------------
+2023/03/04
+Fixed crashes due to sound zone propagation through too many sectors.
+
+--------------------------------------------------------------------------------
+2023/03/07
+Overhauled SDL game controller input to be consistent across controllers.
+Added SDL controller input preset.
+Added vibration support to SDL controllers.
+Added ability to use the IWAD picker with controllers, as well as exit ENDOOM.
+
+--------------------------------------------------------------------------------
+2023/05/01
+Fixed non-keyboard inputs would sometimes being ignored while holding down any
+keyboard keys.
+
+--------------------------------------------------------------------------------
+2023/05/02
+Fixed instances where scrolling through weapons wouldn't work if the next weapon
+to be scrolled to is the same as the currently-equipped weapon.
+
+--------------------------------------------------------------------------------
+2023/05/03
+Improved frame pacing with interpolation.
+
+--------------------------------------------------------------------------------
+2023/05/04
+Added multithreaded renderer. New console variables:
+ * r_numcontexts: Video Options > Page 2 > Renderer Threads. This does what it
+   says on the tin. The higher the number, the more render contexts there are.
+   This number ranges from 1 to however many threads your CPU supports. Your
+   physical thread count is a sensible value for it.
+ * r_sprprojstyle: Video Options > Page 2 > Sprite Projection Style.
+   This has three settings, Default, Fast, and Thorough.
+  * Default means Fast for 1 thread, or Thorough for more than 1 thread.
+  * Fast is the classic Doom sprite projection style—if a subsector isn't
+    visible in a given render context then it won't be renderered. This may
+    cause sprites to have a cut-off appearance between the boundaries of render
+    context windows. It can be faster than Thorough in more sprite-heavy scenes.
+   * Thorough will (generally) eliminate the issues seen in Fast. This can cause
+     a reduction in performance in more heavy scenes compared to Fast, in your
+     average vanilla WAD you're not likely to notice much of a difference.
+
+Split i_joysticksens into i_joy_deadzone_left, i_joy_deadzone_right, and
+i_joy_deadzone_trigger.
+Normalised SDL gamepad axis inputs to start from 0 at the end of the deadzone.
+
+--------------------------------------------------------------------------------
+2023/06/24
+Added texture skewing sidedef properties for the Eternity UDMF namespace.
+Allows textures the match the sloping of slope on the front or back of the
+current line texture.
+ * skew_bottom_type, skew_middle_type, skew_top_type: Can be any of:
+    "none", "front_floor", "front_ceiling", "back_floor", or "back_ceiling".
+
+Added per-texture offset sidedef proeprties for the Eternity UDMF namespace.
+These have the same names as the ones that ZDoom's UDMF namespace uses.
+All properties are read in as decimal numbers (into fixed-point internally).
+ * offsetx_bottom, offsety_bottom, offsetx_mid,
+   offsety_mid, offsetx_top, offsety_top.
+
+--------------------------------------------------------------------------------
+2023/06/26
+Added sidedef lighting properties for the Eternity UDMF namespace.
+This allows for separate lighting on top/middle/bottom textures, as well as
+overall sidedef lighting. These have the same names as the ones that ZDoom's
+UDMF namespace uses. The light_* properties are integers and the lightabsolute_*
+properties are booleans.
+ * light_base, light_top, light_mid, light_bottom
+ * lightabsolute, lightabsolute_top, lightabsolute_mid, lightabsolute_bottom
+
+================================================================================
+EOF
+================================================================================

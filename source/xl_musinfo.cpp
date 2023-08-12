@@ -130,7 +130,7 @@ void XLMusInfoParser::pushMusInfoDef()
 //
 void XLMusInfoParser::doStateExpectMapNum2(XLTokenizer &token)
 {
-   char *end = NULL;
+   char *end = nullptr;
    qstring &tokenText = token.getToken();
    long num = tokenText.toLong(&end, 10);
 

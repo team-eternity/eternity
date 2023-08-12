@@ -32,6 +32,7 @@
 #include "../z_zone.h"
 #include "../d_main.h"
 #include "../i_system.h"
+#include "../m_vector.h"
 #include "../v_misc.h"
 #include "../v_video.h"
 #include "../version.h"
@@ -111,13 +112,13 @@ static const GLubyte screenVtxOrder[3*2] = { 0, 1, 3, 3, 1, 2 };
 //
 
 //
-// GL2D_setupVertexArray
-//
 // Static routine to setup vertex and texture coordinate arrays for use with
 // glDrawElements.
 //
-static void GL2D_setupVertexArray(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
-                                  GLfloat smax, GLfloat tmax)
+static void GL2D_setupVertexArray(
+   const GLfloat x, const GLfloat y, const GLfloat w, const GLfloat h,
+   const GLfloat smax, const GLfloat tmax, const GLfloat ymargin
+)
 {
    // enable vertex and texture coordinate arrays
    glEnableClientState(GL_VERTEX_ARRAY);
@@ -125,19 +126,20 @@ static void GL2D_setupVertexArray(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
 
    // Framebuffer Layout:
    //
-   // 0-------3  0 = (x,  y  ) [0,   0   ]   Tris:
-   // |       |  1 = (x,  y+h) [0,   tmax]   1: 0->1->3
+   // 0-------1  0 = (x,  y  ) [0,   0   ]   Tris:
+   // |       |  1 = (x+w,y  ) [0,   tmax]   1: 0->1->3
    // |       |  2 = (x+w,y+h) [smax,tmax]   2: 3->1->2
-   // 1-------2  3 = (x+w,y  ) [smax,0   ]
+   // 3-------2  3 = (x,  y+h) [smax,0   ]
 
    // populate vertex coordinates
-   screenVertices[0] = screenVertices[2] = x;
-   screenVertices[1] = screenVertices[7] = y;
-   screenVertices[3] = screenVertices[5] = y + h;
-   screenVertices[4] = screenVertices[6] = x + w;
+   screenVertices[0] = screenVertices[6] = x;
+   screenVertices[1] = screenVertices[3] = y + ymargin;
+   screenVertices[5] = screenVertices[7] = (y - ymargin) + h;
+   screenVertices[2] = screenVertices[4] = x + w;
 
    // populate texture coordinates
-   screenTexCoords[0] = screenTexCoords[1] = screenTexCoords[2] = screenTexCoords[7] = 0.0f;
+   screenTexCoords[0] = screenTexCoords[2] = 0.0f;
+   screenTexCoords[1] = screenTexCoords[7] = 0.0f;
    screenTexCoords[3] = screenTexCoords[5] = tmax;
    screenTexCoords[4] = screenTexCoords[6] = smax;
 
@@ -151,16 +153,17 @@ static void GL2D_setupVertexArray(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
 //
 // Protected method.
 //
-void SDLGL2DVideoDriver::DrawPixels(void *buffer, unsigned int destwidth)
+void SDLGL2DVideoDriver::DrawPixels(void *buffer, unsigned int destheight)
 {
-   Uint32   *fb          = static_cast<Uint32 *>(buffer);
-   const int d_end       = (screen->w - bump) & ~7;
-   const int d_remainder = (screen->w - bump) & 7;
+   Uint32   *fb            = static_cast<Uint32 *>(buffer);
+   const int d_end         = screen->w & ~7;
+   const int d_remainder   = screen->w & 7;
+   const int render_height = screen->h - bump;
 
-   for(int y = 0; y < screen->h; y++)
+   for(int y = 0; y < render_height; y++)
    {
       byte   *src  = static_cast<byte *>(screen->pixels) + y * screen->pitch;
-      Uint32 *dest = fb + y * destwidth;
+      Uint32 *dest = fb + y * destheight;
 
       for(int x = d_end; x; x -= 8)
       {
@@ -194,21 +197,23 @@ void SDLGL2DVideoDriver::FinishUpdate()
 
    // Don't update the screen if the window isn't visible.
    // Not doing this breaks under Windows when we alt-tab away 
-   // while fullscreen.   
-   if(!(SDL_GetWindowFlags(window) & SDL_WINDOW_SHOWN))
+   // while fullscreen.
+   if(!(SDL_GetWindowFlags(window) & SDL_WINDOW_SHOWN) || I_IsViewOccluded())
       return;
+
+   GL_RebindBoundTexture();
 
    if(!use_arb_pbo)
    {
       // Convert the game's 8-bit output to the 32-bit texture buffer
-      DrawPixels(framebuffer, static_cast<unsigned int>(video.width));
+      DrawPixels(framebuffer, static_cast<unsigned int>(video.height));
 
       // bind the framebuffer texture if necessary
       GL_BindTextureIfNeeded(textureid);
 
       // update the texture data
       glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 
-                      static_cast<GLsizei>(video.width), static_cast<GLsizei>(video.height),
+                      static_cast<GLsizei>(video.height), static_cast<GLsizei>(video.width),
                       GL_BGRA, GL_UNSIGNED_BYTE, static_cast<GLvoid *>(framebuffer));
    }
    else
@@ -228,8 +233,8 @@ void SDLGL2DVideoDriver::FinishUpdate()
       pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIDs[pboindex]);
 
       // copy primary PBO to texture, using offset
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(framebuffer_umax),
-                   static_cast<GLsizei>(framebuffer_vmax), 0, GL_BGRA, GL_UNSIGNED_BYTE,
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(framebuffer_vmax),
+                   static_cast<GLsizei>(framebuffer_umax), 0, GL_BGRA, GL_UNSIGNED_BYTE,
                    nullptr);
 
       // bind the secondary PBO
@@ -241,7 +246,7 @@ void SDLGL2DVideoDriver::FinishUpdate()
       if((ptr = pglMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY_ARB)))
       {
          // draw directly into video memory
-         DrawPixels(ptr, framebuffer_umax);
+         DrawPixels(ptr, framebuffer_vmax);
 
          // release pointer
          pglUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
@@ -271,12 +276,12 @@ void SDLGL2DVideoDriver::ReadScreen(byte *scr)
    else
    {
       // must copy one row at a time
-      for(int y = 0; y < screen->h; y++)
+      for(int x = 0; x < screen->w; x++)
       {
-         byte *src  = static_cast<byte *>(screen->pixels) + y * screen->pitch;
-         byte *dest = scr + y * video.width;
+         byte *src = static_cast<byte *>(screen->pixels) + x * screen->h;
+         byte *dest = scr + x * (video.pitch - bump);
 
-         memcpy(dest, src, screen->w - bump);
+         memcpy(dest, src, screen->h);
       }
    }
 }
@@ -320,7 +325,7 @@ void SDLGL2DVideoDriver::SetPrimaryBuffer()
       bump = 0;
 
    // Create screen surface for the high-level code to render the game into
-   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, video.width + bump, video.height,
+   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, video.height, video.width + bump,
                                                 0, SDL_PIXELFORMAT_INDEX8)))
       I_Error("SDLGL2DVideoDriver::SetPrimaryBuffer: failed to create screen temp buffer\n");
 
@@ -460,21 +465,39 @@ static GLint textureFilterParams[CFG_GL_NUMFILTERS] =
 };
 
 //
+// Computes rectangle re-scale and displacement (this is the SDL GL 2D version)
+//
+static double I_calcScaleAndDisplacement(SDL_Window *window, int width, int height, 
+   v2double_t *displacement)
+{
+   double destScale = 1;
+   *displacement = {};
+
+   int drawableWidth, drawableHeight;
+   SDL_GL_GetDrawableSize(window, &drawableWidth, &drawableHeight);
+   
+   double widthScale = double(drawableWidth) / width;
+   double heightScale = double(drawableHeight) / height;
+   destScale = widthScale < heightScale ? widthScale : heightScale;
+   if(widthScale < heightScale)  // monitor letterbox
+      displacement->y = fabs(drawableHeight - height * destScale) / 2;
+   else if(heightScale < widthScale) // monitor pillarbox
+      displacement->x = fabs(drawableWidth - width * destScale) / 2;
+
+   return destScale;
+}
+
+//
 // SDLGL2DVideoDriver::InitGraphicsMode
 //
 bool SDLGL2DVideoDriver::InitGraphicsMode()
 {
-   bool    wantfullscreen = false;
-   bool    wantdesktopfs  = false;
-   bool    wantvsync      = false;
-   bool    wanthardware   = false; // Not used - this is always "hardware".
-   bool    wantframe      = true;
-   int     v_w            = 640;
-   int     v_h            = 480;
-   int     v_displaynum   = 0;
-   int     window_flags   = SDL_WINDOW_OPENGL|SDL_WINDOW_ALLOW_HIGHDPI;
-   GLvoid *tempbuffer     = nullptr;
-   GLint   texfiltertype  = GL_LINEAR;
+   int           v_displaynum  = 0;
+   int           window_flags  = SDL_WINDOW_OPENGL|SDL_WINDOW_ALLOW_HIGHDPI;
+   GLvoid       *tempbuffer    = nullptr;
+   GLint         texfiltertype = GL_LINEAR;
+   int           resolutionWidth = 640;
+   int           resolutionHeight = 480;
 
    // Get video commands and geometry settings
 
@@ -495,20 +518,23 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    if(cfg_gl_filter_type >= 0 && cfg_gl_filter_type < CFG_GL_NUMFILTERS)
       texfiltertype = textureFilterParams[cfg_gl_filter_type];
 
-   // haleyjd 04/11/03: "vsync" or page-flipping support
-   if(use_vsync)
-      wantvsync = true;
+   Geom geom;
 
    // set defaults using geom string from configuration file
-   I_ParseGeom(i_videomode, &v_w, &v_h, &wantfullscreen, &wantvsync,
-               &wanthardware, &wantframe, &wantdesktopfs);
+   geom.parse(i_videomode);
+
+   // haleyjd 04/11/03: "vsync" or page-flipping support
+   bool actualVSync;
+   if(geom.vsync == Geom::TriState::neutral)
+      actualVSync = use_vsync;
+   else
+      actualVSync = geom.vsync == Geom::TriState::on;
 
    // haleyjd 06/21/06: allow complete command line overrides but only
    // on initial video mode set (setting from menu doesn't support this)
-   I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware,
-                    &wantframe, &wantdesktopfs);
+   I_CheckVideoCmdsOnce(geom);
 
-   if(!wantframe)
+   if(!geom.wantframe)
       window_flags |= SDL_WINDOW_BORDERLESS;
 
    // Set GL attributes through SDL
@@ -526,23 +552,20 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    if(!(window = SDL_CreateWindow(ee_wmCaption,
                                   SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
                                   SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
-                                  v_w, v_h, window_flags)))
+                                  geom.width, geom.height, window_flags)))
    {
       I_FatalError(I_ERR_KILL, "Couldn't create OpenGL window %dx%d\n"
-                               "SDL Error: %s\n", v_w, v_h, SDL_GetError());
+                               "SDL Error: %s\n", geom.width, geom.height, SDL_GetError());
    }
 
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
-   // this and the below #else block are done here as monitor video mode isn't
-   // set when SDL_WINDOW_FULLSCREEN (sans desktop) is ORed in during window creation
-   if(wantfullscreen)
+   I_ParseResolution(i_resolution, resolutionWidth, resolutionHeight, geom.width, geom.height);
+
+   // this is done here as monitor video mode isn't set when SDL_WINDOW_FULLSCREEN (sans desktop)
+   // is ORed in during window creation
+   if(geom.screentype == screentype_e::FULLSCREEN_DESKTOP)
       SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-#else
-   if(wantfullscreen && wantdesktopfs)
-      SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-   else if(wantfullscreen) // && !wantdesktopfs
+   else if(geom.screentype == screentype_e::FULLSCREEN)
       SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
-#endif
 
    if(!(glcontext = SDL_GL_CreateContext(window)))
    {
@@ -551,7 +574,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    }
 
    // Set swap interval through SDL (must be done after context is created)
-   SDL_GL_SetSwapInterval(wantvsync ? 1 : 0); // OMG vsync!
+   SDL_GL_SetSwapInterval(actualVSync ? 1 : 0); // OMG vsync!
 
    Uint32 format;
    if(colordepth == 32)
@@ -561,11 +584,13 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    else // 16
       format = SDL_PIXELFORMAT_RGB555;
 
-   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, v_w, v_h, 0, format)))
+   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, resolutionHeight, resolutionWidth, 0, format)))
    {
       I_FatalError(I_ERR_KILL, "Couldn't set RGB surface with colordepth %d, format %s\n",
                    colordepth, SDL_GetPixelFormatName(format));
    }
+
+   const char *extensions = reinterpret_cast<const char *>(glGetString(GL_EXTENSIONS));
 
    // Try loading the ARB PBO extension
    LoadPBOExtension();
@@ -574,31 +599,53 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    glEnable(GL_TEXTURE_2D);
 
    // Set viewport
-   // This is necessary for high-DPI displays (tested so far on macOS).
-   int drawableW = 0;
-   int drawableH = 0;
-   SDL_GL_GetDrawableSize(window, &drawableW, &drawableH);
-   if(!drawableW || !drawableH)
+   // This is necessary for fullscreen.
+   int drawableW;
+   int drawableH;
+   v2double_t displacement = {};
+   double scale = I_calcScaleAndDisplacement(window, geom.width, geom.height, &displacement);
+   if(!scale)
    {
       // If the function somehow fails, reset to v_w and v_h
-      drawableW = v_w;
-      drawableH = v_h;
+      drawableW = geom.width;
+      drawableH = geom.height;
    }
-   glViewport(0, 0, static_cast<GLsizei>(drawableW), static_cast<GLsizei>(drawableH));
+   else
+   {
+      drawableW = int(floor(scale * geom.width));
+      drawableH = int(floor(scale * geom.height));
+   }
+   glViewport(static_cast<GLint>(floor(displacement.x)), static_cast<GLint>(floor(displacement.y)), 
+      static_cast<GLsizei>(drawableW), static_cast<GLsizei>(drawableH));
 
    // Set ortho projection
-   GL_SetOrthoMode(v_w, v_h);
+   GL_SetOrthoMode(geom.width, geom.height);
 
    // Calculate framebuffer texture sizes
-   framebuffer_umax = GL_MakeTextureDimension(static_cast<unsigned int>(v_w));
-   framebuffer_vmax = GL_MakeTextureDimension(static_cast<unsigned int>(v_h));
+   if(strstr(extensions, "GL_ARB_texture_non_power_of_two") != nullptr)
+   {
+       framebuffer_umax = resolutionWidth;
+       framebuffer_vmax = resolutionHeight;
+   }
+   else
+   {
+       framebuffer_umax = GL_MakeTextureDimension(static_cast<unsigned int>(resolutionWidth));
+       framebuffer_vmax = GL_MakeTextureDimension(static_cast<unsigned int>(resolutionHeight));
+   }
 
    // calculate right- and bottom-side texture coordinates
-   texcoord_smax = static_cast<GLfloat>(v_w) / framebuffer_umax;
-   texcoord_tmax = static_cast<GLfloat>(v_h) / framebuffer_vmax;
+   texcoord_smax = static_cast<GLfloat>(resolutionWidth) / framebuffer_umax;
+   texcoord_tmax = static_cast<GLfloat>(resolutionHeight) / framebuffer_vmax;
 
-   GL2D_setupVertexArray(0.0f, 0.0f, static_cast<float>(v_w), static_cast<float>(v_h),
-                         texcoord_smax, texcoord_tmax);
+   GLfloat ymargin = 0.0f;
+   if(I_VideoShouldLetterbox(geom.width, geom.height))
+   {
+      const int letterboxHeight = I_VideoLetterboxHeight(static_cast<int>(resolutionWidth));
+      ymargin = static_cast<GLfloat>(geom.height - letterboxHeight) / 2.0f;
+   }
+
+   GL2D_setupVertexArray(0.0f, 0.0f, static_cast<float>(geom.width), static_cast<float>(geom.height),
+                         texcoord_smax, texcoord_tmax, ymargin);
 
    // Create texture
    glGenTextures(1, &textureid);
@@ -615,14 +662,14 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
-   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(framebuffer_umax),
-                static_cast<GLsizei>(framebuffer_vmax), 0, GL_BGRA, GL_UNSIGNED_BYTE, 
+   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(framebuffer_vmax),
+                static_cast<GLsizei>(framebuffer_umax), 0, GL_BGRA, GL_UNSIGNED_BYTE, 
                 tempbuffer);
    efree(tempbuffer);
 
    // Allocate framebuffer data, or PBOs
    if(!use_arb_pbo)
-      framebuffer = ecalloc(Uint32 *, v_w * 4, v_h);
+      framebuffer = ecalloc(Uint32 *, resolutionWidth * 4, resolutionHeight);
    else
    {
       pglGenBuffersARB(2, pboIDs);
@@ -637,8 +684,8 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    UpdateGrab(window);
 
    // Init Cardboard video metrics
-   video.width     = v_w;
-   video.height    = v_h;
+   video.width     = resolutionWidth;
+   video.height    = resolutionHeight;
    video.bitdepth  = 8;
    video.pixelsize = 1;
 
@@ -647,6 +694,13 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
 
    // Set initial palette
    SetPalette(static_cast<byte *>(wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE)));
+
+   // Update the i_videomode cvar to correspond to the real state
+   efree(i_videomode);
+   i_videomode = geom.toString().duplicate();
+   // Also update the vsync variable
+   if(geom.vsync != Geom::TriState::neutral)
+      use_vsync = geom.vsync == Geom::TriState::on;
 
    return false;
 }

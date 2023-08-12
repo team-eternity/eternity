@@ -428,13 +428,13 @@ void I_QuitNetwork(void)
    if(packet)
    {
       SDLNet_FreePacket(packet);
-      packet = NULL;
+      packet = nullptr;
    }
    
    if(udpsocket)
    {
       SDLNet_UDP_Close(udpsocket);
-      udpsocket = NULL;
+      udpsocket = nullptr;
    }
    
    SDLNet_Quit();
@@ -504,7 +504,7 @@ void I_InitNetwork(void)
    
    SDLNet_Init();
    
-   atexit(I_QuitNetwork);
+   I_AtExit(I_QuitNetwork);
    
    i++;
    while(++i < myargc && myargv[i][0] != '-')

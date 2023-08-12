@@ -33,10 +33,7 @@
 #include "../hal/i_gamepads.h"
 
 //
-// SDLGamePadDriver
-//
-// Implements the abstract HAL gamepad/joystick interface for SDL's MMSYSTEM
-// based gamepad support.
+// Implements the abstract HAL gamepad/joystick interface for SDL's GameController gamepad support.
 //
 class SDLGamePadDriver : public HALGamePadDriver
 {
@@ -44,13 +41,31 @@ public:
    virtual bool initialize();
    virtual void shutdown();
    virtual void enumerateDevices();
-   virtual int  getBaseDeviceNum() { return 0x10000; }
+   virtual int  getBaseDeviceNum() { return 0; }
 };
 
 extern SDLGamePadDriver i_sdlGamePadDriver;
 
 //
-// SDLGamePad
+// Exposes support for force feedback effects through SDL gamepads.
+//
+class SDLHapticInterface : public HALHapticInterface
+{
+   DECLARE_RTTI_TYPE(SDLHapticInterface, HALHapticInterface)
+
+protected:
+   bool pauseState;
+
+   void zeroState();
+
+public:
+   SDLHapticInterface();
+   virtual void startEffect(effect_e effect, int data1, int data2) override;
+   virtual void pauseEffects(bool effectsPaused) override;
+   virtual void updateEffects() override;
+   virtual void clearEffects() override;
+};
+
 //
 // Implements the abstract HAL gamepad class, for devices that are driven by
 // the SDL DirectInput driver.
@@ -61,6 +76,11 @@ class SDLGamePad : public HALGamePad
 
 protected:
    int sdlIndex; // SDL gamepad number
+   SDLHapticInterface haptics;
+
+   float normAxis(float value, int threshold, int maxvalue);
+   void  normAxisPair(float &axisx, float &axisy, int threshold, int min, int max);
+
 
 public:
    SDLGamePad(int idx = 0);
@@ -68,6 +88,10 @@ public:
    virtual bool select() override;
    virtual void deselect() override;
    virtual void poll() override;
+
+   virtual HALHapticInterface *getHapticInterface() override { return &haptics; }
+
+   virtual const char *getAxisName(const int axis) override;
 };
 
 #endif

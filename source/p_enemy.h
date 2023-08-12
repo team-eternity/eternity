@@ -65,10 +65,12 @@ void P_NoiseAlert (Mobj *target, Mobj *emmiter);
 void P_SpawnBrainTargets();     // killough 3/26/98: spawn icon landings
 void P_SpawnSorcSpots();        // haleyjd 11/19/02: spawn dsparil spots
 
-extern struct brain_s {         // killough 3/26/98: global state of boss brain
-  int easy;
+extern struct brain_s // killough 3/26/98: global state of boss brain
+{
+   int easy;
 } brain;
 
+bool P_CheckRange(Mobj *actor, fixed_t range);
 bool P_CheckMeleeRange(Mobj *actor);
 
 // haleyjd 07/13/03: editable boss brain spawn types
@@ -92,7 +94,7 @@ class MobjCollection;
 // holds a ton of information to allow for the teleportation of
 // a thing with various effects
 //
-typedef struct bossteleport_s
+struct bossteleport_t
 {
    MobjCollection *mc;          // mobj collection to use
    pr_class_t      rngNum;      // rng number to use for selecting spot
@@ -105,11 +107,11 @@ typedef struct bossteleport_s
    int             hereThere;   // locations to spawn effects at (0, 1, or 2)
    int             soundNum;    // sound to play at locations
    fixed_t         minDistance; // minimum distance a spot must be from origin
-} bossteleport_t;
+};
 
 void P_BossTeleport(bossteleport_t *bt);
 
-void P_SkullFly(Mobj *actor, fixed_t speed);
+void P_SkullFly(Mobj *actor, fixed_t speed, bool useSeeState);
 
 int P_GetAimShift(Mobj *target, bool missile);
 

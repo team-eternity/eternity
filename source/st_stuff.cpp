@@ -34,6 +34,7 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "dstrings.h"
+#include "e_compatibility.h"
 #include "e_inventory.h"
 #include "e_lib.h"
 #include "e_weapons.h"
@@ -44,6 +45,7 @@
 #include "m_random.h"
 #include "p_skin.h"
 #include "r_main.h"
+#include "r_patch.h"
 #include "s_sound.h"
 #include "sounds.h"
 #include "st_lib.h"
@@ -380,8 +382,8 @@ static void ST_drawSmallNumber(int val, int x, int y)
       // know enough about coding to change this hard limit.
       if(val > 99999)
          val = 99999;
-      sprintf(buf, "%d", val);
-      x -= 4 * (strlen(buf));
+      snprintf(buf, sizeof(buf), "%d", val);
+      x -= static_cast<int>(4 * (strlen(buf)));
       for(char *rover = buf; *rover; rover++)
       {
          int i = *rover - '0';
@@ -396,7 +398,11 @@ static void ST_refreshBackground()
 {
    if(st_statusbaron)
    {
-      V_DrawPatch(ST_X, ST_FY, &subscreen43, sbar);
+      V_DrawPatch(
+         ST_X + (vbscreenyscaled.unscaledw - sbar->width) / 2 + sbar->leftoffset,
+         ST_FY + sbar->topoffset,
+         &vbscreenyscaled, sbar
+      );
 
       // killough 3/7/98: make face background change with displayplayer
       // haleyjd 01/12/04: changed translation handling
@@ -405,7 +411,7 @@ static void ST_refreshBackground()
          V_DrawPatchTranslated(ST_FX, ST_FY, &subscreen43, faceback,
             plyr->colormap ?
                translationtables[(plyr->colormap - 1)] :
-               NULL, 
+               nullptr, 
             false);
       }
 
@@ -649,7 +655,7 @@ static void ST_updateFaceWidget()
    if(priority < ST_PRIORITY_RAMPAGE)
    {
       // invulnerability
-      if((plyr->cheats & CF_GODMODE) || plyr->powers[pw_invulnerability])
+      if((plyr->cheats & CF_GODMODE) || plyr->powers[pw_invulnerability].isActive())
       {
          priority = ST_PRIORITY_GODMODE;
          
@@ -692,7 +698,7 @@ static void ST_updateWidgets()
    auto weapon   = plyr->readyweapon;
    auto ammoType = weapon->ammo;
 
-   w_ready.num = ammoType ? E_GetItemOwnedAmount(plyr, ammoType) : 1994;
+   w_ready.num = ammoType ? E_GetItemOwnedAmount(plyr, ammoType) : INT_MIN;
    w_ready.max = E_GetMaxAmountForArtifact(plyr, ammoType);
 
    // update armor
@@ -721,7 +727,7 @@ static void ST_updateWidgets()
       
       amount = E_GetItemOwnedAmountName(plyr, GameModeInfo->cardNames[i + 3]);
       if(amount > 0)
-         keyboxes[i] = ((keyboxes[i] == -1 || sts_traditional_keys) ? i + 3 : i + 6);
+         keyboxes[i] = ((keyboxes[i] == -1 || E_Get(overridableSetting_stsTraditionalKeys)) ? i + 3 : i + 6);
    }
 
    // used by the w_armsbg widget
@@ -779,12 +785,19 @@ static void ST_doPaletteStuff()
    byte *pal;
    int  cnt = plyr->damagecount;
 
-   if(plyr->powers[pw_strength])
+   if(plyr->powers[pw_strength].isActive())
    {
-      // slowly fade the berzerk out
-      int bzc = 12 - (plyr->powers[pw_strength]>>6);
-      if(bzc > cnt)
-         cnt = bzc;
+      if(!(GameModeInfo->flags & GIF_BERZERKISPENTA))
+      {
+         // slowly fade the berzerk out
+         int bzc = 12 - (plyr->powers[pw_strength].tics >> 6);
+         if(bzc > cnt)
+            cnt = bzc;
+      }
+      else if(plyr->powers[pw_strength].infinite ||
+              ((plyr->powers[pw_strength].tics < -4 * 32 || (plyr->powers[pw_strength].tics & 8)) &&
+               plyr->powers[pw_strength].isActive() && cnt == 0))
+         cnt = 1;
    }
 
    if(cnt)
@@ -801,8 +814,9 @@ static void ST_doPaletteStuff()
          palette = NUMBONUSPALS-1;
       palette += STARTBONUSPALS;
    }
-   else if(plyr->powers[pw_ironfeet] > 4*32 || 
-           plyr->powers[pw_ironfeet] & 8)
+   else if(plyr->powers[pw_ironfeet].infinite ||
+           plyr->powers[pw_ironfeet].tics > 4*32 ||
+           plyr->powers[pw_ironfeet].tics & 8)
       palette = RADIATIONPAL;
    else
       palette = 0;
@@ -919,8 +933,7 @@ static void ST_drawInventory()
                     nullptr, (FRACUNIT * 6) / 10);
    }
 
-   V_DrawPatch(ST_INVBARBGX + (inv_ptr - leftoffs) * 31, ST_INVBARBGY, &subscreen43,
-               PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE));
+   V_DrawPatch(ST_INVBARBGX + (inv_ptr - leftoffs) * 31, ST_INVBARBGY, &subscreen43, inv_selectbox);
 }
 
 static void ST_drawWidgets()
@@ -938,8 +951,8 @@ static void ST_drawWidgets()
 
    for(i = 0; i < 4; i++)
    {
-      STlib_updateNum(&w_ammo[i],    NULL, FRACUNIT);   //jff 2/16/98 no xlation
-      STlib_updateNum(&w_maxammo[i], NULL, FRACUNIT);
+      STlib_updateNum(&w_ammo[i],    nullptr, FRACUNIT);   //jff 2/16/98 no xlation
+      STlib_updateNum(&w_maxammo[i], nullptr, FRACUNIT);
    }
 
    STlib_updateBinIcon(&w_armsbg);
@@ -949,7 +962,7 @@ static void ST_drawWidgets()
 
    STlib_updateMultIcon(&w_faces, FRACUNIT);
 
-   STlib_updateNum(&w_frags, NULL, FRACUNIT);
+   STlib_updateNum(&w_frags, nullptr, FRACUNIT);
 
    STlib_updateBinIcon(&w_invbarbg);
    if(*w_invbarbg.on && *w_invbarbg.val)
@@ -1048,16 +1061,16 @@ static void ST_DoomFSDrawer()
    // draw graphics
 
    // health
-   V_DrawPatchTL(ST_FSGFX_X, 152, &subscreen43, fs_health, NULL, ST_ALPHA);
+   V_DrawPatchTL(ST_FSGFX_X, 152, &subscreen43, fs_health, nullptr, ST_ALPHA);
    
    // armor
    fixed_t armorclass = 0;
    if(plyr->armordivisor)
       armorclass = (plyr->armorfactor * FRACUNIT) / plyr->armordivisor;
    if(armorclass > FRACUNIT/3)
-      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorb, NULL, ST_ALPHA);
+      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorb, nullptr, ST_ALPHA);
    else
-      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorg, NULL, ST_ALPHA);
+      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorg, nullptr, ST_ALPHA);
 
    ST_updateWidgets();
 
@@ -1067,7 +1080,7 @@ static void ST_DoomFSDrawer()
    {
       int num = E_StrToNumLinear(st_AmmoForNum, NUMAMMO, ammo->getKey());
       if(num != NUMAMMO)
-         V_DrawPatchTL(256, ST_FS_BY, &subscreen43, fs_ammo[num], NULL, ST_ALPHA);
+         V_DrawPatchTL(256, ST_FS_BY, &subscreen43, fs_ammo[num], nullptr, ST_ALPHA);
    }
 
    // draw common number widgets (always refresh since no background)
@@ -1087,15 +1100,15 @@ void ST_Drawer(bool fullscreen)
    // haleyjd: test whether fullscreen graphical hud is enabled
    bool fshud = hud_enabled && hud_overlaylayout == HUD_GRAPHICAL;
 
-   st_statusbaron  = !fullscreen || automapactive || fshud;
-   st_backgroundon = !fullscreen || automapactive;
+   st_statusbaron  = !fullscreen || (automapactive && !automap_overlay) || fshud;
+   st_backgroundon = !fullscreen || (automapactive && !automap_overlay);
 
    ST_doPaletteStuff();  // Do red-/gold-shifts from damage/items
 
    // sf: draw nothing in fullscreen
    // tiny bit faster and also removes the problem of status bar
    // percent '%' signs being drawn in fullscreen
-   if(fullscreen && !automapactive)
+   if(fullscreen && (!automapactive || automap_overlay))
    {
       // haleyjd: call game mode's fullscreen drawer when 
       // hud is enabled and hud_overlaystyle is "graphical"
@@ -1174,9 +1187,9 @@ static void ST_loadGraphics()
    // Load the numbers, tall and short
    for(i = 0; i < 10; i++)
    {
-      sprintf(namebuf, "STTNUM%d", i);
+      snprintf(namebuf, sizeof(namebuf), "STTNUM%d", i);
       tallnum[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
-      sprintf(namebuf, "STYSNUM%d", i);
+      snprintf(namebuf, sizeof(namebuf), "STYSNUM%d", i);
       shortnum[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 
@@ -1187,7 +1200,7 @@ static void ST_loadGraphics()
    // key cards
    for(i = 0; i < NUMCARDS+3; i++)  //jff 2/23/98 show both keys too
    {
-      sprintf(namebuf, "STKEYS%d", i);
+      snprintf(namebuf, sizeof(namebuf), "STKEYS%d", i);
       keys[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 
@@ -1197,7 +1210,7 @@ static void ST_loadGraphics()
    // arms ownership widgets
    for(i = 0; i < 6; i++)
    {
-      sprintf(namebuf, "STGNUM%d", i+2);
+      snprintf(namebuf, sizeof(namebuf), "STGNUM%d", i+2);
 
       // gray #
       arms[i][0] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
@@ -1220,7 +1233,7 @@ static void ST_loadGraphics()
    fs_armorb = PatchLoader::CacheName(wGlobalDir, "HU_FARM2", PU_STATIC);
    for(i = 0; i < 4; ++i)
    {
-      sprintf(namebuf, "HU_FAMM%d", i);
+      snprintf(namebuf, sizeof(namebuf), "HU_FAMM%d", i);
       fs_ammo[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 
@@ -1325,7 +1338,7 @@ static void ST_unloadGraphics()
 
 void ST_unloadData()
 {
-  ST_unloadGraphics();
+   ST_unloadGraphics();
 }
 
 #endif
@@ -1594,21 +1607,21 @@ void ST_Init()
         CONSOLE COMMANDS
  ***********************/
 
-VARIABLE_INT(ammo_red,      NULL,          0, 100, NULL);
-VARIABLE_INT(ammo_yellow,   NULL,          0, 100, NULL);
-VARIABLE_INT(health_red,    NULL,          0, 200, NULL);
-VARIABLE_INT(health_yellow, NULL,          0, 200, NULL);
-VARIABLE_INT(health_green,  NULL,          0, 200, NULL);
-VARIABLE_INT(armor_red,     NULL,          0, 200, NULL);
-VARIABLE_INT(armor_yellow,  NULL,          0, 200, NULL);
-VARIABLE_INT(armor_green,   NULL,          0, 200, NULL);
+VARIABLE_INT(ammo_red,      nullptr,       0, 100, nullptr);
+VARIABLE_INT(ammo_yellow,   nullptr,       0, 100, nullptr);
+VARIABLE_INT(health_red,    nullptr,       0, 200, nullptr);
+VARIABLE_INT(health_yellow, nullptr,       0, 200, nullptr);
+VARIABLE_INT(health_green,  nullptr,       0, 200, nullptr);
+VARIABLE_INT(armor_red,     nullptr,       0, 200, nullptr);
+VARIABLE_INT(armor_yellow,  nullptr,       0, 200, nullptr);
+VARIABLE_INT(armor_green,   nullptr,       0, 200, nullptr);
 
-VARIABLE_TOGGLE(armor_byclass,             NULL,   yesno);
-VARIABLE_BOOLEAN(sts_pct_always_gray,      NULL,   yesno);
-VARIABLE_BOOLEAN(sts_always_red,           NULL,   yesno);
-VARIABLE_BOOLEAN(sts_traditional_keys,     NULL,   yesno);
+VARIABLE_TOGGLE(armor_byclass,             nullptr,yesno);
+VARIABLE_BOOLEAN(sts_pct_always_gray,      nullptr,yesno);
+VARIABLE_BOOLEAN(sts_always_red,           nullptr,yesno);
+VARIABLE_BOOLEAN(sts_traditional_keys,     nullptr,yesno);
 
-VARIABLE_INT(st_fsalpha, NULL,             0, 100, NULL);
+VARIABLE_INT(st_fsalpha, nullptr,          0, 100, nullptr);
 
 CONSOLE_VARIABLE(ammo_red,      ammo_red,      0) {}
 CONSOLE_VARIABLE(ammo_yellow,   ammo_yellow,   0) {}

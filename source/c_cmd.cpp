@@ -124,7 +124,7 @@ CONSOLE_COMMAND(cmdlist, 0)
    int maxchar = 'z';
 
    // SoM: This could be a little better
-   const char *mask = NULL;
+   const char *mask = nullptr;
    unsigned int masklen = 0;
 
    // haleyjd 07/08/04: optional filter parameter -- the provided
@@ -169,12 +169,12 @@ CONSOLE_COMMAND(cmdlist, 0)
 
 // console height
 
-VARIABLE_INT(c_height,  NULL,                   20, 200, NULL);
+VARIABLE_INT(c_height,  nullptr,                   20, 200, nullptr);
 CONSOLE_VARIABLE(c_height, c_height, 0) {}
 
 // console speed
 
-VARIABLE_INT(c_speed,   NULL,                   1, 200, NULL);
+VARIABLE_INT(c_speed,   nullptr,                   1, 200, nullptr);
 CONSOLE_VARIABLE(c_speed, c_speed, 0) {}
 
 // echo string to console
@@ -196,10 +196,10 @@ CONSOLE_COMMAND(delay, 0)
 
 CONSOLE_COMMAND(flood, 0)
 {
-  int a;
+   int a;
 
-  for(a = 0; a < 300; a++)
-    C_Printf("%c\n", a%64 + 32);
+   for(a = 0; a < 300; a++)
+      C_Printf("%c\n", a%64 + 32);
 }
 
 CONSOLE_COMMAND(quote, 0) {}
@@ -403,7 +403,6 @@ extern void G_AddChatMacros();
 extern void G_AddAutoloadFiles();
 extern void G_AddCompat();
 extern void G_CreateAxisActionVars();
-extern void MN_CreateSaveCmds();
 extern void P_AddEventVars();
 
 //
@@ -421,7 +420,6 @@ void C_AddCommands()
    G_AddAutoloadFiles();
    G_AddCompat();
    G_CreateAxisActionVars();
-   MN_CreateSaveCmds();
    P_AddEventVars();
 }
 
@@ -434,7 +432,7 @@ static cell AMX_NATIVE_CALL sm_version(AMX *amx, cell *params)
 AMX_NATIVE_INFO ccmd_Natives[] =
 {
    {"_EngineVersion", sm_version },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 

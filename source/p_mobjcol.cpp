@@ -193,7 +193,7 @@ MobjCollectionSet::MobjCollectionSet()
 // MobjCollectionSet::collectionForName
 //
 // Tries to find a collection matching the thingtype with the given
-// mnemonic. Returns NULL if not found or there's no such thing.
+// mnemonic. Returns nullptr if not found or there's no such thing.
 //
 MobjCollection *MobjCollectionSet::collectionForName(const char *name)
 {
@@ -236,7 +236,7 @@ void MobjCollectionSet::setCollectionEnabled(const char *mobjType, bool enabled)
 //
 void MobjCollectionSet::collectAllThings()
 {
-   MobjCollection *rover = NULL;
+   MobjCollection *rover = nullptr;
 
    while((rover = pImpl->collectionHash.tableIterator(rover)))
    {

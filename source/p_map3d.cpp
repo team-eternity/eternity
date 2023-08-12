@@ -61,7 +61,7 @@ extern fixed_t FloatBobOffsets[64];
 //
 bool P_Use3DClipping()
 {
-   return (!comp[comp_overunder] || useportalgroups);
+   return (!getComp(comp_overunder) || useportalgroups);
 }
 
 //
@@ -139,8 +139,17 @@ floater:
    }
 
    // haleyjd 06/05/12: flying players
+   // VANILLA_HERETIC: maybe make it choppier per 4 tics?
    if(mo->player && mo->flags4 & MF4_FLY && mo->z > mo->zref.floor)
-      mo->z += finesine[(FINEANGLES / 80 * leveltime) & FINEMASK] / 8;
+   {
+      if(vanilla_heretic)
+      {
+         if(leveltime & 2)
+            mo->z += finesine[(FINEANGLES / 20 * leveltime >> 2) & FINEMASK];
+      }
+      else
+         mo->z += finesine[(FINEANGLES / 80 * leveltime) & FINEMASK] / 8;
+   }
 
    // clip movement
    
@@ -173,12 +182,18 @@ static bool PIT_TestMobjZ(Mobj *thing, void *context)
 
    fixed_t blockdist = thing->radius + data.clip.thing->radius;
 
+   bool under_comp;
+   if(vanilla_heretic)
+      under_comp = data.clip.thing->z + data.clip.thing->height < thing->z;
+   else
+      under_comp = data.clip.thing->z + data.clip.thing->height <= thing->z;
+
    if(!(thing->flags & MF_SOLID) ||                      // non-solid?
-      thing->flags & (MF_SPECIAL|MF_NOCLIP) || // other is special?
+      thing->flags & (MF_SPECIAL|MF_NOCLIP|MF_CORPSE) || // other is special?
       data.clip.thing->flags & MF_SPECIAL ||                   // this is special?
       thing == data.clip.thing ||                              // same as self?
       data.clip.thing->z > thing->z + thing->height ||         // over?
-      data.clip.thing->z + data.clip.thing->height <= thing->z)      // under?
+      under_comp)      // under?
    {
       return true;
    }
@@ -238,7 +253,7 @@ bool P_TestMobjZ(Mobj *mo, doom_mapinter_t &clip, Mobj **testz_mobj)
 // P_GetThingUnder
 //
 // If we're standing on something, this function will return it. Otherwise,
-// it'll return NULL.
+// it'll return nullptr.
 //
 Mobj *P_GetThingUnder(Mobj *mo)
 {
@@ -247,7 +262,7 @@ Mobj *P_GetThingUnder(Mobj *mo)
 
    // fake the move, then test
    P_ZMovementTest(mo);
-   testz_mobj = NULL;
+   testz_mobj = nullptr;
    P_TestMobjZ(mo, clip);
 
    // restore z
@@ -273,7 +288,7 @@ static bool P_SBlockThingsIterator(int x, int y, bool (*func)(Mobj *),
    if(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight)
       return true;
    
-   if(actor == NULL)
+   if(actor == nullptr)
       mobj = blocklinks[y * bmapwidth + x];
    else
       mobj = actor->bnext;
@@ -314,8 +329,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
    blockdist = thing->radius + clip.thing->radius;
 
    // ioanch 20160110: portal aware
-   const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, 
-      thing->groupid);
+   const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, thing->groupid);
 
    if(D_abs(thing->x - link->x - clip.x) >= blockdist ||
       D_abs(thing->y - link->y - clip.y) >= blockdist)
@@ -352,13 +366,16 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
       return true;
 
    // haleyjd 1/17/00: set global hit reference
-   clip.BlockingMobj = thing;
+   if(!vanilla_heretic) // vanilla Heretic doesn't hold this info
+      clip.BlockingMobj = thing;
 
    // haleyjd: from zdoom: OVER_UNDER
    topz = thing->z + thing->height;
 
-   if(!(clip.thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY|MF_NOGRAVITY)) &&
-      (thing->flags & MF_SOLID))
+   // VANILLA_HERETIC: disable this
+   if(!vanilla_heretic &&
+      !(clip.thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY|MF_NOGRAVITY)) &&
+      (thing->flags & MF_SOLID) && (thing->flags5 & MF5_ACTLIKEBRIDGE))
    {
       // [RH] Let monsters walk on actors as well as floors
       if(((clip.thing->flags & MF_COUNTKILL) || (clip.thing->flags3 & MF3_KILLABLE)) &&
@@ -366,6 +383,8 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
       {
          stepthing = thing;
          clip.zref.floor = topz;
+         clip.zref.floorgroupid = thing->groupid;
+         clip.zref.floorsector = nullptr;  // no slopes on things
       }
    }
 
@@ -389,14 +408,26 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
          }
       }
 
-      if((clip.thing->z >= topz) || (clip.thing->z + clip.thing->height <= thing->z))
+      // VANILLA_HERETIC: use strict comparisons here. ONLY FOR VANILLA.
+      bool comparison;
+      if(vanilla_heretic)
+         comparison = clip.thing->z > topz || clip.thing->z + clip.thing->height < thing->z;
+      else
+         comparison = clip.thing->z >= topz || clip.thing->z + clip.thing->height <= thing->z;
+      if(comparison)
       {
-         if(thing->flags & MF_SPECIAL && clip.thing->z >= topz &&
-            clip.thing->z - thing->z <= GameModeInfo->itemHeight)
+         if(thing->flags & MF_SPECIAL)
          {
-            return P_CheckPickUp(thing);
+            // VANILLA_HERETIC: it's critical to avoid this pick-up check here.
+            if(!vanilla_heretic)
+            {
+               if(clip.thing->z >= topz && clip.thing->z - thing->z <= GameModeInfo->itemHeight)
+                  return P_CheckPickUp(thing);
+               return true;
+            }
          }
-         return true;
+         else
+            return true;
       }
    }
 
@@ -417,12 +448,17 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
 
    // check for special pickup
 
-   if(thing->flags & MF_SPECIAL
+   if(thing->flags & MF_SPECIAL)
       // [RH] The next condition is to compensate for the extra height
       // that gets added by P_CheckPosition() so that you cannot pick
       // up things that are above your true height.
-      && thing->z < clip.thing->z + clip.thing->height - STEPSIZE)
-      return P_CheckPickUp(thing);
+   {
+      if(vanilla_heretic ||
+         thing->z < clip.thing->z + clip.thing->height - STEPSIZE)
+      {
+         return P_CheckPickUp(thing);
+      }
+   }
 
    // killough 3/16/98: Allow non-solid moving objects to move through solid
    // ones, by allowing the moving thing (tmthing) to move if it's non-solid,
@@ -440,76 +476,16 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
 //
 bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit) 
 {
-   subsector_t *newsubsec;
-   fixed_t thingdropoffz;
-
-   // haleyjd: from zdoom:
-   Mobj  *thingblocker;
-   fixed_t realheight = thing->height;
+   const fixed_t realheight = thing->height;
 
 #ifdef RANGECHECK
    if(GameModeInfo->type == Game_DOOM && demo_version < 329)
       I_Error("P_CheckPosition3D: called in an old demo!\n");
 #endif
 
-   clip.thing = thing;
-   
-   clip.x = x;
-   clip.y = y;
-   
-   clip.bbox[BOXTOP]    = y + clip.thing->radius;
-   clip.bbox[BOXBOTTOM] = y - clip.thing->radius;
-   clip.bbox[BOXRIGHT]  = x + clip.thing->radius;
-   clip.bbox[BOXLEFT]   = x - clip.thing->radius;
-   
-   newsubsec = R_PointInSubsector(x,y);
-   clip.floorline = clip.blockline = clip.ceilingline = NULL; // killough 8/1/98
-
-   // Whether object can get out of a sticky situation:
-   clip.unstuck = thing->player &&        // only players
-      thing->player->mo == thing;        // not voodoo dolls
-
-   // The base floor / ceiling is from the subsector
-   // that contains the point.
-   // Any contacted lines the step closer together
-   // will adjust them.
-
-   // ioanch 20160110: portal aware floor and ceiling z detection
-   const sector_t *bottomsector = newsubsec->sector;
-#ifdef R_LINKEDPORTALS
-   if(demo_version >= 333 && newsubsec->sector->f_pflags & PS_PASSABLE && 
-      !(clip.thing->flags & MF_NOCLIP))
-   {
-      bottomsector = P_ExtremeSectorAtPoint(x, y, false, 
-         newsubsec->sector);
-      clip.zref.floor = clip.zref.dropoff = bottomsector->floorheight;
-   }
-   else
-#endif
-      clip.zref.floor = clip.zref.dropoff = newsubsec->sector->floorheight;
-
-#ifdef R_LINKEDPORTALS
-   if(demo_version >= 333 && newsubsec->sector->c_pflags & PS_PASSABLE &&
-      !(clip.thing->flags & MF_NOCLIP))
-   {
-      clip.zref.ceiling = P_ExtremeSectorAtPoint(x, y, true,
-         newsubsec->sector)->ceilingheight;
-   }
-   else
-#endif
-      clip.zref.ceiling = newsubsec->sector->ceilingheight;
-
-   clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;
-   clip.zref.secceil = clip.zref.passceil = clip.zref.ceiling;
-
-   // haleyjd
-   // ioanch 20160114: use bottom sector
-   clip.floorpic = bottomsector->floorpic;
-   // SoM: 09/07/02: 3dsides monster fix
-   clip.touch3dside = 0;
-   validcount++;
-   
-   clip.numspechit = 0;
+   const sector_t *bottomsector;
+   const sector_t *topsector;
+   P_GetClipBasics(*thing, x, y, clip, bottomsector, topsector);
 
    // haleyjd 06/28/06: skullfly check from zdoom
    if(clip.thing->flags & MF_NOCLIP && !(clip.thing->flags & MF_SKULLFLY))
@@ -528,12 +504,13 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
    bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] - MAXRADIUS;
    bbox[BOXTOP] = clip.bbox[BOXTOP] + MAXRADIUS;
    
-   clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
-   thingblocker = NULL;
-   stepthing    = NULL;
+   clip.BlockingMobj = nullptr; // haleyjd 1/17/00: global hit reference
+   Mobj *thingblocker = nullptr; // haleyjd: from zdoom:
+   stepthing    = nullptr;
 
    // [RH] Fake taller height to catch stepping up into things.
-   if(thing->player)   
+   // VANILLA_HERETIC: avoid
+   if(thing->player && !vanilla_heretic)
       thing->height = realheight + STEPSIZE;
 
    // ioanch: portal aware
@@ -542,17 +519,19 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
       [thing, realheight, &thingblocker](int x, int y, int groupid) -> bool
    {
          // haleyjd: from zdoom:
-         Mobj *robin = NULL;
+         Mobj *robin = nullptr;
 
          do
          {
             if(!P_SBlockThingsIterator(x, y, PIT_CheckThing3D, robin, groupid))
-            { 
+            {
+               if(vanilla_heretic)  // skip all the improvements in vHeretic
+                  return false;
                // [RH] If a thing can be stepped up on, we need to continue checking
                // other things in the blocks and see if we hit something that is
                // definitely blocking. Otherwise, we need to check the lines, or we
                // could end up stuck inside a wall.
-               if(clip.BlockingMobj == NULL)
+               if(clip.BlockingMobj == nullptr)
                { 
                   // Thing slammed into something; don't let it move now.
                   thing->height = realheight;
@@ -561,12 +540,13 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
                }
                else if(!clip.BlockingMobj->player && 
                        !(thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY)) &&
-                       clip.BlockingMobj->z + clip.BlockingMobj->height - thing->z <= STEPSIZE)
+                       clip.BlockingMobj->z + clip.BlockingMobj->height - thing->z <= STEPSIZE &&
+                       !(clip.BlockingMobj->flags4 & MF4_UNSTEPPABLE))
                {
-                  if(thingblocker == NULL || clip.BlockingMobj->z > thingblocker->z)
+                  if(thingblocker == nullptr || clip.BlockingMobj->z > thingblocker->z)
                      thingblocker = clip.BlockingMobj;
                   robin = clip.BlockingMobj;
-                  clip.BlockingMobj = NULL;
+                  clip.BlockingMobj = nullptr;
                }
                else if(thing->player &&
                        thing->z + thing->height - clip.BlockingMobj->z <= STEPSIZE)
@@ -582,7 +562,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
                   // Nothing is blocking us, but this actor potentially could
                   // if there is something else to step on.
                   robin = clip.BlockingMobj;
-                  clip.BlockingMobj = NULL;
+                  clip.BlockingMobj = nullptr;
                }
                else
                { // Definitely blocking
@@ -592,7 +572,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
                }
             }
             else
-               robin = NULL;
+               robin = nullptr;
          } 
          while(robin);
          return true;
@@ -601,14 +581,17 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
    
    // check lines
    
-   clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
+   clip.BlockingMobj = nullptr; // haleyjd 1/17/00: global hit reference
    thing->height = realheight;
    if(clip.thing->flags & MF_NOCLIP)
-      return (clip.BlockingMobj = thingblocker) == NULL;
+      return (clip.BlockingMobj = thingblocker) == nullptr;
 
    memcpy(bbox, clip.bbox, sizeof(bbox));
    
-   thingdropoffz = clip.zref.floor;
+   const fixed_t thingdropoffz = clip.zref.floor;
+
+   // WARNING: This may be a point of contention because we LOSE floorgroupid
+   // If we HAVE problems, then we need to write down the dropoffgroupid into clip
    clip.zref.floor = clip.zref.dropoff;
 
    // ioanch 20160121: reset portalhits and thing-visited groups
@@ -619,8 +602,12 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
       gGroupVisit[clip.thing->groupid] = true;
    }
 
+   pitcheckline_t pcl = {};
+   pcl.pushhit = pushhit;
+   pcl.haveslopes = bottomsector->srf.floor.slope || topsector->srf.ceiling.slope;
+
    // ioanch 20160112: portal-aware
-   if(!P_TransPortalBlockWalker(bbox, thing->groupid, true, pushhit, 
+   if(!P_TransPortalBlockWalker(bbox, thing->groupid, true, &pcl,
       [](int x, int y, int groupid, void *data) -> bool
    {
       // ioanch 20160112: try 3D portal check-line
@@ -637,17 +624,34 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
    {
       // they will not change the spechit list
       if(gGroupVisit[clip.portalhit[i].ld->frontsector->groupid])
-         if(!PIT_CheckLine3D(clip.portalhit[i].ld, clip.portalhit[i].po, pushhit))
+         if(!PIT_CheckLine3D(clip.portalhit[i].ld, clip.portalhit[i].po, &pcl))
             return false;
+   }
+
+   if(pcl.haveslopes)
+   {
+      // Now also check the corners!
+      v2fixed_t corners[4] =
+      {
+         { clip.bbox[BOXLEFT], clip.bbox[BOXBOTTOM] },
+         { clip.bbox[BOXLEFT], clip.bbox[BOXTOP] },
+         { clip.bbox[BOXRIGHT], clip.bbox[BOXTOP] },
+         { clip.bbox[BOXRIGHT], clip.bbox[BOXBOTTOM] },
+      };
+      lineopening_t open = P_SlopeOpeningPortalAware(corners[0]);
+      open.intersect(P_SlopeOpeningPortalAware(corners[1]));
+      open.intersect(P_SlopeOpeningPortalAware(corners[2]));
+      open.intersect(P_SlopeOpeningPortalAware(corners[3]));
+      P_UpdateFromOpening(open, nullptr, clip, false, false, 0, true, 0);
    }
 
    if(clip.zref.ceiling - clip.zref.floor < thing->height)
       return false;
          
-   if(stepthing != NULL)
+   if(stepthing != nullptr)
       clip.zref.dropoff = thingdropoffz;
    
-   return (clip.BlockingMobj = thingblocker) == NULL;
+   return (clip.BlockingMobj = thingblocker) == nullptr;
 }
 
 //
@@ -678,8 +682,11 @@ bool P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y, fixed_t z)
       if(mo->flags2 & MF2_FLOATBOB)
          z -= FloatBobOffsets[(mo->floatbob + leveltime - 1) & 63];
 
-      if(z < newsubsec->sector->floorheight || z + mo->height > newsubsec->sector->ceilingheight)
+      if(z < newsubsec->sector->srf.floor.getZAt(x, y) ||
+         z + mo->height > newsubsec->sector->srf.ceiling.getZAt(x, y))
+      {
          return false;
+      }
    }
    
    return xygood;
@@ -717,15 +724,15 @@ static bool P_AdjustFloorCeil(Mobj *thing, bool midtex)
    thing->flags3 = oldfl3;
 
    // no sector linear interpolation tic
-   // Use this to prevent all subsequent movement from interpolating if one just
-   // triggered a portal teleport
+   // Use this to prevent all subsequent movement from interpolating if one just triggered a portal
+   // teleport
    static int noseclerptic = INT_MIN;
 
-   // Teleport thngs in the way if this is a portal sector. If targeted thing
-   // is the displayplayer, prevent interpolation.
-   if(noseclerptic == gametic || (demo_version >= 342 &&
-      P_CheckPortalTeleport(thing) && !camera &&
-      thing == players[displayplayer].mo))
+   // Teleport things in the way if this is a portal sector. If targeted thing is the displayplayer,
+   // prevent interpolation.
+   bool portalled = P_CheckPortalTeleport(thing);
+   if(noseclerptic == gametic || (demo_version >= 342 && portalled && !camera &&
+                                  thing == players[displayplayer].mo))
    {
       // Prevent interpolation both for moving sector and player's destination 
       // sector.
@@ -914,7 +921,7 @@ static void P_DoCrunch(Mobj *thing)
       // haleyjd 03/11/03: not in heretic
       if(GameModeInfo->type == Game_DOOM)
       {
-         thing->skin = NULL;
+         thing->skin = nullptr;
          P_SetMobjState(thing, E_SafeState(S_GIBS));
       }
       thing->flags &= ~MF_SOLID;
@@ -934,7 +941,7 @@ static void P_DoCrunch(Mobj *thing)
       (thing->intflags & MIF_ARMED || sentient(thing)))
    {
       // kill object
-      P_DamageMobj(thing, NULL, NULL, thing->health, MOD_CRUSH);
+      P_DamageMobj(thing, nullptr, nullptr, thing->health, MOD_CRUSH);
       return;
    }
 
@@ -951,7 +958,7 @@ static void P_DoCrunch(Mobj *thing)
       if(thing->flags2 & MF2_INVULNERABLE || thing->flags2 & MF2_DORMANT)
          return;
 
-      P_DamageMobj(thing, NULL, NULL, crushchange, MOD_CRUSH);
+      P_DamageMobj(thing, nullptr, nullptr, crushchange, MOD_CRUSH);
       
       // haleyjd 06/26/06: NOBLOOD objects shouldn't bleed when crushed
       // FIXME: needs comp flag!
@@ -966,19 +973,28 @@ static void P_DoCrunch(Mobj *thing)
 static bool midtex_moving;
 
 //
+// Result of the thing-pushing sector-movement functions
+//
+enum class PushResult
+{
+   fit,        // thing fits
+   hitCeiling, // ceiling got in the way
+   noFitAbove, // something above it didn't fit
+};
+
+//
 // P_PushUp
 //
-// Returns 0 if thing fits, 1 if ceiling got in the way, or 2 if something
-// above it didn't fit. From zdoom.
+// From zdoom.
 //
-static int P_PushUp(Mobj *thing)
+static PushResult P_PushUp(Mobj *thing)
 {
    unsigned int firstintersect = static_cast<unsigned>(intersectors.getLength());
    unsigned int lastintersect;
    int mymass = thing->info->mass;
 
    if(thing->z + thing->height > thing->zref.ceiling)
-      return 1;
+      return PushResult::hitCeiling;
 
    P_FindAboveIntersectors(thing, clip, intersectors);
    lastintersect = static_cast<unsigned>(intersectors.getLength());
@@ -993,20 +1009,20 @@ static int P_PushUp(Mobj *thing)
           intersect->info->mass > mymass))
       { 
          // Can't push things more massive than ourself
-         return 2;
+         return PushResult::noFitAbove;
       }
       
       P_AdjustFloorCeil(intersect, midtex_moving);
       intersect->z = thing->z + thing->height + 1;
-      if(P_PushUp(intersect))
+      if(P_PushUp(intersect) != PushResult::fit)
       { 
          // Move blocked
          P_DoCrunch(intersect);
          intersect->z = oldz;
-         return 2;
+         return PushResult::noFitAbove;
       }
    }
-   return 0;
+   return PushResult::fit;
 }
 
 //
@@ -1116,10 +1132,10 @@ static void PIT_FloorRaise(Mobj *thing)
       {
       default:
          break;
-      case 1:
+      case PushResult::hitCeiling:
          P_DoCrunch(thing);
          break;
-      case 2:
+      case PushResult::noFitAbove:
          P_DoCrunch(thing);
          thing->z = oldz;
          break;
@@ -1204,10 +1220,10 @@ static void PIT_CeilingRaise(Mobj *thing)
 // as both a floor and a ceiling move simultaneously, because things may not fit
 // both above and below the 3DMidTex. Tricky.
 //
-bool P_ChangeSector3D(sector_t *sector, int crunch, int amt, int floorOrCeil)
+bool P_ChangeSector3D(sector_t *sector, int crunch, int amt, CheckSectorPlane plane)
 {
-   void (*iterator)(Mobj *)  = NULL;
-   void (*iterator2)(Mobj *) = NULL;
+   void (*iterator)(Mobj *)  = nullptr;
+   void (*iterator2)(Mobj *) = nullptr;
    msecnode_t *n;
 
    midtex_moving = false;
@@ -1219,21 +1235,21 @@ bool P_ChangeSector3D(sector_t *sector, int crunch, int amt, int floorOrCeil)
    // [RH] Use different functions for the four different types of sector
    // movement.
 
-   switch(floorOrCeil)
+   switch(plane)
    {
-   case 0: // floor
+   case CheckSectorPlane::floor:
       iterator = (amt < 0) ? PIT_FloorDrop : PIT_FloorRaise;
       break;
-   case 1: // ceiling
+   case CheckSectorPlane::ceiling:
       iterator = (amt < 0) ? PIT_CeilingLower : PIT_CeilingRaise;
       break;
-   case 2: // 3DMidTex -- haleyjd
+   case CheckSectorPlane::midtex3d: // haleyjd
       iterator  = (amt < 0) ? PIT_FloorDrop : PIT_FloorRaise;
       iterator2 = (amt < 0) ? PIT_CeilingLower : PIT_CeilingRaise;
       midtex_moving = true;
       break; // haleyjd 10/29/09: probably nice.
    default:
-      I_Error("P_ChangeSector3D: unknown movement type %d\n", floorOrCeil);
+      I_Assert(false, "P_ChangeSector3D: unknown movement type %d\n", plane);
    }
 
    // killough 4/4/98: scan list front-to-back until empty or exhausted,

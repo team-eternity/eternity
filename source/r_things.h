@@ -33,15 +33,23 @@ struct sector_t;
 struct particle_t;
 struct planehash_t;
 struct pwindow_t;
+struct cb_column_t;
+struct spritecontext_t;
+struct contextbounds_t;
+struct portalrender_t;
+struct viewpoint_t;
+struct cbviewpoint_t;
+struct bspcontext_t;
+struct cmapcontext_t;
+struct rendercontext_t;
+class  ZoneHeap;
+
+using R_ColumnFunc = void (*)(cb_column_t &);
 
 // Constant arrays used for psprite clipping and initializing clipping.
 
 extern float *zeroarray;
 extern float *screenheightarray;
-
-// Vars for R_DrawMaskedColumn
-
-extern float *mfloorclip, *mceilingclip;
 
 // SoM 12/13/03: the stack for use with portals
 struct maskedrange_t
@@ -63,30 +71,48 @@ struct poststack_t
    maskedrange_t *masked;
 };
 
-void R_PushPost(bool pushmasked, pwindow_t *window);
+void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
+                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window);
+
+void R_ClearBadSpritesAndFrames();
 
 // SoM: Cardboard
-void R_SetMaskedSilhouette(const float *top, const float *bottom);
+void R_SetMaskedSilhouette(const contextbounds_t &bounds,
+                           const float *top, const float *bottom);
 
+struct cb_maskedcolumn_t;
 struct texture_t;
 struct texcol_t;
 
-void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcolumn);
-void R_AddSprites(sector_t *sec, int); // killough 9/18/98
+void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc,
+                           cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
+                           const texture_t *tex, const texcol_t *tcolumn,
+                           const float *const mfloorclip, const float *const mceilingclip,
+                           const float skew);
+void R_AddSprites(cmapcontext_t &cmapcontext,
+                  spritecontext_t &spritecontext,
+                  ZoneHeap &heap,
+                  const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
+                  const contextbounds_t &bounds,
+                  const portalrender_t &portalrender,
+                  sector_t *sec, int); // killough 9/18/98
 void R_InitSprites(char **namelist);
-void R_ClearSprites(void);
-void R_DrawPostBSP(void);
+void R_ClearSprites(spritecontext_t &context);
+void R_ClearMarkedSprites(spritecontext_t &context, ZoneHeap &heap);
+void R_DrawPostBSP(rendercontext_t &context);
+void R_DrawPlayerSprites();
 void R_ClearParticles(void);
 void R_InitParticles(void);
 particle_t *newParticle(void);
 
-typedef struct cb_maskedcolumn_s
+void R_LinkSpriteProj(Mobj &thing);
+void R_UnlinkSpriteProj(Mobj &thing);
+
+struct cb_maskedcolumn_t
 {
    float ytop;
    float scale;
-} cb_maskedcolumn_t;
-
-extern cb_maskedcolumn_t maskedcolumn;
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -105,6 +131,9 @@ struct spriteprojnode_t
    v3fixed_t delta;                       // portal accumulated delta (do not
                                           // link offsets)
    const line_t *portalline;              // portal line (if applicable)
+   v3fixed_t directdelta;                 // delta only for current portal line
+   v2fixed_t shiftedcoord;                // if line, coordinates shifted in front of target portal
+   const spriteprojnode_t *parent;        // parent in the tree (null if it's mobj) - LINE only
    DLListItem<spriteprojnode_t> mobjlink; // vertical link (links separate layers)
    DLListItem<spriteprojnode_t> sectlink; // horizontal link (links separate mobjs)
    DLListItem<spriteprojnode_t> freelink; // free list link (for recycling)

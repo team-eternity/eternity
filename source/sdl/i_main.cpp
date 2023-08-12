@@ -30,8 +30,12 @@
 #include "../d_main.h"
 #include "../i_system.h"
 
-#ifdef HAVE_XLOCALE_H
+#if (EE_CURRENT_PLATFORM != EE_PLATFORM_WINDOWS)
+#if __has_include(<xlocale.h>)
 #include <xlocale.h>
+#elif __has_include(<locale.h>)
+#include <locale.h>
+#endif
 #endif
 
 // main Tweaks for Windows Platforms
@@ -77,7 +81,7 @@ int main(int argc, char **argv)
       SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
 #endif
 
-#ifdef HAVE_XLOCALE_H
+#if (EE_CURRENT_PLATFORM != EE_PLATFORM_WINDOWS) && (__has_include(<xlocale.h>) || __has_include(<locale.h>))
    // We need to prevent any calling terminal from changing Eternity's locale
    // Unconfirmed if needed in Windows. If so, it should be added there too.
    uselocale(newlocale(LC_ALL_MASK, "C", NULL));
@@ -90,7 +94,7 @@ int main(int argc, char **argv)
    Uint32 initflags = (M_CheckParm("-nodraw") &&
                        (M_CheckParm("-nosound") || (M_CheckParm("-nosfx") &&
                                                     M_CheckParm("-nomusic")))) ?
-   SDL_INIT_JOYSTICK : SDL_INIT_VIDEO | SDL_INIT_JOYSTICK;
+   SDL_INIT_JOYSTICK : SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER;
    if(SDL_Init(initflags) == -1)
    {
       printf("Failed to initialize SDL library: %s\n", SDL_GetError());
@@ -136,9 +140,17 @@ static void VerifySDLVersions()
    // must update these when SDL is updated.
    static SDL_version ex_vers[3] =
    {
+      // NOTE: currently only the macOS SDL versions needed updating. Leave Windows alone for now.
+      // NOTE: it's quite possible that Linux distros will have totally different versions installed.
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+      { 2, 26, 5 }, // SDL
+      { 2, 7, 0 }, // SDL_mixer
+      { 2, 2, 0 }, // SDL_net
+#else
       { 2, 0, 7 }, // SDL
-      { 2, 0, 2 }, // SDL_mixer
+      { 2, 6, 2 }, // SDL_mixer
       { 2, 0, 1 }, // SDL_net
+#endif
    };
 
    // test SDL

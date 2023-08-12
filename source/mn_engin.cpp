@@ -79,7 +79,7 @@ int menu_error_time = 0;
 bool menu_toggleisback; 
 
 // input for typing in new value
-command_t *input_command = NULL;       // NULL if not typing in
+command_t *input_command = nullptr;    // nullptr if not typing in
 int input_cmdtype = c_typed;           // haleyjd 07/15/09
 
 vfont_t *menu_font;
@@ -89,6 +89,10 @@ vfont_t *menu_font_normal;
 // haleyjd 08/25/09
 char *mn_background;
 const char *mn_background_flat;
+
+// scrolling text
+int mn_lastSelectTic = 0;
+int mn_lastScrollTic = 0;
 
 //=============================================================================
 //
@@ -143,7 +147,7 @@ void MN_GetItemVariable(menuitem_t *item)
       {
          C_Printf(FC_ERROR "variable not found: %s\n", item->data);
          item->type = it_info;   // turn into normal unselectable text
-         item->var = NULL;
+         item->var = nullptr;
          return;
       }
 
@@ -269,11 +273,9 @@ static void MN_initializeMenu(menu_t *menu)
 }
 
 //
-// MN_DrawMenuItem
+// Draw a menu item. Returns the height in pixels
 //
-// draw a menu item. returns the height in pixels
-//
-static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
+static int MN_drawMenuItem(menuitem_t *item, int x, int y, int color, bool selected)
 {
    int desc_width = 0;
    int alignment;
@@ -304,7 +306,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
 
       return item_height;
    }
- 
+
    // draw an alternate patch?
 
    // haleyjd: gamemodes that use big menu font don't use pics, ever
@@ -314,7 +316,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
       // haleyjd 05/16/04: hack for traditional menu support;
       // this was hard-coded in the old system
       if(drawing_menu->flags & mf_emulated)
-         item_height = EMULATED_ITEM_SIZE; 
+         item_height = EMULATED_ITEM_SIZE;
 
       return item_height; // if returned true, we are done.
    }
@@ -323,7 +325,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
    menuItemClass->drawDescription(item, item_height, desc_width, alignment, color);
 
    // draw other data: variable data etc.
-   menuItemClass->drawData(item, color, alignment, desc_width);
+   menuItemClass->drawData(item, color, alignment, desc_width, selected);
 
    if(drawing_menu->flags & mf_emulated)
       item_height = EMULATED_ITEM_SIZE;
@@ -343,7 +345,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
 //
 void MN_SetLeftSmallPtr(int x, int y, int height)
 {
-   smallptr_coords[0][0] = x - (smallptr_dims[0] + 1);
+   smallptr_coords[0][0] = x - (smallptr_dims[0] + 2);
    smallptr_coords[0][1] = y + ((height - smallptr_dims[1]) / 2);
 }
 
@@ -511,7 +513,7 @@ void MN_DrawMenu(menu_t *menu)
       }
       
       // draw item
-      item_height = MN_DrawMenuItem(mi, menu->x, y, item_color);
+      item_height = MN_drawMenuItem(mi, menu->x, y, item_color, menu->selected == itemnum);
       
       // if selected item, draw skull / pointer next to it
       if(menu->selected == itemnum)
@@ -596,8 +598,6 @@ menuwidget_t *current_menuwidget  = nullptr;
 static PODCollection<menuwidget_t *> menuwidget_stack;
 static bool widget_consume_text = false; // consume text after widget is closed
 
-int quickSaveSlot;  // haleyjd 02/23/02: restored from MBF
-
 static void MN_InitFonts(void);
 
 //
@@ -618,7 +618,7 @@ void MN_PushWidget(menuwidget_t *widget)
 //
 // Back up one widget on the stack
 //
-void MN_PopWidget()
+void MN_PopWidget(const consumeText_e consume)
 {
    size_t len;
 
@@ -635,7 +635,8 @@ void MN_PopWidget()
       current_menuwidget = menuwidget_stack[len - 1];
    else
       current_menuwidget = nullptr;
-   widget_consume_text = true;
+   if(consume == consumeText_e::YES)
+      widget_consume_text = true;
 }
 
 //
@@ -648,7 +649,7 @@ void MN_PopWidget()
 static void MN_ClearWidgetStack()
 {
    menuwidget_stack.clear();
-   current_menuwidget = NULL;
+   current_menuwidget = nullptr;
 }
 
 //
@@ -703,8 +704,6 @@ void MN_Init()
       smallptr_dims[0] = ptr0->width;
       smallptr_dims[1] = ptr0->height;
    }
-      
-   quickSaveSlot = -1; // haleyjd: -1 == no slot selected yet
 
    // haleyjd: init heretic stuff if appropriate
    if(GameModeInfo->type == Game_Heretic)
@@ -776,6 +775,8 @@ qstring &MN_GetInputBuffer()
    return input_buffer;
 }
 
+extern void MN_QuitDoom();
+
 //
 // MN_Responder
 //
@@ -792,6 +793,17 @@ bool MN_Responder(event_t *ev)
    static unsigned lastacceptedtime = 0;
 
    memset(tempstr, 0, sizeof(tempstr));
+
+   // "close" button pressed on window?
+   if (ev->type == ev_quit)
+   {
+      // give the quit menu widget a chance to interpret this as a confirmation
+      if(current_menuwidget && current_menuwidget->responder(ev, ka_nothing))
+         return true;
+
+      MN_QuitDoom();
+      return true;
+   }
 
    // haleyjd 07/03/04: call G_KeyResponder with kac_menu to filter
    // for menu-class actions
@@ -819,7 +831,8 @@ bool MN_Responder(event_t *ev)
       return true;
    }
 
-   if(ev->repeat)
+   if(ev->repeat &&
+      !(input_command && ev->type == ev_keydown && ev->data1 == KEYD_BACKSPACE))
    {
       const unsigned int currtime = i_haltimer.GetTicks();
       // only accept repeated input every 120 ms
@@ -839,9 +852,14 @@ bool MN_Responder(event_t *ev)
    if(ev->type == ev_keydown && input_command)
    {
       if(action == ka_menu_toggle) // cancel input
-         input_command = NULL;      
+      {
+         mn_lastSelectTic = mn_lastScrollTic = gametic;
+         input_command = nullptr;
+      }
       else if(action == ka_menu_confirm)
       {
+         mn_lastSelectTic = mn_lastScrollTic = gametic;
+
          if(input_buffer.length() || (input_command->flags & cf_allowblank))
          {
             if(input_buffer.length())
@@ -937,6 +955,8 @@ bool MN_Responder(event_t *ev)
 
    if(action == ka_menu_up)
    {
+      mn_lastSelectTic = mn_lastScrollTic = gametic;
+
       bool cancelsnd = false;
 
       // skip gaps
@@ -981,6 +1001,8 @@ bool MN_Responder(event_t *ev)
   
    if(action == ka_menu_down)
    {
+      mn_lastSelectTic = mn_lastScrollTic = gametic;
+
       bool cancelsnd = false;
       
       do
@@ -1020,6 +1042,8 @@ bool MN_Responder(event_t *ev)
    
    if(action == ka_menu_confirm)
    {
+      mn_lastSelectTic = mn_lastScrollTic = gametic;
+
       menuitem_t *menuItem      = &current_menu->menuitems[current_menu->selected];
       MenuItem   *menuItemClass = MenuItemInstanceForType[menuItem->type];
      
@@ -1130,6 +1154,7 @@ bool MN_Responder(event_t *ev)
             {
                // found a matching item!
                current_menu->selected = n;
+               mn_lastSelectTic = mn_lastScrollTic = gametic;
                return true; // eat key
             }
          }
@@ -1165,6 +1190,8 @@ void MN_ActivateMenu()
 //
 void MN_StartMenu(menu_t *menu)
 {
+   mn_lastSelectTic = mn_lastScrollTic = gametic;
+
    if(!menuactive)
    {
       MN_ActivateMenu();
@@ -1200,6 +1227,8 @@ void MN_StartMenu(menu_t *menu)
 //
 static void MN_PageMenu(menu_t *newpage)
 {
+   mn_lastSelectTic = mn_lastScrollTic = gametic;
+
    if(!menuactive)
       return;
 
@@ -1222,6 +1251,8 @@ static void MN_PageMenu(menu_t *newpage)
 //
 void MN_PrevMenu()
 {
+   mn_lastSelectTic = mn_lastScrollTic = gametic;
+
    if(--menu_history_num < 0)
       MN_ClearMenus();
    else
@@ -1260,7 +1291,7 @@ CONSOLE_COMMAND(forceload, cf_hidden)
    MN_ClearMenus();
 }
 
-void MN_ForcedLoadGame(char *msg)
+void MN_ForcedLoadGame(const char *msg)
 {
    MN_Question(msg, "forceload");
 }
@@ -1270,7 +1301,7 @@ void MN_ForcedLoadGame(char *msg)
 //
 // display error msg in popup display at bottom of screen
 //
-void MN_ErrorMsg(const char *s, ...)
+void MN_ErrorMsg(E_FORMAT_STRING(const char *s), ...)
 {
    va_list args;
    
@@ -1383,7 +1414,7 @@ int MN_StringHeight(const char *s)
 // "Inherits" from menuwidget_t and extends it to contain a list of commands
 // or menu pages.
 //
-typedef struct box_widget_s
+struct box_widget_t
 {
    menuwidget_t widget;      // the actual menu widget object
 
@@ -1391,7 +1422,7 @@ typedef struct box_widget_s
 
    const char **item_names;  // item strings for box
 
-   int        type;          // type: either contents or cmds
+   boxwidget_e type;          // type: either contents or cmds
 
    menu_t     **pages;       // menu pages array for contents box
    const char **cmds;        // commands for command box
@@ -1400,7 +1431,7 @@ typedef struct box_widget_s
    int        height;        // precalculated height
    int        selection_idx; // currently selected item index
    int        maxidx;        // precalculated maximum index value
-} box_widget_t;
+};
 
 //
 // MN_BoxSetDimensions
@@ -1549,11 +1580,11 @@ static bool MN_BoxWidgetResponder(event_t *ev, int action)
 
       switch(box->type)
       {
-      case 0: // menu page widget
+      case boxwidget_menupage:
          if(box->pages)
             MN_PageMenu(box->pages[box->selection_idx]);
          break;
-      case 1: // command widget
+      case boxwidget_command:
          if(box->cmds)
             C_RunTextCmd(box->cmds[box->selection_idx]);
          break;
@@ -1579,7 +1610,7 @@ static box_widget_t menu_box_widget =
    {
       MN_BoxWidgetDrawer,
       MN_BoxWidgetResponder,
-      NULL,
+      nullptr,
       true // is fullscreen, draws current menu in background
    },
 
@@ -1592,7 +1623,7 @@ static box_widget_t menu_box_widget =
 // Sets up the menu_box_widget object above to show specific information.
 //
 void MN_SetupBoxWidget(const char *title, const char **item_names,
-                       int type, menu_t **pages, const char **cmds)
+                       boxwidget_e type, menu_t **pages, const char **cmds)
 {
    menu_box_widget.title = title;
    menu_box_widget.item_names = item_names;
@@ -1600,12 +1631,12 @@ void MN_SetupBoxWidget(const char *title, const char **item_names,
    
    switch(type)
    {
-   case 0: // menu page widget
+   case boxwidget_menupage: // menu page widget
       menu_box_widget.pages = pages;
-      menu_box_widget.cmds  = NULL;
+      menu_box_widget.cmds  = nullptr;
       break;
-   case 1: // command widget
-      menu_box_widget.pages = NULL;
+   case boxwidget_command: // command widget
+      menu_box_widget.pages = nullptr;
       menu_box_widget.cmds  = cmds;
       break;
    default:
@@ -1643,8 +1674,8 @@ static void MN_ShowContents(void)
    if(!menuactive)
       return;
 
-   MN_SetupBoxWidget("contents", current_menu->content_names, 0,
-                     current_menu->content_pages, NULL);
+   MN_SetupBoxWidget("contents", current_menu->content_names, boxwidget_menupage,
+                     current_menu->content_pages, nullptr);
 
    // haleyjd 05/02/10: try to find the current menu in the list of pages
    // (it should be there unless something really screwy is going on).
@@ -1674,10 +1705,10 @@ static void MN_ShowContents(void)
 // Console Commands
 //
 
-VARIABLE_TOGGLE(menu_toggleisback, NULL, yesno);
+VARIABLE_TOGGLE(menu_toggleisback, nullptr, yesno);
 CONSOLE_VARIABLE(mn_toggleisback, menu_toggleisback, 0) {}
 
-VARIABLE_STRING(mn_background, NULL, 8);
+VARIABLE_STRING(mn_background, nullptr, 8);
 CONSOLE_VARIABLE(mn_background, mn_background, 0)
 {
    MN_SetBackground();

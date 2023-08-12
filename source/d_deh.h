@@ -24,6 +24,10 @@
 #ifndef D_DEH_H__
 #define D_DEH_H__
 
+#define DEH_KEY_INFIGHTING_GROUP "Infighting group"
+#define DEH_KEY_PROJECTILE_GROUP "Projectile group"
+#define DEH_KEY_SPLASH_GROUP "Splash group"
+
 // from g_game.c, prefix for savegame name like "boomsav"
 extern const char *savegamename;
 
@@ -45,7 +49,6 @@ extern const char *mapnamest[];
 extern const char *mapnamesh[];
 
 extern bool deh_pars;
-extern bool deh_loaded; // sf
 
 #endif
 

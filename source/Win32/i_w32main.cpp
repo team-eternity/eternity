@@ -35,9 +35,12 @@
 #include <windows.h>
 #include "SDL_syswm.h"
 
+#include "../d_keywds.h"
+#include "../i_system.h"
+
+extern void I_W32InitExceptionHandler(void);
 extern int __cdecl I_W32ExceptionHandler(PEXCEPTION_POINTERS ep);
 extern int common_main(int argc, char **argv);
-extern void I_FatalError(int code, const char *error, ...);
 
 int disable_sysmenu;
 
@@ -69,7 +72,7 @@ static void I_tweakConsole()
    {
       HMENU hMenu = GetSystemMenu(hwnd, FALSE);
       EnableMenuItem(hMenu, SC_CLOSE, MF_DISABLED|MF_GRAYED);
-      atexit(I_untweakConsole);
+      I_AtExit(I_untweakConsole);
    }
    SetConsoleTitle("Eternity Engine System Console");
 #endif
@@ -78,6 +81,8 @@ static void I_tweakConsole()
 #if !defined(_DEBUG)
 int main(int argc, char **argv)
 {
+   I_W32InitExceptionHandler();
+
    __try
    {
       I_tweakConsole();
@@ -85,7 +90,7 @@ int main(int argc, char **argv)
    }
    __except(I_W32ExceptionHandler(GetExceptionInformation()))
    {
-      I_FatalError(0, "Exception caught in main: see CRASHLOG.TXT for info\n");
+      I_FatalError(0, "Exception caught in main: see CRASHLOG.TXT for info, and in the same directory please upload eternity.dmp along with the crash log\n");
    }
 
    return 0;

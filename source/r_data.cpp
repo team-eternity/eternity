@@ -65,7 +65,7 @@ void R_LoadDoom1();
 // ============================================================================
 // SoM: Moved textures to r_textur.c
 
-void R_InitTextures(void);
+void R_InitTextures();
 
 // killough 4/17/98: make firstcolormaplump,lastcolormaplump external
 int         firstcolormaplump; // killough 4/17/98
@@ -100,14 +100,10 @@ static void R_InitSpriteLumps(void)
    // killough 4/9/98: make columnd offsets 32-bit;
    // clean up malloc-ing to use sizeof
    
-   spritewidth = 
-      (fixed_t *)(Z_Malloc(numspritelumps * sizeof(*spritewidth), PU_RENDERER, 0));
-   spriteoffset = 
-      (fixed_t *)(Z_Malloc(numspritelumps * sizeof(*spriteoffset), PU_RENDERER, 0));
-   spritetopoffset =
-      (fixed_t *)(Z_Malloc(numspritelumps * sizeof(*spritetopoffset), PU_RENDERER, 0));
-   spriteheight = 
-      (float *)(Z_Malloc(numspritelumps * sizeof(float), PU_RENDERER, 0));
+   spritewidth     = emalloctag(fixed_t *, numspritelumps * sizeof(*spritewidth),     PU_RENDERER, nullptr);
+   spriteoffset    = emalloctag(fixed_t *, numspritelumps * sizeof(*spriteoffset),    PU_RENDERER, nullptr);
+   spritetopoffset = emalloctag(fixed_t *, numspritelumps * sizeof(*spritetopoffset), PU_RENDERER, nullptr);
+   spriteheight    = emalloctag(float *,   numspritelumps * sizeof(*spriteheight),    PU_RENDERER, nullptr);
    
    for(i = 0; i < numspritelumps; ++i)
    {
@@ -204,7 +200,7 @@ static void R_InitColormaps()
    size_t numbytes = sizeof(*colormaps) * numcolormaps;
    int    cmlump   = W_GetNumForName("COLORMAP");
 
-   colormaps    = emalloctag(lighttable_t **, numbytes, PU_RENDERER, 0);
+   colormaps    = emalloctag(lighttable_t **, numbytes, PU_RENDERER, nullptr);
    colormaps[0] = (lighttable_t *)(wGlobalDir.cacheLumpNum(cmlump, PU_RENDERER));
 
    // colormaps[1] is FOGMAP, if it exists
@@ -263,6 +259,26 @@ int R_ColormapNumForName(const char *name)
    return i;
 }
 
+//
+// Get name of colormap from index. Returns nullptr if nothing.
+//
+const char *R_ColormapNameForNum(int index)
+{
+   if(index < 0)
+      return nullptr;
+   if(index == 0)
+      return "COLORMAP";
+   if(r_numglobalmaps > 1 && index == 1)
+      return "FOGMAP";
+   index -= r_numglobalmaps;
+   const WadDirectory::namespace_t &ns = wGlobalDir.getNamespace(lumpinfo_t::ns_colormaps);
+   if(index >= ns.numLumps)
+      return nullptr;
+   index += firstcolormaplump;
+   if(index >= 0 && index < wGlobalDir.getNumLumps())
+      return wGlobalDir.getLumpName(index);
+   return nullptr;
+}
 
 int tran_filter_pct = 66;       // filter percent
 
@@ -586,7 +602,7 @@ void R_PrecacheLevel(void)
    
    // Mark floors and ceilings
    for(i = numsectors; --i >= 0; )
-      hitlist[sectors[i].floorpic] = hitlist[sectors[i].ceilingpic] = 1;
+      hitlist[sectors[i].srf.floor.pic] = hitlist[sectors[i].srf.ceiling.pic] = 1;
       
    // Mark walls
    for(i = numsides; --i >= 0; )
@@ -606,6 +622,7 @@ void R_PrecacheLevel(void)
    skyflat_t *sky = GameModeInfo->skyFlats;
    while(sky->flatname)
    {
+      R_CacheSkyTexture(sky->flatnum);
       hitlist[sky->texture] = 1;
       ++sky;
    }

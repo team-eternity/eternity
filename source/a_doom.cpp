@@ -58,6 +58,7 @@
 #include "r_state.h"
 #include "s_sound.h"
 #include "sounds.h"
+#include "v_misc.h"
 
 //
 // A_PosAttack
@@ -490,7 +491,7 @@ void A_Tracer(actionargs_t *actionargs)
       return;
 
    // spawn a puff of smoke behind the rocket
-   P_SpawnPuff(actor->x, actor->y, actor->z, 0, 3, false);
+   P_SpawnPuff(actor->x, actor->y, actor->z, 0, 3, false, actor->target);
    
    th = P_SpawnMobj(actor->x - actor->momx,
                     actor->y - actor->momy,
@@ -591,36 +592,37 @@ void A_SkelFist(actionargs_t *actionargs)
 // Arch-Vile
 //
 
-static Mobj    *corpsehit;
-static Mobj    *vileobj;
-static fixed_t  viletryx;
-static fixed_t  viletryy;
+static struct vileContext_t
+{
+   Mobj    *corpsehit;
+   Mobj    *vileobj;
+   fixed_t  viletryx;
+   fixed_t  viletryy;
+   int      viletryradius;
+} vileContext;
 
-//
-// PIT_VileCheck
 //
 // Detect a corpse that could be raised.
 //
-static bool PIT_VileCheck(Mobj *thing, void *context)
+static bool PIT_vileCheck(Mobj *thing, void *context)
 {
    int maxdist;
-   int vileType = E_SafeThingType(MT_VILE);
-   
+
    // ioanch 20160221: call functions
    if(!P_ThingIsCorpse(thing))
       return true;
-   
-   maxdist = thing->info->radius + mobjinfo[vileType]->radius;
-   
-   if(D_abs(getThingX(vileobj, thing) - viletryx) > maxdist ||
-      D_abs(getThingY(vileobj, thing) - viletryy) > maxdist)
+
+   maxdist = thing->info->radius + vileContext.viletryradius;
+
+   if(D_abs(getThingX(vileContext.vileobj, thing) - vileContext.viletryx) > maxdist ||
+      D_abs(getThingY(vileContext.vileobj, thing) - vileContext.viletryy) > maxdist)
       return true;                // not actually touching
 
    // ioanch 20160108: since now it's portal aware, make sure that corpses
    // from different group ids are seen. This restriction doesn't apply for
    // single layer areas.
-   if(vileobj->groupid != R_NOGROUP && thing->groupid != R_NOGROUP &&
-      vileobj->groupid != thing->groupid && !P_CheckSight(vileobj, thing))
+   if(vileContext.vileobj->groupid != R_NOGROUP && thing->groupid != R_NOGROUP &&
+      vileContext.vileobj->groupid != thing->groupid && !P_CheckSight(vileContext.vileobj, thing))
    {
       return true;
    }
@@ -637,69 +639,98 @@ static bool PIT_VileCheck(Mobj *thing, void *context)
    //        if ((thing->height == 0) && (thing->radius == 0))         //   |
    //            return true;                                          // phares
 
-   corpsehit = thing;
+   vileContext.corpsehit = thing;
 
    // Exit (return false) if the function returns true!
-   return !P_CheckCorpseRaiseSpace(corpsehit);
+   return !P_CheckCorpseRaiseSpace(vileContext.corpsehit);
 }
 
+struct healContext_t
+{
+   actionargs_t *actionargs;
+   int           healstate;
+   int           healsound;
+};
+
 //
-// A_VileChase
+// Check for ressurecting a body (split out from A_VileChase)
 //
-// Check for ressurecting a body
-//
-void A_VileChase(actionargs_t *actionargs)
+bool P_HealCorpse(actionargs_t *actionargs, const int radius, const int healstate, const int healsound)
 {
    Mobj *actor = actionargs->actor;
 
    if(actor->movedir != DI_NODIR)
    {
+      healContext_t healContext = {};
+
       // check for corpses to raise
-      viletryx =
-         actor->x + actor->info->speed*xspeed[actor->movedir];
-      viletryy =
-         actor->y + actor->info->speed*yspeed[actor->movedir];
+      vileContext.viletryx = actor->x + actor->info->speed*xspeed[actor->movedir];
+      vileContext.viletryy = actor->y + actor->info->speed*yspeed[actor->movedir];
 
       // ioanch 20160108: make resurrection portal aware
       fixed_t bbox[4];
-      bbox[BOXLEFT] = viletryx - MAXRADIUS*2;
-      bbox[BOXBOTTOM] = viletryy - MAXRADIUS*2;
-      bbox[BOXRIGHT] = viletryx + MAXRADIUS*2;
-      bbox[BOXTOP] = viletryy + MAXRADIUS*2;
-      vileobj = actor;
+      bbox[BOXLEFT]   = vileContext.viletryx - MAXRADIUS*2;
+      bbox[BOXBOTTOM] = vileContext.viletryy - MAXRADIUS*2;
+      bbox[BOXRIGHT]  = vileContext.viletryx + MAXRADIUS*2;
+      bbox[BOXTOP]    = vileContext.viletryy + MAXRADIUS*2;
+      vileContext.vileobj       = actor;
+      vileContext.viletryradius = radius;
 
-      if(!P_TransPortalBlockWalker(bbox, actor->groupid, true, actionargs, 
+      healContext.actionargs = actionargs;
+      healContext.healstate  = healstate;
+      healContext.healsound  = healsound;
+
+      return !P_TransPortalBlockWalker(
+         bbox, actor->groupid, true, &healContext,
          [](int x, int y, int groupid, void *data) -> bool
-      {
-         // get the variables back
-         auto actionargs = static_cast<actionargs_t *>(data);
-         Mobj *actor = actionargs->actor;
-
-         if(!P_BlockThingsIterator(x, y, groupid, PIT_VileCheck))
          {
-            // got one!
-            Mobj *temp = actor->target;
-            actor->target = corpsehit;
-            A_FaceTarget(actionargs);
-            actor->target = temp;
+            // get the variables back
+            auto          healContext = static_cast<healContext_t *>(data);
+            actionargs_t *actionargs  = healContext->actionargs;
+            int           healstate   = healContext->healstate;
+            int           healsound   = healContext->healsound;
+            Mobj *actor = actionargs->actor;
 
-            // ioanch 20160220: allow custom state
-            const state_t *healstate = E_GetStateForMobjInfo(actor->info, 
-                                                               METASTATE_HEAL);
-            if(healstate && healstate->index != NullStateNum)
-               P_SetMobjState(actor, healstate->index);
-            else
-               P_SetMobjState(actor, S_VILE_HEAL1);   // Doom behaviour
+            if(!P_BlockThingsIterator(x, y, groupid, PIT_vileCheck))
+            {
+               // got one!
+               Mobj *temp = actor->target;
+               actor->target = vileContext.corpsehit;
+               A_FaceTarget(actionargs);
+               actor->target = temp;
 
-            // ioanch 20160221: call function
-            P_RaiseCorpse(corpsehit, actor);
-            return false;
+               P_SetMobjState(actor, healstate);
+
+               // ioanch 20160221: call function
+               P_RaiseCorpse(vileContext.corpsehit, actor, healsound);
+               return false;
+            }
+            return true;
          }
-         return true;
-      }))
-         return;  // if the block returned false, exit
+      );  // if the block returned false, a thing was successfully raised
    }
-   A_Chase(actionargs);  // Return to normal attack.
+
+   return false;
+}
+
+//
+// Check for ressurecting a body
+//
+void A_VileChase(actionargs_t *actionargs)
+{
+   Mobj       *actor    = actionargs->actor;
+   int         vileType = E_SafeThingType(MT_VILE);
+   int         healStateNum;
+
+   // ioanch 20160220: allow custom state
+   const state_t *healState = E_GetStateForMobjInfo(actor->info, METASTATE_HEAL);
+   if(healState && healState->index != NullStateNum)
+      healStateNum = healState->index;
+   else
+      healStateNum = S_VILE_HEAL1;   // Doom behaviour
+
+   if(!P_HealCorpse(actionargs, mobjinfo[vileType]->radius, healStateNum, sfx_slop))
+      A_Chase(actionargs);  // Return to normal attack.
 }
 
 //
@@ -798,7 +829,7 @@ void A_VileTarget(actionargs_t *actionargs)
    fogaction.actiontype = actionargs_t::MOBJFRAME;
    fogaction.actor      = fog;
    fogaction.args       = ESAFEARGS(fog);
-   fogaction.pspr       = NULL;
+   fogaction.pspr       = nullptr;
    
    A_Fire(&fogaction);
 }
@@ -875,6 +906,7 @@ void A_FatRaise(actionargs_t *actionargs)
 // A_FatAttack1
 //
 // Mancubus attack 1.
+// * args[0] = type to spawn
 //
 void A_FatAttack1(actionargs_t *actionargs)
 {
@@ -882,7 +914,9 @@ void A_FatAttack1(actionargs_t *actionargs)
    Mobj   *mo;
    int     an;
    fixed_t z = actor->z + DEFAULTMISSILEZ;
-   int FatShotType = E_SafeThingType(MT_FATSHOT);
+   int thingType = E_ArgAsThingNumG0(actionargs->args, 0);
+   if(thingType < 0)
+      thingType = E_SafeThingType(MT_FATSHOT);
 
    // haleyjd: no crashing
    if(!actor->target)
@@ -892,10 +926,10 @@ void A_FatAttack1(actionargs_t *actionargs)
 
    // Change direction  to ...
    actor->angle += FATSPREAD;
-   
-   P_SpawnMissile(actor, actor->target, FatShotType, z);
-   
-   mo = P_SpawnMissile(actor, actor->target, FatShotType, z);
+
+   P_SpawnMissile(actor, actor->target, thingType, z);
+
+   mo = P_SpawnMissile(actor, actor->target, thingType, z);
    mo->angle += FATSPREAD;
    an = mo->angle >> ANGLETOFINESHIFT;
    mo->momx = FixedMul(mo->info->speed, finecosine[an]);
@@ -906,6 +940,7 @@ void A_FatAttack1(actionargs_t *actionargs)
 // A_FatAttack2
 //
 // Mancubus attack 2.
+// * args[0] = type to spawn
 //
 void A_FatAttack2(actionargs_t *actionargs)
 {
@@ -913,7 +948,9 @@ void A_FatAttack2(actionargs_t *actionargs)
    Mobj   *mo;
    int     an;
    fixed_t z = actor->z + DEFAULTMISSILEZ;
-   int     FatShotType = E_SafeThingType(MT_FATSHOT);
+   int thingType = E_ArgAsThingNumG0(actionargs->args, 0);
+   if(thingType < 0)
+      thingType = E_SafeThingType(MT_FATSHOT);
 
    // haleyjd: no crashing
    if(!actor->target)
@@ -923,9 +960,9 @@ void A_FatAttack2(actionargs_t *actionargs)
 
    // Now here choose opposite deviation.
    actor->angle -= FATSPREAD;
-   P_SpawnMissile(actor, actor->target, FatShotType, z);
-   
-   mo = P_SpawnMissile(actor, actor->target, FatShotType, z);
+   P_SpawnMissile(actor, actor->target, thingType, z);
+
+   mo = P_SpawnMissile(actor, actor->target, thingType, z);
    mo->angle -= FATSPREAD*2;
    an = mo->angle >> ANGLETOFINESHIFT;
    mo->momx = FixedMul(mo->info->speed, finecosine[an]);
@@ -936,6 +973,7 @@ void A_FatAttack2(actionargs_t *actionargs)
 // A_FatAttack3
 //
 // Mancubus attack 3.
+// * args[0] = type to spawn
 //
 void A_FatAttack3(actionargs_t *actionargs)
 {
@@ -943,21 +981,22 @@ void A_FatAttack3(actionargs_t *actionargs)
    Mobj   *mo;
    int     an;
    fixed_t z = actor->z + DEFAULTMISSILEZ;
-   int     FatShotType = E_SafeThingType(MT_FATSHOT);
-
+   int thingType = E_ArgAsThingNumG0(actionargs->args, 0);
+   if(thingType < 0)
+      thingType = E_SafeThingType(MT_FATSHOT);
    // haleyjd: no crashing
    if(!actor->target)
       return;
-   
+
    A_FaceTarget(actionargs);
-   
-   mo = P_SpawnMissile(actor, actor->target, FatShotType, z);
+
+   mo = P_SpawnMissile(actor, actor->target, thingType, z);
    mo->angle -= FATSPREAD/2;
    an = mo->angle >> ANGLETOFINESHIFT;
    mo->momx = FixedMul(mo->info->speed, finecosine[an]);
    mo->momy = FixedMul(mo->info->speed, finesine[an]);
-   
-   mo = P_SpawnMissile(actor, actor->target, FatShotType, z);
+
+   mo = P_SpawnMissile(actor, actor->target, thingType, z);
    mo->angle += FATSPREAD/2;
    an = mo->angle >> ANGLETOFINESHIFT;
    mo->momx = FixedMul(mo->info->speed, finecosine[an]);
@@ -986,7 +1025,7 @@ void A_SkullAttack(actionargs_t *actionargs)
    S_StartSound(actor, actor->info->attacksound);
 
    // haleyjd 08/07/04: use new P_SkullFly function
-   P_SkullFly(actor, SKULLSPEED);
+   P_SkullFly(actor, SKULLSPEED, false);
 }
 
 //
@@ -1023,32 +1062,41 @@ void A_Stop(actionargs_t *actionargs)
    actor->momx = actor->momy = actor->momz = 0;
 }
 
-//
-// A_PainShootSkull
+enum painattackflags_e : unsigned int
+{
+   PAF_NOSKULLATTACK = 0x00000001,
+   PAF_AIMFACING     = 0x00000002,
+   PAF_NOTARGET      = 0x00000004,
+};
+
 //
 // Spawn a lost soul and launch it at the target
 //
-void A_PainShootSkull(Mobj *actor, angle_t angle)
+static void A_painShootSkull(Mobj *actor, const angle_t angle, int thingType,
+                             const unsigned int flags = 0, int count = -1)
 {
    fixed_t  x, y, z;
    Mobj    *newmobj;
    angle_t  an;
    int      prestep;
-   int      skullType = E_SafeThingType(MT_SKULL);
 
    // The original code checked for 20 skulls on the level,    // phares
    // and wouldn't spit another one if there were. If not in   // phares
    // compatibility mode, we remove the limit.                 // phares
 
-   if(comp[comp_pain])  // killough 10/98: compatibility-optioned
+   if((getComp(comp_pain) && count < 0) || count > 0)  // killough 10/98: compatibility-optioned
    {
       // count total number of skulls currently on the level
-      int count = 20;
+      if(count < 0)
+         count = 20;
+      else
+         count--;
+
       Thinker *th;
       for(th = thinkercap.next; th != &thinkercap; th = th->next)
       {
          Mobj *mo;
-         if((mo = thinker_cast<Mobj *>(th)) && mo->type == skullType)
+         if((mo = thinker_cast<Mobj *>(th)) && mo->type == thingType)
          {
             if(--count < 0)         // killough 8/29/98: early exit
                return;
@@ -1060,7 +1108,7 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
    
    an = angle >> ANGLETOFINESHIFT;
    
-   prestep = 4*FRACUNIT + 3*(actor->info->radius + mobjinfo[skullType]->radius)/2;
+   prestep = 4*FRACUNIT + 3*(actor->info->radius + mobjinfo[thingType]->radius)/2;
 
    // ioanch 20160107: spawn at the correct position if there's a line portal
    // between monster and intended position.
@@ -1068,13 +1116,13 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
    // lation. Needed for Check_Sides
    v2fixed_t relpos = { actor->x + FixedMul(prestep, finecosine[an]),
                         actor->y + FixedMul(prestep, finesine[an]) };
-   v2fixed_t pos = P_LinePortalCrossing(*actor, relpos - *actor);
+   v2fixed_t pos = P_LinePortalCrossing(*actor, relpos - v2fixed_t{ actor->x, actor->y });
    x = pos.x;
    y = pos.y;
    z = actor->z + 8*FRACUNIT;
    
-   if(comp[comp_skull])   // killough 10/98: compatibility-optioned
-      newmobj = P_SpawnMobj(x, y, z, skullType);                    // phares
+   if(getComp(comp_skull))   // killough 10/98: compatibility-optioned
+      newmobj = P_SpawnMobj(x, y, z, thingType);                    // phares
    else                                                             //   V
    {
       // Check whether the Lost Soul is being fired through a 1-sided
@@ -1086,31 +1134,26 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
       // ioanch 20160107: check sides against the non-translated position. This 
       // way the two coordinates will be in valid range and it will only check
       // sides against the passable portal line
-      if (Check_Sides(actor, relpos.x, relpos.y, skullType))
+      if(Check_Sides(actor, relpos.x, relpos.y, thingType))
          return;
       
-      newmobj = P_SpawnMobj(x, y, z, skullType);
+      newmobj = P_SpawnMobj(x, y, z, thingType);
       
       // Check to see if the new Lost Soul's z value is above the
       // ceiling of its new sector, or below the floor. If so, kill it.
 
       // ioanch 20160107: check against the floor or ceiling sector behind any
       // portals
-      const sector_t *ceilingsector = P_ExtremeSectorAtPoint(newmobj, true);
-      const sector_t *floorsector = P_ExtremeSectorAtPoint(newmobj, false);
-      // ioanch: removed redundant parentheses (of which the compiler doesn't 
-      // cry)
-      if(newmobj->z > ceilingsector->ceilingheight - newmobj->height ||
-         newmobj->z < floorsector->floorheight)
+      if(!P_CheckFloorCeilingForSpawning(*newmobj))
       {
          // kill it immediately
-         P_DamageMobj(newmobj,actor,actor,10000,MOD_UNKNOWN);
+         P_DamageMobj(newmobj,actor,actor,GOD_BREACH_DAMAGE,MOD_UNKNOWN);
          return;                                                    //   ^
       }                                                             //   |
    }                                                                // phares
 
    // killough 7/20/98: PEs shoot lost souls with the same friendliness
-   newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
+   P_transferFriendship(*newmobj, *actor);
 
    // killough 8/29/98: add to appropriate thread
    newmobj->updateThinker();
@@ -1121,48 +1164,79 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
    if(!P_TryMove(newmobj, newmobj->x, newmobj->y, false))
    {
       // kill it immediately
-      P_DamageMobj(newmobj, actor, actor, 10000, MOD_UNKNOWN);
+      P_DamageMobj(newmobj, actor, actor, GOD_BREACH_DAMAGE, MOD_UNKNOWN);
       return;
    }
    
-   P_SetTarget<Mobj>(&newmobj->target, actor->target);
+   if(!(flags & PAF_NOTARGET))
+      P_SetTarget<Mobj>(&newmobj->target, actor->target);
 
-   actionargs_t skullaction;
+   if(!(flags & PAF_NOSKULLATTACK))
+   {
+      actionargs_t skullaction;
 
-   skullaction.actiontype = actionargs_t::MOBJFRAME;
-   skullaction.actor      = newmobj;
-   skullaction.args       = ESAFEARGS(newmobj);
-   skullaction.pspr       = NULL;
+      skullaction.actiontype = actionargs_t::MOBJFRAME;
+      skullaction.actor      = newmobj;
+      skullaction.args       = ESAFEARGS(newmobj);
+      skullaction.pspr       = nullptr;
 
-   A_SkullAttack(&skullaction);
+      A_SkullAttack(&skullaction);
+   }
 }
 
+static dehflags_t painattack_flaglist[] =
+{
+   { "NOSKULLATTACK", PAF_NOSKULLATTACK },
+   { "AIMFACING",     PAF_AIMFACING     },
+   { "NOTARGET",      PAF_NOTARGET      },
+   { nullptr,         0                 }
+};
+
+static dehflagset_t painattack_flagset =
+{
+   painattack_flaglist, // flaglist
+   0,                   // mode
+};
+
 //
-// A_PainAttack
-//
-// Spawn a lost soul and launch it at the target
+// Spawn a thing and launch it at the target
+// * args[0] = type to spawn
+// * args[1] = angle to add to spawned thing
+// * args[2] = flags
+// * args[3] = maximum amount allowed on map (infinite if 0, 21 if negative)
 //
 void A_PainAttack(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
    if(!actor->target)
       return;
-   A_FaceTarget(actionargs);
-   A_PainShootSkull(actor, actor->angle);
+
+   int thingType = E_ArgAsThingNumG0(actionargs->args, 0);
+   if(thingType < 0)
+      thingType = E_SafeThingType(MT_SKULL);
+   const angle_t      angle = FixedToAngle(E_ArgAsFixed(actionargs->args, 1, 0));
+   const unsigned int flags = E_ArgAsFlags(actionargs->args, 2, &painattack_flagset);
+   const int          count = E_ArgAsInt(actionargs->args, 3, -1);
+
+   if(!(flags & PAF_NOTARGET))
+      A_FaceTarget(actionargs);
+   A_painShootSkull(actor, actor->angle + angle, thingType, flags, count);
 }
 
 //
-// A_PainDie
-//
-// Normal fall logic plus 3 Lost Souls spawn.
+// Normal fall logic plus 3 things spawn.
+// * args[0] = type to spawn
 //
 void A_PainDie(actionargs_t *actionargs)
 {
-   Mobj *actor = actionargs->actor;
+   Mobj *actor     = actionargs->actor;
+   int   thingType = E_ArgAsThingNumG0(actionargs->args, 0);
+   if(thingType < 0)
+      thingType = E_SafeThingType(MT_SKULL);
    A_Fall(actionargs);
-   A_PainShootSkull(actor, actor->angle + ANG90 );
-   A_PainShootSkull(actor, actor->angle + ANG180);
-   A_PainShootSkull(actor, actor->angle + ANG270);
+   A_painShootSkull(actor, actor->angle + ANG90,  thingType);
+   A_painShootSkull(actor, actor->angle + ANG180, thingType);
+   A_painShootSkull(actor, actor->angle + ANG270, thingType);
 }
 
 //=============================================================================
@@ -1170,11 +1244,11 @@ void A_PainDie(actionargs_t *actionargs)
 // Special Death Effects
 //
 
-typedef struct boss_spec_s
+struct boss_spec_t
 {
    unsigned int thing_flag;
    unsigned int level_flag;
-} boss_spec_t;
+};
 
 #define NUM_BOSS_SPECS 7
 
@@ -1201,20 +1275,26 @@ static boss_spec_t boss_specs[NUM_BOSS_SPECS] =
 void A_BossDeath(actionargs_t *actionargs)
 {
    Mobj    *mo = actionargs->actor;
-   Thinker *th;
-   line_t   junk;
    int      i;
+
+   player_t *thePlayer = nullptr;
 
    // make sure there is a player alive for victory
    for(i = 0; i < MAXPLAYERS; i++)
    {
       if(playeringame[i] && players[i].health > 0)
+      {
+         thePlayer = players + i;
          break;
+      }
    }
 
    // no one left alive, so do not end game
-   if(i == MAXPLAYERS)
+   if(i == MAXPLAYERS || !thePlayer)
       return;
+
+   // Now check the UMAPINFO bossactions
+   P_CheckCustomBossActions(*mo, *thePlayer);
 
    for(boss_spec_t &boss_spec : boss_specs)
    {
@@ -1224,7 +1304,7 @@ void A_BossDeath(actionargs_t *actionargs)
          (LevelInfo.bossSpecs & boss_spec.level_flag))
       {
          // scan the remaining thinkers to see if all bosses are dead
-         for(th = thinkercap.next; th != &thinkercap; th = th->next)
+         for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
          {
             Mobj *mo2;
             if((mo2 = thinker_cast<Mobj *>(th)))
@@ -1243,13 +1323,11 @@ void A_BossDeath(actionargs_t *actionargs)
          case BSPEC_E4M8:
          case BSPEC_MAP07_1:
             // lower floors tagged 666 to lowest neighbor
-            junk.args[0] = junk.tag = 666;
-            EV_DoFloor(&junk, lowerFloorToLowest);
+            EV_DoFloor(nullptr, 666, lowerFloorToLowest);
             break;
          case BSPEC_MAP07_2:
             // raise floors tagged 667 by shortest lower texture
-            junk.args[0] = junk.tag = 667;
-            EV_DoFloor(&junk, raiseToTexture);
+            EV_DoFloor(nullptr, 667, raiseToTexture);
             break;
          case BSPEC_E2M8:
          case BSPEC_E3M8:
@@ -1258,8 +1336,7 @@ void A_BossDeath(actionargs_t *actionargs)
             return;
          case BSPEC_E4M6:
             // open sectors tagged 666 as blazing doors
-            junk.args[0] = junk.tag = 666;
-            EV_DoDoor(&junk, blazeOpen);
+            EV_DoDoor(666, blazeOpen);
             break;
          default:
             break;
@@ -1278,8 +1355,7 @@ void A_KeenDie(actionargs_t *actionargs)
 {
    Mobj    *mo = actionargs->actor;
    Thinker *th;
-   line_t   junk;
-   
+
    A_Fall(actionargs);
 
    // scan the remaining thinkers to see if all Keens are dead
@@ -1294,8 +1370,7 @@ void A_KeenDie(actionargs_t *actionargs)
       }
    }
 
-   junk.args[0] = junk.tag = 666;
-   EV_DoDoor(&junk, doorOpen);
+   EV_DoDoor(666, doorOpen);
 }
 
 //=============================================================================
@@ -1335,7 +1410,7 @@ void P_SpawnBrainTargets()  // killough 3/26/98: renamed old function
 //
 void A_BrainAwake(actionargs_t *actionargs)
 {
-   S_StartSound(NULL, sfx_bossit); // killough 3/26/98: only generates sound now
+   S_StartSound(nullptr, sfx_bossit); // killough 3/26/98: only generates sound now
 }
 
 //
@@ -1345,7 +1420,7 @@ void A_BrainAwake(actionargs_t *actionargs)
 //
 void A_BrainPain(actionargs_t *actionargs)
 {
-   S_StartSound(NULL, sfx_bospn);
+   S_StartSound(nullptr, sfx_bospn);
 }
 
 //
@@ -1373,7 +1448,7 @@ void A_BrainScream(actionargs_t *actionargs)
       if(th->tics < 1)
          th->tics = 1;
    }
-   S_StartSound(NULL, sfx_bosdth);
+   S_StartSound(nullptr, sfx_bosdth);
 }
 
 //
@@ -1437,15 +1512,21 @@ void A_BrainSpit(actionargs_t *actionargs)
    // spawn brain missile
    newmobj = P_SpawnMissile(mo, targ, SpawnShotType, mo->z + DEFAULTMISSILEZ);
    P_SetTarget<Mobj>(&newmobj->target, targ);
+   if(!newmobj->state->tics)
+   {
+      newmobj->remove();
+      doom_printf(FC_ERROR "BrainSpit: invalid 0 tic spawn state");
+      return;
+   }
    newmobj->reactiontime = (int16_t)(((targ->y-mo->y)/newmobj->momy)/newmobj->state->tics);
 
    // killough 7/18/98: brain friendliness is transferred
-   newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (mo->flags & MF_FRIEND);
+   P_transferFriendship(*newmobj, *mo);
    
    // killough 8/29/98: add to appropriate thread
    newmobj->updateThinker();
    
-   S_StartSound(NULL, sfx_bospit);
+   S_StartSound(nullptr, sfx_bospit);
 }
 
 void A_SpawnFly(actionargs_t *actionargs);
@@ -1517,7 +1598,7 @@ void A_SpawnFly(actionargs_t *actionargs)
    newmobj = P_SpawnMobj(targ->x, targ->y, targ->z, type);
    
    // killough 7/18/98: brain friendliness is transferred
-   newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (mo->flags & MF_FRIEND);
+   P_transferFriendship(*newmobj, *mo);
 
    // killough 8/29/98: add to appropriate thread
    newmobj->updateThinker();
@@ -1526,7 +1607,7 @@ void A_SpawnFly(actionargs_t *actionargs)
       P_SetMobjState(newmobj, newmobj->info->seestate);
    
    // telefrag anything in this spot
-   P_TeleportMove(newmobj, newmobj->x, newmobj->y, true); // killough 8/9/98
+   P_TeleportMove(newmobj, newmobj->x, newmobj->y, TELEMOVE_BOSS); // killough 8/9/98
    
    // remove self (i.e., cube).
    mo->remove();

@@ -53,7 +53,7 @@
 // Externs
 //
 
-extern int defaultskill;
+extern skill_t defaultskill;
 
 //=============================================================================
 //
@@ -73,7 +73,7 @@ public:
    DLListItem<ManagedDirectory> links; // links
    char *name;   // name
 
-   ManagedDirectory() : WadDirectory(), levels(NULL), links(), name(NULL)
+   ManagedDirectory() : WadDirectory(), levels(nullptr), links(), name(nullptr)
    {
    }
    ~ManagedDirectory();
@@ -111,11 +111,11 @@ static EHashTable<ManagedDirectory, EStringHashKey,
 //
 ManagedDirectory *ManagedDirectory::AddManagedDir(const char *filename)
 {
-   ManagedDirectory *newdir = NULL;
+   ManagedDirectory *newdir = nullptr;
 
    // make sure there isn't one by this name already
    if(w_dirhash.objectForKey(filename))
-      return NULL;
+      return nullptr;
 
    newdir = new ManagedDirectory;
 
@@ -150,14 +150,14 @@ ManagedDirectory::~ManagedDirectory()
    if(name)
    {
       efree(name); 
-      name = NULL;
+      name = nullptr;
    }
 
    // free list of levels
    if(levels)
    {
       efree(levels);
-      levels = NULL;
+      levels = nullptr;
    }
 }
 
@@ -171,7 +171,7 @@ bool ManagedDirectory::openWadFile()
    bool ret;
    
    if((ret = addNewPrivateFile(name)))
-      D_AddFile(name, lumpinfo_t::ns_global, NULL, 0, DAF_PRIVATE);
+      D_AddFile(name, lumpinfo_t::ns_global, nullptr, 0, DAF_PRIVATE);
 
    return ret;
 }
@@ -184,7 +184,7 @@ void ManagedDirectory::enumerateLevels()
 
 wadlevel_t *ManagedDirectory::findLevel(const char *name)
 {
-   wadlevel_t *retlevel = NULL;
+   wadlevel_t *retlevel = nullptr;
    wadlevel_t *curlevel = levels;
 
    // loop on the levels list so long as the header names are valid
@@ -217,27 +217,27 @@ const char *ManagedDirectory::getFirstLevelName()
 // W_AddManagedWad
 //
 // Adds a managed directory object and opens a wad file inside of it.
-// Returns the new waddir if one was created, or else returns NULL.
+// Returns the new waddir if one was created, or else returns nullptr.
 //
 WadDirectory *W_AddManagedWad(const char *filename)
 {
-   ManagedDirectory *newdir = NULL;
+   ManagedDirectory *newdir = nullptr;
 
    // Haha, yeah right, you wanker :P
    // At least be smart enough to ju4r3z if nothing else.
    if(GameModeInfo->flags & GIF_SHAREWARE)
-      return NULL;
+      return nullptr;
 
    // create a new managed wad directory object
    if(!(newdir = ManagedDirectory::AddManagedDir(filename)))
-      return NULL;
+      return nullptr;
 
    // open the wad file in the new directory
    if(!newdir->openWadFile())
    {
       // if failed, delete the new directory object
       delete newdir;
-      return NULL;
+      return nullptr;
    }
 
    // 10/23/10: enumerate all levels in the directory
@@ -256,7 +256,7 @@ WadDirectory *W_AddManagedWad(const char *filename)
 //
 static bool W_CloseManagedWad(const char *filename)
 {
-   ManagedDirectory *dir = NULL;
+   ManagedDirectory *dir = nullptr;
    bool retcode = false;
 
    if((dir = ManagedDirectory::DirectoryForName(filename)))
@@ -272,7 +272,7 @@ static bool W_CloseManagedWad(const char *filename)
 // W_GetManagedWad
 //
 // Returns a managed wad directory for the given filename, if such exists.
-// Returns NULL otherwise.
+// Returns nullptr otherwise.
 //
 WadDirectory *W_GetManagedWad(const char *filename)
 {
@@ -283,11 +283,11 @@ WadDirectory *W_GetManagedWad(const char *filename)
 // W_GetManagedDirFN
 //
 // If the given WadDirectory is a managed directory, the file name corresponding
-// to it will be returned. Otherwise, NULL is returned.
+// to it will be returned. Otherwise, nullptr is returned.
 //
 const char *W_GetManagedDirFN(WadDirectory *waddir)
 {
-   const char *name = NULL;
+   const char *name = nullptr;
 
    if(waddir->getType() == WadDirectory::MANAGED)
    {
@@ -302,13 +302,13 @@ const char *W_GetManagedDirFN(WadDirectory *waddir)
 // W_FindMapInLevelWad
 //
 // Finds the first MAPxy or ExMy map in the given wad directory, assuming it
-// is a single-level wad. Returns NULL if no such map exists. Note that the
+// is a single-level wad. Returns nullptr if no such map exists. Note that the
 // map is not guaranteed to be valid; code in P_SetupLevel is expected to deal
 // with that possibility.
 //
-static char *W_FindMapInLevelWad(WadDirectory *dir, bool mapxy)
+static const char *W_FindMapInLevelWad(WadDirectory *dir, bool mapxy)
 {
-   char *name = NULL;
+   const char *name = nullptr;
    int          numlumps = dir->getNumLumps();
    lumpinfo_t **lumpinfo = dir->getLumpInfo();
 
@@ -318,10 +318,10 @@ static char *W_FindMapInLevelWad(WadDirectory *dir, bool mapxy)
 
       if(mapxy)
       {
-         if(isMAPxy(lump->name))
+         if(M_IsMAPxy(lump->name, nullptr))
             name = lump->name;
       }
-      else if(isExMy(lump->name))
+      else if(M_IsExMy(lump->name, nullptr, nullptr))
          name = lump->name;
    }
 
@@ -397,11 +397,11 @@ wadlevel_t *W_FindAllMapsInLevelWad(WadDirectory *dir)
 // W_FindLevelInDir
 //
 // haleyjd 10/23/2010: Looks for a level by the given name in the wad directory
-// and returns its wadlevel_t object if it is present. Returns NULL otherwise.
+// and returns its wadlevel_t object if it is present. Returns nullptr otherwise.
 //
 wadlevel_t *W_FindLevelInDir(WadDirectory *waddir, const char *name)
 {
-   wadlevel_t *retlevel = NULL;
+   wadlevel_t *retlevel = nullptr;
 
    if(waddir->getType() == WadDirectory::MANAGED)
    {
@@ -434,11 +434,11 @@ static int     masterlevelsskill = -1; // skill level
 //
 static WadDirectory *W_loadMasterLevelWad(const char *filename)
 {
-   char *fullpath = NULL;
-   WadDirectory *dir = NULL;
+   char *fullpath = nullptr;
+   WadDirectory *dir = nullptr;
    
    if(estrempty(w_masterlevelsdirname))
-      return NULL;
+      return nullptr;
 
    // construct full file path
    fullpath = M_SafeFilePath(w_masterlevelsdirname, filename);
@@ -459,8 +459,8 @@ static WadDirectory *W_loadMasterLevelWad(const char *filename)
 //
 static void W_doMasterLevelsStart(const char *filename, const char *levelname)
 {
-   WadDirectory *dir = NULL;
-   const char *mapname = NULL;
+   WadDirectory *dir = nullptr;
+   const char *mapname = nullptr;
 
    // Try to load the indicated wad from the Master Levels directory
    if(!(dir = W_loadMasterLevelWad(filename)))
@@ -589,10 +589,10 @@ char *w_norestpath;
 //
 static WadDirectory *W_loadNR4TL()
 {
-   WadDirectory *dir = NULL;
+   WadDirectory *dir = nullptr;
    
    if(estrempty(w_norestpath))
-      return NULL;
+      return nullptr;
 
    // make sure it wasn't already opened
    if((dir = W_GetManagedWad(w_norestpath)))
@@ -609,7 +609,7 @@ static WadDirectory *W_loadNR4TL()
 //
 void W_DoNR4TLStart(int skill)
 {
-   WadDirectory *dir = NULL;
+   WadDirectory *dir = nullptr;
 
    // Try to load the NR4TL wad file
    if(!(dir = W_loadNR4TL()))
@@ -706,7 +706,7 @@ CONSOLE_COMMAND(w_masterlevels, cf_notnet)
 //
 CONSOLE_COMMAND(w_startlevel, cf_notnet)
 {
-   const char *levelname = NULL;
+   const char *levelname = nullptr;
 
    if(Console.argc < 1)
       return;

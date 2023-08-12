@@ -40,7 +40,7 @@
 class  qstring;
 class  Mobj;
 struct line_t;
-struct polyobj_s;
+struct polyobj_t;
 class  WadDirectory;
 
 //
@@ -235,7 +235,7 @@ public:
       P_SetTarget(&mo, info.mo);
    }
 
-   ACSThreadInfo(Mobj *mo_, line_t *line_, int side_, polyobj_s *po_) :
+   ACSThreadInfo(Mobj *mo_, line_t *line_, int side_, polyobj_t *po_) :
       mo{nullptr}, line{line_}, side{side_}, po{po_}
    {
       P_SetTarget(&mo, mo_);
@@ -259,7 +259,7 @@ public:
    Mobj   *mo;   // Mobj that activated.
    line_t *line; // Line that activated.
    int     side; // Side of actived line.
-   polyobj_s *po;
+   polyobj_t *po;
 };
 
 //
@@ -282,6 +282,8 @@ public:
    virtual void stop();
 
    ACSThreadInfo info;
+
+   static int saveLoadVersion;   // context information stored when saving and loading
 };
 
 
@@ -298,17 +300,17 @@ void ACS_Archive(SaveArchive &arc);
 
 // Script control.
 bool ACS_ExecuteScriptI(uint32_t name, uint32_t mapnum, const uint32_t *argv,
-                        uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po);
+                        uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po);
 bool ACS_ExecuteScriptIAlways(uint32_t name, uint32_t mapnum, const uint32_t *argv,
-                              uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po);
+                              uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po);
 uint32_t ACS_ExecuteScriptIResult(uint32_t name, const uint32_t *argv,
-                                 uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po);
+                                 uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po);
 bool ACS_ExecuteScriptS(const char *name, uint32_t mapnum, const uint32_t *argv,
-                        uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po);
+                        uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po);
 bool ACS_ExecuteScriptSAlways(const char *name, uint32_t mapnum, const uint32_t *argv,
-                              uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po);
+                              uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po);
 uint32_t ACS_ExecuteScriptSResult(const char *name, const uint32_t *argv,
-                                 uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po);
+                                 uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po);
 bool ACS_SuspendScriptI(uint32_t name, uint32_t mapnum);
 bool ACS_SuspendScriptS(const char *name, uint32_t mapnum);
 bool ACS_TerminateScriptI(uint32_t name, uint32_t mapnum);
@@ -321,27 +323,27 @@ uint32_t ACS_GetThingProp(Mobj *mo, uint32_t prop);
 void     ACS_SetThingProp(Mobj *mo, uint32_t prop, uint32_t val);
 
 // CallFuncs.
-bool ACS_CF_ActivatorArmor(ACS_CF_ARGS);
-bool ACS_CF_ActivatorFrags(ACS_CF_ARGS);
-bool ACS_CF_ActivatorHealth(ACS_CF_ARGS);
-bool ACS_CF_ActivatorSigil(ACS_CF_ARGS);
+bool ACS_CF_PlayerArmorPoints(ACS_CF_ARGS);
+bool ACS_CF_PlayerFrags(ACS_CF_ARGS);
+bool ACS_CF_PlayerHealth(ACS_CF_ARGS);
+bool ACS_CF_GetSigilPieces(ACS_CF_ARGS);
 bool ACS_CF_ActivatorSound(ACS_CF_ARGS);
 bool ACS_CF_ActivatorTID(ACS_CF_ARGS);
 bool ACS_CF_AmbientSound(ACS_CF_ARGS);
-bool ACS_CF_AmbientSoundLoc(ACS_CF_ARGS);
-bool ACS_CF_ATan2(ACS_CF_ARGS);
-bool ACS_CF_ChangeCeil(ACS_CF_ARGS);
+bool ACS_CF_LocalAmbientSound(ACS_CF_ARGS);
+bool ACS_CF_VectorAngle(ACS_CF_ARGS);
+bool ACS_CF_ChangeCeiling(ACS_CF_ARGS);
 bool ACS_CF_ChangeFloor(ACS_CF_ARGS);
 bool ACS_CF_CheckProximity(ACS_CF_ARGS);
 bool ACS_CF_CheckSight(ACS_CF_ARGS);
 bool ACS_CF_CheckWeapon(ACS_CF_ARGS);
-bool ACS_CF_ChkThingCeilTex(ACS_CF_ARGS);
-bool ACS_CF_ChkThingFlag(ACS_CF_ARGS);
-bool ACS_CF_ChkThingFloorTex(ACS_CF_ARGS);
-bool ACS_CF_ChkThingProp(ACS_CF_ARGS);
-bool ACS_CF_ChkThingType(ACS_CF_ARGS);
-bool ACS_CF_ClassifyThing(ACS_CF_ARGS);
-bool ACS_CF_ClrLineSpec(ACS_CF_ARGS);
+bool ACS_CF_CheckActorCeilingTexture(ACS_CF_ARGS);
+bool ACS_CF_CheckFlag(ACS_CF_ARGS);
+bool ACS_CF_CheckActorFloorTexture(ACS_CF_ARGS);
+bool ACS_CF_CheckActorProperty(ACS_CF_ARGS);
+bool ACS_CF_CheckActorClass(ACS_CF_ARGS);
+bool ACS_CF_ClassifyActor(ACS_CF_ARGS);
+bool ACS_CF_ClearLineSpecial(ACS_CF_ARGS);
 bool ACS_CF_Cos(ACS_CF_ARGS);
 bool ACS_CF_EndLog(ACS_CF_ARGS);
 bool ACS_CF_EndPrint(ACS_CF_ARGS);
@@ -349,44 +351,45 @@ bool ACS_CF_EndPrintBold(ACS_CF_ARGS);
 bool ACS_CF_GameSkill(ACS_CF_ARGS);
 bool ACS_CF_GameType(ACS_CF_ARGS);
 bool ACS_CF_GetCVar(ACS_CF_ARGS);
-bool ACS_CF_GetCVarStr(ACS_CF_ARGS);
-bool ACS_CF_GetInventory(ACS_CF_ARGS);
-bool ACS_CF_GetLevelProp(ACS_CF_ARGS);
+bool ACS_CF_GetCVarString(ACS_CF_ARGS);
+bool ACS_CF_CheckInventory(ACS_CF_ARGS);
+bool ACS_CF_GetLevelInfo(ACS_CF_ARGS);
 bool ACS_CF_GetLineX(ACS_CF_ARGS);
 bool ACS_CF_GetLineY(ACS_CF_ARGS);
 bool ACS_CF_GetPlayerInput(ACS_CF_ARGS);
 bool ACS_CF_GetPolyobjX(ACS_CF_ARGS);
 bool ACS_CF_GetPolyobjY(ACS_CF_ARGS);
+bool ACS_CF_SetPolyobjXY(ACS_CF_ARGS);
 bool ACS_CF_GetScreenH(ACS_CF_ARGS);
 bool ACS_CF_GetScreenW(ACS_CF_ARGS);
-bool ACS_CF_GetSectorCeilZ(ACS_CF_ARGS);
+bool ACS_CF_GetSectorCeilingZ(ACS_CF_ARGS);
 bool ACS_CF_GetSectorFloorZ(ACS_CF_ARGS);
-bool ACS_CF_GetSectorLight(ACS_CF_ARGS);
-bool ACS_CF_GetThingAngle(ACS_CF_ARGS);
-bool ACS_CF_GetThingCeilZ(ACS_CF_ARGS);
-bool ACS_CF_GetThingFloorZ(ACS_CF_ARGS);
-bool ACS_CF_GetThingLight(ACS_CF_ARGS);
-bool ACS_CF_GetThingMomX(ACS_CF_ARGS);
-bool ACS_CF_GetThingMomY(ACS_CF_ARGS);
-bool ACS_CF_GetThingMomZ(ACS_CF_ARGS);
-bool ACS_CF_GetThingPitch(ACS_CF_ARGS);
-bool ACS_CF_GetThingProp(ACS_CF_ARGS);
-bool ACS_CF_GetThingX(ACS_CF_ARGS);
-bool ACS_CF_GetThingY(ACS_CF_ARGS);
-bool ACS_CF_GetThingZ(ACS_CF_ARGS);
+bool ACS_CF_GetSectorLightLevel(ACS_CF_ARGS);
+bool ACS_CF_GetActorAngle(ACS_CF_ARGS);
+bool ACS_CF_GetActorCeilingZ(ACS_CF_ARGS);
+bool ACS_CF_GetActorFloorZ(ACS_CF_ARGS);
+bool ACS_CF_GetActorLightLevel(ACS_CF_ARGS);
+bool ACS_CF_GetActorVelX(ACS_CF_ARGS);
+bool ACS_CF_GetActorVelY(ACS_CF_ARGS);
+bool ACS_CF_GetActorVelZ(ACS_CF_ARGS);
+bool ACS_CF_GetActorPitch(ACS_CF_ARGS);
+bool ACS_CF_GetActorProperty(ACS_CF_ARGS);
+bool ACS_CF_GetActorX(ACS_CF_ARGS);
+bool ACS_CF_GetActorY(ACS_CF_ARGS);
+bool ACS_CF_GetActorZ(ACS_CF_ARGS);
 bool ACS_CF_GetWeapon(ACS_CF_ARGS);
-bool ACS_CF_Hypot(ACS_CF_ARGS);
+bool ACS_CF_VectorLength(ACS_CF_ARGS);
 bool ACS_CF_IsTIDUsed(ACS_CF_ARGS);
-bool ACS_CF_LineOffsetY(ACS_CF_ARGS);
+bool ACS_CF_GetLineRowOffset(ACS_CF_ARGS);
 bool ACS_CF_LineSide(ACS_CF_ARGS);
 bool ACS_CF_PlaySound(ACS_CF_ARGS);
-bool ACS_CF_PlayThingSound(ACS_CF_ARGS);
+bool ACS_CF_PlayActorSound(ACS_CF_ARGS);
 bool ACS_CF_PlayerCount(ACS_CF_ARGS);
 bool ACS_CF_PlayerNumber(ACS_CF_ARGS);
 bool ACS_CF_PrintName(ACS_CF_ARGS);
-bool ACS_CF_RadiusQuake(ACS_CF_ARGS);
+bool ACS_CF_Radius_Quake2(ACS_CF_ARGS);
 bool ACS_CF_Random(ACS_CF_ARGS);
-bool ACS_CF_ReplaceTex(ACS_CF_ARGS);
+bool ACS_CF_ReplaceTextures(ACS_CF_ARGS);
 bool ACS_CF_SectorDamage(ACS_CF_ARGS);
 bool ACS_CF_SectorSound(ACS_CF_ARGS);
 bool ACS_CF_SetActivator(ACS_CF_ARGS);
@@ -394,49 +397,50 @@ bool ACS_CF_SetActivatorToTarget(ACS_CF_ARGS);
 bool ACS_CF_SetAirControl(ACS_CF_ARGS);
 bool ACS_CF_SetAirFriction(ACS_CF_ARGS);
 bool ACS_CF_SetGravity(ACS_CF_ARGS);
-bool ACS_CF_SetLineBlock(ACS_CF_ARGS);
-bool ACS_CF_SetLineBlockMon(ACS_CF_ARGS);
-bool ACS_CF_SetLineSpec(ACS_CF_ARGS);
-bool ACS_CF_SetLineTex(ACS_CF_ARGS);
+bool ACS_CF_SetLineBlocking(ACS_CF_ARGS);
+bool ACS_CF_SetLineMonsterBlocking(ACS_CF_ARGS);
+bool ACS_CF_SetLineSpecial(ACS_CF_ARGS);
+bool ACS_CF_SetLineTexture(ACS_CF_ARGS);
 bool ACS_CF_SetMusic(ACS_CF_ARGS);
-bool ACS_CF_SetMusicLoc(ACS_CF_ARGS);
-bool ACS_CF_SetSkyDelta(ACS_CF_ARGS);
-bool ACS_CF_SetThingAngle(ACS_CF_ARGS);
-bool ACS_CF_SetThingAngleRet(ACS_CF_ARGS);
-bool ACS_CF_SetThingMom(ACS_CF_ARGS);
-bool ACS_CF_SetThingPitch(ACS_CF_ARGS);
-bool ACS_CF_SetThingPitchRet(ACS_CF_ARGS);
-bool ACS_CF_SetThingPos(ACS_CF_ARGS);
-bool ACS_CF_SetThingProp(ACS_CF_ARGS);
-bool ACS_CF_SetThingSpec(ACS_CF_ARGS);
-bool ACS_CF_SetThingState(ACS_CF_ARGS);
+bool ACS_CF_LocalSetMusic(ACS_CF_ARGS);
+bool ACS_CF_SetSectorDamage(ACS_CF_ARGS);
+bool ACS_CF_SetSkyScrollSpeed(ACS_CF_ARGS);
+bool ACS_CF_SetActorAngle(ACS_CF_ARGS);
+bool ACS_CF_ChangeActorAngle(ACS_CF_ARGS);
+bool ACS_CF_SetActorVelocity(ACS_CF_ARGS);
+bool ACS_CF_SetActorPitch(ACS_CF_ARGS);
+bool ACS_CF_ChangeActorPitch(ACS_CF_ARGS);
+bool ACS_CF_SetActorPosition(ACS_CF_ARGS);
+bool ACS_CF_SetActorProperty(ACS_CF_ARGS);
+bool ACS_CF_SetThingSpecial(ACS_CF_ARGS);
+bool ACS_CF_SetActorState(ACS_CF_ARGS);
 bool ACS_CF_SetWeapon(ACS_CF_ARGS);
 bool ACS_CF_Sin(ACS_CF_ARGS);
 bool ACS_CF_SinglePlayer(ACS_CF_ARGS);
-bool ACS_CF_SoundSeq(ACS_CF_ARGS);
-bool ACS_CF_SpawnMissile(ACS_CF_ARGS);
-bool ACS_CF_SpawnPoint(ACS_CF_ARGS);
-bool ACS_CF_SpawnPointF(ACS_CF_ARGS);
+bool ACS_CF_SoundSequence(ACS_CF_ARGS);
+bool ACS_CF_SpawnProjectile(ACS_CF_ARGS);
+bool ACS_CF_Spawn(ACS_CF_ARGS);
+bool ACS_CF_SpawnForced(ACS_CF_ARGS);
 bool ACS_CF_SpawnSpot(ACS_CF_ARGS);
-bool ACS_CF_SpawnSpotF(ACS_CF_ARGS);
-bool ACS_CF_SpawnSpotAng(ACS_CF_ARGS);
-bool ACS_CF_SpawnSpotAngF(ACS_CF_ARGS);
+bool ACS_CF_SpawnSpotForced(ACS_CF_ARGS);
+bool ACS_CF_SpawnSpotFacing(ACS_CF_ARGS);
+bool ACS_CF_SpawnSpotFacingForced(ACS_CF_ARGS);
 bool ACS_CF_Sqrt(ACS_CF_ARGS);
-bool ACS_CF_SqrtFixed(ACS_CF_ARGS);
+bool ACS_CF_FixedSqrt(ACS_CF_ARGS);
 bool ACS_CF_StopSound(ACS_CF_ARGS);
-bool ACS_CF_SubInventory(ACS_CF_ARGS);
+bool ACS_CF_TakeInventory(ACS_CF_ARGS);
 bool ACS_CF_ThingCount(ACS_CF_ARGS);
-bool ACS_CF_ThingCountStr(ACS_CF_ARGS);
-bool ACS_CF_ThingCountSec(ACS_CF_ARGS);
-bool ACS_CF_ThingCountSecStr(ACS_CF_ARGS);
-bool ACS_CF_ThingDamage(ACS_CF_ARGS);
-bool ACS_CF_ThingMissile(ACS_CF_ARGS);
+bool ACS_CF_ThingCountName(ACS_CF_ARGS);
+bool ACS_CF_ThingCountSector(ACS_CF_ARGS);
+bool ACS_CF_ThingCountNameSector(ACS_CF_ARGS);
+bool ACS_CF_Thing_Damage2(ACS_CF_ARGS);
+bool ACS_CF_Thing_Projectile2(ACS_CF_ARGS);
 bool ACS_CF_ThingSound(ACS_CF_ARGS);
-bool ACS_CF_ThingSoundSeq(ACS_CF_ARGS);
+bool ACS_CF_SoundSequenceOnActor(ACS_CF_ARGS);
 bool ACS_CF_Timer(ACS_CF_ARGS);
 bool ACS_CF_UniqueTID(ACS_CF_ARGS);
-bool ACS_CF_WaitPolyObj(ACS_CF_ARGS);
-bool ACS_CF_WaitSector(ACS_CF_ARGS);
+bool ACS_CF_PolyWait(ACS_CF_ARGS);
+bool ACS_CF_TagWait(ACS_CF_ARGS);
 
 // extern vars.
 

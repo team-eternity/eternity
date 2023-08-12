@@ -74,6 +74,7 @@
 #include "mn_engin.h"
 #include "p_chase.h"
 #include "p_setup.h"
+#include "r_context.h"
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_patch.h"
@@ -95,7 +96,6 @@ char *wad_files[MAXLOADFILES], *deh_files[MAXLOADFILES];
 char *csc_files[MAXLOADFILES];
 
 int textmode_startup = 0;  // sf: textmode_startup for old-fashioned people
-int use_startmap = -1;     // default to -1 for asking in menu
 bool devparm;              // started game with -devparm
 
 // jff 1/24/98 add new versions of these variables to remember command line
@@ -137,12 +137,12 @@ char    *basegamepath;            // haleyjd 11/23/06: path of base/game directo
 char    *userpath;                // haleyjd 02/05/12: path of "user" directory
 char    *usergamepath;            // haleyjd 02/05/12: path of user/game directory
 
-void D_CheckNetGame(void);
-void D_ProcessEvents(void);
+void D_CheckNetGame();
+void D_ProcessEvents();
 void G_BuildTiccmd(ticcmd_t* cmd);
-void D_DoAdvanceDemo(void);
+void D_DoAdvanceDemo();
 
-void usermsg(const char *s, ...)
+void usermsg(E_FORMAT_STRING(const char *s), ...)
 {
    static char msg[1024];
    va_list v;
@@ -187,7 +187,7 @@ static int eventhead, eventtail;
 // D_PostEvent
 // Called by the I/O functions when input is detected
 //
-void D_PostEvent(event_t *ev)
+void D_PostEvent(const event_t *ev)
 {
    events[eventhead++] = *ev;
    eventhead &= MAXEVENTS-1;
@@ -304,34 +304,34 @@ const demostate_t demostates_doom[] =
 {
    { D_DrawTitle,       "TITLEPIC" }, // shareware, registered
    { G_DeferedPlayDemo, "DEMO1"    },
-   { D_SetPageName,     NULL       },
+   { D_SetPageName,     nullptr    },
    { G_DeferedPlayDemo, "DEMO2"    },
    { D_SetPageName,     "HELP2"    },
    { G_DeferedPlayDemo, "DEMO3"    },
-   { NULL }
+   { nullptr }
 };
 
 const demostate_t demostates_doom2[] =
 {
    { D_DrawTitle,       "TITLEPIC" }, // commercial
    { G_DeferedPlayDemo, "DEMO1"    },
-   { D_SetPageName,     NULL       },
+   { D_SetPageName,     nullptr    },
    { G_DeferedPlayDemo, "DEMO2"    },
    { D_SetPageName,     "CREDIT"   },
    { G_DeferedPlayDemo, "DEMO3"    },
-   { NULL }
+   { nullptr }
 };
 
 const demostate_t demostates_udoom[] =
 {
    { D_DrawTitle,       "TITLEPIC" }, // retail
    { G_DeferedPlayDemo, "DEMO1"    },
-   { D_SetPageName,     NULL       },
+   { D_SetPageName,     nullptr    },
    { G_DeferedPlayDemo, "DEMO2"    },
    { D_SetPageName,     "CREDIT"   },
    { G_DeferedPlayDemo, "DEMO3"    },
    { G_DeferedPlayDemo, "DEMO4"    },
-   { NULL }
+   { nullptr }
 };
 
 const demostate_t demostates_hsw[] =
@@ -341,9 +341,9 @@ const demostate_t demostates_hsw[] =
    { G_DeferedPlayDemo, "DEMO1" },
    { D_SetPageName,     "ORDER" },
    { G_DeferedPlayDemo, "DEMO2" },
-   { D_SetPageName,     NULL    },
+   { D_SetPageName,     nullptr },
    { G_DeferedPlayDemo, "DEMO3" },
-   { NULL }
+   { nullptr }
 };
 
 const demostate_t demostates_hreg[] =
@@ -353,15 +353,15 @@ const demostate_t demostates_hreg[] =
    { G_DeferedPlayDemo, "DEMO1"  },
    { D_SetPageName,     "CREDIT" },
    { G_DeferedPlayDemo, "DEMO2"  },
-   { D_SetPageName,     NULL     },
+   { D_SetPageName,     nullptr  },
    { G_DeferedPlayDemo, "DEMO3"  },
-   { NULL }
+   { nullptr }
 };
 
 const demostate_t demostates_unknown[] =
 {
-   { D_SetPageName, NULL }, // indetermined - haleyjd 04/01/08
-   { NULL }
+   { D_SetPageName, nullptr }, // indetermined - haleyjd 04/01/08
+   { nullptr }
 };
 
 //
@@ -458,45 +458,57 @@ struct cachelevelprint_t
    int cachelevel;
    const char *name;
 };
-static cachelevelprint_t cachelevels[] =
+static constexpr cachelevelprint_t cachelevels[] =
 {
-   { PU_STATIC,   "static: " },
-   { PU_VALLOC,   " video: " },
-   { PU_RENDERER, "render: " },
-   { PU_LEVEL,    " level: " },
-   { PU_CACHE,    " cache: " },
-   { PU_MAX,      " total: " }
+   { PU_STATIC,   "static" },
+   { PU_VALLOC,   " video" },
+   { PU_RENDERER, "render" },
+   { PU_LEVEL,    " level" },
+   { PU_CACHE,    " cache" },
+   { PU_MAX,      " total" }
 };
-#define NUMCACHELEVELSTOPRINT earrlen(cachelevels)
+static constexpr size_t NUMCACHELEVELSTOPRINT = earrlen(cachelevels);
 
 static void D_showMemStats()
 {
    vfont_t *font;
    size_t total_memory = 0;
+   size_t memorybytag[PU_MAX] = {};
    double s;
    char buffer[1024];
-   size_t i;
 
-   for(i = 0; i < earrlen(cachelevels) - 1; i++)
+   // Add up the memory by tag across all heaps
+   for(size_t i = 0; i < NUMCACHELEVELSTOPRINT - 1; i++)
+      memorybytag[cachelevels[i].cachelevel] += z_globalheap.memoryForTag(cachelevels[i].cachelevel);
+   R_ForEachContext([&memorybytag](rendercontext_t &context) {
+      for(size_t i = 0; i < NUMCACHELEVELSTOPRINT - 1; i++)
+         memorybytag[cachelevels[i].cachelevel] += context.heap->memoryForTag(cachelevels[i].cachelevel);
+   });
+
+   // Now total the memory based on the total of the cache levels of each heap
+   for(size_t i = 0; i < NUMCACHELEVELSTOPRINT - 1; i++)
       total_memory += memorybytag[cachelevels[i].cachelevel];
    s = 100.0 / total_memory;
 
-   font = E_FontForName("ee_consolefont");   
-   // draw the labels
-   for(i = 0; i < earrlen(cachelevels); i++)
+   font = E_FontForName("ee_consolefont");
+   // Draw the labels
+   for(size_t i = 0; i < NUMCACHELEVELSTOPRINT; i++)
    {
       int tag = cachelevels[i].cachelevel;
       if(tag != PU_MAX)
       {
-         psnprintf(buffer, sizeof(buffer), "%s%9lu %7.02f%%", 
-                   cachelevels[i].name,
-                   memorybytag[tag], memorybytag[tag] * s);
+         psnprintf(
+            buffer, sizeof(buffer), "%s: %10zu %7.02f%%",
+            cachelevels[i].name, memorybytag[tag], memorybytag[tag] * s
+         );
          V_FontWriteText(font, buffer, 1, static_cast<int>(1 + i*font->cy));
       }
       else
       {
-         psnprintf(buffer, sizeof(buffer), "%s%9lu %7.02f%%",
-                   cachelevels[i].name, total_memory, 100.0f);
+         psnprintf(
+            buffer, sizeof(buffer), "%s: %10zu %7.02f%%",
+            cachelevels[i].name, total_memory, 100.0f
+         );
          V_FontWriteText(font, buffer, 1, static_cast<int>(1 + i*font->cy));
       }
    }
@@ -546,7 +558,7 @@ void D_DrawWings()
 
    if(gamestate == GS_LEVEL && !MN_CheckFullScreen())
    {
-      if(scaledwindow.height != SCREENHEIGHT || automapactive)
+      if(scaledwindow.height != SCREENHEIGHT || (automapactive && !automap_overlay))
       {
          unsigned int bottom   = SCREENHEIGHT - 1;
          unsigned int statbarh = static_cast<unsigned int>(GameModeInfo->StatusBar->height);
@@ -572,7 +584,9 @@ void D_DrawWings()
 //
 static void D_Display()
 {
-   if(nodrawers)                // for comparative timing / profiling
+   // nodrawers: for comparative timing / profiling
+   // view occluded: for saving power when Eternity is out of sight
+   if(nodrawers || I_IsViewOccluded())
       return;
 
    i_haltimer.StartDisplay();
@@ -604,7 +618,7 @@ static void D_Display()
          if(oldgamestate != GS_LEVEL)
             R_FillBackScreen(scaledwindow); // draw the pattern into the back screen
 
-         if(automapactive)
+         if(automapactive && !automap_overlay)
          {
             AM_Drawer();
          }
@@ -612,6 +626,8 @@ static void D_Display()
          {
             R_DrawViewBorder();    // redraw border
             R_RenderPlayerView(&players[displayplayer], camera);
+            if(automapactive && automap_overlay)
+               AM_Drawer();
          }
          
          ST_Drawer(scaledwindow.height == SCREENHEIGHT);  // killough 11/98
@@ -649,7 +665,8 @@ static void D_Display()
          int width = patch->width;
          int x = (SCREENWIDTH - width) / 2 + patch->leftoffset;
          // SoM 2-4-04: ANYRES
-         int y = 4 + (automapactive ? 0 : scaledwindow.y);
+
+         int y = 4 + (automapactive && !automap_overlay ? 0 : scaledwindow.y);
          
          V_DrawPatch(x, y, &subscreen43, patch);
       }
@@ -737,7 +754,7 @@ static void D_Display()
 //
 char *D_DoomExeDir()
 {
-   static char *base = NULL;
+   static char *base = nullptr;
 
    if(!base) // cache multiple requests
    {
@@ -770,7 +787,7 @@ static const char *game_name; // description of iwad
 // D_SetGameName
 //
 // Sets the game_name variable for displaying what version of the game is being
-// played at startup. "iwad" may be NULL. GameModeInfo must be initialized prior
+// played at startup. "iwad" may be nullptr. GameModeInfo must be initialized prior
 // to calling this.
 //
 void D_SetGameName(const char *iwad)
@@ -883,7 +900,7 @@ static void FindResponseFile()
       {
          int size, index, indexinfile;
          byte *f;
-         char *file = NULL, *firstargv;
+         char *file = nullptr, *firstargv;
          char **moreargs = ecalloc(char **, myargc, sizeof(char *));
          char **newargv;
          qstring fname;
@@ -1146,7 +1163,7 @@ static void D_AutoExecScripts()
 //
 // If there are multiple instances of "DEHACKED", we process each, in first
 // to last order (we must reverse the order since they will be stored in
-// last to first order in the chain). Passing NULL as first argument to
+// last to first order in the chain). Passing nullptr as first argument to
 // ProcessDehFile() indicates that the data comes from the lump number
 // indicated by the third argument, instead of from a file.
 
@@ -1162,7 +1179,7 @@ static void D_ProcessDehInWad(int i)
       D_ProcessDehInWad(lumpinfo[i]->next);
       if(!strncasecmp(lumpinfo[i]->name, "DEHACKED", 8) &&
          lumpinfo[i]->li_namespace == lumpinfo_t::ns_global)
-         D_QueueDEH(NULL, i); // haleyjd: queue it
+         D_QueueDEH(nullptr, i); // haleyjd: queue it
    }
 }
 
@@ -1231,15 +1248,20 @@ extern int levelFragLimit;
 //
 static void D_StartupMessage()
 {
-   puts("The Eternity Engine\n"
-        "Copyright 2017 James Haley, Stephen McGranahan, et al.\n"
-        "http://www.doomworld.com/eternity\n"
-        "\n"
-        "This program is free software distributed under the terms of\n"
-        "the GNU General Public License. See the file \"COPYING\" for\n"
-        "full details. Commercial sale or distribution of this product\n"
-        "without its license, source code, and copyright notices is an\n"
-        "infringement of US and international copyright laws.\n");
+   static char copyright[] =
+      "The Eternity Engine\n"
+      "Copyright YEAR James Haley, Stephen McGranahan, et al.\n"
+      "http://www.doomworld.com/eternity\n"
+      "\n"
+      "This program is free software distributed under the terms of\n"
+      "the GNU General Public License. See the file \"COPYING\" for\n"
+      "full details. Commercial sale or distribution of this product\n"
+      "without its license, source code, and copyright notices is an\n"
+      "infringement of US and international copyright laws.\n";
+
+   memcpy(copyright + 30, &__DATE__[7], 4); // Automatically update copyright year
+
+   puts(copyright);
 }
 
 //
@@ -1253,7 +1275,7 @@ static void D_DoomInit()
    int p, slot;
    int dmtype = 0;          // haleyjd 04/14/03
    bool haveGFS = false;    // haleyjd 03/10/03
-   gfs_t *gfs = NULL;
+   gfs_t *gfs = nullptr;
 
    gamestate = GS_STARTUP; // haleyjd 01/01/10
 
@@ -1261,7 +1283,7 @@ static void D_DoomInit()
 
    startupmsg("Z_Init", "Init zone memory allocation daemon.");
    Z_Init();
-   atexit(I_Quit);
+   I_AtExit(I_Quit);
 
    FindResponseFile(); // Append response file arguments to command-line
 
@@ -1407,7 +1429,7 @@ static void D_DoomInit()
          else
          {
             if(file)
-               D_AddFile(myargv[p], lumpinfo_t::ns_global, NULL, 0, DAF_NONE);
+               D_AddFile(myargv[p], lumpinfo_t::ns_global, nullptr, 0, DAF_NONE);
          }
       }
    }
@@ -1417,7 +1439,7 @@ static void D_DoomInit()
       G_DemoLogInit(myargv[p + 1]);
 
    // haleyjd 01/17/11: allow -play also
-   const char *playdemoparms[] = { "-playdemo", "-play", NULL };
+   const char *playdemoparms[] = { "-playdemo", "-play", nullptr };
 
    if(!(p = M_CheckMultiParm(playdemoparms, 1)) || p >= myargc-1)   // killough
    {
@@ -1428,7 +1450,7 @@ static void D_DoomInit()
    }
 
    // haleyjd 02/29/2012: support a loose demo on the command line
-   const char *loosedemo = NULL;
+   const char *loosedemo = nullptr;
    if(!p)
       loosedemo = D_LooseDemo();
 
@@ -1440,7 +1462,7 @@ static void D_DoomInit()
       file = demosource;
       file.addDefaultExtension(".lmp"); // killough
 
-      D_AddFile(file.constPtr(), lumpinfo_t::ns_demos, NULL, 0, DAF_DEMO);
+      D_AddFile(file.constPtr(), lumpinfo_t::ns_demos, nullptr, 0, DAF_DEMO);
       usermsg("Playing demo '%s'\n", file.constPtr());
    }
 
@@ -1803,6 +1825,9 @@ static void D_DoomInit()
 
    idmusnum = -1; //jff 3/17/98 insure idmus number is blank
 
+   // Load OPTIONS that are safe to read at startup
+   M_LoadOptions(default_t::wad_startup);
+
 #if 0
    // check for a driver that wants intermission stats
    if((p = M_CheckParm("-statcopy")) && p < myargc-1)
@@ -1835,7 +1860,7 @@ static void D_DoomInit()
    else
    {
       // haleyjd 01/17/11: allow -recorddemo as well
-      const char *recordparms[] = { "-record", "-recorddemo", NULL };
+      const char *recordparms[] = { "-record", "-recorddemo", nullptr };
 
       slot = M_CheckParm("-loadgame");
  
@@ -1877,7 +1902,7 @@ static void D_DoomInit()
 
    if(slot && ++slot < myargc)
    {
-      char *file = NULL;
+      char *file = nullptr;
       size_t len = M_StringAlloca(&file, 2, 26, basesavegame, savegamename);
       slot = atoi(myargv[slot]);        // killough 3/16/98: add slot info
       G_SaveGameName(file, len, slot); // killough 3/22/98
@@ -1969,7 +1994,7 @@ void D_DoomMain()
 // Console Commands
 //
 
-VARIABLE_TOGGLE(d_drawfps, NULL, onoff);
+VARIABLE_TOGGLE(d_drawfps, nullptr, onoff);
 CONSOLE_VARIABLE(d_drawfps, d_drawfps, 0) {}
 
 //----------------------------------------------------------------------------

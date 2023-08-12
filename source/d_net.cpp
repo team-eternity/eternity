@@ -412,7 +412,7 @@ static void D_InitPlayers()
       // FIXME / TODO: BRAINDEAD!
       if(i != consoleplayer)
       {
-         sprintf(players[i].name, "player %i", i+1);
+         snprintf(players[i].name, sizeof(players[i].name), "player %i", i+1);
          players[i].colormap = i % TRANSLATIONCOLOURS;
       }
 
@@ -548,7 +548,7 @@ void D_CheckNetGame()
    D_InitPlayers();      
    
    C_NetInit();
-   atexit(D_QuitNetGame);       // killough
+   I_AtExit(D_QuitNetGame);       // killough
 }
 
 void D_InitNetGame()
@@ -886,10 +886,10 @@ CONSOLE_COMMAND(disconnect, cf_netonly)
 }
 */
  
-VARIABLE_TOGGLE(d_fastrefresh, NULL, onoff);
+VARIABLE_TOGGLE(d_fastrefresh, nullptr, onoff);
 CONSOLE_VARIABLE(d_fastrefresh, d_fastrefresh, 0) {}
 
-VARIABLE_TOGGLE(d_interpolate, NULL, onoff);
+VARIABLE_TOGGLE(d_interpolate, nullptr, onoff);
 CONSOLE_VARIABLE(d_interpolate, d_interpolate, 0) {}
 
 //----------------------------------------------------------------------------

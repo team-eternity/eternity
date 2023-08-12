@@ -35,13 +35,11 @@
 #include <windows.h>
 
 //
-// Checks if Windows version is 10 or higher, for audio kludge.
+// Checks if Windows version is Vista (NT 6.0) or higher, for audio kludge.
 // I wish we could use the Win 8.1 API and Versionhelpers.h
 //
 inline bool I_IsWindowsVistaOrHigher()
 {
-#pragma comment(lib, "version.lib")
-
    static const CHAR kernel32[] = "\\kernel32.dll";
    CHAR *path;
    void *ver, *block;
@@ -55,7 +53,7 @@ inline bool I_IsWindowsVistaOrHigher()
 
    dirLength = GetSystemDirectory(path, MAX_PATH);
    if(dirLength >= MAX_PATH || dirLength == 0 || dirLength > MAX_PATH - earrlen(kernel32))
-      I_Error("I_IsWindows10OrHigher: Location of kernel32.dll longer than MAX_PATH.");
+      I_Error("I_IsWindowsVistaOrHigher: Location of kernel32.dll longer than MAX_PATH.");
    memcpy(path + dirLength, kernel32, sizeof(kernel32));
 
    versionSize = GetFileVersionInfoSize(path, nullptr);
@@ -63,9 +61,9 @@ inline bool I_IsWindowsVistaOrHigher()
       abort();
    ver = emalloc(void *, versionSize);
    if(!GetFileVersionInfo(path, 0, versionSize, ver))
-      I_Error("I_IsWindows10OrHigher: GetFileVersionInfo failed.");
+      I_Error("I_IsWindowsVistaOrHigher: GetFileVersionInfo failed.");
    if(!VerQueryValue(ver, "\\", &block, &blockSize) || blockSize < sizeof(VS_FIXEDFILEINFO))
-      I_Error("I_IsWindows10OrHigher: VerQueryValue failed.");
+      I_Error("I_IsWindowsVistaOrHigher: VerQueryValue failed.");
    vInfo = static_cast<VS_FIXEDFILEINFO *>(block);
    majorVer = HIWORD(vInfo->dwProductVersionMS);
    //minorVer = LOWORD(vInfo->dwProductVersionMS);

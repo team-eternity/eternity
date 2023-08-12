@@ -24,13 +24,8 @@
 #include <memory>
 #if __cplusplus >= 201703L || _MSC_VER >= 1914
 #include "hal/i_platform.h"
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
-#include "hal/i_directory.h"
-namespace fs = fsStopgap;
-#else
 #include <filesystem>
 namespace fs = std::filesystem;
-#endif
 #else
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
@@ -758,12 +753,12 @@ int WadDirectory::addDirectory(const char *dirpath)
    const fs::directory_iterator itr(dir);
 
    // count the files in the directory
-   for(const fs::directory_entry ent : itr)
+   for(const fs::directory_entry &ent : itr)
    {
       edefstructvar(dirfile_t, newfile);
-      const std::string filename = ent.path().filename().generic_u8string();
+      const auto filename = ent.path().filename().generic_u8string();
 
-      newfile.fullfn = M_SafeFilePath(dirpath, filename.c_str());
+      newfile.fullfn = M_SafeFilePath(dirpath, reinterpret_cast<const char *>(filename.c_str())); // C++20_FIXME: Cast to make C++20 builds compile
 
       if(ent.exists()) // check for existence
       {
@@ -885,16 +880,16 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
    prevPaths.add(real);
 
    const fs::directory_iterator itr(dir);
-   for(const fs::directory_entry ent : itr)
+   for(const fs::directory_entry &ent : itr)
    {
-       std::string filename = ent.path().filename().generic_u8string();
+      auto filename = ent.path().filename().generic_u8string();
 
       // Skip UNIX hidden files and directory tree entries
       if(filename[0] == '.')
          continue;
 
       path = base;
-      path.pathConcatenate(subpath).pathConcatenate(filename.c_str());
+      path.pathConcatenate(subpath).pathConcatenate(reinterpret_cast<const char *>(filename.c_str())); // C++20_FIXME: Cast to make C++20 builds compile
 
       if(ent.exists()) // check for existence
       {
@@ -904,7 +899,7 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
             {
                // we need to go deeper.
                path = subpath;
-               path.pathConcatenate(filename.c_str());
+               path.pathConcatenate(reinterpret_cast<const char *>(filename.c_str())); // C++20_FIXME: Cast to make C++20 builds compile
                W_recurseFiles(paths, base, path.constPtr(), prevPaths, depth + 1);
             }
          }
@@ -915,14 +910,14 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
 
             adf.path = path;
             path = subpath;
-            path.pathConcatenate(filename.c_str());
+            path.pathConcatenate(reinterpret_cast<const char *>(filename.c_str())); // C++20_FIXME: Cast to make C++20 builds compile
 
             // Normalize the subpath
             path.toLower();
             path.replace("\\", '/');
 
             adf.innerpath = path;
-            adf.size = ent.file_size();
+            adf.size = static_cast<off_t>(ent.file_size());
          }
       }
    }
@@ -1053,17 +1048,17 @@ struct nsdata_t
 // namespaces
 static nsdata_t wadNameSpaces[lumpinfo_t::ns_max] =
 {
-   { NULL,       NULL,     lumpinfo_t::ns_global       },
+   { nullptr,    nullptr,  lumpinfo_t::ns_global       },
    { "S_START",  "S_END",  lumpinfo_t::ns_sprites      },
    { "F_START",  "F_END",  lumpinfo_t::ns_flats        },
    { "C_START",  "C_END",  lumpinfo_t::ns_colormaps    },
    { "T_START",  "T_END",  lumpinfo_t::ns_translations },
-   { NULL,       NULL,     lumpinfo_t::ns_demos        },
+   { nullptr,    nullptr,  lumpinfo_t::ns_demos        },
    { "A_START",  "A_END",  lumpinfo_t::ns_acs          },
-   { NULL,       NULL,     lumpinfo_t::ns_pads         },
+   { nullptr,    nullptr,  lumpinfo_t::ns_pads         },
    { "TX_START", "TX_END", lumpinfo_t::ns_textures     },
-   { NULL,       NULL,     lumpinfo_t::ns_graphics     },
-   { NULL,       NULL,     lumpinfo_t::ns_sounds       },
+   { nullptr,    nullptr,  lumpinfo_t::ns_graphics     },
+   { nullptr,    nullptr,  lumpinfo_t::ns_sounds       },
    { "HI_START", "HI_END", lumpinfo_t::ns_hires        }, // TODO: Implement
 };
 
@@ -1225,6 +1220,8 @@ unsigned int WadDirectory::LumpNameHash(const char *s)
 {
    using namespace ectype;
    unsigned int hash;
+   if(!*s)
+      return 0;
 
    (void) ((hash =        toUpper(s[0]), s[1]) &&
            (hash = hash*3+toUpper(s[1]), s[2]) &&
@@ -1312,7 +1309,7 @@ int WadDirectory::checkNumForNameNSG(const char *name, int ns) const
 {
    int num = -1;
    int inNS, inGlobal;
-   lumpinfo_t *nsLump = NULL, *globalLump = NULL;
+   lumpinfo_t *nsLump = nullptr, *globalLump = nullptr;
 
    if((inNS = checkNumForName(name, ns)) >= 0)
       nsLump = lumpinfo[inNS];
@@ -1383,7 +1380,7 @@ int WadDirectory::checkNumForLFNNSG(const char *name, int ns) const
 {
    int num = -1;
    int inNS, inGlobal;
-   lumpinfo_t *nsLump = NULL, *globalLump = NULL;
+   lumpinfo_t *nsLump = nullptr, *globalLump = nullptr;
 
    if((inNS = checkNumForLFN(name, ns)) >= 0)
       nsLump = lumpinfo[inNS];
@@ -1646,6 +1643,27 @@ void WadDirectory::readLump(int lump, void *dest,
       if(code == WadLumpLoader::CODE_FATAL)
          I_Error("WadDirectory::readLump: lump %s is malformed\n", lptr->name);
    }
+}
+
+//
+// As WadDirectory::cacheLumpNum but calls I_Error if it fails
+// and doesn't do anything with tags.
+//
+void *WadDirectory::getCachedLumpNum(int lump, const WadLumpLoader *lfmt) const
+{
+   lumpinfo_t::lumpformat fmt = lumpinfo_t::fmt_default;
+
+   if(lfmt)
+      fmt = lfmt->formatIndex();
+
+   // haleyjd 08/14/02: again, should not be RANGECHECK only
+   if(lump < 0 || lump >= numlumps)
+      I_Error("WadDirectory::getCachedLumpNum: %i >= numlumps\n", lump);
+
+   if(!(lumpinfo[lump]->cache[fmt]))
+      I_Error("WadDirectory::getCachedLumpNum %s not cached\n", getLumpName(lump));
+
+   return lumpinfo[lump]->cache[fmt];
 }
 
 //

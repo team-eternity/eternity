@@ -68,27 +68,26 @@ struct sfxinfo_t;
 // coordinates are given for a 320*200 view screen.
 //
 
-typedef enum
+enum psprnum_t
 {
-  ps_weapon,
-  ps_flash,
-  NUMPSPRITES
-} psprnum_t;
+   ps_weapon,
+   ps_flash,
+   NUMPSPRITES
+};
 
 struct pspdef_t
 {
-  state_t *state;       // a NULL state means not active
-  int     tics;
-  v2fixed_t prevpos;
-  fixed_t sx;
-  fixed_t sy;
-  int trans;
+   state_t *state;       // a nullptr state means not active
+   int     tics;
+   v2fixed_t prevpos;
+   v2fixed_t playpos;
+   v2fixed_t renderpos;
+   int trans;
 
-  void backupPosition()
-  {
-     prevpos.x = sx;
-     prevpos.y = sy;
-  }
+   void backupPosition()
+   {
+      prevpos = renderpos;
+   }
 };
 
 int P_WeaponPreferred(int w1, int w2);
@@ -98,13 +97,15 @@ void P_SetPspritePtr(const player_t *player, pspdef_t *psp, statenum_t stnum);
 void P_SetPsprite(player_t *player, int position, statenum_t stnum);
 
 bool P_WeaponHasAmmo(const player_t *player, const weaponinfo_t *weapon);
+bool P_WeaponHasAmmoAlt(const player_t *player, const weaponinfo_t *weapon);
 
 int P_NextWeapon(const player_t *player, uint8_t *slotindex = nullptr);
 int P_PrevWeapon(const player_t *player, uint8_t *slotindex = nullptr);
 
-weapontype_t P_SwitchWeaponOld(const player_t *player);
+weapontype_t P_SwitchWeaponOldDoom(const player_t *player);
 bool P_CheckAmmo(player_t *player);
 void P_SubtractAmmo(const player_t *player, int compat_amt);
+void P_SubtractAmmoAmount(const player_t *player, int amount);
 void P_SetupPsprites(player_t *curplayer);
 void P_MovePsprites(player_t *curplayer);
 void P_DropWeapon(player_t *player);

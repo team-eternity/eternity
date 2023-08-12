@@ -47,10 +47,8 @@
 /* includes ************************/
 
 #include "z_zone.h"
-#include "i_system.h"
 
 #include "c_io.h"
-#include "c_runcmd.h"
 #include "d_deh.h"
 #include "d_dehtbl.h"
 #include "d_gi.h"
@@ -60,26 +58,21 @@
 #include "e_lib.h"
 #include "e_hash.h"
 #include "e_sound.h"
-#include "e_things.h"
-#include "ev_specials.h"
 #include "f_finale.h"
-#include "g_game.h"
-#include "m_collection.h"
-#include "m_dllist.h"
-#include "m_qstr.h"
 #include "m_qstrkeys.h"
 #include "m_utils.h"
 #include "metaqstring.h"
 #include "p_info.h"
-#include "p_mobj.h"
+#include "p_info_emap.h"
+#include "p_info_umap.h"
+#include "p_info_zdmap.h"
 #include "p_setup.h"
 #include "r_sky.h"
 #include "s_sound.h"
-#include "sounds.h"
+#include "v_misc.h"
 #include "w_levels.h"
 #include "w_wad.h"
 #include "xl_emapinfo.h"
-#include "xl_mapinfo.h"
 #include "xl_umapinfo.h"
 
 extern char gamemapname[9];
@@ -103,77 +96,13 @@ struct metainfo_t
    int         nextsecret; // next secret #, only used if non-0
    bool        finale;     // if true, sets LevelInfo.endOfGame
    const char *intertext;  // only used if finale is true
-   const char *interpic;   // interpic, if not NULL
+   const char *interpic;   // interpic, if not nullptr
    int         mission;    // if non-zero, only applies during a mission pack
 };
 
 static int nummetainfo, nummetainfoalloc;
 static metainfo_t *metainfo;
 static metainfo_t *curmetainfo;
-
-static bool foundEEMapInfo;
-
-// haleyjd: flag set for boss specials
-static dehflags_t boss_spec_flags[] =
-{
-   { "MAP07_1", BSPEC_MAP07_1 },
-   { "MAP07_2", BSPEC_MAP07_2 },
-   { "E1M8",    BSPEC_E1M8 },
-   { "E2M8",    BSPEC_E2M8 },
-   { "E3M8",    BSPEC_E3M8 },
-   { "E4M6",    BSPEC_E4M6 },
-   { "E4M8",    BSPEC_E4M8 },
-   { "E5M8",    BSPEC_E5M8 },
-   { NULL,      0 }
-};
-
-static dehflagset_t boss_flagset =
-{
-   boss_spec_flags, // flaglist
-   0,               // mode: single flags word
-};
-
-struct textvals_t
-{
-   const char **vals;
-   int numvals;
-   int defaultval;
-};
-
-static const char *finaleTypeStrs[FINALE_NUMFINALES] =
-{
-   "text",
-   "doom_credits",
-   "doom_deimos",
-   "doom_bunny",
-   "doom_marine",
-   "htic_credits",
-   "htic_water",
-   "htic_demon",
-   "psx_udoom",
-   "psx_doom2"
-};
-
-static textvals_t finaleTypeVals =
-{
-   finaleTypeStrs,
-   FINALE_NUMFINALES,
-   0
-};
-
-static const char *sectorColormapStrs[] =
-{
-   "normal",
-   "Boom",
-   "SMMU"
-};
-
-static textvals_t sectorColormapVals =
-{
-   sectorColormapStrs,
-   earrlen(sectorColormapStrs),
-   0
-};
 
 //=============================================================================
 //
@@ -186,11 +115,11 @@ static textvals_t sectorColormapVals =
 // P_GetMetaInfoForLevel
 //
 // Finds a metainfo object for the given map number, if one exists (returns 
-// NULL otherwise).
+// nullptr otherwise).
 //
 static metainfo_t *P_GetMetaInfoForLevel(int mapnum)
 {
-   metainfo_t *mi = NULL;
+   metainfo_t *mi = nullptr;
 
    for(int i = 0; i < nummetainfo; i++)
    {
@@ -292,12 +221,12 @@ void P_AddSndInfoMusic(int mapnum, const char *lumpname)
 // P_GetSndInfoMusic
 //
 // If a Hexen SNDINFO music definition exists for the passed-in map number,
-// the lumpname to use will be passed in. Otherwise, NULL is returned.
+// the lumpname to use will be passed in. Otherwise, nullptr is returned.
 //
 const char *P_GetSndInfoMusic(int mapnum)
 {
-   const char   *lumpname = NULL;
-   sndinfomus_t *music    = NULL;
+   const char   *lumpname = nullptr;
+   sndinfomus_t *music    = nullptr;
 
    if((music = sndInfoMusHash.objectForKey(mapnum)))
       lumpname = music->lumpname;
@@ -334,7 +263,7 @@ static EHashTable<MusInfoMusic, ENCQStrHashKey,
 //
 void P_AddMusInfoMusic(const char *mapname, int number, const char *lump)
 {
-   MusInfoMusic *music = NULL;
+   MusInfoMusic *music = nullptr;
 
    // Does it exist already?
    if((music = musInfoMusHash.objectForKey(mapname)))
@@ -382,12 +311,12 @@ void P_AddMusInfoMusic(const char *mapname, int number, const char *lump)
 // P_GetMusInfoMusic
 //
 // If a Risen3D MUSINFO music definition exists for the passed-in map name,
-// the lumpname to use will be passed in. Otherwise, NULL is returned.
+// the lumpname to use will be passed in. Otherwise, nullptr is returned.
 //
 const char *P_GetMusInfoMusic(const char *mapname, int number)
 {
-   const char   *lumpname = NULL;
-   MusInfoMusic *music    = NULL;
+   const char   *lumpname = nullptr;
+   MusInfoMusic *music    = nullptr;
 
    if((music = musInfoMusHash.objectForKey(mapname)))
    {
@@ -419,13 +348,13 @@ const char *P_GetMusInfoMusic(const char *mapname, int number)
 //
 // Input:  The filepath to the wad file for the current level.
 // Output: The buffered text from the corresponding wad template file, if the
-//         file was found. NULL otherwise.
+//         file was found. nullptr otherwise.
 //
 static char *P_openWadTemplate(const char *wadfile, int *len)
 {
    char *fn = Z_Strdupa(wadfile);
-   char *dotloc = NULL;
-   byte *buffer = NULL;
+   char *dotloc = nullptr;
+   byte *buffer = nullptr;
 
    // find an extension if it has one, and see that it is ".wad"
    if((dotloc = strrchr(fn, '.')) && !strcasecmp(dotloc, ".wad"))
@@ -436,11 +365,11 @@ static char *P_openWadTemplate(const char *wadfile, int *len)
       {
          strcpy(dotloc, ".TXT"); // try with .TXT (for You-neeks systems 9_9)
          if(access(fn, R_OK))
-            return NULL;         // oh well, tough titties.
+            return nullptr;         // oh well, tough titties.
       }
    }
 
-   return (*len = M_ReadFile(fn, &buffer)) < 0 ? NULL : (char *)buffer;
+   return (*len = M_ReadFile(fn, &buffer)) < 0 ? nullptr : (char *)buffer;
 }
 
 // template parsing states
@@ -618,7 +547,7 @@ static char *P_findTextInTemplate(char *text, int len, int titleOrAuthor)
 {
    tmplpstate_t state;
    qstring tokenbuffer;
-   char *ret = NULL;
+   char *ret = nullptr;
 
    state.text          = text;
    state.len           = len;
@@ -677,7 +606,7 @@ static void SynthLevelName(SynthType_e levelNameType)
    // is deterministic since gamemapname is 8 chars long
    static char newlevelstr[25];
 
-   sprintf(newlevelstr, synthNames[levelNameType], gamemapname);
+   snprintf(newlevelstr, sizeof(newlevelstr), synthNames[levelNameType], gamemapname);
    
    LevelInfo.levelName = newlevelstr;
 }
@@ -715,7 +644,7 @@ static void P_BFGNameHacks()
 //
 void P_DoomDefaultLevelName(levelnamedata_t &lnd)
 {
-   if(isExMy(gamemapname) &&
+   if(M_IsExMy(gamemapname, nullptr, nullptr) &&
       gameepisode > 0 && gameepisode <= GameModeInfo->numEpisodes &&
       gamemap > 0 && gamemap <= 9)
    {
@@ -741,7 +670,7 @@ void P_Doom2DefaultLevelName(levelnamedata_t &lnd)
       (GameModeInfo->missionInfo->flags & MI_HASBETRAY))
       d2upperbound = 33;
 
-   if(isMAPxy(gamemapname) && gamemap > 0 && gamemap <= d2upperbound)
+   if(M_IsMAPxy(gamemapname, nullptr) && gamemap > 0 && gamemap <= d2upperbound)
       lnd.bexName = GameModeInfo->levelNames[gamemap-1];   
 }
 
@@ -754,7 +683,7 @@ void P_HticDefaultLevelName(levelnamedata_t &lnd)
 {
    int maxEpisode = GameModeInfo->numEpisodes;
 
-   if(isExMy(gamemapname) &&
+   if(M_IsExMy(gamemapname, nullptr, nullptr) &&
       gameepisode > 0 && gameepisode <= maxEpisode &&
       gamemap > 0 && gamemap <= 9)
    {
@@ -776,7 +705,7 @@ void P_HticDefaultLevelName(levelnamedata_t &lnd)
 //
 static void P_InfoDefaultLevelName()
 {
-   levelnamedata_t lnd = { NULL, SYNTH_NEWLEVEL };
+   levelnamedata_t lnd = { nullptr, SYNTH_NEWLEVEL };
    bool deh_modified = false;
 
    // if we have a current metainfo, use its level name
@@ -834,87 +763,6 @@ static const char **infoSoundPtrs[NUMMAPINFOSOUNDS] =
 };
 
 //
-// P_applyHexenMapInfo
-//
-// haleyjd 01/26/14: Applies data from Hexen MAPINFO
-//
-static void P_applyHexenMapInfo()
-{
-   MetaTable  *xlmi = NULL;
-   const char *s    = NULL;
-   int i;
-
-   if(!(xlmi = XL_MapInfoForMapName(gamemapname)))
-      return;
-
-   LevelInfo.levelName = xlmi->getString("name", "");
-   
-   // sky textures
-   if((s = xlmi->getString("sky1", NULL)))
-   {
-      LevelInfo.skyName  = s;
-      // FIXME: currently legacy MAPINFO is still integer-only
-      LevelInfo.skyDelta = xlmi->getInt("sky1delta", 0) * FRACUNIT;
-   }
-   if((s = xlmi->getString("sky2", NULL)))
-   {
-      LevelInfo.sky2Name  = s;
-      LevelInfo.sky2Delta = xlmi->getInt("sky2delta", 0) * FRACUNIT;
-   }
-
-   // double skies
-   if((i = xlmi->getInt("doublesky", -1)) >= 0)
-      LevelInfo.doubleSky = !!i;
-
-   // lightning
-   if((i = xlmi->getInt("lightning", -1)) >= 0)
-      LevelInfo.hasLightning = !!i;
-
-   // colormap
-   if((s = xlmi->getString("fadetable", NULL)))
-      LevelInfo.colorMap = s;
-
-   // TODO: cluster, warptrans
-
-   // next map
-   if((s = xlmi->getString("next", NULL)))
-      LevelInfo.nextLevel = s;
-
-   // next secret
-   if((s = xlmi->getString("secretnext", NULL)))
-      LevelInfo.nextSecret = s;
-
-   // titlepatch for intermission
-   if((s = xlmi->getString("titlepatch", NULL)))
-      LevelInfo.levelPic = s;
-
-   // TODO: cdtrack
-
-   // par time
-   if((i = xlmi->getInt("par", -1)) >= 0)
-      LevelInfo.partime = i;
-
-   if((s = xlmi->getString("music", NULL)))
-      LevelInfo.musicName = s;
-
-   // flags
-   if((i = xlmi->getInt("nointermission", -1)) >= 0)
-      LevelInfo.killStats = !!i;
-   if((i = xlmi->getInt("evenlighting", -1)) >= 0)
-      LevelInfo.unevenLight = !i;
-   if((i = xlmi->getInt("noautosequences", -1)) >= 0)
-      LevelInfo.noAutoSequences = !!i;
-
-   /*
-   Stuff with "Unfinished Business":
-   qstring name;
-   qstring next;
-   qstring secretnext;
-   qstring titlepatch;
-   */
-}
-
-//
 // P_InfoDefaultSoundNames
 //
 // Restores the alias fields of the sounds used by the sound sequence engine
@@ -935,7 +783,7 @@ static void P_InfoDefaultSoundNames()
          sfxinfo_t *sfx = E_SoundForName(DefSoundNames[i]);
 
          DefSoundAliases[i][0] = sfx;
-         DefSoundAliases[i][1] = sfx ? sfx->alias : NULL;
+         DefSoundAliases[i][1] = sfx ? sfx->alias : nullptr;
       }
    }
    else
@@ -992,7 +840,7 @@ static char *P_loadTextLump(const char *lumpname)
    lumpNum = W_GetNumForName(lumpname);
    lumpLen = W_LumpLength(lumpNum);
 
-   str = emalloctag(char *, lumpLen + 1, PU_LEVEL, NULL);
+   str = emalloctag(char *, lumpLen + 1, PU_LEVEL, nullptr);
 
    wGlobalDir.readLump(lumpNum, str);
 
@@ -1021,6 +869,70 @@ static void P_LoadInterTextLumps()
 }
 
 //
+// Locate the finale rule suitable for current map or classic game rules. Shared both by
+// initialization and UMAPINFO settings.
+//
+const finalerule_t *P_DetermineEpisodeFinaleRule(bool checkmap)
+{
+   const finaledata_t *fdata = GameModeInfo->finaleData;
+
+   // look for a rule that applies to this level in particular
+   for(const finalerule_t *rule = fdata->rules; rule->gameepisode != -2; rule++)
+   {
+      // if !checkmap, this is a hack for UMAPINFO to find the correct finale
+      bool pickit = checkmap ? rule->gamemap == gamemap :
+                               rule->finaleType != FINALE_TEXT || rule->endOfGame;
+      if((rule->gameepisode == -1 || rule->gameepisode == gameepisode) &&
+         (rule->gamemap == -1 || pickit))
+      {
+         return rule;
+      }
+   }
+   return nullptr;
+}
+
+//
+// Set the finale based on rule
+//
+void P_SetFinaleFromRule(const finalerule_t *rule, bool changeFinaleEarly, bool changeText)
+{
+   if(!rule)
+   {
+      // This shouldn't really happen but I'll be proactive about it.
+      // The finale data sets all have rules to cover defaulted maps.
+
+      // haleyjd: note -- this cannot use F_SKY1 like it did in BOOM
+      // because heretic.wad contains an invalid F_SKY1 flat. This
+      // caused crashes during development of Heretic support, so now
+      // it uses the F_SKY2 flat which is provided in eternity.wad.
+      LevelInfo.backDrop   = "F_SKY2";
+      LevelInfo.interText  = nullptr;
+      LevelInfo.finaleType = FINALE_TEXT;
+      return;
+   }
+
+   // set backdrop graphic, intertext, and finale type
+   if(changeText)
+   {
+      LevelInfo.backDrop   = DEH_String(rule->backDrop);
+      LevelInfo.interText  = DEH_String(rule->interText);
+   }
+   LevelInfo.finaleType = rule->finaleType;
+
+   // check for endOfGame flag
+   if(rule->endOfGame)
+      LevelInfo.endOfGame = true;
+
+   // check for secretOnly flag
+   if(rule->secretOnly)
+      LevelInfo.finaleSecretOnly = true;
+
+   // check for early flag
+   if(rule->early && changeFinaleEarly)
+      LevelInfo.finaleEarly = true;
+}
+
+//
 // P_InfoDefaultFinale
 //
 // Sets up default MapInfo values related to f_finale.c code.
@@ -1032,12 +944,10 @@ static void P_LoadInterTextLumps()
 static void P_InfoDefaultFinale()
 {
    finaledata_t *fdata   = GameModeInfo->finaleData;
-   finalerule_t *rule    = fdata->rules;
-   finalerule_t *theRule = NULL;
 
    // universal defaults
-   LevelInfo.interTextLump    = NULL;
-   LevelInfo.interTextSLump   = NULL;
+   LevelInfo.interTextLump    = nullptr;
+   LevelInfo.interTextSLump   = nullptr;
    LevelInfo.finaleNormalOnly = false;
    LevelInfo.finaleSecretOnly = false;
    LevelInfo.finaleEarly      = false;
@@ -1045,12 +955,13 @@ static void P_InfoDefaultFinale()
    LevelInfo.killStats        = false;
    LevelInfo.endOfGame        = false;
    LevelInfo.useEDFInterName  = false;
+   LevelInfo.endPic           = GameModeInfo->interPic;  // just have a valid default
 
    // set data from the finaledata object
    if(fdata->musicnum != mus_None)
       LevelInfo.interMusic = (GameModeInfo->s_music[fdata->musicnum]).name;
    else
-      LevelInfo.interMusic = NULL;
+      LevelInfo.interMusic = nullptr;
 
    // check killStats flag - a bit of a hack, this is for Heretic's "hidden"
    // levels in episode 6, which have no statistics intermission.
@@ -1061,36 +972,11 @@ static void P_InfoDefaultFinale()
          LevelInfo.killStats = true;
    }
 
-   // look for a rule that applies to this level in particular
-   for(; rule->gameepisode != -2; rule++)
+   const finalerule_t *rule = P_DetermineEpisodeFinaleRule(true);
+   P_SetFinaleFromRule(rule, true, true);
+
+   if(rule)
    {
-      if((rule->gameepisode == -1 || rule->gameepisode == gameepisode) &&
-         (rule->gamemap == -1 || rule->gamemap == gamemap))
-      {
-         theRule = rule;
-         break;
-      }
-   }
-
-   if(theRule)
-   {
-      // set backdrop graphic, intertext, and finale type
-      LevelInfo.backDrop   = DEH_String(rule->backDrop);
-      LevelInfo.interText  = DEH_String(rule->interText);
-      LevelInfo.finaleType = rule->finaleType;
-
-      // check for endOfGame flag
-      if(rule->endOfGame)
-         LevelInfo.endOfGame = true;
-
-      // check for secretOnly flag
-      if(rule->secretOnly)
-         LevelInfo.finaleSecretOnly = true;
-
-      // check for early flag
-      if(rule->early)
-         LevelInfo.finaleEarly = true;
-
       // allow metainfo overrides
       if(curmetainfo)
       {
@@ -1100,27 +986,14 @@ static void P_InfoDefaultFinale()
             LevelInfo.endOfGame = true;
          }
          else
-            LevelInfo.interText = NULL; // disable other levels
+            LevelInfo.interText = nullptr; // disable other levels
       }
-   }
-   else
-   {
-      // This shouldn't really happen but I'll be proactive about it.
-      // The finale data sets all have rules to cover defaulted maps.
-
-      // haleyjd: note -- this cannot use F_SKY1 like it did in BOOM
-      // because heretic.wad contains an invalid F_SKY1 flat. This 
-      // caused crashes during development of Heretic support, so now
-      // it uses the F_SKY2 flat which is provided in eternity.wad.
-      LevelInfo.backDrop   = "F_SKY2";
-      LevelInfo.interText  = NULL;
-      LevelInfo.finaleType = FINALE_TEXT;
    }
 
    // finale type for secret exits starts unspecified; if left that way and a
    // finale occurs for a secret exit anyway, the normal finale will be used.
    LevelInfo.finaleSecretType = FINALE_UNSPECIFIED;
-   LevelInfo.interTextSecret  = NULL;
+   LevelInfo.interTextSecret  = nullptr;
 }
 
 
@@ -1132,9 +1005,9 @@ static void P_InfoDefaultFinale()
 //
 static void P_InfoDefaultSky()
 {
-   skydata_t *sd      = GameModeInfo->skyData;
-   skyrule_t *rule    = sd->rules;
-   skyrule_t *theRule = nullptr;
+   const skydata_t *sd      = GameModeInfo->skyData;
+   const skyrule_t *rule    = sd->rules;
+   const skyrule_t *theRule = nullptr;
 
    // DOOM determines the sky texture to be used
    // depending on the current episode, and the game version.
@@ -1162,11 +1035,14 @@ static void P_InfoDefaultSky()
 
    // we MUST have a default sky rule
    if(theRule)
+   {
       LevelInfo.skyName = theRule->skyTexture;
+      LevelInfo.enableBoomSkyHack = true;  // allow Boom tall sky compatibility
+   }
    else
       I_Error("P_InfoDefaultSky: no default rule in skyrule set\n");
 
-   // set sky2Name to NULL now, we'll test it later
+   // set sky2Name to nullptr now, we'll test it later
    LevelInfo.sky2Name  = nullptr;
    LevelInfo.doubleSky = false; // double skies off by default
 
@@ -1175,8 +1051,12 @@ static void P_InfoDefaultSky()
    LevelInfo.sky2Delta = 0;
 
    // altSkyName -- this is used for lightning flashes --
-   // starts out NULL to indicate none.
-   LevelInfo.altSkyName = NULL;
+   // starts out nullptr to indicate none.
+   LevelInfo.altSkyName = nullptr;
+
+   // Set the sky offset to "unset"
+   LevelInfo.skyRowOffset = SKYROWOFFSET_DEFAULT;
+   LevelInfo.sky2RowOffset = SKYROWOFFSET_DEFAULT;
 }
 
 //
@@ -1234,7 +1114,7 @@ static void P_InfoDefaultMusic(metainfo_t *curmetainfo)
 //
 // Post-processing routine.
 //
-// Sets the sky2Name, if it is still NULL, to whatever 
+// Sets the sky2Name, if it is still nullptr, to whatever 
 // skyName has ended up as. This may be the default, or 
 // the value from MapInfo.
 //
@@ -1334,7 +1214,7 @@ static void P_SetParTime()
 //
 static void P_SetOutdoorFog()
 {
-   if(LevelInfo.outdoorFog == NULL)
+   if(LevelInfo.outdoorFog == nullptr)
       LevelInfo.outdoorFog = LevelInfo.colorMap;
 }
 
@@ -1358,10 +1238,10 @@ static void P_ClearLevelVars()
    // set default level type depending on game mode
    LevelInfo.levelType = GameModeInfo->levelType;
 
-   LevelInfo.levelPic        = NULL;
+   LevelInfo.levelPic        = nullptr;
    LevelInfo.interLevelName  = nullptr;
-   LevelInfo.nextLevelPic    = NULL;
-   LevelInfo.nextSecretPic   = NULL;
+   LevelInfo.nextLevelPic    = nullptr;
+   LevelInfo.nextSecretPic   = nullptr;
    LevelInfo.creator         = "unknown";
 
    if(curmetainfo) // metadata-overridable intermission defaults
@@ -1376,7 +1256,7 @@ static void P_ClearLevelVars()
    }
 
    LevelInfo.colorMap        = "COLORMAP";
-   LevelInfo.outdoorFog      = NULL;
+   LevelInfo.outdoorFog      = nullptr;
    LevelInfo.useFullBright   = true;
    LevelInfo.unevenLight     = true;
    
@@ -1384,8 +1264,8 @@ static void P_ClearLevelVars()
    LevelInfo.nextSecret      = "";
    //info_weapons            = "";
    LevelInfo.gravity         = DEFAULTGRAVITY;
-   LevelInfo.acsScriptLump   = NULL;
-   LevelInfo.extraData       = NULL;
+   LevelInfo.acsScriptLump   = nullptr;
+   LevelInfo.extraData       = nullptr;
 
    // Hexen TODO: will be true for Hexen maps by default
    LevelInfo.acsOpenDelay    = false;
@@ -1413,18 +1293,13 @@ static void P_ClearLevelVars()
    P_InfoDefaultMusic(curmetainfo);
    
    // special handling for ExMy maps under DOOM II
-   if(GameModeInfo->id == commercial && isExMy(levelmapname))
+   int levelepisode, levelmap;
+   if(GameModeInfo->id == commercial && M_IsExMy(levelmapname, &levelepisode, &levelmap))
    {
       LevelInfo.nextLevel = nextlevel;
       
       // set the next episode
-      strcpy(nextlevel, levelmapname);
-      nextlevel[3]++;
-      if(nextlevel[3] > '9')  // next episode
-      {
-         nextlevel[3] = '1';
-         nextlevel[1]++;
-      }
+      snprintf(nextlevel, 9, "E%dM%d", levelepisode, levelmap + 1);
       LevelInfo.musicName = levelmapname;
    }
    else
@@ -1491,456 +1366,72 @@ static void P_InitWeapons()
 #endif
 }
 
-//=============================================================================
 //
-// EMAPINFO Processing
+// If interText is not set, give it some dummy value
 //
-// EMAPINFO and level header [level info] data (for SMMU compatibility) is
-// now parsed by a finite state automaton parser in the XLParser family.
-// Data from EMAPINFO is loaded up for us at startup and any time an archive
-// is runtime loaded. Level header info has to be dealt with here if it exists.
-// Our job here is to get the MetaTable from the XL system and process the
-// fields that are defined in it into the LevelInfo structure.
-//
-
-// levelvar types
-enum
+void P_EnsureDefaultStoryText(bool secret)
 {
-   IVT_STRING,      // data is stored as a straight string value
-   IVT_STRNUM,      // data is a string in EMAPINFO that is converted to an enum value
-   IVT_INT,         // data is converted to integer
-   IVT_BOOLEAN,     // data is boolean true or false
-   IVT_FLAGS,       // data is a BEX-style flags string
-   IVT_ENVIRONMENT, // data is a pair of sound environment ID numbers
-   IVT_LEVELACTION, // data is a level action string
-   IVT_DOUBLEFIXED, // data is floating-point and is loaded as fixed_t
-   IVT_END
-};
-
-// levelvar structure maps from keys to LevelInfo structure fields
-struct levelvar_t
-{
-   int         type;     // determines how MetaTable value should be parsed
-   const char *name;     // key of the MetaTable value
-   void       *variable; // pointer to destination LevelInfo field
-   void       *extra;    // pointer to any "extra" info needed for this parsing
-   bool        multi;    // if true, allows multiple definitions
-};
-
-//
-// levelvars field prototype macros
-//
-// These provide a mapping between keywords and the fields of the LevelInfo
-// structure.
-//
-#define LI_STRING(name, field) \
-   { IVT_STRING, name, (void *)(&(LevelInfo . field)), nullptr, false }
-
-#define LI_STRNUM(name, field, extra) \
-   { IVT_STRNUM, name, (void *)(&(LevelInfo . field)), &(extra), false }
-
-#define LI_INTEGR(name, field) \
-   { IVT_INT, name, &(LevelInfo . field), nullptr, false }
-
-#define LI_DOUBLE(name, field) \
-   { IVT_DOUBLE, name, &(LevelInfo . field), nullptr, false }
-
-#define LI_BOOLNF(name, field) \
-   { IVT_BOOLEAN, name, &(LevelInfo . field), nullptr, false }
-
-#define LI_FLAGSF(name, field, extra) \
-   { IVT_FLAGS, name, &(LevelInfo . field), &(extra), false }
-
-#define LI_ENVIRO(name, field) \
-   { IVT_ENVIRONMENT, name, &(LevelInfo . field), nullptr, false }
-
-#define LI_ACTION(name, field) \
-   { IVT_LEVELACTION, name, &(LevelInfo . field), nullptr, true }
-
-#define LI_DBLFIX(name, field) \
-   { IVT_DOUBLEFIXED, name, &(LevelInfo . field), nullptr, false }
-
-static levelvar_t levelvars[]=
-{
-   LI_BOOLNF("acsopendelay",       acsOpenDelay),
-   LI_STRING("acsscript",          acsScriptLump),
-   LI_INTEGR("aircontrol",         airControl),
-   LI_INTEGR("airfriction",        airFriction),
-   LI_BOOLNF("allowexittags",      allowExitTags),
-   LI_BOOLNF("allowsecrettags",    allowSecretTags),
-   LI_STRING("altskyname",         altSkyName),
-   LI_FLAGSF("boss-specials",      bossSpecs,         boss_flagset),
-   LI_STRING("colormap",           colorMap),
-   LI_STRING("creator",            creator),
-   LI_ENVIRO("defaultenvironment", defaultEnvironment),
-   LI_BOOLNF("disable-jump",       disableJump),
-   LI_BOOLNF("doublesky",          doubleSky),
-   LI_BOOLNF("edf-intername",      useEDFInterName),
-   LI_BOOLNF("endofgame",          endOfGame),
-   LI_STRING("extradata",          extraData),
-   LI_BOOLNF("finale-normal",      finaleNormalOnly),
-   LI_BOOLNF("finale-secret",      finaleSecretOnly), 
-   LI_BOOLNF("finale-early",       finaleEarly),
-   LI_STRNUM("finaletype",         finaleType,        finaleTypeVals),
-   LI_STRNUM("finalesecrettype",   finaleSecretType,  finaleTypeVals),
-   LI_BOOLNF("fullbright",         useFullBright),
-   LI_INTEGR("gravity",            gravity),
-   LI_STRING("inter-backdrop",     backDrop),
-   LI_STRING("inter-levelname",    interLevelName),
-   LI_STRING("intermusic",         interMusic),
-   LI_STRING("interpic",           interPic),
-   LI_STRING("intertext",          interTextLump),
-   LI_STRING("intertext-secret",   interTextSLump),
-   LI_BOOLNF("killfinale",         killFinale),
-   LI_BOOLNF("killstats",          killStats),
-   LI_ACTION("levelaction",        actions),
-   LI_STRING("levelname",          levelName),
-   LI_STRING("levelpic",           levelPic),
-   LI_STRING("levelpicnext",       nextLevelPic),
-   LI_STRING("levelpicsecret",     nextSecretPic),
-   LI_BOOLNF("lightning",          hasLightning),
-   LI_STRING("music",              musicName),
-   LI_STRING("nextlevel",          nextLevel),
-   LI_STRING("nextsecret",         nextSecret),
-   LI_BOOLNF("noautosequences",    noAutoSequences),
-   LI_STRING("outdoorfog",         outdoorFog),
-   LI_INTEGR("partime",            partime),
-   LI_STRNUM("sector-colormaps",   sectorColormaps,   sectorColormapVals),
-   LI_DBLFIX("skydelta",           skyDelta),
-   LI_DBLFIX("sky2delta",          sky2Delta),
-   LI_STRING("skyname",            skyName),
-   LI_STRING("sky2name",           sky2Name),
-   LI_STRING("sound-swtchn",       sound_swtchn),
-   LI_STRING("sound-swtchx",       sound_swtchx),
-   LI_STRING("sound-stnmov",       sound_stnmov),
-   LI_STRING("sound-pstop",        sound_pstop),
-   LI_STRING("sound-bdcls",        sound_bdcls),
-   LI_STRING("sound-bdopn",        sound_bdopn),
-   LI_STRING("sound-dorcls",       sound_dorcls),
-   LI_STRING("sound-doropn",       sound_doropn),
-   LI_STRING("sound-pstart",       sound_pstart),
-   LI_STRING("sound-fcmove",       sound_fcmove),
-   LI_BOOLNF("unevenlight",        unevenLight),
-
-   //{ IVT_STRING,  "defaultweapons", &info_weapons },
-};
-
-//
-// P_parseLevelString
-//
-// Parse a plain string value.
-//
-static void P_parseLevelString(levelvar_t *var, const qstring &value)
-{
-   *(char**)var->variable = value.duplicate(PU_LEVEL);
+   // no text defined? make up something.
+   const char *&interText = secret ? LevelInfo.interTextSecret : LevelInfo.interText;
+   if(!interText)
+      interText = "You have won.";
 }
 
 //
-// P_parseLevelStrNum
+// Check level info for strings illegal to be over 8 characters. Truncate them.
 //
-// Parse an enumerated keyword value into its corresponding integral value.
-//
-static void P_parseLevelStrNum(levelvar_t *var, const qstring &value)
+static void P_truncateLevelInfoNames()
 {
-   const textvals_t *tv = static_cast<textvals_t *>(var->extra);
-   int val = E_StrToNumLinear(tv->vals, tv->numvals, value.constPtr());
+   // For any lump names assumed to be at most 8 characters, truncate them (it's a common author
+   // error, like in vel_aex, to have mapinfo names longer than the actual lumps).
 
-   if(val >= tv->numvals)
-      val = tv->defaultval;
+   // But remove these limitations if the rest of the code guarantees it can handle longer names.
 
-   *(int *)var->variable = val;
-}
-
-//
-// P_parseLevelInt
-//
-// Parse an integer value.
-//
-static void P_parseLevelInt(levelvar_t *var, const qstring &value)
-{
-   *(int*)var->variable = value.toInt();
-}
-
-//
-// Parses a double-precision value and converts it to fixed-point internally
-//
-static void P_parseLevelDoubleFixed(levelvar_t *var, const qstring &value)
-{
-   *static_cast<fixed_t *>(var->variable) = M_DoubleToFixed(value.toDouble(nullptr));
-}
-
-//
-// P_parseLevelBool
-//
-// Parse a boolean true/false option.
-//
-static void P_parseLevelBool(levelvar_t *var, const qstring &value)
-{
-   *(bool *)var->variable = !value.strCaseCmp("true");
-}
-
-//
-// P_parseLevelFlags
-//
-// Parse a BEX-style flags string.
-//
-static void P_parseLevelFlags(levelvar_t *var, const qstring &value)
-{
-   dehflagset_t *flagset = static_cast<dehflagset_t *>(var->extra);
-   *(unsigned int *)var->variable = E_ParseFlags(value.constPtr(), flagset);
-}
-
-enum
-{
-   ENV_STATE_SCANSTART,
-   ENV_STATE_INID1,
-   ENV_STATE_SCANBETWEEN,
-   ENV_STATE_INID2,
-   ENV_STATE_END
-};
-
-//
-// P_parseLevelEnvironment
-//
-// Parse a sound environment ID.
-//
-static void P_parseLevelEnvironment(levelvar_t *var, const qstring &value)
-{
-   int state = ENV_STATE_SCANSTART;
-   qstring id1, id2;
-   const char *rover = value.constPtr();
-
-   // parse with a small state machine
-   while(state != ENV_STATE_END)
+   //
+   // Lump string information: holds its address and user readable description
+   //
+   struct LumpStringInfo
    {
-      char c = *rover++;
-      int isnum = ectype::isDigit(c);
-      
-      if(!c)
-         break;
+      const char **infoField;
+      const char *description;
+   };
 
-      switch(state)
-      {
-      case ENV_STATE_SCANSTART:
-         if(isnum)
-         {
-            id1 += c;
-            state = ENV_STATE_INID1;
-         }
-         break;
-      case ENV_STATE_INID1:
-         if(isnum)
-            id1 += c;
-         else
-            state = ENV_STATE_SCANBETWEEN;
-         break;
-      case ENV_STATE_SCANBETWEEN:
-         if(isnum)
-         {
-            id2 += c;
-            state = ENV_STATE_INID2;
-         }
-         break;
-      case ENV_STATE_INID2:
-         if(isnum)
-            id2 += c;
-         else
-            state = ENV_STATE_END;
-         break;
-      }
-   }
-
-   *(int *)var->variable = (id1.toInt() << 8) | id2.toInt();
-}
-
-enum
-{
-   LVACT_STATE_EXPECTMOBJ,
-   LVACT_STATE_INMOBJ,
-   LVACT_STATE_EXPECTSPECIAL,
-   LVACT_STATE_INSPECIAL,
-   LVACT_STATE_EXPECTARGS,
-   LVACT_STATE_INARG,
-   LVACT_STATE_END
-};
-
-//
-// P_parseLevelAction
-//
-// Parse a level action value.
-//
-static void P_parseLevelAction(levelvar_t *var, const qstring &value)
-{
-   int state = LVACT_STATE_EXPECTMOBJ;
-   const char *rover = value.constPtr();
-   qstring mobjName, lineSpec, argStr[5];
-   qstring *curArg;
-   int argcount = 0;
-   int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
-   int mobjType;
-   ev_binding_t *binding;
-
-   // parse with a small state machine
-   while(state != LVACT_STATE_END)
+   // * Some of these get fed into 8-character buffers.
+   // * All the lump lookups go into hash tables which only check the first 8 characters.
+   // * Textures and flats are fine, however, so they're not limited here.
+   LumpStringInfo eightCharMaxFields[] =
    {
-      char c = *rover++;
+      { &LevelInfo.interPic, "intermission background" },
+      { &LevelInfo.interTextLump, "story text lump" },
+      { &LevelInfo.interTextSLump, "secret story text lump" },
+      { &LevelInfo.backDrop, "story text back drop" },
+      { &LevelInfo.interMusic, "story text music" },
+      { &LevelInfo.levelPic, "intermission level name graphic" },
+      { &LevelInfo.nextLevelPic, "intermission next level name graphic" },
+      { &LevelInfo.nextSecretPic, "intermission next secret level name graphic" },
+      { &LevelInfo.nextLevel, "next level name" },
+      { &LevelInfo.nextSecret, "next secret level name" },
+      { &LevelInfo.musicName, "music name" },
+      { &LevelInfo.colorMap, "color map name" },
+      { &LevelInfo.outdoorFog, "outdoor fog name" },
+      { &LevelInfo.acsScriptLump, "ACS script lump" },
+      { &LevelInfo.extraData, "ExtraData lump" },
+      // skyName is fine! Apart from TXTRCONV which isn't crashy.
+      // Same for: altSkyName,
+   };
 
-      if(!c)
-         break;
-
-      switch(state)
-      {
-      case LVACT_STATE_EXPECTMOBJ:
-         if(c == ' ' || c == '\t') // skip whitespace
-            continue;
-         else                      // start of mobj type name
-         {
-            mobjName.Putc(c);
-            state = LVACT_STATE_INMOBJ;
-         }
-         break;
-      case LVACT_STATE_INMOBJ:
-         if(c == ' ' || c == '\t') // end of mobj name
-            state = LVACT_STATE_EXPECTSPECIAL;
-         else
-            mobjName += c;
-         break;
-      case LVACT_STATE_EXPECTSPECIAL:
-         if(c == ' ' || c == '\t') // skip whitespace
-            continue;
-         else                      // start of special name
-         {
-            lineSpec.Putc(c);
-            state = LVACT_STATE_INSPECIAL;
-         }
-         break;
-      case LVACT_STATE_INSPECIAL:
-         if(c == ' ' || c == '\t') // end of special
-            state = LVACT_STATE_EXPECTARGS;
-         else
-            lineSpec += c;
-         break;
-      case LVACT_STATE_EXPECTARGS:
-         if(argcount == NUMLINEARGS) // only up to five arguments allowed
-            state = LVACT_STATE_END;
-         else if(c == ' ' || c == '\t') // skip whitespace
-            continue;
-         else
-         {
-            curArg = &argStr[argcount];
-            curArg->Putc(c);
-            state = LVACT_STATE_INARG;
-         }
-         break;
-      case LVACT_STATE_INARG:
-         if(c == ' ' || c == '\t') // end of argument
-         {
-            ++argcount;
-            state = LVACT_STATE_EXPECTARGS;
-         }
-         else
-            *curArg += c;
-         break;
-      }
-   }
-
-   // lookup thing and special; both must be valid
-   if((mobjType = E_ThingNumForName(mobjName.constPtr())) == -1)
-      return;
-   if(!(binding = EV_HexenBindingForName(lineSpec.constPtr())))
-      return;
-
-   // translate arguments
-   for(int i = 0; i < NUMLINEARGS; i++)
-      args[i] = argStr[i].toInt();
-
-   // create a new levelaction structure
-   auto newAction = estructalloctag(levelaction_t, 1, PU_LEVEL);
-   newAction->mobjtype = mobjType;
-   newAction->special  = binding->actionNumber;
-   memcpy(newAction->args, args, sizeof(args));
-
-   // put it onto the linked list in LevelInfo
-   newAction->next = LevelInfo.actions;
-   LevelInfo.actions = newAction;
-}
-
-typedef void (*varparserfn_t)(levelvar_t *, const qstring &);
-static varparserfn_t infoVarParsers[IVT_END] =
-{
-   P_parseLevelString,
-   P_parseLevelStrNum,
-   P_parseLevelInt,
-   P_parseLevelBool,
-   P_parseLevelFlags,
-   P_parseLevelEnvironment,
-   P_parseLevelAction,
-   P_parseLevelDoubleFixed
-};
-
-//
-// P_processEMapInfo
-//
-// Call the proper processing routine for every MetaString object in the 
-// MapInfo MetaTable.
-//
-static void P_processEMapInfo(MetaTable *info)
-{
-   for(size_t i = 0; i < earrlen(levelvars); i++)
+   for(const LumpStringInfo &info : eightCharMaxFields)
    {
-      levelvar_t *levelvar  = &levelvars[i];
-      MetaString *str       = nullptr;
-
-      while((str = info->getNextKeyAndTypeEx<MetaString>(str, levelvar->name)))
+      if(*info.infoField && strlen(*info.infoField) > 8)
       {
-         infoVarParsers[levelvar->type](levelvar, qstring(str->getValue()));
-         if(!levelvar->multi)
-            break;
-      }
-   }
-}
-
-//
-// Process UMAPINFO obtained data.
-//
-static void P_processUMapInfo(MetaTable *info)
-{
-   MetaMultiString *mms = nullptr;
-   while((mms = info->getNextTypeEx(mms)))
-   {
-      if(mms->value.isEmpty())
-         continue;
-      const char *key = mms->getKey();
-      const qstring &value = mms->value[0];
-      auto applyTo = [&](const char *&info) {
-         info = value.duplicate(PU_LEVEL);
-      };
-      if(!strcasecmp(key, "levelname"))
-      {
-         applyTo(LevelInfo.levelName);
-         applyTo(LevelInfo.interLevelName);  // apply to both
-      }
-      else if(!strcasecmp(key, "levelpic"))
-         applyTo(LevelInfo.levelPic);
-      else if(!strcasecmp(key, "next"))
-         applyTo(LevelInfo.nextLevel);
-      else if(!strcasecmp(key, "nextsecret"))
-         applyTo(LevelInfo.nextSecret);
-      else if(!strcasecmp(key, "skytexture"))
-         applyTo(LevelInfo.skyName);
-      else if(!strcasecmp(key, "music"))
-         applyTo(LevelInfo.musicName);
-      else if(!strcasecmp(key, "exitpic"))
-         applyTo(LevelInfo.interPic);  // NOTE: enterpic not used here
-      else if(!strcasecmp(key, "partime"))
-         LevelInfo.partime = value.toInt();
-      else if(!strcasecmp(key, "endgame"))
-      {
-         if(!value.strCaseCmp("false"))
-            LevelInfo.killFinale = true;
-         // ???
-//         else
-//            forcefinale = true;
+         C_Printf(FC_ERROR "Truncating %s '%s' to 8 characters\n", info.description,
+                  *info.infoField);
+         // NOTE: we can't overwrite the strings due to constness, but we can define new ones.
+         char *newData = ecalloctag(char *, 9, 1, PU_LEVEL, nullptr);
+         memcpy(newData, *info.infoField, 8);
+         // NOTE: we can't free const pointers, but fortunately it won't leak, because the old data
+         // will be purged at the end of the level.
+         *info.infoField = newData;
       }
    }
 }
@@ -1961,9 +1452,9 @@ static void P_processUMapInfo(MetaTable *info)
 // lvname, if non-null, is the filepath of the wad that contains
 // the level when it has been loaded from a managed wad directory.
 //
-void P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname)
+bool P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname, qstring *error)
 {
-   MetaTable *info = NULL;
+   MetaTable *info = nullptr;
    
    // set all the level defaults
    P_ClearLevelVars();
@@ -1987,36 +1478,36 @@ void P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname)
       }
    }
 
-   foundEEMapInfo = false;
+   bool foundEEMapInfo = false;
 
-   if(demo_version > 203)  // do NOT read any MapInfo in MBF or less
+   const char *mapname = dir->getLumpName(lumpnum);
+   if((info = XL_UMapInfoForMapName(mapname)))
    {
-      // FIXME: this may need finer compatibility check if it materializes
-      if((info = XL_UMapInfoForMapName(dir->getLumpName(lumpnum))))
-      {
-         P_processUMapInfo(info);
-         // Don't give it higher priority over Hexen MAPINFO
-      }
-
-      // process any global EMAPINFO data
-      if((info = XL_EMapInfoForMapName(dir->getLumpName(lumpnum))))
-      {
-         P_processEMapInfo(info);
-         foundEEMapInfo = true;
-      }
-
-      // additively process any SMMU header information for compatibility
-      if((info = XL_ParseLevelInfo(dir, lumpnum)))
-      {
-         P_processEMapInfo(info);
-         foundEEMapInfo = true;
-      }
-
-      // haleyjd 01/26/14: if no EE map information was specified for this map,
-      // defer to any defined Hexen MAPINFO data now.
-      if(!foundEEMapInfo)
-         P_applyHexenMapInfo();
+      if(!P_ProcessUMapInfo(info, mapname, error))
+         return false;
+      // Don't give it higher priority over Hexen MAPINFO
    }
+
+   // process any global EMAPINFO data
+   if((info = XL_EMapInfoForMapName(mapname)))
+   {
+      P_ProcessEMapInfo(info);
+      foundEEMapInfo = true;
+   }
+
+   // additively process any SMMU header information for compatibility
+   if((info = XL_ParseLevelInfo(dir, lumpnum)))
+   {
+      P_ProcessEMapInfo(info);
+      foundEEMapInfo = true;
+   }
+
+   // haleyjd 01/26/14: if no EE map information was specified for this map,
+   // defer to any defined Hexen MAPINFO data now.
+   if(!foundEEMapInfo)
+      P_ApplyHexenMapInfo();
+
+   P_truncateLevelInfoNames();
 
    // haleyjd: call post-processing routines
    P_LoadInterTextLumps();
@@ -2026,6 +1517,7 @@ void P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname)
    P_SetOutdoorFog();
 
    P_InitWeapons();
+   return true;
 }
 
 //

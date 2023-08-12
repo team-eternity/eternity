@@ -35,6 +35,7 @@
 #include "ev_specials.h"
 #include "g_game.h"
 #include "p_info.h"
+#include "p_inter.h"
 #include "p_scroll.h"
 #include "p_sector.h"
 #include "p_skin.h"
@@ -158,7 +159,7 @@ DEFINE_ACTION(EV_ActionOpenDoor)
    // case  86: (WR)
    // case 103: (S1)
    // Open Door
-   return EV_DoDoor(instance->line, doorOpen);
+   return EV_DoDoor(instance->tag, doorOpen);
 }
 
 //
@@ -171,7 +172,7 @@ DEFINE_ACTION(EV_ActionCloseDoor)
    // case 50: (S1)
    // case 75: (WR)
    // Close Door
-   return EV_DoDoor(instance->line, doorClose);
+   return EV_DoDoor(instance->tag, doorClose);
 }
 
 //
@@ -184,7 +185,7 @@ DEFINE_ACTION(EV_ActionRaiseDoor)
    // case 63: (SR)
    // case 90: (WR)
    // Raise Door
-   return EV_DoDoor(instance->line, doorNormal);
+   return EV_DoDoor(instance->tag, doorNormal);
 }
 
 //
@@ -198,7 +199,7 @@ DEFINE_ACTION(EV_ActionRaiseFloor)
    // case  91: (WR)
    // case 101: (S1)
    // Raise Floor
-   return EV_DoFloor(instance->line, raiseFloor);
+   return EV_DoFloor(instance->line, instance->tag, raiseFloor);
 }
 
 //
@@ -211,7 +212,7 @@ DEFINE_ACTION(EV_ActionFastCeilCrushRaise)
    // case 164: (S1 - BOOM Extended)
    // case 183: (SR - BOOM Extended)
    // Fast Ceiling Crush & Raise
-   return EV_DoCeiling(instance->line, fastCrushAndRaise);
+   return EV_DoCeiling(instance->line, instance->tag, fastCrushAndRaise);
 }
 
 //
@@ -224,7 +225,7 @@ DEFINE_ACTION(EV_ActionBuildStairsUp8)
    // case 256: (WR - BOOM Extended)
    // case 258: (SR - BOOM Extended)
    // Build Stairs
-   return EV_BuildStairs(instance->line, build8);
+   return EV_BuildStairs(instance->tag, build8);
 }
 
 //
@@ -237,7 +238,7 @@ DEFINE_ACTION(EV_ActionPlatDownWaitUpStay)
    // case 62: (SR)
    // case 88: (WR)
    // PlatDownWaitUp
-   return EV_DoPlat(instance->line, downWaitUpStay, 0);
+   return EV_DoPlat(instance->line, instance->tag, downWaitUpStay, 0);
 }
 
 //
@@ -280,7 +281,7 @@ DEFINE_ACTION(EV_ActionCloseDoor30)
    // case 175: (S1 - BOOM Extended)
    // case 196: (SR - BOOM Extended)
    // Close Door 30
-   return EV_DoDoor(instance->line, closeThenOpen);
+   return EV_DoDoor(instance->tag, closeThenOpen);
 }
 
 //
@@ -307,7 +308,7 @@ DEFINE_ACTION(EV_ActionLowerFloor)
    // case  83: (WR)
    // case 102: (S1)
    // Lower Floor
-   return EV_DoFloor(instance->line, lowerFloor);
+   return EV_DoFloor(instance->line, instance->tag, lowerFloor);
 }
 
 //
@@ -321,7 +322,7 @@ DEFINE_ACTION(EV_ActionPlatRaiseNearestChange)
    // case 68: (SR)
    // case 95: (WR)
    // Raise floor to nearest height and change texture
-   return EV_DoPlat(instance->line, raiseToNearestAndChange, 0);
+   return EV_DoPlat(instance->line, instance->tag, raiseToNearestAndChange, 0);
 }
 
 //
@@ -334,7 +335,7 @@ DEFINE_ACTION(EV_ActionCeilingCrushAndRaise)
    // case  73: (WR)
    // case 184: (SR - BOOM Extended)
    // Ceiling Crush and Raise
-   return EV_DoCeiling(instance->line, crushAndRaise);
+   return EV_DoCeiling(instance->line, instance->tag, crushAndRaise);
 }
 
 //
@@ -347,7 +348,7 @@ DEFINE_ACTION(EV_ActionFloorRaiseToTexture)
    // case 158: (S1 - BOOM Extended)
    // case 176: (SR - BOOM Extended)
    // Raise floor to shortest texture height on either side of lines.
-   return EV_DoFloor(instance->line, raiseToTexture);
+   return EV_DoFloor(instance->line, instance->tag, raiseToTexture);
 }
 
 //
@@ -373,7 +374,7 @@ DEFINE_ACTION(EV_ActionLowerFloorTurbo)
    // case 71: (S1)
    // case 98: (WR)
    // Lower Floor (TURBO)
-   return EV_DoFloor(instance->line, turboLower);
+   return EV_DoFloor(instance->line, instance->tag, turboLower);
 }
 
 //
@@ -386,7 +387,7 @@ DEFINE_ACTION(EV_ActionFloorLowerAndChange)
    // case 159: (S1 - BOOM Extended)
    // case 177: (SR - BOOM Extended)
    // LowerAndChange
-   return EV_DoFloor(instance->line, lowerAndChange);
+   return EV_DoFloor(instance->line, instance->tag, lowerAndChange);
 }
 
 //
@@ -399,7 +400,7 @@ DEFINE_ACTION(EV_ActionFloorLowerToLowest)
    // case 60: (SR)
    // case 82: (WR)
    // Lower Floor To Lowest
-   return EV_DoFloor(instance->line, lowerFloorToLowest);
+   return EV_DoFloor(instance->line, instance->tag, lowerFloorToLowest);
 }
 
 //
@@ -416,7 +417,7 @@ DEFINE_ACTION(EV_ActionTeleport)
    // case 126: (WR)
    // TELEPORT MonsterONLY.
    // jff 02/09/98 fix using up with wrong side crossing
-   return EV_Teleport(instance->tag, instance->side, instance->actor);
+   return EV_Teleport(instance->tag, instance->side, instance->actor, instance->byALineEffect);
 }
 
 //
@@ -436,13 +437,14 @@ DEFINE_ACTION(EV_ActionRaiseCeilingLowerFloor)
    // RaiseCeilingLowerFloor
    if(demo_compatibility)
    {
-      EV_DoCeiling(line, raiseToHighest);
-      EV_DoFloor(line, lowerFloorToLowest); // jff 02/12/98 doesn't work
-      line->special = 0;
+      EV_DoCeiling(line, instance->tag, raiseToHighest);
+      EV_DoFloor(line, instance->tag, lowerFloorToLowest); // jff 02/12/98 doesn't work
+      if(line) // just to be ultra safe
+         line->special = 0;
       return true;
    }
    else
-      return EV_DoCeiling(line, raiseToHighest);
+      return EV_DoCeiling(line, instance->tag, raiseToHighest);
 }
 
 //
@@ -457,8 +459,8 @@ DEFINE_ACTION(EV_ActionBOOMRaiseCeilingLowerFloor)
    // RaiseCeilingLowerFloor
    // 151 WR  EV_DoCeiling(raiseToHighest),
    //         EV_DoFloor(lowerFloortoLowest)
-   EV_DoCeiling(instance->line, raiseToHighest);
-   EV_DoFloor(instance->line, lowerFloorToLowest);
+   EV_DoCeiling(instance->line, instance->tag, raiseToHighest);
+   EV_DoFloor(instance->line, instance->tag, lowerFloorToLowest);
 
    return true;
 }
@@ -475,8 +477,8 @@ DEFINE_ACTION(EV_ActionBOOMRaiseCeilingOrLowerFloor)
    // case 166: (S1 - BOOM Extended)
    // case 186: (SR - BOOM Extended)
    // Raise ceiling, Lower floor
-   return (EV_DoCeiling(instance->line, raiseToHighest) ||
-           EV_DoFloor(instance->line, lowerFloorToLowest));
+   return (EV_DoCeiling(instance->line, instance->tag, raiseToHighest) ||
+           EV_DoFloor(instance->line, instance->tag, lowerFloorToLowest));
 }
 
 //
@@ -489,14 +491,14 @@ DEFINE_ACTION(EV_ActionCeilingLowerAndCrush)
    // case 167: (S1 - BOOM Extended)
    // case 187: (SR - BOOM Extended)
    // Ceiling Crush
-   return EV_DoCeiling(instance->line, lowerAndCrush);
+   return EV_DoCeiling(instance->line, instance->tag, lowerAndCrush);
 }
 
 // ioanch 20160427: provide an inline helper for checking zombies
 inline static bool EV_isZombiePlayer(const Mobj *thing)
 {
    return thing && thing->player && thing->player->health <= 0 &&
-      !comp[comp_zombie];
+      !getComp(comp_zombie);
 }
 
 //
@@ -588,7 +590,7 @@ DEFINE_ACTION(EV_ActionPlatPerpetualRaise)
    // case 162: (S1 - BOOM Extended)
    // case 181: (SR - BOOM Extended)
    // Perpetual Platform Raise
-   return EV_DoPlat(instance->line, perpetualRaise, 0);
+   return EV_DoPlat(instance->line, instance->tag, perpetualRaise, 0);
 }
 
 //
@@ -614,7 +616,7 @@ DEFINE_ACTION(EV_ActionFloorRaiseCrush)
    // case 65: (SR)
    // case 94: (WR)
    // Raise Floor Crush
-   return EV_DoFloor(instance->line, raiseFloorCrush);
+   return EV_DoFloor(instance->line, instance->tag, raiseFloorCrush);
 }
 
 //
@@ -640,7 +642,7 @@ DEFINE_ACTION(EV_ActionRaiseFloor24)
    // case 161: (S1 - BOOM Extended)
    // case 180: (SR - BOOM Extended)
    // Raise Floor 24
-   return EV_DoFloor(instance->line, raiseFloor24);
+   return EV_DoFloor(instance->line, instance->tag, raiseFloor24);
 }
 
 //
@@ -653,7 +655,7 @@ DEFINE_ACTION(EV_ActionRaiseFloor24Change)
    // case 160: (S1 - BOOM Extended)
    // case 179: (SR - BOOM Extended)
    // Raise Floor 24 And Change
-   return EV_DoFloor(instance->line, raiseFloor24AndChange);
+   return EV_DoFloor(instance->line, instance->tag, raiseFloor24AndChange);
 }
 
 //
@@ -666,7 +668,7 @@ DEFINE_ACTION(EV_ActionBuildStairsTurbo16)
    // case 257: (WR - BOOM Extended)
    // case 259: (SR - BOOM Extended)
    // Build Stairs Turbo 16
-   return EV_BuildStairs(instance->line, turbo16);
+   return EV_BuildStairs(instance->tag, turbo16);
 }
 
 //
@@ -696,7 +698,7 @@ DEFINE_ACTION(EV_ActionDoorBlazeRaise)
    // case 111: (S1)
    // case 114: (SR)
    // Blazing Door Raise (faster than TURBO!)
-   return EV_DoDoor(instance->line, blazeRaise);
+   return EV_DoDoor(instance->tag, blazeRaise);
 }
 
 //
@@ -709,7 +711,7 @@ DEFINE_ACTION(EV_ActionDoorBlazeOpen)
    // case 112: (S1)
    // case 115: (SR)
    // Blazing Door Open (faster than TURBO!)
-   return EV_DoDoor(instance->line, blazeOpen);
+   return EV_DoDoor(instance->tag, blazeOpen);
 }
 
 //
@@ -722,7 +724,7 @@ DEFINE_ACTION(EV_ActionDoorBlazeClose)
    // case 113: (S1)
    // case 116: (SR)
    // Blazing Door Close (faster than TURBO!)
-   return EV_DoDoor(instance->line, blazeClose);
+   return EV_DoDoor(instance->tag, blazeClose);
 }
 
 //
@@ -735,7 +737,7 @@ DEFINE_ACTION(EV_ActionFloorRaiseToNearest)
    // case 119: (W1)
    // case 128: (WR)
    // Raise floor to nearest surr. floor
-   return EV_DoFloor(instance->line, raiseFloorToNearest);
+   return EV_DoFloor(instance->line, instance->tag, raiseFloorToNearest);
 }
 
 //
@@ -748,7 +750,7 @@ DEFINE_ACTION(EV_ActionPlatBlazeDWUS)
    // case 122: (S1)
    // case 123: (SR)
    // Blazing PlatDownWaitUpStay
-   return EV_DoPlat(instance->line, blazeDWUS, 0);
+   return EV_DoPlat(instance->line, instance->tag, blazeDWUS, 0);
 }
 
 //
@@ -840,7 +842,7 @@ DEFINE_ACTION(EV_ActionRaiseFloorTurbo)
    // case 131: (S1)
    // case 132: (SR)
    // Raise Floor Turbo
-   return EV_DoFloor(instance->line, raiseFloorTurbo);
+   return EV_DoFloor(instance->line, instance->tag, raiseFloorTurbo);
 }
 
 //
@@ -853,7 +855,7 @@ DEFINE_ACTION(EV_ActionSilentCrushAndRaise)
    // case 165: (S1 - BOOM Extended)
    // case 185: (SR - BOOM Extended)
    // Silent Ceiling Crush & Raise
-   return EV_DoCeiling(instance->line, silentCrushAndRaise);
+   return EV_DoCeiling(instance->line, instance->tag, silentCrushAndRaise);
 }
 
 //
@@ -866,7 +868,7 @@ DEFINE_ACTION(EV_ActionRaiseFloor512)
    // case 147: (WR - BOOM Extended)
    // case 178: (SR - BOOM Extended)
    // Raise Floor 512
-   return EV_DoFloor(instance->line, raiseFloor512);
+   return EV_DoFloor(instance->line, instance->tag, raiseFloor512);
 }
 
 //
@@ -879,7 +881,7 @@ DEFINE_ACTION(EV_ActionPlatRaise24Change)
    // case 143: (W1 - BOOM Extended)
    // case 148: (WR - BOOM Extended)
    // Raise Floor 24 and change
-   return EV_DoPlat(instance->line, raiseAndChange, 24);
+   return EV_DoPlat(instance->line, instance->tag, raiseAndChange, 24);
 }
 
 //
@@ -892,7 +894,7 @@ DEFINE_ACTION(EV_ActionPlatRaise32Change)
    // case 144: (W1 - BOOM Extended)
    // case 149: (WR - BOOM Extended)
    // Raise Floor 32 and change
-   return EV_DoPlat(instance->line, raiseAndChange, 32);
+   return EV_DoPlat(instance->line, instance->tag, raiseAndChange, 32);
 }
 
 //
@@ -905,7 +907,7 @@ DEFINE_ACTION(EV_ActionCeilingLowerToFloor)
    // case 145: (W1 - BOOM Extended)
    // case 152: (WR - BOOM Extended)
    // Lower Ceiling to Floor
-   return EV_DoCeiling(instance->line, lowerToFloor);
+   return EV_DoCeiling(instance->line, instance->tag, lowerToFloor);
 }
 
 //
@@ -918,7 +920,7 @@ DEFINE_ACTION(EV_ActionDoDonut)
    // case 155: (WR - BOOM Extended)
    // case 191: (SR - BOOM Extended)
    // Lower Pillar, Raise Donut
-   return EV_DoParamDonut(instance->line, instance->line->args[0], false, 
+   return EV_DoParamDonut(instance->line, instance->tag, false, 
                           FLOORSPEED / 2, FLOORSPEED / 2);
 }
 
@@ -932,7 +934,7 @@ DEFINE_ACTION(EV_ActionCeilingLowerToLowest)
    // case 203: (S1 - BOOM Extended)
    // case 205: (SR - BOOM Extended)
    // Lower ceiling to lowest surrounding ceiling
-   return EV_DoCeiling(instance->line, lowerToLowest);
+   return EV_DoCeiling(instance->line, instance->tag, lowerToLowest);
 }
 
 //
@@ -945,7 +947,7 @@ DEFINE_ACTION(EV_ActionCeilingLowerToMaxFloor)
    // case 204: (S1 - BOOM Extended)
    // case 206: (SR - BOOM Extended)
    // Lower ceiling to highest surrounding floor
-   return EV_DoCeiling(instance->line, lowerToMaxFloor);
+   return EV_DoCeiling(instance->line, instance->tag, lowerToMaxFloor);
 }
 
 //
@@ -965,9 +967,10 @@ DEFINE_ACTION(EV_ActionSilentTeleport)
    // case 268: (W1 - BOOM Extended)
    // case 269: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent
-   teleparms_t parms;
+   INIT_STRUCT(teleparms_t, parms);
    parms.teleangle = teleangle_relative_boom;
    parms.keepheight = true;
+   parms.alwaysfrag = instance->byALineEffect;
    return EV_SilentTeleport(line, instance->tag, side, thing, parms);
 }
 
@@ -1016,7 +1019,7 @@ DEFINE_ACTION(EV_ActionFloorLowerToNearest)
    // case 221: (S1 - BOOM Extended)
    // case 222: (SR - BOOM Extended)
    // Lower floor to next lower neighbor
-   return EV_DoFloor(instance->line, lowerFloorToNearest);
+   return EV_DoFloor(instance->line, instance->tag, lowerFloorToNearest);
 }
 
 //
@@ -1029,8 +1032,8 @@ DEFINE_ACTION(EV_ActionElevatorUp)
    // case 229: (S1 - BOOM Extended)
    // case 230: (SR - BOOM Extended)
    // Raise elevator next floor
-   return EV_DoElevator(instance->line, instance->tag, elevateUp,
-                        ELEVATORSPEED, 0, false);
+   return EV_DoElevator(instance->line, instance->actor, instance->poly,
+                        instance->tag, elevateUp, ELEVATORSPEED, 0, false);
 }
 
 //
@@ -1043,8 +1046,8 @@ DEFINE_ACTION(EV_ActionElevatorDown)
    // case 233: (S1 - BOOM Extended)
    // case 234: (SR - BOOM Extended)
    // Lower elevator next floor
-   return EV_DoElevator(instance->line, instance->tag, elevateDown,
-                        ELEVATORSPEED, 0, false);
+   return EV_DoElevator(instance->line, instance->actor, instance->poly,
+                        instance->tag, elevateDown, ELEVATORSPEED, 0, false);
 
 }
 
@@ -1058,8 +1061,8 @@ DEFINE_ACTION(EV_ActionElevatorCurrent)
    // case 237: (S1 - BOOM Extended)
    // case 238: (SR - BOOM Extended)
    // Elevator to current floor
-   return EV_DoElevator(instance->line, instance->tag, elevateCurrent,
-                        ELEVATORSPEED, 0, false);
+   return EV_DoElevator(instance->line, instance->actor, instance->poly,
+                        instance->tag, elevateCurrent, ELEVATORSPEED, 0, false);
 }
 
 //
@@ -1079,7 +1082,7 @@ DEFINE_ACTION(EV_ActionSilentLineTeleport)
    // case 267: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent line-line
 
-   return EV_SilentLineTeleport(line, instance->tag, side, thing, false);
+   return EV_SilentLineTeleport(line, instance->tag, side, thing, false, instance->byALineEffect);
 }
 
 //
@@ -1097,7 +1100,7 @@ DEFINE_ACTION(EV_ActionSilentLineTeleportReverse)
    // case 264: (W1 - BOOM Extended)
    // case 265: (WR - BOOM Extended)
    // jff 4/14/98 add monster-only silent line-line reversed
-   return EV_SilentLineTeleport(line, instance->tag, side, thing, true);
+   return EV_SilentLineTeleport(line, instance->tag, side, thing, true, instance->byALineEffect);
 }
 
 //
@@ -1108,7 +1111,7 @@ DEFINE_ACTION(EV_ActionPlatToggleUpDown)
    // jff 3/14/98 create instant toggle floor type
    // case 211: (SR - BOOM Extended)
    // case 212: (WR - BOOM Extended)
-   return EV_DoPlat(instance->line, toggleUpDn, 0);
+   return EV_DoPlat(instance->line, instance->tag, toggleUpDn, 0);
 }
 
 //
@@ -1159,8 +1162,12 @@ DEFINE_ACTION(EV_ActionDoLockedDoor)
    // case 137: (S1) BlzOpenDoor YELLOW
 
    int lockID = EV_LockDefIDForSpecial(instance->special);
-   if(EV_lockCheck(instance->actor, lockID, true))
-      return EV_DoDoor(instance->line, blazeOpen);
+   // Simulate MBF's undefined behavior which allows A_LineEffect to open locked doors most of the
+   // time.
+   // NOTE: do not do the same for EV_VerticalDoor, as that only goes for manual doors. If we get
+   // incompatibilities with wild wads, we can add it later.
+   if(instance->byALineEffect || EV_lockCheck(instance->actor, lockID, true))
+      return EV_DoDoor(instance->tag, blazeOpen);
    return 0;
 }
 
@@ -1181,7 +1188,7 @@ DEFINE_ACTION(EV_ActionDoLockedDoor)
 //
 DEFINE_ACTION(EV_ActionLowerFloorTurboA)
 {
-   return EV_DoFloor(instance->line, turboLowerA);
+   return EV_DoFloor(instance->line, instance->tag, turboLowerA);
 }
 
 //
@@ -1263,19 +1270,19 @@ DEFINE_ACTION(EV_ActionBoomGen)
    switch(instance->gentype)
    {
    case GenTypeFloor:
-      return EV_DoGenFloor(instance->line);
+      return EV_DoGenFloor(instance->line, instance->special, instance->tag);
    case GenTypeCeiling:
-      return EV_DoGenCeiling(instance->line);
+      return EV_DoGenCeiling(instance->line, instance->special, instance->tag);
    case GenTypeDoor:
-      return EV_DoGenDoor(instance->line, instance->actor);
+      return EV_DoGenDoor(instance->line, instance->actor, instance->special, instance->tag);
    case GenTypeLocked:
-      return EV_DoGenLockedDoor(instance->line, instance->actor);
+      return EV_DoGenLockedDoor(instance->line, instance->actor, instance->special, instance->tag);
    case GenTypeLift:
-      return EV_DoGenLift(instance->line);
+      return EV_DoGenLift(instance->line, instance->special, instance->tag);
    case GenTypeStairs:
-      return EV_DoGenStairs(instance->line);
+      return EV_DoGenStairs(instance->line, instance->special, instance->tag);
    case GenTypeCrusher:
-      return EV_DoGenCrusher(instance->line);
+      return EV_DoGenCrusher(instance->line, instance->special, instance->tag);
    default:
       return false;
    }
@@ -2953,7 +2960,7 @@ DEFINE_ACTION(EV_ActionACSExecuteWithResult)
    Mobj    *thing = instance->actor;
    line_t  *line  = instance->line;
    int      side  = instance->side;
-   polyobj_s *po = instance->poly;
+   polyobj_t *po = instance->poly;
    int      num   = instance->args[0];
    int      argc  = NUMLINEARGS - 1;
    uint32_t argv[NUMLINEARGS - 1];
@@ -3359,7 +3366,7 @@ DEFINE_ACTION(EV_ActionThrustThingZ)
 DEFINE_ACTION(EV_ActionDamageThing)
 {
    return EV_DamageThing(instance->actor, 
-      instance->args[0] == 0 ? 10000 : instance->args[0], instance->args[1], 0);
+      instance->args[0] == 0 ? GOD_BREACH_DAMAGE : instance->args[0], instance->args[1], 0);
 }
 
 //
@@ -3378,13 +3385,13 @@ DEFINE_ACTION(EV_ActionDamageThingEx)
 //
 // EV_ActionThingDestroy
 //
-// Implements Thing_Destroy(tid, reserved, sectortag)
+// Implements Thing_Destroy(tid, flags, sectortag)
 // * ExtraData: 428
 // * Hexen:     133
 //
 DEFINE_ACTION(EV_ActionThingDestroy)
 {
-   return EV_ThingDestroy(instance->args[0], instance->args[2]);
+   return EV_ThingDestroy(instance->args[0], instance->args[1], instance->args[2]);
 }
 
 //
@@ -3764,7 +3771,7 @@ DEFINE_ACTION(EV_ActionParamGenCrusher)
 DEFINE_ACTION(EV_ActionParamTeleport)
 {
    return EV_ParamTeleport(instance->args[0], instance->args[1], 
-                           instance->side,    instance->actor);
+                           instance->side,    instance->actor, instance->byALineEffect);
 }
 
 //
@@ -3776,7 +3783,7 @@ DEFINE_ACTION(EV_ActionParamTeleport)
 //
 DEFINE_ACTION(EV_ActionParamTeleportNoFog)
 {
-   teleparms_t parms;
+   INIT_STRUCT(teleparms_t, parms);
    switch(instance->args[1])
    {
    case 0: // hexen
@@ -3793,6 +3800,7 @@ DEFINE_ACTION(EV_ActionParamTeleportNoFog)
       break;
    }
    parms.keepheight = instance->args[3] != 0;
+   parms.alwaysfrag = instance->byALineEffect;
    return EV_ParamSilentTeleport(instance->args[0], instance->line,
                                  instance->args[2], instance->side,
                                  instance->actor, parms);
@@ -3811,7 +3819,7 @@ DEFINE_ACTION(EV_ActionParamTeleportLine)
    // do it.
    return EV_SilentLineTeleport(instance->line, instance->args[1],
                                 instance->side, instance->actor,
-                                instance->args[2] != 0);
+                                instance->args[2] != 0, instance->byALineEffect);
 }
 
 //
@@ -3959,7 +3967,8 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingLowerByValue)
    // If it's a contemporary level, try to make it as the user expects it to
    // work: Boom elevator moved by value
 
-   return EV_DoElevator(instance->line, instance->tag, elevateByValue,
+   return EV_DoElevator(instance->line, instance->actor, instance->poly,
+                        instance->tag, elevateByValue,
                         instance->args[1] * (FRACUNIT / 8),
                        -instance->args[2] * FRACUNIT, true);
 
@@ -4002,7 +4011,8 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingRaiseByValue)
    // If it's a contemporary level, try to make it as the user expects it to
    // work: Boom elevator moved by value
 
-   return EV_DoElevator(instance->line, instance->tag, elevateByValue,
+   return EV_DoElevator(instance->line, instance->actor, instance->poly,
+                        instance->tag, elevateByValue,
                         instance->args[1] * (FRACUNIT / 8),
                         instance->args[2] * FRACUNIT, true);
 }
@@ -4015,7 +4025,8 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingRaiseByValue)
 //
 DEFINE_ACTION(EV_ActionParamElevatorUp)
 {
-   return EV_DoElevator(instance->line, instance->tag, elevateUp,
+   return EV_DoElevator(instance->line, instance->actor, instance->poly,
+                        instance->tag, elevateUp,
                         instance->args[1] * (FRACUNIT / 8), 0, true);
 }
 
@@ -4027,7 +4038,8 @@ DEFINE_ACTION(EV_ActionParamElevatorUp)
 //
 DEFINE_ACTION(EV_ActionParamElevatorDown)
 {
-   return EV_DoElevator(instance->line, instance->tag, elevateDown,
+   return EV_DoElevator(instance->line, instance->actor, instance->poly,
+                        instance->tag, elevateDown,
                         instance->args[1] * (FRACUNIT / 8), 0, true);
 }
 
@@ -4039,7 +4051,8 @@ DEFINE_ACTION(EV_ActionParamElevatorDown)
 //
 DEFINE_ACTION(EV_ActionParamElevatorCurrent)
 {
-   return EV_DoElevator(instance->line, instance->tag, elevateCurrent,
+   return EV_DoElevator(instance->line, instance->actor, instance->poly,
+                        instance->tag, elevateCurrent,
                         instance->args[1] * (FRACUNIT / 8), 0, true);
 }
 
@@ -4056,7 +4069,7 @@ DEFINE_ACTION(EV_ActionChangeSkill)
    if(instance->args[0] < sk_baby || instance->args[0] > sk_nightmare)
       return 0;
 
-   gameskill = (skill_t)instance->line->args[0];
+   gameskill = static_cast<skill_t>(instance->args[0]);
    G_SetFastParms(gameskill >= sk_nightmare || fastparm);
    return 1;
 }
@@ -4246,7 +4259,7 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingLowerRaise)
 //
 DEFINE_ACTION(EV_ActionHealThing)
 {
-  return EV_HealThing(instance->actor, instance->args[0], instance->args[1]);
+   return EV_HealThing(instance->actor, instance->args[0], instance->args[1]);
 }
 
 //
@@ -4302,7 +4315,7 @@ DEFINE_ACTION(EV_ActionACSExecuteAlways)
    Mobj    *thing = instance->actor;
    line_t  *line  = instance->line;
    int      side  = instance->side;
-   polyobj_s *po = instance->poly;
+   polyobj_t *po = instance->poly;
    int      num   = instance->args[0];
    int      map   = instance->args[1];
    int      argc  = NUMLINEARGS - 2;
@@ -4372,7 +4385,8 @@ DEFINE_ACTION(EV_ActionParamPlatGeneric)
          return 0;
    }
 
-   return EV_DoGenLiftByParameters(!instance->tag, *instance->line, speed, delay, target, height);
+   return EV_DoGenLiftByParameters(!instance->tag, instance->line, instance->tag, speed, delay,
+                                   target, height);
 }
 
 //
@@ -4438,6 +4452,18 @@ DEFINE_ACTION(EV_ActionParamSectorChangeSound)
 //
 
 //
+// Implements Scroll_Floor(tag, amount)
+//
+// * ACS: 219
+//
+DEFINE_ACTION(EV_ActionACSSetFriction)
+{
+   EV_SetFriction(instance->args[0], instance->args[1]);
+
+   return 1;
+}
+
+//
 // Implements Scroll_Floor(tag, x-move, y-move, type)
 //
 // * ACS: 223
@@ -4446,7 +4472,7 @@ DEFINE_ACTION(EV_ActionACSScrollFloor)
 {
    // Don't use INIT_STRUCT or memset because of line_t PointThinker vtable
    // warnings. Just zero-init it.
-   line_t ln = { 0 };
+   line_t ln = {};
 
    // convert (tag, x-move, y-move, type) to (tag, scrollbits, type, x-move, y-move)
    ln.args[0] = instance->args[0];
@@ -4468,7 +4494,7 @@ DEFINE_ACTION(EV_ActionACSScrollFloor)
 DEFINE_ACTION(EV_ActionACSScrollCeiling)
 {
    // See other comment in this file on this
-   line_t ln = { 0 };
+   line_t ln = {};
 
    // convert (tag, x-move, y-move, unused) to (tag, scrollbits, unused, x-move, y-move)
    ln.args[0] = instance->args[0];

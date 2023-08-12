@@ -34,12 +34,13 @@
 // haleyjd: uhh, no. Include it in the files, not in another header.
 
 // Identify language to use, software localization.
-typedef enum {
-  english,
-  french,
-  german,
-  unknown
-} Language_t;
+enum Language_t
+{
+   english,
+   french,
+   german,
+   unknown
+};
 
 //
 // For resize of screen, at start of game.
@@ -83,16 +84,17 @@ typedef enum {
 // The current state of the game: whether we are playing, gazing
 // at the intermission screen, the game final animation, or a demo.
 
-typedef enum {
-  GS_NOSTATE = -1, // haleyjd: for C++ conversion, initial value of oldgamestate
-  GS_LEVEL,
-  GS_INTERMISSION,
-  GS_FINALE,
-  GS_DEMOSCREEN,
-  GS_CONSOLE,
-  GS_STARTUP, // haleyjd: value given to gamestate during startup to avoid thinking it's GS_LEVEL
-  GS_LOADING  // haleyjd: value given to gamestate during level load
-} gamestate_t;
+enum gamestate_t
+{
+   GS_NOSTATE = -1, // haleyjd: for C++ conversion, initial value of oldgamestate
+   GS_LEVEL,
+   GS_INTERMISSION,
+   GS_FINALE,
+   GS_DEMOSCREEN,
+   GS_CONSOLE,
+   GS_STARTUP, // haleyjd: value given to gamestate during startup to avoid thinking it's GS_LEVEL
+   GS_LOADING  // haleyjd: value given to gamestate during level load
+};
 
 //
 // Difficulty/skill settings/filters.
@@ -120,6 +122,12 @@ typedef enum {
 #define MTF_PSX_NIGHTMARE (32|128)
 #define MTF_PSX_SPECTRE   (32|64|128)
 
+// Strife flags
+#define MTF_STRIFE_STAND       32   // WARNING: this is already in MTF_EX_STAND
+#define MTF_STRIFE_FRIEND      64
+#define MTF_STRIFE_TRANSLUCENT 256
+#define MTF_STRIFE_MVCIS       512
+
 //
 // ioanch 20151218: mapthing_t::extOptions (extended) flags: needed by UDMF
 //
@@ -132,6 +140,9 @@ enum
    // will appear on skill 5 if MTF_HARD is not set
    // will not appear on skill 5 if MTF_HARD is set
    MTF_EX_NIGHTMARE_TOGGLE = 2,
+
+   // Strife standing monster
+   MTF_EX_STAND = 4,
 };
 
 // sf: sector flags, not me =)
@@ -143,88 +154,91 @@ enum
 // a macro to find out whether to make moving sounds in a sector
 #define silentmove(s) ((s)->flags & SECF_KILLMOVESOUND)
 
-typedef enum 
+enum skill_t : int
 {
-  sk_none=-1, //jff 3/24/98 create unpicked skill setting
-  sk_baby=0,
-  sk_easy,
-  sk_medium,
-  sk_hard,
-  sk_nightmare
-} skill_t;
+   sk_none = -1, //jff 3/24/98 create unpicked skill setting
+   sk_baby = 0,
+   sk_easy,
+   sk_medium,
+   sk_hard,
+   sk_nightmare
+};
 
 //
 // Key cards.
 //
 
-typedef enum {
-  it_bluecard,
-  it_yellowcard,
-  it_redcard,
-  it_blueskull,
-  it_yellowskull,
-  it_redskull,
-  NUMCARDS
-} card_t;
+enum card_t
+{
+   it_bluecard,
+   it_yellowcard,
+   it_redcard,
+   it_blueskull,
+   it_yellowskull,
+   it_redskull,
+   NUMCARDS
+};
 
 // The defined weapons, including a marker
 // indicating user has not changed weapon.
-enum 
+enum
 {
-  wp_fist,
-  wp_pistol,
-  wp_shotgun,
-  wp_chaingun,
-  wp_missile,
-  wp_plasma,
-  wp_bfg,
-  wp_chainsaw,
-  wp_supershotgun,
+   wp_fist,
+   wp_pistol,
+   wp_shotgun,
+   wp_chaingun,
+   wp_missile,
+   wp_plasma,
+   wp_bfg,
+   wp_chainsaw,
+   wp_supershotgun,
 
-  NUMWEAPONS,
-  wp_nochange              // No pending weapon change.
+   NUMWEAPONS,
+   wp_nochange              // No pending weapon change.
 };
 
 typedef int weapontype_t;
 
 // Ammunition types defined.
-enum 
+enum
 {
-  am_clip,    // Pistol / chaingun ammo.
-  am_shell,   // Shotgun / double barreled shotgun.
-  am_cell,    // Plasma rifle, BFG.
-  am_misl,    // Missile launcher.
-  
-  NUMAMMO,
-  am_noammo   // Unlimited for chainsaw / fist.
+   am_clip,    // Pistol / chaingun ammo.
+   am_shell,   // Shotgun / double barreled shotgun.
+   am_cell,    // Plasma rifle, BFG.
+   am_misl,    // Missile launcher.
+
+   NUMAMMO,
+   am_noammo   // Unlimited for chainsaw / fist.
 };
 typedef int ammotype_t;
 
 // Power up artifacts.
-typedef enum {
-  pw_invulnerability,
-  pw_strength,
-  pw_invisibility,
-  pw_ironfeet,
-  pw_allmap,
-  pw_infrared,
-  pw_totalinvis,  // haleyjd: total invisibility
-  pw_ghost,       // haleyjd: heretic ghost
-  pw_silencer,    // haleyjd: silencer
-  pw_flight,      // haleyjd: flight
-  pw_torch,       // haleyjd: infrared w/flicker
-  pw_weaponlevel2, //  MaxW: powered-up weapons (tome of power)
-  NUMPOWERS
-} powertype_t;
+enum powertype_t
+{
+   pw_invulnerability,
+   pw_strength,
+   pw_invisibility,
+   pw_ironfeet,
+   pw_allmap,
+   pw_infrared,
+   pw_totalinvis,  // haleyjd: total invisibility
+   pw_ghost,       // haleyjd: heretic ghost
+   pw_silencer,    // haleyjd: silencer
+   pw_flight,      // haleyjd: flight
+   pw_torch,       // haleyjd: infrared w/flicker
+   pw_weaponlevel2, //  MaxW: powered-up weapons (tome of power)
+   NUMPOWERS
+};
 
 // Power up durations (how many seconds till expiration).
-typedef enum {
-  INVULNTICS  = (30*TICRATE),
-  INVISTICS   = (60*TICRATE),
-  INFRATICS   = (120*TICRATE),
-  IRONTICS    = (60*TICRATE),
-  FLIGHTTICS  = (60*TICRATE),  // flight tics, for Heretic
-} powerduration_t;
+enum powerduration_e
+{
+   INVULNTICS  = ( 30  * TICRATE),
+   INVISTICS   = ( 60  * TICRATE),
+   INFRATICS   = ( 120 * TICRATE),
+   IRONTICS    = ( 60  * TICRATE),
+   FLIGHTTICS  = ( 60  * TICRATE),  // flight tics, for Heretic
+};
 
 // DOOM keyboard definition.
 // This is the stuff configured by Setup.Exe.
@@ -293,6 +307,9 @@ enum keycode_e
    KEYD_MOUSE3,
    KEYD_MOUSE4,
    KEYD_MOUSE5,
+   KEYD_MOUSE6,
+   KEYD_MOUSE7,
+   KEYD_MOUSE8,
    KEYD_MWHEELUP,
    KEYD_MWHEELDOWN,
 
@@ -317,30 +334,40 @@ enum keycode_e
    KEYD_PAUSE, // 0xff
 
    // virtual key codes for gamepad buttons
-   KEYD_JOY01          = 0x100,
-   KEYD_JOY02,
-   KEYD_JOY03,
-   KEYD_JOY04,
-   KEYD_JOY05,
-   KEYD_JOY06,
-   KEYD_JOY07,
-   KEYD_JOY08,
-   KEYD_JOY09,
-   KEYD_JOY10,
-   KEYD_JOY11,
-   KEYD_JOY12,
-   KEYD_JOY13,
-   KEYD_JOY14,
-   KEYD_JOY15,
-   KEYD_JOY16,
+   KEYD_JOY_BASE = 0x100,
+   KEYD_JOY_A = KEYD_JOY_BASE,
+   KEYD_JOY_B,
+   KEYD_JOY_X,
+   KEYD_JOY_Y,
+   KEYD_JOY_BACK,
+   KEYD_JOY_GUIDE,
+   KEYD_JOY_START,
+   KEYD_JOY_STICK_LEFT,
+   KEYD_JOY_STICK_RIGHT,
+   KEYD_JOY_SHOULDER_LEFT,
+   KEYD_JOY_SHOULDER_RIGHT,
+   KEYD_JOY_DPAD_UP,
+   KEYD_JOY_DPAD_DOWN,
+   KEYD_JOY_DPAD_LEFT,
+   KEYD_JOY_DPAD_RIGHT,
+   KEYD_JOY_MISC1, // Xbox Series X share, PS5 microphone, Switch Pro capture button
+   KEYD_JOY_MISC2,
+   KEYD_JOY_MISC3,
+   KEYD_JOY_MISC4,
+   KEYD_JOY_MISC5,
+   KEYD_JOY_TOUCHPAD,
+   KEYD_JOY_21,
+   KEYD_JOY_22,
+   KEYD_JOY_23,
 
    // axis activation events
-   KEYD_AXISON01,
-   KEYD_AXISON02,
-   KEYD_AXISON03,
-   KEYD_AXISON04,
-   KEYD_AXISON05,
-   KEYD_AXISON06,
+   KEYD_AXIS_BASE,
+   KEYD_AXIS_LEFT_X = KEYD_AXIS_BASE,
+   KEYD_AXIS_LEFT_Y,
+   KEYD_AXIS_RIGHT_X,
+   KEYD_AXIS_RIGHT_Y,
+   KEYD_AXIS_TRIGGER_LEFT,
+   KEYD_AXIS_TRIGGER_RIGHT,
    KEYD_AXISON07,
    KEYD_AXISON08,
 
@@ -351,19 +378,20 @@ enum keycode_e
 // Defines Setup Screen groups that config variables appear in.
 // Used when resetting the defaults for every item in a Setup group.
 
-typedef enum {
-  ss_none,
-  ss_keys,
-  ss_weap,
-  ss_stat,
-  ss_auto,
-  ss_enem,
-  ss_mess,
-  ss_chat,
-  ss_gen,       // killough 10/98
-  ss_comp,      // killough 10/98
-  ss_max
-} ss_types;
+enum ss_types
+{
+   ss_none,
+   ss_keys,
+   ss_weap,
+   ss_stat,
+   ss_auto,
+   ss_enem,
+   ss_mess,
+   ss_chat,
+   ss_gen,       // killough 10/98
+   ss_comp,      // killough 10/98
+   ss_max
+};
 
 // phares 3/20/98:
 //
@@ -388,12 +416,6 @@ typedef enum {
 //
 
 #define isnumchar(c) ((c) >= '0' && (c) <= '9')
-#define isExMy(s)                                       \
-   ((s)[0] == 'E' && (s)[2] == 'M' &&                   \
-    isnumchar((s)[1]) && isnumchar((s)[3]) && !(s)[4])
-#define isMAPxy(s)                                      \
-   ((s)[0] == 'M' && (s)[1] == 'A' && (s)[2] == 'P' &&  \
-    isnumchar((s)[3]) && isnumchar((s)[4]) && !(s)[5])
 
 #define HTIC_GHOST_TRANS 26624
 

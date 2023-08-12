@@ -36,7 +36,7 @@
 #ifdef NEED_EDF_DEFINITIONS
 
 // Game properties section name
-#define EDF_SEC_GAMEPROPS "gameproperties"
+constexpr const char EDF_SEC_GAMEPROPS[] = "gameproperties";
 
 extern cfg_opt_t edf_game_opts[];
 

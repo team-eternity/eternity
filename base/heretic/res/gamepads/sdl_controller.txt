@@ -1,0 +1,62 @@
+// Menu: Select/Start
+bind joy5 menu_previous
+bind joy7 menu_toggle
+
+// Menu: X/O/Square/Triangle
+bind joy1 menu_confirm
+bind joy2 menu_previous
+
+// Menu: Up/Down/Left/Right
+bind joy12 menu_up
+bind joy13 menu_down
+bind joy14 menu_left
+bind joy15 menu_right
+
+// Menu: LB/RB
+bind joy10 menu_pageup
+bind joy11 menu_pagedown
+
+
+// Map: UDLR
+bind joy12 map_up
+bind joy13 map_down
+bind joy14 map_left
+bind joy15 map_right
+
+// Map: LB/RB
+bind joy10 map_zoomout
+bind joy11 map_zoomin
+
+
+// Gameplay: X/O/Square/Triangle
+bind joy1 use
+bind joy2 flip
+bind joy3 jump
+bind joy4 map_toggle
+
+// Gameplay: LT/RT
+bind axis5 run
+bind axis6 attack
+
+// Gameplay: LB/RB
+bind joy10 weapondown
+bind joy11 weaponup
+
+// Gameplay: Up/Down/Left/Right
+bind joy12 flyup
+bind joy13 flydown
+bind joy14 flycenter
+//bind joy15
+
+// Gameplay: L3/R3
+//bind joy8
+bind joy9 center
+
+// Gameplay: Axis
+g_axisaction1 strafe
+g_axisaction2 move
+g_axisaction3 turn
+g_axisaction4 look
+
+g_axisorientation2 reversed
+g_axisorientation4 reversed

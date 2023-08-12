@@ -31,12 +31,14 @@
 #include "d_mod.h"
 #include "e_inventory.h"
 #include "ev_specials.h"
+#include "m_cheat.h"
 #include "metaapi.h"
 #include "p_inter.h"
 #include "p_mobj.h"
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_saveg.h"
+#include "p_saveid.h"
 #include "p_setup.h"
 #include "p_things.h"
 #include "a_small.h"
@@ -60,7 +62,7 @@ int EV_ThingProjectile(const int *args, bool gravity)
    fixed_t speed;
    fixed_t vspeed;
    mobjtype_t moType;
-   Mobj *mobj = NULL, *newMobj;
+   Mobj *mobj = nullptr, *newMobj;
    mobjinfo_t *mi;
    bool success = false;
 
@@ -82,7 +84,7 @@ int EV_ThingProjectile(const int *args, bool gravity)
    speed     = (fixed_t)args[3] << 13;
    vspeed    = (fixed_t)args[4] << 13;
 
-   while((mobj = P_FindMobjFromTID(tid, mobj, NULL)))
+   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
    {
       newMobj = P_SpawnMobj(mobj->x, mobj->y, mobj->z, moType);
       if(newMobj->info->seesound)
@@ -115,7 +117,7 @@ int EV_ThingSpawn(const int *args, bool fog)
 {
    int tid, newtid;
    angle_t angle;
-   Mobj *mobj = NULL, *newMobj, *fogMobj;
+   Mobj *mobj = nullptr, *newMobj, *fogMobj;
    mobjtype_t moType;
    mobjinfo_t *mi;
    bool success = false;
@@ -137,7 +139,7 @@ int EV_ThingSpawn(const int *args, bool fog)
    angle = (angle_t)args[2] << 24;
    newtid = args[3];
 
-   while((mobj = P_FindMobjFromTID(tid, mobj, NULL)))
+   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
    {
       z = mobj->z;
 
@@ -176,10 +178,10 @@ int EV_ThingSpawn(const int *args, bool fog)
 //
 int EV_ThingActivate(int tid)
 {
-   Mobj *mobj = NULL;
+   Mobj *mobj = nullptr;
    int success = 0;
 
-   while((mobj = P_FindMobjFromTID(tid, mobj, NULL)))
+   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
    {
       if((mobj->flags & MF_COUNTKILL) || (mobj->flags3 & MF3_KILLABLE))
       {
@@ -211,10 +213,10 @@ int EV_ThingActivate(int tid)
 //
 int EV_ThingDeactivate(int tid)
 {
-   Mobj *mobj = NULL;
+   Mobj *mobj = nullptr;
    int success = 0;
 
-   while((mobj = P_FindMobjFromTID(tid, mobj, NULL)))
+   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
    {
       if((mobj->flags & MF_COUNTKILL) || (mobj->flags3 & MF3_KILLABLE))
       {
@@ -280,7 +282,7 @@ int EV_ThingRaise(Mobj *actor, int tid)
       if(!P_ThingIsCorpse(mobj) || !P_CheckCorpseRaiseSpace(mobj))
          continue;
       // no raiser allowed, no friendliness transferred
-      P_RaiseCorpse(mobj, nullptr); 
+      P_RaiseCorpse(mobj, nullptr, sfx_slop); 
       success = 1;
    }
    return success;
@@ -381,19 +383,62 @@ int EV_DamageThing(Mobj *actor, int damage, int mod, int tid)
 //
 // EV_ThingDestroy
 //
-// Implements Thing_Destroy(tid, reserved, sectortag)
+// Implements Thing_Destroy(tid, flags, sectortag)
 //
-int EV_ThingDestroy(int tid, int sectortag)
+int EV_ThingDestroy(int tid, int flags, int sectortag)
 {
    Mobj *mobj = nullptr;
    int success = 0;
-   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
+   if(P_LevelIsVanillaHexen())   // Support vanilla Hexen behavior
    {
-      if(mobj->flags & MF_SHOOTABLE &&
-         (!sectortag || mobj->subsector->sector->tag == sectortag))
+      while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
       {
-         P_DamageMobj(mobj, nullptr, nullptr, 10000, MOD_UNKNOWN);
-         success = 1;
+         // Also support sector tags because it's harmless
+         if(mobj->flags & MF_SHOOTABLE && (!sectortag || mobj->subsector->sector->tag == sectortag))
+         {
+            P_DamageMobj(mobj, nullptr, nullptr, GOD_BREACH_DAMAGE, MOD_UNKNOWN);
+            success = 1;
+         }
+      }
+   }
+   else if(!tid && !sectortag)   // zero tagging: kill all monsters
+      success = M_NukeMonsters() > 0;
+   else
+   {
+      //
+      // Common function to kill iterated thing
+      //
+      auto killthing = [](Mobj *mobj, int sectortag, bool extreme)
+      {
+         if(!(mobj->flags & MF_SHOOTABLE) ||
+            (sectortag && mobj->subsector->sector->tag != sectortag))
+         {
+            return false;
+         }
+         int damage;
+         damage = extreme ? GOD_BREACH_DAMAGE : mobj->health;
+         P_DamageMobj(mobj, nullptr, nullptr, damage, MOD_UNKNOWN);
+         return true;
+      };
+
+      bool extreme = !!(flags & 1);
+      // Normal, GZDoom-compatible behavior
+      if(!tid)
+      {
+         for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+         {
+            if(!(mobj = thinker_cast<Mobj *>(th)) || !killthing(mobj, sectortag, extreme))
+               continue;
+            success = 1;
+         }
+      }
+      else
+      {
+         while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
+         {
+            if(killthing(mobj, sectortag, extreme))
+               success = 1;
+         }
       }
    }
    return success;
@@ -503,7 +548,7 @@ void LevelActionThinker::Think()
    }
 
    // Execute special
-   ev_action_t *action = EV_HexenActionForSpecial(special);
+   ev_action_t *action = EV_UDMFEternityActionForSpecial(special);
    if(action && EV_ActivateAction(action, args, thePlayer->mo))
       remove();
 }
@@ -517,7 +562,7 @@ void LevelActionThinker::serialize(SaveArchive &arc)
 {
    Super::serialize(arc);
    arc << special;
-   arc << mobjtype;
+   Archive_MobjType(arc, mobjtype);
    P_ArchiveArray(arc, args, NUMLINEARGS);
 }
 
@@ -546,7 +591,11 @@ void LevelActionThinker::Spawn(int pSpecial, int *pArgs, int pMobjType)
 void P_SpawnLevelActions()
 {
    for(auto action = LevelInfo.actions; action; action = action->next)
-      LevelActionThinker::Spawn(action->special, action->args, action->mobjtype);
+   {
+      // boss-only actions are handled in A_BossDeath
+      if(!(action->flags & levelaction_t::BOSS_ONLY))
+         LevelActionThinker::Spawn(action->special, action->args, action->mobjtype);
+   }
 }
 
 // EOF

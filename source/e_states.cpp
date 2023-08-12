@@ -53,25 +53,26 @@
 int NullStateNum;
 
 // Frame section keywords
-#define ITEM_FRAME_DECORATE  "decorate"
-#define ITEM_FRAME_SPRITE    "sprite"
-#define ITEM_FRAME_SPRFRAME  "spriteframe"
-#define ITEM_FRAME_FULLBRT   "fullbright"
-#define ITEM_FRAME_TICS      "tics"
-#define ITEM_FRAME_ACTION    "action"
-#define ITEM_FRAME_NEXTFRAME "nextframe"
-#define ITEM_FRAME_MISC1     "misc1"
-#define ITEM_FRAME_MISC2     "misc2"
-#define ITEM_FRAME_PTCLEVENT "particle_event"
-#define ITEM_FRAME_ARGS      "args"
-#define ITEM_FRAME_DEHNUM    "dehackednum"
-#define ITEM_FRAME_CMP       "cmp"
-#define ITEM_FRAME_SKILL5FAST "SKILL5FAST"
+constexpr const char ITEM_FRAME_DECORATE[]    = "decorate";
+constexpr const char ITEM_FRAME_SPRITE[]      = "sprite";
+constexpr const char ITEM_FRAME_SPRFRAME[]    = "spriteframe";
+constexpr const char ITEM_FRAME_FULLBRT[]     = "fullbright";
+constexpr const char ITEM_FRAME_TICS[]        = "tics";
+constexpr const char ITEM_FRAME_ACTION[]      = "action";
+constexpr const char ITEM_FRAME_NEXTFRAME[]   = "nextframe";
+constexpr const char ITEM_FRAME_MISC1[]       = "misc1";
+constexpr const char ITEM_FRAME_MISC2[]       = "misc2";
+constexpr const char ITEM_FRAME_PTCLEVENT[]   = "particle_event";
+constexpr const char ITEM_FRAME_ARGS[]        = "args";
+constexpr const char ITEM_FRAME_DEHNUM[]      = "dehackednum";
+constexpr const char ITEM_FRAME_CMP[]         = "cmp";
+constexpr const char ITEM_FRAME_SKILL5FAST[]  = "SKILL5FAST";
+constexpr const char ITEM_FRAME_INTERPOLATE[] = "INTERPOLATE";
 
-#define ITEM_DELTA_NAME      "name"
+constexpr const char ITEM_DELTA_NAME[]        = "name";
 
-#define ITEM_FRAMEBLOCK_FDS    "firststate"
-#define ITEM_FRAMEBLOCK_STATES "states"
+constexpr const char ITEM_FRAMEBLOCK_FDS[]    = "firststate";
+constexpr const char ITEM_FRAMEBLOCK_STATES[] = "states";
 
 // forward prototype for action function dispatcher
 static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
@@ -91,21 +92,22 @@ static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
    CFG_STR(ITEM_FRAME_MISC1,       "0",         CFGF_NONE), \
    CFG_STR(ITEM_FRAME_MISC2,       "0",         CFGF_NONE), \
    CFG_STR(ITEM_FRAME_PTCLEVENT,   "pevt_none", CFGF_NONE), \
-   CFG_STR(ITEM_FRAME_ARGS,        0,           CFGF_LIST), \
+   CFG_STR(ITEM_FRAME_ARGS,        nullptr,     CFGF_LIST), \
    CFG_INT(ITEM_FRAME_DEHNUM,      -1,          CFGF_NONE), \
    CFG_FLAG(ITEM_FRAME_SKILL5FAST, 0,           CFGF_SIGNPREFIX), \
+   CFG_FLAG(ITEM_FRAME_INTERPOLATE, 0,          CFGF_SIGNPREFIX), \
    CFG_END()
 
 cfg_opt_t edf_frame_opts[] =
 {
    CFG_FLAG(ITEM_FRAME_DECORATE, 0, CFGF_SIGNPREFIX),
-   CFG_STR(ITEM_FRAME_CMP, 0, CFGF_NONE),
+   CFG_STR(ITEM_FRAME_CMP, nullptr, CFGF_NONE),
    FRAME_FIELDS
 };
 
 cfg_opt_t edf_fdelta_opts[] =
 {
-   CFG_STR(ITEM_DELTA_NAME, 0, CFGF_NONE),
+   CFG_STR(ITEM_DELTA_NAME, nullptr, CFGF_NONE),
    FRAME_FIELDS
 };
 
@@ -118,7 +120,9 @@ cfg_opt_t edf_fblock_opts[] =
 
 static const dehflags_t frameFlagSet[] =
 {
-   { ITEM_FRAME_SKILL5FAST, STATEF_SKILL5FAST }
+   { ITEM_FRAME_SKILL5FAST, STATEF_SKILL5FAST },
+   { ITEM_FRAME_INTERPOLATE, STATEF_INTERPOLATE },
+   { nullptr },
 };
 
 //
@@ -128,11 +132,16 @@ static const dehflags_t frameFlagSet[] =
 // State hash tables
 
 // State Hashing
-#define NUMSTATECHAINS 2003
+constexpr int NUMSTATECHAINS = 2003;
 
 // hash by name
 static EHashTable<state_t, ENCStringHashKey, 
                   &state_t::name, &state_t::namelinks> state_namehash(NUMSTATECHAINS);
+
+// hash of decorate states. Needed for savegame integrity check but otherwise not desired in 
+// state_namehash
+static EHashTable<state_t, ENCStringHashKey, &state_t::name, &state_t::namelinks> 
+                  decstate_namehash(NUMSTATECHAINS);
 
 // hash by DeHackEd number
 static EHashTable<state_t, EIntHashKey, 
@@ -201,6 +210,34 @@ int E_StateNumForName(const char *name)
       ret = st->index;
 
    return ret;
+}
+
+//
+// Same as above, but also covers decorate states. Only used for savegame integrity.
+//
+int E_StateNumForNameIncludingDecorate(const char *name)
+{
+   const state_t *st = state_namehash.objectForKey(name);
+   if(st)
+      return st->index;
+   st = decstate_namehash.objectForKey(name);
+   if(st)
+      return st->index;
+   return -1;
+}
+// Or only Decorate
+int E_StateNumForNameOnlyDecorate(const char *name)
+{
+   const state_t *st = decstate_namehash.objectForKey(name);
+   return st ? st->index : -1;
+}
+
+//
+// Stores a Decorate state to its special hash
+//
+void E_AddDecorateStateNameToHash(state_t *st)
+{
+   decstate_namehash.addObject(st);
 }
 
 //
@@ -357,7 +394,7 @@ void E_ReallocStates(int numnewstates)
       // reallocate states[]
       states = erealloc(state_t **, states, numstatesalloc * sizeof(state_t *));
 
-      // set the new state pointers to NULL
+      // set the new state pointers to nullptr
       for(i = NUMSTATES; i < numstatesalloc; ++i)
          states[i] = nullptr;
    }
@@ -563,6 +600,7 @@ enum prefixkwd_e
    PREFIX_FLAGS2,
    PREFIX_FLAGS3,
    PREFIX_FLAGS4,
+   PREFIX_FLAGS5,
    PREFIX_BEXPTR,
    PREFIX_STRING,
    NUM_MISC_PREFIXES
@@ -606,7 +644,7 @@ static void E_AssignMiscState(int *target, int framenum)
 
 static void E_AssignMiscSound(int *target, sfxinfo_t *sfx)
 {
-   // 01/04/09: check for NULL just in case
+   // 01/04/09: check for nullptr just in case
    if(!sfx)
       sfx = &NullSound;
 
@@ -718,6 +756,9 @@ static void E_ParseMiscField(const char *value, int *target)
          break;
       case PREFIX_FLAGS4:
          *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE4);
+         break;
+      case PREFIX_FLAGS5:
+         *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE5);
          break;
       case PREFIX_BEXPTR:
          {
@@ -924,7 +965,7 @@ static char *E_CmpTokenizer(const char *text, int *index, qstring *token)
    char c;
    int state = 0;
 
-   // if we're already at the end, return NULL
+   // if we're already at the end, return nullptr
    if(text[*index] == '\0')
       return nullptr;
 
@@ -1155,21 +1196,22 @@ static void E_ProcessCmpState(const char *value, int i)
 #undef NEXTTOKEN
 #undef DEFAULTS
 
-// IS_SET: this macro tests whether or not a particular field should
-// be set. When applying deltas, we should not retrieve defaults.
-
-#undef  IS_SET
-#define IS_SET(name) (def || cfg_size(framesec, (name)) > 0)
-
 //
 // Generalized code to process the data for a single state
 // structure. Doubles as code for frame and framedelta.
 //
-static void E_ProcessState(int i, cfg_t *framesec, bool def)
+static void E_ProcessState(int i, cfg_t *const framesec, bool def)
 {
    int j;
    int tempint;
    const char *tempstr;
+
+
+   // IS_SET: Tests whether or not a particular field should
+   // be set. When applying deltas, we should not retrieve defaults.
+   const auto IS_SET = [framesec, &def](const char *const name) -> bool {
+      return def || cfg_size(framesec, (name)) > 0;
+   };
 
    // 11/14/03:
    // In definitions only, see if the cmp field is defined. If so,
@@ -1184,11 +1226,11 @@ static void E_ProcessState(int i, cfg_t *framesec, bool def)
 
       if(decoratestate)
       {
-         states[i]->flags |= STATEF_DECORATE;
+         states[i]->flags |= STATEFI_DECORATE;
          goto hitdecorate; // skip most processing
       }
       else
-         states[i]->flags &= ~STATEF_DECORATE;
+         states[i]->flags &= ~STATEFI_DECORATE;
 
       if(cfg_size(framesec, ITEM_FRAME_CMP) > 0)
       {
@@ -1408,7 +1450,7 @@ static void E_processFrameBlock(cfg_t *sec, unsigned int index)
    }
 
    edecstateout_t *dso; 
-   if((dso = E_ParseDecorateStates(states, firststate)))
+   if((dso = E_ParseDecorateStates("fb{}", states, firststate)))
    {
       // warn if there are killstates, as these have no meaning
       if(dso->numkillstates)

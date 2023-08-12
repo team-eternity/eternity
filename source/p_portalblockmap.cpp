@@ -35,7 +35,6 @@
 #include "r_state.h"
 
 PortalBlockmap gPortalBlockmap;
-StaticLinedefPortalBlockmap pLPortalMap;
 
 //
 // Initializes the portal blockmap at level start, when map blocks are set.
@@ -67,10 +66,11 @@ void PortalBlockmap::mapInit()
       const sector_t &sector = *R_PointInSubsector(
          bmaporgx + i % bmapwidth * MAPBLOCKSIZE + MAPBLOCKSIZE / 2,
          bmaporgy + i / bmapwidth * MAPBLOCKSIZE + MAPBLOCKSIZE / 2)->sector;
-      checkLinkSector(sector, sector.f_portal, false, i);
-      checkLinkSector(sector, sector.c_portal, true, i);
+      checkLinkSector(sector, sector.srf.floor.portal, surf_floor, i);
+      checkLinkSector(sector, sector.srf.ceiling.portal, surf_ceil, i);
    }
    mInitializing = false;
+   isInit = true;
 }
 
 //
@@ -154,12 +154,12 @@ void PortalBlockmap::linkLine(const line_t &line)
 
       if(mInitializing)
       {
-         checkLinkSector(*line.frontsector, line.frontsector->f_portal, false, b);
-         checkLinkSector(*line.frontsector, line.frontsector->c_portal, true, b);
+         checkLinkSector(*line.frontsector, line.frontsector->srf.floor.portal, surf_floor, b);
+         checkLinkSector(*line.frontsector, line.frontsector->srf.ceiling.portal, surf_ceil, b);
          if(line.backsector)
          {
-            checkLinkSector(*line.backsector, line.backsector->f_portal, false, b);
-            checkLinkSector(*line.backsector, line.backsector->c_portal, true, b);
+            checkLinkSector(*line.backsector, line.backsector->srf.floor.portal, surf_floor, b);
+            checkLinkSector(*line.backsector, line.backsector->srf.ceiling.portal, surf_ceil, b);
          }
       }
 
@@ -186,8 +186,8 @@ void PortalBlockmap::linkLine(const line_t &line)
 // Not optimized for gametime.
 // Sector NOT assumed to have a linked portals or unadded.
 //
-void PortalBlockmap::checkLinkSector(const sector_t &sector, const portal_t *portal, bool isceiling,
-   int mapindex)
+void PortalBlockmap::checkLinkSector(const sector_t &sector, const portal_t *portal, surf_e surf,
+                                     int mapindex)
 {
    if(!portal || portal->type != R_LINKED)
       return;
@@ -203,77 +203,8 @@ void PortalBlockmap::checkLinkSector(const sector_t &sector, const portal_t *por
    entry.ldata = &portal->data.link;
    entry.type = portalblocktype_e::sector;
    entry.sector = &sector;
-   entry.isceiling = isceiling;
+   entry.surf = surf;
 }
-
-//
-// Initialization per map. Makes PU_LEVEL allocations
-//
-void StaticLinedefPortalBlockmap::mapInit()
-{
-   mMap.clear();
-   int numblocks = bmapwidth * bmapheight;
-   for(int i = 0; i < numblocks; ++i)
-   {
-      int offset = blockmap[i];
-      const int *list = blockmaplump + offset;
-      // MaxW: 2016/02/02: if before 3.42 always skip, skip if all blocklists start w/ 0
-      // killough 2/22/98: demo_compatibility check
-      // skip 0 starting delimiter -- phares
-      if((!demo_compatibility && demo_version < 342) ||
-         (demo_version >= 342 && skipblstart))
-      {
-         list++;
-      }
-
-      PODCollection<const line_t *> coll;
-
-      for(; *list != -1; ++list)
-      {
-         if(*list >= numlines)
-            continue;
-         const line_t &line = lines[*list];
-         if(line.backsector &&
-            (line.pflags & PS_PASSABLE ||
-            (line.extflags & EX_ML_LOWERPORTAL &&
-               line.backsector->f_portal &&
-               line.backsector->f_portal->type == R_LINKED) ||
-               (line.extflags & EX_ML_UPPERPORTAL &&
-                  line.backsector->c_portal &&
-                  line.backsector->c_portal->type == R_LINKED)))
-         {
-            coll.add(&line);
-         }
-      }
-
-      mMap.add(coll);
-   }
-
-   mValids = ecalloctag(decltype(mValids), numlines, sizeof(*mValids), PU_LEVEL,
-      nullptr);
-}
-
-//
-// Does the iteration
-//
-bool StaticLinedefPortalBlockmap::iterator(int x, int y, void *data,
-   bool(*func)(const line_t &, void *data)) const
-{
-   if(x < 0 || x >= bmapwidth || y < 0 || y >= bmapheight)
-      return true;
-   int i = y * bmapwidth + x;
-   const PODCollection<const line_t *> coll = mMap[i];
-   for(const line_t *line : coll)
-   {
-      if(mValids[line - lines] == mValidcount)
-         continue;
-      mValids[line - lines] = mValidcount;
-      if(!func(*line, data))
-         return false;
-   }
-   return true;
-}
-
 
 //
 // P_BlockHasLinkedPortalLines

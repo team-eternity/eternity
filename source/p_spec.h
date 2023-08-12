@@ -39,12 +39,13 @@
 struct line_t;
 class  Mobj;
 struct player_t;
-struct polyobj_s;
+struct polyobj_t;
 struct portal_t;
 class  SaveArchive;
 struct sector_t;
 struct side_t;
 class  UDMFSetupSettings;
+struct v3fixed_t;
 
 //      Define values for map objects
 #define MO_TELEPORTMAN  14
@@ -101,6 +102,8 @@ class  UDMFSetupSettings;
 #define KILLSOUND_SHIFT 10
 #define MOVESOUND_MASK  0x800
 #define MOVESOUND_SHIFT 11
+#define INSTANTDEATH_MASK  0x1000
+#define INSTANTDEATH_SHIFT 12
 
 #define UDMF_SEC_MASK   0xff  // 0-255 are the UDMF non-Boom gen specials
 // right-shift from UDMF generalized namespace to Boom generalized namespace
@@ -109,7 +112,7 @@ class  UDMFSetupSettings;
 // haleyjd 12/28/08: mask used to get generalized special bits that are now
 // part of the sector flags
 #define GENSECTOFLAGSMASK \
-   (SECRET_MASK|FRICTION_MASK|PUSH_MASK|KILLSOUND_MASK|MOVESOUND_MASK)
+   (SECRET_MASK|FRICTION_MASK|PUSH_MASK|KILLSOUND_MASK|MOVESOUND_MASK|INSTANTDEATH_MASK)
 
 //jff 02/04/98 Define masks, shifts, for fields in 
 // generalized linedef types
@@ -647,7 +650,7 @@ protected:
    virtual attachpoint_e getAttachPoint() const { return ATTACH_NONE; }
 
 public:
-   SectorThinker() : Thinker(), sector(NULL) {}
+   SectorThinker() : Thinker(), sector(nullptr) {}
 
    // Methods
    virtual void serialize(SaveArchive &arc) override;
@@ -667,20 +670,18 @@ public:
 #pragma pack(push, 1)
 #endif
 
-struct switchlist_s
+struct switchlist_t
 {
-  char    name1[9];
-  char    name2[9];
-  int16_t episode;
-}; 
-
-typedef struct switchlist_s switchlist_t;
+   char    name1[9];
+   char    name2[9];
+   int16_t episode;
+};
 
 #if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
 
-typedef struct button_s
+struct button_t
 {
    int      line;
    int      side;
@@ -689,7 +690,7 @@ typedef struct button_s
    int      btimer;
    bool     dopopout;
    int switchindex;  // for sounds
-} button_t;
+};
 
 // haleyjd 04/17/08: made buttonlist/numbuttonsalloc external for savegames
 extern button_t *buttonlist;
@@ -945,7 +946,7 @@ enum
 };
 
 // haleyjd 05/04/04: extended data struct for gen/param doors
-typedef struct doordata_s
+struct doordata_t
 {
    int     flags;         // flags for action; use DDF values above.
    int     spac;          // valid IFF DDF_HAVESPAC is set
@@ -958,7 +959,7 @@ typedef struct doordata_s
    int     topcountdown;  // delay before initial activation
 
    Mobj   *thing;         // activating thing, if any
-} doordata_t;
+};
 
 // haleyjd 09/06/07: sector special transfer structure
 
@@ -1023,14 +1024,14 @@ public:
    // ID
    int tag;                   
    int olddirection;
-   struct ceilinglist *list;   // jff 2/22/98 copied from killough's plats
+   struct ceilinglist_t *list;   // jff 2/22/98 copied from killough's plats
 };
 
-typedef struct ceilinglist 
+struct ceilinglist_t
 {
-  CeilingThinker *ceiling; 
-  struct ceilinglist *next,**prev;
-} ceilinglist_t;
+   CeilingThinker *ceiling;
+   ceilinglist_t *next,**prev;
+};
 
 // haleyjd 01/09/12: ceiling data flags
 enum
@@ -1043,13 +1044,13 @@ enum
 };
 
 // haleyjd 10/05/05: extended data struct for parameterized ceilings
-typedef struct ceilingdata_s
-{   
+struct ceilingdata_t
+{
    int flags;        // combination of values above
    int trigger_type; // valid IFF (flags & CDF_HAVETRIGGERTYPE)
    int spac;         // valid IFF (flags & CDF_HAVESPAC)
-   
-   // generalized values   
+
+   // generalized values
    int crush;
    int direction;
    int speed_type;
@@ -1061,7 +1062,7 @@ typedef struct ceilingdata_s
    fixed_t height_value;
    fixed_t speed_value;
    fixed_t ceiling_gap;
-} ceilingdata_t;
+};
 
 // ioanch 20160305
 struct crusherdata_t
@@ -1133,13 +1134,13 @@ enum
 };
 
 // haleyjd 05/07/04: extended data struct for parameterized floors
-typedef struct floordata_s
-{   
+struct floordata_t
+{
    // generalized values
    int flags;
    int spac;         // valid IFF flags & FDF_HAVESPAC
    int trigger_type; // valid IFF flags & FDF_HAVETRIGGERTYPE
-   
+
    int crush;
    int direction;
    int speed_type;
@@ -1153,7 +1154,7 @@ typedef struct floordata_s
    int     adjust;        // valid IFF flags & FDF_HACKFORDESTHNF
    int     force_adjust;  // valid IFF flags & FDF_HACKFORDESTHNF
    bool    changeOnStart; // change texture and type immediately, not on landing
-} floordata_t;
+};
 
 // haleyjd 01/21/13: stairdata flags
 enum
@@ -1165,8 +1166,8 @@ enum
 };
 
 // haleyjd 10/06/05: extended data struct for parameterized stairs
-typedef struct stairdata_s
-{   
+struct stairdata_t
+{
    int flags;
    int spac;
    int trigger_type;
@@ -1182,7 +1183,7 @@ typedef struct stairdata_s
    int delay_value;
    int reset_value;
    bool crush; // does it crush
-} stairdata_t;
+};
 
 class ElevatorThinker : public SectorThinker
 {
@@ -1229,7 +1230,7 @@ public:
 };
 
 // haleyjd 10/21/06: data struct for param pillars
-typedef struct pillardata_s
+struct pillardata_t
 {
    fixed_t speed;  // speed of furthest moving surface
    fixed_t fdist;  // for open, how far to open floor
@@ -1237,7 +1238,7 @@ typedef struct pillardata_s
    fixed_t height; // for close, where to meet
    int     crush;  // amount of crushing damage
    int     tag;    // tag
-} pillardata_t;
+};
 
 // haleyjd 06/30/09: waggle floors
 class FloorWaggleThinker : public SectorThinker
@@ -1406,7 +1407,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side);
 //
 // Silent teleport angle change
 //
-enum teleangle_e
+enum teleangle_e : int8_t
 {
    teleangle_keep,               // keep current thing angle (Hexen silent teleport)
    teleangle_absolute,           // totally change angle (ZDoom extension)
@@ -1420,12 +1421,13 @@ enum teleangle_e
 struct teleparms_t
 {
    bool keepheight;
+   bool alwaysfrag;
    teleangle_e teleangle;
 };
 
-bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle);
+bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle, bool alwaysfrag);
 
-int EV_Teleport(int tag, int side, Mobj *thing);
+int EV_Teleport(int tag, int side, Mobj *thing, bool alwaysfrag);
 
 // killough 2/14/98: Add silent teleporter
 int EV_SilentTeleport(const line_t *line, int tag, int side, Mobj *thing,
@@ -1433,27 +1435,28 @@ int EV_SilentTeleport(const line_t *line, int tag, int side, Mobj *thing,
 
 // killough 1/31/98: Add silent line teleporter
 int EV_SilentLineTeleport(const line_t *line, int lineid, int side,
-			              Mobj *thing, bool reverse);
+			              Mobj *thing, bool reverse, bool alwaysfrag);
 
 // ioanch 20160330: parameterized teleport
-int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing);
+int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing, bool alwaysfrag);
 int EV_ParamSilentTeleport(int tid, const line_t *line, int tag, int side,
                            Mobj *thing, teleparms_t parms);
 
 // p_floor
 
-int EV_DoElevator(const line_t *line, int tag, elevator_e type, fixed_t speed,
+int EV_DoElevator(const line_t *line, const Mobj *mo, const polyobj_t *po,
+                  int tag, elevator_e type, fixed_t speed,
                   fixed_t amount, bool isParam);
 
-int EV_BuildStairs(const line_t *line, stair_e type);
+int EV_BuildStairs(int tag, stair_e type);
 
-int EV_DoFloor(const line_t *line, floor_e floortype);
+int EV_DoFloor(const line_t *line, int tag, floor_e floortype);
 
 int EV_FloorCrushStop(const line_t *line, int tag);
 
 // p_ceilng
 
-int EV_DoCeiling(const line_t *line, ceiling_e type);
+int EV_DoCeiling(const line_t *line, int tag, ceiling_e type);
 
 int EV_CeilingCrushStop(int tag, bool removeThinker);
 
@@ -1463,7 +1466,7 @@ void P_ChangeCeilingTex(const char *name, int tag);
 
 int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID);
 
-int EV_DoDoor(const line_t *line, vldoor_e type);
+int EV_DoDoor(int tag, vldoor_e type);
 
 void EV_OpenDoor(int sectag, int speed, int wait_time);
 
@@ -1499,6 +1502,8 @@ int EV_FlickerLight(const line_t *, int tag, int maxval, int minval);
 
 int EV_DoChange(const line_t *line, int tag, change_e changetype, bool isParam);
 
+void EV_SetFriction(const int tag, int amount);
+
 // ioanch: now it's parameterized
 int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
                     fixed_t pspeed, fixed_t sspeed);
@@ -1518,37 +1523,37 @@ void P_ChangeFloorTex(const char *name, int tag);
 
 // p_plats
 
-bool EV_DoPlat(const line_t *line, plattype_e type, int amount);
+bool EV_DoPlat(const line_t *line, int tag, plattype_e type, int amount);
 bool EV_DoParamPlat(const line_t *line, const int *args, paramplattype_e type);
 bool EV_StopPlatByTag(int tag, bool removeThinker);
 
 // p_genlin
 
 int EV_DoParamFloor(const line_t *line, int tag, const floordata_t *fd);
-int EV_DoGenFloor(const line_t *line);
+int EV_DoGenFloor(const line_t *line, int special, int tag);
 
 int EV_DoParamCeiling(const line_t *line, int tag, const ceilingdata_t *cd);
-int EV_DoGenCeiling(const line_t *line);
+int EV_DoGenCeiling(const line_t *line, int special, int tag);
 
 int EV_DoFloorAndCeiling(const line_t *line, int tag, const floordata_t &fd,
                          const ceilingdata_t &cd);
 
-int EV_DoGenLift(const line_t *line);
-int EV_DoGenLiftByParameters(bool manualtrig, const line_t &line, fixed_t speed, int delay,
+int EV_DoGenLift(const line_t *line, int special, int tag);
+int EV_DoGenLiftByParameters(bool manualtrig, const line_t *line, int tag, fixed_t speed, int delay,
                              int target, fixed_t height);
 
 int EV_DoParamStairs(const line_t *line, int tag, const stairdata_t *sd);
-int EV_DoGenStairs(line_t *line);
+int EV_DoGenStairs(line_t *line, int special, int tag);
 
 int EV_DoParamCrusher(const line_t *line, int tag, const crusherdata_t *cd);
-int EV_DoGenCrusher(const line_t *line);
+int EV_DoGenCrusher(const line_t *line, int special, int tag);
 
 int EV_DoParamDoor(const line_t *line, int tag, const doordata_t *dd);
-int EV_DoGenDoor(const line_t *line, Mobj *thing);
+int EV_DoGenDoor(const line_t *line, Mobj *thing, int special, int tag);
 
-int EV_DoGenLockedDoor(const line_t *line, Mobj *thing);
+int EV_DoGenLockedDoor(const line_t *line, Mobj *thing, int special, int tag);
 
-void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag);
+void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag, line_t *triggerLine);
 
 // p_things
 
@@ -1562,7 +1567,7 @@ int EV_ThingStop(Mobj *actor, int tid);
 int EV_ThrustThing(Mobj *actor, int side, int byteangle, int speed, int tid);
 int EV_ThrustThingZ(Mobj *actor, int tid, int speed, bool upDown, bool setAdd);
 int EV_DamageThing(Mobj *actor, int damage, int mod, int tid);
-int EV_ThingDestroy(int tid, int sectortag);
+int EV_ThingDestroy(int tid, int flags, int sectortag);
 int EV_HealThing(Mobj *actor, int amount, int maxhealth);
 int EV_ThingRemove(int tid);
 
@@ -1608,7 +1613,7 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side);
 void P_ShootSpecialLine(Mobj *thing, line_t *line, int side);
 
 // killough 11/98
-void P_CrossSpecialLine(line_t *, int side, Mobj *thing, polyobj_s *poly); 
+void P_CrossSpecialLine(line_t *, int side, Mobj *thing, polyobj_t *poly);
 // ioanch
 void P_PushSpecialLine(Mobj &thing, line_t &line, int side);
 
@@ -1679,7 +1684,7 @@ bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta,
 
 void P_CalcFriction(int length, int &friction, int &movefactor); // ioanch
 
-line_t *P_FindLine(int tag, int *searchPosition);
+line_t *P_FindLine(int tag, int *searchPosition, line_t *defaultLine = nullptr);
 
 // haleyjd: sector special transfers
 void P_SetupSpecialTransfer(const sector_t *, spectransfer_t *);
@@ -1694,10 +1699,12 @@ void P_ZeroSectorSpecial(sector_t *);
 
 void P_SetLineID(line_t *line, int id);
 
+v3fixed_t P_GetArrivalTelefogLocation(v3fixed_t landing, angle_t angle);
+
 // haleyjd: parameterized lines
 
 // param special activation types
-enum
+enum specialactivation_e : int
 {
    SPAC_CROSS,
    SPAC_USE,
@@ -1705,7 +1712,13 @@ enum
    SPAC_PUSH,
 };
 
-extern void P_StartLineScript(line_t *line, int side, Mobj *thing, polyobj_s *po);
+enum sectoractivation_e : int
+{
+   SEAC_ENTER,
+   SEAC_EXIT,
+};
+
+extern void P_StartLineScript(line_t *line, int side, Mobj *thing, polyobj_t *po);
 
 #endif
 

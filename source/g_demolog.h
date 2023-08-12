@@ -25,8 +25,10 @@
 #ifndef G_DEMOTEST_H__
 #define G_DEMOTEST_H__
 
+#include "d_keywds.h"
+
 void G_DemoLogInit(const char *path);
-void G_DemoLog(const char *format, ...);
+void G_DemoLog(E_FORMAT_STRING(const char *format), ...) E_PRINTF(1, 2);
 void G_DemoLogStats();
 bool G_DemoLogEnabled();
 void G_DemoLogSetExited(bool value);

@@ -183,17 +183,15 @@ public:
             else
             {
                avlnode_t *minnode, *minparent;
+
                // Two child nodes
-               if(onleft || !prev)
-               {
-                  minnode    = minimumNode(node, &minparent);
+               minnode = minimumNode(node, &minparent);
+               if(!prev)
+                  root = minnode;
+               else if(onleft)
                   prev->left = minnode;
-               }
                else
-               {
-                  minnode     = minimumNode(node, &minparent);
                   prev->right = minnode;
-               }
 
                // TODO: Is this correct?
                if(minparent != nullptr)
@@ -234,14 +232,19 @@ public:
    //
    int numNodes(const avlnode_t *node = nullptr) const
    {
-      if(node == nullptr && root)
-         node = root;
-      else
-         return 0;
+      if(node == nullptr)
+      {
+         if(root == nullptr)
+            return 0;
+         else
+            node = root;
+      }
 
       int ret = 1;
       if(node->left != nullptr)
          ret += numNodes(node->left);
+      if(node->next != nullptr)
+         ret += numNodes(node->next);
       if(node->right != nullptr)
          ret += numNodes(node->right);
 

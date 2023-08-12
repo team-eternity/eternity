@@ -204,19 +204,9 @@ static void Polyobj_addVertex(polyobj_t *po, vertex_t *v)
    if(po->numVertices >= po->numVerticesAlloc)
    {
       po->numVerticesAlloc = po->numVerticesAlloc ? po->numVerticesAlloc * 2 : 4;
-      po->vertices = 
-         (vertex_t **)(Z_Realloc(po->vertices,
-                                 po->numVerticesAlloc * sizeof(vertex_t *),
-                                 PU_LEVEL, NULL));
-      po->origVerts =
-         (vertex_t *)(Z_Realloc(po->origVerts,
-                                po->numVerticesAlloc * sizeof(vertex_t),
-                                PU_LEVEL, NULL));
-
-      po->tmpVerts =
-         (vertex_t *)(Z_Realloc(po->tmpVerts,
-                                po->numVerticesAlloc * sizeof(vertex_t),
-                                PU_LEVEL, NULL));
+      po->vertices  = erealloctag(vertex_t **, po->vertices,  po->numVerticesAlloc * sizeof(vertex_t *), PU_LEVEL, nullptr);
+      po->origVerts = erealloctag(vertex_t *,  po->origVerts, po->numVerticesAlloc * sizeof(vertex_t),   PU_LEVEL, nullptr);
+      po->tmpVerts  = erealloctag(vertex_t *,  po->tmpVerts, po->numVerticesAlloc * sizeof(vertex_t),    PU_LEVEL, nullptr);
    }
    po->vertices[po->numVertices] = v;
    v->polyindex = po->numVertices; // mark it for reference to the index.
@@ -248,9 +238,7 @@ static void Polyobj_addLine(polyobj_t *po, line_t *l)
    if(po->numLines >= po->numLinesAlloc)
    {
       po->numLinesAlloc = po->numLinesAlloc ? po->numLinesAlloc * 2 : 4;
-      po->lines = (line_t **)(Z_Realloc(po->lines, 
-                                        po->numLinesAlloc * sizeof(line_t *),
-                                        PU_LEVEL, NULL));
+      po->lines = erealloctag(line_t **, po->lines, po->numLinesAlloc * sizeof(line_t *), PU_LEVEL, nullptr);
    }
    po->lines[po->numLines++] = l;
 
@@ -316,11 +304,11 @@ static void Polyobj_findLines(polyobj_t *po, line_t *line)
 }
 
 // structure used to store linedefs during explicit search process
-typedef struct lineitem_s
+struct lineitem_t
 {
    line_t *line;
    int   num;
-} lineitem_t;
+};
 
 //
 // Polyobj_lineCompare
@@ -343,7 +331,7 @@ static int Polyobj_lineCompare(const void *s1, const void *s2)
 static void Polyobj_findExplicit(polyobj_t *po)
 {
    // temporary dynamic seg array
-   lineitem_t *lineitems = NULL;
+   lineitem_t *lineitems = nullptr;
    int numLineItems = 0;
    int numLineItemsAlloc = 0;
 
@@ -546,8 +534,8 @@ static void Polyobj_collectPortals(polyobj_t *po)
    po->hasLinkedPortals = hasLinked;
    if(po->numPortals)
    {
-      po->portals = emalloctag(decltype(po->portals), 
-         po->numPortals * sizeof(*po->portals), PU_LEVEL, nullptr);
+      po->portals = emalloctag(decltype(po->portals),  po->numPortals * sizeof(*po->portals),
+                               PU_LEVEL, nullptr);
       memcpy(po->portals, &portals[0], po->numPortals * sizeof(*po->portals));
    }
 }
@@ -567,13 +555,13 @@ static void Polyobj_moveLinkedPortals(const polyobj_t *po, fixed_t dx, fixed_t d
       if(portal->type == R_LINKED)
       {
          linkdata_t &ldata = portal->data.link;
-         ldata.deltax -= dx;
-         ldata.deltay -= dy;
+         ldata.delta.x -= dx;
+         ldata.delta.y -= dy;
          portal_t *partner = ldata.polyportalpartner;
          if(partner)
          {
-            partner->data.link.deltax += dx;
-            partner->data.link.deltay += dy;
+            partner->data.link.delta.x += dx;
+            partner->data.link.delta.y += dy;
          }
          // mark the group as being moved by the portal or not.
          P_MoveGroupCluster(ldata.fromid, ldata.toid, groupvisit, dx, dy, true,
@@ -833,7 +821,7 @@ static void Polyobj_removeFromBlockmap(polyobj_t *po)
       l = next;
    }
 
-   po->linkhead = NULL;
+   po->linkhead = nullptr;
 
    po->flags &= ~POF_LINKED;
 }
@@ -892,7 +880,7 @@ static void Polyobj_pushThing(polyobj_t *po, line_t *line, Mobj *mo)
    if(po->damage && mo->flags & MF_SHOOTABLE)
    {
       if(po->flags & POF_DAMAGING)
-         P_DamageMobj(mo, NULL, NULL, po->damage, MOD_CRUSH);
+         P_DamageMobj(mo, nullptr, nullptr, po->damage, MOD_CRUSH);
       else
       {
          // Temporarily remove from blockmap to avoid this poly's lines from
@@ -900,7 +888,7 @@ static void Polyobj_pushThing(polyobj_t *po, line_t *line, Mobj *mo)
          // damage the mobj.
          Polyobj_removeFromBlockmap(po);
          if(!P_CheckPosition(mo, mo->x + momx, mo->y + momy))
-            P_DamageMobj(mo, NULL, NULL, po->damage, MOD_CRUSH);
+            P_DamageMobj(mo, nullptr, nullptr, po->damage, MOD_CRUSH);
          Polyobj_linkToBlockmap(po);
       }
    }
@@ -989,6 +977,7 @@ struct portalthing_t
    Mobj *thing;   // the touched thing
    v2fixed_t position;  // the position when touched
    v2fixed_t velocity;  // the velocity when touched
+   int interiorgroupid; // the groupid of the portal this mobj touches
 };
 
 //
@@ -999,6 +988,8 @@ struct portalthing_t
 static void Polyobj_collectPortalThings(const polyobj_t &po, const line_t &line,
                                         PODCollection<portalthing_t> &things)
 {
+   I_Assert(line.pflags & PS_PASSABLE, "Expected linked portal\n");   // linked portal
+
    fixed_t linebox[4];
    // adjust linedef bounding box to blockmap, extend by MAXRADIUS
    linebox[BOXLEFT]   = (line.bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
@@ -1020,12 +1011,22 @@ static void Polyobj_collectPortalThings(const polyobj_t &po, const line_t &line,
             if(!Polyobj_canPushThing(*mo) || Polyobj_untouched(&line, mo))
                continue;
             portalthing_t &pt = things.addNew();
-            pt.thing = mo;
+            P_SetTarget(&pt.thing, mo);
             pt.position = { mo->x, mo->y };
             pt.velocity = { mo->momx, mo->momy };
+            pt.interiorgroupid = line.portal->data.link.toid;
          }
       }
 }
+
+//
+// Holds mobj reference and whether to move it or update its position
+//
+struct insideMobjMove_t
+{
+   Mobj *mobj;
+   bool onground;
+};
 
 //
 // Iterator for the function below
@@ -1033,17 +1034,18 @@ static void Polyobj_collectPortalThings(const polyobj_t &po, const line_t &line,
 static bool PolyobjIT_moveObjectsInside(int groupid, void *context)
 {
    int count;
-   sector_t **gsectors = P_GetSectorsWithGroupId(groupid, &count);
-   auto &moved = *static_cast<PODCollection<Mobj *> *>(context);
+   const int *gsecnums = P_GetSectorsWithGroupId(groupid, &count);
+   auto &moved = *static_cast<PODCollection<insideMobjMove_t> *>(context);
    for(int i = 0; i < count; ++i)
    {
-      for(Mobj *mo = gsectors[i]->thinglist; mo; mo = mo->snext)
+      for(Mobj *mo = sectors[gsecnums[i]].thinglist; mo; mo = mo->snext)
       {
          // NOSECTOR invisible things will be ignored :)
          // Also don't push back standing and hanging things
-         if(P_mobjOnSurface(*mo))
-            continue;
-         moved.add(mo); // don't move them from here, as it may mutate the sector thinglist.
+         insideMobjMove_t imm;
+         imm.mobj = mo;
+         imm.onground = P_mobjOnSurface(*mo);
+         moved.add(imm); // don't move them from here, as it may mutate the sector thinglist.
       }
    }
    return true;
@@ -1057,7 +1059,7 @@ static void Polyobj_moveObjectsInside(const polyobj_t &po, fixed_t dx, fixed_t d
    if(!useportalgroups)
       return;
    bool *groupvisit = ecalloc(bool *, P_PortalGroupCount(), sizeof(bool));
-   PODCollection<Mobj *> moved;
+   PODCollection<insideMobjMove_t> moved;
    for(size_t i = 0; i < po.numPortals; ++i)
    {
       const portal_t &portal = *po.portals[i];
@@ -1066,8 +1068,21 @@ static void Polyobj_moveObjectsInside(const polyobj_t &po, fixed_t dx, fixed_t d
       P_ForEachClusterGroup(portal.data.link.fromid, portal.data.link.toid, groupvisit,
                             PolyobjIT_moveObjectsInside, &moved);
    }
-   for(Mobj *mo : moved)
-      P_TryMove(mo, mo->x + dx, mo->y + dy, 1);
+   for(const insideMobjMove_t &imm : moved)
+   {
+      bool p = false;
+      if(!imm.onground || imm.mobj->zref.floorgroupid != imm.mobj->groupid)
+         p = P_TryMove(imm.mobj, imm.mobj->x + dx, imm.mobj->y + dy, 1);
+
+      if(!p)
+      {
+         // Make sure to update zref anyway
+         P_CheckPosition(imm.mobj, imm.mobj->x, imm.mobj->y);
+         imm.mobj->zref = clip.zref;
+      }
+      else
+         imm.mobj->backupPosition();   // FIXME: do this until we can interpolate polys with portals
+   }
    efree(groupvisit);
 }
 
@@ -1087,7 +1102,7 @@ static void Polyobj_crossLines(polyobj_t *po, v2fixed_t oldcentre)
       if(in->d.line->special)
       {
          P_CrossSpecialLine(in->d.line,
-            P_PointOnLineSide(trace.x, trace.y, in->d.line), nullptr, po);
+            P_PointOnLineSidePrecise(trace.x, trace.y, in->d.line), nullptr, po);
       }
 
       return true;
@@ -1194,10 +1209,15 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
             pt.thing->momx == pt.velocity.x && pt.thing->momy == pt.velocity.y)
          {
             // We got one which we may want to move
-            if(P_mobjOnSurface(*pt.thing))
+            if(P_mobjOnSurface(*pt.thing) && pt.thing->zref.floorgroupid == pt.interiorgroupid)
             {
                if(!P_TryMove(pt.thing, pt.thing->x + x, pt.thing->y + y, 1))
+               {
+                  P_CheckPosition(pt.thing, pt.thing->x, pt.thing->y);
                   pt.thing->zref = clip.zref;   // If couldn't move, still adjust Z references
+               }
+               else
+                  pt.thing->backupPosition();   // FIXME: temporary until we interpolate polyportals
             }
             else
             {
@@ -1211,7 +1231,81 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
       Polyobj_moveObjectsInside(*po, -x, -y);
    }
 
+   // Remember to clear reference
+   for(portalthing_t &pt : pts)
+      P_ClearTarget(pt.thing);
+
    return !hitthing;
+}
+
+//
+// Polyobj_moveToXY
+//
+// Moves a polyobject to a specfic position
+//
+void Polyobj_MoveToXY(polyobj_t* po, fixed_t x, fixed_t y)
+{
+   vertex_t  dist, dest;
+   int i;
+
+   // don't move any bad polyobject that may have gotten through
+   if (po->flags & POF_ISBAD)
+      return;
+
+   dest.x = x;
+   dest.y = y;
+
+   // calculate distance from centerPt to destination
+   // ioanch 20151218: use 32-bit coordinates
+   dist.x = po->centerPt.x - dest.x;
+   dist.y = po->centerPt.y - dest.y;
+
+   // update linedef bounding boxes
+   for (i = 0; i < po->numLines; ++i)
+   {
+      Mobj* mo;
+
+      Polyobj_bboxSub(po->lines[i]->bbox, &dist);
+
+      // 05/25/08: must change lines' sector groupids for correct portal
+      // automap overlay behavior.
+      mo = po->spawnSpotMobj;
+      po->lines[i]->frontsector->groupid = mo->subsector->sector->groupid;
+      po->lines[i]->soundorg.groupid = mo->subsector->sector->groupid;
+   }
+
+   // ioanch 20160226: update portal position
+   Polyobj_collectPortals(po);
+   Polyobj_moveLinkedPortals(po, -dist.x, -dist.y, false);
+
+   // translate vertices and record original coordinates relative to spawn spot
+   for (i = 0; i < po->numVertices; ++i)
+   {
+      Polyobj_vecSub(po->vertices[i], &dist);
+      po->tmpVerts[i] = *po->vertices[i]; // backup position
+      Polyobj_vecSub2(&(po->origVerts[i]), po->vertices[i], &dest);
+   }
+
+   po->spawnSpot.x = dest.x;
+   po->spawnSpot.y = dest.y;
+
+   // Update sound origins
+   for (i = 0; i < po->numLines; ++i)
+   {
+      line_t& line = *po->lines[i];
+      line.soundorg.x = line.v1->x + line.dx / 2;
+      line.soundorg.y = line.v1->y + line.dy / 2;
+
+      Polyobj_relinkLine(line);
+   }
+
+   Polyobj_removeFromBlockmap(po); // unlink it from the blockmap
+   R_DetachPolyObject(po);
+   Polyobj_linkToBlockmap(po);     // relink to blockmap
+   Polyobj_setCenterPt(po);
+   R_AttachPolyObject(po);
+
+   Polyobj_updateAnchoredPortals(*po); // finally update the anchored portals.
 }
 
 //
@@ -1375,7 +1469,7 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
 // Polyobj_GetForNum
 //
 // Retrieves a polyobject by its numeric id using hashing.
-// Returns NULL if no such polyobject exists.
+// Returns nullptr if no such polyobject exists.
 //
 polyobj_t *Polyobj_GetForNum(int id)
 {
@@ -1383,33 +1477,33 @@ polyobj_t *Polyobj_GetForNum(int id)
 
    // haleyjd 01/07/07: must check if == 0 first!
    if(numPolyObjects == 0)
-      return NULL;
+      return nullptr;
    
    curidx = PolyObjects[id % numPolyObjects].first;
 
    while(curidx != numPolyObjects && PolyObjects[curidx].id != id)
       curidx = PolyObjects[curidx].next;
 
-   return curidx == numPolyObjects ? NULL : &PolyObjects[curidx];
+   return curidx == numPolyObjects ? nullptr : &PolyObjects[curidx];
 }
 
 //
 // Polyobj_GetMirror
 //
-// Retrieves the mirroring polyobject if one exists. Returns NULL
+// Retrieves the mirroring polyobject if one exists. Returns nullptr
 // otherwise.
 //
 static polyobj_t *Polyobj_GetMirror(polyobj_t *po)
 {
-   return (po && po->mirror != -1) ? Polyobj_GetForNum(po->mirror) : NULL;
+   return (po && po->mirror != -1) ? Polyobj_GetForNum(po->mirror) : nullptr;
 }
 
 // structure used to queue up mobj pointers in Polyobj_InitLevel
-typedef struct mobjqitem_s
+struct mobjqitem_t
 {
    mqueueitem_t mqitem;
    Mobj *mo;
-} mobjqitem_t;
+};
 
 //
 // Check if mobj is a polyobject spawn spot
@@ -1441,9 +1535,9 @@ void Polyobj_InitLevel(void)
    // get rid of values from previous level
    // note: as with msecnodes, it is very important to clear out the blockmap
    // node freelist, otherwise it may contain dangling pointers to old objects
-   PolyObjects    = NULL;
+   PolyObjects    = nullptr;
    numPolyObjects = 0;
-   bmap_freelist  = NULL;
+   bmap_freelist  = nullptr;
 
    // run down the thinker list, count the number of spawn points, and save
    // the Mobj pointers on a queue for use below.
@@ -1558,7 +1652,7 @@ void PolyRotateThinker::Think()
 #endif
 
    // check for displacement due to override and reattach when possible
-   if(po->thinker == NULL)
+   if(po->thinker == nullptr)
    {
       po->thinker = this;
       
@@ -1580,7 +1674,7 @@ void PolyRotateThinker::Think()
       this->distance -= avel;
 
       // MaxW: 20160106: set the flag which differentiates angles >= 180 from angles < 0
-      hasBeenPositive = hasBeenPositive || (distance > 0);
+      hasBeenPositive = hasBeenPositive || (distance >= 0);
 
       // are we at or past the destination?
       if(this->distance <= 0 && this->hasBeenPositive)
@@ -1588,7 +1682,7 @@ void PolyRotateThinker::Think()
          // remove thinker
          if(po->thinker == this)
          {
-            po->thinker = NULL;
+            po->thinker = nullptr;
             po->thrust = FRACUNIT;
          }
          this->remove();
@@ -1644,7 +1738,7 @@ void PolyMoveThinker::Think()
 #endif
 
    // check for displacement due to override and reattach when possible
-   if(po->thinker == NULL)
+   if(po->thinker == nullptr)
    {
       po->thinker = this;
       
@@ -1670,7 +1764,7 @@ void PolyMoveThinker::Think()
          // remove thinker
          if(po->thinker == this)
          {
-            po->thinker = NULL;
+            po->thinker = nullptr;
             po->thrust = FRACUNIT;
          }
          this->remove();
@@ -1779,7 +1873,7 @@ void PolySlideDoorThinker::Think()
 #endif
 
    // check for displacement due to override and reattach when possible
-   if(po->thinker == NULL)
+   if(po->thinker == nullptr)
    {
       po->thinker = this;
       
@@ -1833,7 +1927,7 @@ void PolySlideDoorThinker::Think()
             // remove thinker
             if(po->thinker == this)
             {
-               po->thinker = NULL;
+               po->thinker = nullptr;
                po->thrust = FRACUNIT;
             }
             this->remove();
@@ -1891,7 +1985,7 @@ void PolySwingDoorThinker::Think()
 #endif
 
    // check for displacement due to override and reattach when possible
-   if(po->thinker == NULL)
+   if(po->thinker == nullptr)
    {
       po->thinker = this;
       
@@ -1921,7 +2015,7 @@ void PolySwingDoorThinker::Think()
       this->distance -= avel;
 
       // MaxW: 20160109: set the flag which differentiates angles >= 180 from angles < 0
-      hasBeenPositive = hasBeenPositive || (distance > 0);
+      hasBeenPositive = hasBeenPositive || (distance >= 0);
 
       // are we at or past the destination?
       if(this->distance <= 0 && this->hasBeenPositive)
@@ -1938,14 +2032,14 @@ void PolySwingDoorThinker::Think()
             // start delay
             this->delayCount = this->delay;    
 
-            this->hasBeenPositive = this->distance < 0 ? false : true;
+            this->hasBeenPositive = this->distance >= 0;
          } 
          else
          {
             // remove thinker
             if(po->thinker == this)
             {
-               po->thinker = NULL;
+               po->thinker = nullptr;
                po->thrust = FRACUNIT;
             }
             this->remove();
@@ -1965,7 +2059,7 @@ void PolySwingDoorThinker::Think()
       // move was blocked, special handling required -- make it reopen
 
       this->distance = this->initDistance - this->distance;
-      this->hasBeenPositive = this->distance < 0 ? false : true;
+      this->hasBeenPositive = this->distance >= 0;
       this->speed    = this->initSpeed;
       this->closing  = false;
 
@@ -2031,7 +2125,7 @@ int EV_DoPolyObjRotate(const polyrotdata_t *prdata)
       th->distance = prdata->distance * BYTEANGLEMUL;
 
    // MaxW: 20160106: Initialise flag which differentiates angles >= 180 from angles < 0
-   th->hasBeenPositive = th->distance < 0 ? false : true;
+   th->hasBeenPositive = th->distance >= 0;
    // set polyobject's thrust
    po->thrust = D_abs(th->speed) >> 8;
    if(po->thrust < FRACUNIT)
@@ -2073,7 +2167,7 @@ int EV_DoPolyObjRotate(const polyrotdata_t *prdata)
          th->distance = prdata->distance * BYTEANGLEMUL;
 
       // MaxW: 20160106: Initialise flag which differentiates angles >= 180 from angles < 0
-      th->hasBeenPositive = th->distance < 0 ? false : true;
+      th->hasBeenPositive = th->distance >= 0;
       // set polyobject's thrust
       po->thrust = D_abs(th->speed) >> 8;
       if(po->thrust < FRACUNIT)
@@ -2228,7 +2322,8 @@ int EV_DoPolyObjMoveToSpot(const polymoveto_t &pmdata)
    th->addThinker();
    po->thinker = th;
 
-   distance -= po->spawnSpot;
+   distance.x -= po->spawnSpot.x;
+   distance.y -= po->spawnSpot.y;
 
    th->polyObjNum = pmdata.polyObjNum;
    th->distance = distance.abs();
@@ -2366,7 +2461,7 @@ static void Polyobj_doSwingDoor(polyobj_t *po, const polydoordata_t *doordata)
    th->speed        = (doordata->speed * BYTEANGLEMUL) >> 3;
    th->initSpeed    = th->speed;
    // MaxW: 20160109: Initialise flag which differentiates angles >= 180 from angles < 0
-   th->hasBeenPositive = th->distance < 0 ? false : true;
+   th->hasBeenPositive = th->distance >= 0;
 
    // set polyobject's thrust
    po->thrust = D_abs(th->speed) >> 3;
@@ -2398,7 +2493,7 @@ static void Polyobj_doSwingDoor(polyobj_t *po, const polydoordata_t *doordata)
       th->delayCount   = 0;
       th->distance     = th->initDistance = doordata->distance * BYTEANGLEMUL;
       // MaxW: 20160109: Initialise flag which differentiates angles >= 180 from angles < 0
-      th->hasBeenPositive = th->distance < 0 ? false : true;
+      th->hasBeenPositive = th->distance >= 0;
 
       // alternate direction with each mirror
       th->speed = (doordata->speed * BYTEANGLEMUL * diracc) >> 3;

@@ -29,6 +29,8 @@
 #ifndef MN_ENGIN_H__
 #define MN_ENGIN_H__
 
+#include "d_keywds.h"
+
 struct command_t;
 struct event_t;
 class  qstring;
@@ -61,7 +63,7 @@ enum
 };
 
 // item types
-enum
+enum menuitemtype_e
 {
    it_gap,              // empty line
    it_runcmd,           // run console command
@@ -73,7 +75,8 @@ enum
    it_slider,           // slider
    it_bigslider,        // big slider -- haleyjd 08/30/06
    it_automap,          // an automap colour
-   it_binding,		// haleyjd: a key binding
+   it_automap_opt,      // an optional automap colour
+   it_binding,		      // haleyjd: a key binding
    it_end,              // last menuitem in the list
 
    it_numtypes          // number of item types
@@ -81,25 +84,25 @@ enum
 
 struct menuitem_t
 {
-  int type; // item types
-  
-  const char *description;  // the describing name of this item
+   int type; // item types
 
-  // useful data for the item:
-  // console command if console
-  // variable name if variable, etc
-  const char *data;         
+   const char *description;  // the describing name of this item
 
-  const char *patch; // patch to use or NULL
+   // useful data for the item:
+   // console command if console
+   // variable name if variable, etc
+   const char *data;
 
-  unsigned int flags;   // haleyjd 03/29/05: menu item flags
+   const char *patch; // patch to use or nullptr
 
-  /*** internal stuff used by menu code ***/
-  int x, y;
-  variable_t *var;        // ptr to console variable
-  char *dyndescription;   // for EDF use only
-  char *dyndata;
-  char *dynpatch;
+   unsigned int flags;   // haleyjd 03/29/05: menu item flags
+
+   /*** internal stuff used by menu code ***/
+   int x, y;
+   variable_t *var;        // ptr to console variable
+   char *dyndescription;   // for EDF use only
+   char *dyndata;
+   char *dynpatch;
 };
 
 // haleyjd 10/07/05: Menu engine changes:
@@ -164,24 +167,30 @@ struct menu_t
 // A structured way for the menu to display things
 // other than the usual menus
 //
-// if current_menuwidget is not NULL, the drawer in
+// if current_menuwidget is not nullptr, the drawer in
 // the menuwidget pointed to by it is called by
 // MN_Drawer. Also events caught by MN_Responder are
 // sent to current_menuwidget->responder
 
 struct menuwidget_t
 {
-  void (*drawer)();
-  bool (*responder)(event_t *ev, int);
-  void (*ticker)();   // haleyjd 05/29/06
-  bool fullscreen;    // haleyjd: optimization for fullscreen widgets
-  
-  menuwidget_t *prev; // haleyjd 08/31/12: previous on stack, if any
+   void (*drawer)();
+   bool (*responder)(event_t *ev, int);
+   void (*ticker)();   // haleyjd 05/29/06
+   bool fullscreen;    // haleyjd: optimization for fullscreen widgets
+
+   menuwidget_t *prev; // haleyjd 08/31/12: previous on stack, if any
+};
+
+enum class consumeText_e : bool
+{
+   YES = true,
+   NO  = false
 };
 
 // haleyjd 08/31/12: A proper widget stack
 void   MN_PushWidget(menuwidget_t *widget);
-void   MN_PopWidget();
+void   MN_PopWidget(const consumeText_e consume = consumeText_e::YES);
 size_t MN_NumActiveWidgets();
 
 // responder for events
@@ -211,7 +220,7 @@ void MN_Init();
 
 void MN_StartControlPanel();
 
-void MN_ForcedLoadGame(char *msg); // killough 5/15/98: forced loadgames
+void MN_ForcedLoadGame(const char *msg); // killough 5/15/98: forced loadgames
 
 void MN_DrawCredits();    // killough 11/98
 
@@ -226,10 +235,15 @@ void MN_WriteTextColored(const char *s, int colour, int x, int y);
 int  MN_StringWidth(const char *s);
 int  MN_StringHeight(const char *s);
 
-void MN_ErrorMsg(const char *s, ...);
+void MN_ErrorMsg(E_FORMAT_STRING(const char *s), ...) E_PRINTF(1, 2);
 
+enum boxwidget_e
+{
+   boxwidget_menupage,
+   boxwidget_command
+};
 void MN_SetupBoxWidget(const char *title, const char **item_names,
-                       int type, menu_t **pages, const char **cmds);
+                       boxwidget_e type, menu_t **pages, const char **cmds);
 void MN_ShowBoxWidget();
 
 void MN_DrawSmallPtr(int x, int y); // haleyjd 03/13/06
@@ -256,13 +270,14 @@ extern int hide_menu;
 extern int menutime;
 
 // haleyjd
-extern int quickSaveSlot;
 extern bool menu_toggleisback;
 extern char *mn_fontname;
 extern char *mn_bigfontname;
 extern char *mn_normalfontname;
 extern char *mn_background;
 extern const char *mn_background_flat;
+extern int mn_lastSelectTic;
+extern int mn_lastScrollTic;
 
 extern vfont_t *menu_font;
 extern vfont_t *menu_font_big;

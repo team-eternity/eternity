@@ -31,6 +31,7 @@
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_gi.h"
+#include "d_main.h"
 #include "e_lib.h"
 #include "metaapi.h"
 #include "v_misc.h"
@@ -43,6 +44,7 @@
 // MAPINFO Data Maintenance
 //
 
+static MetaTable defaultMap;
 static MetaTable mapInfoTable;
 
 //
@@ -89,6 +91,7 @@ public:
       KW_GLOBAL_CD_END3,
       KW_GLOBAL_CD_INTRM,
       KW_GLOBAL_CD_TITLE,
+      KW_GLOBAL_DEFAULTMAP,
      
       KW_NUMGLOBAL
    };
@@ -128,14 +131,15 @@ protected:
    MetaTable     *curInfo;
    qstring        mapName;
    xlmikeyword_t *kwd;
+   bool classicHexenMode;  // use ZDoom's method of determining how to compute some fields
 
-   virtual bool doToken(XLTokenizer &token);
-   virtual void startLump();
+   virtual bool doToken(XLTokenizer &token) override;
+   virtual void startLump() override;
 
 public:
    XLMapInfoParser() 
       : XLParser("MAPINFO"), state(STATE_EXPECTCMD), globalKW(KW_NUMGLOBAL),
-        curInfo(NULL), mapName(), kwd(NULL)
+        curInfo(nullptr), mapName(), kwd(nullptr), classicHexenMode()
    {
    }
 };
@@ -150,6 +154,7 @@ const char *XLMapInfoParser::globalKeywords[KW_NUMGLOBAL] =
    "cd_end3_track",         // specifies END3 track for Hexen (TODO)
    "cd_intermission_track", // specifies intermission CD track (TODO)
    "cd_title_track",        // specifies titlescreen CD track (TODO)
+   "defaultmap",            // GZDoom defaultmap
 };
 
 // Keywords allowed in a map context
@@ -171,6 +176,15 @@ const char *XLMapInfoParser::mapKeywords[XL_NUMMAPINFO_FIELDS] =
    "nointermission",  // kill intermission after map
    "evenlighting",    // map has no fake contrast
    "noautosequences", // disables auto-assignment of default sound sequences
+   "nojump",          // disable jumping
+   "nocrouch",        // unused
+   "map07special",    // map07 boss special
+   "baronspecial",    // baron boss actor
+   "cyberdemonspecial", // cyberdemon boss actor
+   "spidermastermindspecial", // spiderdemon boss actor
+   "specialaction_lowerfloor",   // lower tag 666
+   "specialaction_exitlevel", // exit
+   "nosoundclipping" // no sound clipping (TODO)
 };
 
 // holds data about how to parse and store a map keyword's data
@@ -203,15 +217,15 @@ enum
 };
 
 #define XLMI_INTEGER(n)    \
-   { n, KW_TYPE_VALUE, KW_VALUE_INT,  XLMapInfoParser::mapKeywords[n], NULL }
+   { n, KW_TYPE_VALUE, KW_VALUE_INT,  XLMapInfoParser::mapKeywords[n], nullptr }
 #define XLMI_QSTRING(n)    \
-   { n, KW_TYPE_VALUE, KW_VALUE_QSTR, XLMapInfoParser::mapKeywords[n], NULL }
+   { n, KW_TYPE_VALUE, KW_VALUE_QSTR, XLMapInfoParser::mapKeywords[n], nullptr }
 #define XLMI_BOOLEAN(n)    \
-   { n, KW_TYPE_FLAG,  KW_VALUE_BOOL, XLMapInfoParser::mapKeywords[n], NULL }
+   { n, KW_TYPE_FLAG,  KW_VALUE_BOOL, XLMapInfoParser::mapKeywords[n], nullptr }
 #define XLMI_SKYTYPE(n, i) \
    { n, KW_TYPE_SKY,   KW_VALUE_SKY,  XLMapInfoParser::mapKeywords[n], i    }
 #define XLMI_MAPNAME(n)    \
-   { n, KW_TYPE_VALUE, KW_VALUE_MAP,  XLMapInfoParser::mapKeywords[n], NULL }
+   { n, KW_TYPE_VALUE, KW_VALUE_MAP,  XLMapInfoParser::mapKeywords[n], nullptr }
 
 // This table drives parsing while inside a map block.
 static xlmikeyword_t mapKeywordParseTable[XL_NUMMAPINFO_FIELDS] =
@@ -231,7 +245,16 @@ static xlmikeyword_t mapKeywordParseTable[XL_NUMMAPINFO_FIELDS] =
    XLMI_QSTRING(XL_MAPINFO_MUSIC),
    XLMI_BOOLEAN(XL_MAPINFO_NOINTERMISSION),
    XLMI_BOOLEAN(XL_MAPINFO_EVENLIGHTING),
-   XLMI_BOOLEAN(XL_MAPINFO_NOAUTOSEQUENCES)
+   XLMI_BOOLEAN(XL_MAPINFO_NOAUTOSEQUENCES),
+   XLMI_BOOLEAN(XL_MAPINFO_NOJUMP),
+   XLMI_BOOLEAN(XL_MAPINFO_NOCROUCH),
+   XLMI_BOOLEAN(XL_MAPINFO_MAP07SPECIAL),
+   XLMI_BOOLEAN(XL_MAPINFO_BARONSPECIAL),
+   XLMI_BOOLEAN(XL_MAPINFO_CYBERDEMONSPECIAL),
+   XLMI_BOOLEAN(XL_MAPINFO_SPIDERMASTERMINDSPECIAL),
+   XLMI_BOOLEAN(XL_MAPINFO_SPECIALACTION_LOWERFLOOR),
+   XLMI_BOOLEAN(XL_MAPINFO_SPECIALACTION_EXITLEVEL),
+   XLMI_BOOLEAN(XL_MAPINFO_NOSOUNDCLIPPING),
 };
 
 //
@@ -253,8 +276,9 @@ void XLMapInfoParser::startLump()
 {
    state    = STATE_EXPECTCMD; // scanning for global command
    globalKW = KW_NUMGLOBAL;    // no current global keyword
-   curInfo  = NULL;            // not in a current info definition
-   kwd      = NULL;            // no current keyword data
+   curInfo  = nullptr;            // not in a current info definition
+   kwd      = nullptr;            // no current keyword data
+   classicHexenMode = false;
    mapName.clear();
 }
 
@@ -265,12 +289,20 @@ bool XLMapInfoParser::doStateExpectCmd(XLTokenizer &token)
    int   kwNum    = E_StrToNumLinear(globalKeywords, KW_NUMGLOBAL, tokenVal.constPtr());
 
    if(kwNum == KW_NUMGLOBAL)
+   {
+      usermsg("MAPINFO: unknown item '%s'; stopping parsing.", tokenVal.constPtr());
       return false; // error, stop parsing.
+   }
 
    switch(kwNum)
    {
    case KW_GLOBAL_MAP:
       state = STATE_EXPECTMAPNAME; // map name or number should be next.
+      break;
+   case KW_GLOBAL_DEFAULTMAP:
+      defaultMap.clearTable();   // must clear previous defaultmap data
+      curInfo = &defaultMap;
+      state = STATE_EXPECTMAPCMD;
       break;
    default:
       globalKW = kwNum;
@@ -294,21 +326,27 @@ bool XLMapInfoParser::doStateExpectGlobalVal(XLTokenizer &token)
 // MakeMAPxy
 //
 // Utility to convert Hexen's map numbers into MAPxy map name strings.
+// Returns true if it was indeed just a number
 //
-static void MakeMAPxy(qstring &mapName)
+static bool MakeMAPxy(qstring &mapName)
 {
-   char *endptr = NULL;
+   char *endptr = nullptr;
    auto  num    = mapName.toLong(&endptr, 10);
 
    if(*endptr == '\0' && num >= 1 && num <= 99)
-      mapName.Printf(9, "MAP%02d", num);
+   {
+      mapName.Printf(9, "MAP%02ld", num);
+      return true;
+   }
+   return false;
 }
 
 // Expecting the map lump name or number after "map"
 bool XLMapInfoParser::doStateExpectMapName(XLTokenizer &token)
 {
    mapName = token.getToken();
-   MakeMAPxy(mapName);
+   if(MakeMAPxy(mapName))
+      classicHexenMode = true;   // WARNING: GZDoom keeps this on true for the rest of the lump.
    state = STATE_EXPECTMAPDNAME;
    return true;
 }
@@ -318,6 +356,9 @@ bool XLMapInfoParser::doStateExpectMapDName(XLTokenizer &token)
 {
    // we have enough information now to create a new XLMapInfo
    curInfo = XL_newMapInfo(mapName, token.getToken());
+
+   // Copy now whatever we have in defaultmap
+   curInfo->copyTableFrom(&defaultMap);
 
    state = STATE_EXPECTMAPCMD;
    return true;
@@ -367,7 +408,16 @@ bool XLMapInfoParser::doStateExpectSkyName(XLTokenizer &token)
 // Expecting the scroll delta to apply to that sky texture
 bool XLMapInfoParser::doStateExpectSkyNum(XLTokenizer &token)
 {
-   curInfo->setInt(kwd->intkey, token.getToken().toInt());
+   char *endptr = nullptr;
+   double val = token.getToken().toDouble(&endptr);
+
+   if(*endptr) // not a number, it's optional, so try something else
+      return doStateExpectMapCmd(token);
+
+   // Must apply GZDoom's scale if so far the format is modern
+   if(!classicHexenMode)
+      val *= 256;
+   curInfo->setDouble(kwd->intkey, val);
    state = STATE_EXPECTMAPCMD; // go back to scanning for a map command
    return true;
 }
@@ -419,7 +469,7 @@ bool (XLMapInfoParser::* XLMapInfoParser::States[])(XLTokenizer &) =
 // XL_MapInfoForMapName
 //
 // Lookup an XLMapInfo object by mapname. Returns the active object for the
-// map if one exists, and NULL otherwise.
+// map if one exists, and nullptr otherwise.
 //
 MetaTable *XL_MapInfoForMapName(const char *name)
 {
@@ -474,10 +524,10 @@ CONSOLE_COMMAND(xl_dumpmapinfo, 0)
       return;
    }
 
-   MetaTable *mapInfo = NULL;
+   MetaTable *mapInfo = nullptr;
    if((mapInfo = XL_MapInfoForMapName(Console.argv[0]->constPtr())))
    {
-      const MetaObject *obj = NULL;
+      const MetaObject *obj = nullptr;
 
       C_Printf("MAPINFO Entry for %s:\n", mapInfo->getKey());
       while((obj = mapInfo->tableIterator(obj)))

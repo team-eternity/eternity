@@ -76,8 +76,8 @@ void ST_DrawSmallHereticNumber(int val, int x, int y, bool fullscreen)
       // know enough about coding to change this hard limit.
       if(val > 99999)
          val = 99999;
-      sprintf(buf, "%d", val);
-      x -= 4 * (strlen(buf));
+      snprintf(buf, sizeof(buf), "%d", val);
+      x -= static_cast<int>(4 * (strlen(buf)));
       for(char *rover = buf; *rover; rover++)
       {
          int i = *rover - '0';
@@ -132,7 +132,7 @@ static void ST_HticInit()
       char lumpname[9];
 
       memset(lumpname, 0, 9);
-      sprintf(lumpname, "IN%d", i);
+      snprintf(lumpname, sizeof(lumpname), "IN%d", i);
 
       efree(invnums[i]);
       invnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
@@ -144,7 +144,7 @@ static void ST_HticInit()
       char lumpname[9];
 
       memset(lumpname, 0, 9);
-      sprintf(lumpname, "SMALLIN%d", i);
+      snprintf(lumpname, sizeof(lumpname), "SMALLIN%d", i);
 
       smallinvnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
 
@@ -163,7 +163,7 @@ static void ST_HticInit()
    {
       extern patch_t *keys[];
       char namebuf[9];
-      sprintf(namebuf, "STKEYS%d", i);
+      snprintf(namebuf, sizeof(namebuf), "STKEYS%d", i);
 
       efree(keys[i]);
       keys[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
@@ -223,7 +223,7 @@ static void ST_HticTicker()
 
    // update chain wiggle value
    if(leveltime & 1)
-      chainwiggle = M_Random() & 1;
+      chainwiggle = M_VHereticPRandom(pr_chainwiggle) & 1;
 }
 
 static void ST_drawInvNum(int num, int x, int y)
@@ -288,9 +288,9 @@ static void ST_drawBackground()
 #define SHADOW_BOX_WIDTH  16
 #define SHADOW_BOX_HEIGHT 10
 
-static void ST_BlockDrawerS(int x, int y, int startcmap, int mapdir)
+static void ST_blockDrawerS(int x, int y, int startcmap, int mapdir)
 {
-   byte *dest, *row, *colormap;
+   byte *dest, *col, *colormap;
    int w, h, i, realx, realy;
    int cx1, cy1, cx2, cy2;
 
@@ -300,13 +300,13 @@ static void ST_BlockDrawerS(int x, int y, int startcmap, int mapdir)
    cy1 = y;
    cx2 = x + SHADOW_BOX_WIDTH  - 1;
    cy2 = y + SHADOW_BOX_HEIGHT - 1;
-               
+
    realx = subscreen43.x1lookup[cx1];
    realy = subscreen43.y1lookup[cy1];
    w     = subscreen43.x2lookup[cx2] - realx + 1;
    h     = subscreen43.y2lookup[cy2] - realy + 1;
 
-   dest = subscreen43.data + realy * subscreen43.pitch + realx;
+   dest = subscreen43.data + realx * subscreen43.pitch + realy;
 
    mapstep = mapdir * (16 << FRACBITS) / w;
 
@@ -315,25 +315,25 @@ static void ST_BlockDrawerS(int x, int y, int startcmap, int mapdir)
    if(realx < 0 || realx + w > subscreen43.width ||
       realy < 0 || realy + h > subscreen43.height)
    {
-      I_Error("ST_BlockDrawerS: block exceeds buffer boundaries.\n");
+      I_Error("ST_blockDrawerS: block exceeds buffer boundaries.\n");
    }
 #endif
 
    while(h--)
    {
-      row = dest;
+      col = dest;
       i = w;
       mapnum = startcmap << FRACBITS;
-      
+
       while(i--)
       {
          colormap = colormaps[0] + (mapnum >> FRACBITS) * 256;
-         *row = colormap[*row];
-         ++row;
+         *col = colormap[*col];
+         col += subscreen43.height;
          mapnum += mapstep;
       }
 
-      dest += subscreen43.pitch;
+      dest += 1;
    }
 }
 
@@ -345,8 +345,8 @@ static void ST_BlockDrawerS(int x, int y, int startcmap, int mapdir)
 //
 static void ST_chainShadow()
 {
-   ST_BlockDrawerS(277, 190,  9,  1);
-   ST_BlockDrawerS( 19, 190, 23, -1);
+   ST_blockDrawerS(277, 190,  9,  1);
+   ST_blockDrawerS( 19, 190, 23, -1);
 }
 
 //

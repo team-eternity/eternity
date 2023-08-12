@@ -24,7 +24,7 @@ find_library(SDL2_MIXER_LIBRARY SDL2_mixer
              PATH_SUFFIXES lib)
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(SDL2_MIXER REQUIRED_VARS SDL2_MIXER_LIBRARY SDL2_MIXER_INCLUDE_DIR)
+find_package_handle_standard_args(SDL2_mixer REQUIRED_VARS SDL2_MIXER_LIBRARY SDL2_MIXER_INCLUDE_DIR)
 
 ## EOF
 

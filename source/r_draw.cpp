@@ -67,10 +67,9 @@ byte *renderscreen;            // haleyjd
 //  translate a limited part to another
 //  (color ramps used for  suit colors).
 //
- 
-byte *tranmap;          // translucency filter maps 256x256   // phares 
-byte *main_tranmap;     // killough 4/11/98
-byte *main_submap;      // haleyjd 11/30/13
+
+byte *main_tranmap; // killough 4/11/98
+byte *main_submap;  // haleyjd 11/30/13
 
 int rTintTableIndex;
 
@@ -81,18 +80,29 @@ int rTintTableIndex;
 
 // Fuzz stuffs
 
-const int fuzzoffset[FUZZTABLE] = 
-{
-  1,0,1,0,1,1,0,
-  1,1,0,1,1,1,0,
-  1,1,1,0,0,0,0,
-  1,0,0,1,1,1,1,0,
-  1,0,1,1,0,0,1,
-  1,0,0,0,0,1,1,
-  1,1,0,1,1,0,1 
-}; 
+static constexpr int FUZZTABLE = 50;
 
-int fuzzpos = 0; 
+static constexpr int fuzzoffset[FUZZTABLE] =
+{
+   1,0,1,0,1,1,0,
+   1,1,0,1,1,1,0,
+   1,1,1,0,0,0,0,
+   1,0,0,1,1,1,1,0,
+   1,0,1,1,0,0,1,
+   1,0,0,0,0,1,1,
+   1,1,0,1,1,0,1
+};
+
+// One value per column. Inherently thread-safe for column drawing,
+// and appears the same regardless of thread count.
+static int *fuzzpos;
+
+VALLOCATION(solidsegs)
+{
+   fuzzpos = emalloctag(int *, w * sizeof(int), PU_VALLOC, nullptr);
+   for(int x = 0; x < w; x++)
+      fuzzpos[x] = M_RangeRandomEx(0, FUZZTABLE - 1);
+}
 
 //
 // A column is a vertical slice/span from a wall texture that,
@@ -102,7 +112,7 @@ int fuzzpos = 0;
 //  be used. It has also been used with Wolfenstein 3D.
 // 
 
-void CB_DrawColumn_8()
+void CB_DrawColumn_8(cb_column_t &column)
 {
    int count;
    byte *dest;
@@ -141,7 +151,7 @@ void CB_DrawColumn_8()
          do
          {
             *dest = colormap[source[frac>>FRACBITS]];
-            dest += linesize;                     // killough 11/98
+            dest += 1;                     // killough 11/98
             if((frac += fracstep) >= heightmask)
                frac -= heightmask;
          } 
@@ -152,10 +162,113 @@ void CB_DrawColumn_8()
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
             *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
             *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
+            frac += fracstep;
+         }
+         if(count & 1)
+            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
+      }
+   }
+}
+
+//
+// Sky drawing: for showing just a color above the texture
+//
+void CB_DrawSkyColumn_8(cb_column_t &column)
+{
+   int count;
+   byte *dest;
+   fixed_t frac;
+   fixed_t fracstep;
+
+   count = column.y2 - column.y1 + 1;
+   if(count <= 0) return;
+
+#ifdef RANGECHECK
+   if(column.x  < 0 || column.x  >= video.width ||
+      column.y1 < 0 || column.y2 >= video.height)
+      I_Error("CB_DrawColumn_8: %i to %i at %i\n", column.y1, column.y2, column.x);
+#endif
+
+   dest = R_ADDRESS(column.x, column.y1);
+   fracstep = column.step;
+   frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
+
+   {
+      const byte *source = static_cast<const byte *>(column.source);
+      const lighttable_t *colormap = column.colormap;
+      int heightmask = column.texheight - 1;
+
+      // Fill in the median color here
+      // Have two intermediary fade lines, using the main_tranmap structure
+      int n;
+      if(frac < -2 * FRACUNIT)
+      {
+         n = (-frac - 2 * FRACUNIT + fracstep - 1) / fracstep;
+         if(n > count)
+            n = count;
+         memset(dest, colormap[column.skycolor], n);
+         if(!(count -= n))
+            return;
+         dest += n;
+         frac += fracstep * n;
+      }
+      if(frac < -FRACUNIT)
+      {
+         n = (-frac - FRACUNIT + fracstep - 1) / fracstep;
+         if(n > count)
+            n = count;
+         memset(dest, main_tranmap[(main_tranmap[(colormap[source[0]] << 8) +
+                                                 colormap[column.skycolor]] << 8) +
+                                   colormap[column.skycolor]], n);
+         if(!(count -= n))
+            return;
+         dest += n;
+         frac += fracstep * n;
+      }
+      // Now it's on the edge
+      if(frac < 0)
+      {
+         n = (-frac + fracstep - 1) / fracstep;
+         if(n > count)
+            n = count;
+         memset(dest, main_tranmap[(colormap[source[0]] << 8) + colormap[column.skycolor]], n);
+         if(!(count -= n))
+            return;
+         dest += n;
+         frac += fracstep * n;
+      }
+
+      if(column.texheight & heightmask)
+      {
+         heightmask++;
+         heightmask <<= FRACBITS;
+
+
+         while(frac >= heightmask)
+            frac -= heightmask;
+
+         do
+         {
+            *dest = colormap[source[frac>>FRACBITS]];
+            dest += 1;                     // killough 11/98
+            if((frac += fracstep) >= heightmask)
+               frac -= heightmask;
+         }
+         while(--count);
+      }
+      else
+      {
+         while((count -= 2) >= 0) // texture height is a power of 2 -- killough
+         {
+            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
+            dest += 1;   // killough 11/98
+            frac += fracstep;
+            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
+            dest += 1;   // killough 11/98
             frac += fracstep;
          }
          if(count & 1)
@@ -166,7 +279,7 @@ void CB_DrawColumn_8()
 
 // haleyjd: experimental column drawer for masked sky textures
 // ioanch: confirmed OK, but only for basic r_draw (non-quad) mode.
-static void CB_DrawNewSkyColumn_8()
+static void CB_DrawNewSkyColumn_8(cb_column_t &column)
 {
    int      count;
    byte    *dest;            // killough
@@ -204,16 +317,26 @@ static void CB_DrawNewSkyColumn_8()
       const byte *source = static_cast<const byte *>(column.source);
       const lighttable_t *colormap = column.colormap;
       int heightmask = column.texheight-1;
+
+      // Skip above-areas
+      if(frac < 0)
+      {
+         int n = (-frac + fracstep - 1) / fracstep;
+         if(n > count)
+            n = count;
+         if(!(count -= n))
+            return;
+         dest += n;
+         frac += fracstep * n;
+      }
+
       if (column.texheight & heightmask)   // not a power of 2 -- killough
       {
          heightmask++;
          heightmask <<= FRACBITS;
 
-         if (frac < 0)
-            while ((frac += heightmask) <  0);
-         else
-            while (frac >= heightmask)
-               frac -= heightmask;
+         while (frac >= heightmask)
+            frac -= heightmask;
 
          do
          {
@@ -225,7 +348,7 @@ static void CB_DrawNewSkyColumn_8()
             // haleyjd
             if(source[frac>>FRACBITS])
                *dest = colormap[source[frac>>FRACBITS]];
-            dest += linesize;                     // killough 11/98
+            dest += 1;                     // killough 11/98
             if ((frac += fracstep) >= heightmask)
                frac -= heightmask;
          }
@@ -237,11 +360,11 @@ static void CB_DrawNewSkyColumn_8()
          {
             if(source[(frac>>FRACBITS) & heightmask])
                *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
             if(source[(frac>>FRACBITS) & heightmask])
                *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
          }
          if ((count & 1) && source[(frac>>FRACBITS) & heightmask])
@@ -263,9 +386,9 @@ static void CB_DrawNewSkyColumn_8()
 // actual code differences are.
 
 #define SRCPIXEL \
-   tranmap[(*dest<<8)+colormap[source[(frac>>FRACBITS) & heightmask]]]
+   column.tranmap[(*dest<<8)+colormap[source[(frac>>FRACBITS) & heightmask]]]
 
-void CB_DrawTLColumn_8(void)
+void CB_DrawTLColumn_8(cb_column_t &column)
 {
    int count;
    byte *dest;
@@ -304,8 +427,8 @@ void CB_DrawTLColumn_8(void)
 
          do
          {
-            *dest = tranmap[(*dest<<8) + colormap[source[frac>>FRACBITS]]]; // phares
-            dest += linesize;          // killough 11/98
+            *dest = column.tranmap[(*dest<<8) + colormap[source[frac>>FRACBITS]]]; // phares
+            dest += 1;          // killough 11/98
             if((frac += fracstep) >= heightmask)
                frac -= heightmask;
          } 
@@ -316,10 +439,10 @@ void CB_DrawTLColumn_8(void)
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
             *dest = SRCPIXEL; // phares
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
             *dest = SRCPIXEL; // phares
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
          }
          if(count & 1)
@@ -331,16 +454,16 @@ void CB_DrawTLColumn_8(void)
 #undef SRCPIXEL
 
 #define SRCPIXEL \
-   tranmap[(*dest<<8) + colormap[column.translation[source[frac>>FRACBITS]]]]
+   column.tranmap[(*dest<<8) + colormap[column.translation[source[frac>>FRACBITS]]]]
 
 #define SRCPIXEL_MASK \
-   tranmap[(*dest<<8) + \
+   column.tranmap[(*dest<<8) + \
       colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]]
 
 //
 // haleyjd 02/08/05: BOOM TL/Tlated was neglected.
 //
-void CB_DrawTLTRColumn_8(void)
+void CB_DrawTLTRColumn_8(cb_column_t &column)
 {
    int count;
    byte *dest;
@@ -379,7 +502,7 @@ void CB_DrawTLTRColumn_8(void)
          do
          {
             *dest = SRCPIXEL; // phares
-            dest += linesize; // killough 11/98
+            dest += 1; // killough 11/98
             if((frac += fracstep) >= heightmask)
                frac -= heightmask;
          } 
@@ -390,10 +513,10 @@ void CB_DrawTLTRColumn_8(void)
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
             *dest = SRCPIXEL_MASK; // phares
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
             *dest = SRCPIXEL_MASK; // phares
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
          }
          if(count & 1)
@@ -424,52 +547,67 @@ void CB_DrawTLTRColumn_8(void)
 // sf: restored original fuzz effect (changed in mbf)
 // sf: changed to use vis->colormap not fullcolormap
 //     for coloured lighting and SHADOW now done with
-//     flags not NULL colormap
+//     flags not nullptr colormap
+
+#define COLORFUZZ(offset) \
+   colormap[6*256+dest[(offset)]]
 
 #define SRCPIXEL \
-   colormap[6*256+dest[fuzzoffset[fuzzpos] ? linesize : -linesize]]
+   COLORFUZZ(fuzzoffset[fuzzpos[column.x]] ? 1 : -1)
 
-void CB_DrawFuzzColumn_8(void)
+void CB_DrawFuzzColumn_8(cb_column_t &column)
 {
    int count;
    byte *dest;
 
-   // Adjust borders. Low...
-   if(!column.y1) 
-      column.y1 = 1;
-   
-   // .. and high.
-   if(column.y2 == viewwindow.height - 1) 
-      column.y2 = viewwindow.height - 2; 
-
    count = column.y2 - column.y1 + 1;
    if(count <= 0) return;
 
-#ifdef RANGECHECK 
-   if(column.x  < 0 || column.x  >= video.width || 
+#ifdef RANGECHECK
+   if(column.x  < 0 || column.x  >= video.width ||
       column.y1 < 0 || column.y2 >= video.height)
-      I_Error("CB_DrawFuzzColumn_8: %i to %i at %i\n", column.y1, column.y2, column.x);    
-#endif 
+      I_Error("CB_DrawFuzzColumn_8: %i to %i at %i\n", column.y1, column.y2, column.x);
+#endif
 
    dest = R_ADDRESS(column.x, column.y1);
 
    {
       const lighttable_t *colormap = column.colormap;
-      
+
+      // Instead of +1/-1 render top pixels with +1/0 to avoid underrun.
+      if(column.y1 == 0)
+      {
+         *dest = COLORFUZZ(fuzzoffset[fuzzpos[column.x]] ? 1 : 0);
+         if(++fuzzpos[column.x] == FUZZTABLE) fuzzpos[column.x] = 0;
+         dest += 1;
+         count -= 1;
+      }
+      // For bottom pixels reduce count to render in loop, then render extra pixel at end
+      if(column.y2 == viewwindow.height - 1)
+         count -= 1;
+
       while((count -= 2) >= 0) // texture height is a power of 2 -- killough
       {
          *dest = SRCPIXEL;
-         if(++fuzzpos == FUZZTABLE) fuzzpos = 0;
-         dest += linesize;   // killough 11/98
+         if(++fuzzpos[column.x] == FUZZTABLE) fuzzpos[column.x] = 0;
+         dest += 1;   // killough 11/98
 
          *dest = SRCPIXEL;
-         if(++fuzzpos == FUZZTABLE) fuzzpos = 0;
-         dest += linesize;   // killough 11/98
+         if(++fuzzpos[column.x] == FUZZTABLE) fuzzpos[column.x] = 0;
+         dest += 1;   // killough 11/98
       }
       if(count & 1)
       {
          *dest = SRCPIXEL;
-         if(++fuzzpos == FUZZTABLE) fuzzpos = 0;
+         if(++fuzzpos[column.x] == FUZZTABLE) fuzzpos[column.x] = 0;
+         dest += 1;
+      }
+
+      // Instead of +1/-1 render bottom pixels with 0/-1 to avoid overrun.
+      if(column.y2 == viewwindow.height - 1)
+      {
+         *dest = COLORFUZZ(fuzzoffset[fuzzpos[column.x]] ? 0 : -1);
+         if(++fuzzpos[column.x] == FUZZTABLE) fuzzpos[column.x] = 0;
       }
    }
 }
@@ -487,7 +625,7 @@ void CB_DrawFuzzColumn_8(void)
 //
 
 // haleyjd: changed translationtables to byte **
-byte **translationtables = NULL;
+byte **translationtables = nullptr;
 
 // haleyjd: new stuff
 static int firsttranslationlump;
@@ -496,7 +634,7 @@ static int numtranslations = 0;
 #define SRCPIXEL \
    colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]
 
-void CB_DrawTRColumn_8(void)
+void CB_DrawTRColumn_8(cb_column_t &column)
 {
    int count;
    byte *dest;
@@ -535,7 +673,7 @@ void CB_DrawTRColumn_8(void)
          do
          {
             *dest = colormap[column.translation[source[frac>>FRACBITS]]]; // phares
-            dest += linesize;                     // killough 11/98
+            dest += 1;                     // killough 11/98
             if((frac += fracstep) >= heightmask)
                frac -= heightmask;
          } 
@@ -546,10 +684,10 @@ void CB_DrawTRColumn_8(void)
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
             *dest = SRCPIXEL; // phares
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
             *dest = SRCPIXEL;
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
          }
          if(count & 1)
@@ -565,7 +703,7 @@ void CB_DrawTRColumn_8(void)
 //
 // haleyjd 09/01/02: zdoom-style translucency
 //
-void CB_DrawFlexColumn_8(void)
+void CB_DrawFlexColumn_8(cb_column_t &column)
 {
    int count;
    byte *dest;
@@ -622,7 +760,7 @@ void CB_DrawFlexColumn_8(void)
             fg = (fg+bg) | 0x1f07c1f;
             *dest = RGB32k[0][0][fg & (fg>>15)];
             
-            dest += linesize;          // killough 11/98
+            dest += 1;          // killough 11/98
             if((frac += fracstep) >= heightmask)
                frac -= heightmask;
          } 
@@ -639,7 +777,7 @@ void CB_DrawFlexColumn_8(void)
             fg = (fg+bg) | 0x1f07c1f;
 
             *dest = RGB32k[0][0][fg & (fg>>15)];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
             
             fg = colormap[source[(frac>>FRACBITS) & heightmask]];
@@ -649,7 +787,7 @@ void CB_DrawFlexColumn_8(void)
             fg = (fg+bg) | 0x1f07c1f;
 
             *dest = RGB32k[0][0][fg & (fg>>15)];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
          }
          if(count & 1)
@@ -675,7 +813,7 @@ void CB_DrawFlexColumn_8(void)
 // haleyjd 11/05/02: zdoom-style translucency w/translation, for
 // player sprites
 //
-void CB_DrawFlexTRColumn_8(void)
+void CB_DrawFlexTRColumn_8(cb_column_t &column)
 {
    int count;
    byte *dest;
@@ -732,7 +870,7 @@ void CB_DrawFlexTRColumn_8(void)
             fg = (fg+bg) | 0x1f07c1f;
             *dest = RGB32k[0][0][fg & (fg>>15)];
             
-            dest += linesize;          // killough 11/98
+            dest += 1;          // killough 11/98
             if((frac += fracstep) >= heightmask)
                frac -= heightmask;
          } 
@@ -749,7 +887,7 @@ void CB_DrawFlexTRColumn_8(void)
             fg = (fg+bg) | 0x1f07c1f;
 
             *dest = RGB32k[0][0][fg & (fg>>15)];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
             
             fg = SRCPIXEL;
@@ -759,7 +897,7 @@ void CB_DrawFlexTRColumn_8(void)
             fg = (fg+bg) | 0x1f07c1f;
 
             *dest = RGB32k[0][0][fg & (fg>>15)];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
          }
          if(count & 1)
@@ -786,7 +924,7 @@ void CB_DrawFlexTRColumn_8(void)
 //
 // haleyjd 02/08/05: additive translucency
 //
-void CB_DrawAddColumn_8(void)
+void CB_DrawAddColumn_8(cb_column_t &column)
 {
    int count;
    byte *dest;
@@ -847,7 +985,7 @@ void CB_DrawAddColumn_8(void)
                         
             *dest = RGB32k[0][0][a & (a >> 15)];
             
-            dest += linesize;          // killough 11/98
+            dest += 1;          // killough 11/98
             if((frac += fracstep) >= heightmask)
                frac -= heightmask;
          } 
@@ -867,7 +1005,7 @@ void CB_DrawAddColumn_8(void)
             a |= b;            
             
             *dest = RGB32k[0][0][a & (a >> 15)];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
 
             a = SRCPIXEL + bg2rgb[*dest];
@@ -880,7 +1018,7 @@ void CB_DrawAddColumn_8(void)
             a |= b;
             
             *dest = RGB32k[0][0][a & (a >> 15)];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;            
          }
          if(count & 1)
@@ -914,7 +1052,7 @@ void CB_DrawAddColumn_8(void)
 // haleyjd 02/08/05: additive translucency + translation
 // The slowest of all column drawers!
 //
-void CB_DrawAddTRColumn_8(void)
+void CB_DrawAddTRColumn_8(cb_column_t &column)
 {
    int count;
    byte *dest;
@@ -975,7 +1113,7 @@ void CB_DrawAddTRColumn_8(void)
             
             *dest = RGB32k[0][0][a & (a >> 15)];
             
-            dest += linesize;          // killough 11/98
+            dest += 1;          // killough 11/98
             if((frac += fracstep) >= heightmask)
                frac -= heightmask;
          } 
@@ -995,7 +1133,7 @@ void CB_DrawAddTRColumn_8(void)
             a |= b;
             
             *dest = RGB32k[0][0][a & (a >> 15)];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
 
             a = SRCPIXEL_MASK + bg2rgb[*dest];
@@ -1008,7 +1146,7 @@ void CB_DrawAddTRColumn_8(void)
             a |= b;
             
             *dest = RGB32k[0][0][a & (a >> 15)];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;            
          }
          if(count & 1)
@@ -1038,6 +1176,7 @@ void CB_DrawAddTRColumn_8(void)
 columndrawer_t r_normal_drawer =
 {
    CB_DrawColumn_8,
+   CB_DrawSkyColumn_8,
    CB_DrawNewSkyColumn_8,
    CB_DrawTLColumn_8,
    CB_DrawTRColumn_8,
@@ -1048,7 +1187,7 @@ columndrawer_t r_normal_drawer =
    CB_DrawAddColumn_8,
    CB_DrawAddTRColumn_8,
 
-   NULL,
+   nullptr,
 
    {
       // Normal              Translated
@@ -1107,7 +1246,7 @@ void R_InitTranslationTables()
    numtranslations = TRANSLATIONCOLOURS + wni.getNumLumps();
 
    // allocate the array of pointers
-   translationtables = ecalloctag(byte **, numtranslations, sizeof(byte *), PU_RENDERER, NULL);
+   translationtables = ecalloctag(byte **, numtranslations, sizeof(byte *), PU_RENDERER, nullptr);
    
    // build the internal player translations
    for(i = 0; i < TRANSLATIONCOLOURS; i++)
@@ -1121,6 +1260,8 @@ void R_InitTranslationTables()
    rTintTableIndex = wGlobalDir.checkNumForName("TINTTAB");
    if(rTintTableIndex != -1 && wGlobalDir.lumpLength(rTintTableIndex) < 256 * 256)
       rTintTableIndex = -1;   // bad length
+   else if(rTintTableIndex != -1)
+      wGlobalDir.cacheLumpNum(rTintTableIndex, PU_CACHE);
 }
 
 //
@@ -1143,6 +1284,21 @@ int R_TranslationNumForName(const char *name)
 }
 
 //
+// Get the name from a given number of "mobjinfo colour". Returns nullptr if not found.
+//
+const char *R_TranslationNameForNum(int num)
+{
+   if(num <= TRANSLATIONCOLOURS)
+      return nullptr;
+   num -= TRANSLATIONCOLOURS + 1;
+   const WadDirectory::namespace_t &ns = wGlobalDir.getNamespace(lumpinfo_t::ns_translations);
+   if(num >= ns.numLumps)
+      return nullptr;
+   num += ns.firstLump;
+   return wGlobalDir.getLumpName(num);
+}
+
+//
 // R_GetIdentityMap
 //
 // haleyjd 09/08/12: Returns a pointer to the identity translation.
@@ -1157,7 +1313,7 @@ byte *R_GetIdentityMap()
 
    if(!identityMap)
    {
-      identityMap = emalloctag(byte *, 256, PU_PERMANENT, NULL);
+      identityMap = emalloctag(byte *, 256, PU_PERMANENT, nullptr);
       for(int i = 0; i < 256; i++)
          identityMap[i] = i;
    }

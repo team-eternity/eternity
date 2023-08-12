@@ -43,14 +43,14 @@ struct doomcom_t;
 struct doomdata_t;
 struct mapthing_t;
 
-typedef enum
+enum bfg_t : int
 {
-  bfg_normal,
-  bfg_classic,
-  bfg_11k,
-  bfg_bouncing, // haleyjd
-  bfg_burst,    // haleyjd
-} bfg_t;
+   bfg_normal,
+   bfg_classic,
+   bfg_11k,
+   bfg_bouncing, // haleyjd
+   bfg_burst,    // haleyjd
+};
 
 enum acceltype_e : int
 {
@@ -99,6 +99,8 @@ extern int demo_subversion;
 
 #define demo_compatibility (demo_version < 200) /* killough 11/98: macroized */
 #define ancient_demo       (demo_version < 5)   /* haleyjd  03/17: for old demos */
+#define vanilla_heretic    (ancient_demo && GameModeInfo->type == Game_Heretic)
+#define mbf21_demo         (demo_version >= 403)
 
 // haleyjd 10/16/10: full version macros
 #define make_full_version(v, sv) ((v << 8) | sv)
@@ -129,42 +131,49 @@ extern int demo_insurance, default_demo_insurance;      // killough 4/5/98
 // IMPORTANT: when searching for usage in the code, do NOT include the comp_
 // prefix. Just search for e.g. "telefrag" or "dropoff".
 
-enum {
-  comp_telefrag,
-  comp_dropoff,
-  comp_vile,
-  comp_pain,
-  comp_skull,
-  comp_blazing,
-  comp_doorlight,
-  comp_model,
-  comp_god,
-  comp_falloff,
-  comp_floors,
-  comp_skymap,
-  comp_pursuit,
-  comp_doorstuck,
-  comp_staylift,
-  comp_zombie,
-  comp_stairs,
-  comp_infcheat,
-  comp_zerotags,
-  comp_terrain,     // haleyjd 07/04/99: TerrainTypes toggle (#19)
-  comp_respawnfix,  // haleyjd 08/09/00: compat. option for nm respawn fix
-  comp_fallingdmg,  //         08/09/00: falling damage
-  comp_soul,        //         03/23/03: lost soul bounce
-  comp_theights,    //         07/06/05: thing heights fix
-  comp_overunder,   //         10/19/02: thing z clipping
-  comp_planeshoot,  //         09/22/07: ability to shoot floor/ceiling
-  comp_special,     //         08/29/09: special failure behavior
-  comp_ninja,       //         04/18/10: ninja spawn in G_CheckSpot
-  comp_jump,        // Disable jumping and air control
-  comp_aircontrol = comp_jump,
-  COMP_NUM_USED,    // counts the used comps. MUST BE LAST ONE + 1.
-  COMP_TOTAL=32  // Some extra room for additional variables
+enum
+{
+   comp_telefrag,
+   comp_dropoff,
+   comp_vile,
+   comp_pain,
+   comp_skull,
+   comp_blazing,
+   comp_doorlight,
+   comp_model,
+   comp_god,
+   comp_falloff,
+   comp_floors,
+   comp_skymap,
+   comp_pursuit,
+   comp_doorstuck,
+   comp_staylift,
+   comp_zombie,
+   comp_stairs,
+   comp_infcheat,
+   comp_zerotags,
+   comp_terrain,     // haleyjd 07/04/99: TerrainTypes toggle (#19)
+   comp_respawnfix,  // haleyjd 08/09/00: compat. option for nm respawn fix
+   comp_fallingdmg,  //         08/09/00: falling damage
+   comp_soul,        //         03/23/03: lost soul bounce
+   comp_theights,    //         07/06/05: thing heights fix
+   comp_overunder,   //         10/19/02: thing z clipping
+   comp_planeshoot,  //         09/22/07: ability to shoot floor/ceiling
+   comp_special,     //         08/29/09: special failure behavior
+   comp_ninja,       //         04/18/10: ninja spawn in G_CheckSpot
+   comp_jump,        // Disable jumping and air control
+   comp_aircontrol = comp_jump,
+   COMP_NUM_USED,    // counts the used comps. MUST BE LAST ONE + 1.
+   COMP_TOTAL=32     // Some extra room for additional variables
 };
 
 extern int comp[COMP_TOTAL], default_comp[COMP_TOTAL];
+extern int level_compat_comp[COMP_TOTAL];  // ioanch: level compat active?
+extern bool level_compat_compactive[COMP_TOTAL];   // true if use level_compat_comp instead of comp
+inline static int getComp(int index)
+{
+   return level_compat_compactive[index] ? level_compat_comp[index] : comp[index];
+}
 
 // -------------------------------------------
 // Language.
@@ -212,10 +221,13 @@ extern  bool deathmatch;
 //  but are not (yet) supported with Linux
 //  (e.g. no sound volume adjustment with menu.
 
+// Maximum value for any volume
+constexpr int SND_MAXVOLUME = 15;
+
 // These are not used, but should be (menu).
 // From m_menu.c:
-//  Sound FX volume has default, 0 - 15
-//  Music volume has default, 0 - 15
+//  Sound FX volume has default, 0 - SND_MAXVOLUME
+//  Music volume has default, 0 - SND_MAXVOLUME
 // These are multiplied by 8.
 extern int snd_SfxVolume;      // maximum volume for sound
 extern int snd_MusicVolume;    // maximum volume for music
@@ -241,6 +253,7 @@ extern int snd_DesiredSfxDevice;
 extern  bool statusbaractive;
 
 extern  bool automapactive; // In AutoMap mode?
+extern  bool automap_overlay; // automap is in overlay mode?
 extern  bool menuactive;    // Menu overlayed?
 extern  int  paused;        // Game Pause?
 extern  int  hud_active;    //jff 2/17/98 toggles heads-up status display
@@ -325,9 +338,6 @@ extern  char   *userpath;
 extern  char   *basegamepath;
 extern  char   *usergamepath;
 
-// if true, load all graphics at level load
-extern  bool precache;
-
 // wipegamestate can be set to -1
 //  to force a wipe on the next draw
 extern  gamestate_t     wipegamestate;
@@ -409,6 +419,8 @@ extern int flashing_hom; // killough 10/98
 
 extern int weapon_hotkey_cycling;   // killough 10/98
 
+extern bool weapon_hotkey_holding;  // ioanch 20211113
+
 //=======================================================
 //
 // haleyjd: Eternity Stuff
@@ -431,12 +443,12 @@ extern int forceFlipPan;
 // and deathmatch variables being used to mean multiple things
 // haleyjd 04/14/03: deathmatch type is now controlled via dmflags
 
-typedef enum
+enum gametype_t : int
 {
    gt_single,
    gt_coop,
    gt_dm,
-} gametype_t;
+};
 
 extern gametype_t GameType, DefaultGameType;
 

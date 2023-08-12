@@ -44,7 +44,7 @@ enum
    VFONT_BIG_NUM,
 };
 
-typedef struct vfontfilter_s
+struct vfontfilter_t
 {
    unsigned int start;    // first character
    unsigned int end;      // last character
@@ -52,7 +52,7 @@ typedef struct vfontfilter_s
    unsigned int numchars; // number of chars
    const char   *mask;    // loading string
 
-} vfontfilter_t;
+};
 
 //
 // Linear lump wad reload data
@@ -86,6 +86,7 @@ struct vfont_t
    bool  color;        // supports color translations?
    bool  upper;        // uses uppercase only?
    bool  centered;     // characters are centered in position?
+   bool  useSpaceSize; // use step for a blank space instead of the space character
 
    patch_t **fontgfx;  // graphics patches for font (not owned)
 
@@ -131,17 +132,18 @@ struct vtextdraw_t
 };
 
 void    V_FontWriteTextEx(const vtextdraw_t &textdraw);
-void    V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen = NULL);
+void    V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen = nullptr);
 void    V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int y,
-                               VBuffer *screen = NULL);
+                               VBuffer *screen = nullptr);
 void    V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map,
-                              VBuffer *screen = NULL);
+                              VBuffer *screen = nullptr);
 void    V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y, 
-                                VBuffer *screen = NULL, int color = -1);
+                                VBuffer *screen = nullptr, int color = -1);
 int     V_FontStringHeight(vfont_t *font, const char *s);
 int     V_FontStringWidth(vfont_t *font, const char *s);
 int     V_FontCharWidth(vfont_t *font, char pChar);
 int16_t V_FontMaxWidth(vfont_t *font);
+int16_t V_FontMinWidth(vfont_t *font);
 
 void V_FontFitTextToRect(vfont_t *font, char *msg, int x1, int y1, int x2, int y2);
 void V_FontFitTextToRect(vfont_t *font, qstring &msg, int x1, int y1, int x2, int y2);

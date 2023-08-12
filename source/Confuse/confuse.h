@@ -150,7 +150,7 @@ typedef int (*cfg_callback_t)(cfg_t *cfg, cfg_opt_t *opt,
                               const char *value, void *result);
 
 /** Error reporting function. */
-typedef void (*cfg_errfunc_t)(cfg_t *cfg, const char *fmt, va_list ap);
+using cfg_errfunc_t = void (*)(const cfg_t *const cfg, const char *fmt, va_list ap);
 
 /** Lexer open callback */
 typedef int (*cfg_lexfunc_t)(cfg_t *cfg, const char *data, int size);
@@ -222,11 +222,15 @@ struct cfg_opt_t
 /** 
  * Initialize a string option
  */
-#define CFG_STR(name, def, flags)  \
-   {name, CFGT_STR, 0, 0, flags, 0, 0, def, false, 0, 0, 0, 0}
+constexpr cfg_opt_t CFG_STR(const char *const name, const char *const def, const cfg_flag_t flags)
+{
+   return { name, CFGT_STR, 0, nullptr, flags, nullptr, 0, def, false, 0, nullptr, nullptr, nullptr };
+}
 
-#define CFG_STR_CB(name, def, flags, cb)  \
-   {name, CFGT_STR, 0, 0, flags, 0, 0, def, false, 0, 0, 0, cb}
+constexpr cfg_opt_t CFG_STR_CB(const char *const name, const char *const def, const cfg_flag_t flags, const cfg_callback_t cb)
+{
+   return { name, CFGT_STR, 0, nullptr, flags, nullptr, 0, def, false, 0, nullptr, nullptr, cb };
+}
 
 /** Initialize a "simple" string option.
  *
@@ -239,7 +243,7 @@ struct cfg_opt_t
  *
  * @param name name of the option
  * @param value pointer to a character pointer (a char **). This value
- * must be initalized either to NULL or to a malloc()'ed string. You
+ * must be initalized either to nullptr or to a malloc()'ed string. You
  * can't use CFG_SIMPLE_STR("user", "joe"), since libConfuse will try to
  * free the static string "joe" (which is an error) if a "user" option
  * is found. Rather, use the following code snippet:
@@ -253,48 +257,68 @@ struct cfg_opt_t
  * </pre>
  *
  */
-#define CFG_SIMPLE_STR(name, value)  \
-   {name, CFGT_STR, 0, 0, CFGF_NONE, 0, 0, 0, false, 0, 0, value, 0}
+constexpr cfg_opt_t CFG_SIMPLE_STR(const char *const name, void *const value)
+{
+   return { name, CFGT_STR, 0, nullptr, CFGF_NONE, nullptr, 0, nullptr, false, 0, nullptr, value, nullptr };
+}
 
 /** Initialize an integer option
  */
-#define CFG_INT(name, def, flags)  \
-   {name, CFGT_INT, 0, 0, flags, 0, def, 0, false, 0, 0, 0, 0}
+constexpr cfg_opt_t CFG_INT(const char *const name, const int def, const cfg_flag_t flags)
+{
+   return { name, CFGT_INT, 0, nullptr, flags, nullptr, def, nullptr, false, 0, nullptr, nullptr, nullptr };
+}
 
-#define CFG_INT_CB(name, def, flags, cb) \
-   {name, CFGT_INT, 0, 0, flags, 0, def, 0, false, 0, 0, 0, cb}
+constexpr cfg_opt_t CFG_INT_CB(const char *const name, const int def, const cfg_flag_t flags, const cfg_callback_t cb)
+{
+   return { name, CFGT_INT, 0, nullptr, flags, nullptr, def, nullptr, false, 0, nullptr, nullptr, cb };
+}
 
 /** Initialize a "simple" integer option.
  */
-#define CFG_SIMPLE_INT(name, value)  \
-   {name, CFGT_INT, 0, 0, CFGF_NONE, 0, 0, 0, false, 0, 0, value, 0}
+constexpr cfg_opt_t CFG_SIMPLE_INT(const char *const name, void *const value)
+{
+   return { name, CFGT_INT, 0, nullptr, CFGF_NONE, nullptr, 0, nullptr, false, 0, nullptr, value, nullptr };
+}
 
 /** Initialize a floating point option
  */
-#define CFG_FLOAT(name, def, flags) \
-   {name, CFGT_FLOAT, 0, 0, flags, 0, 0, 0, false, (double)def, 0, 0, 0}
+constexpr cfg_opt_t CFG_FLOAT(const char *const name, const double def, const cfg_flag_t flags)
+{
+   return { name, CFGT_FLOAT, 0, nullptr, flags, nullptr, 0, nullptr, false, def, nullptr, nullptr, nullptr };
+}
 
-#define CFG_FLOAT_CB(name, def, flags, cb) \
-   {name, CFGT_FLOAT, 0, 0, flags, 0, 0, 0, false, (double)def, 0, 0, cb}
+constexpr cfg_opt_t CFG_FLOAT_CB(const char *const name, const double def, const cfg_flag_t flags, const cfg_callback_t cb)
+{
+   return { name, CFGT_FLOAT, 0, nullptr, flags, nullptr, 0, nullptr, false, (double)def, nullptr, nullptr, cb };
+}
 
 /** Initialize a "simple" floating point option (see documentation for
  * CFG_SIMPLE_STR for more information).
  */
-#define CFG_SIMPLE_FLOAT(name, value) \
-   {name, CFGT_FLOAT, 0, 0, CFGF_NONE, 0, 0, 0, false, 0, 0, value, 0}
+constexpr cfg_opt_t CFG_SIMPLE_FLOAT(const char *const name, void *const value)
+{
+   return { name, CFGT_FLOAT, 0, nullptr, CFGF_NONE, nullptr, 0, nullptr, false, 0, nullptr, value, nullptr };
+}
 
 /** Initialize a boolean option
  */
-#define CFG_BOOL(name, def, flags) \
-   {name, CFGT_BOOL, 0, 0, flags, 0, 0, 0, def, 0, 0, 0, 0}
+constexpr cfg_opt_t CFG_BOOL(const char *const name, const bool def, const cfg_flag_t flags)
+{
+   return { name, CFGT_BOOL, 0, nullptr, flags, nullptr, 0, nullptr, def, 0, nullptr, nullptr, nullptr };
+   }
 
-#define CFG_BOOL_CB(name, def, flags, cb) \
-   {name, CFGT_BOOL, 0, 0, flags, 0, 0, 0, def, 0, 0, 0, cb}
+constexpr cfg_opt_t CFG_BOOL_CB(const char *const name, const bool def, const cfg_flag_t flags, const cfg_callback_t cb)
+{
+   return { name, CFGT_BOOL, 0, nullptr, flags, nullptr, 0, nullptr, def, 0, nullptr, nullptr, cb };
+}
 
 /** Initialize a "simple" boolean option.
  */
-#define CFG_SIMPLE_BOOL(name, value) \
-   {name, CFGT_BOOL, 0, 0, CFGF_NONE, 0, 0, 0, false, 0, 0, value, 0}
+constexpr cfg_opt_t CFG_SIMPLE_BOOL(const char *const name, void *const value)
+{
+   return { name, CFGT_BOOL, 0, nullptr, CFGF_NONE, nullptr, 0, nullptr, false, 0, nullptr, value, nullptr };
+}
 
 /** Initialize a section
  *
@@ -305,8 +329,10 @@ struct cfg_opt_t
  * section(s) must have a title (which can be used in the 
  * cfg_gettsec() function)
  */
-#define CFG_SEC(name, opts, flags) \
-   {name, CFGT_SEC, 0, 0, flags, opts, 0, 0, false, 0, 0, 0, 0}
+constexpr cfg_opt_t CFG_SEC(const char *const name, cfg_opt_t *const opts, const cfg_flag_t flags)
+{
+   return { name, CFGT_SEC, 0, nullptr, flags, opts, 0, nullptr, false, 0, nullptr, nullptr, nullptr };
+}
 
 /** Initialize a function
  * @param name The name of the option
@@ -314,16 +340,20 @@ struct cfg_opt_t
  *
  * @see cfg_func_t
  */
-#define CFG_FUNC(name, func) \
-   {name, CFGT_FUNC, 0, 0, CFGF_NONE, 0, 0, 0, false, 0, func, 0, 0}
+constexpr cfg_opt_t CFG_FUNC(const char *const name, const cfg_func_t func)
+{
+   return { name, CFGT_FUNC, 0, nullptr, CFGF_NONE, nullptr, 0, nullptr, false, 0, func, nullptr, nullptr };
+}
 
 /** Initialize a function-valued string option.
  * @param name The name of the option.
  * @param def The default value.
  * @param func The callback function.
  */
-#define CFG_STRFUNC(name, def, func) \
-   {name, CFGT_STRFUNC, 0, 0, CFGF_NONE, 0, 0, def, false, 0, func, 0, 0}
+constexpr cfg_opt_t CFG_STRFUNC(const char *const name, const char *const def, const cfg_func_t func)
+{
+   return { name, CFGT_STRFUNC, 0, nullptr, CFGF_NONE, nullptr, 0, def, false, 0, func, nullptr, nullptr };
+}
 
 /** 
  * Initialize a multi-valued property option.
@@ -332,8 +362,10 @@ struct cfg_opt_t
  * @param opts Array of options in order they must appear listed.
  * @param flags Similar to CFG_SEC. Titles are not supported however.
  */
-#define CFG_MVPROP(name, opts, flags) \
-   {name, CFGT_MVPROP, 0, 0, flags, opts, 0, 0, false, 0, 0, 0, 0}
+constexpr cfg_opt_t CFG_MVPROP(const char *const name, cfg_opt_t *const opts, const cfg_flag_t flags)
+{
+   return { name, CFGT_MVPROP, 0, nullptr, flags, opts, 0, nullptr, false, 0, nullptr, nullptr, nullptr };
+}
 
 /**
  * Initialize an MVPROP which serves to define the parent section's title
@@ -345,25 +377,35 @@ struct cfg_opt_t
  * @param opts Array of options in order they must appear listed.
  * @param flags Similar to CFG_MVPROP. CFGF_TITLEPROPS is implied.
  */
-#define CFG_TPROPS(opts, flags) \
-   {"#title", CFGT_MVPROP, 0, 0, (flags)|CFGF_TITLEPROPS, opts, \
-    0, 0, false, 0, 0, 0, 0 }
+constexpr cfg_opt_t CFG_TPROPS(cfg_opt_t *const opts, const cfg_flag_t flags)
+{
+   return {
+      "#title", CFGT_MVPROP, 0, nullptr, (flags) | CFGF_TITLEPROPS, opts,
+      0, nullptr, false, 0, nullptr, nullptr, nullptr
+   };
+}
 
 /** 
  * Initialize a flag property option.
  */
-#define CFG_FLAG(name, def, flags) \
-   {name, CFGT_FLAG, 0, 0, flags, 0, def, 0, false, 0, 0, 0, 0}
+constexpr cfg_opt_t CFG_FLAG(const char *const name, const bool def, const cfg_flag_t flags)
+{
+   return { name, CFGT_FLAG, 0, nullptr, flags, nullptr, def, nullptr, false, 0, nullptr, nullptr, nullptr };
+}
 
-#define CFG_FLAG_CB(name, def, flags, cb) \
-   {name, CFGT_FLAG, 0, 0, flags, 0, def, 0, false, 0, 0, 0, cb}
+constexpr cfg_opt_t CFG_FLAG_CB(const char *const name, const bool def, const cfg_flag_t flags, const cfg_callback_t cb)
+{
+   return { name, CFGT_FLAG, 0, nullptr, flags, nullptr, def, nullptr, false, 0, nullptr, nullptr, cb };
+}
 
-/** 
+/**
  * Terminate list of options. This must be the last initializer in
  * the option list.
  */
-#define CFG_END() \
-   {0, CFGT_NONE, 0, 0, CFGF_NONE, 0, 0, 0, false, 0, 0, 0, 0}
+constexpr cfg_opt_t CFG_END()
+{
+   return { nullptr, CFGT_NONE, 0, nullptr, CFGF_NONE, nullptr, 0, nullptr, false, 0, nullptr, nullptr, nullptr };
+}
 
 /** Create and initialize a cfg_t structure. This should be the first
  * function called when setting up the parsing of a configuration
@@ -438,7 +480,7 @@ cfg_lexfunc_t cfg_set_lexer_callback(cfg_t *cfg, cfg_lexfunc_t lexfunc);
 /** Show a parser error. Any user-defined error reporting function is called.
  * @see cfg_set_error_function
  */
-void          cfg_error(cfg_t *cfg, const char *fmt, ...);
+void          cfg_error(const cfg_t *const cfg, E_FORMAT_STRING(const char *fmt), ...) E_PRINTF(2, 3);
 
 /** Returns the value of an integer option. This is the same as
  * calling cfg_getnint with index 0.
@@ -475,7 +517,7 @@ double        cfg_getfloat(cfg_t *cfg, const char *name);
  * @return The requested value is returned. If the option was not set
  * in the configuration file, the default value given in the
  * corresponding cfg_opt_t structure is returned. If no option is found
- * with that name, cfg_error is called and NULL is returned.
+ * with that name, cfg_error is called and nullptr is returned.
  */
 const char *  cfg_getstr(cfg_t *cfg, const char *name);
 
@@ -485,7 +527,7 @@ const char *  cfg_getstr(cfg_t *cfg, const char *name);
  * @return A heap-allocated copy of the value is returned. If the option
  * was not set in the configuration file, the default value given in the
  * corresponding cfg_opt_t structure is returned. If no option is found
- * with that name, cfg_error is called and NULL is returned.
+ * with that name, cfg_error is called and nullptr is returned.
  */
 char *cfg_getstrdup(cfg_t *cfg, const char *name);
 
@@ -508,7 +550,7 @@ bool          cfg_getbool(cfg_t *cfg, const char *name);
  * with that name, 0 is returned. Note that there can be no default
  * values for a section.
  */
-cfg_t *       cfg_getsec(cfg_t *cfg, const char *name);
+cfg_t *       cfg_getsec(const cfg_t *const cfg, const char *name);
 
 /** Returns the value of a multi-valued property. The returned value is
  * another cfg_t structure that can be used in following calls to
@@ -549,7 +591,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value);
  * @param cfg The configuration file context.
  * @param name The name of the option.
  */
-unsigned int  cfg_size(cfg_t *cfg, const char *name);
+unsigned int  cfg_size(const cfg_t *const cfg, const char *name);
 
 /** Indexed version of cfg_getfloat().
  * @param cfg The configuration file context.
@@ -583,7 +625,7 @@ bool          cfg_getnbool(cfg_t *cfg, const char *name, unsigned int index);
  * @param index Index of values. Zero based.
  * @see cfg_getsec
  */
-cfg_t *       cfg_getnsec(cfg_t *cfg, const char *name, unsigned int index);
+cfg_t *       cfg_getnsec(const cfg_t *const cfg, const char *name, unsigned int index);
 
 /** Return a section given the title.
  *
@@ -656,10 +698,10 @@ int cfg_parse_boolean(const char *s);
  * @param cfg The configuration file context.
  * @param name The name of the option.
  *
- * @return Returns a pointer to the option, or NULL if the option is
+ * @return Returns a pointer to the option, or nullptr if the option is
  * not found (an error message is also printed).
  */
-cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name);
+cfg_opt_t *cfg_getopt(const cfg_t *const cfg, const char *name);
 
 /** Set a value of an integer option.
  *

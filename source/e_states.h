@@ -39,6 +39,10 @@ int E_SafeState(int dehnum);                //    fallback version
 int E_SafeStateName(const char *name);      //    fallback by name
 int E_StateNumForName(const char *name);    // mnemonic lookup
 int E_GetStateNumForName(const char *name); //    fatal error version
+int E_StateNumForNameIncludingDecorate(const char *name);   // Full lookup for saves
+int E_StateNumForNameOnlyDecorate(const char *name);
+
+void E_AddDecorateStateNameToHash(state_t *st); // called from e_dstate
 
 int E_SafeStateNameOrLabel(const mobjinfo_t *mi, const char *name);
 
@@ -47,9 +51,9 @@ extern int NullStateNum;
 // EDF-Only Definitions/Declarations
 #ifdef NEED_EDF_DEFINITIONS
 
-#define EDF_SEC_FRAME      "frame"
-#define EDF_SEC_FRMDELTA   "framedelta"
-#define EDF_SEC_FRAMEBLOCK "frameblock"
+constexpr const char EDF_SEC_FRAME[]      = "frame";
+constexpr const char EDF_SEC_FRMDELTA[]   = "framedelta";
+constexpr const char EDF_SEC_FRAMEBLOCK[] = "frameblock";
 
 extern cfg_opt_t edf_frame_opts[];
 extern cfg_opt_t edf_fdelta_opts[];

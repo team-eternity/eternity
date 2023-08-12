@@ -45,20 +45,21 @@
 // particle support? How many?
 
 // metakey vocabulary
-#define ITEM_PUFF_THINGTYPE       "thingtype"
-#define ITEM_PUFF_SOUND           "sound"
-#define ITEM_PUFF_HITSOUND        "hitsound"
-#define ITEM_PUFF_HITPUFFTYPE     "hitpufftype"
-#define ITEM_PUFF_NOBLOODPUFFTYPE "nobloodpufftype"
-#define ITEM_PUFF_UPSPEED         "upspeed"
-#define ITEM_PUFF_ZSPREAD         "zspread"
-#define ITEM_PUFF_PUNCHHACK       "punchhack"
-#define ITEM_PUFF_PARTICLES       "particles"
+constexpr const char ITEM_PUFF_THINGTYPE[]       = "thingtype";
+constexpr const char ITEM_PUFF_SOUND[]           = "sound";
+constexpr const char ITEM_PUFF_HITSOUND[]        = "hitsound";
+constexpr const char ITEM_PUFF_HITPUFFTYPE[]     = "hitpufftype";
+constexpr const char ITEM_PUFF_NOBLOODPUFFTYPE[] = "nobloodpufftype";
+constexpr const char ITEM_PUFF_UPSPEED[]         = "upspeed";
+constexpr const char ITEM_PUFF_ZSPREAD[]         = "zspread";
+constexpr const char ITEM_PUFF_PUNCHHACK[]       = "punchhack";
+constexpr const char ITEM_PUFF_PARTICLES[]       = "particles";
 
-#define ITEM_PUFF_ALWAYSPUFF  "ALWAYSPUFF"
-#define ITEM_PUFF_BLOODLESS   "BLOODLESS"
-#define ITEM_PUFF_LOCALTHRUST "LOCALTHRUST"
-#define ITEM_PUFF_RANDOMTICS  "RANDOMTICS"
+constexpr const char ITEM_PUFF_PUFFONACTORS[]  = "PUFFONACTORS";
+constexpr const char ITEM_PUFF_BLOODLESS[]     = "BLOODLESS";
+constexpr const char ITEM_PUFF_LOCALTHRUST[]   = "LOCALTHRUST";
+constexpr const char ITEM_PUFF_RANDOMTICS[]    = "RANDOMTICS";
+constexpr const char ITEM_PUFF_TARGETSHOOTER[] = "TARGETSHOOTER";
 
 // Interned metatable keys
 MetaKeyIndex keyPuffThingType      (ITEM_PUFF_THINGTYPE      );
@@ -70,10 +71,11 @@ MetaKeyIndex keyPuffUpSpeed        (ITEM_PUFF_UPSPEED        );
 MetaKeyIndex keyPuffZSpread        (ITEM_PUFF_ZSPREAD        );
 MetaKeyIndex keyPuffPunchHack      (ITEM_PUFF_PUNCHHACK      );
 MetaKeyIndex keyPuffParticles      (ITEM_PUFF_PARTICLES      );
-MetaKeyIndex keyPuffAlwaysPuff     (ITEM_PUFF_ALWAYSPUFF     );
+MetaKeyIndex keyPuffPuffOnActors   (ITEM_PUFF_PUFFONACTORS   );
 MetaKeyIndex keyPuffBloodless      (ITEM_PUFF_BLOODLESS      );
 MetaKeyIndex keyPuffLocalThrust    (ITEM_PUFF_LOCALTHRUST    );
 MetaKeyIndex keyPuffRandomTics     (ITEM_PUFF_RANDOMTICS     );
+MetaKeyIndex keyPuffTargetShooter  (ITEM_PUFF_TARGETSHOOTER  );
 
 #define PUFF_CONFIGS \
    CFG_STR(ITEM_PUFF_THINGTYPE,       "",                 CFGF_NONE),       \
@@ -85,10 +87,11 @@ MetaKeyIndex keyPuffRandomTics     (ITEM_PUFF_RANDOMTICS     );
    CFG_FLOAT(ITEM_PUFF_ZSPREAD,       puffZSpreadDefault, CFGF_NONE),       \
    CFG_STR(ITEM_PUFF_PUNCHHACK,       "",                 CFGF_NONE),       \
    CFG_INT(ITEM_PUFF_PARTICLES,       0,                  CFGF_NONE),       \
-   CFG_FLAG(ITEM_PUFF_ALWAYSPUFF,     0,                  CFGF_SIGNPREFIX), \
+   CFG_FLAG(ITEM_PUFF_PUFFONACTORS,   0,                  CFGF_SIGNPREFIX), \
    CFG_FLAG(ITEM_PUFF_BLOODLESS,      0,                  CFGF_SIGNPREFIX), \
    CFG_FLAG(ITEM_PUFF_LOCALTHRUST,    0,                  CFGF_SIGNPREFIX), \
    CFG_FLAG(ITEM_PUFF_RANDOMTICS,     0,                  CFGF_SIGNPREFIX), \
+   CFG_FLAG(ITEM_PUFF_TARGETSHOOTER,  0,                  CFGF_SIGNPREFIX), \
    CFG_END()
 
 //
@@ -102,7 +105,7 @@ cfg_opt_t edf_puff_opts[] =
 
 cfg_opt_t edf_puff_delta_opts[] =
 {
-   CFG_STR("name", 0, CFGF_NONE),
+   CFG_STR("name", nullptr, CFGF_NONE),
    PUFF_CONFIGS
 };
 

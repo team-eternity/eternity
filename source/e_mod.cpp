@@ -47,21 +47,21 @@
 // damagetype options
 //
 
-#define ITEM_DAMAGETYPE_NUM        "num"
-#define ITEM_DAMAGETYPE_OBIT       "obituary"
-#define ITEM_DAMAGETYPE_SELFOBIT   "obituaryself"
-#define ITEM_DAMAGETYPE_SOURCELESS "sourceless"
-#define ITEM_DAMAGETYPE_ABSPUSH    "absolute.push"
-#define ITEM_DAMAGETYPE_ABSHOP     "absolute.hop"
+constexpr const char ITEM_DAMAGETYPE_NUM[]        = "num";
+constexpr const char ITEM_DAMAGETYPE_OBIT[]       = "obituary";
+constexpr const char ITEM_DAMAGETYPE_SELFOBIT[]   = "obituaryself";
+constexpr const char ITEM_DAMAGETYPE_SOURCELESS[] = "sourceless";
+constexpr const char ITEM_DAMAGETYPE_ABSPUSH[]    = "absolute.push";
+constexpr const char ITEM_DAMAGETYPE_ABSHOP[]     = "absolute.hop";
 
 cfg_opt_t edf_dmgtype_opts[] =
 {
-   CFG_INT(ITEM_DAMAGETYPE_NUM,         -1,    CFGF_NONE),
-   CFG_STR(ITEM_DAMAGETYPE_OBIT,        NULL,  CFGF_NONE),
-   CFG_STR(ITEM_DAMAGETYPE_SELFOBIT,    NULL,  CFGF_NONE),
-   CFG_BOOL(ITEM_DAMAGETYPE_SOURCELESS, false, CFGF_NONE),
-   CFG_FLOAT(ITEM_DAMAGETYPE_ABSPUSH,   0,     CFGF_NONE),
-   CFG_FLOAT(ITEM_DAMAGETYPE_ABSHOP,    0,     CFGF_NONE),
+   CFG_INT(ITEM_DAMAGETYPE_NUM,         -1,       CFGF_NONE),
+   CFG_STR(ITEM_DAMAGETYPE_OBIT,        nullptr,  CFGF_NONE),
+   CFG_STR(ITEM_DAMAGETYPE_SELFOBIT,    nullptr,  CFGF_NONE),
+   CFG_BOOL(ITEM_DAMAGETYPE_SOURCELESS, false,    CFGF_NONE),
+   CFG_FLOAT(ITEM_DAMAGETYPE_ABSPUSH,   0,        CFGF_NONE),
+   CFG_FLOAT(ITEM_DAMAGETYPE_ABSHOP,    0,        CFGF_NONE),
    CFG_END()
 };
 
@@ -71,7 +71,7 @@ cfg_opt_t edf_dmgtype_opts[] =
 
 // hash tables
 
-#define NUMMODCHAINS 67
+constexpr int NUMMODCHAINS = 67;
 
 static EHashTable<emod_t, ENCStringHashKey,
                  &emod_t::name, &emod_t::namelinks> e_mod_namehash(NUMMODCHAINS);
@@ -180,26 +180,28 @@ static void E_DelDamageTypeFromNumHash(emod_t *mod)
 // E_EDFDamageTypeForName
 //
 // Finds a damage type for the given name. If the name does not exist, this
-// routine returns NULL rather than the Unknown type.
+// routine returns nullptr rather than the Unknown type.
 //
 static emod_t *E_EDFDamageTypeForName(const char *name)
 {
    return e_mod_namehash.objectForKey(name);
 }
 
-#define IS_SET(sec, name) (def || cfg_size(sec, name) > 0)
-
 //
 // E_ProcessDamageType
 //
 // Adds a single damage type.
 //
-static void E_ProcessDamageType(cfg_t *dtsec)
+static void E_ProcessDamageType(cfg_t *const dtsec)
 {
    emod_t *mod;
    const char *title, *obituary;
    bool def = true;
    int num;
+
+   const auto IS_SET = [dtsec, &def](const char *const name) -> bool {
+      return def || cfg_size(dtsec, name) > 0;
+   };
 
    title = cfg_title(dtsec);
    num   = cfg_getint(dtsec, ITEM_DAMAGETYPE_NUM);
@@ -244,7 +246,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
       E_AddDamageTypeToNumHash(mod);
    }
 
-   if(IS_SET(dtsec, ITEM_DAMAGETYPE_OBIT))
+   if(IS_SET(ITEM_DAMAGETYPE_OBIT))
    {
       obituary = cfg_getstr(dtsec, ITEM_DAMAGETYPE_OBIT);
 
@@ -252,7 +254,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
       if(!def && mod->obituary)
       {
          efree(mod->obituary);
-         mod->obituary = NULL;
+         mod->obituary = nullptr;
       }
 
       if(obituary)
@@ -271,7 +273,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
    }
 
    // get self-obituary
-   if(IS_SET(dtsec, ITEM_DAMAGETYPE_SELFOBIT))
+   if(IS_SET(ITEM_DAMAGETYPE_SELFOBIT))
    {
       obituary = cfg_getstr(dtsec, ITEM_DAMAGETYPE_SELFOBIT);
 
@@ -279,7 +281,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
       if(!def && mod->selfobituary)
       {
          efree(mod->selfobituary);
-         mod->selfobituary = NULL;
+         mod->selfobituary = nullptr;
       }
 
       if(obituary)
@@ -298,15 +300,15 @@ static void E_ProcessDamageType(cfg_t *dtsec)
    }
 
    // process sourceless flag
-   if(IS_SET(dtsec, ITEM_DAMAGETYPE_SOURCELESS))
+   if(IS_SET(ITEM_DAMAGETYPE_SOURCELESS))
       mod->sourceless = cfg_getbool(dtsec, ITEM_DAMAGETYPE_SOURCELESS);
 
-   if(IS_SET(dtsec, ITEM_DAMAGETYPE_ABSPUSH))
+   if(IS_SET(ITEM_DAMAGETYPE_ABSPUSH))
    {
       mod->absolutePush = M_DoubleToFixed(cfg_getfloat(dtsec,
                                                        ITEM_DAMAGETYPE_ABSPUSH));
    }
-   if(IS_SET(dtsec, ITEM_DAMAGETYPE_ABSHOP))
+   if(IS_SET(ITEM_DAMAGETYPE_ABSHOP))
    {
       mod->absoluteHop = M_DoubleToFixed(cfg_getfloat(dtsec,
                                                       ITEM_DAMAGETYPE_ABSHOP));
@@ -379,7 +381,7 @@ emod_t *E_DamageTypeForName(const char *name)
 {
    emod_t *mod;
 
-   if((mod = e_mod_namehash.objectForKey(name)) == NULL)
+   if((mod = e_mod_namehash.objectForKey(name)) == nullptr)
       mod = &unknown_mod;
 
    return mod;
@@ -395,7 +397,7 @@ emod_t *E_DamageTypeForNum(int num)
 {
    emod_t *mod;
 
-   if((mod = e_mod_numhash.objectForKey(num)) == NULL)
+   if((mod = e_mod_numhash.objectForKey(num)) == nullptr)
       mod = &unknown_mod;
 
    return mod;

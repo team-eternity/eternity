@@ -29,6 +29,7 @@
 #include "p_map.h"
 #include "p_portal.h"
 #include "p_sector.h"
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "r_defs.h"
 #include "r_state.h"
@@ -66,13 +67,13 @@ result_e T_MoveFloorDown(sector_t *sector, fixed_t speed, fixed_t dest, int crus
    bool move3dsides;  // SoM: If set, check for and move 3d sides.
    bool moveattached; // SoM: if set, check for and move attached sector surfaces.
 
-   move3dsides  = (sector->f_attached  && demo_version >= 331);
-   moveattached = (sector->f_asurfaces && demo_version >= 331);
+   move3dsides  = (sector->srf.floor.attached && demo_version >= 331);
+   moveattached = (sector->srf.floor.asurfaces && demo_version >= 331);
 
    // Moving a floor down
-   if(sector->floorheight - speed < dest)
+   if(sector->srf.floor.height - speed < dest)
    {
-      lastpos = sector->floorheight;
+      lastpos = sector->srf.floor.height;
       bool instant = lastpos < dest;
 
       // SoM 9/19/02: If we are go, move 3d sides first.
@@ -94,12 +95,15 @@ result_e T_MoveFloorDown(sector_t *sector, fixed_t speed, fixed_t dest, int crus
          }
       }            
 
-      P_SetFloorHeight(sector, dest);
-      flag = P_CheckSector(sector,crush,dest-lastpos,0); //jff 3/19/98 use faster chk
+      P_SetSectorHeight(*sector, surf_floor, dest);
+      //jff 3/19/98 use faster chk
+      flag = P_CheckSector(sector,crush,dest-lastpos,CheckSectorPlane::floor);
       if(flag == true)                   
       {
-         P_SetFloorHeight(sector, lastpos);
-         P_CheckSector(sector,crush,lastpos-dest,0); //jff 3/19/98 use faster chk
+         P_SetSectorHeight(*sector, surf_floor, lastpos);
+
+         //jff 3/19/98 use faster chk
+         P_CheckSector(sector,crush,lastpos-dest,CheckSectorPlane::floor);
          // SoM: if the move in the master sector was bad,
          // keep the 3d sides consistant.
          if(move3dsides)
@@ -135,9 +139,10 @@ result_e T_MoveFloorDown(sector_t *sector, fixed_t speed, fixed_t dest, int crus
          }
       }            
 
-      lastpos = sector->floorheight;
-      P_SetFloorHeight(sector, sector->floorheight - speed);
-      flag = P_CheckSector(sector,crush,-speed,0); //jff 3/19/98 use faster chk
+      lastpos = sector->srf.floor.height;
+      P_SetSectorHeight(*sector, surf_floor, sector->srf.floor.height - speed);
+      //jff 3/19/98 use faster chk
+      flag = P_CheckSector(sector,crush,-speed,CheckSectorPlane::floor);
 
       // haleyjd 02/15/01: last of cph's current demo fixes:
       // cph - make more compatible with original Doom, by
@@ -145,7 +150,7 @@ result_e T_MoveFloorDown(sector_t *sector, fixed_t speed, fixed_t dest, int crus
       // if objects are stuck in the ceiling 
       if((flag == true) && demo_compatibility)
       {
-         P_SetFloorHeight(sector, lastpos);
+         P_SetSectorHeight(*sector, surf_floor, lastpos);
          P_ChangeSector(sector, crush);
 
          if(move3dsides)
@@ -175,20 +180,20 @@ result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush,
    bool move3dsides;  // SoM: If set, check for and move 3d sides.
    bool moveattached; // SoM: if set, check for and move attached sector surfaces.
 
-   move3dsides  = (sector->f_attached  && demo_version >= 331);
-   moveattached = (sector->f_asurfaces && demo_version >= 331);
+   move3dsides  = (sector->srf.floor.attached && demo_version >= 331);
+   moveattached = (sector->srf.floor.asurfaces && demo_version >= 331);
 
    // Moving a floor up
    // jff 02/04/98 keep floor from moving thru ceilings
    // jff 2/22/98 weaken check to demo_compatibility
-   if(demo_version < 203 || comp[comp_floors] || dest < sector->ceilingheight)
+   if(getComp(comp_floors) || dest < sector->srf.ceiling.height)
       destheight = dest;
    else
-      destheight = sector->ceilingheight;
-   
-   if(sector->floorheight + speed > destheight)
+      destheight = sector->srf.ceiling.height;
+
+   if(sector->srf.floor.height + speed > destheight)
    {
-      lastpos = sector->floorheight;
+      lastpos = sector->srf.floor.height;
       bool instant = lastpos > destheight;
 
       // SoM 9/19/02: If we are go, move 3d sides first.
@@ -210,13 +215,15 @@ result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush,
          }
       }            
 
-      P_SetFloorHeight(sector, destheight);
-      flag = P_CheckSector(sector,crush,destheight-lastpos,0); //jff 3/19/98 use faster chk
+      P_SetSectorHeight(*sector, surf_floor, destheight);
+      //jff 3/19/98 use faster chk
+      flag = P_CheckSector(sector,crush,destheight-lastpos,CheckSectorPlane::floor);
 
       if(flag == true)
       {
-         P_SetFloorHeight(sector, lastpos);
-         P_CheckSector(sector,crush,lastpos-destheight,0); //jff 3/19/98 use faster chk
+         P_SetSectorHeight(*sector, surf_floor, lastpos);
+         //jff 3/19/98 use faster chk
+         P_CheckSector(sector,crush,lastpos-destheight,CheckSectorPlane::floor);
          if(move3dsides)
             P_Scroll3DSides(sector, false, lastpos-destheight, crush);
          if(moveattached)
@@ -248,21 +255,23 @@ result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush,
       }            
 
       // crushing is possible
-      lastpos = sector->floorheight;
-      P_SetFloorHeight(sector, sector->floorheight + speed);
-      flag = P_CheckSector(sector,crush,speed,0); //jff 3/19/98 use faster chk
+      lastpos = sector->srf.floor.height;
+      P_SetSectorHeight(*sector, surf_floor, sector->srf.floor.height + speed);
+      //jff 3/19/98 use faster chk
+      flag = P_CheckSector(sector,crush,speed,CheckSectorPlane::floor);
       if(flag == true)
       {
          // haleyjd 07/23/05: crush no longer boolean
          // Note: to make crushers that stop at heads, fail
          // to return crushed here even when crush is positive
-         if(demo_version < 203 || comp[comp_floors]) // killough 10/98
+         if(demo_version < 203 || getComp(comp_floors)) // killough 10/98
          {
             if(crush > 0 && !emulateStairCrush) //jff 1/25/98 fix floor crusher
                return crushed;
          }
-         P_SetFloorHeight(sector, lastpos);
-         P_CheckSector(sector,crush,-speed,0); //jff 3/19/98 use faster chk
+         P_SetSectorHeight(*sector, surf_floor, lastpos);
+         //jff 3/19/98 use faster chk
+         P_CheckSector(sector,crush,-speed,CheckSectorPlane::floor);
          if(move3dsides)
             P_Scroll3DSides(sector, false, -speed, crush);
          if(moveattached)
@@ -291,21 +300,22 @@ result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest,
    bool move3dsides;  // SoM: If set, check for and move 3d sides.
    bool moveattached; // SoM: if set, check for and move attached sector surfaces.
 
-   move3dsides  = (sector->c_attached  && demo_version >= 331);
-   moveattached = (sector->c_asurfaces && demo_version >= 331);
+   move3dsides  = (sector->srf.ceiling.attached && demo_version >= 331);
+   moveattached = (sector->srf.ceiling.asurfaces && demo_version >= 331);
 
    // moving a ceiling down
    // jff 02/04/98 keep ceiling from moving thru floors
    // jff 2/22/98 weaken check to demo_compatibility
    // killough 10/98: add comp flag
-   if(comp[comp_floors] || dest > sector->floorheight)
+   fixed_t floorlimit = sector->srf.floor.height + pSlopeHeights[sector - sectors].touchheight;
+   if(getComp(comp_floors) || dest > floorlimit)
       destheight = dest;
    else
-      destheight = sector->floorheight;
-   
-   if(sector->ceilingheight - speed < destheight)
+      destheight = floorlimit;
+
+   if(sector->srf.ceiling.height - speed < destheight)
    {
-      lastpos = sector->ceilingheight;
+      lastpos = sector->srf.ceiling.height;
       bool instant = lastpos < destheight;
 
       // SoM 9/19/02: If we are go, move 3d sides first.
@@ -327,13 +337,15 @@ result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest,
          }
       }            
 
-      P_SetCeilingHeight(sector, destheight);
-      flag = P_CheckSector(sector,crush,lastpos-destheight,1); //jff 3/19/98 use faster chk
+      P_SetSectorHeight(*sector, surf_ceil, destheight);
+      //jff 3/19/98 use faster chk
+      flag = P_CheckSector(sector,crush,lastpos-destheight,CheckSectorPlane::ceiling);
 
       if(flag == true)
       {
-         P_SetCeilingHeight(sector, lastpos);
-         P_CheckSector(sector,crush,destheight-lastpos,1); //jff 3/19/98 use faster chk
+         P_SetSectorHeight(*sector, surf_ceil, lastpos);
+         //jff 3/19/98 use faster chk
+         P_CheckSector(sector,crush,destheight-lastpos,CheckSectorPlane::ceiling);
 
          if(move3dsides)
             P_Scroll3DSides(sector, true, lastpos-destheight, crush);
@@ -367,9 +379,10 @@ result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest,
       }            
 
       // crushing is possible
-      lastpos = sector->ceilingheight;
-      P_SetCeilingHeight(sector, sector->ceilingheight - speed);
-      flag = P_CheckSector(sector,crush,-speed,1); //jff 3/19/98 use faster chk
+      lastpos = sector->srf.ceiling.height;
+      P_SetSectorHeight(*sector, surf_ceil, sector->srf.ceiling.height - speed);
+      //jff 3/19/98 use faster chk
+      flag = P_CheckSector(sector,crush,-speed,CheckSectorPlane::ceiling);
 
       if(flag == true)
       {
@@ -380,8 +393,9 @@ result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest,
          if(!crushrest && crush > 0)
             return crushed;
 
-         P_SetCeilingHeight(sector, lastpos);
-         P_CheckSector(sector,crush,speed,1);      //jff 3/19/98 use faster chk
+         P_SetSectorHeight(*sector, surf_ceil, lastpos);
+         //jff 3/19/98 use faster chk
+         P_CheckSector(sector,crush,speed,CheckSectorPlane::ceiling);
 
          if(move3dsides)
             P_Scroll3DSides(sector, true, speed, crush);
@@ -408,13 +422,13 @@ result_e T_MoveCeilingUp(sector_t *sector, fixed_t speed, fixed_t dest, int crus
    bool move3dsides;  // SoM: If set, check for and move 3d sides.
    bool moveattached; // SoM: if set, check for and move attached sector surfaces.
 
-   move3dsides  = (sector->c_attached  && demo_version >= 331);
-   moveattached = (sector->c_asurfaces && demo_version >= 331);
+   move3dsides  = (sector->srf.ceiling.attached && demo_version >= 331);
+   moveattached = (sector->srf.ceiling.asurfaces && demo_version >= 331);
 
    // moving a ceiling up
-   if(sector->ceilingheight + speed > dest)
+   if(sector->srf.ceiling.height + speed > dest)
    {
-      lastpos = sector->ceilingheight;
+      lastpos = sector->srf.ceiling.height;
       bool instant = lastpos > dest;
 
 
@@ -438,13 +452,15 @@ result_e T_MoveCeilingUp(sector_t *sector, fixed_t speed, fixed_t dest, int crus
          }
       }            
 
-      P_SetCeilingHeight(sector, dest);
-      flag = P_CheckSector(sector,crush,dest-lastpos,1); //jff 3/19/98 use faster chk
+      P_SetSectorHeight(*sector, surf_ceil, dest);
+      //jff 3/19/98 use faster chk
+      flag = P_CheckSector(sector,crush,dest-lastpos,CheckSectorPlane::ceiling);
 
       if(flag == true)
       {
-         P_SetCeilingHeight(sector, lastpos);
-         P_CheckSector(sector,crush,lastpos-dest,1); //jff 3/19/98 use faster chk
+         P_SetSectorHeight(*sector, surf_ceil, lastpos);
+         //jff 3/19/98 use faster chk
+         P_CheckSector(sector,crush,lastpos-dest,CheckSectorPlane::ceiling);
          if(move3dsides)
             P_Scroll3DSides(sector, true, lastpos-dest, crush);
          if(moveattached)
@@ -476,8 +492,9 @@ result_e T_MoveCeilingUp(sector_t *sector, fixed_t speed, fixed_t dest, int crus
       }
 
       //lastpos = sector->ceilingheight;
-      P_SetCeilingHeight(sector, sector->ceilingheight + speed);
-      P_CheckSector(sector,crush,speed,1); //jff 3/19/98 use faster chk
+      P_SetSectorHeight(*sector, surf_ceil, sector->srf.ceiling.height + speed);
+      //jff 3/19/98 use faster chk
+      P_CheckSector(sector,crush,speed,CheckSectorPlane::ceiling);
    }
 
    return ok;

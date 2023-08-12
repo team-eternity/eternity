@@ -55,7 +55,7 @@
 
 int comport;
 
-VARIABLE_INT(comport, NULL, 1, 4, NULL);
+VARIABLE_INT(comport, nullptr, 1, 4, nullptr);
 
 CONSOLE_COMMAND(nullmodem, cf_notnet | cf_buffered)
 {

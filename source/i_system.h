@@ -33,6 +33,14 @@
 struct ticcmd_t;
 struct SDL_Window;
 
+using i_errhandler_t = void (*)(char *errmsg);
+
+typedef void (*atexit_func_t)(void);
+// Schedule a function to be called when the program exits.
+void I_AtExit(atexit_func_t func);
+
+void I_Exit(int status);
+
 // Called by DoomMain.
 void I_Init();
 
@@ -84,12 +92,20 @@ enum
 // haleyjd 06/05/10
 void I_ExitWithMessage(E_FORMAT_STRING(const char *msg), ...) E_PRINTF(1, 2);
 
+void I_SetErrorHandler(const i_errhandler_t handler);
+
 // MaxW: 2018/06/20: No more need for an #ifdef!
 // haleyjd 05/21/10
 [[noreturn]] void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...) E_PRINTF(2, 3);
 // killough 3/20/98: add const
 [[noreturn]] void I_Error(E_FORMAT_STRING(const char *error), ...) E_PRINTF(1, 2);
-[[noreturn]] void I_ErrorVA(const char *error, va_list args);
+[[noreturn]] void I_ErrorVA(E_FORMAT_STRING(const char *error), va_list args) E_PRINTF(1, 0);
+
+#ifdef RANGECHECK
+#define I_Assert(condition, ...) if(!(condition)) I_Error(__VA_ARGS__)
+#else
+#define I_Assert(condition, ...)
+#endif
 
 extern int mousepresent;                // killough
 

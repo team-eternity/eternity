@@ -83,7 +83,7 @@ void HU_FragsDrawer(void)
       return;
 
    if(((players[displayplayer].playerstate != PST_DEAD || walkcam_active)
-      && !hu_showfrags) || GameType != gt_dm || automapactive)
+      && !hu_showfrags) || GameType != gt_dm || (automapactive && !automap_overlay))
       return;
 
    // "frags"
@@ -115,7 +115,7 @@ void HU_FragsDrawer(void)
                             PatchLoader::CacheName(wGlobalDir, "HU_FRGBX", PU_CACHE),
                             sortedplayers[i]->colormap ?
                             translationtables[(sortedplayers[i]->colormap - 1)] :
-                            NULL, false);
+                            nullptr, false);
       // draw the frags
       psnprintf(tempstr, sizeof(tempstr), "%i", sortedplayers[i]->totalfrags);
       V_FontWriteText(hud_font, tempstr, 
@@ -192,7 +192,7 @@ CONSOLE_COMMAND(frags, 0)
    }
 }
 
-VARIABLE_BOOLEAN(show_scores,       NULL,           onoff);
+VARIABLE_BOOLEAN(show_scores,       nullptr,        onoff);
 CONSOLE_VARIABLE(show_scores,   show_scores,    0)      {}
 
 // EOF

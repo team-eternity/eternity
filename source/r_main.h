@@ -26,21 +26,25 @@
 #ifndef R_MAIN_H__
 #define R_MAIN_H__
 
+// NEEDED BY R_doubleToUint32 below
+#include "SDL_endian.h"
+
 #include "tables.h"
 
+#include "m_surf.h"
+#include "m_vector.h"
 // haleyjd 12/15/2010: Lighting data is required
 #include "r_lighting.h"
 
 struct pwindow_t;
 struct columndrawer_t;
 struct spandrawer_t;
+struct rendercontext_t;
+struct cmapcontext_t;
 
 //
 // POV related.
 //
-
-extern fixed_t  viewcos;
-extern fixed_t  viewsin;
 
 extern int      centerx;
 extern int      centery;
@@ -52,6 +56,7 @@ extern int      linecount;
 extern int      loopcount;
 
 extern bool     showpsprites;
+extern bool     centerfire;
 extern bool     r_boomcolormaps;
 
 // haleyjd 11/21/09: enumeration for R_DoomTLStyle
@@ -69,17 +74,23 @@ void R_DoomTLStyle();
 
 void R_ResetTrans();
 
-//
-// Function pointer to switch refresh/drawing functions.
-//
+// Enumeration for sprite projection style
+enum
+{
+   R_SPRPROJSTYLE_DEFAULT,
+   R_SPRPROJSTYLE_FAST,
+   R_SPRPROJSTYLE_THOROUGH,
+   R_SPRPROJSTYLE_NUM
+};
 
-extern void (*colfunc)();
+inline int r_sprprojstyle;
 
 //
 // Utility functions.
 //
 
 struct node_t;
+struct rendersector_t;
 struct seg_t;
 struct subsector_t;
 struct sector_t;
@@ -91,15 +102,13 @@ extern int (*R_PointOnSide)(fixed_t, fixed_t, const node_t *);
 int R_PointOnSegSide(fixed_t x, fixed_t y, const seg_t *line);
 
 int SlopeDiv(unsigned int num, unsigned int den);
-angle_t R_PointToAngle(fixed_t x, fixed_t y);
+angle_t R_PointToAngle(const fixed_t viewx, const fixed_t viewy, const fixed_t x, const fixed_t y);
 angle_t R_PointToAngle2(fixed_t pviewx, fixed_t pviewy, fixed_t x, fixed_t y);
 subsector_t *R_PointInSubsector(fixed_t x, fixed_t y);
 fixed_t R_GetLerp(bool ignorepause);
-void R_SectorColormap(const sector_t *s);
+void R_SectorColormap(cmapcontext_t &context, const fixed_t viewz, const rendersector_t *s);
 
-// ioanch 20160106: template variants
-template<typename T> 
-inline static subsector_t *R_PointInSubsector(T &&v)
+inline static subsector_t *R_PointInSubsector(v2fixed_t v)
 {
    return R_PointInSubsector(v.x, v.y);
 }
@@ -111,6 +120,9 @@ inline static subsector_t *R_PointInSubsector(T &&v)
 struct camera_t;
 struct player_t;
 
+void R_AddMappedLine(const intptr_t lineIndex);
+
+void R_RenderViewContext(rendercontext_t &context);
 void R_RenderPlayerView(player_t *player, camera_t *viewcamera);
 
 //
@@ -135,8 +147,7 @@ angle_t R_WadToAngle(int wadangle);
 
 extern int viewdir;
 
-// haleyjd 09/04/06
-#define NUMCOLUMNENGINES 2
+#define NUMCOLUMNENGINES 1
 #define NUMSPANENGINES 1
 extern int r_column_engine_num;
 extern int r_span_engine_num;
@@ -151,9 +162,7 @@ extern const float PI;
 
 struct cb_view_t
 {
-   float x, y, z;
-   float angle, pitch;
-   float sin, cos;
+   float pitch;
 
    float width, height;
    float xcenter, ycenter;
@@ -193,7 +202,11 @@ struct cb_seg_t
 {
    int x1, x2;
    float x1frac, x2frac;
-   float toffsetx, toffsety;
+
+   float toffset_base_x,   toffset_base_y;
+   float toffset_top_x,    toffset_top_y;
+   float toffset_mid_x,    toffset_mid_y;
+   float toffset_bottom_x, toffset_bottom_y;
 
    float dist, dist2, diststep;
    float len, len2, lenstep;
@@ -218,19 +231,26 @@ struct cb_seg_t
    bool f_portalignore, c_portalignore;
 
    // 8 bit tables
-   lighttable_t **walllights;
+   const lighttable_t *const *walllights_top;
+   const lighttable_t *const *walllights_mid;
+   const lighttable_t *const *walllights_bottom;
 
    const side_t *side;
-   const sector_t *frontsec, *backsec;
-   visplane_t *floorplane, *ceilingplane;
+   const rendersector_t *frontsec, *backsec;
+   Surfaces<visplane_t *> plane;
    const seg_t *line;
 
-   const portal_t *f_portal, *c_portal;
-   pwindow_t *l_window, *f_window, *c_window, *b_window, *t_window;
+   Surfaces<const portal_t *> portal;
+   pwindow_t *l_window, *b_window, *t_window;
+   Surfaces<pwindow_t *> secwindow;   // surface windows
    // ioanch: added b_window for bottom edge portal
 
    // Extreme plane point Z for sloped sectors: used for sprite-clipping silhouettes.
    fixed_t maxfrontfloor, minfrontceil, maxbackfloor, minbackceil;
+
+   // Skew-related values
+   float skew_top_step, skew_mid_step, skew_bottom_step;
+   float skew_top_baseoffset, skew_mid_baseoffset, skew_bottom_baseoffset;
 
    // If nonzero, require f_sky1 rendering
    int skyflat;
@@ -238,12 +258,73 @@ struct cb_seg_t
 
 
 extern cb_view_t  view;
-extern cb_seg_t   seg;
-extern cb_seg_t   segclip;
 
 // SoM: frameid frame counter.
-void R_IncrementFrameid(); // Needed by the portal functions... 
 extern unsigned   frameid;
+
+uint64_t R_GetVisitID(const rendercontext_t &context);
+
+//
+// R_doubleToUint32
+//
+// haleyjd: Derived from Mozilla SpiderMonkey jsnum.c;
+// used under the terms of the GPL.
+//
+// * The Original Code is Mozilla Communicator client code, released
+// * March 31, 1998.
+// *
+// * The Initial Developer of the Original Code is
+// * Netscape Communications Corporation.
+// * Portions created by the Initial Developer are Copyright (C) 1998
+// * the Initial Developer. All Rights Reserved.
+// *
+// * Contributor(s):
+// *   IBM Corp.
+//
+static inline uint32_t R_doubleToUint32(double d)
+{
+#ifdef SDL_BYTEORDER
+   // TODO: Use C++ std::endian when C++20 can be used
+   // This bit (and the ifdef) isn't from SpiderMonkey.
+   // Credit goes to Marrub and David Hill
+   return reinterpret_cast<uint32_t *>(&(d += 6755399441055744.0))[SDL_BYTEORDER == SDL_BIG_ENDIAN];
+#else
+   int32_t i;
+   bool    neg;
+   double  two32;
+
+   // FIXME: should check for finiteness first, but we have no code for
+   // doing that in EE yet.
+
+   //if (!JSDOUBLE_IS_FINITE(d))
+   //   return 0;
+
+   // We check whether d fits int32, not uint32, as all but the ">>>" bit
+   // manipulation bytecode stores the result as int, not uint. When the
+   // result does not fit int jsval, it will be stored as a negative double.
+   i = (int32_t)d;
+   if((double)i == d)
+      return (int32_t)i;
+
+   neg = (d < 0);
+   d   = floor(neg ? -d : d);
+   d   = neg ? -d : d;
+
+   // haleyjd: This is the important part: reduction modulo UINT_MAX.
+   two32 = 4294967296.0;
+   d     = fmod(d, two32);
+
+   return (uint32_t)(d >= 0 ? d : d + two32);
+#endif
+}
+
+//
+// Common routine to convert fixed-point angle to floating-point angle, by Cardboard's rules.
+//
+inline static float cb_fixedAngleToFloat(angle_t angle)
+{
+   return (ANG90 - angle) * PI / ANG180;
+}
 
 #endif
 

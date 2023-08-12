@@ -105,13 +105,24 @@ static MetaTable e_effectsTable;
 // Add an item effect from a cfg_t definition.
 //
 static void E_convertKeywordEnumsToStrings(MetaTable &table);
-static itemeffect_t *E_addItemEffect(cfg_t *cfg)
+static itemeffect_t *E_addItemEffect(cfg_t *cfg, const char *const cfgSecName, const int secNum)
 {
    itemeffect_t *table;
    const char   *name = cfg_title(cfg);
 
    if(!(table = E_ItemEffectForName(name)))
       e_effectsTable.addObject((table = new itemeffect_t(name)));
+   else if(table->getInt(keyClass, ITEMFX_NONE) != secNum)
+   {
+      E_EDFLoggedWarning(
+         2,
+         "E_addItemEffect: Multiple item effects with same name "
+         "'%s' but different types '%s' and '%s' defined\n",
+         name,
+         cfgSecName,
+         table->getConstString(keyClassName, "")
+      );
+   }
 
    E_MetaTableFromCfg(cfg, table);
    E_convertKeywordEnumsToStrings(*table);
@@ -154,74 +165,76 @@ MetaTable *E_GetItemEffects()
 //
 
 // metakey vocabulary
-#define KEY_ADDITIVE       "additive"
-#define KEY_ADDITIVETIME   "additivetime"
-#define KEY_ALWAYSPICKUP   "alwayspickup"
-#define KEY_AMMO           "ammo"
-#define KEY_AMMOGIVEN      "ammogiven"
-#define KEY_AMOUNT         "amount"
-#define KEY_ARGS           "args"
-#define KEY_ARTIFACTTYPE   "artifacttype"
-#define KEY_BACKPACKAMOUNT "ammo.backpackamount"
-#define KEY_BACKPACKMAXAMT "ammo.backpackmaxamount"
-#define KEY_AMMOCOOPSTAY   "ammo.coopstay"
-#define KEY_AMMODMSTAY     "ammo.dmstay"
-#define KEY_AMMODROPPED    "ammo.dropped"
-#define KEY_AMMOGIVE       "ammo.give"
-#define KEY_CLASS          "class"
-#define KEY_CLASSNAME      "classname"
-#define KEY_CLRAMMOGIVEN   "clearammogiven"
-#define KEY_DROPAMOUNT     "dropamount"
-#define KEY_DURATION       "duration"
-#define KEY_FULLAMOUNTONLY "fullamountonly"
-#define KEY_ICON           "icon"
-#define KEY_ICON_XOFFS     "icon.offset.x"
-#define KEY_ICON_YOFFS     "icon.offset.y"
-#define KEY_IGNORESKILL    "ignoreskill"
-#define KEY_INTERHUBAMOUNT "interhubamount"
-#define KEY_INVBAR         "invbar"
-#define KEY_ITEMID         "itemid"
-#define KEY_KEEPDEPLETED   "keepdepleted"
-#define KEY_LOWMESSAGE     "lowmessage"
-#define KEY_MAXAMOUNT      "maxamount"
-#define KEY_MAXSAVEAMOUNT  "maxsaveamount"
-#define KEY_NOSHAREWARE    "noshareware"
-#define KEY_OVERRIDESSELF  "overridesself"
-#define KEY_PERMANENT      "permanent"
-#define KEY_SAVEAMOUNT     "saveamount"
-#define KEY_SAVEDIVISOR    "savedivisor"
-#define KEY_SAVEFACTOR     "savefactor"
-#define KEY_SETHEALTH      "sethealth"
-#define KEY_SETABSORPTION  "setabsorption"
-#define KEY_SORTORDER      "sortorder"
-#define KEY_TYPE           "type"
-#define KEY_UNDROPPABLE    "undroppable"
-#define KEY_USEACTION      "useaction"
-#define KEY_USEEFFECT      "useeffect"
-#define KEY_USESOUND       "usesound"
-#define KEY_WEAPON         "weapon"
+constexpr const char KEY_ADDITIVE[]       = "additive";
+constexpr const char KEY_ADDITIVETIME[]   = "additivetime";
+constexpr const char KEY_ALWAYSPICKUP[]   = "alwayspickup";
+constexpr const char KEY_AMMO[]           = "ammo";
+constexpr const char KEY_AMMOGIVEN[]      = "ammogiven";
+constexpr const char KEY_AMOUNT[]         = "amount";
+constexpr const char KEY_ARGS[]           = "args";
+constexpr const char KEY_ARTIFACTTYPE[]   = "artifacttype";
+constexpr const char KEY_BACKPACKAMOUNT[] = "ammo.backpackamount";
+constexpr const char KEY_BACKPACKMAXAMT[] = "ammo.backpackmaxamount";
+constexpr const char KEY_AMMOCOOPSTAY[]   = "ammo.coopstay";
+constexpr const char KEY_AMMODMSTAY[]     = "ammo.dmstay";
+constexpr const char KEY_AMMODROPPED[]    = "ammo.dropped";
+constexpr const char KEY_AMMOGIVE[]       = "ammo.give";
+constexpr const char KEY_CLASS[]          = "class";
+constexpr const char KEY_CLASSNAME[]      = "classname";
+constexpr const char KEY_CLRAMMOGIVEN[]   = "clearammogiven";
+constexpr const char KEY_DROPAMOUNT[]     = "dropamount";
+constexpr const char KEY_DURATION[]       = "duration";
+constexpr const char KEY_FULLAMOUNTONLY[] = "fullamountonly";
+constexpr const char KEY_ICON[]           = "icon";
+constexpr const char KEY_ICON_XOFFS[]     = "icon.offset.x";
+constexpr const char KEY_ICON_YOFFS[]     = "icon.offset.y";
+constexpr const char KEY_IGNORESKILL[]    = "ignoreskill";
+constexpr const char KEY_INTERHUBAMOUNT[] = "interhubamount";
+constexpr const char KEY_INVBAR[]         = "invbar";
+constexpr const char KEY_ITEMID[]         = "itemid";
+constexpr const char KEY_KEEPDEPLETED[]   = "keepdepleted";
+constexpr const char KEY_LOWMESSAGE[]     = "lowmessage";
+constexpr const char KEY_MAXAMOUNT[]      = "maxamount";
+constexpr const char KEY_MAXSAVEAMOUNT[]  = "maxsaveamount";
+constexpr const char KEY_NOSHAREWARE[]    = "noshareware";
+constexpr const char KEY_OVERRIDESSELF[]  = "overridesself";
+constexpr const char KEY_PERMANENT[]      = "permanent";
+constexpr const char KEY_SAVEAMOUNT[]     = "saveamount";
+constexpr const char KEY_SAVEDIVISOR[]    = "savedivisor";
+constexpr const char KEY_SAVEFACTOR[]     = "savefactor";
+constexpr const char KEY_SETHEALTH[]      = "sethealth";
+constexpr const char KEY_SETABSORPTION[]  = "setabsorption";
+constexpr const char KEY_SORTORDER[]      = "sortorder";
+constexpr const char KEY_TYPE[]           = "type";
+constexpr const char KEY_UNDROPPABLE[]    = "undroppable";
+constexpr const char KEY_USEACTION[]      = "useaction";
+constexpr const char KEY_USEEFFECT[]      = "useeffect";
+constexpr const char KEY_USESOUND[]       = "usesound";
+constexpr const char KEY_WEAPON[]         = "weapon";
 
-#define KEY_DELTA_NAME     "name"
+constexpr const char KEY_DELTA_NAME[]     = "name";
 
 // Interned metatable keys
-static MetaKeyIndex keyAmount        (KEY_AMOUNT        );
+MetaKeyIndex keyAmount        (KEY_AMOUNT        );
+MetaKeyIndex keyBackpackAmount(KEY_BACKPACKAMOUNT);
+MetaKeyIndex keyClass         (KEY_CLASS         );
+MetaKeyIndex keyClassName     (KEY_CLASSNAME     );
+MetaKeyIndex keyItemID        (KEY_ITEMID        );
+MetaKeyIndex keyMaxAmount     (KEY_MAXAMOUNT     );
+MetaKeyIndex keyBackpackMaxAmt(KEY_BACKPACKMAXAMT);
+MetaKeyIndex keyInvBar        (KEY_INVBAR        );
+MetaKeyIndex keyAmmoGiven     (KEY_AMMOGIVEN     );
+
+// Static interened metatable keys
 static MetaKeyIndex keyArtifactType  (KEY_ARTIFACTTYPE  );
-static MetaKeyIndex keyBackpackAmount(KEY_BACKPACKAMOUNT);
-static MetaKeyIndex keyClass         (KEY_CLASS         );
-static MetaKeyIndex keyClassName     (KEY_CLASSNAME     );
 static MetaKeyIndex keyFullAmountOnly(KEY_FULLAMOUNTONLY);
 static MetaKeyIndex keyInterHubAmount(KEY_INTERHUBAMOUNT);
-static MetaKeyIndex keyItemID        (KEY_ITEMID        );
 static MetaKeyIndex keyKeepDepleted  (KEY_KEEPDEPLETED  );
-static MetaKeyIndex keyMaxAmount     (KEY_MAXAMOUNT     );
-static MetaKeyIndex keyBackpackMaxAmt(KEY_BACKPACKMAXAMT);
 static MetaKeyIndex keySortOrder     (KEY_SORTORDER     );
-static MetaKeyIndex keyInvBar        (KEY_INVBAR        );
 static MetaKeyIndex keyUseEffect     (KEY_USEEFFECT     );
 static MetaKeyIndex keyUseAction     (KEY_USEACTION     );
 static MetaKeyIndex keyUseSound      (KEY_USESOUND      );
 static MetaKeyIndex keyArgs          (KEY_ARGS          );
-static MetaKeyIndex keyAmmoGiven     (KEY_AMMOGIVEN     );
 
 // Keys for specially treated artifact types
 static MetaKeyIndex keyBackpackItem  (ARTI_BACKPACKITEM );
@@ -464,7 +477,7 @@ static int E_actionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **arg
    CFG_INT_CB(KEY_ARTIFACTTYPE, ARTI_NORMAL, CFGF_NONE, E_artiTypeCB), /* artifact sub-type */       \
                                                                                                      \
    CFG_STRFUNC(KEY_USEACTION,  "NULL",                  E_actionFuncCB), /* action function */       \
-   CFG_STR(KEY_ARGS,           0,            CFGF_LIST),                                             \
+   CFG_STR(KEY_ARGS,           nullptr,      CFGF_LIST),                                             \
                                                                                                      \
                                                                                                      \
    /* Sub-Type Specific Fields */                                                                    \
@@ -586,7 +599,7 @@ static void E_processItemEffects(cfg_t *cfg)
       // process each section of the current type
       for(unsigned int secNum = 0; secNum < numSections; secNum++)
       {
-         auto newEffect = E_addItemEffect(cfg_getnsec(cfg, cfgSecName, secNum));
+         auto newEffect = E_addItemEffect(cfg_getnsec(cfg, cfgSecName, secNum), cfgSecName, secNum);
 
          // add the item effect type and name as properties
          newEffect->setInt(keyClass, i);
@@ -642,7 +655,17 @@ static void E_generateWeaponTrackers()
       weaponinfo_t *currWeapon  = E_WeaponForID(i);
       itemeffect_t *currTracker = E_ItemEffectForName(currWeapon->name);
       if(currTracker != nullptr)
+      {
+         if(currTracker->getInt(keyClass, ITEMFX_NONE) != ITEMFX_ARTIFACT)
+         {
+            E_EDFLoggedErr(
+               2,
+               "E_generateWeaponTrackers: Non-artifact item effect sharing name of weaponinfo '%s' found\n",
+               currWeapon->name
+            );
+         }
          currWeapon->tracker = currTracker;
+      }
       else
       {
          currTracker = new itemeffect_t(currWeapon->name);
@@ -699,7 +722,7 @@ static void E_collectAmmoTypes()
 {
    e_ammoTypesLookup.makeEmpty();
 
-   itemeffect_t *itr = NULL;
+   itemeffect_t *itr = nullptr;
 
    while((itr = runtime_cast<itemeffect_t *>(e_effectsTable.tableIterator(itr))))
    {
@@ -784,7 +807,7 @@ static void E_collectKeyItems()
 {
    e_keysLookup.makeEmpty();
 
-   itemeffect_t *itr = NULL;
+   itemeffect_t *itr = nullptr;
 
    while((itr = runtime_cast<itemeffect_t *>(e_effectsTable.tableIterator(itr))))
    {
@@ -841,13 +864,13 @@ struct lockdef_t
 // Lockdefs hash, by ID number
 static EHashTable<lockdef_t, EIntHashKey, &lockdef_t::id, &lockdef_t::links> e_lockDefs;
 
-#define ITEM_LOCKDEF_REQUIRE  "require"
-#define ITEM_LOCKDEF_ANY      "any"
-#define ITEM_LOCKDEF_MESSAGE  "message"
-#define ITEM_LOCKDEF_REMOTE   "remotemessage"
-#define ITEM_LOCKDEF_ANY_KEYS "keys"
-#define ITEM_LOCKDEF_LOCKSND  "lockedsound"
-#define ITEM_LOCKDEF_MAPCOLOR "mapcolor"
+constexpr const char ITEM_LOCKDEF_REQUIRE[]  = "require";
+constexpr const char ITEM_LOCKDEF_ANY[]      = "any";
+constexpr const char ITEM_LOCKDEF_MESSAGE[]  = "message";
+constexpr const char ITEM_LOCKDEF_REMOTE[]   = "remotemessage";
+constexpr const char ITEM_LOCKDEF_ANY_KEYS[] = "keys";
+constexpr const char ITEM_LOCKDEF_LOCKSND[]  = "lockedsound";
+constexpr const char ITEM_LOCKDEF_MAPCOLOR[] = "mapcolor";
 
 // "any" section options
 static cfg_opt_t any_opts[] =
@@ -861,10 +884,10 @@ cfg_opt_t edf_lockdef_opts[] =
 {
    CFG_STR(ITEM_LOCKDEF_REQUIRE,  "",       CFGF_MULTI),
    CFG_SEC(ITEM_LOCKDEF_ANY,      any_opts, CFGF_MULTI),
-   CFG_STR(ITEM_LOCKDEF_MESSAGE,  NULL,     CFGF_NONE ),
-   CFG_STR(ITEM_LOCKDEF_REMOTE,   NULL,     CFGF_NONE ),
-   CFG_STR(ITEM_LOCKDEF_LOCKSND,  NULL,     CFGF_NONE ),
-   CFG_STR(ITEM_LOCKDEF_MAPCOLOR, NULL,     CFGF_NONE ),
+   CFG_STR(ITEM_LOCKDEF_MESSAGE,  nullptr,  CFGF_NONE ),
+   CFG_STR(ITEM_LOCKDEF_REMOTE,   nullptr,  CFGF_NONE ),
+   CFG_STR(ITEM_LOCKDEF_LOCKSND,  nullptr,  CFGF_NONE ),
+   CFG_STR(ITEM_LOCKDEF_MAPCOLOR, nullptr,  CFGF_NONE ),
    CFG_END()
 };
 
@@ -888,7 +911,7 @@ static void E_freeLockDefData(lockdef_t *lockdef)
    if(lockdef->requiredKeys)
    {
       efree(lockdef->requiredKeys);
-      lockdef->requiredKeys = NULL;
+      lockdef->requiredKeys = nullptr;
    }
    lockdef->numRequiredKeys = 0;
 
@@ -902,7 +925,7 @@ static void E_freeLockDefData(lockdef_t *lockdef)
             efree(any->keys);
       }
       efree(lockdef->anyKeys);
-      lockdef->anyKeys = NULL;
+      lockdef->anyKeys = nullptr;
    }
    lockdef->numAnyLists = 0;
    lockdef->numAnyKeys  = 0;
@@ -910,17 +933,17 @@ static void E_freeLockDefData(lockdef_t *lockdef)
    if(lockdef->message)
    {
       efree(lockdef->message);
-      lockdef->message = NULL;
+      lockdef->message = nullptr;
    }
    if(lockdef->remoteMessage)
    {
       efree(lockdef->remoteMessage);
-      lockdef->remoteMessage = NULL;
+      lockdef->remoteMessage = nullptr;
    }
    if(lockdef->lockedSound)
    {
       efree(lockdef->lockedSound);
-      lockdef->lockedSound = NULL;
+      lockdef->lockedSound = nullptr;
    }
 }
 
@@ -960,7 +983,7 @@ static void E_processLockDefColor(lockdef_t *lock, const char *value)
 
    AutoPalette pal(wGlobalDir);
    long        lresult = 0;
-   command_t  *cmd     = NULL;
+   command_t  *cmd     = nullptr;
 
    switch(*value)
    {
@@ -978,7 +1001,7 @@ static void E_processLockDefColor(lockdef_t *lock, const char *value)
       break;
    case '#':
       // hex constant
-      lresult = strtol(value + 1, NULL, 16);
+      lresult = strtol(value + 1, nullptr, 16);
       lock->colorType = LOCKDEF_COLOR_CONSTANT;
       lock->color = V_FindBestColor(pal.get(),
                        (int)((lresult >> 16) & 0xff),
@@ -987,7 +1010,7 @@ static void E_processLockDefColor(lockdef_t *lock, const char *value)
       break;
    default:
       // decimal palette index
-      lresult = strtol(value, NULL, 10);
+      lresult = strtol(value, nullptr, 10);
       if(lresult >= 0 && lresult <= 255)
       {
          lock->colorType = LOCKDEF_COLOR_CONSTANT;
@@ -1004,7 +1027,7 @@ static void E_processLockDefColor(lockdef_t *lock, const char *value)
 //
 static void E_processLockDef(cfg_t *lock)
 {
-   lockdef_t *lockdef = NULL;
+   lockdef_t *lockdef = nullptr;
 
    // the ID of the lockdef is the title of the section; it will be interpreted
    // as an integer
@@ -1096,7 +1119,7 @@ static void E_processLockDefs(cfg_t *cfg)
 static void E_failPlayerUnlock(const player_t *player, const lockdef_t *lock,
                                bool remote)
 {
-   const char *msg = NULL;
+   const char *msg = nullptr;
 
    if(remote && lock->remoteMessage)
    {
@@ -1311,7 +1334,7 @@ static dehflags_t e_PickupFlags[] =
    { "SILENTNOBENEFIT",   PFXF_SILENTNOBENEFIT   },
    { "COMMERCIALONLY",    PFXF_COMMERCIALONLY    },
    { "GIVESBACKPACKAMMO", PFXF_GIVESBACKPACKAMMO },
-   { NULL,           0 }
+   { nullptr,        0 }
 };
 
 static dehflagset_t e_PickupFlagSet =
@@ -1328,21 +1351,21 @@ static dehflagset_t e_PickupFlagSet =
 //
 
 // Pick-up effects
-#define ITEM_PICKUP_CNAME     "pfxname"
-#define ITEM_PICKUP_SPRITE    "sprite"
-#define ITEM_PICKUP_FX        "effect"
-#define ITEM_PICKUP_EFFECTS   "effects"
-#define ITEM_PICKUP_CHANGEWPN "changeweapon"
-#define ITEM_PICKUP_MSG       "message"
-#define ITEM_PICKUP_SOUND     "sound"
-#define ITEM_PICKUP_FLAGS     "flags"
+constexpr const char ITEM_PICKUP_CNAME[]     = "pfxname";
+constexpr const char ITEM_PICKUP_SPRITE[]    = "sprite";
+constexpr const char ITEM_PICKUP_FX[]        = "effect";
+constexpr const char ITEM_PICKUP_EFFECTS[]   = "effects";
+constexpr const char ITEM_PICKUP_CHANGEWPN[] = "changeweapon";
+constexpr const char ITEM_PICKUP_MSG[]       = "message";
+constexpr const char ITEM_PICKUP_SOUND[]     = "sound";
+constexpr const char ITEM_PICKUP_FLAGS[]     = "flags";
 
 // sprite-based pickup items
 cfg_opt_t edf_sprpkup_opts[] =
 {
    CFG_STR(ITEM_PICKUP_FX,    "PFX_NONE", CFGF_NONE),
-   CFG_STR(ITEM_PICKUP_MSG,   NULL,       CFGF_NONE),
-   CFG_STR(ITEM_PICKUP_SOUND, NULL,       CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_MSG,   nullptr,    CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_SOUND, nullptr,    CFGF_NONE),
 
    CFG_END()
 };
@@ -1350,13 +1373,13 @@ cfg_opt_t edf_sprpkup_opts[] =
 // standalone pickup effects
 cfg_opt_t edf_pkupfx_opts[] =
 {
-   CFG_STR(ITEM_PICKUP_CNAME,     NULL, CFGF_NONE),
-   CFG_STR(ITEM_PICKUP_SPRITE,    NULL, CFGF_NONE),
-   CFG_STR(ITEM_PICKUP_EFFECTS,   0,    CFGF_LIST),
-   CFG_STR(ITEM_PICKUP_CHANGEWPN, "",   CFGF_NONE),
-   CFG_STR(ITEM_PICKUP_MSG,       NULL, CFGF_NONE),
-   CFG_STR(ITEM_PICKUP_SOUND,     NULL, CFGF_NONE),
-   CFG_STR(ITEM_PICKUP_FLAGS,     NULL, CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_CNAME,     nullptr, CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_SPRITE,    nullptr, CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_EFFECTS,   nullptr, CFGF_LIST),
+   CFG_STR(ITEM_PICKUP_CHANGEWPN, "",      CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_MSG,       nullptr, CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_SOUND,     nullptr, CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_FLAGS,     nullptr, CFGF_NONE),
 
    CFG_END()
 };
@@ -1844,7 +1867,7 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
 //
 static void E_allocateInventoryItemIDs()
 {
-   itemeffect_t *item = NULL;
+   itemeffect_t *item = nullptr;
 
    // empty the table if it was already created before
    e_InventoryItemsByID.clear();
@@ -1927,7 +1950,7 @@ static void E_allocatePlayerInventories()
 //
 itemeffect_t *E_EffectForInventoryItemID(inventoryitemid_t id)
 {
-   return (id >= 0 && id < e_maxitemid) ? e_InventoryItemsByID[id] : NULL;
+   return (id >= 0 && id < e_maxitemid) ? e_InventoryItemsByID[id] : nullptr;
 }
 
 //
@@ -1939,14 +1962,14 @@ itemeffect_t *E_EffectForInventoryIndex(const player_t *player,
                                         inventoryindex_t idx)
 {
    return (idx >= 0 && idx < e_maxitemid) ?
-      E_EffectForInventoryItemID(player->inventory[idx].item) : NULL;
+      E_EffectForInventoryItemID(player->inventory[idx].item) : nullptr;
 }
 
 //
 // E_InventorySlotForItemID
 //
 // Find the slot being used by an item in the player's inventory, if one exists.
-// NULL is returned if the item is not in the player's inventory.
+// nullptr is returned if the item is not in the player's inventory.
 //
 inventoryslot_t *E_InventorySlotForItemID(const player_t *player,
                                           inventoryitemid_t id)
@@ -1959,14 +1982,14 @@ inventoryslot_t *E_InventorySlotForItemID(const player_t *player,
          return &inventory[idx];
    }
 
-   return NULL;
+   return nullptr;
 }
 
 //
 // E_InventorySlotForItem
 //
 // Find the slot being used by an item in the player's inventory, by pointer,
-// if one exists. NULL is returned if the item is not in the player's
+// if one exists. nullptr is returned if the item is not in the player's
 // inventory.
 //
 inventoryslot_t *E_InventorySlotForItem(const player_t *player,
@@ -1984,13 +2007,24 @@ inventoryslot_t *E_InventorySlotForItem(const player_t *player,
 // E_InventorySlotForItemName
 //
 // Find the slot being used by an item in the player's inventory, by name,
-// if one exists. NULL is returned if the item is not in the player's
+// if one exists. nullptr is returned if the item is not in the player's
 // inventory.
 //
 inventoryslot_t *E_InventorySlotForItemName(const player_t *player,
                                             const char *name)
 {
    return E_InventorySlotForItem(player, E_ItemEffectForName(name));
+}
+
+//
+// Returns the item ID for a given item effect name. Returns -1 if not found.
+//
+int E_ItemIDForName(const char *name)
+{
+   const itemeffect_t *effect = E_ItemEffectForName(name);
+   if(!effect)
+      return -1;
+   return effect->getInt(keyItemID, -1);
 }
 
 //
@@ -2157,6 +2191,18 @@ int E_GetItemOwnedAmountName(const player_t *player, const char *name)
    return (slot ? slot->amount : 0);
 }
 
+//
+// Check if player has power by name
+//
+bool E_PlayerHasPowerName(const player_t &player, const char *name)
+{
+   if(estrempty(name))
+      return false;
+   int num = E_StrToNumLinear(powerStrings, NUMPOWERS, name);
+   if(num == NUMPOWERS)
+      return false;
+   return !!player.powers[num].isActive();
+}
 
 //
 // E_GiveInventoryItem

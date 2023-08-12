@@ -31,7 +31,16 @@
 
 #include "r_defs.h"
 #include "m_dllist.h"
+#include "m_vector.h"
 #include "polyobj.h"
+
+struct seginterp_t
+{
+   float offset;
+   float len;
+   v2fixed_t org[2];
+   v2float_t forg[2];
+};
 
 //
 // dynaseg
@@ -46,13 +55,15 @@ struct dynaseg_t
 
    dynaseg_t *subnext;         // next dynaseg in fragment
    dynaseg_t *freenext;        // next dynaseg on freelist
-   struct polyobj_s *polyobj;  // polyobject
+   polyobj_t *polyobj;  // polyobject
 
    DLListItem<dynaseg_t> bsplink;   // link for BSP chains
    DLListItem<dynaseg_t> ownerlink; // link for owning node chain
    DLListItem<dynaseg_t> alterlink; // link for non-dynaBSP segs changed by dynaBSP
 
+   // FIXME: Can probably cut this down somewhat. Seems a bit space inefficient (data-wise).
    float prevlen, prevofs; // for interpolation (keep them out of seg_t)
+   seginterp_t prev;
 
    // properties needed for efficiency in the BSP builder
    double psx, psy, pex, pey; // end points

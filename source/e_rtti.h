@@ -104,7 +104,7 @@ public:
          Type *type = FindType(pName);
 
          if(!T::Class::StaticType.isAncestorOf(type))
-            return NULL;
+            return nullptr;
 
          return static_cast<T *>(type);
       }
@@ -207,10 +207,10 @@ public:
 //
 // Defines the virtual factory construction method for an abstract descendant
 // of RTTIObject. As a result of the class being abstract, it cannot be 
-// instantiated and therefore this method returns NULL.
+// instantiated and therefore this method returns nullptr.
 //
 #define RTTI_ABSTRACT_CONSTRUCTOR(name) \
-   virtual name *newObject() const { return NULL; }
+   virtual name *newObject() const { return nullptr; }
 
 //
 // DECLARE_RTTI_TYPE_CTOR
@@ -310,7 +310,7 @@ template<typename T> inline T runtime_cast(RTTIObject *robj)
    typedef typename std::remove_pointer<T>::type base_type;
 
    return (robj && robj->isDescendantOf(&base_type::StaticType)) ?
-      static_cast<T>(robj) : NULL;
+      static_cast<T>(robj) : nullptr;
 }
 
 #endif //E_RTTI_H__

@@ -27,8 +27,8 @@
 #define E_PLAYER_H__
 
 // macros
-#define NUMEDFSKINCHAINS 17
-#define NUMWEAPONSLOTS   16
+constexpr int NUMEDFSKINCHAINS = 17;
+constexpr int NUMWEAPONSLOTS   = 16;
 
 struct skin_t;
 struct weaponslot_t;
@@ -109,11 +109,11 @@ bool E_MayJumpIfOverriden(const playerclass_t &pclass);
 // EDF-only stuff
 #ifdef NEED_EDF_DEFINITIONS
 
-#define EDF_SEC_SKIN "skin"
+constexpr const char EDF_SEC_SKIN[] = "skin";
 extern cfg_opt_t edf_skin_opts[];
 
-#define EDF_SEC_PCLASS "playerclass"
-#define EDF_SEC_PDELTA "playerdelta"
+constexpr const char EDF_SEC_PCLASS[] = "playerclass";
+constexpr const char EDF_SEC_PDELTA[] = "playerdelta";
 extern cfg_opt_t edf_pclass_opts[];
 extern cfg_opt_t edf_pdelta_opts[];
 

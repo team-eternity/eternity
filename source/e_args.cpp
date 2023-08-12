@@ -37,16 +37,17 @@
 #include "info.h"
 #include "m_utils.h"
 #include "p_mobj.h"
+#include "p_maputl.h"
 
 // haleyjd 05/21/10: a static empty string, to avoid allocating tons of memory 
 // for single-byte strings.
 static char e_argemptystr[] = "";
 
 // test if a string is empty
-#define ISEMPTY(s) (*(s) == '\0')
+constexpr bool ISEMPTY(const char *s) { return *(s) == '\0'; }
 
 // test if a string is the global arg empty string
-#define ISARGEMPTYSTR(s) ((s) == e_argemptystr)
+constexpr bool ISARGEMPTYSTR(const char *s) { return (s) == e_argemptystr; }
 
 //
 // Adds an argument to the end of an argument list, if possible.
@@ -75,7 +76,7 @@ bool E_AddArgToList(arglist_t *al, const char *value)
 // does not exist already, empty arguments will be added until that index 
 // is valid.
 //
-bool E_SetArg(arglist_t *al, int index, const char *value)
+bool E_SetArg(arglist_t *al, int index, const char *value, dehackedArg_e dehacked)
 {
    if(index >= EMAXARGS)
       return false;
@@ -98,6 +99,9 @@ bool E_SetArg(arglist_t *al, int index, const char *value)
    // any cached evaluation is now invalid
    al->values[index].type = EVALTYPE_NONE;
 
+   // track if set by dehacked or not
+   al->values[index].dehacked = dehacked == dehackedArg_e::YES;
+
    return true;
 }
 
@@ -106,13 +110,13 @@ bool E_SetArg(arglist_t *al, int index, const char *value)
 // This is for convenience in DeHackEd, which is not very smart about 
 // setting arguments.
 //
-bool E_SetArgFromNumber(arglist_t *al, int index, int value)
+bool E_SetArgFromNumber(arglist_t *al, int index, int value, dehackedArg_e dehacked)
 {
    char numbuffer[33];
 
    M_Itoa(value, numbuffer, 10);
 
-   return E_SetArg(al, index, numbuffer);
+   return E_SetArg(al, index, numbuffer, dehacked);
 }
 
 //
@@ -210,8 +214,11 @@ fixed_t E_ArgAsFixed(arglist_t *al, int index, fixed_t defvalue)
    if(eval.type != EVALTYPE_FIXED)
    {
       // calculate the value and cache it
-      eval.type    = EVALTYPE_FIXED;
-      eval.value.x = M_DoubleToFixed(strtod(al->args[index], nullptr));
+      eval.type = EVALTYPE_FIXED;
+      if(eval.dehacked)
+         eval.value.x = fixed_t(strtol(al->args[index], nullptr, 0));
+      else
+         eval.value.x = M_DoubleToFixed(strtod(al->args[index], nullptr));
    }
 
    return eval.value.x;
@@ -241,6 +248,32 @@ double E_ArgAsDouble(arglist_t *al, int index, double defvalue)
    }
 
    return eval.value.d;
+}
+
+//
+// Gets the arg value at index i as an angle_t, if such argument exists.
+// The evaluated value will be cached so that it can be returned on
+// subsequent calls. If the argument does not exist, the value passed in
+// the "defvalue" argument will be returned.
+//
+angle_t E_ArgAsAngle(arglist_t *al, int index, angle_t defvalue)
+{
+   // if the arglist doesn't exist or doesn't hold this many arguments,
+   // return the default value.
+   if(!al || index >= al->numargs)
+      return defvalue;
+
+   evalcache_t &eval = al->values[index];
+
+   // if the value is cached, return the cached value
+   if(eval.type != EVALTYPE_ANGLE)
+   {
+      // calculate the value and cache it
+      eval.type    = EVALTYPE_ANGLE;
+      eval.value.a = P_DoubleToAngle(strtod(al->args[index], nullptr));
+   }
+
+   return eval.value.a;
 }
 
 //
@@ -711,7 +744,7 @@ int E_ArgAsStateNumG0(arglist_t *al, int index, const player_t *player)
 //
 // Gets the arg value at index i as a set of thing flag masks, if such argument 
 // exists. The evaluated value will be cached so that it can be returned on 
-// subsequent calls. If the arg does not exist, NULL is returned.
+// subsequent calls. If the arg does not exist, nullptr is returned.
 //
 unsigned int *E_ArgAsThingFlags(arglist_t *al, int index)
 {
@@ -741,10 +774,54 @@ unsigned int *E_ArgAsThingFlags(arglist_t *al, int index)
 }
 
 //
+// Gets the arg value at index i as a set of thing flag masks, if such argument
+// exists. The evaluated value will be cached so that it can be returned on
+// subsequent calls. If the arg does not exist, nullptr is returned.
+//
+unsigned int *E_ArgAsMBF21ThingFlags(arglist_t *al, int index)
+{
+
+   // if the arglist doesn't exist or doesn't hold this many arguments,
+   // return the default value.
+   if(!al || index >= al->numargs)
+      return nullptr;
+
+   evalcache_t &eval = al->values[index];
+
+   if(eval.type != EVALTYPE_THINGFLAG)
+   {
+      char *pos = nullptr;
+      long num;
+
+      eval.type = EVALTYPE_THINGFLAG;
+
+      // see if this is a string or an integer
+      num = strtol(al->args[index], &pos, 0);
+
+      if(estrempty(pos))
+      {
+         // it's an integer to remap
+         unsigned int *flagvals = deh_RemapMBF21ThingTypeFlags(static_cast<unsigned>(num));
+
+         memcpy(eval.value.flags, flagvals, MAXFLAGFIELDS * sizeof(unsigned int));
+      }
+      else if(estrnonempty(al->args[index]))
+         I_Error("E_ArgAsMBF21ThingFlags: MBF21 flags codepointers should not be called from EDF");
+      else
+      {
+         // empty string is zero
+         memset(eval.value.flags, 0, MAXFLAGFIELDS * sizeof(unsigned int));
+      }
+   }
+
+   return eval.value.flags;
+}
+
+//
 // Gets the arg value at index i as a flag mask, if such argument  exists,
 // using the specified flagset. The evaluated value will be cached
 // so that it can be returned on subsequent calls. If the arg does not
-// exist, NULL is returned.
+// exist, nullptr is returned.
 //
 unsigned int E_ArgAsFlags(arglist_t *al, int index, dehflagset_t *flagset)
 {
@@ -773,7 +850,7 @@ unsigned int E_ArgAsFlags(arglist_t *al, int index, dehflagset_t *flagset)
 //
 // Gets the arg value at index i as a sound, if such argument exists.
 // The evaluated value will be cached so that it can be returned on subsequent
-// calls. If the arg does not exist, NULL is returned.
+// calls. If the arg does not exist, nullptr is returned.
 //
 sfxinfo_t *E_ArgAsSound(arglist_t *al, int index)
 {
@@ -837,7 +914,7 @@ int E_ArgAsBexptr(arglist_t *al, int index)
 //
 // Gets the arg value at index i as an EDF string, if such argument exists.
 // The evaluated value will be cached so that it can be returned on subsequent
-// calls. If the arg does not exist, NULL is returned.
+// calls. If the arg does not exist, nullptr is returned.
 //
 edf_string_t *E_ArgAsEDFString(arglist_t *al, int index)
 {
@@ -926,7 +1003,7 @@ int E_ArgAsKwd(arglist_t *al, int index, const argkeywd_t *kw, int defvalue)
    if(!al || index >= al->numargs)
       return defvalue;
 
-      evalcache_t &eval = al->values[index];
+   evalcache_t &eval = al->values[index];
 
    if(eval.type != EVALTYPE_KEYWORD)
    {

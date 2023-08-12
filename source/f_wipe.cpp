@@ -47,7 +47,7 @@ int wipetype;
 
 // common statics
 static int current_wipetype;
-static byte *wipe_buffer = NULL;
+static byte *wipe_buffer = nullptr;
 
 //==============================================================================
 //
@@ -60,7 +60,7 @@ static byte *wipe_buffer = NULL;
 static byte **start_screen;
 VALLOCATION(start_screen)
 {
-   start_screen = ecalloctag(byte **, w, sizeof(byte *), PU_VALLOC, NULL);
+   start_screen = ecalloctag(byte **, w, sizeof(byte *), PU_VALLOC, nullptr);
 }
 
 // y co-ordinate of various columns
@@ -101,15 +101,11 @@ static void Wipe_meltStartScreen(void)
       int wormx = (x << FRACBITS) / video.xscale;
       int wormy = video.y1lookup[worms[wormx] > 0 ? worms[wormx] : 0];
       
-      src = vbscreen.data + x;
+      src = vbscreen.data + x * video.pitch;
       dest = start_screen[x];
       
       for(y = 0; y < video.height - wormy; y++)
-      {
-         *dest = *src;
-         src += vbscreen.pitch;
-         dest++;
-      }
+         *dest++ = *src++;
    }
 }
 
@@ -129,13 +125,10 @@ static void Wipe_meltDrawer(void)
       wormy = video.y1lookup[wormy];
 
       src = start_screen[x];
-      dest = vbscreen.data + vbscreen.pitch * wormy + x;
+      dest = vbscreen.data + vbscreen.pitch * x + wormy;
       
       for(y = video.height - wormy; y--;)
-      {
-         *dest = *src++;
-         dest += vbscreen.pitch;
-      }
+         *dest++ = *src++;
    }
 }
 
@@ -203,11 +196,11 @@ static void Wipe_fadeDrawer(void)
 
       src = wipe_buffer;
 
-      for(y = 0; y < vbscreen.height; ++y)
+      for(x = 0; x < vbscreen.width; ++x)
       {
-         dest = vbscreen.data + y * vbscreen.pitch;
+         dest = vbscreen.data + x * vbscreen.pitch;
 
-         for(x = 0; x < vbscreen.width; ++x)
+         for(y = 0; y < vbscreen.height; ++y)
          {
             unsigned int fg, bg;
             
@@ -233,17 +226,17 @@ static bool Wipe_fadeTicker(void)
 // Wipe Objects
 //
 
-typedef struct fwipe_s
+struct fwipe_t
 {
    void (*StartScreen)(void);
    void (*Drawer)(void);
    bool (*Ticker)(void);
-} fwipe_t;
+};
 
 static fwipe_t wipers[] =
 {
    // none
-   { NULL, NULL, NULL },
+   { nullptr, nullptr, nullptr },
 
    // melt wipe
    {
@@ -280,8 +273,7 @@ void Wipe_StartScreen(void)
    {
       // SoM: Reformatted and cleaned up (ANYRES)
       // haleyjd: make purgable, allocate at required size
-      wipe_buffer = (byte *)(Z_Malloc(video.height * video.width, PU_STATIC, 
-                                      (void **)&wipe_buffer));
+      wipe_buffer = emalloctag(byte *, video.height * video.width, PU_STATIC, reinterpret_cast<void **>(&wipe_buffer));
    }
    else
       Z_ChangeTag(wipe_buffer, PU_STATIC); // buffer is in use
@@ -317,7 +309,7 @@ void Wipe_ScreenReset(void)
    if(wipe_buffer)
    {
       Z_Free(wipe_buffer);
-      wipe_buffer = NULL;
+      wipe_buffer = nullptr;
    }
 
    // cancel any current wipe (screen contents have been lost)

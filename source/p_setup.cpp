@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2021 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,13 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Do all the WAD I/O, get map description,
-//  set up initial state and misc. LUTs.
+// Purpose: Do all the WAD I/O, get map description,
+//          set up initial state and misc. LUTs.
+// Authors: James Haley, Ioan Chera
 //
-//-----------------------------------------------------------------------------
+
 
 #include <memory>
 #include "z_zone.h"
@@ -37,6 +36,7 @@
 #include "d_main.h"
 #include "d_mod.h"
 #include "doomstat.h"
+#include "e_compatibility.h"
 #include "e_exdata.h" // haleyjd: ExtraData!
 #include "e_reverbs.h"
 #include "e_ttypes.h"
@@ -50,6 +50,8 @@
 #include "m_argv.h"
 #include "m_bbox.h"
 #include "m_binary.h"
+#include "m_collection.h"
+#include "m_hash.h"
 #include "p_anim.h"  // haleyjd: lightning
 #include "p_chase.h"
 #include "p_enemy.h"
@@ -60,6 +62,7 @@
 #include "p_mobjcol.h"
 #include "p_partcl.h"
 #include "p_portal.h"
+#include "p_portalblockmap.h"
 #include "p_scroll.h"
 #include "p_setup.h"
 #include "p_skin.h"
@@ -67,6 +70,7 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "polyobj.h"
+#include "r_context.h"
 #include "r_data.h"
 #include "r_defs.h"
 #include "r_dynseg.h"
@@ -76,24 +80,26 @@
 #include "s_musinfo.h"
 #include "s_sndseq.h"
 #include "s_sound.h"
+#include "v_alloc.h"
 #include "v_misc.h"
 #include "v_video.h"
 #include "w_levels.h"
 #include "w_wad.h"
 #include "z_auto.h"
 
+#include "../zlib/zlib.h"
+
 extern const char *level_error;
 
 //
 // Miscellaneous constants
 //
-enum
-{
-   // vertex distance limit over which NOT to fix slime trails. Useful for
-   // the new vanilla Doom rendering trick discovered by Linguica. Link here:
-   // http://www.doomworld.com/vb/doom-editing/74354-stupid-bsp-tricks/
-   LINGUORTAL_THRESHOLD = 8 * FRACUNIT,   
-};
+
+// vertex distance limit over which NOT to fix slime trails. Useful for
+// the new vanilla Doom rendering trick discovered by Linguica. Link here:
+// http://www.doomworld.com/vb/doom-editing/74354-stupid-bsp-tricks/
+constexpr fixed_t LINGUORTAL_THRESHOLD = 8 * FRACUNIT;
+
 
 //
 // ZNodeType
@@ -109,13 +115,18 @@ enum ZNodeType
    ZNodeType_GL3,
 };
 
+struct znodeSignature_t
+{
+   ZNodeType type;
+   bool      compressed;
+};
+
 //
 // MAP related Lookup tables.
 // Store VERTEXES, LINEDEFS, SIDEDEFS, etc.
 //
 
 bool     newlevel = false;
-int      doom1level = false;    // doom 1 level running under doom 2
 char     levelmapname[10];
 
 int      numvertexes;
@@ -146,6 +157,7 @@ node_t   *nodes;
 fnode_t  *fnodes;
 
 int      numlines;
+int      numlinesPlusExtra;
 line_t   *lines;
 
 int      numsides;
@@ -203,6 +215,16 @@ mapthing_t playerstarts[MAXPLAYERS];
 // haleyjd 06/14/10: level wad directory
 static WadDirectory *setupwad;
 
+// Current level's hash digest, for showing on console
+static qstring p_currentLevelHashDigest;
+
+static void P_createSectorBoundingBoxVisitIDs();
+
+VALLOCATION(sectorboxvisits)
+{
+   P_createSectorBoundingBoxVisitIDs();
+}
+
 //
 // ShortToLong
 //
@@ -236,7 +258,7 @@ inline static void ShortToNodeChild(int *loc, uint16_t value)
       // haleyjd 11/06/10: check for invalid subsector reference
       if(*loc >= numsubsectors)
       {
-         C_Printf(FC_ERROR "Warning: BSP tree references invalid subsector #%d\a", *loc);
+         C_Printf(FC_ERROR "Warning: BSP tree references invalid subsector #%d\a\n", *loc);
          *loc = 0;
       }
 
@@ -319,8 +341,8 @@ static void P_LoadConsoleVertexes(int lump)
    // Copy and convert vertex coordinates
    for(int i = 0; i < numvertexes; i++)
    {
-      vertexes[i].x = GetBinaryDWord(&data);
-      vertexes[i].y = GetBinaryDWord(&data);
+      vertexes[i].x = GetBinaryDWord(data);
+      vertexes[i].y = GetBinaryDWord(data);
 
       vertexes[i].fx = M_FixedToFloat(vertexes[i].x);
       vertexes[i].fy = M_FixedToFloat(vertexes[i].y);
@@ -350,8 +372,8 @@ static void P_LoadVertexes(int lump)
    // Copy and convert vertex coordinates, internal representation as fixed.
    for(int i = 0; i < numvertexes; i++)
    {
-      vertexes[i].x = GetBinaryWord(&data) << FRACBITS;
-      vertexes[i].y = GetBinaryWord(&data) << FRACBITS;
+      vertexes[i].x = GetBinaryWord(data) << FRACBITS;
+      vertexes[i].y = GetBinaryWord(data) << FRACBITS;
       
       // SoM: Cardboard stores float versions of vertices.
       vertexes[i].fx = M_FixedToFloat(vertexes[i].x);
@@ -409,14 +431,15 @@ static void P_LoadSegs(int lump)
          return;
       }
 
-      li->sidedef = &sides[ldef->sidenum[side]];
+      li->frontside   = side == 0;
+      li->sidedef     = &sides[ldef->sidenum[side]];
       li->frontsector = sides[ldef->sidenum[side]].sector;
 
       // killough 5/3/98: ignore 2s flag if second sidedef missing:
       if(ldef->flags & ML_TWOSIDED && ldef->sidenum[side^1]!=-1)
          li->backsector = sides[ldef->sidenum[side^1]].sector;
       else
-         li->backsector = NULL;
+         li->backsector = nullptr;
 
       P_CalcSegLength(li);
    }
@@ -481,14 +504,15 @@ static void P_LoadSegs_V4(int lump)
          return;
       }
 
-      li->sidedef = &sides[ldef->sidenum[side]];
+      li->frontside   = side == 0;
+      li->sidedef     = &sides[ldef->sidenum[side]];
       li->frontsector = sides[ldef->sidenum[side]].sector;
 
       // killough 5/3/98: ignore 2s flag if second sidedef missing:
       if(ldef->flags & ML_TWOSIDED && ldef->sidenum[side^1]!=-1)
          li->backsector = sides[ldef->sidenum[side^1]].sector;
       else
-         li->backsector = NULL;
+         li->backsector = nullptr;
 
       P_CalcSegLength(li);
    }
@@ -507,6 +531,11 @@ static void P_LoadSubsectors(int lump)
    int  i;
    
    numsubsectors = setupwad->lumpLength(lump) / sizeof(mapsubsector_t);
+   if(numsubsectors <= 0)
+   {
+      level_error = "no subsectors in level (is this compressed ZDBSP?)";
+      return;
+   }
    subsectors = estructalloctag(subsector_t, numsubsectors, PU_LEVEL);
    data = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
    
@@ -569,11 +598,11 @@ void P_InitSector(sector_t *ss)
 
    // killough 3/7/98:
    ss->heightsec     = -1;   // sector used to get floor and ceiling height
-   ss->floorlightsec = -1;   // sector used to get floor lighting
+   ss->srf.floor.lightsec = -1;   // sector used to get floor lighting
    // killough 3/7/98: end changes
 
    // killough 4/11/98 sector used to get ceiling lighting:
-   ss->ceilinglightsec = -1;
+   ss->srf.ceiling.lightsec = -1;
 
    // killough 4/4/98: colormaps:
    // haleyjd 03/04/07: modifications for per-sector colormap logic
@@ -595,27 +624,25 @@ void P_InitSector(sector_t *ss)
    //   ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
 
    // SoM 9/19/02: Initialize the attached sector list for 3dsides
-   ss->c_attached = ss->f_attached = nullptr;
+   ss->srf.ceiling.attached = ss->srf.floor.attached = nullptr;
    // SoM 11/9/04: 
-   ss->c_attsectors = ss->f_attsectors = nullptr;
+   ss->srf.ceiling.attsectors = ss->srf.floor.attsectors = nullptr;
 
    // SoM 10/14/07:
-   ss->c_asurfaces = ss->f_asurfaces = nullptr;
+   ss->srf.ceiling.asurfaces = ss->srf.floor.asurfaces = nullptr;
 
    // SoM: init portals
-   ss->c_pflags = ss->f_pflags = 0;
-   ss->c_portal = ss->f_portal = nullptr;
+   ss->srf.ceiling.pflags = ss->srf.floor.pflags = 0;
+   ss->srf.ceiling.portal = ss->srf.floor.portal = nullptr;
    ss->groupid = R_NOGROUP;
 
    // SoM: These are kept current with floorheight and ceilingheight now
-   ss->floorheightf   = M_FixedToFloat(ss->floorheight);
-   ss->ceilingheightf = M_FixedToFloat(ss->ceilingheight);
+   ss->srf.floor.heightf = M_FixedToFloat(ss->srf.floor.height);
+   ss->srf.ceiling.heightf = M_FixedToFloat(ss->srf.ceiling.height);
 
    // needs to be defaulted as it starts as nonzero
-   ss->floor_xscale = 1.0;
-   ss->floor_yscale = 1.0;
-   ss->ceiling_xscale = 1.0;
-   ss->ceiling_yscale = 1.0;
+   ss->srf.floor.scale = { 1.0f, 1.0f };
+   ss->srf.ceiling.scale = { 1.0f, 1.0f };
 
    // haleyjd 09/24/06: sound sequences -- set default
    ss->sndSeqID = defaultSndSeq;
@@ -654,16 +681,16 @@ static void P_LoadPSXSectors(int lumpnum)
    {
       sector_t *ss = sectors + i;
 
-      ss->floorheight        = GetBinaryWord(&data) << FRACBITS;
-      ss->ceilingheight      = GetBinaryWord(&data) << FRACBITS;
-      GetBinaryString(&data, namebuf, 8);
-      ss->floorpic           = R_FindFlat(namebuf);
-      GetBinaryString(&data, namebuf, 8);
+      ss->srf.floor.height = GetBinaryWord(data) << FRACBITS;
+      ss->srf.ceiling.height = GetBinaryWord(data) << FRACBITS;
+      GetBinaryString(data, namebuf, 8);
+      ss->srf.floor.pic = R_FindFlat(namebuf);
+      GetBinaryString(data, namebuf, 8);
       P_SetSectorCeilingPic(ss, R_FindFlat(namebuf));
       ss->lightlevel         = *data++;
       ++data;                // skip color ID for now
-      ss->special            = GetBinaryWord(&data);
-      ss->tag                = GetBinaryWord(&data);
+      ss->special            = GetBinaryWord(data);
+      ss->tag                = GetBinaryWord(data);
       data += 2;             // skip flags field for now
 
       // scale up light levels (experimental)
@@ -696,37 +723,50 @@ static void P_LoadSectors(int lumpnum)
    {
       sector_t *ss = sectors + i;
 
-      ss->floorheight        = GetBinaryWord(&data) << FRACBITS;
-      ss->ceilingheight      = GetBinaryWord(&data) << FRACBITS;
-      GetBinaryString(&data, namebuf, 8);
-      ss->floorpic           = R_FindFlat(namebuf);
+      ss->srf.floor.height = GetBinaryWord(data) << FRACBITS;
+      ss->srf.ceiling.height = GetBinaryWord(data) << FRACBITS;
+      GetBinaryString(data, namebuf, 8);
+      ss->srf.floor.pic = R_FindFlat(namebuf);
       // haleyjd 08/30/09: set ceiling pic using function
-      GetBinaryString(&data, namebuf, 8);
+      GetBinaryString(data, namebuf, 8);
       P_SetSectorCeilingPic(ss, R_FindFlat(namebuf));
-      ss->lightlevel         = GetBinaryWord(&data);
-      ss->special            = GetBinaryWord(&data);
-      ss->tag                = GetBinaryWord(&data);
+      ss->lightlevel         = GetBinaryWord(data);
+      ss->special            = GetBinaryWord(data);
+      ss->tag                = GetBinaryWord(data);
     
       P_InitSector(ss);
    }
 }
 
 //
-// P_CreateSectorInterps
-//
 // haleyjd 01/05/14: Create sector interpolation structures.
 //
-static void P_CreateSectorInterps()
+static void P_createSectorInterps()
 {
    sectorinterps = estructalloctag(sectorinterp_t, numsectors, PU_LEVEL);
 
    for(int i = 0; i < numsectors; i++)
    {
-      sectorinterps[i].prevfloorheight    = sectors[i].floorheight;
-      sectorinterps[i].prevceilingheight  = sectors[i].ceilingheight;
-      sectorinterps[i].prevfloorheightf   = sectors[i].floorheightf;
-      sectorinterps[i].prevceilingheightf = sectors[i].ceilingheightf;
+      sectorinterps[i].prevfloorheight    = sectors[i].srf.floor.height;
+      sectorinterps[i].prevceilingheight  = sectors[i].srf.ceiling.height;
+      sectorinterps[i].prevfloorheightf   = sectors[i].srf.floor.heightf;
+      sectorinterps[i].prevceilingheightf = sectors[i].srf.ceiling.heightf;
+
+      if(sectors[i].srf.floor.slope)
+         sectorinterps[i].prevfloorslopezf = sectors[i].srf.floor.slope->of.z;
+      if(sectors[i].srf.ceiling.slope)
+         sectorinterps[i].prevceilingslopezf = sectors[i].srf.ceiling.slope->of.z;
    }
+}
+
+//
+// Creates the context-local visit IDs for the sector bound boxes
+//
+static void P_createSectorBoundingBoxVisitIDs()
+{
+   R_ForEachContext([](rendercontext_t &context) {
+      context.portalcontext.visitids = zhstructalloctag(*context.heap, sectorboxvisit_t, numsectors, PU_LEVEL);
+   });
 }
 
 //
@@ -735,25 +775,28 @@ static void P_CreateSectorInterps()
 static void P_createSectorBoundingBoxes()
 {
    pSectorBoxes = estructalloctag(sectorbox_t, numsectors, PU_LEVEL);
+   P_createSectorBoundingBoxVisitIDs();
 
    for(int i = 0; i < numsectors; ++i)
    {
       const sector_t &sector = sectors[i];
       fixed_t *box = pSectorBoxes[i].box;
+      float *fbox = pSectorBoxes[i].fbox;
       M_ClearBox(box);
+      M_ClearBox(fbox);
       for(int j = 0; j < sector.linecount; ++j)
       {
          const line_t &line = *sector.lines[j];
          M_AddToBox(box, line.v1->x, line.v1->y);
          M_AddToBox(box, line.v2->x, line.v2->y);
+         M_AddToBox2(fbox, line.v1->fx, line.v1->fy);
+         M_AddToBox2(fbox, line.v2->fx, line.v2->fy);
       }
    }
 }
 
 //
-// P_propagateSoundZone
-//
-// haleyjd 01/12/14: Recursive routine to propagate a sound zone from a
+// Iterative routine to propagate a sound zone from a
 // sector to all its neighboring sectors which border it by a 2S line which
 // is not marked as a sound boundary.
 //
@@ -763,23 +806,34 @@ static void P_propagateSoundZone(sector_t *sector, int zoneid)
    if(sector->soundzone == zoneid)
       return;
 
-   // set the zone to the sector
-   sector->soundzone = zoneid;
+   PODCollection<sector_t *> stack;
+   stack.add(sector);
 
-   // iterate on the sector linedef list to find neighboring sectors
-   for(int ln = 0; ln < sector->linecount; ln++)
+   while(!stack.isEmpty())
    {
-      auto line = sector->lines[ln];
+      sector_t *sec = stack.pop();
 
-      // must be 2S and not a zone boundary line
-      if(!line->backsector || (line->extflags & EX_ML_ZONEBOUNDARY))
-         continue;
+      if(sec->soundzone == zoneid)
+         return;
 
-      auto next = ((line->backsector != sector) ? line->backsector : line->frontsector);
+      // set the zone to the sector
+      sec->soundzone = zoneid;
 
-      // if not already in the same sound zone, propagate recursively.
-      if(next->soundzone != zoneid)
-         P_propagateSoundZone(next, zoneid);
+      // iterate on the sector linedef list to find neighboring sectors
+      for(int ln = 0; ln < sec->linecount; ln++)
+      {
+         auto line = sec->lines[ln];
+
+         // must be 2S and not a zone boundary line
+         if(!line->backsector || (line->extflags & EX_ML_ZONEBOUNDARY))
+            continue;
+
+         auto next = ((line->backsector != sec) ? line->backsector : line->frontsector);
+
+         // if not already in the same sound zone, propagate iteratively.
+         if(next->soundzone != zoneid)
+            stack.add(next);
+      }
    }
 }
 
@@ -826,16 +880,16 @@ static void P_CalcNodeCoefficients(node_t *node, fnode_t *fnode)
 {
    // haleyjd 05/16/08: keep floating point versions as well for dynamic
    // seg splitting operations
-   fnode->fx  = (double)node->x;
-   fnode->fy  = (double)node->y;
-   fnode->fdx = (double)node->dx;
-   fnode->fdy = (double)node->dy;
+   double fx = (double)node->x;
+   double fy = (double)node->y;
+   double fdx = (double)node->dx;
+   double fdy = (double)node->dy;
 
    // haleyjd 05/20/08: precalculate general line equation coefficients
-   fnode->a   = -fnode->fdy;
-   fnode->b   =  fnode->fdx;
-   fnode->c   =  fnode->fdy * fnode->fx - fnode->fdx * fnode->fy;
-   fnode->len = sqrt(fnode->fdx * fnode->fdx + fnode->fdy * fnode->fdy);
+   fnode->a = -fdy;
+   fnode->b = fdx;
+   fnode->c = fdy * fx - fdx * fy;
+   fnode->len = sqrt(fdx * fdx + fdy * fdy);
 }
 
 //
@@ -845,16 +899,16 @@ static void P_CalcNodeCoefficients(node_t *node, fnode_t *fnode)
 //
 static void P_CalcNodeCoefficients2(const node_t &node, fnode_t &fnode)
 {
-   fnode.fx = M_FixedToDouble(node.x);
-   fnode.fy = M_FixedToDouble(node.y);
-   fnode.fdx = M_FixedToDouble(node.dx);
-   fnode.fdy = M_FixedToDouble(node.dy);
+   double fx = M_FixedToDouble(node.x);
+   double fy = M_FixedToDouble(node.y);
+   double fdx = M_FixedToDouble(node.dx);
+   double fdy = M_FixedToDouble(node.dy);
    
    // IOANCH: same as code above
-   fnode.a   = -fnode.fdy;
-   fnode.b   =  fnode.fdx;
-   fnode.c   =  fnode.fdy * fnode.fx - fnode.fdx * fnode.fy;
-   fnode.len = sqrt(fnode.fdx * fnode.fdx + fnode.fdy * fnode.fdy);
+   fnode.a = -fdy;
+   fnode.b = fdx;
+   fnode.c = fdy * fx - fdx * fy;
+   fnode.len = sqrt(fdx * fdx + fdy * fdy);
 }
 
 //
@@ -879,8 +933,8 @@ static void P_LoadNodes(int lump)
          level_error = "no nodes in level";
       else
          C_Printf("trivial map (no nodes, one subsector)\n");
-      nodes  = NULL;
-      fnodes = NULL;
+      nodes  = nullptr;
+      fnodes = nullptr;
       return;
    }
 
@@ -1005,19 +1059,15 @@ static bool P_CheckForDeePBSPv4Nodes(int lumpnum)
 
 //=============================================================================
 //
-// haleyjd 06/14/10: ZDoom uncompressed nodes support
+// ZDoom nodes support
 //
 
-//
-// P_CheckForZDoomUncompressedNodes
 //
 // http://zdoom.org/wiki/ZDBSP#Compressed_Nodes
 // IOANCH 20151213: modified to use the NODES lump num and return the signature
 // Also added actual node lump, if it's SSECTORS in a classic map
 //
-static ZNodeType P_CheckForZDoomUncompressedNodes(int nodelumpnum, 
-                                                  int *actualNodeLump, 
-                                                  bool udmf)
+static znodeSignature_t P_checkForZDoomNodes(int nodelumpnum, int *actualNodeLump, bool udmf)
 {
    const void *data;
    
@@ -1033,20 +1083,29 @@ static ZNodeType P_CheckForZDoomUncompressedNodes(int nodelumpnum,
          *actualNodeLump = nodelumpnum - ML_NODES + ML_SSECTORS;
          glNodesFallback = true;
          if(setupwad->lumpLength(*actualNodeLump) < 4)
-            return ZNodeType_Invalid;
+            return { ZNodeType_Invalid };
       }
       else
-         return ZNodeType_Invalid;
+         return { ZNodeType_Invalid };
    }
 
    // haleyjd: load at PU_CACHE and it may stick around for later.
    data = setupwad->cacheLumpNum(*actualNodeLump, PU_CACHE);
 
-   if(!udmf && !glNodesFallback && !memcmp(data, "XNOD", 4))
+   if(!udmf && !glNodesFallback)
    {
-      // only classic maps with NODES having XNOD
-      C_Printf("ZDoom uncompressed normal nodes detected\n");
-      return ZNodeType_Normal;
+      if(!memcmp(data, "XNOD", 4))
+      {
+         // only classic maps with NODES having XNOD
+         C_Printf("ZDoom uncompressed normal nodes detected\n");
+         return { ZNodeType_Normal, false };
+      }
+      if(!memcmp(data, "ZNOD", 4))
+      {
+         // Warn but don't quit (ZNOD may be accidental)
+         C_Printf("ZDoom compressed normal nodes detected\n");
+         return { ZNodeType_Normal, true };
+      }
    }
 
 
@@ -1055,22 +1114,37 @@ static ZNodeType P_CheckForZDoomUncompressedNodes(int nodelumpnum,
       if(!memcmp(data, "XGLN", 4))
       {
          C_Printf("ZDoom uncompressed GL nodes version 1 detected\n");
-         return ZNodeType_GL;
+         return { ZNodeType_GL, false };
       }
       if(!memcmp(data, "XGL2", 4))
       {
          C_Printf("ZDoom uncompressed GL nodes version 2 detected\n");
-         return ZNodeType_GL2;
+         return { ZNodeType_GL2, false };
       }
       if(!memcmp(data, "XGL3", 4))
       {
          C_Printf("ZDoom uncompressed GL nodes version 3 detected\n");
-         return ZNodeType_GL3;
+         return { ZNodeType_GL3, false };
+      }
+      if(!memcmp(data, "ZGLN", 4))
+      {
+         C_Printf("ZDoom compressed GL nodes version 1 detected\n");
+         return { ZNodeType_GL, true };
+      }
+      if(!memcmp(data, "ZGL2", 4))
+      {
+         C_Printf("ZDoom compressed GL nodes version 2 detected\n");
+         return { ZNodeType_GL2, true };
+      }
+      if(!memcmp(data, "ZGL3", 4))
+      {
+         C_Printf("ZDoom compressed GL nodes version 3 detected\n");
+         return { ZNodeType_GL3, true };
       }
    }
 
 
-   return ZNodeType_Invalid;
+   return { ZNodeType_Invalid };
 }
 
 //
@@ -1087,7 +1161,7 @@ static void CheckZNodesOverflowFN(int *size, int count)
 }
 
 // IOANCH 20151217: updated for XGLN and XGL2
-typedef struct mapseg_znod_s
+struct mapseg_znod_t
 {
    uint32_t v1;
    union // IOANCH
@@ -1097,33 +1171,33 @@ typedef struct mapseg_znod_s
    };
    uint32_t linedef; // IOANCH: use 32-bit instead of 16-bit   
    byte     side;
-} mapseg_znod_t;
+};
 
 // IOANCH: modified to support XGL3 nodes
-typedef struct mapnode_znod_s
+struct mapnode_znod_t
 {
-  union
-  {
-     struct
-     {
-        int16_t x;  // Partition line from (x,y) to x+dx,y+dy)
-        int16_t y;
-        int16_t dx;
-        int16_t dy;             
-     };
-     struct
-     {
-        int32_t x32;  // Partition line from (x,y) to x+dx,y+dy)
-        int32_t y32;
-        int32_t dx32;
-        int32_t dy32;             
-     };
-  };
-  // Bounding box for each child, clip against view frustum.
-  int16_t bbox[2][4];
-  // If NF_SUBSECTOR its a subsector, else it's a node of another subtree.
-  int32_t children[2];
-} mapnode_znod_t;
+   union
+   {
+      struct
+      {
+         int16_t x;  // Partition line from (x,y) to x+dx,y+dy)
+         int16_t y;
+         int16_t dx;
+         int16_t dy;
+      };
+      struct
+      {
+         int32_t x32;  // Partition line from (x,y) to x+dx,y+dy)
+         int32_t y32;
+         int32_t dx32;
+         int32_t dy32;
+      };
+   };
+   // Bounding box for each child, clip against view frustum.
+   int16_t bbox[2][4];
+   // If NF_SUBSECTOR its a subsector, else it's a node of another subtree.
+   int32_t children[2];
+};
 
 //
 // R_DynaSegOffset
@@ -1150,7 +1224,7 @@ static void R_calcSegOffset(seg_t *lseg, const line_t *line, int side)
 // Loads segs from ZDoom uncompressed nodes
 // IOANCH 20151217: use signature
 //
-static void P_LoadZSegs(byte *data, ZNodeType signature)
+static void P_LoadZSegs(byte *data, ZNodeType type)
 {
    // IOANCH TODO: read the segs according to signature
    int i;
@@ -1163,7 +1237,7 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
    for(i = 0; i < numsegs; i++, ++actualSegIndex)
    {
       line_t *ldef;
-      uint32_t v1, v2;
+      uint32_t v1, v2 = 0;
       uint32_t linedef;
       byte side;
       seg_t *li = segs+actualSegIndex;
@@ -1173,7 +1247,7 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
       //::segs[actualSegIndex] = ::segs[i];
       
       // IOANCH: increment current subsector if applicable
-      if(signature != ZNodeType_Normal)
+      if(type != ZNodeType_Normal)
       {
          if(actualSegIndex >= ss->firstline + ss->numlines)
          {
@@ -1184,9 +1258,9 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
       }
 
       // haleyjd: FIXME - see no verification of vertex indices
-      v1 = ml.v1 = GetBinaryUDWord(&data);
-      if(signature == ZNodeType_Normal)   // IOANCH: only set directly for nonGL
-         v2 = ml.v2 = GetBinaryUDWord(&data);
+      v1 = ml.v1 = GetBinaryUDWord(data);
+      if(type == ZNodeType_Normal)   // IOANCH: only set directly for nonGL
+         v2 = ml.v2 = GetBinaryUDWord(data);
       else
       {
          if(actualSegIndex == ss->firstline && !firstV1) // only set it once
@@ -1199,18 +1273,17 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
             prevSegToSet = nullptr;   // consume it
          }
          
-         ml.partner = GetBinaryUDWord(&data);   // IOANCH: not used in EE
+         ml.partner = GetBinaryUDWord(data);   // IOANCH: not used in EE
       }
       
       // IOANCH
-      if(signature == ZNodeType_Normal || signature == ZNodeType_GL)
-         ml.linedef = GetBinaryUWord(&data);
+      if(type == ZNodeType_Normal || type == ZNodeType_GL)
+         ml.linedef = GetBinaryUWord(data);
       else
-         ml.linedef = GetBinaryUDWord(&data);
+         ml.linedef = GetBinaryUDWord(data);
       ml.side    = *data++;
       
-      if((signature == ZNodeType_GL && ml.linedef == 0xffff)
-         || ((signature == ZNodeType_GL2 || signature == ZNodeType_GL3) 
+      if((type == ZNodeType_GL && ml.linedef == 0xffff) || ((type == ZNodeType_GL2 || type == ZNodeType_GL3)
              && ml.linedef == 0xffffffff))
       {
          --actualSegIndex;
@@ -1229,6 +1302,7 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
       if(side != 0 && side != 1)
          side = 1;
 
+      li->frontside   = side == 0;
       li->sidedef     = &sides[ldef->sidenum[side]];
       li->frontsector =  sides[ldef->sidenum[side]].sector;
 
@@ -1236,10 +1310,10 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
       if(ldef->flags & ML_TWOSIDED && ldef->sidenum[side^1] != -1)
          li->backsector = sides[ldef->sidenum[side^1]].sector;
       else
-         li->backsector = NULL;
+         li->backsector = nullptr;
 
       li->v1 = &vertexes[v1];
-      if(signature == ZNodeType_Normal)
+      if(type == ZNodeType_Normal)
          li->v2 = &vertexes[v2];
       else
       {
@@ -1269,6 +1343,61 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
    ::numsegs = actualSegIndex;
 }
 
+// P_decompressData adapted from dsda-doom
+// Copyright (C) 2023 Ryan Krafnick
+// Used under terms of the GPLv2+
+
+//
+// Decompress ZDoom compressed nodes
+//
+static byte *P_decompressData(byte *&data, int &len)
+{
+   byte     *output;
+   int       outlen, err;
+   z_stream *zstream;
+
+   // first estimate for compression rate:
+   // output buffer size == 2.5 * input size
+   outlen = int(2.5 * len);
+   output = emalloc(byte *, outlen);
+
+   // initialize stream state for decompression
+   zstream = emalloc(z_stream *, sizeof(*zstream));
+   memset(zstream, 0, sizeof(*zstream));
+
+   // Evidently next_in is the wrong type for legacy reasons
+   zstream->next_in   = data;
+   zstream->avail_in  = len;
+   zstream->next_out  = output;
+   zstream->avail_out = outlen;
+
+   if(inflateInit(zstream) != Z_OK)
+      I_Error("P_decompressData: Error during decompression initialization\n");
+
+   // resize if output buffer runs full
+   while((err = inflate(zstream, Z_SYNC_FLUSH)) == Z_OK)
+   {
+      int outlen_old = outlen;
+      outlen = 2 * outlen_old;
+      output = erealloc(byte *, output, outlen);
+      zstream->next_out = output + outlen_old;
+      zstream->avail_out = outlen - outlen_old;
+   }
+
+   if(err != Z_STREAM_END)
+      I_Error("P_decompressData: Error during decompression\n");
+
+   data = output;
+   len  = static_cast<int>(zstream->total_out);
+
+   if(inflateEnd(zstream) != Z_OK)
+      I_Error("P_decompressData: Error during decompression shut-down\n");
+
+   efree(zstream);
+
+   return output;
+}
+
 #define CheckZNodesOverflow(size, count) \
    CheckZNodesOverflowFN(&(size), (count)); \
    if(level_error) \
@@ -1285,9 +1414,10 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
 // ioanch: 20151221: fixed some memory leaks. Also moved the bounds checks 
 // before attempting to allocate memory, so the app won't terminate.
 //
-static void P_LoadZNodes(int lump, ZNodeType signature)
+static void P_LoadZNodes(int lump, znodeSignature_t signature)
 {
    byte *data, *lumpptr;
+   byte *decompressed = nullptr;
    unsigned int i;
    int len;
 
@@ -1295,7 +1425,7 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
    uint32_t numSubs, currSeg;
    uint32_t numSegs;
    uint32_t numNodes;
-   vertex_t *newvertarray = NULL;
+   vertex_t *newvertarray = nullptr;
 
    data = lumpptr = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
    len  = setupwad->lumpLength(lump);
@@ -1304,12 +1434,15 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
    CheckZNodesOverflow(len, 4);
    data += 4;
 
+   if(signature.compressed)
+      decompressed = P_decompressData(data, len);
+
    // Read extra vertices added during node building
    CheckZNodesOverflow(len, sizeof(orgVerts));  
-   orgVerts = GetBinaryUDWord(&data);
+   orgVerts = GetBinaryUDWord(data);
 
    CheckZNodesOverflow(len, sizeof(newVerts));
-   newVerts = GetBinaryUDWord(&data);
+   newVerts = GetBinaryUDWord(data);
 
    // ioanch: moved before the potential allocation
    CheckZNodesOverflow(len, newVerts * 2 * sizeof(int32_t));
@@ -1328,8 +1461,8 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
    {
       int vindex = i + orgVerts;
 
-      newvertarray[vindex].x = (fixed_t)GetBinaryDWord(&data);
-      newvertarray[vindex].y = (fixed_t)GetBinaryDWord(&data);
+      newvertarray[vindex].x = (fixed_t)GetBinaryDWord(data);
+      newvertarray[vindex].y = (fixed_t)GetBinaryDWord(data);
 
       // SoM: Cardboard stores float versions of vertices.
       newvertarray[vindex].fx = M_FixedToFloat(newvertarray[vindex].x);
@@ -1339,7 +1472,7 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
    if(vertexes != newvertarray)
    {
       // fixup linedef vertex pointers
-      for(i = 0; i < (unsigned int)numlines; i++)
+      for(i = 0; i < (unsigned int)numlinesPlusExtra; i++)
       {
          lines[i].v1 = lines[i].v1 - vertexes + newvertarray;
          lines[i].v2 = lines[i].v2 - vertexes + newvertarray;
@@ -1351,7 +1484,7 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
 
    // Read the subsectors
    CheckZNodesOverflow(len, sizeof(numSubs));
-   numSubs = GetBinaryUDWord(&data);
+   numSubs = GetBinaryUDWord(data);
 
    numsubsectors = (int)numSubs;
    if(numsubsectors <= 0)
@@ -1367,13 +1500,13 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
    for(i = currSeg = 0; i < numSubs; i++)
    {
       subsectors[i].firstline = (int)currSeg;
-      subsectors[i].numlines  = (int)(GetBinaryUDWord(&data));
+      subsectors[i].numlines  = (int)(GetBinaryUDWord(data));
       currSeg += subsectors[i].numlines;
    }
 
    // Read the segs
    CheckZNodesOverflow(len, sizeof(numSegs));
-   numSegs = GetBinaryUDWord(&data);
+   numSegs = GetBinaryUDWord(data);
 
    // The number of segs stored should match the number of
    // segs used by subsectors.
@@ -1388,20 +1521,20 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
 
    // IOANCH 20151217: set reading size
    int totalSegSize;
-   if(signature == ZNodeType_Normal || signature == ZNodeType_GL)
+   if(signature.type == ZNodeType_Normal || signature.type == ZNodeType_GL)
       totalSegSize = numsegs * 11; // haleyjd: hardcoded original structure size
    else
       totalSegSize = numsegs * 13; // IOANCH: DWORD linedef
    
    CheckZNodesOverflow(len, totalSegSize);
    segs = estructalloctag(seg_t, numsegs, PU_LEVEL);
-   P_LoadZSegs(data, signature);
+   P_LoadZSegs(data, signature.type);
    
    data += totalSegSize;
    
    // Read nodes
    CheckZNodesOverflow(len, sizeof(numNodes));
-   numNodes = GetBinaryUDWord(&data);
+   numNodes = GetBinaryUDWord(data);
 
    numnodes = numNodes;
    CheckZNodesOverflow(len, numNodes * 32);
@@ -1414,29 +1547,29 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
       node_t *no = nodes + i;
       mapnode_znod_t mn;
 
-      if(signature == ZNodeType_GL3)
+      if(signature.type == ZNodeType_GL3)
       {
-         mn.x32  = GetBinaryDWord(&data);
-         mn.y32  = GetBinaryDWord(&data);
-         mn.dx32 = GetBinaryDWord(&data);
-         mn.dy32 = GetBinaryDWord(&data);
+         mn.x32  = GetBinaryDWord(data);
+         mn.y32  = GetBinaryDWord(data);
+         mn.dx32 = GetBinaryDWord(data);
+         mn.dy32 = GetBinaryDWord(data);
       }
       else
       {
-         mn.x  = GetBinaryWord(&data);
-         mn.y  = GetBinaryWord(&data);
-         mn.dx = GetBinaryWord(&data);
-         mn.dy = GetBinaryWord(&data);
+         mn.x  = GetBinaryWord(data);
+         mn.y  = GetBinaryWord(data);
+         mn.dx = GetBinaryWord(data);
+         mn.dy = GetBinaryWord(data);
       }
 
       for(j = 0; j < 2; j++)
          for(k = 0; k < 4; k++)
-            mn.bbox[j][k] = GetBinaryWord(&data);
+            mn.bbox[j][k] = GetBinaryWord(data);
 
       for(j = 0; j < 2; j++)
-         mn.children[j] = GetBinaryDWord(&data);
+         mn.children[j] = GetBinaryDWord(data);
 
-      if(signature == ZNodeType_GL3)
+      if(signature.type == ZNodeType_GL3)
       {
          no->x = mn.x32;
          no->y = mn.y32;
@@ -1470,6 +1603,8 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
    }
 
    Z_Free(lumpptr);
+   if(decompressed)
+      efree(decompressed);
 }
 
 //
@@ -1749,7 +1884,8 @@ static void P_LoadLineDefs(int lump, UDMFSetupSettings &setupSettings)
    byte *data;
 
    numlines = setupwad->lumpLength(lump) / sizeof(maplinedef_t);
-   lines    = estructalloctag(line_t, numlines, PU_LEVEL);
+   numlinesPlusExtra = numlines + NUM_LINES_EXTRA;
+   lines    = estructalloctag(line_t, numlinesPlusExtra, PU_LEVEL);
    data     = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
 
    for(int i = 0; i < numlines; i++)
@@ -1857,7 +1993,8 @@ static void P_LoadHexenLineDefs(int lump)
    int  i;
 
    numlines = setupwad->lumpLength(lump) / sizeof(maplinedefhexen_t);
-   lines    = estructalloctag(line_t, numlines, PU_LEVEL);
+   numlinesPlusExtra = numlines + NUM_LINES_EXTRA;
+   lines    = estructalloctag(line_t, numlinesPlusExtra, PU_LEVEL);
    data     = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
 
    for(i = 0; i < numlines; ++i)
@@ -1945,7 +2082,7 @@ static void P_LoadLineDefs2()
 
       // haleyjd 03/13/05: removed redundant -1 check for first side
       ld->frontsector = sides[ld->sidenum[0]].sector;
-      ld->backsector  = ld->sidenum[1] != -1 ? sides[ld->sidenum[1]].sector : 0;
+      ld->backsector  = ld->sidenum[1] != -1 ? sides[ld->sidenum[1]].sector : nullptr;
       
       // haleyjd 02/06/13: lookup static init
       int staticFn = EV_StaticInitForSpecial(ld->special);
@@ -1955,6 +2092,9 @@ static void P_LoadLineDefs2()
       {                       // killough 4/11/98: handle special types
       case EV_STATIC_TRANSLUCENT: // killough 4/11/98: translucent 2s textures
          lump = sides[*ld->sidenum].special; // translucency from sidedef
+         if(lump > 0)
+            wGlobalDir.cacheLumpNum(lump - 1, PU_CACHE);
+
          if(!ld->args[0])                    // if tag == 0,
             ld->tranlump = lump;             // affect this linedef only
          else
@@ -2086,16 +2226,16 @@ static void P_LoadSideDefs2(int lumpnum)
       side_t *sd = sides + i;
       int secnum;
 
-      sd->textureoffset = GetBinaryWord(&data) << FRACBITS;
-      sd->rowoffset     = GetBinaryWord(&data) << FRACBITS; 
+      sd->offset_base_x = GetBinaryWord(data) << FRACBITS;
+      sd->offset_base_y = GetBinaryWord(data) << FRACBITS; 
 
       // haleyjd 05/26/10: read texture names into buffers
-      GetBinaryString(&data, toptexture,    8);
-      GetBinaryString(&data, bottomtexture, 8);
-      GetBinaryString(&data, midtexture,    8);
+      GetBinaryString(data, toptexture,    8);
+      GetBinaryString(data, bottomtexture, 8);
+      GetBinaryString(data, midtexture,    8);
 
       // haleyjd 06/19/06: convert indices to unsigned
-      secnum = SafeUintIndex(GetBinaryWord(&data), numsectors, "side", i, "sector");
+      secnum = SafeUintIndex(GetBinaryWord(data), numsectors, "side", i, "sector");
       sd->sector = &sectors[secnum];
 
       // IOANCH 20151213: this will be in a separate function, because UDMF
@@ -2107,7 +2247,7 @@ static void P_LoadSideDefs2(int lumpnum)
 }
 
 // haleyjd 10/10/11: externalized structure due to pre-C++11 template limitations
-typedef struct bmap_s { int n, nalloc, *list; } bmap_t; // blocklist structure
+struct bmap_t { int n, nalloc, *list; }; // blocklist structure
 
 //
 // Boom variant of blockmap creation, which will fix PrBoom+ demos recorded with -complevel 9. Not
@@ -2438,7 +2578,15 @@ static void P_CreateBlockMap()
       return P_createBlockMapBoom();   // use Boom mode (which is also in PrBoom+)
 
    // First find limits of map
-   
+
+   // This fixes MBF's code, which has a bug where maxx/maxy
+   // are wrong if the 0th node has the largest x or y
+   if(demo_version > 401 && numvertexes)
+   {
+      minx = maxx = vertexes->x >> FRACBITS;
+      miny = maxy = vertexes->y >> FRACBITS;
+   }
+
    for(i = 0; i < (unsigned int)numvertexes; i++)
    {
       if((vertexes[i].x >> FRACBITS) < minx)
@@ -2567,8 +2715,7 @@ static void P_CreateBlockMap()
          }
 
          // Allocate blockmap lump with computed count
-         blockmaplump = (int *)(Z_Malloc(sizeof(*blockmaplump) * count, 
-                                         PU_LEVEL, 0));
+         blockmaplump = emalloctag(int *, sizeof(*blockmaplump) * count,  PU_LEVEL, nullptr);
       }
 
       // Now compress the blockmap.
@@ -2614,7 +2761,7 @@ static bool P_VerifyBlockMap(int count)
    int x, y;
    int *maxoffs = blockmaplump + count;
 
-   bmaperrormsg = NULL;
+   bmaperrormsg = nullptr;
 
    skipblstart = true;
 
@@ -2706,8 +2853,7 @@ static void P_LoadBlockMap(int lump)
    {
       int i;
       int16_t *wadblockmaplump = (int16_t *)(setupwad->cacheLumpNum(lump, PU_LEVEL));
-      blockmaplump = (int *)(Z_Malloc(sizeof(*blockmaplump) * count,
-                                      PU_LEVEL, NULL));
+      blockmaplump = emalloctag(int *, sizeof(*blockmaplump) * count, PU_LEVEL, nullptr);
 
       // killough 3/1/98: Expand wad blockmap into larger internal one,
       // by treating all offsets except -1 as unsigned and zero-extending
@@ -2737,23 +2883,23 @@ static void P_LoadBlockMap(int lump)
       {
          C_Printf(FC_ERROR "Blockmap error: %s\a\n", bmaperrormsg);
          Z_Free(blockmaplump);
-         blockmaplump = NULL;
+         blockmaplump = nullptr;
          P_CreateBlockMap();
       }
    }
 
    // clear out mobj chains
    count      = sizeof(*blocklinks) * bmapwidth * bmapheight;
-   blocklinks = ecalloctag(Mobj **, 1, count, PU_LEVEL, NULL);
+   blocklinks = ecalloctag(Mobj **, 1, count, PU_LEVEL, nullptr);
    blockmap   = blockmaplump + 4;
 
    // haleyjd 2/22/06: setup polyobject blockmap
    count = sizeof(*polyblocklinks) * bmapwidth * bmapheight;
-   polyblocklinks = ecalloctag(DLListItem<polymaplink_t> **, 1, count, PU_LEVEL, NULL);
+   polyblocklinks = ecalloctag(DLListItem<polymaplink_t> **, 1, count, PU_LEVEL, nullptr);
 
    // haleyjd 05/17/13: setup portalmap
    count = sizeof(*portalmap) * bmapwidth * bmapheight;
-   portalmap = ecalloctag(byte *, 1, count, PU_LEVEL, NULL);
+   portalmap = ecalloctag(byte *, 1, count, PU_LEVEL, nullptr);
 }
 
 
@@ -2809,7 +2955,7 @@ static void P_GroupLines()
    gTotalLinesForRejectOverflow = total;
 
    // build line tables for each sector
-   linebuffer = (line_t **)(Z_Malloc(total * sizeof(*linebuffer), PU_LEVEL, 0));
+   linebuffer = emalloctag(line_t **, total * sizeof(*linebuffer), PU_LEVEL, nullptr);
 
    for(i = 0; i < numsectors; i++)
    {
@@ -2998,9 +3144,9 @@ static void P_padRejectArray(byte *array, unsigned int len)
 
    // Values to pad the REJECT array with:
 
-   unsigned int rejectpad[4] =
+   uint32_t rejectpad[4] =
    {
-      static_cast<unsigned int>(((gTotalLinesForRejectOverflow * 4 + 3) & ~3)
+      static_cast<uint32_t>(((gTotalLinesForRejectOverflow * 4 + 3) & ~3)
                                 + 24),      // Size
       0,                                    // Part of z_zone block header
       50,                                   // PU_LEVEL
@@ -3060,7 +3206,7 @@ static void P_LoadReject(int lump)
    else
    {
       // set to all zeroes so that the reject has no effect
-      rejectmatrix = (byte *)(Z_Calloc(1, expectedsize, PU_LEVEL, NULL));
+      rejectmatrix = ecalloctag(byte *, 1, expectedsize, PU_LEVEL, nullptr);
 
       // Pad remaining space with 0xff if specified on command line)
       if(M_CheckParm("-reject_pad_with_ff"))
@@ -3070,13 +3216,12 @@ static void P_LoadReject(int lump)
       {
          byte *temp = (byte *)(setupwad->cacheLumpNum(lump, PU_CACHE));
          memcpy(rejectmatrix, temp, size);
-
-         // ioanch 20160309: REJECT overflow fix. From chocolate-doom (by
-         // fraggle):
-         // Also only do it if MBF or less
-         if(demo_version <= 203)
-            P_padRejectArray(rejectmatrix + size, expectedsize - size);
       }
+      // ioanch 20160309: REJECT overflow fix. From chocolate-doom (by
+      // fraggle):
+      // Also only do it if MBF or less
+      if(demo_version <= 203)
+         P_padRejectArray(rejectmatrix + size, expectedsize - size);
    }
 
    // warn on too-large rejects, but do nothing special.
@@ -3120,7 +3265,7 @@ static const char *consolelumps[] =
 //
 // haleyjd 12/12/13: Check for supported console map formats
 //
-static int P_checkConsoleFormat(WadDirectory *dir, int lumpnum)
+static int P_checkConsoleFormat(const WadDirectory *dir, int lumpnum)
 {
    int          numlumps = dir->getNumLumps();
    lumpinfo_t **lumpinfo = dir->getLumpInfo();
@@ -3149,8 +3294,7 @@ static int P_checkConsoleFormat(WadDirectory *dir, int lumpnum)
 // the MAPxy or ExMy standard previously imposed.
 // IOANCH 20151213: added MGLA, optional parameter to assign values to.
 //
-int P_CheckLevel(WadDirectory *dir, int lumpnum, maplumpindex_t *mgla,
-                 bool *udmf)
+int P_CheckLevel(const WadDirectory *dir, int lumpnum, maplumpindex_t *mgla, bool *udmf)
 {
    int          numlumps = dir->getNumLumps();
    lumpinfo_t **lumpinfo = dir->getLumpInfo();
@@ -3161,8 +3305,7 @@ int P_CheckLevel(WadDirectory *dir, int lumpnum, maplumpindex_t *mgla,
       *udmf = false;
 
    // IOANCH 20151206: check for UDMF lumps structure
-   if(lumpnum + 1 < numlumps 
-      && !strncmp(lumpinfo[lumpnum + 1]->name, "TEXTMAP", 8))
+   if(lumpnum + 1 < numlumps && !strncmp(lumpinfo[lumpnum + 1]->name, "TEXTMAP", 8))
    {
       // found a TEXTMAP. Look for ENDMAP
       bool foundEndMap = false;
@@ -3200,8 +3343,7 @@ int P_CheckLevel(WadDirectory *dir, int lumpnum, maplumpindex_t *mgla,
    for(int i = ML_THINGS; i <= ML_BEHAVIOR; i++)
    {
       int ln = lumpnum + i;
-      if(ln >= numlumps ||     // past the last lump?
-         strncmp(lumpinfo[ln]->name, levellumps[i], 8))
+      if(ln >= numlumps || strncmp(lumpinfo[ln]->name, levellumps[i], 8))     // past the last lump?
       {
          // If "BEHAVIOR" wasn't found, we assume we are dealing with
          // a DOOM-format map, and it is not an error; any other missing
@@ -3247,41 +3389,6 @@ int P_CheckLevel(WadDirectory *dir, int lumpnum, maplumpindex_t *mgla,
 
    // if we got here, we're dealing with a Hexen-format map
    return LEVEL_FORMAT_HEXEN;
-}
-
-//
-// P_CheckLevelName
-//
-// haleyjd 01/21/14: Check for a level's existence and format by lump name.
-//
-int P_CheckLevelName(WadDirectory *dir, const char *mapname)
-{
-   int lumpnum;
-   return ((lumpnum = dir->checkNumForName(mapname)) >= 0 ? 
-      P_CheckLevel(dir, lumpnum) : LEVEL_FORMAT_INVALID);
-}
-
-//
-// P_CheckLevelMapNum
-//
-// haleyjd 01/21/14: Check for a level's existence and format from a map
-// number. Note behavior here for ExMy levels is ZDoom-compatible (episode
-// is base 0, not base 1).
-//
-int P_CheckLevelMapNum(WadDirectory *dir, int mapnum)
-{
-   qstring mapname;
-
-   if(GameModeInfo->flags & GIF_MAPXY)
-      mapname.Printf(9, "MAP%02d", mapnum);
-   else
-   {
-      int episode = mapnum / 10 + 1;
-      int map     = mapnum % 10;
-      mapname.Printf(9, "E%dM%d", episode, map);
-   }
-
-   return P_CheckLevelName(dir, mapname.constPtr());
 }
 
 void P_InitThingLists(); // haleyjd
@@ -3336,10 +3443,10 @@ static void P_ClearPlayerVars()
       memset(players[i].frags, 0, sizeof(players[i].frags));
 
       // haleyjd: explicitly nullify old player object pointers
-      players[i].mo = NULL;
+      players[i].mo = nullptr;
 
       // haleyjd: explicitly nullify old player attacker
-      players[i].attacker = NULL;
+      players[i].attacker = nullptr;
    }
 
    totalkills = totalitems = totalsecret = wminfo.maxfrags = 0;
@@ -3405,6 +3512,12 @@ static void P_PreZoneFreeLevel()
 
    // sf: free the psecnode_t linked list in p_map.c
    P_FreeSecNodeList(); 
+
+   // Clear all global references
+   P_ClearGlobalLevelReferences();
+
+   // Clear the portal blockmap
+   gPortalBlockmap.mapDeinit();
 }
 
 //
@@ -3412,7 +3525,9 @@ static void P_PreZoneFreeLevel()
 //
 // Performs (re)initialization of subsystems after Z_FreeTags.
 //
-static void P_InitNewLevel(int lumpnum, WadDirectory *waddir)
+// IF THIS RETURNS false, IT MUST HAVE CALLED P_SetupLevelError.
+//
+static bool P_InitNewLevel(int lumpnum, WadDirectory *waddir)
 {
    //==============================================
    // Playsim
@@ -3430,7 +3545,12 @@ static void P_InitNewLevel(int lumpnum, WadDirectory *waddir)
    // Map data scripts
 
    // load MapInfo
-   P_LoadLevelInfo(waddir, lumpnum, W_GetManagedDirFN(waddir));
+   qstring error;
+   if(!P_LoadLevelInfo(waddir, lumpnum, W_GetManagedDirFN(waddir), &error))
+   {
+      P_SetupLevelError(error.constPtr(), gamemapname);
+      return false;
+   }
    
    // haleyjd 10/08/03: load ExtraData
    E_LoadExtraData();         
@@ -3462,6 +3582,8 @@ static void P_InitNewLevel(int lumpnum, WadDirectory *waddir)
    //==============================================
    // MUSINFO
    S_MusInfoClear();
+
+   return true;
 }
 
 //
@@ -3477,7 +3599,7 @@ static void P_DeathMatchSpawnPlayers()
       {
          if(playeringame[i])
          {
-            players[i].mo = NULL;
+            players[i].mo = nullptr;
             G_DeathMatchSpawnPlayer(i);
          }
       }
@@ -3507,6 +3629,67 @@ void P_InitThingLists()
 
    // haleyjd 06/06/06: initialize environmental sequences
    S_InitEnviroSpots();
+}
+
+//
+// Computes the compatibility hash. Use the same content as in GZDoom:
+// github.com/coelckers/gzdoom: src/p_openmap.cpp#MapData::GetChecksum
+//
+static void P_resolveCompatibilities(const WadDirectory &dir, int lumpnum, bool isUdmf,
+                                     int behaviorIndex)
+{
+   p_currentLevelHashDigest.clear();
+   E_RestoreCompatibilities();
+   HashData md5(HashData::MD5);
+   ZAutoBuffer buf;
+
+   if(isUdmf)
+   {
+      dir.cacheLumpAuto(lumpnum + 1, buf); // TEXTMAP
+      md5.addData(buf.getAs<const uint8_t *>(), static_cast<uint32_t>(buf.getSize()));
+   }
+   else
+   {
+
+      dir.cacheLumpAuto(lumpnum, buf); // level marker
+      md5.addData(buf.getAs<const uint8_t*>(), static_cast<uint32_t>(buf.getSize()));
+
+      dir.cacheLumpAuto(lumpnum + ML_THINGS, buf);
+      md5.addData(buf.getAs<const uint8_t*>(), static_cast<uint32_t>(buf.getSize()));
+
+      dir.cacheLumpAuto(lumpnum + ML_LINEDEFS, buf);
+      md5.addData(buf.getAs<const uint8_t*>(), static_cast<uint32_t>(buf.getSize()));
+
+      dir.cacheLumpAuto(lumpnum + ML_SIDEDEFS, buf);
+      md5.addData(buf.getAs<const uint8_t*>(), static_cast<uint32_t>(buf.getSize()));
+
+      dir.cacheLumpAuto(lumpnum + ML_SECTORS, buf);
+      md5.addData(buf.getAs<const uint8_t*>(), static_cast<uint32_t>(buf.getSize()));
+   }
+
+   if(behaviorIndex != -1)
+   {
+      dir.cacheLumpAuto(behaviorIndex, buf);
+      md5.addData(buf.getAs<const uint8_t*>(), static_cast<uint32_t>(buf.getSize()));
+   }
+
+   md5.wrapUp();
+
+   char *digest = md5.digestToString();
+   E_ApplyCompatibility(digest);
+   p_currentLevelHashDigest = digest;
+   efree(digest);
+}
+
+//
+// Console command to get the currently obtained MD5 checksum (if available)
+//
+CONSOLE_COMMAND(mapchecksum, 0)
+{
+   if(p_currentLevelHashDigest.empty())
+      C_Puts("Current map MD5 checksum not available.");
+   else
+      C_Printf("Current map MD5: %s\n", p_currentLevelHashDigest.constPtr());
 }
 
 //
@@ -3566,14 +3749,21 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       return;
    }
 
-   if(isUdmf)
+   P_resolveCompatibilities(*setupwad, lumpnum, isUdmf, mgla.behavior);
+
+   if(isUdmf || demo_version >= 401)
+   {
       P_PointOnLineSide = P_PointOnLineSidePrecise;
+      P_PointOnDivlineSide = P_PointOnDivlineSidePrecise;
+   }
    else
+   {
       P_PointOnLineSide = P_PointOnLineSideClassic;
+      P_PointOnDivlineSide = P_PointOnDivlineSideClassic;
+   }
 
    // haleyjd 07/22/04: moved up
    newlevel   = (lumpinfo[lumpnum]->source != WadDirectory::IWADSource);
-   doom1level = false;
 
    strncpy(levelmapname, mapname, 8);
    leveltime = 0;
@@ -3585,7 +3775,8 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    Z_FreeTags(PU_LEVEL, PU_LEVEL);
 
    // perform post-Z_FreeTags actions
-   P_InitNewLevel(lumpnum, dir);
+   if(!P_InitNewLevel(lumpnum, dir))
+      return;  // The error was thrown by P_InitNewLevel if it got false.
 
    // note: most of this ordering is important
    
@@ -3593,7 +3784,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // killough 4/4/98: split load of sidedefs into two parts,
    // to allow texture names to be used in special linedefs
 
-   level_error = NULL; // reset
+   level_error = nullptr; // reset
 
    ScrollThinker::RemoveAllScrollers();
 
@@ -3638,9 +3829,6 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    
    // possible error: missing flats
    CHECK_ERROR();
-
-   // haleyjd 01/05/14: create sector interpolation data
-   P_CreateSectorInterps();
 
    // IOANCH 20151212: UDMF
    if(isUdmf)
@@ -3691,13 +3879,12 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    R_PointOnSide = R_PointOnSideClassic;  // set classic function unless otherwise set later
 
    // IOANCH: at this point, mgla.nodes is valid. Check ZDoom node signature too
-   ZNodeType znodeSignature;
    int actualNodeLump = -1;
-   if((znodeSignature = P_CheckForZDoomUncompressedNodes(mgla.nodes, 
-      &actualNodeLump, isUdmf)) != ZNodeType_Invalid && actualNodeLump >= 0)
+   znodeSignature_t znodeSignature = P_checkForZDoomNodes(mgla.nodes, &actualNodeLump, isUdmf);
+   if(znodeSignature.type != ZNodeType_Invalid && actualNodeLump >= 0)
    {
       P_LoadZNodes(actualNodeLump, znodeSignature);
-      if(znodeSignature == ZNodeType_GL3)
+      if(znodeSignature.type == ZNodeType_GL3)
          R_PointOnSide = R_PointOnSidePrecise;
 
       CHECK_ERROR();
@@ -3738,6 +3925,10 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // overrun
    P_GroupLines();
    P_LoadReject(mgla.reject); // haleyjd 01/26/04
+
+   I_Assert(lines && numlinesPlusExtra == numlines + NUM_LINES_EXTRA,
+            "lines not initialized\n");
+   lines[numlines] = lines[0];   // use the first line as a base for the "junk" line
 
    // Create bounding boxes now
    P_createSectorBoundingBoxes();
@@ -3791,12 +3982,15 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // SoM: Deferred specials that need to be spawned after P_SpawnSpecials
    P_SpawnDeferredSpecials(setupSettings);
 
+   // haleyjd 01/05/14: create sector interpolation data
+   // MaxW: After specials are spawned so slope data is set
+   P_createSectorInterps();
+
    // haleyjd
    P_InitLightning();
 
    // preload graphics
-   if(precache)
-      R_PrecacheLevel();
+   R_PrecacheLevel();
 
    R_SetViewSize(screenSize+3); //sf
 
@@ -3810,7 +4004,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    else if(camera == &walkcamera)
       P_ResetWalkcam();
    else
-      camera = NULL;        // camera off
+      camera = nullptr;        // camera off
+
+   R_RefreshContexts();
 
    // haleyjd 01/07/07: initialize ACS for Hexen maps
    //         03/19/11: also allow for DOOM-format maps via MapInfo
@@ -3900,12 +4096,16 @@ void P_ConvertDoomExtendedSpawnNum(mapthing_t *mthing)
 {
    int16_t num = mthing->type;
 
-   if(num >= 6005 && num <= 6089)
-      num -= 6000;
-   else if(num >= 6201 && num <= 6249)
-      num -= 4200;
-   else if(num >= 6301 && num <= 6306)
-      num -= 3300;
+   // Only convert doomednum if there's no existing thingtype for this one
+   if(const int typenum = P_FindDoomedNum(num); typenum == -1 || typenum == NUMMOBJTYPES)
+   {
+      if(num >= 6005 && num <= 6089)
+         num -= 6000;
+      else if(num >= 6201 && num <= 6249)
+         num -= 4200;
+      else if(num >= 6301 && num <= 6306)
+         num -= 3300;
+   }
 
    mthing->type = num;
 }

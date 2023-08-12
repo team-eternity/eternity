@@ -35,6 +35,12 @@ typedef MetaTable itemeffect_t;
 // follow a player exlusively for 3 seconds
 #define BASETHRESHOLD   (100)
 
+enum
+{
+   GOD_BREACH_DAMAGE = 10000, // common damage that bypasses invulnerability
+   LESSER_GOD_BREACH_DAMAGE = 1000, // this one bypasses less cases but is there (P_DamageMobj)
+};
+
 bool P_GiveAmmoPickup(player_t *, const itemeffect_t *, bool, int);
 bool P_GiveBody(player_t *, const itemeffect_t *);
 bool P_GiveArmor(player_t *, const itemeffect_t *);
@@ -43,7 +49,7 @@ bool P_GiveArmor(player_t *, const itemeffect_t *);
 // that P_GivePowerForItem can be used.
 bool P_GivePowerForItem(player_t *, const itemeffect_t *);
 
-bool P_GivePower(player_t *player, int power, int duration, bool additiveTime);
+bool P_GivePower(player_t *player, int power, int duration, bool permanent, bool additiveTime);
 void P_TouchSpecialThing(Mobj *special, Mobj *toucher);
 void P_DamageMobj(Mobj *target,Mobj *inflictor,Mobj *source,int damage,int mod);
 void P_DropItems(Mobj *actor, bool tossitems);
@@ -54,7 +60,7 @@ void P_Whistle(Mobj *actor, int mobjtype);
 // Archvile interaction check. Used by the A_VileChase and Thing_Raise
 bool P_ThingIsCorpse(const Mobj *mobj);
 bool P_CheckCorpseRaiseSpace(Mobj *corpse);
-void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser);
+void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser, const int sound);
 
 // MaxW: 2016/07/14:
 // Used by HealThing line actions

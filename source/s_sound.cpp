@@ -81,30 +81,30 @@ extern bool nosfxparm, nomusicparm;
 
 struct channel_t
 {
-  sfxinfo_t *sfxinfo;      // sound information (if null, channel avail.)
-  sfxinfo_t *aliasinfo;    // original sound name if using an alias
-  const PointThinker *origin;    // origin of sound
-  int subchannel;          // haleyjd 06/12/08: origin subchannel
-  int volume;              // volume scale value for effect -- haleyjd 05/29/06
-  int attenuation;         // attenuation type -- haleyjd 05/29/06
-  int pitch;               // pitch modifier -- haleyjd 06/03/06
-  int handle;              // handle of the sound being played
-  int o_priority;          // haleyjd 09/27/06: stored priority value
-  int priority;            // current priority value
-  int singularity;         // haleyjd 09/27/06: stored singularity value
-  int idnum;               // haleyjd 09/30/06: unique id num for sound event
-  bool looping;            // haleyjd 10/06/06: is this channel looping?
+   sfxinfo_t *sfxinfo;      // sound information (if null, channel avail.)
+   sfxinfo_t *aliasinfo;    // original sound name if using an alias
+   const PointThinker *origin;    // origin of sound
+   int subchannel;          // haleyjd 06/12/08: origin subchannel
+   int volume;              // volume scale value for effect -- haleyjd 05/29/06
+   int attenuation;         // attenuation type -- haleyjd 05/29/06
+   int pitch;               // pitch modifier -- haleyjd 06/03/06
+   int handle;              // handle of the sound being played
+   int o_priority;          // haleyjd 09/27/06: stored priority value
+   int priority;            // current priority value
+   int singularity;         // haleyjd 09/27/06: stored singularity value
+   int idnum;               // haleyjd 09/30/06: unique id num for sound event
+   bool looping;            // haleyjd 10/06/06: is this channel looping?
 };
 
 // the set of channels available
 static channel_t *channels;
 
 // Maximum volume of a sound effect.
-// Internal default is max out of 0-15.
-int snd_SfxVolume = 15;
+// Internal default is max out of 0-SND_MAXVOLUME.
+int snd_SfxVolume = SND_MAXVOLUME;
 
 // Maximum volume of music.
-int snd_MusicVolume = 15;
+int snd_MusicVolume = SND_MAXVOLUME;
 
 // precache sounds ?
 int s_precache = 1;
@@ -206,11 +206,11 @@ static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
    int attenuator = 0, basevolume;            // haleyjd
    fixed_t close_dist = 0, clipping_dist = 0; // haleyjd
 
-   // haleyjd 08/12/04: we cannot adjust a sound for a NULL listener.
+   // haleyjd 08/12/04: we cannot adjust a sound for a nullptr listener.
    if(!listener)
       return 1;
 
-   // haleyjd 05/29/06: this function isn't supposed to be called for NULL sources
+   // haleyjd 05/29/06: this function isn't supposed to be called for nullptr sources
 #ifdef RANGECHECK
    if(!source)
       I_Error("S_AdjustSoundParams: NULL source\n");
@@ -248,7 +248,7 @@ static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
                                         + ANG90) >> ANGLETOFINESHIFT]) : 0;
 
    // haleyjd 05/29/06: allow per-channel volume scaling
-   basevolume = (snd_SfxVolume * chanvol) / 15;
+   basevolume = (snd_SfxVolume * chanvol) / SND_MAXVOLUME;
 
    // haleyjd 05/30/06: allow per-channel attenuation behavior
    switch(chanattn)
@@ -343,9 +343,9 @@ static int S_getChannel(const PointThinker *origin, sfxinfo_t *sfxinfo,
       // haleyjd 06/12/08: only if subchannel matches
       for(cnum = 0; cnum < numChannels; cnum++)
       {
-         // haleyjd 04/09/11: Allow different sounds played on NULL
+         // haleyjd 04/09/11: Allow different sounds played on nullptr
          // channel to not cut each other off
-         if(origin == NULL)
+         if(origin == nullptr)
             origin_equivalent = (channels[cnum].sfxinfo == sfxinfo);
          else
             origin_equivalent = (channels[cnum].origin == origin);
@@ -437,12 +437,12 @@ void S_StartSfxInfo(const soundparams_t &params)
    bool nocutoff       = false;
    camera_t      playercam;
    camera_t     *listener = &playercam;
-   sector_t     *earsec   = NULL;
+   sector_t     *earsec   = nullptr;
    sfxinfo_t    *sfx      = params.sfx;
    const PointThinker *origin   = params.origin;
    const Mobj *mo;
 
-   // haleyjd 09/03/03: allow NULL sounds to fall through
+   // haleyjd 09/03/03: allow nullptr sounds to fall through
    if(!sfx)
       return;
 
@@ -558,7 +558,7 @@ void S_StartSfxInfo(const soundparams_t &params)
          else
          {
             memset(&playercam, 0, sizeof(playercam));
-            listener = NULL;
+            listener = nullptr;
          }
       }
 
@@ -576,7 +576,7 @@ void S_StartSfxInfo(const soundparams_t &params)
    if(!origin || (!extcamera && origin == players[displayplayer].mo))
    {
       sep = NORM_SEP;
-      volume = (volume * volumeScale) / 15; // haleyjd 05/29/06: scale volume
+      volume = (volume * volumeScale) / SND_MAXVOLUME; // haleyjd 05/29/06: scale volume
       volume = eclamp(volume, 0, 127);
       if(volume < 1) // clip due to inaudibility
          return;
@@ -692,6 +692,25 @@ void S_StartSoundAtVolume(const PointThinker *origin, int sfx_id,
       S_StartSfxInfo(params);
    }
 }
+static void S_StartSoundAtVolumeLooped(const PointThinker *origin, int sfx_id,
+   int volume, int attn, int subchannel)
+{
+   soundparams_t params;
+
+   // haleyjd: changed to use EDF DeHackEd number hashing,
+   // to enable full use of dynamically defined sounds ^_^
+   if((params.sfx = E_SoundForDEHNum(sfx_id)))
+   {
+      params.origin = origin;
+      params.volumeScale = volume;
+      params.attenuation = attn;
+      params.loop = true;
+      params.subchannel = subchannel;
+      params.reverb = true;
+
+      S_StartSfxInfo(params);
+   }
+}
 
 //
 // S_StartSound
@@ -705,6 +724,10 @@ void S_StartSound(const PointThinker *origin, int sfx_id)
 {
    S_StartSoundAtVolume(origin, sfx_id, 127, ATTN_NORMAL, CHAN_AUTO);
 }
+void S_StartSoundLooped(const PointThinker *origin, int sfx_id)
+{
+   S_StartSoundAtVolumeLooped(origin, sfx_id, 127, ATTN_NORMAL, CHAN_AUTO);
+}
 
 //
 // S_StartSoundNameAtVolume
@@ -716,7 +739,7 @@ void S_StartSoundNameAtVolume(const PointThinker *origin, const char *name,
 {
    soundparams_t params;
 
-   // haleyjd 03/17/03: allow NULL sound names to fall through
+   // haleyjd 03/17/03: allow nullptr sound names to fall through
    if(!name)
       return;
 
@@ -746,33 +769,6 @@ void S_StartSoundName(const PointThinker *origin, const char *name)
 }
 
 //
-// S_StartSoundLooped
-//
-// haleyjd 06/03/06: support playing looped sounds.
-//
-// FIXME: unused?
-//
-static void S_StartSoundLooped(PointThinker *origin, char *name, int volume,
-                               int attn, int subchannel)
-{
-   soundparams_t params;
-
-   if(!name)
-      return;
-
-   if((params.sfx = S_SfxInfoForName(name)))
-   {
-      params.origin      = origin;
-      params.volumeScale = volume;
-      params.attenuation = attn;
-      params.loop        = true;
-      params.subchannel  = subchannel;
-      params.reverb      = true;
-      S_StartSfxInfo(params);
-   }
-}
-
-//
 // S_StartInterfaceSound(int)
 //
 // Start an interface sound by DeHackEd number.
@@ -783,7 +779,7 @@ void S_StartInterfaceSound(int sound_id)
 
    if((params.sfx = E_SoundForDEHNum(sound_id)))
    {
-      params.setNormalDefaults(NULL);
+      params.setNormalDefaults(nullptr);
       params.reverb = false;
       S_StartSfxInfo(params);
    }
@@ -800,7 +796,7 @@ void S_StartInterfaceSound(const char *name)
 
    if((params.sfx = E_SoundForName(name)))
    {
-      params.setNormalDefaults(NULL);
+      params.setNormalDefaults(nullptr);
       params.reverb = false;
       S_StartSfxInfo(params);
    }
@@ -817,7 +813,7 @@ void S_StartInterfaceSound(sfxinfo_t *sfx)
 
    if((params.sfx = sfx))
    {
-      params.setNormalDefaults(NULL);
+      params.setNormalDefaults(nullptr);
       params.reverb = false;
       S_StartSfxInfo(params);
    }
@@ -839,6 +835,28 @@ void S_StopSound(const PointThinker *origin, int subchannel)
       if(channels[cnum].sfxinfo && channels[cnum].origin == origin &&
          channels[cnum].idnum == I_SoundID(channels[cnum].handle) &&
          (subchannel == CHAN_ALL || channels[cnum].subchannel == subchannel))
+      {
+         S_StopChannel(cnum);
+      }
+   }
+}
+
+//
+// Stops a sound from an origin if it has the given dehackednum
+//
+void S_StopSoundId(const PointThinker *origin, int sound_id)
+{
+   int cnum;
+
+   //jff 1/22/98 return if sound is not enabled
+   if(!snd_card || nosfxparm)
+      return;
+
+   for(cnum = 0; cnum < numChannels; cnum++)
+   {
+      if(channels[cnum].sfxinfo && channels[cnum].origin == origin &&
+         channels[cnum].idnum == I_SoundID(channels[cnum].handle) &&
+         channels[cnum].aliasinfo && channels[cnum].aliasinfo->dehackednum == sound_id)
       {
          S_StopChannel(cnum);
       }
@@ -906,7 +924,7 @@ void S_UpdateSounds(const Mobj *listener)
 {
    // sf: a camera_t holding the information about the player
    camera_t playercam = { 0 };
-   sector_t *earsec = NULL;
+   sector_t *earsec = nullptr;
 
    //jff 1/22/98 return if sound is not enabled
    if(!snd_card || nosfxparm)
@@ -962,7 +980,7 @@ void S_UpdateSounds(const Mobj *listener)
          // or modify their params
 
          // sf again: use external camera if there is one
-         // fix afterglows bug: segv because of NULL listener
+         // fix afterglows bug: segv because of nullptr listener
 
          // haleyjd 09/29/06: major bug fix. fraggle's change to remove the
          // listener != origin check here causes player sounds to be adjusted
@@ -975,7 +993,7 @@ void S_UpdateSounds(const Mobj *listener)
          {
             // haleyjd 05/29/06: allow per-channel volume scaling
             // and attenuation type selection
-            if(!S_AdjustSoundParams(listener ? &playercam : NULL,
+            if(!S_AdjustSoundParams(listener ? &playercam : nullptr,
                                     c->origin,
                                     c->volume,
                                     c->attenuation,
@@ -1016,6 +1034,21 @@ bool S_CheckSoundPlaying(const PointThinker *mo, sfxinfo_t *aliasinfo)
       }
    }
 
+   return false;
+}
+// Dehackednum variant
+bool S_CheckSoundPlaying(const PointThinker *mo, int sound_id)
+{
+   if(!mo || !sound_id)
+      return false;
+   for(int cnum = 0; cnum < numChannels; cnum++)
+   {
+      const channel_t &channel = channels[cnum];
+      if(channel.origin != mo || !channel.aliasinfo || channel.aliasinfo->dehackednum != sound_id)
+         continue;
+      if(I_SoundIsPlaying(channels[cnum].handle))
+         return true;
+   }
    return false;
 }
 
@@ -1105,12 +1138,15 @@ sfxinfo_t *S_SfxInfoForName(const char *name)
 //
 void S_Chgun()
 {
+   // but only if DSCHGUN is present
+   if(wGlobalDir.checkNumForName("DSCHGUN") == -1)
+      return;
    sfxinfo_t *s_chgun = E_SoundForName("chgun");
 
    if(!s_chgun)
       return;
 
-   s_chgun->link = NULL;
+   s_chgun->link = nullptr;
    s_chgun->pitch = -1;
    s_chgun->volume = -1;
 }
@@ -1196,12 +1232,12 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
       else
       {
          Z_Free(music->data);
-         music->data = NULL;
-         mus_playing = NULL;
+         music->data = nullptr;
+         mus_playing = nullptr;
       }
    }
    else
-      mus_playing = NULL;
+      mus_playing = nullptr;
 }
 
 //
@@ -1276,8 +1312,8 @@ void S_StopMusic()
    I_UnRegisterSong(mus_playing->handle);
    Z_Free(mus_playing->data);
 
-   mus_playing->data = NULL;
-   mus_playing = NULL;
+   mus_playing->data = nullptr;
+   mus_playing = nullptr;
 }
 
 //=============================================================================
@@ -1500,12 +1536,12 @@ static void S_HookMusic(musicinfo_t *music)
 // S_MusicForName
 //
 // Returns a musicinfo_t structure given a music entry name.
-// Returns NULL if not found.
+// Returns nullptr if not found.
 //
 musicinfo_t *S_MusicForName(const char *name)
 {
    int hashnum, lumpnum;
-   musicinfo_t *mus = NULL;
+   musicinfo_t *mus = nullptr;
    bool nameHasPrefix, lumpHasPrefix;
    const char *nameToUse;
    qstring tempname;
@@ -1575,13 +1611,13 @@ musicinfo_t *S_MusicForName(const char *name)
 // Console Commands
 //
 
-VARIABLE_BOOLEAN(s_precache,      NULL, onoff);
-VARIABLE_BOOLEAN(pitched_sounds,  NULL, onoff);
-VARIABLE_INT(default_numChannels, NULL, 1, 32,  NULL);
-VARIABLE_INT(snd_SfxVolume,       NULL, 0, 15,  NULL);
-VARIABLE_INT(snd_MusicVolume,     NULL, 0, 15,  NULL);
-VARIABLE_BOOLEAN(forceFlipPan,    NULL, onoff);
-VARIABLE_TOGGLE(s_hidefmusic,     NULL, onoff);
+VARIABLE_BOOLEAN(s_precache,      nullptr, onoff);
+VARIABLE_BOOLEAN(pitched_sounds,  nullptr, onoff);
+VARIABLE_INT(default_numChannels, nullptr, 1, 32,                nullptr);
+VARIABLE_INT(snd_SfxVolume,       nullptr, 0, SND_MAXVOLUME,  nullptr);
+VARIABLE_INT(snd_MusicVolume,     nullptr, 0, SND_MAXVOLUME,  nullptr);
+VARIABLE_BOOLEAN(forceFlipPan,    nullptr, onoff);
+VARIABLE_TOGGLE(s_hidefmusic,     nullptr, onoff);
 
 CONSOLE_VARIABLE(s_precache, s_precache, 0) {}
 CONSOLE_VARIABLE(s_pitched, pitched_sounds, 0) {}
@@ -1602,7 +1638,7 @@ CONSOLE_VARIABLE(s_flippan, forceFlipPan, 0) {}
 
 CONSOLE_VARIABLE(s_hidefmusic, s_hidefmusic, 0) {}
 
-VARIABLE_TOGGLE(s_randmusic,      NULL, onoff);
+VARIABLE_TOGGLE(s_randmusic,      nullptr, onoff);
 CONSOLE_VARIABLE(s_randmusic, s_randmusic, 0) {}
 
 CONSOLE_COMMAND(s_playmusic, 0)
@@ -1643,6 +1679,11 @@ CONSOLE_COMMAND(s_playmusic, 0)
    S_ChangeMusic(music, true);
 }
 
+CONSOLE_COMMAND(s_stopmusic, 0)
+{
+   S_StopMusic();
+}
+
 #if 0
 //
 // Small native functions
@@ -1660,7 +1701,7 @@ static cell AMX_NATIVE_CALL sm_globalsound(AMX *amx, cell *params)
       return 0;
    }
 
-   S_StartSoundName(NULL, sndname);
+   S_StartSoundName(nullptr, sndname);
 
    Z_Free(sndname);
 
@@ -1671,7 +1712,7 @@ static cell AMX_NATIVE_CALL sm_glblsoundnum(AMX *amx, cell *params)
 {
    int soundnum = (int)params[1];
 
-   S_StartSound(NULL, soundnum);
+   S_StartSound(nullptr, soundnum);
 
    return 0;
 }
@@ -1737,7 +1778,7 @@ AMX_NATIVE_INFO sound_Natives[] =
    { "_SoundGlobalNum", sm_glblsoundnum },
    { "_SectorSound",    sm_sectorsound },
    { "_SectorSoundNum", sm_sectorsoundnum },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 

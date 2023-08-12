@@ -20,8 +20,6 @@
 //
 
 #include "SDL.h"
-#include "SDL_audio.h"
-#include "SDL_thread.h"
 #include "SDL_mixer.h"
 
 #include "../z_zone.h"
@@ -67,34 +65,37 @@ SDL_AudioSpec audio_spec = {};
 // haleyjd 10/28/05: updated for Julian's music code, need full quality now
 static const int snd_samplerate = 44100;
 
-typedef struct channel_info_s
+struct channel_info_t
 {
-  // SFX id of the playing sound effect.
-  // Used to catch duplicates (like chainsaw).
-  sfxinfo_t *id;
-  // The channel step amount...
-  unsigned int step;
-  // ... and a 0.16 bit remainder of last step.
-  unsigned int stepremainder;
-  unsigned int samplerate;
-  // The channel data pointers, start and end.
-  float *data;
-  float *startdata; // haleyjd
-  float *enddata;
-  // Hardware left and right channel volume lookup.
-  float  leftvol, rightvol;
-  // haleyjd 06/03/06: looping
-  int loop;
-  // unique instance id
-  unsigned int idnum;
-  // if true, channel is affected by reverb
-  bool reverb;
+   // SFX id of the playing sound effect.
+   // Used to catch duplicates (like chainsaw).
+   sfxinfo_t *id;
+   // The channel step amount...
+   unsigned int step;
+   // ... and a 0.16 bit remainder of last step.
+   unsigned int stepremainder;
+   unsigned int restartstepremainder;
+   unsigned int samplerate;
+   // The channel data pointers, start and end.
+   float *data;
+   float *startdata; // haleyjd
+   float *enddata;
+   float *restartdata; // For restarting a looping sound after a pause
+   // Hardware left and right channel volume lookup.
+   float  leftvol, rightvol;
+   // haleyjd 06/03/06: looping
+   int loop;
+   bool loopcutoff;
+   // unique instance id
+   unsigned int idnum;
+   // if true, channel is affected by reverb
+   bool reverb;
 
-  // haleyjd 10/02/08: SDL semaphore to protect channel
-  SDL_sem *semaphore;
-  bool shouldstop; // haleyjd 05/16/11
+   // haleyjd 10/02/08: SDL semaphore to protect channel
+   SDL_sem *semaphore;
+   bool shouldstop; // haleyjd 05/16/11
 
-} channel_info_t;
+};
 
 static channel_info_t channelinfo[MAX_CHANNELS+1];
 
@@ -135,24 +136,30 @@ static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id, bool 
    if(SDL_SemWait(channelinfo[channel].semaphore) == 0)
    {
       channelinfo[channel].data = static_cast<float *>(sfx->data);
-      
+
       // Set pointer to end of raw data.
       channelinfo[channel].enddata = static_cast<float *>(sfx->data) + sfx->alen - 1;
-      
+
       // haleyjd 06/03/06: keep track of start of sound
       channelinfo[channel].startdata = channelinfo[channel].data;
-      
+
+      channelinfo[channel].restartdata = nullptr;
+
       channelinfo[channel].stepremainder = 0;
-      
+
+      channelinfo[channel].restartstepremainder = 0;
+
       // Preserve sound SFX id
       channelinfo[channel].id = sfx;
-      
+
       // Set looping
       channelinfo[channel].loop = loop;
 
+      channelinfo[channel].loopcutoff = false;
+
       // Set reverb
       channelinfo[channel].reverb = reverb;
-      
+
       // Set instance ID
       channelinfo[channel].idnum = id;
 
@@ -233,35 +240,34 @@ static double preampmul;
 
 struct EQSTATE
 {
-  // Filter #1 (Low band)
+   // Filter #1 (Low band)
 
-  double  lf;       // Frequency
-  double  f1p0;     // Poles ...
-  double  f1p1;    
-  double  f1p2;
-  double  f1p3;
+   double  lf;       // Frequency
+   double  f1p0;     // Poles ...
+   double  f1p1;
+   double  f1p2;
+   double  f1p3;
 
-  // Filter #2 (High band)
+   // Filter #2 (High band)
 
-  double  hf;       // Frequency
-  double  f2p0;     // Poles ...
-  double  f2p1;
-  double  f2p2;
-  double  f2p3;
+   double  hf;       // Frequency
+   double  f2p0;     // Poles ...
+   double  f2p1;
+   double  f2p2;
+   double  f2p3;
 
-  // Sample history buffer
+   // Sample history buffer
 
-  double  sdm1;     // Sample data minus 1
-  double  sdm2;     //                   2
-  double  sdm3;     //                   3
+   double  sdm1;     // Sample data minus 1
+   double  sdm2;     //                   2
+   double  sdm3;     //                   3
 
-  // Gain Controls
+   // Gain Controls
 
-  double  lg;       // low  gain
-  double  mg;       // mid  gain
-  double  hg;       // high gain
-  
-};  
+   double  lg;       // low  gain
+   double  mg;       // mid  gain
+   double  hg;       // high gain
+};
 
 // haleyjd 04/21/10: equalizers for each stereo channel
 static EQSTATE eqstate[2];
@@ -462,13 +468,24 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
    float *leftend1 = mixbuffer[1] + (len/sample_size);
    float *leftend;
 
+   const bool loopsounds = !paused && ((!menuactive && !consoleactive) || demoplayback || netgame);
+
    // Mix audio channels
    for(channel_info_t *chan = channelinfo; chan != &channelinfo[numChannels]; chan++)
    {
       // fast rejection before semaphore lock
-      if(chan->shouldstop || !chan->data)
+      if(chan->shouldstop || !chan->data || (!loopsounds && chan->loopcutoff))
          continue;
-         
+      else if(loopsounds && chan->loopcutoff)
+      {
+         chan->data                 = chan->restartdata;
+         chan->stepremainder        = chan->restartstepremainder;
+
+         chan->loopcutoff           = false;
+         chan->restartdata          = nullptr;
+         chan->restartstepremainder = 0;
+      }
+
       // try to acquire semaphore, but do not block; if the main thread is using
       // this channel we'll just skip it for now - safer and faster.
       if(SDL_SemTryWait(chan->semaphore) != 0)
@@ -495,6 +512,13 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
          continue;
       }
 
+      // Save position of sound if we just paused
+      if(!loopsounds && !chan->restartdata && chan->loop)
+      {
+         chan->restartdata = chan->data;
+         chan->restartstepremainder = chan->stepremainder;
+      }
+
       while(leftout != leftend)
       {
          float sample  = *(chan->data);         
@@ -516,17 +540,27 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
          // Check whether we are done
          if(chan->data >= chan->enddata)
          {
-            if(chan->loop && !paused && 
-               ((!menuactive && !consoleactive) || demoplayback || netgame))
+            if(chan->loop && loopsounds)
             {
                // haleyjd 06/03/06: restart a looping sample if not paused
                chan->data = chan->startdata;
                chan->stepremainder = 0;
+               chan->loopcutoff = false;
+               chan->restartdata = nullptr;
+               chan->restartstepremainder = 0;
             }
             else
             {
-               // flag the channel to be stopped by the main thread ASAP
-               chan->data = nullptr;
+               if(chan->loop && !loopsounds)
+               {
+                  // flag the channel to be started after sounds can play again
+                  chan->loopcutoff = true;
+               }
+               else
+               {
+                  // flag the channel to be stopped by the main thread ASAP
+                  chan->data = nullptr;
+               }
                break;
             }
          }
@@ -538,7 +572,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 
    // do reverberation if an effect is active
    if(s_reverbactive)
-      S_ProcessReverb(mixbuffer[1], mixbuffer_size / 2);
+      S_ProcessReverb(mixbuffer[1], mixbuffer_size / step, step);
 
    // mix reverberated sound with unreverberated buffer
    I_SDLMixBuffers();

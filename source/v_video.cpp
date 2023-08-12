@@ -67,86 +67,96 @@ byte *colrngs[CR_LIMIT];
 // Now where did these came from?
 byte gammatable[5][256] =
 {
-  {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,
-   17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,
-   33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,
-   49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,
-   65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,
-   81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,
-   97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,
-   113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,
-   128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,
-   144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,
-   160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,
-   176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,
-   192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,
-   208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,
-   224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,
-   240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255},
+   {
+      1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,
+      17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,
+      33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,
+      49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,
+      65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,
+      81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,
+      97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,
+      113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,
+      128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,
+      144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,
+      160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,
+      176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,
+      192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,
+      208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,
+      224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,
+      240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255
+   },
 
-  {2,4,5,7,8,10,11,12,14,15,16,18,19,20,21,23,24,25,26,27,29,30,31,
-   32,33,34,36,37,38,39,40,41,42,44,45,46,47,48,49,50,51,52,54,55,
-   56,57,58,59,60,61,62,63,64,65,66,67,69,70,71,72,73,74,75,76,77,
-   78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,
-   99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,
-   115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,129,
-   130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,
-   146,147,148,148,149,150,151,152,153,154,155,156,157,158,159,160,
-   161,162,163,163,164,165,166,167,168,169,170,171,172,173,174,175,
-   175,176,177,178,179,180,181,182,183,184,185,186,186,187,188,189,
-   190,191,192,193,194,195,196,196,197,198,199,200,201,202,203,204,
-   205,205,206,207,208,209,210,211,212,213,214,214,215,216,217,218,
-   219,220,221,222,222,223,224,225,226,227,228,229,230,230,231,232,
-   233,234,235,236,237,237,238,239,240,241,242,243,244,245,245,246,
-   247,248,249,250,251,252,252,253,254,255},
+   {
+      2,4,5,7,8,10,11,12,14,15,16,18,19,20,21,23,24,25,26,27,29,30,31,
+      32,33,34,36,37,38,39,40,41,42,44,45,46,47,48,49,50,51,52,54,55,
+      56,57,58,59,60,61,62,63,64,65,66,67,69,70,71,72,73,74,75,76,77,
+      78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,
+      99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,
+      115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,129,
+      130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,
+      146,147,148,148,149,150,151,152,153,154,155,156,157,158,159,160,
+      161,162,163,163,164,165,166,167,168,169,170,171,172,173,174,175,
+      175,176,177,178,179,180,181,182,183,184,185,186,186,187,188,189,
+      190,191,192,193,194,195,196,196,197,198,199,200,201,202,203,204,
+      205,205,206,207,208,209,210,211,212,213,214,214,215,216,217,218,
+      219,220,221,222,222,223,224,225,226,227,228,229,230,230,231,232,
+      233,234,235,236,237,237,238,239,240,241,242,243,244,245,245,246,
+      247,248,249,250,251,252,252,253,254,255
+   },
 
-  {4,7,9,11,13,15,17,19,21,22,24,26,27,29,30,32,33,35,36,38,39,40,42,
-   43,45,46,47,48,50,51,52,54,55,56,57,59,60,61,62,63,65,66,67,68,69,
-   70,72,73,74,75,76,77,78,79,80,82,83,84,85,86,87,88,89,90,91,92,93,
-   94,95,96,97,98,100,101,102,103,104,105,106,107,108,109,110,111,112,
-   113,114,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,
-   129,130,131,132,133,133,134,135,136,137,138,139,140,141,142,143,144,
-   144,145,146,147,148,149,150,151,152,153,153,154,155,156,157,158,159,
-   160,160,161,162,163,164,165,166,166,167,168,169,170,171,172,172,173,
-   174,175,176,177,178,178,179,180,181,182,183,183,184,185,186,187,188,
-   188,189,190,191,192,193,193,194,195,196,197,197,198,199,200,201,201,
-   202,203,204,205,206,206,207,208,209,210,210,211,212,213,213,214,215,
-   216,217,217,218,219,220,221,221,222,223,224,224,225,226,227,228,228,
-   229,230,231,231,232,233,234,235,235,236,237,238,238,239,240,241,241,
-   242,243,244,244,245,246,247,247,248,249,250,251,251,252,253,254,254,
-   255},
+   {
+     4,7,9,11,13,15,17,19,21,22,24,26,27,29,30,32,33,35,36,38,39,40,42,
+      43,45,46,47,48,50,51,52,54,55,56,57,59,60,61,62,63,65,66,67,68,69,
+      70,72,73,74,75,76,77,78,79,80,82,83,84,85,86,87,88,89,90,91,92,93,
+      94,95,96,97,98,100,101,102,103,104,105,106,107,108,109,110,111,112,
+      113,114,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,
+      129,130,131,132,133,133,134,135,136,137,138,139,140,141,142,143,144,
+      144,145,146,147,148,149,150,151,152,153,153,154,155,156,157,158,159,
+      160,160,161,162,163,164,165,166,166,167,168,169,170,171,172,172,173,
+      174,175,176,177,178,178,179,180,181,182,183,183,184,185,186,187,188,
+      188,189,190,191,192,193,193,194,195,196,197,197,198,199,200,201,201,
+      202,203,204,205,206,206,207,208,209,210,210,211,212,213,213,214,215,
+      216,217,217,218,219,220,221,221,222,223,224,224,225,226,227,228,228,
+      229,230,231,231,232,233,234,235,235,236,237,238,238,239,240,241,241,
+      242,243,244,244,245,246,247,247,248,249,250,251,251,252,253,254,254,
+      255
+   },
 
-  {8,12,16,19,22,24,27,29,31,34,36,38,40,41,43,45,47,49,50,52,53,55,
-   57,58,60,61,63,64,65,67,68,70,71,72,74,75,76,77,79,80,81,82,84,85,
-   86,87,88,90,91,92,93,94,95,96,98,99,100,101,102,103,104,105,106,107,
-   108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,
-   125,126,127,128,129,130,131,132,133,134,135,135,136,137,138,139,140,
-   141,142,143,143,144,145,146,147,148,149,150,150,151,152,153,154,155,
-   155,156,157,158,159,160,160,161,162,163,164,165,165,166,167,168,169,
-   169,170,171,172,173,173,174,175,176,176,177,178,179,180,180,181,182,
-   183,183,184,185,186,186,187,188,189,189,190,191,192,192,193,194,195,
-   195,196,197,197,198,199,200,200,201,202,202,203,204,205,205,206,207,
-   207,208,209,210,210,211,212,212,213,214,214,215,216,216,217,218,219,
-   219,220,221,221,222,223,223,224,225,225,226,227,227,228,229,229,230,
-   231,231,232,233,233,234,235,235,236,237,237,238,238,239,240,240,241,
-   242,242,243,244,244,245,246,246,247,247,248,249,249,250,251,251,252,
-   253,253,254,254,255},
+   {
+      8,12,16,19,22,24,27,29,31,34,36,38,40,41,43,45,47,49,50,52,53,55,
+      57,58,60,61,63,64,65,67,68,70,71,72,74,75,76,77,79,80,81,82,84,85,
+      86,87,88,90,91,92,93,94,95,96,98,99,100,101,102,103,104,105,106,107,
+      108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,
+      125,126,127,128,129,130,131,132,133,134,135,135,136,137,138,139,140,
+      141,142,143,143,144,145,146,147,148,149,150,150,151,152,153,154,155,
+      155,156,157,158,159,160,160,161,162,163,164,165,165,166,167,168,169,
+      169,170,171,172,173,173,174,175,176,176,177,178,179,180,180,181,182,
+      183,183,184,185,186,186,187,188,189,189,190,191,192,192,193,194,195,
+      195,196,197,197,198,199,200,200,201,202,202,203,204,205,205,206,207,
+      207,208,209,210,210,211,212,212,213,214,214,215,216,216,217,218,219,
+      219,220,221,221,222,223,223,224,225,225,226,227,227,228,229,229,230,
+      231,231,232,233,233,234,235,235,236,237,237,238,238,239,240,240,241,
+      242,242,243,244,244,245,246,246,247,247,248,249,249,250,251,251,252,
+      253,253,254,254,255
+   },
 
-  {16,23,28,32,36,39,42,45,48,50,53,55,57,60,62,64,66,68,69,71,73,75,76,
-   78,80,81,83,84,86,87,89,90,92,93,94,96,97,98,100,101,102,103,105,106,
-   107,108,109,110,112,113,114,115,116,117,118,119,120,121,122,123,124,
-   125,126,128,128,129,130,131,132,133,134,135,136,137,138,139,140,141,
-   142,143,143,144,145,146,147,148,149,150,150,151,152,153,154,155,155,
-   156,157,158,159,159,160,161,162,163,163,164,165,166,166,167,168,169,
-   169,170,171,172,172,173,174,175,175,176,177,177,178,179,180,180,181,
-   182,182,183,184,184,185,186,187,187,188,189,189,190,191,191,192,193,
-   193,194,195,195,196,196,197,198,198,199,200,200,201,202,202,203,203,
-   204,205,205,206,207,207,208,208,209,210,210,211,211,212,213,213,214,
-   214,215,216,216,217,217,218,219,219,220,220,221,221,222,223,223,224,
-   224,225,225,226,227,227,228,228,229,229,230,230,231,232,232,233,233,
-   234,234,235,235,236,236,237,237,238,239,239,240,240,241,241,242,242,
-   243,243,244,244,245,245,246,246,247,247,248,248,249,249,250,250,251,
-   251,252,252,253,254,254,255,255}
+   {
+      16,23,28,32,36,39,42,45,48,50,53,55,57,60,62,64,66,68,69,71,73,75,76,
+      78,80,81,83,84,86,87,89,90,92,93,94,96,97,98,100,101,102,103,105,106,
+      107,108,109,110,112,113,114,115,116,117,118,119,120,121,122,123,124,
+      125,126,128,128,129,130,131,132,133,134,135,136,137,138,139,140,141,
+      142,143,143,144,145,146,147,148,149,150,150,151,152,153,154,155,155,
+      156,157,158,159,159,160,161,162,163,163,164,165,166,166,167,168,169,
+      169,170,171,172,172,173,174,175,175,176,177,177,178,179,180,180,181,
+      182,182,183,184,184,185,186,187,187,188,189,189,190,191,191,192,193,
+      193,194,195,195,196,196,197,198,198,199,200,200,201,202,202,203,203,
+      204,205,205,206,207,207,208,208,209,210,210,211,211,212,213,213,214,
+      214,215,216,216,217,217,218,219,219,220,220,221,221,222,223,223,224,
+      224,225,225,226,227,227,228,228,229,229,230,230,231,232,232,233,233,
+      234,234,235,235,236,236,237,237,238,239,239,240,240,241,241,242,242,
+      243,243,244,244,245,245,246,246,247,247,248,248,249,249,250,250,251,
+      251,252,252,253,254,254,255,255
+   }
 };
 
 int usegamma;
@@ -164,11 +174,11 @@ int usegamma;
 // provided in v_video.h.
 //
 
-typedef struct crdef_s
+struct crdef_t
 {
-  const char *name;
-  byte **map1, **map2;
-} crdef_t;
+   const char *name;
+   byte **map1, **map2;
+};
 
 // killough 5/2/98: table-driven approach
 static const crdef_t crdefs[] = 
@@ -184,7 +194,7 @@ static const crdef_t crdefs[] =
    { "CRORANGE", &cr_orange,  &colrngs[CR_ORANGE] },
    { "CRYELLOW", &cr_yellow,  &colrngs[CR_YELLOW] },
    { "CRBLUE2",  &cr_blue_status, &cr_blue_status },
-   { NULL }
+   { nullptr }
 };
 
 // killough 5/2/98: tiny engine driven by table above
@@ -205,7 +215,7 @@ void V_InitColorTranslation()
 // haleyjd 05/04/10: clippable and scalable rect structure.
 // TODO: make available to v_block.c
 //
-typedef struct vrect_s
+struct vrect_t
 {
    int x;   // original x coordinate for upper left corner
    int y;   // original y coordinate for upper left corner
@@ -223,7 +233,7 @@ typedef struct vrect_s
    int sy;  // scaled y
    int sw;  // scaled width
    int sh;  // scaled height
-} vrect_t;
+};
 
 //
 // V_clipRect
@@ -369,21 +379,19 @@ void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
    // block copy
    if(src->pitch == dest->pitch && usew == src->width && usew == dest->width)
    {
-      memcpy(dstp, srcp, src->pitch * useh);
+      memcpy(dstp, srcp, src->pitch * usew);
    }
    else
    {
-      while(useh--)
+      while(usew--)
       {
-         memcpy(dstp, srcp, usew);
+         memcpy(dstp, srcp, useh);
          srcp += src->pitch;
          dstp += dest->pitch;
       }
    }
 }
 
-//
-// V_DrawPatch
 //
 // Masks a column based masked pic to the screen.
 //
@@ -405,6 +413,7 @@ void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch,
 			            bool flipped)
 {
    PatchInfo pi;
+   cb_patch_column_t patchcol{};
 
    pi.x = x;
    pi.y = y;
@@ -412,11 +421,9 @@ void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch,
    pi.flipped = flipped;
    pi.drawstyle = PSTYLE_NORMAL;
 
-   V_DrawPatchInt(&pi, buffer);
+   V_DrawPatchInt(patchcol, &pi, buffer);
 }
 
-//
-// V_DrawPatchTranslated
 //
 // Masks a column based masked pic to the screen.
 // Also translates colors from one palette range to another using
@@ -432,7 +439,8 @@ void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch,
                            byte *outr, bool flipped)
 {
    PatchInfo pi;
-   
+   cb_patch_column_t patchcol{};
+
    pi.x = x;
    pi.y = y;
    pi.patch = patch;
@@ -442,16 +450,14 @@ void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch,
    if(outr)
    {
       pi.drawstyle = PSTYLE_TLATED;   
-      V_SetPatchColrng(outr);
+      patchcol.translation = outr;
    }
    else
       pi.drawstyle = PSTYLE_NORMAL;
 
-   V_DrawPatchInt(&pi, buffer);
+   V_DrawPatchInt(patchcol, &pi, buffer);
 }
 
-//
-// V_DrawPatchTranslatedLit
 //
 // haleyjd 01/22/12: Translated patch drawer that also supports a secondary
 // lighting remapping.
@@ -460,7 +466,8 @@ void V_DrawPatchTranslatedLit(int x, int y, VBuffer *buffer, patch_t *patch,
                               byte *outr, byte *lighttable, bool flipped)
 {
    PatchInfo pi;
-   
+   cb_patch_column_t patchcol{};
+
    pi.x = x;
    pi.y = y;
    pi.patch = patch;
@@ -472,30 +479,28 @@ void V_DrawPatchTranslatedLit(int x, int y, VBuffer *buffer, patch_t *patch,
       if(lighttable) // is it really lit?
       {
          pi.drawstyle = PSTYLE_TLATEDLIT;
-         V_SetPatchLight(lighttable);
+         patchcol.light = lighttable;
       }
       else
       {
          pi.drawstyle = PSTYLE_TLATED;   
       }
-      V_SetPatchColrng(outr);
+      patchcol.translation = outr;
    }
    else if(lighttable)
    {
       // still treat as translated; just use the lighttable
       pi.drawstyle = PSTYLE_TLATED;
-      V_SetPatchColrng(lighttable);
+      patchcol.translation = lighttable;
    }
    else
       pi.drawstyle = PSTYLE_NORMAL;
 
-   V_DrawPatchInt(&pi, buffer);
+   V_DrawPatchInt(patchcol, &pi, buffer);
 }
 
 
 
-//
-// V_DrawPatchTL
 //
 // Masks a column based masked pic to the screen with translucency.
 // Also translates colors from one palette range to another using
@@ -507,6 +512,7 @@ void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch,
                    byte *outr, int tl)
 {
    PatchInfo pi;
+   cb_patch_column_t patchcol{};
 
    // is invisible?
    if(tl == 0)
@@ -528,7 +534,7 @@ void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch,
    if(outr)
    {
       pi.drawstyle = PSTYLE_TLTRANSLUC;
-      V_SetPatchColrng(outr);
+      patchcol.translation = outr;
    }
    else
       pi.drawstyle = PSTYLE_TRANSLUC;
@@ -538,14 +544,13 @@ void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch,
       unsigned int fglevel, bglevel;
       fglevel = tl & ~0x3ff;
       bglevel = FRACUNIT - fglevel;
-      V_SetPatchTL(Col2RGB8[fglevel >> 10], Col2RGB8[bglevel >> 10]);
+      patchcol.fg2rgb = Col2RGB8[fglevel >> 10];
+      patchcol.bg2rgb = Col2RGB8[bglevel >> 10];
    }
 
-   V_DrawPatchInt(&pi, buffer);
+   V_DrawPatchInt(patchcol, &pi, buffer);
 }
 
-//
-// V_DrawPatchAdd
 //
 // Masks a column based masked pic to the screen with additive
 // translucency and optional color translation.
@@ -556,6 +561,7 @@ void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch,
                     byte *outr, int tl)
 {
    PatchInfo pi;
+   cb_patch_column_t patchcol{};
 
    // if translucency is off, fall back to translated
    if(!general_translucency)
@@ -573,7 +579,7 @@ void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch,
    if(outr)
    {
       pi.drawstyle = PSTYLE_TLADD;
-      V_SetPatchColrng(outr);
+      patchcol.translation = outr;
    }
    else
       pi.drawstyle = PSTYLE_ADD;
@@ -583,11 +589,11 @@ void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch,
       unsigned int fglevel, bglevel;
       fglevel = tl & ~0x3ff;    // normal foreground level
       bglevel = FRACUNIT;       // full background level
-      V_SetPatchTL(Col2RGB8_LessPrecision[fglevel >> 10], 
-                   Col2RGB8_LessPrecision[bglevel >> 10]);
+      patchcol.fg2rgb = Col2RGB8_LessPrecision[fglevel >> 10];
+      patchcol.bg2rgb = Col2RGB8_LessPrecision[bglevel >> 10];
    }
 
-   V_DrawPatchInt(&pi, buffer);
+   V_DrawPatchInt(patchcol, &pi, buffer);
 }
 
 // blackmap is used by V_DrawPatchShadowed; see below.
@@ -639,7 +645,7 @@ void V_DrawPatchShadowed(int x, int y, VBuffer *buffer, patch_t *patch,
 //
 // haleyjd 04/08/03: rewritten for ANYRES system -- see v_block.c
 // 
-void V_DrawBlock(int x, int y, VBuffer *buffer, int width, int height, byte *src)
+void V_DrawBlock(int x, int y, VBuffer *buffer, int width, int height, const byte *src)
 {
    buffer->BlockDrawer(x, y, buffer, width, height, src);
 }
@@ -652,7 +658,7 @@ void V_DrawBlock(int x, int y, VBuffer *buffer, int width, int height, byte *src
 // haleyjd 06/29/08
 // 
 void V_DrawMaskedBlockTR(int x, int y, VBuffer *buffer, int width, int height,
-                         int srcpitch, byte *src, byte *cmap)
+                         int srcpitch, const byte *src, byte *cmap)
 {
    buffer->MaskedBlockDrawer(x, y, buffer, width, height, srcpitch, src, cmap);
 }
@@ -663,7 +669,7 @@ void V_DrawMaskedBlockTR(int x, int y, VBuffer *buffer, int width, int height,
 // haleyjd 05/18/09: Convenience routine to do V_DrawBlock but with
 // the assumption that the graphic is fullscreen, 320x200.
 //
-void V_DrawBlockFS(VBuffer *buffer, byte *src)
+void V_DrawBlockFS(VBuffer *buffer, const byte *src)
 {
    buffer->BlockDrawer(0, 0, buffer, SCREENWIDTH, SCREENHEIGHT, src);
 }
@@ -687,8 +693,8 @@ void V_DrawPatchFS(VBuffer *buffer, patch_t *patch)
 //
 void V_DrawFSBackground(VBuffer *dest, int lumpnum)
 {
-   void    *source = NULL;
-   patch_t *patch  = NULL;
+   void    *source = nullptr;
+   patch_t *patch  = nullptr;
 
    if(lumpnum < 0)
       return;
@@ -701,15 +707,15 @@ void V_DrawFSBackground(VBuffer *dest, int lumpnum)
    case 4160:
    case 8192:
       source = wGlobalDir.cacheLumpNum(lumpnum, PU_CACHE);
-      V_DrawBackgroundCached((byte *)source, dest);
+      V_DrawBackgroundCached(static_cast<const byte *>(source), dest);
       break;
    case 64000: // 320x200 linear
       source = wGlobalDir.cacheLumpNum(lumpnum, PU_CACHE);
-      V_DrawBlockFS(dest, (byte *)source);
+      V_DrawBlockFS(dest, static_cast<const byte *>(source));
       break;
    case 76800: // 320x240 linear
       source = wGlobalDir.cacheLumpNum(lumpnum, PU_CACHE);
-      V_FillBuffer(dest, (byte *)source, 320, 240);
+      V_FillBuffer(dest, static_cast<const byte *>(source), 320, 240);
       break;
    default:    // anything else is treated like a patch (let god sort it out)
       patch = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_CACHE);
@@ -781,10 +787,10 @@ static unsigned int Col2RGB8_2[63][256];
 
 #define MAKECOLOR(a) (((a)<<3)|((a)>>2))
 
-typedef struct tpalcol_s
+struct tpalcol_t
 {
    unsigned int r, g, b;
-} tpalcol_t;
+};
 
 void V_InitFlexTranTable(const byte *palette)
 {
@@ -795,7 +801,7 @@ void V_InitFlexTranTable(const byte *palette)
    // mark that we've initialized the flex tran table
    flexTranInit = true;
    
-   tempRGBpal = (tpalcol_t *)(Z_Malloc(256*sizeof(*tempRGBpal), PU_STATIC, NULL));
+   tempRGBpal = emalloctag(tpalcol_t *, 256*sizeof(*tempRGBpal), PU_STATIC, nullptr);
    
    for(i = 0, palRover = palette; i < 256; i++, palRover += 3)
    {

@@ -38,6 +38,9 @@ struct intercept_t;
 struct player_t;  // ioanch 20160131: for use
 class  Mobj;
 
+static constexpr fixed_t DEFAULT_AIM_SLOPE = 100 * FRACUNIT / 160;
+static constexpr int AUTOAIM_PITCH_DEGREES = 32;
+
 struct camsightparams_t
 {
    fixed_t cx;       // camera (or "looker") coordinates

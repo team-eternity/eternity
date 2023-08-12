@@ -56,19 +56,19 @@
 // Player Class and Skin Options
 //
 
-#define ITEM_SKINSND_PAIN    "pain"
-#define ITEM_SKINSND_DIEHI   "diehi"
-#define ITEM_SKINSND_OOF     "oof"
-#define ITEM_SKINSND_GIB     "gib"
-#define ITEM_SKINSND_PUNCH   "punch"
-#define ITEM_SKINSND_RADIO   "radio"
-#define ITEM_SKINSND_DIE     "die"
-#define ITEM_SKINSND_FALL    "fall"
-#define ITEM_SKINSND_FEET    "feet"
-#define ITEM_SKINSND_FALLHIT "fallhit"
-#define ITEM_SKINSND_PLWDTH  "plwdth"
-#define ITEM_SKINSND_NOWAY   "noway"
-#define ITEM_SKINSND_JUMP    "jump"
+constexpr const char ITEM_SKINSND_PAIN[]    = "pain";
+constexpr const char ITEM_SKINSND_DIEHI[]   = "diehi";
+constexpr const char ITEM_SKINSND_OOF[]     = "oof";
+constexpr const char ITEM_SKINSND_GIB[]     = "gib";
+constexpr const char ITEM_SKINSND_PUNCH[]   = "punch";
+constexpr const char ITEM_SKINSND_RADIO[]   = "radio";
+constexpr const char ITEM_SKINSND_DIE[]     = "die";
+constexpr const char ITEM_SKINSND_FALL[]    = "fall";
+constexpr const char ITEM_SKINSND_FEET[]    = "feet";
+constexpr const char ITEM_SKINSND_FALLHIT[] = "fallhit";
+constexpr const char ITEM_SKINSND_PLWDTH[]  = "plwdth";
+constexpr const char ITEM_SKINSND_NOWAY[]   = "noway";
+constexpr const char ITEM_SKINSND_JUMP[]    = "jump";
 
 static cfg_opt_t pc_skin_sound_opts[] =
 {
@@ -88,9 +88,9 @@ static cfg_opt_t pc_skin_sound_opts[] =
    CFG_END()
 };
 
-#define ITEM_SKIN_SPRITE  "sprite"
-#define ITEM_SKIN_FACES   "faces"
-#define ITEM_SKIN_SOUNDS  "sounds"
+constexpr const char ITEM_SKIN_SPRITE[] = "sprite";
+constexpr const char ITEM_SKIN_FACES[]  = "faces";
+constexpr const char ITEM_SKIN_SOUNDS[] = "sounds";
 
 cfg_opt_t edf_skin_opts[] =
 {
@@ -100,40 +100,41 @@ cfg_opt_t edf_skin_opts[] =
    CFG_END()
 };
 
-#define ITEM_PCLASS_DEFAULT        "default"
-#define ITEM_PCLASS_DEFAULTSKIN    "defaultskin"
-#define ITEM_PCLASS_THINGTYPE      "thingtype"
-#define ITEM_PCLASS_ALTATTACK      "altattackstate"
-#define ITEM_PCLASS_INITIALHEALTH  "initialhealth"
-#define ITEM_PCLASS_MAXHEALTH      "maxhealth"
-#define ITEM_PCLASS_SUPERHEALTH    "superhealth"
-#define ITEM_PCLASS_VIEWHEIGHT     "viewheight"
-#define ITEM_PCLASS_SPEEDWALK      "speedwalk"
-#define ITEM_PCLASS_SPEEDRUN       "speedrun"
-#define ITEM_PCLASS_SPEEDSTRAFE    "speedstrafe"
-#define ITEM_PCLASS_SPEEDSTRAFERUN "speedstraferun"
-#define ITEM_PCLASS_SPEEDTURN      "speedturn"
-#define ITEM_PCLASS_SPEEDTURNFAST  "speedturnfast"
-#define ITEM_PCLASS_SPEEDTURNSLOW  "speedturnslow"
-#define ITEM_PCLASS_SPEEDLOOKSLOW  "speedlookslow"
-#define ITEM_PCLASS_SPEEDLOOKFAST  "speedlookfast"
-#define ITEM_PCLASS_SPEEDJUMP      "speedjump"
-#define ITEM_PCLASS_REBORNITEM     "rebornitem"
-#define ITEM_PCLASS_WEAPONSLOT     "weaponslot"
-#define ITEM_PCLASS_ALWAYSJUMP     "alwaysjump"
+constexpr const char ITEM_PCLASS_DEFAULT[]        = "default";
+constexpr const char ITEM_PCLASS_DEFAULTSKIN[]    = "defaultskin";
+constexpr const char ITEM_PCLASS_THINGTYPE[]      = "thingtype";
+constexpr const char ITEM_PCLASS_ALTATTACK[]      = "altattackstate";
+constexpr const char ITEM_PCLASS_INITIALHEALTH[]  = "initialhealth";
+constexpr const char ITEM_PCLASS_MAXHEALTH[]      = "maxhealth";
+constexpr const char ITEM_PCLASS_SUPERHEALTH[]    = "superhealth";
+constexpr const char ITEM_PCLASS_VIEWHEIGHT[]     = "viewheight";
+constexpr const char ITEM_PCLASS_SPEEDWALK[]      = "speedwalk";
+constexpr const char ITEM_PCLASS_SPEEDRUN[]       = "speedrun";
+constexpr const char ITEM_PCLASS_SPEEDSTRAFE[]    = "speedstrafe";
+constexpr const char ITEM_PCLASS_SPEEDSTRAFERUN[] = "speedstraferun";
+constexpr const char ITEM_PCLASS_SPEEDTURN[]      = "speedturn";
+constexpr const char ITEM_PCLASS_SPEEDTURNFAST[]  = "speedturnfast";
+constexpr const char ITEM_PCLASS_SPEEDTURNSLOW[]  = "speedturnslow";
+constexpr const char ITEM_PCLASS_SPEEDLOOKSLOW[]  = "speedlookslow";
+constexpr const char ITEM_PCLASS_SPEEDLOOKFAST[]  = "speedlookfast";
+constexpr const char ITEM_PCLASS_SPEEDJUMP[]      = "speedjump";
+constexpr const char ITEM_PCLASS_CLRREBORNITEMS[] = "clearrebornitems";
+constexpr const char ITEM_PCLASS_REBORNITEM[]     = "rebornitem";
+constexpr const char ITEM_PCLASS_WEAPONSLOT[]     = "weaponslot";
+constexpr const char ITEM_PCLASS_ALWAYSJUMP[]     = "alwaysjump";
 
-#define ITEM_REBORN_NAME   "name"
-#define ITEM_REBORN_AMOUNT "amount"
+constexpr const char ITEM_REBORN_NAME[]   = "name";
+constexpr const char ITEM_REBORN_AMOUNT[] = "amount";
 
-#define ITEM_WPNSLOT_WPNS  "weapons"
-#define ITEM_WPNSLOT_CLEAR "clear"
+constexpr const char ITEM_WPNSLOT_WPNS[]  = "weapons";
+constexpr const char ITEM_WPNSLOT_CLEAR[] = "clear";
 
-#define ITEM_DELTA_NAME "name"
+constexpr const char ITEM_DELTA_NAME[] = "name";
 
 static cfg_opt_t wpnslot_opts[] =
 {
-   CFG_STR(ITEM_WPNSLOT_WPNS,   0, CFGF_LIST),
-   CFG_FLAG(ITEM_WPNSLOT_CLEAR, 0, CFGF_NONE),
+   CFG_STR(ITEM_WPNSLOT_WPNS,   nullptr, CFGF_LIST),
+   CFG_FLAG(ITEM_WPNSLOT_CLEAR, 0,       CFGF_NONE),
    CFG_END()
 };
 
@@ -145,29 +146,30 @@ static cfg_opt_t reborn_opts[] =
 };
 
 #define PLAYERCLASS_FIELDS \
-   CFG_STR(ITEM_PCLASS_DEFAULTSKIN,   NULL, CFGF_NONE),  \
-   CFG_STR(ITEM_PCLASS_THINGTYPE,     NULL, CFGF_NONE),  \
-   CFG_STR(ITEM_PCLASS_ALTATTACK,     NULL, CFGF_NONE),  \
-   CFG_INT(ITEM_PCLASS_INITIALHEALTH, 100,  CFGF_NONE),  \
-   CFG_INT(ITEM_PCLASS_MAXHEALTH,     100,  CFGF_NONE),  \
-   CFG_INT(ITEM_PCLASS_SUPERHEALTH,   100,  CFGF_NONE),  \
-   CFG_FLOAT(ITEM_PCLASS_VIEWHEIGHT,  41.0, CFGF_NONE),  \
-                                                         \
-   /* speeds */                                          \
-   CFG_INT(ITEM_PCLASS_SPEEDWALK,      0x19, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDRUN,       0x32, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDSTRAFE,    0x18, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDSTRAFERUN, 0x28, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDTURN,       640, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDTURNFAST,  1280, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDTURNSLOW,   320, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDLOOKSLOW,   450, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDLOOKFAST,   512, CFGF_NONE), \
-   CFG_FLOAT(ITEM_PCLASS_SPEEDJUMP,     8.0, CFGF_NONE), \
-                                                         \
-   CFG_BOOL(ITEM_PCLASS_DEFAULT, false, CFGF_NONE),      \
-                                                         \
-   /* reborn inventory items */                          \
+   CFG_STR(ITEM_PCLASS_DEFAULTSKIN,   nullptr, CFGF_NONE),  \
+   CFG_STR(ITEM_PCLASS_THINGTYPE,     nullptr, CFGF_NONE),  \
+   CFG_STR(ITEM_PCLASS_ALTATTACK,     nullptr, CFGF_NONE),  \
+   CFG_INT(ITEM_PCLASS_INITIALHEALTH, 100,     CFGF_NONE),  \
+   CFG_INT(ITEM_PCLASS_MAXHEALTH,     100,     CFGF_NONE),  \
+   CFG_INT(ITEM_PCLASS_SUPERHEALTH,   100,     CFGF_NONE),  \
+   CFG_FLOAT(ITEM_PCLASS_VIEWHEIGHT,  41.0,    CFGF_NONE),  \
+                                                            \
+   /* speeds */                                             \
+   CFG_INT(ITEM_PCLASS_SPEEDWALK,      0x19,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDRUN,       0x32,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDSTRAFE,    0x18,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDSTRAFERUN, 0x28,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDTURN,       640,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDTURNFAST,  1280,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDTURNSLOW,   320,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDLOOKSLOW,   450,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDLOOKFAST,   512,    CFGF_NONE), \
+   CFG_FLOAT(ITEM_PCLASS_SPEEDJUMP,     8.0,    CFGF_NONE), \
+                                                            \
+   CFG_BOOL(ITEM_PCLASS_DEFAULT, false, CFGF_NONE),         \
+                                                            \
+   /* reborn inventory items */                             \
+   CFG_FLAG(ITEM_PCLASS_CLRREBORNITEMS, 0,   CFGF_NONE),    \
    CFG_MVPROP(ITEM_PCLASS_REBORNITEM, reborn_opts,  CFGF_MULTI|CFGF_NOCASE), \
                                                                              \
     /* weapon slots */                                                       \
@@ -183,7 +185,7 @@ cfg_opt_t edf_pclass_opts[] =
 
 cfg_opt_t edf_pdelta_opts[] =
 {
-   CFG_STR(ITEM_DELTA_NAME, 0, CFGF_NONE),
+   CFG_STR(ITEM_DELTA_NAME, nullptr, CFGF_NONE),
    PLAYERCLASS_FIELDS
 };
 
@@ -200,7 +202,7 @@ skin_t *edf_skins[NUMEDFSKINCHAINS];
 
 // Player classes
 
-#define NUMEDFPCLASSCHAINS 17
+constexpr int NUMEDFPCLASSCHAINS = 17;
 
 playerclass_t *edf_player_classes[NUMEDFPCLASSCHAINS];
 
@@ -250,17 +252,19 @@ static skin_t *E_EDFSkinForName(const char *name)
    return skin;
 }
 
-#define IS_SET(sec, name) (def || cfg_size(sec, name) > 0)
-
 //
 // E_DoSkinSound
 //
 // Sets an EDF skin sound name.
 //
-static void E_DoSkinSound(cfg_t *sndsec, bool def, skin_t *skin, int idx,
+static void E_DoSkinSound(cfg_t *const sndsec, const bool def, skin_t *skin, int idx,
                           const char *itemname)
 {
-   if(IS_SET(sndsec, itemname))
+   const auto IS_SET = [sndsec, def](const char *const name) -> bool {
+      return def || cfg_size(sndsec, name) > 0;
+   };
+
+   if(IS_SET(itemname))
       E_ReplaceString(skin->sounds[idx], cfg_getstrdup(sndsec, itemname));
 }
 
@@ -289,11 +293,15 @@ static const char *skin_sound_names[NUMSKINSOUNDS] =
 //
 // Creates and adds a new EDF player skin
 //
-static void E_CreatePlayerSkin(cfg_t *skinsec)
+static void E_CreatePlayerSkin(cfg_t *const skinsec)
 {
    skin_t *newSkin;
    const char *tempstr;
    bool def; // if defining true; if modifying, false
+
+   const auto IS_SET = [skinsec, &def](const char *const name) -> bool {
+      return def || cfg_size(skinsec, name) > 0;
+   };
 
    // skin name is section title
    tempstr = cfg_title(skinsec);
@@ -329,7 +337,7 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
    }
 
    // set sprite information
-   if(IS_SET(skinsec, ITEM_SKIN_SPRITE))
+   if(IS_SET(ITEM_SKIN_SPRITE))
    {
       tempstr = cfg_getstr(skinsec, ITEM_SKIN_SPRITE);
 
@@ -349,12 +357,12 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
    }
 
    // set faces
-   if(IS_SET(skinsec, ITEM_SKIN_FACES))
+   if(IS_SET(ITEM_SKIN_FACES))
    {
       E_ReplaceString(newSkin->facename, cfg_getstrdup(skinsec, ITEM_SKIN_FACES));
 
       // faces have been reset, so clear the face array pointer
-      newSkin->faces = NULL; // handled by skin code
+      newSkin->faces = nullptr; // handled by skin code
    }
 
    // set sounds if specified
@@ -408,7 +416,7 @@ static void E_AddPlayerClass(playerclass_t *pc)
 //
 // E_PlayerClassForName
 //
-// Returns a player class given a name, or NULL if no such class exists.
+// Returns a player class given a name, or nullptr if no such class exists.
 //
 playerclass_t *E_PlayerClassForName(const char *name)
 {
@@ -422,8 +430,6 @@ playerclass_t *E_PlayerClassForName(const char *name)
 }
 
 //
-// E_freeRebornItems
-//
 // Free a player class's default inventory when recreating it.
 //
 static void E_freeRebornItems(playerclass_t *pc)
@@ -436,13 +442,11 @@ static void E_freeRebornItems(playerclass_t *pc)
             efree(pc->rebornitems[i].itemname);
       }
       efree(pc->rebornitems);
-      pc->rebornitems    = NULL;
+      pc->rebornitems    = nullptr;
       pc->numrebornitems = 0;
    }
 }
 
-//
-// E_processRebornItem
 //
 // Process a single rebornitem for the player's default inventory.
 //
@@ -546,11 +550,15 @@ static void E_processWeaponSlot(cfg_t *slot, playerclass_t *pc)
 //
 // Processes a single EDF player class section.
 //
-static void E_processPlayerClass(cfg_t *pcsec, bool delta)
+static void E_processPlayerClass(cfg_t *const pcsec, bool delta)
 {
    const char *tempstr;
    playerclass_t *pc;
    bool def;
+
+   const auto IS_SET = [pcsec, &def](const char *const name) -> bool {
+      return def || cfg_size(pcsec, name) > 0;
+   };
 
    if(!delta)
    {
@@ -596,7 +604,7 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
    }
 
    // default skin name
-   if(IS_SET(pcsec, ITEM_PCLASS_DEFAULTSKIN))
+   if(IS_SET(ITEM_PCLASS_DEFAULTSKIN))
    {
       tempstr = cfg_getstr(pcsec, ITEM_PCLASS_DEFAULTSKIN);
 
@@ -615,7 +623,7 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
       }
    }
 
-   if(IS_SET(pcsec, ITEM_PCLASS_ALWAYSJUMP))
+   if(IS_SET(ITEM_PCLASS_ALWAYSJUMP))
    {
       if(cfg_getflag(pcsec, ITEM_PCLASS_ALWAYSJUMP))
          pc->flags |= PCF_ALWAYSJUMP;
@@ -624,7 +632,7 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
    }
 
    // mobj type
-   if(IS_SET(pcsec, ITEM_PCLASS_THINGTYPE))
+   if(IS_SET(ITEM_PCLASS_THINGTYPE))
    {
       tempstr = cfg_getstr(pcsec, ITEM_PCLASS_THINGTYPE);
 
@@ -640,7 +648,7 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
    }
 
    // altattack state
-   if(IS_SET(pcsec, ITEM_PCLASS_ALTATTACK))
+   if(IS_SET(ITEM_PCLASS_ALTATTACK))
    {
       statenum_t statenum = 0;
       tempstr = cfg_getstr(pcsec, ITEM_PCLASS_ALTATTACK);
@@ -657,13 +665,13 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
    }
 
    // initial health
-   if(IS_SET(pcsec, ITEM_PCLASS_INITIALHEALTH))
+   if(IS_SET(ITEM_PCLASS_INITIALHEALTH))
       pc->initialhealth = cfg_getint(pcsec, ITEM_PCLASS_INITIALHEALTH);
    // max health
-   if(IS_SET(pcsec, ITEM_PCLASS_MAXHEALTH))
+   if(IS_SET(ITEM_PCLASS_MAXHEALTH))
       pc->maxhealth = cfg_getint(pcsec, ITEM_PCLASS_MAXHEALTH);
    // supercharge health
-   if(IS_SET(pcsec, ITEM_PCLASS_SUPERHEALTH))
+   if(IS_SET(ITEM_PCLASS_SUPERHEALTH))
    {
       // Use max health if newly defined but unspecified
       if(def && !cfg_size(pcsec, ITEM_PCLASS_SUPERHEALTH))
@@ -672,39 +680,39 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
          pc->superhealth = cfg_getint(pcsec, ITEM_PCLASS_SUPERHEALTH);
    }
    // view height
-   if(IS_SET(pcsec, ITEM_PCLASS_VIEWHEIGHT))
+   if(IS_SET(ITEM_PCLASS_VIEWHEIGHT))
       pc->viewheight = M_DoubleToFixed(cfg_getfloat(pcsec, ITEM_PCLASS_VIEWHEIGHT));
 
    // process player speed fields
 
-   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDWALK))
+   if(IS_SET(ITEM_PCLASS_SPEEDWALK))
       pc->forwardmove[0] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDWALK);
 
-   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDRUN))
+   if(IS_SET(ITEM_PCLASS_SPEEDRUN))
       pc->forwardmove[1] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDRUN);
 
-   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDSTRAFE))
+   if(IS_SET(ITEM_PCLASS_SPEEDSTRAFE))
       pc->sidemove[0] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDSTRAFE);
 
-   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDSTRAFERUN))
+   if(IS_SET(ITEM_PCLASS_SPEEDSTRAFERUN))
       pc->sidemove[1] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDSTRAFERUN);
 
-   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDTURN))
+   if(IS_SET(ITEM_PCLASS_SPEEDTURN))
       pc->angleturn[0] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDTURN);
 
-   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDTURNFAST))
+   if(IS_SET(ITEM_PCLASS_SPEEDTURNFAST))
       pc->angleturn[1] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDTURNFAST);
 
-   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDTURNSLOW))
+   if(IS_SET(ITEM_PCLASS_SPEEDTURNSLOW))
       pc->angleturn[2] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDTURNSLOW);
 
-   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDLOOKSLOW))
+   if(IS_SET(ITEM_PCLASS_SPEEDLOOKSLOW))
       pc->lookspeed[0] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDLOOKSLOW);
 
-   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDLOOKFAST))
+   if(IS_SET(ITEM_PCLASS_SPEEDLOOKFAST))
       pc->lookspeed[1] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDLOOKFAST);
 
-   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDJUMP))
+   if(IS_SET(ITEM_PCLASS_SPEEDJUMP))
       pc->jumpspeed = M_DoubleToFixed(cfg_getfloat(pcsec, ITEM_PCLASS_SPEEDJUMP));
 
    // copy speeds to original speeds
@@ -712,7 +720,7 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
    memcpy(pc->osidemove,    pc->sidemove,    2 * sizeof(fixed_t));
 
    // default flag
-   if(IS_SET(pcsec, ITEM_PCLASS_DEFAULT))
+   if(IS_SET(ITEM_PCLASS_DEFAULT))
    {
       bool tmp = cfg_getbool(pcsec, ITEM_PCLASS_DEFAULT);
 
@@ -722,12 +730,17 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
          GameModeInfo->defPClassName = pc->mnemonic;
    }
 
-   unsigned int numitems;
-   if((numitems = cfg_size(pcsec, ITEM_PCLASS_REBORNITEM)) > 0)
-   {
+   if(IS_SET(ITEM_PCLASS_CLRREBORNITEMS) && cfg_getflag(pcsec, ITEM_PCLASS_CLRREBORNITEMS))
       E_freeRebornItems(pc);
-      pc->numrebornitems = numitems;
-      pc->rebornitems    = estructalloc(reborninventory_t, numitems);
+
+   if(const unsigned int numitems = cfg_size(pcsec, ITEM_PCLASS_REBORNITEM); numitems > 0)
+   {
+      pc->numrebornitems += numitems;
+      pc->rebornitems = erealloc(
+         reborninventory_t *,
+         pc->rebornitems,
+         pc->numrebornitems * sizeof(reborninventory_t)
+      );
 
       for(unsigned int i = 0; i < numitems; i++)
          E_processRebornItem(cfg_getnmvprop(pcsec, ITEM_PCLASS_REBORNITEM, i), pc, i);
@@ -798,7 +811,7 @@ void E_ProcessPlayerDeltas(cfg_t *cfg)
 //
 void E_VerifyDefaultPlayerClass()
 {
-   if(E_PlayerClassForName(GameModeInfo->defPClassName) == NULL)
+   if(E_PlayerClassForName(GameModeInfo->defPClassName) == nullptr)
    {
       I_Error("E_VerifyDefaultPlayerClass: default playerclass '%s' "
               "does not exist!\n",
@@ -809,30 +822,30 @@ void E_VerifyDefaultPlayerClass()
 //
 // Recursively populate a weapon slot with data from a WeaponSlotTree
 //
-static void E_populateWeaponSlot(BDListItem<weaponslot_t> &slotlist, WeaponSlotNode *node,
+static void E_populateWeaponSlot(BDListItem<weaponslot_t> &slotlist, WeaponSlotNode &node,
                                  unsigned int &data)
 {
-   if(node->left)
-      E_populateWeaponSlot(slotlist, node->left, data);
+   if(node.left)
+      E_populateWeaponSlot(slotlist, *node.left, data);
 
    weaponslot_t *curslot = estructalloc(weaponslot_t, 1);
    curslot->slotindex = slotlist.bdObject->slotindex;
    curslot->links.bdData = data;
-   curslot->weapon = node->object;
+   curslot->weapon = node.object;
    curslot->links.insert(curslot, slotlist);
    data++;
 
-   if(node->next)
-      E_populateWeaponSlot(slotlist, node->next, data);
+   if(node.next)
+      E_populateWeaponSlot(slotlist, *node.next, data);
 
-   if(node->right)
-      E_populateWeaponSlot(slotlist, node->right, data);
+   if(node.right)
+      E_populateWeaponSlot(slotlist, *node.right, data);
 }
 
 //
 // Creates a weapon slot from a given tree, then assigns it to the appropriate pclass slot
 //
-static inline void E_createWeaponSlotFromTree(playerclass_t *pc, int slotindex, WeaponSlotTree *slottree)
+static inline void E_createWeaponSlotFromTree(playerclass_t *pc, int slotindex, WeaponSlotTree &slottree)
 {
    weaponslot_t *initslot = estructalloc(weaponslot_t, 1);
    initslot->slotindex = slotindex;
@@ -841,14 +854,14 @@ static inline void E_createWeaponSlotFromTree(playerclass_t *pc, int slotindex, 
    slotlist.bdObject = initslot;
 
    unsigned int temp = 0;
-   E_populateWeaponSlot(slotlist, slottree->root, temp);
+   E_populateWeaponSlot(slotlist, *slottree.root, temp);
    pc->weaponslots[slotindex] = initslot;
 }
 
 //
 // Recursively place all weapons from the global slot tree into the playerclass weaponslot (in-order traversal)
 //
-static void E_addGlobalWeaponsToSlot(WeaponSlotTree *slot, WeaponSlotNode *node, bool *weaponinslot)
+static void E_addGlobalWeaponsToSlot(WeaponSlotTree *&slot, WeaponSlotNode *node, bool *weaponinslot)
 {
    if(node == nullptr)
       return;
@@ -938,7 +951,7 @@ void E_ProcessFinalWeaponSlots()
             if(pclassslottree != nullptr)
             {
                E_freeWeaponSlot(chain, i);
-               E_createWeaponSlotFromTree(chain, i, pclassslottree);
+               E_createWeaponSlotFromTree(chain, i, *pclassslottree);
                delete pclassslottree;
             }
             else if(chain->weaponslots[i] != nullptr &&
@@ -1055,7 +1068,7 @@ void E_ApplyTurbo(int ts)
 bool E_CanJump(const playerclass_t &pclass)
 {
    return demo_version >= 335 && pclass.jumpspeed > 0 &&
-   (pclass.flags & PCF_ALWAYSJUMP || (!comp[comp_jump] && !LevelInfo.disableJump));
+   (pclass.flags & PCF_ALWAYSJUMP || (!getComp(comp_jump) && !LevelInfo.disableJump));
 }
 bool E_MayJumpIfOverriden(const playerclass_t &pclass)
 {

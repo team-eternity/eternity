@@ -33,11 +33,13 @@
 #include "doomstat.h"
 #include "e_fonts.h"
 #include "e_string.h"
+#include "f_finale.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "m_qstr.h"
 #include "m_random.h"
 #include "m_swap.h"
+#include "m_utils.h"
 #include "p_info.h"
 #include "p_mobj.h"
 #include "p_tick.h"
@@ -116,6 +118,12 @@ extern char gamemapname[9];
 #define DM_VICTIMSX    5
 #define DM_VICTIMSY   50
 
+enum
+{
+   NUM_OVERWORLD_EPISODES = 3,
+   NUM_LEVELS_PER_EPISODE = 9,
+};
+
 // These animation variables, structures, etc. are used for the
 // DOOM/Ultimate DOOM intermission screen animations.  This is
 // totally different from any sprite or texture/flat animations
@@ -126,56 +134,56 @@ typedef enum
    ANIM_LEVEL     // continuous
 } animenum_t;
 
-typedef struct point_s
+struct point_t
 {
    int   x;       // x/y coordinate pair structure
    int   y;
-} point_t;
+};
 
 //
 // Animation.
 // There is another anim_t used in p_spec.
 //
-typedef struct anim_s
+struct anim_t
 {
    animenum_t  type;
-   
+
    // period in tics between animations
    int   period;
-   
+
    // number of animation frames
    int   nanims;
-   
+
    // location of animation
    point_t loc;
-   
+
    // ALWAYS: n/a,
    // RANDOM: period deviation (<256),
    // LEVEL: level
    int   data1;
-   
+
    // ALWAYS: n/a,
    // RANDOM: random base period,
    // LEVEL: n/a
-   int   data2; 
-   
+   int   data2;
+
    // actual graphics for frames of animations
-   patch_t*  p[3]; 
-   
+   patch_t*  p[3];
+
    // following must be initialized to zero before use!
-   
+
    // next value of intertime (used in conjunction with period)
    int   nexttic;
-   
+
    // last drawn animation frame
    int   lastdrawn;
-   
+
    // next frame number to animate
    int   ctr;
-   
+
    // used by RANDOM and LEVEL when animating
-   int   state;  
-} anim_t;
+   int   state;
+};
 
 static point_t lnodes[NUMEPISODES][NUMMAPS] =
 {
@@ -411,6 +419,14 @@ static void WI_OverlayBackground();
 // CODE
 //
 
+//
+// Helper to know if an episode index is for an overworld map
+//
+inline static bool overworld(int epid)
+{
+   return epid >= 0 && epid < NUM_OVERWORLD_EPISODES;
+}
+
 // ====================================================================
 // WI_drawLF
 // Purpose: Draw the "Finished" level name before showing stats
@@ -420,7 +436,7 @@ static void WI_OverlayBackground();
 static void WI_drawLF()
 {
    int y = WI_TITLEY;
-   patch_t *patch = NULL;
+   patch_t *patch = nullptr;
    
    // haleyjd 07/08/04: fixed to work for any map
    // haleyjd 03/27/05: added string functionality
@@ -458,6 +474,23 @@ static void WI_drawLF()
       Z_ChangeTag(patch, PU_CACHE);
 }
 
+//
+// Check if it's finale
+//
+inline static bool WI_isFinale()
+{
+   if(wbs->gotosecret)
+   {
+      return !LevelInfo.finaleNormalOnly && (LevelInfo.endOfGame ||
+                                             (LevelInfo.finaleSecretType != FINALE_UNSPECIFIED &&
+                                              LevelInfo.finaleSecretType != FINALE_TEXT) ||
+                                             (LevelInfo.finaleSecretType != FINALE_TEXT &&
+                                              LevelInfo.finaleType != FINALE_TEXT));
+   }
+   return !LevelInfo.finaleSecretOnly && (LevelInfo.endOfGame ||
+                                          LevelInfo.finaleType != FINALE_TEXT);
+}
+
 
 // ====================================================================
 // WI_drawEL
@@ -467,8 +500,11 @@ static void WI_drawLF()
 //
 static void WI_drawEL()
 {
+   if(WI_isFinale())
+      return;
+
    int y = WI_TITLEY;
-   patch_t *patch = NULL;
+   patch_t *patch = nullptr;
    bool loadedInfoPatch = false;
 
    // haleyjd 10/24/10: Don't draw "Entering" when in Master Levels mode
@@ -497,7 +533,7 @@ static void WI_drawEL()
       loadedInfoPatch = true;
    }
 
-   // if no MapInfo patch was loaded, try the default (may also be NULL)
+   // if no MapInfo patch was loaded, try the default (may also be nullptr)
    if(!patch)
       patch = wi_lname_next;
 
@@ -548,12 +584,17 @@ static void WI_drawOnLnode(int n, patch_t *c[], int numpatches)
    int  right;
    int  bottom;
    bool fits = false;
+
+   if(n < 0 || n >= NUM_LEVELS_PER_EPISODE)
+      return;
+
+   int epsd = state == StatCount ? wbs->epsd : wbs->nextEpisode;
    
    i = 0;
    do
    {
-      left   = lnodes[wbs->epsd][n].x - c[i]->leftoffset;
-      top    = lnodes[wbs->epsd][n].y - c[i]->topoffset;
+      left   = lnodes[epsd][n].x - c[i]->leftoffset;
+      top    = lnodes[epsd][n].y - c[i]->topoffset;
       right  = left + c[i]->width;
       bottom = top  + c[i]->height;
       
@@ -568,10 +609,7 @@ static void WI_drawOnLnode(int n, patch_t *c[], int numpatches)
    while(!fits && i != numpatches); // haleyjd: bug fix
 
    if(fits && i < numpatches) // haleyjd: bug fix
-   {
-      V_DrawPatch(lnodes[wbs->epsd][n].x, lnodes[wbs->epsd][n].y,
-                  &subscreen43, c[i]);
-   }
+      V_DrawPatch(lnodes[epsd][n].x, lnodes[epsd][n].y, &subscreen43, c[i]);
    else
    {
       // haleyjd: changed printf to C_Printf
@@ -591,19 +629,21 @@ static void WI_initAnimatedBack(bool entering)
    int   i;
    anim_t* a;
 
-   if(wbs->li_lastexitpic && *wbs->li_lastexitpic)
+   if(estrnonempty(wbs->li_lastexitpic))
       return;
-   if(wbs->li_nextenterpic && *wbs->li_nextenterpic && entering)
+   if(estrnonempty(wbs->li_nextenterpic) && entering)
       return;
    if(GameModeInfo->id == commercial)  // no animation for DOOM2
       return;
 
-   if(wbs->epsd > 2)
+   int epsd = !entering ? wbs->epsd : wbs->nextEpisode;
+
+   if(!overworld(epsd))
       return;
 
-   for(i = 0; i < NUMANIMS[wbs->epsd]; i++)
+   for(i = 0; i < NUMANIMS[epsd]; i++)
    {
-      a = &anims[wbs->epsd][i];
+      a = &anims[epsd][i];
       
       // init variables
       a->ctr = -1;
@@ -636,19 +676,21 @@ static void WI_updateAnimatedBack()
    int     i;
    anim_t *a;
 
-   if(wbs->li_lastexitpic && *wbs->li_lastexitpic)
+   if(estrnonempty(wbs->li_lastexitpic))
       return;
-   if(wbs->li_nextenterpic && *wbs->li_nextenterpic && state != StatCount)
+   if(estrnonempty(wbs->li_nextenterpic) && state != StatCount)
       return;
    if(GameModeInfo->id == commercial)
       return;
 
-   if(wbs->epsd > 2)
+   int epsd = state == StatCount ? wbs->epsd : wbs->nextEpisode;
+
+   if(!overworld(epsd))
       return;
 
-   for(i = 0; i < NUMANIMS[wbs->epsd]; i++)
+   for(i = 0; i < NUMANIMS[epsd]; i++)
    {
-      a = &anims[wbs->epsd][i];
+      a = &anims[epsd][i];
       
       if(intertime == a->nexttic)
       {
@@ -699,19 +741,20 @@ static void WI_drawAnimatedBack()
    int     i;
    anim_t *a;
 
-   if(wbs->li_lastexitpic && *wbs->li_lastexitpic)
+   if(estrnonempty(wbs->li_lastexitpic))
       return;
-   if(wbs->li_nextenterpic && *wbs->li_nextenterpic && state != StatCount)
+   if(estrnonempty(wbs->li_nextenterpic) && state != StatCount)
       return;
    if(GameModeInfo->id == commercial) //jff 4/25/98 Someone forgot commercial an enum
       return;
 
-   if(wbs->epsd > 2)
+   int epsd = state == StatCount ? wbs->epsd : wbs->nextEpisode;
+   if(!overworld(epsd))
       return;
    
-   for(i = 0; i < NUMANIMS[wbs->epsd]; i++)
+   for(i = 0; i < NUMANIMS[epsd]; i++)
    {
-      a = &anims[wbs->epsd][i];
+      a = &anims[epsd][i];
       
       if(a->ctr >= 0)
          V_DrawPatch(a->loc.x, a->loc.y, &subscreen43, a->p[a->ctr]);
@@ -732,6 +775,10 @@ static int WI_drawNum(int x, int y, int n, int digits)
 {
    int neg, temp, fontwidth = num[0]->width;
 
+   // if non-number, do not draw it
+   if(n == INT_MIN)
+      return 0;
+
    neg = n < 0;    // killough 11/98: move up to here, for /= 10 division below
    if(neg)
       n = -n;
@@ -748,7 +795,7 @@ static int WI_drawNum(int x, int y, int n, int digits)
          // figure out # of digits in #
          digits = 0;
          temp = n;
-         
+
          while(temp)
          {
             temp /= 10;
@@ -756,10 +803,6 @@ static int WI_drawNum(int x, int y, int n, int digits)
          }
       }
    }
-
-   // if non-number, do not draw it
-   if(n == 1994)
-      return 0;
 
    // draw the new number
    while(digits--)
@@ -772,7 +815,7 @@ static int WI_drawNum(int x, int y, int n, int digits)
    // draw a minus sign if necessary
    if(neg)
       V_DrawPatch(x -= 8, y, &subscreen43, wiminus);
-   
+
    return x;
 }
 
@@ -860,14 +903,16 @@ static void WI_unloadData()
       Z_ChangeTag(yah[1], PU_CACHE);
       
       Z_ChangeTag(splat, PU_CACHE);
-      
-      if(wbs->epsd < 3)
+      for(int epsd = wbs->epsd; epsd != -1; epsd = epsd != wbs->nextEpisode ? wbs->nextEpisode : -1)
       {
-         for(j = 0; j < NUMANIMS[wbs->epsd]; j++)
+         if(overworld(epsd))
          {
-            if(wbs->epsd != 1 || j != 8)
-               for(i = 0; i < anims[wbs->epsd][j].nanims; i++)
-                  Z_ChangeTag(anims[wbs->epsd][j].p[i], PU_CACHE);
+            for(j = 0; j < NUMANIMS[epsd]; j++)
+            {
+               if(epsd != 1 || j != 8)
+                  for(i = 0; i < anims[epsd][j].nanims; i++)
+                     Z_ChangeTag(anims[epsd][j].p[i], PU_CACHE);
+            }
          }
       }
    }
@@ -917,11 +962,11 @@ static void WI_End()
 // Args:    none
 // Returns: void
 //
-static void WI_initNoState()
+static void WI_initNoState(int ticcount)
 {
    state = NoState;
    acceleratestage = 0;
-   cnt = 10;
+   cnt = ticcount;
 }
 
 
@@ -980,7 +1025,7 @@ static void WI_updateShowNextLoc()
    WI_updateAnimatedBack();
    
    if(!--cnt || acceleratestage)
-      WI_initNoState();
+      WI_initNoState(10);
    else
       snl_pointeron = (cnt & 31) < 20;
 }
@@ -1010,7 +1055,7 @@ static void WI_drawShowNextLoc()
 
    if(GameModeInfo->id != commercial)
    {
-      if(wbs->epsd > 2)
+      if(!overworld(wbs->nextEpisode) || WI_isFinale())
       {
          WI_drawEL();  // "Entering..." if not E1 or E2 or E3
          return;
@@ -1033,8 +1078,8 @@ static void WI_drawShowNextLoc()
 
    // draws which level you are entering..
    // check for end of game -- haleyjd 07/08/04: use map info
-   if((GameModeInfo->id != commercial) || !LevelInfo.endOfGame)
-      WI_drawEL();  
+   // ioanch: don't make it exclusive to DOOM ][
+   WI_drawEL();
 }
 
 // ====================================================================
@@ -1112,6 +1157,24 @@ static void WI_initDeathmatchStats()
       }
    }
    WI_initAnimatedBack(false);
+}
+
+//
+// Prepares the entering stage, depending on game mode and enterpic settings
+//
+static void WI_prepareEnteringStage()
+{
+   if(GameModeInfo->id != commercial && WI_isFinale())
+      WI_initNoState(1);   // do it (roughly?) like in PrBoom+um
+   else if(GameModeInfo->id == commercial &&
+           (estrempty(wbs->li_nextenterpic) || WI_isFinale() || demo_version <= 203))
+   {
+      // Also keep demo compatibility, since PrBoom+um doesn't show the next enterpic more than 10
+      // tics. But it looks better if it mimics the Doom 1 time.
+      WI_initNoState(10);
+   }
+   else
+      WI_initShowNextLoc();
 }
 
 
@@ -1215,13 +1278,7 @@ static void WI_updateDeathmatchStats()
       if(acceleratestage)
       {   
          S_StartInterfaceSound(sfx_slop);
-
-         if(GameModeInfo->id == commercial && estrempty(wbs->li_nextenterpic))
-         {
-            WI_initNoState();
-         }
-         else
-            WI_initShowNextLoc();
+         WI_prepareEnteringStage();
       }
    }
    else if(dm_state & 1)
@@ -1532,10 +1589,7 @@ static void WI_updateNetgameStats()
       if(acceleratestage)
       {
          S_StartInterfaceSound(sfx_sgcock);
-         if(GameModeInfo->id == commercial && estrempty(wbs->li_nextenterpic))
-            WI_initNoState();
-         else
-            WI_initShowNextLoc();
+         WI_prepareEnteringStage();
       }
    }
    else if(ng_state & 1)
@@ -1754,11 +1808,7 @@ static void WI_updateStats()
       if(acceleratestage)
       {
          S_StartInterfaceSound(sfx_sgcock);
-         
-         if(GameModeInfo->id == commercial && estrempty(wbs->li_nextenterpic))
-            WI_initNoState();
-         else
-            WI_initShowNextLoc();
+         WI_prepareEnteringStage();
       }
    }
    else if(sp_state & 1)
@@ -1821,13 +1871,10 @@ static void WI_drawStats()
    // sf: cleverer: only skips on _new_ non-iwad levels
    //   new logic in g_game.c
 
-   if(wbs->partime != -1)
+   if(wbs->partime >= TICRATE)
    {
-      if(wbs->epsd < 3)
-      {
-         V_DrawPatch(SCREENWIDTH/2 + SP_TIMEX, SP_TIMEY, &subscreen43, par);
-         WI_drawTime(SCREENWIDTH - SP_TIMEX, SP_TIMEY, cnt_par);
-      }
+      V_DrawPatch(SCREENWIDTH/2 + SP_TIMEX, SP_TIMEY, &subscreen43, par);
+      WI_drawTime(SCREENWIDTH - SP_TIMEX, SP_TIMEY, cnt_par);
    }
 }
 
@@ -1889,20 +1936,25 @@ static void WI_DrawBackground()
 {
    char  name[9];  // limited to 8 characters
 
-   if(state != StatCount && estrnonempty(wbs->li_nextenterpic))
+   int epsd = state == StatCount ? wbs->epsd : wbs->nextEpisode;
+   // also do not draw the nextenterpic if now's a finale
+   if(state != StatCount && estrnonempty(wbs->li_nextenterpic) && !WI_isFinale())
+   {
       strncpy(name, wbs->li_nextenterpic, sizeof(name));
+      name[sizeof(name) - 1] = 0;
+   }
    else if(estrnonempty(wbs->li_lastexitpic) ||
       GameModeInfo->id == commercial || (GameModeInfo->id == retail &&
-                                         wbs->epsd == 3))
+                                         !overworld(epsd)))
    {
       // Use LevelInfo's interpic here: it handles cases where li_lastexitpic IS
       // empty. By the help of logic, the intermapinfo_t last exitpic must be
       // equivalent to currently exited level's interPic.
-      strcpy(name, LevelInfo.interPic);
+      strncpy(name, LevelInfo.interPic, sizeof(name));
+      name[sizeof(name) - 1] = 0;
    }
    else
-      sprintf(name, "WIMAP%d", wbs->epsd);
-   name[sizeof(name) - 1] = 0;
+      snprintf(name, sizeof(name), "WIMAP%d", epsd);
 
    // background
    V_DrawFSBackground(&subscreen43, wGlobalDir.checkNumForName(name));
@@ -1928,7 +1980,7 @@ static void WI_loadData()
    {
       // haleyjd 06/17/06: only load the patches that are needed, and also
       // allow them to be loaded for ANY valid MAPxy map, not just 1 - 32
-      if(isMAPxy(gamemapname))
+      if(M_IsMAPxy(gamemapname, nullptr))
       {
          int lumpnum;
 
@@ -1937,20 +1989,20 @@ static void WI_loadData()
          if((lumpnum = g_dir->checkNumForName(name)) != -1)
             wi_lname_this = PatchLoader::CacheNum(*g_dir, lumpnum, PU_STATIC);
          else
-            wi_lname_this = NULL;
+            wi_lname_this = nullptr;
 
          psnprintf(name, sizeof(name), "CWILV%2.2d", wbs->next);
 
          if((lumpnum = g_dir->checkNumForName(name)) != -1)
             wi_lname_next = PatchLoader::CacheNum(*g_dir, lumpnum, PU_STATIC);
          else
-            wi_lname_next = NULL;
+            wi_lname_next = nullptr;
       }
    }
    else
    {
       // haleyjd 06/17/06: as above, but for ExMy maps
-      if(isExMy(gamemapname))
+      if(M_IsExMy(gamemapname, nullptr, nullptr))
       {
          int lumpnum;
 
@@ -1959,14 +2011,14 @@ static void WI_loadData()
          if((lumpnum = g_dir->checkNumForName(name)) != -1)
             wi_lname_this = PatchLoader::CacheNum(*g_dir, lumpnum, PU_STATIC);
          else
-            wi_lname_this = NULL;
+            wi_lname_this = nullptr;
 
-         psnprintf(name, sizeof(name), "WILV%d%d", wbs->epsd, wbs->next);
+         psnprintf(name, sizeof(name), "WILV%d%d", wbs->nextEpisode, wbs->next);
 
          if((lumpnum = g_dir->checkNumForName(name)) != -1)
             wi_lname_next = PatchLoader::CacheNum(*g_dir, lumpnum, PU_STATIC);
          else
-            wi_lname_next = NULL;
+            wi_lname_next = nullptr;
       }
       
       // you are here
@@ -1977,29 +2029,30 @@ static void WI_loadData()
 
       // splat
       splat = PatchLoader::CacheName(wGlobalDir, "WISPLAT", PU_STATIC);
-      
-      if(wbs->epsd < 3)
-      {
-         for(j = 0; j < NUMANIMS[wbs->epsd]; j++)
+
+      for(int epsd = wbs->epsd; epsd != -1; epsd = epsd != wbs->nextEpisode ? wbs->nextEpisode : -1)
+         if(overworld(epsd))
          {
-            anim_t *a = &anims[wbs->epsd][j];
-            for(i = 0; i < a->nanims; i++)
+            for(j = 0; j < NUMANIMS[epsd]; j++)
             {
-               // MONDO HACK!
-               if(wbs->epsd != 1 || j != 8) 
+               anim_t *a = &anims[epsd][j];
+               for(i = 0; i < a->nanims; i++)
                {
-                  // animations
-                  sprintf(name, "WIA%d%.2d%.2d", wbs->epsd, j, i);  
-                  a->p[i] = PatchLoader::CacheName(wGlobalDir, name, PU_STATIC);
-               }
-               else
-               {
-                  // HACK ALERT!
-                  a->p[i] = anims[1][4].p[i]; 
-               }
+                  // MONDO HACK!
+                  if(epsd != 1 || j != 8)
+                  {
+                     // animations
+                     snprintf(name, sizeof(name), "WIA%d%.2d%.2d", epsd, j, i);
+                     a->p[i] = PatchLoader::CacheName(wGlobalDir, name, PU_STATIC);
+                  }
+                  else
+                  {
+                     // HACK ALERT!
+                     a->p[i] = anims[1][4].p[i];
+                  }
+               } // end for
             } // end for
-         } // end for
-      } // end if
+         } // end if
    } // end else (!commercial)
 
    // More hacks on minus sign.
@@ -2008,7 +2061,7 @@ static void WI_loadData()
    for(i = 0; i < 10; i++)
    {
       // numbers 0-9
-      sprintf(name, "WINUM%d", i);     
+      snprintf(name, sizeof(name), "WINUM%d", i);
       num[i] = PatchLoader::CacheName(wGlobalDir, name, PU_STATIC);
    }
 
@@ -2069,11 +2122,11 @@ static void WI_loadData()
    for(i = 0; i < MAXPLAYERS; i++)
    {
       // "1,2,3,4"
-      sprintf(name, "STPB%d", i);      
+      snprintf(name, sizeof(name), "STPB%d", i);
       p[i] = PatchLoader::CacheName(wGlobalDir, name, PU_STATIC);
       
       // "1,2,3,4"
-      sprintf(name, "WIBP%d", i+1);     
+      snprintf(name, sizeof(name), "WIBP%d", i+1);
       bp[i] = PatchLoader::CacheName(wGlobalDir, name, PU_STATIC);
    }
 }
@@ -2147,13 +2200,14 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
 
    if(GameModeInfo->id != retail)
    {
-      if(wbs->epsd > 2)
-         wbs->epsd -= 3;
+      // IOANCH: What was this?!
+//      if(wbs->epsd > 2)
+//         wbs->epsd -= 3;
    }
 
    // haleyjd 03/27/05: EDF-defined intermission map names
-   mapName     = NULL;
-   nextMapName = NULL;
+   mapName     = nullptr;
+   nextMapName = nullptr;
 
    // NOTE: in UMAPINFO, level-pic has priority
    if((!wbs->li_lastlevelpic || !*wbs->li_lastlevelpic) &&
@@ -2214,15 +2268,15 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
          else
          {
             // try ExMy and MAPxy defaults for normally-named maps
-            if(isExMy(gamemapname))
+            if(M_IsExMy(gamemapname, nullptr, nullptr))
             {
                edf_string_t *str;
                psnprintf(nameBuffer, 24, "_IN_NAME_E%01dM%01d",
-                         wbs->epsd + 1, wbs->next + 1);
+                         wbs->nextEpisode + 1, wbs->next + 1);
                if((str = E_StringForName(nameBuffer)))
                   nextMapName = str->string;
             }
-            else if(isMAPxy(gamemapname))
+            else if(M_IsMAPxy(gamemapname, nullptr))
             {
                edf_string_t *str;
                psnprintf(nameBuffer, 24, "_IN_NAME_MAP%02d", wbs->next + 1);

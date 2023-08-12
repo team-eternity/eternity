@@ -1153,6 +1153,7 @@ PARAMLINE(ParamSectorSetCeilingPanning);
 PARAMLINE(ParamSectorChangeSound);
 PARAMLINE(TurnTagLightsOff);
 
+PARAMLINE(ACSSetFriction);
 PARAMLINE(ACSScrollFloor);
 PARAMLINE(ACSScrollCeiling);
 
@@ -1165,8 +1166,8 @@ PARAMLINE(ACSScrollCeiling);
 // additions (many of which conflict with BOOM extensions).
 //
 
-#define LINESPEC(number, action)            { number, &action, NULL },
-#define LINESPECNAMED(number, action, name) { number, &action, name },
+#define LINESPEC(number, action)            { number, &action, nullptr },
+#define LINESPECNAMED(number, action, name) { number, &action, name    },
 
 // DOOM Bindings
 ev_binding_t DOOMBindings[] =
@@ -1777,15 +1778,10 @@ ev_binding_t HexenBindings[] =
 const size_t HexenBindingsLen = earrlen(HexenBindings);
 
 // PSX Mission Bindings
-// * Must hide 200-203, which are static inits for scrolling
 // * TODO: type 142 ("start Club DOOM music")
-ev_binding_t PSXBindings[] = 
+ev_binding_t PSXBindings[] =
 {
    LINESPEC(142, NullAction) // TODO
-   LINESPEC(200, NullAction)
-   LINESPEC(201, NullAction)
-   LINESPEC(202, NullAction)
-   LINESPEC(203, NullAction)
 };
 
 const size_t PSXBindingsLen = earrlen(PSXBindings);
@@ -1820,6 +1816,7 @@ const size_t UDMFEternityBindingsLen = earrlen(UDMFEternityBindings);
 // accessible by ACS, or that have multiple definitions, one for lines, one for ACS
 ev_binding_t ACSBindings[] =
 {
+   LINESPEC(219, ACSSetFriction)
    LINESPEC(223, ACSScrollFloor)
    LINESPEC(224, ACSScrollCeiling)
 };
