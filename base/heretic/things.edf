@@ -2952,7 +2952,7 @@ thingtype HereticHornRodFX2 : HereticMissile, -1, 444
     FX00 I 5 bright
     FX00 J 4 bright
     FX00 KLM 3 bright
-    FX00 G 1 // A_HideInCeiling
+    FX00 G 1 A_HideInCeiling
     FX00 G 1 // A_SkullRodStorm
     goto Death+7
   "@

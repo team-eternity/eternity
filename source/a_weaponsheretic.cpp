@@ -551,11 +551,13 @@ struct playerrain_t
    Mobj* rains[2];
 };
 
-static playerrain_t* playerrains;   // dynamically allocated with PU_LEVEL
+static playerrain_t* playerrains;   // dynamically allocated with PU_LEVEL because it holds Mobj refs
 
 void A_AddPlayerRain(actionargs_t* actionargs)
 {
    Mobj* actor = actionargs->actor;
+   if (!actor)
+      return;
    int playerNum = netgame ? actor->counters[2] : 0;
    if (playerNum < 0 || playerNum >= (int)earrlen(players) || !playeringame[playerNum])
       return;
@@ -584,6 +586,14 @@ void A_AddPlayerRain(actionargs_t* actionargs)
       P_SetTarget(&rains[1], actor);
    else
       P_SetTarget(&rains[0], actor);
+}
+
+void A_HideInCeiling(actionargs_t* actionargs)
+{
+   Mobj* actor = actionargs->actor;
+   if (!actor)
+      return;
+   actor->z = actor->zref.ceiling + 4 * FRACUNIT;
 }
 
 void A_FirePhoenixPL1(actionargs_t *actionargs)
