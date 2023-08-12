@@ -478,6 +478,25 @@ void A_FireBlasterPL2(actionargs_t* actionargs)
    P_WeaponSound(mo, sfx_blssht);
 }
 
+void A_SpawnRippers(actionargs_t* actionargs)
+{
+   const Mobj* actor = actionargs->actor;
+   if (!actor)
+      return;
+   for (int i = 0; i < 8; ++i)
+   {
+      int tnum = E_SafeThingType(MT_RIPPER);
+      Mobj* ripper = P_SpawnMobj(actor->x, actor->y, actor->z, tnum);
+      angle_t angle = i * ANG45;
+      P_SetTarget(&ripper->target, actor->target);
+      ripper->angle = angle;
+      angle >>= ANGLETOFINESHIFT;
+      ripper->momx = FixedMul(ripper->info->speed, finecosine[angle]);
+      ripper->momy = FixedMul(ripper->info->speed, finesine[angle]);
+      P_CheckMissileSpawn(ripper);
+   }
+}
+
 void A_FireSkullRodPL1(actionargs_t *actionargs)
 {
    player_t *player = actionargs->actor->player;

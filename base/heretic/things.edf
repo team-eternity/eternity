@@ -3035,7 +3035,7 @@ thingtype HereticBlasterFX1 : HereticMissile, -1, 443
     ACLO E 200
     loop
   Death:
-    FX18 A 3 bright 
+    FX18 A 3 bright A_SpawnRippers
     FX18 B 3 bright
     FX18 CDEFG 4 bright
     stop
