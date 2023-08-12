@@ -546,6 +546,46 @@ void A_SkullRodPL2Seek(actionargs_t* actionargs)
    P_SeekerMissile(actionargs->actor, HTICANGLE_1 * 10, HTICANGLE_1 * 20, seekcenter_e::no);
 }
 
+struct playerrain_t
+{
+   Mobj* rains[2];
+};
+
+static playerrain_t* playerrains;   // dynamically allocated with PU_LEVEL
+
+void A_AddPlayerRain(actionargs_t* actionargs)
+{
+   Mobj* actor = actionargs->actor;
+   int playerNum = netgame ? actor->counters[2] : 0;
+   if (playerNum < 0 || playerNum >= (int)earrlen(players) || !playeringame[playerNum])
+      return;
+   const player_t& player = players[playerNum];
+   if (player.health <= 0)
+      return;
+   if (!playerrains)
+      playerrains = estructalloctag(playerrain_t, earrlen(players), PU_LEVEL);
+   Mobj** rains = playerrains[playerNum].rains;
+   if (rains[0] && rains[1])
+   {
+      if (rains[0]->health < rains[1]->health)
+      {
+         if (rains[0]->health > 16)
+            rains[0]->health = 16;
+         P_ClearTarget(rains[0]);
+      }
+      else
+      {
+         if (rains[1]->health > 16)
+            rains[1]->health = 16;
+         P_ClearTarget(rains[1]);
+      }
+   }
+   if (rains[0])
+      P_SetTarget(&rains[1], actor);
+   else
+      P_SetTarget(&rains[0], actor);
+}
+
 void A_FirePhoenixPL1(actionargs_t *actionargs)
 {
    Mobj     *mo     = actionargs->actor;

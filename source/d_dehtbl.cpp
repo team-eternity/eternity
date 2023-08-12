@@ -1517,6 +1517,7 @@ void A_SpawnRippers(actionargs_t *);
 void A_FireSkullRodPL1(actionargs_t *);
 void A_FireSkullRodPL2(actionargs_t*);
 void A_SkullRodPL2Seek(actionargs_t*);
+void A_AddPlayerRain(actionargs_t*);
 void A_FirePhoenixPL1(actionargs_t *);
 void A_InitPhoenixPL2(actionargs_t *);
 void A_FirePhoenixPL2(actionargs_t *);
@@ -1913,6 +1914,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(FireSkullRodPL1),
    POINTER(FireSkullRodPL2),
    POINTER(SkullRodPL2Seek),
+   POINTER(AddPlayerRain),
    POINTER(FirePhoenixPL1),
    POINTER(InitPhoenixPL2),
    POINTER(FirePhoenixPL2),
