@@ -2928,6 +2928,36 @@ thingtype HereticHornRodFX1 : HereticMissile, -1, 425
   "@
 }
 
+thingtype HereticHornRodFX2 : HereticMissile, -1, 444
+{
+  compatname HornRodFX2
+  speed 22.0
+  radius 12.0
+  height 8.0
+  damage 10
+  seesound ht_hrnsht
+  deathsound ht_ramphit
+
+  firstdecoratestate S_HRODFX2_1
+  states
+  @"
+  Spawn:
+    FX00 C 3 bright
+    FX00 D 3 bright // A_SkullRodPL2Seek
+    FX00 E 3 bright
+    FX00 F 3 bright // A_SkullRodPL2Seek
+    loop
+  Death:
+    FX00 H 5 bright // A_AddPlayerRain
+    FX00 I 5 bright
+    FX00 J 4 bright
+    FX00 KLM 3 bright
+    FX00 G 1 // A_HideInCeiling
+    FX00 G 1 // A_SkullRodStorm
+    goto Death+7
+  "@
+}
+
 thingtype HereticGoldWandFX1 : HereticMissile, -1, 426
 {
   compatname GoldWandFX1

@@ -963,6 +963,22 @@ sound ht_noway
   dehackednum 418
 }
 
+sound ht_ramphit
+{
+  lump          "ramphit"
+  priority      64
+  dehackednum   419
+  pitchvariance Heretic
+}
+
+sound ht_hrnpow
+{
+  lump          "hrnpow"
+  priority      64
+  dehackednum   420
+  pitchvariance Heretic
+}
+
 sound ht_ripslop
 {
   lump          "ripslop"

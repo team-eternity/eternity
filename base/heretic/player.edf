@@ -322,7 +322,7 @@ weaponinfo SkullRodPowered : SkullRod
     HROD D 3
     HROD E 2
     HROD F 3
-    HROD G 4 // A_FireSkullRodPL2
+    HROD G 4 A_FireSkullRodPL2
     HROD F 2
     HROD E 3
     HROD D 2

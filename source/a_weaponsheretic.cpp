@@ -513,6 +513,23 @@ void A_FireSkullRodPL1(actionargs_t *actionargs)
       P_SetMobjState(mo, mo->state->nextstate);
 }
 
+void A_FireSkullRodPL2(actionargs_t* actionargs)
+{
+   player_t* player = actionargs->actor->player;
+
+   if (!player || !P_CheckAmmo(player))
+      return;
+
+   P_SubtractAmmo(player, deathmatch ? 1 : -1);
+   const int tnum = E_SafeThingType(MT_HORNRODFX2);
+
+   const Mobj* mo = P_SpawnPlayerMissile(player->mo, tnum, SPM_ADDSLOPETOZ);
+
+   // TODO: give it the player num ID and autoaim target
+
+   S_StartSound(mo, sfx_hrnpow);
+}
+
 void A_FirePhoenixPL1(actionargs_t *actionargs)
 {
    Mobj     *mo     = actionargs->actor;
