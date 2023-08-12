@@ -1079,12 +1079,12 @@ frame S_BLASTERATK1_5 { +decorate }
 frame S_BLASTERATK1_6 { +decorate }
 
 // Powered Blaster
-// frame S_BLASTERATK2_1 { +decorate }
-// frame S_BLASTERATK2_2 { +decorate }
-// frame S_BLASTERATK2_3 { +decorate }
-// frame S_BLASTERATK2_4 { +decorate }
-// frame S_BLASTERATK2_5 { +decorate }
-// frame S_BLASTERATK2_6 { +decorate }
+frame S_BLASTERATK2_1 { +decorate }
+frame S_BLASTERATK2_2 { +decorate }
+frame S_BLASTERATK2_3 { +decorate }
+frame S_BLASTERATK2_4 { +decorate }
+frame S_BLASTERATK2_5 { +decorate }
+frame S_BLASTERATK2_6 { +decorate }
 
 // Firemace
 frame S_MACEREADY   { +decorate }

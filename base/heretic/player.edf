@@ -215,6 +215,7 @@ weaponinfo Blaster
   ammouse      1
 
   selectionorder 2.0
+  sisterweapon BlasterPowered
 
   flags        SILENCEABLE|DISABLEAPS
   //mod          ""
@@ -241,6 +242,28 @@ weaponinfo Blaster
   Hold:
     BLSR D 2 A_FireBlasterPL1
     BLSR CB 2
+    BLSR A 0 A_ReFire
+    goto Ready
+  "@
+}
+
+weaponinfo BlasterPowered : Blaster
+{
+  ammouse 5
+
+  sisterweapon Blaster
+
+  addflags POWEREDUP
+
+  // first two frames from vanilla are zero-length
+  firstdecoratestate S_BLASTERATK2_3
+
+  states
+  @"
+  Fire:
+  Hold:
+    BLSR D 3 A_FireBlasterPL2
+    BLSR CB 4
     BLSR A 0 A_ReFire
     goto Ready
   "@
