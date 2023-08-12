@@ -471,7 +471,10 @@ void A_FireBlasterPL2(actionargs_t* actionargs)
    if (!player)
       return;
    P_SubtractAmmo(player, deathmatch ? 1 : -1);
-   // TODO: spawn the proj
+   
+   int tnum = E_SafeThingType(MT_BLASTERFX1);
+   P_SpawnPlayerMissile(player->mo, tnum, SPM_ADDSLOPETOZ);
+
    P_WeaponSound(mo, sfx_blssht);
 }
 

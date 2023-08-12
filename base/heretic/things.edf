@@ -3012,6 +3012,31 @@ thingtype HereticPhoenixFX1 : HereticMissile, -1, 430
   "@
 }
 
+thingtype HereticBlasterFX1 : HereticMissile, -1, 443
+{
+  compatname BlasterFX1
+  speed 184.0
+  radius 12.0
+  height 8.0
+  damage 2
+  addflags FASTMISSILE
+
+  deathsound ht_blshit
+
+  firstdecoratestate S_BLASTERFX1_1
+  states
+  @"
+  Spawn:
+    ACLO E 200
+    loop
+  Death:
+    FX18 A 3 bright 
+    FX18 B 3 bright
+    FX18 CDEFG 4 bright
+    stop
+  "@
+}
+
 thingtype HereticPhoenixFX2 : HereticMissile, -1, 442
 {
   compatname PhoenixFX2
