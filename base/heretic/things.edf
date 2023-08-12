@@ -3021,6 +3021,11 @@ thingtype HereticBlasterFX1 : HereticMissile, -1, 443
   damage 2
   addflags FASTMISSILE
 
+  trail.type HereticBlasterSmoke
+  trail.zoffset -8
+  trail.spawnchance 63
+  trail.sparsity 1
+
   deathsound ht_blshit
 
   firstdecoratestate S_BLASTERFX1_1
