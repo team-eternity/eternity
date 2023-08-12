@@ -464,6 +464,17 @@ void A_FireBlasterPL1(actionargs_t *actionargs)
    P_WeaponSound(mo, sfx_blssht);
 }
 
+void A_FireBlasterPL2(actionargs_t* actionargs)
+{
+   Mobj* mo = actionargs->actor;
+   player_t* player = mo->player;
+   if (!player)
+      return;
+   P_SubtractAmmo(player, deathmatch ? 1 : -1);
+   // TODO: spawn the proj
+   P_WeaponSound(mo, sfx_blssht);
+}
+
 void A_FireSkullRodPL1(actionargs_t *actionargs)
 {
    player_t *player = actionargs->actor->player;

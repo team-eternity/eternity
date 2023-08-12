@@ -1512,6 +1512,7 @@ void A_FireCrossbowPL1(actionargs_t *);
 void A_FireCrossbowPL2(actionargs_t *);
 void A_BoltSpark(actionargs_t *);
 void A_FireBlasterPL1(actionargs_t *);
+void A_FireBlasterPL2(actionargs_t *);
 void A_FireSkullRodPL1(actionargs_t *);
 void A_FirePhoenixPL1(actionargs_t *);
 void A_InitPhoenixPL2(actionargs_t *);
@@ -1904,6 +1905,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(FireCrossbowPL2),
    POINTER(BoltSpark),
    POINTER(FireBlasterPL1),
+   POINTER(FireBlasterPL2),
    POINTER(FireSkullRodPL1),
    POINTER(FirePhoenixPL1),
    POINTER(InitPhoenixPL2),
