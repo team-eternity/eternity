@@ -27,6 +27,7 @@
 
 #include "acs_intr.h"
 #include "am_map.h"
+#include "a_common.h"
 #include "c_io.h"
 #include "d_dehtbl.h"
 #include "d_files.h"
@@ -1595,6 +1596,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
       P_ArchiveSoundSequences(arc);
       P_ArchiveButtons(arc);
       P_ArchiveACS(arc);            // davidph 05/30/12
+      P_ArchiveHereticWeapons(arc);
 
       P_DeNumberThinkers();
 
@@ -1846,6 +1848,7 @@ void P_LoadGame(const char *filename)
       P_UnArchiveSoundSequences(arc);
       P_ArchiveButtons(arc);
       P_ArchiveACS(arc);            // davidph 05/30/12
+      P_ArchiveHereticWeapons(arc);
 
       P_FreeThinkerTable();
 

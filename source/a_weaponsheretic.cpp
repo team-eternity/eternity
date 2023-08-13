@@ -37,6 +37,7 @@
 #include "m_random.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
+#include "p_saveg.h"
 #include "p_spec.h"
 #include "r_main.h"
 #include "s_sound.h"
@@ -858,6 +859,57 @@ void A_HticSpawnFireBomb(actionargs_t *actionargs)
                       mo->y + (24 * finesine[angle]),
                       z, E_SafeThingType(MT_HFIREBOMB));
    P_SetTarget(&bomb->target, mo->target);
+}
+
+void P_ArchiveHereticWeapons(SaveArchive& arc)
+{
+   // The hellstaff super rain state
+   if (arc.saveVersion() < 17)
+      return;
+   if (arc.isLoading())
+   {
+      bool hasStruct = false;
+      arc << hasStruct;
+      if (hasStruct)
+      {
+         if (!playerrains)
+            playerrains = estructalloctag(playerrain_t, earrlen(players), PU_LEVEL);
+         for (size_t i = 0; i < earrlen(players); ++i)
+         {
+            unsigned int indices[2] = {};
+            arc << indices[0] << indices[1];
+            P_ThinkerForNum(indices[0]);
+            
+            playerrain_t& rain = playerrains[i];
+            P_SetNewTarget(&rain.rains[0], thinker_cast<Mobj*>(P_ThinkerForNum(indices[0])));
+            P_SetNewTarget(&rain.rains[1], thinker_cast<Mobj*>(P_ThinkerForNum(indices[1])));
+         }
+      }
+   }
+   else
+   {
+      // saving
+      bool val;
+      if (!playerrains)
+      {
+         val = false;
+         arc << val;
+      }
+      else
+      {
+         val = true;
+         arc << val;
+         for (size_t i = 0; i < earrlen(players); ++i)
+         {
+            unsigned indices[2] = {
+               P_NumForThinker(playerrains[i].rains[0]),
+               P_NumForThinker(playerrains[i].rains[1])
+            };
+            arc << indices[0] << indices[1];
+
+         }
+      }
+   }
 }
 
 // EOF
