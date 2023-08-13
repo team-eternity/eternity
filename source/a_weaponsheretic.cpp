@@ -878,7 +878,6 @@ void P_ArchiveHereticWeapons(SaveArchive& arc)
          {
             unsigned int indices[2] = {};
             arc << indices[0] << indices[1];
-            P_ThinkerForNum(indices[0]);
             
             playerrain_t& rain = playerrains[i];
             P_SetNewTarget(&rain.rains[0], thinker_cast<Mobj*>(P_ThinkerForNum(indices[0])));
