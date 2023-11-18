@@ -30,6 +30,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 
+#include "m_compare.h"
 #include "v_buffer.h"
 #include "v_misc.h"
 #include "v_patch.h"
@@ -329,7 +330,7 @@ void V_SetScaling(VBuffer *buffer, int unscaledw, int unscaledh)
    }
    else
    {
-      int size = sizeof(int) * (unscaledw + 1);
+      int size = sizeof(int) * (emax(unscaledw, unscaledh) + 1);
 
       buffer->x1lookup = ecalloc(int *, 1, size);
       buffer->x2lookup = ecalloc(int *, 1, size);
