@@ -3050,7 +3050,7 @@ thingtype HereticBlasterFX1 : HereticMissile, -1, 443
   radius 12.0
   height 8.0
   damage 2
-  addflags FASTMISSILE
+  missiletype RavenFast
 
   trail.type HereticBlasterSmoke
   trail.zoffset -8

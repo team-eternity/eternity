@@ -214,7 +214,7 @@ protected:
 
    // Methods
    void Think() override;
-   void ThinkFast();
+   void ThinkRavenFast();
 
    bool shouldApplyTorque();
 
@@ -425,6 +425,14 @@ enum bloodaction_e : int
    BLOOD_CRUSH,  // crusher blood
    
    NUMBLOODACTIONS
+};
+
+enum missiletype_e :int
+{
+   MISSILETYPE_DEFAULT,   // standard
+   MISSILETYPE_RAVENFAST, // Heretic/Hexen-style fast missile
+
+   NUMMISSILETYPES
 };
 
 int P_FindDoomedNum(int type);
@@ -752,7 +760,6 @@ enum mobjflags5_e : unsigned int
    MF5_NOTAUTOAIMED       = 0x00000001, // can't be autoaimed (for real)
    MF5_FULLVOLSOUNDS      = 0x00000002, // full-volume see/death sounds
    MF5_ACTLIKEBRIDGE      = 0x00000004, // unmoved by sector actions, and pickups can sit atop
-   MF5_FASTMISSILE        = 0x00000008  // [XA] use Hexen's fast-projectile physics
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

@@ -1440,9 +1440,10 @@ void Mobj::Think()
    // [XA] 02/22/20: use Hexen's fastprojectile think function
    // exclusively if the flag's set, for maximum compatibility.
    // also, today's date is amazing.
-   if(flags5 & MF5_FASTMISSILE)
+   // MaxW: 2023/12/02: Instead of flag, use a dedicated property.
+   if(info->missiletype == MISSILETYPE_RAVENFAST)
    {
-      ThinkFast();
+      ThinkRavenFast();
       return;
    }
 
@@ -1676,7 +1677,7 @@ void Mobj::Think()
 // supported on fast projectiles... yet? Either way, this is
 // experimental for now. Swim at your own risk, etc.
 //
-void Mobj::ThinkFast()
+void Mobj::ThinkRavenFast()
 {
    int i;
    fixed_t xfrac;

@@ -16,7 +16,7 @@ thingtype MageWandSmoke
 
 thingtype MageWandMissile
 {
-  cflags FASTMISSILE
+  missiletype RavenFast
 
   // TODO: rest of flags & properties
 
@@ -35,7 +35,7 @@ thingtype CFlameFloor
 
 thingtype CFlameMissile 
 {
-  cflags FASTMISSILE
+  missiletype RavenFast
 
   // TODO: rest of flags & properties
 

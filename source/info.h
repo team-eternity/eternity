@@ -355,6 +355,7 @@ struct mobjinfo_t
 {
    int doomednum;       // Thing number used in id's editor, and now
                         //  probably by every other editor too
+   int missiletype;     // Type of missile (see missiletype_e in p_mobj.h)
    int spawnstate;      // The state (frame) index when this Thing is
                         //  first created
    int spawnhealth;     // The initial hit points for this Thing

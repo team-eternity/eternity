@@ -116,6 +116,7 @@ constexpr const char ITEM_TNG_DEACTIVATESND[] = "deactivatesound";
 constexpr const char ITEM_TNG_RIPSOUND[]      = "ripsound";
 
 // Basic Stats
+constexpr const char ITEM_TNG_MISSILETYPE[]  = "missiletype";
 constexpr const char ITEM_TNG_SPAWNHEALTH[]  = "spawnhealth";
 constexpr const char ITEM_TNG_GIBHEALTH[]    = "gibhealth";
 constexpr const char ITEM_TNG_REACTTIME[]    = "reactiontime";
@@ -243,6 +244,16 @@ constexpr const char ITEM_TGROUP_TYPES[] = "types";
 // Field-Specific Data
 //
 
+// Missile types
+// currently searched linearly
+// matching enum values in p_mobj.h
+
+static const char* missileTypes[NUMMISSILETYPES] =
+{
+   "Default",
+   "RavenFast"
+};
+
 // Particle effects flags
 
 static dehflags_t particlefx[] =
@@ -311,7 +322,7 @@ static const char *inflictorTypes[INFLICTOR_NUMTYPES] =
 // types is that they can change, and things dependent upon them will be 
 // automatically updated for new versions of the engine.
 //
-static const char *BasicTypeNames[] =
+static constexpr const char *BasicTypeNames[] =
 {
    "Monster",           // normal walking monster with no fancy features
    "FlyingMonster",     // normal flying monster
@@ -560,6 +571,7 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_ACTIVATESND,     "none",        CFGF_NONE), \
    CFG_STR(ITEM_TNG_DEACTIVATESND,   "none",        CFGF_NONE), \
    CFG_STR(ITEM_TNG_RIPSOUND,        "none",        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_MISSILETYPE,     "default",     CFGF_NONE), \
    CFG_INT(ITEM_TNG_SPAWNHEALTH,     1000,          CFGF_NONE), \
    CFG_INT(ITEM_TNG_GIBHEALTH,       0,             CFGF_NONE), \
    CFG_INT(ITEM_TNG_REACTTIME,       8,             CFGF_NONE), \
@@ -2649,6 +2661,21 @@ void E_ProcessThing(int i, cfg_t *const thingsec, cfg_t *pcfg, const bool def)
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_DEACTIVATESND);
       E_ThingSound(tempstr, ITEM_TNG_DEACTIVATESND, i, &(mobjinfo[i]->deactivatesound));
+   }
+
+   if(IS_SET(ITEM_TNG_MISSILETYPE))
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_MISSILETYPE);
+      tempint = E_StrToNumLinear(missileTypes, NUMMISSILETYPES, tempstr);
+
+      if(tempint == NUMMISSILETYPES)
+      {
+         E_EDFLoggedErr(2, 
+            "E_ProcessThing: thing '%s': invalid missiletype '%s'\n",
+            mobjinfo[i]->name, tempstr);
+      }
+
+      mobjinfo[i]->missiletype = tempint;
    }
 
    if(IS_SET(ITEM_TNG_RIPSOUND))
