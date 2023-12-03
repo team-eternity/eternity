@@ -78,6 +78,10 @@ protected:
    int sdlIndex; // SDL gamepad number
    SDLHapticInterface haptics;
 
+   float normAxis(float value, int threshold, int maxvalue);
+   void  normAxisPair(float &axisx, float &axisy, int threshold, int min, int max);
+
+
 public:
    SDLGamePad(int idx = 0);
 
@@ -85,7 +89,7 @@ public:
    virtual void deselect() override;
    virtual void poll() override;
 
-   virtual HALHapticInterface *getHapticInterface() { return &haptics; }
+   virtual HALHapticInterface *getHapticInterface() override { return &haptics; }
 
    virtual const char *getAxisName(const int axis) override;
 };

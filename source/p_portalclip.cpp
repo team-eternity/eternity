@@ -237,7 +237,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    {
       calculatedSlopes = true;
       pcl->haveslopes = true;
-      P_ExactBoxLinePoints(clip.bbox, *ld, i1, i2);
+      P_ExactBoxLinePoints(bbox, *ld, i1, i2);
       lineheights_t heights[2];
       heights[0] = P_getLineHeights(ld, i1);
       heights[1] = P_getLineHeights(ld, i2);
@@ -385,7 +385,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
       {
          if((ld->flags & ML_BLOCKING) ||
-            (mbf21_temp && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
+            (mbf21_demo && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
          {
             // explicitly blocking everything
             // or blocking player
@@ -396,7 +396,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
          if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
             (
                ld->flags & ML_BLOCKMONSTERS ||
-               (mbf21_temp && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
+               (mbf21_demo && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
                )
             )
          {
@@ -415,7 +415,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    {
       pcl->haveslopes = true;
       if(!calculatedSlopes)   // may have already calculated them when checking cross-portal heights
-         P_ExactBoxLinePoints(clip.bbox, *ld, i1, i2);
+         P_ExactBoxLinePoints(bbox, *ld, i1, i2);
      
       // Use the smallest opening from both points
       clip.open = P_LineOpening(ld, clip.thing, &i1, true, &lineclipflags);

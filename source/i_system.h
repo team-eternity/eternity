@@ -33,6 +33,14 @@
 struct ticcmd_t;
 struct SDL_Window;
 
+using i_errhandler_t = void (*)(char *errmsg);
+
+typedef void (*atexit_func_t)(void);
+// Schedule a function to be called when the program exits.
+void I_AtExit(atexit_func_t func);
+
+void I_Exit(int status);
+
 // Called by DoomMain.
 void I_Init();
 
@@ -83,6 +91,8 @@ enum
 
 // haleyjd 06/05/10
 void I_ExitWithMessage(E_FORMAT_STRING(const char *msg), ...) E_PRINTF(1, 2);
+
+void I_SetErrorHandler(const i_errhandler_t handler);
 
 // MaxW: 2018/06/20: No more need for an #ifdef!
 // haleyjd 05/21/10

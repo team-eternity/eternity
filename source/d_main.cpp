@@ -74,6 +74,7 @@
 #include "mn_engin.h"
 #include "p_chase.h"
 #include "p_setup.h"
+#include "r_context.h"
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_patch.h"
@@ -457,45 +458,57 @@ struct cachelevelprint_t
    int cachelevel;
    const char *name;
 };
-static cachelevelprint_t cachelevels[] =
+static constexpr cachelevelprint_t cachelevels[] =
 {
-   { PU_STATIC,   "static: " },
-   { PU_VALLOC,   " video: " },
-   { PU_RENDERER, "render: " },
-   { PU_LEVEL,    " level: " },
-   { PU_CACHE,    " cache: " },
-   { PU_MAX,      " total: " }
+   { PU_STATIC,   "static" },
+   { PU_VALLOC,   " video" },
+   { PU_RENDERER, "render" },
+   { PU_LEVEL,    " level" },
+   { PU_CACHE,    " cache" },
+   { PU_MAX,      " total" }
 };
-#define NUMCACHELEVELSTOPRINT earrlen(cachelevels)
+static constexpr size_t NUMCACHELEVELSTOPRINT = earrlen(cachelevels);
 
 static void D_showMemStats()
 {
    vfont_t *font;
    size_t total_memory = 0;
+   size_t memorybytag[PU_MAX] = {};
    double s;
    char buffer[1024];
-   size_t i;
 
-   for(i = 0; i < earrlen(cachelevels) - 1; i++)
+   // Add up the memory by tag across all heaps
+   for(size_t i = 0; i < NUMCACHELEVELSTOPRINT - 1; i++)
+      memorybytag[cachelevels[i].cachelevel] += z_globalheap.memoryForTag(cachelevels[i].cachelevel);
+   R_ForEachContext([&memorybytag](rendercontext_t &context) {
+      for(size_t i = 0; i < NUMCACHELEVELSTOPRINT - 1; i++)
+         memorybytag[cachelevels[i].cachelevel] += context.heap->memoryForTag(cachelevels[i].cachelevel);
+   });
+
+   // Now total the memory based on the total of the cache levels of each heap
+   for(size_t i = 0; i < NUMCACHELEVELSTOPRINT - 1; i++)
       total_memory += memorybytag[cachelevels[i].cachelevel];
    s = 100.0 / total_memory;
 
-   font = E_FontForName("ee_consolefont");   
-   // draw the labels
-   for(i = 0; i < earrlen(cachelevels); i++)
+   font = E_FontForName("ee_consolefont");
+   // Draw the labels
+   for(size_t i = 0; i < NUMCACHELEVELSTOPRINT; i++)
    {
       int tag = cachelevels[i].cachelevel;
       if(tag != PU_MAX)
       {
-         psnprintf(buffer, sizeof(buffer), "%s%9lu %7.02f%%", 
-                   cachelevels[i].name,
-                   memorybytag[tag], memorybytag[tag] * s);
+         psnprintf(
+            buffer, sizeof(buffer), "%s: %10zu %7.02f%%",
+            cachelevels[i].name, memorybytag[tag], memorybytag[tag] * s
+         );
          V_FontWriteText(font, buffer, 1, static_cast<int>(1 + i*font->cy));
       }
       else
       {
-         psnprintf(buffer, sizeof(buffer), "%s%9lu %7.02f%%",
-                   cachelevels[i].name, total_memory, 100.0f);
+         psnprintf(
+            buffer, sizeof(buffer), "%s: %10zu %7.02f%%",
+            cachelevels[i].name, total_memory, 100.0f
+         );
          V_FontWriteText(font, buffer, 1, static_cast<int>(1 + i*font->cy));
       }
    }
@@ -571,7 +584,9 @@ void D_DrawWings()
 //
 static void D_Display()
 {
-   if(nodrawers)                // for comparative timing / profiling
+   // nodrawers: for comparative timing / profiling
+   // view occluded: for saving power when Eternity is out of sight
+   if(nodrawers || I_IsViewOccluded())
       return;
 
    i_haltimer.StartDisplay();
@@ -1268,7 +1283,7 @@ static void D_DoomInit()
 
    startupmsg("Z_Init", "Init zone memory allocation daemon.");
    Z_Init();
-   atexit(I_Quit);
+   I_AtExit(I_Quit);
 
    FindResponseFile(); // Append response file arguments to command-line
 

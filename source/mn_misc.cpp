@@ -38,6 +38,8 @@
 #include "doomstat.h"
 #include "e_fonts.h"
 #include "g_bind.h"
+#include "hal/i_timer.h"
+#include "m_compare.h"
 #include "m_qstr.h"
 #include "m_swap.h"
 #include "mn_engin.h"
@@ -151,11 +153,15 @@ static bool MN_PopupResponder(event_t *ev, int action)
    int *menuSounds = GameModeInfo->menuSounds;
    char ch;
    
-   if(ev->type != ev_keydown && ev->type != ev_text)
+   if(ev->type != ev_keydown && ev->type != ev_text && ev->type != ev_quit)
       return false;
 
    if(ev->type == ev_text)
       ch = ectype::toLower(ev->data1);
+   else if (ev->type == ev_quit && menuactive &&
+            popup_message_type == popup_question &&
+            !strcmp(popup_message_command, "quit"))
+      ch = 'y';
    else if(!ectype::isPrint(ev->data1))
       ch = ev->data1;
    else
@@ -351,7 +357,7 @@ static void MN_FindHelpScreens(void)
    {
       char tempstr[10];
 
-      sprintf(tempstr, "HELP%.02i", custom);
+      snprintf(tempstr, sizeof(tempstr), "HELP%.02i", custom);
       AddHelpScreen(tempstr);
    }
    
@@ -434,11 +440,25 @@ static const val_str_t *val_strs[NUMCATS] =
    val_thanks
 };
 
+extern bool help_prev_menuactive;
+
 void MN_DrawCredits()
 {
+   static int startTic = 0;
+   static int lastTic  = 0;
+   static int yOffset  = 0;
+
    static int line_x = -1;
    int i, y;
    const char *str;
+
+   // Reset scoll if a full second has passed or we opened the menu
+   if(gametic - lastTic > TICRATE || (help_prev_menuactive && gametic == mn_lastSelectTic + 1))
+   {
+      startTic = gametic;
+      yOffset  = 0;
+   }
+   lastTic = gametic;
 
    if(line_x == -1)
       line_x = SCREENWIDTH >> 1;
@@ -450,7 +470,7 @@ void MN_DrawCredits()
    
    V_DrawDistortedBackground(GameModeInfo->creditBackground, &vbscreen);
 
-   y = GameModeInfo->creditY;
+   y = GameModeInfo->creditY - yOffset;
    str = FC_ABSCENTER FC_HI "The Eternity Engine";
    V_FontWriteTextShadowed(menu_font_big, str, 0, y, &subscreen43);
    y += V_FontStringHeight(menu_font_big, str) + GameModeInfo->creditTitleStep;
@@ -497,6 +517,33 @@ void MN_DrawCredits()
    }();
 
    V_FontWriteText(menu_font_normal, copyright_text, 0, y, &subscreen43);
+   y += V_FontStringHeight(menu_font_normal, "");
+
+
+   // Scroll the credits
+   constexpr int   WAIT_TICS              = TICRATE * 2;
+   constexpr float PIXELS_PER_GAMETIC     = 0.5f;
+
+   static const int maximumDesiredY = SCREENHEIGHT - GameModeInfo->creditY;
+   static const int maximumY        = y;
+   static const int maximumScroll   = maximumY - maximumDesiredY;
+   static const int transitionTics  = int(maximumScroll / PIXELS_PER_GAMETIC);
+   static const int loopTics        = WAIT_TICS + transitionTics + WAIT_TICS + transitionTics;
+   if(maximumY > SCREENHEIGHT)
+   {
+      // Goes _/-\ then loops
+      const int sequenceTic = (gametic - startTic) % loopTics;
+      if(sequenceTic < WAIT_TICS)
+         yOffset = 0;
+      else if(sequenceTic < WAIT_TICS + transitionTics)
+         yOffset = int((sequenceTic - WAIT_TICS) * PIXELS_PER_GAMETIC);
+      else if(sequenceTic < WAIT_TICS + transitionTics + WAIT_TICS)
+         yOffset = maximumScroll;
+      else
+         yOffset = int((loopTics - sequenceTic) * PIXELS_PER_GAMETIC);
+
+      yOffset = emin(maximumScroll, yOffset);
+   }
 }
 
 extern menuwidget_t helpscreen_widget; // actually just below...
@@ -523,7 +570,7 @@ static void MN_HelpDrawer()
 }
 
 // haleyjd 05/29/06: record state of menu activation
-static bool help_prev_menuactive;
+bool help_prev_menuactive;
 
 static bool MN_HelpResponder(event_t *ev, int action)
 {
@@ -685,7 +732,7 @@ static bool MN_MapColourResponder(event_t *ev, int action)
    if(action == ka_menu_confirm)
    {
       static char tempstr[128];
-      sprintf(tempstr, "%i", selected_colour);
+      snprintf(tempstr, sizeof(tempstr), "%i", selected_colour);
      
       // run command
       C_RunCommand(colour_command, tempstr);

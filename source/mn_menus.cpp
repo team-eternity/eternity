@@ -1726,10 +1726,12 @@ static menuitem_t mn_sysvideo_items[] =
    { it_gap },
    { it_info,     "Rendering"                                    },
    { it_slider,   "Screen size",              "screensize"       },
+   { it_toggle,   "Renderer threads",         "r_numcontexts"    },
    { it_toggle,   "HOM detector flashes",     "r_homflash"       },
    { it_toggle,   "Translucency",             "r_trans"          },
    { it_variable, "Opacity percentage",       "r_tranpct"        },
    { it_toggle,   "Stock Doom object style",  "r_tlstyle"        },
+   { it_toggle,   "Sprite projection style",  "r_sprprojstyle"   },
    { it_gap },
    { it_info,     "Framerate"   },
    { it_toggle,   "Uncapped framerate",       "d_fastrefresh"    },
@@ -2247,18 +2249,20 @@ CONSOLE_COMMAND(mn_profiles, cf_hidden)
 
 static menuitem_t mn_gamepad_items[] =
 {
-   { it_title,        "Gamepad Settings",          nullptr, nullptr  },
-   { it_gap                                                          },
-   { it_info,         "Devices"                                      },
-   { it_runcmd,       "Select gamepad...",         "mn_joysticks"    },
-   { it_runcmd,       "Test gamepad...",           "mn_padtest"      },
-   { it_gap                                                          },
-   { it_info,         "Settings"                                     },
-   { it_runcmd,       "Load profile...",           "mn_profiles"     },
-   { it_variable,     "Turn sensitivity",          "i_joyturnsens"   },
-   { it_variable,     "Gamepad axis dead zone",    "i_joysticksens"  },
-   { it_toggle,       "Force feedback",            "i_forcefeedback" },
-   { it_end                                                          }
+   { it_title,        "Gamepad Settings",             nullptr, nullptr          },
+   { it_gap                                                                     },
+   { it_info,         "Devices"                                                 },
+   { it_runcmd,       "Select gamepad...",            "mn_joysticks"            },
+   { it_runcmd,       "Test gamepad...",              "mn_padtest"              },
+   { it_gap                                                                     },
+   { it_info,         "Settings"                                                },
+   { it_runcmd,       "Load profile...",              "mn_profiles"             },
+   { it_variable,     "Turn sensitivity",             "i_joyturnsens"           },
+   { it_variable,     "Gamepad l. stick dead zone",   "i_joy_deadzone_left"     },
+   { it_variable,     "Gamepad r. stick dead zone",   "i_joy_deadzone_right"    },
+   { it_variable,     "Gamepad trigger dead zone",    "i_joy_deadzone_trigger"  },
+   { it_toggle,       "Force feedback",               "i_forcefeedback"         },
+   { it_end                                                                           }
 };
 
 menu_t menu_gamepad =
@@ -2268,7 +2272,7 @@ menu_t menu_gamepad =
    &menu_gamepad_axes,             // next page
    &menu_gamepad,                    // rootpage
    200, 15,                        // x,y offset
-   2,                              // start on first selectable
+   3,                              // start on first selectable
    mf_background,                  // full-screen menu
    nullptr,                        // no drawer
    mn_gamepad_names,               // TOC stuff
@@ -2722,30 +2726,17 @@ static void MN_HUDPg2Drawer(void)
 
    if(patch)
    {
-      int16_t w  = patch->width;
-      int16_t h  = patch->height;
-      int16_t to = patch->topoffset;
-      int16_t lo = patch->leftoffset;
+      VBuffer &buffer = crosshair_scale ? subscreen43 : vbscreenfullres;
 
-      if(!crosshair_scale)
-      {
-         const double x_ratio = video.width  / SCREENWIDTH;
-         const double y_ratio = video.height / SCREENHEIGHT;
+      const int16_t w  = patch->width;
+      const int16_t h  = patch->height;
+      const int16_t to = patch->topoffset;
+      const int16_t lo = patch->leftoffset;
 
-         V_DrawPatchTL(
-            subscreen43.x1lookup[270 + 12] + subscreen43.subx - (w >> 1) + lo,
-            subscreen43.y1lookup[y + 12] + subscreen43.suby - (h >> 1) + to,
-            &vbscreenfullres, patch, colrngs[CR_RED], FTRANLEVEL
-         );
-      }
-      else
-      {
-         V_DrawPatchTL(
-            270 + 12 - (w >> 1) + lo,
-            y + 12 - (h >> 1) + to,
-            &subscreen43, patch, colrngs[CR_RED], FTRANLEVEL
-         );
-      }
+      const int crossX = buffer.mapXFromOther(270 + 12, subscreen43) - (w >> 1) + lo;
+      const int crossY = buffer.mapYFromOther(y   + 12, subscreen43) - (h >> 1) + to;
+
+      V_DrawPatchTL(crossX, crossY, &buffer, patch, colrngs[CR_RED], FTRANLEVEL);
    }
 }
 
@@ -3451,7 +3442,7 @@ static menuitem_t mn_function_items[] =
    {it_binding, "Quit",                 "mn_quit"},
    {it_binding, "Gamma correction",     "gamma /"},
    {it_gap},
-   {it_binding, "Join (-recordfromto)", "joindemo"},
+   {it_binding, "Join demo",            "joindemo"},
    {it_end}
 };
 

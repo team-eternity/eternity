@@ -313,7 +313,6 @@ void I_StartFrame()
 // Mouse
 //
 
-extern void MN_QuitDoom();
 extern acceltype_e mouseAccel_type;
 extern int mouseAccel_threshold;
 extern double mouseAccel_value;
@@ -502,14 +501,12 @@ static void I_RunDeferredEvents()
    }
 }
 
-static void I_GetEvent(SDL_Window *window)
+static void I_getEvent(SDL_Window *window)
 {
    SDL_Event  ev;
    int        sendmouseevent = 0;
    int        buttons        = 0;
-   event_t    d_event        = { ev_keydown, 0, 0, 0, false };
-   event_t    mouseevent     = { ev_mouse,   0, 0, 0, false };
-   event_t    tempevent      = { ev_keydown, 0, 0, 0, false };
+   event_t    mouseevent     = { ev_mouse, 0, 0, 0, false };
 
    // [CG] 01/31/2012: Ensure we have the latest info about focus and mouse grabbing.
    UpdateFocus(window);
@@ -534,15 +531,14 @@ static void I_GetEvent(SDL_Window *window)
             const char currchar = ev.text.text[i];
             if(ectype::isPrint(currchar))
             {
-               const event_t textevent = { ev_text, currchar, 0, 0, false };
-               D_PostEvent(&textevent);
+               const event_t event_text = { ev_text, currchar, 0, 0, false };
+               D_PostEvent(&event_text);
             }
          }
          break;
       case SDL_KEYDOWN:
-         d_event.type = ev_keydown;
-         d_event.repeat = !!ev.key.repeat;
-         d_event.data1 = I_TranslateKey(&ev.key.keysym);
+      {
+         const event_t event_keyDown = { ev_keydown, I_TranslateKey(&ev.key.keysym), 0, 0, !!ev.key.repeat };
 
 #if (EE_CURRENT_PLATFORM != EE_PLATFORM_MACOSX)
          // This quick exit code is adapted from PRBoom+
@@ -583,19 +579,18 @@ static void I_GetEvent(SDL_Window *window)
 
          // MaxW: 2017/10/12: Removed deferred event adding for caps lock
          // MaxW: 2017/10/18: Removed character input
-         D_PostEvent(&d_event);
+         D_PostEvent(&event_keyDown);
          break;
-
+      }
       case SDL_KEYUP:
-         d_event.type = ev_keyup;
-         d_event.data1 = I_TranslateKey(&ev.key.keysym);
+      {
+         const event_t event_keyUp = { ev_keyup, I_TranslateKey(&ev.key.keysym), 0, 0, false };
 
-         D_PostEvent(&d_event);
+         D_PostEvent(&event_keyUp);
          break;
-
+      }
       case SDL_MOUSEMOTION:
-         if(!usemouse || ((mouseAccel_type == ACCELTYPE_CHOCO) ||
-                          (mouseAccel_type == ACCELTYPE_CUSTOM)))
+         if(!usemouse || ((mouseAccel_type == ACCELTYPE_CHOCO) || (mouseAccel_type == ACCELTYPE_CUSTOM)))
             continue;
 
          // haleyjd 06/14/10: no mouse motion at startup.
@@ -621,114 +616,123 @@ static void I_GetEvent(SDL_Window *window)
          break;
 
       case SDL_MOUSEBUTTONDOWN:
+      {
          if(!usemouse)
             continue;
-         d_event.type =  ev_keydown;
+
+         event_t event_MouseButtonDown = { ev_keydown, 0, 0, 0, false };
 
          switch(ev.button.button)
          {
          case SDL_BUTTON_LEFT:
             sendmouseevent = 1;
             buttons |= 1;
-            d_event.data1 = KEYD_MOUSE1;
+            event_MouseButtonDown.data1 = KEYD_MOUSE1;
             break;
          case SDL_BUTTON_MIDDLE:
             // haleyjd 05/28/06: swapped MOUSE3/MOUSE2
             sendmouseevent = 1;
             buttons |= 4;
-            d_event.data1 = KEYD_MOUSE3;
+            event_MouseButtonDown.data1 = KEYD_MOUSE3;
             break;
          case SDL_BUTTON_RIGHT:
             sendmouseevent = 1;
             buttons |= 2;
-            d_event.data1 = KEYD_MOUSE2;
+            event_MouseButtonDown.data1 = KEYD_MOUSE2;
             break;
          case SDL_BUTTON_X1:
-            d_event.data1 = KEYD_MOUSE4;
+            event_MouseButtonDown.data1 = KEYD_MOUSE4;
             break;
          case SDL_BUTTON_X2:
-            d_event.data1 = KEYD_MOUSE5;
+            event_MouseButtonDown.data1 = KEYD_MOUSE5;
             break;
          case SDL_BUTTON_X2 + 1:
-            d_event.data1 = KEYD_MOUSE6;
+            event_MouseButtonDown.data1 = KEYD_MOUSE6;
             break;
          case SDL_BUTTON_X2 + 2:
-            d_event.data1 = KEYD_MOUSE7;
+            event_MouseButtonDown.data1 = KEYD_MOUSE7;
             break;
          case SDL_BUTTON_X2 + 3:
-            d_event.data1 = KEYD_MOUSE8;
+            event_MouseButtonDown.data1 = KEYD_MOUSE8;
             break;
          }
 
-         D_PostEvent(&d_event);
+         D_PostEvent(&event_MouseButtonDown);
          break;
-
+      }
       case SDL_MOUSEWHEEL:
+      {
          if(!usemouse)
             continue;
-         d_event.type = ev_keydown;
+
+         event_t event_mouseWheelDown = { ev_keydown, 0, 0, 0, false };
+         event_t event_mouseWheelUp   = { ev_keyup,   0, 0, 0, false };
 
          // SDL_TODO: Allow y to correspond to # of weps scrolled through?
          if(ev.wheel.y > 0)
          {
-            d_event.data1 = KEYD_MWHEELUP;
-            D_PostEvent(&d_event);
+            event_mouseWheelDown.data1 = KEYD_MWHEELUP;
+            D_PostEvent(&event_mouseWheelDown);
             // WHEELUP sends a button up event immediately. That won't work;
             // we need an input latency gap of at least one gametic.
-            tempevent.type = ev_keyup;
-            tempevent.data1 = KEYD_MWHEELUP;
-            I_AddDeferredEvent(tempevent, gametic + 1);
+            event_mouseWheelUp.data1 = KEYD_MWHEELUP;
+            I_AddDeferredEvent(event_mouseWheelUp, gametic + 1);
             break;
          }
          else if(ev.wheel.y < 0)
          {
-            d_event.data1 = KEYD_MWHEELDOWN;
-            D_PostEvent(&d_event);
+            event_mouseWheelDown.data1 = KEYD_MWHEELDOWN;
+            D_PostEvent(&event_mouseWheelDown);
             // ditto, as above.
-            tempevent.type = ev_keyup;
-            tempevent.data1 = KEYD_MWHEELDOWN;
-            I_AddDeferredEvent(tempevent, gametic + 1);
+            event_mouseWheelUp.data1 = KEYD_MWHEELDOWN;
+            I_AddDeferredEvent(event_mouseWheelUp, gametic + 1);
             break;
          }
 
+         break;
+      }
       case SDL_MOUSEBUTTONUP:
+      {
          if(!usemouse)
             continue;
-         d_event.type = ev_keyup;
-         d_event.data1 = 0;
+
+         event_t event_mouseButtonUp = { ev_keyup, 0, 0, 0, false };
 
          switch(ev.button.button)
          {
          case SDL_BUTTON_LEFT:
             sendmouseevent = 1;
             buttons &= ~1;
-            d_event.data1 = KEYD_MOUSE1;
+            event_mouseButtonUp.data1 = KEYD_MOUSE1;
             break;
          case SDL_BUTTON_MIDDLE:
             // haleyjd 05/28/06: swapped MOUSE3/MOUSE2
             sendmouseevent = 1;
             buttons &= ~4;
-            d_event.data1 = KEYD_MOUSE3;
+            event_mouseButtonUp.data1 = KEYD_MOUSE3;
             break;
          case SDL_BUTTON_RIGHT:
             sendmouseevent = 1;
             buttons &= ~2;
-            d_event.data1 = KEYD_MOUSE2;
+            event_mouseButtonUp.data1 = KEYD_MOUSE2;
             break;
          case SDL_BUTTON_X1:
-            d_event.data1 = KEYD_MOUSE4;
+            event_mouseButtonUp.data1 = KEYD_MOUSE4;
             break;
          case SDL_BUTTON_X2:
-            d_event.data1 = KEYD_MOUSE5;
+            event_mouseButtonUp.data1 = KEYD_MOUSE5;
             break;
          }
 
-         if(d_event.data1)
-            D_PostEvent(&d_event);
+         if(event_mouseButtonUp.data1)
+            D_PostEvent(&event_mouseButtonUp);
          break;
-
+      }
       case SDL_QUIT:
-         MN_QuitDoom();
+         {
+            static const event_t event_quit = { ev_quit };
+            D_PostEvent(&event_quit);
+         }
          break;
 
       case SDL_WINDOWEVENT:
@@ -763,7 +767,7 @@ static void I_GetEvent(SDL_Window *window)
 void I_StartTicInWindow(SDL_Window *window)
 {
    I_RunDeferredEvents();
-   I_GetEvent(window);
+   I_getEvent(window);
    I_UpdateHaptics();
 
    if(usemouse && ((mouseAccel_type == ACCELTYPE_CHOCO) ||

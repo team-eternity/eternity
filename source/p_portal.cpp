@@ -707,6 +707,17 @@ void P_initSectorPortalNeighbors()
    gSectorNeighborsThroughPortals.load(neighs[surf_floor], neighs[surf_ceil]);
 }
 
+static void P_linkDeferredThingsToPortals()
+{
+   for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+   {
+      Mobj *mo = thinker_cast<Mobj *>(th);
+      if(!mo)
+         continue;
+      R_LinkSpriteProj(*mo);
+   }
+}
+
 //
 // P_buildPortalMap
 //
@@ -798,10 +809,11 @@ static void P_buildPortalMap()
       }
    }
 
-   pLPortalMap.mapInit();
    gPortalBlockmap.mapInit();
 
    P_initSectorPortalNeighbors();
+   
+   P_linkDeferredThingsToPortals();
 }
 
 //
@@ -1179,7 +1191,7 @@ static int P_GetPortalState(const portal_t *portal, int sflags, bool obscured)
    return ret;
 }
 
-void P_CheckSectorPortalState(sector_t &sector, surf_e type)
+void P_CheckSectorPortalState(rendersector_t &sector, surf_e type)
 {
    surface_t &surface = sector.srf[type];
    if(!surface.portal)
@@ -1208,7 +1220,7 @@ void P_CheckLPortalState(line_t *line)
 // This function will set the floor or ceiling height, and update
 // the float version of the floor or ceiling height as well. It also updates portals.
 //
-void P_SetSectorHeight(sector_t &sec, surf_e surf, fixed_t h)
+void P_SetSectorHeight(rendersector_t &sec, surf_e surf, fixed_t h)
 {
    surface_t &surface = sec.srf[surf];
    surface.height = h;

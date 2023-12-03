@@ -125,19 +125,18 @@ function(eternity_target_sources _TARGET)
       )
    endif()
 
-   # macOS has no unique files currently
    if(APPLE)
-      if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/filesystem.hpp)
-         message(STATUS "Downloading gulrak filesystem to replace the C++17 one")
-         file(
-            DOWNLOAD "https://github.com/gulrak/filesystem/releases/download/v1.5.14/filesystem.hpp"
-            ${CMAKE_CURRENT_BINARY_DIR}/filesystem.hpp
-            EXPECTED_HASH SHA256=522791c2a2f1959193fdff61f4668c5ba894459753170b2246971272ee8ddc47
-         )
-      endif()
-
       # Add the base binary dir for the SDL2 symlink added from ExternalLibraries
       target_include_directories("${_TARGET}" PRIVATE ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+      target_sources("${_TARGET}" PRIVATE
+         macos/i_macwindow.h
+         macos/i_macwindow.mm
+      )
+      find_library(FOUNDATION_FRAMEWORK Foundation)
+      MESSAGE(${FOUNDATION_FRAMEWORK})
+      target_link_libraries(eternity ${FOUNDATION_FRAMEWORK})
+      find_library(COCOA_FRAMEWORK Cocoa)
+      target_link_libraries(eternity ${COCOA_FRAMEWORK})
    endif(APPLE)
 
    if(LINUX)
@@ -782,6 +781,8 @@ if(BUILD_FLATPAK)
 endif()
 
 if(MSVC)
+   set_property(TARGET eternity PROPERTY VS_DPI_AWARE "PerMonitor")
+
    target_compile_options(eternity PUBLIC
                           "$<$<CONFIG:Debug>:/ZI>" "/MP" "/utf-8")
 
@@ -795,17 +796,18 @@ if(MSVC)
 
    target_link_options(eternity PUBLIC
                        "/DYNAMICBASE:NO" "/SAFESEH:NO"
-                       "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:/MAP:$(OutDir)$(TargetName).map>")
+                       "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:/MAP:$(OutDir)$(TargetName).map>"
+                       "$<$<CONFIG:Release>:/DEBUG>")
 
    if(NOT MSVC_VERSION LESS  "1914")
       target_compile_options(eternity PUBLIC "/std:c++17")
    endif()
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT BUILD_FLATPAK)
-   target_link_libraries(eternity stdc++fs)
+   target_link_libraries(eternity stdc++fs pthread)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-  target_link_libraries(eternity version)
+   target_link_libraries(eternity version)
 endif()
 if(APPLE)
    eternity_set_xcode_attributes(eternity)

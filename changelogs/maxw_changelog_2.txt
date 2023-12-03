@@ -277,6 +277,66 @@ Added SDL controller input preset.
 Added vibration support to SDL controllers.
 Added ability to use the IWAD picker with controllers, as well as exit ENDOOM.
 
+--------------------------------------------------------------------------------
+2023/05/01
+Fixed non-keyboard inputs would sometimes being ignored while holding down any
+keyboard keys.
+
+--------------------------------------------------------------------------------
+2023/05/02
+Fixed instances where scrolling through weapons wouldn't work if the next weapon
+to be scrolled to is the same as the currently-equipped weapon.
+
+--------------------------------------------------------------------------------
+2023/05/03
+Improved frame pacing with interpolation.
+
+--------------------------------------------------------------------------------
+2023/05/04
+Added multithreaded renderer. New console variables:
+ * r_numcontexts: Video Options > Page 2 > Renderer Threads. This does what it
+   says on the tin. The higher the number, the more render contexts there are.
+   This number ranges from 1 to however many threads your CPU supports. Your
+   physical thread count is a sensible value for it.
+ * r_sprprojstyle: Video Options > Page 2 > Sprite Projection Style.
+   This has three settings, Default, Fast, and Thorough.
+  * Default means Fast for 1 thread, or Thorough for more than 1 thread.
+  * Fast is the classic Doom sprite projection style—if a subsector isn't
+    visible in a given render context then it won't be renderered. This may
+    cause sprites to have a cut-off appearance between the boundaries of render
+    context windows. It can be faster than Thorough in more sprite-heavy scenes.
+   * Thorough will (generally) eliminate the issues seen in Fast. This can cause
+     a reduction in performance in more heavy scenes compared to Fast, in your
+     average vanilla WAD you're not likely to notice much of a difference.
+
+Split i_joysticksens into i_joy_deadzone_left, i_joy_deadzone_right, and
+i_joy_deadzone_trigger.
+Normalised SDL gamepad axis inputs to start from 0 at the end of the deadzone.
+
+--------------------------------------------------------------------------------
+2023/06/24
+Added texture skewing sidedef properties for the Eternity UDMF namespace.
+Allows textures the match the sloping of slope on the front or back of the
+current line texture.
+ * skew_bottom_type, skew_middle_type, skew_top_type: Can be any of:
+    "none", "front_floor", "front_ceiling", "back_floor", or "back_ceiling".
+
+Added per-texture offset sidedef proeprties for the Eternity UDMF namespace.
+These have the same names as the ones that ZDoom's UDMF namespace uses.
+All properties are read in as decimal numbers (into fixed-point internally).
+ * offsetx_bottom, offsety_bottom, offsetx_mid,
+   offsety_mid, offsetx_top, offsety_top.
+
+--------------------------------------------------------------------------------
+2023/06/26
+Added sidedef lighting properties for the Eternity UDMF namespace.
+This allows for separate lighting on top/middle/bottom textures, as well as
+overall sidedef lighting. These have the same names as the ones that ZDoom's
+UDMF namespace uses. The light_* properties are integers and the lightabsolute_*
+properties are booleans.
+ * light_base, light_top, light_mid, light_bottom
+ * lightabsolute, lightabsolute_top, lightabsolute_mid, lightabsolute_bottom
+
 ================================================================================
 EOF
 ================================================================================

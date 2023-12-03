@@ -24,13 +24,8 @@
 #include <memory>
 #if __cplusplus >= 201703L || _MSC_VER >= 1914
 #include "hal/i_platform.h"
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
-#include "filesystem.hpp"
-namespace fs = ghc::filesystem;
-#else
 #include <filesystem>
 namespace fs = std::filesystem;
-#endif
 #else
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
@@ -1648,6 +1643,27 @@ void WadDirectory::readLump(int lump, void *dest,
       if(code == WadLumpLoader::CODE_FATAL)
          I_Error("WadDirectory::readLump: lump %s is malformed\n", lptr->name);
    }
+}
+
+//
+// As WadDirectory::cacheLumpNum but calls I_Error if it fails
+// and doesn't do anything with tags.
+//
+void *WadDirectory::getCachedLumpNum(int lump, const WadLumpLoader *lfmt) const
+{
+   lumpinfo_t::lumpformat fmt = lumpinfo_t::fmt_default;
+
+   if(lfmt)
+      fmt = lfmt->formatIndex();
+
+   // haleyjd 08/14/02: again, should not be RANGECHECK only
+   if(lump < 0 || lump >= numlumps)
+      I_Error("WadDirectory::getCachedLumpNum: %i >= numlumps\n", lump);
+
+   if(!(lumpinfo[lump]->cache[fmt]))
+      I_Error("WadDirectory::getCachedLumpNum %s not cached\n", getLumpName(lump));
+
+   return lumpinfo[lump]->cache[fmt];
 }
 
 //

@@ -106,12 +106,12 @@ static bool EV_Check3DMidTexSwitch(const line_t *line, const Mobj *thing, int si
 
       if(line->flags & ML_DONTPEGBOTTOM)
       {
-         texbot = sidedef->rowoffset + openbottom;
+         texbot = sidedef->offset_base_y + sidedef->offset_mid_y + openbottom;
          textop = texbot + textures[sidedef->midtexture]->heightfrac;
       }
       else
       {
-         textop = opentop + sidedef->rowoffset;
+         textop = opentop + sidedef->offset_base_y + sidedef->offset_mid_y;
          texbot = textop - textures[sidedef->midtexture]->heightfrac;
       }
 
@@ -1074,8 +1074,8 @@ static ev_binding_t *EV_UDMFEternityBindingForSpecial(int special)
 
    EV_initUDMFEternitySpecHash(); // ensure table is initialized
 
-  // Try UDMFEternity's bindings first. If nothing is found, defer to Hexen's 
-  // bindings.
+   // Try UDMFEternity's bindings first. If nothing is found, defer to Hexen's 
+   // bindings.
    if(!(bind = UDMFEternitySpecHash.objectForKey(special)))
       bind = HexenSpecHash.objectForKey(special);
 
@@ -1129,8 +1129,8 @@ static ev_binding_t *EV_ACSBindingForSpecial(int special)
 
    EV_initACSSpecHash(); // ensure table is initialized
 
-  // Try ACS's bindings first. If nothing is found, defer to UDMFEternity's 
-  // bindings, then to Hexen's.
+   // Try ACS's bindings first. If nothing is found, defer to UDMFEternity's 
+   // bindings, then to Hexen's.
    if(!(bind = ACSSpecHash.objectForKey(special)))
    {
       if(!(bind = UDMFEternitySpecHash.objectForKey(special)))

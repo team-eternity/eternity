@@ -122,7 +122,6 @@ static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num, bool ignor
 
    // If the player is doing a demo w/ EDF-weapons and the weapon should be switched from,
    // try to do so, otherwise do the legacy ammo switch
-   // FIXME: MBF21 weapon switch if strict MBF21 compat is added
    if((demo_version >= 401 || vanilla_heretic) &&
       (!player->readyweapon || (player->readyweapon->flags & WPF_AUTOSWITCHFROM)))
    {
@@ -139,33 +138,36 @@ static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num, bool ignor
          player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
       }
    }
-   else if(!strcasecmp(ammo->getKey(), "AmmoClip"))
+   else
    {
-      if(E_WeaponIsCurrentDEHNum(player, wp_fist))
+      if(!strcasecmp(ammo->getKey(), "AmmoClip"))
       {
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_chaingun))
-            player->pendingweapon = E_WeaponForDEHNum(wp_chaingun);
-         else
-            player->pendingweapon = E_WeaponForDEHNum(wp_pistol);
+         if(E_WeaponIsCurrentDEHNum(player, wp_fist))
+         {
+            if(E_PlayerOwnsWeaponForDEHNum(player, wp_chaingun))
+               player->pendingweapon = E_WeaponForDEHNum(wp_chaingun);
+            else
+               player->pendingweapon = E_WeaponForDEHNum(wp_pistol);
+         }
       }
-   }
-   else if(!strcasecmp(ammo->getKey(), "AmmoShell"))
-   {
-      if(E_WeaponIsCurrentDEHNum(player, wp_fist) || E_WeaponIsCurrentDEHNum(player, wp_pistol))
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun))
-            player->pendingweapon = E_WeaponForDEHNum(wp_shotgun);
-   }
-   else if(!strcasecmp(ammo->getKey(), "AmmoCell"))
-   {
-      if(E_WeaponIsCurrentDEHNum(player, wp_fist) || E_WeaponIsCurrentDEHNum(player, wp_pistol))
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_plasma))
-            player->pendingweapon = E_WeaponForDEHNum(wp_plasma);
-   }
-   else if(!strcasecmp(ammo->getKey(), "AmmoMissile"))
-   {
-      if(E_WeaponIsCurrentDEHNum(player, wp_fist))
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_missile))
-            player->pendingweapon = E_WeaponForDEHNum(wp_missile);
+      else if(!strcasecmp(ammo->getKey(), "AmmoShell"))
+      {
+         if(E_WeaponIsCurrentDEHNum(player, wp_fist) || E_WeaponIsCurrentDEHNum(player, wp_pistol))
+            if(E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun))
+               player->pendingweapon = E_WeaponForDEHNum(wp_shotgun);
+      }
+      else if(!strcasecmp(ammo->getKey(), "AmmoCell"))
+      {
+         if(E_WeaponIsCurrentDEHNum(player, wp_fist) || E_WeaponIsCurrentDEHNum(player, wp_pistol))
+            if(E_PlayerOwnsWeaponForDEHNum(player, wp_plasma))
+               player->pendingweapon = E_WeaponForDEHNum(wp_plasma);
+      }
+      else if(!strcasecmp(ammo->getKey(), "AmmoMissile"))
+      {
+         if(E_WeaponIsCurrentDEHNum(player, wp_fist))
+            if(E_PlayerOwnsWeaponForDEHNum(player, wp_missile))
+               player->pendingweapon = E_WeaponForDEHNum(wp_missile);
+      }
    }
 
    return true;
@@ -554,19 +556,19 @@ bool P_GiveArmor(player_t *player, const itemeffect_t *effect)
 }
 
 /*
-  pw_invulnerability,
-  pw_strength,
-  pw_invisibility,
-  pw_ironfeet,
-  pw_allmap,
-  pw_infrared,
-  pw_totalinvis,  // haleyjd: total invisibility
-  pw_ghost,       // haleyjd: heretic ghost
-  pw_silencer,    // haleyjd: silencer
-  pw_flight,      // haleyjd: flight
-  pw_torch,       // haleyjd: infrared w/flicker
-  pw_weaponlevel2 // MaxW: power up weapons (e.g.: tome of power)
-  NUMPOWERS
+   pw_invulnerability,
+   pw_strength,
+   pw_invisibility,
+   pw_ironfeet,
+   pw_allmap,
+   pw_infrared,
+   pw_totalinvis,  // haleyjd: total invisibility
+   pw_ghost,       // haleyjd: heretic ghost
+   pw_silencer,    // haleyjd: silencer
+   pw_flight,      // haleyjd: flight
+   pw_torch,       // haleyjd: infrared w/flicker
+   pw_weaponlevel2 // MaxW: power up weapons (e.g.: tome of power)
+   NUMPOWERS
 */
 
 //

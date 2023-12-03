@@ -56,32 +56,32 @@ extern byte *cr_orange;
 extern byte *cr_yellow;
 
 // symbolic indices into color translation table pointer array
-typedef enum
+enum crange_idx_e
 {
-  CR_BRICK,   //0
-  CR_TAN,     //1
-  CR_GRAY,    //2
-  CR_GREEN,   //3
-  CR_BROWN,   //4
-  CR_GOLD,    //5
-  CR_RED,     //6
-  CR_BLUE,    //7
-  CR_ORANGE,  //8
-  CR_YELLOW,  //9
-  
-  CR_BUILTIN = CR_YELLOW,
-  
-  // haleyjd: "custom" colors do not have built-in translations;
-  // they are free for user definition via EDF.
-  CR_CUSTOM1, //10
-  CR_CUSTOM2, //11
-  CR_CUSTOM3, //12
-  CR_CUSTOM4, //13
+   CR_BRICK,   //0
+   CR_TAN,     //1
+   CR_GRAY,    //2
+   CR_GREEN,   //3
+   CR_BROWN,   //4
+   CR_GOLD,    //5
+   CR_RED,     //6
+   CR_BLUE,    //7
+   CR_ORANGE,  //8
+   CR_YELLOW,  //9
 
-  CR_MAXCUSTOM = CR_CUSTOM4,
-  
-  CR_LIMIT    //jff 2/27/98 added for range check
-} crange_idx_e;
+   CR_BUILTIN = CR_YELLOW,
+
+   // haleyjd: "custom" colors do not have built-in translations;
+   // they are free for user definition via EDF.
+   CR_CUSTOM1, //10
+   CR_CUSTOM2, //11
+   CR_CUSTOM3, //12
+   CR_CUSTOM4, //13
+
+   CR_MAXCUSTOM = CR_CUSTOM4,
+
+   CR_LIMIT    //jff 2/27/98 added for range check
+};
 //jff 1/16/98 end palette color range additions
 
 // array of pointers to color translation tables

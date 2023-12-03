@@ -163,9 +163,15 @@ default_t defaults[] =
    // joystick turn sensitivity
    DEFAULT_FLOAT("i_joyturnsens", &i_joyturnsens, nullptr, 1.0, 0, 10000, default_t::wad_no,
                  "Joystick turning sensitivity"),
-   // joystick sensitivity
-   DEFAULT_INT("i_joysticksens", &i_joysticksens, nullptr, 7849, 0, 32767, default_t::wad_no,
-               "SDL joystick sensitivity"),
+   // gamepad left thumbstick sensitivity
+   DEFAULT_INT("i_joy_deadzone_left", &i_joy_deadzone_left, nullptr, 7849, 0, 32767, default_t::wad_no,
+               "SDL gamepad left thumbstick sensitivity"),
+   // gamepad right thumbstick sensitivity
+   DEFAULT_INT("i_joy_deadzone_right", &i_joy_deadzone_right, nullptr, 8689, 0, 32767, default_t::wad_no,
+               "SDL gamepad right thumbstick sensitivity"),
+   // gamepad right thumbstick sensitivity
+   DEFAULT_INT("i_joy_deadzone_right", &i_joy_deadzone_right, nullptr, 3855, 0, 32767, default_t::wad_no,
+               "SDL gamepad trigger sensitivity"),
 
    DEFAULT_INT("s_precache", &s_precache, nullptr, 0, 0, 1, default_t::wad_no,
                "precache sounds at startup"),
@@ -864,6 +870,9 @@ default_t defaults[] =
 
    DEFAULT_INT("r_tlstyle", &r_tlstyle, nullptr, 1, 0, R_TLSTYLE_NUM - 1, default_t::wad_game,
                "Doom object translucency style (0 = none, 1 = Boom, 2 = new)"),
+
+   DEFAULT_INT("r_sprprojstyle", &r_sprprojstyle, nullptr, 0, 0, R_SPRPROJSTYLE_NUM - 1, default_t::wad_no,
+               "Sprite projection style (0 = default, 1 = fast, 2 = thorough)"),
    
    DEFAULT_INT("spechits_emulation", &spechits_emulation, nullptr, 0, 0, 2, default_t::wad_no,
                "0 = off, 1 = emulate like Chocolate Doom, 2 = emulate like PrBoom+"),

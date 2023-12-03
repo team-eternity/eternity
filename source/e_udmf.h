@@ -298,12 +298,17 @@ private:
    class USidedef
    {
    public:
-      int offsetx;
-      int offsety;
+      fixed_t offsetx, offsety;
+      fixed_t offsetx_top, offsety_top, offsetx_mid, offsety_mid, offsetx_bottom, offsety_bottom;
 
       qstring texturetop;
       qstring texturebottom;
       qstring texturemiddle;
+
+      qstring skew_bottom_type, skew_middle_type, skew_top_type;
+
+      int light, light_top, light_mid, light_bottom;
+      bool lightabsolute, lightabsolute_top, lightabsolute_mid, lightabsolute_bottom;
 
       int sector;
 
@@ -311,7 +316,9 @@ private:
 
       int errorline;
 
-      USidedef() : offsetx(0), offsety(0), sector(0), sset(false), errorline(0)
+      USidedef() : offsetx(0), offsety(0), 
+         offsetx_top(0), offsety_top(0), offsetx_mid(0), offsety_mid(0), offsetx_bottom(0), offsety_bottom(0),
+         sector(0), sset(false), errorline(0)
       {
       }
    };

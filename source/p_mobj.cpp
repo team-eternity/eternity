@@ -1446,6 +1446,16 @@ void Mobj::Think()
       return;
    }
 
+   // [XA] 02/22/20: use Hexen's fastprojectile think function
+   // exclusively if the flag's set, for maximum compatibility.
+   // also, today's date is amazing.
+   // MaxW: 2023/12/02: Instead of flag, use a dedicated property.
+   if(info->missiletype == MISSILETYPE_RAVENFAST)
+   {
+      ThinkRavenFast();
+      return;
+   }
+
    int oldwaterstate, waterstate = 0;
    fixed_t lz;
 
@@ -1665,6 +1675,111 @@ void Mobj::Think()
    // FIXME: may be insufficient
    if(!removed)
       P_checkMobjProjections(*this);
+}
+
+//
+// Mobj::ThinkFast
+//
+// [XA] This is pretty much a direct port of Hexen's fast-projectile
+// code, warts and all. Since this is a completely different code
+// path from normal Think, there's a lot of features that aren't
+// supported on fast projectiles... yet? Either way, this is
+// experimental for now. Swim at your own risk, etc.
+//
+void Mobj::ThinkRavenFast()
+{
+   int i;
+   fixed_t xfrac;
+   fixed_t yfrac;
+   fixed_t zfrac;
+   fixed_t z;
+   bool changexy;
+   Mobj *mo;
+
+   // backup previous position for interpolation
+   if(!player || player->mo != this)
+      backupPosition();
+
+   // Handle movement
+   if(this->momx || this->momy ||
+      (this->z != this->zref.floor) || this->momz)
+   {
+      xfrac = this->momx>>3;
+      yfrac = this->momy>>3;
+      zfrac = this->momz>>3;
+      changexy = xfrac || yfrac;
+
+      for(i = 0; i < 8; i++)
+      {
+         if(changexy)
+         {
+            if(!P_TryMove(this, this->x+xfrac, this->y+yfrac, false))
+            {
+               // Blocked move
+               P_ExplodeMissile(this, nullptr);
+               return;
+            }
+         }
+
+         this->z += zfrac;
+         if(this->z <= this->zref.floor)
+         {
+            // Hit the floor
+            this->z = this->zref.floor;
+            E_HitFloor(this);
+            P_ExplodeMissile(this, nullptr);
+            return;
+         }
+
+         if(this->z+this->height > this->zref.ceiling)
+         {
+            // Hit the ceiling
+            this->z = this->zref.ceiling-this->height;
+            P_ExplodeMissile(this, nullptr);
+            return;
+         }
+
+         if(changexy && this->info->trailthingnum >= 0)
+         {
+            // [XA] spawn a trail once every <trailsparsity>
+            // movement steps. This is a generalized form of
+            // Hexen's CFlame behavior, where it only spawned
+            // every 4th movement step. Yeah, the way this
+            // is coded means that values below 1 are the
+            // same as 1. Meh, sue me. :P
+            if(--this->counters[0] <= 0)
+            {
+               this->counters[0] = this->info->trailsparsity;
+
+               // [XA] random chance to spawn. A generalized
+               // version of Hexen's MWand's 50% spawn chance.
+               if(P_Random(pr_fasttrailchance) <= this->info->trailchance)
+               {
+                  z = this->z + this->info->trailzoffset;
+                  if(z < this->zref.floor)
+                     z = this->zref.floor;
+                  else if(z > this->zref.ceiling)
+                     z = this->zref.ceiling;
+
+                  // [XA] as a heads-up, this angle adjustment was
+                  // only done for the CFlame trail, not the MWand
+                  // one. Hopefully doing it for both doesn't
+                  // break anything... 9_6
+                  mo = P_SpawnMobj(this->x, this->y, z, this->info->trailthingnum);
+                  if(mo)
+                     mo->angle = this->angle;
+               }
+            }
+         }
+      }
+   }
+
+   // Advance the state
+   if(tics != -1) // you can cycle through multiple states in a tic
+   {
+      if(!--tics)
+         P_SetMobjState(this, state->nextstate);
+   }
 }
 
 //

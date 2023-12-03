@@ -321,7 +321,7 @@ void A_Chase(actionargs_t *actionargs)
    if(demo_version >= 331)
       superfriend = P_SuperFriend(actor);
 
-  // check for melee attack
+   // check for melee attack
    if(actor->info->meleestate != NullStateNum && P_CheckMeleeRange(actor) && 
       !superfriend)
    {

@@ -35,7 +35,6 @@
 #include "r_state.h"
 
 PortalBlockmap gPortalBlockmap;
-StaticLinedefPortalBlockmap pLPortalMap;
 
 //
 // Initializes the portal blockmap at level start, when map blocks are set.
@@ -71,6 +70,7 @@ void PortalBlockmap::mapInit()
       checkLinkSector(sector, sector.srf.ceiling.portal, surf_ceil, i);
    }
    mInitializing = false;
+   isInit = true;
 }
 
 //
@@ -205,79 +205,6 @@ void PortalBlockmap::checkLinkSector(const sector_t &sector, const portal_t *por
    entry.sector = &sector;
    entry.surf = surf;
 }
-
-//
-// Initialization per map. Makes PU_LEVEL allocations
-//
-void StaticLinedefPortalBlockmap::mapInit()
-{
-   Collection<PODCollection<int>> map;
-   int numblocks = bmapwidth * bmapheight;
-   for(int i = 0; i < numblocks; ++i)
-   {
-      int offset = blockmap[i];
-      const int *list = blockmaplump + offset;
-      // MaxW: 2016/02/02: if before 3.42 always skip, skip if all blocklists start w/ 0
-      // killough 2/22/98: demo_compatibility check
-      // skip 0 starting delimiter -- phares
-      if((!demo_compatibility && demo_version < 342) ||
-         (demo_version >= 342 && skipblstart))
-      {
-         list++;
-      }
-
-      PODCollection<int> coll;
-
-      for(; *list != -1; ++list)
-      {
-         if(*list >= numlines)
-            continue;
-         const line_t &line = lines[*list];
-         if(line.backsector &&
-            (line.pflags & PS_PASSABLE ||
-            (line.extflags & EX_ML_LOWERPORTAL &&
-               line.backsector->srf.floor.portal &&
-               line.backsector->srf.floor.portal->type == R_LINKED) ||
-               (line.extflags & EX_ML_UPPERPORTAL &&
-                  line.backsector->srf.ceiling.portal &&
-                  line.backsector->srf.ceiling.portal->type == R_LINKED)))
-         {
-            coll.add(*list);
-         }
-      }
-
-      map.add(coll);
-   }
-   mMap.load(map);
-
-   mValids = ecalloctag(decltype(mValids), numlines, sizeof(*mValids), PU_LEVEL,
-      nullptr);
-}
-
-//
-// Does the iteration
-//
-bool StaticLinedefPortalBlockmap::iterator(int x, int y, void *data,
-   bool(*func)(const line_t &, void *data)) const
-{
-   if(x < 0 || x >= bmapwidth || y < 0 || y >= bmapheight)
-      return true;
-   int i = y * bmapwidth + x;
-
-   int linecount = 0;
-   const int *linenum = mMap.getList(i, &linecount);
-
-   for(int j = 0; j < linecount; ++j)
-   {
-      if(mValids[linenum[j]] == mValidcount)
-         continue;
-      mValids[linenum[j]] = mValidcount;
-      if(!func(lines[linenum[j]], data))
-         return false;
-   }
-   return true;
-}
-
 
 //
 // P_BlockHasLinkedPortalLines

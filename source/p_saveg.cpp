@@ -27,6 +27,7 @@
 
 #include "acs_intr.h"
 #include "am_map.h"
+#include "a_common.h"
 #include "c_io.h"
 #include "d_dehtbl.h"
 #include "d_files.h"
@@ -861,10 +862,17 @@ static void P_ArchiveWorld(SaveArchive &arc)
             // killough 10/98: save full sidedef offsets,
             // preserving fractional scroll offsets
             
-            arc << si->textureoffset << si->rowoffset;
+            arc << si->offset_base_x << si->offset_base_y;
             Archive_Texture(arc, si->toptexture);
             Archive_Texture(arc, si->bottomtexture);
             Archive_Texture(arc, si->midtexture);
+
+            if(arc.saveVersion() >= 16)
+            {
+               arc << si->offset_top_x    << si->offset_top_y
+                   << si->offset_bottom_x << si->offset_bottom_y
+                   << si->offset_mid_x    << si->offset_mid_y;
+            }
          }
       }
    }
@@ -1498,7 +1506,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
       
       // killough 2/22/98: "proprietary" version string :-)
       memset(name2, 0, sizeof(name2));
-      sprintf(name2, VERSIONID);
+      snprintf(name2, sizeof(name2), VERSIONID);
    
       arc.archiveCString(name2, VERSIONSIZE);
 
@@ -1588,6 +1596,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
       P_ArchiveSoundSequences(arc);
       P_ArchiveButtons(arc);
       P_ArchiveACS(arc);            // davidph 05/30/12
+      P_ArchiveHereticWeapons(arc);
 
       P_DeNumberThinkers();
 
@@ -1839,6 +1848,7 @@ void P_LoadGame(const char *filename)
       P_UnArchiveSoundSequences(arc);
       P_ArchiveButtons(arc);
       P_ArchiveACS(arc);            // davidph 05/30/12
+      P_ArchiveHereticWeapons(arc);
 
       P_FreeThinkerTable();
 

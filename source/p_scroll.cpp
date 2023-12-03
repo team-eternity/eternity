@@ -125,8 +125,8 @@ void ScrollThinker::Think()
    {
    case ScrollThinker::sc_side:          // killough 3/7/98: Scroll wall texture
       side = sides + this->affectee;
-      side->textureoffset += dx;
-      side->rowoffset += dy;
+      side->offset_base_x += dx;
+      side->offset_base_y += dy;
       P_AddScrolledSide(side, dx, dy);
       break;
 
@@ -608,8 +608,8 @@ static void P_spawnDynamicWallScroller(int staticFn, line_t *l, int linenum)
       case EV_STATIC_SCROLL_BY_OFFSETS_TAG_ACCEL:
       {
          const side_t &side = sides[l->sidenum[0]];
-         dx = -side.textureoffset / 8;
-         dy = side.rowoffset / 8;
+         dx = -side.offset_base_x / 8;
+         dy = side.offset_base_y / 8;
          byoffset = true;
          break;
       }
@@ -674,7 +674,7 @@ static void P_spawnStaticWallScroller(line_t *l, fixed_t dx, fixed_t dy)
 static void P_handleScrollByOffsetsParam(line_t &line)
 {
    const side_t &side = sides[line.sidenum[0]];
-   v2fixed_t delta = { -side.textureoffset, side.rowoffset };
+   v2fixed_t delta = { -side.offset_base_x, side.offset_base_y };
 
    // Check args now
    qstring error;
@@ -795,8 +795,8 @@ void P_SpawnScrollers()
       case EV_STATIC_SCROLL_BY_OFFSETS:
          // killough 3/2/98: scroll according to sidedef offsets
          P_spawnStaticWallScroller(line, 
-            -sides[*line->sidenum].textureoffset,
-             sides[*line->sidenum].rowoffset);
+            -sides[*line->sidenum].offset_base_x,
+             sides[*line->sidenum].offset_base_y);
          break;
       case EV_STATIC_SCROLL_BY_OFFSETS_PARAM:
          P_handleScrollByOffsetsParam(*line);

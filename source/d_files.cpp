@@ -25,13 +25,8 @@
 // haleyjd 08/20/07: POSIX opendir needed for autoload functionality
 #if __cplusplus >= 201703L || _MSC_VER >= 1914
 #include "hal/i_platform.h"
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
-#include "filesystem.hpp"
-namespace fs = ghc::filesystem;
-#else
 #include <filesystem>
 namespace fs = std::filesystem;
-#endif
 #else
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;

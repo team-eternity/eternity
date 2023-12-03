@@ -53,14 +53,20 @@ static gamePadChangeCallback_t gamePadChangeCallback;
 
 // Generic sensitivity values, for drivers that need them
 double i_joyturnsens;
-int    i_joysticksens;
+int    i_joy_deadzone_left;
+int    i_joy_deadzone_right;
+int    i_joy_deadzone_trigger;
 
 // haleyjd 04/15/02: joystick sensitivity variables
-VARIABLE_FLOAT(i_joyturnsens, nullptr, 0.0, 100.0);
-VARIABLE_INT(i_joysticksens, nullptr, 0, 32767, nullptr);
+VARIABLE_FLOAT(i_joyturnsens,        nullptr, 0.0, 100.0);
+VARIABLE_INT(i_joy_deadzone_left,    nullptr, 0, 32767, nullptr);
+VARIABLE_INT(i_joy_deadzone_right,   nullptr, 0, 32767, nullptr);
+VARIABLE_INT(i_joy_deadzone_trigger, nullptr, 0, 32767, nullptr);
 
 CONSOLE_VARIABLE(i_joyturnsens, i_joyturnsens, 0) {}
-CONSOLE_VARIABLE(i_joysticksens, i_joysticksens, 0) {}
+CONSOLE_VARIABLE(i_joy_deadzone_left,    i_joy_deadzone_left,    0) {}
+CONSOLE_VARIABLE(i_joy_deadzone_right,   i_joy_deadzone_right,   0) {}
+CONSOLE_VARIABLE(i_joy_deadzone_trigger, i_joy_deadzone_trigger, 0) {}
 
 //=============================================================================
 //

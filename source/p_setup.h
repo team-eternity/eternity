@@ -99,24 +99,24 @@ extern bool     newlevel;
 extern char     levelmapname[10];
 
 #if 0
-typedef struct                          // Standard OLO stuff, put in WADs
-{       
-  unsigned char header[3];                 // Header
-  unsigned char space1;
-  unsigned char extend;
-  unsigned char space2;
-  
-  // Standard
-  unsigned char levelwarp;
-  unsigned char lastlevel;
-  unsigned char deathmatch;
-  unsigned char skill_level;
-  unsigned char nomonsters;
-  unsigned char respawn;
-  unsigned char fast;
+struct olo_t                                // Standard OLO stuff, put in WADs
+{
+   unsigned char header[3];                 // Header
+   unsigned char space1;
+   unsigned char extend;
+   unsigned char space2;
 
-  unsigned char levelname[32][32];
-} olo_t;
+   // Standard
+   unsigned char levelwarp;
+   unsigned char lastlevel;
+   unsigned char deathmatch;
+   unsigned char skill_level;
+   unsigned char nomonsters;
+   unsigned char respawn;
+   unsigned char fast;
+
+   unsigned char levelname[32][32];
+};
 
 extern olo_t olo;
 extern int olo_loaded;

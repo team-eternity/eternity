@@ -158,18 +158,11 @@ void R_FillBackScreen(const rrect_t &window);
 // If the view size is not full screen, draws a border around it.
 void R_DrawViewBorder();
 
-extern byte  *tranmap;       // translucency filter maps 256x256  // phares 
-extern byte  *main_tranmap;  // killough 4/11/98
-extern byte  *main_submap;   // haleyjd 11/30/13
+extern byte *main_tranmap; // killough 4/11/98
+extern byte *main_submap;  // haleyjd 11/30/13
 
 #define R_ADDRESS(px, py) \
    (renderscreen + (viewwindow.y + (py)) + linesize * (viewwindow.x + (px)))
-
-#define FUZZTABLE 50 
-#define FUZZOFF (SCREENWIDTH)
-
-extern const int fuzzoffset[];
-extern int fuzzpos;
 
 // Cardboard
 struct cb_column_t
@@ -184,6 +177,7 @@ struct cb_column_t
    // 8-bit lighting
    const lighttable_t *colormap;
    const byte *translation;
+   byte *tranmap;
    fixed_t translevel; // haleyjd: zdoom style trans level
    byte skycolor; // the sky color
 

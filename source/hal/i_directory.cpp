@@ -26,7 +26,9 @@
 //
 //-----------------------------------------------------------------------------
 
-#if _MSC_VER >= 1914
+#include "i_platform.h"
+
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
 #include <locale>
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -37,7 +39,6 @@ namespace fs = std::filesystem;
 
 #include "i_directory.h"
 
-#include "i_platform.h"
 #include "../m_qstr.h"
 
 //
@@ -111,7 +112,6 @@ void I_GetRealPath(const char *path, qstring &real)
    //std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
    //std::string spath(convertor.to_bytes(wpath));
    //real = spath.c_str();
-
 
 #elif EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX \
    || EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX \

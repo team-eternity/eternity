@@ -382,9 +382,9 @@ void G_InitKeyBindings()
 
          // build generic name
          if(ectype::isPrint(i))
-            sprintf(tempstr, "%c", i);
+            snprintf(tempstr, sizeof(tempstr), "%c", i);
          else
-            sprintf(tempstr, "key%x", i);
+            snprintf(tempstr, sizeof(tempstr), "key%x", i);
 
          keybindings[i].name = Z_Strdup(tempstr, PU_STATIC, nullptr);
       }
@@ -963,7 +963,7 @@ void G_SaveDefaults()
       return;
    }
 
-  // write key bindings
+   // write key bindings
 
    for(doomkey_t &keybinding : keybindings)
    {

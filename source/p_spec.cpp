@@ -80,6 +80,7 @@
 #include "r_plane.h"    // killough 10/98
 #include "r_portal.h"
 #include "r_ripple.h"
+#include "r_sky.h"
 #include "r_state.h"
 #include "s_sound.h"
 #include "sounds.h"
@@ -95,11 +96,11 @@ bool secret_notification_enabled = true;
 //
 struct anim_t
 {
-  bool        istexture;
-  int         picnum;
-  int         basepic;
-  int         numpics;
-  int         speed;
+   bool        istexture;
+   int         picnum;
+   int         basepic;
+   int         numpics;
+   int         speed;
 };
 
 //
@@ -1204,7 +1205,7 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
 
    // Has hit ground
 
-   if(mbf21_temp && sector->flags & SECF_INSTANTDEATH)
+   if(mbf21_demo && sector->flags & SECF_INSTANTDEATH)
       P_runInstantDeathSector(player, sector);
    else if(enable_nuke && sector->damage > 0) // killough 12/98: nukage disabling cheat
    {
@@ -1331,6 +1332,8 @@ void P_UpdateSpecials()
    {
       for(int i = anim->basepic; i < anim->basepic + anim->numpics; i++)
       {
+         const int prev = texturetranslation[i];
+
          if((i >= flatstart && i < flatstop && r_swirl) ||
             anim->speed >= SWIRL_TICS || anim->numpics == 1)
          {
@@ -1343,6 +1346,10 @@ void P_UpdateSpecials()
 
             texturetranslation[i] = pic;
          }
+
+         // Cache new animation and make a sky texture if required
+         R_CacheTexture(texturetranslation[i]);
+         R_CacheSkyTextureAnimFrame(prev, texturetranslation[i]);
       }
    }
    
@@ -1507,8 +1514,15 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
 
       case EV_STATIC_SKY_TRANSFER:         // Regular sky
       case EV_STATIC_SKY_TRANSFER_FLIPPED: // Same, only flipped
-         for(s = -1; (s = P_FindSectorFromLineArg0(lines+i,s)) >= 0;)
+         for(s = -1; (s = P_FindSectorFromLineArg0(lines + i, s)) >= 0;)
+         {
             sectors[s].sky = i | PL_SKYFLAT;
+
+            const line_t &l = lines[i];
+            const side_t *s = sides + *l.sidenum;
+            if(s->toptexture < texturecount)
+               R_CacheSkyTexture(s->toptexture);
+         }
          break;
 
          // ioanch 20160803: Static_Init special from ZDoom
@@ -1517,8 +1531,15 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
             int prop = line->args[ev_StaticInit_Arg_Prop];
             if(prop == ev_StaticInit_Prop_SkyTransfer)   // sky transfer
             {
-               for(s = -1; (s = P_FindSectorFromLineArg0(line,s)) >= 0;)
+               for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0;)
+               {
                   sectors[s].sky = i | PL_SKYFLAT;
+
+                  const line_t &l = lines[i];
+                  const side_t *s = sides + *l.sidenum;
+                  if(s->toptexture < texturecount)
+                     R_CacheSkyTexture(s->toptexture);
+               }
             }
          }
          break;
@@ -2181,8 +2202,8 @@ bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta,
       if(!(line->flags & (ML_TWOSIDED|ML_3DMIDTEX)) || line->sidenum[1] == -1)
          continue;
 
-      sides[line->sidenum[0]].rowoffset += delta;
-      sides[line->sidenum[1]].rowoffset += delta;
+      sides[line->sidenum[0]].offset_base_y += delta;
+      sides[line->sidenum[1]].offset_base_y += delta;
       P_AddScrolledSide(&sides[line->sidenum[0]], 0, delta);
       P_AddScrolledSide(&sides[line->sidenum[1]], 0, delta);
    }

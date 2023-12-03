@@ -235,8 +235,8 @@ static default_t sysdefaults[] =
    DEFAULT_INT("gl_colordepth", &cfg_gl_colordepth, nullptr, 32, 16, 32, default_t::wad_no,
                "GL backend screen bitdepth (16, 24, or 32)"),
 
-   DEFAULT_INT("gl_filter_type", &cfg_gl_filter_type, nullptr, CFG_GL_LINEAR,
-               0, CFG_GL_NUMFILTERS-1, default_t::wad_no, 
+   DEFAULT_INT("gl_filter_type", &cfg_gl_filter_type, nullptr, CFG_GL_NEAREST,
+               0, CFG_GL_NUMFILTERS-1, default_t::wad_no,
                "GL2D texture filtering type (0 = GL_LINEAR, 1 = GL_NEAREST)"),
 
    DEFAULT_BOOL("d_fastrefresh", &d_fastrefresh, nullptr, true, default_t::wad_no,
@@ -248,10 +248,8 @@ static default_t sysdefaults[] =
    DEFAULT_BOOL("i_forcefeedback", &i_forcefeedback, nullptr, true, default_t::wad_no,
                 "1 to enable force feedback through gamepads where supported"),
 
-#if 0
    DEFAULT_INT("r_numcontexts", &r_numcontexts, nullptr, 1, 1, UL, default_t::wad_no,
                "Amount of renderer threads to run"),
-#endif
 
 #ifdef _SDL_VER
    DEFAULT_INT("displaynum", &displaynum, nullptr, 0, 0, UL, default_t::wad_no,

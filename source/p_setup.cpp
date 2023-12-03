@@ -62,6 +62,7 @@
 #include "p_mobjcol.h"
 #include "p_partcl.h"
 #include "p_portal.h"
+#include "p_portalblockmap.h"
 #include "p_scroll.h"
 #include "p_setup.h"
 #include "p_skin.h"
@@ -79,6 +80,7 @@
 #include "s_musinfo.h"
 #include "s_sndseq.h"
 #include "s_sound.h"
+#include "v_alloc.h"
 #include "v_misc.h"
 #include "v_video.h"
 #include "w_levels.h"
@@ -92,13 +94,12 @@ extern const char *level_error;
 //
 // Miscellaneous constants
 //
-enum
-{
-   // vertex distance limit over which NOT to fix slime trails. Useful for
-   // the new vanilla Doom rendering trick discovered by Linguica. Link here:
-   // http://www.doomworld.com/vb/doom-editing/74354-stupid-bsp-tricks/
-   LINGUORTAL_THRESHOLD = 8 * FRACUNIT,   
-};
+
+// vertex distance limit over which NOT to fix slime trails. Useful for
+// the new vanilla Doom rendering trick discovered by Linguica. Link here:
+// http://www.doomworld.com/vb/doom-editing/74354-stupid-bsp-tricks/
+constexpr fixed_t LINGUORTAL_THRESHOLD = 8 * FRACUNIT;
+
 
 //
 // ZNodeType
@@ -216,6 +217,13 @@ static WadDirectory *setupwad;
 
 // Current level's hash digest, for showing on console
 static qstring p_currentLevelHashDigest;
+
+static void P_createSectorBoundingBoxVisitIDs();
+
+VALLOCATION(sectorboxvisits)
+{
+   P_createSectorBoundingBoxVisitIDs();
+}
 
 //
 // ShortToLong
@@ -423,7 +431,8 @@ static void P_LoadSegs(int lump)
          return;
       }
 
-      li->sidedef = &sides[ldef->sidenum[side]];
+      li->frontside   = side == 0;
+      li->sidedef     = &sides[ldef->sidenum[side]];
       li->frontsector = sides[ldef->sidenum[side]].sector;
 
       // killough 5/3/98: ignore 2s flag if second sidedef missing:
@@ -495,7 +504,8 @@ static void P_LoadSegs_V4(int lump)
          return;
       }
 
-      li->sidedef = &sides[ldef->sidenum[side]];
+      li->frontside   = side == 0;
+      li->sidedef     = &sides[ldef->sidenum[side]];
       li->frontsector = sides[ldef->sidenum[side]].sector;
 
       // killough 5/3/98: ignore 2s flag if second sidedef missing:
@@ -750,11 +760,22 @@ static void P_createSectorInterps()
 }
 
 //
+// Creates the context-local visit IDs for the sector bound boxes
+//
+static void P_createSectorBoundingBoxVisitIDs()
+{
+   R_ForEachContext([](rendercontext_t &context) {
+      context.portalcontext.visitids = zhstructalloctag(*context.heap, sectorboxvisit_t, numsectors, PU_LEVEL);
+   });
+}
+
+//
 // Setup sector bounding boxes
 //
 static void P_createSectorBoundingBoxes()
 {
    pSectorBoxes = estructalloctag(sectorbox_t, numsectors, PU_LEVEL);
+   P_createSectorBoundingBoxVisitIDs();
 
    for(int i = 0; i < numsectors; ++i)
    {
@@ -1155,27 +1176,27 @@ struct mapseg_znod_t
 // IOANCH: modified to support XGL3 nodes
 struct mapnode_znod_t
 {
-  union
-  {
-     struct
-     {
-        int16_t x;  // Partition line from (x,y) to x+dx,y+dy)
-        int16_t y;
-        int16_t dx;
-        int16_t dy;             
-     };
-     struct
-     {
-        int32_t x32;  // Partition line from (x,y) to x+dx,y+dy)
-        int32_t y32;
-        int32_t dx32;
-        int32_t dy32;             
-     };
-  };
-  // Bounding box for each child, clip against view frustum.
-  int16_t bbox[2][4];
-  // If NF_SUBSECTOR its a subsector, else it's a node of another subtree.
-  int32_t children[2];
+   union
+   {
+      struct
+      {
+         int16_t x;  // Partition line from (x,y) to x+dx,y+dy)
+         int16_t y;
+         int16_t dx;
+         int16_t dy;
+      };
+      struct
+      {
+         int32_t x32;  // Partition line from (x,y) to x+dx,y+dy)
+         int32_t y32;
+         int32_t dx32;
+         int32_t dy32;
+      };
+   };
+   // Bounding box for each child, clip against view frustum.
+   int16_t bbox[2][4];
+   // If NF_SUBSECTOR its a subsector, else it's a node of another subtree.
+   int32_t children[2];
 };
 
 //
@@ -1281,6 +1302,7 @@ static void P_LoadZSegs(byte *data, ZNodeType type)
       if(side != 0 && side != 1)
          side = 1;
 
+      li->frontside   = side == 0;
       li->sidedef     = &sides[ldef->sidenum[side]];
       li->frontsector =  sides[ldef->sidenum[side]].sector;
 
@@ -2070,6 +2092,9 @@ static void P_LoadLineDefs2()
       {                       // killough 4/11/98: handle special types
       case EV_STATIC_TRANSLUCENT: // killough 4/11/98: translucent 2s textures
          lump = sides[*ld->sidenum].special; // translucency from sidedef
+         if(lump > 0)
+            wGlobalDir.cacheLumpNum(lump - 1, PU_CACHE);
+
          if(!ld->args[0])                    // if tag == 0,
             ld->tranlump = lump;             // affect this linedef only
          else
@@ -2201,8 +2226,8 @@ static void P_LoadSideDefs2(int lumpnum)
       side_t *sd = sides + i;
       int secnum;
 
-      sd->textureoffset = GetBinaryWord(data) << FRACBITS;
-      sd->rowoffset     = GetBinaryWord(data) << FRACBITS; 
+      sd->offset_base_x = GetBinaryWord(data) << FRACBITS;
+      sd->offset_base_y = GetBinaryWord(data) << FRACBITS; 
 
       // haleyjd 05/26/10: read texture names into buffers
       GetBinaryString(data, toptexture,    8);
@@ -3490,6 +3515,9 @@ static void P_PreZoneFreeLevel()
 
    // Clear all global references
    P_ClearGlobalLevelReferences();
+
+   // Clear the portal blockmap
+   gPortalBlockmap.mapDeinit();
 }
 
 //
@@ -3962,8 +3990,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    P_InitLightning();
 
    // preload graphics
-   if(precache)
-      R_PrecacheLevel();
+   R_PrecacheLevel();
 
    R_SetViewSize(screenSize+3); //sf
 

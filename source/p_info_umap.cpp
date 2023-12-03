@@ -146,6 +146,9 @@ static bool P_processUMapInfoBossActions(MetaTable *info, qstring *error)
             action.mobjclass, action.tag);
          continue;
       }
+         
+      // UMAPINFO specs state that the vanilla preset specs shall be cleared.
+      LevelInfo.bossSpecs = 0;
 
       // Now we may have it
       auto bossaction = estructalloctag(levelaction_t, 1, PU_LEVEL);

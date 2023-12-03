@@ -47,6 +47,7 @@ struct pwindow_t;
 struct rendercontext_t;
 struct sectorbox_t;
 struct viewpoint_t;
+class  ZoneHeap;
 
 typedef enum
 {
@@ -173,6 +174,8 @@ struct anchordata_t
 // kind of portal.
 struct portal_t
 {
+   int index;
+
    rportaltype_e type;
 
    union portaldata_u
@@ -185,14 +188,17 @@ struct portal_t
 
    // See: portalflag_e
    int    flags;
-   
+
    // Planes that makeup a blended overlay
    int          globaltex;
-   planehash_t *poverlay;
 
    portal_t *next;
+};
 
-   // haleyjd: temporary debug
+// Context-specific portal info.
+struct portalstate_t
+{
+   planehash_t *poverlay;
    int16_t tainted;
 };
 
@@ -205,25 +211,25 @@ inline static bool R_portalIsAnchored(const portal_t *portal)
 }
 
 const portal_t *R_GetPortalHead();
+int R_GetNumPortals();
 
 portal_t *R_GetSkyBoxPortal(Mobj *camera);
 portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum,
    bool allowrotate, bool flipped, fixed_t zoffset);
-portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum, 
+portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum,
    bool allowrotate, bool flipped, fixed_t zoffset);
 
 portal_t *R_GetHorizonPortal(const sector_t *sector);
 
 portal_t *R_GetPlanePortal(const sector_t *sector);
 
-void R_MovePortalOverlayToWindow(cmapcontext_t &cmapcontext, planecontext_t &context, const viewpoint_t &viewpoint,
-                                 const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
+void R_MovePortalOverlayToWindow(cmapcontext_t &cmapcontext, planecontext_t &planecontext, ZoneHeap &heap,
+                                 const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
                                  cb_seg_t &seg, surf_e surf);
-void R_ClearPortals(visplane_t **&freehead);
 void R_RenderPortals(rendercontext_t &context);
 
-portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
-                            fixed_t planez, int fromid, int toid);
+portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
+                            fixed_t planez, int fromid,        int toid);
 
 void R_CalcRenderBarrier(pwindow_t &window, const sectorbox_t &box);
 
@@ -260,6 +266,7 @@ static const pwindowtype_e pw_surface[surf_NUM] = { pw_floor, pw_ceiling };
 using R_WindowFunc = void (*)(rendercontext_t &context, pwindow_t *window);
 using R_ClipSegFunc = void (*)(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext,
                                planecontext_t &planecontext, portalcontext_t &portalcontext,
+                               ZoneHeap &heap,
                                const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                                const contextbounds_t &bounds, const cb_seg_t &seg);
 
@@ -337,14 +344,14 @@ struct pwindow_t
 };
 
 // SoM: Cardboard
-void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext,
+void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext, ZoneHeap &heap,
                  const viewpoint_t &viewpoint,const contextbounds_t &bounds,
                  pwindow_t *window, int x, float ytop, float ybottom);
 
-pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
+pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext, ZoneHeap &heap,
                                    const viewpoint_t &viewpoint, const contextbounds_t &bounds,
                                    surf_e surf, const surface_t &surface);
-pwindow_t *R_GetLinePortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
+pwindow_t *R_GetLinePortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext, ZoneHeap &heap,
                                  const viewpoint_t &viewpoint,const contextbounds_t &bounds,
                                  portal_t *portal, const seg_t *seg);
 

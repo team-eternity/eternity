@@ -77,7 +77,7 @@ char *temp_hubfile(void)
    
    new_tmpfilename = emalloc(char *, 10);
    
-   sprintf(new_tmpfilename, "smmu%i.tmp", tmpfilenum++);
+   snprintf(new_tmpfilename, 10, "smmu%i.tmp", tmpfilenum++);
    
    return new_tmpfilename;  
 }
@@ -108,7 +108,7 @@ static void P_ClearHubsAtExit(void)
    
    if(atexit_set) return;   // already set
    
-   atexit(P_ClearHubs);
+   I_AtExit(P_ClearHubs);
    
    atexit_set = true;
 }

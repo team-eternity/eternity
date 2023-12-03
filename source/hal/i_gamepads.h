@@ -42,8 +42,10 @@ extern int  i_joysticknum;     // Joystick device number, for config file
 // Joystick turning sensitvity
 extern double i_joyturnsens;
 
-// Generic sensitivity value, for drivers that need it
-extern int i_joysticksens;
+// Generic sensitivity values, for drivers that need them
+extern int i_joy_deadzone_left;
+extern int i_joy_deadzone_right;
+extern int i_joy_deadzone_trigger;
 
 //
 // HALGamePadDriver

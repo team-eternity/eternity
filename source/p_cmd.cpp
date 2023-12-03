@@ -238,7 +238,7 @@ VARIABLE_INT(levelFragLimit,    nullptr,        0, 100,         nullptr);
 CONSOLE_NETVAR(fraglimit, levelFragLimit, cf_server, netcmd_fraglimit) {}
 
 
-  /************** monster variables ***********/
+/************** monster variables ***********/
 
 // fast monsters
 

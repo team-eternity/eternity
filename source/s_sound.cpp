@@ -81,19 +81,19 @@ extern bool nosfxparm, nomusicparm;
 
 struct channel_t
 {
-  sfxinfo_t *sfxinfo;      // sound information (if null, channel avail.)
-  sfxinfo_t *aliasinfo;    // original sound name if using an alias
-  const PointThinker *origin;    // origin of sound
-  int subchannel;          // haleyjd 06/12/08: origin subchannel
-  int volume;              // volume scale value for effect -- haleyjd 05/29/06
-  int attenuation;         // attenuation type -- haleyjd 05/29/06
-  int pitch;               // pitch modifier -- haleyjd 06/03/06
-  int handle;              // handle of the sound being played
-  int o_priority;          // haleyjd 09/27/06: stored priority value
-  int priority;            // current priority value
-  int singularity;         // haleyjd 09/27/06: stored singularity value
-  int idnum;               // haleyjd 09/30/06: unique id num for sound event
-  bool looping;            // haleyjd 10/06/06: is this channel looping?
+   sfxinfo_t *sfxinfo;      // sound information (if null, channel avail.)
+   sfxinfo_t *aliasinfo;    // original sound name if using an alias
+   const PointThinker *origin;    // origin of sound
+   int subchannel;          // haleyjd 06/12/08: origin subchannel
+   int volume;              // volume scale value for effect -- haleyjd 05/29/06
+   int attenuation;         // attenuation type -- haleyjd 05/29/06
+   int pitch;               // pitch modifier -- haleyjd 06/03/06
+   int handle;              // handle of the sound being played
+   int o_priority;          // haleyjd 09/27/06: stored priority value
+   int priority;            // current priority value
+   int singularity;         // haleyjd 09/27/06: stored singularity value
+   int idnum;               // haleyjd 09/30/06: unique id num for sound event
+   bool looping;            // haleyjd 10/06/06: is this channel looping?
 };
 
 // the set of channels available

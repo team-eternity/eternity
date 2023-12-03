@@ -67,10 +67,9 @@ byte *renderscreen;            // haleyjd
 //  translate a limited part to another
 //  (color ramps used for  suit colors).
 //
- 
-byte *tranmap;          // translucency filter maps 256x256   // phares 
-byte *main_tranmap;     // killough 4/11/98
-byte *main_submap;      // haleyjd 11/30/13
+
+byte *main_tranmap; // killough 4/11/98
+byte *main_submap;  // haleyjd 11/30/13
 
 int rTintTableIndex;
 
@@ -81,18 +80,29 @@ int rTintTableIndex;
 
 // Fuzz stuffs
 
-const int fuzzoffset[FUZZTABLE] = 
-{
-  1,0,1,0,1,1,0,
-  1,1,0,1,1,1,0,
-  1,1,1,0,0,0,0,
-  1,0,0,1,1,1,1,0,
-  1,0,1,1,0,0,1,
-  1,0,0,0,0,1,1,
-  1,1,0,1,1,0,1 
-}; 
+static constexpr int FUZZTABLE = 50;
 
-int fuzzpos = 0; 
+static constexpr int fuzzoffset[FUZZTABLE] =
+{
+   1,0,1,0,1,1,0,
+   1,1,0,1,1,1,0,
+   1,1,1,0,0,0,0,
+   1,0,0,1,1,1,1,0,
+   1,0,1,1,0,0,1,
+   1,0,0,0,0,1,1,
+   1,1,0,1,1,0,1
+};
+
+// One value per column. Inherently thread-safe for column drawing,
+// and appears the same regardless of thread count.
+static int *fuzzpos;
+
+VALLOCATION(solidsegs)
+{
+   fuzzpos = emalloctag(int *, w * sizeof(int), PU_VALLOC, nullptr);
+   for(int x = 0; x < w; x++)
+      fuzzpos[x] = M_RangeRandomEx(0, FUZZTABLE - 1);
+}
 
 //
 // A column is a vertical slice/span from a wall texture that,
@@ -376,7 +386,7 @@ static void CB_DrawNewSkyColumn_8(cb_column_t &column)
 // actual code differences are.
 
 #define SRCPIXEL \
-   tranmap[(*dest<<8)+colormap[source[(frac>>FRACBITS) & heightmask]]]
+   column.tranmap[(*dest<<8)+colormap[source[(frac>>FRACBITS) & heightmask]]]
 
 void CB_DrawTLColumn_8(cb_column_t &column)
 {
@@ -417,7 +427,7 @@ void CB_DrawTLColumn_8(cb_column_t &column)
 
          do
          {
-            *dest = tranmap[(*dest<<8) + colormap[source[frac>>FRACBITS]]]; // phares
+            *dest = column.tranmap[(*dest<<8) + colormap[source[frac>>FRACBITS]]]; // phares
             dest += 1;          // killough 11/98
             if((frac += fracstep) >= heightmask)
                frac -= heightmask;
@@ -444,10 +454,10 @@ void CB_DrawTLColumn_8(cb_column_t &column)
 #undef SRCPIXEL
 
 #define SRCPIXEL \
-   tranmap[(*dest<<8) + colormap[column.translation[source[frac>>FRACBITS]]]]
+   column.tranmap[(*dest<<8) + colormap[column.translation[source[frac>>FRACBITS]]]]
 
 #define SRCPIXEL_MASK \
-   tranmap[(*dest<<8) + \
+   column.tranmap[(*dest<<8) + \
       colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]]
 
 //
@@ -539,21 +549,16 @@ void CB_DrawTLTRColumn_8(cb_column_t &column)
 //     for coloured lighting and SHADOW now done with
 //     flags not nullptr colormap
 
+#define COLORFUZZ(offset) \
+   colormap[6*256+dest[(offset)]]
+
 #define SRCPIXEL \
-   colormap[6*256+dest[fuzzoffset[fuzzpos] ? linesize : -linesize]]
+   COLORFUZZ(fuzzoffset[fuzzpos[column.x]] ? 1 : -1)
 
 void CB_DrawFuzzColumn_8(cb_column_t &column)
 {
    int count;
    byte *dest;
-
-   // Adjust borders. Low...
-   if(!column.x)
-      column.x = 1;
-
-   // .. and high.
-   if(column.x == viewwindow.width - 1)
-      column.x = viewwindow.width - 2;
 
    count = column.y2 - column.y1 + 1;
    if(count <= 0) return;
@@ -569,20 +574,40 @@ void CB_DrawFuzzColumn_8(cb_column_t &column)
    {
       const lighttable_t *colormap = column.colormap;
 
+      // Instead of +1/-1 render top pixels with +1/0 to avoid underrun.
+      if(column.y1 == 0)
+      {
+         *dest = COLORFUZZ(fuzzoffset[fuzzpos[column.x]] ? 1 : 0);
+         if(++fuzzpos[column.x] == FUZZTABLE) fuzzpos[column.x] = 0;
+         dest += 1;
+         count -= 1;
+      }
+      // For bottom pixels reduce count to render in loop, then render extra pixel at end
+      if(column.y2 == viewwindow.height - 1)
+         count -= 1;
+
       while((count -= 2) >= 0) // texture height is a power of 2 -- killough
       {
          *dest = SRCPIXEL;
-         if(++fuzzpos == FUZZTABLE) fuzzpos = 0;
+         if(++fuzzpos[column.x] == FUZZTABLE) fuzzpos[column.x] = 0;
          dest += 1;   // killough 11/98
 
          *dest = SRCPIXEL;
-         if(++fuzzpos == FUZZTABLE) fuzzpos = 0;
+         if(++fuzzpos[column.x] == FUZZTABLE) fuzzpos[column.x] = 0;
          dest += 1;   // killough 11/98
       }
       if(count & 1)
       {
          *dest = SRCPIXEL;
-         if(++fuzzpos == FUZZTABLE) fuzzpos = 0;
+         if(++fuzzpos[column.x] == FUZZTABLE) fuzzpos[column.x] = 0;
+         dest += 1;
+      }
+
+      // Instead of +1/-1 render bottom pixels with 0/-1 to avoid overrun.
+      if(column.y2 == viewwindow.height - 1)
+      {
+         *dest = COLORFUZZ(fuzzoffset[fuzzpos[column.x]] ? 0 : -1);
+         if(++fuzzpos[column.x] == FUZZTABLE) fuzzpos[column.x] = 0;
       }
    }
 }
@@ -1235,6 +1260,8 @@ void R_InitTranslationTables()
    rTintTableIndex = wGlobalDir.checkNumForName("TINTTAB");
    if(rTintTableIndex != -1 && wGlobalDir.lumpLength(rTintTableIndex) < 256 * 256)
       rTintTableIndex = -1;   // bad length
+   else if(rTintTableIndex != -1)
+      wGlobalDir.cacheLumpNum(rTintTableIndex, PU_CACHE);
 }
 
 //

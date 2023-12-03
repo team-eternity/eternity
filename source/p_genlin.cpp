@@ -48,6 +48,7 @@
 #include "sounds.h"
 #include "r_data.h"
 #include "r_main.h"
+#include "r_sky.h"
 #include "r_state.h"
 
 //=============================================================================
@@ -228,6 +229,7 @@ manual_floor:
             {
                if(fd->changeOnStart)
                {
+                  R_CacheIfSkyTexture(sec->srf.floor.pic, msec->srf.floor.pic);
                   sec->srf.floor.pic = msec->srf.floor.pic;
                   switch(fd->change_type)
                   {
@@ -275,6 +277,7 @@ manual_floor:
             {
                if(fd->changeOnStart)
                {
+                  R_CacheIfSkyTexture(sec->srf.floor.pic, line->frontsector->srf.floor.pic);
                   sec->srf.floor.pic = line->frontsector->srf.floor.pic;
                   switch(fd->change_type)
                   {
@@ -1610,6 +1613,8 @@ void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool useta
    texnum = R_FindWall(texture);
    linenum = -1;
 
+   R_CacheTexture(texnum);
+
    while((l = P_FindLine(tag, &linenum, triggerLine)) != nullptr)
    {
        if(l->sidenum[side] == -1)
@@ -1618,12 +1623,15 @@ void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool useta
       switch(pos)
       {
       case CLT_TEX_UPPER:
+         R_CacheIfSkyTexture(sides[l->sidenum[side]].toptexture, texnum);
          sides[l->sidenum[side]].toptexture = texnum;
          break;
       case CLT_TEX_MIDDLE:
+         R_CacheIfSkyTexture(sides[l->sidenum[side]].midtexture, texnum);
          sides[l->sidenum[side]].midtexture = texnum;
          break;
       case CLT_TEX_LOWER:
+         R_CacheIfSkyTexture(sides[l->sidenum[side]].bottomtexture, texnum);
          sides[l->sidenum[side]].bottomtexture = texnum;
          break;
       }

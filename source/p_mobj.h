@@ -214,6 +214,7 @@ protected:
 
    // Methods
    void Think() override;
+   void ThinkRavenFast();
 
    bool shouldApplyTorque();
 
@@ -276,7 +277,7 @@ public:
    mobjinfo_t *info;   // mobjinfo[mobj->type]
 
    int colour; // sf: the sprite colour
-   int tranmap;   // the translucency map
+   int tranmap;   // the translucency map: MUST BE CACHED IF MODIFIED AT RUNTIME
 
    // INVENTORY_FIXME: eliminate union
    union
@@ -424,6 +425,14 @@ enum bloodaction_e : int
    BLOOD_CRUSH,  // crusher blood
    
    NUMBLOODACTIONS
+};
+
+enum missiletype_e :int
+{
+   MISSILETYPE_DEFAULT,   // standard
+   MISSILETYPE_RAVENFAST, // Heretic/Hexen-style fast missile
+
+   NUMMISSILETYPES
 };
 
 int P_FindDoomedNum(int type);

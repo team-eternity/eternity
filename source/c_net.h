@@ -31,74 +31,74 @@ struct command_t;
 
 enum
 {
-  netcmd_null,       // 0 is empty
-  netcmd_colour,
-  netcmd_deathmatch,
-  netcmd_exitlevel,
-  netcmd_fast,
-  netcmd_kill,
-  netcmd_name,
-  netcmd_nomonsters,
-  netcmd_nuke,
-  netcmd_respawn,
-  netcmd_skill,
-  netcmd_skin,
-  netcmd_allowmlook,
-  netcmd_bobbing, // haleyjd
-  netcmd_autoaim,
-  netcmd_bfgtype,
-  netcmd_recoil,
-  netcmd_pushers,
-  netcmd_varfriction,
-  netcmd_chat,
-  netcmd_monremember,
-  netcmd_moninfight,
-  netcmd_monbacking,
-  netcmd_monavoid,
-  netcmd_monfriction,
-  netcmd_monclimb,
-  netcmd_monhelpfriends,
-  netcmd_mondistfriend,
-  netcmd_map,
-  netcmd_restartmap,
-  netcmd_nukage,
-  netcmd_timelimit,
-  netcmd_fraglimit,
-  netcmd_dmflags,       // haleyjd 04/14/03
-  netcmd_dogjumping,    // haleyjd 11/06/05
-  netcmd_pitchedflight, // haleyjd 06/07/12
-  NETCMD_COMP_0,        // keep this as 0-base index
-  netcmd_comp_telefrag = NETCMD_COMP_0,
-  netcmd_comp_dropoff,
-  netcmd_comp_vile,
-  netcmd_comp_pain,
-  netcmd_comp_skull,
-  netcmd_comp_blazing,
-  netcmd_comp_doorlight,
-  netcmd_comp_model,
-  netcmd_comp_god,
-  netcmd_comp_falloff,
-  netcmd_comp_floors,
-  netcmd_comp_skymap,
-  netcmd_comp_pursuit,
-  netcmd_comp_doorstuck,
-  netcmd_comp_staylift,
-  netcmd_comp_zombie,
-  netcmd_comp_stairs,
-  netcmd_comp_infcheat,
-  netcmd_comp_zerotags,
-  netcmd_comp_terrain,     // haleyjd: TerrainTypes
-  netcmd_comp_respawnfix,  //          respawn fix
-  netcmd_comp_fallingdmg,  //          falling damage
-  netcmd_comp_soul,        //          lost soul bouncing
-  netcmd_comp_theights,    //          thing heights fix
-  netcmd_comp_overunder,   //          extended z clipping
-  netcmd_comp_planeshoot,  //          plane shooting
-  netcmd_comp_special,     //          special failure
-  netcmd_comp_ninja,       //          ninja spawn
-  netcmd_comp_jump,        // ioanch:  air control for jumping
-  netcmd_comp_aircontrol = netcmd_comp_jump,
-  NUMNETCMDS
+   netcmd_null,       // 0 is empty
+   netcmd_colour,
+   netcmd_deathmatch,
+   netcmd_exitlevel,
+   netcmd_fast,
+   netcmd_kill,
+   netcmd_name,
+   netcmd_nomonsters,
+   netcmd_nuke,
+   netcmd_respawn,
+   netcmd_skill,
+   netcmd_skin,
+   netcmd_allowmlook,
+   netcmd_bobbing, // haleyjd
+   netcmd_autoaim,
+   netcmd_bfgtype,
+   netcmd_recoil,
+   netcmd_pushers,
+   netcmd_varfriction,
+   netcmd_chat,
+   netcmd_monremember,
+   netcmd_moninfight,
+   netcmd_monbacking,
+   netcmd_monavoid,
+   netcmd_monfriction,
+   netcmd_monclimb,
+   netcmd_monhelpfriends,
+   netcmd_mondistfriend,
+   netcmd_map,
+   netcmd_restartmap,
+   netcmd_nukage,
+   netcmd_timelimit,
+   netcmd_fraglimit,
+   netcmd_dmflags,       // haleyjd 04/14/03
+   netcmd_dogjumping,    // haleyjd 11/06/05
+   netcmd_pitchedflight, // haleyjd 06/07/12
+   NETCMD_COMP_0,        // keep this as 0-base index
+   netcmd_comp_telefrag = NETCMD_COMP_0,
+   netcmd_comp_dropoff,
+   netcmd_comp_vile,
+   netcmd_comp_pain,
+   netcmd_comp_skull,
+   netcmd_comp_blazing,
+   netcmd_comp_doorlight,
+   netcmd_comp_model,
+   netcmd_comp_god,
+   netcmd_comp_falloff,
+   netcmd_comp_floors,
+   netcmd_comp_skymap,
+   netcmd_comp_pursuit,
+   netcmd_comp_doorstuck,
+   netcmd_comp_staylift,
+   netcmd_comp_zombie,
+   netcmd_comp_stairs,
+   netcmd_comp_infcheat,
+   netcmd_comp_zerotags,
+   netcmd_comp_terrain,     // haleyjd: TerrainTypes
+   netcmd_comp_respawnfix,  //          respawn fix
+   netcmd_comp_fallingdmg,  //          falling damage
+   netcmd_comp_soul,        //          lost soul bouncing
+   netcmd_comp_theights,    //          thing heights fix
+   netcmd_comp_overunder,   //          extended z clipping
+   netcmd_comp_planeshoot,  //          plane shooting
+   netcmd_comp_special,     //          special failure
+   netcmd_comp_ninja,       //          ninja spawn
+   netcmd_comp_jump,        // ioanch:  air control for jumping
+   netcmd_comp_aircontrol = netcmd_comp_jump,
+   NUMNETCMDS
 };
 
 void C_InitPlayerName(void); // haleyjd

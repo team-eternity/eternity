@@ -101,13 +101,13 @@ struct slopevalues
 template<int xshift, int yshift, int xmask>
 static void R_DrawSpanSolid_8(const cb_span_t &span)
 {
-   unsigned int xf = span.xfrac, xs = span.xstep; 
-   unsigned int yf = span.yfrac, ys = span.ystep; 
-   lighttable_t *colormap = span.colormap; 
+   unsigned int       xf = span.xfrac, yf = span.yfrac;
+   const unsigned int xs = span.xstep, ys = span.ystep;
+   const lighttable_t *const colormap = span.colormap;
    int count = span.x2 - span.x1 + 1;
 
-   byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   const byte *const source = static_cast<const byte *>(span.source);
+   byte *dest               = R_ADDRESS(span.x1, span.y);
 
    while(count-- > 0)
    {
@@ -120,13 +120,13 @@ static void R_DrawSpanSolid_8(const cb_span_t &span)
 
 static void R_DrawSpanSolid_8_GEN(const cb_span_t &span)
 {
-   unsigned int xf = span.xfrac, xs = span.xstep; 
-   unsigned int yf = span.yfrac, ys = span.ystep; 
-   lighttable_t *colormap = span.colormap; 
+   unsigned int       xf = span.xfrac, yf = span.yfrac;
+   const unsigned int xs = span.xstep, ys = span.ystep;
+   const lighttable_t *const colormap = span.colormap;
    int count = span.x2 - span.x1 + 1;
 
-   byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   const byte *const source = static_cast<const byte *>(span.source);
+   byte *dest               = R_ADDRESS(span.x1, span.y);
 
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
@@ -212,13 +212,13 @@ template<int xshift, int yshift, int xmask>
 static void R_DrawSpanTL_8(const cb_span_t &span)
 {
    unsigned int t;
-   unsigned int xf = span.xfrac, xs = span.xstep;
-   unsigned int yf = span.yfrac, ys = span.ystep;
-   lighttable_t *colormap = span.colormap;
+   unsigned int       xf = span.xfrac, yf = span.yfrac;
+   const unsigned int xs = span.xstep, ys = span.ystep;
+   const lighttable_t *const colormap = span.colormap;
    int count = span.x2 - span.x1 + 1;
 
-   byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   const byte *const source = static_cast<const byte *>(span.source);
+   byte *dest               = R_ADDRESS(span.x1, span.y);
 
    while(count-- > 0)
    {
@@ -235,13 +235,13 @@ static void R_DrawSpanTL_8(const cb_span_t &span)
 static void R_DrawSpanTL_8_GEN(const cb_span_t &span)
 {
    unsigned int t;
-   unsigned int xf = span.xfrac, xs = span.xstep;
-   unsigned int yf = span.yfrac, ys = span.ystep;
-   lighttable_t *colormap = span.colormap;
+   unsigned int       xf = span.xfrac, yf = span.yfrac;
+   const unsigned int xs = span.xstep, ys = span.ystep;
+   const lighttable_t *const colormap = span.colormap;
    int count = span.x2 - span.x1 + 1;
 
-   byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   const byte *const source = static_cast<const byte *>(span.source);
+   byte *dest               = R_ADDRESS(span.x1, span.y);
 
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
@@ -264,19 +264,19 @@ static void R_DrawSpanTL_8_GEN(const cb_span_t &span)
 template<int xshift, int yshift, int xmask>
 static void R_DrawSpanAdd_8(const cb_span_t &span)
 {
-   unsigned int a, b;
-   unsigned int xf = span.xfrac, xs = span.xstep;
-   unsigned int yf = span.yfrac, ys = span.ystep;
-   lighttable_t *colormap = span.colormap;
+   unsigned int       xf = span.xfrac, yf = span.yfrac;
+   const unsigned int xs = span.xstep, ys = span.ystep;
+   const lighttable_t *const colormap = span.colormap;
    int count = span.x2 - span.x1 + 1;
 
-   byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   const byte *const source = static_cast<const byte *>(span.source);
+   byte *dest               = R_ADDRESS(span.x1, span.y);
 
    while(count-- > 0)
    {
-      a = span.bg2rgb[*dest] +
-          span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]];
+      unsigned int a, b;
+
+      a = span.bg2rgb[*dest] + span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]];
       b = a;
       a |= 0x01f07c1f;
       b &= 0x40100400;
@@ -292,14 +292,13 @@ static void R_DrawSpanAdd_8(const cb_span_t &span)
 
 static void R_DrawSpanAdd_8_GEN(const cb_span_t &span)
 {
-   unsigned int a, b;
-   unsigned int xf = span.xfrac, xs = span.xstep;
-   unsigned int yf = span.yfrac, ys = span.ystep;
-   lighttable_t *colormap = span.colormap;
+   unsigned int       xf = span.xfrac, yf = span.yfrac;
+   const unsigned int xs = span.xstep, ys = span.ystep;
+   const lighttable_t *const colormap = span.colormap;
    int count = span.x2 - span.x1 + 1;
 
-   byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   const byte *const source = static_cast<const byte *>(span.source);
+   byte *dest               = R_ADDRESS(span.x1, span.y);
 
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
@@ -307,8 +306,9 @@ static void R_DrawSpanAdd_8_GEN(const cb_span_t &span)
 
    while(count-- > 0)
    {
-      a = span.bg2rgb[*dest] +
-          span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]];
+      unsigned int a, b;
+
+      a = span.bg2rgb[*dest] + span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]];
       b = a;
       a |= 0x01f07c1f;
       b &= 0x40100400;
@@ -334,13 +334,13 @@ static void R_DrawSpanAdd_8_GEN(const cb_span_t &span)
 template<int xshift, int yshift, int xmask>
 static void R_DrawSpanSolidMasked_8(const cb_span_t &span)
 {
-   unsigned int xf = span.xfrac, xs = span.xstep;
-   unsigned int yf = span.yfrac, ys = span.ystep;
-   lighttable_t *colormap = span.colormap;
+   unsigned int       xf = span.xfrac, yf = span.yfrac;
+   const unsigned int xs = span.xstep, ys = span.ystep;
+   const lighttable_t *const colormap = span.colormap;
    int count = span.x2 - span.x1 + 1;
 
-   byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   const byte *const source = static_cast<const byte *>(span.source);
+   byte *dest               = R_ADDRESS(span.x1, span.y);
 
    const byte *alpham = (byte *)span.alphamask;
    unsigned i;
@@ -382,13 +382,13 @@ static void R_DrawSpanSolidMasked_8(const cb_span_t &span)
 }
 static void R_DrawSpanSolidMasked_8_GEN(const cb_span_t &span)
 {
-   unsigned int xf = span.xfrac, xs = span.xstep;
-   unsigned int yf = span.yfrac, ys = span.ystep;
-   lighttable_t *colormap = span.colormap;
+   unsigned int       xf = span.xfrac, yf = span.yfrac;
+   const unsigned int xs = span.xstep, ys = span.ystep;
+   const lighttable_t *const colormap = span.colormap;
    int count = span.x2 - span.x1 + 1;
 
-   byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   const byte *const source = static_cast<const byte *>(span.source);
+   byte *dest               = R_ADDRESS(span.x1, span.y);
 
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
@@ -436,13 +436,13 @@ template<int xshift, int yshift, int xmask>
 static void R_DrawSpanTLMasked_8(const cb_span_t &span)
 {
    unsigned int t;
-   unsigned int xf = span.xfrac, xs = span.xstep;
-   unsigned int yf = span.yfrac, ys = span.ystep;
-   lighttable_t *colormap = span.colormap;
+   unsigned int       xf = span.xfrac, yf = span.yfrac;
+   const unsigned int xs = span.xstep, ys = span.ystep;
+   const lighttable_t *const colormap = span.colormap;
    int count = span.x2 - span.x1 + 1;
 
-   byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   const byte *const source = static_cast<const byte *>(span.source);
+   byte *dest               = R_ADDRESS(span.x1, span.y);
 
    const byte *alpham = (byte *)span.alphamask;
    unsigned i;
@@ -464,13 +464,13 @@ static void R_DrawSpanTLMasked_8(const cb_span_t &span)
 static void R_DrawSpanTLMasked_8_GEN(const cb_span_t &span)
 {
    unsigned int t;
-   unsigned int xf = span.xfrac, xs = span.xstep;
-   unsigned int yf = span.yfrac, ys = span.ystep;
-   lighttable_t *colormap = span.colormap;
+   unsigned int       xf = span.xfrac, yf = span.yfrac;
+   const unsigned int xs = span.xstep, ys = span.ystep;
+   const lighttable_t *const colormap = span.colormap;
    int count = span.x2 - span.x1 + 1;
 
-   byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   const byte *const source = static_cast<const byte *>(span.source);
+   byte *dest               = R_ADDRESS(span.x1, span.y);
 
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
@@ -496,14 +496,13 @@ static void R_DrawSpanTLMasked_8_GEN(const cb_span_t &span)
 template<int xshift, int yshift, int xmask>
 static void R_DrawSpanAddMasked_8(const cb_span_t &span)
 {
-   unsigned int a, b;
-   unsigned int xf = span.xfrac, xs = span.xstep;
-   unsigned int yf = span.yfrac, ys = span.ystep;
-   lighttable_t *colormap = span.colormap;
+   unsigned int       xf = span.xfrac, yf = span.yfrac;
+   const unsigned int xs = span.xstep, ys = span.ystep;
+   const lighttable_t *const colormap = span.colormap;
    int count = span.x2 - span.x1 + 1;
 
-   byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   const byte *const source = static_cast<const byte *>(span.source);
+   byte *dest               = R_ADDRESS(span.x1, span.y);
 
    const byte *alpham = (byte *)span.alphamask;
    unsigned i;
@@ -513,8 +512,10 @@ static void R_DrawSpanAddMasked_8(const cb_span_t &span)
       i = ((xf >> xshift) & xmask) | (yf >> yshift);
       if(MASK(alpham, i))
       {
-         a = span.bg2rgb[*dest] + span.fg2rgb[colormap[source[i]]];
-         b = a;
+         unsigned int a, b;
+
+         a  = span.bg2rgb[*dest] + span.fg2rgb[colormap[source[i]]];
+         b  = a;
          a |= 0x01f07c1f;
          b &= 0x40100400;
          a &= 0x3fffffff;
@@ -529,14 +530,13 @@ static void R_DrawSpanAddMasked_8(const cb_span_t &span)
 }
 static void R_DrawSpanAddMasked_8_GEN(const cb_span_t &span)
 {
-   unsigned int a, b;
-   unsigned int xf = span.xfrac, xs = span.xstep;
-   unsigned int yf = span.yfrac, ys = span.ystep;
-   lighttable_t *colormap = span.colormap;
+   unsigned int       xf = span.xfrac, yf = span.yfrac;
+   const unsigned int xs = span.xstep, ys = span.ystep;
+   const lighttable_t *const colormap = span.colormap;
    int count = span.x2 - span.x1 + 1;
 
-   byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   const byte *const source = static_cast<const byte *>(span.source);
+   byte *dest               = R_ADDRESS(span.x1, span.y);
 
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
@@ -550,8 +550,10 @@ static void R_DrawSpanAddMasked_8_GEN(const cb_span_t &span)
       i = ((xf >> xshift) & xmask) | (yf >> yshift);
       if(MASK(alpham, i))
       {
-         a = span.bg2rgb[*dest] + span.fg2rgb[colormap[source[i]]];
-         b = a;
+         unsigned int a, b;
+
+         a  = span.bg2rgb[*dest] + span.fg2rgb[colormap[source[i]]];
+         b  = a;
          a |= 0x01f07c1f;
          b &= 0x40100400;
          a &= 0x3fffffff;
@@ -604,8 +606,8 @@ struct Sampler
       {
          unsigned int a, b;
 
-         a = span.bg2rgb[bgColor] + span.fg2rgb[fgColor];
-         b = a;
+         a  = span.bg2rgb[bgColor] + span.fg2rgb[fgColor];
+         b  = a;
          a |= 0x01f07c1f;
          b &= 0x40100400;
          a &= 0x3fffffff;
@@ -662,15 +664,15 @@ static inline void R_drawSlope_8(const cb_slopespan_t &slopespan, const cb_span_
    double ius = slopespan.iustep, ivs = slopespan.ivstep;
    double id  = slopespan.idfrac, ids = slopespan.idstep;
 
-   byte *colormap;
+   const byte *colormap;
    int count;
-   fixed_t mapindex = 0;
+   fixed_t mapindex = slopespan.x1;
 
    if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
       return;
 
-   byte *src  = (byte *)slopespan.source;
-   byte *dest = R_ADDRESS(slopespan.x1, slopespan.y);
+   const byte *const src  = static_cast<const byte *>(slopespan.source);
+   byte             *dest = R_ADDRESS(slopespan.x1, slopespan.y);
 
    const byte *alpham = static_cast<const byte *>(span.alphamask);
 
@@ -686,15 +688,17 @@ static inline void R_drawSlope_8(const cb_slopespan_t &slopespan, const cb_span_
       id += ids * SPANJUMP;
       mulend = 65536.0f / id;
 
-      ufrac = static_cast<unsigned int>(ustart = iu * mulstart);
-      vfrac = static_cast<unsigned int>(vstart = iv * mulstart);
+      // IMPORTANT: use this function to properly handle negative numbers. Merely casting is
+      // non-standard between CPUs and will glitch out.
+      ufrac = R_doubleToUint32(ustart = iu * mulstart);
+      vfrac = R_doubleToUint32(vstart = iv * mulstart);
       iu += ius * SPANJUMP;
       iv += ivs * SPANJUMP;
       uend = iu * mulend;
       vend = iv * mulend;
 
-      ustep = static_cast<unsigned int>((uend - ustart) * INTERPSTEP);
-      vstep = static_cast<unsigned int>((vend - vstart) * INTERPSTEP);
+      ustep = R_doubleToUint32((uend - ustart) * INTERPSTEP);
+      vstep = R_doubleToUint32((vend - vstart) * INTERPSTEP);
 
       incount = SPANJUMP;
       while(incount--)
@@ -716,15 +720,15 @@ static inline void R_drawSlope_8(const cb_slopespan_t &slopespan, const cb_span_
       id += ids * count;
       mulend = 65536.0f / id;
 
-      ufrac = static_cast<unsigned int>(ustart = iu * mulstart);
-      vfrac = static_cast<unsigned int>(vstart = iv * mulstart);
+      ufrac = R_doubleToUint32(ustart = iu * mulstart);
+      vfrac = R_doubleToUint32(vstart = iv * mulstart);
       iu += ius * count;
       iv += ivs * count;
       uend = iu * mulend;
       vend = iv * mulend;
 
-      ustep = static_cast<unsigned int>((uend - ustart) / count);
-      vstep = static_cast<unsigned int>((vend - vstart) / count);
+      ustep = R_doubleToUint32((uend - ustart) / count);
+      vstep = R_doubleToUint32((vend - vstart) / count);
 
       incount = count;
       while(incount--)
@@ -741,14 +745,14 @@ static inline void R_drawSlope_8_GEN(const cb_slopespan_t &slopespan, const cb_s
    double ius = slopespan.iustep, ivs = slopespan.ivstep;
    double id  = slopespan.idfrac, ids = slopespan.idstep;
 
-   byte *colormap;
+   const byte *colormap;
    int count;
-   fixed_t mapindex = 0;
+   fixed_t mapindex = slopespan.x1;
 
    if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
       return;
 
-   byte *src  = (byte *)slopespan.source;
+   const byte *const src = static_cast<const byte *>(slopespan.source);
    byte *dest = R_ADDRESS(slopespan.x1, slopespan.y);
 
    const byte *alpham = static_cast<const byte *>(span.alphamask);
@@ -769,15 +773,15 @@ static inline void R_drawSlope_8_GEN(const cb_slopespan_t &slopespan, const cb_s
       id += ids * SPANJUMP;
       mulend = 65536.0f / id;
 
-      ufrac = static_cast<unsigned int>(ustart = iu * mulstart);
-      vfrac = static_cast<unsigned int>(vstart = iv * mulstart);
+      ufrac = R_doubleToUint32(ustart = iu * mulstart);
+      vfrac = R_doubleToUint32(vstart = iv * mulstart);
       iu += ius * SPANJUMP;
       iv += ivs * SPANJUMP;
       uend = iu * mulend;
       vend = iv * mulend;
 
-      ustep = static_cast<unsigned int>((uend - ustart) * INTERPSTEP);
-      vstep = static_cast<unsigned int>((vend - vstart) * INTERPSTEP);
+      ustep = R_doubleToUint32((uend - ustart) * INTERPSTEP);
+      vstep = R_doubleToUint32((vend - vstart) * INTERPSTEP);
 
       incount = SPANJUMP;
       while(incount--)
@@ -799,15 +803,15 @@ static inline void R_drawSlope_8_GEN(const cb_slopespan_t &slopespan, const cb_s
       id += ids * count;
       mulend = 65536.0f / id;
 
-      ufrac = static_cast<unsigned int>(ustart = iu * mulstart);
-      vfrac = static_cast<unsigned int>(vstart = iv * mulstart);
+      ufrac = R_doubleToUint32(ustart = iu * mulstart);
+      vfrac = R_doubleToUint32(vstart = iv * mulstart);
       iu += ius * count;
       iv += ivs * count;
       uend = iu * mulend;
       vend = iv * mulend;
 
-      ustep = static_cast<unsigned int>((uend - ustart) / count);
-      vstep = static_cast<unsigned int>((vend - vstart) / count);
+      ustep = R_doubleToUint32((uend - ustart) / count);
+      vstep = R_doubleToUint32((vend - vstart) / count);
 
       incount = count;
       while(incount--)

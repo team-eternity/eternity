@@ -55,6 +55,44 @@
 extern int waitAtExit;
 #endif
 
+struct atexit_listentry_t
+{
+   atexit_func_t func;
+   atexit_listentry_t *next;
+};
+
+static atexit_listentry_t *exit_funcs = NULL;
+
+void I_AtExit(atexit_func_t func)
+{
+   atexit_listentry_t *entry;
+
+   entry = (atexit_listentry_t *)malloc(sizeof(*entry));
+
+   entry->func = func;
+   entry->next = exit_funcs;
+   exit_funcs = entry;
+}
+
+void I_Exit(int status)
+{
+   atexit_listentry_t *entry, *next;
+
+   // Run through all exit functions
+
+   entry = exit_funcs;
+
+   while (entry != NULL)
+   {
+      entry->func();
+      next = entry->next;
+      free(entry);
+      entry = next;
+   }
+
+   exit(status);
+}
+
 //
 // I_BaseTiccmd
 //
@@ -90,7 +128,7 @@ void I_Init()
    // haleyjd 04/15/02: initialize joystick
    I_InitGamePads(MN_UpdateGamepadMenus);
  
-   atexit(I_Shutdown);
+   I_AtExit(I_Shutdown);
    
    // killough 2/21/98: avoid sound initialization if no sound & no music
    extern bool nomusicparm, nosfxparm;
@@ -98,10 +136,10 @@ void I_Init()
       I_InitSound();
 }
 
+static i_errhandler_t i_error_handler;  // special handler for I_Error run before exiting
+static thread_local char errmsg[2048];  // buffer of error message -- killough
 
-static char errmsg[2048];  // buffer of error message -- killough
-
-static int has_exited;
+static bool has_exited;
 
 enum
 {
@@ -129,7 +167,7 @@ static bool speedyexit = false;
 //
 void I_Quit(void)
 {
-   has_exited = 1;   /* Prevent infinitely recursive exits -- killough */
+   has_exited = true;   /* Prevent infinitely recursive exits -- killough */
    
    // haleyjd 06/05/10: not in fatal error situations; causes heap calls
    if(error_exitcode < I_ERRORLEVEL_FATAL && demorecording)
@@ -138,9 +176,6 @@ void I_Quit(void)
    // sf : rearrange this so the errmsg doesn't get messed up
    if(error_exitcode >= I_ERRORLEVEL_MESSAGE)
       puts(errmsg);   // killough 8/8/98
-
-   // FIXME: TEMPORARILY disabled on MacOS because of some crash in SDL_Renderer
-   // affecting functions. MUST FIX.
    else if(!speedyexit) // MaxW: The user didn't Alt+F4
       I_EndDoom();
 
@@ -179,7 +214,7 @@ void I_QuitFast()
 {
    puts("Eternity quit quickly.");
    speedyexit = true;
-   exit(0);
+   I_Exit(0);
 }
 
 //
@@ -215,7 +250,7 @@ void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...)
 
       if(!has_exited)    // If it hasn't exited yet, exit now -- killough
       {
-         has_exited = 1; // Prevent infinitely recursive exits -- killough
+         has_exited = true; // Prevent infinitely recursive exits -- killough
          exit(-1);
       }
       else
@@ -243,11 +278,19 @@ void I_ExitWithMessage(E_FORMAT_STRING(const char *msg), ...)
       va_end(argptr);
    }
 
-   if(!has_exited)    // If it hasn't exited yet, exit now -- killough
+   if(!has_exited)       // If it hasn't exited yet, exit now -- killough
    {
-      has_exited = 1; // Prevent infinitely recursive exits -- killough
-      exit(0);
+      has_exited = true; // Prevent infinitely recursive exits -- killough
+      I_Exit(0);
    }
+}
+
+//
+// Set a special handler for I_Error that runs prior to exiting
+//
+void I_SetErrorHandler(const i_errhandler_t handler)
+{
+   i_error_handler = handler;
 }
 
 //
@@ -268,11 +311,14 @@ void I_Error(E_FORMAT_STRING(const char *error), ...)
       pvsnprintf(errmsg, sizeof(errmsg), error, argptr);
       va_end(argptr);
    }
-   
-   if(!has_exited)    // If it hasn't exited yet, exit now -- killough
+
+   if(i_error_handler)
+      i_error_handler(errmsg);
+
+   if(!has_exited)       // If it hasn't exited yet, exit now -- killough
    {
-      has_exited = 1; // Prevent infinitely recursive exits -- killough
-      exit(-1);
+      has_exited = true; // Prevent infinitely recursive exits -- killough
+      I_Exit(-1);
    }
    else
       I_FatalError(I_ERR_ABORT, "I_Error: double faulted\n");
@@ -294,8 +340,8 @@ void I_ErrorVA(E_FORMAT_STRING(const char *error), va_list args)
 
    if(!has_exited)
    {
-      has_exited = 1;
-      exit(-1);
+      has_exited = true;
+      I_Exit(-1);
    }
    else
       I_FatalError(I_ERR_ABORT, "I_ErrorVA: double faulted\n");

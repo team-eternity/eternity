@@ -45,11 +45,11 @@ struct mapthing_t;
 
 enum bfg_t : int
 {
-  bfg_normal,
-  bfg_classic,
-  bfg_11k,
-  bfg_bouncing, // haleyjd
-  bfg_burst,    // haleyjd
+   bfg_normal,
+   bfg_classic,
+   bfg_11k,
+   bfg_bouncing, // haleyjd
+   bfg_burst,    // haleyjd
 };
 
 enum acceltype_e : int
@@ -100,7 +100,7 @@ extern int demo_subversion;
 #define demo_compatibility (demo_version < 200) /* killough 11/98: macroized */
 #define ancient_demo       (demo_version < 5)   /* haleyjd  03/17: for old demos */
 #define vanilla_heretic    (ancient_demo && GameModeInfo->type == Game_Heretic)
-#define mbf21_temp         (demo_version >= 403) /* MaxW: 2021: TODO: Sort this out once MBF21 demo compat ends up in */
+#define mbf21_demo         (demo_version >= 403)
 
 // haleyjd 10/16/10: full version macros
 #define make_full_version(v, sv) ((v << 8) | sv)
@@ -131,39 +131,40 @@ extern int demo_insurance, default_demo_insurance;      // killough 4/5/98
 // IMPORTANT: when searching for usage in the code, do NOT include the comp_
 // prefix. Just search for e.g. "telefrag" or "dropoff".
 
-enum {
-  comp_telefrag,
-  comp_dropoff,
-  comp_vile,
-  comp_pain,
-  comp_skull,
-  comp_blazing,
-  comp_doorlight,
-  comp_model,
-  comp_god,
-  comp_falloff,
-  comp_floors,
-  comp_skymap,
-  comp_pursuit,
-  comp_doorstuck,
-  comp_staylift,
-  comp_zombie,
-  comp_stairs,
-  comp_infcheat,
-  comp_zerotags,
-  comp_terrain,     // haleyjd 07/04/99: TerrainTypes toggle (#19)
-  comp_respawnfix,  // haleyjd 08/09/00: compat. option for nm respawn fix
-  comp_fallingdmg,  //         08/09/00: falling damage
-  comp_soul,        //         03/23/03: lost soul bounce
-  comp_theights,    //         07/06/05: thing heights fix
-  comp_overunder,   //         10/19/02: thing z clipping
-  comp_planeshoot,  //         09/22/07: ability to shoot floor/ceiling
-  comp_special,     //         08/29/09: special failure behavior
-  comp_ninja,       //         04/18/10: ninja spawn in G_CheckSpot
-  comp_jump,        // Disable jumping and air control
-  comp_aircontrol = comp_jump,
-  COMP_NUM_USED,    // counts the used comps. MUST BE LAST ONE + 1.
-  COMP_TOTAL=32  // Some extra room for additional variables
+enum
+{
+   comp_telefrag,
+   comp_dropoff,
+   comp_vile,
+   comp_pain,
+   comp_skull,
+   comp_blazing,
+   comp_doorlight,
+   comp_model,
+   comp_god,
+   comp_falloff,
+   comp_floors,
+   comp_skymap,
+   comp_pursuit,
+   comp_doorstuck,
+   comp_staylift,
+   comp_zombie,
+   comp_stairs,
+   comp_infcheat,
+   comp_zerotags,
+   comp_terrain,     // haleyjd 07/04/99: TerrainTypes toggle (#19)
+   comp_respawnfix,  // haleyjd 08/09/00: compat. option for nm respawn fix
+   comp_fallingdmg,  //         08/09/00: falling damage
+   comp_soul,        //         03/23/03: lost soul bounce
+   comp_theights,    //         07/06/05: thing heights fix
+   comp_overunder,   //         10/19/02: thing z clipping
+   comp_planeshoot,  //         09/22/07: ability to shoot floor/ceiling
+   comp_special,     //         08/29/09: special failure behavior
+   comp_ninja,       //         04/18/10: ninja spawn in G_CheckSpot
+   comp_jump,        // Disable jumping and air control
+   comp_aircontrol = comp_jump,
+   COMP_NUM_USED,    // counts the used comps. MUST BE LAST ONE + 1.
+   COMP_TOTAL=32     // Some extra room for additional variables
 };
 
 extern int comp[COMP_TOTAL], default_comp[COMP_TOTAL];
@@ -336,9 +337,6 @@ extern  char   *basepath;
 extern  char   *userpath;
 extern  char   *basegamepath;
 extern  char   *usergamepath;
-
-// if true, load all graphics at level load
-extern  bool precache;
 
 // wipegamestate can be set to -1
 //  to force a wipe on the next draw

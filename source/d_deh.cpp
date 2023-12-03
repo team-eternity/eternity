@@ -98,8 +98,8 @@ static void deh_procBexSprites(DWFILE *, char *, MetaTable &);
 
 struct deh_block
 {
-  const char *key;       // a mnemonic block code name
-  void (*const fptr)(DWFILE *, char *, MetaTable &); // handler
+   const char *key;       // a mnemonic block code name
+   void (*const fptr)(DWFILE *, char *, MetaTable &); // handler
 };
 
 struct dehflagremap_t
@@ -195,42 +195,41 @@ enum dehmobjinfoid_e : int
 
 static constexpr const char *deh_mobjinfo[DEH_MOBJINFOMAX] =
 {
-  "ID #",                // .doomednum
-  "Initial frame",       // .spawnstate
-  "Hit points",          // .spawnhealth
-  "First moving frame",  // .seestate
-  "Alert sound",         // .seesound
-  "Reaction time",       // .reactiontime
-  "Attack sound",        // .attacksound
-  "Injury frame",        // .painstate
-  "Pain chance",         // .painchance
-  "Pain sound",          // .painsound
-  "Close attack frame",  // .meleestate
-  "Far attack frame",    // .missilestate
-  "Death frame",         // .deathstate
-  "Exploding frame",     // .xdeathstate
-  "Death sound",         // .deathsound
-  "Speed",               // .speed
-  "Width",               // .radius
-  "Height",              // .height
-  "Mass",                // .mass
-  "Missile damage",      // .damage
-  "Action sound",        // .activesound
-  "Bits",                // .flags
-  "Bits2",               // .flags2 haleyjd 04/09/99
-  "Respawn frame",       // .raisestate
-  "Translucency",        // .translucency  haleyjd 09/01/02
-  "Bits3",               // .flags3 haleyjd 02/02/03
-  "Blood color",         // .bloodcolor haleyjd 05/08/03
-  "Dropped item",        // .meta sorta kinda it's complicated
-  "MBF21 Bits",          // .flags[2-5] (they're scattered across)
-  "Fast speed",          // .meta sorta kinda it's complicated
-  DEH_KEY_SPLASH_GROUP,  // Thing group NOSPLASHDAMAGE
-  DEH_KEY_PROJECTILE_GROUP,   // Thing group PROJECTILEALLIANCE or mobjinfo MF4_HARMSPECIESMISSILE
-  DEH_KEY_INFIGHTING_GROUP,   // Thing group DAMAGEIGNORE and flag
-  "Melee range",         // .meleerange
-  "Rip sound",           // .ripsound
-
+   "ID #",                // .doomednum
+   "Initial frame",       // .spawnstate
+   "Hit points",          // .spawnhealth
+   "First moving frame",  // .seestate
+   "Alert sound",         // .seesound
+   "Reaction time",       // .reactiontime
+   "Attack sound",        // .attacksound
+   "Injury frame",        // .painstate
+   "Pain chance",         // .painchance
+   "Pain sound",          // .painsound
+   "Close attack frame",  // .meleestate
+   "Far attack frame",    // .missilestate
+   "Death frame",         // .deathstate
+   "Exploding frame",     // .xdeathstate
+   "Death sound",         // .deathsound
+   "Speed",               // .speed
+   "Width",               // .radius
+   "Height",              // .height
+   "Mass",                // .mass
+   "Missile damage",      // .damage
+   "Action sound",        // .activesound
+   "Bits",                // .flags
+   "Bits2",               // .flags2 haleyjd 04/09/99
+   "Respawn frame",       // .raisestate
+   "Translucency",        // .translucency  haleyjd 09/01/02
+   "Bits3",               // .flags3 haleyjd 02/02/03
+   "Blood color",         // .bloodcolor haleyjd 05/08/03
+   "Dropped item",        // .meta sorta kinda it's complicated
+   "MBF21 Bits",          // .flags[2-5] (they're scattered across)
+   "Fast speed",          // .meta sorta kinda it's complicated
+   DEH_KEY_SPLASH_GROUP,  // Thing group NOSPLASHDAMAGE
+   DEH_KEY_PROJECTILE_GROUP,   // Thing group PROJECTILEALLIANCE or mobjinfo MF4_HARMSPECIESMISSILE
+   DEH_KEY_INFIGHTING_GROUP,   // Thing group DAMAGEIGNORE and flag
+   "Melee range",         // .meleerange
+   "Rip sound",           // .ripsound
 };
 
 // Strings that are used to indicate flags ("Bits" in mobjinfo)
@@ -249,164 +248,164 @@ static constexpr const char *deh_mobjinfo[DEH_MOBJINFOMAX] =
 
 static dehflags_t deh_mobjflags[] =
 {
-  {"SPECIAL",          0x00000001}, // call  P_Specialthing when touched
-  {"SOLID",            0x00000002}, // block movement
-  {"SHOOTABLE",        0x00000004}, // can be hit
-  {"NOSECTOR",         0x00000008}, // invisible but touchable
-  {"NOBLOCKMAP",       0x00000010}, // inert but displayable
-  {"AMBUSH",           0x00000020}, // deaf monster
-  {"JUSTHIT",          0x00000040}, // will try to attack right back
-  {"JUSTATTACKED",     0x00000080}, // take at least 1 step before attacking
-  {"SPAWNCEILING",     0x00000100}, // initially hang from ceiling
-  {"NOGRAVITY",        0x00000200}, // don't apply gravity during play
-  {"DROPOFF",          0x00000400}, // can jump from high places
-  {"PICKUP",           0x00000800}, // will pick up items
-  {"NOCLIP",           0x00001000}, // goes through walls
+   { "SPECIAL",          0x00000001 }, // call  P_Specialthing when touched
+   { "SOLID",            0x00000002 }, // block movement
+   { "SHOOTABLE",        0x00000004 }, // can be hit
+   { "NOSECTOR",         0x00000008 }, // invisible but touchable
+   { "NOBLOCKMAP",       0x00000010 }, // inert but displayable
+   { "AMBUSH",           0x00000020 }, // deaf monster
+   { "JUSTHIT",          0x00000040 }, // will try to attack right back
+   { "JUSTATTACKED",     0x00000080 }, // take at least 1 step before attacking
+   { "SPAWNCEILING",     0x00000100 }, // initially hang from ceiling
+   { "NOGRAVITY",        0x00000200 }, // don't apply gravity during play
+   { "DROPOFF",          0x00000400 }, // can jump from high places
+   { "PICKUP",           0x00000800 }, // will pick up items
+   { "NOCLIP",           0x00001000 }, // goes through walls
 
-  // haleyjd: for combined flags fields, the flags3 SLIDE must take
-  // precedence, and thus has to be listed up here. This is a bit of
-  // a kludge, but it will preserve compatibility perfectly. The flags
-  // SLIDE bit has no effect, as it is never used. I will make a point
-  // of avoiding duplicate flag names in the future ;)
+   // haleyjd: for combined flags fields, the flags3 SLIDE must take
+   // precedence, and thus has to be listed up here. This is a bit of
+   // a kludge, but it will preserve compatibility perfectly. The flags
+   // SLIDE bit has no effect, as it is never used. I will make a point
+   // of avoiding duplicate flag names in the future ;)
 
-  {"SLIDE",            0x00000100, 2}, // mobj slides against walls (for real)
-  {"SLIDE",            0x00002000}, // keep info about sliding along walls
+   { "SLIDE",            0x00000100, 2 }, // mobj slides against walls (for real)
+   { "SLIDE",            0x00002000    }, // keep info about sliding along walls
 
-  {"FLOAT",            0x00004000}, // allow movement to any height
-  {"TELEPORT",         0x00008000}, // don't cross lines or look at heights
-  {"MISSILE",          0x00010000}, // don't hit same species, explode on block
-  {"DROPPED",          0x00020000}, // dropped, not spawned (like ammo clip)
-  {"SHADOW",           0x00040000}, // use fuzzy draw like spectres
-  {"NOBLOOD",          0x00080000}, // puffs instead of blood when shot
-  {"CORPSE",           0x00100000}, // so it will slide down steps when dead
-  {"INFLOAT",          0x00200000}, // float but not to target height
-  {"COUNTKILL",        0x00400000}, // count toward the kills total
-  {"COUNTITEM",        0x00800000}, // count toward the items total
-  {"SKULLFLY",         0x01000000}, // special handling for flying skulls
-  {"NOTDMATCH",        0x02000000}, // do not spawn in deathmatch
+   { "FLOAT",            0x00004000 }, // allow movement to any height
+   { "TELEPORT",         0x00008000 }, // don't cross lines or look at heights
+   { "MISSILE",          0x00010000 }, // don't hit same species, explode on block
+   { "DROPPED",          0x00020000 }, // dropped, not spawned (like ammo clip)
+   { "SHADOW",           0x00040000 }, // use fuzzy draw like spectres
+   { "NOBLOOD",          0x00080000 }, // puffs instead of blood when shot
+   { "CORPSE",           0x00100000 }, // so it will slide down steps when dead
+   { "INFLOAT",          0x00200000 }, // float but not to target height
+   { "COUNTKILL",        0x00400000 }, // count toward the kills total
+   { "COUNTITEM",        0x00800000 }, // count toward the items total
+   { "SKULLFLY",         0x01000000 }, // special handling for flying skulls
+   { "NOTDMATCH",        0x02000000 }, // do not spawn in deathmatch
 
-  // killough 10/98: TRANSLATION consists of 2 bits, not 1:
+   // killough 10/98: TRANSLATION consists of 2 bits, not 1:
 
-  {"TRANSLATION",      0x04000000}, // for Boom bug-compatibility
-  {"TRANSLATION1",     0x04000000}, // use translation table for color (players)
-  {"TRANSLATION2",     0x08000000}, // use translation table for color (players)
-  {"UNUSED1",          0x08000000}, // unused bit # 1 -- For Boom bug-compatibility
-  {"UNUSED2",          0x10000000}, // unused bit # 2 -- For Boom compatibility
-  {"UNUSED3",          0x20000000}, // unused bit # 3 -- For Boom compatibility
-  {"UNUSED4",          0x40000000}, // unused bit # 4 -- For Boom compatibility
-  {"TOUCHY",           0x10000000}, // dies on contact with solid objects (MBF)
-  {"BOUNCES",          0x20000000}, // bounces off floors, ceilings and maybe walls
-  {"FRIEND",           0x40000000}, // a friend of the player(s) (MBF)
-  {"TRANSLUCENT",      0x80000000}, // apply translucency to sprite (BOOM)
+   { "TRANSLATION",      0x04000000 }, // for Boom bug-compatibility
+   { "TRANSLATION1",     0x04000000 }, // use translation table for color (players)
+   { "TRANSLATION2",     0x08000000 }, // use translation table for color (players)
+   { "UNUSED1",          0x08000000 }, // unused bit # 1 -- For Boom bug-compatibility
+   { "UNUSED2",          0x10000000 }, // unused bit # 2 -- For Boom compatibility
+   { "UNUSED3",          0x20000000 }, // unused bit # 3 -- For Boom compatibility
+   { "UNUSED4",          0x40000000 }, // unused bit # 4 -- For Boom compatibility
+   { "TOUCHY",           0x10000000 }, // dies on contact with solid objects (MBF)
+   { "BOUNCES",          0x20000000 }, // bounces off floors, ceilings and maybe walls
+   { "FRIEND",           0x40000000 }, // a friend of the player(s) (MBF)
+   { "TRANSLUCENT",      0x80000000 }, // apply translucency to sprite (BOOM)
 
-  // flags2 bits
-  {"LOGRAV",           0x00000001, 1}, // low gravity
-  {"NOSPLASH",         0x00000002, 1}, // no splash object
-  {"NOSTRAFE",         0x00000004, 1}, // never uses strafing logic
-  {"NORESPAWN",        0x00000008, 1}, // never respawns
-  {"ALWAYSRESPAWN",    0x00000010, 1}, // always respawns
-  {"REMOVEDEAD",       0x00000020, 1}, // removes self after death
-  {"NOTHRUST",         0x00000040, 1}, // not affected by external pushers
-  {"NOCROSS",          0x00000080, 1}, // cannot trigger special lines
-  {"JUMPDOWN",         0x00000100, 1}, // can jump down to follow player
-  {"PUSHABLE",         0x00000200, 1}, // pushable
-  {"MAP07BOSS1",       0x00000400, 1}, // triggers map07 special 1
-  {"MAP07BOSS2",       0x00000800, 1}, // triggers map07 special 2
-  {"E1M8BOSS",         0x00001000, 1}, // triggers e1m8 special
-  {"E2M8BOSS",         0x00002000, 1}, // triggers e2m8 end
-  {"E3M8BOSS",         0x00004000, 1}, // triggers e3m8 end
-  {"BOSS",             0x00008000, 1}, // mobj is a boss
-  {"E4M6BOSS",         0x00010000, 1}, // triggers e4m6 special
-  {"E4M8BOSS",         0x00020000, 1}, // triggers e4m8 special
-  {"FOOTCLIP",         0x00040000, 1}, // feet clipped by liquids
-  {"FLOATBOB",         0x00080000, 1}, // use floatbob z movement
-  {"DONTDRAW",         0x00100000, 1}, // don't draw vissprite
-  {"SHORTMRANGE",      0x00200000, 1}, // has shorter missile range
-  {"LONGMELEE",        0x00400000, 1}, // has longer melee range
-  {"RANGEHALF",        0x00800000, 1}, // considers 1/2 distance
-  {"HIGHERMPROB",      0x01000000, 1}, // higher min. missile attack prob.
-  {"CANTLEAVEFLOORPIC",0x02000000, 1}, // can't leave floor type
-  {"SPAWNFLOAT",       0x04000000, 1}, // spawn @ random float z
-  {"INVULNERABLE",     0x08000000, 1}, // mobj is invincible
-  {"DORMANT",          0x10000000, 1}, // mobj is dormant
-  {"SEEKERMISSILE",    0x20000000, 1}, // internal, may be a tracer
-  {"DEFLECTIVE",       0x40000000, 1}, // if reflective, deflects projectiles
-  {"REFLECTIVE",       0x80000000, 1}, // mobj reflects projectiles
+   // flags2 bits
+   { "LOGRAV",           0x00000001, 1 }, // low gravity
+   { "NOSPLASH",         0x00000002, 1 }, // no splash object
+   { "NOSTRAFE",         0x00000004, 1 }, // never uses strafing logic
+   { "NORESPAWN",        0x00000008, 1 }, // never respawns
+   { "ALWAYSRESPAWN",    0x00000010, 1 }, // always respawns
+   { "REMOVEDEAD",       0x00000020, 1 }, // removes self after death
+   { "NOTHRUST",         0x00000040, 1 }, // not affected by external pushers
+   { "NOCROSS",          0x00000080, 1 }, // cannot trigger special lines
+   { "JUMPDOWN",         0x00000100, 1 }, // can jump down to follow player
+   { "PUSHABLE",         0x00000200, 1 }, // pushable
+   { "MAP07BOSS1",       0x00000400, 1 }, // triggers map07 special 1
+   { "MAP07BOSS2",       0x00000800, 1 }, // triggers map07 special 2
+   { "E1M8BOSS",         0x00001000, 1 }, // triggers e1m8 special
+   { "E2M8BOSS",         0x00002000, 1 }, // triggers e2m8 end
+   { "E3M8BOSS",         0x00004000, 1 }, // triggers e3m8 end
+   { "BOSS",             0x00008000, 1 }, // mobj is a boss
+   { "E4M6BOSS",         0x00010000, 1 }, // triggers e4m6 special
+   { "E4M8BOSS",         0x00020000, 1 }, // triggers e4m8 special
+   { "FOOTCLIP",         0x00040000, 1 }, // feet clipped by liquids
+   { "FLOATBOB",         0x00080000, 1 }, // use floatbob z movement
+   { "DONTDRAW",         0x00100000, 1 }, // don't draw vissprite
+   { "SHORTMRANGE",      0x00200000, 1 }, // has shorter missile range
+   { "LONGMELEE",        0x00400000, 1 }, // has longer melee range
+   { "RANGEHALF",        0x00800000, 1 }, // considers 1/2 distance
+   { "HIGHERMPROB",      0x01000000, 1 }, // higher min. missile attack prob.
+   { "CANTLEAVEFLOORPIC",0x02000000, 1 }, // can't leave floor type
+   { "SPAWNFLOAT",       0x04000000, 1 }, // spawn @ random float z
+   { "INVULNERABLE",     0x08000000, 1 }, // mobj is invincible
+   { "DORMANT",          0x10000000, 1 }, // mobj is dormant
+   { "SEEKERMISSILE",    0x20000000, 1 }, // internal, may be a tracer
+   { "DEFLECTIVE",       0x40000000, 1 }, // if reflective, deflects projectiles
+   { "REFLECTIVE",       0x80000000, 1 }, // mobj reflects projectiles
 
-  // flags3 bits
-  {"GHOST",            0x00000001, 2}, // heretic-style ghost
-  {"THRUGHOST",        0x00000002, 2}, // passes through ghosts
-  {"NODMGTHRUST",      0x00000004, 2}, // doesn't inflict thrust
-  {"ACTSEESOUND",      0x00000008, 2}, // uses see sound randomly
-  {"LOUDACTIVE",       0x00000010, 2}, // has full-volume activesnd
-  {"E5M8BOSS",         0x00000020, 2}, // boss of E5M8
-  {"DMGIGNORED",       0x00000040, 2}, // damage is ignored
-  {"BOSSIGNORE",       0x00000080, 2}, // ignores damage by others with flag
-  // See above for flags3 SLIDE flag
-  {"TELESTOMP",        0x00000200, 2}, // can telestomp
-  {"WINDTHRUST",       0x00000400, 2}, // affected by heretic wind
-  {"FIREDAMAGE",       0x00000800, 2}, // does fire damage
-  {"KILLABLE",         0x00001000, 2}, // is killable, but doesn't count
-  {"DEADFLOAT",        0x00002000, 2}, // keeps NOGRAVITY when dead
-  {"NOTHRESHOLD",      0x00004000, 2}, // has no target threshold
-  {"FLOORMISSILE",     0x00008000, 2}, // is a floor missile
-  {"SUPERITEM",        0x00010000, 2}, // is a super powerup
-  {"NOITEMRESP",       0x00020000, 2}, // won't item respawn
-  {"SUPERFRIEND",      0x00040000, 2}, // won't attack other friends
-  {"INVULNCHARGE",     0x00080000, 2}, // invincible when skull flying
-  {"EXPLOCOUNT",       0x00100000, 2}, // doesn't explode until count expires
-  {"CANNOTPUSH",       0x00200000, 2}, // can't push other things
-  {"TLSTYLEADD",       0x00400000, 2}, // uses additive translucency
-  {"SPACMONSTER",      0x00800000, 2}, // monster that can activate param lines
-  {"SPACMISSILE",      0x01000000, 2}, // missile that can activate param lines
-  {"NOFRIENDDMG",      0x02000000, 2}, // object isn't hurt by friends
-  {"3DDECORATION",     0x04000000, 2}, // object is a decor. with 3D height info
-  {"ALWAYSFAST",       0x08000000, 2}, // object is always in -fast mode
-  {"PASSMOBJ",         0x10000000, 2}, // OVER_UNDER
-  {"DONTOVERLAP",      0x20000000, 2}, // OVER_UNDER
-  {"CYCLEALPHA",       0x40000000, 2}, // alpha cycles perpetually
-  {"RIP",              0x80000000, 2}, // ripper projectile
+   // flags3 bits
+   { "GHOST",            0x00000001, 2 }, // heretic-style ghost
+   { "THRUGHOST",        0x00000002, 2 }, // passes through ghosts
+   { "NODMGTHRUST",      0x00000004, 2 }, // doesn't inflict thrust
+   { "ACTSEESOUND",      0x00000008, 2 }, // uses see sound randomly
+   { "LOUDACTIVE",       0x00000010, 2 }, // has full-volume activesnd
+   { "E5M8BOSS",         0x00000020, 2 }, // boss of E5M8
+   { "DMGIGNORED",       0x00000040, 2 }, // damage is ignored
+   { "BOSSIGNORE",       0x00000080, 2 }, // ignores damage by others with flag
+   // See above for flags3 SLIDE flag
+   { "TELESTOMP",        0x00000200, 2 }, // can telestomp
+   { "WINDTHRUST",       0x00000400, 2 }, // affected by heretic wind
+   { "FIREDAMAGE",       0x00000800, 2 }, // does fire damage
+   { "KILLABLE",         0x00001000, 2 }, // is killable, but doesn't count
+   { "DEADFLOAT",        0x00002000, 2 }, // keeps NOGRAVITY when dead
+   { "NOTHRESHOLD",      0x00004000, 2 }, // has no target threshold
+   { "FLOORMISSILE",     0x00008000, 2 }, // is a floor missile
+   { "SUPERITEM",        0x00010000, 2 }, // is a super powerup
+   { "NOITEMRESP",       0x00020000, 2 }, // won't item respawn
+   { "SUPERFRIEND",      0x00040000, 2 }, // won't attack other friends
+   { "INVULNCHARGE",     0x00080000, 2 }, // invincible when skull flying
+   { "EXPLOCOUNT",       0x00100000, 2 }, // doesn't explode until count expires
+   { "CANNOTPUSH",       0x00200000, 2 }, // can't push other things
+   { "TLSTYLEADD",       0x00400000, 2 }, // uses additive translucency
+   { "SPACMONSTER",      0x00800000, 2 }, // monster that can activate param lines
+   { "SPACMISSILE",      0x01000000, 2 }, // missile that can activate param lines
+   { "NOFRIENDDMG",      0x02000000, 2 }, // object isn't hurt by friends
+   { "3DDECORATION",     0x04000000, 2 }, // object is a decor. with 3D height info
+   { "ALWAYSFAST",       0x08000000, 2 }, // object is always in -fast mode
+   { "PASSMOBJ",         0x10000000, 2 }, // OVER_UNDER
+   { "DONTOVERLAP",      0x20000000, 2 }, // OVER_UNDER
+   { "CYCLEALPHA",       0x40000000, 2 }, // alpha cycles perpetually
+   { "RIP",              0x80000000, 2 }, // ripper projectile
 
-  // flags4 bits
-  {"AUTOTRANSLATE",    0x00000001, 3}, // automatic translation for non-DOOM modes
-  {"NORADIUSDMG",      0x00000002, 3}, // doesn't take radius damage
-  {"FORCERADIUSDMG",   0x00000004, 3}, // forces radius damage despite other flags
-  {"LOOKALLAROUND",    0x00000008, 3}, // looks all around for targets
-  {"NODAMAGE",         0x00000010, 3}, // takes no damage but reacts normally
-  {"SYNCHRONIZED",     0x00000020, 3}, // spawn state tics are not randomized
-  {"NORANDOMIZE",      0x00000040, 3}, // missile spawn and death not randomized
-  {"BRIGHT",           0x00000080, 3}, // actor is always fullbright
-  {"FLY",              0x00000100, 3}, // actor is flying
-  {"NORADIUSHACK",     0x00000200, 3}, // bouncing missile obeys normal radius attack flags
-  {"NOSOUNDCUTOFF",    0x00000400, 3}, // actor can play any number of sounds
-  {"RAVENRESPAWN",     0x00000800, 3}, // special respawns Raven style
-  {"NOTSHAREWARE",     0x00001000, 3}, // item won't spawn in shareware gamemodes
-  {"NOTORQUE",         0x00002000, 3}, // never subject to torque simulation
-  {"ALWAYSTORQUE",     0x00004000, 3}, // torque not restricted by comp_falloff
-  {"NOZERODAMAGE",     0x00008000, 3}, // missile won't inflict damage if damage is 0
-  {"TLSTYLESUB",       0x00010000, 3}, // use subtractive blending map
-  {"TOTALINVISIBLE",   0x00020000, 3}, // thing is totally invisible to monsters
-  {"DRAWSBLOOD",       0x00040000, 3}, // missile draws blood
-  {"SPACPUSHWALL",     0x00080000, 3}, // thing can activate push walls
-  {"NOSPECIESINFIGHT", 0x00100000, 3}, // no infighting in this species, but still damage
-  {"HARMSPECIESMISSILE", 0x00200000, 3}, // harmed even by projectiles of same species
-  {"FRIENDFOEMISSILE",   0x00400000, 3}, // friends and foes of same species hurt each other
-  {"BLOODLESSIMPACT",    0x00800000, 3}, // doesn't draw blood when it hits or rips a thing
-  {"HERETICBOUNCES",     0x01000000, 3}, // thing bounces à la Heretic
-  {"MONSTERPASS",        0x02000000, 3}, // not blocked by blockmonsters
-  {"LOWAIMPRIO",         0x04000000, 3}, // less likely to be autoaimed
-  {"STICKYCARRY",        0x08000000, 3}, // can carry other things on top of it
-  {"SETTARGETONDEATH",   0x10000000, 3}, // target is updated even when one-shot
-  {"SLIDEOVERTHINGS",    0x20000000, 3}, // thing will keep sliding when on top of things
-  {"UNSTEPPABLE",        0x40000000, 3}, // thing cannot be stepped on like stairs
-  {"RANGEEIGHTH",        0x80000000, 3}, // uses eighth actual distance
+   // flags4 bits
+   { "AUTOTRANSLATE",      0x00000001, 3 }, // automatic translation for non-DOOM modes
+   { "NORADIUSDMG",        0x00000002, 3 }, // doesn't take radius damage
+   { "FORCERADIUSDMG",     0x00000004, 3 }, // forces radius damage despite other flags
+   { "LOOKALLAROUND",      0x00000008, 3 }, // looks all around for targets
+   { "NODAMAGE",           0x00000010, 3 }, // takes no damage but reacts normally
+   { "SYNCHRONIZED",       0x00000020, 3 }, // spawn state tics are not randomized
+   { "NORANDOMIZE",        0x00000040, 3 }, // missile spawn and death not randomized
+   { "BRIGHT",             0x00000080, 3 }, // actor is always fullbright
+   { "FLY",                0x00000100, 3 }, // actor is flying
+   { "NORADIUSHACK",       0x00000200, 3 }, // bouncing missile obeys normal radius attack flags
+   { "NOSOUNDCUTOFF",      0x00000400, 3 }, // actor can play any number of sounds
+   { "RAVENRESPAWN",       0x00000800, 3 }, // special respawns Raven style
+   { "NOTSHAREWARE",       0x00001000, 3 }, // item won't spawn in shareware gamemodes
+   { "NOTORQUE",           0x00002000, 3 }, // never subject to torque simulation
+   { "ALWAYSTORQUE",       0x00004000, 3 }, // torque not restricted by comp_falloff
+   { "NOZERODAMAGE",       0x00008000, 3 }, // missile won't inflict damage if damage is 0
+   { "TLSTYLESUB",         0x00010000, 3 }, // use subtractive blending map
+   { "TOTALINVISIBLE",     0x00020000, 3 }, // thing is totally invisible to monsters
+   { "DRAWSBLOOD",         0x00040000, 3 }, // missile draws blood
+   { "SPACPUSHWALL",       0x00080000, 3 }, // thing can activate push walls
+   { "NOSPECIESINFIGHT",   0x00100000, 3 }, // no infighting in this species, but still damage
+   { "HARMSPECIESMISSILE", 0x00200000, 3 }, // harmed even by projectiles of same species
+   { "FRIENDFOEMISSILE",   0x00400000, 3 }, // friends and foes of same species hurt each other
+   { "BLOODLESSIMPACT",    0x00800000, 3 }, // doesn't draw blood when it hits or rips a thing
+   { "HERETICBOUNCES",     0x01000000, 3 }, // thing bounces à la Heretic
+   { "MONSTERPASS",        0x02000000, 3 }, // not blocked by blockmonsters
+   { "LOWAIMPRIO",         0x04000000, 3 }, // less likely to be autoaimed
+   { "STICKYCARRY",        0x08000000, 3 }, // can carry other things on top of it
+   { "SETTARGETONDEATH",   0x10000000, 3 }, // target is updated even when one-shot
+   { "SLIDEOVERTHINGS",    0x20000000, 3 }, // thing will keep sliding when on top of things
+   { "UNSTEPPABLE",        0x40000000, 3 }, // thing cannot be stepped on like stairs
+   { "RANGEEIGHTH",        0x80000000, 3 }, // uses eighth actual distance
 
    // flags5 bits
-  {"NOTAUTOAIMED",       0x00000001, 4}, // can't be autoaimed (for real)
-  {"FULLVOLSOUNDS",      0x00000002, 4}, // full-volume see/death sounds
-  {"ACTLIKEBRIDGE",      0x00000004, 4}, // unmoved by sector actions, and pickups can sit atop
+   { "NOTAUTOAIMED",       0x00000001, 4 }, // can't be autoaimed (for real)
+   { "FULLVOLSOUNDS",      0x00000002, 4 }, // full-volume see/death sounds
+   { "ACTLIKEBRIDGE",      0x00000004, 4 }, // unmoved by sector actions, and pickups can sit atop
 
-  { nullptr,             0 }             // nullptr terminator
+   { nullptr,             0 }             // nullptr terminator
 };
 
 // haleyjd 02/19/04: new dehflagset for combined flags
@@ -504,24 +503,24 @@ enum dehstateid_e : int
 
 static constexpr const char *deh_state[NUMDEHSTATEIDS] =
 {
-  "Sprite number",    // .sprite (spritenum_t) // an enum
-  "Sprite subnumber", // .frame
-  "Duration",         // .tics
-  "Next frame",       // .nextstate (statenum_t)
-  // This is set in a separate "Pointer" block from Dehacked
-  "Codep Frame",      // pointer to first use of action (actionf_t)
-  "Unknown 1",        // .misc1
-  "Unknown 2",        // .misc2
-  "Particle event",   // haleyjd 08/09/02: particle event num
-  "Args1",            // haleyjd 08/09/02: arguments
-  "Args2",
-  "Args3",
-  "Args4",
-  "Args5",
-  "Args6",
-  "Args7",
-  "Args8",
-  "MBF21 Bits",
+   "Sprite number",    // .sprite (spritenum_t) // an enum
+   "Sprite subnumber", // .frame
+   "Duration",         // .tics
+   "Next frame",       // .nextstate (statenum_t)
+   // This is set in a separate "Pointer" block from Dehacked
+   "Codep Frame",      // pointer to first use of action (actionf_t)
+   "Unknown 1",        // .misc1
+   "Unknown 2",        // .misc2
+   "Particle event",   // haleyjd 08/09/02: particle event num
+   "Args1",            // haleyjd 08/09/02: arguments
+   "Args2",
+   "Args3",
+   "Args4",
+   "Args5",
+   "Args6",
+   "Args7",
+   "Args8",
+   "MBF21 Bits",
 };
 
 static dehflags_t deh_mbf21stateflags[] =
@@ -566,15 +565,15 @@ enum dehsfxinfoid_e : int
 
 static constexpr const char *deh_sfxinfo[] =
 {
-  "Offset",     // pointer to a name string, changed in text
-  "Zero/One",   // .singularity (int, one at a time flag)
-  "Value",      // .priority
-  "Zero 1",     // .link (sfxinfo_t*) referenced sound if linked
-  "Zero 2",     // .pitch
-  "Zero 3",     // .volume
-  "Zero 4",     // .data (SAMPLE*) sound data
-  "Neg. One 1", // .usefulness
-  "Neg. One 2"  // .lumpnum
+   "Offset",     // pointer to a name string, changed in text
+   "Zero/One",   // .singularity (int, one at a time flag)
+   "Value",      // .priority
+   "Zero 1",     // .link (sfxinfo_t*) referenced sound if linked
+   "Zero 2",     // .pitch
+   "Zero 3",     // .volume
+   "Zero 4",     // .data (SAMPLE*) sound data
+   "Neg. One 1", // .usefulness
+   "Neg. One 2"  // .lumpnum
 };
 
 // MUSICINFO is not supported in Dehacked.  Ignored here.
@@ -587,7 +586,7 @@ static constexpr const char *deh_sfxinfo[] =
 
 static constexpr const char *deh_sprite[] =
 {
-  "Offset"      // supposed to be the offset into the text section
+   "Offset"      // supposed to be the offset into the text section
 };
 
 // AMMO - Dehacked block name = "Ammo"
@@ -613,14 +612,14 @@ enum dehweaponid_e : int
 
 static constexpr const char *deh_weapon[NUMDEHWEAPONIDS] =
 {
-  "Ammo type",      // .ammo
-  "Deselect frame", // .upstate
-  "Select frame",   // .downstate
-  "Bobbing frame",  // .readystate
-  "Shooting frame", // .atkstate
-  "Firing frame",   // .flashstate
-  "Ammo per shot",  // haleyjd 08/10/02: .ammopershot
-  "MBF21 Bits",     // .flags
+   "Ammo type",      // .ammo
+   "Deselect frame", // .upstate
+   "Select frame",   // .downstate
+   "Bobbing frame",  // .readystate
+   "Shooting frame", // .atkstate
+   "Firing frame",   // .flashstate
+   "Ammo per shot",  // haleyjd 08/10/02: .ammopershot
+   "MBF21 Bits",     // .flags
 };
 
 static dehflags_t deh_mbf21weaponflags[] =

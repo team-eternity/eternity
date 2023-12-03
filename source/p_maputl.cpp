@@ -37,6 +37,7 @@
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_maputl.h"
+#include "p_portalblockmap.h"
 #include "p_portalcross.h"
 #include "p_portalclip.h"
 #include "p_setup.h"
@@ -596,12 +597,12 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
       
       if(linedef->flags & ML_DONTPEGBOTTOM)
       {
-         texbot = side->rowoffset + obot;
+         texbot = side->offset_base_y + side->offset_mid_y + obot;
          textop = texbot + textures[side->midtexture]->heightfrac;
       }
       else
       {
-         textop = otop + side->rowoffset;
+         textop = otop + side->offset_base_y + side->offset_mid_y;
          texbot = textop - textures[side->midtexture]->heightfrac;
       }
       texmid = (textop + texbot)/2;
@@ -759,6 +760,8 @@ void P_UnsetThingPosition(Mobj *thing)
       
       thing->old_sectorlist = thing->touching_sectorlist;
       thing->touching_sectorlist = nullptr; // to be restored by P_SetThingPosition
+      
+      R_UnlinkSpriteProj(*thing);
    }
 
    if(!(thing->flags & MF_NOBLOCKMAP))
@@ -833,7 +836,9 @@ void P_SetThingPosition(Mobj *thing)
          EV_ActivateSectorAction(ss->sector, thing, SEAC_ENTER);
          EV_ActivateSectorAction(prevss->sector, thing, SEAC_EXIT);
       }
-
+      
+      // ioanch: link to portals
+      R_LinkSpriteProj(*thing);
    }
 
    // link into blockmap

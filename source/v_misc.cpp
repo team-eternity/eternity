@@ -320,13 +320,13 @@ void V_FPSTicker()
 //
 static void V_ClassicFPSDrawer()
 {
-  static int lasttic;
-  
-  int i = i_haltimer.GetTime();
-  int tics = i - lasttic;
-  lasttic = i;
-  if (tics > 20)
-    tics = 20;
+   static int lasttic;
+
+   int i = i_haltimer.GetTime();
+   int tics = i - lasttic;
+   lasttic = i;
+   if(tics > 20)
+      tics = 20;
 
    // SoM: ANYRES
    if(vbscreen.scaled)
@@ -587,7 +587,7 @@ void V_DrawBackground(const char *patchname, VBuffer *back_dest)
    back_dest->TileBlock64(back_dest, src);
 }
 
-byte *R_DistortedFlat(int, bool);
+byte *R_DistortedFlat(ZoneHeap &heap, int, bool);
 
 //
 // V_DrawDistortedBackground
@@ -597,8 +597,10 @@ byte *R_DistortedFlat(int, bool);
 //
 void V_DrawDistortedBackground(const char *patchname, VBuffer *back_dest)
 {
-   const byte *src = R_DistortedFlat(R_FindFlat(patchname), true);
-   
+   const int patchNum = R_FindFlat(patchname);
+   R_CacheTexture(patchNum);
+   const byte *src = R_DistortedFlat(*r_globalcontext.heap, patchNum, true);
+
    back_dest->TileBlock64(back_dest, src);
 }
 

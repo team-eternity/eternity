@@ -672,10 +672,10 @@ public:
 
 struct switchlist_t
 {
-  char    name1[9];
-  char    name2[9];
-  int16_t episode;
-}; 
+   char    name1[9];
+   char    name2[9];
+   int16_t episode;
+};
 
 #if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(pop)
@@ -1029,8 +1029,8 @@ public:
 
 struct ceilinglist_t
 {
-  CeilingThinker *ceiling;
-  ceilinglist_t *next,**prev;
+   CeilingThinker *ceiling;
+   ceilinglist_t *next,**prev;
 };
 
 // haleyjd 01/09/12: ceiling data flags

@@ -128,7 +128,6 @@ bool            democontinue;
 bool            demorecording;
 bool            demoplayback;
 bool            singledemo;           // quit after playing a demo from cmdline
-bool            precache = true;      // if true, load all graphics at start
 wbstartstruct_t wminfo;               // parms for world map / intermission
 bool            haswolflevels = false;// jff 4/18/98 wolf levels present
 byte            *savebuffer;
@@ -364,7 +363,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
       newweapon = -1;
 
-      if((p.attackdown && !P_CheckAmmo(&p)) || gameactions[ka_nextweapon])
+      if(gameactions[ka_nextweapon])
       {
          weaponinfo_t *temp = E_FindBestWeapon(&p);
          if(temp == nullptr)
@@ -1307,10 +1306,6 @@ static byte *G_ReadDemoHeader(byte *demo_p)
 
    if(gameaction != ga_loadgame)      // killough 12/98: support -loadgame
    {
-      // killough 2/22/98:
-      // Do it anyway for timing demos, to reduce timing noise
-      precache = timingdemo;
-      
       // haleyjd: choose appropriate G_InitNew based on version
       if(full_demo_version >= make_full_version(329, 5))
          G_InitNew(skill, gamemapname);
@@ -1371,7 +1366,6 @@ void G_DoPlayDemo(void)
    if(!(demo_p = G_ReadDemoHeader(demobuffer)))
       return;
 
-   precache = true;
    usergame = false;
    demoplayback = true;
    
@@ -3633,21 +3627,21 @@ static void G_BeginRecordingOld()
 }
 
 /*
-  haleyjd 06/17/01: new demo format changes
+   haleyjd 06/17/01: new demo format changes
 
-  1. The old version field is now always written as 255
-  2. The signature has been changed to the null-term'd string ETERN
-  3. The version and new subversion are written immediately following
+   1. The old version field is now always written as 255
+   2. The signature has been changed to the null-term'd string ETERN
+   3. The version and new subversion are written immediately following
      the signature
-  4. cmd->updownangle is now recorded and read back appropriately
+   4. cmd->updownangle is now recorded and read back appropriately
 
-  12/14/01:
-  5. gamemapname is recorded and will be used on loading demos
+   12/14/01:
+   5. gamemapname is recorded and will be used on loading demos
 
-  Note that the demo-reading code still handles the "sacred" formats
-  for DOOM, BOOM and MBF, so purists don't need to have heart attacks.
-  However, only new Eternity-format demos can be written, and these
-  will not be compatible with other engines.
+   Note that the demo-reading code still handles the "sacred" formats
+   for DOOM, BOOM and MBF, so purists don't need to have heart attacks.
+   However, only new Eternity-format demos can be written, and these
+   will not be compatible with other engines.
 */
 // NETCODE_FIXME -- DEMO_FIXME: Yet more demo writing.
 

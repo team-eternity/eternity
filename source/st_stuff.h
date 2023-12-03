@@ -85,11 +85,11 @@ extern stbarfns_t DoomStatusBar;
 extern stbarfns_t HticStatusBar;
 
 // States for status bar code.
-typedef enum
+enum st_stateenum_t
 {
-  AutomapState,
-  FirstPersonState
-} st_stateenum_t;
+   AutomapState,
+   FirstPersonState
+};
 
 // killough 5/2/98: moved from m_misc.c:
 

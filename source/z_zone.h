@@ -97,66 +97,70 @@ enum
 
 // killough 3/22/98: add file/line info
 
-void *(Z_Malloc)(size_t size, int tag, void **ptr, const char *, int);
-void  (Z_Free)(void *ptr, const char *, int);
-void  (Z_FreeTags)(int lowtag, int hightag, const char *, int);
-void  (Z_ChangeTag)(void *ptr, int tag, const char *, int);
-void   Z_Init();
-void *(Z_Calloc)(size_t n, size_t n2, int tag, void **user, const char *, int);
-void *(Z_Realloc)(void *p, size_t n, int tag, void **user, const char *, int);
-char *(Z_Strdup)(const char *s, int tag, void **user, const char *, int);
-void   Z_FreeAlloca(void);
-void *(Z_Alloca)(size_t n, const char *file, int line);
-void *(Z_Realloca)(void *ptr, size_t n, const char *file, int line);
-char *(Z_Strdupa)(const char *s, const char *file, int line);
-void  (Z_CheckHeap)(const char *, int);   
-int   (Z_CheckTag)(void *, const char *, int);
+void Z_Init();
 
 void *Z_SysMalloc(size_t size);
 void *Z_SysCalloc(size_t n1, size_t n2);
 void *Z_SysRealloc(void *ptr, size_t size);
 void  Z_SysFree(void *p);
 
-#define Z_Free(a)          (Z_Free)     (a,      __FILE__,__LINE__)
-#define Z_FreeTags(a,b)    (Z_FreeTags) (a,b,    __FILE__,__LINE__)
-#define Z_ChangeTag(a,b)   (Z_ChangeTag)(a,b,    __FILE__,__LINE__)
-#define Z_Malloc(a,b,c)    (Z_Malloc)   (a,b,c,  __FILE__,__LINE__)
-#define Z_Strdup(a,b,c)    (Z_Strdup)   (a,b,c,  __FILE__,__LINE__)
-#define Z_Calloc(a,b,c,d)  (Z_Calloc)   (a,b,c,d,__FILE__,__LINE__)
-#define Z_Realloc(a,b,c,d) (Z_Realloc)  (a,b,c,d,__FILE__,__LINE__)
-#define Z_Alloca(a)        (Z_Alloca)   (a,      __FILE__,__LINE__)
-#define Z_Realloca(a,b)    (Z_Realloca) (a,b,    __FILE__,__LINE__)
-#define Z_Strdupa(a)       (Z_Strdupa)  (a,      __FILE__,__LINE__)
-#define Z_CheckHeap()      (Z_CheckHeap)(        __FILE__,__LINE__)
-#define Z_CheckTag(a)      (Z_CheckTag) (a,      __FILE__,__LINE__)
+//
+// Context-specific Heap alloc Macros
+//
+#define zhmalloc(zoneheap, type, n) \
+   static_cast<type>((zoneheap).malloc(n, PU_STATIC, 0, __FILE__, __LINE__))
 
-#define emalloc(type, n) \
-   static_cast<type>((Z_Malloc)(n, PU_STATIC, 0, __FILE__, __LINE__))
+#define zhmalloctag(zoneheap, type, n1, tag, user) \
+   static_cast<type>((zoneheap).malloc(n1, tag, user, __FILE__, __LINE__))
 
-#define emalloctag(type, n1, tag, user) \
-   static_cast<type>((Z_Malloc)(n1, tag, user, __FILE__, __LINE__))
+#define zhcalloc(zoneheap, type, n1, n2) \
+   static_cast<type>((zoneheap).calloc(n1, n2, PU_STATIC, 0, __FILE__, __LINE__))
 
-#define ecalloc(type, n1, n2) \
-   static_cast<type>((Z_Calloc)(n1, n2, PU_STATIC, 0, __FILE__, __LINE__))
+#define zhcalloctag(zoneheap, type, n1, n2, tag, user) \
+   static_cast<type>((zoneheap).calloc(n1, n2, tag, user, __FILE__, __LINE__))
 
-#define ecalloctag(type, n1, n2, tag, user) \
-   static_cast<type>((Z_Calloc)(n1, n2, tag, user, __FILE__, __LINE__))
+#define zhrealloc(zoneheap, type, p, n) \
+   static_cast<type>((zoneheap).realloc(p, n, PU_STATIC, 0, __FILE__, __LINE__))
 
-#define erealloc(type, p, n) \
-   static_cast<type>((Z_Realloc)(p, n, PU_STATIC, 0, __FILE__, __LINE__))
+#define zhrealloctag(zoneheap, type, p, n, tag, user) \
+   static_cast<type>((zoneheap).realloc(p, n, tag, user, __FILE__, __LINE__))
 
-#define erealloctag(type, p, n, tag, user) \
-   static_cast<type>((Z_Realloc)(p, n, tag, user, __FILE__, __LINE__))
+#define zhstructalloc(zoneheap, type, n) \
+   static_cast<type *>((zoneheap).calloc(n, sizeof(type), PU_STATIC, 0, __FILE__, __LINE__))
 
-#define estructalloc(type, n) \
-   static_cast<type *>((Z_Calloc)(n, sizeof(type), PU_STATIC, 0, __FILE__, __LINE__))
+#define zhstructalloctag(zoneheap, type, n, tag) \
+   static_cast<type *>((zoneheap).calloc(n, sizeof(type), tag, 0, __FILE__, __LINE__))
 
-#define estructalloctag(type, n, tag) \
-   static_cast<type *>((Z_Calloc)(n, sizeof(type), tag, 0, __FILE__, __LINE__))
+#define zhstrdup(zoneheap, s) (zoneheap).strdup(s, PU_STATIC, 0, __FILE__, __LINE__)
 
-#define estrdup(s) (Z_Strdup)(s, PU_STATIC, 0, __FILE__, __LINE__)
+#define zhfree(zoneheap, p)   (zoneheap).free(p, __FILE__, __LINE__)
 
-#define efree(p)   (Z_Free)(p, __FILE__, __LINE__)
+// Global Heap alloc Macros
+
+#define Z_Free(a)          z_globalheap.free       (a,      __FILE__,__LINE__)
+#define Z_FreeTags(a,b)    z_globalheap.freeTags   (a,b,    __FILE__,__LINE__)
+#define Z_ChangeTag(a,b)   z_globalheap.changeTag  (a,b,    __FILE__,__LINE__)
+#define Z_Malloc(a,b,c)    z_globalheap.malloc     (a,b,c,  __FILE__,__LINE__)
+#define Z_Strdup(a,b,c)    z_globalheap.strdup     (a,b,c,  __FILE__,__LINE__)
+#define Z_Calloc(a,b,c,d)  z_globalheap.calloc     (a,b,c,d,__FILE__,__LINE__)
+#define Z_Realloc(a,b,c,d) z_globalheap.realloc    (a,b,c,d,__FILE__,__LINE__)
+#define Z_FreeAlloca       z_globalheap.freeAllocAuto
+#define Z_Alloca(a)        z_globalheap.allocAuto  (a,      __FILE__,__LINE__)
+#define Z_Realloca(a,b)    z_globalheap.reallocAuto(a,b,    __FILE__,__LINE__)
+#define Z_Strdupa(a)       z_globalheap.strdupAuto (a,      __FILE__,__LINE__)
+#define Z_CheckHeap()      z_globalheap.checkHeap  (        __FILE__,__LINE__)
+#define Z_CheckTag(a)      z_globalheap.checkTag   (a,      __FILE__,__LINE__)
+
+#define emalloc(type, n)                    zhmalloc(z_globalheap, type, n)
+#define emalloctag(type, n1, tag, user)     zhmalloctag(z_globalheap, type, n1, tag, user)
+#define ecalloc(type, n1, n2)               zhcalloc(z_globalheap, type, n1, n2)
+#define ecalloctag(type, n1, n2, tag, user) zhcalloctag(z_globalheap, type, n1, n2, tag, user)
+#define erealloc(type, p, n)                zhrealloc(z_globalheap, type, p, n)
+#define erealloctag(type, p, n, tag, user)  zhrealloctag(z_globalheap, type, p, n, tag, user)
+#define estructalloc(type, n)               zhstructalloc(z_globalheap, type, n)
+#define estructalloctag(type, n, tag)       zhstructalloctag(z_globalheap, type, n, tag)
+#define estrdup(s)                          zhstrdup(z_globalheap, s)
+#define efree(p)                            zhfree(z_globalheap, p)
 
 //
 // Globally useful macros
@@ -182,16 +186,121 @@ void doom_printf(E_FORMAT_STRING(const char *), ...) E_PRINTF(1, 2);
 void doom_warningf(E_FORMAT_STRING(const char *), ...) E_PRINTF(1, 2);
 
 #ifdef INSTRUMENTED
-extern size_t memorybytag[PU_MAX]; // haleyjd  04/01/11
-extern int printstats;             // killough 08/23/98
+extern int printstats;
 #endif
 
 void Z_PrintZoneHeap();
 
 void Z_DumpCore();
 
+struct ZoneHeapMutex;
+
 //
-// ZoneObject Class
+// This class represents an instance of the zone heap. It might be
+// single or multiple-consumer. Previously much of this was statics
+// in z_native.cpp but thread-local tagged memory demands that what
+// was global state is now per-instance.
+//
+class ZoneHeapBase
+{
+protected:
+   struct memblock_t *m_blockbytag[PU_MAX]; // used for tracking all zone blocks
+
+#ifdef INSTRUMENTED
+   size_t m_memorybytag[PU_MAX];
+#endif
+
+public:
+   virtual void *malloc(size_t size, int tag, void **ptr, const char *, int);
+   virtual void  free(void *ptr, const char *, int);
+   virtual void  freeTags(int lowtag, int hightag, const char *, int);
+   virtual void  changeTag(void *ptr, int tag, const char *, int);
+   virtual void *calloc(size_t n, size_t n2, int tag, void **user, const char *, int);
+   virtual void *realloc(void *p, size_t n, int tag, void **user, const char *, int);
+   virtual char *strdup(const char *s, int tag, void **user, const char *, int);
+   virtual void  freeAllocAuto();
+   virtual void *allocAuto(size_t n, const char *file, int line); // Not alloca because defines
+   virtual void *reallocAuto(void *ptr, size_t n, const char *file, int line);
+   virtual char *strdupAuto(const char *s, const char *file, int line);
+   virtual void  checkHeap(const char *, int);
+   virtual int   checkTag(void *, const char *, int);
+
+   void print(const char *filename);
+   void dumpCore(const char *filename);
+
+#ifdef INSTRUMENTED
+   inline size_t memoryForTag(const int tag) { return m_memorybytag[tag]; }
+#endif
+};
+
+//
+// Single-consumer zone heap (thread-local).
+//
+class ZoneHeap final : public ZoneHeapBase
+{
+public:
+   ~ZoneHeap() { freeTags(PU_STATIC, PU_CACHE, __FILE__, __LINE__); };
+
+   // TODO: Re-enable when C++20 is a thing and kill the zh macros
+   // THREAD_FIXME: Guard against any and all PU_STATIC (and maybe PU_PERMANENT) allocations?
+   //template <typename T>
+   //inline T *malloc(const size_t size, const int tag, void **user = nullptr,
+   //   const std::source_location loc = std::source_location::current())
+   //{
+   //   return static_cast<T *>(ZoneHeapBase::malloc(size, tag, user, loc.file_name(), loc.line()));
+   //}
+   //template <typename T>
+   //inline T *calloc(size_t n, size_t n2, int tag, void **user = nullptr,
+   //   const std::source_location loc = std::source_location::current())
+   //{
+   //   return static_cast<T *>(ZoneHeapBase::calloc(n, n2, tag, user, loc.file_name(), loc.line()));
+   //}
+   //template <typename T>
+   //inline T *realloc(void *p, size_t n, int tag, void **user = nullptr,
+   //   const std::source_location loc = std::source_location::current())
+   //{
+   //   return static_cast<T *>(ZoneHeapBase::realloc(p, n, tag, user, loc.file_name(), loc.line()));
+   //}
+   //template <typename T>
+   //inline T *allocAuto(size_t n, const std::source_location loc = std::source_location::current())
+   //{
+   //   return static_cast<T *>(ZoneHeapBase::allocAuto(n, loc.file_name(), loc.line()));
+   //}
+   //template <typename T>
+   //inline T *reallocAuto(void *ptr, size_t n, const std::source_location loc = std::source_location::current())
+   //{
+   //   return static_cast<T *>(ZoneHeapBase::reallocAuto(ptr, n, ptr, loc.file_name(), loc.line()));
+   //}
+};
+
+//
+// Multiple-consumer zone heap (shared).
+//
+class ZoneHeapThreadSafe final : public ZoneHeapBase
+{
+private:
+   ZoneHeapMutex *m_mutex;
+
+public:
+   ZoneHeapThreadSafe();
+   ~ZoneHeapThreadSafe();
+
+
+   virtual void *malloc(size_t size, int tag, void **ptr, const char *, int) override;
+   virtual void  free(void *ptr, const char *, int) override;
+   virtual void  freeTags(int lowtag, int hightag, const char *, int) override;
+   virtual void  changeTag(void *ptr, int tag, const char *, int) override;
+   virtual void *calloc(size_t n, size_t n2, int tag, void **user, const char *, int) override;
+   virtual void *realloc(void *p, size_t n, int tag, void **user, const char *, int) override;
+   virtual char *strdup(const char *s, int tag, void **user, const char *, int) override;
+   virtual void  freeAllocAuto() override;
+   virtual void *allocAuto(size_t n, const char *file, int line) override; // Not alloca because defines
+   virtual void *reallocAuto(void *ptr, size_t n, const char *file, int line) override;
+   virtual char *strdupAuto(const char *s, const char *file, int line) override;
+   virtual void  checkHeap(const char *, int) override;
+   virtual int   checkTag(void *, const char *, int) override;
+};
+
 //
 // This class serves as a base class for C++ objects that want to support
 // allocation on the zone heap. 
@@ -227,6 +336,9 @@ public:
 
    static void FreeTags(int lowtag, int hightag);
 };
+
+// Has to be inline otherwise initialisation order causes stuff to use z_globalheap before its mutex exists
+inline ZoneHeapThreadSafe z_globalheap;
 
 #endif
 

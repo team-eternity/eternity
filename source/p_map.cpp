@@ -774,7 +774,7 @@ bool P_CheckLineBlocksThing(line_t *ld, const linkoffset_t *link,
    if(!(clip.thing->flags & (MF_MISSILE | MF_BOUNCES)))
    {
       if((ld->flags & ML_BLOCKING) ||
-         (mbf21_temp && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
+         (mbf21_demo && !(ld->flags & ML_RESERVED) && clip.thing->player && (ld->flags & ML_BLOCKPLAYERS)))
       {
          // explicitly blocking everything
          // or blocking player
@@ -795,7 +795,7 @@ bool P_CheckLineBlocksThing(line_t *ld, const linkoffset_t *link,
       if(!(ld->flags & ML_3DMIDTEX) && P_BlockedAsMonster(*clip.thing) &&
          (
             ld->flags & ML_BLOCKMONSTERS ||
-            (mbf21_temp && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
+            (mbf21_demo && (ld->flags & ML_BLOCKLANDMONSTERS) && !(clip.thing->flags & MF_FLOAT))
             )
          )
       {
@@ -1042,6 +1042,10 @@ ItemCheckResult P_CheckThingCommon(Mobj *thing)
       // haleyjd 10/15/08: rippers
       if(clip.thing->flags3 & MF3_RIP)
       {
+         if (!(thing->flags & MF_SHOOTABLE))
+         {
+            return !(thing->flags & MF_SOLID) ? ItemCheck_pass : ItemCheck_hit;
+         }
          damage = ((P_Random(pr_rip) & 3) + 2) * clip.thing->damage;
 
          if(!(thing->flags & MF_NOBLOOD) &&
@@ -3384,15 +3388,15 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
          node = node->m_tnext;
    }
 
-  /* cph -
-   * This is the strife we get into for using global variables. 
-   *  clip.thing is being used by several different functions calling
-   *  P_BlockThingIterator, including functions that can be called 
-   *  *from* P_BlockThingIterator. Using a global clip.thing is not 
-   *  reentrant. OTOH for Boom/MBF demos we have to preserve the buggy 
-   *  behaviour. Fun. We restore its previous value unless we're in a 
-   *  Boom/MBF demo. -- haleyjd: add SMMU too :)
-   */
+   // cph -
+   // This is the strife we get into for using global variables.
+   //  clip.thing is being used by several different functions calling
+   //  P_BlockThingIterator, including functions that can be called
+   //  *from* P_BlockThingIterator. Using a global clip.thing is not
+   //  reentrant. OTOH for Boom/MBF demos we have to preserve the buggy
+   //  behaviour. Fun. We restore its previous value unless we're in a
+   //  Boom/MBF demo. -- haleyjd: add SMMU too :)
+   //
 
    if(demo_version < 200 || demo_version >= 329)
       P_PopClipStack();

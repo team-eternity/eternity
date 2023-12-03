@@ -74,11 +74,23 @@ void R_DoomTLStyle();
 
 void R_ResetTrans();
 
+// Enumeration for sprite projection style
+enum
+{
+   R_SPRPROJSTYLE_DEFAULT,
+   R_SPRPROJSTYLE_FAST,
+   R_SPRPROJSTYLE_THOROUGH,
+   R_SPRPROJSTYLE_NUM
+};
+
+inline int r_sprprojstyle;
+
 //
 // Utility functions.
 //
 
 struct node_t;
+struct rendersector_t;
 struct seg_t;
 struct subsector_t;
 struct sector_t;
@@ -94,7 +106,7 @@ angle_t R_PointToAngle(const fixed_t viewx, const fixed_t viewy, const fixed_t x
 angle_t R_PointToAngle2(fixed_t pviewx, fixed_t pviewy, fixed_t x, fixed_t y);
 subsector_t *R_PointInSubsector(fixed_t x, fixed_t y);
 fixed_t R_GetLerp(bool ignorepause);
-void R_SectorColormap(cmapcontext_t &context, const fixed_t viewz, const sector_t *s);
+void R_SectorColormap(cmapcontext_t &context, const fixed_t viewz, const rendersector_t *s);
 
 inline static subsector_t *R_PointInSubsector(v2fixed_t v)
 {
@@ -107,6 +119,8 @@ inline static subsector_t *R_PointInSubsector(v2fixed_t v)
 
 struct camera_t;
 struct player_t;
+
+void R_AddMappedLine(const intptr_t lineIndex);
 
 void R_RenderViewContext(rendercontext_t &context);
 void R_RenderPlayerView(player_t *player, camera_t *viewcamera);
@@ -188,7 +202,11 @@ struct cb_seg_t
 {
    int x1, x2;
    float x1frac, x2frac;
-   float toffsetx, toffsety;
+
+   float toffset_base_x,   toffset_base_y;
+   float toffset_top_x,    toffset_top_y;
+   float toffset_mid_x,    toffset_mid_y;
+   float toffset_bottom_x, toffset_bottom_y;
 
    float dist, dist2, diststep;
    float len, len2, lenstep;
@@ -213,10 +231,12 @@ struct cb_seg_t
    bool f_portalignore, c_portalignore;
 
    // 8 bit tables
-   lighttable_t **walllights;
+   const lighttable_t *const *walllights_top;
+   const lighttable_t *const *walllights_mid;
+   const lighttable_t *const *walllights_bottom;
 
    const side_t *side;
-   const sector_t *frontsec, *backsec;
+   const rendersector_t *frontsec, *backsec;
    Surfaces<visplane_t *> plane;
    const seg_t *line;
 
@@ -227,6 +247,10 @@ struct cb_seg_t
 
    // Extreme plane point Z for sloped sectors: used for sprite-clipping silhouettes.
    fixed_t maxfrontfloor, minfrontceil, maxbackfloor, minbackceil;
+
+   // Skew-related values
+   float skew_top_step, skew_mid_step, skew_bottom_step;
+   float skew_top_baseoffset, skew_mid_baseoffset, skew_bottom_baseoffset;
 
    // If nonzero, require f_sky1 rendering
    int skyflat;

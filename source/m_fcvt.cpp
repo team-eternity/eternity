@@ -64,7 +64,7 @@ char *M_Fcvtbuf(double value, int ndigits, int *decpt, int *sign, char *buf)
    char *s = cvtbuf;
    char *dot;
 
-   sprintf(cvtbuf, "%-+#.*f", DBL_MAX_10_EXP + digits + 1, value);
+   snprintf(cvtbuf, 2*DBL_MAX_10_EXP + 16, "%-+#.*f", DBL_MAX_10_EXP + digits + 1, value);
    
    /* The sign.  */
    if(*s++ == '-')
@@ -163,7 +163,7 @@ M_Ecvtbuf(double value, int ndigits, int *decpt, int *sign, char *buf)
    char *s = cvtbuf, *d = buf;
 
    /* Produce two extra digits, so we could round properly.  */
-   sprintf(cvtbuf, "%-+.*E", ndigits + 2, value);
+   snprintf(cvtbuf, ndigits + 20, "%-+.*E", ndigits + 2, value);
    *decpt = 0;
 
    /* The sign.  */

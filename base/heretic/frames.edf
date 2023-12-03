@@ -985,6 +985,20 @@ frame S_HRODFXI1_4 { +decorate; dehackednum 2801 }
 frame S_HRODFXI1_5 { +decorate; dehackednum 2802 }
 frame S_HRODFXI1_6 { +decorate; dehackednum 2803 }
 
+// HereticHornRodFX2
+frame S_HRODFX2_1 { +decorate }
+frame S_HRODFX2_2 { +decorate }
+frame S_HRODFX2_3 { +decorate }
+frame S_HRODFX2_4 { +decorate }
+frame S_HRODFXI2_1 { +decorate }
+frame S_HRODFXI2_2 { +decorate }
+frame S_HRODFXI2_3 { +decorate }
+frame S_HRODFXI2_4 { +decorate }
+frame S_HRODFXI2_5 { +decorate }
+frame S_HRODFXI2_6 { +decorate }
+frame S_HRODFXI2_7 { +decorate }
+frame S_HRODFXI2_8 { +decorate }
+
 // HereticGoldWandFX1,2 + HereticGoldWandPuff1,2
 frame S_GWANDFX1_1   { +decorate; dehackednum 2804 }
 frame S_GWANDFX1_2   { +decorate; dehackednum 2805 }
@@ -1079,12 +1093,22 @@ frame S_BLASTERATK1_5 { +decorate }
 frame S_BLASTERATK1_6 { +decorate }
 
 // Powered Blaster
-// frame S_BLASTERATK2_1 { +decorate }
-// frame S_BLASTERATK2_2 { +decorate }
-// frame S_BLASTERATK2_3 { +decorate }
-// frame S_BLASTERATK2_4 { +decorate }
-// frame S_BLASTERATK2_5 { +decorate }
-// frame S_BLASTERATK2_6 { +decorate }
+frame S_BLASTERATK2_1 { +decorate }
+frame S_BLASTERATK2_2 { +decorate }
+frame S_BLASTERATK2_3 { +decorate }
+frame S_BLASTERATK2_4 { +decorate }
+frame S_BLASTERATK2_5 { +decorate }
+frame S_BLASTERATK2_6 { +decorate }
+
+// Super blaster
+frame S_BLASTERFX1_1 { +decorate }
+frame S_BLASTERFXI1_1 { +decorate }
+frame S_BLASTERFXI1_2 { +decorate }
+frame S_BLASTERFXI1_3 { +decorate }
+frame S_BLASTERFXI1_4 { +decorate }
+frame S_BLASTERFXI1_5 { +decorate }
+frame S_BLASTERFXI1_6 { +decorate }
+frame S_BLASTERFXI1_7 { +decorate }
 
 // Firemace
 frame S_MACEREADY   { +decorate }
@@ -1116,15 +1140,15 @@ frame S_HORNRODATK1_2 { +decorate }
 frame S_HORNRODATK1_3 { +decorate }
 
 // Powered Hellstaff
-// frame S_HORNRODATK2_1 { +decorate }
-// frame S_HORNRODATK2_2 { +decorate }
-// frame S_HORNRODATK2_3 { +decorate }
-// frame S_HORNRODATK2_4 { +decorate }
-// frame S_HORNRODATK2_5 { +decorate }
-// frame S_HORNRODATK2_6 { +decorate }
-// frame S_HORNRODATK2_7 { +decorate }
-// frame S_HORNRODATK2_8 { +decorate }
-// frame S_HORNRODATK2_9 { +decorate }
+frame S_HORNRODATK2_1 { +decorate }
+frame S_HORNRODATK2_2 { +decorate }
+frame S_HORNRODATK2_3 { +decorate }
+frame S_HORNRODATK2_4 { +decorate }
+frame S_HORNRODATK2_5 { +decorate }
+frame S_HORNRODATK2_6 { +decorate }
+frame S_HORNRODATK2_7 { +decorate }
+frame S_HORNRODATK2_8 { +decorate }
+frame S_HORNRODATK2_9 { +decorate }
 
 // GoldWand
 frame S_GOLDWANDREADY  { +decorate }

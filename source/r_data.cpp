@@ -622,6 +622,7 @@ void R_PrecacheLevel(void)
    skyflat_t *sky = GameModeInfo->skyFlats;
    while(sky->flatname)
    {
+      R_CacheSkyTexture(sky->flatnum);
       hitlist[sky->texture] = 1;
       ++sky;
    }

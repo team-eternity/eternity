@@ -65,7 +65,10 @@ struct VBuffer
 
    fixed_t getRealAspectRatio()    const;
    fixed_t getVirtualAspectRatio() const;
-}; 
+
+   int mapXFromOther(const int x, const VBuffer &other) const;
+   int mapYFromOther(const int y, const VBuffer &other) const;
+};
 
 // V_InitVBuffer
 // Initializes the given vbuffer and allocates pixeldata for it.
