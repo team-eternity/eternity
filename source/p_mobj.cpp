@@ -1713,7 +1713,7 @@ void Mobj::ThinkRavenFast()
       {
          if(changexy)
          {
-            if(!P_TryMove(this, this->x+xfrac, this->y+yfrac, false))
+            if(!P_TryMove(this, this->x+xfrac, this->y+yfrac, false, false))
             {
                // Blocked move
                P_ExplodeMissile(this, nullptr);
