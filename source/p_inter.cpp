@@ -667,13 +667,15 @@ bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
    if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
       return false; // There's no power for the type provided
 
+   const powerduration_t& currentpower = player->powers[powerNum];
+
    // EDF_FEATURES_FIXME: Strength counts up. Also should additivetime imply overridesself?
    if(!power->getInt("overridesself", 0) &&
-      (player->powers[powerNum].tics >  4 * 32 || player->powers[powerNum].tics < 0))
+      (currentpower.tics >  4 * 32 || currentpower.tics < 0 || currentpower.infinite))
       return false;
 
    // Unless player has infinite duration cheat, set duration (MaxW stolen from killough)
-   if(!player->powers[powerNum].infinite)
+   if(!currentpower.infinite)
    {
       bool permanent = false;
       int duration = power->getInt("duration", 0);

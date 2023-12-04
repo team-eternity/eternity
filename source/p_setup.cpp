@@ -3220,7 +3220,7 @@ static void P_LoadReject(int lump)
       // ioanch 20160309: REJECT overflow fix. From chocolate-doom (by
       // fraggle):
       // Also only do it if MBF or less
-      if(demo_version <= 203)
+      if(demo_compatibility)
          P_padRejectArray(rejectmatrix + size, expectedsize - size);
    }
 
