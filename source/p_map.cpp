@@ -2284,19 +2284,43 @@ bool P_CheckSlopeWalk(const Mobj &thing, fixed_t &xmove, fixed_t &ymove)
       // walking up the slope
       // NOTE: use zdelta instead of normal.z, since it's more precise for comparison.
       // Experimentally we've seen in Odamex that 1:1 slopes are *inclusively* considered steep.
-      if(P_IsSteep(slope))   // steep slope
-      {
-         // Can't climb
-         // NOTES:
-         // 1. Also include semi-noclip (TELEPORT) objects, since they're also supposed to walk up
-         //    any cliffs.
-         // 2. Currently no dedicated spectator player, we just have walkcam, which is no-clip.
-         if(thing.flags & (MF_NOCLIP | MF_TELEPORT))
-            return true;
+      //if(P_IsSteep(slope))   // steep slope
+      //{
+      //   // Can't climb
+      //   // NOTES:
+      //   // 1. Also include semi-noclip (TELEPORT) objects, since they're also supposed to walk up
+      //   //    any cliffs.
+      //   // 2. Currently no dedicated spectator player, we just have walkcam, which is no-clip.
+      //   if(thing.flags & (MF_NOCLIP | MF_TELEPORT))
+      //      return true;
 
-         // TODO: all trickery with the slope mashup
-         return false;
-      }
+      //   //bool dopush = true;
+      //   //if (D_abs(slope->zdelta) < NOT_TOO_STEEP_SLOPE)
+      //   //{
+      //   //   for (const msecnode_t* node = thing.touching_sectorlist; node; node = node->m_tnext)
+      //   //   {
+      //   //      const sector_t& sec = *node->m_sector;
+      //   //      if (P_IsSteep(sec.srf.floor.slope) ||
+      //   //         sec.srf.floor.getZAt(thing.x, thing.y) < thing.z - STEPSIZE)
+      //   //      {
+      //   //         continue;
+      //   //      }
+      //   //      dopush = false;
+      //   //      break;
+      //   //   }
+      //   //}
+      //   //if (dopush)
+      //   {
+      //      //v3fixed_t n = slope->normal;
+      //      //if (n.z < 0)
+      //      //   n = -n;
+      //      fixed_t dot = FixedMul(slope->normal.x, xmove) + FixedMul(slope->normal.y, ymove);
+      //      xmove -= FixedMul(slope->normal.x, dot);
+      //      ymove -= FixedMul(slope->normal.y, dot);
+      //   }
+
+      //   return false;
+      //}
 
       // Adjust movement to be along the slope surface
       xmove -= FixedMul(slope->normal.x, destzdelta);
@@ -3423,6 +3447,8 @@ void P_ClearGlobalLevelReferences()
 //
 bool P_OnGroundOrThing(const Mobj &mobj)
 {
+   if (mobj.z <= mobj.zref.floor && mobj.zref.floorsector && P_IsSteep(mobj.zref.floorsector->srf.floor.slope) && mobj.zref.dropoff < mobj.zref.floor - STEPSIZE)
+      return false;
    return mobj.z <= mobj.zref.floor || ( P_Use3DClipping() &&   mobj.intflags & MIF_ONMOBJ);
    // negative:
    //     mobj.z >  mobj.zref.floor && (!P_Use3DClipping() || !(mobj.intflags & MIF_ONMOBJ))

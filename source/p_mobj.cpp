@@ -1442,27 +1442,30 @@ inline static void P_checkMobjProjections(Mobj &mobj)
 static void P_steepSlopeSlide(Mobj& mo)
 {
    // Algorithm from Odamex
+   
    const sector_t* sector = mo.zref.floorsector;
    if (!sector || !P_IsSteep(sector->srf.floor.slope) ||
-      mo.flags & (MF_NOCLIP | MF_NOGRAVITY | MF_TELEPORT) || mo.momz > 0 || mo.z > mo.zref.floor)
+      mo.flags & (MF_NOCLIP | MF_NOGRAVITY | MF_TELEPORT) || mo.momz > 0 || mo.z > mo.zref.floor || mo.zref.floor <= mo.zref.dropoff + STEPSIZE)
    {
+      //if (mo.player)
+      //printf("%s momz %f z %f floorz %f\n", __func__, mo.momz / 65536.0, mo.z / 65536.0, mo.zref.floor/65536.0);
       return;
    }
    // NOTE: no spectator, just use walkcam
-   bool dopush = true;
-   if (D_abs(sector->srf.floor.slope->zdelta) < NOT_TOO_STEEP_SLOPE)
-   {
-      for (const msecnode_t* node = mo.touching_sectorlist; node; node = node->m_tnext)
-      {
-         const sector_t& sec = *node->m_sector;
-         if (P_IsSteep(sec.srf.floor.slope) || sec.srf.floor.getZAt(mo.x, mo.y) < mo.z - STEPSIZE)
-            continue;
-         dopush = false;
-         break;
-      }
-   }
-   if (!dopush)
-      return;
+   //bool dopush = true;
+   //if (D_abs(sector->srf.floor.slope->zdelta) < NOT_TOO_STEEP_SLOPE)
+   //{
+   //   for (const msecnode_t* node = mo.touching_sectorlist; node; node = node->m_tnext)
+   //   {
+   //      const sector_t& sec = *node->m_sector;
+   //      if (P_IsSteep(sec.srf.floor.slope) || sec.srf.floor.getZAt(mo.x, mo.y) < mo.z - STEPSIZE)
+   //         continue;
+   //      dopush = false;
+   //      break;
+   //   }
+   //}
+   //if (!dopush)
+   //   return;
    
    v3fixed_t n = sector->srf.floor.slope->normal;
    if (n.z < 0)
