@@ -79,6 +79,8 @@ bool P_SlopesEqual(const pslope_t &s1, const pslope_t &s2);
 
 bool P_AnySlope(const line_t &line);
 
+bool P_IsSteep(const pslope_t *slope);
+
 #endif
 
 // EOF

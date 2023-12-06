@@ -2284,7 +2284,7 @@ bool P_CheckSlopeWalk(const Mobj &thing, fixed_t &xmove, fixed_t &ymove)
       // walking up the slope
       // NOTE: use zdelta instead of normal.z, since it's more precise for comparison.
       // Experimentally we've seen in Odamex that 1:1 slopes are *inclusively* considered steep.
-      if(D_abs(slope->zdelta) >= FRACUNIT)   // steep slope
+      if(P_IsSteep(slope))   // steep slope
       {
          // Can't climb
          // NOTES:

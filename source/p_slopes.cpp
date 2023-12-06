@@ -641,5 +641,15 @@ fixed_t surface_t::getZAt(fixed_t x, fixed_t y) const
    return height;
 }
 
+//
+// Check if slope is at least 1:1. Null pointer means no slope.
+//
+bool P_IsSteep(const pslope_t *slope)
+{
+   if(!slope)
+      return false;
+   return D_abs(slope->zdelta) >= FRACUNIT;
+}
+
 // EOF
 
