@@ -62,6 +62,11 @@ struct v3fixed_t
       return *this;
    }
 
+   v3fixed_t operator - () const
+   {
+      return { -x, -y, -z };
+   }
+
    static v3fixed_t floatToFixed(const v3float_t &v);
 
    fixed_t x, y, z;

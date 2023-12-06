@@ -27,6 +27,8 @@
 #ifndef P_SLOPES_H__
 #define P_SLOPES_H__
 
+#define NOT_TOO_STEEP_SLOPE 122607  // tangent resulting from cosine of 2/3*cos(pi/4)
+
 struct line_t;
 struct pslope_t;
 struct v3float_t;

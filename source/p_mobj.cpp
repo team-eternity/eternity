@@ -63,6 +63,7 @@
 #include "p_saveid.h"
 #include "p_sector.h"
 #include "p_skin.h"
+#include "p_slopes.h"
 #include "p_tick.h"
 #include "p_spec.h"    // haleyjd 04/05/99: TerrainTypes
 #include "p_user.h"
@@ -1436,6 +1437,42 @@ inline static void P_checkMobjProjections(Mobj &mobj)
 }
 
 //
+// If mobj is on a steep slope, slide off
+//
+static void P_steepSlopeSlide(Mobj& mo)
+{
+   // Algorithm from Odamex
+   const sector_t* sector = mo.zref.floorsector;
+   if (!sector || !P_IsSteep(sector->srf.floor.slope) ||
+      mo.flags & (MF_NOCLIP | MF_NOGRAVITY | MF_TELEPORT) || mo.momz > 0 || mo.z > mo.zref.floor)
+   {
+      return;
+   }
+   // NOTE: no spectator, just use walkcam
+   bool dopush = true;
+   if (D_abs(sector->srf.floor.slope->zdelta) < NOT_TOO_STEEP_SLOPE)
+   {
+      for (const msecnode_t* node = mo.touching_sectorlist; node; node = node->m_tnext)
+      {
+         const sector_t& sec = *node->m_sector;
+         if (P_IsSteep(sec.srf.floor.slope) || sec.srf.floor.getZAt(mo.x, mo.y) < mo.z - STEPSIZE)
+            continue;
+         dopush = false;
+         break;
+      }
+   }
+   if (!dopush)
+      return;
+   
+   v3fixed_t n = sector->srf.floor.slope->normal;
+   if (n.z < 0)
+      n = -n;
+   
+   mo.momx += n.x;
+   mo.momy += n.y;
+}
+
+//
 // P_MobjThinker
 //
 void Mobj::Think()
@@ -1481,6 +1518,8 @@ void Mobj::Think()
    // Heretic Wind transfer specials
    if(!vanilla_heretic && (flags3 & MF3_WINDTHRUST) && !(flags & MF_NOCLIP))
       P_hereticWind(*this);
+
+   P_steepSlopeSlide(*this);
 
    // momentum movement
    clip.BlockingMobj = nullptr;
