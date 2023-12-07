@@ -1471,8 +1471,8 @@ static void P_steepSlopeSlide(Mobj& mo)
    if (n.z < 0)
       n = -n;
    
-   mo.momx += n.x;
-   mo.momy += n.y;
+//   mo.momx += n.x;
+//   mo.momy += n.y;
 }
 
 //

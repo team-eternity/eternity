@@ -2278,6 +2278,7 @@ bool P_CheckSlopeWalk(const Mobj &thing, fixed_t &xmove, fixed_t &ymove)
    checkpos.y += link->y;
 
    fixed_t destzdelta = thing.z - P_GetZAt(slope, checkpos.x, checkpos.y);
+   destzdelta = FixedDiv(destzdelta, D_abs(slope->zdelta));
 
    if(destzdelta < 0)
    {
@@ -2323,6 +2324,7 @@ bool P_CheckSlopeWalk(const Mobj &thing, fixed_t &xmove, fixed_t &ymove)
       //}
 
       // Adjust movement to be along the slope surface
+      
       xmove -= FixedMul(slope->normal.x, destzdelta);
       ymove -= FixedMul(slope->normal.y, destzdelta);
       return true;
@@ -2333,8 +2335,8 @@ bool P_CheckSlopeWalk(const Mobj &thing, fixed_t &xmove, fixed_t &ymove)
       if(floorheight == thing.z)
       {
          // Adjust movement to be along the slope surface
-         xmove += FixedMul(slope->normal.x, destzdelta);
-         ymove += FixedMul(slope->normal.y, destzdelta);
+         xmove -= FixedMul(slope->normal.x, destzdelta);
+         ymove -= FixedMul(slope->normal.y, destzdelta);
          return true;
       }
    }
@@ -3447,8 +3449,8 @@ void P_ClearGlobalLevelReferences()
 //
 bool P_OnGroundOrThing(const Mobj &mobj)
 {
-   if (mobj.z <= mobj.zref.floor && mobj.zref.floorsector && P_IsSteep(mobj.zref.floorsector->srf.floor.slope) && mobj.zref.dropoff < mobj.zref.floor - STEPSIZE)
-      return false;
+//   if (mobj.z <= mobj.zref.floor && mobj.zref.floorsector && P_IsSteep(mobj.zref.floorsector->srf.floor.slope) && mobj.zref.dropoff < mobj.zref.floor - STEPSIZE)
+//      return false;
    return mobj.z <= mobj.zref.floor || ( P_Use3DClipping() &&   mobj.intflags & MIF_ONMOBJ);
    // negative:
    //     mobj.z >  mobj.zref.floor && (!P_Use3DClipping() || !(mobj.intflags & MIF_ONMOBJ))
