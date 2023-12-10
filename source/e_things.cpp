@@ -1060,6 +1060,70 @@ void E_CollectThings(cfg_t *cfg)
 }
 
 //
+// Fetches a thingnum, or creates a new one if it doesn't exist.
+// DSDHacked demands this
+//
+int E_GetOrAddThingNumForDEHNum(int dehnum, bool forceAdd)
+{
+   mobjinfo_t* mi = nullptr;
+   int thingnum = E_ThingNumForDEHNum(dehnum);
+
+   if(thingnum == -1)
+   {
+      unsigned int newthing = 0; // index of new thingtype
+      // allocate mobjinfo_t structure for the new thingtypes
+      mi = estructalloc(mobjinfo_t, 1);
+
+      // add space to the mobjinfo array
+      newthing = NUMMOBJTYPES;
+
+      E_ReallocThings(1);
+
+      // set pointer in mobjinfo[] to the proper structure
+      mobjinfo[newthing] = mi;
+      thingnum = newthing;
+   }
+   else if(forceAdd)
+   {
+      mi = mobjinfo[thingnum];
+
+      thing_namehash.removeObject(mi);
+      thing_cnamehash.removeObject(mi);
+      thing_dehhash.removeObject(mi);
+
+      if(mi->name)
+         efree(mi->name);
+      if(mi->compatname)
+         efree(mi->compatname);
+      if(mi->pickupfx)
+         efree(mi->pickupfx);
+      delete mi->meta;
+
+      *mi = {};
+   }
+
+   if(mi)
+   {
+      qstring name;
+      name.Printf(0, "DSDHackedThing%d", dehnum);
+
+      // set self-referential index member, allocate a
+      // metatable, set dehnum, and set name and melee range.
+      mi->index  = thingnum;
+      mi->meta   = new MetaTable("mobjinfo");
+      mi->dehnum = dehnum;
+      mi->name   = name.duplicate();
+
+      mi->meleerange = MELEERANGE;
+
+      thing_namehash.addObject(mi);
+      thing_dehhash.addObject(mi);
+   }
+
+   return thingnum;
+}
+
+//
 // Does sound name lookup & verification and then stores the resulting
 // sound DeHackEd number into *target.
 //

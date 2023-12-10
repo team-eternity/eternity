@@ -145,6 +145,13 @@ static deh_block deh_blocks[] =
 // flag to skip included deh-style text, used with INCLUDE NOTEXT directive
 static bool includenotext = false;
 
+// DSDHacked shit
+static bool dsdhacked = false;
+static constexpr int DOOM_NUMSTATES    = 1076;
+static constexpr int DOOM_NUMMOBJTYPES = 145;
+static constexpr int DOOM_NUMSPRNAMES  = 245;
+static constexpr int DOOM_NUMSFX       = 700;
+
 // MOBJINFO - Dehacked block name = "Thing"
 // Usage: Thing nn (name)
 // These are for mobjinfo_t types.  Each is an integer
@@ -872,6 +879,22 @@ void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum,
          continue;
       }
 
+      if(!strncasecmp(inbuffer, "Doom version", 12)) // set version
+      {
+         char key[DEH_MAXKEYLEN];
+         int value; // All deh values are ints or longs
+         char* strval;
+
+         if(!deh_GetData(inbuffer, key, &value, &strval)) // returns TRUE if ok
+         {
+            deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
+         }
+
+         dsdhacked = value == 2021;
+
+         continue;
+      }
+
       for(size_t i = 0; i < earrlen(deh_blocks); i++)
       {
          if(!strncasecmp(inbuffer, deh_blocks[i].key, strlen(deh_blocks[i].key)))
@@ -1276,7 +1299,10 @@ static void deh_procThing(DWFILE *fpin, char *line, MetaTable &gatheredData)
    // haleyjd: not as big an issue with EDF, as it uses a hash lookup
    // --indexnum;  <-- old code
 
-   indexnum = E_GetThingNumForDEHNum(indexnum);
+   if(dsdhacked)
+      indexnum = E_GetOrAddThingNumForDEHNum(indexnum, indexnum >= DOOM_NUMMOBJTYPES);
+   else
+      indexnum = E_GetThingNumForDEHNum(indexnum);
 
    // now process the stuff
    // Note that for Things we can look up the key and use its offset
