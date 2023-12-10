@@ -916,6 +916,17 @@ void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum,
 }
 
 
+//
+// For DSDHacked: Has the logic for getting the state num or making it (calls the functions)
+//
+static int deh_getStateNumForDEHNum(int indexnum)
+{
+   if(dsdhacked)
+      return E_GetOrAddStateNumForDEHNum(indexnum, indexnum >= DOOM_NUMSTATES);
+   else
+      return E_GetStateNumForDEHNum(indexnum);
+}
+
 // ====================================================================
 // deh_procBexCodePointers
 // Purpose: Handle [CODEPTR] block, BOOM Extension
@@ -958,7 +969,7 @@ static void deh_procBexCodePointers(DWFILE *fpin, char *line, MetaTable &gathere
       }
 
       // haleyjd: resolve DeHackEd num of state through EDF
-      indexnum = E_GetStateNumForDEHNum(indexnum);
+      indexnum = deh_getStateNumForDEHNum(indexnum);
 
       deh_LogPrintf("Processing pointer at index %d: %s\n", indexnum, mnemonic);
 
@@ -1158,7 +1169,7 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value, MetaTab
       break;
    case dehmobjinfoid_spawnstate:
    {
-      const int statenum = E_GetStateNumForDEHNum(value);
+      const int statenum = deh_getStateNumForDEHNum(value);
       mi->spawnstate = statenum;
       states[statenum]->flags |= STATEFI_VANILLA0TIC;
       break;
@@ -1168,7 +1179,7 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value, MetaTab
       E_ThingDefaultGibHealth(mi); // haleyjd 01/02/15: reset gibhealth
       break;
    case dehmobjinfoid_seestate:
-      mi->seestate = E_GetStateNumForDEHNum(value);
+      mi->seestate = deh_getStateNumForDEHNum(value);
       break;
    case dehmobjinfoid_seesound:
       mi->seesound = value;
@@ -1180,7 +1191,7 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value, MetaTab
       mi->attacksound = value;
       break;
    case dehmobjinfoid_painstate:
-      mi->painstate = E_GetStateNumForDEHNum(value);
+      mi->painstate = deh_getStateNumForDEHNum(value);
       break;
    case dehmobjinfoid_painchance:
       mi->painchance = value;
@@ -1189,16 +1200,16 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value, MetaTab
       mi->painsound = value;
       break;
    case dehmobjinfoid_meleestate:
-      mi->meleestate = E_GetStateNumForDEHNum(value);
+      mi->meleestate = deh_getStateNumForDEHNum(value);
       break;
    case dehmobjinfoid_missilestate:
-      mi->missilestate = E_GetStateNumForDEHNum(value);
+      mi->missilestate = deh_getStateNumForDEHNum(value);
       break;
    case dehmobjinfoid_deathstate:
-      mi->deathstate = E_GetStateNumForDEHNum(value);
+      mi->deathstate = deh_getStateNumForDEHNum(value);
       break;
    case dehmobjinfoid_xdeathstate:
-      mi->xdeathstate = E_GetStateNumForDEHNum(value);
+      mi->xdeathstate = deh_getStateNumForDEHNum(value);
       break;
    case dehmobjinfoid_deathsound:
       mi->deathsound = value;
@@ -1231,7 +1242,7 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value, MetaTab
       mi->flags2 = value;
       break;
    case dehmobjinfoid_raisestate:
-      mi->raisestate = E_GetStateNumForDEHNum(value);
+      mi->raisestate = deh_getStateNumForDEHNum(value);
       break;
    case dehmobjinfoid_translucency:
       mi->translucency = value;
@@ -1450,7 +1461,7 @@ static void deh_procFrame(DWFILE *fpin, char *line, MetaTable &gatheredData)
    sscanf(inbuffer,"%" DEH_MAXKEYLEN_FMT "s %i",key, &indexnum);
 
    // haleyjd: resolve state number through EDF
-   indexnum = E_GetStateNumForDEHNum(indexnum);
+   indexnum = deh_getStateNumForDEHNum(indexnum);
 
    deh_LogPrintf("Processing Frame at index %d: %s\n", indexnum, key);
 
@@ -1492,7 +1503,7 @@ static void deh_procFrame(DWFILE *fpin, char *line, MetaTable &gatheredData)
          deh_LogPrintf(" - nextstate = %ld\n", value);
 
          // haleyjd: resolve state number through EDF
-         states[indexnum]->nextstate = E_GetStateNumForDEHNum(value);
+         states[indexnum]->nextstate = deh_getStateNumForDEHNum(value);
 
          break;
       case dehstateid_action:  // Codep frame (not set in Frame deh block)
@@ -1575,7 +1586,7 @@ static void deh_procPointer(DWFILE *fpin, char *line, MetaTable &gatheredData) /
 
    // haleyjd: resolve state num through EDF; preserve old for output
    oldindex = indexnum;
-   indexnum = E_GetStateNumForDEHNum(indexnum);
+   indexnum = deh_getStateNumForDEHNum(indexnum);
 
    deh_LogPrintf("Processing Pointer at index %d: %s\n", indexnum, key);
 
@@ -1595,7 +1606,7 @@ static void deh_procPointer(DWFILE *fpin, char *line, MetaTable &gatheredData) /
       }
 
       // haleyjd: resolve xref state number through EDF
-      value = E_GetStateNumForDEHNum(value);
+      value = deh_getStateNumForDEHNum(value);
 
       if(!strcasecmp(key, deh_state[dehstateid_action])) // Codep frame (not set in Frame deh block)
       {
@@ -1919,13 +1930,13 @@ static void deh_procWeapon(DWFILE *fpin, char *line, MetaTable &gatheredData)
          break;
       }
       case dehweaponid_deselect:
-         weaponinfo.upstate = E_GetStateNumForDEHNum(value);
+         weaponinfo.upstate = deh_getStateNumForDEHNum(value);
          break;
       case dehweaponid_select:
-         weaponinfo.downstate = E_GetStateNumForDEHNum(value);
+         weaponinfo.downstate = deh_getStateNumForDEHNum(value);
          break;
       case dehweaponid_bobbing:
-         weaponinfo.readystate = E_GetStateNumForDEHNum(value);
+         weaponinfo.readystate = deh_getStateNumForDEHNum(value);
          // Apply chainsaw replacement hack by suppressing ready sound
          if(indexnum == wp_chainsaw)
          {
@@ -1936,10 +1947,10 @@ static void deh_procWeapon(DWFILE *fpin, char *line, MetaTable &gatheredData)
          }
          break;
       case dehweaponid_shooting:
-         weaponinfo.atkstate = E_GetStateNumForDEHNum(value);
+         weaponinfo.atkstate = deh_getStateNumForDEHNum(value);
          break;
       case dehweaponid_firing:
-         weaponinfo.flashstate = E_GetStateNumForDEHNum(value);
+         weaponinfo.flashstate = deh_getStateNumForDEHNum(value);
          break;
       case dehweaponid_ammoPerShot:
          weaponinfo.ammopershot = value;

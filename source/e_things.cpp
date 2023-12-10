@@ -1083,7 +1083,7 @@ int E_GetOrAddThingNumForDEHNum(int dehnum, bool forceAdd)
       mobjinfo[newthing] = mi;
       thingnum = newthing;
    }
-   else if(forceAdd)
+   else if(forceAdd && !mobjinfo[thingnum]->dsdhacked)
    {
       mi = mobjinfo[thingnum];
 
@@ -1106,6 +1106,8 @@ int E_GetOrAddThingNumForDEHNum(int dehnum, bool forceAdd)
    {
       qstring name;
       name.Printf(0, "DSDHackedThing%d", dehnum);
+
+      mi->dsdhacked = true;
 
       // set self-referential index member, allocate a
       // metatable, set dehnum, and set name and melee range.

@@ -514,6 +514,60 @@ void E_CollectStates(cfg_t *cfg)
    }
 }
 
+int E_GetOrAddStateNumForDEHNum(int dehnum, bool forceAdd)
+{
+   int statenum = E_StateNumForDEHNum(dehnum);
+   state_t* state = nullptr;
+
+   if(statenum < 0)
+   {
+      unsigned int newstate = NUMSTATES; // index of new state
+      // allocate state_t structure for the new state
+      state = estructalloc(state_t, 1);
+
+      // add space to the states array
+
+      E_ReallocStates(1);
+
+      states[newstate] = state;
+      states[newstate]->index = newstate;
+
+      statenum = newstate;
+   }
+   else if(forceAdd && !states[statenum]->dsdhacked)
+   {
+      state = states[statenum];
+
+      state_namehash.removeObject(state);
+      state_numhash.removeObject(state);
+
+      if(state->args)
+         E_DisposeArgs(state->args);
+
+      *state = {};
+   }
+
+   if(state)
+   {
+      qstring name;
+      name.Printf(0, "S_DSDHACKED%d", dehnum);
+
+      state->dsdhacked = true;
+
+      state->index     = statenum;
+      state->sprite    = E_SpriteNumForName("TNT1");
+      state->tics      = -1;
+      state->nextstate = statenum;
+      state->dehnum    = dehnum;
+      state->name      = name.duplicate();
+
+      state_namehash.addObject(state);
+      state_numhash.addObject(state);
+   }
+
+   return statenum;
+}
+
 //
 // Creates an arglist object for the state, if it does not already have one. 
 // Otherwise, the existing arguments are disposed of.
