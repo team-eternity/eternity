@@ -28,6 +28,7 @@
 
 #include "c_io.h"
 #include "m_collection.h"
+#include "m_compare.h"
 #include "m_swap.h"
 #include "r_patch.h"
 #include "v_block.h"
@@ -584,8 +585,13 @@ void V_DrawPatchInt(cb_patch_column_t &patchcol, PatchInfo *pi, VBuffer *buffer)
       // very carefully here.
       if(x1 >= 0)
          x1 = buffer->x1lookup[x1];
-      else
+      else if(-x1 - 1 < maxw)
          x1 = -buffer->x2lookup[-x1 - 1];
+      else
+      {
+         // We can't do lookups for stuff that starts simply too far off-screen
+         x1 = -int(float(buffer->width * (-x1 - 1)) / float(maxw));
+      }
 
       if(x2 < buffer->unscaledw)
          x2 = buffer->x2lookup[x2];
