@@ -104,7 +104,7 @@ void E_UpdateSpriteName(const char *oldname, const char *newname, const int newl
 {
    constexpr int SPRITE_NAME_LENGTH = int(earrlen(esprite_t::name) - 1);
 
-   if(oldname && newname && !strcmp(oldname, newname))
+   if(estrnonempty(oldname) && estrnonempty(newname) && !strcmp(oldname, newname))
       return;
 
    esprite_t *obj = spritenamehash.objectForKey(oldname);
@@ -120,8 +120,9 @@ void E_UpdateSpriteName(const char *oldname, const char *newname, const int newl
    }
 
    spritenamehash.removeObject(obj);
-   strncpy(obj->name, newname ? newname : "", newlen);
-   spritenamehash.addObject(obj);
+   strncpy(obj->name, estrnonempty(newname) ? newname : "", newlen);
+   if(estrnonempty(newname))
+      spritenamehash.addObject(obj);
 }
 
 //
@@ -168,7 +169,7 @@ static bool E_AddSprite(const char *name, esprite_t *sprite, int num = -1)
 // Updates a sprite's name for an according number, or creates that sprite
 // If the newname is nullptr then it will only clear the name if the name update is forced
 //
-void E_UpdateSpriteNameForNum(const int num, const char* newname, const int newlen, bool forceupdate)
+void E_UpdateAddSpriteNameForNum(const int num, const char* newname, const int newlen, bool forceupdate)
 {
    esprite_t* obj;
    int spritenum = -1;
@@ -179,7 +180,13 @@ void E_UpdateSpriteNameForNum(const int num, const char* newname, const int newl
    if(obj = spritedsdnumhash.objectForKey(num); obj && (!forceupdate || obj->dsdhacked))
    {
       spritenum = obj->num;
-      E_UpdateSpriteName(obj->name, newname, newlen);
+      if(estrnonempty(obj->name))
+         E_UpdateSpriteName(obj->name, newname, newlen);
+      else if(estrnonempty(newname))
+      {
+         strncpy(obj->name, newname, newlen);
+         spritenamehash.addObject(obj);
+      }
    }
    else
    {

@@ -1063,7 +1063,7 @@ void E_CollectThings(cfg_t *cfg)
 // Fetches a thingnum, or creates a new one if it doesn't exist.
 // DSDHacked demands this
 //
-int E_GetOrAddThingNumForDEHNum(int dehnum, bool forceAdd)
+int E_GetAddThingNumForDEHNum(int dehnum, bool forceAdd)
 {
    mobjinfo_t* mi = nullptr;
    int thingnum = E_ThingNumForDEHNum(dehnum);

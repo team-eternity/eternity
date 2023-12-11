@@ -43,7 +43,7 @@ bool E_ProcessSingleSprite(const char *sprname);
 int E_SpriteNumForName(const char *name);
 int E_SpriteNumForDEHNum(const int num);
 void E_UpdateSpriteName(const char *oldname, const char *newname, const int newlen);
-void E_UpdateSpriteNameForNum(const int num, const char* newname, const int newlen, bool forceupdate);
+void E_UpdateAddSpriteNameForNum(const int num, const char* newname, const int newlen, bool forceupdate);
 
 #endif
 

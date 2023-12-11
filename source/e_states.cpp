@@ -514,7 +514,7 @@ void E_CollectStates(cfg_t *cfg)
    }
 }
 
-int E_GetOrAddStateNumForDEHNum(int dehnum, bool forceAdd)
+int E_GetAddStateNumForDEHNum(int dehnum, bool forceAdd)
 {
    int statenum = E_StateNumForDEHNum(dehnum);
    state_t* state = nullptr;

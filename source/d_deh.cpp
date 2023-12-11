@@ -922,7 +922,7 @@ void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum,
 static int deh_getStateNumForDEHNum(int indexnum)
 {
    if(dsdhacked)
-      return E_GetOrAddStateNumForDEHNum(indexnum, indexnum >= DOOM_NUMSTATES);
+      return E_GetAddStateNumForDEHNum(indexnum, indexnum >= DOOM_NUMSTATES);
    else
       return E_GetStateNumForDEHNum(indexnum);
 }
@@ -1311,7 +1311,7 @@ static void deh_procThing(DWFILE *fpin, char *line, MetaTable &gatheredData)
    // --indexnum;  <-- old code
 
    if(dsdhacked)
-      indexnum = E_GetOrAddThingNumForDEHNum(indexnum, indexnum >= DOOM_NUMMOBJTYPES);
+      indexnum = E_GetAddThingNumForDEHNum(indexnum, indexnum >= DOOM_NUMMOBJTYPES);
    else
       indexnum = E_GetThingNumForDEHNum(indexnum);
 
@@ -1488,7 +1488,7 @@ static void deh_procFrame(DWFILE *fpin, char *line, MetaTable &gatheredData)
       {
       case dehstateid_sprite:  // Sprite number
          deh_LogPrintf(" - sprite = %ld\n", value);
-         E_UpdateSpriteNameForNum(value, nullptr, 4, value >= DOOM_NUMSPRNAMES);
+         E_UpdateAddSpriteNameForNum(value, nullptr, 4, value >= DOOM_NUMSPRNAMES);
          states[indexnum]->sprite = (spritenum_t)E_SpriteNumForDEHNum(value);
          break;
       case dehstateid_frame:  // Sprite subnumber
@@ -2762,7 +2762,7 @@ static void deh_procBexSprites(DWFILE *fpin, char *line, MetaTable &gatheredData
          }
 
          if(processAsNumber)
-            E_UpdateSpriteNameForNum(atoi(key), candidate, 4, atoi(key) >= DOOM_NUMSPRNAMES);
+            E_UpdateAddSpriteNameForNum(atoi(key), candidate, 4, atoi(key) >= DOOM_NUMSPRNAMES);
       }
 
       if(!processAsNumber)

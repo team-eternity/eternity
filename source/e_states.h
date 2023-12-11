@@ -33,7 +33,7 @@
 struct mobjinfo_t;
 struct state_t;
 
-int E_GetOrAddStateNumForDEHNum(int dehnum, bool forceAdd);
+int E_GetAddStateNumForDEHNum(int dehnum, bool forceAdd);
 int E_StateNumForDEHNum(int dehnum);        // dehnum lookup
 int E_GetStateNumForDEHNum(int dehnum);     //    fatal error version
 int E_SafeState(int dehnum);                //    fallback version
