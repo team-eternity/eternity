@@ -116,15 +116,15 @@ struct sfxinfo_t
    int usefulness;
 
    // haleyjd: EDF mnemonic
-   char mnemonic[129];
+   char *mnemonic;
 
    char *lfn;    // alison: long file name
    char *pcslfn; // alison: long file name for PC speaker sound
 
    // haleyjd 09/03/03: revised for dynamic EDF sounds
-   DLListItem<sfxinfo_t> numlinks; // haleyjd 04/13/08: numeric hash links
-   sfxinfo_t *next;                // next in mnemonic hash chain
-   int dehackednum;                // dehacked number
+   DLListItem<sfxinfo_t> namelinks; // hashing: by name
+   DLListItem<sfxinfo_t> numlinks;  // haleyjd 04/13/08: numeric hash links
+   int dehackednum;                 // dehacked number
 };
 
 //

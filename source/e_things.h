@@ -80,6 +80,7 @@ void E_SetThingDefaultSprites(void);
 #endif
 
 // For Game Engine:
+int E_GetAddThingNumForDEHNum(int dehnum, bool forceAdd);
 int E_ThingNumForDEHNum(int dehnum);           // dehnum lookup
 int E_GetThingNumForDEHNum(int dehnum);        //   fatal error version
 int E_SafeThingType(int dehnum);               //   fallback version

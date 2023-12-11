@@ -30,6 +30,11 @@ includeifenabled("heretic/things.edf", "HERETIC")
 // Common Objects --------------------------------------------------------------
 
 //
+// The template for all DSDHacked things.
+//
+thingtype _DSDHackedThingtypeTemplate {}
+
+//
 // TeleportSpot 
 //
 // This is the object used to tag line-to-thing teleport exit spots. It is 

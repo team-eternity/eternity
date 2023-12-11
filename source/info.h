@@ -182,6 +182,7 @@ struct state_t
    int          particle_evt;                 // haleyjd: determines an event to run  
    arglist_t   *args;                         // haleyjd: state arguments
    unsigned int flags;                        // haleyjd: flags
+   bool         dsdhacked;                    // MaxW: Created by DSDhacked
    
    // haleyjd: fields needed for EDF identification and hashing
    char       *name;      // buffer for name
@@ -404,6 +405,7 @@ struct mobjinfo_t
    unsigned int flags3; // haleyjd 11/03/02: flags3
    unsigned int flags4; // haleyjd 09/13/09: flags4
    unsigned int flags5; // MaxW: 2021/02/14: flags5
+   bool         dsdhacked; // MaxW: made by DSDhacked
    int raisestate;      // The first state for an Archvile or respawn
                         //  resurrection.  Zero means it won't come
                         //  back to life.
