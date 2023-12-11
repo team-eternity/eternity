@@ -2394,7 +2394,7 @@ int E_GetAddThingNumForDEHNum(int dehnum, bool forceAdd)
    if(mi)
    {
       qstring name;
-      name.Printf(0, "DSDHackedThing%d", dehnum);
+      name.Printf(0, "_DSDHackedThing%d", dehnum);
 
       mi->dsdhacked = true;
 

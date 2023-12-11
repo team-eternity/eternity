@@ -550,7 +550,7 @@ int E_GetAddStateNumForDEHNum(int dehnum, bool forceAdd)
    if(state)
    {
       qstring name;
-      name.Printf(0, "S_DSDHACKED%d", dehnum);
+      name.Printf(0, "_S_DSDHACKED%d", dehnum);
 
       state->dsdhacked = true;
 
