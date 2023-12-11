@@ -1488,7 +1488,8 @@ static void deh_procFrame(DWFILE *fpin, char *line, MetaTable &gatheredData)
       {
       case dehstateid_sprite:  // Sprite number
          deh_LogPrintf(" - sprite = %ld\n", value);
-         states[indexnum]->sprite = (spritenum_t)value;
+         E_UpdateSpriteNameForNum(value, nullptr, 4, value >= DOOM_NUMSPRNAMES);
+         states[indexnum]->sprite = (spritenum_t)E_SpriteNumForDEHNum(value);
          break;
       case dehstateid_frame:  // Sprite subnumber
          deh_LogPrintf(" - frame = %ld\n", value);
@@ -2748,20 +2749,39 @@ static void deh_procBexSprites(DWFILE *fpin, char *line, MetaTable &gatheredData
          continue;
       }
 
-      rover = 0;
-      while(deh_spritenames[rover])
+      bool processAsNumber = dsdhacked;
+      if(dsdhacked)
       {
-         if(!strncasecmp(deh_spritenames[rover], key, 4))
+         for(int i = 0; key[i] && i < DEH_MAXKEYLEN; i++)
          {
-            deh_LogPrintf("Substituting '%s' for sprite '%s'\n",
-                          candidate, deh_spritenames[rover]);
-
-            // haleyjd 03/11/03: can now use original due to EDF
-            // sprnames[rover] = estrdup(candidate);
-            E_UpdateSpriteName(sprnames[rover], candidate, 4);
-            break;
+            if(!ectype::isDigit(key[i]))
+            {
+               processAsNumber = false;
+               break;
+            }
          }
-         rover++;
+
+         if(processAsNumber)
+            E_UpdateSpriteNameForNum(atoi(key), candidate, 4, atoi(key) >= DOOM_NUMSPRNAMES);
+      }
+
+      if(!processAsNumber)
+      {
+         rover = 0;
+         while(deh_spritenames[rover])
+         {
+            if(!strncasecmp(deh_spritenames[rover], key, 4))
+            {
+               deh_LogPrintf("Substituting '%s' for sprite '%s'\n",
+                             candidate, deh_spritenames[rover]);
+
+               // haleyjd 03/11/03: can now use original due to EDF
+               // sprnames[rover] = estrdup(candidate);
+               E_UpdateSpriteName(sprnames[rover], candidate, 4);
+               break;
+            }
+            rover++;
+         }
       }
    }
 }

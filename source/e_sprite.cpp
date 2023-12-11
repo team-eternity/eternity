@@ -47,16 +47,24 @@ static int     numspritesalloc; // number of sprites allocated
 
 struct esprite_t
 {
-   DLListItem<esprite_t> link;    // hash links
-   char                 *nameptr; // hash key
-   
-   int  num;      // sprite number
-   char name[5];  // sprite name   
+   DLListItem<esprite_t> namelinks;   // name hash links
+   DLListItem<esprite_t> dsdnumlinks; // dsdnumnum hash links
+
+   char *nameptr;  // name hash key   
+   int  num;       // sprite number
+   int  dsdnum;    // DSDHacked sprite number
+   char name[5];   // sprite name
+   bool dsdhacked; // made by DSDHacked
 };
 
-// sprite hash table
+// sprite name hash table
 static EHashTable<esprite_t, ENCStringHashKey, 
-                  &esprite_t::nameptr, &esprite_t::link> spritehash(257);
+                  &esprite_t::nameptr, &esprite_t::namelinks> spritenamehash(257);
+
+// sprite DSDHacked num hash table
+static EHashTable<esprite_t, EIntHashKey, 
+                  &esprite_t::dsdnum, &esprite_t::dsdnumlinks> spritedsdnumhash(257);
+
 
 //
 // E_SpriteNumForName
@@ -69,7 +77,21 @@ int E_SpriteNumForName(const char *name)
    esprite_t *obj;
    int spritenum = -1;
 
-   if((obj = spritehash.objectForKey(name)))
+   if((obj = spritenamehash.objectForKey(name)))
+      spritenum = obj->num;
+
+   return spritenum;
+}
+
+//
+// As above but for DSDHacked
+//
+int E_SpriteNumForDEHNum(const int num)
+{
+   esprite_t* obj;
+   int spritenum = -1;
+
+   if((obj = spritedsdnumhash.objectForKey(num)))
       spritenum = obj->num;
 
    return spritenum;
@@ -82,10 +104,10 @@ void E_UpdateSpriteName(const char *oldname, const char *newname, const int newl
 {
    constexpr int SPRITE_NAME_LENGTH = int(earrlen(esprite_t::name) - 1);
 
-   if(!strcmp(oldname, newname))
+   if(oldname && newname && !strcmp(oldname, newname))
       return;
 
-   esprite_t *obj = spritehash.objectForKey(oldname);
+   esprite_t *obj = spritenamehash.objectForKey(oldname);
    if(!obj)
       return;
 
@@ -97,9 +119,9 @@ void E_UpdateSpriteName(const char *oldname, const char *newname, const int newl
       );
    }
 
-   spritehash.removeObject(obj);
-   strncpy(obj->name, newname, newlen);
-   spritehash.addObject(obj);
+   spritenamehash.removeObject(obj);
+   strncpy(obj->name, newname ? newname : "", newlen);
+   spritenamehash.addObject(obj);
 }
 
 //
@@ -108,20 +130,23 @@ void E_UpdateSpriteName(const char *oldname, const char *newname, const int newl
 // haleyjd 03/23/10: Add a sprite name to sprnames, if such is not already 
 // present. Returns true if successful and false otherwise.
 //
-static bool E_AddSprite(const char *name, esprite_t *sprite)
+static bool E_AddSprite(const char *name, esprite_t *sprite, int num = -1)
 {
-   // initialize the esprite object   
-   strncpy(sprite->name, name, 4);
+   // initialize the esprite object
+   strncpy(sprite->name, name ? name : "", 4);
    sprite->num = NUMSPRITES;
+   sprite->dsdnum = num < 0 ? NUMSPRITES : num;
    sprite->nameptr = sprite->name;
    
-   if(spritehash.objectForKey(name))
+   if(name && spritenamehash.objectForKey(name))
       return false; // don't add the same sprite name twice
    
-   E_EDFLogPrintf("\t\tAdding spritename %s\n", name);
+   E_EDFLogPrintf("\t\tAdding spritename %s\n", name ? name : "NAMELESS");
    
-   // add esprite to hash
-   spritehash.addObject(sprite);
+   // add esprite to hashes
+   if(name)
+      spritenamehash.addObject(sprite);
+   spritedsdnumhash.addObject(sprite);
 
    // reallocate sprnames if necessary
    if(NUMSPRITES + 1 >= numspritesalloc)
@@ -137,6 +162,60 @@ static bool E_AddSprite(const char *name, esprite_t *sprite)
    ++NUMSPRITES;
 
    return true;
+}
+
+//
+// Updates a sprite's name for an according number, or creates that sprite
+// If the newname is nullptr then it will only clear the name if the name update is forced
+//
+void E_UpdateSpriteNameForNum(const int num, const char* newname, const int newlen, bool forceupdate)
+{
+   esprite_t* obj;
+   int spritenum = -1;
+
+   if(!forceupdate && !newname)
+      return;
+
+   if(obj = spritedsdnumhash.objectForKey(num); obj && (!forceupdate || obj->dsdhacked))
+   {
+      spritenum = obj->num;
+      E_UpdateSpriteName(obj->name, newname, newlen);
+   }
+   else
+   {
+      // we need to create a new sprite
+
+      // remove the old sprite for this dsdnum from the hash if applicable
+      if(obj)
+         spritedsdnumhash.removeObject(obj);
+
+      esprite_t* spr;
+
+      // must be exactly 4 characters
+      if(newname && strlen(newname) != 4)
+         return;
+
+      // allocate separate storage for implicit sprites
+      spr = estructalloc(esprite_t, 1);
+
+      // try adding it; if this fails, we need to free spr
+      if(!E_AddSprite(newname, spr, num))
+      {
+         efree(spr);
+         return;
+      }
+
+      spr->dsdhacked = true;
+      
+      // re-add the old sprite at the end of the sprite list
+      if(obj)
+      {
+         obj->dsdnum = NUMSPRITES;
+         spritedsdnumhash.addObject(obj);
+      }
+
+      return;
+   }
 }
 
 //
