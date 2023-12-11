@@ -517,7 +517,7 @@ void E_CollectStates(cfg_t *cfg)
 int E_GetAddStateNumForDEHNum(int dehnum, bool forceAdd)
 {
    int statenum = E_StateNumForDEHNum(dehnum);
-   state_t* state = nullptr;
+   state_t *state = nullptr;
 
    if(statenum < 0)
    {
@@ -555,7 +555,7 @@ int E_GetAddStateNumForDEHNum(int dehnum, bool forceAdd)
       state->dsdhacked = true;
 
       state->index     = statenum;
-      state->sprite    = E_SpriteNumForName("TNT1");
+      state->sprite    = blankSpriteNum;
       state->tics      = -1;
       state->nextstate = statenum;
       state->dehnum    = dehnum;

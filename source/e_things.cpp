@@ -1060,72 +1060,6 @@ void E_CollectThings(cfg_t *cfg)
 }
 
 //
-// Fetches a thingnum, or creates a new one if it doesn't exist.
-// DSDHacked demands this
-//
-int E_GetAddThingNumForDEHNum(int dehnum, bool forceAdd)
-{
-   mobjinfo_t* mi = nullptr;
-   int thingnum = E_ThingNumForDEHNum(dehnum);
-
-   if(thingnum == -1)
-   {
-      unsigned int newthing = 0; // index of new thingtype
-      // allocate mobjinfo_t structure for the new thingtypes
-      mi = estructalloc(mobjinfo_t, 1);
-
-      // add space to the mobjinfo array
-      newthing = NUMMOBJTYPES;
-
-      E_ReallocThings(1);
-
-      // set pointer in mobjinfo[] to the proper structure
-      mobjinfo[newthing] = mi;
-      thingnum = newthing;
-   }
-   else if(forceAdd && !mobjinfo[thingnum]->dsdhacked)
-   {
-      mi = mobjinfo[thingnum];
-
-      thing_namehash.removeObject(mi);
-      thing_cnamehash.removeObject(mi);
-      thing_dehhash.removeObject(mi);
-
-      if(mi->name)
-         efree(mi->name);
-      if(mi->compatname)
-         efree(mi->compatname);
-      if(mi->pickupfx)
-         efree(mi->pickupfx);
-      delete mi->meta;
-
-      *mi = {};
-   }
-
-   if(mi)
-   {
-      qstring name;
-      name.Printf(0, "DSDHackedThing%d", dehnum);
-
-      mi->dsdhacked = true;
-
-      // set self-referential index member, allocate a
-      // metatable, set dehnum, and set name and melee range.
-      mi->index  = thingnum;
-      mi->meta   = new MetaTable("mobjinfo");
-      mi->dehnum = dehnum;
-      mi->name   = name.duplicate();
-
-      mi->meleerange = MELEERANGE;
-
-      thing_namehash.addObject(mi);
-      thing_dehhash.addObject(mi);
-   }
-
-   return thingnum;
-}
-
-//
 // Does sound name lookup & verification and then stores the resulting
 // sound DeHackEd number into *target.
 //
@@ -2364,6 +2298,7 @@ static void E_CopyThing(int num, int pnum)
    MetaTable  *meta;
    int         index;
    int         generation;
+   bool        dsdhacked;
    
    this_mi = mobjinfo[num];
 
@@ -2377,6 +2312,7 @@ static void E_CopyThing(int num, int pnum)
    meta       = this_mi->meta;
    index      = this_mi->index;
    generation = this_mi->generation;
+   dsdhacked  = this_mi->dsdhacked;
    
    // copy from source to destination
    memcpy(this_mi, mobjinfo[pnum], sizeof(mobjinfo_t));
@@ -2404,11 +2340,79 @@ static void E_CopyThing(int num, int pnum)
    this_mi->dehnum     = dehnum;
    this_mi->index      = index;
    this_mi->generation = generation;
+   this_mi->dsdhacked  = dsdhacked;
 
    // other fields not inherited:
 
    // force doomednum of inheriting type to -1
    this_mi->doomednum = -1;
+}
+
+//
+// Fetches a thingnum, or creates a new one if it doesn't exist.
+// DSDHacked demands this
+//
+int E_GetAddThingNumForDEHNum(int dehnum, bool forceAdd)
+{
+   mobjinfo_t* mi = nullptr;
+   int thingNum = E_ThingNumForDEHNum(dehnum);
+
+   if(thingNum == -1)
+   {
+      unsigned int newThing = 0; // index of new thingtype
+      // allocate mobjinfo_t structure for the new thingtypes
+      mi = estructalloc(mobjinfo_t, 1);
+
+      // add space to the mobjinfo array
+      newThing = NUMMOBJTYPES;
+
+      E_ReallocThings(1);
+
+      // set pointer in mobjinfo[] to the proper structure
+      mobjinfo[newThing] = mi;
+      thingNum = newThing;
+   }
+   else if(forceAdd && !mobjinfo[thingNum]->dsdhacked)
+   {
+      mi = mobjinfo[thingNum];
+
+      thing_namehash.removeObject(mi);
+      thing_cnamehash.removeObject(mi);
+      thing_dehhash.removeObject(mi);
+
+      if(mi->name)
+         efree(mi->name);
+      if(mi->compatname)
+         efree(mi->compatname);
+      if(mi->pickupfx)
+         efree(mi->pickupfx);
+      delete mi->meta;
+
+      *mi = {};
+   }
+
+   if(mi)
+   {
+      qstring name;
+      name.Printf(0, "DSDHackedThing%d", dehnum);
+
+      mi->dsdhacked = true;
+
+      // set self-referential index member, allocate a
+      // metatable, set dehnum, and set name and melee range.
+      mi->index  = thingNum;
+      mi->meta   = new MetaTable("mobjinfo");
+      mi->dehnum = dehnum;
+      mi->name   = name.duplicate();
+
+      const int templateNum = E_GetThingNumForName("_DSDHackedThingtypeTemplate");
+      E_CopyThing(thingNum, templateNum);
+
+      thing_namehash.addObject(mi);
+      thing_dehhash.addObject(mi);
+   }
+
+   return thingNum;
 }
 
 struct thingtitleprops_t
