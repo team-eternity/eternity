@@ -57,6 +57,7 @@
 
 #include "d_io.h"
 #include "d_dehtbl.h"
+#include "e_hash.h"
 #include "i_sound.h"
 #include "m_utils.h"
 #include "p_mobj.h"
@@ -93,8 +94,10 @@ constexpr const char ITEM_DELTA_NAME[] = "name";
 // Static sound hash tables
 //
 constexpr int NUMSFXCHAINS = 307;
-static sfxinfo_t             *sfxchains[NUMSFXCHAINS];
 static DLListItem<sfxinfo_t> *sfx_dehchains[NUMSFXCHAINS];
+
+static EHashTable<sfxinfo_t, ENCStringHashKey,
+                  &sfxinfo_t::mnemonic, &sfxinfo_t::namelinks> sound_namehash(NUMSFXCHAINS);
 
 //
 // Singularity types
@@ -212,13 +215,7 @@ cfg_opt_t edf_sdelta_opts[] =
 //
 sfxinfo_t *E_SoundForName(const char *name)
 {
-   unsigned int hash = D_HashTableKey(name) % NUMSFXCHAINS;
-   sfxinfo_t  *rover = sfxchains[hash];
-
-   while(rover && strcasecmp(name, rover->mnemonic))
-      rover = rover->next;
-
-   return rover;
+   return sound_namehash.objectForKey(name);
 }
 
 //
@@ -270,11 +267,7 @@ static void E_AddSoundToHash(sfxinfo_t *sfx)
    if(E_EDFSoundForName(sfx->mnemonic))
       return;
 
-   hash = D_HashTableKey(sfx->mnemonic) % NUMSFXCHAINS;
-
-   // link it in
-   sfx->next = sfxchains[hash];
-   sfxchains[hash] = sfx;
+   sound_namehash.addObject(sfx);
 }
 
 //
@@ -324,17 +317,13 @@ static void E_DelSoundFromDEHHash(sfxinfo_t *sfx)
 sfxinfo_t *E_FindSoundForDEH(char *inbuffer, unsigned int fromlen)
 {
    // run down all the mnemonic hash chains
-   for(sfxinfo_t *cursfx : sfxchains)
+   sfxinfo_t *cursfx = nullptr;
+   while((cursfx = sound_namehash.tableIterator(cursfx)))
    {
-      while(cursfx)
-      {
-         // avoid short prefix erroneous match
-         if(strlen(cursfx->mnemonic) == fromlen &&
-            !strncasecmp(cursfx->mnemonic, inbuffer, fromlen))
-            return cursfx;
-
-         cursfx = cursfx->next;
-      }
+      // avoid short prefix erroneous match
+      if(strlen(cursfx->mnemonic) == fromlen &&
+         !strncasecmp(cursfx->mnemonic, inbuffer, fromlen))
+         return cursfx;
    }
 
    // no match
@@ -435,8 +424,10 @@ sfxinfo_t *E_NewSndInfoSound(const char *mnemonic, const char *name)
    // create a new one and hook into hashchain
    sfx = ecalloc(sfxinfo_t *, 1, sizeof(sfxinfo_t));
 
-   strncpy(sfx->name,     name,      9);
-   strncpy(sfx->mnemonic, mnemonic, sizeof(sfx->mnemonic));
+   strncpy(sfx->name, name, 9);
+   if(sfx->mnemonic)
+      efree(sfx->mnemonic);
+   sfx->mnemonic = estrdup(mnemonic);
 
    sfx->flags         = SFXF_SNDINFO;    // born via SNDINFO
    sfx->priority      = 64;
@@ -463,14 +454,9 @@ void E_PreCacheSounds()
 {
    // run down all the mnemonic hash chains so that we precache
    // all sounds, not just ones stored in S_sfx
-   for(sfxinfo_t *cursfx : sfxchains)
-   {
-      while(cursfx)
-      {
-         I_CacheSound(cursfx);
-         cursfx = cursfx->next;
-      }
-   }
+   sfxinfo_t *cursfx = nullptr;
+   while((cursfx = sound_namehash.tableIterator(cursfx)))
+      I_CacheSound(cursfx);
 }
 
 //
@@ -484,18 +470,16 @@ void E_UpdateSoundCache()
    // be sure all sounds are stopped
    S_StopSounds(true);
 
-   for(sfxinfo_t *cursfx : sfxchains)
+   sfxinfo_t *cursfx = nullptr;
+   while((cursfx = sound_namehash.tableIterator(cursfx)))
    {
-      while(cursfx)
+      if(cursfx->data)
       {
-         if(cursfx->data)
-         {
-            efree(cursfx->data);
-            cursfx->data = nullptr;
-         }
-         cursfx = cursfx->next;
+         efree(cursfx->data);
+         cursfx->data = nullptr;
       }
    }
+
 
    // recache sounds if so requested
    if(s_precache)
@@ -781,15 +765,10 @@ void E_ProcessSounds(cfg_t *cfg)
          // create a new sound
          sfx = estructalloc(sfxinfo_t, 1);
 
-         // verify the length
-         if(strlen(mnemonic) >= sizeof(sfx->mnemonic))
-         {
-            E_EDFLoggedErr(2, "E_ProcessSounds: invalid sound mnemonic '%s'\n",
-                           mnemonic);
-         }
-
          // copy mnemonic
-         strncpy(sfx->mnemonic, mnemonic, sizeof(sfx->mnemonic));
+         if(sfx->mnemonic)
+            efree(sfx->mnemonic);
+         sfx->mnemonic = estrdup(mnemonic);
 
          // add this sound to the hash table
          E_AddSoundToHash(sfx);

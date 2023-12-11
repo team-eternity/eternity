@@ -1158,6 +1158,8 @@ static void E_ProcessSpriteVars(cfg_t *cfg)
    blankSpriteNum = sprnum;
 }
 
+static char NullMnemonic[5] = "none";
+
 // haleyjd 04/13/08: this replaces S_sfx[0].
 sfxinfo_t NullSound =
 {
@@ -1171,7 +1173,7 @@ sfxinfo_t NullSound =
    0, 0, 0,                          // flags, clipping_dist, close_dist
    nullptr, nullptr, nullptr, 0,     // link, alias, random sounds
    nullptr, 0, 0, 0,                 // data, length, alen, usefulness
-   { 'n', 'o', 'n', 'e', '\0' },     // mnemomnic
+   NullMnemonic,                     // mnemomnic
    nullptr, nullptr,                 // lfn, pcslfn
    { nullptr, nullptr, nullptr, 0 }, // numlinks
    nullptr,                          // next
