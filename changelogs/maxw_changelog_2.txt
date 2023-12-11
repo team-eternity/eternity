@@ -337,6 +337,11 @@ properties are booleans.
  * light_base, light_top, light_mid, light_bottom
  * lightabsolute, lightabsolute_top, lightabsolute_mid, lightabsolute_bottom
 
+--------------------------------------------------------------------------------
+2023/11/12
+Added support for DSDHacked things, sprites, and states. Sounds are not yet
+implemented.
+
 ================================================================================
 EOF
 ================================================================================
