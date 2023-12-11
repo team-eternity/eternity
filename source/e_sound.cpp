@@ -94,10 +94,11 @@ constexpr const char ITEM_DELTA_NAME[] = "name";
 // Static sound hash tables
 //
 constexpr int NUMSFXCHAINS = 307;
-static DLListItem<sfxinfo_t> *sfx_dehchains[NUMSFXCHAINS];
 
 static EHashTable<sfxinfo_t, ENCStringHashKey,
                   &sfxinfo_t::mnemonic, &sfxinfo_t::namelinks> sound_namehash(NUMSFXCHAINS);
+static EHashTable<sfxinfo_t, EIntHashKey,
+                  &sfxinfo_t::dehackednum, &sfxinfo_t::numlinks> sound_numhash(NUMSFXCHAINS);
 
 //
 // Singularity types
@@ -235,33 +236,19 @@ sfxinfo_t *E_EDFSoundForName(const char *name)
 }
 
 //
-// E_SoundForDEHNum
-//
 // Returns a sfxinfo_t pointer given the DeHackEd number for that
 // sound. Will return nullptr if the requested sound is not found.
 //
 sfxinfo_t *E_SoundForDEHNum(int dehnum)
 {
-   unsigned int hash = dehnum % NUMSFXCHAINS;
-   DLListItem<sfxinfo_t> *rover = sfx_dehchains[hash];
-
-   // haleyjd 04/13/08: rewritten for dynamic hash chains
-   while(rover && (*rover)->dehackednum != dehnum)
-      rover = rover->dllNext;
-
-   return rover ? rover->dllObject : nullptr;
+   return sound_numhash.objectForKey(dehnum);
 }
 
-//
-// E_AddSoundToHash
 //
 // Adds a new sfxinfo_t structure to the name hash table.
 //
 static void E_AddSoundToHash(sfxinfo_t *sfx)
 {
-   // compute the hash code using the sound mnemonic
-   unsigned int hash;
-
    // make sure it doesn't exist already -- if it does, this
    // insertion must be ignored
    if(E_EDFSoundForName(sfx->mnemonic))
@@ -271,8 +258,6 @@ static void E_AddSoundToHash(sfxinfo_t *sfx)
 }
 
 //
-// E_AddSoundToDEHHash
-//
 // Only used locally. This adds a sound to the DeHackEd number hash
 // table, so that both old and new sounds can be referred to by
 // use of a number. This avoids major code rewrites and compatibility
@@ -280,8 +265,6 @@ static void E_AddSoundToHash(sfxinfo_t *sfx)
 //
 static void E_AddSoundToDEHHash(sfxinfo_t *sfx)
 {
-   unsigned int hash = sfx->dehackednum % NUMSFXCHAINS;
-
 #ifdef RANGECHECK
    if(sfx->dehackednum < 0)
       I_Error("E_AddSoundToDEHHash: internal error - dehnum == -1\n");
@@ -290,24 +273,9 @@ static void E_AddSoundToDEHHash(sfxinfo_t *sfx)
    if(sfx->dehackednum == 0)
       E_EDFLoggedErr(2, "E_AddSoundToDEHHash: dehackednum zero is reserved!\n");
 
-   // haleyjd 04/13/08: use M_DLListInsert to support removal & reinsertion
-   sfx->numlinks.insert(sfx, &sfx_dehchains[hash]);
+   sound_numhash.addObject(sfx);
 }
 
-//
-// E_DelSoundFromDEHHash
-//
-// haleyjd 04/13/08: Made sound dehackednum hash chains dynamically linked
-// to fully support DeHackEd number specification in sounds added after
-// primary EDF processing.
-//
-static void E_DelSoundFromDEHHash(sfxinfo_t *sfx)
-{
-   sfx->numlinks.remove();
-}
-
-//
-// E_FindSoundForDEH
 //
 // haleyjd 04/13/08: There's a hackish little code segment in DeHackEd
 // that looks for a sound name match to a DeHackEd text string. Now that
@@ -750,7 +718,7 @@ void E_ProcessSounds(cfg_t *cfg)
          {
             // if already in hash, remove it
             if(sfx->dehackednum > 0)
-               E_DelSoundFromDEHHash(sfx);
+               sound_numhash.removeObject(sfx);
 
             // set new dehackednum
             sfx->dehackednum = idnum;
