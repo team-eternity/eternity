@@ -64,7 +64,7 @@ void P_SpawnSlope_Line(int linenum, int staticFn);
 void P_CopySectorSlope(line_t *line, int staticFn);
 
 // Returns the height of the sloped plane at (x, y) as a fixed_t
-fixed_t P_GetZAt(pslope_t *slope, fixed_t x, fixed_t y);
+fixed_t P_GetZAt(const pslope_t *slope, fixed_t x, fixed_t y);
 
 
 // Returns the height of the sloped plane at (x, y) as a float
@@ -78,6 +78,8 @@ float P_DistFromPlanef(const v3float_t *point, const v3float_t *pori,
 bool P_SlopesEqual(const pslope_t &s1, const pslope_t &s2);
 
 bool P_AnySlope(const line_t &line);
+
+bool P_IsSteep(const pslope_t* slope);
 
 #endif
 
