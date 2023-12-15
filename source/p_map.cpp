@@ -1696,7 +1696,37 @@ static bool P_checkCarryUp(Mobj &thing, fixed_t floorz)
 
 static void P_adjustSlopeSlide(const Mobj& thing, fixed_t& x, fixed_t& y)
 {
-   const pslope_t* floorslope = thing.zref.floorsector ? thing.zref.floorsector->srf.floor.slope : nullptr;
+   
+   const pslope_t* ceilingslope = thing.zref.ceilingsector ? thing.zref.ceilingsector->srf.ceiling.slope : nullptr;
+
+   // NOTE: we won't check if the floor slope sector is the same as the center point sector, since
+   // we want slope clipping to consider the whole bounding box (this will avoid bumpy lines)
+
+   if (thing.zref.floorsector)
+   {
+      const pslope_t* slope = thing.zref.floorsector->srf.floor.slope;
+      if (!slope)
+         return;
+
+      v2fixed_t dest = { x, y };
+      v2fixed_t corner;
+      corner.x = ((slope->normal.x < 0) - (slope->normal.x > 0)) * thing.radius;
+      corner.y = ((slope->normal.y < 0) - (slope->normal.y > 0)) * thing.radius;
+      v2fixed_t checkpos = dest + corner;
+      const linkoffset_t* link = P_GetLinkOffset(thing.groupid, thing.zref.floorsector->groupid);
+      checkpos.x += link->x;
+      checkpos.y += link->y;
+
+      fixed_t destzdelta = thing.z - P_GetZAt(slope, checkpos.x, checkpos.y);
+      destzdelta = FixedDiv(destzdelta, D_abs(slope->zdelta));
+
+      if (destzdelta < 0)
+      {
+         x -= FixedMul(slope->normal.x, destzdelta);
+         y -= FixedMul(slope->normal.y, destzdelta);
+      }
+   }
+   // TODO: ceiling
 }
 
 //
@@ -1712,6 +1742,8 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    fixed_t oldx, oldy, oldz;
    int oldgroupid;
    dropoff_func_t dropofffunc;
+
+   P_adjustSlopeSlide(*thing, x, y);
    
    // haleyjd 11/10/04: 3dMidTex: determine if a thing is on a line:
    // zref.passfloor is the floor as determined from sectors and 3DMidTex.
