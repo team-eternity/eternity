@@ -2089,6 +2089,7 @@ bool ACS_CF_SetActorPosition(ACS_CF_ARGS)
          mo->zref.floorgroupid = newsubsec->sector->groupid;
          mo->zref.floorsector = newsubsec->sector;
          mo->zref.ceiling = newsubsec->sector->srf.ceiling.getZAt(x, y);
+         mo->zref.ceilingsector = newsubsec->sector;
          mo->zref.passfloor = mo->zref.secfloor = mo->zref.floor;
          mo->zref.passceil = mo->zref.secceil = mo->zref.ceiling;
 

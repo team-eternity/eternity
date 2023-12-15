@@ -139,6 +139,7 @@ static void P_blockingLineDifferentLevel(line_t *ld, fixed_t thingz,
    if(towards == surf_floor && outerheights.bottomend < clip.zref.ceiling)
    {
       clip.zref.ceiling = outerheights.bottomend;
+      clip.zref.ceilingsector = nullptr;
       clip.ceilingline = ld;
       clip.blockline = ld;
    }

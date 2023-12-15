@@ -544,6 +544,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       int floorgroupid = actor->zref.floorgroupid;
       const sector_t *floorsector = actor->zref.floorsector;
       fixed_t ceilingz = actor->zref.ceiling;
+      const sector_t* ceilingsector = actor->zref.ceilingsector;
       fixed_t dropoffz = actor->zref.dropoff;
       
       try_ok = P_TryMove(actor, tryx, tryy, dropoff);
@@ -560,6 +561,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
          actor->zref.floorgroupid = floorgroupid;
          actor->zref.floorsector = floorsector;
          actor->zref.ceiling = ceilingz;
+         actor->zref.ceilingsector = ceilingsector;
          actor->zref.dropoff = dropoffz;
          P_SetThingPosition(actor);
          movefactor *= FRACUNIT / ORIG_FRICTION_FACTOR / 4;

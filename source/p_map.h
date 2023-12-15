@@ -223,6 +223,9 @@ struct zrefs_t
    // floor sector reference
    const sector_t *floorsector;
 
+   // Same with ceiling, since we can also slide on ceiling
+   const sector_t* ceilingsector;
+
    int floorgroupid;
 
    // Strictly sector floor and ceiling z, not counting 3dmidtex

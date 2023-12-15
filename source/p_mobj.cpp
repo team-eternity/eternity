@@ -2125,6 +2125,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
    mobj->zref.floorsector = extremesector;
    extremesector = P_ExtremeSectorAtPoint(mobj, surf_ceil, &totaldelta);
    mobj->zref.ceiling = extremesector->srf.ceiling.getZAt(x + totaldelta.x, y + totaldelta.y);
+   mobj->zref.ceilingsector = extremesector;
 
    mobj->z = 
       (z == ONFLOORZ ? mobj->zref.floor : z == ONCEILINGZ ? mobj->zref.ceiling - mobj->height : z);

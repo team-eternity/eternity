@@ -431,11 +431,15 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, unsigned flags)
     //newsubsec->sector->ceilingheight + clip.thing->height;
    if(demo_version >= 333 && newsubsec->sector->srf.ceiling.pflags & PS_PASSABLE)
    {
-      clip.zref.ceiling = P_ExtremeSectorAtPoint(x, y, surf_ceil,
-            newsubsec->sector)->srf.ceiling.height;
+      const sector_t* topceilingsector = P_ExtremeSectorAtPoint(x, y, surf_ceil, newsubsec->sector);
+      clip.zref.ceiling = topceilingsector->srf.ceiling.height;
+      clip.zref.ceilingsector = topceilingsector;
    }
    else
+   {
       clip.zref.ceiling = newsubsec->sector->srf.ceiling.height;
+      clip.zref.ceilingsector = newsubsec->sector;
+   }
 
    clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;
    clip.zref.secceil = clip.zref.passceil = clip.zref.ceiling;
@@ -698,6 +702,8 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
       open.height.ceiling < inter.zref.ceiling)
    {
       inter.zref.ceiling = open.height.ceiling;
+      inter.zref.ceilingsector = open.ceilsector;
+
       inter.ceilingline = ld;
       inter.blockline = ld;
    }
@@ -718,6 +724,11 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
       !open.floorsector->srf.floor.slope)
    {
       inter.zref.floorsector = open.floorsector;
+   }
+   if (open.height.ceiling == inter.zref.ceiling && open.ceilsector && 
+      !open.ceilsector->srf.ceiling.slope)
+   {
+      inter.zref.ceilingsector = open.ceilsector;
    }
 
    // ioanch 20160116: this is crazy. If the lines belong in separate groups,
@@ -1317,9 +1328,13 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter,
       v2fixed_t totaldelta;
       topsector = P_ExtremeSectorAtPoint(x, y, surf_ceil, &sector, &totaldelta);
       inter.zref.ceiling = topsector->srf.ceiling.getZAt(x + totaldelta.x, y + totaldelta.y);
+      inter.zref.ceilingsector = topsector;
    }
    else
+   {
       inter.zref.ceiling = sector.srf.ceiling.getZAt(x, y);
+      inter.zref.ceilingsector = &sector;
+   }
 
    inter.zref.secfloor = inter.zref.passfloor = inter.zref.floor;
    inter.zref.secceil = inter.zref.passceil = inter.zref.ceiling;
@@ -1677,6 +1692,11 @@ static bool P_checkCarryUp(Mobj &thing, fixed_t floorz)
       ++orgzit;
    }
    return true;
+}
+
+static void P_adjustSlopeSlide(const Mobj& thing, fixed_t& x, fixed_t& y)
+{
+   const pslope_t* floorslope = thing.zref.floorsector ? thing.zref.floorsector->srf.floor.slope : nullptr;
 }
 
 //
@@ -3320,6 +3340,7 @@ void P_ClearGlobalLevelReferences()
    clip.BlockingMobj = nullptr;  // also not ref-counted
    clip.numportalhit = 0;
    clip.zref.floorsector = nullptr;
+   clip.zref.ceilingsector = nullptr;
    P_ClearTarget(clip.linetarget);
 }
 
