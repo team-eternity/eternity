@@ -1694,9 +1694,8 @@ static bool P_checkCarryUp(Mobj &thing, fixed_t floorz)
    return true;
 }
 
-static void P_adjustSlopeSlide(const Mobj& thing, fixed_t& x, fixed_t& y)
+static void P_adjustSlopeSlide(Mobj& thing, fixed_t& x, fixed_t& y)
 {
-   
    const pslope_t* ceilingslope = thing.zref.ceilingsector ? thing.zref.ceilingsector->srf.ceiling.slope : nullptr;
 
    // NOTE: we won't check if the floor slope sector is the same as the center point sector, since
@@ -1705,7 +1704,7 @@ static void P_adjustSlopeSlide(const Mobj& thing, fixed_t& x, fixed_t& y)
    if (thing.zref.floorsector)
    {
       const pslope_t* slope = thing.zref.floorsector->srf.floor.slope;
-      if (!slope)
+      if (!slope || !slope->zdelta)
          return;
 
       v2fixed_t dest = { x, y };
@@ -1718,12 +1717,57 @@ static void P_adjustSlopeSlide(const Mobj& thing, fixed_t& x, fixed_t& y)
       checkpos.y += link->y;
 
       fixed_t destzdelta = thing.z - P_GetZAt(slope, checkpos.x, checkpos.y);
-      destzdelta = FixedDiv(destzdelta, D_abs(slope->zdelta));
+      fixed_t destztrig = FixedDiv(destzdelta, D_abs(slope->zdelta));
 
-      if (destzdelta < 0)
+      
+      if (destztrig < 0)
       {
-         x -= FixedMul(slope->normal.x, destzdelta);
-         y -= FixedMul(slope->normal.y, destzdelta);
+         // Voluntary monster movement should not be slowed down by slopes
+         if (!(thing.intflags & MIF_MONSTERMOVE))
+         {
+            v2fixed_t predelta = { x - thing.x, y - thing.y };
+            //x -= FixedMul(slope->normal.x, destztrig);
+            //y -= FixedMul(slope->normal.y, destztrig);
+            // Also reduce velocity so thing doesn't spring to speed when getting off slope
+
+            //fixed_t newx = x - FixedMul(slope->normal.x, destztrig);
+            //fixed_t newy = y - FixedMul(slope->normal.y, destztrig);
+            //thing.momx = FixedMul(thing.momx, FixedDiv(x - thing.x, predelta.x));
+            //thing.momy = FixedMul(thing.momy, FixedDiv(y - thing.y, predelta.y));
+            //if (thing.momx > x - thing.x)
+            //   thing.momx = x - thing.x;
+            //else if (thing.momx < x - thing.x)
+            //   thing.momx = x - thing.x;
+            //if (thing.momy > y - thing.y)
+            //   thing.momy = y - thing.y;
+            //else if (thing.momy < y - thing.y)
+            //   thing.momx = y - thing.y;
+            thing.momx -= FixedMul(slope->normal.x, destztrig);
+            thing.momy -= FixedMul(slope->normal.y, destztrig);
+            if (thing.player)
+            {
+               thing.player->momx = thing.momx;
+               thing.player->momy = thing.momy;
+            }
+
+            // TODO: actually this belongs in P_XYMovement or wherever the velocity is set, not in P_TryMove which reacts to that speed change.
+         }
+      }
+      else
+      {
+         // If on ground when touching slope as going down, make sure to go down by the slope
+         if (thing.z == thing.zref.floor)
+         {
+            // Same as when going up, voluntary monster movement should be unaffected
+            if (!(thing.intflags & MIF_MONSTERMOVE))
+            {
+               // Slow down horizontally even when going down, to compensate for the changed
+               // direction
+               x -= FixedMul(slope->normal.x, destztrig);
+               y -= FixedMul(slope->normal.y, destztrig);
+            }
+            thing.z -= destzdelta;  // try to keep on ground
+         }
       }
    }
    // TODO: ceiling

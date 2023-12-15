@@ -534,8 +534,12 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
 
    // killough 12/98: rearrange, fix potential for stickiness on ice
 
-   if(friction <= ORIG_FRICTION)
+   if (friction <= ORIG_FRICTION)
+   {
+      actor->intflags |= MIF_MONSTERMOVE;
       try_ok = P_TryMove(actor, tryx, tryy, dropoff);
+      actor->intflags &= ~MIF_MONSTERMOVE;
+   }
    else
    {
       fixed_t x = actor->x;
@@ -547,7 +551,9 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       const sector_t* ceilingsector = actor->zref.ceilingsector;
       fixed_t dropoffz = actor->zref.dropoff;
       
+      actor->intflags |= MIF_MONSTERMOVE;
       try_ok = P_TryMove(actor, tryx, tryy, dropoff);
+      actor->intflags &= ~MIF_MONSTERMOVE;
       
       // killough 10/98:
       // Let normal momentum carry them, instead of steptoeing them across ice.

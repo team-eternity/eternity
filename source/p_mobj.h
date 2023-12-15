@@ -800,6 +800,8 @@ enum
    MIF_MAYPLAYPARTICLESOUNDS = 0x00040000,   // Hint that it may be playing particle sounds
    MIF_SKULLFLYSEE = 0x00080000, // ioanch: when MF_SKULLFLY is set, return to seestate, not spawn
 
+   MIF_MONSTERMOVE = 0x00100000, // movement as result of P_Move (sentient enemy)
+
    // these should be cleared when a thing is being raised
    MIF_CLEARRAISED = (MIF_DIEDFALLING|MIF_SCREAMED|MIF_CRASHED|MIF_SKULLFLYSEE|MIF_WIMPYDEATH),
 };
