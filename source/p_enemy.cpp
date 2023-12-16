@@ -534,10 +534,8 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
 
    // killough 12/98: rearrange, fix potential for stickiness on ice
 
-   if (friction <= ORIG_FRICTION)
-   {
+   if(friction <= ORIG_FRICTION)
       try_ok = P_TryMove(actor, tryx, tryy, dropoff);
-   }
    else
    {
       fixed_t x = actor->x;

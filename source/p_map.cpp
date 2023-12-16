@@ -432,7 +432,7 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, unsigned flags)
    if(demo_version >= 333 && newsubsec->sector->srf.ceiling.pflags & PS_PASSABLE)
    {
       clip.zref.ceiling = P_ExtremeSectorAtPoint(x, y, surf_ceil,
-         newsubsec->sector)->srf.ceiling.height;
+            newsubsec->sector)->srf.ceiling.height;
    }
    else
       clip.zref.ceiling = newsubsec->sector->srf.ceiling.height;

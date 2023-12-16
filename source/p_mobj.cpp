@@ -530,41 +530,40 @@ static void P_reduceVelocityBySlope(Mobj& thing)
    // NOTE: we won't check if the floor slope sector is the same as the center point sector, since
    // we want slope clipping to consider the whole bounding box (this will avoid bumpy lines)
 
-   if (thing.zref.floorsector)
-   {
-      const pslope_t* slope = thing.zref.floorsector->srf.floor.slope;
-      if (!slope || !slope->zdelta)
-         return;
+   if (!thing.zref.floorsector)
+      return;
+   
+   const pslope_t* slope = thing.zref.floorsector->srf.floor.slope;
+   if (!slope || !slope->zdelta)
+      return;
 
-      // Offset to the corner that touches the slope. Also add portal if any
-      const linkoffset_t* link = P_GetLinkOffset(thing.groupid, thing.zref.floorsector->groupid);
-      const v2fixed_t slopeoffset = {
-         ((slope->normal.x < 0) - (slope->normal.x > 0)) * thing.radius + link->x,
-         ((slope->normal.y < 0) - (slope->normal.y > 0)) * thing.radius + link->y
-      };
-      const v2fixed_t source = { thing.x, thing.y };
-      const v2fixed_t dest = { thing.x + thing.momx, thing.y + thing.momy };
-
+   // Offset to the corner that touches the slope. Also add portal if any
+   const linkoffset_t* link = P_GetLinkOffset(thing.groupid, thing.zref.floorsector->groupid);
+   const v2fixed_t slopeoffset = {
+      ((slope->normal.x < 0) - (slope->normal.x > 0)) * thing.radius + link->x,
+      ((slope->normal.y < 0) - (slope->normal.y > 0)) * thing.radius + link->y
+   };
+   const v2fixed_t source = { thing.x, thing.y };
+   const v2fixed_t dest = { thing.x + thing.momx, thing.y + thing.momy };
       
-      v2fixed_t checkpos = source + slopeoffset;
-      const fixed_t sourcezdelta = thing.z - P_GetZAt(slope, checkpos.x, checkpos.y);
-      checkpos = dest + slopeoffset;
-      const fixed_t destzdelta = thing.z - P_GetZAt(slope, checkpos.x, checkpos.y);
+   v2fixed_t checkpos = source + slopeoffset;
+   const fixed_t sourcezdelta = thing.z - P_GetZAt(slope, checkpos.x, checkpos.y);
+   checkpos = dest + slopeoffset;
+   const fixed_t destzdelta = thing.z - P_GetZAt(slope, checkpos.x, checkpos.y);
 
-      if (sourcezdelta >= 0 && destzdelta < 0)
+   if (sourcezdelta >= 0 && destzdelta < 0)
+   {
+      // We are going up a slope
+      const fixed_t totaldelta = sourcezdelta - destzdelta;
+      const fixed_t movedist = P_AproxDistance(thing.momx, thing.momy);
+      const angle_t slopeangle = P_PointToAngle(0, 0, movedist, totaldelta);
+      const fixed_t reduction = finecosine[slopeangle >> ANGLETOFINESHIFT];
+      thing.momx = FixedMul(thing.momx, reduction);
+      thing.momy = FixedMul(thing.momy, reduction);
+      if (thing.player)
       {
-         // We are going up a slope
-         const fixed_t totaldelta = sourcezdelta - destzdelta;
-         const fixed_t movedist = P_AproxDistance(thing.momx, thing.momy);
-         const angle_t slopeangle = P_PointToAngle(0, 0, movedist, totaldelta);
-         const fixed_t reduction = finecosine[slopeangle >> ANGLETOFINESHIFT];
-         thing.momx = FixedMul(thing.momx, reduction);
-         thing.momy = FixedMul(thing.momy, reduction);
-         if (thing.player)
-         {
-            thing.player->momx = thing.momx;
-            thing.player->momy = thing.momy;
-         }
+         thing.player->momx = thing.momx;
+         thing.player->momy = thing.momy;
       }
    }
 }
