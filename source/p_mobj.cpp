@@ -510,7 +510,7 @@ static void P_applySlopeGravity(Mobj& thing)
       return;
    }
    const pslope_t* slope = thing.zref.floorsector->srf.floor.slope;
-   if (!slope || D_abs(slope->zdelta) <= FRACUNIT)
+   if (!slope || D_abs(slope->zdelta) < FRACUNIT)
       return;
 
    fixed_t gravity;
