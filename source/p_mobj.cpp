@@ -503,7 +503,8 @@ inline static void P_hereticWind(Mobj &mo)
 
 static void P_applySlopeGravity(Mobj& thing)
 {
-   if (!thing.zref.floorsector || thing.z > thing.zref.floor || thing.z < thing.zref.dropoff + STEPSIZE ||
+   if (!thing.zref.floorsector || thing.z > thing.zref.floor || 
+      thing.z < thing.zref.dropoff + STEPSIZE || 
       thing.flags & (MF_NOGRAVITY | MF_NOCLIP | MF_TELEPORT))
    {
       return;
@@ -526,8 +527,6 @@ static void P_applySlopeGravity(Mobj& thing)
 
 static void P_reduceVelocityBySlope(Mobj& thing)
 {
-   const pslope_t* ceilingslope = thing.zref.ceilingsector ? thing.zref.ceilingsector->srf.ceiling.slope : nullptr;
-
    // NOTE: we won't check if the floor slope sector is the same as the center point sector, since
    // we want slope clipping to consider the whole bounding box (this will avoid bumpy lines)
 
@@ -568,7 +567,6 @@ static void P_reduceVelocityBySlope(Mobj& thing)
          }
       }
    }
-   // TODO: ceiling
 }
 
 //
@@ -950,6 +948,7 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
 
 static void P_floorHereticBounceMissile(Mobj * mo)
 {
+   // TODO: bounce on slopes
    mo->momz = -mo->momz;
    P_SetMobjState(mo, mobjinfo[mo->type]->deathstate);
 }
@@ -988,6 +987,7 @@ static void P_ZMovement(Mobj* mo)
          E_HitFloor(mo); // haleyjd
          if (mo->momz < 0)
          {
+            // TODO: bouncing on slopes
             mo->momz = -mo->momz;
             if (!(mo->flags & MF_NOGRAVITY))  // bounce back with decay
             {
@@ -1016,6 +1016,7 @@ static void P_ZMovement(Mobj* mo)
          mo->z = mo->zref.ceiling - mo->height;
          if(mo->momz > 0)
          {
+            // TODO: bounce on slopes
             if(!(mo->subsector->sector->intflags & SIF_SKY))
                mo->momz = -mo->momz;    // always bounce off non-sky ceiling
             else

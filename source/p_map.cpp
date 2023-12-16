@@ -3439,7 +3439,8 @@ void P_ClearGlobalLevelReferences()
 bool P_OnGroundOrThing(const Mobj &mobj)
 {
    if (mobj.zref.floorsector && mobj.zref.floorsector->srf.floor.slope &&
-      D_abs(mobj.zref.floorsector->srf.floor.slope->zdelta) > FRACUNIT && mobj.z > mobj.zref.dropoff + STEPSIZE)
+      D_abs(mobj.zref.floorsector->srf.floor.slope->zdelta) >= FRACUNIT && 
+      mobj.z > mobj.zref.dropoff + STEPSIZE)
    {
       return false;
    }
