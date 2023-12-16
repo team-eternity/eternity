@@ -3438,6 +3438,11 @@ void P_ClearGlobalLevelReferences()
 //
 bool P_OnGroundOrThing(const Mobj &mobj)
 {
+   if (mobj.zref.floorsector && mobj.zref.floorsector->srf.floor.slope &&
+      D_abs(mobj.zref.floorsector->srf.floor.slope->zdelta) > FRACUNIT && mobj.z > mobj.zref.dropoff + STEPSIZE)
+   {
+      return false;
+   }
    return mobj.z <= mobj.zref.floor || ( P_Use3DClipping() &&   mobj.intflags & MIF_ONMOBJ);
    // negative:
    //     mobj.z >  mobj.zref.floor && (!P_Use3DClipping() || !(mobj.intflags & MIF_ONMOBJ))

@@ -501,6 +501,29 @@ inline static void P_hereticWind(Mobj &mo)
       P_ThrustMobj(&mo, sector.hticPushAngle, sector.hticPushForce);
 }
 
+static void P_applySlopeGravity(Mobj& thing)
+{
+   if (!thing.zref.floorsector || thing.z > thing.zref.floor || thing.z < thing.zref.dropoff + STEPSIZE ||
+      thing.flags & (MF_NOGRAVITY | MF_NOCLIP | MF_TELEPORT))
+   {
+      return;
+   }
+   const pslope_t* slope = thing.zref.floorsector->srf.floor.slope;
+   if (!slope || D_abs(slope->zdelta) <= FRACUNIT)
+      return;
+
+   fixed_t gravity;
+   if (thing.flags & MF_BOUNCES)
+      gravity = thing.info->mass * (LevelInfo.gravity / 256);
+   else if (thing.flags2 & MF2_LOGRAV)
+      gravity = LevelInfo.gravity / 8;
+   else
+      gravity = LevelInfo.gravity;
+   thing.momx += FixedMul(slope->normal.x, gravity);
+   thing.momy += FixedMul(slope->normal.y, gravity);
+   
+}
+
 static void P_reduceVelocityBySlope(Mobj& thing)
 {
    const pslope_t* ceilingslope = thing.zref.ceilingsector ? thing.zref.ceilingsector->srf.ceiling.slope : nullptr;
@@ -538,6 +561,11 @@ static void P_reduceVelocityBySlope(Mobj& thing)
          const fixed_t reduction = finecosine[slopeangle >> ANGLETOFINESHIFT];
          thing.momx = FixedMul(thing.momx, reduction);
          thing.momy = FixedMul(thing.momy, reduction);
+         if (thing.player)
+         {
+            thing.player->momx = thing.momx;
+            thing.player->momy = thing.momy;
+         }
       }
    }
    // TODO: ceiling
@@ -578,6 +606,8 @@ void P_XYMovement(Mobj* mo)
    // VANILLA_HERETIC: handle wind here
    if(vanilla_heretic && mo->flags3 & MF3_WINDTHRUST)
       P_hereticWind(*mo);
+
+   P_applySlopeGravity(*mo);
 
    if(mo->momx > MAXMOVE)
       mo->momx = MAXMOVE;
