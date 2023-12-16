@@ -1788,6 +1788,12 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    dropoff_func_t dropofffunc;
 
    //P_adjustSlopeSlide(*thing, x, y);
+
+   const pslope_t* slope;
+   if (!(thing->flags & MF_NOGRAVITY) && thing->z <= thing->zref.floor)
+      slope = thing->zref.floorsector ? thing->zref.floorsector->srf.floor.slope : nullptr;
+   else
+      slope = nullptr;
    
    // haleyjd 11/10/04: 3dMidTex: determine if a thing is on a line:
    // zref.passfloor is the floor as determined from sectors and 3DMidTex.
@@ -2072,6 +2078,13 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          thing->prevpos.ldata = &crossoutcome.lastpassed->portal->data.link;
       }
       P_PortalDidTeleport(thing, x - prex, y - prey, 0, oldgroupid, crossoutcome.finalgroup);
+   }
+
+   if (slope && slope->zdelta && thing->zref.floorsector && 
+      thing->zref.floorsector->srf.floor.slope && thing->z > thing->zref.floor && 
+      thing->z <= thing->zref.floor + STEPSIZE)
+   {
+      thing->z = thing->zref.floor;
    }
 
    // haleyjd 08/07/04: new footclip system
