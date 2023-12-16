@@ -952,6 +952,31 @@ static void P_floorHereticBounceMissile(Mobj * mo)
    P_SetMobjState(mo, mobjinfo[mo->type]->deathstate);
 }
 
+static void P_planeBounce(Mobj &thing)
+{
+   if (thing.zref.floorsector)
+   {
+      const pslope_t* slope = thing.zref.floorsector->srf.floor.slope;
+      if (slope && slope->zdelta)
+      {
+         // Get normal component of velocity
+         fixed_t prod = FixedMul(slope->normal.x, thing.momx) + 
+            FixedMul(slope->normal.y, thing.momy) + FixedMul(slope->normal.z, thing.momz);
+         v3fixed_t normcomp = { 
+            FixedMul(prod, slope->normal.x), 
+            FixedMul(prod, slope->normal.y),
+            FixedMul(prod, slope->normal.z)
+         };
+         thing.momx -= 2 * normcomp.x;
+         thing.momy -= 2 * normcomp.y;
+         thing.momz -= 2 * normcomp.z;
+         return;
+      }
+   }
+   thing.momz = -thing.momz;
+   
+}
+
 //
 // P_ZMovement
 //
@@ -986,8 +1011,10 @@ static void P_ZMovement(Mobj* mo)
          E_HitFloor(mo); // haleyjd
          if (mo->momz < 0)
          {
-            // TODO: bouncing on slopes
-            mo->momz = -mo->momz;
+            // TODO: bouncing if momz is zero
+            P_planeBounce(*mo);
+            // TODO: what if gravity?
+            
             if (!(mo->flags & MF_NOGRAVITY))  // bounce back with decay
             {
                mo->momz = mo->flags & MF_FLOAT ?   // floaters fall slowly
