@@ -431,15 +431,11 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, unsigned flags)
     //newsubsec->sector->ceilingheight + clip.thing->height;
    if(demo_version >= 333 && newsubsec->sector->srf.ceiling.pflags & PS_PASSABLE)
    {
-      const sector_t* topceilingsector = P_ExtremeSectorAtPoint(x, y, surf_ceil, newsubsec->sector);
-      clip.zref.ceiling = topceilingsector->srf.ceiling.height;
-      clip.zref.ceilingsector = topceilingsector;
+      clip.zref.ceiling = P_ExtremeSectorAtPoint(x, y, surf_ceil,
+         newsubsec->sector)->srf.ceiling.height;
    }
    else
-   {
       clip.zref.ceiling = newsubsec->sector->srf.ceiling.height;
-      clip.zref.ceilingsector = newsubsec->sector;
-   }
 
    clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;
    clip.zref.secceil = clip.zref.passceil = clip.zref.ceiling;
@@ -702,8 +698,6 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
       open.height.ceiling < inter.zref.ceiling)
    {
       inter.zref.ceiling = open.height.ceiling;
-      inter.zref.ceilingsector = open.ceilsector;
-
       inter.ceilingline = ld;
       inter.blockline = ld;
    }
@@ -724,11 +718,6 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
       !open.floorsector->srf.floor.slope)
    {
       inter.zref.floorsector = open.floorsector;
-   }
-   if (open.height.ceiling == inter.zref.ceiling && open.ceilsector && 
-      !open.ceilsector->srf.ceiling.slope)
-   {
-      inter.zref.ceilingsector = open.ceilsector;
    }
 
    // ioanch 20160116: this is crazy. If the lines belong in separate groups,
@@ -1328,13 +1317,9 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter,
       v2fixed_t totaldelta;
       topsector = P_ExtremeSectorAtPoint(x, y, surf_ceil, &sector, &totaldelta);
       inter.zref.ceiling = topsector->srf.ceiling.getZAt(x + totaldelta.x, y + totaldelta.y);
-      inter.zref.ceilingsector = topsector;
    }
    else
-   {
       inter.zref.ceiling = sector.srf.ceiling.getZAt(x, y);
-      inter.zref.ceilingsector = &sector;
-   }
 
    inter.zref.secfloor = inter.zref.passfloor = inter.zref.floor;
    inter.zref.secceil = inter.zref.passceil = inter.zref.ceiling;
@@ -1694,85 +1679,6 @@ static bool P_checkCarryUp(Mobj &thing, fixed_t floorz)
    return true;
 }
 
-static void P_adjustSlopeSlide(Mobj& thing, fixed_t& x, fixed_t& y)
-{
-   const pslope_t* ceilingslope = thing.zref.ceilingsector ? thing.zref.ceilingsector->srf.ceiling.slope : nullptr;
-
-   // NOTE: we won't check if the floor slope sector is the same as the center point sector, since
-   // we want slope clipping to consider the whole bounding box (this will avoid bumpy lines)
-
-   if (thing.zref.floorsector)
-   {
-      const pslope_t* slope = thing.zref.floorsector->srf.floor.slope;
-      if (!slope || !slope->zdelta)
-         return;
-
-      v2fixed_t dest = { x, y };
-      v2fixed_t corner;
-      corner.x = ((slope->normal.x < 0) - (slope->normal.x > 0)) * thing.radius;
-      corner.y = ((slope->normal.y < 0) - (slope->normal.y > 0)) * thing.radius;
-      v2fixed_t checkpos = dest + corner;
-      const linkoffset_t* link = P_GetLinkOffset(thing.groupid, thing.zref.floorsector->groupid);
-      checkpos.x += link->x;
-      checkpos.y += link->y;
-
-      fixed_t destzdelta = thing.z - P_GetZAt(slope, checkpos.x, checkpos.y);
-      fixed_t destztrig = FixedDiv(destzdelta, D_abs(slope->zdelta));
-
-      
-      if (destztrig < 0)
-      {
-         // Voluntary monster movement should not be slowed down by slopes
-         if (!(thing.intflags & MIF_MONSTERMOVE))
-         {
-            v2fixed_t predelta = { x - thing.x, y - thing.y };
-            //x -= FixedMul(slope->normal.x, destztrig);
-            //y -= FixedMul(slope->normal.y, destztrig);
-            // Also reduce velocity so thing doesn't spring to speed when getting off slope
-
-            //fixed_t newx = x - FixedMul(slope->normal.x, destztrig);
-            //fixed_t newy = y - FixedMul(slope->normal.y, destztrig);
-            //thing.momx = FixedMul(thing.momx, FixedDiv(x - thing.x, predelta.x));
-            //thing.momy = FixedMul(thing.momy, FixedDiv(y - thing.y, predelta.y));
-            //if (thing.momx > x - thing.x)
-            //   thing.momx = x - thing.x;
-            //else if (thing.momx < x - thing.x)
-            //   thing.momx = x - thing.x;
-            //if (thing.momy > y - thing.y)
-            //   thing.momy = y - thing.y;
-            //else if (thing.momy < y - thing.y)
-            //   thing.momx = y - thing.y;
-            thing.momx -= FixedMul(slope->normal.x, destztrig);
-            thing.momy -= FixedMul(slope->normal.y, destztrig);
-            if (thing.player)
-            {
-               thing.player->momx = thing.momx;
-               thing.player->momy = thing.momy;
-            }
-
-            // TODO: actually this belongs in P_XYMovement or wherever the velocity is set, not in P_TryMove which reacts to that speed change.
-         }
-      }
-      else
-      {
-         // If on ground when touching slope as going down, make sure to go down by the slope
-         if (thing.z == thing.zref.floor)
-         {
-            // Same as when going up, voluntary monster movement should be unaffected
-            if (!(thing.intflags & MIF_MONSTERMOVE))
-            {
-               // Slow down horizontally even when going down, to compensate for the changed
-               // direction
-               x -= FixedMul(slope->normal.x, destztrig);
-               y -= FixedMul(slope->normal.y, destztrig);
-            }
-            thing.z -= destzdelta;  // try to keep on ground
-         }
-      }
-   }
-   // TODO: ceiling
-}
-
 //
 // P_TryMove
 //
@@ -1787,13 +1693,11 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    int oldgroupid;
    dropoff_func_t dropofffunc;
 
-   //P_adjustSlopeSlide(*thing, x, y);
-
-   const pslope_t* slope;
+   const pslope_t* downslope;
    if (!(thing->flags & MF_NOGRAVITY) && thing->z <= thing->zref.floor)
-      slope = thing->zref.floorsector ? thing->zref.floorsector->srf.floor.slope : nullptr;
+      downslope = thing->zref.floorsector ? thing->zref.floorsector->srf.floor.slope : nullptr;
    else
-      slope = nullptr;
+      downslope = nullptr;
    
    // haleyjd 11/10/04: 3dMidTex: determine if a thing is on a line:
    // zref.passfloor is the floor as determined from sectors and 3DMidTex.
@@ -2079,8 +1983,10 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       }
       P_PortalDidTeleport(thing, x - prex, y - prey, 0, oldgroupid, crossoutcome.finalgroup);
    }
-
-   if (slope && slope->zdelta && thing->zref.floorsector && 
+   
+   // If going down slope while still having some distance, stick to it to avoid sliding off it 
+   // endlessly.
+   if (downslope && downslope->zdelta && thing->zref.floorsector &&
       thing->zref.floorsector->srf.floor.slope && thing->z > thing->zref.floor && 
       thing->z <= thing->zref.floor + STEPSIZE)
    {
@@ -3429,7 +3335,6 @@ void P_ClearGlobalLevelReferences()
    clip.BlockingMobj = nullptr;  // also not ref-counted
    clip.numportalhit = 0;
    clip.zref.floorsector = nullptr;
-   clip.zref.ceilingsector = nullptr;
    P_ClearTarget(clip.linetarget);
 }
 
@@ -3438,6 +3343,7 @@ void P_ClearGlobalLevelReferences()
 //
 bool P_OnGroundOrThing(const Mobj &mobj)
 {
+   // Steep slopes are falling areas
    if (mobj.zref.floorsector && mobj.zref.floorsector->srf.floor.slope &&
       D_abs(mobj.zref.floorsector->srf.floor.slope->zdelta) >= FRACUNIT && 
       mobj.z > mobj.zref.dropoff + STEPSIZE)
