@@ -1787,7 +1787,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    int oldgroupid;
    dropoff_func_t dropofffunc;
 
-   P_adjustSlopeSlide(*thing, x, y);
+   //P_adjustSlopeSlide(*thing, x, y);
    
    // haleyjd 11/10/04: 3dMidTex: determine if a thing is on a line:
    // zref.passfloor is the floor as determined from sectors and 3DMidTex.
