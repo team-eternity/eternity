@@ -757,7 +757,8 @@ static void WI_drawAnimatedBack()
       a = &anims[epsd][i];
       
       if(a->ctr >= 0)
-         V_DrawPatch(a->loc.x, a->loc.y, &subscreen43, a->p[a->ctr]);
+         //widescreen alignment
+         V_DrawPatch(a->loc.x + (vbscreenyscaled.unscaledw - SCREENWIDTH) / 2, a->loc.y, &vbscreenyscaled, a->p[a->ctr]);
    }
 }
 
@@ -1957,7 +1958,7 @@ static void WI_DrawBackground()
       snprintf(name, sizeof(name), "WIMAP%d", epsd);
 
    // background
-   V_DrawFSBackground(&subscreen43, wGlobalDir.checkNumForName(name));
+   V_DrawFSBackground(&vbscreenyscaled, wGlobalDir.checkNumForName(name));
 
    // re-fade if we were called due to video mode reset
    if(fade_applied && wi_fade_color != -1)

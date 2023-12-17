@@ -482,7 +482,7 @@ void MN_DrawMenu(menu_t *menu)
    {
       // haleyjd 04/04/10: draw menus higher in some game modes
       y -= GameModeInfo->menuOffset;
-      V_DrawBackground(mn_background_flat, &vbscreen);
+      V_DrawBackground(mn_background_flat, &vbscreenyscaled);
    }
 
    // haleyjd: calculate widest width for LALIGNED flag

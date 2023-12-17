@@ -35,6 +35,7 @@
 #include "m_bbox.h"
 #include "r_draw.h"
 #include "r_main.h"
+#include "r_patch.h"
 #include "v_block.h"
 #include "v_misc.h"
 #include "v_patchfmt.h"
@@ -680,9 +681,10 @@ void V_DrawBlockFS(VBuffer *buffer, const byte *src)
 // haleyjd 05/18/09: Convenience routine to do V_DrawPatch but with
 // the assumption that the graphic is fullscreen, 320x200.
 //
+// If wider than the screen, center align.
 void V_DrawPatchFS(VBuffer *buffer, patch_t *patch)
 {
-   V_DrawPatchGeneral(0, 0, buffer, patch, false);
+   V_DrawPatchGeneral((buffer->unscaledw - patch->width) / 2, 0, buffer, patch, false);
 }
 
 //

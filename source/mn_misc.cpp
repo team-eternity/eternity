@@ -565,7 +565,7 @@ static void MN_HelpDrawer()
       D_DrawPillars();
 
       // haleyjd 05/18/09: use smart background drawer
-      V_DrawFSBackground(&subscreen43, lumpnum);
+      V_DrawFSBackground(&vbscreenyscaled, lumpnum);
    }
 }
 

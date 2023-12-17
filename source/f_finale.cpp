@@ -304,7 +304,7 @@ static void F_TextWrite()
    // killough 11/98: the background-filling code was already in m_menu.c
    lumpnum = wGlobalDir.checkNumForNameNSG(LevelInfo.backDrop, lumpinfo_t::ns_flats);
    if(lumpnum > 0)
-      V_DrawFSBackground(&subscreen43, lumpnum);
+      V_DrawFSBackground(&vbscreenyscaled, lumpnum);
 
    // draw some of the text onto the screen
    cx = GameModeInfo->fTextPos->x;
@@ -673,11 +673,19 @@ static void F_BunnyScroll()
       scrolled = 0;
               
    // ANYRES
+   int ws_offset2;
+   // Doom I Enhanced screens
+   if (p1->width == 426 && p2->width == 320)
+      ws_offset2 = 106;
+   else
+      ws_offset2 = (vbscreenyscaled.unscaledw - p2->width) / 2;
+   int ws_offset1 = (vbscreenyscaled.unscaledw - p1->width) / 2;
    if(scrolled > 0)
-      V_DrawPatchGeneral(320 - scrolled, 0, &subscreen43, p2, false);
-   if(scrolled < 320)
-      V_DrawPatchGeneral(-scrolled, 0, &subscreen43, p1, false);
-      
+      V_DrawPatchGeneral(320 - scrolled + ws_offset2, 0, &vbscreenyscaled, p2, false);
+   if(scrolled < 320 || ws_offset2 > 0)
+      V_DrawPatchGeneral(-scrolled + ws_offset1, 0, &vbscreenyscaled, p1, false);
+   if(ws_offset2 > 0)
+      D_DrawWings();
    if(finalecount < 1130)
       return;
    if(finalecount < 1180)
@@ -831,18 +839,18 @@ static void F_FinaleEndDrawer()
    switch(finaletype)
    {
    case FINALE_DOOM_CREDITS:
-      V_DrawPatch(0, 0, &subscreen43, 
+      V_DrawPatchFS(&vbscreenyscaled,
          PatchLoader::CacheName(wGlobalDir, sw ? "HELP2" : "CREDIT", PU_CACHE));
       break;
    case FINALE_DOOM_DEIMOS:
-      V_DrawPatch(0,0,&subscreen43, 
+      V_DrawPatchFS(&vbscreenyscaled, 
          PatchLoader::CacheName(wGlobalDir, "VICTORY2",PU_CACHE));
       break;
    case FINALE_DOOM_BUNNY:
       F_BunnyScroll();
       break;
    case FINALE_DOOM_MARINE:
-      V_DrawPatch(0,0,&subscreen43,
+      V_DrawPatchFS(&vbscreenyscaled,
          PatchLoader::CacheName(wGlobalDir, "ENDPIC", PU_CACHE));
       break;
    case FINALE_HTIC_CREDITS:
