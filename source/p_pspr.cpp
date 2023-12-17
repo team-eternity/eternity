@@ -555,19 +555,21 @@ void P_SubtractAmmoAmount(player_t *player, int amount)
 {
    weaponinfo_t *weapon = player->readyweapon;
    itemeffect_t *ammo;
-   bool          addAmmo = false;
+   bool          addAmmo = amount < 0;
 
    if(demo_version >= 401 && (player->attackdown & AT_ITEM))
       return;
    else if(demo_version >= 401 && (player->attackdown & AT_SECONDARY))
    {
-      ammo    = weapon->ammo_alt;
-      addAmmo = amount < 0;
+      ammo = weapon->ammo_alt;
+      if(amount == INT_MIN)
+         amount = weapon->ammopershot_alt;
    }
    else
    {
-      ammo    = weapon->ammo;
-      addAmmo = weapon->ammopershot;
+      ammo = weapon->ammo;
+      if(amount == INT_MIN)
+         amount = weapon->ammopershot;
    }
 
    if(player->cheats & CF_INFAMMO || !ammo)
