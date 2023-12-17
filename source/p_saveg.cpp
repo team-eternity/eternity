@@ -792,7 +792,13 @@ static void P_ArchiveWorld(SaveArchive &arc)
       Archive_Colormap(arc, sec->midmap);
       Archive_Colormap(arc, sec->bottommap);
       arc << sec->flags;
-      if(arc.saveVersion() <= 11 && arc.isLoading())
+      if(arc.saveVersion() <= 17 && arc.isLoading())
+      {
+         // Adjust for the MONSTERDEATH flag inserted in the middle
+         sec->flags = (sec->flags &            (SECF_MONSTERDEATH - 1)) |
+                     ((sec->flags & ~((unsigned)SECF_MONSTERDEATH - 1)) << 1);
+      }
+      else if(arc.saveVersion() <= 11 && arc.isLoading())
       {
          // Adjust for the INSTANTDEATH flag inserted in the middle
          sec->flags = (sec->flags &            (SECF_INSTANTDEATH - 1)) |

@@ -1661,6 +1661,23 @@ void Mobj::Think()
       }
    }
 
+   // This if statement is adapted from P_MobjInCompatibleSector in p_spec.c of dsda-doom.
+   // Copyright (C) 2023 Ryan Krafnick, used under terms of the GPLv2+.
+   if(mbf21_demo)
+   {
+      sector_t *sector = subsector->sector;
+      if(sector->flags & SECF_MONSTERDEATH &&
+         z <= zref.floor &&
+         player == nullptr &&
+         (flags & MF_SHOOTABLE) &&
+         !(flags & MF_FLOAT))
+      {
+         P_DamageMobj(player->mo, nullptr, nullptr, GOD_BREACH_DAMAGE, sector->damagemod);
+         return;
+      }
+
+   }
+
    // check if we are passing an interactive portal plane
    P_CheckPortalTeleport(this);
 
