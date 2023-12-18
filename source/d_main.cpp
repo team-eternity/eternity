@@ -258,7 +258,7 @@ static void D_PageDrawer()
    if(pagename && (l = W_CheckNumForName(pagename)) != -1)
    {
       // haleyjd 08/15/02: handle Heretic pages
-      V_DrawFSBackground(&subscreen43, l);
+      V_DrawFSBackground(&vbscreenyscaled, l);
 
       if(GameModeInfo->flags & GIF_HASADVISORY && demosequence == 1)
       {
