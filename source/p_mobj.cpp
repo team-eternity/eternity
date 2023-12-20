@@ -967,6 +967,13 @@ static void P_floorHereticBounceMissile(Mobj * mo)
 
 static void P_planeBounce(Mobj &thing)
 {
+   auto getBouncingDecay = [](unsigned flags)
+   {
+      return flags & MF_FLOAT ?  // floaters fall slowly
+         flags & MF_DROPOFF ?    // DROPOFF indicates rate
+            (fixed_t)(FRACUNIT*.85) : (fixed_t)(FRACUNIT*.70) : (fixed_t)(FRACUNIT*.45);
+   };
+   
    if (thing.zref.floorsector)
    {
       const pslope_t* slope = thing.zref.floorsector->srf.floor.slope;
@@ -983,11 +990,34 @@ static void P_planeBounce(Mobj &thing)
          thing.momx -= 2 * normcomp.x;
          thing.momy -= 2 * normcomp.y;
          thing.momz -= 2 * normcomp.z;
+         
+         if(!(thing.flags & MF_NOGRAVITY))
+         {
+            fixed_t decay = getBouncingDecay(thing.flags);
+            thing.momx = FixedMul(thing.momx, decay);
+            thing.momy = FixedMul(thing.momy, decay);
+            thing.momz = FixedMul(thing.momz, decay);
+            
+            // Bring it to rest below a certain speed
+            fixed_t threshold = P_getMBFBouncerGravity(thing, 4);
+            if(D_abs(thing.momx) <= threshold && D_abs(thing.momy) <= threshold &&
+               D_abs(thing.momz) <= threshold)
+            {
+               thing.momx = thing.momy = thing.momz = 0;
+            }
+         }
          return;
       }
    }
    thing.momz = -thing.momz;
-   
+   if(!(thing.flags & MF_NOGRAVITY))   // bounce back with decay
+   {
+      thing.momz = FixedMul(thing.momz, getBouncingDecay(thing.flags));
+      
+      // Bring it to rest below a certain speed
+      if(D_abs(thing.momz) <= P_getMBFBouncerGravity(thing, 4))
+         thing.momz = 0;
+   }
 }
 
 //
@@ -1026,20 +1056,7 @@ static void P_ZMovement(Mobj* mo)
          {
             // TODO: bouncing if momz is zero
             P_planeBounce(*mo);
-            // TODO: what if gravity?
             
-            if (!(mo->flags & MF_NOGRAVITY))  // bounce back with decay
-            {
-               mo->momz = mo->flags & MF_FLOAT ?   // floaters fall slowly
-                  mo->flags & MF_DROPOFF ?          // DROPOFF indicates rate
-                     FixedMul(mo->momz, (fixed_t)(FRACUNIT*.85)) :
-                     FixedMul(mo->momz, (fixed_t)(FRACUNIT*.70)) :
-                     FixedMul(mo->momz, (fixed_t)(FRACUNIT*.45)) ;
-
-               // Bring it to rest below a certain speed
-               if(D_abs(mo->momz) <= P_getMBFBouncerGravity(*mo, 4))
-                  mo->momz = 0;
-            }
 
             // killough 11/98: touchy objects explode on impact
             if (mo->flags & MF_TOUCHY && mo->intflags & MIF_ARMED &&
