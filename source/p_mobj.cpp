@@ -958,15 +958,8 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
    }
 }
 
-static void P_floorHereticBounceMissile(Mobj * mo)
-{
-   // TODO: bounce on slopes
-   mo->momz = -mo->momz;
-   P_SetMobjState(mo, mobjinfo[mo->type]->deathstate);
-}
-
-// MBF bouncing on possibly sloped floors or ceilings. Returns false if caller should quit.
-static bool P_planeMBFBounce(Mobj &thing, surf_e surf)
+// Bouncing on possibly sloped floors or ceilings. Returns false if caller should quit.
+static bool P_planeBounce(Mobj &thing, surf_e surf, bool floordecay)
 {
    auto getBouncingDecay = [](unsigned flags)
    {
@@ -1012,7 +1005,7 @@ static bool P_planeMBFBounce(Mobj &thing, surf_e surf)
             }
          }
          
-         if(surf == surf_floor && !(thing.flags & MF_NOGRAVITY))
+         if(floordecay && surf == surf_floor && !(thing.flags & MF_NOGRAVITY))
          {
             fixed_t decay = getBouncingDecay(thing.flags);
             thing.momx = FixedMul(thing.momx, decay);
@@ -1043,7 +1036,7 @@ static bool P_planeMBFBounce(Mobj &thing, surf_e surf)
       else if(thing.flags & MF_NOGRAVITY)
          thing.momz = -thing.momz;  // bounce unless under gravity
    }
-   if(surf == surf_floor && !(thing.flags & MF_NOGRAVITY))   // bounce back with decay if from floor
+   if(floordecay && surf == surf_floor && !(thing.flags & MF_NOGRAVITY))   // bounce back with decay if from floor
    {
       thing.momz = FixedMul(thing.momz, getBouncingDecay(thing.flags));
       
@@ -1053,6 +1046,12 @@ static bool P_planeMBFBounce(Mobj &thing, surf_e surf)
    }
    
    return true;
+}
+
+static void P_floorHereticBounceMissile(Mobj * mo)
+{
+   P_planeBounce(*mo, surf_floor, false);
+   P_SetMobjState(mo, mobjinfo[mo->type]->deathstate);
 }
 
 //
@@ -1093,7 +1092,7 @@ static void P_ZMovement(Mobj* mo)
          E_HitFloor(mo); // haleyjd
          if (mo->momz < 0 || horizontalBounceOnSlope)
          {
-            P_planeMBFBounce(*mo, surf_floor);
+            P_planeBounce(*mo, surf_floor, true);
 
             // killough 11/98: touchy objects explode on impact
             if (mo->flags & MF_TOUCHY && mo->intflags & MIF_ARMED &&
@@ -1109,7 +1108,7 @@ static void P_ZMovement(Mobj* mo)
          mo->z = mo->zref.ceiling - mo->height;
          if(mo->momz > 0 || horizontalBounceOnSlope)
          {
-            if(!P_planeMBFBounce(*mo, surf_ceil))
+            if(!P_planeBounce(*mo, surf_ceil, false))
                return;
 
             if (mo->flags & MF_FLOAT && sentient(mo))
