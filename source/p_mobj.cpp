@@ -965,7 +965,7 @@ static void P_floorHereticBounceMissile(Mobj * mo)
    P_SetMobjState(mo, mobjinfo[mo->type]->deathstate);
 }
 
-static void P_planeBounce(Mobj &thing)
+static void P_planeMBFBounce(Mobj &thing)
 {
    auto getBouncingDecay = [](unsigned flags)
    {
@@ -1043,8 +1043,11 @@ static void P_ZMovement(Mobj* mo)
    // BFG fireballs bounced on floors and ceilings in Pre-Beta Doom
    // killough 8/9/98: added support for non-missile objects bouncing
    // (e.g. grenade, mine, pipebomb)
+   
+   bool horizontalBounceOnSlope = !mo->momz && mo->zref.floorsector &&
+         mo->zref.floorsector->srf.floor.slope;
 
-   if(mo->flags & MF_BOUNCES && mo->momz)
+   if(mo->flags & MF_BOUNCES && (mo->momz || horizontalBounceOnSlope))
    {
       mo->z += mo->momz;
 
@@ -1052,10 +1055,10 @@ static void P_ZMovement(Mobj* mo)
       {
          mo->z = mo->zref.floor;
          E_HitFloor(mo); // haleyjd
-         if (mo->momz < 0)
+         if (mo->momz < 0 || horizontalBounceOnSlope)
          {
             // TODO: bouncing if momz is zero
-            P_planeBounce(*mo);
+            P_planeMBFBounce(*mo);
             
 
             // killough 11/98: touchy objects explode on impact
