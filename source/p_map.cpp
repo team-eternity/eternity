@@ -285,7 +285,7 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
             bool onfloor = sec->srf.floor.slope ? mo->zref.sector.floor == sec : 
                                                   mo->z <= sec->srf.floor.height;
             if(onfloor || (sec->heightsec != -1 &&
-                           mo->z <= sectors[sec->heightsec].srf.floor.height &&
+                           mo->z <= sectors[sec->heightsec].srf.floor.getZAt(mo->x, mo->y) &&
                            demo_version >= 203))
             {
                friction = sec->friction;
