@@ -760,7 +760,7 @@ ETerrain *E_GetThingFloorType(const Mobj *thing)
       for(m = thing->touching_sectorlist; m; m = m->m_tnext)
       {
          // Handle sloped floors a bit differently, using the designated floorsector
-         if(m->m_sector->srf.floor.slope && m->m_sector == thing->zref.floorsector)
+         if(m->m_sector->srf.floor.slope && m->m_sector == thing->zref.sector.floor)
             break;
          if(!m->m_sector->srf.floor.slope && z == m->m_sector->srf.floor.height)
             break;
@@ -1019,7 +1019,7 @@ static bool E_standingOn(const sector_t &sector, const Mobj &thing)
    if(!sector.srf.floor.slope && thing.z == sector.srf.floor.height)
       return true;
    // Different handling for sloped floors
-   if(sector.srf.floor.slope && thing.z <= thing.zref.floor && thing.zref.floorsector == &sector)
+   if(sector.srf.floor.slope && thing.z <= thing.zref.floor && thing.zref.sector.floor == &sector)
       return true;
    return false;
 }

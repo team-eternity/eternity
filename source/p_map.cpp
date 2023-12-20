@@ -419,23 +419,28 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, unsigned flags)
       bottomfloorsector = P_ExtremeSectorAtPoint(x, y, surf_floor, newsubsec->sector, &totaldelta);
       clip.zref.floor = clip.zref.dropoff = bottomfloorsector->srf.floor.getZAt(x + totaldelta.x, y + totaldelta.y);
       clip.zref.floorgroupid = bottomfloorsector->groupid;
-      clip.zref.floorsector = bottomfloorsector;
+      clip.zref.sector.floor = bottomfloorsector;
    }
    else
    {
       clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.getZAt(x, y);
       clip.zref.floorgroupid = newsubsec->sector->groupid;
-      clip.zref.floorsector = newsubsec->sector;
+      clip.zref.sector.floor = newsubsec->sector;
    }
 
     //newsubsec->sector->ceilingheight + clip.thing->height;
    if(demo_version >= 333 && newsubsec->sector->srf.ceiling.pflags & PS_PASSABLE)
    {
-      clip.zref.ceiling = P_ExtremeSectorAtPoint(x, y, surf_ceil,
-            newsubsec->sector)->srf.ceiling.height;
+      const sector_t *topceilsector = P_ExtremeSectorAtPoint(x, y, surf_ceil,
+                                                             newsubsec->sector);
+      clip.zref.ceiling = topceilsector->srf.ceiling.height;
+      clip.zref.sector.ceiling = topceilsector;
    }
    else
+   {
       clip.zref.ceiling = newsubsec->sector->srf.ceiling.height;
+      clip.zref.sector.ceiling = newsubsec->sector;
+   }
 
    clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;
    clip.zref.secceil = clip.zref.passceil = clip.zref.ceiling;
@@ -698,6 +703,7 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
       open.height.ceiling < inter.zref.ceiling)
    {
       inter.zref.ceiling = open.height.ceiling;
+      inter.zref.sector.ceiling = open.ceilsector;
       inter.ceilingline = ld;
       inter.blockline = ld;
    }
@@ -707,7 +713,7 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
    {
       inter.zref.floor = open.height.floor;
       inter.zref.floorgroupid = open.bottomgroupid;
-      inter.zref.floorsector = open.floorsector;
+      inter.zref.sector.floor = open.floorsector;
 
       inter.floorline = ld;          // killough 8/1/98: remember floor linedef
       inter.blockline = ld;
@@ -717,7 +723,12 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
    if (open.height.floor == inter.zref.floor && open.floorsector &&
       !open.floorsector->srf.floor.slope)
    {
-      inter.zref.floorsector = open.floorsector;
+      inter.zref.sector.floor = open.floorsector;
+   }
+   if(open.height.ceiling == inter.zref.ceiling && open.ceilsector &&
+      !open.ceilsector->srf.ceiling.slope)
+   {
+      inter.zref.sector.ceiling = open.ceilsector;
    }
 
    // ioanch 20160116: this is crazy. If the lines belong in separate groups,
@@ -1301,13 +1312,13 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter,
       inter.zref.floor = inter.zref.dropoff =
          bottomsector->srf.floor.getZAt(x + totaldelta.x, y + totaldelta.y);
       inter.zref.floorgroupid = bottomsector->groupid;
-      inter.zref.floorsector = bottomsector;
+      inter.zref.sector.floor = bottomsector;
    }
    else
    {
       inter.zref.floor = inter.zref.dropoff = sector.srf.floor.getZAt(x, y);
       inter.zref.floorgroupid = sector.groupid;
-      inter.zref.floorsector = &sector;
+      inter.zref.sector.floor = &sector;
    }
 
    topsector = &sector;
@@ -1317,9 +1328,13 @@ void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter,
       v2fixed_t totaldelta;
       topsector = P_ExtremeSectorAtPoint(x, y, surf_ceil, &sector, &totaldelta);
       inter.zref.ceiling = topsector->srf.ceiling.getZAt(x + totaldelta.x, y + totaldelta.y);
+      inter.zref.sector.ceiling = topsector;
    }
    else
+   {
       inter.zref.ceiling = sector.srf.ceiling.getZAt(x, y);
+      inter.zref.sector.ceiling = &sector;
+   }
 
    inter.zref.secfloor = inter.zref.passfloor = inter.zref.floor;
    inter.zref.secceil = inter.zref.passceil = inter.zref.ceiling;
@@ -1695,7 +1710,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 
    const pslope_t* downslope;
    if (!(thing->flags & MF_NOGRAVITY) && thing->z <= thing->zref.floor)
-      downslope = thing->zref.floorsector ? thing->zref.floorsector->srf.floor.slope : nullptr;
+      downslope = thing->zref.sector.floor ? thing->zref.sector.floor->srf.floor.slope : nullptr;
    else
       downslope = nullptr;
    
@@ -1986,8 +2001,8 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    
    // If going down slope while still having some distance, stick to it to avoid sliding off it 
    // endlessly.
-   if (downslope && downslope->zdelta && thing->zref.floorsector &&
-      thing->zref.floorsector->srf.floor.slope && thing->z > thing->zref.floor && 
+   if (downslope && downslope->zdelta && thing->zref.sector.floor &&
+      thing->zref.sector.floor->srf.floor.slope && thing->z > thing->zref.floor &&
       thing->z <= thing->zref.floor + STEPSIZE)
    {
       thing->z = thing->zref.floor;
@@ -3334,7 +3349,7 @@ void P_ClearGlobalLevelReferences()
    clip.numspechit = 0;
    clip.BlockingMobj = nullptr;  // also not ref-counted
    clip.numportalhit = 0;
-   clip.zref.floorsector = nullptr;
+   clip.zref.sector = {};
    P_ClearTarget(clip.linetarget);
 }
 
@@ -3344,8 +3359,8 @@ void P_ClearGlobalLevelReferences()
 bool P_OnGroundOrThing(const Mobj &mobj)
 {
    // Steep slopes are falling areas
-   if (mobj.zref.floorsector && mobj.zref.floorsector->srf.floor.slope &&
-      D_abs(mobj.zref.floorsector->srf.floor.slope->zdelta) >= FRACUNIT && 
+   if (mobj.zref.sector.floor && mobj.zref.sector.floor->srf.floor.slope &&
+      D_abs(mobj.zref.sector.floor->srf.floor.slope->zdelta) >= FRACUNIT &&
       mobj.z > mobj.zref.dropoff + STEPSIZE)
    {
       return false;

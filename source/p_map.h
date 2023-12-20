@@ -219,9 +219,9 @@ struct zrefs_t
    // killough 11/98: the lowest floor over all contacted Sectors.
    fixed_t dropoff;
 
-   // Sometimes we need to know if we're on top of a floor slope. To that end, we need the complete
-   // floor sector reference
-   const sector_t *floorsector;
+   // Sometimes we need to know if we're on top of a floor slope or below a ceiling slope. To that 
+   // end, we need the complete floor or ceiling sector reference
+   Surfaces<const sector_t *> sector;
 
    int floorgroupid;
 

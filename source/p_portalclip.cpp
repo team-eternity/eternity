@@ -139,6 +139,7 @@ static void P_blockingLineDifferentLevel(line_t *ld, fixed_t thingz,
    if(towards == surf_floor && outerheights.bottomend < clip.zref.ceiling)
    {
       clip.zref.ceiling = outerheights.bottomend;
+      clip.zref.sector.ceiling = nullptr;
       clip.ceilingline = ld;
       clip.blockline = ld;
    }
@@ -147,7 +148,7 @@ static void P_blockingLineDifferentLevel(line_t *ld, fixed_t thingz,
       clip.zref.floor = outerheights.topend;
       clip.zref.floorgroupid = ld->frontsector->groupid;
       // TODO: we'll need to handle sloped portals one day
-      clip.zref.floorsector = nullptr;
+      clip.zref.sector.floor = nullptr;
 
       clip.floorline = ld;
       clip.blockline = ld;

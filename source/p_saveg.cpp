@@ -494,10 +494,19 @@ SaveArchive &SaveArchive::operator << (zrefs_t &zref)
    {
       int32_t val;
       if(isSaving())
-         val = zref.floorsector ? eindex(zref.floorsector - ::sectors) : -1;
+         val = zref.sector.floor ? eindex(zref.sector.floor - ::sectors) : -1;
       *this << val;
       if(isLoading())
-         zref.floorsector = val >= 0 ? sectors + val : nullptr;
+         zref.sector.floor = val >= 0 ? sectors + val : nullptr;
+   }
+   if(saveVersion() >= 19)
+   {
+      int32_t val;
+      if(isSaving())
+         val = zref.sector.ceiling ? eindex(zref.sector.ceiling - ::sectors) : -1;
+      *this << val;
+      if(isLoading())
+         zref.sector.ceiling = val >= 0 ? sectors + val : nullptr;
    }
    return *this;
 }

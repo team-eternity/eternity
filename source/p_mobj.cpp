@@ -516,13 +516,13 @@ inline static fixed_t P_getMBFBouncerGravity(const Mobj &thing, int multiplier)
 
 static void P_applySlopeGravity(Mobj& thing)
 {
-   if (!thing.zref.floorsector || thing.z > thing.zref.floor || 
-      thing.z < thing.zref.dropoff + STEPSIZE || 
+   if (!thing.zref.sector.floor || thing.z > thing.zref.floor ||
+      thing.z < thing.zref.dropoff + STEPSIZE ||
       thing.flags & (MF_NOGRAVITY | MF_NOCLIP | MF_TELEPORT))
    {
       return;
    }
-   const pslope_t* slope = thing.zref.floorsector->srf.floor.slope;
+   const pslope_t* slope = thing.zref.sector.floor->srf.floor.slope;
    if (!slope || D_abs(slope->zdelta) < FRACUNIT)
       return;
 
@@ -543,15 +543,15 @@ static void P_reduceVelocityBySlope(Mobj& thing)
    // NOTE: we won't check if the floor slope sector is the same as the center point sector, since
    // we want slope clipping to consider the whole bounding box (this will avoid bumpy lines)
 
-   if (!thing.zref.floorsector)
+   if (!thing.zref.sector.floor)
       return;
    
-   const pslope_t* slope = thing.zref.floorsector->srf.floor.slope;
+   const pslope_t* slope = thing.zref.sector.floor->srf.floor.slope;
    if (!slope || !slope->zdelta)
       return;
 
    // Offset to the corner that touches the slope. Also add portal if any
-   const linkoffset_t* link = P_GetLinkOffset(thing.groupid, thing.zref.floorsector->groupid);
+   const linkoffset_t* link = P_GetLinkOffset(thing.groupid, thing.zref.sector.floor->groupid);
    const v2fixed_t slopeoffset = {
       ((slope->normal.x < 0) - (slope->normal.x > 0)) * thing.radius + link->x,
       ((slope->normal.y < 0) - (slope->normal.y > 0)) * thing.radius + link->y
@@ -974,9 +974,9 @@ static void P_planeMBFBounce(Mobj &thing)
             (fixed_t)(FRACUNIT*.85) : (fixed_t)(FRACUNIT*.70) : (fixed_t)(FRACUNIT*.45);
    };
    
-   if (thing.zref.floorsector)
+   if (thing.zref.sector.floor)
    {
-      const pslope_t* slope = thing.zref.floorsector->srf.floor.slope;
+      const pslope_t* slope = thing.zref.sector.floor->srf.floor.slope;
       if (slope && slope->zdelta)
       {
          // Get normal component of velocity
@@ -1044,8 +1044,8 @@ static void P_ZMovement(Mobj* mo)
    // killough 8/9/98: added support for non-missile objects bouncing
    // (e.g. grenade, mine, pipebomb)
    
-   bool horizontalBounceOnSlope = !mo->momz && mo->zref.floorsector &&
-         mo->zref.floorsector->srf.floor.slope;
+   bool horizontalBounceOnSlope = !mo->momz && mo->zref.sector.floor &&
+         mo->zref.sector.floor->srf.floor.slope;
 
    if(mo->flags & MF_BOUNCES && (mo->momz || horizontalBounceOnSlope))
    {
@@ -2275,9 +2275,10 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
    mobj->zref.dropoff = mobj->zref.floor = extremesector->srf.floor.getZAt(x + totaldelta.x,
                                                                            y + totaldelta.y);
    mobj->zref.floorgroupid = extremesector->groupid;
-   mobj->zref.floorsector = extremesector;
+   mobj->zref.sector.floor = extremesector;
    extremesector = P_ExtremeSectorAtPoint(mobj, surf_ceil, &totaldelta);
    mobj->zref.ceiling = extremesector->srf.ceiling.getZAt(x + totaldelta.x, y + totaldelta.y);
+   mobj->zref.sector.ceiling = extremesector;
 
    mobj->z = 
       (z == ONFLOORZ ? mobj->zref.floor : z == ONCEILINGZ ? mobj->zref.ceiling - mobj->height : z);
