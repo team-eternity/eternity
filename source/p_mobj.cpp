@@ -501,6 +501,19 @@ inline static void P_hereticWind(Mobj &mo)
       P_ThrustMobj(&mo, sector.hticPushAngle, sector.hticPushForce);
 }
 
+inline static const int kHitFloorGravityFactor = 8;
+
+// Common formula to avoid repeating it
+inline static fixed_t P_getLowGravity()
+{
+   return LevelInfo.gravity / 8;
+}
+
+inline static fixed_t P_getMBFBouncerGravity(const Mobj &thing, int multiplier)
+{
+   return thing.info->mass * (LevelInfo.gravity * multiplier / 256);
+}
+
 static void P_applySlopeGravity(Mobj& thing)
 {
    if (!thing.zref.floorsector || thing.z > thing.zref.floor || 
@@ -515,9 +528,9 @@ static void P_applySlopeGravity(Mobj& thing)
 
    fixed_t gravity;
    if (thing.flags & MF_BOUNCES)
-      gravity = thing.info->mass * (LevelInfo.gravity / 256);
+      gravity = P_getMBFBouncerGravity(thing, 1);
    else if (thing.flags2 & MF2_LOGRAV)
-      gravity = LevelInfo.gravity / 8;
+      gravity = P_getLowGravity();
    else
       gravity = LevelInfo.gravity;
    thing.momx += FixedMul(slope->normal.x, gravity);
@@ -1024,7 +1037,7 @@ static void P_ZMovement(Mobj* mo)
                      FixedMul(mo->momz, (fixed_t)(FRACUNIT*.45)) ;
 
                // Bring it to rest below a certain speed
-               if(D_abs(mo->momz) <= mo->info->mass*(LevelInfo.gravity*4/256))
+               if(D_abs(mo->momz) <= P_getMBFBouncerGravity(*mo, 4))
                   mo->momz = 0;
             }
 
@@ -1066,7 +1079,7 @@ static void P_ZMovement(Mobj* mo)
             // gravity to get it out of this code segment gradually
             if(demo_version >= 331 && mo->momz > 0)
             {
-               mo->momz -= mo->info->mass*(LevelInfo.gravity/256);
+               mo->momz -= P_getMBFBouncerGravity(*mo, 1);
             }
 
             return;
@@ -1075,7 +1088,7 @@ static void P_ZMovement(Mobj* mo)
       else
       {
          if(!(mo->flags & MF_NOGRAVITY))      // free-fall under gravity
-            mo->momz -= mo->info->mass*(LevelInfo.gravity/256);
+            mo->momz -= P_getMBFBouncerGravity(*mo, 1);
          if(mo->flags & MF_FLOAT && sentient(mo))
             goto floater;
          return;
@@ -1176,7 +1189,7 @@ floater:
             P_DamageMobj(mo, nullptr, nullptr, mo->health, MOD_UNKNOWN);
          else if(mo->player && // killough 5/12/98: exclude voodoo dolls
                  mo->player->mo == mo &&
-                 mo->momz < -LevelInfo.gravity*8)
+                 mo->momz < -LevelInfo.gravity*kHitFloorGravityFactor)
          {
             P_PlayerHitFloor(mo, false);
          }
@@ -1226,9 +1239,9 @@ floater:
    else if(mo->flags2 & MF2_LOGRAV) // low gravity objects
    {
       if(!mo->momz)
-         mo->momz = -(LevelInfo.gravity / 8) * 2;
+         mo->momz = -P_getLowGravity() * 2;
       else
-         mo->momz -= LevelInfo.gravity / 8;
+         mo->momz -= P_getLowGravity();
    }
    else // still above the floor
    {
@@ -1627,7 +1640,7 @@ void Mobj::Think()
             }
 
             if(player && this == player->mo &&
-               momz < -LevelInfo.gravity*8)
+               momz < -LevelInfo.gravity*kHitFloorGravityFactor)
             {
                P_PlayerHitFloor(this, true);
             }
