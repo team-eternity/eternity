@@ -965,7 +965,8 @@ static void P_floorHereticBounceMissile(Mobj * mo)
    P_SetMobjState(mo, mobjinfo[mo->type]->deathstate);
 }
 
-static void P_planeMBFBounce(Mobj &thing)
+// MBF bouncing on possibly sloped floors or ceilings. Returns false if caller should quit.
+static bool P_planeMBFBounce(Mobj &thing, surf_e surf)
 {
    auto getBouncingDecay = [](unsigned flags)
    {
@@ -974,9 +975,9 @@ static void P_planeMBFBounce(Mobj &thing)
             (fixed_t)(FRACUNIT*.85) : (fixed_t)(FRACUNIT*.70) : (fixed_t)(FRACUNIT*.45);
    };
    
-   if (thing.zref.sector.floor)
+   if (thing.zref.sector[surf])
    {
-      const pslope_t* slope = thing.zref.sector.floor->srf.floor.slope;
+      const pslope_t* slope = thing.zref.sector[surf]->srf[surf].slope;
       if (slope && slope->zdelta)
       {
          // Get normal component of velocity
@@ -987,11 +988,31 @@ static void P_planeMBFBounce(Mobj &thing)
             FixedMul(prod, slope->normal.y),
             FixedMul(prod, slope->normal.z)
          };
-         thing.momx -= 2 * normcomp.x;
-         thing.momy -= 2 * normcomp.y;
-         thing.momz -= 2 * normcomp.z;
+         if(surf == surf_floor || !(thing.zref.sector[surf]->intflags & SIF_SKY))
+         {
+            // always bounce off non-sky ceiling
+            thing.momx -= 2 * normcomp.x;
+            thing.momy -= 2 * normcomp.y;
+            thing.momz -= 2 * normcomp.z;
+         }
+         else if(surf == surf_ceil) // sky ceiling here
+         {
+            if(thing.flags & MF_MISSILE)
+            {
+               thing.remove();   // missiles don't bounce off skies
+               if(demo_version >= 331)
+                  return false;  // haleyjd: return here for below fix
+            }
+            else if(thing.flags & MF_NOGRAVITY)
+            {
+               // bounce unless under gravity
+               thing.momx -= 2 * normcomp.x;
+               thing.momy -= 2 * normcomp.y;
+               thing.momz -= 2 * normcomp.z;
+            }
+         }
          
-         if(!(thing.flags & MF_NOGRAVITY))
+         if(surf == surf_floor && !(thing.flags & MF_NOGRAVITY))
          {
             fixed_t decay = getBouncingDecay(thing.flags);
             thing.momx = FixedMul(thing.momx, decay);
@@ -1006,11 +1027,23 @@ static void P_planeMBFBounce(Mobj &thing)
                thing.momx = thing.momy = thing.momz = 0;
             }
          }
-         return;
+         return true;
       }
    }
-   thing.momz = -thing.momz;
-   if(!(thing.flags & MF_NOGRAVITY))   // bounce back with decay
+   if(surf == surf_floor || !(thing.subsector->sector->intflags & SIF_SKY))
+      thing.momz = -thing.momz;  // always bounce off non-sky ceiling
+   else if(surf == surf_ceil)    // sky ceiling here
+   {
+      if(thing.flags & MF_MISSILE)
+      {
+         thing.remove();   // missiles don't bounce off skies
+         if(demo_version >= 331)
+            return false;  // haleyjd: return here for below fix
+      }
+      else if(thing.flags & MF_NOGRAVITY)
+         thing.momz = -thing.momz;  // bounce unless under gravity
+   }
+   if(surf == surf_floor && !(thing.flags & MF_NOGRAVITY))   // bounce back with decay if from floor
    {
       thing.momz = FixedMul(thing.momz, getBouncingDecay(thing.flags));
       
@@ -1018,6 +1051,8 @@ static void P_planeMBFBounce(Mobj &thing)
       if(D_abs(thing.momz) <= P_getMBFBouncerGravity(thing, 4))
          thing.momz = 0;
    }
+   
+   return true;
 }
 
 //
@@ -1044,8 +1079,9 @@ static void P_ZMovement(Mobj* mo)
    // killough 8/9/98: added support for non-missile objects bouncing
    // (e.g. grenade, mine, pipebomb)
    
-   bool horizontalBounceOnSlope = !mo->momz && mo->zref.sector.floor &&
-         mo->zref.sector.floor->srf.floor.slope;
+   bool horizontalBounceOnSlope = !mo->momz && 
+      ((mo->zref.sector.floor && mo->zref.sector.floor->srf.floor.slope) ||
+       (mo->zref.sector.ceiling && mo->zref.sector.ceiling->srf.ceiling.slope));
 
    if(mo->flags & MF_BOUNCES && (mo->momz || horizontalBounceOnSlope))
    {
@@ -1057,9 +1093,7 @@ static void P_ZMovement(Mobj* mo)
          E_HitFloor(mo); // haleyjd
          if (mo->momz < 0 || horizontalBounceOnSlope)
          {
-            // TODO: bouncing if momz is zero
-            P_planeMBFBounce(*mo);
-            
+            P_planeMBFBounce(*mo, surf_floor);
 
             // killough 11/98: touchy objects explode on impact
             if (mo->flags & MF_TOUCHY && mo->intflags & MIF_ARMED &&
@@ -1073,22 +1107,10 @@ static void P_ZMovement(Mobj* mo)
       else if(mo->z >= mo->zref.ceiling - mo->height) // bounce off ceilings
       {
          mo->z = mo->zref.ceiling - mo->height;
-         if(mo->momz > 0)
+         if(mo->momz > 0 || horizontalBounceOnSlope)
          {
-            // TODO: bounce on slopes
-            if(!(mo->subsector->sector->intflags & SIF_SKY))
-               mo->momz = -mo->momz;    // always bounce off non-sky ceiling
-            else
-            {
-               if(mo->flags & MF_MISSILE)
-               {
-                  mo->remove();      // missiles don't bounce off skies
-                  if(demo_version >= 331)
-                     return; // haleyjd: return here for below fix
-               }
-               else if(mo->flags & MF_NOGRAVITY)
-                  mo->momz = -mo->momz; // bounce unless under gravity
-            }
+            if(!P_planeMBFBounce(*mo, surf_ceil))
+               return;
 
             if (mo->flags & MF_FLOAT && sentient(mo))
                goto floater;
