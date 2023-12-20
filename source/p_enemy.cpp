@@ -43,6 +43,7 @@
 #include "ev_specials.h"
 #include "m_bbox.h"
 #include "m_collection.h"
+#include "m_compare.h"
 #include "metaapi.h"
 #include "p_enemy.h"
 #include "p_inter.h"
@@ -51,6 +52,7 @@
 #include "p_partcl.h"
 #include "p_portal.h"
 #include "p_setup.h"
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "r_main.h"
 #include "r_portal.h"
@@ -831,6 +833,7 @@ struct avoiddropoff_t
 {
    v2fixed_t delta;
    fixed_t floorz;
+   const sector_t *floorsector;
 };
 static avoiddropoff_t avoiddropoff; // currently we change global state
 
@@ -843,14 +846,28 @@ static bool PIT_AvoidDropoff(line_t *line, polyobj_t *po, void *context)
       clip.bbox[BOXBOTTOM] < line->bbox[BOXTOP]    &&
       P_BoxOnLineSide(clip.bbox, line) == -1)
    {
+      v2fixed_t i1, i2;
+      const pslope_t *frontslope = line->frontsector->srf.floor.slope;
+      const pslope_t *backslope = line->backsector->srf.floor.slope;
+      if(frontslope || backslope)
+         P_ExactBoxLinePoints(clip.bbox, *line, i1, i2);
+      
       fixed_t front = line->frontsector->srf.floor.height;
       fixed_t back  = line->backsector->srf.floor.height;
       angle_t angle;
 
       // The monster must contact one of the two floors,
       // and the other must be a tall dropoff (more than 24).
+      
+      bool backmatch = (backslope && line->backsector == avoiddropoff.floorsector) ||
+                      (!backslope && back == avoiddropoff.floorz);
+      const surface_t &frontfloor = line->frontsector->srf.floor;
+      bool frontlow = (frontslope && 
+                       emin(frontfloor.getZAt(i1),
+                            frontfloor.getZAt(i2)) < avoiddropoff.floorz - STEPSIZE) ||
+                     (!frontslope && front < avoiddropoff.floorz - STEPSIZE);
 
-      if(back == avoiddropoff.floorz && front < avoiddropoff.floorz - STEPSIZE)
+      if(backmatch && frontlow)
       {
          // front side dropoff
          angle = P_PointToAngle(0,0,line->dx,line->dy);
@@ -858,7 +875,14 @@ static bool PIT_AvoidDropoff(line_t *line, polyobj_t *po, void *context)
       else
       {
          // back side dropoff
-         if(front == avoiddropoff.floorz && back < avoiddropoff.floorz - STEPSIZE)
+         bool frontmatch = (frontslope && line->frontsector == avoiddropoff.floorsector) ||
+                          (!frontslope && front == avoiddropoff.floorz);
+         const surface_t &backfloor = line->backsector->srf.floor;
+         bool backlow = (backslope &&
+                          emin(backfloor.getZAt(i1),
+                               backfloor.getZAt(i2)) < avoiddropoff.floorz - STEPSIZE) ||
+                        (!backslope && back < avoiddropoff.floorz - STEPSIZE);
+         if(frontmatch && backlow)
             angle = P_PointToAngle(line->dx,line->dy,0,0);
          else
             return true;
@@ -887,6 +911,7 @@ static fixed_t P_AvoidDropoff(Mobj *actor)
    int bx, by;
 
    avoiddropoff.floorz = actor->z;            // remember floor height
+   avoiddropoff.floorsector = actor->zref.sector.floor;
 
    avoiddropoff.delta = {};
 
