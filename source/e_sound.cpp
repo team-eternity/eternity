@@ -363,7 +363,7 @@ sfxinfo_t *E_NewWadSound(const char *name)
       sfx = ecalloc(sfxinfo_t *, 1, sizeof(sfxinfo_t));
 
       strncpy(sfx->name, name, 9);
-      strncpy(sfx->mnemonic, mnemonic, 9);
+      sfx->mnemonic = estrdup(mnemonic);
 
       sfx->flags         = SFXF_WAD;        // born as implicit wad sound
       sfx->priority      = 64;
