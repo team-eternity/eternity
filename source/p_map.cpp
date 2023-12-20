@@ -279,15 +279,18 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
          {
             continue;
          }
-         if((sec = m->m_sector)->flags & SECF_FRICTION &&
-            (sec->friction < friction || friction == ORIG_FRICTION) &&
-            (mo->z <= sec->srf.floor.height ||
-             (sec->heightsec != -1 &&
-              mo->z <= sectors[sec->heightsec].srf.floor.height &&
-              demo_version >= 203)))
+         if((sec = m->m_sector)->flags & SECF_FRICTION && (sec->friction < friction ||
+                                                           friction == ORIG_FRICTION))
          {
-            friction = sec->friction;
-            movefactor = sec->movefactor;
+            bool onfloor = sec->srf.floor.slope ? mo->zref.sector.floor == sec : 
+                                                  mo->z <= sec->srf.floor.height;
+            if(onfloor || (sec->heightsec != -1 &&
+                           mo->z <= sectors[sec->heightsec].srf.floor.height &&
+                           demo_version >= 203))
+            {
+               friction = sec->friction;
+               movefactor = sec->movefactor;
+            }
          }
       }
    }
