@@ -2435,6 +2435,8 @@ void R_LinkSpriteProj(Mobj &thing)
    // TODO: don't link (and unlink) if DONTDRAW
    I_Assert(sprites && spritewidth && spriteoffset, "We don't have sprites defined here!");
    const spritedef_t &sprdef = sprites[thing.sprite];
+   if(!sprdef.numframes)
+      return;
    const spriteframe_t &sprframe = sprdef.spriteframes[thing.frame & FF_FRAMEMASK];
    fixed_t maxradius;
    if(sprframe.rotate)

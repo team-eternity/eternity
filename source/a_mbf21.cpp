@@ -872,7 +872,7 @@ void A_ConsumeAmmo(actionargs_t *actionargs)
       if(player->readyweapon->flags & WPF_DISABLEAPS)
          amount = 1; // default to 1 if ammo-per-shot was never set
       else
-         amount = -1;
+         amount = INT_MIN;
    }
 
    P_SubtractAmmoAmount(player, amount);
