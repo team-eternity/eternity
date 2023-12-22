@@ -516,31 +516,10 @@ static void D_showMemStats()
 #endif
 
 //
-// D_DrawPillars
-//
-// Will draw pillars for pillarboxing the 4:3 subscreen.
-//
-void D_DrawPillars()
-{
-   int wingwidth;
-   
-   if(vbscreen.getVirtualAspectRatio() <= 4 * FRACUNIT / 3)
-      return;
-   
-   wingwidth = (vbscreen.width - (vbscreen.height * 4 / 3)) / 2;
-   if(wingwidth <= 0)
-         return;
-
-   V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, 0, 0, wingwidth, vbscreen.height);
-   V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, vbscreen.width - wingwidth,
-                0, wingwidth, vbscreen.height);
-}
-
-//
 // D_DrawWings
 //
-// haleyjd: Draw pillarboxing during non-play gamestates, or the wings of the 
-// status bar while it is visible. This is necessary when drawing patches at
+// haleyjd: Draw wings of the status bar while it is visible.
+// This is necessary when drawing patches at
 // 4:3 aspect ratio over widescreen video modes.
 //
 void D_DrawWings()
@@ -556,25 +535,17 @@ void D_DrawWings()
    if(wingwidth <= 0)
       return;
 
-   if(gamestate == GS_LEVEL && !MN_CheckFullScreen())
+   if(gamestate == GS_LEVEL && !MN_CheckFullScreen() &&
+      (scaledwindow.height != SCREENHEIGHT || (automapactive && !automap_overlay)))
    {
-      if(scaledwindow.height != SCREENHEIGHT || (automapactive && !automap_overlay))
-      {
-         unsigned int bottom   = SCREENHEIGHT - 1;
-         unsigned int statbarh = static_cast<unsigned int>(GameModeInfo->StatusBar->height);
-         
-         int ycoord      = vbscreen.y1lookup[bottom - statbarh];
-         int blockheight = vbscreen.y2lookup[bottom] - ycoord + 1;
+      unsigned int bottom   = SCREENHEIGHT - 1;
+      unsigned int statbarh = static_cast<unsigned int>(GameModeInfo->StatusBar->height);
+      
+      int ycoord      = vbscreen.y1lookup[bottom - statbarh];
+      int blockheight = vbscreen.y2lookup[bottom] - ycoord + 1;
 
-         R_VideoEraseScaled(0, ycoord, wingwidth, blockheight);
-         R_VideoEraseScaled(vbscreen.width - wingwidth, ycoord, wingwidth, blockheight);
-      }
-   }
-   else
-   {
-      V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, 0, 0, wingwidth, vbscreen.height);
-      V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, vbscreen.width - wingwidth,
-                   0, wingwidth, vbscreen.height);
+      R_VideoEraseScaled(0, ycoord, wingwidth, blockheight);
+      R_VideoEraseScaled(vbscreen.width - wingwidth, ycoord, wingwidth, blockheight);
    }
 }
 

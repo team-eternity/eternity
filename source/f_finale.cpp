@@ -613,7 +613,7 @@ static void F_CastDrawer()
    
    // erase the entire screen to a background
    // Ty 03/30/98 bg texture extern
-   V_DrawFSBackground(&subscreen43, wGlobalDir.checkNumForName(DEH_String("BGCASTCALL")));
+   V_DrawFSBackground(&vbscreenyscaled, wGlobalDir.checkNumForName(DEH_String("BGCASTCALL")));
    
    F_CastTitle();
 
@@ -685,7 +685,7 @@ static void F_BunnyScroll()
    if(scrolled < 320 || ws_offset2 > 0)
       V_DrawPatchGeneral(-scrolled + ws_offset1, 0, &vbscreenyscaled, p1, false);
    if(ws_offset2 > 0)
-      D_DrawWings();
+      V_DrawPillars();
    if(finalecount < 1130)
       return;
    if(finalecount < 1180)
@@ -726,7 +726,7 @@ static void F_DrawUnderwater()
          palette = (byte *)wGlobalDir.cacheLumpName("E2PAL", PU_CACHE);
          I_SetPalette(palette);
 
-         V_DrawBlock(0,0,&subscreen43,SCREENWIDTH,SCREENHEIGHT,
+         V_DrawBlockFS(&vbscreenyscaled,
                      (byte *)wGlobalDir.cacheLumpName("E2END", PU_CACHE));
          finalestage = 3;
       }
@@ -739,7 +739,7 @@ static void F_DrawUnderwater()
    
    case 4:
       Console.enabled = true;
-      V_DrawBlock(0,0,&subscreen43,SCREENWIDTH,SCREENHEIGHT,
+      V_DrawBlockFS(&vbscreenyscaled,
                   (byte *)wGlobalDir.cacheLumpName("TITLE", PU_CACHE));
       break;
    }
@@ -854,8 +854,8 @@ static void F_FinaleEndDrawer()
          PatchLoader::CacheName(wGlobalDir, "ENDPIC", PU_CACHE));
       break;
    case FINALE_HTIC_CREDITS:
-      V_DrawBlock(0, 0, &subscreen43, SCREENWIDTH, SCREENHEIGHT,
-                  (byte *)wGlobalDir.cacheLumpName(sw ? "ORDER" : "CREDIT", PU_CACHE));
+      V_DrawBlockFS(&vbscreenyscaled,
+         (byte *)wGlobalDir.cacheLumpName(sw ? "ORDER" : "CREDIT", PU_CACHE));
       break;
    case FINALE_HTIC_WATER:
       F_DrawUnderwater();
@@ -864,8 +864,8 @@ static void F_FinaleEndDrawer()
       F_DemonScroll();
       break;
    case FINALE_END_PIC:
-      V_DrawPatch(0, 0, &subscreen43,
-                  PatchLoader::CacheName(wGlobalDir, LevelInfo.endPic, PU_CACHE));
+      V_DrawPatchFS(&vbscreenyscaled,
+          PatchLoader::CacheName(wGlobalDir, LevelInfo.endPic, PU_CACHE));
       break;
    default: // ?
       break;

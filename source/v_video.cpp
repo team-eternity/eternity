@@ -665,14 +665,38 @@ void V_DrawMaskedBlockTR(int x, int y, VBuffer *buffer, int width, int height,
 }
 
 //
+   // V_DrawPillars
+//
+// Will draw pillars for pillarboxing the 4:3 subscreen.
+//
+void V_DrawPillars()
+{
+   int wingwidth;
+
+   if (vbscreen.getVirtualAspectRatio() <= 4 * FRACUNIT / 3)
+      return;
+
+   wingwidth = (vbscreen.width - (vbscreen.height * 4 / 3)) / 2;
+   if (wingwidth <= 0)
+      return;
+
+   V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, 0, 0, wingwidth, vbscreen.height);
+   V_ColorBlock(&vbscreen, GameModeInfo->blackIndex, vbscreen.width - wingwidth,
+      0, wingwidth, vbscreen.height);
+}
+
+//
 // V_DrawBlockFS
 //
 // haleyjd 05/18/09: Convenience routine to do V_DrawBlock but with
 // the assumption that the graphic is fullscreen, 320x200.
 //
+// If drawing to widescreen, center align.
 void V_DrawBlockFS(VBuffer *buffer, const byte *src)
 {
-   buffer->BlockDrawer(0, 0, buffer, SCREENWIDTH, SCREENHEIGHT, src);
+   V_DrawPillars();
+
+   buffer->BlockDrawer((buffer->unscaledw - SCREENWIDTH) / 2, 0, buffer, SCREENWIDTH, SCREENHEIGHT, src);
 }
 
 //
@@ -681,9 +705,11 @@ void V_DrawBlockFS(VBuffer *buffer, const byte *src)
 // haleyjd 05/18/09: Convenience routine to do V_DrawPatch but with
 // the assumption that the graphic is fullscreen, 320x200.
 //
-// If wider than the screen, center align.
+// If drawing to widescreen, center align.
 void V_DrawPatchFS(VBuffer *buffer, patch_t *patch)
 {
+   V_DrawPillars();
+
    V_DrawPatchGeneral((buffer->unscaledw - patch->width) / 2, 0, buffer, patch, false);
 }
 

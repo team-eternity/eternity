@@ -65,7 +65,6 @@ extern camera_t *camera;
 //
 
 void D_PageTicker();
-void D_DrawPillars();
 void D_DrawWings();
 void D_AdvanceDemo();
 void D_StartTitle();
