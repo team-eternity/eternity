@@ -1753,7 +1753,7 @@ void Mobj::Think()
          (flags & MF_SHOOTABLE) &&
          !(flags & MF_FLOAT))
       {
-         P_DamageMobj(player->mo, nullptr, nullptr, GOD_BREACH_DAMAGE, sector->damagemod);
+         P_DamageMobj(this, nullptr, nullptr, GOD_BREACH_DAMAGE, sector->damagemod);
          return;
       }
 
