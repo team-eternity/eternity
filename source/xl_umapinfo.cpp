@@ -474,7 +474,7 @@ void XLUMapInfoParser::startLump()
 void XLUMapInfoParser::initTokenizer(XLTokenizer &tokenizer)
 {
    tokenizer.setTokenFlags(XLTokenizer::TF_OPERATORS | XLTokenizer::TF_ESCAPESTRINGS |
-                           XLTokenizer::TF_STRINGSQUOTED | XLTokenizer::TF_SLASHCOMMENTS);
+                           XLTokenizer::TF_STRINGSQUOTED | XLTokenizer::TF_SLASHCOMMENTS | XLTokenizer::TF_BLOCKCOMMENTS);
 }
 
 //
