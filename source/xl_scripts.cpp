@@ -322,12 +322,6 @@ void XLTokenizer::doStateComment()
 void XLTokenizer::doStateBlockComment()
 {
     // consume all input until next '*/'
-    if(flags & TF_LINEBREAKS)
-    {
-       tokentype = TOKEN_LINEBREAK;
-       state     = STATE_DONE;
-    }
-    
     if((input[idx] == '*' && input[idx+1] == '/'))
     {
         idx++; //push ahead then start to scan again
