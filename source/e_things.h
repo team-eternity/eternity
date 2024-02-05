@@ -117,6 +117,7 @@ void E_RemoveFromExistingThingPairs(int type, unsigned flag);
 // ioanch 20160220: metastate key names used throughout the code. They also
 // work as DECORATE state label names.
 #define METASTATE_HEAL "Heal"
+#define METASTATE_CRUNCH "Crunch"
 
 // blood types
 enum bloodtype_e : int
@@ -139,7 +140,7 @@ bloodtype_e E_GetBloodBehaviorForAction(mobjinfo_t *info, bloodaction_e action);
 void E_ForEachMobjInfoWithAnyFlags2(unsigned flags,
    bool (*func)(const mobjinfo_t &info, void *context), void *context);
 
-int E_GetCrushFrame(const Mobj *mo);
+int E_GetCrunchFrame(const Mobj *mo);
 
 #endif
 

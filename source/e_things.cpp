@@ -98,6 +98,7 @@ constexpr const char ITEM_TNG_XDEATHSTATE[]   = "xdeathstate";
 constexpr const char ITEM_TNG_RAISESTATE[]    = "raisestate";
 constexpr const char ITEM_TNG_HEALSTATE[]     = "healstate";   // ioanch 20160220
 constexpr const char ITEM_TNG_CRASHSTATE[]    = "crashstate";
+constexpr const char ITEM_TNG_CRUNCHSTATE[]   = "crunchstate"; // sinku 20240205
 constexpr const char ITEM_TNG_ACTIVESTATE[]   = "activestate";
 constexpr const char ITEM_TNG_INACTIVESTATE[] = "inactivestate";
 constexpr const char ITEM_TNG_FIRSTDECSTATE[] = "firstdecoratestate";
@@ -559,6 +560,7 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_RAISESTATE,      "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_HEALSTATE,       "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_CRASHSTATE,      "S_NULL",      CFGF_NONE), \
+   CFG_STR(ITEM_TNG_CRUNCHSTATE,     "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_ACTIVESTATE,     "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_INACTIVESTATE,   "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_FIRSTDECSTATE,   nullptr,       CFGF_NONE), \
@@ -2053,12 +2055,17 @@ bloodtype_e E_GetBloodBehaviorForAction(mobjinfo_t *info, bloodaction_e action)
    return mbb ? mbb->behavior : GameModeInfo->defBloodBehaviors[action];
 }
 
-int E_GetCrushFrame(const Mobj *mo) {
-   const char *spriteKey;
-   const char *defaultFrame = GameModeInfo->defCrushFrame;
-   const char *typeName      = mo->info->meta->getString(spriteKey, defaultFrame);
+// get the frame for when a thing is crunched by a crusher,
+// if there's a crunch metastate or (old syntax) frame, use it
+
+int E_GetCrunchFrame(const Mobj *mo) {
+   const char *defaultFrame = GameModeInfo->defCrunchFrame;
+   const state_t *cf = E_GetStateForMobjInfo(mo->info, METASTATE_CRUNCH);
    
-   return E_SafeStateName(typeName);
+   int fnum = (cf && cf->index != NullStateNum) ? cf->index :
+      E_SafeStateName(defaultFrame);
+   
+   return fnum;
 }
 
 //
@@ -2674,6 +2681,13 @@ void E_ProcessThing(int i, cfg_t *const thingsec, cfg_t *pcfg, const bool def)
       tempstr = cfg_getstr(thingsec, ITEM_TNG_CRASHSTATE);
       E_ThingFrame(tempstr, ITEM_TNG_CRASHSTATE, i,
                    &(mobjinfo[i]->crashstate));
+   }
+   
+   // process crunchstate 20240205
+   if(IS_SET(ITEM_TNG_CRUNCHSTATE))
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_CRUNCHSTATE);
+      E_ThingFrame(tempstr, ITEM_TNG_CRUNCHSTATE, i, METASTATE_CRUNCH);
    }
 
    // 03/19/11: process active/inactive states

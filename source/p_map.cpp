@@ -2807,7 +2807,7 @@ static bool PIT_ChangeSector(Mobj *thing, void *context)
       if(GameModeInfo->type == Game_DOOM)
       {
          thing->skin = nullptr;
-         P_SetMobjState(thing, E_GetCrushFrame(thing));
+         P_SetMobjState(thing, E_GetCrunchFrame(thing));
       }
       thing->flags &= ~MF_SOLID;
       thing->height = thing->radius = 0;
