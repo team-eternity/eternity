@@ -139,6 +139,8 @@ bloodtype_e E_GetBloodBehaviorForAction(mobjinfo_t *info, bloodaction_e action);
 void E_ForEachMobjInfoWithAnyFlags2(unsigned flags,
    bool (*func)(const mobjinfo_t &info, void *context), void *context);
 
+int E_GetCrushFrame(const Mobj *mo);
+
 #endif
 
 // EOF

@@ -2053,6 +2053,14 @@ bloodtype_e E_GetBloodBehaviorForAction(mobjinfo_t *info, bloodaction_e action)
    return mbb ? mbb->behavior : GameModeInfo->defBloodBehaviors[action];
 }
 
+int E_GetCrushFrame(const Mobj *mo) {
+   const char *spriteKey;
+   const char *defaultFrame = GameModeInfo->defCrushFrame;
+   const char *typeName      = mo->info->meta->getString(spriteKey, defaultFrame);
+   
+   return E_SafeStateName(typeName);
+}
+
 //
 // Creates a thing pickup effect if not already
 //

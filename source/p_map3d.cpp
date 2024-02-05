@@ -918,7 +918,6 @@ static void P_DoCrunch(Mobj *thing)
 {
    // crunch bodies to giblets
    // TODO: support DONTGIB flag like zdoom?
-   // TODO: support custom gib state for actors?
    if(thing->health <= 0)
    {
       // sf: clear the skin which will mess things up
@@ -926,7 +925,7 @@ static void P_DoCrunch(Mobj *thing)
       if(GameModeInfo->type == Game_DOOM)
       {
          thing->skin = nullptr;
-         P_SetMobjState(thing, E_SafeState(S_GIBS));
+         P_SetMobjState(thing, E_GetCrushFrame(thing));
       }
       thing->flags &= ~MF_SOLID;
       thing->height = thing->radius = 0;

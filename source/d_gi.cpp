@@ -1422,7 +1422,7 @@ static gamemodeinfo_t giDoomRetail =
    "DoomBlood",      // bloodDefaultRIP
    "DoomBlood",      // bloodDefaultCrush
    bloodTypeForActionDOOM, // default behavior for action array
-   "S_GIBS", //default sprite for when things are crushed
+   "S_GIBS", //default frame for when things are crushed
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
