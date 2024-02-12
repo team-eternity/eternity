@@ -152,6 +152,24 @@ void P_InitHexenAnims()
 }
 
 //
+// P_ResetAnimatedSurfaces
+//
+// Called on level reload to make sure animations begin from their first frame
+//
+void P_ResetAnimatedSurfaces()
+{
+   for(hanimdef_t &had : AnimDefs)
+   {
+      had.currentFrameDef = had.startFrameDef;
+      const hframedef_t &hfd = FrameDefs[had.currentFrameDef];
+      
+      if(had.tics != hfd.tics)
+         had.tics = hfd.tics;
+   }
+}
+
+
+//
 // P_AnimateSurfaces
 //
 // Called every tic in P_Ticker
