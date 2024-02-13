@@ -147,9 +147,9 @@ static void VerifySDLVersions()
       { 2, 7, 0 }, // SDL_mixer
       { 2, 2, 0 }, // SDL_net
 #else
-      { 2, 0, 7 }, // SDL
-      { 2, 6, 2 }, // SDL_mixer
-      { 2, 0, 1 }, // SDL_net
+      { 2, 30, 0 }, // SDL
+      { 2, 8,  0 }, // SDL_mixer
+      { 2, 2,  0 }, // SDL_net
 #endif
    };
 

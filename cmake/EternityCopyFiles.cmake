@@ -37,10 +37,12 @@ function(eternity_copy_libs TARGET)
 
     # SDL2_mixer
     if(MSVC)
-        list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/optional/libmodplug-1.dll")
+        list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/optional/libgme.dll")
         list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/optional/libogg-0.dll")
         list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/optional/libopus-0.dll")
         list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/optional/libopusfile-0.dll")
+		list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/optional/libwavpack-1.dll")
+		list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/optional/libxmp.dll")
     endif()
     list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/SDL2_mixer.dll")
 

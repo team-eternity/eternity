@@ -342,6 +342,12 @@ properties are booleans.
 Added support for DSDHacked things, sprites, and states. Sounds are not yet
 implemented.
 
+--------------------------------------------------------------------------------
+2024/02/13
+Updated SDL to 2.30.0 (from 2.0.7) on Windows.
+Updated SDL_mixer to 2.8.0 (from 2.6.2) on Windows.
+Updated SDL_net to 2.2.0 (from 2.0.1) on Windows.
+
 ================================================================================
 EOF
 ================================================================================
