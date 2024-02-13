@@ -3761,6 +3761,10 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       P_PointOnLineSide = P_PointOnLineSideClassic;
       P_PointOnDivlineSide = P_PointOnDivlineSideClassic;
    }
+   
+   // reset hexen animations so they don't desync
+   if(demo_version >= 329)
+      P_ResetAnimatedSurfaces();
 
    // haleyjd 07/22/04: moved up
    newlevel   = (lumpinfo[lumpnum]->source != WadDirectory::IWADSource);
