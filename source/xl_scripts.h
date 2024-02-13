@@ -80,7 +80,7 @@ public:
       TF_OPERATORS     = 0x00000010, // C-style identifiers, no space operators
       TF_ESCAPESTRINGS = 0x00000020, // Add support for escaping strings
       TF_STRINGSQUOTED = 0x00000040, // Strings must be quoted, otherwise they're keywords
-      TF_BLOCKCOMMENTS = 0x00000080  // supports block comments with /* */
+      TF_BLOCKCOMMENTS = 0x00000080, // supports block comments with /* */
    };
 
 protected:
