@@ -1510,7 +1510,7 @@ void A_BrainSpit(actionargs_t *actionargs)
    targ = braintargets.wrapIterator();
 
    // spawn brain missile
-   newmobj = P_SpawnMissile(mo, targ, SpawnShotType, mo->z + actor->info->missileheight);
+   newmobj = P_SpawnMissile(mo, targ, SpawnShotType, mo->z + mo->info->missileheight);
    P_SetTarget<Mobj>(&newmobj->target, targ);
    if(!newmobj->state->tics)
    {

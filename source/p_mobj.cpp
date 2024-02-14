@@ -3537,7 +3537,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type, unsigned flags,
 
    x = source->x;
    y = source->y;
-   z = source->z + source->info->missilezoffset - source->floorclip;
+   z = source->z + source->info->missileheight - source->floorclip;
    if(flags & SPM_ADDSLOPETOZ)
       z += playersightslope;
 
