@@ -371,9 +371,6 @@ void Geom::parse(const char *geom)
          case 'w': // window
             screentype = screentype_e::WINDOWED;
             break;
-         case 'd': // fullscreen desktop
-            screentype = screentype_e::FULLSCREEN_DESKTOP;
-            break;
          case 'f': // fullscreen
             screentype = screentype_e::FULLSCREEN;
             break;
@@ -425,9 +422,6 @@ qstring Geom::toString() const
    {
       case screentype_e::FULLSCREEN:
          result.Putc('f');
-         break;
-      case screentype_e::FULLSCREEN_DESKTOP:
-         result.Putc('d');
          break;
       case screentype_e::WINDOWED:
          result.Putc('w');
@@ -718,21 +712,15 @@ static void I_updateVideoMode(const Geom *geom)
 CONSOLE_COMMAND(togglefullscreen, cf_buffered)
 {
    Geom geom(i_videomode);
-   static bool lastWasFullscreenDesktop;
    switch(geom.screentype)
    {
-      case screentype_e::FULLSCREEN_DESKTOP:
-         lastWasFullscreenDesktop = true;
-         geom.screentype = screentype_e::WINDOWED;
-         break;
+;
       case screentype_e::FULLSCREEN:
-         lastWasFullscreenDesktop = false;
          geom.screentype = screentype_e::WINDOWED;
          break;
 
       case screentype_e::WINDOWED:
-         geom.screentype = lastWasFullscreenDesktop ? screentype_e::FULLSCREEN_DESKTOP :
-               screentype_e::FULLSCREEN;
+         geom.screentype = screentype_e::FULLSCREEN;
          break;
    }
 

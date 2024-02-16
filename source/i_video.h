@@ -34,7 +34,6 @@ struct SDL_Window;
 enum class screentype_e : int
 {
    WINDOWED,
-   FULLSCREEN_DESKTOP,
    FULLSCREEN,
 };
 

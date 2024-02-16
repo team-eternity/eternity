@@ -61,10 +61,10 @@ static SDL_Surface  *primary_surface;
 static SDL_Surface  *rgba_surface;
 static SDL_Texture  *sdltexture; // the texture to use for rendering
 static SDL_Renderer *renderer;
-static SDL_Rect     *destrect;
+static SDL_FRect    *destrect;
 
 // used when rendering to a subregion, such as for letterboxing
-static SDL_Rect staticDestRect;
+static SDL_FRect staticDestRect;
 
 extern int  use_vsync;     // killough 2/8/98: controls whether vsync is called
 extern bool noblit;
@@ -91,7 +91,7 @@ void SDLVideoDriver::FinishUpdate()
    // Don't update the screen if the window isn't visible.
    // Not doing this breaks under Windows when we alt-tab away 
    // while fullscreen.   
-   if(!(SDL_GetWindowFlags(window) & SDL_WINDOW_SHOWN) || I_IsViewOccluded())
+   if((SDL_GetWindowFlags(window) & SDL_WINDOW_HIDDEN) || I_IsViewOccluded())
       return;
 
    if(setpalette)
@@ -218,8 +218,7 @@ void SDLVideoDriver::SetPrimaryBuffer()
    if(window)
    {
       // SDL_FIXME: This won't be sufficient once a truecolour renderer is implemented
-      primary_surface = SDL_CreateRGBSurfaceWithFormat(0, video.height, video.width + bump,
-                                                       0, SDL_PIXELFORMAT_INDEX8);
+      primary_surface = SDL_CreateSurface(video.height, video.width + bump, SDL_PIXELFORMAT_INDEX8);
       if(!primary_surface)
          I_Error("SDLVideoDriver::SetPrimaryBuffer: failed to create screen temp buffer\n");
 
@@ -227,8 +226,7 @@ void SDLVideoDriver::SetPrimaryBuffer()
       if(pixelformat == SDL_PIXELFORMAT_UNKNOWN)
          pixelformat = SDL_PIXELFORMAT_RGBA32;
 
-      rgba_surface = SDL_CreateRGBSurfaceWithFormat(0, video.height, video.width + bump,
-                                                    0, pixelformat);
+      rgba_surface = SDL_CreateSurface(video.height, video.width + bump, pixelformat);
       if(!rgba_surface)
       {
          I_Error("SDLVideoDriver::SetPrimaryBuffer: failed to create true-colour buffer: %s\n",
@@ -335,11 +333,11 @@ bool SDLVideoDriver::InitGraphicsMode()
    static int fallback_w       = 640;
    static int fallback_h       = 480;
    static int fallback_w_flags = 0;
-   static int fallback_r_flags = SDL_RENDERER_TARGETTEXTURE;
+   static int fallback_r_flags = 0;
 
    int          v_displaynum   = 0;
    int          window_flags   = 0;
-   int          renderer_flags = SDL_RENDERER_TARGETTEXTURE;
+   int          renderer_flags = 0;
    int          resolutionWidth = 640;
    int          resolutionHeight = 480;
 
@@ -359,8 +357,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    // on initial video mode set (setting from menu doesn't support this)
    I_CheckVideoCmdsOnce(geom);
 
-   if(geom.screentype == screentype_e::FULLSCREEN ||
-      geom.screentype == screentype_e::FULLSCREEN_DESKTOP)
+   if(geom.screentype == screentype_e::FULLSCREEN)
    {
       window_flags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
       fallback_w_flags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
@@ -381,21 +378,29 @@ bool SDLVideoDriver::InitGraphicsMode()
    if(!geom.wantframe)
       window_flags |= SDL_WINDOW_BORDERLESS;
 
-   if(displaynum < SDL_GetNumVideoDisplays())
+   int numDisplays;
+   SDL_DisplayID *displayIDs = SDL_GetDisplays(&numDisplays);
+   if(displaynum < numDisplays)
       v_displaynum = displaynum;
    else
       displaynum = 0;
 
-   if(!(window = SDL_CreateWindow(ee_wmCaption,
-                                  SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
-                                  SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
-                                  geom.width, geom.height, window_flags)))
+   SDL_PropertiesID windowProperties = SDL_CreateProperties();
+   SDL_SetStringProperty(windowProperties, SDL_PROP_WINDOW_CREATE_TITLE_STRING, ee_wmCaption);
+   SDL_SetNumberProperty(windowProperties, SDL_PROP_WINDOW_CREATE_X_NUMBER, SDL_WINDOWPOS_CENTERED_DISPLAY(displayIDs[v_displaynum]));
+   SDL_SetNumberProperty(windowProperties, SDL_PROP_WINDOW_CREATE_Y_NUMBER, SDL_WINDOWPOS_CENTERED_DISPLAY(displayIDs[v_displaynum]));
+   SDL_SetNumberProperty(windowProperties, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, geom.width);
+   SDL_SetNumberProperty(windowProperties, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, geom.height);
+   SDL_SetNumberProperty(windowProperties, "flags", window_flags);
+
+   if(!(window = SDL_CreateWindowWithProperties(windowProperties)))
    {
       // try 320x200w safety mode
-      if(!(window = SDL_CreateWindow(ee_wmCaption,
-                                     SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
-                                     SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
-                                     fallback_w, fallback_h, fallback_w_flags)))
+      SDL_SetNumberProperty(windowProperties, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, fallback_w);
+      SDL_SetNumberProperty(windowProperties, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, fallback_h);
+      SDL_SetNumberProperty(windowProperties, "flags", fallback_w_flags);
+
+      if(!(window = SDL_CreateWindowWithProperties(windowProperties)))
       {
          // SDL_TODO: Trim fat from this error message
          I_FatalError(I_ERR_KILL,
@@ -415,14 +420,12 @@ bool SDLVideoDriver::InitGraphicsMode()
 
    // this is done here as monitor video mode isn't set when SDL_WINDOW_FULLSCREEN (sans desktop) is
    // ORed in during window creation
-   if(geom.screentype == screentype_e::FULLSCREEN_DESKTOP)
-      SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-   else if(geom.screentype == screentype_e::FULLSCREEN)
+   if(geom.screentype == screentype_e::FULLSCREEN)
       SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
 
-   if(!(renderer = SDL_CreateRenderer(window, -1, renderer_flags)))
+   if(!(renderer = SDL_CreateRenderer(window, nullptr, renderer_flags)))
    {
-      if(!(renderer = SDL_CreateRenderer(window, -1, fallback_r_flags)))
+      if(!(renderer = SDL_CreateRenderer(window, nullptr, fallback_r_flags)))
       {
          // SDL_TODO: Trim fat from this error message
          I_FatalError(I_ERR_KILL,
@@ -442,7 +445,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    fallback_r_flags = renderer_flags;
 
    // haleyjd 10/09/05: keep track of fullscreen state
-   fullscreen = !!(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP);
+   fullscreen = !!(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN);
 
    UpdateFocus(window);
    UpdateGrab(window);
@@ -503,6 +506,10 @@ bool SDLVideoDriver::InitGraphicsMode()
    if(geom.vsync != Geom::TriState::neutral)
       use_vsync = geom.vsync == Geom::TriState::on;
 
+   // Clean up after SDL
+   SDL_free(displayIDs);
+   SDL_DestroyProperties(windowProperties);
+
    return false;
 }
 
@@ -515,26 +522,35 @@ CONSOLE COMMANDS
 
 CONSOLE_COMMAND(maxdisplaynum, 0)
 {
-   C_Printf("%d", SDL_GetNumVideoDisplays() - 1);
+   int numDisplays;
+   SDL_DisplayID *displayIDs = SDL_GetDisplays(&numDisplays);
+
+   C_Printf("%d", numDisplays);
+
+   if(displayIDs)
+      SDL_free(displayIDs);
 }
 
 VARIABLE_INT(displaynum, nullptr, -1, UL, nullptr);
 CONSOLE_VARIABLE(displaynum, displaynum, cf_buffered)
 {
-   const int numdisplays = SDL_GetNumVideoDisplays();
+   int numDisplays;
+   SDL_DisplayID *displayIDs = SDL_GetDisplays(&numDisplays);
 
    if(displaynum == -1)
-      displaynum = numdisplays - 1; // allow scrolling left from 0 to maxdisplaynum
-   else if(displaynum == numdisplays)
+      displaynum = numDisplays - 1; // allow scrolling left from 0 to maxdisplaynum
+   else if(displaynum == numDisplays)
       displaynum = 0; // allow scrolling right from maxdisplaynum to 0
-   else if(displaynum > numdisplays)
+   else if(displaynum > numDisplays)
    {
-      C_Printf(FC_ERROR "Warning: displaynum's current maximum is %d, resetting to 0",
-               numdisplays - 1);
+      C_Printf(FC_ERROR "Warning: displaynum's current maximum is %d, resetting to 0", numDisplays - 1);
       displaynum = 0;
    }
 
    I_SetMode();
+
+   if(displayIDs)
+      SDL_free(displayIDs);
 }
 
 
