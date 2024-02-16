@@ -191,7 +191,7 @@ static int PCSound_SDL_Init(pcsound_callback_func callback_func)
       return 0;
    }
 
-   if(Mix_OpenAudio(0, &audio_spec) < 0)
+   if(Mix_OpenAudio(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &audio_spec) < 0)
    {
       fprintf(stderr, "Error initialising SDL_mixer: %s\n", Mix_GetError());
 
@@ -201,7 +201,7 @@ static int PCSound_SDL_Init(pcsound_callback_func callback_func)
 
    float_samples = SDL_AUDIO_ISFLOAT(audio_spec.format);
 
-   SDL_PauseAudioDevice(0);
+   SDL_PauseAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT);
 
    callback          = callback_func;
    current_freq      = 0;

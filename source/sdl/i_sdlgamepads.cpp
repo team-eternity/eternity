@@ -88,7 +88,7 @@ void SDLGamePadDriver::enumerateDevices()
    SDLGamePad *sdlDev;
 
    SDL_JoystickID *joystickIDs = SDL_GetJoysticks(&numpads);
-   for(SDL_JoystickID *joystickID = joystickIDs; joystickID; joystickID++)
+   for(SDL_JoystickID *joystickID = joystickIDs; *joystickID; joystickID++)
    {
       // Use only valid gamepads
       if(SDL_IsGamepad(*joystickID))

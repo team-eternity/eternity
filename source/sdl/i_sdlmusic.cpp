@@ -316,7 +316,7 @@ static int I_SDLInitSoundForMusic(void)
       return 0;
    }
 
-   if(Mix_OpenAudio(0, &audio_spec) < 0)
+   if(Mix_OpenAudio(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &audio_spec) < 0)
       return 0;
 
    float_samples = SDL_AUDIO_ISFLOAT(audio_spec.format);

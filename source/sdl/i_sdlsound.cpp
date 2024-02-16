@@ -814,13 +814,14 @@ bool I_GenSDLAudioSpec(int samplerate, SDL_AudioFormat fmt, int channels, int sa
    want.format   = fmt;
    want.channels = channels;
 
-   if(SDL_OpenAudioDevice(0, &want) == 0)
+   if(SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &want) == 0)
    {
-      SDL_CloseAudioDevice(0);
+      printf("Failed to open audio device (%s)\n", SDL_GetError());
+      SDL_CloseAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT);
       return true;
    }
 
-   SDL_GetAudioDeviceFormat(0, &audio_spec, nullptr);
+   SDL_GetAudioDeviceFormat(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &audio_spec, nullptr);
 
    return false;
 }
@@ -857,7 +858,7 @@ static int I_SDLInitSound()
    float_samples = SDL_AUDIO_ISFLOAT(audio_spec.format);
    step          = audio_spec.channels;
 
-   if(Mix_OpenAudio(0, &audio_spec) < 0)
+   if(Mix_OpenAudio(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &audio_spec) < 0)
    {
       printf("Couldn't open audio with desired format.\n");
       nosfxparm   = true;
@@ -865,7 +866,7 @@ static int I_SDLInitSound()
       return 0;
    }
 
-   SDL_GetAudioDeviceFormat(0, nullptr, &mixbuffer_size);
+   SDL_GetAudioDeviceFormat(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, nullptr, &mixbuffer_size);
 
    // haleyjd 10/02/08: this must be done as early as possible.
    I_SetChannels();
