@@ -351,14 +351,16 @@ enum keycode_e
    KEYD_JOY_DPAD_LEFT,
    KEYD_JOY_DPAD_RIGHT,
    KEYD_JOY_MISC1, // Xbox Series X share, PS5 microphone, Switch Pro capture button
+   KEYD_JOY_PADDLE1_RIGHT,
+   KEYD_JOY_PADDLE1_LEFT,
+   KEYD_JOY_PADDLE2_RIGHT,
+   KEYD_JOY_PADDLE2_LEFT,
+   KEYD_JOY_TOUCHPAD,
    KEYD_JOY_MISC2,
    KEYD_JOY_MISC3,
    KEYD_JOY_MISC4,
    KEYD_JOY_MISC5,
-   KEYD_JOY_TOUCHPAD,
-   KEYD_JOY_21,
-   KEYD_JOY_22,
-   KEYD_JOY_23,
+   KEYD_JOY_MISC6,
 
    // axis activation events
    KEYD_AXIS_BASE,

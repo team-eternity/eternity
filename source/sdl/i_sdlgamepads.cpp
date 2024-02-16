@@ -87,18 +87,19 @@ void SDLGamePadDriver::enumerateDevices()
    int numpads = 0;
    SDLGamePad *sdlDev;
 
-   for(int i = 0; i < SDL_NumJoysticks(); i++)
+   SDL_JoystickID *joystickIDs = SDL_GetJoysticks(&numpads);
+   for(SDL_JoystickID *joystickID = joystickIDs; joystickID; joystickID++)
    {
       // Use only valid gamepads
-      if(SDL_IsGamepad(i))
+      if(SDL_IsGamepad(*joystickID))
       {
          // Skip this controller if it can't be opened
-         if(SDL_Gamepad *temp = SDL_OpenGamepad(i); !temp)
+         if(SDL_Gamepad *temp = SDL_OpenGamepad(*joystickID); !temp)
             continue;
          else
             SDL_CloseGamepad(temp);
 
-         sdlDev = new SDLGamePad(i);
+         sdlDev = new SDLGamePad(*joystickID);
          addDevice(sdlDev);
       }
    }
@@ -120,7 +121,7 @@ IMPLEMENT_RTTI_TYPE(SDLGamePad)
 SDLGamePad::SDLGamePad(int idx)
    : Super(), sdlIndex(idx), haptics()
 {
-   name << "SDL " << SDL_GameControllerNameForIndex(sdlIndex);
+   name << "SDL " << SDL_GetGamepadInstanceName(sdlIndex);
    num = i_sdlGamePadDriver.getBaseDeviceNum() + sdlIndex;
 }
 
@@ -689,7 +690,9 @@ void SDLHapticInterface::updateEffects()
 {
 #if SDL_VERSION_ATLEAST(2, 0, 18)
    // Don't try updating if controller doesn't have rumble
-   if(SDL_GameControllerHasRumble(gamecontroller) == SDL_FALSE)
+   SDL_PropertiesID gamepadProperties = SDL_GetGamepadProperties(gamecontroller);
+   if(gamepadProperties == 0 ||
+      SDL_GetBooleanProperty(gamepadProperties, SDL_PROP_GAMEPAD_CAP_RUMBLE_BOOLEAN, SDL_FALSE) == SDL_FALSE)
       return;
 #endif
 
