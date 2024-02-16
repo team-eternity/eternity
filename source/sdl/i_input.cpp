@@ -98,9 +98,9 @@ void UpdateGrab(SDL_Window *window)
       SDL_GetWindowSize(window, &window_w, &window_h);
 
       // Disable handling the mouse during this action
-      SDL_EventState(SDL_EVENT_MOUSE_MOTION, SDL_DISABLE);
+      SDL_SetEventEnabled(SDL_EVENT_MOUSE_MOTION, SDL_FALSE);
       SDL_WarpMouseInWindow(window, window_w - 16, window_h - 16);
-      SDL_EventState(SDL_EVENT_MOUSE_MOTION, SDL_ENABLE);
+      SDL_SetEventEnabled(SDL_EVENT_MOUSE_MOTION, SDL_TRUE);
    }
 
    currently_grabbed = grab;
@@ -154,7 +154,7 @@ void UpdateFocus(SDL_Window *window)
    SDL_PumpEvents();
 
    state = window ? SDL_GetWindowFlags(window) : 0;
-   screenvisible = ((state & SDL_WINDOW_SHOWN) && !(state & SDL_WINDOW_MINIMIZED));
+   screenvisible = (!(state & SDL_WINDOW_HIDDEN) && !(state & SDL_WINDOW_MINIMIZED));
 
    window_focused = (screenvisible &&
                      ((state & (SDL_WINDOW_MOUSE_GRABBED | SDL_WINDOW_INPUT_FOCUS |
@@ -334,14 +334,15 @@ int   mouse_threshold = 10;
 // AccelerateMouse
 //
 // haleyjd 10/23/08: From Choco-Doom
+// MaxW: Converted to float
 //
-static int AccelerateMouse(int val)
+static float AccelerateMouse(float val)
 {
    if(val < 0)
       return -AccelerateMouse(-val);
 
    return (val > mouse_threshold) ?
-             (int)((val - mouse_threshold) * mouse_acceleration + mouse_threshold) :
+             ((val - mouse_threshold) * mouse_acceleration + mouse_threshold) :
              val;
 }
 
@@ -368,7 +369,7 @@ static double CustomAccelerateMouse(int val)
 //
 static void I_ReadMouse(SDL_Window *window)
 {
-   int x, y;
+   float x, y;
    event_t ev;
    static Uint8 previous_state = 137;
    Uint8 state;
@@ -735,15 +736,16 @@ static void I_getEvent(SDL_Window *window)
          }
          break;
 
-      case SDL_WINDOWEVENT:
-         // haleyjd 10/08/05: from Chocolate DOOM:
-         // need to update our focus state
-         // 2/14/2011: Update mouse grabbing as well (thanks Catoptromancy)
-         UpdateFocus(window);
-         UpdateGrab(window);
-         break;
-
       default:
+
+         if(ev.type >= SDL_EVENT_WINDOW_FIRST && ev.type <= SDL_EVENT_WINDOW_LAST)
+         {
+            // haleyjd 10/08/05: from Chocolate DOOM:
+            // need to update our focus state
+            // 2/14/2011: Update mouse grabbing as well (thanks Catoptromancy)
+            UpdateFocus(window);
+            UpdateGrab(window);
+         }
          break;
       }
    }
