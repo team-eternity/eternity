@@ -1,7 +1,5 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2024 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -54,10 +52,10 @@ bool NetListen(void);
 
 static Uint16 DOOMPORT = 8626;
 
-static UDPsocket udpsocket;
-static UDPpacket *packet;
+static SDLNet_DatagramSocket *udpsocket;
+static byte                  *packetbuf; // SDL3_FIXME: Is this required?
 
-static IPaddress sendaddress[MAXNETNODES];
+static SDLNet_Address *sendaddress[MAXNETNODES];
 
 // haleyjd: new functions for anarkavre's WinMBF netcode
 
@@ -229,7 +227,7 @@ bool PacketSend(void)
    int c;
    int packetsize = 0;   
 
-   byte *rover = (byte *)packet->data;
+   byte *rover = packetbuf;
 
    // reserve 4 bytes for the checksum
    rover += 4;
@@ -281,19 +279,16 @@ bool PacketSend(void)
    }
 
    // Go back and write the checksum at the beginning
-   rover = (byte *)packet->data;
-   netbuffer->checksum |= NetChecksum((byte *)packet->data + 4, packetsize);
+   rover = packetbuf;
+   netbuffer->checksum |= NetChecksum(packetbuf + 4, packetsize);
    NETWRITELONG(netbuffer->checksum);
    
-   packet->len     = packetsize;
-   packet->address = sendaddress[doomcom->remotenode];
-
    // DEBUG
-   writesendpacket(packet->data, packet->len);
+   writesendpacket(packetbuf, packetsize);
 
-   if(!SDLNet_UDP_Send(udpsocket, -1, packet))
+   if(!SDLNet_SendDatagram(udpsocket, sendaddress[doomcom->remotenode], DOOMPORT, packetbuf, packetsize))
    {
-      I_Error("Error sending packet: %s\n", SDLNet_GetError());
+      I_Error("Error sending packet: %s\n", SDL_GetError());
       return false;
    }
 
@@ -305,27 +300,27 @@ bool PacketSend(void)
 //
 bool PacketGet(void)
 {
+   SDLNet_Datagram *packet = nullptr;
    uint32_t checksum;
-   int i, c, packets_read;
+   int i, c;
    byte *rover;
    
-   packets_read = SDLNet_UDP_Recv(udpsocket, packet);
+   if(!SDLNet_ReceiveDatagram(udpsocket, &packet))
+      I_Error("Error reading packet: %s\n", SDL_GetError());
    
-   if(packets_read < 0)
-      I_Error("Error reading packet: %s\n", SDLNet_GetError());
-   
-   if(packets_read == 0)
+   if(packet == nullptr)
    {
       doomcom->remotenode = -1;
       return true;
    }
 
-   writegetpacket(packet->data, packet->len);
+   writegetpacket(packet->buf, packet->buflen);
    
    for(i = 0; i < doomcom->numnodes; ++i)
    {
-      if(packet->address.host == sendaddress[i].host && 
-         packet->address.port == sendaddress[i].port)
+      // SDL3_FIXME: Verify correctness
+      if(SDLNet_CompareAddresses(packet->addr, sendaddress[i])) // &&
+         // packet->address.port == sendaddress[i].port)
          break;
    }
    
@@ -337,15 +332,15 @@ bool PacketGet(void)
    
    doomcom->remotenode = i;
 
-   if(packet->len < 4)
+   if(packet->buflen < 4)
       return false;
    
-   rover = (byte *)packet->data;
+   rover = (byte *)packet->buf;
 
    checksum = NetToHost32(rover);
    
    // haleyjd: verify checksum first; if fails, don't even read the rest
-   if((checksum & NCMD_CHECKSUM) != NetChecksum((byte *)packet->data + 4, packet->len - 4))
+   if((checksum & NCMD_CHECKSUM) != NetChecksum((byte *)packet->buf + 4, packet->buflen - 4))
       return false;
    
    netbuffer->checksum = checksum;
@@ -415,6 +410,8 @@ bool PacketGet(void)
          netbuffer->d.data[c] = *rover++;
    }
 
+   SDLNet_DestroyDatagram(packet);
+
    return true;
 }
 
@@ -422,18 +419,28 @@ bool PacketGet(void)
 // I_QuitNetwork
 //
 // haleyjd: from anarkavre's WinMBF netcode
+// MaxW: Updated to SDL 3
 //
 void I_QuitNetwork(void)
 {
-   if(packet)
+   for(SDLNet_Address *&curraddress : sendaddress)
    {
-      SDLNet_FreePacket(packet);
-      packet = nullptr;
+      if(curraddress)
+      {
+         SDLNet_UnrefAddress(curraddress);
+         curraddress = nullptr;
+      }
+   }
+
+   if(packetbuf)
+   {
+      efree(packetbuf);
+      packetbuf = nullptr;
    }
    
    if(udpsocket)
    {
-      SDLNet_UDP_Close(udpsocket);
+      SDLNet_DestroyDatagramSocket(udpsocket);
       udpsocket = nullptr;
    }
    
@@ -509,18 +516,35 @@ void I_InitNetwork(void)
    i++;
    while(++i < myargc && myargv[i][0] != '-')
    {
-      if(SDLNet_ResolveHost(&sendaddress[doomcom->numnodes], myargv[i], DOOMPORT))
-         I_Error("Unable to resolve %s\n", myargv[i]);
+      sendaddress[doomcom->numnodes] = SDLNet_ResolveHostname(myargv[i]);
+      if(sendaddress[doomcom->numnodes] == nullptr)
+         I_Error("Catastrophic failure trying to resolve %s (%s)\n", myargv[i], SDL_GetError());
       
       doomcom->numnodes++;
+   }
+
+   int numresolved = 1;
+   while(numresolved < doomcom->numnodes)
+   {
+      for(int node = 1; node++; node < doomcom->numnodes)
+      {
+         const int resolveResult = SDLNet_WaitUntilResolved(sendaddress[doomcom->numnodes], 0);
+         if(resolveResult != -1)
+            I_Error("Unable to resolve %s (%s)\n", myargv[i], SDL_GetError());
+         else if(resolveResult)
+            numresolved++;
+
+      }
+
+      SDL_Delay(10);
    }
 
    doomcom->id = DOOMCOM_ID;
    doomcom->numplayers = doomcom->numnodes;
    
-   udpsocket = SDLNet_UDP_Open(DOOMPORT);
+   udpsocket = SDLNet_CreateDatagramSocket(nullptr, DOOMPORT);
 
-   packet = SDLNet_AllocPacket((int)((sizeof(doomdata_t) + 31) & ~31));
+   packetbuf = ecalloc(byte *, (sizeof(doomdata_t) + 31) & ~31, 1);
 }
 
 bool I_NetCmd(void)
