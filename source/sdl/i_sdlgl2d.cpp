@@ -198,7 +198,7 @@ void SDLGL2DVideoDriver::FinishUpdate()
    // Don't update the screen if the window isn't visible.
    // Not doing this breaks under Windows when we alt-tab away 
    // while fullscreen.
-   if(!(SDL_GetWindowFlags(window) & SDL_WINDOW_SHOWN) || I_IsViewOccluded())
+   if(!(SDL_GetWindowFlags(window) & SDL_WINDOW_HIDDEN) || I_IsViewOccluded())
       return;
 
    GL_RebindBoundTexture();
@@ -325,8 +325,7 @@ void SDLGL2DVideoDriver::SetPrimaryBuffer()
       bump = 0;
 
    // Create screen surface for the high-level code to render the game into
-   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, video.height, video.width + bump,
-                                                0, SDL_PIXELFORMAT_INDEX8)))
+   if(!(screen = SDL_CreateSurface(video.height, video.width + bump, SDL_PIXELFORMAT_INDEX8)))
       I_Error("SDLGL2DVideoDriver::SetPrimaryBuffer: failed to create screen temp buffer\n");
 
    // Point screens[0] to 8-bit temp buffer
@@ -474,7 +473,7 @@ static double I_calcScaleAndDisplacement(SDL_Window *window, int width, int heig
    *displacement = {};
 
    int drawableWidth, drawableHeight;
-   SDL_GL_GetDrawableSize(window, &drawableWidth, &drawableHeight);
+   SDL_GetWindowSizeInPixels(window, &drawableWidth, &drawableHeight);
    
    double widthScale = double(drawableWidth) / width;
    double heightScale = double(drawableHeight) / height;
@@ -544,15 +543,22 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,  colordepth >= 24 ? 8 : 5);
    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, colordepth == 32 ? 8 : 0);
 
-   if(displaynum < SDL_GetNumVideoDisplays())
+   int numDisplays;
+   SDL_DisplayID *displayIDs = SDL_GetDisplays(&numDisplays);
+   if(displaynum < numDisplays)
       v_displaynum = displaynum;
    else
       displaynum = 0;
 
-   if(!(window = SDL_CreateWindow(ee_wmCaption,
-                                  SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
-                                  SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
-                                  geom.width, geom.height, window_flags)))
+   SDL_PropertiesID windowProperties = SDL_CreateProperties();
+   SDL_SetStringProperty(windowProperties, SDL_PROP_WINDOW_CREATE_TITLE_STRING, ee_wmCaption);
+   SDL_SetNumberProperty(windowProperties, SDL_PROP_WINDOW_CREATE_X_NUMBER, SDL_WINDOWPOS_CENTERED_DISPLAY(displayIDs[v_displaynum]));
+   SDL_SetNumberProperty(windowProperties, SDL_PROP_WINDOW_CREATE_Y_NUMBER, SDL_WINDOWPOS_CENTERED_DISPLAY(displayIDs[v_displaynum]));
+   SDL_SetNumberProperty(windowProperties, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, geom.width);
+   SDL_SetNumberProperty(windowProperties, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, geom.height);
+   SDL_SetNumberProperty(windowProperties, "flags", window_flags);
+
+   if(!(window = SDL_CreateWindowWithProperties(windowProperties)))
    {
       I_FatalError(I_ERR_KILL, "Couldn't create OpenGL window %dx%d\n"
                                "SDL Error: %s\n", geom.width, geom.height, SDL_GetError());
@@ -562,9 +568,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
 
    // this is done here as monitor video mode isn't set when SDL_WINDOW_FULLSCREEN (sans desktop)
    // is ORed in during window creation
-   if(geom.screentype == screentype_e::FULLSCREEN_DESKTOP)
-      SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-   else if(geom.screentype == screentype_e::FULLSCREEN)
+   if(geom.screentype == screentype_e::FULLSCREEN)
       SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
 
    if(!(glcontext = SDL_GL_CreateContext(window)))
@@ -584,7 +588,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    else // 16
       format = SDL_PIXELFORMAT_RGB555;
 
-   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, resolutionHeight, resolutionWidth, 0, format)))
+   if(!(screen = SDL_CreateSurface(resolutionHeight, resolutionWidth, format)))
    {
       I_FatalError(I_ERR_KILL, "Couldn't set RGB surface with colordepth %d, format %s\n",
                    colordepth, SDL_GetPixelFormatName(format));
@@ -701,6 +705,10 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    // Also update the vsync variable
    if(geom.vsync != Geom::TriState::neutral)
       use_vsync = geom.vsync == Geom::TriState::on;
+
+   // Clean up after SDL
+   SDL_free(displayIDs);
+   SDL_DestroyProperties(windowProperties);
 
    return false;
 }
