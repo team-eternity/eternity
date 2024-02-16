@@ -191,7 +191,7 @@ static int PCSound_SDL_Init(pcsound_callback_func callback_func)
       return 0;
    }
 
-   if(Mix_OpenAudio(audio_spec.freq, audio_spec.format, audio_spec.channels, audio_spec.samples) < 0)
+   if(Mix_OpenAudio(0, &audio_spec) < 0)
    {
       fprintf(stderr, "Error initialising SDL_mixer: %s\n", Mix_GetError());
 
@@ -201,7 +201,7 @@ static int PCSound_SDL_Init(pcsound_callback_func callback_func)
 
    float_samples = SDL_AUDIO_ISFLOAT(audio_spec.format);
 
-   SDL_PauseAudio(0);
+   SDL_PauseAudioDevice(0);
 
    callback          = callback_func;
    current_freq      = 0;
@@ -257,11 +257,13 @@ static void PCSCallbackFunc(int *duration, int *freq)
 
    *duration = 1000 / 140;
 
-   if(SDL_LockMutex(sound_lock) < 0)
+   if(sound_lock == nullptr)
    {
       *freq = 0;
       return;
    }
+
+   SDL_LockMutex(sound_lock);
 
    if(current_sound_lump != nullptr && current_sound_remaining > 0)
    {
@@ -428,8 +430,10 @@ static int I_PCSStartSound(sfxinfo_t *sfx, int cnum, int vol, int sep,
    if(sfx->flags & SFXF_NOPCSOUND)
       return -1;
 
-   if(SDL_LockMutex(sound_lock) < 0)
+   if(sound_lock == nullptr)
       return -1;
+
+   SDL_LockMutex(sound_lock);
 
    if((result = CachePCSLump(sfx)))
       current_sound_handle = cnum;
@@ -449,8 +453,10 @@ static void I_PCSStopSound(int handle, int id)
    if(!pcs_initialised)
       return;
 
-   if(SDL_LockMutex(sound_lock) < 0)
+   if(sound_lock == nullptr)
       return;
+
+   SDL_LockMutex(sound_lock);
 
    // If this is the channel currently playing, immediately end it.
    if(current_sound_handle == handle)
