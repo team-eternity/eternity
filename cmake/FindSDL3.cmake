@@ -1,4 +1,4 @@
-## Copyright (C) 2017 Max Waine
+## Copyright (C) 2024 Max Waine
 ##
 ## This program is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -15,16 +15,25 @@
 ##
 ################################################################################
 
-find_path(SDL2_NET_INCLUDE_DIR SDL_net.h
-          HINTS ENV SDL2DIR
-          PATH_SUFFIXES SDL2 include include/SDL2_net)
+find_path(SDL3_INCLUDE_DIR SDL.h
+          HINTS ENV SDL3DIR
+          PATH_SUFFIXES SDL3 include include/SDL3)
 
-find_library(SDL2_NET_LIBRARY SDL2_net
-             HINTS ENV SDL2DIR
+find_library(SDL3_LIBRARY SDL3
+          HINTS ENV SDL3DIR
+          PATH_SUFFIXES lib)
+
+find_library(SDL3_MAIN_LIBRARY SDL3main
+             HINTS ENV SDL3DIR
              PATH_SUFFIXES lib)
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(SDL2_net REQUIRED_VARS SDL2_NET_LIBRARY SDL2_NET_INCLUDE_DIR)
+find_package_handle_standard_args(SDL3 REQUIRED_VARS SDL3_LIBRARY SDL3_INCLUDE_DIR)
+
+set(SDL3_MAIN_FOUND NO)
+if(SDL3_MAIN_LIBRARY)
+    set(SDL3_MAIN_FOUND YES)
+endif()
 
 ## EOF
 

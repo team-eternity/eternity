@@ -126,7 +126,7 @@ function(eternity_target_sources _TARGET)
    endif()
 
    if(APPLE)
-      # Add the base binary dir for the SDL2 symlink added from ExternalLibraries
+      # Add the base binary dir for the SDL3 symlink added from ExternalLibraries
       target_include_directories("${_TARGET}" PRIVATE ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR})
       target_sources("${_TARGET}" PRIVATE
          macos/i_macwindow.h
@@ -752,15 +752,15 @@ set_target_properties(eternity
 
 eternity_target_compile_definitions(eternity)
 eternity_target_sources(eternity)
-eternity_copy_libs(eternity)
+#eternity_copy_libs(eternity)
 eternity_copy_base_and_user(eternity)
 
-target_include_directories(eternity PRIVATE ${SDL2_INCLUDE_DIR} ${SDL2_MIXER_INCLUDE_DIR} ${SDL2_NET_INCLUDE_DIR})
-target_link_libraries(eternity ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY} ${SDL2_NET_LIBRARY} acsvm png_static snes_spc ADLMIDI_static)
+target_include_directories(eternity PRIVATE ${SDL3_INCLUDE_DIR} ${SDL3_MIXER_INCLUDE_DIR} ${SDL3_NET_INCLUDE_DIR})
+target_link_libraries(eternity ${SDL3_LIBRARY} ${SDL3_MIXER_LIBRARY} ${SDL3_NET_LIBRARY} acsvm png_static snes_spc ADLMIDI_static)
 
 if(APPLE)
    eternity_set_mac_library_output()
-   # Fix the lookup to the SDL2 frameworks
+   # Fix the lookup to the SDL3 frameworks
    set_target_properties(eternity PROPERTIES LINK_FLAGS "-Wl,-F\"${CMAKE_BINARY_DIR}\"")
    set_target_properties(eternity PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE
                                              INSTALL_RPATH "@loader_path")

@@ -23,37 +23,37 @@ function(eternity_copy_libs TARGET)
 
   if(WIN32)
     if(MSVC)
-      set(SDL2_DLL_DIR "$<TARGET_FILE_DIR:SDL2::SDL2>")
-      set(SDL2_MIXER_DLL_DIR "$<TARGET_FILE_DIR:SDL2::mixer>")
-      set(SDL2_NET_DLL_DIR "$<TARGET_FILE_DIR:SDL2::net>")
+      set(SDL3_DLL_DIR "$<TARGET_FILE_DIR:SDL3::SDL3>")
+      set(SDL3_MIXER_DLL_DIR "$<TARGET_FILE_DIR:SDL3::mixer>")
+      set(SDL3_NET_DLL_DIR "$<TARGET_FILE_DIR:SDL3::net>")
     else()
-      set(SDL2_DLL_DIR "$<TARGET_FILE_DIR:SDL2::SDL2>/../bin")
-      set(SDL2_MIXER_DLL_DIR "$<TARGET_FILE_DIR:SDL2::mixer>/../bin")
-      set(SDL2_NET_DLL_DIR "$<TARGET_FILE_DIR:SDL2::net>/../bin")
+      set(SDL3_DLL_DIR "$<TARGET_FILE_DIR:SDL3::SDL3>/../bin")
+      set(SDL3_MIXER_DLL_DIR "$<TARGET_FILE_DIR:SDL3::mixer>/../bin")
+      set(SDL3_NET_DLL_DIR "$<TARGET_FILE_DIR:SDL3::net>/../bin")
     endif()
 
-    # SDL2
-    list(APPEND ETERNITY_DLLS "${SDL2_DLL_DIR}/SDL2.dll")
+    # SDL3
+    list(APPEND ETERNITY_DLLS "${SDL3_DLL_DIR}/SDL3.dll")
 
-    # SDL2_mixer
+    # SDL3_mixer
     if(MSVC)
-        list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/optional/libgme.dll")
-        list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/optional/libogg-0.dll")
-        list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/optional/libopus-0.dll")
-        list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/optional/libopusfile-0.dll")
-		list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/optional/libwavpack-1.dll")
-		list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/optional/libxmp.dll")
+        list(APPEND ETERNITY_DLLS "${SDL3_MIXER_DLL_DIR}/optional/libgme.dll")
+        list(APPEND ETERNITY_DLLS "${SDL3_MIXER_DLL_DIR}/optional/libogg-0.dll")
+        list(APPEND ETERNITY_DLLS "${SDL3_MIXER_DLL_DIR}/optional/libopus-0.dll")
+        list(APPEND ETERNITY_DLLS "${SDL3_MIXER_DLL_DIR}/optional/libopusfile-0.dll")
+		list(APPEND ETERNITY_DLLS "${SDL3_MIXER_DLL_DIR}/optional/libwavpack-1.dll")
+		list(APPEND ETERNITY_DLLS "${SDL3_MIXER_DLL_DIR}/optional/libxmp.dll")
     endif()
-    list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/SDL2_mixer.dll")
+    list(APPEND ETERNITY_DLLS "${SDL3_MIXER_DLL_DIR}/SDL3_mixer.dll")
 
-    # SDL2_net
-    list(APPEND ETERNITY_DLLS "${SDL2_NET_DLL_DIR}/SDL2_net.dll")
+    # SDL3_net
+    list(APPEND ETERNITY_DLLS "${SDL3_NET_DLL_DIR}/SDL3_net.dll")
   endif()
 
   if(APPLE)
-    list(APPEND ETERNITY_FWS SDL2.framework)
-    list(APPEND ETERNITY_FWS SDL2_mixer.framework)
-    list(APPEND ETERNITY_FWS SDL2_net.framework)
+    list(APPEND ETERNITY_FWS SDL3.framework)
+    list(APPEND ETERNITY_FWS SDL3_mixer.framework)
+    list(APPEND ETERNITY_FWS SDL3_net.framework)
 
     foreach(ETERNITY_FW ${ETERNITY_FWS})
     add_custom_command(

@@ -1,4 +1,4 @@
-## Copyright (C) 2017 Max Waine
+## Copyright (C) 2024 Max Waine
 ##
 ## This program is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -15,16 +15,16 @@
 ##
 ################################################################################
 
-find_path(SDL2_MIXER_INCLUDE_DIR SDL_mixer.h
-          HINTS ENV SDL2DIR
-          PATH_SUFFIXES SDL2 include include/SDL2_mixer)
+find_path(SDL3_NET_INCLUDE_DIR SDL_net.h
+          HINTS ENV SDL3DIR
+          PATH_SUFFIXES SDL3 include include/SDL3_net)
 
-find_library(SDL2_MIXER_LIBRARY SDL2_mixer
-             HINTS ENV SDL2DIR
+find_library(SDL3_NET_LIBRARY SDL3_net
+             HINTS ENV SDL3DIR
              PATH_SUFFIXES lib)
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(SDL2_mixer REQUIRED_VARS SDL2_MIXER_LIBRARY SDL2_MIXER_INCLUDE_DIR)
+find_package_handle_standard_args(SDL3_net REQUIRED_VARS SDL3_NET_LIBRARY SDL3_NET_INCLUDE_DIR)
 
 ## EOF
 
