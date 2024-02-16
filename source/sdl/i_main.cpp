@@ -77,9 +77,9 @@ int main(int argc, char **argv)
 
 #if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
    if(I_IsWindowsVistaOrHigher())
-      SDL_setenv("SDL_AUDIODRIVER", "wasapi", true);
+      SDL_setenv("SDL_AUDIO_DRIVER", "wasapi", true);
    else
-      SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
+      SDL_setenv("SDL_AUDIO_DRIVER", "winmm", true);
 #endif
 
 #if (EE_CURRENT_PLATFORM != EE_PLATFORM_WINDOWS) && (__has_include(<xlocale.h>) || __has_include(<locale.h>))

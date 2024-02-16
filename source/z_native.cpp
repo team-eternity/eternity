@@ -1019,7 +1019,8 @@ ZoneHeapThreadSafe::ZoneHeapThreadSafe() :
 //
 ZoneHeapThreadSafe::~ZoneHeapThreadSafe()
 {
-   delete(m_mutex);
+   if(m_mutex)
+      delete(m_mutex);
 }
 
 //=============================================================================

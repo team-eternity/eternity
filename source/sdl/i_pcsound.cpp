@@ -173,7 +173,7 @@ static void PCSound_SDL_Shutdown()
    SDL_QuitSubSystem(SDL_INIT_AUDIO);
 }
 
-extern bool I_GenSDLAudioSpec(int, SDL_AudioFormat, int, int);
+extern bool I_GenSDLAudioSpec(int, SDL_AudioFormat, int);
 
 static int PCSound_SDL_Init(pcsound_callback_func callback_func)
 {
@@ -184,9 +184,8 @@ static int PCSound_SDL_Init(pcsound_callback_func callback_func)
    }
 
    // Figure out mix buffer sizes
-   if(!I_GenSDLAudioSpec(pcsound_sample_rate, SDL_AUDIO_S16, 2, 1024))
+   if(!I_GenSDLAudioSpec(pcsound_sample_rate, SDL_AUDIO_S16, 2))
    {
-      printf("Couldn't determine sound mixing buffer size.\n");
       nomusicparm = true;
       return 0;
    }

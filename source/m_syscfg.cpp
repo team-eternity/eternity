@@ -58,7 +58,6 @@ extern int fov;
 extern int waitAtExit;
 extern int grabmouse;
 extern int use_vsync;
-extern int audio_buffers;
 #endif
 
 #if defined _MSC_VER
@@ -260,10 +259,6 @@ static default_t sysdefaults[] =
    
    DEFAULT_INT("grabmouse", &grabmouse, nullptr, 1, 0, 1, default_t::wad_no,
                "Toggle mouse input grabbing"),
-
-   DEFAULT_INT("audio_buffers", &audio_buffers, nullptr, 2048, 1024, 8192, default_t::wad_no,
-               "SDL_mixer audio buffer size"),
-
 #endif
 
 #ifdef _MSC_VER

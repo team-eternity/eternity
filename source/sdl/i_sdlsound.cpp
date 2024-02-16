@@ -47,8 +47,6 @@ extern bool snd_init;
 // Needed for calling the actual sound output.
 #define MAX_CHANNELS 32
 
-int audio_buffers;
-
 // MaxW: 2019/08/24: float audio if true else Sint16
 bool float_samples = false;
 
@@ -805,7 +803,7 @@ static void I_SDLCacheSound(sfxinfo_t *sound)
 
 static void I_SDLDummyCallback(void *, Uint8 *, int) {}
 
-bool I_GenSDLAudioSpec(int samplerate, SDL_AudioFormat fmt, int channels, int samples)
+bool I_GenSDLAudioSpec(int samplerate, SDL_AudioFormat fmt, int channels)
 {
    SDL_AudioSpec want;
    audio_spec = {};
@@ -814,18 +812,18 @@ bool I_GenSDLAudioSpec(int samplerate, SDL_AudioFormat fmt, int channels, int sa
    want.format   = fmt;
    want.channels = channels;
 
-   if(SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &want) == 0)
+   if(SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &want) != 0)
    {
-      SDL_CloseAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT);
-      if(SDL_GetAudioDeviceFormat(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &audio_spec, nullptr) != 0)
+      if(SDL_GetAudioDeviceFormat(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &audio_spec, &mixbuffer_size) == 0)
       {
-         printf("Failed to get audio device format (%s)\n", SDL_GetError());
-         return false;
+         mixbuffer_size *= audio_spec.channels;
+         SDL_CloseAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT);
+         return true;
       }
-      return true;
+      SDL_CloseAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT);
    }
 
-   printf("Failed to open audio device (%s)\n", SDL_GetError());
+   printf("Couldn't determine sound mixing buffer size: %s\n", SDL_GetError());
    return false;
 }
 
@@ -845,11 +843,8 @@ static int I_SDLInitSound()
       return 0;
    }
 
-   if(!I_IsSoundBufferSizePowerOf2(audio_buffers))
-      audio_buffers = I_MakeSoundBufferSize(audio_buffers);
-
    // Figure out mix buffer sizes
-   if(!I_GenSDLAudioSpec(snd_samplerate, MIX_DEFAULT_FORMAT, 2, audio_buffers))
+   if(!I_GenSDLAudioSpec(snd_samplerate, MIX_DEFAULT_FORMAT, 2))
    {
       printf("Couldn't determine sound mixing buffer size.\n");
       nosfxparm   = true;
@@ -863,19 +858,17 @@ static int I_SDLInitSound()
 
    if(Mix_OpenAudio(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &audio_spec) < 0)
    {
-      printf("Couldn't open audio with desired format.\n");
+      printf("Couldn't open audio with desired format: %s\n", SDL_GetError());
       nosfxparm   = true;
       nomusicparm = true;
       return 0;
    }
 
-   SDL_GetAudioDeviceFormat(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, nullptr, &mixbuffer_size);
-
    // haleyjd 10/02/08: this must be done as early as possible.
    I_SetChannels();
 
    Mix_SetPostMix(float_samples ? I_SDLUpdateSoundCB<float> : I_SDLUpdateSoundCB<Sint16>, nullptr);
-   printf("Configured audio device with %d samples/slice.\n", audio_buffers);
+   printf("Configured audio device with %d samples/slice.\n", mixbuffer_size);
 
    return 1;
 }
