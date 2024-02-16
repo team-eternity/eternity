@@ -116,7 +116,7 @@ static bool ReadByte(byte *result, SDL_RWops *stream)
 {
    int c;
 
-   if(SDL_RWread(stream, &c, 1, 1) == 0)
+   if(SDL_RWread(stream, &c, 1) == 0)
    {
       printf("ReadByte: Unexpected end of file\n");
       return false;
@@ -403,7 +403,7 @@ static bool ReadTrackHeader(midi_track_t *track, SDL_RWops *stream)
    size_t records_read;
    chunk_header_t chunk_header;
 
-   records_read = SDL_RWread(stream, &chunk_header, sizeof(chunk_header_t), 1);
+   records_read = SDL_RWread(stream, &chunk_header, sizeof(chunk_header_t));
 
    if(records_read < 1)
       return false;
@@ -492,7 +492,7 @@ static bool ReadFileHeader(midi_file_t *file, SDL_RWops *stream)
    size_t records_read;
    unsigned int format_type;
 
-   records_read = SDL_RWread(stream, &file->header, sizeof(midi_header_t), 1);
+   records_read = SDL_RWread(stream, &file->header, sizeof(midi_header_t));
 
    if(records_read < 1)
       return false;
