@@ -33,7 +33,8 @@
 #ifdef _MSC_VER
 
 #include <windows.h>
-#include <SDL3/SDL_syswm.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
 
 #include "../d_keywds.h"
 #include "../i_system.h"
@@ -109,15 +110,12 @@ void I_DisableSysMenu(SDL_Window *window)
 {
    if(disable_sysmenu)
    {
-      SDL_SysWMinfo info;
-      
-      SDL_VERSION(&info.version); // this is important!
-      
-      if(SDL_GetWindowWMInfo(window, &info))
+      HWND hwnd = static_cast<HWND>(SDL_GetProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr));
+      if(hwnd)
       {
-         LONG_PTR window_style = GetWindowLongPtr(info.info.win.window, GWL_STYLE);
+         LONG_PTR window_style = GetWindowLongPtr(hwnd, GWL_STYLE);
          window_style &= ~WS_SYSMENU;
-         SetWindowLongPtr(info.info.win.window, GWL_STYLE, window_style);
+         SetWindowLongPtr(hwnd, GWL_STYLE, window_style);
       }
    }
 }
