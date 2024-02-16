@@ -314,12 +314,18 @@ static void I_Pick_Drawer(void)
 //
 static void I_Pick_InitControllers()
 {
-   controllers = ecalloc(SDL_Gamepad **, SDL_NumJoysticks(), sizeof(SDL_Gamepad *));;
-   for(int i = 0; i < SDL_NumJoysticks(); i++)
+   int numJoysticks;
+   SDL_JoystickID *joystickIDs = SDL_GetJoysticks(&numJoysticks);
+
+   controllers = ecalloc(SDL_Gamepad **, numJoysticks, sizeof(SDL_Gamepad *));;
+   for(int i = 0; i < numJoysticks; i++)
    {
       if(SDL_IsGamepad(i))
-         controllers[i] = SDL_OpenGamepad(i);
+         controllers[i] = SDL_OpenGamepad(joystickIDs[i]);
    }
+
+   if(joystickIDs)
+      SDL_free(joystickIDs);
 }
 
 //
@@ -327,12 +333,17 @@ static void I_Pick_InitControllers()
 //
 static void I_Pick_CloseControllers()
 {
-   for(int i = 0; i < SDL_NumJoysticks(); i++)
+   int numJoysticks;
+   SDL_JoystickID *joystickIDs = SDL_GetJoysticks(&numJoysticks);
+
+   for(int i = 0; i < numJoysticks; i++)
    {
       if(controllers[i])
          SDL_CloseGamepad(controllers[i]);
    }
    efree(controllers);
+   if(joystickIDs)
+      SDL_free(joystickIDs);
 }
 
 //
@@ -519,7 +530,7 @@ static void I_Pick_MainLoop(void)
             }
             break;
          case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
-            switch(ev.cbutton.button)
+            switch(ev.gbutton.button)
             {
             case SDL_GAMEPAD_BUTTON_NORTH:
                I_Pick_DoAbort();
@@ -600,20 +611,25 @@ int I_Pick_DoPicker(bool haveIWADs[], int startchoice)
 
    pickvideoinit = true;
 
-   if(displaynum < SDL_GetNumVideoDisplays())
+   int numDisplays;
+   SDL_DisplayID *displayIDs = SDL_GetDisplays(&numDisplays);
+   if(displaynum < numDisplays)
       v_displaynum = displaynum;
    else
       displaynum = 0;
 
+   SDL_PropertiesID windowProperties = SDL_CreateProperties();
+   SDL_SetNumberProperty(windowProperties, SDL_PROP_WINDOW_CREATE_X_NUMBER, SDL_WINDOWPOS_CENTERED_DISPLAY(displayIDs[v_displaynum]));
+   SDL_SetNumberProperty(windowProperties, SDL_PROP_WINDOW_CREATE_Y_NUMBER, SDL_WINDOWPOS_CENTERED_DISPLAY(displayIDs[v_displaynum]));
+   SDL_SetNumberProperty(windowProperties, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, 540);
+   SDL_SetNumberProperty(windowProperties, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, 380);
+
    // create the window
-   if(!(pickwindow = SDL_CreateWindow(nullptr,
-                                      SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
-                                      SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
-                                      540, 380, 0)))
+   if(!(pickwindow = SDL_CreateWindowWithProperties(windowProperties)))
       return -1;
 
    // create the renderer
-   if(!(pickrenderer = SDL_CreateRenderer(pickwindow, -1, SDL_RENDERER_SOFTWARE)))
+   if(!(pickrenderer = SDL_CreateRenderer(pickwindow, nullptr, SDL_RENDERER_SOFTWARE)))
       return -1;
 
    // bring the window to the front
@@ -667,6 +683,10 @@ int I_Pick_DoPicker(bool haveIWADs[], int startchoice)
 
    // close the controllers since we're done with them for now
    I_Pick_CloseControllers();
+
+   // Clean up after SDL
+   SDL_free(displayIDs);
+   SDL_DestroyProperties(windowProperties);
 
    // the currently selected file is returned to d_main.c
    return currentiwad;
