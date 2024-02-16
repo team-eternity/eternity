@@ -816,13 +816,16 @@ bool I_GenSDLAudioSpec(int samplerate, SDL_AudioFormat fmt, int channels, int sa
 
    if(SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &want) == 0)
    {
-      printf("Failed to open audio device (%s)\n", SDL_GetError());
       SDL_CloseAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT);
+      if(SDL_GetAudioDeviceFormat(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &audio_spec, nullptr) != 0)
+      {
+         printf("Failed to get audio device format (%s)\n", SDL_GetError());
+         return false;
+      }
       return true;
    }
 
-   SDL_GetAudioDeviceFormat(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &audio_spec, nullptr);
-
+   printf("Failed to open audio device (%s)\n", SDL_GetError());
    return false;
 }
 
