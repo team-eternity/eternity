@@ -26,9 +26,9 @@
 
 #import <AppKit/AppKit.h>
 
-#include "SDL_config_macosx.h"
-#include "SDL.h"
-#include "SDL_syswm.h"
+#include <SDL3/SDL_config_macosx.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_syswm.h>
 
 #include "../z_zone.h"
 

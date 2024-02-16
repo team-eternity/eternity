@@ -27,7 +27,7 @@
 #define R_MAIN_H__
 
 // NEEDED BY R_doubleToUint32 below
-#include "SDL_endian.h"
+#include <SDL3/SDL_endian.h>
 
 #include "tables.h"
 

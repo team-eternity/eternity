@@ -30,7 +30,7 @@
 // Need platform defines
 #include "i_platform.h"
 
-#include "SDL.h"
+#include <SDL3/SDL.h>
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
 #include "../macos/i_macwindow.h"
 #endif

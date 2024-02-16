@@ -19,7 +19,7 @@
 // Authors: James Haley, Max Waine
 //
 
-#include "SDL.h"
+#include <SDL3/SDL.h>
 
 #include "../hal/i_platform.h"
 
@@ -108,7 +108,7 @@ void SDLVideoDriver::FinishUpdate()
       // Don't bother checking for errors. It should just cancel itself in that case.
       SDL_BlitSurface(primary_surface, nullptr, rgba_surface, nullptr);
       SDL_UpdateTexture(sdltexture, nullptr, rgba_surface->pixels, rgba_surface->pitch);
-      SDL_RenderCopyEx(renderer, sdltexture, nullptr, destrect, 90.0, nullptr, SDL_FLIP_VERTICAL);
+      SDL_RenderTextureRotated(renderer, sdltexture, nullptr, destrect, 90.0, nullptr, SDL_FLIP_VERTICAL);
    }
 
    // haleyjd 11/12/09: ALWAYS update. Causes problems with some video surface
@@ -194,12 +194,12 @@ void SDLVideoDriver::UnsetPrimaryBuffer()
    }
    if(rgba_surface)
    {
-      SDL_FreeSurface(rgba_surface);
+      SDL_DestroySurface(rgba_surface);
       rgba_surface = nullptr;
    }
    if(primary_surface)
    {
-      SDL_FreeSurface(primary_surface);
+      SDL_DestroySurface(primary_surface);
       primary_surface = nullptr;
    }
    video.screens[0] = nullptr;
@@ -307,7 +307,7 @@ static double I_calcScaleAndDisplacement(SDL_Renderer *renderer, int width, int 
    *displacement = {};
 
    int renderWidth, renderHeight;
-   if(SDL_GetRendererOutputSize(renderer, &renderWidth, &renderHeight))
+   if(SDL_GetCurrentRenderOutputSize(renderer, &renderWidth, &renderHeight))
       printf("Error: %s\n", SDL_GetError());
    else
    {
@@ -362,8 +362,8 @@ bool SDLVideoDriver::InitGraphicsMode()
    if(geom.screentype == screentype_e::FULLSCREEN ||
       geom.screentype == screentype_e::FULLSCREEN_DESKTOP)
    {
-      window_flags |= SDL_WINDOW_ALLOW_HIGHDPI;
-      fallback_w_flags |= SDL_WINDOW_ALLOW_HIGHDPI;
+      window_flags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
+      fallback_w_flags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
    }
 
    // Wanting vsync forces framebuffer acceleration on

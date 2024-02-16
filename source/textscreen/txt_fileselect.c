@@ -324,7 +324,7 @@ char *TXT_SelectFile(char *window_title, char **extensions)
     return result;
 }
 
-#elif defined(__MACOSX__)
+#elif defined(SDL_PLATFORM_MACOS)
 
 // Mac OS X code. Popping up a dialog requires Objective C/Cocoa
 // but we can get away with using AppleScript which avoids adding

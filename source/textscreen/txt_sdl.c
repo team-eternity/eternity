@@ -15,7 +15,7 @@
 // Text mode emulation in SDL
 //
 
-#include "SDL.h"
+#include <SDL3/SDL.h>
 
 #include <ctype.h>
 #include <stdio.h>
@@ -243,7 +243,7 @@ int TXT_Init(void)
     // If highdpi_font is selected, try to initialize high dpi rendering.
     if (font == &highdpi_font)
     {
-        flags |= SDL_WINDOW_ALLOW_HIGHDPI;
+        flags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
     }
 
     TXT_SDLWindow =
@@ -259,11 +259,11 @@ int TXT_Init(void)
     // highdpi flag, check the output size for the screen renderer. If we get
     // the 2x doubled size we expect from a retina display, use the large font
     // for drawing the screen.
-    if ((SDL_GetWindowFlags(TXT_SDLWindow) & SDL_WINDOW_ALLOW_HIGHDPI) != 0)
+    if ((SDL_GetWindowFlags(TXT_SDLWindow) & SDL_WINDOW_HIGH_PIXEL_DENSITY) != 0)
     {
         int render_w, render_h;
 
-        if (SDL_GetRendererOutputSize(renderer, &render_w, &render_h) == 0
+        if (SDL_GetCurrentRenderOutputSize(renderer, &render_w, &render_h) == 0
          && render_w >= TXT_SCREEN_W * (int)large_font.w
          && render_h >= TXT_SCREEN_H * (int)large_font.h)
         {
@@ -303,7 +303,7 @@ void TXT_Shutdown(void)
 {
     free(screendata);
     screendata = NULL;
-    SDL_FreeSurface(screenbuffer);
+    SDL_DestroySurface(screenbuffer);
     screenbuffer = NULL;
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
@@ -395,7 +395,7 @@ static void GetDestRect(SDL_Rect *rect)
 {
     int w, h;
 
-    SDL_GetRendererOutputSize(renderer, &w, &h);
+    SDL_GetCurrentRenderOutputSize(renderer, &w, &h);
     rect->x = (w - screenbuffer->w) / 2;
     rect->y = (h - screenbuffer->h) / 2;
     rect->w = screenbuffer->w;
@@ -435,7 +435,7 @@ void TXT_UpdateScreenArea(int x, int y, int w, int h)
 
     SDL_RenderClear(renderer);
     GetDestRect(&rect);
-    SDL_RenderCopy(renderer, screentx, NULL, &rect);
+    SDL_RenderTexture(renderer, screentx, NULL, &rect);
     SDL_RenderPresent(renderer);
 
     SDL_DestroyTexture(screentx);
@@ -609,21 +609,21 @@ signed int TXT_GetChar(void)
 
         switch (ev.type)
         {
-            case SDL_CONTROLLERBUTTONDOWN:
+            case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
                 return TXT_MOUSE_LEFT;
                 break;
 
-            case SDL_MOUSEBUTTONDOWN:
+            case SDL_EVENT_MOUSE_BUTTON_DOWN:
                 if (ev.button.button < TXT_MAX_MOUSE_BUTTONS)
                 {
                     return SDLButtonToTXTButton(ev.button.button);
                 }
                 break;
 
-            case SDL_MOUSEWHEEL:
+            case SDL_EVENT_MOUSE_WHEEL:
                 return SDLWheelToTXTButton(&ev.wheel);
 
-            case SDL_KEYDOWN:
+            case SDL_EVENT_KEY_DOWN:
                 switch (input_mode)
                 {
                     case TXT_INPUT_RAW:
@@ -643,7 +643,7 @@ signed int TXT_GetChar(void)
                 }
                 break;
 
-            case SDL_TEXTINPUT:
+            case SDL_EVENT_TEXT_INPUT:
                 if (input_mode == TXT_INPUT_TEXT)
                 {
                     // TODO: Support input of more than just the first char?
@@ -655,11 +655,11 @@ signed int TXT_GetChar(void)
                 }
                 break;
 
-            case SDL_QUIT:
+            case SDL_EVENT_QUIT:
                 // Quit = escape
                 return 27;
 
-            case SDL_MOUSEMOTION:
+            case SDL_EVENT_MOUSE_MOTION:
                 if (MouseHasMoved())
                 {
                     return 0;
@@ -682,11 +682,11 @@ int TXT_GetModifierState(txt_modifier_t mod)
     switch (mod)
     {
         case TXT_MOD_SHIFT:
-            return (state & KMOD_SHIFT) != 0;
+            return (state & SDL_KMOD_SHIFT) != 0;
         case TXT_MOD_CTRL:
-            return (state & KMOD_CTRL) != 0;
+            return (state & SDL_KMOD_CTRL) != 0;
         case TXT_MOD_ALT:
-            return (state & KMOD_ALT) != 0;
+            return (state & SDL_KMOD_ALT) != 0;
         default:
             return 0;
     }
@@ -882,11 +882,11 @@ void TXT_Sleep(int timeout)
 
 void TXT_SetInputMode(txt_input_mode_t mode)
 {
-    if (mode == TXT_INPUT_TEXT && !SDL_IsTextInputActive())
+    if (mode == TXT_INPUT_TEXT && !SDL_TextInputActive())
     {
         SDL_StartTextInput();
     }
-    else if (SDL_IsTextInputActive() && mode != TXT_INPUT_TEXT)
+    else if (SDL_TextInputActive() && mode != TXT_INPUT_TEXT)
     {
         SDL_StopTextInput();
     }

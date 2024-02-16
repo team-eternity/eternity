@@ -25,8 +25,8 @@
 //
 //-----------------------------------------------------------------------------
 
-#include "SDL.h"
-#include "SDL_mixer.h"
+#include <SDL3/SDL.h>
+#include <SDL3_mixer/SDL_mixer.h>
 
 #include "../z_zone.h"
 #include "../d_main.h"
@@ -184,7 +184,7 @@ static int PCSound_SDL_Init(pcsound_callback_func callback_func)
    }
 
    // Figure out mix buffer sizes
-   if(!I_GenSDLAudioSpec(pcsound_sample_rate, AUDIO_S16SYS, 2, 1024))
+   if(!I_GenSDLAudioSpec(pcsound_sample_rate, SDL_AUDIO_S16, 2, 1024))
    {
       printf("Couldn't determine sound mixing buffer size.\n");
       nomusicparm = true;
@@ -220,7 +220,7 @@ static int PCSound_SDL_Init(pcsound_callback_func callback_func)
 
 static bool pcs_initialised = false;
 
-static SDL_mutex *sound_lock;
+static SDL_Mutex *sound_lock;
 
 static Uint8 *current_sound_lump = nullptr;
 static Uint8 *current_sound_pos = nullptr;

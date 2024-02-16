@@ -33,7 +33,7 @@
 #ifdef _MSC_VER
 
 #include <windows.h>
-#include "SDL_syswm.h"
+#include <SDL3/SDL_syswm.h>
 
 #include "../d_keywds.h"
 #include "../i_system.h"

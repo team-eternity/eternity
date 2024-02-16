@@ -24,7 +24,7 @@
 #include <conio.h>
 #endif
 
-#include "SDL.h"
+#include <SDL3/SDL.h>
 
 // HAL modules
 #include "../hal/i_gamepads.h"
@@ -415,7 +415,7 @@ int I_CheckAbort()
    {
       switch(ev.type)
       {
-      case SDL_KEYDOWN:
+      case SDL_EVENT_KEY_DOWN:
          if(ev.key.keysym.sym == SDLK_ESCAPE)
             return true;
       default:

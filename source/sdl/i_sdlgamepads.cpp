@@ -19,12 +19,12 @@
 // Authors: James Haley, Max Waine
 //
 
-#ifdef __APPLE__
-#include "SDL2/SDL.h"
-#include "SDL2/SDL_gamecontroller.h"
+#ifdef SDL_PLATFORM_APPLE
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_gamepad.h>
 #else
-#include "SDL.h"
-#include "SDL_gamecontroller.h"
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_gamepad.h>
 #endif
 
 #include "../z_zone.h"
@@ -38,14 +38,14 @@
 #include "i_timer.h"
 
 // Assertions
-static_assert(HALGamePad::MAXBUTTONS >= SDL_CONTROLLER_BUTTON_MAX);
-static_assert(HALGamePad::MAXAXES >= SDL_CONTROLLER_AXIS_MAX);
+static_assert(HALGamePad::MAXBUTTONS >= SDL_GAMEPAD_BUTTON_MAX);
+static_assert(HALGamePad::MAXAXES >= SDL_GAMEPAD_AXIS_MAX);
 
 // Module-private globals
 
-// SDL_GameController structure for the currently open GameController device (if any).
+// SDL_Gamepad structure for the currently open GameController device (if any).
 // Singleton resource.
-static SDL_GameController *gamecontroller;
+static SDL_Gamepad *gamecontroller;
 
 // Index of active SDL GameController structure. -1 while not valid.
 static int activeIdx = -1;
@@ -73,7 +73,7 @@ void SDLGamePadDriver::shutdown()
    // if the GameController is still active, shut it down.
    if(gamecontroller)
    {
-      SDL_GameControllerClose(gamecontroller);
+      SDL_CloseGamepad(gamecontroller);
       gamecontroller = nullptr;
    }
 }
@@ -90,13 +90,13 @@ void SDLGamePadDriver::enumerateDevices()
    for(int i = 0; i < SDL_NumJoysticks(); i++)
    {
       // Use only valid gamepads
-      if(SDL_IsGameController(i))
+      if(SDL_IsGamepad(i))
       {
          // Skip this controller if it can't be opened
-         if(SDL_GameController *temp = SDL_GameControllerOpen(i); !temp)
+         if(SDL_Gamepad *temp = SDL_OpenGamepad(i); !temp)
             continue;
          else
-            SDL_GameControllerClose(temp);
+            SDL_CloseGamepad(temp);
 
          sdlDev = new SDLGamePad(i);
          addDevice(sdlDev);
@@ -135,10 +135,10 @@ bool SDLGamePad::select()
    // remember who is in use internally
    activeIdx = sdlIndex;
 
-   if((gamecontroller = SDL_GameControllerOpen(sdlIndex)) != nullptr)
+   if((gamecontroller = SDL_OpenGamepad(sdlIndex)) != nullptr)
    {
-      numAxes    = SDL_CONTROLLER_AXIS_MAX;
-      numButtons = SDL_CONTROLLER_BUTTON_MAX;
+      numAxes    = SDL_GAMEPAD_AXIS_MAX;
+      numButtons = SDL_GAMEPAD_BUTTON_MAX;
       return true;
    }
    else
@@ -155,7 +155,7 @@ void SDLGamePad::deselect()
 
    if(gamecontroller)
    {
-      SDL_GameControllerClose(gamecontroller);
+      SDL_CloseGamepad(gamecontroller);
       gamecontroller = nullptr;
       activeIdx      = -1;
    }
@@ -213,27 +213,27 @@ void SDLGamePad::normAxisPair(float &axisx, float &axisy, int threshold, int min
 //
 void SDLGamePad::poll()
 {
-   SDL_GameControllerUpdate();
+   SDL_UpdateGamepads();
 
    // save old button and axis states
    backupState();
 
    // get button states
-   for(int i = 0; i < numButtons && i < SDL_CONTROLLER_BUTTON_MAX; i++)
-      state.buttons[i] = !!SDL_GameControllerGetButton(gamecontroller, SDL_GameControllerButton(i));
+   for(int i = 0; i < numButtons && i < SDL_GAMEPAD_BUTTON_MAX; i++)
+      state.buttons[i] = !!SDL_GetGamepadButton(gamecontroller, SDL_GamepadButton(i));
 
    // get axis states
-   for(int i = 0; i < numAxes && i < SDL_CONTROLLER_AXIS_MAX; i++)
-      state.axes[i] = SDL_GameControllerGetAxis(gamecontroller, SDL_GameControllerAxis(i));
+   for(int i = 0; i < numAxes && i < SDL_GAMEPAD_AXIS_MAX; i++)
+      state.axes[i] = SDL_GetGamepadAxis(gamecontroller, SDL_GamepadAxis(i));
 
-   normAxisPair(state.axes[SDL_CONTROLLER_AXIS_LEFTX],  state.axes[SDL_CONTROLLER_AXIS_LEFTY],  i_joy_deadzone_left,  -32768, 32767);
-   normAxisPair(state.axes[SDL_CONTROLLER_AXIS_RIGHTX], state.axes[SDL_CONTROLLER_AXIS_RIGHTY], i_joy_deadzone_right, -32768, 32767);
+   normAxisPair(state.axes[SDL_GAMEPAD_AXIS_LEFTX],  state.axes[SDL_GAMEPAD_AXIS_LEFTY],  i_joy_deadzone_left,  -32768, 32767);
+   normAxisPair(state.axes[SDL_GAMEPAD_AXIS_RIGHTX], state.axes[SDL_GAMEPAD_AXIS_RIGHTY], i_joy_deadzone_right, -32768, 32767);
 
-   state.axes[SDL_CONTROLLER_AXIS_TRIGGERLEFT]  = normAxis(state.axes[SDL_CONTROLLER_AXIS_TRIGGERLEFT],  i_joy_deadzone_trigger, 32767);
-   state.axes[SDL_CONTROLLER_AXIS_TRIGGERRIGHT] = normAxis(state.axes[SDL_CONTROLLER_AXIS_TRIGGERRIGHT], i_joy_deadzone_trigger, 32767);
+   state.axes[SDL_GAMEPAD_AXIS_LEFT_TRIGGER]  = normAxis(state.axes[SDL_GAMEPAD_AXIS_LEFT_TRIGGER],  i_joy_deadzone_trigger, 32767);
+   state.axes[SDL_GAMEPAD_AXIS_RIGHT_TRIGGER] = normAxis(state.axes[SDL_GAMEPAD_AXIS_RIGHT_TRIGGER], i_joy_deadzone_trigger, 32767);
 }
 
-static constexpr const char *stringForAxis[SDL_CONTROLLER_AXIS_MAX] =
+static constexpr const char *stringForAxis[SDL_GAMEPAD_AXIS_MAX] =
 {
    "Left X",
    "Left Y",
@@ -244,12 +244,12 @@ static constexpr const char *stringForAxis[SDL_CONTROLLER_AXIS_MAX] =
 };
 
 //
-// Gets a name for a SDL_GameControllerAxis (if possible)
+// Gets a name for a SDL_GamepadAxis (if possible)
 //
 const char *SDLGamePad::getAxisName(const int axis)
 {
-   const SDL_GameControllerAxis controllerAxis = SDL_GameControllerAxis(axis);
-   if(controllerAxis > SDL_CONTROLLER_AXIS_INVALID && controllerAxis < SDL_CONTROLLER_AXIS_MAX)
+   const SDL_GamepadAxis controllerAxis = SDL_GamepadAxis(axis);
+   if(controllerAxis > SDL_GAMEPAD_AXIS_INVALID && controllerAxis < SDL_GAMEPAD_AXIS_MAX)
       return stringForAxis[axis];
    else
       return Super::getAxisName(axis);
@@ -595,7 +595,7 @@ void SDLDamageEffect::evolve(sdlRumbleVibration_t &sdlvid, uint32_t curTime)
 //
 // SDLHapticInterface
 //
-// Implements HALHapticInterface using SDL_GameControllerRumble
+// Implements HALHapticInterface using SDL_RumbleGamepad
 //
 
 //
@@ -613,7 +613,7 @@ SDLHapticInterface::SDLHapticInterface()
 //
 void SDLHapticInterface::zeroState()
 {
-   SDL_GameControllerRumble(gamecontroller, 0, 0, 0);
+   SDL_RumbleGamepad(gamecontroller, 0, 0, 0);
 }
 
 //
@@ -708,7 +708,7 @@ void SDLHapticInterface::updateEffects()
    static int prevx, prevy = 0;
 
    // set state to the device using the summation of the effects
-   SDL_GameControllerRumble(gamecontroller, sdlvib.leftMotorSpeed, sdlvib.rightMotorSpeed, 1000);
+   SDL_RumbleGamepad(gamecontroller, sdlvib.leftMotorSpeed, sdlvib.rightMotorSpeed, 1000);
 }
 
 //

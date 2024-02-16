@@ -19,10 +19,10 @@
 // Authors: James Haley, Max Waine
 //
 
-#ifdef __APPLE__
-#include "SDL2/SDL.h"
+#ifdef SDL_PLATFORM_APPLE
+#include <SDL3/SDL.h>
 #else
-#include "SDL.h"
+#include <SDL3/SDL.h>
 #endif
 
 #include "../z_zone.h"
@@ -41,7 +41,7 @@ static WadDirectory  pickwad;       // private directory for startup.wad
 static int           currentiwad;   // currently selected IWAD
 static bool         *haveIWADArray; // valid IWADs, passed here from d_main.c
 
-static SDL_GameController **controllers; // All controllers
+static SDL_Gamepad **controllers; // All controllers
 
 extern int           displaynum;  // What number display to place windows on
 
@@ -244,7 +244,7 @@ static void I_Pick_DrawBG()
          b = *src++;
 
          SDL_SetRenderDrawColor(pickrenderer, r, g, b, SDL_ALPHA_OPAQUE);
-         SDL_RenderDrawPoint(pickrenderer, x, y);
+         SDL_RenderPoint(pickrenderer, x, y);
       }
    }
 }
@@ -282,7 +282,7 @@ static void I_Pick_DrawIWADPic(int pic)
          b = pal[color * 3 + 2];
 
          SDL_SetRenderDrawColor(pickrenderer, r, g, b, SDL_ALPHA_OPAQUE);
-         SDL_RenderDrawPoint(pickrenderer, x, y);
+         SDL_RenderPoint(pickrenderer, x, y);
       }
    }
 }
@@ -314,11 +314,11 @@ static void I_Pick_Drawer(void)
 //
 static void I_Pick_InitControllers()
 {
-   controllers = ecalloc(SDL_GameController **, SDL_NumJoysticks(), sizeof(SDL_GameController *));;
+   controllers = ecalloc(SDL_Gamepad **, SDL_NumJoysticks(), sizeof(SDL_Gamepad *));;
    for(int i = 0; i < SDL_NumJoysticks(); i++)
    {
-      if(SDL_IsGameController(i))
-         controllers[i] = SDL_GameControllerOpen(i);
+      if(SDL_IsGamepad(i))
+         controllers[i] = SDL_OpenGamepad(i);
    }
 }
 
@@ -330,7 +330,7 @@ static void I_Pick_CloseControllers()
    for(int i = 0; i < SDL_NumJoysticks(); i++)
    {
       if(controllers[i])
-         SDL_GameControllerClose(controllers[i]);
+         SDL_CloseGamepad(controllers[i]);
    }
    efree(controllers);
 }
@@ -489,10 +489,10 @@ static void I_Pick_MainLoop(void)
       {
          switch(ev.type)
          {
-         case SDL_MOUSEBUTTONDOWN:
+         case SDL_EVENT_MOUSE_BUTTON_DOWN:
             I_Pick_MouseEvent(&ev, &doloop);
             break;
-         case SDL_KEYDOWN:
+         case SDL_EVENT_KEY_DOWN:
             switch(ev.key.keysym.scancode)
             {
             case SDL_SCANCODE_ESCAPE:
@@ -518,24 +518,24 @@ static void I_Pick_MainLoop(void)
                break;
             }
             break;
-         case SDL_CONTROLLERBUTTONDOWN:
+         case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
             switch(ev.cbutton.button)
             {
-            case SDL_CONTROLLER_BUTTON_Y:
+            case SDL_GAMEPAD_BUTTON_NORTH:
                I_Pick_DoAbort();
                break;
-            case SDL_CONTROLLER_BUTTON_A:
-            case SDL_CONTROLLER_BUTTON_B:
-            case SDL_CONTROLLER_BUTTON_X:
-            case SDL_CONTROLLER_BUTTON_START:
+            case SDL_GAMEPAD_BUTTON_SOUTH:
+            case SDL_GAMEPAD_BUTTON_EAST:
+            case SDL_GAMEPAD_BUTTON_WEST:
+            case SDL_GAMEPAD_BUTTON_START:
                doloop = false;
                break;
-            case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
-            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+            case SDL_GAMEPAD_BUTTON_LEFT_SHOULDER:
+            case SDL_GAMEPAD_BUTTON_DPAD_LEFT:
                I_Pick_DoLeft();
                break;
-            case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
-            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+            case SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER:
+            case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:
                I_Pick_DoRight();
                break;
             default:

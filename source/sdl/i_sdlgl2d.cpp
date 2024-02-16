@@ -22,8 +22,8 @@
 #ifdef EE_FEATURE_OPENGL
 
 // SDL headers
-#include "SDL.h"
-#include "SDL_opengl.h"
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_opengl.h>
 
 // HAL header
 #include "../hal/i_platform.h"
@@ -341,7 +341,7 @@ void SDLGL2DVideoDriver::UnsetPrimaryBuffer()
 {
    if(screen)
    {
-      SDL_FreeSurface(screen);
+      SDL_DestroySurface(screen);
       screen = nullptr;
    }
    video.screens[0] = nullptr;
@@ -493,7 +493,7 @@ static double I_calcScaleAndDisplacement(SDL_Window *window, int width, int heig
 bool SDLGL2DVideoDriver::InitGraphicsMode()
 {
    int           v_displaynum  = 0;
-   int           window_flags  = SDL_WINDOW_OPENGL|SDL_WINDOW_ALLOW_HIGHDPI;
+   int           window_flags  = SDL_WINDOW_OPENGL|SDL_WINDOW_HIGH_PIXEL_DENSITY;
    GLvoid       *tempbuffer    = nullptr;
    GLint         texfiltertype = GL_LINEAR;
    int           resolutionWidth = 640;

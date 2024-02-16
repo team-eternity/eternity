@@ -19,9 +19,9 @@
 // Authors: James Haley, Max Waine
 //
 
-#include "SDL.h"
-#include "SDL_net.h"
-#include "SDL_mixer.h"
+#include <SDL3/SDL.h>
+#include <SDL3_net/SDL_net.h>
+#include <SDL3_mixer/SDL_mixer.h>
 
 #include "../z_zone.h"
 #include "../doomdef.h"
@@ -94,7 +94,7 @@ int main(int argc, char **argv)
    Uint32 initflags = (M_CheckParm("-nodraw") &&
                        (M_CheckParm("-nosound") || (M_CheckParm("-nosfx") &&
                                                     M_CheckParm("-nomusic")))) ?
-   SDL_INIT_JOYSTICK : SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER;
+   SDL_INIT_JOYSTICK : SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD;
    if(SDL_Init(initflags) == -1)
    {
       printf("Failed to initialize SDL library: %s\n", SDL_GetError());
@@ -132,13 +132,13 @@ enum
 //
 static void VerifySDLVersions()
 {
-   SDL_version cv;       // compiled version
-   SDL_version lv = {}; // linked version
+   SDL_Version cv;       // compiled version
+   SDL_Version lv = {}; // linked version
    int error = 0;
 
    // expected versions
    // must update these when SDL is updated.
-   static SDL_version ex_vers[3] =
+   static SDL_Version ex_vers[3] =
    {
       // NOTE: currently only the macOS SDL versions needed updating. Leave Windows alone for now.
       // NOTE: it's quite possible that Linux distros will have totally different versions installed.
@@ -181,7 +181,7 @@ static void VerifySDLVersions()
 
    // test SDL_mixer
    SDL_MIXER_VERSION(&cv);
-   const SDL_version *lv2;
+   const SDL_Version *lv2;
    lv2 = Mix_Linked_Version();
 
    if(cv.major != lv2->major || cv.minor != lv2->minor || cv.patch != lv2->patch)

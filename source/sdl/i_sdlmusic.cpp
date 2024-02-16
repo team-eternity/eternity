@@ -28,8 +28,8 @@
 
 #include <optional>
 
-#include "SDL.h"
-#include "SDL_mixer.h"
+#include <SDL3/SDL.h>
+#include <SDL3_mixer/SDL_mixer.h>
 
 #include "../z_zone.h"
 #include "../d_io.h"

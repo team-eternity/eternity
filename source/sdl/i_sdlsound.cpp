@@ -19,8 +19,8 @@
 // Authors: James Haley, Stephen McGranahan, Julian Aubourg
 //
 
-#include "SDL.h"
-#include "SDL_mixer.h"
+#include <SDL3/SDL.h>
+#include <SDL3_mixer/SDL_mixer.h>
 
 #include "../z_zone.h"
 
@@ -92,7 +92,7 @@ struct channel_info_t
    bool reverb;
 
    // haleyjd 10/02/08: SDL semaphore to protect channel
-   SDL_sem *semaphore;
+   SDL_Semaphore *semaphore;
    bool shouldstop; // haleyjd 05/16/11
 
 };
@@ -133,7 +133,7 @@ static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id, bool 
       return false;
 
    // haleyjd 10/02/08: critical section
-   if(SDL_SemWait(channelinfo[channel].semaphore) == 0)
+   if(SDL_WaitSemaphore(channelinfo[channel].semaphore) == 0)
    {
       channelinfo[channel].data = static_cast<float *>(sfx->data);
 
@@ -166,7 +166,7 @@ static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id, bool 
       // Shouldn't be stopped - haleyjd 05/16/11
       channelinfo[channel].shouldstop = false;
 
-      SDL_SemPost(channelinfo[channel].semaphore);
+      SDL_PostSemaphore(channelinfo[channel].semaphore);
 
       return true;
    }
@@ -488,7 +488,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 
       // try to acquire semaphore, but do not block; if the main thread is using
       // this channel we'll just skip it for now - safer and faster.
-      if(SDL_SemTryWait(chan->semaphore) != 0)
+      if(SDL_TryWaitSemaphore(chan->semaphore) != 0)
          continue;
 
       // Left and right channel are in audio stream, alternating.
@@ -508,7 +508,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
       // does happen.
       if(chan->shouldstop || !chan->data)
       {
-         SDL_SemPost(chan->semaphore);
+         SDL_PostSemaphore(chan->semaphore);
          continue;
       }
 
@@ -567,7 +567,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
       }
 
       // release semaphore and move on to the next channel
-      SDL_SemPost(chan->semaphore);
+      SDL_PostSemaphore(chan->semaphore);
    }
 
    // do reverberation if an effect is active

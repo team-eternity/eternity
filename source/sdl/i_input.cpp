@@ -20,9 +20,9 @@
 //
 
 #ifdef __APPLE__
-#include "SDL2/SDL.h"
+#include <SDL3/SDL.h>
 #else
-#include "SDL.h"
+#include <SDL3/SDL.h>
 #endif
 
 // HAL modules
@@ -98,9 +98,9 @@ void UpdateGrab(SDL_Window *window)
       SDL_GetWindowSize(window, &window_w, &window_h);
 
       // Disable handling the mouse during this action
-      SDL_EventState(SDL_MOUSEMOTION, SDL_DISABLE);
+      SDL_EventState(SDL_EVENT_MOUSE_MOTION, SDL_DISABLE);
       SDL_WarpMouseInWindow(window, window_w - 16, window_h - 16);
-      SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
+      SDL_EventState(SDL_EVENT_MOUSE_MOTION, SDL_ENABLE);
    }
 
    currently_grabbed = grab;
@@ -157,7 +157,7 @@ void UpdateFocus(SDL_Window *window)
    screenvisible = ((state & SDL_WINDOW_SHOWN) && !(state & SDL_WINDOW_MINIMIZED));
 
    window_focused = (screenvisible &&
-                     ((state & (SDL_WINDOW_INPUT_GRABBED | SDL_WINDOW_INPUT_FOCUS |
+                     ((state & (SDL_WINDOW_MOUSE_GRABBED | SDL_WINDOW_INPUT_FOCUS |
                                 SDL_WINDOW_MOUSE_FOCUS)) != 0));
 }
 
@@ -383,7 +383,7 @@ static void I_ReadMouse(SDL_Window *window)
    if(x != 0 || y != 0)
    {
       ev.type = ev_mouse;
-      ev.data1 = SDL_MOUSEMOTION;
+      ev.data1 = SDL_EVENT_MOUSE_MOTION;
       if(mouseAccel_type == ACCELTYPE_CHOCO)
       {
          // SoM: So the values that go to Eternity should be 16.16 fixed point...
@@ -516,16 +516,16 @@ static void I_getEvent(SDL_Window *window)
    {
       // haleyjd 10/08/05: from Chocolate DOOM
       if(!window_focused &&
-         (ev.type == SDL_MOUSEMOTION     ||
-          ev.type == SDL_MOUSEBUTTONDOWN ||
-          ev.type == SDL_MOUSEBUTTONUP))
+         (ev.type == SDL_EVENT_MOUSE_MOTION     ||
+          ev.type == SDL_EVENT_MOUSE_BUTTON_DOWN ||
+          ev.type == SDL_EVENT_MOUSE_BUTTON_UP))
       {
          continue;
       }
 
       switch(ev.type)
       {
-      case SDL_TEXTINPUT:
+      case SDL_EVENT_TEXT_INPUT:
          for(unsigned int i = 0; i < SDL_strlen(ev.text.text); i++)
          {
             const char currchar = ev.text.text[i];
@@ -536,14 +536,14 @@ static void I_getEvent(SDL_Window *window)
             }
          }
          break;
-      case SDL_KEYDOWN:
+      case SDL_EVENT_KEY_DOWN:
       {
          const event_t event_keyDown = { ev_keydown, I_TranslateKey(&ev.key.keysym), 0, 0, !!ev.key.repeat };
 
 #if (EE_CURRENT_PLATFORM != EE_PLATFORM_MACOSX)
          // This quick exit code is adapted from PRBoom+
          // See PRBoom+'s I_GetEvent for a cross-platform implementation of how to get that input.
-         if(ev.key.keysym.mod & KMOD_LALT)
+         if(ev.key.keysym.mod & SDL_KMOD_LALT)
          {
             // Prevent executing action on Alt-Tab
             if(ev.key.keysym.scancode == SDL_SCANCODE_TAB)
@@ -562,7 +562,7 @@ static void I_getEvent(SDL_Window *window)
          }
 #else
          // Also provide macOS option for quick exit and fullscreen toggle
-         if(ev.key.keysym.mod & KMOD_GUI)
+         if(ev.key.keysym.mod & SDL_KMOD_GUI)
          {
             if(ev.key.keysym.scancode == SDL_SCANCODE_Q)
             {
@@ -582,14 +582,14 @@ static void I_getEvent(SDL_Window *window)
          D_PostEvent(&event_keyDown);
          break;
       }
-      case SDL_KEYUP:
+      case SDL_EVENT_KEY_UP:
       {
          const event_t event_keyUp = { ev_keyup, I_TranslateKey(&ev.key.keysym), 0, 0, false };
 
          D_PostEvent(&event_keyUp);
          break;
       }
-      case SDL_MOUSEMOTION:
+      case SDL_EVENT_MOUSE_MOTION:
          if(!usemouse || ((mouseAccel_type == ACCELTYPE_CHOCO) || (mouseAccel_type == ACCELTYPE_CUSTOM)))
             continue;
 
@@ -615,7 +615,7 @@ static void I_getEvent(SDL_Window *window)
          sendmouseevent = 1;
          break;
 
-      case SDL_MOUSEBUTTONDOWN:
+      case SDL_EVENT_MOUSE_BUTTON_DOWN:
       {
          if(!usemouse)
             continue;
@@ -660,7 +660,7 @@ static void I_getEvent(SDL_Window *window)
          D_PostEvent(&event_MouseButtonDown);
          break;
       }
-      case SDL_MOUSEWHEEL:
+      case SDL_EVENT_MOUSE_WHEEL:
       {
          if(!usemouse)
             continue;
@@ -691,7 +691,7 @@ static void I_getEvent(SDL_Window *window)
 
          break;
       }
-      case SDL_MOUSEBUTTONUP:
+      case SDL_EVENT_MOUSE_BUTTON_UP:
       {
          if(!usemouse)
             continue;
@@ -728,7 +728,7 @@ static void I_getEvent(SDL_Window *window)
             D_PostEvent(&event_mouseButtonUp);
          break;
       }
-      case SDL_QUIT:
+      case SDL_EVENT_QUIT:
          {
             static const event_t event_quit = { ev_quit };
             D_PostEvent(&event_quit);

@@ -21,7 +21,7 @@
 //
 
 
-#include "SDL.h"
+#include <SDL3/SDL.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -321,7 +321,7 @@ static bool ReadEvent(midi_event_t *event, unsigned int *last_event_type,
    {
       event_type = *last_event_type;
 
-      if(SDL_RWseek(stream, -1, RW_SEEK_CUR) < 0)
+      if(SDL_RWseek(stream, -1, SDL_RW_SEEK_CUR) < 0)
       {
          printf("ReadEvent: Unable to seek in stream\n");
          return false;
