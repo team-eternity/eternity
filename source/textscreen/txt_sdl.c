@@ -164,7 +164,7 @@ static const txt_font_t *FontForName(char *name)
 
 static void ChooseFont(void)
 {
-    SDL_DisplayMode desktop_info;
+    const SDL_DisplayMode *desktop_info;
     char *env;
 
     // Allow normal selection to be overridden from an environment variable:
@@ -182,7 +182,7 @@ static void ChooseFont(void)
     // Get desktop resolution.
     // If in doubt and we can't get a list, always prefer to
     // fall back to the normal font:
-    if (SDL_GetCurrentDisplayMode(0, &desktop_info))
+    if ((desktop_info = SDL_GetCurrentDisplayMode(0)) == NULL)
     {
         font = &highdpi_font;
         return;
@@ -193,7 +193,7 @@ static void ChooseFont(void)
     // a modern high-resolution display, and we can use the
     // large font.
 
-    if (desktop_info.w < 640 || desktop_info.h < 480)
+    if (desktop_info->w < 640 || desktop_info->h < 480)
     {
         font = &small_font;
     }
@@ -246,14 +246,12 @@ int TXT_Init(void)
         flags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
     }
 
-    TXT_SDLWindow =
-        SDL_CreateWindow("", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                         screen_image_w, screen_image_h, flags);
+    TXT_SDLWindow = SDL_CreateWindow("", screen_image_w, screen_image_h, flags);
 
     if (TXT_SDLWindow == NULL)
         return 0;
 
-    renderer = SDL_CreateRenderer(TXT_SDLWindow, -1, 0);
+    renderer = SDL_CreateRenderer(TXT_SDLWindow, NULL, 0);
 
     // Special handling for OS X retina display. If we successfully set the
     // highdpi flag, check the output size for the screen renderer. If we get
@@ -284,10 +282,9 @@ int TXT_Init(void)
     // Instead, we draw everything into an intermediate 8-bit surface
     // the same dimensions as the screen. SDL then takes care of all the
     // 8->32 bit (or whatever depth) color conversions for us.
-    screenbuffer = SDL_CreateRGBSurface(0,
-                                        TXT_SCREEN_W * font->w,
-                                        TXT_SCREEN_H * font->h,
-                                        8, 0, 0, 0, 0);
+    screenbuffer = SDL_CreateSurface(TXT_SCREEN_W * font->w,
+                                     TXT_SCREEN_H * font->h,
+                                     SDL_GetPixelFormatEnumForMasks(8, 0, 0, 0, 0));
 
     SDL_LockSurface(screenbuffer);
     SDL_SetPaletteColors(screenbuffer->format->palette, ega_colors, 0, 16);
@@ -391,21 +388,21 @@ static int LimitToRange(int val, int min, int max)
     }
 }
 
-static void GetDestRect(SDL_Rect *rect)
+static void GetDestRect(SDL_FRect *rect)
 {
     int w, h;
 
     SDL_GetCurrentRenderOutputSize(renderer, &w, &h);
-    rect->x = (w - screenbuffer->w) / 2;
-    rect->y = (h - screenbuffer->h) / 2;
-    rect->w = screenbuffer->w;
-    rect->h = screenbuffer->h;
+    rect->x = (float)(w - screenbuffer->w) / 2;
+    rect->y = (float)(h - screenbuffer->h) / 2;
+    rect->w = (float)screenbuffer->w;
+    rect->h = (float)screenbuffer->h;
 }
 
 void TXT_UpdateScreenArea(int x, int y, int w, int h)
 {
     SDL_Texture *screentx;
-    SDL_Rect rect;
+    SDL_FRect rect;
     int x1, y1;
     int x_end;
     int y_end;
@@ -426,8 +423,6 @@ void TXT_UpdateScreenArea(int x, int y, int w, int h)
     }
 
     SDL_UnlockSurface(screenbuffer);
-
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 
     // TODO: This is currently creating a new texture every time we render
     // the screen; find a more efficient way to do it.
@@ -450,8 +445,11 @@ void TXT_GetMousePosition(int *x, int *y)
 {
     int window_w, window_h;
     int origin_x, origin_y;
+    float temp_x, temp_y;
 
-    SDL_GetMouseState(x, y);
+    SDL_GetMouseState(&temp_x, &temp_y);
+    *x = (int)temp_x;
+    *y = (int)temp_y;
 
     // Translate mouse position from 'pixel' position into character position.
     // We are working here in screen coordinates and not pixels, since this is

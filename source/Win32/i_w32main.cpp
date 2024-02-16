@@ -34,8 +34,6 @@
 
 #include <windows.h>
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_main.h>
-
 #include "../d_keywds.h"
 #include "../i_system.h"
 

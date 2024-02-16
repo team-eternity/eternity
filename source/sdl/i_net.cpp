@@ -526,7 +526,7 @@ void I_InitNetwork(void)
    int numresolved = 1;
    while(numresolved < doomcom->numnodes)
    {
-      for(int node = 1; node++; node < doomcom->numnodes)
+      for(int node = 1; node < doomcom->numnodes; node++)
       {
          const int resolveResult = SDLNet_WaitUntilResolved(sendaddress[doomcom->numnodes], 0);
          if(resolveResult != -1)

@@ -36,6 +36,7 @@
 #elif __has_include(<locale.h>)
 #include <locale.h>
 #endif
+#include <SDL3/SDL_main.h>
 #endif
 
 // main Tweaks for Windows Platforms

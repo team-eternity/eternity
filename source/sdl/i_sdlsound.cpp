@@ -53,7 +53,7 @@ int audio_buffers;
 bool float_samples = false;
 
 // haleyjd 12/18/13: size at which mix buffers must be allocated
-static Uint32 mixbuffer_size;
+static int mixbuffer_size;
 
 // haleyjd 12/18/13: primary floating point mixing buffers
 static float *mixbuffer[2];
@@ -813,14 +813,14 @@ bool I_GenSDLAudioSpec(int samplerate, SDL_AudioFormat fmt, int channels, int sa
    want.freq     = samplerate;
    want.format   = fmt;
    want.channels = channels;
-   want.samples  = samples;
-   want.callback = I_SDLDummyCallback;
 
-   if(SDL_OpenAudio(&want, &audio_spec) >= 0)
+   if(SDL_OpenAudioDevice(0, &want) == 0)
    {
-      SDL_CloseAudio();
+      SDL_CloseAudioDevice(0);
       return true;
    }
+
+   SDL_GetAudioDeviceFormat(0, &audio_spec, nullptr);
 
    return false;
 }
@@ -857,7 +857,7 @@ static int I_SDLInitSound()
    float_samples = SDL_AUDIO_ISFLOAT(audio_spec.format);
    step          = audio_spec.channels;
 
-   if(Mix_OpenAudio(audio_spec.freq, audio_spec.format, audio_spec.channels, audio_spec.samples) < 0)
+   if(Mix_OpenAudio(0, &audio_spec) < 0)
    {
       printf("Couldn't open audio with desired format.\n");
       nosfxparm   = true;
@@ -865,7 +865,7 @@ static int I_SDLInitSound()
       return 0;
    }
 
-   mixbuffer_size = audio_spec.size / sample_size;
+   SDL_GetAudioDeviceFormat(0, nullptr, &mixbuffer_size);
 
    // haleyjd 10/02/08: this must be done as early as possible.
    I_SetChannels();
