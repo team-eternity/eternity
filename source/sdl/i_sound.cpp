@@ -70,6 +70,18 @@ static i_musicdriver_t *i_musicdriver;
 // SFX API
 //
 
+
+//
+// What it says on the tin.
+//
+int I_PlaybackFrequency()
+{
+   if(snd_init)
+      return i_sounddriver->SampleRate();
+   else
+      return 0;
+}
+
 //
 // I_UpdateSoundParams
 //

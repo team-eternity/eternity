@@ -41,6 +41,7 @@ struct i_sounddriver_t
    int  (*SoundIsPlaying)(int);
    void (*UpdateSoundParams)(int, int, int, int);
    void (*UpdateEQParams)(void);
+   int  (*SampleRate)(void);
 };
 
 // Init at program start...
@@ -124,6 +125,9 @@ void I_StopSong(int handle);
 
 // See above (register), then think backwards
 void I_UnRegisterSong(int handle);
+
+// What it says on the tin.
+int I_PlaybackFrequency();
 
 // Allegro card support jff 1/18/98
 extern  int snd_card;

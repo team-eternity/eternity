@@ -1501,6 +1501,8 @@ void S_Init(int sfxVolume, int musicVolume)
    else
       usermsg("\tsounds to be cached dynamically.");
 
+   S_ReverbInit();
+
    if(!mus_card || nomusicparm)
       return;
 

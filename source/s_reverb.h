@@ -38,6 +38,7 @@ void S_ResumeReverb();
 void S_ReverbSetState(ereverb_t *ereverb);
 void S_ProcessReverb(float *stream, const int samples, const int skip);
 void S_ProcessReverbReplace(float *stream, int samples);
+void S_ReverbInit();
 
 #endif
 

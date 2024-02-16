@@ -153,7 +153,7 @@ static void I_effectSPC(void *udata, Uint8 *stream, int len)
       static_assert(std::is_same_v<T, Sint16> || std::is_same_v<T, float>,
                     "I_effectSPC called with incompatible template parameter");
 
-      stepremainder += ((32000 << 16) / 44100);
+      stepremainder += ((32000 << 16) / I_PlaybackFrequency());
 
       i += (stepremainder >> 16);
 

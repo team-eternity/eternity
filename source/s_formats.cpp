@@ -30,6 +30,7 @@
 
 #include "doomtype.h"
 #include "d_gi.h"
+#include "i_sound.h"
 #include "m_binary.h"
 #include "m_compare.h"
 #include "m_swap.h"
@@ -309,8 +310,6 @@ static bool S_detectSoundFormat(sounddata_t &sd, byte *data, size_t len)
 // PCM Conversion
 //
 
-#define TARGETSAMPLERATE 44100u
-
 //
 // S_alenForSample
 //
@@ -319,7 +318,7 @@ static bool S_detectSoundFormat(sounddata_t &sd, byte *data, size_t len)
 //
 static unsigned int S_alenForSample(const sounddata_t &sd)
 {
-   return (unsigned int)(((uint64_t)sd.samplecount * TARGETSAMPLERATE) / sd.samplerate);
+   return (unsigned int)(((uint64_t)sd.samplecount * I_PlaybackFrequency()) / sd.samplerate);
 }
 
 //
@@ -340,7 +339,7 @@ static void S_convertPCMU8(sfxinfo_t *sfx, const sounddata_t &sd)
       float *dest = static_cast<float *>(sfx->data);
       byte  *src  = sd.samplestart;
 
-      unsigned int step = (sd.samplerate << 16) / TARGETSAMPLERATE;
+      unsigned int step = (sd.samplerate << 16) / I_PlaybackFrequency();
       unsigned int stepremainder = 0, j = 0;
 
       // do linear filtering operation
@@ -407,7 +406,7 @@ static void S_convertPCM16(sfxinfo_t *sfx, const sounddata_t &sd)
       float   *dest = static_cast<float *>(sfx->data);
       int16_t *src  = reinterpret_cast<int16_t *>(sd.samplestart);
 
-      unsigned int step = (sd.samplerate << 16) / TARGETSAMPLERATE;
+      unsigned int step = (sd.samplerate << 16) / I_PlaybackFrequency();
       unsigned int stepremainder = 0, j = 0;
 
       // do linear filtering operation

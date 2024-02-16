@@ -95,9 +95,8 @@ static inline void undenormalize(double &d)
 //
 
 #define MAXDELAY 250u
-#define MAXSR    44100u
 
-static double delayBuffer[MAXDELAY*MAXSR/1000];
+static double *delayBuffer;
 
 static size_t delaySize;
 static size_t readPos;
@@ -109,12 +108,12 @@ static void delay_clearBuffer()
       delayBuffer[i] = 0.0;
 }
 
-static void delay_set(size_t delayms, size_t sr = MAXSR)
+static void delay_set(size_t delayms, size_t sr = I_PlaybackFrequency())
 {
    if(delayms > MAXDELAY)
       delayms = MAXDELAY;
-   if(sr > MAXSR)
-      sr = MAXSR;
+   if(sr > I_PlaybackFrequency())
+      sr = I_PlaybackFrequency();
    size_t curDelaySize = delaySize;
    delaySize = delayms * sr / 1000;
 
@@ -340,8 +339,8 @@ static void init_3band(const eqparams_t &params, EQSTATE &eql, EQSTATE &eqr)
    eql.hg = eqr.hg = params.highgain;
 
    // Calculate filter cutoff frequencies
-   eql.lf = eqr.lf = 2 * sin(SND_PI * (params.lowfreq  / (double)MAXSR));
-   eql.hf = eqr.hf = 2 * sin(SND_PI * (params.highfreq / (double)MAXSR));
+   eql.lf = eqr.lf = 2 * sin(SND_PI * (params.lowfreq  / double(I_PlaybackFrequency())));
+   eql.hf = eqr.hf = 2 * sin(SND_PI * (params.highfreq / double(I_PlaybackFrequency())));
 }
 
 static void clear_3band(EQSTATE &eq)
@@ -738,6 +737,14 @@ void S_ProcessReverb(float *stream, const int samples, const int skip)
 void S_ProcessReverbReplace(float *stream, int samples)
 {
    reverb.processReplace(stream, stream+1, stream, stream+1, samples, 2);
+}
+
+//
+// Allocate the delay buffer based on the maximum playback frequency.
+//
+void S_ReverbInit()
+{
+   delayBuffer = ecalloc(double *, MAXDELAY * I_PlaybackFrequency() / 1000, 1);
 }
 
 // EOF

@@ -61,7 +61,7 @@ SDL_AudioSpec audio_spec = {};
 
 // MWM 2000-01-08: Sample rate in samples/second
 // haleyjd 10/28/05: updated for Julian's music code, need full quality now
-static const int snd_samplerate = 44100;
+int snd_samplerate = 44100;
 
 struct channel_info_t
 {
@@ -584,6 +584,14 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 //
 //============================================================================
 
+//
+// Returns the sample rate. That's it.
+//
+static int I_SampleRate()
+{
+   return snd_samplerate;
+}
+
 #define SND_PI 3.14159265
 
 //
@@ -803,6 +811,10 @@ static void I_SDLCacheSound(sfxinfo_t *sound)
 
 static void I_SDLDummyCallback(void *, Uint8 *, int) {}
 
+//
+// Generates an SDL_AudioSpec for storage, as well as retaining a few key details,
+// like mix buffer size, and sample rate.
+//
 bool I_GenSDLAudioSpec(int samplerate, SDL_AudioFormat fmt, int channels)
 {
    SDL_AudioSpec want;
@@ -817,6 +829,7 @@ bool I_GenSDLAudioSpec(int samplerate, SDL_AudioFormat fmt, int channels)
       if(SDL_GetAudioDeviceFormat(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &audio_spec, &mixbuffer_size) == 0)
       {
          mixbuffer_size *= audio_spec.channels;
+         snd_samplerate  = audio_spec.freq;
          SDL_CloseAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT);
          return true;
       }
@@ -852,9 +865,9 @@ static int I_SDLInitSound()
       return 0;
    }
 
-   sample_size   = SDL_AUDIO_BITSIZE(audio_spec.format) / 8; // bits to bytes
-   float_samples = SDL_AUDIO_ISFLOAT(audio_spec.format);
-   step          = audio_spec.channels;
+   sample_size    = SDL_AUDIO_BITSIZE(audio_spec.format) / 8; // bits to bytes
+   float_samples  = SDL_AUDIO_ISFLOAT(audio_spec.format);
+   step           = audio_spec.channels;
 
    if(Mix_OpenAudio(SDL_AUDIO_DEVICE_DEFAULT_OUTPUT, &audio_spec) < 0)
    {
@@ -889,6 +902,7 @@ i_sounddriver_t i_sdlsound_driver =
    I_SDLSoundIsPlaying,    // SoundIsPlaying
    I_SDLUpdateSoundParams, // UpdateSoundParams
    I_SDLUpdateEQParams,    // UpdateEQParams
+   I_SampleRate,           // SampleRate
 };
 
 // EOF
