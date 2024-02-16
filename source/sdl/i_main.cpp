@@ -207,7 +207,7 @@ static void VerifySDLVersions()
              lv2->major, lv2->minor, lv2->patch);
 
    SDL_NET_VERSION(&cv);
-   lv2 = SDLNet_Linked_Version();
+   lv2 = SDLNet_LinkedVersion();
 
    if(cv.major != lv2->major || cv.minor != lv2->minor || cv.patch != lv2->patch)
    {
