@@ -182,7 +182,7 @@ static void ChooseFont(void)
     // Get desktop resolution.
     // If in doubt and we can't get a list, always prefer to
     // fall back to the normal font:
-    if ((desktop_info = SDL_GetCurrentDisplayMode(0)) == NULL)
+    if ((desktop_info = SDL_GetCurrentDisplayMode(SDL_GetPrimaryDisplay())) == NULL)
     {
         font = &highdpi_font;
         return;
