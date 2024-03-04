@@ -280,12 +280,19 @@ void R_ComputeIntersection(const dynaseg_t *part, const dynaseg_t *seg, double &
             const double ba2  = bdx2 / bl2;
             const double bb2  = bdy2 / bl2;
             const double bd   = dy * ba2 - dx * bb2;
-            const double bw   = (
-               dx * (segv1->fbackup.y - part->psy) +
-               dy * (part->psx - segv1->fbackup.x)
-            ) / bd;
-            fbackup->x = static_cast<float>(segv1->fbackup.x + ba2 * bw);
-            fbackup->y = static_cast<float>(segv1->fbackup.y + bb2 * bw);
+
+            if(bd == 0.0)
+               *fbackup = segv1->fbackup;
+            else
+            {
+               const double bw = (
+                  dx * (segv1->fbackup.y - part->psy) +
+                  dy * (part->psx - segv1->fbackup.x)
+                  ) / bd;
+
+               fbackup->x = float(segv1->fbackup.x + ba2 * bw);
+               fbackup->y = float(segv1->fbackup.y + bb2 * bw);
+            }
          }
       }
    }
