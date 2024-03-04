@@ -1823,8 +1823,6 @@ static void D_DoomInit()
    if(!textmode_startup && !devparm)
       C_Update();
 
-   idmusnum = -1; //jff 3/17/98 insure idmus number is blank
-
    // Load OPTIONS that are safe to read at startup
    M_LoadOptions(default_t::wad_startup);
 

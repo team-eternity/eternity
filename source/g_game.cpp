@@ -1908,7 +1908,6 @@ static void G_DoCompleted()
 
 static void G_DoWorldDone()
 {
-   idmusnum = -1; //jff 3/17/98 allow new level's music to be loaded
    gamestate = GS_LOADING;
    gameepisode = wminfo.nextEpisode + 1;
    gamemap = wminfo.next+1;

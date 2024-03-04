@@ -119,7 +119,10 @@ void SaveArchive::archiveLString(char *&str, size_t &len)
          savefile->write(str, len);
       }
       else
-         savefile->writeUint32(0);
+      {
+         size_t emptySize = 0;
+         archiveSize(emptySize);
+      }
    }
    else
    {
@@ -1579,9 +1582,16 @@ void P_SaveCurrentLevel(char *filename, char *description)
          arc << dummy;
       }
 
+      const char *musicName = S_GetMusicName();
+      if(!musicName)
+         arc.getSaveFile()->writeUint8(0);
+      else
+         arc.writeLString(musicName);
+
       // jff 3/17/98 save idmus state
+      // MaxW: No more idmus state saving
       int tempGameType = (int)GameType;
-      arc << idmusnum << tempGameType;
+      arc << tempGameType;
 
       byte options[GAME_OPTION_SIZE];
       G_WriteOptions(options);    // killough 3/1/98: save game options
@@ -1814,9 +1824,17 @@ void P_LoadGame(const char *filename)
       // jff 3/18/98 account for unsigned byte
       // killough 11/98: simplify
       // haleyjd 04/14/03: game type
+      // MaxW: Skip loading save version
       // note: don't set DefaultGameType from save games
+      if(arc.saveVersion() < 20)
+         arc.getLoadFile()->skip(sizeof(int));
+      else
+      {
+         size_t dummy = 0;
+         arc.archiveLString(mus_LoadName, dummy);
+      }
       int tempGameType;
-      arc << idmusnum << tempGameType;
+      arc << tempGameType;
 
       GameType = (gametype_t)tempGameType;
 

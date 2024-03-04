@@ -251,7 +251,6 @@ static void cheat_mus(const void *arg)
    {
       doom_printf("%s", DEH_String("STSTR_MUS")); // Ty 03/27/98 - externalized
       S_ChangeMusicNum(musnum, 1);
-      idmusnum = musnum; // jff 3/17/98: remember idmus number for restore
    }
 }
 
@@ -434,8 +433,6 @@ static bool cht_levelWarp(const char *buf)
    }
 
    // So be it.
-
-   idmusnum = -1; //jff 3/17/98 revert to normal level music on IDCLEV
 
    G_DeferedInitNewFromDir(gameskill, mapname, levelDir);
    
