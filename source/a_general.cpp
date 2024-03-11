@@ -1767,5 +1767,47 @@ void A_SelfDestruct(actionargs_t *actionargs)
       A_Die(actionargs);
 }
 
+//
+// A_BFGSprayEx
+//
+// Similar to ZDoom A_BFGSpray extensions.
+//
+// args[0] -- thing to spawn on actors (default MT_EXTRABFG)
+// args[1] -- number of rays to spawn (default 40)
+// args[2] -- fov to spawn rays (default 90 degrees)
+// args[3] -- number of times to roll for damage (default 15)
+//
+void A_BFGSprayEx(actionargs_t *actionargs)
+{
+   Mobj *mo = actionargs->actor;
+   
+   for(int i = 0; i < 40; i++)  // offset angles from its attack angle
+   {
+      int j, damage;
+      angle_t an = mo->angle - ANG90/2 + ANG90/40*i;
+      
+      // mo->target is the originator (player) of the missile
+      
+      // killough 8/2/98: make autoaiming prefer enemies
+      if(demo_version < 203 ||
+         (P_AimLineAttack(mo->target, an, 16*64*FRACUNIT, true),
+         !clip.linetarget))
+         P_AimLineAttack(mo->target, an, 16*64*FRACUNIT, false);
+      
+      if(!clip.linetarget)
+         continue;
+      
+      P_SpawnMobj(clip.linetarget->x, clip.linetarget->y,
+                  clip.linetarget->z + (clip.linetarget->height>>2),
+                  E_SafeThingType(MT_EXTRABFG));
+      
+      for(damage = j = 0; j < 15; j++)
+         damage += (P_Random(pr_bfg)&7) + 1;
+      
+      P_DamageMobj(clip.linetarget, mo->target, mo->target, damage,
+                   MOD_BFG_SPLASH);
+   }
+}
+
 // EOF
 
