@@ -1786,6 +1786,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(SelfDestruct),
    POINTER(TurnProjectile),
    POINTER(SubtractAmmo),
+   POINTER(BFGSprayEx),
 
    // haleyjd 07/13/03: nuke specials
    POINTER(PainNukeSpec),

@@ -1772,19 +1772,29 @@ void A_SelfDestruct(actionargs_t *actionargs)
 //
 // Similar to ZDoom A_BFGSpray extensions.
 //
-// args[0] -- thing to spawn on actors (default MT_EXTRABFG)
+// args[0] -- thing to spawn on actors (no default)
 // args[1] -- number of rays to spawn (default 40)
 // args[2] -- fov to spawn rays (default 90 degrees)
 // args[3] -- number of times to roll for damage (default 15)
+// args[4] -- damage type (default MOD_BFG_SPLASH)
 //
 void A_BFGSprayEx(actionargs_t *actionargs)
 {
    Mobj *mo = actionargs->actor;
+   arglist_t *args = actionargs->args;
+   int thingnum, raynum, damroll, mod;
+   angle_t fov;
    
-   for(int i = 0; i < 40; i++)  // offset angles from its attack angle
+   thingnum = E_ArgAsThingNumG0(args, 0);
+   raynum = E_ArgAsInt(args, 1, 40);
+   fov = E_ArgAsAngle(args, 2, ANG90);
+   damroll = E_ArgAsInt(args, 3, 15);
+   mod = E_ArgAsDamageType(args, 4, MOD_BFG_SPLASH)->num;
+   
+   for(int i = 0; i < raynum; i++)  // offset angles from its attack angle
    {
       int j, damage;
-      angle_t an = mo->angle - ANG90/2 + ANG90/40*i;
+      angle_t an = mo->angle - fov/2 + fov/raynum*i;
       
       // mo->target is the originator (player) of the missile
       
@@ -1799,13 +1809,12 @@ void A_BFGSprayEx(actionargs_t *actionargs)
       
       P_SpawnMobj(clip.linetarget->x, clip.linetarget->y,
                   clip.linetarget->z + (clip.linetarget->height>>2),
-                  E_SafeThingType(MT_EXTRABFG));
+                  thingnum);
       
-      for(damage = j = 0; j < 15; j++)
+      for(damage = j = 0; j < damroll; j++)
          damage += (P_Random(pr_bfg)&7) + 1;
       
-      P_DamageMobj(clip.linetarget, mo->target, mo->target, damage,
-                   MOD_BFG_SPLASH);
+      P_DamageMobj(clip.linetarget, mo->target, mo->target, damage, mod);
    }
 }
 
