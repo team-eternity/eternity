@@ -1392,6 +1392,8 @@ void A_SelfDestruct(actionargs_t *);
 void A_TurnProjectile(actionargs_t *);
 void A_SubtractAmmo(actionargs_t *);
 void A_BFGSprayEx(actionargs_t *);
+void A_VileTargetEx(actionargs_t *);
+void A_VileAttackEx(actionargs_t *);
 
 // MaxW: MBF21 pointers
 void A_SpawnObject(actionargs_t *actionargs);
@@ -1787,6 +1789,8 @@ deh_bexptr deh_bexptrs[] =
    POINTER(TurnProjectile),
    POINTER(SubtractAmmo),
    POINTER(BFGSprayEx),
+   POINTER(VileTargetEx),
+   POINTER(VileAttackEx),
 
    // haleyjd 07/13/03: nuke specials
    POINTER(PainNukeSpec),
