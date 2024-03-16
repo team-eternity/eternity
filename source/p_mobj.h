@@ -76,7 +76,8 @@ class  BloodSpawner;
 #define MAXGEAR (OVERDRIVE+16)
 
 // haleyjd 11/28/02: default z coord addend for missile spawn
-#define DEFAULTMISSILEZ (4*8*FRACUNIT)
+//#define DEFAULTMISSILEZ (4*8*FRACUNIT)
+// DEFAULTMISSILEZ is now a mobjinfo property (missileheight)
 
 #define NUMMOBJCOUNTERS 8
 

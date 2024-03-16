@@ -234,6 +234,10 @@ constexpr const char ITEM_TNG_PFX_FLAGS[]     = "flags";
 #define ITEM_TNG_TRAILCHANCE   "trail.spawnchance"
 #define ITEM_TNG_TRAILSPARSITY "trail.sparsity"
 
+// Projectile/Hitscan properties
+constexpr const char ITEM_TNG_MISSILEHEIGHT[] = "missileheight";
+constexpr const char ITEM_TNG_BULLETZOFFSET[] = "bulletzoffset";
+
 //
 // Thing groups
 //
@@ -635,6 +639,8 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_FLOAT(ITEM_TNG_TRAILZOFFSET, -8.0f, CFGF_NONE), \
    CFG_INT(ITEM_TNG_TRAILCHANCE, 256, CFGF_NONE), \
    CFG_INT(ITEM_TNG_TRAILSPARSITY, 0, CFGF_NONE), \
+   CFG_FLOAT(ITEM_TNG_MISSILEHEIGHT, 32.0f, CFGF_NONE), \
+   CFG_FLOAT(ITEM_TNG_BULLETZOFFSET, 8.0f, CFGF_NONE), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
@@ -3253,6 +3259,18 @@ void E_ProcessThing(int i, cfg_t *const thingsec, cfg_t *pcfg, const bool def)
 
    if(IS_SET(ITEM_TNG_TRAILSPARSITY))
       mobjinfo[i]->trailsparsity = cfg_getint(thingsec, ITEM_TNG_TRAILSPARSITY);
+   
+   if(IS_SET(ITEM_TNG_MISSILEHEIGHT))
+   {
+      tempfloat = cfg_getfloat(thingsec, ITEM_TNG_MISSILEHEIGHT);
+      mobjinfo[i]->missileheight = M_FloatToFixed(tempfloat);
+   }
+   
+   if(IS_SET(ITEM_TNG_BULLETZOFFSET))
+   {
+      tempfloat = cfg_getfloat(thingsec, ITEM_TNG_BULLETZOFFSET);
+      mobjinfo[i]->bulletzoffset = M_FloatToFixed(tempfloat);
+   }
 
    // Process DECORATE state block
    E_ProcessDecorateStatesRecursive(thingsec, i, false);
