@@ -1,6 +1,6 @@
 /*
    AngelCode Scripting Library
-   Copyright (c) 2003-2019 Andreas Jonsson
+   Copyright (c) 2003-2023 Andreas Jonsson
 
    This software is provided 'as-is', without any express or implied
    warranty. In no event will the authors be held liable for any
@@ -61,7 +61,8 @@ struct asSScriptVariable
 	asCString   name;
 	asCDataType type;
 	int         stackOffset;
-	asUINT      declaredAtProgramPos;
+	asUINT      onHeap : 1;
+	asUINT      declaredAtProgramPos : 31;
 };
 
 enum asEListPatternNodeType
@@ -100,17 +101,17 @@ enum asEObjVarInfoOption
 
 enum asEFuncTrait
 {
-	asTRAIT_CONSTRUCTOR = 1,
-	asTRAIT_DESTRUCTOR  = 2,
-	asTRAIT_CONST       = 4,
-	asTRAIT_PRIVATE     = 8,
-	asTRAIT_PROTECTED   = 16,
-	asTRAIT_FINAL       = 32,
-	asTRAIT_OVERRIDE    = 64,
-	asTRAIT_SHARED      = 128,
-	asTRAIT_EXTERNAL    = 256,
-	asTRAIT_EXPLICIT    = 512,
-	asTRAIT_PROPERTY    = 1024
+	asTRAIT_CONSTRUCTOR = 1,    // method
+	asTRAIT_DESTRUCTOR  = 2,    // method
+	asTRAIT_CONST       = 4,    // method
+	asTRAIT_PRIVATE     = 8,    // method
+	asTRAIT_PROTECTED   = 16,   // method
+	asTRAIT_FINAL       = 32,   // method
+	asTRAIT_OVERRIDE    = 64,   // method
+	asTRAIT_SHARED      = 128,  // function
+	asTRAIT_EXTERNAL    = 256,  // function
+	asTRAIT_EXPLICIT    = 512,  // method
+	asTRAIT_PROPERTY    = 1024  // method/function
 };
 
 struct asSFunctionTraits
@@ -215,6 +216,7 @@ public:
 	void SetProtected(bool set) { traits.SetTrait(asTRAIT_PROTECTED, set); }
 	void SetPrivate(bool set) { traits.SetTrait(asTRAIT_PRIVATE, set); }
 	void SetProperty(bool set) { traits.SetTrait(asTRAIT_PROPERTY, set); }
+	bool IsFactory() const;
 
 	asCScriptFunction(asCScriptEngine *engine, asCModule *mod, asEFuncType funcType);
 	~asCScriptFunction();
@@ -236,7 +238,7 @@ public:
 
 	void      DestroyInternal();
 
-	void      AddVariable(asCString &name, asCDataType &type, int stackOffset);
+	void      AddVariable(const asCString &name, asCDataType &type, int stackOffset, bool onHeap);
 
 	int       GetSpaceNeededForArguments();
 	int       GetSpaceNeededForReturnValue();
@@ -266,6 +268,9 @@ public:
 
 	void      AllocateScriptFunctionData();
 	void      DeallocateScriptFunctionData();
+
+	asCScriptFunction* FindNextFunctionCalled(asUINT startSearchFromProgramPos, int *stackDelta, asUINT *outProgramPos);
+	asCScriptFunction* GetCalledFunction(asDWORD programPos);
 
 	asCGlobalProperty *GetPropertyByGlobalVarPtr(void *gvarPtr);
 
@@ -327,15 +332,6 @@ public:
 		// The stack space needed for the local variables
 		asDWORD                         variableSpace;
 
-		// These hold information on objects and function pointers, including temporary
-		// variables used by exception handler and when saving bytecode
-		asCArray<asCTypeInfo*>          objVariableTypes;
-		asCArray<int>                   objVariablePos; // offset on stackframe
-
-		// The first variables in above array are allocated on the heap, the rest on the stack.
-		// This variable shows how many are on the heap.
-		asUINT                          objVariablesOnHeap;
-
 		// Holds information on scope for object variables on the stack
 		asCArray<asSObjectVariableInfo> objVariableInfo;
 
@@ -348,8 +344,10 @@ public:
 		// JIT compiled code of this function
 		asJITFunction                   jitFunction;
 
-		// Holds debug information on explicitly declared variables
+		// Holds type information on both explicitly declared variables and temporary variables
+		// Used during exception handling, byte code serialization, debugging, and context serialization
 		asCArray<asSScriptVariable*>    variables;
+
 		// Store position, line number pairs for debug information
 		asCArray<int>                   lineNumbers;
 		// Store the script section where the code was declared

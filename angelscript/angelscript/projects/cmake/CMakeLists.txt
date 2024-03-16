@@ -6,7 +6,7 @@ option(BUILD_SHARED_LIBS "Build shared library" OFF)
 option(AS_NO_EXCEPTIONS "Disable exception handling in script context" OFF)
 
 if(MSVC)
-    option(MSVC_COMPILE_FLAGS "Compiler flags to use with MSVC" "/MP")
+    set(MSVC_COMPILE_FLAGS "/MP" CACHE STRING "Compiler flags to use with MSVC")
 endif()
 
 if(APPLE)
@@ -19,6 +19,13 @@ set(ANGELSCRIPT_VERSION_MAJOR ${CMAKE_MATCH_1})
 set(ANGELSCRIPT_VERSION_MINOR ${CMAKE_MATCH_2})
 set(ANGELSCRIPT_VERSION_PATCH ${CMAKE_MATCH_3})
 set(PROJECT_VERSION ${ANGELSCRIPT_VERSION_MAJOR}.${ANGELSCRIPT_VERSION_MINOR}.${ANGELSCRIPT_VERSION_PATCH})
+
+set(ARCHFLAGS "${CMAKE_SYSTEM_PROCESSOR}")
+if (APPLE AND NOT IOS)
+  if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
+    set(ARCHFLAGS "aarch64")
+  endif ()
+endif ()
 
 message(STATUS "Configuring angelscript ${PROJECT_VERSION}")
 
@@ -59,7 +66,6 @@ set(ANGELSCRIPT_HEADERS
     ../../source/as_tokenizer.h
     ../../source/as_typeinfo.h
     ../../source/as_variablescope.h
-    ../../../add_on/scriptarray/scriptarray.h
 )
 
 set(ANGELSCRIPT_SOURCE
@@ -96,7 +102,6 @@ set(ANGELSCRIPT_SOURCE
     ../../source/as_tokenizer.cpp
     ../../source/as_typeinfo.cpp
     ../../source/as_variablescope.cpp
-    ../../../add_on/scriptarray/scriptarray.cpp
 )
 
 if(MSVC AND CMAKE_CL_64)
@@ -108,7 +113,7 @@ if(MSVC AND CMAKE_CL_64)
     endif()
 endif()
 
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "^arm")
+if(${ARCHFLAGS} MATCHES "^arm")
     enable_language(ASM)
     if(CMAKE_ASM_COMPILER_WORKS)
         set(ANGELSCRIPT_SOURCE ${ANGELSCRIPT_SOURCE} ../../source/as_callfunc_arm.cpp ../../source/as_callfunc_arm_gcc.S)
@@ -118,11 +123,14 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "^arm")
     endif()
 endif()
 
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "^aarch64")
+if(${ARCHFLAGS} MATCHES "^aarch64")
     enable_language(ASM)
     if(CMAKE_ASM_COMPILER_WORKS)
-        set(ANGELSCRIPT_SOURCE ${ANGELSCRIPT_SOURCE} ../../source/as_callfunc_arm64.cpp ../../source/as_callfunc_arm64_gcc.S)
-        #set_property(SOURCE ../../source/as_callfunc_arm64_gcc.S APPEND PROPERTY COMPILE_FLAGS " -Wa")
+        if(NOT APPLE)
+            set(ANGELSCRIPT_SOURCE ${ANGELSCRIPT_SOURCE} ../../source/as_callfunc_arm64.cpp ../../source/as_callfunc_arm64_gcc.S)
+        else()
+            set(ANGELSCRIPT_SOURCE ${ANGELSCRIPT_SOURCE} ../../source/as_callfunc_arm64.cpp ../../source/as_callfunc_arm64_xcode.S)
+        endif()
     else()
         message(FATAL ERROR "ARM target requires a working assembler")
     endif()
@@ -142,13 +150,13 @@ set(ANGELSCRIPT_LIBRARY_NAME ${ANGELSCRIPT_LIBRARY_NAME} CACHE STRING "" FORCE)
 
 add_library(${ANGELSCRIPT_LIBRARY_NAME} ${ANGELSCRIPT_SOURCE} ${ANGELSCRIPT_HEADERS})
 
-target_include_directories(${ANGELSCRIPT_LIBRARY_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../include)
+target_include_directories(${ANGELSCRIPT_LIBRARY_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include>")
 
 if(MSVC)
     target_compile_definitions(${ANGELSCRIPT_LIBRARY_NAME} PRIVATE -D_CRT_SECURE_NO_WARNINGS)    
 endif()
 
-target_compile_definitions(${ANGELSCRIPT_LIBRARY_NAME} PRIVATE -DANGELSCRIPT_EXPORT -DAS_MAX_PORTABILITY -D_LIB)
+target_compile_definitions(${ANGELSCRIPT_LIBRARY_NAME} PRIVATE -DANGELSCRIPT_EXPORT -D_LIB)
 
 if(AS_NO_EXCEPTIONS)
 	target_compile_definitions(${ANGELSCRIPT_LIBRARY_NAME} PRIVATE AS_NO_EXCEPTIONS)
