@@ -172,7 +172,7 @@ CONSOLE_NETVAR(skill, gameskill, cf_server, netcmd_skill)
 
    startskill = gameskill = (skill_t)(Console.argv[0]->toInt());
    if(Console.cmdsrc == consoleplayer)
-      defaultskill = gameskill + 1;
+      defaultskill = static_cast<skill_t>(gameskill + 1);
 }
 
 // allow mlook
@@ -238,7 +238,7 @@ VARIABLE_INT(levelFragLimit,    nullptr,        0, 100,         nullptr);
 CONSOLE_NETVAR(fraglimit, levelFragLimit, cf_server, netcmd_fraglimit) {}
 
 
-  /************** monster variables ***********/
+/************** monster variables ***********/
 
 // fast monsters
 

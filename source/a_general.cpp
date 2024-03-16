@@ -42,6 +42,7 @@
 #include "e_string.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "ev_specials.h"
 #include "hu_stuff.h"
 #include "p_enemy.h"
 #include "p_info.h"
@@ -91,7 +92,7 @@ void P_Mushroom(Mobj *actor, const int ShotType, const int n, const fixed_t misc
        
          mo = P_SpawnMissileWithDest(actor, actor, 
                                      ShotType,          // Launch fireball
-                                     actor->z + DEFAULTMISSILEZ,
+                                     actor->z + actor->info->missileheight,
                                      x, y, z);
          
          mo->momx = FixedMul(mo->momx, misc2);
@@ -186,7 +187,7 @@ void A_Spawn(actionargs_t *actionargs)
                      (mo->state->misc2 << FRACBITS) + mo->z,
                      thingtype);
       if(newmobj)
-         newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (mo->flags & MF_FRIEND);
+         P_transferFriendship(*newmobj, *mo);
    }
 }
 
@@ -397,22 +398,27 @@ void A_LineEffect(actionargs_t *actionargs)
    // This line can end up being referred to long after this
    // function returns, thus it must be made static or memory
    // corruption is possible.
-   static line_t junk;
+   I_Assert(numlinesPlusExtra > numlines, "Must have one extra line\n");
+
+   // ioanch: use the footer "shadow" linedef from the lines list. This will allow any thinkers who
+   // adopt this linedef to be serialized properly when saving, so it won't crash after loading.
+   line_t &junk = lines[numlines];
 
    if(!(mo->intflags & MIF_LINEDONE))                // Unless already used up
    {
       junk = *lines;                                 // Fake linedef set to 1st
       if((junk.special = mo->state->misc1))          // Linedef type
       {
-         player_t player, *oldplayer = mo->player;   // Remember player status
-         mo->player = &player;                       // Fake player
-         player.health = 100;                        // Alive player
+         // ioanch: remove the fake player, it was causing undefined behaviour and crashes.
+         // Instead, mark the activation instance as "byCodepointer", which will allow the monster
+         // to trigger linedefs and open locked doors, just like in MBF.
+
          junk.args[0] = junk.tag = mo->state->misc2;            // Sector tag for linedef
-         if(!P_UseSpecialLine(mo, &junk, 0))         // Try using it
-            P_CrossSpecialLine(&junk, 0, mo, nullptr);  // Try crossing it
+         // Only try use or cross
+         if(!EV_ActivateSpecialLineWithSpac(&junk, 0, mo, nullptr, SPAC_USE, true))
+            EV_ActivateSpecialLineWithSpac(&junk, 0, mo, nullptr, SPAC_CROSS, true);
          if(!junk.special)                           // If type cleared,
             mo->intflags |= MIF_LINEDONE;            // no more for this thing
-         mo->player = oldplayer;                     // Restore player status
       }
    }
 }
@@ -587,6 +593,7 @@ void A_SpawnEx(actionargs_t *actionargs)
       mo->remove();
    else
    {
+      P_transferFriendship(*mo, *actor);
       mo->angle = angle;
       mo->momx = xvel;
       mo->momy = yvel;
@@ -1013,7 +1020,7 @@ void A_MissileAttack(actionargs_t *actionargs)
    ang = (angle_t)(((uint64_t)a << 32) / 360);
 
    // adjust z coordinate
-   z = actor->z + DEFAULTMISSILEZ + z;
+   z = actor->z + actor->info->missileheight + z;
 
    if(!hastarget)
    {
@@ -1092,7 +1099,7 @@ void A_MissileSpread(actionargs_t *actionargs)
    angsweep = (angle_t)(((uint64_t)a << 32) / 360);
 
    // adjust z coordinate
-   z = actor->z + DEFAULTMISSILEZ + z;
+   z = actor->z + actor->info->missileheight + z;
 
    ang = actor->angle - angsweep / 2;
    astep = angsweep / (num - 1);
@@ -1291,13 +1298,7 @@ void A_ThingSummon(actionargs_t *actionargs)
    // Check to see if the new thing's z value is above the
    // ceiling of its new sector, or below the floor. If so, kill it.
 
-   // ioanch 20160107: consider sectors when killing things stuck in floor or
-   // ceiling. Also remove redundant parentheses.
-   const sector_t *csector = P_ExtremeSectorAtPoint(newmobj, surf_ceil);
-   const sector_t *fsector = P_ExtremeSectorAtPoint(newmobj, surf_floor);
-
-   if(newmobj->z > csector->srf.ceiling.height - newmobj->height ||
-      newmobj->z < fsector->srf.floor.height)
+   if(!P_CheckFloorCeilingForSpawning(*newmobj))
    {
       actionargs_t dieaction;
 
@@ -1320,7 +1321,7 @@ void A_ThingSummon(actionargs_t *actionargs)
    }                                                         
    
    // spawn thing with same friendliness
-   newmobj->flags = (newmobj->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
+   P_transferFriendship(*newmobj, *actor);
 
    // killough 8/29/98: add to appropriate thread
    newmobj->updateThinker();

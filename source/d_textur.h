@@ -43,9 +43,9 @@
 // a pic is an unmasked block of pixels
 struct pic_t
 {
-  byte  width;
-  byte  height;
-  byte  data;
+   byte  width;
+   byte  height;
+   byte  data;
 };
 
 

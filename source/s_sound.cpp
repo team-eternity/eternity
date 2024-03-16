@@ -81,30 +81,30 @@ extern bool nosfxparm, nomusicparm;
 
 struct channel_t
 {
-  sfxinfo_t *sfxinfo;      // sound information (if null, channel avail.)
-  sfxinfo_t *aliasinfo;    // original sound name if using an alias
-  const PointThinker *origin;    // origin of sound
-  int subchannel;          // haleyjd 06/12/08: origin subchannel
-  int volume;              // volume scale value for effect -- haleyjd 05/29/06
-  int attenuation;         // attenuation type -- haleyjd 05/29/06
-  int pitch;               // pitch modifier -- haleyjd 06/03/06
-  int handle;              // handle of the sound being played
-  int o_priority;          // haleyjd 09/27/06: stored priority value
-  int priority;            // current priority value
-  int singularity;         // haleyjd 09/27/06: stored singularity value
-  int idnum;               // haleyjd 09/30/06: unique id num for sound event
-  bool looping;            // haleyjd 10/06/06: is this channel looping?
+   sfxinfo_t *sfxinfo;      // sound information (if null, channel avail.)
+   sfxinfo_t *aliasinfo;    // original sound name if using an alias
+   const PointThinker *origin;    // origin of sound
+   int subchannel;          // haleyjd 06/12/08: origin subchannel
+   int volume;              // volume scale value for effect -- haleyjd 05/29/06
+   int attenuation;         // attenuation type -- haleyjd 05/29/06
+   int pitch;               // pitch modifier -- haleyjd 06/03/06
+   int handle;              // handle of the sound being played
+   int o_priority;          // haleyjd 09/27/06: stored priority value
+   int priority;            // current priority value
+   int singularity;         // haleyjd 09/27/06: stored singularity value
+   int idnum;               // haleyjd 09/30/06: unique id num for sound event
+   bool looping;            // haleyjd 10/06/06: is this channel looping?
 };
 
 // the set of channels available
 static channel_t *channels;
 
 // Maximum volume of a sound effect.
-// Internal default is max out of 0-15.
-int snd_SfxVolume = 15;
+// Internal default is max out of 0-SND_MAXVOLUME.
+int snd_SfxVolume = SND_MAXVOLUME;
 
 // Maximum volume of music.
-int snd_MusicVolume = 15;
+int snd_MusicVolume = SND_MAXVOLUME;
 
 // precache sounds ?
 int s_precache = 1;
@@ -121,8 +121,8 @@ static musicinfo_t *mus_playing;
 int numChannels;
 int default_numChannels;  // killough 9/98
 
-//jff 3/17/98 to keep track of last IDMUS specified music num
-int idmusnum;
+// MaxW: Holds music num to load.
+extern char *mus_LoadName = nullptr;
 
 // haleyjd 05/18/14: music randomization
 bool s_randmusic = false;
@@ -248,7 +248,7 @@ static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
                                         + ANG90) >> ANGLETOFINESHIFT]) : 0;
 
    // haleyjd 05/29/06: allow per-channel volume scaling
-   basevolume = (snd_SfxVolume * chanvol) / 15;
+   basevolume = (snd_SfxVolume * chanvol) / SND_MAXVOLUME;
 
    // haleyjd 05/30/06: allow per-channel attenuation behavior
    switch(chanattn)
@@ -576,7 +576,7 @@ void S_StartSfxInfo(const soundparams_t &params)
    if(!origin || (!extcamera && origin == players[displayplayer].mo))
    {
       sep = NORM_SEP;
-      volume = (volume * volumeScale) / 15; // haleyjd 05/29/06: scale volume
+      volume = (volume * volumeScale) / SND_MAXVOLUME; // haleyjd 05/29/06: scale volume
       volume = eclamp(volume, 0, 127);
       if(volume < 1) // clip due to inaudibility
          return;
@@ -1103,6 +1103,11 @@ void S_SetSfxVolume(int volume)
    snd_SfxVolume = volume;
 }
 
+const char *S_GetMusicName()
+{
+   return mus_playing ? mus_playing->name : nullptr;
+}
+
 //=============================================================================
 //
 // Sound Hashing
@@ -1138,6 +1143,9 @@ sfxinfo_t *S_SfxInfoForName(const char *name)
 //
 void S_Chgun()
 {
+   // but only if DSCHGUN is present
+   if(wGlobalDir.checkNumForName("DSCHGUN") == -1)
+      return;
    sfxinfo_t *s_chgun = E_SoundForName("chgun");
 
    if(!s_chgun)
@@ -1401,15 +1409,19 @@ void S_Start()
       LevelInfo.musicName = GameModeInfo->defMusName;
    }
 
-   // sf: replacement music
-   if(*LevelInfo.musicName)
-      S_ChangeMusicName(LevelInfo.musicName, true);
+   
+   if(mus_LoadName)
+   {
+      // MaxW: Unarchived music set during level runtime
+      S_ChangeMusicName(mus_LoadName, true);
+      efree(mus_LoadName);
+      mus_LoadName = nullptr;
+   }
+   else if(*LevelInfo.musicName)
+      S_ChangeMusicName(LevelInfo.musicName, true); // sf: replacement music
    else
    {
-      if(idmusnum != -1)
-         mnum = idmusnum; //jff 3/17/98 reload IDMUS music if not -1
-      else
-         mnum = GameModeInfo->MusicForMap();
+      mnum = GameModeInfo->MusicForMap();
 
       // start music
       S_ChangeMusicNum(mnum, true);
@@ -1610,9 +1622,9 @@ musicinfo_t *S_MusicForName(const char *name)
 
 VARIABLE_BOOLEAN(s_precache,      nullptr, onoff);
 VARIABLE_BOOLEAN(pitched_sounds,  nullptr, onoff);
-VARIABLE_INT(default_numChannels, nullptr, 1, 32,  nullptr);
-VARIABLE_INT(snd_SfxVolume,       nullptr, 0, 15,  nullptr);
-VARIABLE_INT(snd_MusicVolume,     nullptr, 0, 15,  nullptr);
+VARIABLE_INT(default_numChannels, nullptr, 1, 32,                nullptr);
+VARIABLE_INT(snd_SfxVolume,       nullptr, 0, SND_MAXVOLUME,  nullptr);
+VARIABLE_INT(snd_MusicVolume,     nullptr, 0, SND_MAXVOLUME,  nullptr);
 VARIABLE_BOOLEAN(forceFlipPan,    nullptr, onoff);
 VARIABLE_TOGGLE(s_hidefmusic,     nullptr, onoff);
 

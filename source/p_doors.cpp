@@ -36,6 +36,7 @@
 #include "p_info.h"
 #include "p_saveg.h"
 #include "p_skin.h"
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "r_main.h"
@@ -108,6 +109,7 @@ IMPLEMENT_THINKER_TYPE(VerticalDoorThinker)
 void VerticalDoorThinker::Think()
 {
    result_e  res;
+   fixed_t bottomheight;
    
    // Is the door waiting, going up, or going down?
    switch(direction)
@@ -159,13 +161,15 @@ void VerticalDoorThinker::Think()
 
    case plat_down:
       // Door is moving down
-      res = T_MoveCeilingDown(sector, speed, sector->srf.floor.height, -1);
+      bottomheight = sector->srf.floor.height + pSlopeHeights[sector - sectors].touchheight;
+      res = T_MoveCeilingDown(sector, speed, bottomheight, -1);
 
       // killough 10/98: implement gradual lighting effects
-      if(lighttag && topheight - sector->srf.floor.height)
-         EV_LightTurnOnPartway(lighttag,
-                               FixedDiv(sector->srf.ceiling.height - sector->srf.floor.height,
-                                        topheight - sector->srf.floor.height));
+      if(lighttag && topheight - bottomheight)
+      {
+         EV_LightTurnOnPartway(lighttag, FixedDiv(sector->srf.ceiling.height - bottomheight,
+                                                  topheight - bottomheight));
+      }
 
       // handle door reaching bottom
       if(res == pastdest)
@@ -221,12 +225,14 @@ void VerticalDoorThinker::Think()
    case plat_up:
       // Door is moving up
       res = T_MoveCeilingUp(sector, speed, topheight, -1);
+      bottomheight = sector->srf.floor.height + pSlopeHeights[sector - sectors].touchheight;
 
       // killough 10/98: implement gradual lighting effects
-      if(lighttag && topheight - sector->srf.floor.height)
-         EV_LightTurnOnPartway(lighttag,
-                               FixedDiv(sector->srf.ceiling.height - sector->srf.floor.height,
-                                        topheight - sector->srf.floor.height));
+      if(lighttag && topheight - bottomheight)
+      {
+         EV_LightTurnOnPartway(lighttag, FixedDiv(sector->srf.ceiling.height - bottomheight,
+                                                  topheight - bottomheight));
+      }
 
       // handle door reaching the top
       if(res == pastdest)
@@ -326,14 +332,14 @@ bool VerticalDoorThinker::reTriggerVerticalDoor(bool player)
 // Passed the line activating the door and the type of door
 // Returns true if a thinker created
 //
-int EV_DoDoor(const line_t *line, vldoor_e type)
+int EV_DoDoor(int tag, vldoor_e type)
 {
    int secnum = -1, rtn = 0;
    sector_t *sec;
    VerticalDoorThinker *door;
 
    // open all doors with the same tag as the activating line
-   while((secnum = P_FindSectorFromLineArg0(line, secnum)) >= 0)
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       sec = &sectors[secnum];
       // if the ceiling already moving, don't start the door action
@@ -435,7 +441,7 @@ int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID)
    }
 
    // if the wrong side of door is pushed, give oof sound
-   if(line->sidenum[1] == -1)                      // killough
+   if(!line || line->sidenum[1] == -1)                      // killough
    {
       if(player)
          S_StartSound(player->mo, GameModeInfo->playerSounds[sk_oof]); // killough 3/20/98

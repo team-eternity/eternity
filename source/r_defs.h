@@ -48,12 +48,13 @@ struct dynavertex_t;
 
 // Silhouette, needed for clipping Segs (mainly)
 // and sprites representing things.
-#define SIL_NONE    0
-#define SIL_BOTTOM  1
-#define SIL_TOP     2
-#define SIL_BOTH    3
-
-#define MAXDRAWSEGS   256
+enum silhouette_e : byte
+{
+   SIL_NONE = 0,
+   SIL_BOTTOM,
+   SIL_TOP,
+   SIL_BOTH,
+};
 
 extern int r_blockmap;
 
@@ -103,15 +104,17 @@ enum
    SECF_PUSH               = 0x00000004,  // bit 9 of generalized special
    SECF_KILLSOUND          = 0x00000008,  // bit A of generalized special
    SECF_KILLMOVESOUND      = 0x00000010,  // bit B of generalized special
+   SECF_INSTANTDEATH       = 0x00000020,  // bit C of generalized special (MBF21)
+   SECF_MONSTERDEATH       = 0x00000040,  // bit D of generalized special (MBF21)
 
    // Hexen phased lighting
-   SECF_PHASEDLIGHT        = 0x00000020,  // spawned with sequence start special
-   SECF_LIGHTSEQUENCE      = 0x00000040,  // spawned with sequence special
-   SECF_LIGHTSEQALT        = 0x00000080,  // spawned with sequence alt special
+   SECF_PHASEDLIGHT        = 0x00000080,  // spawned with sequence start special
+   SECF_LIGHTSEQUENCE      = 0x00000100,  // spawned with sequence special
+   SECF_LIGHTSEQALT        = 0x00000200,  // spawned with sequence alt special
 
    // UDMF given
-   SECF_FLOORLIGHTABSOLUTE = 0x00000100,  // lightfloor is set absolutely
-   SECF_CEILLIGHTABSOLUTE  = 0x00000200,  // lightceiling is set absolutely
+   SECF_FLOORLIGHTABSOLUTE = 0x00000400,  // lightfloor is set absolutely
+   SECF_CEILLIGHTABSOLUTE  = 0x00000800,  // lightceiling is set absolutely
 };
 
 // haleyjd 12/31/08: sector damage flags
@@ -122,6 +125,8 @@ enum
    SDMG_ENDGODMODE = 0x00000004, // turns off god mode if on
    SDMG_EXITLEVEL  = 0x00000008, // exits when player health <= 10
    SDMG_TERRAINHIT = 0x00000010, // damage causes a terrain hit
+   SDMG_INSTAEXITNORMAL = 0x00000020,  // exits to next map (only for MBF21 instadeath)
+   SDMG_INSTAEXITSECRET = 0x00000040,  // exits to secret map (only for MBF21 instadeath)
 };
 
 // haleyjd 08/30/09: internal sector flags
@@ -142,6 +147,19 @@ enum
    SECTOR_HTIC_WIND     // created by types 40-51
 };
 
+// Seg skew types
+enum skewType_e
+{
+   SKEW_NONE = 0,
+   SKEW_FRONT_FLOOR,
+   SKEW_FRONT_CEILING,
+   SKEW_BACK_FLOOR,
+   SKEW_BACK_CEILING,
+   NUMSKEWTYPES
+};
+
+constexpr int SKEW_FRONT_TO_BACK = SKEW_BACK_FLOOR - SKEW_FRONT_FLOOR;
+
 //
 // Slope Structures
 //
@@ -151,11 +169,12 @@ enum
 struct pslope_t
 {
    // --- Information used in clipping/projection ---
-   // Origin vector for the plane
+   // Origin vector for the plane. Z is always the host sector's floor height.
    v3fixed_t o;
    v3float_t of;
 
    // The normal of the 3d plane the slope creates.
+   v3fixed_t normal;
    v3float_t normalf;
 
    // 2-Dimensional vector (x, y) normalized. Used to determine distance from
@@ -166,6 +185,18 @@ struct pslope_t
    // The rate at which z changes based on distance from the origin plane.
    fixed_t zdelta;
    float   zdeltaf;
+
+   //
+   // IMPORTANT
+   //
+   // The following are references to the containing sector. They work simply because we follow the
+   // rule that each sector may have its own slope, no slopes are shared. If we decide to share
+   // slopes, we MUST make sure to decouple the following fields from pslope_t
+   //
+
+   // Offset of this slope's origin from surface's height, set on sector assignment and kept constant
+   fixed_t surfaceZOffset;
+   float surfaceZOffsetF;  // floating-point variant
 };
 
 //
@@ -175,18 +206,22 @@ struct pslope_t
 #define NUMLINEARGS 5
 
 // sector action flags
-enum
+enum sectoractionflags_e : unsigned int
 {
-   SEC_ACTION_ENTER = 0x00000001
+   SEC_ACTION_NOTREPEAT  = 0x00000001,
+   SEC_ACTION_PROJECTILE = 0x00000002,
+   SEC_ACTION_MONSTER    = 0x00000004,
+   SEC_ACTION_NOPLAYER   = 0x00000008,
+   SEC_ACTION_ENTER      = 0x00000010,
+   SEC_ACTION_EXIT       = 0x00000020,
 };
 
 struct sectoraction_t
 {
    DLListItem<sectoraction_t> links;
 
-   int special;
-   int args[NUMLINEARGS];
-   int actionflags;
+   Mobj *mo;
+   int   actionflags;
 };
 
 // sector interpolation values
@@ -203,6 +238,13 @@ struct sectorinterp_t
    fixed_t backceilingheight;
    float   backfloorheightf;
    float   backceilingheightf;
+
+   // as the above sets of values, but for slope origin Z
+   float   prevfloorslopezf;
+   float   prevceilingslopezf;
+
+   float   backfloorslopezf;
+   float   backceilingslopezf;
 };
 
 //
@@ -212,8 +254,9 @@ struct sectorbox_t
 {
    fixed_t box[4];      // bounding box per sector
    float fbox[4];
-   Surfaces<uint64_t> visitid;   // updated to avoid visiting more than once
 };
+
+using sectorboxvisit_t = Surfaces<uint64_t>;
 
 //
 // Sound Zones
@@ -233,7 +276,7 @@ static const unsigned secf_surfLightAbsolute[surf_NUM] = {
 struct surface_t
 {
    fixed_t height;
-   int pic;
+   int pic; // MUST BE CACHED IF MODIFIED AT RUNTIME
 
    // thinker_t for reversable actions
    // jff 2/22/98 make thinkers on
@@ -281,13 +324,52 @@ struct surface_t
 
    // haleyjd 10/17/10: terrain type overrides
    ETerrain *terrain;
+
+   fixed_t getZAt(fixed_t x, fixed_t y) const;
+   inline fixed_t getZAt(v2fixed_t v) const
+   {
+      return getZAt(v.x, v.y);
+   }
+};
+
+//
+// All sector_t properties required for rendering
+// MUST BE TRIVIALLY CONSTRUCTABLE
+//
+struct rendersector_t
+{
+   // Keep name short because it's very frequently used.
+   Surfaces<surface_t> srf;
+
+   int16_t lightlevel;
+
+   // killough 3/7/98: support flat heights drawn at another sector's heights
+   int heightsec;    // other sector, or -1 if no other sector
+
+   int bottommap, midmap, topmap; // killough 4/4/98: dynamic colormaps
+
+   // killough 10/98: support skies coming from sidedefs. Allows scrolling
+   // skies and other effects. No "level info" kind of lump is needed,
+   // because you can use an arbitrary number of skies per level with this
+   // method. This field only applies when skyflatnum is used for floorpic
+   // or ceilingpic, because the rest of Doom needs to know which is sky
+   // and which isn't, etc.
+
+   int sky;
+
+   int groupid;
+
+   // haleyjd 12/28/08: sector flags, for ED/UDMF use. Replaces stupid BOOM
+   // generalized sector types outside of DOOM-format maps.
+   unsigned int flags;
+   unsigned int intflags; // internal flags
 };
 
 //
 // The SECTORS record, at runtime.
 // Stores things/mobjs.
 //
-struct sector_t
+struct sector_t : rendersector_t
 {
    // flag set for various uses
    enum
@@ -296,10 +378,6 @@ struct sector_t
       ceiling = 2
    };
 
-   // Keep name short because it's very frequently used.
-   Surfaces<surface_t> srf;
-
-   int16_t lightlevel;
    int16_t special;
    int16_t tag;
    int16_t leakiness;       // ioanch (UDMF): probability / 256 that the suit will leak
@@ -326,28 +404,12 @@ struct sector_t
    int prevsec;     // -1 or number of sector for previous step
    int nextsec;     // -1 or number of next step sector
 
-   // killough 3/7/98: support flat heights drawn at another sector's heights
-   int heightsec;    // other sector, or -1 if no other sector
-   
-   int bottommap, midmap, topmap; // killough 4/4/98: dynamic colormaps
-   
-   // killough 10/98: support skies coming from sidedefs. Allows scrolling
-   // skies and other effects. No "level info" kind of lump is needed, 
-   // because you can use an arbitrary number of skies per level with this
-   // method. This field only applies when skyflatnum is used for floorpic
-   // or ceilingpic, because the rest of Doom needs to know which is sky
-   // and which isn't, etc.
-   
-   int sky;
-   
    // list of mobjs that are at least partially in the sector
    // thinglist is a subset of touching_thinglist
    msecnode_t *touching_thinglist;               // phares 3/14/98  
    
    int linecount;
    line_t **lines;
-
-   int groupid;
 
    // haleyjd 03/12/03: Heretic wind specials
    int     hticPushType;
@@ -359,11 +421,6 @@ struct sector_t
 
    DLListItem<particle_t> *ptcllist; // haleyjd 02/20/04: list of particles in sector
 
-   // haleyjd 12/28/08: sector flags, for ED/UDMF use. Replaces stupid BOOM
-   // generalized sector types outside of DOOM-format maps.
-   unsigned int flags;
-   unsigned int intflags; // internal flags
-   
    // haleyjd 12/31/08: sector damage properties
    int damage;      // if > 0, sector is damaging
    int damagemask;  // damage is done when !(leveltime % mask)
@@ -386,29 +443,51 @@ struct sector_t
 
 struct side_t
 {
-  fixed_t textureoffset; // add this to the calculated texture column
-  fixed_t rowoffset;     // add this to the calculated texture top
-  int16_t toptexture;      // Texture indices. We do not maintain names here. 
-  int16_t bottomtexture;
-  int16_t midtexture;
-  sector_t* sector;      // Sector the SideDef is facing.
+   fixed_t offset_base_x;   // add this to the calculated texture column
+   fixed_t offset_base_y;   // add this to the calculated texture top
 
-  // killough 4/4/98, 4/11/98: highest referencing special linedef's type,
-  // or lump number of special effect. Allows texture names to be overloaded
-  // for other functions.
-  int special;
+   fixed_t offset_top_x;    // x offset for toptexture only
+   fixed_t offset_top_y;    // y offset for toptexture only
+   fixed_t offset_bottom_x; // x offset for bottomtexture only
+   fixed_t offset_bottom_y; // y offset for bottomtexture only
+   fixed_t offset_mid_x;    // x offset for midtexture only
+   fixed_t offset_mid_y;    // y offset for midtexture only
+
+   int16_t light_base;   // light offset for sidedef (or overall if flag is set)
+   int16_t light_top;    // light offset for top texture (or overall if flag is set)
+   int16_t light_mid;    // light offset for mid texture (or overall if flag is set)
+   int16_t light_bottom; // light offset for bottom texture (or overall if flag is set)
+
+   // Texture indices. We do not maintain names here.
+   int16_t toptexture;    // MUST BE CACHED IF MODIFIED AT RUNTIME
+   int16_t bottomtexture; // MUST BE CACHED IF MODIFIED AT RUNTIME
+   int16_t midtexture;    // MUST BE CACHED IF MODIFIED AT RUNTIME
+
+   uint16_t intflags; // keep intflags here (we may also afford to edit "special")
+   sector_t* sector;      // Sector the SideDef is facing.
+
+   // killough 4/4/98, 4/11/98: highest referencing special linedef's type,
+   // or lump number of special effect. Allows texture names to be overloaded
+   // for other functions.
+   int special;
+
+   uint16_t flags;
+
+   inline int topSkewType()    const { return (intflags & SDI_SKEW_TOP_MASK)    >> SDI_SKEW_TOP_SHIFT;    }
+   inline int bottomSkewType() const { return (intflags & SDI_SKEW_BOTTOM_MASK) >> SDI_SKEW_BOTTOM_SHIFT; }
+   inline int middleSkewType() const { return (intflags & SDI_SKEW_MIDDLE_MASK) >> SDI_SKEW_MIDDLE_SHIFT; }
 };
 
 //
 // Move clipping aid for LineDefs.
 //
-typedef enum
+enum slopetype_t
 {
-  ST_HORIZONTAL,
-  ST_VERTICAL,
-  ST_POSITIVE,
-  ST_NEGATIVE
-} slopetype_t;
+   ST_HORIZONTAL,
+   ST_VERTICAL,
+   ST_POSITIVE,
+   ST_NEGATIVE
+};
 
 struct seg_t;
 
@@ -428,7 +507,7 @@ struct line_t
    sector_t *frontsector;  // Front and back sector.
    sector_t *backsector; 
    int validcount;         // if == validcount, already checked
-   int tranlump;           // killough 4/11/98: translucency filter, -1 == none
+   int tranlump;           // killough 4/11/98: translucency filter, -1 == none: MUST BE CACHED IF MODIFIED AT RUNTIME
    int firsttag, nexttag;  // killough 4/17/98: improves searches for tags.
    PointThinker soundorg;  // haleyjd 04/19/09: line sound origin
    int intflags;           // haleyjd 01/22/11: internal flags
@@ -461,13 +540,13 @@ struct rpolybsp_t;
 //
 struct subsector_t
 {
-  sector_t *sector;
+   sector_t *sector;
 
-  // haleyjd 06/19/06: converted from short to long for 65535 segs
-  int    numlines, firstline;
+   // haleyjd 06/19/06: converted from short to long for 65535 segs
+   int    numlines, firstline;
 
-  DLListItem<rpolyobj_t> *polyList; // haleyjd 05/15/08: list of polyobj fragments
-  rpolybsp_t *bsp;                  // haleyjd 05/05/13: sub-BSP tree
+   DLListItem<rpolyobj_t> *polyList; // haleyjd 05/15/08: list of polyobj fragments
+   rpolybsp_t *bsp;                  // haleyjd 05/05/13: sub-BSP tree
 };
 
 // phares 3/14/98
@@ -488,13 +567,13 @@ struct subsector_t
 
 struct msecnode_t
 {
-  sector_t   *m_sector; // a sector containing this object
-  Mobj       *m_thing;  // this object
-  msecnode_t *m_tprev;  // prev msecnode_t for this thing
-  msecnode_t *m_tnext;  // next msecnode_t for this thing
-  msecnode_t *m_sprev;  // prev msecnode_t for this sector
-  msecnode_t *m_snext;  // next msecnode_t for this sector
-  bool        visited;  // killough 4/4/98, 4/7/98: used in search algorithms
+   sector_t   *m_sector; // a sector containing this object
+   Mobj       *m_thing;  // this object
+   msecnode_t *m_tprev;  // prev msecnode_t for this thing
+   msecnode_t *m_tnext;  // next msecnode_t for this thing
+   msecnode_t *m_sprev;  // prev msecnode_t for this sector
+   msecnode_t *m_snext;  // next msecnode_t for this sector
+   bool        visited;  // killough 4/4/98, 4/7/98: used in search algorithms
 };
 
 //
@@ -502,24 +581,25 @@ struct msecnode_t
 //
 struct seg_t
 {
-  union 
-  {
-    struct { vertex_t *v1, *v2; };
-    struct { dynavertex_t *dyv1, *dyv2; };
-  };
-  float     offset;
-  side_t   *sidedef;
-  line_t   *linedef;
-  
-  // Sector references.
-  // Could be retrieved from linedef, too
-  // (but that would be slower -- killough)
-  // backsector is nullptr for one sided lines
+   union
+   {
+      struct { vertex_t *v1, *v2; };
+      struct { dynavertex_t *dyv1, *dyv2; };
+   };
+   float     offset;
+   side_t   *sidedef;
+   line_t   *linedef;
 
-  sector_t *frontsector, *backsector;
+   // Sector references.
+   // Could be retrieved from linedef, too
+   // (but that would be slower -- killough)
+   // backsector is nullptr for one sided lines
 
-  // SoM: Precached seg length in float format
-  float  len;
+   sector_t *frontsector, *backsector;
+   bool      frontside;
+
+   // SoM: Precached seg length in float format
+   float  len;
 };
 
 //
@@ -568,17 +648,16 @@ struct fnode_t
 
 struct spriteframe_t
 {
-  // If false use 0 for any position.
-  // Note: as eight entries are available,
-  //  we might as well insert the same name eight times.
-  int rotate;
+   // If false use 0 for any position.
+   // Note: as eight entries are available,
+   //  we might as well insert the same name eight times.
+   int rotate;
 
-  // Lump to use for view angles 0-7.
-  int16_t lump[8];
+   // Lump to use for view angles 0-7.
+   int16_t lump[8];
 
-  // Flip bit (1 = flip) to use for view angles 0-7.
-  byte  flip[8];
-
+   // Flip bit (1 = flip) to use for view angles 0-7.
+   byte  flip[8];
 };
 
 //
@@ -588,14 +667,20 @@ struct spriteframe_t
 
 struct spritedef_t
 {
-  int numframes;
-  spriteframe_t *spriteframes;
+   int numframes;
+   spriteframe_t *spriteframes;
 };
 
 
 // SoM: Information used in texture mapping sloped planes
 struct rslope_t
 {
+   // A is a vector, which represents how movement through x and y screen space changes the u texture coordinate
+   // B is a vector, which represents how movement through x and y screen space changes the v texture coordinate
+
+   // Alternatively: A maps screen coordinates to u coords, B maps screen coordinates to v coords,
+   //                and C maps screen coordinates to inverse plane distances
+
    v3double_t A, B, C;
    double     zat, plight, shade;
 };
@@ -616,11 +701,12 @@ struct rslope_t
 struct visplane_t
 {
    visplane_t *next;        // Next visplane in hash chain -- killough
+   int         chainnum;    // The index of this visplane's hash chain, for optimisation
    int picnum, lightlevel, minx, maxx;
    fixed_t height;
-   lighttable_t *(*colormap)[MAXLIGHTZ];
-   lighttable_t *fullcolormap;   // SoM: Used by slopes.
-   lighttable_t *fixedcolormap;  // haleyjd 10/16/06
+   const lighttable_t *const (*colormap)[MAXLIGHTZ];
+   const lighttable_t *fullcolormap;   // SoM: Used by slopes.
+   const lighttable_t *fixedcolormap;  // haleyjd 10/16/06
    v2fixed_t offs;         // killough 2/28/98: Support scrolling flats
    v2float_t scale;
 

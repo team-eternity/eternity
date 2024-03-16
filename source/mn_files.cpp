@@ -23,13 +23,8 @@
 
 #if __cplusplus >= 201703L || _MSC_VER >= 1914
 #include "hal/i_platform.h"
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
-#include "hal/i_directory.h"
-namespace fs = fsStopgap;
-#else
 #include <filesystem>
 namespace fs = std::filesystem;
-#endif
 #else
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
@@ -283,7 +278,9 @@ int MN_ReadDirectory(mndir_t *dir, const char *read_dir,
    const fs::directory_iterator itr(dir->dirpath);
    for(const fs::directory_entry &ent : itr)
    {
-      qstring filename(ent.path().filename().generic_u8string().c_str());
+      qstring filename(
+         reinterpret_cast<const char *>(ent.path().filename().generic_u8string().c_str())
+      ); // C++20_FIXME: Cast to make C++20 builds compile
       if(allowsubdirs)
       {
          qstring path(read_dir);

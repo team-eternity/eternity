@@ -74,14 +74,18 @@ public:
 private:
 
    bool checkShootFlatPortal(const sector_t *sector, fixed_t infrac) const;
-   bool shoot2SLine(line_t *li, int lineside, fixed_t dist, const lineopening_t &lo) const;
-   bool shotCheck2SLine(line_t *li, int lineside, fixed_t dist) const;
+   bool shoot2SLine(line_t *li, int lineside, fixed_t dist,
+                    const tracelineopening_t &lo) const;
+   bool shotCheck2SLine(line_t *li, int lineside, fixed_t dist, v2fixed_t edgepos) const;
    static bool shootTraverse(const intercept_t *in, void *data, const divline_t &trace);
    ShootContext(const params_t &params, const State *instate);
 
    const params_t params;
    fixed_t cos, sin;
    State state;
+
+   v2fixed_t prevedgepos = {};  // previous edge position, needed for slope intersection
+   fixed_t prevfrac = 0;
 };
 
 //
@@ -178,7 +182,7 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector, fixed_t infr
 // ShootContext::shoot2SLine
 //
 bool ShootContext::shoot2SLine(line_t *li, int lineside, fixed_t dist,
-   const lineopening_t &lo) const
+   const tracelineopening_t &lo) const
 {
    // ioanch: no more need for demo version < 333 check. Also don't allow comp.
    if(FixedDiv(lo.open.floor - state.v.z, dist) <= params.aimslope &&
@@ -194,7 +198,8 @@ bool ShootContext::shoot2SLine(line_t *li, int lineside, fixed_t dist,
 //
 // ShootContext::shotCheck2SLine
 //
-bool ShootContext::shotCheck2SLine(line_t *li, int lineside, fixed_t dist) const
+bool ShootContext::shotCheck2SLine(line_t *li, int lineside, fixed_t dist, v2fixed_t edgepos)
+   const
 {
    bool ret = false;
    if(li->extflags & EX_ML_BLOCKALL)
@@ -202,8 +207,8 @@ bool ShootContext::shotCheck2SLine(line_t *li, int lineside, fixed_t dist) const
 
    if(li->flags & ML_TWOSIDED)
    {
-      lineopening_t lo = { 0 };
-      lo.calculate(li);
+      tracelineopening_t lo = { 0 };
+      lo.calculateAtPoint(*li, edgepos);
       if(shoot2SLine(li, lineside, dist, lo))
          ret = true;
    }
@@ -226,27 +231,29 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
       int lineside = P_PointOnLineSidePrecise(trace.x, trace.y, li);
 
       fixed_t dist = FixedMul(context.params.attackrange, in->frac);
-      if(context.shotCheck2SLine(li, lineside, dist))
+      v2fixed_t edgepos = trace.v + trace.dv.fixedMul(in->frac);
+
+      if(context.shotCheck2SLine(li, lineside, dist, edgepos))
       {
          // ioanch 20160101: line portal aware
          const portal_t *portal = nullptr;
          if(li->extflags & EX_ML_LOWERPORTAL && li->backsector &&
             li->backsector->srf.floor.pflags & PS_PASSABLE &&
-            FixedDiv(li->backsector->srf.floor.height - context.state.v.z, dist)
+            FixedDiv(li->backsector->srf.floor.getZAt(edgepos) - context.state.v.z, dist)
             >= context.params.aimslope)
          {
             portal = li->backsector->srf.floor.portal;
          }
          else if(li->extflags & EX_ML_UPPERPORTAL && li->backsector &&
             li->backsector->srf.ceiling.pflags & PS_PASSABLE &&
-            FixedDiv(li->backsector->srf.ceiling.height - context.state.v.z, dist)
+            FixedDiv(li->backsector->srf.ceiling.getZAt(edgepos) - context.state.v.z, dist)
             <= context.params.aimslope)
          {
             portal = li->backsector->srf.ceiling.portal;
          }
          else if(li->pflags & PS_PASSABLE &&
             (!(li->extflags & EX_ML_LOWERPORTAL) ||
-             FixedDiv(li->backsector->srf.floor.height - context.state.v.z, dist)
+             FixedDiv(li->backsector->srf.floor.getZAt(edgepos) - context.state.v.z, dist)
                < context.params.aimslope))
          {
             portal = li->portal;
@@ -255,10 +262,18 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          {
             int newfromid = portal->data.link.toid;
             if(newfromid == context.state.groupid)
+            {
+               context.prevedgepos = edgepos;
+               context.prevfrac = in->frac;
                return true;
+            }
 
             if(context.state.reclevel >= RECURSION_LIMIT)
+            {
+               context.prevedgepos = edgepos;
+               context.prevfrac = in->frac;
                return true;
+            }
 
             // NOTE: for line attacks, sightzstart also moves!
             v3fixed_t v;
@@ -289,6 +304,8 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
             return false;
          }
 
+         context.prevedgepos = edgepos;
+         context.prevfrac = in->frac;
          return true;
       }
 
@@ -311,68 +328,23 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          if(context.checkShootFlatPortal(sidesector, in->frac))
             return false;  // done here
 
-         if(z < sidesector->srf.floor.height)
+         if(!P_CheckShootPlane(*sidesector, trace.x, trace.y, context.state.v.z,
+                               context.params.aimslope, context.prevedgepos, context.prevfrac,
+                               context.params.attackrange, context.cos, context.sin, x, y, z,
+                               hitplane, updown))
          {
-            fixed_t pfrac = FixedDiv(sidesector->srf.floor.height
-                                     - context.state.v.z, context.params.aimslope);
-
-            if(R_IsSkyFlat(sidesector->srf.floor.pic) ||
-               R_IsSkyLikePortalFloor(*sidesector))
-            {
-               return false;
-            }
-
-            x = trace.x + FixedMul(context.cos, pfrac);
-            y = trace.y + FixedMul(context.sin, pfrac);
-            z = sidesector->srf.floor.height;
-
-            hitplane = true;
-            updown = 0;
-         }
-         else if(z > sidesector->srf.ceiling.height)
-         {
-            fixed_t pfrac = FixedDiv(sidesector->srf.ceiling.height
-                                     - context.state.v.z, context.params.aimslope);
-            if(sidesector->intflags & SIF_SKY ||
-               R_IsSkyLikePortalCeiling(*sidesector))
-            {
-               return false;
-            }
-            x = trace.x + FixedMul(context.cos, pfrac);
-            y = trace.y + FixedMul(context.sin, pfrac);
-            z = sidesector->srf.ceiling.height;
-
-            hitplane = true;
-            updown = 1;
+            return false;
          }
       }
 
       if(!hitplane && li->special)
          P_ShootSpecialLine(context.params.thing, li, lineside);
 
-      if(R_IsSkyFlat(li->frontsector->srf.ceiling.pic) || li->frontsector->srf.ceiling.portal)
-      {
-         if(z > li->frontsector->srf.ceiling.height)
-            return false;
-         if(li->backsector && R_IsSkyFlat(li->backsector->srf.ceiling.pic))
-         {
-            if(li->backsector->srf.ceiling.height < z)
-               return false;
-         }
-      }
-
-      if(demo_version >= 342 && li->backsector &&
-         ((li->extflags & EX_ML_UPPERPORTAL &&
-            li->backsector->srf.ceiling.height < li->frontsector->srf.ceiling.height &&
-            li->backsector->srf.ceiling.height < z &&
-            R_IsSkyLikePortalCeiling(*li->backsector)) ||
-            (li->extflags & EX_ML_LOWERPORTAL &&
-               li->backsector->srf.floor.height > li->frontsector->srf.floor.height &&
-               li->backsector->srf.floor.height > z &&
-               R_IsSkyLikePortalFloor(*li->backsector))))
-      {
+      if(!P_CheckShootSkyHack(*li, x, y, z))
          return false;
-      }
+
+      if(!P_CheckShootSkyLikeEdgePortal(*li, edgepos, z))
+         return false;
 
       if(!hitplane && !li->backsector && R_IsSkyWall(*li))
          return false;
@@ -415,6 +387,10 @@ ShootContext::ShootContext(const params_t &params, const State *instate) :
       state.origindist = 0;
       state.reclevel = 0;
    }
+
+   // Store the initial edge position
+   prevedgepos = v2fixed_t(state.v);
+   prevfrac = 0;
 }
 
 //

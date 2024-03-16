@@ -45,6 +45,7 @@ class  SaveArchive;
 struct sector_t;
 struct side_t;
 class  UDMFSetupSettings;
+struct v3fixed_t;
 
 //      Define values for map objects
 #define MO_TELEPORTMAN  14
@@ -101,6 +102,10 @@ class  UDMFSetupSettings;
 #define KILLSOUND_SHIFT 10
 #define MOVESOUND_MASK  0x800
 #define MOVESOUND_SHIFT 11
+#define INSTANTDEATH_MASK  0x1000
+#define INSTANTDEATH_SHIFT 12
+#define MONSTERDEATH_MASK  0x2000
+#define MONSTERDEATH_SHIFT 13
 
 #define UDMF_SEC_MASK   0xff  // 0-255 are the UDMF non-Boom gen specials
 // right-shift from UDMF generalized namespace to Boom generalized namespace
@@ -109,7 +114,7 @@ class  UDMFSetupSettings;
 // haleyjd 12/28/08: mask used to get generalized special bits that are now
 // part of the sector flags
 #define GENSECTOFLAGSMASK \
-   (SECRET_MASK|FRICTION_MASK|PUSH_MASK|KILLSOUND_MASK|MOVESOUND_MASK)
+   (SECRET_MASK|FRICTION_MASK|PUSH_MASK|KILLSOUND_MASK|MOVESOUND_MASK|INSTANTDEATH_MASK|MONSTERDEATH_MASK)
 
 //jff 02/04/98 Define masks, shifts, for fields in 
 // generalized linedef types
@@ -669,10 +674,10 @@ public:
 
 struct switchlist_t
 {
-  char    name1[9];
-  char    name2[9];
-  int16_t episode;
-}; 
+   char    name1[9];
+   char    name2[9];
+   int16_t episode;
+};
 
 #if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(pop)
@@ -1026,8 +1031,8 @@ public:
 
 struct ceilinglist_t
 {
-  CeilingThinker *ceiling;
-  ceilinglist_t *next,**prev;
+   CeilingThinker *ceiling;
+   ceilinglist_t *next,**prev;
 };
 
 // haleyjd 01/09/12: ceiling data flags
@@ -1404,7 +1409,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side);
 //
 // Silent teleport angle change
 //
-enum teleangle_e
+enum teleangle_e : int8_t
 {
    teleangle_keep,               // keep current thing angle (Hexen silent teleport)
    teleangle_absolute,           // totally change angle (ZDoom extension)
@@ -1418,12 +1423,13 @@ enum teleangle_e
 struct teleparms_t
 {
    bool keepheight;
+   bool alwaysfrag;
    teleangle_e teleangle;
 };
 
-bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle);
+bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle, bool alwaysfrag);
 
-int EV_Teleport(int tag, int side, Mobj *thing);
+int EV_Teleport(int tag, int side, Mobj *thing, bool alwaysfrag);
 
 // killough 2/14/98: Add silent teleporter
 int EV_SilentTeleport(const line_t *line, int tag, int side, Mobj *thing,
@@ -1431,27 +1437,28 @@ int EV_SilentTeleport(const line_t *line, int tag, int side, Mobj *thing,
 
 // killough 1/31/98: Add silent line teleporter
 int EV_SilentLineTeleport(const line_t *line, int lineid, int side,
-			              Mobj *thing, bool reverse);
+			              Mobj *thing, bool reverse, bool alwaysfrag);
 
 // ioanch 20160330: parameterized teleport
-int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing);
+int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing, bool alwaysfrag);
 int EV_ParamSilentTeleport(int tid, const line_t *line, int tag, int side,
                            Mobj *thing, teleparms_t parms);
 
 // p_floor
 
-int EV_DoElevator(const line_t *line, int tag, elevator_e type, fixed_t speed,
+int EV_DoElevator(const line_t *line, const Mobj *mo, const polyobj_t *po,
+                  int tag, elevator_e type, fixed_t speed,
                   fixed_t amount, bool isParam);
 
-int EV_BuildStairs(const line_t *line, stair_e type);
+int EV_BuildStairs(int tag, stair_e type);
 
-int EV_DoFloor(const line_t *line, floor_e floortype);
+int EV_DoFloor(const line_t *line, int tag, floor_e floortype);
 
 int EV_FloorCrushStop(const line_t *line, int tag);
 
 // p_ceilng
 
-int EV_DoCeiling(const line_t *line, ceiling_e type);
+int EV_DoCeiling(const line_t *line, int tag, ceiling_e type);
 
 int EV_CeilingCrushStop(int tag, bool removeThinker);
 
@@ -1461,7 +1468,7 @@ void P_ChangeCeilingTex(const char *name, int tag);
 
 int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID);
 
-int EV_DoDoor(const line_t *line, vldoor_e type);
+int EV_DoDoor(int tag, vldoor_e type);
 
 void EV_OpenDoor(int sectag, int speed, int wait_time);
 
@@ -1518,37 +1525,37 @@ void P_ChangeFloorTex(const char *name, int tag);
 
 // p_plats
 
-bool EV_DoPlat(const line_t *line, plattype_e type, int amount);
+bool EV_DoPlat(const line_t *line, int tag, plattype_e type, int amount);
 bool EV_DoParamPlat(const line_t *line, const int *args, paramplattype_e type);
 bool EV_StopPlatByTag(int tag, bool removeThinker);
 
 // p_genlin
 
 int EV_DoParamFloor(const line_t *line, int tag, const floordata_t *fd);
-int EV_DoGenFloor(const line_t *line);
+int EV_DoGenFloor(const line_t *line, int special, int tag);
 
 int EV_DoParamCeiling(const line_t *line, int tag, const ceilingdata_t *cd);
-int EV_DoGenCeiling(const line_t *line);
+int EV_DoGenCeiling(const line_t *line, int special, int tag);
 
 int EV_DoFloorAndCeiling(const line_t *line, int tag, const floordata_t &fd,
                          const ceilingdata_t &cd);
 
-int EV_DoGenLift(const line_t *line);
-int EV_DoGenLiftByParameters(bool manualtrig, const line_t &line, fixed_t speed, int delay,
+int EV_DoGenLift(const line_t *line, int special, int tag);
+int EV_DoGenLiftByParameters(bool manualtrig, const line_t *line, int tag, fixed_t speed, int delay,
                              int target, fixed_t height);
 
 int EV_DoParamStairs(const line_t *line, int tag, const stairdata_t *sd);
-int EV_DoGenStairs(line_t *line);
+int EV_DoGenStairs(line_t *line, int special, int tag);
 
 int EV_DoParamCrusher(const line_t *line, int tag, const crusherdata_t *cd);
-int EV_DoGenCrusher(const line_t *line);
+int EV_DoGenCrusher(const line_t *line, int special, int tag);
 
 int EV_DoParamDoor(const line_t *line, int tag, const doordata_t *dd);
-int EV_DoGenDoor(const line_t *line, Mobj *thing);
+int EV_DoGenDoor(const line_t *line, Mobj *thing, int special, int tag);
 
-int EV_DoGenLockedDoor(const line_t *line, Mobj *thing);
+int EV_DoGenLockedDoor(const line_t *line, Mobj *thing, int special, int tag);
 
-void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag);
+void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag, line_t *triggerLine);
 
 // p_things
 
@@ -1608,7 +1615,7 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side);
 void P_ShootSpecialLine(Mobj *thing, line_t *line, int side);
 
 // killough 11/98
-void P_CrossSpecialLine(line_t *, int side, Mobj *thing, polyobj_t *poly); 
+void P_CrossSpecialLine(line_t *, int side, Mobj *thing, polyobj_t *poly);
 // ioanch
 void P_PushSpecialLine(Mobj &thing, line_t &line, int side);
 
@@ -1679,7 +1686,7 @@ bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta,
 
 void P_CalcFriction(int length, int &friction, int &movefactor); // ioanch
 
-line_t *P_FindLine(int tag, int *searchPosition);
+line_t *P_FindLine(int tag, int *searchPosition, line_t *defaultLine = nullptr);
 
 // haleyjd: sector special transfers
 void P_SetupSpecialTransfer(const sector_t *, spectransfer_t *);
@@ -1694,15 +1701,23 @@ void P_ZeroSectorSpecial(sector_t *);
 
 void P_SetLineID(line_t *line, int id);
 
+v3fixed_t P_GetArrivalTelefogLocation(v3fixed_t landing, angle_t angle);
+
 // haleyjd: parameterized lines
 
 // param special activation types
-enum
+enum specialactivation_e : int
 {
    SPAC_CROSS,
    SPAC_USE,
    SPAC_IMPACT,
    SPAC_PUSH,
+};
+
+enum sectoractivation_e : int
+{
+   SEAC_ENTER,
+   SEAC_EXIT,
 };
 
 extern void P_StartLineScript(line_t *line, int side, Mobj *thing, polyobj_t *po);

@@ -42,9 +42,9 @@ extern int UnknownThingType;
 #ifdef NEED_EDF_DEFINITIONS
 
 // Section Names
-#define EDF_SEC_THING    "thingtype"
-#define EDF_SEC_TNGDELTA "thingdelta"
-#define EDF_SEC_THINGGROUP "thinggroup"
+constexpr const char EDF_SEC_THING[]      = "thingtype";
+constexpr const char EDF_SEC_TNGDELTA[]   = "thingdelta";
+constexpr const char EDF_SEC_THINGGROUP[] = "thinggroup";
 
 // Section Options
 extern cfg_opt_t edf_thing_opts[];
@@ -61,6 +61,7 @@ enum
    TGF_PROJECTILEALLIANCE = 1,   // things in group are immune to their projectiles
    TGF_DAMAGEIGNORE = 2,         // things in group don't react to being damaged
    TGF_INHERITED = 4,            // make sure to also apply these to inheriting objects
+   TGF_NOSPLASHDAMAGE = 8,       // things in group immune to splash damage
 };
 
 // Global Functions
@@ -79,6 +80,7 @@ void E_SetThingDefaultSprites(void);
 #endif
 
 // For Game Engine:
+int E_GetAddThingNumForDEHNum(int dehnum, bool forceAdd);
 int E_ThingNumForDEHNum(int dehnum);           // dehnum lookup
 int E_GetThingNumForDEHNum(int dehnum);        //   fatal error version
 int E_SafeThingType(int dehnum);               //   fallback version
@@ -109,6 +111,8 @@ state_t *E_GetStateForMobj(const Mobj *mo, const char *label);
 
 // Thing groups
 bool E_ThingPairValid(int t1, int t2, unsigned flags);
+void E_AddToMBF21ThingGroup(int idnum, unsigned flag, int type, bool inclusive);
+void E_RemoveFromExistingThingPairs(int type, unsigned flag);
 
 // ioanch 20160220: metastate key names used throughout the code. They also
 // work as DECORATE state label names.
@@ -131,6 +135,9 @@ enum bloodtype_e : int
 
 int E_BloodTypeForThing(const Mobj *mo, bloodaction_e action);
 bloodtype_e E_GetBloodBehaviorForAction(mobjinfo_t *info, bloodaction_e action);
+
+void E_ForEachMobjInfoWithAnyFlags2(unsigned flags,
+   bool (*func)(const mobjinfo_t &info, void *context), void *context);
 
 #endif
 

@@ -42,6 +42,28 @@ typedef uint8_t byte;
 #define D_MININT INT_MIN
 #define D_MAXSHORT  SHRT_MAX
 
+// The packed attribute forces structures to be packed into the minimum
+// space necessary.  If this is not done, the compiler may align structure
+// fields differently to optimize memory access, inflating the overall
+// structure size.  It is important to use the packed attribute on certain
+// structures where alignment is important, particularly data read/written
+// to disk.
+
+#if defined(__GNUC__)
+   #define PACKED_PREFIX
+   #if defined(_WIN32) && !defined(__clang__)
+      #define PACKED_SUFFIX __attribute__((packed,gcc_struct))
+   #else
+      #define PACKED_SUFFIX __attribute__((packed))
+   #endif
+#elif defined(__WATCOMC__)
+   #define PACKED_PREFIX _Packed
+   #define PACKED_SUFFIX
+#else
+   #define PACKED_PREFIX
+   #define PACKED_SUFFIX
+#endif
+
 #endif
 
 //----------------------------------------------------------------------------

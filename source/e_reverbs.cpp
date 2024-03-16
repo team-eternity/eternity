@@ -82,21 +82,21 @@ ereverb_t *E_ReverbForID(int id)
 // EDF Processing
 //
 
-#define ITEM_TP_ID1 "id1"
-#define ITEM_TP_ID2 "id2"
+constexpr const char ITEM_TP_ID1[] = "id1";
+constexpr const char ITEM_TP_ID2[] = "id2";
 
-#define ITEM_REVERB_ROOMSIZE  "roomsize"
-#define ITEM_REVERB_DAMPING   "damping"
-#define ITEM_REVERB_WETSCALE  "wetscale"
-#define ITEM_REVERB_DRYSCALE  "dryscale"
-#define ITEM_REVERB_WIDTH     "width"
-#define ITEM_REVERB_PREDELAY  "predelay"
-#define ITEM_REVERB_EQUALIZED "equalized"
-#define ITEM_REVERB_EQLOWFREQ "eq.lowfreq"
-#define ITEM_REVERB_EQHIFREQ  "eq.highfreq"
-#define ITEM_REVERB_EQLOWGAIN "eq.lowgain"
-#define ITEM_REVERB_EQMIDGAIN "eq.midgain"
-#define ITEM_REVERB_EQHIGAIN  "eq.highgain"
+constexpr const char ITEM_REVERB_ROOMSIZE[]  = "roomsize";
+constexpr const char ITEM_REVERB_DAMPING[]   = "damping";
+constexpr const char ITEM_REVERB_WETSCALE[]  = "wetscale";
+constexpr const char ITEM_REVERB_DRYSCALE[]  = "dryscale";
+constexpr const char ITEM_REVERB_WIDTH[]     = "width";
+constexpr const char ITEM_REVERB_PREDELAY[]  = "predelay";
+constexpr const char ITEM_REVERB_EQUALIZED[] = "equalized";
+constexpr const char ITEM_REVERB_EQLOWFREQ[] = "eq.lowfreq";
+constexpr const char ITEM_REVERB_EQHIFREQ[]  = "eq.highfreq";
+constexpr const char ITEM_REVERB_EQLOWGAIN[] = "eq.lowgain";
+constexpr const char ITEM_REVERB_EQMIDGAIN[] = "eq.midgain";
+constexpr const char ITEM_REVERB_EQHIGAIN[]  = "eq.highgain";
 
 // titleprops subsection
 static cfg_opt_t titleprops[] =
@@ -130,8 +130,6 @@ cfg_opt_t edf_reverb_opts[] =
    CFG_END()
 };
 
-// Test if the item is defined explicitly, or the default should be gotten
-#define IS_SET(cfg, s, def) (def || cfg_size((cfg), (s)) > 0)
 
 //
 // E_getFloatAndClamp
@@ -139,10 +137,15 @@ cfg_opt_t edf_reverb_opts[] =
 // Get a floating point property from the cfg_t and clamp it into a given
 // range inclusive.
 //
-static void E_getFloatAndClamp(cfg_t *cfg, const char *name, double &dest, 
-                               double min, double max, bool def)
+static void E_getFloatAndClamp(cfg_t *const cfg, const char *name, double &dest,
+                               double min, double max, const bool def)
 {
-   if(IS_SET(cfg, name, def))
+   // Test if the item is defined explicitly, or the default should be gotten
+   const auto IS_SET = [cfg, def](const char *const s) -> bool {
+      return def || cfg_size((cfg), (s)) > 0;
+   };
+
+   if(IS_SET(name))
    {
       dest = cfg_getfloat(cfg, name);
       dest = eclamp(dest, min, max);
@@ -186,11 +189,16 @@ static void E_initDefaultEnvironment()
 //
 // Process a single EDF reverb definition.
 //
-static void E_processReverb(cfg_t *sec)
+static void E_processReverb(cfg_t *const sec)
 {
    bool        def    = false;
    const char *title  = cfg_title(sec);
    cfg_t      *tprops = cfg_gettitleprops(sec);
+
+   // Test if the item is defined explicitly, or the default should be gotten
+   const auto IS_SET = [sec, &def](const char *const s) -> bool {
+      return def || cfg_size((sec), (s)) > 0;
+   };
 
    // get ID components
    int id1 = cfg_getint(tprops, ITEM_TP_ID1);
@@ -231,14 +239,14 @@ static void E_processReverb(cfg_t *sec)
    E_getFloatAndClamp(sec, ITEM_REVERB_WIDTH,     newReverb->width,     0.0, 1.0,     def);
 
    // predelay
-   if(IS_SET(sec, ITEM_REVERB_PREDELAY, def))
+   if(IS_SET(ITEM_REVERB_PREDELAY))
    {
       newReverb->predelay = cfg_getint(sec, ITEM_REVERB_PREDELAY);
       newReverb->predelay = eclamp(newReverb->predelay, 0, 250);
    }
 
    // equalization enabled
-   if(IS_SET(sec, ITEM_REVERB_EQUALIZED, def))
+   if(IS_SET(ITEM_REVERB_EQUALIZED))
    {
       if(!!cfg_getflag(sec, ITEM_REVERB_EQUALIZED))
          newReverb->flags |= REVERB_EQUALIZED;

@@ -74,14 +74,15 @@
 VALLOCATION(mainhash)
 {
    R_ForEachContext([](rendercontext_t &basecontext) {
-      planecontext_t &context = basecontext.planecontext;
+      planecontext_t &context =  basecontext.planecontext;
+      ZoneHeap       &heap    = *basecontext.heap;
 
       context.freetail = nullptr;
       context.freehead = &context.freetail;
       context.floorplane = context.ceilingplane = nullptr;
 
-      context.mainchains = ecalloctag(
-         visplane_t **, MAINHASHCHAINS, sizeof(visplane_t *), PU_VALLOC, nullptr
+      context.mainchains = zhcalloctag(
+         heap, visplane_t **, MAINHASHCHAINS, sizeof(visplane_t *), PU_VALLOC, nullptr
       );
       context.mainhash = { MAINHASHCHAINS, context.mainchains, nullptr };
    });
@@ -95,15 +96,23 @@ constexpr unsigned int visplane_hash(const unsigned int picnum, const unsigned i
    return ((picnum * 3) + lightlevel + (height * 7)) % chains;
 }
 
+static float *g_openings = nullptr;
+static float *g_skews    = nullptr;
+
 // killough 8/1/98: set static number of openings to be large enough
 // (a static limit is okay in this case and avoids difficulties in r_segs.c)
-// THREAD_FIXME: Can openings somehow be de-contextified? I feel like it should be possible.
 VALLOCATION(openings)
 {
+
+   g_openings = ecalloctag(float *, w * h, sizeof(float), PU_VALLOC, nullptr);
+   g_skews    = ecalloctag(float *, w * h, sizeof(float), PU_VALLOC, nullptr);
+
    R_ForEachContext([w, h](rendercontext_t &context)
    {
-      context.planecontext.openings    = ecalloctag(float *, w * h, sizeof(float), PU_VALLOC, nullptr);
+      context.planecontext.openings    = g_openings + context.bounds.startcolumn * h;
       context.planecontext.lastopening = context.planecontext.openings;
+      context.planecontext.skews       = g_skews + context.bounds.startcolumn * h;
+      context.planecontext.lastskew = context.planecontext.skews;
    });
 }
 
@@ -142,7 +151,7 @@ VALLOCATION(overlayfclip)
 VALLOCATION(spanstart)
 {
    R_ForEachContext([h](rendercontext_t &context) {
-      context.planecontext.spanstart = ecalloctag(int *, h, sizeof(int), PU_VALLOC, nullptr);
+      context.planecontext.spanstart = zhcalloctag(*context.heap, int *, h, sizeof(int), PU_VALLOC, nullptr);
    });
 }
 
@@ -152,8 +161,7 @@ VALLOCATION(spanstart)
 
 VALLOCATION(slopespan)
 {
-   size_t size = sizeof(lighttable_t *) * w;
-   cb_slopespan_t::colormap = ecalloctag(lighttable_t **, 1, size, PU_VALLOC, nullptr);
+   cb_slopespan_t::colormap = ecalloctag(const lighttable_t **, w, sizeof(const lighttable_t *), PU_VALLOC, nullptr);
 }
 
 float slopevis; // SoM: used in slope lighting
@@ -225,7 +233,7 @@ static void R_mapPlane(const R_FlatFunc flatfunc, const R_SlopeFunc, cb_span_t &
       const double xfrac = (
          ((plane.pviewx + plane.xoffset) * plane.xscale) +
          (plane.pviewsin * realy * plane.xscale) +
-         ((static_cast<double>(x1) - view.xcenter) * xstep)
+         ((double(x1) - view.xcenter) * xstep)
       ) * plane.fixedunitx;
 
       span.xfrac = R_doubleToUint32(xfrac);
@@ -233,7 +241,7 @@ static void R_mapPlane(const R_FlatFunc flatfunc, const R_SlopeFunc, cb_span_t &
       const double yfrac = (
          ((-plane.pviewy + plane.yoffset) * plane.yscale) +
          (-plane.pviewcos * realy * plane.yscale) +
-         ((static_cast<double>(x1) - view.xcenter) * ystep)
+         ((double(x1) - view.xcenter) * ystep)
       ) * plane.fixedunity;
 
       span.yfrac = R_doubleToUint32(yfrac);
@@ -258,10 +266,11 @@ static void R_mapPlane(const R_FlatFunc flatfunc, const R_SlopeFunc, cb_span_t &
 //
 // R_slopeLights
 //
-static void R_slopeLights(const cb_plane_t &plane, int len, double startcmap, double endcmap)
+static void R_slopeLights(const cb_plane_t &plane, int x1, int x2, double startcmap, double endcmap)
 {
    int i;
    fixed_t map, map2, step;
+   const int len = x2 - x1 + 1;
 
 #ifdef RANGECHECK
    if(len > video.width)
@@ -271,7 +280,7 @@ static void R_slopeLights(const cb_plane_t &plane, int len, double startcmap, do
    if(plane.fixedcolormap)
    {
       for(i = 0; i < len; i++)
-         cb_slopespan_t::colormap[i] = plane.fixedcolormap;
+         cb_slopespan_t::colormap[i + x1] = plane.fixedcolormap;
       return;
    }
 
@@ -290,11 +299,11 @@ static void R_slopeLights(const cb_plane_t &plane, int len, double startcmap, do
       index -= (extralight * LIGHTBRIGHT);
 
       if(index < 0)
-         cb_slopespan_t::colormap[i] = (byte *)(plane.colormap);
+         cb_slopespan_t::colormap[i + x1] = (byte *)(plane.colormap);
       else if(index >= NUMCOLORMAPS)
-         cb_slopespan_t::colormap[i] = (byte *)(plane.colormap + ((NUMCOLORMAPS - 1) * 256));
+         cb_slopespan_t::colormap[i + x1] = (byte *)(plane.colormap + ((NUMCOLORMAPS - 1) * 256));
       else
-         cb_slopespan_t::colormap[i] = (byte *)(plane.colormap + (index * 256));
+         cb_slopespan_t::colormap[i + x1] = (byte *)(plane.colormap + (index * 256));
 
       map += step;
    }
@@ -307,7 +316,7 @@ static void R_mapSlope(const R_FlatFunc, const R_SlopeFunc slopefunc,
                        cb_span_t &span, cb_slopespan_t &slopespan, const cb_plane_t &plane,
                        int y, int x1, int x2)
 {
-   rslope_t *slope = plane.slope;
+   const rslope_t *slope = plane.slope;
    int count = x2 - x1;
    v3double_t s;
    double map1, map2;
@@ -316,16 +325,12 @@ static void R_mapSlope(const R_FlatFunc, const R_SlopeFunc slopefunc,
    s.y = y - view.ycenter + 1;
    s.z = view.xfoc;
 
-   slopespan.iufrac = M_DotVec3(&s, &slope->A) * static_cast<double>(plane.tex->width) *
-                      static_cast<double>(plane.yscale);
-   slopespan.ivfrac = M_DotVec3(&s, &slope->B) * static_cast<double>(plane.tex->height) *
-                      static_cast<double>(plane.xscale);
+   slopespan.iufrac = M_DotVec3(&s, &slope->A) * double(plane.tex->width) * double(plane.yscale);
+   slopespan.ivfrac = M_DotVec3(&s, &slope->B) * double(plane.tex->height) * double(plane.xscale);
    slopespan.idfrac = M_DotVec3(&s, &slope->C);
 
-   slopespan.iustep = slope->A.x * static_cast<double>(plane.tex->width) *
-                      static_cast<double>(plane.yscale);
-   slopespan.ivstep = slope->B.x * static_cast<double>(plane.tex->height) *
-                      static_cast<double>(plane.xscale);
+   slopespan.iustep = slope->A.x * double(plane.tex->width) * double(plane.yscale);
+   slopespan.ivstep = slope->B.x * double(plane.tex->height) * double(plane.xscale);
    slopespan.idstep = slope->C.x;
 
    slopespan.source = plane.source;
@@ -344,7 +349,7 @@ static void R_mapSlope(const R_FlatFunc, const R_SlopeFunc slopefunc,
    else
       map2 = map1;
 
-   R_slopeLights(plane, x2 - x1 + 1, (256.0 - map1), (256.0 - map2));
+   R_slopeLights(plane, x1, x2, (256.0 - map1), (256.0 - map2));
 
    slopefunc(slopespan, span);
 }
@@ -365,6 +370,21 @@ bool R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
         CompFloats(s1->normalf.x, s2->normalf.x) &&  // components are equal and...
         CompFloats(s1->normalf.y, s2->normalf.y) &&
         CompFloats(s1->normalf.z, s2->normalf.z) &&
+        fabs(P_DistFromPlanef(&s2->of, &s1->of, &s1->normalf)) < 0.001f); // this.
+}
+
+//
+// Compares slopes by swapping one's normal. Useful for checking if two slopes are touching
+// each other in the same sector.
+//
+bool R_CompareSlopesFlipped(const pslope_t *s1, const pslope_t *s2)
+{
+   return
+      (s1 == s2) ||                 // both are equal, including both nullptr; OR:
+       (s1 && s2 &&                 // both are valid and...
+        CompFloats(s1->normalf.x, -s2->normalf.x) &&  // components are equal and...
+        CompFloats(s1->normalf.y, -s2->normalf.y) &&
+        CompFloats(s1->normalf.z, -s2->normalf.z) &&
         fabs(P_DistFromPlanef(&s2->of, &s1->of, &s1->normalf)) < 0.001f); // this.
 }
 
@@ -403,6 +423,13 @@ static void R_calcSlope(const cbviewpoint_t &cb_viewpoint, visplane_t *pl)
    // Need to reduce them to the visible range, because otherwise it may overflow
    double xoffsf = fmod(pl->xoffsf, xl / pl->scale.x);
    double yoffsf = fmod(pl->yoffsf, yl / pl->scale.y);
+
+   // P, M, and N are basically three points on the plane which then become two directional vectors:
+   // (M = M - P, N = N - P) and then the cross product between the origin vector P and the directional vectors M,
+   // and N then are used to define this coordinate space translation
+
+   // There are various nuances along the way to define things in terms of 64x64 texture space and into screen space,
+   // but that's the gist of it
 
    v3double_t P;
    P.x = -xoffsf * tcos - yoffsf * tsin;
@@ -455,12 +482,10 @@ static void R_calcSlope(const cbviewpoint_t &cb_viewpoint, visplane_t *pl)
 }
 
 //
-// R_NewPlaneHash
-//
 // Allocates and returns a new planehash_t object. The hash object is allocated
 // PU_LEVEL
 //
-planehash_t *R_NewPlaneHash(int chaincount)
+planehash_t *R_NewPlaneHash(ZoneHeap &heap, int chaincount)
 {
    planehash_t*  ret;
    int           i;
@@ -475,9 +500,9 @@ planehash_t *R_NewPlaneHash(int chaincount)
       chaincount = c;
    }
    
-   ret = emalloctag(planehash_t *, sizeof(planehash_t), PU_LEVEL, nullptr);
+   ret = zhmalloctag(heap, planehash_t *, sizeof(planehash_t), PU_LEVEL, nullptr);
    ret->chaincount = chaincount;
-   ret->chains = emalloctag(visplane_t **, sizeof(visplane_t *) * chaincount, PU_LEVEL, nullptr);
+   ret->chains = zhmalloctag(heap, visplane_t **, sizeof(visplane_t *) * chaincount, PU_LEVEL, nullptr);
    ret->next = nullptr;
    
    for(i = 0; i < chaincount; i++)
@@ -538,25 +563,25 @@ void R_ClearPlanes(planecontext_t &context, const contextbounds_t &bounds)
    R_ClearPlaneHash(context.freehead, &context.mainhash);
 
    context.lastopening = context.openings;
+   context.lastskew    = context.skews;
 }
 
 
 //
 // New function, by Lee Killough
 //
-static visplane_t *new_visplane(planecontext_t &context,
+static visplane_t *new_visplane(planecontext_t &context, ZoneHeap &heap,
                                 unsigned hash, planehash_t *table)
 {
-   visplane_t *&freetail  = context.freetail;
+   visplane_t  *&freetail = context.freetail;
    visplane_t **&freehead = context.freehead;
 
    visplane_t *check = freetail;
 
    if(!check)
-      check = ecalloctag(visplane_t *, 1, sizeof *check, PU_VALLOC, nullptr);
-   else
-      if(!(freetail = freetail->next))
-         freehead = &freetail;
+      check = zhcalloctag(heap, visplane_t *, 1, sizeof * check, PU_VALLOC, nullptr);
+   else if(!(freetail = freetail->next))
+      freehead = &freetail;
 
    check->next = table->chains[hash];
    table->chains[hash] = check;
@@ -569,13 +594,15 @@ static visplane_t *new_visplane(planecontext_t &context,
 
       // THREAD_TODO: Try make this use context.numcolumns again
       check->max_width = static_cast<unsigned int>(video.width);
-      paddedTop        = ecalloctag(int *, 2 * (video.width + 2), sizeof(int), PU_VALLOC, nullptr);
+      paddedTop = zhcalloctag(heap, int *, 2 * (video.width + 2), sizeof(int), PU_VALLOC, nullptr);
       paddedBottom     = paddedTop + video.width + 2;
 
       check->top    = paddedTop    + 1;
       check->bottom = paddedBottom + 1;
    }
-   
+
+   check->chainnum = hash;
+
    return check;
 }
 
@@ -583,8 +610,7 @@ static visplane_t *new_visplane(planecontext_t &context,
 // killough 2/28/98: Add offsets
 // haleyjd 01/05/08: Add angle
 //
-visplane_t *R_FindPlane(cmapcontext_t &cmapcontext,
-                        planecontext_t &planecontext,
+visplane_t *R_FindPlane(cmapcontext_t &cmapcontext, planecontext_t &planecontext, ZoneHeap &heap,
                         const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                         const contextbounds_t &bounds,
                         fixed_t height, int picnum, int lightlevel,
@@ -646,12 +672,11 @@ visplane_t *R_FindPlane(cmapcontext_t &cmapcontext,
         return check;
    }
 
-   check = new_visplane(planecontext, hash, table);         // killough
+   check = new_visplane(planecontext, heap, hash, table);         // killough
 
    check->height = height;
    check->picnum = picnum;
    check->lightlevel = lightlevel;
-   // THREAD_TODO: Verify it should be these two values and not viewwindow.width and -1
    check->minx = bounds.endcolumn;     // Was SCREENWIDTH -- killough 11/98
    check->maxx = bounds.startcolumn - 1;
    check->offs = offs;               // killough 2/28/98: Save offsets
@@ -711,11 +736,10 @@ visplane_t *R_FindPlane(cmapcontext_t &cmapcontext,
 // From PrBoom+
 // cph 2003/04/18 - create duplicate of existing visplane and set initial range
 //
-visplane_t *R_DupPlane(planecontext_t &context, const visplane_t *pl, int start, int stop)
+visplane_t *R_DupPlane(planecontext_t &context, ZoneHeap &heap, const visplane_t *pl, int start, int stop)
 {
-   planehash_t *table = pl->table;
-   unsigned hash = visplane_hash(pl->picnum, pl->lightlevel, pl->height, table->chaincount);
-   visplane_t *new_pl = new_visplane(context, hash, table);
+   planehash_t *table  = pl->table;
+   visplane_t  *new_pl = new_visplane(context, heap, pl->chainnum, table);
 
    new_pl->height = pl->height;
    new_pl->picnum = pl->picnum;
@@ -766,7 +790,7 @@ visplane_t *R_DupPlane(planecontext_t &context, const visplane_t *pl, int start,
 //
 // R_CheckPlane
 //
-visplane_t *R_CheckPlane(planecontext_t &context, visplane_t *pl, int start, int stop)
+visplane_t *R_CheckPlane(planecontext_t &context, ZoneHeap &heap, visplane_t *pl, int start, int stop)
 {
    int intrl, intrh, unionl, unionh, x;
    
@@ -801,7 +825,7 @@ visplane_t *R_CheckPlane(planecontext_t &context, visplane_t *pl, int start, int
       pl->maxx = unionh;
    }
    else
-      pl = R_DupPlane(context, pl, start, stop);
+      pl = R_DupPlane(context, heap, pl, start, stop);
 
    return pl;
 }
@@ -829,13 +853,19 @@ static void R_makeSpans(const R_FlatFunc flatfunc, const R_SlopeFunc slopefunc,
       spanstart[b2--] = x;
 }
 
-// haleyjd: moved here from r_newsky.c
-static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visplane_t *pl)
+//
+// Get the sky column from input parms. Shared by the sky drawers here.
+//
+inline static int32_t R_getSkyColumn(angle_t an, int x, angle_t flip, int offset)
 {
-   int x, offset, skyTexture, offset2, skyTexture2;
-   skytexture_t *sky1, *sky2;
+   return ((((an + xtoviewangle[x]) ^ flip) / (1 << (ANGLETOSKYSHIFT - FRACBITS))) + offset)
+         / FRACUNIT;
+}
 
-   cb_column_t column = {};
+// haleyjd: moved here from r_newsky.c
+static void do_draw_newsky(cmapcontext_t &context, ZoneHeap &heap, const angle_t viewangle, visplane_t *pl)
+{
+   cb_column_t column{};
 
    R_ColumnFunc colfunc = r_column_engine->DrawColumn;
 
@@ -850,204 +880,225 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    if(!(skyflat1 && skyflat2))
       return; // feh!
 
-   offset      = skyflat1->columnoffset >> 16;
-   skyTexture  = texturetranslation[skyflat1->texture];
-   offset2     = skyflat2->columnoffset >> 16;
-   skyTexture2 = texturetranslation[skyflat2->texture];
+   int offset      = skyflat1->columnoffset;
+   int skyTexture  = texturetranslation[skyflat1->texture];
+   int offset2     = skyflat2->columnoffset;
+   int skyTexture2 = texturetranslation[skyflat2->texture];
 
-   sky1 = R_GetSkyTexture(skyTexture);
-   sky2 = R_GetSkyTexture(skyTexture2);
+   const skytexture_t *sky1 = R_GetSkyTexture(skyTexture);
+   const skytexture_t *sky2 = R_GetSkyTexture(skyTexture2);
       
    if(getComp(comp_skymap) || !(column.colormap = context.fixedcolormap))
       column.colormap = context.fullcolormap;
       
    // first draw sky 2 with R_DrawColumn (unmasked)
-   column.texmid    = sky2->texturemid;      
-   column.texheight = sky2->height;
-
-   // haleyjd: don't stretch textures over 200 tall
-   if(demo_version >= 300 && column.texheight < 200 && stretchsky)
-      column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
+   if(LevelInfo.sky2RowOffset != SKYROWOFFSET_DEFAULT)
+      column.texmid = LevelInfo.sky2RowOffset * FRACUNIT;
    else
-      column.step = M_FloatToFixed(view.pspriteystep);
-      
-   for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
+      column.texmid = sky2->texturemid;
+   column.texheight = sky2->height;
+   column.skycolor = sky2->medianColor;
+   column.step = M_FloatToFixed(view.pspriteystep);
+
+   colfunc = r_column_engine->DrawSkyColumn;
+   for(int x = pl->minx; (column.x = x) <= pl->maxx; x++)
    {
       if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
       {
-         column.source = 
-            R_GetRawColumn(skyTexture2,
-               (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset2);
-            
+         column.source = R_GetRawColumn(heap, skyTexture2, R_getSkyColumn(an, x, 0, offset2));
+
          colfunc(column);
       }
    }
       
    // now draw sky 1 with R_DrawNewSkyColumn (masked)
-   column.texmid = sky1->texturemid;
+   if(LevelInfo.skyRowOffset != SKYROWOFFSET_DEFAULT)
+      column.texmid = LevelInfo.skyRowOffset * FRACUNIT;
+   else
+      column.texmid = sky1->texturemid;
    column.texheight = sky1->height;
 
-   // haleyjd: don't stretch textures over 200 tall
-   if(demo_version >= 300 && column.texheight < 200 && stretchsky)
-      column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
-   else
-      column.step = M_FloatToFixed(view.pspriteystep);
+   column.step = M_FloatToFixed(view.pspriteystep);
       
    colfunc = r_column_engine->DrawNewSkyColumn;
-   for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
+   for(int x = pl->minx; (column.x = x) <= pl->maxx; x++)
    {
       if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
       {
-         column.source =
-            R_GetRawColumn(skyTexture,
-               (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset);
-            
+         column.source = R_GetRawColumn(heap, skyTexture, R_getSkyColumn(an, x, 0, offset));
+
          colfunc(column);
       }
    }
-   colfunc = r_column_engine->DrawColumn;
 }
 
 // Log base 2 LUT
-static const int MultiplyDeBruijnBitPosition2[32] = 
+static const int MultiplyDeBruijnBitPosition2[32] =
 {
-  0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 
-  31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
+   0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
+   31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
 };
+
+//
+// Drawing sky as a background texture instead of a visplane.
+//
+static void R_drawSky(ZoneHeap &heap, angle_t viewangle, const visplane_t *pl, const skyflat_t *skyflat)
+{
+   int texture;
+   int offset = 0;
+   angle_t flip;
+   const skytexture_t *sky;
+
+   // killough 10/98: allow skies to come from sidedefs.
+   // Allows scrolling and/or animated skies, as well as
+   // arbitrary multiple skies per level without having
+   // to use info lumps.
+
+   angle_t an = viewangle;
+
+   cb_column_t column{};
+   bool tilevert = false;
+   if(pl->picnum & PL_SKYFLAT)
+   {
+      // Sky Linedef
+      const line_t *l = &lines[pl->picnum & ~PL_SKYFLAT];
+
+      // Sky transferred from first sidedef
+      const side_t *s = *l->sidenum + sides;
+
+      // Texture comes from upper texture of reference sidedef
+      texture = texturetranslation[s->toptexture];
+
+      // haleyjd 08/30/02: set skytexture info pointer
+      sky = R_GetSkyTexture(texture);
+
+      // Horizontal offset is turned into an angle offset,
+      // to allow sky rotation as well as careful positioning.
+      // However, the offset is scaled very small, so that it
+      // allows a long-period of sky rotation.
+
+      an += s->offset_base_x;
+
+      // Vertical offset allows careful sky positioning.
+
+      column.texmid = s->offset_base_y - 28*FRACUNIT;
+
+      // Adjust it upwards to make sure the fade-to-color effect doesn't happen too early
+      tilevert = !!(s->intflags & SDI_VERTICALLYSCROLLING);
+      if(!tilevert && column.texmid < SCREENHEIGHT / 2 * FRACUNIT)
+      {
+         fixed_t diff = column.texmid - SCREENHEIGHT / 2 * FRACUNIT;
+         diff %= textures[sky->texturenum]->heightfrac;
+         if(diff < 0)
+            diff += textures[sky->texturenum]->heightfrac;
+         column.texmid = SCREENHEIGHT / 2 * FRACUNIT + diff;
+      }
+
+      // We sometimes flip the picture horizontally.
+      //
+      // Doom always flipped the picture, so we make it optional,
+      // to make it easier to use the new feature, while to still
+      // allow old sky textures to be used.
+      int staticFn = EV_StaticInitForSpecial(l->special);
+
+      bool flipCond = staticFn == EV_STATIC_SKY_TRANSFER_FLIPPED
+      || (staticFn == EV_STATIC_INIT_PARAM
+          && l->args[ev_StaticInit_Arg_Flip]);
+
+      flip = flipCond ? 0u : ~0u;
+   }
+   else     // Normal Doom sky, only one allowed per level
+   {
+      texture       = skyflat->texture;            // Default texture
+      sky           = R_GetSkyTexture(texture);    // haleyjd 08/30/02
+      flip          = 0;                           // Doom flips it
+      // Hexen-style scrolling
+      offset        = skyflat->columnoffset;
+
+      // Set y offset depending on level info or depending on R_GetSkyTexture
+      if(skyflat == R_SkyFlatForIndex(0) && LevelInfo.skyRowOffset != SKYROWOFFSET_DEFAULT)
+         column.texmid = LevelInfo.skyRowOffset * FRACUNIT;
+      else if(skyflat == R_SkyFlatForIndex(1) && LevelInfo.sky2RowOffset != SKYROWOFFSET_DEFAULT)
+         column.texmid = LevelInfo.sky2RowOffset * FRACUNIT;
+      else
+         column.texmid = sky->texturemid;
+   }
+
+   // Sky is always drawn full bright, i.e. colormaps[0] is used.
+   // Because of this hack, sky is not affected by INVUL inverse mapping.
+   //
+   // killough 7/19/98: fix hack to be more realistic:
+   // haleyjd 10/31/10: use plane colormaps, not global vars!
+   if(getComp(comp_skymap) || !(column.colormap = pl->fixedcolormap))
+      column.colormap = pl->fullcolormap;
+
+   //dc_texheight = (textureheight[texture])>>FRACBITS; // killough
+   // haleyjd: use height determined from patches in texture
+   column.texheight = sky->height;
+
+   column.step = M_FloatToFixed(view.pspriteystep);
+   column.skycolor = sky->medianColor;
+
+   R_ColumnFunc colfunc = tilevert ? r_column_engine->DrawColumn :
+                                     r_column_engine->DrawSkyColumn;
+
+   // We need the translucency map to exist because we fade the sky to a single color when looking
+   // above it.
+   if(!main_tranmap)
+      R_InitTranMap(false);
+
+   // killough 10/98: Use sky scrolling offset, and possibly flip picture
+   for(int x = pl->minx; x <= pl->maxx; x++)
+   {
+      column.x = x;
+
+      column.y1 = pl->top[x];
+      column.y2 = pl->bottom[x];
+
+      if(column.y1 <= column.y2)
+      {
+         column.source = R_GetRawColumn(heap, texture, R_getSkyColumn(an, x, flip, offset));
+         colfunc(column);
+      }
+   }
+}
 
 //
 // New function, by Lee Killough
 // haleyjd 08/30/02: slight restructuring to use hashed sky texture info cache.
 //
-static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
+static void do_draw_plane(cmapcontext_t &context, ZoneHeap &heap, int *const spanstart,
                           const angle_t viewangle, visplane_t *pl)
 {
-   int x;
-
    if(!(pl->minx <= pl->maxx))
       return;
 
    // haleyjd: hexen-style skies
    if(R_IsSkyFlat(pl->picnum) && LevelInfo.doubleSky)
    {
-      do_draw_newsky(context, viewangle, pl);
+      // NOTE: MBF sky transfers change pl->picnum so it won't go here if set to transfer.
+      do_draw_newsky(context, heap, viewangle, pl);
       return;
    }
    
    skyflat_t *skyflat = R_SkyFlatForPicnum(pl->picnum);
    
    if(skyflat || pl->picnum & PL_SKYFLAT)  // sky flat
-   {
-      int texture;
-      int offset = 0;
-      angle_t an, flip;
-      skytexture_t *sky;
-      
-      // killough 10/98: allow skies to come from sidedefs.
-      // Allows scrolling and/or animated skies, as well as
-      // arbitrary multiple skies per level without having
-      // to use info lumps.
-
-      an = viewangle;
-      
-      cb_column_t column = {};
-      if(pl->picnum & PL_SKYFLAT)
-      { 
-         // Sky Linedef
-         const line_t *l = &lines[pl->picnum & ~PL_SKYFLAT];
-         
-         // Sky transferred from first sidedef
-         const side_t *s = *l->sidenum + sides;
-         
-         // Texture comes from upper texture of reference sidedef
-         texture = texturetranslation[s->toptexture];
-
-         // haleyjd 08/30/02: set skytexture info pointer
-         sky = R_GetSkyTexture(texture);
-
-         // Horizontal offset is turned into an angle offset,
-         // to allow sky rotation as well as careful positioning.
-         // However, the offset is scaled very small, so that it
-         // allows a long-period of sky rotation.
-         
-         an += s->textureoffset;
-         
-         // Vertical offset allows careful sky positioning.        
-         
-         column.texmid = s->rowoffset - 28*FRACUNIT;
-         
-         // We sometimes flip the picture horizontally.
-         //
-         // Doom always flipped the picture, so we make it optional,
-         // to make it easier to use the new feature, while to still
-         // allow old sky textures to be used.
-         int staticFn = EV_StaticInitForSpecial(l->special);
-
-         bool flipCond = staticFn == EV_STATIC_SKY_TRANSFER_FLIPPED
-         || (staticFn == EV_STATIC_INIT_PARAM
-             && l->args[ev_StaticInit_Arg_Flip]);
-
-         flip = flipCond ? 0u : ~0u;
-      }
-      else 	 // Normal Doom sky, only one allowed per level
-      {
-         texture       = skyflat->texture;            // Default texture
-         sky           = R_GetSkyTexture(texture);    // haleyjd 08/30/02
-         column.texmid = sky->texturemid;             // Default y-offset
-         flip          = 0;                           // Doom flips it
-         offset        = skyflat->columnoffset >> 16; // Hexen-style scrolling
-      }
-
-      // Sky is always drawn full bright, i.e. colormaps[0] is used.
-      // Because of this hack, sky is not affected by INVUL inverse mapping.
-      //
-      // killough 7/19/98: fix hack to be more realistic:
-      // haleyjd 10/31/10: use plane colormaps, not global vars!
-      if(getComp(comp_skymap) || !(column.colormap = pl->fixedcolormap))
-         column.colormap = pl->fullcolormap;
-
-      //dc_texheight = (textureheight[texture])>>FRACBITS; // killough
-      // haleyjd: use height determined from patches in texture
-      column.texheight = sky->height;
-      
-      // haleyjd:  don't stretch textures over 200 tall
-      // 10/07/06: don't stretch skies in old demos (no mlook)
-      if(demo_version >= 300 && column.texheight < 200 && stretchsky)
-         column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
-      else
-         column.step = M_FloatToFixed(view.pspriteystep);
-
-      // killough 10/98: Use sky scrolling offset, and possibly flip picture
-      for(x = pl->minx; x <= pl->maxx; x++)
-      {
-         column.x = x;
-
-         column.y1 = pl->top[x];
-         column.y2 = pl->bottom[x];
-
-         if(column.y1 <= column.y2)
-         {
-            column.source = R_GetRawColumn(texture,
-               (((an + xtoviewangle[x])^flip) >> ANGLETOSKYSHIFT) + offset);
-            
-            r_column_engine->DrawColumn(column);
-         }
-      }
-   }
+      R_drawSky(heap, viewangle, pl, skyflat);
    else // regular flat
-   {  
-      texture_t *tex;
-      int        stop, light;
-      int        stylenum;
+   {
+      const texture_t *tex;
+      int stop, light;
+      int stylenum;
 
-      cb_span_t      span      = {};
-      cb_slopespan_t slopespan = {};
-      cb_plane_t     plane     = {};
+      cb_span_t      span{};
+      cb_slopespan_t slopespan{};
+      cb_plane_t     plane{};
 
       R_FlatFunc  flatfunc  = R_Throw;
       R_SlopeFunc slopefunc = R_ThrowSlope;
 
-      int picnum = texturetranslation[pl->picnum];
+      const int picnum = texturetranslation[pl->picnum];
 
       // haleyjd 05/19/06: rewritten to avoid crashes
       // ioanch: apply swirly if original (pl->picnum) has the flag. This is so
@@ -1055,13 +1106,13 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
       if((r_swirl && textures[picnum]->flags & TF_ANIMATED)
          || textures[pl->picnum]->flags & TF_SWIRLY)
       {
-         plane.source = R_DistortedFlat(picnum);
+         plane.source = R_DistortedFlat(heap, picnum);
          tex = plane.tex = textures[picnum];
       }
       else
       {
          // SoM: Handled outside
-         tex = plane.tex = R_CacheTexture(picnum);
+         tex = plane.tex = R_GetTexture(picnum);
          plane.source = tex->bufferdata;
       }
 
@@ -1176,7 +1227,7 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
 
       plane.MapFunc = (plane.slope == nullptr ? R_mapPlane : R_mapSlope);
 
-      for(x = pl->minx; x <= stop; x++)
+      for(int x = pl->minx; x <= stop; x++)
       {
          R_makeSpans(
             flatfunc, slopefunc, span, slopespan, plane, spanstart, x,
@@ -1190,7 +1241,7 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
 // Called after the BSP has been traversed and walls have rendered. This 
 // function is also now used to render portal overlays.
 //
-void R_DrawPlanes(cmapcontext_t &context, planehash_t &mainhash,
+void R_DrawPlanes(cmapcontext_t &context, ZoneHeap &heap, planehash_t &mainhash,
                   int *const spanstart, const angle_t viewangle, planehash_t *table)
 {
    visplane_t *pl;
@@ -1202,7 +1253,7 @@ void R_DrawPlanes(cmapcontext_t &context, planehash_t &mainhash,
    for(i = 0; i < table->chaincount; ++i)
    {
       for(pl = table->chains[i]; pl; pl = pl->next)
-         do_draw_plane(context, spanstart, viewangle, pl);
+         do_draw_plane(context, heap, spanstart, viewangle, pl);
    }
 }
 
@@ -1217,14 +1268,14 @@ VALLOCATION(overlaySets)
 //
 // Gets a free portal overlay plane set
 //
-planehash_t *R_NewOverlaySet(planecontext_t &context)
+planehash_t *R_NewOverlaySet(planecontext_t &context, ZoneHeap &heap)
 {
    planehash_t *&r_overlayfreesets = context.r_overlayfreesets;
 
    planehash_t *set;
    if(!r_overlayfreesets)
    {
-      set = R_NewPlaneHash(131);
+      set = R_NewPlaneHash(heap, 131);
       return set;
    }
    set = r_overlayfreesets;

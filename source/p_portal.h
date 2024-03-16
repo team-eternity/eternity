@@ -48,6 +48,7 @@ extern const polyobj_t **gGroupPolyobject; // ioanch 20160227
 
 struct linkdata_t;
 struct portal_t;
+struct rendersector_t;
 struct sector_t;
 
 //
@@ -111,42 +112,18 @@ void R_SetSectorGroupID(sector_t *sector, int groupid);
 void P_FitLinkOffsetsToPortal(const linkdata_t &ldata);
 
 //
-// P_CheckCPortalState
-// 
-// Checks the state of the ceiling portal in the given sector and updates
+// Checks the state of the floor/ceiling portal in the given sector and updates
 // the state flags accordingly.
 //
-void P_CheckCPortalState(sector_t *sec);
-
-
-// P_CheckFPortalState
-// 
-// Checks the state of the floor portal in the given sector and updates
-// the state flags accordingly.
-//
-void P_CheckFPortalState(sector_t *sec);
+void P_CheckSectorPortalState(rendersector_t &sector, surf_e type);
 
 //
-// P_CheckLPortalState
-// 
 // Checks the state of the portal in the given line and updates
 // the state flags accordingly.
 //
 void P_CheckLPortalState(line_t *line);
 
-//
-// P_SetFloorHeight
-// This function will set the floor height, and update
-// the float version of the floor height as well.
-//
-void P_SetFloorHeight(sector_t *sec, fixed_t h);
-
-//
-// P_SetCeilingHeight
-// This function will set the ceiling height, and update
-// the float version of the ceiling height as well.
-//
-void P_SetCeilingHeight(sector_t *sec, fixed_t h);
+void P_SetSectorHeight(rendersector_t &sec, surf_e surf, fixed_t h);
 
 //
 // P_SetPortalBehavior
@@ -187,15 +164,18 @@ void P_ForEachClusterGroup(int outgroup, int ingroup, bool *groupvisit,
                            bool (*func)(int groupid, void *context), void *context);
 
 fixed_t P_PortalZ(const surface_t &surface);
-inline fixed_t P_PortalZ(surf_e surf, const sector_t &sector)
+inline fixed_t P_PortalZ(surf_e surf, const rendersector_t &sector)
 {
    return P_PortalZ(sector.srf[surf]);
 }
 
 // Group mappings
 void P_BuildSectorGroupMappings();
-sector_t **P_GetSectorsWithGroupId(int groupid, int *count);
+const int *P_GetSectorsWithGroupId(int groupid, int *count);
 bool P_PortalLayersByPoly(int groupid1, int groupid2);
+
+const int *P_GetSectorPortalNeighbors(const sector_t &sector, surf_e surf,
+                                      int *count);
 
 #endif
 

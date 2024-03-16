@@ -125,8 +125,8 @@ void ScrollThinker::Think()
    {
    case ScrollThinker::sc_side:          // killough 3/7/98: Scroll wall texture
       side = sides + this->affectee;
-      side->textureoffset += dx;
-      side->rowoffset += dy;
+      side->offset_base_x += dx;
+      side->offset_base_y += dy;
       P_AddScrolledSide(side, dx, dy);
       break;
 
@@ -315,6 +315,8 @@ void Add_Scroller(int type, fixed_t dx, fixed_t dy,
          EV_stopFlatScrollerBySecnum(type, affectee);
       s->addScroller();
    }
+   else if(dy) // mark it as vertically scrolling for proper sky rendering
+      sides[affectee].intflags |= SDI_VERTICALLYSCROLLING;
 
    s->addThinker();
 }
@@ -348,14 +350,27 @@ static void Add_WallScroller(int64_t dx, int64_t dy, const line_t *l,
 }
 
 // Amount (dx,dy) vector linedef is shifted right to get scroll amount
-#define SCROLL_SHIFT 5
+static constexpr int SCROLL_SHIFT = 5;
 
 // Factor to scale scrolling effect into mobj-carrying properties = 3/32.
 // (This is so scrolling floors and objects on them can move at same speed.)
-#define CARRYFACTOR ((fixed_t)(FRACUNIT*.09375))
+static constexpr fixed_t CARRYFACTOR = fixed_t(FRACUNIT * .09375);
 
 // This makes it so certain values are approx 1 unit per second
-#define ZDSCROLLFACTOR 10
+static constexpr int ZDSCROLLFACTOR = 10;
+
+//
+// Helper to get accel and control values from bits
+//
+static void P_getAccelControl(const line_t &line, int bits, int &accel, int &control)
+{
+   accel = 0;
+   control = -1;
+   if(bits & ev_Scroll_Bit_Accel)
+      accel = 1;
+   if(bits & (ev_Scroll_Bit_Accel | ev_Scroll_Bit_Displace))
+      control = eindex(sides[*line.sidenum].sector - sectors);
+}
 
 // killough 3/7/98: Types 245-249 are same as 250-254 except that the
 // first side's sector's heights cause scrolling when they change, and
@@ -386,10 +401,7 @@ static void P_getScrollParams(const line_t *l, fixed_t &dx, fixed_t &dy,
       dx = ((l->args[ev_Scroll_Arg_X] * ZDSCROLLFACTOR) << FRACBITS) >> SCROLL_SHIFT;
       dy = ((l->args[ev_Scroll_Arg_Y] * ZDSCROLLFACTOR) << FRACBITS) >> SCROLL_SHIFT;
    }
-   if(bits & ev_Scroll_Bit_Accel)
-      accel = 1;
-   if(bits & (ev_Scroll_Bit_Accel | ev_Scroll_Bit_Displace))
-      control = eindex(sides[*l->sidenum].sector - sectors);
+   P_getAccelControl(*l, bits, accel, control);
 }
 
 //
@@ -576,28 +588,51 @@ void P_SpawnFloorParam(const line_t *l, bool acs)
 // * EV_STATIC_SCROLL_WALL_WITH
 // * EV_STATIC_SCROLL_DISPLACE_WALL
 // * EV_STATIC_SCROLL_ACCEL_WALL
+// MBF21:
+// * EV_STATIC_SCROLL_BY_OFFSETS_TAG
+// * EV_STATIC_SCROLL_BY_OFFSETS_TAG_DISPLACE
+// * EV_STATIC_SCROLL_BY_OFFSETS_TAG_ACCEL
 //
 static void P_spawnDynamicWallScroller(int staticFn, line_t *l, int linenum)
 {
-   fixed_t dx = l->dx >> SCROLL_SHIFT;  // direction and speed of scrolling
-   fixed_t dy = l->dy >> SCROLL_SHIFT;
+   fixed_t dx;  // direction and speed of scrolling
+   fixed_t dy;
+   bool byoffset;
    int control = -1;
    int accel   =  0;
+
+   switch(staticFn)
+   {
+      case EV_STATIC_SCROLL_BY_OFFSETS_TAG:
+      case EV_STATIC_SCROLL_BY_OFFSETS_TAG_DISPLACE:
+      case EV_STATIC_SCROLL_BY_OFFSETS_TAG_ACCEL:
+      {
+         const side_t &side = sides[l->sidenum[0]];
+         dx = -side.offset_base_x / 8;
+         dy = side.offset_base_y / 8;
+         byoffset = true;
+         break;
+      }
+      default:
+         dx = l->dx >> SCROLL_SHIFT;
+         dy = l->dy >> SCROLL_SHIFT;
+         byoffset = false;
+         break;
+   }
 
    if(staticFn == EV_STATIC_SCROLL_WALL_PARAM)
    {
       int bits = l->args[ev_Scroll_Arg_Bits];
-      if(bits & ev_Scroll_Bit_Accel)
-         accel = 1;
-      if(bits & (ev_Scroll_Bit_Accel | ev_Scroll_Bit_Displace))
-         control = eindex(sides[*l->sidenum].sector - sectors);
+      P_getAccelControl(*l, bits, accel, control);
    }
-   else
+   else switch(staticFn)
    {
-      if(staticFn == EV_STATIC_SCROLL_ACCEL_WALL)
+      case EV_STATIC_SCROLL_ACCEL_WALL:
+      case EV_STATIC_SCROLL_BY_OFFSETS_TAG_ACCEL:
          accel = 1;
-      if(staticFn == EV_STATIC_SCROLL_ACCEL_WALL ||
-         staticFn == EV_STATIC_SCROLL_DISPLACE_WALL)
+         // go on
+      case EV_STATIC_SCROLL_DISPLACE_WALL:
+      case EV_STATIC_SCROLL_BY_OFFSETS_TAG_DISPLACE:
          control = eindex(sides[*l->sidenum].sector - sectors);
    }
 
@@ -606,7 +641,12 @@ static void P_spawnDynamicWallScroller(int staticFn, line_t *l, int linenum)
    for(int s = -1; (s = P_FindLineFromLineArg0(l, s)) >= 0;)
    {
       if(s != linenum)
-         Add_WallScroller(dx, dy, lines + s, control, accel);
+      {
+         if(byoffset)
+            Add_Scroller(ScrollThinker::sc_side, dx, dy, control, lines[s].sidenum[0], accel);
+         else
+            Add_WallScroller(dx, dy, lines + s, control, accel);
+      }
    }
 }
 
@@ -626,6 +666,53 @@ static void P_spawnDynamicWallScroller(int staticFn, line_t *l, int linenum)
 static void P_spawnStaticWallScroller(line_t *l, fixed_t dx, fixed_t dy)
 {
    Add_Scroller(ScrollThinker::sc_side, dx, dy, -1, l->sidenum[0], 0);
+}
+
+//
+// Handle Scroll_Texture_Offsets special (parameterized)
+//
+static void P_handleScrollByOffsetsParam(line_t &line)
+{
+   const side_t &side = sides[line.sidenum[0]];
+   v2fixed_t delta = { -side.offset_base_x, side.offset_base_y };
+
+   // Check args now
+   qstring error;
+   int flags = line.args[0];
+   if(flags < 0 || (flags >= 1 && flags <= 6))
+      error.Printf(64, "Scroll_Texture_Offsets: unsupported edge flags %d", flags);
+   int tag = line.args[1];
+   int accel, control;
+   int bits = line.args[2];
+   if(bits & ~3)
+      error.Printf(64, "Scroll_Texture_Offsets: invalid mode bits %d", bits);
+   P_getAccelControl(line, bits, accel, control);
+   int divider = line.args[3];
+   if(divider <= 0)
+      divider = 1;
+
+   if(!error.empty())
+   {
+      doom_warningf("%s (line=%d)", error.constPtr(), eindex(&line - lines));
+      return;
+   }
+
+   delta /= divider;
+
+   if(tag)
+   {
+      int triggernum = eindex(&line - lines);
+      for(int linenum = -1; (linenum = P_FindLineFromTag(tag, linenum)) >= 0;)
+         if(linenum != triggernum)
+         {
+            Add_Scroller(ScrollThinker::sc_side, delta.x, delta.y, control,
+                         lines[linenum].sidenum[0], accel);
+         }
+      return;
+   }
+
+   // killough 3/2/98: scroll according to sidedef offsets
+   Add_Scroller(ScrollThinker::sc_side, delta.x, delta.y, control, line.sidenum[0], accel);
 }
 
 //
@@ -682,6 +769,9 @@ void P_SpawnScrollers()
       case EV_STATIC_SCROLL_DISPLACE_WALL:
       case EV_STATIC_SCROLL_WALL_WITH:
       case EV_STATIC_SCROLL_WALL_PARAM:
+      case EV_STATIC_SCROLL_BY_OFFSETS_TAG:
+      case EV_STATIC_SCROLL_BY_OFFSETS_TAG_DISPLACE:
+      case EV_STATIC_SCROLL_BY_OFFSETS_TAG_ACCEL:
          // killough 3/1/98: scroll wall according to linedef
          // (same direction and speed as scrolling floors)
          P_spawnDynamicWallScroller(staticFn, line, i);
@@ -705,8 +795,11 @@ void P_SpawnScrollers()
       case EV_STATIC_SCROLL_BY_OFFSETS:
          // killough 3/2/98: scroll according to sidedef offsets
          P_spawnStaticWallScroller(line, 
-            -sides[*line->sidenum].textureoffset,
-             sides[*line->sidenum].rowoffset);
+            -sides[*line->sidenum].offset_base_x,
+             sides[*line->sidenum].offset_base_y);
+         break;
+      case EV_STATIC_SCROLL_BY_OFFSETS_PARAM:
+         P_handleScrollByOffsetsParam(*line);
          break;
 
       case EV_STATIC_SCROLL_LEFT_PARAM:

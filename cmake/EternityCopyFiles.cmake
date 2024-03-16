@@ -16,6 +16,8 @@
 ## Boston, MA  02110-1301  USA
 ##
 
+include(EternityResources)
+
 function(eternity_copy_libs TARGET)
   set(ETERNITY_DLLS "")
 
@@ -34,18 +36,32 @@ function(eternity_copy_libs TARGET)
     list(APPEND ETERNITY_DLLS "${SDL2_DLL_DIR}/SDL2.dll")
 
     # SDL2_mixer
-    list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/libFLAC-8.dll")
-    list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/libmodplug-1.dll")
-    list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/libmpg123-0.dll")
-    list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/libogg-0.dll")
-    list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/libopus-0.dll")
-    list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/libopusfile-0.dll")
-    list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/libvorbis-0.dll")
-    list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/libvorbisfile-3.dll")
+    if(MSVC)
+        list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/optional/libgme.dll")
+        list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/optional/libogg-0.dll")
+        list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/optional/libopus-0.dll")
+        list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/optional/libopusfile-0.dll")
+		list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/optional/libwavpack-1.dll")
+		list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/optional/libxmp.dll")
+    endif()
     list(APPEND ETERNITY_DLLS "${SDL2_MIXER_DLL_DIR}/SDL2_mixer.dll")
 
     # SDL2_net
     list(APPEND ETERNITY_DLLS "${SDL2_NET_DLL_DIR}/SDL2_net.dll")
+  endif()
+
+  if(APPLE)
+    list(APPEND ETERNITY_FWS SDL2.framework)
+    list(APPEND ETERNITY_FWS SDL2_mixer.framework)
+    list(APPEND ETERNITY_FWS SDL2_net.framework)
+
+    foreach(ETERNITY_FW ${ETERNITY_FWS})
+    add_custom_command(
+      TARGET ${TARGET} POST_BUILD
+      COMMAND ${CMAKE_SOURCE_DIR}/macosx/copy_frameworks_to_product.sh ${CMAKE_BINARY_DIR}/${ETERNITY_FW} $<TARGET_FILE_DIR:${TARGET}>
+      VERBATIM
+    )
+    endforeach()
   endif()
 
   # Copy library files to target directory.
@@ -57,8 +73,14 @@ function(eternity_copy_libs TARGET)
 endfunction()
 
 function(eternity_copy_base_and_user TARGET)
+  eternity_build_resources(${TARGET})
+
+  # TODO: Use rm instead of remove_directory in a few years when we can assume people will have CMake 3.17
+  #       across the board.
   add_custom_command(TARGET ${TARGET} POST_BUILD
     COMMAND "${CMAKE_COMMAND}" -E copy_directory "${CMAKE_SOURCE_DIR}/base" "$<TARGET_FILE_DIR:${TARGET}>/base"
+    COMMAND "${CMAKE_COMMAND}" -E remove_directory "$<TARGET_FILE_DIR:${TARGET}>/base/doom/res"
+    COMMAND "${CMAKE_COMMAND}" -E remove_directory "$<TARGET_FILE_DIR:${TARGET}>/base/heretic/res"
     VERBATIM)
 
   add_custom_command(TARGET ${TARGET} POST_BUILD

@@ -165,6 +165,7 @@ keyaction_t keyactions[NUMKEYACTIONS] =
    { "map_mark",          kac_map,     at_variable },
    { "map_clear",         kac_map,     at_variable },
    { "map_grid",          kac_map,     at_variable },
+   { "map_overlay",       kac_map,     at_variable },
 
    // Console Actions
 
@@ -225,115 +226,140 @@ struct keyname_t
    const char *name;
 } keyNames[] =
 {
-   { KEYD_COMMA,      "<"          },
-   { KEYD_PERIOD,     ">"          },
-   { KEYD_ACCGRAVE,   "tilde"      },
-   { KEYD_RIGHTARROW, "rightarrow" },
-   { KEYD_LEFTARROW,  "leftarrow"  },
-   { KEYD_UPARROW,    "uparrow"    },
-   { KEYD_DOWNARROW,  "downarrow"  },
-   { KEYD_ESCAPE,     "escape"     },
-   { KEYD_ENTER,      "enter"      },
-   { KEYD_TAB,        "tab"        },
-   { KEYD_F1,         "f1"         },
-   { KEYD_F2,         "f2"         },
-   { KEYD_F3,         "f3"         },
-   { KEYD_F4,         "f4"         },
-   { KEYD_F5,         "f5"         },
-   { KEYD_F6,         "f6"         },
-   { KEYD_F7,         "f7"         },
-   { KEYD_F8,         "f8"         },
-   { KEYD_F9,         "f9"         },
-   { KEYD_F10,        "f10"        },
-   { KEYD_F11,        "f11"        },
-   { KEYD_F12,        "f12"        },
-   { KEYD_BACKSPACE,  "backspace"  },
-   { KEYD_NONUSBACKSLASH, "iso key 1" },
-   { KEYD_NONUSHASH,  "iso key 2"  },
-   { KEYD_PAUSE,      "pause"      },
-   { KEYD_MINUS,      "-"          },
-   { KEYD_RSHIFT,     "shift"      },
-   { KEYD_RCTRL,      "ctrl"       },
-   { KEYD_RALT,       "alt"        },
-   { KEYD_CAPSLOCK,   "capslock"   },
-   { KEYD_INSERT,     "insert"     },
-   { KEYD_HOME,       "home"       },
-   { KEYD_END,        "end"        },
-   { KEYD_PAGEUP,     "pgup"       },
-   { KEYD_PAGEDOWN,   "pgdn"       },
-   { KEYD_PRINTSCREEN, "printscreen" },
-   { KEYD_SCROLLLOCK, "scrolllock" },
-   { KEYD_SPACEBAR,   "space"      },
-   { KEYD_NUMLOCK,    "numlock"    },
-   { KEYD_DEL,        "delete"     },
-   { KEYD_MOUSE1,     "mouse1"     },
-   { KEYD_MOUSE2,     "mouse2"     },
-   { KEYD_MOUSE3,     "mouse3"     },
-   { KEYD_MOUSE4,     "mouse4"     },
-   { KEYD_MOUSE5,     "mouse5"     },
-   { KEYD_MOUSE6,     "mouse6"     },
-   { KEYD_MOUSE7,     "mouse7"     },
-   { KEYD_MOUSE8,     "mouse8"     },
-   { KEYD_MWHEELUP,   "wheelup"    },
-   { KEYD_MWHEELDOWN, "wheeldown"  },
-   { KEYD_KP0,        "kp_0"       },
-   { KEYD_KP1,        "kp_1"       },
-   { KEYD_KP2,        "kp_2"       },
-   { KEYD_KP3,        "kp_3"       },
-   { KEYD_KP4,        "kp_4"       },
-   { KEYD_KP5,        "kp_5"       },
-   { KEYD_KP6,        "kp_6"       },
-   { KEYD_KP7,        "kp_7"       },
-   { KEYD_KP8,        "kp_8"       },
-   { KEYD_KP9,        "kp_9"       },
-   { KEYD_KPPERIOD,   "kp_period"  },
-   { KEYD_KPDIVIDE,   "kp_slash"   },
-   { KEYD_KPMULTIPLY, "kp_star"    },
-   { KEYD_KPMINUS,    "kp_minus"   },
-   { KEYD_KPPLUS,     "kp_plus"    },
-   { KEYD_KPENTER,    "kp_enter"   },
-   { KEYD_KPEQUALS,   "kp_equals"  },
-   { KEYD_JOY01,      "joy1"       },
-   { KEYD_JOY02,      "joy2"       },
-   { KEYD_JOY03,      "joy3"       },
-   { KEYD_JOY04,      "joy4"       },
-   { KEYD_JOY05,      "joy5"       },
-   { KEYD_JOY06,      "joy6"       },
-   { KEYD_JOY07,      "joy7"       },
-   { KEYD_JOY08,      "joy8"       },
-   { KEYD_JOY09,      "joy9"       },
-   { KEYD_JOY10,      "joy10"      },
-   { KEYD_JOY11,      "joy11"      },
-   { KEYD_JOY12,      "joy12"      },
-   { KEYD_JOY13,      "joy13"      },
-   { KEYD_JOY14,      "joy14"      },
-   { KEYD_JOY15,      "joy15"      },
-   { KEYD_JOY16,      "joy16"      },
-   { KEYD_HAT1RIGHT,  "hat1right"  },
-   { KEYD_HAT1UP,     "hat1up"     },
-   { KEYD_HAT1LEFT,   "hat1left"   },
-   { KEYD_HAT1DOWN,   "hat1down"   },
-   { KEYD_HAT2RIGHT,  "hat2right"  },
-   { KEYD_HAT2UP,     "hat2up"     },
-   { KEYD_HAT2LEFT,   "hat2left"   },
-   { KEYD_HAT2DOWN,   "hat2down"   },
-   { KEYD_HAT3RIGHT,  "hat3right"  },
-   { KEYD_HAT3UP,     "hat3up"     },
-   { KEYD_HAT3LEFT,   "hat3left"   },
-   { KEYD_HAT3DOWN,   "hat3down"   },
-   { KEYD_HAT4RIGHT,  "hat4right"  },
-   { KEYD_HAT4UP,     "hat4up"     },
-   { KEYD_HAT4LEFT,   "hat4left"   },
-   { KEYD_HAT4DOWN,   "hat4down"   },
-   { KEYD_AXISON01,   "axis1"      },
-   { KEYD_AXISON02,   "axis2"      },
-   { KEYD_AXISON03,   "axis3"      },
-   { KEYD_AXISON04,   "axis4"      },
-   { KEYD_AXISON05,   "axis5"      },
-   { KEYD_AXISON06,   "axis6"      },
-   { KEYD_AXISON07,   "axis7"      },
-   { KEYD_AXISON08,   "axis8"      },
+   { KEYD_COMMA,              "<"                  },
+   { KEYD_PERIOD,             ">"                  },
+   { KEYD_ACCGRAVE,           "tilde"              },
+   { KEYD_RIGHTARROW,         "rightarrow"         },
+   { KEYD_LEFTARROW,          "leftarrow"          },
+   { KEYD_UPARROW,            "uparrow"            },
+   { KEYD_DOWNARROW,          "downarrow"          },
+   { KEYD_ESCAPE,             "escape"             },
+   { KEYD_ENTER,              "enter"              },
+   { KEYD_TAB,                "tab"                },
+   { KEYD_F1,                 "f1"                 },
+   { KEYD_F2,                 "f2"                 },
+   { KEYD_F3,                 "f3"                 },
+   { KEYD_F4,                 "f4"                 },
+   { KEYD_F5,                 "f5"                 },
+   { KEYD_F6,                 "f6"                 },
+   { KEYD_F7,                 "f7"                 },
+   { KEYD_F8,                 "f8"                 },
+   { KEYD_F9,                 "f9"                 },
+   { KEYD_F10,                "f10"                },
+   { KEYD_F11,                "f11"                },
+   { KEYD_F12,                "f12"                },
+   { KEYD_BACKSPACE,          "backspace"          },
+   { KEYD_NONUSBACKSLASH,     "iso key 1"          },
+   { KEYD_NONUSHASH,          "iso key 2"          },
+   { KEYD_PAUSE,              "pause"              },
+   { KEYD_MINUS,              "-"                  },
+   { KEYD_RSHIFT,             "shift"              },
+   { KEYD_RCTRL,              "ctrl"               },
+   { KEYD_RALT,               "alt"                },
+   { KEYD_CAPSLOCK,           "capslock"           },
+   { KEYD_INSERT,             "insert"             },
+   { KEYD_HOME,               "home"               },
+   { KEYD_END,                "end"                },
+   { KEYD_PAGEUP,             "pgup"               },
+   { KEYD_PAGEDOWN,           "pgdn"               },
+   { KEYD_PRINTSCREEN,        "printscreen"        },
+   { KEYD_SCROLLLOCK,         "scrolllock"         },
+   { KEYD_SPACEBAR,           "space"              },
+   { KEYD_NUMLOCK,            "numlock"            },
+   { KEYD_DEL,                "delete"             },
+   { KEYD_MOUSE1,             "mouse1"             },
+   { KEYD_MOUSE2,             "mouse2"             },
+   { KEYD_MOUSE3,             "mouse3"             },
+   { KEYD_MOUSE4,             "mouse4"             },
+   { KEYD_MOUSE5,             "mouse5"             },
+   { KEYD_MOUSE6,             "mouse6"             },
+   { KEYD_MOUSE7,             "mouse7"             },
+   { KEYD_MOUSE8,             "mouse8"             },
+   { KEYD_MWHEELUP,           "wheelup"            },
+   { KEYD_MWHEELDOWN,         "wheeldown"          },
+   { KEYD_KP0,                "kp_0"               },
+   { KEYD_KP1,                "kp_1"               },
+   { KEYD_KP2,                "kp_2"               },
+   { KEYD_KP3,                "kp_3"               },
+   { KEYD_KP4,                "kp_4"               },
+   { KEYD_KP5,                "kp_5"               },
+   { KEYD_KP6,                "kp_6"               },
+   { KEYD_KP7,                "kp_7"               },
+   { KEYD_KP8,                "kp_8"               },
+   { KEYD_KP9,                "kp_9"               },
+   { KEYD_KPPERIOD,           "kp_period"          },
+   { KEYD_KPDIVIDE,           "kp_slash"           },
+   { KEYD_KPMULTIPLY,         "kp_star"            },
+   { KEYD_KPMINUS,            "kp_minus"           },
+   { KEYD_KPPLUS,             "kp_plus"            },
+   { KEYD_KPENTER,            "kp_enter"           },
+   { KEYD_KPEQUALS,           "kp_equals"          },
+   { KEYD_JOY_A,              "joy_a"              },
+   { KEYD_JOY_B,              "joy_b"              },
+   { KEYD_JOY_X,              "joy_x"              },
+   { KEYD_JOY_Y,              "joy_y"              },
+   { KEYD_JOY_BACK,           "joy_back"           },
+   { KEYD_JOY_GUIDE,          "joy_guide"          },
+   { KEYD_JOY_START,          "joy_start"          },
+   { KEYD_JOY_STICK_LEFT,     "joy_stick_left"     },
+   { KEYD_JOY_STICK_RIGHT,    "joy_stick_right"    },
+   { KEYD_JOY_SHOULDER_LEFT,  "joy_shoulder_left"  },
+   { KEYD_JOY_SHOULDER_RIGHT, "joy_shoulder_right" },
+   { KEYD_JOY_DPAD_UP,        "joy_dpad_up"        },
+   { KEYD_JOY_DPAD_DOWN,      "joy_dpad_down"      },
+   { KEYD_JOY_DPAD_LEFT,      "joy_dpad_left"      },
+   { KEYD_JOY_DPAD_RIGHT,     "joy_dpad_right"     },
+   { KEYD_JOY_MISC1,          "joy_misc1"          }, // see doomdef.h
+   { KEYD_JOY_MISC2,          "joy17"              },
+   { KEYD_JOY_MISC3,          "joy18"              },
+   { KEYD_JOY_MISC4,          "joy19"              },
+   { KEYD_JOY_MISC5,          "joy20"              },
+   { KEYD_JOY_TOUCHPAD,       "joy_touchpad"       },
+   { KEYD_JOY_21,             "joy22"              },
+   { KEYD_JOY_22,             "joy23"              },
+   { KEYD_JOY_23,             "joy24"              },
+   { KEYD_AXIS_LEFT_X,        "joy_left_x"         },
+   { KEYD_AXIS_LEFT_Y,        "joy_left_y"         },
+   { KEYD_AXIS_RIGHT_X,       "joy_right_x"        },
+   { KEYD_AXIS_RIGHT_Y,       "joy_right_y"        },
+   { KEYD_AXIS_TRIGGER_LEFT,  "joy_trigger_left"   },
+   { KEYD_AXIS_TRIGGER_RIGHT, "joy_trigger_right"  },
+   { KEYD_AXISON07,           "axis7"              },
+   { KEYD_AXISON08,           "axis8"              },
 };
+
+struct altkeyname_t
+{
+   const char *name;
+   int keyCode;
+} altKeyNames[] =
+{
+   { "joy1",   KEYD_JOY_A,              },
+   { "joy2",   KEYD_JOY_B,              },
+   { "joy3",   KEYD_JOY_X,              },
+   { "joy4",   KEYD_JOY_Y,              },
+   { "joy5",   KEYD_JOY_BACK,           },
+   { "joy6",   KEYD_JOY_GUIDE,          },
+   { "joy7",   KEYD_JOY_START,          },
+   { "joy8",   KEYD_JOY_STICK_LEFT,     },
+   { "joy9",   KEYD_JOY_STICK_RIGHT,    },
+   { "joy10",  KEYD_JOY_SHOULDER_LEFT,  },
+   { "joy11",  KEYD_JOY_SHOULDER_RIGHT, },
+   { "joy12",  KEYD_JOY_DPAD_UP,        },
+   { "joy13",  KEYD_JOY_DPAD_DOWN,      },
+   { "joy14",  KEYD_JOY_DPAD_LEFT,      },
+   { "joy15",  KEYD_JOY_DPAD_RIGHT,     },
+   { "joy16",  KEYD_JOY_MISC1,          }, // see doomdef.h
+   { "joy21",  KEYD_JOY_TOUCHPAD,       },
+   { "axis1",  KEYD_AXIS_LEFT_X,        },
+   { "axis2",  KEYD_AXIS_LEFT_Y,        },
+   { "axis3",  KEYD_AXIS_RIGHT_X,       },
+   { "axis4",  KEYD_AXIS_RIGHT_Y,       },
+   { "axis5",  KEYD_AXIS_TRIGGER_LEFT,  },
+   { "axis6",  KEYD_AXIS_TRIGGER_RIGHT, },
+};
+
+constexpr size_t numAltKeyNames = earrlen(altKeyNames);
 
 //
 // G_InitKeyBindings
@@ -356,9 +382,9 @@ void G_InitKeyBindings()
 
          // build generic name
          if(ectype::isPrint(i))
-            sprintf(tempstr, "%c", i);
+            snprintf(tempstr, sizeof(tempstr), "%c", i);
          else
-            sprintf(tempstr, "key%x", i);
+            snprintf(tempstr, sizeof(tempstr), "key%x", i);
 
          keybindings[i].name = Z_Strdup(tempstr, PU_STATIC, nullptr);
       }
@@ -459,6 +485,11 @@ static int G_KeyForName(const char *name)
    {
       if(!strcasecmp(keybindings[i].name, name))
          return ectype::toLower(i);
+   }
+   for(int i = 0; i < numAltKeyNames; i++)
+   {
+      if(!strcasecmp(altKeyNames[i].name, name))
+         return ectype::toLower(altKeyNames[i].keyCode);
    }
 
    return -1;
@@ -796,19 +827,10 @@ static void G_clearGamepadBindings()
    // clear button bindings
    for(int key = 0; key < HALGamePad::MAXBUTTONS; key++)
    {
-      int vkc = KEYD_JOY01 + key;
+      int vkc = KEYD_JOY_BASE + key;
 
       for(keyaction_t *&binding : keybindings[vkc].bindings)
          binding = nullptr;
-   }
-
-   // clear hats
-   for(int hat = 0; hat < HALGamePad::MAXHATS; hat++)
-   {
-      int vkc = KEYD_HAT1RIGHT + 4 * hat;
-      for(int i = 0; i < 4; ++i)
-         for(keyaction_t *&binding : keybindings[vkc + i].bindings)
-            binding = nullptr;
    }
 
    // clear axis actions, orientations, and trigger bindings
@@ -817,7 +839,7 @@ static void G_clearGamepadBindings()
       axisActions[axis] = axis_none;
       axisOrientation[axis] = 0;     // zero is agnostic
 
-      int vkc = KEYD_AXISON01 + axis;
+      int vkc = KEYD_AXIS_BASE + axis;
 
       for(keyaction_t *&binding : keybindings[vkc].bindings)
          binding = nullptr;
@@ -941,7 +963,7 @@ void G_SaveDefaults()
       return;
    }
 
-  // write key bindings
+   // write key bindings
 
    for(doomkey_t &keybinding : keybindings)
    {

@@ -28,17 +28,23 @@
 #ifndef R_CONTEXT_H__
 #define R_CONTEXT_H__
 
+#include "m_surf.h"
 #include "r_defs.h"
 #include "r_lighting.h"
 #include "r_portal.h"
 
 struct cliprange_t;
+struct contextportalinfo_t;
+struct drawnsprite_t;
 struct drawseg_t;
 struct drawsegs_xrange_t;
 struct maskedrange_t;
 struct poststack_t;
 struct pwindow_t;
+struct sectorbox_t;
 struct vissprite_t;
+class  Mobj;
+class  ZoneHeap;
 
 struct contextbounds_t
 {
@@ -67,12 +73,12 @@ struct bspcontext_t
 struct cmapcontext_t
 {
    // killough 3/20/98: Allow colormaps to be dynamic (e.g. underwater)
-   lighttable_t *(*scalelight)[MAXLIGHTSCALE];
-   lighttable_t *(*zlight)[MAXLIGHTZ];
-   lighttable_t *fullcolormap;
+   const lighttable_t *const (*scalelight)[MAXLIGHTSCALE];
+   const lighttable_t *const (*zlight)[MAXLIGHTZ];
+   const lighttable_t *fullcolormap;
    // killough 3/20/98, 4/4/98: end dynamic colormaps
 
-   lighttable_t *fixedcolormap;
+   const lighttable_t *fixedcolormap;
 };
 
 struct planecontext_t
@@ -90,6 +96,7 @@ struct planecontext_t
    planehash_t *r_overlayfreesets;
 
    float *openings, *lastopening;
+   float *skews, *lastskew;
 
    // SoM 12/8/03: floorclip and ceilingclip changed to pointers so they can be set
    // to the clipping arrays of portals.
@@ -101,9 +108,14 @@ struct planecontext_t
 
 struct portalcontext_t
 {
-   uint16_t renderdepth; // THREAD_TODO: Rename this, it's a misnomer
+   uint16_t windowid;
 
    pwindow_t *unusedhead, *windowhead, *windowlast;
+
+   sectorboxvisit_t *visitids;
+
+   int            numportalstates;
+   portalstate_t *portalstates;
 
    // This flag is set when a portal is being rendered. This flag is checked in
    // r_bsp.c when rendering camera portals (skybox, anchored, linked) so that an
@@ -112,6 +124,8 @@ struct portalcontext_t
 
    portalrender_t portalrender;
 };
+
+inline constexpr int NUMSPRITEMARKS = 1021;
 
 struct spritecontext_t
 {
@@ -128,6 +142,8 @@ struct spritecontext_t
    int            pstacksize;
    int            pstackmax;
    maskedrange_t *unusedmasked;
+
+   drawnsprite_t *drawnSpriteHash[NUMSPRITEMARKS];
 
    bool *sectorvisited;
 };
@@ -157,6 +173,10 @@ struct rendercontext_t
    portalcontext_t portalcontext;
    spritecontext_t spritecontext;
 
+   // Hi-ho, the mem'ry o!
+   // The heap stands alone.
+   ZoneHeap *heap;
+
    contextbounds_t bounds;
    viewpoint_t     view;
    cbviewpoint_t   cb_view;
@@ -166,8 +186,8 @@ struct rendercontext_t
 // It doesn't contribute to r_numcontexts
 inline rendercontext_t r_globalcontext;
 
-inline constexpr int r_numcontexts = 1;
-//inline int r_numcontexts; // RESTORE TO THIS EVENTUALLY
+inline int  r_numcontexts;
+inline bool r_hascontexts;
 
 rendercontext_t &R_GetContext(int context);
 void R_FreeContexts();
@@ -179,6 +199,9 @@ void R_RunContexts();
 template<typename F>
 void R_ForEachContext(F &&f)
 {
+   if(!r_hascontexts)
+      return;
+
    f(r_globalcontext);
 
    if(r_numcontexts > 1)

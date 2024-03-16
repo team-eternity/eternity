@@ -229,8 +229,9 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
       const divline_t &trace)
 {
    const line_t *li = in->d.line;
-   lineopening_t lo = { 0 };
-   lo.calculate(li);
+   tracelineopening_t lo = { 0 };
+   v2fixed_t edgepos = trace.v + trace.dv.fixedMul(in->frac);
+   lo.calculateAtPoint(*li, edgepos);
 
    CamContext &context = *static_cast<CamContext *>(vcontext);
 
@@ -261,7 +262,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    {
       const surface_t &surface = sector->srf[surf];
       const surface_t &otherSurface = osector->srf[surf];
-      if(surface.height != otherSurface.height ||
+      if(surface.getZAt(edgepos) != otherSurface.getZAt(edgepos) ||
          (surface.pflags & PS_PASSABLE) != (otherSurface.pflags & PS_PASSABLE))
       {
          slope = FixedDiv(lo.open[surf] - context.sightzstart, totalfrac);
@@ -281,7 +282,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
       if(li->extflags & e_edgePortalFlags[surf] && li->backsector &&
          backSurface.pflags & PS_PASSABLE &&
          !isInner(surf, context.state.slope[surf],
-                  FixedDiv(backSurface.height - context.sightzstart, totalfrac)) &&
+                  FixedDiv(backSurface.getZAt(edgepos) - context.sightzstart, totalfrac)) &&
          P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 && in->frac > 0)
       {
          State state(context.state);
@@ -323,8 +324,8 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
 // ioanch 20151229: check sector if it has portals and create cameras for them
 // Returns true if any branching sight check beyond a portal returned true
 //
-bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fixed_t partialfrac, 
-                                   const divline_t &trace) const
+bool CamContext::checkPortalSector(const sector_t *sector, const fixed_t totalfrac,
+                                   const fixed_t partialfrac, const divline_t &trace) const
 {
    for(const surf_e surf : SURFS)
    {
@@ -348,32 +349,34 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
 
             // get x and y of position
             fixed_t x, y;
+            fixed_t newtotalfrac = totalfrac;
+            fixed_t newpartialfrac = partialfrac;
             if(linehitz == sightzstart)
             {
                // handle this edge case: put point right on line
-               x = trace.x + FixedMul(trace.dx, partialfrac);
-               y = trace.y + FixedMul(trace.dy, partialfrac);
+               x = trace.x + FixedMul(trace.dx, newpartialfrac);
+               y = trace.y + FixedMul(trace.dy, newpartialfrac);
             }
             else
             {
                fixed_t sectorfrac = FixedDiv(planez - sightzstart, linehitz - sightzstart);
                // update z frac
-               totalfrac = FixedMul(sectorfrac, totalfrac);
+               newtotalfrac = FixedMul(sectorfrac, newtotalfrac);
                // retrieve the xy frac using the origin frac
-               partialfrac = FixedDiv(totalfrac - state.originfrac,
+               newpartialfrac = FixedDiv(newtotalfrac - state.originfrac,
                                       FRACUNIT - state.originfrac);
 
                // HACK: add a unit just to ensure that it enters the sector
-               x = trace.x + FixedMul(partialfrac + 1, trace.dx);
-               y = trace.y + FixedMul(partialfrac + 1, trace.dy);
+               x = trace.x + FixedMul(newpartialfrac + 1, trace.dx);
+               y = trace.y + FixedMul(newpartialfrac + 1, trace.dy);
             }
 
-            if(partialfrac + 1 > 0) // don't allow going back
+            if(newpartialfrac + 1 > 0) // don't allow going back
             {
                State newstate;
                newstate.slope[surf] = slope;
                newstate.slope[!surf] = newslope;
-               newstate.originfrac = totalfrac;
+               newstate.originfrac = newtotalfrac;
                newstate.reclevel = state.reclevel + 1;
 
                bool result = false;
@@ -455,17 +458,23 @@ bool CamContext::checkSight(const camsightparams_t &params,
    {
       // killough 4/19/98: make fake floors and ceilings block monster view
       if((csec->heightsec != -1 &&
-          ((params.cz + params.cheight <= sectors[csec->heightsec].srf.floor.height &&
-            params.tz >= sectors[csec->heightsec].srf.floor.height) ||
-           (params.cz >= sectors[csec->heightsec].srf.ceiling.height &&
-            params.tz + params.cheight <= sectors[csec->heightsec].srf.ceiling.height)))
+          ((params.cz + params.cheight <=
+            sectors[csec->heightsec].srf.floor.getZAt(params.cx, params.cy) &&
+            params.tz >= sectors[csec->heightsec].srf.floor.getZAt(params.tx, params.ty)) ||
+           (params.cz >= sectors[csec->heightsec].srf.ceiling.getZAt(params.cx, params.cy) &&
+            params.tz + params.cheight <=
+            sectors[csec->heightsec].srf.ceiling.getZAt(params.tx, params.ty))))
          ||
          (tsec->heightsec != -1 &&
-          ((params.tz + params.theight <= sectors[tsec->heightsec].srf.floor.height &&
-            params.cz >= sectors[tsec->heightsec].srf.floor.height) ||
-           (params.tz >= sectors[tsec->heightsec].srf.ceiling.height &&
-            params.cz + params.theight <= sectors[tsec->heightsec].srf.ceiling.height))))
+          ((params.tz + params.theight <=
+            sectors[tsec->heightsec].srf.floor.getZAt(params.tx, params.ty) &&
+            params.cz >= sectors[tsec->heightsec].srf.floor.getZAt(params.cx, params.cy)) ||
+           (params.tz >= sectors[tsec->heightsec].srf.ceiling.getZAt(params.tx, params.ty) &&
+            params.cz + params.theight <=
+            sectors[tsec->heightsec].srf.ceiling.getZAt(params.cx, params.cy)))))
+      {
          return false;
+      }
 
       //
       // check precisely

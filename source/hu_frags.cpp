@@ -83,7 +83,7 @@ void HU_FragsDrawer(void)
       return;
 
    if(((players[displayplayer].playerstate != PST_DEAD || walkcam_active)
-      && !hu_showfrags) || GameType != gt_dm || automapactive)
+      && !hu_showfrags) || GameType != gt_dm || (automapactive && !automap_overlay))
       return;
 
    // "frags"

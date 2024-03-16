@@ -76,7 +76,8 @@ class  BloodSpawner;
 #define MAXGEAR (OVERDRIVE+16)
 
 // haleyjd 11/28/02: default z coord addend for missile spawn
-#define DEFAULTMISSILEZ (4*8*FRACUNIT)
+//#define DEFAULTMISSILEZ (4*8*FRACUNIT)
+// DEFAULTMISSILEZ is now a mobjinfo property (missileheight)
 
 #define NUMMOBJCOUNTERS 8
 
@@ -214,6 +215,7 @@ protected:
 
    // Methods
    void Think() override;
+   void ThinkRavenFast();
 
    bool shouldApplyTorque();
 
@@ -227,6 +229,11 @@ public:
 
    // Methods
    void backupPosition();
+   // This one only backs up angle against interpolation, while leaving XYZ and portal refs alone
+   void backupAngle()
+   {
+      prevpos.angle = angle;
+   }
    void copyPosition(const Mobj *other);
    int getModifiedSpawnHealth() const;
    
@@ -272,7 +279,7 @@ public:
    mobjinfo_t *info;   // mobjinfo[mobj->type]
 
    int colour; // sf: the sprite colour
-   int tranmap;   // the translucency map
+   int tranmap;   // the translucency map: MUST BE CACHED IF MODIFIED AT RUNTIME
 
    // INVENTORY_FIXME: eliminate union
    union
@@ -422,6 +429,16 @@ enum bloodaction_e : int
    NUMBLOODACTIONS
 };
 
+enum missiletype_e :int
+{
+   MISSILETYPE_DEFAULT,   // standard
+   MISSILETYPE_RAVENFAST, // Heretic/Hexen-style fast missile
+
+   NUMMISSILETYPES
+};
+
+int P_FindDoomedNum(int type);
+
 void  P_RespawnSpecials();
 Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
                   bool nolastlook = false);
@@ -434,6 +451,13 @@ Mobj *P_SpawnMapThing(mapthing_t *mt);
 bool  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
 void  P_ExplodeMissile(Mobj *, const sector_t *topedgesec);     // killough
 bool P_CheckPortalTeleport(Mobj *mobj);
+
+enum class seekcenter_e : bool
+{
+   no = false,
+   yes = true,
+};
+bool P_SeekerMissile(Mobj *actor, const angle_t threshold, const angle_t maxturn, const seekcenter_e seekcenter);
 
 //
 // Blood spawning
@@ -577,6 +601,8 @@ inline static fixed_t getThingZ(Mobj *mo1, Mobj *mo2)
    if(!mo1) return mo2->z;
    return mo2->z + P_GetLinkOffset(mo2->groupid, mo1->groupid)->z;
 }
+
+bool P_CheckFloorCeilingForSpawning(const Mobj& mobj);
 
 //=============================================================================
 //
@@ -734,6 +760,8 @@ enum mobjflags4_e : unsigned int
 enum mobjflags5_e : unsigned int
 {
    MF5_NOTAUTOAIMED       = 0x00000001, // can't be autoaimed (for real)
+   MF5_FULLVOLSOUNDS      = 0x00000002, // full-volume see/death sounds
+   MF5_ACTLIKEBRIDGE      = 0x00000004, // unmoved by sector actions, and pickups can sit atop
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh
@@ -790,6 +818,14 @@ inline static bool P_mobjOnSurface(const Mobj &mobj)
 {
    return mobj.z <= mobj.zref.floor || (mobj.z + mobj.height >= mobj.zref.ceiling &&
                                         mobj.flags & MF_SPAWNCEILING && mobj.flags & MF_NOGRAVITY);
+}
+
+//
+// Common procedure to copy a spawner's friendship status to a spawnee
+//
+inline static void P_transferFriendship(Mobj &target, const Mobj &source)
+{
+   target.flags = (target.flags & ~MF_FRIEND) | (source.flags & MF_FRIEND);
 }
 
 #endif

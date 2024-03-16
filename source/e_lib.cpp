@@ -62,7 +62,7 @@
 //
 // Default Error Callback
 //
-void E_ErrorCB(cfg_t *cfg, const char *fmt, va_list ap)
+void E_ErrorCB(const cfg_t *const cfg, const char *fmt, va_list ap)
 {
    I_ErrorVA(fmt, ap);
 }
@@ -546,7 +546,7 @@ int E_Endif(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 // is found, and then returns the index the match is found at. If no
 // match is found, the array size is returned.
 //
-int E_StrToNumLinear(const char **strings, int numstrings, const char *value)
+int E_StrToNumLinear(const char *const *const strings, int numstrings, const char *const value)
 {
    int index = 0;
 

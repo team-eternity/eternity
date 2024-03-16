@@ -338,10 +338,13 @@ v2fixed_t P_PrecisePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
 // If point x/y resides in a sector with portal, pass through it
 //
 sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, surf_e surf,
-                                 sector_t *sector)
+                                 sector_t *sector, v2fixed_t *totaldelta)
 {
    if(!sector) // if not preset
       sector = R_PointInSubsector(x, y)->sector;
+
+   if(totaldelta)
+      *totaldelta = {};
 
    int numgroups = P_PortalGroupCount();
    if(numgroups <= 1 || full_demo_version < make_full_version(340, 48) ||
@@ -370,6 +373,11 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, surf_e surf,
       // move into the new sector
       x += link.delta.x;
       y += link.delta.y;
+      if(totaldelta)
+      {
+         totaldelta->x += link.delta.x;
+         totaldelta->y += link.delta.y;
+      }
       sector = R_PointInSubsector(x, y)->sector;
    }
 
@@ -379,9 +387,9 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, surf_e surf,
    return sector;
 }
 
-sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, surf_e surf)
+sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, surf_e surf, v2fixed_t *totaldelta)
 {
-   return P_ExtremeSectorAtPoint(mo->x, mo->y, surf, mo->subsector->sector);
+   return P_ExtremeSectorAtPoint(mo->x, mo->y, surf, mo->subsector->sector, totaldelta);
 }
 
 //==============================================================================
@@ -624,7 +632,7 @@ bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
 sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
                                         int cgroupid, int tgroupid,
                                         sector_t *csector, fixed_t midzhint,
-                                        uint8_t *floorceiling)
+                                        surf_e *surf)
 {
    if(cgroupid == tgroupid)
       return csector;
@@ -639,23 +647,17 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
       memset(groupVisit, 0, sizeof(*groupVisit) * P_PortalGroupCount());
    groupVisit[cgroupid] = true;
 
-   uint8_t fcflag[2];
-
    surf_e surfs[2];
 
    if(midzhint < cmidz)
    {
       surfs[0] = surf_floor;
       surfs[1] = surf_ceil;
-      fcflag[0] = sector_t::floor;
-      fcflag[1] = sector_t::ceiling;
    }
    else
    {
       surfs[0] = surf_ceil;
       surfs[1] = surf_floor;
-      fcflag[0] = sector_t::ceiling;
-      fcflag[1] = sector_t::floor;
    }
 
    sector_t *sector;
@@ -677,8 +679,8 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
          groupid = sector->groupid;
          if(groupid == tgroupid)
          {
-            if(floorceiling)
-               *floorceiling = fcflag[i];
+            if(surf)
+               *surf = surfs[i];
             return sector;
          }
          if(groupVisit[groupid])

@@ -217,7 +217,7 @@ bool P_WeaponHasAmmo(const player_t *player, const weaponinfo_t *weapon)
 //
 // MaxW: 2018/01/03: Test if a player has alt ammo for a weapon
 //
-static bool P_WeaponHasAmmoAlt(player_t *player, weaponinfo_t *weapon)
+bool P_WeaponHasAmmoAlt(const player_t *player, const weaponinfo_t *weapon)
 {
    itemeffect_t *ammoType = weapon->ammo_alt;
 
@@ -259,12 +259,12 @@ int P_NextWeapon(const player_t *player, uint8_t *slotindex)
    const weaponinfo_t             *newweapon     = player->readyweapon;
    const weaponslot_t             *newweaponslot = player->readyweaponslot;
    const BDListItem<weaponslot_t> *newweaponlink;
-   bool                            ammototry;
 
    if(newweaponslot == nullptr)
       newweaponslot = P_findFirstNonNullWeaponSlot(player);
    newweaponlink = &newweaponslot->links;
 
+   bool ownsweapon, canfireweapon, sameweapon, sameweaponslot;
    do
    {
       newweaponlink = newweaponlink->bdPrev;
@@ -285,10 +285,13 @@ int P_NextWeapon(const player_t *player, uint8_t *slotindex)
             firsttime = false;
          }
       }
-      ammototry = P_WeaponHasAmmo(player, newweapon);
+
+      ownsweapon     = E_PlayerOwnsWeapon(player, newweapon);
+      canfireweapon  = P_WeaponHasAmmo(player, newweapon);
+      sameweapon     = newweapon->id == currentweapon->id;
+      sameweaponslot = &newweaponslot->links == newweaponlink;
    }
-   while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
-         newweapon->id != currentweapon->id);
+   while(((!ownsweapon || !canfireweapon) && !sameweapon) || (sameweapon && !sameweaponslot));
 
    if(demo_version >= 401)
    {
@@ -318,12 +321,12 @@ int P_PrevWeapon(const player_t *player, uint8_t *slotindex)
    const weaponinfo_t             *newweapon     = player->readyweapon;
    const weaponslot_t             *newweaponslot = player->readyweaponslot;
    const BDListItem<weaponslot_t> *newweaponlink;
-   bool                            ammototry;
 
    if(newweaponslot == nullptr)
       newweaponslot = P_findFirstNonNullWeaponSlot(player);
    newweaponlink = &newweaponslot->links;
 
+   bool ownsweapon, canfireweapon, sameweapon, sameweaponslot;
    do
    {
       newweaponlink = newweaponlink->bdNext;
@@ -344,10 +347,13 @@ int P_PrevWeapon(const player_t *player, uint8_t *slotindex)
          }
 
       }
-      ammototry = P_WeaponHasAmmo(player, newweapon);
+
+      ownsweapon     = E_PlayerOwnsWeapon(player, newweapon);
+      canfireweapon  = P_WeaponHasAmmo(player, newweapon);
+      sameweapon     = newweapon->id == currentweapon->id;
+      sameweaponslot = &newweaponslot->links == newweaponlink;
    }
-   while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
-         newweapon->id != currentweapon->id);
+   while(((!ownsweapon || !canfireweapon) && !sameweapon) || (sameweapon && !sameweaponslot));
 
    if(demo_version >= 401)
    {
@@ -379,9 +385,9 @@ static int weapon_preferences[NUMWEAPONS+1] =
 // this won't matter, because the raised weapon has no ammo anyway. When called
 // from G_BuildTiccmd you want to toggle to a different weapon regardless.
 //
-weapontype_t P_SwitchWeaponOld(const player_t *player)
+weapontype_t P_SwitchWeaponOldDoom(const player_t *player)
 {
-   int *prefer = weapon_preferences; // killough 3/22/98
+   const int *prefer = weapon_preferences; // killough 3/22/98
    weapontype_t currentweapon = player->readyweapon->dehnum;
    weapontype_t newweapon = currentweapon;
    int i = NUMWEAPONS + 1;   // killough 5/2/98   
@@ -396,7 +402,7 @@ weapontype_t P_SwitchWeaponOld(const player_t *player)
       switch(*prefer++)
       {
       case 1:
-         if(!player->powers[pw_strength])  // allow chainsaw override
+         if(!player->powers[pw_strength].isActive())  // allow chainsaw override
             break;
       case 0:
          newweapon = wp_fist;
@@ -451,15 +457,15 @@ weapontype_t P_SwitchWeaponOld(const player_t *player)
 //
 int P_WeaponPreferred(int w1, int w2)
 {
-  return
-    (weapon_preferences[0] != ++w2 && (weapon_preferences[0] == ++w1 ||
-    (weapon_preferences[1] !=   w2 && (weapon_preferences[1] ==   w1 ||
-    (weapon_preferences[2] !=   w2 && (weapon_preferences[2] ==   w1 ||
-    (weapon_preferences[3] !=   w2 && (weapon_preferences[3] ==   w1 ||
-    (weapon_preferences[4] !=   w2 && (weapon_preferences[4] ==   w1 ||
-    (weapon_preferences[5] !=   w2 && (weapon_preferences[5] ==   w1 ||
-    (weapon_preferences[6] !=   w2 && (weapon_preferences[6] ==   w1 ||
-    (weapon_preferences[7] !=   w2 && (weapon_preferences[7] ==   w1
+   return
+      (weapon_preferences[0] != ++w2 && (weapon_preferences[0] == ++w1 ||
+      (weapon_preferences[1] !=   w2 && (weapon_preferences[1] ==   w1 ||
+      (weapon_preferences[2] !=   w2 && (weapon_preferences[2] ==   w1 ||
+      (weapon_preferences[3] !=   w2 && (weapon_preferences[3] ==   w1 ||
+      (weapon_preferences[4] !=   w2 && (weapon_preferences[4] ==   w1 ||
+      (weapon_preferences[5] !=   w2 && (weapon_preferences[5] ==   w1 ||
+      (weapon_preferences[6] !=   w2 && (weapon_preferences[6] ==   w1 ||
+      (weapon_preferences[7] !=   w2 && (weapon_preferences[7] ==   w1
    ))))))))))))))));
 }
 
@@ -482,10 +488,22 @@ bool P_CheckAmmo(player_t *player)
    // for Boom games we cannot do this, and have different player
    // preferences across demos or networks, so we have to use the
    // G_BuildTiccmd() interface instead of making the switch here.
-   
+
+   // MaxW: 2023: We need to change pengingweapon here otherwise
+   //  otherwise players will switch to the same weapon twice when
+   //  they run out of ammo in netgames.
+   if(demo_version >= 401)
+   {
+      weaponinfo_t *temp = E_FindBestWeapon(player);
+      player->pendingweapon = temp;
+      player->pendingweaponslot = E_FindFirstWeaponSlot(player, temp);
+   }
    if(demo_compatibility)
    {
-      player->pendingweapon = E_WeaponForDEHNum(P_SwitchWeaponOld(player));      // phares
+      if(vanilla_heretic)
+         player->pendingweapon = E_FindBestWeapon(player);
+      else
+         player->pendingweapon = E_WeaponForDEHNum(P_SwitchWeaponOldDoom(player));      // phares
       // Now set appropriate weapon overlay.
       // WEAPON_FIXME
       P_SetPsprite(player,ps_weapon,player->readyweapon->downstate);
@@ -531,6 +549,39 @@ void P_SubtractAmmo(const player_t *player, int compat_amt)
    E_RemoveInventoryItem(player, ammo, amount);
 }
 
+//
+// As above but it always subtracts a specific amount
+//
+void P_SubtractAmmoAmount(player_t *player, int amount)
+{
+   weaponinfo_t *weapon = player->readyweapon;
+   itemeffect_t *ammo;
+   bool          addAmmo = amount < 0;
+
+   if(demo_version >= 401 && (player->attackdown & AT_ITEM))
+      return;
+   else if(demo_version >= 401 && (player->attackdown & AT_SECONDARY))
+   {
+      ammo = weapon->ammo_alt;
+      if(amount == INT_MIN)
+         amount = weapon->ammopershot_alt;
+   }
+   else
+   {
+      ammo = weapon->ammo;
+      if(amount == INT_MIN)
+         amount = weapon->ammopershot;
+   }
+
+   if(player->cheats & CF_INFAMMO || !ammo)
+      return;
+
+   if(addAmmo)
+      E_GiveInventoryItem(player, ammo, -amount);
+   else
+      E_RemoveInventoryItem(player, ammo, amount);
+}
+
 int lastshottic; // killough 3/22/98
 
 //
@@ -552,7 +603,7 @@ static void P_FireWeapon(player_t *player)
 
    // haleyjd 04/06/03: silencer powerup
    // haleyjd 09/14/07: per-weapon silencer, always silent support
-   if(!(weapon->flags & WPF_SILENCEABLE && player->powers[pw_silencer]) &&
+   if(!(weapon->flags & WPF_SILENCEABLE && player->powers[pw_silencer].isActive()) &&
       !(weapon->flags & WPF_SILENT))
       P_NoiseAlert(player->mo, player->mo);
 
@@ -577,7 +628,7 @@ static void P_fireWeaponAlt(player_t *player)
 
    // haleyjd 04/06/03: silencer powerup
    // haleyjd 09/14/07: per-weapon silencer, always silent support
-   if(!(weapon->flags & WPF_SILENCEABLE && player->powers[pw_silencer]) &&
+   if(!(weapon->flags & WPF_SILENCEABLE && player->powers[pw_silencer].isActive()) &&
       !(weapon->flags & WPF_SILENT))
       P_NoiseAlert(player->mo, player->mo);
 
@@ -763,7 +814,7 @@ void P_WeaponSoundInfo(Mobj *mo, sfxinfo_t *sound)
    params.sfx = sound;
    params.setNormalDefaults(mo);
 
-   if(mo->player && mo->player->powers[pw_silencer] &&
+   if(mo->player && mo->player->powers[pw_silencer].isActive() &&
       mo->player->readyweapon->flags & WPF_SILENCEABLE)
       params.volumeScale = WEAPON_VOLUME_SILENCED;
 
@@ -779,7 +830,7 @@ void P_WeaponSound(Mobj *mo, int sfx_id)
 {
    int volume = 127;
 
-   if(mo->player && mo->player->powers[pw_silencer] &&
+   if(mo->player && mo->player->powers[pw_silencer].isActive() &&
       mo->player->readyweapon->flags & WPF_SILENCEABLE)
       volume = WEAPON_VOLUME_SILENCED;
 
@@ -829,8 +880,11 @@ void A_WeaponReady(actionargs_t *actionargs)
    // according flag is set.
    if(player->readyweapon->readysound &&
       psp->state->index == player->readyweapon->readystate &&
-      (!(player->readyweapon->flags & WPF_READYSNDHALF) || M_VHereticPRandom(pr_wpnreadysnd) < 128))
+      (!(player->readyweapon->flags & WPF_READYSNDHALF) || M_VHereticPRandom(pr_wpnreadysnd) < 128) &&
+      !(player->readyweapon->intflags & WIF_SUPPRESSREADYSOUND))
+   {
       S_StartSoundName(player->mo, player->readyweapon->readysound);
+   }
 
    // WEAPON_FIXME: chainsaw particulars (haptic feedback)
    if(E_WeaponIsCurrentDEHNum(player, wp_chainsaw) && psp->state == states[E_SafeState(S_SAW)])
@@ -898,8 +952,7 @@ static void A_reFireNew(actionargs_t *actionargs)
       P_FireWeapon(player);
    }
    else if((player->cmd.buttons & BTN_ATTACK_ALT) && player->pendingweapon == nullptr &&
-            player->health &&
-            !(player->attackdown & AT_PRIMARY))
+            player->health && !(player->attackdown & AT_PRIMARY))
    {
       player->refire++;
       P_fireWeaponAlt(player);
@@ -986,7 +1039,7 @@ void A_Lower(actionargs_t *actionargs)
       return;
 
    psp->playpos.y += lowerspeed;
-   psp->renderpos.y = psp->renderpos.y;
+   psp->renderpos.y = psp->playpos.y;
 
    // Is already down.
    if(psp->playpos.y < WEAPONBOTTOM)
@@ -1074,7 +1127,7 @@ void P_WeaponRecoil(player_t *player)
    }
 
    // haleyjd 06/05/13: if weapon is flagged for it, do haptic recoil effect here.
-   if(player == &players[consoleplayer] && (readyweapon->flags & WPF_HAPTICRECOIL))
+   if(player == &players[consoleplayer] && (readyweapon->flags & WPF_NOHAPTICRECOIL) == 0)
       I_StartHaptic(HALHapticInterface::EFFECT_FIRE, readyweapon->hapticrecoil, readyweapon->haptictime);
 }
 
@@ -1542,7 +1595,7 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
    damage = dmgfactor * ((P_Random(pr_custompunch)%dmgmod) + 1);
 
    // apply berzerk multiplier
-   if(player->powers[pw_strength])
+   if(player->powers[pw_strength].isActive())
       damage *= berzerkmul;
 
    // decrement ammo if appropriate

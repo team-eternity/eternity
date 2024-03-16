@@ -133,8 +133,6 @@ bool M_FindCheats(int key);
 void M_DoCheat(const char *cheatname);
 int M_NukeMonsters();
 
-extern int idmusnum;
-
 //
 // Shared both by cheats and by vanilla Heretic demos
 //

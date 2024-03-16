@@ -30,7 +30,7 @@
 #include "m_dllist.h"
 #include "m_qstr.h"
 
-#define EDF_SEC_SWITCH "switch"
+constexpr const char EDF_SEC_SWITCH[] = "switch";
 
 struct cfg_t;
 

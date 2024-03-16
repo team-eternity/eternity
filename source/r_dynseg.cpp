@@ -331,9 +331,10 @@ dynaseg_t *R_CreateDynaSeg(const dynaseg_t *proto, dynavertex_t *v1, dynavertex_
    dynaseg_t *ret = R_GetFreeDynaSeg();
 
    // properties inherited from prototype seg
-   ret->polyobj     = proto->polyobj;
-   ret->seg.linedef = proto->seg.linedef;
-   ret->seg.sidedef = proto->seg.sidedef;
+   ret->polyobj       = proto->polyobj;
+   ret->seg.linedef   = proto->seg.linedef;
+   ret->seg.sidedef   = proto->seg.sidedef;
+   ret->seg.frontside = !proto->backside;
    ret->backside = proto->backside;
 
    R_SetDynaVertexRef(&ret->linev1, proto->linev1);
@@ -687,9 +688,10 @@ void R_AttachPolyObject(polyobj_t *poly)
       // create initial dseg representing the entire linedef
       dynaseg_t *idseg = R_GetFreeDynaSeg();
 
-      idseg->polyobj     = poly;
-      idseg->seg.linedef = line;
-      idseg->seg.sidedef = &sides[line->sidenum[0]];
+      idseg->polyobj       = poly;
+      idseg->seg.linedef   = line;
+      idseg->seg.sidedef   = &sides[line->sidenum[0]];
+      idseg->seg.frontside = true;
       
       dynavertex_t *v1 = R_GetFreeDynaVertex();
       dynavertex_t *v2 = R_GetFreeDynaVertex();
@@ -744,6 +746,7 @@ void R_AttachPolyObject(polyobj_t *poly)
          backdseg->polyobj = poly;
          backdseg->seg.linedef = line;
          backdseg->seg.sidedef = &sides[line->sidenum[1]];
+         backdseg->seg.frontside = !backdseg->backside;
          R_SetDynaVertexRef(&backdseg->seg.dyv1, v2);
          R_SetDynaVertexRef(&backdseg->seg.dyv2, v1);
          R_SetDynaVertexRef(&backdseg->linev1, v2);

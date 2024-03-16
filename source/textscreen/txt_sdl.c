@@ -15,11 +15,7 @@
 // Text mode emulation in SDL
 //
 
-#ifdef __APPLE__
-#include "SDL2/SDL.h"
-#else
 #include "SDL.h"
-#endif
 
 #include <ctype.h>
 #include <stdio.h>
@@ -613,6 +609,10 @@ signed int TXT_GetChar(void)
 
         switch (ev.type)
         {
+            case SDL_CONTROLLERBUTTONDOWN:
+                return TXT_MOUSE_LEFT;
+                break;
+
             case SDL_MOUSEBUTTONDOWN:
                 if (ev.button.button < TXT_MAX_MOUSE_BUTTONS)
                 {

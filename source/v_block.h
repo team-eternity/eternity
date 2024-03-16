@@ -45,7 +45,7 @@ void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y, int w,
                     int h, int tl);
 
 // buffer fill w/texture
-void V_FillBuffer(VBuffer *buffer, byte *src, int texw, int texh);
+void V_FillBuffer(VBuffer *buffer, const byte *src, int texw, int texh);
 
 // sets block function pointers for a VBuffer object
 void V_SetBlockFuncs(VBuffer *, int);

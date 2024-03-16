@@ -43,10 +43,10 @@
 // 03/27/05: EDF strings!
 
 // String section keywords
-#define ITEM_STRING_NUM    "num"
-#define ITEM_STRING_VAL    "val"
-#define ITEM_STRING_BEXDST "bexdest"
-#define ITEM_STRING_BEXSRC "bexsource"
+constexpr const char ITEM_STRING_NUM[]    = "num";
+constexpr const char ITEM_STRING_VAL[]    = "val";
+constexpr const char ITEM_STRING_BEXDST[] = "bexdest";
+constexpr const char ITEM_STRING_BEXSRC[] = "bexsource";
 
 // String Options
 cfg_opt_t edf_string_opts[] =
@@ -58,7 +58,7 @@ cfg_opt_t edf_string_opts[] =
    CFG_END()
 };
 
-#define NUM_EDFSTR_CHAINS 257
+constexpr int NUM_EDFSTR_CHAINS = 257;
 
 static edf_string_t             *edf_str_chains[NUM_EDFSTR_CHAINS];
 static DLListItem<edf_string_t> *edf_str_numchains[NUM_EDFSTR_CHAINS];

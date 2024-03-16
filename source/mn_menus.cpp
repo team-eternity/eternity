@@ -245,12 +245,41 @@ CONSOLE_COMMAND(mn_newgame, 0)
 
    // haleyjd 05/14/06: check for episode menu override now
    if(mn_episode_override)
-      MN_StartMenu(mn_episode_override);
+   {
+      int episodeIndex = -1;
+
+      // Figure out if we should skip the episode menu override due to it containing only a
+      // single episode, and nothing else
+      for(int i = 0; mn_episode_override->menuitems[i].type != it_end; i++)
+      {
+         menuitem_t *item = &mn_episode_override->menuitems[i];
+         if(item->type == it_runcmd)
+         {
+            if(!strncasecmp("mn_start_mapname", item->data, strlen("mn_start_mapname")) && episodeIndex == -1)
+               episodeIndex = i;
+            else
+            {
+               episodeIndex = -1;
+               break;
+            }
+         }
+         else if(item->type != it_title && item->type != it_gap && item->type != it_info)
+         {
+            episodeIndex = -1;
+            break;
+         }
+      }
+
+      if(episodeIndex >= 0)
+         C_RunTextCmd(mn_episode_override->menuitems[episodeIndex].data);
+      else
+         MN_StartMenu(mn_episode_override);
+      }
    else if(GameModeInfo->menuStartMap &&
            *GameModeInfo->menuStartMap &&
            W_CheckNumForName(GameModeInfo->menuStartMap) >= 0)
    {
-      G_DeferedInitNew((skill_t)defaultskill, GameModeInfo->menuStartMap);
+      G_DeferedInitNew(defaultskill, GameModeInfo->menuStartMap);
       MN_ClearMenus();
    }
    else
@@ -319,6 +348,23 @@ menu_t menu_episode =
    0,                          // select episode 1
    mf_skullmenu | mf_emulated, // skull menu
    MN_EpisodeDrawer            // drawer
+};
+
+//
+// Stub episode menu (for UMAPINFO)
+//
+static menuitem_t mn_episode_itemsStub[] =
+{
+   { it_end }
+};
+menu_t menu_episodeDoom2Stub =
+{
+   mn_episode_itemsStub,
+   nullptr, nullptr, nullptr,
+   48, 63,
+   0,
+   mf_skullmenu | mf_emulated,
+   MN_EpisodeDrawer
 };
 
 // console command to select episode
@@ -1235,7 +1281,8 @@ static menuitem_t mn_options_items[] =
    {it_gap},
    {it_info,   "Input/Output"},
    {it_runcmd, "Key bindings",          "mn_bindings" },
-   {it_runcmd, "Mouse / Gamepad",       "mn_mouse"    },
+   {it_runcmd, "Mouse Options",         "mn_mouse"    },
+   {it_runcmd, "Gamepad Options",       "mn_gamepad"  },
    {it_runcmd, "Video Options",         "mn_video"    },
    {it_runcmd, "Sound Options",         "mn_sound"    },
    {it_gap},
@@ -1679,10 +1726,12 @@ static menuitem_t mn_sysvideo_items[] =
    { it_gap },
    { it_info,     "Rendering"                                    },
    { it_slider,   "Screen size",              "screensize"       },
+   { it_toggle,   "Renderer threads",         "r_numcontexts"    },
    { it_toggle,   "HOM detector flashes",     "r_homflash"       },
    { it_toggle,   "Translucency",             "r_trans"          },
    { it_variable, "Opacity percentage",       "r_tranpct"        },
    { it_toggle,   "Stock Doom object style",  "r_tlstyle"        },
+   { it_toggle,   "Sprite projection style",  "r_sprprojstyle"   },
    { it_gap },
    { it_info,     "Framerate"   },
    { it_toggle,   "Uncapped framerate",       "d_fastrefresh"    },
@@ -1948,29 +1997,23 @@ menu_t menu_soundeq =
 
 /////////////////////////////////////////////////////////////////
 //
-// Mouse & Joystick Options
+// Mouse Options
 //
 
-static const char *mn_mousejoy_names[] =
+static const char *mn_mouse_names[] =
 {
    "Mouse Settings",
    "Acceleration / Mouselook",
-   "Gamepad Settings",
-   "Gamepad Axis Settings",
    nullptr
 };
 
 extern menu_t menu_mouse;
 extern menu_t menu_mouse_accel_and_mlook;
-extern menu_t menu_joystick;
-extern menu_t menu_joystick_axes;
 
-static menu_t *mn_mousejoy_pages[] =
+static menu_t *mn_mouse_pages[] =
 {
    &menu_mouse,
    &menu_mouse_accel_and_mlook,
-   &menu_joystick,
-   &menu_joystick_axes,
    nullptr
 };
 
@@ -1988,7 +2031,7 @@ static menuitem_t mn_mouse_items[] =
    {it_info,       "Miscellaneous"},
    {it_toggle,     "Invert mouse",                  "invertmouse"    },
    {it_toggle,     "Smooth turning",                "smooth_turning" },
-   {it_toggle,     "No vertical mouse movement",    "mouse_novert"   },
+   {it_toggle,     "Vertical mouse movement",       "mouse_vert"   },
 #ifdef _SDL_VER
    {it_toggle,     "Window grabs mouse",            "i_grabmouse"    },
 #endif
@@ -2005,8 +2048,8 @@ menu_t menu_mouse =
    2,                            // first selectable
    mf_background,                // full-screen menu
    nullptr,                      // no drawer
-   mn_mousejoy_names,            // TOC stuff
-   mn_mousejoy_pages,
+   mn_mouse_names,            // TOC stuff
+   mn_mouse_pages,
 };
 
 CONSOLE_COMMAND(mn_mouse, 0)
@@ -2027,7 +2070,6 @@ static menuitem_t mn_mouse_accel_and_mlook_items[] =
    {it_toggle,     "Enable mouselook",    "allowmlook" },
    {it_toggle,     "Always mouselook",    "alwaysmlook"},
    {it_binding,    "Bind mouselook key",  "mlook"      },
-   {it_toggle,     "Stretch short skies", "r_stretchsky"},
    {it_end}
 };
 
@@ -2035,19 +2077,43 @@ menu_t menu_mouse_accel_and_mlook =
 {
    mn_mouse_accel_and_mlook_items, // menu items
    &menu_mouse,                    // previous page
-   &menu_joystick,                 // next page
+   nullptr,                        // next page
    &menu_mouse,                    // rootpage
    200, 15,                        // x, y offset
    3,                              // first selectable
    mf_background,                  // full-screen menu
    nullptr,                        // no drawer
-   mn_mousejoy_names,              // TOC stuff
-   mn_mousejoy_pages,
+   mn_mouse_names,                 // TOC stuff
+   mn_mouse_pages,
 };
+
+/////////////////////////////////////////////////////////////////
+//
+// Gamepad Options
+//
+
+extern menu_t menu_gamepad;
+extern menu_t menu_gamepad_axes;
+
+static const char *mn_gamepad_names[] =
+{
+   "Gamepad Settings",
+   "Gamepad Axis Settings",
+   nullptr
+};
+
+static menu_t *mn_gamepad_pages[] =
+{
+   &menu_gamepad,
+   &menu_gamepad_axes,
+   nullptr
+};
+
+
 
 //------------------------------------------------------------------------
 //
-// Joystick Configuration Menu
+// Gamepad Configuration Menu
 //
 
 static const char **mn_js_desc;
@@ -2056,7 +2122,7 @@ static const char **mn_js_cmds;
 static void MN_BuildJSTables()
 {
    static bool menu_built = false;
-   
+
    // don't build multiple times
    if(!menu_built)
    {
@@ -2076,8 +2142,8 @@ static void MN_BuildJSTables()
       {
          HALGamePad *pad = I_GetGamePad(jsnum);
 
-         mn_js_desc[jsnum + 1] = pad->name.duplicate(PU_STATIC);         
-         
+         mn_js_desc[jsnum + 1] = pad->name.duplicate(PU_STATIC);
+
          tempstr.Printf(0, "i_joystick %i", pad->num);
          mn_js_cmds[jsnum + 1] = tempstr.duplicate(PU_STATIC);
       }
@@ -2136,6 +2202,7 @@ static void MN_buildProfileTables()
       {
          qstring fullname;
          qstring base;
+         qstring desc;
          lumpinfo_t *lump = wni.current();
 
          if(lump->lfn)
@@ -2149,7 +2216,10 @@ static void MN_buildProfileTables()
 
          fullname.extractFileBase(base);
 
-         mn_prof_desc[i] = base.duplicate();
+         desc = base;
+         desc.replace("_", ' ');
+
+         mn_prof_desc[i] = desc.duplicate();
 
          base.makeQuoted();
          base.insert("g_padprofile ", 0);
@@ -2177,39 +2247,41 @@ CONSOLE_COMMAND(mn_profiles, cf_hidden)
    MN_ShowBoxWidget();
 }
 
-static menuitem_t mn_joystick_items[] =
+static menuitem_t mn_gamepad_items[] =
 {
-   { it_title,        "Gamepad Settings",          nullptr, nullptr  },
-   { it_gap                                                          },
-   { it_info,         "Devices"                                      },
-   { it_runcmd,       "Select gamepad...",         "mn_joysticks"    },
-   { it_runcmd,       "Test gamepad...",           "mn_padtest"      },
-   { it_gap                                                          },
-   { it_info,         "Settings"                                     },
-   { it_runcmd,       "Load profile...",           "mn_profiles"     },
-   { it_variable,     "Turn sensitivity",          "i_joyturnsens"   },
-   { it_variable,     "SDL axis dead zone",        "i_joysticksens"  },
-   { it_toggle,       "Force feedback",            "i_forcefeedback" },
-   { it_end                                                          }
+   { it_title,        "Gamepad Settings",             nullptr, nullptr          },
+   { it_gap                                                                     },
+   { it_info,         "Devices"                                                 },
+   { it_runcmd,       "Select gamepad...",            "mn_joysticks"            },
+   { it_runcmd,       "Test gamepad...",              "mn_padtest"              },
+   { it_gap                                                                     },
+   { it_info,         "Settings"                                                },
+   { it_runcmd,       "Load profile...",              "mn_profiles"             },
+   { it_variable,     "Turn sensitivity",             "i_joyturnsens"           },
+   { it_variable,     "Gamepad l. stick dead zone",   "i_joy_deadzone_left"     },
+   { it_variable,     "Gamepad r. stick dead zone",   "i_joy_deadzone_right"    },
+   { it_variable,     "Gamepad trigger dead zone",    "i_joy_deadzone_trigger"  },
+   { it_toggle,       "Force feedback",               "i_forcefeedback"         },
+   { it_end                                                                           }
 };
 
-menu_t menu_joystick =
+menu_t menu_gamepad =
 {
-   mn_joystick_items,
-   &menu_mouse_accel_and_mlook,    // previous page
-   &menu_joystick_axes,            // next page
-   &menu_mouse,                    // rootpage
+   mn_gamepad_items,
+   nullptr,                        // previous page
+   &menu_gamepad_axes,             // next page
+   &menu_gamepad,                    // rootpage
    200, 15,                        // x,y offset
-   2,                              // start on first selectable
+   3,                              // start on first selectable
    mf_background,                  // full-screen menu
    nullptr,                        // no drawer
-   mn_mousejoy_names,              // TOC stuff
-   mn_mousejoy_pages,
+   mn_gamepad_names,               // TOC stuff
+   mn_gamepad_pages,
 };
 
-CONSOLE_COMMAND(mn_joymenu, 0)
-{   
-   MN_StartMenu(&menu_joystick);
+CONSOLE_COMMAND(mn_gamepad, 0)
+{
+   MN_StartMenu(&menu_gamepad);
 }
 
 //-----------------------------------------------------------------------------
@@ -2222,12 +2294,11 @@ CONSOLE_COMMAND(mn_joymenu, 0)
 //
 struct mn_padtestdata_t
 {
+   int   buttonLengths[HALGamePad::MAXBUTTONS];
    bool  buttonStates[HALGamePad::MAXBUTTONS];
    float axisStates[HALGamePad::MAXAXES];
-   uint8_t hatStates[HALGamePad::MAXHATS];
    int   numButtons;
    int   numAxes;
-   int   numHats;
 };
 
 static mn_padtestdata_t mn_padtestdata;
@@ -2300,36 +2371,14 @@ static void MN_padTestDrawer()
       }
    }
 
-   // draw hats
+   const char *help1 = "Press ESC on keyboard or hold any";
+   x = 160 - MN_StringWidth(help1) / 2;
    y += 2 * lineHeight;
-   x = 8;
-   MN_WriteText("Hats:", x, y);
-   y += MN_StringHeight("Hats:") + 4;
-   char hatinfos[4] = { 'L', 'R', 'U', 'D' };
-   uint8_t hatflags[4] = { HALGamePad::HAT_LEFT, HALGamePad::HAT_RIGHT, 
-                           HALGamePad::HAT_UP, HALGamePad::HAT_DOWN };
-   for(int i = 0; i < mn_padtestdata.numHats && HALGamePad::MAXHATS; i++)
-   {
-      for(int j = 0; j < 4; ++j)
-      {
-         int color = mn_padtestdata.hatStates[i] & hatflags[j] ? GameModeInfo->selectColor
-                                                               : GameModeInfo->infoColor;
-         qstr.clear() << "H" << (i + 1) << hatinfos[j];
-         MN_WriteTextColored(qstr.constPtr(), color, x, y);
-         x += MN_StringWidth(qstr.constPtr()) + 8;
-
-         if(x > 300 && (i != mn_padtestdata.numHats - 1 || j != 3))
-         {
-            x = 8;
-            y += lineHeight;
-         }
-      }
-   }
-
-   const char *help = "Press ESC on keyboard to exit";
-   x = 160 - MN_StringWidth(help) / 2;
-   y += 2 * lineHeight;
-   MN_WriteTextColored(help, GameModeInfo->infoColor, x, y);
+   MN_WriteTextColored(help1, GameModeInfo->infoColor, x, y);
+   const char *help2 = "controller button 5 seconds to exit";
+   x = 160 - MN_StringWidth(help2) / 2;
+   y += lineHeight;
+   MN_WriteTextColored(help2, GameModeInfo->infoColor, x, y);
 }
 
 //
@@ -2345,20 +2394,31 @@ static void MN_padTestTicker()
    {
       mn_padtestdata.numAxes = 0;
       mn_padtestdata.numButtons = 0;
-      mn_padtestdata.numHats = 0;
       return; // woops!?
    }
 
    mn_padtestdata.numAxes    = gamepad->numAxes;
    mn_padtestdata.numButtons = gamepad->numButtons;
-   mn_padtestdata.numHats    = gamepad->numHats;
 
    for(int i = 0; i < mn_padtestdata.numAxes && i < HALGamePad::MAXAXES; i++)
-      mn_padtestdata.axisStates[i]   = gamepad->state.axes[i];
+      mn_padtestdata.axisStates[i] = gamepad->state.axes[i];
    for(int i = 0; i < mn_padtestdata.numButtons && i < HALGamePad::MAXBUTTONS; i++)
+   {
       mn_padtestdata.buttonStates[i] = gamepad->state.buttons[i];
-   for(int i = 0; i < mn_padtestdata.numHats && i < HALGamePad::MAXHATS; i++)
-      mn_padtestdata.hatStates[i]    = gamepad->state.hats[i];
+
+      // kill the widget if any button is held for 5 seconds
+      if(mn_padtestdata.buttonStates[i])
+      {
+         mn_padtestdata.buttonLengths[i]++;
+         if(mn_padtestdata.buttonLengths[i] > TICRATE * 5)
+         {
+            S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+            MN_PopWidget();
+         }
+      }
+      else
+         mn_padtestdata.buttonLengths[i] = 0;
+   }
 }
 
 //
@@ -2381,8 +2441,8 @@ static bool MN_padTestResponder(event_t *ev, int action)
    return true;
 }
 
-static menuwidget_t padtest_widget = 
-{ 
+static menuwidget_t padtest_widget =
+{
    MN_padTestDrawer,
    MN_padTestResponder,
    MN_padTestTicker,
@@ -2397,19 +2457,22 @@ CONSOLE_COMMAND(mn_padtest, 0)
       return;
    }
 
+   for(int i = 0; i < HALGamePad::MAXBUTTONS; i++)
+      mn_padtestdata.buttonLengths[i] = 0;
+
    MN_PushWidget(&padtest_widget);
 }
 
 //------------------------------------------------------------------------
 //
-// Joystick Axis Configuration Menu
+// Gamepad Axis Configuration Menu
 //
 
 //
 // The menu content. NOTE: this is only for show and keeping content; otherwise it gets dynamically
 // updated
 //
-static menuitem_t mn_joystick_axes_placeholder[] =
+static menuitem_t mn_gamepad_axes_placeholder[] =
 {
    { it_title,        "Gamepad Axis Settings",     nullptr, nullptr  },
    { it_gap                                                          },
@@ -2417,24 +2480,24 @@ static menuitem_t mn_joystick_axes_placeholder[] =
    { it_end                                                          },
 };
 
-menu_t menu_joystick_axes =
+menu_t menu_gamepad_axes =
 {
-   mn_joystick_axes_placeholder,
-   &menu_joystick,                 // previous page
+   mn_gamepad_axes_placeholder,
+   &menu_gamepad,                  // previous page
    nullptr,                        // next page
-   &menu_mouse,                    // rootpage
+   &menu_gamepad,                  // rootpage
    200, 15,                        // x,y offset
    2,                              // start on first selectable
    mf_background,                  // full-screen menu
    nullptr,                        // no drawer
-   mn_mousejoy_names,              // TOC stuff
-   mn_mousejoy_pages,
+   mn_gamepad_names,               // TOC stuff
+   mn_gamepad_pages,
 };
 
 //
-// Called when the current joystick is changed
+// Called when the current gamepad is changed
 //
-void MN_UpdateJoystickMenus()
+void MN_UpdateGamepadMenus()
 {
    struct menuentry_t
    {
@@ -2446,15 +2509,15 @@ void MN_UpdateJoystickMenus()
    static const menu_t basemenu =
    {
       nullptr,
-      &menu_joystick,
+      &menu_gamepad,
       nullptr,
-      &menu_mouse,
+      &menu_gamepad,
       200, 15,
       2,
       mf_background,
       nullptr,
-      mn_mousejoy_names,
-      mn_mousejoy_pages
+      mn_gamepad_names,
+      mn_gamepad_pages
    };
 
    HALGamePad *pad = I_GetActivePad();
@@ -2468,8 +2531,8 @@ void MN_UpdateJoystickMenus()
          { it_end }
       };
 
-      menu_joystick_axes = basemenu;
-      menu_joystick_axes.menuitems = noitems;
+      menu_gamepad_axes = basemenu;
+      menu_gamepad_axes.menuitems = noitems;
       return;
    }
 
@@ -2480,13 +2543,13 @@ void MN_UpdateJoystickMenus()
    for(int i = 0; i < pad->numAxes; ++i)
    {
       menuentry_t &entry = entries.addNew();
-      snprintf(entry.label, sizeof(entry.label), "Axis %d action", i + 1);
+      snprintf(entry.label, sizeof(entry.label), "%s action", pad->getAxisName(i));
       snprintf(entry.variable, sizeof(entry.variable), "g_axisaction%d", i + 1);
    }
    for(int i = 0; i < pad->numAxes; ++i)
    {
       menuentry_t &entry = entries.addNew();
-      snprintf(entry.label, sizeof(entry.label), "Axis %d orientation", i + 1);
+      snprintf(entry.label, sizeof(entry.label), "%s orientation", pad->getAxisName(i));
       snprintf(entry.variable, sizeof(entry.variable), "g_axisorientation%d", i + 1);
    }
    // TODO: add the options from Descent Rebirth
@@ -2533,16 +2596,16 @@ void MN_UpdateJoystickMenus()
    }
    for(int i = 0; i < numpages; ++i)
       pages[i].menuitems = pageitems[i].items;
-   pages[0].prevpage = &menu_joystick;
+   pages[0].prevpage = &menu_gamepad;
    for(int i = 1; i < numpages; ++i)
       pages[i].prevpage = &pages[i - 1];
    for(int i = 0; i < numpages - 1; ++i)
       pages[i].nextpage = &pages[i + 1];
 
-   // HACK: just copy the first page into menu_joystick_axes. It will be a duplicate, yes, but
+   // HACK: just copy the first page into menu_gamepad_axes. It will be a duplicate, yes, but
    // the TOC looks for this global object, and we don't want to mess with the C-like TOC structure
    // here
-   menu_joystick_axes = pages[0];
+   menu_gamepad_axes = pages[0];
 }
 
 //=============================================================================
@@ -2663,30 +2726,17 @@ static void MN_HUDPg2Drawer(void)
 
    if(patch)
    {
-      int16_t w  = patch->width;
-      int16_t h  = patch->height;
-      int16_t to = patch->topoffset;
-      int16_t lo = patch->leftoffset;
+      VBuffer &buffer = crosshair_scale ? subscreen43 : vbscreenfullres;
 
-      if(!crosshair_scale)
-      {
-         const double x_ratio = video.width  / SCREENWIDTH;
-         const double y_ratio = video.height / SCREENHEIGHT;
+      const int16_t w  = patch->width;
+      const int16_t h  = patch->height;
+      const int16_t to = patch->topoffset;
+      const int16_t lo = patch->leftoffset;
 
-         V_DrawPatchTL(
-            subscreen43.x1lookup[270 + 12] + subscreen43.subx - (w >> 1) + lo,
-            subscreen43.y1lookup[y + 12] + subscreen43.suby - (h >> 1) + to,
-            &vbscreenfullres, patch, colrngs[CR_RED], FTRANLEVEL
-         );
-      }
-      else
-      {
-         V_DrawPatchTL(
-            270 + 12 - (w >> 1) + lo,
-            y + 12 - (h >> 1) + to,
-            &subscreen43, patch, colrngs[CR_RED], FTRANLEVEL
-         );
-      }
+      const int crossX = buffer.mapXFromOther(270 + 12, subscreen43) - (w >> 1) + lo;
+      const int crossY = buffer.mapYFromOther(y   + 12, subscreen43) - (h >> 1) + to;
+
+      V_DrawPatchTL(crossX, crossY, &buffer, patch, colrngs[CR_RED], FTRANLEVEL);
    }
 }
 
@@ -2768,60 +2818,62 @@ static menu_t *mn_automap_pages[] =
 
 static menuitem_t mn_automapcolbgl_items[] =
 {
-   {it_title,    "Automap",              nullptr, "m_auto"},
+   {it_title,        "Automap",              nullptr, "m_auto"},
    {it_gap},
-   {it_info,     "Background and Lines", nullptr, nullptr, MENUITEM_CENTERED},
+   {it_toggle,       "Overlay automap",                 "am_overlay"},
    {it_gap},
-   {it_automap,  "Background color",             "mapcolor_back"},
-   {it_automap,  "Crosshair",                    "mapcolor_hair"},
-   {it_automap,  "Grid",                         "mapcolor_grid"},
-   {it_automap,  "One-sided walls",              "mapcolor_wall"},
-   {it_automap,  "Teleporter",                   "mapcolor_tele"},
-   {it_automap,  "Secret area boundary",         "mapcolor_secr"},
-   {it_automap,  "Exit",                         "mapcolor_exit"},
-   {it_automap,  "Unseen line",                  "mapcolor_unsn"},
+   {it_info,         "Background and Lines", nullptr, nullptr, MENUITEM_CENTERED},
+   {it_gap},
+   {it_automap,      "Background color",             "mapcolor_back"},
+   {it_automap,      "Crosshair",                    "mapcolor_hair"},
+   {it_automap,      "Grid",                         "mapcolor_grid"},
+   {it_automap,      "One-sided walls",              "mapcolor_wall"},
+   {it_automap_opt,  "Teleporter",                   "mapcolor_tele"},
+   {it_automap_opt,  "Secret area boundary",         "mapcolor_secr"},
+   {it_automap_opt,  "Exit",                         "mapcolor_exit"},
+   {it_automap,      "Unseen line",                  "mapcolor_unsn"},
    {it_end}
 };
 
 static menuitem_t mn_automapcoldoor_items[] =
 {
-   {it_title,    "Automap",        nullptr, "m_auto"},
+   {it_title,        "Automap",        nullptr, "m_auto"},
    {it_gap},
-   {it_info,     "Floor and Ceiling Lines", nullptr, nullptr, MENUITEM_CENTERED},
+   {it_info,         "Floor and Ceiling Lines", nullptr, nullptr, MENUITEM_CENTERED},
    {it_gap},
    {it_automap,  "Change in floor height",   "mapcolor_fchg"},
    {it_automap,  "Change in ceiling height", "mapcolor_cchg"},
-   {it_automap,  "Floor and ceiling equal",  "mapcolor_clsd"},
-   {it_automap,  "No change in height",      "mapcolor_flat"},
-   {it_automap,  "Red locked door",          "mapcolor_rdor"},
-   {it_automap,  "Yellow locked door",       "mapcolor_ydor"},
-   {it_automap,  "Blue locked door",         "mapcolor_bdor"},
+   {it_automap_opt,  "Floor and ceiling equal",  "mapcolor_clsd"},
+   {it_automap_opt,  "No change in height",      "mapcolor_flat"},
+   {it_automap_opt,  "Red locked door",          "mapcolor_rdor"},
+   {it_automap_opt,  "Yellow locked door",       "mapcolor_ydor"},
+   {it_automap_opt,  "Blue locked door",         "mapcolor_bdor"},
    {it_end}
 };
 
 static menuitem_t mn_automapcolsprite_items[] =
 {
-   {it_title,    "Automap", nullptr, "m_auto"},
+   {it_title,        "Automap", nullptr, "m_auto"},
    {it_gap},
-   {it_info,     "Sprites", nullptr, nullptr, MENUITEM_CENTERED},
+   {it_info,         "Sprites", nullptr, nullptr, MENUITEM_CENTERED},
    {it_gap},
-   {it_automap,  "Normal objects",  "mapcolor_sprt"},
-   {it_automap,  "Friends",         "mapcolor_frnd"},
-   {it_automap,  "Player arrow",    "mapcolor_sngl"},
-   {it_automap,  "Red key",         "mapcolor_rkey"},
-   {it_automap,  "Yellow key",      "mapcolor_ykey"},
-   {it_automap,  "Blue key",        "mapcolor_bkey"},
+   {it_automap,      "Normal objects",  "mapcolor_sprt"},
+   {it_automap,      "Friends",         "mapcolor_frnd"},
+   {it_automap,      "Player arrow",    "mapcolor_sngl"},
+   {it_automap,      "Red key",         "mapcolor_rkey"},
+   {it_automap,      "Yellow key",      "mapcolor_ykey"},
+   {it_automap,      "Blue key",        "mapcolor_bkey"},
    {it_end}
 };
 
 static menuitem_t mn_automapportal_items[] =
 {
-   {it_title,    "Automap", nullptr, "m_auto"},
+   {it_title,        "Automap", nullptr, "m_auto"},
    {it_gap},
-   {it_info,     "Portals", nullptr, nullptr, MENUITEM_CENTERED},
+   {it_info,         "Portals", nullptr, nullptr, MENUITEM_CENTERED},
    {it_gap},
-   {it_toggle,   "Overlay linked portals", "mapportal_overlay"},
-   {it_automap,  "Overlay line color",     "mapcolor_prtl"},
+   {it_toggle,       "Overlay linked portals", "mapportal_overlay"},
+   {it_automap_opt,  "Overlay line color",     "mapcolor_prtl"},
    {it_end},
 };
 
@@ -2832,7 +2884,7 @@ menu_t menu_automapcol1 =
    &menu_automapcol2,      // next page
    &menu_automapcol1,      // rootpage
    200, 15,                // x,y
-   4,                      // starting item
+   2,                      // starting item
    mf_background,          // fullscreen
    nullptr,
    mn_automap_names,       // TOC stuff
@@ -2924,6 +2976,7 @@ static menuitem_t mn_weapons_items[] =
    {it_toggle,     "Center when firing",             "r_centerfire"},
    {it_toggle,     "Recoil",                         "recoil"},
    {it_toggle,     "Weapon hotkey cycling",          "weapon_hotkey_cycling"},
+   {it_toggle,     "Cycle when holding key",         "weapon_hotkey_holding"},
    {it_toggle,     "Autoaiming",                     "autoaim"},
    {it_gap},
    {it_end},
@@ -3389,7 +3442,7 @@ static menuitem_t mn_function_items[] =
    {it_binding, "Quit",                 "mn_quit"},
    {it_binding, "Gamma correction",     "gamma /"},
    {it_gap},
-   {it_binding, "Join (-recordfromto)", "joindemo"},
+   {it_binding, "Join demo",            "joindemo"},
    {it_end}
 };
 
@@ -3476,6 +3529,7 @@ static menuitem_t mn_automapkeys_items[] =
    {it_binding, "Mark spot",            "map_mark"},
    {it_binding, "Clear spots",          "map_clear"},
    {it_binding, "Show grid",            "map_grid"},
+   {it_binding, "Overlay mode",         "map_overlay"},
    {it_end}
 };
 
@@ -3563,6 +3617,7 @@ static void MN_InitSearchStr()
 // haleyjd: searchable menus
 extern menu_t menu_movekeys;
 extern menu_t menu_mouse;
+extern menu_t menu_gamepad;
 extern menu_t menu_video;
 extern menu_t menu_sound;
 extern menu_t menu_compat1;
@@ -3580,6 +3635,7 @@ static menu_t *mn_search_menus[] =
 {
    &menu_movekeys,
    &menu_mouse,
+   &menu_gamepad,
    &menu_video,
    &menu_sound,
    &menu_compat1,

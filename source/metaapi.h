@@ -527,6 +527,8 @@ public:
    operator size_t () { return getIndex(); }
 };
 
+MetaTable &M_GetTableOrDefault(MetaTable &table, const char *key);
+
 #endif
 
 // EOF

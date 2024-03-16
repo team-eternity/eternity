@@ -34,6 +34,7 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "r_main.h"
+#include "r_sky.h"
 #include "r_state.h"
 #include "s_sndseq.h"
 #include "s_sound.h"
@@ -269,7 +270,7 @@ bool PlatThinker::reTriggerVerticalDoor(bool player)
 // and for some plat types, an amount to raise
 // Returns true if a thinker is started, or restarted from stasis
 //
-bool EV_DoPlat(const line_t *line, plattype_e type, int amount )
+bool EV_DoPlat(const line_t *line, int tag, plattype_e type, int amount )
 {
    PlatThinker *plat;
    int          secnum;
@@ -283,11 +284,11 @@ bool EV_DoPlat(const line_t *line, plattype_e type, int amount )
    switch(type)
    {
    case perpetualRaise:
-      PlatThinker::ActivateInStasis(line->args[0]);
+      PlatThinker::ActivateInStasis(tag);
       break;
 
    case toggleUpDn:
-      PlatThinker::ActivateInStasis(line->args[0]);
+      PlatThinker::ActivateInStasis(tag);
       rtn = true;
       break;
 
@@ -296,7 +297,7 @@ bool EV_DoPlat(const line_t *line, plattype_e type, int amount )
    }
 
    // act on all sectors tagged the same as the activating linedef
-   while((secnum = P_FindSectorFromLineArg0(line, secnum)) >= 0)
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       sec = &sectors[secnum];
 
@@ -311,7 +312,7 @@ bool EV_DoPlat(const line_t *line, plattype_e type, int amount )
 
       plat->type   = type;
       plat->crush  = -1;
-      plat->tag    = line->args[0];
+      plat->tag    = tag;
       plat->sector = sec;
       plat->sector->srf.floor.data = plat; //jff 2/23/98 multiple thinkers
       plat->rnctype = PlatThinker::PRNC_DEFAULT;
@@ -325,7 +326,11 @@ bool EV_DoPlat(const line_t *line, plattype_e type, int amount )
       {
       case raiseToNearestAndChange:
          plat->speed   = PLATSPEED/2;
-         sec->srf.floor.pic = sides[line->sidenum[0]].sector->srf.floor.pic;
+         if(line)
+         {
+            R_CacheIfSkyTexture(sec->srf.floor.pic, sides[line->sidenum[0]].sector->srf.floor.pic);
+            sec->srf.floor.pic = sides[line->sidenum[0]].sector->srf.floor.pic;
+         }
          plat->high    = P_FindNextHighestFloor(sec,sec->srf.floor.height);
          plat->wait    = 0;
          plat->status  = PlatThinker::up;
@@ -336,7 +341,11 @@ bool EV_DoPlat(const line_t *line, plattype_e type, int amount )
 
       case raiseAndChange:
          plat->speed   = PLATSPEED/2;
-         sec->srf.floor.pic = sides[line->sidenum[0]].sector->srf.floor.pic;
+         if(line)
+         {
+            R_CacheIfSkyTexture(sec->srf.floor.pic, sides[line->sidenum[0]].sector->srf.floor.pic);
+            sec->srf.floor.pic = sides[line->sidenum[0]].sector->srf.floor.pic;
+         }
          plat->high    = sec->srf.floor.height + amount*FRACUNIT;
          plat->wait    = 0;
          plat->status  = PlatThinker::up;
@@ -536,7 +545,10 @@ manual_plat:
          plat->status = PlatThinker::up;
          platTypeStr = "EEPlatRaise";
          if(line)
+         {
+            R_CacheIfSkyTexture(sec->srf.floor.pic, sides[line->sidenum[0]].sector->srf.floor.pic);
             sec->srf.floor.pic = sides[line->sidenum[0]].sector->srf.floor.pic;
+         }
          plat->high   = sec->srf.floor.height + args[2] * 8 * FRACUNIT;
          plat->wait = 0; // We need to override the earlier setting of this
          if(plat->high < sec->srf.floor.height)
@@ -549,7 +561,10 @@ manual_plat:
          plat->rnctype = static_cast<PlatThinker::rnctype_e>(args[2]);
          platTypeStr = "EEPlatRaise";
          if(line)
+         {
+            R_CacheIfSkyTexture(sec->srf.floor.pic, sides[line->sidenum[0]].sector->srf.floor.pic);
             sec->srf.floor.pic = sides[line->sidenum[0]].sector->srf.floor.pic;
+         }
          plat->high = P_FindNextHighestFloor(sec, sec->srf.floor.height);
          plat->wait = 0; // We need to override the earlier setting of this
          P_ZeroSectorSpecial(sec);

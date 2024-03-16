@@ -130,11 +130,11 @@ void E_ProcessSndSeqs(cfg_t *cfg);
 void E_ProcessAmbience(cfg_t *cfg);
 bool E_AutoAllocSoundDEHNum(sfxinfo_t *sfx);
 
-#define EDF_SEC_SOUND     "sound"
-#define EDF_SEC_SDELTA    "sounddelta"
-#define EDF_SEC_AMBIENCE  "ambience"
-#define EDF_SEC_SNDSEQ    "soundsequence"
-#define EDF_SEC_ENVIROMGR "enviromanager"
+constexpr const char EDF_SEC_SOUND[]     = "sound";
+constexpr const char EDF_SEC_SDELTA[]    = "sounddelta";
+constexpr const char EDF_SEC_AMBIENCE[]  = "ambience";
+constexpr const char EDF_SEC_SNDSEQ[]    = "soundsequence";
+constexpr const char EDF_SEC_ENVIROMGR[] = "enviromanager";
 #endif
 
 #endif

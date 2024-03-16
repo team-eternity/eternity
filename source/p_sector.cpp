@@ -87,20 +87,37 @@ void SectorThinker::serialize(SaveArchive &arc)
 //
 
 //
-// P_NewSectorActionFromMobj
-//
 // Adds the Mobj's special to the sector
 //
 void P_NewSectorActionFromMobj(Mobj *actor)
 {
-#if 0
    sectoraction_t *newAction = estructalloc(sectoraction_t, 1);
 
-   if(actor->type == E_ThingNumForName("EESectorActionEnter"))
+   newAction->mo = actor;
+   if(actor->type == E_ThingNumForName("EESectorActionExit"))
+      newAction->actionflags = SEC_ACTION_EXIT;
+   else if(actor->type == E_ThingNumForName("EESectorActionEnter"))
+      newAction->actionflags = SEC_ACTION_ENTER;
+   else
    {
-      // TODO
+      efree(newAction);
+      return;
    }
-#endif
+
+   // TODO: Gate off for certain actions that this doesn't apply to if/when they get added
+   if(actor->spawnpoint.options & MTF_AMBUSH)
+      newAction->actionflags |= SEC_ACTION_MONSTER;
+   if(actor->spawnpoint.options & MTF_DORMANT)
+      newAction->actionflags |= SEC_ACTION_PROJECTILE;
+   if(actor->spawnpoint.options & MTF_FRIEND)
+      newAction->actionflags |= SEC_ACTION_NOPLAYER;
+   if(actor->spawnpoint.extOptions & MTF_EX_STAND)
+      newAction->actionflags |= SEC_ACTION_NOTREPEAT;
+
+   sector_t *sec = actor->subsector->sector;
+   newAction->links.insert(newAction, &(sec->actions));
+   if(sec->actions->dllNext)
+      sec->actions->dllData = sec->actions->dllNext->dllData + 1;
 }
 
 //
@@ -246,6 +263,11 @@ void P_SaveSectorPositions()
       si.prevfloorheightf   = sec.srf.floor.heightf;
       si.prevceilingheight  = sec.srf.ceiling.height;
       si.prevceilingheightf = sec.srf.ceiling.heightf;
+
+      if(sec.srf.floor.slope)
+         si.prevfloorslopezf = sec.srf.floor.slope->of.z;
+      if(sec.srf.ceiling.slope)
+         si.prevceilingslopezf = sec.srf.ceiling.slope->of.z;
    }
 }
 
@@ -255,10 +277,16 @@ void P_SaveSectorPositions()
 void P_SaveSectorPosition(const sector_t &sec)
 {
    auto &si = sectorinterps[&sec - sectors];
-   si.prevfloorheight = sec.srf.floor.height;
-   si.prevfloorheightf = sec.srf.floor.heightf;
-   si.prevceilingheight = sec.srf.ceiling.height;
+
+   si.prevfloorheight    = sec.srf.floor.height;
+   si.prevfloorheightf   = sec.srf.floor.heightf;
+   si.prevceilingheight  = sec.srf.ceiling.height;
    si.prevceilingheightf = sec.srf.ceiling.heightf;
+
+   if(sec.srf.floor.slope)
+      si.prevfloorslopezf = sec.srf.floor.slope->of.z;
+   if(sec.srf.ceiling.slope)
+      si.prevceilingslopezf = sec.srf.ceiling.slope->of.z;
 }
 
 //
@@ -272,10 +300,14 @@ void P_SaveSectorPosition(const sector_t &sec, ssurftype_e surf)
       case ssurf_floor:
          si.prevfloorheight = sec.srf.floor.height;
          si.prevfloorheightf = sec.srf.floor.heightf;
+         if(sec.srf.floor.slope)
+            si.prevfloorslopezf = sec.srf.floor.slope->of.z;
          break;
       case ssurf_ceiling:
          si.prevceilingheight = sec.srf.ceiling.height;
          si.prevceilingheightf = sec.srf.ceiling.heightf;
+         if(sec.srf.ceiling.slope)
+            si.prevceilingslopezf = sec.srf.ceiling.slope->of.z;
          break;
    }
 }

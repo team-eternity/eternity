@@ -58,6 +58,7 @@ void A_Punch(actionargs_t *actionargs)
 {
    angle_t angle;
    fixed_t slope;
+   fixed_t range;
    int damage = (P_Random(pr_punch) % 10 + 1) << 1;
    Mobj     *mo     = actionargs->actor;
    player_t *player = mo->player;
@@ -65,7 +66,7 @@ void A_Punch(actionargs_t *actionargs)
    if(!player)
       return;
    
-   if(player->powers[pw_strength])
+   if(player->powers[pw_strength].isActive())
       damage *= 10;
    
    angle = mo->angle;
@@ -73,9 +74,11 @@ void A_Punch(actionargs_t *actionargs)
    // haleyjd 08/05/04: use new function
    angle += P_SubRandom(pr_punchangle) << 18;
 
-   slope = P_DoAutoAim(mo, angle, MELEERANGE);
+   range = mbf21_demo ? player->mo->info->meleerange : MELEERANGE;
 
-   P_LineAttack(mo, angle, MELEERANGE, slope, damage);
+   slope = P_DoAutoAim(mo, angle, range);
+
+   P_LineAttack(mo, angle, range, slope, damage);
 
    if(!clip.linetarget)
       return;
@@ -95,16 +98,19 @@ void A_Saw(actionargs_t *actionargs)
    int     damage = 2 * (P_Random(pr_saw) % 10 + 1);
    Mobj   *mo    = actionargs->actor;
    angle_t angle = mo->angle;
-   
+   fixed_t range;
+
    // haleyjd 08/05/04: use new function
    angle += P_SubRandom(pr_saw) << 18;
 
+   range = (mbf21_demo ? mo->info->meleerange : MELEERANGE) + 1;
+
    // Use meleerange + 1 so that the puff doesn't skip the flash
-   slope = P_DoAutoAim(mo, angle, MELEERANGE + 1);
-   P_LineAttack(mo, angle, MELEERANGE+1, slope, damage);
-   
-   I_StartHaptic(HALHapticInterface::EFFECT_CONSTANT, 4, 108);   
-   
+   slope = P_DoAutoAim(mo, angle, range);
+   P_LineAttack(mo, angle, range, slope, damage);
+
+   I_StartHaptic(HALHapticInterface::EFFECT_CONSTANT, 4, 108);
+
    if(!clip.linetarget)
    {
       P_WeaponSound(mo, sfx_sawful);
@@ -113,7 +119,7 @@ void A_Saw(actionargs_t *actionargs)
 
    P_WeaponSound(mo, sfx_sawhit);
    I_StartHaptic(HALHapticInterface::EFFECT_RUMBLE, 5, 108);
-   
+
    // turn to face target
    angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
 

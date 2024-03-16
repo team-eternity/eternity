@@ -134,7 +134,7 @@ static void G_QuitDoom()
       i_haltimer.Sleep(1500);
    }
 
-   exit(0);
+   I_Exit(0);
 }
 
 CONSOLE_COMMAND(quit, 0)
@@ -232,6 +232,9 @@ CONSOLE_NETVAR(bobbing, player_bobbing, cf_server, netcmd_bobbing) {}
 
 VARIABLE_BOOLEAN(weapon_hotkey_cycling, nullptr, onoff);
 CONSOLE_VARIABLE(weapon_hotkey_cycling, weapon_hotkey_cycling, 0) {}
+
+VARIABLE_TOGGLE(weapon_hotkey_holding, nullptr, onoff);
+CONSOLE_VARIABLE(weapon_hotkey_holding, weapon_hotkey_holding, 0) {}
 
 // turbo scale
 
@@ -397,7 +400,7 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
 
 // restart map (shorthand for doing the map command to the same level)
 
-CONSOLE_NETCMD(restartmap, cf_server, netcmd_restartmap)
+CONSOLE_NETCMD(restartmap, cf_server|cf_level, netcmd_restartmap)
 {
    G_DeferedInitNew(gameskill, gamemapname);
 }
@@ -449,7 +452,7 @@ VARIABLE_BOOLEAN(smooth_turning, nullptr,       onoff);
 CONSOLE_VARIABLE(smooth_turning, smooth_turning, 0) {}
 
 // SoM: mouse accel
-int default_mouse_accel_type = ACCELTYPE_NONE;
+acceltype_e default_mouse_accel_type = ACCELTYPE_NONE;
 const char *accel_options[]={ "off", "linear", "choco", "custom" };
 VARIABLE_INT(mouseAccel_type, &default_mouse_accel_type,
              ACCELTYPE_NONE, ACCELTYPE_MAX, accel_options);
@@ -464,8 +467,8 @@ double default_mouse_accel_value = 2.0;
 VARIABLE_FLOAT(mouseAccel_value, &default_mouse_accel_value, 0.0, 100.0);
 CONSOLE_VARIABLE(mouse_accel_value, mouseAccel_value, 0) {}
 
-VARIABLE_BOOLEAN(novert, nullptr, onoff);
-CONSOLE_VARIABLE(mouse_novert, novert, 0) {}
+VARIABLE_BOOLEAN(mouse_vert, nullptr, onoff);
+CONSOLE_VARIABLE(mouse_vert, mouse_vert, 0) {}
 
 VARIABLE_INT(mouseb_dblc1, nullptr, -1, 2, nullptr);
 CONSOLE_VARIABLE(mouseb_dblc1, mouseb_dblc1, 0) {}
@@ -690,7 +693,7 @@ void G_AddChatMacros()
       // now the command
       command = estructalloc(command_t, 1);
 
-      sprintf(tempstr, "chatmacro%i", i);
+      snprintf(tempstr, sizeof(tempstr), "chatmacro%i", i);
       command->name     = estrdup(tempstr);
       command->type     = ct_variable;
       command->flags    = 0;
@@ -770,35 +773,35 @@ void G_AddAutoloadFiles()
 // names given to cmds
 const char *comp_strings[] =
 {
-  "telefrag",
-  "dropoff",
-  "vile",
-  "pain",
-  "skull",
-  "blazing",
-  "doorlight",
-  "model",
-  "god",
-  "falloff",
-  "floors",
-  "skymap",
-  "pursuit",
-  "doorstuck",
-  "staylift",
-  "zombie",
-  "stairs",
-  "infcheat",
-  "zerotags",
-  "terrain",    // haleyjd: TerrainTypes
-  "respawnfix", //          Nightmare respawn location fix
-  "fallingdmg", //          Players take falling damage
-  "soul",       //          Lost soul bouncing
-  "theights",   //          Thing heights fix
-  "overunder",  //          10/19/02: z checking
-  "planeshoot", //          09/22/07: plane shooting
-  "special",    //          08/29/09: special failure behavior
-  "ninja",      //          04/18/10: ninja spawn
-  "aircontrol"
+   "telefrag",
+   "dropoff",
+   "vile",
+   "pain",
+   "skull",
+   "blazing",
+   "doorlight",
+   "model",
+   "god",
+   "falloff",
+   "floors",
+   "skymap",
+   "pursuit",
+   "doorstuck",
+   "staylift",
+   "zombie",
+   "stairs",
+   "infcheat",
+   "zerotags",
+   "terrain",    // haleyjd: TerrainTypes
+   "respawnfix", //          Nightmare respawn location fix
+   "fallingdmg", //          Players take falling damage
+   "soul",       //          Lost soul bouncing
+   "theights",   //          Thing heights fix
+   "overunder",  //          10/19/02: z checking
+   "planeshoot", //          09/22/07: plane shooting
+   "special",    //          08/29/09: special failure behavior
+   "ninja",      //          04/18/10: ninja spawn
+   "aircontrol"
 };
 
 static void Handler_CompTHeights()

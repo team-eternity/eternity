@@ -112,6 +112,7 @@ int help_friends, default_help_friends;
 int flashing_hom;     // killough 10/98
 
 int weapon_hotkey_cycling; // killough 10/98
+bool weapon_hotkey_holding;   // ioanch 20211113
 
 int monkeys, default_monkeys;
 

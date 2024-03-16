@@ -76,165 +76,188 @@ int UnknownThingType;
 // Thing Keywords
 
 // ID / Type Info
-#define ITEM_TNG_DOOMEDNUM    "doomednum"
-#define ITEM_TNG_DEHNUM       "dehackednum"
-#define ITEM_TNG_COMPATNAME   "compatname"
-#define ITEM_TNG_INHERITS     "inherits"
-#define ITEM_TNG_BASICTYPE    "basictype"
+constexpr const char ITEM_TNG_DOOMEDNUM[]  = "doomednum";
+constexpr const char ITEM_TNG_DEHNUM[]     = "dehackednum";
+constexpr const char ITEM_TNG_COMPATNAME[] = "compatname";
+constexpr const char ITEM_TNG_INHERITS[]   = "inherits";
+constexpr const char ITEM_TNG_BASICTYPE[]  = "basictype";
 
 // States
-#define ITEM_TNG_SPAWNSTATE    "spawnstate"
-#define ITEM_TNG_SEESTATE      "seestate"
-#define ITEM_TNG_PAINSTATE     "painstate"
-#define ITEM_TNG_PAINSTATES    "dmg_painstates"
-#define ITEM_TNG_PNSTATESADD   "dmg_painstates.add"
-#define ITEM_TNG_PNSTATESREM   "dmg_painstates.remove"
-#define ITEM_TNG_MELEESTATE    "meleestate"
-#define ITEM_TNG_MISSILESTATE  "missilestate"
-#define ITEM_TNG_DEATHSTATE    "deathstate"
-#define ITEM_TNG_DEATHSTATES   "dmg_deathstates"
-#define ITEM_TNG_DTHSTATESADD  "dmg_deathstates.add"
-#define ITEM_TNG_DTHSTATESREM  "dmg_deathstates.remove"
-#define ITEM_TNG_XDEATHSTATE   "xdeathstate"
-#define ITEM_TNG_RAISESTATE    "raisestate"
-#define ITEM_TNG_HEALSTATE     "healstate"   // ioanch 20160220
-#define ITEM_TNG_CRASHSTATE    "crashstate"
-#define ITEM_TNG_ACTIVESTATE   "activestate"
-#define ITEM_TNG_INACTIVESTATE "inactivestate"
-#define ITEM_TNG_FIRSTDECSTATE "firstdecoratestate"
+constexpr const char ITEM_TNG_SPAWNSTATE[]    = "spawnstate";
+constexpr const char ITEM_TNG_SEESTATE[]      = "seestate";
+constexpr const char ITEM_TNG_PAINSTATE[]     = "painstate";
+constexpr const char ITEM_TNG_PAINSTATES[]    = "dmg_painstates";
+constexpr const char ITEM_TNG_PNSTATESADD[]   = "dmg_painstates.add";
+constexpr const char ITEM_TNG_PNSTATESREM[]   = "dmg_painstates.remove";
+constexpr const char ITEM_TNG_MELEESTATE[]    = "meleestate";
+constexpr const char ITEM_TNG_MISSILESTATE[]  = "missilestate";
+constexpr const char ITEM_TNG_DEATHSTATE[]    = "deathstate";
+constexpr const char ITEM_TNG_DEATHSTATES[]   = "dmg_deathstates";
+constexpr const char ITEM_TNG_DTHSTATESADD[]  = "dmg_deathstates.add";
+constexpr const char ITEM_TNG_DTHSTATESREM[]  = "dmg_deathstates.remove";
+constexpr const char ITEM_TNG_XDEATHSTATE[]   = "xdeathstate";
+constexpr const char ITEM_TNG_RAISESTATE[]    = "raisestate";
+constexpr const char ITEM_TNG_HEALSTATE[]     = "healstate";   // ioanch 20160220
+constexpr const char ITEM_TNG_CRASHSTATE[]    = "crashstate";
+constexpr const char ITEM_TNG_ACTIVESTATE[]   = "activestate";
+constexpr const char ITEM_TNG_INACTIVESTATE[] = "inactivestate";
+constexpr const char ITEM_TNG_FIRSTDECSTATE[] = "firstdecoratestate";
 
 // DECORATE state block
-#define ITEM_TNG_STATES        "states"
+constexpr const char ITEM_TNG_STATES[]        = "states";
 
 // Sounds
-#define ITEM_TNG_SEESOUND      "seesound"
-#define ITEM_TNG_ATKSOUND      "attacksound"
-#define ITEM_TNG_PAINSOUND     "painsound"
-#define ITEM_TNG_DEATHSOUND    "deathsound"
-#define ITEM_TNG_ACTIVESOUND   "activesound"
-#define ITEM_TNG_ACTIVATESND   "activatesound"
-#define ITEM_TNG_DEACTIVATESND "deactivatesound"
+constexpr const char ITEM_TNG_SEESOUND[]      = "seesound";
+constexpr const char ITEM_TNG_ATKSOUND[]      = "attacksound";
+constexpr const char ITEM_TNG_PAINSOUND[]     = "painsound";
+constexpr const char ITEM_TNG_DEATHSOUND[]    = "deathsound";
+constexpr const char ITEM_TNG_ACTIVESOUND[]   = "activesound";
+constexpr const char ITEM_TNG_ACTIVATESND[]   = "activatesound";
+constexpr const char ITEM_TNG_DEACTIVATESND[] = "deactivatesound";
+constexpr const char ITEM_TNG_RIPSOUND[]      = "ripsound";
 
 // Basic Stats
-#define ITEM_TNG_SPAWNHEALTH  "spawnhealth"
-#define ITEM_TNG_GIBHEALTH    "gibhealth"
-#define ITEM_TNG_REACTTIME    "reactiontime"
-#define ITEM_TNG_PAINCHANCE   "painchance"
-#define ITEM_TNG_SPEED        "speed"
-#define ITEM_TNG_FASTSPEED    "fastspeed"
-#define ITEM_TNG_RADIUS       "radius"
-#define ITEM_TNG_HEIGHT       "height"
-#define ITEM_TNG_C3DHEIGHT    "correct_height"
-#define ITEM_TNG_MASS         "mass"
-#define ITEM_TNG_RESPAWNTIME  "respawntime"
-#define ITEM_TNG_RESPCHANCE   "respawnchance"
-#define ITEM_TNG_AIMSHIFT     "aimshift"
+constexpr const char ITEM_TNG_MISSILETYPE[]  = "missiletype";
+constexpr const char ITEM_TNG_SPAWNHEALTH[]  = "spawnhealth";
+constexpr const char ITEM_TNG_GIBHEALTH[]    = "gibhealth";
+constexpr const char ITEM_TNG_REACTTIME[]    = "reactiontime";
+constexpr const char ITEM_TNG_MELEERANGE[]   = "meleerange";
+constexpr const char ITEM_TNG_PAINCHANCE[]   = "painchance";
+constexpr const char ITEM_TNG_SPEED[]        = "speed";
+constexpr const char ITEM_TNG_FASTSPEED[]    = "fastspeed";
+constexpr const char ITEM_TNG_RADIUS[]       = "radius";
+constexpr const char ITEM_TNG_HEIGHT[]       = "height";
+constexpr const char ITEM_TNG_C3DHEIGHT[]    = "correct_height";
+constexpr const char ITEM_TNG_MASS[]         = "mass";
+constexpr const char ITEM_TNG_RESPAWNTIME[]  = "respawntime";
+constexpr const char ITEM_TNG_RESPCHANCE[]   = "respawnchance";
+constexpr const char ITEM_TNG_AIMSHIFT[]     = "aimshift";
 
 // Special Spawning
-#define ITEM_TNG_COLSPAWN     "collectionspawn"
-#define ITEM_TNG_ITEMRESPAT   "itemrespawnat"
+constexpr const char ITEM_TNG_COLSPAWN[]     = "collectionspawn";
+constexpr const char ITEM_TNG_ITEMRESPAT[]   = "itemrespawnat";
 
 // Damage Properties
-#define ITEM_TNG_DAMAGE       "damage"
-#define ITEM_TNG_DAMAGEMOD    "damagemod"
-#define ITEM_TNG_DMGSPECIAL   "dmgspecial"
-#define ITEM_TNG_DAMAGEFACTOR "damagefactor"
-#define ITEM_TNG_REMDMGFACTOR "damagefactor.remove"
-#define ITEM_TNG_CLRDMGFACTOR "cleardamagefactors"
-#define ITEM_TNG_TOPDAMAGE    "topdamage"
-#define ITEM_TNG_TOPDMGMASK   "topdamagemask"
-#define ITEM_TNG_MOD          "mod"
-#define ITEM_TNG_OBIT1        "obituary_normal"
-#define ITEM_TNG_OBIT2        "obituary_melee"
+constexpr const char ITEM_TNG_DAMAGE[]       = "damage";
+constexpr const char ITEM_TNG_DAMAGEMOD[]    = "damagemod";
+constexpr const char ITEM_TNG_DMGSPECIAL[]   = "dmgspecial";
+constexpr const char ITEM_TNG_DAMAGEFACTOR[] = "damagefactor";
+constexpr const char ITEM_TNG_REMDMGFACTOR[] = "damagefactor.remove";
+constexpr const char ITEM_TNG_CLRDMGFACTOR[] = "cleardamagefactors";
+constexpr const char ITEM_TNG_TOPDAMAGE[]    = "topdamage";
+constexpr const char ITEM_TNG_TOPDMGMASK[]   = "topdamagemask";
+constexpr const char ITEM_TNG_MOD[]          = "mod";
+constexpr const char ITEM_TNG_OBIT1[]        = "obituary_normal";
+constexpr const char ITEM_TNG_OBIT2[]        = "obituary_melee";
 
 // Pain/Death Properties
-#define ITEM_TNG_BLOODCOLOR   "bloodcolor"
-#define ITEM_TNG_NUKESPEC     "nukespecial"
-#define ITEM_TNG_DROPTYPE     "droptype"
-#define ITEM_TNG_DROPITEM     "dropitem"
-#define ITEM_TNG_REMDROPITEM  "dropitem.remove"
-#define ITEM_TNG_CLRDROPITEM  "cleardropitems"
+constexpr const char ITEM_TNG_BLOODCOLOR[]   = "bloodcolor";
+constexpr const char ITEM_TNG_NUKESPEC[]     = "nukespecial";
+constexpr const char ITEM_TNG_DROPTYPE[]     = "droptype";
+constexpr const char ITEM_TNG_DROPITEM[]     = "dropitem";
+constexpr const char ITEM_TNG_REMDROPITEM[]  = "dropitem.remove";
+constexpr const char ITEM_TNG_CLRDROPITEM[]  = "cleardropitems";
 
 // Flags
-#define ITEM_TNG_CFLAGS       "cflags"
-#define ITEM_TNG_ADDFLAGS     "addflags"
-#define ITEM_TNG_REMFLAGS     "remflags"
-#define ITEM_TNG_FLAGS        "flags"
-#define ITEM_TNG_FLAGS2       "flags2"
-#define ITEM_TNG_FLAGS3       "flags3"
-#define ITEM_TNG_FLAGS4       "flags4"
-#define ITEM_TNG_FLAGS5       "flags5"
-#define ITEM_TNG_PARTICLEFX   "particlefx"
+constexpr const char ITEM_TNG_CFLAGS[]       = "cflags";
+constexpr const char ITEM_TNG_ADDFLAGS[]     = "addflags";
+constexpr const char ITEM_TNG_REMFLAGS[]     = "remflags";
+constexpr const char ITEM_TNG_FLAGS[]        = "flags";
+constexpr const char ITEM_TNG_FLAGS2[]       = "flags2";
+constexpr const char ITEM_TNG_FLAGS3[]       = "flags3";
+constexpr const char ITEM_TNG_FLAGS4[]       = "flags4";
+constexpr const char ITEM_TNG_FLAGS5[]       = "flags5";
+constexpr const char ITEM_TNG_PARTICLEFX[]   = "particlefx";
 
 // Graphic Properites
-#define ITEM_TNG_TRANSLUC     "translucency"
-#define ITEM_TNG_TRANMAP      "tranmap"
-#define ITEM_TNG_COLOR        "translation"
-#define ITEM_TNG_SKINSPRITE   "skinsprite"
-#define ITEM_TNG_DEFSPRITE    "defaultsprite"
-#define ITEM_TNG_AVELOCITY    "alphavelocity"
-#define ITEM_TNG_XSCALE       "xscale"
-#define ITEM_TNG_YSCALE       "yscale"
+constexpr const char ITEM_TNG_TRANSLUC[]     = "translucency";
+constexpr const char ITEM_TNG_TRANMAP[]      = "tranmap";
+constexpr const char ITEM_TNG_COLOR[]        = "translation";
+constexpr const char ITEM_TNG_SKINSPRITE[]   = "skinsprite";
+constexpr const char ITEM_TNG_DEFSPRITE[]    = "defaultsprite";
+constexpr const char ITEM_TNG_AVELOCITY[]    = "alphavelocity";
+constexpr const char ITEM_TNG_XSCALE[]       = "xscale";
+constexpr const char ITEM_TNG_YSCALE[]       = "yscale";
 
 // Title properties
-#define ITEM_TNG_TITLE_SUPER     "superclass"
-#define ITEM_TNG_TITLE_DOOMEDNUM "doomednum"
-#define ITEM_TNG_TITLE_DEHNUM    "dehackednum"
+constexpr const char ITEM_TNG_TITLE_SUPER[]     = "superclass";
+constexpr const char ITEM_TNG_TITLE_DOOMEDNUM[] = "doomednum";
+constexpr const char ITEM_TNG_TITLE_DEHNUM[]    = "dehackednum";
 
 // ACS Spawn Data Sub-Block
-#define ITEM_TNG_ACS_SPAWN    "acs_spawndata"
-#define ITEM_TNG_ACS_NUM      "num"
-#define ITEM_TNG_ACS_MODES    "modes"
+constexpr const char ITEM_TNG_ACS_SPAWN[]    = "acs_spawndata";
+constexpr const char ITEM_TNG_ACS_NUM[]      = "num";
+constexpr const char ITEM_TNG_ACS_MODES[]    = "modes";
 
 // Damage factor multi-value property internal fields
-#define ITEM_TNG_DMGF_MODNAME "mod"
-#define ITEM_TNG_DMGF_FACTOR  "factor"
+constexpr const char ITEM_TNG_DMGF_MODNAME[] = "mod";
+constexpr const char ITEM_TNG_DMGF_FACTOR[]  = "factor";
 
 // DropItem multi-value property internal fields
-#define ITEM_TNG_DROPITEM_ITEM   "item"
-#define ITEM_TNG_DROPITEM_CHANCE "chance"
-#define ITEM_TNG_DROPITEM_AMOUNT "amount"
-#define ITEM_TNG_DROPITEM_TOSS   "toss"
+constexpr const char ITEM_TNG_DROPITEM_ITEM[]   = "item";
+constexpr const char ITEM_TNG_DROPITEM_CHANCE[] = "chance";
+constexpr const char ITEM_TNG_DROPITEM_AMOUNT[] = "amount";
+constexpr const char ITEM_TNG_DROPITEM_TOSS[]   = "toss";
 
 // Collection spawn multi-value property internal fields
-#define ITEM_TNG_COLSPAWN_TYPE   "type"
-#define ITEM_TNG_COLSPAWN_SP     "spchance"
-#define ITEM_TNG_COLSPAWN_COOP   "coopchance"
-#define ITEM_TNG_COLSPAWN_DM     "dmchance"
+constexpr const char ITEM_TNG_COLSPAWN_TYPE[]   = "type";
+constexpr const char ITEM_TNG_COLSPAWN_SP[]     = "spchance";
+constexpr const char ITEM_TNG_COLSPAWN_COOP[]   = "coopchance";
+constexpr const char ITEM_TNG_COLSPAWN_DM[]     = "dmchance";
 
 // Thing Delta Keywords
-#define ITEM_DELTA_NAME "name"
+constexpr const char ITEM_DELTA_NAME[] = "name";
 
 // Blood Properties
-#define ITEM_TNG_BLOODNORM   "bloodtype.normal"
-#define ITEM_TNG_BLOODIMPACT "bloodtype.impact"
-#define ITEM_TNG_BLOODRIP    "bloodtype.rip"
-#define ITEM_TNG_BLOODCRUSH  "bloodtype.crush"
+constexpr const char ITEM_TNG_BLOODNORM[]   = "bloodtype.normal";
+constexpr const char ITEM_TNG_BLOODIMPACT[] = "bloodtype.impact";
+constexpr const char ITEM_TNG_BLOODRIP[]    = "bloodtype.rip";
+constexpr const char ITEM_TNG_BLOODCRUSH[]  = "bloodtype.crush";
 
-#define ITEM_TNG_BLOODBEHAV  "bloodbehavior"
-#define ITEM_TNG_CLRBLOODBEH "clearbloodbehaviors"
+constexpr const char ITEM_TNG_BLOODBEHAV[]  = "bloodbehavior";
+constexpr const char ITEM_TNG_CLRBLOODBEH[] = "clearbloodbehaviors";
 
-#define ITEM_TNG_BB_ACTION   "action"
-#define ITEM_TNG_BB_BEHAVIOR "behavior"
+constexpr const char ITEM_TNG_BB_ACTION[]   = "action";
+constexpr const char ITEM_TNG_BB_BEHAVIOR[] = "behavior";
 
 // Pickup Property
-#define ITEM_TNG_PFX_PICKUPFX  "pickupeffect"
-#define ITEM_TNG_PFX_CLRPICKFX "clearpickupeffect"
-#define ITEM_TNG_PFX_EFFECTS   "effects"
-#define ITEM_TNG_PFX_CHANGEWPN "changeweapon"
-#define ITEM_TNG_PFX_MSG       "message"
-#define ITEM_TNG_PFX_SOUND     "sound"
-#define ITEM_TNG_PFX_FLAGS     "flags"
+constexpr const char ITEM_TNG_PFX_PICKUPFX[]  = "pickupeffect";
+constexpr const char ITEM_TNG_PFX_CLRPICKFX[] = "clearpickupeffect";
+constexpr const char ITEM_TNG_PFX_EFFECTS[]   = "effects";
+constexpr const char ITEM_TNG_PFX_CHANGEWPN[] = "changeweapon";
+constexpr const char ITEM_TNG_PFX_MSG[]       = "message";
+constexpr const char ITEM_TNG_PFX_SOUND[]     = "sound";
+constexpr const char ITEM_TNG_PFX_FLAGS[]     = "flags";
+
+// Projectile Trail Properties
+#define ITEM_TNG_TRAILTYPE     "trail.type"
+#define ITEM_TNG_TRAILZOFFSET  "trail.zoffset"
+#define ITEM_TNG_TRAILCHANCE   "trail.spawnchance"
+#define ITEM_TNG_TRAILSPARSITY "trail.sparsity"
+
+// Projectile/Hitscan properties
+constexpr const char ITEM_TNG_MISSILEHEIGHT[] = "missileheight";
+constexpr const char ITEM_TNG_BULLETZOFFSET[] = "bulletzoffset";
 
 //
 // Thing groups
 //
-#define ITEM_TGROUP_FLAGS "flags"
-#define ITEM_TGROUP_TYPES "types"
+constexpr const char ITEM_TGROUP_FLAGS[] = "flags";
+constexpr const char ITEM_TGROUP_TYPES[] = "types";
 
 //
 // Field-Specific Data
 //
+
+// Missile types
+// currently searched linearly
+// matching enum values in p_mobj.h
+
+static const char* missileTypes[NUMMISSILETYPES] =
+{
+   "Default",
+   "RavenFast"
+};
 
 // Particle effects flags
 
@@ -304,7 +327,7 @@ static const char *inflictorTypes[INFLICTOR_NUMTYPES] =
 // types is that they can change, and things dependent upon them will be 
 // automatically updated for new versions of the engine.
 //
-static const char *BasicTypeNames[] =
+static constexpr const char *BasicTypeNames[] =
 {
    "Monster",           // normal walking monster with no fancy features
    "FlyingMonster",     // normal flying monster
@@ -325,7 +348,7 @@ static const char *BasicTypeNames[] =
    "ControlPointGrav",  // a control point with gravity
 };
 
-#define NUMBASICTYPES earrlen(BasicTypeNames)
+constexpr int NUMBASICTYPES = earrlen(BasicTypeNames);
 
 struct basicttype_t
 {
@@ -552,6 +575,8 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_ACTIVESOUND,     "none",        CFGF_NONE), \
    CFG_STR(ITEM_TNG_ACTIVATESND,     "none",        CFGF_NONE), \
    CFG_STR(ITEM_TNG_DEACTIVATESND,   "none",        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_RIPSOUND,        "none",        CFGF_NONE), \
+   CFG_STR(ITEM_TNG_MISSILETYPE,     "default",     CFGF_NONE), \
    CFG_INT(ITEM_TNG_SPAWNHEALTH,     1000,          CFGF_NONE), \
    CFG_INT(ITEM_TNG_GIBHEALTH,       0,             CFGF_NONE), \
    CFG_INT(ITEM_TNG_REACTTIME,       8,             CFGF_NONE), \
@@ -589,6 +614,7 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_FLOAT(ITEM_TNG_RADIUS,        20.0f,         CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_HEIGHT,        16.0f,         CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_C3DHEIGHT,     0.0f,          CFGF_NONE), \
+   CFG_FLOAT(ITEM_TNG_MELEERANGE,    FPMELEERANGE,  CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_AVELOCITY,     0.0f,          CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_XSCALE,        1.0f,          CFGF_NONE), \
    CFG_FLOAT(ITEM_TNG_YSCALE,        1.0f,          CFGF_NONE), \
@@ -610,6 +636,12 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_BLOODCRUSH,      "",            CFGF_NONE                ), \
    CFG_SEC(ITEM_TNG_PFX_PICKUPFX,    tngpfx_opts,   CFGF_NOCASE              ), \
    CFG_FLAG(ITEM_TNG_PFX_CLRPICKFX,  0,             CFGF_NONE                ), \
+   CFG_STR(ITEM_TNG_TRAILTYPE, "", CFGF_NONE), \
+   CFG_FLOAT(ITEM_TNG_TRAILZOFFSET, -8.0f, CFGF_NONE), \
+   CFG_INT(ITEM_TNG_TRAILCHANCE, 256, CFGF_NONE), \
+   CFG_INT(ITEM_TNG_TRAILSPARSITY, 0, CFGF_NONE), \
+   CFG_FLOAT(ITEM_TNG_MISSILEHEIGHT, 32.0f, CFGF_NONE), \
+   CFG_FLOAT(ITEM_TNG_BULLETZOFFSET, 8.0f, CFGF_NONE), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
@@ -633,6 +665,7 @@ static dehflags_t tgroup_kinds[] =
    { "PROJECTILEALLIANCE", TGF_PROJECTILEALLIANCE },
    { "DAMAGEIGNORE",       TGF_DAMAGEIGNORE       },
    { "INHERITED",          TGF_INHERITED          },
+   { "NOSPLASHDAMAGE",     TGF_NOSPLASHDAMAGE     },
    { nullptr,              0                      }
 };
 
@@ -664,9 +697,26 @@ public:
    explicit ThingGroup(const char *inname) : name(inname), link(), flags()
    {
    }
+   ThingGroup(int idnum, unsigned flag) : link(), flags()
+   {
+      coding.idnum = idnum;
+      coding.flag = flag;
+   }
 
    qstring name;
    DLListItem<ThingGroup> link;
+
+   // MBF21 number-based addressing
+   struct mbf21coding_t
+   {
+      int32_t idnum;
+      uint32_t flag;
+   };
+   union
+   {
+      mbf21coding_t coding;
+      int64_t num;
+   };
 
    unsigned flags;
    PODCollection<int> types;
@@ -698,7 +748,7 @@ struct thinggrouppair_t
 // number of types without causing significant hash collisions.
 
 // Number of chains
-#define NUMTHINGCHAINS 307
+constexpr int NUMTHINGCHAINS = 307;
 
 // hash by name
 static EHashTable<mobjinfo_t, ENCStringHashKey, 
@@ -715,6 +765,8 @@ static EHashTable<mobjinfo_t, EIntHashKey,
 // Thing group
 static EHashTable<ThingGroup, ENCQStrHashKey,
                   &ThingGroup::name, &ThingGroup::link> thinggroup_namehash(53);
+static EHashTable<ThingGroup, EInt64HashKey,
+                  &ThingGroup::num, &ThingGroup::link> thinggroup_mbf21hash(53);
 
 static EHashTable<thinggrouppair_t, EInt64HashKey,
      &thinggrouppair_t::key, &thinggrouppair_t::link> thinggrouppairs(NUMTHINGCHAINS);
@@ -1530,7 +1582,9 @@ static void E_ProcessDecorateStateList(mobjinfo_t *mi, const char *str,
 {
    edecstateout_t *dso;
 
-   if(!(dso = E_ParseDecorateStates(str, firststate)))
+   qstring owner;
+   owner.Printf(strlen(mi->name) + 4, "t{%s}", mi->name);
+   if(!(dso = E_ParseDecorateStates(owner.constPtr(), str, firststate)))
    {
       E_EDFLoggedWarning(2, "Warning: couldn't attach DECORATE states to thing '%s'.\n",
                          mi->name);
@@ -1784,6 +1838,26 @@ static void E_processItemRespawnAt(mobjinfo_t *mi, const char *name)
    }
    else
       mi->meta->removeStringNR("itemrespawnat");
+}
+
+//
+// Projectile Trail
+//
+static void E_processTrailType(mobjinfo_t *mi, const char *name)
+{
+   if(*name)
+   {
+      mi->trailthingnum = E_ThingNumForName(name);
+
+      if(mi->trailthingnum < 0)
+      {
+         E_EDFLoggedWarning(2,
+            "Warning: Unknown thingtype '%s' specified as trail.type for '%s'\n",
+            name, mi->name);
+      }
+   }
+   else
+      mi->trailthingnum = -1;
 }
 
 //
@@ -2124,6 +2198,8 @@ static int E_TranMapCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
       *target = -1;
       return 0;
    }
+   else
+      wGlobalDir.cacheLumpNum(trnum, PU_CACHE);
    *target = trnum;
 
    return 0;
@@ -2229,6 +2305,7 @@ static void E_CopyThing(int num, int pnum)
    MetaTable  *meta;
    int         index;
    int         generation;
+   bool        dsdhacked;
    
    this_mi = mobjinfo[num];
 
@@ -2242,6 +2319,7 @@ static void E_CopyThing(int num, int pnum)
    meta       = this_mi->meta;
    index      = this_mi->index;
    generation = this_mi->generation;
+   dsdhacked  = this_mi->dsdhacked;
    
    // copy from source to destination
    memcpy(this_mi, mobjinfo[pnum], sizeof(mobjinfo_t));
@@ -2269,11 +2347,79 @@ static void E_CopyThing(int num, int pnum)
    this_mi->dehnum     = dehnum;
    this_mi->index      = index;
    this_mi->generation = generation;
+   this_mi->dsdhacked  = dsdhacked;
 
    // other fields not inherited:
 
    // force doomednum of inheriting type to -1
    this_mi->doomednum = -1;
+}
+
+//
+// Fetches a thingnum, or creates a new one if it doesn't exist.
+// DSDHacked demands this
+//
+int E_GetAddThingNumForDEHNum(int dehnum, bool forceAdd)
+{
+   mobjinfo_t* mi = nullptr;
+   int thingNum = E_ThingNumForDEHNum(dehnum);
+
+   if(thingNum == -1)
+   {
+      unsigned int newThing = 0; // index of new thingtype
+      // allocate mobjinfo_t structure for the new thingtypes
+      mi = estructalloc(mobjinfo_t, 1);
+
+      // add space to the mobjinfo array
+      newThing = NUMMOBJTYPES;
+
+      E_ReallocThings(1);
+
+      // set pointer in mobjinfo[] to the proper structure
+      mobjinfo[newThing] = mi;
+      thingNum = newThing;
+   }
+   else if(forceAdd && !mobjinfo[thingNum]->dsdhacked)
+   {
+      mi = mobjinfo[thingNum];
+
+      thing_namehash.removeObject(mi);
+      thing_cnamehash.removeObject(mi);
+      thing_dehhash.removeObject(mi);
+
+      if(mi->name)
+         efree(mi->name);
+      if(mi->compatname)
+         efree(mi->compatname);
+      if(mi->pickupfx)
+         efree(mi->pickupfx);
+      delete mi->meta;
+
+      *mi = {};
+   }
+
+   if(mi)
+   {
+      qstring name;
+      name.Printf(0, "_DSDHackedThing%d", dehnum);
+
+      mi->dsdhacked = true;
+
+      // set self-referential index member, allocate a
+      // metatable, set dehnum, and set name and melee range.
+      mi->index  = thingNum;
+      mi->meta   = new MetaTable("mobjinfo");
+      mi->dehnum = dehnum;
+      mi->name   = name.duplicate();
+
+      const int templateNum = E_GetThingNumForName("_DSDHackedThingtypeTemplate");
+      E_CopyThing(thingNum, templateNum);
+
+      thing_namehash.addObject(mi);
+      thing_dehhash.addObject(mi);
+   }
+
+   return thingNum;
 }
 
 struct thingtitleprops_t
@@ -2329,26 +2475,11 @@ static int E_resolveParentThingType(cfg_t *thingsec,
    return pnum;
 }
 
-// IS_SET: this macro tests whether or not a particular field should
-// be set. When applying deltas, we should not retrieve defaults.
-// 01/27/04: Also, if inheritance is taking place, we should not
-// retrieve defaults.
-
-#undef  IS_SET
-#define IS_SET(name) ((def && !inherits) || cfg_size(thingsec, (name)) > 0)
-
-// Same as above, but also considers if the basictype has set fields in the thing.
-// In that case, fields which are affected by basictype don't set defaults unless
-// they are explicitly specified.
-
-#define IS_SET_BT(name) \
-   ((def && !inherits && !hasbtype) || cfg_size(thingsec, (name)) > 0)
-
 //
 // Generalized code to process the data for a single thing type
 // structure. Doubles as code for thingtype and thingdelta.
 //
-void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
+void E_ProcessThing(int i, cfg_t *const thingsec, cfg_t *pcfg, const bool def)
 {
    double tempfloat;
    int tempint;
@@ -2357,6 +2488,20 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    bool cflags   = false;
    bool hasbtype = false;
    thingtitleprops_t titleprops;
+
+   // Tests whether or not a particular field should be set.
+   // When applying deltas, we should not retrieve defaults.
+   // Also, if inheritance is taking place, we should not
+   const auto IS_SET = [def, &inherits, thingsec](const char *const name) -> bool {
+      return (def && !inherits) || cfg_size(thingsec, (name)) > 0;
+   };
+
+   // Same as above, but also considers if the basictype has set fields in the thing.
+   // In that case, fields which are affected by basictype don't set defaults unless
+   // they are explicitly specified.
+   const auto IS_SET_BT = [def, &inherits, &hasbtype, thingsec](const char *const name) -> bool {
+      return (def && !inherits && !hasbtype) || cfg_size(thingsec, (name)) > 0;
+   };
 
    // if thingsec is null, we are in the situation of inheriting from a thing
    // that was processed in a previous EDF generation, so no processing is
@@ -2551,55 +2696,69 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    if(IS_SET(ITEM_TNG_SEESOUND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_SEESOUND);
-      E_ThingSound(tempstr, ITEM_TNG_SEESOUND, i,
-                   &(mobjinfo[i]->seesound));
+      E_ThingSound(tempstr, ITEM_TNG_SEESOUND, i, &(mobjinfo[i]->seesound));
    }
 
    // process attacksound
    if(IS_SET(ITEM_TNG_ATKSOUND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_ATKSOUND);
-      E_ThingSound(tempstr, ITEM_TNG_ATKSOUND, i,
-                   &(mobjinfo[i]->attacksound));
+      E_ThingSound(tempstr, ITEM_TNG_ATKSOUND, i, &(mobjinfo[i]->attacksound));
    }
 
    // process painsound
    if(IS_SET(ITEM_TNG_PAINSOUND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_PAINSOUND);
-      E_ThingSound(tempstr, ITEM_TNG_PAINSOUND, i,
-                   &(mobjinfo[i]->painsound));
+      E_ThingSound(tempstr, ITEM_TNG_PAINSOUND, i, &(mobjinfo[i]->painsound));
    }
 
    // process deathsound
    if(IS_SET(ITEM_TNG_DEATHSOUND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_DEATHSOUND);
-      E_ThingSound(tempstr, ITEM_TNG_DEATHSOUND, i,
-                   &(mobjinfo[i]->deathsound));
+      E_ThingSound(tempstr, ITEM_TNG_DEATHSOUND, i, &(mobjinfo[i]->deathsound));
    }
 
    // process activesound
    if(IS_SET(ITEM_TNG_ACTIVESOUND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_ACTIVESOUND);
-      E_ThingSound(tempstr, ITEM_TNG_ACTIVESOUND, i,
-                   &(mobjinfo[i]->activesound));
+      E_ThingSound(tempstr, ITEM_TNG_ACTIVESOUND, i, &(mobjinfo[i]->activesound));
    }
 
    // 3/19/11: process activatesound/deactivatesound
    if(IS_SET(ITEM_TNG_ACTIVATESND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_ACTIVATESND);
-      E_ThingSound(tempstr, ITEM_TNG_ACTIVATESND, i,
-                   &(mobjinfo[i]->activatesound));
+      E_ThingSound(tempstr, ITEM_TNG_ACTIVATESND, i, &(mobjinfo[i]->activatesound));
    }
 
    if(IS_SET(ITEM_TNG_DEACTIVATESND))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_DEACTIVATESND);
-      E_ThingSound(tempstr, ITEM_TNG_DEACTIVATESND, i,
-                   &(mobjinfo[i]->deactivatesound));
+      E_ThingSound(tempstr, ITEM_TNG_DEACTIVATESND, i, &(mobjinfo[i]->deactivatesound));
+   }
+
+   if(IS_SET(ITEM_TNG_MISSILETYPE))
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_MISSILETYPE);
+      tempint = E_StrToNumLinear(missileTypes, NUMMISSILETYPES, tempstr);
+
+      if(tempint == NUMMISSILETYPES)
+      {
+         E_EDFLoggedErr(2, 
+            "E_ProcessThing: thing '%s': invalid missiletype '%s'\n",
+            mobjinfo[i]->name, tempstr);
+      }
+
+      mobjinfo[i]->missiletype = tempint;
+   }
+
+   if(IS_SET(ITEM_TNG_RIPSOUND))
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_RIPSOUND);
+      E_ThingSound(tempstr, ITEM_TNG_RIPSOUND, i, &(mobjinfo[i]->ripsound));
    }
 
    // ******************************* METRICS ********************************
@@ -2668,6 +2827,10 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       tempfloat = cfg_getfloat(thingsec, ITEM_TNG_C3DHEIGHT);
       mobjinfo[i]->c3dheight = (int)(tempfloat * FRACUNIT);
    }
+
+   // process melee range
+   if(IS_SET(ITEM_TNG_MELEERANGE))
+      mobjinfo[i]->meleerange = M_DoubleToFixed(cfg_getfloat(thingsec, ITEM_TNG_MELEERANGE));
 
    // process mass
    if(IS_SET(ITEM_TNG_MASS))
@@ -3082,6 +3245,34 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       }
    }
 
+   // [XA] 02-22-2020: process projectile trail fields
+   if(IS_SET(ITEM_TNG_TRAILTYPE))
+      E_processTrailType(mobjinfo[i], cfg_getstr(thingsec, ITEM_TNG_TRAILTYPE));
+
+   if(IS_SET(ITEM_TNG_TRAILZOFFSET))
+   {
+      tempfloat = cfg_getfloat(thingsec, ITEM_TNG_TRAILZOFFSET);
+      mobjinfo[i]->trailzoffset = (int)(tempfloat * FRACUNIT);
+   }
+
+   if(IS_SET(ITEM_TNG_TRAILCHANCE))
+      mobjinfo[i]->trailchance = cfg_getint(thingsec, ITEM_TNG_TRAILCHANCE);
+
+   if(IS_SET(ITEM_TNG_TRAILSPARSITY))
+      mobjinfo[i]->trailsparsity = cfg_getint(thingsec, ITEM_TNG_TRAILSPARSITY);
+   
+   if(IS_SET(ITEM_TNG_MISSILEHEIGHT))
+   {
+      tempfloat = cfg_getfloat(thingsec, ITEM_TNG_MISSILEHEIGHT);
+      mobjinfo[i]->missileheight = M_FloatToFixed(tempfloat);
+   }
+   
+   if(IS_SET(ITEM_TNG_BULLETZOFFSET))
+   {
+      tempfloat = cfg_getfloat(thingsec, ITEM_TNG_BULLETZOFFSET);
+      mobjinfo[i]->bulletzoffset = M_FloatToFixed(tempfloat);
+   }
+
    // Process DECORATE state block
    E_ProcessDecorateStatesRecursive(thingsec, i, false);
 }
@@ -3114,6 +3305,7 @@ void E_ProcessThings(cfg_t *cfg)
    {
      for(i = 0; i < ACS_NUM_THINGTYPES; i++)
         ACS_thingtypes[i] = UnknownThingType;
+     firsttime = false;
    }
 
    for(i = 0; i < numthings; i++)
@@ -3154,16 +3346,73 @@ static bool E_mobjTypeIsDescendantOf(mobjtype_t low, mobjtype_t high)
 }
 
 //
+// Get thing group pair from two types
+//
+static thinggrouppair_t *E_getThingGroupPair(mobjtype_t type1, mobjtype_t type2)
+{
+   mobjtype_t min = type1 < type2 ? type1 : type2;
+   mobjtype_t max = type1 > type2 ? type1 : type2;
+   int64_t key = (int64_t)min | (int64_t)max << 32;
+   thinggrouppair_t *proj = thinggrouppairs.objectForKey(key);
+   if (!proj)
+   {
+      proj = estructalloc(thinggrouppair_t, 1);
+      proj->types[0] = min;
+      proj->types[1] = max;
+      thinggrouppairs.addObject(proj);
+   }
+   return proj;
+}
+
+//
+// Populate a thinggroup's array from EDF config
+//
+static void E_populateEDFThingGroup(ThingGroup &group, cfg_t *gsec)
+{
+   // Have a visited list
+   ZAutoBuffer zvisited(NUMMOBJTYPES, true);
+   bool *visited = zvisited.getAs<bool *>();
+
+   unsigned numtypes = cfg_size(gsec, ITEM_TGROUP_TYPES);
+   if(!numtypes)
+      return;
+
+   for(unsigned j = 0; j < numtypes; ++j)
+   {
+      const char *tempstr = cfg_getnstr(gsec, ITEM_TGROUP_TYPES, j);
+      int type = E_ThingNumForName(tempstr);
+      if(type != -1 && !visited[type])
+      {
+         visited[type] = true;
+         group.types.add(type);
+         if(group.flags & TGF_INHERITED)
+         {
+            // Also check children
+            for(int k = 0; k < NUMMOBJTYPES; ++k)
+            {
+               if(visited[k] || !E_mobjTypeIsDescendantOf(k, type))
+                  continue;
+
+               visited[k] = true;
+               group.types.add(k);
+            }
+         }
+      }
+      else if(!visited[type]) // don't scream if visited
+      {
+         E_EDFLoggedWarning(2, "Warning: unknown type '%s' for group '%s'\n",
+                            tempstr, group.name.constPtr());
+      }
+   }
+}
+
+//
 // Process thing group definitions
 //
 void E_ProcessThingGroups(cfg_t *cfg)
 {
    unsigned numgroups = cfg_size(cfg, EDF_SEC_THINGGROUP);
    ThingGroup *group;
-
-   // Have a visited list
-   ZAutoBuffer zvisited(NUMMOBJTYPES, true);
-   bool *visited = zvisited.getAs<bool *>();
 
    for(unsigned i = 0; i < numgroups; ++i)
    {
@@ -3178,47 +3427,24 @@ void E_ProcessThingGroups(cfg_t *cfg)
          thinggroup_namehash.addObject(group);
       }
       else
+      {
          E_EDFLogPrintf("\t\tModifying thing group '%s'\n", name);
+         // Reset the properties if group redefined
+         group->flags = 0;
+         group->types.makeEmpty();
+      }
 
       const char *tempstr = cfg_getstr(gsec, ITEM_TGROUP_FLAGS);
       if(estrnonempty(tempstr))
          group->flags = E_ParseFlags(tempstr, &tgroup_kindset);
 
-      unsigned numtypes = cfg_size(gsec, ITEM_TGROUP_TYPES);
-      if(numtypes)
-      {
-         group->types.clear();   // clear it even if thinggroup redefined.
-         for(unsigned j = 0; j < numtypes; ++j)
-         {
-            tempstr = cfg_getnstr(gsec, ITEM_TGROUP_TYPES, j);
-            int type = E_ThingNumForName(tempstr);
-            if(type != -1 && !visited[type])
-            {
-               visited[type] = true;
-               group->types.add(type);
-               if(group->flags & TGF_INHERITED)
-               {
-                  // Also check children
-                  for(int k = 0; k < NUMMOBJTYPES; ++k)
-                  {
-                     if(visited[k] || !E_mobjTypeIsDescendantOf(k, type))
-                        continue;
-
-                     visited[k] = true;
-                     group->types.add(k);
-                  }
-               }
-            }
-            else if(!visited[type]) // don't scream if visited
-            {
-               E_EDFLoggedWarning(2, "Warning: unknown type '%s' for group '%s'\n",
-                                  tempstr, name);
-            }
-         }
-      }
+      E_populateEDFThingGroup(*group, gsec);
    }
 
-   // Now process them
+   // Now process them.
+   // It's safe to remove all thinggrouppairs now, because we'll redefine them from all ThingGroups,
+   // new and current.
+   // MBF21 Dehacked will apply on top of this, overriding as necessary.
    thinggrouppair_t *proj;
    while((proj = thinggrouppairs.tableIterator((thinggrouppair_t*)nullptr)))
    {
@@ -3227,31 +3453,99 @@ void E_ProcessThingGroups(cfg_t *cfg)
    }
 
    group = nullptr;
-   static const unsigned operationalFlags = TGF_PROJECTILEALLIANCE | TGF_DAMAGEIGNORE;
+   static const unsigned operationalFlags = (TGF_PROJECTILEALLIANCE |
+                                             TGF_DAMAGEIGNORE |
+                                             TGF_NOSPLASHDAMAGE);
+
+   // These ones also apply to monsters from the same species
+   static const unsigned inclusiveFlags = TGF_NOSPLASHDAMAGE;
+
    while((group = thinggroup_namehash.tableIterator(group)))
    {
       // Currently only these are supported
-      if(!(group->flags & operationalFlags))
+      unsigned flags = group->flags & operationalFlags;
+      if(!flags)
          continue;
       // Setup relation
       for(int entry : group->types)
       {
          for(int other : group->types)
          {
-            if(other <= entry)
+            unsigned setflags = flags;
+            if(other == entry && flags & inclusiveFlags)
+               setflags &= inclusiveFlags;
+            else if(other <= entry)
                continue;
-            int64_t key = (int64_t)entry | (int64_t)other << 32;
-            proj = thinggrouppairs.objectForKey(key);
-            if (!proj)
-            {
-               proj = estructalloc(thinggrouppair_t, 1);
-               proj->types[0] = entry;
-               proj->types[1] = other;
-               thinggrouppairs.addObject(proj);
-            }
-            proj->flags |= group->flags & operationalFlags;
+
+            proj = E_getThingGroupPair(entry, other);
+            proj->flags |= setflags;
          }
       }
+   }
+}
+
+//
+// Gets (or creates) thing group by MBF21id
+//
+static ThingGroup *E_getThingGroupByMBF21id(int idnum, unsigned flag)
+{
+   union
+   {
+      ThingGroup::mbf21coding_t coding;
+      int64_t num;
+   } u = {};
+   u.coding.idnum = idnum;
+   u.coding.flag = flag;
+
+   // Locate the group
+   ThingGroup *group = thinggroup_mbf21hash.objectForKey(u.num);
+   if(!group)
+   {
+      E_EDFLogPrintf("\t\tCreating thing group '%d'\n", idnum);
+      group = new ThingGroup(idnum, flag);
+      group->flags = flag;
+      thinggroup_mbf21hash.addObject(group);
+      return group;
+   }
+   E_EDFLogPrintf("\t\tModifying thing group '%d'\n", idnum);
+   return group;
+}
+
+//
+// Given an external source, adds the type and flag to a thing group
+// "inclusive" means to also add a self-self pair.
+//
+void E_AddToMBF21ThingGroup(int idnum, unsigned flag, int type, bool inclusive)
+{
+   ThingGroup *group = E_getThingGroupByMBF21id(idnum, flag);
+
+   for(int prevtype : group->types)   // primitive check against duplicates
+      if(prevtype == type)
+         return;
+   group->types.add(type);
+
+   // Plug the types together
+   for(int prevtype : group->types)
+   {
+      if(!inclusive && prevtype == type) // only allow self-pairs if inclusive
+         continue;
+      thinggrouppair_t *pair = E_getThingGroupPair(prevtype, type);
+      pair->flags |= flag;
+   }
+}
+
+//
+// Clears all pairs of this thing and flag with any other things.
+//
+void E_RemoveFromExistingThingPairs(int type, unsigned flag)
+{
+   // What we need to do here is to remove all pre-existing pairs of this thing.
+   thinggrouppair_t *pair = nullptr;
+   while((pair = thinggrouppairs.tableIterator(pair)))
+   {
+      if(pair->types[0] != type && pair->types[1] != type)
+         continue;
+      pair->flags &= ~flag;
    }
 }
 
@@ -3486,7 +3780,7 @@ enum nstatetypes_e
    NSTATE_INACTIVE
 };
 
-#define NUMNATIVESTATES earrlen(nativeStateLabels)
+constexpr int NUMNATIVESTATES = earrlen(nativeStateLabels);
 
 //
 // Returns a pointer to an mobjinfo's native state field if the given name
@@ -3548,6 +3842,18 @@ state_t *E_GetStateForMobjInfo(const mobjinfo_t *mi, const char *label)
 state_t *E_GetStateForMobj(const Mobj *mo, const char *label)
 {
    return E_GetStateForMobjInfo(mo->info, label);
+}
+
+//
+// Iterates through the mobjinfo table and runs callback for each one satisfying flags2
+//
+void E_ForEachMobjInfoWithAnyFlags2(unsigned flags, 
+   bool (*func)(const mobjinfo_t &info, void *context), void *context)
+{
+   for(int i = 0; i < NUMMOBJTYPES; ++i)
+      if(mobjinfo[i]->flags2 & flags)
+         if(!func(*mobjinfo[i], context))
+            return;
 }
 
 // EOF

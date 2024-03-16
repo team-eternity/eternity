@@ -59,7 +59,7 @@ const char *confuse_author    = "Martin Hedenfalk <mhe@home.se>";
 #define cfg_assert(test) ((void)0)
 #else
 #define cfg_assert(test) \
-  ((void)((test)||(my_assert(#test, __FILE__, __LINE__),0)))
+   ((void)((test)||(my_assert(#test, __FILE__, __LINE__),0)))
 #endif
 
 #define STATE_CONTINUE 0
@@ -105,10 +105,10 @@ static char *cfg_strndup(const char *s, size_t n)
 // Option Retrieval
 //
 
-cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name)
+cfg_opt_t *cfg_getopt(const cfg_t *const cfg, const char *name)
 {
    int i;
-   cfg_t *sec = cfg;
+   const cfg_t *sec = cfg;
    
    cfg_assert(cfg && cfg->name && name);
 
@@ -179,7 +179,7 @@ const char *cfg_title(cfg_t *cfg)
    return cfg->title;
 }
 
-unsigned int cfg_size(cfg_t *cfg, const char *name)
+unsigned int cfg_size(const cfg_t *const cfg, const char *name)
 {
    cfg_opt_t *opt = cfg_getopt(cfg, name);
    if(opt)
@@ -298,7 +298,7 @@ char *cfg_getstrdup(cfg_t *cfg, const char *name)
    return value ? estrdup(value) : nullptr;
 }
 
-cfg_t *cfg_getnsec(cfg_t *cfg, const char *name, unsigned int index)
+cfg_t *cfg_getnsec(const cfg_t *const cfg, const char *name, unsigned int index)
 {
    cfg_opt_t *opt = cfg_getopt(cfg, name);
    
@@ -337,7 +337,7 @@ cfg_t *cfg_gettsec(cfg_t *cfg, const char *name, const char *title)
    return nullptr;
 }
 
-cfg_t *cfg_getsec(cfg_t *cfg, const char *name)
+cfg_t *cfg_getsec(const cfg_t *const cfg, const char *name)
 {
    return cfg_getnsec(cfg, name, 0);
 }
@@ -706,7 +706,7 @@ cfg_lexfunc_t cfg_set_lexer_callback(cfg_t *cfg, cfg_lexfunc_t lexfunc)
    return old;
 }
 
-void cfg_error(cfg_t *cfg, E_FORMAT_STRING(const char *fmt), ...)
+void cfg_error(const cfg_t *const cfg, E_FORMAT_STRING(const char *fmt), ...)
 {
    va_list ap;
    

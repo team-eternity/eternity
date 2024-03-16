@@ -142,8 +142,7 @@ struct variable_t;
 // Simpler macro for int. You do not need to specify the type.
 //
 #define VARIABLE_INT(name, defaultvar, min, max, strings)    \
-        variable_t var_ ## name = { &name, defaultvar,       \
-                        vt_int, min, max, strings, 0, 0, nullptr, nullptr };
+        variable_t var_ ## name = variable_t::makeInt(&name, defaultvar, min, max, strings);
 
 //
 // VARIABLE_STRING
@@ -151,8 +150,7 @@ struct variable_t;
 // Simplified to create strings: 'max' is the maximum string length
 //
 #define VARIABLE_STRING(name, defaultvar, max)               \
-        variable_t var_ ## name = { &name, defaultvar,       \
-                  vt_string, 0, max, nullptr, 0, 0, nullptr, nullptr};
+        variable_t var_ ## name = variable_t::makeString(&name, defaultvar, max);
 
 //
 // VARIABLE_CHARARRAY
@@ -171,8 +169,7 @@ struct variable_t;
 // haleyjd 07/05/10: For real booleans, use vt_toggle type with VARIABLE_TOGGLE
 //
 #define VARIABLE_BOOLEAN(name, defaultvar, strings)          \
-        variable_t var_ ## name = { &name, defaultvar,       \
-                  vt_int, 0, 1, strings, 0, 0, nullptr, nullptr };
+        variable_t var_ ## name = variable_t::makeBoolInt(&name, defaultvar, strings);
 
 //
 // VARIABLE_TOGGLE
@@ -180,8 +177,7 @@ struct variable_t;
 // haleyjd: for actual C++ "bool" variables.
 //
 #define VARIABLE_TOGGLE(name, defaultvar, strings)           \
-        variable_t var_ ## name = { &name, defaultvar,       \
-                   vt_toggle, 0, 1, strings, 0, 0, nullptr, nullptr };
+        variable_t var_ ## name = variable_t::makeBool(&name, defaultvar, strings);
 
 //
 // VARIABLE_FLOAT
@@ -189,18 +185,15 @@ struct variable_t;
 // haleyjd 04/21/10: support for vt_float
 //
 #define VARIABLE_FLOAT(name, defaultvar, min, max)           \
-        variable_t var_ ## name = { &name, defaultvar,       \
-                  vt_float, 0, 0, nullptr, min, max, nullptr, nullptr };
+        variable_t var_ ## name = variable_t::makeDouble(&name, defaultvar, min, max);
 
 // basic variable_t creators for constants.
 
 #define CONST_INT(name)                                      \
-        variable_t var_ ## name = { &name, nullptr,          \
-                  vt_int, -1, -1, nullptr, 0, 0, nullptr, nullptr };
+        variable_t var_ ## name = variable_t::makeConstInt(&name);
 
 #define CONST_STRING(name)                                   \
-        variable_t var_ ## name = { &name, nullptr,          \
-                  vt_string, -1, -1, nullptr, 0, 0, nullptr, nullptr };
+        variable_t var_ ## name = variable_t::makeConstString(&name);
 
 //=============================================================================
 //
@@ -210,46 +203,46 @@ struct variable_t;
 // cmdtype values
 enum
 {
-  c_typed,        // typed at console
-  c_menu,
-  c_netcmd,
-  c_script,	  // haleyjd: started by command script
-  C_CMDTYPES
+   c_typed,        // typed at console
+   c_menu,
+   c_netcmd,
+   c_script,	  // haleyjd: started by command script
+   C_CMDTYPES
 };
 
 // command type
 enum
 {
-  ct_command,
-  ct_variable,
-  ct_constant,
-  ct_end
+   ct_command,
+   ct_variable,
+   ct_constant,
+   ct_end
 };
 
 // command flags
 enum
 {
-  cf_notnet       = 0x001, // not in netgames
-  cf_netonly      = 0x002, // only in netgames
-  cf_server       = 0x004, // server only 
-  cf_handlerset   = 0x008, // if set, the handler sets the variable,
-                           // not c_runcmd.c itself
-  cf_netvar       = 0x010, // sync with other pcs
-  cf_level        = 0x020, // only works in levels
-  cf_hidden       = 0x040, // hidden in cmdlist
-  cf_buffered     = 0x080, // buffer command: wait til all screen
-                           // rendered before running command
-  cf_allowblank   = 0x100, // string variable allows empty value
+   cf_notnet       = 0x001, // not in netgames
+   cf_netonly      = 0x002, // only in netgames
+   cf_server       = 0x004, // server only
+   cf_handlerset   = 0x008, // if set, the handler sets the variable,
+                            // not c_runcmd.c itself
+   cf_netvar       = 0x010, // sync with other pcs
+   cf_level        = 0x020, // only works in levels
+   cf_hidden       = 0x040, // hidden in cmdlist
+   cf_buffered     = 0x080, // buffer command: wait til all screen
+                            // rendered before running command
+   cf_allowblank   = 0x100, // string variable allows empty value
 };
 
 // variable types
 enum
 {
-  vt_int,       // normal integer 
-  vt_float,     // decimal
-  vt_string,    // string
-  vt_chararray, // char array -- haleyjd 03/13/06
-  vt_toggle     // boolean (for real bool-type variables)
+   vt_int,       // normal integer
+   vt_float,     // decimal
+   vt_string,    // string
+   vt_chararray, // char array -- haleyjd 03/13/06
+   vt_toggle     // boolean (for real bool-type variables)
 };
 
 //=============================================================================
@@ -258,37 +251,90 @@ enum
 //
 
 struct variable_t
-{  
-  void *variable;        // NB: for strings, this is char ** not char *
-  void *v_default;       // the default 
-  int type;              // vt_?? variable type: int, string
-  int min;               // minimum value or string length
-  int max;               // maximum value/length
-  const char **defines;  // strings representing the value: eg "on" not "1"
-  double dmin;           // haleyjd 04/21/10: min for double vars
-  double dmax;           //                   max for double vars
-  
-  default_t *cfgDefault; // haleyjd 07/04/10: pointer to config default
-  command_t *command;           // haleyjd 08/15/10: parent command
+{
+   // Static type-safe factories
+   template<typename T>
+   static variable_t makeInt(T *target, T *defaultTarget, int min, int max,
+                             const char **strings)
+   {
+      static_assert(sizeof(T) == sizeof(int), "Type T must be int-like");
+      return { target, defaultTarget, vt_int, min, max, strings, 0, 0, nullptr, nullptr };
+   }
+   // Stupid boilerplate though
+   template<typename T>
+   static variable_t makeInt(T *target, std::nullptr_t, int min, int max, const char **strings)
+   {
+      static_assert(sizeof(T) == sizeof(int), "Type T must be int-like");
+      return { target, nullptr, vt_int, min, max, strings, 0, 0, nullptr, nullptr };
+   }
+
+   // String variable factory
+   static variable_t makeString(char **target, char **defaultTarget, int max)
+   {
+      return { target, defaultTarget, vt_string, 0, max, nullptr, 0, 0, nullptr, nullptr };
+   }
+
+   // Boolean as int
+   static variable_t makeBoolInt(int *target, int *defaultTarget, const char **strings)
+   {
+      return { target, defaultTarget, vt_int, 0, 1, strings, 0, 0, nullptr, nullptr };
+   }
+
+   // Real boolean
+   static variable_t makeBool(bool *target, bool *defaultTarget, const char **strings)
+   {
+      return { target, defaultTarget, vt_toggle, 0, 1, strings, 0, 0, nullptr, nullptr };
+   }
+
+   // Floating point
+   static variable_t makeDouble(double *target, double *defaultTarget, double min, double max)
+   {
+      return { target, defaultTarget, vt_float, 0, 0, nullptr, min, max, nullptr, nullptr };
+   }
+
+   // Constants
+   template<typename T>
+   static variable_t makeConstInt(T *target)
+   {
+      static_assert(sizeof(T) == sizeof(int), "Type T must be int-like");
+      return { target, nullptr, vt_int, -1, -1, nullptr, 0, 0, nullptr, nullptr };
+   }
+   static variable_t makeConstString(char **target)
+   {
+      return { target, nullptr, vt_string, -1, -1, nullptr, 0, 0, nullptr, nullptr };
+   }
+
+
+   void *variable;        // NB: for strings, this is char ** not char *
+   void *v_default;       // the default
+   int type;              // vt_?? variable type: int, string
+   int min;               // minimum value or string length
+   int max;               // maximum value/length
+   const char **defines;  // strings representing the value: eg "on" not "1"
+   double dmin;           // haleyjd 04/21/10: min for double vars
+   double dmax;           //                   max for double vars
+
+   default_t *cfgDefault; // haleyjd 07/04/10: pointer to config default
+   command_t *command;           // haleyjd 08/15/10: parent command
 };
 
 struct command_t
 {
-  const char *name;
-  int type;              // ct_?? command type
-  int flags;             // cf_??
-  variable_t *variable;
-  void (*handler)(void); // handler
-  int netcmd;            // network command number
-  command_t *next;       // for hashing
+   const char *name;
+   int type;              // ct_?? command type
+   int flags;             // cf_??
+   variable_t *variable;
+   void (*handler)(void); // handler
+   int netcmd;            // network command number
+   command_t *next;       // for hashing
 };
 
 struct alias_t
 {
-  char *name;
-  char *command;
-  
-  alias_t *next; // haleyjd 04/14/03
+   char *name;
+   char *command;
+
+   alias_t *next; // haleyjd 04/14/03
 };
 
 //=============================================================================

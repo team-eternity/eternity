@@ -47,7 +47,7 @@
 // defines
 
 // the ExtraData control object has doomednum 5004
-#define ED_CTRL_DOOMEDNUM 5004
+constexpr int ED_CTRL_DOOMEDNUM = 5004;
 
 // ExtraData mapthing structure
 

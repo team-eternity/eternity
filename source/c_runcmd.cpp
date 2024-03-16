@@ -1495,8 +1495,6 @@ enum
 };
 
 //
-// C_RunScript
-//
 // haleyjd 02/12/04: rewritten to use DWFILE and qstring, and to
 // formalize into a finite state automaton lexer. Removes several 
 // bugs and problems, including static line length limit and failure 
@@ -1517,6 +1515,11 @@ void C_RunScript(DWFILE *dwfile)
 
       switch(state)
       {
+      case CSC_COMMENT:
+         if(c == '\n')        // end the comment now
+            state = CSC_NONE;
+         continue;
+
       case CSC_SLASH:
          if(c == '/')         // start the comment now
             state = CSC_COMMENT;
@@ -1544,6 +1547,10 @@ void C_RunScript(DWFILE *dwfile)
       case '\t':
       case '\f':
       case '\n':
+         continue;
+
+      case '/': // possibly starting a comment
+         state = CSC_SLASH;
          continue;
 
       default:  // anything else starts a command

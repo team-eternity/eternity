@@ -25,11 +25,14 @@
 
 // 4/25/98, 5/2/98 killough: reformatted, beautified
 
+#include "concurrentqueue/concurrentqueue.h"
+
 #include "z_zone.h"
 #include "i_system.h"
 
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "m_compare.h"
 #include "p_info.h"
 #include "p_user.h"
 #include "r_draw.h"
@@ -44,25 +47,39 @@
 #include "r_things.h"
 #include "w_wad.h"
 
+static moodycamel::ConcurrentQueue<intptr_t> g_linesToMap;
+
+//
+// Take all the lines to map after multithreaded contexts are done,
+// and apply the mapped flag to them.
+//
+void R_FinishMappingLines()
+{
+   intptr_t lineIndex = -1;
+   while(g_linesToMap.try_dequeue(lineIndex))
+      lines[lineIndex].flags |= ML_MAPPED;
+}
+
 //
 // R_RenderMaskedSegRange
 //
 void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
                             const fixed_t viewz, drawseg_t *ds, int x1, int x2)
 {
-   texcol_t *col;
+   static thread_local rendersector_t tempsec; // killough 4/13/98
+
+   const texcol_t *col;
    int      lightnum;
    int      texnum;
-   sector_t tempsec;      // killough 4/13/98
    float    dist, diststep;
    float    scale, scalestep;
    float    texmidf;
    line_t  *linedef;
-   lighttable_t **wlight;
+   const lighttable_t *const *wlight;
    float   *maskedtexturecol;
 
-   cb_column_t column  = {};
-   cb_seg_t    segclip = {};
+   cb_column_t column{};
+   cb_seg_t    segclip{};
 
    // Calculate light table.
    // Use different light tables
@@ -80,9 +97,9 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
       {
          colfunc = r_column_engine->DrawTLColumn;
          if(linedef->tranlump > 0)
-            tranmap = (byte *)(wGlobalDir.cacheLumpNum(linedef->tranlump-1, PU_STATIC));
+            column.tranmap = static_cast<byte *>(wGlobalDir.getCachedLumpNum(linedef->tranlump-1));
          else
-            tranmap = main_tranmap;
+            column.tranmap = main_tranmap;
       }
       else // haleyjd 11/11/10: flex/additive translucency for linedefs
       {
@@ -107,10 +124,24 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
    segclip.backsec  = segclip.line->backsector;
 
    texnum = texturetranslation[segclip.line->sidedef->midtexture];
-   
+
    // killough 4/13/98: get correct lightlevel for 2s normal textures
-   lightnum = (R_FakeFlat(viewz, segclip.frontsec, &tempsec, nullptr, nullptr, false)
-               ->lightlevel >> LIGHTSEGSHIFT)+(extralight * LIGHTBRIGHT);
+   if(segclip.line->sidedef->flags & SDF_LIGHT_MID_ABSOLUTE)
+      lightnum = segclip.line->sidedef->light_mid >> LIGHTSEGSHIFT;
+   else
+   {
+      if(segclip.line->sidedef->flags & SDF_LIGHT_BASE_ABSOLUTE)
+         lightnum = segclip.line->sidedef->light_base >> LIGHTSEGSHIFT;
+      else
+      {
+         lightnum = R_FakeFlat(viewz, segclip.frontsec, &tempsec, nullptr, nullptr, false)->lightlevel >> LIGHTSEGSHIFT;
+         lightnum += segclip.line->sidedef->light_base >> LIGHTSEGSHIFT;
+      }
+      lightnum += segclip.line->sidedef->light_mid >> LIGHTSEGSHIFT;
+
+   }
+   lightnum += (extralight * LIGHTBRIGHT);
+
 
    // haleyjd 08/11/00: optionally skip this to evenly apply colormap
    if(LevelInfo.unevenLight)
@@ -146,7 +177,7 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
       column.texmid = column.texmid - viewz;
    }
 
-   column.texmid += segclip.line->sidedef->rowoffset - ds->deltaz;
+   column.texmid += segclip.line->sidedef->offset_base_y + segclip.line->sidedef->offset_mid_y - ds->deltaz;
    
    // SoM 10/19/02: deep water colormap fixes
    //if (fixedcolormap)
@@ -191,18 +222,35 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
          col = R_GetMaskedColumn(texnum, (int)(maskedtexturecol[column.x]));
          R_DrawNewMaskedColumn(
             colfunc, column, maskedcolumn,
-            textures[texnum], col, ds->sprbottomclip, ds->sprtopclip
+            textures[texnum], col, ds->sprbottomclip, ds->sprtopclip,
+            ds->maskedtextureskew[column.x]
          );
 
          maskedtexturecol[column.x] = FLT_MAX;
       }
    }
-
-   // Except for main_tranmap, mark others purgable at this point
-   if(linedef->tranlump > 0 && general_translucency)
-      Z_ChangeTag(tranmap, PU_CACHE); // killough 4/11/98
 }
 
+
+static const lighttable_t *R_calculateLighting(cmapcontext_t &cmapcontext, const lighttable_t *const *walllights, const float dist)
+{
+   // calculate lighting
+   // SoM: ANYRES
+   if(!cmapcontext.fixedcolormap)
+   {
+      // SoM: it took me about 5 solid minutes of looking at the old doom code
+      // and running test levels through it to do the math and get 2560 as the
+      // light distance factor.
+      int index = int(dist * 2560.0f);
+
+      if(index >= MAXLIGHTSCALE)
+         index = MAXLIGHTSCALE - 1;
+
+      return walllights[index];
+   }
+
+   return cmapcontext.fixedcolormap;
+}
 
 
 
@@ -212,22 +260,11 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
 // CALLED: CORE LOOPING ROUTINE.
 //
 static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecontext,
-                            portalcontext_t &portalcontext,
+                            portalcontext_t &portalcontext, ZoneHeap &heap,
                             const R_ColumnFunc colfunc, const viewpoint_t &viewpoint,
                             const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
                             drawseg_t *const ds_p, cb_seg_t &segclip)
 {
-   float     *const floorclip   = planecontext.floorclip;
-   float     *const ceilingclip = planecontext.ceilingclip;
-
-   int t, b, line;
-   int cliptop, clipbot;
-   int i;
-   float texx;
-   float basescale;
-
-   cb_column_t column = {};
-
 #ifdef RANGECHECK
    if(segclip.x1 < bounds.startcolumn || segclip.x2 >= bounds.endcolumn || segclip.x1 > segclip.x2)
    {
@@ -238,6 +275,17 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
    }
 #endif
 
+   float     *const floorclip   = planecontext.floorclip;
+   float     *const ceilingclip = planecontext.ceilingclip;
+
+   int t, b, line;
+   int cliptop, clipbot;
+   int i;
+   float texx;
+   float basescale;
+
+   cb_column_t column{};
+
 
    visplane_t *skyplane = nullptr;
    if(segclip.skyflat)
@@ -245,11 +293,11 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
       // Use value -1 which is extremely hard to reach, and different to the hardcoded ceiling 1,
       // to avoid HOM
       skyplane = R_FindPlane(
-         cmapcontext, planecontext, viewpoint, cb_viewpoint,
+         cmapcontext, planecontext, heap, viewpoint, cb_viewpoint,
          bounds, viewpoint.z - 1, segclip.skyflat,
          144, {}, { 1, 1 }, 0, nullptr, 0, 255, nullptr
       );
-      skyplane = R_CheckPlane(planecontext, skyplane, segclip.x1, segclip.x2);
+      skyplane = R_CheckPlane(planecontext, heap, skyplane, segclip.x1, segclip.x2);
    }
 
    // haleyjd 06/30/07: cardboard invuln fix.
@@ -291,7 +339,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
             if(segclip.markflags & SEG_MARKCPORTAL)
             {
                R_WindowAdd(
-                  planecontext, portalcontext, viewpoint, bounds,
+                  planecontext, portalcontext, heap, viewpoint, bounds,
                   segclip.secwindow.ceiling, i, (float)cliptop, (float)line
                );
                ceilingclip[i] = (float)t;
@@ -331,7 +379,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
             if(segclip.markflags & SEG_MARKFPORTAL)
             {
                R_WindowAdd(
-                  planecontext, portalcontext, viewpoint, bounds,
+                  planecontext, portalcontext, heap, viewpoint, bounds,
                   segclip.secwindow.floor, i, (float)line, (float)clipbot
                );
                floorclip[i] = (float)b;
@@ -347,31 +395,22 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
       
       if(segclip.segtextured)
       {
-         int index;
-
          basescale = 1.0f / (segclip.dist * view.yfoc);
 
          column.step = M_FloatToFixed(basescale); // SCALE_TODO: Y scale-factor here
          column.x = i;
 
-         texx = segclip.len * basescale + segclip.toffsetx; // SCALE_TODO: X scale-factor here
+         texx = segclip.len * basescale + segclip.toffset_base_x; // SCALE_TODO: X scale-factor here
 
          if(ds_p->maskedtexturecol)
-            ds_p->maskedtexturecol[i] = texx;
+            ds_p->maskedtexturecol[i] = texx + segclip.toffset_mid_x;
 
-         // calculate lighting
-         // SoM: ANYRES
-         if(!cmapcontext.fixedcolormap)
+         if(ds_p->maskedtextureskew)
          {
-            // SoM: it took me about 5 solid minutes of looking at the old doom code
-            // and running test levels through it to do the math and get 2560 as the
-            // light distance factor.
-            index = (int)(segclip.dist * 2560.0f);
-         
-            if(index >=  MAXLIGHTSCALE)
-               index = MAXLIGHTSCALE - 1;
-
-            column.colormap = segclip.walllights[index];
+            if(segclip.skew_mid_step && segclip.side->middleSkewType() != SKEW_NONE)
+               ds_p->maskedtextureskew[i] = segclip.skew_mid_step * (segclip.len * basescale) + segclip.skew_mid_baseoffset;
+            else
+               ds_p->maskedtextureskew[i] = 0.0f; // Don't think this is strictly necessary but do this for safety.
          }
 
          if(!segclip.twosided)
@@ -388,8 +427,9 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                      column.y2 = (int)(segclip.high > floorclip[i] ? floorclip[i] : segclip.high);
                      if(column.y2 >= column.y1)
                      {
+                        column.colormap = R_calculateLighting(cmapcontext, segclip.walllights_top, segclip.dist);
                         column.texmid = segclip.toptexmid;
-                        column.source = R_GetRawColumn(segclip.toptex, (int)texx);
+                        column.source = R_GetRawColumn(heap, segclip.toptex, int(texx + segclip.toffset_top_x));
                         column.texheight = segclip.toptexh;
                         colfunc(column);
                         ceilingclip[i] = (float)(column.y2 + 1);
@@ -407,8 +447,9 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                      column.y2 = b;
                      if(column.y2 >= column.y1)
                      {
+                        column.colormap = R_calculateLighting(cmapcontext, segclip.walllights_bottom, segclip.dist);
                         column.texmid = segclip.bottomtexmid;
-                        column.source = R_GetRawColumn(segclip.bottomtex, (int)texx);
+                        column.source = R_GetRawColumn(heap, segclip.bottomtex, int(texx + segclip.toffset_bottom_x));
                         column.texheight = segclip.bottomtexh;
                         colfunc(column);
                         floorclip[i] = (float)(column.y1 - 1);
@@ -420,14 +461,14 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                   }
 
                   R_WindowAdd(
-                     planecontext, portalcontext, viewpoint, bounds,
+                     planecontext, portalcontext, heap, viewpoint, bounds,
                      segclip.l_window, i, ceilingclip[i], floorclip[i]
                   );
                }
                else
                {
                   R_WindowAdd(
-                     planecontext, portalcontext, viewpoint, bounds,
+                     planecontext, portalcontext, heap, viewpoint, bounds,
                      segclip.l_window, i, (float)t, (float)b
                   );
                }
@@ -439,9 +480,14 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                column.y1 = t;
                column.y2 = b;
 
+               column.colormap = R_calculateLighting(cmapcontext, segclip.walllights_mid, segclip.dist);
                column.texmid = segclip.midtexmid;
+               if(segclip.skew_mid_step && (segclip.side->middleSkewType() == SKEW_FRONT_FLOOR ||
+                                            segclip.side->middleSkewType() == SKEW_FRONT_CEILING))
+                  column.texmid += M_FloatToFixed(segclip.skew_mid_step * (segclip.len * basescale) + segclip.skew_mid_baseoffset);
 
-               column.source = R_GetRawColumn(segclip.midtex, (int)texx);
+
+               column.source = R_GetRawColumn(heap, segclip.midtex, int(texx + segclip.toffset_mid_x));
                column.texheight = segclip.midtexh;
 
                colfunc(column);
@@ -459,7 +505,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                if(column.y2 >= column.y1)
                {
                   R_WindowAdd(
-                     planecontext, portalcontext, viewpoint, bounds,
+                     planecontext, portalcontext, heap, viewpoint, bounds,
                      segclip.t_window, i,
                      static_cast<float>(column.y1), static_cast<float>(column.y2)
                   );
@@ -476,9 +522,13 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
 
                if(column.y2 >= column.y1)
                {
+                  column.colormap = R_calculateLighting(cmapcontext, segclip.walllights_top, segclip.dist);
                   column.texmid = segclip.toptexmid;
 
-                  column.source = R_GetRawColumn(segclip.toptex, (int)texx);
+                  if(segclip.skew_top_step && segclip.side->topSkewType() != SKEW_NONE)
+                     column.texmid += M_FloatToFixed(segclip.skew_top_step * (segclip.len * basescale) + segclip.skew_top_baseoffset);
+
+                  column.source = R_GetRawColumn(heap, segclip.toptex, int(texx + segclip.toffset_top_x));
                   column.texheight = segclip.toptexh;
 
                   colfunc(column);
@@ -501,7 +551,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
                if(column.y2 >= column.y1)
                {
                   R_WindowAdd(
-                     planecontext, portalcontext, viewpoint, bounds,
+                     planecontext, portalcontext, heap, viewpoint, bounds,
                      segclip.b_window, i,
                      static_cast<float>(column.y1), static_cast<float>(column.y2)
                   );
@@ -518,9 +568,13 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
 
                if(column.y2 >= column.y1)
                {
+                  column.colormap = R_calculateLighting(cmapcontext, segclip.walllights_bottom, segclip.dist);
                   column.texmid = segclip.bottomtexmid;
 
-                  column.source = R_GetRawColumn(segclip.bottomtex, (int)texx);
+                  if(segclip.skew_bottom_step && segclip.side->bottomSkewType() != SKEW_NONE)
+                     column.texmid += M_FloatToFixed(segclip.skew_bottom_step * (segclip.len * basescale) + segclip.skew_bottom_baseoffset);
+
+                  column.source = R_GetRawColumn(heap, segclip.bottomtex, int(texx + segclip.toffset_bottom_x));
                   column.texheight = segclip.bottomtexh;
 
                   colfunc(column);
@@ -539,7 +593,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
             if(segclip.l_window)
             {
                R_WindowAdd(
-                  planecontext, portalcontext, viewpoint, bounds,
+                  planecontext, portalcontext, heap, viewpoint, bounds,
                   segclip.l_window, i, ceilingclip[i], floorclip[i]
                );
                ceilingclip[i] = view.height - 1.0f;
@@ -560,7 +614,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
       else if(segclip.l_window)
       {
          R_WindowAdd(
-            planecontext, portalcontext, viewpoint, bounds,
+            planecontext, portalcontext, heap, viewpoint, bounds,
             segclip.l_window, i, (float)t, (float)b
          );
          ceilingclip[i] = view.height - 1.0f;
@@ -595,7 +649,7 @@ static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecon
 // SoM: This function is needed in multiple places now to fix some cases
 // of sprites showing up behind walls in some portal areas.
 //
-static void R_checkDSAlloc(bspcontext_t &context)
+static void R_checkDSAlloc(bspcontext_t &context, ZoneHeap &heap)
 {
    drawseg_t   *&drawsegs    = context.drawsegs;
    unsigned int &maxdrawsegs = context.maxdrawsegs;
@@ -605,7 +659,7 @@ static void R_checkDSAlloc(bspcontext_t &context)
    if(ds_p == drawsegs + maxdrawsegs)
    {
       unsigned int newmax = maxdrawsegs ? maxdrawsegs * 2 : 128;
-      drawsegs    = erealloc(drawseg_t *, drawsegs, sizeof(drawseg_t) * newmax);
+      drawsegs    = zhrealloc(heap, drawseg_t *, drawsegs, sizeof(drawseg_t) * newmax);
       ds_p        = drawsegs + maxdrawsegs;
       maxdrawsegs = newmax;
    }
@@ -617,17 +671,18 @@ static void R_checkDSAlloc(bspcontext_t &context)
 static void R_closeDSP(drawseg_t *const ds_p)
 {
 
-   ds_p->silhouette       = SIL_BOTH;
-   ds_p->sprtopclip       = screenheightarray;
-   ds_p->sprbottomclip    = zeroarray;
-   ds_p->bsilheight       = D_MAXINT;
-   ds_p->tsilheight       = D_MININT;
-   ds_p->maskedtexturecol = nullptr;
+   ds_p->silhouette        = SIL_BOTH;
+   ds_p->sprtopclip        = screenheightarray;
+   ds_p->sprbottomclip     = zeroarray;
+   ds_p->bsilheight        = D_MAXINT;
+   ds_p->tsilheight        = D_MININT;
+   ds_p->maskedtexturecol  = nullptr;
+   ds_p->maskedtextureskew = nullptr;
 }
 
 #define NEXTDSP(model, newx1) \
    ds_p++; \
-   R_checkDSAlloc(bspcontext); \
+   R_checkDSAlloc(bspcontext, heap); \
    *ds_p = model; \
    ds_p->x1 = newx1; \
    ds_p->dist1 += segclip.diststep * (newx1 - model.x1)
@@ -642,10 +697,8 @@ static void R_closeDSP(drawseg_t *const ds_p)
 // new closed regions are then added to the solidsegs array to speed up 
 // rejection of new segs trying to render to closed areas of clipping space.
 //
-static void R_detectClosedColumns(bspcontext_t &bspcontext,
-                                  planecontext_t &planecontext,
-                                  [[maybe_unused]] const contextbounds_t &bounds,
-                                  cb_seg_t &segclip)
+static void R_detectClosedColumns(bspcontext_t &bspcontext, planecontext_t &planecontext, ZoneHeap &heap,
+                                  [[maybe_unused]] const contextbounds_t &bounds, cb_seg_t &segclip)
 {
    drawseg_t      *&ds_p        = bspcontext.ds_p;
    float     *const floorclip   = planecontext.floorclip;
@@ -729,7 +782,7 @@ static void R_detectClosedColumns(bspcontext_t &bspcontext,
 #undef NEXTDSP
 #undef SETX2
 
-static void R_storeTextureColumns(float *const maskedtexturecol, cb_seg_t &segclip)
+static void R_storeTextureColumns(float *const maskedtexturecol, float *const maskedtextureskew, cb_seg_t &segclip)
 {
    int i;
    float texx;
@@ -738,10 +791,17 @@ static void R_storeTextureColumns(float *const maskedtexturecol, cb_seg_t &segcl
    for(i = segclip.x1; i <= segclip.x2; i++)
    {
       basescale = 1.0f / (segclip.dist * view.yfoc);
-      texx = segclip.len * basescale + segclip.toffsetx;
+      texx = segclip.len * basescale + segclip.toffset_base_x + segclip.toffset_mid_x;
 
       if(maskedtexturecol)
          maskedtexturecol[i] = texx;
+      if(maskedtextureskew)
+      {
+         if(segclip.skew_mid_step && segclip.side->middleSkewType() != SKEW_NONE)
+            maskedtextureskew[i] = segclip.skew_mid_step * (segclip.len * basescale) + segclip.skew_mid_baseoffset;
+         else
+            maskedtextureskew[i] = 0.0f; // Don't think this is strictly necessary but do this for safety.
+      }
 
       segclip.len  += segclip.lenstep;
       segclip.dist += segclip.diststep;
@@ -773,13 +833,14 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 //  between start and stop pixels (inclusive).
 //
 void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,
-                      portalcontext_t &portalcontext,
+                      portalcontext_t &portalcontext, ZoneHeap &heap,
                       const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                       const contextbounds_t &bounds,
                       const cb_seg_t &seg, const int start, const int stop)
 {
    drawseg_t           *&ds_p         = bspcontext.ds_p;
    float               *&lastopening  = planecontext.lastopening;
+   float               *&lastskew     = planecontext.lastskew;
    const portalrender_t &portalrender = portalcontext.portalrender;
 
    float clipx1;
@@ -808,7 +869,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    segclip.x2 = stop;
 
    if(segclip.plane.floor)
-      segclip.plane.floor = R_CheckPlane(planecontext, segclip.plane.floor, start, stop);
+      segclip.plane.floor = R_CheckPlane(planecontext, heap, segclip.plane.floor, start, stop);
 
    if(segclip.plane.ceiling)
    {
@@ -827,13 +888,13 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
       // duplication when it encounters the floorplane, not the ceilingplane like here.
 
       if(segclip.plane.ceiling == segclip.plane.floor)
-         segclip.plane.ceiling = R_DupPlane(planecontext, segclip.plane.ceiling, start, stop);
+         segclip.plane.ceiling = R_DupPlane(planecontext, heap, segclip.plane.ceiling, start, stop);
       else
-         segclip.plane.ceiling = R_CheckPlane(planecontext, segclip.plane.ceiling, start, stop);
+         segclip.plane.ceiling = R_CheckPlane(planecontext, heap, segclip.plane.ceiling, start, stop);
    }
 
    if(!(segclip.line->linedef->flags & (ML_MAPPED | ML_DONTDRAW)))
-      segclip.line->linedef->flags |= ML_MAPPED;
+      g_linesToMap.enqueue(intptr_t(segclip.line->linedef - lines));
 
    if(clipx1)
    {
@@ -890,28 +951,57 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    // OPTIMIZE: get rid of LIGHTSEGSHIFT globally
    if(!cmapcontext.fixedcolormap)
    {
-      int lightnum = (segclip.frontsec->lightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
+      struct {
+         const lighttable_t *const **walllight;
+         const int16_t               light;
+         const uint16_t              absoluteflag;
+      } walllights[3] =
+      {
+         { &segclip.walllights_top,    segclip.line->sidedef->light_top,    SDF_LIGHT_TOP_ABSOLUTE    },
+         { &segclip.walllights_mid,    segclip.line->sidedef->light_mid,    SDF_LIGHT_MID_ABSOLUTE    },
+         { &segclip.walllights_bottom, segclip.line->sidedef->light_bottom, SDF_LIGHT_BOTTOM_ABSOLUTE },
+      };
 
-      // haleyjd 08/11/00: optionally skip this to evenly apply colormap
-      if(LevelInfo.unevenLight)
-      {  
-         if(segclip.line->linedef->v1->y == segclip.line->linedef->v2->y)
-            lightnum -= LIGHTBRIGHT;
-         else if(segclip.line->linedef->v1->x == segclip.line->linedef->v2->x)
-            lightnum += LIGHTBRIGHT;
+      for(auto &walllight : walllights)
+      {
+         int lightnum;
+         if(segclip.line->sidedef->flags & walllight.absoluteflag)
+            lightnum = walllight.light >> LIGHTSEGSHIFT;
+         else
+         {
+            if(segclip.line->sidedef->flags & SDF_LIGHT_BASE_ABSOLUTE)
+               lightnum = segclip.line->sidedef->light_base >> LIGHTSEGSHIFT;
+            else
+            {
+               lightnum = segclip.frontsec->lightlevel >> LIGHTSEGSHIFT;
+               lightnum += segclip.line->sidedef->light_base >> LIGHTSEGSHIFT;
+            }
+            lightnum += walllight.light >> LIGHTSEGSHIFT;
+
+         }
+         lightnum += extralight * LIGHTBRIGHT;
+
+         // haleyjd 08/11/00: optionally skip this to evenly apply colormap
+         if(LevelInfo.unevenLight)
+         {
+            if(segclip.line->linedef->v1->y == segclip.line->linedef->v2->y)
+               lightnum -= LIGHTBRIGHT;
+            else if(segclip.line->linedef->v1->x == segclip.line->linedef->v2->x)
+               lightnum += LIGHTBRIGHT;
+         }
+
+         if(lightnum < 0)
+            *walllight.walllight = cmapcontext.scalelight[0];
+         else if(lightnum >= LIGHTLEVELS)
+            *walllight.walllight = cmapcontext.scalelight[LIGHTLEVELS - 1];
+         else
+            *walllight.walllight = cmapcontext.scalelight[lightnum];
       }
-
-      if(lightnum < 0)
-         segclip.walllights = cmapcontext.scalelight[0];
-      else if(lightnum >= LIGHTLEVELS)
-         segclip.walllights = cmapcontext.scalelight[LIGHTLEVELS-1];
-      else
-         segclip.walllights = cmapcontext.scalelight[lightnum];
    }
 
 
    // drawsegs need to be taken care of here
-   R_checkDSAlloc(bspcontext);
+   R_checkDSAlloc(bspcontext, heap);
 
    ds_p->x1       = start;
    ds_p->x2       = stop;
@@ -941,6 +1031,11 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
          ds_p->silhouette = SIL_BOTTOM;
          ds_p->bsilheight = D_MAXINT;
       }
+      else if(segclip.backsec->srf.floor.slope)
+      {
+         ds_p->silhouette = SIL_BOTTOM;
+         ds_p->bsilheight = emax(segclip.maxfrontfloor, segclip.maxbackfloor);
+      }
       if(segclip.minfrontceil < segclip.minbackceil)
       {
          ds_p->silhouette |= SIL_TOP;
@@ -951,27 +1046,42 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
          ds_p->silhouette |= SIL_TOP;
          ds_p->tsilheight = D_MININT;
       }
+      else if(segclip.backsec->srf.ceiling.slope)
+      {
+         ds_p->silhouette |= SIL_TOP;
+         ds_p->tsilheight = emin(segclip.minfrontceil, segclip.minbackceil);
+      }
 
       if(segclip.maskedtex)
       {
          int i;
          float *mtc;
+         float *mts;
          int xlen;
          xlen = segclip.x2 - segclip.x1 + 1;
 
-         ds_p->maskedtexturecol = lastopening - segclip.x1;
+         ds_p->maskedtexturecol  = lastopening - segclip.x1;
+         ds_p->maskedtextureskew = lastskew - segclip.x1;
          if(portalrender.active)
             ds_p->deltaz = viewpoint.z - portalrender.w->vz;
          
          mtc = lastopening;
+         mts = lastskew;
 
          for(i = 0; i < xlen; i++)
+         {
             mtc[i] = FLT_MAX;
+            mts[i] = 0.0f;
+         }
 
          lastopening += xlen;
+         lastskew    += xlen;
       }
       else
+      {
          ds_p->maskedtexturecol = nullptr;
+         ds_p->maskedtextureskew = nullptr;
+      }
    }
 
    usesegloop = !seg.backsec        || 
@@ -990,11 +1100,11 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    {
       const R_ColumnFunc colfunc = r_column_engine->DrawColumn;
       R_renderSegLoop(
-         cmapcontext, planecontext, portalcontext, colfunc, viewpoint, cb_viewpoint, bounds, ds_p, segclip
+         cmapcontext, planecontext, portalcontext, heap, colfunc, viewpoint, cb_viewpoint, bounds, ds_p, segclip
       );
    }
    else
-      R_storeTextureColumns(ds_p->maskedtexturecol, segclip);
+      R_storeTextureColumns(ds_p->maskedtexturecol, ds_p->maskedtextureskew, segclip);
 
    // store clipping arrays
    float *const floorclip   = planecontext.floorclip;
@@ -1052,7 +1162,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    // portal window, which would otherwise be ignored. Necessary for correct
    // sprite rendering.
    if(!segclip.clipsolid && (ds_p->silhouette || portalrender.active))
-      R_detectClosedColumns(bspcontext, planecontext, bounds, segclip);
+      R_detectClosedColumns(bspcontext, planecontext, heap, bounds, segclip);
 
    ++ds_p;
 }

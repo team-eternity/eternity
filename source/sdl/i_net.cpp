@@ -32,11 +32,7 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifdef __APPLE__
-#include "SDL2_net/SDL_net.h"
-#else
 #include "SDL_net.h"
-#endif
 
 #include "../z_zone.h"  /* memory allocation wrappers -- killough */
 
@@ -508,7 +504,7 @@ void I_InitNetwork(void)
    
    SDLNet_Init();
    
-   atexit(I_QuitNetwork);
+   I_AtExit(I_QuitNetwork);
    
    i++;
    while(++i < myargc && myargv[i][0] != '-')

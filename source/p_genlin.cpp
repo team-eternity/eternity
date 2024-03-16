@@ -48,6 +48,7 @@
 #include "sounds.h"
 #include "r_data.h"
 #include "r_main.h"
+#include "r_sky.h"
 #include "r_state.h"
 
 //=============================================================================
@@ -228,6 +229,7 @@ manual_floor:
             {
                if(fd->changeOnStart)
                {
+                  R_CacheIfSkyTexture(sec->srf.floor.pic, msec->srf.floor.pic);
                   sec->srf.floor.pic = msec->srf.floor.pic;
                   switch(fd->change_type)
                   {
@@ -275,6 +277,7 @@ manual_floor:
             {
                if(fd->changeOnStart)
                {
+                  R_CacheIfSkyTexture(sec->srf.floor.pic, line->frontsector->srf.floor.pic);
                   sec->srf.floor.pic = line->frontsector->srf.floor.pic;
                   switch(fd->change_type)
                   {
@@ -337,12 +340,12 @@ manual_floor:
 //
 // haleyjd 05/07/04: rewritten to use EV_DoParamFloor
 //
-int EV_DoGenFloor(const line_t *line)
+int EV_DoGenFloor(const line_t *line, int special, int tag)
 {
    floordata_t fd;
    memset(&fd, 0, sizeof(fd));
 
-   int value = line->special - GenFloorBase;
+   int value = special - GenFloorBase;
 
    // parse the bit fields in the line's special type
    
@@ -355,7 +358,7 @@ int EV_DoGenFloor(const line_t *line)
    fd.trigger_type = (value & TriggerType   ) >> TriggerTypeShift;
    fd.flags        = FDF_HAVETRIGGERTYPE;
 
-   return EV_DoParamFloor(line, line->args[0], &fd);
+   return EV_DoParamFloor(line, tag, &fd);
 }
 
 //
@@ -645,10 +648,10 @@ manual_ceiling:
 // jff 02/04/98 Added this routine (and file) to handle generalized
 // floor movers using bit fields in the line special type.
 //
-int EV_DoGenCeiling(const line_t *line)
+int EV_DoGenCeiling(const line_t *line, int special, int tag)
 {
    edefstructvar(ceilingdata_t, cd);
-   int value = line->special - GenCeilingBase;
+   int value = special - GenCeilingBase;
 
    // parse the bit fields in the line's special type
    
@@ -665,7 +668,7 @@ int EV_DoGenCeiling(const line_t *line)
    cd.height_value = 0;
    cd.speed_value  = 0;
 
-   return EV_DoParamCeiling(line, line->args[0], &cd);
+   return EV_DoParamCeiling(line, tag, &cd);
 }
 
 //
@@ -676,9 +679,9 @@ int EV_DoGenCeiling(const line_t *line)
 // Passed the linedef activating the lift
 // Returns true if a thinker is created
 //
-int EV_DoGenLift(const line_t *line)
+int EV_DoGenLift(const line_t *line, int special, int tag)
 {
-   int  value = line->special - GenLiftBase;
+   int  value = special - GenLiftBase;
 
    // parse the bit fields in the line's special type
    
@@ -729,15 +732,15 @@ int EV_DoGenLift(const line_t *line)
          break;
    }
 
-   return EV_DoGenLiftByParameters(Trig == PushOnce || Trig == PushMany, *line, speed, delay, Targ,
-                                   0);
+   return EV_DoGenLiftByParameters(Trig == PushOnce || Trig == PushMany, line, tag, speed, delay,
+                                   Targ, 0);
 }
 
 //
 // Do generic lift using direct parameters. Meant to be called both from Boom generalized actions
 // and the parameterized special Generic_Lift.
 //
-int EV_DoGenLiftByParameters(bool manualtrig, const line_t &line, fixed_t speed, int delay,
+int EV_DoGenLiftByParameters(bool manualtrig, const line_t *line, int tag, fixed_t speed, int delay,
                              int target, fixed_t height)
 {
    PlatThinker *plat;
@@ -754,13 +757,13 @@ int EV_DoGenLiftByParameters(bool manualtrig, const line_t &line, fixed_t speed,
    // Activate all <type> plats that are in_stasis
 
    if(target == LnF2HnF)
-      PlatThinker::ActivateInStasis(line.args[0]);
+      PlatThinker::ActivateInStasis(tag);
 
    // check if a manual trigger, if so do just the sector on the backside
    manual = false;
    if(manualtrig)
    {
-      if (!(sec = line.backsector))
+      if (!line || !(sec = line->backsector))
          return rtn;
       secnum = eindex(sec - sectors);
       manual = true;
@@ -768,7 +771,7 @@ int EV_DoGenLiftByParameters(bool manualtrig, const line_t &line, fixed_t speed,
    }
 
    // if not manual do all sectors tagged the same as the line
-   while((secnum = P_FindSectorFromLineArg0(&line, secnum)) >= 0)
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       sec = &sectors[secnum];
 
@@ -788,7 +791,7 @@ int EV_DoGenLiftByParameters(bool manualtrig, const line_t &line, fixed_t speed,
       plat->addThinker();
 
       plat->crush  = -1;
-      plat->tag    = line.args[0];
+      plat->tag    = tag;
       plat->type   = genLift;
       plat->high   = sec->srf.floor.height;
       plat->status = PlatThinker::down;
@@ -1086,11 +1089,11 @@ manual_stair:
 // Passed the linedef activating the stairs
 // Returns true if a thinker is created
 //
-int EV_DoGenStairs(line_t *line)
+int EV_DoGenStairs(line_t *line, int special, int tag)
 {
    edefstructvar(stairdata_t, sd);
    int         rtn;
-   int         value = line->special - GenStairsBase;
+   int         value = special - GenStairsBase;
 
    // parse the bit fields in the line's special type
    sd.direction     = (value & StairDirection) >> StairDirectionShift;
@@ -1108,10 +1111,10 @@ int EV_DoGenStairs(line_t *line)
    sd.speed_value    = 0;
    sd.stepsize_value = 0;
 
-   rtn = EV_DoParamStairs(line, line->args[0], &sd);
+   rtn = EV_DoParamStairs(line, tag, &sd);
 
    // retriggerable generalized stairs build up or down alternately
-   if(rtn)
+   if(rtn && line)
       line->special ^= StairDirection; // alternate dir on succ activations
 
    return rtn;
@@ -1145,7 +1148,7 @@ int EV_DoParamCrusher(const line_t *line, int tag, const crusherdata_t *cd)
        (cd->trigger_type == PushOnce || cd->trigger_type == PushMany)) ||
       manualParam)
    {
-      if(!(sec = line->backsector))
+      if(!line || !(sec = line->backsector))
          return rtn;
       secnum = eindex(sec-sectors);
       manual = true;
@@ -1263,10 +1266,10 @@ manual_crusher:
 // Passed the linedef activating the crusher
 // Returns true if a thinker created
 //
-int EV_DoGenCrusher(const line_t *line)
+int EV_DoGenCrusher(const line_t *line, int special, int tag)
 {
    edefstructvar(crusherdata_t, cd);
-   int value = line->special - GenCrusherBase;
+   int value = special - GenCrusherBase;
 
    cd.type = ((value & CrusherSilent) >> CrusherSilentShift != 0) ? 
              genSilentCrusher : genCrusher;
@@ -1276,7 +1279,7 @@ int EV_DoGenCrusher(const line_t *line)
    cd.flags = CDF_HAVETRIGGERTYPE;
    cd.ground_dist = 8 * FRACUNIT;
 
-   return EV_DoParamCrusher(line, line->args[0], &cd);
+   return EV_DoParamCrusher(line, tag, &cd);
 }
 
 
@@ -1483,10 +1486,10 @@ manual_door:
 //
 // haleyjd 05/04/04: rewritten to use EV_DoParamDoor
 //
-int EV_DoGenLockedDoor(const line_t *line, Mobj *thing)
+int EV_DoGenLockedDoor(const line_t *line, Mobj *thing, int special, int tag)
 {
    doordata_t dd;
-   int value = line->special - GenLockedBase;
+   int value = special - GenLockedBase;
    int speedType;
 
    memset(&dd, 0, sizeof(doordata_t));
@@ -1518,7 +1521,7 @@ int EV_DoGenLockedDoor(const line_t *line, Mobj *thing)
 
    dd.kind = (value & LockedKind) >> LockedKindShift;
    
-   return EV_DoParamDoor(line, line->args[0], &dd);
+   return EV_DoParamDoor(line, tag, &dd);
 }
 
 //
@@ -1531,10 +1534,10 @@ int EV_DoGenLockedDoor(const line_t *line, Mobj *thing)
 //
 // haleyjd 05/04/04: rewritten to use EV_DoParamDoor
 //
-int EV_DoGenDoor(const line_t *line, Mobj *thing)
+int EV_DoGenDoor(const line_t *line, Mobj *thing, int special, int tag)
 {
    doordata_t dd;
-   int value = line->special - GenDoorBase;
+   int value = special - GenDoorBase;
    int delayType, speedType;
 
    memset(&dd, 0, sizeof(doordata_t));
@@ -1584,7 +1587,7 @@ int EV_DoGenDoor(const line_t *line, Mobj *thing)
 
    dd.kind = (value & DoorKind) >> DoorKindShift;
    
-   return EV_DoParamDoor(line, line->args[0], &dd);
+   return EV_DoParamDoor(line, tag, &dd);
 }
 
 // ChangeLineTex texture position numbers
@@ -1601,7 +1604,8 @@ enum
 // Sets the indicated texture on all lines of lineid tag (if usetag false) or of
 // the given tag (if usetag true)
 //
-void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag)
+void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag,
+                     line_t *triggerLine)
 {
    line_t *l = nullptr;
    int linenum, texnum;
@@ -1609,7 +1613,9 @@ void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool useta
    texnum = R_FindWall(texture);
    linenum = -1;
 
-   while((l = P_FindLine(tag, &linenum)) != nullptr)
+   R_CacheTexture(texnum);
+
+   while((l = P_FindLine(tag, &linenum, triggerLine)) != nullptr)
    {
        if(l->sidenum[side] == -1)
          continue;
@@ -1617,12 +1623,15 @@ void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool useta
       switch(pos)
       {
       case CLT_TEX_UPPER:
+         R_CacheIfSkyTexture(sides[l->sidenum[side]].toptexture, texnum);
          sides[l->sidenum[side]].toptexture = texnum;
          break;
       case CLT_TEX_MIDDLE:
+         R_CacheIfSkyTexture(sides[l->sidenum[side]].midtexture, texnum);
          sides[l->sidenum[side]].midtexture = texnum;
          break;
       case CLT_TEX_LOWER:
+         R_CacheIfSkyTexture(sides[l->sidenum[side]].bottomtexture, texnum);
          sides[l->sidenum[side]].bottomtexture = texnum;
          break;
       }

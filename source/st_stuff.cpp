@@ -45,6 +45,7 @@
 #include "m_random.h"
 #include "p_skin.h"
 #include "r_main.h"
+#include "r_patch.h"
 #include "s_sound.h"
 #include "sounds.h"
 #include "st_lib.h"
@@ -381,7 +382,7 @@ static void ST_drawSmallNumber(int val, int x, int y)
       // know enough about coding to change this hard limit.
       if(val > 99999)
          val = 99999;
-      sprintf(buf, "%d", val);
+      snprintf(buf, sizeof(buf), "%d", val);
       x -= static_cast<int>(4 * (strlen(buf)));
       for(char *rover = buf; *rover; rover++)
       {
@@ -397,13 +398,17 @@ static void ST_refreshBackground()
 {
    if(st_statusbaron)
    {
-      V_DrawPatch(ST_X, ST_FY, &subscreen43, sbar);
+      V_DrawPatch(
+         ST_X + (vbscreenyscaled.unscaledw - sbar->width) / 2 + sbar->leftoffset,
+         ST_FY + sbar->topoffset,
+         &vbscreenyscaled, sbar
+      );
 
       // killough 3/7/98: make face background change with displayplayer
       // haleyjd 01/12/04: changed translation handling
       if(GameType != gt_single)
       {
-         V_DrawPatchTranslated(ST_FX, ST_FY, &subscreen43, faceback,
+         V_DrawPatchTranslated(ST_FX, ST_FY, &vbscreenyscaled, faceback,
             plyr->colormap ?
                translationtables[(plyr->colormap - 1)] :
                nullptr, 
@@ -650,7 +655,7 @@ static void ST_updateFaceWidget()
    if(priority < ST_PRIORITY_RAMPAGE)
    {
       // invulnerability
-      if((plyr->cheats & CF_GODMODE) || plyr->powers[pw_invulnerability])
+      if((plyr->cheats & CF_GODMODE) || plyr->powers[pw_invulnerability].isActive())
       {
          priority = ST_PRIORITY_GODMODE;
          
@@ -780,17 +785,18 @@ static void ST_doPaletteStuff()
    byte *pal;
    int  cnt = plyr->damagecount;
 
-   if(plyr->powers[pw_strength])
+   if(plyr->powers[pw_strength].isActive())
    {
       if(!(GameModeInfo->flags & GIF_BERZERKISPENTA))
       {
          // slowly fade the berzerk out
-         int bzc = 12 - (plyr->powers[pw_strength] >> 6);
+         int bzc = 12 - (plyr->powers[pw_strength].tics >> 6);
          if(bzc > cnt)
             cnt = bzc;
       }
-      else if((plyr->powers[pw_strength] < -4 * 32 || (plyr->powers[pw_strength] & 8)) &&
-              plyr->powers[pw_strength] && cnt == 0)
+      else if(plyr->powers[pw_strength].infinite ||
+              ((plyr->powers[pw_strength].tics < -4 * 32 || (plyr->powers[pw_strength].tics & 8)) &&
+               plyr->powers[pw_strength].isActive() && cnt == 0))
          cnt = 1;
    }
 
@@ -808,8 +814,9 @@ static void ST_doPaletteStuff()
          palette = NUMBONUSPALS-1;
       palette += STARTBONUSPALS;
    }
-   else if(plyr->powers[pw_ironfeet] > 4*32 || 
-           plyr->powers[pw_ironfeet] & 8)
+   else if(plyr->powers[pw_ironfeet].infinite ||
+           plyr->powers[pw_ironfeet].tics > 4*32 ||
+           plyr->powers[pw_ironfeet].tics & 8)
       palette = RADIATIONPAL;
    else
       palette = 0;
@@ -1093,15 +1100,15 @@ void ST_Drawer(bool fullscreen)
    // haleyjd: test whether fullscreen graphical hud is enabled
    bool fshud = hud_enabled && hud_overlaylayout == HUD_GRAPHICAL;
 
-   st_statusbaron  = !fullscreen || automapactive || fshud;
-   st_backgroundon = !fullscreen || automapactive;
+   st_statusbaron  = !fullscreen || (automapactive && !automap_overlay) || fshud;
+   st_backgroundon = !fullscreen || (automapactive && !automap_overlay);
 
    ST_doPaletteStuff();  // Do red-/gold-shifts from damage/items
 
    // sf: draw nothing in fullscreen
    // tiny bit faster and also removes the problem of status bar
    // percent '%' signs being drawn in fullscreen
-   if(fullscreen && !automapactive)
+   if(fullscreen && (!automapactive || automap_overlay))
    {
       // haleyjd: call game mode's fullscreen drawer when 
       // hud is enabled and hud_overlaystyle is "graphical"
@@ -1180,9 +1187,9 @@ static void ST_loadGraphics()
    // Load the numbers, tall and short
    for(i = 0; i < 10; i++)
    {
-      sprintf(namebuf, "STTNUM%d", i);
+      snprintf(namebuf, sizeof(namebuf), "STTNUM%d", i);
       tallnum[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
-      sprintf(namebuf, "STYSNUM%d", i);
+      snprintf(namebuf, sizeof(namebuf), "STYSNUM%d", i);
       shortnum[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 
@@ -1193,7 +1200,7 @@ static void ST_loadGraphics()
    // key cards
    for(i = 0; i < NUMCARDS+3; i++)  //jff 2/23/98 show both keys too
    {
-      sprintf(namebuf, "STKEYS%d", i);
+      snprintf(namebuf, sizeof(namebuf), "STKEYS%d", i);
       keys[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 
@@ -1203,7 +1210,7 @@ static void ST_loadGraphics()
    // arms ownership widgets
    for(i = 0; i < 6; i++)
    {
-      sprintf(namebuf, "STGNUM%d", i+2);
+      snprintf(namebuf, sizeof(namebuf), "STGNUM%d", i+2);
 
       // gray #
       arms[i][0] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
@@ -1226,7 +1233,7 @@ static void ST_loadGraphics()
    fs_armorb = PatchLoader::CacheName(wGlobalDir, "HU_FARM2", PU_STATIC);
    for(i = 0; i < 4; ++i)
    {
-      sprintf(namebuf, "HU_FAMM%d", i);
+      snprintf(namebuf, sizeof(namebuf), "HU_FAMM%d", i);
       fs_ammo[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 
@@ -1331,7 +1338,7 @@ static void ST_unloadGraphics()
 
 void ST_unloadData()
 {
-  ST_unloadGraphics();
+   ST_unloadGraphics();
 }
 
 #endif

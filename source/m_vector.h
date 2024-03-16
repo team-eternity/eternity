@@ -30,12 +30,18 @@
 #include "m_fixed.h"
 
 struct cbviewpoint_t;
+struct v3float_t;
 
 struct v3fixed_t
 {
    v3fixed_t operator + (const v3fixed_t &other) const
    {
       return { x + other.x, y + other.y, z + other.z };
+   }
+   
+   bool operator ! () const
+   {
+      return !x && !y && !z;
    }
 
    bool operator == (const v3fixed_t &other) const
@@ -56,9 +62,12 @@ struct v3fixed_t
       return *this;
    }
 
+   static v3fixed_t floatToFixed(const v3float_t &v);
+
    fixed_t x, y, z;
 };
 
+struct v2float_t;
 struct v2double_t;
 
 struct v2fixed_t
@@ -99,6 +108,13 @@ struct v2fixed_t
       return *this;
    }
 
+   v2fixed_t &operator /= (int scalar)
+   {
+      x /= scalar;
+      y /= scalar;
+      return *this;
+   }
+
    v2fixed_t operator-() const
    {
       return { -x, -y };
@@ -124,17 +140,58 @@ struct v2fixed_t
       return x == other.x && y == other.y;
    }
 
+   static v2fixed_t floatToFixed(const v2float_t &v);
    static v2fixed_t doubleToFixed(const v2double_t &v);
 
    v2fixed_t fixedMul(const fixed_t scalar) const
    {
       return { FixedMul(x, scalar), FixedMul(y, scalar) };
    }
+
+   v2fixed_t fixedDiv(const fixed_t scalar) const
+   {
+      return { FixedDiv(x, scalar), FixedDiv(y, scalar) };
+   }
+
+   v2fixed_t operator / (int scalar) const
+   {
+      return { x / scalar, y / scalar };
+   }
+
+   v2fixed_t operator * (int scalar) const
+   {
+      return { x * scalar, y * scalar };
+   }
 };
 
 struct v3float_t
 {
    float x, y, z;
+
+   v3float_t operator - (const v3float_t &other) const
+   {
+      return { x - other.x, y - other.y, z - other.z };
+   }
+
+   // cross product
+   v3float_t operator % (const v3float_t &other) const
+   {
+      return {
+         y * other.z - z * other.y,
+         z * other.x - x * other.z,
+         x * other.y - y * other.x
+      };
+   }
+
+   v3float_t &operator /= (float operand)
+   {
+      x /= operand;
+      y /= operand;
+      z /= operand;
+      return *this;
+   }
+
+   float abs() const;
 };
 
 struct v2float_t;
@@ -150,6 +207,11 @@ struct v3double_t
 {
    double x, y, z;
 };
+
+inline v3fixed_t v3fixed_t::floatToFixed(const v3float_t &v)
+{
+   return { M_FloatToFixed(v.x), M_FloatToFixed(v.y), M_FloatToFixed(v.z) };
+}
 
 struct v2float_t
 {
@@ -175,6 +237,11 @@ struct v2float_t
       return { x - other.x, y - other.y };
    }
 
+   v2float_t operator - () const
+   {
+      return { -x, -y };
+   }
+
    float operator * (const v2float_t other) const
    {
       return x * other.x + y * other.y;
@@ -191,6 +258,13 @@ struct v2float_t
       y += other.y;
       return *this;
    }
+   
+   v2float_t &operator -= (const v2float_t other)
+   {
+      x -= other.x;
+      y -= other.y;
+      return *this;
+   }
 
    //
    // Z of cross product assuming these two vectors have z=0. Uses the corkscrew rule. Useful to
@@ -204,7 +278,7 @@ struct v2float_t
       return x * other.y - other.x * y;
    }
 
-   operator bool() const
+   bool nonzero() const
    {
       return x || y;
    }
@@ -218,6 +292,10 @@ struct v2float_t
 //
 // Vector-wise operation
 //
+inline v2fixed_t v2fixed_t::floatToFixed(const v2float_t &v)
+{
+   return { M_FloatToFixed(v.x), M_FloatToFixed(v.y) };
+}
 inline v2fixed_t v2fixed_t::doubleToFixed(const v2double_t &v)
 {
    return { M_DoubleToFixed(v.x), M_DoubleToFixed(v.y) };

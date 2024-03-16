@@ -28,15 +28,8 @@
 
 #include <optional>
 
-#ifdef __APPLE__
-#include "SDL2/SDL.h"
-#include "SDL2_mixer/SDL_mixer.h"
-#else
 #include "SDL.h"
 #include "SDL_mixer.h"
-#endif
-
-#include "i_midirpc.h"
 
 #include "../z_zone.h"
 #include "../d_io.h"
@@ -54,6 +47,7 @@
 #include "../d_gi.h"
 #include "../s_sound.h"
 #include "../mn_engin.h"
+#include "../m_utils.h"
 
 #ifdef HAVE_SPCLIB
 #include "../../snes_spc/spc.h"
@@ -63,11 +57,11 @@
 #include "adlmidi.h"
 #endif
 
-#ifdef EE_FEATURE_MIDIRPC
+#if defined(_WIN32)
 #include <windows.h>
-#pragma comment(lib, "Winmm.lib")
 
-#include "../Win32/i_winversion.h"
+#include "../Win32/midifile.h"
+#include "../Win32/i_winmusic.h"
 #endif
 
 extern int audio_buffers;
@@ -226,12 +220,14 @@ static void I_effectADLMIDI(void *udata, Uint8 *stream, int len)
    ADL_UInt8 *const r_out = reinterpret_cast<ADL_UInt8 *>(adlmidi_buffer + 1);
    const int gotlen = adl_playFormat(adlmidi_player, numsamples, l_out, r_out, &fmt) *
                       fmt.sampleOffset / 2;
-   if(snd_MusicVolume == 15)
+   if(snd_MusicVolume == SND_MAXVOLUME)
       memcpy(stream, reinterpret_cast<Uint8 *>(adlmidi_buffer), size_t(gotlen));
    else
    {
-      SDL_MixAudioFormat(stream, reinterpret_cast<Uint8 *>(adlmidi_buffer), audio_spec.format,
-                         gotlen, (snd_MusicVolume * 128) / 15);
+      SDL_MixAudioFormat(
+         stream, reinterpret_cast<Uint8 *>(adlmidi_buffer), audio_spec.format,
+         gotlen, (snd_MusicVolume * 128) / SND_MAXVOLUME
+      );
    }
    adlplaying = false;
 }
@@ -242,12 +238,9 @@ static void I_effectADLMIDI(void *udata, Uint8 *stream, int len)
 // MUSIC API.
 //
 
-#ifdef EE_FEATURE_MIDIRPC
-static bool haveMidiServer;
-static bool haveMidiClient;
-static bool serverMidiPlaying;
-
-static std::optional<DWORD> initialVolume;
+#if defined(_WIN32)
+static bool winMIDIStreamOpened = false;
+static bool winMIDISteamRegistered = false;
 #endif
 
 // julian (10/25/2005): rewrote (nearly) entirely
@@ -280,11 +273,12 @@ static void I_SDLShutdownMusic(void)
 {
    I_SDLUnRegisterSong(1);
 
-#ifdef EE_FEATURE_MIDIRPC
-   if(initialVolume.has_value() && I_IsWindowsVistaOrHigher())
-      waveOutSetVolume(nullptr, *initialVolume);
-
-   I_MidiRPCClientShutDown();
+#if defined(_WIN32)
+   if(winMIDIStreamOpened)
+   {
+      I_WIN_ShutdownMusic();
+      winMIDIStreamOpened = false;
+   }
 #endif
 }
 
@@ -343,20 +337,13 @@ static int I_SDLInitMusic(void)
    if(!snd_init)
    {
       if((success = I_SDLInitSoundForMusic()))
-         atexit(I_SDLShutdownSoundForMusic);
+         I_AtExit(I_SDLShutdownSoundForMusic);
    }
    else
       success = 1;
 
-#ifdef EE_FEATURE_MIDIRPC
-   // Initialize RPC server
-   haveMidiServer = I_MidiRPCInitServer();
-
-   if(!haveMidiServer)
-   {
-      if(DWORD currVolume = 0; waveOutGetVolume(nullptr, &currVolume) == MMSYSERR_NOERROR)
-         initialVolume = currVolume;
-   }
+#if defined(_WIN32)
+   winMIDIStreamOpened = I_WIN_InitMusic(DEFAULT_MIDI_DEVICE);
 #endif
 
    return success;
@@ -383,9 +370,9 @@ static void I_SDLPlaySong(int handle, int looping)
       }
       else
 #endif
-#ifdef EE_FEATURE_MIDIRPC
-   if(serverMidiPlaying)
-      I_MidiRPCPlaySong(!!looping);
+#if defined(_WIN32)
+   if(winMIDISteamRegistered)
+      I_WIN_PlaySong(!!looping);
    else
 #endif
    if(CHECK_MUSIC(handle) && Mix_PlayMusic(music, looping ? -1 : 0) == -1)
@@ -400,19 +387,19 @@ static void I_SDLPlaySong(int handle, int looping)
 //
 static void I_SDLSetMusicVolume(int volume)
 {
-   // haleyjd 09/04/06: adjust to use scale from 0 to 15
-   Mix_VolumeMusic((volume * 128) / 15);
+   // haleyjd 09/04/06: adjust to use scale from 0 to SND_MAXVOLUME
+   Mix_VolumeMusic((volume * 128) / SND_MAXVOLUME);
 
-#ifdef EE_FEATURE_MIDIRPC
+#if defined(_WIN32)
    // adjust server volume
-   I_MidiRPCSetVolume(volume);
+   I_WIN_SetMusicVolume(volume);
 #endif
 
 #ifdef HAVE_SPCLIB
    if(snes_spc)
    {
       // if a SPC is playing, set its volume too
-      spc_filter_set_gain(spc_filter, volume * (256 * spc_preamp) / 15);
+      spc_filter_set_gain(spc_filter, volume * (256 * spc_preamp) / SND_MAXVOLUME);
    }
 #endif
 }
@@ -424,10 +411,10 @@ static int paused_midi_volume;
 //
 static void I_SDLPauseSong(int handle)
 {
-#ifdef EE_FEATURE_MIDIRPC
-   if(serverMidiPlaying)
+#if defined(_WIN32)
+   if(winMIDISteamRegistered)
    {
-      I_MidiRPCPauseSong();
+      I_WIN_PauseSong();
       return;
    }
 #endif
@@ -455,10 +442,10 @@ static void I_SDLPauseSong(int handle)
 //
 static void I_SDLResumeSong(int handle)
 {
-#ifdef EE_FEATURE_MIDIRPC
-   if(serverMidiPlaying)
+#if defined(_WIN32)
+   if(winMIDISteamRegistered)
    {
-      I_MidiRPCResumeSong();
+      I_WIN_ResumeSong();
       return;
    }
 #endif
@@ -482,12 +469,9 @@ static void I_SDLResumeSong(int handle)
 //
 static void I_SDLStopSong(int handle)
 {
-#ifdef EE_FEATURE_MIDIRPC
-   if(serverMidiPlaying)
-   {
-      I_MidiRPCStopSong();
-      serverMidiPlaying = false;
-   }
+#if defined(_WIN32)
+   if(winMIDISteamRegistered)
+      I_WIN_StopSong();
 #endif
 
    if(CHECK_MUSIC(handle))
@@ -509,11 +493,11 @@ static void I_SDLStopSong(int handle)
 //
 static void I_SDLUnRegisterSong(int handle)
 {
-#ifdef EE_FEATURE_MIDIRPC
-   if(serverMidiPlaying)
+#if defined(_WIN32)
+   if(winMIDISteamRegistered)
    {
-      I_MidiRPCStopSong();
-      serverMidiPlaying = false;
+      winMIDISteamRegistered = false;
+      I_WIN_UnRegisterSong();
    }
 #endif
 
@@ -606,7 +590,7 @@ static int I_TryLoadSPC(void *data, int size)
    spc_filter_clear(spc_filter);
 
    // set initial gain and bass parameters
-   spc_filter_set_gain(spc_filter, snd_MusicVolume * (256 * spc_preamp) / 15);
+   spc_filter_set_gain(spc_filter, snd_MusicVolume * (256 * spc_preamp) / SND_MAXVOLUME);
    spc_filter_set_bass(spc_filter, spc_bass_boost);
 
    return 0;
@@ -663,22 +647,25 @@ static int I_SDLRegisterSong(void *data, int size)
       isMIDI = true;   // now it's a MIDI.
    }
 
-#ifdef EE_FEATURE_MIDIRPC
-   // Check for option to invoke RPC server if isMIDI
+#if defined(_WIN32)
 #ifdef HAVE_ADLMIDILIB
-   if(isMIDI && haveMidiServer && midi_device == -1)
+   if(isMIDI && winMIDIStreamOpened && midi_device == -1)
 #else
-   if(isMIDI && haveMidiServer)
+   if(isMIDI && winMIDIStreamOpened)
 #endif
    {
-      // Init client if not yet started
-      if(!haveMidiClient)
-         haveMidiClient = I_MidiRPCInitClient();
-
-      if(I_MidiRPCRegisterSong(data, size))
+      if(winMIDIStreamOpened)
       {
-         serverMidiPlaying = true;
-         return 1; // server will play this song.
+         if(I_WIN_RegisterSong(data, size))
+         {
+            winMIDISteamRegistered = true;
+            return 1;
+         }
+         else
+         {
+            winMIDISteamRegistered = false;
+            music = nullptr;
+         }
       }
    }
 #endif
@@ -750,4 +737,3 @@ i_musicdriver_t i_sdlmusicdriver =
 };
 
 // EOF
-

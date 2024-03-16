@@ -80,6 +80,7 @@
 #include "r_plane.h"    // killough 10/98
 #include "r_portal.h"
 #include "r_ripple.h"
+#include "r_sky.h"
 #include "r_state.h"
 #include "s_sound.h"
 #include "sounds.h"
@@ -95,11 +96,11 @@ bool secret_notification_enabled = true;
 //
 struct anim_t
 {
-  bool        istexture;
-  int         picnum;
-  int         basepic;
-  int         numpics;
-  int         speed;
+   bool        istexture;
+   int         picnum;
+   int         basepic;
+   int         numpics;
+   int         speed;
 };
 
 //
@@ -1090,7 +1091,7 @@ void P_CrossSpecialLine(line_t *line, int side, Mobj *thing, polyobj_t *poly)
 {
    // EV_SPECIALS TODO: This function should return success or failure to 
    // the caller.
-   EV_ActivateSpecialLineWithSpac(line, side, thing, poly, SPAC_CROSS);
+   EV_ActivateSpecialLineWithSpac(line, side, thing, poly, SPAC_CROSS, false);
 }
 
 //
@@ -1109,7 +1110,7 @@ void P_ShootSpecialLine(Mobj *thing, line_t *line, int side)
 {
    // EV_SPECIALS TODO: This function should return success or failure to 
    // the caller.
-   EV_ActivateSpecialLineWithSpac(line, side, thing, nullptr, SPAC_IMPACT);
+   EV_ActivateSpecialLineWithSpac(line, side, thing, nullptr, SPAC_IMPACT, false);
 }
 
 //
@@ -1117,11 +1118,42 @@ void P_ShootSpecialLine(Mobj *thing, line_t *line, int side)
 //
 void P_PushSpecialLine(Mobj &thing, line_t &line, int side)
 {
-   EV_ActivateSpecialLineWithSpac(&line, side, &thing, nullptr, SPAC_PUSH);
+   EV_ActivateSpecialLineWithSpac(&line, side, &thing, nullptr, SPAC_PUSH, false);
 }
 
         // sf: changed to enable_nuke for console
 int enable_nuke = 1;  // killough 12/98: nukage disabling cheat
+
+//
+// Handle MBF21 instant death sector for player
+//
+static void P_runInstantDeathSector(player_t *player, const sector_t *sector)
+{
+   bool exit = !!(sector->damageflags & (SDMG_INSTAEXITNORMAL | SDMG_INSTAEXITSECRET));
+   bool kill;
+   if(!enable_nuke)  // allow the nuke cheat to eliminate the insta-deaths without exit
+      kill = exit;
+   else
+   {
+      kill = sector->damageflags & SDMG_IGNORESUIT || (!player->powers[pw_ironfeet].isActive() &&
+                                                       !player->powers[pw_invulnerability].isActive());
+   }
+   if(!kill)
+      return;
+
+   P_DamageMobj(player->mo, nullptr, nullptr, GOD_BREACH_DAMAGE, sector->damagemod);
+   if(!exit)
+      return;
+
+   // Must also "kill" the other players before exiting
+   for(int i = 0; i < MAXPLAYERS; ++i)
+      if(playeringame[i] && players[i].mo != player->mo)
+         P_DamageMobj(player->mo, nullptr, nullptr, GOD_BREACH_DAMAGE, sector->damagemod);
+   if(sector->damageflags & SDMG_INSTAEXITSECRET)
+      G_SecretExitLevel();
+   else
+      G_ExitLevel();
+}
 
 //
 // P_PlayerInSpecialSector
@@ -1140,8 +1172,13 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
    // TODO: waterzones should damage whenever you're in them
    // Falling, not all the way down yet?
    // Sector specials don't apply in mid-air
-   if(player->mo->z != sector->srf.floor.height)
+   if(!sector->srf.floor.slope && player->mo->z != sector->srf.floor.height)
       return;
+   if(sector->srf.floor.slope && (player->mo->z != player->mo->zref.floor ||
+                                  player->mo->zref.sector.floor != sector))
+   {
+      return;
+   }
 
    // haleyjd 12/28/08: We handle secrets uniformly now, through the
    // sector flags field. We also keep track of former secret status
@@ -1168,12 +1205,14 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
 
    // Has hit ground
 
-   // haleyjd 12/31/08: generalized sector damage engine
-   if(enable_nuke && sector->damage > 0) // killough 12/98: nukage disabling cheat
+   if(mbf21_demo && sector->flags & SECF_INSTANTDEATH)
+      P_runInstantDeathSector(player, sector);
+   else if(enable_nuke && sector->damage > 0) // killough 12/98: nukage disabling cheat
    {
-      if(!player->powers[pw_ironfeet]          ||  // no rad suit?
-         sector->leakiness >= 256              ||  // ignores suit?
-         (sector->leakiness > 0                &&  // suit leaks?
+      // haleyjd 12/31/08: generalized sector damage engine
+      if(!player->powers[pw_ironfeet].isActive() ||  // no rad suit?
+         sector->leakiness >= 256                ||  // ignores suit?
+         (sector->leakiness > 0                  &&  // suit leaks?
           (P_Random(pr_slimehurt) < sector->leakiness))
         )
       {
@@ -1231,7 +1270,7 @@ void P_PlayerOnSpecialFlat(const player_t *player)
    if(player->mo->z != floorz)
       return;
 
-   terrain = E_GetThingFloorType(player->mo, true);
+   terrain = E_GetThingFloorType(player->mo);
 
    if(enable_nuke && // haleyjd: allow nuke cheat to disable terrain damage too
       terrain->damageamount && !(leveltime & terrain->damagetimemask))
@@ -1293,6 +1332,8 @@ void P_UpdateSpecials()
    {
       for(int i = anim->basepic; i < anim->basepic + anim->numpics; i++)
       {
+         const int prev = texturetranslation[i];
+
          if((i >= flatstart && i < flatstop && r_swirl) ||
             anim->speed >= SWIRL_TICS || anim->numpics == 1)
          {
@@ -1305,6 +1346,10 @@ void P_UpdateSpecials()
 
             texturetranslation[i] = pic;
          }
+
+         // Cache new animation and make a sky texture if required
+         R_CacheTexture(texturetranslation[i]);
+         R_CacheSkyTextureAnimFrame(prev, texturetranslation[i]);
       }
    }
    
@@ -1469,8 +1514,15 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
 
       case EV_STATIC_SKY_TRANSFER:         // Regular sky
       case EV_STATIC_SKY_TRANSFER_FLIPPED: // Same, only flipped
-         for(s = -1; (s = P_FindSectorFromLineArg0(lines+i,s)) >= 0;)
+         for(s = -1; (s = P_FindSectorFromLineArg0(lines + i, s)) >= 0;)
+         {
             sectors[s].sky = i | PL_SKYFLAT;
+
+            const line_t &l = lines[i];
+            const side_t *s = sides + *l.sidenum;
+            if(s->toptexture < texturecount)
+               R_CacheSkyTexture(s->toptexture);
+         }
          break;
 
          // ioanch 20160803: Static_Init special from ZDoom
@@ -1479,8 +1531,15 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
             int prop = line->args[ev_StaticInit_Arg_Prop];
             if(prop == ev_StaticInit_Prop_SkyTransfer)   // sky transfer
             {
-               for(s = -1; (s = P_FindSectorFromLineArg0(line,s)) >= 0;)
+               for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0;)
+               {
                   sectors[s].sky = i | PL_SKYFLAT;
+
+                  const line_t &l = lines[i];
+                  const side_t *s = sides + *l.sidenum;
+                  if(s->toptexture < texturecount)
+                     R_CacheSkyTexture(s->toptexture);
+               }
             }
          }
          break;
@@ -1652,6 +1711,8 @@ void P_SpawnDeferredSpecials(UDMFSetupSettings &setupSettings)
       else
          sec->intflags &= ~SIF_PORTALBOX;
    }
+
+   P_PostProcessSlopes();
 }
 
 // haleyjd 04/11/10:
@@ -1903,8 +1964,22 @@ static void P_SpawnFriction()
 // haleyjd 02/27/07: rewritten to get rid of Raven code and to speed up in the
 // same manner as P_FindLineFromLineTag by using in-table tag hash.
 //
-line_t *P_FindLine(int tag, int *searchPosition)
+// ioanch 20211010: return defaultline if provided and tag is zero.
+//
+line_t *P_FindLine(int tag, int *searchPosition, line_t *defaultLine)
 {
+   if(defaultLine && !tag)
+   {
+      if(*searchPosition == eindex(defaultLine - lines))
+      {
+         // Don't loop over; make sure to still provide valid output
+         *searchPosition = -1;
+         return nullptr;
+      }
+      *searchPosition = eindex(defaultLine - lines);
+      return defaultLine;
+   }
+
    line_t *line = nullptr;
    
    int start = 
@@ -1983,7 +2058,7 @@ void P_SetLineID(line_t *line, int id)
 // the sector special (not all sector flags may be considered to be such).
 
 #define SPECIALFLAGSMASK \
-   (SECF_SECRET|SECF_FRICTION|SECF_PUSH|SECF_KILLSOUND|SECF_KILLMOVESOUND)
+   (SECF_SECRET|SECF_FRICTION|SECF_PUSH|SECF_KILLSOUND|SECF_KILLMOVESOUND|SECF_INSTANTDEATH|SECF_MONSTERDEATH)
 
 //
 // P_SetupSpecialTransfer
@@ -2127,15 +2202,15 @@ bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta,
       if(!(line->flags & (ML_TWOSIDED|ML_3DMIDTEX)) || line->sidenum[1] == -1)
          continue;
 
-      sides[line->sidenum[0]].rowoffset += delta;
-      sides[line->sidenum[1]].rowoffset += delta;
+      sides[line->sidenum[0]].offset_base_y += delta;
+      sides[line->sidenum[1]].offset_base_y += delta;
       P_AddScrolledSide(&sides[line->sidenum[0]], 0, delta);
       P_AddScrolledSide(&sides[line->sidenum[1]], 0, delta);
    }
 
    for(i = 0; i < numattsectors; ++i)
    {
-      if(P_CheckSector(sectors + attsectors[i], crush, delta, 2))
+      if(P_CheckSector(sectors + attsectors[i], crush, delta, CheckSectorPlane::midtex3d))
          ok = false;
    }
 
@@ -2401,16 +2476,16 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
    {
       if(list[i].type & AS_CEILING)
       {
-         P_SetCeilingHeight(list[i].sector, list[i].sector->srf.ceiling.height + delta);
-         if(P_CheckSector(list[i].sector, crush, delta, 1))
+         P_SetSectorHeight(*list[i].sector, surf_ceil, list[i].sector->srf.ceiling.height + delta);
+         if(P_CheckSector(list[i].sector, crush, delta, CheckSectorPlane::ceiling))
             ok = false;
          if(nointerp)
             P_SaveSectorPosition(*list[i].sector, ssurf_ceiling);
       }
       else if(list[i].type & AS_MIRRORCEILING)
       {
-         P_SetCeilingHeight(list[i].sector, list[i].sector->srf.ceiling.height - delta);
-         if(P_CheckSector(list[i].sector, crush, -delta, 1))
+         P_SetSectorHeight(*list[i].sector, surf_ceil, list[i].sector->srf.ceiling.height - delta);
+         if(P_CheckSector(list[i].sector, crush, -delta, CheckSectorPlane::ceiling))
             ok = false;
          if(nointerp)
             P_SaveSectorPosition(*list[i].sector, ssurf_ceiling);
@@ -2418,16 +2493,16 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
 
       if(list[i].type & AS_FLOOR)
       {
-         P_SetFloorHeight(list[i].sector, list[i].sector->srf.floor.height + delta);
-         if(P_CheckSector(list[i].sector, crush, delta, 0))
+         P_SetSectorHeight(*list[i].sector, surf_floor, list[i].sector->srf.floor.height + delta);
+         if(P_CheckSector(list[i].sector, crush, delta, CheckSectorPlane::floor))
             ok = false;
          if(nointerp)
             P_SaveSectorPosition(*list[i].sector, ssurf_floor);
       }
       else if(list[i].type & AS_MIRRORFLOOR)
       {
-         P_SetFloorHeight(list[i].sector, list[i].sector->srf.floor.height - delta);
-         if(P_CheckSector(list[i].sector, crush, -delta, 0))
+         P_SetSectorHeight(*list[i].sector, surf_floor, list[i].sector->srf.floor.height - delta);
+         if(P_CheckSector(list[i].sector, crush, -delta, CheckSectorPlane::floor))
             ok = false;
          if(nointerp)
             P_SaveSectorPosition(*list[i].sector, ssurf_floor);
@@ -2804,16 +2879,16 @@ void P_SetPortal(sector_t *sec, line_t *line, portal_t *portal, portal_effect ef
    {
    case portal_ceiling:
       sec->srf.ceiling.portal = portal;
-      P_CheckCPortalState(sec);
+      P_CheckSectorPortalState(*sec, surf_ceil);
       break;
    case portal_floor:
       sec->srf.floor.portal = portal;
-      P_CheckFPortalState(sec);
+      P_CheckSectorPortalState(*sec, surf_floor);
       break;
    case portal_both:
       sec->srf.ceiling.portal = sec->srf.floor.portal = portal;
-      P_CheckCPortalState(sec);
-      P_CheckFPortalState(sec);
+      P_CheckSectorPortalState(*sec, surf_ceil);
+      P_CheckSectorPortalState(*sec, surf_floor);
       break;
    case portal_lineonly:
       line->portal = portal;
@@ -3312,11 +3387,10 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          {
             // SoM 3-10-04: Two different anchor linedef codes so I can tag
             // two anchored portals to the same sector.
-            if((lines[s].special != anchortype &&
-                !(lines[s].extflags &
-                  (EX_ML_LOWERPORTAL | EX_ML_UPPERPORTAL))) ||
-               line == &lines[s] ||
-               lines[s].frontsector == nullptr)
+            if((lines[s].special != anchortype && (anchorfunc != EV_STATIC_PORTAL_LINKED_L2L_ANCHOR ||
+                                                   !(lines[s].extflags & (EX_ML_LOWERPORTAL |
+                                                                          EX_ML_UPPERPORTAL)))) ||
+               line == &lines[s] || lines[s].frontsector == nullptr)
             {
                continue;
             }
@@ -3467,7 +3541,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
    }
 }
 
-VARIABLE_BOOLEAN(secret_notification_enabled, nullptr, onoff);
+VARIABLE_TOGGLE(secret_notification_enabled, nullptr, onoff);
 CONSOLE_VARIABLE(secret_notification, secret_notification_enabled, 0) {}
 
 #if 0

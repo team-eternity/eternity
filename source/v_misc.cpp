@@ -320,13 +320,13 @@ void V_FPSTicker()
 //
 static void V_ClassicFPSDrawer()
 {
-  static int lasttic;
-  
-  int i = i_haltimer.GetTime();
-  int tics = i - lasttic;
-  lasttic = i;
-  if (tics > 20)
-    tics = 20;
+   static int lasttic;
+
+   int i = i_haltimer.GetTime();
+   int tics = i - lasttic;
+   lasttic = i;
+   if(tics > 20)
+      tics = 20;
 
    // SoM: ANYRES
    if(vbscreen.scaled)
@@ -410,12 +410,21 @@ void V_InitSubScreenModernHUD()
    int subwidth;
    int offset;
    int unscaledw;
+   int unscaledh;
 
    if(vbscreensquarepx.getRealAspectRatio() >= 16 * FRACUNIT / 9 && hud_restrictoverlaywidth)
    {
       subwidth  = vbscreensquarepx.height * 16 / 9;
       offset    = (vbscreensquarepx.width - subwidth) / 2;
-      unscaledw = int(round(vbscreensquarepx.unscaledh * 16.0 / 9.0));
+      unscaledw = int(floor(vbscreensquarepx.unscaledh * 16.0 / 9.0)) & ~1;
+      unscaledh = vbscreensquarepx.unscaledh;
+   }
+   else if(vbscreen.getVirtualAspectRatio() == 4 * FRACUNIT / 3 && vbscreen.getRealAspectRatio() != vbscreen.getVirtualAspectRatio())
+   {
+      offset    = 0;
+      subwidth  = vbscreen.width;
+      unscaledw = vbscreen.unscaledw;
+      unscaledh = vbscreen.unscaledh;
    }
    else
    {
@@ -423,12 +432,13 @@ void V_InitSubScreenModernHUD()
 
       subwidth  = vbscreen.width;
       offset    = 0;
-      unscaledw = int(round(vbscreensquarepx.unscaledh * scaleaspect));
+      unscaledw = int(floor(vbscreensquarepx.unscaledh * scaleaspect)) & ~1;
+      unscaledh = vbscreensquarepx.unscaledh;
    }
 
 
    V_InitSubVBuffer(&vbscreenmodernhud, &vbscreen, offset, 0, subwidth, vbscreen.height);
-   V_SetScaling(&vbscreenmodernhud, unscaledw, vbscreensquarepx.unscaledh);
+   V_SetScaling(&vbscreenmodernhud, unscaledw, unscaledh);
 }
 
 //
@@ -452,7 +462,7 @@ static void V_initSubScreen43()
       offset   = (vbscreen.width - subwidth) / 2;
 
       const double scaleaspect = 1.2 * double(vbscreen.width) / double(vbscreen.height);
-      unscaledw                = int(round(SCREENHEIGHT * scaleaspect));
+      unscaledw                = int(floor(SCREENHEIGHT * scaleaspect)) & ~1;
 
       // FIXME(?): vbscreenyscaled doesn't work if unscaledw is larger than vbscreen.width,
       // which happens if the vbscreen.height < SCREENHEIGHT * 1.2 (roughly)
@@ -555,7 +565,7 @@ void V_Init()
 // Tiles a 64 x 64 flat over the entirety of the provided VBuffer
 // surface. Used by menus, intermissions, finales, etc.
 //
-void V_DrawBackgroundCached(byte *src, VBuffer *back_dest)
+void V_DrawBackgroundCached(const byte *src, VBuffer *back_dest)
 {
    back_dest->TileBlock64(back_dest, src);
 }
@@ -566,7 +576,7 @@ void V_DrawBackgroundCached(byte *src, VBuffer *back_dest)
 void V_DrawBackground(const char *patchname, VBuffer *back_dest)
 {
    int         tnum = R_FindFlat(patchname) - flatstart;
-   byte        *src;
+   const byte *src;
    
    // SoM: Extra protection, I don't think this should ever actually happen.
    if(tnum < 0 || tnum >= numflats)   
@@ -577,7 +587,7 @@ void V_DrawBackground(const char *patchname, VBuffer *back_dest)
    back_dest->TileBlock64(back_dest, src);
 }
 
-byte *R_DistortedFlat(int, bool);
+byte *R_DistortedFlat(ZoneHeap &heap, int, bool);
 
 //
 // V_DrawDistortedBackground
@@ -587,8 +597,10 @@ byte *R_DistortedFlat(int, bool);
 //
 void V_DrawDistortedBackground(const char *patchname, VBuffer *back_dest)
 {
-   byte *src = R_DistortedFlat(R_FindFlat(patchname), true);
-   
+   const int patchNum = R_FindFlat(patchname);
+   R_CacheTexture(patchNum);
+   const byte *src = R_DistortedFlat(*r_globalcontext.heap, patchNum, true);
+
    back_dest->TileBlock64(back_dest, src);
 }
 

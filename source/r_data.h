@@ -28,7 +28,10 @@
 #define R_DATA_H__
 
 // Required for: DLListItem
+#include "doomtype.h"
 #include "m_dllist.h"
+
+class ZoneHeap;
 
 enum
 {
@@ -84,6 +87,8 @@ typedef enum
    TF_ANIMATED  = 0x08u,
    // Set if texture width is non-power-of-two
    TF_WIDTHNP2  = 0x10u,
+   // Set if texture was loaded in non-vanilla ways (i.e. not by TEXTUREx/PNAMES)
+   TF_NONVANILLA = 0x20u,
 } texflag_e;
 
 struct texture_t
@@ -127,15 +132,16 @@ struct texture_t
 // SoM: This is replaced with two functions. For solid walls/skies, we only 
 // need the raw column data (direct buffer ptr). For masked mid-textures, we
 // need to return columns from the column list
-byte     *R_GetRawColumn(int tex, int32_t col);
-texcol_t *R_GetMaskedColumn(int tex, int32_t col);
+const byte *R_GetRawColumn(ZoneHeap &heap, int tex, int32_t col);
+const texcol_t *R_GetMaskedColumn(int tex, int32_t col);
 
 // SoM: This function returns the linear texture buffer (recache if needed)
-byte *R_GetLinearBuffer(int tex);
+const byte *R_GetLinearBuffer(int tex);
 
 // Cache a given texture
 // Returns the texture for chaining.
-texture_t *R_CacheTexture(int num);
+texture_t *R_GetTexture(int num);
+void R_CacheTexture(int num);
 
 // SoM: all textures/flats are now stored in a single array (textures)
 // Walls start from wallstart to (wallstop - 1) and flats go from flatstart 
@@ -174,11 +180,12 @@ int R_CheckForWall(const char *name);
 void R_InitTranMap(bool force);      // killough 3/6/98: translucency initialization
 void R_InitSubMap(bool force);
 int  R_ColormapNumForName(const char *name);      // killough 4/4/98
+const char *R_ColormapNameForNum(int index);
 
 // haleyjd: new global colormap method
 void R_SetGlobalLevelColormap(void);
 
-extern byte *main_tranmap, *main_submap, *tranmap;
+extern byte *main_tranmap, *main_submap;
 
 extern int r_precache;
 

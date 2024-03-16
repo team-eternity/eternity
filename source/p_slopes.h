@@ -31,6 +31,20 @@ struct line_t;
 struct pslope_t;
 struct v3float_t;
 
+//
+// Holds a sector slopes' vertical heights. For each map sector there's a slopeheight
+//
+struct slopeheight_t
+{
+   fixed_t floordelta;     // difference from bottom slope tip to floorheight
+   fixed_t ceilingdelta;   // difference from top slope tip to ceilingheight
+   fixed_t touchheight;    // difference from ceilingheight to floorheight when planes touch
+};
+
+extern slopeheight_t *pSlopeHeights;
+
+void P_PostProcessSlopes();
+
 // P_MakeLineNormal
 // Calculates a 2D normal for the given line and stores it in the line
 void P_MakeLineNormal(line_t *line);
@@ -50,7 +64,7 @@ void P_SpawnSlope_Line(int linenum, int staticFn);
 void P_CopySectorSlope(line_t *line, int staticFn);
 
 // Returns the height of the sloped plane at (x, y) as a fixed_t
-fixed_t P_GetZAt(pslope_t *slope, fixed_t x, fixed_t y);
+fixed_t P_GetZAt(const pslope_t *slope, fixed_t x, fixed_t y);
 
 
 // Returns the height of the sloped plane at (x, y) as a float
@@ -60,6 +74,12 @@ float P_GetZAtf(pslope_t *slope, float x, float y);
 // Returns the distance of the given point from the given origin and normal.
 float P_DistFromPlanef(const v3float_t *point, const v3float_t *pori, 
                        const v3float_t *pnormal);
+
+bool P_SlopesEqual(const pslope_t &s1, const pslope_t &s2);
+
+bool P_AnySlope(const line_t &line);
+
+bool P_IsSteep(const pslope_t* slope);
 
 #endif
 

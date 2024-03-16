@@ -659,7 +659,7 @@ thingtype HereticTeleFog : Mobj, -1, 334
 
 thingtype HereticBlood : Mobj, -1, 335
 {
-  cflags NOBLOCKMAP|NOSPLASH
+  cflags NOBLOCKMAP
 
   firstdecoratestate S_HTICBLOOD1
   states
@@ -1102,8 +1102,8 @@ thingtype Disciple : ClassicHereticSolid, 7015, 349
   addflags        SHOOTABLE|NOGRAVITY|FLOAT|COUNTKILL|ACTSEESOUND|BOSSIGNORE|SPACMONSTER|PASSMOBJ|DONTOVERLAP
   obituary_normal "was schooled by a Disciple"
   obituary_melee  "was slapped by a Disciple"
-  dropitem        HAmmoBlasterWimpy, 84, 10, +toss
   dropitem        HArtiTomeOfPower,   4,  0, +toss
+  dropitem        HAmmoBlasterWimpy, 84, 10, +toss
   acs_spawndata
   {
     num   19
@@ -1522,7 +1522,7 @@ thingtype DsparilShot2 : HereticMissile, -1, 360
     FX11 A 35 bright
     FX11 A  5 bright A_GenWizard
     FX11 B  5 bright
-    loop
+    goto Spawn+1
   Death:
     FX11 CDEFG 5 bright
     stop
@@ -1745,8 +1745,8 @@ thingtype Maulotaur : ClassicHereticSolid, 7009, 371
   addflags        SHOOTABLE|DROPOFF|COUNTKILL|BOSS|FOOTCLIP|E2M8BOSS|NOSTRAFE|INVULNCHARGE|E5M8BOSS|DMGIGNORED|SPACMONSTER|PASSMOBJ
   obituary_normal "bowed down before the Maulotaur"
   obituary_melee  "was pounded flat by the Maulotaur"
-  dropitem        HArtiSuperHeal,    51,  0, +toss
   dropitem        HAmmoPhoenixWimpy, 84, 10, +toss
+  dropitem        HArtiSuperHeal,    51,  0, +toss
   acs_spawndata
   {
     num   114     // note: different from zdoom
@@ -1926,8 +1926,8 @@ thingtype IronLich : ClassicHereticSolid, 7006, 376
   addflags        SHOOTABLE|COUNTKILL|NOBLOOD|E1M8BOSS|E4M8BOSS|NOSPLASH|SPACMONSTER|PASSMOBJ
   obituary_normal "was punished by the Iron Lich"
   obituary_melee  "was bitten by the Iron Lich"
-  dropitem        HAmmoBlasterWimpy, 84, 10, +toss
   dropitem        HArtiEgg,          51,  0, +toss
+  dropitem        HAmmoBlasterWimpy, 84, 10, +toss
   acs_spawndata
   {
     num   20
@@ -2852,6 +2852,7 @@ thingtype HereticBlasterSmoke : Mobj, -1, 421
 thingtype HereticRipper : HereticMissile, -1, 422
 {
   compatname Ripper
+  ripsound   ht_ripslop
   deathsound ht_hrnhit
   speed      14.0
   radius     8.0
@@ -2924,6 +2925,37 @@ thingtype HereticHornRodFX1 : HereticMissile, -1, 425
     FX00 JK 4 bright
     FX00 LM 3 bright
     stop
+  "@
+}
+
+thingtype HereticHornRodFX2 : HereticMissile, -1, 444
+{
+  compatname HornRodFX2
+  spawnhealth 140
+  speed 22.0
+  radius 12.0
+  height 8.0
+  damage 10
+  seesound ht_hrnsht
+  deathsound ht_ramphit
+
+  firstdecoratestate S_HRODFX2_1
+  states
+  @"
+  Spawn:
+    FX00 C 3 bright
+    FX00 D 3 bright A_SkullRodPL2Seek
+    FX00 E 3 bright
+    FX00 F 3 bright A_SkullRodPL2Seek
+    loop
+  Death:
+    FX00 H 5 bright A_AddPlayerRain
+    FX00 I 5 bright
+    FX00 J 4 bright
+    FX00 KLM 3 bright
+    FX00 G 1 A_HideInCeiling
+    FX00 G 1 A_SkullRodStorm
+    goto Death+7
   "@
 }
 
@@ -3007,6 +3039,36 @@ thingtype HereticPhoenixFX1 : HereticMissile, -1, 430
     FX08 A     6 bright A_HticExplode
     FX08 BC    5 bright
     FX08 DEFGH 4 bright
+    stop
+  "@
+}
+
+thingtype HereticBlasterFX1 : HereticMissile, -1, 443
+{
+  compatname BlasterFX1
+  speed 184.0
+  radius 12.0
+  height 8.0
+  damage 2
+  missiletype RavenFast
+
+  trail.type HereticBlasterSmoke
+  trail.zoffset -8
+  trail.spawnchance 63
+  trail.sparsity 1
+
+  deathsound ht_blshit
+
+  firstdecoratestate S_BLASTERFX1_1
+  states
+  @"
+  Spawn:
+    ACLO E 200
+    loop
+  Death:
+    FX18 A 3 bright A_SpawnRippers
+    FX18 B 3 bright
+    FX18 CDEFG 4 bright
     stop
   "@
 }

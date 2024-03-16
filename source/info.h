@@ -49,107 +49,107 @@ extern int NUMSPRITES;
 
 enum
 {
-  S_NULL,
-  
-  S_PUNCH = 2,
-  S_PUNCHDOWN,
-  S_PUNCHUP,
-  S_PUNCH1,
+   S_NULL,
 
-  S_PISTOL = 10,
-  S_PISTOLDOWN,
-  S_PISTOLUP,
-  S_PISTOL1,
-  S_PISTOLFLASH = 17,
-  
-  S_SGUN = 18,
-  S_SGUNDOWN,
-  S_SGUNUP,
-  S_SGUN1,
-  S_SGUNFLASH1 = 30,
+   S_PUNCH = 2,
+   S_PUNCHDOWN,
+   S_PUNCHUP,
+   S_PUNCH1,
 
-  S_DSGUN = 32,
-  S_DSGUNDOWN,
-  S_DSGUNUP,
-  S_DSGUN1,
-  S_DSGUNFLASH1 = 47,
+   S_PISTOL = 10,
+   S_PISTOLDOWN,
+   S_PISTOLUP,
+   S_PISTOL1,
+   S_PISTOLFLASH = 17,
 
-  S_CHAIN = 49,
-  S_CHAINDOWN,
-  S_CHAINUP,
-  S_CHAIN1,
-  S_CHAIN2, // not used
-  S_CHAIN3,
-  S_CHAINFLASH1,
-  
-  S_MISSILE = 57,
-  S_MISSILEDOWN,
-  S_MISSILEUP,
-  S_MISSILE1,
-  S_MISSILEFLASH1 = 63,
+   S_SGUN = 18,
+   S_SGUNDOWN,
+   S_SGUNUP,
+   S_SGUN1,
+   S_SGUNFLASH1 = 30,
 
-  S_SAW = 67,
-  S_SAWB,    // not used
-  S_SAWDOWN,
-  S_SAWUP,
-  S_SAW1,
+   S_DSGUN = 32,
+   S_DSGUNDOWN,
+   S_DSGUNUP,
+   S_DSGUN1,
+   S_DSGUNFLASH1 = 47,
 
-  S_PLASMA = 74,
-  S_PLASMADOWN,
-  S_PLASMAUP,
-  S_PLASMA1,
-  S_PLASMAFLASH1 = 79,
+   S_CHAIN = 49,
+   S_CHAINDOWN,
+   S_CHAINUP,
+   S_CHAIN1,
+   S_CHAIN2, // not used
+   S_CHAIN3,
+   S_CHAINFLASH1,
 
-  S_BFG = 81,
-  S_BFGDOWN,
-  S_BFGUP,
-  S_BFG1,
-  S_BFGFLASH1 = 88,
+   S_MISSILE = 57,
+   S_MISSILEDOWN,
+   S_MISSILEUP,
+   S_MISSILE1,
+   S_MISSILEFLASH1 = 63,
 
-  S_BLOOD2 = 91,
-  S_BLOOD3,
+   S_SAW = 67,
+   S_SAWB,    // not used
+   S_SAWDOWN,
+   S_SAWUP,
+   S_SAW1,
 
-  S_PUFF3 = 95,
+   S_PLASMA = 74,
+   S_PLASMADOWN,
+   S_PLASMAUP,
+   S_PLASMA1,
+   S_PLASMAFLASH1 = 79,
 
-  S_TBALL1 = 97,
+   S_BFG = 81,
+   S_BFGDOWN,
+   S_BFGUP,
+   S_BFG1,
+   S_BFGFLASH1 = 88,
 
-  S_EXPLODE1 = 127,
+   S_BLOOD2 = 91,
+   S_BLOOD3,
 
-  S_VILE_HEAL1 = 266,
+   S_PUFF3 = 95,
 
-  S_SARG_RUN1 = 477,
-  S_SARG_PAIN2 = 489,
+   S_TBALL1 = 97,
 
-  S_PAIN_DIE6 = 719,
+   S_EXPLODE1 = 127,
 
-  S_BRAINEXPLODE1 = 799,
+   S_VILE_HEAL1 = 266,
 
-  S_GIBS = 895,
+   S_SARG_RUN1 = 477,
+   S_SARG_PAIN2 = 489,
 
-  S_OLDBFG1 = 999,  // killough 7/11/98: the old BFG's 43 firing frames
+   S_PAIN_DIE6 = 719,
 
-  // Start Heretic frames
-  S_POD_GROW1 = 2013,
+   S_BRAINEXPLODE1 = 799,
 
-  S_MUMMYFX1_1 = 2127,
+   S_GIBS = 895,
 
-  S_SRCR1_ATK4 = 2318,
-  S_SRCR1_DIE17 = 2338,
+   S_OLDBFG1 = 999,  // killough 7/11/98: the old BFG's 43 firing frames
 
-  S_SOR2_RISE1 = 2347,
-  S_SOR2_TELE1 = 2365,
-  S_SOR2_DIE4  = 2374,
+   // Start Heretic frames
+   S_POD_GROW1 = 2013,
 
-  S_MNTR_ATK3_1 = 2481,
-  S_MNTR_ATK3_4 = 2484,
-  S_MNTR_ATK4_1,
+   S_MUMMYFX1_1 = 2127,
 
-  S_LICHFX3_4 = 2561,
+   S_SRCR1_ATK4 = 2318,
+   S_SRCR1_DIE17 = 2338,
 
-  S_IMP_XCRASH1 = 2642,
+   S_SOR2_RISE1 = 2347,
+   S_SOR2_TELE1 = 2365,
+   S_SOR2_DIE4 = 2374,
 
-  // haleyjd: NUMSTATES is now a variable
-  //NUMSTATES  // Counter of how many there are
+   S_MNTR_ATK3_1 = 2481,
+   S_MNTR_ATK3_4 = 2484,
+   S_MNTR_ATK4_1,
+
+   S_LICHFX3_4 = 2561,
+
+   S_IMP_XCRASH1 = 2642,
+
+   // haleyjd: NUMSTATES is now a variable
+   //NUMSTATES  // Counter of how many there are
 
 };
 
@@ -196,6 +196,7 @@ struct state_t
    int          particle_evt;                 // haleyjd: determines an event to run  
    arglist_t   *args;                         // haleyjd: state arguments
    unsigned int flags;                        // haleyjd: flags
+   bool         dsdhacked;                    // MaxW: Created by DSDhacked
    
    // haleyjd: fields needed for EDF identification and hashing
    char       *name;      // buffer for name
@@ -218,141 +219,143 @@ extern char **sprnames;
 //
 enum
 {
-  MT_VILE = 4,
-  MT_FIRE,
-  
-  MT_TRACER = 7,
-  MT_SMOKE,
-  
-  MT_FATSHOT = 10,
+   MT_VILE = 4,
+   MT_FIRE,
 
-  MT_BRUISER = 16,
-  MT_BRUISERSHOT,
-  MT_KNIGHT,
-  MT_SKULL,
-  MT_SPIDER,
-  MT_BABY,
-  MT_CYBORG,
-  MT_PAIN,
+   MT_TRACER = 7,
+   MT_SMOKE,
 
-  MT_BOSSTARGET = 28,
-  MT_SPAWNSHOT,
-  MT_SPAWNFIRE,
-  MT_BARREL,
-  MT_TROOPSHOT,
-  MT_HEADSHOT,
-  MT_ROCKET,
-  MT_PLASMA,
-  MT_BFG,
-  MT_ARACHPLAZ,
-  MT_PUFF,
-  MT_BLOOD,
-  MT_TFOG,
-  MT_IFOG,
-  MT_TELEPORTMAN,
-  MT_EXTRABFG,
+   MT_FATSHOT = 10,
 
-  MT_PUSH = 138, // controls push source -- phares
-  MT_PULL,       // controls pull source -- phares 3/20/98
-  MT_DOGS,       // killough 7/19/98: Marine's best friend
-  MT_PLASMA1,    // killough 7/11/98: first  of alternating beta plasma fireballs
-  MT_PLASMA2,    // killough 7/11/98: second of alternating beta plasma fireballs
+   MT_BRUISER = 16,
+   MT_BRUISERSHOT,
+   MT_KNIGHT,
+   MT_SKULL,
+   MT_SPIDER,
+   MT_BABY,
+   MT_CYBORG,
+   MT_PAIN,
 
-  // haleyjd 10/08/02: Heretic things
-  MT_POD = 305,
-  MT_PODGOO,
+   MT_BOSSTARGET = 28,
+   MT_SPAWNSHOT,
+   MT_SPAWNFIRE,
+   MT_BARREL,
+   MT_TROOPSHOT,
+   MT_HEADSHOT,
+   MT_ROCKET,
+   MT_PLASMA,
+   MT_BFG,
+   MT_ARACHPLAZ,
+   MT_PUFF,
+   MT_BLOOD,
+   MT_TFOG,
+   MT_IFOG,
+   MT_TELEPORTMAN,
+   MT_EXTRABFG,
 
-  MT_HTFOG = 334,
-  MT_HTICBLOOD,
-  
-  MT_MUMMYSOUL = 340,
-  MT_MUMMYFX1,
+   MT_PUSH = 138, // controls push source -- phares
+   MT_PULL,       // controls pull source -- phares 3/20/98
+   MT_DOGS,       // killough 7/19/98: Marine's best friend
+   MT_PLASMA1,    // killough 7/11/98: first  of alternating beta plasma fireballs
+   MT_PLASMA2,    // killough 7/11/98: second of alternating beta plasma fireballs
 
-  MT_BEASTBALL = 343,
-  MT_PUFFY,
+   // haleyjd 10/08/02: Heretic things
+   MT_POD = 305,
+   MT_PODGOO,
 
-  MT_SNAKEPRO_A = 346,
-  MT_SNAKEPRO_B,
+   MT_HTFOG = 334,
+   MT_HTICBLOOD,
 
-  MT_WIZARD = 349,
-  MT_WIZFX1,
+   MT_MUMMYSOUL = 340,
+   MT_MUMMYFX1,
 
-  MT_KNIGHTGHOST = 352,
-  MT_KNIGHTAXE,
-  MT_REDAXE,
+   MT_BEASTBALL = 343,
+   MT_PUFFY,
 
-  MT_SRCRFX1 = 356,
-  MT_SORCERER2,
-  MT_SOR2FX1,
-  MT_SOR2FXSPARK,
-  MT_SOR2FX2,
-  MT_SOR2TELEFADE,
+   MT_SNAKEPRO_A = 346,
+   MT_SNAKEPRO_B,
 
-  MT_DSPARILSPOT = 367,
+   MT_WIZARD = 349,
+   MT_WIZFX1,
 
-  MT_VOLCANOBLAST = 369,
-  MT_VOLCANOTBLAST,
+   MT_KNIGHTGHOST = 352,
+   MT_KNIGHTAXE,
+   MT_REDAXE,
 
-  MT_MNTRFX1 = 372,
-  MT_MNTRFX2,
-  MT_MNTRFX3,
-  MT_PHOENIXPUFF,
+   MT_SRCRFX1 = 356,
+   MT_SORCERER2,
+   MT_SOR2FX1,
+   MT_SOR2FXSPARK,
+   MT_SOR2FX2,
+   MT_SOR2TELEFADE,
 
-  MT_LICH = 376,
-  MT_LICHFX1,
-  MT_LICHFX2,
-  MT_LICHFX3,
-  MT_WHIRLWIND,
+   MT_DSPARILSPOT = 367,
 
-  MT_IMPCHUNK1 = 395,
-  MT_IMPCHUNK2,
-  MT_IMPBALL,
+   MT_VOLCANOBLAST = 369,
+   MT_VOLCANOTBLAST,
 
-  MT_HPLAYERSKULL = 399,
+   MT_MNTRFX1 = 372,
+   MT_MNTRFX2,
+   MT_MNTRFX3,
+   MT_PHOENIXPUFF,
 
-  MT_HFIREBOMB = 409,
+   MT_LICH = 376,
+   MT_LICHFX1,
+   MT_LICHFX2,
+   MT_LICHFX3,
+   MT_WHIRLWIND,
 
-  // Heretic weapon-associated things (not actual weapons)
-  MT_STAFFPUFF = 416,
-  MT_STAFFPUFF2,
-  MT_BEAKPUFF,
-  MT_GAUNTLETPUFF1,
-  MT_GAUNTLETPUFF2,
-  MT_BLASTERSMOKE,
-  MT_RIPPER,
-  MT_BLASTERPUFF1,
-  MT_BLASTERPUFF2,
-  MT_HORNRODFX1,
-  MT_GOLDWANDFX1,
-  MT_GOLDWANDFX2,
-  MT_GOLDWANDPUFF1,
-  MT_GOLDWANDPUFF2,
-  MT_PHOENIXFX1,
+   MT_IMPCHUNK1 = 395,
+   MT_IMPCHUNK2,
+   MT_IMPBALL,
 
-  MT_CRBOWFX1 = 434,
-  MT_CRBOWFX2,
-  MT_CRBOWFX3,
-  MT_CRBOWFX4,
-  MT_MACEFX1,
-  MT_MACEFX2,
-  MT_MACEFX3,
-  MT_MACEFX4,
-  MT_PHOENIXFX2,
+   MT_HPLAYERSKULL = 399,
 
-// Start Eternity TC New Things
+   MT_HFIREBOMB = 409,
 
-  MT_FOGPATCHS = 228,
-  MT_FOGPATCHM,
-  MT_FOGPATCHL,
-  
-// End Eternity TC New Things
+   // Heretic weapon-associated things (not actual weapons)
+   MT_STAFFPUFF = 416,
+   MT_STAFFPUFF2,
+   MT_BEAKPUFF,
+   MT_GAUNTLETPUFF1,
+   MT_GAUNTLETPUFF2,
+   MT_BLASTERSMOKE,
+   MT_RIPPER,
+   MT_BLASTERPUFF1,
+   MT_BLASTERPUFF2,
+   MT_HORNRODFX1,
+   MT_GOLDWANDFX1,
+   MT_GOLDWANDFX2,
+   MT_GOLDWANDPUFF1,
+   MT_GOLDWANDPUFF2,
+   MT_PHOENIXFX1,
 
-  MT_CAMERA = 1062, // SMMU camera spot
-  MT_PLASMA3,       // haleyjd: for burst bfg
+   MT_CRBOWFX1 = 434,
+   MT_CRBOWFX2,
+   MT_CRBOWFX3,
+   MT_CRBOWFX4,
+   MT_MACEFX1,
+   MT_MACEFX2,
+   MT_MACEFX3,
+   MT_MACEFX4,
+   MT_PHOENIXFX2,
+   MT_BLASTERFX1,
+   MT_HORNRODFX2,
 
-  // haleyjd: NUMMOBJTYPES is a variable now
-  //NUMMOBJTYPES  // Counter of how many there are
-}; 
+   // Start Eternity TC New Things
+
+   MT_FOGPATCHS = 228,
+   MT_FOGPATCHM,
+   MT_FOGPATCHL,
+
+   // End Eternity TC New Things
+
+   MT_CAMERA = 1062, // SMMU camera spot
+   MT_PLASMA3,       // haleyjd: for burst bfg
+
+   // haleyjd: NUMMOBJTYPES is a variable now
+   //NUMMOBJTYPES  // Counter of how many there are
+};
 
 typedef int mobjtype_t;
 
@@ -367,6 +370,7 @@ struct mobjinfo_t
 {
    int doomednum;       // Thing number used in id's editor, and now
                         //  probably by every other editor too
+   int missiletype;     // Type of missile (see missiletype_e in p_mobj.h)
    int spawnstate;      // The state (frame) index when this Thing is
                         //  first created
    int spawnhealth;     // The initial hit points for this Thing
@@ -401,6 +405,8 @@ struct mobjinfo_t
    int c3dheight;       // haleyjd 07/06/05: a height value corrected for
                         //  3D object clipping. Used only if non-zero and
                         //  comp_theights is enabled.
+   int meleerange;      // MaxW: Range at which monster will initiate melee attack
+                        //  and also the default range for their melee attacks
    int mass;            // How much an impact will move it.  Cacodemons
                         //  seem to retreat when shot because they have
                         //  very little mass and are moved by impact
@@ -413,6 +419,7 @@ struct mobjinfo_t
    unsigned int flags3; // haleyjd 11/03/02: flags3
    unsigned int flags4; // haleyjd 09/13/09: flags4
    unsigned int flags5; // MaxW: 2021/02/14: flags5
+   bool         dsdhacked; // MaxW: made by DSDhacked
    int raisestate;      // The first state for an Archvile or respawn
                         //  resurrection.  Zero means it won't come
                         //  back to life.
@@ -440,7 +447,14 @@ struct mobjinfo_t
    int inactivestate;   // haleyjd 03/19/11: Hexen deactivation state
    int activatesound;   // haleyjd 03/19/11: Hexen activation sound
    int deactivatesound; // haleyjd 03/19/11: Hexen deactivation sound
+   int ripsound;        // MaxW: 2021/12/02: Hexen/Heretic ripper sound
    int gibhealth;       // haleyjd 09/12/13: health at which actor gibs
+   int trailthingnum;   // [XA] 02/22/2020: projectile trail thing number
+   int trailzoffset;    // [XA] 02/22/2020: projectile trail z offset (fixed point)
+   int trailchance;     // [XA] 02/22/2020: projectile trail spawn chance (out of 255)
+   int trailsparsity;   // [XA] 02/22/2020: projectile trail sparsity
+   int missileheight;   // sinku 14/02/2024: height from bottom for missile attacks
+   int bulletzoffset;   // sinku 14/02/2024: offset from centre for bullet attacks
 
    e_pickupfx_t *pickupfx;
 

@@ -76,6 +76,12 @@ add_library(acsvm ${ACSVM_SHARED_DECL}
    Vector.hpp
 )
 
+set_target_properties(acsvm
+   PROPERTIES
+   CXX_STANDARD          11
+   CXX_STANDARD_REQUIRED ON
+)
+
 ACSVM_INSTALL_LIB(acsvm)
 
 ## EOF

@@ -57,6 +57,7 @@
 
 #include "d_io.h"
 #include "d_dehtbl.h"
+#include "e_hash.h"
 #include "i_sound.h"
 #include "m_utils.h"
 #include "p_mobj.h"
@@ -69,32 +70,35 @@
 //
 // Sound keywords
 //
-#define ITEM_SND_LUMP          "lump"
-#define ITEM_SND_PREFIX        "prefix"
-#define ITEM_SND_SINGULARITY   "singularity"
-#define ITEM_SND_PRIORITY      "priority"
-#define ITEM_SND_LINK          "link"
-#define ITEM_SND_ALIAS         "alias"
-#define ITEM_SND_RANDOM        "random"
-#define ITEM_SND_SKININDEX     "skinindex"
-#define ITEM_SND_LINKVOL       "linkvol"
-#define ITEM_SND_LINKPITCH     "linkpitch"
-#define ITEM_SND_CLIPPING_DIST "clipping_dist"
-#define ITEM_SND_CLOSE_DIST    "close_dist"
-#define ITEM_SND_PITCHVAR      "pitchvariance"
-#define ITEM_SND_SUBCHANNEL    "subchannel"
-#define ITEM_SND_PCSLUMP       "pcslump"
-#define ITEM_SND_NOPCSOUND     "nopcsound"
-#define ITEM_SND_DEHNUM        "dehackednum"
+constexpr const char ITEM_SND_LUMP[]          = "lump";
+constexpr const char ITEM_SND_PREFIX[]        = "prefix";
+constexpr const char ITEM_SND_SINGULARITY[]   = "singularity";
+constexpr const char ITEM_SND_PRIORITY[]      = "priority";
+constexpr const char ITEM_SND_LINK[]          = "link";
+constexpr const char ITEM_SND_ALIAS[]         = "alias";
+constexpr const char ITEM_SND_RANDOM[]        = "random";
+constexpr const char ITEM_SND_SKININDEX[]     = "skinindex";
+constexpr const char ITEM_SND_LINKVOL[]       = "linkvol";
+constexpr const char ITEM_SND_LINKPITCH[]     = "linkpitch";
+constexpr const char ITEM_SND_CLIPPING_DIST[] = "clipping_dist";
+constexpr const char ITEM_SND_CLOSE_DIST[]    = "close_dist";
+constexpr const char ITEM_SND_PITCHVAR[]      = "pitchvariance";
+constexpr const char ITEM_SND_SUBCHANNEL[]    = "subchannel";
+constexpr const char ITEM_SND_PCSLUMP[]       = "pcslump";
+constexpr const char ITEM_SND_NOPCSOUND[]     = "nopcsound";
+constexpr const char ITEM_SND_DEHNUM[]        = "dehackednum";
 
-#define ITEM_DELTA_NAME "name"
+constexpr const char ITEM_DELTA_NAME[] = "name";
 
 //
 // Static sound hash tables
 //
-#define NUMSFXCHAINS 307
-static sfxinfo_t             *sfxchains[NUMSFXCHAINS];
-static DLListItem<sfxinfo_t> *sfx_dehchains[NUMSFXCHAINS];
+constexpr int NUMSFXCHAINS = 307;
+
+static EHashTable<sfxinfo_t, ENCStringHashKey,
+                  &sfxinfo_t::mnemonic, &sfxinfo_t::namelinks> sound_namehash(NUMSFXCHAINS);
+static EHashTable<sfxinfo_t, EIntHashKey,
+                  &sfxinfo_t::dehackednum, &sfxinfo_t::numlinks> sound_numhash(NUMSFXCHAINS);
 
 //
 // Singularity types
@@ -110,7 +114,7 @@ static const char *singularities[] =
    "sg_getpow",
 };
 
-#define NUM_SINGULARITIES (sizeof(singularities) / sizeof(char *))
+constexpr int NUM_SINGULARITIES = earrlen(singularities);
 
 //
 // Skin sound indices
@@ -137,7 +141,7 @@ static const char *skinindices[NUMSKINSOUNDS + 1] =
    "sk_jump",
 };
 
-#define NUM_SKININDICES (sizeof(skinindices) / sizeof(const char *))
+constexpr int NUM_SKININDICES = earrlen(skinindices);
 
 //
 // Pitch variance types
@@ -151,7 +155,7 @@ static const char *pitchvars[] =
    "HereticAmbient"
 };
 
-#define NUM_PITCHVARS (sizeof(pitchvars) / sizeof(const char *))
+constexpr int NUM_PITCHVARS = earrlen(pitchvars);
 
 //
 // Subchannel types
@@ -168,7 +172,7 @@ static const char *subchans[] =
    "SoundSlot7"
 };
 
-#define NUM_SUBCHANS (sizeof(subchans) / sizeof(const char *))
+constexpr int NUM_SUBCHANS = earrlen(subchans);
 
 #define SOUND_OPTIONS \
    CFG_STR(ITEM_SND_LUMP,          nullptr,           CFGF_NONE), \
@@ -212,13 +216,7 @@ cfg_opt_t edf_sdelta_opts[] =
 //
 sfxinfo_t *E_SoundForName(const char *name)
 {
-   unsigned int hash = D_HashTableKey(name) % NUMSFXCHAINS;
-   sfxinfo_t  *rover = sfxchains[hash];
-
-   while(rover && strcasecmp(name, rover->mnemonic))
-      rover = rover->next;
-
-   return rover;
+   return sound_namehash.objectForKey(name);
 }
 
 //
@@ -238,47 +236,27 @@ sfxinfo_t *E_EDFSoundForName(const char *name)
 }
 
 //
-// E_SoundForDEHNum
-//
 // Returns a sfxinfo_t pointer given the DeHackEd number for that
 // sound. Will return nullptr if the requested sound is not found.
 //
 sfxinfo_t *E_SoundForDEHNum(int dehnum)
 {
-   unsigned int hash = dehnum % NUMSFXCHAINS;
-   DLListItem<sfxinfo_t> *rover = sfx_dehchains[hash];
-
-   // haleyjd 04/13/08: rewritten for dynamic hash chains
-   while(rover && (*rover)->dehackednum != dehnum)
-      rover = rover->dllNext;
-
-   return rover ? rover->dllObject : nullptr;
+   return sound_numhash.objectForKey(dehnum);
 }
 
-//
-// E_AddSoundToHash
 //
 // Adds a new sfxinfo_t structure to the name hash table.
 //
 static void E_AddSoundToHash(sfxinfo_t *sfx)
 {
-   // compute the hash code using the sound mnemonic
-   unsigned int hash;
-
    // make sure it doesn't exist already -- if it does, this
    // insertion must be ignored
    if(E_EDFSoundForName(sfx->mnemonic))
       return;
 
-   hash = D_HashTableKey(sfx->mnemonic) % NUMSFXCHAINS;
-
-   // link it in
-   sfx->next = sfxchains[hash];
-   sfxchains[hash] = sfx;
+   sound_namehash.addObject(sfx);
 }
 
-//
-// E_AddSoundToDEHHash
 //
 // Only used locally. This adds a sound to the DeHackEd number hash
 // table, so that both old and new sounds can be referred to by
@@ -287,8 +265,6 @@ static void E_AddSoundToHash(sfxinfo_t *sfx)
 //
 static void E_AddSoundToDEHHash(sfxinfo_t *sfx)
 {
-   unsigned int hash = sfx->dehackednum % NUMSFXCHAINS;
-
 #ifdef RANGECHECK
    if(sfx->dehackednum < 0)
       I_Error("E_AddSoundToDEHHash: internal error - dehnum == -1\n");
@@ -297,24 +273,9 @@ static void E_AddSoundToDEHHash(sfxinfo_t *sfx)
    if(sfx->dehackednum == 0)
       E_EDFLoggedErr(2, "E_AddSoundToDEHHash: dehackednum zero is reserved!\n");
 
-   // haleyjd 04/13/08: use M_DLListInsert to support removal & reinsertion
-   sfx->numlinks.insert(sfx, &sfx_dehchains[hash]);
+   sound_numhash.addObject(sfx);
 }
 
-//
-// E_DelSoundFromDEHHash
-//
-// haleyjd 04/13/08: Made sound dehackednum hash chains dynamically linked
-// to fully support DeHackEd number specification in sounds added after
-// primary EDF processing.
-//
-static void E_DelSoundFromDEHHash(sfxinfo_t *sfx)
-{
-   sfx->numlinks.remove();
-}
-
-//
-// E_FindSoundForDEH
 //
 // haleyjd 04/13/08: There's a hackish little code segment in DeHackEd
 // that looks for a sound name match to a DeHackEd text string. Now that
@@ -324,17 +285,13 @@ static void E_DelSoundFromDEHHash(sfxinfo_t *sfx)
 sfxinfo_t *E_FindSoundForDEH(char *inbuffer, unsigned int fromlen)
 {
    // run down all the mnemonic hash chains
-   for(sfxinfo_t *cursfx : sfxchains)
+   sfxinfo_t *cursfx = nullptr;
+   while((cursfx = sound_namehash.tableIterator(cursfx)))
    {
-      while(cursfx)
-      {
-         // avoid short prefix erroneous match
-         if(strlen(cursfx->mnemonic) == fromlen &&
-            !strncasecmp(cursfx->mnemonic, inbuffer, fromlen))
-            return cursfx;
-
-         cursfx = cursfx->next;
-      }
+      // avoid short prefix erroneous match
+      if(strlen(cursfx->mnemonic) == fromlen &&
+         !strncasecmp(cursfx->mnemonic, inbuffer, fromlen))
+         return cursfx;
    }
 
    // no match
@@ -406,7 +363,7 @@ sfxinfo_t *E_NewWadSound(const char *name)
       sfx = ecalloc(sfxinfo_t *, 1, sizeof(sfxinfo_t));
 
       strncpy(sfx->name, name, 9);
-      strncpy(sfx->mnemonic, mnemonic, 9);
+      sfx->mnemonic = estrdup(mnemonic);
 
       sfx->flags         = SFXF_WAD;        // born as implicit wad sound
       sfx->priority      = 64;
@@ -435,8 +392,10 @@ sfxinfo_t *E_NewSndInfoSound(const char *mnemonic, const char *name)
    // create a new one and hook into hashchain
    sfx = ecalloc(sfxinfo_t *, 1, sizeof(sfxinfo_t));
 
-   strncpy(sfx->name,     name,      9);
-   strncpy(sfx->mnemonic, mnemonic, sizeof(sfx->mnemonic));
+   strncpy(sfx->name, name, 9);
+   if(sfx->mnemonic)
+      efree(sfx->mnemonic);
+   sfx->mnemonic = estrdup(mnemonic);
 
    sfx->flags         = SFXF_SNDINFO;    // born via SNDINFO
    sfx->priority      = 64;
@@ -463,14 +422,9 @@ void E_PreCacheSounds()
 {
    // run down all the mnemonic hash chains so that we precache
    // all sounds, not just ones stored in S_sfx
-   for(sfxinfo_t *cursfx : sfxchains)
-   {
-      while(cursfx)
-      {
-         I_CacheSound(cursfx);
-         cursfx = cursfx->next;
-      }
-   }
+   sfxinfo_t *cursfx = nullptr;
+   while((cursfx = sound_namehash.tableIterator(cursfx)))
+      I_CacheSound(cursfx);
 }
 
 //
@@ -484,18 +438,16 @@ void E_UpdateSoundCache()
    // be sure all sounds are stopped
    S_StopSounds(true);
 
-   for(sfxinfo_t *cursfx : sfxchains)
+   sfxinfo_t *cursfx = nullptr;
+   while((cursfx = sound_namehash.tableIterator(cursfx)))
    {
-      while(cursfx)
+      if(cursfx->data)
       {
-         if(cursfx->data)
-         {
-            efree(cursfx->data);
-            cursfx->data = nullptr;
-         }
-         cursfx = cursfx->next;
+         efree(cursfx->data);
+         cursfx->data = nullptr;
       }
    }
+
 
    // recache sounds if so requested
    if(s_precache)
@@ -506,18 +458,21 @@ void E_UpdateSoundCache()
 // EDF Processing Functions
 //
 
-#define IS_SET(name) (def || cfg_size(section, name) > 0)
-
 //
 // E_ProcessSound
 //
 // Processes an EDF sound definition
 //
-static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, bool def)
+static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *const section, const bool def)
 {
    bool setLink = false;
    bool explicitLumpName = false;
    int tempint;
+
+   const auto IS_SET = [section, def](const char *const name) -> bool {
+      return def || cfg_size(section, name) > 0;
+   };
+
 
    // preconditions:
 
@@ -763,7 +718,7 @@ void E_ProcessSounds(cfg_t *cfg)
          {
             // if already in hash, remove it
             if(sfx->dehackednum > 0)
-               E_DelSoundFromDEHHash(sfx);
+               sound_numhash.removeObject(sfx);
 
             // set new dehackednum
             sfx->dehackednum = idnum;
@@ -778,15 +733,10 @@ void E_ProcessSounds(cfg_t *cfg)
          // create a new sound
          sfx = estructalloc(sfxinfo_t, 1);
 
-         // verify the length
-         if(strlen(mnemonic) >= sizeof(sfx->mnemonic))
-         {
-            E_EDFLoggedErr(2, "E_ProcessSounds: invalid sound mnemonic '%s'\n",
-                           mnemonic);
-         }
-
          // copy mnemonic
-         strncpy(sfx->mnemonic, mnemonic, sizeof(sfx->mnemonic));
+         if(sfx->mnemonic)
+            efree(sfx->mnemonic);
+         sfx->mnemonic = estrdup(mnemonic);
 
          // add this sound to the hash table
          E_AddSoundToHash(sfx);
@@ -818,6 +768,9 @@ void E_ProcessSounds(cfg_t *cfg)
    }
 
    E_EDFLogPuts("\t\tFinished sound processing\n");
+
+   // Apply the Chgun hack now
+   S_Chgun();
 }
 
 //
@@ -872,21 +825,21 @@ void E_ProcessSoundDeltas(cfg_t *cfg, bool add)
 // haleyjd 05/28/06
 //
 
-#define ITEM_SEQ_ID     "id"
-#define ITEM_SEQ_CMDS   "cmds"
-#define ITEM_SEQ_HCMDS  "commands"
-#define ITEM_SEQ_TYPE   "type"
-#define ITEM_SEQ_STOP   "stopsound"
-#define ITEM_SEQ_ATTN   "attenuation"
-#define ITEM_SEQ_VOL    "volume"
-#define ITEM_SEQ_MNVOL  "minvolume"
-#define ITEM_SEQ_NSCO   "nostopcutoff"
-#define ITEM_SEQ_RNDVOL "randomplayvol"
-#define ITEM_SEQ_DOOR   "doorsequence"
-#define ITEM_SEQ_PLAT   "platsequence"
-#define ITEM_SEQ_FLOOR  "floorsequence"
-#define ITEM_SEQ_CEIL   "ceilingsequence"
-#define ITEM_SEQ_REVERB "reverb"
+constexpr const char ITEM_SEQ_ID[]     = "id";
+constexpr const char ITEM_SEQ_CMDS[]   = "cmds";
+constexpr const char ITEM_SEQ_HCMDS[]  = "commands";
+constexpr const char ITEM_SEQ_TYPE[]   = "type";
+constexpr const char ITEM_SEQ_STOP[]   = "stopsound";
+constexpr const char ITEM_SEQ_ATTN[]   = "attenuation";
+constexpr const char ITEM_SEQ_VOL[]    = "volume";
+constexpr const char ITEM_SEQ_MNVOL[]  = "minvolume";
+constexpr const char ITEM_SEQ_NSCO[]   = "nostopcutoff";
+constexpr const char ITEM_SEQ_RNDVOL[] = "randomplayvol";
+constexpr const char ITEM_SEQ_DOOR[]   = "doorsequence";
+constexpr const char ITEM_SEQ_PLAT[]   = "platsequence";
+constexpr const char ITEM_SEQ_FLOOR[]  = "floorsequence";
+constexpr const char ITEM_SEQ_CEIL[]   = "ceilingsequence";
+constexpr const char ITEM_SEQ_REVERB[] = "reverb";
 
 // attenuation types -- also used by ambience
 static const char *attenuation_types[] =
@@ -897,7 +850,7 @@ static const char *attenuation_types[] =
    "none"
 };
 
-#define NUM_ATTENUATION_TYPES (sizeof(attenuation_types) / sizeof(char *))
+constexpr int NUM_ATTENUATION_TYPES = earrlen(attenuation_types);
 
 // sequence types
 static const char *seq_types[] =
@@ -908,7 +861,7 @@ static const char *seq_types[] =
    "environment", // environment
 };
 
-#define NUM_SEQ_TYPES (sizeof(seq_types) / sizeof(char *))
+constexpr int NUM_SEQ_TYPES = earrlen(seq_types);
 
 // sequence command strings
 static const char *sndseq_cmdstrs[] =
@@ -977,17 +930,17 @@ cfg_opt_t edf_sndseq_opts[] =
    CFG_END()
 };
 
-#define NUM_EDFSEQ_CHAINS 127
+constexpr int NUM_EDFSEQ_CHAINS = 127;
 static ESoundSeq_t              *edf_seq_chains[NUM_EDFSEQ_CHAINS];
 static DLListItem<ESoundSeq_t> *edf_seq_numchains[NUM_EDFSEQ_CHAINS];
 
 // need a separate hash for environmental sequences
-#define NUM_EDFSEQ_ENVCHAINS 31
+constexpr int NUM_EDFSEQ_ENVCHAINS = 31;
 static DLListItem<ESoundSeq_t> *edf_seq_envchains[NUM_EDFSEQ_ENVCHAINS];
 
 // translator tables for specific types
 
-#define NUM_SEQ_TRANSLATE 64
+constexpr int NUM_SEQ_TRANSLATE = 64;
 
 static ESoundSeq_t *edf_door_sequences[NUM_SEQ_TRANSLATE];
 static ESoundSeq_t *edf_plat_sequences[NUM_SEQ_TRANSLATE];
@@ -1584,10 +1537,10 @@ static void E_ResolveNames(cfg_t *cfg, unsigned int i)
 
 // enviro seq manager stuff
 
-#define ITEM_SEQMGR_MINSTARTWAIT "minstartwait"
-#define ITEM_SEQMGR_MAXSTARTWAIT "maxstartwait"
-#define ITEM_SEQMGR_MINWAIT      "minwait"
-#define ITEM_SEQMGR_MAXWAIT      "maxwait"
+constexpr const char ITEM_SEQMGR_MINSTARTWAIT[] = "minstartwait";
+constexpr const char ITEM_SEQMGR_MAXSTARTWAIT[] = "maxstartwait";
+constexpr const char ITEM_SEQMGR_MINWAIT[]      = "minwait";
+constexpr const char ITEM_SEQMGR_MAXWAIT[]      = "maxwait";
 
 cfg_opt_t edf_seqmgr_opts[] =
 {
@@ -1675,15 +1628,15 @@ void E_ProcessSndSeqs(cfg_t *cfg)
 // haleyjd 05/30/06
 //
 
-#define ITEM_AMB_SOUND       "sound"
-#define ITEM_AMB_INDEX       "index"
-#define ITEM_AMB_VOLUME      "volume"
-#define ITEM_AMB_ATTENUATION "attenuation"
-#define ITEM_AMB_TYPE        "type"
-#define ITEM_AMB_PERIOD      "period"
-#define ITEM_AMB_MINPERIOD   "minperiod"
-#define ITEM_AMB_MAXPERIOD   "maxperiod"
-#define ITEM_AMB_REVERB      "reverb"
+constexpr const char ITEM_AMB_SOUND[]       = "sound";
+constexpr const char ITEM_AMB_INDEX[]       = "index";
+constexpr const char ITEM_AMB_VOLUME[]      = "volume";
+constexpr const char ITEM_AMB_ATTENUATION[] = "attenuation";
+constexpr const char ITEM_AMB_TYPE[]        = "type";
+constexpr const char ITEM_AMB_PERIOD[]      = "period";
+constexpr const char ITEM_AMB_MINPERIOD[]   = "minperiod";
+constexpr const char ITEM_AMB_MAXPERIOD[]   = "maxperiod";
+constexpr const char ITEM_AMB_REVERB[]      = "reverb";
 
 static const char *ambience_types[] =
 {
@@ -1692,7 +1645,7 @@ static const char *ambience_types[] =
    "random",
 };
 
-#define NUM_AMBIENCE_TYPES (sizeof(ambience_types) / sizeof(char *))
+constexpr int NUM_AMBIENCE_TYPES = earrlen(ambience_types);
 
 cfg_opt_t edf_ambience_opts[] =
 {
@@ -1711,7 +1664,7 @@ cfg_opt_t edf_ambience_opts[] =
 };
 
 // ambience hash table
-#define NUMAMBIENCECHAINS 67
+constexpr int NUMAMBIENCECHAINS = 67;
 static EAmbience_t *ambience_chains[NUMAMBIENCECHAINS];
 
 //

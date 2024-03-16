@@ -152,6 +152,24 @@ void P_InitHexenAnims()
 }
 
 //
+// P_ResetAnimatedSurfaces
+//
+// Called on level reload to make sure animations begin from their first frame
+//
+void P_ResetAnimatedSurfaces()
+{
+   for(hanimdef_t &had : AnimDefs)
+   {
+      had.currentFrameDef = had.startFrameDef;
+      const hframedef_t &hfd = FrameDefs[had.currentFrameDef];
+      
+      if(had.tics != hfd.tics)
+         had.tics = hfd.tics;
+   }
+}
+
+
+//
 // P_AnimateSurfaces
 //
 // Called every tic in P_Ticker
@@ -162,6 +180,8 @@ void P_AnimateSurfaces()
    {
       if(!--had.tics)
       {
+         const int prev = texturetranslation[had.index];
+
          if(had.currentFrameDef == had.endFrameDef)
             had.currentFrameDef = had.startFrameDef;
          else
@@ -172,6 +192,10 @@ void P_AnimateSurfaces()
          else
             had.tics = hfd.tics;
          texturetranslation[had.index] = hfd.index;
+
+         // Cache new animation and make a sky texture if required
+         R_CacheTexture(hfd.index);
+         R_CacheSkyTextureAnimFrame(prev, hfd.index);
 
          // Set TF_SWIRLY on the *source* texture index. This gives fine control
          // over one's sequence without affecting unrelated surfaces.

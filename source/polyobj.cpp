@@ -1034,11 +1034,11 @@ struct insideMobjMove_t
 static bool PolyobjIT_moveObjectsInside(int groupid, void *context)
 {
    int count;
-   sector_t **gsectors = P_GetSectorsWithGroupId(groupid, &count);
+   const int *gsecnums = P_GetSectorsWithGroupId(groupid, &count);
    auto &moved = *static_cast<PODCollection<insideMobjMove_t> *>(context);
    for(int i = 0; i < count; ++i)
    {
-      for(Mobj *mo = gsectors[i]->thinglist; mo; mo = mo->snext)
+      for(Mobj *mo = sectors[gsecnums[i]].thinglist; mo; mo = mo->snext)
       {
          // NOSECTOR invisible things will be ignored :)
          // Also don't push back standing and hanging things
@@ -1236,6 +1236,76 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
       P_ClearTarget(pt.thing);
 
    return !hitthing;
+}
+
+//
+// Polyobj_moveToXY
+//
+// Moves a polyobject to a specfic position
+//
+void Polyobj_MoveToXY(polyobj_t* po, fixed_t x, fixed_t y)
+{
+   vertex_t  dist, dest;
+   int i;
+
+   // don't move any bad polyobject that may have gotten through
+   if (po->flags & POF_ISBAD)
+      return;
+
+   dest.x = x;
+   dest.y = y;
+
+   // calculate distance from centerPt to destination
+   // ioanch 20151218: use 32-bit coordinates
+   dist.x = po->centerPt.x - dest.x;
+   dist.y = po->centerPt.y - dest.y;
+
+   // update linedef bounding boxes
+   for (i = 0; i < po->numLines; ++i)
+   {
+      Mobj* mo;
+
+      Polyobj_bboxSub(po->lines[i]->bbox, &dist);
+
+      // 05/25/08: must change lines' sector groupids for correct portal
+      // automap overlay behavior.
+      mo = po->spawnSpotMobj;
+      po->lines[i]->frontsector->groupid = mo->subsector->sector->groupid;
+      po->lines[i]->soundorg.groupid = mo->subsector->sector->groupid;
+   }
+
+   // ioanch 20160226: update portal position
+   Polyobj_collectPortals(po);
+   Polyobj_moveLinkedPortals(po, -dist.x, -dist.y, false);
+
+   // translate vertices and record original coordinates relative to spawn spot
+   for (i = 0; i < po->numVertices; ++i)
+   {
+      Polyobj_vecSub(po->vertices[i], &dist);
+      po->tmpVerts[i] = *po->vertices[i]; // backup position
+      Polyobj_vecSub2(&(po->origVerts[i]), po->vertices[i], &dest);
+   }
+
+   po->spawnSpot.x = dest.x;
+   po->spawnSpot.y = dest.y;
+
+   // Update sound origins
+   for (i = 0; i < po->numLines; ++i)
+   {
+      line_t& line = *po->lines[i];
+      line.soundorg.x = line.v1->x + line.dx / 2;
+      line.soundorg.y = line.v1->y + line.dy / 2;
+
+      Polyobj_relinkLine(line);
+   }
+
+   Polyobj_removeFromBlockmap(po); // unlink it from the blockmap
+   R_DetachPolyObject(po);
+   Polyobj_linkToBlockmap(po);     // relink to blockmap
+   Polyobj_setCenterPt(po);
+   R_AttachPolyObject(po);
+
+   Polyobj_updateAnchoredPortals(*po); // finally update the anchored portals.
 }
 
 //

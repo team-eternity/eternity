@@ -166,54 +166,54 @@ MetaTable *E_GetItemEffects()
 //
 
 // metakey vocabulary
-#define KEY_ADDITIVE       "additive"
-#define KEY_ADDITIVETIME   "additivetime"
-#define KEY_ALWAYSPICKUP   "alwayspickup"
-#define KEY_AMMO           "ammo"
-#define KEY_AMMOGIVEN      "ammogiven"
-#define KEY_AMOUNT         "amount"
-#define KEY_ARGS           "args"
-#define KEY_ARTIFACTTYPE   "artifacttype"
-#define KEY_BACKPACKAMOUNT "ammo.backpackamount"
-#define KEY_BACKPACKMAXAMT "ammo.backpackmaxamount"
-#define KEY_AMMOCOOPSTAY   "ammo.coopstay"
-#define KEY_AMMODMSTAY     "ammo.dmstay"
-#define KEY_AMMODROPPED    "ammo.dropped"
-#define KEY_AMMOGIVE       "ammo.give"
-#define KEY_CLASS          "class"
-#define KEY_CLASSNAME      "classname"
-#define KEY_CLRAMMOGIVEN   "clearammogiven"
-#define KEY_DROPAMOUNT     "dropamount"
-#define KEY_DURATION       "duration"
-#define KEY_FULLAMOUNTONLY "fullamountonly"
-#define KEY_ICON           "icon"
-#define KEY_ICON_XOFFS     "icon.offset.x"
-#define KEY_ICON_YOFFS     "icon.offset.y"
-#define KEY_IGNORESKILL    "ignoreskill"
-#define KEY_INTERHUBAMOUNT "interhubamount"
-#define KEY_INVBAR         "invbar"
-#define KEY_ITEMID         "itemid"
-#define KEY_KEEPDEPLETED   "keepdepleted"
-#define KEY_LOWMESSAGE     "lowmessage"
-#define KEY_MAXAMOUNT      "maxamount"
-#define KEY_MAXSAVEAMOUNT  "maxsaveamount"
-#define KEY_NOSHAREWARE    "noshareware"
-#define KEY_OVERRIDESSELF  "overridesself"
-#define KEY_PERMANENT      "permanent"
-#define KEY_SAVEAMOUNT     "saveamount"
-#define KEY_SAVEDIVISOR    "savedivisor"
-#define KEY_SAVEFACTOR     "savefactor"
-#define KEY_SETHEALTH      "sethealth"
-#define KEY_SETABSORPTION  "setabsorption"
-#define KEY_SORTORDER      "sortorder"
-#define KEY_TYPE           "type"
-#define KEY_UNDROPPABLE    "undroppable"
-#define KEY_USEACTION      "useaction"
-#define KEY_USEEFFECT      "useeffect"
-#define KEY_USESOUND       "usesound"
-#define KEY_WEAPON         "weapon"
+constexpr const char KEY_ADDITIVE[]       = "additive";
+constexpr const char KEY_ADDITIVETIME[]   = "additivetime";
+constexpr const char KEY_ALWAYSPICKUP[]   = "alwayspickup";
+constexpr const char KEY_AMMO[]           = "ammo";
+constexpr const char KEY_AMMOGIVEN[]      = "ammogiven";
+constexpr const char KEY_AMOUNT[]         = "amount";
+constexpr const char KEY_ARGS[]           = "args";
+constexpr const char KEY_ARTIFACTTYPE[]   = "artifacttype";
+constexpr const char KEY_BACKPACKAMOUNT[] = "ammo.backpackamount";
+constexpr const char KEY_BACKPACKMAXAMT[] = "ammo.backpackmaxamount";
+constexpr const char KEY_AMMOCOOPSTAY[]   = "ammo.coopstay";
+constexpr const char KEY_AMMODMSTAY[]     = "ammo.dmstay";
+constexpr const char KEY_AMMODROPPED[]    = "ammo.dropped";
+constexpr const char KEY_AMMOGIVE[]       = "ammo.give";
+constexpr const char KEY_CLASS[]          = "class";
+constexpr const char KEY_CLASSNAME[]      = "classname";
+constexpr const char KEY_CLRAMMOGIVEN[]   = "clearammogiven";
+constexpr const char KEY_DROPAMOUNT[]     = "dropamount";
+constexpr const char KEY_DURATION[]       = "duration";
+constexpr const char KEY_FULLAMOUNTONLY[] = "fullamountonly";
+constexpr const char KEY_ICON[]           = "icon";
+constexpr const char KEY_ICON_XOFFS[]     = "icon.offset.x";
+constexpr const char KEY_ICON_YOFFS[]     = "icon.offset.y";
+constexpr const char KEY_IGNORESKILL[]    = "ignoreskill";
+constexpr const char KEY_INTERHUBAMOUNT[] = "interhubamount";
+constexpr const char KEY_INVBAR[]         = "invbar";
+constexpr const char KEY_ITEMID[]         = "itemid";
+constexpr const char KEY_KEEPDEPLETED[]   = "keepdepleted";
+constexpr const char KEY_LOWMESSAGE[]     = "lowmessage";
+constexpr const char KEY_MAXAMOUNT[]      = "maxamount";
+constexpr const char KEY_MAXSAVEAMOUNT[]  = "maxsaveamount";
+constexpr const char KEY_NOSHAREWARE[]    = "noshareware";
+constexpr const char KEY_OVERRIDESSELF[]  = "overridesself";
+constexpr const char KEY_PERMANENT[]      = "permanent";
+constexpr const char KEY_SAVEAMOUNT[]     = "saveamount";
+constexpr const char KEY_SAVEDIVISOR[]    = "savedivisor";
+constexpr const char KEY_SAVEFACTOR[]     = "savefactor";
+constexpr const char KEY_SETHEALTH[]      = "sethealth";
+constexpr const char KEY_SETABSORPTION[]  = "setabsorption";
+constexpr const char KEY_SORTORDER[]      = "sortorder";
+constexpr const char KEY_TYPE[]           = "type";
+constexpr const char KEY_UNDROPPABLE[]    = "undroppable";
+constexpr const char KEY_USEACTION[]      = "useaction";
+constexpr const char KEY_USEEFFECT[]      = "useeffect";
+constexpr const char KEY_USESOUND[]       = "usesound";
+constexpr const char KEY_WEAPON[]         = "weapon";
 
-#define KEY_DELTA_NAME     "name"
+constexpr const char KEY_DELTA_NAME[]     = "name";
 
 // Interned metatable keys
 MetaKeyIndex keyAmount        (KEY_AMOUNT        );
@@ -865,13 +865,13 @@ struct lockdef_t
 // Lockdefs hash, by ID number
 static EHashTable<lockdef_t, EIntHashKey, &lockdef_t::id, &lockdef_t::links> e_lockDefs;
 
-#define ITEM_LOCKDEF_REQUIRE  "require"
-#define ITEM_LOCKDEF_ANY      "any"
-#define ITEM_LOCKDEF_MESSAGE  "message"
-#define ITEM_LOCKDEF_REMOTE   "remotemessage"
-#define ITEM_LOCKDEF_ANY_KEYS "keys"
-#define ITEM_LOCKDEF_LOCKSND  "lockedsound"
-#define ITEM_LOCKDEF_MAPCOLOR "mapcolor"
+constexpr const char ITEM_LOCKDEF_REQUIRE[]  = "require";
+constexpr const char ITEM_LOCKDEF_ANY[]      = "any";
+constexpr const char ITEM_LOCKDEF_MESSAGE[]  = "message";
+constexpr const char ITEM_LOCKDEF_REMOTE[]   = "remotemessage";
+constexpr const char ITEM_LOCKDEF_ANY_KEYS[] = "keys";
+constexpr const char ITEM_LOCKDEF_LOCKSND[]  = "lockedsound";
+constexpr const char ITEM_LOCKDEF_MAPCOLOR[] = "mapcolor";
 
 // "any" section options
 static cfg_opt_t any_opts[] =
@@ -1352,14 +1352,14 @@ static dehflagset_t e_PickupFlagSet =
 //
 
 // Pick-up effects
-#define ITEM_PICKUP_CNAME     "pfxname"
-#define ITEM_PICKUP_SPRITE    "sprite"
-#define ITEM_PICKUP_FX        "effect"
-#define ITEM_PICKUP_EFFECTS   "effects"
-#define ITEM_PICKUP_CHANGEWPN "changeweapon"
-#define ITEM_PICKUP_MSG       "message"
-#define ITEM_PICKUP_SOUND     "sound"
-#define ITEM_PICKUP_FLAGS     "flags"
+constexpr const char ITEM_PICKUP_CNAME[]     = "pfxname";
+constexpr const char ITEM_PICKUP_SPRITE[]    = "sprite";
+constexpr const char ITEM_PICKUP_FX[]        = "effect";
+constexpr const char ITEM_PICKUP_EFFECTS[]   = "effects";
+constexpr const char ITEM_PICKUP_CHANGEWPN[] = "changeweapon";
+constexpr const char ITEM_PICKUP_MSG[]       = "message";
+constexpr const char ITEM_PICKUP_SOUND[]     = "sound";
+constexpr const char ITEM_PICKUP_FLAGS[]     = "flags";
 
 // sprite-based pickup items
 cfg_opt_t edf_sprpkup_opts[] =
@@ -2194,6 +2194,18 @@ int E_GetItemOwnedAmountName(const player_t *player, const char *name)
    return (slot ? slot->amount : 0);
 }
 
+//
+// Check if player has power by name
+//
+bool E_PlayerHasPowerName(const player_t &player, const char *name)
+{
+   if(estrempty(name))
+      return false;
+   int num = E_StrToNumLinear(powerStrings, NUMPOWERS, name);
+   if(num == NUMPOWERS)
+      return false;
+   return !!player.powers[num].isActive();
+}
 
 //
 // E_GiveInventoryItem

@@ -164,7 +164,7 @@ DebugLogger &DebugLogger::operator << (const seg_t &seg)
 }
 DebugLogger &DebugLogger::operator << (const side_t &side)
 {
-   return *this << "side" << (&side - sides) << '(' >> side.textureoffset >> side.rowoffset
+   return *this << "side" << (&side - sides) << '(' >> side.offset_base_x >> side.offset_base_y
    << "top(" << side.toptexture << ") bot(" << side.bottomtexture << ") mid(" << side.midtexture
    << ") " << side.sector << "spec(" << side.special << "))";
 }

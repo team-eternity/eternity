@@ -38,6 +38,7 @@
 #include "p_map.h"
 #include "p_map3d.h"
 #include "p_saveg.h"
+#include "p_saveid.h"
 #include "p_setup.h"
 #include "p_things.h"
 #include "a_small.h"
@@ -281,7 +282,7 @@ int EV_ThingRaise(Mobj *actor, int tid)
       if(!P_ThingIsCorpse(mobj) || !P_CheckCorpseRaiseSpace(mobj))
          continue;
       // no raiser allowed, no friendliness transferred
-      P_RaiseCorpse(mobj, nullptr); 
+      P_RaiseCorpse(mobj, nullptr, sfx_slop); 
       success = 1;
    }
    return success;
@@ -547,7 +548,7 @@ void LevelActionThinker::Think()
    }
 
    // Execute special
-   ev_action_t *action = EV_HexenActionForSpecial(special);
+   ev_action_t *action = EV_UDMFEternityActionForSpecial(special);
    if(action && EV_ActivateAction(action, args, thePlayer->mo))
       remove();
 }
@@ -561,7 +562,7 @@ void LevelActionThinker::serialize(SaveArchive &arc)
 {
    Super::serialize(arc);
    arc << special;
-   arc << mobjtype;
+   Archive_MobjType(arc, mobjtype);
    P_ArchiveArray(arc, args, NUMLINEARGS);
 }
 
@@ -590,7 +591,11 @@ void LevelActionThinker::Spawn(int pSpecial, int *pArgs, int pMobjType)
 void P_SpawnLevelActions()
 {
    for(auto action = LevelInfo.actions; action; action = action->next)
-      LevelActionThinker::Spawn(action->special, action->args, action->mobjtype);
+   {
+      // boss-only actions are handled in A_BossDeath
+      if(!(action->flags & levelaction_t::BOSS_ONLY))
+         LevelActionThinker::Spawn(action->special, action->args, action->mobjtype);
+   }
 }
 
 // EOF

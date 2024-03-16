@@ -24,38 +24,27 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
 
-#include "a_small.h"
 #include "acs_intr.h"
 #include "am_map.h"
+#include "a_common.h"
 #include "c_io.h"
 #include "d_dehtbl.h"
-#include "d_event.h"
 #include "d_files.h"
-#include "d_gi.h"
-#include "d_main.h"
 #include "d_net.h"
 #include "doomstat.h"
-#include "e_edf.h"
 #include "e_inventory.h"
-#include "e_player.h"
 #include "e_weapons.h"
 #include "g_dmflag.h"
 #include "g_game.h"
-#include "m_argv.h"
 #include "m_buffer.h"
-#include "m_random.h"
 #include "p_info.h"
-#include "p_maputl.h"
 #include "p_spec.h"
-#include "p_tick.h"
 #include "p_saveg.h"
+#include "p_saveid.h"
 #include "p_enemy.h"
-#include "p_xenemy.h"
 #include "p_portal.h"
 #include "p_hubs.h"
-#include "p_skin.h"
 #include "p_setup.h"
 #include "r_draw.h"
 #include "r_main.h"
@@ -64,7 +53,6 @@
 #include "s_sndseq.h"
 #include "st_stuff.h"
 #include "v_misc.h"
-#include "v_video.h"
 #include "version.h"
 #include "w_levels.h"
 #include "w_wad.h"
@@ -131,7 +119,10 @@ void SaveArchive::archiveLString(char *&str, size_t &len)
          savefile->write(str, len);
       }
       else
-         savefile->writeUint32(0);
+      {
+         size_t emptySize = 0;
+         archiveSize(emptySize);
+      }
    }
    else
    {
@@ -207,6 +198,62 @@ void SaveArchive::writeLString(const char *str, size_t len)
    }
    else
       I_Error("SaveArchive::writeLString: cannot deserialize!\n");
+}
+
+//
+// Archives a string that will be cached. Any equivalent values will only be referenced by an integer ID
+//
+void SaveArchive::archiveCachedString(qstring &string)
+{
+   if(isSaving())
+   {
+      // look up strings by content to get their ID
+      CachedString *cache = mStringTable.objectForKey(string.constPtr());
+      if(!cache)
+      {
+         cache = new CachedString;
+         mCacheStringHolder.add(cache);
+
+         cache->identifier = mNextCachedStringID;
+         cache->string = string;
+         ++mNextCachedStringID;
+         mStringTable.addObject(cache);
+
+         // Write both the new ID and the content
+         auto localID = static_cast<int32_t>(cache->identifier);
+         *this << localID;
+         qstring localString = string;
+         localString.archive(*this);
+      }
+      else
+      {
+         // We have it cached already
+         auto localID = static_cast<int32_t>(cache->identifier);
+         *this << localID;
+      }
+   }
+   else
+   {
+      // Loading
+      int32_t id;
+      *this << id;
+      CachedString *cache = mIdTable.objectForKey(id);   // look up strings by ID
+      if(!cache)
+      {
+         cache = new CachedString;
+         mCacheStringHolder.add(cache);
+
+         cache->identifier = id;
+         cache->string.archive(*this);
+         mIdTable.addObject(cache);
+
+         string = cache->string;
+      }
+      else
+      {
+         string = cache->string;
+      }
+   }
 }
 
 #define SAVE_MIN_SIZEOF_SIZE_T 4
@@ -394,7 +441,7 @@ SaveArchive &SaveArchive::operator << (line_t *&ln)
       loadfile->readSint32(linenum);
       if(linenum == -1) // Some line pointers can be nullptr
          ln = nullptr;
-      else if(linenum < 0 || linenum >= numlines)
+      else if(linenum < 0 || linenum >= numlinesPlusExtra)
       {
          I_Error("SaveArchive: line num %d out of range\n", linenum);
       }
@@ -446,6 +493,24 @@ SaveArchive &SaveArchive::operator << (zrefs_t &zref)
 {
    *this << zref.floor << zref.ceiling << zref.dropoff << zref.secfloor << zref.secceil
          << zref.passfloor << zref.passceil;
+   if(saveVersion() >= 15)
+   {
+      int32_t val;
+      if(isSaving())
+         val = zref.sector.floor ? eindex(zref.sector.floor - ::sectors) : -1;
+      *this << val;
+      if(isLoading())
+         zref.sector.floor = val >= 0 ? sectors + val : nullptr;
+   }
+   if(saveVersion() >= 19)
+   {
+      int32_t val;
+      if(isSaving())
+         val = zref.sector.ceiling ? eindex(zref.sector.ceiling - ::sectors) : -1;
+      *this << val;
+      if(isLoading())
+         zref.sector.ceiling = val >= 0 ? sectors + val : nullptr;
+   }
    return *this;
 }
 
@@ -530,18 +595,10 @@ static void P_ArchivePSprite(SaveArchive &arc, pspdef_t &pspr)
       arc << pspr.renderpos.x << pspr.renderpos.y;
 
    if(arc.isSaving())
-   {
-      int statenum = pspr.state ? pspr.state->index : -1;
-      arc << statenum;
-   }
+      Archive_PSpriteState_Save(arc, pspr.state);
    else
    {
-      int statenum = -1;
-      arc << statenum;
-      if(statenum != -1) // TODO: bounds-check!
-         pspr.state = states[statenum];
-      else
-         pspr.state = nullptr;
+      pspr.state = Archive_PSpriteState_Load(arc);
       pspr.backupPosition();
    }
 }
@@ -558,8 +615,7 @@ static void P_saveWeaponCounters(SaveArchive &arc, WeaponCounterNode *node)
       if(node->right)
          P_saveWeaponCounters(arc, node->right);
       arc.writeLString(E_WeaponForID(node->key)->name);
-      for(int &counter : *node->object)
-         arc << counter;
+      P_ArchiveArray<int>(arc, *node->object, earrlen(*node->object));
    }
 }
 
@@ -569,15 +625,15 @@ static void P_saveWeaponCounters(SaveArchive &arc, WeaponCounterNode *node)
 //
 static void P_loadWeaponCounters(SaveArchive &arc, player_t &p)
 {
-   int numCounters;
+   int numCountedWeapons;
 
    delete p.weaponctrs;
    p.weaponctrs = new WeaponCounterTree();
-   arc << numCounters;
-   if(numCounters)
+   arc << numCountedWeapons;
+   if(numCountedWeapons)
    {
-      WeaponCounter *weaponCounters = estructalloc(WeaponCounter, numCounters);
-      for(int i = 0; i < numCounters; i++)
+      WeaponCounter *weaponCounters = estructalloc(WeaponCounter, numCountedWeapons);
+      for(int i = 0; i < numCountedWeapons; i++)
       {
          size_t len;
          char *className = nullptr;
@@ -587,8 +643,13 @@ static void P_loadWeaponCounters(SaveArchive &arc, player_t &p)
          if(!wp)
             I_Error("P_loadWeaponCounters: weapon '%s' not found\n", className);
          WeaponCounter &wc = weaponCounters[i];
-         for(int &counter : wc)
-            arc << counter;
+         if(arc.saveVersion() >= 21)
+            P_ArchiveArray<int>(arc, wc, earrlen(wc));
+         else
+         {
+            for(int &counter : wc)
+               arc << counter;
+         }
          p.weaponctrs->insert(wp->id, &wc);
       }
    }
@@ -623,7 +684,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
          int inventorySize;
          if(arc.isSaving())
          {
-            int numCounters, slotIndex;
+            int numCountedWeapons, slotIndex;
             size_t noLen = 0;
 
             inventorySize = E_GetInventoryAllocSize();
@@ -644,10 +705,10 @@ static void P_ArchivePlayers(SaveArchive &arc)
             slotIndex = p.pendingweaponslot != nullptr ? p.pendingweaponslot->slotindex : 0;
             arc << slotIndex;
 
-            // Save numcounters, then counters if there's a need to
-            numCounters = p.weaponctrs->numNodes();
-            arc << numCounters;
-            if(numCounters)
+            // Save number of weapons that have counters, then counters themselves if there's a need to
+            numCountedWeapons = p.weaponctrs->numNodes();
+            arc << numCountedWeapons;
+            if(numCountedWeapons)
                P_saveWeaponCounters(arc, p.weaponctrs->root); // Recursively save
          }
          else
@@ -679,8 +740,12 @@ static void P_ArchivePlayers(SaveArchive &arc)
          }
          P_ArchiveArray<inventoryslot_t>(arc, p.inventory, inventorySize);
 
-         for(int &power : p.powers)
-            arc << power;
+         for(powerduration_t &power : p.powers)
+         {
+            arc << power.tics;
+            if(arc.saveVersion() >= 14)
+               arc << power.infinite;
+         }
 
          for(j = 0; j < MAXPLAYERS; j++)
             arc << p.frags[j];
@@ -735,33 +800,69 @@ static void P_ArchiveWorld(SaveArchive &arc)
       // haleyjd 08/30/09: intflags
       // haleyjd 03/02/09: save sector damage properties
       // haleyjd 08/30/09: save floorpic/ceilingpic as ints
+      surface_t &floor = sec->srf.floor;
+      surface_t &ceiling = sec->srf.ceiling;
 
-      arc << sec->srf.floor.height << sec->srf.ceiling.height
-          << sec->friction << sec->movefactor
-          << sec->topmap << sec->midmap << sec->bottommap
-          << sec->flags << sec->intflags
+      arc << floor.height << ceiling.height << sec->friction << sec->movefactor;
+      Archive_Colormap(arc, sec->topmap);
+      Archive_Colormap(arc, sec->midmap);
+      Archive_Colormap(arc, sec->bottommap);
+      arc << sec->flags;
+      if(arc.saveVersion() <= 17 && arc.isLoading())
+      {
+         // Adjust for the MONSTERDEATH flag inserted in the middle
+         sec->flags = (sec->flags &            (SECF_MONSTERDEATH - 1)) |
+                     ((sec->flags & ~((unsigned)SECF_MONSTERDEATH - 1)) << 1);
+      }
+      else if(arc.saveVersion() <= 11 && arc.isLoading())
+      {
+         // Adjust for the INSTANTDEATH flag inserted in the middle
+         sec->flags = (sec->flags &            (SECF_INSTANTDEATH - 1)) |
+                     ((sec->flags & ~((unsigned)SECF_INSTANTDEATH - 1)) << 1);
+      }
+      arc << sec->intflags
           << sec->damage << sec->damageflags << sec->leakiness << sec->damagemask
-          << sec->damagemod
-          << sec->srf.floor.pic << sec->srf.ceiling.pic
-          << sec->lightlevel << sec->oldlightlevel
-          << sec->srf.floor.lightdelta << sec->srf.ceiling.lightdelta
+          << sec->damagemod;
+      Archive_Flat(arc, floor.pic);
+      Archive_Flat(arc, ceiling.pic);
+      arc << sec->lightlevel << sec->oldlightlevel << floor.lightdelta << ceiling.lightdelta
           << sec->special << sec->tag; // needed?   yes -- transfer types -- killough
+      if(arc.saveVersion() >= 10)
+      {
+         // surf.data handled elsewhere
+         // surf.scale, .baseangle, .lightsec, .(attached), .pflags, .portal invariant
+         // surf.heightf derivative, same with .slope Z.
+         // surf.terrain invariant
+
+         // nexttag, firsttag invariant because tag is also invariant
+         // soundtarget handled elsewhere
+         // blockbox, soundorg, csoundorg invariant
+         // validcount, thinglist, spriteproj dynamic
+         // heightsec, sky invariant
+         // touching_thinglist dynamic
+         // linecount, lines, groupid, hticPushType, hticPushAngle, hticPushForce invariant
+         arc << floor.offset << ceiling.offset << floor.angle << ceiling.angle
+             << sec->soundtraversed << sec->stairlock << sec->prevsec << sec->nextsec;
+
+         arc << sec->sndSeqID;   // currently the ID is always stable, no need for name
+      }
 
       if(arc.isLoading())
       {
          // jff 2/22/98 now three thinker fields, not two
-         sec->srf.ceiling.data = nullptr;
-         sec->srf.floor.data = nullptr;
+         ceiling.data = nullptr;
+         floor.data = nullptr;
          sec->soundtarget  = nullptr;
 
          // SoM: update the heights
-         P_SetFloorHeight(sec, sec->srf.floor.height);
-         P_SetCeilingHeight(sec, sec->srf.ceiling.height);
+         P_SetSectorHeight(*sec, surf_floor, floor.height);
+         P_SetSectorHeight(*sec, surf_ceil, ceiling.height);
       }
    }
 
    // do lines
-   for(i = 0, li = lines; i < numlines; ++i, ++li)
+   int numlinesSave = arc.saveVersion() >= 11 ? numlinesPlusExtra : numlines;
+   for(i = 0, li = lines; i < numlinesSave; ++i, ++li)
    {
       int j;
 
@@ -770,6 +871,9 @@ static void P_ArchiveWorld(SaveArchive &arc)
 
       if((arc.saveVersion() >= 1))
          arc << li->extflags;
+
+      if(arc.saveVersion() >= 10)
+         arc << li->intflags;
 
       for(j = 0; j < 2; j++)
       {
@@ -780,17 +884,33 @@ static void P_ArchiveWorld(SaveArchive &arc)
             // killough 10/98: save full sidedef offsets,
             // preserving fractional scroll offsets
             
-            arc << si->textureoffset << si->rowoffset
-                << si->toptexture << si->bottomtexture << si->midtexture;
+            arc << si->offset_base_x << si->offset_base_y;
+            Archive_Texture(arc, si->toptexture);
+            Archive_Texture(arc, si->bottomtexture);
+            Archive_Texture(arc, si->midtexture);
+
+            if(arc.saveVersion() >= 16)
+            {
+               arc << si->offset_top_x    << si->offset_top_y
+                   << si->offset_bottom_x << si->offset_bottom_y
+                   << si->offset_mid_x    << si->offset_mid_y;
+            }
          }
       }
    }
+
+   // do sides
+   if(arc.saveVersion() >= 8)
+      for(i = 0, si = sides; i < numsides; ++i, ++si)
+         arc << si->intflags;
 
    // killough 3/26/98: Save boss brain state
    arc << brain.easy;
 
    // haleyjd 08/30/09: save state of lightning engine
-   arc << NextLightningFlash << LightningFlash << LevelSky << LevelTempSky;
+   arc << NextLightningFlash << LightningFlash;
+   Archive_Texture(arc, LevelSky);
+   Archive_Texture(arc, LevelTempSky);
 
    // ioanch: musinfo stuff
    S_MusInfoArchive(arc);
@@ -842,6 +962,52 @@ static void P_ArchiveSoundTargets(SaveArchive &arc)
             P_SetNewTarget(&sectors[i].soundtarget, target);
          else
             sectors[i].soundtarget = nullptr;
+      }
+   }
+}
+
+static void P_archiveSectorActions(SaveArchive &arc)
+{
+   if(arc.saveVersion() < 6)
+      return;
+
+   if(arc.isSaving())
+   {
+      for(int i = 0; i < numsectors; i++)
+      {
+         sector_t &sec = sectors[i];
+         unsigned int numActions = sec.actions ? sec.actions->dllData + 1 : 0;
+         DLListItem<sectoraction_t> *action = sec.actions;
+         arc << numActions;
+
+         for(unsigned int j = 0; j < numActions; j++)
+         {
+            unsigned int ordinal = action->dllObject->mo->getOrdinal();
+            arc << ordinal;
+            action = action->dllNext;
+         }
+      }
+   }
+   else
+   {
+      for(int i = 0; i < numsectors; i++)
+      {
+         sector_t &sec = sectors[i];
+         unsigned int mapNumActions = sec.actions ? sec.actions->dllData + 1 : 0;
+         unsigned int numActions;
+         DLListItem<sectoraction_t> *action = sec.actions;
+         arc << numActions;
+
+         if(numActions != mapNumActions)
+            I_Error("P_archiveSectorActions: sector action count mismatch\n");
+
+         for(unsigned int j = 0; j < numActions; j++)
+         {
+            unsigned int ordinal;
+            arc << ordinal;
+            action->dllObject->mo = thinker_cast<Mobj *>(P_ThinkerForNum(ordinal));
+            action = action->dllNext;
+         }
       }
    }
 }
@@ -962,6 +1128,8 @@ static void P_ArchiveThinkers(SaveArchive &arc)
 
    // Do sound targets
    P_ArchiveSoundTargets(arc);
+   // Do sector actions
+   P_archiveSectorActions(arc);
 }
 
 //
@@ -985,8 +1153,11 @@ void P_SetNewTarget(Mobj **mop, Mobj *targ)
 static void P_ArchiveRNG(SaveArchive &arc)
 {
    arc << rng.rndindex << rng.prndindex;
-
-   P_ArchiveArray<unsigned int>(arc, rng.seed, NUMPRCLASS);
+   // Protection for existing affected savegames...
+   if(arc.saveVersion() <= 12)
+      P_ArchiveArray<unsigned int>(arc, rng.seed, pr_mbf21);
+   else
+      P_ArchiveArray<unsigned int>(arc, rng.seed, NUMPRCLASS);
 }
 
 //
@@ -1307,7 +1478,8 @@ static void P_ArchiveButtons(SaveArchive &arc)
    // my recent rewrite of the button code.
    for(int i = 0; i < numsaved; i++)
    {
-      arc << buttonlist[i].btexture << buttonlist[i].btimer
+      Archive_Texture(arc, buttonlist[i].btexture);
+      arc << buttonlist[i].btimer
           << buttonlist[i].dopopout << buttonlist[i].line
           << buttonlist[i].side     << buttonlist[i].where
           << buttonlist[i].switchindex;
@@ -1356,7 +1528,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
       
       // killough 2/22/98: "proprietary" version string :-)
       memset(name2, 0, sizeof(name2));
-      sprintf(name2, VERSIONID);
+      snprintf(name2, sizeof(name2), VERSIONID);
    
       arc.archiveCString(name2, VERSIONSIZE);
 
@@ -1414,9 +1586,16 @@ void P_SaveCurrentLevel(char *filename, char *description)
          arc << dummy;
       }
 
+      const char *musicName = S_GetMusicName();
+      if(!musicName)
+         arc.getSaveFile()->writeUint8(0);
+      else
+         arc.writeLString(musicName);
+
       // jff 3/17/98 save idmus state
+      // MaxW: No more idmus state saving
       int tempGameType = (int)GameType;
-      arc << idmusnum << tempGameType;
+      arc << tempGameType;
 
       byte options[GAME_OPTION_SIZE];
       G_WriteOptions(options);    // killough 3/1/98: save game options
@@ -1446,6 +1625,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
       P_ArchiveSoundSequences(arc);
       P_ArchiveButtons(arc);
       P_ArchiveACS(arc);            // davidph 05/30/12
+      P_ArchiveHereticWeapons(arc);
 
       P_DeNumberThinkers();
 
@@ -1499,6 +1679,11 @@ void P_LoadGame(const char *filename)
 
    try
    {
+      WadDirectory *tmp_g_dir = g_dir;
+      WadDirectory *tmp_d_dir = d_dir;
+
+      int     tmp_gamemap         = gamemap;
+      int     tmp_gameepisode     = gameepisode;
       int     tmp_compatibility   = compatibility;
       skill_t tmp_gameskill       = gameskill;
       int     tmp_inmanageddir    = inmanageddir;
@@ -1610,6 +1795,10 @@ void P_LoadGame(const char *filename)
          if(checksum != rchecksum && !forced_loadgame)
          {
             // If we don't restore some state things will go very awry
+            g_dir           = tmp_g_dir;
+            d_dir           = tmp_d_dir;
+            gamemap         = tmp_gamemap;
+            gameepisode     = tmp_gameepisode;
             compatibility   = tmp_compatibility;
             gameskill       = tmp_gameskill;
             inmanageddir    = tmp_inmanageddir;
@@ -1639,9 +1828,17 @@ void P_LoadGame(const char *filename)
       // jff 3/18/98 account for unsigned byte
       // killough 11/98: simplify
       // haleyjd 04/14/03: game type
+      // MaxW: Skip loading save version
       // note: don't set DefaultGameType from save games
+      if(arc.saveVersion() < 20)
+         arc.getLoadFile()->skip(sizeof(int));
+      else
+      {
+         size_t dummy = 0;
+         arc.archiveLString(mus_LoadName, dummy);
+      }
       int tempGameType;
-      arc << idmusnum << tempGameType;
+      arc << tempGameType;
 
       GameType = (gametype_t)tempGameType;
 
@@ -1688,6 +1885,7 @@ void P_LoadGame(const char *filename)
       P_UnArchiveSoundSequences(arc);
       P_ArchiveButtons(arc);
       P_ArchiveACS(arc);            // davidph 05/30/12
+      P_ArchiveHereticWeapons(arc);
 
       P_FreeThinkerTable();
 

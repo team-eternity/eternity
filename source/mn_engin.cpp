@@ -90,6 +90,10 @@ vfont_t *menu_font_normal;
 char *mn_background;
 const char *mn_background_flat;
 
+// scrolling text
+int mn_lastSelectTic = 0;
+int mn_lastScrollTic = 0;
+
 //=============================================================================
 //
 // Static Declarations and Data
@@ -269,11 +273,9 @@ static void MN_initializeMenu(menu_t *menu)
 }
 
 //
-// MN_DrawMenuItem
+// Draw a menu item. Returns the height in pixels
 //
-// draw a menu item. returns the height in pixels
-//
-static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
+static int MN_drawMenuItem(menuitem_t *item, int x, int y, int color, bool selected)
 {
    int desc_width = 0;
    int alignment;
@@ -304,7 +306,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
 
       return item_height;
    }
- 
+
    // draw an alternate patch?
 
    // haleyjd: gamemodes that use big menu font don't use pics, ever
@@ -314,7 +316,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
       // haleyjd 05/16/04: hack for traditional menu support;
       // this was hard-coded in the old system
       if(drawing_menu->flags & mf_emulated)
-         item_height = EMULATED_ITEM_SIZE; 
+         item_height = EMULATED_ITEM_SIZE;
 
       return item_height; // if returned true, we are done.
    }
@@ -323,7 +325,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
    menuItemClass->drawDescription(item, item_height, desc_width, alignment, color);
 
    // draw other data: variable data etc.
-   menuItemClass->drawData(item, color, alignment, desc_width);
+   menuItemClass->drawData(item, color, alignment, desc_width, selected);
 
    if(drawing_menu->flags & mf_emulated)
       item_height = EMULATED_ITEM_SIZE;
@@ -343,7 +345,7 @@ static int MN_DrawMenuItem(menuitem_t *item, int x, int y, int color)
 //
 void MN_SetLeftSmallPtr(int x, int y, int height)
 {
-   smallptr_coords[0][0] = x - (smallptr_dims[0] + 1);
+   smallptr_coords[0][0] = x - (smallptr_dims[0] + 2);
    smallptr_coords[0][1] = y + ((height - smallptr_dims[1]) / 2);
 }
 
@@ -480,7 +482,7 @@ void MN_DrawMenu(menu_t *menu)
    {
       // haleyjd 04/04/10: draw menus higher in some game modes
       y -= GameModeInfo->menuOffset;
-      V_DrawBackground(mn_background_flat, &vbscreen);
+      V_DrawBackground(mn_background_flat, &vbscreenyscaled);
    }
 
    // haleyjd: calculate widest width for LALIGNED flag
@@ -511,7 +513,7 @@ void MN_DrawMenu(menu_t *menu)
       }
       
       // draw item
-      item_height = MN_DrawMenuItem(mi, menu->x, y, item_color);
+      item_height = MN_drawMenuItem(mi, menu->x, y, item_color, menu->selected == itemnum);
       
       // if selected item, draw skull / pointer next to it
       if(menu->selected == itemnum)
@@ -773,6 +775,8 @@ qstring &MN_GetInputBuffer()
    return input_buffer;
 }
 
+extern void MN_QuitDoom();
+
 //
 // MN_Responder
 //
@@ -789,6 +793,17 @@ bool MN_Responder(event_t *ev)
    static unsigned lastacceptedtime = 0;
 
    memset(tempstr, 0, sizeof(tempstr));
+
+   // "close" button pressed on window?
+   if (ev->type == ev_quit)
+   {
+      // give the quit menu widget a chance to interpret this as a confirmation
+      if(current_menuwidget && current_menuwidget->responder(ev, ka_nothing))
+         return true;
+
+      MN_QuitDoom();
+      return true;
+   }
 
    // haleyjd 07/03/04: call G_KeyResponder with kac_menu to filter
    // for menu-class actions
@@ -837,9 +852,14 @@ bool MN_Responder(event_t *ev)
    if(ev->type == ev_keydown && input_command)
    {
       if(action == ka_menu_toggle) // cancel input
+      {
+         mn_lastSelectTic = mn_lastScrollTic = gametic;
          input_command = nullptr;
+      }
       else if(action == ka_menu_confirm)
       {
+         mn_lastSelectTic = mn_lastScrollTic = gametic;
+
          if(input_buffer.length() || (input_command->flags & cf_allowblank))
          {
             if(input_buffer.length())
@@ -935,6 +955,8 @@ bool MN_Responder(event_t *ev)
 
    if(action == ka_menu_up)
    {
+      mn_lastSelectTic = mn_lastScrollTic = gametic;
+
       bool cancelsnd = false;
 
       // skip gaps
@@ -979,6 +1001,8 @@ bool MN_Responder(event_t *ev)
   
    if(action == ka_menu_down)
    {
+      mn_lastSelectTic = mn_lastScrollTic = gametic;
+
       bool cancelsnd = false;
       
       do
@@ -1018,6 +1042,8 @@ bool MN_Responder(event_t *ev)
    
    if(action == ka_menu_confirm)
    {
+      mn_lastSelectTic = mn_lastScrollTic = gametic;
+
       menuitem_t *menuItem      = &current_menu->menuitems[current_menu->selected];
       MenuItem   *menuItemClass = MenuItemInstanceForType[menuItem->type];
      
@@ -1128,6 +1154,7 @@ bool MN_Responder(event_t *ev)
             {
                // found a matching item!
                current_menu->selected = n;
+               mn_lastSelectTic = mn_lastScrollTic = gametic;
                return true; // eat key
             }
          }
@@ -1163,6 +1190,8 @@ void MN_ActivateMenu()
 //
 void MN_StartMenu(menu_t *menu)
 {
+   mn_lastSelectTic = mn_lastScrollTic = gametic;
+
    if(!menuactive)
    {
       MN_ActivateMenu();
@@ -1198,6 +1227,8 @@ void MN_StartMenu(menu_t *menu)
 //
 static void MN_PageMenu(menu_t *newpage)
 {
+   mn_lastSelectTic = mn_lastScrollTic = gametic;
+
    if(!menuactive)
       return;
 
@@ -1220,6 +1251,8 @@ static void MN_PageMenu(menu_t *newpage)
 //
 void MN_PrevMenu()
 {
+   mn_lastSelectTic = mn_lastScrollTic = gametic;
+
    if(--menu_history_num < 0)
       MN_ClearMenus();
    else

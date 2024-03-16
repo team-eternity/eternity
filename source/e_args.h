@@ -45,7 +45,7 @@ struct state_t;
 struct weaponinfo_t;
 
 // 16 arguments ought to be enough for anybody.
-#define EMAXARGS 16
+constexpr int EMAXARGS = 16;
 
 // Get an arglist safely from an Mobj * even if the pointer or the 
 // Mobj's state is nullptr (nullptr is returned in either case).
@@ -83,6 +83,7 @@ struct evalcache_t
       emod_t       *mod;
       unsigned int  flags[MAXFLAGFIELDS];
    } value;
+   bool dehacked;
 };
 
 struct arglist_t
@@ -98,10 +99,16 @@ struct argkeywd_t
    int        numkeywords;
 };
 
+enum class dehackedArg_e : bool
+{
+   NO  = false,
+   YES = true,
+};
+
 bool          E_AddArgToList(arglist_t *al, const char *value);
 inline int    E_GetArgCount(const arglist_t *al) { return al ? al->numargs : 0; }
-bool          E_SetArg(arglist_t *al, int index, const char *value);
-bool          E_SetArgFromNumber(arglist_t *al, int index, int value);
+bool          E_SetArg(arglist_t *al, int index, const char *value, dehackedArg_e dehacked);
+bool          E_SetArgFromNumber(arglist_t *al, int index, int value, dehackedArg_e dehacked);
 void          E_DisposeArgs(arglist_t *al);
 void          E_ResetArgEval(arglist_t *al, int index);
 void          E_ResetAllArgEvals();
@@ -122,6 +129,7 @@ int           E_ArgAsStateNumNI(arglist_t *al, int index, const player_t *player
 int           E_ArgAsStateNumG0(arglist_t *al, int index, const Mobj     *mo);
 int           E_ArgAsStateNumG0(arglist_t *al, int index, const player_t *player);
 unsigned int *E_ArgAsThingFlags(arglist_t *al, int index);
+unsigned int *E_ArgAsMBF21ThingFlags(arglist_t *al, int index);
 unsigned int  E_ArgAsFlags(arglist_t *al, int index, dehflagset_t *flagset);
 sfxinfo_t    *E_ArgAsSound(arglist_t *al, int index);
 int           E_ArgAsBexptr(arglist_t *al, int index);

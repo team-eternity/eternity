@@ -30,6 +30,11 @@ includeifenabled("heretic/things.edf", "HERETIC")
 // Common Objects --------------------------------------------------------------
 
 //
+// The template for all DSDHacked things.
+//
+thingtype _DSDHackedThingtypeTemplate {}
+
+//
 // TeleportSpot 
 //
 // This is the object used to tag line-to-thing teleport exit spots. It is 
@@ -312,6 +317,24 @@ thingtype EETerrainSludgeBase : Mobj, -1, 1050
   compatname  SludgeSplash
   spawnstate  S_SLUDGEBASE1
   cflags      NOBLOCKMAP|NOGRAVITY|NOSPLASH
+}
+
+// Sector Action Objects -------------------------------------------------------
+
+thingtype EESectorActionProto
+{
+  spawnstate  S_TNT1
+  cflags NOBLOCKMAP|NOSECTOR|NOGRAVITY|NOSPLASH
+}
+
+thingtype EESectorActionExit : EESectorActionProto, 9997
+{
+  compatname  SecActExit
+}
+
+thingtype EESectorActionEnter : EESectorActionProto, 9998
+{
+  compatname  SecActEnter
 }
 
 // Eternity TC Objects ---------------------------------------------------------

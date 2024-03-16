@@ -26,7 +26,7 @@
 #ifndef E_COMPATIBILITY_H_
 #define E_COMPATIBILITY_H_
 
-#define EDF_SEC_COMPATIBILITY "compatibilityhacks"
+constexpr const char EDF_SEC_COMPATIBILITY[] = "compatibilityhacks";
 
 struct cfg_opt_t;
 struct cfg_t;

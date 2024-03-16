@@ -37,6 +37,7 @@
 #include "m_random.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
+#include "p_saveg.h"
 #include "p_spec.h"
 #include "r_main.h"
 #include "s_sound.h"
@@ -266,7 +267,7 @@ void A_MaceBallImpact2(actionargs_t *actionargs)
       for(int horizontalmultiplier = -1; horizontalmultiplier <= 1; horizontalmultiplier += 2)
       {
          tiny = P_SpawnMobj(ball->x, ball->y, ball->z, tnum);
-         angle = ball->angle + (horizontalmultiplier * ANG90);
+         angle = ball->angle + (horizontalmultiplier * int(ANG90));
          P_SetTarget(&tiny->target, ball->target);
          tiny->angle = angle;
          angle >>= ANGLETOFINESHIFT;
@@ -464,6 +465,39 @@ void A_FireBlasterPL1(actionargs_t *actionargs)
    P_WeaponSound(mo, sfx_blssht);
 }
 
+void A_FireBlasterPL2(actionargs_t* actionargs)
+{
+   Mobj* mo = actionargs->actor;
+   player_t* player = mo->player;
+   if (!player)
+      return;
+   P_SubtractAmmo(player, deathmatch ? 1 : -1);
+   
+   int tnum = E_SafeThingType(MT_BLASTERFX1);
+   P_SpawnPlayerMissile(player->mo, tnum, SPM_ADDSLOPETOZ);
+
+   P_WeaponSound(mo, sfx_blssht);
+}
+
+void A_SpawnRippers(actionargs_t* actionargs)
+{
+   const Mobj* actor = actionargs->actor;
+   if (!actor)
+      return;
+   for (int i = 0; i < 8; ++i)
+   {
+      int tnum = E_SafeThingType(MT_RIPPER);
+      Mobj* ripper = P_SpawnMobj(actor->x, actor->y, actor->z, tnum);
+      angle_t angle = i * ANG45;
+      P_SetTarget(&ripper->target, actor->target);
+      ripper->angle = angle;
+      angle >>= ANGLETOFINESHIFT;
+      ripper->momx = FixedMul(ripper->info->speed, finecosine[angle]);
+      ripper->momy = FixedMul(ripper->info->speed, finesine[angle]);
+      P_CheckMissileSpawn(ripper);
+   }
+}
+
 void A_FireSkullRodPL1(actionargs_t *actionargs)
 {
    player_t *player = actionargs->actor->player;
@@ -478,6 +512,121 @@ void A_FireSkullRodPL1(actionargs_t *actionargs)
    // Randomize the first frame
    if(mo && P_Random(pr_skullrod) > 128)
       P_SetMobjState(mo, mo->state->nextstate);
+}
+
+void A_FireSkullRodPL2(actionargs_t* actionargs)
+{
+   player_t* player = actionargs->actor->player;
+
+   if (!player || !P_CheckAmmo(player))
+      return;
+
+   P_SubtractAmmo(player, deathmatch ? 1 : -1);
+   const int tnum = E_SafeThingType(MT_HORNRODFX2);
+
+   Mobj* mo = P_SpawnPlayerMissile(player->mo, tnum, SPM_ADDSLOPETOZ);
+
+   if (netgame)
+   {
+      int pindex = eindex(player - players);
+      if (pindex < 0 || pindex >= (int)earrlen(players))
+         pindex = 0; // just for safety
+      mo->counters[1] = pindex;
+   }
+   else
+      mo->counters[1] = 2;
+
+   if (clip.linetarget)
+      P_SetTarget(&mo->tracer, clip.linetarget);
+
+   S_StartSound(mo, sfx_hrnpow);
+}
+
+void A_SkullRodPL2Seek(actionargs_t* actionargs)
+{
+   P_SeekerMissile(actionargs->actor, HTICANGLE_1 * 10, HTICANGLE_1 * 20, seekcenter_e::no);
+}
+
+struct playerrain_t
+{
+   Mobj* rains[2];
+};
+
+static playerrain_t* playerrains;   // dynamically allocated with PU_LEVEL because it holds Mobj refs
+
+inline static bool P_checkPlayerForRain(int playerNum)
+{
+   return playerNum >= 0 && playerNum < (int)earrlen(players) && playeringame[playerNum] && 
+      players[playerNum].health > 0;
+}
+
+void A_AddPlayerRain(actionargs_t* actionargs)
+{
+   Mobj* actor = actionargs->actor;
+   if (!actor)
+      return;
+   int playerNum = netgame ? actor->counters[1] : 0;
+   if (!P_checkPlayerForRain(playerNum))
+      return;
+   if (!playerrains)
+      playerrains = estructalloctag(playerrain_t, earrlen(players), PU_LEVEL);
+   Mobj** rains = playerrains[playerNum].rains;
+   if (rains[0] && rains[1])
+   {
+      if (rains[0]->health < rains[1]->health)
+      {
+         if (rains[0]->health > 16)
+            rains[0]->health = 16;
+         P_ClearTarget(rains[0]);
+      }
+      else
+      {
+         if (rains[1]->health > 16)
+            rains[1]->health = 16;
+         P_ClearTarget(rains[1]);
+      }
+   }
+   if (rains[0])
+      P_SetTarget(&rains[1], actor);
+   else
+      P_SetTarget(&rains[0], actor);
+}
+
+void A_HideInCeiling(actionargs_t* actionargs)
+{
+   Mobj* actor = actionargs->actor;
+   if (!actor)
+      return;
+   actor->z = actor->zref.ceiling + 4 * FRACUNIT;
+}
+
+void A_SkullRodStorm(actionargs_t* actionargs)
+{
+   Mobj* actor = actionargs->actor;
+   if (!actor)
+      return;
+   if (actor->health-- == 0)
+   {
+      int playerNum = netgame ? actor->counters[1] : 0;
+      actor->remove();
+      if (!playerrains || !P_checkPlayerForRain(playerNum))
+         return;
+      if (playerrains->rains[0] == actor)
+         P_ClearTarget(playerrains->rains[0]);
+      if (playerrains->rains[1] == actor)
+         P_ClearTarget(playerrains->rains[1]);
+      return;
+   }
+   if (P_Random(pr_rodstormfudge) < 25)
+      return;
+   v2fixed_t pos = {
+      actor->x + ((P_Random(pr_rodstormspawn) & 127) - 64) * FRACUNIT,
+      actor->y + ((P_Random(pr_rodstormspawn) & 127) - 64) * FRACUNIT
+   };
+   // TODO: spawn the mobj player-dependent
+   if (!(actor->counters[0] & 31))
+      S_StartSound(actor, sfx_ramrain);
+   actor->counters[0]++;
 }
 
 void A_FirePhoenixPL1(actionargs_t *actionargs)
@@ -690,7 +839,7 @@ void A_HticArtiTele(actionargs_t *actionargs)
       destAngle = ANG45 * (playerstarts[0].angle / 45);
    }
 
-   P_HereticTeleport(mo, destX, destY, destAngle);
+   P_HereticTeleport(mo, destX, destY, destAngle, false);
    S_StartSound(nullptr, sfx_hwpnup);
 }
 
@@ -710,6 +859,56 @@ void A_HticSpawnFireBomb(actionargs_t *actionargs)
                       mo->y + (24 * finesine[angle]),
                       z, E_SafeThingType(MT_HFIREBOMB));
    P_SetTarget(&bomb->target, mo->target);
+}
+
+void P_ArchiveHereticWeapons(SaveArchive& arc)
+{
+   // The hellstaff super rain state
+   if (arc.saveVersion() < 17)
+      return;
+   if (arc.isLoading())
+   {
+      bool hasStruct = false;
+      arc << hasStruct;
+      if (hasStruct)
+      {
+         if (!playerrains)
+            playerrains = estructalloctag(playerrain_t, earrlen(players), PU_LEVEL);
+         for (size_t i = 0; i < earrlen(players); ++i)
+         {
+            unsigned int indices[2] = {};
+            arc << indices[0] << indices[1];
+            
+            playerrain_t& rain = playerrains[i];
+            P_SetNewTarget(&rain.rains[0], thinker_cast<Mobj*>(P_ThinkerForNum(indices[0])));
+            P_SetNewTarget(&rain.rains[1], thinker_cast<Mobj*>(P_ThinkerForNum(indices[1])));
+         }
+      }
+   }
+   else
+   {
+      // saving
+      bool val;
+      if (!playerrains)
+      {
+         val = false;
+         arc << val;
+      }
+      else
+      {
+         val = true;
+         arc << val;
+         for (size_t i = 0; i < earrlen(players); ++i)
+         {
+            unsigned indices[2] = {
+               P_NumForThinker(playerrains[i].rains[0]),
+               P_NumForThinker(playerrains[i].rains[1])
+            };
+            arc << indices[0] << indices[1];
+
+         }
+      }
+   }
 }
 
 // EOF

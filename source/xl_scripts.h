@@ -53,6 +53,7 @@ public:
       STATE_INBRACKETS, // in a bracketed token
       STATE_QUOTED,     // in a quoted string
       STATE_COMMENT,    // reading out a comment (eat rest of line)
+      STATE_INBCOMMENT, // in a block comment
       STATE_DONE        // finished the current token
    };
 
@@ -60,7 +61,7 @@ public:
    enum
    {
       TOKEN_NONE,       // Nothing identified yet
-      TOKEN_KEYWORD,    // Starts with a $; otherwise, same as a string
+      TOKEN_KEYWORD,    // Starts with a $ (or without quotes if specified); or same as a string
       TOKEN_STRING,     // Generic string token; ex: 92 foobar
       TOKEN_EOF,        // End of input
       TOKEN_LINEBREAK,  // '\n' character, only a token when TF_LINEBREAKS is enabled
@@ -78,6 +79,8 @@ public:
       TF_SLASHCOMMENTS = 0x00000008, // supports double-slash comments
       TF_OPERATORS     = 0x00000010, // C-style identifiers, no space operators
       TF_ESCAPESTRINGS = 0x00000020, // Add support for escaping strings
+      TF_STRINGSQUOTED = 0x00000040, // Strings must be quoted, otherwise they're keywords
+      TF_BLOCKCOMMENTS = 0x00000080, // supports block comments with /* */
    };
 
 protected:
@@ -93,6 +96,7 @@ protected:
    void doStateInBrackets();
    void doStateQuoted();
    void doStateComment();
+   void doStateBlockComment();
 
    // State table declaration
    static void (XLTokenizer::*States[])();

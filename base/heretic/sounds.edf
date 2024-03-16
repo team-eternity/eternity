@@ -963,6 +963,37 @@ sound ht_noway
   dehackednum 418
 }
 
+sound ht_ramphit
+{
+  lump          "ramphit"
+  priority      64
+  dehackednum   419
+  pitchvariance Heretic
+}
+
+sound ht_hrnpow
+{
+  lump          "hrnpow"
+  priority      64
+  dehackednum   420
+  pitchvariance Heretic
+}
+
+sound ht_ramrain
+{
+  lump          "ramrain"
+  priority      96
+  dehackednum   421
+  pitchvariance Heretic
+}
+
+sound ht_ripslop
+{
+  lump          "ripslop"
+  priority      32
+  pitchvariance Heretic
+}
+
 // Environmental Sound Defaults
 // These are altered by the game engine to point to sounds specifed by MapInfo.
 // Use these names in sound sequences to refer to the MapInfo-defined defaults.

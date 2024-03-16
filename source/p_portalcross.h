@@ -73,9 +73,10 @@ v2fixed_t P_PrecisePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
 // ioanch 20160107
 //
 sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, surf_e surf,
-                                 sector_t *preCalcSector = nullptr);
+                                 sector_t *preCalcSector = nullptr,
+                                 v2fixed_t *totaldelta = nullptr);
 
-sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, surf_e surf);
+sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, surf_e surf, v2fixed_t *totaldelta = nullptr);
 //
 // P_TransPortalBlockWalker
 // ioanch 20160107
@@ -107,7 +108,7 @@ bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj);
 sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
                                         int cgroupid, int tgroupid,
                                         sector_t *csector, fixed_t midzhint,
-                                        uint8_t *floorceiling = nullptr);
+                                        surf_e *surf = nullptr);
 sector_t *P_ThingReachesGroupVertically(const Mobj *mo, int groupid,
                                         fixed_t midzhint);
 

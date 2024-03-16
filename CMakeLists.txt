@@ -19,7 +19,12 @@
 ##
 ################################################################################
 ######################### CMake Configuration ##################################
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.16)
+
+# Must be before project()
+# Can't set anything below 10.15 now (10.13 would have worked, but we want std::filesystem)
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum macOS deployment version")
+
 project("Eternity Engine"
         VERSION 4.3.0
         LANGUAGES C CXX)
@@ -83,35 +88,15 @@ include(Packaging)
 ################################################################################
 ######################### Documentation  #######################################
 
-# Generate RADME.txt via simple copy.
+# Generate README.txt via simple copy.
 configure_file(
-   ${CMAKE_SOURCE_DIR}/README.adoc
+   ${CMAKE_SOURCE_DIR}/README.md
    ${CMAKE_BINARY_DIR}/README.txt
    COPYONLY)
-
-# If present on system, use asciidoc to generate README.html.
-find_program(ASCIIDOC_EXE asciidoc)
-if(ASCIIDOC_EXE)
-   message(STATUS "Found asciidoc: ${ASCIIDOC_EXE}")
-   add_custom_target(readme-asciidoc ALL
-      COMMAND "${ASCIIDOC_EXE}"
-         --backend=html
-         --out-file=${CMAKE_BINARY_DIR}/README.html
-         ${CMAKE_SOURCE_DIR}/README.adoc
-      SOURCES ${CMAKE_SOURCE_DIR}/README.adoc
-      )
-endif()
 
 ################################################################################
 ############ Compiler: Features, Warnings, Hardening, Optimisation  ############
 include(Compiler)
-
-################################################################################
-######################### Find Headers #########################################
-check_include_files(xlocale.h HAVE_XLOCALE_H)
-if(HAVE_XLOCALE_H)
-   add_definitions(-DHAVE_XLOCALE_H)
-endif()
 
 ################################################################################
 ######################### Find Needed Libs #####################################
@@ -139,16 +124,38 @@ add_subdirectory(adlmidi)
 add_subdirectory(angelscript/angelscript/projects/cmake)
 add_subdirectory(mcpp)
 add_subdirectory(zlib)
-add_subdirectory(libpng)
 add_subdirectory(snes_spc)
+
+# WARNING: this section must be before add_subdirectory(libpng)
+if(WIN32)
+   set(PNG_BUILD_ZLIB ON CACHE BOOL "Custom zlib location" FORCE)
+
+   set(ZLIB_LIBRARY zlibstatic CACHE STRING "zlib library name" FORCE)
+   set(ZLIB_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/zlib CACHE STRING "zlib include directory" FORCE)
+   find_package(ZLIB REQUIRED)
+
+   set(PNG_SHARED OFF CACHE BOOL "Build shared pnglib" FORCE)
+   set(PNG_EXECUTABLES OFF CACHE BOOL "Build libpng executables" FORCE)
+   set(PNG_TESTS OFF CACHE BOOL "Build libpng tests" FORCE)
+endif()
+add_subdirectory(libpng)
+
+# WARNING: add_subdirectory(source) must be below libpng, otherwise the png_static isn't found on Mac.
 add_subdirectory(source)
 
+
 if(WIN32 AND MSVC)
-   add_subdirectory(eecrashreport)
-   add_subdirectory(midiproc)
+   find_package(MFC)
+   if(MFC_FOUND)
+      add_subdirectory(eecrashreport)
 
-   add_dependencies(eternity eecrashreport midiproc)
+      add_dependencies(eternity eecrashreport)
+   else()
+      message("Warning: MFC/ATL not found. eecrashreport will not be built.")
+   endif()
 endif()
-
+if(APPLE)
+   add_subdirectory(macosx/launcher)
+endif()
 # EOF
 

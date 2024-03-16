@@ -25,13 +25,8 @@
 // haleyjd 08/20/07: POSIX opendir needed for autoload functionality
 #if __cplusplus >= 201703L || _MSC_VER >= 1914
 #include "hal/i_platform.h"
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
-#include "hal/i_directory.h"
-namespace fs = fsStopgap;
-#else
 #include <filesystem>
 namespace fs = std::filesystem;
-#endif
 #else
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
@@ -541,12 +536,6 @@ void D_NewWadLumps(int source)
       if(lumpinfo[i]->source != source)
          continue;
 
-      // new sound
-      if(!strncmp(lumpinfo[i]->name, "DSCHGUN",8)) // chaingun sound
-      {
-         S_Chgun();
-         continue;
-      }
       // haleyjd 03/26/11: sounds are not handled here any more
       // haleyjd 04/10/11: music is not handled here now either
 
@@ -620,7 +609,9 @@ static int D_CheckBasePath(const qstring &qpath)
          const fs::directory_iterator itr(path);
          for(const fs::directory_entry &ent : itr)
          {
-            const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
+            const qstring filename = qstring(
+               reinterpret_cast<const char *>(ent.path().filename().generic_u8string().c_str())
+            ).toLower(); // C++20_FIXME: Cast to make C++20 builds compile
 
             if(filename == "startup.wad")
                ++score;
@@ -806,7 +797,9 @@ static int D_CheckUserPath(const qstring &qpath)
          const fs::directory_iterator itr(path);
          for(const fs::directory_entry &ent : itr)
          {
-            const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
+            const qstring filename = qstring(
+               reinterpret_cast<const char *>(ent.path().filename().generic_u8string().c_str())
+            ).toLower(); // C++20_FIXME: Cast to make C++20 builds compile
 
             if(filename == "doom")
                ++score;
@@ -1208,8 +1201,10 @@ void D_GameAutoloadWads()
       {
          if(ent.path().extension() == ".wad")
          {
-            fn = M_SafeFilePath(autoload_dirname.constPtr(),
-                                ent.path().filename().generic_u8string().c_str());
+            fn = M_SafeFilePath(
+               autoload_dirname.constPtr(),
+               reinterpret_cast<const char *>(ent.path().filename().generic_u8string().c_str())
+            ); // C++20_FIXME: Cast to make C++20 builds compile
             D_AddFile(fn, lumpinfo_t::ns_global, nullptr, 0, DAF_NONE);
          }
       }
@@ -1234,8 +1229,10 @@ void D_GameAutoloadDEH()
          if(const fs::path extension = ent.path().extension();
             extension == ".deh" || extension == ".bex")
          {
-            fn = M_SafeFilePath(autoload_dirname.constPtr(),
-                                ent.path().filename().generic_u8string().c_str());
+            fn = M_SafeFilePath(
+               autoload_dirname.constPtr(),
+               reinterpret_cast<const char *>(ent.path().filename().generic_u8string().c_str())
+            ); // C++20_FIXME: Cast to make C++20 builds compile
             D_QueueDEH(fn, 0);
          }
       }
@@ -1258,8 +1255,10 @@ void D_GameAutoloadCSC()
       {
          if(ent.path().extension() == ".csc")
          {
-            fn = M_SafeFilePath(autoload_dirname.constPtr(),
-                                ent.path().filename().generic_u8string().c_str());
+            fn = M_SafeFilePath(
+               autoload_dirname.constPtr(),
+               reinterpret_cast<const char *>(ent.path().filename().generic_u8string().c_str())
+            ); // C++20_FIXME: Cast to make C++20 builds compile
             C_RunScriptFromFile(fn);
          }
       }

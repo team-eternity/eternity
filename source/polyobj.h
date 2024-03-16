@@ -298,6 +298,7 @@ polyobj_t *Polyobj_GetForNum(int id);
 bool Polyobj_IsSpawnSpot(const Mobj &mo);
 void Polyobj_InitLevel(void);
 void Polyobj_MoveOnLoad(polyobj_t *po, angle_t angle, fixed_t x, fixed_t y);
+void Polyobj_MoveToXY(polyobj_t* po, fixed_t x, fixed_t y);
 
 int EV_DoPolyDoor(const polydoordata_t *);
 int EV_DoPolyObjMove(const polymovedata_t *);

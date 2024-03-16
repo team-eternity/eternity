@@ -68,7 +68,7 @@ static void P_spawnGlitter(Mobj *actor, int type)
    v2fixed_t pos = P_LinePortalCrossing(*actor, dx, dy);
 
    Mobj *mo = P_SpawnMobj(pos.x, pos.y,
-      P_ExtremeSectorAtPoint(actor, surf_floor)->srf.floor.height, type);
+      P_ExtremeSectorAtPoint(actor, surf_floor)->srf.floor.getZAt(pos), type);
    mo->momz = FRACUNIT / 4;
 }
 
@@ -177,7 +177,7 @@ void A_MummyAttack2(actionargs_t *actionargs)
    
    mo = P_SpawnMissile(actor, actor->target, 
                        E_SafeThingType(MT_MUMMYFX1),
-                       actor->z + DEFAULTMISSILEZ);
+                       actor->z + actor->info->missileheight);
 
    P_SetTarget<Mobj>(&mo->tracer, actor->target);
 }
@@ -202,78 +202,13 @@ void A_HticDrop(actionargs_t *actionargs)
    A_Fall(actionargs);
 }
 
+//
+// Function to maintain Heretic-style seekers
+// TODO: Replace all P_HticTracer called with P_SeekerMissile calls?
+//
 static void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
 {
-   angle_t exact, diff;
-   Mobj   *dest;
-   bool    dir;
-  
-   // adjust direction
-   dest = actor->tracer;
-   
-   if(!dest || dest->health <= 0)
-      return;
-
-   // ioanch 20151230: portal aware
-   fixed_t dx = getThingX(actor, dest);
-   fixed_t dy = getThingY(actor, dest);
-   fixed_t dz = getThingZ(actor, dest);
-
-   exact = P_PointToAngle(actor->x, actor->y, dx, dy);
-
-   if(exact > actor->angle)
-   {
-      diff = exact - actor->angle;
-      dir = true;
-   }
-   else
-   {
-      diff = actor->angle - exact;
-      dir = false;
-   }
-
-   // if > 180, invert angle and direction
-   if(diff > 0x80000000)
-   {
-      diff = 0xFFFFFFFF - diff;
-      dir = !dir;
-   }
-
-   // apply limiting parameters
-   if(diff > threshold)
-   {
-      diff >>= 1;
-      if(diff > maxturn)
-         diff = maxturn;
-   }
-
-   // turn clockwise or counterclockwise
-   if(dir)
-      actor->angle += diff;
-   else
-      actor->angle -= diff;
-
-   // directly from above
-   diff = actor->angle>>ANGLETOFINESHIFT;
-   actor->momx = FixedMul(actor->info->speed, finecosine[diff]);
-   actor->momy = FixedMul(actor->info->speed, finesine[diff]);
-
-   // adjust z only when significant height difference exists
-   if(actor->z + actor->height < dz ||
-      dz  + dest->height  < actor->z)
-   {
-      // directly from above
-      fixed_t dist = P_AproxDistance(dx - actor->x, dy - actor->y);
-      
-      dist = dist / actor->info->speed;
-      
-      if(dist < 1)
-         dist = 1;
-
-      // momentum is set to equal slope rather than having some
-      // added to it
-      actor->momz = (dz - actor->z) / dist;
-   }
+   P_SeekerMissile(actor, threshold, maxturn, seekcenter_e::no);
 }
 
 //
@@ -363,7 +298,7 @@ void A_WizardAtk3(actionargs_t *actionargs)
    Mobj *mo;
    angle_t angle;
    fixed_t momz;
-   fixed_t z = actor->z + DEFAULTMISSILEZ;
+   fixed_t z = actor->z + actor->info->missileheight;
    int wizfxType = E_SafeThingType(MT_WIZFX1);
    
    actor->flags3 &= ~MF3_GHOST;
@@ -455,9 +390,9 @@ void A_Srcr1Attack(actionargs_t *actionargs)
       mo = P_SpawnMissile(actor, actor->target, srcrfxType, mheight);
       fixed_t momz = mo->momz;
       angle_t angle = mo->angle;
-      P_SpawnMissileAngle(actor, srcrfxType, angle-ANGLE_1*3, 
+      P_SpawnMissileAngle(actor, srcrfxType, angle - HTICANGLE_1 * 3,
                           momz, mheight);
-      P_SpawnMissileAngle(actor, srcrfxType, angle+ANGLE_1*3,
+      P_SpawnMissileAngle(actor, srcrfxType, angle + HTICANGLE_1 * 3,
                           momz, mheight);
       
       // desperation -- attack twice
@@ -492,7 +427,7 @@ void A_SorcererRise(actionargs_t *actionargs)
    mo->angle = actor->angle;
 
    // transfer friendliness
-   mo->flags = (mo->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
+   P_transferFriendship(*mo, *actor);
 
    // add to appropriate thread
    mo->updateThinker();
@@ -594,14 +529,14 @@ void A_Srcr2Attack(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
    int chance;
-   fixed_t z = actor->z + DEFAULTMISSILEZ;
+   fixed_t z = actor->z + actor->info->missileheight;
    int sor2fx1Type = E_SafeThingType(MT_SOR2FX1);
    int sor2fx2Type = E_SafeThingType(MT_SOR2FX2);
    
    if(!actor->target)
       return;
    
-   S_StartSound(actor, actor->info->attacksound);
+   S_StartSound(nullptr, actor->info->attacksound);
 
    if(P_CheckMeleeRange(actor))
    {
@@ -621,12 +556,12 @@ void A_Srcr2Attack(actionargs_t *actionargs)
       mo = P_SpawnMissileAngle(actor, sor2fx2Type, 
                                actor->angle - ANG45, 
                                FRACUNIT / 2, z);
-      mo->flags = (mo->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
+      P_transferFriendship(*mo, *actor);
       
       mo = P_SpawnMissileAngle(actor, sor2fx2Type,
                                actor->angle + ANG45, 
                                FRACUNIT / 2, z);
-      mo->flags = (mo->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
+      P_transferFriendship(*mo, *actor);
    }
    else
    {
@@ -664,10 +599,7 @@ void A_GenWizard(actionargs_t *actionargs)
                     wizType);
 
    // ioanch 20160116: portal aware
-   if(!P_CheckPosition(mo, mo->x, mo->y) ||
-      (mo->z >
-      (P_ExtremeSectorAtPoint(mo, surf_ceil)->srf.ceiling.height - mo->height)) ||
-      (mo->z < P_ExtremeSectorAtPoint(mo, surf_floor)->srf.floor.height))
+   if(!P_CheckPosition(mo, mo->x, mo->y) || !P_CheckFloorCeilingForSpawning(*mo))
    {
       // doesn't fit, so remove it immediately
       mo->remove();
@@ -675,7 +607,7 @@ void A_GenWizard(actionargs_t *actionargs)
    }
 
    // transfer friendliness
-   mo->flags = (mo->flags & ~MF_FRIEND) | (actor->flags & MF_FRIEND);
+   P_transferFriendship(*mo, *actor);
 
    // add to appropriate thread
    mo->updateThinker();
@@ -758,6 +690,7 @@ void A_HticExplode(actionargs_t *actionargs)
       break;
    case 3: // 3 -- Time Bomb of the Ancients, special effects
       actor->z += 32*FRACUNIT;
+      actor->backupPosition();   // don't show the bomb popping up
       actor->translucency = FRACUNIT;
       break;
    default:
@@ -797,7 +730,22 @@ void A_HticBossDeath(actionargs_t *actionargs)
 {
    Mobj    *actor = actionargs->actor;
    Thinker *th;
-   line_t   junk;
+
+   // Now check the UMAPINFO bossactions
+   // We need a player for this. NOTE: we don't require a living player here.
+   const player_t *thePlayer = nullptr;
+   int i;
+   for(i = 0; i < MAXPLAYERS; i++)
+      if(playeringame[i] && players[i].health > 0)
+      {
+         thePlayer = players + i;
+         break;
+      }
+   // none alive found
+   if(i == MAXPLAYERS || !thePlayer)
+      thePlayer = players; // pick player 1, even if dead
+
+   P_CheckCustomBossActions(*actor, *thePlayer);
 
    for(boss_spec_htic_t &hboss_spec : hboss_specs)
    {
@@ -837,8 +785,7 @@ void A_HticBossDeath(actionargs_t *actionargs)
 
             // fall through
          case BSPEC_E1M8:
-            junk.tag = junk.args[0] = 666;
-            EV_DoFloor(&junk, lowerFloor);
+            EV_DoFloor(nullptr, 666, lowerFloor);
             break;
          } // end switch
       } // end if
@@ -1121,7 +1068,7 @@ void A_BeastAttack(actionargs_t *actionargs)
    }
    else
       P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_BEASTBALL),
-                     actor->z + DEFAULTMISSILEZ);
+                     actor->z + actor->info->missileheight);
 }
 
 void A_BeastPuff(actionargs_t *actionargs)
@@ -1163,7 +1110,7 @@ void A_SnakeAttack(actionargs_t *actionargs)
    S_StartSound(actor, actor->info->attacksound);
    A_FaceTarget(actionargs);
    P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_SNAKEPRO_A),
-                  actor->z + DEFAULTMISSILEZ);
+                  actor->z + actor->info->missileheight);
 }
 
 void A_SnakeAttack2(actionargs_t *actionargs)
@@ -1180,7 +1127,7 @@ void A_SnakeAttack2(actionargs_t *actionargs)
    S_StartSound(actor, actor->info->attacksound);
    A_FaceTarget(actionargs);
    P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_SNAKEPRO_B),
-                  actor->z + DEFAULTMISSILEZ);
+                  actor->z + actor->info->missileheight);
 }
 
 //=============================================================================
@@ -1447,7 +1394,7 @@ void A_LichFire(actionargs_t *actionargs)
 
    // spawn the parent fireball
    baseFire = P_SpawnMissile(actor, target, headfxType, 
-                             actor->z + DEFAULTMISSILEZ);
+                             actor->z + actor->info->missileheight);
    
    // set it to S_HEADFX3_4 so that it doesn't grow
    P_SetMobjState(baseFire, frameNum);
@@ -1547,8 +1494,8 @@ void A_LichAttack(actionargs_t *actionargs)
    if(randAttack < (dist ? 150 : 50))
    {
       // ice attack
-      P_SpawnMissile(actor, target, fxType, actor->z + DEFAULTMISSILEZ);
-      S_StartSound(actor, sfx_hedat2);	
+      P_SpawnMissile(actor, target, fxType, actor->z + actor->info->missileheight);
+      S_StartSound(actor, sfx_hedat2);
    }
    else if(randAttack < (dist ? 200 : 150))
       A_LichFire(actionargs);
@@ -1722,7 +1669,7 @@ void A_ImpMissileAtk(actionargs_t *actionargs)
                    5 + (P_Random(pr_impmelee2) & 7), MOD_HIT);
    }
    else
-      P_SpawnMissile(actor, actor->target, fxType, actor->z + DEFAULTMISSILEZ);
+      P_SpawnMissile(actor, actor->target, fxType, actor->z + actor->info->missileheight);
 }
 
 //

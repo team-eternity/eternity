@@ -251,7 +251,6 @@ static void cheat_mus(const void *arg)
    {
       doom_printf("%s", DEH_String("STSTR_MUS")); // Ty 03/27/98 - externalized
       S_ChangeMusicNum(musnum, 1);
-      idmusnum = musnum; // jff 3/17/98: remember idmus number for restore
    }
 }
 
@@ -289,9 +288,9 @@ static void cheat_one(const void *arg)
    if(!(players[consoleplayer].cheats & CF_INFAMMO))
       C_RunTextCmd("infammo");
    cheat_fa(arg);
-   if(!players[consoleplayer].powers[pw_totalinvis])
+   if(!players[consoleplayer].powers[pw_totalinvis].isActive())
       cheat_pw(&pwinv);
-   if(!players[consoleplayer].powers[pw_silencer])
+   if(!players[consoleplayer].powers[pw_silencer].isActive())
       cheat_pw(&pwsil);
 }
 
@@ -325,10 +324,10 @@ static void cheat_k(const void *arg)
 
 static void cheat_kfa(const void *arg)
 {
-  cheat_k(arg);
-  cheat_fa(arg);
+   cheat_k(arg);
+   cheat_fa(arg);
 
-  doom_printf(STSTR_KFAADDED);
+   doom_printf(STSTR_KFAADDED);
 }
 
 static void cheat_noclip(const void *arg)
@@ -342,8 +341,8 @@ static void cheat_pw(const void *arg)
 {
    int pw = *(const int *)arg;
 
-   if(plyr->powers[pw])
-      plyr->powers[pw] = pw!=pw_strength && pw!=pw_allmap && pw!=pw_silencer;  // killough
+   if(plyr->powers[pw].isActive())
+      plyr->powers[pw] = { pw != pw_strength && pw != pw_allmap && pw != pw_silencer, false };  // killough
    else
    {
       static const int tics[NUMPOWERS] =
@@ -360,13 +359,13 @@ static void cheat_pw(const void *arg)
          FLIGHTTICS, // haleyjd: flight
          INFRATICS,  // haleyjd: torch
       };
-      P_GivePower(plyr, pw, tics[pw], false);
-      if(pw != pw_strength && !getComp(comp_infcheat))
-         plyr->powers[pw] = -1;      // infinite duration -- killough
+      P_GivePower(plyr, pw, tics[pw], false, false);
+      if(!getComp(comp_infcheat))
+         plyr->powers[pw] = { 0, true };
    }
 
    // haleyjd: stop flight if necessary
-   if(pw == pw_flight && !plyr->powers[pw_flight])
+   if(pw == pw_flight && !plyr->powers[pw_flight].isActive())
       P_PlayerStopFlight(plyr);
    
    doom_printf("%s", DEH_String("STSTR_BEHOLDX")); // Ty 03/27/98 - externalized
@@ -434,8 +433,6 @@ static bool cht_levelWarp(const char *buf)
    }
 
    // So be it.
-
-   idmusnum = -1; //jff 3/17/98 revert to normal level music on IDCLEV
 
    G_DeferedInitNewFromDir(gameskill, mapname, levelDir);
    
@@ -1048,18 +1045,18 @@ CONSOLE_COMMAND(fly, cf_notnet|cf_level)
 {
    player_t *p = &players[consoleplayer];
 
-   if(!(p->powers[pw_flight]))
+   if(!(p->powers[pw_flight]).isActive())
    {
-      p->powers[pw_flight] = -1;
+      p->powers[pw_flight] = { 0, true };;
       P_PlayerStartFlight(p, true);
    }
    else
    {
-      p->powers[pw_flight] = 0;
+      p->powers[pw_flight] = { 0, false };
       P_PlayerStopFlight(p);
    }
 
-   doom_printf(p->powers[pw_flight] ? "Flight on" : "Flight off");
+   doom_printf(p->powers[pw_flight].isActive() ? "Flight on" : "Flight off");
 }
 
 extern void A_Fall(actionargs_t *);
@@ -1211,9 +1208,10 @@ CONSOLE_COMMAND(warp, cf_notnet | cf_level)
    }
 
    const sector_t *sector = R_PointInSubsector(x, y)->sector;
-   fixed_t z = sector->srf.ceiling.height / 2 + sector->srf.floor.height / 2 - plyr->mo->height / 2;
+   fixed_t z = sector->srf.ceiling.getZAt(x, y) / 2 + sector->srf.floor.getZAt(x, y) / 2
+         - plyr->mo->height / 2;
 
-   P_TeleportMove(plyr->mo, x, y, false);
+   P_TeleportMove(plyr->mo, x, y, 0);
    plyr->mo->z = z;
 }
 

@@ -226,21 +226,14 @@ font ee_bignumfont
    filter { start '!'; end 'Z'; mask "FONTB%.2d" }
 }
 
-// Menu font - this is a special copy of the smallfont used by the menus;
-// widthdelta is set to 1 to move the text closer together.
+// Menu font - it's just the console font but as a patch
 font ee_menufont
 {
-   id          5
-   start       '!'
-   end         0x7f
-   linesize    8
-   spacesize   4
-   widthdelta  1
-   tallestchar 8
-   colorable   true
-   uppercase   true
-   
-   filter { start '!'; end 0x7f; mask "STCFN%.3d" }
+   id           5
+   linearlump   MENCHARS
+   linearformat patch
+   spacesize    4
+   usespacesize true
 }
 
 // Finale font - this is yet another copy of the smallfont, used by the finale.

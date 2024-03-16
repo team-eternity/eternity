@@ -54,26 +54,26 @@
 int NullStateNum;
 
 // Frame section keywords
-#define ITEM_FRAME_DECORATE  "decorate"
-#define ITEM_FRAME_SPRITE    "sprite"
-#define ITEM_FRAME_SPRFRAME  "spriteframe"
-#define ITEM_FRAME_FULLBRT   "fullbright"
-#define ITEM_FRAME_TICS      "tics"
-#define ITEM_FRAME_ACTION    "action"
-#define ITEM_FRAME_NEXTFRAME "nextframe"
-#define ITEM_FRAME_MISC1     "misc1"
-#define ITEM_FRAME_MISC2     "misc2"
-#define ITEM_FRAME_PTCLEVENT "particle_event"
-#define ITEM_FRAME_ARGS      "args"
-#define ITEM_FRAME_DEHNUM    "dehackednum"
-#define ITEM_FRAME_CMP       "cmp"
-#define ITEM_FRAME_SKILL5FAST "SKILL5FAST"
-#define ITEM_FRAME_INTERPOLATE "INTERPOLATE"
+constexpr const char ITEM_FRAME_DECORATE[]    = "decorate";
+constexpr const char ITEM_FRAME_SPRITE[]      = "sprite";
+constexpr const char ITEM_FRAME_SPRFRAME[]    = "spriteframe";
+constexpr const char ITEM_FRAME_FULLBRT[]     = "fullbright";
+constexpr const char ITEM_FRAME_TICS[]        = "tics";
+constexpr const char ITEM_FRAME_ACTION[]      = "action";
+constexpr const char ITEM_FRAME_NEXTFRAME[]   = "nextframe";
+constexpr const char ITEM_FRAME_MISC1[]       = "misc1";
+constexpr const char ITEM_FRAME_MISC2[]       = "misc2";
+constexpr const char ITEM_FRAME_PTCLEVENT[]   = "particle_event";
+constexpr const char ITEM_FRAME_ARGS[]        = "args";
+constexpr const char ITEM_FRAME_DEHNUM[]      = "dehackednum";
+constexpr const char ITEM_FRAME_CMP[]         = "cmp";
+constexpr const char ITEM_FRAME_SKILL5FAST[]  = "SKILL5FAST";
+constexpr const char ITEM_FRAME_INTERPOLATE[] = "INTERPOLATE";
 
-#define ITEM_DELTA_NAME      "name"
+constexpr const char ITEM_DELTA_NAME[]        = "name";
 
-#define ITEM_FRAMEBLOCK_FDS    "firststate"
-#define ITEM_FRAMEBLOCK_STATES "states"
+constexpr const char ITEM_FRAMEBLOCK_FDS[]    = "firststate";
+constexpr const char ITEM_FRAMEBLOCK_STATES[] = "states";
 
 // forward prototype for action function dispatcher
 static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
@@ -133,11 +133,16 @@ static const dehflags_t frameFlagSet[] =
 // State hash tables
 
 // State Hashing
-#define NUMSTATECHAINS 2003
+constexpr int NUMSTATECHAINS = 2003;
 
 // hash by name
 static EHashTable<state_t, ENCStringHashKey, 
                   &state_t::name, &state_t::namelinks> state_namehash(NUMSTATECHAINS);
+
+// hash of decorate states. Needed for savegame integrity check but otherwise not desired in 
+// state_namehash
+static EHashTable<state_t, ENCStringHashKey, &state_t::name, &state_t::namelinks> 
+                  decstate_namehash(NUMSTATECHAINS);
 
 // hash by DeHackEd number
 static EHashTable<state_t, EIntHashKey, 
@@ -206,6 +211,34 @@ int E_StateNumForName(const char *name)
       ret = st->index;
 
    return ret;
+}
+
+//
+// Same as above, but also covers decorate states. Only used for savegame integrity.
+//
+int E_StateNumForNameIncludingDecorate(const char *name)
+{
+   const state_t *st = state_namehash.objectForKey(name);
+   if(st)
+      return st->index;
+   st = decstate_namehash.objectForKey(name);
+   if(st)
+      return st->index;
+   return -1;
+}
+// Or only Decorate
+int E_StateNumForNameOnlyDecorate(const char *name)
+{
+   const state_t *st = decstate_namehash.objectForKey(name);
+   return st ? st->index : -1;
+}
+
+//
+// Stores a Decorate state to its special hash
+//
+void E_AddDecorateStateNameToHash(state_t *st)
+{
+   decstate_namehash.addObject(st);
 }
 
 //
@@ -480,6 +513,60 @@ void E_CollectStates(cfg_t *cfg)
 
       firsttime = false;
    }
+}
+
+int E_GetAddStateNumForDEHNum(int dehnum, bool forceAdd)
+{
+   int statenum = E_StateNumForDEHNum(dehnum);
+   state_t *state = nullptr;
+
+   if(statenum < 0)
+   {
+      unsigned int newstate = NUMSTATES; // index of new state
+      // allocate state_t structure for the new state
+      state = estructalloc(state_t, 1);
+
+      // add space to the states array
+
+      E_ReallocStates(1);
+
+      states[newstate] = state;
+      states[newstate]->index = newstate;
+
+      statenum = newstate;
+   }
+   else if(forceAdd && !states[statenum]->dsdhacked)
+   {
+      state = states[statenum];
+
+      state_namehash.removeObject(state);
+      state_numhash.removeObject(state);
+
+      if(state->args)
+         E_DisposeArgs(state->args);
+
+      *state = {};
+   }
+
+   if(state)
+   {
+      qstring name;
+      name.Printf(0, "_S_DSDHACKED%d", dehnum);
+
+      state->dsdhacked = true;
+
+      state->index     = statenum;
+      state->sprite    = blankSpriteNum;
+      state->tics      = -1;
+      state->nextstate = statenum;
+      state->dehnum    = dehnum;
+      state->name      = name.duplicate();
+
+      state_namehash.addObject(state);
+      state_numhash.addObject(state);
+   }
+
+   return statenum;
 }
 
 //
@@ -1164,21 +1251,22 @@ static void E_ProcessCmpState(const char *value, int i)
 #undef NEXTTOKEN
 #undef DEFAULTS
 
-// IS_SET: this macro tests whether or not a particular field should
-// be set. When applying deltas, we should not retrieve defaults.
-
-#undef  IS_SET
-#define IS_SET(name) (def || cfg_size(framesec, (name)) > 0)
-
 //
 // Generalized code to process the data for a single state
 // structure. Doubles as code for frame and framedelta.
 //
-static void E_ProcessState(int i, cfg_t *framesec, bool def)
+static void E_ProcessState(int i, cfg_t *const framesec, bool def)
 {
    int j;
    int tempint;
    const char *tempstr;
+
+
+   // IS_SET: Tests whether or not a particular field should
+   // be set. When applying deltas, we should not retrieve defaults.
+   const auto IS_SET = [framesec, &def](const char *const name) -> bool {
+      return def || cfg_size(framesec, (name)) > 0;
+   };
 
    // 11/14/03:
    // In definitions only, see if the cmp field is defined. If so,
@@ -1417,7 +1505,7 @@ static void E_processFrameBlock(cfg_t *sec, unsigned int index)
    }
 
    edecstateout_t *dso; 
-   if((dso = E_ParseDecorateStates(states, firststate)))
+   if((dso = E_ParseDecorateStates("fb{}", states, firststate)))
    {
       // warn if there are killstates, as these have no meaning
       if(dso->numkillstates)

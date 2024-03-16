@@ -19,13 +19,8 @@
 // Authors: James Haley, Stephen McGranahan, Julian Aubourg
 //
 
-#ifdef __APPLE__
-#include "SDL2/SDL.h"
-#include "SDL2_mixer/SDL_mixer.h"
-#else
 #include "SDL.h"
 #include "SDL_mixer.h"
-#endif
 
 #include "../z_zone.h"
 
@@ -72,33 +67,33 @@ static const int snd_samplerate = 44100;
 
 struct channel_info_t
 {
-  // SFX id of the playing sound effect.
-  // Used to catch duplicates (like chainsaw).
-  sfxinfo_t *id;
-  // The channel step amount...
-  unsigned int step;
-  // ... and a 0.16 bit remainder of last step.
-  unsigned int stepremainder;
-  unsigned int restartstepremainder;
-  unsigned int samplerate;
-  // The channel data pointers, start and end.
-  float *data;
-  float *startdata; // haleyjd
-  float *enddata;
-  float *restartdata; // For restarting a looping sound after a pause
-  // Hardware left and right channel volume lookup.
-  float  leftvol, rightvol;
-  // haleyjd 06/03/06: looping
-  int loop;
-  bool loopcutoff;
-  // unique instance id
-  unsigned int idnum;
-  // if true, channel is affected by reverb
-  bool reverb;
+   // SFX id of the playing sound effect.
+   // Used to catch duplicates (like chainsaw).
+   sfxinfo_t *id;
+   // The channel step amount...
+   unsigned int step;
+   // ... and a 0.16 bit remainder of last step.
+   unsigned int stepremainder;
+   unsigned int restartstepremainder;
+   unsigned int samplerate;
+   // The channel data pointers, start and end.
+   float *data;
+   float *startdata; // haleyjd
+   float *enddata;
+   float *restartdata; // For restarting a looping sound after a pause
+   // Hardware left and right channel volume lookup.
+   float  leftvol, rightvol;
+   // haleyjd 06/03/06: looping
+   int loop;
+   bool loopcutoff;
+   // unique instance id
+   unsigned int idnum;
+   // if true, channel is affected by reverb
+   bool reverb;
 
-  // haleyjd 10/02/08: SDL semaphore to protect channel
-  SDL_sem *semaphore;
-  bool shouldstop; // haleyjd 05/16/11
+   // haleyjd 10/02/08: SDL semaphore to protect channel
+   SDL_sem *semaphore;
+   bool shouldstop; // haleyjd 05/16/11
 
 };
 
@@ -245,35 +240,34 @@ static double preampmul;
 
 struct EQSTATE
 {
-  // Filter #1 (Low band)
+   // Filter #1 (Low band)
 
-  double  lf;       // Frequency
-  double  f1p0;     // Poles ...
-  double  f1p1;    
-  double  f1p2;
-  double  f1p3;
+   double  lf;       // Frequency
+   double  f1p0;     // Poles ...
+   double  f1p1;
+   double  f1p2;
+   double  f1p3;
 
-  // Filter #2 (High band)
+   // Filter #2 (High band)
 
-  double  hf;       // Frequency
-  double  f2p0;     // Poles ...
-  double  f2p1;
-  double  f2p2;
-  double  f2p3;
+   double  hf;       // Frequency
+   double  f2p0;     // Poles ...
+   double  f2p1;
+   double  f2p2;
+   double  f2p3;
 
-  // Sample history buffer
+   // Sample history buffer
 
-  double  sdm1;     // Sample data minus 1
-  double  sdm2;     //                   2
-  double  sdm3;     //                   3
+   double  sdm1;     // Sample data minus 1
+   double  sdm2;     //                   2
+   double  sdm3;     //                   3
 
-  // Gain Controls
+   // Gain Controls
 
-  double  lg;       // low  gain
-  double  mg;       // mid  gain
-  double  hg;       // high gain
-  
-};  
+   double  lg;       // low  gain
+   double  mg;       // mid  gain
+   double  hg;       // high gain
+};
 
 // haleyjd 04/21/10: equalizers for each stereo channel
 static EQSTATE eqstate[2];

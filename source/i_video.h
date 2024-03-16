@@ -127,6 +127,7 @@ int  I_VideoLetterboxHeight(int w);
 int  I_VideoLetterboxOffset(int h, int hl);
 
 void I_ToggleFullscreen();
+bool I_IsViewOccluded();
 
 extern int use_vsync;  // killough 2/8/98: controls whether vsync is called
 
