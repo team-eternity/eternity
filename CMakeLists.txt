@@ -121,7 +121,10 @@ add_subdirectory(acsvm)
 set(WITH_CPP_EXTRAS ON)
 add_subdirectory(adlmidi)
 
+enable_language(ASM)
 add_subdirectory(angelscript/angelscript/projects/cmake)
+target_compile_definitions(${ANGELSCRIPT_LIBRARY_NAME} PRIVATE -DAS_MAX_PORTABILITY)
+
 add_subdirectory(mcpp)
 add_subdirectory(zlib)
 add_subdirectory(snes_spc)
