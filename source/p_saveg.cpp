@@ -625,15 +625,15 @@ static void P_saveWeaponCounters(SaveArchive &arc, WeaponCounterNode *node)
 //
 static void P_loadWeaponCounters(SaveArchive &arc, player_t &p)
 {
-   int numCounters;
+   int numCountedWeapons;
 
    delete p.weaponctrs;
    p.weaponctrs = new WeaponCounterTree();
-   arc << numCounters;
-   if(numCounters)
+   arc << numCountedWeapons;
+   if(numCountedWeapons)
    {
-      WeaponCounter *weaponCounters = estructalloc(WeaponCounter, numCounters);
-      for(int i = 0; i < numCounters; i++)
+      WeaponCounter *weaponCounters = estructalloc(WeaponCounter, numCountedWeapons);
+      for(int i = 0; i < numCountedWeapons; i++)
       {
          size_t len;
          char *className = nullptr;
@@ -684,7 +684,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
          int inventorySize;
          if(arc.isSaving())
          {
-            int numCounters, slotIndex;
+            int numCountedWeapons, slotIndex;
             size_t noLen = 0;
 
             inventorySize = E_GetInventoryAllocSize();
@@ -705,10 +705,10 @@ static void P_ArchivePlayers(SaveArchive &arc)
             slotIndex = p.pendingweaponslot != nullptr ? p.pendingweaponslot->slotindex : 0;
             arc << slotIndex;
 
-            // Save numcounters, then counters if there's a need to
-            numCounters = p.weaponctrs->numNodes();
-            arc << numCounters;
-            if(numCounters)
+            // Save number of weapons that have counters, then counters themselves if there's a need to
+            numCountedWeapons = p.weaponctrs->numNodes();
+            arc << numCountedWeapons;
+            if(numCountedWeapons)
                P_saveWeaponCounters(arc, p.weaponctrs->root); // Recursively save
          }
          else
