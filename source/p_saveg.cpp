@@ -615,8 +615,7 @@ static void P_saveWeaponCounters(SaveArchive &arc, WeaponCounterNode *node)
       if(node->right)
          P_saveWeaponCounters(arc, node->right);
       arc.writeLString(E_WeaponForID(node->key)->name);
-      for(int &counter : *node->object)
-         arc << counter;
+      P_ArchiveArray<int>(arc, *node->object, earrlen(*node->object));
    }
 }
 
@@ -644,8 +643,13 @@ static void P_loadWeaponCounters(SaveArchive &arc, player_t &p)
          if(!wp)
             I_Error("P_loadWeaponCounters: weapon '%s' not found\n", className);
          WeaponCounter &wc = weaponCounters[i];
-         for(int &counter : wc)
-            arc << counter;
+         if(arc.saveVersion() >= 21)
+            P_ArchiveArray<int>(arc, wc, earrlen(wc));
+         else
+         {
+            for(int &counter : wc)
+               arc << counter;
+         }
          p.weaponctrs->insert(wp->id, &wc);
       }
    }
