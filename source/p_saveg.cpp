@@ -190,11 +190,19 @@ void SaveArchive::writeLString(const char *str, size_t len)
 {
    if(savefile)
    {
-      if(!len)
-         len = strlen(str) + 1;
+      if(str)
+      {
+         if(!len)
+            len = strlen(str) + 1;
 
-      archiveSize(len);
-      savefile->write(str, len);
+         archiveSize(len);
+         savefile->write(str, len);
+      }
+      else
+      {
+         size_t emptySize = 0;
+         archiveSize(emptySize);
+      }
    }
    else
       I_Error("SaveArchive::writeLString: cannot deserialize!\n");
@@ -1587,10 +1595,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
       }
 
       const char *musicName = S_GetMusicName();
-      if(!musicName)
-         arc.getSaveFile()->writeUint8(0);
-      else
-         arc.writeLString(musicName);
+      arc.writeLString(musicName);
 
       // jff 3/17/98 save idmus state
       // MaxW: No more idmus state saving
