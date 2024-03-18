@@ -2505,7 +2505,7 @@ void R_LinkSpriteProj(Mobj &thing)
                   continue;
                const line_t *line = entry.line;
                I_Assert(line, "No line found at %d!", index);
-               if(line->frontsector->groupid != item.groupid || P_BoxOnLineSide(bbox, line) != -1)
+               if(line->frontsector->groupid != item.groupid || P_BoxOnLineSideExclusive(bbox, line) != -1)
                   continue;
                I_Assert(entry.ldata, "No linkdata at %d!", index);
                

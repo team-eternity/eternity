@@ -77,13 +77,35 @@ int P_PointOnLineSideClassic(fixed_t x, fixed_t y, const line_t *line)
       FixedMul(y-line->v1->y, line->dx>>FRACBITS) >=
       FixedMul(line->dy>>FRACBITS, x-line->v1->x);
 }
+
 int P_PointOnLineSidePrecise(fixed_t x, fixed_t y, const line_t *line)
 {
-   return !line->dx ? x <= line->v1->x ? line->dy > 0 : line->dy < 0 :
-   !line->dy ? y <= line->v1->y ? line->dx < 0 : line->dx > 0 :
-   ((int64_t)y - line->v1->y) * line->dx >= line->dy * ((int64_t)x - line->v1->x);
+   return
+      !line->dx ? x <= line->v1->x ? line->dy > 0 : line->dy < 0 :
+      !line->dy ? y <= line->v1->y ? line->dx < 0 : line->dx > 0 :
+      ((int64_t)y - line->v1->y) * line->dx >= line->dy * ((int64_t)x - line->v1->x);
 }
 int (*P_PointOnLineSide)(fixed_t x, fixed_t y, const line_t *line) = P_PointOnLineSideClassic;
+
+//
+// Return 0 or 1, or -1 if flush
+//
+int P_PointOnLineSideExclusive(fixed_t x, fixed_t y, const line_t *line)
+{
+   if(!line->dx)
+      return x <= line->v1->x ? line->dy > 0 : line->dy < 0;
+   else if(!line->dy)
+      return y <= line->v1->y ? line->dx < 0 : line->dx > 0;
+   else
+   {
+      const int64_t yTerm = ((int64_t)y - line->v1->y) * line->dx;
+      const int64_t xTerm = line->dy * ((int64_t)x - line->v1->x);
+      if(xTerm == yTerm)
+         return -1;
+      else
+         return xTerm >= yTerm ? 1 : 0;
+   }
+}
 
 //
 // P_BoxOnLineSide
@@ -116,6 +138,60 @@ int P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld)
         (P_PointOnLineSide(tmbox[BOXLEFT], tmbox[BOXBOTTOM], ld)) ==
         (p = P_PointOnLineSide(tmbox[BOXRIGHT], tmbox[BOXTOP], ld)) ? p : -1;
     }
+}
+
+//
+// Considers the line to be infinite
+// Returns side 0 or 1, -1 if box crosses (or is flush with) the line.
+//
+int P_BoxOnLineSideExclusive(const fixed_t *tmbox, const line_t *ld)
+{
+   int p;
+
+   switch(ld->slopetype)
+   {
+   default:
+   case ST_HORIZONTAL:
+   {
+      const bool boxBottomAbove = tmbox[BOXBOTTOM] >= ld->v1->y;
+      const bool boxTopAbove = tmbox[BOXTOP] >= ld->v1->y;
+      if(boxBottomAbove == boxTopAbove)
+         return boxTopAbove != (ld->dx < 0) ? 1 : 0;
+      else
+         return -1;
+   }
+   case ST_VERTICAL:
+   {
+      const bool boxLeftLeft = tmbox[BOXLEFT] <= ld->v1->x;
+      const bool boxRightLeft = tmbox[BOXRIGHT] <= ld->v1->x;
+      if(boxLeftLeft == boxRightLeft)
+         return boxRightLeft != (ld->dy < 0) ? 1 : 0;
+      else
+         return -1;
+   }
+   case ST_POSITIVE:
+   {
+      int boxBottomRightCorner = P_PointOnLineSideExclusive(tmbox[BOXRIGHT], tmbox[BOXBOTTOM], ld);
+      int boxTopLeftCorner = P_PointOnLineSideExclusive(tmbox[BOXLEFT], tmbox[BOXTOP], ld);
+      if(boxBottomRightCorner == -1)
+         return boxTopLeftCorner;
+      else if(boxTopLeftCorner == -1)
+         return boxBottomRightCorner;
+      else
+         return boxBottomRightCorner == boxTopLeftCorner ? boxTopLeftCorner : -1;
+   }
+   case ST_NEGATIVE:
+   {
+      int boxBottomLeftCorner = P_PointOnLineSideExclusive(tmbox[BOXLEFT], tmbox[BOXBOTTOM], ld);
+      int boxTopRightCorner = P_PointOnLineSideExclusive(tmbox[BOXRIGHT], tmbox[BOXTOP], ld);
+      if(boxBottomLeftCorner == -1)
+         return boxTopRightCorner;
+      else if(boxTopRightCorner == -1)
+         return boxBottomLeftCorner;
+      else
+         return boxBottomLeftCorner == boxBottomLeftCorner ? boxBottomLeftCorner : -1;
+   }
+   }
 }
 
 //
