@@ -2473,19 +2473,18 @@ void R_LinkSpriteProj(Mobj &thing)
    };
    
    PODCollection<item_t> queue;
-   size_t queuepos = 0;
 
    queue.add({nullptr, {thing.x, thing.y}, {0, 0, 0}, thing.groupid});
 
-   while(queuepos < queue.getLength())
+   for(size_t queuepos = 0; queuepos < queue.getLength(); queuepos++)
    {
-      const item_t &item = queue[queuepos++];
+      const item_t &outeritem = queue[queuepos];
       
       fixed_t bbox[4];
-      bbox[BOXTOP] = item.coord.y + maxradius;
-      bbox[BOXBOTTOM] = item.coord.y - maxradius;
-      bbox[BOXLEFT] = item.coord.x - maxradius;
-      bbox[BOXRIGHT] = item.coord.x + maxradius;
+      bbox[BOXTOP] = outeritem.coord.y + maxradius;
+      bbox[BOXBOTTOM] = outeritem.coord.y - maxradius;
+      bbox[BOXLEFT] = outeritem.coord.x - maxradius;
+      bbox[BOXRIGHT] = outeritem.coord.x + maxradius;
       
       int bx1 = eclamp((bbox[BOXLEFT] - bmaporgx) / MAPBLOCKSIZE, 0, bmapwidth - 1);
       int bx2 = eclamp((bbox[BOXRIGHT] - bmaporgx) / MAPBLOCKSIZE, 0, bmapwidth - 1);
@@ -2496,6 +2495,8 @@ void R_LinkSpriteProj(Mobj &thing)
       {
          for(int bx = bx1; bx <= bx2; ++bx)
          {
+            const item_t &item = queue[queuepos];
+
             int index = by * bmapwidth + bx;
             const PODCollection<portalblockentry_t> &list = gPortalBlockmap[index];
             for(const portalblockentry_t &entry : list)
