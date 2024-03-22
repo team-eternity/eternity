@@ -330,7 +330,7 @@ static dehflags_t sectorportalflags[] =
    { "ADDITIVE",     PS_ADDITIVE     },
    { "USEGLOBALTEX", PS_USEGLOBALTEX },
    { "ATTACHEDPORTAL", PF_ATTACHEDPORTAL },
-   { "DOTERRAINHIT", PS_DOTERRAINHIT },
+   { "DOTERRAINHIT", PF_DOTERRAINHIT },
    { nullptr,        0               }
 };
 

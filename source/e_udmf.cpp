@@ -260,7 +260,7 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
             ss->srf.floor.pflags |= PS_OBLENDFLAGS; // PS_OBLENDFLAGS is PS_OVERLAY | PS_ADDITIVE
          ss->srf.floor.pflags |= us.portal_floor_useglobaltex ? PS_USEGLOBALTEX : 0;
          ss->srf.floor.pflags |= us.portal_floor_attached ? PF_ATTACHEDPORTAL : 0;
-         ss->srf.floor.pflags |= us.portal_floor_doterrain ? PS_DOTERRAINHIT : 0;
+         ss->srf.floor.pflags |= us.portal_floor_doterrain ? PF_DOTERRAINHIT : 0;
 
          // Ceilings
          balpha = us.alphaceiling >= 1.0 ? 255 : us.alphaceiling <= 0 ? 
