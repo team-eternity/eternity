@@ -1786,7 +1786,7 @@ void Mobj::Think()
       waterstate = 0;
    
    sector_t *ps = subsector->sector;
-   if(ps->srf.floor.pflags & PS_OVERLAY)
+   if((ps->srf.floor.pflags & PS_DOTERRAINHIT))
    {
       waterstate = ((z < P_PortalZ(ps->srf.floor)) && (lz > P_PortalZ(ps->srf.floor)));
    }
