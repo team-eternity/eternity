@@ -2486,10 +2486,10 @@ void R_LinkSpriteProj(Mobj &thing)
       bbox[BOXLEFT] = outeritem.coord.x - maxradius;
       bbox[BOXRIGHT] = outeritem.coord.x + maxradius;
       
-      int bx1 = eclamp((bbox[BOXLEFT] - bmaporgx) / MAPBLOCKSIZE, 0, bmapwidth - 1);
-      int bx2 = eclamp((bbox[BOXRIGHT] - bmaporgx) / MAPBLOCKSIZE, 0, bmapwidth - 1);
-      int by1 = eclamp((bbox[BOXBOTTOM] - bmaporgy) / MAPBLOCKSIZE, 0, bmapheight - 1);
-      int by2 = eclamp((bbox[BOXTOP] - bmaporgy) / MAPBLOCKSIZE, 0, bmapheight - 1);
+      const int bx1 = eclamp((bbox[BOXLEFT] - bmaporgx) / MAPBLOCKSIZE, 0, bmapwidth - 1);
+      const int bx2 = eclamp((bbox[BOXRIGHT] - bmaporgx) / MAPBLOCKSIZE, 0, bmapwidth - 1);
+      const int by1 = eclamp((bbox[BOXBOTTOM] - bmaporgy) / MAPBLOCKSIZE, 0, bmapheight - 1);
+      const int by2 = eclamp((bbox[BOXTOP] - bmaporgy) / MAPBLOCKSIZE, 0, bmapheight - 1);
          
       for(int by = by1; by <= by2; ++by)
       {
@@ -2505,7 +2505,7 @@ void R_LinkSpriteProj(Mobj &thing)
                   continue;
                const line_t *line = entry.line;
                I_Assert(line, "No line found at %d!", index);
-               if(line->frontsector->groupid != item.groupid || P_BoxOnLineSideExclusive(bbox, line) != -1)
+               if(line->frontsector->groupid != item.groupid || P_LineIntersectsBox(line, bbox) == false)
                   continue;
                I_Assert(entry.ldata, "No linkdata at %d!", index);
                

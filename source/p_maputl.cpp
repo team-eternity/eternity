@@ -298,6 +298,96 @@ int P_BoxOnDivlineSideFloat(const float *box, v2float_t start, v2float_t delta)
    return prod2 * prod >= 0 ? prod + prod2 >= 0 : -1;
 }
 
+enum outCode_e
+{
+   OC_INSIDE = 0x00000000,
+   OC_LEFT   = 0x00000001,
+   OC_RIGHT  = 0x00000002,
+   OC_BOTTOM = 0x00000004,
+   OC_TOP    = 0x00000008,
+};
+
+int GetVertexOutCode(const fixed_t *tmbox, const fixed_t x, const fixed_t y)
+{
+   int code = OC_INSIDE;
+   if(x < tmbox[BOXLEFT])
+      code |= OC_LEFT;
+   else if(x > tmbox[BOXRIGHT])
+      code |= OC_RIGHT;
+   if(y < tmbox[BOXTOP])
+      code |= OC_TOP;
+   else if(y > tmbox[BOXBOTTOM])
+      code |= OC_BOTTOM;
+
+   return code;
+}
+
+//
+// MaxW: Perform a Cohen Sutherland line clip to calculate if a line intersects a box
+//
+bool P_LineIntersectsBox(const line_t *ld, const fixed_t *tmbox)
+{
+   int ocV1 = GetVertexOutCode(tmbox, ld->v1->x, ld->v1->y);
+   int ocV2 = GetVertexOutCode(tmbox, ld->v2->x, ld->v2->y);
+
+   // These values represent the two intersect points (left as-is if both points are inside the box)
+   fixed_t x1 = ld->v1->x;
+   fixed_t y1 = ld->v1->y;
+   fixed_t x2 = ld->v2->x;
+   fixed_t y2 = ld->v2->y;
+
+   bool intersects = false;
+
+   while(true) {
+      if(!(ocV1 | ocV2))
+      {
+         intersects = true;
+         break;
+      }
+      else if(ocV1 & ocV2)
+         break;
+      else
+      {
+         fixed_t x = 0, y = 0;
+         const int outsideOutcode = emax(ocV2, ocV1);
+
+         if(outsideOutcode & OC_TOP)
+         {
+            x = x1 + FixedDiv(FixedMul((x2 - x1), (tmbox[BOXTOP] - y1)), (y2 - y1));
+            y = tmbox[BOXTOP];
+         }
+         else if(outsideOutcode & OC_BOTTOM)
+         {
+            x = x1 + FixedDiv(FixedMul((x2 - x1), (tmbox[BOXBOTTOM] - y1)), (y2 - y1));
+            y = tmbox[BOXBOTTOM];
+         }
+         else if(outsideOutcode & OC_RIGHT)
+         { 
+            y = y1 + FixedDiv(FixedMul((y2 - y1), (tmbox[BOXRIGHT] - x1)),  (x2 - x1));
+            x = tmbox[BOXRIGHT];
+         }
+         else if(outsideOutcode & OC_LEFT)
+         {
+            y = y1 + FixedDiv(FixedMul((y2 - y1), (tmbox[BOXLEFT] - x1)), (x2 - x1));
+            x = tmbox[BOXLEFT];
+         }
+
+         if(outsideOutcode == ocV1) {
+            x1 = x;
+            y1 = y;
+            ocV1 = GetVertexOutCode(tmbox, x1, y1);
+         }
+         else {
+            x2 = x;
+            y2 = y;
+            ocV2 = GetVertexOutCode(tmbox, x2, y2);
+         }
+      }
+   }
+
+   return intersects;
+}
+
 //
 // P_BoxLinePoint
 //
