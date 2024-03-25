@@ -2522,6 +2522,16 @@ void R_LinkSpriteProj(Mobj &thing)
                      already = true;
                      break;
                   }
+
+                  // Check for a 1/256 epsilon
+                  constexpr fixed_t epsilon = (1 << (FRACBITS - 8));
+                  if(D_abs((*checknode)->delta.x - newdelta.x) < epsilon && 
+                     D_abs((*checknode)->delta.y - newdelta.y) < epsilon &&
+                     D_abs((*checknode)->delta.z - newdelta.z) < epsilon )
+                  {
+                     already = true;
+                     break;
+                  }
                }
                
                if(already)
