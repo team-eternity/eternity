@@ -195,6 +195,7 @@ void V_DrawMaskedBlockTR(int x, int y, VBuffer *buffer, int width, int height,
 void V_DrawBlockFS(VBuffer *buffer, const byte *src);
 void V_DrawPatchFS(VBuffer *buffer, patch_t *patch);
 void V_DrawFSBackground(VBuffer *dest, int lumpnum);
+void V_DrawPillars();
 
 // V_FindBestColor (haleyjd)
 // A function that requantizes a color into the default game palette
