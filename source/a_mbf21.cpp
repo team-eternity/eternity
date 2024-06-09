@@ -208,6 +208,12 @@ void A_MonsterBulletAttack(actionargs_t *actionargs)
    numbullets = E_ArgAsInt(args, 2, 1);
    damagebase = E_ArgAsInt(args, 3, 3);
    damagemod  = E_ArgAsInt(args, 4, 5);
+   
+   if(numbullets >= 1 && !damagemod)
+   {
+      doom_warningf("%s: invalid damage random multiplier 0", __func__);
+      return;
+   }
 
    A_FaceTarget(actionargs);
    S_StartSound(actor, actor->info->attacksound);
