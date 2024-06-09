@@ -2852,7 +2852,15 @@ void E_ProcessThing(int i, cfg_t *const thingsec, cfg_t *pcfg, const bool def)
 
    // [XA] 02/29/20: process damagemod
    if(IS_SET(ITEM_TNG_DAMAGEMOD))
+   {
       mobjinfo[i]->damagemod = cfg_getint(thingsec, ITEM_TNG_DAMAGEMOD);
+      if(!mobjinfo[i]->damagemod)
+      {
+         E_EDFLoggedErr(2,
+                        "E_ProcessThing: thing '%s': invalid zero damagemod\n",
+                        mobjinfo[i]->name, tempstr);
+      }
+   }
 
    // 09/22/06: process topdamage 
    if(IS_SET(ITEM_TNG_TOPDAMAGE))
