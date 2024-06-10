@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # NOTE: this script is meant to be called from CMake, when it downloads the external libraries.
 #
