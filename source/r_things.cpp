@@ -1039,11 +1039,16 @@ static inline byte R_getDrawStyle(const Mobj *const thing, int *tranmaplump)
          return VS_DRAWSTYLE_ALPHA;
       else if(thing->flags & MF_TRANSLUCENT)
          return VS_DRAWSTYLE_TRANMAP;
-      else if(rTintTableIndex != -1 && thing->flags3 & MF3_GHOST)
+      else if(thing->flags3 & MF3_GHOST)
       {
-         if(tranmaplump)
-            *tranmaplump = rTintTableIndex;
-         return VS_DRAWSTYLE_TRANMAP;
+         if(rTintTableIndex != -1)
+         {
+            if(tranmaplump)
+               *tranmaplump = rTintTableIndex;
+            return VS_DRAWSTYLE_TRANMAP;
+         }
+         else
+            return VS_DRAWSTYLE_ALPHA;
       }
    }
 
