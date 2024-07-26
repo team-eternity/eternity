@@ -1308,9 +1308,15 @@ angle_t R_WadToAngle(int wadangle)
    // haleyjd: FIXME: needs comp option
    // allows wads to specify angles to
    // the nearest degree, not nearest 45   
+   
+   // Restore vanilla DOOM angle precision which we lost when we enabled non-multiple of 45 mapthing 
+   // angles. This is important for ACS scripts, including those from Hexen, where you'd get
+   // off-by-one errors with byte and fixed-point angles.
+   if(demo_version >= 403 && wadangle % 45 == 0)
+      return wadangle / 45 * ANG45;
 
-   return (demo_version < 302) 
-             ? (wadangle / 45) * ANG45 
+   return (demo_version < 302)
+             ? (wadangle / 45) * ANG45
              : wadangle * (ANG45 / 45);
 }
 
