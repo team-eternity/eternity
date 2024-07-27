@@ -54,6 +54,7 @@
 #include "ev_specials.h"
 #include "g_game.h"
 #include "hu_stuff.h"
+#include "m_compare.h"
 #include "p_info.h"
 #include "p_inter.h"
 #include "p_map.h"
@@ -632,6 +633,14 @@ fixed_t P_FindNextHighestCeiling(const sector_t *sec, int currentheight)
    return currentheight;
 }
 
+static fixed_t P_minimumCeilingHeightOnLine(const sector_t &sector, const line_t &line)
+{
+   if(!sector.srf.ceiling.slope)
+      return sector.srf.ceiling.height;
+   return emin(sector.srf.ceiling.getZAt(line.v1->x, line.v1->y),
+               sector.srf.ceiling.getZAt(line.v2->x, line.v2->y));
+}
+
 //
 // P_FindLowestCeilingSurrounding()
 //
@@ -657,8 +666,11 @@ fixed_t P_FindLowestCeilingSurrounding(const sector_t* sec)
       // SoM: ignore attached sectors.
       for(i = 0; i < sec->linecount; i++)
       {
-         if((other = getNextSector(sec->lines[i],sec)) &&
-            other->srf.ceiling.height < height)
+         other = getNextSector(sec->lines[i],sec);
+         if(!other)
+            continue;
+         fixed_t ceilingHeight = P_minimumCeilingHeightOnLine(*other, *sec->lines[i]);
+         if(ceilingHeight < height)
          {
             int j;
 
@@ -667,7 +679,7 @@ fixed_t P_FindLowestCeilingSurrounding(const sector_t* sec)
                   break;
 
             if(j == sec->srf.ceiling.asurfacecount)
-               height = other->srf.ceiling.height;
+               height = ceilingHeight;
          }
       }
    }
