@@ -502,9 +502,12 @@ fixed_t P_FindHighestFloorSurrounding(const sector_t *sec)
 
    for(i = 0; i < sec->linecount; i++)
    {
-      if((other = getNextSector(sec->lines[i],sec)) &&
-         other->srf.floor.height > floor)
-         floor = other->srf.floor.height;
+      other = getNextSector(sec->lines[i],sec);
+      if(!other)
+         continue;
+      fixed_t otherHeight = P_extremeHeightOnLine(*other, *sec->lines[i], surf_floor, emax);
+      if(otherHeight > floor)
+         floor = otherHeight;
    }
 
    return floor;
