@@ -440,6 +440,16 @@ sector_t *getNextSector(const line_t *line, const sector_t *sec)
             line->frontsector;
 }
 
+// Maximum or minimum floor or ceiling height along a line (in case of slopes)
+static fixed_t P_extremeHeightOnLine(const sector_t &sector, const line_t &line, surf_e surf,
+                                       const fixed_t &(*comp)(const fixed_t &, const fixed_t &))
+{
+   if(!sector.srf[surf].slope)
+      return sector.srf[surf].height;
+   return comp(sector.srf[surf].getZAt(line.v1->x, line.v1->y),
+               sector.srf[surf].getZAt(line.v2->x, line.v2->y));
+}
+
 //
 // P_FindLowestFloorSurrounding()
 //
@@ -633,14 +643,6 @@ fixed_t P_FindNextHighestCeiling(const sector_t *sec, int currentheight)
    return currentheight;
 }
 
-static fixed_t P_minimumCeilingHeightOnLine(const sector_t &sector, const line_t &line)
-{
-   if(!sector.srf.ceiling.slope)
-      return sector.srf.ceiling.height;
-   return emin(sector.srf.ceiling.getZAt(line.v1->x, line.v1->y),
-               sector.srf.ceiling.getZAt(line.v2->x, line.v2->y));
-}
-
 //
 // P_FindLowestCeilingSurrounding()
 //
@@ -669,7 +671,7 @@ fixed_t P_FindLowestCeilingSurrounding(const sector_t* sec)
          other = getNextSector(sec->lines[i],sec);
          if(!other)
             continue;
-         fixed_t ceilingHeight = P_minimumCeilingHeightOnLine(*other, *sec->lines[i]);
+         fixed_t ceilingHeight = P_extremeHeightOnLine(*other, *sec->lines[i], surf_ceil, emin);
          if(ceilingHeight < height)
          {
             int j;
