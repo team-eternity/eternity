@@ -673,21 +673,36 @@ fixed_t P_FindNextLowestCeiling(const sector_t *sec, int currentheight)
 //
 fixed_t P_FindNextHighestCeiling(const sector_t *sec, int currentheight)
 {
-   sector_t *other;
+   sector_t* other;
    int i;
 
-   for(i=0; i < sec->linecount; i++)
+   for (i = 0; i < sec->linecount; i++)
    {
-      if((other = getNextSector(sec->lines[i],sec)) &&
-         other->srf.ceiling.height > currentheight)
+      other = getNextSector(sec->lines[i], sec);
+      if (!other)
+         continue;
+      fixed_t height = P_extremeHeightOnLine(*other, *sec->lines[i], surf_ceil, emin);
+      if (height <= currentheight && other->srf.ceiling.slope)
+         height = P_extremeHeightOnLine(*other, *sec->lines[i], surf_ceil, emax);
+      if (height > currentheight)
       {
-         int height = other->srf.ceiling.height;
          while (++i < sec->linecount)
          {
-            if((other = getNextSector(sec->lines[i],sec)) &&
-               other->srf.ceiling.height < height &&
-               other->srf.ceiling.height > currentheight)
-               height = other->srf.ceiling.height;
+            other = getNextSector(sec->lines[i], sec);
+            if (!other)
+               continue;
+            fixed_t otherHeight = P_extremeHeightOnLine(*other, *sec->lines[i], surf_ceil, emin);
+            if (otherHeight < height)
+            {
+               if (otherHeight > currentheight)
+                  height = otherHeight;
+               else if (other->srf.ceiling.slope)
+               {
+                  otherHeight = P_extremeHeightOnLine(*other, *sec->lines[i], surf_ceil, emax);
+                  if (otherHeight < height && otherHeight > currentheight)
+                     height = otherHeight;
+               }
+            }
          }
          return height;
       }
