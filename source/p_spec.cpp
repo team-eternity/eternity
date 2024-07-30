@@ -788,10 +788,15 @@ fixed_t P_FindHighestCeilingSurrounding(const sector_t* sec)
       height = -32000*FRACUNIT; //jff 3/12/98 avoid ovf in
 
    // height calculations
-   for(i=0; i < sec->linecount; i++)
-      if((other = getNextSector(sec->lines[i],sec)) &&
-         other->srf.ceiling.height > height)
-         height = other->srf.ceiling.height;
+   for (i = 0; i < sec->linecount; i++)
+   {
+      other = getNextSector(sec->lines[i], sec);
+      if (!other)
+         continue;
+      fixed_t otherHeight = P_extremeHeightOnLine(*other, *sec->lines[i], surf_ceil, emax);
+      if (otherHeight > height)
+         height = otherHeight;
+   }
 
    return height;
 }
