@@ -556,7 +556,6 @@ fixed_t P_FindNextHighestFloor(const sector_t *sec, int currentheight)
                      height = otherHeight;
                }
             }
-            
          }
          return height;
       }
@@ -581,16 +580,31 @@ fixed_t P_FindNextLowestFloor(const sector_t *sec, int currentheight)
 
    for(i=0; i < sec->linecount; i++)
    {
-      if((other = getNextSector(sec->lines[i],sec)) &&
-         other->srf.floor.height < currentheight)
+      other = getNextSector(sec->lines[i],sec);
+      if(!other)
+         continue;
+      fixed_t height = P_extremeHeightOnLine(*other, *sec->lines[i], surf_floor, emax);
+      if(height >= currentheight && other->srf.floor.slope)
+         height = P_extremeHeightOnLine(*other, *sec->lines[i], surf_floor, emin);
+      if(height < currentheight)
       {
-         int height = other->srf.floor.height;
          while (++i < sec->linecount)
          {
-            if((other = getNextSector(sec->lines[i],sec)) &&
-               other->srf.floor.height > height &&
-               other->srf.floor.height < currentheight)
-               height = other->srf.floor.height;
+            other = getNextSector(sec->lines[i],sec);
+            if(!other)
+               continue;
+            fixed_t otherHeight = P_extremeHeightOnLine(*other, *sec->lines[i], surf_floor, emax);
+            if(otherHeight > height)
+            {
+               if(otherHeight < currentheight)
+                  height = otherHeight;
+               else if(other->srf.floor.slope)
+               {
+                  otherHeight = P_extremeHeightOnLine(*other, *sec->lines[i], surf_floor, emin);
+                  if(otherHeight > height && otherHeight < currentheight)
+                     height = otherHeight;
+               }
+            }
          }
          return height;
       }
