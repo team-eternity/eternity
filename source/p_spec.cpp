@@ -907,6 +907,7 @@ fixed_t P_FindShortestUpperAround(int secnum)
 //
 sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum)
 {
+   const sector_t &originSec = sectors[secnum]; // keep track
    sector_t *sec = &sectors[secnum]; //jff 3/2/98 woops! better do this
 
    //jff 5/23/98 don't disturb sec->linecount while searching
@@ -918,11 +919,22 @@ sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum)
        i < (demo_compatibility && sec->linecount < lineCount ? sec->linecount : lineCount);
        i++)
    {
-      if(twoSided(secnum, i) &&
-         (sec = getSector(secnum, i,
-          getSide(secnum,i,0)->sector-sectors == secnum))->srf.floor.height == floordestheight)
+      if(twoSided(secnum, i))
       {
-         return sec;
+         sec = getSector(secnum, i, getSide(secnum,i,0)->sector-sectors == secnum);
+         if(originSec.srf.floor.slope)
+         {
+            if(sec->srf.floor.slope && P_SlopesEqualAtGivenHeight(*originSec.srf.floor.slope, 
+                                                                  floordestheight,
+                                                                  *sec->srf.floor.slope))
+            {
+               return sec;
+            }
+         }
+         else if(!sec->srf.floor.slope && sec->srf.floor.height == floordestheight)
+         {
+            return sec;
+         }
       }
    }
 

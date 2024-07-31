@@ -625,6 +625,22 @@ bool P_SlopesEqual(const pslope_t &s1, const pslope_t &s2)
                          D_abs(P_DistFromPlane(s2.o, s1.o, s1.normal)) < epsilon);
 }
 
+// Useful for model sector finder
+bool P_SlopesEqualAtGivenHeight(const pslope_t &s1, fixed_t destheight1, const pslope_t &s2)
+{
+   // Apply the same safety epsilon here as in R_CompareSlopes
+   static constexpr fixed_t epsilon = FRACUNIT >> 10;
+   
+   // Calculate how the origin would be as if height changed by P_SetSectorHeight
+   v3fixed_t s1o = s1.o;
+   s1o.z = destheight1 + s1.surfaceZOffset;
+
+   return &s1 == &s2 || (D_abs(s1.normal.x - s2.normal.x) < epsilon &&
+                         D_abs(s1.normal.y - s2.normal.y) < epsilon &&
+                         D_abs(s1.normal.z - s2.normal.z) < epsilon &&
+                         D_abs(P_DistFromPlane(s2.o, s1o, s1.normal)) < epsilon);
+}
+
 bool P_AnySlope(const line_t &line)
 {
    return line.frontsector->srf.floor.slope || line.frontsector->srf.ceiling.slope ||
