@@ -961,6 +961,7 @@ sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum)
 
 sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum)
 {
+   const sector_t& originSec = sectors[secnum]; // keep track
    sector_t *sec = &sectors[secnum]; //jff 3/2/98 woops! better do this
 
    //jff 5/23/98 don't disturb sec->linecount while searching
@@ -972,11 +973,22 @@ sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum)
        i < (demo_compatibility && sec->linecount < lineCount ? sec->linecount : lineCount);
        i++)
    {
-      if(twoSided(secnum, i) &&
-         (sec = getSector(secnum, i,
-          getSide(secnum,i,0)->sector-sectors == secnum))->srf.ceiling.height == ceildestheight)
+      if (twoSided(secnum, i))
       {
-         return sec;
+         sec = getSector(secnum, i, getSide(secnum, i, 0)->sector - sectors == secnum);
+         if (originSec.srf.ceiling.slope)
+         {
+            if (sec->srf.ceiling.slope && P_SlopesEqualAtGivenHeight(*originSec.srf.ceiling.slope,
+               ceildestheight,
+               *sec->srf.ceiling.slope))
+            {
+               return sec;
+            }
+         }
+         else if (!sec->srf.ceiling.slope && sec->srf.ceiling.height == ceildestheight)
+         {
+            return sec;
+         }
       }
    }
 
