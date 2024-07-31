@@ -1160,7 +1160,8 @@ int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
          }
          else
          {
-            s3_floorheight = s3->srf.floor.height;
+            // Give some slope a chance, but it may be wrong
+            s3_floorheight = P_ExtremeHeightOnLine(*s3, *s2->lines[i], surf_floor, emin);
             s3_floorpic    = s3->srf.floor.pic;
          }
         
