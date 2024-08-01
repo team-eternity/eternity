@@ -164,7 +164,7 @@ manual_floor:
          floor->floordestheight += fd->adjust;
          break;
       case FtoC:
-         floor->floordestheight = sec->srf.ceiling.height + fd->adjust;
+         floor->floordestheight = sec->srf.ceiling.height - pSlopeHeights[secnum].touchheight + fd->adjust;
          break;
       case FbyST:
          floor->floordestheight =
