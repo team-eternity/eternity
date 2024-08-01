@@ -1433,7 +1433,7 @@ int EV_PillarOpen(const line_t *line, const pillardata_t *pd)
 manual_pillar:
       // already being buggered about with
       if(sector->srf.floor.data || sector->srf.ceiling.data ||
-         sector->srf.floor.height != sector->srf.ceiling.height)
+         sector->srf.floor.height + pSlopeHeights[sectornum].touchheight != sector->srf.ceiling.height)
       {
          if(manual)
             return returnval;
