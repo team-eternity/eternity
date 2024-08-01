@@ -40,6 +40,7 @@
 #include "m_compare.h"
 #include "m_random.h"
 #include "p_info.h"
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "p_xenemy.h"
@@ -158,8 +159,8 @@ manual_floor:
          break;
       case FtoLnCInclusive:
          floor->floordestheight = P_FindLowestCeilingSurrounding(sec);
-         if(floor->floordestheight > sec->srf.ceiling.height)
-            floor->floordestheight = sec->srf.ceiling.height;
+         if(floor->floordestheight > sec->srf.ceiling.height - pSlopeHeights[secnum].touchheight)
+            floor->floordestheight = sec->srf.ceiling.height - pSlopeHeights[secnum].touchheight;
          floor->floordestheight += fd->adjust;
          break;
       case FtoC:
