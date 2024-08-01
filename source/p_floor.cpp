@@ -539,8 +539,8 @@ int EV_DoFloor(const line_t *line, int tag, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED;
          floor->floordestheight = P_FindLowestCeilingSurrounding(sec);
-         if(floor->floordestheight > sec->srf.ceiling.height)
-            floor->floordestheight = sec->srf.ceiling.height;
+         if(floor->floordestheight > sec->srf.ceiling.height - pSlopeHeights[secnum].touchheight)
+            floor->floordestheight = sec->srf.ceiling.height - pSlopeHeights[secnum].touchheight;
          floor->floordestheight -=
             (8*FRACUNIT)*(floortype == raiseFloorCrush);
          break;
