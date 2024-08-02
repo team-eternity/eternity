@@ -1217,7 +1217,7 @@ manual_crusher:
       }
 
       ceiling->topheight = sec->srf.ceiling.height;
-      ceiling->bottomheight = sec->srf.floor.height + cd->ground_dist;
+      ceiling->bottomheight = sec->srf.floor.height + pSlopeHeights[secnum].touchheight + cd->ground_dist;
 
       // setup ceiling motion speed
       switch (cd->speed_type)
