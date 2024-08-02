@@ -434,14 +434,15 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, unsigned flags)
     //newsubsec->sector->ceilingheight + clip.thing->height;
    if(demo_version >= 333 && newsubsec->sector->srf.ceiling.pflags & PS_PASSABLE)
    {
+      v2fixed_t totaldelta;
       const sector_t *topceilsector = P_ExtremeSectorAtPoint(x, y, surf_ceil,
-                                                             newsubsec->sector);
-      clip.zref.ceiling = topceilsector->srf.ceiling.height;
+                                                             newsubsec->sector, &totaldelta);
+      clip.zref.ceiling = topceilsector->srf.ceiling.getZAt(x + totaldelta.x, y + totaldelta.y);
       clip.zref.sector.ceiling = topceilsector;
    }
    else
    {
-      clip.zref.ceiling = newsubsec->sector->srf.ceiling.height;
+      clip.zref.ceiling = newsubsec->sector->srf.ceiling.getZAt(x, y);
       clip.zref.sector.ceiling = newsubsec->sector;
    }
 
@@ -1817,8 +1818,8 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             else
                steplimit = STEPSIZE;
 
-            if(clip.BlockingMobj->z + clip.BlockingMobj->height - thing->z > steplimit ||
-               (P_ExtremeSectorAtPoint(clip.BlockingMobj, surf_ceil)->srf.ceiling.height
+            if (clip.BlockingMobj->z + clip.BlockingMobj->height - thing->z > steplimit ||
+               (P_ExtremeSectorAtPoint(clip.BlockingMobj, surf_ceil)->srf.ceiling.getZAt(thing->x, thing->y)
                  - (clip.BlockingMobj->z + clip.BlockingMobj->height) < thing->height) ||
                (clip.zref.ceiling - (clip.BlockingMobj->z + clip.BlockingMobj->height)
                  < thing->height))
