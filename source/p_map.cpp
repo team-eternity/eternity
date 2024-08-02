@@ -2101,27 +2101,45 @@ static bool PIT_ApplyTorque(line_t *ld, polyobj_t *po, void *context)
 
       // ioanch: portal aware. Use two different behaviours depending on map
       bool cond;
+      fixed_t frontfloor, backfloor;
+      fixed_t mocheckz;
+      if (ld->frontsector->srf.floor.slope || ld->backsector->srf.floor.slope)
+      {
+         if (mo->zref.sector.floor == ld->frontsector)
+         {
+            frontfloor = mocheckz = mo->zref.floor;
+            backfloor = ld->backsector->srf.floor.getZAt(mox, moy);
+         }
+         else if (mo->zref.sector.floor == ld->backsector)
+         {
+            frontfloor = ld->frontsector->srf.floor.getZAt(mox, moy);
+            backfloor = mocheckz = mo->zref.floor;
+         }
+         else
+            return true;   // not actually touching this line
+      }
+      else
+      {
+         frontfloor = ld->frontsector->srf.floor.height;
+         backfloor = ld->backsector->srf.floor.height;
+         mocheckz = mo->z;
+      }
+
       if(!useportalgroups || full_demo_version < make_full_version(340, 48))
       {
-         cond = dist < 0 ?                               // dropoff direction
-         ld->frontsector->srf.floor.height < mo->z &&
-         ld->backsector->srf.floor.height >= mo->z :
-         ld->backsector->srf.floor.height < mo->z &&
-         ld->frontsector->srf.floor.height >= mo->z;
+         // dropoff direction
+         cond = dist < 0 ? frontfloor < mocheckz && backfloor >= mocheckz :
+                            backfloor < mocheckz && frontfloor >= mocheckz;
       }
       else
       {
          // with portals and advanced version, also allow equal floor heights
          // if one side has portals. Require equal floor height though
-         cond = dist < 0 ?                               // dropoff direction
-         (ld->frontsector->srf.floor.height < mo->z ||
-         (ld->frontsector->srf.floor.height == mo->z &&
-         ld->frontsector->srf.floor.pflags & PS_PASSABLE)) &&
-         ld->backsector->srf.floor.height == mo->z :
-         (ld->backsector->srf.floor.height < mo->z ||
-         (ld->backsector->srf.floor.height == mo->z &&
-         ld->backsector->srf.floor.pflags & PS_PASSABLE)) &&
-         ld->frontsector->srf.floor.height == mo->z;
+         // dropoff direction
+         cond = dist < 0 ? (frontfloor < mocheckz ||
+            (frontfloor == mocheckz && ld->frontsector->srf.floor.pflags & PS_PASSABLE)) &&
+            backfloor == mocheckz : (backfloor < mocheckz ||
+               (backfloor == mocheckz && ld->backsector->srf.floor.pflags & PS_PASSABLE)) && frontfloor == mocheckz;
       }
 
       if(cond)
