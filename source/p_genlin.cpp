@@ -463,8 +463,8 @@ manual_ceiling:
             // gap to have any effect. But if gap is 0, just emulate the buggy
             // (but compat-fixed) Boom behavior. The only classic specials with
             // this behavior are from Boom anyway.
-            if(targheight < sec->srf.floor.height)
-               targheight = sec->srf.floor.height;
+            if(targheight < sec->srf.floor.height + pSlopeHeights[secnum].touchheight)
+               targheight = sec->srf.floor.height + pSlopeHeights[secnum].touchheight;
             targheight += cd->ceiling_gap;
 
             // Also slow ceiling down if blocked while gap is nonzero
@@ -473,7 +473,7 @@ manual_ceiling:
          }
          break;
       case CtoF:
-         targheight = sec->srf.floor.height + cd->ceiling_gap;
+         targheight = sec->srf.floor.height + pSlopeHeights[secnum].touchheight + cd->ceiling_gap;
          // ioanch: if hack flag is available, apply the Doom-like behavior if
          // gap is nonzero
          if(cd->ceiling_gap && cd->flags & CDF_HACKFORDESTF)
