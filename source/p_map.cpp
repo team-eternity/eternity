@@ -3186,7 +3186,7 @@ static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *context)
       i2.x += FixedMul(FRACUNIT >> 12, finecosine[angle >> ANGLETOFINESHIFT]);
       i2.y += FixedMul(FRACUNIT >> 12, finesine[angle >> ANGLETOFINESHIFT]);
 
-      if(P_PointReachesGroupVertically(i2.x, i2.y, ld->frontsector->srf.floor.height,
+      if(P_PointReachesGroupVertically(i2.x, i2.y, ld->frontsector->srf.floor.getZAt(i2),
                                        ld->frontsector->groupid,
                                        pClip->thing->groupid, ld->frontsector,
                                        pClip->thing->z))
@@ -3202,7 +3202,7 @@ static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *context)
          i2.x += FixedMul(FRACUNIT >> 12, finecosine[angle >> ANGLETOFINESHIFT]);
          i2.y += FixedMul(FRACUNIT >> 12, finesine[angle >> ANGLETOFINESHIFT]);
          if(P_PointReachesGroupVertically(i2.x, i2.y,
-                                          ld->backsector->srf.floor.height,
+                                          ld->backsector->srf.floor.getZAt(i2),
                                           ld->backsector->groupid,
                                           pClip->thing->groupid, ld->backsector,
                                           pClip->thing->z))
