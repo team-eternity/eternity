@@ -27,6 +27,8 @@
 #ifndef P_SLOPES_H__
 #define P_SLOPES_H__
 
+#include "m_surf.h"
+
 struct line_t;
 struct pslope_t;
 struct v3float_t;
@@ -76,6 +78,7 @@ float P_DistFromPlanef(const v3float_t *point, const v3float_t *pori,
                        const v3float_t *pnormal);
 
 bool P_SlopesEqual(const pslope_t &s1, const pslope_t &s2);
+bool P_SlopesEqual(const sector_t *s1, const sector_t *s2, surf_e surf);
 bool P_SlopesEqualAtGivenHeight(const pslope_t &s1, fixed_t destheight1, const pslope_t &s2);
 
 bool P_AnySlope(const line_t &line);

@@ -48,6 +48,7 @@
 #include "in_lude.h"
 #include "m_bbox.h"
 #include "m_collection.h"
+#include "m_compare.h"
 #include "m_random.h"
 #include "p_chase.h"
 #include "p_enemy.h"
@@ -430,8 +431,10 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
 
 //
 // P_ExplodeMissile
+// 
+// slopebumpz is in case P_TryMove hits a downward ceiling slope and needs to detect it from clip
 //
-void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec)
+void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec, fixed_t slopebumpz)
 {
    // haleyjd 08/02/04: EXPLOCOUNT flag
    if(mo->flags3 & MF3_EXPLOCOUNT)
@@ -446,19 +449,40 @@ void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec)
    if(demo_version >= 329)
    {
       const sector_t *ceilingsector = P_ExtremeSectorAtPoint(mo, surf_ceil);
-      if((ceilingsector->intflags & SIF_SKY ||
-         R_IsSkyLikePortalSurface(ceilingsector->srf.ceiling)) &&
-         mo->z >= ceilingsector->srf.ceiling.height - P_ThingInfoHeight(mo->info))
+      const fixed_t theight = P_ThingInfoHeight(mo->info);
+      fixed_t minbumpz;
+
+      if ((ceilingsector->intflags & SIF_SKY ||
+         R_IsSkyLikePortalSurface(ceilingsector->srf.ceiling)))
       {
-         mo->remove(); // don't explode on the actual sky itself
-         return;
+         if (ceilingsector->srf.ceiling.slope)
+         {
+            // Can hit either vertically or horizontally the slope, unlike the horizontal ceiling
+            minbumpz = slopebumpz > D_MININT ? emin(slopebumpz, mo->zref.ceiling) : mo->zref.ceiling;
+            if (P_SlopesEqual(mo->zref.sector.ceiling, ceilingsector, surf_ceil) && 
+               mo->z >= minbumpz - theight)
+            {
+               mo->remove();
+               return;
+            }
+         }
+         else if (mo->z >= ceilingsector->srf.ceiling.height - theight)
+         {
+            mo->remove(); // don't explode on the actual sky itself
+            return;
+         }
       }
-      if(topedgesec && demo_version >= 342 && (topedgesec->intflags & SIF_SKY ||
-         R_IsSkyLikePortalSurface(topedgesec->srf.ceiling)) &&
-         mo->z >= topedgesec->srf.ceiling.height - P_ThingInfoHeight(mo->info))
+      if (topedgesec && demo_version >= 342 && (topedgesec->intflags & SIF_SKY ||
+         R_IsSkyLikePortalSurface(topedgesec->srf.ceiling)))
       {
-         mo->remove(); // don't explode on the edge
-         return;
+         fixed_t edgez = topedgesec->srf.ceiling.getZAt(mo->x, mo->y);
+         minbumpz = slopebumpz > D_MININT ? emin(slopebumpz, edgez) : edgez;
+
+         if (mo->z >= minbumpz - theight)
+         {
+            mo->remove(); // don't explode on the edge
+            return;
+         }
       }
    }
 
@@ -784,7 +808,7 @@ void P_XYMovement(Mobj* mo)
             }
 
             P_ExplodeMissile(mo, clip.ceilingline ? clip.ceilingline->backsector :
-               nullptr);
+               nullptr, clip.zref.ceiling);
          }
          else // whatever else it is, it is now standing still in (x,y)
          {

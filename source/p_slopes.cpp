@@ -625,6 +625,25 @@ bool P_SlopesEqual(const pslope_t &s1, const pslope_t &s2)
                          D_abs(P_DistFromPlane(s2.o, s1.o, s1.normal)) < epsilon);
 }
 
+// Flexible overload which also allows null checks
+bool P_SlopesEqual(const sector_t* s1, const sector_t* s2, surf_e surf)
+{
+   if (!s1 || !s2)
+      return false;
+   const surface_t& srf1 = s1->srf[surf];
+   const surface_t& srf2 = s2->srf[surf];
+   if (!srf1.slope && !srf2.slope)
+      return srf1.height == srf2.height;
+
+   // Also cover zero slopes
+   if (!srf1.slope)
+      return !srf2.slope->zdelta && srf2.slope->o.z == srf1.height;
+   if (!srf2.slope)
+      return !srf1.slope->zdelta && srf1.slope->o.z == srf2.height;
+
+   return P_SlopesEqual(*srf1.slope, *srf2.slope);
+}
+
 // Useful for model sector finder
 bool P_SlopesEqualAtGivenHeight(const pslope_t &s1, fixed_t destheight1, const pslope_t &s2)
 {
