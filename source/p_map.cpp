@@ -2105,6 +2105,11 @@ static bool PIT_ApplyTorque(line_t *ld, polyobj_t *po, void *context)
       fixed_t mocheckz;
       if (ld->frontsector->srf.floor.slope || ld->backsector->srf.floor.slope)
       {
+         if (ld->frontsector->srf.floor.slope && ld->backsector->srf.floor.slope && 
+            P_SlopesEqual(*ld->frontsector->srf.floor.slope, *ld->backsector->srf.floor.slope))
+         {
+            return true;
+         }
          if (mo->zref.sector.floor == ld->frontsector)
          {
             frontfloor = mocheckz = mo->zref.floor;

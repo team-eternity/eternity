@@ -824,12 +824,30 @@ void P_XYMovement(Mobj* mo)
    // killough 9/15/98: add objects falling off ledges
    // killough 11/98: only include bouncers hanging off ledges
    // ioanch 20160116: portal aware
-   if(((mo->flags & MF_BOUNCES && mo->z > mo->zref.dropoff) ||
-       mo->flags & MF_CORPSE || mo->intflags & MIF_FALLING) &&
-      (mo->momx > FRACUNIT/4 || mo->momx < -FRACUNIT/4 ||
-       mo->momy > FRACUNIT/4 || mo->momy < -FRACUNIT/4) &&
-      mo->zref.floor != P_ExtremeSectorAtPoint(mo, surf_floor)->srf.floor.height)
-      return;  // do not stop sliding if halfway off a step with some momentum
+   if (((mo->flags & MF_BOUNCES && mo->z > mo->zref.dropoff) ||
+      mo->flags & MF_CORPSE || mo->intflags & MIF_FALLING) &&
+      (mo->momx > FRACUNIT / 4 || mo->momx < -FRACUNIT / 4 ||
+         mo->momy > FRACUNIT / 4 || mo->momy < -FRACUNIT / 4))
+   {
+      const sector_t* floorsector = P_ExtremeSectorAtPoint(mo, surf_floor);
+      if (mo->zref.floor != floorsector->srf.floor.height)
+      {
+         // do not stop sliding if halfway off a step with some momentum
+         // BUT: stop sliding if actually on top of the slope that keeps it
+         bool keepgoing = false;
+         const sector_t* mofloorsector = mo->zref.sector.floor;
+         if (mofloorsector && mofloorsector->srf.floor.slope)
+         {
+            if (floorsector == mofloorsector || (floorsector->srf.floor.slope &&
+               P_SlopesEqual(*floorsector->srf.floor.slope, *mofloorsector->srf.floor.slope)))
+            {
+               keepgoing = true;
+            }
+         }
+         if(!keepgoing)
+            return;
+      }
+   }
 
    // Some objects never rest on other things
    if(mo->intflags & MIF_ONMOBJ && mo->flags4 & MF4_SLIDEOVERTHINGS)
