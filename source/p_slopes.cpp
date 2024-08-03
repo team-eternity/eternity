@@ -630,6 +630,8 @@ bool P_SlopesEqual(const sector_t* s1, const sector_t* s2, surf_e surf)
 {
    if (!s1 || !s2)
       return false;
+   if (s1 == s2)
+      return true;
    const surface_t& srf1 = s1->srf[surf];
    const surface_t& srf2 = s2->srf[surf];
    if (!srf1.slope && !srf2.slope)
