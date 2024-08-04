@@ -1371,7 +1371,7 @@ floater:
       if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
       {
          P_ExplodeMissile (mo, 
-            clip.ceilingline ? clip.ceilingline->backsector : nullptr);
+            clip.ceilingline ? clip.ceilingline->backsector : nullptr, &clip.zref);
          return;
       }
    }
