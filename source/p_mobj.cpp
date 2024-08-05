@@ -428,11 +428,71 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
    return true;
 }
 
+//
+// Advanced (new to Eternity) P_ExplodeMissile sky vanishing. Not MBF or Heretic demo relevant, but
+// with necessary handling added for sloped skies, as well as edge cases against sky hacks.
+// 
+// If hitting sky, it will remove the mobj and return true. Otherwise it returns false.
+//
+static bool P_advancedSkyVanish(Mobj *mo, const sector_t *topedgesec, const zrefs_t *slopebumpz)
+{
+   // haleyjd: an attempt at fixing explosions on skies (works!)
+
+   const sector_t* ceilingsector = P_ExtremeSectorAtPoint(mo, surf_ceil);
+   const fixed_t theight = P_ThingInfoHeight(mo->info);
+
+   if ((ceilingsector->intflags & SIF_SKY ||
+      R_IsSkyLikePortalSurface(ceilingsector->srf.ceiling)))
+   {
+      if (ceilingsector->srf.ceiling.slope)
+      {
+         // Can hit either vertically or horizontally the slope, unlike the horizontal ceiling
+
+         if (P_SlopesEqual(mo->zref.sector.ceiling, ceilingsector, surf_ceil) &&
+            mo->z >= mo->zref.ceiling - theight)
+         {
+            mo->remove();
+            return true;
+         }
+         if (slopebumpz && P_SlopesEqual(mo->zref.sector.ceiling, slopebumpz->sector.ceiling,
+            surf_ceil) && mo->z >= slopebumpz->ceiling - theight)
+         {
+            mo->remove();
+            return true;
+         }
+      }
+      else if (mo->z >= ceilingsector->srf.ceiling.height - theight)
+      {
+         mo->remove(); // don't explode on the actual sky itself
+         return true;
+      }
+   }
+   if (topedgesec && demo_version >= 342 && (topedgesec->intflags & SIF_SKY ||
+      R_IsSkyLikePortalSurface(topedgesec->srf.ceiling)))
+   {
+      if (!topedgesec->srf.ceiling.slope)
+      {
+         if (mo->z >= topedgesec->srf.ceiling.height - theight)
+         {
+            mo->remove(); // don't explode on the edge
+            return true;
+         }
+      }
+      else if (slopebumpz && P_SlopesEqual(topedgesec, slopebumpz->sector.ceiling, surf_ceil) &&
+         mo->z >= slopebumpz->ceiling - theight)
+      {
+         mo->remove(); // don't explode on the edge
+         return true;
+      }
+   }
+   return false;
+}
 
 //
 // P_ExplodeMissile
 // 
 // slopebumpz is in case P_TryMove hits a downward ceiling slope and needs to detect it from clip
+// WARNING: this can remove the mobj, MAKE SURE to check if it's removed after calling this.
 //
 void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec, const zrefs_t *slopebumpz)
 {
@@ -446,56 +506,8 @@ void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec, const zrefs_t *slope
    mo->momx = mo->momy = mo->momz = 0;
 
    // haleyjd: an attempt at fixing explosions on skies (works!)
-   if(demo_version >= 329)
-   {
-      const sector_t *ceilingsector = P_ExtremeSectorAtPoint(mo, surf_ceil);
-      const fixed_t theight = P_ThingInfoHeight(mo->info);
-
-      if ((ceilingsector->intflags & SIF_SKY ||
-         R_IsSkyLikePortalSurface(ceilingsector->srf.ceiling)))
-      {
-         if (ceilingsector->srf.ceiling.slope)
-         {
-            // Can hit either vertically or horizontally the slope, unlike the horizontal ceiling
-            
-            if (P_SlopesEqual(mo->zref.sector.ceiling, ceilingsector, surf_ceil) && 
-               mo->z >= mo->zref.ceiling - theight)
-            {
-               mo->remove();
-               return;
-            }
-            if (slopebumpz && P_SlopesEqual(mo->zref.sector.ceiling, slopebumpz->sector.ceiling,
-               surf_ceil) && mo->z >= slopebumpz->ceiling - theight)
-            {
-               mo->remove();
-               return;
-            }
-         }
-         else if (mo->z >= ceilingsector->srf.ceiling.height - theight)
-         {
-            mo->remove(); // don't explode on the actual sky itself
-            return;
-         }
-      }
-      if (topedgesec && demo_version >= 342 && (topedgesec->intflags & SIF_SKY ||
-         R_IsSkyLikePortalSurface(topedgesec->srf.ceiling)))
-      {
-         if (!topedgesec->srf.ceiling.slope)
-         {
-            if (mo->z >= topedgesec->srf.ceiling.height - theight)
-            {
-               mo->remove(); // don't explode on the edge
-               return;
-            }
-         }
-         else if (slopebumpz && P_SlopesEqual(topedgesec, slopebumpz->sector.ceiling, surf_ceil) &&
-            mo->z >= slopebumpz->ceiling - theight)
-         {
-            mo->remove(); // don't explode on the edge
-            return;
-         }
-      }
-   }
+   if(demo_version >= 329 && P_advancedSkyVanish(mo, topedgesec, slopebumpz))
+      return;
 
    P_SetMobjState(mo, mobjinfo[mo->type]->deathstate);
 
@@ -824,6 +836,12 @@ void P_XYMovement(Mobj* mo)
 
             P_ExplodeMissile(mo, clip.ceilingline ? clip.ceilingline->backsector :
                nullptr, &clip.zref);
+
+            // IMPORTANT TO CHECK THAT IT GOT REMOVED BY SKIES. Exiting P_XYMovement will also check
+            // for removal, so it's safe. Inside P_ExplodeMissile it only explodes outside old demos,
+            // so it's safe.
+            if (mo->isRemoved())
+               return;
          }
          else // whatever else it is, it is now standing still in (x,y)
          {
