@@ -812,7 +812,9 @@ void P_XYMovement(Mobj* mo)
                   mo->remove();
                   return;
                }
-               if (mo->z > clip.ceilingline->backsector->srf.ceiling.height)
+               const surface_t &backceiling = clip.ceilingline->backsector->srf.ceiling;
+               // Slope handling is done in P_ExplodeMissile
+               if (!backceiling.slope && mo->z > backceiling.height)
                {
                   // Hack to prevent missiles exploding against the sky.
                   // Does not handle sky floors.
