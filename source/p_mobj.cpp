@@ -485,6 +485,16 @@ static bool P_advancedSkyVanish(Mobj *mo, const sector_t *topedgesec, const zref
          return true;
       }
    }
+   if(demo_version >= 403 && slopebumpz)
+   {
+      const sector_t *ceilsector = slopebumpz->sector.ceiling;
+      if(ceilsector && (ceilsector->intflags & SIF_SKY || R_IsSkyLikePortalSurface(ceilsector->srf.ceiling)) &&
+         ceilsector->srf.ceiling.slope && mo->z >= slopebumpz->ceiling - theight)
+      {
+         mo->remove();
+         return true;
+      }
+   }
    return false;
 }
 

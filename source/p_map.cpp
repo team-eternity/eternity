@@ -708,8 +708,11 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
    {
       inter.zref.ceiling = open.height.ceiling;
       inter.zref.sector.ceiling = open.ceilsector;
-      inter.ceilingline = ld;
-      inter.blockline = ld;
+      if(ld)
+      {
+         inter.ceilingline = ld;
+         inter.blockline = ld;
+      }
    }
 
    if((!aboveportal || (lineclipflags & LINECLIP_OVER3DMIDTEX)) && 
@@ -719,8 +722,11 @@ void P_UpdateFromOpening(const lineopening_t &open, const line_t *ld, doom_mapin
       inter.zref.floorgroupid = open.bottomgroupid;
       inter.zref.sector.floor = open.floorsector;
 
-      inter.floorline = ld;          // killough 8/1/98: remember floor linedef
-      inter.blockline = ld;
+      if(ld)
+      {
+         inter.floorline = ld;          // killough 8/1/98: remember floor linedef
+         inter.blockline = ld;
+      }
    }
 
    // Make sure to prioritize non-sloped floors if multiple sectors give the same floor Z
