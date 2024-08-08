@@ -898,8 +898,10 @@ void P_XYMovement(Mobj* mo)
       (mo->momx > FRACUNIT / 4 || mo->momx < -FRACUNIT / 4 ||
          mo->momy > FRACUNIT / 4 || mo->momy < -FRACUNIT / 4))
    {
-      const sector_t* floorsector = P_ExtremeSectorAtPoint(mo, surf_floor);
-      if (mo->zref.floor != floorsector->srf.floor.height)
+      v2fixed_t totaldelta = {};
+      const sector_t* floorsector = P_ExtremeSectorAtPoint(mo, surf_floor, &totaldelta);
+      v2fixed_t pos = {mo->x + totaldelta.x, mo->y + totaldelta.y};
+      if (mo->zref.floor != floorsector->srf.floor.getZAt(pos))
       {
          // do not stop sliding if halfway off a step with some momentum
          // BUT: stop sliding if actually on top of the slope that keeps it
@@ -1227,8 +1229,11 @@ static void P_ZMovement(Mobj* mo)
 
       if (mo->flags & MF_MISSILE)
       {
+         // FIXME: does this really execute here instead of P_TryMove?
+         // This check is for non-sloped ceilingline backsector
          if(clip.ceilingline &&
             clip.ceilingline->backsector &&
+            !clip.ceilingline->backsector->srf.ceiling.slope &&
             (mo->z > clip.ceilingline->backsector->srf.ceiling.height) &&
             (clip.ceilingline->backsector->intflags & SIF_SKY ||
             (demo_version >= 342 &&
@@ -1239,7 +1244,8 @@ static void P_ZMovement(Mobj* mo)
          }
          else
          {
-            P_ExplodeMissile(mo, 
+            // FIXME: do I have to put clip.zref here? It's already handled in P_XYMovement
+            P_ExplodeMissile(mo,
                clip.ceilingline ? clip.ceilingline->backsector : nullptr);
          }
       }
@@ -1444,7 +1450,7 @@ void P_NightmareRespawn(Mobj* mobj)
       subsector_t *newsubsec = R_PointInSubsector(x, y);
 
       fixed_t sheight = mobj->height;
-      fixed_t tz      = newsubsec->sector->srf.floor.height + mobj->spawnpoint.height;
+      fixed_t tz      = newsubsec->sector->srf.floor.getZAt(x, y) + mobj->spawnpoint.height;
 
       // need to restore real height before checking
       mobj->height = P_ThingInfoHeight(mobj->info);
@@ -1464,8 +1470,12 @@ void P_NightmareRespawn(Mobj* mobj)
 
    // spawn a teleport fog at old spot
    // because of removal of the body?
+   v2fixed_t sourcepos = {};
+   const sector_t *floorsector = P_ExtremeSectorAtPoint(mobj, surf_floor, &sourcepos);
+   sourcepos.x += mobj->x;
+   sourcepos.y += mobj->y;
    mo = P_SpawnMobj(mobj->x, mobj->y,
-                    P_ExtremeSectorAtPoint(mobj, surf_floor)->srf.floor.height +
+                    floorsector->srf.floor.getZAt(sourcepos) +
                        GameModeInfo->teleFogHeight,
                     E_SafeThingName(GameModeInfo->teleFogType));
 
@@ -1475,7 +1485,7 @@ void P_NightmareRespawn(Mobj* mobj)
    // spawn a teleport fog at the new spot
    ss = R_PointInSubsector(x, y);
    mo = P_SpawnMobj(x, y,
-                    ss->sector->srf.floor.height + GameModeInfo->teleFogHeight,
+                    ss->sector->srf.floor.getZAt(x, y) + GameModeInfo->teleFogHeight,
                     E_SafeThingName(GameModeInfo->teleFogType));
 
    S_StartSound(mo, GameModeInfo->teleSound);
