@@ -61,6 +61,11 @@ struct v3fixed_t
       z += other.z;
       return *this;
    }
+   
+   v3fixed_t operator - () const
+   {
+      return v3fixed_t{-x, -y, -z};
+   }
 
    static v3fixed_t floatToFixed(const v3float_t &v);
 
@@ -189,6 +194,11 @@ struct v3float_t
       y /= operand;
       z /= operand;
       return *this;
+   }
+   
+   v3float_t operator - () const
+   {
+      return v3float_t{-x, -y, -z};
    }
 
    float abs() const;

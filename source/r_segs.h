@@ -40,7 +40,7 @@ class  ZoneHeap;
 void R_FinishMappingLines();
 
 void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
-                            const fixed_t viewz, drawseg_t *ds, int x1, int x2);
+                            const viewpoint_t &viewpoint, drawseg_t *ds, int x1, int x2);
 void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,
                       portalcontext_t &portalcontext, ZoneHeap &heap,
                       const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,

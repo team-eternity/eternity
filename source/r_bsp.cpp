@@ -524,7 +524,8 @@ int R_GetSurfaceLightLevel(surf_e surf, const rendersector_t *sec)
 
 extern camera_t *camera; // haleyjd
 
-const rendersector_t *R_FakeFlat(const fixed_t viewz, const rendersector_t *sec, rendersector_t *tempsec,
+const rendersector_t *R_FakeFlat(const viewpoint_t &viewpoint, const rendersector_t *sec,
+                                 rendersector_t *tempsec, Surfaces<pslope_t> &tempslopes,
                                  int *floorlightlevel, int *ceilinglightlevel, bool back)
 {
    if(!sec)
@@ -555,15 +556,56 @@ const rendersector_t *R_FakeFlat(const fixed_t viewz, const rendersector_t *sec,
       // haleyjd 01/07/14: get from view.sector due to interpolation
       heightsec = view.sector->heightsec;
 
-      underwater = (heightsec != -1 && viewz <= sectors[heightsec].srf.floor.height);
+      underwater = (heightsec != -1 &&
+                    viewpoint.z <= sectors[heightsec].srf.floor.getZAt(viewpoint.x, viewpoint.y));
 
       // Replace floor and ceiling height with other sector's heights.
       tempsec->srf.floor.height = s->srf.floor.height;
       tempsec->srf.ceiling.height = s->srf.ceiling.height;
+      
+      for(surf_e surf : SURFS)
+      {
+         if(s->srf[surf].slope)
+         {
+            tempsec->srf[surf].slope = &tempslopes[surf];
+            tempslopes[surf] = *s->srf[surf].slope;
+         }
+         else
+            tempsec->srf[surf].slope = nullptr;
+      }
+      
+      bool goUnderwater = false;
+      if(underwater)
+      {
+         tempsec->srf.floor.height = sec->srf.floor.height;
+         tempsec->srf.ceiling.height = s->srf.floor.height - 1;
+         
+         if(sec->srf.floor.slope)
+         {
+            tempsec->srf.floor.slope = &tempslopes.floor;
+            tempslopes.floor = *s->srf.floor.slope;
+         }
+         else
+            tempsec->srf.floor.slope = nullptr;
+         
+         if(s->srf.floor.slope)
+         {
+            tempsec->srf.ceiling.slope = &tempslopes.ceiling;
+            tempslopes.ceiling = *s->srf.floor.slope;
+            tempslopes.ceiling.normal = -tempslopes.ceiling.normal;
+            tempslopes.ceiling.normalf = -tempslopes.ceiling.normalf;
+            --tempslopes.ceiling.o.z;
+         }
+         else
+            tempsec->srf.ceiling.slope = nullptr;
+            
+         
+         if(!back)
+            goUnderwater = true;
+      }
 
       // killough 11/98: prevent sudden light changes from non-water sectors:
-      if(underwater && (tempsec->srf.floor.height = sec->srf.floor.height,
-                        tempsec->srf.ceiling.height = s->srf.floor.height -1, !back))
+      if(goUnderwater)
       {
          // SoM: kill any ceiling portals that may try to render
          tempsec->srf.ceiling.portal = nullptr;
@@ -579,6 +621,17 @@ const rendersector_t *R_FakeFlat(const fixed_t viewz, const rendersector_t *sec,
          if(s->intflags & SIF_SKY)
          {
             tempsec->srf.floor.height = tempsec->srf.ceiling.height +1;
+            if(tempsec->srf.ceiling.slope)
+            {
+               tempsec->srf.floor.slope = &tempslopes.floor;
+               tempslopes.floor = *tempsec->srf.ceiling.slope;
+               tempslopes.floor.normal = -tempslopes.floor.normal;
+               tempslopes.floor.normalf = -tempslopes.floor.normalf;
+               ++tempslopes.floor.o.z;
+            }
+            else
+               tempsec->srf.floor.slope = nullptr;
+            
             tempsec->srf.floor.pic = tempsec->srf.floor.pic;
             tempsec->srf.ceiling.offset = tempsec->srf.floor.offset;
             tempsec->srf.ceiling.scale = tempsec->srf.floor.scale;
@@ -622,8 +675,8 @@ const rendersector_t *R_FakeFlat(const fixed_t viewz, const rendersector_t *sec,
          }
       }
       else if(heightsec != -1 &&
-              viewz >= sectors[heightsec].srf.ceiling.height &&
-              sec->srf.ceiling.height > s->srf.ceiling.height)
+              viewpoint.z >= sectors[heightsec].srf.ceiling.getZAt(viewpoint.x, viewpoint.y) &&
+              sec->srf.ceiling.getZAt(viewpoint.x, viewpoint.y) > s->srf.ceiling.getZAt(viewpoint.x, viewpoint.y))
       {
          // SoM: kill any floor portals that may try to render
          tempsec->srf.floor.portal = nullptr;
@@ -631,6 +684,23 @@ const rendersector_t *R_FakeFlat(const fixed_t viewz, const rendersector_t *sec,
          // Above-ceiling hack
          tempsec->srf.ceiling.height = s->srf.ceiling.height;
          tempsec->srf.floor.height = s->srf.ceiling.height + 1;
+         
+         if(s->srf.ceiling.slope)
+         {
+            tempsec->srf.ceiling.slope = &tempslopes.ceiling;
+            tempslopes.ceiling = *s->srf.ceiling.slope;
+            tempsec->srf.floor.slope = &tempslopes.floor;
+            tempslopes.floor = *s->srf.ceiling.slope;
+            tempslopes.floor.normal = -tempslopes.floor.normal;
+            tempslopes.floor.normalf = -tempslopes.floor.normalf;
+            ++tempslopes.floor.o.z;
+         }
+         else
+         {
+            tempsec->srf.floor.slope = nullptr;
+            tempsec->srf.ceiling.slope = nullptr;
+         }
+         
 
          tempsec->srf.floor.pic = tempsec->srf.ceiling.pic = s->srf.ceiling.pic;
          tempsec->srf.floor.offset = tempsec->srf.ceiling.offset = s->srf.ceiling.offset;
@@ -641,6 +711,14 @@ const rendersector_t *R_FakeFlat(const fixed_t viewz, const rendersector_t *sec,
          if(!R_IsSkyFlat(s->srf.floor.pic))
          {
             tempsec->srf.ceiling.height = sec->srf.ceiling.height;
+            if(sec->srf.ceiling.slope)
+            {
+               tempsec->srf.ceiling.slope = &tempslopes.ceiling;
+               tempslopes.ceiling = *sec->srf.ceiling.slope;
+            }
+            else
+               tempsec->srf.ceiling.slope = nullptr;
+            
             tempsec->srf.floor.pic = s->srf.floor.pic;
             tempsec->srf.floor.offset = s->srf.floor.offset;
             tempsec->srf.floor.scale = s->srf.floor.scale;
@@ -677,14 +755,16 @@ const rendersector_t *R_FakeFlat(const fixed_t viewz, const rendersector_t *sec,
       }
       else if(heightsec != -1)
       {
-         if(sec->srf.ceiling.height != s->srf.ceiling.height)
+         if(sec->srf.ceiling.getZAt(viewpoint.x, viewpoint.y) != s->srf.ceiling.getZAt(viewpoint.x, viewpoint.y))
             tempsec->srf.ceiling.portal = nullptr;
-         if(sec->srf.floor.height != s->srf.floor.height)
+         if(sec->srf.floor.getZAt(viewpoint.x, viewpoint.y) != s->srf.floor.getZAt(viewpoint.x, viewpoint.y))
             tempsec->srf.floor.portal = nullptr;
       }
 
       tempsec->srf.ceiling.heightf = M_FixedToFloat(tempsec->srf.ceiling.height);
       tempsec->srf.floor.heightf = M_FixedToFloat(tempsec->srf.floor.height);
+      tempslopes.floor.of.z = M_FixedToFloat(tempslopes.floor.o.z);
+      tempslopes.ceiling.of.z = M_FixedToFloat(tempslopes.ceiling.o.z);
       sec = tempsec;            // Use other sector
    }
 
@@ -692,7 +772,7 @@ const rendersector_t *R_FakeFlat(const fixed_t viewz, const rendersector_t *sec,
    {
       if(sec->srf.ceiling.portal->type == R_LINKED && !(sec->srf.ceiling.pflags & PF_ATTACHEDPORTAL))
       {
-         if(sec->srf.ceiling.height < R_CPLink(sec)->planez)
+         if(sec->srf.ceiling.height + pSlopeHeights[(sector_t*)sec - sectors].ceilingdelta < R_CPLink(sec)->planez)
          {
             tempsec->srf.ceiling.portal = nullptr;
             tempsec->srf.ceiling.pflags = 0;
@@ -712,7 +792,7 @@ const rendersector_t *R_FakeFlat(const fixed_t viewz, const rendersector_t *sec,
    {
       if(sec->srf.floor.portal->type == R_LINKED && !(sec->srf.floor.pflags & PF_ATTACHEDPORTAL))
       {
-         if(sec->srf.floor.height > R_FPLink(sec)->planez)
+         if(sec->srf.floor.height + pSlopeHeights[(sector_t*)sec - sectors].floordelta > R_FPLink(sec)->planez)
          {
             tempsec->srf.floor.portal = nullptr;
             tempsec->srf.floor.pflags = 0;
@@ -2368,6 +2448,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    const portalrender_t &portalrender = portalcontext.portalrender;
 
    static thread_local rendersector_t tempsec;
+   static thread_local Surfaces<pslope_t> tempslopes;
 
    float x1, x2;
    float i1, i2, pstep;
@@ -2403,7 +2484,8 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
    seg.clipsolid = false;
    seg.line = line;
 
-   seg.backsec = R_FakeFlat(viewpoint.z, line->backsector, &tempsec, nullptr, nullptr, true);
+   seg.backsec = R_FakeFlat(viewpoint, line->backsector, &tempsec, tempslopes, nullptr, nullptr,
+                            true);
 
    // haleyjd: TEST
    // This seems to fix fiffy5, but smells like a hack to me.
@@ -2995,6 +3077,7 @@ static void R_subsector(rendercontext_t &context, const int num)
    const portalrender_t &portalrender = portalcontext.portalrender;
 
    static thread_local rendersector_t tempsec; // killough 3/7/98: deep water hack
+   static thread_local Surfaces<pslope_t> tempslopes;
 
    int                count;
    const seg_t       *line;
@@ -3027,7 +3110,7 @@ static void R_subsector(rendercontext_t &context, const int num)
    R_SectorColormap(cmapcontext, viewpoint.z, seg.frontsec);
 
    // killough 3/8/98, 4/4/98: Deep water / fake ceiling effect
-   seg.frontsec = R_FakeFlat(viewpoint. z, seg.frontsec, &tempsec,
+   seg.frontsec = R_FakeFlat(viewpoint, seg.frontsec, &tempsec, tempslopes,
                              &floorlightlevel, &ceilinglightlevel, false);   // killough 4/11/98
 
    // ioanch: reject all sectors fully above or below a sector portal.

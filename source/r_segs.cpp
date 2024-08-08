@@ -64,9 +64,10 @@ void R_FinishMappingLines()
 // R_RenderMaskedSegRange
 //
 void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
-                            const fixed_t viewz, drawseg_t *ds, int x1, int x2)
+                            const viewpoint_t &viewpoint, drawseg_t *ds, int x1, int x2)
 {
    static thread_local rendersector_t tempsec; // killough 4/13/98
+   static thread_local Surfaces<pslope_t> tempslopes;
 
    const texcol_t *col;
    int      lightnum;
@@ -134,7 +135,8 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
          lightnum = segclip.line->sidedef->light_base >> LIGHTSEGSHIFT;
       else
       {
-         lightnum = R_FakeFlat(viewz, segclip.frontsec, &tempsec, nullptr, nullptr, false)->lightlevel >> LIGHTSEGSHIFT;
+         lightnum = R_FakeFlat(viewpoint, segclip.frontsec, &tempsec, tempslopes, nullptr, nullptr,
+                               false)->lightlevel >> LIGHTSEGSHIFT;
          lightnum += segclip.line->sidedef->light_base >> LIGHTSEGSHIFT;
       }
       lightnum += segclip.line->sidedef->light_mid >> LIGHTSEGSHIFT;
@@ -168,13 +170,13 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
    {
       column.texmid = segclip.frontsec->srf.floor.height > segclip.backsec->srf.floor.height
          ? segclip.frontsec->srf.floor.height : segclip.backsec->srf.floor.height;
-      column.texmid = column.texmid + textures[texnum]->heightfrac - viewz;
+      column.texmid = column.texmid + textures[texnum]->heightfrac - viewpoint.z;
    }
    else
    {
       column.texmid = segclip.frontsec->srf.ceiling.height < segclip.backsec->srf.ceiling.height
          ? segclip.frontsec->srf.ceiling.height : segclip.backsec->srf.ceiling.height;
-      column.texmid = column.texmid - viewz;
+      column.texmid = column.texmid - viewpoint.z;
    }
 
    column.texmid += segclip.line->sidedef->offset_base_y + segclip.line->sidedef->offset_mid_y - ds->deltaz;

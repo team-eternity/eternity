@@ -1776,6 +1776,7 @@ void R_DrawPlayerSprites()
    int i, lightnum;
    const pspdef_t *psp;
    sector_t tmpsec;
+   Surfaces<pslope_t> tempslopes;
    int floorlightlevel, ceilinglightlevel;
    const lighttable_t *const *spritelights;
    
@@ -1788,8 +1789,9 @@ void R_DrawPlayerSprites()
    // killough 9/18/98: compute lightlevel from floor and ceiling lightlevels
    // (see r_bsp.c for similar calculations for non-player sprites)
 
-   R_FakeFlat(r_globalcontext.view.z, view.sector, &tmpsec, &floorlightlevel, &ceilinglightlevel, 0);
-   lightnum = ((floorlightlevel+ceilinglightlevel) >> (LIGHTSEGSHIFT+1)) 
+   R_FakeFlat(r_globalcontext.view, view.sector, &tmpsec, tempslopes, &floorlightlevel,
+              &ceilinglightlevel, 0);
+   lightnum = ((floorlightlevel+ceilinglightlevel) >> (LIGHTSEGSHIFT+1))
                  + (extralight * LIGHTBRIGHT);
 
    if(lightnum < 0)
@@ -1954,7 +1956,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
          {
             r1 = ds->x1 < spr->x1 ? spr->x1 : ds->x1;
             r2 = ds->x2 > spr->x2 ? spr->x2 : ds->x2;
-            R_RenderMaskedSegRange(cmapcontext, viewpoint.z, ds, r1, r2);
+            R_RenderMaskedSegRange(cmapcontext, viewpoint, ds, r1, r2);
          }
          return;                // seg is behind sprite
       }
@@ -2224,7 +2226,7 @@ void R_DrawPostBSP(rendercontext_t &context)
          for(ds = drawsegs + lastds; ds-- > drawsegs + firstds; )  // new -- killough
          {
             if(ds->maskedtexturecol)
-               R_RenderMaskedSegRange(context.cmapcontext, context.view.z, ds, ds->x1, ds->x2);
+               R_RenderMaskedSegRange(context.cmapcontext, context.view, ds, ds->x1, ds->x2);
          }
          
          // Done with the masked range
@@ -2791,9 +2793,10 @@ static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &sprit
       {
          const lighttable_t *const *ltable;
          static thread_local rendersector_t tmpsec;
+         static thread_local Surfaces<pslope_t> tempslopes;
          int floorlightlevel, ceilinglightlevel, lightnum, index;
 
-         R_FakeFlat(viewpoint.z, sector, &tmpsec, &floorlightlevel, &ceilinglightlevel, false);
+         R_FakeFlat(viewpoint, sector, &tmpsec, tempslopes, &floorlightlevel, &ceilinglightlevel, false);
 
          lightnum = (floorlightlevel + ceilinglightlevel) / 2;
          lightnum = (lightnum >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
