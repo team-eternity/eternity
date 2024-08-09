@@ -1720,7 +1720,7 @@ void Mobj::Think()
    {
       sector_t *hs = &sectors[subsector->sector->heightsec];
 
-      waterstate = (z < hs->srf.floor.height);
+      waterstate = (z < hs->srf.floor.getZAt(x, y));
    }
 
    // Heretic Wind transfer specials
@@ -1877,7 +1877,7 @@ void Mobj::Think()
    {
       sector_t *hs = &sectors[subsector->sector->heightsec];
 
-      waterstate = (z < hs->srf.floor.height);
+      waterstate = (z < hs->srf.floor.getZAt(x, y));
    }
    else
       waterstate = 0;
@@ -2605,7 +2605,7 @@ void P_RespawnSpecials()
 
    // spawn a teleport fog at the new spot
    ss = R_PointInSubsector(x,y);
-   mo = P_SpawnMobj(x, y, ss->sector->srf.floor.height, E_SafeThingType(MT_IFOG));
+   mo = P_SpawnMobj(x, y, ss->sector->srf.floor.getZAt(x, y), E_SafeThingType(MT_IFOG));
    S_StartSound(mo, sfx_itmbk);
 
    // spawn it
@@ -3983,7 +3983,10 @@ void P_AdjustFloorClip(Mobj *thing)
    for(m = thing->touching_sectorlist; m; m = m->m_tnext)
    {
       if(m->m_sector->heightsec == -1 &&
-         thing->z == m->m_sector->srf.floor.height)
+         ((!m->m_sector->srf.floor.slope && thing->z == m->m_sector->srf.floor.height) || 
+          (m->m_sector->srf.floor.slope &&
+           P_SlopesEqual(thing->zref.sector.floor, m->m_sector, surf_floor) &&
+           thing->z == thing->zref.floor)))
       {
          fixed_t fclip = E_SectorFloorClip(m->m_sector);
 
