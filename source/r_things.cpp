@@ -1356,12 +1356,12 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
       auto &hsec = sectors[heightsec];
       int   phs  = view.sector->heightsec;
 
-      if(phs != -1 && viewpoint.z < sectors[phs].srf.floor.height ?
-         thing->z >= hsec.srf.floor.height : gzt < hsec.srf.floor.height)
+      if(phs != -1 && viewpoint.z < sectors[phs].srf.floor.getZAt(viewpoint.x, viewpoint.y) ?
+         thing->z >= hsec.srf.floor.getZAt(spritepos.x, spritepos.y) : gzt < hsec.srf.floor.getZAt(spritepos.x, spritepos.y))
          return;
-      if(phs != -1 && viewpoint.z > sectors[phs].srf.ceiling.height ?
-         gzt < hsec.srf.ceiling.height && viewpoint.z >= hsec.srf.ceiling.height :
-         thing->z >= hsec.srf.ceiling.height)
+      if(phs != -1 && viewpoint.z > sectors[phs].srf.ceiling.getZAt(viewpoint.x, viewpoint.y) ?
+         gzt < hsec.srf.ceiling.getZAt(spritepos.x, spritepos.y) && viewpoint.z >= hsec.srf.ceiling.getZAt(viewpoint.x, viewpoint.y) :
+         thing->z >= hsec.srf.ceiling.getZAt(spritepos.x, spritepos.y))
          return;
    }
 
@@ -2031,14 +2031,17 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
    {
       float h, mh;
       
-      int phs = view.sector->heightsec;
+      const int phs = view.sector->heightsec;
 
-      mh = M_FixedToFloat(sectors[spr->heightsec].srf.floor.height) - cb_viewpoint.z;
-      if(sectors[spr->heightsec].srf.floor.height > spr->gz &&
+      fixed_t heightsecheight = sectors[spr->heightsec].srf.floor.getZAt(spr->gx, spr->gy);
+      fixed_t phsheight = phs >= 0 ? sectors[phs].srf.floor.getZAt(viewpoint.x, viewpoint.y) : 0;
+      
+      mh = M_FixedToFloat(heightsecheight) - cb_viewpoint.z;
+      if(heightsecheight > spr->gz &&
          (h = view.ycenter - (mh * spr->scale)) >= 0.0f &&
          (h < view.height))
       {
-         if(mh <= 0.0 || (phs != -1 && viewpoint.z > sectors[phs].srf.floor.height))
+         if(mh <= 0.0 || (phs != -1 && viewpoint.z > phsheight))
          {
             // clip bottom
             for(x = spr->x1; x <= spr->x2; x++)
@@ -2049,7 +2052,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
          }
          else  // clip top
          {
-            if(phs != -1 && viewpoint.z <= sectors[phs].srf.floor.height) // killough 11/98
+            if(phs != -1 && viewpoint.z <= phsheight) // killough 11/98
             {
                for(x = spr->x1; x <= spr->x2; x++)
                {
@@ -2060,12 +2063,15 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
          }
       }
 
-      mh = M_FixedToFloat(sectors[spr->heightsec].srf.ceiling.height) - cb_viewpoint.z;
-      if(sectors[spr->heightsec].srf.ceiling.height < spr->gzt &&
+      heightsecheight = sectors[spr->heightsec].srf.ceiling.getZAt(spr->gx, spr->gy);
+      phsheight = phs >= 0 ? sectors[phs].srf.ceiling.getZAt(viewpoint.x, viewpoint.y) : 0;
+      
+      mh = M_FixedToFloat(heightsecheight) - cb_viewpoint.z;
+      if(heightsecheight < spr->gzt &&
          (h = view.ycenter - (mh * spr->scale)) >= 0.0f &&
          (h < view.height))
       {
-         if(phs != -1 && viewpoint.z >= sectors[phs].srf.ceiling.height)
+         if(phs != -1 && viewpoint.z >= phsheight)
          {
             // clip bottom
             for(x = spr->x1; x <= spr->x2; x++)
@@ -2092,9 +2098,11 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
       float h, mh;
 
       sector_t *sector = sectors + spr->sector;
+      
+      fixed_t sectorheight = sector->srf.floor.getZAt(spr->gx, spr->gy);
 
-      mh = M_FixedToFloat(sector->srf.floor.height) - cb_viewpoint.z;
-      if(sector->srf.floor.pflags & PS_PASSABLE && sector->srf.floor.height > spr->gz)
+      mh = M_FixedToFloat(sectorheight) - cb_viewpoint.z;
+      if(sector->srf.floor.pflags & PS_PASSABLE && sectorheight > spr->gz)
       {
          h = eclamp(view.ycenter - (mh * spr->scale), 0.0f, view.height - 1);
 
@@ -2105,8 +2113,10 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
          }
       }
 
-      mh = M_FixedToFloat(sector->srf.ceiling.height) - cb_viewpoint.z;
-      if(sector->srf.ceiling.pflags & PS_PASSABLE && sector->srf.ceiling.height < spr->gzt)
+      sectorheight = sector->srf.ceiling.getZAt(spr->gx, spr->gy);
+      
+      mh = M_FixedToFloat(sectorheight) - cb_viewpoint.z;
+      if(sector->srf.ceiling.pflags & PS_PASSABLE && sectorheight < spr->gzt)
       {
          // Add +1 to avoid overdrawing with the bottomclip of the above part
          h = eclamp(view.ycenter - (mh * spr->scale) + 1, 0.0f, view.height - 1);
