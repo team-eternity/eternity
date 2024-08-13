@@ -35,6 +35,7 @@
 #include "doomtype.h"
 #include "e_sound.h"
 #include "e_ttypes.h"
+#include "m_compare.h"
 #include "m_random.h"
 #include "p_chase.h"
 #include "p_info.h"
@@ -416,11 +417,14 @@ void P_ParticleThinker(void)
 
       // haleyjd 09/04/05: use deep water floor if it is higher
       // than the real floor.
-      floorheight =
-         (psec->heightsec != -1 &&
-          sectors[psec->heightsec].srf.floor.height > psec->srf.floor.height) ?
-          sectors[psec->heightsec].srf.floor.height :
-          psec->srf.floor.height;
+      fixed_t psecheight = psec->srf.floor.getZAt(particle->x, particle->y);
+      if(psec->heightsec != -1)
+      {
+         floorheight = emax(sectors[psec->heightsec].srf.floor.getZAt(particle->x, particle->y), 
+                            psecheight);
+      }
+      else
+         floorheight = psecheight;
 
       // did particle hit ground, but is now no longer on it?
       if(particle->styleflags & PS_HITGROUND && particle->z != floorheight)
@@ -455,7 +459,7 @@ void P_ParticleThinker(void)
                E_PtclTerrainHit(particle);
          }
       }
-      else if(particle->z > psec->srf.ceiling.height && psec->srf.ceiling.pflags & PS_PASSABLE)
+      else if(particle->z > psec->srf.ceiling.getZAt(particle->x, particle->y) && psec->srf.ceiling.pflags & PS_PASSABLE)
       {
          const linkdata_t *ldata = R_CPLink(psec);
 
@@ -1247,7 +1251,7 @@ static void P_DripEffect(Mobj *actor)
       p->styleflags |= PS_FULLBRIGHT;
    p->x = actor->x;
    p->y = actor->y;
-   p->z = actor->subsector->sector->srf.ceiling.height;
+   p->z = actor->subsector->sector->srf.ceiling.getZAt(p->x, p->y);
    P_SetParticlePosition(p);
 }
 

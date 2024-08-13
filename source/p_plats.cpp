@@ -31,6 +31,7 @@
 #include "m_random.h"
 #include "p_info.h"
 #include "p_saveg.h"
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "r_main.h"
@@ -575,8 +576,8 @@ manual_plat:
          plat->speed = PLATSPEED;      // not used
          plat->wait = 35 * PLATWAIT;   // not used
          plat->crush = 10;             // jff 3/14/98 crush anything in the way
-         plat->low = sec->srf.ceiling.height;
-         plat->high = sec->srf.floor.height;
+         plat->low = sec->srf.ceiling.height - pSlopeHeights[secnum].touchheight;
+         plat->high = sec->srf.floor.height + pSlopeHeights[secnum].touchheight;
          plat->status = PlatThinker::down;
          platTypeStr = "EEPlatSilent";
          break;
