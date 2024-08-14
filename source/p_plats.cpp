@@ -404,7 +404,7 @@ bool EV_DoPlat(const line_t *line, int tag, plattype_e type, int amount )
          plat->crush = 10;          //jff 3/14/98 crush anything in the way
 
          // set up toggling between ceiling, floor inclusive
-         plat->low    = sec->srf.ceiling.height;
+         plat->low    = sec->srf.ceiling.height - pSlopeHeights[secnum].touchheight;
          plat->high   = sec->srf.floor.height;
          plat->status = PlatThinker::down;
 
@@ -577,7 +577,7 @@ manual_plat:
          plat->wait = 35 * PLATWAIT;   // not used
          plat->crush = 10;             // jff 3/14/98 crush anything in the way
          plat->low = sec->srf.ceiling.height - pSlopeHeights[secnum].touchheight;
-         plat->high = sec->srf.floor.height + pSlopeHeights[secnum].touchheight;
+         plat->high = sec->srf.floor.height;
          plat->status = PlatThinker::down;
          platTypeStr = "EEPlatSilent";
          break;
