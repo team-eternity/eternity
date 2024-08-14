@@ -1350,10 +1350,11 @@ void P_ForEachClusterGroup(int outgroup, int ingroup, bool *groupvisit,
 //
 // Returns a surface's portal Z, aware of whether it's an attached portal or not
 //
-fixed_t P_PortalZ(const surface_t &surface)
+fixed_t P_PortalZ(const surface_t &surface, fixed_t x, fixed_t y)
 {
+   // TODO: planez by coordinates (sloped portals)
    return !surface.portal || surface.portal->type != R_LINKED ||
-         surface.pflags & PF_ATTACHEDPORTAL ? surface.height : surface.portal->data.link.planez;
+         surface.pflags & PF_ATTACHEDPORTAL ? surface.getZAt(x, y) : surface.portal->data.link.planez;
 }
 
 //
