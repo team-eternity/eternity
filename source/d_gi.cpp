@@ -788,6 +788,8 @@ char *gi_path_fdoomu;
 char *gi_path_freedm;
 char *gi_path_rekkr;
 
+char *gi_path_id24res;
+
 //
 // Default Override Objects
 //

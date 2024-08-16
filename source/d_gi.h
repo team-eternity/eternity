@@ -526,6 +526,8 @@ extern char *gi_path_fdoomu;
 extern char *gi_path_freedm;
 extern char *gi_path_rekkr;
 
+extern char *gi_path_id24res;
+
 
 void D_SetGameModeInfo(GameMode_t, GameMission_t);
 void D_InitGMIPostWads();

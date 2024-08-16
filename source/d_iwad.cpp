@@ -1489,7 +1489,7 @@ static void D_identifyIWAD()
          dirpath = I_OpenWindowsDirectory();
          if(dirpath.length())
          {
-            D_CheckPathForIWADs(dirpath);
+            D_CheckPathForWADs(dirpath);
             D_findIWADFile(iwad);
          }
       } while(iwad.empty() && !dirpath.empty() && I_TryIWADSearchAgain());

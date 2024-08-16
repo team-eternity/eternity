@@ -355,8 +355,8 @@ Fixed rare hard-lock when polyobjects start moving.
 
 --------------------------------------------------------------------------------
 2024/08/16
-Added support for scanning for Steam/GOG Doom + Doom II IWADs
-(and Master Levels for Steam only).
+Added support for scanning for Steam/GOG Doom + Doom II IWADs and
+No Rest for the Living (and Master Levels for Steam only).
 
 ================================================================================
 EOF

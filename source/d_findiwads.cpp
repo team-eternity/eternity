@@ -583,9 +583,9 @@ static void D_determineIWADVersion(const qstring &fullpath)
 }
 
 //
-// Check a path for any of the standard IWAD file names.
+// Check a path for any of the standard IWAD (or addon WAD) file names.
 //
-void D_CheckPathForIWADs(const qstring &path)
+void D_CheckPathForWADs(const qstring &path)
 {
    if(std::error_code ec; !fs::is_directory(path.constPtr(), ec))
    {
@@ -615,41 +615,58 @@ void D_CheckPathForIWADs(const qstring &path)
             break; // break inner loop
          }
       }
+
+      if(estrempty(gi_path_id24res) && filename == "id24res.wad")
+      {
+         // C++20_FIXME: Cast to make C++20 builds compile
+         gi_path_id24res = estrdup(reinterpret_cast<const char*>(ent.path().generic_u8string().c_str()));
+         break;
+      }
    }
 }
 
 //
-// If we found a BFG Edition IWAD, check also for nerve.wad and configure its
-// mission pack path.
+// If we found a BFG Edition IWAD, or ID24 res,
+// check also for nerve.wad and configure its mission pack path.
 //
 static void D_checkForNoRest()
 {
-   // Need BFG Edition DOOM II IWAD
-   if(estrempty(gi_path_bfgdoom2))
-      return;
+   const char *const *const indicator_wad_path_ptrs[] = {
+      &gi_path_id24res,
+      &gi_path_bfgdoom2
+   };
 
-   // Need no NR4TL path already configured
-   if(estrnonempty(w_norestpath))
-      return;
-
-   qstring nrvpath;
-
-   nrvpath = gi_path_bfgdoom2;
-   nrvpath.removeFileSpec();
-
-   if(std::error_code ec; fs::is_directory(nrvpath.constPtr(), ec))
+   for(const char *const *const path_ptr : indicator_wad_path_ptrs)
    {
-      const fs::directory_iterator itr(nrvpath.constPtr());
-      for(const fs::directory_entry &ent : itr)
+      const char *path = *path_ptr;
+
+      // Need BFG Edition DOOM II IWAD
+      if(estrempty(path))
+         return;
+
+      // Need no NR4TL path already configured
+      if(estrnonempty(w_norestpath))
+         return;
+
+      qstring nrvpath;
+
+      nrvpath = path;
+      nrvpath.removeFileSpec();
+
+      if(std::error_code ec; fs::is_directory(nrvpath.constPtr(), ec))
       {
-         const qstring filename = qstring(
-            reinterpret_cast<const char *>(ent.path().filename().generic_u8string().c_str())
-         ).toLower();
-         if(filename == "nerve.wad")
+         const fs::directory_iterator itr(nrvpath.constPtr());
+         for(const fs::directory_entry &ent : itr)
          {
-            nrvpath.pathConcatenate(filename);
-            w_norestpath = nrvpath.duplicate();
-            break;
+            const qstring filename = qstring(
+               reinterpret_cast<const char *>(ent.path().filename().generic_u8string().c_str())
+            ).toLower();
+            if(filename == "nerve.wad")
+            {
+               nrvpath.pathConcatenate(filename);
+               w_norestpath = nrvpath.duplicate();
+               break;
+            }
          }
       }
    }
@@ -737,7 +754,7 @@ void D_FindIWADs()
 
    // Check all paths that were found for IWADs
    for(qstring &path : paths)
-      D_CheckPathForIWADs(path);
+      D_CheckPathForWADs(path);
 
    // Check for special WADs
    D_checkForNoRest(); // NR4TL

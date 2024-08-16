@@ -762,6 +762,8 @@ static menuitem_t mn_wadiwad1_items[] =
    {it_variable, "Evilution:",          "iwad_tnt",               nullptr, MENUITEM_LALIGNED },
    {it_variable, "Plutonia:",           "iwad_plutonia",          nullptr, MENUITEM_LALIGNED },
    {it_variable, "HACX:",               "iwad_hacx",              nullptr, MENUITEM_LALIGNED },
+   {it_gap},
+   {it_variable, "ID24 Resources:",     "pwad_id24res",           nullptr, MENUITEM_LALIGNED },
    {it_end}
 };
 
