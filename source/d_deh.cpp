@@ -145,8 +145,8 @@ static deh_block deh_blocks[] =
 // flag to skip included deh-style text, used with INCLUDE NOTEXT directive
 static bool includenotext = false;
 
-// DSDHacked shit
-static bool dsdhacked = false;
+// additive dehacked
+static bool adddeh = false;
 static constexpr int DOOM_NUMSTATES    = 1076;
 static constexpr int DOOM_NUMMOBJTYPES = 145;
 static constexpr int DOOM_NUMSPRNAMES  = 245;
@@ -890,7 +890,7 @@ void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum,
             deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
          }
 
-         dsdhacked = value == 2021;
+         adddeh = value == 2021;
 
          continue;
       }
@@ -917,14 +917,28 @@ void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum,
 
 
 //
-// For DSDHacked: Has the logic for getting the state num or making it (calls the functions)
+// For additive dehacked: Has the logic for getting the state num or making it (calls the functions)
 //
 static int deh_getStateNumForDEHNum(int indexnum)
 {
-   if(dsdhacked)
+   if(adddeh)
       return E_GetAddStateNumForDEHNum(indexnum, indexnum >= DOOM_NUMSTATES);
    else
       return E_GetStateNumForDEHNum(indexnum);
+}
+
+//
+// For additive dehacked: Has the logic for getting the state num or making it (calls the functions)
+//
+static int deh_getSoundNumForDEHNum(int indexnum)
+{
+   sfxinfo_t *sfx;
+   if(adddeh && indexnum >= DOOM_NUMSFX)
+      sfx = E_GetAddSoundForAddDEHNum(indexnum, indexnum >= DOOM_NUMSFX);
+   else
+      sfx = E_SoundForDEHNum(indexnum);
+
+   return sfx ? sfx->dehackednum : 0;
 }
 
 // ====================================================================
@@ -1182,13 +1196,13 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value, MetaTab
       mi->seestate = deh_getStateNumForDEHNum(value);
       break;
    case dehmobjinfoid_seesound:
-      mi->seesound = value;
+      mi->seesound = deh_getSoundNumForDEHNum(value);
       break;
    case dehmobjinfoid_reactiontime:
       mi->reactiontime = value;
       break;
    case dehmobjinfoid_attacksound:
-      mi->attacksound = value;
+      mi->attacksound = deh_getSoundNumForDEHNum(value);
       break;
    case dehmobjinfoid_painstate:
       mi->painstate = deh_getStateNumForDEHNum(value);
@@ -1197,7 +1211,7 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value, MetaTab
       mi->painchance = value;
       break;
    case dehmobjinfoid_painsound:
-      mi->painsound = value;
+      mi->painsound = deh_getSoundNumForDEHNum(value);
       break;
    case dehmobjinfoid_meleestate:
       mi->meleestate = deh_getStateNumForDEHNum(value);
@@ -1212,7 +1226,7 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value, MetaTab
       mi->xdeathstate = deh_getStateNumForDEHNum(value);
       break;
    case dehmobjinfoid_deathsound:
-      mi->deathsound = value;
+      mi->deathsound = deh_getSoundNumForDEHNum(value);
       break;
    case dehmobjinfoid_speed:
       mi->speed = value;
@@ -1231,7 +1245,7 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value, MetaTab
       mi->damage = value;
       break;
    case dehmobjinfoid_activesound:
-      mi->activesound = value;
+      mi->activesound = deh_getSoundNumForDEHNum(value);
       break;
    case dehmobjinfoid_flags:
       mi->flags = value;
@@ -1272,7 +1286,7 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value, MetaTab
       mi->meleerange = value;
       break;
    case dehmobjinfoid_ripsound:
-      mi->ripsound = value;
+      mi->ripsound = deh_getSoundNumForDEHNum(value);
       break;
    default:
       break;
@@ -1310,7 +1324,7 @@ static void deh_procThing(DWFILE *fpin, char *line, MetaTable &gatheredData)
    // haleyjd: not as big an issue with EDF, as it uses a hash lookup
    // --indexnum;  <-- old code
 
-   if(dsdhacked)
+   if(adddeh)
       indexnum = E_GetAddThingNumForDEHNum(indexnum, indexnum >= DOOM_NUMMOBJTYPES);
    else
       indexnum = E_GetThingNumForDEHNum(indexnum);
@@ -2749,8 +2763,8 @@ static void deh_procBexSprites(DWFILE *fpin, char *line, MetaTable &gatheredData
          continue;
       }
 
-      bool processAsNumber = dsdhacked;
-      if(dsdhacked)
+      bool processAsNumber = adddeh;
+      if(adddeh)
       {
          for(int i = 0; key[i] && i < DEH_MAXKEYLEN; i++)
          {
@@ -2831,18 +2845,37 @@ static void deh_procBexSounds(DWFILE *fpin, char *line, MetaTable &gatheredData)
          continue;
       }
 
-      sfx = E_SoundForName(key);
-
-      if(!sfx)
+      bool processAsNumber = adddeh;
+      if(adddeh)
       {
-         deh_LogPrintf("Bad sound mnemonic '%s'\n", key);
-         continue;
+         for(int i = 0; key[i] && i < DEH_MAXKEYLEN; i++)
+         {
+            if(!ectype::isDigit(key[i]))
+            {
+               processAsNumber = false;
+               break;
+            }
+         }
+
+         if(processAsNumber)
+            E_UpdateAddSoundNameForNum(atoi(key), candidate, atoi(key) >= DOOM_NUMSFX);
       }
 
-      deh_LogPrintf("Substituting '%s' for sound '%s'\n",
-                    candidate, sfx->mnemonic);
+      if(!processAsNumber)
+      {
+         sfx = E_SoundForName(key);
 
-      strncpy(sfx->name, candidate, 9);
+         if(!sfx)
+         {
+            deh_LogPrintf("Bad sound mnemonic '%s'\n", key);
+            continue;
+         }
+
+         deh_LogPrintf("Substituting '%s' for sound '%s'\n",
+                       candidate, sfx->mnemonic);
+
+         strncpy(sfx->name, candidate, 9);
+      }
    }
 }
 

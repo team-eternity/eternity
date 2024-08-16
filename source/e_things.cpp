@@ -2304,7 +2304,7 @@ static void E_CopyThing(int num, int pnum)
    MetaTable  *meta;
    int         index;
    int         generation;
-   bool        dsdhacked;
+   bool        adddeh;
    
    this_mi = mobjinfo[num];
 
@@ -2318,7 +2318,7 @@ static void E_CopyThing(int num, int pnum)
    meta       = this_mi->meta;
    index      = this_mi->index;
    generation = this_mi->generation;
-   dsdhacked  = this_mi->dsdhacked;
+   adddeh  = this_mi->adddeh;
    
    // copy from source to destination
    memcpy(this_mi, mobjinfo[pnum], sizeof(mobjinfo_t));
@@ -2346,7 +2346,7 @@ static void E_CopyThing(int num, int pnum)
    this_mi->dehnum     = dehnum;
    this_mi->index      = index;
    this_mi->generation = generation;
-   this_mi->dsdhacked  = dsdhacked;
+   this_mi->adddeh  = adddeh;
 
    // other fields not inherited:
 
@@ -2356,7 +2356,7 @@ static void E_CopyThing(int num, int pnum)
 
 //
 // Fetches a thingnum, or creates a new one if it doesn't exist.
-// DSDHacked demands this
+// Additive dehacked demands this
 //
 int E_GetAddThingNumForDEHNum(int dehnum, bool forceAdd)
 {
@@ -2378,7 +2378,7 @@ int E_GetAddThingNumForDEHNum(int dehnum, bool forceAdd)
       mobjinfo[newThing] = mi;
       thingNum = newThing;
    }
-   else if(forceAdd && !mobjinfo[thingNum]->dsdhacked)
+   else if(forceAdd && !mobjinfo[thingNum]->adddeh)
    {
       mi = mobjinfo[thingNum];
 
@@ -2400,9 +2400,9 @@ int E_GetAddThingNumForDEHNum(int dehnum, bool forceAdd)
    if(mi)
    {
       qstring name;
-      name.Printf(0, "_DSDHackedThing%d", dehnum);
+      name.Printf(0, "_AddDehThing%d", dehnum);
 
-      mi->dsdhacked = true;
+      mi->adddeh = true;
 
       // set self-referential index member, allocate a
       // metatable, set dehnum, and set name and melee range.
@@ -2411,7 +2411,7 @@ int E_GetAddThingNumForDEHNum(int dehnum, bool forceAdd)
       mi->dehnum = dehnum;
       mi->name   = name.duplicate();
 
-      const int templateNum = E_GetThingNumForName("_DSDHackedThingtypeTemplate");
+      const int templateNum = E_GetThingNumForName("_AdditiveDehackedThingtypeTemplate");
       E_CopyThing(thingNum, templateNum);
 
       thing_namehash.addObject(mi);

@@ -39,9 +39,12 @@ extern sfxinfo_t NullSound;
 sfxinfo_t *E_SoundForName(const char *);
 sfxinfo_t *E_EDFSoundForName(const char *name);
 sfxinfo_t *E_SoundForDEHNum(int);
+sfxinfo_t *E_GetAddSoundForAddDEHNum(int dehnum, bool forceupdate);
 sfxinfo_t *E_FindSoundForDEH(char *inbuffer, unsigned int fromlen);
 sfxinfo_t *E_NewWadSound(const char *);
 sfxinfo_t *E_NewSndInfoSound(const char *mnemonic, const char *name);
+
+void E_UpdateAddSoundNameForNum(const int num, const char *name, bool forceupdate);
 
 void E_PreCacheSounds();
 void E_UpdateSoundCache();

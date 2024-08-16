@@ -50,20 +50,20 @@ struct esprite_t
    DLListItem<esprite_t> namelinks;   // name hash links
    DLListItem<esprite_t> dsdnumlinks; // dsdnumnum hash links
 
-   char *nameptr;  // name hash key   
+   char *nameptr;  // name hash key
    int  num;       // sprite number
-   int  dsdnum;    // DSDHacked sprite number
+   int  adddehnum; // additive dehacked sprite number
    char name[5];   // sprite name
-   bool dsdhacked; // made by DSDHacked
+   bool adddeh;    // made by additive dehacked
 };
 
 // sprite name hash table
 static EHashTable<esprite_t, ENCStringHashKey, 
                   &esprite_t::nameptr, &esprite_t::namelinks> spritenamehash(257);
 
-// sprite DSDHacked num hash table
+// sprite additive dehacked num hash table
 static EHashTable<esprite_t, EIntHashKey, 
-                  &esprite_t::dsdnum, &esprite_t::dsdnumlinks> spritedsdnumhash(257);
+                  &esprite_t::adddehnum, &esprite_t::dsdnumlinks> spritedsdnumhash(257);
 
 
 //
@@ -84,7 +84,7 @@ int E_SpriteNumForName(const char *name)
 }
 
 //
-// As above but for DSDHacked
+// As above but for additive dehacked
 //
 int E_SpriteNumForDEHNum(const int num)
 {
@@ -136,7 +136,7 @@ static bool E_AddSprite(const char *name, esprite_t *sprite, int num = -1)
    // initialize the esprite object
    strncpy(sprite->name, name ? name : "", 4);
    sprite->num = NUMSPRITES;
-   sprite->dsdnum = num < 0 ? NUMSPRITES : num;
+   sprite->adddehnum = num < 0 ? NUMSPRITES : num;
    sprite->nameptr = sprite->name;
    
    if(name && spritenamehash.objectForKey(name))
@@ -177,7 +177,7 @@ void E_UpdateAddSpriteNameForNum(const int num, const char* newname, const int n
    if(!forceupdate && !newname)
       return;
 
-   if(obj = spritedsdnumhash.objectForKey(num); obj && (!forceupdate || obj->dsdhacked))
+   if(obj = spritedsdnumhash.objectForKey(num); obj && (!forceupdate || obj->adddeh))
    {
       spritenum = obj->num;
       if(estrnonempty(obj->name))
@@ -212,12 +212,12 @@ void E_UpdateAddSpriteNameForNum(const int num, const char* newname, const int n
          return;
       }
 
-      spr->dsdhacked = true;
+      spr->adddeh = true;
       
       // re-add the old sprite at the end of the sprite list
       if(obj)
       {
-         obj->dsdnum = NUMSPRITES;
+         obj->adddehnum = NUMSPRITES;
          spritedsdnumhash.addObject(obj);
       }
 

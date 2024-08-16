@@ -179,11 +179,11 @@ struct state_t
    void         (*oldaction)(actionargs_t *); // haleyjd: original action, for DeHackEd
    statenum_t   nextstate;                    // index of next state, or -1
    int          misc1, misc2;                 // used for psprite positioning
-   int          particle_evt;                 // haleyjd: determines an event to run  
+   int          particle_evt;                 // haleyjd: determines an event to run
    arglist_t   *args;                         // haleyjd: state arguments
    unsigned int flags;                        // haleyjd: flags
-   bool         dsdhacked;                    // MaxW: Created by DSDhacked
-   
+   bool         adddeh;                       // MaxW: Created by additive dehacked
+
    // haleyjd: fields needed for EDF identification and hashing
    char       *name;      // buffer for name
    int         dehnum;    // DeHackEd number for fast access, comp.
@@ -405,7 +405,7 @@ struct mobjinfo_t
    unsigned int flags3; // haleyjd 11/03/02: flags3
    unsigned int flags4; // haleyjd 09/13/09: flags4
    unsigned int flags5; // MaxW: 2021/02/14: flags5
-   bool         dsdhacked; // MaxW: made by DSDhacked
+   bool         adddeh; // MaxW: made by DSDhacked
    int raisestate;      // The first state for an Archvile or respawn
                         //  resurrection.  Zero means it won't come
                         //  back to life.
