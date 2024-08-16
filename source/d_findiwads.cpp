@@ -118,6 +118,7 @@ static const char *collectorsEditionSubDirs[] =
 // Order of GOG installation key values below.
 enum gogkeys_e
 {
+   GOG_KEY_DOOM_DOOM_II,
    GOG_KEY_ULTIMATE,
    GOG_KEY_DOOM2,
    GOG_KEY_FINAL,
@@ -129,6 +130,13 @@ enum gogkeys_e
 // GOG.com installation keys
 static registry_value_t gogInstallValues[GOG_KEY_MAX+1] =
 {
+   // Doom + Doom II install
+   {
+      HKEY_LOCAL_MACHINE,
+      SOFTWARE_KEY "\\GOG.com\\Games\\1413291984",
+      "PATH"
+   },
+
    // Ultimate Doom install
    {
       HKEY_LOCAL_MACHINE,
@@ -169,7 +177,7 @@ static registry_value_t gogInstallValues[GOG_KEY_MAX+1] =
 };
 
 // The paths loaded from the GOG.com keys have several subdirectories.
-// Ultimate Doom and SVE are stored straight in their top directories.
+// Doom + Doom II, Ultimate Doom, and SVE are stored straight in their top directories.
 static const char *gogInstallSubDirs[] =
 {
    "doom2",
@@ -253,7 +261,7 @@ static void D_addGogPaths(Collection<qstring> &paths)
 
       if(I_GetRegistryString(*regval, str))
       {
-         // Ultimate Doom and SVE are in their root installation paths
+         // Doom + Doom II and SVE are in their root installation paths
          paths.add(str);
 
          for(size_t i = 0; i < earrlen(gogInstallSubDirs); i++)
@@ -280,21 +288,22 @@ struct steamdir_t
 // Steam install directory subdirs
 static const steamdir_t steamInstallSubDirs[] =
 {
-   { DOOM2_STEAM_APPID,      "base"          },
-   { DOOM2_STEAM_APPID,      "finaldoombase" },
-   { FINAL_DOOM_STEAM_APPID, "base"          },
-   { UDOOM_STEAM_APPID,      "base"          },
-   { HEXEN_STEAM_APPID,      "base"          },
-   { HEXDD_STEAM_APPID,      "base"          },
-   { SOSR_STEAM_APPID,       "base"          },
-   { DOOM3_BFG_STEAM_APPID,  "base/wads"     },
-   { SVE_STEAM_APPID,        nullptr         },
+   { DOOM_DOOM_II_STEAM_APPID, "rerelease"     },
+   { DOOM2_STEAM_APPID,        "base"          },
+   { DOOM2_STEAM_APPID,        "finaldoombase" },
+   { FINAL_DOOM_STEAM_APPID,   "base"          },
+   { HEXEN_STEAM_APPID,        "base"          },
+   { HEXDD_STEAM_APPID,        "base"          },
+   { SOSR_STEAM_APPID,         "base"          },
+   { DOOM3_BFG_STEAM_APPID,    "base/wads"     },
+   { SVE_STEAM_APPID,          nullptr         },
 };
 
 // Master Levels
 static const steamdir_t steamMasterLevelsSubDirs[] =
 {
-   { MASTER_LEVELS_STEAM_APPID, "master/wads"            } , // Special thanks to Gez for getting this installation path.
+   { DOOM_DOOM_II_STEAM_APPID,  "base/master/wads"       },
+   { MASTER_LEVELS_STEAM_APPID, "master/wads"            }, // Special thanks to Gez for getting this installation path.
    { DOOM2_STEAM_APPID,         "masterbase/master/wads" },
 };
 
