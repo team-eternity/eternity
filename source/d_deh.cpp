@@ -660,6 +660,47 @@ dehflagremap_t dehacked_mbf21weaponflags_remappings[earrlen(deh_mbf21weaponflags
 // Usage: Misc 0
 // Always uses a zero in the dehacked file, for consistency.  No meaning.
 
+enum dehmiscid_e : int
+{
+   dehmiscid_initialHealth,
+   dehmiscid_maxHealth,
+   dehmiscid_maxArmor,
+   dehmiscid_greenArmorClass,
+   dehmiscid_blueArmorClass,
+   dehmiscid_maxSoulsphere,
+   dehmiscid_soulsphereHealth,
+   dehmiscid_megasphereHealth,
+   dehmiscid_godModeHealth,
+   dehmiscid_idfaArmor,
+   dehmiscid_idfaArmorClass,
+   dehmiscid_idkfaArmor,
+   dehmiscid_idkfaArmorClass,
+   dehmiscid_bfgCellsPerShot,
+   dehmiscid_initialBullets,
+   dehmiscid_monstersInfight,
+   NUMDEHMISCIDS
+};
+
+static constexpr const char *deh_misc[NUMDEHMISCIDS] =
+{
+   "Initial Health",
+   "Max Health",
+   "Max Armor",
+   "Green Armor Class",
+   "Blue Armor Class",
+   "Max Soulsphere",
+   "Soulsphere Health",
+   "Megasphere Health",
+   "God Mode Health",
+   "IDFA Armor",
+   "IDFA Armor Class",
+   "IDKFA Armor",
+   "IDKFA Armor Class",
+   "BFG Cells/Shot",
+   "Initial Bullets",
+   "Monsters Infight",
+};
+
 // CHEATS - Dehacked block name = "Cheat"
 // Usage: Cheat 0
 // Always uses a zero in the dehacked file, for consistency.  No meaning.
@@ -2222,16 +2263,101 @@ static void deh_procMisc(DWFILE *fpin, char *line, MetaTable &gatheredData) // d
       // Otherwise it's ok
       deh_LogPrintf("Processing Misc item '%s'\n", key);
 
-      if(!strcasecmp(key, "Initial Health"))
+      const int dehmiscid = E_StrToNumLinear(deh_misc, NUMDEHMISCIDS, key);
+      switch(dehmiscid)
       {
-         playerclass_t *pc;
-         if((pc = E_PlayerClassForName("DoomMarine")))
+      case dehmiscid_initialHealth:
+         if(playerclass_t *pc = E_PlayerClassForName("DoomMarine"); pc)
             pc->initialhealth = value;
-      }
-      else if(!strcasecmp(key, "Initial Bullets"))
-      {
-         playerclass_t *pc;
-         if((pc = E_PlayerClassForName("DoomMarine")))
+         break;
+      case dehmiscid_maxHealth:
+         if(fx = E_ItemEffectForName(ITEMNAME_HEALTHBONUS); fx)
+         {
+            fx->removeConstString("maxamount");
+            fx->setInt("maxamount", value * 2);
+         }
+         if(fx = E_ItemEffectForName(ITEMNAME_MEDIKIT); fx)
+            fx->setInt("compatmaxamount", value);
+         if(fx = E_ItemEffectForName(ITEMNAME_STIMPACK); fx)
+               fx->setInt("compatmaxamount", value);
+         break;
+      case dehmiscid_maxArmor:
+         if((fx = E_ItemEffectForName(ITEMNAME_ARMORBONUS)))
+            fx->setInt("maxsaveamount", value);
+         break;
+      case dehmiscid_greenArmorClass:
+         if(fx = E_ItemEffectForName(ITEMNAME_GREENARMOR); fx)
+         {
+            fx->setInt("saveamount", value * 100);
+            if(value > 1)
+            {
+               fx->setInt("savefactor",  1);
+               fx->setInt("savedivisor", 2);
+            }
+         }
+         break;
+      case dehmiscid_blueArmorClass:
+         if(fx = E_ItemEffectForName(ITEMNAME_BLUEARMOR); fx)
+         {
+            fx->setInt("saveamount", value * 100);
+            if(value <= 1)
+            {
+               fx->setInt("savefactor",  1);
+               fx->setInt("savedivisor", 3);
+            }
+         }
+         break;
+      case dehmiscid_maxSoulsphere:
+         if(fx = E_ItemEffectForName(ITEMNAME_SOULSPHERE); fx)
+         {
+            fx->removeConstString("maxamount");
+            fx->setInt("maxamount", value);
+         }
+         break;
+      case dehmiscid_soulsphereHealth:
+         if(fx = E_ItemEffectForName(ITEMNAME_SOULSPHERE); fx)
+         {
+            fx->removeConstString("amount");
+            fx->setInt("amount", value);
+         }
+         break;
+      case dehmiscid_megasphereHealth:
+         if(fx = E_ItemEffectForName(ITEMNAME_MEGASPHERE); fx)
+         {
+            fx->removeConstString("amount");
+            fx->setInt("amount",    value);
+            fx->removeConstString("maxamount");
+            fx->setInt("maxamount", value);
+         }
+         break;
+      case dehmiscid_godModeHealth:
+         god_health_override = value;
+         break;
+      case dehmiscid_idfaArmor:
+         if(fx = E_ItemEffectForName(ITEMNAME_IDFAARMOR); fx)
+            fx->setInt("saveamount", value);
+         break;
+      case dehmiscid_idfaArmorClass:
+         if(fx = E_ItemEffectForName(ITEMNAME_IDFAARMOR); fx)
+         {
+            fx->setInt("savefactor", 1);
+            fx->setInt("savedivisor", value > 1 ? 2 : 3);
+         }
+         break;
+      case dehmiscid_idkfaArmor:
+         ; //idkfa_armor = value;
+         break;
+      case dehmiscid_idkfaArmorClass:
+         ; //idkfa_armor_class = value;
+         break;
+      case dehmiscid_bfgCellsPerShot:
+         // haleyjd 08/10/02: propagate to weapon info
+         bfgcells = value;
+         if(weaponinfo_t *bfginfo = E_WeaponForDEHNum(wp_bfg); bfginfo)
+            bfginfo->ammopershot = value;
+         break;
+      case dehmiscid_initialBullets:
+         if(playerclass_t *pc = E_PlayerClassForName("DoomMarine"); pc)
          {
             for(unsigned int i = 0; i < pc->numrebornitems; i++)
             {
@@ -2243,103 +2369,8 @@ static void deh_procMisc(DWFILE *fpin, char *line, MetaTable &gatheredData) // d
                }
             }
          }
-      }
-      else if(!strcasecmp(key, "Max Health"))
-      {
-         if((fx = E_ItemEffectForName(ITEMNAME_HEALTHBONUS)))
-         {
-            fx->removeConstString("maxamount");
-            fx->setInt("maxamount", value * 2);
-         }
-         if((fx = E_ItemEffectForName(ITEMNAME_MEDIKIT)))
-            fx->setInt("compatmaxamount", value);
-         if((fx = E_ItemEffectForName(ITEMNAME_STIMPACK)))
-            fx->setInt("compatmaxamount", value);
-      }
-      else if(!strcasecmp(key, "Max Armor"))
-      {
-         if((fx = E_ItemEffectForName(ITEMNAME_ARMORBONUS)))
-            fx->setInt("maxsaveamount", value);
-      }
-      else if(!strcasecmp(key, "Green Armor Class"))
-      {
-         if((fx = E_ItemEffectForName(ITEMNAME_GREENARMOR)))
-         {
-            fx->setInt("saveamount", value * 100);
-            if(value > 1)
-            {
-               fx->setInt("savefactor",  1);
-               fx->setInt("savedivisor", 2);
-            }
-         }
-      }
-      else if(!strcasecmp(key, "Blue Armor Class"))  // Blue Armor Class
-      {
-         if((fx = E_ItemEffectForName(ITEMNAME_BLUEARMOR)))
-         {
-            fx->setInt("saveamount", value * 100);
-            if(value <= 1)
-            {
-               fx->setInt("savefactor",  1);
-               fx->setInt("savedivisor", 3);
-            }
-         }
-      }
-      else if(!strcasecmp(key, "Max Soulsphere"))
-      {
-         if((fx = E_ItemEffectForName(ITEMNAME_SOULSPHERE)))
-         {
-            fx->removeConstString("maxamount");
-            fx->setInt("maxamount", value);
-         }
-      }
-      else if(!strcasecmp(key, "Soulsphere Health"))
-      {
-         if((fx = E_ItemEffectForName(ITEMNAME_SOULSPHERE)))
-         {
-            fx->removeConstString("amount");
-            fx->setInt("amount", value);
-         }
-      }
-      else if(!strcasecmp(key, "Megasphere Health"))
-      {
-         if((fx = E_ItemEffectForName(ITEMNAME_MEGASPHERE)))
-         {
-            fx->removeConstString("amount");
-            fx->setInt("amount",    value);
-            fx->removeConstString("maxamount");
-            fx->setInt("maxamount", value);
-         }
-      }
-      else if(!strcasecmp(key, "God Mode Health"))
-      {
-         god_health_override = value;
-      }
-      else if(!strcasecmp(key, "IDFA Armor"))
-      {
-         if((fx = E_ItemEffectForName(ITEMNAME_IDFAARMOR)))
-            fx->setInt("saveamount", value);
-      }
-      else if(!strcasecmp(key, "IDFA Armor Class"))
-      {
-         if((fx = E_ItemEffectForName(ITEMNAME_IDFAARMOR)))
-         {
-            fx->setInt("savefactor", 1);
-            fx->setInt("savedivisor", value > 1 ? 2 : 3);
-         }
-      }
-      else if(!strcasecmp(key, "IDKFA Armor"))
-         ; //idkfa_armor = value;
-      else if(!strcasecmp(key, "IDKFA Armor Class"))
-         ; //idkfa_armor_class = value;
-      else if(!strcasecmp(key, "BFG Cells/Shot"))
-      {
-         // haleyjd 08/10/02: propagate to weapon info
-         weaponinfo_t &bfginfo = *E_WeaponForDEHNum(wp_bfg);
-         bfgcells = bfginfo.ammopershot = value;
-      }
-      else if(!strcasecmp(key, "Monsters Infight"))
-      {
+         break;
+      case dehmiscid_monstersInfight:
          // FROM CHOCOLATE-DOOM
          // Dehacked: "Monsters infight"
          // This controls whether monsters can harm other monsters of the same species. For example,
@@ -2347,19 +2378,21 @@ static void deh_procMisc(DWFILE *fpin, char *line, MetaTable &gatheredData) // d
          // weird - '202' means off, while '221' means on.
          switch(value)
          {
-            case 202:
-               deh_species_infighting = false;
-               break;
-            case 221:
-               deh_species_infighting = true;
-               break;
-            default:
-               deh_LogPrintf("Invalid value for 'Monsters Infight': %d\n", value);
-               break;
+         case 202:
+            deh_species_infighting = false;
+            break;
+         case 221:
+            deh_species_infighting = true;
+            break;
+         default:
+            deh_LogPrintf("Invalid value for 'Monsters Infight': %d\n", value);
+            break;
          }
-      }
-      else
+         break;
+      default:
          deh_LogPrintf("Invalid misc item string index for '%s'\n", key);
+         break;
+      }
    }
 }
 
