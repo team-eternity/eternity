@@ -537,12 +537,19 @@ const rendersector_t *R_FakeFlat(const viewpoint_t &viewpoint, const rendersecto
    // killough 4/11/98
    if(ceilinglightlevel)
       *ceilinglightlevel = R_GetSurfaceLightLevel(surf_ceil, sec);
+   
+   const sector_t *origsector = nullptr;
 
    if(sec->heightsec != -1 || sec->srf.floor.portal || sec->srf.ceiling.portal)
    {
       // SoM: This was moved here for use with portals
       // Replace sector being drawn, with a copy to be hacked
       *tempsec = *sec;
+      if(sec->srf.floor.portal || sec->srf.ceiling.portal)
+      {
+         // Hack because we need the sector lines
+         origsector = static_cast<const sector_t *>(sec);
+      }
    }
 
    if(sec->heightsec != -1)
@@ -772,7 +779,11 @@ const rendersector_t *R_FakeFlat(const viewpoint_t &viewpoint, const rendersecto
    {
       if(sec->srf.ceiling.portal->type == R_LINKED && !(sec->srf.ceiling.pflags & PF_ATTACHEDPORTAL))
       {
-         if(sec->srf.ceiling.height + pSlopeHeights[(sector_t*)sec - sectors].ceilingdelta < R_CPLink(sec)->planez)
+         fixed_t ceilingdelta = sec == tempsec ? sec->srf.ceiling.slope ?
+               P_GetSlopedSectorCeilingDelta(*origsector, sec->srf.ceiling.slope) : 0 :
+               pSlopeHeights[origsector - sectors].ceilingdelta;
+         
+         if(sec->srf.ceiling.height + ceilingdelta < R_CPLink(sec)->planez)
          {
             tempsec->srf.ceiling.portal = nullptr;
             tempsec->srf.ceiling.pflags = 0;
@@ -792,7 +803,10 @@ const rendersector_t *R_FakeFlat(const viewpoint_t &viewpoint, const rendersecto
    {
       if(sec->srf.floor.portal->type == R_LINKED && !(sec->srf.floor.pflags & PF_ATTACHEDPORTAL))
       {
-         if(sec->srf.floor.height + pSlopeHeights[(sector_t*)sec - sectors].floordelta > R_FPLink(sec)->planez)
+         fixed_t floordelta = sec == tempsec ? sec->srf.floor.slope ?
+               P_GetSlopedSectorFloorDelta(*origsector, sec->srf.floor.slope) : 0 :
+               pSlopeHeights[origsector - sectors].floordelta;
+         if(sec->srf.floor.height + floordelta > R_FPLink(sec)->planez)
          {
             tempsec->srf.floor.portal = nullptr;
             tempsec->srf.floor.pflags = 0;

@@ -31,6 +31,7 @@
 
 struct line_t;
 struct pslope_t;
+struct sector_t;
 struct v3float_t;
 
 //
@@ -44,6 +45,9 @@ struct slopeheight_t
 };
 
 extern slopeheight_t *pSlopeHeights;
+
+fixed_t P_GetSlopedSectorFloorDelta(const sector_t &sector, const pslope_t *slope);
+fixed_t P_GetSlopedSectorCeilingDelta(const sector_t &sector, const pslope_t *slope);
 
 void P_PostProcessSlopes();
 
