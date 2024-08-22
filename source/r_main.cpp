@@ -403,12 +403,11 @@ void R_ResetFOV(int width, int height)
       fov = 90;
       return;
    }
+   
+   // Basically this results from keeping 90 fov on the 4:3 subscreen.
+   fov = round(360 / PI * atan(ratio / 4 * 3));
 
-   // The general equation is as follows:
-   // y = mx + b -> fov = (75/2) * ratio + 40
-   // This gives 90 for 4:3, 100 for 16:10, and 106 for 16:9.
-   fov = static_cast<int>((75.0/2.0) * ratio + 40.0);
-
+   // Ultra sanity check
    if(fov < 20)
       fov = 20;
    else if(fov > 179)
