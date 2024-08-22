@@ -7,6 +7,13 @@ Dates are in dd.mm.yyyy format. Most recent update is first.
 Since v4.02.00 "Forseti"
 ========================
 --------------------------------------------------------------------------------
+22.08.2024
+
+BUGFIX: Fixed wrong FOV when setting very wide aspect ratios.
+
+        Fixed fatal error happening at very big resolutions.
+
+--------------------------------------------------------------------------------
 26.07.2024
 
 BUGFIX: Fixed round-off errors with map thing angles. Now they match vanilla
