@@ -408,7 +408,7 @@ static void ST_refreshBackground()
       // haleyjd 01/12/04: changed translation handling
       if(GameType != gt_single)
       {
-         V_DrawPatchTranslated(ST_FX, ST_FY, &vbscreenyscaled, faceback,
+         V_DrawPatchTranslated(ST_FX, ST_FY, &subscreen43, faceback,
             plyr->colormap ?
                translationtables[(plyr->colormap - 1)] :
                nullptr, 
