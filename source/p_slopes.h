@@ -39,8 +39,15 @@ struct v3float_t;
 //
 struct slopeheight_t
 {
-   fixed_t floordelta;     // difference from bottom slope tip to floorheight
-   fixed_t ceilingdelta;   // difference from top slope tip to ceilingheight
+   union
+   {
+      struct
+      {
+         fixed_t floordelta;     // difference from bottom slope tip to floorheight
+         fixed_t ceilingdelta;   // difference from top slope tip to ceilingheight
+      };
+      Surfaces<fixed_t> delta;   // alternate surface notation
+   };
    fixed_t touchheight;    // difference from ceilingheight to floorheight when planes touch
 };
 

@@ -36,6 +36,7 @@
 #include "p_portalblockmap.h"
 #include "p_portalcross.h"
 #include "p_setup.h"
+#include "p_slopes.h"
 #include "polyobj.h"
 #include "r_main.h"
 #include "r_portal.h"
@@ -362,7 +363,7 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, surf_e surf,
       // Also quit early if the planez is obscured by a dynamic horizontal plane
       // or if deltax and deltay are somehow zero
       if((!(sector->srf[surf].pflags & PF_ATTACHEDPORTAL) &&
-          isInner(surf, sector->srf[surf].height, link.planez)) || (!link.delta.x && !link.delta.y))
+          isInner(surf, sector->srf[surf].height + pSlopeHeights[sector - sectors].delta[surf], link.planez)) || (!link.delta.x && !link.delta.y))
       {
          return sector;
       }
