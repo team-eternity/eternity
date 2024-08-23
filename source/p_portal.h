@@ -168,13 +168,10 @@ inline static fixed_t P_PortalZ(const surface_t &surface, v2fixed_t v)
 {
    return P_PortalZ(surface, v.x, v.y);
 }
-inline static fixed_t P_PortalZ(const surface_t &surface)
-{
-   return P_PortalZ(surface, 0, 0);
-}
+fixed_t P_PortalZ(const surface_t &surface);
 inline static fixed_t P_PortalZ(surf_e surf, const rendersector_t &sector)
 {
-   return P_PortalZ(sector.srf[surf], 0, 0);
+   return P_PortalZ(sector.srf[surf]);
 }
 
 // Group mappings

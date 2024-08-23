@@ -1357,6 +1357,13 @@ fixed_t P_PortalZ(const surface_t &surface, fixed_t x, fixed_t y)
          surface.pflags & PF_ATTACHEDPORTAL ? surface.getZAt(x, y) : surface.portal->data.link.planez;
 }
 
+fixed_t P_PortalZ(const surface_t &surface)
+{
+   // TODO: real slopes and sloped portals
+   return !surface.portal || surface.portal->type != R_LINKED ||
+         surface.pflags & PF_ATTACHEDPORTAL ? surface.height : surface.portal->data.link.planez;
+}
+
 //
 // Builds the sector group mappings
 //
