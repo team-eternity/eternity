@@ -611,11 +611,12 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst, v
 bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
 {
    fixed_t topz = mobj->z + mobj->height;
-   if(topz < sector->srf.floor.height || mobj->z > sector->srf.ceiling.height)
+   v2fixed_t mpos = { mobj->x, mobj->y };
+   if(topz < sector->srf.floor.getZAt(mpos) || mobj->z > sector->srf.ceiling.getZAt(mpos))
       return false;
-   if(sector->srf.floor.pflags & PS_PASSABLE && topz < P_PortalZ(surf_floor, *sector))
+   if(sector->srf.floor.pflags & PS_PASSABLE && topz < P_PortalZ(sector->srf.floor, mpos))
       return false;
-   if(sector->srf.ceiling.pflags & PS_PASSABLE && mobj->z > P_PortalZ(surf_ceil, *sector))
+   if(sector->srf.ceiling.pflags & PS_PASSABLE && mobj->z > P_PortalZ(sector->srf.ceiling, mpos))
       return false;
    return true;
 }
