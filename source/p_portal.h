@@ -115,7 +115,8 @@ void P_FitLinkOffsetsToPortal(const linkdata_t &ldata);
 // Checks the state of the floor/ceiling portal in the given sector and updates
 // the state flags accordingly.
 //
-void P_CheckSectorPortalState(rendersector_t &sector, surf_e type);
+void P_CheckRenderSectorPortalState(rendersector_t &sector, surf_e type);
+void P_CheckSectorPortalState(sector_t &sector, surf_e type);
 
 //
 // Checks the state of the portal in the given line and updates
@@ -123,7 +124,8 @@ void P_CheckSectorPortalState(rendersector_t &sector, surf_e type);
 //
 void P_CheckLPortalState(line_t *line);
 
-void P_SetSectorHeight(rendersector_t &sec, surf_e surf, fixed_t h);
+void P_SetSectorHeight(sector_t &sec, surf_e surf, fixed_t h);
+void P_SetRenderSectorHeight(rendersector_t &sec, surf_e surf, fixed_t h);
 
 //
 // P_SetPortalBehavior
