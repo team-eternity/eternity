@@ -246,12 +246,13 @@ static namespace_matcher_t matchers[] =
    { "translations/", lumpinfo_t::ns_translations }, // EE extension
    { "gamepads/",     lumpinfo_t::ns_pads         }, // EE extension
    { "textures/",     lumpinfo_t::ns_textures     },
+   { "patches/",      lumpinfo_t::ns_global       }, //Treated as global in EE as of 26/01/2024
+   // { "patches/",      lumpinfo_t::ns_patches      }, FIXME - as soon as VImage is done!
 
    { nullptr,         -1                          }  // keep this last
 
    // TODO ??
    /*
-   { "patches/",      lumpinfo_t::ns_patches      },
    { "voices/",       lumpinfo_t::ns_voices       },
    { "voxels/",       lumpinfo_t::ns_voxels       },
    */
