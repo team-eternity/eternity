@@ -2740,8 +2740,8 @@ static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &sprit
       sector = subsector->sector;
       heightsec = sector->heightsec;
 
-      if(particle->z < sector->srf.floor.height ||
-	 particle->z > sector->srf.ceiling.height)
+      if(particle->z < sector->srf.floor.getZAt(particle->x, particle->y) ||
+	 particle->z > sector->srf.ceiling.getZAt(particle->x, particle->y))
 	 return;
    }
 
@@ -2751,16 +2751,16 @@ static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &sprit
       int phs = view.sector->heightsec;
 
       if(phs != -1 &&
-	 viewpoint.z < sectors[phs].srf.floor.height ?
-	 particle->z >= sectors[heightsec].srf.floor.height :
-         gzt < sectors[heightsec].srf.floor.height)
+	 viewpoint.z < sectors[phs].srf.floor.getZAt(viewpoint.x, viewpoint.y) ?
+	 particle->z >= sectors[heightsec].srf.floor.getZAt(particle->x, particle->y) :
+         gzt < sectors[heightsec].srf.floor.getZAt(particle->x, particle->y))
          return;
 
       if(phs != -1 &&
-	 viewpoint.z > sectors[phs].srf.ceiling.height ?
-	 gzt < sectors[heightsec].srf.ceiling.height &&
-	 viewpoint.z >= sectors[heightsec].srf.ceiling.height :
-         particle->z >= sectors[heightsec].srf.ceiling.height)
+	 viewpoint.z > sectors[phs].srf.ceiling.getZAt(viewpoint.x, viewpoint.y) ?
+	 gzt < sectors[heightsec].srf.ceiling.getZAt(particle->x, particle->y) &&
+	 viewpoint.z >= sectors[heightsec].srf.ceiling.getZAt(viewpoint.x, viewpoint.y) :
+         particle->z >= sectors[heightsec].srf.ceiling.getZAt(particle->x, particle->y))
          return;
    }
 
