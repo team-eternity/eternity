@@ -146,15 +146,13 @@ int P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld)
 //
 int P_BoxOnLineSideExclusive(const fixed_t *tmbox, const line_t *ld)
 {
-   int p;
-
    switch(ld->slopetype)
    {
    default:
    case ST_HORIZONTAL:
    {
       const bool boxBottomAbove = tmbox[BOXBOTTOM] >= ld->v1->y;
-      const bool boxTopAbove = tmbox[BOXTOP] >= ld->v1->y;
+      const bool boxTopAbove    = tmbox[BOXTOP] >= ld->v1->y;
       if(boxBottomAbove == boxTopAbove)
          return boxTopAbove != (ld->dx < 0) ? 1 : 0;
       else
@@ -162,7 +160,7 @@ int P_BoxOnLineSideExclusive(const fixed_t *tmbox, const line_t *ld)
    }
    case ST_VERTICAL:
    {
-      const bool boxLeftLeft = tmbox[BOXLEFT] <= ld->v1->x;
+      const bool boxLeftLeft  = tmbox[BOXLEFT] <= ld->v1->x;
       const bool boxRightLeft = tmbox[BOXRIGHT] <= ld->v1->x;
       if(boxLeftLeft == boxRightLeft)
          return boxRightLeft != (ld->dy < 0) ? 1 : 0;
@@ -171,8 +169,8 @@ int P_BoxOnLineSideExclusive(const fixed_t *tmbox, const line_t *ld)
    }
    case ST_POSITIVE:
    {
-      int boxBottomRightCorner = P_PointOnLineSideExclusive(tmbox[BOXRIGHT], tmbox[BOXBOTTOM], ld);
-      int boxTopLeftCorner = P_PointOnLineSideExclusive(tmbox[BOXLEFT], tmbox[BOXTOP], ld);
+      const int boxBottomRightCorner = P_PointOnLineSideExclusive(tmbox[BOXRIGHT], tmbox[BOXBOTTOM], ld);
+      const int boxTopLeftCorner     = P_PointOnLineSideExclusive(tmbox[BOXLEFT], tmbox[BOXTOP], ld);
       if(boxBottomRightCorner == -1)
          return boxTopLeftCorner;
       else if(boxTopLeftCorner == -1)
@@ -182,14 +180,14 @@ int P_BoxOnLineSideExclusive(const fixed_t *tmbox, const line_t *ld)
    }
    case ST_NEGATIVE:
    {
-      int boxBottomLeftCorner = P_PointOnLineSideExclusive(tmbox[BOXLEFT], tmbox[BOXBOTTOM], ld);
-      int boxTopRightCorner = P_PointOnLineSideExclusive(tmbox[BOXRIGHT], tmbox[BOXTOP], ld);
+      const int boxBottomLeftCorner = P_PointOnLineSideExclusive(tmbox[BOXLEFT], tmbox[BOXBOTTOM], ld);
+      const int boxTopRightCorner   = P_PointOnLineSideExclusive(tmbox[BOXRIGHT], tmbox[BOXTOP], ld);
       if(boxBottomLeftCorner == -1)
          return boxTopRightCorner;
       else if(boxTopRightCorner == -1)
          return boxBottomLeftCorner;
       else
-         return boxBottomLeftCorner == boxBottomLeftCorner ? boxBottomLeftCorner : -1;
+         return boxBottomLeftCorner == boxTopRightCorner ? boxTopRightCorner : -1;
    }
    }
 }
