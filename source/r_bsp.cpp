@@ -829,13 +829,14 @@ const rendersector_t *R_FakeFlat(const viewpoint_t &viewpoint, const rendersecto
 //
 // As R_FakeFlat but it only calculates the overall lighting (for sprites)
 //
-int R_FakeFlatSpriteLighting(const fixed_t viewz, const sector_t *sec)
+int R_FakeFlatSpriteLighting(const viewpoint_t &viewpoint, const sector_t *sec)
 {
    if(!sec)
       return 0;
 
    int floorlightlevel   = R_GetSurfaceLightLevel(surf_floor, sec);
    int ceilinglightlevel = R_GetSurfaceLightLevel(surf_ceil, sec);
+   const fixed_t viewz = viewpoint.z;
 
    if(sec->heightsec != -1)
    {
@@ -843,12 +844,16 @@ int R_FakeFlatSpriteLighting(const fixed_t viewz, const sector_t *sec)
 
       // Get from view.sector due to interpolation
       const int  heightsec = view.sector->heightsec;
-      const bool underwater = (heightsec != -1 && viewz <= sectors[heightsec].srf.floor.height);
+      const bool underwater = (heightsec != -1 &&
+                               viewz <= sectors[heightsec].srf.floor.getZAt(viewpoint.x, 
+                                                                            viewpoint.y));
 
       // Prevent sudden light changes from non-water sectors:
       if(underwater ||
-         (heightsec != -1 && viewz >= sectors[heightsec].srf.ceiling.height &&
-          sec->srf.ceiling.height > s->srf.ceiling.height))
+         (heightsec != -1 &&
+          viewz >= sectors[heightsec].srf.ceiling.getZAt(viewpoint.x, viewpoint.y) &&
+          sec->srf.ceiling.getZAt(viewpoint.x, viewpoint.y) > s->srf.ceiling.getZAt(viewpoint.x,
+                                                                                    viewpoint.y)))
       {
          floorlightlevel = s->srf.floor.lightdelta;
          if(!(s->flags & SECF_FLOORLIGHTABSOLUTE))

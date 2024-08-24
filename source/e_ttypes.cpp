@@ -1015,7 +1015,7 @@ void E_ExplosionHitWater(Mobj *thing, int damage)
 // Check if thing is standing on given sector, compatible with slopes and non-slopes
 // NOTE: this checks _exact_ floor equality, not <=
 //
-static bool E_standingOn(const sector_t &sector, const Mobj &thing)
+bool E_StandingOnExactly(const sector_t &sector, const Mobj &thing)
 {
    if(!sector.srf.floor.slope && thing.z == sector.srf.floor.height)
       return true;
@@ -1036,7 +1036,7 @@ bool E_HitFloor(Mobj *thing)
 
    // determine what touched sector the thing is standing on
    for(m = thing->touching_sectorlist; m; m = m->m_tnext)
-      if(E_standingOn(*m->m_sector, *thing))
+      if(E_StandingOnExactly(*m->m_sector, *thing))
          break;
 
    // not on a floor or dealing with deep water, return solid
@@ -1055,7 +1055,7 @@ bool E_WouldHitFloorWater(const Mobj &thing)
 {
    const msecnode_t *m;
    for(m = thing.touching_sectorlist; m; m = m->m_tnext)
-      if(E_standingOn(*m->m_sector, thing))
+      if(E_StandingOnExactly(*m->m_sector, thing))
          break;
 
    // NOTE: same conditions as E_HitFloor

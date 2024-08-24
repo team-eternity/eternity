@@ -36,6 +36,7 @@
 #include "e_inventory.h"
 #include "e_player.h"
 #include "e_states.h"
+#include "e_ttypes.h"
 #include "e_weapons.h"
 #include "g_game.h"
 #include "hu_stuff.h"
@@ -500,7 +501,7 @@ static void P_HereticCurrent(player_t *player)
    // determine what touched sector the player is standing on
    for(m = thing->touching_sectorlist; m; m = m->m_tnext)
    {
-      if(thing->z == m->m_sector->srf.floor.height)
+      if(E_StandingOnExactly(*m->m_sector, *thing))
          break;
    }
 
