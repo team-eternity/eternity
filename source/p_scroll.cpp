@@ -70,16 +70,6 @@ static scrollerlist_t *scrollers;
 static PODCollection<sidelerpinfo_t> pScrolledSides;
 static PODCollection<seclerpinfo_t> pScrolledSectors;
 
-// Enable BOOM carrying scroller behaviour for thing on floor, while also handling sloped floors.
-inline static bool P_onCarryingFloor(const Mobj &thing, const surface_t &floor)
-{
-   if(!floor.slope)
-      return thing.z <= floor.height;
-   // Sloped: must rest on this slope.
-   return thing.zref.sector.floor && &thing.zref.sector.floor->srf.floor == &floor &&
-         thing.z == thing.zref.floor;
-}
-
 // Also for moving through BOOM-scrolling water surface
 inline static bool P_inCarryingWater(const Mobj &thing, const surface_t &floor,
                                      const surface_t *waterlevel)
@@ -203,7 +193,7 @@ void ScrollThinker::Think()
          }
          if(!((thing = node->m_thing)->flags & MF_NOCLIP) &&
             !(thing->flags2 & MF2_NOTHRUST) &&
-            (!(thing->flags & MF_NOGRAVITY || !P_onCarryingFloor(*thing, sec->srf.floor)) ||
+            (!(thing->flags & MF_NOGRAVITY || !P_RestingOnGround(*thing, sec->srf.floor)) ||
              P_inCarryingWater(*thing, sec->srf.floor, watersurface)))
          {
             thing->momx += dx;

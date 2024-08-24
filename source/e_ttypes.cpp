@@ -1013,6 +1013,7 @@ void E_ExplosionHitWater(Mobj *thing, int damage)
 
 //
 // Check if thing is standing on given sector, compatible with slopes and non-slopes
+// NOTE: this checks _exact_ floor equality, not <=
 //
 static bool E_standingOn(const sector_t &sector, const Mobj &thing)
 {

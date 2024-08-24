@@ -4315,6 +4315,17 @@ void P_StartMobjFade(Mobj *mo, int alphavelocity)
    mo->alphavelocity = alphavelocity;
 }
 
+// Common case of standing on ground, with z <= floor height for non-sloped, or floor sector being
+// the slope sector otherwise
+bool P_RestingOnGround(const Mobj &thing, const surface_t &floor)
+{
+   if(!floor.slope)
+      return thing.z <= floor.height;
+   // Sloped: must rest on this slope.
+   return thing.zref.sector.floor && &thing.zref.sector.floor->srf.floor == &floor &&
+         thing.z == thing.zref.floor;
+}
+
 #if 0
 //
 // Small natives

@@ -1891,8 +1891,7 @@ void FrictionThinker::Think()
       }
       thing = node->m_thing;
       if(thing->player &&
-         !(thing->flags & (MF_NOGRAVITY | MF_NOCLIP)) &&
-         thing->z <= sec->srf.floor.height)
+         !(thing->flags & (MF_NOGRAVITY | MF_NOCLIP)) && P_RestingOnGround(*thing, sec->srf.floor))
       {
          if((thing->friction == ORIG_FRICTION) ||     // normal friction?
             (this->friction < thing->friction))

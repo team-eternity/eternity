@@ -602,6 +602,7 @@ inline static fixed_t getThingZ(Mobj *mo1, Mobj *mo2)
 }
 
 bool P_CheckFloorCeilingForSpawning(const Mobj& mobj);
+bool P_RestingOnGround(const Mobj &mobj, const surface_t &floor);
 
 //=============================================================================
 //
