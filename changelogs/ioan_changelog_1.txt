@@ -7,6 +7,14 @@ Dates are in dd.mm.yyyy format. Most recent update is first.
 Since v4.02.00 "Forseti"
 ========================
 --------------------------------------------------------------------------------
+24.08.2024
+
+FEATURE: Slope physics is now largely implemented. Testing will be done.
+
+         Added patches/ as an alternative path to graphics/ for ZIP and archive
+         directories. Thanks to sink666 for the contribution.
+
+--------------------------------------------------------------------------------
 22.08.2024
 
 BUGFIX: Fixed wrong FOV when setting very wide aspect ratios.
