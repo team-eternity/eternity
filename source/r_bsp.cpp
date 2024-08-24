@@ -3065,6 +3065,20 @@ static void R_addDynaSegs(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, 
    }
 }
 
+static fixed_t R_getSlopeBaseHeight(const rendersector_t &sector, const rendersector_t &tempsec,
+                                    surf_e surf)
+{
+   if(&sector != &tempsec)
+   {
+      return sector.srf[surf].height +
+            pSlopeHeights[static_cast<const sector_t *>(&sector) - sectors].slopebasedelta[surf];
+   }
+   return sector.srf[surf].height + 
+         (tempsec.srf[surf].slope ?
+          P_GetSlopedSectorBaseDelta(static_cast<const sector_t &>(sector), surf,
+                                     tempsec.srf[surf].slope) : 0);
+}
+
 //
 // Determine floor/ceiling planes.
 // Add sprites of things in sector.
@@ -3134,9 +3148,11 @@ static void R_subsector(rendercontext_t &context, const int num)
    // ioanch: reject all sectors fully above or below a sector portal.
    if(portalrender.active && portalrender.w->portal->type != R_SKYBOX &&
       ((portalrender.w->type == pw_ceiling &&
-        seg.frontsec->srf.ceiling.height < portalrender.w->planez + viewpoint.z - portalrender.w->vz) ||
+        R_getSlopeBaseHeight(*seg.frontsec, tempsec, surf_ceil) <
+        portalrender.w->planez + viewpoint.z - portalrender.w->vz) ||
        (portalrender.w->type == pw_floor &&
-        seg.frontsec->srf.floor.height > portalrender.w->planez + viewpoint.z - portalrender.w->vz)))
+        R_getSlopeBaseHeight(*seg.frontsec, tempsec, surf_floor) >
+        portalrender.w->planez + viewpoint.z - portalrender.w->vz)))
    {
       return;
    }

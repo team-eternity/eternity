@@ -150,6 +150,22 @@ fixed_t P_GetSlopedSectorCeilingDelta(const sector_t &sector, const pslope_t *sl
    return minz - sector.srf.ceiling.height;
 }
 
+fixed_t P_GetSlopedSectorBaseDelta(const sector_t &sector, surf_e surf, const pslope_t *slope)
+{
+   fixed_t extremum = surf == surf_floor ? D_MAXINT : D_MININT;
+   const surface_t &surface = sector.srf[surf];
+   for(int j = 0; j < sector.linecount; ++j)
+   {
+      const line_t &line = *sector.lines[j];
+      fixed_t z = P_GetZAt(slope, line.v1->x, line.v1->y);
+      if(isOuter(surf, z, extremum))
+         extremum = z;
+      z = P_GetZAt(slope, line.v2->x, line.v2->y);
+      if(isOuter(surf, z, extremum))
+         extremum = z;
+   }
+   return extremum - surface.height;
+}
 //
 // Sets up the slope height list per sector.
 //
@@ -169,6 +185,12 @@ static void P_initSlopeHeights()
          pSlopeHeights[i].ceilingdelta = P_GetSlopedSectorCeilingDelta(sector,
                                                                        sector.srf.ceiling.slope);
       }
+      for(surf_e surf : SURFS)
+         if(sector.srf[surf].slope)
+         {
+            pSlopeHeights[i].slopebasedelta[surf] =
+                  P_GetSlopedSectorBaseDelta(sector, surf, sector.srf[surf].slope);
+         }
       if(!sector.srf.ceiling.slope)
          pSlopeHeights[i].touchheight = pSlopeHeights[i].floordelta;
       else if(!sector.srf.floor.slope)

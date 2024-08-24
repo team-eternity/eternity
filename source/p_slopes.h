@@ -49,12 +49,14 @@ struct slopeheight_t
       Surfaces<fixed_t> delta;   // alternate surface notation
    };
    fixed_t touchheight;    // difference from ceilingheight to floorheight when planes touch
+   Surfaces<fixed_t> slopebasedelta;   // difference from slope BASE to surface height
 };
 
 extern slopeheight_t *pSlopeHeights;
 
 fixed_t P_GetSlopedSectorFloorDelta(const sector_t &sector, const pslope_t *slope);
 fixed_t P_GetSlopedSectorCeilingDelta(const sector_t &sector, const pslope_t *slope);
+fixed_t P_GetSlopedSectorBaseDelta(const sector_t &sector, surf_e surf, const pslope_t *slope);
 
 void P_PostProcessSlopes();
 
