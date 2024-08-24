@@ -323,8 +323,16 @@ int GetVertexOutCode(const fixed_t *tmbox, const fixed_t x, const fixed_t y)
 //
 // MaxW: Perform a Cohen Sutherland line clip to calculate if a line intersects a box
 //
-bool P_LineIntersectsBox(const line_t *ld, const fixed_t *tmbox)
+bool P_LineIntersectsBox(const line_t *ld, const fixed_t *tmboxin)
 {
+   // We need for top and left to be min and right and bottom to be max
+   fixed_t tmbox[4];
+   tmbox[BOXTOP]    = emin(tmboxin[BOXTOP], tmboxin[BOXBOTTOM]);
+   tmbox[BOXBOTTOM] = emax(tmboxin[BOXTOP], tmboxin[BOXBOTTOM]);
+   tmbox[BOXLEFT]   = emin(tmboxin[BOXLEFT], tmboxin[BOXRIGHT]);
+   tmbox[BOXRIGHT]  = emax(tmboxin[BOXLEFT], tmboxin[BOXRIGHT]);
+
+
    int ocV1 = GetVertexOutCode(tmbox, ld->v1->x, ld->v1->y);
    int ocV2 = GetVertexOutCode(tmbox, ld->v2->x, ld->v2->y);
 

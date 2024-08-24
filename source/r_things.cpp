@@ -2502,12 +2502,12 @@ void R_LinkSpriteProj(Mobj &thing)
       bbox[BOXBOTTOM] = outeritem.coord.y - maxradius;
       bbox[BOXLEFT] = outeritem.coord.x - maxradius;
       bbox[BOXRIGHT] = outeritem.coord.x + maxradius;
-      
-      const int bx1 = eclamp((bbox[BOXLEFT] - bmaporgx) / MAPBLOCKSIZE, 0, bmapwidth - 1);
-      const int bx2 = eclamp((bbox[BOXRIGHT] - bmaporgx) / MAPBLOCKSIZE, 0, bmapwidth - 1);
+
+      const int bx1 = eclamp((bbox[BOXLEFT]   - bmaporgx) / MAPBLOCKSIZE, 0, bmapwidth  - 1);
+      const int bx2 = eclamp((bbox[BOXRIGHT]  - bmaporgx) / MAPBLOCKSIZE, 0, bmapwidth  - 1);
       const int by1 = eclamp((bbox[BOXBOTTOM] - bmaporgy) / MAPBLOCKSIZE, 0, bmapheight - 1);
-      const int by2 = eclamp((bbox[BOXTOP] - bmaporgy) / MAPBLOCKSIZE, 0, bmapheight - 1);
-         
+      const int by2 = eclamp((bbox[BOXTOP]    - bmaporgy) / MAPBLOCKSIZE, 0, bmapheight - 1);
+
       for(int by = by1; by <= by2; ++by)
       {
          for(int bx = bx1; bx <= bx2; ++bx)
