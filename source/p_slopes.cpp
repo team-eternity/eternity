@@ -186,11 +186,13 @@ static void P_initSlopeHeights()
                                                                        sector.srf.ceiling.slope);
       }
       for(surf_e surf : SURFS)
+      {
          if(sector.srf[surf].slope)
          {
             pSlopeHeights[i].slopebasedelta[surf] =
                   P_GetSlopedSectorBaseDelta(sector, surf, sector.srf[surf].slope);
          }
+      }
       if(!sector.srf.ceiling.slope)
          pSlopeHeights[i].touchheight = pSlopeHeights[i].floordelta;
       else if(!sector.srf.floor.slope)
