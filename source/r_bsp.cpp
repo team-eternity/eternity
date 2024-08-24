@@ -336,7 +336,6 @@ static void R_clipPassWallSegment(bspcontext_t &bspcontext, cmapcontext_t &cmapc
                                   const int x1, const int x2)
 {
    cliprange_t *&solidsegs = bspcontext.solidsegs;
-   cliprange_t *&newend    = bspcontext.newend;
 
    const cliprange_t *start;
    
