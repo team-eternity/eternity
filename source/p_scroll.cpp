@@ -137,7 +137,7 @@ void ScrollThinker::Think()
 
    side_t *side;
    sector_t *sec;
-   fixed_t height, waterheight;  // killough 4/4/98: add waterheight
+   // killough 4/4/98: add waterheight
    msecnode_t *node;
    Mobj *thing;
    const surface_t *watersurface;
@@ -185,10 +185,6 @@ void ScrollThinker::Think()
       // killough 4/4/98: Underwater, carry things even w/o gravity
 
       sec = sectors + this->affectee;
-      height = sec->srf.floor.height;
-      waterheight = sec->heightsec != -1 &&
-         sectors[sec->heightsec].srf.floor.height > height ?
-         sectors[sec->heightsec].srf.floor.height : D_MININT;
       watersurface = sec->heightsec != -1 ? &sectors[sec->heightsec].srf.floor : nullptr;
 
       // Move objects only if on floor or underwater,
