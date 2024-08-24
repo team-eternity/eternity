@@ -3139,7 +3139,7 @@ static void R_subsector(rendercontext_t &context, const int num)
    count = sub->numlines;
    line = &segs[sub->firstline];
 
-   R_SectorColormap(cmapcontext, viewpoint.z, seg.frontsec);
+   R_SectorColormap(cmapcontext, viewpoint, seg.frontsec);
 
    // killough 3/8/98, 4/4/98: Deep water / fake ceiling effect
    seg.frontsec = R_FakeFlat(viewpoint, seg.frontsec, &tempsec, tempslopes,

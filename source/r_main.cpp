@@ -1219,11 +1219,13 @@ static int R_getSectorColormap(const rendersector_t &sector, ViewArea viewarea)
 // instead of from its heightsec if it has one (heightsec colormaps are
 // transferred to their affected sectors at level setup now).
 //
-void R_SectorColormap(cmapcontext_t &context, const fixed_t viewz, const rendersector_t *s)
+void R_SectorColormap(cmapcontext_t &context, const viewpoint_t &viewpoint, const rendersector_t *s)
 {
    int colormapIndex = 0;
    bool boomStyleOverride = false;
    ViewArea area = ViewArea::normal;
+   
+   const fixed_t viewz = viewpoint.z;
 
    // haleyjd: Under BOOM logic, the view sector determines the colormap of all sectors in view.
    // This is supported for backward compatibility.
@@ -1242,9 +1244,9 @@ void R_SectorColormap(cmapcontext_t &context, const fixed_t viewz, const renders
       const sector_t &heightSector = sectors[view.sector->heightsec];
 
       // Pick area ID the viewer is in
-      if(viewz < heightSector.srf.floor.height)
+      if(viewz < heightSector.srf.floor.getZAt(viewpoint.x, viewpoint.y))
          area = ViewArea::below;
-      else if(viewz > heightSector.srf.ceiling.height)
+      else if(viewz > heightSector.srf.ceiling.getZAt(viewpoint.x, viewpoint.y))
          area = ViewArea::above;
       else
          area = ViewArea::normal;
@@ -1268,9 +1270,9 @@ void R_SectorColormap(cmapcontext_t &context, const fixed_t viewz, const renders
 
          if(hs == -1)
             area = ViewArea::normal;
-         else if(viewz < sectors[hs].srf.floor.height)
+         else if(viewz < sectors[hs].srf.floor.getZAt(viewpoint.x, viewpoint.y))
             area = ViewArea::below;
-         else if(viewz > sectors[hs].srf.ceiling.height)
+         else if(viewz > sectors[hs].srf.ceiling.getZAt(viewpoint.x, viewpoint.y))
             area = ViewArea::above;
          else
             area = ViewArea::normal;

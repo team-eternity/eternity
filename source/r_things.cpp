@@ -1783,7 +1783,7 @@ void R_DrawPlayerSprites()
    // sf: psprite switch
    if(!showpsprites || viewcamera) return;
    
-   R_SectorColormap(r_globalcontext.cmapcontext, r_globalcontext.view.z, view.sector);
+   R_SectorColormap(r_globalcontext.cmapcontext, r_globalcontext.view, view.sector);
 
    // get light level
    // killough 9/18/98: compute lightlevel from floor and ceiling lightlevels
@@ -2793,7 +2793,7 @@ static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &sprit
    } 
    else
    {
-      R_SectorColormap(cmapcontext, viewpoint.z, sector);
+      R_SectorColormap(cmapcontext, viewpoint, sector);
 
       if(LevelInfo.useFullBright && (particle->styleflags & PS_FULLBRIGHT))
       {
