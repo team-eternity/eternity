@@ -85,6 +85,12 @@ static PODCollection<hframedef_t> FrameDefs;
 
 static void P_LightningFlash();
 
+static void P_resetHexenAnimation(hanimdef_t &had)
+{
+   had.currentFrameDef = had.endFrameDef;
+   had.tics = 1;
+}
+
 //
 // Initializes Hexen animations
 //
@@ -146,8 +152,7 @@ void P_InitHexenAnims()
          }
       }
       had.endFrameDef = static_cast<int>(FrameDefs.getLength()) - 1;
-      had.currentFrameDef = had.endFrameDef;
-      had.tics = 1;
+      P_resetHexenAnimation(had);
    }
 }
 
@@ -159,13 +164,7 @@ void P_InitHexenAnims()
 void P_ResetAnimatedSurfaces()
 {
    for(hanimdef_t &had : AnimDefs)
-   {
-      had.currentFrameDef = had.startFrameDef;
-      const hframedef_t &hfd = FrameDefs[had.currentFrameDef];
-      
-      if(had.tics != hfd.tics)
-         had.tics = hfd.tics;
-   }
+      P_resetHexenAnimation(had);
 }
 
 
