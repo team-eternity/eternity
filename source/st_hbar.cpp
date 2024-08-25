@@ -58,6 +58,7 @@ static patch_t *PatchBLACKSQ;
 // current state variables
 static int chainhealth;        // current position of the gem
 static int chainwiggle;        // small randomized addend for chain y coord.
+static int ws_offset;
 
 //
 // ST_drawSmallNumber
@@ -270,19 +271,21 @@ static void ST_drawInvNum(int num, int x, int y)
 static void ST_drawBackground()
 {
    // draw the background
-   V_DrawPatch(0, 158, &subscreen43, PatchLoader::CacheName(wGlobalDir, "BARBACK", PU_CACHE));
+   patch_t* barback = PatchLoader::CacheName(wGlobalDir, "BARBACK", PU_CACHE);
+   ws_offset = (vbscreenyscaled.unscaledw - barback->width) / 2 + barback->leftoffset;
+   V_DrawPatch(ws_offset, 158, &vbscreenyscaled, barback);
    
    // patch the face eyes with the GOD graphics if the player
    // is in god mode
    if(plyr->cheats & CF_GODMODE)
    {
-      V_DrawPatch(16,  167, &subscreen43, PatchLoader::CacheName(wGlobalDir, "GOD1", PU_CACHE));
-      V_DrawPatch(287, 167, &subscreen43, PatchLoader::CacheName(wGlobalDir, "GOD2", PU_CACHE));
+      V_DrawPatch(16 + ws_offset,  167, &vbscreenyscaled, PatchLoader::CacheName(wGlobalDir, "GOD1", PU_CACHE));
+      V_DrawPatch(287 + ws_offset, 167, &vbscreenyscaled, PatchLoader::CacheName(wGlobalDir, "GOD2", PU_CACHE));
    }
    
    // draw the tops of the faces
-   V_DrawPatch(0,   148, &subscreen43, PatchLoader::CacheName(wGlobalDir, "LTFCTOP", PU_CACHE));
-   V_DrawPatch(290, 148, &subscreen43, PatchLoader::CacheName(wGlobalDir, "RTFCTOP", PU_CACHE));
+   V_DrawPatch(ws_offset,   148, &vbscreenyscaled, PatchLoader::CacheName(wGlobalDir, "LTFCTOP", PU_CACHE));
+   V_DrawPatch(290 + ws_offset, 148, &vbscreenyscaled, PatchLoader::CacheName(wGlobalDir, "RTFCTOP", PU_CACHE));
 }
 
 #define SHADOW_BOX_WIDTH  16
@@ -296,24 +299,26 @@ static void ST_blockDrawerS(int x, int y, int startcmap, int mapdir)
 
    fixed_t mapnum, mapstep;
    
+   x += ws_offset;
+
    cx1 = x;
    cy1 = y;
    cx2 = x + SHADOW_BOX_WIDTH  - 1;
    cy2 = y + SHADOW_BOX_HEIGHT - 1;
 
-   realx = subscreen43.x1lookup[cx1];
-   realy = subscreen43.y1lookup[cy1];
-   w     = subscreen43.x2lookup[cx2] - realx + 1;
-   h     = subscreen43.y2lookup[cy2] - realy + 1;
+   realx = vbscreenyscaled.x1lookup[cx1];
+   realy = vbscreenyscaled.y1lookup[cy1];
+   w     = vbscreenyscaled.x2lookup[cx2] - realx + 1;
+   h     = vbscreenyscaled.y2lookup[cy2] - realy + 1;
 
-   dest = subscreen43.data + realx * subscreen43.pitch + realy;
+   dest = vbscreenyscaled.data + realx * vbscreenyscaled.pitch + realy;
 
    mapstep = mapdir * (16 << FRACBITS) / w;
 
 #ifdef RANGECHECK
    // sanity check
-   if(realx < 0 || realx + w > subscreen43.width ||
-      realy < 0 || realy + h > subscreen43.height)
+   if(realx < 0 || realx + w > vbscreenyscaled.width ||
+      realy < 0 || realy + h > vbscreenyscaled.height)
    {
       I_Error("ST_blockDrawerS: block exceeds buffer boundaries.\n");
    }
@@ -329,7 +334,7 @@ static void ST_blockDrawerS(int x, int y, int startcmap, int mapdir)
       {
          colormap = colormaps[0] + (mapnum >> FRACBITS) * 256;
          *col = colormap[*col];
-         col += subscreen43.height;
+         col += vbscreenyscaled.height;
          mapnum += mapstep;
       }
 
@@ -376,18 +381,18 @@ static void ST_drawLifeChain()
 
    // draw the chain -- links repeat every 17 pixels, so we
    // wrap the chain back to the starting position every 17
-   V_DrawPatch(2 + (chainpos%17), y, &subscreen43, 
+   V_DrawPatch(2 + (chainpos%17) + ws_offset, y, &vbscreenyscaled, 
                PatchLoader::CacheName(wGlobalDir, "CHAIN", PU_CACHE));
    
    // draw the gem (17 is the far left pos., 273 is max)   
    // TODO: fix life gem for multiplayer modes
-   V_DrawPatch(17 + chainpos, y, &subscreen43, 
-               PatchLoader::CacheName(wGlobalDir, "LIFEGEM2", PU_CACHE));
+   V_DrawPatch(17 + chainpos + ws_offset, y, &vbscreenyscaled,
+         PatchLoader::CacheName(wGlobalDir, "LIFEGEM2", PU_CACHE));
    
    // draw face patches to cover over spare ends of chain
-   V_DrawPatch(0,   190, &subscreen43, PatchLoader::CacheName(wGlobalDir, "LTFACE", PU_CACHE));
-   V_DrawPatch(276, 190, &subscreen43, PatchLoader::CacheName(wGlobalDir, "RTFACE", PU_CACHE));
-   
+   V_DrawPatch(ws_offset, 190, &vbscreenyscaled, PatchLoader::CacheName(wGlobalDir, "LTFACE", PU_CACHE));
+   V_DrawPatch(276 + ws_offset, 190, &vbscreenyscaled, PatchLoader::CacheName(wGlobalDir, "RTFACE", PU_CACHE));
+
    // use the colormap to shadow the ends of the chain
    ST_chainShadow();
 }
