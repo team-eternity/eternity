@@ -338,6 +338,9 @@ struct surface_t
 //
 struct rendersector_t
 {
+   int linecount;
+   line_t **lines;
+
    // Keep name short because it's very frequently used.
    Surfaces<surface_t> srf;
 
@@ -407,9 +410,6 @@ struct sector_t : rendersector_t
    // list of mobjs that are at least partially in the sector
    // thinglist is a subset of touching_thinglist
    msecnode_t *touching_thinglist;               // phares 3/14/98  
-   
-   int linecount;
-   line_t **lines;
 
    // haleyjd 03/12/03: Heretic wind specials
    int     hticPushType;

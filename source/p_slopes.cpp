@@ -118,7 +118,7 @@ static pslope_t *P_CopySlope(const pslope_t *src, const surface_t &surface)
 }
 
 // Calculate difference from nominal floor height given by slope on top of a sector
-fixed_t P_GetSlopedSectorFloorDelta(const sector_t &sector, const pslope_t *slope)
+fixed_t P_GetSlopedSectorFloorDelta(const rendersector_t &sector, const pslope_t *slope)
 {
    fixed_t maxz = D_MININT;
    for(int j = 0; j < sector.linecount; ++j)
@@ -134,7 +134,7 @@ fixed_t P_GetSlopedSectorFloorDelta(const sector_t &sector, const pslope_t *slop
    return maxz - sector.srf.floor.height;
 }
 // Same for ceiling
-fixed_t P_GetSlopedSectorCeilingDelta(const sector_t &sector, const pslope_t *slope)
+fixed_t P_GetSlopedSectorCeilingDelta(const rendersector_t &sector, const pslope_t *slope)
 {
    fixed_t minz = D_MAXINT;
    for(int j = 0; j < sector.linecount; ++j)
@@ -150,7 +150,7 @@ fixed_t P_GetSlopedSectorCeilingDelta(const sector_t &sector, const pslope_t *sl
    return minz - sector.srf.ceiling.height;
 }
 
-fixed_t P_GetSlopedSectorBaseDelta(const sector_t &sector, surf_e surf, const pslope_t *slope)
+fixed_t P_GetSlopedSectorBaseDelta(const rendersector_t &sector, surf_e surf, const pslope_t *slope)
 {
    fixed_t extremum = surf == surf_floor ? D_MAXINT : D_MININT;
    const surface_t &surface = sector.srf[surf];
