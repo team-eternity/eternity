@@ -171,7 +171,9 @@ fixed_t P_GetSlopedSectorBaseDelta(const rendersector_t &sector, surf_e surf, co
 //
 static void P_initSlopeHeights()
 {
-   pSlopeHeights = estructalloctag(slopeheight_t, numsectors, PU_LEVEL);
+   // Have a user pointer because we use this during setup, and we want it null
+   pSlopeHeights = ecalloctag(slopeheight_t *, numsectors, sizeof(*pSlopeHeights), PU_LEVEL,
+                              reinterpret_cast<void **>(&pSlopeHeights));
    for(int i = 0; i < numsectors; ++i)
    {
       const sector_t &sector = sectors[i];
