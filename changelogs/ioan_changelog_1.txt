@@ -7,6 +7,13 @@ Dates are in dd.mm.yyyy format. Most recent update is first.
 Since v4.02.00 "Forseti"
 ========================
 --------------------------------------------------------------------------------
+28.08.2024
+
+IMPROVEMENT: now the Doom 1 Episode 3 ending works better with widescreen
+             assets. Keep compatibility with non-widescreen assets by preserving
+             the pillarbox in that case.
+
+--------------------------------------------------------------------------------
 24.08.2024
 
 FEATURE: Slope physics is now largely implemented. Testing will be done.

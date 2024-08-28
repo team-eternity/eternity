@@ -671,21 +671,24 @@ static void F_BunnyScroll()
       scrolled = 320;
    if(scrolled < 0)
       scrolled = 0;
-              
-   // ANYRES
-   int ws_offset2;
-   // Doom I Enhanced screens
-   if (p1->width == 426 && p2->width == 320)
-      ws_offset2 = 106;
-   else
-      ws_offset2 = (vbscreenyscaled.unscaledw - p2->width) / 2;
-   int ws_offset1 = (vbscreenyscaled.unscaledw - p1->width) / 2;
-   if(scrolled > 0)
-      V_DrawPatchGeneral(320 - scrolled + ws_offset2, 0, &vbscreenyscaled, p2, false);
-   if(scrolled < 320 || ws_offset2 > 0)
-      V_DrawPatchGeneral(-scrolled + ws_offset1, 0, &vbscreenyscaled, p1, false);
-   if(ws_offset2 > 0)
-      D_DrawWings();
+
+   int ws_offset1, ws_offset2;
+
+   // IOANCH: changed to fit variable widescreen assets
+   int coverage = vbscreenyscaled.unscaledw + 320;
+   int totalwidth = p1->width + p2->width;
+   bool widescreenAssets = totalwidth > 640;
+   ws_offset1 = (coverage - totalwidth) / 2;
+   ws_offset2 = ws_offset1 + p1->width - 320;
+
+   int drawx = 320 - scrolled + ws_offset2;
+   if(drawx < vbscreenyscaled.unscaledw)
+      V_DrawPatchGeneral(drawx, 0, &vbscreenyscaled, p2, false);
+   drawx = -scrolled + ws_offset1;
+   if(drawx + p1->width > 0)
+      V_DrawPatchGeneral(drawx, 0, &vbscreenyscaled, p1, false);
+   if(!widescreenAssets)
+      D_DrawWings(); // keep visual compatibility with classic wads
    if(finalecount < 1130)
       return;
    if(finalecount < 1180)
