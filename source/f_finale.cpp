@@ -867,7 +867,7 @@ static void F_FinaleEndDrawer()
       F_DemonScroll();
       break;
    case FINALE_END_PIC:
-      V_DrawPatch(0, 0, &subscreen43,
+      V_DrawPatchFS(&vbscreenyscaled,
                   PatchLoader::CacheName(wGlobalDir, LevelInfo.endPic, PU_CACHE));
       break;
    default: // ?
