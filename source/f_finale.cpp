@@ -613,7 +613,7 @@ static void F_CastDrawer()
    
    // erase the entire screen to a background
    // Ty 03/30/98 bg texture extern
-   V_DrawFSBackground(&subscreen43, wGlobalDir.checkNumForName(DEH_String("BGCASTCALL")));
+   V_DrawFSBackground(&vbscreenyscaled, wGlobalDir.checkNumForName(DEH_String("BGCASTCALL")));
    
    F_CastTitle();
 
@@ -867,7 +867,7 @@ static void F_FinaleEndDrawer()
       F_DemonScroll();
       break;
    case FINALE_END_PIC:
-      V_DrawPatch(0, 0, &subscreen43,
+      V_DrawPatchFS(&vbscreenyscaled,
                   PatchLoader::CacheName(wGlobalDir, LevelInfo.endPic, PU_CACHE));
       break;
    default: // ?
