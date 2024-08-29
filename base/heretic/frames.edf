@@ -998,6 +998,30 @@ frame S_HRODFXI2_5 { +decorate }
 frame S_HRODFXI2_6 { +decorate }
 frame S_HRODFXI2_7 { +decorate }
 frame S_HRODFXI2_8 { +decorate }
+frame S_RAINPLR1_1 { +decorate }
+frame S_RAINPLR1X_1 { +decorate }
+frame S_RAINPLR1X_2 { +decorate }
+frame S_RAINPLR1X_3 { +decorate }
+frame S_RAINPLR1X_4 { +decorate }
+frame S_RAINPLR1X_5 { +decorate }
+frame S_RAINPLR2_1 { +decorate }
+frame S_RAINPLR2X_1 { +decorate }
+frame S_RAINPLR2X_2 { +decorate }
+frame S_RAINPLR2X_3 { +decorate }
+frame S_RAINPLR2X_4 { +decorate }
+frame S_RAINPLR2X_5 { +decorate }
+frame S_RAINPLR3_1 { +decorate }
+frame S_RAINPLR3X_1 { +decorate }
+frame S_RAINPLR3X_2 { +decorate }
+frame S_RAINPLR3X_3 { +decorate }
+frame S_RAINPLR3X_4 { +decorate }
+frame S_RAINPLR3X_5 { +decorate }
+frame S_RAINPLR4_1 { +decorate }
+frame S_RAINPLR4X_1 { +decorate }
+frame S_RAINPLR4X_2 { +decorate }
+frame S_RAINPLR4X_3 { +decorate }
+frame S_RAINPLR4X_4 { +decorate }
+frame S_RAINPLR4X_5 { +decorate }
 
 // HereticGoldWandFX1,2 + HereticGoldWandPuff1,2
 frame S_GWANDFX1_1   { +decorate; dehackednum 2804 }

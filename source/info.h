@@ -327,6 +327,10 @@ enum
    MT_PHOENIXFX2,
    MT_BLASTERFX1,
    MT_HORNRODFX2,
+   MT_RAINPLR1,
+   MT_RAINPLR2,
+   MT_RAINPLR3,
+   MT_RAINPLR4,
 
    // Start Eternity TC New Things
 
