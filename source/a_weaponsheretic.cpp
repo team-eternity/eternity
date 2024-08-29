@@ -611,9 +611,9 @@ void A_SkullRodStorm(actionargs_t* actionargs)
       actor->remove();
       if (!playerrains || !P_checkPlayerForRain(playerNum))
          return;
-      if (playerrains->rains[0] == actor)
+      if (playerrains[playerNum].rains[0] == actor)
          P_ClearTarget(playerrains->rains[0]);
-      if (playerrains->rains[1] == actor)
+      if (playerrains[playerNum].rains[1] == actor)
          P_ClearTarget(playerrains->rains[1]);
       return;
    }
