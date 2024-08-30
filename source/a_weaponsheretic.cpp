@@ -611,22 +611,48 @@ void A_SkullRodStorm(actionargs_t* actionargs)
       actor->remove();
       if (!playerrains || !P_checkPlayerForRain(playerNum))
          return;
+      // NOTE: keep references like in Heretic. It's safe because we have reference counting.
       if (playerrains[playerNum].rains[0] == actor)
          P_ClearTarget(playerrains->rains[0]);
       if (playerrains[playerNum].rains[1] == actor)
          P_ClearTarget(playerrains->rains[1]);
       return;
    }
-   if (P_Random(pr_rodstormfudge) < 25)
+   if (P_Random(pr_rodstormfudge) < 25)   // Fudge rain frequency
       return;
-   v2fixed_t pos = {
+   
+   v2fixed_t pos =
+   {
       actor->x + ((P_Random(pr_rodstormspawn) & 127) - 64) * FRACUNIT,
       actor->y + ((P_Random(pr_rodstormspawn) & 127) - 64) * FRACUNIT
    };
-   // TODO: spawn the mobj player-dependent
+   
+   const int raintypes[4] =
+   {
+      E_SafeThingType(MT_RAINPLR1),
+      E_SafeThingType(MT_RAINPLR2),
+      E_SafeThingType(MT_RAINPLR3),
+      E_SafeThingType(MT_RAINPLR4),
+   };
+   
+   Mobj *mo = P_SpawnMobj(pos.x, pos.y, ONCEILINGZ,
+                          raintypes[actor->counters[1] % earrlen(raintypes)], false);
+   P_SetTarget(&mo->target, actor->target);
+   mo->momx = 1;  // Force collision detection
+   mo->momz = -mo->info->speed;
+   mo->counters[1] = actor->counters[1];  // Transfer player number
+   P_CheckMissileSpawn(mo);
+   
    if (!(actor->counters[0] & 31))
       S_StartSound(actor, sfx_ramrain);
    actor->counters[0]++;
+}
+
+void A_RainImpact(actionargs_t *actionargs)
+{
+   const Mobj *actor = actionargs->actor;
+   if(actor->z > actor->zref.passfloor)
+      P_SetMobjState(actor, <#statenum_t state#>)
 }
 
 void A_FirePhoenixPL1(actionargs_t *actionargs)
