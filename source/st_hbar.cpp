@@ -270,7 +270,8 @@ static void ST_drawInvNum(int num, int x, int y)
 static void ST_drawBackground()
 {
    // draw the background
-   V_DrawPatch(0, 158, &subscreen43, PatchLoader::CacheName(wGlobalDir, "BARBACK", PU_CACHE));
+   patch_t* barback = PatchLoader::CacheName(wGlobalDir, "BARBACK", PU_CACHE);
+   V_DrawPatch((vbscreenyscaled.unscaledw - barback->width) / 2 + barback->leftoffset, 158, &vbscreenyscaled, barback);
    
    // patch the face eyes with the GOD graphics if the player
    // is in god mode
@@ -281,6 +282,7 @@ static void ST_drawBackground()
    }
    
    // draw the tops of the faces
+   
    V_DrawPatch(0,   148, &subscreen43, PatchLoader::CacheName(wGlobalDir, "LTFCTOP", PU_CACHE));
    V_DrawPatch(290, 148, &subscreen43, PatchLoader::CacheName(wGlobalDir, "RTFCTOP", PU_CACHE));
 }
