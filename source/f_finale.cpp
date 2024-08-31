@@ -718,6 +718,7 @@ static void F_BunnyScroll()
 // haleyjd: heretic e2 ending -- sort of hackish
 static void F_DrawUnderwater()
 {
+   int initialstage = finalestage;
    switch(finalestage)
    {
    case 1:
@@ -728,9 +729,9 @@ static void F_DrawUnderwater()
 
          palette = (byte *)wGlobalDir.cacheLumpName("E2PAL", PU_CACHE);
          I_SetPalette(palette);
+         
+         V_DrawFSBackground(&vbscreenyscaled, wGlobalDir.checkNumForName("E2END"));
 
-         V_DrawBlock(0,0,&subscreen43,SCREENWIDTH,SCREENHEIGHT,
-                     (byte *)wGlobalDir.cacheLumpName("E2END", PU_CACHE));
          finalestage = 3;
       }
       // fall through
@@ -738,12 +739,15 @@ static void F_DrawUnderwater()
       Console.enabled = false; // let console key fall through
       paused = 0;
       menuactive = false;
+         
+      // Redraw to cover possible pillarbox caused by D_Display
+      if(initialstage == 3)
+         V_DrawFSBackground(&vbscreenyscaled, wGlobalDir.checkNumForName("E2END"));
       break;
    
    case 4:
       Console.enabled = true;
-      V_DrawBlock(0,0,&subscreen43,SCREENWIDTH,SCREENHEIGHT,
-                  (byte *)wGlobalDir.cacheLumpName("TITLE", PU_CACHE));
+      V_DrawFSBackground(&vbscreenyscaled, wGlobalDir.checkNumForName("TITLE"));
       break;
    }
 }
@@ -857,8 +861,7 @@ static void F_FinaleEndDrawer()
          PatchLoader::CacheName(wGlobalDir, "ENDPIC", PU_CACHE));
       break;
    case FINALE_HTIC_CREDITS:
-      V_DrawBlock(0, 0, &subscreen43, SCREENWIDTH, SCREENHEIGHT,
-                  (byte *)wGlobalDir.cacheLumpName(sw ? "ORDER" : "CREDIT", PU_CACHE));
+      V_DrawFSBackground(&vbscreenyscaled, wGlobalDir.checkNumForName(sw ? "ORDER" : "CREDIT"));
       break;
    case FINALE_HTIC_WATER:
       F_DrawUnderwater();

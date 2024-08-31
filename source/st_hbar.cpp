@@ -271,7 +271,8 @@ static void ST_drawBackground()
 {
    // draw the background
    patch_t* barback = PatchLoader::CacheName(wGlobalDir, "BARBACK", PU_CACHE);
-   V_DrawPatch((vbscreenyscaled.unscaledw - barback->width) / 2, 158, &vbscreenyscaled, barback);
+   int subscreenOrigin = (vbscreenyscaled.unscaledw - SCREENWIDTH) / 2;
+   V_DrawPatch(subscreenOrigin, 158, &vbscreenyscaled, barback);
    
    // patch the face eyes with the GOD graphics if the player
    // is in god mode
@@ -283,9 +284,8 @@ static void ST_drawBackground()
    
    // draw the tops of the faces
    
-   int origin = (vbscreenyscaled.unscaledw - SCREENWIDTH) / 2;
-   V_DrawPatch(origin,   148, &vbscreenyscaled, PatchLoader::CacheName(wGlobalDir, "LTFCTOP", PU_CACHE));
-   V_DrawPatch(origin + 290, 148, &vbscreenyscaled, PatchLoader::CacheName(wGlobalDir, "RTFCTOP", PU_CACHE));
+   V_DrawPatch(subscreenOrigin,   148, &vbscreenyscaled, PatchLoader::CacheName(wGlobalDir, "LTFCTOP", PU_CACHE));
+   V_DrawPatch(subscreenOrigin + 290, 148, &vbscreenyscaled, PatchLoader::CacheName(wGlobalDir, "RTFCTOP", PU_CACHE));
 }
 
 #define SHADOW_BOX_WIDTH  16
