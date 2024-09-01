@@ -1322,6 +1322,10 @@ thingtype SerpentRiderDsparil : ClassicHereticSolid, 7007, 355
   nukespecial     SorcNukeSpec
   obituary_normal "was burned by D'Sparil's serpent"
   obituary_melee  "was devoured by D'Sparil's serpent"
+
+  // 0.21 to prevent round-down errors as if it were 0.2
+  damagefactor    PoweredHellStaffRain, 0.21
+
   acs_spawndata
   {
     num   142
@@ -1411,6 +1415,10 @@ thingtype Dsparil : ClassicHereticSolid, -1, 357
   addflags        SHOOTABLE|DROPOFF|COUNTKILL|E3M8BOSS|BOSS|FOOTCLIP|LOUDACTIVE|DMGIGNORED|BOSSIGNORE|SPACMONSTER|PASSMOBJ
   obituary_normal "brought about the end of Parthoris"
   obituary_melee  "utterly failed to save Parthoris"
+
+  // 0.21 to prevent round-down errors as if it were 0.2
+  damagefactor    PoweredHellStaffRain, 0.21
+
   acs_spawndata
   {
     num   143
@@ -1747,6 +1755,10 @@ thingtype Maulotaur : ClassicHereticSolid, 7009, 371
   obituary_melee  "was pounded flat by the Maulotaur"
   dropitem        HAmmoPhoenixWimpy, 84, 10, +toss
   dropitem        HArtiSuperHeal,    51,  0, +toss
+
+  // 0.21 to prevent round-down errors as if it were 0.2
+  damagefactor    PoweredHellStaffRain, 0.21
+
   acs_spawndata
   {
     num   114     // note: different from zdoom
@@ -2967,6 +2979,8 @@ thingtype HereticRainPlayer1 : HereticMissile, -1, 445
   radius 5.0
   height 12.0
   damage 5
+
+  mod PoweredHellStaffRain
   
   firstdecoratestate S_RAINPLR1_1
   states
@@ -3378,3 +3392,6 @@ damagetype StaffPowered
   absolute.push 10
   absolute.hop  5
 }
+
+// Bosses have resistance to this
+damagetype PoweredHellStaffRain {}
