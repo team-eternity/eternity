@@ -1291,6 +1291,16 @@ static bool P_touchPoweredMaceBall(dmgspecdata_t *dmgspec)
    return true;
 }
 
+static bool P_touchPoweredPhoenixFire(dmgspecdata_t *dmgspec)
+{
+   // Flame thrower
+   Mobj *target = dmgspec->target;
+   if(!target || !target->player || P_Random(pr_touchphoenixfire) >= 128)
+      return false;
+   target->reactiontime += 4; // Freeze player for a bit
+   return false;
+}
+
 //
 // haleyjd: Damage Special codepointer lookup table
 //
@@ -1310,6 +1320,7 @@ static dmgspecial_t DamageSpecials[INFLICTOR_NUMTYPES] =
    P_minotaurChargeHit,    // MinotaurCharge
    P_touchWhirlwind,       // Whirlwind
    P_touchPoweredMaceBall, // PoweredMaceBall
+   P_touchPoweredPhoenixFire, // PoweredPhoenixFire
 };
 
 //

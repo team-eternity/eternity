@@ -79,6 +79,7 @@ typedef enum
    INFLICTOR_MINOTAUR,  // minotaur charge
    INFLICTOR_WHIRLWIND, // whirlwinds
    INFLICTOR_MACEBALL,  // powered mace ball
+   INFLICTOR_PHOENIXFIRE,  // powered Phoenix fire
    INFLICTOR_NUMTYPES
 } inflictor_type_e;
 
