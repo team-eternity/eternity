@@ -2959,17 +2959,14 @@ thingtype HereticHornRodFX2 : HereticMissile, -1, 444
   "@
 }
 
-thingtype HereticRainBase : HereticMissile, -1, -1
+thingtype HereticRainPlayer1 : HereticMissile, -1, 445
 {
+  compatname RainPillar
+
   speed 12.0
   radius 5.0
   height 12.0
   damage 5
-}
-
-thingtype HereticRainPlayer1 : HereticRainBase, -1, 445
-{
-  compatname RainPillar
   
   firstdecoratestate S_RAINPLR1_1
   states
@@ -2981,52 +2978,27 @@ thingtype HereticRainPlayer1 : HereticRainBase, -1, 445
     FX20 B 4 bright A_RainImpact
     FX20 CDEF 4 bright
     stop
+  XDeath:
+    FX20 GHI 4 bright
+    stop 
   "@
 }
 
-thingtype HereticRainPlayer2 : HereticRainBase, -1, 446
+spritenames += { FX21, FX22, FX23 }
+
+thingtype HereticRainPlayer2 : HereticRainPlayer1, -1, 446
 {
-  firstdecoratestate S_RAINPLR2_1
-  states
-  @"
-  Spawn:
-    FX21 A -1 bright
-    stop
-  Death:
-    FX21 B 4 bright A_RainImpact
-    FX21 CDEF 4 bright
-    stop
-  "@
+  skinsprite FX21
 }
 
-thingtype HereticRainPlayer3 : HereticRainBase, -1, 447
+thingtype HereticRainPlayer3 : HereticRainPlayer1, -1, 447
 {
-  firstdecoratestate S_RAINPLR3_1
-  states
-  @"
-  Spawn:
-    FX22 A -1 bright
-    stop
-  Death:
-    FX22 B 4 bright A_RainImpact
-    FX22 CDEF 4 bright
-    stop
-  "@
+  skinsprite FX22
 }
 
-thingtype HereticRainPlayer4 : HereticRainBase, -1, 448
+thingtype HereticRainPlayer4 : HereticRainPlayer1, -1, 448
 {
-  firstdecoratestate S_RAINPLR4_1
-  states
-  @"
-  Spawn:
-    FX23 A -1 bright
-    stop
-  Death:
-    FX23 B 4 bright A_RainImpact
-    FX23 CDEF 4 bright
-    stop
-  "@
+  skinsprite FX23
 }
 
 thingtype HereticGoldWandFX1 : HereticMissile, -1, 426

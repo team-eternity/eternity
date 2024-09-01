@@ -266,6 +266,7 @@ typedef enum {
    pr_fasttrailchance,         // [XA] 02/22/2020: Fast projectile trail spawn-chance
    pr_rodstormfudge, // A_SkullRodStorm
    pr_rodstormspawn,
+   pr_rodrainimpact,   // A_RainImpact
 
    NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;

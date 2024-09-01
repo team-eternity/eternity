@@ -650,9 +650,17 @@ void A_SkullRodStorm(actionargs_t* actionargs)
 
 void A_RainImpact(actionargs_t *actionargs)
 {
-   const Mobj *actor = actionargs->actor;
+   Mobj *actor = actionargs->actor;
    if(actor->z > actor->zref.passfloor)
-      P_SetMobjState(actor, <#statenum_t state#>)
+      P_SetMobjState(actor, actor->info->xdeathstate);
+   else if(P_Random(pr_rodrainimpact) < 40)
+   {
+      // Hack to enable random splashes
+      unsigned backupflag = actor->flags2 & MF2_NOSPLASH;
+      actor->flags2 &= ~MF2_NOSPLASH;
+      E_HitFloor(actor);
+      actor->flags2 |= backupflag;
+   }
 }
 
 void A_FirePhoenixPL1(actionargs_t *actionargs)

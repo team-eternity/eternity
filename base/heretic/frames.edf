@@ -985,44 +985,6 @@ frame S_HRODFXI1_4 { +decorate; dehackednum 2801 }
 frame S_HRODFXI1_5 { +decorate; dehackednum 2802 }
 frame S_HRODFXI1_6 { +decorate; dehackednum 2803 }
 
-// HereticHornRodFX2
-frame S_HRODFX2_1 { +decorate }
-frame S_HRODFX2_2 { +decorate }
-frame S_HRODFX2_3 { +decorate }
-frame S_HRODFX2_4 { +decorate }
-frame S_HRODFXI2_1 { +decorate }
-frame S_HRODFXI2_2 { +decorate }
-frame S_HRODFXI2_3 { +decorate }
-frame S_HRODFXI2_4 { +decorate }
-frame S_HRODFXI2_5 { +decorate }
-frame S_HRODFXI2_6 { +decorate }
-frame S_HRODFXI2_7 { +decorate }
-frame S_HRODFXI2_8 { +decorate }
-frame S_RAINPLR1_1 { +decorate }
-frame S_RAINPLR1X_1 { +decorate }
-frame S_RAINPLR1X_2 { +decorate }
-frame S_RAINPLR1X_3 { +decorate }
-frame S_RAINPLR1X_4 { +decorate }
-frame S_RAINPLR1X_5 { +decorate }
-frame S_RAINPLR2_1 { +decorate }
-frame S_RAINPLR2X_1 { +decorate }
-frame S_RAINPLR2X_2 { +decorate }
-frame S_RAINPLR2X_3 { +decorate }
-frame S_RAINPLR2X_4 { +decorate }
-frame S_RAINPLR2X_5 { +decorate }
-frame S_RAINPLR3_1 { +decorate }
-frame S_RAINPLR3X_1 { +decorate }
-frame S_RAINPLR3X_2 { +decorate }
-frame S_RAINPLR3X_3 { +decorate }
-frame S_RAINPLR3X_4 { +decorate }
-frame S_RAINPLR3X_5 { +decorate }
-frame S_RAINPLR4_1 { +decorate }
-frame S_RAINPLR4X_1 { +decorate }
-frame S_RAINPLR4X_2 { +decorate }
-frame S_RAINPLR4X_3 { +decorate }
-frame S_RAINPLR4X_4 { +decorate }
-frame S_RAINPLR4X_5 { +decorate }
-
 // HereticGoldWandFX1,2 + HereticGoldWandPuff1,2
 frame S_GWANDFX1_1   { +decorate; dehackednum 2804 }
 frame S_GWANDFX1_2   { +decorate; dehackednum 2805 }
@@ -1048,6 +1010,29 @@ frame S_PHOENIXFXI1_5 { +decorate; dehackednum 2822 }
 frame S_PHOENIXFXI1_6 { +decorate; dehackednum 2823 }
 frame S_PHOENIXFXI1_7 { +decorate; dehackednum 2824 }
 frame S_PHOENIXFXI1_8 { +decorate; dehackednum 2825 }
+
+// HereticHornRodFX2
+frame S_HRODFX2_1 { +decorate; dehackednum 2826 }
+frame S_HRODFX2_2 { +decorate; dehackednum 2827 }
+frame S_HRODFX2_3 { +decorate; dehackednum 2828 }
+frame S_HRODFX2_4 { +decorate; dehackednum 2829 }
+frame S_HRODFXI2_1 { +decorate; dehackednum 2830 }
+frame S_HRODFXI2_2 { +decorate; dehackednum 2831 }
+frame S_HRODFXI2_3 { +decorate; dehackednum 2832 }
+frame S_HRODFXI2_4 { +decorate; dehackednum 2833 }
+frame S_HRODFXI2_5 { +decorate; dehackednum 2834 }
+frame S_HRODFXI2_6 { +decorate; dehackednum 2835 }
+frame S_HRODFXI2_7 { +decorate; dehackednum 2836 }
+frame S_HRODFXI2_8 { +decorate; dehackednum 2837 }
+frame S_RAINPLR1_1 { +decorate; dehackednum 2838 }
+frame S_RAINPLR1X_1 { +decorate; dehackednum 2839 }
+frame S_RAINPLR1X_2 { +decorate; dehackednum 2840 }
+frame S_RAINPLR1X_3 { +decorate; dehackednum 2841 }
+frame S_RAINPLR1X_4 { +decorate; dehackednum 2842 }
+frame S_RAINPLR1X_5 { +decorate; dehackednum 2843 }
+frame S_RAINAIRXPLR1_1 { +decorate; dehackednum 2844 }
+frame S_RAINAIRXPLR1_2 { +decorate; dehackednum 2845 }
+frame S_RAINAIRXPLR1_3 { +decorate; dehackednum 2846 }
 
 // Heretic Weapons
 
