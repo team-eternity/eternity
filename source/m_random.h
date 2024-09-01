@@ -269,6 +269,7 @@ typedef enum {
    pr_rodrainimpact,   // A_RainImpact
    
    pr_touchphoenixfire,
+   pr_touchbossteleport,
 
    NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;

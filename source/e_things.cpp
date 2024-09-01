@@ -318,6 +318,7 @@ static const char *inflictorTypes[INFLICTOR_NUMTYPES] =
    "Whirlwind",
    "PoweredMaceBall",
    "PoweredPhoenixFire",
+   "BossTeleport",
 };
 
 //

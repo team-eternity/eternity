@@ -487,13 +487,30 @@ void A_SorSightSnd(actionargs_t *actionargs)
 // as needed). This automatically removes the Heretic boss spot
 // limit, of course.
 
-MobjCollection sorcspots;
+static MobjCollection sorcspots;
 
 void P_SpawnSorcSpots()
 {
    sorcspots.mobjType = "DsparilTeleSpot";
    sorcspots.makeEmpty();
    sorcspots.collectThings();
+}
+
+void P_DSparilTeleport(Mobj *actor)
+{
+   bossteleport_t bt;
+
+   bt.mc          = &sorcspots;                       // use sorcspots
+   bt.rngNum      = pr_sorctele2;                     // use this rng
+   bt.boss        = actor;                            // teleport D'Sparil
+   bt.state       = E_SafeState(S_SOR2_TELE1);        // set him to this state
+   bt.fxtype      = E_SafeThingType(MT_SOR2TELEFADE); // spawn a DSparil TeleFade
+   bt.zpamt       = 0;                                // add 0 to fx z coord
+   bt.hereThere   = BOSSTELE_ORIG;                    // spawn fx only at origin
+   bt.soundNum    = sfx_htelept;                      // use htic teleport sound
+   bt.minDistance = 128 * FRACUNIT;                   // minimum distance
+
+   P_BossTeleport(&bt);
 }
 
 void A_Srcr2Decide(actionargs_t *actionargs)
@@ -508,21 +525,7 @@ void A_Srcr2Decide(actionargs_t *actionargs)
       return;
 
    if(P_Random(pr_sorctele1) < chance[index])
-   {
-      bossteleport_t bt;
-
-      bt.mc          = &sorcspots;                       // use sorcspots
-      bt.rngNum      = pr_sorctele2;                     // use this rng
-      bt.boss        = actor;                            // teleport D'Sparil
-      bt.state       = E_SafeState(S_SOR2_TELE1);        // set him to this state
-      bt.fxtype      = E_SafeThingType(MT_SOR2TELEFADE); // spawn a DSparil TeleFade
-      bt.zpamt       = 0;                                // add 0 to fx z coord
-      bt.hereThere   = BOSSTELE_ORIG;                    // spawn fx only at origin
-      bt.soundNum    = sfx_htelept;                      // use htic teleport sound
-      bt.minDistance = 128 * FRACUNIT;                   // minimum distance
-
-      P_BossTeleport(&bt);
-   }
+      P_DSparilTeleport(actor);
 }
 
 void A_Srcr2Attack(actionargs_t *actionargs)

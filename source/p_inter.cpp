@@ -1301,6 +1301,26 @@ static bool P_touchPoweredPhoenixFire(dmgspecdata_t *dmgspec)
    return false;
 }
 
+static bool P_touchBossTeleport(dmgspecdata_t *dmgspec)
+{
+   extern void A_Srcr2Decide(actionargs_t *);
+   extern void P_DSparilTeleport(Mobj *actor);
+   
+   Mobj *target = dmgspec->target;
+   if(!target)
+      return false;
+   statenum_t missilestate = target->info->missilestate;
+   
+   // Determine it's D'Sparil by noticing the missilestate
+   if(missilestate == NullStateNum || states[target->info->missilestate]->action != A_Srcr2Decide ||
+      P_Random(pr_touchbossteleport) >= 96)
+   {
+      return false;
+   }
+   P_DSparilTeleport(target);
+   return true;
+}
+
 //
 // haleyjd: Damage Special codepointer lookup table
 //
@@ -1321,6 +1341,7 @@ static dmgspecial_t DamageSpecials[INFLICTOR_NUMTYPES] =
    P_touchWhirlwind,       // Whirlwind
    P_touchPoweredMaceBall, // PoweredMaceBall
    P_touchPoweredPhoenixFire, // PoweredPhoenixFire
+   P_touchBossTeleport,    // determine boss to teleport if capable
 };
 
 //

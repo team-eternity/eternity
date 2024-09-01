@@ -80,6 +80,7 @@ typedef enum
    INFLICTOR_WHIRLWIND, // whirlwinds
    INFLICTOR_MACEBALL,  // powered mace ball
    INFLICTOR_PHOENIXFIRE,  // powered Phoenix fire
+   INFLICTOR_BOSSTELEPORT, // determine bosses like D'Sparil to teleport
    INFLICTOR_NUMTYPES
 } inflictor_type_e;
 

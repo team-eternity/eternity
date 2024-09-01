@@ -2948,6 +2948,7 @@ thingtype HereticHornRodFX2 : HereticMissile, -1, 444
   radius 12.0
   height 8.0
   damage 10
+  dmgspecial BossTeleport
   seesound ht_hrnsht
   deathsound ht_ramphit
 
@@ -3080,6 +3081,7 @@ thingtype HereticPhoenixFX1 : HereticMissile, -1, 430
   radius     11.0
   height     8.0
   damage     20
+  dmgspecial BossTeleport
   seesound   ht_phosht
   deathsound ht_phohit
   addflags   THRUGHOST
