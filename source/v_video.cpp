@@ -672,7 +672,8 @@ void V_DrawMaskedBlockTR(int x, int y, VBuffer *buffer, int width, int height,
 //
 void V_DrawBlockFS(VBuffer *buffer, const byte *src)
 {
-   buffer->BlockDrawer(0, 0, buffer, SCREENWIDTH, SCREENHEIGHT, src);
+   // as said above, assume src is SCREENWIDTH x SCREENHEIGHT
+   buffer->BlockDrawer((buffer->unscaledw - SCREENWIDTH) / 2, 0, buffer, SCREENWIDTH, SCREENHEIGHT, src);
 }
 
 //

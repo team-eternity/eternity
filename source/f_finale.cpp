@@ -54,6 +54,7 @@
 #include "v_patchfmt.h"
 #include "v_video.h"
 #include "w_wad.h"
+#include "z_auto.h"
 
 
 
@@ -79,7 +80,14 @@ extern int acceleratestage;      // accelerate intermission screens
 static int midstage;             // whether we're in "mid-stage"
 
 static void F_InitDemonScroller();
-static byte *DemonBuffer; // haleyjd 08/23/02
+
+struct demonscreen_t
+{
+   byte *buffer;  // haleyjd 08/23/02
+   int width;
+};
+
+static demonscreen_t DemonScreen;
 
 vfont_t *f_font;
 vfont_t *f_titlefont;
@@ -718,6 +726,7 @@ static void F_BunnyScroll()
 // haleyjd: heretic e2 ending -- sort of hackish
 static void F_DrawUnderwater()
 {
+   int initialstage = finalestage;
    switch(finalestage)
    {
    case 1:
@@ -728,9 +737,9 @@ static void F_DrawUnderwater()
 
          palette = (byte *)wGlobalDir.cacheLumpName("E2PAL", PU_CACHE);
          I_SetPalette(palette);
+         
+         V_DrawFSBackground(&vbscreenyscaled, wGlobalDir.checkNumForName("E2END"));
 
-         V_DrawBlock(0,0,&subscreen43,SCREENWIDTH,SCREENHEIGHT,
-                     (byte *)wGlobalDir.cacheLumpName("E2END", PU_CACHE));
          finalestage = 3;
       }
       // fall through
@@ -738,15 +747,51 @@ static void F_DrawUnderwater()
       Console.enabled = false; // let console key fall through
       paused = 0;
       menuactive = false;
+         
+      // Redraw to cover possible pillarbox caused by D_Display
+      if(initialstage == 3)
+         V_DrawFSBackground(&vbscreenyscaled, wGlobalDir.checkNumForName("E2END"));
       break;
    
    case 4:
       Console.enabled = true;
-      V_DrawBlock(0,0,&subscreen43,SCREENWIDTH,SCREENHEIGHT,
-                  (byte *)wGlobalDir.cacheLumpName("TITLE", PU_CACHE));
+      V_DrawFSBackground(&vbscreenyscaled, wGlobalDir.checkNumForName("TITLE"));
       break;
    }
 }
+
+//
+// Obtained from https://stackoverflow.com/a/9320349
+// Thanks to Christian Ammer
+//
+static void F_inPlaceTranspose(byte *buffer, int width, int height)
+{
+   // Assume graphics was drawn transposed, so restore it
+   int mn1 = width * height - 1;
+//   int m = width;
+   int n = height;
+   PODCollection<bool> visisted;
+   visisted.resize(width * height);
+   
+   byte *first = buffer;
+   byte *cycle = buffer;
+   byte *last = buffer + width * height;
+   while(++cycle != last)
+   {
+      if(visisted[cycle - first])
+         continue;
+      int a = (int)(cycle - first);
+      do
+      {
+         a = a == mn1 ? mn1 : (n * a) % mn1;
+         byte aux = *(first + a);
+         *(first + a) = *cycle;
+         *cycle = aux;
+         visisted[a] = true;
+      } while((first + a) != cycle);
+   }
+}
+
 
 //
 // F_InitDemonScroller
@@ -758,34 +803,77 @@ static void F_InitDemonScroller()
    int lnum1, lnum2;
    int lsize1, lsize2;
    VBuffer vbuf;
-
-   DemonBuffer = emalloctag(byte *, 128000, PU_LEVEL, reinterpret_cast<void **>(&DemonBuffer));
-
+   
    // get screens
    lnum1  = W_GetNumForName("FINAL1");
    lnum2  = W_GetNumForName("FINAL2");
    lsize1 = W_LumpLength(lnum1);
    lsize2 = W_LumpLength(lnum2);
+   bool raw1, raw2;
+   patch_t *patch1 = nullptr, *patch2 = nullptr;
+   
+   int maxwidth = 0;
+   int totalheight = 0;
+   int height2;
+
+   raw1 = lsize1 == SCREENWIDTH * SCREENHEIGHT;
+   if(raw1)
+   {
+      maxwidth = SCREENWIDTH;
+      totalheight += SCREENHEIGHT;
+   }
+   else
+   {
+      patch1 = PatchLoader::CacheNum(wGlobalDir, lnum1, PU_CACHE);
+      maxwidth = patch1->width;
+      totalheight += patch1->height;
+   }
+   raw2 = lsize2 == SCREENWIDTH * SCREENHEIGHT;
+   if(raw2)
+   {
+      if(maxwidth < SCREENWIDTH)
+         maxwidth = SCREENWIDTH;
+      totalheight += SCREENHEIGHT;
+      height2 = SCREENHEIGHT;
+   }
+   else
+   {
+      patch2 = PatchLoader::CacheNum(wGlobalDir, lnum2, PU_CACHE);
+      if(patch2->width > maxwidth)
+         maxwidth = patch2->width;
+      height2 = patch2->height;
+      totalheight += height2;
+   }
+
+   DemonScreen.buffer = ecalloctag(byte *, maxwidth, totalheight, PU_LEVEL,
+                                   reinterpret_cast<void **>(&DemonScreen.buffer));
+   DemonScreen.width = maxwidth;
 
    // init VBuffer
-   V_InitVBufferFrom(&vbuf, 320, 400, 400, video.bitdepth, DemonBuffer);
+   V_InitVBufferFrom(&vbuf, maxwidth, totalheight, totalheight, video.bitdepth, DemonScreen.buffer);
    
-   if(lsize2 == 64000) // raw screen
-      wGlobalDir.readLump(lnum2, DemonBuffer);
-   else
+   if(raw2) // raw screen
    {
-      patch_t *p = PatchLoader::CacheNum(wGlobalDir, lnum2, PU_CACHE);
-      V_DrawPatchGeneral(0, 0, &vbuf, p, false);
+      ZAutoBuffer autobuf(SCREENWIDTH * SCREENHEIGHT, false);
+      wGlobalDir.cacheLumpAuto(lnum2, autobuf);
+      V_DrawBlock((maxwidth - SCREENWIDTH) / 2, 0, &vbuf, SCREENWIDTH, SCREENHEIGHT, 
+                  static_cast<const byte*>(autobuf.get()));
    }
-
-   if(lsize1 == 64000) // raw screen
-      wGlobalDir.readLump(lnum1, DemonBuffer + 64000);
    else
-   {
-      patch_t *p = PatchLoader::CacheNum(wGlobalDir, lnum1, PU_CACHE);
-      V_DrawPatchGeneral(0, 200, &vbuf, p, false);
-   }
+      V_DrawPatchGeneral((maxwidth - patch2->width) / 2, 0, &vbuf, patch2, false);
 
+   if(raw1) // raw screen
+   {
+      ZAutoBuffer autobuf(SCREENWIDTH * SCREENHEIGHT, false);
+      wGlobalDir.cacheLumpAuto(lnum1, autobuf);
+      V_DrawBlock((maxwidth - SCREENWIDTH) / 2, height2, &vbuf, SCREENWIDTH, SCREENHEIGHT,
+                  static_cast<const byte*>(autobuf.get()));
+   }
+   else
+      V_DrawPatchGeneral((maxwidth - patch1->width) / 2, height2, &vbuf, patch1, false);
+
+   F_inPlaceTranspose(DemonScreen.buffer, totalheight, maxwidth);
+   
    V_FreeVBuffer(&vbuf);
 }
 
@@ -800,31 +888,33 @@ static void F_DemonScroll()
    static int nextscroll = 0;
 
    // show first screen for a while
+   int origin = (vbscreenyscaled.unscaledw - DemonScreen.width) / 2;
    if(finalecount < 70)
    {
-      V_DrawBlock(0, 0, &subscreen43, SCREENWIDTH, SCREENHEIGHT, DemonBuffer+64000);
+      V_DrawBlock(origin, 0, &vbscreenyscaled, DemonScreen.width, SCREENHEIGHT, 
+                  DemonScreen.buffer + DemonScreen.width * SCREENHEIGHT);
       nextscroll = finalecount;
       yval = 0;
       return;
    }
 
-   if(yval < 64000)
+   if(yval < DemonScreen.width * SCREENHEIGHT)
    {
       // scroll up one line at a time until only the top screen
       // shows
-      V_DrawBlock(0, 0, &subscreen43, SCREENWIDTH, SCREENHEIGHT,
-                  DemonBuffer + 64000 - yval);
+      V_DrawBlock(origin, 0, &vbscreenyscaled, DemonScreen.width, SCREENHEIGHT,
+                  DemonScreen.buffer + DemonScreen.width * SCREENHEIGHT - yval);
       
       if(finalecount >= nextscroll)
       {
-         yval += 320; // move up one line
+         yval += DemonScreen.width; // move up one line
          nextscroll = finalecount + 3; // don't scroll too fast
       }
    }
    else
    {
       // finished scrolling
-      V_DrawBlock(0, 0, &subscreen43, SCREENWIDTH, SCREENHEIGHT, DemonBuffer);
+      V_DrawBlock(origin, 0, &vbscreenyscaled, DemonScreen.width, SCREENHEIGHT, DemonScreen.buffer);
    }
 }
 
@@ -857,8 +947,7 @@ static void F_FinaleEndDrawer()
          PatchLoader::CacheName(wGlobalDir, "ENDPIC", PU_CACHE));
       break;
    case FINALE_HTIC_CREDITS:
-      V_DrawBlock(0, 0, &subscreen43, SCREENWIDTH, SCREENHEIGHT,
-                  (byte *)wGlobalDir.cacheLumpName(sw ? "ORDER" : "CREDIT", PU_CACHE));
+      V_DrawFSBackground(&vbscreenyscaled, wGlobalDir.checkNumForName(sw ? "ORDER" : "CREDIT"));
       break;
    case FINALE_HTIC_WATER:
       F_DrawUnderwater();
