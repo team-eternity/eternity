@@ -1937,6 +1937,12 @@ thingtype IronLich : ClassicHereticSolid, 7006, 376
   obituary_melee  "was bitten by the Iron Lich"
   dropitem        HArtiEgg,          51,  0, +toss
   dropitem        HAmmoBlasterWimpy, 84, 10, +toss
+
+  // These values will result in 0-1 damage equally distributed, with 0
+  // meaning no effect at all.
+  damagefactor    PoweredDragonClawImpact, 0.0588, rounded
+  damagefactor    PoweredDragonClawRip,    0.1429, rounded
+
   acs_spawndata
   {
     num   20
@@ -2867,6 +2873,7 @@ thingtype HereticRipper : HereticMissile, -1, 422
   radius     8.0
   height     6.0
   damage     1
+  mod        PoweredDragonClawRip
   addflags   RIP
 
   firstdecoratestate S_HRIPPER1
@@ -3105,6 +3112,7 @@ thingtype HereticBlasterFX1 : HereticMissile, -1, 443
   radius 12.0
   height 8.0
   damage 2
+  mod PoweredDragonClawImpact
   missiletype RavenFast
 
   trail.type HereticBlasterSmoke
@@ -3395,3 +3403,5 @@ damagetype StaffPowered
 
 // Bosses have resistance to this
 damagetype PoweredHellStaffRain {}
+damagetype PoweredDragonClawImpact {}
+damagetype PoweredDragonClawRip {}

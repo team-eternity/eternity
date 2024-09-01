@@ -1493,7 +1493,8 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
                if(!damage) // rounded also skips 0 damage
                   return;
             }
-            damage = (damage * df) / FRACUNIT;
+            else  // old case, kept for compatibility and tricks
+               damage = (damage * df) / FRACUNIT;
          }
       }
    }
