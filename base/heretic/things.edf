@@ -1323,8 +1323,7 @@ thingtype SerpentRiderDsparil : ClassicHereticSolid, 7007, 355
   obituary_normal "was burned by D'Sparil's serpent"
   obituary_melee  "was devoured by D'Sparil's serpent"
 
-  // 0.21 to prevent round-down errors as if it were 0.2
-  damagefactor    PoweredHellStaffRain, 0.21
+  damagefactor    PoweredHellStaffRain, 0.2, rounded
 
   acs_spawndata
   {
@@ -1416,8 +1415,7 @@ thingtype Dsparil : ClassicHereticSolid, -1, 357
   obituary_normal "brought about the end of Parthoris"
   obituary_melee  "utterly failed to save Parthoris"
 
-  // 0.21 to prevent round-down errors as if it were 0.2
-  damagefactor    PoweredHellStaffRain, 0.21
+  damagefactor    PoweredHellStaffRain, 0.2, rounded
 
   acs_spawndata
   {
@@ -1756,8 +1754,7 @@ thingtype Maulotaur : ClassicHereticSolid, 7009, 371
   dropitem        HAmmoPhoenixWimpy, 84, 10, +toss
   dropitem        HArtiSuperHeal,    51,  0, +toss
 
-  // 0.21 to prevent round-down errors as if it were 0.2
-  damagefactor    PoweredHellStaffRain, 0.21
+  damagefactor    PoweredHellStaffRain, 0.2, rounded
 
   acs_spawndata
   {

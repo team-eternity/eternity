@@ -191,6 +191,7 @@ constexpr const char ITEM_TNG_ACS_MODES[]    = "modes";
 // Damage factor multi-value property internal fields
 constexpr const char ITEM_TNG_DMGF_MODNAME[] = "mod";
 constexpr const char ITEM_TNG_DMGF_FACTOR[]  = "factor";
+constexpr const char ITEM_TNG_DMGF_FLAGS[]   = "flags";
 
 // DropItem multi-value property internal fields
 constexpr const char ITEM_TNG_DROPITEM_ITEM[]   = "item";
@@ -496,6 +497,7 @@ static cfg_opt_t dmgf_opts[] =
 {
    CFG_STR(  ITEM_TNG_DMGF_MODNAME, "Unknown", CFGF_NONE),
    CFG_FLOAT_CB(ITEM_TNG_DMGF_FACTOR, 0.0, CFGF_NONE, E_damageFactorCB),
+   CFG_STR(  ITEM_TNG_DMGF_FLAGS,   "",        CFGF_NONE),
    CFG_END()
 };
 
@@ -1675,7 +1677,10 @@ static void E_ProcessDamageFactors(mobjinfo_t *info, cfg_t *cfg)
    {
       emod_t *mod = E_DamageTypeForName(cfg_getnstr(cfg, ITEM_TNG_REMDMGFACTOR, i));
       if(mod->num)   // avoid the unknown one, just like below
-         info->meta->removeInt(E_ModFieldName("damagefactor", mod));
+      {
+         size_t keyindex = MetaTable::IndexForKey(E_ModFieldName("damagefactor", mod));
+         info->meta->removeMetaTableNR(keyindex);
+      }
    }
 
    unsigned int numfactors = cfg_size(cfg, ITEM_TNG_DAMAGEFACTOR);
@@ -1691,8 +1696,26 @@ static void E_ProcessDamageFactors(mobjinfo_t *info, cfg_t *cfg)
          double df  = cfg_getfloat(sec, ITEM_TNG_DMGF_FACTOR);
          // D_MININT is a special case which makes monster totally ignore damage
          int    dfi = df == D_MININT ? D_MININT : static_cast<int>(M_DoubleToFixed(df));
+         
+         bool rounded = false;
+         if(cfg_size(sec, ITEM_TNG_DMGF_FLAGS))
+         {
+            const char *flags = cfg_getstr(sec, ITEM_TNG_DMGF_FLAGS);
+            if(estrnonempty(flags))
+            {
+               if(strcasecmp(flags, "rounded"))
+                  I_Error("Invalid damagefactor flag '%s'\n", flags);
+               else
+                  rounded = true;
+            }
+         }
+      
+         MetaTable *damagefactor = new MetaTable(E_ModFieldName("damagefactor", mod));
+         damagefactor->setInt("factor", dfi);
+         damagefactor->setInt("rounded", rounded ? 1 : 0);
 
-         info->meta->setInt(E_ModFieldName("damagefactor", mod), dfi);
+         info->meta->setMetaTable(E_ModFieldName("damagefactor", mod),
+                                  damagefactor);
       }
    }
 }

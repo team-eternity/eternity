@@ -1472,16 +1472,30 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    if(mod != MOD_UNKNOWN)
    {
       MetaTable *meta = target->info->meta;
-      int df = meta->getInt(emod->dfKeyIndex, FRACUNIT);
-
-      // Special case: D_MININT is absolute immunity.
-      if(df == D_MININT)
-         return;
-
-      // Only apply if not FRACUNIT, due to the chance this might alter
-      // the compatibility characteristics of extreme DEH/BEX damage.
-      if(df != FRACUNIT)
-         damage = (damage * df) / FRACUNIT;
+      MetaTable *damagefactor = meta->getMetaTable(emod->dfKeyIndex, nullptr);
+      if(damagefactor)
+      {
+         int df = damagefactor->getInt("factor", FRACUNIT);
+         int rounded = damagefactor->getInt("rounded", 0);
+         
+         // Special case: D_MININT is absolute immunity.
+         if(df == D_MININT)
+            return;
+         
+         // Only apply if not FRACUNIT, due to the chance this might alter
+         // the compatibility characteristics of extreme DEH/BEX damage.
+         if(df != FRACUNIT)
+         {
+            if(rounded)
+            {
+               // rounding allows us to use clear values without getting errors
+               damage = (damage * df + FRACUNIT / 2) / FRACUNIT;
+               if(!damage) // rounded also skips 0 damage
+                  return;
+            }
+            damage = (damage * df) / FRACUNIT;
+         }
+      }
    }
 
    // Some close combat weapons should not
