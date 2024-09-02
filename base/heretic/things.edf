@@ -670,6 +670,26 @@ thingtype HereticBlood : Mobj, -1, 335
   "@
 }
 
+thingtype Feather : HereticMissile, -1, -1
+{
+  radius 2.0
+  height 4.0
+
+  remflags NOGRAVITY
+  addflags CANNOTPUSH|LOGRAV|WINDTHRUST
+
+  firstdecoratestate S_FEATHER1
+  states
+  @"
+  Spawn:
+    CHKN MNOPQPON 3
+    loop
+  Death:
+    CHKN N 6
+    stop
+  "@
+}
+
 thingtype Golem : ClassicHereticSolid, 7068, 336
 {
   compatname     Mummy

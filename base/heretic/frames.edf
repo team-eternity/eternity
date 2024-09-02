@@ -1034,6 +1034,17 @@ frame S_RAINAIRXPLR1_1 { +decorate; dehackednum 2844 }
 frame S_RAINAIRXPLR1_2 { +decorate; dehackednum 2845 }
 frame S_RAINAIRXPLR1_3 { +decorate; dehackednum 2846 }
 
+// Feather
+frame S_FEATHER1 { +decorate; dehackednum 2847 }
+frame S_FEATHER2 { +decorate; dehackednum 2848 }
+frame S_FEATHER3 { +decorate; dehackednum 2849 }
+frame S_FEATHER4 { +decorate; dehackednum 2850 }
+frame S_FEATHER5 { +decorate; dehackednum 2851 }
+frame S_FEATHER6 { +decorate; dehackednum 2852 }
+frame S_FEATHER7 { +decorate; dehackednum 2853 }
+frame S_FEATHER8 { +decorate; dehackednum 2854 }
+frame S_FEATHERX { +decorate; dehackednum 2855 }
+
 // Heretic Weapons
 
 // S_HTICLIGHTDONE: Why is this here? I mean it's in the Heretic source but why is it there?
