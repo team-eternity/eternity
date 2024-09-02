@@ -3469,3 +3469,12 @@ damagetype StaffPowered
 damagetype PoweredHellStaffRain {}
 damagetype PoweredDragonClawImpact {}
 damagetype PoweredDragonClawRip {}
+
+damagetype ChickenMorph
+{
+  morph
+  {
+    species Chicken
+    exclude Dsparil, Maulotaur, SerpentRiderDsparil
+  }
+}

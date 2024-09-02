@@ -37,11 +37,13 @@
 #include "e_edf.h"
 #include "e_mod.h"
 #include "e_hash.h"
+#include "e_things.h"
 
 #include "d_dehtbl.h"
 #include "d_io.h"
 #include "doomtype.h"
 #include "metaapi.h"
+#include "m_collection.h"
 
 //
 // damagetype options
@@ -54,6 +56,18 @@ constexpr const char ITEM_DAMAGETYPE_SOURCELESS[] = "sourceless";
 constexpr const char ITEM_DAMAGETYPE_ABSPUSH[]    = "absolute.push";
 constexpr const char ITEM_DAMAGETYPE_ABSHOP[]     = "absolute.hop";
 
+constexpr const char ITEM_DAMAGETYPE_MORPH[]      = "morph";
+
+constexpr const char ITEM_MORPH_SPECIES[] = "species";
+constexpr const char ITEM_MORPH_EXCLUDE[] = "exclude";
+
+static cfg_opt_t morph_opts[] =
+{
+   CFG_STR(ITEM_MORPH_SPECIES, "", CFGF_NONE),
+   CFG_STR(ITEM_MORPH_EXCLUDE, "", CFGF_LIST),
+   CFG_END(),
+};
+
 cfg_opt_t edf_dmgtype_opts[] =
 {
    CFG_INT(ITEM_DAMAGETYPE_NUM,         -1,       CFGF_NONE),
@@ -62,6 +76,7 @@ cfg_opt_t edf_dmgtype_opts[] =
    CFG_BOOL(ITEM_DAMAGETYPE_SOURCELESS, false,    CFGF_NONE),
    CFG_FLOAT(ITEM_DAMAGETYPE_ABSPUSH,   0,        CFGF_NONE),
    CFG_FLOAT(ITEM_DAMAGETYPE_ABSHOP,    0,        CFGF_NONE),
+   CFG_SEC(ITEM_DAMAGETYPE_MORPH, morph_opts, CFGF_NOCASE),
    CFG_END()
 };
 
@@ -312,6 +327,29 @@ static void E_ProcessDamageType(cfg_t *const dtsec)
    {
       mod->absoluteHop = M_DoubleToFixed(cfg_getfloat(dtsec,
                                                       ITEM_DAMAGETYPE_ABSHOP));
+   }
+
+   if (cfg_size(dtsec, ITEM_DAMAGETYPE_MORPH))
+   {
+      // We have morphing
+      cfg_t* morph = cfg_getsec(dtsec, ITEM_DAMAGETYPE_MORPH);
+      mod->morph.enabled = true;
+      
+      const char *species = cfg_getstr(morph, ITEM_MORPH_SPECIES);
+      mod->morph.species = E_GetThingNumForName(species);
+
+      unsigned numExclude = cfg_size(morph, ITEM_MORPH_EXCLUDE);
+      mod->morph.numExclude = (int)numExclude;
+
+      PODCollection<mobjtype_t> excludes;
+      for (unsigned i = 0; i < numExclude; ++i)
+      {
+         const char* exclude = cfg_getnstr(morph, ITEM_MORPH_EXCLUDE, i);
+         excludes.add(E_GetThingNumForName(exclude));
+      }
+
+      mod->morph.exclude = ecalloc(mobjtype_t*, numExclude, sizeof(mobjtype_t));
+      memcpy(mod->morph.exclude, &excludes[0], numExclude * sizeof(mobjtype_t));
    }
 
    E_EDFLogPrintf("\t\t%s damagetype %s\n",

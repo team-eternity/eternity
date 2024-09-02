@@ -31,6 +31,16 @@
 
 #include "m_dllist.h"
 #include "m_fixed.h"
+#include "info.h"
+
+struct emodmorph_t
+{
+   bool enabled;
+   mobjtype_t species;
+
+   int numExclude;
+   mobjtype_t* exclude;
+};
 
 //
 // emod structure
@@ -49,6 +59,8 @@ struct emod_t
    bool obitIsIndirect;
    bool selfObitIsIndirect;
    bool sourceless;
+
+   emodmorph_t morph;
 
    fixed_t absolutePush;   // if set, push things by this amount
    fixed_t absoluteHop;    // if set, hop gravity things by this amount
