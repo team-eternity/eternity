@@ -17,6 +17,9 @@ FEATURE: Added a new optional argument to thingtype's damagefactor, which can be
          2. If damage ends up being 0 anyway, it will behave like full damage
             immunity, without any side effects of damage.
 
+         Added some new dmgspecial values, for supporting the various Heretic
+         effects: PoweredPhoenixFire and BossTeleport.
+
 --------------------------------------------------------------------------------
 28.08.2024
 
