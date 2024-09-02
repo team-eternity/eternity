@@ -271,6 +271,8 @@ typedef enum {
    pr_touchphoenixfire,
    pr_touchbossteleport,
 
+   pr_feathers,   // A_Feathers
+
    NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;
 

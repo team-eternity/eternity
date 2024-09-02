@@ -812,6 +812,27 @@ sound ht_chicatk
   pitchvariance Heretic
 }
 
+sound ht_chicpai
+{
+  lump          "chicpai"
+  priority      96
+  pitchvariance Heretic
+}
+
+sound ht_chicdth
+{
+  lump          "chicdth"
+  priority      70
+  pitchvariance Heretic
+}
+
+sound ht_chicact
+{
+  lump          "chicact"
+  priority      100
+  pitchvariance Heretic
+}
+
 sound ht_hrnsht
 {
   lump          "hrnsht"

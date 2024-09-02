@@ -1496,6 +1496,7 @@ void A_ClearSkin(actionargs_t *);
 void A_PhoenixPuff(actionargs_t *);
 void A_FlameEnd(actionargs_t *);
 void A_FloatPuff(actionargs_t *);
+void A_Feathers(actionargs_t *);
 
 // MaxW: 2018/01/02: Heretic weapon pointers
 void A_StaffAttackPL1(actionargs_t *);
@@ -1896,6 +1897,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(PhoenixPuff),
    POINTER(FlameEnd),
    POINTER(FloatPuff),
+   POINTER(Feathers),
 
    // MaxW: 2018/01/02: Heretic weapon pointers
    POINTER(StaffAttackPL1),

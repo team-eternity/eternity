@@ -670,6 +670,50 @@ thingtype HereticBlood : Mobj, -1, 335
   "@
 }
 
+thingtype Chicken : ClassicHereticSolid, -1, -1
+{
+  spawnhealth 10
+  seesound ht_chicpai
+  activesound ht_chicact
+  attacksound ht_chicatk
+  painchance 200
+  painsound ht_chicpai
+  deathsound ht_chicdth
+  speed 4
+  radius 9.0
+  height 22.0
+  mass 40
+  
+  addflags SHOOTABLE|DROPOFF|WINDTHRUST|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  
+  firstdecoratestate S_CHICKEN_LOOK1
+  states
+  @"
+  Spawn:
+    CHKN AB 10 A_Look
+    loop
+  See:
+    CHKN AB 3 A_Chase
+    loop
+  Pain:
+    CHKN D 5 A_Feathers
+    CHKN C 5 A_Pain
+    goto See
+  Melee:
+    CHKN A 8 A_FaceTarget
+    CHKN C 10 A_MonsterMeleeAttack(1, 2)
+    goto See
+  Death:
+    CHKN E 6 A_Scream
+    CHKN F 6 A_Feathers
+    CHKN G 6
+    CHKN H 6 A_Fall
+    CHKN IJK 6
+    CHKN L -1
+    stop
+  "@
+}
+
 thingtype Feather : HereticMissile, -1, -1
 {
   radius 2.0
