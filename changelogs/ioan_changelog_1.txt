@@ -7,6 +7,17 @@ Dates are in dd.mm.yyyy format. Most recent update is first.
 Since v4.02.00 "Forseti"
 ========================
 --------------------------------------------------------------------------------
+02.09.2024
+
+FEATURE: Added a new optional argument to thingtype's damagefactor, which can be
+         "rounded" (after the comma). This has two effects:
+
+         1. The damage value is rounded to the nearest, instead of to the lower
+            value, preventing round-off errors.
+         2. If damage ends up being 0 anyway, it will behave like full damage
+            immunity, without any side effects of damage.
+
+--------------------------------------------------------------------------------
 28.08.2024
 
 IMPROVEMENT: now the Doom 1 Episode 3 ending works better with widescreen
