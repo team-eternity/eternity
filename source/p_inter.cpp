@@ -125,7 +125,6 @@ void MorphTimerThinker::Think()
    {
       v3fixed_t pos = { mobj->x, mobj->y, mobj->z };
 
-      // TODO: flag if it should unmorph at original health or full
       Mobj* unmorph = P_SpawnMobj(pos.x, pos.y, pos.z, resettype);
 
       unsigned solidity = mobj->flags & MF_SOLID;
