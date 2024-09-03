@@ -35,11 +35,8 @@
 
 struct emodmorph_t
 {
-   bool enabled;
-   mobjtype_t species;  // TODO: change to string because we don't have thing info yet!
-
-   int numExclude;
-   mobjtype_t* exclude;
+   const char *species;
+   const char **excluded;
 };
 
 //

@@ -202,6 +202,25 @@ static emod_t *E_EDFDamageTypeForName(const char *name)
    return e_mod_namehash.objectForKey(name);
 }
 
+static void E_processMorphing(cfg_t *dtsec, emod_t *mod)
+{
+   cfg_t* morph = cfg_getsec(dtsec, ITEM_DAMAGETYPE_MORPH);
+   
+   mod->morph.species = cfg_getstr(morph, ITEM_MORPH_SPECIES);
+
+   unsigned numExclude = cfg_size(morph, ITEM_MORPH_EXCLUDE);
+
+   PODCollection<const char *> excludes;
+   for (unsigned i = 0; i < numExclude; ++i)
+   {
+      const char* exclude = cfg_getnstr(morph, ITEM_MORPH_EXCLUDE, i);
+      excludes.add(exclude);
+   }
+
+   mod->morph.excluded = ecalloc(const char**, numExclude + 1, sizeof(const char *));
+   memcpy(mod->morph.excluded, &excludes[0], numExclude * sizeof(const char *));
+}
+
 //
 // E_ProcessDamageType
 //
@@ -330,27 +349,7 @@ static void E_ProcessDamageType(cfg_t *const dtsec)
    }
 
    if (cfg_size(dtsec, ITEM_DAMAGETYPE_MORPH))
-   {
-      // We have morphing
-      cfg_t* morph = cfg_getsec(dtsec, ITEM_DAMAGETYPE_MORPH);
-      mod->morph.enabled = true;
-      
-      const char *species = cfg_getstr(morph, ITEM_MORPH_SPECIES);
-      mod->morph.species = E_GetThingNumForName(species);
-
-      unsigned numExclude = cfg_size(morph, ITEM_MORPH_EXCLUDE);
-      mod->morph.numExclude = (int)numExclude;
-
-      PODCollection<mobjtype_t> excludes;
-      for (unsigned i = 0; i < numExclude; ++i)
-      {
-         const char* exclude = cfg_getnstr(morph, ITEM_MORPH_EXCLUDE, i);
-         excludes.add(E_GetThingNumForName(exclude));
-      }
-
-      mod->morph.exclude = ecalloc(mobjtype_t*, numExclude, sizeof(mobjtype_t));
-      memcpy(mod->morph.exclude, &excludes[0], numExclude * sizeof(mobjtype_t));
-   }
+      E_processMorphing(dtsec, mod);
 
    E_EDFLogPrintf("\t\t%s damagetype %s\n",
                   def ? "Defined" : "Modified", mod->name);
