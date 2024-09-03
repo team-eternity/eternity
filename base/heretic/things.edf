@@ -2700,6 +2700,26 @@ thingtype HArtiEgg : HereticArtifact, 7030, 405
   "@
 }
 
+thingtype EggShot : HereticMissile, -1, -1
+{
+  speed 18.0
+  radius 8.0
+  height 8.0
+  damage 1
+  mod ChickenMorph
+
+  firstdecoratestate S_EGGFX1
+  states
+  @"
+  Spawn:
+    EGGM ABCDE 4
+    loop
+  Death:
+    FX01 EFGH 3 bright
+    stop
+  "@
+}
+
 thingtype HArtiSuperHeal : HereticArtifact, 7032, 406
 {
   compatname ArtiSuperHealth
@@ -3475,6 +3495,6 @@ damagetype ChickenMorph
   morph
   {
     species Chicken
-    exclude Dsparil, Maulotaur, SerpentRiderDsparil
+    exclude Dsparil, IronLich, Maulotaur, SerpentRiderDsparil
   }
 }

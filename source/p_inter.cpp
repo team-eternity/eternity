@@ -1381,6 +1381,42 @@ static int P_AdjustDamageType(Mobj *source, Mobj *inflictor, int mod)
    return newmod;
 }
 
+static void P_morphMobj(const emodmorph_t &minfo, Mobj &target)
+{
+   // TODO: also support players -- need to do it differently there!
+   if(target.player)
+      return;
+
+   // Cannot morph into same species or if non-sentient
+   if(target.type == minfo.speciesID || !sentient(&target))
+      return;
+   
+   if(minfo.excludedID)
+      for(mobjtype_t *excluded = minfo.excludedID; *excluded != -1; ++excluded)
+         if(target.type == *excluded)
+            return;
+   
+   v3fixed_t pos = { target.x, target.y, target.z };
+   angle_t angle = target.angle;
+   // TODO: flags to keep besides these (MOD setting?)
+   unsigned ghost = target.flags & MF_SHADOW;
+   unsigned ghost3 = target.flags3 & MF3_GHOST;
+   Mobj *enemy = target.target;
+   Mobj *tracer = target.tracer; // NOTE: copy this too, right?
+   target.remove();
+   S_StartSound(P_SpawnMobj(pos.x, pos.y, pos.z + GameModeInfo->teleFogHeight,
+                            E_SafeThingName(GameModeInfo->teleFogType)), GameModeInfo->teleSound);
+   
+   // TODO: handle if morphing is done into a larger species
+   Mobj *polymorph = P_SpawnMobj(pos.x, pos.y, pos.z, minfo.speciesID);
+   // TODO: store timer and return species (MOD setting most likely)
+   polymorph->flags |= ghost;
+   polymorph->flags3 |= ghost3;
+   P_SetTarget(&polymorph->target, enemy);
+   P_SetTarget(&polymorph->tracer, tracer);
+   polymorph->angle = angle;
+}
+
 //
 // P_DamageMobj
 //
@@ -1471,6 +1507,13 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    // haleyjd 10/12/09: damage factors
    if(mod != MOD_UNKNOWN)
    {
+      E_IndexMorphInfo(emod->morph);
+      if(emod->morph.speciesID != -1)
+      {
+         P_morphMobj(emod->morph, *target);
+         return;
+      }
+      
       MetaTable *meta = target->info->meta;
       MetaTable *damagefactor = meta->getMetaTable(emod->dfKeyIndex, nullptr);
       if(damagefactor)

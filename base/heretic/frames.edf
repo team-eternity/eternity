@@ -1063,6 +1063,17 @@ frame S_CHICKEN_DIE6 { +decorate; dehackednum 2869 }
 frame S_CHICKEN_DIE7 { +decorate; dehackednum 2870 }
 frame S_CHICKEN_DIE8 { +decorate; dehackednum 2871 }
 
+// Morph Ovum projectile
+frame S_EGGFX1 { +decorate; dehackednum 2872 }
+frame S_EGGFX2 { +decorate; dehackednum 2873 }
+frame S_EGGFX3 { +decorate; dehackednum 2874 }
+frame S_EGGFX4 { +decorate; dehackednum 2875 }
+frame S_EGGFX5 { +decorate; dehackednum 2876 }
+frame S_EGGFXI1_1 { +decorate; dehackednum 2877 }
+frame S_EGGFXI1_2 { +decorate; dehackednum 2878 }
+frame S_EGGFXI1_3 { +decorate; dehackednum 2879 }
+frame S_EGGFXI1_4 { +decorate; dehackednum 2880 }
+
 // Heretic Weapons
 
 // S_HTICLIGHTDONE: Why is this here? I mean it's in the Heretic source but why is it there?
