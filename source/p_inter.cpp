@@ -57,6 +57,7 @@
 #include "metaapi.h"
 #include "p_inter.h"
 #include "p_map.h"
+#include "p_map3d.h"
 #include "p_maputl.h"
 #include "p_portalcross.h"
 #include "p_skin.h"
@@ -84,6 +85,73 @@ int god_health_override = 0;   // these are used in cheats (see st_stuff.c)
 
 int bfgcells = 40;      // used in p_pspr.c
 // Ty 03/07/98 - end deh externals
+
+class MorphTimerThinker : public Thinker
+{
+   DECLARE_THINKER_TYPE(MorphTimerThinker, Thinker)
+
+public:
+   void initialize(Mobj* mo, int tics, mobjtype_t reset);
+
+   // Methods
+   virtual void serialize(SaveArchive& arc) override
+   {}// TODO: serialize
+
+   virtual void Think() override;
+
+private:
+   Mobj *mobj = nullptr;
+   int tics = 0;
+   mobjtype_t resettype = -1;
+};
+
+IMPLEMENT_THINKER_TYPE(MorphTimerThinker);
+
+void MorphTimerThinker::initialize(Mobj* mo, int tics, mobjtype_t reset)
+{
+   P_SetTarget(&mobj, mo);
+   this->tics = tics;
+   resettype = reset;
+}
+
+void MorphTimerThinker::Think()
+{
+   if (mobj->isRemoved() || mobj->health <= 0)
+   {
+      remove();
+      return;
+   }
+   if (!--tics)
+   {
+      v3fixed_t pos = { mobj->x, mobj->y, mobj->z };
+
+      // TODO: flag if it should unmorph at original health or full
+      Mobj* unmorph = P_SpawnMobj(pos.x, pos.y, pos.z, resettype);
+
+      unsigned solidity = mobj->flags & MF_SOLID;
+      mobj->flags &= ~MF_SOLID;
+      bool fit = P_CheckPositionExt(unmorph, pos.x, pos.y, pos.z);
+      mobj->flags |= solidity;
+
+      if (!fit)
+      {
+         // Didn't fit
+         unmorph->remove();
+         tics = 5 * TICRATE; // Next try in 5 seconds
+         return;
+      }
+      mobj->remove();
+
+      unmorph->angle = mobj->angle;
+      P_SetTarget(&unmorph->target, mobj->target);
+      P_SetTarget(&unmorph->tracer, mobj->tracer);
+
+      S_StartSound(P_SpawnMobj(pos.x, pos.y, pos.z + GameModeInfo->teleFogHeight,
+         E_SafeThingName(GameModeInfo->teleFogType)), GameModeInfo->teleSound);
+
+      remove();
+   }
+}
 
 //
 // GET STUFF
@@ -1403,18 +1471,24 @@ static void P_morphMobj(const emodmorph_t &minfo, Mobj &target)
    unsigned ghost3 = target.flags3 & MF3_GHOST;
    Mobj *enemy = target.target;
    Mobj *tracer = target.tracer; // NOTE: copy this too, right?
+   mobjtype_t backuptype = target.type;
    target.remove();
    S_StartSound(P_SpawnMobj(pos.x, pos.y, pos.z + GameModeInfo->teleFogHeight,
                             E_SafeThingName(GameModeInfo->teleFogType)), GameModeInfo->teleSound);
    
    // TODO: handle if morphing is done into a larger species
    Mobj *polymorph = P_SpawnMobj(pos.x, pos.y, pos.z, minfo.speciesID);
-   // TODO: store timer and return species (MOD setting most likely)
+   
    polymorph->flags |= ghost;
    polymorph->flags3 |= ghost3;
    P_SetTarget(&polymorph->target, enemy);
    P_SetTarget(&polymorph->tracer, tracer);
    polymorph->angle = angle;
+
+   MorphTimerThinker* unmorpher = new MorphTimerThinker;
+   // TODO: put timer in EDF
+   unmorpher->initialize(polymorph, 40 * TICRATE + P_Random(pr_morphmobj), backuptype);
+   unmorpher->addThinker();
 }
 
 //
