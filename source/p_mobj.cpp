@@ -314,8 +314,7 @@ static bool P_checkUnmorph(Mobj &mobj)
    
    v3fixed_t pos = {mobj.x, mobj.y, mobj.z};
    Mobj *unmorph = P_SpawnMobj(pos.x, pos.y, pos.z, mobj.unmorph.type);
-   P_transferFriendship(*unmorph, mobj);
-   
+      
    // Temporarily remove the solid flag in order to check position without being blocked by this.
    unsigned solidity = mobj.flags & MF_SOLID;
    mobj.flags &= ~MF_SOLID;
@@ -331,15 +330,15 @@ static bool P_checkUnmorph(Mobj &mobj)
       return false;
    }
    
-   angle_t angle = mobj.angle;
-   Mobj *target = mobj.target;
-   Mobj *tracer = mobj.tracer;
-   
+   P_transferFriendship(*unmorph, mobj);
+   unmorph->angle = mobj.angle;
+   unmorph->special = mobj.special;
+   memcpy(unmorph->args, mobj.args, sizeof(mobj.args));
+   P_AddThingTID(unmorph, mobj.tid);
+   P_SetTarget(&unmorph->target, mobj.target);
+   P_SetTarget(&unmorph->tracer, mobj.tracer);
+
    mobj.remove();
-   
-   unmorph->angle = angle;
-   P_SetTarget(&unmorph->target, target);
-   P_SetTarget(&unmorph->tracer, tracer);
    
    // TODO: check if it should heal or preserve old health
    

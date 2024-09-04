@@ -1399,26 +1399,30 @@ static void P_morphMobj(const emodmorph_t &minfo, Mobj &target)
             return;
    
    v3fixed_t pos = { target.x, target.y, target.z };
-   angle_t angle = target.angle;
-   // TODO: flags to keep besides these (MOD setting?)
+   Mobj *polymorph = P_SpawnMobj(pos.x, pos.y, pos.z, minfo.speciesID);
+
+   // TODO: handle if morphing is done into a larger species
+   
    unsigned ghost = target.flags & MF_SHADOW;
    unsigned ghost3 = target.flags3 & MF3_GHOST;
-   Mobj *enemy = target.target;
-   Mobj *tracer = target.tracer; // NOTE: copy this too, right?
-   mobjtype_t backuptype = target.type;
-   target.remove();
-   S_StartSound(P_SpawnMobj(pos.x, pos.y, pos.z + GameModeInfo->teleFogHeight,
-                            E_SafeThingName(GameModeInfo->teleFogType)), GameModeInfo->teleSound);
-   
-   // TODO: handle if morphing is done into a larger species
-   Mobj *polymorph = P_SpawnMobj(pos.x, pos.y, pos.z, minfo.speciesID);
-   P_transferFriendship(*polymorph, target);
-   
    polymorph->flags |= ghost;
    polymorph->flags3 |= ghost3;
-   P_SetTarget(&polymorph->target, enemy);
-   P_SetTarget(&polymorph->tracer, tracer);
-   polymorph->angle = angle;
+   
+   P_transferFriendship(*polymorph, target);
+   polymorph->angle = target.angle;
+   polymorph->special = target.special;
+   memcpy(polymorph->args, target.args, sizeof(target.args));
+   P_AddThingTID(polymorph, target.tid);
+   P_SetTarget(&polymorph->target, target.target);
+   P_SetTarget(&polymorph->tracer, target.tracer);
+   
+   // TODO: flags to keep besides these (MOD setting?)
+   mobjtype_t backuptype = target.type;
+
+   target.remove();
+   
+   S_StartSound(P_SpawnMobj(pos.x, pos.y, pos.z + GameModeInfo->teleFogHeight,
+                            E_SafeThingName(GameModeInfo->teleFogType)), GameModeInfo->teleSound);
    
    // TODO: put timer in EDF
    polymorph->unmorph.tics = 40 * TICRATE + P_Random(pr_morphmobj);
