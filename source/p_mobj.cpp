@@ -302,6 +302,52 @@ static void A_vanillaHereticPodFinalAction(actionargs_t *args)
 //   actor->player = NULL;
 };
 
+// Returns true if the morphed monster returns back to normal form.
+// This involves removing mobj and replacing with another one.
+static bool P_checkUnmorph(Mobj &mobj)
+{
+   if(mobj.unmorph.type == UnknownThingType)
+      return false;
+   mobj.unmorph.tics -= mobj.tics;
+   if(mobj.unmorph.tics > 0)
+      return false;
+   
+   v3fixed_t pos = {mobj.x, mobj.y, mobj.z};
+   Mobj *unmorph = P_SpawnMobj(pos.x, pos.y, pos.z, mobj.unmorph.type);
+   P_transferFriendship(*unmorph, mobj);
+   
+   // Temporarily remove the solid flag in order to check position without being blocked by this.
+   unsigned solidity = mobj.flags & MF_SOLID;
+   mobj.flags &= ~MF_SOLID;
+   bool fit = P_CheckPositionExt(unmorph, pos.x, pos.y, pos.z);
+   mobj.flags |= solidity;
+   
+   if(!fit)
+   {
+      // Didn't fit
+      unmorph->remove();
+      // TODO: check if EDF should store the retry period
+      mobj.unmorph.tics = 5 * TICRATE; // Next try in 5 seconds
+      return false;
+   }
+   
+   angle_t angle = mobj.angle;
+   Mobj *target = mobj.target;
+   Mobj *tracer = mobj.tracer;
+   
+   mobj.remove();
+   
+   unmorph->angle = angle;
+   P_SetTarget(&unmorph->target, target);
+   P_SetTarget(&unmorph->tracer, tracer);
+   
+   // TODO: check if it should heal or preserve old health
+   
+   S_StartSound(P_SpawnMobj(pos.x, pos.y, pos.z + GameModeInfo->teleFogHeight,
+      E_SafeThingName(GameModeInfo->teleFogType)), GameModeInfo->teleSound);
+   return true;
+}
+
 //
 // P_SetMobjState
 //
@@ -355,6 +401,10 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
       P_setSpriteBySkin(*mobj, *st);
 
       mobj->frame = st->frame;
+      
+      // Handle unmorphing
+      if(P_checkUnmorph(*mobj))
+         return false;
 
       // Modified handling.
       // Call action functions when the state is set
@@ -2449,6 +2499,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
          mobj->colour = (info->flags & MF_TRANSLATION) >> MF_TRANSSHIFT;
    }
 
+   mobj->unmorph.type = UnknownThingType;
    return mobj;
 }
 

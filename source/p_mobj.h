@@ -180,6 +180,12 @@ struct sprojlast_t
    float xscale;
 };
 
+struct unmorph_t
+{
+   int tics;
+   mobjtype_t type;
+};
+
 //
 // Map Object definition.
 //
@@ -372,6 +378,9 @@ public:
    int special;         // special
    int args[NUMMTARGS]; // arguments
    uint16_t tid;        // thing id used by scripts
+   
+   // TODO: serialize
+   unmorph_t unmorph;
 
    // Note: tid chain pointers are NOT serialized in save games,
    // but are restored on load by rehashing the things as they are
