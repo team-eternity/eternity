@@ -670,70 +670,6 @@ thingtype HereticBlood : Mobj, -1, 335
   "@
 }
 
-thingtype Chicken : ClassicHereticSolid, -1, -1
-{
-  spawnhealth 10
-  seesound ht_chicpai
-  activesound ht_chicact
-  attacksound ht_chicatk
-  painchance 200
-  painsound ht_chicpai
-  deathsound ht_chicdth
-  speed 4
-  radius 9.0
-  height 22.0
-  mass 40
-  
-  addflags SHOOTABLE|DROPOFF|WINDTHRUST|FOOTCLIP|SPACMONSTER|PASSMOBJ
-  
-  firstdecoratestate S_CHICKEN_LOOK1
-  states
-  @"
-  Spawn:
-    CHKN AB 10 A_Look
-    loop
-  See:
-    CHKN AB 3 A_Chase
-    loop
-  Pain:
-    CHKN D 5 A_Feathers
-    CHKN C 5 A_Pain
-    goto See
-  Melee:
-    CHKN A 8 A_FaceTarget
-    CHKN C 10 A_MonsterMeleeAttack(1, 2)
-    goto See
-  Death:
-    CHKN E 6 A_Scream
-    CHKN F 6 A_Feathers
-    CHKN G 6
-    CHKN H 6 A_Fall
-    CHKN IJK 6
-    CHKN L -1
-    stop
-  "@
-}
-
-thingtype Feather : HereticMissile, -1, -1
-{
-  radius 2.0
-  height 4.0
-
-  remflags NOGRAVITY
-  addflags CANNOTPUSH|LOGRAV|WINDTHRUST
-
-  firstdecoratestate S_FEATHER1
-  states
-  @"
-  Spawn:
-    CHKN MNOPQPON 3
-    loop
-  Death:
-    CHKN N 6
-    stop
-  "@
-}
-
 thingtype Golem : ClassicHereticSolid, 7068, 336
 {
   compatname     Mummy
@@ -2700,26 +2636,6 @@ thingtype HArtiEgg : HereticArtifact, 7030, 405
   "@
 }
 
-thingtype EggShot : HereticMissile, -1, -1
-{
-  speed 18.0
-  radius 8.0
-  height 8.0
-  damage 1
-  mod ChickenMorph
-
-  firstdecoratestate S_EGGFX1
-  states
-  @"
-  Spawn:
-    EGGM ABCDE 4
-    loop
-  Death:
-    FX01 EFGH 3 bright
-    stop
-  "@
-}
-
 thingtype HArtiSuperHeal : HereticArtifact, 7032, 406
 {
   compatname ArtiSuperHealth
@@ -3474,6 +3390,90 @@ thingtype HereticRainPlayer3 : HereticRainPlayer1, -1, 447
 thingtype HereticRainPlayer4 : HereticRainPlayer1, -1, 448
 {
   skinsprite FX23
+}
+
+thingtype Chicken : ClassicHereticSolid, -1, 449
+{
+  spawnhealth 10
+  seesound ht_chicpai
+  activesound ht_chicact
+  attacksound ht_chicatk
+  painchance 200
+  painsound ht_chicpai
+  deathsound ht_chicdth
+  speed 4
+  radius 9.0
+  height 22.0
+  mass 40
+  
+  addflags SHOOTABLE|DROPOFF|WINDTHRUST|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  
+  firstdecoratestate S_CHICKEN_LOOK1
+  states
+  @"
+  Spawn:
+    CHKN AB 10 A_Look
+    loop
+  See:
+    CHKN AB 3 A_Chase
+    loop
+  Pain:
+    CHKN D 5 A_Feathers
+    CHKN C 5 A_Pain
+    goto See
+  Melee:
+    CHKN A 8 A_FaceTarget
+    CHKN C 10 A_MonsterMeleeAttack(1, 2)
+    goto See
+  Death:
+    CHKN E 6 A_Scream
+    CHKN F 6 A_Feathers
+    CHKN G 6
+    CHKN H 6 A_Fall
+    CHKN IJK 6
+    CHKN L -1
+    stop
+  "@
+}
+
+thingtype Feather : HereticMissile, -1, 450
+{
+  radius 2.0
+  height 4.0
+
+  remflags NOGRAVITY
+  addflags CANNOTPUSH|LOGRAV|WINDTHRUST
+
+  firstdecoratestate S_FEATHER1
+  states
+  @"
+  Spawn:
+    CHKN MNOPQPON 3
+    loop
+  Death:
+    CHKN N 6
+    stop
+  "@
+}
+
+thingtype EggShot : HereticMissile, -1, 451
+{
+  speed 18.0
+  radius 8.0
+  height 8.0
+  damage 1
+  mod ChickenMorph
+
+  firstdecoratestate S_EGGFX1
+  states
+  @"
+  Spawn:
+    EGGM ABCDE 4
+    loop
+  Death:
+    FX01 EFGH 3 bright
+    stop
+  "@
 }
 
 // Damage Types ----------------------------------------------------------------
