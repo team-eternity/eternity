@@ -2944,82 +2944,6 @@ thingtype HereticHornRodFX1 : HereticMissile, -1, 425
   "@
 }
 
-thingtype HereticHornRodFX2 : HereticMissile, -1, 444
-{
-  compatname HornRodFX2
-  spawnhealth 140
-  speed 22.0
-  radius 12.0
-  height 8.0
-  damage 10
-  dmgspecial BossTeleport
-  seesound ht_hrnsht
-  deathsound ht_ramphit
-
-  firstdecoratestate S_HRODFX2_1
-  states
-  @"
-  Spawn:
-    FX00 C 3 bright
-    FX00 D 3 bright A_SkullRodPL2Seek
-    FX00 E 3 bright
-    FX00 F 3 bright A_SkullRodPL2Seek
-    loop
-  Death:
-    FX00 H 5 bright A_AddPlayerRain
-    FX00 I 5 bright
-    FX00 J 4 bright
-    FX00 KLM 3 bright
-    FX00 G 1 A_HideInCeiling
-    FX00 G 1 A_SkullRodStorm
-    goto Death+7
-  "@
-}
-
-thingtype HereticRainPlayer1 : HereticMissile, -1, 445
-{
-  compatname RainPillar
-
-  speed 12.0
-  radius 5.0
-  height 12.0
-  damage 5
-
-  mod PoweredHellStaffRain
-  
-  firstdecoratestate S_RAINPLR1_1
-  states
-  @"
-  Spawn:
-    FX20 A -1 bright
-    stop
-  Death:
-    FX20 B 4 bright A_RainImpact
-    FX20 CDEF 4 bright
-    stop
-  XDeath:
-    FX20 GHI 4 bright
-    stop 
-  "@
-}
-
-spritenames += { FX21, FX22, FX23 }
-
-thingtype HereticRainPlayer2 : HereticRainPlayer1, -1, 446
-{
-  skinsprite FX21
-}
-
-thingtype HereticRainPlayer3 : HereticRainPlayer1, -1, 447
-{
-  skinsprite FX22
-}
-
-thingtype HereticRainPlayer4 : HereticRainPlayer1, -1, 448
-{
-  skinsprite FX23
-}
-
 thingtype HereticGoldWandFX1 : HereticMissile, -1, 426
 {
   compatname GoldWandFX1
@@ -3105,60 +3029,58 @@ thingtype HereticPhoenixFX1 : HereticMissile, -1, 430
   "@
 }
 
-thingtype HereticBlasterFX1 : HereticMissile, -1, 443
+//
+// Fire Mace
+//
+// The fire mace weapon has very special behavior in that it spawns randomly at
+// a given spot in the map, and in single player, may not spawn at all.
+//
+
+thingtype HereticMaceSpot : Mobj, 7202, 431
 {
-  compatname BlasterFX1
-  speed 184.0
-  radius 12.0
-  height 8.0
-  damage 2
-  mod PoweredDragonClawImpact
-  missiletype RavenFast
-
-  trail.type HereticBlasterSmoke
-  trail.zoffset -8
-  trail.spawnchance 63
-  trail.sparsity 1
-
-  deathsound ht_blshit
-
-  firstdecoratestate S_BLASTERFX1_1
+  compatname MaceSpawner
+  cflags     NOTSHAREWARE
+   
+  collectionspawn HWeaponFireMace, 64, 64
+   
   states
   @"
   Spawn:
-    ACLO E 200
-    loop
-  Death:
-    FX18 A 3 bright A_SpawnRippers
-    FX18 B 3 bright
-    FX18 CDEFG 4 bright
+    TNT1 A -1
     stop
   "@
 }
 
-thingtype HereticPhoenixFX2 : HereticMissile, -1, 442
+thingtype HWeaponFireMace : HereticPickup, -1, 432
 {
-  compatname PhoenixFX2
-  speed      10.0
-  radius     6.0
-  height     8.0
-  damage     2
-  dmgspecial PoweredPhoenixFire
-  addflags   FIREDAMAGE
+  compatname    Mace
+  itemrespawnat HereticMaceSpot
 
-  //firstdecoratestate S_PHOENIXFX2_1
+  firstdecoratestate S_WMCE
   states
   @"
   Spawn:
-    FX09 ABABA 2 Bright
-    FX09 B 2 Bright A_FlameEnd
-    FX09 CDEF 2 Bright
+    WMCE A -1
+    stop
+  "@
+}
+
+//
+// Blood Splatter
+//
+
+thingtype HereticBloodSplatter : HereticMissile, -1, 433
+{
+  radius 2.0
+  height 4.0
+  remflags NOGRAVITY
+  states
+  @"
+  Spawn:
+    BLOD CBA 8
     stop
   Death:
-    FX09 G 3 Bright
-    FX09 H 3 Bright A_FloatPuff
-    FX09 I 4 Bright
-    FX09 JK 5 Bright
+    BLOD A 6
     stop
   "@
 }
@@ -3334,60 +3256,140 @@ thingtype MaceFX4 : MaceShotProto, -1, 441
   "@
 }
 
-//
-// Fire Mace
-//
-// The fire mace weapon has very special behavior in that it spawns randomly at
-// a given spot in the map, and in single player, may not spawn at all.
-//
 
-thingtype HereticMaceSpot : Mobj, 7202, 431
+thingtype HereticPhoenixFX2 : HereticMissile, -1, 442
 {
-  compatname MaceSpawner
-  cflags     NOTSHAREWARE
-   
-  collectionspawn HWeaponFireMace, 64, 64
-   
+  compatname PhoenixFX2
+  speed      10.0
+  radius     6.0
+  height     8.0
+  damage     2
+  dmgspecial PoweredPhoenixFire
+  addflags   FIREDAMAGE
+
+  //firstdecoratestate S_PHOENIXFX2_1
   states
   @"
   Spawn:
-    TNT1 A -1
-    stop
-  "@
-}
-
-thingtype HWeaponFireMace : HereticPickup, -1, 432
-{
-  compatname    Mace
-  itemrespawnat HereticMaceSpot
-
-  firstdecoratestate S_WMCE
-  states
-  @"
-  Spawn:
-    WMCE A -1
-    stop
-  "@
-}
-
-//
-// Blood Splatter
-//
-
-thingtype HereticBloodSplatter : HereticMissile, -1, 433
-{
-  radius 2.0
-  height 4.0
-  remflags NOGRAVITY
-  states
-  @"
-  Spawn:
-    BLOD CBA 8
+    FX09 ABABA 2 Bright
+    FX09 B 2 Bright A_FlameEnd
+    FX09 CDEF 2 Bright
     stop
   Death:
-    BLOD A 6
+    FX09 G 3 Bright
+    FX09 H 3 Bright A_FloatPuff
+    FX09 I 4 Bright
+    FX09 JK 5 Bright
     stop
   "@
+}
+
+thingtype HereticBlasterFX1 : HereticMissile, -1, 443
+{
+  compatname BlasterFX1
+  speed 184.0
+  radius 12.0
+  height 8.0
+  damage 2
+  mod PoweredDragonClawImpact
+  missiletype RavenFast
+
+  trail.type HereticBlasterSmoke
+  trail.zoffset -8
+  trail.spawnchance 63
+  trail.sparsity 1
+
+  deathsound ht_blshit
+
+  firstdecoratestate S_BLASTERFX1_1
+  states
+  @"
+  Spawn:
+    ACLO E 200
+    loop
+  Death:
+    FX18 A 3 bright A_SpawnRippers
+    FX18 B 3 bright
+    FX18 CDEFG 4 bright
+    stop
+  "@
+}
+
+
+thingtype HereticHornRodFX2 : HereticMissile, -1, 444
+{
+  compatname HornRodFX2
+  spawnhealth 140
+  speed 22.0
+  radius 12.0
+  height 8.0
+  damage 10
+  dmgspecial BossTeleport
+  seesound ht_hrnsht
+  deathsound ht_ramphit
+
+  firstdecoratestate S_HRODFX2_1
+  states
+  @"
+  Spawn:
+    FX00 C 3 bright
+    FX00 D 3 bright A_SkullRodPL2Seek
+    FX00 E 3 bright
+    FX00 F 3 bright A_SkullRodPL2Seek
+    loop
+  Death:
+    FX00 H 5 bright A_AddPlayerRain
+    FX00 I 5 bright
+    FX00 J 4 bright
+    FX00 KLM 3 bright
+    FX00 G 1 A_HideInCeiling
+    FX00 G 1 A_SkullRodStorm
+    goto Death+7
+  "@
+}
+
+thingtype HereticRainPlayer1 : HereticMissile, -1, 445
+{
+  compatname RainPillar
+
+  speed 12.0
+  radius 5.0
+  height 12.0
+  damage 5
+
+  mod PoweredHellStaffRain
+  
+  firstdecoratestate S_RAINPLR1_1
+  states
+  @"
+  Spawn:
+    FX20 A -1 bright
+    stop
+  Death:
+    FX20 B 4 bright A_RainImpact
+    FX20 CDEF 4 bright
+    stop
+  XDeath:
+    FX20 GHI 4 bright
+    stop 
+  "@
+}
+
+spritenames += { FX21, FX22, FX23 }
+
+thingtype HereticRainPlayer2 : HereticRainPlayer1, -1, 446
+{
+  skinsprite FX21
+}
+
+thingtype HereticRainPlayer3 : HereticRainPlayer1, -1, 447
+{
+  skinsprite FX22
+}
+
+thingtype HereticRainPlayer4 : HereticRainPlayer1, -1, 448
+{
+  skinsprite FX23
 }
 
 // Damage Types ----------------------------------------------------------------
