@@ -3369,7 +3369,7 @@ thingtype HereticRainPlayer1 : HereticMissile, -1, 445
     FX20 B 4 bright A_RainImpact
     FX20 CDEF 4 bright
     stop
-  XDeath:
+  AirDeath:
     FX20 GHI 4 bright
     stop 
   "@
