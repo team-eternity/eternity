@@ -652,7 +652,11 @@ void A_RainImpact(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
    if(actor->z > actor->zref.passfloor)
-      P_SetMobjState(actor, actor->info->xdeathstate);
+   {
+      const state_t *state = E_GetStateForMobjInfo(actor->info, "AirDeath");
+      if(state)
+         P_SetMobjState(actor, state->index);
+   }
    else if(P_Random(pr_rodrainimpact) < 40)
    {
       // Hack to enable random splashes
