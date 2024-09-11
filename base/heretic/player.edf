@@ -513,6 +513,31 @@ weaponinfo GauntletsPowered : Gauntlets
   "@
 }
 
+weaponinfo Beak
+{
+  selectionorder 8.0
+
+  // TODO: sisterweapon
+
+  flags FLEEMELEE|SILENCEABLE
+
+  // TODO: firstdecoratestate
+  states
+  @"
+  Ready:
+    BEAK A 1 offset(0, 32) A_WeaponReady
+    loop
+  Deselect:
+    BEAK A 1 offset(0, 128) A_Lower
+    loop
+  Select:
+    BEAK A 1 offset(0, 32) A_Raise
+    loop
+  Fire:
+  Hold:
+    BEAK A 18 
+  "@
+}
 
 //=============================================================================
 //
