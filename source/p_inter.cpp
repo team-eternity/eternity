@@ -1416,7 +1416,6 @@ static void P_morphMobj(const emodmorph_t &minfo, Mobj &target)
    P_SetTarget(&polymorph->target, target.target);
    P_SetTarget(&polymorph->tracer, target.tracer);
    
-   // TODO: flags to keep besides these (MOD setting?)
    mobjtype_t backuptype = target.type;
 
    target.remove();
@@ -1424,7 +1423,6 @@ static void P_morphMobj(const emodmorph_t &minfo, Mobj &target)
    S_StartSound(P_SpawnMobj(pos.x, pos.y, pos.z + GameModeInfo->teleFogHeight,
                             E_SafeThingName(GameModeInfo->teleFogType)), GameModeInfo->teleSound);
    
-   // TODO: put timer in EDF
    polymorph->unmorph.tics = 40 * TICRATE + P_Random(pr_morphmobj);
    polymorph->unmorph.type = backuptype;
 }

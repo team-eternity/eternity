@@ -2160,6 +2160,12 @@ void Mobj::serialize(SaveArchive &arc)
    if(arc.saveVersion() >= 2)
       arc << flags5;
 
+   if (arc.saveVersion() >= 22)
+   {
+      arc << unmorph.tics;
+      Archive_MobjType(arc, unmorph.type);
+   }
+
    // Arrays
    P_ArchiveArray<int>(arc, counters, NUMMOBJCOUNTERS); // Counters
    P_ArchiveArray<int>(arc, args,     NUMMTARGS);       // Arguments
