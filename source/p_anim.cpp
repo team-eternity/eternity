@@ -337,7 +337,10 @@ void P_InitLightning()
       LevelSky = sky1->texture;
       
       if(LevelInfo.altSkyName)
+      {
          LevelTempSky = R_FindWall(LevelInfo.altSkyName);
+         R_CacheSkyTexture(LevelTempSky);
+      }
       else
          LevelTempSky = -1;
       
