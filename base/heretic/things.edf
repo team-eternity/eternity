@@ -3476,6 +3476,39 @@ thingtype EggShot : HereticMissile, -1, 451
   "@
 }
 
+thingtype ChickenPlayer : ClassicHereticSolid, -1, 452
+{
+  spawnhealth 100
+  reactiontime 0
+  painchance 255
+  radius 16.0
+  height 24.0
+  painsound ht_chicpai
+  deathsound ht_chicdth
+
+  addflags SHOOTABLE|DROPOFF|NOTDMATCH|FOOTCLIP|SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ|LOGRAV|NOSOUNDCUTOFF|STICKYCARRY
+  
+  deathstate S_CHICKEN_DIE1
+
+  firstdecoratestate S_CHICPLAY
+  states
+  @"
+  Spawn:
+    CHKN A -1
+    stop
+  See:
+    CHKN ABAB 3
+    loop
+  Missile:
+    CHKN C 12
+    goto Spawn
+  Pain:
+    CHKN D 4 A_Feathers
+    CHKN C 4 A_Pain
+    goto Spawn
+  "@
+}
+
 // Damage Types ----------------------------------------------------------------
 
 //

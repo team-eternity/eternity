@@ -1074,6 +1074,16 @@ frame S_EGGFXI1_2 { +decorate; dehackednum 2878 }
 frame S_EGGFXI1_3 { +decorate; dehackednum 2879 }
 frame S_EGGFXI1_4 { +decorate; dehackednum 2880 }
 
+// Chicken Player
+frame S_CHICPLAY { +decorate; dehackednum 2881 }
+frame S_CHICPLAY_RUN1 { +decorate; dehackednum 2882 }
+frame S_CHICPLAY_RUN2 { +decorate; dehackednum 2883 }
+frame S_CHICPLAY_RUN3 { +decorate; dehackednum 2884 }
+frame S_CHICPLAY_RUN4 { +decorate; dehackednum 2885 }
+frame S_CHICPLAY_ATK1 { +decorate; dehackednum 2886 }
+frame S_CHICPLAY_PAIN { +decorate; dehackednum 2887 }
+frame S_CHICPLAY_PAIN2 { +decorate; dehackednum 2888 }
+
 // Heretic Weapons
 
 // S_HTICLIGHTDONE: Why is this here? I mean it's in the Heretic source but why is it there?
