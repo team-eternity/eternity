@@ -47,6 +47,7 @@
 #include "p_map3d.h"
 #include "p_maputl.h"
 #include "p_portalcross.h"
+#include "p_pspr.h"
 #include "p_skin.h"
 #include "p_spec.h"
 #include "p_user.h"
@@ -607,6 +608,34 @@ inline static bool P_SectorIsSpecial(const sector_t *sector)
    return (sector->special || sector->flags || sector->damage);
 }
 
+static void P_chickenPlayerThink(player_t* player)
+{
+   if (player->health > 0)
+   {
+      // Update beak
+      pspdef_t& psp = player->psprites[ps_weapon];
+      psp.playpos.y = WEAPONTOP + (player->chickenPeck << (FRACBITS - 1));
+      psp.renderpos.y = psp.playpos.y;
+   }
+   if (player->chickenTics & 15)
+      return;
+
+   Mobj* pmo = player->mo;
+
+   if (pmo->momx + pmo->momy == 0 && P_Random(pr_chickenplayerthink) < 160)
+      pmo->angle += P_SubRandom(pr_chickenplayerthink) << 19;  // Twitch view angle
+   if (pmo->z <= pmo->zref.floor && P_Random(pr_chickenplayerthink) < 32)
+   {
+      // Jump and noise
+      pmo->momz += FRACUNIT;
+      if(pmo->info->painstate != NullStateNum)
+         P_SetMobjState(pmo, pmo->info->painstate);
+      return;
+   }
+   if (P_Random(pr_chickenplayerthink) < 48)
+      S_StartSound(pmo, pmo->info->activesound);   // Just noise
+}
+
 //
 // P_PlayerThink
 //
@@ -645,6 +674,10 @@ void P_PlayerThink(player_t *player)
    {
       P_DeathThink(player);
       return;
+   }
+   if (player->chickenTics)
+   {
+      P_chickenPlayerThink(player);
    }
 
    // haleyjd 04/03/05: new yshear code
@@ -840,6 +873,17 @@ void P_PlayerThink(player_t *player)
    }
    else
       player->usedown = false;
+
+   // Chicken counter
+   if (player->chickenTics)
+   {
+      if (player->chickenPeck)
+         player->chickenPeck -= 3;  // Chicken attack counter
+      if (!--player->chickenTics)
+      {
+         // TODO: undo player chicken
+      }
+   }
 
    // cycle psprites
 

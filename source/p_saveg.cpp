@@ -689,6 +689,9 @@ static void P_ArchivePlayers(SaveArchive &arc)
              << p.colormap     << p.quake           << p.jumptime
              << p.inv_ptr;
 
+         if (arc.saveVersion() >= 2)
+            arc << p.chickenTics << p.chickenPeck;
+
          int inventorySize;
          if(arc.isSaving())
          {

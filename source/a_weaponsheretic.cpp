@@ -76,6 +76,26 @@ void A_StaffAttackPL2(actionargs_t *actionargs)
       mo->angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
 }
 
+void A_BeakAttackPL1(actionargs_t* actionargs)
+{
+   Mobj* mo = actionargs->actor;
+   if (!mo)
+      return;
+   int damage = 1 + (P_Random(pr_beak) & 3);
+   angle_t angle = mo->angle;
+   fixed_t slope = P_DoAutoAim(mo, angle, MELEERANGE);
+
+   P_LineAttack(mo, angle, MELEERANGE, slope, damage, "HereticBeakPuff");
+   if (clip.linetarget)
+      mo->angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
+
+   // TODO: start sound
+   // TODO: chicken peck
+   // TODO: tic decrease
+   // TODO: A_BeakAttackPL2
+   // TODO: update EDF
+}
+
 void A_FireGoldWandPL1(actionargs_t *actionargs)
 {
    Mobj     *mo     = actionargs->actor;

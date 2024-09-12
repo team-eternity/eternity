@@ -194,6 +194,10 @@ struct player_t
 
    int            refire;      // Refired shots are less accurate.
 
+   // For chicken
+   int            chickenTics;   // player is a chicken if > 0
+   int            chickenPeck;   // chicken peck countdown
+
    // For intermission stats.
    int            killcount;
    int            itemcount;
