@@ -525,7 +525,7 @@ weaponinfo Beak
   states
   @"
   Ready:
-    BEAK A 1 offset(0, 32) A_WeaponReady
+    BEAK A 1 A_WeaponReady(WRF_NOBOB)
     loop
   Deselect:
     BEAK A 1 offset(0, 128) A_Lower
