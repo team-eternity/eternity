@@ -1362,6 +1362,7 @@ void A_CopyCounter(actionargs_t *);
 void A_CounterOp(actionargs_t *);
 void A_CounterDiceRoll(actionargs_t *);
 void A_SetTics(actionargs_t *);
+void A_WeaponSetTics(actionargs_t*);
 void A_AproxDistance(actionargs_t *);
 void A_ShowMessage(actionargs_t *);
 void A_RandomWalk(actionargs_t *);
@@ -1758,6 +1759,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(CounterOp),
    POINTER(CounterDiceRoll),
    POINTER(SetTics),
+   POINTER(WeaponSetTics),
    POINTER(AproxDistance),
    POINTER(ShowMessage),
    POINTER(RandomWalk),

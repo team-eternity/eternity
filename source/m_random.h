@@ -274,6 +274,8 @@ typedef enum {
    pr_feathers,   // A_Feathers
    pr_morphmobj,
 
+   pr_wpnsettics, // A_WeaponSetTics
+
    NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;
 

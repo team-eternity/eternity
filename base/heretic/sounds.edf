@@ -812,27 +812,6 @@ sound ht_chicatk
   pitchvariance Heretic
 }
 
-sound ht_chicpai
-{
-  lump          "chicpai"
-  priority      96
-  pitchvariance Heretic
-}
-
-sound ht_chicdth
-{
-  lump          "chicdth"
-  priority      70
-  pitchvariance Heretic
-}
-
-sound ht_chicact
-{
-  lump          "chicact"
-  priority      100
-  pitchvariance Heretic
-}
-
 sound ht_hrnsht
 {
   lump          "hrnsht"
@@ -1012,7 +991,61 @@ sound ht_ripslop
 {
   lump          "ripslop"
   priority      32
+  dehackednum 422
   pitchvariance Heretic
+}
+
+sound ht_chicpai
+{
+  lump          "chicpai"
+  priority      96
+  dehackednum 423
+  pitchvariance Heretic
+}
+
+sound ht_chicdth
+{
+  lump          "chicdth"
+  priority      70
+  dehackednum 424
+  pitchvariance Heretic
+}
+
+sound ht_chicact
+{
+  lump          "chicact"
+  priority      100
+  dehackednum 425
+  pitchvariance Heretic
+}
+
+sound ht_chicpk1
+{
+  lump "chicpk1"
+  priority 96
+  dehackednum 426
+  pitchvariance Heretic
+}
+
+sound ht_chicpk2
+{
+  lump "chicpk2"
+  priority 96
+  dehackednum 427
+  pitchvariance Heretic
+}
+
+sound ht_chicpk3
+{
+  lump "chicpk3"
+  priority 96
+  dehackednum 428
+  pitchvariance Heretic
+}
+
+sound ht_chicpk
+{
+  random ht_chicpk1, ht_chicpk2, ht_chicpk3
 }
 
 // Environmental Sound Defaults

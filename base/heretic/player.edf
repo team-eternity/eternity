@@ -521,7 +521,8 @@ weaponinfo Beak
 
   flags FLEEMELEE|SILENCEABLE
 
-  // TODO: firstdecoratestate
+  // TODO: chicken peck thrust
+  firstdecoratestate S_BEAKREADY
   states
   @"
   Ready:
@@ -535,7 +536,10 @@ weaponinfo Beak
     loop
   Fire:
   Hold:
-    BEAK A 18 
+    BEAK A 0 A_WeaponSound(ht_chicpk)
+    BEAK A 11 A_CustomPlayerMelee(1, 4, 1, none, none, 64.0, HereticBeakPuff)
+    BEAK A 0 A_WeaponSetTics(0, 8, constant)
+    goto Ready
   "@
 }
 

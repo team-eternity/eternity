@@ -1280,3 +1280,10 @@ frame S_CRBOWATK2_6 { +decorate }
 frame S_CRBOWATK2_7 { +decorate }
 frame S_CRBOWATK2_8 { +decorate }
 
+// Beak
+frame S_BEAKREADY { +decorate }
+frame S_BEAKDOWN { +decorate }
+frame S_BEAKUP { +decorate }
+frame S_BEAKSOUND { +decorate }
+frame S_BEAKATK1_1 { +decorate }
+frame S_BEAKATK1_2 { +decorate }

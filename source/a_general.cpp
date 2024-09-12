@@ -42,6 +42,7 @@
 #include "e_string.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "e_weapons.h"
 #include "ev_specials.h"
 #include "hu_stuff.h"
 #include "p_enemy.h"
@@ -953,6 +954,35 @@ void A_SetTics(actionargs_t *actionargs)
    }
 
    actor->tics = baseamt + (rnd ? P_Random(pr_settics) % rnd : 0);
+}
+
+void A_WeaponSetTics(actionargs_t* actionargs)
+{
+   arglist_t* args = actionargs->args;
+   const player_t* player = actionargs->actor ? actionargs->actor->player : nullptr;
+   pspdef_t* pspr = actionargs->pspr;
+   if (!player || !pspr)
+   {
+      doom_warningf("Invalid A_WeaponSetTics from non-player");
+      return;  // invalid
+   }
+
+   int baseamt = E_ArgAsInt(args, 0, 0);
+   int rnd = E_ArgAsInt(args, 1, 0);
+   int usecounter = E_ArgAsKwd(args, 2, &settickwds, 0);
+
+   // if counter toggle is set, args[0] is a counter number
+   if (usecounter)
+   {
+      if (baseamt < 0 || baseamt >= NUMWEAPCOUNTERS)
+      {
+         doom_warningf("Invalid A_WeaponSetTics counter %d", baseamt);
+         return; // invalid
+      }
+      baseamt = *E_GetIndexedWepCtrForPlayer(player, baseamt);
+   }
+
+   pspr->tics = baseamt + (rnd ? P_Random(pr_wpnsettics) % rnd : 0);
 }
 
 static const char *kwds_A_MissileAttack[] =
