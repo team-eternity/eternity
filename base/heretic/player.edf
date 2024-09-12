@@ -528,10 +528,10 @@ weaponinfo Beak
     BEAK A 1 A_WeaponReady(WRF_NOBOB)
     loop
   Deselect:
-    BEAK A 1 offset(0, 128) A_Lower
+    BEAK A 1 A_Lower(128)
     loop
   Select:
-    BEAK A 1 offset(0, 32) A_Raise
+    BEAK A 1 A_Raise(128)
     loop
   Fire:
   Hold:
