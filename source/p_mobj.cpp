@@ -1881,6 +1881,14 @@ void Mobj::Think()
    }
    else
       waterstate = 0;
+   
+   sector_t *ps = subsector->sector;
+   if((ps->srf.floor.pflags & PF_DOTERRAINHIT))
+   {
+      waterstate = ((z < P_PortalZ(ps->srf.floor)) && (lz > P_PortalZ(ps->srf.floor)));
+   }
+   else
+      waterstate = 0;
 
    if(flags & (MF_MISSILE|MF_BOUNCES))
    {

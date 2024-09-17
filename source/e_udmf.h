@@ -410,6 +410,7 @@ private:
       bool         portal_floor_useglobaltex;
       qstring      portal_floor_overlaytype; // OVERLAY and ADDITIVE consolidated into a single property
       bool         portal_floor_attached;
+      bool         portal_floor_doterrain;
       double       alphafloor;
 
       int          portalceiling;   // floor portal id
