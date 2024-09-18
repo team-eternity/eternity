@@ -610,13 +610,6 @@ inline static bool P_SectorIsSpecial(const sector_t *sector)
 
 static void P_chickenPlayerThink(player_t* player)
 {
-   if (player->health > 0)
-   {
-      // Update beak
-      pspdef_t& psp = player->psprites[ps_weapon];
-      psp.playpos.y = WEAPONTOP + (player->headThrust << (FRACBITS - 1));
-      psp.renderpos.y = psp.playpos.y;
-   }
    if (player->chickenTics & 15)
       return;
 
@@ -675,6 +668,14 @@ void P_PlayerThink(player_t *player)
       P_DeathThink(player);
       return;
    }
+
+   if(player->headThrust && player->health > 0)
+   {
+      pspdef_t &psp = player->psprites[ps_weapon];
+      psp.playpos.y = WEAPONTOP + (player->headThrust << (FRACBITS - 1));
+      psp.renderpos.y = psp.playpos.y;
+   }
+
    if (player->chickenTics)
    {
       P_chickenPlayerThink(player);
