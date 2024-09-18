@@ -1527,6 +1527,7 @@ void A_FirePhoenixPL1(actionargs_t *);
 void A_InitPhoenixPL2(actionargs_t *);
 void A_FirePhoenixPL2(actionargs_t *);
 void A_GauntletAttack(actionargs_t *);
+void A_ViewThrust(actionargs_t *);
 
 // MaxW: 2018/01/02: Heretic artifact use pointers
 void A_HticArtiTele(actionargs_t *);
@@ -1929,6 +1930,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(InitPhoenixPL2),
    POINTER(FirePhoenixPL2),
    POINTER(GauntletAttack),
+   POINTER(ViewThrust),
 
    // MaxW: 2018/01/02: Heretic artifact use pointers
    POINTER(HticArtiTele),

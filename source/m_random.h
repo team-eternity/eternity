@@ -276,7 +276,6 @@ typedef enum {
 
    pr_wpnsettics, // A_WeaponSetTics
    pr_chickenplayerthink,  // P_ChickenPlayerThink
-   pr_beak, // A_BeakAttackPL1
 
    NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;

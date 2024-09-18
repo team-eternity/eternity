@@ -196,7 +196,7 @@ struct player_t
 
    // For chicken
    int            chickenTics;   // player is a chicken if > 0
-   int            chickenPeck;   // chicken peck countdown
+   int            headThrust;    // chicken peck countdown
 
    // For intermission stats.
    int            killcount;

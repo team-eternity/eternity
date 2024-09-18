@@ -614,7 +614,7 @@ static void P_chickenPlayerThink(player_t* player)
    {
       // Update beak
       pspdef_t& psp = player->psprites[ps_weapon];
-      psp.playpos.y = WEAPONTOP + (player->chickenPeck << (FRACBITS - 1));
+      psp.playpos.y = WEAPONTOP + (player->headThrust << (FRACBITS - 1));
       psp.renderpos.y = psp.playpos.y;
    }
    if (player->chickenTics & 15)
@@ -875,10 +875,14 @@ void P_PlayerThink(player_t *player)
       player->usedown = false;
 
    // Chicken counter
+   if (player->headThrust)
+   {
+      player->headThrust -= 3;
+      if(player->headThrust < 0)
+         player->headThrust = 0;
+   }
    if (player->chickenTics)
    {
-      if (player->chickenPeck)
-         player->chickenPeck -= 3;  // Chicken attack counter
       if (!--player->chickenTics)
       {
          // TODO: undo player chicken
