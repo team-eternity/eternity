@@ -1285,5 +1285,11 @@ frame S_BEAKREADY { +decorate }
 frame S_BEAKDOWN { +decorate }
 frame S_BEAKUP { +decorate }
 frame S_BEAKSOUND { +decorate }
-frame S_BEAKATK1_1 { +decorate }
-frame S_BEAKATK1_2 { +decorate }
+frame S_BEAKHIT { +decorate }
+frame S_BEAKTHRUST { +decorate }
+frame S_BEAKOFFSET1 { +decorate }
+frame S_BEAKOFFSET2 { +decorate }
+frame S_BEAKOFFSET3 { +decorate }
+frame S_BEAKOFFSET4 { +decorate }
+frame S_BEAKWAIT { +decorate }
+frame S_BEAKTICS { +decorate }

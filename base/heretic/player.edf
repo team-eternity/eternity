@@ -519,9 +519,10 @@ weaponinfo Beak
 
   // TODO: sisterweapon
 
+  fullscreenoffset 15
+
   flags FLEEMELEE|SILENCEABLE
 
-  // TODO: chicken peck thrust
   firstdecoratestate S_BEAKREADY
   states
   @"
