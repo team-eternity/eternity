@@ -1045,7 +1045,8 @@ sound ht_chicpk3
 
 sound ht_chicpk
 {
-  random ht_chicpk1, ht_chicpk2, ht_chicpk3
+  random {ht_chicpk1, ht_chicpk2, ht_chicpk3}
+  dehackednum 429
 }
 
 // Environmental Sound Defaults
