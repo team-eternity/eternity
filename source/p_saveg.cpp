@@ -690,7 +690,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
              << p.inv_ptr;
 
          if (arc.saveVersion() >= 22)
-            arc << p.chickenTics << p.headThrust;
+            arc << p.morphTics << p.headThrust;
 
          int inventorySize;
          if(arc.isSaving())

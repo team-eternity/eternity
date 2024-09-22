@@ -606,7 +606,7 @@ bool P_GivePower(player_t *player, int power, int duration, bool permament, bool
       P_PlayerStartFlight(player, true);
       break;
    case pw_weaponlevel2:
-      if (player->chickenTics)
+      if (player->morphTics)
       {
          // TODO: undo player chicken
          // TODO: actually this is the wrong place for this logic
@@ -1002,7 +1002,8 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
          source->player->frags[target->player-players]++;
          HU_FragsUpdate();
 
-         if (source->player->chickenTics && target != source)  // Make a super chicken
+         // TODO: make this an EDF thing if possible
+         if (source->player->morphTics && target != source)  // Make a super chicken
             P_GivePower(source->player, pw_weaponlevel2, 40 * TICRATE, false, false);
       }
    }

@@ -122,6 +122,7 @@ constexpr const char ITEM_PCLASS_CLRREBORNITEMS[] = "clearrebornitems";
 constexpr const char ITEM_PCLASS_REBORNITEM[]     = "rebornitem";
 constexpr const char ITEM_PCLASS_WEAPONSLOT[]     = "weaponslot";
 constexpr const char ITEM_PCLASS_ALWAYSJUMP[]     = "alwaysjump";
+constexpr const char ITEM_PCLASS_CHICKENTWITCH[]  = "chickentwitch";
 
 constexpr const char ITEM_REBORN_NAME[]   = "name";
 constexpr const char ITEM_REBORN_AMOUNT[] = "amount";
@@ -176,6 +177,7 @@ static cfg_opt_t reborn_opts[] =
    CFG_SEC(ITEM_PCLASS_WEAPONSLOT,    wpnslot_opts, CFGF_MULTI|CFGF_NOCASE|CFGF_TITLE), \
    /* flags */                                          \
    CFG_FLAG(ITEM_PCLASS_ALWAYSJUMP, 0, CFGF_SIGNPREFIX),\
+   CFG_FLAG(ITEM_PCLASS_CHICKENTWITCH, 0, CFGF_SIGNPREFIX),\
    CFG_END()
 
 cfg_opt_t edf_pclass_opts[] =
@@ -629,6 +631,13 @@ static void E_processPlayerClass(cfg_t *const pcsec, bool delta)
          pc->flags |= PCF_ALWAYSJUMP;
       else
          pc->flags &= ~PCF_ALWAYSJUMP;
+   }
+   if(IS_SET(ITEM_PCLASS_CHICKENTWITCH))
+   {
+      if(cfg_getflag(pcsec, ITEM_PCLASS_CHICKENTWITCH))
+         pc->flags |= PCF_CHICKENTWITCH;
+      else
+         pc->flags &= ~PCF_CHICKENTWITCH;
    }
 
    // mobj type

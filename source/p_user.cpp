@@ -610,7 +610,7 @@ inline static bool P_SectorIsSpecial(const sector_t *sector)
 
 static void P_chickenPlayerThink(player_t* player)
 {
-   if (player->chickenTics & 15)
+   if (player->morphTics & 15)
       return;
 
    Mobj* pmo = player->mo;
@@ -676,7 +676,7 @@ void P_PlayerThink(player_t *player)
       psp.renderpos.y = psp.playpos.y;
    }
 
-   if (player->chickenTics)
+   if (player->morphTics && player->pclass->flags & PCF_CHICKENTWITCH)
    {
       P_chickenPlayerThink(player);
    }
@@ -882,9 +882,9 @@ void P_PlayerThink(player_t *player)
       if(player->headThrust < 0)
          player->headThrust = 0;
    }
-   if (player->chickenTics)
+   if (player->morphTics)
    {
-      if (!--player->chickenTics)
+      if (!--player->morphTics)
       {
          // TODO: undo player chicken
       }

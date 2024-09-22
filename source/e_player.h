@@ -46,6 +46,7 @@ enum rebornitemflag_e
 enum
 {
    PCF_ALWAYSJUMP = 1,   // class is designed to jump, do not allow disabling it
+   PCF_CHICKENTWITCH = 2,  // random twitching like Heretic chicken
 };
 
 // default inventory items

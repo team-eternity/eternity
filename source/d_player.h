@@ -194,9 +194,9 @@ struct player_t
 
    int            refire;      // Refired shots are less accurate.
 
-   // For chicken
-   int            chickenTics;   // player is a chicken if > 0
-   int            headThrust;    // chicken peck countdown
+   // For Heretic chicken and similar
+   int            morphTics;   // player is morphed if > 0
+   int            headThrust;  // chicken peck countdown
 
    // For intermission stats.
    int            killcount;
