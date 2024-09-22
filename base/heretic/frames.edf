@@ -1288,3 +1288,7 @@ frame S_BEAKSOUND { +decorate }
 frame S_BEAKHIT { +decorate }
 frame S_BEAKTHRUST { +decorate }
 frame S_BEAKTICS { +decorate }
+frame S_BEAK2SOUND { +decorate }
+frame S_BEAK2HIT { +decorate }
+frame S_BEAK2THRUST { +decorate }
+frame S_BEAK2TICS { +decorate }
