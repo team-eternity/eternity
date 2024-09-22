@@ -3529,7 +3529,8 @@ damagetype ChickenMorph
 {
   morph
   {
-    species Chicken
+    monsterspecies Chicken
+    playerclass Chicken
     exclude Dsparil, IronLich, Maulotaur, SerpentRiderDsparil
   }
 }

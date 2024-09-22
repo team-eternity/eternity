@@ -47,6 +47,8 @@ playerclass Chicken
 
   weaponslot 1 { weapons : Beak}
 
+  +ChickenTwitch
+
   rebornitem Beak
 }
 

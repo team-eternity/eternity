@@ -37,6 +37,7 @@
 #include "e_edf.h"
 #include "e_mod.h"
 #include "e_hash.h"
+#include "e_player.h"
 #include "e_things.h"
 
 #include "d_dehtbl.h"
@@ -58,13 +59,15 @@ constexpr const char ITEM_DAMAGETYPE_ABSHOP[]     = "absolute.hop";
 
 constexpr const char ITEM_DAMAGETYPE_MORPH[]      = "morph";
 
-constexpr const char ITEM_MORPH_SPECIES[] = "species";
+constexpr const char ITEM_MORPH_MONSTER_SPECIES[] = "monsterspecies";
 constexpr const char ITEM_MORPH_EXCLUDE[] = "exclude";
+constexpr const char ITEM_MORPH_PLAYER_CLASS[] = "playerclass";
 
 static cfg_opt_t morph_opts[] =
 {
-   CFG_STR(ITEM_MORPH_SPECIES, "", CFGF_NONE),
+   CFG_STR(ITEM_MORPH_MONSTER_SPECIES, "", CFGF_NONE),
    CFG_STR(ITEM_MORPH_EXCLUDE, "", CFGF_LIST),
+   CFG_STR(ITEM_MORPH_PLAYER_CLASS, "", CFGF_NONE),
    CFG_END(),
 };
 
@@ -206,7 +209,8 @@ static void E_processMorphing(cfg_t *dtsec, emod_t *mod)
 {
    cfg_t* morph = cfg_getsec(dtsec, ITEM_DAMAGETYPE_MORPH);
    
-   mod->morph.species = estrdup(cfg_getstr(morph, ITEM_MORPH_SPECIES));
+   mod->morph.species = estrdup(cfg_getstr(morph, ITEM_MORPH_MONSTER_SPECIES));
+   mod->morph.pclassName = estrdup(cfg_getstr(morph, ITEM_MORPH_PLAYER_CLASS));
 
    unsigned numExclude = cfg_size(morph, ITEM_MORPH_EXCLUDE);
 
@@ -361,7 +365,8 @@ void E_IndexMorphInfo(emodmorph_t &morph)
       return;
    char *species = morph.species;
    char **excluded = morph.excluded;
-   
+   char *pclassName = morph.pclassName;
+
    if(!species)
       morph.speciesID = -1;
    else
@@ -394,7 +399,17 @@ void E_IndexMorphInfo(emodmorph_t &morph)
    }
    else
       morph.excludedID = nullptr;
-   
+
+   if(pclassName)
+   {
+      morph.pclass = E_PlayerClassForName(pclassName);
+      if(!morph.pclass)
+         doom_warningf("Invalid playerclass '%s' for morph info", pclassName);
+      efree(pclassName);
+   }
+   else
+      morph.pclass = nullptr;
+
    morph.indexed = true;
 }
 

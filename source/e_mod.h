@@ -33,6 +33,8 @@
 #include "m_fixed.h"
 #include "info.h"
 
+struct playerclass_t;
+
 struct emodmorph_t
 {
    // NOTE: when we read the EDF for damagetype, we don't yet have thingtypes, so we need to read
@@ -46,12 +48,14 @@ struct emodmorph_t
       {
          char *species;
          char **excluded;
+         char *pclassName;
       };
       // indexed
       struct
       {
          mobjtype_t speciesID;
          mobjtype_t *excludedID;
+         const playerclass_t *pclass;
       };
    };
 };

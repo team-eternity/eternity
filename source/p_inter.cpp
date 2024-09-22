@@ -606,12 +606,13 @@ bool P_GivePower(player_t *player, int power, int duration, bool permament, bool
       P_PlayerStartFlight(player, true);
       break;
    case pw_weaponlevel2:
-      if (player->morphTics)
-      {
+      //if (player->morphTics)
+      //{
          // TODO: undo player chicken
          // TODO: actually this is the wrong place for this logic
-      }
-      else if(!E_IsPoweredVariant(player->readyweapon))
+      //}
+      //else
+      if(!E_IsPoweredVariant(player->readyweapon))
       {
          weaponinfo_t *sister = player->readyweapon->sisterWeapon;
          if(E_IsPoweredVariant(sister))
@@ -1392,9 +1393,14 @@ static int P_AdjustDamageType(Mobj *source, Mobj *inflictor, int mod)
    return newmod;
 }
 
-static void P_morphMobj(const emodmorph_t &minfo, Mobj &target)
+// TODO: make it last as long as item
+enum
 {
-   // TODO: also support players -- need to do it differently there!
+   MORPHTICS = 40 * TICRATE,
+};
+
+static void P_morphMonster(const emodmorph_t &minfo, Mobj &target)
+{
    if(target.player)
       return;
 
@@ -1432,8 +1438,53 @@ static void P_morphMobj(const emodmorph_t &minfo, Mobj &target)
    S_StartSound(P_SpawnMobj(pos.x, pos.y, pos.z + GameModeInfo->teleFogHeight,
                             E_SafeThingName(GameModeInfo->teleFogType)), GameModeInfo->teleSound);
    
-   polymorph->unmorph.tics = 40 * TICRATE + P_Random(pr_morphmobj);
+   polymorph->unmorph.tics = MORPHTICS + P_Random(pr_morphmobj);
    polymorph->unmorph.type = backuptype;
+}
+
+static void P_morphPlayer(const emodmorph_t &minfo, Mobj &target)
+{
+   player_t *player = target.player;
+   if(!player)
+      return;
+   if(player->morphTics)
+   {
+      // TODO: make this behavior flag dependent
+      if(player->morphTics < MORPHTICS - TICRATE && player->powers[pw_weaponlevel2].isActive())
+      {
+         // Make a super chicken
+         // TODO: actually make duration last as long as item
+         P_GivePower(player, pw_weaponlevel2, MORPHTICS, false, false);
+      }
+      return;
+   }
+   if(player->powers[pw_invulnerability].isActive())
+      return;  // Immune when invulnerable
+
+   v3fixed_t pos = {target.x, target.y, target.z};
+
+   angle_t angle = target.angle;
+   unsigned oldflags4 = target.flags4 & MF4_FLY;
+   target.remove();
+
+   S_StartSound(P_SpawnMobj(pos.x, pos.y, pos.z + GameModeInfo->teleFogHeight,
+                            E_SafeThingName(GameModeInfo->teleFogType)), GameModeInfo->teleSound);
+
+   Mobj *chicken = P_SpawnMobj(pos.x, pos.y, pos.z, minfo.pclass->type);
+   chicken->angle = angle;
+   chicken->player = player;
+   player->health = chicken->health = minfo.pclass->maxhealth;
+   P_SetTarget(&player->mo, chicken);
+   player->armorpoints = player->armorfactor = player->armordivisor = 0;
+
+   // TODO: make this a morph property (?!)
+   // TODO: actually make these work
+//   player->powers[pw_invisibility]. = 0;
+//   player->powers[pw_weaponlevel2] = 0;
+   if(oldflags4 & MF4_FLY)
+      chicken->flags4 |= MF4_FLY;
+   player->morphTics = MORPHTICS;
+   // TODO: set weapon
 }
 
 //
@@ -1527,12 +1578,17 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    if(mod != MOD_UNKNOWN)
    {
       E_IndexMorphInfo(emod->morph);
-      if(emod->morph.speciesID != -1)
+      if(!target->player && emod->morph.speciesID != -1)
       {
-         P_morphMobj(emod->morph, *target);
+         P_morphMonster(emod->morph, *target);
          return;
       }
-      
+      if(target->player && emod->morph.pclass)
+      {
+         P_morphPlayer(emod->morph, *target);
+         return;
+      }
+
       MetaTable *meta = target->info->meta;
       MetaTable *damagefactor = meta->getMetaTable(emod->dfKeyIndex, nullptr);
       if(damagefactor)

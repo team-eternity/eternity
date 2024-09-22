@@ -30,6 +30,7 @@
 constexpr int NUMEDFSKINCHAINS = 17;
 constexpr int NUMWEAPONSLOTS   = 16;
 
+struct player_t;
 struct skin_t;
 struct weaponslot_t;
 
