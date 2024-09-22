@@ -31,6 +31,25 @@ playerclass Corvus
    rebornitem GoldWand
 }
 
+playerclass Chicken
+{
+  defaultskin corvus
+  thingtype ChickenPlayer
+  initialhealth 30
+  maxhealth 30
+  superhealth 30
+  viewheight 21.0
+
+  speedwalk 30.517578125
+  speedrun 61.03515625
+  speedstrafe 29.296875
+  speedstraferun 48.828125
+
+  weaponslot 1 { weapons : Beak}
+
+  rebornitem Beak
+}
+
 //=============================================================================
 //
 // Weapon Info

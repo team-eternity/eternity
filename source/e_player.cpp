@@ -155,10 +155,10 @@ static cfg_opt_t reborn_opts[] =
    CFG_FLOAT(ITEM_PCLASS_VIEWHEIGHT,  41.0,    CFGF_NONE),  \
                                                             \
    /* speeds */                                             \
-   CFG_INT(ITEM_PCLASS_SPEEDWALK,      0x19,    CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDRUN,       0x32,    CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDSTRAFE,    0x18,    CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDSTRAFERUN, 0x28,    CFGF_NONE), \
+   CFG_FLOAT(ITEM_PCLASS_SPEEDWALK,      25.0,    CFGF_NONE), \
+   CFG_FLOAT(ITEM_PCLASS_SPEEDRUN,       50.0,    CFGF_NONE), \
+   CFG_FLOAT(ITEM_PCLASS_SPEEDSTRAFE,    24.0,    CFGF_NONE), \
+   CFG_FLOAT(ITEM_PCLASS_SPEEDSTRAFERUN, 40.0,    CFGF_NONE), \
    CFG_INT(ITEM_PCLASS_SPEEDTURN,       640,    CFGF_NONE), \
    CFG_INT(ITEM_PCLASS_SPEEDTURNFAST,  1280,    CFGF_NONE), \
    CFG_INT(ITEM_PCLASS_SPEEDTURNSLOW,   320,    CFGF_NONE), \
@@ -686,16 +686,16 @@ static void E_processPlayerClass(cfg_t *const pcsec, bool delta)
    // process player speed fields
 
    if(IS_SET(ITEM_PCLASS_SPEEDWALK))
-      pc->forwardmove[0] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDWALK);
+      pc->forwardmove[0] = M_DoubleToFixed(cfg_getfloat(pcsec, ITEM_PCLASS_SPEEDWALK));
 
    if(IS_SET(ITEM_PCLASS_SPEEDRUN))
-      pc->forwardmove[1] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDRUN);
+      pc->forwardmove[1] = M_DoubleToFixed(cfg_getfloat(pcsec, ITEM_PCLASS_SPEEDRUN));
 
    if(IS_SET(ITEM_PCLASS_SPEEDSTRAFE))
-      pc->sidemove[0] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDSTRAFE);
+      pc->sidemove[0] = M_DoubleToFixed(cfg_getfloat(pcsec, ITEM_PCLASS_SPEEDSTRAFE));
 
    if(IS_SET(ITEM_PCLASS_SPEEDSTRAFERUN))
-      pc->sidemove[1] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDSTRAFERUN);
+      pc->sidemove[1] = M_DoubleToFixed(cfg_getfloat(pcsec, ITEM_PCLASS_SPEEDSTRAFERUN));
 
    if(IS_SET(ITEM_PCLASS_SPEEDTURN))
       pc->angleturn[0] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDTURN);
