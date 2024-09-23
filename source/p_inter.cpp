@@ -1477,6 +1477,7 @@ static void P_morphPlayer(const emodmorph_t &minfo, player_t &player)
    P_SetTarget(&player.mo, chicken);
    player.armorpoints = player.armorfactor = player.armordivisor = 0;
    player.pclass = minfo.pclass;
+   // TODO: change weapon
 
    // TODO: make this a morph property (?!)
    // TODO: actually make these work
