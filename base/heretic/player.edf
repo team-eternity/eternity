@@ -39,7 +39,7 @@ playerclass Chicken
   maxhealth 30
   superhealth 30
   viewheight 21.0
-
+  speedfactor 1.220703125
 
   weaponslot 1 { weapons : Beak}
 

@@ -1442,40 +1442,41 @@ static void P_morphMonster(const emodmorph_t &minfo, Mobj &target)
    polymorph->unmorph.type = backuptype;
 }
 
-static void P_morphPlayer(const emodmorph_t &minfo, Mobj &target)
+static void P_morphPlayer(const emodmorph_t &minfo, player_t &player)
 {
-   player_t *player = target.player;
-   if(!player)
+   Mobj* target = player.mo;
+   if(!target)
       return;
-   if(player->morphTics)
+   if(player.morphTics)
    {
       // TODO: make this behavior flag dependent
-      if(player->morphTics < MORPHTICS - TICRATE && player->powers[pw_weaponlevel2].isActive())
+      if(player.morphTics < MORPHTICS - TICRATE && player.powers[pw_weaponlevel2].isActive())
       {
          // Make a super chicken
          // TODO: actually make duration last as long as item
-         P_GivePower(player, pw_weaponlevel2, MORPHTICS, false, false);
+         P_GivePower(&player, pw_weaponlevel2, MORPHTICS, false, false);
       }
       return;
    }
-   if(player->powers[pw_invulnerability].isActive())
+   if(player.powers[pw_invulnerability].isActive())
       return;  // Immune when invulnerable
 
-   v3fixed_t pos = {target.x, target.y, target.z};
+   v3fixed_t pos = {target->x, target->y, target->z};
 
-   angle_t angle = target.angle;
-   unsigned oldflags4 = target.flags4 & MF4_FLY;
-   target.remove();
+   angle_t angle = target->angle;
+   unsigned oldflags4 = target->flags4 & MF4_FLY;
+   target->remove();
 
    S_StartSound(P_SpawnMobj(pos.x, pos.y, pos.z + GameModeInfo->teleFogHeight,
                             E_SafeThingName(GameModeInfo->teleFogType)), GameModeInfo->teleSound);
 
    Mobj *chicken = P_SpawnMobj(pos.x, pos.y, pos.z, minfo.pclass->type);
    chicken->angle = angle;
-   chicken->player = player;
-   player->health = chicken->health = minfo.pclass->maxhealth;
-   P_SetTarget(&player->mo, chicken);
-   player->armorpoints = player->armorfactor = player->armordivisor = 0;
+   chicken->player = &player;
+   player.health = chicken->health = minfo.pclass->maxhealth;
+   P_SetTarget(&player.mo, chicken);
+   player.armorpoints = player.armorfactor = player.armordivisor = 0;
+   player.pclass = minfo.pclass;
 
    // TODO: make this a morph property (?!)
    // TODO: actually make these work
@@ -1483,7 +1484,7 @@ static void P_morphPlayer(const emodmorph_t &minfo, Mobj &target)
 //   player->powers[pw_weaponlevel2] = 0;
    if(oldflags4 & MF4_FLY)
       chicken->flags4 |= MF4_FLY;
-   player->morphTics = MORPHTICS;
+   player.morphTics = MORPHTICS;
    // TODO: set weapon
 }
 
@@ -1585,7 +1586,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       }
       if(target->player && emod->morph.pclass)
       {
-         P_morphPlayer(emod->morph, *target);
+         P_morphPlayer(emod->morph, *target->player);
          return;
       }
 

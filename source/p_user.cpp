@@ -335,6 +335,10 @@ void P_MovePlayer(player_t* player)
       {
          int friction, movefactor = P_GetMoveFactor(mo, &friction);
 
+         // Some classes have superior speeds
+         if (player->pclass->speedfactor != FRACUNIT)
+            movefactor = FixedMul(movefactor, player->pclass->speedfactor);
+
          // killough 11/98:
          // On sludge, make bobbing depend on efficiency.
          // On ice, make it depend on effort.
@@ -370,6 +374,10 @@ void P_MovePlayer(player_t* player)
          // Strife. For those, look below.
 
          int friction, movefactor = P_GetMoveFactor(mo, &friction);
+
+         // Some classes have superior speeds
+         if (player->pclass->speedfactor != FRACUNIT)
+            movefactor = FixedMul(movefactor, player->pclass->speedfactor);
 
          movefactor = FixedMul(movefactor, LevelInfo.airControl);
 

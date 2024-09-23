@@ -118,6 +118,7 @@ constexpr const char ITEM_PCLASS_SPEEDTURNSLOW[]  = "speedturnslow";
 constexpr const char ITEM_PCLASS_SPEEDLOOKSLOW[]  = "speedlookslow";
 constexpr const char ITEM_PCLASS_SPEEDLOOKFAST[]  = "speedlookfast";
 constexpr const char ITEM_PCLASS_SPEEDJUMP[]      = "speedjump";
+constexpr const char ITEM_PCLASS_SPEEDFACTOR[]    = "speedfactor";
 constexpr const char ITEM_PCLASS_CLRREBORNITEMS[] = "clearrebornitems";
 constexpr const char ITEM_PCLASS_REBORNITEM[]     = "rebornitem";
 constexpr const char ITEM_PCLASS_WEAPONSLOT[]     = "weaponslot";
@@ -166,6 +167,7 @@ static cfg_opt_t reborn_opts[] =
    CFG_INT(ITEM_PCLASS_SPEEDLOOKSLOW,   450,    CFGF_NONE), \
    CFG_INT(ITEM_PCLASS_SPEEDLOOKFAST,   512,    CFGF_NONE), \
    CFG_FLOAT(ITEM_PCLASS_SPEEDJUMP,     8.0,    CFGF_NONE), \
+   CFG_FLOAT(ITEM_PCLASS_SPEEDFACTOR,   1.0,    CFGF_NONE), \
                                                             \
    CFG_BOOL(ITEM_PCLASS_DEFAULT, false, CFGF_NONE),         \
                                                             \
@@ -727,6 +729,9 @@ static void E_processPlayerClass(cfg_t *const pcsec, bool delta)
    // copy speeds to original speeds
    memcpy(pc->oforwardmove, pc->forwardmove, 2 * sizeof(fixed_t));
    memcpy(pc->osidemove,    pc->sidemove,    2 * sizeof(fixed_t));
+
+   if (IS_SET(ITEM_PCLASS_SPEEDFACTOR))
+      pc->speedfactor = M_DoubleToFixed(cfg_getfloat(pcsec, ITEM_PCLASS_SPEEDFACTOR));
 
    // default flag
    if(IS_SET(ITEM_PCLASS_DEFAULT))

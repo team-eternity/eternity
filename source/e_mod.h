@@ -55,7 +55,7 @@ struct emodmorph_t
       {
          mobjtype_t speciesID;
          mobjtype_t *excludedID;
-         const playerclass_t *pclass;
+         playerclass_t *pclass;
       };
    };
 };

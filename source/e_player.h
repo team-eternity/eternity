@@ -82,6 +82,8 @@ struct playerclass_t
    fixed_t oforwardmove[2];
    fixed_t osidemove[2];
 
+   fixed_t speedfactor;
+
    // reborn inventory
    unsigned int       numrebornitems;
    reborninventory_t *rebornitems;
