@@ -163,7 +163,9 @@ void P_CalcHeight(player_t *player)
    // 04/11/10: refactored
 
    player->bob = 0;
-   if(demo_version >= 203)
+   if (player->pclass->flags & PCF_NOBOB)
+      player->bob = 0;
+   else if(demo_version >= 203)
    {
       if(player_bobbing)
       {

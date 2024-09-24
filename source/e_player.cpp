@@ -52,6 +52,12 @@
 #include "v_video.h"
 #include "w_wad.h"
 
+struct flagmap_t
+{
+   const char* edfname;
+   unsigned flag;
+};
+
 //
 // Player Class and Skin Options
 //
@@ -122,8 +128,10 @@ constexpr const char ITEM_PCLASS_SPEEDFACTOR[]    = "speedfactor";
 constexpr const char ITEM_PCLASS_CLRREBORNITEMS[] = "clearrebornitems";
 constexpr const char ITEM_PCLASS_REBORNITEM[]     = "rebornitem";
 constexpr const char ITEM_PCLASS_WEAPONSLOT[]     = "weaponslot";
+
 constexpr const char ITEM_PCLASS_ALWAYSJUMP[]     = "alwaysjump";
 constexpr const char ITEM_PCLASS_CHICKENTWITCH[]  = "chickentwitch";
+constexpr const char ITEM_PCLASS_NOBOB[] = "nobob";
 
 constexpr const char ITEM_REBORN_NAME[]   = "name";
 constexpr const char ITEM_REBORN_AMOUNT[] = "amount";
@@ -180,6 +188,7 @@ static cfg_opt_t reborn_opts[] =
    /* flags */                                          \
    CFG_FLAG(ITEM_PCLASS_ALWAYSJUMP, 0, CFGF_SIGNPREFIX),\
    CFG_FLAG(ITEM_PCLASS_CHICKENTWITCH, 0, CFGF_SIGNPREFIX),\
+   CFG_FLAG(ITEM_PCLASS_NOBOB, 0, CFGF_SIGNPREFIX),\
    CFG_END()
 
 cfg_opt_t edf_pclass_opts[] =
@@ -191,6 +200,13 @@ cfg_opt_t edf_pdelta_opts[] =
 {
    CFG_STR(ITEM_DELTA_NAME, nullptr, CFGF_NONE),
    PLAYERCLASS_FIELDS
+};
+
+static const flagmap_t s_flagmap[] =
+{
+   { ITEM_PCLASS_ALWAYSJUMP, PCF_ALWAYSJUMP },
+   { ITEM_PCLASS_CHICKENTWITCH, PCF_CHICKENTWITCH },
+   { ITEM_PCLASS_NOBOB, PCF_NOBOB },
 };
 
 //==============================================================================
@@ -627,20 +643,14 @@ static void E_processPlayerClass(cfg_t *const pcsec, bool delta)
       }
    }
 
-   if(IS_SET(ITEM_PCLASS_ALWAYSJUMP))
-   {
-      if(cfg_getflag(pcsec, ITEM_PCLASS_ALWAYSJUMP))
-         pc->flags |= PCF_ALWAYSJUMP;
-      else
-         pc->flags &= ~PCF_ALWAYSJUMP;
-   }
-   if(IS_SET(ITEM_PCLASS_CHICKENTWITCH))
-   {
-      if(cfg_getflag(pcsec, ITEM_PCLASS_CHICKENTWITCH))
-         pc->flags |= PCF_CHICKENTWITCH;
-      else
-         pc->flags &= ~PCF_CHICKENTWITCH;
-   }
+   for (const flagmap_t& item : s_flagmap)
+      if (IS_SET(item.edfname))
+      {
+         if (cfg_getflag(pcsec, item.edfname))
+            pc->flags |= item.flag;
+         else
+            pc->flags &= ~item.flag;
+      }
 
    // mobj type
    if(IS_SET(ITEM_PCLASS_THINGTYPE))
