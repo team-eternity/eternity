@@ -1486,6 +1486,8 @@ static void P_morphPlayer(const emodmorph_t &minfo, player_t &player)
 
    // WARNING: it seems that P_SetTarget is not used for player_t::mo. Keep a watch on this.
    player.mo = chicken;
+   player.momx = chicken->momx;
+   player.momy = chicken->momy;
 
    // TODO: make this a morph property (?!)
    player.powers[pw_invisibility].tics = 0;
