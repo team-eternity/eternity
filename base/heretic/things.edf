@@ -3485,6 +3485,7 @@ thingtype ChickenPlayer : ClassicHereticSolid, -1, 452
   height 24.0
   painsound ht_chicpai
   deathsound ht_chicdth
+  activesound ht_chicact
 
   addflags SHOOTABLE|DROPOFF|NOTDMATCH|FOOTCLIP|SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ|LOGRAV|NOSOUNDCUTOFF|STICKYCARRY
   
