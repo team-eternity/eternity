@@ -38,6 +38,7 @@
 #include "e_states.h"
 #include "e_ttypes.h"
 #include "e_weapons.h"
+#include "g_dmflag.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "m_random.h"
@@ -1074,6 +1075,39 @@ void P_PlayerStopFlight(player_t *player)
 
    player->mo->flags4 &= ~MF4_FLY;
    player->mo->flags  &= ~MF_NOGRAVITY;
+}
+
+//
+// Removes inventory and only keeps the one reborn for the given class
+//
+void P_ResetRebornInventory(player_t& player, bool checkdmflags)
+{
+   const playerclass_t& playerclass = *player.pclass;
+
+   // clear inventory unless otherwise indicated
+   if (!checkdmflags || !(dmflags & DM_KEEPITEMS))
+      E_ClearInventory(&player);
+
+   // haleyjd 08/05/13: give reborn inventory
+   for (unsigned int i = 0; i < playerclass.numrebornitems; i++)
+   {
+      // ignore this item due to cancellation by, ie., DeHackEd?
+      if (playerclass.rebornitems[i].flags & RBIF_IGNORE)
+         continue;
+
+      const char* name = playerclass.rebornitems[i].itemname;
+      int           amount = playerclass.rebornitems[i].amount;
+      itemeffect_t* effect = E_ItemEffectForName(name);
+
+      // only if have none, in the case that DM_KEEPITEMS is specified
+      if (!E_GetItemOwnedAmount(&player, effect))
+         E_GiveInventoryItem(&player, effect, amount);
+   }
+
+   if (!(player.readyweapon = E_FindBestWeapon(&player)))
+      player.readyweapon = E_WeaponForID(UnknownWeaponInfo);
+   else
+      player.readyweaponslot = E_FindFirstWeaponSlot(&player, player.readyweapon);
 }
 
 #if 0

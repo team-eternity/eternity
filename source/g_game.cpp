@@ -2463,30 +2463,7 @@ void G_PlayerReborn(int player)
    // MaxW: 2018/01/03: Adapt for new attackdown
    p->attackdown = demo_version >= 401 ? AT_ALL : AT_PRIMARY;
 
-   // clear inventory unless otherwise indicated
-   if(!(dmflags & DM_KEEPITEMS))
-      E_ClearInventory(p);
-   
-   // haleyjd 08/05/13: give reborn inventory
-   for(unsigned int i = 0; i < playerclass->numrebornitems; i++)
-   {
-      // ignore this item due to cancellation by, ie., DeHackEd?
-      if(playerclass->rebornitems[i].flags & RBIF_IGNORE)
-         continue;
-
-      const char   *name   = playerclass->rebornitems[i].itemname;
-      int           amount = playerclass->rebornitems[i].amount;
-      itemeffect_t *effect = E_ItemEffectForName(name);
-
-      // only if have none, in the case that DM_KEEPITEMS is specified
-      if(!E_GetItemOwnedAmount(p, effect))
-         E_GiveInventoryItem(p, effect, amount);
-   }
-
-   if(!(p->readyweapon = E_FindBestWeapon(p)))
-      p->readyweapon = E_WeaponForID(UnknownWeaponInfo);
-   else
-      p->readyweaponslot = E_FindFirstWeaponSlot(p, p->readyweapon);
+   P_ResetRebornInventory(*p, true);
 }
 
 void P_SpawnPlayer(mapthing_t *mthing);

@@ -1473,20 +1473,32 @@ static void P_morphPlayer(const emodmorph_t &minfo, player_t &player)
    Mobj *chicken = P_SpawnMobj(pos.x, pos.y, pos.z, minfo.pclass->type);
    chicken->angle = angle;
    chicken->player = &player;
-   player.health = chicken->health = minfo.pclass->maxhealth;
-   P_SetTarget(&player.mo, chicken);
-   player.armorpoints = player.armorfactor = player.armordivisor = 0;
+
    player.pclass = minfo.pclass;
-   // TODO: change weapon
+   player.skin = minfo.pclass->defaultskin;
+   player.viewz = chicken->z + minfo.pclass->viewheight;
+   player.viewheight = minfo.pclass->viewheight;
+   player.deltaviewheight = 0;
+   player.bob = 0;
+   player.health = chicken->health = minfo.pclass->maxhealth;
+   player.armorpoints = player.armorfactor = player.armordivisor = 0;
+
+   // WARNING: it seems that P_SetTarget is not used for player_t::mo. Keep a watch on this.
+   player.mo = chicken;
 
    // TODO: make this a morph property (?!)
-   // TODO: actually make these work
-//   player->powers[pw_invisibility]. = 0;
-//   player->powers[pw_weaponlevel2] = 0;
+   player.powers[pw_invisibility].tics = 0;
+   player.powers[pw_weaponlevel2].tics = 0;
+   
+   // TODO: save inventory for restoration
+   // TODO: change weapon
+   P_ResetRebornInventory(player, false);
+
+   player.extralight = 0;
+   
    if(oldflags4 & MF4_FLY)
       chicken->flags4 |= MF4_FLY;
    player.morphTics = MORPHTICS;
-   // TODO: set weapon
 }
 
 //
