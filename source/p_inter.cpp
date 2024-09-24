@@ -1495,7 +1495,10 @@ static void P_morphPlayer(const emodmorph_t &minfo, player_t &player)
    
    // TODO: save inventory for restoration
    // TODO: change weapon
+
+   // TODO: THIS IS WRONG, change it
    P_ResetRebornInventory(player, false);
+
    player.pendingweapon = player.readyweapon;
    player.pendingweaponslot = player.readyweaponslot;
 
