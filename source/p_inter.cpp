@@ -1474,6 +1474,7 @@ static void P_morphPlayer(const emodmorph_t &minfo, player_t &player)
    chicken->angle = angle;
    chicken->player = &player;
 
+   // TODO: check what vanilla Heretic restores and apply that back
    player.pclass = minfo.pclass;
    player.skin = minfo.pclass->defaultskin;
    player.viewz = chicken->z + minfo.pclass->viewheight;
@@ -1493,6 +1494,8 @@ static void P_morphPlayer(const emodmorph_t &minfo, player_t &player)
    // TODO: save inventory for restoration
    // TODO: change weapon
    P_ResetRebornInventory(player, false);
+   player.pendingweapon = player.readyweapon;
+   player.pendingweaponslot = player.readyweaponslot;
 
    player.extralight = 0;
    
