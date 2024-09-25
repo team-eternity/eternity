@@ -1497,7 +1497,8 @@ static void P_morphPlayer(const emodmorph_t &minfo, player_t &player)
    // TODO: change weapon
 
    // TODO: THIS IS WRONG, change it
-   P_ResetRebornInventory(player, false);
+   E_StashOriginalMorphWeapons(player);
+   P_GiveRebornInventory(player);
 
    player.pendingweapon = player.readyweapon;
    player.pendingweaponslot = player.readyweaponslot;

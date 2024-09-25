@@ -45,7 +45,7 @@ void P_SetPlayerAttacker(player_t *player, Mobj *attacker);
 void P_SetDisplayPlayer(int new_displayplayer);
 void P_PlayerStartFlight(player_t *player, bool thrustup);
 void P_PlayerStopFlight(player_t *player);
-void P_ResetRebornInventory(player_t& player, bool checkdmflags);
+void P_GiveRebornInventory(player_t& player);
 
 extern bool pitchedflight;
 extern bool default_pitchedflight;

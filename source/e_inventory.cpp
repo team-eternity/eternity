@@ -110,8 +110,11 @@ static itemeffect_t *E_addItemEffect(cfg_t *cfg, const char *const cfgSecName, c
    itemeffect_t *table;
    const char   *name = cfg_title(cfg);
 
-   if(!(table = E_ItemEffectForName(name)))
-      e_effectsTable.addObject((table = new itemeffect_t(name)));
+   if (!(table = E_ItemEffectForName(name)))
+   {
+      table = new itemeffect_t(name);
+      e_effectsTable.addObject(table);
+   }
    else if(table->getInt(keyClass, ITEMFX_NONE) != secNum)
    {
       E_EDFLoggedWarning(
@@ -813,6 +816,37 @@ static void E_collectKeyItems()
    {
       if(itr->getInt(keyArtifactType, ARTI_NORMAL) == ARTI_KEY)
          e_keysLookup.add(itr);
+   }
+}
+
+//=============================================================================
+//
+// Weapons
+//
+// We also need to look up weapons, due to polymorphing stripping player of
+// current arsenal
+//
+
+static PODCollection<itemeffect_t*> e_weaponsLookup;
+
+static size_t E_getNumWeaponItems()
+{
+   return e_weaponsLookup.getLength();
+}
+
+static itemeffect_t* E_weaponItemForIndex(size_t idx)
+{
+   return e_weaponsLookup[idx];
+}
+
+static void E_collectWeaponTypes()
+{
+   e_weaponsLookup.makeEmpty();
+   itemeffect_t* itr = nullptr;
+   while ((itr = runtime_cast<itemeffect_t*>(e_effectsTable.tableIterator(itr))))
+   {
+      if (itr->getInt(keyArtifactType, ARTI_NORMAL) == ARTI_WEAPON)
+         e_weaponsLookup.add(itr);
    }
 }
 
@@ -1940,6 +1974,10 @@ static void E_allocatePlayerInventories()
 
       for(inventoryindex_t idx = 0; idx < e_maxitemid; idx++)
          players[i].inventory[idx].item = -1;
+
+      if (players[i].unmorphInventory)
+         efree(players[i].unmorphInventory);
+      players[i].unmorphInventory = estructalloc(inventoryslot_t, e_maxitemid);
    }
 }
 
@@ -2424,6 +2462,32 @@ int E_GetPClassHealth(const itemeffect_t &effect, const char *key, const playerc
    return E_GetPClassHealth(effect, MetaKeyIndex(key), pclass, def);
 }
 
+//
+// Upon a polymorph, stash the current weapons to a separate inventory, since they can't be used by
+// morphing class.
+//
+void E_StashOriginalMorphWeapons(player_t& player)
+{
+   size_t numWeapons = E_getNumWeaponItems();
+
+   // WARNING: this clears existing unmorph inventory
+   memset(player.unmorphInventory, 0, e_maxitemid * sizeof(inventoryslot_t));
+   int pos = 0;
+
+   for (size_t i = 0; i < numWeapons; ++i)
+   {
+      const itemeffect_t* effect = E_weaponItemForIndex(i);
+      inventoryslot_t* slot = E_InventorySlotForItem(&player, effect);
+
+      if (!slot)
+         continue;
+
+      // Move the slot to the unmorph inventory
+      player.unmorphInventory[pos++] = *slot;
+      E_RemoveInventoryItem(&player, effect, -1);
+   }
+}
+
 //=============================================================================
 //
 // Global Processing
@@ -2467,6 +2531,7 @@ void E_ProcessInventory(cfg_t *cfg)
    // collect special artifact type definitions
    E_collectAmmoTypes();
    E_collectKeyItems();
+   E_collectWeaponTypes();
 
    // process lockdefs
    E_processLockDefs(cfg);

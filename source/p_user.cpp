@@ -1082,13 +1082,9 @@ void P_PlayerStopFlight(player_t *player)
 //
 // Removes inventory and only keeps the one reborn for the given class
 //
-void P_ResetRebornInventory(player_t& player, bool checkdmflags)
+void P_GiveRebornInventory(player_t& player)
 {
    const playerclass_t& playerclass = *player.pclass;
-
-   // clear inventory unless otherwise indicated
-   if (!checkdmflags || !(dmflags & DM_KEEPITEMS))
-      E_ClearInventory(&player);
 
    // haleyjd 08/05/13: give reborn inventory
    for (unsigned int i = 0; i < playerclass.numrebornitems; i++)

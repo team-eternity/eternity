@@ -227,6 +227,9 @@ struct player_t
    inventoryindex_t inv_ptr;     // MaxW: 2017/12/28: Player's currently selected item
    invbarstate_t    invbarstate; // MaxW: 2017/12/28: player's inventory bar state
 
+   // Unmorph info
+   inventory_t unmorphInventory; // weapons are moved here when polymorphed to another creature
+
    // Player name
    char           name[20];
 };

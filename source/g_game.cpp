@@ -2420,6 +2420,7 @@ void G_PlayerReborn(int player)
    skin_t *playerskin;
    playerclass_t *playerclass;
    inventory_t inventory;
+   inventory_t unmorphInventory;
 
    p = &players[player];
 
@@ -2435,6 +2436,7 @@ void G_PlayerReborn(int player)
    playerskin   = p->skin;
    playerclass  = p->pclass;     // haleyjd: playerclass
    inventory    = p->inventory;  // haleyjd: inventory
+   unmorphInventory = p->unmorphInventory;
 
    delete p->weaponctrs;
   
@@ -2454,6 +2456,7 @@ void G_PlayerReborn(int player)
    p->skin        = playerskin;
    p->pclass      = playerclass;              // haleyjd: playerclass
    p->inventory   = inventory;                // haleyjd: inventory
+   p->unmorphInventory = unmorphInventory;
    p->playerstate = PST_LIVE;
    p->health      = p->pclass->initialhealth; // Ty 03/12/98 - use dehacked values
    p->quake       = 0;                        // haleyjd 01/21/07
@@ -2463,7 +2466,11 @@ void G_PlayerReborn(int player)
    // MaxW: 2018/01/03: Adapt for new attackdown
    p->attackdown = demo_version >= 401 ? AT_ALL : AT_PRIMARY;
 
-   P_ResetRebornInventory(*p, true);
+   // clear inventory unless otherwise indicated
+   if (!(dmflags & DM_KEEPITEMS))
+      E_ClearInventory(p);
+
+   P_GiveRebornInventory(*p);
 }
 
 void P_SpawnPlayer(mapthing_t *mthing);
