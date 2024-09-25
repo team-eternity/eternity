@@ -134,14 +134,6 @@ static itemeffect_t *E_addItemEffect(cfg_t *cfg, const char *const cfgSecName, c
 }
 
 //
-// Remove an item effect from the table.
-//
-void E_RemoveItemEffect(itemeffect_t *effect)
-{
-   e_effectsTable.removeObject(effect);
-}
-
-//
 // E_ItemEffectForName
 //
 // Find an item effect by name.
@@ -2486,6 +2478,24 @@ void E_StashOriginalMorphWeapons(player_t& player)
       player.unmorphInventory[pos++] = *slot;
       E_RemoveInventoryItem(&player, effect, -1);
    }
+}
+
+//
+// Remove an item effect from the table.
+//
+void E_SafeDeleteItemEffect(itemeffect_t *effect)
+{
+   // Delete references from other collections
+   // NOTE: this would also need to handle e_ammoTypesLookup and e_keysLookup
+   for(size_t i = 0; i < e_weaponsLookup.getLength(); ++i)
+      if(e_weaponsLookup[i] == effect)
+      {
+         e_weaponsLookup[i] = e_weaponsLookup.back();
+         e_weaponsLookup.pop();
+      }
+
+   e_effectsTable.removeObject(effect);
+   delete effect;
 }
 
 //=============================================================================
