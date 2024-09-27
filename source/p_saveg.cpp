@@ -695,26 +695,37 @@ static void P_ArchivePlayers(SaveArchive &arc)
          int inventorySize;
          if(arc.isSaving())
          {
-            int numCountedWeapons, slotIndex;
-            size_t noLen = 0;
+            int numCountedWeapons;
 
             inventorySize = E_GetInventoryAllocSize();
             arc << inventorySize;
 
             // Save ready and pending weapon via string
-            if(p.readyweapon)
-               arc.writeLString(p.readyweapon->name);
-            else
-               arc.archiveSize(noLen);
-            if(p.pendingweapon)
-               arc.writeLString(p.pendingweapon->name);
-            else
-               arc.archiveSize(noLen);
 
-            slotIndex = p.readyweaponslot != nullptr ? p.readyweaponslot->slotindex : 0;
-            arc << slotIndex;
-            slotIndex = p.pendingweaponslot != nullptr ? p.pendingweaponslot->slotindex : 0;
-            arc << slotIndex;
+            auto saveweapon = [&arc](const weaponinfo_t *weapon)
+            {
+               size_t noLen = 0;
+               if(weapon)
+                  arc.writeLString(weapon->name);
+               else
+                  arc.archiveSize(noLen);
+            };
+
+            saveweapon(p.readyweapon);
+            saveweapon(p.pendingweapon);
+            if(arc.saveVersion() >= 22)
+               saveweapon(p.unmorphWeapon);
+
+            auto saveslot = [&arc](weaponslot_t *slot)
+            {
+               int slotIndex = slot ? slot->slotindex : 0;
+               arc << slotIndex;
+            };
+
+            saveslot(p.readyweaponslot);
+            saveslot(p.pendingweaponslot);
+            if(arc.saveVersion() >= 22)
+               saveslot(p.unmorphWeaponSlot);
 
             // Save number of weapons that have counters, then counters themselves if there's a need to
             numCountedWeapons = p.weaponctrs->numNodes();
@@ -733,23 +744,37 @@ static void P_ArchivePlayers(SaveArchive &arc)
                I_Error("P_ArchivePlayers: inventory size mismatch\n");
 
             // Load ready and pending weapon via string
-            arc.archiveLString(className, len);
-            if(estrnonempty(className) && !(p.readyweapon = E_WeaponForName(className)))
-               I_Error("P_ArchivePlayers: readyweapon '%s' not found\n", className);
-            arc.archiveLString(className, len);
-            if(estrnonempty(className) && !(p.pendingweapon = E_WeaponForName(className)))
-               I_Error("P_ArchivePlayers: pendingweapon '%s' not found\n", className);
+            auto loadweapon = [&arc](weaponinfo_t **weapon, const char *name)
+            {
+               char *className = nullptr;
+               size_t len;
+               arc.archiveLString(className, len);
+               if(estrnonempty(className) && !(*weapon = E_WeaponForName(className)))
+                  I_Error("P_ArchivePlayers: %s '%s' not found\n", name, className);
+            };
+
+            loadweapon(&p.readyweapon, "readyweapon");
+            loadweapon(&p.pendingweapon, "pendingweapon");
+            if(arc.saveVersion() >= 22)
+               loadweapon(&p.unmorphWeapon, "unmorphWeapon");
 
             arc << slotIndex;
             p.readyweaponslot = E_FindEntryForWeaponInSlotIndex(&p, p.readyweapon, slotIndex);
             arc << slotIndex;
             if(p.pendingweapon != nullptr)
                p.pendingweaponslot = E_FindEntryForWeaponInSlotIndex(&p, p.pendingweapon, slotIndex);
+            if(arc.saveVersion() >= 22)
+            {
+               arc << slotIndex;
+               p.unmorphWeaponSlot = E_FindEntryForWeaponInSlotIndex(&p, p.unmorphWeapon, slotIndex);
+            }
 
             // Load counters if there's a need to
             P_loadWeaponCounters(arc, p);
          }
          P_ArchiveArray<inventoryslot_t>(arc, p.inventory, inventorySize);
+         if(arc.saveVersion() >= 22)
+            P_ArchiveArray<inventoryslot_t>(arc, p.unmorphInventory, inventorySize);
 
          for(powerduration_t &power : p.powers)
          {
@@ -779,6 +804,8 @@ static void P_ArchivePlayers(SaveArchive &arc)
             p.prevviewz   = p.viewz;
             p.prevpitch   = p.pitch;
          }
+
+         // TODO: archive pclass and skin!
       }
    }
 }
