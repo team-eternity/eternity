@@ -687,6 +687,7 @@ bool P_UnmorphPlayer(player_t& player, bool onexit)
    player.momx = unmorph->momx;
    player.momy = unmorph->momy;
 
+   P_NeutralizeForRemoval(*pmo);
    pmo->remove();
 
    int fineangle = angle >> ANGLETOFINESHIFT;

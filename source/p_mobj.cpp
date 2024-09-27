@@ -338,6 +338,7 @@ static bool P_checkUnmorph(Mobj &mobj)
    P_SetTarget(&unmorph->target, mobj.target);
    P_SetTarget(&unmorph->tracer, mobj.tracer);
 
+   P_NeutralizeForRemoval(mobj);
    mobj.remove();
    
    // TODO: check if it should heal or preserve old health
@@ -4380,6 +4381,19 @@ bool P_RestingOnGround(const Mobj &thing, const surface_t &floor)
    // Sloped: must rest on this slope.
    return thing.zref.sector.floor && &thing.zref.sector.floor->srf.floor == &floor &&
          thing.z == thing.zref.floor;
+}
+
+void P_NeutralizeForRemoval(Mobj &mobj)
+{
+   // From Heretic, seems to do as much as possible to make a thing "inert" before it gets removed
+   mobj.momx = mobj.momy = mobj.momz = 0;
+   mobj.z = mobj.zref.ceiling + 4 * FRACUNIT;
+   mobj.flags &= ~(MF_SHOOTABLE | MF_FLOAT | MF_SKULLFLY | MF_SOLID | MF_COUNTKILL);
+   mobj.flags2 &= ~(MF2_LOGRAV);
+   mobj.flags2 |= MF2_DONTDRAW;
+   mobj.flags3 &= ~(MF3_PASSMOBJ);
+   mobj.player = nullptr;
+   mobj.health = -1000;
 }
 
 #if 0

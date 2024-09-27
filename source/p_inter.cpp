@@ -968,6 +968,12 @@ void P_DropItems(Mobj *actor, bool tossitems)
    }
 }
 
+// TODO: make it last as long as item
+enum
+{
+   MORPHTICS = 40 * TICRATE,
+};
+
 //
 // P_KillMobj
 //
@@ -1005,7 +1011,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 
          // TODO: make this an EDF thing if possible
          if (source->player->morphTics && target != source)  // Make a super chicken
-            P_GivePower(source->player, pw_weaponlevel2, 40 * TICRATE, false, false);
+            P_GivePower(source->player, pw_weaponlevel2, MORPHTICS, false, false);
       }
    }
    else if(GameType == gt_single && (target->flags & MF_COUNTKILL))
@@ -1393,11 +1399,6 @@ static int P_AdjustDamageType(Mobj *source, Mobj *inflictor, int mod)
    return newmod;
 }
 
-// TODO: make it last as long as item
-enum
-{
-   MORPHTICS = 40 * TICRATE,
-};
 
 static void P_morphMonster(const emodmorph_t &minfo, Mobj &target)
 {
@@ -1433,6 +1434,7 @@ static void P_morphMonster(const emodmorph_t &minfo, Mobj &target)
    
    mobjtype_t backuptype = target.type;
 
+   P_NeutralizeForRemoval(target);
    target.remove();
    
    S_StartSound(P_SpawnMobj(pos.x, pos.y, pos.z + GameModeInfo->teleFogHeight,
@@ -1466,6 +1468,7 @@ static void P_morphPlayer(const emodmorph_t &minfo, player_t &player)
    angle_t angle = target->angle;
    unsigned oldflags4 = target->flags4 & MF4_FLY;
    int playerColour = target->colour;
+   P_NeutralizeForRemoval(*target);
    target->remove();
 
    S_StartSound(P_SpawnMobj(pos.x, pos.y, pos.z + GameModeInfo->teleFogHeight,
