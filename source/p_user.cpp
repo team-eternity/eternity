@@ -690,10 +690,11 @@ static bool P_unmorphPlayer(player_t& player)
                             pos.z + GameModeInfo->teleFogHeight,
                             E_SafeThingName(GameModeInfo->teleFogType)), GameModeInfo->teleSound);
 
-   // TODO: make it instant
    E_UnstashWeaponsForUnmorphing(player);
    player.pendingweapon = player.readyweapon = player.unmorphWeapon;
    player.pendingweaponslot = player.readyweaponslot = player.unmorphWeaponSlot;
+   pspdef_t &pspr = player.psprites[ps_weapon];
+   pspr.playpos.y = pspr.renderpos.y = WEAPONBOTTOM;
    player.extralight = 0;
 
    if(oldflags4 & MF4_FLY)
