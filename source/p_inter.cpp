@@ -606,12 +606,6 @@ bool P_GivePower(player_t *player, int power, int duration, bool permament, bool
       P_PlayerStartFlight(player, true);
       break;
    case pw_weaponlevel2:
-      //if (player->morphTics)
-      //{
-         // TODO: undo player chicken
-         // TODO: actually this is the wrong place for this logic
-      //}
-      //else
       if(!E_IsPoweredVariant(player->readyweapon))
       {
          weaponinfo_t *sister = player->readyweapon->sisterWeapon;
@@ -693,6 +687,21 @@ bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
       {
          duration = duration * TICRATE; // Duration is given in seconds
          additiveTime = power->getInt("additivetime", 0) ? true : false;
+      }
+
+      if(powerNum == pw_weaponlevel2 && player->morphTics)
+      {
+         if(!P_UnmorphPlayer(*player, false))
+            P_DamageMobj(player->mo, nullptr, nullptr, GOD_BREACH_DAMAGE, MOD_SUICIDE);
+         else
+         {
+            player->morphTics = 0;
+
+            // FIXME: make this pclass or skin specific perhaps
+            if(GameModeInfo->type == Game_Heretic)
+               S_StartSound(nullptr, sfx_hwpnup);
+         }
+         return true;
       }
 
       return P_GivePower(player, powerNum, duration, permanent, additiveTime);
