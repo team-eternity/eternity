@@ -2418,6 +2418,9 @@ void E_ClearInventory(player_t *player)
    {
       player->inventory[i].amount =  0;
       player->inventory[i].item   = -1;
+      // Also unmorph inventory
+      player->unmorphInventory[i].amount =  0;
+      player->unmorphInventory[i].item   = -1;
    }
 
    player->inv_ptr = 0;

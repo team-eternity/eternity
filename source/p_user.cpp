@@ -671,8 +671,12 @@ bool P_UnmorphPlayer(player_t& player, bool onexit)
    unmorph->player = &player;
    unmorph->reactiontime = 18;
 
+   I_Assert(player.unmorphClass, "No unmorph class");
    player.pclass = player.unmorphClass;
+   player.unmorphClass = nullptr;
+   I_Assert(player.unmorphSkin, "No unmorph skin");
    player.skin = player.unmorphSkin;
+   player.unmorphSkin = nullptr;
    player.viewz = unmorph->z + player.pclass->viewheight;
    player.viewheight = player.pclass->viewheight;
    player.deltaviewheight = 0;

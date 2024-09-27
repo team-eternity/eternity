@@ -2438,8 +2438,9 @@ void G_PlayerReborn(int player)
    cheats       = p->cheats;     // killough 3/10/98,3/21/98: preserve cheats across idclev
    playercolour = p->colormap;
    totalfrags   = p->totalfrags;
-   playerskin   = p->skin;
-   playerclass  = p->pclass;     // haleyjd: playerclass
+   // Restore class now
+   playerskin   = p->unmorphSkin ? p->unmorphSkin : p->skin;
+   playerclass  = p->unmorphClass ? p->unmorphClass : p->pclass;     // haleyjd: playerclass
    inventory    = p->inventory;  // haleyjd: inventory
    unmorphInventory = p->unmorphInventory;
 
