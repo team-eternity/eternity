@@ -1670,7 +1670,12 @@ static void G_PlayerFinishLevel(int player)
    p->mo->flags2 &= ~MF2_DONTDRAW;          // haleyjd: cancel total invis.
    p->mo->flags4 &= ~MF4_TOTALINVISIBLE; 
    p->mo->flags3 &= ~MF3_GHOST;             // haleyjd: cancel ghost
-   p->morphTics = 0;
+   if(p->morphTics)
+   {
+      p->morphTics = 0;
+      P_UnmorphPlayer(*p, true);
+   }
+
    // TODO: test if the player chicken class really gets restored on level exit!!
 
    E_InventoryEndHub(p);   // haleyjd: strip inventory

@@ -641,7 +641,7 @@ static void P_chickenPlayerThink(player_t* player)
       S_StartSound(pmo, pmo->info->activesound);   // Just noise
 }
 
-static bool P_unmorphPlayer(player_t& player)
+bool P_UnmorphPlayer(player_t& player, bool onexit)
 {
    Mobj* pmo = player.mo;
    I_Assert(pmo, "No player mo");
@@ -658,7 +658,7 @@ static bool P_unmorphPlayer(player_t& player)
    bool fit = P_CheckPositionExt(unmorph, pos.x, pos.y, pos.z);
    pmo->flags |= solidity;
 
-   if(!fit)
+   if(!fit && !onexit)
    {
       // Didn't fit
       unmorph->remove();
@@ -957,12 +957,8 @@ void P_PlayerThink(player_t *player)
          player->headThrust = 0;
    }
    if (player->morphTics)
-   {
       if (!--player->morphTics)
-      {
-         P_unmorphPlayer(*player);
-      }
-   }
+         P_UnmorphPlayer(*player, false);
 
    // cycle psprites
 
