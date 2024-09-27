@@ -197,6 +197,9 @@ struct player_t
    // For Heretic chicken and similar
    int            morphTics;   // player is morphed if > 0
    int            headThrust;  // chicken peck countdown
+   inventory_t    unmorphInventory; // weapons are moved here when polymorphed to another creature
+   weaponinfo_t  *unmorphWeapon;
+   weaponslot_t  *unmorphWeaponSlot;
 
    // For intermission stats.
    int            killcount;
@@ -225,10 +228,7 @@ struct player_t
    // Inventory
    inventory_t      inventory;   // haleyjd 07/06/13: player's inventory
    inventoryindex_t inv_ptr;     // MaxW: 2017/12/28: Player's currently selected item
-   invbarstate_t    invbarstate; // MaxW: 2017/12/28: player's inventory bar state
-
-   // Unmorph info
-   inventory_t unmorphInventory; // weapons are moved here when polymorphed to another creature
+   invbarstate_t    invbarstate; // MaxW: 2017/12/28: player's inventory bar state   
 
    // Player name
    char           name[20];

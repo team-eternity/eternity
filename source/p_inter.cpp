@@ -1465,6 +1465,7 @@ static void P_morphPlayer(const emodmorph_t &minfo, player_t &player)
 
    angle_t angle = target->angle;
    unsigned oldflags4 = target->flags4 & MF4_FLY;
+   int playerColour = target->colour;
    target->remove();
 
    S_StartSound(P_SpawnMobj(pos.x, pos.y, pos.z + GameModeInfo->teleFogHeight,
@@ -1473,6 +1474,7 @@ static void P_morphPlayer(const emodmorph_t &minfo, player_t &player)
    Mobj *chicken = P_SpawnMobj(pos.x, pos.y, pos.z, minfo.pclass->type);
    chicken->angle = angle;
    chicken->player = &player;
+   chicken->colour = playerColour;  // retain colour mapping
 
    // TODO: check what vanilla Heretic restores and apply that back
    player.pclass = minfo.pclass;
@@ -1493,10 +1495,8 @@ static void P_morphPlayer(const emodmorph_t &minfo, player_t &player)
    player.powers[pw_invisibility].tics = 0;
    player.powers[pw_weaponlevel2].tics = 0;
    
-   // TODO: save inventory for restoration
-   // TODO: change weapon
-
-   // TODO: THIS IS WRONG, change it
+   player.unmorphWeapon = player.readyweapon;
+   player.unmorphWeaponSlot = player.readyweaponslot;
    E_StashOriginalMorphWeapons(player);
    P_GiveRebornInventory(player);
 

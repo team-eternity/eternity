@@ -640,6 +640,17 @@ static void P_chickenPlayerThink(player_t* player)
       S_StartSound(pmo, pmo->info->activesound);   // Just noise
 }
 
+static bool P_unmorphPlayer(player_t& player)
+{
+   Mobj* pmo = player.mo;
+   I_Assert(pmo, "No player mo");
+
+   v3fixed_t pos = { pmo->x, pmo->y, pmo->z };
+   angle_t angle = pmo->angle;
+   // TODO: remember weapon
+   return false;
+}
+
 //
 // P_PlayerThink
 //
