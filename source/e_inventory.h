@@ -193,6 +193,9 @@ int E_TakeAllKeys(const player_t *player);
 // Upon morphing a player, move all original class weapons to a secondary inventory
 void E_StashOriginalMorphWeapons(player_t& player);
 
+// After returning to normal form, restore all weapons. Delete existing weapons
+void E_UnstashWeaponsForUnmorphing(player_t &player);
+
 // Check if a player is able to unlock a lock, by its lock ID.
 bool E_PlayerCanUnlock(const player_t *player, int lockID, bool remote);
 

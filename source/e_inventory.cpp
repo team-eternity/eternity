@@ -2471,12 +2471,41 @@ void E_StashOriginalMorphWeapons(player_t& player)
       const itemeffect_t* effect = E_weaponItemForIndex(i);
       inventoryslot_t* slot = E_InventorySlotForItem(&player, effect);
 
-      if (!slot)
+      if (!slot || slot->amount <= 0)
          continue;
 
       // Move the slot to the unmorph inventory
       player.unmorphInventory[pos++] = *slot;
       E_RemoveInventoryItem(&player, effect, -1);
+   }
+}
+
+//
+// Unstash weapons
+//
+void E_UnstashWeaponsForUnmorphing(player_t &player)
+{
+   size_t numWeapons = E_getNumWeaponItems();
+
+   // First remove all owned weapons (specific to morph class)
+   for(size_t i = 0; i < numWeapons; ++i)
+   {
+      const itemeffect_t* effect = E_weaponItemForIndex(i);
+      inventoryslot_t* slot = E_InventorySlotForItem(&player, effect);
+
+      if (!slot)
+         continue;
+
+      E_RemoveInventoryItem(&player, effect, -1);
+   }
+
+   for(inventoryitemid_t i = 0; i < e_maxitemid; ++i)
+   {
+      const inventoryslot_t &slot = player.unmorphInventory[i];
+      if(!slot.amount)
+         break;   // reached end
+
+      E_GiveInventoryItem(&player, E_EffectForInventoryItemID(slot.item));
    }
 }
 

@@ -200,6 +200,8 @@ struct player_t
    inventory_t    unmorphInventory; // weapons are moved here when polymorphed to another creature
    weaponinfo_t  *unmorphWeapon;
    weaponslot_t  *unmorphWeaponSlot;
+   playerclass_t *unmorphClass;
+   skin_t        *unmorphSkin;
 
    // For intermission stats.
    int            killcount;

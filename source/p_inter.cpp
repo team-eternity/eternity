@@ -1477,6 +1477,8 @@ static void P_morphPlayer(const emodmorph_t &minfo, player_t &player)
    chicken->colour = playerColour;  // retain colour mapping
 
    // TODO: check what vanilla Heretic restores and apply that back
+   player.unmorphClass = player.pclass;
+   player.unmorphSkin = player.skin;
    player.pclass = minfo.pclass;
    player.skin = minfo.pclass->defaultskin;
    player.viewz = chicken->z + minfo.pclass->viewheight;
@@ -1497,6 +1499,7 @@ static void P_morphPlayer(const emodmorph_t &minfo, player_t &player)
    
    player.unmorphWeapon = player.readyweapon;
    player.unmorphWeaponSlot = player.readyweaponslot;
+
    E_StashOriginalMorphWeapons(player);
    P_GiveRebornInventory(player);
 

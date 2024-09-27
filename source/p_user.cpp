@@ -36,6 +36,7 @@
 #include "e_inventory.h"
 #include "e_player.h"
 #include "e_states.h"
+#include "e_things.h"
 #include "e_ttypes.h"
 #include "e_weapons.h"
 #include "g_dmflag.h"
@@ -647,8 +648,58 @@ static bool P_unmorphPlayer(player_t& player)
 
    v3fixed_t pos = { pmo->x, pmo->y, pmo->z };
    angle_t angle = pmo->angle;
-   // TODO: remember weapon
-   return false;
+   unsigned oldflags4 = pmo->flags4 & MF4_FLY;
+
+   Mobj *unmorph = P_SpawnMobj(pos.x, pos.y, pos.z, player.unmorphClass->type);
+
+   // Temporarily remove the solid flag in order to check position without being blocked by this.
+   unsigned solidity = pmo->flags & MF_SOLID;
+   pmo->flags &= ~MF_SOLID;
+   bool fit = P_CheckPositionExt(unmorph, pos.x, pos.y, pos.z);
+   pmo->flags |= solidity;
+
+   if(!fit)
+   {
+      // Didn't fit
+      unmorph->remove();
+      player.morphTics = 2 * TICRATE;
+      return false;
+   }
+
+   unmorph->colour = player.colormap;
+   unmorph->angle = angle;
+   unmorph->player = &player;
+   unmorph->reactiontime = 18;
+
+   player.pclass = player.unmorphClass;
+   player.skin = player.unmorphSkin;
+   player.viewz = unmorph->z + player.pclass->viewheight;
+   player.viewheight = player.pclass->viewheight;
+   player.deltaviewheight = 0;
+   player.morphTics = 0;
+   player.powers[pw_weaponlevel2].tics = 0;
+   player.health = unmorph->health = player.pclass->maxhealth;
+   player.mo = unmorph;
+   player.momx = unmorph->momx;
+   player.momy = unmorph->momy;
+
+   pmo->remove();
+
+   int fineangle = angle >> ANGLETOFINESHIFT;
+   S_StartSound(P_SpawnMobj(pos.x + 20 * finecosine[fineangle], pos.y + 20 * finesine[fineangle],
+                            pos.z + GameModeInfo->teleFogHeight,
+                            E_SafeThingName(GameModeInfo->teleFogType)), GameModeInfo->teleSound);
+
+   // TODO: make it instant
+   E_UnstashWeaponsForUnmorphing(player);
+   player.pendingweapon = player.readyweapon = player.unmorphWeapon;
+   player.pendingweaponslot = player.readyweaponslot = player.unmorphWeaponSlot;
+   player.extralight = 0;
+
+   if(oldflags4 & MF4_FLY)
+      unmorph->flags4 |= MF4_FLY;
+
+   return true;
 }
 
 //
@@ -908,7 +959,7 @@ void P_PlayerThink(player_t *player)
    {
       if (!--player->morphTics)
       {
-         // TODO: undo player chicken
+         P_unmorphPlayer(*player);
       }
    }
 
