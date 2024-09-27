@@ -1452,10 +1452,9 @@ static void P_morphPlayer(const emodmorph_t &minfo, player_t &player)
    if(player.morphTics)
    {
       // TODO: make this behavior flag dependent
-      if(player.morphTics < MORPHTICS - TICRATE && player.powers[pw_weaponlevel2].isActive())
+      if(player.morphTics < MORPHTICS - TICRATE && !player.powers[pw_weaponlevel2].isActive())
       {
          // Make a super chicken
-         // TODO: actually make duration last as long as item
          P_GivePower(&player, pw_weaponlevel2, MORPHTICS, false, false);
       }
       return;
