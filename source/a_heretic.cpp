@@ -1848,5 +1848,40 @@ void A_FloatPuff(actionargs_t *actionargs)
    actionargs->actor->momz += static_cast<fixed_t>(1.8 * FRACUNIT);
 }
 
+//=============================================================================
+//
+// Player Projectiles
+//
+
+void A_Feathers(actionargs_t* actionargs)
+{
+   Mobj* actor = actionargs->actor;
+   int feather = E_SafeThingName("Feather");
+
+   int count = actor->health > 0 ? P_Random(pr_feathers) < 32 ? 2 : 1 
+                                 : 5 + (P_Random(pr_feathers) & 3);
+   for (int i = 0; i < count; ++i)
+   {
+      Mobj* mo = P_SpawnMobj(actor->x, actor->y, actor->z + 20 * FRACUNIT, feather);
+      P_SetTarget(&mo->target, actor);
+      mo->momx = P_SubRandom(pr_feathers) << 8;
+      mo->momy = P_SubRandom(pr_feathers) << 8;
+      mo->momz = FRACUNIT + (P_SubRandom(pr_feathers) << 9);
+      // Randomize state
+      statenum_t snum;
+      int addrandom = P_Random(pr_feathers) & 7;
+      
+      int j;
+      for (snum = mo->info->spawnstate, j = 0; j < addrandom && snum != NullStateNum; ++j)
+      {
+         const state_t* cur = states[snum];
+         if (cur)
+            snum = cur->nextstate;
+      }
+      if (snum != NullStateNum && snum != mo->info->spawnstate)
+         P_SetMobjState(mo, snum);
+   }
+}
+
 // EOF
 

@@ -856,11 +856,20 @@ void A_WeaponReady(actionargs_t *actionargs)
    player_t *player;
    pspdef_t *psp;
 
+   static const unsigned WRF_NOBOB = 1;
+   static dehflags_t flaglist[] =
+   {
+      { "WRF_NOBOB", WRF_NOBOB },
+   };
+   static dehflagset_t flagset = { flaglist, 0 };
+
    if(!(player = mo->player))
       return;
 
    if(!(psp = actionargs->pspr))
       return;
+
+   unsigned flags = E_ArgAsFlags(actionargs->args, 0, &flagset);
 
    // EDF_FEATURES_FIXME: Demo guard this as well?
    if(!player->pendingweapon && !E_PlayerOwnsWeapon(player, player->readyweapon) &&
@@ -928,10 +937,13 @@ void A_WeaponReady(actionargs_t *actionargs)
       player->attackdown = AT_NONE;
 
    // bob the weapon based on movement speed
-   int angle = (128*leveltime) & FINEMASK;
-   psp->playpos.x = psp->renderpos.x = FRACUNIT + FixedMul(player->bob, finecosine[angle]);
-   angle &= FINEANGLES/2-1;
-   psp->playpos.y = psp->renderpos.y = WEAPONTOP + FixedMul(player->bob, finesine[angle]);
+   if(!(flags & WRF_NOBOB))
+   {
+      int angle = (128*leveltime) & FINEMASK;
+      psp->playpos.x = psp->renderpos.x = FRACUNIT + FixedMul(player->bob, finecosine[angle]);
+      angle &= FINEANGLES/2-1;
+      psp->playpos.y = psp->renderpos.y = WEAPONTOP + FixedMul(player->bob, finesine[angle]);
+   }
 }
 
 static void A_reFireNew(actionargs_t *actionargs)

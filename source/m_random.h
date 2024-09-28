@@ -271,6 +271,12 @@ typedef enum {
    pr_touchphoenixfire,
    pr_touchbossteleport,
 
+   pr_feathers,   // A_Feathers
+   pr_morphmobj,
+
+   pr_wpnsettics, // A_WeaponSetTics
+   pr_chickenplayerthink,  // P_ChickenPlayerThink
+
    NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;
 

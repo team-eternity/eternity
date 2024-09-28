@@ -27,6 +27,7 @@
 #ifndef P_INTER_H__
 #define P_INTER_H__
 
+struct emodmorph_t;
 struct player_t;
 class  Mobj;
 class  MetaTable;
@@ -53,6 +54,7 @@ bool P_GivePower(player_t *player, int power, int duration, bool permanent, bool
 void P_TouchSpecialThing(Mobj *special, Mobj *toucher);
 void P_DamageMobj(Mobj *target,Mobj *inflictor,Mobj *source,int damage,int mod);
 void P_DropItems(Mobj *actor, bool tossitems);
+bool P_MorphPlayer(const emodmorph_t &minfo, player_t &player);
 
 void P_Whistle(Mobj *actor, int mobjtype);
 

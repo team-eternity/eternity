@@ -1670,6 +1670,11 @@ static void G_PlayerFinishLevel(int player)
    p->mo->flags2 &= ~MF2_DONTDRAW;          // haleyjd: cancel total invis.
    p->mo->flags4 &= ~MF4_TOTALINVISIBLE; 
    p->mo->flags3 &= ~MF3_GHOST;             // haleyjd: cancel ghost
+   if(p->morphTics)
+   {
+      p->morphTics = 0;
+      P_UnmorphPlayer(*p, true);
+   }
 
    E_InventoryEndHub(p);   // haleyjd: strip inventory
 
@@ -2418,6 +2423,7 @@ void G_PlayerReborn(int player)
    skin_t *playerskin;
    playerclass_t *playerclass;
    inventory_t inventory;
+   inventory_t unmorphInventory;
 
    p = &players[player];
 
@@ -2430,9 +2436,11 @@ void G_PlayerReborn(int player)
    cheats       = p->cheats;     // killough 3/10/98,3/21/98: preserve cheats across idclev
    playercolour = p->colormap;
    totalfrags   = p->totalfrags;
-   playerskin   = p->skin;
-   playerclass  = p->pclass;     // haleyjd: playerclass
+   // Restore class now
+   playerskin   = p->unmorphSkin ? p->unmorphSkin : p->skin;
+   playerclass  = p->unmorphClass ? p->unmorphClass : p->pclass;     // haleyjd: playerclass
    inventory    = p->inventory;  // haleyjd: inventory
+   unmorphInventory = p->unmorphInventory;
 
    delete p->weaponctrs;
   
@@ -2452,6 +2460,7 @@ void G_PlayerReborn(int player)
    p->skin        = playerskin;
    p->pclass      = playerclass;              // haleyjd: playerclass
    p->inventory   = inventory;                // haleyjd: inventory
+   p->unmorphInventory = unmorphInventory;
    p->playerstate = PST_LIVE;
    p->health      = p->pclass->initialhealth; // Ty 03/12/98 - use dehacked values
    p->quake       = 0;                        // haleyjd 01/21/07
@@ -2464,27 +2473,8 @@ void G_PlayerReborn(int player)
    // clear inventory unless otherwise indicated
    if(!(dmflags & DM_KEEPITEMS))
       E_ClearInventory(p);
-   
-   // haleyjd 08/05/13: give reborn inventory
-   for(unsigned int i = 0; i < playerclass->numrebornitems; i++)
-   {
-      // ignore this item due to cancellation by, ie., DeHackEd?
-      if(playerclass->rebornitems[i].flags & RBIF_IGNORE)
-         continue;
 
-      const char   *name   = playerclass->rebornitems[i].itemname;
-      int           amount = playerclass->rebornitems[i].amount;
-      itemeffect_t *effect = E_ItemEffectForName(name);
-
-      // only if have none, in the case that DM_KEEPITEMS is specified
-      if(!E_GetItemOwnedAmount(p, effect))
-         E_GiveInventoryItem(p, effect, amount);
-   }
-
-   if(!(p->readyweapon = E_FindBestWeapon(p)))
-      p->readyweapon = E_WeaponForID(UnknownWeaponInfo);
-   else
-      p->readyweaponslot = E_FindFirstWeaponSlot(p, p->readyweapon);
+   P_GiveRebornInventory(*p);
 }
 
 void P_SpawnPlayer(mapthing_t *mthing);

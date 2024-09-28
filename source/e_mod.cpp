@@ -37,11 +37,14 @@
 #include "e_edf.h"
 #include "e_mod.h"
 #include "e_hash.h"
+#include "e_player.h"
+#include "e_things.h"
 
 #include "d_dehtbl.h"
 #include "d_io.h"
 #include "doomtype.h"
 #include "metaapi.h"
+#include "m_collection.h"
 
 //
 // damagetype options
@@ -54,6 +57,20 @@ constexpr const char ITEM_DAMAGETYPE_SOURCELESS[] = "sourceless";
 constexpr const char ITEM_DAMAGETYPE_ABSPUSH[]    = "absolute.push";
 constexpr const char ITEM_DAMAGETYPE_ABSHOP[]     = "absolute.hop";
 
+constexpr const char ITEM_DAMAGETYPE_MORPH[]      = "morph";
+
+constexpr const char ITEM_MORPH_MONSTER_SPECIES[] = "monsterspecies";
+constexpr const char ITEM_MORPH_EXCLUDE[] = "exclude";
+constexpr const char ITEM_MORPH_PLAYER_CLASS[] = "playerclass";
+
+static cfg_opt_t morph_opts[] =
+{
+   CFG_STR(ITEM_MORPH_MONSTER_SPECIES, "", CFGF_NONE),
+   CFG_STR(ITEM_MORPH_EXCLUDE, "", CFGF_LIST),
+   CFG_STR(ITEM_MORPH_PLAYER_CLASS, "", CFGF_NONE),
+   CFG_END(),
+};
+
 cfg_opt_t edf_dmgtype_opts[] =
 {
    CFG_INT(ITEM_DAMAGETYPE_NUM,         -1,       CFGF_NONE),
@@ -62,6 +79,7 @@ cfg_opt_t edf_dmgtype_opts[] =
    CFG_BOOL(ITEM_DAMAGETYPE_SOURCELESS, false,    CFGF_NONE),
    CFG_FLOAT(ITEM_DAMAGETYPE_ABSPUSH,   0,        CFGF_NONE),
    CFG_FLOAT(ITEM_DAMAGETYPE_ABSHOP,    0,        CFGF_NONE),
+   CFG_SEC(ITEM_DAMAGETYPE_MORPH, morph_opts, CFGF_NOCASE),
    CFG_END()
 };
 
@@ -185,6 +203,26 @@ static void E_DelDamageTypeFromNumHash(emod_t *mod)
 static emod_t *E_EDFDamageTypeForName(const char *name)
 {
    return e_mod_namehash.objectForKey(name);
+}
+
+static void E_processMorphing(cfg_t *dtsec, emod_t *mod)
+{
+   cfg_t* morph = cfg_getsec(dtsec, ITEM_DAMAGETYPE_MORPH);
+   
+   mod->morph.species = estrdup(cfg_getstr(morph, ITEM_MORPH_MONSTER_SPECIES));
+   mod->morph.pclassName = estrdup(cfg_getstr(morph, ITEM_MORPH_PLAYER_CLASS));
+
+   unsigned numExclude = cfg_size(morph, ITEM_MORPH_EXCLUDE);
+
+   PODCollection<const char *> excludes;
+   for (unsigned i = 0; i < numExclude; ++i)
+   {
+      const char* exclude = estrdup(cfg_getnstr(morph, ITEM_MORPH_EXCLUDE, i));
+      excludes.add(exclude);
+   }
+
+   mod->morph.excluded = ecalloc(char**, numExclude + 1, sizeof(char *));
+   memcpy(mod->morph.excluded, &excludes[0], numExclude * sizeof(char *));
 }
 
 //
@@ -314,8 +352,65 @@ static void E_ProcessDamageType(cfg_t *const dtsec)
                                                       ITEM_DAMAGETYPE_ABSHOP));
    }
 
+   if (cfg_size(dtsec, ITEM_DAMAGETYPE_MORPH))
+      E_processMorphing(dtsec, mod);
+
    E_EDFLogPrintf("\t\t%s damagetype %s\n",
                   def ? "Defined" : "Modified", mod->name);
+}
+
+void E_IndexMorphInfo(emodmorph_t &morph)
+{
+   if(morph.indexed)
+      return;
+   char *species = morph.species;
+   char **excluded = morph.excluded;
+   char *pclassName = morph.pclassName;
+
+   if(!species)
+      morph.speciesID = -1;
+   else
+   {
+      morph.speciesID = E_ThingNumForName(species);
+      if(morph.speciesID == -1)
+         doom_warningf("Invalid species '%s' for morph info", species);
+      efree(species);
+   }
+   
+   if(excluded)
+   {
+      PODCollection<mobjtype_t> excludedID;
+      for(char **item = excluded; *item; ++item)
+      {
+         int type = E_ThingNumForName(*item);
+         if(type == -1)
+            doom_warningf("Invalid excluded tareget '%s' for morph info", *item);
+         else
+            excludedID.add(type);
+      }
+      for(char **iter = excluded; *iter; ++iter)
+         efree(*iter);
+      efree(excluded);
+      
+      morph.excludedID = emalloc(mobjtype_t *, (excludedID.getLength() + 1) * sizeof(mobjtype_t));
+      memcpy(morph.excludedID, &excludedID[0], excludedID.getLength() * sizeof(mobjtype_t));
+      morph.excludedID[excludedID.getLength()] = -1;  // end with -1
+      
+   }
+   else
+      morph.excludedID = nullptr;
+
+   if(pclassName)
+   {
+      morph.pclass = E_PlayerClassForName(pclassName);
+      if(!morph.pclass)
+         doom_warningf("Invalid playerclass '%s' for morph info", pclassName);
+      efree(pclassName);
+   }
+   else
+      morph.pclass = nullptr;
+
+   morph.indexed = true;
 }
 
 //

@@ -51,3 +51,11 @@ pufftype HereticGauntletPuff2 : HereticPuffBase
   thingtype     HereticGauntletPuff2
   upspeed       0.8
 }
+
+pufftype HereticBeakPuff : HereticPuffBase
+{
+  thingtype HereticStaffPuff
+  sound ht_chicatk
+  upspeed 1.0
+  particles 4
+}

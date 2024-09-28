@@ -1034,6 +1034,56 @@ frame S_RAINAIRXPLR1_1 { +decorate; dehackednum 2844 }
 frame S_RAINAIRXPLR1_2 { +decorate; dehackednum 2845 }
 frame S_RAINAIRXPLR1_3 { +decorate; dehackednum 2846 }
 
+// Feather
+frame S_FEATHER1 { +decorate; dehackednum 2847 }
+frame S_FEATHER2 { +decorate; dehackednum 2848 }
+frame S_FEATHER3 { +decorate; dehackednum 2849 }
+frame S_FEATHER4 { +decorate; dehackednum 2850 }
+frame S_FEATHER5 { +decorate; dehackednum 2851 }
+frame S_FEATHER6 { +decorate; dehackednum 2852 }
+frame S_FEATHER7 { +decorate; dehackednum 2853 }
+frame S_FEATHER8 { +decorate; dehackednum 2854 }
+frame S_FEATHERX { +decorate; dehackednum 2855 }
+
+// Chicken
+frame S_CHICKEN_LOOK1 { +decorate; dehackednum 2856 }
+frame S_CHICKEN_LOOK2 { +decorate; dehackednum 2857 }
+frame S_CHICKEN_WALK1 { +decorate; dehackednum 2858 }
+frame S_CHICKEN_WALK2 { +decorate; dehackednum 2859 }
+frame S_CHICKEN_PAIN1 { +decorate; dehackednum 2860 }
+frame S_CHICKEN_PAIN2 { +decorate; dehackednum 2861 }
+frame S_CHICKEN_ATK1 { +decorate; dehackednum 2862 }
+frame S_CHICKEN_ATK2 { +decorate; dehackednum 2863 }
+frame S_CHICKEN_DIE1 { +decorate; dehackednum 2864 }
+frame S_CHICKEN_DIE2 { +decorate; dehackednum 2865 }
+frame S_CHICKEN_DIE3 { +decorate; dehackednum 2866 }
+frame S_CHICKEN_DIE4 { +decorate; dehackednum 2867 }
+frame S_CHICKEN_DIE5 { +decorate; dehackednum 2868 }
+frame S_CHICKEN_DIE6 { +decorate; dehackednum 2869 }
+frame S_CHICKEN_DIE7 { +decorate; dehackednum 2870 }
+frame S_CHICKEN_DIE8 { +decorate; dehackednum 2871 }
+
+// Morph Ovum projectile
+frame S_EGGFX1 { +decorate; dehackednum 2872 }
+frame S_EGGFX2 { +decorate; dehackednum 2873 }
+frame S_EGGFX3 { +decorate; dehackednum 2874 }
+frame S_EGGFX4 { +decorate; dehackednum 2875 }
+frame S_EGGFX5 { +decorate; dehackednum 2876 }
+frame S_EGGFXI1_1 { +decorate; dehackednum 2877 }
+frame S_EGGFXI1_2 { +decorate; dehackednum 2878 }
+frame S_EGGFXI1_3 { +decorate; dehackednum 2879 }
+frame S_EGGFXI1_4 { +decorate; dehackednum 2880 }
+
+// Chicken Player
+frame S_CHICPLAY { +decorate; dehackednum 2881 }
+frame S_CHICPLAY_RUN1 { +decorate; dehackednum 2882 }
+frame S_CHICPLAY_RUN2 { +decorate; dehackednum 2883 }
+frame S_CHICPLAY_RUN3 { +decorate; dehackednum 2884 }
+frame S_CHICPLAY_RUN4 { +decorate; dehackednum 2885 }
+frame S_CHICPLAY_ATK1 { +decorate; dehackednum 2886 }
+frame S_CHICPLAY_PAIN { +decorate; dehackednum 2887 }
+frame S_CHICPLAY_PAIN2 { +decorate; dehackednum 2888 }
+
 // Heretic Weapons
 
 // S_HTICLIGHTDONE: Why is this here? I mean it's in the Heretic source but why is it there?
@@ -1230,3 +1280,15 @@ frame S_CRBOWATK2_6 { +decorate }
 frame S_CRBOWATK2_7 { +decorate }
 frame S_CRBOWATK2_8 { +decorate }
 
+// Beak
+frame S_BEAKREADY { +decorate }
+frame S_BEAKDOWN { +decorate }
+frame S_BEAKUP { +decorate }
+frame S_BEAKSOUND { +decorate }
+frame S_BEAKHIT { +decorate }
+frame S_BEAKTHRUST { +decorate }
+frame S_BEAKTICS { +decorate }
+frame S_BEAK2SOUND { +decorate }
+frame S_BEAK2HIT { +decorate }
+frame S_BEAK2THRUST { +decorate }
+frame S_BEAK2TICS { +decorate }

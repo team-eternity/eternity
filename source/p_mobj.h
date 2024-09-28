@@ -180,6 +180,12 @@ struct sprojlast_t
    float xscale;
 };
 
+struct unmorph_t
+{
+   int tics;
+   mobjtype_t type;
+};
+
 //
 // Map Object definition.
 //
@@ -372,6 +378,8 @@ public:
    int special;         // special
    int args[NUMMTARGS]; // arguments
    uint16_t tid;        // thing id used by scripts
+   
+   unmorph_t unmorph;
 
    // Note: tid chain pointers are NOT serialized in save games,
    // but are restored on load by rehashing the things as they are
@@ -603,6 +611,7 @@ inline static fixed_t getThingZ(Mobj *mo1, Mobj *mo2)
 
 bool P_CheckFloorCeilingForSpawning(const Mobj& mobj);
 bool P_RestingOnGround(const Mobj &mobj, const surface_t &floor);
+void P_NeutralizeForRemoval(Mobj &mobj);
 
 //=============================================================================
 //

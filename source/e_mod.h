@@ -31,6 +31,34 @@
 
 #include "m_dllist.h"
 #include "m_fixed.h"
+#include "info.h"
+
+struct playerclass_t;
+
+struct emodmorph_t
+{
+   // NOTE: when we read the EDF for damagetype, we don't yet have thingtypes, so we need to read
+   // the strings raw. But at runtime we can do the actual string-to-index mapping.
+   bool indexed;
+   
+   union
+   {
+      // not indexed
+      struct
+      {
+         char *species;
+         char **excluded;
+         char *pclassName;
+      };
+      // indexed
+      struct
+      {
+         mobjtype_t speciesID;
+         mobjtype_t *excludedID;
+         playerclass_t *pclass;
+      };
+   };
+};
 
 //
 // emod structure
@@ -50,6 +78,8 @@ struct emod_t
    bool selfObitIsIndirect;
    bool sourceless;
 
+   emodmorph_t morph;
+
    fixed_t absolutePush;   // if set, push things by this amount
    fixed_t absoluteHop;    // if set, hop gravity things by this amount
 
@@ -63,6 +93,8 @@ int     E_DamageTypeNumForName(const char *name);
 
 // This is actually in e_things.c but should be prototyped here.
 const char *E_ModFieldName(const char *base, const emod_t *mod);
+
+void E_IndexMorphInfo(emodmorph_t &morph);
 
 // EDF-only stuff
 #ifdef NEED_EDF_DEFINITIONS

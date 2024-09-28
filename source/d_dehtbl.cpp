@@ -1362,6 +1362,7 @@ void A_CopyCounter(actionargs_t *);
 void A_CounterOp(actionargs_t *);
 void A_CounterDiceRoll(actionargs_t *);
 void A_SetTics(actionargs_t *);
+void A_WeaponSetTics(actionargs_t*);
 void A_AproxDistance(actionargs_t *);
 void A_ShowMessage(actionargs_t *);
 void A_RandomWalk(actionargs_t *);
@@ -1496,6 +1497,7 @@ void A_ClearSkin(actionargs_t *);
 void A_PhoenixPuff(actionargs_t *);
 void A_FlameEnd(actionargs_t *);
 void A_FloatPuff(actionargs_t *);
+void A_Feathers(actionargs_t *);
 
 // MaxW: 2018/01/02: Heretic weapon pointers
 void A_StaffAttackPL1(actionargs_t *);
@@ -1525,10 +1527,12 @@ void A_FirePhoenixPL1(actionargs_t *);
 void A_InitPhoenixPL2(actionargs_t *);
 void A_FirePhoenixPL2(actionargs_t *);
 void A_GauntletAttack(actionargs_t *);
+void A_ViewThrust(actionargs_t *);
 
 // MaxW: 2018/01/02: Heretic artifact use pointers
 void A_HticArtiTele(actionargs_t *);
 void A_HticSpawnFireBomb(actionargs_t *);
+void A_HticMorphOvum(actionargs_t *);
 
 // haleyjd 10/04/08: Hexen pointers
 #if 0
@@ -1757,6 +1761,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(CounterOp),
    POINTER(CounterDiceRoll),
    POINTER(SetTics),
+   POINTER(WeaponSetTics),
    POINTER(AproxDistance),
    POINTER(ShowMessage),
    POINTER(RandomWalk),
@@ -1896,6 +1901,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(PhoenixPuff),
    POINTER(FlameEnd),
    POINTER(FloatPuff),
+   POINTER(Feathers),
 
    // MaxW: 2018/01/02: Heretic weapon pointers
    POINTER(StaffAttackPL1),
@@ -1925,10 +1931,12 @@ deh_bexptr deh_bexptrs[] =
    POINTER(InitPhoenixPL2),
    POINTER(FirePhoenixPL2),
    POINTER(GauntletAttack),
+   POINTER(ViewThrust),
 
    // MaxW: 2018/01/02: Heretic artifact use pointers
    POINTER(HticArtiTele),
    POINTER(HticSpawnFireBomb),
+   POINTER(HticMorphOvum),
 
    // haleyjd 10/04/08: Hexen pointers
 #if 0

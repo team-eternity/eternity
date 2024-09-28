@@ -199,7 +199,7 @@ void HU_BuffsDraw(int leftoffset, int rightoffset)
       }
    }
 
-   if(plyr.powers[pw_weaponlevel2].isActive())
+   if(plyr.powers[pw_weaponlevel2].isActive() && !plyr.morphTics)
    {
       if(plyr.powers[pw_weaponlevel2].infinite ||
          plyr.powers[pw_weaponlevel2].tics > (4 * 32) || !(plyr.powers[pw_weaponlevel2].tics & 16))

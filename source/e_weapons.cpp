@@ -1463,8 +1463,7 @@ static void E_processWeapon(weapontype_t i, cfg_t *const weaponsec, cfg_t *pcfg,
                            "selectionorder as their unpowered sisterweapon\n", wp.name);
       }
 
-      E_RemoveItemEffect(wp.tracker);
-      delete wp.tracker;
+      E_SafeDeleteItemEffect(wp.tracker);
       wp.tracker = wp.sisterWeapon->tracker;
    }
 

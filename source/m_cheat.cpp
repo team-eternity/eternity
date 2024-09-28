@@ -45,6 +45,7 @@
 #include "doomstat.h"
 #include "dstrings.h"
 #include "e_inventory.h"
+#include "e_mod.h"
 #include "e_player.h"
 #include "e_states.h"
 #include "e_weapons.h"
@@ -112,6 +113,7 @@ static void cheat_hticwarp(const void *);
 static void cheat_hticbehold(const void *);
 static void cheat_hticgimme(const void *);
 static void cheat_rambo(const void *);
+static void cheat_cockadoodledoo(const void *);
 
 // Shared cheats
 static void cheat_pw(const void *);
@@ -203,6 +205,7 @@ cheat_s cheat[CHEAT_NUMCHEATS] =
    { "ravpower",  Game_Heretic, not_sync, cheat_hticbehold,  0                  },
    { "gimme",     Game_Heretic, not_sync, cheat_hticgimme, -(2 | FLAG_ALWAYSCALL) },
    { "rambo",     Game_Heretic, not_sync, cheat_rambo,       0                  },
+   { "cockadoodledoo", Game_Heretic, not_sync, cheat_cockadoodledoo, 0          },
 
    // Shared Cheats
    { "comp",     -1, not_sync, cheat_comp,     0             }, // phares
@@ -827,6 +830,29 @@ static void cheat_rambo(const void *arg)
    E_GiveAllAmmo(plyr, GAA_MAXAMOUNT);
 
    player_printf(plyr, "%s", DEH_String(TXT_CHEATWEAPONS));
+}
+
+static void cheat_cockadoodledoo(const void *arg)
+{
+   if(plyr->morphTics)
+   {
+      if(P_UnmorphPlayer(*plyr, false))
+         player_printf(plyr, "%s", DEH_String(TXT_CHEATCHICKENOFF));
+   }
+   else
+   {
+      // hardcode for now
+      emod_t *mod = E_DamageTypeForName("ChickenMorph");
+      if(!mod)
+      {
+         doom_warningf("Couldn't find ChickenMorph damagetype");
+         return;
+      }
+      emodmorph_t &minfo = mod->morph;
+      E_IndexMorphInfo(minfo);
+      if(P_MorphPlayer(minfo, *plyr))
+         player_printf(plyr, "%s", DEH_String(TXT_CHEATCHICKENON));
+   }
 }
 
 //-----------------------------------------------------------------------------

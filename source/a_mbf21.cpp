@@ -29,6 +29,7 @@
 #include "a_common.h"
 #include "a_doom.h"
 #include "d_event.h"
+#include "d_gi.h"
 #include "d_mod.h"
 #include "d_player.h"
 #include "doomstat.h"
@@ -256,7 +257,8 @@ void A_MonsterMeleeAttack(actionargs_t *actionargs)
    hitsound   = E_ArgAsSound(args, 2);
    range      = E_ArgAsFixed(args, 3, actor->info->meleerange);
 
-   range += actor->target->info->radius - 20 * FRACUNIT;
+   if (GameModeInfo->monsterMeleeRange == meleecalc_doom)
+      range += actor->target->info->radius - 20 * FRACUNIT;
 
    A_FaceTarget(actionargs);
    if(!P_CheckRange(actor, range))

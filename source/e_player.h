@@ -26,10 +26,13 @@
 #ifndef E_PLAYER_H__
 #define E_PLAYER_H__
 
+#include "info.h"
+
 // macros
 constexpr int NUMEDFSKINCHAINS = 17;
 constexpr int NUMWEAPONSLOTS   = 16;
 
+struct player_t;
 struct skin_t;
 struct weaponslot_t;
 
@@ -46,6 +49,8 @@ enum rebornitemflag_e
 enum
 {
    PCF_ALWAYSJUMP = 1,   // class is designed to jump, do not allow disabling it
+   PCF_CHICKENTWITCH = 2,  // random twitching like Heretic chicken
+   PCF_NOBOB = 4, // disable bobbing
 };
 
 // default inventory items
@@ -79,6 +84,8 @@ struct playerclass_t
    // original speeds - before turbo is applied.
    fixed_t oforwardmove[2];
    fixed_t osidemove[2];
+
+   fixed_t speedfactor;
 
    // reborn inventory
    unsigned int       numrebornitems;

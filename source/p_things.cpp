@@ -493,6 +493,7 @@ int EV_ThingRemove(int tid)
       mobj = P_FindMobjFromTID(tid, mobj, nullptr);
 
       // clean up as best as we can
+      // FIXME: maybe P_NeutralizeForRemoval is better? Only change if absolutely needed or broken.
       removed->health = 0;
       removed->flags &= ~MF_SHOOTABLE;
       removed->remove();

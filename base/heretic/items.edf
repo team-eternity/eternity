@@ -468,7 +468,7 @@ artifact ArtiEgg
   sortorder      50
   icon           ARTIEGGC
   usesound       ht_artiuse
-  useeffect      MorphOvum
+  useaction      A_HticMorphOvum
 
   +invbar
 

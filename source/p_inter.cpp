@@ -57,6 +57,7 @@
 #include "metaapi.h"
 #include "p_inter.h"
 #include "p_map.h"
+#include "p_map3d.h"
 #include "p_maputl.h"
 #include "p_portalcross.h"
 #include "p_skin.h"
@@ -72,6 +73,11 @@
 
 
 #define BONUSADD        6
+
+enum
+{
+   MORPHTICS = 40 * TICRATE,
+};
 
 // Ty 03/07/98 - add deh externals
 // Maximums and such were hardcoded values.  Need to externalize those for
@@ -687,6 +693,21 @@ bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
          additiveTime = power->getInt("additivetime", 0) ? true : false;
       }
 
+      if(powerNum == pw_weaponlevel2 && player->morphTics)
+      {
+         if(!P_UnmorphPlayer(*player, false))
+            P_DamageMobj(player->mo, nullptr, nullptr, GOD_BREACH_DAMAGE, MOD_SUICIDE);
+         else
+         {
+            player->morphTics = 0;
+
+            // FIXME: make this pclass or skin specific perhaps
+            if(GameModeInfo->type == Game_Heretic)
+               S_StartSound(nullptr, sfx_hwpnup);
+         }
+         return true;
+      }
+
       return P_GivePower(player, powerNum, duration, permanent, additiveTime);
    }
 
@@ -994,6 +1015,9 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
       {
          source->player->frags[target->player-players]++;
          HU_FragsUpdate();
+
+         if (source->player->morphTics && target != source)  // Make a super chicken
+            P_GivePower(source->player, pw_weaponlevel2, MORPHTICS, false, false);
       }
    }
    else if(GameType == gt_single && (target->flags & MF_COUNTKILL))
@@ -1381,6 +1405,147 @@ static int P_AdjustDamageType(Mobj *source, Mobj *inflictor, int mod)
    return newmod;
 }
 
+
+static void P_morphMonster(const emodmorph_t &minfo, Mobj &target)
+{
+   if(target.player)
+      return;
+
+   // Cannot morph into same species or if non-sentient
+   if(target.type == minfo.speciesID || !sentient(&target))
+      return;
+   
+   if(minfo.excludedID)
+      for(mobjtype_t *excluded = minfo.excludedID; *excluded != -1; ++excluded)
+         if(target.type == *excluded)
+            return;
+   
+   v3fixed_t pos = { target.x, target.y, target.z };
+   Mobj *polymorph = P_SpawnMobj(pos.x, pos.y, pos.z, minfo.speciesID);
+
+   // Temporarily remove the solid flag in order to check position without being blocked by this.
+   unsigned solidity = target.flags & MF_SOLID;
+   target.flags &= ~MF_SOLID;
+   bool fit = P_CheckPositionExt(polymorph, pos.x, pos.y, pos.z);
+   target.flags |= solidity;
+
+   if(!fit)
+   {
+      // Didn't fit. Abort the polymorph.
+      polymorph->remove();
+      return;
+   }
+
+   unsigned ghost = target.flags & MF_SHADOW;
+   unsigned ghost3 = target.flags3 & MF3_GHOST;
+   polymorph->flags |= ghost;
+   polymorph->flags3 |= ghost3;
+   
+   P_transferFriendship(*polymorph, target);
+   polymorph->angle = target.angle;
+   polymorph->special = target.special;
+   memcpy(polymorph->args, target.args, sizeof(target.args));
+   P_AddThingTID(polymorph, target.tid);
+   P_SetTarget(&polymorph->target, target.target);
+   P_SetTarget(&polymorph->tracer, target.tracer);
+   
+   mobjtype_t backuptype = target.type;
+
+   P_NeutralizeForRemoval(target);
+   target.remove();
+   
+   S_StartSound(P_SpawnMobj(pos.x, pos.y, pos.z + GameModeInfo->teleFogHeight,
+                            E_SafeThingName(GameModeInfo->teleFogType)), GameModeInfo->teleSound);
+   
+   polymorph->unmorph.tics = MORPHTICS + P_Random(pr_morphmobj);
+   polymorph->unmorph.type = backuptype;
+}
+
+bool P_MorphPlayer(const emodmorph_t &minfo, player_t &player)
+{
+   Mobj* target = player.mo;
+   if(!target)
+      return false;
+   if(player.morphTics)
+   {
+      if(player.morphTics < MORPHTICS - TICRATE && !player.powers[pw_weaponlevel2].isActive())
+      {
+         // Make a super chicken
+         P_GivePower(&player, pw_weaponlevel2, MORPHTICS, false, false);
+         return true;
+      }
+      return false;
+   }
+   if(player.powers[pw_invulnerability].isActive())
+      return false;  // Immune when invulnerable
+
+   v3fixed_t pos = {target->x, target->y, target->z};
+
+   angle_t angle = target->angle;
+   unsigned oldflags4 = target->flags4 & MF4_FLY;
+   int playerColour = target->colour;
+
+   Mobj *chicken = P_SpawnMobj(pos.x, pos.y, pos.z, minfo.pclass->type);
+
+   // Temporarily remove the solid flag in order to check position without being blocked by this.
+   unsigned solidity = target->flags & MF_SOLID;
+   target->flags &= ~MF_SOLID;
+   bool fit = P_CheckPositionExt(chicken, pos.x, pos.y, pos.z);
+   target->flags |= solidity;
+
+   if(!fit)
+   {
+      // Didn't fit. Abort the polymorph.
+      chicken->remove();
+      return false;
+   }
+
+   P_NeutralizeForRemoval(*target);
+   target->remove();
+
+   S_StartSound(P_SpawnMobj(pos.x, pos.y, pos.z + GameModeInfo->teleFogHeight,
+                            E_SafeThingName(GameModeInfo->teleFogType)), GameModeInfo->teleSound);
+
+   chicken->angle = angle;
+   chicken->player = &player;
+   chicken->colour = playerColour;  // retain colour mapping
+
+   player.unmorphClass = player.pclass;
+   player.unmorphSkin = player.skin;
+   player.pclass = minfo.pclass;
+   player.skin = minfo.pclass->defaultskin;
+   player.viewz = chicken->z + minfo.pclass->viewheight;
+   player.viewheight = minfo.pclass->viewheight;
+   player.deltaviewheight = 0;
+   player.bob = 0;
+   player.health = chicken->health = minfo.pclass->maxhealth;
+   player.armorpoints = player.armorfactor = player.armordivisor = 0;
+
+   // WARNING: it seems that P_SetTarget is not used for player_t::mo. Keep a watch on this.
+   player.mo = chicken;
+   player.momx = chicken->momx;
+   player.momy = chicken->momy;
+
+   player.powers[pw_ghost].tics = 0;
+   player.powers[pw_weaponlevel2].tics = 0;
+   
+   player.unmorphWeapon = player.readyweapon;
+   player.unmorphWeaponSlot = player.readyweaponslot;
+
+   E_StashOriginalMorphWeapons(player);
+   P_GiveRebornInventory(player);
+
+   player.pendingweapon = player.readyweapon;
+   player.pendingweaponslot = player.readyweaponslot;
+
+   player.extralight = 0;
+   
+   if(oldflags4 & MF4_FLY)
+      chicken->flags4 |= MF4_FLY;
+   player.morphTics = MORPHTICS;
+   return true;
+}
+
 //
 // P_DamageMobj
 //
@@ -1471,6 +1636,18 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    // haleyjd 10/12/09: damage factors
    if(mod != MOD_UNKNOWN)
    {
+      E_IndexMorphInfo(emod->morph);
+      if(!target->player && emod->morph.speciesID != -1)
+      {
+         P_morphMonster(emod->morph, *target);
+         return;
+      }
+      if(target->player && emod->morph.pclass)
+      {
+         P_MorphPlayer(emod->morph, *target->player);
+         return;
+      }
+
       MetaTable *meta = target->info->meta;
       MetaTable *damagefactor = meta->getMetaTable(emod->dfKeyIndex, nullptr);
       if(damagefactor)

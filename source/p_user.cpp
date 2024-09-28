@@ -36,8 +36,10 @@
 #include "e_inventory.h"
 #include "e_player.h"
 #include "e_states.h"
+#include "e_things.h"
 #include "e_ttypes.h"
 #include "e_weapons.h"
+#include "g_dmflag.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "m_random.h"
@@ -47,6 +49,7 @@
 #include "p_map3d.h"
 #include "p_maputl.h"
 #include "p_portalcross.h"
+#include "p_pspr.h"
 #include "p_skin.h"
 #include "p_spec.h"
 #include "p_user.h"
@@ -161,7 +164,9 @@ void P_CalcHeight(player_t *player)
    // 04/11/10: refactored
 
    player->bob = 0;
-   if(demo_version >= 203)
+   if (player->pclass->flags & PCF_NOBOB)
+      player->bob = 0;
+   else if(demo_version >= 203)
    {
       if(player_bobbing)
       {
@@ -334,6 +339,10 @@ void P_MovePlayer(player_t* player)
       {
          int friction, movefactor = P_GetMoveFactor(mo, &friction);
 
+         // Some classes have superior speeds
+         if (player->pclass->speedfactor != FRACUNIT)
+            movefactor = FixedMul(movefactor, player->pclass->speedfactor);
+
          // killough 11/98:
          // On sludge, make bobbing depend on efficiency.
          // On ice, make it depend on effort.
@@ -369,6 +378,10 @@ void P_MovePlayer(player_t* player)
          // Strife. For those, look below.
 
          int friction, movefactor = P_GetMoveFactor(mo, &friction);
+
+         // Some classes have superior speeds
+         if (player->pclass->speedfactor != FRACUNIT)
+            movefactor = FixedMul(movefactor, player->pclass->speedfactor);
 
          movefactor = FixedMul(movefactor, LevelInfo.airControl);
 
@@ -607,6 +620,94 @@ inline static bool P_SectorIsSpecial(const sector_t *sector)
    return (sector->special || sector->flags || sector->damage);
 }
 
+static void P_chickenPlayerThink(player_t* player)
+{
+   if (player->morphTics & 15)
+      return;
+
+   Mobj* pmo = player->mo;
+
+   if (pmo->momx + pmo->momy == 0 && P_Random(pr_chickenplayerthink) < 160)
+      pmo->angle += P_SubRandom(pr_chickenplayerthink) << 19;  // Twitch view angle
+   if (pmo->z <= pmo->zref.floor && P_Random(pr_chickenplayerthink) < 32)
+   {
+      // Jump and noise
+      pmo->momz += FRACUNIT;
+      if(pmo->info->painstate != NullStateNum)
+         P_SetMobjState(pmo, pmo->info->painstate);
+      return;
+   }
+   if (P_Random(pr_chickenplayerthink) < 48)
+      S_StartSound(pmo, pmo->info->activesound);   // Just noise
+}
+
+bool P_UnmorphPlayer(player_t& player, bool onexit)
+{
+   Mobj* pmo = player.mo;
+   I_Assert(pmo, "No player mo");
+
+   v3fixed_t pos = { pmo->x, pmo->y, pmo->z };
+   angle_t angle = pmo->angle;
+   unsigned oldflags4 = pmo->flags4 & MF4_FLY;
+
+   Mobj *unmorph = P_SpawnMobj(pos.x, pos.y, pos.z, player.unmorphClass->type);
+
+   // Temporarily remove the solid flag in order to check position without being blocked by this.
+   unsigned solidity = pmo->flags & MF_SOLID;
+   pmo->flags &= ~MF_SOLID;
+   bool fit = P_CheckPositionExt(unmorph, pos.x, pos.y, pos.z);
+   pmo->flags |= solidity;
+
+   if(!fit && !onexit)
+   {
+      // Didn't fit
+      unmorph->remove();
+      player.morphTics = 2 * TICRATE;
+      return false;
+   }
+
+   unmorph->colour = player.colormap;
+   unmorph->angle = angle;
+   unmorph->player = &player;
+   unmorph->reactiontime = 18;
+
+   I_Assert(player.unmorphClass, "No unmorph class");
+   player.pclass = player.unmorphClass;
+   player.unmorphClass = nullptr;
+   I_Assert(player.unmorphSkin, "No unmorph skin");
+   player.skin = player.unmorphSkin;
+   player.unmorphSkin = nullptr;
+   player.viewz = unmorph->z + player.pclass->viewheight;
+   player.viewheight = player.pclass->viewheight;
+   player.deltaviewheight = 0;
+   player.morphTics = 0;
+   player.powers[pw_weaponlevel2].tics = 0;
+   player.health = unmorph->health = player.pclass->maxhealth;
+   player.mo = unmorph;
+   player.momx = unmorph->momx;
+   player.momy = unmorph->momy;
+
+   P_NeutralizeForRemoval(*pmo);
+   pmo->remove();
+
+   int fineangle = angle >> ANGLETOFINESHIFT;
+   S_StartSound(P_SpawnMobj(pos.x + 20 * finecosine[fineangle], pos.y + 20 * finesine[fineangle],
+                            pos.z + GameModeInfo->teleFogHeight,
+                            E_SafeThingName(GameModeInfo->teleFogType)), GameModeInfo->teleSound);
+
+   E_UnstashWeaponsForUnmorphing(player);
+   player.pendingweapon = player.readyweapon = player.unmorphWeapon;
+   player.pendingweaponslot = player.readyweaponslot = player.unmorphWeaponSlot;
+   pspdef_t &pspr = player.psprites[ps_weapon];
+   pspr.playpos.y = pspr.renderpos.y = WEAPONBOTTOM;
+   player.extralight = 0;
+
+   if(oldflags4 & MF4_FLY)
+      unmorph->flags4 |= MF4_FLY;
+
+   return true;
+}
+
 //
 // P_PlayerThink
 //
@@ -645,6 +746,18 @@ void P_PlayerThink(player_t *player)
    {
       P_DeathThink(player);
       return;
+   }
+
+   if(player->headThrust && player->health > 0)
+   {
+      pspdef_t &psp = player->psprites[ps_weapon];
+      psp.playpos.y = WEAPONTOP + (player->headThrust << (FRACBITS - 1));
+      psp.renderpos.y = psp.playpos.y;
+   }
+
+   if (player->morphTics && player->pclass->flags & PCF_CHICKENTWITCH)
+   {
+      P_chickenPlayerThink(player);
    }
 
    // haleyjd 04/03/05: new yshear code
@@ -841,6 +954,17 @@ void P_PlayerThink(player_t *player)
    else
       player->usedown = false;
 
+   // Chicken counter
+   if (player->headThrust)
+   {
+      player->headThrust -= 3;
+      if(player->headThrust < 0)
+         player->headThrust = 0;
+   }
+   if (player->morphTics)
+      if (!--player->morphTics)
+         P_UnmorphPlayer(*player, false);
+
    // cycle psprites
 
    P_MovePsprites (player);
@@ -1017,6 +1141,35 @@ void P_PlayerStopFlight(player_t *player)
 
    player->mo->flags4 &= ~MF4_FLY;
    player->mo->flags  &= ~MF_NOGRAVITY;
+}
+
+//
+// Removes inventory and only keeps the one reborn for the given class
+//
+void P_GiveRebornInventory(player_t& player)
+{
+   const playerclass_t& playerclass = *player.pclass;
+
+   // haleyjd 08/05/13: give reborn inventory
+   for (unsigned int i = 0; i < playerclass.numrebornitems; i++)
+   {
+      // ignore this item due to cancellation by, ie., DeHackEd?
+      if (playerclass.rebornitems[i].flags & RBIF_IGNORE)
+         continue;
+
+      const char* name = playerclass.rebornitems[i].itemname;
+      int           amount = playerclass.rebornitems[i].amount;
+      itemeffect_t* effect = E_ItemEffectForName(name);
+
+      // only if have none, in the case that DM_KEEPITEMS is specified
+      if (!E_GetItemOwnedAmount(&player, effect))
+         E_GiveInventoryItem(&player, effect, amount);
+   }
+
+   if (!(player.readyweapon = E_FindBestWeapon(&player)))
+      player.readyweapon = E_WeaponForID(UnknownWeaponInfo);
+   else
+      player.readyweaponslot = E_FindFirstWeaponSlot(&player, player.readyweapon);
 }
 
 #if 0

@@ -3392,6 +3392,124 @@ thingtype HereticRainPlayer4 : HereticRainPlayer1, -1, 448
   skinsprite FX23
 }
 
+thingtype Chicken : ClassicHereticSolid, -1, 449
+{
+  spawnhealth 10
+  seesound ht_chicpai
+  activesound ht_chicact
+  attacksound ht_chicatk
+  painchance 200
+  painsound ht_chicpai
+  deathsound ht_chicdth
+  speed 4
+  radius 9.0
+  height 22.0
+  mass 40
+  
+  addflags SHOOTABLE|DROPOFF|WINDTHRUST|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  
+  firstdecoratestate S_CHICKEN_LOOK1
+  states
+  @"
+  Spawn:
+    CHKN AB 10 A_Look
+    loop
+  See:
+    CHKN AB 3 A_Chase
+    loop
+  Pain:
+    CHKN D 5 A_Feathers
+    CHKN C 5 A_Pain
+    goto See
+  Melee:
+    CHKN A 8 A_FaceTarget
+    CHKN C 10 A_MonsterMeleeAttack(1, 2)
+    goto See
+  Death:
+    CHKN E 6 A_Scream
+    CHKN F 6 A_Feathers
+    CHKN G 6
+    CHKN H 6 A_Fall
+    CHKN IJK 6
+    CHKN L -1
+    stop
+  "@
+}
+
+thingtype Feather : HereticMissile, -1, 450
+{
+  radius 2.0
+  height 4.0
+
+  remflags NOGRAVITY
+  addflags CANNOTPUSH|LOGRAV|WINDTHRUST
+
+  firstdecoratestate S_FEATHER1
+  states
+  @"
+  Spawn:
+    CHKN MNOPQPON 3
+    loop
+  Death:
+    CHKN N 6
+    stop
+  "@
+}
+
+thingtype EggShot : HereticMissile, -1, 451
+{
+  speed 18.0
+  radius 8.0
+  height 8.0
+  damage 1
+  mod ChickenMorph
+
+  firstdecoratestate S_EGGFX1
+  states
+  @"
+  Spawn:
+    EGGM ABCDE 4
+    loop
+  Death:
+    FX01 EFGH 3 bright
+    stop
+  "@
+}
+
+thingtype ChickenPlayer : ClassicHereticSolid, -1, 452
+{
+  spawnhealth 100
+  reactiontime 0
+  painchance 255
+  radius 16.0
+  height 24.0
+  painsound ht_chicpai
+  deathsound ht_chicdth
+  activesound ht_chicact
+
+  addflags SHOOTABLE|DROPOFF|NOTDMATCH|FOOTCLIP|SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ|LOGRAV|NOSOUNDCUTOFF|STICKYCARRY
+  
+  deathstate S_CHICKEN_DIE1
+
+  firstdecoratestate S_CHICPLAY
+  states
+  @"
+  Spawn:
+    CHKN A -1
+    stop
+  See:
+    CHKN ABAB 3
+    loop
+  Missile:
+    CHKN C 12
+    goto Spawn
+  Pain:
+    CHKN D 4 A_Feathers
+    CHKN C 4 A_Pain
+    goto Spawn
+  "@
+}
+
 // Damage Types ----------------------------------------------------------------
 
 //
@@ -3407,3 +3525,13 @@ damagetype StaffPowered
 damagetype PoweredHellStaffRain {}
 damagetype PoweredDragonClawImpact {}
 damagetype PoweredDragonClawRip {}
+
+damagetype ChickenMorph
+{
+  morph
+  {
+    monsterspecies Chicken
+    playerclass Chicken
+    exclude Dsparil, IronLich, Maulotaur, SerpentRiderDsparil
+  }
+}

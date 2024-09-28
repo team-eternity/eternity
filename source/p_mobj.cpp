@@ -302,6 +302,49 @@ static void A_vanillaHereticPodFinalAction(actionargs_t *args)
 //   actor->player = NULL;
 };
 
+// Returns true if the morphed monster returns back to normal form.
+// This involves removing mobj and replacing with another one.
+static bool P_checkUnmorph(Mobj &mobj)
+{
+   if(mobj.unmorph.type == UnknownThingType)
+      return false;
+   mobj.unmorph.tics -= mobj.tics;
+   if(mobj.unmorph.tics > 0)
+      return false;
+   
+   v3fixed_t pos = {mobj.x, mobj.y, mobj.z};
+   Mobj *unmorph = P_SpawnMobj(pos.x, pos.y, pos.z, mobj.unmorph.type);
+      
+   // Temporarily remove the solid flag in order to check position without being blocked by this.
+   unsigned solidity = mobj.flags & MF_SOLID;
+   mobj.flags &= ~MF_SOLID;
+   bool fit = P_CheckPositionExt(unmorph, pos.x, pos.y, pos.z);
+   mobj.flags |= solidity;
+   
+   if(!fit)
+   {
+      // Didn't fit
+      unmorph->remove();
+      mobj.unmorph.tics = 5 * TICRATE; // Next try in 5 seconds
+      return false;
+   }
+   
+   P_transferFriendship(*unmorph, mobj);
+   unmorph->angle = mobj.angle;
+   unmorph->special = mobj.special;
+   memcpy(unmorph->args, mobj.args, sizeof(mobj.args));
+   P_AddThingTID(unmorph, mobj.tid);
+   P_SetTarget(&unmorph->target, mobj.target);
+   P_SetTarget(&unmorph->tracer, mobj.tracer);
+
+   P_NeutralizeForRemoval(mobj);
+   mobj.remove();
+   
+   S_StartSound(P_SpawnMobj(pos.x, pos.y, pos.z + GameModeInfo->teleFogHeight,
+      E_SafeThingName(GameModeInfo->teleFogType)), GameModeInfo->teleSound);
+   return true;
+}
+
 //
 // P_SetMobjState
 //
@@ -355,6 +398,10 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
       P_setSpriteBySkin(*mobj, *st);
 
       mobj->frame = st->frame;
+      
+      // Handle unmorphing
+      if(P_checkUnmorph(*mobj))
+         return false;
 
       // Modified handling.
       // Call action functions when the state is set
@@ -2111,6 +2158,12 @@ void Mobj::serialize(SaveArchive &arc)
    if(arc.saveVersion() >= 2)
       arc << flags5;
 
+   if (arc.saveVersion() >= 22)
+   {
+      arc << unmorph.tics;
+      Archive_MobjType(arc, unmorph.type);
+   }
+
    // Arrays
    P_ArchiveArray<int>(arc, counters, NUMMOBJCOUNTERS); // Counters
    P_ArchiveArray<int>(arc, args,     NUMMTARGS);       // Arguments
@@ -2156,14 +2209,18 @@ void Mobj::serialize(SaveArchive &arc)
          int playernum = temp - 1;
          (player = &players[playernum])->mo = this;
 
-         // PCLASS_FIXME: Need to save and restore proper player class!
-         // Temporary hack.
-         players[playernum].pclass = E_PlayerClassForName(GameModeInfo->defPClassName);
-         
-         // PCLASS_FIXME: Need to save skin and attempt to restore, then fall
-         // back to default for player class if non-existant. Note: must be 
-         // after player class is set.
-         P_SetSkin(P_GetDefaultSkin(&players[playernum]), playernum); // haleyjd
+         // Now we have a proper way to serialize this, in P_ArchivePlayers
+         if(arc.saveVersion() < 22)
+         {
+            // PCLASS_FIXME: Need to save and restore proper player class!
+            // Temporary hack.
+            players[playernum].pclass = E_PlayerClassForName(GameModeInfo->defPClassName);
+
+            // PCLASS_FIXME: Need to save skin and attempt to restore, then fall
+            // back to default for player class if non-existant. Note: must be
+            // after player class is set.
+            P_SetSkin(P_GetDefaultSkin(&players[playernum]), playernum); // haleyjd
+         }
       }
       else
       {
@@ -2449,6 +2506,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
          mobj->colour = (info->flags & MF_TRANSLATION) >> MF_TRANSSHIFT;
    }
 
+   mobj->unmorph.type = UnknownThingType;
    return mobj;
 }
 
@@ -4324,6 +4382,19 @@ bool P_RestingOnGround(const Mobj &thing, const surface_t &floor)
    // Sloped: must rest on this slope.
    return thing.zref.sector.floor && &thing.zref.sector.floor->srf.floor == &floor &&
          thing.z == thing.zref.floor;
+}
+
+void P_NeutralizeForRemoval(Mobj &mobj)
+{
+   // From Heretic, seems to do as much as possible to make a thing "inert" before it gets removed
+   mobj.momx = mobj.momy = mobj.momz = 0;
+   mobj.z = mobj.zref.ceiling + 4 * FRACUNIT;
+   mobj.flags &= ~(MF_SHOOTABLE | MF_FLOAT | MF_SKULLFLY | MF_SOLID | MF_COUNTKILL);
+   mobj.flags2 &= ~(MF2_LOGRAV);
+   mobj.flags2 |= MF2_DONTDRAW;
+   mobj.flags3 &= ~(MF3_PASSMOBJ);
+   mobj.player = nullptr;
+   mobj.health = -1000;
 }
 
 #if 0

@@ -1112,6 +1112,14 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
          viewpoint.x += (M_Random() % (strength * 4) - (strength * 2)) << FRACBITS;
          viewpoint.y += (M_Random() % (strength * 4) - (strength * 2)) << FRACBITS;
       }
+
+      if (player->headThrust)
+      {
+         // Set chicken attack view position
+         int fineangle = viewpoint.angle >> ANGLETOFINESHIFT;
+         viewpoint.x += player->headThrust * finecosine[fineangle];
+         viewpoint.y += player->headThrust * finesine[fineangle];
+      }
    }
    else
    {
