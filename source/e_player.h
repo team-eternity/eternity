@@ -26,6 +26,8 @@
 #ifndef E_PLAYER_H__
 #define E_PLAYER_H__
 
+#include "info.h"
+
 // macros
 constexpr int NUMEDFSKINCHAINS = 17;
 constexpr int NUMWEAPONSLOTS   = 16;

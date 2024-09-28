@@ -25,11 +25,13 @@
 #include <assert.h>
 #include "z_zone.h"
 #include "e_edf.h"
+#include "e_player.h"
 #include "e_sprite.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "p_saveg.h"
 #include "p_saveid.h"
+#include "p_skin.h"
 #include "r_data.h"
 #include "r_draw.h"
 #include "w_wad.h"
@@ -212,6 +214,19 @@ void Archive_MobjType(SaveArchive &arc, mobjtype_t &type)
 }
 
 //
+// player class
+//
+void Archive_PlayerClass(SaveArchive &arc, playerclass_t *&pclass)
+{
+   qstring fieldname;
+   if(arc.isSaving())
+      fieldname = pclass ? pclass->mnemonic : "";
+   arc.archiveCachedString(fieldname);
+   if(arc.isLoading())
+      pclass = fieldname.empty() ? nullptr : E_PlayerClassForName(fieldname.constPtr());
+}
+
+//
 // Save PSprite state
 //
 void Archive_PSpriteState_Save(SaveArchive &arc, const state_t *state)
@@ -245,6 +260,19 @@ state_t *Archive_PSpriteState_Load(SaveArchive &arc)
    else
       arc << statenum;
    return statenum < 0 || statenum >= NUMSTATES ? nullptr : states[statenum];
+}
+
+//
+// player skin
+//
+void Archive_Skin(SaveArchive &arc, skin_t *&skin)
+{
+   qstring fieldname;
+   if(arc.isSaving())
+      fieldname = skin && skin->skinname ? skin->skinname : "";
+   arc.archiveCachedString(fieldname);
+   if(arc.isLoading())
+      skin = fieldname.empty() ? nullptr : P_SkinForName(fieldname.constPtr());
 }
 
 //

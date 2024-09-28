@@ -2473,7 +2473,7 @@ void G_PlayerReborn(int player)
    p->attackdown = demo_version >= 401 ? AT_ALL : AT_PRIMARY;
 
    // clear inventory unless otherwise indicated
-   if (!(dmflags & DM_KEEPITEMS))
+   if(!(dmflags & DM_KEEPITEMS))
       E_ClearInventory(p);
 
    P_GiveRebornInventory(*p);

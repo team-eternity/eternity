@@ -86,7 +86,6 @@ int god_health_override = 0;   // these are used in cheats (see st_stuff.c)
 int bfgcells = 40;      // used in p_pspr.c
 // Ty 03/07/98 - end deh externals
 
-
 //
 // GET STUFF
 //

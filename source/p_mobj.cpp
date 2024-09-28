@@ -2212,14 +2212,18 @@ void Mobj::serialize(SaveArchive &arc)
          int playernum = temp - 1;
          (player = &players[playernum])->mo = this;
 
-         // PCLASS_FIXME: Need to save and restore proper player class!
-         // Temporary hack.
-         players[playernum].pclass = E_PlayerClassForName(GameModeInfo->defPClassName);
-         
-         // PCLASS_FIXME: Need to save skin and attempt to restore, then fall
-         // back to default for player class if non-existant. Note: must be 
-         // after player class is set.
-         P_SetSkin(P_GetDefaultSkin(&players[playernum]), playernum); // haleyjd
+         // Now we have a proper way to serialize this, in P_ArchivePlayers
+         if(arc.saveVersion() < 22)
+         {
+            // PCLASS_FIXME: Need to save and restore proper player class!
+            // Temporary hack.
+            players[playernum].pclass = E_PlayerClassForName(GameModeInfo->defPClassName);
+
+            // PCLASS_FIXME: Need to save skin and attempt to restore, then fall
+            // back to default for player class if non-existant. Note: must be
+            // after player class is set.
+            P_SetSkin(P_GetDefaultSkin(&players[playernum]), playernum); // haleyjd
+         }
       }
       else
       {

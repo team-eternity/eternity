@@ -736,8 +736,6 @@ static void P_ArchivePlayers(SaveArchive &arc)
          else
          {
             int slotIndex;
-            char *className = nullptr;
-            size_t len;
 
             arc << inventorySize;
             if(inventorySize != E_GetInventoryAllocSize())
@@ -796,8 +794,11 @@ static void P_ArchivePlayers(SaveArchive &arc)
             // will be set when unarc thinker
             p.mo          = nullptr;
             p.attacker    = nullptr;
-            p.skin        = nullptr;
-            p.pclass      = nullptr;
+            if(arc.saveVersion() < 22)
+            {
+               p.skin        = nullptr;
+               p.pclass      = nullptr;
+            }
             p.attackdown  = AT_NONE; // sf, MaxW
             p.usedown     = false;   // sf
             p.cmd.buttons = 0;       // sf
@@ -805,7 +806,13 @@ static void P_ArchivePlayers(SaveArchive &arc)
             p.prevpitch   = p.pitch;
          }
 
-         // TODO: archive pclass and skin!
+         if(arc.saveVersion() >= 22)
+         {
+            Archive_PlayerClass(arc, p.pclass);
+            Archive_PlayerClass(arc, p.unmorphClass);
+            Archive_Skin(arc, p.skin);
+            Archive_Skin(arc, p.unmorphSkin);
+         }
       }
    }
 }
