@@ -10,6 +10,7 @@
 //
 
 skin corvus {}
+skin chicken {}
 
 playerclass Corvus
 {
@@ -33,7 +34,7 @@ playerclass Corvus
 
 playerclass Chicken
 {
-  defaultskin corvus
+  defaultskin chicken
   thingtype ChickenPlayer
   initialhealth 30
   maxhealth 30
