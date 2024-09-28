@@ -379,7 +379,6 @@ public:
    int args[NUMMTARGS]; // arguments
    uint16_t tid;        // thing id used by scripts
    
-   // TODO: serialize
    unmorph_t unmorph;
 
    // Note: tid chain pointers are NOT serialized in save games,

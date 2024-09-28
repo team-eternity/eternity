@@ -1510,7 +1510,6 @@ bool P_MorphPlayer(const emodmorph_t &minfo, player_t &player)
    chicken->player = &player;
    chicken->colour = playerColour;  // retain colour mapping
 
-   // TODO: check what vanilla Heretic restores and apply that back
    player.unmorphClass = player.pclass;
    player.unmorphSkin = player.skin;
    player.pclass = minfo.pclass;
@@ -1527,7 +1526,6 @@ bool P_MorphPlayer(const emodmorph_t &minfo, player_t &player)
    player.momx = chicken->momx;
    player.momy = chicken->momy;
 
-   // TODO: make this a morph property (?!)
    player.powers[pw_ghost].tics = 0;
    player.powers[pw_weaponlevel2].tics = 0;
    

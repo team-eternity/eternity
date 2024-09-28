@@ -325,7 +325,6 @@ static bool P_checkUnmorph(Mobj &mobj)
    {
       // Didn't fit
       unmorph->remove();
-      // TODO: check if EDF should store the retry period
       mobj.unmorph.tics = 5 * TICRATE; // Next try in 5 seconds
       return false;
    }
@@ -340,8 +339,6 @@ static bool P_checkUnmorph(Mobj &mobj)
 
    P_NeutralizeForRemoval(mobj);
    mobj.remove();
-   
-   // TODO: check if it should heal or preserve old health
    
    S_StartSound(P_SpawnMobj(pos.x, pos.y, pos.z + GameModeInfo->teleFogHeight,
       E_SafeThingName(GameModeInfo->teleFogType)), GameModeInfo->teleSound);
