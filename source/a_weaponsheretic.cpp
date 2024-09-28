@@ -899,6 +899,27 @@ void A_HticSpawnFireBomb(actionargs_t *actionargs)
    P_SetTarget(&bomb->target, mo->target);
 }
 
+//
+// Morph ovum attack
+//
+void A_HticMorphOvum(actionargs_t *actionargs)
+{
+   Mobj *mo = actionargs->actor;
+   if(!mo)
+      return;
+   edefstructvar(playertargetinfo_t, targetinfo);
+   mobjtype_t eggtype = E_SafeThingName("EggShot");
+   P_SpawnPlayerMissile(mo, eggtype, SPM_ADDSLOPETOZ, &targetinfo);
+   P_SpawnPlayerMissileAngleHeretic(mo, eggtype, mo->angle - ANG45 / 6,
+                                    SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
+   P_SpawnPlayerMissileAngleHeretic(mo, eggtype, mo->angle + ANG45 / 6,
+                                    SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
+   P_SpawnPlayerMissileAngleHeretic(mo, eggtype, mo->angle - ANG45 / 3,
+                                    SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
+   P_SpawnPlayerMissileAngleHeretic(mo, eggtype, mo->angle + ANG45 / 3,
+                                    SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
+}
+
 void A_ViewThrust(actionargs_t *actionargs)
 {
    player_t *player = actionargs->actor ? actionargs->actor->player : nullptr;

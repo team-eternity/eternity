@@ -1532,6 +1532,7 @@ void A_ViewThrust(actionargs_t *);
 // MaxW: 2018/01/02: Heretic artifact use pointers
 void A_HticArtiTele(actionargs_t *);
 void A_HticSpawnFireBomb(actionargs_t *);
+void A_HticMorphOvum(actionargs_t *);
 
 // haleyjd 10/04/08: Hexen pointers
 #if 0
@@ -1935,6 +1936,7 @@ deh_bexptr deh_bexptrs[] =
    // MaxW: 2018/01/02: Heretic artifact use pointers
    POINTER(HticArtiTele),
    POINTER(HticSpawnFireBomb),
+   POINTER(HticMorphOvum),
 
    // haleyjd 10/04/08: Hexen pointers
 #if 0
