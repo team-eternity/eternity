@@ -1461,22 +1461,23 @@ static void P_morphMonster(const emodmorph_t &minfo, Mobj &target)
    polymorph->unmorph.type = backuptype;
 }
 
-static void P_morphPlayer(const emodmorph_t &minfo, player_t &player)
+bool P_MorphPlayer(const emodmorph_t &minfo, player_t &player)
 {
    Mobj* target = player.mo;
    if(!target)
-      return;
+      return false;
    if(player.morphTics)
    {
       if(player.morphTics < MORPHTICS - TICRATE && !player.powers[pw_weaponlevel2].isActive())
       {
          // Make a super chicken
          P_GivePower(&player, pw_weaponlevel2, MORPHTICS, false, false);
+         return true;
       }
-      return;
+      return false;
    }
    if(player.powers[pw_invulnerability].isActive())
-      return;  // Immune when invulnerable
+      return false;  // Immune when invulnerable
 
    v3fixed_t pos = {target->x, target->y, target->z};
 
@@ -1496,7 +1497,7 @@ static void P_morphPlayer(const emodmorph_t &minfo, player_t &player)
    {
       // Didn't fit. Abort the polymorph.
       chicken->remove();
-      return;
+      return false;
    }
 
    P_NeutralizeForRemoval(*target);
@@ -1544,6 +1545,7 @@ static void P_morphPlayer(const emodmorph_t &minfo, player_t &player)
    if(oldflags4 & MF4_FLY)
       chicken->flags4 |= MF4_FLY;
    player.morphTics = MORPHTICS;
+   return true;
 }
 
 //
@@ -1644,7 +1646,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       }
       if(target->player && emod->morph.pclass)
       {
-         P_morphPlayer(emod->morph, *target->player);
+         P_MorphPlayer(emod->morph, *target->player);
          return;
       }
 
