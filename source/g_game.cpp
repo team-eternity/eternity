@@ -1676,8 +1676,6 @@ static void G_PlayerFinishLevel(int player)
       P_UnmorphPlayer(*p, true);
    }
 
-   // TODO: test if the player chicken class really gets restored on level exit!!
-
    E_InventoryEndHub(p);   // haleyjd: strip inventory
 
    p->extralight    = 0;   // cancel gun flashes

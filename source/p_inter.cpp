@@ -74,6 +74,11 @@
 
 #define BONUSADD        6
 
+enum
+{
+   MORPHTICS = 40 * TICRATE,
+};
+
 // Ty 03/07/98 - add deh externals
 // Maximums and such were hardcoded values.  Need to externalize those for
 // dehacked support (and future flexibility).  Most var names came from the key
@@ -976,12 +981,6 @@ void P_DropItems(Mobj *actor, bool tossitems)
    }
 }
 
-// TODO: make it last as long as item
-enum
-{
-   MORPHTICS = 40 * TICRATE,
-};
-
 //
 // P_KillMobj
 //
@@ -1017,7 +1016,6 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
          source->player->frags[target->player-players]++;
          HU_FragsUpdate();
 
-         // TODO: make this an EDF thing if possible
          if (source->player->morphTics && target != source)  // Make a super chicken
             P_GivePower(source->player, pw_weaponlevel2, MORPHTICS, false, false);
       }
@@ -1425,8 +1423,19 @@ static void P_morphMonster(const emodmorph_t &minfo, Mobj &target)
    v3fixed_t pos = { target.x, target.y, target.z };
    Mobj *polymorph = P_SpawnMobj(pos.x, pos.y, pos.z, minfo.speciesID);
 
-   // TODO: handle if morphing is done into a larger species
-   
+   // Temporarily remove the solid flag in order to check position without being blocked by this.
+   unsigned solidity = target.flags & MF_SOLID;
+   target.flags &= ~MF_SOLID;
+   bool fit = P_CheckPositionExt(polymorph, pos.x, pos.y, pos.z);
+   target.flags |= solidity;
+
+   if(!fit)
+   {
+      // Didn't fit. Abort the polymorph.
+      polymorph->remove();
+      return;
+   }
+
    unsigned ghost = target.flags & MF_SHADOW;
    unsigned ghost3 = target.flags3 & MF3_GHOST;
    polymorph->flags |= ghost;
@@ -1459,7 +1468,6 @@ static void P_morphPlayer(const emodmorph_t &minfo, player_t &player)
       return;
    if(player.morphTics)
    {
-      // TODO: make this behavior flag dependent
       if(player.morphTics < MORPHTICS - TICRATE && !player.powers[pw_weaponlevel2].isActive())
       {
          // Make a super chicken
@@ -1475,13 +1483,28 @@ static void P_morphPlayer(const emodmorph_t &minfo, player_t &player)
    angle_t angle = target->angle;
    unsigned oldflags4 = target->flags4 & MF4_FLY;
    int playerColour = target->colour;
+
+   Mobj *chicken = P_SpawnMobj(pos.x, pos.y, pos.z, minfo.pclass->type);
+
+   // Temporarily remove the solid flag in order to check position without being blocked by this.
+   unsigned solidity = target->flags & MF_SOLID;
+   target->flags &= ~MF_SOLID;
+   bool fit = P_CheckPositionExt(chicken, pos.x, pos.y, pos.z);
+   target->flags |= solidity;
+
+   if(!fit)
+   {
+      // Didn't fit. Abort the polymorph.
+      chicken->remove();
+      return;
+   }
+
    P_NeutralizeForRemoval(*target);
    target->remove();
 
    S_StartSound(P_SpawnMobj(pos.x, pos.y, pos.z + GameModeInfo->teleFogHeight,
                             E_SafeThingName(GameModeInfo->teleFogType)), GameModeInfo->teleSound);
 
-   Mobj *chicken = P_SpawnMobj(pos.x, pos.y, pos.z, minfo.pclass->type);
    chicken->angle = angle;
    chicken->player = &player;
    chicken->colour = playerColour;  // retain colour mapping
@@ -1504,7 +1527,7 @@ static void P_morphPlayer(const emodmorph_t &minfo, player_t &player)
    player.momy = chicken->momy;
 
    // TODO: make this a morph property (?!)
-   player.powers[pw_invisibility].tics = 0;
+   player.powers[pw_ghost].tics = 0;
    player.powers[pw_weaponlevel2].tics = 0;
    
    player.unmorphWeapon = player.readyweapon;
