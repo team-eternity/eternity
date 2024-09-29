@@ -3406,7 +3406,7 @@ thingtype Chicken : ClassicHereticSolid, -1, 449
   height 22.0
   mass 40
   
-  addflags SHOOTABLE|DROPOFF|WINDTHRUST|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  addflags SHOOTABLE|DROPOFF|COUNTKILL|WINDTHRUST|FOOTCLIP|SPACMONSTER|PASSMOBJ
   
   firstdecoratestate S_CHICKEN_LOOK1
   states

@@ -2506,7 +2506,9 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
          mobj->colour = (info->flags & MF_TRANSLATION) >> MF_TRANSSHIFT;
    }
 
-   mobj->unmorph.type = UnknownThingType;
+   // Under vanilla Heretic type 0 is the crystal vial, so try to emulate that weirdness where
+   // respawned chickens turn into vials
+   mobj->unmorph.type = vanilla_heretic ? E_SafeThingName("CrystalVial") : UnknownThingType;
    return mobj;
 }
 
