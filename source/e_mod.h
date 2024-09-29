@@ -42,8 +42,7 @@ struct playerclass_t;
 enum
 {
    MorphExcludeListEnd = -1,     // this is the terminator of the "exclude" list
-   MorphExcludeBosses = -2,      // from @boss
-   MorphExcludeInanimate = -3,   // from @inanimate
+   MorphExcludeInanimate = -2,   // from @inanimate
 };
 
 struct emodmorph_t

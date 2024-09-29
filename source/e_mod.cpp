@@ -382,17 +382,24 @@ void E_IndexMorphInfo(emodmorph_t &morph)
       PODCollection<mobjtype_t> excludedID;
       for(char **item = excluded; *item; ++item)
       {
-         if(!strcasecmp(*item, "@boss"))
-            excludedID.add(MorphExcludeBosses);
-         else if(!strcasecmp(*item, "@inanimate"))
+         if(!strcasecmp(*item, "@inanimate"))
             excludedID.add(MorphExcludeInanimate);
          else
          {
-            int type = E_ThingNumForName(*item);
-            if(type == -1)
-               doom_warningf("Invalid excluded tareget '%s' for morph info", *item);
-            else
-               excludedID.add(type);
+            const PODCollection<int> *group = E_GetThingsFromGroup(*item);
+            if(group)
+            {
+               for(int type : *group)
+                  excludedID.add(type);
+            }
+            else  // single thing type, not a group
+            {
+               int type = E_ThingNumForName(*item);
+               if(type == -1)
+                  doom_warningf("Invalid excluded tareget '%s' for morph info", *item);
+               else
+                  excludedID.add(type);
+            }
          }
       }
       for(char **iter = excluded; *iter; ++iter)

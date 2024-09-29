@@ -1318,7 +1318,7 @@ thingtype SerpentRiderDsparil : ClassicHereticSolid, 7007, 355
   attacksound     ht_bstatk
   painsound       ht_sbtpai
   deathsound      ht_sbtdth
-  addflags        SHOOTABLE|COUNTKILL|BOSS|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  addflags        SHOOTABLE|COUNTKILL|BOSS|FOOTCLIP|DMGIGNORED|SPACMONSTER|PASSMOBJ
   nukespecial     SorcNukeSpec
   obituary_normal "was burned by D'Sparil's serpent"
   obituary_melee  "was devoured by D'Sparil's serpent"
@@ -3510,6 +3510,12 @@ thingtype ChickenPlayer : ClassicHereticSolid, -1, 452
   "@
 }
 
+// Thing groups ----------------------------------------------------------------
+thinggroup NoMorphBosses
+{
+  types Dsparil, IronLich, Maulotaur, SerpentRiderDsparil
+}
+
 // Damage Types ----------------------------------------------------------------
 
 //
@@ -3532,6 +3538,6 @@ damagetype ChickenMorph
   {
     monsterspecies Chicken
     playerclass Chicken
-    exclude IronLich, @boss, @inanimate
+    exclude NoMorphBosses, @inanimate
   }
 }

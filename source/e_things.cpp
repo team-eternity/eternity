@@ -2882,7 +2882,7 @@ void E_ProcessThing(int i, cfg_t *const thingsec, cfg_t *pcfg, const bool def)
       if(!mobjinfo[i]->damagemod)
       {
          E_EDFLoggedErr(2,
-                        "E_ProcessThing: thing '%s': invalid zero damagemod\n",
+                        "E_ProcessThing: thing '%s': invalid zero damagemod %s\n",
                         mobjinfo[i]->name, tempstr);
       }
    }
@@ -3579,6 +3579,15 @@ void E_RemoveFromExistingThingPairs(int type, unsigned flag)
          continue;
       pair->flags &= ~flag;
    }
+}
+
+//
+// Gets the collection of mobjtypes from a group, if it exists
+//
+const PODCollection<int> *E_GetThingsFromGroup(const char *name)
+{
+   const ThingGroup *group = thinggroup_namehash.objectForKey(name);
+   return group ? &group->types : nullptr;
 }
 
 //

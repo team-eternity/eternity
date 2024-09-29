@@ -1420,10 +1420,6 @@ static void P_morphMonster(const emodmorph_t &minfo, Mobj &target)
       {
          switch(*excluded)
          {
-            case MorphExcludeBosses:
-               if(target.flags2 & MF2_BOSS)
-                  return;
-               continue;
             case MorphExcludeInanimate:
                if(!(target.flags & MF_COUNTKILL) && !(target.flags3 & MF3_KILLABLE))
                   return;
