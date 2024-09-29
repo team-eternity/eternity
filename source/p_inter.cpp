@@ -1412,14 +1412,29 @@ static void P_morphMonster(const emodmorph_t &minfo, Mobj &target)
       return;
 
    // Cannot morph into same species or if non-sentient
-   if(target.type == minfo.speciesID || !sentient(&target))
+   if(target.type == minfo.speciesID)
       return;
    
    if(minfo.excludedID)
-      for(mobjtype_t *excluded = minfo.excludedID; *excluded != -1; ++excluded)
+      for(mobjtype_t *excluded = minfo.excludedID; *excluded != MorphExcludeListEnd; ++excluded)
+      {
+         switch(*excluded)
+         {
+            case MorphExcludeBosses:
+               if(target.flags2 & MF2_BOSS)
+                  return;
+               continue;
+            case MorphExcludeInanimate:
+               if(!(target.flags & MF_COUNTKILL) && !(target.flags3 & MF3_KILLABLE))
+                  return;
+               continue;
+            default:
+               break;   // go ahead to checking type
+         }
          if(target.type == *excluded)
             return;
-   
+      }
+
    v3fixed_t pos = { target.x, target.y, target.z };
    Mobj *polymorph = P_SpawnMobj(pos.x, pos.y, pos.z, minfo.speciesID);
 

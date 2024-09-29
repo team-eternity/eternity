@@ -35,6 +35,17 @@
 
 struct playerclass_t;
 
+//
+// morph species exclude placeholders. Values must be negative because positive values are
+// mobjtype_t
+//
+enum
+{
+   MorphExcludeListEnd = -1,     // this is the terminator of the "exclude" list
+   MorphExcludeBosses = -2,      // from @boss
+   MorphExcludeInanimate = -3,   // from @inanimate
+};
+
 struct emodmorph_t
 {
    // NOTE: when we read the EDF for damagetype, we don't yet have thingtypes, so we need to read

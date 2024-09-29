@@ -382,11 +382,18 @@ void E_IndexMorphInfo(emodmorph_t &morph)
       PODCollection<mobjtype_t> excludedID;
       for(char **item = excluded; *item; ++item)
       {
-         int type = E_ThingNumForName(*item);
-         if(type == -1)
-            doom_warningf("Invalid excluded tareget '%s' for morph info", *item);
+         if(!strcasecmp(*item, "@boss"))
+            excludedID.add(MorphExcludeBosses);
+         else if(!strcasecmp(*item, "@inanimate"))
+            excludedID.add(MorphExcludeInanimate);
          else
-            excludedID.add(type);
+         {
+            int type = E_ThingNumForName(*item);
+            if(type == -1)
+               doom_warningf("Invalid excluded tareget '%s' for morph info", *item);
+            else
+               excludedID.add(type);
+         }
       }
       for(char **iter = excluded; *iter; ++iter)
          efree(*iter);
@@ -394,8 +401,8 @@ void E_IndexMorphInfo(emodmorph_t &morph)
       
       morph.excludedID = emalloc(mobjtype_t *, (excludedID.getLength() + 1) * sizeof(mobjtype_t));
       memcpy(morph.excludedID, &excludedID[0], excludedID.getLength() * sizeof(mobjtype_t));
-      morph.excludedID[excludedID.getLength()] = -1;  // end with -1
-      
+      morph.excludedID[excludedID.getLength()] = MorphExcludeListEnd;  // end with -1
+
    }
    else
       morph.excludedID = nullptr;
