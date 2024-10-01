@@ -47,27 +47,9 @@ enum
 
 struct emodmorph_t
 {
-   // NOTE: when we read the EDF for damagetype, we don't yet have thingtypes, so we need to read
-   // the strings raw. But at runtime we can do the actual string-to-index mapping.
-   bool indexed;
-   
-   union
-   {
-      // not indexed
-      struct
-      {
-         char *species;
-         char **excluded;
-         char *pclassName;
-      };
-      // indexed
-      struct
-      {
-         mobjtype_t speciesID;
-         mobjtype_t *excludedID;
-         playerclass_t *pclass;
-      };
-   };
+   mobjtype_t speciesID;
+   mobjtype_t *excludedID;
+   playerclass_t *pclass;
 };
 
 //
@@ -104,16 +86,18 @@ int     E_DamageTypeNumForName(const char *name);
 // This is actually in e_things.c but should be prototyped here.
 const char *E_ModFieldName(const char *base, const emod_t *mod);
 
-void E_IndexMorphInfo(emodmorph_t &morph);
-
 // EDF-only stuff
 #ifdef NEED_EDF_DEFINITIONS
 
 constexpr const char EDF_SEC_MOD[] = "damagetype";
+constexpr const char EDF_SEC_MORPHTYPE[] = "morphtype";
 
 extern cfg_opt_t edf_dmgtype_opts[];
+extern cfg_opt_t edf_morphtype_opts[];
 
 void E_ProcessDamageTypes(cfg_t *cfg);
+void E_PrepareMorphTypes(cfg_t *cfg);
+void E_ProcessMorphTypes(cfg_t *cfg);
 
 #endif // NEED_EDF_DEFINITIONS
 

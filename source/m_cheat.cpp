@@ -849,7 +849,6 @@ static void cheat_cockadoodledoo(const void *arg)
          return;
       }
       emodmorph_t &minfo = mod->morph;
-      E_IndexMorphInfo(minfo);
       if(P_MorphPlayer(minfo, *plyr))
          player_printf(plyr, "%s", DEH_String(TXT_CHEATCHICKENON));
    }

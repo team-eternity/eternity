@@ -3532,12 +3532,9 @@ damagetype PoweredHellStaffRain {}
 damagetype PoweredDragonClawImpact {}
 damagetype PoweredDragonClawRip {}
 
-damagetype ChickenMorph
+morphtype ChickenMorph
 {
-  morph
-  {
-    monsterspecies Chicken
-    playerclass Chicken
-    exclude NoMorphBosses, @inanimate
-  }
+  monsterspecies Chicken
+  playerclass Chicken
+  exclude NoMorphBosses, @inanimate
 }

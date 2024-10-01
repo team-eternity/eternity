@@ -1647,7 +1647,6 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    // haleyjd 10/12/09: damage factors
    if(mod != MOD_UNKNOWN)
    {
-      E_IndexMorphInfo(emod->morph);
       if(!target->player && emod->morph.speciesID != -1)
       {
          P_morphMonster(emod->morph, *target);

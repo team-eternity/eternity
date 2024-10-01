@@ -46,6 +46,8 @@
 #include "metaapi.h"
 #include "m_collection.h"
 
+#include <functional>
+
 //
 // damagetype options
 //
@@ -57,17 +59,16 @@ constexpr const char ITEM_DAMAGETYPE_SOURCELESS[] = "sourceless";
 constexpr const char ITEM_DAMAGETYPE_ABSPUSH[]    = "absolute.push";
 constexpr const char ITEM_DAMAGETYPE_ABSHOP[]     = "absolute.hop";
 
-constexpr const char ITEM_DAMAGETYPE_MORPH[]      = "morph";
+constexpr const char ITEM_MORPHTYPE_MONSTER_SPECIES[] = "monsterspecies";
+constexpr const char ITEM_MORPHTYPE_EXCLUDE[] = "exclude";
+constexpr const char ITEM_MORPHTYPE_PLAYER_CLASS[] = "playerclass";
 
-constexpr const char ITEM_MORPH_MONSTER_SPECIES[] = "monsterspecies";
-constexpr const char ITEM_MORPH_EXCLUDE[] = "exclude";
-constexpr const char ITEM_MORPH_PLAYER_CLASS[] = "playerclass";
-
-static cfg_opt_t morph_opts[] =
+cfg_opt_t edf_morphtype_opts[] =
 {
-   CFG_STR(ITEM_MORPH_MONSTER_SPECIES, "", CFGF_NONE),
-   CFG_STR(ITEM_MORPH_EXCLUDE, "", CFGF_LIST),
-   CFG_STR(ITEM_MORPH_PLAYER_CLASS, "", CFGF_NONE),
+   CFG_INT(ITEM_DAMAGETYPE_NUM,         -1,       CFGF_NONE),
+   CFG_STR(ITEM_MORPHTYPE_MONSTER_SPECIES, "", CFGF_NONE),
+   CFG_STR(ITEM_MORPHTYPE_EXCLUDE, "", CFGF_LIST),
+   CFG_STR(ITEM_MORPHTYPE_PLAYER_CLASS, "", CFGF_NONE),
    CFG_END(),
 };
 
@@ -79,7 +80,6 @@ cfg_opt_t edf_dmgtype_opts[] =
    CFG_BOOL(ITEM_DAMAGETYPE_SOURCELESS, false,    CFGF_NONE),
    CFG_FLOAT(ITEM_DAMAGETYPE_ABSPUSH,   0,        CFGF_NONE),
    CFG_FLOAT(ITEM_DAMAGETYPE_ABSHOP,    0,        CFGF_NONE),
-   CFG_SEC(ITEM_DAMAGETYPE_MORPH, morph_opts, CFGF_NOCASE),
    CFG_END()
 };
 
@@ -205,85 +205,12 @@ static emod_t *E_EDFDamageTypeForName(const char *name)
    return e_mod_namehash.objectForKey(name);
 }
 
-static void E_processMorphing(cfg_t *dtsec, emod_t *mod)
+//
+// Does the actual populator of the damagetype
+//
+static void E_populateDamageType(const std::function<bool(const char *)> &IS_SET, cfg_t *dtsec, bool def, emod_t *mod)
 {
-   cfg_t* morph = cfg_getsec(dtsec, ITEM_DAMAGETYPE_MORPH);
-   
-   mod->morph.species = estrdup(cfg_getstr(morph, ITEM_MORPH_MONSTER_SPECIES));
-   mod->morph.pclassName = estrdup(cfg_getstr(morph, ITEM_MORPH_PLAYER_CLASS));
-
-   unsigned numExclude = cfg_size(morph, ITEM_MORPH_EXCLUDE);
-
-   PODCollection<const char *> excludes;
-   for (unsigned i = 0; i < numExclude; ++i)
-   {
-      const char* exclude = estrdup(cfg_getnstr(morph, ITEM_MORPH_EXCLUDE, i));
-      excludes.add(exclude);
-   }
-
-   mod->morph.excluded = ecalloc(char**, numExclude + 1, sizeof(char *));
-   memcpy(mod->morph.excluded, &excludes[0], numExclude * sizeof(char *));
-}
-
-//
-// E_ProcessDamageType
-//
-// Adds a single damage type.
-//
-static void E_ProcessDamageType(cfg_t *const dtsec)
-{
-   emod_t *mod;
-   const char *title, *obituary;
-   bool def = true;
-   int num;
-
-   const auto IS_SET = [dtsec, &def](const char *const name) -> bool {
-      return def || cfg_size(dtsec, name) > 0;
-   };
-
-   title = cfg_title(dtsec);
-   num   = cfg_getint(dtsec, ITEM_DAMAGETYPE_NUM);
-
-   // if one exists by this name already, modify it
-   if((mod = E_EDFDamageTypeForName(title)))
-   {
-      // check numeric key
-      if(mod->num != num)
-      {
-         // remove from numeric hash
-         E_DelDamageTypeFromNumHash(mod);
-
-         // change key
-         mod->num = num;
-
-         // add back to numeric hash
-         E_AddDamageTypeToNumHash(mod);
-      }
-
-      // not a definition
-      def = false;
-   }
-   else
-   {
-      // do not override the Unknown type
-      if(!strcasecmp(title, "Unknown"))
-      {
-         E_EDFLoggedWarning(2, "Warning: attempt to override default Unknown "
-                               "damagetype ignored\n");
-         return;
-      }
-
-      // create a new mod
-      mod = ecalloc(emod_t *, 1, sizeof(emod_t));
-
-      mod->name = estrdup(title);
-      mod->num  = num;
-
-      // add to hash tables
-      E_AddDamageTypeToNameHash(mod);
-      E_AddDamageTypeToNumHash(mod);
-   }
-
+   const char *obituary;
    if(IS_SET(ITEM_DAMAGETYPE_OBIT))
    {
       obituary = cfg_getstr(dtsec, ITEM_DAMAGETYPE_OBIT);
@@ -351,42 +278,41 @@ static void E_ProcessDamageType(cfg_t *const dtsec)
       mod->absoluteHop = M_DoubleToFixed(cfg_getfloat(dtsec,
                                                       ITEM_DAMAGETYPE_ABSHOP));
    }
-
-   if (cfg_size(dtsec, ITEM_DAMAGETYPE_MORPH))
-      E_processMorphing(dtsec, mod);
-
-   E_EDFLogPrintf("\t\t%s damagetype %s\n",
-                  def ? "Defined" : "Modified", mod->name);
 }
 
-void E_IndexMorphInfo(emodmorph_t &morph)
+//
+// Does the actual populator of morphtype
+//
+static void E_populateMorphType(const std::function<bool(const char *)> &IS_SET, cfg_t *mtsec, bool def, emod_t *mod)
 {
-   if(morph.indexed)
-      return;
-   char *species = morph.species;
-   char **excluded = morph.excluded;
-   char *pclassName = morph.pclassName;
-
-   if(!species)
-      morph.speciesID = -1;
-   else
+   if(IS_SET(ITEM_MORPHTYPE_MONSTER_SPECIES))
    {
-      morph.speciesID = E_ThingNumForName(species);
-      if(morph.speciesID == -1)
-         doom_warningf("Invalid species '%s' for morph info", species);
-      efree(species);
+      const char *species = cfg_getstr(mtsec, ITEM_MORPHTYPE_MONSTER_SPECIES);
+      mod->morph.speciesID = E_ThingNumForName(species);
+      if(estrnonempty(species) && mod->morph.speciesID == -1)
+         doom_warningf("Invalid species '%s' for morphtype '%s'", species, mod->name);
    }
-   
-   if(excluded)
+   if(IS_SET(ITEM_MORPHTYPE_PLAYER_CLASS))
    {
-      PODCollection<mobjtype_t> excludedID;
-      for(char **item = excluded; *item; ++item)
+      const char *pclassName = cfg_getstr(mtsec, ITEM_MORPHTYPE_PLAYER_CLASS);
+      mod->morph.pclass = E_PlayerClassForName(pclassName);
+      if(estrnonempty(pclassName) && !mod->morph.pclass)
+         doom_warningf("Invalid playerclass '%s' for morphtype '%s'", pclassName, mod->name);
+   }
+
+   if(IS_SET(ITEM_MORPHTYPE_EXCLUDE))
+   {
+      unsigned numExclude = cfg_size(mtsec, ITEM_MORPHTYPE_EXCLUDE);
+
+      PODCollection<int> excludedID;
+      for(unsigned i = 0; i < numExclude; ++i)
       {
-         if(!strcasecmp(*item, "@inanimate"))
+         const char *exclude = cfg_getnstr(mtsec, ITEM_MORPHTYPE_EXCLUDE, i);
+         if(!strcasecmp(exclude, "@inanimate"))
             excludedID.add(MorphExcludeInanimate);
          else
          {
-            const PODCollection<int> *group = E_GetThingsFromGroup(*item);
+            const PODCollection<int> *group = E_GetThingsFromGroup(exclude);
             if(group)
             {
                for(int type : *group)
@@ -394,37 +320,92 @@ void E_IndexMorphInfo(emodmorph_t &morph)
             }
             else  // single thing type, not a group
             {
-               int type = E_ThingNumForName(*item);
+               int type = E_ThingNumForName(exclude);
                if(type == -1)
-                  doom_warningf("Invalid excluded tareget '%s' for morph info", *item);
+                  doom_warningf("Invalid excluded tareget '%s' for morphtype '%s'", exclude, mod->name);
                else
                   excludedID.add(type);
             }
          }
+
+         mod->morph.excludedID = emalloc(mobjtype_t *, (excludedID.getLength() + 1) * sizeof(mobjtype_t));
+         memcpy(mod->morph.excludedID, &excludedID[0], excludedID.getLength() * sizeof(mobjtype_t));
+         mod->morph.excludedID[excludedID.getLength()] = MorphExcludeListEnd;  // end with -1
       }
-      for(char **iter = excluded; *iter; ++iter)
-         efree(*iter);
-      efree(excluded);
-      
-      morph.excludedID = emalloc(mobjtype_t *, (excludedID.getLength() + 1) * sizeof(mobjtype_t));
-      memcpy(morph.excludedID, &excludedID[0], excludedID.getLength() * sizeof(mobjtype_t));
-      morph.excludedID[excludedID.getLength()] = MorphExcludeListEnd;  // end with -1
-
    }
-   else
-      morph.excludedID = nullptr;
+}
 
-   if(pclassName)
+//
+// Empty function for declaring only
+//
+static void E_doNotPopulateMOD(const std::function<bool(const char *)> &, cfg_t *, bool, emod_t *)
+{
+}
+
+//
+// Common function to process any of the varieties of MOD
+//
+static void E_processMODGeneric(cfg_t *modsec, const char *secname, 
+                                void (*populate)(const std::function<bool(const char *)> &, cfg_t *, 
+                                                 bool, emod_t *))
+{
+   bool def = true;
+
+   const auto IS_SET = [modsec, &def](const char *const name) -> bool {
+      return def || cfg_size(modsec, name) > 0;
+      };
+
+   const char *title = cfg_title(modsec);
+   int num = cfg_getint(modsec, ITEM_DAMAGETYPE_NUM);
+
+   // if one exists by this name already, modify it
+   emod_t *mod;
+   if((mod = E_EDFDamageTypeForName(title)))
    {
-      morph.pclass = E_PlayerClassForName(pclassName);
-      if(!morph.pclass)
-         doom_warningf("Invalid playerclass '%s' for morph info", pclassName);
-      efree(pclassName);
+      
+      // TODO: solve the autodecrement problem
+      
+      // check numeric key
+      if(mod->num != num)
+      {
+         // remove from numeric hash
+         E_DelDamageTypeFromNumHash(mod);
+
+         // change key
+         mod->num = num;
+
+         // add back to numeric hash
+         E_AddDamageTypeToNumHash(mod);
+      }
+
+      // not a definition
+      def = false;
    }
    else
-      morph.pclass = nullptr;
+   {
+      // do not override the Unknown type
+      if(!strcasecmp(title, "Unknown"))
+      {
+         E_EDFLoggedWarning(2, "Warning: attempt to override default Unknown "
+                            "damagetype ignored\n");
+         return;
+      }
 
-   morph.indexed = true;
+      // create a new mod
+      mod = ecalloc(emod_t *, 1, sizeof(emod_t));
+
+      mod->name = estrdup(title);
+      mod->num = num;
+
+      // add to hash tables
+      E_AddDamageTypeToNameHash(mod);
+      E_AddDamageTypeToNumHash(mod);
+   }
+
+   populate(IS_SET, modsec, def, mod);
+
+   E_EDFLogPrintf("\t\t%s %s %s\n",
+                  def ? "Defined" : "Modified", secname, mod->name);
 }
 
 //
@@ -477,7 +458,36 @@ void E_ProcessDamageTypes(cfg_t *cfg)
    E_initUnknownMod();
 
    for(i = 0; i < nummods; ++i)
-      E_ProcessDamageType(cfg_getnsec(cfg, EDF_SEC_MOD, i));
+      E_processMODGeneric(cfg_getnsec(cfg, EDF_SEC_MOD, i), "damagetype", E_populateDamageType);
+}
+
+//
+// This only initializes the morph types so they can be found by thingtype definitions
+//
+void E_PrepareMorphTypes(cfg_t *cfg)
+{
+   unsigned int i;
+   unsigned int nummorphs = cfg_size(cfg, EDF_SEC_MORPHTYPE);
+
+   E_EDFLogPrintf("\t* Preparing morphtypes\n"
+                  "\t\t%d morphtype(s) declared\n", nummorphs);
+
+   for(i = 0; i < nummorphs; ++i)
+      E_processMODGeneric(cfg_getnsec(cfg, EDF_SEC_MORPHTYPE, i), "morphtype", E_doNotPopulateMOD);
+}
+
+//
+// Also process the morph types
+//
+void E_ProcessMorphTypes(cfg_t *cfg)
+{
+   unsigned nummorphs = cfg_size(cfg, EDF_SEC_MORPHTYPE);
+
+   E_EDFLogPrintf("\t* Processing morphtypes\n"
+                  "\t\t%d morphtype(s) defined\n", nummorphs);
+
+   for(unsigned i = 0; i < nummorphs; ++i)
+      E_processMODGeneric(cfg_getnsec(cfg, EDF_SEC_MORPHTYPE, i), "morphtype", E_populateMorphType);
 }
 
 //
