@@ -398,6 +398,8 @@ static void E_processMODGeneric(cfg_t *modsec, const char *secname,
       mod->name = estrdup(title);
       mod->num = num;
 
+      mod->morph.speciesID = -1;
+
       // add to hash tables
       E_AddDamageTypeToNameHash(mod);
       E_AddDamageTypeToNumHash(mod);
