@@ -346,8 +346,8 @@ static void E_doNotPopulateMOD(const std::function<bool(const char *)> &, cfg_t 
 // Common function to process any of the varieties of MOD
 //
 static void E_processMODGeneric(cfg_t *modsec, const char *secname, 
-                                void (*populate)(const std::function<bool(const char *)> &, cfg_t *, 
-                                                 bool, emod_t *))
+                                void (*populate)(const std::function<bool(const char *)> &, cfg_t *,
+                                                 bool, emod_t *), bool renumber)
 {
    bool def = true;
 
@@ -366,7 +366,8 @@ static void E_processMODGeneric(cfg_t *modsec, const char *secname,
       // TODO: solve the autodecrement problem
       
       // check numeric key
-      if(mod->num != num)
+      // NOTE: if renumber is false, only redo if given number is explicit
+      if(mod->num != num && (renumber || num != -1))
       {
          // remove from numeric hash
          E_DelDamageTypeFromNumHash(mod);
@@ -458,7 +459,10 @@ void E_ProcessDamageTypes(cfg_t *cfg)
    E_initUnknownMod();
 
    for(i = 0; i < nummods; ++i)
-      E_processMODGeneric(cfg_getnsec(cfg, EDF_SEC_MOD, i), "damagetype", E_populateDamageType);
+   {
+      E_processMODGeneric(cfg_getnsec(cfg, EDF_SEC_MOD, i), "damagetype", E_populateDamageType,
+                          true);
+   }
 }
 
 //
@@ -473,7 +477,10 @@ void E_PrepareMorphTypes(cfg_t *cfg)
                   "\t\t%d morphtype(s) declared\n", nummorphs);
 
    for(i = 0; i < nummorphs; ++i)
-      E_processMODGeneric(cfg_getnsec(cfg, EDF_SEC_MORPHTYPE, i), "morphtype", E_doNotPopulateMOD);
+   {
+      E_processMODGeneric(cfg_getnsec(cfg, EDF_SEC_MORPHTYPE, i), "morphtype", E_doNotPopulateMOD,
+                          true);
+   }
 }
 
 //
@@ -486,8 +493,12 @@ void E_ProcessMorphTypes(cfg_t *cfg)
    E_EDFLogPrintf("\t* Processing morphtypes\n"
                   "\t\t%d morphtype(s) defined\n", nummorphs);
 
+   // Do not renumber this time, because we don't want to autodecrement and lose refs
    for(unsigned i = 0; i < nummorphs; ++i)
-      E_processMODGeneric(cfg_getnsec(cfg, EDF_SEC_MORPHTYPE, i), "morphtype", E_populateMorphType);
+   {
+      E_processMODGeneric(cfg_getnsec(cfg, EDF_SEC_MORPHTYPE, i), "morphtype", E_populateMorphType,
+                          false);
+   }
 }
 
 //
