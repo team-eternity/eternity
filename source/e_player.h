@@ -27,6 +27,7 @@
 #define E_PLAYER_H__
 
 #include "info.h"
+#include "m_fixed.h"
 
 // macros
 constexpr int NUMEDFSKINCHAINS = 17;
