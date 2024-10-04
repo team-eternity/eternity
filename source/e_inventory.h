@@ -63,6 +63,15 @@ enum
 };
 typedef int artitype_t;
 
+// Autouse health types
+enum class AutoUseHealthMode : int
+{
+   none,
+   heretic,
+   strife,
+   MAX
+};
+
 // Hard-coded names for specially treated items (needed in DeHackEd, etc.)
 constexpr const char ITEMNAME_BERSERKHEALTH[] = "BerserkHealth"; // The health
 constexpr const char ITEMNAME_HEALTHBONUS[]   = "HealthBonus";
@@ -276,6 +285,12 @@ enum itemremoved_e
    INV_REMOVEDSLOT // removed number AND slot
 };
 
+enum autousehealthrestrict_flags : unsigned
+{
+   AHR_BABY = 1,
+   AHR_DEATHMATCH = 2,
+};
+
 // Remove an item from a player's inventory.
 itemremoved_e E_RemoveInventoryItem(const player_t *player,
                                     const itemeffect_t *artifact, int amount);
@@ -304,6 +319,8 @@ extern MetaKeyIndex keyMaxAmount;
 extern MetaKeyIndex keyBackpackMaxAmt;
 extern MetaKeyIndex keyInvBar;
 extern MetaKeyIndex keyAmmoGiven;
+extern MetaKeyIndex keyAutouseHealthRestrict;
+extern MetaKeyIndex keyAutouseHealthMode;
 
 //
 // EDF-Only Definitions

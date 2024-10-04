@@ -168,6 +168,8 @@ constexpr const char KEY_AMMOGIVEN[]      = "ammogiven";
 constexpr const char KEY_AMOUNT[]         = "amount";
 constexpr const char KEY_ARGS[]           = "args";
 constexpr const char KEY_ARTIFACTTYPE[]   = "artifacttype";
+constexpr const char KEY_AUTOUSE_HEALTH_MODE[] = "autouse.health.mode";
+constexpr const char KEY_AUTOUSE_HEALTH_RESTRICT[] = "autouse.health.restrict";
 constexpr const char KEY_BACKPACKAMOUNT[] = "ammo.backpackamount";
 constexpr const char KEY_BACKPACKMAXAMT[] = "ammo.backpackmaxamount";
 constexpr const char KEY_AMMOCOOPSTAY[]   = "ammo.coopstay";
@@ -219,6 +221,8 @@ MetaKeyIndex keyMaxAmount     (KEY_MAXAMOUNT     );
 MetaKeyIndex keyBackpackMaxAmt(KEY_BACKPACKMAXAMT);
 MetaKeyIndex keyInvBar        (KEY_INVBAR        );
 MetaKeyIndex keyAmmoGiven     (KEY_AMMOGIVEN     );
+MetaKeyIndex keyAutouseHealthMode(KEY_AUTOUSE_HEALTH_MODE);
+MetaKeyIndex keyAutouseHealthRestrict(KEY_AUTOUSE_HEALTH_RESTRICT);
 
 // Static interened metatable keys
 static MetaKeyIndex keyArtifactType  (KEY_ARTIFACTTYPE  );
@@ -430,6 +434,52 @@ static int E_artiTypeCB(cfg_t *cfg, cfg_opt_t *opt, const char *value, void *res
    return 0;
 }
 
+// Autouse options
+static const char *autouseHealthModeNames[(int)AutoUseHealthMode::MAX] =
+{
+   "none",
+   "heretic",
+   "strife"
+};
+
+//
+// Parsing callback for autouse
+//
+static int E_autouseHealthModeCB(cfg_t *cfg, cfg_opt_t *opt, const char *value, void *result)
+{
+   int res;
+
+   if((res = E_StrToNumLinear(autouseHealthModeNames, (int)earrlen(autouseHealthModeNames), value))
+      == (int)earrlen(autouseHealthModeNames))
+   {
+      res = (int)AutoUseHealthMode::none;
+   }
+   *(int *)result = res;
+
+   return 0;
+}
+
+static dehflags_t autousehealthrestrict_flaglist[] =
+{
+   { "baby", AHR_BABY },
+   { "deathmatch", AHR_DEATHMATCH },
+   { nullptr, 0 },
+};
+
+static dehflagset_t autousehealthrestrict_flagset =
+{
+   autousehealthrestrict_flaglist,
+   0,
+};
+
+//
+// Restrict by skill or game mode
+//
+static int E_autouseHealthRestrictCB(cfg_t *cfg, cfg_opt_t *opt, const char *value, void *result)
+{
+   return (int)E_ParseFlags(value, &autousehealthrestrict_flagset);
+}
+
 //
 // Callback function for the function-valued string option used to
 // specify state action functions. This is called during parsing, not
@@ -468,6 +518,9 @@ static int E_actionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **arg
    CFG_FLAG(KEY_KEEPDEPLETED,   0, CFGF_SIGNPREFIX), /* if +, remains in inventory if amount is 0 */ \
    CFG_FLAG(KEY_FULLAMOUNTONLY, 0, CFGF_SIGNPREFIX), /* if +, pick up for full amount only        */ \
    CFG_FLAG(KEY_NOSHAREWARE,    0, CFGF_SIGNPREFIX), /* if +, non-shareware                       */ \
+                                                                                                     \
+   CFG_INT_CB(KEY_AUTOUSE_HEALTH_MODE, (int)AutoUseHealthMode::none, CFGF_NONE, E_autouseHealthModeCB), \
+   CFG_INT_CB(KEY_AUTOUSE_HEALTH_RESTRICT, 0, CFGF_NONE, E_autouseHealthRestrictCB),                 \
                                                                                                      \
    CFG_INT_CB(KEY_ARTIFACTTYPE, ARTI_NORMAL, CFGF_NONE, E_artiTypeCB), /* artifact sub-type */       \
                                                                                                      \

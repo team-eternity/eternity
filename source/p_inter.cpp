@@ -1557,6 +1557,43 @@ bool P_MorphPlayer(const emodmorph_t &minfo, player_t &player)
    return true;
 }
 
+static void P_hereticAutoUseHealth(player_t *player, int saveHealth)
+{
+   PODCollection<int> counts;
+   PODCollection<const itemeffect_t *> effects;
+   int invsize = E_GetInventoryAllocSize();
+   for(int i = 0; i < invsize; ++i)
+   {
+      const itemeffect_t *effect = E_EffectForInventoryIndex(player, i);
+      if(!effect)
+         continue;
+      int amount = E_GetItemOwnedAmount(player, effect);
+      if(amount <= 0 || effect->getInt(keyClass, ITEMFX_NONE) != ITEMFX_ARTIFACT ||
+         effect->getInt(keyAutouseHealthMode, (int)AutoUseHealthMode::none) != 
+         (int)AutoUseHealthMode::heretic)
+      {
+         continue;
+      }
+      unsigned restriction = (unsigned)effect->getInt(keyAutouseHealthRestrict, 0);
+      if(restriction)
+      {
+         // Restriction is actually a list of accepted game types, which if 0, means no restriction
+         bool baby = gameskill == sk_baby;
+         bool dm = GameType == gt_dm;
+
+         bool accept = (baby && (restriction & AHR_BABY)) || (dm && (restriction & AHR_DEATHMATCH));
+         if(!accept)
+            continue;
+      }
+
+      counts.add(amount);
+      effects.add(effect);
+      
+   }
+
+   qsort()
+}
+
 //
 // P_DamageMobj
 //
@@ -1771,6 +1808,10 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
          player->armorpoints -= saved;
          damage -= saved;
       }
+
+      // TODO: disable from healing cursed classes
+      if(damage >= player->health)
+         P_hereticAutoUseHealth(player, damage - player->health + 1);
 
       player->health -= damage;       // mirror mobj health here for Dave
       if(player->health < 0)
