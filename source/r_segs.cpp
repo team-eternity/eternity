@@ -1023,16 +1023,18 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
       // SoM: TODO: This can be a bit problematic for slopes because we'll have 
       // to check the line for textures at both ends...
-      if(segclip.frontsec->srf.floor.slope &&
-         !R_CompareSlopes(segclip.frontsec->srf.floor.slope, segclip.backsec->srf.floor.slope))
+      if(segclip.maxfrontfloor > segclip.maxbackfloor)
       {
-         ds_p->silhouette = SIL_BOTTOM;
-         ds_p->bsilheight = D_MAXINT;
-      }
-      else if(segclip.maxfrontfloor > segclip.maxbackfloor)
-      {
-         ds_p->silhouette = SIL_BOTTOM;
-         ds_p->bsilheight = segclip.maxfrontfloor;
+         if(segclip.maxfrontfloor > viewpoint.z)   // above a raising floor slope
+         {
+            ds_p->silhouette = SIL_BOTTOM;
+            ds_p->bsilheight = D_MAXINT;
+         }
+         else
+         {
+            ds_p->silhouette = SIL_BOTTOM;
+            ds_p->bsilheight = segclip.maxfrontfloor;
+         }
       }
       else if(segclip.maxbackfloor > viewpoint.z)
       {
@@ -1044,16 +1046,18 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
          ds_p->silhouette = SIL_BOTTOM;
          ds_p->bsilheight = emax(segclip.maxfrontfloor, segclip.maxbackfloor);
       }
-      if(segclip.frontsec->srf.ceiling.slope && 
-         !R_CompareSlopes(segclip.frontsec->srf.ceiling.slope, segclip.backsec->srf.ceiling.slope))
+      if(segclip.minfrontceil < segclip.minbackceil)
       {
-         ds_p->silhouette |= SIL_TOP;
-         ds_p->tsilheight = D_MININT;
-      }
-      else if(segclip.minfrontceil < segclip.minbackceil)
-      {
-         ds_p->silhouette |= SIL_TOP;
-         ds_p->tsilheight = segclip.minfrontceil;
+         if(segclip.minfrontceil < viewpoint.z)  // under a lowering ceiling slope
+         {
+            ds_p->silhouette |= SIL_TOP;
+            ds_p->tsilheight = D_MININT;
+         }
+         else
+         {
+            ds_p->silhouette |= SIL_TOP;
+            ds_p->tsilheight = segclip.minfrontceil;
+         }
       }
       else if(segclip.minbackceil < viewpoint.z)
       {
