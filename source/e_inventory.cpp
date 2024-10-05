@@ -439,7 +439,9 @@ static const char *autouseHealthModeNames[(int)AutoUseHealthMode::MAX] =
 {
    "none",
    "heretic",
-   "strife"
+
+   // TODO: add this when we support strife
+//   "strife"
 };
 
 //

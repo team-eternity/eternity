@@ -69,7 +69,8 @@ enum class AutoUseHealthMode : int
 {
    none,
    heretic,
-   strife,
+   // TODO: add this when we support strife
+//   strife,   
    MAX
 };
 
