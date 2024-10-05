@@ -1557,41 +1557,74 @@ bool P_MorphPlayer(const emodmorph_t &minfo, player_t &player)
    return true;
 }
 
+//
+// Auto use health like in Heretic, if needed
+//
 static void P_hereticAutoUseHealth(player_t *player, int saveHealth)
 {
-   PODCollection<int> counts;
-   PODCollection<const itemeffect_t *> effects;
-   int invsize = E_GetInventoryAllocSize();
-   for(int i = 0; i < invsize; ++i)
+   const PODCollection<e_autouseid_t> &items = E_GetAutouseList();
+
+   // Returns true if allowed
+   auto checkRestrictions = [](unsigned allowed)
+      {
+         if(!allowed)   // no mention of anything, always allow
+            return true;
+         // Otherwise, apply this logic
+         return (allowed & AHR_BABY       && gameskill == sk_baby) || 
+                (allowed & AHR_DEATHMATCH && GameType  == gt_dm);
+      };
+
+   bool healed = false;
+   for(const e_autouseid_t &useid : items)
    {
-      const itemeffect_t *effect = E_EffectForInventoryIndex(player, i);
-      if(!effect)
+      if(!checkRestrictions(useid.restriction) || useid.amount <= 0)  // also sanity check amount
          continue;
-      int amount = E_GetItemOwnedAmount(player, effect);
-      if(amount <= 0 || effect->getInt(keyClass, ITEMFX_NONE) != ITEMFX_ARTIFACT ||
-         effect->getInt(keyAutouseHealthMode, (int)AutoUseHealthMode::none) != 
-         (int)AutoUseHealthMode::heretic)
-      {
+
+      int numitems = E_GetItemOwnedAmount(player, useid.artifact);
+      if(numitems <= 0 || numitems * useid.amount < saveHealth)   // skip if can't save life
          continue;
-      }
-      unsigned restriction = (unsigned)effect->getInt(keyAutouseHealthRestrict, 0);
-      if(restriction)
-      {
-         // Restriction is actually a list of accepted game types, which if 0, means no restriction
-         bool baby = gameskill == sk_baby;
-         bool dm = GameType == gt_dm;
-
-         bool accept = (baby && (restriction & AHR_BABY)) || (dm && (restriction & AHR_DEATHMATCH));
-         if(!accept)
-            continue;
-      }
-
-      counts.add(amount);
-      effects.add(effect);
-      
+      int count = (saveHealth + useid.amount - 1) / useid.amount; // Round up to next multiple of amount
+      const int itemid = useid.artifact->getInt(keyItemID, -1);
+      if(itemid == -1)
+         continue;
+      for(int i = 0; i < count; ++i)
+         E_TryUseItem(player, itemid); // heal now
+      healed = true;
+      break;
    }
+   if(healed)
+      return;
+   // Found no individual item set to heal, so try them all now
+   int totalheal = 0;
+   for(const e_autouseid_t &useid : items)
+   {
+      if(!checkRestrictions(useid.restriction) || useid.amount <= 0)  // again check not to add fake
+         continue;
+      int numitems = E_GetItemOwnedAmount(player, useid.artifact);
+      if(numitems <= 0)   // now don't skip if can't save life alone
+         continue;
+      totalheal += numitems * useid.amount;
+   }
+   if(totalheal < saveHealth)
+      return;  // not enough :(
 
-   qsort()
+   for(const e_autouseid_t &useid : items)
+   {
+      if(!checkRestrictions(useid.restriction) || useid.amount <= 0)
+         continue;
+      int numitems = E_GetItemOwnedAmount(player, useid.artifact);
+      if(numitems <= 0)
+         continue;
+      const int itemid = useid.artifact->getInt(keyItemID, -1);
+      if(itemid == -1)
+         continue;
+      int count = (saveHealth + useid.amount - 1) / useid.amount;
+      saveHealth -= count * useid.amount;
+      for(int i = 0; i < count; ++i)
+         E_TryUseItem(player, itemid);
+      if(saveHealth <= 0)
+         break;   // alive
+   }
 }
 
 //

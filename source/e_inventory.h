@@ -29,6 +29,7 @@
 // Basic inventory definitions are now in d_player.h, so that the entire engine
 // doesn't rebuild if you modify this header.
 #include "d_player.h"
+#include "m_collection.h"
 
 class MetaKeyIndex;
 class MetaTable;
@@ -156,6 +157,16 @@ struct e_pickupfx_t
 };
 
 //
+// Autouse health items
+//
+struct e_autouseid_t
+{
+   int amount;                   // heal amount
+   unsigned restriction;         // restriction, if any
+   const itemeffect_t *artifact; // the inventory artifact effect
+};
+
+//
 // Functions
 //
 
@@ -276,6 +287,8 @@ e_pickupfx_t *E_PickupFXForName(const char *name);
 e_pickupfx_t *E_PickupFXForSprNum(spritenum_t sprnum);
 
 pickupflags_e E_PickupFlagsForStr(const char *flagstr);
+
+const PODCollection<e_autouseid_t> &E_GetAutouseList();
 
 // return value enumeration for E_RemoveInventoryItem
 enum itemremoved_e

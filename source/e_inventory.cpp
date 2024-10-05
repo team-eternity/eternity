@@ -168,7 +168,7 @@ constexpr const char KEY_AMMOGIVEN[]      = "ammogiven";
 constexpr const char KEY_AMOUNT[]         = "amount";
 constexpr const char KEY_ARGS[]           = "args";
 constexpr const char KEY_ARTIFACTTYPE[]   = "artifacttype";
-constexpr const char KEY_AUTOUSE_HEALTH_MODE[] = "autouse.health.mode";
+constexpr const char KEY_AUTOUSE_HEALTH_MODE[]     = "autouse.health.mode";
 constexpr const char KEY_AUTOUSE_HEALTH_RESTRICT[] = "autouse.health.restrict";
 constexpr const char KEY_BACKPACKAMOUNT[] = "ammo.backpackamount";
 constexpr const char KEY_BACKPACKMAXAMT[] = "ammo.backpackmaxamount";
@@ -221,7 +221,7 @@ MetaKeyIndex keyMaxAmount     (KEY_MAXAMOUNT     );
 MetaKeyIndex keyBackpackMaxAmt(KEY_BACKPACKMAXAMT);
 MetaKeyIndex keyInvBar        (KEY_INVBAR        );
 MetaKeyIndex keyAmmoGiven     (KEY_AMMOGIVEN     );
-MetaKeyIndex keyAutouseHealthMode(KEY_AUTOUSE_HEALTH_MODE);
+MetaKeyIndex keyAutouseHealthMode    (KEY_AUTOUSE_HEALTH_MODE    );
 MetaKeyIndex keyAutouseHealthRestrict(KEY_AUTOUSE_HEALTH_RESTRICT);
 
 // Static interened metatable keys
@@ -461,9 +461,9 @@ static int E_autouseHealthModeCB(cfg_t *cfg, cfg_opt_t *opt, const char *value, 
 
 static dehflags_t autousehealthrestrict_flaglist[] =
 {
-   { "baby", AHR_BABY },
+   { "baby",       AHR_BABY       },
    { "deathmatch", AHR_DEATHMATCH },
-   { nullptr, 0 },
+   { nullptr,      0              },
 };
 
 static dehflagset_t autousehealthrestrict_flagset =
@@ -477,7 +477,8 @@ static dehflagset_t autousehealthrestrict_flagset =
 //
 static int E_autouseHealthRestrictCB(cfg_t *cfg, cfg_opt_t *opt, const char *value, void *result)
 {
-   return (int)E_ParseFlags(value, &autousehealthrestrict_flagset);
+   *(int *)result = (int)E_ParseFlags(value, &autousehealthrestrict_flagset);
+   return 0;
 }
 
 //
@@ -893,6 +894,69 @@ static void E_collectWeaponTypes()
       if (itr->getInt(keyArtifactType, ARTI_NORMAL) == ARTI_WEAPON)
          e_weaponsLookup.add(itr);
    }
+}
+
+//=============================================================================
+//
+// Autouse health items
+//
+
+static PODCollection<e_autouseid_t> e_autouseLookup; // cached collection of autouse items
+
+//
+// Comparator for sorting ascending by health provided
+//
+static int autouseCompare(const void *p1, const void *p2)
+{
+   auto a1 = static_cast<const e_autouseid_t *>(p1);
+   auto a2 = static_cast<const e_autouseid_t *>(p2);
+
+   return a1->amount - a2->amount;
+}
+
+//
+// Collect inventory items for using in Heretic for saving player's life under certain skill levels
+//
+static void E_collectAutouseHealthItems()
+{
+   e_autouseLookup.makeEmpty();
+   itemeffect_t *itr = nullptr;
+   while((itr = runtime_cast<itemeffect_t *>(e_effectsTable.tableIterator(itr))))
+   {
+      if(itr->getInt(keyArtifactType, ARTI_NORMAL) != ARTI_NORMAL ||
+         itr->getInt(keyAutouseHealthMode, (int)AutoUseHealthMode::none) !=
+         (int)AutoUseHealthMode::heretic)
+      {
+         continue;
+      }
+      
+      const char *useeffectstr = itr->getString(keyUseEffect, "");
+      const itemeffect_t *effect = E_ItemEffectForName(useeffectstr);
+      if(!effect || effect->getInt("sethealth", 0))   // don't support health-set items, just health-add
+         continue;
+      
+      int amount = effect->getInt(keyAmount, 0);
+      if(!amount)
+         continue;
+
+      int restriction = itr->getInt(keyAutouseHealthRestrict, 0);
+
+      e_autouseid_t &useid = e_autouseLookup.addNew();
+      useid.amount = amount;
+      useid.artifact = itr;
+      useid.restriction = restriction;
+   }
+
+   if(e_autouseLookup.isEmpty())
+      return;
+
+   // Now sort
+   qsort(&e_autouseLookup[0], e_autouseLookup.getLength(), sizeof(e_autouseid_t), autouseCompare);
+}
+
+const PODCollection<e_autouseid_t> &E_GetAutouseList()
+{
+   return e_autouseLookup;
 }
 
 //=============================================================================
@@ -2627,6 +2691,7 @@ void E_ProcessInventory(cfg_t *cfg)
    E_collectAmmoTypes();
    E_collectKeyItems();
    E_collectWeaponTypes();
+   E_collectAutouseHealthItems();
 
    // process lockdefs
    E_processLockDefs(cfg);
