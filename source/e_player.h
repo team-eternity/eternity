@@ -52,6 +52,7 @@ enum
    PCF_ALWAYSJUMP = 1,   // class is designed to jump, do not allow disabling it
    PCF_CHICKENTWITCH = 2,  // random twitching like Heretic chicken
    PCF_NOBOB = 4, // disable bobbing
+   PCF_NOHEALTHAUTOUSE = 8,   // disable health auto-use on emergency
 };
 
 // default inventory items

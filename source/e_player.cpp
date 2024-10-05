@@ -132,6 +132,7 @@ constexpr const char ITEM_PCLASS_WEAPONSLOT[]     = "weaponslot";
 constexpr const char ITEM_PCLASS_ALWAYSJUMP[]     = "alwaysjump";
 constexpr const char ITEM_PCLASS_CHICKENTWITCH[]  = "chickentwitch";
 constexpr const char ITEM_PCLASS_NOBOB[] = "nobob";
+constexpr const char ITEM_PCLASS_NOHEALTHAUTOUSE[] = "nohealthautouse";
 
 constexpr const char ITEM_REBORN_NAME[]   = "name";
 constexpr const char ITEM_REBORN_AMOUNT[] = "amount";
@@ -189,6 +190,7 @@ static cfg_opt_t reborn_opts[] =
    CFG_FLAG(ITEM_PCLASS_ALWAYSJUMP, 0, CFGF_SIGNPREFIX),\
    CFG_FLAG(ITEM_PCLASS_CHICKENTWITCH, 0, CFGF_SIGNPREFIX),\
    CFG_FLAG(ITEM_PCLASS_NOBOB, 0, CFGF_SIGNPREFIX),\
+   CFG_FLAG(ITEM_PCLASS_NOHEALTHAUTOUSE, 0, CFGF_SIGNPREFIX),\
    CFG_END()
 
 cfg_opt_t edf_pclass_opts[] =
@@ -207,6 +209,7 @@ static const flagmap_t s_flagmap[] =
    { ITEM_PCLASS_ALWAYSJUMP, PCF_ALWAYSJUMP },
    { ITEM_PCLASS_CHICKENTWITCH, PCF_CHICKENTWITCH },
    { ITEM_PCLASS_NOBOB, PCF_NOBOB },
+   { ITEM_PCLASS_NOHEALTHAUTOUSE, PCF_NOHEALTHAUTOUSE },
 };
 
 //==============================================================================

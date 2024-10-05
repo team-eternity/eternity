@@ -46,6 +46,7 @@ playerclass Chicken
 
   +ChickenTwitch
   +NoBob
+  +NoHealthAutoUse
 
   rebornitem Beak
 }

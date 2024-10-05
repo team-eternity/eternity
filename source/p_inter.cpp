@@ -1842,8 +1842,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
          damage -= saved;
       }
 
-      // TODO: disable from healing cursed classes
-      if(damage >= player->health)
+      if(!(player->pclass->flags & PCF_NOHEALTHAUTOUSE) && damage >= player->health)
          P_hereticAutoUseHealth(player, damage - player->health + 1);
 
       player->health -= damage;       // mirror mobj health here for Dave
