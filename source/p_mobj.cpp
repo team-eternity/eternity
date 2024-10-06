@@ -2503,7 +2503,13 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
          mobj->colour = mobj->info->colour;
       }
       else
+      {
          mobj->colour = (info->flags & MF_TRANSLATION) >> MF_TRANSSHIFT;
+
+         // FIXME: move this stuff to GameModeInfo/EDF
+         if(GameModeInfo->type == Game_Heretic)
+            mobj->colour = hereticPlayerTranslationRemap[mobj->colour];
+      }
    }
 
    // Under vanilla Heretic type 0 is the crystal vial, so try to emulate that weirdness where
