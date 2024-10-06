@@ -1001,7 +1001,7 @@ bool P_SkullHit(Mobj *thing)
 // missiles, since this alters the playability of the game severely
 // in areas of many maps.
 //
-int P_MissileBlockHeight(const Mobj *mo)
+int P_MissileBlockHeight(Mobj *mo)
 {
    return (demo_version >= 333 && !getComp(comp_theights) &&
            mo->flags3 & MF3_3DDECORATION) ? mo->info->height : mo->height;

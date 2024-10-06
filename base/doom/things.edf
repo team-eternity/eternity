@@ -1280,7 +1280,7 @@ thingtype DoomBarrel : Mobj, 2035, 31
   radius         10.0
   height         42.0
   correct_height 34.0
-  cflags         SOLID|SHOOTABLE|NOBLOOD|3DDECORATION
+  flags          SOLID|SHOOTABLE|NOBLOOD
   mod            Barrel
   acs_spawndata
   {

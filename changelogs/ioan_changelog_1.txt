@@ -11,9 +11,6 @@ Since v4.02.00 "Forseti"
 
 BUGFIX: Fixed a crash happening involving weapon counter and saving/loading.
 
-        Fixed barrels with a correct height for z-clipping getting undesired
-        side effects with the hitbox when attacked.
-
 --------------------------------------------------------------------------------
 02.09.2024
 
