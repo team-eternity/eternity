@@ -251,7 +251,7 @@ void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...)
       if(!has_exited)    // If it hasn't exited yet, exit now -- killough
       {
          has_exited = true; // Prevent infinitely recursive exits -- killough
-         exit(-1);
+         I_Exit(-1);
       }
       else
          abort(); // double fault, must abort
