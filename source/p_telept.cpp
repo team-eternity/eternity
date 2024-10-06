@@ -327,7 +327,7 @@ int EV_Teleport(int tag, int side, Mobj *thing, bool alwaysfrag)
    // don't teleport missiles
    // Don't teleport if hit back of line,
    //  so you can get out of teleporter.
-   if(!thing || side || thing->flags & MF_MISSILE)
+   if(!thing || side || (thing->flags & MF_MISSILE && !(thing->flags3 & MF3_TELESTOMP)))
       return 0;
 
    // killough 1/31/98: improve performance by using
