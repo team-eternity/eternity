@@ -640,9 +640,9 @@ static void P_loadWeaponCounters(SaveArchive &arc, player_t &p)
    arc << numCountedWeapons;
    if(numCountedWeapons)
    {
-      WeaponCounter *weaponCounters = estructalloc(WeaponCounter, numCountedWeapons);
       for(int i = 0; i < numCountedWeapons; i++)
       {
+         auto weaponCounter = ecalloc(WeaponCounter *, 1, sizeof(WeaponCounter));
          size_t len;
          char *className = nullptr;
 
@@ -650,7 +650,7 @@ static void P_loadWeaponCounters(SaveArchive &arc, player_t &p)
          weaponinfo_t *wp = E_WeaponForName(className);
          if(!wp)
             I_Error("P_loadWeaponCounters: weapon '%s' not found\n", className);
-         WeaponCounter &wc = weaponCounters[i];
+         WeaponCounter &wc = *weaponCounter;
          if(arc.saveVersion() >= 21)
             P_ArchiveArray<int>(arc, wc, earrlen(wc));
          else
