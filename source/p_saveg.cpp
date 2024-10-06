@@ -764,7 +764,8 @@ static void P_ArchivePlayers(SaveArchive &arc)
             if(arc.saveVersion() >= 22)
             {
                arc << slotIndex;
-               p.unmorphWeaponSlot = E_FindEntryForWeaponInSlotIndex(&p, p.unmorphWeapon, slotIndex);
+               if(p.unmorphWeapon)
+                  p.unmorphWeaponSlot = E_FindEntryForWeaponInSlotIndex(&p, p.unmorphWeapon, slotIndex);
             }
 
             // Load counters if there's a need to
