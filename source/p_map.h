@@ -102,6 +102,8 @@ void P_CollectSpechits(line_t *ld, PODCollection<line_t *> *pushhit);
 
 bool P_BlockedAsMonster(const Mobj &mo);
 
+int P_MissileBlockHeight(const Mobj *mo);
+
 //
 // Various results
 //

@@ -89,7 +89,7 @@ bool P_CheckThingAimSlopes(const Mobj *th, fixed_t origindist, fixed_t infrac, l
 {
    // check angles to see if the thing can be aimed at
    fixed_t dist = origindist + FixedMul(atrace.attackrange, infrac);
-   fixed_t thingtopslope = FixedDiv(th->z + th->height - atrace.z, dist);
+   fixed_t thingtopslope = FixedDiv(th->z + P_MissileBlockHeight(th) - atrace.z, dist);
 
    if(thingtopslope < atrace.bottomslope)
       return false; // shot over the thing
@@ -283,7 +283,7 @@ bool P_ShootThing(const intercept_t *in,
 
    // check angles to see if the thing can be aimed at
    fixed_t dist             = FixedMul(attackrange_local, in->frac);
-   fixed_t thingtopslope    = FixedDiv(th->z + th->height - sourcez, dist);
+   fixed_t thingtopslope    = FixedDiv(th->z + P_MissileBlockHeight(th) - sourcez, dist);
    fixed_t thingbottomslope = FixedDiv(th->z - sourcez, dist);
 
    if(thingtopslope < aimslope)
