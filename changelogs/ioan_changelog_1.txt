@@ -11,6 +11,10 @@ Since v4.02.00 "Forseti"
 
 BUGFIX: Fixed a crash happening involving weapon counter and saving/loading.
 
+        Fixed a long-standing problem with barrels having the wrong height,
+        breaking all sorts of scenarios which work correctly in Doom and other
+        ports.
+
 --------------------------------------------------------------------------------
 02.09.2024
 
