@@ -549,8 +549,10 @@ void D_DrawWings()
 
    if(vbscreen.getVirtualAspectRatio() <= 4 * FRACUNIT / 3)
       return;
+   if(vbscreenyscaled.unscaledw < SCREENWIDTH)
+      return;  // safety
 
-   wingwidth = (vbscreen.width - (vbscreen.height * 4 / 3)) / 2;
+   wingwidth = vbscreenyscaled.x1lookup[(vbscreenyscaled.unscaledw - SCREENWIDTH) / 2];
 
    // safety check
    if(wingwidth <= 0)
