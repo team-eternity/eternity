@@ -195,7 +195,7 @@ Other files required    : DOOM, DOOM II, Final Doom, HACX, or Heretic
 
 Base                    : SMMU v3.21 / v3.30
 Build Time              : Nineteen years and counting
-Editor(s) used          : Visual Studio 2017/2019, Xcode, UltraEdit-32, SLADE,
+Editor(s) used          : Visual Studio 2017/2019/2022, Xcode, UltraEdit-32, SLADE,
                           Visual Studio Code, Notepad++, GZDoom Builder
 Known Bugs              : Too many to mention here, see below for more info
 May Not Run With...     : Most mods made for other source ports
@@ -243,6 +243,20 @@ with any concerns.
 ===============================================================================
 * Features New to Version 4.03.00 *
 
+** Major Highlights **
+  
+  * Completed the Heretic support
+  * Completed slope physics support
+  * Multithreaded renderer for better performance. New console variables:
+    - r_numcontexts: (video options, renderer threads). From 1 to how many
+      threads your CPU supports. Suggest using physical thread count.
+    - r_sprprojstyle (sprite projection style): default, fast, thorough:
+      + default means fast for 1 thread, or thorough for multiple threads.
+      + fast: classic DOOM sprite projection - sometimes sprites cut off
+        between boundaries of render context windows, if subsector isn't visible.
+      + thorough: without the cut-off possibility from "fast", at the cost of
+        some performance.
+
 ** Level Info **
 
   * Implemented full UMAPINFO (cross-port level info) support in Eternity.
@@ -260,6 +274,7 @@ with any concerns.
     conventional number limitations.
   * Now the level info changes (from any such lump) will also take effect in de-
     mos and vanilla mode if they're only cosmetic.
+  * Added support for ZDoom compressed nodes.
 
 ** Level editing features **
 
@@ -282,6 +297,23 @@ with any concerns.
     activator doesn't have a linedef.
   * If the SetActorPosition ACS function uses fog, make sure to spawn the fog in
     front of the destination area, not on top of it.
+  * Added texture skewing sidedef properties for the Eternity UDMF namespace. It
+    allows textures to match the sloping of slope on the front or back of the
+    current line texture.
+    - skew_bottom_type, skew_middle_type, skew_top_type: can be any of:
+      "none", "front_floor", "front_ceiling", "back_floor", "back_ceiling".
+  * Added per-texture offset sidedef properties for the Eternity UDMF namespace.
+    These have the same names as the ones that ZDoom's UDMF namespace uses.
+    All properties are read as decimal numbers:
+    - offsetx_bottom, offsety_bottom, offsetx_mid, 
+      offsety_mid, offsetx_top, offsety_top.
+  * Added sidedef lighting properties for the Eternity UDMF namespace.
+    This allows for separate lighting on top/middle/bottom textures, as well as
+    overall sidedef lighting. These have the same names as the ones that ZDoom's 
+    UDMF namespace uses. The light_* properties are integers and the
+    lightabsolute_* properties are booleans.
+    - light_base, light_top, light_mid, light_bottom
+    - lightabsolute, lightabsolute_top, lightabsolute_mid, lightabsolute_bottom
 
 ** Modding features **
   * (THANKS TO Afterglow FOR THIS FEATURE)
@@ -308,7 +340,39 @@ with any concerns.
     present).
   * MBF21: added the "Splash group", "Projectile group" and "Infighting group"
     specifiers for "Thing" sections.
+  * MBF21: added support for the FULLVOLSOUNDS thing flag, which makes see and
+    death sounds maximum volume.
+  * MBF21: added Dehacked support for thingtype "MBF21 Bits"
+  * MBF21: added Dehacked support for "Fast speed"
+  * MBF21: added NOAUTOSWITCHTO weapon flag, which forbids a weapon from being
+    automatically switched to when weapon is picked up on a "worse" weapon.
+  * MBF21: added support for Dehacked weapon flags.
+  * MBF21: added support for Dehacked frame flags.
+  * MBF21: added support for Dehacked "Melee range"
+  * MBF21: added support for Dehacked "Rip sound"
+  * MBF21: added A_AddFlags, A_CheckAmmo, A_ClearTracer, A_ConsumeAmmo, A_FindTracer,
+    A_GunFlashTo, A_HealChase, A_JumpIfFlagsSet, A_JumpIfHealthBelow,
+    A_JumpIfTargetCloser, A_JumpIfTargetInSight, A_JumpIfTracerCloser,
+    A_JumpIfTracerInSight, A_MonsterMeleeAttack, A_MonsterProjectile, A_NoiseAlert,
+    A_RadiusDamage, A_RefireTo, A_RemoveFlags, A_SeekTracer, A_SpawnObject,
+    A_WeaponBulletAttack, A_WeaponJump, A_WeaponMeleeAttack, A_WeaponProjectile,
+    A_WeaponSound.
   * Made thing-based obituaries use deh or EDF strings if they start with $.
+  * Added patches/ as an alternative path to graphics/ for ZIP and archive
+    directories. Thanks to sink666 for the contribution.
+  * Added a new optional argument to thingtype's damagefactor, which can be
+    "rounded" (after the comma). This has two effects:
+
+    1. The damage value is rounded to the nearest, instead of to the lower value,
+       preventing round-off errors.
+    2. If damage ends up being 0 anyway, it will behave like full damage immunity,
+       without any side effects of damage.
+
+  * Added some new dmgspecial values, for supporting the various Heretic effects:
+    PoweredPhoenixFire and BossTeleport.
+  * Added "meleerange" EDF property. It's a float, like radius and height.
+  * Added "ripsound" EDF property, which is played when a ripper rips.
+  * Added support for DSDHacked things, sprites, states and sounds.
 
 ** Automap **
 
@@ -319,8 +383,14 @@ with any concerns.
     added more confusion for mappers and playtesters alike, and it didn't
     effectively hide any immersion detail (the XY coordinates are already pretty
     arbitrary for the player).
+  * Added level stats to automap display.
+  * Added cvar "map_antialias" which toggles whether lines get drawn with anti-
+    aliasing.
+  * Automap colour improvements.
 
-** Sky aspect and freelook **
+** Visual improvements **
+
+  * Wide screen status bar
 
   * Short skies now fade into a single colour instead of stretching. The
     r_stretchsky console variable and stretchsky OPTIONS entry are deprecated
@@ -337,6 +407,14 @@ with any concerns.
     game.lookpitchdown.
 
   * Horizontally scrolling skies (e.g. clouds) now move smoothly.
+
+  * Wall portal sprite rendering is smoother now.
+
+  * Now the DOOM 1 Episode 3 ending works better with widescreen assets.
+
+  * Made fontdeltas able to change linear fonts to filter-based fonts. Depre-
+    cated "linearlump" from fonts, which now does nothing. Font format is now
+    automatically detected.
 
 ** Save game improvements **
 
@@ -379,6 +457,26 @@ with any concerns.
   * Fixed -dog. Made it so -dogs only works if it's not the last command-line
     arg.
   * macOS: reenabled ENDOOM, as it seems stable now.
+  * Windows: removed midiproc, as Eternity is now using a solution based on 
+    Woof!'s code, by Roman Fomin, which removes the need for a separate MIDI
+    playback application.
+  * Update auto-detecting DOOM 2 and Final DOOM WADs for Steam, as well as non-
+    default Steam library game install locations.
+  * Added support for scanning for Steam/GOG DOOM + DOOM II IWADs and No Rest
+    for the Living (and Master Levels for Steam only).
+  * Fixed qsave command to work even if no save slot had been selected before.
+  * Overhauled SDL game controller input to be consistent across controllers.
+    Added SDL controller input preset.
+    Added vibration support to SDL controllers.
+    Added ability to use the IWAD picker with controllers, as well as exit
+    ENDOOM.
+  * Split i_joysticksens into i_joy_deadzone_left, i_joy_deadzone_right and
+    i_joy_deadzone_trigger. Normalized the SDL gamepad axis inputs from 0 to
+    the end of deadzone.
+  * Updated SDL to 2.30.0 (from 2.0.7) on Windows.
+  * Updated SDL_mixer to 2.8.0 (from 2.6.2) on Windows.
+  * Updated SDL_net to 2.2.0 (from 2.0.1) on Windows.
+  * Added loading and sacing of mid-level music changes
 
 ===============================================================================
 * Coming Soon *
@@ -387,9 +485,7 @@ These are features planned to debut in future versions of the Eternity Engine:
 
 - Priority -
 
-  ** Slope physics
   ** Aeon scripting system
-  ** 100% Heretic support
   Hexen Support
   Strife Support                         (In progress)
   PSX Doom support                       (In progress)
@@ -407,7 +503,9 @@ These are features planned to debut in future versions of the Eternity Engine:
 
 * Dates are in mm/dd/yy *
 
-4.03.00 "Glitnir" -- 11/06/21
+4.03.00 "Glitnir" -- 10/09/24
+
+  Slopes complete, Heretic complete.
 
   UMAPINFO support, overlay automap, sky and freelook improvements, save game
   improvements, added the first MBF21 features and sector actions. Many bug
@@ -603,6 +701,38 @@ These are features planned to debut in future versions of the Eternity Engine:
 * Bugs Fixed, Known Issues *
 
 Bugs Fixed (between 4.02.00 and 4.03.00):
+
++ Fixed rare hard-lock when polyobjects start moving.
+
++ Fixed non-keyboard inputs sometimes being ignored while holding down any key-
+  board keys.
+
++ Fixed instances where scrolling through weapons wouldn't work if the next wea-
+  pon to be scrolled to is the same as the currently-equipped weapon.
+
++ Fixed crashes due to sound zone propagation through too many sectors.
+
++ Fixed enemies walking off onto other enemies if the floor height matched the
+  height at the top of the enemy being walked on to.
+
++ Fixed weapondeltas setting weapon means of death to none if not specified in
+  the delta.
+
++ Fixed Lost Souls spawned inside the player making them pop up.
+
++ Fixed a crash happening involving weapon counter and saving/loading.
+
++ Fixed a long-standing problem with barrels having the wrong height, breaking
+  all sorts of scenarios which work correctly in DOOM and other ports.
+
++ Fixed wrong FOV when setting very wide aspect ratios.
+
++ Fixed fatal error happening at very big resolutions.
+
++ Fixed round-off errors with map thing angles. Now they match vanilla DOOM angles
+  if multiples of 45.
+
++ A_SpawnEx was not transferring the FIREND flag.
 
 + Fixed a crash happening when setting the HUD message number of lines to 0 and
   then picking up something.
