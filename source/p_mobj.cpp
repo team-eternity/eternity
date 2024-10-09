@@ -306,7 +306,7 @@ static void A_vanillaHereticPodFinalAction(actionargs_t *args)
 // This involves removing mobj and replacing with another one.
 static bool P_checkUnmorph(Mobj &mobj)
 {
-   if(mobj.unmorph.type == UnknownThingType)
+   if(mobj.unmorph.type == UnknownThingType || mobj.unmorph.tics <= 0)
       return false;
    mobj.unmorph.tics -= mobj.tics;
    if(mobj.unmorph.tics > 0)
