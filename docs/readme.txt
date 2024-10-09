@@ -507,9 +507,11 @@ These are features planned to debut in future versions of the Eternity Engine:
 
   Slopes complete, Heretic complete.
 
+  Added multithreaded renderer.
+
   UMAPINFO support, overlay automap, sky and freelook improvements, save game
-  improvements, added the first MBF21 features and sector actions. Many bug
-  fixes.
+  improvements, many MBF21 features and sector actions. Sidedef lights, sidedef
+  skewing to slopes. Many bug fixes.
 
 4.02.00 "Forseti" -- 01/24/21
 
