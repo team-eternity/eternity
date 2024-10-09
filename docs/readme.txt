@@ -2,12 +2,13 @@
 Title                   : The Eternity Engine v4.03.00 "Glitnir"
 Filename                : ee-4.03.00-win64.zip, ee-4.03.00-macos.dmg,
                           ee-4.03.00-win32.zip, ee-4.03.00-win-legacy.zip
-Release date            : 2021-11-06
+Release date            : 2024-10-09
 Author                  : Team Eternity:
-                          Ioan "printz" Chera,
+                          Ioan Chera,
                           James "Quasar" Haley,
                           David "DavidPH" Hill,
                           Stephen "SoM" McGranahan,
+                          Edward "Edward850" Richardson
                           Max "Altazimuth" Waine
 Email Address           : (redacted)
 
@@ -16,8 +17,9 @@ Description             : The Eternity Engine is an advanced Doom source port
                           with bleeding-edge editing and gameplay enhancements.
                           Eternity supports all versions of Doom, Doom II,
                           Final Doom, HACX, and the FreeDoom project, and it
-                          has in-progress support for Raven Software's Heretic
-                          and Hexen and Rogue Entertainment's Strife.
+                          has complete support for Raven Software's Heretic
+                          and in-progress support for Raven's Hexen and Rogue
+                          Entertainment's Strife.
 
                           See the Eternity wiki for editing documentation at
                           eternity.youfailit.net
@@ -91,39 +93,84 @@ Additional Credits to   : Graphics
 
 Special Thanks to       : - Feature and Patch Contributors -
                               4mer
+                              38-vita-38
                               Afterglow
                               Anders Astrand
                               anotak
                               Cephaler
                               Charles Gunyon
+                              cxong
+                              derekmd
                               dotfloat
+                              FozzeY
                               Gez
+                              icecream95
+                              joanbm
                               Joe Kennedy
                               Joel Murdoch
                               Julian Aubourg
                               Kaitlyn Anne Fox
+                              madame-rachelle
+                              marrub--
                               Mike Swanson
                               MP2E
+                              nemesis-vampy
                               Revenant
                               Russell Rice
                               ryan
                               Samuel Villarreal
+                              SarahCosmosys
                               SargeBaldy
                               Shannon Freeman
                               Simon Howard
+                              sink666
+                              skillsawed
+                              XaserAcheron
                               Yagisan
                           - Hosting -
+                              Bloodshedder
                               Mike "Manc" Lightner
                           - Idea People and Beta Testers -
+                              aaaqqqddd
+                              akorov
+                              amiga1985
+                              andrikpowell
+                              AtifArshad1995
+                              Aurelius
+                              Blastfrog
+                              CapnClever
                               Catoptromancy
+                              Danfun64
+                              DENCHIKTEAM
+                              DerTodIstEinDandy
                               ellmo
+                              Exarkuniv
+                              fluffymormegil
+                              hfc2x
+                              inf78
+                              jackrjli
+                              jmtd
+                              JoBergeron
+                              Kappa971
+                              Linguica
                               Lut
+                              maxmanium
+                              Meerschweinmann
                               Mordeth
+                              muizzsiddique
+                              OpenRift412
+                              OrdinaryMagician
+                              Python-Sargent
+                              simc2
+                              sinisterseed
+                              tomash
+                              tomatothesaddo
                               Xaser
                           - Friends of Team Eternity -
                               Assmaster
                               Chris Rhinehart
                               DooMWiz
+                              InsanityBringer
                               James Monroe
                               John Romero
                               JKist3
