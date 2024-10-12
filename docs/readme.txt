@@ -1,7 +1,8 @@
 ===============================================================================
 Title                   : The Eternity Engine v4.04.00 "Glitnir"
 Filename                : ee-4.04.00-win64.zip, ee-4.04.00-win32.zip,
-                          ee-4.04.00-win-legacy.zip, ee-4.04.00-macos-applesilicon.dmg,
+                          ee-4.04.00-win-legacy.zip,
+                          ee-4.04.00-macos-applesilicon.dmg, 
                           ee-4.04.00-macos-intel.dmg,
 Release date            : 2024-10-12
 Author                  : Team Eternity:
