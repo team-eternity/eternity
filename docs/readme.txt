@@ -1,8 +1,9 @@
 ===============================================================================
-Title                   : The Eternity Engine v4.03.00 "Glitnir"
-Filename                : ee-4.03.00-win64.zip, ee-4.03.00-macos.dmg,
-                          ee-4.03.00-win32.zip, ee-4.03.00-win-legacy.zip
-Release date            : 2024-10-09
+Title                   : The Eternity Engine v4.04.00 "Glitnir"
+Filename                : ee-4.04.00-win64.zip, ee-4.04.00-win32.zip,
+                          ee-4.04.00-win-legacy.zip, ee-4.04.00-macos-applesilicon.dmg,
+                          ee-4.04.00-macos-intel.dmg,
+Release date            : 2024-10-12
 Author                  : Team Eternity:
                           Ioan Chera,
                           James "Quasar" Haley,
@@ -146,6 +147,7 @@ Special Thanks to       : - Feature and Patch Contributors -
                               ellmo
                               Exarkuniv
                               fluffymormegil
+                              GooberMan
                               hfc2x
                               inf78
                               jackrjli
@@ -503,7 +505,7 @@ These are features planned to debut in future versions of the Eternity Engine:
 
 * Dates are in mm/dd/yy *
 
-4.03.00 "Glitnir" -- 10/09/24
+4.04.00 "Glitnir" -- 10/12/24
 
   Slopes complete, Heretic complete.
 
