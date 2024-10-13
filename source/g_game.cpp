@@ -1087,20 +1087,25 @@ static byte *G_ReadDemoHeader(byte *demo_p)
    // contain incorrect version numbers. Demo recording was also broken in
    // several versions of the port anyway.
 
+   auto fail = [](const char *message)
+   {
+      if(singledemo)
+         I_Error("G_ReadDemoHeader: %s\n", message);
+      else
+      {
+         C_Printf(FC_ERROR "%s\n", message);
+         gameaction = ga_nothing;
+         Z_ChangeTag(demobuffer, PU_CACHE);
+         D_AdvanceDemo();
+      }
+   };
+
    if(!((demover >=   0 && demover <= 4  ) || // Doom 1.2 or less
         (demover >= 104 && demover <= 111) || // Doom 1.4 - 1.9, 1.10, 1.11
         (demover >= 200 && demover <= 203) || // BOOM, MBF
         (demover == 255)))                    // Eternity
    {
-      if(singledemo)
-         I_Error("G_ReadDemoHeader: unsupported demo format\n");
-      else
-      {
-         C_Printf(FC_ERROR "Unsupported demo format\n");
-         gameaction = ga_nothing;
-         Z_ChangeTag(demobuffer, PU_CACHE);
-         D_AdvanceDemo();
-      }
+      fail("unsupported demo format");
       return nullptr;
    }
    
@@ -1200,15 +1205,14 @@ static byte *G_ReadDemoHeader(byte *demo_p)
       else if(demo_version == 255 && !strncmp((const char *)demo_p, prdemosig, 5))
       {
          // TODO: Support in future
-         if(singledemo)
-            I_Error("G_ReadDemoHeader: PRBoom+UMAPINFO demo format not currently supported\n");
-         else
-         {
-            C_Printf(FC_ERROR "PRBoom+UMAPINFO demo format not currently supported\n");
-            gameaction = ga_nothing;
-            Z_ChangeTag(demobuffer, PU_CACHE);
-            D_AdvanceDemo();
-         }
+         fail("PRBoom+UMAPINFO demo format not currently supported");
+         return nullptr;
+      }
+      else if(demo_version == 255)
+      {
+         // If the signature is unknown, reject it outright, otherwise
+         // we read garbage data which further destabilizes the engine.
+         fail("Unsupported demo format");
          return nullptr;
       }
       else

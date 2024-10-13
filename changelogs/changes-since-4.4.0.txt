@@ -1,0 +1,8 @@
+Changes since v4.04.00
+----------------------
+
+Bug fixes
+
+* Fixed wrong version display in the title bar.
+* Fixed corruption happening after trying to play an unsupported demo, such as coming from
+  DSDA-DOOM. This affects projects such as Eviternity II.
