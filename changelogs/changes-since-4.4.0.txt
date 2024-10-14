@@ -6,3 +6,4 @@ Bug fixes
 * Fixed wrong version display in the title bar.
 * Fixed corruption happening after trying to play an unsupported demo, such as coming from
   DSDA-DOOM. This affects projects such as Eviternity II.
+* Fixed Heretic autoswitching weapons wrongly when having the Tome of Power.

@@ -179,6 +179,7 @@ static void P_BringUpWeapon(player_t *player)
    weaponinfo_t *pendingweapon;
    if((pendingweapon = player->pendingweapon))
    {
+      pendingweapon = &E_TryPowered(*player, *pendingweapon);
       // haleyjd 06/28/13: weapon upsound
       if(pendingweapon->upsound)
          S_StartSoundName(player->mo, pendingweapon->upsound);
@@ -203,6 +204,8 @@ static void P_BringUpWeapon(player_t *player)
 //
 bool P_WeaponHasAmmo(const player_t *player, const weaponinfo_t *weapon)
 {
+   if(player)
+      weapon = &E_TryPowered(*player, *weapon);
    itemeffect_t *ammoType = weapon->ammo;
 
    // a weapon without an ammotype has infinite ammo
@@ -1075,7 +1078,7 @@ void A_Lower(actionargs_t *actionargs)
    // haleyjd 03/28/10: do not assume pendingweapon is valid
    if(player->pendingweapon != nullptr)
    {
-      player->readyweapon = player->pendingweapon;
+      player->readyweapon = &E_TryPowered(*player, *player->pendingweapon);
       player->readyweaponslot = player->pendingweaponslot;
    }
 

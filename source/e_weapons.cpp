@@ -520,19 +520,26 @@ static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t *player,
                                                const SelectOrderNode *node)
 {
    bool correctammo;
-   weaponinfo_t *ret, *temp = node->object;
+   weaponinfo_t *ret, *temp;
    if(node == nullptr)
       return nullptr; // This *really* shouldn't happen
+   temp = node->object;
 
-   if(temp->ammo && ammo)
-      correctammo = !strcasecmp(temp->ammo->getKey(), ammo->getKey());
+   weaponinfo_t *powerChecked;
+   if(player)
+      powerChecked = &E_TryPowered(*player, *temp);
+
+   // Analyze powered weapon's ammo type
+   if(powerChecked->ammo && ammo)
+      correctammo = !strcasecmp(powerChecked->ammo->getKey(), ammo->getKey());
    else
-      correctammo = temp->ammo == nullptr && ammo == nullptr;
+      correctammo = powerChecked->ammo == nullptr && ammo == nullptr;
 
    if(node->left  && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->left)))
       return ret;
-   if(E_PlayerOwnsWeapon(player, temp) && !(temp->flags & WPF_NOAUTOSWITCHTO) &&
-      correctammo && P_WeaponHasAmmo(player, temp))
+   // Player owns normal weapon always, but check if the powered one has the flag
+   if(E_PlayerOwnsWeapon(player, temp) && !(powerChecked->flags & WPF_NOAUTOSWITCHTO) &&
+      correctammo && P_WeaponHasAmmo(player, powerChecked))
       return temp;
    if(node->next  && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->next)))
       return ret;
@@ -1578,6 +1585,23 @@ void E_ProcessWeaponDeltas(cfg_t *cfg)
                      i, weaponinfo[weaponNum]->name, weaponNum);
    }
 }
+
+//
+// Use powered weapon if needed
+//
+weaponinfo_t &E_TryPowered(const player_t &player, weaponinfo_t &weapon)
+{
+   weaponinfo_t *sister = weapon.sisterWeapon;
+   if(player.powers[pw_weaponlevel2].isActive() && E_IsPoweredVariant(sister))
+      return *sister;
+   return weapon;
+}
+
+const weaponinfo_t &E_TryPowered(const player_t &player, const weaponinfo_t &weapon)
+{
+   return E_TryPowered(player, const_cast<weaponinfo_t &>(weapon));
+}
+
 
 // EOF
 

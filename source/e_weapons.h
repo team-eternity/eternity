@@ -219,6 +219,8 @@ void E_GiveAllClassWeapons(player_t *player);
 
 bool E_IsPoweredVariant(const weaponinfo_t *wp);
 bool E_IsPoweredVariantOf(const weaponinfo_t *untomed, const weaponinfo_t *tomed);
+weaponinfo_t &E_TryPowered(const player_t &player, weaponinfo_t &weapon);
+const weaponinfo_t &E_TryPowered(const player_t &player, const weaponinfo_t &weapon);
 
 BDListItem<weaponslot_t> *E_FirstInSlot(const weaponslot_t *dummyslot);
 BDListItem<weaponslot_t> *E_LastInSlot(const weaponslot_t *dummyslot);
