@@ -1469,9 +1469,6 @@ static void E_processWeapon(weapontype_t i, cfg_t *const weaponsec, cfg_t *pcfg,
                            "as an explicit selectionorder.\nPowered weapons use the same "
                            "selectionorder as their unpowered sisterweapon\n", wp.name);
       }
-
-      E_SafeDeleteItemEffect(wp.tracker);
-      wp.tracker = wp.sisterWeapon->tracker;
    }
 
    if(IS_SET(ITEM_WPN_RECOIL))
@@ -1561,6 +1558,24 @@ void E_ProcessWeaponInfo(cfg_t *cfg)
    ++edf_weapon_generation;
 }
 
+//
+// Powered weapons should just use the inventory-item trackers of their basic counterparts. The 
+// single powered-basic pairing check was already done. This must be done after the entire weapon
+// processing is complete, including deltas, otherwise Eternity crashes.
+//
+static void E_clearPoweredWeaponTrackers()
+{
+   for(int i = 0; i < NUMWEAPONTYPES; ++i)
+   {
+      weaponinfo_t *currWeapon = E_WeaponForID(i);
+      if(currWeapon->flags & WPF_POWEREDUP && currWeapon->sisterWeapon)
+      {
+         E_SafeDeleteItemEffect(currWeapon->tracker);
+         currWeapon->tracker = currWeapon->sisterWeapon->tracker;
+      }
+   }
+}
+
 void E_ProcessWeaponDeltas(cfg_t *cfg)
 {
    E_EDFLogPuts("\t* Processing weapondelta data\n");
@@ -1584,6 +1599,8 @@ void E_ProcessWeaponDeltas(cfg_t *cfg)
       E_EDFLogPrintf("\t\tApplied weapondelta #%d to %s(#%d)\n",
                      i, weaponinfo[weaponNum]->name, weaponNum);
    }
+
+   E_clearPoweredWeaponTrackers();
 }
 
 //
