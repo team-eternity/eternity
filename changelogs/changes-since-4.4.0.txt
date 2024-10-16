@@ -10,3 +10,4 @@ Bug fixes
 * Fixed Heretic autoswitching weapons wrongly when having the Tome of Power.
 * Fixed crash happening when inheriting or applying a delta structure on a powered-up weaponinfo.
 * Fixed unintended NOHITGHOSTS on Heretic gauntlets weapon.
+* Fixed powered dragonclaw starting displaced a few meters from player.
