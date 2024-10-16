@@ -489,6 +489,9 @@ static void I_Pick_MainLoop(void)
       {
          switch(ev.type)
          {
+         case SDL_QUIT:
+            I_Pick_DoAbort();
+            break;
          case SDL_MOUSEBUTTONDOWN:
             I_Pick_MouseEvent(&ev, &doloop);
             break;
