@@ -475,7 +475,7 @@ weaponinfo Gauntlets
 
   sisterweapon GauntletsPowered
 
-  flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM
+  flags        NOTHRUST|FLEEMELEE|SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM
   //mod          ""
   upsound      ht_gntact
 
