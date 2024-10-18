@@ -1107,7 +1107,10 @@ static bool P_planeBounce(Mobj &thing, surf_e surf, bool floordecay)
    if (thing.zref.sector[surf])
    {
       const pslope_t* slope = thing.zref.sector[surf]->srf[surf].slope;
-      if (slope && slope->zdelta)
+
+      // ONLY for no-gravity things, apply bouncing according to slope normal.
+      // For falling things it has been noticed it's too wacky and unrealistic.
+      if (thing.flags & MF_NOGRAVITY && slope && slope->zdelta)
       {
          // Get normal component of velocity
          fixed_t prod = FixedMul(slope->normal.x, thing.momx) + 
@@ -1132,28 +1135,12 @@ static bool P_planeBounce(Mobj &thing, surf_e surf, bool floordecay)
                if(demo_version >= 331)
                   return false;  // haleyjd: return here for below fix
             }
-            else if(thing.flags & MF_NOGRAVITY)
+            else
             {
-               // bounce unless under gravity
+               // bounce
                thing.momx -= 2 * normcomp.x;
                thing.momy -= 2 * normcomp.y;
                thing.momz -= 2 * normcomp.z;
-            }
-         }
-         
-         if(floordecay && surf == surf_floor && !(thing.flags & MF_NOGRAVITY))
-         {
-            fixed_t decay = getBouncingDecay(thing.flags);
-            thing.momx = FixedMul(thing.momx, decay);
-            thing.momy = FixedMul(thing.momy, decay);
-            thing.momz = FixedMul(thing.momz, decay);
-            
-            // Bring it to rest below a certain speed
-            fixed_t threshold = P_getMBFBouncerGravity(thing, 4);
-            if(D_abs(thing.momx) <= threshold && D_abs(thing.momy) <= threshold &&
-               D_abs(thing.momz) <= threshold)
-            {
-               thing.momx = thing.momy = thing.momz = 0;
             }
          }
          return true;
