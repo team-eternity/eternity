@@ -12,3 +12,4 @@ Bug fixes
 * Fixed unintended NOHITGHOSTS on Heretic gauntlets weapon.
 * Fixed powered dragonclaw starting displaced a few meters from player.
 * Fixed jerky and visually imprecise polyobject movement (bug introduced in v4.04.00).
+* Fixed exaggerated and unrealistic slope bouncing of objects under gravity.
