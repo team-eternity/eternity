@@ -1029,12 +1029,19 @@ static void R_interpolateVertex(dynavertex_t &v, v2fixed_t &org, v2float_t &forg
 //
 static void R_setDynaSegInterpolationState(secinterpstate_e state)
 {
+   static int dvcount;  // dynaseg validcount (so as not to increment the official one)
+
    switch(state)
    {
       case SEC_INTERPOLATE:
+         ++dvcount;
          R_ForEachPolyNode([](rpolynode_t *node) {
             dynaseg_t &dynaseg = *node->partition;
             seg_t     *seg     = &node->partition->seg;
+
+            if(dynaseg.validcount == dvcount)
+               return;
+            dynaseg.validcount = dvcount;
 
             R_interpolateVertex(*seg->dyv1, dynaseg.prev.org[0], dynaseg.prev.forg[0]);
             R_interpolateVertex(*seg->dyv2, dynaseg.prev.org[1], dynaseg.prev.forg[1]);
@@ -1046,10 +1053,14 @@ static void R_setDynaSegInterpolationState(secinterpstate_e state)
          });
          break;
       case SEC_NORMAL:
+         ++dvcount;
          R_ForEachPolyNode([](rpolynode_t *node) {
             seginterp_t &prev = node->partition->prev;
             seg_t       *seg  = &node->partition->seg;
 
+            if(node->partition->validcount == dvcount)
+               return;
+            node->partition->validcount = dvcount;
             seg->offset = prev.offset;
             seg->len    = prev.len;
             seg->v1->x  = prev.org[0].x;

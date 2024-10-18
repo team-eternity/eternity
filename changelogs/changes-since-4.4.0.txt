@@ -11,3 +11,4 @@ Bug fixes
 * Fixed crash happening when inheriting or applying a delta structure on a powered-up weaponinfo.
 * Fixed unintended NOHITGHOSTS on Heretic gauntlets weapon.
 * Fixed powered dragonclaw starting displaced a few meters from player.
+* Fixed jerky and visually imprecise polyobject movement (bug introduced in v4.04.00).
