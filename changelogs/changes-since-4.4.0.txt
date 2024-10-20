@@ -15,3 +15,5 @@ Bug fixes
 * Fixed exaggerated and unrealistic slope bouncing of objects under gravity.
 * Fixed attach-3dmidtex specials from quitting Eternity. This was happening on WADs like Hell Ground
   where there were mistaken linedef specials such as 281 or 282.
+* Fixed the close button of the IWAD picker window not working. Thanks to FozzeY for the pull
+  request!
