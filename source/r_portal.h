@@ -101,10 +101,12 @@ typedef enum
 
    // More flags added along...
    PF_ATTACHEDPORTAL     = 0x400,
+   // Do a terrain hit when you pass this surface
+   PF_DOTERRAINHIT       = 0x600,
 
    // Mask for the flags portion
    PF_FLAGMASK           = PF_DISABLED | PF_NORENDER | PF_NOPASS | PF_BLOCKSOUND
-   | PF_ATTACHEDPORTAL,
+   | PF_ATTACHEDPORTAL | PF_DOTERRAINHIT,
 
 
    // -- Opactiy --
