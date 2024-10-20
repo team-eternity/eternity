@@ -40,8 +40,9 @@ When releasing a new version of Eternity, do the following:
     d. Open each xcodeproj in Xcode. Go into project settings. For the eternity executable and
        ESPECIALLY the EternityLauncher target, set the developer team to your team and select
        "Automatically Manage Signing"
-    e. Go to the build menu and make an Archive. CAUTION: when prompted to change architecture,
-       REFUSE! Let it only build for the target architecture.
+    e. Select EternityLauncher in the targets menu, then go to the build menu and make an Archive.
+       CAUTION: when prompted to change architecture, REFUSE! Let it only build for the target
+       architecture.
     f. When archiving is finished, send the app for notarization, then export it.
     g. Look at how past version DMG files are set up, and add the text files accordingly. Then use
        Disk Utility to make the new DMGs. CAUTION: do NOT store the apps in DropBox, or it'll try to
