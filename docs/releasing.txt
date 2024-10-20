@@ -31,3 +31,18 @@ When releasing a new version of Eternity, do the following:
     c. Look in past versions what other files they have, and add them accordingly.
     d. MAKE SURE THE user FOLDER IS EMPTY, SAVE FOR delete.me!
     e. Make ZIP files according to naming in readme.txt
+
+4. For Mac:
+    a. Make *from scratch* (delete if existing) build-arm and build-intel folder.
+    b. For the build-arm folder, run "cmake .. -G Xcode"
+    c. For the build-intel folder, run
+       "cmake .. -G Xcode -DCMAKE_OSX_ARCHITECTURES=x86_64 -DPNG_INTEL_SSE=on"
+    d. Open each xcodeproj in Xcode. Go into project settings. For the eternity executable and
+       ESPECIALLY the EternityLauncher target, set the developer team to your team and select
+       "Automatically Manage Signing"
+    e. Go to the build menu and make an Archive. CAUTION: when prompted to change architecture,
+       REFUSE! Let it only build for the target architecture.
+    f. When archiving is finished, send the app for notarization, then export it.
+    g. Look at how past version DMG files are set up, and add the text files accordingly. Then use
+       Disk Utility to make the new DMGs. CAUTION: do NOT store the apps in DropBox, or it'll try to
+       copy everything from symbolic links into your cloud!
