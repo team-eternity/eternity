@@ -3869,6 +3869,22 @@ void doom_warningf(E_FORMAT_STRING(const char *s), ...)
 }
 
 //
+// Like above, but don't beep. Meant for lesser warnings which don't imply something is unusable.
+//
+void doom_warningf_silent(E_FORMAT_STRING(const char *s), ...)
+{
+   static char msg[MAX_MESSAGE_SIZE] = FC_ERROR;
+   va_list v;
+
+   va_start(v, s);
+   pvsnprintf(msg + 1, sizeof(msg) - 1, s, v); // print message in buffer
+   va_end(v);
+
+   C_Puts(msg);
+   HU_PlayerMsg(msg);
+}
+
+//
 // player_printf
 //
 // sf: printf to a particular player only

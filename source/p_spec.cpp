@@ -2474,9 +2474,13 @@ void P_AttachLines(const line_t *cline, bool ceiling)
    }
 
    // haleyjd: static analyzer says this could happen, so let's just be safe.
+   // ioanch: don't quit, as it will all fit fine.
    if(!attached)
-      I_Error("P_AttachLines: nothing to attach to sector %d\n",
-              static_cast<int>(cline->frontsector - sectors));
+   {
+      doom_warningf_silent("P_AttachLines: nothing to attach to sector %d",
+                           static_cast<int>(cline->frontsector - sectors));
+      return;
+   }
 
    // Copy the list to the c_attached or f_attached list.
    if(ceiling)
