@@ -31,6 +31,7 @@ When releasing a new version of Eternity, do the following:
     c. Look in past versions what other files they have, and add them accordingly.
     d. MAKE SURE THE user FOLDER IS EMPTY, SAVE FOR delete.me!
     e. Make ZIP files according to naming in readme.txt
+    f. Test that it runs.
 
 4. For Mac:
     a. Make *from scratch* (delete if existing) build-arm and build-intel folder.
@@ -47,3 +48,4 @@ When releasing a new version of Eternity, do the following:
     g. Look at how past version DMG files are set up, and add the text files accordingly. Then use
        Disk Utility to make the new DMGs. CAUTION: do NOT store the apps in DropBox, or it'll try to
        copy everything from symbolic links into your cloud!
+    h. Test that it runs.
