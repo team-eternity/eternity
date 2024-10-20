@@ -29,4 +29,5 @@ When releasing a new version of Eternity, do the following:
        Visual Studio generator
     b. Make each build for Release
     c. Look in past versions what other files they have, and add them accordingly.
-    d. Make ZIP files according to naming in readme.txt
+    d. MAKE SURE THE user FOLDER IS EMPTY, SAVE FOR delete.me!
+    e. Make ZIP files according to naming in readme.txt
