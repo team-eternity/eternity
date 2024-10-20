@@ -24,4 +24,9 @@ When releasing a new version of Eternity, do the following:
     o. Add bugs fixed from changelog to Bugs Fixed, Known Issues.
     p. Update Known Issues at the bottom
 
-TODO: actual release process for Windows and Mac
+3. For Windows:
+    a. Generate a clean build32 and build64 folder, using the CMake GUI, and selecting the proper
+       Visual Studio generator
+    b. Make each build for Release
+    c. Look in past versions what other files they have, and add them accordingly.
+    d. Make ZIP files according to naming in readme.txt
