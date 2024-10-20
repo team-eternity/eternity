@@ -1,0 +1,27 @@
+When releasing a new version of Eternity, do the following:
+
+1. Update AUTHORS
+    a. Look in github pull requests history for all successful pull requests since last release. Add
+       the authors (by their nicknames) in AUTHORS under "Feature and Patch Contributors".
+
+2. Update readme.txt
+    a. Update version in "Filename" at the top.
+    b. Update Release date at the top
+    c. If new art: update Graphics in credits
+    d. If new code got imported: update Significant Code Utilized From
+    e. If new code libraries got imported: update Libraries and Utilities
+    f. Same as in 1.a. update Feature and Patch Contributors
+    g. If Eternity got a new hosting site, update Hosting
+    h. Look in github issues history for successful completed ones and add the people (by nicknames)
+       in Idea People and Beta Testers
+    i. If anyone has been very helpful and supportive in the community, add to Friends of Team
+       Eternity
+    j. If new assets came up, update What is included
+    k. If new IDE or coding tool came up, update Construction
+    l. Update the Features New to Version
+    m. Update Coming Soon with estimated expectations on next releases and clear whatever's finished
+    n. Add a summary to Revision History.
+    o. Add bugs fixed from changelog to Bugs Fixed, Known Issues.
+    p. Update Known Issues at the bottom
+
+TODO: actual release process for Windows and Mac
