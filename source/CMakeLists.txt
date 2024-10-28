@@ -780,6 +780,12 @@ if(BUILD_FLATPAK)
    target_compile_definitions(eternity PRIVATE BUILD_FLATPAK)
 endif()
 
+# AppImage support
+option(BUILD_APPIMAGE "Build with AppImage-friendly settings." OFF)
+if(BUILD_APPIMAGE)
+   target_compile_definitions(eternity PRIVATE BUILD_APPIMAGE)
+endif()
+
 if(MSVC)
    set_property(TARGET eternity PROPERTY VS_DPI_AWARE "PerMonitor")
 

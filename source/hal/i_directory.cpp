@@ -77,6 +77,15 @@ const char *I_PlatformInstallDirectory()
 {
 #ifdef BUILD_FLATPAK
    return "/app/share/eternity/base";
+#elif BUILD_APPIMAGE
+   {
+      qstring exePath;
+      I_GetRealPath("/proc/self/exe", exePath);
+      qstring basePath = exePath.removeFileSpec() + "/../share/eternity/base";
+      static char path[PATH_MAX];
+      basePath.copyInto(path, PATH_MAX);
+      return path;
+   }
 #elif EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
    struct stat sbuf;
 
