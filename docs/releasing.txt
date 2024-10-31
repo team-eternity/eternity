@@ -1,10 +1,12 @@
 When releasing a new version of Eternity, do the following:
 
-1. Update AUTHORS
+1. Test demos: get EternityDemoTest from GitHub and follow the instructions there.
+
+2. Update AUTHORS
     a. Look in github pull requests history for all successful pull requests since last release. Add
        the authors (by their nicknames) in AUTHORS under "Feature and Patch Contributors".
 
-2. Update readme.txt
+3. Update readme.txt
     a. Update version in "Filename" at the top.
     b. Update Release date at the top
     c. If new art: update Graphics in credits
@@ -24,7 +26,7 @@ When releasing a new version of Eternity, do the following:
     o. Add bugs fixed from changelog to Bugs Fixed, Known Issues.
     p. Update Known Issues at the bottom
 
-3. For Windows:
+4. For Windows:
     a. Generate a clean build32 and build64 folder, using the CMake GUI, and selecting the proper
        Visual Studio generator
     b. Make each build for Release
@@ -33,7 +35,7 @@ When releasing a new version of Eternity, do the following:
     e. Make ZIP files according to naming in readme.txt
     f. Test that it runs.
 
-4. For Mac:
+5. For Mac:
     a. Make *from scratch* (delete if existing) build-arm and build-intel folder.
     b. For the build-arm folder, run "cmake .. -G Xcode"
     c. For the build-intel folder, run
@@ -49,3 +51,14 @@ When releasing a new version of Eternity, do the following:
        Disk Utility to make the new DMGs. CAUTION: do NOT store the apps in DropBox, or it'll try to
        copy everything from symbolic links into your cloud!
     h. Test that it runs.
+
+6. Once all is good, make a new git tag.
+
+7. Publish on GitHub.
+
+8. Go to the Eternity Wiki and:
+    a. Update the Template:latest page
+    b. Go into the "Eternity" page and add the new version there.
+
+9. Post on the Doomworld forum about the new release (only update the existing thread if it's just a
+   patch release).
