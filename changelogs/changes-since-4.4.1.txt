@@ -1,0 +1,8 @@
+Changes since v4.04.01
+======================
+
+Small improvements
+------------------
+
+* Confirmation yes/no views (such as for quitting) now accept non-QWERTY keyboard layouts for 'y' 
+  and 'n', i.e. the same keys which under QWERTY would be 'y' or 'n' will also work.

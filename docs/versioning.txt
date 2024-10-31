@@ -3,6 +3,7 @@ Eternity version is defined in the following places. Make sure to update these f
 * CMakeLists.txt: from the root location
 * source/version.cpp: these two fields -
     * int version
+    * unsigned char subversion
     * const char ee_wmCaption[]
 
 Also update the following files:
