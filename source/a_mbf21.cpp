@@ -376,9 +376,6 @@ void A_FindTracer(actionargs_t *actionargs)
    if(fov == 0)
       fov = ANG360;
 
-   angle_t minang = actor->angle - fov / 2;
-   angle_t maxang = actor->angle + fov / 2;
-
    // Code based on A_BouncingBFG
    for(int i = 1; i < 40; i++)  // offset angles from its attack angle
    {
