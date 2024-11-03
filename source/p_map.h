@@ -197,7 +197,9 @@ void P_ApplyTorque(Mobj *mo);                       // killough 9/12/98
 
 void P_DelSeclist(msecnode_t *); // phares 3/16/98
 void P_FreeSecNodeList();        // sf
-msecnode_t *P_CreateSecNodeList(Mobj *, fixed_t, fixed_t);  // phares 3/14/98
+
+// phares 3/14/98
+msecnode_t *P_CreateSecNodeList(Mobj *, fixed_t, fixed_t, msecnode_t *sector_t::*which_thinglist);
 
 //=============================================================================
 //
