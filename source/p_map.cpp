@@ -3239,32 +3239,43 @@ static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *context)
 }
 
 //
+// State for the function below
+//
+struct transPortalGetSectors_t
+{
+   int curgroupid;
+   doom_mapinter_t *clip;
+};
+
+//
 // Trans-portal support for the usual msecnode PIT_GetSector gatherer
 //
 static bool PIT_transPortalGetSectors(int x, int y, int groupid, void *data)
 {
-   int *curgroupid = static_cast<int *>(data);
-   if(groupid != *curgroupid)
+   auto context = static_cast<transPortalGetSectors_t *>(data);
+   doom_mapinter_t &inter = *context->clip;
+
+   if(groupid != context->curgroupid)
    {
-      *curgroupid = groupid;
+      context->curgroupid = groupid;
       // We're at a new groupid. Start by adding the midsector.
 
       // Get the offset from thing's position to the PREVIOUS groupid
-      if(groupid == pClip->thing->groupid)
+      if(groupid == inter.thing->groupid)
       {
-         pClip->sector_list = P_AddSecnode(pClip->thing->subsector->sector, pClip->thing,
-                                           pClip->sector_list);
+         inter.sector_list = P_AddSecnode(inter.thing->subsector->sector, inter.thing,
+                                          inter.sector_list);
       }
       else
       {
-         sector_t *sector = P_PointReachesGroupVertically(pClip->x, pClip->y, pClip->thing->z,
-                                                          pClip->thing->groupid, groupid,
-                                                          pClip->thing->subsector->sector,
-                                                          pClip->thing->z);
+         sector_t *sector = P_PointReachesGroupVertically(inter.x, inter.y, inter.thing->z,
+                                                          inter.thing->groupid, groupid,
+                                                          inter.thing->subsector->sector,
+                                                          inter.thing->z);
          if(sector)
          {
             // Add it
-            pClip->sector_list = P_AddSecnode(sector, pClip->thing, pClip->sector_list);
+            inter.sector_list = P_AddSecnode(sector, inter.thing, inter.sector_list);
          }
       }
    }
@@ -3320,8 +3331,10 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
       // FIXME: unfortunately all sectors need to be added, because this function
       // is only called on XY coordinate change.
 
-      int curgroupid = R_NOGROUP;
-      P_TransPortalBlockWalker(pClip->bbox, thing->groupid, true, &curgroupid,
+      edefstructvar(transPortalGetSectors_t, context);
+      context.curgroupid = R_NOGROUP;
+      context.clip = pClip;
+      P_TransPortalBlockWalker(pClip->bbox, thing->groupid, true, &context,
                                PIT_transPortalGetSectors);
       list = pClip->sector_list;
    }
