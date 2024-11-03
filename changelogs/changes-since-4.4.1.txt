@@ -6,3 +6,10 @@ Small improvements
 
 * Confirmation yes/no views (such as for quitting) now accept non-QWERTY keyboard layouts for 'y' 
   and 'n', i.e. the same keys which under QWERTY would be 'y' or 'n' will also work.
+* Do not terminate suddenly if user put flag names in the MBF21 flag codepointer. Just display an
+  in-game error message with sound. Also, the message is more accurate.
+
+Bug fixes
+---------
+
+* Fixed A_JumpIfFlagsSet as it was completely broken.

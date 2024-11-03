@@ -573,17 +573,17 @@ void A_JumpIfFlagsSet(actionargs_t *actionargs)
    if(!mbf21_demo || !actor || state < 0)
       return;
 
-   flags      = E_ArgAsInt(args, 0, 0);
-   mbf21flags = E_ArgAsMBF21ThingFlags(args, 1);
+   flags      = E_ArgAsInt(args, 1, 0);
+   mbf21flags = E_ArgAsMBF21ThingFlags(args, 2);
 
    if((actor->flags & flags) == flags &&
       (
          !mbf21flags ||
          (
-            (actor->flags & mbf21flags[DEHFLAGS_MODE2]) == mbf21flags[DEHFLAGS_MODE2] &&
-            (actor->flags & mbf21flags[DEHFLAGS_MODE3]) == mbf21flags[DEHFLAGS_MODE3] &&
-            (actor->flags & mbf21flags[DEHFLAGS_MODE4]) == mbf21flags[DEHFLAGS_MODE4] &&
-            (actor->flags & mbf21flags[DEHFLAGS_MODE5]) == mbf21flags[DEHFLAGS_MODE5]
+            (actor->flags2 & mbf21flags[DEHFLAGS_MODE2]) == mbf21flags[DEHFLAGS_MODE2] &&
+            (actor->flags3 & mbf21flags[DEHFLAGS_MODE3]) == mbf21flags[DEHFLAGS_MODE3] &&
+            (actor->flags4 & mbf21flags[DEHFLAGS_MODE4]) == mbf21flags[DEHFLAGS_MODE4] &&
+            (actor->flags5 & mbf21flags[DEHFLAGS_MODE5]) == mbf21flags[DEHFLAGS_MODE5]
          )
       )
    )

@@ -793,6 +793,7 @@ unsigned int *E_ArgAsMBF21ThingFlags(arglist_t *al, int index)
       char *pos = nullptr;
       long num;
 
+      evaltype_e prevType = eval.type;
       eval.type = EVALTYPE_THINGFLAG;
 
       // see if this is a string or an integer
@@ -806,7 +807,12 @@ unsigned int *E_ArgAsMBF21ThingFlags(arglist_t *al, int index)
          memcpy(eval.value.flags, flagvals, MAXFLAGFIELDS * sizeof(unsigned int));
       }
       else if(estrnonempty(al->args[index]))
-         I_Error("E_ArgAsMBF21ThingFlags: MBF21 flags codepointers should not be called from EDF");
+      {
+         doom_warningf("MBF21 flags must currently be written as numbers.");
+         // Restore mutations
+         eval.type = prevType;
+         return nullptr;
+      }
       else
       {
          // empty string is zero
