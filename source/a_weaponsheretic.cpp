@@ -37,6 +37,7 @@
 #include "m_random.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
+#include "p_portalcross.h"
 #include "p_saveg.h"
 #include "p_spec.h"
 #include "r_main.h"
@@ -620,13 +621,12 @@ void A_SkullRodStorm(actionargs_t* actionargs)
    }
    if (P_Random(pr_rodstormfudge) < 25)   // Fudge rain frequency
       return;
-   
-   v2fixed_t pos =
-   {
-      actor->x + ((P_Random(pr_rodstormspawn) & 127) - 64) * FRACUNIT,
-      actor->y + ((P_Random(pr_rodstormspawn) & 127) - 64) * FRACUNIT
-   };
-   
+
+   fixed_t dx = ((P_Random(pr_rodstormspawn) & 127) - 64) * FRACUNIT;
+   fixed_t dy = ((P_Random(pr_rodstormspawn) & 127) - 64) * FRACUNIT;
+
+   v2fixed_t pos = P_LinePortalCrossing(actor->x, actor->y, dx, dy);
+
    const int raintypes[4] =
    {
       E_SafeThingType(MT_RAINPLR1),
