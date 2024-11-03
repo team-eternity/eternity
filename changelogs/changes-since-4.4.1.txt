@@ -15,3 +15,4 @@ Bug fixes
 * Fixed A_JumpIfFlagsSet as it was completely broken.
 * Fixed wrong defaults in A_WeaponBulletAttack.
 * A_SkullRodStorm wasn't line portal aware.
+* Fixed UMAPINFO not recognizing spec-defined Deh_Actor_145 to Deh_Actor_249
