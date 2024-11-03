@@ -3243,10 +3243,10 @@ static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *context)
 //
 static bool PIT_transPortalGetSectors(int x, int y, int groupid, void *data)
 {
-   int &curgroupid = *static_cast<int *>(data);
-   if(groupid != curgroupid)
+   int *curgroupid = static_cast<int *>(data);
+   if(groupid != *curgroupid)
    {
-      curgroupid = groupid;
+      *curgroupid = groupid;
       // We're at a new groupid. Start by adding the midsector.
 
       // Get the offset from thing's position to the PREVIOUS groupid
