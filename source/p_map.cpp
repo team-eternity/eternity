@@ -3239,6 +3239,40 @@ static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *context)
 }
 
 //
+// Trans-portal support for the usual msecnode PIT_GetSector gatherer
+//
+static bool PIT_transPortalGetSectors(int x, int y, int groupid, void *data)
+{
+   int &curgroupid = *static_cast<int *>(data);
+   if(groupid != curgroupid)
+   {
+      curgroupid = groupid;
+      // We're at a new groupid. Start by adding the midsector.
+
+      // Get the offset from thing's position to the PREVIOUS groupid
+      if(groupid == pClip->thing->groupid)
+      {
+         pClip->sector_list = P_AddSecnode(pClip->thing->subsector->sector, pClip->thing,
+                                           pClip->sector_list);
+      }
+      else
+      {
+         sector_t *sector = P_PointReachesGroupVertically(pClip->x, pClip->y, pClip->thing->z,
+                                                          pClip->thing->groupid, groupid,
+                                                          pClip->thing->subsector->sector,
+                                                          pClip->thing->z);
+         if(sector)
+         {
+            // Add it
+            pClip->sector_list = P_AddSecnode(sector, pClip->thing, pClip->sector_list);
+         }
+      }
+   }
+   P_BlockLinesIterator(x, y, PIT_GetSectors, groupid);
+   return true;
+}
+
+//
 // P_CreateSecNodeList 
 //
 // phares 3/14/98
@@ -3288,39 +3322,7 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
 
       int curgroupid = R_NOGROUP;
       P_TransPortalBlockWalker(pClip->bbox, thing->groupid, true, &curgroupid,
-         [](int x, int y, int groupid, void *data) -> bool
-      {
-         int &curgroupid = *static_cast<int *>(data);
-         if(groupid != curgroupid)
-         {
-            curgroupid = groupid;
-            // We're at a new groupid. Start by adding the midsector.
-
-            // Get the offset from thing's position to the PREVIOUS groupid
-            if(groupid == pClip->thing->groupid)
-            {
-               pClip->sector_list = P_AddSecnode(pClip->thing->subsector->sector,
-                  pClip->thing, pClip->sector_list);
-            }
-            else
-            {
-               sector_t *sector
-               = P_PointReachesGroupVertically(pClip->x, pClip->y,
-                                               pClip->thing->z,
-                                               pClip->thing->groupid, groupid,
-                                               pClip->thing->subsector->sector,
-                                               pClip->thing->z);
-               if(sector)
-               {
-                  // Add it
-                  pClip->sector_list = P_AddSecnode(sector, pClip->thing,
-                                                    pClip->sector_list);
-               }
-            }
-         }
-         P_BlockLinesIterator(x, y, PIT_GetSectors, groupid);
-         return true;
-      });
+                               PIT_transPortalGetSectors);
       list = pClip->sector_list;
    }
    else
