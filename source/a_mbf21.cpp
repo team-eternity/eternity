@@ -734,8 +734,8 @@ void A_WeaponBulletAttack(actionargs_t *actionargs)
    hspread    = E_ArgAsFixed(args, 0, 0);
    vspread    = E_ArgAsFixed(args, 1, 0);
    numbullets = E_ArgAsInt(args, 2, 1);
-   damagebase = E_ArgAsInt(args, 3, 3);
-   damagemod  = E_ArgAsInt(args, 4, 5);
+   damagebase = E_ArgAsInt(args, 3, 5);
+   damagemod  = E_ArgAsInt(args, 4, 3);
 
    P_BulletSlope(actor);
 
