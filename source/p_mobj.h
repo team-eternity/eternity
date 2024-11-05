@@ -350,6 +350,8 @@ public:
    // a linked list of sectors where this object appears
    msecnode_t *touching_sectorlist;                 // phares 3/14/98
    msecnode_t *old_sectorlist;                      // haleyjd 04/16/10
+   msecnode_t *sprite_touching_sectorlist;   // for sprite rendering help
+   msecnode_t *old_sprite_sectorlist;
 
    // SEE WARNING ABOVE ABOUT POINTER FIELDS!!!
 
