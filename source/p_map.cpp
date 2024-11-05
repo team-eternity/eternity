@@ -3312,7 +3312,7 @@ static bool PIT_transPortalGetSectors(int x, int y, int groupid, void *data)
 // haleyjd 04/16/2010: rewritten to use clip stack for saving global clipping
 // variables when required
 //
-msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y,
+msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y, fixed_t radius,
                                 msecnode_t *sector_t::*which_thinglist)
 {
    msecnode_t *node, *list;
@@ -3333,10 +3333,10 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y,
    pClip->x = x;
    pClip->y = y;
    
-   pClip->bbox[BOXTOP]    = y + thing->radius;
-   pClip->bbox[BOXBOTTOM] = y - thing->radius;
-   pClip->bbox[BOXRIGHT]  = x + thing->radius;
-   pClip->bbox[BOXLEFT]   = x - thing->radius;
+   pClip->bbox[BOXTOP]    = y + radius;
+   pClip->bbox[BOXBOTTOM] = y - radius;
+   pClip->bbox[BOXRIGHT]  = x + radius;
+   pClip->bbox[BOXLEFT]   = x - radius;
 
    validcount++; // used to make sure we only process a line once
 

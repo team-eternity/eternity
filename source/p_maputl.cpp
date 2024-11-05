@@ -999,7 +999,7 @@ void P_SetThingPosition(Mobj *thing)
       // at sector_t->touching_thinglist) are broken. When a node is
       // added, new sector links are created.
 
-      thing->touching_sectorlist = P_CreateSecNodeList(thing, thing->x, thing->y,
+      thing->touching_sectorlist = P_CreateSecNodeList(thing, thing->x, thing->y, thing->radius,
                                                        &sector_t::touching_thinglist);
       thing->old_sectorlist = nullptr;
 
