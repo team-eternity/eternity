@@ -2560,14 +2560,17 @@ void Mobj::remove()
 
    // Delete all nodes on the current sector_list -- phares 3/16/98
    if(this->old_sectorlist)
-      P_DelSeclist(this->old_sectorlist);
+      P_DelSeclist(this->old_sectorlist, &sector_t::touching_thinglist);
+   if(this->old_sprite_sectorlist)
+      P_DelSeclist(this->old_sprite_sectorlist, &sector_t::touching_thinglist_by_sprites);
 
    // haleyjd 08/13/10: ensure that the object cannot be relinked, and
    // nullify old_sectorlist to avoid multiple release of msecnodes.
    if(demo_version > 337)
    {
       this->flags |= (MF_NOSECTOR | MF_NOBLOCKMAP);
-      this->old_sectorlist = nullptr; 
+      this->old_sectorlist = nullptr;
+      this->old_sprite_sectorlist = nullptr;
    }
 
    // killough 11/98: Remove any references to other mobjs.

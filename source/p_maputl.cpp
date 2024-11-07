@@ -932,6 +932,9 @@ void P_UnsetThingPosition(Mobj *thing)
       
       thing->old_sectorlist = thing->touching_sectorlist;
       thing->touching_sectorlist = nullptr; // to be restored by P_SetThingPosition
+
+      thing->old_sprite_sectorlist = thing->sprite_touching_sectorlist;
+      thing->sprite_touching_sectorlist = nullptr;
       
       R_UnlinkSpriteProj(*thing);
    }
@@ -952,6 +955,28 @@ void P_UnsetThingPosition(Mobj *thing)
       if(bprev && (*bprev = bnext = thing->bnext))  // unlink from block map
          bnext->bprev = bprev;
    }
+}
+
+//
+// Get a thing's sprite radius
+//
+static fixed_t P_getSpriteRadius(const Mobj &thing)
+{
+   I_Assert(r_spritespan != nullptr, 
+            "The sprite span cache should have been initialized by now!\n");
+   
+   if(thing.sprite < 0 || thing.sprite >= numsprites)
+      return thing.radius; // fallback
+
+   const spritespan_t *spansprite = r_spritespan[thing.sprite];
+   int framenum = thing.frame & FF_FRAMEMASK;
+
+   if(framenum < 0 || framenum >= sprites[thing.sprite].numframes)
+      return thing.radius;
+   
+   const spritespan_t &span = spansprite[framenum];
+
+   return span.sideFixed;
 }
 
 //
@@ -1000,8 +1025,15 @@ void P_SetThingPosition(Mobj *thing)
       // added, new sector links are created.
 
       thing->touching_sectorlist = P_CreateSecNodeList(thing, thing->x, thing->y, thing->radius,
-                                                       &sector_t::touching_thinglist);
+                                                       &sector_t::touching_thinglist,
+                                                       &Mobj::old_sectorlist);
       thing->old_sectorlist = nullptr;
+
+      thing->sprite_touching_sectorlist =
+         P_CreateSecNodeList(thing, thing->x, thing->y, P_getSpriteRadius(*thing),
+                             &sector_t::touching_thinglist_by_sprites,
+                             &Mobj::old_sprite_sectorlist);
+      thing->old_sprite_sectorlist = nullptr;
 
       // MaxW: EESectorActionEnter and EESectorActionExit
       if(prevss && prevss->sector != ss->sector)

@@ -1548,7 +1548,8 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
    else
    {
       // Handle all things in (and touching) sector that haven't already been drawn this BSP traversal.
-      for(const msecnode_t *sectorNode = sec->touching_thinglist; sectorNode; sectorNode = sectorNode->m_snext)
+      for(const msecnode_t *sectorNode = sec->touching_thinglist_by_sprites; sectorNode;
+		  sectorNode = sectorNode->m_snext)
       {
          const Mobj *const thing = sectorNode->m_thing;
 

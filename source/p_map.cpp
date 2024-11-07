@@ -3093,7 +3093,7 @@ static msecnode_t *P_AddSecnode(sector_t *s, msecnode_t *sector_t::*which_thingl
 //
 // killough 11/98: reformatted
 //
-static msecnode_t *P_DelSecnode(msecnode_t *node)
+static msecnode_t *P_DelSecnode(msecnode_t *node, msecnode_t *sector_t::*which_thinglist)
 {
    if(node)
    {
@@ -3120,7 +3120,7 @@ static msecnode_t *P_DelSecnode(msecnode_t *node)
       if(sp)
          sp->m_snext = sn;
       else
-         node->m_sector->touching_thinglist = sn;
+         node->m_sector->*which_thinglist = sn;
       
       if(sn)
          sn->m_sprev = sp;
@@ -3139,10 +3139,10 @@ static msecnode_t *P_DelSecnode(msecnode_t *node)
 //
 // Delete an entire sector list
 //
-void P_DelSeclist(msecnode_t *node)
+void P_DelSeclist(msecnode_t *node, msecnode_t *sector_t::*which_thinglist)
 {
    while(node)
-      node = P_DelSecnode(node);
+      node = P_DelSecnode(node, which_thinglist);
 }
 
 //
@@ -3313,7 +3313,8 @@ static bool PIT_transPortalGetSectors(int x, int y, int groupid, void *data)
 // variables when required
 //
 msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y, fixed_t radius,
-                                msecnode_t *sector_t::*which_thinglist)
+                                msecnode_t *sector_t::*which_thinglist, 
+                                msecnode_t *Mobj::*which_old_sectorlist)
 {
    msecnode_t *node, *list;
 
@@ -3325,7 +3326,7 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y, fixed_t radiu
    // finished, delete all nodes where m_thing is still nullptr. These
    // represent the sectors the Thing has vacated.
    
-   for(node = thing->old_sectorlist; node; node = node->m_tnext)
+   for(node = thing->*which_old_sectorlist; node; node = node->m_tnext)
       node->m_thing = nullptr;
 
    pClip->thing = thing;
@@ -3340,7 +3341,7 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y, fixed_t radiu
 
    validcount++; // used to make sure we only process a line once
 
-   pClip->sector_list = thing->old_sectorlist;
+   pClip->sector_list = thing->*which_old_sectorlist;
 
    // ioanch 20160115: use portal-aware gathering if there are portals. Sectors
    // may be touched both horizontally (like in Doom) or vertically (thing
@@ -3388,7 +3389,7 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y, fixed_t radiu
       {
          if(node == list)
             list = node->m_tnext;
-         node = P_DelSecnode(node);
+         node = P_DelSecnode(node, which_thinglist);
       }
       else
          node = node->m_tnext;
