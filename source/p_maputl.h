@@ -189,6 +189,7 @@ bool P_SegmentIntersectsSector(v2fixed_t v1, v2fixed_t v2, const sector_t &secto
 
 extern linetracer_t trace;
 
+void P_RefreshSpriteTouchingSectorList(Mobj *mo);
 void P_CheckSpriteTouchingSectorLists();
 
 #endif  // __P_MAPUTL__

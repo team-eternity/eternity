@@ -1482,6 +1482,20 @@ bool P_SegmentIntersectsSector(v2fixed_t v1, v2fixed_t v2, const sector_t &secto
 }
 
 //
+// Common call to refresh sprite touching sector list when some visual sprite property changes
+// 
+// WARNING: make sure that SetThingPosition was last called on this.
+//
+void P_RefreshSpriteTouchingSectorList(Mobj *mo)
+{
+   if(R_NeedThoroughSpriteCollection() && !(mo->flags & MF_NOSECTOR))
+   {
+      P_unsetThingSpriteTouchingSectorList(mo);
+      P_setThingSpriteTouchingSectorList(mo);
+   }
+}
+
+//
 // Enable or disable sprite touching sector lists based on CVAR settings
 //
 void P_CheckSpriteTouchingSectorLists()
@@ -1493,12 +1507,9 @@ void P_CheckSpriteTouchingSectorLists()
          Mobj *mo;
          if(!(mo = thinker_cast<Mobj *>(th)))
             continue;
-         // We need to refresh the sprite touching sector list because the renderer may demand it immediately
-         if(!(mo->flags & MF_NOSECTOR))
-         {
-            P_unsetThingSpriteTouchingSectorList(mo);
-            P_setThingSpriteTouchingSectorList(mo);
-         }
+         // We need to refresh the sprite touching sector list because the renderer may demand it
+         // immediately
+         P_RefreshSpriteTouchingSectorList(mo);
       }
    }
 }
