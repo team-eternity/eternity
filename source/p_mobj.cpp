@@ -284,6 +284,7 @@ inline static void P_setSpriteBySkin(Mobj &mobj, const state_t &st)
       mobj.sprite = mobj.skin->sprite;
    else
       mobj.sprite = st.sprite;
+   // Do not change sprite touching sector list yet, this happens in calling code.
 }
 
 //
