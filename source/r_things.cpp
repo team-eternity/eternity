@@ -1534,7 +1534,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
 
    // Even though the default way of rendering isn't as "correct"
    // the single-threaded performance gains are too significant to ignore
-   if((r_numcontexts == 1 && r_sprprojstyle == R_SPRPROJSTYLE_DEFAULT) || r_sprprojstyle == R_SPRPROJSTYLE_FAST)
+   if(! R_NeedThoroughSpriteCollection())
    {
       // Handle all things in sector.
       for(const Mobj *thing = sec->thinglist; thing; thing = thing->snext)

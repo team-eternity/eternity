@@ -1763,7 +1763,10 @@ CONSOLE_VARIABLE(r_tlstyle, r_tlstyle, 0)
    R_DoomTLStyle();
 }
 
-CONSOLE_VARIABLE(r_sprprojstyle, r_sprprojstyle, 0) {}
+CONSOLE_VARIABLE(r_sprprojstyle, r_sprprojstyle, 0) 
+{
+   P_CheckSpriteTouchingSectorLists();
+}
 
 CONSOLE_VARIABLE(r_boomcolormaps, r_boomcolormaps, 0) {}
 

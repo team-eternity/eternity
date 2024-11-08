@@ -2553,7 +2553,7 @@ void Mobj::remove()
    P_RemoveThingTID(this);
 
    // unlink from sector and block lists
-   P_UnsetThingPosition(this);
+   P_UnsetThingPosition(this, true);
 
    // ioanch 20160109: remove portal sprite projections
    R_RemoveMobjProjections(this);
