@@ -314,6 +314,7 @@ void R_ClearBadSpritesAndFrames()
       }
       mobj->sprite = blankSpriteNum;
       mobj->frame  = 0;
+      // Do not refresh touching sprite list here, as it's called during rendering.
    }
 
    while(g_badFrameMobjs.try_dequeue(mobj))
@@ -330,6 +331,7 @@ void R_ClearBadSpritesAndFrames()
       }
       mobj->sprite = blankSpriteNum;
       mobj->frame  = 0;
+      // Neither here
    }
 }
 
