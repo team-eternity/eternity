@@ -99,6 +99,7 @@ void A_ClearSkin(actionargs_t *actionargs)
    Mobj *mo   = actionargs->actor;
    mo->skin   = nullptr;
    mo->sprite = mo->state->sprite;
+   P_RefreshSpriteTouchingSectorList(mo);
 }
 
 //
