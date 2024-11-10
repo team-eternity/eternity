@@ -986,7 +986,7 @@ static fixed_t P_getSpriteRadius(const Mobj &thing)
    
    const spritespan_t &span = spansprite[framenum];
 
-   return span.sideFixed;
+   return thing.xscale == 1.0f ? span.sideFixed : M_FloatToFixed(span.side * thing.xscale);
 }
 
 //
@@ -994,8 +994,11 @@ static fixed_t P_getSpriteRadius(const Mobj &thing)
 //
 static void P_setThingSpriteTouchingSectorList(Mobj *thing)
 {
+   fixed_t radius = P_getSpriteRadius(*thing);
+   if(radius <= 0)
+      radius = 1; // minimum safe to account for any assumptions
    thing->sprite_touching_sectorlist =
-      P_CreateSecNodeList(thing, thing->x, thing->y, P_getSpriteRadius(*thing),
+      P_CreateSecNodeList(thing, thing->x, thing->y, radius,
                           &sector_t::touching_thinglist_by_sprites,
                           &Mobj::old_sprite_sectorlist);
    thing->old_sprite_sectorlist = nullptr;
