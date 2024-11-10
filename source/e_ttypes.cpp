@@ -1084,5 +1084,20 @@ bool E_WouldHitFloorWater(const Mobj &thing)
    return terrain.liquid;
 }
 
+//
+// Check if under a BOOM liquid fake floor that would splash liquid. Needed for certain Heretic 
+// things.
+//
+bool E_UnderBoomLiquidFakeFloor(const Mobj &thing)
+{
+   const sector_t &sector = *thing.subsector->sector;
+   if(sector.heightsec == -1)
+      return false;
+
+   fixed_t z;
+   const ETerrain &terrain = E_getFloorTerrain(thing, sector, { thing.x, thing.y }, &z);
+   return z > thing.z && terrain.liquid;
+}
+
 // EOF
 

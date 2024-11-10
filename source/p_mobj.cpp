@@ -1386,7 +1386,7 @@ floater:
 
       if(mo->flags & MF_MISSILE && !(mo->flags & MF_NOCLIP))
       {
-         if(mo->flags4 & MF4_HERETICBOUNCES) // MaxW
+         if(mo->flags4 & MF4_HERETICBOUNCES && !E_UnderBoomLiquidFakeFloor(*mo)) // MaxW
          {
             P_floorHereticBounceMissile(mo);
             return;

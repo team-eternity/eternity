@@ -109,6 +109,7 @@ void      E_ExplosionHitWater(Mobj *thing, int damage);
 bool      E_StandingOnExactly(const sector_t &sector, const Mobj &thing);
 bool      E_HitFloor(Mobj *thing);
 bool      E_WouldHitFloorWater(const Mobj &thing);
+bool      E_UnderBoomLiquidFakeFloor(const Mobj &thing);
 void      E_PtclTerrainHit(particle_t *);
 
 #endif

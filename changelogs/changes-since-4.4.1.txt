@@ -10,6 +10,8 @@ Small improvements
   in-game error message with sound. Also, the message is more accurate.
 * Explosions now trigger splashes on BOOM deep water surfaces by comparing their heights to the 
   water surface, not to the solid surface beneath.
+* Heretic Fire Mace projectiles now blow up when hitting anything under Boom water, without
+  bouncing, so as to behave consistently with shallow Heretic water.
 
 Bug fixes
 ---------
