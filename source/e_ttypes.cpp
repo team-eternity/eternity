@@ -1007,7 +1007,24 @@ void E_ExplosionHitWater(Mobj *thing, int damage)
       return;
    }
    // VANILLA_HERETIC: explosion infinite height
-   if(vanilla_heretic || thing->z <= thing->zref.secfloor + damage * FRACUNIT)
+
+   bool hit = false;
+   if(vanilla_heretic)
+      hit = true;
+
+   if(!hit)
+   {
+      fixed_t refheight;
+      const sector_t &sector = *thing->subsector->sector;
+      if(sector.heightsec != -1)
+         refheight = sectors[sector.heightsec].srf.floor.getZAt(thing->x, thing->y);
+      else
+         refheight = thing->zref.secfloor;
+
+      if(thing->z <= refheight + damage * FRACUNIT)
+         hit = true;
+   }
+   if(hit)
       E_HitWater(thing, P_ExtremeSectorAtPoint(thing, surf_floor));
 }
 
