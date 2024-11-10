@@ -3047,7 +3047,8 @@ static void P_PutSecnode(msecnode_t *node)
 //
 // killough 11/98: reformatted
 //
-static msecnode_t *P_AddSecnode(sector_t *s, Mobj *thing, msecnode_t *nextnode)
+static msecnode_t *P_AddSecnode(sector_t *s, msecnode_t *sector_t::*which_thinglist, Mobj *thing,
+                                msecnode_t *nextnode)
 {
    msecnode_t *node;
    
@@ -3078,10 +3079,10 @@ static msecnode_t *P_AddSecnode(sector_t *s, Mobj *thing, msecnode_t *nextnode)
    // Add new node at head of sector thread starting at s->touching_thinglist
    
    node->m_sprev  = nullptr;    // prev node on sector thread
-   node->m_snext  = s->touching_thinglist; // next node on sector thread
-   if(s->touching_thinglist)
+   node->m_snext  = s->*which_thinglist; // next node on sector thread
+   if(s->*which_thinglist)
       node->m_snext->m_sprev = node;
-   return s->touching_thinglist = node;
+   return s->*which_thinglist = node;
 }
 
 //
@@ -3092,7 +3093,7 @@ static msecnode_t *P_AddSecnode(sector_t *s, Mobj *thing, msecnode_t *nextnode)
 //
 // killough 11/98: reformatted
 //
-static msecnode_t *P_DelSecnode(msecnode_t *node)
+static msecnode_t *P_DelSecnode(msecnode_t *node, msecnode_t *sector_t::*which_thinglist)
 {
    if(node)
    {
@@ -3119,7 +3120,7 @@ static msecnode_t *P_DelSecnode(msecnode_t *node)
       if(sp)
          sp->m_snext = sn;
       else
-         node->m_sector->touching_thinglist = sn;
+         node->m_sector->*which_thinglist = sn;
       
       if(sn)
          sn->m_sprev = sp;
@@ -3138,11 +3139,19 @@ static msecnode_t *P_DelSecnode(msecnode_t *node)
 //
 // Delete an entire sector list
 //
-void P_DelSeclist(msecnode_t *node)
+void P_DelSeclist(msecnode_t *node, msecnode_t *sector_t::*which_thinglist)
 {
    while(node)
-      node = P_DelSecnode(node);
+      node = P_DelSecnode(node, which_thinglist);
 }
+
+//
+// Context for the like-named function
+//
+struct getSectors_t
+{
+   msecnode_t *sector_t::*which_thinglist;
+};
 
 //
 // PIT_GetSectors
@@ -3153,7 +3162,7 @@ void P_DelSeclist(msecnode_t *node)
 // at this location, so don't bother with checking impassable or
 // blocking lines.
 //
-static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *context)
+static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *vcontext)
 {
    // ioanch 20160115: portal aware
    fixed_t bbox[4];
@@ -3172,6 +3181,8 @@ static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *context)
 
    if(P_BoxOnLineSide(bbox, ld) != -1)
       return true;
+
+   auto context = static_cast<getSectors_t *>(vcontext);
 
    // This line crosses through the object.
    
@@ -3197,8 +3208,8 @@ static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *context)
                                        pClip->thing->groupid, ld->frontsector,
                                        pClip->thing->z))
       {
-         pClip->sector_list = P_AddSecnode(ld->frontsector, pClip->thing,
-                                           pClip->sector_list);
+         pClip->sector_list = P_AddSecnode(ld->frontsector, context->which_thinglist,
+                                           pClip->thing, pClip->sector_list);
       }
 
       if(ld->backsector && ld->backsector != ld->frontsector)
@@ -3213,13 +3224,15 @@ static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *context)
                                           pClip->thing->groupid, ld->backsector,
                                           pClip->thing->z))
          {
-            pClip->sector_list = P_AddSecnode(ld->backsector, pClip->thing, pClip->sector_list);
+            pClip->sector_list = P_AddSecnode(ld->backsector, context->which_thinglist,
+                                              pClip->thing, pClip->sector_list);
          }
       }
    }
    else
    {
-      pClip->sector_list = P_AddSecnode(ld->frontsector, pClip->thing, pClip->sector_list);
+      pClip->sector_list = P_AddSecnode(ld->frontsector, context->which_thinglist,
+                                        pClip->thing, pClip->sector_list);
 
       // Don't assume all lines are 2-sided, since some Things
       // like teleport fog are allowed regardless of whether their
@@ -3230,8 +3243,8 @@ static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *context)
       // killough 8/1/98: avoid duplicate if same sector on both sides
 
       if(ld->backsector && ld->backsector != ld->frontsector)
-         pClip->sector_list = P_AddSecnode(ld->backsector, pClip->thing,
-                                           pClip->sector_list);
+         pClip->sector_list = P_AddSecnode(ld->backsector, context->which_thinglist,
+                                           pClip->thing, pClip->sector_list);
 
    }
 
@@ -3245,6 +3258,7 @@ struct transPortalGetSectors_t
 {
    int curgroupid;
    doom_mapinter_t *clip;
+   msecnode_t *sector_t::*which_thinglist;
 };
 
 //
@@ -3263,7 +3277,8 @@ static bool PIT_transPortalGetSectors(int x, int y, int groupid, void *data)
       // Get the offset from thing's position to the PREVIOUS groupid
       if(groupid == inter.thing->groupid)
       {
-         inter.sector_list = P_AddSecnode(inter.thing->subsector->sector, inter.thing,
+         inter.sector_list = P_AddSecnode(inter.thing->subsector->sector,
+                                          context->which_thinglist, inter.thing,
                                           inter.sector_list);
       }
       else
@@ -3275,11 +3290,14 @@ static bool PIT_transPortalGetSectors(int x, int y, int groupid, void *data)
          if(sector)
          {
             // Add it
-            inter.sector_list = P_AddSecnode(sector, inter.thing, inter.sector_list);
+            inter.sector_list = P_AddSecnode(sector, context->which_thinglist, inter.thing,
+                                             inter.sector_list);
          }
       }
    }
-   P_BlockLinesIterator(x, y, PIT_GetSectors, groupid);
+   edefstructvar(getSectors_t, getSectorsContext);
+   getSectorsContext.which_thinglist = context->which_thinglist;
+   P_BlockLinesIterator(x, y, PIT_GetSectors, groupid, &getSectorsContext);
    return true;
 }
 
@@ -3294,7 +3312,9 @@ static bool PIT_transPortalGetSectors(int x, int y, int groupid, void *data)
 // haleyjd 04/16/2010: rewritten to use clip stack for saving global clipping
 // variables when required
 //
-msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
+msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y, fixed_t radius,
+                                msecnode_t *sector_t::*which_thinglist, 
+                                msecnode_t *Mobj::*which_old_sectorlist)
 {
    msecnode_t *node, *list;
 
@@ -3306,7 +3326,7 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
    // finished, delete all nodes where m_thing is still nullptr. These
    // represent the sectors the Thing has vacated.
    
-   for(node = thing->old_sectorlist; node; node = node->m_tnext)
+   for(node = thing->*which_old_sectorlist; node; node = node->m_tnext)
       node->m_thing = nullptr;
 
    pClip->thing = thing;
@@ -3314,14 +3334,14 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
    pClip->x = x;
    pClip->y = y;
    
-   pClip->bbox[BOXTOP]    = y + thing->radius;
-   pClip->bbox[BOXBOTTOM] = y - thing->radius;
-   pClip->bbox[BOXRIGHT]  = x + thing->radius;
-   pClip->bbox[BOXLEFT]   = x - thing->radius;
+   pClip->bbox[BOXTOP]    = y + radius;
+   pClip->bbox[BOXBOTTOM] = y - radius;
+   pClip->bbox[BOXRIGHT]  = x + radius;
+   pClip->bbox[BOXLEFT]   = x - radius;
 
    validcount++; // used to make sure we only process a line once
 
-   pClip->sector_list = thing->old_sectorlist;
+   pClip->sector_list = thing->*which_old_sectorlist;
 
    // ioanch 20160115: use portal-aware gathering if there are portals. Sectors
    // may be touched both horizontally (like in Doom) or vertically (thing
@@ -3334,6 +3354,7 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
       edefstructvar(transPortalGetSectors_t, context);
       context.curgroupid = R_NOGROUP;
       context.clip = pClip;
+      context.which_thinglist = which_thinglist;
       P_TransPortalBlockWalker(pClip->bbox, thing->groupid, true, &context,
                                PIT_transPortalGetSectors);
       list = pClip->sector_list;
@@ -3346,14 +3367,17 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
       int yl = (pClip->bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
       int yh = (pClip->bbox[BOXTOP   ] - bmaporgy) >> MAPBLOCKSHIFT;
 
+      edefstructvar(getSectors_t, context);
+      context.which_thinglist = which_thinglist;
+
       for(int bx = xl; bx <= xh; bx++)
       {
          for(int by = yl; by <= yh; by++)
-            P_BlockLinesIterator(bx, by, PIT_GetSectors);
+            P_BlockLinesIterator(bx, by, PIT_GetSectors, R_NOGROUP, &context);
       }
 
       // Add the sector of the (x,y) point to sector_list.
-      list = P_AddSecnode(thing->subsector->sector, thing, pClip->sector_list);
+      list = P_AddSecnode(thing->subsector->sector, which_thinglist, thing, pClip->sector_list);
    }
 
    // Now delete any nodes that won't be used. These are the ones where
@@ -3365,7 +3389,7 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
       {
          if(node == list)
             list = node->m_tnext;
-         node = P_DelSecnode(node);
+         node = P_DelSecnode(node, which_thinglist);
       }
       else
          node = node->m_tnext;

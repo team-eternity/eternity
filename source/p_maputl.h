@@ -139,7 +139,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo,
 lineopening_t P_SlopeOpening(v2fixed_t pos);
 lineopening_t P_SlopeOpeningPortalAware(v2fixed_t pos);
 
-void P_UnsetThingPosition(Mobj *thing);
+void P_UnsetThingPosition(Mobj *thing, bool isRemoved = false);
 void P_SetThingPosition(Mobj *thing);
 bool P_BlockLinesIterator (int x, int y, bool func(line_t *, polyobj_t *, void *),
                            int groupid = R_NOGROUP, void *context = nullptr);
@@ -188,6 +188,9 @@ v2fixed_t P_GetSafeLineNormal(const line_t &line);
 bool P_SegmentIntersectsSector(v2fixed_t v1, v2fixed_t v2, const sector_t &sector);
 
 extern linetracer_t trace;
+
+void P_RefreshSpriteTouchingSectorList(Mobj *mo);
+void P_CheckSpriteTouchingSectorLists();
 
 #endif  // __P_MAPUTL__
 

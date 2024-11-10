@@ -43,6 +43,7 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "polyobj.h"
+#include "r_context.h"
 #include "r_data.h"
 #include "r_main.h"
 #include "r_portal.h"
@@ -895,13 +896,22 @@ void P_LogThingPosition(Mobj *mo, const char *caller)
 #endif
 
 //
+// Routine to remove sprite touching sector list
+//
+static void P_unsetThingSpriteTouchingSectorList(Mobj *thing)
+{
+   thing->old_sprite_sectorlist = thing->sprite_touching_sectorlist;
+   thing->sprite_touching_sectorlist = nullptr;
+}
+
+//
 // P_UnsetThingPosition
 // Unlinks a thing from block map and sectors.
 // On each position change, BLOCKMAP and other
 // lookups maintaining lists ot things inside
 // these structures need to be updated.
 //
-void P_UnsetThingPosition(Mobj *thing)
+void P_UnsetThingPosition(Mobj *thing, bool isRemoved)
 {
    P_LogThingPosition(thing, "unset");
 
@@ -932,6 +942,9 @@ void P_UnsetThingPosition(Mobj *thing)
       
       thing->old_sectorlist = thing->touching_sectorlist;
       thing->touching_sectorlist = nullptr; // to be restored by P_SetThingPosition
+
+      if(R_NeedThoroughSpriteCollection() || isRemoved)
+         P_unsetThingSpriteTouchingSectorList(thing);
       
       R_UnlinkSpriteProj(*thing);
    }
@@ -952,6 +965,43 @@ void P_UnsetThingPosition(Mobj *thing)
       if(bprev && (*bprev = bnext = thing->bnext))  // unlink from block map
          bnext->bprev = bprev;
    }
+}
+
+//
+// Get a thing's sprite radius
+//
+static fixed_t P_getSpriteRadius(const Mobj &thing)
+{
+   I_Assert(r_spritespan != nullptr, 
+            "The sprite span cache should have been initialized by now!\n");
+   
+   if(thing.sprite < 0 || thing.sprite >= numsprites)
+      return thing.radius; // fallback
+
+   const spritespan_t *spansprite = r_spritespan[thing.sprite];
+   int framenum = thing.frame & FF_FRAMEMASK;
+
+   if(framenum < 0 || framenum >= sprites[thing.sprite].numframes)
+      return thing.radius;
+   
+   const spritespan_t &span = spansprite[framenum];
+
+   return thing.xscale == 1.0f ? span.sideFixed : M_FloatToFixed(span.side * thing.xscale);
+}
+
+//
+// Routine to set sprite_touching_sectorlist
+//
+static void P_setThingSpriteTouchingSectorList(Mobj *thing)
+{
+   fixed_t radius = P_getSpriteRadius(*thing);
+   if(radius <= 0)
+      radius = 1; // minimum safe to account for any assumptions
+   thing->sprite_touching_sectorlist =
+      P_CreateSecNodeList(thing, thing->x, thing->y, radius,
+                          &sector_t::touching_thinglist_by_sprites,
+                          &Mobj::old_sprite_sectorlist);
+   thing->old_sprite_sectorlist = nullptr;
 }
 
 //
@@ -999,8 +1049,13 @@ void P_SetThingPosition(Mobj *thing)
       // at sector_t->touching_thinglist) are broken. When a node is
       // added, new sector links are created.
 
-      thing->touching_sectorlist = P_CreateSecNodeList(thing, thing->x, thing->y);
+      thing->touching_sectorlist = P_CreateSecNodeList(thing, thing->x, thing->y, thing->radius,
+                                                       &sector_t::touching_thinglist,
+                                                       &Mobj::old_sectorlist);
       thing->old_sectorlist = nullptr;
+
+      if(R_NeedThoroughSpriteCollection())
+         P_setThingSpriteTouchingSectorList(thing);
 
       // MaxW: EESectorActionEnter and EESectorActionExit
       if(prevss && prevss->sector != ss->sector)
@@ -1427,6 +1482,39 @@ bool P_SegmentIntersectsSector(v2fixed_t v1, v2fixed_t v2, const sector_t &secto
          return true;   // found one
    }
    return false;
+}
+
+//
+// Common call to refresh sprite touching sector list when some visual sprite property changes
+// 
+// WARNING: make sure that SetThingPosition was last called on this.
+//
+void P_RefreshSpriteTouchingSectorList(Mobj *mo)
+{
+   if(R_NeedThoroughSpriteCollection() && !(mo->flags & MF_NOSECTOR))
+   {
+      P_unsetThingSpriteTouchingSectorList(mo);
+      P_setThingSpriteTouchingSectorList(mo);
+   }
+}
+
+//
+// Enable or disable sprite touching sector lists based on CVAR settings
+//
+void P_CheckSpriteTouchingSectorLists()
+{
+   if(R_NeedThoroughSpriteCollection())
+   {
+      for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+      {
+         Mobj *mo;
+         if(!(mo = thinker_cast<Mobj *>(th)))
+            continue;
+         // We need to refresh the sprite touching sector list because the renderer may demand it
+         // immediately
+         P_RefreshSpriteTouchingSectorList(mo);
+      }
+   }
 }
 
 //----------------------------------------------------------------------------

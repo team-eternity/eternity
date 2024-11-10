@@ -284,6 +284,7 @@ inline static void P_setSpriteBySkin(Mobj &mobj, const state_t &st)
       mobj.sprite = mobj.skin->sprite;
    else
       mobj.sprite = st.sprite;
+   // Do not change sprite touching sector list yet, this happens in calling code.
 }
 
 //
@@ -398,6 +399,8 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
       P_setSpriteBySkin(*mobj, *st);
 
       mobj->frame = st->frame;
+
+      P_RefreshSpriteTouchingSectorList(mobj);
       
       // Handle unmorphing
       if(P_checkUnmorph(*mobj))
@@ -471,6 +474,8 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
    P_setSpriteBySkin(*mobj, *st);
 
    mobj->frame = st->frame;
+
+   P_RefreshSpriteTouchingSectorList(mobj);
 
    return true;
 }
@@ -2419,6 +2424,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
 
    P_setSpriteBySkin(*mobj, *st);
    mobj->frame  = st->frame;
+   // Do not refresh sprite touching sector list here, as it will be done by P_SetThingPosition below.
 
    // ioanch 20160109: init spriteproj. They won't be set in P_SetThingPosition 
    // but P_CheckPortalTeleport
@@ -2553,21 +2559,24 @@ void Mobj::remove()
    P_RemoveThingTID(this);
 
    // unlink from sector and block lists
-   P_UnsetThingPosition(this);
+   P_UnsetThingPosition(this, true);
 
    // ioanch 20160109: remove portal sprite projections
    R_RemoveMobjProjections(this);
 
    // Delete all nodes on the current sector_list -- phares 3/16/98
    if(this->old_sectorlist)
-      P_DelSeclist(this->old_sectorlist);
+      P_DelSeclist(this->old_sectorlist, &sector_t::touching_thinglist);
+   if(this->old_sprite_sectorlist)
+      P_DelSeclist(this->old_sprite_sectorlist, &sector_t::touching_thinglist_by_sprites);
 
    // haleyjd 08/13/10: ensure that the object cannot be relinked, and
    // nullify old_sectorlist to avoid multiple release of msecnodes.
    if(demo_version > 337)
    {
       this->flags |= (MF_NOSECTOR | MF_NOBLOCKMAP);
-      this->old_sectorlist = nullptr; 
+      this->old_sectorlist = nullptr;
+      this->old_sprite_sectorlist = nullptr;
    }
 
    // killough 11/98: Remove any references to other mobjs.

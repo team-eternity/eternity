@@ -314,6 +314,7 @@ void R_ClearBadSpritesAndFrames()
       }
       mobj->sprite = blankSpriteNum;
       mobj->frame  = 0;
+      // Do not refresh touching sprite list here, as it's called during rendering.
    }
 
    while(g_badFrameMobjs.try_dequeue(mobj))
@@ -330,6 +331,7 @@ void R_ClearBadSpritesAndFrames()
       }
       mobj->sprite = blankSpriteNum;
       mobj->frame  = 0;
+      // Neither here
    }
 }
 
@@ -1534,7 +1536,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
 
    // Even though the default way of rendering isn't as "correct"
    // the single-threaded performance gains are too significant to ignore
-   if((r_numcontexts == 1 && r_sprprojstyle == R_SPRPROJSTYLE_DEFAULT) || r_sprprojstyle == R_SPRPROJSTYLE_FAST)
+   if(! R_NeedThoroughSpriteCollection())
    {
       // Handle all things in sector.
       for(const Mobj *thing = sec->thinglist; thing; thing = thing->snext)
@@ -1548,7 +1550,8 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
    else
    {
       // Handle all things in (and touching) sector that haven't already been drawn this BSP traversal.
-      for(const msecnode_t *sectorNode = sec->touching_thinglist; sectorNode; sectorNode = sectorNode->m_snext)
+      for(const msecnode_t *sectorNode = sec->touching_thinglist_by_sprites; sectorNode;
+		  sectorNode = sectorNode->m_snext)
       {
          const Mobj *const thing = sectorNode->m_thing;
 
