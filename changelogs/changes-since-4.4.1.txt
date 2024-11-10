@@ -16,3 +16,5 @@ Bug fixes
 * Fixed wrong defaults in A_WeaponBulletAttack.
 * A_SkullRodStorm wasn't line portal aware.
 * Fixed UMAPINFO not recognizing spec-defined Deh_Actor_145 to Deh_Actor_249
+* Multithreaded rendering now renders very wide sprites properly (such as the trees in Eviternity 2
+  MAP14).
