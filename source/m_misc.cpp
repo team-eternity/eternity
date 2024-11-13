@@ -724,8 +724,11 @@ default_t defaults[] =
    DEFAULT_INT("hud_enabled",&hud_enabled, nullptr, 1, 0, 1, default_t::wad_game,
                "fullscreen hud enabled"),
    
-   DEFAULT_INT("hud_hidestatus",&hud_hidestatus, nullptr, 0, 0, 1, default_t::wad_game,
-               "hide kills/items/secrets info on fullscreen hud"),
+   DEFAULT_INT("hud_hidestats",&hud_hidestats, nullptr, 0, 0, 1, default_t::wad_game,
+               "hide kills/items/secrets info on automap and fullscreen hud"),
+
+   DEFAULT_INT("hud_hidesecrets", &hud_hidesecrets, nullptr, 0, 0, 1, default_t::wad_game,
+               "hide secrets info on automap and fullscreen hud"),
 
    DEFAULT_BOOL("hud_restrictoverlaywidth", &hud_restrictoverlaywidth, nullptr, true, default_t::wad_no,
                "restrict HUD overlays to be no wider than 16:9"),
@@ -735,9 +738,6 @@ default_t defaults[] =
    
    DEFAULT_BOOL("hu_showcoords", &hu_showcoords, nullptr, true, default_t::wad_game,
                 "display player/pointer coordinates on automap"),
-
-   DEFAULT_BOOL("hu_showstats", &hu_showstats, nullptr, true, default_t::wad_game,
-                "display level statistics on automap"),
    
    DEFAULT_INT("hu_timecolor",&hu_timecolor, nullptr, CR_RED, 0, CR_BUILTIN, default_t::wad_game,
                "color of automap level time widget"),

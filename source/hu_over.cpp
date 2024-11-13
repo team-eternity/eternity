@@ -269,7 +269,8 @@ char HU_ArmorColor()
 // Globals
 int hud_overlaylayout = HUD_BOOM;
 int hud_enabled      = 1;
-int hud_hidestatus   = 0;
+int hud_hidestats   = 0;
+int hud_hidesecrets  = 0;
 
 //=============================================================================
 //
@@ -431,8 +432,11 @@ const char *str_style[HUD_NUMHUDS] =
 VARIABLE_INT(hud_overlaylayout, nullptr, HUD_OFF, HUD_GRAPHICAL, str_style);
 CONSOLE_VARIABLE(hu_overlaystyle, hud_overlaylayout, 0) {}
 
-VARIABLE_BOOLEAN(hud_hidestatus, nullptr, yesno);
-CONSOLE_VARIABLE(hu_hidesecrets, hud_hidestatus, 0) {}
+VARIABLE_BOOLEAN(hud_hidestats, nullptr, yesno);
+CONSOLE_VARIABLE(hu_hidestats, hud_hidestats, 0) {}
+
+VARIABLE_BOOLEAN(hud_hidesecrets, nullptr, yesno);
+CONSOLE_VARIABLE(hu_hidesecrets, hud_hidesecrets, 0) {}
 
 VARIABLE_TOGGLE(hud_restrictoverlaywidth, nullptr, yesno);
 CONSOLE_VARIABLE(hu_restrictoverlaywidth, hud_restrictoverlaywidth, cf_buffered)

@@ -1503,15 +1503,13 @@ static HUDStatWidget statkill_widget;
 static HUDStatWidget statitem_widget;
 static HUDStatWidget statsecr_widget;
 
-bool hu_showstats; // enable/disable flag for level stats
-
 void HUDStatWidget::ticker()
 {
    static char statkillstr[64];
    static char statitemstr[64];
    static char statsecrstr[64];
 
-   if(!HU_allowMapWidget() || !hu_showstats)
+   if(!HU_allowMapWidget() || hud_hidestats)
    {
       message = nullptr;
       return;
@@ -1529,7 +1527,7 @@ void HUDStatWidget::ticker()
       snprintf(statitemstr, sizeof(statitemstr), "I: %i/%i", plr->itemcount, totalitems);
       message = statitemstr;
    }
-   else if(statType == STATTYPE_SECRETS && !hud_hidestatus)
+   else if(statType == STATTYPE_SECRETS && !hud_hidesecrets)
    {
       snprintf(statsecrstr, sizeof(statsecrstr), "S: %i/%i", plr->secretcount, totalsecret);
       message = statsecrstr;
@@ -1628,7 +1626,6 @@ VARIABLE_INT(message_timer,     nullptr, 0, 100000,        nullptr);
 VARIABLE_TOGGLE(hu_showtime,         nullptr,                yesno);
 VARIABLE_TOGGLE(hu_showcoords,       nullptr,                yesno);
 VARIABLE_TOGGLE(hu_alwaysshowcoords, nullptr,                yesno);
-VARIABLE_TOGGLE(hu_showstats,        nullptr,                yesno);
 VARIABLE_INT(hu_timecolor,           nullptr, 0, CR_BUILTIN,    textcolours);
 VARIABLE_INT(hu_levelnamecolor,      nullptr, 0, CR_BUILTIN,    textcolours);
 VARIABLE_INT(hu_coordscolor,         nullptr, 0, CR_BUILTIN,    textcolours);
@@ -1663,7 +1660,6 @@ CONSOLE_VARIABLE(hu_messagetime, message_timer, 0) {}
 CONSOLE_VARIABLE(hu_showtime, hu_showtime, 0) {}
 CONSOLE_VARIABLE(hu_showcoords, hu_showcoords, 0) {}
 CONSOLE_VARIABLE(hu_alwaysshowcoords, hu_alwaysshowcoords, 0) {}
-CONSOLE_VARIABLE(hu_showstats, hu_showstats, 0) {}
 CONSOLE_VARIABLE(hu_timecolor, hu_timecolor, 0) {}
 CONSOLE_VARIABLE(hu_levelnamecolor, hu_levelnamecolor, 0) {}
 CONSOLE_VARIABLE(hu_coordscolor, hu_coordscolor, 0) {}

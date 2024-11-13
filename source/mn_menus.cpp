@@ -2651,6 +2651,7 @@ static menuitem_t mn_hud_items[] =
    {it_info,       "HUD Overlay options"},
    {it_toggle,     "Overlay type",                 "hu_overlayid"   },
    {it_toggle,     "Overlay layout",               "hu_overlaystyle"},
+   {it_toggle,     "Hide stats",                   "hu_hidestats"   },
    {it_toggle,     "Hide secrets",                 "hu_hidesecrets" },
    {it_end}
 };
@@ -2671,7 +2672,6 @@ static menuitem_t mn_hud_pg2_items[] =
    {it_toggle,     "Show level time widget",       "hu_showtime"},
    {it_toggle,     "Level time color",             "hu_timecolor"},
    {it_toggle,     "Level name color",             "hu_levelnamecolor"},
-   {it_toggle,     "Show level stats widget",      "hu_showstats"},
    {it_gap},
    {it_info,       "Miscellaneous"},
    {it_toggle,     "Show frags in deathmatch",     "show_scores"},
