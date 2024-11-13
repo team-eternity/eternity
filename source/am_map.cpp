@@ -877,6 +877,36 @@ bool AM_Responder(const event_t *ev)
       if(ev->type != ev_keydown)
          return false;
 
+      // mousewheel zooming
+      if (ev->data1 == KEYD_MWHEELUP)
+      {
+         scale_mtof = scale_mtof * 1.3;
+         scale_ftom = 1.0 / scale_mtof;
+
+         if (scale_mtof < min_scale_mtof)
+            AM_minOutWindowScale();
+         else if (scale_mtof > max_scale_mtof)
+            AM_maxOutWindowScale();
+         else
+            AM_activateNewScale();
+
+         return true;
+      }
+      else if (ev->data1 == KEYD_MWHEELDOWN)
+      {
+         scale_mtof = scale_mtof * (1.0/1.3);
+         scale_ftom = 1.0 / scale_mtof;
+
+         if (scale_mtof < min_scale_mtof)
+            AM_minOutWindowScale();
+         else if (scale_mtof > max_scale_mtof)
+            AM_maxOutWindowScale();
+         else
+            AM_activateNewScale();
+
+         return true;
+      }
+
       static int bigstate = 0;
 
       switch(action)
