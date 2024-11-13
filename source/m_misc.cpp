@@ -735,6 +735,9 @@ default_t defaults[] =
    
    DEFAULT_BOOL("hu_showcoords", &hu_showcoords, nullptr, true, default_t::wad_game,
                 "display player/pointer coordinates on automap"),
+
+   DEFAULT_BOOL("hu_showstats", &hu_showstats, nullptr, true, default_t::wad_game,
+                "display level statistics on automap"),
    
    DEFAULT_INT("hu_timecolor",&hu_timecolor, nullptr, CR_RED, 0, CR_BUILTIN, default_t::wad_game,
                "color of automap level time widget"),
