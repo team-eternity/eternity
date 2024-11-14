@@ -28,6 +28,7 @@
 #define P_PORTAL_H__
 
 #include "r_defs.h"
+#include "r_portal.h"
 
 struct polyobj_t;
 
@@ -183,6 +184,14 @@ bool P_PortalLayersByPoly(int groupid1, int groupid2);
 
 const int *P_GetSectorPortalNeighbors(const sector_t &sector, surf_e surf,
                                       int *count);
+
+//
+// True if it's a passable portal with overlay
+//
+inline static bool P_IsLiquidOverlaylinkedPortal(const surface_t &surface)
+{
+   return (surface.pflags & (PS_PASSABLE | PS_OVERLAY)) == (PS_PASSABLE | PS_OVERLAY);
+}
 
 #endif
 

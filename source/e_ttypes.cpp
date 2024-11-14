@@ -48,11 +48,13 @@
 #include "p_enemy.h"
 #include "p_mobj.h"
 #include "p_partcl.h"
+#include "p_portal.h"
 #include "p_portalcross.h"
 #include "p_tick.h"
 #include "r_data.h"
 #include "r_defs.h"
 #include "r_main.h"
+#include "r_portal.h"
 #include "r_state.h"
 #include "s_sound.h"
 #include "w_wad.h"
@@ -899,7 +901,8 @@ void E_PtclTerrainHit(particle_t *p)
 // Executes mobj terrain effects.
 // ioanch 20160116: also use "sector" to change the group ID if needed
 //
-static void E_TerrainHit(const ETerrain *terrain, Mobj *thing, fixed_t z, const sector_t *sector)
+static void E_TerrainHit(const ETerrain *terrain, Mobj *thing, fixed_t z, const sector_t *sector, 
+                         fixed_t splashAlpha)
 {
    ETerrainSplash *splash = terrain->splash;
    Mobj *mo = nullptr;
@@ -913,21 +916,32 @@ static void E_TerrainHit(const ETerrain *terrain, Mobj *thing, fixed_t z, const 
    fixed_t tx = thing->x + link->x;
    fixed_t ty = thing->y + link->y;
 
+   auto reduceAlpha = [&mo, splashAlpha]()
+      {
+         if(mo->translucency > splashAlpha)
+            mo->translucency = splashAlpha;
+      };
+
    // low mass splash?
    // note: small splash didn't exist before version 3.33
    if(demo_version >= 333 && lowmass && splash->smallclass != -1)
    {
       mo = P_SpawnMobj(tx, ty, z, splash->smallclass);
       mo->floorclip += splash->smallclip;
+      reduceAlpha();
    }
    else
    {
       if(splash->baseclass != -1)
+      {
          mo = P_SpawnMobj(tx, ty, z, splash->baseclass);
+         reduceAlpha();
+      }
 
       if(splash->chunkclass != -1)
       {
          mo = P_SpawnMobj(tx, ty, z, splash->chunkclass);
+         reduceAlpha();
          P_SetTarget<Mobj>(&mo->target, thing);
          
          if(splash->chunkxvelshift != -1)
@@ -955,7 +969,7 @@ static void E_TerrainHit(const ETerrain *terrain, Mobj *thing, fixed_t z, const 
 // Get the information for the thing's floor terrain. Also gets the resulting z value
 //
 static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sector, v2fixed_t pos,
-                                         fixed_t *z)
+                                         fixed_t *z, fixed_t *splashAlpha)
 {
    // override with sector terrain if one is specified
    const ETerrain *terrain = sector.srf.floor.terrain;
@@ -975,6 +989,14 @@ static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sect
       *z = sector.heightsec != -1 ? sectors[sector.heightsec].srf.floor.getZAt(pos) :
                                     sector.srf.floor.getZAt(pos);
    }
+   if(splashAlpha)
+   {
+      // Take the alpha from the overlay, if available
+      if(sector.heightsec == -1 && P_IsLiquidOverlaylinkedPortal(sector.srf.floor))
+         *splashAlpha = ((sector.srf.floor.pflags >> PO_OPACITYSHIFT & 0xff) << 8) + 255;
+      else
+         *splashAlpha = FRACUNIT;
+   }
    return *terrain;
 }
 
@@ -986,10 +1008,12 @@ static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sect
 bool E_HitWater(Mobj *thing, const sector_t *sector)
 {
    fixed_t z;
-   const ETerrain &terrain = E_getFloorTerrain(*thing, *sector, {thing->x, thing->y}, &z);
+   fixed_t splashAlpha;
+   const ETerrain &terrain = E_getFloorTerrain(*thing, *sector, {thing->x, thing->y}, &z,
+                                               &splashAlpha);
 
    // ioanch 20160116: also use "sector" as a parameter in case it's in another group
-   E_TerrainHit(&terrain, thing, z, sector);
+   E_TerrainHit(&terrain, thing, z, sector, splashAlpha);
 
    return terrain.liquid;
 }
@@ -1080,7 +1104,7 @@ bool E_WouldHitFloorWater(const Mobj &thing)
       return false;
 
    const sector_t &sector = *m->m_sector;
-   const ETerrain &terrain = E_getFloorTerrain(thing, sector, v2fixed_t(), nullptr);
+   const ETerrain &terrain = E_getFloorTerrain(thing, sector, v2fixed_t(), nullptr, nullptr);
    return terrain.liquid;
 }
 
@@ -1095,7 +1119,7 @@ bool E_UnderBoomLiquidFakeFloor(const Mobj &thing)
       return false;
 
    fixed_t z;
-   const ETerrain &terrain = E_getFloorTerrain(thing, sector, { thing.x, thing.y }, &z);
+   const ETerrain &terrain = E_getFloorTerrain(thing, sector, { thing.x, thing.y }, &z, nullptr);
    return z > thing.z && terrain.liquid;
 }
 

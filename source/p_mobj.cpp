@@ -1722,14 +1722,6 @@ inline static void P_checkMobjProjections(Mobj &mobj)
 }
 
 //
-// True if it's a passable portal with overlay
-//
-inline static bool P_isLiquidOverlaylinkedPortal(const surface_t &surface)
-{
-   return (surface.pflags & (PS_PASSABLE | PS_OVERLAY)) == (PS_PASSABLE | PS_OVERLAY);
-}
-
-//
 // P_MobjThinker
 //
 void Mobj::Think()
@@ -1785,7 +1777,7 @@ void Mobj::Think()
       waterstate = (z < hs->srf.floor.getZAt(x, y));
    }
 
-   if(P_isLiquidOverlaylinkedPortal(subsector->sector->srf.floor))
+   if(P_IsLiquidOverlaylinkedPortal(subsector->sector->srf.floor))
    {
       portalSplash.waterState = z < subsector->sector->srf.floor.getZAt(x, y);
       portalSplash.sectorAbove = subsector->sector;
@@ -1927,7 +1919,7 @@ void Mobj::Think()
    // Must check here if we're about to pass a water portal
    // NOTE: only handle it when going down from above water. Going up from underwater is handled
    // differently (see below).
-   if(P_isLiquidOverlaylinkedPortal(subsector->sector->srf.floor))
+   if(P_IsLiquidOverlaylinkedPortal(subsector->sector->srf.floor))
    {
       portalSplash.oldWaterState = portalSplash.waterState;
       portalSplash.waterState = z < subsector->sector->srf.floor.getZAt(x, y);
@@ -1944,7 +1936,7 @@ void Mobj::Think()
 
    // We need to handle movement from below water surface, which typically happens through portal
    if(portalPassed && portalSplash.passSurface == surf_ceil && 
-      P_isLiquidOverlaylinkedPortal(subsector->sector->srf.floor))
+      P_IsLiquidOverlaylinkedPortal(subsector->sector->srf.floor))
    {
       portalSplash.oldWaterState = true;
       portalSplash.waterState = false;
