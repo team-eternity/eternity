@@ -986,8 +986,12 @@ static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sect
 
    if(z)
    {
-      *z = sector.heightsec != -1 ? sectors[sector.heightsec].srf.floor.getZAt(pos) :
-                                    sector.srf.floor.getZAt(pos);
+      if(sector.heightsec != -1)
+         *z = sectors[sector.heightsec].srf.floor.getZAt(pos);
+      else if(P_IsLiquidOverlaylinkedPortal(sector.srf.floor))
+         *z = P_PortalZ(sector.srf.floor, pos);
+      else 
+         *z = sector.srf.floor.getZAt(pos);
    }
    if(splashAlpha)
    {
@@ -1036,6 +1040,8 @@ void E_ExplosionHitWater(Mobj *thing, int damage)
    if(vanilla_heretic)
       hit = true;
 
+   const sector_t *overlaySplashSector = nullptr;
+
    if(!hit)
    {
       fixed_t refheight;
@@ -1043,13 +1049,38 @@ void E_ExplosionHitWater(Mobj *thing, int damage)
       if(sector.heightsec != -1)
          refheight = sectors[sector.heightsec].srf.floor.getZAt(thing->x, thing->y);
       else
-         refheight = thing->zref.secfloor;
+      {
+         v2fixed_t pos = { thing->x, thing->y };
+         bool foundLiquidOverlay = false;
+         for(int prot = 0; prot < SECTOR_PORTAL_LOOP_PROTECTION; ++prot)
+         {
+            const sector_t *currentSector = R_PointInSubsector(pos)->sector;
+            if((currentSector->srf.floor.pflags & (PS_PASSABLE | PS_OVERLAY)) == PS_PASSABLE)
+            {
+               pos.x += currentSector->srf.floor.portal->data.link.delta.x;
+               pos.y += currentSector->srf.floor.portal->data.link.delta.y;
+            }
+            else if(P_IsLiquidOverlaylinkedPortal(currentSector->srf.floor))
+            {
+               refheight = P_PortalZ(currentSector->srf.floor, pos);
+               foundLiquidOverlay = true;
+               overlaySplashSector = currentSector;
+            }
+            else
+               break;
+         }
+         if(!foundLiquidOverlay)
+            refheight = thing->zref.secfloor;
+      }
 
       if(thing->z <= refheight + damage * FRACUNIT)
          hit = true;
    }
    if(hit)
-      E_HitWater(thing, P_ExtremeSectorAtPoint(thing, surf_floor));
+   {
+      E_HitWater(thing, overlaySplashSector ? overlaySplashSector :
+                 P_ExtremeSectorAtPoint(thing, surf_floor));
+   }
 }
 
 //

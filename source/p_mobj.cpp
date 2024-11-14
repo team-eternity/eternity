@@ -1779,7 +1779,7 @@ void Mobj::Think()
 
    if(P_IsLiquidOverlaylinkedPortal(subsector->sector->srf.floor))
    {
-      portalSplash.waterState = z < subsector->sector->srf.floor.getZAt(x, y);
+      portalSplash.waterState = z < P_PortalZ(subsector->sector->srf.floor, x, y);
       portalSplash.sectorAbove = subsector->sector;
    }
 
@@ -1922,7 +1922,7 @@ void Mobj::Think()
    if(P_IsLiquidOverlaylinkedPortal(subsector->sector->srf.floor))
    {
       portalSplash.oldWaterState = portalSplash.waterState;
-      portalSplash.waterState = z < subsector->sector->srf.floor.getZAt(x, y);
+      portalSplash.waterState = z < P_PortalZ(subsector->sector->srf.floor, x, y);
       // may need to update because of horizontal movement
       portalSplash.sectorAbove = subsector->sector;   
    }
