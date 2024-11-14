@@ -14,6 +14,8 @@ Small improvements
 * Heretic Fire Mace projectiles now blow up when hitting anything under Boom water, without
   bouncing, so as to behave consistently with shallow Heretic water. Currently this doesn't apply to
   linked portal water however.
+* A_SetFlags, A_UnsetFlags, A_AddFlags and A_RemoveFlags now handle NOSECTOR and NOBLOCKMAP in a
+  stable manner.
 
 Bug fixes
 ---------

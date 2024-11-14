@@ -905,6 +905,59 @@ static void P_unsetThingSpriteTouchingSectorList(Mobj *thing)
 }
 
 //
+// Remove sector link when unsetting position
+//
+void P_UnsetThingSectorLink(Mobj *thing, bool isRemoved)
+{
+   // unlink from subsector
+
+   // killough 8/11/98: simpler scheme using pointers-to-pointers for prev
+   // pointers, allows head node pointers to be treated like everything else
+   Mobj **sprev = thing->sprev;
+   Mobj *snext = thing->snext;
+   if((*sprev = snext))  // unlink from sector list
+      snext->sprev = sprev;
+
+   // phares 3/14/98
+   //
+   // Save the sector list pointed to by touching_sectorlist.
+   // In P_SetThingPosition, we'll keep any nodes that represent
+   // sectors the Thing still touches. We'll add new ones then, and
+   // delete any nodes for sectors the Thing has vacated. Then we'll
+   // put it back into touching_sectorlist. It's done this way to
+   // avoid a lot of deleting/creating for nodes, when most of the
+   // time you just get back what you deleted anyway.
+   //
+   // If this Thing is being removed entirely, then the calling
+   // routine will clear out the nodes in sector_list.
+
+   thing->old_sectorlist = thing->touching_sectorlist;
+   thing->touching_sectorlist = nullptr; // to be restored by P_SetThingPosition
+
+   if(R_NeedThoroughSpriteCollection() || isRemoved)
+      P_unsetThingSpriteTouchingSectorList(thing);
+
+   R_UnlinkSpriteProj(*thing);
+}
+
+void P_UnsetThingBlockLink(Mobj *thing)
+{
+   // inert things don't need to be in blockmap
+
+   // killough 8/11/98: simpler scheme using pointers-to-pointers for prev
+   // pointers, allows head node pointers to be treated like everything else
+   //
+   // Also more robust, since it doesn't depend on current position for
+   // unlinking. Old method required computing head node based on position
+   // at time of unlinking, assuming it was the same position as during
+   // linking.
+
+   Mobj *bnext, **bprev = thing->bprev;
+   if(bprev && (*bprev = bnext = thing->bnext))  // unlink from block map
+      bnext->bprev = bprev;
+}
+
+//
 // P_UnsetThingPosition
 // Unlinks a thing from block map and sectors.
 // On each position change, BLOCKMAP and other
@@ -915,56 +968,13 @@ void P_UnsetThingPosition(Mobj *thing, bool isRemoved)
 {
    P_LogThingPosition(thing, "unset");
 
+   // invisible things don't need to be in sector list
    if(!(thing->flags & MF_NOSECTOR))
-   {
-      // invisible things don't need to be in sector list
-      // unlink from subsector
-      
-      // killough 8/11/98: simpler scheme using pointers-to-pointers for prev
-      // pointers, allows head node pointers to be treated like everything else
-      Mobj **sprev = thing->sprev;
-      Mobj  *snext = thing->snext;
-      if((*sprev = snext))  // unlink from sector list
-         snext->sprev = sprev;
+      P_UnsetThingSectorLink(thing, isRemoved);
 
-      // phares 3/14/98
-      //
-      // Save the sector list pointed to by touching_sectorlist.
-      // In P_SetThingPosition, we'll keep any nodes that represent
-      // sectors the Thing still touches. We'll add new ones then, and
-      // delete any nodes for sectors the Thing has vacated. Then we'll
-      // put it back into touching_sectorlist. It's done this way to
-      // avoid a lot of deleting/creating for nodes, when most of the
-      // time you just get back what you deleted anyway.
-      //
-      // If this Thing is being removed entirely, then the calling
-      // routine will clear out the nodes in sector_list.
-      
-      thing->old_sectorlist = thing->touching_sectorlist;
-      thing->touching_sectorlist = nullptr; // to be restored by P_SetThingPosition
-
-      if(R_NeedThoroughSpriteCollection() || isRemoved)
-         P_unsetThingSpriteTouchingSectorList(thing);
-      
-      R_UnlinkSpriteProj(*thing);
-   }
-
+   // inert things don't need to be in blockmap
    if(!(thing->flags & MF_NOBLOCKMAP))
-   {
-      // inert things don't need to be in blockmap
-      
-      // killough 8/11/98: simpler scheme using pointers-to-pointers for prev
-      // pointers, allows head node pointers to be treated like everything else
-      //
-      // Also more robust, since it doesn't depend on current position for
-      // unlinking. Old method required computing head node based on position
-      // at time of unlinking, assuming it was the same position as during
-      // linking.
-      
-      Mobj *bnext, **bprev = thing->bprev;
-      if(bprev && (*bprev = bnext = thing->bnext))  // unlink from block map
-         bnext->bprev = bprev;
-   }
+      P_UnsetThingBlockLink(thing);
 }
 
 //
@@ -1005,6 +1015,77 @@ static void P_setThingSpriteTouchingSectorList(Mobj *thing)
 }
 
 //
+// Links to sector
+//
+void P_SetThingSectorLink(Mobj *thing, const subsector_t *prevss)
+{
+   // killough 8/11/98: simpler scheme using pointer-to-pointer prev
+   // pointers, allows head nodes to be treated like everything else
+
+   Mobj **link = &thing->subsector->sector->thinglist;
+   Mobj *snext = *link;
+   if((thing->snext = snext))
+      snext->sprev = &thing->snext;
+   thing->sprev = link;
+   *link = thing;
+
+   // phares 3/16/98
+   //
+   // If sector_list isn't nullptr, it has a collection of sector
+   // nodes that were just removed from this Thing.
+   //
+   // Collect the sectors the object will live in by looking at
+   // the existing sector_list and adding new nodes and deleting
+   // obsolete ones.
+   //
+   // When a node is deleted, its sector links (the links starting
+   // at sector_t->touching_thinglist) are broken. When a node is
+   // added, new sector links are created.
+
+   thing->touching_sectorlist = P_CreateSecNodeList(thing, thing->x, thing->y, thing->radius,
+                                                    &sector_t::touching_thinglist,
+                                                    &Mobj::old_sectorlist);
+   thing->old_sectorlist = nullptr;
+
+   if(R_NeedThoroughSpriteCollection())
+      P_setThingSpriteTouchingSectorList(thing);
+
+   // MaxW: EESectorActionEnter and EESectorActionExit
+   if(prevss && prevss->sector != thing->subsector->sector)
+   {
+      EV_ActivateSectorAction(thing->subsector->sector, thing, SEAC_ENTER);
+      EV_ActivateSectorAction(prevss->sector, thing, SEAC_EXIT);
+   }
+
+   // ioanch: link to portals
+   R_LinkSpriteProj(*thing);
+}
+
+void P_SetThingBlockLink(Mobj *thing)
+{
+   int blockx = (thing->x - bmaporgx) >> MAPBLOCKSHIFT;
+   int blocky = (thing->y - bmaporgy) >> MAPBLOCKSHIFT;
+
+   if(blockx >= 0 && blockx < bmapwidth && blocky >= 0 && blocky < bmapheight)
+   {
+      // killough 8/11/98: simpler scheme using pointer-to-pointer prev
+      // pointers, allows head nodes to be treated like everything else
+
+      Mobj **link = &blocklinks[blocky * bmapwidth + blockx];
+      Mobj *bnext = *link;
+      if((thing->bnext = bnext))
+         bnext->bprev = &thing->bnext;
+      thing->bprev = link;
+      *link = thing;
+   }
+   else        // thing is off the map
+   {
+      thing->bnext = nullptr;
+      thing->bprev = nullptr;
+   }
+}
+
+//
 // P_SetThingPosition
 // Links a thing into both a block and a subsector
 // based on it's x y.
@@ -1022,77 +1103,14 @@ void P_SetThingPosition(Mobj *thing)
 
    thing->groupid = ss->sector->groupid;
 
+   // invisible things don't go into the sector links
    if(!(thing->flags & MF_NOSECTOR))
-   {
-      // invisible things don't go into the sector links
-      
-      // killough 8/11/98: simpler scheme using pointer-to-pointer prev
-      // pointers, allows head nodes to be treated like everything else
-      
-      Mobj **link = &ss->sector->thinglist;
-      Mobj *snext = *link;
-      if((thing->snext = snext))
-         snext->sprev = &thing->snext;
-      thing->sprev = link;
-      *link = thing;
-
-      // phares 3/16/98
-      //
-      // If sector_list isn't nullptr, it has a collection of sector
-      // nodes that were just removed from this Thing.
-      //
-      // Collect the sectors the object will live in by looking at
-      // the existing sector_list and adding new nodes and deleting
-      // obsolete ones.
-      //
-      // When a node is deleted, its sector links (the links starting
-      // at sector_t->touching_thinglist) are broken. When a node is
-      // added, new sector links are created.
-
-      thing->touching_sectorlist = P_CreateSecNodeList(thing, thing->x, thing->y, thing->radius,
-                                                       &sector_t::touching_thinglist,
-                                                       &Mobj::old_sectorlist);
-      thing->old_sectorlist = nullptr;
-
-      if(R_NeedThoroughSpriteCollection())
-         P_setThingSpriteTouchingSectorList(thing);
-
-      // MaxW: EESectorActionEnter and EESectorActionExit
-      if(prevss && prevss->sector != ss->sector)
-      {
-         EV_ActivateSectorAction(ss->sector, thing, SEAC_ENTER);
-         EV_ActivateSectorAction(prevss->sector, thing, SEAC_EXIT);
-      }
-      
-      // ioanch: link to portals
-      R_LinkSpriteProj(*thing);
-   }
+      P_SetThingSectorLink(thing, prevss);
 
    // link into blockmap
+   // inert things don't need to be in blockmap
    if(!(thing->flags & MF_NOBLOCKMAP))
-   {
-      // inert things don't need to be in blockmap
-      int blockx = (thing->x - bmaporgx) >> MAPBLOCKSHIFT;
-      int blocky = (thing->y - bmaporgy) >> MAPBLOCKSHIFT;
-      
-      if(blockx >= 0 && blockx < bmapwidth && blocky >= 0 && blocky < bmapheight)
-      {
-         // killough 8/11/98: simpler scheme using pointer-to-pointer prev
-         // pointers, allows head nodes to be treated like everything else
-
-         Mobj **link = &blocklinks[blocky*bmapwidth+blockx];
-         Mobj *bnext = *link;
-         if((thing->bnext = bnext))
-            bnext->bprev = &thing->bnext;
-         thing->bprev = link;
-         *link = thing;
-      }
-      else        // thing is off the map
-      {
-         thing->bnext = nullptr;
-         thing->bprev = nullptr;
-      }
-   }
+      P_SetThingBlockLink(thing);
 }
 
 // killough 3/15/98:

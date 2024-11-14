@@ -632,6 +632,8 @@ void A_SetFlags(actionargs_t *actionargs)
 
    if(!(flags = E_ArgAsThingFlags(args, 1)))
       return;
+
+   unsigned preflags = actor->flags;
    
    switch(flagfield)
    {
@@ -658,6 +660,12 @@ void A_SetFlags(actionargs_t *actionargs)
       actor->flags5 |= (unsigned int)flags[4];
       break;
    }
+
+   // Must do it after the change, to avoid nested functions interpreting the current state.
+   if(!(preflags & MF_NOSECTOR) && flags[0] & MF_NOSECTOR)
+      P_UnsetThingSectorLink(actor, false);
+   if(!(preflags & MF_NOBLOCKMAP) && flags[0] & MF_NOBLOCKMAP)
+      P_UnsetThingBlockLink(actor);
 }
 
 //
@@ -679,6 +687,8 @@ void A_UnSetFlags(actionargs_t *actionargs)
 
    if(!(flags = E_ArgAsThingFlags(args, 1)))
       return;
+
+   unsigned preflags = actor->flags;
 
    switch(flagfield)
    {
@@ -705,6 +715,11 @@ void A_UnSetFlags(actionargs_t *actionargs)
       actor->flags5 &= ~flags[4];
       break;
    }
+
+   if(preflags & MF_NOSECTOR && flags[0] & MF_NOSECTOR)
+      P_SetThingSectorLink(actor, nullptr);
+   if(preflags & MF_NOBLOCKMAP && flags[0] & MF_NOBLOCKMAP)
+      P_SetThingBlockLink(actor);
 }
 
 static const char *kwds_A_StartScript[] =
