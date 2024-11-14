@@ -734,7 +734,7 @@ static bool P_AdjustFloorCeil(Mobj *thing, bool midtex)
 
    // Teleport things in the way if this is a portal sector. If targeted thing is the displayplayer,
    // prevent interpolation.
-   bool portalled = P_CheckPortalTeleport(thing);
+   bool portalled = P_CheckPortalTeleport(thing, nullptr);
    if(noseclerptic == gametic || (demo_version >= 342 && portalled && !camera &&
                                   thing == players[displayplayer].mo))
    {

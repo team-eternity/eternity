@@ -1613,7 +1613,7 @@ static const line_t *P_avoidPortalEdges(Mobj &mobj, surf_e surf)
 //
 // Check for passing through an interactive portal plane.
 //
-bool P_CheckPortalTeleport(Mobj *mobj)
+bool P_CheckPortalTeleport(Mobj *mobj, surf_e *whichSurf)
 {
    static const int MAXIMUM_PER_TIC = 8;  // set some limit for maximum portals to cross per tic
 
@@ -1666,6 +1666,8 @@ bool P_CheckPortalTeleport(Mobj *mobj)
                   mobj->player->prevviewz = mobj->player->viewz;
             }
             movedalready = true;  // signal not to attempt moving the other way now
+            if(whichSurf)
+               *whichSurf = surf;
          }
          else
             break;   // break out of the eight-attempt if there's no portal now
@@ -1720,10 +1722,29 @@ inline static void P_checkMobjProjections(Mobj &mobj)
 }
 
 //
+// True if it's a passable portal with overlay
+//
+inline static bool P_isLiquidOverlaylinkedPortal(const surface_t &surface)
+{
+   return (surface.pflags & (PS_PASSABLE | PS_OVERLAY)) == (PS_PASSABLE | PS_OVERLAY);
+}
+
+//
 // P_MobjThinker
 //
 void Mobj::Think()
 {
+   //
+   // Grouped info about portal terrain splash
+   //
+   struct portalSplash_t
+   {
+      bool oldWaterState;
+      bool waterState;
+      const sector_t *sectorAbove;
+      surf_e passSurface;
+   };
+
    if(intflags & MIF_MUSICCHANGER)
    {
       S_MusInfoThink(*this);
@@ -1741,6 +1762,8 @@ void Mobj::Think()
    }
 
    int oldwaterstate, waterstate = 0;
+
+   edefstructvar(portalSplash_t, portalSplash);
    fixed_t lz;
 
    // haleyjd 01/04/14: backup current position at start of frame;
@@ -1760,6 +1783,12 @@ void Mobj::Think()
       sector_t *hs = &sectors[subsector->sector->heightsec];
 
       waterstate = (z < hs->srf.floor.getZAt(x, y));
+   }
+
+   if(P_isLiquidOverlaylinkedPortal(subsector->sector->srf.floor))
+   {
+      portalSplash.waterState = z < subsector->sector->srf.floor.getZAt(x, y);
+      portalSplash.sectorAbove = subsector->sector;
    }
 
    // Heretic Wind transfer specials
@@ -1895,8 +1924,32 @@ void Mobj::Think()
 
    }
 
+   // Must check here if we're about to pass a water portal
+   // NOTE: only handle it when going down from above water. Going up from underwater is handled
+   // differently (see below).
+   if(P_isLiquidOverlaylinkedPortal(subsector->sector->srf.floor))
+   {
+      portalSplash.oldWaterState = portalSplash.waterState;
+      portalSplash.waterState = z < subsector->sector->srf.floor.getZAt(x, y);
+      // may need to update because of horizontal movement
+      portalSplash.sectorAbove = subsector->sector;   
+   }
+   // Do not handle up-from-water portal overlay changes here, because they're handled below,
+   // accounting for portal teleport.
+   if(portalSplash.oldWaterState && !portalSplash.waterState)
+      portalSplash.oldWaterState = false;
+
    // check if we are passing an interactive portal plane
-   P_CheckPortalTeleport(this);
+   bool portalPassed = P_CheckPortalTeleport(this, &portalSplash.passSurface);
+
+   // We need to handle movement from below water surface, which typically happens through portal
+   if(portalPassed && portalSplash.passSurface == surf_ceil && 
+      P_isLiquidOverlaylinkedPortal(subsector->sector->srf.floor))
+   {
+      portalSplash.oldWaterState = true;
+      portalSplash.waterState = false;
+      portalSplash.sectorAbove = subsector->sector;
+   }
 
    // handle crashstate here
    // VANILLA_HERETIC: move this check into Z_Movement.
@@ -1924,14 +1977,15 @@ void Mobj::Think()
    if(flags & (MF_MISSILE|MF_BOUNCES))
    {
       // any time a missile or bouncer crosses, splash
-      if(oldwaterstate != waterstate)
+      if(portalSplash.oldWaterState != portalSplash.waterState)
+         E_HitWater(this, portalSplash.sectorAbove);
+      else if(oldwaterstate != waterstate)
          E_HitWater(this, subsector->sector);
-   }
+   }  // normal things only splash going into the water
+   else if(! portalSplash.oldWaterState && portalSplash.waterState)
+      E_HitWater(this, portalSplash.sectorAbove);
    else if(oldwaterstate == 0 && waterstate != 0)
-   {
-      // normal things only splash going into the water
       E_HitWater(this, subsector->sector);
-   }
 
    // cycle through states,
    // calling action functions at transitions

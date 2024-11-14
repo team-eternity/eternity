@@ -459,7 +459,7 @@ void  P_SpawnUnknownThings();
 Mobj *P_SpawnMapThing(mapthing_t *mt);
 bool  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
 void  P_ExplodeMissile(Mobj *, const sector_t *topedgesec, const zrefs_t *slopebumpz = nullptr);     // killough
-bool P_CheckPortalTeleport(Mobj *mobj);
+bool P_CheckPortalTeleport(Mobj *mobj, surf_e *whichSurf);
 
 enum class seekcenter_e : bool
 {
