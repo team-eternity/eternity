@@ -1722,20 +1722,80 @@ inline static void P_checkMobjProjections(Mobj &mobj)
 }
 
 //
+// Grouped info about portal terrain splash
+//
+struct portalSplash_t
+{
+   bool oldWaterState;
+   bool waterState;
+   const sector_t *sectorAbove;
+   surf_e passSurface;
+};
+
+//
+// Called before any movement
+//
+static void P_initializePortalSplash(portalSplash_t &splash, const Mobj &mobj)
+{
+   if(P_IsLiquidOverlaylinkedPortal(mobj.subsector->sector->srf.floor))
+   {
+      splash.waterState = mobj.z < P_PortalZ(mobj.subsector->sector->srf.floor, mobj.x, mobj.y);
+      splash.sectorAbove = mobj.subsector->sector;
+   }
+}
+
+//
+// Update state just before going through a portal (the splash boundary is the thing bottom, whereas
+// the portal transfer boundary is the thing middle or, if player, eye level)
+//
+static void P_updatePortalSplashBeforeTransfer(portalSplash_t &splash, const Mobj &mobj)
+{
+   // Must check here if we're about to pass a water portal
+   // NOTE: only handle it when going down from above water. Going up from underwater is handled
+   // differently (see below).
+   if(P_IsLiquidOverlaylinkedPortal(mobj.subsector->sector->srf.floor))
+   {
+      splash.oldWaterState = splash.waterState;
+      splash.waterState = mobj.z < P_PortalZ(mobj.subsector->sector->srf.floor, mobj.x, mobj.y);
+      // may need to update because of horizontal movement
+      splash.sectorAbove = mobj.subsector->sector;
+   }
+   // Do not handle up-from-water portal overlay changes here, because they're handled below,
+   // accounting for portal teleport.
+   if(splash.oldWaterState && !splash.waterState)
+      splash.oldWaterState = false;
+}
+
+//
+// Update state after portals were accounted for
+//
+static void P_updatePortalSplashAfterTransfer(portalSplash_t &splash, const Mobj &mobj)
+{
+   // We need to handle movement from below water surface, which typically happens through portal
+   if(splash.passSurface == surf_ceil && 
+      P_IsLiquidOverlaylinkedPortal(mobj.subsector->sector->srf.floor))
+   {
+      splash.oldWaterState = true;
+      splash.waterState = false;
+      splash.sectorAbove = mobj.subsector->sector;
+   }
+
+   // Conversely, it's possible we might end up right below some other liquid separator just as we
+   // pass a non-overlay portal
+   if(splash.passSurface == surf_floor &&
+      P_IsLiquidOverlaylinkedPortal(mobj.subsector->sector->srf.floor) && ! splash.oldWaterState &&
+      ! splash.waterState)
+   {
+      splash.waterState = mobj.z < P_PortalZ(mobj.subsector->sector->srf.floor, mobj.x, mobj.y);
+      splash.sectorAbove = mobj.subsector->sector;
+   }
+}
+
+//
 // P_MobjThinker
 //
 void Mobj::Think()
 {
-   //
-   // Grouped info about portal terrain splash
-   //
-   struct portalSplash_t
-   {
-      bool oldWaterState;
-      bool waterState;
-      const sector_t *sectorAbove;
-      surf_e passSurface;
-   };
 
    if(intflags & MIF_MUSICCHANGER)
    {
@@ -1777,11 +1837,7 @@ void Mobj::Think()
       waterstate = (z < hs->srf.floor.getZAt(x, y));
    }
 
-   if(P_IsLiquidOverlaylinkedPortal(subsector->sector->srf.floor))
-   {
-      portalSplash.waterState = z < P_PortalZ(subsector->sector->srf.floor, x, y);
-      portalSplash.sectorAbove = subsector->sector;
-   }
+   P_initializePortalSplash(portalSplash, *this);
 
    // Heretic Wind transfer specials
    if(!vanilla_heretic && (flags3 & MF3_WINDTHRUST) && !(flags & MF_NOCLIP))
@@ -1916,32 +1972,13 @@ void Mobj::Think()
 
    }
 
-   // Must check here if we're about to pass a water portal
-   // NOTE: only handle it when going down from above water. Going up from underwater is handled
-   // differently (see below).
-   if(P_IsLiquidOverlaylinkedPortal(subsector->sector->srf.floor))
-   {
-      portalSplash.oldWaterState = portalSplash.waterState;
-      portalSplash.waterState = z < P_PortalZ(subsector->sector->srf.floor, x, y);
-      // may need to update because of horizontal movement
-      portalSplash.sectorAbove = subsector->sector;   
-   }
-   // Do not handle up-from-water portal overlay changes here, because they're handled below,
-   // accounting for portal teleport.
-   if(portalSplash.oldWaterState && !portalSplash.waterState)
-      portalSplash.oldWaterState = false;
+   P_updatePortalSplashBeforeTransfer(portalSplash, *this);
 
    // check if we are passing an interactive portal plane
    bool portalPassed = P_CheckPortalTeleport(this, &portalSplash.passSurface);
 
-   // We need to handle movement from below water surface, which typically happens through portal
-   if(portalPassed && portalSplash.passSurface == surf_ceil && 
-      P_IsLiquidOverlaylinkedPortal(subsector->sector->srf.floor))
-   {
-      portalSplash.oldWaterState = true;
-      portalSplash.waterState = false;
-      portalSplash.sectorAbove = subsector->sector;
-   }
+   if(portalPassed)
+      P_updatePortalSplashAfterTransfer(portalSplash, *this);
 
    // handle crashstate here
    // VANILLA_HERETIC: move this check into Z_Movement.
