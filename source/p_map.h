@@ -201,7 +201,7 @@ void P_FreeSecNodeList();        // sf
 // phares 3/14/98
 msecnode_t *P_CreateSecNodeList(Mobj *, fixed_t, fixed_t, fixed_t radius, 
                                 msecnode_t *sector_t::*which_thinglist, 
-                                msecnode_t *Mobj:: *which_old_sectorlist);
+                                msecnode_t *Mobj:: *which_old_sectorlist, bool nonDemo);
 
 //=============================================================================
 //

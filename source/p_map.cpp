@@ -3314,11 +3314,11 @@ static bool PIT_transPortalGetSectors(int x, int y, int groupid, void *data)
 //
 msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y, fixed_t radius,
                                 msecnode_t *sector_t::*which_thinglist, 
-                                msecnode_t *Mobj::*which_old_sectorlist)
+                                msecnode_t *Mobj::*which_old_sectorlist, bool nonDemo)
 {
    msecnode_t *node, *list;
 
-   if(demo_version < 200 || demo_version >= 329)
+   if(demo_version < 200 || demo_version >= 329 || nonDemo)
       P_PushClipStack();
 
    // First, clear out the existing m_thing fields. As each node is
@@ -3405,7 +3405,7 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y, fixed_t radiu
    //  Boom/MBF demo. -- haleyjd: add SMMU too :)
    //
 
-   if(demo_version < 200 || demo_version >= 329)
+   if(demo_version < 200 || demo_version >= 329 || nonDemo)
       P_PopClipStack();
 
    return list;

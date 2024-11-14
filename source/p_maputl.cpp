@@ -1010,7 +1010,7 @@ static void P_setThingSpriteTouchingSectorList(Mobj *thing)
    thing->sprite_touching_sectorlist =
       P_CreateSecNodeList(thing, thing->x, thing->y, radius,
                           &sector_t::touching_thinglist_by_sprites,
-                          &Mobj::old_sprite_sectorlist);
+                          &Mobj::old_sprite_sectorlist, true);
    thing->old_sprite_sectorlist = nullptr;
 }
 
@@ -1044,7 +1044,7 @@ void P_SetThingSectorLink(Mobj *thing, const subsector_t *prevss)
 
    thing->touching_sectorlist = P_CreateSecNodeList(thing, thing->x, thing->y, thing->radius,
                                                     &sector_t::touching_thinglist,
-                                                    &Mobj::old_sectorlist);
+                                                    &Mobj::old_sectorlist, false);
    thing->old_sectorlist = nullptr;
 
    if(R_NeedThoroughSpriteCollection())
