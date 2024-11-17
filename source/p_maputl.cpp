@@ -980,7 +980,7 @@ void P_UnsetThingPosition(Mobj *thing, bool isRemoved)
 //
 // Get a thing's sprite radius
 //
-static fixed_t P_getSpriteRadius(const Mobj &thing)
+fixed_t P_GetSpriteRadius(const Mobj &thing)
 {
    I_Assert(r_spritespan != nullptr, 
             "The sprite span cache should have been initialized by now!\n");
@@ -1002,13 +1002,12 @@ static fixed_t P_getSpriteRadius(const Mobj &thing)
 //
 // Routine to set sprite_touching_sectorlist
 //
-static void P_setThingSpriteTouchingSectorList(Mobj *thing)
+static void P_setThingSpriteTouchingSectorList(Mobj *thing, fixed_t curSpriteRadius)
 {
-   fixed_t radius = P_getSpriteRadius(*thing);
-   if(radius <= 0)
-      radius = 1; // minimum safe to account for any assumptions
+   if(curSpriteRadius <= 0)
+      curSpriteRadius = 1; // minimum safe to account for any assumptions
    thing->sprite_touching_sectorlist =
-      P_CreateSecNodeList(thing, thing->x, thing->y, radius,
+      P_CreateSecNodeList(thing, thing->x, thing->y, curSpriteRadius,
                           &sector_t::touching_thinglist_by_sprites,
                           &Mobj::old_sprite_sectorlist, true);
    thing->old_sprite_sectorlist = nullptr;
@@ -1048,7 +1047,7 @@ void P_SetThingSectorLink(Mobj *thing, const subsector_t *prevss)
    thing->old_sectorlist = nullptr;
 
    if(R_NeedThoroughSpriteCollection())
-      P_setThingSpriteTouchingSectorList(thing);
+      P_setThingSpriteTouchingSectorList(thing, P_GetSpriteRadius(*thing));
 
    // MaxW: EESectorActionEnter and EESectorActionExit
    if(prevss && prevss->sector != thing->subsector->sector)
@@ -1527,12 +1526,22 @@ bool P_SegmentIntersectsSector(v2fixed_t v1, v2fixed_t v2, const sector_t &secto
 // 
 // WARNING: make sure that SetThingPosition was last called on this.
 //
-void P_RefreshSpriteTouchingSectorList(Mobj *mo)
+void P_RefreshSpriteTouchingSectorList(Mobj *mo, fixed_t prevSpriteRadius)
 {
    if(R_NeedThoroughSpriteCollection() && !(mo->flags & MF_NOSECTOR))
    {
+      fixed_t curSpriteRadius = P_GetSpriteRadius(*mo);
+      // This is an optimization sacrifice to avoid always calling this every time someone
+      // changes a frame. I saw it affect maps like nuts.wad.
+      // FIXME: this will need to be improved the moment someone starts to implement a growing
+      // thing that sits in-place.
+      if(prevSpriteRadius >= 0 && (curSpriteRadius > prevSpriteRadius / 2 &&
+                                   curSpriteRadius < 2 * prevSpriteRadius))
+      {
+         return;
+      }
       P_unsetThingSpriteTouchingSectorList(mo);
-      P_setThingSpriteTouchingSectorList(mo);
+      P_setThingSpriteTouchingSectorList(mo, curSpriteRadius);
    }
 }
 
@@ -1550,7 +1559,7 @@ void P_CheckSpriteTouchingSectorLists()
             continue;
          // We need to refresh the sprite touching sector list because the renderer may demand it
          // immediately
-         P_RefreshSpriteTouchingSectorList(mo);
+         P_RefreshSpriteTouchingSectorList(mo, -1);
       }
    }
 }

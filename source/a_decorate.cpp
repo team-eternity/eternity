@@ -97,9 +97,10 @@ void A_CheckPlayerDone(actionargs_t *actionargs)
 void A_ClearSkin(actionargs_t *actionargs)
 {
    Mobj *mo   = actionargs->actor;
+   fixed_t prevSpriteRadius = P_GetSpriteRadius(*mo);
    mo->skin   = nullptr;
    mo->sprite = mo->state->sprite;
-   P_RefreshSpriteTouchingSectorList(mo);
+   P_RefreshSpriteTouchingSectorList(mo, prevSpriteRadius);
 }
 
 //

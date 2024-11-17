@@ -180,6 +180,7 @@ lineopening_t P_SlopeOpeningPortalAware(v2fixed_t pos);
 void P_UnsetThingSectorLink(Mobj *thing, bool isRemoved);
 void P_UnsetThingBlockLink(Mobj *thing);
 void P_UnsetThingPosition(Mobj *thing, bool isRemoved = false);
+fixed_t P_GetSpriteRadius(const Mobj &thing);
 void P_SetThingSectorLink(Mobj *thing, const subsector_t *prevss);
 void P_SetThingBlockLink(Mobj *thing);
 void P_SetThingPosition(Mobj *thing);
@@ -232,7 +233,7 @@ bool P_SegmentIntersectsSector(v2fixed_t v1, v2fixed_t v2, const sector_t &secto
 
 extern linetracer_t trace;
 
-void P_RefreshSpriteTouchingSectorList(Mobj *mo);
+void P_RefreshSpriteTouchingSectorList(Mobj *mo, fixed_t prevSpriteRadius);
 void P_CheckSpriteTouchingSectorLists();
 
 #endif  // __P_MAPUTL__
