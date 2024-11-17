@@ -1174,7 +1174,7 @@ bool ThingIsOnLine(const Mobj *t, const line_t *l)
 // ioanch 20160114: enhanced the callback
 //
 bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*, void *), int groupid,
-   void *context)
+   void *context, LineIteratorVisiting *visit)
 {
    int        offset;
    const int  *list;     // killough 3/1/98: for removal of blockmap limit
@@ -1186,21 +1186,35 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*, void *), 
 
    // haleyjd 02/22/06: consider polyobject lines
    plink = polyblocklinks[offset];
+   bool visitcheck;
 
    while(plink)
    {
       polyobj_t *po = (*plink)->po;
+      size_t index = po - PolyObjects;
 
-      if(po->validcount != validcount) // if polyobj hasn't been checked
+      visitcheck = visit ? visit->polys.get(index) : po->validcount == validcount;
+
+      if(! visitcheck) // if polyobj hasn't been checked
       {
          int i;
-         po->validcount = validcount;
+         if(visit)
+            visit->polys.put(index);
+         else
+            po->validcount = validcount;
          
          for(i = 0; i < po->numLines; ++i)
          {
-            if(po->lines[i]->validcount == validcount) // line has been checked
+            index = po->lines[i] - lines;
+            visitcheck = visit ? visit->lines.get(index) : po->lines[i]->validcount == validcount;
+
+            if(visitcheck) // line has been checked
                continue;
-            po->lines[i]->validcount = validcount;
+            if(visit)
+               visit->lines.put(index);
+            else
+               po->lines[i]->validcount = validcount;
+
             if(!func(po->lines[i], po, context))
                return false;
          }
@@ -1237,9 +1251,15 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*, void *), 
       // ioanch 20160111: check groupid
       if(groupid != R_NOGROUP && groupid != ld->frontsector->groupid)
          continue;
-      if(ld->validcount == validcount)
+      
+      visitcheck = visit ? visit->lines.get(*list) : ld->validcount == validcount;
+
+      if(visitcheck)
          continue;       // line has already been checked
-      ld->validcount = validcount;
+      if(visit)
+         visit->lines.put(*list);
+      else
+         ld->validcount = validcount;
       if(!func(ld, nullptr, context))
          return false;
    }

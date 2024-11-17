@@ -26,6 +26,7 @@
 #ifndef P_MAPUTL_H__
 #define P_MAPUTL_H__
 
+#include <vector>
 #include "linkoffs.h"   // ioanch 20160108: for R_NOGROUP
 #include "m_vector.h"
 #include "tables.h" // for angle_t
@@ -102,6 +103,43 @@ struct intercept_t
    } d;
 };
 
+//
+// Visiting list, to avoid non-reentrant validcount marking
+//
+class VisitList
+{
+public:
+   //
+   // Must be explicitly initialized, because we don't always want to use it
+   //
+   void init(size_t size)
+   {
+      bitset.resize(size);
+   }
+
+   bool get(size_t index) const
+   {
+      return bitset[index];
+   }
+
+   void put(size_t index)
+   {
+      bitset[index] = true;
+   }
+private:
+   std::vector<bool> bitset;  // use standard vector, as it has bit packing
+};
+
+//
+// Packs both line and polyobject visit lists
+//
+class LineIteratorVisiting
+{
+public:
+   VisitList lines;
+   VisitList polys;
+};
+
 typedef bool (*traverser_t)(intercept_t *in, void *context);
 
 fixed_t P_AproxDistance(fixed_t dx, fixed_t dy);
@@ -146,7 +184,8 @@ void P_SetThingSectorLink(Mobj *thing, const subsector_t *prevss);
 void P_SetThingBlockLink(Mobj *thing);
 void P_SetThingPosition(Mobj *thing);
 bool P_BlockLinesIterator (int x, int y, bool func(line_t *, polyobj_t *, void *),
-                           int groupid = R_NOGROUP, void *context = nullptr);
+                           int groupid = R_NOGROUP, void *context = nullptr,
+                           LineIteratorVisiting *visit = nullptr);
 bool P_BlockThingsIterator(int x, int y, int groupid, bool (*func)(Mobj *, void *),
                            void *context = nullptr);
 inline static bool P_BlockThingsIterator(int x, int y, bool func(Mobj *, void *),

@@ -51,6 +51,7 @@
 #include "p_slopes.h"
 #include "p_skin.h"
 #include "p_spec.h"
+#include "polyobj.h"
 #include "r_main.h"
 #include "r_portal.h"
 #include "r_state.h"
@@ -3259,6 +3260,7 @@ struct transPortalGetSectors_t
    int curgroupid;
    doom_mapinter_t *clip;
    msecnode_t *sector_t::*which_thinglist;
+   LineIteratorVisiting *visit;
 };
 
 //
@@ -3297,7 +3299,7 @@ static bool PIT_transPortalGetSectors(int x, int y, int groupid, void *data)
    }
    edefstructvar(getSectors_t, getSectorsContext);
    getSectorsContext.which_thinglist = context->which_thinglist;
-   P_BlockLinesIterator(x, y, PIT_GetSectors, groupid, &getSectorsContext);
+   P_BlockLinesIterator(x, y, PIT_GetSectors, groupid, &getSectorsContext, context->visit);
    return true;
 }
 
@@ -3339,7 +3341,14 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y, fixed_t radiu
    pClip->bbox[BOXRIGHT]  = x + radius;
    pClip->bbox[BOXLEFT]   = x - radius;
 
-   validcount++; // used to make sure we only process a line once
+   LineIteratorVisiting visit;
+   if(nonDemo)
+   {
+      visit.lines.init(numlines);
+      visit.polys.init(numPolyObjects);
+   }
+   else
+      validcount++; // used to make sure we only process a line once
 
    pClip->sector_list = thing->*which_old_sectorlist;
 
@@ -3355,6 +3364,7 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y, fixed_t radiu
       context.curgroupid = R_NOGROUP;
       context.clip = pClip;
       context.which_thinglist = which_thinglist;
+      context.visit = nonDemo ? &visit : nullptr;
       P_TransPortalBlockWalker(pClip->bbox, thing->groupid, true, &context,
                                PIT_transPortalGetSectors);
       list = pClip->sector_list;
@@ -3373,7 +3383,10 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y, fixed_t radiu
       for(int bx = xl; bx <= xh; bx++)
       {
          for(int by = yl; by <= yh; by++)
-            P_BlockLinesIterator(bx, by, PIT_GetSectors, R_NOGROUP, &context);
+         {
+            P_BlockLinesIterator(bx, by, PIT_GetSectors, R_NOGROUP, &context,
+                                 nonDemo ? &visit : nullptr);
+         }
       }
 
       // Add the sector of the (x,y) point to sector_list.
