@@ -518,8 +518,8 @@ CONSOLE_VARIABLE(r_numcontexts, r_numcontexts, cf_buffered)
 //
 bool R_NeedThoroughSpriteCollection()
 {
-   return r_sprprojstyle != R_SPRPROJSTYLE_FAST && (r_numcontexts != 1 || 
-                                                    r_sprprojstyle != R_SPRPROJSTYLE_DEFAULT);
+   return !nodrawers && r_sprprojstyle != R_SPRPROJSTYLE_FAST && 
+      (r_numcontexts != 1 || r_sprprojstyle != R_SPRPROJSTYLE_DEFAULT);
 }
 
 // EOF
