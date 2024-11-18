@@ -180,7 +180,7 @@ lineopening_t P_SlopeOpeningPortalAware(v2fixed_t pos);
 void P_UnsetThingSectorLink(Mobj *thing, bool isRemoved);
 void P_UnsetThingBlockLink(Mobj *thing);
 void P_UnsetThingPosition(Mobj *thing, bool isRemoved = false);
-fixed_t P_GetSpriteRadius(const Mobj &thing);
+fixed_t P_GetSpriteOrBoxRadius(const Mobj &thing);
 void P_SetThingSectorLink(Mobj *thing, const subsector_t *prevss);
 void P_SetThingBlockLink(Mobj *thing);
 void P_SetThingPosition(Mobj *thing);

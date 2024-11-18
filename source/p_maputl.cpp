@@ -978,9 +978,10 @@ void P_UnsetThingPosition(Mobj *thing, bool isRemoved)
 }
 
 //
-// Get a thing's sprite radius
+// Get a thing's sprite radius OR the physical radius, whichever is greater.
+// The physical radius is an optimization for small sprites.
 //
-fixed_t P_GetSpriteRadius(const Mobj &thing)
+fixed_t P_GetSpriteOrBoxRadius(const Mobj &thing)
 {
    I_Assert(r_spritespan != nullptr, 
             "The sprite span cache should have been initialized by now!\n");
@@ -996,7 +997,9 @@ fixed_t P_GetSpriteRadius(const Mobj &thing)
    
    const spritespan_t &span = spansprite[framenum];
 
-   return thing.xscale == 1.0f ? span.sideFixed : M_FloatToFixed(span.side * thing.xscale);
+   fixed_t spriteRadius = thing.xscale == 1.0f ? span.sideFixed : 
+      M_FloatToFixed(span.side * thing.xscale);
+   return emax(spriteRadius, thing.radius);
 }
 
 //
@@ -1047,7 +1050,7 @@ void P_SetThingSectorLink(Mobj *thing, const subsector_t *prevss)
    thing->old_sectorlist = nullptr;
 
    if(R_NeedThoroughSpriteCollection())
-      P_setThingSpriteTouchingSectorList(thing, P_GetSpriteRadius(*thing));
+      P_setThingSpriteTouchingSectorList(thing, P_GetSpriteOrBoxRadius(*thing));
 
    // MaxW: EESectorActionEnter and EESectorActionExit
    if(prevss && prevss->sector != thing->subsector->sector)
@@ -1530,16 +1533,10 @@ void P_RefreshSpriteTouchingSectorList(Mobj *mo, fixed_t prevSpriteRadius)
 {
    if(R_NeedThoroughSpriteCollection() && !(mo->flags & MF_NOSECTOR))
    {
-      fixed_t curSpriteRadius = P_GetSpriteRadius(*mo);
-      // This is an optimization sacrifice to avoid always calling this every time someone
-      // changes a frame. I saw it affect maps like nuts.wad.
-      // FIXME: this will need to be improved the moment someone starts to implement a growing
-      // thing that sits in-place.
-      if(prevSpriteRadius >= 0 && (curSpriteRadius > prevSpriteRadius / 2 &&
-                                   curSpriteRadius < 2 * prevSpriteRadius))
-      {
+      fixed_t curSpriteRadius = P_GetSpriteOrBoxRadius(*mo);
+      // Do not call this if the radius reduced, only if increased.
+      if(prevSpriteRadius >= 0 && curSpriteRadius <= prevSpriteRadius)
          return;
-      }
       P_unsetThingSpriteTouchingSectorList(mo);
       P_setThingSpriteTouchingSectorList(mo, curSpriteRadius);
    }

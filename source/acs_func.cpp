@@ -2129,7 +2129,7 @@ bool ACS_CF_SetActorPosition(ACS_CF_ARGS)
 
 inline static void ACS_setThingXScale(Mobj &thing, fixed_t val)
 {
-   fixed_t prevSpriteRadius = P_GetSpriteRadius(thing);
+   fixed_t prevSpriteRadius = P_GetSpriteOrBoxRadius(thing);
    thing.xscale = M_FixedToFloat(val);
    P_RefreshSpriteTouchingSectorList(&thing, prevSpriteRadius);
 }

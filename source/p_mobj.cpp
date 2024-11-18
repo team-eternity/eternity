@@ -396,7 +396,7 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
       mobj->state = st;
       mobj->tics = st->tics;
 
-      fixed_t prevSpriteRadius = P_GetSpriteRadius(*mobj);
+      fixed_t prevSpriteRadius = P_GetSpriteOrBoxRadius(*mobj);
       P_setSpriteBySkin(*mobj, *st);
 
       mobj->frame = st->frame;
@@ -472,7 +472,7 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
    // don't leave an object in a state with 0 tics
    mobj->tics = (st->tics > 0) ? st->tics : 1;
 
-   fixed_t prevSpriteRadius = P_GetSpriteRadius(*mobj);
+   fixed_t prevSpriteRadius = P_GetSpriteOrBoxRadius(*mobj);
    P_setSpriteBySkin(*mobj, *st);
 
    mobj->frame = st->frame;
