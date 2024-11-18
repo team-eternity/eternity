@@ -1,10 +1,10 @@
 ===============================================================================
-Title                   : The Eternity Engine v4.04.01 "Glitnir" Update 1
-Filename                : ee-4.04.01-win64.zip, ee-4.04.01-win32.zip,
-                          ee-4.04.01-win-legacy.zip,
-                          ee-4.04.01-macos-applesilicon.dmg,
-                          ee-4.04.01-macos-intel.dmg,
-Release date            : 2024-10-20
+Title                   : The Eternity Engine v4.04.02 "Glitnir" Update 2
+Filename                : ee-4.04.02-win64.zip, ee-4.04.02-win32.zip,
+                          ee-4.04.02-win-legacy.zip,
+                          ee-4.04.02-macos-applesilicon.dmg,
+                          ee-4.04.02-macos-intel.dmg,
+Release date            : 2024-11-18
 Author                  : Team Eternity:
                           Ioan Chera,
                           James "Quasar" Haley,
@@ -146,6 +146,7 @@ Special Thanks to       : - Feature and Patch Contributors -
                               Danfun64
                               DENCHIKTEAM
                               DerTodIstEinDandy
+                              deviant27
                               Droid
                               ellmo
                               Exarkuniv
@@ -249,11 +250,28 @@ with any concerns.
 
 
 ===============================================================================
-* Features New to Version 4.04.01 *
+* Features New to Version 4.04.02 *
 
-Critical bug fixes over v4.04.00. Please upgrade to this version if you still
-use 4.04.00. Check the readme for that version for the additions over 4.02.00,
-they are many!
+Bug fixes and quality of life improvements:
+
+* Multithreaded rendering now renders very wide sprites properly (such as the
+  trees in Eviternity 2 MAP14).
+* Confirmation yes/no views (such as for quitting) now accept non-QWERTY
+  keyboard layouts for 'y' and 'n', i.e. the same keys which under QWERTY would
+  be 'y' or 'n' will also work.
+* Do not terminate suddenly if user put flag names in the MBF21 flag
+  codepointer. Just display an in-game error message with sound. Also, the
+  message is more accurate.
+* Explosions now trigger splashes on BOOM deep water surfaces by comparing their
+  heights to the water surface, not to the solid surface beneath.
+* Splash terrain types now work with portal overlays.
+* Heretic Fire Mace projectiles now blow up when hitting anything under Boom
+  water, without bouncing, so as to behave consistently with shallow Heretic
+  water. Currently this doesn't apply to linked portal water however.
+* A_SetFlags, A_UnsetFlags, A_AddFlags and A_RemoveFlags now handle NOSECTOR and
+  NOBLOCKMAP in a stable manner.
+
+For actual bug fixes, see the end of this document.
 
 ===============================================================================
 * Coming Soon *
@@ -280,6 +298,11 @@ These are features planned to debut in future versions of the Eternity Engine:
 * Revision History *
 
 * Dates are in mm/dd/yy *
+
+4.04.02 "Glitnir" Update 2 -- 11/18/24
+
+  Bug fix and quality updates. Linked portals with overlays can now trigger
+  terrain effects if assigned.
 
 4.04.01 "Glitnir" Update 1 -- 10/20/24
 
@@ -484,26 +507,15 @@ These are features planned to debut in future versions of the Eternity Engine:
 ===============================================================================
 * Bugs Fixed, Known Issues *
 
-Bugs Fixed (between 4.04.00 and 4.04.01):
+Bugs Fixed (between 4.04.01 and 4.04.02):
 
-+ Fixed wrong version display in the title bar.
-+ Fixed corruption happening after trying to play an unsupported demo, such as
-  coming from DSDA-DOOM. This affects projects such as Eviternity II.
-+ Fixed Heretic autoswitching weapons wrongly when having the Tome of Power.
-+ Fixed crash happening when inheriting or applying a delta structure on a
-  powered-up weaponinfo.
-+ Fixed powered dragonclaw starting displaced a few meters from player.
-+ Fixed jerky and visually imprecise polyobject movement (bug introduced in
-  v4.04.00).
-+ Fixed exaggerated and unrealistic slope bouncing of objects under gravity.
-+ Fixed attach-3dmidtex specials from quitting Eternity. This was happening on
-  WADs like Hell Ground where there were mistaken linedef specials such as 281
-  or 282.
-+ Fixed the close button of the IWAD picker window not working. Thanks to FozzeY
-  for the pull request!
+* Fixed A_JumpIfFlagsSet as it was completely broken.
+* Fixed wrong defaults in A_WeaponBulletAttack.
+* A_SkullRodStorm wasn't line portal aware.
+* Fixed UMAPINFO not recognizing spec-defined Deh_Actor_145 to Deh_Actor_249
 
 
-Known Issues in v4.04.01:
+Known Issues in v4.04.02:
 
 - Moving polyobject portal movement is not interpolated yet.
 
@@ -520,3 +532,5 @@ Known Issues in v4.04.01:
 
 - Some momentary interpolation glitches occur when an attached horizontal
   portal surface passes through you.
+
+- There are still known vanilla Heretic demos which desync.
