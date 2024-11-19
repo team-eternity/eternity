@@ -117,7 +117,7 @@ static bool am_drawsegs;
 // pulls out to 0.5x in 1 second
 #define M_ZOOMOUT       (1.0/1.02)
 // how much zoom in/out on each mousewheel scroll
-static constexpr double M_WHEELZOOM = 1.3;
+static constexpr double M_ZOOMWHEEL = 1.3;
 
 // translates between frame-buffer and map distances
 #define FTOM(x) ((x) * scale_ftom)
@@ -882,7 +882,7 @@ bool AM_Responder(const event_t *ev)
       // mousewheel zooming
       if (ev->data1 == KEYD_MWHEELUP)
       {
-         scale_mtof = scale_mtof * M_WHEELZOOM;
+         scale_mtof = scale_mtof * M_ZOOMWHEEL;
          scale_ftom = 1.0 / scale_mtof;
 
          if (scale_mtof < min_scale_mtof)
@@ -896,7 +896,7 @@ bool AM_Responder(const event_t *ev)
       }
       else if (ev->data1 == KEYD_MWHEELDOWN)
       {
-         scale_mtof = scale_mtof * (1.0/1.3);
+         scale_mtof = scale_mtof * (1.0/M_ZOOMWHEEL);
          scale_ftom = 1.0 / scale_mtof;
 
          if (scale_mtof < min_scale_mtof)
