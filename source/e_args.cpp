@@ -39,6 +39,8 @@
 #include "p_mobj.h"
 #include "p_maputl.h"
 
+#define ASSIGNED(al, index) (!!((al)->assigned & 1 << (index)))
+
 // haleyjd 05/21/10: a static empty string, to avoid allocating tons of memory 
 // for single-byte strings.
 static char e_argemptystr[] = "";
@@ -50,21 +52,24 @@ constexpr bool ISEMPTY(const char *s) { return *(s) == '\0'; }
 constexpr bool ISARGEMPTYSTR(const char *s) { return (s) == e_argemptystr; }
 
 //
-// Adds an argument to the end of an argument list, if possible.
-// Returns false if the operation fails.
+// Generic argument adding to list, specifying if it's assigned to some value, or let to use the
+// default. Needed for Dehacked patches which may skip earlier args, which should be handled as
+// default, not zero or empty.
 //
-bool E_AddArgToList(arglist_t *al, const char *value)
+static bool E_addArgToList(arglist_t &al, const char *value, bool assigned)
 {
    bool added = false;
-   
-   if(al->numargs < EMAXARGS)
+
+   if(al.numargs < EMAXARGS)
    {
       if(ISEMPTY(value))
-         al->args[al->numargs] = e_argemptystr;
+         al.args[al.numargs] = e_argemptystr;
       else
-         al->args[al->numargs] = estrdup(value);
-      
-      al->numargs++;
+         al.args[al.numargs] = estrdup(value);
+
+      if(assigned)
+         al.assigned |= 1 << al.numargs;
+      al.numargs++;
       added = true;
    }
 
@@ -72,18 +77,27 @@ bool E_AddArgToList(arglist_t *al, const char *value)
 }
 
 //
+// Adds an argument to the end of an argument list, if possible.
+// Returns false if the operation fails.
+//
+bool E_AddArgToList(arglist_t *al, const char *value)
+{
+   return E_addArgToList(*al, value, true);
+}
+
+//
 // Sets the argument at the given index to a new value. If that argument
 // does not exist already, empty arguments will be added until that index 
 // is valid.
 //
-bool E_SetArg(arglist_t *al, int index, const char *value, dehackedArg_e dehacked)
+static bool E_setArg(arglist_t *al, int index, const char *value, dehackedArg_e dehacked)
 {
    if(index >= EMAXARGS)
       return false;
 
    while(index >= al->numargs)
    {
-      if(!E_AddArgToList(al, ""))
+      if(!E_addArgToList(*al, "", false))
          return false;
    }
 
@@ -102,6 +116,9 @@ bool E_SetArg(arglist_t *al, int index, const char *value, dehackedArg_e dehacke
    // track if set by dehacked or not
    al->values[index].dehacked = dehacked == dehackedArg_e::YES;
 
+   // Finally mark it as assigned, since we initially added it as unassigned
+   al->assigned |= 1 << index;
+
    return true;
 }
 
@@ -116,7 +133,7 @@ bool E_SetArgFromNumber(arglist_t *al, int index, int value, dehackedArg_e dehac
 
    M_Itoa(value, numbuffer, 10);
 
-   return E_SetArg(al, index, numbuffer, dehacked);
+   return E_setArg(al, index, numbuffer, dehacked);
 }
 
 //
@@ -166,7 +183,7 @@ void E_ResetAllArgEvals()
 //
 const char *E_ArgAsString(const arglist_t *al, int index, const char *defvalue)
 {
-   return (al && index < al->numargs) ? al->args[index] : defvalue;
+   return (al && index < al->numargs && ASSIGNED(al, index)) ? al->args[index] : defvalue;
 }
 
 //
@@ -179,7 +196,7 @@ int E_ArgAsInt(arglist_t *al, int index, int defvalue)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
-   if(!al || index >= al->numargs)
+   if(!al || index >= al->numargs || !ASSIGNED(al, index))
       return defvalue;
 
    evalcache_t &eval = al->values[index];
@@ -205,7 +222,7 @@ fixed_t E_ArgAsFixed(arglist_t *al, int index, fixed_t defvalue)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
-   if(!al || index >= al->numargs)
+   if(!al || index >= al->numargs || !ASSIGNED(al, index))
       return defvalue;
 
    evalcache_t &eval = al->values[index];
@@ -234,7 +251,7 @@ double E_ArgAsDouble(arglist_t *al, int index, double defvalue)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
-   if(!al || index >= al->numargs)
+   if(!al || index >= al->numargs || !ASSIGNED(al, index))
       return defvalue;
 
    evalcache_t &eval = al->values[index];
@@ -260,7 +277,7 @@ angle_t E_ArgAsAngle(arglist_t *al, int index, angle_t defvalue)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
-   if(!al || index >= al->numargs)
+   if(!al || index >= al->numargs || !ASSIGNED(al, index))
       return defvalue;
 
    evalcache_t &eval = al->values[index];
@@ -286,7 +303,7 @@ int E_ArgAsThingNum(arglist_t *al, int index)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
-   if(!al || index >= al->numargs)
+   if(!al || index >= al->numargs || !ASSIGNED(al, index))
       return UnknownThingType;
 
    evalcache_t &eval = al->values[index];
@@ -323,7 +340,7 @@ int E_ArgAsThingNumG0(arglist_t *al, int index)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
-   if(!al || index >= al->numargs)
+   if(!al || index >= al->numargs || !ASSIGNED(al, index))
       return -1;
 
    evalcache_t &eval = al->values[index];
@@ -469,7 +486,7 @@ state_t *E_ArgAsStateLabel(const Mobj *mo, const arglist_t *al, int index)
    state_t    *state = mo->state;
    long        num;
 
-   if(!al || index >= al->numargs)
+   if(!al || index >= al->numargs || !ASSIGNED(al, index))
       return nullptr;
 
    arg = al->args[index];
@@ -500,7 +517,7 @@ state_t *E_ArgAsStateLabel(const player_t *player, const arglist_t *al, int inde
    const state_t *state = player->psprites->state;
    long        num;
 
-   if(!al || index >= al->numargs)
+   if(!al || index >= al->numargs || !ASSIGNED(al, index))
       return nullptr;
 
    arg = al->args[index];
@@ -527,7 +544,7 @@ template<typename T> inline int E_argAsStateNum(arglist_t *al, int index, const 
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
-   if(!al || index >= al->numargs)
+   if(!al || index >= al->numargs || !ASSIGNED(al, index))
       return NullStateNum;
 
    evalcache_t &eval = al->values[index];
@@ -592,7 +609,7 @@ template<typename T> inline int E_argAsStateNumNI(arglist_t *al, int index, cons
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
-   if(!al || index >= al->numargs)
+   if(!al || index >= al->numargs || !ASSIGNED(al, index))
       return -1;
 
    evalcache_t &eval = al->values[index];
@@ -655,7 +672,7 @@ template<typename T> inline int E_argAsStateNumG0(arglist_t *al, int index, cons
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
-   if(!al || index >= al->numargs)
+   if(!al || index >= al->numargs || !ASSIGNED(al, index))
       return -1;
 
    evalcache_t &eval = al->values[index];
@@ -750,7 +767,7 @@ unsigned int *E_ArgAsThingFlags(arglist_t *al, int index)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
-   if(!al || index >= al->numargs)
+   if(!al || index >= al->numargs || !ASSIGNED(al, index))
       return nullptr;
 
    evalcache_t &eval = al->values[index];
@@ -783,7 +800,7 @@ unsigned int *E_ArgAsMBF21ThingFlags(arglist_t *al, int index)
 
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
-   if(!al || index >= al->numargs)
+   if(!al || index >= al->numargs || !ASSIGNED(al, index))
       return nullptr;
 
    evalcache_t &eval = al->values[index];
@@ -833,7 +850,7 @@ unsigned int E_ArgAsFlags(arglist_t *al, int index, dehflagset_t *flagset)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
-   if(!al || index >= al->numargs)
+   if(!al || index >= al->numargs || !ASSIGNED(al, index))
       return 0;
 
    evalcache_t &eval = al->values[index];
@@ -862,7 +879,7 @@ sfxinfo_t *E_ArgAsSound(arglist_t *al, int index)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
-   if(!al || index >= al->numargs)
+   if(!al || index >= al->numargs || !ASSIGNED(al, index))
       return nullptr;
 
    evalcache_t &eval = al->values[index];
@@ -901,7 +918,7 @@ int E_ArgAsBexptr(arglist_t *al, int index)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
-   if(!al || index >= al->numargs)
+   if(!al || index >= al->numargs || !ASSIGNED(al, index))
       return -1;
 
    evalcache_t &eval = al->values[index];
@@ -926,7 +943,7 @@ edf_string_t *E_ArgAsEDFString(arglist_t *al, int index)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
-   if(!al || index >= al->numargs)
+   if(!al || index >= al->numargs || !ASSIGNED(al, index))
       return nullptr;
 
    evalcache_t &eval = al->values[index];
@@ -967,7 +984,7 @@ emod_t *E_ArgAsDamageType(arglist_t *al, int index, int defvalue)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
-   if(!al || index >= al->numargs)
+   if(!al || index >= al->numargs || !ASSIGNED(al, index))
       return E_DamageTypeForNum(defvalue);
 
    evalcache_t &eval = al->values[index];
@@ -1006,7 +1023,7 @@ int E_ArgAsKwd(arglist_t *al, int index, const argkeywd_t *kw, int defvalue)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
-   if(!al || index >= al->numargs)
+   if(!al || index >= al->numargs || !ASSIGNED(al, index))
       return defvalue;
 
    evalcache_t &eval = al->values[index];
