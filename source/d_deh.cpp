@@ -1927,7 +1927,7 @@ static void deh_procWeapon(DWFILE *fpin, char *line, MetaTable &gatheredData)
 
    // haleyjd 08/10/02: significant reformatting
 
-   strncpy(inbuffer,line,DEH_BUFFERMAX);
+   strncpy(inbuffer,line,DEH_BUFFERMAX);  // safe because line is same length when calling this
 
    // killough 8/98: allow hex numbers in input:
    sscanf(inbuffer,"%" DEH_MAXKEYLEN_FMT "s %i",key, &indexnum);

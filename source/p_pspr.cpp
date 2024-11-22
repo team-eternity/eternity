@@ -558,7 +558,6 @@ void P_SubtractAmmoAmount(player_t *player, int amount)
 {
    weaponinfo_t *weapon = player->readyweapon;
    itemeffect_t *ammo;
-   bool          addAmmo = amount < 0;
 
    if(demo_version >= 401 && (player->attackdown & AT_ITEM))
       return;
@@ -578,7 +577,7 @@ void P_SubtractAmmoAmount(player_t *player, int amount)
    if(player->cheats & CF_INFAMMO || !ammo)
       return;
 
-   if(addAmmo)
+   if(amount < 0)
       E_GiveInventoryItem(player, ammo, -amount);
    else
       E_RemoveInventoryItem(player, ammo, amount);

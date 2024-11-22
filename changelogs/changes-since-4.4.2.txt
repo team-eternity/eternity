@@ -6,3 +6,4 @@ Bug fixes
 
 * Dehacked patch Frame omitted Args* fields didn't resolve to defaults, but 0. This was wrong com-
   pared to how ports such as DSDA-DOOM should handle it.
+* Fixed A_ConsumeAmmo bug when specifying 0 (ammo per shot) ammo.
