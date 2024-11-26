@@ -1509,7 +1509,7 @@ void HUDStatWidget::ticker()
    static char statitemstr[64];
    static char statsecrstr[64];
 
-   if(!HU_allowMapWidget())
+   if(!HU_allowMapWidget() || hud_hidestats)
    {
       message = nullptr;
       return;
@@ -1527,7 +1527,7 @@ void HUDStatWidget::ticker()
       snprintf(statitemstr, sizeof(statitemstr), "I: %i/%i", plr->itemcount, totalitems);
       message = statitemstr;
    }
-   else if(statType == STATTYPE_SECRETS && !hud_hidestatus)
+   else if(statType == STATTYPE_SECRETS && !hud_hidesecrets)
    {
       snprintf(statsecrstr, sizeof(statsecrstr), "S: %i/%i", plr->secretcount, totalsecret);
       message = statsecrstr;
