@@ -100,7 +100,7 @@ void ModernHUD::DrawStatus(int x, int y)
 
    if(hud_overlaylayout == HUD_BOOM)
    {
-      tempstr << FC_RED   "K" FC_GRAY "  " << hu_player.killcount   << "/" << totalkills <<
+      tempstr << FC_RED   "K" FC_GRAY "  " << hu_player.displaykillcount   << "/" << totalkills <<
                  FC_BLUE " I" FC_GRAY "  " << hu_player.itemcount   << "/" << totalitems;
       if (!hud_hidesecrets)
       {
@@ -110,7 +110,7 @@ void ModernHUD::DrawStatus(int x, int y)
    }
    else if(hud_overlaylayout == HUD_DISTRIB)
    {
-      tempstr << FC_RED "KILLS" FC_GRAY "  " << hu_player.killcount << "/" << totalkills;
+      tempstr << FC_RED "KILLS" FC_GRAY "  " << hu_player.displaykillcount << "/" << totalkills;
       V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y - 16, m_screen);
       tempstr.clear();
       tempstr << FC_BLUE "ITEMS" FC_GRAY "  " << hu_player.itemcount << "/" << totalitems;
@@ -124,7 +124,7 @@ void ModernHUD::DrawStatus(int x, int y)
    }
    else
    {
-      tempstr << hu_player.killcount << "/" << totalkills << "  " FC_RED "KILLS";
+      tempstr << hu_player.displaykillcount << "/" << totalkills << "  " FC_RED "KILLS";
       FontWriteTextRAlign(hud_fssmall, tempstr.constPtr(), x, y, m_screen);
       tempstr.clear();
       tempstr << hu_player.itemcount << "/" << totalitems << "  " FC_BLUE "ITEMS";

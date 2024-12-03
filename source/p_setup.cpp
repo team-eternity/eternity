@@ -3438,7 +3438,7 @@ static void P_ClearPlayerVars()
       if(playeringame[i] && players[i].playerstate == PST_DEAD)
          players[i].playerstate = PST_REBORN;
 
-      players[i].killcount = players[i].secretcount = players[i].itemcount = 0;
+      players[i].killcount = players[i].displaykillcount = players[i].secretcount = players[i].itemcount = 0;
 
       memset(players[i].frags, 0, sizeof(players[i].frags));
 
