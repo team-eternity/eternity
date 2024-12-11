@@ -25,4 +25,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: windows-release
-        path: build/Release
+        path: build/eternity/Release
