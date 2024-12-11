@@ -12,6 +12,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: recursive
+        fetch-tags: true
 
     - name: Configure CMake
       run: |
@@ -25,13 +26,13 @@ jobs:
 
     - name: Add text files
       run: |
-        copy COPYING build32/eternity/Release/COPYING.txt
-        copy COPYING-EE build32/eternity/Release/COPYING-EE.txt
-        copy docs/readme.txt "build32/eternity/Release/ee-$(git describe --tags).txt"
+        Copy-Item COPYING build32/eternity/Release/COPYING.txt
+        Copy-Item COPYING-EE build32/eternity/Release/COPYING-EE.txt
+        Copy-Item docs/readme.txt "build32/eternity/Release/ee-$(git describe --tags).txt"
 
-        copy COPYING build64/eternity/Release/COPYING.txt
-        copy COPYING-EE build64/eternity/Release/COPYING-EE.txt
-        copy docs/readme.txt "build64/eternity/Release/ee-$(git describe --tags).txt"
+        Copy-Item COPYING build64/eternity/Release/COPYING.txt
+        Copy-Item COPYING-EE build64/eternity/Release/COPYING-EE.txt
+        Copy-Item docs/readme.txt "build64/eternity/Release/ee-$(git describe --tags).txt"
 
     - name: Archive release build
       uses: actions/upload-artifact@v4
