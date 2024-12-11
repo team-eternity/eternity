@@ -25,13 +25,13 @@ jobs:
 
     - name: Add text files
       run: |
-        copy COPYING build32/eternity/COPYING.txt
-        copy COPYING-EE build32/eternity/COPYING-EE.txt
-        copy docs/readme.txt "build32/eternity/ee-$(git describe --tags --abbrev=0).txt"
+        copy COPYING build32/eternity/Release/COPYING.txt
+        copy COPYING-EE build32/eternity/Release/COPYING-EE.txt
+        copy docs/readme.txt "build32/eternity/Release/ee-$(git describe --tags).txt"
 
-        copy COPYING build64/eternity/COPYING.txt
-        copy COPYING-EE build64/eternity/COPYING-EE.txt
-        copy docs/readme.txt "build64/eternity/ee-$(git describe --tags --abbrev=0).txt"
+        copy COPYING build64/eternity/Release/COPYING.txt
+        copy COPYING-EE build64/eternity/Release/COPYING-EE.txt
+        copy docs/readme.txt "build64/eternity/Release/ee-$(git describe --tags).txt"
 
     - name: Archive release build
       uses: actions/upload-artifact@v4
