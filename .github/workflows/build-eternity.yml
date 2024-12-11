@@ -1,10 +1,10 @@
-name: Windows Build
+name: Eternity Build
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-latest
 
     steps:
@@ -40,3 +40,23 @@ jobs:
       with:
         name: windows-release
         path: build??/eternity/Release
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+          fetch-tags: true
+      
+      - name: Configure CMake
+        run: |
+          cmake -S . -B build-arm -G Xcode
+          cmake -S . -B build-intel -G Xcode -DCMAKE_OSX_ARCHITECTURES=x86_64 -DPNG_INTEL_SSE=on
+      
+      - name: Build
+        run: |
+          cmake --build build-arm --config Release
+          cmake --build build-intel --config Release
