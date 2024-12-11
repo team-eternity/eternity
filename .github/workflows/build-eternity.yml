@@ -60,3 +60,25 @@ jobs:
         run: |
           cmake --build build-arm --config Release
           cmake --build build-intel --config Release
+
+      - name: Add text files
+        run: |
+          cp COPYING build-arm/macosx/launcher/Release/COPYING.txt
+          cp COPYING-EE build-arm/macosx/launcher/Release/COPYING-EE.txt
+          cp docs/readme.txt "build-arm/macosx/launcher/Release/ee-$(git describe --tags).txt"
+
+          cp COPYING build-intel/macosx/launcher/Release/COPYING.txt
+          cp COPYING-EE build-intel/macosx/launcher/Release/COPYING-EE.txt
+          cp docs/readme.txt "build-intel/macosx/launcher/Release/ee-$(git describe --tags).txt"
+
+      - name: build DMG
+        run: |
+          hdiutil create -srcfolder build-arm/macosx/launcher/Release/ -volname "ee-$(git describe --tags)-applesilicon" -fs HFS+ -format UDZO ee-$(git describe --tags)-applesilicon.dmg
+
+          hdiutil create -srcfolder build-intel/macosx/launcher/Release/ -volname "ee-$(git describe --tags)-intel" -fs HFS+ -format UDZO ee-$(git describe --tags)-intel.dmg
+
+      - name: Archive ARM release build
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-release
+          path: "*.dmg"
