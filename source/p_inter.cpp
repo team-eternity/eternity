@@ -1009,7 +1009,10 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
       if(!(target->flags & MF_FRIEND))
       {
          if(target->flags & MF_COUNTKILL)
+         {
             source->player->killcount++;
+            source->player->displaykillcount++;
+         }
       }
       if(target->player)
       {
@@ -1026,7 +1029,10 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
       // even those caused by other monsters
       // killough 7/20/98: don't count friends
       if(!(target->flags & MF_FRIEND))
+      {
          players->killcount++;
+         players->displaykillcount++;
+      }
    }
 
    if(target->player)
@@ -2207,6 +2213,12 @@ void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser, const int healsound)
 
    // killough 8/29/98: add to appropriate thread
    corpse->updateThinker();
+
+   if (!((corpse->flags ^ MF_COUNTKILL) & (MF_FRIEND | MF_COUNTKILL)))
+   {
+      player_t* plr = &players[displayplayer];
+      plr->displaykillcount--;
+   }
 }
 
 #if 0

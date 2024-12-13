@@ -117,7 +117,7 @@ void BoomHUD::DrawStatus(int x, int y)
 
    // haleyjd 06/14/06: restored original colors to K/I/S
    tempstr
-      << FC_RED  "K " FC_GREEN << hu_player.killcount << '/' << totalkills << ' '
+      << FC_RED  "K " FC_GREEN << hu_player.displaykillcount << '/' << totalkills << ' '
       << FC_BLUE "I " FC_GREEN << hu_player.itemcount << '/' << totalitems << ' ';
    
    if (!hud_hidesecrets)

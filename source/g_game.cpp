@@ -2456,6 +2456,7 @@ void G_PlayerReborn(int player)
    p->weaponctrs = new WeaponCounterTree();
    
    p->killcount   = killcount;
+   p->displaykillcount = killcount;
    p->itemcount   = itemcount;
    p->secretcount = secretcount;
    p->cheats      = cheats;
