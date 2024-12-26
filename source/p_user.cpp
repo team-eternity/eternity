@@ -265,44 +265,44 @@ void P_CalcHeight(player_t *player)
 //
 // haleyjd 06/05/12: flying logic for players
 //
-static void P_PlayerFlight(player_t *player, const ticcmd_t *cmd)
+static void P_PlayerFlight(player_t &player, const ticcmd_t *cmd)
 {
    int fly = cmd->fly;
 
-   if(fly && player->powers[pw_flight].isActive())
+   if(fly && player.powers[pw_flight].isActive())
    {
       if(fly != FLIGHT_CENTER)
       {
-         player->flyheight = fly * 2;
+         player.flyheight = fly * 2;
 
-         if(!(player->mo->flags4 & MF4_FLY))
-            P_PlayerStartFlight(player, false);
+         if(!(player.mo->flags4 & MF4_FLY))
+            P_PlayerStartFlight(&player, false);
       }
       else
-         P_PlayerStopFlight(player);
+         P_PlayerStopFlight(&player);
    }
    else if(fly > 0 && estrnonempty(GameModeInfo->autoFlightArtifact) &&
-           E_GetItemOwnedAmountName(player, GameModeInfo->autoFlightArtifact) >= 1)
+           E_GetItemOwnedAmountName(&player, GameModeInfo->autoFlightArtifact) >= 1)
    {
       E_TryUseItem(player, E_ItemIDForName(GameModeInfo->autoFlightArtifact));
    }
 
-   if(player->mo->flags4 & MF4_FLY)
+   if(player.mo->flags4 & MF4_FLY)
    {
-      if(player->mo->intflags & MIF_CLEARMOMZ)
+      if(player.mo->intflags & MIF_CLEARMOMZ)
       {
-         player->mo->momz = 0;
-         player->mo->intflags &= ~MIF_CLEARMOMZ;
+         player.mo->momz = 0;
+         player.mo->intflags &= ~MIF_CLEARMOMZ;
       }
 
-      if(player->flyheight)
+      if(player.flyheight)
       {
-         player->mo->momz = player->flyheight * FRACUNIT;
-         player->flyheight /= 2;
+         player.mo->momz = player.flyheight * FRACUNIT;
+         player.flyheight /= 2;
          // When flyheight turns to 0 from this location, mark it to become 0 instead of letting it
          // be subject to P_ZMovement flying friction.
-         if(!(GameModeInfo->flags & GIF_FLIGHTINERTIA) && !player->flyheight)
-            player->mo->intflags |= MIF_CLEARMOMZ;
+         if(!(GameModeInfo->flags & GIF_FLIGHTINERTIA) && !player.flyheight)
+            player.mo->intflags |= MIF_CLEARMOMZ;
       }
    }
 }
@@ -410,7 +410,7 @@ void P_MovePlayer(player_t* player)
    }
 
    // haleyjd 06/05/12: flight
-   P_PlayerFlight(player, cmd);
+   P_PlayerFlight(*player, cmd);
 }
 
 #define ANG5 (ANG90/18)
@@ -711,123 +711,123 @@ bool P_UnmorphPlayer(player_t& player, bool onexit)
 //
 // P_PlayerThink
 //
-void P_PlayerThink(player_t *player)
+void P_PlayerThink(player_t &player)
 {
    ticcmd_t*    cmd;
 
    // haleyjd 01/04/14: backup viewz and mobj location for interpolation
-   player->prevviewz = player->viewz;
-   player->mo->backupPosition();
+   player.prevviewz = player.viewz;
+   player.mo->backupPosition();
 
    // killough 2/8/98, 3/21/98:
    // (this code is necessary despite questions raised elsewhere in a comment)
 
-   if(player->cheats & CF_NOCLIP)
-      player->mo->flags |= MF_NOCLIP;
+   if(player.cheats & CF_NOCLIP)
+      player.mo->flags |= MF_NOCLIP;
    else
-      player->mo->flags &= ~MF_NOCLIP;
+      player.mo->flags &= ~MF_NOCLIP;
 
    // chain saw run forward
 
-   cmd = &player->cmd;
+   cmd = &player.cmd;
 
    if(cmd->itemID && (demo_version >= 401 || vanilla_heretic))
       E_TryUseItem(player, cmd->itemID - 1); // ticcmd ID is off by one
 
-   if(player->mo->flags & MF_JUSTATTACKED)
+   if(player.mo->flags & MF_JUSTATTACKED)
    {
       cmd->angleturn = 0;
       cmd->forwardmove = 0xc800/512;
       cmd->sidemove = 0;
-      player->mo->flags &= ~MF_JUSTATTACKED;
+      player.mo->flags &= ~MF_JUSTATTACKED;
    }
 
-   if(player->playerstate == PST_DEAD)
+   if(player.playerstate == PST_DEAD)
    {
-      P_DeathThink(player);
+      P_DeathThink(&player);
       return;
    }
 
-   if(player->headThrust && player->health > 0)
+   if(player.headThrust && player.health > 0)
    {
-      pspdef_t &psp = player->psprites[ps_weapon];
-      psp.playpos.y = WEAPONTOP + (player->headThrust << (FRACBITS - 1));
+      pspdef_t &psp = player.psprites[ps_weapon];
+      psp.playpos.y = WEAPONTOP + (player.headThrust << (FRACBITS - 1));
       psp.renderpos.y = psp.playpos.y;
    }
 
-   if (player->morphTics && player->pclass->flags & PCF_CHICKENTWITCH)
+   if (player.morphTics && player.pclass->flags & PCF_CHICKENTWITCH)
    {
-      P_chickenPlayerThink(player);
+      P_chickenPlayerThink(&player);
    }
 
    // haleyjd 04/03/05: new yshear code
    if(!allowmlook)
-      player->prevpitch = player->pitch = 0;
+      player.prevpitch = player.pitch = 0;
    else
    {
-      player->prevpitch = player->pitch;
+      player.prevpitch = player.pitch;
       int look = cmd->look;
 
-      if(look && (!player->mo->reactiontime || demo_version < 342))
+      if(look && (!player.mo->reactiontime || demo_version < 342))
       {
          // test for special centerview value
          if(look == -32768)
-            player->pitch = 0;
+            player.pitch = 0;
          else
          {
-            player->pitch -= look << 16;
+            player.pitch -= look << 16;
             int maxpitchup = GameModeInfo->lookPitchUp;
             int maxpitchdown = GameModeInfo->lookPitchDown;
-            if(player->pitch < -ANGLE_1*maxpitchup)
-               player->pitch = -ANGLE_1*maxpitchup;
-            else if(player->pitch > ANGLE_1*maxpitchdown)
-               player->pitch = ANGLE_1*maxpitchdown;
+            if(player.pitch < -ANGLE_1*maxpitchup)
+               player.pitch = -ANGLE_1*maxpitchup;
+            else if(player.pitch > ANGLE_1*maxpitchdown)
+               player.pitch = ANGLE_1*maxpitchdown;
 
             // Eternity previously had ±32˚ pitch range
             if(demo_version >= 300 && demo_version <= 402)
-               player->pitch = eclamp(player->pitch, -ANGLE_1 * 32, ANGLE_1 * 32);
+               player.pitch = eclamp(player.pitch, -ANGLE_1 * 32, ANGLE_1 * 32);
          }
       }
    }
 
    // haleyjd: count down jump timer
-   if(player->jumptime)
-      player->jumptime--;
+   if(player.jumptime)
+      player.jumptime--;
 
    // Move around.
    // Reactiontime is used to prevent movement
    //  for a bit after a teleport.
    
-   if(player->mo->reactiontime)
-      player->mo->reactiontime--;
+   if(player.mo->reactiontime)
+      player.mo->reactiontime--;
    else
    {
-      P_MovePlayer(player);
+      P_MovePlayer(&player);
 
       // Handle actions   -- joek 12/22/07
       // ioanch: not on demo_version lower than some amount. Was happening
       // accidentally in -vanilla.
       if(cmd->actions & AC_JUMP)
       {
-         if(E_CanJump(*player->pclass))
+         if(E_CanJump(*player.pclass))
          {
-            if((player->mo->z == player->mo->zref.floor ||
-                (player->mo->intflags & MIF_ONMOBJ)) && !player->jumptime)
+            if((player.mo->z == player.mo->zref.floor ||
+                (player.mo->intflags & MIF_ONMOBJ)) && !player.jumptime)
             {
-               if(strcasecmp(player->skin->sounds[sk_jump], "none"))
-                  S_StartSound(player->mo, GameModeInfo->playerSounds[sk_jump]);
-               player->mo->momz += player->pclass->jumpspeed;
-               player->mo->intflags &= ~MIF_ONMOBJ;
-               player->jumptime = 18;
+               if(strcasecmp(player.skin->sounds[sk_jump], "none"))
+                  S_StartSound(player.mo, GameModeInfo->playerSounds[sk_jump]);
+               player.mo->momz += player.pclass->jumpspeed;
+               player.mo->intflags &= ~MIF_ONMOBJ;
+               player.jumptime = 18;
             }
          }
          else
          {
             static int printtic = -3 * TICRATE;
-            if(gametic >= printtic + 3 * TICRATE && player == &players[consoleplayer])
+            if(gametic >= printtic + 3 * TICRATE && &player == &players[consoleplayer])
             {
                printtic = gametic;
-               if(E_MayJumpIfOverriden(*player->pclass))
+               if(E_MayJumpIfOverriden(*player.pclass))
                   doom_printf("Jumping needs to be allowed in the settings.");
                else
                   doom_printf("Jumping not possible.");
@@ -836,20 +836,20 @@ void P_PlayerThink(player_t *player)
       }
    }
   
-   P_CalcHeight(player); // Determines view height and bobbing
-   
+   P_CalcHeight(&player); // Determines view height and bobbing
+
    // haleyjd: are we falling? might need to scream :->
    if(!getComp(comp_fallingdmg) && demo_version >= 329)
    {  
-      if(player->mo->momz >= 0)
-         player->mo->intflags &= ~MIF_SCREAMED;
+      if(player.mo->momz >= 0)
+         player.mo->intflags &= ~MIF_SCREAMED;
 
-      if(player->mo->momz <= -35*FRACUNIT && 
-         player->mo->momz >= -40*FRACUNIT &&
-         !(player->mo->intflags & MIF_SCREAMED))
+      if(player.mo->momz <= -35*FRACUNIT &&
+         player.mo->momz >= -40*FRACUNIT &&
+         !(player.mo->intflags & MIF_SCREAMED))
       {
-         player->mo->intflags |= MIF_SCREAMED;
-         S_StartSound(player->mo, GameModeInfo->playerSounds[sk_plfall]);
+         player.mo->intflags |= MIF_SCREAMED;
+         S_StartSound(player.mo, GameModeInfo->playerSounds[sk_plfall]);
       }
    }
 
@@ -857,16 +857,16 @@ void P_PlayerThink(player_t *player)
    // going to affect you, like painful floors.
 
    // ioanch 20160116: portal aware
-   sector_t *sector = P_ExtremeSectorAtPoint(player->mo, surf_floor);
+   sector_t *sector = P_ExtremeSectorAtPoint(player.mo, surf_floor);
    if(P_SectorIsSpecial(sector))
-      P_PlayerInSpecialSector(player, sector);
+      P_PlayerInSpecialSector(&player, sector);
 
    // haleyjd 08/23/05: terrain-based effects
-   P_PlayerOnSpecialFlat(player);
+   P_PlayerOnSpecialFlat(&player);
 
    // haleyjd: Heretic current specials
-   P_HereticCurrent(player);
-   
+   P_HereticCurrent(&player);
+
    // Check for weapon change.
    
    // A special event has no other buttons.
@@ -880,12 +880,12 @@ void P_PlayerThink(player_t *player)
       {
          weaponinfo_t *wp = E_WeaponForID(cmd->weaponID - 1); // weaponID is off by one
          weaponinfo_t *sister = wp->sisterWeapon;
-         if(player->powers[pw_weaponlevel2].isActive() && E_IsPoweredVariant(sister))
-            player->pendingweapon = sister;
+         if(player.powers[pw_weaponlevel2].isActive() && E_IsPoweredVariant(sister))
+            player.pendingweapon = sister;
          else
-            player->pendingweapon = wp;
+            player.pendingweapon = wp;
 
-         player->pendingweaponslot = E_FindEntryForWeaponInSlotIndex(player, wp, cmd->slotIndex);
+         player.pendingweaponslot = E_FindEntryForWeaponInSlotIndex(&player, wp, cmd->slotIndex);
       }
    }
    else if(cmd->buttons & BT_CHANGE)
@@ -909,14 +909,14 @@ void P_PlayerThink(player_t *player)
          //e6y
          newweapon = (cmd->buttons & BT_WEAPONMASK_OLD)>>BT_WEAPONSHIFT;
 
-         if(newweapon == wp_fist && E_PlayerOwnsWeaponForDEHNum(player, wp_chainsaw) &&
-            (!E_WeaponIsCurrentDEHNum(player, wp_chainsaw) ||
-             !player->powers[pw_strength].tics))
+         if(newweapon == wp_fist && E_PlayerOwnsWeaponForDEHNum(&player, wp_chainsaw) &&
+            (!E_WeaponIsCurrentDEHNum(&player, wp_chainsaw) ||
+             !player.powers[pw_strength].tics))
             newweapon = wp_chainsaw;
          if(enable_ssg &&
             newweapon == wp_shotgun &&
-            E_PlayerOwnsWeaponForDEHNum(player, wp_supershotgun) &&
-            !E_WeaponIsCurrentDEHNum(player, wp_supershotgun))
+            E_PlayerOwnsWeaponForDEHNum(&player, wp_supershotgun) &&
+            !E_WeaponIsCurrentDEHNum(&player, wp_supershotgun))
             newweapon = wp_supershotgun;
       }
 
@@ -925,18 +925,18 @@ void P_PlayerThink(player_t *player)
       // WEAPON_FIXME: setting pendingweapon
 
       weaponinfo_t *pendingweapon = E_WeaponForDEHNum(newweapon);
-      if(E_PlayerOwnsWeapon(player, pendingweapon) &&
-         pendingweapon->id != player->readyweapon->id)
+      if(E_PlayerOwnsWeapon(&player, pendingweapon) &&
+         pendingweapon->id != player.readyweapon->id)
       {
          // Do not go to plasma or BFG in shareware, even if cheated.
          // haleyjd 06/28/13: generalized for EDF weapon system
-         weaponinfo_t *pendingweapon = P_GetPlayerWeapon(player, newweapon);
-         
+         weaponinfo_t *pendingweapon = P_GetPlayerWeapon(&player, newweapon);
+
          if(pendingweapon && 
             !(GameModeInfo->flags & GIF_SHAREWARE && 
               pendingweapon->flags & WPF_NOTSHAREWARE))
          {
-            player->pendingweapon = pendingweapon;
+            player.pendingweapon = pendingweapon;
          }
       }
    }
@@ -945,150 +945,150 @@ void P_PlayerThink(player_t *player)
    
    if(cmd->buttons & BT_USE)
    {
-      if(!player->usedown)
+      if(!player.usedown)
       {
-         P_UseLines(player);
-         player->usedown = true;
+         P_UseLines(&player);
+         player.usedown = true;
       }
    }
    else
-      player->usedown = false;
+      player.usedown = false;
 
    // Chicken counter
-   if (player->headThrust)
+   if (player.headThrust)
    {
-      player->headThrust -= 3;
-      if(player->headThrust < 0)
-         player->headThrust = 0;
+      player.headThrust -= 3;
+      if(player.headThrust < 0)
+         player.headThrust = 0;
    }
-   if (player->morphTics)
-      if (!--player->morphTics)
-         P_UnmorphPlayer(*player, false);
+   if (player.morphTics)
+      if (!--player.morphTics)
+         P_UnmorphPlayer(player, false);
 
    // cycle psprites
 
-   P_MovePsprites (player);
+   P_MovePsprites (&player);
 
    // Counters, time dependent power ups.
 
    // Strength counts up to diminish fade.
 
-   if(player->powers[pw_strength].shouldCount())
-      player->powers[pw_strength].tics++;
+   if(player.powers[pw_strength].shouldCount())
+      player.powers[pw_strength].tics++;
 
    // killough 1/98: Make idbeholdx toggle:
 
-   if(player->powers[pw_invulnerability].shouldCount())
-      player->powers[pw_invulnerability].tics--;
+   if(player.powers[pw_invulnerability].shouldCount())
+      player.powers[pw_invulnerability].tics--;
 
-   if(player->powers[pw_invisibility].shouldCount())
+   if(player.powers[pw_invisibility].shouldCount())
    {
-      if(!--player->powers[pw_invisibility].tics)
-         player->mo->flags &= ~MF_SHADOW;
+      if(!--player.powers[pw_invisibility].tics)
+         player.mo->flags &= ~MF_SHADOW;
    }
 
-   if(player->powers[pw_infrared].shouldCount())
-      player->powers[pw_infrared].tics--;
+   if(player.powers[pw_infrared].shouldCount())
+      player.powers[pw_infrared].tics--;
 
    // haleyjd: torch
-   if(player->powers[pw_torch].shouldCount())
-      player->powers[pw_torch].tics--;
+   if(player.powers[pw_torch].shouldCount())
+      player.powers[pw_torch].tics--;
 
-   if(player->powers[pw_ironfeet].shouldCount())
-      player->powers[pw_ironfeet].tics--;
+   if(player.powers[pw_ironfeet].shouldCount())
+      player.powers[pw_ironfeet].tics--;
 
-   if(player->powers[pw_ghost].shouldCount())
+   if(player.powers[pw_ghost].shouldCount())
    {
-      if(!--player->powers[pw_ghost].tics)
-         player->mo->flags3 &= ~MF3_GHOST;
+      if(!--player.powers[pw_ghost].tics)
+         player.mo->flags3 &= ~MF3_GHOST;
    }
 
-   if(player->powers[pw_totalinvis].shouldCount())
+   if(player.powers[pw_totalinvis].shouldCount())
    {
-      if(!--player->powers[pw_totalinvis].tics)
+      if(!--player.powers[pw_totalinvis].tics)
       {
-         player->mo->flags2 &= ~MF2_DONTDRAW;
-         player->mo->flags4 &= ~MF4_TOTALINVISIBLE;
+         player.mo->flags2 &= ~MF2_DONTDRAW;
+         player.mo->flags4 &= ~MF4_TOTALINVISIBLE;
       }
    }
 
-   if(player->powers[pw_flight].shouldCount())
+   if(player.powers[pw_flight].shouldCount())
    {
-      if(!--player->powers[pw_flight].tics)
-         P_PlayerStopFlight(player);
+      if(!--player.powers[pw_flight].tics)
+         P_PlayerStopFlight(&player);
    }
 
-   if(player->powers[pw_weaponlevel2].shouldCount())
+   if(player.powers[pw_weaponlevel2].shouldCount())
    {
-      if(!--player->powers[pw_weaponlevel2].tics)
+      if(!--player.powers[pw_weaponlevel2].tics)
       {
          // switch back to normal weapon if need be
-         if(E_IsPoweredVariant(player->readyweapon))
+         if(E_IsPoweredVariant(player.readyweapon))
          {
             // Note: sisterWeapon is guaranteed to != nullptr elsewhere
-            weaponinfo_t *unpowered = player->readyweapon->sisterWeapon;
-            if(player->readyweapon->flags & WPF_PHOENIXRESET &&
-               player->psprites[ps_weapon].state->index != player->readyweapon->readystate &&
-               player->psprites[ps_weapon].state->index != player->readyweapon->upstate)
+            weaponinfo_t *unpowered = player.readyweapon->sisterWeapon;
+            if(player.readyweapon->flags & WPF_PHOENIXRESET &&
+               player.psprites[ps_weapon].state->index != player.readyweapon->readystate &&
+               player.psprites[ps_weapon].state->index != player.readyweapon->upstate)
             {
-               P_SetPsprite(player, ps_weapon, unpowered->readystate);
-               P_SubtractAmmo(player, -1);
-               player->refire = 0;
+               P_SetPsprite(&player, ps_weapon, unpowered->readystate);
+               P_SubtractAmmo(&player, -1);
+               player.refire = 0;
             }
-            else if(unpowered->flags & WPF_FORCETOREADY || player->attackdown == AT_NONE)
+            else if(unpowered->flags & WPF_FORCETOREADY || player.attackdown == AT_NONE)
             {
-               // TODO: Figure out if should be || (player->attackdown == AT_NONE && current-state-isireadystate)
-               P_SetPsprite(player, ps_weapon, unpowered->readystate);
-               player->refire = 0;
+               // TODO: Figure out if should be || (player.attackdown == AT_NONE && current-state-isireadystate)
+               P_SetPsprite(&player, ps_weapon, unpowered->readystate);
+               player.refire = 0;
             }
-            else if(player->readyweapon->flags & WPF_DEPOWERSWITCH)
-               player->pendingweapon = unpowered;
+            else if(player.readyweapon->flags & WPF_DEPOWERSWITCH)
+               player.pendingweapon = unpowered;
 
-            player->readyweapon = unpowered;
+            player.readyweapon = unpowered;
          }
       }
    }
 
-   if(player->damagecount)
-      player->damagecount--;
+   if(player.damagecount)
+      player.damagecount--;
 
-   if(player->bonuscount)
-      player->bonuscount--;
+   if(player.bonuscount)
+      player.bonuscount--;
 
    // get length of time left on any active lighting powerup
-   powerduration_t lightduration = P_playerLightDuration(player);
-   int             lightsource   = P_PlayerLightSourceType(player);
+   powerduration_t lightduration = P_playerLightDuration(&player);
+   int             lightsource   = P_PlayerLightSourceType(&player);
 
    // Handling colormaps.
-   if(player->powers[pw_invulnerability].isActive())
+   if(player.powers[pw_invulnerability].isActive())
    {
-      if(player->powers[pw_invulnerability].infinite ||
-         player->powers[pw_invulnerability].tics > 4 * 32 ||
-         player->powers[pw_invulnerability].tics & 8)
-         player->fixedcolormap = INVERSECOLORMAP;
+      if(player.powers[pw_invulnerability].infinite ||
+         player.powers[pw_invulnerability].tics > 4 * 32 ||
+         player.powers[pw_invulnerability].tics & 8)
+         player.fixedcolormap = INVERSECOLORMAP;
       else
-         player->fixedcolormap = 0;
+         player.fixedcolormap = 0;
    }
    else if(lightsource != PLS_NONE)
    {
       if(lightduration.infinite)
-         player->fixedcolormap = 1;
+         player.fixedcolormap = 1;
       else if(lightduration.tics > 0 && lightduration.tics <= 4 * 32) // fading out?
-         player->fixedcolormap = ((lightduration.tics & 8) != 0);
+         player.fixedcolormap = ((lightduration.tics & 8) != 0);
       else
       {
          // haleyjd: if player has a torch, do flickering
          if(lightsource == PLS_TORCH)
-            P_doTorchFlicker(player);
+            P_doTorchFlicker(&player);
          else
-            player->fixedcolormap = 1; // almost full bright
+            player.fixedcolormap = 1; // almost full bright
       }
    }
    else
-      player->fixedcolormap = 0;
+      player.fixedcolormap = 0;
 
    // haleyjd 01/21/07: clear earthquake flag before running quake thinkers later
-   player->quake = 0;
+   player.quake = 0;
 }
 
 //

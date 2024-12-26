@@ -1305,7 +1305,7 @@ static bool P_touchPoweredMaceBall(dmgspecdata_t *dmgspec)
          const int itemid = chaosdevice->getInt("itemid", -1);
          if(itemid != -1 && E_GetItemOwnedAmount(player, chaosdevice) >= 1)
          {
-            E_TryUseItem(target->player, itemid);
+            E_TryUseItem(*target->player, itemid);
             player->health = player->mo->health = (player->health + 1) / 2;
             return true;
          }
@@ -1560,7 +1560,7 @@ bool P_MorphPlayer(const emodmorph_t &minfo, player_t &player)
 //
 // Auto use health like in Heretic, if needed
 //
-static void P_hereticAutoUseHealth(player_t *player, int saveHealth)
+static void P_hereticAutoUseHealth(player_t &player, int saveHealth)
 {
    const PODCollection<e_autouseid_t> &items = E_GetAutouseList();
 
@@ -1580,7 +1580,7 @@ static void P_hereticAutoUseHealth(player_t *player, int saveHealth)
       if(!checkRestrictions(useid.restriction) || useid.amount <= 0)  // also sanity check amount
          continue;
 
-      int numitems = E_GetItemOwnedAmount(player, useid.artifact);
+      int numitems = E_GetItemOwnedAmount(&player, useid.artifact);
       if(numitems <= 0 || numitems * useid.amount < saveHealth)   // skip if can't save life
          continue;
       int count = (saveHealth + useid.amount - 1) / useid.amount; // Round up to next multiple of amount
@@ -1600,7 +1600,7 @@ static void P_hereticAutoUseHealth(player_t *player, int saveHealth)
    {
       if(!checkRestrictions(useid.restriction) || useid.amount <= 0)  // again check not to add fake
          continue;
-      int numitems = E_GetItemOwnedAmount(player, useid.artifact);
+      int numitems = E_GetItemOwnedAmount(&player, useid.artifact);
       if(numitems <= 0)   // now don't skip if can't save life alone
          continue;
       totalheal += numitems * useid.amount;
@@ -1612,7 +1612,7 @@ static void P_hereticAutoUseHealth(player_t *player, int saveHealth)
    {
       if(!checkRestrictions(useid.restriction) || useid.amount <= 0)
          continue;
-      int numitems = E_GetItemOwnedAmount(player, useid.artifact);
+      int numitems = E_GetItemOwnedAmount(&player, useid.artifact);
       if(numitems <= 0)
          continue;
       const int itemid = useid.artifact->getInt(keyItemID, -1);
@@ -1843,7 +1843,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       }
 
       if(!(player->pclass->flags & PCF_NOHEALTHAUTOUSE) && damage >= player->health)
-         P_hereticAutoUseHealth(player, damage - player->health + 1);
+         P_hereticAutoUseHealth(*player, damage - player->health + 1);
 
       player->health -= damage;       // mirror mobj health here for Dave
       if(player->health < 0)

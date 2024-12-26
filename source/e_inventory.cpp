@@ -1911,9 +1911,9 @@ static useaction_t *E_addUseAction(itemeffect_t *artifact)
 //
 // Tries to use the currently selected item.
 //
-void E_TryUseItem(player_t *player, inventoryitemid_t ID)
+void E_TryUseItem(player_t &player, inventoryitemid_t ID)
 {
-   invbarstate_t &invbarstate = player->invbarstate;
+   invbarstate_t &invbarstate = player.invbarstate;
    itemeffect_t *artifact = E_EffectForInventoryItemID(ID);
    if(!artifact)
       return;
@@ -1930,16 +1930,16 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
             switch(E_getItemEffectType(effect))
             {
             case ITEMFX_HEALTH:
-               success = P_GiveBody(player, effect);
+               success = P_GiveBody(&player, effect);
                break;
             case ITEMFX_ARMOR:
-               success = P_GiveArmor(player, effect);
+               success = P_GiveArmor(&player, effect);
                break;
             case ITEMFX_AMMO:
-               success = P_GiveAmmoPickup(player, effect, false, 0);
+               success = P_GiveAmmoPickup(&player, effect, false, 0);
                break;
             case ITEMFX_POWER:
-               success = P_GivePowerForItem(player, effect);
+               success = P_GivePowerForItem(&player, effect);
                break;
             default:
                return;
@@ -1965,13 +1965,13 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
                actionargs_t action = *useaction;
 
                // Temporarily note down that the called codepointer shouldn't subtract ammo
-               player->attackdown = static_cast<attacktype_e>(player->attackdown | AT_ITEM);
+               player.attackdown = static_cast<attacktype_e>(player.attackdown | AT_ITEM);
                // We ALWAYS update the actor and psprite
-               action.actor = player->mo;
-               action.pspr  = player->psprites;
+               action.actor = player.mo;
+               action.pspr  = player.psprites;
                ptr->cptr(&action);
                success = true;
-               player->attackdown = static_cast<attacktype_e>(player->attackdown & ~AT_ITEM);
+               player.attackdown = static_cast<attacktype_e>(player.attackdown & ~AT_ITEM);
             }
          }
          else if(estrnonempty(useactionstr))
@@ -1984,11 +1984,11 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
          if(success)
          {
             const char *sound;
-            E_RemoveInventoryItem(player, artifact, 1);
+            E_RemoveInventoryItem(&player, artifact, 1);
 
             sound = artifact->getString(keyUseSound, "");
             if(estrnonempty(sound))
-               S_StartSoundName(player->mo, sound);
+               S_StartSoundName(player.mo, sound);
 
             invbarstate.ArtifactFlash = 5;
          }
@@ -1996,7 +1996,7 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
          {
             // Heretic shifts inventory one left if you fail to use your selected item.
             // FIXME: Make this behaviour optional, or remove
-            E_MoveInventoryCursor(player, -1, player->inv_ptr);
+            E_MoveInventoryCursor(&player, -1, player.inv_ptr);
          }
       }
    }

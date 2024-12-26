@@ -298,7 +298,7 @@ void P_Ticker()
       for(int i = 0; i < MAXPLAYERS; i++)
       {
          if(playeringame[i])
-            P_PlayerThink(&players[i]);
+            P_PlayerThink(players[i]);
       }
    }
 
