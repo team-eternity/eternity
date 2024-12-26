@@ -1008,7 +1008,6 @@ void A_GunFlashTo(actionargs_t *actionargs)
 //
 void A_WeaponAlert(actionargs_t *actionargs)
 {
-   arglist_t *args   = actionargs->args;
    Mobj      *mo     = actionargs->actor;
    player_t  *player = mo->player;
 

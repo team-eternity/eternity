@@ -1044,7 +1044,7 @@ void E_ExplosionHitWater(Mobj *thing, int damage)
 
    if(!hit)
    {
-      fixed_t refheight;
+      fixed_t refheight = D_MININT;
       const sector_t &sector = *thing->subsector->sector;
       if(sector.heightsec != -1)
          refheight = sectors[sector.heightsec].srf.floor.getZAt(thing->x, thing->y);
@@ -1073,6 +1073,7 @@ void E_ExplosionHitWater(Mobj *thing, int damage)
             refheight = thing->zref.secfloor;
       }
 
+      I_Assert(refheight != D_MININT, "refheight should have been set here");
       if(thing->z <= refheight + damage * FRACUNIT)
          hit = true;
    }

@@ -357,7 +357,9 @@ static const char *dosInstallPaths[] =
 // Default DOS install paths for add-ons.
 // Special thanks to GreyGhost for confirming these:
 static const char *masterLevelsDOSPath = "\\master\\wads";
-static const char *dkotdcDOSPath       = "\\hexendk"; // TODO: not used yet
+
+// TODO: not used yet
+// static const char *dkotdcDOSPath       = "\\hexendk";
 
 //
 // Add default DOS installation paths

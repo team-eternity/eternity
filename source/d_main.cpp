@@ -358,11 +358,14 @@ const demostate_t demostates_hreg[] =
    { nullptr }
 };
 
+// NOTE: unused
+/*
 const demostate_t demostates_unknown[] =
 {
    { D_SetPageName, nullptr }, // indetermined - haleyjd 04/01/08
    { nullptr }
 };
+*/
 
 //
 // D_DoAdvanceDemo

@@ -591,10 +591,12 @@ static constexpr const char *deh_sfxinfo[] =
 // Sprite redirection by offset into the text area - unsupported by BOOM
 // * sprites are base zero and dehacked uses it that way.
 
-static constexpr const char *deh_sprite[] =
-{
-   "Offset"      // supposed to be the offset into the text section
-};
+// COMMENTED OUT BECAUSE IT'S UNUSED
+
+//static constexpr const char *deh_sprite[] =
+//{
+//   "Offset"      // supposed to be the offset into the text section
+//};
 
 // AMMO - Dehacked block name = "Ammo"
 // usage = Ammo n (name)
