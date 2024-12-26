@@ -6,6 +6,7 @@ Improvements
 * Automap improvements: now you can zoom in with the mouse wheel on the automap. You also have the
   option to hide all stats from both the automap and the overlay HUD, and hu_hidesecrets only hides
   secrets. Special thanks to SarahCosmosys for the contribution!
+  + New console variable for this purpose: hu_hidestats.
 
 Bug fixes
 ---------
