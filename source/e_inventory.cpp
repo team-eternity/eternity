@@ -1930,16 +1930,16 @@ void E_TryUseItem(player_t &player, inventoryitemid_t ID)
             switch(E_getItemEffectType(effect))
             {
             case ITEMFX_HEALTH:
-               success = P_GiveBody(&player, effect);
+               success = P_GiveBody(player, effect);
                break;
             case ITEMFX_ARMOR:
-               success = P_GiveArmor(&player, effect);
+               success = P_GiveArmor(player, effect);
                break;
             case ITEMFX_AMMO:
                success = P_GiveAmmoPickup(player, effect, false, 0);
                break;
             case ITEMFX_POWER:
-               success = P_GivePowerForItem(&player, effect);
+               success = P_GivePowerForItem(player, effect);
                break;
             default:
                return;

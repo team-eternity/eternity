@@ -447,13 +447,13 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropp
 //
 // Returns false if the body isn't needed at all
 //
-bool P_GiveBody(player_t *player, const itemeffect_t *effect)
+bool P_GiveBody(player_t &player, const itemeffect_t *effect)
 {
    if(!effect)
       return false;
 
-   int amount = E_GetPClassHealth(*effect, "amount", *player->pclass, 0);
-   int maxamount = E_GetPClassHealth(*effect, "maxamount", *player->pclass, 0);
+   int amount = E_GetPClassHealth(*effect, "amount", *player.pclass, 0);
+   int maxamount = E_GetPClassHealth(*effect, "maxamount", *player.pclass, 0);
 
    // haleyjd 11/14/09: compatibility fix - the DeHackEd maxhealth setting was
    // only supposed to affect health potions, but when Ty replaced the MAXHEALTH
@@ -468,21 +468,21 @@ bool P_GiveBody(player_t *player, const itemeffect_t *effect)
    }
 
    // if not alwayspickup, and have more health than the max, don't pick it up
-   if(!effect->getInt("alwayspickup", 0) && player->health >= maxamount)
+   if(!effect->getInt("alwayspickup", 0) && player.health >= maxamount)
       return false;
 
    // give the health
    if(effect->getInt("sethealth", 0))
-      player->health = amount;  // some items set health directly
+      player.health = amount;  // some items set health directly
    else
-      player->health += amount; // most items add to health
+      player.health += amount; // most items add to health
 
    // cap to maxamount
-   if(player->health > maxamount)
-      player->health = maxamount;
+   if(player.health > maxamount)
+      player.health = maxamount;
 
    // propagate to player's Mobj
-   player->mo->health = player->health;
+   player.mo->health = player.health;
    return true;
 }
 
@@ -517,7 +517,7 @@ bool EV_DoHealThing(Mobj *actor, int amount, int max)
 // Returns false if the armor is worse
 // than the current armor.
 //
-bool P_GiveArmor(player_t *player, const itemeffect_t *effect)
+bool P_GiveArmor(player_t &player, const itemeffect_t *effect)
 {
    if(!effect)
       return false;
@@ -535,27 +535,27 @@ bool P_GiveArmor(player_t *player, const itemeffect_t *effect)
 
    // check if needed
    if(!(effect->getInt("alwayspickup", 0)) &&
-      (player->armorpoints >= (additive ? maxsaveamount : hits) ||
-       (hits == 0 && (!player->armorfactor || !setabsorption))))
+      (player.armorpoints >= (additive ? maxsaveamount : hits) ||
+       (hits == 0 && (!player.armorfactor || !setabsorption))))
    {
       return false; // don't pick up
    }
 
    if(additive)
    {
-      player->armorpoints += hits;
-      if(player->armorpoints > maxsaveamount)
-         player->armorpoints = maxsaveamount;
+      player.armorpoints += hits;
+      if(player.armorpoints > maxsaveamount)
+         player.armorpoints = maxsaveamount;
    }
    else
-      player->armorpoints = hits;
+      player.armorpoints = hits;
 
    // only set armour quality if the armour always sets it,
    // or if the player had no armour prior to this pickup
-   if((!player->armorfactor || setabsorption))
+   if((!player.armorfactor || setabsorption))
    {
-      player->armorfactor  = savefactor;
-      player->armordivisor = savedivisor;
+      player.armorfactor  = savefactor;
+      player.armordivisor = savedivisor;
    }
 
    return true;
@@ -661,7 +661,7 @@ const char *powerStrings[NUMPOWERS] =
 //
 // Takes a powereffect and applies the power accordingly
 //
-bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
+bool P_GivePowerForItem(player_t &player, const itemeffect_t *power)
 {
    int powerNum;
    const char *powerStr;
@@ -673,7 +673,7 @@ bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
    if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
       return false; // There's no power for the type provided
 
-   const powerduration_t& currentpower = player->powers[powerNum];
+   const powerduration_t& currentpower = player.powers[powerNum];
 
    // EDF_FEATURES_FIXME: Strength counts up. Also should additivetime imply overridesself?
    if(!power->getInt("overridesself", 0) &&
@@ -693,13 +693,13 @@ bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
          additiveTime = power->getInt("additivetime", 0) ? true : false;
       }
 
-      if(powerNum == pw_weaponlevel2 && player->morphTics)
+      if(powerNum == pw_weaponlevel2 && player.morphTics)
       {
-         if(!P_UnmorphPlayer(*player, false))
-            P_DamageMobj(player->mo, nullptr, nullptr, GOD_BREACH_DAMAGE, MOD_SUICIDE);
+         if(!P_UnmorphPlayer(player, false))
+            P_DamageMobj(player.mo, nullptr, nullptr, GOD_BREACH_DAMAGE, MOD_SUICIDE);
          else
          {
-            player->morphTics = 0;
+            player.morphTics = 0;
 
             // FIXME: make this pclass or skin specific perhaps
             if(GameModeInfo->type == Game_Heretic)
@@ -708,7 +708,7 @@ bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
          return true;
       }
 
-      return P_GivePower(player, powerNum, duration, permanent, additiveTime);
+      return P_GivePower(&player, powerNum, duration, permanent, additiveTime);
    }
 
    return true;
@@ -834,7 +834,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       switch(effect->getInt("class", ITEMFX_NONE))
       {
       case ITEMFX_HEALTH:   // Health - heal up the player automatically
-         pickedup |= P_GiveBody(player, effect);
+         pickedup |= P_GiveBody(*player, effect);
          if(pickedup && player->health < E_GetPClassHealth(*effect, "amount", *player->pclass,
                                                            0) * 2)
          {
@@ -842,13 +842,13 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
          }
          break;
       case ITEMFX_ARMOR:    // Armor - give the player some armor
-         pickedup |= P_GiveArmor(player, effect);
+         pickedup |= P_GiveArmor(*player, effect);
          break;
       case ITEMFX_AMMO:     // Ammo - give the player some ammo
          pickedup |= P_GiveAmmoPickup(*player, effect, dropped, special->dropamount);
          break;
       case ITEMFX_POWER:
-         pickedup |= P_GivePowerForItem(player, effect);
+         pickedup |= P_GivePowerForItem(*player, effect);
          break;
       case ITEMFX_WEAPONGIVER:
          pickedup |= P_giveWeapon(*player, effect, dropped, special, sound);
