@@ -42,7 +42,7 @@ enum
    LESSER_GOD_BREACH_DAMAGE = 1000, // this one bypasses less cases but is there (P_DamageMobj)
 };
 
-bool P_GiveAmmoPickup(player_t *, const itemeffect_t *, bool, int);
+bool P_GiveAmmoPickup(player_t &, const itemeffect_t *, bool, int);
 bool P_GiveBody(player_t *, const itemeffect_t *);
 bool P_GiveArmor(player_t *, const itemeffect_t *);
 // MaxW 2016/07/23: P_GivePower is no longer required for external use;

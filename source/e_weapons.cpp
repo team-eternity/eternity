@@ -515,7 +515,7 @@ weaponinfo_t *E_FindBestWeapon(const player_t *player)
 // Perform an augmented in-order traversal of the select order tree
 // to try and find the best weapon the player can fire.
 //
-static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t *player,
+static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t &player,
                                                const itemeffect_t *ammo,
                                                const SelectOrderNode *node)
 {
@@ -526,8 +526,7 @@ static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t *player,
    temp = node->object;
 
    weaponinfo_t *powerChecked;
-   if(player)
-      powerChecked = &E_TryPowered(*player, *temp);
+   powerChecked = &E_TryPowered(player, *temp);
 
    // Analyze powered weapon's ammo type
    if(powerChecked->ammo && ammo)
@@ -538,8 +537,8 @@ static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t *player,
    if(node->left  && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->left)))
       return ret;
    // Player owns normal weapon always, but check if the powered one has the flag
-   if(E_PlayerOwnsWeapon(player, temp) && !(powerChecked->flags & WPF_NOAUTOSWITCHTO) &&
-      correctammo && P_WeaponHasAmmo(player, powerChecked))
+   if(E_PlayerOwnsWeapon(&player, temp) && !(powerChecked->flags & WPF_NOAUTOSWITCHTO) &&
+      correctammo && P_WeaponHasAmmo(&player, powerChecked))
       return temp;
    if(node->next  && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->next)))
       return ret;
@@ -556,11 +555,11 @@ static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t *player,
 // If the best weapon found isn't better than the player's readyweapon
 // then nullptr is returned.
 //
-weaponinfo_t *E_FindBestBetterWeaponUsingAmmo(const player_t *player,
+weaponinfo_t *E_FindBestBetterWeaponUsingAmmo(const player_t &player,
                                               const itemeffect_t *ammo)
 {
    weaponinfo_t *wp = E_findBestWeaponUsingAmmo(player, ammo, selectordertree->root);
-   if(wp != nullptr && wp->sortorder < player->readyweapon->sortorder)
+   if(wp != nullptr && wp->sortorder < player.readyweapon->sortorder)
       return wp;
    else
       return nullptr;

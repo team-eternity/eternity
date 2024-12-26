@@ -100,14 +100,14 @@ int bfgcells = 40;      // used in p_pspr.c
 //
 // Returns false if the ammo can't be picked up at all
 //
-static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num, bool ignoreskill)
+static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, int num, bool ignoreskill)
 {
    if(!ammo)
       return false;
 
    // check if needed
-   int oldammo   = E_GetItemOwnedAmount(player, ammo);
-   int maxamount = E_GetMaxAmountForArtifact(player, ammo);
+   int oldammo   = E_GetItemOwnedAmount(&player, ammo);
+   int maxamount = E_GetMaxAmountForArtifact(&player, ammo);
 
    if(oldammo == maxamount)
       return false;
@@ -116,7 +116,7 @@ static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num, bool ignor
    if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
       num = static_cast<int>(floor(num * GameModeInfo->skillAmmoMultiplier));
 
-   if(!E_GiveInventoryItem(player, ammo, num))
+   if(!E_GiveInventoryItem(&player, ammo, num))
       return false; // don't need this ammo
 
    // If non zero ammo, don't change up weapons, player was lower on purpose.
@@ -129,50 +129,50 @@ static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num, bool ignor
    // If the player is doing a demo w/ EDF-weapons and the weapon should be switched from,
    // try to do so, otherwise do the legacy ammo switch
    if((demo_version >= 401 || vanilla_heretic) &&
-      (!player->readyweapon || (player->readyweapon->flags & WPF_AUTOSWITCHFROM)))
+      (!player.readyweapon || (player.readyweapon->flags & WPF_AUTOSWITCHFROM)))
    {
       // FIXME: This assumes that the powered variant has the same
       // ammo usage as the unpowered variant, which is not always true
       if(weaponinfo_t *const wp = E_FindBestBetterWeaponUsingAmmo(player, ammo); wp)
       {
          weaponinfo_t *sister = wp->sisterWeapon;
-         if(player->powers[pw_weaponlevel2].isActive() && E_IsPoweredVariant(sister))
-            player->pendingweapon = sister;
+         if(player.powers[pw_weaponlevel2].isActive() && E_IsPoweredVariant(sister))
+            player.pendingweapon = sister;
          else
-            player->pendingweapon = wp;
+            player.pendingweapon = wp;
 
-         player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+         player.pendingweaponslot = E_FindFirstWeaponSlot(&player, wp);
       }
    }
    else
    {
       if(!strcasecmp(ammo->getKey(), "AmmoClip"))
       {
-         if(E_WeaponIsCurrentDEHNum(player, wp_fist))
+         if(E_WeaponIsCurrentDEHNum(&player, wp_fist))
          {
-            if(E_PlayerOwnsWeaponForDEHNum(player, wp_chaingun))
-               player->pendingweapon = E_WeaponForDEHNum(wp_chaingun);
+            if(E_PlayerOwnsWeaponForDEHNum(&player, wp_chaingun))
+               player.pendingweapon = E_WeaponForDEHNum(wp_chaingun);
             else
-               player->pendingweapon = E_WeaponForDEHNum(wp_pistol);
+               player.pendingweapon = E_WeaponForDEHNum(wp_pistol);
          }
       }
       else if(!strcasecmp(ammo->getKey(), "AmmoShell"))
       {
-         if(E_WeaponIsCurrentDEHNum(player, wp_fist) || E_WeaponIsCurrentDEHNum(player, wp_pistol))
-            if(E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun))
-               player->pendingweapon = E_WeaponForDEHNum(wp_shotgun);
+         if(E_WeaponIsCurrentDEHNum(&player, wp_fist) || E_WeaponIsCurrentDEHNum(&player, wp_pistol))
+            if(E_PlayerOwnsWeaponForDEHNum(&player, wp_shotgun))
+               player.pendingweapon = E_WeaponForDEHNum(wp_shotgun);
       }
       else if(!strcasecmp(ammo->getKey(), "AmmoCell"))
       {
-         if(E_WeaponIsCurrentDEHNum(player, wp_fist) || E_WeaponIsCurrentDEHNum(player, wp_pistol))
-            if(E_PlayerOwnsWeaponForDEHNum(player, wp_plasma))
-               player->pendingweapon = E_WeaponForDEHNum(wp_plasma);
+         if(E_WeaponIsCurrentDEHNum(&player, wp_fist) || E_WeaponIsCurrentDEHNum(&player, wp_pistol))
+            if(E_PlayerOwnsWeaponForDEHNum(&player, wp_plasma))
+               player.pendingweapon = E_WeaponForDEHNum(wp_plasma);
       }
       else if(!strcasecmp(ammo->getKey(), "AmmoMissile"))
       {
-         if(E_WeaponIsCurrentDEHNum(player, wp_fist))
-            if(E_PlayerOwnsWeaponForDEHNum(player, wp_missile))
-               player->pendingweapon = E_WeaponForDEHNum(wp_missile);
+         if(E_WeaponIsCurrentDEHNum(&player, wp_fist))
+            if(E_PlayerOwnsWeaponForDEHNum(&player, wp_missile))
+               player.pendingweapon = E_WeaponForDEHNum(wp_missile);
       }
    }
 
@@ -184,7 +184,7 @@ static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num, bool ignor
 //
 // Give the player ammo from an ammoeffect pickup.
 //
-bool P_GiveAmmoPickup(player_t *player, const itemeffect_t *pickup, bool dropped, int dropamount)
+bool P_GiveAmmoPickup(player_t &player, const itemeffect_t *pickup, bool dropped, int dropamount)
 {
    if(!pickup)
       return false;
@@ -213,7 +213,7 @@ bool P_GiveAmmoPickup(player_t *player, const itemeffect_t *pickup, bool dropped
 // amount metatable value. It needs to work this way to have all side effects
 // of the called function (double baby/nightmare ammo, weapon switching).
 //
-static bool P_giveBackpackAmmo(player_t *player)
+static bool P_giveBackpackAmmo(player_t &player)
 {
    static MetaKeyIndex keyBackpackAmount("ammo.backpackamount");
 
@@ -248,7 +248,7 @@ static void P_consumeSpecial(player_t *activator, Mobj *special)
 //
 // Compat P_giveWeapon, to stop demos catching on fire for some reason
 //
-static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool dropped,
+static bool P_giveWeaponCompat(player_t &player, const itemeffect_t *giver, bool dropped,
                                Mobj *special, const char *sound)
 {
    bool gaveweapon = false;
@@ -278,21 +278,21 @@ static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool
    if((dmflags & DM_WEAPONSTAY) && !dropped)
    {
       // leave placed weapons forever on net games
-      if(E_PlayerOwnsWeapon(player, wp))
+      if(E_PlayerOwnsWeapon(&player, wp))
          return false;
 
-      player->bonuscount += BONUSADD;
-      E_GiveWeapon(player, wp);
+      player.bonuscount += BONUSADD;
+      E_GiveWeapon(&player, wp);
 
       // FIXME: no way to ignoreskill?
       P_GiveAmmo(player, ammo, (GameType == gt_dm) ? dmstayammo : coopstayammo, false);
 
-      player->pendingweapon = wp;
-      player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+      player.pendingweapon = wp;
+      player.pendingweaponslot = E_FindFirstWeaponSlot(&player, wp);
       // killough 4/25/98, 12/98
       if(sound)
-         S_StartSoundName(player->mo, sound);
-      P_consumeSpecial(player, special); // need to handle it here
+         S_StartSoundName(player.mo, sound);
+      P_consumeSpecial(&player, special); // need to handle it here
       return false;
    }
 
@@ -303,11 +303,11 @@ static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool
    bool gaveammo = (ammo ? P_GiveAmmo(player, ammo, amount, false) : false);
 
    // haleyjd 10/4/11: de-Killoughized
-   if(!E_PlayerOwnsWeapon(player, wp))
+   if(!E_PlayerOwnsWeapon(&player, wp))
    {
-      player->pendingweapon = wp;
-      player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
-      E_GiveWeapon(player, wp);
+      player.pendingweapon = wp;
+      player.pendingweaponslot = E_FindFirstWeaponSlot(&player, wp);
+      E_GiveWeapon(&player, wp);
       gaveweapon = true;
    }
 
@@ -345,7 +345,7 @@ static bool P_shouldSwitchToNewWeapon(const player_t &player, const weaponinfo_t
 //
 // The weapon name may have a MF_DROPPED flag ored in.
 //
-static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropped, Mobj *special,
+static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropped, Mobj *special,
                          const char *sound)
 {
    if(demo_version < 401 && !vanilla_heretic)
@@ -361,7 +361,7 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
       return false;
    }
 
-   if((dmflags & DM_WEAPONSTAY) && !dropped && E_PlayerOwnsWeapon(player, wp))
+   if((dmflags & DM_WEAPONSTAY) && !dropped && E_PlayerOwnsWeapon(&player, wp))
       return false;
 
    itemeffect_t *ammogiven = nullptr;
@@ -414,27 +414,27 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
 
    if((dmflags & DM_WEAPONSTAY) && !dropped)
    {
-      player->bonuscount += BONUSADD;
-      E_GiveWeapon(player, wp);
-      player->pendingweapon = wp;
-      player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+      player.bonuscount += BONUSADD;
+      E_GiveWeapon(&player, wp);
+      player.pendingweapon = wp;
+      player.pendingweaponslot = E_FindFirstWeaponSlot(&player, wp);
       // killough 4/25/98, 12/98
       if(sound)
-         S_StartSoundName(player->mo, sound);
-      P_consumeSpecial(player, special); // need to handle it here
+         S_StartSoundName(player.mo, sound);
+      P_consumeSpecial(&player, special); // need to handle it here
       return false;
    }
-   else if(!E_PlayerOwnsWeapon(player, wp))
+   else if(!E_PlayerOwnsWeapon(&player, wp))
    {
-      if(P_shouldSwitchToNewWeapon(*player, *wp))
+      if(P_shouldSwitchToNewWeapon(player, *wp))
       {
          weaponinfo_t *sister = wp->sisterWeapon;
-         player->pendingweapon = wp;
-         player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
-         if(player->powers[pw_weaponlevel2].isActive() && E_IsPoweredVariant(sister))
-            player->pendingweapon = sister;
+         player.pendingweapon = wp;
+         player.pendingweaponslot = E_FindFirstWeaponSlot(&player, wp);
+         if(player.powers[pw_weaponlevel2].isActive() && E_IsPoweredVariant(sister))
+            player.pendingweapon = sister;
       }
-      E_GiveWeapon(player, wp);
+      E_GiveWeapon(&player, wp);
       return true;
    }
 
@@ -845,13 +845,13 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
          pickedup |= P_GiveArmor(player, effect);
          break;
       case ITEMFX_AMMO:     // Ammo - give the player some ammo
-         pickedup |= P_GiveAmmoPickup(player, effect, dropped, special->dropamount);
+         pickedup |= P_GiveAmmoPickup(*player, effect, dropped, special->dropamount);
          break;
       case ITEMFX_POWER:
          pickedup |= P_GivePowerForItem(player, effect);
          break;
       case ITEMFX_WEAPONGIVER:
-         pickedup |= P_giveWeapon(player, effect, dropped, special, sound);
+         pickedup |= P_giveWeapon(*player, effect, dropped, special, sound);
          break;
       case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
          pickedup |= E_GiveInventoryItem(player, effect);
@@ -862,7 +862,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    }
 
    if(pickup->flags & PFXF_GIVESBACKPACKAMMO)
-      pickedup |= P_giveBackpackAmmo(player);
+      pickedup |= P_giveBackpackAmmo(*player);
 
    // perform post-processing if the item was collected beneficially, or if the
    // pickup is flagged to always be picked up even without benefit.
