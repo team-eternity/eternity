@@ -263,7 +263,7 @@ static void cheat_choppers(const void *arg)
    weaponinfo_t *chainsaw = E_WeaponForDEHNum(wp_chainsaw);
    if(!chainsaw)
       return; // For whatever reason, the chainsaw isn't defined
-   E_GiveWeapon(plyr, chainsaw);
+   E_GiveWeapon(*plyr, chainsaw);
    doom_printf("%s", DEH_String("STSTR_CHOPPERS")); // Ty 03/27/98 - externalized
 }
 
@@ -299,8 +299,8 @@ static void cheat_one(const void *arg)
 
 static void cheat_fa(const void *arg)
 {
-   if(!E_PlayerHasBackpack(plyr))
-      E_GiveBackpack(plyr);
+   if(!E_PlayerHasBackpack(*plyr))
+      E_GiveBackpack(*plyr);
 
    itemeffect_t *armor = E_ItemEffectForName(ITEMNAME_IDFAARMOR);
    if(armor)
@@ -313,7 +313,7 @@ static void cheat_fa(const void *arg)
    E_GiveAllClassWeapons(plyr);
 
    // give full ammo
-   E_GiveAllAmmo(plyr, GAA_MAXAMOUNT);
+   E_GiveAllAmmo(*plyr, GAA_MAXAMOUNT);
 
    doom_printf("%s", DEH_String("STSTR_FAADDED"));
 }
@@ -321,7 +321,7 @@ static void cheat_fa(const void *arg)
 static void cheat_k(const void *arg)
 {
    // sf: fix multiple 'keys added' messages
-   if(E_GiveAllKeys(plyr))
+   if(E_GiveAllKeys(*plyr))
       doom_printf("Keys Added");
 }
 
@@ -546,14 +546,14 @@ static void cheat_keyxx(const void *arg)
    if(!(fx = E_ItemEffectForName(GameModeInfo->cardNames[key])))
       return;
 
-   if(!E_GetItemOwnedAmount(plyr, fx))
+   if(!E_GetItemOwnedAmount(*plyr, fx))
    {
-      E_GiveInventoryItem(plyr, fx);
+      E_GiveInventoryItem(*plyr, fx);
       msg = "Key Added"; // Ty 03/27/98 - *not* externalized
    }
    else
    {
-      E_RemoveInventoryItem(plyr, fx, -1);
+      E_RemoveInventoryItem(*plyr, fx, -1);
       msg = "Key Removed";
    }
 
@@ -582,14 +582,14 @@ static void cheat_weapx(const void *arg)
    else if(w > wp_fist && w < NUMWEAPONS)
    {
       weaponinfo_t *weapon = E_WeaponForDEHNum(w);
-      if(!E_PlayerOwnsWeapon(plyr, weapon))
+      if(!E_PlayerOwnsWeapon(*plyr, weapon))
       {
-         E_GiveWeapon(plyr, weapon);
+         E_GiveWeapon(*plyr, weapon);
          doom_printf("Weapon Added");  // Ty 03/27/98 - *not* externalized
       }
       else
       {
-         E_RemoveInventoryItem(plyr, weapon->tracker, 1);
+         E_RemoveInventoryItem(*plyr, weapon->tracker, 1);
          doom_printf("Weapon Removed"); // Ty 03/27/98 - *not* externalized
       }
    }
@@ -616,15 +616,15 @@ static void cheat_ammox(const void *arg)
 
    if(*buf == 'b')
    {
-      if(!E_PlayerHasBackpack(plyr))
+      if(!E_PlayerHasBackpack(*plyr))
       {
          doom_printf("Backpack Added");
-         E_GiveBackpack(plyr);
+         E_GiveBackpack(*plyr);
       }
       else
       {
          doom_printf("Backpack Removed");
-         E_RemoveBackpack(plyr);
+         E_RemoveBackpack(*plyr);
       }
    }
    else if(a >= 0 && a < NUMAMMO)
@@ -636,17 +636,17 @@ static void cheat_ammox(const void *arg)
       if(!item)
          return;
 
-      int amount    = E_GetItemOwnedAmount(plyr, item);
-      int maxamount = E_GetMaxAmountForArtifact(plyr, item);
+      int amount    = E_GetItemOwnedAmount(*plyr, item);
+      int maxamount = E_GetMaxAmountForArtifact(*plyr, item);
 
       if(amount != maxamount)
       {
-         E_GiveInventoryItem(plyr, item, maxamount);
+         E_GiveInventoryItem(*plyr, item, maxamount);
          doom_printf("Ammo Added");
       }
       else
       {
-         E_RemoveInventoryItem(plyr, item, -1);
+         E_RemoveInventoryItem(*plyr, item, -1);
          doom_printf("Ammo Removed");
       }
    }
@@ -707,7 +707,7 @@ static void cheat_htichealth(const void *arg)
 //
 static void cheat_htickeys(const void *arg)
 {
-   if(E_GiveAllKeys(plyr))
+   if(E_GiveAllKeys(*plyr))
       player_printf(plyr, "%s", DEH_String("TXT_CHEATKEYS"));
 }
 
@@ -785,7 +785,7 @@ static void cheat_hticgimme(const void *varg)
             continue;
          if((GameModeInfo->flags & GIF_SHAREWARE) && artifact->getInt("noshareware", 0))
             continue;
-         E_GiveInventoryItem(plyr, artifact, E_GetMaxAmountForArtifact(plyr, artifact));
+         E_GiveInventoryItem(*plyr, artifact, E_GetMaxAmountForArtifact(*plyr, artifact));
       }
       player_printf(plyr, "%s", DEH_String(TXT_CHEATARTIFACTS3));
    }
@@ -801,7 +801,7 @@ static void cheat_hticgimme(const void *varg)
          player_printf(plyr, "%s", DEH_String(TXT_CHEATARTIFACTSFAIL));
          return;
       }
-      E_GiveInventoryItem(plyr, artifact, count);
+      E_GiveInventoryItem(*plyr, artifact, count);
       player_printf(plyr, "%s", DEH_String(TXT_CHEATARTIFACTS3));
    }
    else
@@ -813,8 +813,8 @@ static void cheat_hticgimme(const void *varg)
 
 static void cheat_rambo(const void *arg)
 {
-   if(!E_PlayerHasBackpack(plyr))
-      E_GiveBackpack(plyr);
+   if(!E_PlayerHasBackpack(*plyr))
+      E_GiveBackpack(*plyr);
 
    itemeffect_t *armor = E_ItemEffectForName(ITEMNAME_RAMBOARMOR);
    if(armor)
@@ -827,7 +827,7 @@ static void cheat_rambo(const void *arg)
    E_GiveAllClassWeapons(plyr);
 
    // give full ammo
-   E_GiveAllAmmo(plyr, GAA_MAXAMOUNT);
+   E_GiveAllAmmo(*plyr, GAA_MAXAMOUNT);
 
    player_printf(plyr, "%s", DEH_String(TXT_CHEATWEAPONS));
 }

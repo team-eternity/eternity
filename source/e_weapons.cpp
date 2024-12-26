@@ -299,7 +299,7 @@ bool E_WeaponIsCurrentDEHNum(const player_t *player, const int dehnum)
 //
 // Convenience function to check if a player owns a weapon
 //
-bool E_PlayerOwnsWeapon(const player_t *player, const weaponinfo_t *weapon)
+bool E_PlayerOwnsWeapon(const player_t &player, const weaponinfo_t *weapon)
 {
    return weapon ? E_GetItemOwnedAmount(player, weapon->tracker) : false;
 }
@@ -307,7 +307,7 @@ bool E_PlayerOwnsWeapon(const player_t *player, const weaponinfo_t *weapon)
 //
 // Convenience function to check if a player owns the weapon specific by dehnum
 //
-bool E_PlayerOwnsWeaponForDEHNum(const player_t *player, const int dehnum)
+bool E_PlayerOwnsWeaponForDEHNum(const player_t &player, const int dehnum)
 {
    return E_PlayerOwnsWeapon(player, E_WeaponForDEHNum(dehnum));
 }
@@ -316,12 +316,12 @@ bool E_PlayerOwnsWeaponForDEHNum(const player_t *player, const int dehnum)
 // Checks if a player owns a weapon in the provided slot, useful for things like the
 // Doom weapon-number widget
 //
-bool E_PlayerOwnsWeaponInSlot(const player_t *player, const int slot)
+bool E_PlayerOwnsWeaponInSlot(const player_t &player, const int slot)
 {
-   if(!player->pclass->weaponslots[slot])
+   if(!player.pclass->weaponslots[slot])
       return false;
 
-   BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
+   BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(player.pclass->weaponslots[slot]);
    do
    {
       if(E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
@@ -334,13 +334,13 @@ bool E_PlayerOwnsWeaponInSlot(const player_t *player, const int slot)
 //
 // As above, but returning the number owned in the slot
 //
-int E_NumWeaponsInSlotPlayerOwns(const player_t *player, const int slot)
+int E_NumWeaponsInSlotPlayerOwns(const player_t &player, const int slot)
 {
-   if(!player->pclass->weaponslots[slot])
+   if(!player.pclass->weaponslots[slot])
       return 0;
 
    int ret = 0;
-   BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
+   BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(player.pclass->weaponslots[slot]);
    do
    {
       if(E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
@@ -362,7 +362,7 @@ bool E_WeaponHasAltFire(const weaponinfo_t *wp)
 //
 // Give a player a weapon if they don't own it
 //
-void E_GiveWeapon(player_t *player, const weaponinfo_t *weapon)
+void E_GiveWeapon(player_t &player, const weaponinfo_t *weapon)
 {
    if(!E_PlayerOwnsWeapon(player, weapon))
       E_GiveInventoryItem(player, weapon->tracker);
@@ -381,7 +381,7 @@ void E_GiveAllClassWeapons(player_t *player)
       BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(slot);
       do
       {
-         E_GiveWeapon(player, weaponslot->bdObject->weapon);
+         E_GiveWeapon(*player, weaponslot->bdObject->weapon);
          weaponslot = weaponslot->bdNext;
       } while(!weaponslot->isDummy());
    }
@@ -432,8 +432,7 @@ BDListItem<weaponslot_t> *E_LastInSlot(const weaponslot_t *dummyslot)
 //
 // Looks for the given weapon  in an indexed slot
 //
-static weaponslot_t *E_findEntryForWeaponInSlot(const player_t *player, const weaponinfo_t *wp,
-                                                const weaponslot_t *slot)
+static weaponslot_t *E_findEntryForWeaponInSlot(const weaponinfo_t *wp, const weaponslot_t *slot)
 {
    if(slot == nullptr)
       return nullptr;
@@ -453,20 +452,20 @@ static weaponslot_t *E_findEntryForWeaponInSlot(const player_t *player, const we
    return nullptr;
 }
 
-weaponslot_t *E_FindEntryForWeaponInSlotIndex(const player_t *player, const weaponinfo_t *wp,
+weaponslot_t *E_FindEntryForWeaponInSlotIndex(const player_t &player, const weaponinfo_t *wp,
                                               const int slotindex)
 {
-   return E_findEntryForWeaponInSlot(player, wp, player->pclass->weaponslots[slotindex]);
+   return E_findEntryForWeaponInSlot(wp, player.pclass->weaponslots[slotindex]);
 }
 //
 // Finds the first instance of a weapon in a player's weaponslots
 //
-weaponslot_t *E_FindFirstWeaponSlot(const player_t *player, const weaponinfo_t *wp)
+weaponslot_t *E_FindFirstWeaponSlot(const player_t &player, const weaponinfo_t *wp)
 {
-   for(const weaponslot_t *slot : player->pclass->weaponslots)
+   for(const weaponslot_t *slot : player.pclass->weaponslots)
    {
       weaponslot_t *ret;
-      if((ret = E_findEntryForWeaponInSlot(player, wp, slot)) != nullptr)
+      if((ret = E_findEntryForWeaponInSlot(wp, slot)) != nullptr)
          return ret;
    }
    return nullptr;
@@ -482,7 +481,7 @@ weaponslot_t *E_FindFirstWeaponSlot(const player_t *player, const weaponinfo_t *
 // Perform an augmented in-order traversal of the select order tree
 // to try and find the best weapon the player can fire.
 //
-static weaponinfo_t *E_findBestWeapon(const player_t *player,
+static weaponinfo_t *E_findBestWeapon(const player_t &player,
                                       const SelectOrderNode *node)
 {
    weaponinfo_t *ret = nullptr;
@@ -506,7 +505,7 @@ static weaponinfo_t *E_findBestWeapon(const player_t *player,
 // Initial function to call the function that recursively finds the
 // best weapon the player owns that they have the ammo to fire
 //
-weaponinfo_t *E_FindBestWeapon(const player_t *player)
+weaponinfo_t *E_FindBestWeapon(const player_t &player)
 {
    return E_findBestWeapon(player, selectordertree->root);
 }
@@ -537,8 +536,8 @@ static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t &player,
    if(node->left  && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->left)))
       return ret;
    // Player owns normal weapon always, but check if the powered one has the flag
-   if(E_PlayerOwnsWeapon(&player, temp) && !(powerChecked->flags & WPF_NOAUTOSWITCHTO) &&
-      correctammo && P_WeaponHasAmmo(&player, powerChecked))
+   if(E_PlayerOwnsWeapon(player, temp) && !(powerChecked->flags & WPF_NOAUTOSWITCHTO) &&
+      correctammo && P_WeaponHasAmmo(player, powerChecked))
       return temp;
    if(node->next  && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->next)))
       return ret;

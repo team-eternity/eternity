@@ -788,7 +788,7 @@ static void E_collectAmmoTypes()
 // Function to give the player a certain amount of all ammo types; the amount
 // given can be controlled using enumeration values in e_inventory.h
 //
-void E_GiveAllAmmo(player_t *player, giveallammo_e op, int amount)
+void E_GiveAllAmmo(player_t &player, giveallammo_e op, int amount)
 {
    size_t numAmmo = E_GetNumAmmoTypes();
 
@@ -1261,7 +1261,7 @@ static void E_processLockDefs(cfg_t *cfg)
 //
 // Routine to call when unlocking a lock has failed.
 //
-static void E_failPlayerUnlock(const player_t *player, const lockdef_t *lock,
+static void E_failPlayerUnlock(const player_t &player, const lockdef_t *lock,
                                bool remote)
 {
    const char *msg = nullptr;
@@ -1281,13 +1281,13 @@ static void E_failPlayerUnlock(const player_t *player, const lockdef_t *lock,
          msg = E_StringOrDehForName(msg + 1);
    }
    if(msg)
-      player_printf(player, "%s", msg);
+      player_printf(&player, "%s", msg);
 
    // play sound if specified; if not, use skin default
    if(lock->lockedSound)
-      S_StartSoundName(player->mo, lock->lockedSound);
+      S_StartSoundName(player.mo, lock->lockedSound);
    else
-      S_StartSound(player->mo, GameModeInfo->playerSounds[sk_oof]);
+      S_StartSound(player.mo, GameModeInfo->playerSounds[sk_oof]);
 }
 
 //
@@ -1296,7 +1296,7 @@ static void E_failPlayerUnlock(const player_t *player, const lockdef_t *lock,
 // Check if a player has the keys necessary to unlock an object that is
 // protected by a lock with the given ID.
 //
-bool E_PlayerCanUnlock(const player_t *player, int lockID, bool remote)
+bool E_PlayerCanUnlock(const player_t &player, int lockID, bool remote)
 {
    lockdef_t *lock;
 
@@ -1414,7 +1414,7 @@ int E_GetLockDefColor(int lockID)
 // Give a player every artifact type that is considered a key and is not
 // already owned. Returns the number of keys given.
 //
-int E_GiveAllKeys(player_t *player)
+int E_GiveAllKeys(player_t &player)
 {
    size_t numKeys = E_GetNumKeyItems();
    int keysGiven  = 0;
@@ -1438,7 +1438,7 @@ int E_GiveAllKeys(player_t *player)
 // Take away every artifact a player has that is of "key" type.
 // Returns the number of keys taken away.
 //
-int E_TakeAllKeys(const player_t *player)
+int E_TakeAllKeys(const player_t &player)
 {
    size_t numKeys = E_GetNumKeyItems();
    int keysTaken  = 0;
@@ -1797,7 +1797,7 @@ inventoryindex_t e_maxvisiblesortorder = INT_MIN;
 // Tries to move the inventory cursor 'amount' right.
 // Returns true if cursor wasn't adjusted (outside of amount being added).
 //
-bool E_MoveInventoryCursor(const player_t *player, const int amount, int &cursor)
+bool E_MoveInventoryCursor(const player_t &player, const int amount, int &cursor)
 {
    if(cursor + amount < 0)
    {
@@ -1830,7 +1830,7 @@ bool E_CanMoveInventoryCursor(const player_t *player, const int amount, const in
    if(amount <= 0)
       return true; // We know that the cursor will succeed in moving left
 
-   itemeffect_t *effect = E_EffectForInventoryIndex(player, cursor + amount);
+   itemeffect_t *effect = E_EffectForInventoryIndex(*player, cursor + amount);
    if(!effect)
       return false;
    if(effect->getInt(keySortOrder, INT_MAX) > e_maxvisiblesortorder)
@@ -1842,7 +1842,7 @@ bool E_CanMoveInventoryCursor(const player_t *player, const int amount, const in
 //
 // Says if a player possesses at least one item w/ +invbar
 //
-bool E_PlayerHasVisibleInvItem(const player_t *player)
+bool E_PlayerHasVisibleInvItem(const player_t &player)
 {
    int i = -1;
    return E_MoveInventoryCursor(player, 1, i);
@@ -1984,7 +1984,7 @@ void E_TryUseItem(player_t &player, inventoryitemid_t ID)
          if(success)
          {
             const char *sound;
-            E_RemoveInventoryItem(&player, artifact, 1);
+            E_RemoveInventoryItem(player, artifact, 1);
 
             sound = artifact->getString(keyUseSound, "");
             if(estrnonempty(sound))
@@ -1996,7 +1996,7 @@ void E_TryUseItem(player_t &player, inventoryitemid_t ID)
          {
             // Heretic shifts inventory one left if you fail to use your selected item.
             // FIXME: Make this behaviour optional, or remove
-            E_MoveInventoryCursor(&player, -1, player.inv_ptr);
+            E_MoveInventoryCursor(player, -1, player.inv_ptr);
          }
       }
    }
@@ -2107,11 +2107,11 @@ itemeffect_t *E_EffectForInventoryItemID(inventoryitemid_t id)
 //
 // Get the item effect for a particular index in a given player's inventory.
 //
-itemeffect_t *E_EffectForInventoryIndex(const player_t *player,
+itemeffect_t *E_EffectForInventoryIndex(const player_t &player,
                                         inventoryindex_t idx)
 {
    return (idx >= 0 && idx < e_maxitemid) ?
-      E_EffectForInventoryItemID(player->inventory[idx].item) : nullptr;
+      E_EffectForInventoryItemID(player.inventory[idx].item) : nullptr;
 }
 
 //
@@ -2120,10 +2120,10 @@ itemeffect_t *E_EffectForInventoryIndex(const player_t *player,
 // Find the slot being used by an item in the player's inventory, if one exists.
 // nullptr is returned if the item is not in the player's inventory.
 //
-inventoryslot_t *E_InventorySlotForItemID(const player_t *player,
+inventoryslot_t *E_InventorySlotForItemID(const player_t &player,
                                           inventoryitemid_t id)
 {
-   inventory_t inventory = player->inventory;
+   inventory_t inventory = player.inventory;
 
    for(inventoryindex_t idx = 0; idx < e_maxitemid; idx++)
    {
@@ -2141,7 +2141,7 @@ inventoryslot_t *E_InventorySlotForItemID(const player_t *player,
 // if one exists. nullptr is returned if the item is not in the player's
 // inventory.
 //
-inventoryslot_t *E_InventorySlotForItem(const player_t *player,
+inventoryslot_t *E_InventorySlotForItem(const player_t &player,
                                         const itemeffect_t *effect)
 {
    inventoryitemid_t id;
@@ -2159,7 +2159,7 @@ inventoryslot_t *E_InventorySlotForItem(const player_t *player,
 // if one exists. nullptr is returned if the item is not in the player's
 // inventory.
 //
-inventoryslot_t *E_InventorySlotForItemName(const player_t *player,
+inventoryslot_t *E_InventorySlotForItemName(const player_t &player,
                                             const char *name)
 {
    return E_InventorySlotForItem(player, E_ItemEffectForName(name));
@@ -2200,10 +2200,10 @@ static inventoryindex_t E_findInventorySlot(inventory_t inventory)
 // After a new slot is added to the inventory, it needs to be placed into its
 // proper sorted position based on the item effects' sortorder fields.
 //
-static void E_sortInventory(const player_t *player, inventoryindex_t newIndex,
+static void E_sortInventory(const player_t &player, inventoryindex_t newIndex,
                             int sortorder, const char *name)
 {
-   inventory_t     inventory = player->inventory;
+   inventory_t     inventory = player.inventory;
    inventoryslot_t tempSlot  = inventory[newIndex];
 
    for(inventoryindex_t idx = 0; idx < newIndex; idx++)
@@ -2236,7 +2236,7 @@ static void E_sortInventory(const player_t *player, inventoryindex_t newIndex,
 //
 // Special lookup function to test if the player has a backpack.
 //
-bool E_PlayerHasBackpack(const player_t *player)
+bool E_PlayerHasBackpack(const player_t &player)
 {
    auto backpackItem = runtime_cast<itemeffect_t *>(e_effectsTable.getObject(keyBackpackItem));
    return (E_GetItemOwnedAmount(player, backpackItem) > 0);
@@ -2247,7 +2247,7 @@ bool E_PlayerHasBackpack(const player_t *player)
 //
 // Special function to give a backpack.
 //
-bool E_GiveBackpack(player_t *player)
+bool E_GiveBackpack(player_t &player)
 {
    auto backpackItem = runtime_cast<itemeffect_t *>(e_effectsTable.getObject(keyBackpackItem));
 
@@ -2259,7 +2259,7 @@ bool E_GiveBackpack(player_t *player)
 //
 // Special function to remove a backpack.
 //
-bool E_RemoveBackpack(const player_t *player)
+bool E_RemoveBackpack(const player_t &player)
 {
    auto backpackItem = runtime_cast<itemeffect_t *>(e_effectsTable.getObject(keyBackpackItem));
    bool removed = false;
@@ -2292,7 +2292,7 @@ bool E_RemoveBackpack(const player_t *player)
 // Get the max amount of an artifact that can be carried. There are some
 // special cases for different token subtypes of artifact.
 //
-int E_GetMaxAmountForArtifact(const player_t *player,
+int E_GetMaxAmountForArtifact(const player_t &player,
                               const itemeffect_t *artifact)
 {
    if(!artifact)
@@ -2321,7 +2321,7 @@ int E_GetMaxAmountForArtifact(const player_t *player,
 // If you do not need the inventory slot for any other purpose, you can lookup
 // the amount of an item owned in one step by using this function.
 //
-int E_GetItemOwnedAmount(const player_t *player, const itemeffect_t *artifact)
+int E_GetItemOwnedAmount(const player_t &player, const itemeffect_t *artifact)
 {
    auto slot = E_InventorySlotForItem(player, artifact);
 
@@ -2333,7 +2333,7 @@ int E_GetItemOwnedAmount(const player_t *player, const itemeffect_t *artifact)
 //
 // As above, but also doing a lookup on name.
 //
-int E_GetItemOwnedAmountName(const player_t *player, const char *name)
+int E_GetItemOwnedAmountName(const player_t &player, const char *name)
 {
    auto slot = E_InventorySlotForItemName(player, name);
 
@@ -2358,7 +2358,7 @@ bool E_PlayerHasPowerName(const player_t &player, const char *name)
 //
 // Place an artifact effect into the player's inventory, if it will fit.
 //
-bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amount)
+bool E_GiveInventoryItem(player_t &player, const itemeffect_t *artifact, int amount)
 {
    if(!artifact)
       return false;
@@ -2385,9 +2385,9 @@ bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amo
    // If not, make a slot for it
    if(!slot)
    {
-      if((newSlot = E_findInventorySlot(player->inventory)) < 0)
+      if((newSlot = E_findInventorySlot(player.inventory)) < 0)
          return false; // internal error, actually... shouldn't happen
-      slot = &player->inventory[newSlot];
+      slot = &player.inventory[newSlot];
    }
    else if (slot->amount == maxAmount)
 	   return false;
@@ -2400,12 +2400,12 @@ bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amo
    // Make sure the player's inv_ptr is updated if need be
    if(!initslot && E_PlayerHasVisibleInvItem(player))
    {
-      const itemeffect_t *other = E_EffectForInventoryIndex(player, player->inv_ptr);
+      const itemeffect_t *other = E_EffectForInventoryIndex(player, player.inv_ptr);
       const int artiorder  = artifact->getInt(keySortOrder, 0);
       const int otherorder = other->getInt(keySortOrder, 0);
       if(artiorder < otherorder ||
          (artiorder == otherorder && strcasecmp(artifact->getKey(), other->getKey()) < 0))
-         player->inv_ptr++;
+         player.inv_ptr++;
    }
 
    // set the item type in case the slot is new, and increment the amount owned
@@ -2443,7 +2443,7 @@ static void E_removeInventorySlot(const player_t *player, inventoryslot_t *slot)
          inventory[e_maxitemid - 1].item   = -1;
          inventory[e_maxitemid - 1].amount =  0;
 
-         E_MoveInventoryCursor(player, -1, const_cast<int &>(player->inv_ptr));
+         E_MoveInventoryCursor(*player, -1, const_cast<int &>(player->inv_ptr));
 
          return;
       }
@@ -2456,7 +2456,7 @@ static void E_removeInventorySlot(const player_t *player, inventoryslot_t *slot)
 // Remove some amount of a specific item from the player's inventory, if
 // possible. If amount is less than zero, then all of the item will be removed.
 //
-itemremoved_e E_RemoveInventoryItem(const player_t *player,
+itemremoved_e E_RemoveInventoryItem(const player_t &player,
                                     const itemeffect_t *artifact, int amount)
 {
    inventoryslot_t *slot = E_InventorySlotForItem(player, artifact);
@@ -2487,7 +2487,7 @@ itemremoved_e E_RemoveInventoryItem(const player_t *player,
       {
          // otherwise, we need to remove that item and collapse the player's
          // inventory
-         E_removeInventorySlot(player, slot);
+         E_removeInventorySlot(&player, slot);
          ret = INV_REMOVEDSLOT;
       }
    }
@@ -2507,7 +2507,7 @@ void E_InventoryEndHub(const player_t *player)
    for(inventoryindex_t i = 0; i < e_maxitemid; i++)
    {
       int amount = player->inventory[i].amount;
-      itemeffect_t *item = E_EffectForInventoryIndex(player, i);
+      itemeffect_t *item = E_EffectForInventoryIndex(*player, i);
 
       if(item)
       {
@@ -2516,7 +2516,7 @@ void E_InventoryEndHub(const player_t *player)
          // an interhubamount less than zero means no stripping occurs
          if(interHubAmount >= 0 && amount > interHubAmount)
          {
-            auto code = E_RemoveInventoryItem(player, item, amount - interHubAmount);
+            auto code = E_RemoveInventoryItem(*player, item, amount - interHubAmount);
             if(code == INV_REMOVEDSLOT)
                --i; // back up one slot, because the current one was removed
          }
@@ -2591,14 +2591,14 @@ void E_StashOriginalMorphWeapons(player_t& player)
    for (size_t i = 0; i < numWeapons; ++i)
    {
       const itemeffect_t* effect = E_weaponItemForIndex(i);
-      inventoryslot_t* slot = E_InventorySlotForItem(&player, effect);
+      inventoryslot_t* slot = E_InventorySlotForItem(player, effect);
 
       if (!slot || slot->amount <= 0)
          continue;
 
       // Move the slot to the unmorph inventory
       player.unmorphInventory[pos++] = *slot;
-      E_RemoveInventoryItem(&player, effect, -1);
+      E_RemoveInventoryItem(player, effect, -1);
    }
 }
 
@@ -2613,12 +2613,12 @@ void E_UnstashWeaponsForUnmorphing(player_t &player)
    for(size_t i = 0; i < numWeapons; ++i)
    {
       const itemeffect_t* effect = E_weaponItemForIndex(i);
-      inventoryslot_t* slot = E_InventorySlotForItem(&player, effect);
+      inventoryslot_t* slot = E_InventorySlotForItem(player, effect);
 
       if (!slot)
          continue;
 
-      E_RemoveInventoryItem(&player, effect, -1);
+      E_RemoveInventoryItem(player, effect, -1);
    }
 
    for(inventoryitemid_t i = 0; i < e_maxitemid; ++i)
@@ -2627,7 +2627,7 @@ void E_UnstashWeaponsForUnmorphing(player_t &player)
       if(!slot.amount)
          break;   // reached end
 
-      E_GiveInventoryItem(&player, E_EffectForInventoryItemID(slot.item));
+      E_GiveInventoryItem(player, E_EffectForInventoryItemID(slot.item));
    }
 }
 

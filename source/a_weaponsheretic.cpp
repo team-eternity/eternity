@@ -87,7 +87,7 @@ void A_FireGoldWandPL1(actionargs_t *actionargs)
    if(!player)
       return;
 
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
    P_BulletSlope(mo);
    if(player->refire)
       angle += P_SubRandom(pr_goldwand) * PO2(18);
@@ -109,7 +109,7 @@ void A_FireGoldWandPL2(actionargs_t *actionargs)
 
    z  = mo->z + 32 * FRACUNIT;
 
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
    P_BulletSlope(mo);
 
    const int   tnum = E_SafeThingType(MT_GOLDWANDFX2);
@@ -140,7 +140,7 @@ void A_FireMacePL1B(actionargs_t *actionargs)
    if(!player || !P_CheckAmmo(player))
       return;
 
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
 
    const int   tnum = E_SafeThingType(MT_MACEFX2);
 
@@ -182,7 +182,7 @@ void A_FireMacePL1(actionargs_t *actionargs)
 
    const int tnum = E_SafeThingType(MT_MACEFX1);
 
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
    psp->playpos.x = psp->renderpos.x = ((P_Random(pr_firemace) & 3) - 2) * FRACUNIT;
    psp->playpos.y = psp->renderpos.y = WEAPONTOP + (P_Random(pr_firemace) & 3) * FRACUNIT;
    ball = P_SpawnPlayerMissileAngleHeretic(mo, tnum, mo->angle +
@@ -292,7 +292,7 @@ void A_FireMacePL2(actionargs_t *actionargs)
    //player->ammo[am_mace] -= deathmatch ? USE_MACE_AMMO_1 : USE_MACE_AMMO_2;
    // FIXME: This needs to do the above behaviour:
    // to wit, fire the wimpy version's amount of ammo if in deathmatch
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
 
    mo = P_SpawnPlayerMissile(player->mo, tnum, SPM_ADDSLOPETOZ);
    if(mo)
@@ -397,7 +397,7 @@ void A_FireCrossbowPL1(actionargs_t *actionargs)
    if(!player)
       return;
 
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
 
    edefstructvar(playertargetinfo_t, targetinfo);
    P_SpawnPlayerMissile(pmo, E_SafeThingType(MT_CRBOWFX1), SPM_ADDSLOPETOZ, &targetinfo);
@@ -417,7 +417,7 @@ void A_FireCrossbowPL2(actionargs_t *actionargs)
    if(!player)
       return;
 
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
 
    edefstructvar(playertargetinfo_t, targetinfo);
    P_SpawnPlayerMissile(pmo, tnum2, SPM_ADDSLOPETOZ, &targetinfo);
@@ -455,7 +455,7 @@ void A_FireBlasterPL1(actionargs_t *actionargs)
       return;
 
    P_WeaponSound(mo, sfx_gldhit);
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
    P_BulletSlope(mo);
    damage = (1 + (P_Random(pr_blaster) & 7)) * 4;
    angle  = mo->angle;
@@ -472,8 +472,8 @@ void A_FireBlasterPL2(actionargs_t* actionargs)
    player_t* player = mo->player;
    if (!player)
       return;
-   P_SubtractAmmo(player, deathmatch ? 1 : -1);
-   
+   P_SubtractAmmo(*player, deathmatch ? 1 : -1);
+
    int tnum = E_SafeThingType(MT_BLASTERFX1);
    P_SpawnPlayerMissile(player->mo, tnum, SPM_ADDSLOPETOZ);
 
@@ -506,7 +506,7 @@ void A_FireSkullRodPL1(actionargs_t *actionargs)
    if(!player || !P_CheckAmmo(player))
       return;
 
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
    const int tnum = E_SafeThingType(MT_HORNRODFX1);
 
    Mobj     *mo   = P_SpawnPlayerMissile(player->mo, tnum, SPM_ADDSLOPETOZ);
@@ -522,7 +522,7 @@ void A_FireSkullRodPL2(actionargs_t* actionargs)
    if (!player || !P_CheckAmmo(player))
       return;
 
-   P_SubtractAmmo(player, deathmatch ? 1 : -1);
+   P_SubtractAmmo(*player, deathmatch ? 1 : -1);
    const int tnum = E_SafeThingType(MT_HORNRODFX2);
 
    Mobj* mo = P_SpawnPlayerMissile(player->mo, tnum, SPM_ADDSLOPETOZ);
@@ -677,7 +677,7 @@ void A_FirePhoenixPL1(actionargs_t *actionargs)
    if(!player)
       return;
 
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
 
    P_SpawnPlayerMissile(mo, tnum, SPM_ADDSLOPETOZ);
    // Commented out fire-trail functionality
@@ -720,7 +720,7 @@ void A_FirePhoenixPL2(actionargs_t *actionargs)
       const state_t *state = E_GetWpnJumpInfo(player->readyweapon, "Powerdown");
       if(state != nullptr)
       {
-         P_SetPsprite(player, ps_weapon, state->index);
+         P_SetPsprite(*player, ps_weapon, state->index);
          player->refire = 0;
       }
       else
@@ -755,7 +755,7 @@ void A_SubtractAmmo(actionargs_t *actionargs)
    player_t *player = actionargs->actor->player;
    if(!player)
       return;
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
 }
 
 void A_GauntletAttack(actionargs_t *actionargs)

@@ -106,8 +106,8 @@ static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, int num, bool ignor
       return false;
 
    // check if needed
-   int oldammo   = E_GetItemOwnedAmount(&player, ammo);
-   int maxamount = E_GetMaxAmountForArtifact(&player, ammo);
+   int oldammo   = E_GetItemOwnedAmount(player, ammo);
+   int maxamount = E_GetMaxAmountForArtifact(player, ammo);
 
    if(oldammo == maxamount)
       return false;
@@ -116,7 +116,7 @@ static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, int num, bool ignor
    if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
       num = static_cast<int>(floor(num * GameModeInfo->skillAmmoMultiplier));
 
-   if(!E_GiveInventoryItem(&player, ammo, num))
+   if(!E_GiveInventoryItem(player, ammo, num))
       return false; // don't need this ammo
 
    // If non zero ammo, don't change up weapons, player was lower on purpose.
@@ -141,7 +141,7 @@ static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, int num, bool ignor
          else
             player.pendingweapon = wp;
 
-         player.pendingweaponslot = E_FindFirstWeaponSlot(&player, wp);
+         player.pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
       }
    }
    else
@@ -150,7 +150,7 @@ static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, int num, bool ignor
       {
          if(E_WeaponIsCurrentDEHNum(&player, wp_fist))
          {
-            if(E_PlayerOwnsWeaponForDEHNum(&player, wp_chaingun))
+            if(E_PlayerOwnsWeaponForDEHNum(player, wp_chaingun))
                player.pendingweapon = E_WeaponForDEHNum(wp_chaingun);
             else
                player.pendingweapon = E_WeaponForDEHNum(wp_pistol);
@@ -159,19 +159,19 @@ static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, int num, bool ignor
       else if(!strcasecmp(ammo->getKey(), "AmmoShell"))
       {
          if(E_WeaponIsCurrentDEHNum(&player, wp_fist) || E_WeaponIsCurrentDEHNum(&player, wp_pistol))
-            if(E_PlayerOwnsWeaponForDEHNum(&player, wp_shotgun))
+            if(E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun))
                player.pendingweapon = E_WeaponForDEHNum(wp_shotgun);
       }
       else if(!strcasecmp(ammo->getKey(), "AmmoCell"))
       {
          if(E_WeaponIsCurrentDEHNum(&player, wp_fist) || E_WeaponIsCurrentDEHNum(&player, wp_pistol))
-            if(E_PlayerOwnsWeaponForDEHNum(&player, wp_plasma))
+            if(E_PlayerOwnsWeaponForDEHNum(player, wp_plasma))
                player.pendingweapon = E_WeaponForDEHNum(wp_plasma);
       }
       else if(!strcasecmp(ammo->getKey(), "AmmoMissile"))
       {
          if(E_WeaponIsCurrentDEHNum(&player, wp_fist))
-            if(E_PlayerOwnsWeaponForDEHNum(&player, wp_missile))
+            if(E_PlayerOwnsWeaponForDEHNum(player, wp_missile))
                player.pendingweapon = E_WeaponForDEHNum(wp_missile);
       }
    }
@@ -278,17 +278,17 @@ static bool P_giveWeaponCompat(player_t &player, const itemeffect_t *giver, bool
    if((dmflags & DM_WEAPONSTAY) && !dropped)
    {
       // leave placed weapons forever on net games
-      if(E_PlayerOwnsWeapon(&player, wp))
+      if(E_PlayerOwnsWeapon(player, wp))
          return false;
 
       player.bonuscount += BONUSADD;
-      E_GiveWeapon(&player, wp);
+      E_GiveWeapon(player, wp);
 
       // FIXME: no way to ignoreskill?
       P_GiveAmmo(player, ammo, (GameType == gt_dm) ? dmstayammo : coopstayammo, false);
 
       player.pendingweapon = wp;
-      player.pendingweaponslot = E_FindFirstWeaponSlot(&player, wp);
+      player.pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
       // killough 4/25/98, 12/98
       if(sound)
          S_StartSoundName(player.mo, sound);
@@ -303,11 +303,11 @@ static bool P_giveWeaponCompat(player_t &player, const itemeffect_t *giver, bool
    bool gaveammo = (ammo ? P_GiveAmmo(player, ammo, amount, false) : false);
 
    // haleyjd 10/4/11: de-Killoughized
-   if(!E_PlayerOwnsWeapon(&player, wp))
+   if(!E_PlayerOwnsWeapon(player, wp))
    {
       player.pendingweapon = wp;
-      player.pendingweaponslot = E_FindFirstWeaponSlot(&player, wp);
-      E_GiveWeapon(&player, wp);
+      player.pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+      E_GiveWeapon(player, wp);
       gaveweapon = true;
    }
 
@@ -361,7 +361,7 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropp
       return false;
    }
 
-   if((dmflags & DM_WEAPONSTAY) && !dropped && E_PlayerOwnsWeapon(&player, wp))
+   if((dmflags & DM_WEAPONSTAY) && !dropped && E_PlayerOwnsWeapon(player, wp))
       return false;
 
    itemeffect_t *ammogiven = nullptr;
@@ -415,26 +415,26 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropp
    if((dmflags & DM_WEAPONSTAY) && !dropped)
    {
       player.bonuscount += BONUSADD;
-      E_GiveWeapon(&player, wp);
+      E_GiveWeapon(player, wp);
       player.pendingweapon = wp;
-      player.pendingweaponslot = E_FindFirstWeaponSlot(&player, wp);
+      player.pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
       // killough 4/25/98, 12/98
       if(sound)
          S_StartSoundName(player.mo, sound);
       P_consumeSpecial(&player, special); // need to handle it here
       return false;
    }
-   else if(!E_PlayerOwnsWeapon(&player, wp))
+   else if(!E_PlayerOwnsWeapon(player, wp))
    {
       if(P_shouldSwitchToNewWeapon(player, *wp))
       {
          weaponinfo_t *sister = wp->sisterWeapon;
          player.pendingweapon = wp;
-         player.pendingweaponslot = E_FindFirstWeaponSlot(&player, wp);
+         player.pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
          if(player.powers[pw_weaponlevel2].isActive() && E_IsPoweredVariant(sister))
             player.pendingweapon = sister;
       }
-      E_GiveWeapon(&player, wp);
+      E_GiveWeapon(player, wp);
       return true;
    }
 
@@ -618,7 +618,7 @@ bool P_GivePower(player_t *player, int power, int duration, bool permament, bool
             if(sister->readystate != player->readyweapon->readystate ||
                sister->flags & WPF_FORCETOREADY)
             {
-               P_SetPsprite(player, ps_weapon, sister->readystate);
+               P_SetPsprite(*player, ps_weapon, sister->readystate);
                player->refire = 0;
             }
             player->readyweapon = sister;
@@ -854,7 +854,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
          pickedup |= P_giveWeapon(*player, effect, dropped, special, sound);
          break;
       case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
-         pickedup |= E_GiveInventoryItem(player, effect);
+         pickedup |= E_GiveInventoryItem(*player, effect);
          break;
       default:
          break;
@@ -871,10 +871,10 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       // Set pendingweapon if need be
       if(pickup->changeweapon != nullptr &&
          player->readyweapon->id != pickup->changeweapon->id &&
-         E_PlayerOwnsWeapon(player, pickup->changeweapon))
+         E_PlayerOwnsWeapon(*player, pickup->changeweapon))
       {
          player->pendingweapon = pickup->changeweapon;
-         player->pendingweaponslot = E_FindFirstWeaponSlot(player, player->pendingweapon);
+         player->pendingweaponslot = E_FindFirstWeaponSlot(*player, player->pendingweapon);
       }
 
       // Remove the object, provided it doesn't stay in multiplayer games
@@ -1303,7 +1303,7 @@ static bool P_touchPoweredMaceBall(dmgspecdata_t *dmgspec)
       if(chaosdevice)
       {
          const int itemid = chaosdevice->getInt("itemid", -1);
-         if(itemid != -1 && E_GetItemOwnedAmount(player, chaosdevice) >= 1)
+         if(itemid != -1 && E_GetItemOwnedAmount(*player, chaosdevice) >= 1)
          {
             E_TryUseItem(*target->player, itemid);
             player->health = player->mo->health = (player->health + 1) / 2;
@@ -1580,7 +1580,7 @@ static void P_hereticAutoUseHealth(player_t &player, int saveHealth)
       if(!checkRestrictions(useid.restriction) || useid.amount <= 0)  // also sanity check amount
          continue;
 
-      int numitems = E_GetItemOwnedAmount(&player, useid.artifact);
+      int numitems = E_GetItemOwnedAmount(player, useid.artifact);
       if(numitems <= 0 || numitems * useid.amount < saveHealth)   // skip if can't save life
          continue;
       int count = (saveHealth + useid.amount - 1) / useid.amount; // Round up to next multiple of amount
@@ -1600,7 +1600,7 @@ static void P_hereticAutoUseHealth(player_t &player, int saveHealth)
    {
       if(!checkRestrictions(useid.restriction) || useid.amount <= 0)  // again check not to add fake
          continue;
-      int numitems = E_GetItemOwnedAmount(&player, useid.artifact);
+      int numitems = E_GetItemOwnedAmount(player, useid.artifact);
       if(numitems <= 0)   // now don't skip if can't save life alone
          continue;
       totalheal += numitems * useid.amount;
@@ -1612,7 +1612,7 @@ static void P_hereticAutoUseHealth(player_t &player, int saveHealth)
    {
       if(!checkRestrictions(useid.restriction) || useid.amount <= 0)
          continue;
-      int numitems = E_GetItemOwnedAmount(&player, useid.artifact);
+      int numitems = E_GetItemOwnedAmount(player, useid.artifact);
       if(numitems <= 0)
          continue;
       const int itemid = useid.artifact->getInt(keyItemID, -1);

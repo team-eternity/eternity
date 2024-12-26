@@ -757,15 +757,15 @@ static void P_ArchivePlayers(SaveArchive &arc)
                loadweapon(&p.unmorphWeapon, "unmorphWeapon");
 
             arc << slotIndex;
-            p.readyweaponslot = E_FindEntryForWeaponInSlotIndex(&p, p.readyweapon, slotIndex);
+            p.readyweaponslot = E_FindEntryForWeaponInSlotIndex(p, p.readyweapon, slotIndex);
             arc << slotIndex;
             if(p.pendingweapon != nullptr)
-               p.pendingweaponslot = E_FindEntryForWeaponInSlotIndex(&p, p.pendingweapon, slotIndex);
+               p.pendingweaponslot = E_FindEntryForWeaponInSlotIndex(p, p.pendingweapon, slotIndex);
             if(arc.saveVersion() >= 22)
             {
                arc << slotIndex;
                if(p.unmorphWeapon)
-                  p.unmorphWeaponSlot = E_FindEntryForWeaponInSlotIndex(&p, p.unmorphWeapon, slotIndex);
+                  p.unmorphWeaponSlot = E_FindEntryForWeaponInSlotIndex(p, p.unmorphWeapon, slotIndex);
             }
 
             // Load counters if there's a need to

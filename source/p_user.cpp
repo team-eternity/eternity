@@ -282,7 +282,7 @@ static void P_PlayerFlight(player_t &player, const ticcmd_t *cmd)
          P_PlayerStopFlight(&player);
    }
    else if(fly > 0 && estrnonempty(GameModeInfo->autoFlightArtifact) &&
-           E_GetItemOwnedAmountName(&player, GameModeInfo->autoFlightArtifact) >= 1)
+           E_GetItemOwnedAmountName(player, GameModeInfo->autoFlightArtifact) >= 1)
    {
       E_TryUseItem(player, E_ItemIDForName(GameModeInfo->autoFlightArtifact));
    }
@@ -885,7 +885,7 @@ void P_PlayerThink(player_t &player)
          else
             player.pendingweapon = wp;
 
-         player.pendingweaponslot = E_FindEntryForWeaponInSlotIndex(&player, wp, cmd->slotIndex);
+         player.pendingweaponslot = E_FindEntryForWeaponInSlotIndex(player, wp, cmd->slotIndex);
       }
    }
    else if(cmd->buttons & BT_CHANGE)
@@ -909,13 +909,13 @@ void P_PlayerThink(player_t &player)
          //e6y
          newweapon = (cmd->buttons & BT_WEAPONMASK_OLD)>>BT_WEAPONSHIFT;
 
-         if(newweapon == wp_fist && E_PlayerOwnsWeaponForDEHNum(&player, wp_chainsaw) &&
+         if(newweapon == wp_fist && E_PlayerOwnsWeaponForDEHNum(player, wp_chainsaw) &&
             (!E_WeaponIsCurrentDEHNum(&player, wp_chainsaw) ||
              !player.powers[pw_strength].tics))
             newweapon = wp_chainsaw;
          if(enable_ssg &&
             newweapon == wp_shotgun &&
-            E_PlayerOwnsWeaponForDEHNum(&player, wp_supershotgun) &&
+            E_PlayerOwnsWeaponForDEHNum(player, wp_supershotgun) &&
             !E_WeaponIsCurrentDEHNum(&player, wp_supershotgun))
             newweapon = wp_supershotgun;
       }
@@ -925,7 +925,7 @@ void P_PlayerThink(player_t &player)
       // WEAPON_FIXME: setting pendingweapon
 
       weaponinfo_t *pendingweapon = E_WeaponForDEHNum(newweapon);
-      if(E_PlayerOwnsWeapon(&player, pendingweapon) &&
+      if(E_PlayerOwnsWeapon(player, pendingweapon) &&
          pendingweapon->id != player.readyweapon->id)
       {
          // Do not go to plasma or BFG in shareware, even if cheated.
@@ -1031,14 +1031,14 @@ void P_PlayerThink(player_t &player)
                player.psprites[ps_weapon].state->index != player.readyweapon->readystate &&
                player.psprites[ps_weapon].state->index != player.readyweapon->upstate)
             {
-               P_SetPsprite(&player, ps_weapon, unpowered->readystate);
-               P_SubtractAmmo(&player, -1);
+               P_SetPsprite(player, ps_weapon, unpowered->readystate);
+               P_SubtractAmmo(player, -1);
                player.refire = 0;
             }
             else if(unpowered->flags & WPF_FORCETOREADY || player.attackdown == AT_NONE)
             {
                // TODO: Figure out if should be || (player.attackdown == AT_NONE && current-state-isireadystate)
-               P_SetPsprite(&player, ps_weapon, unpowered->readystate);
+               P_SetPsprite(player, ps_weapon, unpowered->readystate);
                player.refire = 0;
             }
             else if(player.readyweapon->flags & WPF_DEPOWERSWITCH)
@@ -1162,14 +1162,14 @@ void P_GiveRebornInventory(player_t& player)
       itemeffect_t* effect = E_ItemEffectForName(name);
 
       // only if have none, in the case that DM_KEEPITEMS is specified
-      if (!E_GetItemOwnedAmount(&player, effect))
-         E_GiveInventoryItem(&player, effect, amount);
+      if (!E_GetItemOwnedAmount(player, effect))
+         E_GiveInventoryItem(player, effect, amount);
    }
 
-   if (!(player.readyweapon = E_FindBestWeapon(&player)))
+   if (!(player.readyweapon = E_FindBestWeapon(player)))
       player.readyweapon = E_WeaponForID(UnknownWeaponInfo);
    else
-      player.readyweaponslot = E_FindFirstWeaponSlot(&player, player.readyweapon);
+      player.readyweaponslot = E_FindFirstWeaponSlot(player, player.readyweapon);
 }
 
 #if 0

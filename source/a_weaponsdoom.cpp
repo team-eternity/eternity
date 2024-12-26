@@ -151,7 +151,7 @@ void A_FireMissile(actionargs_t *actionargs)
    if(!player)
       return;
 
-   P_SubtractAmmo(player, 1);
+   P_SubtractAmmo(*player, 1);
 
    P_SpawnPlayerMissile(player->mo, E_SafeThingType(MT_ROCKET));
 }
@@ -170,8 +170,8 @@ void A_FireBFG(actionargs_t *actionargs)
    if(!player)
       return;
 
-   P_SubtractAmmo(player, BFGCELLS);
-   
+   P_SubtractAmmo(*player, BFGCELLS);
+
    mo = P_SpawnPlayerMissile(actionargs->actor, E_SafeThingType(MT_BFG));
    mo->extradata.bfgcount = BFGBOUNCE;   // for bouncing bfg - redundant
 }
@@ -221,7 +221,7 @@ void A_FireOldBFG(actionargs_t *actionargs)
    auto weapon   = player->readyweapon;
    auto ammoType = weapon->ammo;   
    if(ammoType && !(player->cheats & CF_INFAMMO))
-      E_RemoveInventoryItem(player, ammoType, wp->ammopershot);
+      E_RemoveInventoryItem(*player, ammoType, wp->ammopershot);
 
    if(LevelInfo.useFullBright) // haleyjd
       player->extralight = 2;
@@ -296,7 +296,7 @@ void A_FirePlasma(actionargs_t *actionargs)
    if(!player)
       return;
 
-   P_SubtractAmmo(player, 1);
+   P_SubtractAmmo(*player, 1);
 
    A_FireSomething(player, P_Random(pr_plasma) & 1);
    
@@ -335,8 +335,8 @@ void A_FirePistol(actionargs_t *actionargs)
 
    P_SetMobjState(mo, player->pclass->altattack);
 
-   P_SubtractAmmo(player, 1);
-   
+   P_SubtractAmmo(*player, 1);
+
    A_FireSomething(player, 0); // phares
    P_BulletSlope(mo);
    P_GunShot(mo, !player->refire);
@@ -357,8 +357,8 @@ void A_FireShotgun(actionargs_t *actionargs)
    P_WeaponSound(mo, sfx_shotgn);
    P_SetMobjState(mo, player->pclass->altattack);
    
-   P_SubtractAmmo(player, 1);
-   
+   P_SubtractAmmo(*player, 1);
+
    A_FireSomething(player, 0); // phares
    
    P_BulletSlope(mo);
@@ -382,8 +382,8 @@ void A_FireShotgun2(actionargs_t *actionargs)
    P_WeaponSound(mo, sfx_dshtgn);
    P_SetMobjState(mo, player->pclass->altattack);
 
-   P_SubtractAmmo(player, 2);
-   
+   P_SubtractAmmo(*player, 2);
+
    A_FireSomething(player, 0); // phares
    
    P_BulletSlope(mo);
@@ -436,12 +436,12 @@ void A_FireCGun(actionargs_t *actionargs)
 
    P_WeaponSound(mo, sfx_chgun);
 
-   if(!P_WeaponHasAmmo(player, player->readyweapon))
+   if(!P_WeaponHasAmmo(*player, player->readyweapon))
       return;
    
    P_SetMobjState(mo, player->pclass->altattack);
    
-   P_SubtractAmmo(player, 1);
+   P_SubtractAmmo(*player, 1);
 
    // haleyjd 08/28/03: this is not safe for DeHackEd/EDF, so it
    // needs some modification to be safer

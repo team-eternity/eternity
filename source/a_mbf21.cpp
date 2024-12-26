@@ -866,7 +866,7 @@ void A_WeaponJump(actionargs_t *actionargs)
       return;
 
    if(P_Random(pr_mbf21) < E_ArgAsInt(args, 1, 0))
-      P_SetPspritePtr(player, pspr, state);
+      P_SetPspritePtr(*player, pspr, state);
 }
 
 //
@@ -934,10 +934,10 @@ void A_CheckAmmo(actionargs_t *actionargs)
    if(!ammotype) // no-ammo weapon?
       return;
 
-   ammoamount = E_GetItemOwnedAmount(player, ammotype);
+   ammoamount = E_GetItemOwnedAmount(*player, ammotype);
 
    if(ammoamount < checkamount)
-      P_SetPspritePtr(player, pspr, state);
+      P_SetPspritePtr(*player, pspr, state);
 }
 
 //
@@ -966,13 +966,13 @@ void A_RefireTo(actionargs_t *actionargs)
    {
       if((player->cmd.buttons & BT_ATTACK) && !(player->attackdown & AT_SECONDARY))
       {
-         if(noammocheck || P_WeaponHasAmmo(player, player->readyweapon))
-            P_SetPspritePtr(player, pspr, state);
+         if(noammocheck || P_WeaponHasAmmo(*player, player->readyweapon))
+            P_SetPspritePtr(*player, pspr, state);
       }
       else if((player->cmd.buttons & BTN_ATTACK_ALT) && !(player->attackdown & AT_PRIMARY))
       {
          if(noammocheck || P_WeaponHasAmmoAlt(player, player->readyweapon))
-            P_SetPspritePtr(player, pspr, state);
+            P_SetPspritePtr(*player, pspr, state);
       }
    }
 }
@@ -999,7 +999,7 @@ void A_GunFlashTo(actionargs_t *actionargs)
    if(!E_ArgAsInt(args, 1, 0))
       P_SetMobjState(actionargs->actor, player->pclass->altattack);
 
-   P_SetPsprite(player, ps_flash, state);
+   P_SetPsprite(*player, ps_flash, state);
 }
 
 //

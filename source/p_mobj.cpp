@@ -2829,7 +2829,7 @@ void P_SpawnPlayer(mapthing_t* mthing)
 
    // give all cards in death match mode
    if(GameType == gt_dm)
-      E_GiveAllKeys(p);
+      E_GiveAllKeys(*p);
 
    if(mthing->type - 1 == consoleplayer)
    {

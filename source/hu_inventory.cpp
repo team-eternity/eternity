@@ -45,7 +45,7 @@ void HU_InventoryDrawCurrentBox(int x, int y)
    const player_t &plyr = players[displayplayer];
    if(plyr.invbarstate.inventory || !plyr.inventory[plyr.inv_ptr].amount)
       return;  // do not display it if selector is active or in case of no item
-   const itemeffect_t *artifact = E_EffectForInventoryIndex(&plyr, plyr.inv_ptr);
+   const itemeffect_t *artifact = E_EffectForInventoryIndex(plyr, plyr.inv_ptr);
    if(!artifact)
       return;
    const char *patch = artifact->getString("icon", nullptr);
@@ -56,7 +56,7 @@ void HU_InventoryDrawCurrentBox(int x, int y)
    V_DrawPatchTL(x, y, &vbscreenyscaled, box, nullptr, HTIC_GHOST_TRANS);
    patch_t *icon = PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE, lumpinfo_t::ns_sprites);
    V_DrawPatch(x, y, &vbscreenyscaled, icon);
-   ST_DrawSmallHereticNumber(E_GetItemOwnedAmount(&plyr, artifact), x + 29, y + 22, true);
+   ST_DrawSmallHereticNumber(E_GetItemOwnedAmount(plyr, artifact), x + 29, y + 22, true);
 }
 
 //
@@ -99,11 +99,11 @@ void HU_InventoryDrawSelector()
    const int inv_ptr = plyr.inv_ptr;
    const int leftoffs = inv_ptr >= count ? inv_ptr - count + 1 : 0;
    int i = -1;
-   while(E_MoveInventoryCursor(&plyr, 1, i) && i < count)
+   while(E_MoveInventoryCursor(plyr, 1, i) && i < count)
    {
       if(plyr.inventory[i + leftoffs].amount <= 0)
          continue;
-      const itemeffect_t *artifact = E_EffectForInventoryIndex(&plyr, i + leftoffs);
+      const itemeffect_t *artifact = E_EffectForInventoryIndex(plyr, i + leftoffs);
       if(!artifact)
          continue;
       const char *patchname = artifact->getString("icon", nullptr);
@@ -116,7 +116,7 @@ void HU_InventoryDrawSelector()
       const int yoffs = artifact->getInt("icon.offset.y", 0);
 
       V_DrawPatch(origin + i * 31 - xoffs, ybase - yoffs, &vbscreenyscaled, patch);
-      ST_DrawSmallHereticNumber(E_GetItemOwnedAmount(&plyr, artifact), origin + 19 + i * 31 + 8,
+      ST_DrawSmallHereticNumber(E_GetItemOwnedAmount(plyr, artifact), origin + 19 + i * 31 + 8,
                                 ybase + 22, true);
    }
    patch_t *selectbox = PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE);

@@ -268,7 +268,7 @@ void ModernHUD::DrawKeys(int x, int y)
    V_FontWriteText(hud_fssmall, "KEYS", x, y, m_screen);
    for(int i = 0, xoffs = displayoffs; i < GameModeInfo->numHUDKeys; i++)
    {
-      if(E_GetItemOwnedAmountName(&hu_player, GameModeInfo->cardNames[i]) > 0)
+      if(E_GetItemOwnedAmountName(hu_player, GameModeInfo->cardNames[i]) > 0)
       {
          // got that key
          V_DrawPatch(xoffs, y, m_screen, keys[i]);

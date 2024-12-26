@@ -257,7 +257,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       }
       else if(usearti)
       {
-         if(E_PlayerHasVisibleInvItem(&p))
+         if(E_PlayerHasVisibleInvItem(p))
             cmd->itemID = p.inventory[p.inv_ptr].item + 1;
          usearti = false;
       }
@@ -365,7 +365,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
       if(gameactions[ka_nextweapon])
       {
-         weaponinfo_t *temp = E_FindBestWeapon(&p);
+         weaponinfo_t *temp = E_FindBestWeapon(p);
          if(temp == nullptr)
          {
             p.attackdown = AT_NONE;
@@ -374,7 +374,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          else
          {
             newweapon = temp->id; // phares
-            cmd->slotIndex = E_FindFirstWeaponSlot(&p, temp)->slotindex;
+            cmd->slotIndex = E_FindFirstWeaponSlot(p, temp)->slotindex;
          }
       }
 
@@ -385,7 +385,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
             weaponinfo_t *weapon = P_GetPlayerWeapon(&p, i - ka_weapon1);
             if(weapon)
             {
-               const auto slot = E_FindEntryForWeaponInSlotIndex(&p, weapon, i - ka_weapon1);
+               const auto slot = E_FindEntryForWeaponInSlotIndex(p, weapon, i - ka_weapon1);
                newweapon = weapon->id;
                cmd->slotIndex = slot->slotindex;
                if(!weapon_hotkey_holding)
@@ -427,7 +427,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       if((!demo_compatibility && (p.attackdown & AT_PRIMARY) && !P_CheckAmmo(&p)) ||
          gameactions[ka_nextweapon])
       {
-         newweapon = P_SwitchWeaponOldDoom(&p); // phares
+         newweapon = P_SwitchWeaponOldDoom(p); // phares
       }
       else
       {                                 // phares 02/26/98: Added gamemode checks
@@ -465,7 +465,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
             // the fist is already in use, or the player does not
             // have the berserker strength.
 
-            if(newweapon==wp_fist && E_PlayerOwnsWeaponForDEHNum(&p, wp_chainsaw) &&
+            if(newweapon==wp_fist && E_PlayerOwnsWeaponForDEHNum(p, wp_chainsaw) &&
                !E_WeaponIsCurrentDEHNum(&p, wp_chainsaw) &&
                (E_WeaponIsCurrentDEHNum(&p, wp_fist) ||
                 !p.powers[pw_strength].isActive() ||
@@ -480,8 +480,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
             // player prefers it.
 
             if(newweapon == wp_shotgun && enable_ssg &&
-               E_PlayerOwnsWeaponForDEHNum(&p, wp_supershotgun) &&
-               (!E_PlayerOwnsWeaponForDEHNum(&p, wp_shotgun) ||
+               E_PlayerOwnsWeaponForDEHNum(p, wp_supershotgun) &&
+               (!E_PlayerOwnsWeaponForDEHNum(p, wp_shotgun) ||
                 E_WeaponIsCurrentDEHNum(&p, wp_shotgun) ||
                 !(E_WeaponIsCurrentDEHNum(&p, wp_supershotgun) &&
                  P_WeaponPreferred(wp_supershotgun, wp_shotgun))))
@@ -879,7 +879,7 @@ bool G_Responder(const event_t* ev)
             invbarstate.inventory = true;
             break;
          }
-         E_MoveInventoryCursor(&players[consoleplayer], -1, players[consoleplayer].inv_ptr);
+         E_MoveInventoryCursor(players[consoleplayer], -1, players[consoleplayer].inv_ptr);
          return true;
       }
       if(gameactions[ka_inventory_right])
@@ -890,7 +890,7 @@ bool G_Responder(const event_t* ev)
             invbarstate.inventory = true;
             break;
          }
-         E_MoveInventoryCursor(&players[consoleplayer], 1, players[consoleplayer].inv_ptr);
+         E_MoveInventoryCursor(players[consoleplayer], 1, players[consoleplayer].inv_ptr);
          return true;
       }
 
@@ -1406,7 +1406,7 @@ static void G_convertButtonsToWeaponID(ticcmd_t &cmd)
          const weaponinfo_t *info = P_GetPlayerWeapon(&player, index);
          if(info)
          {
-            const weaponslot_t *slot = E_FindEntryForWeaponInSlotIndex(&player, info, index);
+            const weaponslot_t *slot = E_FindEntryForWeaponInSlotIndex(player, info, index);
             cmd.weaponID = info->id + 1;
             cmd.slotIndex = slot->slotindex;
          }

@@ -234,7 +234,7 @@ void BoomHUD::DrawKeys(int x, int y)
    // haleyjd 10/09/05: don't show double keys in Heretic
    for(int i = 0; i < GameModeInfo->numHUDKeys; i++)
    {
-      if(E_GetItemOwnedAmountName(&hu_player, GameModeInfo->cardNames[i]) > 0)
+      if(E_GetItemOwnedAmountName(hu_player, GameModeInfo->cardNames[i]) > 0)
       {
          // got that key
          V_DrawPatch(x, y, m_screen, keys[i]);

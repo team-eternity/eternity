@@ -440,7 +440,7 @@ static void ST_drawStatBar()
    // It's safety checks all the way down!
    else if(plyr->inventory[plyr->inv_ptr].amount)
    {
-      if((artifact = E_EffectForInventoryIndex(plyr, plyr->inv_ptr)))
+      if((artifact = E_EffectForInventoryIndex(*plyr, plyr->inv_ptr)))
       {
          patch = artifact->getString("icon", nullptr);
          if(estrnonempty(patch) && artifact->getInt("invbar", 0))
@@ -448,7 +448,7 @@ static void ST_drawStatBar()
             V_DrawPatch(179, 160, &subscreen43,
                         PatchLoader::CacheName(wGlobalDir, patch,
                                                PU_CACHE, lumpinfo_t::ns_sprites));
-            ST_DrawSmallHereticNumber(E_GetItemOwnedAmount(plyr, artifact), 209, 182, false);
+            ST_DrawSmallHereticNumber(E_GetItemOwnedAmount(*plyr, artifact), 209, 182, false);
          }
       }
    }
@@ -472,11 +472,11 @@ static void ST_drawStatBar()
    ST_drawInvNum(plyr->armorpoints, 255, 170);
 
    // draw key icons
-   if(E_GetItemOwnedAmountName(plyr, ARTI_KEYYELLOW) > 0)
+   if(E_GetItemOwnedAmountName(*plyr, ARTI_KEYYELLOW) > 0)
       V_DrawPatch(153, 164, &subscreen43, PatchLoader::CacheName(wGlobalDir, "YKEYICON", PU_CACHE));
-   if(E_GetItemOwnedAmountName(plyr, ARTI_KEYGREEN) > 0)
+   if(E_GetItemOwnedAmountName(*plyr, ARTI_KEYGREEN) > 0)
       V_DrawPatch(153, 172, &subscreen43, PatchLoader::CacheName(wGlobalDir, "GKEYICON", PU_CACHE));
-   if(E_GetItemOwnedAmountName(plyr, ARTI_KEYBLUE) > 0)
+   if(E_GetItemOwnedAmountName(*plyr, ARTI_KEYBLUE) > 0)
       V_DrawPatch(153, 180, &subscreen43, PatchLoader::CacheName(wGlobalDir, "BKEYICON", PU_CACHE));
 
    // draw ammo amount
@@ -490,7 +490,7 @@ static void ST_drawStatBar()
          V_DrawPatch(111, 172, &subscreen43,
                      PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE));
       }
-      ST_drawInvNum(E_GetItemOwnedAmount(plyr, ammo), 136, 162);
+      ST_drawInvNum(E_GetItemOwnedAmount(*plyr, ammo), 136, 162);
    }
 }
 
@@ -509,13 +509,13 @@ static void ST_drawInvBar()
    int i = -1;
    // E_MoveInventoryCursor returns false when it hits the boundary of the visible inventory,
    // so it's a useful iterator here.
-   while(E_MoveInventoryCursor(plyr, 1, i) && i < 7)
+   while(E_MoveInventoryCursor(*plyr, 1, i) && i < 7)
    {
       // Safety check that the player has an inventory item, then that the effect exists
       // for the selected item, then that there is an associated patch for that effect.
       if(plyr->inventory[i + leftoffs].amount > 0)
       {
-         itemeffect_t *artifact = E_EffectForInventoryIndex(plyr, i + leftoffs);
+         itemeffect_t *artifact = E_EffectForInventoryIndex(*plyr, i + leftoffs);
          if(artifact)
          {
             const char *patchname = artifact->getString("icon", nullptr);
@@ -530,7 +530,7 @@ static void ST_drawInvBar()
 
                V_DrawPatch(ST_INVSLOTSTARTX + (i * 31) - xoffs, 160 - yoffs,
                            &subscreen43, patch);
-               ST_DrawSmallHereticNumber(E_GetItemOwnedAmount(plyr, artifact), ST_INVSLOTSTARTX +
+               ST_DrawSmallHereticNumber(E_GetItemOwnedAmount(*plyr, artifact), ST_INVSLOTSTARTX +
                                          27 + (i * 31), ST_INVBARBGY + 22, false);
             }
          }
