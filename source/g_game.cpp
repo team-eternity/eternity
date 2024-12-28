@@ -2678,6 +2678,7 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
 //
 // FIXME: unused?
 //
+#if 0
 static int G_ClosestDMSpot(fixed_t x, fixed_t y, int notspot)
 {
    int j, numspots = int(deathmatch_p - deathmatchstarts);
@@ -2702,6 +2703,7 @@ static int G_ClosestDMSpot(fixed_t x, fixed_t y, int notspot)
 
    return closestspot;
 }
+#endif
 
 extern const char *level_error;
 

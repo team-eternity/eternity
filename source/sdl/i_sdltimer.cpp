@@ -52,10 +52,13 @@ static int MSToTic(uint32_t time)
    return time * TICRATE / 1000;
 }
 
+// FIXME: unused
+/*
 static uint64_t TicToCounter(int tic)
 {
    return uint64_t(tic) * basefreq / TICRATE;
 }
+*/
 
 //
 // I_SDLGetTicks

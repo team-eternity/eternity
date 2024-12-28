@@ -1472,7 +1472,7 @@ static inline bool R_checkAndMarkSprite(spritecontext_t &spritecontext,
                                         const Mobj *const thing)
 {
    const size_t thing_hash = std::hash<const Mobj *>{}(thing) % NUMSPRITEMARKS;
-   drawnsprite_t *prevSprite;
+   drawnsprite_t *prevSprite = nullptr;
    drawnsprite_t *drawnSprite = spritecontext.drawnSpriteHash[thing_hash];
    if(drawnSprite)
    {
@@ -1488,6 +1488,7 @@ static inline bool R_checkAndMarkSprite(spritecontext_t &spritecontext,
       if(drawnSprite)
          return true;
 
+      I_Assert(prevSprite != nullptr, "prevSprite should have been set");
       prevSprite->next = zhstructalloc(heap, drawnsprite_t, 1);
       prevSprite->next->thing = thing;
    }
@@ -1658,7 +1659,6 @@ static void R_drawPSprite(const pspdef_t *psp,
    flip = !!(sprframe->flip[0] ^ lefthanded);
 
    // calculate edges of the shape
-   void (*playeraction)(actionargs_t *) = viewplayer->psprites[0].state->action;
    v2fixed_t pspos;
    R_interpolatePSpritePosition(*psp, pspos);
 

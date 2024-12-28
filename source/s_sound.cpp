@@ -122,7 +122,7 @@ int numChannels;
 int default_numChannels;  // killough 9/98
 
 // MaxW: Holds music num to load.
-extern char *mus_LoadName = nullptr;
+char *mus_LoadName;
 
 // haleyjd 05/18/14: music randomization
 bool s_randmusic = false;

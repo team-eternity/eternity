@@ -121,7 +121,6 @@ VALLOCATION(solidsegs)
       {
          rendercontext_t &basecontext = R_GetContext(i);
          bspcontext_t    &context     = basecontext.bspcontext;
-         ZoneHeap        &heap        = *basecontext.heap;
          const int        CONTEXTSEGS = basecontext.bounds.numcolumns / 2 + 1;
 
          context.solidsegs  = buf;

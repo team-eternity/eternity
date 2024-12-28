@@ -264,7 +264,6 @@ void R_CacheIfSkyTexture(int basetexturenum, int nexttexturenum)
       I_Error("R_CacheIfSkyTexture: invalid next animated texture num %i\n", nexttexturenum);
 #endif
 
-   texture_t *basetexture = textures[basetexturenum];
    if(!!R_findSkyTexture(basetexturenum))
       R_CacheSkyTexture(nexttexturenum);
 }
