@@ -426,8 +426,8 @@ void P_DeathThink(player_t *player)
    angle_t angle;
    angle_t delta;
    
-   P_MovePsprites(player);
-   
+   P_MovePsprites(*player);
+
    // fall to the ground
    
    if(player->viewheight > 6 * FRACUNIT)
@@ -930,7 +930,7 @@ void P_PlayerThink(player_t &player)
       {
          // Do not go to plasma or BFG in shareware, even if cheated.
          // haleyjd 06/28/13: generalized for EDF weapon system
-         weaponinfo_t *pendingweapon = P_GetPlayerWeapon(&player, newweapon);
+         weaponinfo_t *pendingweapon = P_GetPlayerWeapon(player, newweapon);
 
          if(pendingweapon && 
             !(GameModeInfo->flags & GIF_SHAREWARE && 
@@ -967,7 +967,7 @@ void P_PlayerThink(player_t &player)
 
    // cycle psprites
 
-   P_MovePsprites (&player);
+   P_MovePsprites (player);
 
    // Counters, time dependent power ups.
 

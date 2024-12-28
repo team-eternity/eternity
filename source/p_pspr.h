@@ -99,29 +99,29 @@ void P_SetPsprite(player_t &player, int position, statenum_t stnum);
 bool P_WeaponHasAmmo(const player_t &player, const weaponinfo_t *weapon);
 bool P_WeaponHasAmmoAlt(const player_t &player, const weaponinfo_t *weapon);
 
-int P_NextWeapon(const player_t *player, uint8_t *slotindex = nullptr);
-int P_PrevWeapon(const player_t *player, uint8_t *slotindex = nullptr);
+int P_NextWeapon(const player_t &player, uint8_t *slotindex = nullptr);
+int P_PrevWeapon(const player_t &player, uint8_t *slotindex = nullptr);
 
 weapontype_t P_SwitchWeaponOldDoom(const player_t &player);
-bool P_CheckAmmo(player_t *player);
+bool P_CheckAmmo(player_t &player);
 void P_SubtractAmmo(const player_t &player, int compat_amt);
-void P_SubtractAmmoAmount(player_t *player, int amount);
+void P_SubtractAmmoAmount(player_t &player, int amount);
 void P_SetupPsprites(player_t &curplayer);
-void P_MovePsprites(player_t *curplayer);
-void P_DropWeapon(player_t *player);
+void P_MovePsprites(player_t &curplayer);
+void P_DropWeapon(player_t &player);
 
 extern fixed_t bulletslope;
 void P_BulletSlope(Mobj *mo);
 
-weaponinfo_t *P_GetPlayerWeapon(const player_t *player, int slot);
+weaponinfo_t *P_GetPlayerWeapon(const player_t &player, int slot);
 
 void P_WeaponSoundInfo(Mobj *mo, sfxinfo_t *sound);
 void P_WeaponSound(Mobj *mo, int sfx_id);
 
-void P_WeaponRecoil(player_t *player);
+void P_WeaponRecoil(player_t &player);
 
 void A_ReFire(actionargs_t *actionargs);
-void A_FireSomething(player_t* player, int adder);
+void A_FireSomething(player_t& player, int adder);
 
 fixed_t P_DoAutoAim(Mobj *mo, angle_t angle, fixed_t distance);
 

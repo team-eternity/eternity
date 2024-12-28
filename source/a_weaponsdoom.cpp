@@ -298,8 +298,8 @@ void A_FirePlasma(actionargs_t *actionargs)
 
    P_SubtractAmmo(*player, 1);
 
-   A_FireSomething(player, P_Random(pr_plasma) & 1);
-   
+   A_FireSomething(*player, P_Random(pr_plasma) & 1);
+
    // sf: removed beta
    P_SpawnPlayerMissile(mo, E_SafeThingType(MT_PLASMA));
 }
@@ -337,7 +337,7 @@ void A_FirePistol(actionargs_t *actionargs)
 
    P_SubtractAmmo(*player, 1);
 
-   A_FireSomething(player, 0); // phares
+   A_FireSomething(*player, 0); // phares
    P_BulletSlope(mo);
    P_GunShot(mo, !player->refire);
 }
@@ -359,8 +359,8 @@ void A_FireShotgun(actionargs_t *actionargs)
    
    P_SubtractAmmo(*player, 1);
 
-   A_FireSomething(player, 0); // phares
-   
+   A_FireSomething(*player, 0); // phares
+
    P_BulletSlope(mo);
    
    for(i = 0; i < 7; ++i)
@@ -384,8 +384,8 @@ void A_FireShotgun2(actionargs_t *actionargs)
 
    P_SubtractAmmo(*player, 2);
 
-   A_FireSomething(player, 0); // phares
-   
+   A_FireSomething(*player, 0); // phares
+
    P_BulletSlope(mo);
    
    for(i = 0; i < 20; i++)
@@ -451,10 +451,10 @@ void A_FireCGun(actionargs_t *actionargs)
        psp->state->index < E_StateNumForDEHNum(S_CHAIN3)))
    {      
       // phares
-      A_FireSomething(player, psp->state->index - states[E_SafeState(S_CHAIN1)]->index);
+      A_FireSomething(*player, psp->state->index - states[E_SafeState(S_CHAIN1)]->index);
    }
    else
-      A_FireSomething(player, 0); // new default behavior
+      A_FireSomething(*player, 0); // new default behavior
    
    P_BulletSlope(mo);
    

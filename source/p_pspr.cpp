@@ -233,13 +233,13 @@ bool P_WeaponHasAmmoAlt(const player_t &player, const weaponinfo_t *weapon)
 //
 // Find the first weaponslot that isn't nullptr for a given player
 //
-static weaponslot_t *P_findFirstNonNullWeaponSlot(const player_t *player)
+static weaponslot_t *P_findFirstNonNullWeaponSlot(const player_t &player)
 {
    // Don't ask
    if(demo_version < 401)
-      return E_FindFirstWeaponSlot(*player, player->readyweapon);
+      return E_FindFirstWeaponSlot(player, player.readyweapon);
 
-   for(weaponslot_t *&weaponslot : player->pclass->weaponslots)
+   for(weaponslot_t *&weaponslot : player.pclass->weaponslots)
    {
       if(weaponslot != nullptr)
          return weaponslot;
@@ -254,11 +254,11 @@ static weaponslot_t *P_findFirstNonNullWeaponSlot(const player_t *player)
 // haleyjd 05/31/14: Rewritten to use next and previous in cycle pointers
 // in weaponinfo_t, for friendliness with future dynamic weapons system.
 //
-int P_NextWeapon(const player_t *player, uint8_t *slotindex)
+int P_NextWeapon(const player_t &player, uint8_t *slotindex)
 {
-   const weaponinfo_t             *currentweapon = player->readyweapon;
-   const weaponinfo_t             *newweapon     = player->readyweapon;
-   const weaponslot_t             *newweaponslot = player->readyweaponslot;
+   const weaponinfo_t             *currentweapon = player.readyweapon;
+   const weaponinfo_t             *newweapon     = player.readyweapon;
+   const weaponslot_t             *newweaponslot = player.readyweaponslot;
    const BDListItem<weaponslot_t> *newweaponlink;
 
    if(newweaponslot == nullptr)
@@ -277,9 +277,9 @@ int P_NextWeapon(const player_t *player, uint8_t *slotindex)
          for(int i = (slotindex + 1) % NUMWEAPONSLOTS;
              i  != slotindex + 1 || firsttime; i = (i + 1) % NUMWEAPONSLOTS)
          {
-            if(player->pclass->weaponslots[i] != nullptr)
+            if(player.pclass->weaponslots[i] != nullptr)
             {
-               newweaponlink = E_LastInSlot(player->pclass->weaponslots[i]);
+               newweaponlink = E_LastInSlot(player.pclass->weaponslots[i]);
                newweapon = newweaponlink->bdObject->weapon;
                break;
             }
@@ -287,8 +287,8 @@ int P_NextWeapon(const player_t *player, uint8_t *slotindex)
          }
       }
 
-      ownsweapon     = E_PlayerOwnsWeapon(*player, newweapon);
-      canfireweapon  = P_WeaponHasAmmo(*player, newweapon);
+      ownsweapon     = E_PlayerOwnsWeapon(player, newweapon);
+      canfireweapon  = P_WeaponHasAmmo(player, newweapon);
       sameweapon     = newweapon->id == currentweapon->id;
       sameweaponslot = &newweaponslot->links == newweaponlink;
    }
@@ -316,11 +316,11 @@ int P_NextWeapon(const player_t *player, uint8_t *slotindex)
 //
 // haleyjd 03/06/09: Like the above.
 //
-int P_PrevWeapon(const player_t *player, uint8_t *slotindex)
+int P_PrevWeapon(const player_t &player, uint8_t *slotindex)
 {
-   const weaponinfo_t             *currentweapon = player->readyweapon;
-   const weaponinfo_t             *newweapon     = player->readyweapon;
-   const weaponslot_t             *newweaponslot = player->readyweaponslot;
+   const weaponinfo_t             *currentweapon = player.readyweapon;
+   const weaponinfo_t             *newweapon     = player.readyweapon;
+   const weaponslot_t             *newweaponslot = player.readyweaponslot;
    const BDListItem<weaponslot_t> *newweaponlink;
 
    if(newweaponslot == nullptr)
@@ -339,9 +339,9 @@ int P_PrevWeapon(const player_t *player, uint8_t *slotindex)
          for(int i = slotindex == 0 ? NUMWEAPONSLOTS - 1 : slotindex - 1;
              i  != slotindex - 1 || firsttime; i = i == 0 ? NUMWEAPONSLOTS - 1 : i - 1)
          {
-            if(player->pclass->weaponslots[i] != nullptr)
+            if(player.pclass->weaponslots[i] != nullptr)
             {
-               newweaponlink = E_FirstInSlot(player->pclass->weaponslots[i]);
+               newweaponlink = E_FirstInSlot(player.pclass->weaponslots[i]);
                newweapon = newweaponlink->bdObject->weapon;
                break;
             }
@@ -349,8 +349,8 @@ int P_PrevWeapon(const player_t *player, uint8_t *slotindex)
 
       }
 
-      ownsweapon     = E_PlayerOwnsWeapon(*player, newweapon);
-      canfireweapon  = P_WeaponHasAmmo(*player, newweapon);
+      ownsweapon     = E_PlayerOwnsWeapon(player, newweapon);
+      canfireweapon  = P_WeaponHasAmmo(player, newweapon);
       sameweapon     = newweapon->id == currentweapon->id;
       sameweaponslot = &newweaponslot->links == newweaponlink;
    }
@@ -477,10 +477,10 @@ int P_WeaponPreferred(int w1, int w2)
 // If not, selects the next weapon to use.
 // (only in demo_compatibility mode -- killough 3/22/98)
 //
-bool P_CheckAmmo(player_t *player)
+bool P_CheckAmmo(player_t &player)
 {
    // Return if current ammunition sufficient.
-   if(P_WeaponHasAmmo(*player, player->readyweapon))
+   if(P_WeaponHasAmmo(player, player.readyweapon))
       return true;
    
    // Out of ammo, pick a weapon to change to.
@@ -495,19 +495,19 @@ bool P_CheckAmmo(player_t *player)
    //  they run out of ammo in netgames.
    if(demo_version >= 401)
    {
-      weaponinfo_t *temp = E_FindBestWeapon(*player);
-      player->pendingweapon = temp;
-      player->pendingweaponslot = E_FindFirstWeaponSlot(*player, temp);
+      weaponinfo_t *temp = E_FindBestWeapon(player);
+      player.pendingweapon = temp;
+      player.pendingweaponslot = E_FindFirstWeaponSlot(player, temp);
    }
    if(demo_compatibility)
    {
       if(vanilla_heretic)
-         player->pendingweapon = E_FindBestWeapon(*player);
+         player.pendingweapon = E_FindBestWeapon(player);
       else
-         player->pendingweapon = E_WeaponForDEHNum(P_SwitchWeaponOldDoom(*player));      // phares
+         player.pendingweapon = E_WeaponForDEHNum(P_SwitchWeaponOldDoom(player));      // phares
       // Now set appropriate weapon overlay.
       // WEAPON_FIXME
-      P_SetPsprite(*player,ps_weapon,player->readyweapon->downstate);
+      P_SetPsprite(player,ps_weapon,player.readyweapon->downstate);
    }
      
    return false;
@@ -553,14 +553,14 @@ void P_SubtractAmmo(const player_t &player, int compat_amt)
 //
 // As above but it always subtracts a specific amount
 //
-void P_SubtractAmmoAmount(player_t *player, int amount)
+void P_SubtractAmmoAmount(player_t &player, int amount)
 {
-   weaponinfo_t *weapon = player->readyweapon;
+   weaponinfo_t *weapon = player.readyweapon;
    itemeffect_t *ammo;
 
-   if(demo_version >= 401 && (player->attackdown & AT_ITEM))
+   if(demo_version >= 401 && (player.attackdown & AT_ITEM))
       return;
-   else if(demo_version >= 401 && (player->attackdown & AT_SECONDARY))
+   else if(demo_version >= 401 && (player.attackdown & AT_SECONDARY))
    {
       ammo = weapon->ammo_alt;
       if(amount == INT_MIN)
@@ -573,13 +573,13 @@ void P_SubtractAmmoAmount(player_t *player, int amount)
          amount = weapon->ammopershot;
    }
 
-   if(player->cheats & CF_INFAMMO || !ammo)
+   if(player.cheats & CF_INFAMMO || !ammo)
       return;
 
    if(amount < 0)
-      E_GiveInventoryItem(*player, ammo, -amount);
+      E_GiveInventoryItem(player, ammo, -amount);
    else
-      E_RemoveInventoryItem(*player, ammo, amount);
+      E_RemoveInventoryItem(player, ammo, amount);
 }
 
 int lastshottic; // killough 3/22/98
@@ -592,7 +592,7 @@ static void P_FireWeapon(player_t *player)
    statenum_t    newstate;
    weaponinfo_t *weapon;
 
-   if(!P_CheckAmmo(player))
+   if(!P_CheckAmmo(*player))
       return;
 
    weapon = player->readyweapon;
@@ -707,9 +707,9 @@ static bool P_tryExecuteWeaponState(player_t &player, pspdef_t *psp)
 //
 // Player died, so put the weapon away.
 //
-void P_DropWeapon(player_t *player)
+void P_DropWeapon(player_t &player)
 {
-   P_SetPsprite(*player, ps_weapon, player->readyweapon->downstate);
+   P_SetPsprite(player, ps_weapon, player.readyweapon->downstate);
 }
 
 //=============================================================================
@@ -725,12 +725,12 @@ void P_DropWeapon(player_t *player)
 // haleyjd 09/16/07:
 // Gets weapon at given index for the given player.
 //
-weaponinfo_t *P_GetPlayerWeapon(const player_t *player, int slot)
+weaponinfo_t *P_GetPlayerWeapon(const player_t &player, int slot)
 {
    if(demo_version < 401 && GameModeInfo->type == Game_DOOM)
       return E_WeaponForDEHNum(slot);
 
-   if(!player->pclass->weaponslots[slot])
+   if(!player.pclass->weaponslots[slot])
       return nullptr;
 
    // Backup demo compat code, in case something goes *really*
@@ -745,13 +745,13 @@ weaponinfo_t *P_GetPlayerWeapon(const player_t *player, int slot)
 
    bool hit = false;
    BDListItem<weaponslot_t> *weaponslot, *baseslot;
-   const auto *wp = E_IsPoweredVariant(player->readyweapon) ?
-                    player->readyweapon->sisterWeapon : player->readyweapon;
+   const auto *wp = E_IsPoweredVariant(player.readyweapon) ?
+                    player.readyweapon->sisterWeapon : player.readyweapon;
 
    if(!weapon_hotkey_cycling)
    {
-      weaponslot = E_LastInSlot(player->pclass->weaponslots[slot]);
-      if(!E_PlayerOwnsWeapon(*player, weaponslot->bdObject->weapon))
+      weaponslot = E_LastInSlot(player.pclass->weaponslots[slot]);
+      if(!E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
          return nullptr;
       else
          return weaponslot ? weaponslot->bdObject->weapon : nullptr;
@@ -759,7 +759,7 @@ weaponinfo_t *P_GetPlayerWeapon(const player_t *player, int slot)
 
    // This initial call assures us that
    // player->pclass->weaponslots[slot]->bdNext is valid.
-   baseslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
+   baseslot = E_FirstInSlot(player.pclass->weaponslots[slot]);
 
    // Try finding the player's currently-equipped weapon.
    while(!baseslot->isDummy())
@@ -781,7 +781,7 @@ weaponinfo_t *P_GetPlayerWeapon(const player_t *player, int slot)
 
    // If we found the player's readyweapon in the current slot, or the player
    // doesn't own the first weapon in the slot, we'll need to iterate through.
-   if(hit || !E_PlayerOwnsWeapon(*player, weaponslot->bdObject->weapon))
+   if(hit || !E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
    {
       // The next weapon we find that the player owns is what we're looking for.
       do
@@ -792,10 +792,10 @@ weaponinfo_t *P_GetPlayerWeapon(const player_t *player, int slot)
             weaponslot = weaponslot->bdNext;
 
       } while(weaponslot != baseslot &&
-              !E_PlayerOwnsWeapon(*player, weaponslot->bdObject->weapon));
+              !E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon));
 
       // If the player doesn't own weaponslot's weapon, don't allow the change.
-      if(!E_PlayerOwnsWeapon(*player, weaponslot->bdObject->weapon))
+      if(!E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
          weaponslot = nullptr;
    }
 
@@ -972,7 +972,7 @@ static void A_reFireNew(actionargs_t *actionargs)
    else
    {
       player->refire = 0;
-      P_CheckAmmo(player);
+      P_CheckAmmo(*player);
    }
 }
 
@@ -1007,7 +1007,7 @@ void A_ReFire(actionargs_t *actionargs)
    else
    {
       player->refire = 0;
-      P_CheckAmmo(player);
+      P_CheckAmmo(*player);
    }
 }
 
@@ -1027,7 +1027,7 @@ void A_CheckReload(actionargs_t *actionargs)
    if(!player)
       return;
 
-   if(!P_CheckAmmo(player) && demo_version >= 331)
+   if(!P_CheckAmmo(*player) && demo_version >= 331)
       P_SetPsprite(*player, ps_weapon, player->readyweapon->downstate);
 }
 
@@ -1122,24 +1122,24 @@ void A_Raise(actionargs_t *actionargs)
 //
 // haleyjd 12/11/12: Separated out of the below.
 //
-void P_WeaponRecoil(player_t *player)
+void P_WeaponRecoil(player_t &player)
 {
-   weaponinfo_t *readyweapon = player->readyweapon;
+   weaponinfo_t *readyweapon = player.readyweapon;
 
    // killough 3/27/98: prevent recoil in no-clipping mode
-   if(!(player->mo->flags & MF_NOCLIP))
+   if(!(player.mo->flags & MF_NOCLIP))
    {
       // haleyjd 08/18/08: added ALWAYSRECOIL weapon flag; recoil in weaponinfo
       if(readyweapon->flags & WPF_ALWAYSRECOIL ||
          (weapon_recoil && (demo_version >= 203 || !compatibility)))
       {
          // MaxW: 2018/11/04: Changed to allow for fixed-point recoil
-         P_Thrust(player, ANG180 + player->mo->angle, 0, readyweapon->recoil / 32);
+         P_Thrust(&player, ANG180 + player.mo->angle, 0, readyweapon->recoil / 32);
       }
    }
 
    // haleyjd 06/05/13: if weapon is flagged for it, do haptic recoil effect here.
-   if(player == &players[consoleplayer] && (readyweapon->flags & WPF_NOHAPTICRECOIL) == 0)
+   if(&player == &players[consoleplayer] && (readyweapon->flags & WPF_NOHAPTICRECOIL) == 0)
       I_StartHaptic(HALHapticInterface::EFFECT_FIRE, readyweapon->hapticrecoil, readyweapon->haptictime);
 }
 
@@ -1152,12 +1152,12 @@ void P_WeaponRecoil(player_t *player)
 //
 // WEAPON_FIXME: "adder" parameter is not reliable for EDF editing
 //
-void A_FireSomething(player_t* player, int adder)
+void A_FireSomething(player_t& player, int adder)
 {
-   if(demo_version >= 401 && player->attackdown & AT_SECONDARY)
-      P_SetPsprite(*player, ps_flash, player->readyweapon->flashstate_alt);
+   if(demo_version >= 401 && player.attackdown & AT_SECONDARY)
+      P_SetPsprite(player, ps_flash, player.readyweapon->flashstate_alt);
    else
-      P_SetPsprite(*player, ps_flash, player->readyweapon->flashstate+adder);
+      P_SetPsprite(player, ps_flash, player.readyweapon->flashstate+adder);
 
    P_WeaponRecoil(player);
 }
@@ -1175,7 +1175,7 @@ void A_GunFlash(actionargs_t *actionargs)
 
    P_SetMobjState(actionargs->actor, player->pclass->altattack);
    
-   A_FireSomething(player, 0);                               // phares
+   A_FireSomething(*player, 0);                               // phares
 }
 
 //=============================================================================
@@ -1300,28 +1300,28 @@ void P_SetupPsprites(player_t &player)
 //
 // Called every tic by player thinking routine.
 //
-void P_MovePsprites(player_t *player)
+void P_MovePsprites(player_t &player)
 {
-   pspdef_t *psp = player->psprites;
+   pspdef_t *psp = player.psprites;
    int i;
 
    // a null state means not active
    // drop tic count and possibly change state
    // a -1 tic count never changes
 
-   player->psprites[ps_weapon].backupPosition();
-   player->psprites[ps_flash].backupPosition();
-   
+   player.psprites[ps_weapon].backupPosition();
+   player.psprites[ps_flash].backupPosition();
+
    for(i = 0; i < NUMPSPRITES; ++i, ++psp)
    {
       if(psp->state && psp->tics != -1 && !--psp->tics)
-         P_SetPsprite(*player, i, psp->state->nextstate);
+         P_SetPsprite(player, i, psp->state->nextstate);
    }
    
-   player->psprites[ps_flash].playpos   = player->psprites[ps_weapon].playpos;
-   player->psprites[ps_flash].renderpos = player->psprites[ps_weapon].renderpos;
+   player.psprites[ps_flash].playpos   = player.psprites[ps_weapon].playpos;
+   player.psprites[ps_flash].renderpos = player.psprites[ps_weapon].renderpos;
    // also preserve interpolation
-   player->psprites[ps_flash].prevpos   = player->psprites[ps_weapon].prevpos;
+   player.psprites[ps_flash].prevpos   = player.psprites[ps_weapon].prevpos;
 }
 
 //===============================
@@ -1428,7 +1428,7 @@ void A_FireCustomBullets(actionargs_t *actionargs)
    else if(flashint == 0) // zero means default behavior
       P_SetPsprite(*player, ps_flash, player->readyweapon->flashstate);
 
-   P_WeaponRecoil(player);
+   P_WeaponRecoil(*player);
 
    P_BulletSlope(mo);
 

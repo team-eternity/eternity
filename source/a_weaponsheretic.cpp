@@ -137,7 +137,7 @@ void A_FireMacePL1B(actionargs_t *actionargs)
    Mobj     *ball;
    angle_t   angle;
 
-   if(!player || !P_CheckAmmo(player))
+   if(!player || !P_CheckAmmo(*player))
       return;
 
    P_SubtractAmmo(*player, -1);
@@ -177,7 +177,7 @@ void A_FireMacePL1(actionargs_t *actionargs)
       A_FireMacePL1B(actionargs);
       return;
    }
-   if(!P_CheckAmmo(player))
+   if(!P_CheckAmmo(*player))
       return;
 
    const int tnum = E_SafeThingType(MT_MACEFX1);
@@ -503,7 +503,7 @@ void A_FireSkullRodPL1(actionargs_t *actionargs)
 {
    player_t *player = actionargs->actor->player;
 
-   if(!player || !P_CheckAmmo(player))
+   if(!player || !P_CheckAmmo(*player))
       return;
 
    P_SubtractAmmo(*player, -1);
@@ -519,7 +519,7 @@ void A_FireSkullRodPL2(actionargs_t* actionargs)
 {
    player_t* player = actionargs->actor->player;
 
-   if (!player || !P_CheckAmmo(player))
+   if (!player || !P_CheckAmmo(*player))
       return;
 
    P_SubtractAmmo(*player, deathmatch ? 1 : -1);

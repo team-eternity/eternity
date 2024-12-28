@@ -382,7 +382,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       {
          if(gameactions[i])
          {
-            weaponinfo_t *weapon = P_GetPlayerWeapon(&p, i - ka_weapon1);
+            weaponinfo_t *weapon = P_GetPlayerWeapon(p, i - ka_weapon1);
             if(weapon)
             {
                const auto slot = E_FindEntryForWeaponInSlotIndex(p, weapon, i - ka_weapon1);
@@ -397,9 +397,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
       //next / prev weapon actions
       if(gameactions[ka_weaponup])
-         newweapon = P_NextWeapon(&p, &cmd->slotIndex);
+         newweapon = P_NextWeapon(p, &cmd->slotIndex);
       else if(gameactions[ka_weapondown])
-         newweapon = P_PrevWeapon(&p, &cmd->slotIndex);
+         newweapon = P_PrevWeapon(p, &cmd->slotIndex);
 
       if(p.readyweapon)
       {
@@ -424,7 +424,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       //
       // killough 3/26/98, 4/2/98: fix autoswitch when no weapons are left
 
-      if((!demo_compatibility && (p.attackdown & AT_PRIMARY) && !P_CheckAmmo(&p)) ||
+      if((!demo_compatibility && (p.attackdown & AT_PRIMARY) && !P_CheckAmmo(p)) ||
          gameactions[ka_nextweapon])
       {
          newweapon = P_SwitchWeaponOldDoom(p); // phares
@@ -496,9 +496,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       {
           // haleyjd 03/06/09: next/prev weapon actions
           if(gameactions[ka_weaponup])
-              newweapon = P_NextWeapon(&p);
+              newweapon = P_NextWeapon(p);
           else if(gameactions[ka_weapondown])
-              newweapon = P_PrevWeapon(&p);
+              newweapon = P_PrevWeapon(p);
 
           const weaponinfo_t *wp = E_WeaponForDEHNum(newweapon);
 
@@ -1403,7 +1403,7 @@ static void G_convertButtonsToWeaponID(ticcmd_t &cmd)
    for(const player_t &player : players)
       if((byte*)&cmd == (byte*)&player + offsetof(player_t, cmd))
       {
-         const weaponinfo_t *info = P_GetPlayerWeapon(&player, index);
+         const weaponinfo_t *info = P_GetPlayerWeapon(player, index);
          if(info)
          {
             const weaponslot_t *slot = E_FindEntryForWeaponInSlotIndex(player, info, index);

@@ -229,7 +229,7 @@ char HU_WeaponColourGeneralized(const player_t &player, int index, bool *had)
    {
       if(had)
          *had = true;
-      const weaponinfo_t *weapon = P_GetPlayerWeapon(&player, index);
+      const weaponinfo_t *weapon = P_GetPlayerWeapon(player, index);
       return weapon->ammo ? HU_WeapColor(weapon) : *FC_GRAY;
    }
    if(had)
