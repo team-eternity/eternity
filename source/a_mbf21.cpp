@@ -971,7 +971,7 @@ void A_RefireTo(actionargs_t *actionargs)
       }
       else if((player->cmd.buttons & BTN_ATTACK_ALT) && !(player->attackdown & AT_PRIMARY))
       {
-         if(noammocheck || P_WeaponHasAmmoAlt(player, player->readyweapon))
+         if(noammocheck || P_WeaponHasAmmoAlt(*player, player->readyweapon))
             P_SetPspritePtr(*player, pspr, state);
       }
    }

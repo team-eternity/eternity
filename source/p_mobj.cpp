@@ -2825,7 +2825,7 @@ void P_SpawnPlayer(mapthing_t* mthing)
 
    // setup gun psprite
 
-   P_SetupPsprites(p);
+   P_SetupPsprites(*p);
 
    // give all cards in death match mode
    if(GameType == gt_dm)

@@ -166,34 +166,34 @@ void P_SetPsprite(player_t &player, int position, statenum_t stnum)
 // Starts bringing the pending weapon up from the bottom of the screen.
 // Uses player.
 //
-static void P_BringUpWeapon(player_t *player)
+static void P_BringUpWeapon(player_t &player)
 {
    statenum_t newstate;
    
-   if(player->pendingweapon == nullptr)
+   if(player.pendingweapon == nullptr)
    {
-      player->pendingweapon = player->readyweapon;
-      player->pendingweaponslot = player->readyweaponslot;
+      player.pendingweapon = player.readyweapon;
+      player.pendingweaponslot = player.readyweaponslot;
    }
    
    weaponinfo_t *pendingweapon;
-   if((pendingweapon = player->pendingweapon))
+   if((pendingweapon = player.pendingweapon))
    {
-      pendingweapon = &E_TryPowered(*player, *pendingweapon);
+      pendingweapon = &E_TryPowered(player, *pendingweapon);
       // haleyjd 06/28/13: weapon upsound
       if(pendingweapon->upsound)
-         S_StartSoundName(player->mo, pendingweapon->upsound);
-  
+         S_StartSoundName(player.mo, pendingweapon->upsound);
+
       newstate = pendingweapon->upstate;
   
-      player->pendingweapon = nullptr;
-      player->pendingweaponslot = nullptr;
-   
+      player.pendingweapon = nullptr;
+      player.pendingweaponslot = nullptr;
+
       // killough 12/98: prevent pistol from starting visibly at bottom of screen:
-      player->psprites[ps_weapon].playpos.y = player->psprites[ps_weapon].renderpos.y = demo_version >= 203 ?
+      player.psprites[ps_weapon].playpos.y = player.psprites[ps_weapon].renderpos.y = demo_version >= 203 ?
          WEAPONBOTTOM+FRACUNIT*2 : WEAPONBOTTOM;
    
-      P_SetPsprite(*player, ps_weapon, newstate);
+      P_SetPsprite(player, ps_weapon, newstate);
    }
 }
 
@@ -218,7 +218,7 @@ bool P_WeaponHasAmmo(const player_t &player, const weaponinfo_t *weapon)
 //
 // MaxW: 2018/01/03: Test if a player has alt ammo for a weapon
 //
-bool P_WeaponHasAmmoAlt(const player_t *player, const weaponinfo_t *weapon)
+bool P_WeaponHasAmmoAlt(const player_t &player, const weaponinfo_t *weapon)
 {
    itemeffect_t *ammoType = weapon->ammo_alt;
 
@@ -227,7 +227,7 @@ bool P_WeaponHasAmmoAlt(const player_t *player, const weaponinfo_t *weapon)
       return true;
 
    // otherwise, read the inventory slot
-   return (E_GetItemOwnedAmount(*player, ammoType) >= weapon->ammopershot_alt);
+   return (E_GetItemOwnedAmount(player, ammoType) >= weapon->ammopershot_alt);
 }
 
 //
@@ -613,24 +613,24 @@ static void P_FireWeapon(player_t *player)
 //
 // Do a weapon's alt fire
 //
-static void P_fireWeaponAlt(player_t *player)
+static void P_fireWeaponAlt(player_t &player)
 {
    statenum_t    newstate;
-   weaponinfo_t *weapon = player->readyweapon;
+   weaponinfo_t *weapon = player.readyweapon;
 
    if(!P_WeaponHasAmmoAlt(player, weapon) || !E_WeaponHasAltFire(weapon))
       return;
 
-   P_SetMobjState(player->mo, player->mo->info->missilestate);
-   newstate = player->refire && weapon->holdstate_alt ? weapon->holdstate_alt :
+   P_SetMobjState(player.mo, player.mo->info->missilestate);
+   newstate = player.refire && weapon->holdstate_alt ? weapon->holdstate_alt :
                                                         weapon->atkstate_alt;
-   P_SetPsprite(*player, ps_weapon, newstate);
+   P_SetPsprite(player, ps_weapon, newstate);
 
    // haleyjd 04/06/03: silencer powerup
    // haleyjd 09/14/07: per-weapon silencer, always silent support
-   if(!(weapon->flags & WPF_SILENCEABLE && player->powers[pw_silencer].isActive()) &&
+   if(!(weapon->flags & WPF_SILENCEABLE && player.powers[pw_silencer].isActive()) &&
       !(weapon->flags & WPF_SILENT))
-      P_NoiseAlert(player->mo, player->mo);
+      P_NoiseAlert(player.mo, player.mo);
 
    lastshottic = gametic;                       // killough 3/22/98
 }
@@ -653,14 +653,14 @@ static bool P_executeWeaponState(player_t *player, const int weaponinfo_t::*stat
 // Try to execute a weapon states if the user inputs that.
 // Returns true if a state is executed, and false otherwise.
 //
-static bool P_tryExecuteWeaponState(player_t *player, pspdef_t *psp)
+static bool P_tryExecuteWeaponState(player_t &player, pspdef_t *psp)
 {
-   if(player->cmd.buttons & BT_ATTACK)
+   if(player.cmd.buttons & BT_ATTACK)
    {
-      if(!(player->attackdown & AT_ALL) || !(player->readyweapon->flags & WPF_NOAUTOFIRE))
+      if(!(player.attackdown & AT_ALL) || !(player.readyweapon->flags & WPF_NOAUTOFIRE))
       {
-         player->attackdown = AT_PRIMARY;
-         P_FireWeapon(player);
+         player.attackdown = AT_PRIMARY;
+         P_FireWeapon(&player);
          if(centerfire)
          {
             psp->renderpos = { FRACUNIT, WEAPONTOP };
@@ -669,11 +669,11 @@ static bool P_tryExecuteWeaponState(player_t *player, pspdef_t *psp)
          return true;
       }
    }
-   else if(player->cmd.buttons & BTN_ATTACK_ALT && E_WeaponHasAltFire(player->readyweapon))
+   else if(player.cmd.buttons & BTN_ATTACK_ALT && E_WeaponHasAltFire(player.readyweapon))
    {
-      if(!(player->attackdown & AT_ALL) || !(player->readyweapon->flags & WPF_NOAUTOFIRE))
+      if(!(player.attackdown & AT_ALL) || !(player.readyweapon->flags & WPF_NOAUTOFIRE))
       {
-         player->attackdown = AT_SECONDARY;
+         player.attackdown = AT_SECONDARY;
          P_fireWeaponAlt(player);
          if(centerfire)
          {
@@ -684,20 +684,20 @@ static bool P_tryExecuteWeaponState(player_t *player, pspdef_t *psp)
       }
    }
    else
-      player->attackdown = AT_NONE;
+      player.attackdown = AT_NONE;
 
-   if(player->cmd.actions & AC_RELOAD)
-      return P_executeWeaponState(player, &weaponinfo_t::reloadstate);
-   else if(player->cmd.actions & AC_ZOOM)
-      return P_executeWeaponState(player, &weaponinfo_t::zoomstate);
-   else if(player->cmd.actions & AC_USER1)
-      return P_executeWeaponState(player, &weaponinfo_t::userstate_1);
-   else if(player->cmd.actions & AC_USER2)
-      return P_executeWeaponState(player, &weaponinfo_t::userstate_2);
-   else if(player->cmd.actions & AC_USER3)
-      return P_executeWeaponState(player, &weaponinfo_t::userstate_3);
-   else if(player->cmd.actions & AC_USER4)
-      return P_executeWeaponState(player, &weaponinfo_t::userstate_4);
+   if(player.cmd.actions & AC_RELOAD)
+      return P_executeWeaponState(&player, &weaponinfo_t::reloadstate);
+   else if(player.cmd.actions & AC_ZOOM)
+      return P_executeWeaponState(&player, &weaponinfo_t::zoomstate);
+   else if(player.cmd.actions & AC_USER1)
+      return P_executeWeaponState(&player, &weaponinfo_t::userstate_1);
+   else if(player.cmd.actions & AC_USER2)
+      return P_executeWeaponState(&player, &weaponinfo_t::userstate_2);
+   else if(player.cmd.actions & AC_USER3)
+      return P_executeWeaponState(&player, &weaponinfo_t::userstate_3);
+   else if(player.cmd.actions & AC_USER4)
+      return P_executeWeaponState(&player, &weaponinfo_t::userstate_4);
 
    return false;
 }
@@ -917,7 +917,7 @@ void A_WeaponReady(actionargs_t *actionargs)
    // certain weapons do not auto fire
    if(demo_version >= 401)
    {
-      if(P_tryExecuteWeaponState(player, psp))
+      if(P_tryExecuteWeaponState(*player, psp))
          return;
    }
    else if(player->cmd.buttons & BT_ATTACK)
@@ -967,7 +967,7 @@ static void A_reFireNew(actionargs_t *actionargs)
             player->health && !(player->attackdown & AT_PRIMARY))
    {
       player->refire++;
-      P_fireWeaponAlt(player);
+      P_fireWeaponAlt(*player);
    }
    else
    {
@@ -1080,7 +1080,7 @@ void A_Lower(actionargs_t *actionargs)
       player->readyweaponslot = player->pendingweaponslot;
    }
 
-   P_BringUpWeapon(player);
+   P_BringUpWeapon(*player);
 }
 
 //
@@ -1283,15 +1283,15 @@ void A_Light2(actionargs_t *actionargs)
 //
 // Called at start of level for each player.
 //
-void P_SetupPsprites(player_t *player)
+void P_SetupPsprites(player_t &player)
 {
    // remove all psprites
-   for(pspdef_t &psprite : player->psprites)
+   for(pspdef_t &psprite : player.psprites)
       psprite.state = nullptr;
 
    // spawn the gun
-   player->pendingweapon     = player->readyweapon;
-   player->pendingweaponslot = player->readyweaponslot;
+   player.pendingweapon     = player.readyweapon;
+   player.pendingweaponslot = player.readyweaponslot;
    P_BringUpWeapon(player);
 }
 
