@@ -587,25 +587,25 @@ int lastshottic; // killough 3/22/98
 //
 // P_FireWeapon.
 //
-static void P_FireWeapon(player_t *player)
+static void P_FireWeapon(player_t &player)
 {
    statenum_t    newstate;
    weaponinfo_t *weapon;
 
-   if(!P_CheckAmmo(*player))
+   if(!P_CheckAmmo(player))
       return;
 
-   weapon = player->readyweapon;
+   weapon = player.readyweapon;
 
-   P_SetMobjState(player->mo, player->mo->info->missilestate);
-   newstate = player->refire && weapon->holdstate ? weapon->holdstate : weapon->atkstate;
-   P_SetPsprite(*player, ps_weapon, newstate);
+   P_SetMobjState(player.mo, player.mo->info->missilestate);
+   newstate = player.refire && weapon->holdstate ? weapon->holdstate : weapon->atkstate;
+   P_SetPsprite(player, ps_weapon, newstate);
 
    // haleyjd 04/06/03: silencer powerup
    // haleyjd 09/14/07: per-weapon silencer, always silent support
-   if(!(weapon->flags & WPF_SILENCEABLE && player->powers[pw_silencer].isActive()) &&
+   if(!(weapon->flags & WPF_SILENCEABLE && player.powers[pw_silencer].isActive()) &&
       !(weapon->flags & WPF_SILENT))
-      P_NoiseAlert(player->mo, player->mo);
+      P_NoiseAlert(player.mo, player.mo);
 
    lastshottic = gametic;                       // killough 3/22/98
 }
@@ -660,7 +660,7 @@ static bool P_tryExecuteWeaponState(player_t &player, pspdef_t *psp)
       if(!(player.attackdown & AT_ALL) || !(player.readyweapon->flags & WPF_NOAUTOFIRE))
       {
          player.attackdown = AT_PRIMARY;
-         P_FireWeapon(&player);
+         P_FireWeapon(player);
          if(centerfire)
          {
             psp->renderpos = { FRACUNIT, WEAPONTOP };
@@ -925,7 +925,7 @@ void A_WeaponReady(actionargs_t *actionargs)
       if(!(player->attackdown & AT_PRIMARY) || !(player->readyweapon->flags & WPF_NOAUTOFIRE))
       {
          player->attackdown = AT_PRIMARY;
-         P_FireWeapon(player);
+         P_FireWeapon(*player);
          if(centerfire)
          {
             psp->renderpos = { FRACUNIT, WEAPONTOP };
@@ -961,7 +961,7 @@ static void A_reFireNew(actionargs_t *actionargs)
        player->health && !(player->attackdown & AT_SECONDARY))
    {
       player->refire++;
-      P_FireWeapon(player);
+      P_FireWeapon(*player);
    }
    else if((player->cmd.buttons & BTN_ATTACK_ALT) && player->pendingweapon == nullptr &&
             player->health && !(player->attackdown & AT_PRIMARY))
@@ -1002,7 +1002,7 @@ void A_ReFire(actionargs_t *actionargs)
       && player->pendingweapon == nullptr && player->health)
    {
       player->refire++;
-      P_FireWeapon(player);
+      P_FireWeapon(*player);
    }
    else
    {
