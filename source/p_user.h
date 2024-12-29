@@ -37,11 +37,11 @@ class  Mobj;
 #define INVERSECOLORMAP 32
 
 void P_PlayerThink(player_t &player);
-void P_CalcHeight(player_t *player);
-void P_DeathThink(player_t *player);
-void P_MovePlayer(player_t *player);
-void P_Thrust(player_t *player, angle_t angle, angle_t pitch, fixed_t move);
-void P_SetPlayerAttacker(player_t *player, Mobj *attacker);
+void P_CalcHeight(player_t &player);
+void P_DeathThink(player_t &player);
+void P_MovePlayer(player_t &player);
+void P_Thrust(player_t &player, angle_t angle, angle_t pitch, fixed_t move);
+void P_SetPlayerAttacker(player_t &player, Mobj *attacker);
 void P_SetDisplayPlayer(int new_displayplayer);
 void P_PlayerStartFlight(player_t *player, bool thrustup);
 void P_PlayerStopFlight(player_t *player);

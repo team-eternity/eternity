@@ -1849,7 +1849,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       if(player->health < 0)
          player->health = 0;
 
-      P_SetPlayerAttacker(player, source);
+      P_SetPlayerAttacker(*player, source);
       player->damagecount += damage;  // add damage after armor / invuln
 
       if(player->damagecount > 100)

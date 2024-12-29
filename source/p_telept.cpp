@@ -295,7 +295,7 @@ static int P_SilentTeleport(Mobj *thing, const line_t *line,
       player->deltaviewheight = 0;
 
       // Set player's view according to the newly set parameters
-      P_CalcHeight(player);
+      P_CalcHeight(*player);
 
       player->prevviewz = player->viewz;
 
@@ -572,7 +572,7 @@ int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing,
             player->deltaviewheight = 0;
 
             // Set player's view according to the newly set parameters
-            P_CalcHeight(player);
+            P_CalcHeight(*player);
 
             player->prevviewz = player->viewz;
 

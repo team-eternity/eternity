@@ -93,17 +93,17 @@ void P_SetDisplayPlayer(int new_displayplayer)
 //
 // davidph 06/06/12: Added pitch.
 //
-void P_Thrust(player_t *player, angle_t angle, angle_t pitch, fixed_t move)
+void P_Thrust(player_t &player, angle_t angle, angle_t pitch, fixed_t move)
 {
    if(pitch)
    {
       pitch >>= ANGLETOFINESHIFT;
-      player->mo->momz -= FixedMul(move, finesine[pitch]);
+      player.mo->momz -= FixedMul(move, finesine[pitch]);
       move = FixedMul(move, finecosine[pitch]);
    }
 
-   player->mo->momx += FixedMul(move, finecosine[angle >>= ANGLETOFINESHIFT]);
-   player->mo->momy += FixedMul(move, finesine[angle]);
+   player.mo->momx += FixedMul(move, finecosine[angle >>= ANGLETOFINESHIFT]);
+   player.mo->momy += FixedMul(move, finesine[angle]);
 }
 
 //
@@ -140,7 +140,7 @@ void P_Bob(player_t *player, angle_t angle, angle_t pitch, fixed_t move)
 //
 // Calculate the walking / running height adjustment
 //
-void P_CalcHeight(player_t *player)
+void P_CalcHeight(player_t &player)
 {
    int     angle;
    fixed_t bob;
@@ -163,49 +163,49 @@ void P_CalcHeight(player_t *player)
    // optioned.
    // 04/11/10: refactored
 
-   player->bob = 0;
-   if (player->pclass->flags & PCF_NOBOB)
-      player->bob = 0;
+   player.bob = 0;
+   if (player.pclass->flags & PCF_NOBOB)
+      player.bob = 0;
    else if(demo_version >= 203)
    {
       if(player_bobbing)
       {
-         player->bob = (FixedMul(player->momx, player->momx) +
-                        FixedMul(player->momy, player->momy)) >> 2;
+         player.bob = (FixedMul(player.momx, player.momx) +
+                        FixedMul(player.momy, player.momy)) >> 2;
       }
    }
    else
    {
       if(demo_compatibility || player_bobbing)
       {
-         player->bob = (FixedMul(player->mo->momx, player->mo->momx) +
-                        FixedMul(player->mo->momy, player->mo->momy)) >> 2;
+         player.bob = (FixedMul(player.mo->momx, player.mo->momx) +
+                       FixedMul(player.mo->momy, player.mo->momy)) >> 2;
       }
    }
 
    // haleyjd 04/11/10:
    // e6y
-   if(demo_version == 202 && player->mo->friction > ORIG_FRICTION) // ice?
+   if(demo_version == 202 && player.mo->friction > ORIG_FRICTION) // ice?
    {
-      if(player->bob > (MAXBOB>>2))
-         player->bob = MAXBOB>>2;
+      if(player.bob > (MAXBOB>>2))
+         player.bob = MAXBOB>>2;
    }
    else
    {
-      if(player->bob > MAXBOB)
-         player->bob = MAXBOB;
+      if(player.bob > MAXBOB)
+         player.bob = MAXBOB;
    }
 
    // haleyjd 06/05/12: flying players
-   if(player->mo->flags4 & MF4_FLY && !P_OnGroundOrThing(*player->mo))
-      player->bob = FRACUNIT / 2;
+   if(player.mo->flags4 & MF4_FLY && !P_OnGroundOrThing(*player.mo))
+      player.bob = FRACUNIT / 2;
 
-   if(!onground || player->cheats & CF_NOMOMENTUM)
+   if(!onground || player.cheats & CF_NOMOMENTUM)
    {
-      player->viewz = player->mo->z + player->pclass->viewheight;
-      
-      if(player->viewz > player->mo->zref.ceiling - 4 * FRACUNIT)
-         player->viewz = player->mo->zref.ceiling - 4 * FRACUNIT;
+      player.viewz = player.mo->z + player.pclass->viewheight;
+
+      if(player.viewz > player.mo->zref.ceiling - 4 * FRACUNIT)
+         player.viewz = player.mo->zref.ceiling - 4 * FRACUNIT;
 
       // phares 2/25/98:
       // The following line was in the Id source and appears
@@ -218,46 +218,46 @@ void P_CalcHeight(player_t *player)
    }
 
    angle = (FINEANGLES / 20 * leveltime) & FINEMASK;
-   bob   = FixedMul(player->bob / 2, finesine[angle]);
+   bob   = FixedMul(player.bob / 2, finesine[angle]);
 
    // move viewheight
    
-   if(player->playerstate == PST_LIVE)
+   if(player.playerstate == PST_LIVE)
    {
-      player->viewheight += player->deltaviewheight;
-      
-      if(player->viewheight > player->pclass->viewheight)
+      player.viewheight += player.deltaviewheight;
+
+      if(player.viewheight > player.pclass->viewheight)
       {
-         player->viewheight = player->pclass->viewheight;
-         player->deltaviewheight = 0;
+         player.viewheight = player.pclass->viewheight;
+         player.deltaviewheight = 0;
       }
 
-      if(player->viewheight < player->pclass->viewheight / 2)
+      if(player.viewheight < player.pclass->viewheight / 2)
       {
-         player->viewheight = player->pclass->viewheight / 2;
-         if(player->deltaviewheight <= 0)
-            player->deltaviewheight = 1;
+         player.viewheight = player.pclass->viewheight / 2;
+         if(player.deltaviewheight <= 0)
+            player.deltaviewheight = 1;
       }
 
-      if(player->deltaviewheight)
+      if(player.deltaviewheight)
       {
-         player->deltaviewheight += FRACUNIT / 4;
-         if(!player->deltaviewheight)
-            player->deltaviewheight = 1;
+         player.deltaviewheight += FRACUNIT / 4;
+         if(!player.deltaviewheight)
+            player.deltaviewheight = 1;
       }
    }
 
-   player->viewz = player->mo->z + player->viewheight + bob;
+   player.viewz = player.mo->z + player.viewheight + bob;
 
    // haleyjd 08/07/04: new floorclip system
-   if(player->mo->floorclip && player->playerstate != PST_DEAD && 
-      player->mo->z <= player->mo->zref.floor)
+   if(player.mo->floorclip && player.playerstate != PST_DEAD &&
+      player.mo->z <= player.mo->zref.floor)
    {
-      player->viewz -= player->mo->floorclip;
+      player.viewz -= player.mo->floorclip;
    }
    
-   if(player->viewz > player->mo->zref.ceiling - 4 * FRACUNIT)
-      player->viewz = player->mo->zref.ceiling - 4 * FRACUNIT;
+   if(player.viewz > player.mo->zref.ceiling - 4 * FRACUNIT)
+      player.viewz = player.mo->zref.ceiling - 4 * FRACUNIT;
 }
 
 //
@@ -314,11 +314,11 @@ static void P_PlayerFlight(player_t &player, const ticcmd_t *cmd)
 //
 // killough 10/98: simplified
 //
-void P_MovePlayer(player_t* player)
+void P_MovePlayer(player_t& player)
 {
-   const ticcmd_t *cmd = &player->cmd;
-   Mobj *mo = player->mo;
-   
+   const ticcmd_t *cmd = &player.cmd;
+   Mobj *mo = player.mo;
+
    mo->angle += cmd->angleturn << 16;
    
    // haleyjd: OVER_UNDER
@@ -340,8 +340,8 @@ void P_MovePlayer(player_t* player)
          int friction, movefactor = P_GetMoveFactor(mo, &friction);
 
          // Some classes have superior speeds
-         if (player->pclass->speedfactor != FRACUNIT)
-            movefactor = FixedMul(movefactor, player->pclass->speedfactor);
+         if (player.pclass->speedfactor != FRACUNIT)
+            movefactor = FixedMul(movefactor, player.pclass->speedfactor);
 
          // killough 11/98:
          // On sludge, make bobbing depend on efficiency.
@@ -351,20 +351,20 @@ void P_MovePlayer(player_t* player)
             friction < ORIG_FRICTION ? movefactor : ORIG_FRICTION_FACTOR;
 
          // davidph 06/06/12: pitch-to-fly
-         fixed_t pitch = player->pitch;
+         fixed_t pitch = player.pitch;
 
          if(!(mo->flags4 & MF4_FLY) || !pitchedflight)
             pitch = 0;
 
          if(cmd->forwardmove)
          {
-            P_Bob(player, mo->angle, pitch, cmd->forwardmove*bobfactor);
+            P_Bob(&player, mo->angle, pitch, cmd->forwardmove*bobfactor);
             P_Thrust(player, mo->angle, pitch, cmd->forwardmove*movefactor);
          }
          
          if(cmd->sidemove)
          {
-            P_Bob(player, mo->angle-ANG90, 0, cmd->sidemove*bobfactor);
+            P_Bob(&player, mo->angle-ANG90, 0, cmd->sidemove*bobfactor);
             P_Thrust(player, mo->angle-ANG90, 0, cmd->sidemove*movefactor);
          }
       }
@@ -380,8 +380,8 @@ void P_MovePlayer(player_t* player)
          int friction, movefactor = P_GetMoveFactor(mo, &friction);
 
          // Some classes have superior speeds
-         if (player->pclass->speedfactor != FRACUNIT)
-            movefactor = FixedMul(movefactor, player->pclass->speedfactor);
+         if (player.pclass->speedfactor != FRACUNIT)
+            movefactor = FixedMul(movefactor, player.pclass->speedfactor);
 
          movefactor = FixedMul(movefactor, LevelInfo.airControl);
 
@@ -392,7 +392,7 @@ void P_MovePlayer(player_t* player)
          if(cmd->sidemove)
             P_Thrust(player, mo->angle - ANG90, 0, cmd->sidemove*movefactor);
       }
-      else if(LevelInfo.airControl == 0 && E_CanJump(*player->pclass))
+      else if(LevelInfo.airControl == 0 && E_CanJump(*player.pclass))
       {
          // Apply legacy Hexen/Strife primitive air control if air control is 0
          // (default) and the compatibility setting is "NO".
@@ -410,7 +410,7 @@ void P_MovePlayer(player_t* player)
    }
 
    // haleyjd 06/05/12: flight
-   P_PlayerFlight(*player, cmd);
+   P_PlayerFlight(player, cmd);
 }
 
 #define ANG5 (ANG90/18)
@@ -421,77 +421,77 @@ void P_MovePlayer(player_t* player)
 // Fall on your face when dying.
 // Decrease POV height to floor height.
 //
-void P_DeathThink(player_t *player)
+void P_DeathThink(player_t &player)
 {
    angle_t angle;
    angle_t delta;
    
-   P_MovePsprites(*player);
+   P_MovePsprites(player);
 
    // fall to the ground
    
-   if(player->viewheight > 6 * FRACUNIT)
-      player->viewheight -= FRACUNIT;
-   
-   if(player->viewheight < 6 * FRACUNIT)
-      player->viewheight = 6 * FRACUNIT;
-   
-   player->deltaviewheight = 0;
+   if(player.viewheight > 6 * FRACUNIT)
+      player.viewheight -= FRACUNIT;
+
+   if(player.viewheight < 6 * FRACUNIT)
+      player.viewheight = 6 * FRACUNIT;
+
+   player.deltaviewheight = 0;
 
    // haleyjd: never bob player view when dead, and always treat player like
    //          he is on the ground
    if(demo_version >= 333)
    {
       onground = true;
-      player->momx = player->momy = 0;
+      player.momx = player.momy = 0;
    }
    else
-      onground = P_OnGroundOrThing(*player->mo);
+      onground = P_OnGroundOrThing(*player.mo);
 
    P_CalcHeight(player);
-   
-   if(player->attacker && player->attacker != player->mo)
+
+   if(player.attacker && player.attacker != player.mo)
    {
       // ioanch 20151226: use portal-translated coordinates if needed
-      angle = P_PointToAngle(player->mo->x,
-                             player->mo->y,
-                             getThingX(player->mo, player->attacker),
-                             getThingY(player->mo, player->attacker));
+      angle = P_PointToAngle(player.mo->x,
+                             player.mo->y,
+                             getThingX(player.mo, player.attacker),
+                             getThingY(player.mo, player.attacker));
 
-      delta = angle - player->mo->angle;
-      
+      delta = angle - player.mo->angle;
+
       if(delta < ANG5 || delta > (unsigned int)-ANG5)
       {
          // Looking at killer,
          //  so fade damage flash down.
          
-         player->mo->angle = angle;
-         
-         if(player->damagecount)
-            player->damagecount--;
+         player.mo->angle = angle;
+
+         if(player.damagecount)
+            player.damagecount--;
       }
       else 
          if(delta < ANG180)
-            player->mo->angle += ANG5;
+            player.mo->angle += ANG5;
          else
-            player->mo->angle -= ANG5;
+            player.mo->angle -= ANG5;
    }
-   else if(player->damagecount)
-      player->damagecount--;
+   else if(player.damagecount)
+      player.damagecount--;
 
    // haleyjd 10/05/08:
    // handle looking slightly up when the player is attached to a non-player
    // object and is dead. This was done for the decapitation deaths in Heretic
    // and Hexen.
-   if(!E_IsPlayerClassThingType(player->mo->type))
+   if(!E_IsPlayerClassThingType(player.mo->type))
    {
-      player->prevpitch = player->pitch;
-      if(player->mo->z <= player->mo->zref.floor && player->pitch > -ANGLE_1 * 15)
-         player->pitch -= 2*ANGLE_1/3;
+      player.prevpitch = player.pitch;
+      if(player.mo->z <= player.mo->zref.floor && player.pitch > -ANGLE_1 * 15)
+         player.pitch -= 2*ANGLE_1/3;
    }
 
-   if(player->cmd.buttons & BT_USE)
-      player->playerstate = PST_REBORN;
+   if(player.cmd.buttons & BT_USE)
+      player.playerstate = PST_REBORN;
 }
 
 //
@@ -523,7 +523,7 @@ static void P_HereticCurrent(player_t *player)
       sector_t *sec = m->m_sector;
 
       if(sec->hticPushType == SECTOR_HTIC_CURRENT)
-         P_Thrust(player, sec->hticPushAngle, 0, sec->hticPushForce);
+         P_Thrust(*player, sec->hticPushAngle, 0, sec->hticPushForce);
    }
 }
 
@@ -744,7 +744,7 @@ void P_PlayerThink(player_t &player)
 
    if(player.playerstate == PST_DEAD)
    {
-      P_DeathThink(&player);
+      P_DeathThink(player);
       return;
    }
 
@@ -802,7 +802,7 @@ void P_PlayerThink(player_t &player)
       player.mo->reactiontime--;
    else
    {
-      P_MovePlayer(&player);
+      P_MovePlayer(player);
 
       // Handle actions   -- joek 12/22/07
       // ioanch: not on demo_version lower than some amount. Was happening
@@ -836,7 +836,7 @@ void P_PlayerThink(player_t &player)
       }
    }
   
-   P_CalcHeight(&player); // Determines view height and bobbing
+   P_CalcHeight(player); // Determines view height and bobbing
 
    // haleyjd: are we falling? might need to scream :->
    if(!getComp(comp_fallingdmg) && demo_version >= 329)
@@ -1102,12 +1102,12 @@ void P_PlayerThink(player_t &player)
 // spin around to a pseudo-random angle when watching a Lost Soul that
 // had killed you be removed from the game world.
 //
-void P_SetPlayerAttacker(player_t *player, Mobj *attacker)
+void P_SetPlayerAttacker(player_t &player, Mobj *attacker)
 {
    if(full_demo_version >= make_full_version(340, 17))
-      P_SetTarget<Mobj>(&player->attacker, attacker);
+      P_SetTarget<Mobj>(&player.attacker, attacker);
    else
-      player->attacker = attacker;
+      player.attacker = attacker;
 }
 
 //

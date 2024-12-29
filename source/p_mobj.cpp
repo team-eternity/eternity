@@ -1634,7 +1634,7 @@ bool P_CheckPortalTeleport(Mobj *mobj, surf_e *whichSurf)
          fixed_t passheight, prevpassheight;
          if(mobj->player)
          {
-            P_CalcHeight(mobj->player);
+            P_CalcHeight(*mobj->player);
             passheight = mobj->player->viewz;
             prevpassheight = mobj->player->prevviewz;
          }

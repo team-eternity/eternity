@@ -216,7 +216,7 @@ void A_FireOldBFG(actionargs_t *actionargs)
    // WEAPON_FIXME: recoil for classic BFG
 
    if(weapon_recoil && !(mo->flags & MF_NOCLIP))
-      P_Thrust(player, ANG180 + mo->angle, 0, 512 * wp->recoil);
+      P_Thrust(*player, ANG180 + mo->angle, 0, 512 * wp->recoil);
 
    auto weapon   = player->readyweapon;
    auto ammoType = weapon->ammo;   
