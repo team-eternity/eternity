@@ -276,10 +276,10 @@ static void P_PlayerFlight(player_t &player, const ticcmd_t *cmd)
          player.flyheight = fly * 2;
 
          if(!(player.mo->flags4 & MF4_FLY))
-            P_PlayerStartFlight(&player, false);
+            P_PlayerStartFlight(player, false);
       }
       else
-         P_PlayerStopFlight(&player);
+         P_PlayerStopFlight(player);
    }
    else if(fly > 0 && estrnonempty(GameModeInfo->autoFlightArtifact) &&
            E_GetItemOwnedAmountName(player, GameModeInfo->autoFlightArtifact) >= 1)
@@ -1015,7 +1015,7 @@ void P_PlayerThink(player_t &player)
    if(player.powers[pw_flight].shouldCount())
    {
       if(!--player.powers[pw_flight].tics)
-         P_PlayerStopFlight(&player);
+         P_PlayerStopFlight(player);
    }
 
    if(player.powers[pw_weaponlevel2].shouldCount())
@@ -1115,16 +1115,16 @@ void P_SetPlayerAttacker(player_t &player, Mobj *attacker)
 //
 // Call this to start the player flying.
 //
-void P_PlayerStartFlight(player_t *player, bool thrustup)
+void P_PlayerStartFlight(player_t &player, bool thrustup)
 {
    if(full_demo_version < make_full_version(340, 23) && !vanilla_heretic)
       return;
 
-   player->mo->flags4 |= MF4_FLY;
-   player->mo->flags  |= MF_NOGRAVITY;
+   player.mo->flags4 |= MF4_FLY;
+   player.mo->flags  |= MF_NOGRAVITY;
 
-   if(thrustup && player->mo->z <= player->mo->zref.floor)
-      player->flyheight = 2 * FLIGHT_IMPULSE_AMT;
+   if(thrustup && player.mo->z <= player.mo->zref.floor)
+      player.flyheight = 2 * FLIGHT_IMPULSE_AMT;
 
    // TODO: stop screaming if falling
 }
@@ -1134,13 +1134,13 @@ void P_PlayerStartFlight(player_t *player, bool thrustup)
 //
 // Call this to make the player stop flying.
 //
-void P_PlayerStopFlight(player_t *player)
+void P_PlayerStopFlight(player_t &player)
 {
    if(full_demo_version < make_full_version(340, 23) && !vanilla_heretic)
       return;
 
-   player->mo->flags4 &= ~MF4_FLY;
-   player->mo->flags  &= ~MF_NOGRAVITY;
+   player.mo->flags4 &= ~MF4_FLY;
+   player.mo->flags  &= ~MF_NOGRAVITY;
 }
 
 //

@@ -582,58 +582,58 @@ bool P_GiveArmor(player_t &player, const itemeffect_t *effect)
 //
 // Rewritten by Lee Killough
 //
-bool P_GivePower(player_t *player, int power, int duration, bool permament, bool additiveTime)
+bool P_GivePower(player_t &player, int power, int duration, bool permament, bool additiveTime)
 {
    switch(power)
    {
    case pw_invisibility:
-      player->mo->flags |= MF_SHADOW;
+      player.mo->flags |= MF_SHADOW;
       break;
    case pw_allmap:
-      if(player->powers[pw_allmap].isActive())
+      if(player.powers[pw_allmap].isActive())
          return false;
       break;
    case pw_totalinvis:   // haleyjd: total invisibility
-      player->mo->flags2 |= MF2_DONTDRAW;
-      player->mo->flags4 |= MF4_TOTALINVISIBLE;
+      player.mo->flags2 |= MF2_DONTDRAW;
+      player.mo->flags4 |= MF4_TOTALINVISIBLE;
       break;
    case pw_ghost:        // haleyjd: heretic ghost
-      player->mo->flags3 |= MF3_GHOST;
+      player.mo->flags3 |= MF3_GHOST;
       break;
    case pw_silencer:
-      if(player->powers[pw_silencer].isActive())
+      if(player.powers[pw_silencer].isActive())
          return false;
       break;
    case pw_flight:       // haleyjd: flight
-      if(player->powers[pw_flight].tics < 0 || player->powers[pw_flight].tics > 4 * 32)
+      if(player.powers[pw_flight].tics < 0 || player.powers[pw_flight].tics > 4 * 32)
          return false;
       P_PlayerStartFlight(player, true);
       break;
    case pw_weaponlevel2:
-      if(!E_IsPoweredVariant(player->readyweapon))
+      if(!E_IsPoweredVariant(player.readyweapon))
       {
-         weaponinfo_t *sister = player->readyweapon->sisterWeapon;
+         weaponinfo_t *sister = player.readyweapon->sisterWeapon;
          if(E_IsPoweredVariant(sister))
          {
-            if(sister->readystate != player->readyweapon->readystate ||
+            if(sister->readystate != player.readyweapon->readystate ||
                sister->flags & WPF_FORCETOREADY)
             {
-               P_SetPsprite(*player, ps_weapon, sister->readystate);
-               player->refire = 0;
+               P_SetPsprite(player, ps_weapon, sister->readystate);
+               player.refire = 0;
             }
-            player->readyweapon = sister;
+            player.readyweapon = sister;
          }
       }
       break;
    }
 
    // Unless player has infinite duration cheat, set duration (killough)
-   if(!player->powers[power].infinite)
+   if(!player.powers[power].infinite)
    {
       if(permament)
-         player->powers[power] = { 0, true };
+         player.powers[power] = { 0, true };
       else
-         player->powers[power].tics = additiveTime ? players->powers[power].tics + duration : duration;
+         player.powers[power].tics = additiveTime ? players->powers[power].tics + duration : duration;
    }
 
    return true;
@@ -708,7 +708,7 @@ bool P_GivePowerForItem(player_t &player, const itemeffect_t *power)
          return true;
       }
 
-      return P_GivePower(&player, powerNum, duration, permanent, additiveTime);
+      return P_GivePower(player, powerNum, duration, permanent, additiveTime);
    }
 
    return true;
@@ -1017,7 +1017,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
          HU_FragsUpdate();
 
          if (source->player->morphTics && target != source)  // Make a super chicken
-            P_GivePower(source->player, pw_weaponlevel2, MORPHTICS, false, false);
+            P_GivePower(*source->player, pw_weaponlevel2, MORPHTICS, false, false);
       }
    }
    else if(GameType == gt_single && (target->flags & MF_COUNTKILL))
@@ -1041,7 +1041,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
       target->flags  &= ~MF_SOLID;
       target->player->powers[pw_flight]       = { 0, false };
       target->player->powers[pw_weaponlevel2] = { 0, false };
-      P_PlayerStopFlight(target->player);  // haleyjd: stop flying
+      P_PlayerStopFlight(*target->player);  // haleyjd: stop flying
 
       G_DemoLog("%d\tdeath player %d ", gametic,
          (int)(target->player - players) + 1);
@@ -1482,7 +1482,7 @@ bool P_MorphPlayer(const emodmorph_t &minfo, player_t &player)
       if(player.morphTics < MORPHTICS - TICRATE && !player.powers[pw_weaponlevel2].isActive())
       {
          // Make a super chicken
-         P_GivePower(&player, pw_weaponlevel2, MORPHTICS, false, false);
+         P_GivePower(player, pw_weaponlevel2, MORPHTICS, false, false);
          return true;
       }
       return false;

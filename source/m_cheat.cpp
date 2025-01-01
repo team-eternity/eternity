@@ -362,15 +362,15 @@ static void cheat_pw(const void *arg)
          FLIGHTTICS, // haleyjd: flight
          INFRATICS,  // haleyjd: torch
       };
-      P_GivePower(plyr, pw, tics[pw], false, false);
+      P_GivePower(*plyr, pw, tics[pw], false, false);
       if(!getComp(comp_infcheat))
          plyr->powers[pw] = { 0, true };
    }
 
    // haleyjd: stop flight if necessary
    if(pw == pw_flight && !plyr->powers[pw_flight].isActive())
-      P_PlayerStopFlight(plyr);
-   
+      P_PlayerStopFlight(*plyr);
+
    doom_printf("%s", DEH_String("STSTR_BEHOLDX")); // Ty 03/27/98 - externalized
 }
 
@@ -1073,12 +1073,12 @@ CONSOLE_COMMAND(fly, cf_notnet|cf_level)
    if(!(p->powers[pw_flight]).isActive())
    {
       p->powers[pw_flight] = { 0, true };;
-      P_PlayerStartFlight(p, true);
+      P_PlayerStartFlight(*p, true);
    }
    else
    {
       p->powers[pw_flight] = { 0, false };
-      P_PlayerStopFlight(p);
+      P_PlayerStopFlight(*p);
    }
 
    doom_printf(p->powers[pw_flight].isActive() ? "Flight on" : "Flight off");

@@ -50,7 +50,7 @@ bool P_GiveArmor(player_t &, const itemeffect_t *);
 // that P_GivePowerForItem can be used.
 bool P_GivePowerForItem(player_t &, const itemeffect_t *);
 
-bool P_GivePower(player_t *player, int power, int duration, bool permanent, bool additiveTime);
+bool P_GivePower(player_t &player, int power, int duration, bool permanent, bool additiveTime);
 void P_TouchSpecialThing(Mobj *special, Mobj *toucher);
 void P_DamageMobj(Mobj *target,Mobj *inflictor,Mobj *source,int damage,int mod);
 void P_DropItems(Mobj *actor, bool tossitems);
