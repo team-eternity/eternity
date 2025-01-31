@@ -1549,6 +1549,8 @@ void P_CheckSpriteTouchingSectorLists()
 {
    if(R_NeedThoroughSpriteCollection())
    {
+      if(!thinkercap.next)
+         return;
       for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
       {
          Mobj *mo;
