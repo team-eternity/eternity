@@ -121,6 +121,7 @@ const PODCollection<int> *E_GetThingsFromGroup(const char *name);
 // work as DECORATE state label names.
 #define METASTATE_HEAL "Heal"
 #define METASTATE_CRUNCH "Crunch"
+#define METASTATE_CRUNCH_ZDOOM_COMPATIBILITY "Crush"
 
 // blood types
 enum bloodtype_e : int

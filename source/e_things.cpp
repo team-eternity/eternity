@@ -2094,6 +2094,8 @@ int E_GetCrunchFrame(const Mobj *mo)
 {
    const char *defaultFrame = GameModeInfo->defCrunchFrame;
    const state_t *cf = E_GetStateForMobjInfo(mo->info, METASTATE_CRUNCH);
+   if(!cf)
+      cf = E_GetStateForMobjInfo(mo->info, METASTATE_CRUNCH_ZDOOM_COMPATIBILITY);
    
    int fnum = (cf && cf->index != NullStateNum) ? cf->index :
       E_SafeStateName(defaultFrame);
