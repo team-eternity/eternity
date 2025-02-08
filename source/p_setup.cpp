@@ -3761,6 +3761,10 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       P_PointOnLineSide = P_PointOnLineSideClassic;
       P_PointOnDivlineSide = P_PointOnDivlineSideClassic;
    }
+   
+   // reset hexen animations so they don't desync
+   if(demo_version >= 329)
+      P_ResetAnimatedSurfaces();
 
    // haleyjd 07/22/04: moved up
    newlevel   = (lumpinfo[lumpnum]->source != WadDirectory::IWADSource);
@@ -4151,6 +4155,8 @@ void P_ConvertHereticThing(mapthing_t *mthing)
 // 3000 - 3002 -> 9300 - 9302
 // Others in 8000, 9000, 10000, and 14000 ranges do not conflict.
 //
+// NOTE: unused
+#if 0
 static void P_ConvertHexenThing(mapthing_t *mthing)
 {
    int16_t num = mthing->type;
@@ -4191,6 +4197,7 @@ static void P_ConvertStrifeThing(mapthing_t *mthing)
 
    mthing->type = num;
 }
+#endif
 
 #define DEN_PSXCHAIN   64
 #define DEN_NMSPECTRE  889

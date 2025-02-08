@@ -85,6 +85,12 @@ static PODCollection<hframedef_t> FrameDefs;
 
 static void P_LightningFlash();
 
+static void P_resetHexenAnimation(hanimdef_t &had)
+{
+   had.currentFrameDef = had.endFrameDef;
+   had.tics = 1;
+}
+
 //
 // Initializes Hexen animations
 //
@@ -146,10 +152,21 @@ void P_InitHexenAnims()
          }
       }
       had.endFrameDef = static_cast<int>(FrameDefs.getLength()) - 1;
-      had.currentFrameDef = had.endFrameDef;
-      had.tics = 1;
+      P_resetHexenAnimation(had);
    }
 }
+
+//
+// P_ResetAnimatedSurfaces
+//
+// Called on level reload to make sure animations begin from their first frame
+//
+void P_ResetAnimatedSurfaces()
+{
+   for(hanimdef_t &had : AnimDefs)
+      P_resetHexenAnimation(had);
+}
+
 
 //
 // P_AnimateSurfaces
@@ -320,7 +337,10 @@ void P_InitLightning()
       LevelSky = sky1->texture;
       
       if(LevelInfo.altSkyName)
+      {
          LevelTempSky = R_FindWall(LevelInfo.altSkyName);
+         R_CacheSkyTexture(LevelTempSky);
+      }
       else
          LevelTempSky = -1;
       

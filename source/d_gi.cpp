@@ -751,6 +751,8 @@ static bloodtype_e bloodTypeForActionHtic[NUMBLOODACTIONS] =
    BLOODTYPE_CRUSH       // crush
 };
 
+// TODO: unused yet
+/*
 static bloodtype_e bloodTypeForActionHexen[NUMBLOODACTIONS] =
 {
    BLOODTYPE_HEXEN,    // shoot
@@ -766,6 +768,7 @@ static bloodtype_e bloodTypeForActionStrife[NUMBLOODACTIONS] =
    BLOODTYPE_HERETICRIP, // rip
    BLOODTYPE_CRUSH       // crush
 };
+*/
 
 //
 // IWAD paths
@@ -787,6 +790,8 @@ char *gi_path_fdoom;
 char *gi_path_fdoomu;
 char *gi_path_freedm;
 char *gi_path_rekkr;
+
+char *gi_path_id24res;
 
 //
 // Default Override Objects

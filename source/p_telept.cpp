@@ -295,7 +295,7 @@ static int P_SilentTeleport(Mobj *thing, const line_t *line,
       player->deltaviewheight = 0;
 
       // Set player's view according to the newly set parameters
-      P_CalcHeight(player);
+      P_CalcHeight(*player);
 
       player->prevviewz = player->viewz;
 
@@ -327,7 +327,7 @@ int EV_Teleport(int tag, int side, Mobj *thing, bool alwaysfrag)
    // don't teleport missiles
    // Don't teleport if hit back of line,
    //  so you can get out of teleporter.
-   if(!thing || side || thing->flags & MF_MISSILE)
+   if(!thing || side || (thing->flags & MF_MISSILE && !(thing->flags3 & MF3_TELESTOMP)))
       return 0;
 
    // killough 1/31/98: improve performance by using
@@ -504,7 +504,7 @@ int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing,
 
          // Whether walking towards first side of exit linedef steps down
          int stepdown =
-            l->frontsector->srf.floor.height < l->backsector->srf.floor.height;
+            l->frontsector->srf.floor.getZAt(x, y) < l->backsector->srf.floor.getZAt(x, y);
 
          // Height of thing above ground
          fixed_t z = thing->z - thing->zref.floor;
@@ -549,7 +549,7 @@ int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing,
          // Adjust z position to be same height above ground as before.
          // Ground level at the exit is measured as the higher of the
          // two floor heights at the exit linedef.
-         thing->z = z + sides[l->sidenum[stepdown]].sector->srf.floor.height;
+         thing->z = z + sides[l->sidenum[stepdown]].sector->srf.floor.getZAt(x, y);
 
          // Rotate thing's orientation according to difference in linedef angles
          thing->angle += angle;
@@ -572,7 +572,7 @@ int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing,
             player->deltaviewheight = 0;
 
             // Set player's view according to the newly set parameters
-            P_CalcHeight(player);
+            P_CalcHeight(*player);
 
             player->prevviewz = player->viewz;
 

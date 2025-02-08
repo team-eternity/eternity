@@ -405,6 +405,9 @@ artifact ArtiHealth
   icon           ARTIPTN2
   usesound       ht_artiuse
   useeffect      QuartzFlask
+
+  autouse.health.mode     heretic
+  autouse.health.restrict baby
   
   +invbar
 
@@ -468,7 +471,7 @@ artifact ArtiEgg
   sortorder      50
   icon           ARTIEGGC
   usesound       ht_artiuse
-  useeffect      MorphOvum
+  useaction      A_HticMorphOvum
 
   +invbar
 
@@ -485,6 +488,9 @@ artifact ArtiSuperHealth
   icon           ARTISPHL
   usesound       ht_artiuse
   useeffect      MysticUrn
+
+  autouse.health.mode     heretic
+  autouse.health.restrict baby|deathmatch
 
   +invbar
   +noshareware

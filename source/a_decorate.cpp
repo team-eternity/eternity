@@ -97,8 +97,10 @@ void A_CheckPlayerDone(actionargs_t *actionargs)
 void A_ClearSkin(actionargs_t *actionargs)
 {
    Mobj *mo   = actionargs->actor;
+   fixed_t prevSpriteRadius = P_GetSpriteOrBoxRadius(*mo);
    mo->skin   = nullptr;
    mo->sprite = mo->state->sprite;
+   P_RefreshSpriteTouchingSectorList(mo, prevSpriteRadius);
 }
 
 //
@@ -174,7 +176,7 @@ void A_Jump(actionargs_t *actionargs)
    if(at == actionargs_t::MOBJFRAME && (state = E_ArgAsStateLabel(actor, al, choice)))
       P_SetMobjState(actor, state->index);
    else if(at == actionargs_t::WEAPONFRAME && (state = E_ArgAsStateLabel(player, al, choice)))
-      P_SetPspritePtr(player, actionargs->pspr, state->index);
+      P_SetPspritePtr(*player, actionargs->pspr, state->index);
 
 }
 
@@ -200,10 +202,10 @@ void A_JumpIfNoAmmo(actionargs_t *actionargs)
       if(!w->ammo) // no-ammo weapon?
          return;
 
-      ammo = E_GetItemOwnedAmount(p, w->ammo);
+      ammo = E_GetItemOwnedAmount(*p, w->ammo);
 
       if(ammo < w->ammopershot)
-         P_SetPspritePtr(p, actionargs->pspr, statenum);
+         P_SetPspritePtr(*p, actionargs->pspr, statenum);
    }
 }
 
@@ -238,7 +240,7 @@ void A_JumpIfTargetInLOS(actionargs_t *actionargs)
       if((statenum = E_ArgAsStateNumNI(args, 0, player)) < 0)
          return;
 
-      P_SetPspritePtr(player, pspr, statenum);
+      P_SetPspritePtr(*player, pspr, statenum);
    }
    else
    {

@@ -42,6 +42,7 @@
 #include "e_string.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "e_weapons.h"
 #include "ev_specials.h"
 #include "hu_stuff.h"
 #include "p_enemy.h"
@@ -92,7 +93,7 @@ void P_Mushroom(Mobj *actor, const int ShotType, const int n, const fixed_t misc
        
          mo = P_SpawnMissileWithDest(actor, actor, 
                                      ShotType,          // Launch fireball
-                                     actor->z + DEFAULTMISSILEZ,
+                                     actor->z + actor->info->missileheight,
                                      x, y, z);
          
          mo->momx = FixedMul(mo->momx, misc2);
@@ -631,6 +632,8 @@ void A_SetFlags(actionargs_t *actionargs)
 
    if(!(flags = E_ArgAsThingFlags(args, 1)))
       return;
+
+   unsigned preflags = actor->flags;
    
    switch(flagfield)
    {
@@ -657,6 +660,12 @@ void A_SetFlags(actionargs_t *actionargs)
       actor->flags5 |= (unsigned int)flags[4];
       break;
    }
+
+   // Must do it after the change, to avoid nested functions interpreting the current state.
+   if(!(preflags & MF_NOSECTOR) && flags[0] & MF_NOSECTOR)
+      P_UnsetThingSectorLink(actor, false);
+   if(!(preflags & MF_NOBLOCKMAP) && flags[0] & MF_NOBLOCKMAP)
+      P_UnsetThingBlockLink(actor);
 }
 
 //
@@ -678,6 +687,8 @@ void A_UnSetFlags(actionargs_t *actionargs)
 
    if(!(flags = E_ArgAsThingFlags(args, 1)))
       return;
+
+   unsigned preflags = actor->flags;
 
    switch(flagfield)
    {
@@ -704,6 +715,11 @@ void A_UnSetFlags(actionargs_t *actionargs)
       actor->flags5 &= ~flags[4];
       break;
    }
+
+   if(preflags & MF_NOSECTOR && flags[0] & MF_NOSECTOR)
+      P_SetThingSectorLink(actor, nullptr);
+   if(preflags & MF_NOBLOCKMAP && flags[0] & MF_NOBLOCKMAP)
+      P_SetThingBlockLink(actor);
 }
 
 static const char *kwds_A_StartScript[] =
@@ -955,6 +971,35 @@ void A_SetTics(actionargs_t *actionargs)
    actor->tics = baseamt + (rnd ? P_Random(pr_settics) % rnd : 0);
 }
 
+void A_WeaponSetTics(actionargs_t* actionargs)
+{
+   arglist_t* args = actionargs->args;
+   const player_t* player = actionargs->actor ? actionargs->actor->player : nullptr;
+   pspdef_t* pspr = actionargs->pspr;
+   if (!player || !pspr)
+   {
+      doom_warningf("Invalid A_WeaponSetTics from non-player");
+      return;  // invalid
+   }
+
+   int baseamt = E_ArgAsInt(args, 0, 0);
+   int rnd = E_ArgAsInt(args, 1, 0);
+   int usecounter = E_ArgAsKwd(args, 2, &settickwds, 0);
+
+   // if counter toggle is set, args[0] is a counter number
+   if (usecounter)
+   {
+      if (baseamt < 0 || baseamt >= NUMWEAPCOUNTERS)
+      {
+         doom_warningf("Invalid A_WeaponSetTics counter %d", baseamt);
+         return; // invalid
+      }
+      baseamt = *E_GetIndexedWepCtrForPlayer(player, baseamt);
+   }
+
+   pspr->tics = baseamt + (rnd ? P_Random(pr_wpnsettics) % rnd : 0);
+}
+
 static const char *kwds_A_MissileAttack[] =
 {
    "normal",        //  0
@@ -1020,7 +1065,7 @@ void A_MissileAttack(actionargs_t *actionargs)
    ang = (angle_t)(((uint64_t)a << 32) / 360);
 
    // adjust z coordinate
-   z = actor->z + DEFAULTMISSILEZ + z;
+   z = actor->z + actor->info->missileheight + z;
 
    if(!hastarget)
    {
@@ -1099,7 +1144,7 @@ void A_MissileSpread(actionargs_t *actionargs)
    angsweep = (angle_t)(((uint64_t)a << 32) / 360);
 
    // adjust z coordinate
-   z = actor->z + DEFAULTMISSILEZ + z;
+   z = actor->z + actor->info->missileheight + z;
 
    ang = actor->angle - angsweep / 2;
    astep = angsweep / (num - 1);

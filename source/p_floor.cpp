@@ -35,6 +35,7 @@
 #include "p_portal.h"
 #include "p_saveg.h"
 #include "p_saveid.h"
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "s_sound.h"
@@ -538,8 +539,8 @@ int EV_DoFloor(const line_t *line, int tag, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED;
          floor->floordestheight = P_FindLowestCeilingSurrounding(sec);
-         if(floor->floordestheight > sec->srf.ceiling.height)
-            floor->floordestheight = sec->srf.ceiling.height;
+         if(floor->floordestheight > sec->srf.ceiling.height - pSlopeHeights[secnum].touchheight)
+            floor->floordestheight = sec->srf.ceiling.height - pSlopeHeights[secnum].touchheight;
          floor->floordestheight -=
             (8*FRACUNIT)*(floortype == raiseFloorCrush);
          break;
@@ -1160,7 +1161,8 @@ int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
          }
          else
          {
-            s3_floorheight = s3->srf.floor.height;
+            // Give some slope a chance, but it may be wrong
+            s3_floorheight = P_ExtremeHeightOnLine(*s3, *s2->lines[i], surf_floor, emin);
             s3_floorpic    = s3->srf.floor.pic;
          }
         
@@ -1316,7 +1318,7 @@ int EV_PillarBuild(const line_t *line, const pillardata_t *pd)
    sector_t *sector;
    int returnval = 0;
    int sectornum = -1;
-   int destheight;
+   fixed_t destfloorheight, destceilheight;
    bool manual = false;
 
    // check if a manual trigger, if so do just the sector on the backside
@@ -1334,10 +1336,11 @@ int EV_PillarBuild(const line_t *line, const pillardata_t *pd)
       sector = &sectors[sectornum];
 
 manual_pillar:
+      const slopeheight_t &sh = pSlopeHeights[sectornum];
       // already being buggered about with,
       // or ceiling <= floor, therefore closed
       if(sector->srf.floor.data || sector->srf.ceiling.data ||
-         sector->srf.ceiling.height <= sector->srf.floor.height)
+         sector->srf.ceiling.height - sector->srf.floor.height <= sh.touchheight)
       {
          if(manual)
             return returnval;
@@ -1353,34 +1356,39 @@ manual_pillar:
 
       if(pd->height == 0) // height == 0 so we meet in the middle
       {
-         destheight = sector->srf.floor.height +
-                         ((sector->srf.ceiling.height - sector->srf.floor.height) / 2);
+         fixed_t gap = sector->srf.ceiling.height - sector->srf.floor.height - sh.touchheight;
+         destfloorheight = sector->srf.floor.height + gap / 2;
+         // Mind the round-off errors for compatibility
+         destceilheight = sector->srf.ceiling.height - (gap - gap / 2);
       }
       else // else we meet at floorheight + args[2]
-         destheight = sector->srf.floor.height + pd->height;
+      {
+         destfloorheight = sector->srf.floor.height + pd->height;
+         destceilheight = destfloorheight + sh.touchheight;
+      }
 
       if(pd->height == 0) // height is 0 so we meet halfway
       {
          pillar->ceilingSpeed = pd->speed;
          pillar->floorSpeed   = pd->speed;
       }
-      else if(destheight-sector->srf.floor.height > sector->srf.ceiling.height -destheight)
+      else if(destfloorheight - sector->srf.floor.height > sector->srf.ceiling.height - destceilheight)
       {
          pillar->floorSpeed = pd->speed;
-         pillar->ceilingSpeed = FixedDiv(sector->srf.ceiling.height - destheight,
-                                   FixedDiv(destheight - sector->srf.floor.height,
+         pillar->ceilingSpeed = FixedDiv(sector->srf.ceiling.height - destceilheight,
+                                   FixedDiv(destfloorheight - sector->srf.floor.height,
                                             pillar->floorSpeed));
       }
       else
       {
          pillar->ceilingSpeed = pd->speed;
-         pillar->floorSpeed = FixedDiv(destheight - sector->srf.floor.height,
-                                 FixedDiv(sector->srf.ceiling.height - destheight,
+         pillar->floorSpeed = FixedDiv(destfloorheight - sector->srf.floor.height,
+                                 FixedDiv(sector->srf.ceiling.height - destceilheight,
                                           pillar->ceilingSpeed));
       }
 
-      pillar->floordest = destheight;
-      pillar->ceilingdest = destheight;
+      pillar->floordest = destfloorheight;
+      pillar->ceilingdest = destceilheight;
       pillar->direction = 1;
       pillar->crush = pd->crush;
       returnval = 1;
@@ -1425,7 +1433,7 @@ int EV_PillarOpen(const line_t *line, const pillardata_t *pd)
 manual_pillar:
       // already being buggered about with
       if(sector->srf.floor.data || sector->srf.ceiling.data ||
-         sector->srf.floor.height != sector->srf.ceiling.height)
+         sector->srf.floor.height + pSlopeHeights[sectornum].touchheight != sector->srf.ceiling.height)
       {
          if(manual)
             return returnval;

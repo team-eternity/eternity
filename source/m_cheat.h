@@ -93,6 +93,7 @@ enum cheatnum_e
    CHEAT_HTICPOWER,
    CHEAT_HTICGIMME,
    CHEAT_HTICRAMBO,
+   CHEAT_HTICCOCKADOODLEDOO,
 
    // Shared Cheats
    CHEAT_COMP,
@@ -132,8 +133,6 @@ extern cheat_s cheat[CHEAT_NUMCHEATS];
 bool M_FindCheats(int key);
 void M_DoCheat(const char *cheatname);
 int M_NukeMonsters();
-
-extern int idmusnum;
 
 //
 // Shared both by cheats and by vanilla Heretic demos

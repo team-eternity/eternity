@@ -204,12 +204,15 @@ enum
    NUM_FONT_FMTS
 };
 
+// NOTE: unused
+/*
 static const char *fontfmts[NUM_FONT_FMTS] =
 {
    "linear",  // a linear block of pixel data; the default format.
    "patch",   // a DOOM patch, which will be converted to linear.
    "png"      // a PNG graphic
 };
+*/
 
 typedef EHashTable<vfont_t, EIntHashKey, 
                    &vfont_t::num, &vfont_t::numlinks> EFontNumHash;
@@ -940,7 +943,6 @@ static void E_ProcessFont(cfg_t *const sec, bool delta)
       ZAutoBuffer lumpBuffer;
       vimgformat_e vfmt = FORMAT_INVALID;
       int lumpnum = W_GetNumForName(tempstr);
-      int size    = W_LumpLength(lumpnum);
       wGlobalDir.cacheLumpAuto(lumpnum, lumpBuffer);
       vfmt = VImageManager::detectResourceFormat(lumpBuffer.get(), lumpBuffer.getSize());
 

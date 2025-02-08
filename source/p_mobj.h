@@ -76,7 +76,8 @@ class  BloodSpawner;
 #define MAXGEAR (OVERDRIVE+16)
 
 // haleyjd 11/28/02: default z coord addend for missile spawn
-#define DEFAULTMISSILEZ (4*8*FRACUNIT)
+//#define DEFAULTMISSILEZ (4*8*FRACUNIT)
+// DEFAULTMISSILEZ is now a mobjinfo property (missileheight)
 
 #define NUMMOBJCOUNTERS 8
 
@@ -177,6 +178,12 @@ struct sprojlast_t
    uint32_t sprite;  // holds both sprite num and frame num
    float yscale;     // if scale changes, sprojheight may also do
    float xscale;
+};
+
+struct unmorph_t
+{
+   int tics;
+   mobjtype_t type;
 };
 
 //
@@ -343,6 +350,8 @@ public:
    // a linked list of sectors where this object appears
    msecnode_t *touching_sectorlist;                 // phares 3/14/98
    msecnode_t *old_sectorlist;                      // haleyjd 04/16/10
+   msecnode_t *sprite_touching_sectorlist;   // for sprite rendering help
+   msecnode_t *old_sprite_sectorlist;
 
    // SEE WARNING ABOVE ABOUT POINTER FIELDS!!!
 
@@ -371,6 +380,8 @@ public:
    int special;         // special
    int args[NUMMTARGS]; // arguments
    uint16_t tid;        // thing id used by scripts
+   
+   unmorph_t unmorph;
 
    // Note: tid chain pointers are NOT serialized in save games,
    // but are restored on load by rehashing the things as they are
@@ -447,8 +458,8 @@ Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown,
 void  P_SpawnUnknownThings();
 Mobj *P_SpawnMapThing(mapthing_t *mt);
 bool  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
-void  P_ExplodeMissile(Mobj *, const sector_t *topedgesec);     // killough
-bool P_CheckPortalTeleport(Mobj *mobj);
+void  P_ExplodeMissile(Mobj *, const sector_t *topedgesec, const zrefs_t *slopebumpz = nullptr);     // killough
+bool P_CheckPortalTeleport(Mobj *mobj, surf_e *whichSurf);
 
 enum class seekcenter_e : bool
 {
@@ -601,6 +612,8 @@ inline static fixed_t getThingZ(Mobj *mo1, Mobj *mo2)
 }
 
 bool P_CheckFloorCeilingForSpawning(const Mobj& mobj);
+bool P_RestingOnGround(const Mobj &mobj, const surface_t &floor);
+void P_NeutralizeForRemoval(Mobj &mobj);
 
 //=============================================================================
 //

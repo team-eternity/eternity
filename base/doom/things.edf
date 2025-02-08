@@ -1279,7 +1279,6 @@ thingtype DoomBarrel : Mobj, 2035, 31
   deathsound     barexp
   radius         10.0
   height         42.0
-  correct_height 34.0
   flags          SOLID|SHOOTABLE|NOBLOOD
   mod            Barrel
   acs_spawndata

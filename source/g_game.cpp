@@ -257,7 +257,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       }
       else if(usearti)
       {
-         if(E_PlayerHasVisibleInvItem(&p))
+         if(E_PlayerHasVisibleInvItem(p))
             cmd->itemID = p.inventory[p.inv_ptr].item + 1;
          usearti = false;
       }
@@ -365,7 +365,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
       if(gameactions[ka_nextweapon])
       {
-         weaponinfo_t *temp = E_FindBestWeapon(&p);
+         weaponinfo_t *temp = E_FindBestWeapon(p);
          if(temp == nullptr)
          {
             p.attackdown = AT_NONE;
@@ -374,7 +374,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          else
          {
             newweapon = temp->id; // phares
-            cmd->slotIndex = E_FindFirstWeaponSlot(&p, temp)->slotindex;
+            cmd->slotIndex = E_FindFirstWeaponSlot(p, temp)->slotindex;
          }
       }
 
@@ -382,10 +382,10 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       {
          if(gameactions[i])
          {
-            weaponinfo_t *weapon = P_GetPlayerWeapon(&p, i - ka_weapon1);
+            weaponinfo_t *weapon = P_GetPlayerWeapon(p, i - ka_weapon1);
             if(weapon)
             {
-               const auto slot = E_FindEntryForWeaponInSlotIndex(&p, weapon, i - ka_weapon1);
+               const auto slot = E_FindEntryForWeaponInSlotIndex(p, weapon, i - ka_weapon1);
                newweapon = weapon->id;
                cmd->slotIndex = slot->slotindex;
                if(!weapon_hotkey_holding)
@@ -397,9 +397,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
       //next / prev weapon actions
       if(gameactions[ka_weaponup])
-         newweapon = P_NextWeapon(&p, &cmd->slotIndex);
+         newweapon = P_NextWeapon(p, &cmd->slotIndex);
       else if(gameactions[ka_weapondown])
-         newweapon = P_PrevWeapon(&p, &cmd->slotIndex);
+         newweapon = P_PrevWeapon(p, &cmd->slotIndex);
 
       if(p.readyweapon)
       {
@@ -424,10 +424,10 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       //
       // killough 3/26/98, 4/2/98: fix autoswitch when no weapons are left
 
-      if((!demo_compatibility && (p.attackdown & AT_PRIMARY) && !P_CheckAmmo(&p)) ||
+      if((!demo_compatibility && (p.attackdown & AT_PRIMARY) && !P_CheckAmmo(p)) ||
          gameactions[ka_nextweapon])
       {
-         newweapon = P_SwitchWeaponOldDoom(&p); // phares
+         newweapon = P_SwitchWeaponOldDoom(p); // phares
       }
       else
       {                                 // phares 02/26/98: Added gamemode checks
@@ -465,7 +465,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
             // the fist is already in use, or the player does not
             // have the berserker strength.
 
-            if(newweapon==wp_fist && E_PlayerOwnsWeaponForDEHNum(&p, wp_chainsaw) &&
+            if(newweapon==wp_fist && E_PlayerOwnsWeaponForDEHNum(p, wp_chainsaw) &&
                !E_WeaponIsCurrentDEHNum(&p, wp_chainsaw) &&
                (E_WeaponIsCurrentDEHNum(&p, wp_fist) ||
                 !p.powers[pw_strength].isActive() ||
@@ -480,8 +480,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
             // player prefers it.
 
             if(newweapon == wp_shotgun && enable_ssg &&
-               E_PlayerOwnsWeaponForDEHNum(&p, wp_supershotgun) &&
-               (!E_PlayerOwnsWeaponForDEHNum(&p, wp_shotgun) ||
+               E_PlayerOwnsWeaponForDEHNum(p, wp_supershotgun) &&
+               (!E_PlayerOwnsWeaponForDEHNum(p, wp_shotgun) ||
                 E_WeaponIsCurrentDEHNum(&p, wp_shotgun) ||
                 !(E_WeaponIsCurrentDEHNum(&p, wp_supershotgun) &&
                  P_WeaponPreferred(wp_supershotgun, wp_shotgun))))
@@ -496,9 +496,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       {
           // haleyjd 03/06/09: next/prev weapon actions
           if(gameactions[ka_weaponup])
-              newweapon = P_NextWeapon(&p);
+              newweapon = P_NextWeapon(p);
           else if(gameactions[ka_weapondown])
-              newweapon = P_PrevWeapon(&p);
+              newweapon = P_PrevWeapon(p);
 
           const weaponinfo_t *wp = E_WeaponForDEHNum(newweapon);
 
@@ -879,7 +879,7 @@ bool G_Responder(const event_t* ev)
             invbarstate.inventory = true;
             break;
          }
-         E_MoveInventoryCursor(&players[consoleplayer], -1, players[consoleplayer].inv_ptr);
+         E_MoveInventoryCursor(players[consoleplayer], -1, players[consoleplayer].inv_ptr);
          return true;
       }
       if(gameactions[ka_inventory_right])
@@ -890,7 +890,7 @@ bool G_Responder(const event_t* ev)
             invbarstate.inventory = true;
             break;
          }
-         E_MoveInventoryCursor(&players[consoleplayer], 1, players[consoleplayer].inv_ptr);
+         E_MoveInventoryCursor(players[consoleplayer], 1, players[consoleplayer].inv_ptr);
          return true;
       }
 
@@ -1087,20 +1087,25 @@ static byte *G_ReadDemoHeader(byte *demo_p)
    // contain incorrect version numbers. Demo recording was also broken in
    // several versions of the port anyway.
 
+   auto fail = [](const char *message)
+   {
+      if(singledemo)
+         I_Error("G_ReadDemoHeader: %s\n", message);
+      else
+      {
+         C_Printf(FC_ERROR "%s\n", message);
+         gameaction = ga_nothing;
+         Z_ChangeTag(demobuffer, PU_CACHE);
+         D_AdvanceDemo();
+      }
+   };
+
    if(!((demover >=   0 && demover <= 4  ) || // Doom 1.2 or less
         (demover >= 104 && demover <= 111) || // Doom 1.4 - 1.9, 1.10, 1.11
         (demover >= 200 && demover <= 203) || // BOOM, MBF
         (demover == 255)))                    // Eternity
    {
-      if(singledemo)
-         I_Error("G_ReadDemoHeader: unsupported demo format\n");
-      else
-      {
-         C_Printf(FC_ERROR "Unsupported demo format\n");
-         gameaction = ga_nothing;
-         Z_ChangeTag(demobuffer, PU_CACHE);
-         D_AdvanceDemo();
-      }
+      fail("unsupported demo format");
       return nullptr;
    }
    
@@ -1200,15 +1205,14 @@ static byte *G_ReadDemoHeader(byte *demo_p)
       else if(demo_version == 255 && !strncmp((const char *)demo_p, prdemosig, 5))
       {
          // TODO: Support in future
-         if(singledemo)
-            I_Error("G_ReadDemoHeader: PRBoom+UMAPINFO demo format not currently supported\n");
-         else
-         {
-            C_Printf(FC_ERROR "PRBoom+UMAPINFO demo format not currently supported\n");
-            gameaction = ga_nothing;
-            Z_ChangeTag(demobuffer, PU_CACHE);
-            D_AdvanceDemo();
-         }
+         fail("PRBoom+UMAPINFO demo format not currently supported");
+         return nullptr;
+      }
+      else if(demo_version == 255)
+      {
+         // If the signature is unknown, reject it outright, otherwise
+         // we read garbage data which further destabilizes the engine.
+         fail("Unsupported demo format");
          return nullptr;
       }
       else
@@ -1399,10 +1403,10 @@ static void G_convertButtonsToWeaponID(ticcmd_t &cmd)
    for(const player_t &player : players)
       if((byte*)&cmd == (byte*)&player + offsetof(player_t, cmd))
       {
-         const weaponinfo_t *info = P_GetPlayerWeapon(&player, index);
+         const weaponinfo_t *info = P_GetPlayerWeapon(player, index);
          if(info)
          {
-            const weaponslot_t *slot = E_FindEntryForWeaponInSlotIndex(&player, info, index);
+            const weaponslot_t *slot = E_FindEntryForWeaponInSlotIndex(player, info, index);
             cmd.weaponID = info->id + 1;
             cmd.slotIndex = slot->slotindex;
          }
@@ -1670,6 +1674,11 @@ static void G_PlayerFinishLevel(int player)
    p->mo->flags2 &= ~MF2_DONTDRAW;          // haleyjd: cancel total invis.
    p->mo->flags4 &= ~MF4_TOTALINVISIBLE; 
    p->mo->flags3 &= ~MF3_GHOST;             // haleyjd: cancel ghost
+   if(p->morphTics)
+   {
+      p->morphTics = 0;
+      P_UnmorphPlayer(*p, true);
+   }
 
    E_InventoryEndHub(p);   // haleyjd: strip inventory
 
@@ -1908,7 +1917,6 @@ static void G_DoCompleted()
 
 static void G_DoWorldDone()
 {
-   idmusnum = -1; //jff 3/17/98 allow new level's music to be loaded
    gamestate = GS_LOADING;
    gameepisode = wminfo.nextEpisode + 1;
    gamemap = wminfo.next+1;
@@ -2419,6 +2427,7 @@ void G_PlayerReborn(int player)
    skin_t *playerskin;
    playerclass_t *playerclass;
    inventory_t inventory;
+   inventory_t unmorphInventory;
 
    p = &players[player];
 
@@ -2431,9 +2440,11 @@ void G_PlayerReborn(int player)
    cheats       = p->cheats;     // killough 3/10/98,3/21/98: preserve cheats across idclev
    playercolour = p->colormap;
    totalfrags   = p->totalfrags;
-   playerskin   = p->skin;
-   playerclass  = p->pclass;     // haleyjd: playerclass
+   // Restore class now
+   playerskin   = p->unmorphSkin ? p->unmorphSkin : p->skin;
+   playerclass  = p->unmorphClass ? p->unmorphClass : p->pclass;     // haleyjd: playerclass
    inventory    = p->inventory;  // haleyjd: inventory
+   unmorphInventory = p->unmorphInventory;
 
    delete p->weaponctrs;
   
@@ -2453,6 +2464,7 @@ void G_PlayerReborn(int player)
    p->skin        = playerskin;
    p->pclass      = playerclass;              // haleyjd: playerclass
    p->inventory   = inventory;                // haleyjd: inventory
+   p->unmorphInventory = unmorphInventory;
    p->playerstate = PST_LIVE;
    p->health      = p->pclass->initialhealth; // Ty 03/12/98 - use dehacked values
    p->quake       = 0;                        // haleyjd 01/21/07
@@ -2465,27 +2477,8 @@ void G_PlayerReborn(int player)
    // clear inventory unless otherwise indicated
    if(!(dmflags & DM_KEEPITEMS))
       E_ClearInventory(p);
-   
-   // haleyjd 08/05/13: give reborn inventory
-   for(unsigned int i = 0; i < playerclass->numrebornitems; i++)
-   {
-      // ignore this item due to cancellation by, ie., DeHackEd?
-      if(playerclass->rebornitems[i].flags & RBIF_IGNORE)
-         continue;
 
-      const char   *name   = playerclass->rebornitems[i].itemname;
-      int           amount = playerclass->rebornitems[i].amount;
-      itemeffect_t *effect = E_ItemEffectForName(name);
-
-      // only if have none, in the case that DM_KEEPITEMS is specified
-      if(!E_GetItemOwnedAmount(p, effect))
-         E_GiveInventoryItem(p, effect, amount);
-   }
-
-   if(!(p->readyweapon = E_FindBestWeapon(p)))
-      p->readyweapon = E_WeaponForID(UnknownWeaponInfo);
-   else
-      p->readyweaponslot = E_FindFirstWeaponSlot(p, p->readyweapon);
+   P_GiveRebornInventory(*p);
 }
 
 void P_SpawnPlayer(mapthing_t *mthing);
@@ -2685,6 +2678,7 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
 //
 // FIXME: unused?
 //
+#if 0
 static int G_ClosestDMSpot(fixed_t x, fixed_t y, int notspot)
 {
    int j, numspots = int(deathmatch_p - deathmatchstarts);
@@ -2709,6 +2703,7 @@ static int G_ClosestDMSpot(fixed_t x, fixed_t y, int notspot)
 
    return closestspot;
 }
+#endif
 
 extern const char *level_error;
 
@@ -3872,6 +3867,22 @@ void doom_warningf(E_FORMAT_STRING(const char *s), ...)
    }
    else
       C_Puts(msg);
+   HU_PlayerMsg(msg);
+}
+
+//
+// Like above, but don't beep. Meant for lesser warnings which don't imply something is unusable.
+//
+void doom_warningf_silent(E_FORMAT_STRING(const char *s), ...)
+{
+   static char msg[MAX_MESSAGE_SIZE] = FC_ERROR;
+   va_list v;
+
+   va_start(v, s);
+   pvsnprintf(msg + 1, sizeof(msg) - 1, s, v); // print message in buffer
+   va_end(v);
+
+   C_Puts(msg);
    HU_PlayerMsg(msg);
 }
 

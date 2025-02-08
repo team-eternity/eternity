@@ -22,6 +22,7 @@
 
 void P_InitLightning(void);
 void P_InitHexenAnims();
+void P_ResetAnimatedSurfaces(void);
 void P_AnimateSurfaces(void);
 void P_ForceLightning(void);
 

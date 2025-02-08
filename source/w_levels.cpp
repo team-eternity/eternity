@@ -254,6 +254,7 @@ WadDirectory *W_AddManagedWad(const char *filename)
 //
 // FIXME: unused?
 //
+/*
 static bool W_CloseManagedWad(const char *filename)
 {
    ManagedDirectory *dir = nullptr;
@@ -267,6 +268,7 @@ static bool W_CloseManagedWad(const char *filename)
 
    return retcode;
 }
+*/
 
 //
 // W_GetManagedWad

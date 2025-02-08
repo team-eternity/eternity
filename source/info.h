@@ -179,11 +179,11 @@ struct state_t
    void         (*oldaction)(actionargs_t *); // haleyjd: original action, for DeHackEd
    statenum_t   nextstate;                    // index of next state, or -1
    int          misc1, misc2;                 // used for psprite positioning
-   int          particle_evt;                 // haleyjd: determines an event to run  
+   int          particle_evt;                 // haleyjd: determines an event to run
    arglist_t   *args;                         // haleyjd: state arguments
    unsigned int flags;                        // haleyjd: flags
-   bool         dsdhacked;                    // MaxW: Created by DSDhacked
-   
+   bool         adddeh;                       // MaxW: Created by additive dehacked
+
    // haleyjd: fields needed for EDF identification and hashing
    char       *name;      // buffer for name
    int         dehnum;    // DeHackEd number for fast access, comp.
@@ -327,6 +327,10 @@ enum
    MT_PHOENIXFX2,
    MT_BLASTERFX1,
    MT_HORNRODFX2,
+   MT_RAINPLR1,
+   MT_RAINPLR2,
+   MT_RAINPLR3,
+   MT_RAINPLR4,
 
    // Start Eternity TC New Things
 
@@ -405,7 +409,7 @@ struct mobjinfo_t
    unsigned int flags3; // haleyjd 11/03/02: flags3
    unsigned int flags4; // haleyjd 09/13/09: flags4
    unsigned int flags5; // MaxW: 2021/02/14: flags5
-   bool         dsdhacked; // MaxW: made by DSDhacked
+   bool         adddeh; // MaxW: made by DSDhacked
    int raisestate;      // The first state for an Archvile or respawn
                         //  resurrection.  Zero means it won't come
                         //  back to life.
@@ -439,6 +443,8 @@ struct mobjinfo_t
    int trailzoffset;    // [XA] 02/22/2020: projectile trail z offset (fixed point)
    int trailchance;     // [XA] 02/22/2020: projectile trail spawn chance (out of 255)
    int trailsparsity;   // [XA] 02/22/2020: projectile trail sparsity
+   int missileheight;   // sinku 14/02/2024: height from bottom for missile attacks
+   int bulletzoffset;   // sinku 14/02/2024: offset from centre for bullet attacks
 
    e_pickupfx_t *pickupfx;
 

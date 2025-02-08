@@ -342,6 +342,23 @@ properties are booleans.
 Added support for DSDHacked things, sprites, and states. Sounds are not yet
 implemented.
 
+--------------------------------------------------------------------------------
+2024/02/13
+Updated SDL to 2.30.0 (from 2.0.7) on Windows.
+Updated SDL_mixer to 2.8.0 (from 2.6.2) on Windows.
+Updated SDL_net to 2.2.0 (from 2.0.1) on Windows.
+
+--------------------------------------------------------------------------------
+2024/04/03
+Added loading and saving of mid-level music changes.
+Fixed rare hard-lock when polyobjects start moving.
+
+--------------------------------------------------------------------------------
+2024/08/16
+Added support for scanning for Steam/GOG Doom + Doom II IWADs and
+No Rest for the Living (and Master Levels for Steam only).
+Add support for DSDHacked sounds.
+
 ================================================================================
 EOF
 ================================================================================

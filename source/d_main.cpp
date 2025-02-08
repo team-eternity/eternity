@@ -358,11 +358,14 @@ const demostate_t demostates_hreg[] =
    { nullptr }
 };
 
+// NOTE: unused
+/*
 const demostate_t demostates_unknown[] =
 {
    { D_SetPageName, nullptr }, // indetermined - haleyjd 04/01/08
    { nullptr }
 };
+*/
 
 //
 // D_DoAdvanceDemo
@@ -549,8 +552,10 @@ void D_DrawWings()
 
    if(vbscreen.getVirtualAspectRatio() <= 4 * FRACUNIT / 3)
       return;
+   if(vbscreenyscaled.unscaledw < SCREENWIDTH)
+      return;  // safety
 
-   wingwidth = (vbscreen.width - (vbscreen.height * 4 / 3)) / 2;
+   wingwidth = vbscreenyscaled.x1lookup[(vbscreenyscaled.unscaledw - SCREENWIDTH) / 2];
 
    // safety check
    if(wingwidth <= 0)
@@ -1822,8 +1827,6 @@ static void D_DoomInit()
 
    if(!textmode_startup && !devparm)
       C_Update();
-
-   idmusnum = -1; //jff 3/17/98 insure idmus number is blank
 
    // Load OPTIONS that are safe to read at startup
    M_LoadOptions(default_t::wad_startup);

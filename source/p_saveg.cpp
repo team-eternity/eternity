@@ -119,7 +119,10 @@ void SaveArchive::archiveLString(char *&str, size_t &len)
          savefile->write(str, len);
       }
       else
-         savefile->writeUint32(0);
+      {
+         size_t emptySize = 0;
+         archiveSize(emptySize);
+      }
    }
    else
    {
@@ -187,11 +190,19 @@ void SaveArchive::writeLString(const char *str, size_t len)
 {
    if(savefile)
    {
-      if(!len)
-         len = strlen(str) + 1;
+      if(str)
+      {
+         if(!len)
+            len = strlen(str) + 1;
 
-      archiveSize(len);
-      savefile->write(str, len);
+         archiveSize(len);
+         savefile->write(str, len);
+      }
+      else
+      {
+         size_t emptySize = 0;
+         archiveSize(emptySize);
+      }
    }
    else
       I_Error("SaveArchive::writeLString: cannot deserialize!\n");
@@ -612,8 +623,7 @@ static void P_saveWeaponCounters(SaveArchive &arc, WeaponCounterNode *node)
       if(node->right)
          P_saveWeaponCounters(arc, node->right);
       arc.writeLString(E_WeaponForID(node->key)->name);
-      for(int &counter : *node->object)
-         arc << counter;
+      P_ArchiveArray<int>(arc, *node->object, earrlen(*node->object));
    }
 }
 
@@ -623,16 +633,16 @@ static void P_saveWeaponCounters(SaveArchive &arc, WeaponCounterNode *node)
 //
 static void P_loadWeaponCounters(SaveArchive &arc, player_t &p)
 {
-   int numCounters;
+   int numCountedWeapons;
 
    delete p.weaponctrs;
    p.weaponctrs = new WeaponCounterTree();
-   arc << numCounters;
-   if(numCounters)
+   arc << numCountedWeapons;
+   if(numCountedWeapons)
    {
-      WeaponCounter *weaponCounters = estructalloc(WeaponCounter, numCounters);
-      for(int i = 0; i < numCounters; i++)
+      for(int i = 0; i < numCountedWeapons; i++)
       {
+         auto weaponCounter = ecalloc(WeaponCounter *, 1, sizeof(WeaponCounter));
          size_t len;
          char *className = nullptr;
 
@@ -640,9 +650,14 @@ static void P_loadWeaponCounters(SaveArchive &arc, player_t &p)
          weaponinfo_t *wp = E_WeaponForName(className);
          if(!wp)
             I_Error("P_loadWeaponCounters: weapon '%s' not found\n", className);
-         WeaponCounter &wc = weaponCounters[i];
-         for(int &counter : wc)
-            arc << counter;
+         WeaponCounter &wc = *weaponCounter;
+         if(arc.saveVersion() >= 21)
+            P_ArchiveArray<int>(arc, wc, earrlen(wc));
+         else
+         {
+            for(int &counter : wc)
+               arc << counter;
+         }
          p.weaponctrs->insert(wp->id, &wc);
       }
    }
@@ -674,64 +689,91 @@ static void P_ArchivePlayers(SaveArchive &arc)
              << p.colormap     << p.quake           << p.jumptime
              << p.inv_ptr;
 
+         if (arc.saveVersion() >= 22)
+            arc << p.morphTics << p.headThrust;
+
          int inventorySize;
          if(arc.isSaving())
          {
-            int numCounters, slotIndex;
-            size_t noLen = 0;
+            int numCountedWeapons;
 
             inventorySize = E_GetInventoryAllocSize();
             arc << inventorySize;
 
             // Save ready and pending weapon via string
-            if(p.readyweapon)
-               arc.writeLString(p.readyweapon->name);
-            else
-               arc.archiveSize(noLen);
-            if(p.pendingweapon)
-               arc.writeLString(p.pendingweapon->name);
-            else
-               arc.archiveSize(noLen);
 
-            slotIndex = p.readyweaponslot != nullptr ? p.readyweaponslot->slotindex : 0;
-            arc << slotIndex;
-            slotIndex = p.pendingweaponslot != nullptr ? p.pendingweaponslot->slotindex : 0;
-            arc << slotIndex;
+            auto saveweapon = [&arc](const weaponinfo_t *weapon)
+            {
+               size_t noLen = 0;
+               if(weapon)
+                  arc.writeLString(weapon->name);
+               else
+                  arc.archiveSize(noLen);
+            };
 
-            // Save numcounters, then counters if there's a need to
-            numCounters = p.weaponctrs->numNodes();
-            arc << numCounters;
-            if(numCounters)
+            saveweapon(p.readyweapon);
+            saveweapon(p.pendingweapon);
+            if(arc.saveVersion() >= 22)
+               saveweapon(p.unmorphWeapon);
+
+            auto saveslot = [&arc](weaponslot_t *slot)
+            {
+               int slotIndex = slot ? slot->slotindex : 0;
+               arc << slotIndex;
+            };
+
+            saveslot(p.readyweaponslot);
+            saveslot(p.pendingweaponslot);
+            if(arc.saveVersion() >= 22)
+               saveslot(p.unmorphWeaponSlot);
+
+            // Save number of weapons that have counters, then counters themselves if there's a need to
+            numCountedWeapons = p.weaponctrs->numNodes();
+            arc << numCountedWeapons;
+            if(numCountedWeapons)
                P_saveWeaponCounters(arc, p.weaponctrs->root); // Recursively save
          }
          else
          {
             int slotIndex;
-            char *className = nullptr;
-            size_t len;
 
             arc << inventorySize;
             if(inventorySize != E_GetInventoryAllocSize())
                I_Error("P_ArchivePlayers: inventory size mismatch\n");
 
             // Load ready and pending weapon via string
-            arc.archiveLString(className, len);
-            if(estrnonempty(className) && !(p.readyweapon = E_WeaponForName(className)))
-               I_Error("P_ArchivePlayers: readyweapon '%s' not found\n", className);
-            arc.archiveLString(className, len);
-            if(estrnonempty(className) && !(p.pendingweapon = E_WeaponForName(className)))
-               I_Error("P_ArchivePlayers: pendingweapon '%s' not found\n", className);
+            auto loadweapon = [&arc](weaponinfo_t **weapon, const char *name)
+            {
+               char *className = nullptr;
+               size_t len;
+               arc.archiveLString(className, len);
+               if(estrnonempty(className) && !(*weapon = E_WeaponForName(className)))
+                  I_Error("P_ArchivePlayers: %s '%s' not found\n", name, className);
+            };
+
+            loadweapon(&p.readyweapon, "readyweapon");
+            loadweapon(&p.pendingweapon, "pendingweapon");
+            if(arc.saveVersion() >= 22)
+               loadweapon(&p.unmorphWeapon, "unmorphWeapon");
 
             arc << slotIndex;
-            p.readyweaponslot = E_FindEntryForWeaponInSlotIndex(&p, p.readyweapon, slotIndex);
+            p.readyweaponslot = E_FindEntryForWeaponInSlotIndex(p, p.readyweapon, slotIndex);
             arc << slotIndex;
             if(p.pendingweapon != nullptr)
-               p.pendingweaponslot = E_FindEntryForWeaponInSlotIndex(&p, p.pendingweapon, slotIndex);
+               p.pendingweaponslot = E_FindEntryForWeaponInSlotIndex(p, p.pendingweapon, slotIndex);
+            if(arc.saveVersion() >= 22)
+            {
+               arc << slotIndex;
+               if(p.unmorphWeapon)
+                  p.unmorphWeaponSlot = E_FindEntryForWeaponInSlotIndex(p, p.unmorphWeapon, slotIndex);
+            }
 
             // Load counters if there's a need to
             P_loadWeaponCounters(arc, p);
          }
          P_ArchiveArray<inventoryslot_t>(arc, p.inventory, inventorySize);
+         if(arc.saveVersion() >= 22)
+            P_ArchiveArray<inventoryslot_t>(arc, p.unmorphInventory, inventorySize);
 
          for(powerduration_t &power : p.powers)
          {
@@ -753,13 +795,24 @@ static void P_ArchivePlayers(SaveArchive &arc)
             // will be set when unarc thinker
             p.mo          = nullptr;
             p.attacker    = nullptr;
-            p.skin        = nullptr;
-            p.pclass      = nullptr;
+            if(arc.saveVersion() < 22)
+            {
+               p.skin        = nullptr;
+               p.pclass      = nullptr;
+            }
             p.attackdown  = AT_NONE; // sf, MaxW
             p.usedown     = false;   // sf
             p.cmd.buttons = 0;       // sf
             p.prevviewz   = p.viewz;
             p.prevpitch   = p.pitch;
+         }
+
+         if(arc.saveVersion() >= 22)
+         {
+            Archive_PlayerClass(arc, p.pclass);
+            Archive_PlayerClass(arc, p.unmorphClass);
+            Archive_Skin(arc, p.skin);
+            Archive_Skin(arc, p.unmorphSkin);
          }
       }
    }
@@ -1579,9 +1632,13 @@ void P_SaveCurrentLevel(char *filename, char *description)
          arc << dummy;
       }
 
+      const char *musicName = S_GetMusicName();
+      arc.writeLString(musicName);
+
       // jff 3/17/98 save idmus state
+      // MaxW: No more idmus state saving
       int tempGameType = (int)GameType;
-      arc << idmusnum << tempGameType;
+      arc << tempGameType;
 
       byte options[GAME_OPTION_SIZE];
       G_WriteOptions(options);    // killough 3/1/98: save game options
@@ -1814,9 +1871,17 @@ void P_LoadGame(const char *filename)
       // jff 3/18/98 account for unsigned byte
       // killough 11/98: simplify
       // haleyjd 04/14/03: game type
+      // MaxW: Skip loading save version
       // note: don't set DefaultGameType from save games
+      if(arc.saveVersion() < 20)
+         arc.getLoadFile()->skip(sizeof(int));
+      else
+      {
+         size_t dummy = 0;
+         arc.archiveLString(mus_LoadName, dummy);
+      }
       int tempGameType;
-      arc << idmusnum << tempGameType;
+      arc << tempGameType;
 
       GameType = (gametype_t)tempGameType;
 

@@ -43,6 +43,7 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "polyobj.h"
+#include "r_context.h"
 #include "r_data.h"
 #include "r_main.h"
 #include "r_portal.h"
@@ -77,13 +78,35 @@ int P_PointOnLineSideClassic(fixed_t x, fixed_t y, const line_t *line)
       FixedMul(y-line->v1->y, line->dx>>FRACBITS) >=
       FixedMul(line->dy>>FRACBITS, x-line->v1->x);
 }
+
 int P_PointOnLineSidePrecise(fixed_t x, fixed_t y, const line_t *line)
 {
-   return !line->dx ? x <= line->v1->x ? line->dy > 0 : line->dy < 0 :
-   !line->dy ? y <= line->v1->y ? line->dx < 0 : line->dx > 0 :
-   ((int64_t)y - line->v1->y) * line->dx >= line->dy * ((int64_t)x - line->v1->x);
+   return
+      !line->dx ? x <= line->v1->x ? line->dy > 0 : line->dy < 0 :
+      !line->dy ? y <= line->v1->y ? line->dx < 0 : line->dx > 0 :
+      ((int64_t)y - line->v1->y) * line->dx >= line->dy * ((int64_t)x - line->v1->x);
 }
 int (*P_PointOnLineSide)(fixed_t x, fixed_t y, const line_t *line) = P_PointOnLineSideClassic;
+
+//
+// Return 0 or 1, or -1 if flush
+//
+int P_PointOnLineSideExclusive(fixed_t x, fixed_t y, const line_t *line)
+{
+   if(!line->dx)
+      return x <= line->v1->x ? line->dy > 0 : line->dy < 0;
+   else if(!line->dy)
+      return y <= line->v1->y ? line->dx < 0 : line->dx > 0;
+   else
+   {
+      const int64_t yTerm = ((int64_t)y - line->v1->y) * line->dx;
+      const int64_t xTerm = line->dy * ((int64_t)x - line->v1->x);
+      if(xTerm == yTerm)
+         return -1;
+      else
+         return xTerm >= yTerm ? 1 : 0;
+   }
+}
 
 //
 // P_BoxOnLineSide
@@ -116,6 +139,58 @@ int P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld)
         (P_PointOnLineSide(tmbox[BOXLEFT], tmbox[BOXBOTTOM], ld)) ==
         (p = P_PointOnLineSide(tmbox[BOXRIGHT], tmbox[BOXTOP], ld)) ? p : -1;
     }
+}
+
+//
+// Considers the line to be infinite
+// Returns side 0 or 1, -1 if box crosses (or is flush with) the line.
+//
+int P_BoxOnLineSideExclusive(const fixed_t *tmbox, const line_t *ld)
+{
+   switch(ld->slopetype)
+   {
+   default:
+   case ST_HORIZONTAL:
+   {
+      const bool boxBottomAbove = tmbox[BOXBOTTOM] >= ld->v1->y;
+      const bool boxTopAbove    = tmbox[BOXTOP] >= ld->v1->y;
+      if(boxBottomAbove == boxTopAbove)
+         return boxTopAbove != (ld->dx < 0) ? 1 : 0;
+      else
+         return -1;
+   }
+   case ST_VERTICAL:
+   {
+      const bool boxLeftLeft  = tmbox[BOXLEFT] <= ld->v1->x;
+      const bool boxRightLeft = tmbox[BOXRIGHT] <= ld->v1->x;
+      if(boxLeftLeft == boxRightLeft)
+         return boxRightLeft != (ld->dy < 0) ? 1 : 0;
+      else
+         return -1;
+   }
+   case ST_POSITIVE:
+   {
+      const int boxBottomRightCorner = P_PointOnLineSideExclusive(tmbox[BOXRIGHT], tmbox[BOXBOTTOM], ld);
+      const int boxTopLeftCorner     = P_PointOnLineSideExclusive(tmbox[BOXLEFT], tmbox[BOXTOP], ld);
+      if(boxBottomRightCorner == -1)
+         return boxTopLeftCorner;
+      else if(boxTopLeftCorner == -1)
+         return boxBottomRightCorner;
+      else
+         return boxBottomRightCorner == boxTopLeftCorner ? boxTopLeftCorner : -1;
+   }
+   case ST_NEGATIVE:
+   {
+      const int boxBottomLeftCorner = P_PointOnLineSideExclusive(tmbox[BOXLEFT], tmbox[BOXBOTTOM], ld);
+      const int boxTopRightCorner   = P_PointOnLineSideExclusive(tmbox[BOXRIGHT], tmbox[BOXTOP], ld);
+      if(boxBottomLeftCorner == -1)
+         return boxTopRightCorner;
+      else if(boxTopRightCorner == -1)
+         return boxBottomLeftCorner;
+      else
+         return boxBottomLeftCorner == boxTopRightCorner ? boxTopRightCorner : -1;
+   }
+   }
 }
 
 //
@@ -220,6 +295,104 @@ int P_BoxOnDivlineSideFloat(const float *box, v2float_t start, v2float_t delta)
    float prod = delta % (topRight - start);
    float prod2 = delta % (bottomLeft - start);
    return prod2 * prod >= 0 ? prod + prod2 >= 0 : -1;
+}
+
+enum outCode_e
+{
+   OC_INSIDE = 0x00000000,
+   OC_LEFT   = 0x00000001,
+   OC_RIGHT  = 0x00000002,
+   OC_BOTTOM = 0x00000004,
+   OC_TOP    = 0x00000008,
+};
+
+int GetVertexOutCode(const fixed_t *tmbox, const fixed_t x, const fixed_t y)
+{
+   int code = OC_INSIDE;
+   if(x < tmbox[BOXLEFT])
+      code |= OC_LEFT;
+   else if(x > tmbox[BOXRIGHT])
+      code |= OC_RIGHT;
+   if(y < tmbox[BOXTOP])
+      code |= OC_TOP;
+   else if(y > tmbox[BOXBOTTOM])
+      code |= OC_BOTTOM;
+
+   return code;
+}
+
+//
+// MaxW: Perform a Cohen Sutherland line clip to calculate if a line intersects a box
+//
+bool P_LineIntersectsBox(const line_t *ld, const fixed_t *tmboxin)
+{
+   // We need for top and left to be min and right and bottom to be max
+   fixed_t tmbox[4];
+   tmbox[BOXTOP]    = emin(tmboxin[BOXTOP], tmboxin[BOXBOTTOM]);
+   tmbox[BOXBOTTOM] = emax(tmboxin[BOXTOP], tmboxin[BOXBOTTOM]);
+   tmbox[BOXLEFT]   = emin(tmboxin[BOXLEFT], tmboxin[BOXRIGHT]);
+   tmbox[BOXRIGHT]  = emax(tmboxin[BOXLEFT], tmboxin[BOXRIGHT]);
+
+
+   int ocV1 = GetVertexOutCode(tmbox, ld->v1->x, ld->v1->y);
+   int ocV2 = GetVertexOutCode(tmbox, ld->v2->x, ld->v2->y);
+
+   // These values represent the two intersect points (left as-is if both points are inside the box)
+   fixed_t x1 = ld->v1->x;
+   fixed_t y1 = ld->v1->y;
+   fixed_t x2 = ld->v2->x;
+   fixed_t y2 = ld->v2->y;
+
+   bool intersects = false;
+
+   while(true) {
+      if(!(ocV1 | ocV2))
+      {
+         intersects = true;
+         break;
+      }
+      else if(ocV1 & ocV2)
+         break;
+      else
+      {
+         fixed_t x = 0, y = 0;
+         const int outsideOutcode = emax(ocV2, ocV1);
+
+         if(outsideOutcode & OC_TOP)
+         {
+            x = x1 + FixedDiv(FixedMul((x2 - x1), (tmbox[BOXTOP] - y1)), (y2 - y1));
+            y = tmbox[BOXTOP];
+         }
+         else if(outsideOutcode & OC_BOTTOM)
+         {
+            x = x1 + FixedDiv(FixedMul((x2 - x1), (tmbox[BOXBOTTOM] - y1)), (y2 - y1));
+            y = tmbox[BOXBOTTOM];
+         }
+         else if(outsideOutcode & OC_RIGHT)
+         { 
+            y = y1 + FixedDiv(FixedMul((y2 - y1), (tmbox[BOXRIGHT] - x1)),  (x2 - x1));
+            x = tmbox[BOXRIGHT];
+         }
+         else if(outsideOutcode & OC_LEFT)
+         {
+            y = y1 + FixedDiv(FixedMul((y2 - y1), (tmbox[BOXLEFT] - x1)), (x2 - x1));
+            x = tmbox[BOXLEFT];
+         }
+
+         if(outsideOutcode == ocV1) {
+            x1 = x;
+            y1 = y;
+            ocV1 = GetVertexOutCode(tmbox, x1, y1);
+         }
+         else {
+            x2 = x;
+            y2 = y;
+            ocV2 = GetVertexOutCode(tmbox, x2, y2);
+         }
+      }
+   }
+
+   return intersects;
 }
 
 //
@@ -723,62 +896,194 @@ void P_LogThingPosition(Mobj *mo, const char *caller)
 #endif
 
 //
+// Routine to remove sprite touching sector list
+//
+static void P_unsetThingSpriteTouchingSectorList(Mobj *thing)
+{
+   thing->old_sprite_sectorlist = thing->sprite_touching_sectorlist;
+   thing->sprite_touching_sectorlist = nullptr;
+}
+
+//
+// Remove sector link when unsetting position
+//
+void P_UnsetThingSectorLink(Mobj *thing, bool isRemoved)
+{
+   // unlink from subsector
+
+   // killough 8/11/98: simpler scheme using pointers-to-pointers for prev
+   // pointers, allows head node pointers to be treated like everything else
+   Mobj **sprev = thing->sprev;
+   Mobj *snext = thing->snext;
+   if((*sprev = snext))  // unlink from sector list
+      snext->sprev = sprev;
+
+   // phares 3/14/98
+   //
+   // Save the sector list pointed to by touching_sectorlist.
+   // In P_SetThingPosition, we'll keep any nodes that represent
+   // sectors the Thing still touches. We'll add new ones then, and
+   // delete any nodes for sectors the Thing has vacated. Then we'll
+   // put it back into touching_sectorlist. It's done this way to
+   // avoid a lot of deleting/creating for nodes, when most of the
+   // time you just get back what you deleted anyway.
+   //
+   // If this Thing is being removed entirely, then the calling
+   // routine will clear out the nodes in sector_list.
+
+   thing->old_sectorlist = thing->touching_sectorlist;
+   thing->touching_sectorlist = nullptr; // to be restored by P_SetThingPosition
+
+   if(R_NeedThoroughSpriteCollection() || isRemoved)
+      P_unsetThingSpriteTouchingSectorList(thing);
+
+   R_UnlinkSpriteProj(*thing);
+}
+
+void P_UnsetThingBlockLink(Mobj *thing)
+{
+   // inert things don't need to be in blockmap
+
+   // killough 8/11/98: simpler scheme using pointers-to-pointers for prev
+   // pointers, allows head node pointers to be treated like everything else
+   //
+   // Also more robust, since it doesn't depend on current position for
+   // unlinking. Old method required computing head node based on position
+   // at time of unlinking, assuming it was the same position as during
+   // linking.
+
+   Mobj *bnext, **bprev = thing->bprev;
+   if(bprev && (*bprev = bnext = thing->bnext))  // unlink from block map
+      bnext->bprev = bprev;
+}
+
+//
 // P_UnsetThingPosition
 // Unlinks a thing from block map and sectors.
 // On each position change, BLOCKMAP and other
 // lookups maintaining lists ot things inside
 // these structures need to be updated.
 //
-void P_UnsetThingPosition(Mobj *thing)
+void P_UnsetThingPosition(Mobj *thing, bool isRemoved)
 {
    P_LogThingPosition(thing, "unset");
 
+   // invisible things don't need to be in sector list
    if(!(thing->flags & MF_NOSECTOR))
-   {
-      // invisible things don't need to be in sector list
-      // unlink from subsector
-      
-      // killough 8/11/98: simpler scheme using pointers-to-pointers for prev
-      // pointers, allows head node pointers to be treated like everything else
-      Mobj **sprev = thing->sprev;
-      Mobj  *snext = thing->snext;
-      if((*sprev = snext))  // unlink from sector list
-         snext->sprev = sprev;
+      P_UnsetThingSectorLink(thing, isRemoved);
 
-      // phares 3/14/98
-      //
-      // Save the sector list pointed to by touching_sectorlist.
-      // In P_SetThingPosition, we'll keep any nodes that represent
-      // sectors the Thing still touches. We'll add new ones then, and
-      // delete any nodes for sectors the Thing has vacated. Then we'll
-      // put it back into touching_sectorlist. It's done this way to
-      // avoid a lot of deleting/creating for nodes, when most of the
-      // time you just get back what you deleted anyway.
-      //
-      // If this Thing is being removed entirely, then the calling
-      // routine will clear out the nodes in sector_list.
-      
-      thing->old_sectorlist = thing->touching_sectorlist;
-      thing->touching_sectorlist = nullptr; // to be restored by P_SetThingPosition
-      
-      R_UnlinkSpriteProj(*thing);
+   // inert things don't need to be in blockmap
+   if(!(thing->flags & MF_NOBLOCKMAP))
+      P_UnsetThingBlockLink(thing);
+}
+
+//
+// Get a thing's sprite radius OR the physical radius, whichever is greater.
+// The physical radius is an optimization for small sprites.
+//
+fixed_t P_GetSpriteOrBoxRadius(const Mobj &thing)
+{
+   I_Assert(r_spritespan != nullptr, 
+            "The sprite span cache should have been initialized by now!\n");
+   
+   if(thing.sprite < 0 || thing.sprite >= numsprites)
+      return thing.radius; // fallback
+
+   const spritespan_t *spansprite = r_spritespan[thing.sprite];
+   int framenum = thing.frame & FF_FRAMEMASK;
+
+   if(framenum < 0 || framenum >= sprites[thing.sprite].numframes)
+      return thing.radius;
+   
+   const spritespan_t &span = spansprite[framenum];
+
+   fixed_t spriteRadius = thing.xscale == 1.0f ? span.sideFixed : 
+      M_FloatToFixed(span.side * thing.xscale);
+   return emax(spriteRadius, thing.radius);
+}
+
+//
+// Routine to set sprite_touching_sectorlist
+//
+static void P_setThingSpriteTouchingSectorList(Mobj *thing, fixed_t curSpriteRadius)
+{
+   if(curSpriteRadius <= 0)
+      curSpriteRadius = 1; // minimum safe to account for any assumptions
+   thing->sprite_touching_sectorlist =
+      P_CreateSecNodeList(thing, thing->x, thing->y, curSpriteRadius,
+                          &sector_t::touching_thinglist_by_sprites,
+                          &Mobj::old_sprite_sectorlist, true);
+   thing->old_sprite_sectorlist = nullptr;
+}
+
+//
+// Links to sector
+//
+void P_SetThingSectorLink(Mobj *thing, const subsector_t *prevss)
+{
+   // killough 8/11/98: simpler scheme using pointer-to-pointer prev
+   // pointers, allows head nodes to be treated like everything else
+
+   Mobj **link = &thing->subsector->sector->thinglist;
+   Mobj *snext = *link;
+   if((thing->snext = snext))
+      snext->sprev = &thing->snext;
+   thing->sprev = link;
+   *link = thing;
+
+   // phares 3/16/98
+   //
+   // If sector_list isn't nullptr, it has a collection of sector
+   // nodes that were just removed from this Thing.
+   //
+   // Collect the sectors the object will live in by looking at
+   // the existing sector_list and adding new nodes and deleting
+   // obsolete ones.
+   //
+   // When a node is deleted, its sector links (the links starting
+   // at sector_t->touching_thinglist) are broken. When a node is
+   // added, new sector links are created.
+
+   thing->touching_sectorlist = P_CreateSecNodeList(thing, thing->x, thing->y, thing->radius,
+                                                    &sector_t::touching_thinglist,
+                                                    &Mobj::old_sectorlist, false);
+   thing->old_sectorlist = nullptr;
+
+   if(R_NeedThoroughSpriteCollection())
+      P_setThingSpriteTouchingSectorList(thing, P_GetSpriteOrBoxRadius(*thing));
+
+   // MaxW: EESectorActionEnter and EESectorActionExit
+   if(prevss && prevss->sector != thing->subsector->sector)
+   {
+      EV_ActivateSectorAction(thing->subsector->sector, thing, SEAC_ENTER);
+      EV_ActivateSectorAction(prevss->sector, thing, SEAC_EXIT);
    }
 
-   if(!(thing->flags & MF_NOBLOCKMAP))
+   // ioanch: link to portals
+   R_LinkSpriteProj(*thing);
+}
+
+void P_SetThingBlockLink(Mobj *thing)
+{
+   int blockx = (thing->x - bmaporgx) >> MAPBLOCKSHIFT;
+   int blocky = (thing->y - bmaporgy) >> MAPBLOCKSHIFT;
+
+   if(blockx >= 0 && blockx < bmapwidth && blocky >= 0 && blocky < bmapheight)
    {
-      // inert things don't need to be in blockmap
-      
-      // killough 8/11/98: simpler scheme using pointers-to-pointers for prev
-      // pointers, allows head node pointers to be treated like everything else
-      //
-      // Also more robust, since it doesn't depend on current position for
-      // unlinking. Old method required computing head node based on position
-      // at time of unlinking, assuming it was the same position as during
-      // linking.
-      
-      Mobj *bnext, **bprev = thing->bprev;
-      if(bprev && (*bprev = bnext = thing->bnext))  // unlink from block map
-         bnext->bprev = bprev;
+      // killough 8/11/98: simpler scheme using pointer-to-pointer prev
+      // pointers, allows head nodes to be treated like everything else
+
+      Mobj **link = &blocklinks[blocky * bmapwidth + blockx];
+      Mobj *bnext = *link;
+      if((thing->bnext = bnext))
+         bnext->bprev = &thing->bnext;
+      thing->bprev = link;
+      *link = thing;
+   }
+   else        // thing is off the map
+   {
+      thing->bnext = nullptr;
+      thing->bprev = nullptr;
    }
 }
 
@@ -800,72 +1105,14 @@ void P_SetThingPosition(Mobj *thing)
 
    thing->groupid = ss->sector->groupid;
 
+   // invisible things don't go into the sector links
    if(!(thing->flags & MF_NOSECTOR))
-   {
-      // invisible things don't go into the sector links
-      
-      // killough 8/11/98: simpler scheme using pointer-to-pointer prev
-      // pointers, allows head nodes to be treated like everything else
-      
-      Mobj **link = &ss->sector->thinglist;
-      Mobj *snext = *link;
-      if((thing->snext = snext))
-         snext->sprev = &thing->snext;
-      thing->sprev = link;
-      *link = thing;
-
-      // phares 3/16/98
-      //
-      // If sector_list isn't nullptr, it has a collection of sector
-      // nodes that were just removed from this Thing.
-      //
-      // Collect the sectors the object will live in by looking at
-      // the existing sector_list and adding new nodes and deleting
-      // obsolete ones.
-      //
-      // When a node is deleted, its sector links (the links starting
-      // at sector_t->touching_thinglist) are broken. When a node is
-      // added, new sector links are created.
-
-      thing->touching_sectorlist = P_CreateSecNodeList(thing, thing->x, thing->y);
-      thing->old_sectorlist = nullptr;
-
-      // MaxW: EESectorActionEnter and EESectorActionExit
-      if(prevss && prevss->sector != ss->sector)
-      {
-         EV_ActivateSectorAction(ss->sector, thing, SEAC_ENTER);
-         EV_ActivateSectorAction(prevss->sector, thing, SEAC_EXIT);
-      }
-      
-      // ioanch: link to portals
-      R_LinkSpriteProj(*thing);
-   }
+      P_SetThingSectorLink(thing, prevss);
 
    // link into blockmap
+   // inert things don't need to be in blockmap
    if(!(thing->flags & MF_NOBLOCKMAP))
-   {
-      // inert things don't need to be in blockmap
-      int blockx = (thing->x - bmaporgx) >> MAPBLOCKSHIFT;
-      int blocky = (thing->y - bmaporgy) >> MAPBLOCKSHIFT;
-      
-      if(blockx >= 0 && blockx < bmapwidth && blocky >= 0 && blocky < bmapheight)
-      {
-         // killough 8/11/98: simpler scheme using pointer-to-pointer prev
-         // pointers, allows head nodes to be treated like everything else
-
-         Mobj **link = &blocklinks[blocky*bmapwidth+blockx];
-         Mobj *bnext = *link;
-         if((thing->bnext = bnext))
-            bnext->bprev = &thing->bnext;
-         thing->bprev = link;
-         *link = thing;
-      }
-      else        // thing is off the map
-      {
-         thing->bnext = nullptr;
-         thing->bprev = nullptr;
-      }
-   }
+      P_SetThingBlockLink(thing);
 }
 
 // killough 3/15/98:
@@ -929,7 +1176,7 @@ bool ThingIsOnLine(const Mobj *t, const line_t *l)
 // ioanch 20160114: enhanced the callback
 //
 bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*, void *), int groupid,
-   void *context)
+   void *context, LineIteratorVisiting *visit)
 {
    int        offset;
    const int  *list;     // killough 3/1/98: for removal of blockmap limit
@@ -941,21 +1188,35 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*, void *), 
 
    // haleyjd 02/22/06: consider polyobject lines
    plink = polyblocklinks[offset];
+   bool visitcheck;
 
    while(plink)
    {
       polyobj_t *po = (*plink)->po;
+      size_t index = po - PolyObjects;
 
-      if(po->validcount != validcount) // if polyobj hasn't been checked
+      visitcheck = visit ? visit->polys.get(index) : po->validcount == validcount;
+
+      if(! visitcheck) // if polyobj hasn't been checked
       {
          int i;
-         po->validcount = validcount;
+         if(visit)
+            visit->polys.put(index);
+         else
+            po->validcount = validcount;
          
          for(i = 0; i < po->numLines; ++i)
          {
-            if(po->lines[i]->validcount == validcount) // line has been checked
+            index = po->lines[i] - lines;
+            visitcheck = visit ? visit->lines.get(index) : po->lines[i]->validcount == validcount;
+
+            if(visitcheck) // line has been checked
                continue;
-            po->lines[i]->validcount = validcount;
+            if(visit)
+               visit->lines.put(index);
+            else
+               po->lines[i]->validcount = validcount;
+
             if(!func(po->lines[i], po, context))
                return false;
          }
@@ -992,9 +1253,15 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*, void *), 
       // ioanch 20160111: check groupid
       if(groupid != R_NOGROUP && groupid != ld->frontsector->groupid)
          continue;
-      if(ld->validcount == validcount)
+      
+      visitcheck = visit ? visit->lines.get(*list) : ld->validcount == validcount;
+
+      if(visitcheck)
          continue;       // line has already been checked
-      ld->validcount = validcount;
+      if(visit)
+         visit->lines.put(*list);
+      else
+         ld->validcount = validcount;
       if(!func(ld, nullptr, context))
          return false;
    }
@@ -1255,6 +1522,45 @@ bool P_SegmentIntersectsSector(v2fixed_t v1, v2fixed_t v2, const sector_t &secto
          return true;   // found one
    }
    return false;
+}
+
+//
+// Common call to refresh sprite touching sector list when some visual sprite property changes
+// 
+// WARNING: make sure that SetThingPosition was last called on this.
+//
+void P_RefreshSpriteTouchingSectorList(Mobj *mo, fixed_t prevSpriteRadius)
+{
+   if(R_NeedThoroughSpriteCollection() && !(mo->flags & MF_NOSECTOR))
+   {
+      fixed_t curSpriteRadius = P_GetSpriteOrBoxRadius(*mo);
+      // Do not call this if the radius reduced, only if increased.
+      if(prevSpriteRadius >= 0 && curSpriteRadius <= prevSpriteRadius)
+         return;
+      P_unsetThingSpriteTouchingSectorList(mo);
+      P_setThingSpriteTouchingSectorList(mo, curSpriteRadius);
+   }
+}
+
+//
+// Enable or disable sprite touching sector lists based on CVAR settings
+//
+void P_CheckSpriteTouchingSectorLists()
+{
+   if(R_NeedThoroughSpriteCollection())
+   {
+      if(!thinkercap.next)
+         return;
+      for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+      {
+         Mobj *mo;
+         if(!(mo = thinker_cast<Mobj *>(th)))
+            continue;
+         // We need to refresh the sprite touching sector list because the renderer may demand it
+         // immediately
+         P_RefreshSpriteTouchingSectorList(mo, -1);
+      }
+   }
 }
 
 //----------------------------------------------------------------------------

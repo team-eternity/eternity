@@ -97,6 +97,11 @@ void XLTokenizer::doStateScan()
          state = STATE_COMMENT;
          break;
       }
+      else if(c == '/' && input[idx+1] == '*' && (flags & TF_BLOCKCOMMENTS))
+      {
+          state     = STATE_INBCOMMENT;
+          break;
+      }
       else if(c == '[' && (flags & TF_BRACKETS))
       {
          tokentype = TOKEN_BRACKETSTR;
@@ -146,12 +151,14 @@ void XLTokenizer::doStateInToken()
    default:
       if((c == '#' && flags & TF_HASHCOMMENTS) ||
          (c == '/' && input[idx+1] == '/' && flags & TF_SLASHCOMMENTS) ||
+         (c == '/' && input[idx+1] == '*' && flags & TF_BLOCKCOMMENTS) ||
          (flags & TF_OPERATORS && !token.empty() &&
           XL_isIdentifierChar(c) != XL_isIdentifierChar(token[0])) ||
          (c == '"' && tokentype == TOKEN_KEYWORD))
       {
          // hashes may conditionally be supported as comments
          // double slashes may conditionally be supported as comments
+         // block comments may be conditionally supported as comments
          // operators and identifiers are separate
          // starting strings next to keywords should be detected
          --idx;
@@ -312,6 +319,21 @@ void XLTokenizer::doStateComment()
    }
 }
 
+void XLTokenizer::doStateBlockComment()
+{
+    // consume all input until next '*/'
+    if((input[idx] == '*' && input[idx+1] == '/'))
+    {
+        idx++; //push ahead then start to scan again
+        state = STATE_SCAN;
+    } 
+    else if(input[idx] == '\0') // end of input (technically malformed)
+    {
+       tokentype = TOKEN_EOF;
+       state     = STATE_DONE;
+    }
+}
+
 // State table for the tokenizer - static array of method pointers :)
 void (XLTokenizer::* XLTokenizer::States[])() =
 {
@@ -319,7 +341,8 @@ void (XLTokenizer::* XLTokenizer::States[])() =
    &XLTokenizer::doStateInToken,
    &XLTokenizer::doStateInBrackets,
    &XLTokenizer::doStateQuoted,
-   &XLTokenizer::doStateComment
+   &XLTokenizer::doStateComment,
+   &XLTokenizer::doStateBlockComment
 };
 
 //

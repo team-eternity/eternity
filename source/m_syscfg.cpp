@@ -76,6 +76,7 @@ extern int disable_sysmenu;
 #define ITEM_IWAD_BFGDOOM2      "iwad_bfgdoom2"
 #define ITEM_IWAD_TNT           "iwad_tnt"
 #define ITEM_IWAD_PLUTONIA      "iwad_plutonia"
+#define ITEM_PWAD_ID24RES       "pwad_id24res"
 #define ITEM_IWAD_HACX          "iwad_hacx"
 #define ITEM_IWAD_HERETIC_SW    "iwad_heretic_shareware"
 #define ITEM_IWAD_HERETIC       "iwad_heretic"
@@ -149,6 +150,9 @@ static default_t sysdefaults[] =
 
    DEFAULT_INT(ITEM_IWAD_CHOICE, &iwad_choice, nullptr, -1, -1, NUMPICKIWADS, default_t::wad_no,
                "Number of last IWAD chosen from the IWAD picker"),
+
+   DEFAULT_STR(ITEM_PWAD_ID24RES, &gi_path_id24res, nullptr, "", default_t::wad_no,
+               "PWAD path for ID24 resources"),
 
    DEFAULT_STR("master_levels_dir", &w_masterlevelsdirname, nullptr, "", default_t::wad_no,
                "Directory containing Master Levels wad files"),

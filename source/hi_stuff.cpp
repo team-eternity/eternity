@@ -988,26 +988,26 @@ static void HI_DrawBackground(void)
    {
       case INTR_LEAVING:
          if(hi_exitpic)
-            V_DrawPatch(0, 0, &subscreen43, hi_exitpic);
+            V_DrawPatchFS(&vbscreenyscaled, hi_exitpic);
          else
-            V_DrawBackground("FLOOR16", &subscreen43);
+            V_DrawBackground("FLOOR16", &vbscreenyscaled);
          break;
       case INTR_GOING:
       case INTR_WAITING:
          // Make sure to continue showing the last explicit exit pic if the next enterpic is not
          // provided
          if(estrnonempty(hi_wbs.li_lastexitpic) && estrempty(hi_wbs.li_nextenterpic))
-            V_DrawPatch(0, 0, &subscreen43, hi_exitpic);
+            V_DrawPatchFS(&vbscreenyscaled, hi_exitpic);
          else if(hi_interpic)
-            V_DrawPatch(0, 0, &subscreen43, hi_interpic);
+            V_DrawPatchFS(&vbscreenyscaled, hi_interpic);
          else
-            V_DrawBackground("FLOOR16", &subscreen43);
+            V_DrawBackground("FLOOR16", &vbscreenyscaled);
          break;
       default:
          if(estrnonempty(hi_wbs.li_lastexitpic) && estrempty(hi_wbs.li_nextenterpic))
-            V_DrawPatch(0, 0, &subscreen43, hi_exitpic);
+            V_DrawPatchFS(&vbscreenyscaled, hi_exitpic);
          else
-            V_DrawBackground("FLOOR16", &subscreen43);
+            V_DrawBackground("FLOOR16", &vbscreenyscaled);
          break;
    }
 }
@@ -1017,7 +1017,10 @@ static void HI_Drawer()
    static int oldinterstate;
 
    if(interstate == INTR_WAITING)
+   {
+      IN_slamBackground(); // needed because D_Display puts pillarboxes
       return;
+   }
    
    if(oldinterstate != INTR_GOING && interstate == INTR_GOING)
       S_StartInterfaceSound(sfx_hpstop);

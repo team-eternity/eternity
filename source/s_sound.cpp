@@ -121,8 +121,8 @@ static musicinfo_t *mus_playing;
 int numChannels;
 int default_numChannels;  // killough 9/98
 
-//jff 3/17/98 to keep track of last IDMUS specified music num
-int idmusnum;
+// MaxW: Holds music num to load.
+char *mus_LoadName;
 
 // haleyjd 05/18/14: music randomization
 bool s_randmusic = false;
@@ -1103,6 +1103,11 @@ void S_SetSfxVolume(int volume)
    snd_SfxVolume = volume;
 }
 
+const char *S_GetMusicName()
+{
+   return mus_playing ? mus_playing->name : nullptr;
+}
+
 //=============================================================================
 //
 // Sound Hashing
@@ -1404,15 +1409,19 @@ void S_Start()
       LevelInfo.musicName = GameModeInfo->defMusName;
    }
 
-   // sf: replacement music
-   if(*LevelInfo.musicName)
-      S_ChangeMusicName(LevelInfo.musicName, true);
+   
+   if(mus_LoadName)
+   {
+      // MaxW: Unarchived music set during level runtime
+      S_ChangeMusicName(mus_LoadName, true);
+      efree(mus_LoadName);
+      mus_LoadName = nullptr;
+   }
+   else if(*LevelInfo.musicName)
+      S_ChangeMusicName(LevelInfo.musicName, true); // sf: replacement music
    else
    {
-      if(idmusnum != -1)
-         mnum = idmusnum; //jff 3/17/98 reload IDMUS music if not -1
-      else
-         mnum = GameModeInfo->MusicForMap();
+      mnum = GameModeInfo->MusicForMap();
 
       // start music
       S_ChangeMusicNum(mnum, true);

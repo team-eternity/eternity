@@ -146,6 +146,9 @@ void S_UpdateSounds(const Mobj *listener);
 void S_SetMusicVolume(int volume);
 void S_SetSfxVolume(int volume);
 
+// MaxW: Music name getter
+const char *S_GetMusicName();
+
 // haleyjd: rudimentary sound checker
 bool S_CheckSoundPlaying(const PointThinker *, sfxinfo_t *aliasinfo);
 bool S_CheckSoundPlaying(const PointThinker *, int sound_id);
@@ -157,8 +160,8 @@ extern int s_precache;
 extern int numChannels;
 extern int default_numChannels;  // killough 10/98
 
-//jff 3/17/98 holds last IDMUS number, or -1
-extern int idmusnum;
+// MaxW: Holds music num to load.
+extern char *mus_LoadName;
 
 // haleyjd 11/03/06: moved/added to header
 #define SOUND_HASHSLOTS 257

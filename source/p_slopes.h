@@ -27,8 +27,12 @@
 #ifndef P_SLOPES_H__
 #define P_SLOPES_H__
 
+#include "m_surf.h"
+
 struct line_t;
 struct pslope_t;
+struct rendersector_t;
+struct sector_t;
 struct v3float_t;
 
 //
@@ -36,12 +40,24 @@ struct v3float_t;
 //
 struct slopeheight_t
 {
-   fixed_t floordelta;     // difference from bottom slope tip to floorheight
-   fixed_t ceilingdelta;   // difference from top slope tip to ceilingheight
+   union
+   {
+      struct
+      {
+         fixed_t floordelta;     // difference from bottom slope tip to floorheight
+         fixed_t ceilingdelta;   // difference from top slope tip to ceilingheight
+      };
+      Surfaces<fixed_t> delta;   // alternate surface notation
+   };
    fixed_t touchheight;    // difference from ceilingheight to floorheight when planes touch
+   Surfaces<fixed_t> slopebasedelta;   // difference from slope BASE to surface height
 };
 
 extern slopeheight_t *pSlopeHeights;
+
+fixed_t P_GetSlopedSectorFloorDelta(const rendersector_t &sector, const pslope_t *slope);
+fixed_t P_GetSlopedSectorCeilingDelta(const rendersector_t &sector, const pslope_t *slope);
+fixed_t P_GetSlopedSectorBaseDelta(const rendersector_t &sector, surf_e surf, const pslope_t *slope);
 
 void P_PostProcessSlopes();
 
@@ -76,6 +92,8 @@ float P_DistFromPlanef(const v3float_t *point, const v3float_t *pori,
                        const v3float_t *pnormal);
 
 bool P_SlopesEqual(const pslope_t &s1, const pslope_t &s2);
+bool P_SlopesEqual(const sector_t *s1, const sector_t *s2, surf_e surf);
+bool P_SlopesEqualAtGivenHeight(const pslope_t &s1, fixed_t destheight1, const pslope_t &s2);
 
 bool P_AnySlope(const line_t &line);
 

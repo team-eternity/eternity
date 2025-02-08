@@ -557,6 +557,8 @@ void HUDPatchWidget::drawer()
 // Adds a dynamically allocated patch widget to the hash table.
 // For scripting.
 //
+// FIXME: unused
+#if 0
 static void HU_DynamicPatchWidget(char *name, int x, int y, int color,
                                   int tl_level, char *patch)
 {
@@ -576,6 +578,7 @@ static void HU_DynamicPatchWidget(char *name, int x, int y, int color,
 
    newpw->initProps(x, y, color, tl_level, patch);
 }
+#endif
 
 //=============================================================================
 //
@@ -773,7 +776,9 @@ void HUDTextWidget::clear()
 //
 // Adds a dynamically allocated text widget to the hash table.
 // For scripting.
-// 
+//
+// FIXME: unused
+#if 0
 static void HU_DynamicTextWidget(const char *name, int x, int y, int font,
                                  char *message, int cleartic, int flags)
 {
@@ -795,6 +800,7 @@ static void HU_DynamicTextWidget(const char *name, int x, int y, int font,
    // set properties
    newtw->initProps(x, y, font, cleartic, flags, message);
 }
+#endif
 
 //=============================================================================
 //
@@ -1509,7 +1515,7 @@ void HUDStatWidget::ticker()
    static char statitemstr[64];
    static char statsecrstr[64];
 
-   if(!HU_allowMapWidget())
+   if(!HU_allowMapWidget() || hud_hidestats)
    {
       message = nullptr;
       return;
@@ -1527,7 +1533,7 @@ void HUDStatWidget::ticker()
       snprintf(statitemstr, sizeof(statitemstr), "I: %i/%i", plr->itemcount, totalitems);
       message = statitemstr;
    }
-   else if(statType == STATTYPE_SECRETS && !hud_hidestatus)
+   else if(statType == STATTYPE_SECRETS && !hud_hidesecrets)
    {
       snprintf(statsecrstr, sizeof(statsecrstr), "S: %i/%i", plr->secretcount, totalsecret);
       message = statsecrstr;

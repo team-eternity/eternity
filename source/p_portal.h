@@ -28,6 +28,7 @@
 #define P_PORTAL_H__
 
 #include "r_defs.h"
+#include "r_portal.h"
 
 struct polyobj_t;
 
@@ -115,7 +116,8 @@ void P_FitLinkOffsetsToPortal(const linkdata_t &ldata);
 // Checks the state of the floor/ceiling portal in the given sector and updates
 // the state flags accordingly.
 //
-void P_CheckSectorPortalState(rendersector_t &sector, surf_e type);
+void P_CheckRenderSectorPortalState(rendersector_t &sector, surf_e type);
+void P_CheckSectorPortalState(sector_t &sector, surf_e type);
 
 //
 // Checks the state of the portal in the given line and updates
@@ -123,7 +125,8 @@ void P_CheckSectorPortalState(rendersector_t &sector, surf_e type);
 //
 void P_CheckLPortalState(line_t *line);
 
-void P_SetSectorHeight(rendersector_t &sec, surf_e surf, fixed_t h);
+void P_SetSectorHeight(sector_t &sec, surf_e surf, fixed_t h);
+void P_SetRenderSectorHeight(rendersector_t &sec, surf_e surf, fixed_t h);
 
 //
 // P_SetPortalBehavior
@@ -163,8 +166,13 @@ void P_MoveGroupCluster(int outgroup, int ingroup, bool *groupvisit, fixed_t dx,
 void P_ForEachClusterGroup(int outgroup, int ingroup, bool *groupvisit,
                            bool (*func)(int groupid, void *context), void *context);
 
+fixed_t P_PortalZ(const surface_t &surface, fixed_t x, fixed_t y);
+inline static fixed_t P_PortalZ(const surface_t &surface, v2fixed_t v)
+{
+   return P_PortalZ(surface, v.x, v.y);
+}
 fixed_t P_PortalZ(const surface_t &surface);
-inline fixed_t P_PortalZ(surf_e surf, const rendersector_t &sector)
+inline static fixed_t P_PortalZ(surf_e surf, const rendersector_t &sector)
 {
    return P_PortalZ(sector.srf[surf]);
 }
@@ -176,6 +184,14 @@ bool P_PortalLayersByPoly(int groupid1, int groupid2);
 
 const int *P_GetSectorPortalNeighbors(const sector_t &sector, surf_e surf,
                                       int *count);
+
+//
+// True if it's a passable portal with overlay
+//
+inline static bool P_IsLiquidOverlaylinkedPortal(const surface_t &surface)
+{
+   return (surface.pflags & (PS_PASSABLE | PS_OVERLAY)) == (PS_PASSABLE | PS_OVERLAY);
+}
 
 #endif
 

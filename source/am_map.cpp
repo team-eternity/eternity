@@ -116,6 +116,8 @@ static bool am_drawsegs;
 // how much zoom-out per tic
 // pulls out to 0.5x in 1 second
 #define M_ZOOMOUT       (1.0/1.02)
+// how much zoom in/out on each mousewheel scroll
+static constexpr double M_ZOOMWHEEL = 1.3;
 
 // translates between frame-buffer and map distances
 #define FTOM(x) ((x) * scale_ftom)
@@ -181,6 +183,17 @@ static constexpr mline_t player_arrow_raven[] =
    { { -R - R / 4,  R / 8 }, { -R + R / 8,  R / 8 } },
    { { -R - R / 4, -R / 8 }, { -R + R / 8, -R / 8 } }
 };
+// "Wet nurse" drawing of Heretic keys on map
+static constexpr mline_t am_hereticKeySquare[] = {
+   { { 0, 0 }, { R/4, -R/2 } },
+   { { R/4, -R/2 }, { R/2, -R/2 } },
+   { { R/2, -R/2 }, { R/2, R/2 } },
+   { { R/2, R/2 }, { R/4, R/2 } },
+   { { R/4, R/2 }, { 0, 0 } }, // handle part type thing
+   { { 0, 0 }, { -R, 0 } }, // stem
+   { { -R, 0 }, { -R, -R/2 } }, // end lockpick part
+   { { -3*R/4, 0 }, { -3*R/4, -R/4 } }
+   };
 #undef R
 
 #define R ((8*PLAYERRADIUS)/7)
@@ -865,6 +878,36 @@ bool AM_Responder(const event_t *ev)
       // all other events are keydown only
       if(ev->type != ev_keydown)
          return false;
+
+      // mousewheel zooming
+      if (ev->data1 == KEYD_MWHEELUP)
+      {
+         scale_mtof = scale_mtof * M_ZOOMWHEEL;
+         scale_ftom = 1.0 / scale_mtof;
+
+         if (scale_mtof < min_scale_mtof)
+            AM_minOutWindowScale();
+         else if (scale_mtof > max_scale_mtof)
+            AM_maxOutWindowScale();
+         else
+            AM_activateNewScale();
+
+         return true;
+      }
+      else if (ev->data1 == KEYD_MWHEELDOWN)
+      {
+         scale_mtof = scale_mtof * (1.0/M_ZOOMWHEEL);
+         scale_ftom = 1.0 / scale_mtof;
+
+         if (scale_mtof < min_scale_mtof)
+            AM_minOutWindowScale();
+         else if (scale_mtof > max_scale_mtof)
+            AM_maxOutWindowScale();
+         else
+            AM_activateNewScale();
+
+         return true;
+      }
 
       static int bigstate = 0;
 
@@ -2232,7 +2275,7 @@ static void AM_drawThings(int colors, int colorrange)
    // for all sectors
    for(int i = 0; i < numsectors; i++)
    {
-      Mobj *t = sectors[i].thinglist;
+      const Mobj *t = sectors[i].thinglist;
 
       while(t) // for all things in that sector
       {
@@ -2250,66 +2293,93 @@ static void AM_drawThings(int colors, int colorrange)
          //jff 1/5/98 case over doomednum of thing being drawn
          if(mapcolor_rkey || mapcolor_ykey || mapcolor_bkey)
          {
-            switch(t->info->doomednum)
+            // FIXME: make this EDF controllable!
+            const mline_t *keyglyph = nullptr;  // shut up compiler
+            size_t keysize = 0;
+            double keyscale = 0.0;
+            angle_t keyang = 0;
+            int keycolour = -1;
+            bool havekey = false;
+
+            // MAJOR FIXME: MAKE THIS EDF DEPENDENT (the key colours MUST use lockdefs)
+
+            switch(GameModeInfo->type)
             {
-               //jff 1/5/98 treat keys special
-            case 38: case 13: //jff  red key
-               AM_drawLineCharacter
-                  (
-                   cross_mark,
-                   earrlen(cross_mark),
-                   16.0,
-                   t->angle,
-                   mapcolor_rkey!=-1? mapcolor_rkey : mapcolor_sprt,
-                   tx,
-                   ty
-                  );
+               case Game_DOOM:
+                  //jff 1/5/98 treat keys special
+                  keyglyph = cross_mark;
+                  keysize = earrlen(cross_mark);
+                  keyscale = 16.0;
+                  keyang = t->angle;
+                  switch(t->info->doomednum)
+                  {
+                     case 13: //jff  red key
+                     case 38:
+                        keycolour = mapcolor_rkey;
+                        havekey = true;
+                        break;
+                     case 6:  //jff yellow key
+                     case 39:
+                        keycolour = mapcolor_ykey;
+                        havekey = true;
+                        break;
+                     case 5:  //jff blue key
+                     case 40:
+                        keycolour = mapcolor_bkey;
+                        havekey = true;
+                        break;
+                     default:
+                        break;
+                  }
+                  break;
+               case Game_Heretic:
+                  keyglyph = am_hereticKeySquare;
+                  keysize = earrlen(am_hereticKeySquare);
+                  switch(t->info->doomednum)
+                  {
+                     case 7073:
+                        keycolour = mapcolor_rkey;
+                        havekey = true;
+                        break;
+                     case 7080:
+                        keycolour = mapcolor_ykey;
+                        havekey = true;
+                        break;
+                     case 7079:
+                        keycolour = mapcolor_bkey;
+                        havekey = true;
+                        break;
+                     default:
+                        break;
+                  }
+                  break;
+               default:
+                  break;
+            }
+
+            if(havekey)
+            {
+               AM_drawLineCharacter(keyglyph, (int)keysize, keyscale, keyang,
+                                    keycolour != -1 ? keycolour : mapcolor_sprt, tx, ty);
                t = t->snext;
                continue;
-            case 39: case 6: //jff yellow key
-               AM_drawLineCharacter
-                  (
-                   cross_mark,
-                   earrlen(cross_mark),
-                   16.0,
-                   t->angle,
-                   mapcolor_ykey!=-1? mapcolor_ykey : mapcolor_sprt,
-                   tx,
-                   ty
-                  );
-               t = t->snext;
-               continue;
-            case 40: case 5: //jff blue key
-               AM_drawLineCharacter
-                  (
-                   cross_mark,
-                   earrlen(cross_mark),
-                   16.0,
-                   t->angle,
-                   mapcolor_bkey!=-1? mapcolor_bkey : mapcolor_sprt,
-                   tx,
-                   ty
-                  );
-               t = t->snext;
-               continue;
-            default:
-               break;
             }
          }
 
          //jff 1/5/98 end added code for keys
          //jff previously entire code
-         AM_drawLineCharacter
-            (
-             thintriangle_guy,
-             earrlen(thintriangle_guy),
-             16.0,
-             t->angle,
-             // killough 8/8/98: mark friends specially
-             t->flags & MF_FRIEND && !t->player ? mapcolor_frnd : mapcolor_sprt,
-             tx,
-             ty
-            );
+         if(ddt_cheating == 2)
+            AM_drawLineCharacter
+               (
+                thintriangle_guy,
+                earrlen(thintriangle_guy),
+                16.0,
+                t->angle,
+                // killough 8/8/98: mark friends specially
+                t->flags & MF_FRIEND && !t->player ? mapcolor_frnd : mapcolor_sprt,
+                tx,
+                ty
+               );
          t = t->snext;
       } // end if
    } // end for
@@ -2428,8 +2498,9 @@ void AM_Drawer()
    }
 
    AM_drawPlayers();
-   
-   if(ddt_cheating == 2)
+
+   // FIXME: make showing key a gamemodeinfo (EDF) dependent thing
+   if(ddt_cheating == 2 || (GameModeInfo->type == Game_Heretic && gameskill == sk_baby))
       AM_drawThings(mapcolor_sprt, 0); //jff 1/5/98 default double IDDT sprite
 
    AM_drawCrosshair(mapcolor_hair); //jff 1/7/98 default crosshair color   

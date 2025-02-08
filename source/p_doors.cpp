@@ -436,7 +436,7 @@ int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID)
    {
       if(!player)
          return 0;
-      if(!E_PlayerCanUnlock(player, lockID, false))
+      if(!E_PlayerCanUnlock(*player, lockID, false))
          return 0;
    }
 

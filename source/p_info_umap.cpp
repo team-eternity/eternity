@@ -41,6 +41,29 @@
 #include "v_misc.h"
 #include "xl_umapinfo.h"
 
+#define DEH_ACTOR_PREFIX "deh_actor_"
+
+enum
+{
+   MIN_UMAPINFO_DEH_ACTOR = 145,
+   MAX_UMAPINFO_DEH_ACTOR = 249,
+};
+
+//
+// UMAPINFO has Deh_Actor_* names for DSDHacked compatibility.
+//
+static mobjtype_t P_getUMapInfoThingType(const char *name)
+{
+   if(!strncasecmp(name, DEH_ACTOR_PREFIX, sizeof(DEH_ACTOR_PREFIX) - 1))
+   {
+      char *endptr = nullptr;
+      int index = (int)strtol(name + sizeof(DEH_ACTOR_PREFIX) - 1, &endptr, 10);
+      if(index >= MIN_UMAPINFO_DEH_ACTOR && index <= MAX_UMAPINFO_DEH_ACTOR && !*endptr)
+         return E_ThingNumForDEHNum(index + 1); // yeah, dehackednum is from 146 to 250.
+   }
+   return E_ThingNumForCompatName(name);
+}
+
 //
 // Process the bossaction part of UMAPINFO. Moved here due to complexity.
 //
@@ -82,7 +105,7 @@ static bool P_processUMapInfoBossActions(MetaTable *info, qstring *error)
    {
       const bossaction_t &action = actions[i];
 
-      mobjtype_t type = E_ThingNumForCompatName(action.mobjclass);
+      mobjtype_t type = P_getUMapInfoThingType(action.mobjclass);
       if(type == -1)
       {
          if(error)

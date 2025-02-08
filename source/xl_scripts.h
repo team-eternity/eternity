@@ -53,6 +53,7 @@ public:
       STATE_INBRACKETS, // in a bracketed token
       STATE_QUOTED,     // in a quoted string
       STATE_COMMENT,    // reading out a comment (eat rest of line)
+      STATE_INBCOMMENT, // in a block comment
       STATE_DONE        // finished the current token
    };
 
@@ -79,6 +80,7 @@ public:
       TF_OPERATORS     = 0x00000010, // C-style identifiers, no space operators
       TF_ESCAPESTRINGS = 0x00000020, // Add support for escaping strings
       TF_STRINGSQUOTED = 0x00000040, // Strings must be quoted, otherwise they're keywords
+      TF_BLOCKCOMMENTS = 0x00000080, // supports block comments with /* */
    };
 
 protected:
@@ -94,6 +96,7 @@ protected:
    void doStateInBrackets();
    void doStateQuoted();
    void doStateComment();
+   void doStateBlockComment();
 
    // State table declaration
    static void (XLTokenizer::*States[])();

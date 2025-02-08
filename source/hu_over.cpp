@@ -135,7 +135,7 @@ static hudoverlayitem_t *I_defaultHUDOverlay()
 // Get the player's ammo for the given weapon, or 0 if am_noammo
 int HU_WC_PlayerAmmo(const weaponinfo_t *w)
 {
-   return E_GetItemOwnedAmount(&hu_player, w->ammo);
+   return E_GetItemOwnedAmount(hu_player, w->ammo);
 }
 
 // Determine if the player has enough ammo for one shot with the given weapon
@@ -146,7 +146,7 @@ bool HU_WC_NoAmmo(const weaponinfo_t *w)
    // no-ammo weapons are always considered to have ammo
    if(ammo)
    {
-      const int amount = E_GetItemOwnedAmount(&hu_player, ammo);
+      const int amount = E_GetItemOwnedAmount(hu_player, ammo);
       return amount < w->ammopershot;
    }
    else
@@ -160,7 +160,7 @@ int HU_WC_MaxAmmo(const weaponinfo_t *w)
    itemeffect_t *ammo = w->ammo;
 
    if(ammo)
-      amount = E_GetMaxAmountForArtifact(&hu_player, ammo);
+      amount = E_GetMaxAmountForArtifact(hu_player, ammo);
 
    return amount;
 }
@@ -194,7 +194,7 @@ static char HU_weapSlotColor(const int slot)
    BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(hu_player.pclass->weaponslots[slot]);
    do
    {
-      if(E_PlayerOwnsWeapon(&hu_player, weaponslot->bdObject->weapon))
+      if(E_PlayerOwnsWeapon(hu_player, weaponslot->bdObject->weapon))
       {
          if(weapon == nullptr)
             weapon = weaponslot->bdObject->weapon;
@@ -212,24 +212,24 @@ static char HU_weapSlotColor(const int slot)
 //
 char HU_WeaponColourGeneralized(const player_t &player, int index, bool *had)
 {
-   if(E_NumWeaponsInSlotPlayerOwns(&player, index))
+   if(E_NumWeaponsInSlotPlayerOwns(player, index))
    {
       if(had)
          *had = true;
       return HU_weapSlotColor(index);
    }
-   if(E_PlayerOwnsWeaponForDEHNum(&player, index))
+   if(E_PlayerOwnsWeaponForDEHNum(player, index))
    {
       if(had)
          *had = true;
       const weaponinfo_t *weapon = E_WeaponForDEHNum(index);
       return weapon->ammo ? HU_WeapColor(weapon) : *FC_GRAY;
    }
-   if(E_PlayerOwnsWeaponInSlot(&player, index))
+   if(E_PlayerOwnsWeaponInSlot(player, index))
    {
       if(had)
          *had = true;
-      const weaponinfo_t *weapon = P_GetPlayerWeapon(&player, index);
+      const weaponinfo_t *weapon = P_GetPlayerWeapon(player, index);
       return weapon->ammo ? HU_WeapColor(weapon) : *FC_GRAY;
    }
    if(had)
@@ -269,7 +269,8 @@ char HU_ArmorColor()
 // Globals
 int hud_overlaylayout = HUD_BOOM;
 int hud_enabled      = 1;
-int hud_hidestatus   = 0;
+int hud_hidestats   = 0;
+int hud_hidesecrets  = 0;
 
 //=============================================================================
 //
@@ -431,8 +432,11 @@ const char *str_style[HUD_NUMHUDS] =
 VARIABLE_INT(hud_overlaylayout, nullptr, HUD_OFF, HUD_GRAPHICAL, str_style);
 CONSOLE_VARIABLE(hu_overlaystyle, hud_overlaylayout, 0) {}
 
-VARIABLE_BOOLEAN(hud_hidestatus, nullptr, yesno);
-CONSOLE_VARIABLE(hu_hidesecrets, hud_hidestatus, 0) {}
+VARIABLE_BOOLEAN(hud_hidestats, nullptr, yesno);
+CONSOLE_VARIABLE(hu_hidestats, hud_hidestats, 0) {}
+
+VARIABLE_BOOLEAN(hud_hidesecrets, nullptr, yesno);
+CONSOLE_VARIABLE(hu_hidesecrets, hud_hidesecrets, 0) {}
 
 VARIABLE_TOGGLE(hud_restrictoverlaywidth, nullptr, yesno);
 CONSOLE_VARIABLE(hu_restrictoverlaywidth, hud_restrictoverlaywidth, cf_buffered)
