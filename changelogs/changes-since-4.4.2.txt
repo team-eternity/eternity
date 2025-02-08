@@ -12,6 +12,11 @@ Bug fixes
 ---------
 
 * Fixed crash happening when changing multithreaded rendering number of threads before demos start.
+* Fixed sprite glitching shortly followed by crash when starting with multithreaded renderer on a
+  small view, and then increasing the view.
+* Fixed strange failure to start, happening on some Windows installations because of changes in the
+  runtime.
+  (issue here: https://stackoverflow.com/questions/78598141/first-stdmutexlock-crashes-in-application-built-with-latest-visual-studio)
 * Dehacked patch Frame omitted Args* fields didn't resolve to defaults, but 0. This was wrong com-
   pared to how ports such as DSDA-DOOM should handle it.
 * Fixed A_ConsumeAmmo bug when specifying 0 (ammo per shot) ammo.

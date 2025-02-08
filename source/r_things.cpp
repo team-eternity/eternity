@@ -664,9 +664,11 @@ void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHe
       {
          post->masked = zhstructalloc(heap, maskedrange_t, 1);
 
-         float *buf = zhmalloc(heap, float *, 2 * bounds.numcolumns * sizeof(float)); // THREAD_FIXME: May not be load-balance friendly?
+         // Need to allocate it by video.width, because it will only be managed by VALLOCATION when
+         // video width changes.
+         float *buf = zhmalloc(heap, float *, 2 * video.width * sizeof(float)); // THREAD_FIXME: May not be load-balance friendly?
          post->masked->ceilingclip = buf;
-         post->masked->floorclip   = buf + bounds.numcolumns;
+         post->masked->floorclip   = buf + video.width;
       }
 
       for(i = pstacksize - 1; i >= 0; i--)
