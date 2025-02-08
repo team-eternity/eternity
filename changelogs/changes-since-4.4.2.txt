@@ -8,6 +8,14 @@ Improvements
   secrets. Special thanks to SarahCosmosys for the contribution!
   + New console variable for this purpose: hu_hidestats.
 
+* Now the 'gib' state of the crushed corpses is customizable in EDF in the following ways:
+  + in EDF `thingtype`, using the `crunchstate` property;
+  + in EDF `thingtype` DECORATE-style `state` definition, using either the `Crunch:` or `Crush:`
+    label (the latter is on par with the name from ZDoom).
+  If unspecified, it will default to the game mode behavior: change to S_GIBS in Doom, or do not
+  change in Heretic. Thanks to sink666 for the implementation!
+
+
 Bug fixes
 ---------
 
