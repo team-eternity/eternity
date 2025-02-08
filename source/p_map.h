@@ -179,6 +179,7 @@ enum class CheckSectorPlane
 };
 
 bool P_CheckSector(sector_t *sector, int crunch, int amt, CheckSectorPlane plane);
+void P_DoCrunch(Mobj *thing, int *pNoFit, int *pCrushChange);
 bool P_ChangeSector(sector_t *sector, int crunch);
 
 //=============================================================================

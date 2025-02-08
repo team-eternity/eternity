@@ -2086,10 +2086,12 @@ bloodtype_e E_GetBloodBehaviorForAction(mobjinfo_t *info, bloodaction_e action)
    return mbb ? mbb->behavior : GameModeInfo->defBloodBehaviors[action];
 }
 
+//
 // get the frame for when a thing is crunched by a crusher,
 // if there's a crunch metastate or (old syntax) frame, use it
-
-int E_GetCrunchFrame(const Mobj *mo) {
+//
+int E_GetCrunchFrame(const Mobj *mo) 
+{
    const char *defaultFrame = GameModeInfo->defCrunchFrame;
    const state_t *cf = E_GetStateForMobjInfo(mo->info, METASTATE_CRUNCH);
    

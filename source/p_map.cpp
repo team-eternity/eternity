@@ -2823,33 +2823,32 @@ void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance,
 //
 
 //
-// PIT_ChangeSector
+// Blood and damage cruhs
 //
-static bool PIT_ChangeSector(Mobj *thing, void *context)
+void P_DoCrunch(Mobj *thing, int *pNoFit, int *pCrushChange)
 {
-   if(P_ThingHeightClip(thing))
-      return true; // keep checking
-   
    // crunch bodies to giblets
+   // TODO: support DONTGIB flag like zdoom?
    if(thing->health <= 0)
    {
       // sf: clear the skin which will mess things up
       // haleyjd 03/11/03: only in Doom
-      if(GameModeInfo->type == Game_DOOM)
+      int crunchFrame = E_GetCrunchFrame(thing);
+      if(crunchFrame != NullStateNum)
       {
          thing->skin = nullptr;
-         P_SetMobjState(thing, E_GetCrunchFrame(thing));
+         P_SetMobjState(thing, crunchFrame);
       }
       thing->flags &= ~MF_SOLID;
       thing->height = thing->radius = 0;
-      return true;      // keep checking
+      return;
    }
 
    // crunch dropped items
    if(thing->flags & MF_DROPPED)
    {
       thing->remove();
-      return true;      // keep checking
+      return;
    }
 
    // killough 11/98: kill touchy things immediately
@@ -2858,31 +2857,42 @@ static bool PIT_ChangeSector(Mobj *thing, void *context)
    {
       // kill object
       P_DamageMobj(thing, nullptr, nullptr, thing->health, MOD_CRUSH);
-      return true;   // keep checking
+      return;
    }
 
    if(!(thing->flags & MF_SHOOTABLE))
-      return true;        // assume it is bloody gibs or something
+      return;        // assume it is bloody gibs or something
 
-   nofit = 1;
-   
+   *pNoFit = 1;
+
    // haleyjd 06/19/00: fix for invulnerable things -- no crusher effects
    // haleyjd 05/20/05: allow custom crushing damage
 
-   if(crushchange > 0 && !(leveltime & 3))
+   if(*pCrushChange > 0 && !(leveltime & 3))
    {
       if(thing->flags2 & MF2_INVULNERABLE || thing->flags2 & MF2_DORMANT)
-         return true;
+         return;
 
-      P_DamageMobj(thing, nullptr, nullptr, crushchange, MOD_CRUSH);
-      
+      P_DamageMobj(thing, nullptr, nullptr, *pCrushChange, MOD_CRUSH);
+
       // haleyjd 06/26/06: NOBLOOD objects shouldn't bleed when crushed
       // haleyjd FIXME: needs compflag
       if(demo_version < 333 || !(thing->flags & MF_NOBLOOD))
       {
-         BloodSpawner(thing, crushchange).spawn(BLOOD_CRUSH);
+         BloodSpawner(thing, *pCrushChange).spawn(BLOOD_CRUSH);
       }
    }
+}
+
+//
+// PIT_ChangeSector
+//
+static bool PIT_ChangeSector(Mobj *thing, void *context)
+{
+   if(P_ThingHeightClip(thing))
+      return true; // keep checking
+
+   P_DoCrunch(thing, &nofit, &crushchange);
 
    // keep checking (crush other things)
    return true;

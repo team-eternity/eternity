@@ -908,70 +908,6 @@ static void P_FindBelowIntersectors(Mobj *actor)
    return;
 }
 
-//
-// P_DoCrunch
-//
-// As in zdoom, the inner core of PIT_ChangeSector isolated for effects that
-// should occur when a thing definitely doesn't fit.
-//
-static void P_DoCrunch(Mobj *thing)
-{
-   // crunch bodies to giblets
-   // TODO: support DONTGIB flag like zdoom?
-   if(thing->health <= 0)
-   {
-      // sf: clear the skin which will mess things up
-      // haleyjd 03/11/03: not in heretic
-      if(GameModeInfo->type == Game_DOOM)
-      {
-         thing->skin = nullptr;
-         P_SetMobjState(thing, E_GetCrunchFrame(thing));
-      }
-      thing->flags &= ~MF_SOLID;
-      thing->height = thing->radius = 0;
-      return;
-   }
-
-   // crunch dropped items
-   if(thing->flags & MF_DROPPED)
-   {
-      thing->remove();
-      return;
-   }
-
-   // killough 11/98: kill touchy things immediately
-   if(thing->flags & MF_TOUCHY &&
-      (thing->intflags & MIF_ARMED || sentient(thing)))
-   {
-      // kill object
-      P_DamageMobj(thing, nullptr, nullptr, thing->health, MOD_CRUSH);
-      return;
-   }
-
-   if(!(thing->flags & MF_SHOOTABLE))
-      return;
-
-   nofit = 1;
-   
-   // haleyjd 06/19/00: fix for invulnerable things -- no crusher effects
-   // haleyjd 05/20/05: allow custom crushing damage
-
-   if(crushchange > 0 && !(leveltime & 3))
-   {
-      if(thing->flags2 & MF2_INVULNERABLE || thing->flags2 & MF2_DORMANT)
-         return;
-
-      P_DamageMobj(thing, nullptr, nullptr, crushchange, MOD_CRUSH);
-      
-      // haleyjd 06/26/06: NOBLOOD objects shouldn't bleed when crushed
-      // FIXME: needs comp flag!
-      if(demo_version < 333 || !(thing->flags & MF_NOBLOOD))
-      {
-         BloodSpawner(thing, crushchange).spawn(BLOOD_CRUSH);
-      }
-   } // end if
-}
-
 // haleyjd: if true, we're moving 3DMidTex lines
 static bool midtex_moving;
 
@@ -1020,7 +956,7 @@ static PushResult P_PushUp(Mobj *thing)
       if(P_PushUp(intersect) != PushResult::fit)
       { 
          // Move blocked
-         P_DoCrunch(intersect);
+         P_DoCrunch(intersect, &nofit, &crushchange);
          intersect->z = oldz;
          return PushResult::noFitAbove;
       }
@@ -1066,7 +1002,7 @@ static int P_PushDown(Mobj *thing)
          if(P_PushDown(intersect))
          { 
             // Move blocked
-            P_DoCrunch(intersect);
+            P_DoCrunch(intersect, &nofit, &crushchange);
             intersect->z = oldz;
             return 2;
          }
@@ -1136,10 +1072,10 @@ static void PIT_FloorRaise(Mobj *thing)
       default:
          break;
       case PushResult::hitCeiling:
-         P_DoCrunch(thing);
+         P_DoCrunch(thing, &nofit, &crushchange);
          break;
       case PushResult::noFitAbove:
-         P_DoCrunch(thing);
+         P_DoCrunch(thing, &nofit, &crushchange);
          thing->z = oldz;
          break;
       }
@@ -1172,7 +1108,7 @@ static void PIT_CeilingLower(Mobj *thing)
       case 1:
          if(onfloor)
             thing->z = thing->zref.floor;
-         P_DoCrunch(thing);
+         P_DoCrunch(thing, &nofit, &crushchange);
          break;
       default:
          break;

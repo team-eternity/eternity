@@ -1165,7 +1165,7 @@ static gamemodeinfo_t giDoomSW =
    "DoomBlood",      // bloodDefaultRIP
    "DoomBlood",      // bloodDefaultCrush
    bloodTypeForActionDOOM, // default behavior for action array
-   "S_GIBS", //default sprite for when things are crushed
+   "S_GIBS",         // defCrunchFrame
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
@@ -1296,7 +1296,7 @@ static gamemodeinfo_t giDoomReg =
    "DoomBlood",      // bloodDefaultRIP
    "DoomBlood",      // bloodDefaultCrush
    bloodTypeForActionDOOM, // default behavior for action array
-   "S_GIBS", //default sprite for when things are crushed
+   "S_GIBS",         // defCrunchFrame
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
@@ -1427,7 +1427,7 @@ static gamemodeinfo_t giDoomRetail =
    "DoomBlood",      // bloodDefaultRIP
    "DoomBlood",      // bloodDefaultCrush
    bloodTypeForActionDOOM, // default behavior for action array
-   "S_GIBS", //default frame for when things are crushed
+   "S_GIBS",         // defCrunchFrame
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
@@ -1558,7 +1558,7 @@ static gamemodeinfo_t giDoomCommercial =
    "DoomBlood",      // bloodDefaultRIP
    "DoomBlood",      // bloodDefaultCrush
    bloodTypeForActionDOOM, // default behavior for action array
-   "S_GIBS", //default sprite for when things are crushed
+   "S_GIBS",         // defCrunchFrame
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
@@ -1689,7 +1689,7 @@ static gamemodeinfo_t giHereticSW =
    "HereticBlood",         // bloodDefaultRIP
    "HereticBlood",         // bloodDefaultCrush
    bloodTypeForActionHtic, // default blood behavior for action array
-   "", //default sprite for when things are crushed
+   "",                 // defCrunchFrame
    1.5,                // skillAmmoMultiplier
    meleecalc_raven,     // monsterMeleeRange
    32 * FRACUNIT,     // itemHeight
@@ -1824,7 +1824,7 @@ static gamemodeinfo_t giHereticReg =
    "HereticBlood",         // bloodDefaultRIP
    "HereticBlood",         // bloodDefaultCrush
    bloodTypeForActionHtic, // default blood behavior for action array
-   "", //default sprite for when things are crushed
+   "",                 // defCrunchFrame
    1.5,               // skillAmmoMultiplier
    meleecalc_raven,     // monsterMeleeRange
    32 * FRACUNIT,     // itemHeight
