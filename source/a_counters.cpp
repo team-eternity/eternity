@@ -794,7 +794,7 @@ void A_WeaponCtrJump(actionargs_t *actionargs)
    }
 
    if(branch)
-      P_SetPsprite(player, psprnum, statenum);
+      P_SetPsprite(*player, psprnum, statenum);
 }
 
 //
@@ -888,7 +888,7 @@ void A_WeaponCtrJumpEx(actionargs_t *actionargs)
    }
 
    if(branch)
-      P_SetPsprite(player, psprnum, state->index);
+      P_SetPsprite(*player, psprnum, state->index);
 }
 
 //
@@ -949,7 +949,7 @@ void A_WeaponCtrSwitch(actionargs_t *actionargs)
       return;
 
    // jump!
-   P_SetPsprite(player, psprnum, startstate + *counter);
+   P_SetPsprite(*player, psprnum, startstate + *counter);
 }
 
 static const char *kwds_A_WeaponSetCtr[] =
@@ -1270,7 +1270,7 @@ void A_CheckReloadEx(actionargs_t *actionargs)
    if(!w->ammo) // no-ammo weapon?
       return;
 
-   ammo      = E_GetItemOwnedAmount(player, w->ammo);
+   ammo      = E_GetItemOwnedAmount(*player, w->ammo);
    statenum  = E_ArgAsStateNumNI(args, 0, player);
    checktype = E_ArgAsKwd(args, 1, &weapctrkwds, 0);
    value     = E_ArgAsInt(args, 2, 0);
@@ -1327,7 +1327,7 @@ void A_CheckReloadEx(actionargs_t *actionargs)
    }
 
    if(branch)
-      P_SetPsprite(player, psprnum, statenum);
+      P_SetPsprite(*player, psprnum, statenum);
 }
 
 static const char *kwds_CPSetOrAdd[] =

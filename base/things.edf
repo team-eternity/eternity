@@ -30,9 +30,9 @@ includeifenabled("heretic/things.edf", "HERETIC")
 // Common Objects --------------------------------------------------------------
 
 //
-// The template for all DSDHacked things.
+// The template for all additive dehacked things.
 //
-thingtype _DSDHackedThingtypeTemplate {}
+thingtype _AdditiveDehackedThingtypeTemplate {}
 
 //
 // TeleportSpot 

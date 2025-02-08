@@ -1,4 +1,4 @@
-﻿//
+//
 // The Eternity Engine
 // Copyright(C) 2021 James Haley, Max Waine, et al.
 //
@@ -29,6 +29,7 @@
 #include "a_common.h"
 #include "a_doom.h"
 #include "d_event.h"
+#include "d_gi.h"
 #include "d_mod.h"
 #include "d_player.h"
 #include "doomstat.h"
@@ -156,7 +157,7 @@ void A_MonsterProjectile(actionargs_t *actionargs)
    spawnofs_z  = E_ArgAsFixed(args, 4, 0);
 
    A_FaceTarget(actionargs);
-   mo = P_SpawnMissile(actor, actor->target, thingtype, actor->z + DEFAULTMISSILEZ);
+   mo = P_SpawnMissile(actor, actor->target, thingtype, actor->z + actor->info->missileheight);
    if(!mo)
       return;
 
@@ -208,6 +209,12 @@ void A_MonsterBulletAttack(actionargs_t *actionargs)
    numbullets = E_ArgAsInt(args, 2, 1);
    damagebase = E_ArgAsInt(args, 3, 3);
    damagemod  = E_ArgAsInt(args, 4, 5);
+   
+   if(numbullets >= 1 && !damagemod)
+   {
+      doom_warningf("%s: invalid damage random multiplier 0", __func__);
+      return;
+   }
 
    A_FaceTarget(actionargs);
    S_StartSound(actor, actor->info->attacksound);
@@ -250,7 +257,8 @@ void A_MonsterMeleeAttack(actionargs_t *actionargs)
    hitsound   = E_ArgAsSound(args, 2);
    range      = E_ArgAsFixed(args, 3, actor->info->meleerange);
 
-   range += actor->target->info->radius - 20 * FRACUNIT;
+   if (GameModeInfo->monsterMeleeRange == meleecalc_doom)
+      range += actor->target->info->radius - 20 * FRACUNIT;
 
    A_FaceTarget(actionargs);
    if(!P_CheckRange(actor, range))
@@ -367,9 +375,6 @@ void A_FindTracer(actionargs_t *actionargs)
 
    if(fov == 0)
       fov = ANG360;
-
-   angle_t minang = actor->angle - fov / 2;
-   angle_t maxang = actor->angle + fov / 2;
 
    // Code based on A_BouncingBFG
    for(int i = 1; i < 40; i++)  // offset angles from its attack angle
@@ -568,17 +573,17 @@ void A_JumpIfFlagsSet(actionargs_t *actionargs)
    if(!mbf21_demo || !actor || state < 0)
       return;
 
-   flags      = E_ArgAsInt(args, 0, 0);
-   mbf21flags = E_ArgAsMBF21ThingFlags(args, 1);
+   flags      = E_ArgAsInt(args, 1, 0);
+   mbf21flags = E_ArgAsMBF21ThingFlags(args, 2);
 
    if((actor->flags & flags) == flags &&
       (
          !mbf21flags ||
          (
-            (actor->flags & mbf21flags[DEHFLAGS_MODE2]) == mbf21flags[DEHFLAGS_MODE2] &&
-            (actor->flags & mbf21flags[DEHFLAGS_MODE3]) == mbf21flags[DEHFLAGS_MODE3] &&
-            (actor->flags & mbf21flags[DEHFLAGS_MODE4]) == mbf21flags[DEHFLAGS_MODE4] &&
-            (actor->flags & mbf21flags[DEHFLAGS_MODE5]) == mbf21flags[DEHFLAGS_MODE5]
+            (actor->flags2 & mbf21flags[DEHFLAGS_MODE2]) == mbf21flags[DEHFLAGS_MODE2] &&
+            (actor->flags3 & mbf21flags[DEHFLAGS_MODE3]) == mbf21flags[DEHFLAGS_MODE3] &&
+            (actor->flags4 & mbf21flags[DEHFLAGS_MODE4]) == mbf21flags[DEHFLAGS_MODE4] &&
+            (actor->flags5 & mbf21flags[DEHFLAGS_MODE5]) == mbf21flags[DEHFLAGS_MODE5]
          )
       )
    )
@@ -605,6 +610,7 @@ void A_AddFlags(actionargs_t *actionargs)
    flags      = E_ArgAsInt(args, 0, 0);
    mbf21flags = E_ArgAsMBF21ThingFlags(args, 1);
 
+   unsigned preflags = actor->flags;
    actor->flags  |= flags;
    if(mbf21flags)
    {
@@ -613,6 +619,11 @@ void A_AddFlags(actionargs_t *actionargs)
       actor->flags4 |= mbf21flags[DEHFLAGS_MODE4];
       actor->flags5 |= mbf21flags[DEHFLAGS_MODE5];
    }
+   // Must do it after the change, to avoid nested functions interpreting the current state.
+   if(!(preflags & MF_NOSECTOR) && flags & MF_NOSECTOR)
+      P_UnsetThingSectorLink(actor, false);
+   if(!(preflags & MF_NOBLOCKMAP) && flags & MF_NOBLOCKMAP)
+      P_UnsetThingBlockLink(actor);
 }
 
 //
@@ -634,6 +645,7 @@ void A_RemoveFlags(actionargs_t *actionargs)
    flags      = E_ArgAsInt(args, 0, 0);
    mbf21flags = E_ArgAsMBF21ThingFlags(args, 1);
 
+   unsigned preflags = actor->flags;
    actor->flags &= ~flags;
    if(mbf21flags)
    {
@@ -642,6 +654,11 @@ void A_RemoveFlags(actionargs_t *actionargs)
       actor->flags4 &= ~mbf21flags[DEHFLAGS_MODE4];
       actor->flags5 &= ~mbf21flags[DEHFLAGS_MODE5];
    }
+
+   if(preflags & MF_NOSECTOR && flags & MF_NOSECTOR)
+      P_SetThingSectorLink(actor, nullptr);
+   if(preflags & MF_NOBLOCKMAP && flags & MF_NOBLOCKMAP)
+      P_SetThingBlockLink(actor);
 }
 
 //=============================================================================
@@ -729,8 +746,8 @@ void A_WeaponBulletAttack(actionargs_t *actionargs)
    hspread    = E_ArgAsFixed(args, 0, 0);
    vspread    = E_ArgAsFixed(args, 1, 0);
    numbullets = E_ArgAsInt(args, 2, 1);
-   damagebase = E_ArgAsInt(args, 3, 3);
-   damagemod  = E_ArgAsInt(args, 4, 5);
+   damagebase = E_ArgAsInt(args, 3, 5);
+   damagemod  = E_ArgAsInt(args, 4, 3);
 
    P_BulletSlope(actor);
 
@@ -849,7 +866,7 @@ void A_WeaponJump(actionargs_t *actionargs)
       return;
 
    if(P_Random(pr_mbf21) < E_ArgAsInt(args, 1, 0))
-      P_SetPspritePtr(player, pspr, state);
+      P_SetPspritePtr(*player, pspr, state);
 }
 
 //
@@ -875,7 +892,7 @@ void A_ConsumeAmmo(actionargs_t *actionargs)
          amount = INT_MIN;
    }
 
-   P_SubtractAmmoAmount(player, amount);
+   P_SubtractAmmoAmount(*player, amount);
 }
 
 //
@@ -917,10 +934,10 @@ void A_CheckAmmo(actionargs_t *actionargs)
    if(!ammotype) // no-ammo weapon?
       return;
 
-   ammoamount = E_GetItemOwnedAmount(player, ammotype);
+   ammoamount = E_GetItemOwnedAmount(*player, ammotype);
 
    if(ammoamount < checkamount)
-      P_SetPspritePtr(player, pspr, state);
+      P_SetPspritePtr(*player, pspr, state);
 }
 
 //
@@ -949,13 +966,13 @@ void A_RefireTo(actionargs_t *actionargs)
    {
       if((player->cmd.buttons & BT_ATTACK) && !(player->attackdown & AT_SECONDARY))
       {
-         if(noammocheck || P_WeaponHasAmmo(player, player->readyweapon))
-            P_SetPspritePtr(player, pspr, state);
+         if(noammocheck || P_WeaponHasAmmo(*player, player->readyweapon))
+            P_SetPspritePtr(*player, pspr, state);
       }
       else if((player->cmd.buttons & BTN_ATTACK_ALT) && !(player->attackdown & AT_PRIMARY))
       {
-         if(noammocheck || P_WeaponHasAmmoAlt(player, player->readyweapon))
-            P_SetPspritePtr(player, pspr, state);
+         if(noammocheck || P_WeaponHasAmmoAlt(*player, player->readyweapon))
+            P_SetPspritePtr(*player, pspr, state);
       }
    }
 }
@@ -982,7 +999,7 @@ void A_GunFlashTo(actionargs_t *actionargs)
    if(!E_ArgAsInt(args, 1, 0))
       P_SetMobjState(actionargs->actor, player->pclass->altattack);
 
-   P_SetPsprite(player, ps_flash, state);
+   P_SetPsprite(*player, ps_flash, state);
 }
 
 //
@@ -991,7 +1008,6 @@ void A_GunFlashTo(actionargs_t *actionargs)
 //
 void A_WeaponAlert(actionargs_t *actionargs)
 {
-   arglist_t *args   = actionargs->args;
    Mobj      *mo     = actionargs->actor;
    player_t  *player = mo->player;
 

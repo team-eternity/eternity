@@ -57,6 +57,7 @@
 #include "metaapi.h"
 #include "p_inter.h"
 #include "p_map.h"
+#include "p_map3d.h"
 #include "p_maputl.h"
 #include "p_portalcross.h"
 #include "p_skin.h"
@@ -72,6 +73,11 @@
 
 
 #define BONUSADD        6
+
+enum
+{
+   MORPHTICS = 40 * TICRATE,
+};
 
 // Ty 03/07/98 - add deh externals
 // Maximums and such were hardcoded values.  Need to externalize those for
@@ -94,7 +100,7 @@ int bfgcells = 40;      // used in p_pspr.c
 //
 // Returns false if the ammo can't be picked up at all
 //
-static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num, bool ignoreskill)
+static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, int num, bool ignoreskill)
 {
    if(!ammo)
       return false;
@@ -123,50 +129,50 @@ static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num, bool ignor
    // If the player is doing a demo w/ EDF-weapons and the weapon should be switched from,
    // try to do so, otherwise do the legacy ammo switch
    if((demo_version >= 401 || vanilla_heretic) &&
-      (!player->readyweapon || (player->readyweapon->flags & WPF_AUTOSWITCHFROM)))
+      (!player.readyweapon || (player.readyweapon->flags & WPF_AUTOSWITCHFROM)))
    {
       // FIXME: This assumes that the powered variant has the same
       // ammo usage as the unpowered variant, which is not always true
       if(weaponinfo_t *const wp = E_FindBestBetterWeaponUsingAmmo(player, ammo); wp)
       {
          weaponinfo_t *sister = wp->sisterWeapon;
-         if(player->powers[pw_weaponlevel2].isActive() && E_IsPoweredVariant(sister))
-            player->pendingweapon = sister;
+         if(player.powers[pw_weaponlevel2].isActive() && E_IsPoweredVariant(sister))
+            player.pendingweapon = sister;
          else
-            player->pendingweapon = wp;
+            player.pendingweapon = wp;
 
-         player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+         player.pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
       }
    }
    else
    {
       if(!strcasecmp(ammo->getKey(), "AmmoClip"))
       {
-         if(E_WeaponIsCurrentDEHNum(player, wp_fist))
+         if(E_WeaponIsCurrentDEHNum(&player, wp_fist))
          {
             if(E_PlayerOwnsWeaponForDEHNum(player, wp_chaingun))
-               player->pendingweapon = E_WeaponForDEHNum(wp_chaingun);
+               player.pendingweapon = E_WeaponForDEHNum(wp_chaingun);
             else
-               player->pendingweapon = E_WeaponForDEHNum(wp_pistol);
+               player.pendingweapon = E_WeaponForDEHNum(wp_pistol);
          }
       }
       else if(!strcasecmp(ammo->getKey(), "AmmoShell"))
       {
-         if(E_WeaponIsCurrentDEHNum(player, wp_fist) || E_WeaponIsCurrentDEHNum(player, wp_pistol))
+         if(E_WeaponIsCurrentDEHNum(&player, wp_fist) || E_WeaponIsCurrentDEHNum(&player, wp_pistol))
             if(E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun))
-               player->pendingweapon = E_WeaponForDEHNum(wp_shotgun);
+               player.pendingweapon = E_WeaponForDEHNum(wp_shotgun);
       }
       else if(!strcasecmp(ammo->getKey(), "AmmoCell"))
       {
-         if(E_WeaponIsCurrentDEHNum(player, wp_fist) || E_WeaponIsCurrentDEHNum(player, wp_pistol))
+         if(E_WeaponIsCurrentDEHNum(&player, wp_fist) || E_WeaponIsCurrentDEHNum(&player, wp_pistol))
             if(E_PlayerOwnsWeaponForDEHNum(player, wp_plasma))
-               player->pendingweapon = E_WeaponForDEHNum(wp_plasma);
+               player.pendingweapon = E_WeaponForDEHNum(wp_plasma);
       }
       else if(!strcasecmp(ammo->getKey(), "AmmoMissile"))
       {
-         if(E_WeaponIsCurrentDEHNum(player, wp_fist))
+         if(E_WeaponIsCurrentDEHNum(&player, wp_fist))
             if(E_PlayerOwnsWeaponForDEHNum(player, wp_missile))
-               player->pendingweapon = E_WeaponForDEHNum(wp_missile);
+               player.pendingweapon = E_WeaponForDEHNum(wp_missile);
       }
    }
 
@@ -178,7 +184,7 @@ static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num, bool ignor
 //
 // Give the player ammo from an ammoeffect pickup.
 //
-bool P_GiveAmmoPickup(player_t *player, const itemeffect_t *pickup, bool dropped, int dropamount)
+bool P_GiveAmmoPickup(player_t &player, const itemeffect_t *pickup, bool dropped, int dropamount)
 {
    if(!pickup)
       return false;
@@ -207,7 +213,7 @@ bool P_GiveAmmoPickup(player_t *player, const itemeffect_t *pickup, bool dropped
 // amount metatable value. It needs to work this way to have all side effects
 // of the called function (double baby/nightmare ammo, weapon switching).
 //
-static bool P_giveBackpackAmmo(player_t *player)
+static bool P_giveBackpackAmmo(player_t &player)
 {
    static MetaKeyIndex keyBackpackAmount("ammo.backpackamount");
 
@@ -242,7 +248,7 @@ static void P_consumeSpecial(player_t *activator, Mobj *special)
 //
 // Compat P_giveWeapon, to stop demos catching on fire for some reason
 //
-static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool dropped,
+static bool P_giveWeaponCompat(player_t &player, const itemeffect_t *giver, bool dropped,
                                Mobj *special, const char *sound)
 {
    bool gaveweapon = false;
@@ -275,18 +281,18 @@ static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool
       if(E_PlayerOwnsWeapon(player, wp))
          return false;
 
-      player->bonuscount += BONUSADD;
+      player.bonuscount += BONUSADD;
       E_GiveWeapon(player, wp);
 
       // FIXME: no way to ignoreskill?
       P_GiveAmmo(player, ammo, (GameType == gt_dm) ? dmstayammo : coopstayammo, false);
 
-      player->pendingweapon = wp;
-      player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+      player.pendingweapon = wp;
+      player.pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
       // killough 4/25/98, 12/98
       if(sound)
-         S_StartSoundName(player->mo, sound);
-      P_consumeSpecial(player, special); // need to handle it here
+         S_StartSoundName(player.mo, sound);
+      P_consumeSpecial(&player, special); // need to handle it here
       return false;
    }
 
@@ -299,8 +305,8 @@ static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool
    // haleyjd 10/4/11: de-Killoughized
    if(!E_PlayerOwnsWeapon(player, wp))
    {
-      player->pendingweapon = wp;
-      player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+      player.pendingweapon = wp;
+      player.pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
       E_GiveWeapon(player, wp);
       gaveweapon = true;
    }
@@ -339,7 +345,7 @@ static bool P_shouldSwitchToNewWeapon(const player_t &player, const weaponinfo_t
 //
 // The weapon name may have a MF_DROPPED flag ored in.
 //
-static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropped, Mobj *special,
+static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropped, Mobj *special,
                          const char *sound)
 {
    if(demo_version < 401 && !vanilla_heretic)
@@ -408,25 +414,25 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
 
    if((dmflags & DM_WEAPONSTAY) && !dropped)
    {
-      player->bonuscount += BONUSADD;
+      player.bonuscount += BONUSADD;
       E_GiveWeapon(player, wp);
-      player->pendingweapon = wp;
-      player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+      player.pendingweapon = wp;
+      player.pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
       // killough 4/25/98, 12/98
       if(sound)
-         S_StartSoundName(player->mo, sound);
-      P_consumeSpecial(player, special); // need to handle it here
+         S_StartSoundName(player.mo, sound);
+      P_consumeSpecial(&player, special); // need to handle it here
       return false;
    }
    else if(!E_PlayerOwnsWeapon(player, wp))
    {
-      if(P_shouldSwitchToNewWeapon(*player, *wp))
+      if(P_shouldSwitchToNewWeapon(player, *wp))
       {
          weaponinfo_t *sister = wp->sisterWeapon;
-         player->pendingweapon = wp;
-         player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
-         if(player->powers[pw_weaponlevel2].isActive() && E_IsPoweredVariant(sister))
-            player->pendingweapon = sister;
+         player.pendingweapon = wp;
+         player.pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+         if(player.powers[pw_weaponlevel2].isActive() && E_IsPoweredVariant(sister))
+            player.pendingweapon = sister;
       }
       E_GiveWeapon(player, wp);
       return true;
@@ -441,13 +447,13 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
 //
 // Returns false if the body isn't needed at all
 //
-bool P_GiveBody(player_t *player, const itemeffect_t *effect)
+bool P_GiveBody(player_t &player, const itemeffect_t *effect)
 {
    if(!effect)
       return false;
 
-   int amount = E_GetPClassHealth(*effect, "amount", *player->pclass, 0);
-   int maxamount = E_GetPClassHealth(*effect, "maxamount", *player->pclass, 0);
+   int amount = E_GetPClassHealth(*effect, "amount", *player.pclass, 0);
+   int maxamount = E_GetPClassHealth(*effect, "maxamount", *player.pclass, 0);
 
    // haleyjd 11/14/09: compatibility fix - the DeHackEd maxhealth setting was
    // only supposed to affect health potions, but when Ty replaced the MAXHEALTH
@@ -462,21 +468,21 @@ bool P_GiveBody(player_t *player, const itemeffect_t *effect)
    }
 
    // if not alwayspickup, and have more health than the max, don't pick it up
-   if(!effect->getInt("alwayspickup", 0) && player->health >= maxamount)
+   if(!effect->getInt("alwayspickup", 0) && player.health >= maxamount)
       return false;
 
    // give the health
    if(effect->getInt("sethealth", 0))
-      player->health = amount;  // some items set health directly
+      player.health = amount;  // some items set health directly
    else
-      player->health += amount; // most items add to health
+      player.health += amount; // most items add to health
 
    // cap to maxamount
-   if(player->health > maxamount)
-      player->health = maxamount;
+   if(player.health > maxamount)
+      player.health = maxamount;
 
    // propagate to player's Mobj
-   player->mo->health = player->health;
+   player.mo->health = player.health;
    return true;
 }
 
@@ -511,7 +517,7 @@ bool EV_DoHealThing(Mobj *actor, int amount, int max)
 // Returns false if the armor is worse
 // than the current armor.
 //
-bool P_GiveArmor(player_t *player, const itemeffect_t *effect)
+bool P_GiveArmor(player_t &player, const itemeffect_t *effect)
 {
    if(!effect)
       return false;
@@ -529,27 +535,27 @@ bool P_GiveArmor(player_t *player, const itemeffect_t *effect)
 
    // check if needed
    if(!(effect->getInt("alwayspickup", 0)) &&
-      (player->armorpoints >= (additive ? maxsaveamount : hits) ||
-       (hits == 0 && (!player->armorfactor || !setabsorption))))
+      (player.armorpoints >= (additive ? maxsaveamount : hits) ||
+       (hits == 0 && (!player.armorfactor || !setabsorption))))
    {
       return false; // don't pick up
    }
 
    if(additive)
    {
-      player->armorpoints += hits;
-      if(player->armorpoints > maxsaveamount)
-         player->armorpoints = maxsaveamount;
+      player.armorpoints += hits;
+      if(player.armorpoints > maxsaveamount)
+         player.armorpoints = maxsaveamount;
    }
    else
-      player->armorpoints = hits;
+      player.armorpoints = hits;
 
    // only set armour quality if the armour always sets it,
    // or if the player had no armour prior to this pickup
-   if((!player->armorfactor || setabsorption))
+   if((!player.armorfactor || setabsorption))
    {
-      player->armorfactor  = savefactor;
-      player->armordivisor = savedivisor;
+      player.armorfactor  = savefactor;
+      player.armordivisor = savedivisor;
    }
 
    return true;
@@ -576,58 +582,58 @@ bool P_GiveArmor(player_t *player, const itemeffect_t *effect)
 //
 // Rewritten by Lee Killough
 //
-bool P_GivePower(player_t *player, int power, int duration, bool permament, bool additiveTime)
+bool P_GivePower(player_t &player, int power, int duration, bool permament, bool additiveTime)
 {
    switch(power)
    {
    case pw_invisibility:
-      player->mo->flags |= MF_SHADOW;
+      player.mo->flags |= MF_SHADOW;
       break;
    case pw_allmap:
-      if(player->powers[pw_allmap].isActive())
+      if(player.powers[pw_allmap].isActive())
          return false;
       break;
    case pw_totalinvis:   // haleyjd: total invisibility
-      player->mo->flags2 |= MF2_DONTDRAW;
-      player->mo->flags4 |= MF4_TOTALINVISIBLE;
+      player.mo->flags2 |= MF2_DONTDRAW;
+      player.mo->flags4 |= MF4_TOTALINVISIBLE;
       break;
    case pw_ghost:        // haleyjd: heretic ghost
-      player->mo->flags3 |= MF3_GHOST;
+      player.mo->flags3 |= MF3_GHOST;
       break;
    case pw_silencer:
-      if(player->powers[pw_silencer].isActive())
+      if(player.powers[pw_silencer].isActive())
          return false;
       break;
    case pw_flight:       // haleyjd: flight
-      if(player->powers[pw_flight].tics < 0 || player->powers[pw_flight].tics > 4 * 32)
+      if(player.powers[pw_flight].tics < 0 || player.powers[pw_flight].tics > 4 * 32)
          return false;
       P_PlayerStartFlight(player, true);
       break;
    case pw_weaponlevel2:
-      if(!E_IsPoweredVariant(player->readyweapon))
+      if(!E_IsPoweredVariant(player.readyweapon))
       {
-         weaponinfo_t *sister = player->readyweapon->sisterWeapon;
+         weaponinfo_t *sister = player.readyweapon->sisterWeapon;
          if(E_IsPoweredVariant(sister))
          {
-            if(sister->readystate != player->readyweapon->readystate ||
+            if(sister->readystate != player.readyweapon->readystate ||
                sister->flags & WPF_FORCETOREADY)
             {
                P_SetPsprite(player, ps_weapon, sister->readystate);
-               player->refire = 0;
+               player.refire = 0;
             }
-            player->readyweapon = sister;
+            player.readyweapon = sister;
          }
       }
       break;
    }
 
    // Unless player has infinite duration cheat, set duration (killough)
-   if(!player->powers[power].infinite)
+   if(!player.powers[power].infinite)
    {
       if(permament)
-         player->powers[power] = { 0, true };
+         player.powers[power] = { 0, true };
       else
-         player->powers[power].tics = additiveTime ? players->powers[power].tics + duration : duration;
+         player.powers[power].tics = additiveTime ? players->powers[power].tics + duration : duration;
    }
 
    return true;
@@ -655,7 +661,7 @@ const char *powerStrings[NUMPOWERS] =
 //
 // Takes a powereffect and applies the power accordingly
 //
-bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
+bool P_GivePowerForItem(player_t &player, const itemeffect_t *power)
 {
    int powerNum;
    const char *powerStr;
@@ -667,7 +673,7 @@ bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
    if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
       return false; // There's no power for the type provided
 
-   const powerduration_t& currentpower = player->powers[powerNum];
+   const powerduration_t& currentpower = player.powers[powerNum];
 
    // EDF_FEATURES_FIXME: Strength counts up. Also should additivetime imply overridesself?
    if(!power->getInt("overridesself", 0) &&
@@ -685,6 +691,21 @@ bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
       {
          duration = duration * TICRATE; // Duration is given in seconds
          additiveTime = power->getInt("additivetime", 0) ? true : false;
+      }
+
+      if(powerNum == pw_weaponlevel2 && player.morphTics)
+      {
+         if(!P_UnmorphPlayer(player, false))
+            P_DamageMobj(player.mo, nullptr, nullptr, GOD_BREACH_DAMAGE, MOD_SUICIDE);
+         else
+         {
+            player.morphTics = 0;
+
+            // FIXME: make this pclass or skin specific perhaps
+            if(GameModeInfo->type == Game_Heretic)
+               S_StartSound(nullptr, sfx_hwpnup);
+         }
+         return true;
       }
 
       return P_GivePower(player, powerNum, duration, permanent, additiveTime);
@@ -813,7 +834,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       switch(effect->getInt("class", ITEMFX_NONE))
       {
       case ITEMFX_HEALTH:   // Health - heal up the player automatically
-         pickedup |= P_GiveBody(player, effect);
+         pickedup |= P_GiveBody(*player, effect);
          if(pickedup && player->health < E_GetPClassHealth(*effect, "amount", *player->pclass,
                                                            0) * 2)
          {
@@ -821,19 +842,19 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
          }
          break;
       case ITEMFX_ARMOR:    // Armor - give the player some armor
-         pickedup |= P_GiveArmor(player, effect);
+         pickedup |= P_GiveArmor(*player, effect);
          break;
       case ITEMFX_AMMO:     // Ammo - give the player some ammo
-         pickedup |= P_GiveAmmoPickup(player, effect, dropped, special->dropamount);
+         pickedup |= P_GiveAmmoPickup(*player, effect, dropped, special->dropamount);
          break;
       case ITEMFX_POWER:
-         pickedup |= P_GivePowerForItem(player, effect);
+         pickedup |= P_GivePowerForItem(*player, effect);
          break;
       case ITEMFX_WEAPONGIVER:
-         pickedup |= P_giveWeapon(player, effect, dropped, special, sound);
+         pickedup |= P_giveWeapon(*player, effect, dropped, special, sound);
          break;
       case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
-         pickedup |= E_GiveInventoryItem(player, effect);
+         pickedup |= E_GiveInventoryItem(*player, effect);
          break;
       default:
          break;
@@ -841,7 +862,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    }
 
    if(pickup->flags & PFXF_GIVESBACKPACKAMMO)
-      pickedup |= P_giveBackpackAmmo(player);
+      pickedup |= P_giveBackpackAmmo(*player);
 
    // perform post-processing if the item was collected beneficially, or if the
    // pickup is flagged to always be picked up even without benefit.
@@ -850,10 +871,10 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       // Set pendingweapon if need be
       if(pickup->changeweapon != nullptr &&
          player->readyweapon->id != pickup->changeweapon->id &&
-         E_PlayerOwnsWeapon(player, pickup->changeweapon))
+         E_PlayerOwnsWeapon(*player, pickup->changeweapon))
       {
          player->pendingweapon = pickup->changeweapon;
-         player->pendingweaponslot = E_FindFirstWeaponSlot(player, player->pendingweapon);
+         player->pendingweaponslot = E_FindFirstWeaponSlot(*player, player->pendingweapon);
       }
 
       // Remove the object, provided it doesn't stay in multiplayer games
@@ -994,6 +1015,9 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
       {
          source->player->frags[target->player-players]++;
          HU_FragsUpdate();
+
+         if (source->player->morphTics && target != source)  // Make a super chicken
+            P_GivePower(*source->player, pw_weaponlevel2, MORPHTICS, false, false);
       }
    }
    else if(GameType == gt_single && (target->flags & MF_COUNTKILL))
@@ -1017,7 +1041,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
       target->flags  &= ~MF_SOLID;
       target->player->powers[pw_flight]       = { 0, false };
       target->player->powers[pw_weaponlevel2] = { 0, false };
-      P_PlayerStopFlight(target->player);  // haleyjd: stop flying
+      P_PlayerStopFlight(*target->player);  // haleyjd: stop flying
 
       G_DemoLog("%d\tdeath player %d ", gametic,
          (int)(target->player - players) + 1);
@@ -1026,7 +1050,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 
       target->player->prevpitch = target->player->pitch; // MaxW: Stop interpolation jittering
       target->player->playerstate = PST_DEAD;
-      P_DropWeapon(target->player);
+      P_DropWeapon(*target->player);
 
       if(target->player == &players[consoleplayer] && automapactive)
       {
@@ -1279,15 +1303,45 @@ static bool P_touchPoweredMaceBall(dmgspecdata_t *dmgspec)
       if(chaosdevice)
       {
          const int itemid = chaosdevice->getInt("itemid", -1);
-         if(itemid != -1 && E_GetItemOwnedAmount(player, chaosdevice) >= 1)
+         if(itemid != -1 && E_GetItemOwnedAmount(*player, chaosdevice) >= 1)
          {
-            E_TryUseItem(target->player, itemid);
+            E_TryUseItem(*target->player, itemid);
             player->health = player->mo->health = (player->health + 1) / 2;
             return true;
          }
       }
    }
    P_DamageMobj(target, nullptr, nullptr, GOD_BREACH_DAMAGE, MOD_UNKNOWN);
+   return true;
+}
+
+static bool P_touchPoweredPhoenixFire(dmgspecdata_t *dmgspec)
+{
+   // Flame thrower
+   Mobj *target = dmgspec->target;
+   if(!target || !target->player || P_Random(pr_touchphoenixfire) >= 128)
+      return false;
+   target->reactiontime += 4; // Freeze player for a bit
+   return false;
+}
+
+static bool P_touchBossTeleport(dmgspecdata_t *dmgspec)
+{
+   extern void A_Srcr2Decide(actionargs_t *);
+   extern void P_DSparilTeleport(Mobj *actor);
+   
+   Mobj *target = dmgspec->target;
+   if(!target)
+      return false;
+   statenum_t missilestate = target->info->missilestate;
+   
+   // Determine it's D'Sparil by noticing the missilestate
+   if(missilestate == NullStateNum || states[target->info->missilestate]->action != A_Srcr2Decide ||
+      P_Random(pr_touchbossteleport) >= 96)
+   {
+      return false;
+   }
+   P_DSparilTeleport(target);
    return true;
 }
 
@@ -1310,6 +1364,8 @@ static dmgspecial_t DamageSpecials[INFLICTOR_NUMTYPES] =
    P_minotaurChargeHit,    // MinotaurCharge
    P_touchWhirlwind,       // Whirlwind
    P_touchPoweredMaceBall, // PoweredMaceBall
+   P_touchPoweredPhoenixFire, // PoweredPhoenixFire
+   P_touchBossTeleport,    // determine boss to teleport if capable
 };
 
 //
@@ -1347,6 +1403,228 @@ static int P_AdjustDamageType(Mobj *source, Mobj *inflictor, int mod)
    }
 
    return newmod;
+}
+
+
+static void P_morphMonster(const emodmorph_t &minfo, Mobj &target)
+{
+   if(target.player)
+      return;
+
+   // Cannot morph into same species or if non-sentient
+   if(target.type == minfo.speciesID)
+      return;
+   
+   if(minfo.excludedID)
+      for(mobjtype_t *excluded = minfo.excludedID; *excluded != MorphExcludeListEnd; ++excluded)
+      {
+         switch(*excluded)
+         {
+            case MorphExcludeInanimate:
+               if(!(target.flags & MF_COUNTKILL) && !(target.flags3 & MF3_KILLABLE))
+                  return;
+               continue;
+            default:
+               break;   // go ahead to checking type
+         }
+         if(target.type == *excluded)
+            return;
+      }
+
+   v3fixed_t pos = { target.x, target.y, target.z };
+   Mobj *polymorph = P_SpawnMobj(pos.x, pos.y, pos.z, minfo.speciesID);
+
+   // Temporarily remove the solid flag in order to check position without being blocked by this.
+   unsigned solidity = target.flags & MF_SOLID;
+   target.flags &= ~MF_SOLID;
+   bool fit = P_CheckPositionExt(polymorph, pos.x, pos.y, pos.z);
+   target.flags |= solidity;
+
+   if(!fit)
+   {
+      // Didn't fit. Abort the polymorph.
+      polymorph->remove();
+      return;
+   }
+
+   unsigned ghost = target.flags & MF_SHADOW;
+   unsigned ghost3 = target.flags3 & MF3_GHOST;
+   polymorph->flags |= ghost;
+   polymorph->flags3 |= ghost3;
+   
+   P_transferFriendship(*polymorph, target);
+   polymorph->angle = target.angle;
+   polymorph->special = target.special;
+   memcpy(polymorph->args, target.args, sizeof(target.args));
+   P_AddThingTID(polymorph, target.tid);
+   P_SetTarget(&polymorph->target, target.target);
+   P_SetTarget(&polymorph->tracer, target.tracer);
+   
+   mobjtype_t backuptype = target.type;
+
+   P_NeutralizeForRemoval(target);
+   target.remove();
+   
+   S_StartSound(P_SpawnMobj(pos.x, pos.y, pos.z + GameModeInfo->teleFogHeight,
+                            E_SafeThingName(GameModeInfo->teleFogType)), GameModeInfo->teleSound);
+   
+   polymorph->unmorph.tics = MORPHTICS + P_Random(pr_morphmobj);
+   polymorph->unmorph.type = backuptype;
+}
+
+bool P_MorphPlayer(const emodmorph_t &minfo, player_t &player)
+{
+   Mobj* target = player.mo;
+   if(!target)
+      return false;
+   if(player.morphTics)
+   {
+      if(player.morphTics < MORPHTICS - TICRATE && !player.powers[pw_weaponlevel2].isActive())
+      {
+         // Make a super chicken
+         P_GivePower(player, pw_weaponlevel2, MORPHTICS, false, false);
+         return true;
+      }
+      return false;
+   }
+   if(player.powers[pw_invulnerability].isActive())
+      return false;  // Immune when invulnerable
+
+   v3fixed_t pos = {target->x, target->y, target->z};
+
+   angle_t angle = target->angle;
+   unsigned oldflags4 = target->flags4 & MF4_FLY;
+   int playerColour = target->colour;
+
+   Mobj *chicken = P_SpawnMobj(pos.x, pos.y, pos.z, minfo.pclass->type);
+
+   // Temporarily remove the solid flag in order to check position without being blocked by this.
+   unsigned solidity = target->flags & MF_SOLID;
+   target->flags &= ~MF_SOLID;
+   bool fit = P_CheckPositionExt(chicken, pos.x, pos.y, pos.z);
+   target->flags |= solidity;
+
+   if(!fit)
+   {
+      // Didn't fit. Abort the polymorph.
+      chicken->remove();
+      return false;
+   }
+
+   P_NeutralizeForRemoval(*target);
+   target->remove();
+
+   S_StartSound(P_SpawnMobj(pos.x, pos.y, pos.z + GameModeInfo->teleFogHeight,
+                            E_SafeThingName(GameModeInfo->teleFogType)), GameModeInfo->teleSound);
+
+   chicken->angle = angle;
+   chicken->player = &player;
+   chicken->colour = playerColour;  // retain colour mapping
+
+   player.unmorphClass = player.pclass;
+   player.unmorphSkin = player.skin;
+   player.pclass = minfo.pclass;
+   player.skin = minfo.pclass->defaultskin;
+   player.viewz = chicken->z + minfo.pclass->viewheight;
+   player.viewheight = minfo.pclass->viewheight;
+   player.deltaviewheight = 0;
+   player.bob = 0;
+   player.health = chicken->health = minfo.pclass->maxhealth;
+   player.armorpoints = player.armorfactor = player.armordivisor = 0;
+
+   // WARNING: it seems that P_SetTarget is not used for player_t::mo. Keep a watch on this.
+   player.mo = chicken;
+   player.momx = chicken->momx;
+   player.momy = chicken->momy;
+
+   player.powers[pw_ghost].tics = 0;
+   player.powers[pw_weaponlevel2].tics = 0;
+   
+   player.unmorphWeapon = player.readyweapon;
+   player.unmorphWeaponSlot = player.readyweaponslot;
+
+   E_StashOriginalMorphWeapons(player);
+   P_GiveRebornInventory(player);
+
+   player.pendingweapon = player.readyweapon;
+   player.pendingweaponslot = player.readyweaponslot;
+
+   player.extralight = 0;
+   
+   if(oldflags4 & MF4_FLY)
+      chicken->flags4 |= MF4_FLY;
+   player.morphTics = MORPHTICS;
+   return true;
+}
+
+//
+// Auto use health like in Heretic, if needed
+//
+static void P_hereticAutoUseHealth(player_t &player, int saveHealth)
+{
+   const PODCollection<e_autouseid_t> &items = E_GetAutouseList();
+
+   // Returns true if allowed
+   auto checkRestrictions = [](unsigned allowed)
+      {
+         if(!allowed)   // no mention of anything, always allow
+            return true;
+         // Otherwise, apply this logic
+         return (allowed & AHR_BABY       && gameskill == sk_baby) || 
+                (allowed & AHR_DEATHMATCH && GameType  == gt_dm);
+      };
+
+   bool healed = false;
+   for(const e_autouseid_t &useid : items)
+   {
+      if(!checkRestrictions(useid.restriction) || useid.amount <= 0)  // also sanity check amount
+         continue;
+
+      int numitems = E_GetItemOwnedAmount(player, useid.artifact);
+      if(numitems <= 0 || numitems * useid.amount < saveHealth)   // skip if can't save life
+         continue;
+      int count = (saveHealth + useid.amount - 1) / useid.amount; // Round up to next multiple of amount
+      const int itemid = useid.artifact->getInt(keyItemID, -1);
+      if(itemid == -1)
+         continue;
+      for(int i = 0; i < count; ++i)
+         E_TryUseItem(player, itemid); // heal now
+      healed = true;
+      break;
+   }
+   if(healed)
+      return;
+   // Found no individual item set to heal, so try them all now
+   int totalheal = 0;
+   for(const e_autouseid_t &useid : items)
+   {
+      if(!checkRestrictions(useid.restriction) || useid.amount <= 0)  // again check not to add fake
+         continue;
+      int numitems = E_GetItemOwnedAmount(player, useid.artifact);
+      if(numitems <= 0)   // now don't skip if can't save life alone
+         continue;
+      totalheal += numitems * useid.amount;
+   }
+   if(totalheal < saveHealth)
+      return;  // not enough :(
+
+   for(const e_autouseid_t &useid : items)
+   {
+      if(!checkRestrictions(useid.restriction) || useid.amount <= 0)
+         continue;
+      int numitems = E_GetItemOwnedAmount(player, useid.artifact);
+      if(numitems <= 0)
+         continue;
+      const int itemid = useid.artifact->getInt(keyItemID, -1);
+      if(itemid == -1)
+         continue;
+      int count = (saveHealth + useid.amount - 1) / useid.amount;
+      saveHealth -= count * useid.amount;
+      for(int i = 0; i < count; ++i)
+         E_TryUseItem(player, itemid);
+      if(saveHealth <= 0)
+         break;   // alive
+   }
 }
 
 //
@@ -1439,17 +1717,43 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    // haleyjd 10/12/09: damage factors
    if(mod != MOD_UNKNOWN)
    {
-      MetaTable *meta = target->info->meta;
-      int df = meta->getInt(emod->dfKeyIndex, FRACUNIT);
-
-      // Special case: D_MININT is absolute immunity.
-      if(df == D_MININT)
+      if(!target->player && emod->morph.speciesID != -1)
+      {
+         P_morphMonster(emod->morph, *target);
          return;
+      }
+      if(target->player && emod->morph.pclass)
+      {
+         P_MorphPlayer(emod->morph, *target->player);
+         return;
+      }
 
-      // Only apply if not FRACUNIT, due to the chance this might alter
-      // the compatibility characteristics of extreme DEH/BEX damage.
-      if(df != FRACUNIT)
-         damage = (damage * df) / FRACUNIT;
+      MetaTable *meta = target->info->meta;
+      MetaTable *damagefactor = meta->getMetaTable(emod->dfKeyIndex, nullptr);
+      if(damagefactor)
+      {
+         int df = damagefactor->getInt("factor", FRACUNIT);
+         int rounded = damagefactor->getInt("rounded", 0);
+         
+         // Special case: D_MININT is absolute immunity.
+         if(df == D_MININT)
+            return;
+         
+         // Only apply if not FRACUNIT, due to the chance this might alter
+         // the compatibility characteristics of extreme DEH/BEX damage.
+         if(df != FRACUNIT)
+         {
+            if(rounded)
+            {
+               // rounding allows us to use clear values without getting errors
+               damage = (damage * df + FRACUNIT / 2) / FRACUNIT;
+               if(!damage) // rounded also skips 0 damage
+                  return;
+            }
+            else  // old case, kept for compatibility and tricks
+               damage = (damage * df) / FRACUNIT;
+         }
+      }
    }
 
    // Some close combat weapons should not
@@ -1538,11 +1842,14 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
          damage -= saved;
       }
 
+      if(!(player->pclass->flags & PCF_NOHEALTHAUTOUSE) && damage >= player->health)
+         P_hereticAutoUseHealth(*player, damage - player->health + 1);
+
       player->health -= damage;       // mirror mobj health here for Dave
       if(player->health < 0)
          player->health = 0;
 
-      P_SetPlayerAttacker(player, source);
+      P_SetPlayerAttacker(*player, source);
       player->damagecount += damage;  // add damage after armor / invuln
 
       if(player->damagecount > 100)

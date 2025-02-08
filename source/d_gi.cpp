@@ -751,6 +751,8 @@ static bloodtype_e bloodTypeForActionHtic[NUMBLOODACTIONS] =
    BLOODTYPE_CRUSH       // crush
 };
 
+// TODO: unused yet
+/*
 static bloodtype_e bloodTypeForActionHexen[NUMBLOODACTIONS] =
 {
    BLOODTYPE_HEXEN,    // shoot
@@ -766,6 +768,7 @@ static bloodtype_e bloodTypeForActionStrife[NUMBLOODACTIONS] =
    BLOODTYPE_HERETICRIP, // rip
    BLOODTYPE_CRUSH       // crush
 };
+*/
 
 //
 // IWAD paths
@@ -787,6 +790,8 @@ char *gi_path_fdoom;
 char *gi_path_fdoomu;
 char *gi_path_freedm;
 char *gi_path_rekkr;
+
+char *gi_path_id24res;
 
 //
 // Default Override Objects
@@ -1160,6 +1165,7 @@ static gamemodeinfo_t giDoomSW =
    "DoomBlood",      // bloodDefaultRIP
    "DoomBlood",      // bloodDefaultCrush
    bloodTypeForActionDOOM, // default behavior for action array
+   "S_GIBS",         // defCrunchFrame
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
@@ -1290,6 +1296,7 @@ static gamemodeinfo_t giDoomReg =
    "DoomBlood",      // bloodDefaultRIP
    "DoomBlood",      // bloodDefaultCrush
    bloodTypeForActionDOOM, // default behavior for action array
+   "S_GIBS",         // defCrunchFrame
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
@@ -1420,6 +1427,7 @@ static gamemodeinfo_t giDoomRetail =
    "DoomBlood",      // bloodDefaultRIP
    "DoomBlood",      // bloodDefaultCrush
    bloodTypeForActionDOOM, // default behavior for action array
+   "S_GIBS",         // defCrunchFrame
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
@@ -1550,6 +1558,7 @@ static gamemodeinfo_t giDoomCommercial =
    "DoomBlood",      // bloodDefaultRIP
    "DoomBlood",      // bloodDefaultCrush
    bloodTypeForActionDOOM, // default behavior for action array
+   "S_GIBS",         // defCrunchFrame
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
@@ -1680,6 +1689,7 @@ static gamemodeinfo_t giHereticSW =
    "HereticBlood",         // bloodDefaultRIP
    "HereticBlood",         // bloodDefaultCrush
    bloodTypeForActionHtic, // default blood behavior for action array
+   "",                 // defCrunchFrame
    1.5,                // skillAmmoMultiplier
    meleecalc_raven,     // monsterMeleeRange
    32 * FRACUNIT,     // itemHeight
@@ -1814,6 +1824,7 @@ static gamemodeinfo_t giHereticReg =
    "HereticBlood",         // bloodDefaultRIP
    "HereticBlood",         // bloodDefaultCrush
    bloodTypeForActionHtic, // default blood behavior for action array
+   "",                 // defCrunchFrame
    1.5,               // skillAmmoMultiplier
    meleecalc_raven,     // monsterMeleeRange
    32 * FRACUNIT,     // itemHeight

@@ -208,7 +208,7 @@ void A_TroopAttack(actionargs_t *actionargs)
    {
       // launch a missile
       P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_TROOPSHOT),
-                     actor->z + DEFAULTMISSILEZ);
+                     actor->z + actor->info->missileheight);
    }
 }
 
@@ -280,7 +280,7 @@ void A_HeadAttack(actionargs_t *actionargs)
    {
       // launch a missile
       P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_HEADSHOT),
-                     actor->z + DEFAULTMISSILEZ);
+                     actor->z + actor->info->missileheight);
    }
 }
 
@@ -307,7 +307,7 @@ void A_BruisAttack(actionargs_t *actionargs)
    {
       // launch a missile
       P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_BRUISERSHOT),
-                     actor->z + DEFAULTMISSILEZ);  
+                     actor->z + actor->info->missileheight);
    }
 }
 
@@ -363,7 +363,7 @@ void A_BspiAttack(actionargs_t *actionargs)
    
    // launch a missile
    P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_ARACHPLAZ), 
-                  actor->z + DEFAULTMISSILEZ);
+                  actor->z + actor->info->missileheight);
 }
 
 //
@@ -420,7 +420,7 @@ void A_CyberAttack(actionargs_t *actionargs)
    A_FaceTarget(actionargs);
    P_SpawnMissile(actor, actor->target, 
                   E_SafeThingType(MT_ROCKET),
-                  actor->z + DEFAULTMISSILEZ);   
+                  actor->z + actor->info->missileheight);
 }
 
 //=============================================================================
@@ -444,7 +444,7 @@ void A_SkelMissile(actionargs_t *actionargs)
    A_FaceTarget(actionargs);
    actor->z += 16*FRACUNIT;      // so missile spawns higher
    mo = P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_TRACER),
-                       actor->z + DEFAULTMISSILEZ);
+                       actor->z + actor->info->missileheight);
    actor->z -= 16*FRACUNIT;      // back to normal
    
    mo->x += mo->momx;
@@ -913,7 +913,7 @@ void A_FatAttack1(actionargs_t *actionargs)
    Mobj   *actor = actionargs->actor;
    Mobj   *mo;
    int     an;
-   fixed_t z = actor->z + DEFAULTMISSILEZ;
+   fixed_t z = actor->z + actor->info->missileheight;
    int thingType = E_ArgAsThingNumG0(actionargs->args, 0);
    if(thingType < 0)
       thingType = E_SafeThingType(MT_FATSHOT);
@@ -947,7 +947,7 @@ void A_FatAttack2(actionargs_t *actionargs)
    Mobj   *actor = actionargs->actor;
    Mobj   *mo;
    int     an;
-   fixed_t z = actor->z + DEFAULTMISSILEZ;
+   fixed_t z = actor->z + actor->info->missileheight;
    int thingType = E_ArgAsThingNumG0(actionargs->args, 0);
    if(thingType < 0)
       thingType = E_SafeThingType(MT_FATSHOT);
@@ -980,7 +980,7 @@ void A_FatAttack3(actionargs_t *actionargs)
    Mobj   *actor = actionargs->actor;
    Mobj   *mo;
    int     an;
-   fixed_t z = actor->z + DEFAULTMISSILEZ;
+   fixed_t z = actor->z + actor->info->missileheight;
    int thingType = E_ArgAsThingNumG0(actionargs->args, 0);
    if(thingType < 0)
       thingType = E_SafeThingType(MT_FATSHOT);
@@ -1510,7 +1510,7 @@ void A_BrainSpit(actionargs_t *actionargs)
    targ = braintargets.wrapIterator();
 
    // spawn brain missile
-   newmobj = P_SpawnMissile(mo, targ, SpawnShotType, mo->z + DEFAULTMISSILEZ);
+   newmobj = P_SpawnMissile(mo, targ, SpawnShotType, mo->z + mo->info->missileheight);
    P_SetTarget<Mobj>(&newmobj->target, targ);
    if(!newmobj->state->tics)
    {

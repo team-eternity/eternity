@@ -26,6 +26,7 @@
 #ifndef P_MAPUTL_H__
 #define P_MAPUTL_H__
 
+#include <vector>
 #include "linkoffs.h"   // ioanch 20160108: for R_NOGROUP
 #include "m_vector.h"
 #include "tables.h" // for angle_t
@@ -102,6 +103,43 @@ struct intercept_t
    } d;
 };
 
+//
+// Visiting list, to avoid non-reentrant validcount marking
+//
+class VisitList
+{
+public:
+   //
+   // Must be explicitly initialized, because we don't always want to use it
+   //
+   void init(size_t size)
+   {
+      bitset.resize(size);
+   }
+
+   bool get(size_t index) const
+   {
+      return bitset[index];
+   }
+
+   void put(size_t index)
+   {
+      bitset[index] = true;
+   }
+private:
+   std::vector<bool> bitset;  // use standard vector, as it has bit packing
+};
+
+//
+// Packs both line and polyobject visit lists
+//
+class LineIteratorVisiting
+{
+public:
+   VisitList lines;
+   VisitList polys;
+};
+
 typedef bool (*traverser_t)(intercept_t *in, void *context);
 
 fixed_t P_AproxDistance(fixed_t dx, fixed_t dy);
@@ -121,6 +159,8 @@ extern int (*P_PointOnDivlineSide)(fixed_t x, fixed_t y, const divline_t *line);
 void    P_MakeDivline(const line_t *li, divline_t *dl);
 fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1);
 int     P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld);
+int     P_BoxOnLineSideExclusive(const fixed_t *tmbox, const line_t *ld);
+bool    P_LineIntersectsBox(const line_t *ld, const fixed_t *tmbox);
 // ioanch 20160123: for linedef portal clipping.
 v2fixed_t P_BoxLinePoint(const fixed_t bbox[4], const line_t *ld);
 int P_LineIsCrossed(const line_t &line, const divline_t &dl);
@@ -137,10 +177,16 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo,
 lineopening_t P_SlopeOpening(v2fixed_t pos);
 lineopening_t P_SlopeOpeningPortalAware(v2fixed_t pos);
 
-void P_UnsetThingPosition(Mobj *thing);
+void P_UnsetThingSectorLink(Mobj *thing, bool isRemoved);
+void P_UnsetThingBlockLink(Mobj *thing);
+void P_UnsetThingPosition(Mobj *thing, bool isRemoved = false);
+fixed_t P_GetSpriteOrBoxRadius(const Mobj &thing);
+void P_SetThingSectorLink(Mobj *thing, const subsector_t *prevss);
+void P_SetThingBlockLink(Mobj *thing);
 void P_SetThingPosition(Mobj *thing);
 bool P_BlockLinesIterator (int x, int y, bool func(line_t *, polyobj_t *, void *),
-                           int groupid = R_NOGROUP, void *context = nullptr);
+                           int groupid = R_NOGROUP, void *context = nullptr,
+                           LineIteratorVisiting *visit = nullptr);
 bool P_BlockThingsIterator(int x, int y, int groupid, bool (*func)(Mobj *, void *),
                            void *context = nullptr);
 inline static bool P_BlockThingsIterator(int x, int y, bool func(Mobj *, void *),
@@ -186,6 +232,9 @@ v2fixed_t P_GetSafeLineNormal(const line_t &line);
 bool P_SegmentIntersectsSector(v2fixed_t v1, v2fixed_t v2, const sector_t &sector);
 
 extern linetracer_t trace;
+
+void P_RefreshSpriteTouchingSectorList(Mobj *mo, fixed_t prevSpriteRadius);
+void P_CheckSpriteTouchingSectorLists();
 
 #endif  // __P_MAPUTL__
 

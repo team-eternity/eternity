@@ -70,6 +70,16 @@ static scrollerlist_t *scrollers;
 static PODCollection<sidelerpinfo_t> pScrolledSides;
 static PODCollection<seclerpinfo_t> pScrolledSectors;
 
+// Also for moving through BOOM-scrolling water surface
+inline static bool P_inCarryingWater(const Mobj &thing, const surface_t &floor,
+                                     const surface_t *waterlevel)
+{
+   if(!waterlevel)
+      return false;
+   fixed_t waterheight = waterlevel->getZAt(thing.x, thing.y);
+   return waterheight > floor.getZAt(thing.x, thing.y) && thing.z < waterheight;
+}
+
 IMPLEMENT_THINKER_TYPE(ScrollThinker)
 
 // killough 2/28/98:
@@ -117,9 +127,10 @@ void ScrollThinker::Think()
 
    side_t *side;
    sector_t *sec;
-   fixed_t height, waterheight;  // killough 4/4/98: add waterheight
+   // killough 4/4/98: add waterheight
    msecnode_t *node;
    Mobj *thing;
+   const surface_t *watersurface;
 
    switch(this->type)
    {
@@ -164,10 +175,7 @@ void ScrollThinker::Think()
       // killough 4/4/98: Underwater, carry things even w/o gravity
 
       sec = sectors + this->affectee;
-      height = sec->srf.floor.height;
-      waterheight = sec->heightsec != -1 &&
-         sectors[sec->heightsec].srf.floor.height > height ?
-         sectors[sec->heightsec].srf.floor.height : D_MININT;
+      watersurface = sec->heightsec != -1 ? &sectors[sec->heightsec].srf.floor : nullptr;
 
       // Move objects only if on floor or underwater,
       // non-floating, and clipped.
@@ -185,8 +193,8 @@ void ScrollThinker::Think()
          }
          if(!((thing = node->m_thing)->flags & MF_NOCLIP) &&
             !(thing->flags2 & MF2_NOTHRUST) &&
-            (!(thing->flags & MF_NOGRAVITY || thing->z > height) ||
-             thing->z < waterheight))
+            (!(thing->flags & MF_NOGRAVITY || !P_RestingOnGround(*thing, sec->srf.floor)) ||
+             P_inCarryingWater(*thing, sec->srf.floor, watersurface)))
          {
             thing->momx += dx;
             thing->momy += dy;

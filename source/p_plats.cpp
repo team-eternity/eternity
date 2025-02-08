@@ -31,6 +31,7 @@
 #include "m_random.h"
 #include "p_info.h"
 #include "p_saveg.h"
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "r_main.h"
@@ -403,7 +404,7 @@ bool EV_DoPlat(const line_t *line, int tag, plattype_e type, int amount )
          plat->crush = 10;          //jff 3/14/98 crush anything in the way
 
          // set up toggling between ceiling, floor inclusive
-         plat->low    = sec->srf.ceiling.height;
+         plat->low    = sec->srf.ceiling.height - pSlopeHeights[secnum].touchheight;
          plat->high   = sec->srf.floor.height;
          plat->status = PlatThinker::down;
 
@@ -575,7 +576,7 @@ manual_plat:
          plat->speed = PLATSPEED;      // not used
          plat->wait = 35 * PLATWAIT;   // not used
          plat->crush = 10;             // jff 3/14/98 crush anything in the way
-         plat->low = sec->srf.ceiling.height;
+         plat->low = sec->srf.ceiling.height - pSlopeHeights[secnum].touchheight;
          plat->high = sec->srf.floor.height;
          plat->status = PlatThinker::down;
          platTypeStr = "EEPlatSilent";

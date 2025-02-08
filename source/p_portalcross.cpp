@@ -36,6 +36,7 @@
 #include "p_portalblockmap.h"
 #include "p_portalcross.h"
 #include "p_setup.h"
+#include "p_slopes.h"
 #include "polyobj.h"
 #include "r_main.h"
 #include "r_portal.h"
@@ -362,7 +363,7 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, surf_e surf,
       // Also quit early if the planez is obscured by a dynamic horizontal plane
       // or if deltax and deltay are somehow zero
       if((!(sector->srf[surf].pflags & PF_ATTACHEDPORTAL) &&
-          isInner(surf, sector->srf[surf].height, link.planez)) || (!link.delta.x && !link.delta.y))
+          isInner(surf, sector->srf[surf].height + pSlopeHeights[sector - sectors].delta[surf], link.planez)) || (!link.delta.x && !link.delta.y))
       {
          return sector;
       }
@@ -610,11 +611,12 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst, v
 bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
 {
    fixed_t topz = mobj->z + mobj->height;
-   if(topz < sector->srf.floor.height || mobj->z > sector->srf.ceiling.height)
+   v2fixed_t mpos = { mobj->x, mobj->y };
+   if(topz < sector->srf.floor.getZAt(mpos) || mobj->z > sector->srf.ceiling.getZAt(mpos))
       return false;
-   if(sector->srf.floor.pflags & PS_PASSABLE && topz < P_PortalZ(surf_floor, *sector))
+   if(sector->srf.floor.pflags & PS_PASSABLE && topz < P_PortalZ(sector->srf.floor, mpos))
       return false;
-   if(sector->srf.ceiling.pflags & PS_PASSABLE && mobj->z > P_PortalZ(surf_ceil, *sector))
+   if(sector->srf.ceiling.pflags & PS_PASSABLE && mobj->z > P_PortalZ(sector->srf.ceiling, mpos))
       return false;
    return true;
 }

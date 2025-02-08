@@ -636,6 +636,10 @@ void V_DrawPatchInt(cb_patch_column_t &patchcol, PatchInfo *pi, VBuffer *buffer)
       {
          texturecolumn = startfrac >> FRACBITS;
          
+         // Handle if we overshoot on very high resolutions at the end
+         if(texturecolumn == w && patchcol.x == x2)
+            texturecolumn--;
+         
 #ifdef RANGECHECK
          if(texturecolumn < 0 || texturecolumn >= w)
             I_Error("V_DrawPatchInt: bad texturecolumn %d\n", texturecolumn);

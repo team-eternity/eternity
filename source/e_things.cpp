@@ -98,6 +98,7 @@ constexpr const char ITEM_TNG_XDEATHSTATE[]   = "xdeathstate";
 constexpr const char ITEM_TNG_RAISESTATE[]    = "raisestate";
 constexpr const char ITEM_TNG_HEALSTATE[]     = "healstate";   // ioanch 20160220
 constexpr const char ITEM_TNG_CRASHSTATE[]    = "crashstate";
+constexpr const char ITEM_TNG_CRUNCHSTATE[]   = "crunchstate"; // sinku 20240205
 constexpr const char ITEM_TNG_ACTIVESTATE[]   = "activestate";
 constexpr const char ITEM_TNG_INACTIVESTATE[] = "inactivestate";
 constexpr const char ITEM_TNG_FIRSTDECSTATE[] = "firstdecoratestate";
@@ -191,6 +192,7 @@ constexpr const char ITEM_TNG_ACS_MODES[]    = "modes";
 // Damage factor multi-value property internal fields
 constexpr const char ITEM_TNG_DMGF_MODNAME[] = "mod";
 constexpr const char ITEM_TNG_DMGF_FACTOR[]  = "factor";
+constexpr const char ITEM_TNG_DMGF_FLAGS[]   = "flags";
 
 // DropItem multi-value property internal fields
 constexpr const char ITEM_TNG_DROPITEM_ITEM[]   = "item";
@@ -233,6 +235,10 @@ constexpr const char ITEM_TNG_PFX_FLAGS[]     = "flags";
 #define ITEM_TNG_TRAILZOFFSET  "trail.zoffset"
 #define ITEM_TNG_TRAILCHANCE   "trail.spawnchance"
 #define ITEM_TNG_TRAILSPARSITY "trail.sparsity"
+
+// Projectile/Hitscan properties
+constexpr const char ITEM_TNG_MISSILEHEIGHT[] = "missileheight";
+constexpr const char ITEM_TNG_BULLETZOFFSET[] = "bulletzoffset";
 
 //
 // Thing groups
@@ -313,6 +319,8 @@ static const char *inflictorTypes[INFLICTOR_NUMTYPES] =
    "MinotaurCharge",
    "Whirlwind",
    "PoweredMaceBall",
+   "PoweredPhoenixFire",
+   "BossTeleport",
 };
 
 //
@@ -490,6 +498,7 @@ static cfg_opt_t dmgf_opts[] =
 {
    CFG_STR(  ITEM_TNG_DMGF_MODNAME, "Unknown", CFGF_NONE),
    CFG_FLOAT_CB(ITEM_TNG_DMGF_FACTOR, 0.0, CFGF_NONE, E_damageFactorCB),
+   CFG_STR(  ITEM_TNG_DMGF_FLAGS,   "",        CFGF_NONE),
    CFG_END()
 };
 
@@ -559,6 +568,7 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_RAISESTATE,      "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_HEALSTATE,       "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_CRASHSTATE,      "S_NULL",      CFGF_NONE), \
+   CFG_STR(ITEM_TNG_CRUNCHSTATE,     "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_ACTIVESTATE,     "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_INACTIVESTATE,   "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_FIRSTDECSTATE,   nullptr,       CFGF_NONE), \
@@ -635,6 +645,8 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_FLOAT(ITEM_TNG_TRAILZOFFSET, -8.0f, CFGF_NONE), \
    CFG_INT(ITEM_TNG_TRAILCHANCE, 256, CFGF_NONE), \
    CFG_INT(ITEM_TNG_TRAILSPARSITY, 0, CFGF_NONE), \
+   CFG_FLOAT(ITEM_TNG_MISSILEHEIGHT, 32.0f, CFGF_NONE), \
+   CFG_FLOAT(ITEM_TNG_BULLETZOFFSET, 8.0f, CFGF_NONE), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
@@ -1667,7 +1679,10 @@ static void E_ProcessDamageFactors(mobjinfo_t *info, cfg_t *cfg)
    {
       emod_t *mod = E_DamageTypeForName(cfg_getnstr(cfg, ITEM_TNG_REMDMGFACTOR, i));
       if(mod->num)   // avoid the unknown one, just like below
-         info->meta->removeInt(E_ModFieldName("damagefactor", mod));
+      {
+         size_t keyindex = MetaTable::IndexForKey(E_ModFieldName("damagefactor", mod));
+         info->meta->removeMetaTableNR(keyindex);
+      }
    }
 
    unsigned int numfactors = cfg_size(cfg, ITEM_TNG_DAMAGEFACTOR);
@@ -1683,8 +1698,26 @@ static void E_ProcessDamageFactors(mobjinfo_t *info, cfg_t *cfg)
          double df  = cfg_getfloat(sec, ITEM_TNG_DMGF_FACTOR);
          // D_MININT is a special case which makes monster totally ignore damage
          int    dfi = df == D_MININT ? D_MININT : static_cast<int>(M_DoubleToFixed(df));
+         
+         bool rounded = false;
+         if(cfg_size(sec, ITEM_TNG_DMGF_FLAGS))
+         {
+            const char *flags = cfg_getstr(sec, ITEM_TNG_DMGF_FLAGS);
+            if(estrnonempty(flags))
+            {
+               if(strcasecmp(flags, "rounded"))
+                  I_Error("Invalid damagefactor flag '%s'\n", flags);
+               else
+                  rounded = true;
+            }
+         }
+      
+         MetaTable *damagefactor = new MetaTable(E_ModFieldName("damagefactor", mod));
+         damagefactor->setInt("factor", dfi);
+         damagefactor->setInt("rounded", rounded ? 1 : 0);
 
-         info->meta->setInt(E_ModFieldName("damagefactor", mod), dfi);
+         info->meta->setMetaTable(E_ModFieldName("damagefactor", mod),
+                                  damagefactor);
       }
    }
 }
@@ -2054,6 +2087,23 @@ bloodtype_e E_GetBloodBehaviorForAction(mobjinfo_t *info, bloodaction_e action)
 }
 
 //
+// get the frame for when a thing is crunched by a crusher,
+// if there's a crunch metastate or (old syntax) frame, use it
+//
+int E_GetCrunchFrame(const Mobj *mo) 
+{
+   const char *defaultFrame = GameModeInfo->defCrunchFrame;
+   const state_t *cf = E_GetStateForMobjInfo(mo->info, METASTATE_CRUNCH);
+   if(!cf)
+      cf = E_GetStateForMobjInfo(mo->info, METASTATE_CRUNCH_ZDOOM_COMPATIBILITY);
+   
+   int fnum = (cf && cf->index != NullStateNum) ? cf->index :
+      E_SafeStateName(defaultFrame);
+   
+   return fnum;
+}
+
+//
 // Creates a thing pickup effect if not already
 //
 void E_createThingPickupEffect(mobjinfo_t &mi)
@@ -2298,7 +2348,7 @@ static void E_CopyThing(int num, int pnum)
    MetaTable  *meta;
    int         index;
    int         generation;
-   bool        dsdhacked;
+   bool        adddeh;
    
    this_mi = mobjinfo[num];
 
@@ -2312,7 +2362,7 @@ static void E_CopyThing(int num, int pnum)
    meta       = this_mi->meta;
    index      = this_mi->index;
    generation = this_mi->generation;
-   dsdhacked  = this_mi->dsdhacked;
+   adddeh  = this_mi->adddeh;
    
    // copy from source to destination
    memcpy(this_mi, mobjinfo[pnum], sizeof(mobjinfo_t));
@@ -2340,7 +2390,7 @@ static void E_CopyThing(int num, int pnum)
    this_mi->dehnum     = dehnum;
    this_mi->index      = index;
    this_mi->generation = generation;
-   this_mi->dsdhacked  = dsdhacked;
+   this_mi->adddeh  = adddeh;
 
    // other fields not inherited:
 
@@ -2350,7 +2400,7 @@ static void E_CopyThing(int num, int pnum)
 
 //
 // Fetches a thingnum, or creates a new one if it doesn't exist.
-// DSDHacked demands this
+// Additive dehacked demands this
 //
 int E_GetAddThingNumForDEHNum(int dehnum, bool forceAdd)
 {
@@ -2372,7 +2422,7 @@ int E_GetAddThingNumForDEHNum(int dehnum, bool forceAdd)
       mobjinfo[newThing] = mi;
       thingNum = newThing;
    }
-   else if(forceAdd && !mobjinfo[thingNum]->dsdhacked)
+   else if(forceAdd && !mobjinfo[thingNum]->adddeh)
    {
       mi = mobjinfo[thingNum];
 
@@ -2394,9 +2444,9 @@ int E_GetAddThingNumForDEHNum(int dehnum, bool forceAdd)
    if(mi)
    {
       qstring name;
-      name.Printf(0, "_DSDHackedThing%d", dehnum);
+      name.Printf(0, "_AddDehThing%d", dehnum);
 
-      mi->dsdhacked = true;
+      mi->adddeh = true;
 
       // set self-referential index member, allocate a
       // metatable, set dehnum, and set name and melee range.
@@ -2405,7 +2455,7 @@ int E_GetAddThingNumForDEHNum(int dehnum, bool forceAdd)
       mi->dehnum = dehnum;
       mi->name   = name.duplicate();
 
-      const int templateNum = E_GetThingNumForName("_DSDHackedThingtypeTemplate");
+      const int templateNum = E_GetThingNumForName("_AdditiveDehackedThingtypeTemplate");
       E_CopyThing(thingNum, templateNum);
 
       thing_namehash.addObject(mi);
@@ -2667,6 +2717,13 @@ void E_ProcessThing(int i, cfg_t *const thingsec, cfg_t *pcfg, const bool def)
       E_ThingFrame(tempstr, ITEM_TNG_CRASHSTATE, i,
                    &(mobjinfo[i]->crashstate));
    }
+   
+   // process crunchstate 20240205
+   if(IS_SET(ITEM_TNG_CRUNCHSTATE))
+   {
+      tempstr = cfg_getstr(thingsec, ITEM_TNG_CRUNCHSTATE);
+      E_ThingFrame(tempstr, ITEM_TNG_CRUNCHSTATE, i, METASTATE_CRUNCH);
+   }
 
    // 03/19/11: process active/inactive states
    if(IS_SET(ITEM_TNG_ACTIVESTATE))
@@ -2846,7 +2903,15 @@ void E_ProcessThing(int i, cfg_t *const thingsec, cfg_t *pcfg, const bool def)
 
    // [XA] 02/29/20: process damagemod
    if(IS_SET(ITEM_TNG_DAMAGEMOD))
+   {
       mobjinfo[i]->damagemod = cfg_getint(thingsec, ITEM_TNG_DAMAGEMOD);
+      if(!mobjinfo[i]->damagemod)
+      {
+         E_EDFLoggedErr(2,
+                        "E_ProcessThing: thing '%s': invalid zero damagemod %s\n",
+                        mobjinfo[i]->name, tempstr);
+      }
+   }
 
    // 09/22/06: process topdamage 
    if(IS_SET(ITEM_TNG_TOPDAMAGE))
@@ -3253,6 +3318,18 @@ void E_ProcessThing(int i, cfg_t *const thingsec, cfg_t *pcfg, const bool def)
 
    if(IS_SET(ITEM_TNG_TRAILSPARSITY))
       mobjinfo[i]->trailsparsity = cfg_getint(thingsec, ITEM_TNG_TRAILSPARSITY);
+   
+   if(IS_SET(ITEM_TNG_MISSILEHEIGHT))
+   {
+      tempfloat = cfg_getfloat(thingsec, ITEM_TNG_MISSILEHEIGHT);
+      mobjinfo[i]->missileheight = M_FloatToFixed(tempfloat);
+   }
+   
+   if(IS_SET(ITEM_TNG_BULLETZOFFSET))
+   {
+      tempfloat = cfg_getfloat(thingsec, ITEM_TNG_BULLETZOFFSET);
+      mobjinfo[i]->bulletzoffset = M_FloatToFixed(tempfloat);
+   }
 
    // Process DECORATE state block
    E_ProcessDecorateStatesRecursive(thingsec, i, false);
@@ -3528,6 +3605,15 @@ void E_RemoveFromExistingThingPairs(int type, unsigned flag)
          continue;
       pair->flags &= ~flag;
    }
+}
+
+//
+// Gets the collection of mobjtypes from a group, if it exists
+//
+const PODCollection<int> *E_GetThingsFromGroup(const char *name)
+{
+   const ThingGroup *group = thinggroup_namehash.objectForKey(name);
+   return group ? &group->types : nullptr;
 }
 
 //

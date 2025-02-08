@@ -353,6 +353,12 @@ Updated SDL_net to 2.2.0 (from 2.0.1) on Windows.
 Added loading and saving of mid-level music changes.
 Fixed rare hard-lock when polyobjects start moving.
 
+--------------------------------------------------------------------------------
+2024/08/16
+Added support for scanning for Steam/GOG Doom + Doom II IWADs and
+No Rest for the Living (and Master Levels for Steam only).
+Add support for DSDHacked sounds.
+
 ================================================================================
 EOF
 ================================================================================

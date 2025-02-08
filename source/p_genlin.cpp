@@ -40,6 +40,7 @@
 #include "m_compare.h"
 #include "m_random.h"
 #include "p_info.h"
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "p_xenemy.h"
@@ -158,12 +159,12 @@ manual_floor:
          break;
       case FtoLnCInclusive:
          floor->floordestheight = P_FindLowestCeilingSurrounding(sec);
-         if(floor->floordestheight > sec->srf.ceiling.height)
-            floor->floordestheight = sec->srf.ceiling.height;
+         if(floor->floordestheight > sec->srf.ceiling.height - pSlopeHeights[secnum].touchheight)
+            floor->floordestheight = sec->srf.ceiling.height - pSlopeHeights[secnum].touchheight;
          floor->floordestheight += fd->adjust;
          break;
       case FtoC:
-         floor->floordestheight = sec->srf.ceiling.height + fd->adjust;
+         floor->floordestheight = sec->srf.ceiling.height - pSlopeHeights[secnum].touchheight + fd->adjust;
          break;
       case FbyST:
          floor->floordestheight =
@@ -462,8 +463,8 @@ manual_ceiling:
             // gap to have any effect. But if gap is 0, just emulate the buggy
             // (but compat-fixed) Boom behavior. The only classic specials with
             // this behavior are from Boom anyway.
-            if(targheight < sec->srf.floor.height)
-               targheight = sec->srf.floor.height;
+            if(targheight < sec->srf.floor.height + pSlopeHeights[secnum].touchheight)
+               targheight = sec->srf.floor.height + pSlopeHeights[secnum].touchheight;
             targheight += cd->ceiling_gap;
 
             // Also slow ceiling down if blocked while gap is nonzero
@@ -472,7 +473,7 @@ manual_ceiling:
          }
          break;
       case CtoF:
-         targheight = sec->srf.floor.height + cd->ceiling_gap;
+         targheight = sec->srf.floor.height + pSlopeHeights[secnum].touchheight + cd->ceiling_gap;
          // ioanch: if hack flag is available, apply the Doom-like behavior if
          // gap is nonzero
          if(cd->ceiling_gap && cd->flags & CDF_HACKFORDESTF)
@@ -1216,7 +1217,7 @@ manual_crusher:
       }
 
       ceiling->topheight = sec->srf.ceiling.height;
-      ceiling->bottomheight = sec->srf.floor.height + cd->ground_dist;
+      ceiling->bottomheight = sec->srf.floor.height + pSlopeHeights[secnum].touchheight + cd->ground_dist;
 
       // setup ceiling motion speed
       switch (cd->speed_type)

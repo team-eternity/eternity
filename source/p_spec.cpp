@@ -54,6 +54,7 @@
 #include "ev_specials.h"
 #include "g_game.h"
 #include "hu_stuff.h"
+#include "m_compare.h"
 #include "p_info.h"
 #include "p_inter.h"
 #include "p_map.h"
@@ -439,6 +440,16 @@ sector_t *getNextSector(const line_t *line, const sector_t *sec)
             line->frontsector;
 }
 
+// Maximum or minimum floor or ceiling height along a line (in case of slopes)
+fixed_t P_ExtremeHeightOnLine(const sector_t &sector, const line_t &line, surf_e surf,
+                                       const fixed_t &(*comp)(const fixed_t &, const fixed_t &))
+{
+   if(!sector.srf[surf].slope)
+      return sector.srf[surf].height;
+   return comp(sector.srf[surf].getZAt(line.v1->x, line.v1->y),
+               sector.srf[surf].getZAt(line.v2->x, line.v2->y));
+}
+
 //
 // P_FindLowestFloorSurrounding()
 //
@@ -455,9 +466,12 @@ fixed_t P_FindLowestFloorSurrounding(const sector_t* sec)
 
    for(i = 0; i < sec->linecount; i++)
    {
-      if((other = getNextSector(sec->lines[i], sec)) &&
-         other->srf.floor.height < floor)
-         floor = other->srf.floor.height;
+      other = getNextSector(sec->lines[i], sec);
+      if(!other)
+         continue;
+      fixed_t otherHeight = P_ExtremeHeightOnLine(*other, *sec->lines[i], surf_floor, emin);
+      if(otherHeight < floor)
+         floor = otherHeight;
    }
 
    return floor;
@@ -488,9 +502,12 @@ fixed_t P_FindHighestFloorSurrounding(const sector_t *sec)
 
    for(i = 0; i < sec->linecount; i++)
    {
-      if((other = getNextSector(sec->lines[i],sec)) &&
-         other->srf.floor.height > floor)
-         floor = other->srf.floor.height;
+      other = getNextSector(sec->lines[i],sec);
+      if(!other)
+         continue;
+      fixed_t otherHeight = P_ExtremeHeightOnLine(*other, *sec->lines[i], surf_floor, emax);
+      if(otherHeight > floor)
+         floor = otherHeight;
    }
 
    return floor;
@@ -513,16 +530,32 @@ fixed_t P_FindNextHighestFloor(const sector_t *sec, int currentheight)
 
    for(i=0; i < sec->linecount; i++)
    {
-      if((other = getNextSector(sec->lines[i],sec)) &&
-         other->srf.floor.height > currentheight)
+      other = getNextSector(sec->lines[i],sec);
+      if(!other)
+         continue;
+      fixed_t height = P_ExtremeHeightOnLine(*other, *sec->lines[i], surf_floor, emin);
+      if(height <= currentheight && other->srf.floor.slope)
+         height = P_ExtremeHeightOnLine(*other, *sec->lines[i], surf_floor, emax);
+      
+      if(height > currentheight)
       {
-         int height = other->srf.floor.height;
          while (++i < sec->linecount)
          {
-            if((other = getNextSector(sec->lines[i],sec)) &&
-               other->srf.floor.height < height &&
-               other->srf.floor.height > currentheight)
-               height = other->srf.floor.height;
+            other = getNextSector(sec->lines[i],sec);
+            if(!other)
+               continue;
+            fixed_t otherHeight = P_ExtremeHeightOnLine(*other, *sec->lines[i], surf_floor, emin);
+            if(otherHeight < height)
+            {
+               if(otherHeight > currentheight)
+                  height = otherHeight;
+               else if(other->srf.floor.slope)
+               {
+                  otherHeight = P_ExtremeHeightOnLine(*other, *sec->lines[i], surf_floor, emax);
+                  if(otherHeight < height && otherHeight > currentheight)
+                     height = otherHeight;
+               }
+            }
          }
          return height;
       }
@@ -547,16 +580,31 @@ fixed_t P_FindNextLowestFloor(const sector_t *sec, int currentheight)
 
    for(i=0; i < sec->linecount; i++)
    {
-      if((other = getNextSector(sec->lines[i],sec)) &&
-         other->srf.floor.height < currentheight)
+      other = getNextSector(sec->lines[i],sec);
+      if(!other)
+         continue;
+      fixed_t height = P_ExtremeHeightOnLine(*other, *sec->lines[i], surf_floor, emax);
+      if(height >= currentheight && other->srf.floor.slope)
+         height = P_ExtremeHeightOnLine(*other, *sec->lines[i], surf_floor, emin);
+      if(height < currentheight)
       {
-         int height = other->srf.floor.height;
          while (++i < sec->linecount)
          {
-            if((other = getNextSector(sec->lines[i],sec)) &&
-               other->srf.floor.height > height &&
-               other->srf.floor.height < currentheight)
-               height = other->srf.floor.height;
+            other = getNextSector(sec->lines[i],sec);
+            if(!other)
+               continue;
+            fixed_t otherHeight = P_ExtremeHeightOnLine(*other, *sec->lines[i], surf_floor, emax);
+            if(otherHeight > height)
+            {
+               if(otherHeight < currentheight)
+                  height = otherHeight;
+               else if(other->srf.floor.slope)
+               {
+                  otherHeight = P_ExtremeHeightOnLine(*other, *sec->lines[i], surf_floor, emin);
+                  if(otherHeight > height && otherHeight < currentheight)
+                     height = otherHeight;
+               }
+            }
          }
          return height;
       }
@@ -581,16 +629,31 @@ fixed_t P_FindNextLowestCeiling(const sector_t *sec, int currentheight)
 
    for(i=0 ;i < sec->linecount ; i++)
    {
-      if((other = getNextSector(sec->lines[i],sec)) &&
-         other->srf.ceiling.height < currentheight)
+      other = getNextSector(sec->lines[i], sec);
+      if (!other)
+         continue;
+      fixed_t height = P_ExtremeHeightOnLine(*other, *sec->lines[i], surf_ceil, emax);
+      if(height >= currentheight && other->srf.ceiling.slope)
+         height = P_ExtremeHeightOnLine(*other, *sec->lines[i], surf_ceil, emin);
+      if(height < currentheight)
       {
-         int height = other->srf.ceiling.height;
          while (++i < sec->linecount)
          {
-            if((other = getNextSector(sec->lines[i],sec)) &&
-               other->srf.ceiling.height > height &&
-               other->srf.ceiling.height < currentheight)
-               height = other->srf.ceiling.height;
+            other = getNextSector(sec->lines[i], sec);
+            if (!other)
+               continue;
+            fixed_t otherHeight = P_ExtremeHeightOnLine(*other, *sec->lines[i], surf_ceil, emax);
+            if (otherHeight > height)
+            {
+               if (otherHeight < currentheight)
+                  height = otherHeight;
+               else if (other->srf.ceiling.slope)
+               {
+                  otherHeight = P_ExtremeHeightOnLine(*other, *sec->lines[i], surf_ceil, emin);
+                  if (otherHeight > height && otherHeight < currentheight)
+                     height = otherHeight;
+               }
+            }
          }
         return height;
       }
@@ -610,21 +673,36 @@ fixed_t P_FindNextLowestCeiling(const sector_t *sec, int currentheight)
 //
 fixed_t P_FindNextHighestCeiling(const sector_t *sec, int currentheight)
 {
-   sector_t *other;
+   sector_t* other;
    int i;
 
-   for(i=0; i < sec->linecount; i++)
+   for (i = 0; i < sec->linecount; i++)
    {
-      if((other = getNextSector(sec->lines[i],sec)) &&
-         other->srf.ceiling.height > currentheight)
+      other = getNextSector(sec->lines[i], sec);
+      if (!other)
+         continue;
+      fixed_t height = P_ExtremeHeightOnLine(*other, *sec->lines[i], surf_ceil, emin);
+      if (height <= currentheight && other->srf.ceiling.slope)
+         height = P_ExtremeHeightOnLine(*other, *sec->lines[i], surf_ceil, emax);
+      if (height > currentheight)
       {
-         int height = other->srf.ceiling.height;
          while (++i < sec->linecount)
          {
-            if((other = getNextSector(sec->lines[i],sec)) &&
-               other->srf.ceiling.height < height &&
-               other->srf.ceiling.height > currentheight)
-               height = other->srf.ceiling.height;
+            other = getNextSector(sec->lines[i], sec);
+            if (!other)
+               continue;
+            fixed_t otherHeight = P_ExtremeHeightOnLine(*other, *sec->lines[i], surf_ceil, emin);
+            if (otherHeight < height)
+            {
+               if (otherHeight > currentheight)
+                  height = otherHeight;
+               else if (other->srf.ceiling.slope)
+               {
+                  otherHeight = P_ExtremeHeightOnLine(*other, *sec->lines[i], surf_ceil, emax);
+                  if (otherHeight < height && otherHeight > currentheight)
+                     height = otherHeight;
+               }
+            }
          }
          return height;
       }
@@ -657,8 +735,11 @@ fixed_t P_FindLowestCeilingSurrounding(const sector_t* sec)
       // SoM: ignore attached sectors.
       for(i = 0; i < sec->linecount; i++)
       {
-         if((other = getNextSector(sec->lines[i],sec)) &&
-            other->srf.ceiling.height < height)
+         other = getNextSector(sec->lines[i],sec);
+         if(!other)
+            continue;
+         fixed_t ceilingHeight = P_ExtremeHeightOnLine(*other, *sec->lines[i], surf_ceil, emin);
+         if(ceilingHeight < height)
          {
             int j;
 
@@ -667,7 +748,7 @@ fixed_t P_FindLowestCeilingSurrounding(const sector_t* sec)
                   break;
 
             if(j == sec->srf.ceiling.asurfacecount)
-               height = other->srf.ceiling.height;
+               height = ceilingHeight;
          }
       }
    }
@@ -707,10 +788,15 @@ fixed_t P_FindHighestCeilingSurrounding(const sector_t* sec)
       height = -32000*FRACUNIT; //jff 3/12/98 avoid ovf in
 
    // height calculations
-   for(i=0; i < sec->linecount; i++)
-      if((other = getNextSector(sec->lines[i],sec)) &&
-         other->srf.ceiling.height > height)
-         height = other->srf.ceiling.height;
+   for (i = 0; i < sec->linecount; i++)
+   {
+      other = getNextSector(sec->lines[i], sec);
+      if (!other)
+         continue;
+      fixed_t otherHeight = P_ExtremeHeightOnLine(*other, *sec->lines[i], surf_ceil, emax);
+      if (otherHeight > height)
+         height = otherHeight;
+   }
 
    return height;
 }
@@ -821,6 +907,7 @@ fixed_t P_FindShortestUpperAround(int secnum)
 //
 sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum)
 {
+   const sector_t &originSec = sectors[secnum]; // keep track
    sector_t *sec = &sectors[secnum]; //jff 3/2/98 woops! better do this
 
    //jff 5/23/98 don't disturb sec->linecount while searching
@@ -832,11 +919,22 @@ sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum)
        i < (demo_compatibility && sec->linecount < lineCount ? sec->linecount : lineCount);
        i++)
    {
-      if(twoSided(secnum, i) &&
-         (sec = getSector(secnum, i,
-          getSide(secnum,i,0)->sector-sectors == secnum))->srf.floor.height == floordestheight)
+      if(twoSided(secnum, i))
       {
-         return sec;
+         sec = getSector(secnum, i, getSide(secnum,i,0)->sector-sectors == secnum);
+         if(originSec.srf.floor.slope)
+         {
+            if(sec->srf.floor.slope && P_SlopesEqualAtGivenHeight(*originSec.srf.floor.slope, 
+                                                                  floordestheight,
+                                                                  *sec->srf.floor.slope))
+            {
+               return sec;
+            }
+         }
+         else if(!sec->srf.floor.slope && sec->srf.floor.height == floordestheight)
+         {
+            return sec;
+         }
       }
    }
 
@@ -863,6 +961,7 @@ sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum)
 
 sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum)
 {
+   const sector_t& originSec = sectors[secnum]; // keep track
    sector_t *sec = &sectors[secnum]; //jff 3/2/98 woops! better do this
 
    //jff 5/23/98 don't disturb sec->linecount while searching
@@ -874,11 +973,22 @@ sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum)
        i < (demo_compatibility && sec->linecount < lineCount ? sec->linecount : lineCount);
        i++)
    {
-      if(twoSided(secnum, i) &&
-         (sec = getSector(secnum, i,
-          getSide(secnum,i,0)->sector-sectors == secnum))->srf.ceiling.height == ceildestheight)
+      if (twoSided(secnum, i))
       {
-         return sec;
+         sec = getSector(secnum, i, getSide(secnum, i, 0)->sector - sectors == secnum);
+         if (originSec.srf.ceiling.slope)
+         {
+            if (sec->srf.ceiling.slope && P_SlopesEqualAtGivenHeight(*originSec.srf.ceiling.slope,
+               ceildestheight,
+               *sec->srf.ceiling.slope))
+            {
+               return sec;
+            }
+         }
+         else if (!sec->srf.ceiling.slope && sec->srf.ceiling.height == ceildestheight)
+         {
+            return sec;
+         }
       }
    }
 
@@ -1781,8 +1891,7 @@ void FrictionThinker::Think()
       }
       thing = node->m_thing;
       if(thing->player &&
-         !(thing->flags & (MF_NOGRAVITY | MF_NOCLIP)) &&
-         thing->z <= sec->srf.floor.height)
+         !(thing->flags & (MF_NOGRAVITY | MF_NOCLIP)) && P_RestingOnGround(*thing, sec->srf.floor))
       {
          if((thing->friction == ORIG_FRICTION) ||     // normal friction?
             (this->friction < thing->friction))
@@ -2365,9 +2474,13 @@ void P_AttachLines(const line_t *cline, bool ceiling)
    }
 
    // haleyjd: static analyzer says this could happen, so let's just be safe.
+   // ioanch: don't quit, as it will all fit fine.
    if(!attached)
-      I_Error("P_AttachLines: nothing to attach to sector %d\n",
-              static_cast<int>(cline->frontsector - sectors));
+   {
+      doom_warningf_silent("P_AttachLines: nothing to attach to sector %d",
+                           static_cast<int>(cline->frontsector - sectors));
+      return;
+   }
 
    // Copy the list to the c_attached or f_attached list.
    if(ceiling)

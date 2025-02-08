@@ -536,6 +536,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
       else 
       {
          // haleyjd 11/10/08: modified to print invalid values
+         errno = 0;  // set it to 0 so we can test if it changes
          val->number = static_cast<int>(strtol(value, &endptr, 0));
          if(*endptr != '\0')
          {            

@@ -91,6 +91,10 @@ struct arglist_t
    char *args[EMAXARGS];         // argument strings stored from EDF
    evalcache_t values[EMAXARGS]; // if type != EVALTYPE_NONE, cached value
    int numargs;                  // number of arguments
+
+   // bit set of assigned args. A bit is 0 if omitted in a Dehacked patch and expected to use the
+   // default value.
+   uint16_t assigned;
 };
 
 struct argkeywd_t
@@ -107,7 +111,6 @@ enum class dehackedArg_e : bool
 
 bool          E_AddArgToList(arglist_t *al, const char *value);
 inline int    E_GetArgCount(const arglist_t *al) { return al ? al->numargs : 0; }
-bool          E_SetArg(arglist_t *al, int index, const char *value, dehackedArg_e dehacked);
 bool          E_SetArgFromNumber(arglist_t *al, int index, int value, dehackedArg_e dehacked);
 void          E_DisposeArgs(arglist_t *al);
 void          E_ResetArgEval(arglist_t *al, int index);

@@ -23,10 +23,10 @@
 #include "d_io.h"
 #include "m_qstr.h"
 
-constexpr int UDOOM_STEAM_APPID      = 2280;
-constexpr int FINAL_DOOM_STEAM_APPID = 2290;
-constexpr int DOOM2_STEAM_APPID      = 2300;
-constexpr int DOOM3_BFG_STEAM_APPID  = 208200;
+constexpr int DOOM_DOOM_II_STEAM_APPID = 2280;
+constexpr int FINAL_DOOM_STEAM_APPID   = 2290;
+constexpr int DOOM2_STEAM_APPID        = 2300;
+constexpr int DOOM3_BFG_STEAM_APPID    = 208200;
 
 constexpr int MASTER_LEVELS_STEAM_APPID = 9160;
 
@@ -38,7 +38,7 @@ constexpr int SVE_STEAM_APPID = 317040;
 
 constexpr int STEAM_APPIDS[] =
 {
-   UDOOM_STEAM_APPID,
+   DOOM_DOOM_II_STEAM_APPID,
    FINAL_DOOM_STEAM_APPID,
    DOOM2_STEAM_APPID,
    DOOM3_BFG_STEAM_APPID,

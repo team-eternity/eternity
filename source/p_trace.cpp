@@ -39,6 +39,7 @@
 #include "p_portal.h"   // ioanch 20160113
 #include "p_setup.h"
 #include "p_skin.h"
+#include "p_slopes.h"
 #include "p_spec.h"
 #include "r_defs.h"
 #include "r_main.h"
@@ -460,13 +461,13 @@ static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist)
    if(fs->srf.floor.slope || bs->srf.floor.slope)  // don't support this in case of slopes
       floorsame = false;
    else
-      floorsame = becomp && fs->srf.floor.height == bs->srf.floor.height;
+      floorsame = becomp && P_SlopesEqual(fs, bs, surf_floor);
 
    bool ceilingsame;
    if(fs->srf.ceiling.slope || bs->srf.ceiling.slope)
       ceilingsame = false;
    else
-      ceilingsame = becomp && fs->srf.ceiling.height == bs->srf.ceiling.height;
+      ceilingsame = becomp && P_SlopesEqual(fs, bs, surf_ceil);
 
    if((floorsame   || FixedDiv(clip.open.height.floor - trace.z , dist) <= trace.aimslope) &&
       (ceilingsame || FixedDiv(clip.open.height.ceiling - trace.z , dist) >= trace.aimslope))
@@ -752,7 +753,7 @@ void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
    x2 = t1->x + (distance >> FRACBITS) * (trace.cos = finecosine[angle]);
    y2 = t1->y + (distance >> FRACBITS) * (trace.sin = finesine[angle]);
    
-   trace.z = t1->z - t1->floorclip + (t1->height>>1) + 8*FRACUNIT;
+   trace.z = t1->z - t1->floorclip + (t1->height>>1) + (t1->info->bulletzoffset);
    trace.attackrange = distance;
    trace.aimslope = slope;
 

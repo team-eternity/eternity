@@ -48,11 +48,13 @@
 #include "p_enemy.h"
 #include "p_mobj.h"
 #include "p_partcl.h"
+#include "p_portal.h"
 #include "p_portalcross.h"
 #include "p_tick.h"
 #include "r_data.h"
 #include "r_defs.h"
 #include "r_main.h"
+#include "r_portal.h"
 #include "r_state.h"
 #include "s_sound.h"
 #include "w_wad.h"
@@ -899,7 +901,8 @@ void E_PtclTerrainHit(particle_t *p)
 // Executes mobj terrain effects.
 // ioanch 20160116: also use "sector" to change the group ID if needed
 //
-static void E_TerrainHit(const ETerrain *terrain, Mobj *thing, fixed_t z, const sector_t *sector)
+static void E_TerrainHit(const ETerrain *terrain, Mobj *thing, fixed_t z, const sector_t *sector, 
+                         fixed_t splashAlpha)
 {
    ETerrainSplash *splash = terrain->splash;
    Mobj *mo = nullptr;
@@ -913,21 +916,32 @@ static void E_TerrainHit(const ETerrain *terrain, Mobj *thing, fixed_t z, const 
    fixed_t tx = thing->x + link->x;
    fixed_t ty = thing->y + link->y;
 
+   auto reduceAlpha = [&mo, splashAlpha]()
+      {
+         if(mo->translucency > splashAlpha)
+            mo->translucency = splashAlpha;
+      };
+
    // low mass splash?
    // note: small splash didn't exist before version 3.33
    if(demo_version >= 333 && lowmass && splash->smallclass != -1)
    {
       mo = P_SpawnMobj(tx, ty, z, splash->smallclass);
       mo->floorclip += splash->smallclip;
+      reduceAlpha();
    }
    else
    {
       if(splash->baseclass != -1)
+      {
          mo = P_SpawnMobj(tx, ty, z, splash->baseclass);
+         reduceAlpha();
+      }
 
       if(splash->chunkclass != -1)
       {
          mo = P_SpawnMobj(tx, ty, z, splash->chunkclass);
+         reduceAlpha();
          P_SetTarget<Mobj>(&mo->target, thing);
          
          if(splash->chunkxvelshift != -1)
@@ -955,7 +969,7 @@ static void E_TerrainHit(const ETerrain *terrain, Mobj *thing, fixed_t z, const 
 // Get the information for the thing's floor terrain. Also gets the resulting z value
 //
 static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sector, v2fixed_t pos,
-                                         fixed_t *z)
+                                         fixed_t *z, fixed_t *splashAlpha)
 {
    // override with sector terrain if one is specified
    const ETerrain *terrain = sector.srf.floor.terrain;
@@ -972,8 +986,20 @@ static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sect
 
    if(z)
    {
-      *z = sector.heightsec != -1 ? sectors[sector.heightsec].srf.floor.getZAt(pos) :
-                                    sector.srf.floor.getZAt(pos);
+      if(sector.heightsec != -1)
+         *z = sectors[sector.heightsec].srf.floor.getZAt(pos);
+      else if(P_IsLiquidOverlaylinkedPortal(sector.srf.floor))
+         *z = P_PortalZ(sector.srf.floor, pos);
+      else 
+         *z = sector.srf.floor.getZAt(pos);
+   }
+   if(splashAlpha)
+   {
+      // Take the alpha from the overlay, if available
+      if(sector.heightsec == -1 && P_IsLiquidOverlaylinkedPortal(sector.srf.floor))
+         *splashAlpha = ((sector.srf.floor.pflags >> PO_OPACITYSHIFT & 0xff) << 8) + 255;
+      else
+         *splashAlpha = FRACUNIT;
    }
    return *terrain;
 }
@@ -986,10 +1012,12 @@ static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sect
 bool E_HitWater(Mobj *thing, const sector_t *sector)
 {
    fixed_t z;
-   const ETerrain &terrain = E_getFloorTerrain(*thing, *sector, {thing->x, thing->y}, &z);
+   fixed_t splashAlpha;
+   const ETerrain &terrain = E_getFloorTerrain(*thing, *sector, {thing->x, thing->y}, &z,
+                                               &splashAlpha);
 
    // ioanch 20160116: also use "sector" as a parameter in case it's in another group
-   E_TerrainHit(&terrain, thing, z, sector);
+   E_TerrainHit(&terrain, thing, z, sector, splashAlpha);
 
    return terrain.liquid;
 }
@@ -1007,14 +1035,60 @@ void E_ExplosionHitWater(Mobj *thing, int damage)
       return;
    }
    // VANILLA_HERETIC: explosion infinite height
-   if(vanilla_heretic || thing->z <= thing->zref.secfloor + damage * FRACUNIT)
-      E_HitWater(thing, P_ExtremeSectorAtPoint(thing, surf_floor));
+
+   bool hit = false;
+   if(vanilla_heretic)
+      hit = true;
+
+   const sector_t *overlaySplashSector = nullptr;
+
+   if(!hit)
+   {
+      fixed_t refheight = D_MININT;
+      const sector_t &sector = *thing->subsector->sector;
+      if(sector.heightsec != -1)
+         refheight = sectors[sector.heightsec].srf.floor.getZAt(thing->x, thing->y);
+      else
+      {
+         v2fixed_t pos = { thing->x, thing->y };
+         bool foundLiquidOverlay = false;
+         for(int prot = 0; prot < SECTOR_PORTAL_LOOP_PROTECTION; ++prot)
+         {
+            const sector_t *currentSector = R_PointInSubsector(pos)->sector;
+            if((currentSector->srf.floor.pflags & (PS_PASSABLE | PS_OVERLAY)) == PS_PASSABLE)
+            {
+               pos.x += currentSector->srf.floor.portal->data.link.delta.x;
+               pos.y += currentSector->srf.floor.portal->data.link.delta.y;
+            }
+            else if(P_IsLiquidOverlaylinkedPortal(currentSector->srf.floor))
+            {
+               refheight = P_PortalZ(currentSector->srf.floor, pos);
+               foundLiquidOverlay = true;
+               overlaySplashSector = currentSector;
+            }
+            else
+               break;
+         }
+         if(!foundLiquidOverlay)
+            refheight = thing->zref.secfloor;
+      }
+
+      I_Assert(refheight != D_MININT, "refheight should have been set here");
+      if(thing->z <= refheight + damage * FRACUNIT)
+         hit = true;
+   }
+   if(hit)
+   {
+      E_HitWater(thing, overlaySplashSector ? overlaySplashSector :
+                 P_ExtremeSectorAtPoint(thing, surf_floor));
+   }
 }
 
 //
 // Check if thing is standing on given sector, compatible with slopes and non-slopes
+// NOTE: this checks _exact_ floor equality, not <=
 //
-static bool E_standingOn(const sector_t &sector, const Mobj &thing)
+bool E_StandingOnExactly(const sector_t &sector, const Mobj &thing)
 {
    if(!sector.srf.floor.slope && thing.z == sector.srf.floor.height)
       return true;
@@ -1035,7 +1109,7 @@ bool E_HitFloor(Mobj *thing)
 
    // determine what touched sector the thing is standing on
    for(m = thing->touching_sectorlist; m; m = m->m_tnext)
-      if(E_standingOn(*m->m_sector, *thing))
+      if(E_StandingOnExactly(*m->m_sector, *thing))
          break;
 
    // not on a floor or dealing with deep water, return solid
@@ -1054,7 +1128,7 @@ bool E_WouldHitFloorWater(const Mobj &thing)
 {
    const msecnode_t *m;
    for(m = thing.touching_sectorlist; m; m = m->m_tnext)
-      if(E_standingOn(*m->m_sector, thing))
+      if(E_StandingOnExactly(*m->m_sector, thing))
          break;
 
    // NOTE: same conditions as E_HitFloor
@@ -1062,8 +1136,23 @@ bool E_WouldHitFloorWater(const Mobj &thing)
       return false;
 
    const sector_t &sector = *m->m_sector;
-   const ETerrain &terrain = E_getFloorTerrain(thing, sector, v2fixed_t(), nullptr);
+   const ETerrain &terrain = E_getFloorTerrain(thing, sector, v2fixed_t(), nullptr, nullptr);
    return terrain.liquid;
+}
+
+//
+// Check if under a BOOM liquid fake floor that would splash liquid. Needed for certain Heretic 
+// things.
+//
+bool E_UnderBoomLiquidFakeFloor(const Mobj &thing)
+{
+   const sector_t &sector = *thing.subsector->sector;
+   if(sector.heightsec == -1)
+      return false;
+
+   fixed_t z;
+   const ETerrain &terrain = E_getFloorTerrain(thing, sector, { thing.x, thing.y }, &z, nullptr);
+   return z > thing.z && terrain.liquid;
 }
 
 // EOF

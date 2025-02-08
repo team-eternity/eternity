@@ -403,12 +403,11 @@ void R_ResetFOV(int width, int height)
       fov = 90;
       return;
    }
+   
+   // Basically this results from keeping 90 fov on the 4:3 subscreen.
+   fov = round(360 / PI * atan(ratio / 4 * 3));
 
-   // The general equation is as follows:
-   // y = mx + b -> fov = (75/2) * ratio + 40
-   // This gives 90 for 4:3, 100 for 16:10, and 106 for 16:9.
-   fov = static_cast<int>((75.0/2.0) * ratio + 40.0);
-
+   // Ultra sanity check
    if(fov < 20)
       fov = 20;
    else if(fov > 179)
@@ -923,12 +922,14 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
             sec.srf.ceiling.heightf = M_FixedToFloat(sec.srf.ceiling.height);
 
             // as above, but only for slope origin Z
-            if(pslope_t *slope = sec.srf.floor.slope; slope && si.prevfloorslopezf != slope->of.z)
+            pslope_t* slope = sec.srf.floor.slope;
+            if (slope)
             {
                si.backfloorslopezf = slope->of.z;
                slope->of.z = lerpCoordf(view.lerp, si.prevfloorslopezf, slope->of.z);
             }
-            if(pslope_t *slope = sec.srf.ceiling.slope; slope && si.prevceilingslopezf != slope->of.z)
+            slope = sec.srf.ceiling.slope;
+            if (slope)
             {
                si.backceilingslopezf = slope->of.z;
                slope->of.z = lerpCoordf(view.lerp, si.prevceilingslopezf, slope->of.z);
@@ -1028,12 +1029,19 @@ static void R_interpolateVertex(dynavertex_t &v, v2fixed_t &org, v2float_t &forg
 //
 static void R_setDynaSegInterpolationState(secinterpstate_e state)
 {
+   static int dvcount;  // dynaseg validcount (so as not to increment the official one)
+
    switch(state)
    {
       case SEC_INTERPOLATE:
+         ++dvcount;
          R_ForEachPolyNode([](rpolynode_t *node) {
             dynaseg_t &dynaseg = *node->partition;
             seg_t     *seg     = &node->partition->seg;
+
+            if(dynaseg.validcount == dvcount)
+               return;
+            dynaseg.validcount = dvcount;
 
             R_interpolateVertex(*seg->dyv1, dynaseg.prev.org[0], dynaseg.prev.forg[0]);
             R_interpolateVertex(*seg->dyv2, dynaseg.prev.org[1], dynaseg.prev.forg[1]);
@@ -1045,10 +1053,14 @@ static void R_setDynaSegInterpolationState(secinterpstate_e state)
          });
          break;
       case SEC_NORMAL:
+         ++dvcount;
          R_ForEachPolyNode([](rpolynode_t *node) {
             seginterp_t &prev = node->partition->prev;
             seg_t       *seg  = &node->partition->seg;
 
+            if(node->partition->validcount == dvcount)
+               return;
+            node->partition->validcount = dvcount;
             seg->offset = prev.offset;
             seg->len    = prev.len;
             seg->v1->x  = prev.org[0].x;
@@ -1110,6 +1122,14 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
 
          viewpoint.x += (M_Random() % (strength * 4) - (strength * 2)) << FRACBITS;
          viewpoint.y += (M_Random() % (strength * 4) - (strength * 2)) << FRACBITS;
+      }
+
+      if (player->headThrust)
+      {
+         // Set chicken attack view position
+         int fineangle = viewpoint.angle >> ANGLETOFINESHIFT;
+         viewpoint.x += player->headThrust * finecosine[fineangle];
+         viewpoint.y += player->headThrust * finesine[fineangle];
       }
    }
    else
@@ -1218,11 +1238,13 @@ static int R_getSectorColormap(const rendersector_t &sector, ViewArea viewarea)
 // instead of from its heightsec if it has one (heightsec colormaps are
 // transferred to their affected sectors at level setup now).
 //
-void R_SectorColormap(cmapcontext_t &context, const fixed_t viewz, const rendersector_t *s)
+void R_SectorColormap(cmapcontext_t &context, const viewpoint_t &viewpoint, const rendersector_t *s)
 {
    int colormapIndex = 0;
    bool boomStyleOverride = false;
    ViewArea area = ViewArea::normal;
+   
+   const fixed_t viewz = viewpoint.z;
 
    // haleyjd: Under BOOM logic, the view sector determines the colormap of all sectors in view.
    // This is supported for backward compatibility.
@@ -1241,9 +1263,9 @@ void R_SectorColormap(cmapcontext_t &context, const fixed_t viewz, const renders
       const sector_t &heightSector = sectors[view.sector->heightsec];
 
       // Pick area ID the viewer is in
-      if(viewz < heightSector.srf.floor.height)
+      if(viewz < heightSector.srf.floor.getZAt(viewpoint.x, viewpoint.y))
          area = ViewArea::below;
-      else if(viewz > heightSector.srf.ceiling.height)
+      else if(viewz > heightSector.srf.ceiling.getZAt(viewpoint.x, viewpoint.y))
          area = ViewArea::above;
       else
          area = ViewArea::normal;
@@ -1267,9 +1289,9 @@ void R_SectorColormap(cmapcontext_t &context, const fixed_t viewz, const renders
 
          if(hs == -1)
             area = ViewArea::normal;
-         else if(viewz < sectors[hs].srf.floor.height)
+         else if(viewz < sectors[hs].srf.floor.getZAt(viewpoint.x, viewpoint.y))
             area = ViewArea::below;
-         else if(viewz > sectors[hs].srf.ceiling.height)
+         else if(viewz > sectors[hs].srf.ceiling.getZAt(viewpoint.x, viewpoint.y))
             area = ViewArea::above;
          else
             area = ViewArea::normal;
@@ -1308,9 +1330,15 @@ angle_t R_WadToAngle(int wadangle)
    // haleyjd: FIXME: needs comp option
    // allows wads to specify angles to
    // the nearest degree, not nearest 45   
+   
+   // Restore vanilla DOOM angle precision which we lost when we enabled non-multiple of 45 mapthing 
+   // angles. This is important for ACS scripts, including those from Hexen, where you'd get
+   // off-by-one errors with byte and fixed-point angles.
+   if(demo_version >= 403 && wadangle % 45 == 0)
+      return wadangle / 45 * ANG45;
 
-   return (demo_version < 302) 
-             ? (wadangle / 45) * ANG45 
+   return (demo_version < 302)
+             ? (wadangle / 45) * ANG45
              : wadangle * (ANG45 / 45);
 }
 
@@ -1735,7 +1763,10 @@ CONSOLE_VARIABLE(r_tlstyle, r_tlstyle, 0)
    R_DoomTLStyle();
 }
 
-CONSOLE_VARIABLE(r_sprprojstyle, r_sprprojstyle, 0) {}
+CONSOLE_VARIABLE(r_sprprojstyle, r_sprprojstyle, 0) 
+{
+   P_CheckSpriteTouchingSectorLists();
+}
 
 CONSOLE_VARIABLE(r_boomcolormaps, r_boomcolormaps, 0) {}
 

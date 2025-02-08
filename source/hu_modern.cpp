@@ -101,8 +101,11 @@ void ModernHUD::DrawStatus(int x, int y)
    if(hud_overlaylayout == HUD_BOOM)
    {
       tempstr << FC_RED   "K" FC_GRAY "  " << hu_player.killcount   << "/" << totalkills <<
-                 FC_BLUE " I" FC_GRAY "  " << hu_player.itemcount   << "/" << totalitems <<
-                 FC_GOLD " S" FC_GRAY "  " << hu_player.secretcount << "/" << totalsecret;
+                 FC_BLUE " I" FC_GRAY "  " << hu_player.itemcount   << "/" << totalitems;
+      if (!hud_hidesecrets)
+      {
+         tempstr << FC_GOLD " S" FC_GRAY "  " << hu_player.secretcount << "/" << totalsecret;
+      }
       V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y, m_screen);
    }
    else if(hud_overlaylayout == HUD_DISTRIB)
@@ -113,8 +116,11 @@ void ModernHUD::DrawStatus(int x, int y)
       tempstr << FC_BLUE "ITEMS" FC_GRAY "  " << hu_player.itemcount << "/" << totalitems;
       V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y - 8, m_screen);
       tempstr.clear();
-      tempstr << FC_GOLD "SCRTS" FC_GRAY "  " << hu_player.secretcount << "/" << totalsecret;
-      V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y, m_screen);
+      if (!hud_hidesecrets)
+      {
+         tempstr << FC_GOLD "SCRTS" FC_GRAY "  " << hu_player.secretcount << "/" << totalsecret;
+         V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y, m_screen);
+      }
    }
    else
    {
@@ -124,8 +130,11 @@ void ModernHUD::DrawStatus(int x, int y)
       tempstr << hu_player.itemcount << "/" << totalitems << "  " FC_BLUE "ITEMS";
       FontWriteTextRAlign(hud_fssmall, tempstr.constPtr(), x, y + 8, m_screen);
       tempstr.clear();
-      tempstr << hu_player.secretcount << "/" << totalsecret << "  " FC_GOLD "SCRTS";
-      FontWriteTextRAlign(hud_fssmall, tempstr.constPtr(), x, y + 16, m_screen);
+      if (!hud_hidesecrets)
+      {
+         tempstr << hu_player.secretcount << "/" << totalsecret << "  " FC_GOLD "SCRTS";
+         FontWriteTextRAlign(hud_fssmall, tempstr.constPtr(), x, y + 16, m_screen);
+      }
    }
 }
 
@@ -259,7 +268,7 @@ void ModernHUD::DrawKeys(int x, int y)
    V_FontWriteText(hud_fssmall, "KEYS", x, y, m_screen);
    for(int i = 0, xoffs = displayoffs; i < GameModeInfo->numHUDKeys; i++)
    {
-      if(E_GetItemOwnedAmountName(&hu_player, GameModeInfo->cardNames[i]) > 0)
+      if(E_GetItemOwnedAmountName(hu_player, GameModeInfo->cardNames[i]) > 0)
       {
          // got that key
          V_DrawPatch(xoffs, y, m_screen, keys[i]);
@@ -292,7 +301,7 @@ void ModernHUD::Setup()
       data.enabled = true; // turn em all on
 
    // turn off status if we aren't using it
-   if(hud_hidestatus)
+   if(hud_hidestats)
       drawerdata[ol_status].enabled = false;
 
    // turn off frag counter or key display,
@@ -339,7 +348,7 @@ void ModernHUD::Setup()
       SetupOverlay(ol_ammo,   42,                      m_screen->unscaledh - 16);
       SetupOverlay(ol_key,    42,                      m_screen->unscaledh - 8 );
       SetupOverlay(ol_frag,   42,                      m_screen->unscaledh - 8 );
-      if(!hud_hidestatus)
+      if(!hud_hidestats)
          boxy -= 24;
       SetupOverlay(ol_invcurr, boxx, boxy);
       break;
@@ -356,7 +365,7 @@ void ModernHUD::Setup()
       else
          SetupOverlay(ol_key,  3, m_screen->unscaledh - 8);
 
-      if(!hud_hidestatus)
+      if(!hud_hidestats)
          SetupOverlay(ol_status, 3, m_screen->unscaledh - 16);
       boxy -= 16;
       SetupOverlay(ol_invcurr, boxx, boxy);

@@ -1,0 +1,19 @@
+Changes since v4.04.00
+======================
+
+Bug fixes
+---------
+
+* Fixed wrong version display in the title bar.
+* Fixed corruption happening after trying to play an unsupported demo, such as coming from
+  DSDA-DOOM. This affects projects such as Eviternity II.
+* Fixed Heretic autoswitching weapons wrongly when having the Tome of Power.
+* Fixed crash happening when inheriting or applying a delta structure on a powered-up weaponinfo.
+* Fixed unintended NOHITGHOSTS on Heretic gauntlets weapon.
+* Fixed powered dragonclaw starting displaced a few meters from player.
+* Fixed jerky and visually imprecise polyobject movement (bug introduced in v4.04.00).
+* Fixed exaggerated and unrealistic slope bouncing of objects under gravity.
+* Fixed attach-3dmidtex specials from quitting Eternity. This was happening on WADs like Hell Ground
+  where there were mistaken linedef specials such as 281 or 282.
+* Fixed the close button of the IWAD picker window not working. Thanks to FozzeY for the pull
+  request!

@@ -95,13 +95,13 @@ static constexpr int fuzzoffset[FUZZTABLE] =
 
 // One value per column. Inherently thread-safe for column drawing,
 // and appears the same regardless of thread count.
-static int *fuzzpos;
+static int *g_fuzzpos;
 
-VALLOCATION(solidsegs)
+VALLOCATION(fuzzpos)
 {
-   fuzzpos = emalloctag(int *, w * sizeof(int), PU_VALLOC, nullptr);
+   g_fuzzpos = emalloctag(int *, w * sizeof(int), PU_VALLOC, nullptr);
    for(int x = 0; x < w; x++)
-      fuzzpos[x] = M_RangeRandomEx(0, FUZZTABLE - 1);
+      g_fuzzpos[x] = M_RangeRandomEx(0, FUZZTABLE - 1);
 }
 
 //
@@ -553,7 +553,7 @@ void CB_DrawTLTRColumn_8(cb_column_t &column)
    colormap[6*256+dest[(offset)]]
 
 #define SRCPIXEL \
-   COLORFUZZ(fuzzoffset[fuzzpos[column.x]] ? 1 : -1)
+   COLORFUZZ(fuzzoffset[g_fuzzpos[column.x]] ? 1 : -1)
 
 void CB_DrawFuzzColumn_8(cb_column_t &column)
 {
@@ -577,8 +577,8 @@ void CB_DrawFuzzColumn_8(cb_column_t &column)
       // Instead of +1/-1 render top pixels with +1/0 to avoid underrun.
       if(column.y1 == 0)
       {
-         *dest = COLORFUZZ(fuzzoffset[fuzzpos[column.x]] ? 1 : 0);
-         if(++fuzzpos[column.x] == FUZZTABLE) fuzzpos[column.x] = 0;
+         *dest = COLORFUZZ(fuzzoffset[g_fuzzpos[column.x]] ? 1 : 0);
+         if(++g_fuzzpos[column.x] == FUZZTABLE) g_fuzzpos[column.x] = 0;
          dest += 1;
          count -= 1;
       }
@@ -589,25 +589,25 @@ void CB_DrawFuzzColumn_8(cb_column_t &column)
       while((count -= 2) >= 0) // texture height is a power of 2 -- killough
       {
          *dest = SRCPIXEL;
-         if(++fuzzpos[column.x] == FUZZTABLE) fuzzpos[column.x] = 0;
+         if(++g_fuzzpos[column.x] == FUZZTABLE) g_fuzzpos[column.x] = 0;
          dest += 1;   // killough 11/98
 
          *dest = SRCPIXEL;
-         if(++fuzzpos[column.x] == FUZZTABLE) fuzzpos[column.x] = 0;
+         if(++g_fuzzpos[column.x] == FUZZTABLE) g_fuzzpos[column.x] = 0;
          dest += 1;   // killough 11/98
       }
       if(count & 1)
       {
          *dest = SRCPIXEL;
-         if(++fuzzpos[column.x] == FUZZTABLE) fuzzpos[column.x] = 0;
+         if(++g_fuzzpos[column.x] == FUZZTABLE) g_fuzzpos[column.x] = 0;
          dest += 1;
       }
 
       // Instead of +1/-1 render bottom pixels with 0/-1 to avoid overrun.
       if(column.y2 == viewwindow.height - 1)
       {
-         *dest = COLORFUZZ(fuzzoffset[fuzzpos[column.x]] ? 0 : -1);
-         if(++fuzzpos[column.x] == FUZZTABLE) fuzzpos[column.x] = 0;
+         *dest = COLORFUZZ(fuzzoffset[g_fuzzpos[column.x]] ? 0 : -1);
+         if(++g_fuzzpos[column.x] == FUZZTABLE) g_fuzzpos[column.x] = 0;
       }
    }
 }
@@ -1208,7 +1208,7 @@ columndrawer_t r_normal_drawer =
 // Could be read from a lump instead.
 //
 
-static const char *translations[TRANSLATIONCOLOURS] =
+static const char *translationsDoom[TRANSLATIONCOLOURS] =
 {
    // Standard Doom Colors:
    /*Indigo*/ "112:127=96:111",
@@ -1223,10 +1223,30 @@ static const char *translations[TRANSLATIONCOLOURS] =
    /*Sea   */ "112=91,113:114=94:95,115:122=152:159,123:126=9:12,127=8",
    /*Black */ "112=101,113:121=103:111,122:125=5:8,126:127=0",
    /*Purple*/ "112:113=4,114:115=170,116:117=250,118:119=251,120:121=252,122:123=253,124:125=254,126:127=46",
-   /*Vomit */ "112:119=209:216,120:121=218:220,122:124=69:75,125:127=237:239",
+   /*Orange*/ "112:119=209:216,120:121=218:220,122:124=69:75,125:127=237:239",
    /*Pink  */ "112:113=16:17,114:117=19:25,118:119=27:28,120:124=30:38,125:126=41:43,127=46",
    /*Cream */ "112=4,113:118=48:63,119=65,120:124=68:76,125:126=77:79,127=1",
    /*White */ "112=4,113:115=80:82,116:117=84:86,118:120=89:93,121:127=96:108",
+};
+
+// Heretic colours have the same cvar choices as in Doom, but classic multiplayer gets different
+// selections than the first three.
+static const char *translationsHeretic[TRANSLATIONCOLOURS] =
+{
+   /*Indigo*/ "225:232=185:189,233:240=177:184",
+   /*Brown */ "225:240=66:81",
+   /*Red   */ "225:240=145:160", // Player 3
+   /*Tomato*/ "225:240=209:224",
+   /*Dirt  */ "225:240=95:110",
+   /*Blue  */ "225:240=190:205", // Player 4
+   /*Gold  */ "225:240=114:129", // Player 2
+   /*Sea   */ "225:240=52:65",
+   /*Black */ "225:240=0:15",
+   /*Purple*/ "225:232=169:176,233:240=161:168",
+   /*Orange*/ "225:232=137:143,233:240=130:136",
+   /*Pink  */ "225:240=82:94",
+   /*Cream */ "225:240=36:51",
+   /*White */ "225:240=20:35",
 };
 
 // 
@@ -1250,7 +1270,7 @@ void R_InitTranslationTables()
    
    // build the internal player translations
    for(i = 0; i < TRANSLATIONCOLOURS; i++)
-      translationtables[i] = E_ParseTranslation(translations[i], PU_RENDERER);
+      translationtables[i] = E_ParseTranslation(GameModeInfo->type == Game_Heretic ? translationsHeretic[i] : translationsDoom[i], PU_RENDERER);
 
    // read in the lumps, if any
    for(wni.begin(); wni.current(); wni.next(), i++)

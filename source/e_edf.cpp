@@ -219,6 +219,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_ENVIROMGR,   edf_seqmgr_opts,   CFGF_NOCASE),
    CFG_SEC(EDF_SEC_REVERB,      edf_reverb_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_MOD,         edf_dmgtype_opts,  EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_MORPHTYPE,   edf_morphtype_opts, EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_FRAME,       edf_frame_opts,    EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_FRAMEBLOCK,  edf_fblock_opts,   EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_THING,       edf_thing_opts,    EDF_TSEC_FLAGS),
@@ -1621,6 +1622,7 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
 
    // process damage types
    E_ProcessDamageTypes(cfg);
+   E_PrepareMorphTypes(cfg);
 
    // process frame and thing definitions (made dynamic 11/06/11)
    E_ProcessStatesAndThings(cfg);
@@ -1642,6 +1644,9 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
 
    // process player sections
    E_ProcessPlayerData(cfg);
+
+   // process morph types (like damage types but with class and mobj info)
+   E_ProcessMorphTypes(cfg);
 
    // process cast call (made dynamic 11/21/11)
    E_ProcessCast(cfg);

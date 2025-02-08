@@ -117,9 +117,13 @@ void BoomHUD::DrawStatus(int x, int y)
 
    // haleyjd 06/14/06: restored original colors to K/I/S
    tempstr
-      << FC_RED  "K " FC_GREEN << hu_player.killcount   << '/' << totalkills << ' '
-      << FC_BLUE "I " FC_GREEN << hu_player.itemcount   << '/' << totalitems << ' '
-      << FC_GOLD "S " FC_GREEN << hu_player.secretcount << '/' << totalsecret;
+      << FC_RED  "K " FC_GREEN << hu_player.killcount << '/' << totalkills << ' '
+      << FC_BLUE "I " FC_GREEN << hu_player.itemcount << '/' << totalitems << ' ';
+   
+   if (!hud_hidesecrets)
+   {
+      tempstr << FC_GOLD "S " FC_GREEN << hu_player.secretcount << '/' << totalsecret;
+   }
 
    HU_WriteText(tempstr.constPtr(), x, y, m_screen);
 }
@@ -230,7 +234,7 @@ void BoomHUD::DrawKeys(int x, int y)
    // haleyjd 10/09/05: don't show double keys in Heretic
    for(int i = 0; i < GameModeInfo->numHUDKeys; i++)
    {
-      if(E_GetItemOwnedAmountName(&hu_player, GameModeInfo->cardNames[i]) > 0)
+      if(E_GetItemOwnedAmountName(hu_player, GameModeInfo->cardNames[i]) > 0)
       {
          // got that key
          V_DrawPatch(x, y, m_screen, keys[i]);
@@ -268,7 +272,7 @@ void BoomHUD::Setup()
       data.enabled = true; // turn em all on
 
    // turn off status if we aren't using it
-   if(hud_hidestatus)
+   if(hud_hidestats)
       drawerdata[ol_status].enabled = false;
 
    // turn off frag counter or key display,
@@ -340,7 +344,7 @@ void BoomHUD::Setup()
       else
          SetupOverlay(ol_key,  0, m_screen->unscaledh - 8);
 
-      if(!hud_hidestatus)
+      if(!hud_hidestats)
          SetupOverlay(ol_status, 0, m_screen->unscaledh - 16);
       boxy -= 16;
       SetupOverlay(ol_invcurr, boxx, boxy);

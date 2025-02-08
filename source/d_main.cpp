@@ -358,11 +358,14 @@ const demostate_t demostates_hreg[] =
    { nullptr }
 };
 
+// NOTE: unused
+/*
 const demostate_t demostates_unknown[] =
 {
    { D_SetPageName, nullptr }, // indetermined - haleyjd 04/01/08
    { nullptr }
 };
+*/
 
 //
 // D_DoAdvanceDemo
@@ -549,8 +552,10 @@ void D_DrawWings()
 
    if(vbscreen.getVirtualAspectRatio() <= 4 * FRACUNIT / 3)
       return;
+   if(vbscreenyscaled.unscaledw < SCREENWIDTH)
+      return;  // safety
 
-   wingwidth = (vbscreen.width - (vbscreen.height * 4 / 3)) / 2;
+   wingwidth = vbscreenyscaled.x1lookup[(vbscreenyscaled.unscaledw - SCREENWIDTH) / 2];
 
    // safety check
    if(wingwidth <= 0)

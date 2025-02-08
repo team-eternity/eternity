@@ -30,6 +30,8 @@
 #ifndef E_THINGS_H__
 #define E_THINGS_H__
 
+#include "m_collection.h"
+
 struct emod_t;
 struct mobjinfo_t;
 struct state_t;
@@ -113,10 +115,13 @@ state_t *E_GetStateForMobj(const Mobj *mo, const char *label);
 bool E_ThingPairValid(int t1, int t2, unsigned flags);
 void E_AddToMBF21ThingGroup(int idnum, unsigned flag, int type, bool inclusive);
 void E_RemoveFromExistingThingPairs(int type, unsigned flag);
+const PODCollection<int> *E_GetThingsFromGroup(const char *name);
 
 // ioanch 20160220: metastate key names used throughout the code. They also
 // work as DECORATE state label names.
 #define METASTATE_HEAL "Heal"
+#define METASTATE_CRUNCH "Crunch"
+#define METASTATE_CRUNCH_ZDOOM_COMPATIBILITY "Crush"
 
 // blood types
 enum bloodtype_e : int
@@ -138,6 +143,8 @@ bloodtype_e E_GetBloodBehaviorForAction(mobjinfo_t *info, bloodaction_e action);
 
 void E_ForEachMobjInfoWithAnyFlags2(unsigned flags,
    bool (*func)(const mobjinfo_t &info, void *context), void *context);
+
+int E_GetCrunchFrame(const Mobj *mo);
 
 #endif
 

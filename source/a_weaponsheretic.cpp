@@ -37,6 +37,7 @@
 #include "m_random.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
+#include "p_portalcross.h"
 #include "p_saveg.h"
 #include "p_spec.h"
 #include "r_main.h"
@@ -86,7 +87,7 @@ void A_FireGoldWandPL1(actionargs_t *actionargs)
    if(!player)
       return;
 
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
    P_BulletSlope(mo);
    if(player->refire)
       angle += P_SubRandom(pr_goldwand) * PO2(18);
@@ -108,7 +109,7 @@ void A_FireGoldWandPL2(actionargs_t *actionargs)
 
    z  = mo->z + 32 * FRACUNIT;
 
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
    P_BulletSlope(mo);
 
    const int   tnum = E_SafeThingType(MT_GOLDWANDFX2);
@@ -136,10 +137,10 @@ void A_FireMacePL1B(actionargs_t *actionargs)
    Mobj     *ball;
    angle_t   angle;
 
-   if(!player || !P_CheckAmmo(player))
+   if(!player || !P_CheckAmmo(*player))
       return;
 
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
 
    const int   tnum = E_SafeThingType(MT_MACEFX2);
 
@@ -176,12 +177,12 @@ void A_FireMacePL1(actionargs_t *actionargs)
       A_FireMacePL1B(actionargs);
       return;
    }
-   if(!P_CheckAmmo(player))
+   if(!P_CheckAmmo(*player))
       return;
 
    const int tnum = E_SafeThingType(MT_MACEFX1);
 
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
    psp->playpos.x = psp->renderpos.x = ((P_Random(pr_firemace) & 3) - 2) * FRACUNIT;
    psp->playpos.y = psp->renderpos.y = WEAPONTOP + (P_Random(pr_firemace) & 3) * FRACUNIT;
    ball = P_SpawnPlayerMissileAngleHeretic(mo, tnum, mo->angle +
@@ -291,7 +292,7 @@ void A_FireMacePL2(actionargs_t *actionargs)
    //player->ammo[am_mace] -= deathmatch ? USE_MACE_AMMO_1 : USE_MACE_AMMO_2;
    // FIXME: This needs to do the above behaviour:
    // to wit, fire the wimpy version's amount of ammo if in deathmatch
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
 
    mo = P_SpawnPlayerMissile(player->mo, tnum, SPM_ADDSLOPETOZ);
    if(mo)
@@ -396,7 +397,7 @@ void A_FireCrossbowPL1(actionargs_t *actionargs)
    if(!player)
       return;
 
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
 
    edefstructvar(playertargetinfo_t, targetinfo);
    P_SpawnPlayerMissile(pmo, E_SafeThingType(MT_CRBOWFX1), SPM_ADDSLOPETOZ, &targetinfo);
@@ -416,7 +417,7 @@ void A_FireCrossbowPL2(actionargs_t *actionargs)
    if(!player)
       return;
 
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
 
    edefstructvar(playertargetinfo_t, targetinfo);
    P_SpawnPlayerMissile(pmo, tnum2, SPM_ADDSLOPETOZ, &targetinfo);
@@ -454,7 +455,7 @@ void A_FireBlasterPL1(actionargs_t *actionargs)
       return;
 
    P_WeaponSound(mo, sfx_gldhit);
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
    P_BulletSlope(mo);
    damage = (1 + (P_Random(pr_blaster) & 7)) * 4;
    angle  = mo->angle;
@@ -471,8 +472,8 @@ void A_FireBlasterPL2(actionargs_t* actionargs)
    player_t* player = mo->player;
    if (!player)
       return;
-   P_SubtractAmmo(player, deathmatch ? 1 : -1);
-   
+   P_SubtractAmmo(*player, deathmatch ? 1 : -1);
+
    int tnum = E_SafeThingType(MT_BLASTERFX1);
    P_SpawnPlayerMissile(player->mo, tnum, SPM_ADDSLOPETOZ);
 
@@ -502,10 +503,10 @@ void A_FireSkullRodPL1(actionargs_t *actionargs)
 {
    player_t *player = actionargs->actor->player;
 
-   if(!player || !P_CheckAmmo(player))
+   if(!player || !P_CheckAmmo(*player))
       return;
 
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
    const int tnum = E_SafeThingType(MT_HORNRODFX1);
 
    Mobj     *mo   = P_SpawnPlayerMissile(player->mo, tnum, SPM_ADDSLOPETOZ);
@@ -518,10 +519,10 @@ void A_FireSkullRodPL2(actionargs_t* actionargs)
 {
    player_t* player = actionargs->actor->player;
 
-   if (!player || !P_CheckAmmo(player))
+   if (!player || !P_CheckAmmo(*player))
       return;
 
-   P_SubtractAmmo(player, deathmatch ? 1 : -1);
+   P_SubtractAmmo(*player, deathmatch ? 1 : -1);
    const int tnum = E_SafeThingType(MT_HORNRODFX2);
 
    Mobj* mo = P_SpawnPlayerMissile(player->mo, tnum, SPM_ADDSLOPETOZ);
@@ -611,22 +612,59 @@ void A_SkullRodStorm(actionargs_t* actionargs)
       actor->remove();
       if (!playerrains || !P_checkPlayerForRain(playerNum))
          return;
-      if (playerrains->rains[0] == actor)
+      // NOTE: keep references like in Heretic. It's safe because we have reference counting.
+      if (playerrains[playerNum].rains[0] == actor)
          P_ClearTarget(playerrains->rains[0]);
-      if (playerrains->rains[1] == actor)
+      if (playerrains[playerNum].rains[1] == actor)
          P_ClearTarget(playerrains->rains[1]);
       return;
    }
-   if (P_Random(pr_rodstormfudge) < 25)
+   if (P_Random(pr_rodstormfudge) < 25)   // Fudge rain frequency
       return;
-   v2fixed_t pos = {
-      actor->x + ((P_Random(pr_rodstormspawn) & 127) - 64) * FRACUNIT,
-      actor->y + ((P_Random(pr_rodstormspawn) & 127) - 64) * FRACUNIT
+
+   fixed_t dx = ((P_Random(pr_rodstormspawn) & 127) - 64) * FRACUNIT;
+   fixed_t dy = ((P_Random(pr_rodstormspawn) & 127) - 64) * FRACUNIT;
+
+   v2fixed_t pos = P_LinePortalCrossing(actor->x, actor->y, dx, dy);
+
+   const int raintypes[4] =
+   {
+      E_SafeThingType(MT_RAINPLR1),
+      E_SafeThingType(MT_RAINPLR2),
+      E_SafeThingType(MT_RAINPLR3),
+      E_SafeThingType(MT_RAINPLR4),
    };
-   // TODO: spawn the mobj player-dependent
+   
+   Mobj *mo = P_SpawnMobj(pos.x, pos.y, ONCEILINGZ,
+                          raintypes[actor->counters[1] % earrlen(raintypes)], false);
+   P_SetTarget(&mo->target, actor->target);
+   mo->momx = 1;  // Force collision detection
+   mo->momz = -mo->info->speed;
+   mo->counters[1] = actor->counters[1];  // Transfer player number
+   P_CheckMissileSpawn(mo);
+   
    if (!(actor->counters[0] & 31))
       S_StartSound(actor, sfx_ramrain);
    actor->counters[0]++;
+}
+
+void A_RainImpact(actionargs_t *actionargs)
+{
+   Mobj *actor = actionargs->actor;
+   if(actor->z > actor->zref.passfloor)
+   {
+      const state_t *state = E_GetStateForMobjInfo(actor->info, "AirDeath");
+      if(state)
+         P_SetMobjState(actor, state->index);
+   }
+   else if(P_Random(pr_rodrainimpact) < 40)
+   {
+      // Hack to enable random splashes
+      unsigned backupflag = actor->flags2 & MF2_NOSPLASH;
+      actor->flags2 &= ~MF2_NOSPLASH;
+      E_HitFloor(actor);
+      actor->flags2 |= backupflag;
+   }
 }
 
 void A_FirePhoenixPL1(actionargs_t *actionargs)
@@ -639,7 +677,7 @@ void A_FirePhoenixPL1(actionargs_t *actionargs)
    if(!player)
       return;
 
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
 
    P_SpawnPlayerMissile(mo, tnum, SPM_ADDSLOPETOZ);
    // Commented out fire-trail functionality
@@ -682,7 +720,7 @@ void A_FirePhoenixPL2(actionargs_t *actionargs)
       const state_t *state = E_GetWpnJumpInfo(player->readyweapon, "Powerdown");
       if(state != nullptr)
       {
-         P_SetPsprite(player, ps_weapon, state->index);
+         P_SetPsprite(*player, ps_weapon, state->index);
          player->refire = 0;
       }
       else
@@ -717,7 +755,7 @@ void A_SubtractAmmo(actionargs_t *actionargs)
    player_t *player = actionargs->actor->player;
    if(!player)
       return;
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
 }
 
 void A_GauntletAttack(actionargs_t *actionargs)
@@ -859,6 +897,38 @@ void A_HticSpawnFireBomb(actionargs_t *actionargs)
                       mo->y + (24 * finesine[angle]),
                       z, E_SafeThingType(MT_HFIREBOMB));
    P_SetTarget(&bomb->target, mo->target);
+}
+
+//
+// Morph ovum attack
+//
+void A_HticMorphOvum(actionargs_t *actionargs)
+{
+   Mobj *mo = actionargs->actor;
+   if(!mo)
+      return;
+   edefstructvar(playertargetinfo_t, targetinfo);
+   mobjtype_t eggtype = E_SafeThingName("EggShot");
+   P_SpawnPlayerMissile(mo, eggtype, SPM_ADDSLOPETOZ, &targetinfo);
+   P_SpawnPlayerMissileAngleHeretic(mo, eggtype, mo->angle - ANG45 / 6,
+                                    SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
+   P_SpawnPlayerMissileAngleHeretic(mo, eggtype, mo->angle + ANG45 / 6,
+                                    SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
+   P_SpawnPlayerMissileAngleHeretic(mo, eggtype, mo->angle - ANG45 / 3,
+                                    SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
+   P_SpawnPlayerMissileAngleHeretic(mo, eggtype, mo->angle + ANG45 / 3,
+                                    SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
+}
+
+void A_ViewThrust(actionargs_t *actionargs)
+{
+   player_t *player = actionargs->actor ? actionargs->actor->player : nullptr;
+   if(!player)
+   {
+      doom_warningf("ViewThrust must be used on player");
+      return;
+   }
+   player->headThrust = 12;   // we'll customize later, only on demand.
 }
 
 void P_ArchiveHereticWeapons(SaveArchive& arc)

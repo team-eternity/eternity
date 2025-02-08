@@ -35,7 +35,7 @@ function(check_lib_needs_downloading LIBRARY INCLUDE_DIR LIBRARY_DIR)
       set(DOWNLOAD_LIB TRUE PARENT_SCOPE)
       return()
    endif()
-  
+
    if(WIN32)
       if(MSVC)
          if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/${LIBRARY_DIR}")
@@ -62,14 +62,14 @@ find_package(OpenGL)
 
 ### SDL2 ###
 
-set(SDL2_VERSION "SDL2-2.30.0" CACHE STRING "" FORCE)
+set(SDL2_VERSION "SDL2-2.30.8" CACHE STRING "" FORCE)
 check_lib_needs_downloading(SDL2_LIBRARY SDL2_INCLUDE_DIR ${SDL2_VERSION})
 if(WIN32 AND DOWNLOAD_LIB)
    if(MSVC)
       file(DOWNLOAD
-         "https://www.libsdl.org/release/SDL2-devel-2.30.0-VC.zip"
+         "https://github.com/libsdl-org/SDL/releases/download/release-2.30.8/SDL2-devel-2.30.8-VC.zip"
          "${CMAKE_CURRENT_BINARY_DIR}/SDL2-VC.zip"
-         EXPECTED_HASH SHA256=6413358B67F19B5398E902C576518D5350394A863EB53EB27BB9A81E75A36958)
+         EXPECTED_HASH SHA256=2A95B96FD2CDECC84F79F9285BCC3B3654FCDB23C268ECEAF85912BD4D73308F)
       execute_process(COMMAND "${CMAKE_COMMAND}" -E tar xf
          "${CMAKE_CURRENT_BINARY_DIR}/SDL2-VC.zip"
          WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
@@ -85,9 +85,9 @@ if(WIN32 AND DOWNLOAD_LIB)
       endif()
    else()
       file(DOWNLOAD
-         "https://www.libsdl.org/release/SDL2-devel-2.30.0-mingw.tar.gz"
+         "https://github.com/libsdl-org/SDL/releases/download/release-2.30.8/SDL2-devel-2.30.8-mingw.tar.gz"
          "${CMAKE_CURRENT_BINARY_DIR}/SDL2-mingw.tar.gz"
-         EXPECTED_HASH SHA256=D44BD8CD869219F43634A898D7735D0C92D4B2CCA129F709DC8B98402B36D5F3)
+         EXPECTED_HASH SHA256=ADBF5AE7B5144F02D4CB091A9A7F4752F8E835B4BEBD9F3FCAFD9D7A4194F3B9)
       execute_process(COMMAND "${CMAKE_COMMAND}" -E tar xf
          "${CMAKE_CURRENT_BINARY_DIR}/SDL2-mingw.tar.gz"
          WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
@@ -265,4 +265,3 @@ if(SDL2_NET_FOUND)
 endif()
 
 ## EOF
-

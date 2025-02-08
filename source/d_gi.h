@@ -450,6 +450,7 @@ struct gamemodeinfo_t
    const char *bloodDefaultRIP;    // thingtype of blood shown when thing is impcated by inflictor with "RIP" flag
    const char *bloodDefaultCrush;  // thingtype of blood shown when thing is crushed
    bloodtype_e *defBloodBehaviors; // default blood behavior for action array
+   const char *defCrunchFrame;     // default frame name for when things are smashed by crushers
    double skillAmmoMultiplier;     // how much more ammo to give on baby and nightmare
    meleecalc_e monsterMeleeRange;  // how monster melee range is calculated
    fixed_t itemHeight;             // item pick-up height (independent of thing height)
@@ -525,6 +526,8 @@ extern char *gi_path_fdoom;
 extern char *gi_path_fdoomu;
 extern char *gi_path_freedm;
 extern char *gi_path_rekkr;
+
+extern char *gi_path_id24res;
 
 
 void D_SetGameModeInfo(GameMode_t, GameMission_t);
