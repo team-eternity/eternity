@@ -74,7 +74,8 @@ bool P_CheckThingAimAvailability(const Mobj *th, const Mobj *source, bool aimfla
    // killough 7/19/98, 8/2/98:
    // friends don't aim at friends (except players), at least not first
    // ioanch: also avoid aiming for LOWAIMPRIO things
-   if(aimflagsmask && ((th->flags & source->flags & MF_FRIEND && !th->player) ||
+   unsigned sourceFlags = source ? source->flags : 0;
+   if(aimflagsmask && ((th->flags & sourceFlags & MF_FRIEND && !th->player) ||
                        th->flags4 & MF4_LOWAIMPRIO))
    {
       return false;
@@ -199,15 +200,17 @@ fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, bool mask)
    
    angle >>= ANGLETOFINESHIFT;
    trace.thing = t1;
+
+   v3fixed_t coords = t1 ? v3fixed_t{ t1->x, t1->y, t1->z + (t1->height >> 1) } : v3fixed_t{};
    
-   x2 = t1->x + (distance>>FRACBITS)*(trace.cos = finecosine[angle]);
-   y2 = t1->y + (distance>>FRACBITS)*(trace.sin = finesine[angle]);
-   trace.z = t1->z + (t1->height>>1) + 8*FRACUNIT;
+   x2 = coords.x + (distance>>FRACBITS)*(trace.cos = finecosine[angle]);
+   y2 = coords.y + (distance>>FRACBITS)*(trace.sin = finesine[angle]);
+   trace.z = coords.z + 8*FRACUNIT;
 
    // haleyjd 10/08/06: this should be gotten from t1->player, not 
    // players[displayplayer]. Also, if it's zero, use the old
    // code in all cases to avoid roundoff error.
-   if(t1->player)
+   if(t1 && t1->player)
       pitch = t1->player->pitch;
    
    // can't shoot outside view angles
@@ -237,7 +240,7 @@ fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, bool mask)
    // killough 8/2/98: prevent friends from aiming at friends
    trace.aimflagsmask = mask;
    
-   P_PathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, PTR_AimTraverse);
+   P_PathTraverse(coords.x, coords.y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, PTR_AimTraverse);
    
    return clip.linetarget ? trace.aimslope : lookslope;
 }
