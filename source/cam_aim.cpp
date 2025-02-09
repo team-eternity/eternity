@@ -96,7 +96,7 @@ AimContext::AimContext(const Mobj *t1, angle_t inangle, fixed_t distance,
    thing(t1), attackrange(distance), aimflagsmask(mask), aimslope(0),
    linetarget(nullptr), targetdist(D_MAXINT), angle(inangle)
 {
-   fixed_t pitch = t1->player ? t1->player->pitch : 0;
+   fixed_t pitch = t1 && t1->player ? t1->player->pitch : 0;
    lookslope = pitch ? finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT] : 0;
 
    if(instate)
@@ -104,10 +104,19 @@ AimContext::AimContext(const Mobj *t1, angle_t inangle, fixed_t distance,
    else
    {
       state.origindist = 0;
-      state.c.x = t1->x;
-      state.c.y = t1->y;
-      state.c.z = t1->z + (t1->height >> 1) + 8 * FRACUNIT;
-      state.groupid = t1->groupid;
+      if(t1)
+      {
+         state.c.x = t1->x;
+         state.c.y = t1->y;
+         state.c.z = t1->z + (t1->height >> 1) + 8 * FRACUNIT;
+         state.groupid = t1->groupid;
+      }
+      else
+      {
+         state.c.x = state.c.y = 0;
+         state.c.z = 8 * FRACUNIT;
+         state.groupid = 0;
+      }
       state.prev = nullptr;
       state.reclevel = 0;
 
