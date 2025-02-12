@@ -25,6 +25,8 @@ Bug fixes
 * Fixed strange failure to start, happening on some Windows installations because of changes in the
   runtime.
   (issue here: https://stackoverflow.com/questions/78598141/first-stdmutexlock-crashes-in-application-built-with-latest-visual-studio)
+* Fixed sudden termination due to "texture not cached" when playing back multiple level demos, or
+  when the r_precache cvar was off.
 * Dehacked patch Frame omitted Args* fields didn't resolve to defaults, but 0. This was wrong com-
   pared to how ports such as DSDA-DOOM should handle it.
 * Fixed A_ConsumeAmmo bug when specifying 0 (ammo per shot) ammo.

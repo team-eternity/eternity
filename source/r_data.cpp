@@ -588,11 +588,12 @@ void R_PrecacheLevel(void)
    byte *hitlist;
    int numalloc;
 
-   if(demoplayback)
-      return;
-   
-   if(!r_precache)
-      return;
+   // IMPORTANT: we must precache textures now, no exceptions
+//   if(demoplayback)
+//      return;
+//   
+//   if(!r_precache)
+//      return;
 
    // SoM: Hey, you never know, it could happen....
    numalloc = (texturecount > numsprites ? texturecount : numsprites);
