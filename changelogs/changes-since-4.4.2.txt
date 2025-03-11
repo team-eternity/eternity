@@ -15,6 +15,7 @@ Improvements
   If unspecified, it will default to the game mode behavior: change to S_GIBS in Doom, or do not
   change in Heretic. Thanks to sink666 for the implementation!
 
+* Minor improvements with portal error messages.
 
 Bug fixes
 ---------
