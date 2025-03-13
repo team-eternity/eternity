@@ -30,6 +30,7 @@
 
 #include "a_args.h"
 #include "a_common.h"
+#include "a_doom.h" //sinku 14032024; for A_Fire access
 #include "acs_intr.h"
 #include "c_io.h"
 #include "d_gi.h"
@@ -57,6 +58,7 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
+#include "r_main.h" //sinku 14032024; 
 #include "r_state.h"
 #include "sounds.h"
 #include "s_sound.h"
@@ -1810,6 +1812,171 @@ void A_SelfDestruct(actionargs_t *actionargs)
       P_ExplodeMissile(actor, nullptr);
    else
       A_Die(actionargs);
+}
+
+//
+// A_BFGSprayEx
+//
+// Similar to ZDoom A_BFGSpray extensions.
+//
+// args[0] -- thing to spawn on actors (no default)
+// args[1] -- number of rays to spawn (default 40)
+// args[2] -- fov to spawn rays (default 90 degrees)
+// args[3] -- number of times to roll for damage (default 15)
+// args[4] -- damage type (default MOD_BFG_SPLASH)
+//
+void A_BFGSprayEx(actionargs_t *actionargs)
+{
+   Mobj *mo = actionargs->actor;
+   arglist_t *args = actionargs->args;
+   int thingnum, raynum, damroll, mod;
+   angle_t fov;
+   
+   thingnum = E_ArgAsThingNumG0(args, 0);
+   raynum = E_ArgAsInt(args, 1, 40);
+   fov = E_ArgAsAngle(args, 2, ANG90);
+   damroll = E_ArgAsInt(args, 3, 15);
+   mod = E_ArgAsDamageType(args, 4, MOD_BFG_SPLASH)->num;
+   
+   //validate thingtype
+   if(thingnum < 0)
+      return;
+   
+   for(int i = 0; i < raynum; i++)  // offset angles from its attack angle
+   {
+      int j, damage;
+      angle_t an = mo->angle - fov/2 + fov/raynum*i;
+      
+      // mo->target is the originator (player) of the missile
+      
+      // killough 8/2/98: make autoaiming prefer enemies
+      if(demo_version < 203 ||
+         (P_AimLineAttack(mo->target, an, 16*64*FRACUNIT, true),
+         !clip.linetarget))
+         P_AimLineAttack(mo->target, an, 16*64*FRACUNIT, false);
+      
+      if(!clip.linetarget)
+         continue;
+      
+      P_SpawnMobj(clip.linetarget->x, clip.linetarget->y,
+                  clip.linetarget->z + (clip.linetarget->height>>2),
+                  thingnum);
+      
+      for(damage = j = 0; j < damroll; j++)
+         damage += (P_Random(pr_bfg)&7) + 1;
+      
+      P_DamageMobj(clip.linetarget, mo->target, mo->target, damage, mod);
+   }
+}
+
+//
+// A_VileTargetEx
+//
+// Generalized version of VileTarget, for spawning custom effects
+//
+// args[0] -- thing to spawn (no default)
+//
+
+void A_VileTargetEx(actionargs_t *actionargs)
+{
+   
+   Mobj *actor = actionargs->actor;
+   Mobj *fog;
+   
+   arglist_t *args = actionargs->args;
+   int thingnum = E_ArgAsThingNumG0(args, 0);
+   
+   if(!actor->target)
+      return;
+   
+   //validate thingtype
+   if(thingnum < 0)
+      return;
+
+   A_FaceTarget(actionargs);
+   
+   fog = P_SpawnMobj(actor->target->x,
+                     demo_version < 203 ? actor->target->x : actor->target->y,
+                     actor->target->z,thingnum);
+   
+   P_SetTarget<Mobj>(&actor->tracer, fog);
+   P_SetTarget<Mobj>(&fog->target, actor);
+   P_SetTarget<Mobj>(&fog->tracer, actor->target);
+   
+   actionargs_t fogaction;
+
+   fogaction.actiontype = actionargs_t::MOBJFRAME;
+   fogaction.actor      = fog;
+   fogaction.args       = ESAFEARGS(fog);
+   fogaction.pspr       = nullptr;
+   
+   A_Fire(&fogaction);
+}
+
+//
+// A_VileAttackEx
+//
+// Generalized version of VileAttack
+//
+// args[0] -- sound
+// args[1] -- flat damage (default 0)
+// args[2] -- upward velocity (default 0)
+// args[3] -- do explosion? (default 0; 0 == FALSE)
+// args[4] -- explosion damage (default 70)
+// args[5] -- explosion radius (default 70)
+
+void A_VileAttackEx(actionargs_t *actionargs)
+{
+   Mobj *actor = actionargs->actor;
+   Mobj *fire;
+   soundparams_t params;
+   int   an;
+   bool doexp = false;
+   
+   arglist_t *args = actionargs->args;
+   params.sfx = E_ArgAsSound(args, 0);
+   int fdmg = E_ArgAsInt(args, 1, 0);
+   int upvel = E_ArgAsInt(args, 2, 0);
+   int do_explosion = E_ArgAsInt(args, 3, 0);
+   int expdamage = E_ArgAsInt(args, 4, 70);
+   int expradius = E_ArgAsInt(args, 5, 70);
+   
+   if(do_explosion)
+      doexp = true;
+   
+   if(!actor->target)
+      return;
+
+   A_FaceTarget(actionargs);
+   
+   if(!P_CheckSight(actor, actor->target))
+      return;
+
+   S_StartSfxInfo(params.setNormalDefaults(actor));
+   P_DamageMobj(actor->target, actor, actor, fdmg, actor->info->mod);
+   actor->target->momz = upvel*FRACUNIT/actor->target->info->mass;
+
+   an = actor->angle >> ANGLETOFINESHIFT;
+   
+   fire = actor->tracer;
+   
+   if(!fire)
+      return;
+
+   // move the fire between the vile and the player
+   // ioanch 20160106: correct fire position based on portals
+   v2fixed_t pos = P_LinePortalCrossing(*actor->target,
+                                        -FixedMul(24 * FRACUNIT, finecosine[an]),
+                                        -FixedMul(24 * FRACUNIT, finesine[an]));
+   fire->x = pos.x;
+   fire->y = pos.y;
+   
+   // ioanch: set the correct group ID now
+   if(full_demo_version >= make_full_version(340, 48))
+      fire->groupid = R_PointInSubsector(pos)->sector->groupid;
+   
+   if(doexp)
+      P_RadiusAttack(fire, actor, expdamage, expradius, actor->info->mod, 0);
 }
 
 // EOF
