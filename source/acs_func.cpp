@@ -2368,6 +2368,11 @@ static Mobj *ACS_spawn(mobjtype_t type, fixed_t x, fixed_t y, fixed_t z,
 
       if(tid) P_AddThingTID(mo, tid);
       mo->angle = angle;
+
+      // Add thing to kill count
+      if (!((mo->flags ^ MF_COUNTKILL) & (MF_FRIEND | MF_COUNTKILL)))
+         totalkills++;
+
       return mo;
    }
    else

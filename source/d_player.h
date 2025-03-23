@@ -205,6 +205,7 @@ struct player_t
 
    // For intermission stats.
    int            killcount;
+   int            displaykillcount; // the level stats on the automap/alternate hud
    int            itemcount;
    int            secretcount;
    bool           didsecret;    // True if secret level has been done.
