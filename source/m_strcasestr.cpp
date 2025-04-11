@@ -2,7 +2,7 @@
 // Copyright (C) 2005-2007 Free Software Foundation, Inc.
 // Written by Bruno Haible <bruno@clisp.org>, 2005.
 // 
-// Modifications for Eternity Copyright (C) 2013 James Haley et al.
+// Modifications for Eternity Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

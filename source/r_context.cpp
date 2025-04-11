@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2023 James Haley, Max Waine, et al.
+// Copyright (C) 2025 James Haley, Max Waine, et al.
 // Copyright (C) 2020 Ethan Watson
 //
 // This program is free software: you can redistribute it and/or modify

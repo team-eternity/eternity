@@ -1,4 +1,7 @@
 //
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
+//
 // Copyright (C) 2021 Roman Fomin
 //
 // This program is free software; you can redistribute it and/or

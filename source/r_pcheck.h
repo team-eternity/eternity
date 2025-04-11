@@ -1,5 +1,6 @@
 //
-// Copyright (C) 2008 James Haley, Stephen McGranahan, et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley, Stephen McGranahan, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

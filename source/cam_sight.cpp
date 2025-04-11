@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2018 James Haley et al.
+// Copyright (C) 2025 James Haley et al.
 //
 // ZDoom
 // Copyright (C) 1998-2012 Marisa Heit

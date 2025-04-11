@@ -1,5 +1,6 @@
 //
-// Copyright (C) 2009 James Haley
+// The Eternity Engine
+// Copyright (C) 2025 James Haley
 //
 // Derived from Chocolate Doom
 // Copyright 2009 Simon Howard

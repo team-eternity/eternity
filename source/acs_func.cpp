@@ -1,5 +1,6 @@
 //
-// Copyright (C) 2016 James Haley, David Hill, et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley, David Hill, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

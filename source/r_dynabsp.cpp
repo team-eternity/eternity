@@ -1,5 +1,6 @@
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // Portions derived from BSP 5.2, "Node builder for DOOM levels"
 //   (c) 1996 Raphael Quinet

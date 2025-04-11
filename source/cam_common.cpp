@@ -1,7 +1,7 @@
 //
 //
 // The Eternity Engine
-// Copyright (C) 2018 James Haley, Ioan Chera, et al.
+// Copyright (C) 2025 James Haley, Ioan Chera, et al.
 //
 // ZDoom
 // Copyright (C) 1998-2012 Marisa Heit
