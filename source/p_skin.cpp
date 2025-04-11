@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------------
 //
-// Copyright(C) 2006 Simon Howard, James Haley, et al.
+// Copyright (C) 2006 Simon Howard, James Haley, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
-//                Copyright(C) 1999 Simon Howard 'Fraggle'
+//                Copyright (C) 1999 Simon Howard 'Fraggle'
 //
 // Skins (Doom Legacy)
 //

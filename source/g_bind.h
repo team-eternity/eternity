@@ -1,6 +1,6 @@
 //----------------------------------------------------------------------------
 //
-// Copyright(C) 2005 Simon Howard, James Haley, et al.
+// Copyright (C) 2005 Simon Howard, James Haley, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

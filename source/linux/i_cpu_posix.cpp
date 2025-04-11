@@ -1,5 +1,5 @@
 //
-// Copyright(C) 2009 James Haley
+// Copyright (C) 2009 James Haley
 //
 // Derived from Chocolate Doom
 // Copyright 2009 Simon Howard

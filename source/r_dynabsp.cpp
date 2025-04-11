@@ -1,5 +1,5 @@
 //
-// Copyright(C) 2013 James Haley et al.
+// Copyright (C) 2013 James Haley et al.
 //
 // Portions derived from BSP 5.2, "Node builder for DOOM levels"
 //   (c) 1996 Raphael Quinet
