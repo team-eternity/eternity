@@ -1,5 +1,3 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
 // Copyright(C) 2016 James Haley, David Hill, et al.
 //

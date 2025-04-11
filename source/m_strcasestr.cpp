@@ -1,5 +1,3 @@
-// Emacs style mode select -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
 // Copyright (C) 2005-2007 Free Software Foundation, Inc.
 // Written by Bruno Haible <bruno@clisp.org>, 2005.
