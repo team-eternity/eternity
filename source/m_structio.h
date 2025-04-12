@@ -119,7 +119,7 @@ template<typename S>
 class MStructReader
 {
 public:
-   typedef void (*fieldadd_t)(MStructReader<S> &);
+   using fieldadd_t = void (*)(MStructReader<S> &);
 
 protected:
    Collection<MFieldDescriptor<S>> descriptors;

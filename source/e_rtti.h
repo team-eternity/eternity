@@ -69,7 +69,7 @@ public:
       const char *const name;   // Name of this class
 
    public:
-      typedef RTTIObject Class; // Type of the class being proxied
+      using Class = RTTIObject; // Type of the class being proxied
       friend class RTTIObject;  // The proxied class is always a friend.
 
       // Accessors
@@ -243,14 +243,14 @@ public:
 //
 #define DECLARE_RTTI_TYPE_CTOR(name, inherited, ctor) \
 public:                                               \
-   typedef inherited Super;                           \
+   using Super = inherited;                           \
    class Type : public Super::Type                    \
    {                                                  \
    protected:                                         \
       Type(char const *pName, Super::Type *pParent)   \
        : Super::Type( pName, pParent ) {}             \
    public:                                            \
-      typedef name Class;                             \
+      using Class = name;                             \
       friend class name;                              \
       ctor                                            \
    };                                                 \
@@ -307,7 +307,7 @@ name::Type name::StaticType(#name, &Super::StaticType);
 //
 template<typename T> inline T runtime_cast(RTTIObject *robj)
 {
-   typedef typename std::remove_pointer<T>::type base_type;
+   using base_type = typename std::remove_pointer<T>::type;
 
    return (robj && robj->isDescendantOf(&base_type::StaticType)) ?
       static_cast<T>(robj) : nullptr;

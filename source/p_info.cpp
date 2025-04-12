@@ -524,7 +524,7 @@ static void TmplStateInTitle(tmplpstate_t *state)
    }
 }
 
-typedef void (*tmplstatefunc_t)(tmplpstate_t *state);
+using tmplstatefunc_t = void (*)(tmplpstate_t *state);
 
 // state functions
 static tmplstatefunc_t statefuncs[] =

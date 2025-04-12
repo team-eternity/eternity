@@ -48,7 +48,7 @@ constexpr int EMAXARGS = 16;
 // Mobj's state is nullptr (nullptr is returned in either case).
 #define ESAFEARGS(mo) ((mo && mo->state) ? mo->state->args : nullptr)
 
-typedef enum
+enum evaltype_e
 {
    EVALTYPE_NONE,      // not cached
    EVALTYPE_INT,       // evaluated to an integer
@@ -64,7 +64,7 @@ typedef enum
    EVALTYPE_KEYWORD,   // evaluated to a keyword enumeration value
    EVALTYPE_MOD,       // evaluated to a damagetype/means of damage
    EVALTYPE_NUMTYPES
-} evaltype_e;
+};
 
 struct evalcache_t
 {

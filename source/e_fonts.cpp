@@ -212,10 +212,8 @@ static const char *fontfmts[NUM_FONT_FMTS] =
 };
 */
 
-typedef EHashTable<vfont_t, EIntHashKey, 
-                   &vfont_t::num, &vfont_t::numlinks> EFontNumHash;
-typedef EHashTable<vfont_t, ENCStringHashKey, 
-                   &vfont_t::name, &vfont_t::namelinks> EFontNameHash;
+using EFontNumHash = EHashTable<vfont_t, EIntHashKey, &vfont_t::num, &vfont_t::numlinks>;
+using EFontNameHash = EHashTable<vfont_t, ENCStringHashKey, &vfont_t::name, &vfont_t::namelinks>;
 
 static EFontNumHash  e_font_numhash;
 static EFontNameHash e_font_namehash;

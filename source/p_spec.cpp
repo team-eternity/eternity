@@ -135,7 +135,7 @@ extern int allow_pushers;
 extern int variable_friction;     // phares 3/20/98
 
 // haleyjd 01/24/04: portals
-typedef enum
+enum portal_type
 {
    portal_plane,
    portal_horizon,
@@ -143,7 +143,7 @@ typedef enum
    portal_anchored,
    portal_twoway,
    portal_linked
-} portal_type;
+};
 
 static void P_spawnDeferredParamPortal(line_t *line, int staticFn);
 static void P_SpawnPortal(line_t *, int);

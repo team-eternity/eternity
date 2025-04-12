@@ -253,11 +253,11 @@ struct polymovedata_t
 };
 
 // polyobject door types
-typedef enum
+enum polydoor_e
 {
    POLY_DOOR_SLIDE,
    POLY_DOOR_SWING,
-} polydoor_e;
+};
 
 struct polydoordata_t
 {

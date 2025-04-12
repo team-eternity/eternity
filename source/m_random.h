@@ -57,7 +57,8 @@ void M_RandomLog(E_FORMAT_STRING(const char *format), ...) E_PRINTF(1, 2);
 // indicated by the #'s, because they're critical for preserving demo
 // sync. Do not remove entries simply because they become unused later.
 
-typedef enum {
+enum pr_class_t
+{
    pr_skullfly,                // #0
    pr_damage,                  // #1
    pr_crush,                   // #2
@@ -275,7 +276,7 @@ typedef enum {
    pr_chickenplayerthink,  // P_ChickenPlayerThink
 
    NUMPRCLASS                  // MUST be last item in list
-} pr_class_t;
+};
 
 // The random number generator's state.
 struct rng_t

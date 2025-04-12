@@ -106,7 +106,7 @@ static struct particleColorList {
 
 #define	BEAMLENGTH       16
 #define NUMVERTEXNORMALS 162
-typedef float vec3_t[3];
+using vec3_t = float[3];
 
 static vec3_t avelocities[NUMVERTEXNORMALS];
 

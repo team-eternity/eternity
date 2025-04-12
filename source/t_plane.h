@@ -31,12 +31,12 @@
 struct sector_t;
 
 // crush check returns
-typedef enum
+enum result_e
 {
    ok,
    crushed,
    pastdest
-} result_e;
+};
 
 result_e T_MoveFloorDown  (sector_t *sector, fixed_t speed, fixed_t dest, int crush);
 result_e T_MoveFloorUp    (sector_t *sector, fixed_t speed, fixed_t dest, int crush,

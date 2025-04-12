@@ -125,12 +125,12 @@ enum
 // These animation variables, structures, etc. are used for the
 // DOOM/Ultimate DOOM intermission screen animations.  This is
 // totally different from any sprite or texture/flat animations
-typedef enum
+enum animenum_t
 {
    ANIM_ALWAYS,   // determined by patch entry
    ANIM_RANDOM,   // occasional
    ANIM_LEVEL     // continuous
-} animenum_t;
+};
 
 struct point_t
 {

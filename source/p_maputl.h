@@ -139,7 +139,7 @@ public:
    VisitList polys;
 };
 
-typedef bool (*traverser_t)(intercept_t *in, void *context);
+using traverser_t = bool (*)(intercept_t *in, void *context);
 
 fixed_t P_AproxDistance(fixed_t dx, fixed_t dy);
 inline static fixed_t P_AproxDistance(v2fixed_t dv)

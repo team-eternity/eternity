@@ -40,11 +40,11 @@ enum
 
 // haleyjd 08/30/02: externalized these structures
 
-typedef enum
+enum cmptype_e
 {
    TC_PATCH,
    TC_FLAT,
-} cmptype_e;
+};
 
 // Generalized graphic
 struct tcomponent_t
@@ -73,7 +73,7 @@ struct texcol_t
 // of one or more mappatch_t structures that arrange graphic patches.
 // Redesigned by SoM so that the same textures can be used by both walls
 // and flats.
-typedef enum
+enum texflag_e
 {
    // Set if the texture contains see-thru portions
    TF_MASKED    = 0x01u,
@@ -87,7 +87,7 @@ typedef enum
    TF_WIDTHNP2  = 0x10u,
    // Set if texture was loaded in non-vanilla ways (i.e. not by TEXTUREx/PNAMES)
    TF_NONVANILLA = 0x20u,
-} texflag_e;
+};
 
 struct texture_t
 {

@@ -508,7 +508,7 @@ static void V_drawMaskedColumnUnscaled(cb_patch_column_t &patchcol, const int yt
    }
 }
 
-typedef void (*patchcolfunc_t)(const cb_patch_column_t &);
+using patchcolfunc_t = void (*)(const cb_patch_column_t &);
 
 static patchcolfunc_t colfuncfordrawstyle[PSTYLE_NUMSTYLES] =
 {

@@ -37,8 +37,8 @@
 class ENCQStrHashKey
 {
 public:
-   typedef qstring     basic_type;
-   typedef const char *param_type;
+   using basic_type = qstring;
+   using param_type = const char *;
 
    // NB: HashCode must be implemented for both types when they are distinct.
 
@@ -66,8 +66,8 @@ public:
 class EQStrHashKey
 {
 public:
-   typedef qstring     basic_type;
-   typedef const char *param_type;
+   using basic_type = qstring;
+   using param_type = const char *;
 
    static unsigned int HashCode(const char *input)
    {

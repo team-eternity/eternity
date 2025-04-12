@@ -34,7 +34,7 @@
 // from darkening PLAYPAL to all black.
 // Could use even more than 32 levels.
 
-typedef byte  lighttable_t; 
+using lighttable_t = byte;
 
 // sf: moved from r_main.h for coloured lighting
 #define MAXLIGHTZ        128

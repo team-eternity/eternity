@@ -33,7 +33,7 @@
 #define FRACBITS 16
 #define FRACUNIT (1<<FRACBITS)
 
-typedef int32_t fixed_t;
+using fixed_t = int32_t;
 
 //
 // Absolute Value

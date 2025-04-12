@@ -35,7 +35,7 @@
 #define R_NOGROUP -1
 #endif
 
-typedef v3fixed_t linkoffset_t;
+using linkoffset_t = v3fixed_t;
 
 extern linkoffset_t **linktable;
 extern linkoffset_t zerolink;

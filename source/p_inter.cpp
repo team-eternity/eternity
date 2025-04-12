@@ -1354,7 +1354,7 @@ static bool P_touchBossTeleport(dmgspecdata_t *dmgspec)
 // done.
 //
 
-typedef bool (*dmgspecial_t)(dmgspecdata_t *);
+using dmgspecial_t = bool (*)(dmgspecdata_t *);
 
 static dmgspecial_t DamageSpecials[INFLICTOR_NUMTYPES] =
 {

@@ -35,14 +35,14 @@ extern int config_help;
 // haleyjd 07/27/09: default file portability fix - separate types for config
 // variables
 
-typedef enum
+enum defaulttype_e
 {
    dt_integer,
    dt_string,
    dt_float,
    dt_boolean,
    dt_numtypes
-} defaulttype_e;
+};
 
 // phares 4/21/98:
 // Moved from m_misc.c so m_menu.c could see it.

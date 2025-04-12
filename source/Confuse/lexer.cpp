@@ -202,7 +202,7 @@ struct lexerstate_t
 };
 
 // lexer function protocol
-typedef int (*lexfunc_t)(lexerstate_t *);
+using lexfunc_t = int (*)(lexerstate_t *);
 
 // state enumeration for lexer FSA
 enum

@@ -1595,7 +1595,7 @@ static void DoPStateCommaOrEnd(tr_pstate_t *pstate)
 }
 
 // Parser callback type
-typedef void (*tr_pfunc)(tr_pstate_t *);
+using tr_pfunc = void (*)(tr_pstate_t *);
 
 // Parser state table
 static tr_pfunc trpfuncs[TR_PSTATE_NUMSTATES] = 

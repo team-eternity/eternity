@@ -160,7 +160,7 @@ public:
 
 // Global interface
 
-typedef void (*gamePadChangeCallback_t)();
+using gamePadChangeCallback_t = void (*)();
 
 bool I_SelectDefaultGamePad();
 void I_InitGamePads(gamePadChangeCallback_t callback);

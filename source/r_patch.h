@@ -46,7 +46,7 @@ struct post_t
 };
 
 // column_t is a list of 0 or more post_t, (byte)-1 terminated
-typedef post_t column_t;
+using column_t = post_t;
 
 struct patch_t
 { 

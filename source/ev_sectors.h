@@ -29,7 +29,7 @@
 
 struct sector_t;
 
-typedef void (*EVSectorSpecialFunc)(sector_t *);
+using EVSectorSpecialFunc = void (*)(sector_t *);
 
 // Sector special binding
 struct ev_sectorbinding_t

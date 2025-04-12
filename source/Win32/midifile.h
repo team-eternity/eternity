@@ -23,7 +23,7 @@
 #ifndef MIDIFILE_H
 #define MIDIFILE_H
 
-typedef struct SDL_RWops SDL_RWops;
+using SDL_RWops = struct SDL_RWops;
 
 struct midi_file_t;
 struct midi_track_iter_t;

@@ -237,7 +237,7 @@ enum
 
 // define names for the TriggerType field of the general linedefs
 
-typedef enum
+enum triggertype_e
 {
    WalkOnce,
    WalkMany,
@@ -247,22 +247,22 @@ typedef enum
    GunMany,
    PushOnce,
    PushMany
-} triggertype_e;
+};
 
 // define names for the Speed field of the general linedefs
 
-typedef enum
+enum motionspeed_e
 {
    SpeedSlow,
    SpeedNormal,
    SpeedFast,
    SpeedTurbo,  
    SpeedParam  // haleyjd 05/04/04: parameterized extension 
-} motionspeed_e;
+};
 
 // define names for the Target field of the general floor
 
-typedef enum
+enum floortarget_e
 {
    FtoHnF,
    FtoLnF,
@@ -277,29 +277,29 @@ typedef enum
    FtoAbs,
    FInst,
    FtoLnCInclusive
-} floortarget_e;
+};
 
 // define names for the Changer Type field of the general floor
 
-typedef enum
+enum floorchange_e
 {
    FNoChg,
    FChgZero,
    FChgTxt,
    FChgTyp
-} floorchange_e;
+};
 
 // define names for the Change Model field of the general floor
 
-typedef enum
+enum floormodel_t
 {
    FTriggerModel,
    FNumericModel
-} floormodel_t;
+};
 
 // define names for the Target field of the general ceiling
 
-typedef enum
+enum ceilingtarget_e
 {
    CtoHnC,
    CtoLnC,
@@ -313,29 +313,29 @@ typedef enum
    CbyParam, // haleyjd 05/07/04: parameterized extensions
    CtoAbs,
    CInst
-} ceilingtarget_e;
+};
 
 // define names for the Changer Type field of the general ceiling
 
-typedef enum
+enum ceilingchange_e
 {
    CNoChg,
    CChgZero,
    CChgTxt,
    CChgTyp
-} ceilingchange_e;
+};
 
 // define names for the Change Model field of the general ceiling
 
-typedef enum
+enum ceilingmodel_t
 {
    CTriggerModel,
    CNumericModel
-} ceilingmodel_t;
+};
 
 // define names for the Target field of the general lift
 
-typedef enum
+enum lifttarget_e
 {
    F2LnF,
    F2NnF,
@@ -343,11 +343,11 @@ typedef enum
    LnF2HnF,
 
    lifttarget_upValue
-} lifttarget_e;
+};
 
 // haleyjd 10/06/05: defines for generalized stair step sizes
  
-typedef enum
+enum genstairsize_e
 {
    StepSize4,
    StepSize8,
@@ -355,11 +355,11 @@ typedef enum
    StepSize24,
 
    StepSizeParam  // haleyjd 10/06/05: parameterized extension
-} genstairsize_e;
+};
 
 // define names for the door Kind field of the general ceiling
 
-typedef enum
+enum doorkind_e
 {
    OdCDoor,
    ODoor,
@@ -369,11 +369,11 @@ typedef enum
    // haleyjd 03/01/05: new param types with initial delays
    pDOdCDoor,
    pDCDoor
-} doorkind_e;
+};
 
 // define names for the locked door Kind field of the general ceiling
 
-typedef enum
+enum keykind_e
 {
    AnyKey,
    RCard,
@@ -384,7 +384,7 @@ typedef enum
    YSkull,
    AllKeys,
    MaxKeyKind
-} keykind_e;
+};
 
 //////////////////////////////////////////////////////////////////
 //
@@ -394,23 +394,23 @@ typedef enum
 
 //jff 2/23/98 identify the special classes that can share sectors
 
-typedef enum
+enum special_e
 {
    floor_special,
    ceiling_special,
    lighting_special
-} special_e;
+};
 
 //jff 3/15/98 pure texture/type change for better generalized support
-typedef enum
+enum change_e
 {
    trigChangeOnly,
    numChangeOnly
-} change_e;
+};
 
 // p_plats
 
-typedef enum
+enum plattype_e
 {
    perpetualRaise,
    downWaitUpStay,
@@ -422,10 +422,10 @@ typedef enum
    toggleUpDn,    // jff 3/14/98 added to support instant toggle type
    upWaitDownStay // haleyjd 2/18/13: Hexen and Strife reverse plats
 
-} plattype_e;
+};
 
 // haleyjd 02/18/13: parameterized plat trigger types
-typedef enum
+enum paramplattype_e
 {
    paramDownWaitUpStay,
    paramDownByValueWaitUpStay,
@@ -437,7 +437,7 @@ typedef enum
    paramToggleCeiling,
    paramDownWaitUpStayLip,
    paramPerpetualRaiseLip
-} paramplattype_e;
+};
 
 // p_doors
 
@@ -445,7 +445,7 @@ typedef enum
 // common to be used unprefixed in a global enumeration, so they
 // have been changed
 
-typedef enum
+enum vldoor_e
 {
    doorNormal,
    closeThenOpen,
@@ -461,21 +461,21 @@ typedef enum
 
    // haleyjd 03/01/05: exclusively param door types
    paramCloseIn
-} vldoor_e;
+};
 
 // haleyjd 05/04/04: door wait types
-typedef enum
+enum doorwait_e
 {
    doorWaitOneSec,
    doorWaitStd,
    doorWaitStd2x,
    doorWaitStd7x,
    doorWaitParam
-} doorwait_e;
+};
 
 // p_ceilng
 
-typedef enum
+enum ceiling_e
 {
    lowerToFloor,
    raiseToHighest,
@@ -500,7 +500,7 @@ typedef enum
    paramHexenCrush,
    paramHexenCrushRaiseStay,
    paramHexenLowerCrush,
-} ceiling_e;
+};
 
 // ioanch 20160313: crushing mode, compatible with ZDoom. Decided from
 // parameterized crusher arg
@@ -514,7 +514,7 @@ enum crushmode_e
 
 // p_floor
 
-typedef enum
+enum floor_e
 {
    // lower floor to highest surrounding floor
    lowerFloor,
@@ -575,44 +575,44 @@ typedef enum
 
    // new types for supporting other idTech games
    turboLowerA    // haleyjd 02/09/13: for Heretic turbo floors
-} floor_e;
+};
 
-typedef enum
+enum stair_e
 {
    build8, // slowly build by 8
    turbo16 // quickly build by 16    
-} stair_e;
+};
 
-typedef enum
+enum elevator_e
 {
    elevateUp,
    elevateDown,
    elevateCurrent,
    elevateByValue // for Hexen additions
-} elevator_e;
+};
 
 // haleyjd 01/09/07: p_lights
 
-typedef enum
+enum setlight_e
 {
    setlight_set, // set light to given level
    setlight_add, // add to light level
    setlight_sub  // subtract from light level
-} setlight_e;
+};
 
-typedef enum
+enum lightfade_e
 {
    fade_once, // just a normal fade effect
    fade_glow  // glow effect
-} lightfade_e;
+};
 
 // haleyjd 06/29/14: second argument to P_SpawnPSXGlowingLight
-typedef enum
+enum psxglow_e
 {
    psxglow_low, // glow down to lowest neighboring lightlevel
    psxglow_10,  // glow down to 10 from sector->lightlevel
    psxglow_255  // glow up to 255 from sector->lightlevel
-} psxglow_e;
+};
 
 //////////////////////////////////////////////////////////////////
 //
@@ -621,12 +621,12 @@ typedef enum
 //////////////////////////////////////////////////////////////////
 
 // texture type enum
-typedef enum
+enum bwhere_e
 {
    top,
    middle,
    bottom      
-} bwhere_e;
+};
 
 //=============================================================================
 //
@@ -640,14 +640,14 @@ class SectorThinker : public Thinker
 
 protected:
    // sector attach points
-   typedef enum
+   enum attachpoint_e
    {
       ATTACH_NONE, 
       ATTACH_FLOOR,
       ATTACH_CEILING,
       ATTACH_FLOORCEILING,
       ATTACH_LIGHT
-   } attachpoint_e;
+   };
 
    // Methods
    virtual attachpoint_e getAttachPoint() const { return ATTACH_NONE; }
@@ -846,22 +846,22 @@ class PlatThinker : public SectorThinker
 
 public:
    // Enumerations
-   typedef enum
+   enum plat_e
    {
       up,
       down,
       waiting,
       in_stasis
-   } plat_e;
+   };
 
    // This enum is for determining what behaviour a raiseToNearestAndChange
    // platform uses, as Plat_RaiseAndStayTx0 requires this as a parameter.
-   typedef enum
+   enum rnctype_e
    {
       PRNC_DEFAULT,
       PRNC_DOOM,
       PRNC_HERETIC
-   } rnctype_e;
+   };
 
 protected:
    void Think() override;
@@ -1584,13 +1584,13 @@ int EV_ThingRemove(int tid);
 //
 ////////////////////////////////////////////////////////////////
 
-typedef enum
+enum portal_effect
 {
    portal_ceiling,
    portal_floor,
    portal_both,
    portal_lineonly, // SoM: Added for linked line-line portals.
-} portal_effect;
+};
 
 // at game start
 void P_InitPicAnims();

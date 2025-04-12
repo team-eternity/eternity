@@ -777,12 +777,10 @@ ev_actiontype_t ParamActionType =
 //
 
 // Special hash table type
-typedef EHashTable<ev_binding_t, EIntHashKey, &ev_binding_t::actionNumber,
-                   &ev_binding_t::links> EV_SpecHash;
+using EV_SpecHash = EHashTable<ev_binding_t, EIntHashKey, &ev_binding_t::actionNumber, &ev_binding_t::links>;
 
 // By-name hash table type
-typedef EHashTable<ev_binding_t, ENCStringHashKey, &ev_binding_t::name,
-                   &ev_binding_t::namelinks> EV_SpecNameHash;
+using EV_SpecNameHash = EHashTable<ev_binding_t, ENCStringHashKey, &ev_binding_t::name, &ev_binding_t::namelinks>;
 
 // Hash tables for binding arrays
 static EV_SpecHash DOOMSpecHash;

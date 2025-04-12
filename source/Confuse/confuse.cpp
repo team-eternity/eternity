@@ -821,7 +821,7 @@ static void cfg_init_pstate(cfg_pstate_t *pstate)
 }
 
 // haleyjd: parser state handler function signature
-typedef int (*cfg_pstate_func)(cfg_t *, int, cfg_pstate_t &);
+using cfg_pstate_func = int (*)(cfg_t *, int, cfg_pstate_t &);
 
 //
 // haleyjd: parser states

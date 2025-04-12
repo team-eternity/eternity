@@ -981,7 +981,7 @@ static void R_drawVisSprite(const contextbounds_t &bounds, vissprite_t *vis,
    }
 }
 
-typedef v3fixed_t spritepos_t;
+using spritepos_t = v3fixed_t;
 
 // ioanch 20160109: added offset arguments
 static void R_interpolateThingPosition(const Mobj *const thing, spritepos_t &pos)

@@ -62,8 +62,8 @@ unsigned int D_HashTableKeyCase(const char *str);
 class EIntHashKey
 {
 public:
-   typedef int basic_type;
-   typedef int param_type;
+   using basic_type = int;
+   using param_type = int;
 
    static unsigned int HashCode(int input)
    {
@@ -82,8 +82,8 @@ public:
 class EInt64HashKey
 {
 public:
-   typedef int64_t basic_type;
-   typedef int64_t param_type;
+   using basic_type = int64_t;
+   using param_type = int64_t;
 
    static unsigned HashCode(int64_t input)
    {
@@ -102,8 +102,8 @@ public:
 class EStringHashKey
 {
 public: 
-   typedef const char *basic_type;
-   typedef const char *param_type;
+   using basic_type = const char *;
+   using param_type = const char *;
 
    static unsigned int HashCode(const char *input)
    {
@@ -122,8 +122,8 @@ public:
 class ENCStringHashKey
 {
 public:
-   typedef const char *basic_type;
-   typedef const char *param_type;
+   using basic_type = const char *;
+   using param_type = const char *;
 
    static unsigned int HashCode(const char *input)
    {

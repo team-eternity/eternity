@@ -195,8 +195,7 @@ enum
    NUMWEAPONS,
    wp_nochange              // No pending weapon change.
 };
-
-typedef int weapontype_t;
+using weapontype_t = int;
 
 // Ammunition types defined.
 enum
@@ -209,7 +208,7 @@ enum
    NUMAMMO,
    am_noammo   // Unlimited for chainsaw / fist.
 };
-typedef int ammotype_t;
+using ammotype_t = int;
 
 // Power up artifacts.
 enum powertype_t

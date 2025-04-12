@@ -61,7 +61,7 @@ struct ZIPLocalFileHeader
    // const char *extra;
 };
 
-typedef ZIPLocalFileHeader ZLFH_t;
+using ZLFH_t = ZIPLocalFileHeader;
 
 static MStructReader<ZLFH_t> localFileReader([] (MStructReader<ZLFH_t> &obj) {
    obj.addField(&ZLFH_t::signature   );
@@ -106,7 +106,7 @@ struct ZIPCentralDirEntry
    // const char *comment;
 };
 
-typedef ZIPCentralDirEntry ZCDE_t;
+using ZCDE_t = ZIPCentralDirEntry;
 
 static MStructReader<ZCDE_t> centralDirReader([] (MStructReader<ZCDE_t> &obj) {
    obj.addField(&ZCDE_t::signature    );
@@ -146,7 +146,7 @@ struct ZIPEndOfCentralDir
    // const char *comment;
 };
 
-typedef ZIPEndOfCentralDir ZECD_t;
+using ZECD_t = ZIPEndOfCentralDir;
 
 static MStructReader<ZECD_t> endCentralDirReader([] (MStructReader<ZECD_t> &obj) {
    obj.addField(&ZECD_t::signature       );

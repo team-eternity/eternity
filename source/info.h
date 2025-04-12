@@ -36,7 +36,7 @@ class  Mobj;
 
 // haleyjd 07/17/04: sprite constants removed
 
-typedef int spritenum_t;
+using spritenum_t = int;
 extern int NUMSPRITES;
 
 // ********************************************************************
@@ -150,7 +150,7 @@ enum
 
 };
 
-typedef int statenum_t;
+using statenum_t = int;
 
 // state flags
 // NOTE: STATEFI = internal flag, not meant for user consumption
@@ -345,7 +345,7 @@ enum
    //NUMMOBJTYPES  // Counter of how many there are
 };
 
-typedef int mobjtype_t;
+using mobjtype_t = int;
 
 // ********************************************************************
 // Definition of the Thing structure

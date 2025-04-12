@@ -117,7 +117,7 @@ FILE *W_TryOpenFile(qstring &filename, bool allowInexact)
    return nullptr;
 }
 
-typedef bool (*FormatFunc)(FILE *, long);
+using FormatFunc = bool (*)(FILE *, long);
 
 //
 // W_isWadFile

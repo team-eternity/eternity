@@ -44,7 +44,7 @@
 // So for now at least, this code is being included here directly.
 //
 
-typedef void (*pcsound_callback_func)(int *duration, int *frequency);
+using pcsound_callback_func = void (*)(int *duration, int *frequency);
 
 #define SQUARE_WAVE_AMP 0x2000
 

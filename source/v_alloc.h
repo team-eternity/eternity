@@ -34,7 +34,7 @@
 class VAllocItem
 {
 public:
-   typedef void (*allocfn_t)(int w, int h);
+   using allocfn_t = void (*)(int w, int h);
 
 protected:
    static DLListItem<VAllocItem> *vAllocList;

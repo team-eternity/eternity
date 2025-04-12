@@ -565,7 +565,7 @@ static bool png_Writer(OutBuffer *ob, byte *data,
 // Shared Code
 //
 
-typedef bool (*ShotWriter_t)(OutBuffer *, byte *, uint32_t, uint32_t, byte *);
+using ShotWriter_t = bool (*)(OutBuffer *, byte *, uint32_t, uint32_t, byte *);
 
 struct shotformat_t
 {

@@ -89,7 +89,7 @@ struct ev_instance_t
 // special is activated. Most arguments are optional and must be checked for
 // validity.
 //
-typedef bool (*EVPreFunc)(ev_action_t *, ev_instance_t *);
+using EVPreFunc = bool (*)(ev_action_t *, ev_instance_t *);
 
 //
 // EVPostFunc
@@ -99,7 +99,7 @@ typedef bool (*EVPreFunc)(ev_action_t *, ev_instance_t *);
 // parameter. Most other parameters are optional and must be checked for
 // validity.
 //
-typedef int (*EVPostFunc)(ev_action_t *, int, ev_instance_t *);
+using EVPostFunc = int (*)(ev_action_t *, int, ev_instance_t *);
 
 //
 // EVActionFunc
@@ -107,7 +107,7 @@ typedef int (*EVPostFunc)(ev_action_t *, int, ev_instance_t *);
 // All actions must adhere to this call signature. Most members of the 
 // specialactivation structure are optional and must be checked for validity.
 //
-typedef int (*EVActionFunc)(ev_action_t *, ev_instance_t *);
+using EVActionFunc = int (*)(ev_action_t *, ev_instance_t *);
 
 //
 // ev_actiontype_t

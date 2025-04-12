@@ -67,7 +67,7 @@
 
 // event types
 
-typedef enum
+enum mus_event_t
 {
    RELEASE_NOTE,
    PLAY_NOTE,
@@ -77,7 +77,7 @@ typedef enum
    UNKNOWN_EVENT1,
    SCORE_END,
    UNKNOWN_EVENT2,
-} mus_event_t;
+};
 
 // MUS format header structure
 

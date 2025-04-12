@@ -72,8 +72,8 @@ struct dynaseg_t
    int validcount;   // used to keep track of visiting
 };
 
-typedef DLListItem<dynaseg_t> dseglink_t;
-typedef dseglink_t * dseglist_t;
+using dseglink_t = DLListItem<dynaseg_t>;
+using dseglist_t = dseglink_t *;
 
 //
 // rpolyobj_t

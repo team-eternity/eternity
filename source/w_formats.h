@@ -32,7 +32,7 @@ class qstring;
 
 FILE *W_TryOpenFile(qstring &filename, bool allowInexact);
 
-typedef enum
+enum WResourceFmt
 {
    W_FORMAT_WAD,  // id wadlink file (IWAD or PWAD)
    W_FORMAT_ZIP,  // PKZip archive (aka pk3)
@@ -40,7 +40,7 @@ typedef enum
    W_FORMAT_DIR,  // PKE-like directory
    
    W_FORMAT_MAX   // Keep this last
-} WResourceFmt;
+};
 
 WResourceFmt W_DetermineFileFormat(FILE *f, long baseoffset);
 

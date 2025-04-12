@@ -128,14 +128,14 @@ public:
 //
 template<typename T> inline T thinker_cast(Thinker *th)
 {
-   typedef typename std::remove_pointer<T>::type base_type;
+   using base_type = typename std::remove_pointer<T>::type;
 
    return (th && !th->isRemoved() && th->isDescendantOf(&base_type::StaticType)) ?
       static_cast<T>(th) : nullptr;
 }
 template<typename T> inline T thinker_cast(const Thinker *th)
 {
-   typedef typename std::remove_pointer<T>::type base_type;
+   using base_type = typename std::remove_pointer<T>::type;
 
    return (th && !th->isRemoved() && th->isDescendantOf(&base_type::StaticType)) ?
    static_cast<T>(th) : nullptr;

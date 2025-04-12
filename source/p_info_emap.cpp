@@ -494,7 +494,7 @@ static void P_parseLevelAction(levelvar_t *var, const qstring &value)
    LevelInfo.actions = newAction;
 }
 
-typedef void (*varparserfn_t)(levelvar_t *, const qstring &);
+using varparserfn_t = void (*)(levelvar_t *, const qstring &);
 static varparserfn_t infoVarParsers[IVT_END] =
 {
    P_parseLevelString,

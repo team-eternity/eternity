@@ -51,12 +51,12 @@ enum
 
 // haleyjd 09/26/04: skin type enumeration
 
-typedef enum
+enum skintype_e
 {
    SKIN_PLAYER,
    SKIN_MONSTER,
    SKIN_NUMTYPES
-} skintype_e;
+};
 
 struct skin_t
 {

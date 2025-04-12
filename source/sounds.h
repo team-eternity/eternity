@@ -36,7 +36,7 @@
 //
 
 // haleyjd 06/12/08: origin subchannels
-typedef enum
+enum schannel_e
 {
    CHAN_ALL = -1, // to S_StopSound, this means stop everything
    CHAN_AUTO,
@@ -48,7 +48,7 @@ typedef enum
    CHAN_SLOT6,
    CHAN_SLOT7,
    NUMSCHANNELS
-} schannel_e;
+};
 
 // haleyjd 03/27/11: sound flags
 enum
@@ -246,7 +246,7 @@ enum doom_musicenum_t
 };
 
 // haleyjd: heretic music
-typedef enum
+enum htic_musicenum_t
 {
    hmus_None,
    hmus_e1m1,
@@ -272,7 +272,7 @@ typedef enum
    hmus_intr,
    hmus_cptd,
    NUMHTICMUSIC
-} htic_musicenum_t;
+};
 
 //
 // Identifiers for all sfx in game.

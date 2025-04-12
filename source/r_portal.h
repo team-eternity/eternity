@@ -46,7 +46,7 @@ struct sectorbox_t;
 struct viewpoint_t;
 class  ZoneHeap;
 
-typedef enum
+enum rportaltype_e
 {
    R_NONE,
    R_SKYBOX,
@@ -55,11 +55,11 @@ typedef enum
    R_PLANE,
    R_TWOWAY, // SoM: two-way non-linked anchored portals
    R_LINKED, // SoM: interactive portals  
-} rportaltype_e;
+};
 
 
 // These are flags used to represent configurable options for portals
-typedef enum
+enum portalflag_e
 {
    // -- Portal behavior flags --
    // Portal is completely disabled
@@ -111,7 +111,7 @@ typedef enum
    
    // All overlay and blending flags
    PS_BLENDFLAGS         = PS_OVERLAYFLAGS | PO_OPACITYMASK,
-} portalflag_e;
+};
 
 
 // Contains information representing a link from one portal group to another

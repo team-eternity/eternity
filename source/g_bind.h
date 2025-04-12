@@ -35,7 +35,7 @@ int  G_KeyResponder(const event_t *ev, int bclass, bool *allreleased = nullptr);
 
 void G_ClearKeyStates();
 
-typedef void (*binding_handler)(event_t *ev);
+using binding_handler = void (*)(event_t *ev);
 
 void G_EditBinding(const char *action);
 void G_BoundKeys(const char *action, qstring &outstr);

@@ -205,12 +205,10 @@ static ev_static_t UDMFEternityStaticBindings[] =
 //
 
 // Resolve a static init function to the special to which it is bound
-typedef EHashTable<ev_static_t, EIntHashKey, &ev_static_t::staticFn,
-                   &ev_static_t::staticLinks> EV_StaticHash;
+using EV_StaticHash = EHashTable<ev_static_t, EIntHashKey, &ev_static_t::staticFn, &ev_static_t::staticLinks>;
 
 // Resolve a line special to the static init function to which it is bound
-typedef EHashTable<ev_static_t, EIntHashKey,&ev_static_t::actionNumber,
-                   &ev_static_t::actionLinks> EV_StaticSpecHash;
+using EV_StaticSpecHash = EHashTable<ev_static_t, EIntHashKey,&ev_static_t::actionNumber, &ev_static_t::actionLinks>;
 
 // DOOM hashes
 static EV_StaticHash     DOOMStaticHash(earrlen(DOOMStaticBindings));

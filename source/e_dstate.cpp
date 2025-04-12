@@ -648,7 +648,7 @@ static void DoTokenStateString(tkstate_t *tks)
 }
 
 // tokenizer callback type
-typedef void (*tksfunc_t)(tkstate_t *);
+using tksfunc_t = void (*)(tkstate_t *);
 
 // tokenizer state function table
 static tksfunc_t tstatefuncs[] =
@@ -1753,7 +1753,7 @@ static void DoPSNeedStateEOL(pstate_t *ps)
 }
 
 // parser callback type
-typedef void (*psfunc_t)(pstate_t *);
+using psfunc_t = void (*)(pstate_t *);
 
 // parser state function table
 static psfunc_t pstatefuncs[PSTATE_NUMSTATES] =

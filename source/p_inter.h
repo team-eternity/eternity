@@ -30,7 +30,7 @@ struct emodmorph_t;
 struct player_t;
 class  Mobj;
 class  MetaTable;
-typedef MetaTable itemeffect_t;
+using  itemeffect_t = MetaTable;
 
 // follow a player exlusively for 3 seconds
 #define BASETHRESHOLD   (100)
@@ -74,7 +74,7 @@ extern int god_health_override;   // Ty 03/09/98 - deh support, see also p_inter
 extern int bfgcells;
 
 // haleyjd 08/01/04: special inflictor types
-typedef enum
+enum inflictor_type_e
 {
    INFLICTOR_NONE,
    INFLICTOR_MINOTAUR,  // minotaur charge
@@ -83,7 +83,7 @@ typedef enum
    INFLICTOR_PHOENIXFIRE,  // powered Phoenix fire
    INFLICTOR_BOSSTELEPORT, // determine bosses like D'Sparil to teleport
    INFLICTOR_NUMTYPES
-} inflictor_type_e;
+};
 
 #endif
 

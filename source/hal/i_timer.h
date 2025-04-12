@@ -32,16 +32,16 @@
 extern int     realtic_clock_rate;
 extern int64_t I_GetTime_Scale;
 
-typedef void         (*HAL_TimerInitFunc)();
-typedef void         (*HAL_ChangeClockRateFunc)();
+using HAL_TimerInitFunc       = void         (*)();
+using HAL_ChangeClockRateFunc = void         (*)();
 
-typedef int          (*HAL_GetTimeFunc)();
-typedef unsigned int (*HAL_GetTicksFunc)();
-typedef void         (*HAL_SleepFunc)(int);
-typedef void         (*HAL_StartDisplayFunc)();
-typedef void         (*HAL_EndDisplayFunc)();
-typedef fixed_t      (*HAL_GetFracFunc)();
-typedef void         (*HAL_SaveMSFunc)();
+using HAL_GetTimeFunc         = int          (*)();
+using HAL_GetTicksFunc        = unsigned int (*)();
+using HAL_SleepFunc           = void         (*)(int);
+using HAL_StartDisplayFunc    = void         (*)();
+using HAL_EndDisplayFunc      = void         (*)();
+using HAL_GetFracFunc         = fixed_t      (*)();
+using HAL_SaveMSFunc          = void         (*)();
 
 //
 // HALTimer

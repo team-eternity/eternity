@@ -117,7 +117,7 @@ enum buttoncode_t
 //
 // Player action code definitions (jumping etc) -- joek 12/22/07
 //
-typedef enum
+enum actioncode_t
 {
    // Bouncy bouncy jump jump
    AC_JUMP       = 1,
@@ -129,7 +129,7 @@ typedef enum
    AC_USER2      = 16,
    AC_USER3      = 32,
    AC_USER4      = 64,
-} actioncode_t;
+};
 
 //
 // GLOBAL VARIABLES

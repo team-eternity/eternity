@@ -51,11 +51,11 @@ template<typename item_type, typename key_type,
 class EHashTable
 {
 public:
-   typedef DLListItem<item_type> link_type;    // Type of linked list item
+   using link_type = DLListItem<item_type>;    // Type of linked list item
    
    // Type of key's basic data member
-   typedef typename key_type::basic_type basic_key_type; 
-   typedef typename key_type::param_type param_key_type;
+   using basic_key_type = typename key_type::basic_type;
+   using param_key_type = typename key_type::param_type;
 
 protected:
    link_type    **chains;      // hash chains

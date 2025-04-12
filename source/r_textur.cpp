@@ -47,7 +47,7 @@
 #include "w_iterator.h"
 
 // Texture hash table, used in several places here
-typedef EHashTable<texture_t, ENCStringHashKey, &texture_t::name, &texture_t::link> texturehash_t;
+using texturehash_t = EHashTable<texture_t, ENCStringHashKey, &texture_t::name, &texture_t::link>;
 
 //
 // Texture definition.

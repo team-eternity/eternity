@@ -151,7 +151,7 @@ public:
    }
 
    // STL-compatible iterator semantics
-   typedef T *iterator;
+   using iterator = T *;
 
    T *begin() const { return ptrArray; }
    T *end()   const { return ptrArray + length; }

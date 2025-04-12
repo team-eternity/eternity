@@ -95,7 +95,7 @@ enum
 
 // haleyjd 07/02/09: moved demostate_t to header for GameModeInfo
 
-typedef void (*dsfunc_t)(const char *);
+using dsfunc_t = void (*)(const char *);
 
 struct demostate_t
 {
@@ -346,12 +346,12 @@ struct missioninfo_t
 };
 
 // function pointer types
-typedef int  (*gimusformapfn_t)();
-typedef int  (*gimuscheatfn_t )(const char *);
-typedef void (*ginewgamefn_t  )();
-typedef int  (*gipartimefn_t  )(int, int);
-typedef void (*gilevelnamefn_t)(levelnamedata_t &);
-typedef void (*gitexhackfn_t  )(texture_t *);
+using gimusformapfn_t = int  (*)();
+using gimuscheatfn_t  = int  (*)(const char *);
+using ginewgamefn_t   = void (*)();
+using gipartimefn_t   = int  (*)(int, int);
+using gilevelnamefn_t = void (*)(levelnamedata_t &);
+using gitexhackfn_t   = void (*)(texture_t *);
 
 //
 // gamemodeinfo_t
@@ -359,7 +359,7 @@ typedef void (*gitexhackfn_t  )(texture_t *);
 // This structure holds just about all the gamemode-pertinent
 // information that could easily be pulled out of the rest of
 // the source. This approach, as mentioned above, was inspired
-// by zdoom, but I've taken it and really run with it.
+// by ZDoom, but I've taken it and really run with it.
 //
 struct gamemodeinfo_t
 {

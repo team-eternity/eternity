@@ -112,12 +112,12 @@ struct lumpinfo_t
    int li_namespace;
 
    // haleyjd 09/03/12: lump cache formats
-   typedef enum
+   enum lumpformat
    {
       fmt_default, // always used for the raw untranslated lump data
       fmt_patch,   // converted to a patch
       fmt_maxfmts  // number of formats
-   } lumpformat;
+   };
 
    void *cache[fmt_maxfmts];  //sf
 
@@ -192,12 +192,12 @@ class WadLumpLoader
 {
 public:
       // Error modes enumeration
-   typedef enum
+   enum Code
    {
       CODE_OK,    // Proceed
       CODE_NOFMT, // OK, but don't call formatData
       CODE_FATAL  // Fatal error
-   } Code;
+   };
 
    // verifyData should do format checking and return true if the data is valid,
    // and false otherwise. If verifyData returns anything other than CODE_OK,

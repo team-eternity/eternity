@@ -77,7 +77,7 @@ extern const fixed_t finetangent[FINEANGLES/2];
 
 // PORTABILITY WARNING: angle_t depends on 32-bit math overflow
 
-typedef uint32_t angle_t;
+using angle_t = uint32_t;
 
 // Effective size is 2049;
 // The +1 size is to handle the case when x==y without additional checking.

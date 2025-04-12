@@ -49,7 +49,7 @@ enum
    ITEMFX_ARTIFACT,    // an item that enters the inventory, for later use or tracking
    NUMITEMFX
 };
-typedef int itemeffecttype_t;
+using itemeffecttype_t = int;
 
 // Artifact sub-types
 enum
@@ -63,7 +63,7 @@ enum
    ARTI_QUEST,    // quest token
    NUMARTITYPES
 };
-typedef int artitype_t;
+using artitype_t = int;
 
 // Autouse health types
 enum class AutoUseHealthMode : int
@@ -123,7 +123,7 @@ extern const char *powerStrings[NUMPOWERS];
 // An item effect is a MetaTable. The properties in the table depend on the type
 // of section that instantiated the effect (and therefore what its purpose is).
 //
-typedef MetaTable itemeffect_t;
+using itemeffect_t = MetaTable;
 
 //
 // Effect Bindings

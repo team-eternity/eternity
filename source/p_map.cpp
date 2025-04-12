@@ -1617,7 +1617,7 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
    return true;
 }
 
-typedef bool (*dropoff_func_t)(Mobj *, int);
+using dropoff_func_t = bool (*)(Mobj *, int);
 
 //
 // Runs the spechit push specials

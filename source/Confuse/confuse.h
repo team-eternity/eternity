@@ -56,7 +56,7 @@ enum cfg_type_t
    CFGT_FLAG     /**< flag property, no value is given */
 };
 
-typedef enum cfg_type_t cfg_type_t;
+using cfg_type_t = enum cfg_type_t;
 
 // haleyjd 07/11/03: changed to match libConfuse 2.0 cvs
 /** Flags. */
@@ -93,7 +93,7 @@ union  cfg_value_t;
 struct cfg_opt_t;
 struct cfg_t;
 
-typedef int cfg_flag_t;
+using cfg_flag_t = int;
 
 /** Function prototype used by CFGT_FUNC options.
  *
@@ -120,8 +120,7 @@ typedef int cfg_flag_t;
  *
  * @see CFG_FUNC
 */
-typedef int (*cfg_func_t)(cfg_t *cfg, cfg_opt_t *opt,
-                          int argc, const char **argv);
+using cfg_func_t = int (*)(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv);
 
 /** Value parsing callback prototype
  *
@@ -146,14 +145,13 @@ typedef int (*cfg_func_t)(cfg_t *cfg, cfg_opt_t *opt,
  * function should notify the error itself, for example by calling
  * cfg_error().
  */
-typedef int (*cfg_callback_t)(cfg_t *cfg, cfg_opt_t *opt,
-                              const char *value, void *result);
+using cfg_callback_t = int (*)(cfg_t *cfg, cfg_opt_t *opt, const char *value, void *result);
 
 /** Error reporting function. */
 using cfg_errfunc_t = void (*)(const cfg_t *const cfg, const char *fmt, va_list ap);
 
 /** Lexer open callback */
-typedef int (*cfg_lexfunc_t)(cfg_t *cfg, const char *data, int size);
+using cfg_lexfunc_t = int (*)(cfg_t *cfg, const char *data, int size);
 
 /** 
  * Data structure holding information about a "section". Sections can

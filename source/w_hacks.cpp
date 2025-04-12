@@ -30,7 +30,7 @@
 #include "w_levels.h"
 #include "w_wad.h"
 
-typedef void (*hackhandler_t)(filelump_t *, int);
+using hackhandler_t = void (*)(filelump_t *, int);
 
 //
 // w_dirhack_t structure

@@ -50,12 +50,12 @@ class WeaponCounterTree;
 
 // Inventory item ID is just an integer. The inventory item type can be looked
 // up using this.
-typedef int inventoryitemid_t;
+using inventoryitemid_t = int;
 
 // Inventory index is an index into a player's inventory_t array. It is NOT
 // the same as the item ID. You get from one to the other by using:
 //   inventory[index].item
-typedef int inventoryindex_t;
+using inventoryindex_t = int;
 
 // Inventory Slot
 // Every slot in an inventory is composed of this structure. It references the
@@ -71,7 +71,7 @@ struct inventoryslot_t
 // An inventory is an array of inventoryslot structures, allocated at the max
 // number of inventory items it is possible to carry (ie. the number of distinct
 // inventory items defined).
-typedef inventoryslot_t * inventory_t;
+using inventory_t = inventoryslot_t *;
 
 //
 // Player states.
@@ -86,7 +86,7 @@ enum
    PST_REBORN
 };
 
-typedef int playerstate_t;
+using playerstate_t = int;
 
 //
 // Player internal flags, for cheats and debug.

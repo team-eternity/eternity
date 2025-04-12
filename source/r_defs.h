@@ -79,13 +79,13 @@ struct vertex_t
 
 // SoM: for attaching surfaces (floors and ceilings) to each other
 // SoM: these are flags now
-typedef enum
+enum attachedtype_e
 {
    AS_FLOOR          = 0x01,
    AS_CEILING        = 0x02,
    AS_MIRRORFLOOR    = 0x04,
    AS_MIRRORCEILING  = 0x08,
-} attachedtype_e;
+};
 
 struct attachedsurface_t
 {

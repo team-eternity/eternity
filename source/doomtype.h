@@ -28,11 +28,8 @@
 
 #include <inttypes.h>
 
-#ifndef BYTEBOOL__
-#define BYTEBOOL__
 // haleyjd 04/10/11: boolean typedef eliminated in pref. of direct use of bool
-typedef uint8_t byte;
-#endif
+using byte = uint8_t;
 
 // SoM: resolve platform-specific range symbol issues
 

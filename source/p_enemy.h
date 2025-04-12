@@ -43,7 +43,7 @@ enum
    DI_NODIR,
    NUMDIRS
 };
-typedef int dirtype_t;
+using dirtype_t = int;
 
 extern fixed_t xspeed[8];
 extern fixed_t yspeed[8];
