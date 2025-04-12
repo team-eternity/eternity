@@ -15,14 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  MapObj data. Map Objects or mobjs are actors, entities,
+// Purpose: MapObj data. Map Objects or mobjs are actors, entities,
 //  thinker, take-your-pick... anything that moves, acts, or
 //  suffers state changes of more or less violent nature.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley
+//
 
 #ifndef D_THINK_H__
 #define D_THINK_H__

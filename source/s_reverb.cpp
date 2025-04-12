@@ -18,8 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: Freeverb algorithm implementation
-//          Based on original public domain implementation by Jezar at Dreampoint
+//------------------------------------------------------------------------------
+//
+// Purpose: Freeverb algorithm implementation.
+//  Based on original public domain implementation by Jezar at Dreampoint.
+//
 // Authors: James Haley, Max Waine
 //
 

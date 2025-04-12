@@ -17,6 +17,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
+//------------------------------------------------------------------------------
+//
 // Purpose: Menu file selector
 //  eg. For selecting a wad to load or demo to play
 //  Revisions by James Haley taken from SMMU v3.30 8/11/00 build

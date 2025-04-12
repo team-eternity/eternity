@@ -15,12 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Generalized texture system
+// Purpose: Generalized texture system.
+// Authors: Stephen McGranahan, James Haley, Ioan Chera, Max Waine,
+//  Derek MacDonald.
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"

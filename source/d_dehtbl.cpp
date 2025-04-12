@@ -15,15 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DeHackEd information tables / hashing
+// Purpose: DeHackEd information tables / hashing.
 //
-// Separated out from d_deh.c to avoid clutter and speed up the
-// editing of that file. Routines for internal table hash chaining
-// and initialization are also here.
+//  Separated out from d_deh.c to avoid clutter and speed up the
+//  editing of that file. Routines for internal table hash chaining
+//  and initialization are also here.
 //
-//--------------------------------------------------------------------------
+// Authors: James Haley, David Hill, Max Waine, Xaser Acheron, Ioan Chera
+//
 
 #include "z_zone.h"
 

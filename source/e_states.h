@@ -18,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// EDF States Module
+// Purpose: EDF states module.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #ifndef E_STATES_H__
 #define E_STATES_H__

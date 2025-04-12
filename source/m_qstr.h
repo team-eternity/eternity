@@ -18,21 +18,20 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Reallocating string structure
+// Purpose: Reallocating string structure.
 //
-// What this class guarantees:
-// * The string will always be null-terminated
-// * Indexing functions always check array bounds
-// * Insertion functions always reallocate when needed
+//  What this class guarantees:
+//  * The string will always be null-terminated
+//  * Indexing functions always check array bounds
+//  * Insertion functions always reallocate when needed
 //
-// Of course, using getBuffer can negate these, so avoid it
-// except for passing a char * to read op functions.
+//  Of course, using getBuffer can negate these, so avoid it
+//  except for passing a char * to read op functions.
 //
-// By James Haley
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef M_QSTR_H__
 #define M_QSTR_H__

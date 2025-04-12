@@ -16,7 +16,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//
+// Purpose: Player skins.
+// Authors: James Haley, Ioan Chera
+//
 
 #ifndef P_SKIN_H__
 #define P_SKIN_H__

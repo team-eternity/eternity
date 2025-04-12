@@ -15,13 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Preparation of data for rendering,
-//      generation of lookups, caching, retrieval by name.
+// Purpose: Preparation of data for rendering,
+//  generation of lookups, caching, retrieval by name.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Stephen McGranahan, Ioan Chera, Max Waine
+//
 
 #include "z_zone.h"
 

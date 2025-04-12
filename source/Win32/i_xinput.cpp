@@ -18,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// XInput Gamepad Support
+// Purpose: XInput gamepad support.
+// Authors: James Haley
 //
-// By James Haley
-//
-//-----------------------------------------------------------------------------
 
 #ifdef EE_FEATURE_XINPUT
 

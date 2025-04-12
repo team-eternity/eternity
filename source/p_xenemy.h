@@ -15,17 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: Hexen-inspired action functions.
 //
-// Hexen-inspired action functions
+//  DISCLAIMER: None of this code was taken from Hexen. Any
+//  resemblence is purely coincidental or is the result of work from
+//  a common base source.
 //
-// DISCLAIMER: None of this code was taken from Hexen. Any
-// resemblence is purely coincidental or is the result of work from
-// a common base source.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef P_XENEMY_H__
 #define P_XENEMY_H__

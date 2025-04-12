@@ -15,15 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Action Pointer Functions
-//      that are associated with states/frames.
+// Purpose: Generalized/Parameterized action functions.
+// Authors: James Haley, David Hill, Ioan Chera, Xaser Acheron, Simone Ivanish
 //
-//      Generalized/Parameterized action functions.
-//
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

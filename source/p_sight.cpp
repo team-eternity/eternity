@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      LineOfSight/Visibility checks, uses REJECT Lookup Table.
+// Purpose: LineOfSight/Visibility checks, uses REJECT Lookup Table.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"

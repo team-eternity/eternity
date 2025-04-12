@@ -17,17 +17,19 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// By Popular demand :)
-// Hubs.
+// Purpose: By Popular demand :)
+//  Hubs.
 //
-// Hubs are where there is more than one level, and links between them:
-// you can freely travel between all the levels in a hub and when you
-// return, the level should be exactly as it previously was.
-// As in Quake2/Half life/Hexen etc.
+//  Hubs are where there is more than one level, and links between them:
+//  you can freely travel between all the levels in a hub and when you
+//  return, the level should be exactly as it previously was.
+//  As in Quake2/Half life/Hexen etc.
 //
-// By Simon Howard
+// Authors: Simon Howard
+//
+
 //
 // haleyjd:
 // This code is not currently accessible and needs a complete ground-up
@@ -35,7 +37,6 @@
 // storage and indexing of hub save files, level transfers, and the
 // proper handling of scripts.
 //
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

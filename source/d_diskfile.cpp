@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//    Code to deal with disk files.
-//    
-//-----------------------------------------------------------------------------
+// Purpose: Code to deal with disk files.
+// Authors: James Haley
+//
 
 #include "z_zone.h"
 #include "i_system.h"

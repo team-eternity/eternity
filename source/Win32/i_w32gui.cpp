@@ -18,9 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Purpose: Win32 GUI stuff (message boxes, folder dialogues, etc.)
+// Purpose: Win32 GUI stuff (message boxes, folder dialogues, etc.).
 // Authors: Max Waine
 //
 

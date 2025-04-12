@@ -15,12 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Map Objects, MObj, definition and handling.
+// Purpose: Map Objects, MObj, definition and handling.
+// Authors: James Haley, Stephen McGranahan, David Hill, Ioan Chera, Max Waine,
+//  Xaser Acheron, Simone Ivanish
 //
-//-----------------------------------------------------------------------------
 
 #ifndef P_MOBJ_H__
 #define P_MOBJ_H__

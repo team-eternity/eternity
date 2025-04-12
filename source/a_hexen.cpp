@@ -15,16 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Action Pointer Functions
-//      that are associated with states/frames.
+// Purpose: Hexen action functions.
+//  Note: These are not "live" yet and should not be documented or used.
 //
-//      Hexen action functions.
-//      Note: These are not "live" yet and should not be documented or used.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #if 0
 

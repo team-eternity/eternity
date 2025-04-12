@@ -18,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Deathmatch Flags
+// Purpose: Deathmatch Flags
+// Authors: James Haley
 //
-// By James Haley
-//
-//---------------------------------------------------------------------------
 
 #ifndef G_DMFLAG_H__
 #define G_DMFLAG_H__

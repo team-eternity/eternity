@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Comparison templates
+// Purpose: Comparison templates
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef M_COMPARE_H__
 #define M_COMPARE_H__

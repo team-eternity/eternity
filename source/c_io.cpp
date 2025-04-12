@@ -15,18 +15,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Console I/O
+// Purpose: Console I/O. Basic rountines: outputting text to the console,
+//  main console functions: drawer, responder, ticket, init.
 //
-// Basic routines: outputting text to the console, main console functions:
-//                 drawer, responder, ticker, init
+// Authors: Simon Howard, James Haley, Stephen McGranahan, Charles Gunyon,
+//  Ioan Chera, Max Waine
 //
-// By Simon Howard
+
 //
 // NETCODE_FIXME -- CONSOLE_FIXME: Major changes needed in this module!
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

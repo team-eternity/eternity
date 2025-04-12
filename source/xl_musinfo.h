@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Description: 
-//   MUSINFO Parser
+// Purpose: MUSINFO parser.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef XL_MUSINFO_H__
 #define XL_MUSINFO_H__

@@ -20,15 +20,12 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
-
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//    
-//   CPU-related system-specific module for POSIX systems
+// Purpose: CPU-related system-specific module for POSIX systems
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #include <stdio.h>
 #include <stdlib.h>

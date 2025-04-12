@@ -18,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// EDF Strings Module
+// Purpose: EDF strings module.
+// Authors: James Haley
 //
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"

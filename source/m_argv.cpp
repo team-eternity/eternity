@@ -15,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: Utilities for storing and checking command-line parameters.
+// Authors: James Haley, Stephen McGranahan
 //
-// Utilities for storing and checking command-line parameters.
-//
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "d_io.h"   // SoM 3/14/2002: strncasecmp

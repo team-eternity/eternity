@@ -15,13 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Light tables and related constants
+// Purpose: Light tables and related constants
 //  Split out of r_defs.h for dependency-hell resolution.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Max Waine
+//
 
 #ifndef R_LIGHTING_H__
 #define R_LIGHTING_H__

@@ -18,10 +18,10 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Purpose: EDF Player Class Module
-// Authors: James Haley, Max Waine
+// Purpose: EDF player class module.
+// Authors: James Haley, Max Waine, Ioan Chera, Xaser Acheron
 //
 
 #define NEED_EDF_DEFINITIONS

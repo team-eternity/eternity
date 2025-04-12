@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Description: 
-//   SNDINFO Parser
+// Purpose: SNDINFO parser.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

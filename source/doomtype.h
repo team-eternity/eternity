@@ -15,13 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Simple basic typedefs, isolated here to make it easier
-//       separating modules.
+// Purpose: Simple basic typedefs, isolated here to make it easier
+//  separating modules.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley
+//
 
 #ifndef DOOMTYPE_H__
 #define DOOMTYPE_H__

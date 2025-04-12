@@ -18,12 +18,12 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//    Common utilities for "Extended Feature" modules.
+// Purpose: Common utilities for "Extended Feature" modules.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
+//
 
 #include "z_zone.h"
 #include "i_system.h"

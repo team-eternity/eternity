@@ -18,9 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Purpose: Boom HUD. Rewritten and put in a seperate module(seems sensible)
+// Purpose: Boom HUD.
 // Authors: Max Waine
 //
 

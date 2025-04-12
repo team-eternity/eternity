@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
+//------------------------------------------------------------------------------
+//
 // Purpose: Code for automated location of users' IWAD files and important
 //  PWADs. Some code is derived from Chocolate Doom, by Simon Howard, used
 //  under terms of the GPLv2.

@@ -15,12 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Map utility functions
+// Purpose: Map utility functions.
+// Authors: James Haley, Stephen McGranahan, Ioan Chera, Xaser Acheron,
+//  Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef P_MAPUTL_H__
 #define P_MAPUTL_H__

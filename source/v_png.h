@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   PNG Resource Reading and Conversion
+// Purpose: PNG resource reading and conversion.
+// Authors: Samuel Villarreal, James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef V_PNG_H__
 #define V_PNG_H__

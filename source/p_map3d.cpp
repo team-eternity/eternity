@@ -18,12 +18,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Purpose: 3D Mobj Clipping Code.
-//          Largely from ZDoom, this system seems to be more reliable than our old one.
-//          It is also kept totally separate from the old clipping code to avoid the
-//          entangling problems the earlier code had.
+// Purpose: 3D Mobj clipping code.
+//  Largely from ZDoom, this system seems to be more reliable than our old one.
+//  It is also kept totally separate from the old clipping code to avoid the
+//  entangling problems the earlier code had.
 // Authors: James Haley, Ioan Chera, Max Waine
 //
 

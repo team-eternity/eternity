@@ -15,11 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  Platform-independent sound code
+// Purpose: Platform-independent sound code.
+// Authors: James Haley, Stephen McGranahan, Ioan Chera, Alison Gray Watson,
+//  Max Waine
 //
-//-----------------------------------------------------------------------------
 
 // killough 3/7/98: modified to allow arbitrary listeners in spy mode
 // killough 5/2/98: reindented, removed useless code, beautified

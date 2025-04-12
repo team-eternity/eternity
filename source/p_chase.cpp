@@ -17,14 +17,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Chasecam
+// Purpose: Chasecam.
+//  Follows the displayplayer. It does exactly what it says on the cover!
 //
-// Follows the displayplayer. It does exactly what it says on the
-// cover!
+// Authors: Simon Howard, James Haley, Stephen McGranahan, Ioan Chera, Max Waine
 //
-//--------------------------------------------------------------------------
 
 #include <algorithm>
 #include "z_zone.h"

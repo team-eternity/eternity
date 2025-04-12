@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Refresh module, BSP traversal and handling.
+// Purpose: Refresh module, BSP traversal and handling.
+// Authors: James Haley, Stephen McGranahan, Max Waine, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef R_BSP_H__
 #define R_BSP_H__

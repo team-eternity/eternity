@@ -15,14 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      PC Speaker Sound
+// Purpose: PC speaker sound.
+//  Largely derived from Chocolate Doom.
 //
-//      Largely derived from Chocolate Doom.
+// Authors: James Haley, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #include "SDL.h"
 #include "SDL_mixer.h"

@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//    Hardware Abstraction Layer for Gamepads and Joysticks
+// Purpose: Hardware abstraction layer for gamepads and joysticks.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef I_GAMEPADS_H__
 #define I_GAMEPADS_H__

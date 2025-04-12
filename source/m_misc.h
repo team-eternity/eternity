@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//    Config file
-//    
-//-----------------------------------------------------------------------------
+// Purpose: Config file.
+// Authors: James Haley, Max Waine
+//
 
 #ifndef M_MISC_H__
 #define M_MISC_H__

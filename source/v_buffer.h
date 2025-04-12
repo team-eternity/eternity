@@ -18,13 +18,13 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  VBuffer has become a much more all-purpose solution for many video handling
-//  needs. Simple, but powerful pixelbuffer object.
+// Purpose: VBuffer has become a much more all-purpose solution for many video
+//  handling needs. Simple, but powerful pixelbuffer object.
 //
-//-----------------------------------------------------------------------------
+// Authors: Stephen McGranahan, James Haley, Ioan Chera
+//
 
 #ifndef V_BUFFER_H__
 #define V_BUFFER_H__

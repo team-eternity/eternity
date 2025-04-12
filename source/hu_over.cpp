@@ -15,15 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Heads up 'overlay' for fullscreen
+// Purpose: Heads up 'overlay' for fullscreen.
+// Authors: Simon Howard, James Haley, Stephen McGranahan, Max Waine,
+//  Ioan Chera, Sarah Woodie
 //
-// Rewritten and put in a seperate module(seems sensible)
-//
-// By Simon Howard
-//
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"

@@ -18,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// EDF Thing Types Module
+// Purpose: EDF thing types modules.
+// Authors: James Haley, Ioan Chera, Max Waine, Simone Ivanish
 //
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #ifndef E_THINGS_H__
 #define E_THINGS_H__

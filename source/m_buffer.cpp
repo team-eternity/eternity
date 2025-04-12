@@ -18,6 +18,8 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
+//------------------------------------------------------------------------------
+//
 // Purpose: Buffered file input/output
 // Authors: James Haley
 //

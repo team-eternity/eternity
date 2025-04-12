@@ -18,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// EDF Sprites Module
+// Purpose: EDF sprites module.
+// Authors: James Haley, Max Waine
 //
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "info.h"

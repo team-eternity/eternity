@@ -18,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Win32-specific File Name Handling Routines.
-//      haleyjd 10/28/04
+// Purpose: Win32-specific file name handling routines.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef I_FNAMES_H__
 #define I_FNAMES_H__

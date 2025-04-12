@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Screenshots.
+// Purpose: Screenshots
+// Authors: James Haley, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

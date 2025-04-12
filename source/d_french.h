@@ -15,15 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Printed strings, french translation.
+// Purpose: Printed strings, french translation.
 //  NOTE: In BOOM, there are additional strings that have been
 //        defined that are not included here.  See d_strings.h for
 //        a suggested alternative.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley
+//
 
 #ifndef D_FRENCH_H__
 #define D_FRENCH_H__

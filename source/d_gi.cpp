@@ -18,11 +18,14 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: Gamemode information
+//------------------------------------------------------------------------------
+//
+// Purpose: Gamemode information.
 //  Stores all gamemode-dependent information in one location and 
 //  lends more structure to other modules.
 //
-// Authors: James Haley
+// Authors: James Haley, Max Waine, Xaser Acheron, Derek MacDonald,
+//  Simone Ivanish
 //
 
 #include "z_zone.h"

@@ -15,15 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Automap colours.
+// Purpose: Holds console commands (variables) for map colours.
+// Authors: Simon Howard, James Haley, Stephen McGranahan
 //
-// Holds console commands (variables) for map colours
-//
-// By Simon Howard
-//
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "doomdef.h"

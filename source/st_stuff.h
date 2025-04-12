@@ -15,14 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Status bar code.
-//      Does the face/direction indicator animatin.
-//      Does palette indicators as well (red pain/berserk, bright pickup)
+// Purpose: Status bar code.
+//  Does the face/direction indicator animatin.
+//  Does palette indicators as well (red pain/berserk, bright pickup).
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Ioan Chera
+//
 
 #ifndef ST_STUFF_H__
 #define ST_STUFF_H__

@@ -15,16 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//    SDL Timer Implementation
+// Purpose: SDL Timer Implementation
+//  Some of this code is taken from Woof!'s i_timer.c, authored by Roman Fomin
+//  and Fabian Greffrath, and used under terms of the GPLv2+.
 //
-// Some of this code is taken from Woof!'s i_timer.c, authored by Roman Fomin
-// and Fabian Greffrath, and used under terms of the GPLv2+.
+// Authors: James Haley, Max Waine
 //
-//
-//-----------------------------------------------------------------------------
 
 #include "SDL.h"
 

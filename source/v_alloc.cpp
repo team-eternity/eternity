@@ -18,13 +18,13 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Video and rendering related buffers which must allocate and deallocate
-//   with screen resolution changes.
+// Purpose: Video and rendering related buffers which must allocate and
+//  deallocate with screen resolution changes.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley
+//
 
 #include "z_zone.h"
 #include "v_alloc.h"

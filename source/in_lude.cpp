@@ -15,16 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-// 
-// Shared intermission code
+// Purpose: Shared intermission code.
+//  This code has been moved here from wi_stuff.c to provide a
+//  consistent interface to intermission code and to enable better code reuse.
 //
-// haleyjd: This code has been moved here from wi_stuff.c to provide a
-// consistent interface to intermission code and to enable better code reuse.
+// Authors: James Haley, Stephen McGranahan, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"

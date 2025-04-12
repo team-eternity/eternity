@@ -18,12 +18,12 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Description: 
-//   SNDINFO Parser
+// Purpose: SNDINFO parser.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
+
 
 #ifndef XL_SNDINFO_H__
 #define XL_SNDINFO_H__

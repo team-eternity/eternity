@@ -15,19 +15,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//
-// Patches.
-// A patch holds one or more columns. Patches are used for sprites and all 
-// masked pictures, and we compose textures from the TEXTURE1/2 lists of 
-// patches.
+// Purpose: Patches.
+//  A patch holds one or more columns. Patches are used for sprites and all 
+//  masked pictures, and we compose textures from the TEXTURE1/2 lists of 
+//  patches.
 //
 // haleyjd 11/21/10: Separated from r_defs.h to help resolve circular
 // #include dependency problems.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley
+//
 
 #ifndef R_PATCH_H__
 #define R_PATCH_H__

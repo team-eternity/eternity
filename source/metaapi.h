@@ -18,14 +18,13 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: Metatables for storage of multiple types of objects in an
+//  associative array.
 //
-//   Metatables for storage of multiple types of objects in an associative
-//   array.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef METAAPI_H__
 #define METAAPI_H__

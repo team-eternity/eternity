@@ -18,6 +18,8 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
+//------------------------------------------------------------------------------
+//
 // Purpose: Code for automated location of users' IWAD files and important
 //  PWADs. Some code is derived from Chocolate Doom, by Simon Howard, used
 //  under terms of the GPLv2.

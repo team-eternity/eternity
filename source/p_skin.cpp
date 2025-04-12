@@ -3,6 +3,7 @@
 // Copyright (C) 2025 James Haley et al.
 // 
 // Copyright (C) 2005 Simon Howard
+// Copyright (C) 1999 Simon Howard 'Fraggle'
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,18 +18,19 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
-//                Copyright (C) 1999 Simon Howard 'Fraggle'
+//------------------------------------------------------------------------------
 //
-// Skins (Doom Legacy)
+// Purpose: Skins (Doom Legacy).
+//  Skins are a set of sprites which replace the normal player sprites, so
+//  in multiplayer the players can look like whatever they want.
 //
-// Skins are a set of sprites which replace the normal player sprites, so
-// in multiplayer the players can look like whatever they want.
+// Authors: Simon Howard, James Haley, Ioan Chera
+//
+
 //
 // NETCODE_FIXME -- CONFIG_FIXME: Need to be able to save skin values more
 // effectively.
 //
-//--------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"

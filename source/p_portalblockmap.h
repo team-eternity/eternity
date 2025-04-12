@@ -18,7 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: linked portal blockmap.
+//------------------------------------------------------------------------------
+//
+// Purpose: Linked portal blockmap.
 // Authors: Ioan Chera
 //
 

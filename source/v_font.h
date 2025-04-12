@@ -15,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Unified Font Engine
+// Purpose: Unified font engine.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-// haleyjd 01/14/05
-//
-//----------------------------------------------------------------------------
 
 #ifndef V_FONT_H__
 #define V_FONT_H__

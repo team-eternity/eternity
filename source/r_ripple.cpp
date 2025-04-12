@@ -15,16 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Flat ripple warping
+// Purpose: Flat ripple warping.
+//  Takes a normal, flat texture and distorts it like the water distortion
+//  in Quake.
 //
-// Takes a normal, flat texture and distorts it like the water distortion
-// in Quake.
+// Authors: Simon Howard, James Haley, Stephen McGranahan, Ioan Chera, Max Waine
 //
-// By Simon Howard
-//
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "doomdef.h"

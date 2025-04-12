@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Auto-caching of PLAYPAL lump
+// Purpose: Auto-caching of PLAYPAL lump.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef AUTOPALETTE_H__
 #define AUTOPALETTE_H__

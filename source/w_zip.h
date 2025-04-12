@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      ZIP Archive Loading
+// Purpose: ZIP archive loading.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef W_ZIP_H__
 #define W_ZIP_H__

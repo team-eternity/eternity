@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Description: 
-//   Hexen MAPINFO Parser
+// Purpose: Hexen MAPINFO parser.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef XL_MAPINFO_H__
 #define XL_MAPINFO_H__

@@ -16,7 +16,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//
+// Purpose: Frame-linked animation processes.
+// Authors: James Haley, Ioan Chera, Simone Ivanish
+//
 
 #ifndef __P_ANIM_H__
 #define __P_ANIM_H__

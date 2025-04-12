@@ -15,15 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  DOOM main program (D_DoomMain) and game loop, plus functions to
+// Purpose: DOOM main program (D_DoomMain) and game loop, plus functions to
 //  determine game mode (shareware, registered), parse command line
 //  parameters, configure game parameters (turbo), and call the startup
 //  functions.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Charles Gunyon, David Hill, Ioan Chera, Max Waine,
+//  vita, Xaser Acheron, Derek MacDonald, Joan Bruguera Micó, FozzeY
+//
 
 // haleyjd 10/28/04: Win32-specific repair for D_DoomExeDir
 // haleyjd 08/20/07: POSIX opendir needed for autoload functionality

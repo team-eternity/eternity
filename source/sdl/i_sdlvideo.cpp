@@ -15,7 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// Purpose: SDL-specific graphics code
+//------------------------------------------------------------------------------
+//
+// Purpose: SDL-specific graphics code.
 // Authors: James Haley, Max Waine
 //
 

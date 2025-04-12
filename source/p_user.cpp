@@ -15,14 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Player related stuff.
-//      Bobbing POV/weapon, movement.
-//      Pending weapon.
+// Purpose: Player related stuff. Bobbing POV/weapon, movement. Pending weapon.
+// Authors: James Haley, Joe Kennedy, Charles Gunyon, David Hill, Ioan Chera,
+//  Max Waine, Xaser Acheron
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

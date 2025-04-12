@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//    Generic hash table implementation.
+// Purpose: Generic hash table implementation
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 // Extinct module, see e_hash.h for full definition of template class
 // EHashTable.

@@ -15,25 +15,24 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: Native implementation of the zone API. This doesn't have a lot of advantage
+//  over the zone heap during normal play, but it shines when the game is
+//  under stress, whereas the zone heap chokes doing an O(N) search over the
+//  block list and wasting time dumping purgables, causing unnecessary disk 
+//  thrashing.
 //
-// Native implementation of the zone API. This doesn't have a lot of advantage
-// over the zone heap during normal play, but it shines when the game is
-// under stress, whereas the zone heap chokes doing an O(N) search over the
-// block list and wasting time dumping purgables, causing unnecessary disk 
-// thrashing.
+//  When running with this heap, there is no limitation to the amount of memory
+//  allocated except what the system will provide.
 //
-// When running with this heap, there is no limitation to the amount of memory
-// allocated except what the system will provide.
+//  Limitations:
+//  * Purgables are never currently dumped unless the machine runs out of RAM.
+//  * Instrumentation cannot track the amount of free memory.
+//  * Heap check is limited to a zone ID check.
 //
-// Limitations:
-// * Purgables are never currently dumped unless the machine runs out of RAM.
-// * Instrumentation cannot track the amount of free memory.
-// * Heap check is limited to a zone ID check.
+// Authors: James Haley, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #include <mutex>
 

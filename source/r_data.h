@@ -15,13 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Refresh module, data I/O, caching, retrieval of graphics
-//  by name.
+// Purpose: Refresh module, data I/O, caching, retrieval of graphics by name.
+// Authors: James Haley, Stephen McGranahan, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
+//
 
 #ifndef R_DATA_H__
 #define R_DATA_H__

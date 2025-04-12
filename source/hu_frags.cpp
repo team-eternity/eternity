@@ -15,16 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Heads up frag counter
+// Purpose: Heads up frag counter.
 //
-// Counts the frags by each player and sorts them so that the best
-// player is at the top of the list
+//  Counts the frags by each player and sorts them so that the best
+//  player is at the top of the list
 //
-// By Simon Howard
+// Authors: Simon Howard, James Haley, Charles Gunyon, Ioan Chera
 //
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

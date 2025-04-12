@@ -15,13 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Dynamic Menus -- EDF Subsystem 
+// Purpose: Dynamic menus -- EDF subsystem.
+// Authors: James Haley, Ioan Chera
 //
-// By James Haley
-//
-//-----------------------------------------------------------------------------
+
+
 
 #ifndef MN_EMENU_H__
 #define MN_EMENU_H__

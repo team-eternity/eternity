@@ -16,18 +16,16 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: Exception handling for Windows, because the SDL parachute sucks.
+//  Based loosely on ExceptionHandler.cpp
+//  Author:  Hans Dietrich
+//           hdietrich2@hotmail.com
+//  Original license: public domain
 //
-//   Exception handling for Windows, because the SDL parachute sucks.
+// Authors: Hans Dietrich, James Haley, Max Waine
 //
-//   Based loosely on ExceptionHandler.cpp
-//   Author:  Hans Dietrich
-//            hdietrich2@hotmail.com
-//   Original license: public domain
-//
-//-----------------------------------------------------------------------------
 
 #if defined(_MSC_VER)
 

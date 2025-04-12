@@ -18,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: Classes for random spot spawns.
+// Authors: James Haley
 //
-//   Classes for random spot spawns.
-//
-//-----------------------------------------------------------------------------
 
 #ifndef METASPAWN_H__
 #define METASPAWN_H__

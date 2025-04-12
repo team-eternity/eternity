@@ -18,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// EDF Reverb Module
+// Purpose: EDF Reverb Module
+// Authors: James Haley
 //
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #ifndef E_REVERBS_H__
 #define E_REVERBS_H__

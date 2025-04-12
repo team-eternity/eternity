@@ -15,7 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// Purpose: Helper functions for logging and debugging. Should be disabled in release builds.
+//------------------------------------------------------------------------------
+//
+// Purpose: Helper functions for logging and debugging.
+//  Should be disabled in release builds.
+//
 // Authors: Ioan Chera
 //
 

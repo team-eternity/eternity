@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Dynamic segs for PolyObject re-implementation.
+// Purpose: Dynamic segs for PolyObject re-implementation.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef R_DYNSEG_H__
 #define R_DYNSEG_H__

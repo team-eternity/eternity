@@ -18,11 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: Voxels.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef R_VOXELS_H__
 #define R_VOXELS_H__

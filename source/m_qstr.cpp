@@ -15,21 +15,20 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Reallocating string structure
+// Purpose: Reallocating string structure.
 //
-// What this class guarantees:
-// * The string will always be null-terminated
-// * Indexing functions always check array bounds
-// * Insertion functions always reallocate when needed
+//  What this class guarantees:
+//  * The string will always be null-terminated
+//  * Indexing functions always check array bounds
+//  * Insertion functions always reallocate when needed
 //
-// Of course, using getBuffer can negate these, so avoid it
-// except for passing a char * to read op functions.
+//  Of course, using getBuffer can negate these, so avoid it
+//  except for passing a char * to read op functions.
 //
-// By James Haley
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "d_dehtbl.h"     // for D_HashTableKey

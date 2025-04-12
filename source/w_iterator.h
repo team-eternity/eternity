@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Wad Directory Iterators
+// Purpose: Wad directory iterators.
+// Authors: James Haley, Stephen McGranahan, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef W_ITERATOR_H__
 #define W_ITERATOR_H__

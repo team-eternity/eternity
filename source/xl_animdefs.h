@@ -18,6 +18,8 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
+//------------------------------------------------------------------------------
+//
 // Purpose: ANIMDEFS lump, from Hexen. Replaces ANIMATED.
 // Authors: Ioan Chera
 //

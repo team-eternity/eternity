@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Method of Death Flags
+// Purpose: Method of death flags.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef __D_MOD_H__
 #define __D_MOD_H__

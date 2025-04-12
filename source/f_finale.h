@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Related to f_finale.c, which is called at the end of a level
-//    
-//-----------------------------------------------------------------------------
+// Purpose: Related to finale.c, which is called at the end of a level.
+// Authors: James Haley, Ioan Chera
+//
 
 #ifndef F_FINALE_H__
 #define F_FINALE_H__

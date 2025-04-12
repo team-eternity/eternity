@@ -15,7 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// Purpose: Main program, simply calls D_DoomMain high level loop
+//------------------------------------------------------------------------------
+//
+// Purpose: Main program, simply calls D_DoomMain high level loop.
 // Authors: James Haley, Max Waine
 //
 

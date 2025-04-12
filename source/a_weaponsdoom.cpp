@@ -18,9 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Purpose: Doom weapon action functions
+// Purpose: Doom weapon action functions.
 // Authors: Max Waine
 //
 

@@ -15,11 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Weapon sprite animation, weapon objects.
-//      Action functions for weapons.
+// Purpose: Weapon sprite animation, weapon objects.
+//  Action functions for weapons.
+//
+// Authors: James Haley, David Hill, Ioan Chera, Max Waine, Xaser Acheron
+//
+
 //
 // NETCODE_FIXME -- DEMO_FIXME -- WEAPON_FIXME: Weapon changing, prefs,
 // etc. need overhaul for all of these. See comments in other modules
@@ -27,7 +30,6 @@
 // outside of ticcmd_t to indicate weapon changes now, and so will not
 // face the issue of being limited to 16 weapons.
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"

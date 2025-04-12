@@ -15,16 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   PNG Resource Reading and Conversion
+// Purpose: PNG Resource Reading and Conversion
 //   
-//   Some code derived from Doom 64 EX, by Kaiser. Used under the GPL.
-//   Some code derived from SDL_image, by Sam Lantinga. Used under the GPL
-//    (via license upgrade option of the LGPL v2.1 license)
+//  Some code derived from Doom 64 EX, by Kaiser. Used under the GPL.
+//  Some code derived from SDL_image, by Sam Lantinga. Used under the GPL
+//   (via license upgrade option of the LGPL v2.1 license)
 //
-//-----------------------------------------------------------------------------
+// Authors: Samuel Villarreal, James Haley, Max Waine
+//
 
 #include "z_zone.h"
 

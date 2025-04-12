@@ -18,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// General queue code
+// Purpose: General queue code.
+// Authors: James Haley, Charles Gunyon
 //
-// By James Haley
-//
-//-----------------------------------------------------------------------------
 
 #ifndef M_QUEUE_H
 #define M_QUEUE_H

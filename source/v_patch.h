@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Functions to draw patches (by post)
+// Purpose: Functions to draw patches (by post).
+// Authors: James Haley, Stephen McGranahan, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef V_PATCH_H__
 #define V_PATCH_H__

@@ -15,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Misc menu stuff
+// Purpose: Misc menu stuff.
+// Authors: Simon Howard, Jamey Haley
 //
-// By Simon Howard 
-//
-//----------------------------------------------------------------------------
 
 #ifndef MN_MISC_H__
 #define MN_MISC_H__

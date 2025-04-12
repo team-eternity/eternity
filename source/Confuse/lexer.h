@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//    Lexer header for custom libConfuse lexer.
+// Purpose: Lexer header for custom libConfuse lexer.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef LEXER_H__
 #define LEXER_H__

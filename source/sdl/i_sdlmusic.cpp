@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      SDL_mixer music interface
+// Purpose: SDL_mixer music interface.
+// Authors: James Haley, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 // haleyjd 11/22/08: I don't understand why this is needed here...
 #define USE_RWOPS

@@ -18,14 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   
-//  OpenGL Header Includes
-//  haleyjd 05/15/11
+// Purpose: OpenGL header includes.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef GL_HEADERS_H__
 #define GL_HEADERS_H__

@@ -18,7 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: linked portal aware switch using
+//------------------------------------------------------------------------------
+//
+// Purpose: Linked portal aware switch using.
 // Authors: Ioan Chera
 //
 

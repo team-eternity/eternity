@@ -15,14 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Action routines for lighting thinkers
+// Purpose: Action routines for lighting thinkers.
 //  Spawn sector based lighting effects.
 //  Handle lighting linedef types
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Ioan Chera, Max Waine
+//
 
 #include "z_zone.h"
 

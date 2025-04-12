@@ -18,31 +18,30 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// EDF Sound Module
+// Purpose: EDF sound module.
 //
-// Maintains the globally-used sound hash tables, for lookup by
-// assigned mnemonics and DeHackEd numbers. EDF-defined sounds are
-// processed and linked into the tables first. Any wad lumps with
-// names starting with DS* are later added as the wads that contain
-// them are loaded.
+//  Maintains the globally-used sound hash tables, for lookup by
+//  assigned mnemonics and DeHackEd numbers. EDF-defined sounds are
+//  processed and linked into the tables first. Any wad lumps with
+//  names starting with DS* are later added as the wads that contain
+//  them are loaded.
 //
-// Note that wad sounds can't be referred to via DeHackEd, which
-// hasn't changed since this functionality was implemented in s_sound.c.
-// The functions in s_sound.c for sound hashing now call down to these
-// functions.
+//  Note that wad sounds can't be referred to via DeHackEd, which
+//  hasn't changed since this functionality was implemented in s_sound.c.
+//  The functions in s_sound.c for sound hashing now call down to these
+//  functions.
 //
-// 05/28/06: Sound Sequences, Ambience
+//  05/28/06: Sound Sequences, Ambience
 //
-// This module also now contains EDF sound sequence code. Sound sequences are
-// miniature scripts that determine how sectors and polyobjects play sounds.
-// Also included are ambience objects that work with mapthings 14001-14065 to
-// provide a generalized ambient sound engine.
+//  This module also now contains EDF sound sequence code. Sound sequences are
+//  miniature scripts that determine how sectors and polyobjects play sounds.
+//  Also included are ambience objects that work with mapthings 14001-14065 to
+//  provide a generalized ambient sound engine.
 //
-// By James Haley
+// Authors: James Haley, Ioan Chera, Alison Gray Watson, Max Waine
 //
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"

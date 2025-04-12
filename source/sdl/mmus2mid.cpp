@@ -16,10 +16,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  This file supports conversion of MUS format music in memory
+// Purpose: This file supports conversion of MUS format music in memory
 //  to MIDI format 1 music in memory. 
 //
 //  The primary routine, mmus2mid, converts a block of memory in MUS format
@@ -37,7 +36,8 @@
 //
 //  Much of the code here is thanks to S. Bacquet's source for QMUS2MID.C
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Ioan Chera
+//
 
 #include <stdio.h>
 #include <stdlib.h>

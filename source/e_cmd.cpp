@@ -18,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// EDF- and ExtraData-Related Console Commands and Script Functions
+// Purpose: EDF- and ExtraData-related console commands and script functions.
+// Authors: James Haley
 //
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

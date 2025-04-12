@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//    Implementation of SDL classes for Gamepads and Joysticks
+// Purpose: Implementation of SDL classes for gamepads and joysticks.
+// Authors: James Haley, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef I_SDLGAMEPADS_H__
 #define I_SDLGAMEPADS_H__

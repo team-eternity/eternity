@@ -15,11 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Menu Item Classes
+// Purpose: Menu item classes.
+// Authors: James Haley, Max Waine
 //
-//----------------------------------------------------------------------------
 
 #ifndef MN_ITEMS_H__
 #define MN_ITEMS_H__

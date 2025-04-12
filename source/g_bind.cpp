@@ -15,17 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Key Bindings
+// Purpose: Key bindings.
 //
-// Rather than use the old system of binding a key to an action, we bind
-// an action to a key. This way we can have as many actions as we want
-// bound to a particular key.
+//  Rather than use the old system of binding a key to an action, we bind
+//  an action to a key. This way we can have as many actions as we want
+//  bound to a particular key.
 //
-// By Simon Howard, Revised by James Haley
+// Authors: Simon Howard, James Haley, Max Waine, Ioan Chera
 //
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"

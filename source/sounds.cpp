@@ -15,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Created by a sound utility.
-//      Kept as a sample, DOOM2 sounds.
+// Purpose: Created by a sound utility. Kept as a sample, DOOM2 sounds.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 // killough 5/3/98: reformatted
 

@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Batched console commands.
+// Purpose: Batched console commands.
+// Authors: James Haley, Charles Gunyon
 //
-//----------------------------------------------------------------------------
 
 #ifndef C_BATCH__
 #define C_BATCH__

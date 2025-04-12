@@ -15,7 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//
+// Purpose: Console network support.
+// Authors: James Haley, Ioan Chera, Max Waine
+//
 
 #ifndef C_NET_H__
 #define C_NET_H__

@@ -15,16 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// $Id: d_deh.c,v 1.20 1998/06/01 22:30:38 thldrmn Exp $
+// Purpose: DeHackEd file support. New for the TeamTNT "Boom" engine.
+// Authors: Ty Halderman, TeamTNT, James Haley, David Hill, Ioan Chera,
+//  Max Waine, Xaser Acheron
 //
-// Dehacked file support
-// New for the TeamTNT "Boom" engine
-//
-// Author: Ty Halderman, TeamTNT
-//
-//-----------------------------------------------------------------------------
 
 // killough 5/2/98: fixed headers, removed redundant external declarations:
 #include "z_zone.h"

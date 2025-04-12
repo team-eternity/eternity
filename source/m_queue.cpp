@@ -15,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// General queue code
+// Purpose: General queue code.
+// Authors: James Haley, Charles Gunyon
 //
-// By James Haley
-//
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "m_queue.h"

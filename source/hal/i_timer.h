@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//    Hardware Abstraction Layer for Timing
+// Purpose: Hardware abstraction layer for timing.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef I_TIMER_H__
 #define I_TIMER_H__

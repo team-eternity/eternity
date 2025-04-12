@@ -15,13 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Constants and functions for object interaction.
-//   External variables editable by DeHackEd patch.
+// Purpose: Constants and functions for object interaction.
+//  External variables editable by DeHackEd patch.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Ioan Chera, Max Waine
+//
 
 #ifndef P_INTER_H__
 #define P_INTER_H__

@@ -18,7 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: EDF animation definitions
+//------------------------------------------------------------------------------
+//
+// Purpose: EDF animation definitions.
 // Authors: Ioan Chera
 //
 

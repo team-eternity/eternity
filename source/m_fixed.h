@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Fixed point arithemtics, implementation.
+// Purpose: Fixed point arithmetics, implementation.
+// Authors: James Haley, Stephen McGranahan
 //
-//-----------------------------------------------------------------------------
 
 #ifndef M_FIXED_H__
 #define M_FIXED_H__

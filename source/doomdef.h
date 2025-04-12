@@ -15,13 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Internally used data structures for virtually everything,
-//   key definitions, lots of other stuff.
+// Purpose: Internally used data structures for virtually everything,
+//  key definitions, lots of other stuff.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Stephen McGranahan, Ioan Chera, Max Waine
+//
 
 #ifndef DOOMDEF_H__
 #define DOOMDEF_H__

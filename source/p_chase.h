@@ -16,7 +16,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//
+// Purpose: Chasecam.
+// Authors: James Haley, Stephen McGranahan
+//
 
 #ifndef P_CHASE_H__
 #define P_CHASE_H__

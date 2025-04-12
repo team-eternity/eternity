@@ -15,11 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
 // Purpose: Heretic weapon action functions
-// Almost all code is derived from Chocolate Doom, by Simon Howard, used under
-// terms of the GPLv3.
+//  Almost all code is derived from Chocolate Doom, by Simon Howard,
+//  used under terms of the GPLv3.
 //
 // Authors: Max Waine
 //

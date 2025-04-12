@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//    SDL Timer Implementation
+// Purpose: SDL timer implementation.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef I_SDLTIMER_H__
 #define I_SDLTIMER_H__

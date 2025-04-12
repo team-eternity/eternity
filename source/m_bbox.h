@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//    Bounding-box routines (clipping, bsp, etc)
-//    
-//-----------------------------------------------------------------------------
+// Purpose: Bounding-box routines (clipping, bsp, etc).
+// Authors: James Haley, Ioan Chera
+//
 
 #ifndef M_BBOX_H__
 #define M_BBOX_H__

@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      System specific interface stuff.
+// Purpose: System-specific interface stuff.
+// Authors: James Haley, Max Waine, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef I_SYSTEM_H__
 #define I_SYSTEM_H__

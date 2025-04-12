@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Buffered file output.
+// Purpose: Buffered file output.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef M_BUFFER_H__
 #define M_BUFFER_H__

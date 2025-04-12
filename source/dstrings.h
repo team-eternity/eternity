@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//	DOOM strings, by language.
+// Purpose: DOOM strings, by language.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef DSTRINGS_H__
 #define DSTRINGS_H__

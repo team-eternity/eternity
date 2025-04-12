@@ -15,18 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Unified Font Engine
+// Purpose: Unified font engine.
+//  The functions in this module replace code that was previously
+//  duplicated with special-case constants inserted in at least four
+//  different modules.  This provides a uniform interface for all fonts
+//  and makes the addition of more fonts easier.
 //
-// haleyjd 01/14/05
+// Authors: James Haley, Max Waine
 //
-// The functions in this module replace code that was previously
-// duplicated with special-case constants inserted in at least four
-// different modules.  This provides a uniform interface for all fonts
-// and makes the addition of more fonts easier.
-//
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

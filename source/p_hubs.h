@@ -17,15 +17,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Hubs.
+// Purpose: Hubs.
+// Authors: Simon Howard
 //
-// Header file.
-//
-// By Simon Howard
-//
-//---------------------------------------------------------------------------
 
 #ifndef __P_HUBS_H__
 #define __P_HUBS_H__

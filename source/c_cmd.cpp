@@ -15,19 +15,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Console commands
+// Purpose: Basic console commands and variables for controlling the console
+//  itself.
+// Authors: Simon Howard, James Haley
 //
-// basic console commands and variables for controlling
-// the console itself.
-// 
-// By Simon Howard
+
 //
 // NETCODE_FIXME -- CONSOLE_FIXME
 // There's a lot of cruft in here that can be done without.
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

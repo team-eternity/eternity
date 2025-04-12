@@ -15,18 +15,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// File/WAD Standard Input Routines
+// Purpose: File/WAD Standard Input Routines
 //
-// This code was moved here from d_deh.c and generalized to make a consistent
-// interface for emulating stdio functions on wad lumps. The structure here 
-// handles either external files or wad lumps, depending on how it is 
-// initialized, and emulates stdio regardless.
+//  This code was moved here from d_deh.c and generalized to make a consistent
+//  interface for emulating stdio functions on wad lumps. The structure here 
+//  handles either external files or wad lumps, depending on how it is 
+//  initialized, and emulates stdio regardless.
 //
-// James Haley
+// Authors: James Haley
 //
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "d_keywds.h"

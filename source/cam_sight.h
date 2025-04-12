@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Line of sight checking for cameras
+// Purpose: Line of sight checking for cameras
+// Authors: James Haley, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef CAM_SIGHT_H__
 #define CAM_SIGHT_H__

@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Intermission.
+// Purpose: Intermission.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef WI_STUFF_H__
 #define WI_STUFF_H__

@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  System specific network interface stuff.
+// Purpose: System specific network interface stuff.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef __I_NET__
 #define __I_NET__

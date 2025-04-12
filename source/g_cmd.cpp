@@ -15,15 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Game console commands
+// Purpose: Game console commands.
+//  Console commands controlling the game functions.
 //
-// console commands controlling the game functions.
+// Authors: Simon Howard, James Haley, Charles Gunyon, Ioan Chera, Max Waine
 //
-// By Simon Howard
-//
-//---------------------------------------------------------------------------
 
 #include "z_zone.h"
 

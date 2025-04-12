@@ -15,7 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//
+// Purpose: Thinker, ticker.
+// Authors: James Haley, David Hill, Max Waine
+//
 
 #ifndef P_TICK_H__
 #define P_TICK_H__

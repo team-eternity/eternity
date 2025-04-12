@@ -15,10 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Cheat sequence checking.
+// Purpose: Cheat sequence checking.
+// Authors: James Haley, Max Waine, Ioan Chera
+//
+
 //
 // NETCODE_FIXME: Cheats need to work in netgames and demos when enabled 
 // by the arbitrator. Requires significant changes, including addition of
@@ -28,7 +30,6 @@
 // It should be possible to have an exclusive cheats mode and an exclusive
 // bindings mode.
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

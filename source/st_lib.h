@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  The status bar widget definitions and prototypes
+// Purpose: The status bar widget definitions and prototypes.
+// Authors: James Haley, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef ST_LIB_H__
 #define ST_LIB_H__

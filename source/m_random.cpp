@@ -15,10 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Random number LUT.
+// Purpose: Random number LUT.
+// Authors: James Haley, Ioan Chera, Max Waine
+//
+
 //
 // 1/19/98 killough: Rewrote random number generator for better randomness,
 // while at the same time maintaining demo sync and backward compatibility.
@@ -26,7 +28,6 @@
 // 2/16/98 killough: Made each RNG local to each control-equivalent block,
 // to reduce the chances of demo sync problems.
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "d_gi.h"

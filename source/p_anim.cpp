@@ -16,17 +16,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// haleyjd 11/14/00
+// Purpose: Handles new frame-linked animation processes.
+//  Currently performs lightning in sky sectors.
+//  Updates scroll offsets for Hexen-style skies.
 //
-// Description:  Handles new frame-linked animation processes
-//               Currently performs lightning in sky sectors
+// Authors: James Haley, Stephen McGranahan, Ioan Chera, Max Waine,
+//  Simone Ivanish
 //
-//               11/14/00: updates scroll offsets for hexen-style
-//                         skies
-//
-//=========================================================================
 
 #include "z_zone.h"
 #include "doomstat.h"

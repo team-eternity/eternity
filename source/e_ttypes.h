@@ -18,13 +18,13 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//   New dynamic TerrainTypes system. Inspired heavily by zdoom, but
-//   all-original code.
+// Purpose: New dynamic TerrainTypes system. Inspired heavily by ZDoom, but
+// all-original code.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley
+//
 
 #ifndef E_TTYPES_H__
 #define E_TTYPES_H__

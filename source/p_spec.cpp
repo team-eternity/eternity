@@ -15,20 +15,22 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   -Loads and initializes texture and flat animation sequences
-//   -Implements utility functions for all linedef/sector special handlers
-//   -Dispatches walkover and gun line triggers
-//   -Initializes and implements special sector types
-//   -Implements donut linedef triggers
-//   -Initializes and implements BOOM linedef triggers for
-//     Friction
+// Purpose:
+//  -Loads and initializes texture and flat animation sequences.
+//  -Implements utility functions for all linedef/sector special handlers.
+//  -Dispatches walkover and gun line triggers.
+//  -Initializes and implements special sector types.
+//  -Implements donut linedef triggers.
+//  -Initializes and implements BOOM linedef triggers for friction.
+//
+// Authors: James Haley, Stephen McGranahan, David Hill, Ioan Chera, Max Waine
+//
+
 //
 // haleyjd 10/13/2011: TODO - module is oversized; split up.
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"

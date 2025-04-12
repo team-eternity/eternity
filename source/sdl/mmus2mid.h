@@ -16,11 +16,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// $Id: mmus2mid.h,v 1.6 1998/05/10 23:00:48 jim Exp $
+// Purpose: MUS to MIDI.
+// Authors: James Haley, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef MMUS2MID_H__
 #define MMUS2MID_H__

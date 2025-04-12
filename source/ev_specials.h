@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Generalized line action system
+// Purpose: Generalized line action system.
+// Authors: James Haley, David Hill, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef EV_SPECIALS_H__
 #define EV_SPECIALS_H__

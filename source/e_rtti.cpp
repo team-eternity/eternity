@@ -18,12 +18,13 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//    Base for classes with custom RTTI. Adapted from the original ThinkerType.
+// Purpose: Base for classes with custom RTTI.
+//  Adapted from the original ThinkerType.
 //
-//-----------------------------------------------------------------------------
+// Authors: David Hill, James Haley
+//
 
 #include "e_rtti.h"
 

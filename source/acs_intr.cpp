@@ -18,15 +18,12 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Original 100% GPL ACS Interpreter
+// Purpose: Original 100% GPL ACS Interpreter. By James Haley, improved by
+//  David Hill.
+// Authors: James Haley, David Hill
 //
-// By James Haley
-//
-// Improved by David Hill
-//
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

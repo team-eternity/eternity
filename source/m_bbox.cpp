@@ -15,15 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Main loop menu stuff.
-//      Random number LUT.
-//      Default Config File.
-//      PCX Screenshots.
+// Purpose: Bounding-box routines (clipping, bsp, etc).
+// Authors: James Haley, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #include <float.h>
 #include "m_bbox.h"

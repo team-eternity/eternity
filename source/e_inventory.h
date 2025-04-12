@@ -20,7 +20,7 @@
 //
 //----------------------------------------------------------------------------
 //
-// Purpose: Inventory
+// Purpose: EDF inventory.
 // Authors: James Haley, Max Waine
 //
 

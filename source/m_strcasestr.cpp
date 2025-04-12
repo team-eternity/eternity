@@ -17,11 +17,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// GNUlib strcasestr implementation for case-insensitive substring detection.
+// Purpose: GNUlib strcasestr implementation for case-insensitive substring
+//  detection.
 //
-//-----------------------------------------------------------------------------
+// Authors: Bruno Haible, James Haley
+//
 
 #include "z_zone.h"
 #include "m_ctype.h"

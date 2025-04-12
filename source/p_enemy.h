@@ -15,14 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Enemy thinking, AI.
-//      Action Pointer Functions
-//      that are associated with states/frames.
+// Purpose: Enemy thinking, AI.
+//  Action Pointer Functions that are associated with states/frames.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Ioan Chera, Max Waine
+//
 
 #ifndef P_ENEMY_H__
 #define P_ENEMY_H__

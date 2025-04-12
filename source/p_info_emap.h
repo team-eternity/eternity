@@ -18,7 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: Eternity EMAPINFO lump processing
+//------------------------------------------------------------------------------
+//
+// Purpose: Eternity EMAPINFO lump processing.
 // Authors: Ioan Chera
 //
 

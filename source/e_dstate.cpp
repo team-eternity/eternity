@@ -18,22 +18,23 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// EDF DECORATE States Implementation
+// Purpose: EDF DECORATE states implementation.
 //
-// 100% original GPL code by James Haley
+//  100% original GPL code by James Haley
 //
-// I have implemented DECORATE states into EDF for several reasons. First and
-// foremost is that their compact syntax is vastly superior even to EDF cmp
-// frames. Second, they offer improved encapsulation of states within the
-// objects that use them. Third, they will be useful for weapons and 
-// inventory definitions as well as mobjinfo.
+//  I have implemented DECORATE states into EDF for several reasons. First and
+//  foremost is that their compact syntax is vastly superior even to EDF cmp
+//  frames. Second, they offer improved encapsulation of states within the
+//  objects that use them. Third, they will be useful for weapons and 
+//  inventory definitions as well as mobjinfo.
 //
-// And finally, they offer a vastly simpler method of both adding and removing
-// metastates from objects.
+//  And finally, they offer a vastly simpler method of both adding and removing
+//  metastates from objects.
 //
-//----------------------------------------------------------------------------
+// Authors: James Haley, Ioan Chera
+//
 
 #include "z_zone.h"
 #include "i_system.h"

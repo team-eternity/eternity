@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Replacement for standard ctype.h header
+// Purpose: Replacement for standard ctype.h header.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef M_CTYPE_H__
 #define M_CTYPE_H__

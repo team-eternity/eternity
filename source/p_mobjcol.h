@@ -18,16 +18,16 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Mobj Collections
+// Purpose: Mobj Collections
 //  These are used by stuff like Boss Spawn Spots and D'Sparil landings, and
 //  evolved out of a generalization of the code Lee originally wrote to remove
 //  the boss spot limit in BOOM. The core logic is now based on the generic
 //  PODCollection class, however, and this just adds a bit of utility to it.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley
+//
 
 #ifndef P_MOBJCOL_H__
 #define P_MOBJCOL_H__

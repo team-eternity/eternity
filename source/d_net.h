@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Networking stuff.
+// Purpose: Networking stuff.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef D_NET_H__
 #define D_NET_H__

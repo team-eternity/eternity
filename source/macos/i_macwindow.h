@@ -18,9 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Purpose: macOS Objective-C specific Window functions 
+// Purpose: macOS Objective-C specific Window functions.
 // Authors: Ioan Chera
 //
 

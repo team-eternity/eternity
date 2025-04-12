@@ -18,7 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: Read-only contiguous storage [int: [int]] data map
+//------------------------------------------------------------------------------
+//
+// Purpose: Read-only contiguous storage [int: [int]] data map.
 // Authors: Ioan Chera
 //
 

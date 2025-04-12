@@ -18,7 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: UMAPINFO lump, invented by Graf Zahl for cross-port support
+//------------------------------------------------------------------------------
+//
+// Purpose: UMAPINFO lump, invented by Graf Zahl for cross-port support.
 // Authors: Ioan Chera
 //
 

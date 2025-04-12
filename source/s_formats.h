@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Sound loading
+// Purpose: Sounds loading.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef S_FORMATS_H__
 #define S_FORMATS_H__

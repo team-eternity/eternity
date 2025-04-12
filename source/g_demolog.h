@@ -18,7 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: Isolated demo logging functions
+//------------------------------------------------------------------------------
+//
+// Purpose: Isolated demo logging functions.
 // Authors: Ioan Chera
 //
 

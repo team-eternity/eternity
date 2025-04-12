@@ -15,11 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
 // Purpose: Do all the WAD I/O, get map description,
-//          set up initial state and misc. LUTs.
-// Authors: James Haley, Ioan Chera
+//  set up initial state and misc. LUTs.
+//
+// Authors: James Haley, Stephen McGranahan, Ioan Chera, Max Waine
 //
 
 

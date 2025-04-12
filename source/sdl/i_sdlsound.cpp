@@ -15,8 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
+//------------------------------------------------------------------------------
+//
 // Purpose: SDL sound system interface
-// Authors: James Haley, Stephen McGranahan, Julian Aubourg
+// Authors: James Haley, Stephen McGranahan, Julian Aubourg, Max Waine
 //
 
 #include "SDL.h"

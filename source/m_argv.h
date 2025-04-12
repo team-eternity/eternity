@@ -15,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Utilities for storing and checking command-line parameters.
-//    
-//-----------------------------------------------------------------------------
-
+// Purpose: Utilities for storing and checking command-line parameters.
+// Authors: James Haley
+//
 
 #ifndef __M_ARGV__
 #define __M_ARGV__

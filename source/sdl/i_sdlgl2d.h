@@ -18,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   
-//   SDL-specific GL 2D-in-3D video code
+// Purpose: SDL-specific GL 2D-in-3D video code.
+// Authors: James Haley, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef I_SDLGL2D_H__
 #define I_SDLGL2D_H__

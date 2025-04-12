@@ -15,9 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Purpose: Moving object handling. Spawn functions
+// Purpose: Moving object handling. Spawn functions.
 // Authors: James Haley, Ioan Chera, Max Waine
 //
 

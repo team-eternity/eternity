@@ -15,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Game console variables 
+// Purpose: Game console variables.
+// Authors: Simon Howard, James Haley, Joe Kennedy, David Hill, Ioan Chera
 //
-// By Simon Howard
-//
-//---------------------------------------------------------------------------
 
 /* includes ************************/
 

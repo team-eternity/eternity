@@ -15,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Slopes
-//      SoM created 05/10/09
+// Purpose: Slopes.
+// Authors: Stephen McGranahan, James Haley, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef P_SLOPES_H__
 #define P_SLOPES_H__

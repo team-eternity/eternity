@@ -15,11 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Console Commands - Macros and Command Execution
+// Purpose: Console commands - macros and command execution.
+// Authors: James Haley, Ioan Chera
 //
-//----------------------------------------------------------------------------
 
 #ifndef C_RUNCMD_H__
 #define C_RUNCMD_H__

@@ -1,5 +1,4 @@
 //
-//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley, Ioan Chera, et al.
 //
@@ -19,7 +18,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
 // Purpose: Reentrant path traversing, used by several new functions
 // Authors: James Haley, Ioan Chera, Max Waine

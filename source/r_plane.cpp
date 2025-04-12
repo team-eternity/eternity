@@ -15,12 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Here is a core component: drawing the floors and ceilings,
-//       while maintaining a per column clipping list only.
-//      Moreover, the sky areas have to be determined.
+// Purpose: Here is a core component: drawing the floors and ceilings,
+//  while maintaining a per column clipping list only.
+//  Moreover, the sky areas have to be determined.
+//
+// Authors: James Haley, Stephen McGranahan, Ioan Chera, Max Waine
+//
+
 //
 // MAXVISPLANES is no longer a limit on the number of visplanes,
 // but a limit on the number of hash slots; larger numbers mean
@@ -33,7 +36,6 @@
 //
 // Lee Killough
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"    /* memory allocation wrappers -- killough */
 #include "i_system.h"

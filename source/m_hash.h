@@ -18,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   
-//    Hash routines for data integrity and cryptographic purposes.
+// Purpose: Hash routines for data integrity and cryptographic purposes.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef M_HASH_H__
 #define M_HASH_H__

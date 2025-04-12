@@ -15,14 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Printed strings for translation.
-//  English language support (default).
-//  See dstrings.h for suggestions about foreign language BEX support
+// Purpose: Printed strings for translation.
+//  English languages support (default).
+//  See dstrings.h for suggestions about foreign language BEX support.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley
+//
 
 #ifndef D_ENGLSH_H__
 #define D_ENGLSH_H__

@@ -18,7 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: archiving named objects by their name and not index, for forward compatibility.
+//------------------------------------------------------------------------------
+//
+// Purpose: Archiving named objects by their name and not index,
+//  for forward compatibility.
+//
 // Authors: Ioan Chera
 //
 

@@ -15,12 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Items: key cards, artifacts, weapon, ammunition.
-//
-//-----------------------------------------------------------------------------
+// Purpose: Items: key cards, artifacts, weapon, ammunition.
+// Authors: James Haley, Max Waine, Ioan Chera
 
 #ifndef D_ITEMS_H__
 #define D_ITEMS_H__

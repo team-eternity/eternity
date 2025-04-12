@@ -18,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// EDF Argument Management
+// Purpose: EDF argument management.
+// Authors: James Haley, David Hill, Ioan Chera, Max Waine, Xaser Acheron
 //
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #ifndef E_ARGS_H__
 #define E_ARGS_H__

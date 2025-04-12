@@ -15,15 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Action Pointer Functions
-//      that are associated with states/frames.
+// Purpose: DECORATE-compatible or -inspired action functions.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-//      DECORATE-compatible or -inspired action functions.
-//
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

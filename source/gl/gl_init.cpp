@@ -18,14 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   
-//  OpenGL Initialization/Setup Functions
-//  haleyjd 05/15/11
+// Purpose: OpenGL initialization/setup functions.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifdef EE_FEATURE_OPENGL
 

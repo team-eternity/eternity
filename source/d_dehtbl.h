@@ -15,7 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//
+// Purpose: DeHackEd information tables / hashing.
+// Authors: James Haley, David Hill, Xaser Acheron
+//
 
 #ifndef D_DEHTBL_H__
 #define D_DEHTBL_H__

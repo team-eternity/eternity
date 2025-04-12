@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Functions to deal with retrieving data from raw binary.
+// Purpose: Functions to deal with retrieving data from raw binary.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef M_BINARY_H__
 #define M_BINARY_H__

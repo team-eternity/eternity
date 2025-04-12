@@ -18,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// EDF Strings Module
+// Purpose: EDF strings module.
+// Authors: James Haley, Alison Gray Watson
 //
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #ifndef E_STRING_H__
 #define E_STRING_H__

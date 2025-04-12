@@ -18,8 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: linked portal crossing calculations. Separated from p_portal due to
-//          becoming too many.
+//------------------------------------------------------------------------------
+//
+// Purpose: Linked portal crossing calculations. Separated from p_portal due to
+//  becoming too many.
+//
 // Authors: Ioan Chera
 //
 

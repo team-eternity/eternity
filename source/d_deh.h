@@ -15,11 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DeHackEd Externals
+// Purpose: DeHackEd externals.
+// Authors: James Haley, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef D_DEH_H__
 #define D_DEH_H__

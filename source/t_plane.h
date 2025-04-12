@@ -15,12 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  General plane mover routines
+// Purpose: General plane mover routines.
+// Authors: James Haley, Stephen McGranahan, Ioan Chera
 //
-//-----------------------------------------------------------------------------
+
 
 #ifndef T_PLANE_H__
 #define T_PLANE_H__

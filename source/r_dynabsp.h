@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//    Dynamic BSP sub-trees for dynaseg sorting.
+// Purpose: Dynamic BSP sub-trees for dynaseg sorting.
+// Authors: James Haley, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef R_DYNABSP_H__
 #define R_DYNABSP_H__

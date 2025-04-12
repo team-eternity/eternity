@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Wad directory hacks for prominent broken wad files
+// Purpose: Wad directory hacks for prominent broken wad files.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef W_HACKS_H__
 #define W_HACKS_H__

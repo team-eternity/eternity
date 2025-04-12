@@ -18,15 +18,13 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// EDF Gamemode Properties
+// Purpose: EDF gamemode properties.
+//  Allows editing of select properties from the GameModeInfo structure.
 //
-// Allows editing of select properties from the GameModeInfo structure.
+// Authors: James Haley, Max Waine, Ioan Chera, Xaser Acheron, Derek MacDonald
 //
-// James Haley
-//
-//----------------------------------------------------------------------------
 
 #define NEED_EDF_DEFINITIONS
 

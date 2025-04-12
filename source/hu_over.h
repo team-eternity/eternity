@@ -15,7 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//
+// Purpose: Heads up 'overlay' for fullscreen.
+// Authors: James Haley, Ioan Chera, Max Waine, Sarah Woodie
+//
 
 #ifndef HU_OVER_H__
 #define HU_OVER_H__

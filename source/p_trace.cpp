@@ -15,13 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: Tracers and path traversal, moved here from p_map.c and p_maputl.c.
+// Authors: James Haley, Stephen McGranahan, Ioan Chera, Max Waine,
+//  Simone Ivanish
 //
-// Tracers and path traversal, moved here from p_map.c and p_maputl.c.
-//
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

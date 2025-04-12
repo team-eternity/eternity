@@ -15,14 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: Routines for IWAD location, version identification, and loading.
+//  Split out of d_main.cpp 08/12/12.
 //
-//    Routines for IWAD location, version identification, and loading.
-//    Split out of d_main.cpp 08/12/12.
+// Authors: James Haley, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef D_IWAD_H__
 #define D_IWAD_H__

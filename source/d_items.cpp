@@ -15,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: The weapon info structure.
+// Authors: James Haley, Max Waine
 //
-// The weapon info structure.
-//
-//-----------------------------------------------------------------------------
 
 // We are referring to sprite numbers.
 #include "d_items.h"

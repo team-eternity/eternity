@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Cheat code checking.
+// Purpose: Cheat code checking.
+// Authors: James Haley, Max Waine, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef M_CHEAT_H__
 #define M_CHEAT_H__

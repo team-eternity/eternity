@@ -18,17 +18,16 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Generalized Bidirectional Double-linked List Routines
+// Purpose: Generalized bidirectional double-linked list routines.
+//  A generalized bidirectional, circular double linked list.
+//  As the name suggests, the primary distinction between this and DLListItem
+//  is that the resulting list can be traversed forward and backward. A dummy
+//  head node is also required.
 //
-// haleyjd 04/16/12: A generalized bidirectional, circular double linked list.
-// As the name suggests, the primary distinction between this and DLListItem
-// is that the resulting list can be traversed forward and backward. A dummy
-// head node is also required.
-//    
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Max Waine
+//
 
 #ifndef M_BDLIST_H__
 #define M_BDLIST_H__

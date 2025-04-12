@@ -15,13 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Linked portal clipping. Mostly called from functions like
-//      when map has portals PIT_CheckPosition3D
+// Purpose: Linked portal clipping. Mostly called from functions like
+//  when map has portals PIT_CheckPosition3D.
 //
-//-----------------------------------------------------------------------------
+// Authors: Ioan Chera, Max Waine
+//
 
 #include "z_zone.h"
 

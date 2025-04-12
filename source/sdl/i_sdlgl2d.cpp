@@ -15,7 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// Purpose: SDL-specific GL 2D-in-3D video code
+//------------------------------------------------------------------------------
+//
+// Purpose: SDL-specific GL 2D-in-3D video code.
 // Authors: James Haley, Max Waine
 //
 

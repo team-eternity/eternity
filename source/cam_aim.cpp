@@ -18,7 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: linked portal aware autoaiming (used by player and some monsters)
+//------------------------------------------------------------------------------
+//
+// Purpose: Linked portal aware autoaiming (used by player and some monsters).
 // Authors: Ioan Chera
 //
 

@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  IO. Deals with the differences between VC++ and other languages.
+// Purpose: IO. Deals with the differences between VC++ and other languages.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef __D_IO_H__
 #define __D_IO_H__

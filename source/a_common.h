@@ -15,15 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Action Pointer Functions
-//      that are associated with states/frames.
+// Purpose: Common action functions shared by all games.
+// Authors: James Haley, Ioan Chera
 //
-//      Common action functions shared by all games.
-//
-//-----------------------------------------------------------------------------
 
 #ifndef A_COMMON_H__
 #define A_COMMON_H__

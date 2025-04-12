@@ -15,7 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// Purpose: reentrant path traversing, used by several new functions
+//------------------------------------------------------------------------------
+//
+// Purpose: Reentrant path traversing, used by several new functions.
 // Authors: James Haley, Ioan Chera
 //
 

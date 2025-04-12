@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Mission start screen wipe/melt, special effects.
+// Purpose: Mission start screen wipe/melt, special effects.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef __F_WIPE_H__
 #define __F_WIPE_H__

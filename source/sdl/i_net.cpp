@@ -15,11 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: Mid-level network code.
+// Authors: James Haley, Joe Kennedy, Max Waine
 //
-//  Mid-level network code
+
 //
 // NETCODE_FIXME: Stubified during port to Windows. This is where
 // mid-level networking code should go. Code here will need to act as
@@ -29,7 +30,6 @@
 // easily be adapted to work for Eternity. Quake 2 is a preferred 
 // reference source because of its GPL license.
 //
-//-----------------------------------------------------------------------------
 
 #include "SDL_net.h"
 

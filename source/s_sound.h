@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      The not so system specific sound interface.
+// Purpose: The not so system specific sound interface.
+// Authors: James Haley, Ioan Chera, Alison Gray Watson, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef S_SOUND_H__
 #define S_SOUND_H__

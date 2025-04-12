@@ -15,15 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Menu engine.
+// Purpose: Menu engine. All the main functions of the menu.
+// Authors: Simon Howard, Jamey Haley, Ioan Chera, Max Waine
 //
-// All the main functions of the menu
-//
-// By Simon Howard
-//
-//----------------------------------------------------------------------------
 
 #ifndef MN_ENGIN_H__
 #define MN_ENGIN_H__

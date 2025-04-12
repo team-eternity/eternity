@@ -18,11 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Universal Doom Map Format, for Eternity
+// Purpose: Universal Doom Map Format, for Eternity.
+// Authors: Ioan Chera, Max Waine, anotak
 //
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

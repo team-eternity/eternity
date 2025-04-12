@@ -15,14 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   
-//  Hardware Abstraction Layer for Video
-//  haleyjd 05/08/11
+// Purpose: Hardware abstraction layer for video.
+// Authors: James Haley, Stephen McGranahan, Charles Gunyon, Ioan Chera,
+//  Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #include "../z_zone.h"   /* memory allocation wrappers -- killough */
 

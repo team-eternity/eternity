@@ -15,17 +15,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   All the global variables that store the internal state.
-//   Theoretically speaking, the internal state of the engine
-//    should be found by looking at the variables collected
-//    here, and every relevant module will have to include
-//    this header file.
-//   In practice, things are a bit messy.
+// Purpose: All the global variables that store the internal state.
+//  Theoretically speaking, the internal state of the engine
+//   should be found by looking at the variables collected
+//   here, and every relevant module will have to include
+//   this header file.
+//  In practice, things are a bit messy.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Stephen McGranahan, Charles Gunyon, Ioan Chera,
+//  Max Waine
+//
 
 #ifndef D_STATE_H__
 #define D_STATE_H__

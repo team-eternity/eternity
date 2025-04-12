@@ -15,13 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  General plane mover and floor mover action routines
-//  Floor motion, pure changer types, raising stairs. donuts, elevators
+// Purpose: General plane mover and floor mover action routines:
+//  Floor motion, pure changer types, raising stairs. donuts, elevators.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Stephen McGranahan, Ioan Chera, Max Waine
+//
 
 #include "z_zone.h"
 

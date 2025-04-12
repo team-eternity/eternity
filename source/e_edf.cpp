@@ -18,55 +18,54 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// EDF Core Module
+// Purpose: EDF core module.
 //
-// EDF is the answer to moving most of the remaining static data
-// out of the executable and into user-editable data files. Uses
-// the customized version of libConfuse to allow for ease of editing
-// and parsing.
+//  EDF is the answer to moving most of the remaining static data
+//  out of the executable and into user-editable data files. Uses
+//  the customized version of libConfuse to allow for ease of editing
+//  and parsing.
 //
-// Current layout of EDF modules and their contents follows. Note
-// that these names are just the defaults; user EDF replacements
-// can use whatever names and layouts they so wish.
+//  Current layout of EDF modules and their contents follows. Note
+//  that these names are just the defaults; user EDF replacements
+//  can use whatever names and layouts they so wish.
 //
-// * root.edf ..... This file includes the others, and is opened by
-//                  E_ProcessEDF by default
-// * sprites.edf .. Includes the sprnames array and sprite-based
-//                  pickup item definitions
-// * sounds.edf ... Contains sfxinfo structures and sound sequences
-//                  See e_sound.c for implementation.
-// * frames.edf ... Contains the states structures
-//                  See e_states.c for implementation.
-// * things.edf ... Contains the mobjinfo structures
-//                  See e_things.c for implementation.
-// * cast.edf ..... Contains DOOM II cast call definitions
-// * terrain.edf .. Contains terrain-related structures.
-//                  See e_ttypes.c for implementation.
-// * misc.edf ..... Miscellaneous stuff
-// * player.edf ... EDF skins, weapons, and player classes
-//                  See e_player.c for implementation.
+//  * root.edf ..... This file includes the others, and is opened by
+//                   E_ProcessEDF by default
+//  * sprites.edf .. Includes the sprnames array and sprite-based
+//                   pickup item definitions
+//  * sounds.edf ... Contains sfxinfo structures and sound sequences
+//                   See e_sound.c for implementation.
+//  * frames.edf ... Contains the states structures
+//                   See e_states.c for implementation.
+//  * things.edf ... Contains the mobjinfo structures
+//                   See e_things.c for implementation.
+//  * cast.edf ..... Contains DOOM II cast call definitions
+//  * terrain.edf .. Contains terrain-related structures.
+//                   See e_ttypes.c for implementation.
+//  * misc.edf ..... Miscellaneous stuff
+//  * player.edf ... EDF skins, weapons, and player classes
+//                   See e_player.c for implementation.
 //
-// EDF can also be loaded from WAD lumps, starting from the newest
-// lump named "EDFROOT". EDF lumps currently take total precedence
-// over any EDF file specified via GFS or command-line.
+//  EDF can also be loaded from WAD lumps, starting from the newest
+//  lump named "EDFROOT". EDF lumps currently take total precedence
+//  over any EDF file specified via GFS or command-line.
 //
-// Other separately processed sources of EDF data include:
+//  Other separately processed sources of EDF data include:
 //
-// * ESTRINGS ..... Lump chain that can define more string objects.
-//                  See e_string.c for implementation.
-// * ETERRAIN ..... Lump chain that can define terrain-related objects.
-//                  See e_ttypes.c for implementation.
-// * EMENUS ....... Lump chain that can define menu objects.
-//                  See mn_emenu.c for implementation.
-// * ESNDINFO ..... Lump chain that can contain any type of sound definition.
-// * ESNDSEQ ...... Same as above.
-//                  See e_sound.c for implementation.
+//  * ESTRINGS ..... Lump chain that can define more string objects.
+//                   See e_string.c for implementation.
+//  * ETERRAIN ..... Lump chain that can define terrain-related objects.
+//                   See e_ttypes.c for implementation.
+//  * EMENUS ....... Lump chain that can define menu objects.
+//                   See mn_emenu.c for implementation.
+//  * ESNDINFO ..... Lump chain that can contain any type of sound definition.
+//  * ESNDSEQ ...... Same as above.
+//                   See e_sound.c for implementation.
 //
-// By James Haley
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-//----------------------------------------------------------------------------
 
 #include <errno.h>
 

@@ -18,9 +18,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Purpose: Line of sight checking for cameras
+// Purpose: Line of sight checking for cameras.
 // Authors: James Haley, Ioan Chera
 //
 

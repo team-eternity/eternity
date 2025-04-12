@@ -15,15 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: The heart of DOOM itself -- everything is tied together from
+//  here. Input, demos, netplay, level loading, exit, savegames --
+//  there's something pertinent to everything.
 //
-// The heart of DOOM itself -- everything is tied together from
-// here. Input, demos, netplay, level loading, exit, savegames --
-// there's something pertinent to everything.
+// Authors: James Haley, Charles Gunyon, Ioan Chera, David Hill, Max Waine
+//  Derek MacDonald
 //
-//-----------------------------------------------------------------------------
+
 
 #include "z_zone.h"
 

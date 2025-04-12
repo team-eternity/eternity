@@ -18,7 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: Hexen and ZDoom MAPINFO lump processing
+//------------------------------------------------------------------------------
+//
+// Purpose: Hexen and ZDoom MAPINFO lump processing.
 // Authors: Ioan Chera
 //
 

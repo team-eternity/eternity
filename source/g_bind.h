@@ -17,11 +17,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Key Bindings
+// Purpose: Key bindings.
+// Authors: James Haley, Joe Kennedy, Charles Gunyon, Max Waine, Ioan Chera,
+//  vita
 //
-//----------------------------------------------------------------------------
 
 #ifndef G_BIND_H__
 #define G_BIND_H__

@@ -15,13 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Movement, collision handling.
-//  Shooting and aiming.
+// Purpose: Movement, collision handling. Shooting and aiming.
+// Authors: James Haley, Stephen McGranahan, David Hill, Ioan Chera, Max Waine,
+//  Xaser Acheron, Simone Ivanish
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"

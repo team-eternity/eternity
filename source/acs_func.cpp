@@ -18,18 +18,19 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// ACS CALLFUNC functions.
+// Purpose: ACS CALLFUNC functions.
 //
-// Some of these are used to implement what have historically been discreet ACS
-// instructions. They are moved here in the interest of keeping the core
-// interpreter loop as clean as possible.
+//  Some of these are used to implement what have historically been
+//  discreet ACS instructions. They are moved here in the interest of
+//  keeping the core interpreter loop as clean as possible.
 //
-// Generally speaking, instructions that call an external function should go
-// here instead of acs_intr.cpp.
+//  Generally speaking, instructions that call an external function
+//  should go here instead of acs_intr.cpp.
 //
-//----------------------------------------------------------------------------
+// Authors: James Haley, David Hill, Ioan Chera, Max Waine, Edward Richardson
+//
 
 #include "z_zone.h"
 

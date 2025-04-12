@@ -15,13 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: Heretic status bar.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-// Heretic Status Bar
-//
-//-----------------------------------------------------------------------------
+
 
 #include "z_zone.h"
 #include "doomstat.h"

@@ -18,7 +18,12 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//
+// Purpose: Unified internal image storage.
+// Authors: James Haley
+//
+
 //
 // DESCRIPTION:
 //   Unified internal image storage

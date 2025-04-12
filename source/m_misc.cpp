@@ -15,12 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Default Config File.
+// Purpose: Default config file.
+// Authors: James Haley, Stephen McGranahan, Charles Gunyon, Max Waine,
+//  Ioan Chera, Derek MacDonald, Sarah Woodie
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"

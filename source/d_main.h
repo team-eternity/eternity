@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      System specific interface stuff.
+// Purpose: System specific interface stuff.
+// Authors: James Haley, Ioan Chera, Derek MacDonald
 //
-//-----------------------------------------------------------------------------
 
 #ifndef D_MAIN_H__
 #define D_MAIN_H__

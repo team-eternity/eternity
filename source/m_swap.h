@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Endianess handling, swapping 16bit and 32bit.
+// Purpose: Endianess handling, swapping 16bit and 32bit.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef M_SWAP_H__
 #define M_SWAP_H__

@@ -15,15 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Movement/collision utility functions,
-//      as used by function in p_map.c.
-//      BLOCKMAP Iterator functions,
-//      and some PIT_* functions to use for iteration.
+// Purpose: Movement/collision utility functions,
+//  as used by function in p_map.cpp.
+//  BLOCKMAP Iterator functions,
+//  and some PIT_* functions to use for iteration.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Stephen McGranahan, Ioan Chera, Max Waine,
+//  Xaser Acheron
+//
 
 #include <assert.h>
 #include "z_zone.h"

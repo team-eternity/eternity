@@ -15,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Linked portals
-//      SoM created 02/13/06
+// Purpose: Linked portals link offsets.
+// Authors: Stephen McGranahan, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef P_LINKOFFSET_H__
 #define P_LINKOFFSET_H__

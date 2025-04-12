@@ -16,14 +16,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
 // Purpose: Renderer context
-// Some code is derived from Rum & Raisin Doom, by Ethan Watson, used under
-// terms of the GPLv3.
-// BasicSemaphore and RenderThreadSemaphore are based on
-// code from https://vorbrodt.blog/2019/02/05/fast-semaphore/.
-// I can't find a licence for it.
+//  Some code is derived from Rum & Raisin Doom, by Ethan Watson, used under
+//  terms of the GPLv3.
+//  BasicSemaphore and RenderThreadSemaphore are based on
+//  code from https://vorbrodt.blog/2019/02/05/fast-semaphore/.
+//  I can't find a licence for it.
 //
 // Authors: Max Waine
 //

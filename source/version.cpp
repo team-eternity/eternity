@@ -17,11 +17,9 @@
 //
 //------------------------------------------------------------------------------
 //
-// $Id: version.c,v 1.2 1998/05/03 22:59:31 killough Exp $
+// Purpose: Version ID constants.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-// Description: Version ID constants
-//
-//-----------------------------------------------------------------------------
 
 #include "version.h"
 

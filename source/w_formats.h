@@ -18,12 +18,12 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Resource archive file formats
+// Purpose: Resource archive file formats.
+// Authors: James Haley, Ioan Chera
 //
-//-----------------------------------------------------------------------------
+
 
 #ifndef W_FORMATS_H__
 #define W_FORMATS_H__

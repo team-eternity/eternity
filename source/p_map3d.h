@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Map functions
+// Purpose: Map functions.
+// Authors: James Haley, Stephen McGranahan, Max Waine, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef P_MAP3D_H__
 #define P_MAP3D_H__

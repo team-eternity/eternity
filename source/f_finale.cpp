@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Game completion, final screen animation.
+// Purpose: Game completion, final screen animation.
+// Authors: James Haley, Stephen McGranahan, Ioan Chera, Max Waine, FozzeY
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"

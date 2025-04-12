@@ -18,16 +18,15 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  Sound Sequences
+// Purpose: Sound Sequences, which are powered by EDF-defined data, implement a way to
+//  script the sound behavior of sectors and global ambience effects. Measures
+//  have been taken to keep it all fully backward-compatible, as well as to
+//  make it more flexible than Hexen's implementation.
 //
-// Sound Sequences, which are powered by EDF-defined data, implement a way to
-// script the sound behavior of sectors and global ambience effects. Measures
-// have been taken to keep it all fully backward-compatible, as well as to
-// make it more flexible than Hexen's implementation.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "d_gi.h"

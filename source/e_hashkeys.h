@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//    Generic hash table implementation - Hash Key classes
+// Purpose: Generic hash table implementation - Hash Key classes.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef E_HASHKEYS_H__
 #define E_HASHKEYS_H__

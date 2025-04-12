@@ -15,13 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Generalized linedef type handlers
-//  Floors, Ceilings, Doors, Locked Doors, Lifts, Stairs, Crushers
+// Purpose: Generalized linedef type handlers:
+//  Floors, Ceilings, Doors, Locked Doors, Lifts, Stairs, Crushers.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Stephen McGranahan, David Hill, Ioan Chera, Max Waine
+//
 
 #include "z_zone.h"
 #include "i_system.h"

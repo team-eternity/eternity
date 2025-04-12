@@ -15,14 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      The actual span drawing functions.
-//      Here find the main potential for optimization,
-//       e.g. inline assembly, different algorithms.
+// Purpose: The actual span drawing functions.
+// Here find the main potential for optimization,
+// e.g. inline assembly, different algorithms.
 //
-//-----------------------------------------------------------------------------
+// Authors: Stephen McGranahan, James Haley, Ioan Chera, Max Waine
+//
 
 #include "z_zone.h"
 #include "doomstat.h"

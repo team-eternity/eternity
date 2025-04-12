@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Door animation code (opening/closing)
+// Purpose: Door animation code (opening/closing).
+// Authors: James Haley, Stephen McGranahan, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

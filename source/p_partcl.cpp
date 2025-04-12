@@ -18,10 +18,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
 // Purpose: Code that ties particle effects to map objects,
-//          adapted from ZDoom. Thanks to Marisa Heit.
+//  adapted from ZDoom. Thanks to Marisa Heit.
+//
 // Authors: James Haley, Ioan Chera
 //
 

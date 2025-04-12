@@ -18,14 +18,13 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: Freeverb algorithm implementation.
+//  Based on original public domain implementation by Jezar at Dreampoint.
 //
-//  Freeverb algorithm implementation
-//  Based on original public domain implementation by Jezar at Dreampoint
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef S_REVERB_H__
 #define S_REVERB_H__

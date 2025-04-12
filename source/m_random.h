@@ -15,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Random number generator
-//    
-//-----------------------------------------------------------------------------
-
+// Purpose: Random number generator.
+// Authors: James Haley, Ioan Chera, Max Waine, Xaser Acheron
+//
 
 #ifndef M_RANDOM_H__
 #define M_RANDOM_H__

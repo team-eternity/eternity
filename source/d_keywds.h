@@ -15,13 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Macros to resolve compiler-dependent keywords and language
+// Purpose: Macros to resolve compiler-dependent keywords and language
 //  extensions.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley
+//
 
 #ifndef D_KEYWDS_H__
 #define D_KEYWDS_H__

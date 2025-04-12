@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   BOOM Push / Pull / Current Effects
+// Purpose: BOOM push / pull / current effects.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef P_PUSHERS_H__
 #define P_PUSHERS_H__

@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   System specific interface stuff.
+// Purpose: System specific interface stuff.
+// Authors: James Haley, Joe Kennedy
 //
-//-----------------------------------------------------------------------------
 
 #ifndef D_TICCMD_H__
 #define D_TICCMD_H__

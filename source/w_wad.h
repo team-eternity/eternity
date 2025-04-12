@@ -15,9 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// Purpose: WAD I/O functions
+//------------------------------------------------------------------------------
 //
-// Authors: James Haley
+// Purpose: WAD I/O functions.
+//
+// Authors: James Haley, Ioan Chera, Max Waine
 //
 
 #ifndef W_WAD_H__

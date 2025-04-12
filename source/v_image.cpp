@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Unified internal image storage
+// Purpose: Unified internal image storage.
+// Authors: James Haley, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

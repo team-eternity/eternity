@@ -15,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Dynamic Menus -- EDF Subsystem 
+// Purpose: Dynamic menus -- EDF subsystem.
+// Authors: James Haley
 //
-// By James Haley
-//
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

@@ -18,7 +18,12 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//
+// Purpose: Custom damage types, or "Means of Death" flags.
+// Authors: James Haley, Ioan Chera, Alison Gray Watson
+//
+
 //
 // DESCRIPTION:
 //    Custom damage types, or "Means of Death" flags.

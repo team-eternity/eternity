@@ -15,13 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      DOOM Network game communication and protocol,
-//      all OS independend parts.
+// Purpose: DOOM Network game communication and protocol,
+//  all OS independent parts.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Charles Gunyon, Ioan Chera, Joan Bruguera Micó
+//
 
 #include "z_zone.h"
 #include "i_system.h"

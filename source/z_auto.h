@@ -18,17 +18,16 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Zone Memory Allocation, perhaps NeXT ObjectiveC inspired.
-//      Remark: this was the only stuff that, according
-//       to John Carmack, might have been useful for
-//       Quake.
+// Purpose: Zone Memory Allocation, perhaps NeXT ObjectiveC inspired.
+//  Remark: This was the only stuff that, according
+//   to John Carmack, might have been useful for Quake.
 //
-// Rewritten by Lee Killough, though, since it was not efficient enough.
+//  Rewritten by Lee Killough, though, since it was not efficient enough.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Max Waine
+//
 
 #ifndef Z_AUTO_H__
 #define Z_AUTO_H__

@@ -15,7 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// Purpose:Implementation of SDL classes for Gamepads and Joysticks
+//------------------------------------------------------------------------------
+//
+// Purpose: Implementation of SDL classes for gamepads and joysticks.
 // Authors: James Haley, Max Waine
 //
 

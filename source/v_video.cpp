@@ -15,12 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
 // Purpose: Gamma correction LUT stuff.
-//          Color range translation support.
-//          Functions to draw patches (by post) directly to screen.
-//          Functions to blit a block to the screen.
+//  Color range translation support.
+//  Functions to draw patches (by post) directly to screen.
+//  Functions to blit a block to the screen.
 // Authors: James Haley, Ioan Chera, Max Waine
 //
 

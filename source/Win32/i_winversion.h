@@ -17,11 +17,10 @@
 //
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
-//
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
 // Purpose: Ugly hack to check if Windows is 10 or higher,
-//          to be removed once XP support is dropped.
+//  to be removed once XP support is dropped.
 // Authors: Max Waine
 //
 

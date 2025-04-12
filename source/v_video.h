@@ -15,15 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Gamma correction LUT.
-//  Color range translation support
+// Purpose: Gamma correction LUT.
+//  Color range translation support.
 //  Functions to draw patches (by post) directly to screen.
 //  Functions to blit a block to the screen.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Stephen McGranahan, Max Waine
+//
 
 #ifndef V_VIDEO_H__
 #define V_VIDEO_H__

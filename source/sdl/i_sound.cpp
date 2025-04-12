@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Main system interface for sound.
+// Purpose: Main system interface for sound.
+// Authors: James Haley, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #include "../z_zone.h"
 

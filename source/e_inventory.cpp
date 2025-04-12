@@ -18,10 +18,10 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Purpose: Inventory
-// Authors: James Haley, Max Waine
+// Purpose: Inventory.
+// Authors: James Haley, Max Waine, Ioan Chera
 //
 
 #define NEED_EDF_DEFINITIONS

@@ -15,13 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  DoomDef - basic defines for DOOM, e.g. Version, game mode
-//   and skill level, and display parameters.
+// Purpose: DoomDef - basic defines for DOOM, e.g. Version, game mode
+//  and skill level, and display parameters.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley
+//
 
 #include "doomdef.h"
 

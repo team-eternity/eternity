@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//    Hardware Abstraction Layer for Timing
+// Purpose: Hardware abstraction layer for timing.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #include "../z_zone.h"
 #include "../c_runcmd.h"

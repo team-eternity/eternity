@@ -15,14 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  all external data is defined here
-//  most of the data is loaded into different structures at run time
-//  some internal structures shared by many modules are here
+// Purpose: All external data is defined here.
+//  Most of the data is loaded into different structures at run time.
+//  Some internal structures shared by many modules are here.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Ioan Chera, Max Waine
+//
 
 #ifndef DOOMDATA_H__
 #define DOOMDATA_H__

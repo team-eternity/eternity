@@ -15,16 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Menu - misc functions
+// Purpose: Menu - misc functions. Pop up alert/question messages.
+//  Miscellaneous stuff.
 //
-// Pop up alert/question messages
-// Miscellaneous stuff
+// Author: Simon Howard, James Haley, Max Waine, Ioan Chera
 //
-// By Simon Howard
-//
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

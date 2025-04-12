@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Functions to manipulate linear blocks of graphics data.
+// Purpose: Functions to manipulate linear blocks of graphics data.
+// Authors: James Haley, Stephen McGranahan, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

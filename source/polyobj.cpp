@@ -18,16 +18,15 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Polyobjects
+// Purpose: Polyobjects.
+//  Movable segs like in Hexen, but more flexible due to application of
+//  dynamic binary space partitioning theory.
 //
-// Movable segs like in Hexen, but more flexible due to application of
-// dynamic binary space partitioning theory.
+// Authors: James Haley, Stephen McGranahan, Max Waine, Ioan Chera,
+//  Edward Richardson
 //
-// haleyjd 02/16/06
-//
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "cam_sight.h"

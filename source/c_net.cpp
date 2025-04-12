@@ -15,15 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Console Network support 
+// Purpose: Console network support.
 //
-// Network commands can be sent across netgames using 'C_SendCmd'. The
-// command is transferred byte by byte, 1 per tic cmd, using the 
-// chatchar variable (previously used for chat messages)
+//  Network commands can be sent across netgames using 'C_SendCmd'. The
+//  command is transferred byte by byte, 1 per tic cmd, using the 
+//  chatchar variable (previously used for chat messages).
 //
-// By Simon Howard
+// Authors: Simon Howard, James Haley, Ioan Chera, Max Waine
+
 //
 // NETCODE_FIXME RED LEVEL ALERT!!! -- CONSOLE_FIXME
 // The biggest problems are in here by far. While all the netcode needs
@@ -33,7 +34,6 @@
 // everything in here. zdoom has an elegant solution to this problem,
 // but it requires much more complicated network packet parsing.
 //
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

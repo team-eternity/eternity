@@ -18,14 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   
-//  OpenGL Configuration Variables
-//  haleyjd 05/30/11
+// Purpose: OpenGL configuration variables.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef GL_VARS_H__
 #define GL_VARS_H__

@@ -18,21 +18,20 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// ExtraData
+// Purpose: ExtraData
 //
-// The be-all, end-all extension to the DOOM map format. Uses the
-// libConfuse library like EDF.
+//  The be-all, end-all extension to the DOOM map format. Uses the
+//  libConfuse library like EDF.
 // 
-// ExtraData can extend mapthings, lines, and sectors with an
-// arbitrary number of fields, with data provided in more or less
-// any format. The use of a textual input language will forever
-// remove any future problems caused by binary format limitations.
+//  ExtraData can extend mapthings, lines, and sectors with an
+//  arbitrary number of fields, with data provided in more or less
+//  any format. The use of a textual input language will forever
+//  remove any future problems caused by binary format limitations.
 //
-// By James Haley
+// Authors: James Haley, Max Waine, Ioan Chera
 //
-//----------------------------------------------------------------------------
 
 #ifndef E_EXDATA_H__
 #define E_EXDATA_H__

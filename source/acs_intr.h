@@ -18,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Original 100% GPL ACS Interpreter
+// Purpose: Original 100% GPL ACS interpreter.
+// Authors: James Haley, David Hill
 //
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #ifndef ACS_INTR_H__
 #define ACS_INTR_H__

@@ -15,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Heretic-specific menu code
+// Purpose: Heretic-specific menu code.
+// Authors: James Haley
 //
-// By James Haley
-//
-//-----------------------------------------------------------------------------
 
 #ifndef MN_HTIC_H__
 #define MN_HTIC_H__

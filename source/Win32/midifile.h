@@ -14,8 +14,10 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// DESCRIPTION:
-//     MIDI file parsing.
+//------------------------------------------------------------------------------
+//
+// Purpose: MIDI file parsing.
+// Authors: Simon Howard, James Haley
 //
 
 #ifndef MIDIFILE_H

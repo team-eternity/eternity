@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  AutoMap module.
+// Purpose: Automap module.
+// Authors: James Haley, Stephen McGranahan, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef __AMMAP_H__
 #define __AMMAP_H__

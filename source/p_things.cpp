@@ -17,13 +17,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Description:
+// Purpose: Mobj-related line specials. Mostly from Hexen.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-// Mobj-related line specials. Mostly from Hexen.
-//
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

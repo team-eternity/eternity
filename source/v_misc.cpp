@@ -15,13 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Misc Video stuff.
+// Purpose: Misc Video stuff.
+//  Font. Loading box. FPS ticker, etc
 //
-// Font. Loading box. FPS ticker, etc
+// Authors: James Haley, Stephen McGranahan, Ioan Chera, Max Waine
 //
-//---------------------------------------------------------------------------
 
 #include "z_zone.h"
 

@@ -15,17 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Zone Memory Allocation, perhaps NeXT ObjectiveC inspired.
-//      Remark: this was the only stuff that, according
-//       to John Carmack, might have been useful for
-//       Quake.
+// Purpose: Zone Memory Allocation, perhaps NeXT ObjectiveC inspired.
+//  Remark: this was the only stuff that, according
+//   to John Carmack, might have been useful for Quake.
 //
-// Rewritten by Lee Killough, though, since it was not efficient enough.
+//  Rewritten by Lee Killough, though, since it was not efficient enough.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Max Waine
+//
 
 #ifndef Z_ZONE_H__
 #define Z_ZONE_H__

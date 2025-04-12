@@ -16,16 +16,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// psnprintf
+// Purpose: Portable snprintf.
+//  Amongst other things, tries to always guarantee the buffer will be null-
+//  terminated, which some implementations do not do.
 //
-// Portable snprintf
+// Authors: James Haley
 //
-// Amongst other things, tries to always guarantee the buffer will be null-
-// terminated, which some implementations do not do.
-//
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

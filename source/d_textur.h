@@ -15,13 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//    Typedefs related to to textures etc.,
-//    isolated here to make it easier separating modules.
-//    
-//-----------------------------------------------------------------------------
+// Purpose: Typedefs related to to textures etc.,
+//  isolated here to make it easier separating modules.
+//
+// Authors: James Haley
+//
 
 
 #ifndef D_TEXTUR_H__

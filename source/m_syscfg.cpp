@@ -15,14 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//    "System" configuration file.
-//    Sets some low-level stuff that must be read before the main config
-//    file can be loaded.
+// Purpose: "System" configuration file.
+//  Sets some low-level stuff that must be read before the main config
+//  file can be loaded.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Max Waine
+//
 
 #include "z_zone.h"
 

@@ -15,15 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// New menu
+// Purpose: The menu engine.
+//  All the menus themselves are in other mn_*.cpp files.
 //
-// The menu engine. All the menus themselves are in mn_menus.c
+// Authors: Simon Howard, James Haley, Charles Gunyon, Max Waine, Ioan Chera,
+//  Joan Bruguera Micó, FozzeY
 //
-// By Simon Howard
-//
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"

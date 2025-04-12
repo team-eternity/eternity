@@ -18,8 +18,10 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: EDF hitscan puffs
-// Authors: Ioan Chera
+//------------------------------------------------------------------------------
+//
+// Purpose: EDF hitscan puffs.
+// Authors: Ioan Chera, Max Waine, Xaser Acheron
 //
 
 #define NEED_EDF_DEFINITIONS

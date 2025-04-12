@@ -18,21 +18,18 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: GFS -- Game File Scripts.
 //
-// GFS -- Game File Scripts
+//  This is a radical new way for DOOM editing projects to provide
+//  file information to Eternity. A single GFS script, when provided
+//  via the -gfs command-line parameter, will affect the loading of
+//  an arbitrary number of WADs, DEH/BEX's, EDF files, and console
+//  scripts.
 //
-// This is a radical new way for DOOM editing projects to provide
-// file information to Eternity. A single GFS script, when provided
-// via the -gfs command-line parameter, will affect the loading of
-// an arbitrary number of WADs, DEH/BEX's, EDF files, and console
-// scripts.
+// Authors: James Haley
 //
-// By James Haley
-//
-//--------------------------------------------------------------------------
 
 #ifndef G_GFS_H__
 #define G_GFS_H__

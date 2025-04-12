@@ -14,8 +14,11 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// DESCRIPTION:
-//      Windows native MIDI
+//------------------------------------------------------------------------------
+//
+// Purpose: Windows native MIDI.
+// Authors: Roman Fomin, Max Waine
+//
 
 #ifdef _WIN32
 

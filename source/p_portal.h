@@ -15,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Linked portals
-//      SoM created 02/13/06
+// Purpose: Linked portals.
+// Authors: Stephen McGranahan, James Haley, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef P_PORTAL_H__
 #define P_PORTAL_H__

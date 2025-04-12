@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Patch format verification and load-time processing code
+// Purpose: Patch format verification and load-time processing code.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef V_PATCHFMT_H__
 #define V_PATCHFMT_H__

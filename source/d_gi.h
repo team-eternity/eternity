@@ -18,11 +18,13 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
+//------------------------------------------------------------------------------
+//
 // Purpose: Gamemode information
 //  Stores all gamemode-dependent information in one location and 
 //  lends more structure to other modules.
 //
-// Authors: James Haley
+// Authors: James Haley, Max Waine, Ioan Chera, Derek MacDonald, Simone Ivanish
 //
 
 #ifndef D_GI_H__

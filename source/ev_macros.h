@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Generalized line action system - Macros
+// Purpose: Generalized line action system - Macros.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef EV_MACROS_H__
 #define EV_MACROS_H__

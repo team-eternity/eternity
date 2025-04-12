@@ -18,15 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Hexen Script Lumps
+// Purpose: Hexen script lumps. Parsing and processing for Hexen's data scripts.
+// Authors: James Haley
 //
-//   Parsing and processing for Hexen's data scripts
-//
-//   By James Haley
-//
-//-----------------------------------------------------------------------------
 
 #ifndef XL_SCRIPTS_H__
 #define XL_SCRIPTS_H__

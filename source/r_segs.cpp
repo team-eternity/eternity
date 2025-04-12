@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      All the clipping: columns, horizontal spans, sky columns.
+// Purpose: All the clipping: columns, horizontal spans, sky columns.
+// Authors: James Haley, Stephen McGranahan, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 // 4/25/98, 5/2/98 killough: reformatted, beautified
 

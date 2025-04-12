@@ -15,8 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// Purpose: EDF Generalized Double-linked List Routines
+//------------------------------------------------------------------------------
+//
+// Purpose: EDF generalized double-linked list routines.
 // Authors: James Haley
+//
+
 //
 // haleyjd 08/05/05: This is Lee Killough's smart double-linked list
 // implementation with pointer-to-pointer prev links, generalized to

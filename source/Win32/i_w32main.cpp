@@ -18,14 +18,14 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Win32-specific main function, used in release mode. Provides proper
-//   exception handling instead of the silent dump-out to console that the 
-//   SDL parachute now provides.   
+// Purpose: Win32-specific main function, used in release mode. Provides proper
+//  exception handling instead of the silent dump-out to console that the 
+//  SDL parachute now provides.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Max Waine
+//
 
 #include "../hal/i_platform.h"
 

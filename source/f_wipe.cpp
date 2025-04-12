@@ -15,15 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Mission begin melt/wipe screen special effect.
+// Purpose: Mission begin melt/wipe screen special effect.
 //
-// Rewritten by Simon Howard
-// Portions which deal with the movement of the columns adapted
-// from the original sources
+//  Rewritten by Simon Howard.
+//  Portions which deal with the movement of the columns adapted
+//  from the original sources.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Stephen McGranahan, Max Waine
+//
 
 // 13/12/99: restored movement of columns to being the same as in the
 // original, while retaining the new 'engine'

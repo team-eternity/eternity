@@ -18,7 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: Object-oriented portable structure IO
+//------------------------------------------------------------------------------
+//
+// Purpose: Object-oriented portable structure IO.
 // Authors: James Haley
 //
 

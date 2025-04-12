@@ -1,7 +1,10 @@
 //
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
-// 
+//
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
+//
 // Copyright (C) 2019 Simon Howard
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,8 +20,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// Purpose: Menu file selector
-//  eg. For selecting a wad to load or demo to play
+//------------------------------------------------------------------------------
+//
+// Purpose: Menu file selector,
+//  eg. For selecting a wad to load or demo to play.
 //
 // Authors: Simon Howard, James Haley
 //

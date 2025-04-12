@@ -18,17 +18,17 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Win32-specific File Name Handling Routines.
-//      haleyjd 10/28/04
+// Purpose: Win32-specific file name handling routines.
+// Authors: James Haley
 //
-//      Note: You cannot include most of DOOM's header files into this
-//      module, due to namespace conflicts with the Win32 API.  Keep it
-//      isolated.
+
 //
-//-----------------------------------------------------------------------------
+// Note: You cannot include most of DOOM's header files into this
+// module, due to namespace conflicts with the Win32 API.  Keep it
+// isolated.
+//
 
 #define WIN32_LEAN_AND_MEAN
 

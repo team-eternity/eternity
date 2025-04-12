@@ -15,33 +15,32 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Level info.
+// Purpose: Level info.
 //
-// Under SMMU, level info is stored in the level marker: ie. "mapxx"
-// or "exmx" lump. This contains new info such as: the level name, music
-// lump to be played, par time etc.
+//  Under SMMU, level info is stored in the level marker: ie. "mapxx"
+//  or "exmx" lump. This contains new info such as: the level name, music
+//  lump to be played, par time etc.
 //
-// By Simon Howard
+//  Eternity Modifications:
+//  -----------------------
+//  As of 07/22/04, Eternity can now support global MapInfo lumps in
+//  addition to MapInfo placed in level headers. Header MapInfo always
+//  overrides any global lump data. The global lumps cascade in such
+//  a way that a map will get its global MapInfo from the newest 
+//  "EMAPINFO" lump that contains a block with the map's name.
 //
-// Eternity Modifications:
-// -----------------------
-// As of 07/22/04, Eternity can now support global MapInfo lumps in
-// addition to MapInfo placed in level headers. Header MapInfo always
-// overrides any global lump data. The global lumps cascade in such
-// a way that a map will get its global MapInfo from the newest 
-// "EMAPINFO" lump that contains a block with the map's name.
-//
-// I have also moved much of the initialization code from many modules
-// into this file, making the LevelInfo structure the default place to
-// get map information, rather than an alternative to many other
-// sources as it was previously. This simplifies code outside this
-// module and encapsulates more level-dependent decisions here.
+//  I have also moved much of the initialization code from many modules
+//  into this file, making the LevelInfo structure the default place to
+//  get map information, rather than an alternative to many other
+//  sources as it was previously. This simplifies code outside this
+//  module and encapsulates more level-dependent decisions here.
 //
 // -- haleyjd
 //
-//-----------------------------------------------------------------------------
+// Authors: Simon Howard, James Haley, David Hill, Ioan Chera, Max Waine
+//
 
 /* includes ************************/
 

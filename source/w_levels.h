@@ -18,12 +18,13 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Management of private wad directories for individual level resources
+// Purpose: Management of private wad directories for individual level
+//  resources.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley
+//
 
 #ifndef W_LEVELS_H__
 #define W_LEVELS_H__

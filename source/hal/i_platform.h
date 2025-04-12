@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//    Platform Defines
+// Purpose: Platform defines.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef I_PLATFORM_H__
 #define I_PLATFORM_H__

@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Generalized sector special system
+// Purpose: Generalized sector special system.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef EV_SECTORS_H__
 #define EV_SECTORS_H__

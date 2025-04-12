@@ -18,17 +18,15 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Hexen Script Lumps
-//
+// Purpose: Hexen script lumps.
 //   Parsing and processing for Hexen's data scripts, including:
 //   * SNDINFO
 //   * MUSINFO (Risen3D)
 //
-//   By James Haley
+// Authors: James Haley, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

@@ -15,16 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Heads-Up Display
+// Purpose: Heads-Up Display. Displays widgets using a system of C++ classes.
+// Authors: Simon Howard, James Haley, Stephen McGranahan, Ioan Chera,
+//  Max Waine, Sarah Woodie
 //
-// haleyjd: Rewritten a third time. Displays widgets using a system
-// of C++ classes.
-//
-// By James Haley and Simon Howard
-//
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"

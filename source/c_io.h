@@ -15,7 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//
+// Purpose: Console I/O.
+// Authors: James Haley, Ioan Chera, Max Waine
+//
 
 #ifndef C_IO_H__
 #define C_IO_H__

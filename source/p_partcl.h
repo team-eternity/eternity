@@ -16,11 +16,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Particle effects header
+// Purpose: Particle effects header.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef P_PARTCL_H__
 #define P_PARTCL_H__

@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Sector effects.
+// Purpose: Sector effects.
+// Authors: James Haley, Max Waine, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef P_SECTOR_H__
 #define P_SECTOR_H__

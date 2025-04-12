@@ -17,11 +17,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
 // Purpose: Renderer context
-// Some code is derived from Rum & Raisin Doom, by Ethan Watson, used under
-// terms of the GPLv3.
+//  Some code is derived from Rum & Raisin Doom, by Ethan Watson, used under
+//  terms of the GPLv3.
 //
 // Authors: Max Waine
 //

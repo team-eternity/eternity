@@ -15,14 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Command running functions
+// Purpose: Command running functions. Running typed commands, or
+//  network/linedef triggers. Sending commands over the network. Calls handlers
+//  for some commands.
 //
-// Running typed commands, or network/linedef triggers. Sending commands over
-// the network. Calls handlers for some commands.
+// Authors: Simon Howard, James Haley
 //
-// By Simon Howard
+
 //
 // NETCODE_FIXME -- CONSOLE_FIXME
 // Parts of this module also are involved in the netcode cmd problems.
@@ -30,7 +31,6 @@
 // delayed an arbitrary amount of time, that won't work with netgames
 // properly. 
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"

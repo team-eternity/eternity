@@ -15,15 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Action Pointer Functions
-//      that are associated with states/frames.
+// Purpose: DOOM action functions.
+// Authors: James Haley, Max Waine
 //
-//      DOOM action functions.
-//
-//-----------------------------------------------------------------------------
 
 #ifndef A_DOOM_H__
 #define A_DOOM_H__

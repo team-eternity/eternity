@@ -18,13 +18,13 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  VBuffer has become a much more all-purpose solution for many video handling
-//  needs. Simple, but powerful pixelbuffer object.
+// Purpose: VBuffer has become a much more all-purpose solution for many video
+//  handling needs. Simple, but powerful pixelbuffer object.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Stephen McGranahan, Max Waine
+//
 
 #include "z_zone.h"
 #include "i_system.h"

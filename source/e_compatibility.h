@@ -18,9 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Purpose: EDF compatibility WAD support
+// Purpose: EDF compatibility WAD support.
 // Authors: Ioan Chera
 //
 

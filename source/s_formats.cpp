@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Sound loading
+// Purpose: Sound loading.
+// Authors: James Haley, Max Waine, Alison Gray Watson
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

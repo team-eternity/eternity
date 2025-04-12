@@ -18,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// EDF Reverb Module
+// Purpose: EDF reverb module.
+// Authors: James Haley
 //
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

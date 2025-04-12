@@ -18,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   
-//   SDL-specific graphics code.
+// Purpose: SDL-specific graphics code.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef I_SDLVIDEO_H__
 #define I_SDLVIDEO_H__

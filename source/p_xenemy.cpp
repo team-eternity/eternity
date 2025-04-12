@@ -15,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: Hexen enemy-related functions.
+// Authors: James Haley, Stephen McGranahan, Ioan Chera
 //
-// Hexen enemy-related functions
-//
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      System configuration
+// Purpose: System configuration.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef M_SYSCFG_H__
 #define M_SYSCFG_H__

@@ -18,15 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Skin Viewer Widget for the Menu
+// Purpose: Skin viewer widget for the menu. Why? Because I can!
+// Authors: James Haley
 //
-//    Why? Because I can!
-//
-// haleyjd 04/20/03
-//
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

@@ -18,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Hash key classes for use of qstrings as hash keys.
+// Purpose: Hash key classes for use of qstrings as hash keys.
+// Authors: James Haley
 //
-// By James Haley
-//
-//-----------------------------------------------------------------------------
 
 #ifndef M_QSTRKEYS_H__
 #define M_QSTRKEYS_H__

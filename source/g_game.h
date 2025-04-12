@@ -15,7 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//
+// Purpose: Core game module.
+// Authors: James Haley, Ioan Chera, Max Waine
+//
 
 #ifndef G_GAME_H__
 #define G_GAME_H__

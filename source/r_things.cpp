@@ -15,10 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Purpose: Refresh of things represented by sprites i.e. map objects and particles.
-//          Particle code largely from ZDoom, thanks to Marisa Heit.
+// Purpose: Refresh of things represented by sprites i.e. map objects and
+//  particles. Particle code largely from ZDoom, thanks to Marisa Heit.
+//
 // Authors: Stephen McGranahan, James Haley, Ioan Chera, Max Waine
 //
 

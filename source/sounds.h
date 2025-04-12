@@ -15,15 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Created by the sound utility written by Dave Taylor.
-//      Kept as a sample, DOOM2 sounds. Frozen.
+// Purpose: Created by the sound utility written by Dave Taylor.
+// Kept as a sample, DOOM2 sounds. Frozen.
 //
-//      haleyjd: erm... ::lights a fire to warm it up::
+// haleyjd: erm... ::lights a fire to warm it up::
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Max Waine, Alison Gray Watson, Ioan Chera
+//
 
 #ifndef __SOUNDS__
 #define __SOUNDS__

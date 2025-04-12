@@ -18,13 +18,13 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: MetaQString adapter class for storage of qstrings as metatable
+//  properties.
 //
-//   MetaQString adapter class for storage of qstrings as metatable properties.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #include "metaqstring.h"
 

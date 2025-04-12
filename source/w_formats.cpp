@@ -18,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Resource archive file formats
+// Purpose: Resource archive file formats.
+// Authors: James Haley, Ioan Chera, Max Waine, Simone Ivanish
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 

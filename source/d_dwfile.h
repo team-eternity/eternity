@@ -15,22 +15,19 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: File/WAD standard input routines.
 //
-// File/WAD Standard Input Routines
+//  Separated DWFILE functions from d_io.h
 //
-// Separated DWFILE functions from d_io.h
+//  This code was moved here from d_deh.c and generalized to make a
+//  consistent interface for emulating stdio functions on wad lumps.
+//  The structure here handles either external files or wad lumps,
+//  depending on how it is initialized, and emulates stdio regardless.
 //
-// This code was moved here from d_deh.c and generalized to make a consistent
-// interface for emulating stdio functions on wad lumps. The structure here 
-// handles either external files or wad lumps, depending on how it is 
-// initialized, and emulates stdio regardless.
+// Authors: James Haley
 //
-// James Haley
-//
-//-----------------------------------------------------------------------------
 
 #ifndef D_DWFILE_H__
 #define D_DWFILE_H__

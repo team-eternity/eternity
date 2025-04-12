@@ -18,15 +18,14 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  Sound Sequences
+// Purpose: Sound Sequences, which are powered by EDF-defined data, implement a
+// way to script the sound behavior of sectors and global ambience effects.
+// Measures have been taken to keep it all fully backward-compatible.
 //
-// Sound Sequences, which are powered by EDF-defined data, implement a way to
-// script the sound behavior of sectors and global ambience effects. Measures
-// have been taken to keep it all fully backward-compatible.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef S_SNDSEQ_H__
 #define S_SNDSEQ_H__

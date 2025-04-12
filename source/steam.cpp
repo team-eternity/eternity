@@ -20,8 +20,11 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //
-
-// steam.cpp -- steam config parsing
+//------------------------------------------------------------------------------
+//
+// Purpose: Steam config parsing.
+// Authors: A. Drexler, Max Waine
+//
 
 #include "z_zone.h"
 

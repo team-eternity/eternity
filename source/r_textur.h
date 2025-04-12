@@ -15,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      New texture system header
+// Purpose: New texture system header.
+// Authors: James Haley, Derek MacDonald
 //
-//-----------------------------------------------------------------------------
 
 #ifndef R_TEXTUR_H__
 #define R_TEXTUR_H__

@@ -15,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: Various structures pertaining to the player.
+// Authors: James Haley, Max Waine, Ioan Chera
 //
-// Various structures pertaining to the player.
-//
-//-----------------------------------------------------------------------------
 
 #ifndef D_PLAYER_H__
 #define D_PLAYER_H__
