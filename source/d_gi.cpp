@@ -58,79 +58,79 @@
 // definitions
 
 // automap number mark format strings
-#define DOOMMARKS    "AMMNUM%d"
-#define HTICMARKS    "SMALLIN%d"
+constexpr const char DOOMMARKS[]    = "AMMNUM%d";
+constexpr const char HTICMARKS[]    = "SMALLIN%d";
 
 // menu background flats
-#define DOOMMENUBACK "FLOOR4_6"
-#define HACXMENUBACK "CONS1_5"
-#define HTICMENUBACK "FLOOR16"
+constexpr const char DOOMMENUBACK[] = "FLOOR4_6";
+constexpr const char HACXMENUBACK[] = "CONS1_5";
+constexpr const char HTICMENUBACK[] = "FLOOR16";
 
 // credit background flats
-#define DOOMCREDITBK "NUKAGE1"
-#define DM2CREDITBK  "SLIME05"
-#define HACXCREDITBK "SLIME01"
-#define HTICCREDITBK "FLTWAWA1"
+constexpr const char DOOMCREDITBK[] = "NUKAGE1";
+constexpr const char DM2CREDITBK[]  = "SLIME05";
+constexpr const char HACXCREDITBK[] = "SLIME01";
+constexpr const char HTICCREDITBK[] = "FLTWAWA1";
 
 // border flats
-#define DOOMBRDRFLAT "FLOOR7_2"
-#define DM2BRDRFLAT  "GRNROCK"
-#define HREGBRDRFLAT "FLAT513"
-#define HSWBRDRFLAT  "FLOOR04"
+constexpr const char DOOMBRDRFLAT[] = "FLOOR7_2";
+constexpr const char DM2BRDRFLAT[]  = "GRNROCK";
+constexpr const char HREGBRDRFLAT[] = "FLAT513";
+constexpr const char HSWBRDRFLAT[]  = "FLOOR04";
 
 // Default sound names
 // Note: these are lump names, not sound mnemonics
-#define DOOMDEFSOUND "DSPISTOL"
-#define HTICDEFSOUND "GLDHIT"
+constexpr const char DOOMDEFSOUND[] = "DSPISTOL";
+constexpr const char HTICDEFSOUND[] = "GLDHIT";
 
 // Default console backdrops
 // Used when no "CONSOLE" lump has been provided.
 // Most gamemodes use the titlepic, which is darkened by code in c_io.c.
 // Ultimate DOOM and DOOM II have a suitable graphic in the INTERPIC.
-#define CONBACK_DEFAULT "TITLEPIC"
-#define CONBACK_HERETIC "TITLE" 
+constexpr const char CONBACK_DEFAULT[] = "TITLEPIC";
+constexpr const char CONBACK_HERETIC[] = "TITLE";
 
 // Version names
-#define VNAME_DOOM_SW   "DOOM Shareware version"
-#define VNAME_DOOM_REG  "DOOM Registered version"
-#define VNAME_DOOM_RET  "Ultimate DOOM version"
-#define VNAME_DOOM2     "DOOM II version"
-#define VNAME_TNT       "Final DOOM: TNT - Evilution version"
-#define VNAME_PLUT      "Final DOOM: The Plutonia Experiment version"
-#define VNAME_HACX      "HACX - Twitch 'n Kill version"
-#define VNAME_DISK      "DOOM II disk version"
-#define VNAME_PSX       "DOOM: Custom PlayStation Edition version"
-#define VNAME_HTIC_SW   "Heretic Shareware version"
-#define VNAME_HTIC_REG  "Heretic Registered version"
-#define VNAME_HTIC_BETA "Heretic Beta version"
-#define VNAME_HTIC_SOSR "Heretic: Shadow of the Serpent Riders version"
-#define VNAME_UNKNOWN   "Unknown Game version. May not work."
+constexpr const char VNAME_DOOM_SW[]   = "DOOM Shareware version";
+constexpr const char VNAME_DOOM_REG[]  = "DOOM Registered version";
+constexpr const char VNAME_DOOM_RET[]  = "Ultimate DOOM version";
+constexpr const char VNAME_DOOM2[]     = "DOOM II version";
+constexpr const char VNAME_TNT[]       = "Final DOOM: TNT - Evilution version";
+constexpr const char VNAME_PLUT[]      = "Final DOOM: The Plutonia Experiment version";
+constexpr const char VNAME_HACX[]      = "HACX - Twitch 'n Kill version";
+constexpr const char VNAME_DISK[]      = "DOOM II disk version";
+constexpr const char VNAME_PSX[]       = "DOOM: Custom PlayStation Edition version";
+constexpr const char VNAME_HTIC_SW[]   = "Heretic Shareware version";
+constexpr const char VNAME_HTIC_REG[]  = "Heretic Registered version";
+constexpr const char VNAME_HTIC_BETA[] = "Heretic Beta version";
+constexpr const char VNAME_HTIC_SOSR[] = "Heretic: Shadow of the Serpent Riders version";
+constexpr const char VNAME_UNKNOWN[]   = "Unknown Game version. May not work.";
 
 // FreeDoom/Blasphemer/Etc override names
-#define FNAME_DOOM_SW   "Freedoom Demo version"
-#define FNAME_DOOM_R    "Freedoom Phase 1 version"
-#define FNAME_DOOM2     "Freedoom Phase 2 version"
+constexpr const char FNAME_DOOM_SW[]   = "Freedoom Demo version";
+constexpr const char FNAME_DOOM_R[]    = "Freedoom Phase 1 version";
+constexpr const char FNAME_DOOM2[]     = "Freedoom Phase 2 version";
 
 // BFG Edition override names
-#define BFGNAME_DOOM    "Ultimate DOOM - BFG Edition version"
-#define BFGNAME_DOOM2   "DOOM II - BFG Edition version"
+constexpr const char BFGNAME_DOOM[]    = "Ultimate DOOM - BFG Edition version";
+constexpr const char BFGNAME_DOOM2[]   = "DOOM II - BFG Edition version";
 
 // Startup banners
-#define BANNER_DOOM_SW   "DOOM Shareware Startup"
-#define BANNER_DOOM_REG  "DOOM Registered Startup"
-#define BANNER_DOOM_RET  "The Ultimate DOOM Startup"
-#define BANNER_DOOM2     "DOOM 2: Hell on Earth"
-#define BANNER_TNT       "DOOM 2: TNT - Evilution"
-#define BANNER_PLUT      "DOOM 2: Plutonia Experiment"
-#define BANNER_HACX      "HACX - Twitch 'n Kill"
-#define BANNER_PSX       "DOOM: Custom PlayStation Edition Startup"
-#define BANNER_HTIC_SW   "Heretic Shareware Startup"
-#define BANNER_HTIC_REG  "Heretic Registered Startup"
-#define BANNER_HTIC_SOSR "Heretic: Shadow of the Serpent Riders"
-#define BANNER_UNKNOWN   "Public DOOM"
+constexpr const char BANNER_DOOM_SW[]   = "DOOM Shareware Startup";
+constexpr const char BANNER_DOOM_REG[]  = "DOOM Registered Startup";
+constexpr const char BANNER_DOOM_RET[]  = "The Ultimate DOOM Startup";
+constexpr const char BANNER_DOOM2[]     = "DOOM 2: Hell on Earth";
+constexpr const char BANNER_TNT[]       = "DOOM 2: TNT - Evilution";
+constexpr const char BANNER_PLUT[]      = "DOOM 2: Plutonia Experiment";
+constexpr const char BANNER_HACX[]      = "HACX - Twitch 'n Kill";
+constexpr const char BANNER_PSX[]       = "DOOM: Custom PlayStation Edition Startup";
+constexpr const char BANNER_HTIC_SW[]   = "Heretic Shareware Startup";
+constexpr const char BANNER_HTIC_REG[]  = "Heretic Registered Startup";
+constexpr const char BANNER_HTIC_SOSR[] = "Heretic: Shadow of the Serpent Riders";
+constexpr const char BANNER_UNKNOWN[]   = "Public DOOM";
 
 // Default intermission pics
-#define INTERPIC_DOOM    "INTERPIC"
+constexpr const char INTERPIC_DOOM[]    = "INTERPIC";
 
 // Default finales caused by Teleport_EndGame special
 #define DEF_DOOM_FINALE  FINALE_DOOM_CREDITS
@@ -138,7 +138,7 @@
 
 // Default translations for MF4_AUTOTRANSLATE flag.
 // Graphic is assumed to be in the DOOM palette.
-#define DEFTL_HERETIC  "TR_DINH"
+constexpr const char DEFTL_HERETIC[]  = "TR_DINH";
 
 // Default cast call text string coordinates
 #define CAST_DEFTITLEY 20

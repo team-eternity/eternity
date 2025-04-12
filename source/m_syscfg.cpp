@@ -66,25 +66,25 @@ extern int disable_sysmenu;
 
 // option name defines
 
-#define ITEM_USE_DOOM_CONFIG    "use_doom_config"
+constexpr const char ITEM_USE_DOOM_CONFIG[]    = "use_doom_config";
 
-#define ITEM_IWAD_DOOM_SW       "iwad_doom_shareware"
-#define ITEM_IWAD_DOOM          "iwad_doom"
-#define ITEM_IWAD_ULTIMATE_DOOM "iwad_ultimate_doom"
-#define ITEM_IWAD_DOOM2         "iwad_doom2"
-#define ITEM_IWAD_BFGDOOM2      "iwad_bfgdoom2"
-#define ITEM_IWAD_TNT           "iwad_tnt"
-#define ITEM_IWAD_PLUTONIA      "iwad_plutonia"
-#define ITEM_PWAD_ID24RES       "pwad_id24res"
-#define ITEM_IWAD_HACX          "iwad_hacx"
-#define ITEM_IWAD_HERETIC_SW    "iwad_heretic_shareware"
-#define ITEM_IWAD_HERETIC       "iwad_heretic"
-#define ITEM_IWAD_HERETIC_SOSR  "iwad_heretic_sosr"
-#define ITEM_IWAD_FREEDOOM      "iwad_freedoom"
-#define ITEM_IWAD_FREEDOOMU     "iwad_freedoomu"
-#define ITEM_IWAD_FREEDM        "iwad_freedm"
-#define ITEM_IWAD_REKKR         "iwad_rekkr"
-#define ITEM_IWAD_CHOICE        "iwad_choice"
+constexpr const char ITEM_IWAD_DOOM_SW[]       = "iwad_doom_shareware";
+constexpr const char ITEM_IWAD_DOOM[]          = "iwad_doom";
+constexpr const char ITEM_IWAD_ULTIMATE_DOOM[] = "iwad_ultimate_doom";
+constexpr const char ITEM_IWAD_DOOM2[]         = "iwad_doom2";
+constexpr const char ITEM_IWAD_BFGDOOM2[]      = "iwad_bfgdoom2";
+constexpr const char ITEM_IWAD_TNT[]           = "iwad_tnt";
+constexpr const char ITEM_IWAD_PLUTONIA[]      = "iwad_plutonia";
+constexpr const char ITEM_PWAD_ID24RES[]       = "pwad_id24res";
+constexpr const char ITEM_IWAD_HACX[]          = "iwad_hacx";
+constexpr const char ITEM_IWAD_HERETIC_SW[]    = "iwad_heretic_shareware";
+constexpr const char ITEM_IWAD_HERETIC[]       = "iwad_heretic";
+constexpr const char ITEM_IWAD_HERETIC_SOSR[]  = "iwad_heretic_sosr";
+constexpr const char ITEM_IWAD_FREEDOOM[]      = "iwad_freedoom";
+constexpr const char ITEM_IWAD_FREEDOOMU[]     = "iwad_freedoomu";
+constexpr const char ITEM_IWAD_FREEDM[]        = "iwad_freedm";
+constexpr const char ITEM_IWAD_REKKR[]         = "iwad_rekkr";
+constexpr const char ITEM_IWAD_CHOICE[]        = "iwad_choice";
 
 // system defaults array
 

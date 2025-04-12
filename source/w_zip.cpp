@@ -39,7 +39,7 @@
 
 // Internal ZIP file structures
 
-#define ZIP_LOCAL_FILE_SIG  "PK\x3\x4"
+const char ZIP_LOCAL_FILE_SIG[] = "PK\x3\x4";
 #define ZIP_LOCAL_FILE_SIZE 30
 
 struct ZIPLocalFileHeader
@@ -77,7 +77,7 @@ static MStructReader<ZLFH_t> localFileReader([] (MStructReader<ZLFH_t> &obj) {
    obj.addField(&ZLFH_t::extraLength );
 });
 
-#define ZIP_CENTRAL_DIR_SIG  "PK\x1\x2"
+constexpr const char ZIP_CENTRAL_DIR_SIG[] = "PK\x1\x2";
 #define ZIP_CENTRAL_DIR_SIZE 46
 
 struct ZIPCentralDirEntry
@@ -128,7 +128,7 @@ static MStructReader<ZCDE_t> centralDirReader([] (MStructReader<ZCDE_t> &obj) {
    obj.addField(&ZCDE_t::localOffset  );
 });
 
-#define ZIP_END_OF_DIR_SIG  "PK\x5\x6"
+constexpr const char ZIP_END_OF_DIR_SIG[] = "PK\x5\x6";
 #define ZIP_END_OF_DIR_SIZE 22
 
 struct ZIPEndOfCentralDir

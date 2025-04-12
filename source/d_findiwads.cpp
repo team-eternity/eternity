@@ -60,7 +60,7 @@ namespace fs = std::experimental::filesystem;
 #include "Win32/i_registry.h"
 
 // Prefix of uninstall value strings
-#define UNINSTALLER_STRING "\\uninstl.exe /S "
+constexpr const char UNINSTALLER_STRING[] = "\\uninstl.exe /S ";
 
 // CD Installer Locations
 static registry_value_t cdUninstallValues[] =

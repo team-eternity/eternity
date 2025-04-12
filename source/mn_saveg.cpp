@@ -68,7 +68,7 @@ namespace fs = std::experimental::filesystem;
 #include "v_patchfmt.h"
 #include "v_video.h"
 
-#define DSPROMPT "Delete save named\n\n'%s'?\n\n" PRESSYN
+constexpr const char DSPROMPT[] = "Delete save named\n\n'%s'?\n\n" PRESSYN;
 
 static constexpr int SAVESTRINGSIZE     = 24;
 static constexpr int NUMSAVEBOXLINES    = 15;

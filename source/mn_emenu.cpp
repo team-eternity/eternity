@@ -41,21 +41,21 @@
 
 // menu section keywords
 
-#define ITEM_MENU_ITEM     "item"
-#define ITEM_MENU_PREVPAGE "prevpage"
-#define ITEM_MENU_NEXTPAGE "nextpage"
-#define ITEM_MENU_X        "x"
-#define ITEM_MENU_Y        "y"
-#define ITEM_MENU_FIRST    "first"
-#define ITEM_MENU_FLAGS    "flags"
+constexpr const char ITEM_MENU_ITEM[]     = "item";
+constexpr const char ITEM_MENU_PREVPAGE[] = "prevpage";
+constexpr const char ITEM_MENU_NEXTPAGE[] = "nextpage";
+constexpr const char ITEM_MENU_X[]        = "x";
+constexpr const char ITEM_MENU_Y[]        = "y";
+constexpr const char ITEM_MENU_FIRST[]    = "first";
+constexpr const char ITEM_MENU_FLAGS[]    = "flags";
 
-#define ITEM_MNITEM_TYPE   "type"
-#define ITEM_MNITEM_TEXT   "text"
-#define ITEM_MNITEM_CMD    "cmd"
-#define ITEM_MNITEM_PATCH  "patch"
-#define ITEM_MNITEM_FLAGS  "flags"
+constexpr const char ITEM_MNITEM_TYPE[]   = "type";
+constexpr const char ITEM_MNITEM_TEXT[]   = "text";
+constexpr const char ITEM_MNITEM_CMD[]    = "cmd";
+constexpr const char ITEM_MNITEM_PATCH[]  = "patch";
+constexpr const char ITEM_MNITEM_FLAGS[]  = "flags";
 
-#define ITEM_MN_EPISODE    "mn_episode"
+constexpr const char ITEM_MN_EPISODE[]    = "mn_episode";
 
 // menu item options table
 static cfg_opt_t mnitem_opts[] =

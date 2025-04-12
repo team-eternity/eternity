@@ -48,17 +48,17 @@ extern char gamemapname[9];
 
 // Macros
 
-#define HIS_NOWENTERING "NOW ENTERING:"
-#define HIS_FINISHED    "FINISHED"
-#define HIS_KILLS       "KILLS"
-#define HIS_BONUS       "BONUS"
-#define HIS_ITEMS       "ITEMS"
-#define HIS_SECRETS     "SECRETS"
-#define HIS_SECRET      "SECRET"
-#define HIS_TIME        "TIME"
-#define HIS_TOTAL       "TOTAL"
-#define HIS_VICTIMS     "VICTIMS"
-#define HIS_KILLERS     "K\0I\0L\0L\0E\0R\0S"
+constexpr const char HIS_NOWENTERING[] = "NOW ENTERING:";
+constexpr const char HIS_FINISHED[]    = "FINISHED";
+constexpr const char HIS_KILLS[]       = "KILLS";
+constexpr const char HIS_BONUS[]       = "BONUS";
+constexpr const char HIS_ITEMS[]       = "ITEMS";
+constexpr const char HIS_SECRETS[]     = "SECRETS";
+constexpr const char HIS_SECRET[]      = "SECRET";
+constexpr const char HIS_TIME[]        = "TIME";
+constexpr const char HIS_TOTAL[]       = "TOTAL";
+constexpr const char HIS_VICTIMS[]     = "VICTIMS";
+constexpr const char HIS_KILLERS[]     = "K\0I\0L\0L\0E\0R\0S";
 
 enum
 {

@@ -1060,7 +1060,7 @@ static void P_archiveSectorActions(SaveArchive &arc)
 // Thinkers
 //
 
-#define tc_end "TC_END"
+constexpr const char tc_end[] = "TC_END";
 
 //
 // P_RemoveAllThinkers

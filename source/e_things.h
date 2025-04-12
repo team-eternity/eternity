@@ -116,9 +116,9 @@ const PODCollection<int> *E_GetThingsFromGroup(const char *name);
 
 // ioanch 20160220: metastate key names used throughout the code. They also
 // work as DECORATE state label names.
-#define METASTATE_HEAL "Heal"
-#define METASTATE_CRUNCH "Crunch"
-#define METASTATE_CRUNCH_ZDOOM_COMPATIBILITY "Crush"
+const char METASTATE_HEAL[]                       = "Heal";
+const char METASTATE_CRUNCH[]                     = "Crunch";
+const char METASTATE_CRUNCH_ZDOOM_COMPATIBILITY[] = "Crush";
 
 // blood types
 enum bloodtype_e : int

@@ -48,12 +48,12 @@
 
 static gfs_t gfs;
 
-#define SEC_WADFILE   "wadfile"
-#define SEC_DEHFILE   "dehfile"
-#define SEC_CSCFILE   "cscfile"
-#define SEC_EDFFILE   "edffile"
-#define SEC_IWAD      "iwad"
-#define SEC_BASEPATH  "basepath"
+constexpr const char SEC_WADFILE[]  = "wadfile";
+constexpr const char SEC_DEHFILE[]  = "dehfile";
+constexpr const char SEC_CSCFILE[]  = "cscfile";
+constexpr const char SEC_EDFFILE[]  = "edffile";
+constexpr const char SEC_IWAD[]     = "iwad";
+constexpr const char SEC_BASEPATH[] = "basepath";
 
 static cfg_opt_t gfs_opts[] =
 {

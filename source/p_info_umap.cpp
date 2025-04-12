@@ -43,7 +43,7 @@
 #include "v_misc.h"
 #include "xl_umapinfo.h"
 
-#define DEH_ACTOR_PREFIX "deh_actor_"
+constexpr const char DEH_ACTOR_PREFIX[] = "deh_actor_";
 
 enum
 {

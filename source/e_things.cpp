@@ -233,10 +233,10 @@ constexpr const char ITEM_TNG_PFX_SOUND[]     = "sound";
 constexpr const char ITEM_TNG_PFX_FLAGS[]     = "flags";
 
 // Projectile Trail Properties
-#define ITEM_TNG_TRAILTYPE     "trail.type"
-#define ITEM_TNG_TRAILZOFFSET  "trail.zoffset"
-#define ITEM_TNG_TRAILCHANCE   "trail.spawnchance"
-#define ITEM_TNG_TRAILSPARSITY "trail.sparsity"
+constexpr const char ITEM_TNG_TRAILTYPE[]     = "trail.type";
+constexpr const char ITEM_TNG_TRAILZOFFSET[]  = "trail.zoffset";
+constexpr const char ITEM_TNG_TRAILCHANCE[]   = "trail.spawnchance";
+constexpr const char ITEM_TNG_TRAILSPARSITY[] = "trail.sparsity";
 
 // Projectile/Hitscan properties
 constexpr const char ITEM_TNG_MISSILEHEIGHT[] = "missileheight";

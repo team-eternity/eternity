@@ -233,7 +233,7 @@ void I_ShutdownGraphics()
    }
 }
 
-#define BADVID "video mode not supported"
+constexpr const char BADVID[] = "video mode not supported";
 
 extern bool setsizeneeded;
 

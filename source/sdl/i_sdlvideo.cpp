@@ -303,7 +303,7 @@ void SDLVideoDriver::ShutdownGraphics()
    SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
 
-#define BADVID "video mode not supported"
+constexpr const char BADVID[] = "video mode not supported";
 
 extern bool setsizeneeded;
 
