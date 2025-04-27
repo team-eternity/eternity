@@ -31,12 +31,12 @@
 
 struct edf_string_t
 {
-   DLListItem<edf_string_t> numlinks; // next, prev links for numeric hash chain
-   edf_string_t *next;                 // next in mnemonic hash chain
+    DLListItem<edf_string_t> numlinks; // next, prev links for numeric hash chain
+    edf_string_t            *next;     // next in mnemonic hash chain
 
-   char *string;       // string value
-   char key[129];      // mnemonic for hashing
-   int  numkey;        // number for hashing
+    char *string;   // string value
+    char  key[129]; // mnemonic for hashing
+    int   numkey;   // number for hashing
 };
 
 edf_string_t *E_CreateString(const char *value, const char *key, int num);
@@ -49,7 +49,7 @@ const char *E_StringOrDehForName(const char *mnemonic);
 
 #ifdef NEED_EDF_DEFINITIONS
 constexpr const char EDF_SEC_STRING[] = "string";
-extern cfg_opt_t edf_string_opts[];
+extern cfg_opt_t     edf_string_opts[];
 
 void E_ProcessStrings(cfg_t *cfg);
 #endif

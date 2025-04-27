@@ -51,8 +51,8 @@ int leveltime;
 //
 // THINKERS
 //
-// All thinkers should be allocated by Z_Malloc so they can be operated on 
-// uniformly. The actual structures will vary in size, but the first element 
+// All thinkers should be allocated by Z_Malloc so they can be operated on
+// uniformly. The actual structures will vary in size, but the first element
 // must be thinker_t.
 //
 
@@ -60,11 +60,11 @@ int leveltime;
 Thinker thinkercap;
 
 // killough 8/29/98: we maintain several separate threads, each containing
-// a special class of thinkers, to allow more efficient searches. 
+// a special class of thinkers, to allow more efficient searches.
 
 Thinker thinkerclasscap[NUMTHCLASS];
 
-// 
+//
 // Thinker::StaticType
 //
 // haleyjd 11/14/11: Custom RTTI
@@ -76,10 +76,10 @@ IMPLEMENT_RTTI_TYPE(Thinker)
 //
 void Thinker::InitThinkers(void)
 {
-   for(Thinker &thinker : thinkerclasscap)  // killough 8/29/98: initialize threaded lists
-      thinker.cprev = thinker.cnext = &thinker;
+    for(Thinker &thinker : thinkerclasscap) // killough 8/29/98: initialize threaded lists
+        thinker.cprev = thinker.cnext = &thinker;
 
-   thinkercap.prev = thinkercap.next  = &thinkercap;
+    thinkercap.prev = thinkercap.next = &thinkercap;
 }
 
 //
@@ -90,25 +90,25 @@ void Thinker::InitThinkers(void)
 //
 void Thinker::addToThreadedList(int tclass)
 {
-   Thinker *th;
-   
-   // Remove from current thread, if in one -- haleyjd: from PrBoom
-   if((th = this->cnext) != nullptr)
-      (th->cprev = this->cprev)->cnext = th;
+    Thinker *th;
 
-   // Add to appropriate thread
-   th = &thinkerclasscap[tclass];
-   th->cprev->cnext = this;
-   this->cnext = th;
-   this->cprev = th->cprev;
-   th->cprev = this;
+    // Remove from current thread, if in one -- haleyjd: from PrBoom
+    if((th = this->cnext) != nullptr)
+        (th->cprev = this->cprev)->cnext = th;
+
+    // Add to appropriate thread
+    th               = &thinkerclasscap[tclass];
+    th->cprev->cnext = this;
+    this->cnext      = th;
+    this->cprev      = th->cprev;
+    th->cprev        = this;
 }
 
 //
 // P_UpdateThinker
 //
 // killough 8/29/98:
-// 
+//
 // We maintain separate threads of friends and enemies, to permit more
 // efficient searches.
 //
@@ -119,7 +119,7 @@ void Thinker::addToThreadedList(int tclass)
 //
 void Thinker::updateThinker()
 {
-   addToThreadedList(this->removed ? th_delete : th_misc);
+    addToThreadedList(this->removed ? th_delete : th_misc);
 }
 
 //
@@ -129,14 +129,14 @@ void Thinker::updateThinker()
 //
 void Thinker::addThinker()
 {
-   thinkercap.prev->next = this;
-   next = &thinkercap;
-   prev = thinkercap.prev;
-   thinkercap.prev = this;
-   
-   // killough 8/29/98: set sentinel pointers, and then add to appropriate list
-   cnext = cprev = this;
-   updateThinker();
+    thinkercap.prev->next = this;
+    next                  = &thinkercap;
+    prev                  = thinkercap.prev;
+    thinkercap.prev       = this;
+
+    // killough 8/29/98: set sentinel pointers, and then add to appropriate list
+    cnext = cprev = this;
+    updateThinker();
 }
 
 //
@@ -159,16 +159,16 @@ Thinker *Thinker::currentthinker;
 //
 void Thinker::removeDelayed()
 {
-   if(!this->references)
-   {
-      Thinker *lnext = this->next;
-      (lnext->prev = currentthinker = this->prev)->next = lnext;
-      
-      // haleyjd 11/09/06: remove from threaded list now
-      (this->cnext->cprev = this->cprev)->cnext = this->cnext;
-      
-      delete this;
-   }
+    if(!this->references)
+    {
+        Thinker *lnext                                    = this->next;
+        (lnext->prev = currentthinker = this->prev)->next = lnext;
+
+        // haleyjd 11/09/06: remove from threaded list now
+        (this->cnext->cprev = this->cprev)->cnext = this->cnext;
+
+        delete this;
+    }
 }
 
 //
@@ -185,21 +185,21 @@ void Thinker::removeDelayed()
 //
 void Thinker::remove()
 {
-   removed = true;
-   
-   // killough 8/29/98: remove immediately from threaded list
-   
-   // haleyjd 11/09/06: NO! Doing this here was always suspect to me, and
-   // sure enough: if a monster's removed at the wrong time, it gets put
-   // back into the list improperly and starts causing an infinite loop in
-   // the AI code. We'll follow PrBoom's lead and create a th_delete class
-   // for thinkers awaiting deferred removal.
+    removed = true;
 
-   // Old code:
-   //(thinker->cnext->cprev = thinker->cprev)->cnext = thinker->cnext;
+    // killough 8/29/98: remove immediately from threaded list
 
-   // Move to th_delete class.
-   updateThinker();
+    // haleyjd 11/09/06: NO! Doing this here was always suspect to me, and
+    // sure enough: if a monster's removed at the wrong time, it gets put
+    // back into the list improperly and starts causing an infinite loop in
+    // the AI code. We'll follow PrBoom's lead and create a th_delete class
+    // for thinkers awaiting deferred removal.
+
+    // Old code:
+    //(thinker->cnext->cprev = thinker->cprev)->cnext = thinker->cnext;
+
+    // Move to th_delete class.
+    updateThinker();
 }
 
 //
@@ -226,16 +226,14 @@ void Thinker::remove()
 //
 void Thinker::RunThinkers(void)
 {
-   for(currentthinker = thinkercap.next; 
-       currentthinker != &thinkercap;
-       currentthinker = currentthinker->next)
-   {
-      if(currentthinker->removed)
-         currentthinker->removeDelayed();
-      else
-         currentthinker->Think();
-   }
-   S_MusInfoUpdate();
+    for(currentthinker = thinkercap.next; currentthinker != &thinkercap; currentthinker = currentthinker->next)
+    {
+        if(currentthinker->removed)
+            currentthinker->removeDelayed();
+        else
+            currentthinker->Think();
+    }
+    S_MusInfoUpdate();
 }
 
 //
@@ -243,7 +241,7 @@ void Thinker::RunThinkers(void)
 //
 // Thinker serialization works together with the SaveArchive class and the
 // series of ThinkerType-derived classes. Thinker subclasses should always
-// call their parent implementation's serialize method. This default 
+// call their parent implementation's serialize method. This default
 // implementation takes care of writing the class name when the archive is in
 // save mode. If the thinker is being loaded from a save, the save archive
 // has already read out the thinker name in order to instantiate an instance
@@ -251,8 +249,8 @@ void Thinker::RunThinkers(void)
 //
 void Thinker::serialize(SaveArchive &arc)
 {
-   if(arc.isSaving())
-      arc.writeLString(getClassName());
+    if(arc.isSaving())
+        arc.writeLString(getClassName());
 }
 
 //
@@ -260,58 +258,57 @@ void Thinker::serialize(SaveArchive &arc)
 //
 void P_Ticker()
 {
-   // pause if in menu and at least one tic has been run
-   //
-   // killough 9/29/98: note that this ties in with basetic,
-   // since G_Ticker does the pausing during recording or
-   // playback, and compensates by incrementing basetic.
-   // 
-   // All of this complicated mess is used to preserve demo sync.
-   
-   if(paused || ((menuactive || consoleactive) && !demoplayback && !netgame &&
-                 players[consoleplayer].viewz != 1))
-      return;
+    // pause if in menu and at least one tic has been run
+    //
+    // killough 9/29/98: note that this ties in with basetic,
+    // since G_Ticker does the pausing during recording or
+    // playback, and compensates by incrementing basetic.
+    //
+    // All of this complicated mess is used to preserve demo sync.
 
-   // spawn unknowns at start of map if requested and possible
-   if(!leveltime)
-      P_SpawnUnknownThings();
+    if(paused || ((menuactive || consoleactive) && !demoplayback && !netgame && players[consoleplayer].viewz != 1))
+        return;
 
-   // interpolation: save current sector heights
-   P_SaveSectorPositions();
-   // save dynaseg positions (or reset them to avoid shaking)
-   R_SaveDynasegPositions();
-   // Reset any interpolated scrolled sidedefs
-   P_TicResetLerpScrolledSides();
-   
-   P_ParticleThinker(); // haleyjd: think for particles
+    // spawn unknowns at start of map if requested and possible
+    if(!leveltime)
+        P_SpawnUnknownThings();
 
-   // VANILLA_HERETIC: it's critical to postpone S_RunSequences below
-   if(!vanilla_heretic)
-      S_RunSequences(); // haleyjd 06/06/06
+    // interpolation: save current sector heights
+    P_SaveSectorPositions();
+    // save dynaseg positions (or reset them to avoid shaking)
+    R_SaveDynasegPositions();
+    // Reset any interpolated scrolled sidedefs
+    P_TicResetLerpScrolledSides();
 
-   // not if this is an intermission screen
-   // haleyjd: players don't think during cinematic pauses
-   if(gamestate == GS_LEVEL && !cinema_pause)
-   {
-      for(int i = 0; i < MAXPLAYERS; i++)
-      {
-         if(playeringame[i])
-            P_PlayerThink(players[i]);
-      }
-   }
+    P_ParticleThinker(); // haleyjd: think for particles
 
-   Thinker::RunThinkers();
-   ACS_Exec();
-   P_UpdateSpecials();
-   if(vanilla_heretic)
-      S_RunSequences();
-   P_RespawnSpecials();
-   if(demo_version >= 329)
-      P_AnimateSurfaces(); // haleyjd 04/14/99
-   
-   leveltime++;                       // for par times
+    // VANILLA_HERETIC: it's critical to postpone S_RunSequences below
+    if(!vanilla_heretic)
+        S_RunSequences(); // haleyjd 06/06/06
 
-   P_RunEffects(); // haleyjd: run particle effects
+    // not if this is an intermission screen
+    // haleyjd: players don't think during cinematic pauses
+    if(gamestate == GS_LEVEL && !cinema_pause)
+    {
+        for(int i = 0; i < MAXPLAYERS; i++)
+        {
+            if(playeringame[i])
+                P_PlayerThink(players[i]);
+        }
+    }
+
+    Thinker::RunThinkers();
+    ACS_Exec();
+    P_UpdateSpecials();
+    if(vanilla_heretic)
+        S_RunSequences();
+    P_RespawnSpecials();
+    if(demo_version >= 329)
+        P_AnimateSurfaces(); // haleyjd 04/14/99
+
+    leveltime++; // for par times
+
+    P_RunEffects(); // haleyjd: run particle effects
 }
 
 //----------------------------------------------------------------------------

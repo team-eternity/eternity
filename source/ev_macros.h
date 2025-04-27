@@ -34,13 +34,13 @@
 
 // Call to require a valid actor
 #define REQUIRE_ACTOR(actor) \
-   if(!(actor))              \
-      return false
+    if(!(actor))             \
+        return false
 
 // Call to require a valid line
 #define REQUIRE_LINE(line) \
-   if(!(line))             \
-      return false
+    if(!(line))            \
+        return false
 
 #endif
 

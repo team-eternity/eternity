@@ -33,7 +33,7 @@
 #include "doomstat.h"
 #include "e_fonts.h"
 #include "e_hash.h"
-#include "e_things.h" 
+#include "e_things.h"
 #include "g_game.h"
 #include "in_lude.h"
 #include "m_random.h"
@@ -60,9 +60,9 @@ static interfns_t *InterFuncs = nullptr;
 vfont_t *in_font;
 vfont_t *in_bigfont;
 vfont_t *in_bignumfont;
-char *in_fontname;
-char *in_bigfontname;
-char *in_bignumfontname;
+char    *in_fontname;
+char    *in_bigfontname;
+char    *in_bignumfontname;
 
 //
 // Intermission Camera
@@ -81,8 +81,7 @@ Mobj *wi_camera;
 //
 // Intermission map info
 //
-static EHashTable<intermapinfo_t, ENCStringHashKey,
-&intermapinfo_t::lumpname, &intermapinfo_t::link> in_mapinfo;
+static EHashTable<intermapinfo_t, ENCStringHashKey, &intermapinfo_t::lumpname, &intermapinfo_t::link> in_mapinfo;
 
 //
 // IN_AddCameras
@@ -93,14 +92,14 @@ static EHashTable<intermapinfo_t, ENCStringHashKey,
 //
 void IN_AddCameras()
 {
-   camerathings.mobjType = "SMMUCameraSpot";
-   camerathings.makeEmpty();
+    camerathings.mobjType = "SMMUCameraSpot";
+    camerathings.makeEmpty();
 
-   // no camera view if we're in an older demo.
-   if(demo_version < 331)
-      return;
-   
-   camerathings.collectThings();
+    // no camera view if we're in an older demo.
+    if(demo_version < 331)
+        return;
+
+    camerathings.collectThings();
 }
 
 //
@@ -110,47 +109,47 @@ void IN_AddCameras()
 //
 static void IN_StartCamera()
 {
-   if(!camerathings.isEmpty())
-   {
-      realbackdrop = 1;
+    if(!camerathings.isEmpty())
+    {
+        realbackdrop = 1;
 
-      // pick a camera at random
-      wi_camera = camerathings.getRandom(pr_misc);
+        // pick a camera at random
+        wi_camera = camerathings.getRandom(pr_misc);
 
 #ifdef UNSAFE_BACKDROP
-      // remove the player mobjs (look silly in camera view)
-      for(int i = 0; i < MAXPLAYERS; ++i)
-      {
-         if(!playeringame[i])
-            continue;
-         // this is strange. the monsters can still see the player Mobj, (and
-         // even kill it!) even tho it has been removed from the level. I make
-         // it unshootable first so they lose interest.
-         players[i].mo->flags &= ~MF_SHOOTABLE;
-         players[i].mo->remove();
-      }
+        // remove the player mobjs (look silly in camera view)
+        for(int i = 0; i < MAXPLAYERS; ++i)
+        {
+            if(!playeringame[i])
+                continue;
+            // this is strange. the monsters can still see the player Mobj, (and
+            // even kill it!) even tho it has been removed from the level. I make
+            // it unshootable first so they lose interest.
+            players[i].mo->flags &= ~MF_SHOOTABLE;
+            players[i].mo->remove();
+        }
 #endif
-            
-      intercam.x = wi_camera->x;
-      intercam.y = wi_camera->y;
-      intercam.angle = wi_camera->angle;
-      intercam.pitch = 0;
 
-      subsector_t *subsec = R_PointInSubsector(intercam.x, intercam.y);
-      intercam.z = subsec->sector->srf.floor.getZAt(intercam.x, intercam.y) + 41*FRACUNIT;
+        intercam.x     = wi_camera->x;
+        intercam.y     = wi_camera->y;
+        intercam.angle = wi_camera->angle;
+        intercam.pitch = 0;
 
-      intercam.backupPosition();
-      
-      // FIXME: does this bite the player's setting for the next map?
-      R_SetViewSize(11);     // force fullscreen
-   }
-   else            // no camera, boring interpic
-   {
-      realbackdrop = 0;
-      wi_camera = nullptr;
-      S_StopAllSequences(); // haleyjd 06/06/06
-      S_StopLoopedSounds(); // haleyjd 10/06/06
-   }
+        subsector_t *subsec = R_PointInSubsector(intercam.x, intercam.y);
+        intercam.z          = subsec->sector->srf.floor.getZAt(intercam.x, intercam.y) + 41 * FRACUNIT;
+
+        intercam.backupPosition();
+
+        // FIXME: does this bite the player's setting for the next map?
+        R_SetViewSize(11); // force fullscreen
+    }
+    else // no camera, boring interpic
+    {
+        realbackdrop = 0;
+        wi_camera    = nullptr;
+        S_StopAllSequences(); // haleyjd 06/06/06
+        S_StopLoopedSounds(); // haleyjd 10/06/06
+    }
 }
 
 // ====================================================================
@@ -161,10 +160,10 @@ static void IN_StartCamera()
 //
 void IN_slamBackground()
 {
-   if(realbackdrop)
-      R_RenderPlayerView(players+displayplayer, &intercam);
-   else
-      IN_DrawBackground();
+    if(realbackdrop)
+        R_RenderPlayerView(players + displayplayer, &intercam);
+    else
+        IN_DrawBackground();
 }
 
 // ====================================================================
@@ -177,33 +176,33 @@ void IN_slamBackground()
 //
 void IN_checkForAccelerate()
 {
-   int   i;
-   player_t  *player;
-   
-   // check for button presses to skip delays
-   for(i = 0, player = players ; i < MAXPLAYERS ; i++, player++)
-   {
-      if(playeringame[i])
-      {
-         if(player->cmd.buttons & BT_ATTACK)
-         {
-            if(!(player->attackdown & AT_PRIMARY))
-               acceleratestage = 1;
-            player->attackdown = AT_PRIMARY;
-         }
-         else
-            player->attackdown = AT_NONE;
-         
-         if (player->cmd.buttons & BT_USE)
-         {
-            if(!player->usedown)
-               acceleratestage = 1;
-            player->usedown = true;
-         }
-         else
-            player->usedown = false;
-      }
-   }
+    int       i;
+    player_t *player;
+
+    // check for button presses to skip delays
+    for(i = 0, player = players; i < MAXPLAYERS; i++, player++)
+    {
+        if(playeringame[i])
+        {
+            if(player->cmd.buttons & BT_ATTACK)
+            {
+                if(!(player->attackdown & AT_PRIMARY))
+                    acceleratestage = 1;
+                player->attackdown = AT_PRIMARY;
+            }
+            else
+                player->attackdown = AT_NONE;
+
+            if(player->cmd.buttons & BT_USE)
+            {
+                if(!player->usedown)
+                    acceleratestage = 1;
+                player->usedown = true;
+            }
+            else
+                player->usedown = false;
+        }
+    }
 }
 
 //
@@ -215,21 +214,21 @@ void IN_checkForAccelerate()
 //
 void IN_Ticker()
 {
-   // counter for general background animation
-   intertime++;  
-   
-   // intermission music
-   if(intertime == 1)
-      S_ChangeMusicNum(GameModeInfo->interMusNum, true);
+    // counter for general background animation
+    intertime++;
 
-   IN_checkForAccelerate();
+    // intermission music
+    if(intertime == 1)
+        S_ChangeMusicNum(GameModeInfo->interMusNum, true);
 
-   InterFuncs->Ticker();
+    IN_checkForAccelerate();
+
+    InterFuncs->Ticker();
 
 #ifdef UNSAFE_BACKDROP
-   // keep the level running when using an intermission camera
-   if(realbackdrop)
-      P_Ticker();
+    // keep the level running when using an intermission camera
+    if(realbackdrop)
+        P_Ticker();
 #endif
 }
 
@@ -240,21 +239,21 @@ void IN_Ticker()
 //
 void IN_Drawer()
 {
-   InterFuncs->Drawer();
+    InterFuncs->Drawer();
 }
 
 //
 // IN_DrawBackground
 //
 // Calls the gamemode-specific background drawer. This doesn't
-// use the static global InterFuncs on the off chance that the video 
-// mode could change while the game is in intermission mode, but the 
+// use the static global InterFuncs on the off chance that the video
+// mode could change while the game is in intermission mode, but the
 // InterFuncs variable hasn't been initialized yet.
 // Called from system-specific code when the video mode changes.
 //
 void IN_DrawBackground()
 {
-   GameModeInfo->interfuncs->DrawBackground();
+    GameModeInfo->interfuncs->DrawBackground();
 }
 
 //
@@ -266,28 +265,28 @@ void IN_DrawBackground()
 //
 void IN_Start(wbstartstruct_t *wbstartstruct)
 {
-   // haleyjd 03/24/05: allow skipping stats intermission
-   if(LevelInfo.killStats)
-   {
-      G_WorldDone();
-      return;
-   }
+    // haleyjd 03/24/05: allow skipping stats intermission
+    if(LevelInfo.killStats)
+    {
+        G_WorldDone();
+        return;
+    }
 
-   if(!in_font)
-   {
-      if(!(in_font = E_FontForName(in_fontname)))
-         I_Error("IN_Start: bad EDF font name %s\n", in_fontname);
-      if(!(in_bigfont = E_FontForName(in_bigfontname)))
-         I_Error("IN_Start: bad EDF font name %s\n", in_bigfontname);
-      if(!(in_bignumfont = E_FontForName(in_bignumfontname)))
-         I_Error("IN_Start: bad EDF font name %s\n", in_bignumfontname);
-   }
+    if(!in_font)
+    {
+        if(!(in_font = E_FontForName(in_fontname)))
+            I_Error("IN_Start: bad EDF font name %s\n", in_fontname);
+        if(!(in_bigfont = E_FontForName(in_bigfontname)))
+            I_Error("IN_Start: bad EDF font name %s\n", in_bigfontname);
+        if(!(in_bignumfont = E_FontForName(in_bignumfontname)))
+            I_Error("IN_Start: bad EDF font name %s\n", in_bignumfontname);
+    }
 
-   IN_StartCamera();  //set up camera
+    IN_StartCamera(); // set up camera
 
-   InterFuncs = GameModeInfo->interfuncs;
+    InterFuncs = GameModeInfo->interfuncs;
 
-   InterFuncs->Start(wbstartstruct);
+    InterFuncs->Start(wbstartstruct);
 }
 
 //
@@ -296,14 +295,14 @@ void IN_Start(wbstartstruct_t *wbstartstruct)
 //
 intermapinfo_t &IN_GetMapInfo(const char *lumpname)
 {
-   intermapinfo_t *info;
-   if(!(info = in_mapinfo.objectForKey(lumpname)))
-   {
-      info = estructalloc(intermapinfo_t, 1);
-      info->lumpname = estrdup(lumpname);
-      in_mapinfo.addObject(info);
-   }
-   return *info;
+    intermapinfo_t *info;
+    if(!(info = in_mapinfo.objectForKey(lumpname)))
+    {
+        info           = estructalloc(intermapinfo_t, 1);
+        info->lumpname = estrdup(lumpname);
+        in_mapinfo.addObject(info);
+    }
+    return *info;
 }
 
 // EOF

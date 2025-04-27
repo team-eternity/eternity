@@ -33,25 +33,19 @@
 class AutoPalette
 {
 protected:
-   byte *palette;
+    byte *palette;
 
-   // Not copyable.
-   AutoPalette(const AutoPalette &other) {} 
+    // Not copyable.
+    AutoPalette(const AutoPalette &other) {}
 
 public:
-   explicit AutoPalette(WadDirectory &dir)
-   {
-      palette = static_cast<byte *>(dir.cacheLumpName("PLAYPAL", PU_STATIC));
-   }
+    explicit AutoPalette(WadDirectory &dir) { palette = static_cast<byte *>(dir.cacheLumpName("PLAYPAL", PU_STATIC)); }
 
-   ~AutoPalette()
-   {
-      Z_ChangeTag(palette, PU_CACHE);
-   }
+    ~AutoPalette() { Z_ChangeTag(palette, PU_CACHE); }
 
-   byte *get() const { return palette; }
-   
-   byte operator [] (size_t index) const { return palette[index]; }
+    byte *get() const { return palette; }
+
+    byte operator[](size_t index) const { return palette[index]; }
 };
 
 #endif

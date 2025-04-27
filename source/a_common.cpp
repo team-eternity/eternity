@@ -61,36 +61,36 @@
 //
 void P_MakeSeeSound(Mobj *actor, pr_class_t rngnum)
 {
-   if(actor->info->seesound)
-   {
-      int sound;
-      Mobj *emitter = actor;
+    if(actor->info->seesound)
+    {
+        int   sound;
+        Mobj *emitter = actor;
 
-      // EDF_FIXME: needs to be generalized like in zdoom
-      switch (actor->info->seesound)
-      {
-      case sfx_posit1:
-      case sfx_posit2:
-      case sfx_posit3:
-         sound = sfx_posit1 + P_Random(rngnum) % 3;
-         break;
-         
-      case sfx_bgsit1:
-      case sfx_bgsit2:
-         sound = sfx_bgsit1 + P_Random(rngnum) % 2;
-         break;
-                  
-      default:
-         sound = actor->info->seesound;
-         break;
-      }
-      
-      // haleyjd: generalize to all bosses
-      if((actor->flags2 & MF2_BOSS) || (actor->flags5 & MF5_FULLVOLSOUNDS))
-         emitter = nullptr;
+        // EDF_FIXME: needs to be generalized like in zdoom
+        switch(actor->info->seesound)
+        {
+        case sfx_posit1:
+        case sfx_posit2:
+        case sfx_posit3: //
+            sound = sfx_posit1 + P_Random(rngnum) % 3;
+            break;
 
-      S_StartSound(emitter, sound);
-   }
+        case sfx_bgsit1:
+        case sfx_bgsit2: //
+            sound = sfx_bgsit1 + P_Random(rngnum) % 2;
+            break;
+
+        default: //
+            sound = actor->info->seesound;
+            break;
+        }
+
+        // haleyjd: generalize to all bosses
+        if((actor->flags2 & MF2_BOSS) || (actor->flags5 & MF5_FULLVOLSOUNDS))
+            emitter = nullptr;
+
+        S_StartSound(emitter, sound);
+    }
 }
 
 //
@@ -100,59 +100,59 @@ void P_MakeSeeSound(Mobj *actor, pr_class_t rngnum)
 //
 void A_Look(actionargs_t *actionargs)
 {
-   Mobj *actor     = actionargs->actor;
-   Mobj *sndtarget = actor->subsector->sector->soundtarget;
-   bool  allaround = false;
+    Mobj *actor     = actionargs->actor;
+    Mobj *sndtarget = actor->subsector->sector->soundtarget;
+    bool  allaround = false;
 
-   // killough 7/18/98:
-   // Friendly monsters go after other monsters first, but 
-   // also return to player, without attacking them, if they
-   // cannot find any targets. A marine's best friend :)
-   
-   actor->threshold = actor->pursuecount = 0;
+    // killough 7/18/98:
+    // Friendly monsters go after other monsters first, but
+    // also return to player, without attacking them, if they
+    // cannot find any targets. A marine's best friend :)
 
-   if(actor->flags4 & MF4_LOOKALLAROUND)
-      allaround = true;
+    actor->threshold = actor->pursuecount = 0;
 
-   // If a friend, look for targets immediately.
-   // If a monster, go on to check soundtarget first.
-   if(!(actor->flags & MF_FRIEND) || !P_LookForTargets(actor, allaround))
-   {
-      if(!sndtarget || !(sndtarget->flags & MF_SHOOTABLE))
-      {
-         // There is no valid soundtarget.
-         // If a friend, return.
-         // If a monster, look for players.
-         if(actor->flags & MF_FRIEND || !P_LookForTargets(actor, allaround))
-            return;
-      }
-      else
-      {
-         // haleyjd 1/25/00: test for AMBUSH enemies seeing totally invisible
-         // players after the soundtarget is activated.
-         if(actor->flags & MF_AMBUSH && sndtarget->flags4 & MF4_TOTALINVISIBLE)
-            return;
+    if(actor->flags4 & MF4_LOOKALLAROUND)
+        allaround = true;
 
-         // soundtarget is valid, acquire it.
-         P_SetTarget<Mobj>(&actor->target, sndtarget);
-
-         // If an ambush monster, we must additionally be able to see it.
-         if(actor->flags & MF_AMBUSH && !P_CheckSight(actor, sndtarget))
-         {
-            // We couldn't see the soundtarget.
+    // If a friend, look for targets immediately.
+    // If a monster, go on to check soundtarget first.
+    if(!(actor->flags & MF_FRIEND) || !P_LookForTargets(actor, allaround))
+    {
+        if(!sndtarget || !(sndtarget->flags & MF_SHOOTABLE))
+        {
+            // There is no valid soundtarget.
             // If a friend, return.
-            // If a monster, look for other players.
+            // If a monster, look for players.
             if(actor->flags & MF_FRIEND || !P_LookForTargets(actor, allaround))
-               return;
-         }
-      }
+                return;
+        }
+        else
+        {
+            // haleyjd 1/25/00: test for AMBUSH enemies seeing totally invisible
+            // players after the soundtarget is activated.
+            if(actor->flags & MF_AMBUSH && sndtarget->flags4 & MF4_TOTALINVISIBLE)
+                return;
 
-      // Target is now valid, so the monster will awaken.
-   }
+            // soundtarget is valid, acquire it.
+            P_SetTarget<Mobj>(&actor->target, sndtarget);
 
-   // go into chase state
-   P_MakeSeeSound(actor, pr_see);
-   P_SetMobjState(actor, actor->info->seestate);
+            // If an ambush monster, we must additionally be able to see it.
+            if(actor->flags & MF_AMBUSH && !P_CheckSight(actor, sndtarget))
+            {
+                // We couldn't see the soundtarget.
+                // If a friend, return.
+                // If a monster, look for other players.
+                if(actor->flags & MF_FRIEND || !P_LookForTargets(actor, allaround))
+                    return;
+            }
+        }
+
+        // Target is now valid, so the monster will awaken.
+    }
+
+    // go into chase state
+    P_MakeSeeSound(actor, pr_see);
+    P_SetMobjState(actor, actor->info->seestate);
 }
 
 //
@@ -163,16 +163,16 @@ void A_Look(actionargs_t *actionargs)
 //
 void A_KeepChasing(actionargs_t *actionargs)
 {
-   /*
-   if(actor->movecount)
-   {
-      actor->movecount--;
-      if(actor->strafecount)
-         actor->strafecount--;
-      P_SmartMove(actor);
-   }
-   */
-   P_SmartMove(actionargs->actor);
+    /*
+    if(actor->movecount)
+    {
+        actor->movecount--;
+        if(actor->strafecount)
+            actor->strafecount--;
+        P_SmartMove(actor);
+    }
+    */
+    P_SmartMove(actionargs->actor);
 }
 
 //
@@ -183,11 +183,11 @@ void A_KeepChasing(actionargs_t *actionargs)
 //
 static bool P_SuperFriend(Mobj *actor)
 {
-   Mobj *target = actor->target;
+    Mobj *target = actor->target;
 
-   return ((actor->flags3 & MF3_SUPERFRIEND) && // thing is a super friend,
-           target &&                            // target is valid, and
-           (actor->flags & target->flags & MF_FRIEND)); // both are friends
+    return ((actor->flags3 & MF3_SUPERFRIEND) &&         // thing is a super friend,
+            target &&                                    // target is valid, and
+            (actor->flags & target->flags & MF_FRIEND)); // both are friends
 }
 
 //
@@ -197,24 +197,24 @@ static bool P_SuperFriend(Mobj *actor)
 //
 static void P_MakeActiveSound(Mobj *actor)
 {
-   if(actor->info->activesound && P_Random(pr_see) < 3)
-   {
-      int sound = actor->info->activesound;
+    if(actor->info->activesound && P_Random(pr_see) < 3)
+    {
+        int sound = actor->info->activesound;
 
-      // haleyjd: some heretic enemies use their seesound on
-      // occasion, so I've made this a general feature
-      if(actor->flags3 & MF3_ACTSEESOUND)
-      {
-         if(P_Random(pr_lookact) < 128 && actor->info->seesound)
-            sound = actor->info->seesound;
-      }
+        // haleyjd: some heretic enemies use their seesound on
+        // occasion, so I've made this a general feature
+        if(actor->flags3 & MF3_ACTSEESOUND)
+        {
+            if(P_Random(pr_lookact) < 128 && actor->info->seesound)
+                sound = actor->info->seesound;
+        }
 
-      // haleyjd: some heretic enemies snort at full volume :)
-      if(actor->flags3 & MF3_LOUDACTIVE)
-         actor = nullptr;
+        // haleyjd: some heretic enemies snort at full volume :)
+        if(actor->flags3 & MF3_LOUDACTIVE)
+            actor = nullptr;
 
-      S_StartSound(actor, sound);
-   }
+        S_StartSound(actor, sound);
+    }
 }
 
 //
@@ -222,22 +222,21 @@ static void P_MakeActiveSound(Mobj *actor)
 //
 void A_FaceTarget(actionargs_t *actionargs)
 {
-   Mobj *actor = actionargs->actor;
+    Mobj *actor = actionargs->actor;
 
-   if(!actor->target)
-      return;
+    if(!actor->target)
+        return;
 
-   // haleyjd: special feature for player thunking
-   if(actor->intflags & MIF_NOFACE)
-      return;
+    // haleyjd: special feature for player thunking
+    if(actor->intflags & MIF_NOFACE)
+        return;
 
-   actor->flags &= ~MF_AMBUSH;
-   actor->angle = P_PointToAngle(actor->x, actor->y,
-                                 getTargetX(actor), getTargetY(actor));
+    actor->flags &= ~MF_AMBUSH;
+    actor->angle  = P_PointToAngle(actor->x, actor->y, getTargetX(actor), getTargetY(actor));
 
-   int shiftamount = P_GetAimShift(actor->target, false);
-   if(shiftamount >= 0)
-      actor->angle += P_SubRandom(pr_facetarget) << shiftamount;
+    int shiftamount = P_GetAimShift(actor->target, false);
+    if(shiftamount >= 0)
+        actor->angle += P_SubRandom(pr_facetarget) << shiftamount;
 }
 
 //
@@ -248,167 +247,161 @@ void A_FaceTarget(actionargs_t *actionargs)
 //
 void A_Chase(actionargs_t *actionargs)
 {
-   Mobj *actor = actionargs->actor;
-   bool superfriend = false;
+    Mobj *actor       = actionargs->actor;
+    bool  superfriend = false;
 
-   if(actor->reactiontime)
-      actor->reactiontime--;
+    if(actor->reactiontime)
+        actor->reactiontime--;
 
-   // modify target threshold
-   if(actor->threshold)
-   {
-      if(!actor->target || actor->target->health <= 0)
-         actor->threshold = 0;
-      else
-         actor->threshold--;
-   }
+    // modify target threshold
+    if(actor->threshold)
+    {
+        if(!actor->target || actor->target->health <= 0)
+            actor->threshold = 0;
+        else
+            actor->threshold--;
+    }
 
-   // Support Raven game Heretic actor speedup
-   if(GameModeInfo->flags & GIF_CHASEFAST &&
-      (gameskill >= sk_nightmare || fastparm ||
-       actor->flags3 & MF3_ALWAYSFAST) && actor->tics > 3)
-   {
-      // Unlike vanilla Heretic, don't make frames shorter than 3 tics actually
-      // longer. This shouldn't affect any monster from vanilla Heretic, except
-      // the enraged D'sparil Serpent, which instead gets an extra check in
-      // A_Sor1Chase.
-      actor->tics -= actor->tics / 2;
-      if(actor->tics < 3)
-         actor->tics = 3;
-   }
+    // Support Raven game Heretic actor speedup
+    if(GameModeInfo->flags & GIF_CHASEFAST &&
+       (gameskill >= sk_nightmare || fastparm || actor->flags3 & MF3_ALWAYSFAST) && actor->tics > 3)
+    {
+        // Unlike vanilla Heretic, don't make frames shorter than 3 tics actually
+        // longer. This shouldn't affect any monster from vanilla Heretic, except
+        // the enraged D'sparil Serpent, which instead gets an extra check in
+        // A_Sor1Chase.
+        actor->tics -= actor->tics / 2;
+        if(actor->tics < 3)
+            actor->tics = 3;
+    }
 
-   // turn towards movement direction if not there yet
-   // killough 9/7/98: keep facing towards target if strafing or backing out
+    // turn towards movement direction if not there yet
+    // killough 9/7/98: keep facing towards target if strafing or backing out
 
-   if(actor->strafecount)
-      A_FaceTarget(actionargs);
-   else
-   {
-      if(actor->movedir < 8)
-      {
-         int delta = (actor->angle &= (7<<29)) - (actor->movedir << 29);
+    if(actor->strafecount)
+        A_FaceTarget(actionargs);
+    else
+    {
+        if(actor->movedir < 8)
+        {
+            int delta = (actor->angle &= (7 << 29)) - (actor->movedir << 29);
 
-         if(delta > 0)
-            actor->angle -= ANG90/2;
-         else if (delta < 0)
-            actor->angle += ANG90/2;
-      }
-   }
+            if(delta > 0)
+                actor->angle -= ANG90 / 2;
+            else if(delta < 0)
+                actor->angle += ANG90 / 2;
+        }
+    }
 
-   if(!actor->target || !(actor->target->flags & MF_SHOOTABLE))
-   {
-      if(!P_LookForTargets(actor,true)) // look for a new target
-         P_SetMobjState(actor, actor->info->spawnstate); // no new target
-      return;
-   }
+    if(!actor->target || !(actor->target->flags & MF_SHOOTABLE))
+    {
+        if(!P_LookForTargets(actor, true))                  // look for a new target
+            P_SetMobjState(actor, actor->info->spawnstate); // no new target
+        return;
+    }
 
-   // do not attack twice in a row
-   if(actor->flags & MF_JUSTATTACKED)
-   {
-      // haleyjd 05/22/06: ALWAYSFAST flag
-      actor->flags &= ~MF_JUSTATTACKED;
-      if(gameskill != sk_nightmare && !fastparm && !(actor->flags3 & MF3_ALWAYSFAST))
-         P_NewChaseDir(actor);
-      return;
-   }
+    // do not attack twice in a row
+    if(actor->flags & MF_JUSTATTACKED)
+    {
+        // haleyjd 05/22/06: ALWAYSFAST flag
+        actor->flags &= ~MF_JUSTATTACKED;
+        if(gameskill != sk_nightmare && !fastparm && !(actor->flags3 & MF3_ALWAYSFAST))
+            P_NewChaseDir(actor);
+        return;
+    }
 
-   // haleyjd 01/11/04: check superfriend status
-   if(demo_version >= 331)
-      superfriend = P_SuperFriend(actor);
+    // haleyjd 01/11/04: check superfriend status
+    if(demo_version >= 331)
+        superfriend = P_SuperFriend(actor);
 
-   // check for melee attack
-   if(actor->info->meleestate != NullStateNum && P_CheckMeleeRange(actor) && 
-      !superfriend)
-   {
-      S_StartSound(actor, actor->info->attacksound);
-      
-      P_SetMobjState(actor, actor->info->meleestate);
+    // check for melee attack
+    if(actor->info->meleestate != NullStateNum && P_CheckMeleeRange(actor) && !superfriend)
+    {
+        S_StartSound(actor, actor->info->attacksound);
 
-      if(actor->info->missilestate == NullStateNum)
-         actor->flags |= MF_JUSTHIT; // killough 8/98: remember an attack
-      return;
-   }
+        P_SetMobjState(actor, actor->info->meleestate);
 
-   // check for missile attack
-   if(actor->info->missilestate != NullStateNum && !superfriend)
-   {
-      // haleyjd 05/22/06: ALWAYSFAST flag
-      if(!actor->movecount || gameskill >= sk_nightmare || fastparm || 
-         (actor->flags3 & MF3_ALWAYSFAST))
-      {
-         if(P_CheckMissileRange(actor))
-         {
-            P_SetMobjState(actor, actor->info->missilestate);
-            actor->flags |= MF_JUSTATTACKED;
-            return;
-         }
-      }
-   }
+        if(actor->info->missilestate == NullStateNum)
+            actor->flags |= MF_JUSTHIT; // killough 8/98: remember an attack
+        return;
+    }
 
-   if (!actor->threshold)
-   {
-      if(demo_version < 203)
-      {
-         // killough 9/9/98: for backward demo compatibility
-         if(netgame && !P_CheckSight(actor, actor->target) &&
-            P_LookForPlayers(actor, true))
-            return;  
-      }
-      else  // killough 7/18/98, 9/9/98: new monster AI
-      {
-         if(help_friends && P_HelpFriend(actor))
-         {
-            return;      // killough 9/8/98: Help friends in need
-         }
-         else  // Look for new targets if current one is bad or is out of view
-         {
-            if (actor->pursuecount)
-               actor->pursuecount--;
-            else
+    // check for missile attack
+    if(actor->info->missilestate != NullStateNum && !superfriend)
+    {
+        // haleyjd 05/22/06: ALWAYSFAST flag
+        if(!actor->movecount || gameskill >= sk_nightmare || fastparm || (actor->flags3 & MF3_ALWAYSFAST))
+        {
+            if(P_CheckMissileRange(actor))
             {
-               actor->pursuecount = BASETHRESHOLD;
-               
-               // If current target is bad and a new one is found, return:
-
-               if(!(actor->target && actor->target->health > 0 &&
-                   ((getComp(comp_pursuit) && !netgame) ||
-                    (((actor->target->flags ^ actor->flags) & MF_FRIEND ||
-                      (!(actor->flags & MF_FRIEND) && monster_infighting)) &&
-                    P_CheckSight(actor, actor->target)))) &&
-                    P_LookForTargets(actor, true))
-               {
-                  return;
-               }
-              
-               // (Current target was good, or no new target was found)
-               //
-               // If monster is a missile-less friend, give up pursuit 
-               // and return to player, if no attacks have occurred 
-               // recently.
-               
-               if(actor->info->missilestate == NullStateNum && 
-                  actor->flags & MF_FRIEND)
-               {
-                  if(actor->flags & MF_JUSTHIT)        // if recent action,
-                     actor->flags &= ~MF_JUSTHIT;      // keep fighting
-                  else
-                     if(P_LookForPlayers(actor, true)) // else return to player
-                        return;
-               }
+                P_SetMobjState(actor, actor->info->missilestate);
+                actor->flags |= MF_JUSTATTACKED;
+                return;
             }
-         }
-      }
-   }
-   
-   if(actor->strafecount)
-      actor->strafecount--;
-   
-   // chase towards player
-   if(--actor->movecount<0 || !P_SmartMove(actor))
-      P_NewChaseDir(actor);
+        }
+    }
 
-   // make active sound
-   P_MakeActiveSound(actor);   
+    if(!actor->threshold)
+    {
+        if(demo_version < 203)
+        {
+            // killough 9/9/98: for backward demo compatibility
+            if(netgame && !P_CheckSight(actor, actor->target) && P_LookForPlayers(actor, true))
+                return;
+        }
+        else // killough 7/18/98, 9/9/98: new monster AI
+        {
+            if(help_friends && P_HelpFriend(actor))
+            {
+                return; // killough 9/8/98: Help friends in need
+            }
+            else // Look for new targets if current one is bad or is out of view
+            {
+                if(actor->pursuecount)
+                    actor->pursuecount--;
+                else
+                {
+                    actor->pursuecount = BASETHRESHOLD;
+
+                    // If current target is bad and a new one is found, return:
+
+                    if(!(actor->target && actor->target->health > 0 &&
+                         ((getComp(comp_pursuit) && !netgame) ||
+                          (((actor->target->flags ^ actor->flags) & MF_FRIEND ||
+                            (!(actor->flags & MF_FRIEND) && monster_infighting)) &&
+                           P_CheckSight(actor, actor->target)))) &&
+                       P_LookForTargets(actor, true))
+                    {
+                        return;
+                    }
+
+                    // (Current target was good, or no new target was found)
+                    //
+                    // If monster is a missile-less friend, give up pursuit
+                    // and return to player, if no attacks have occurred
+                    // recently.
+
+                    if(actor->info->missilestate == NullStateNum && actor->flags & MF_FRIEND)
+                    {
+                        if(actor->flags & MF_JUSTHIT)          // if recent action,
+                            actor->flags &= ~MF_JUSTHIT;       // keep fighting
+                        else if(P_LookForPlayers(actor, true)) // else return to player
+                            return;
+                    }
+                }
+            }
+        }
+    }
+
+    if(actor->strafecount)
+        actor->strafecount--;
+
+    // chase towards player
+    if(--actor->movecount < 0 || !P_SmartMove(actor))
+        P_NewChaseDir(actor);
+
+    // make active sound
+    P_MakeActiveSound(actor);
 }
 
 //
@@ -419,162 +412,160 @@ void A_Chase(actionargs_t *actionargs)
 //
 void A_RandomWalk(actionargs_t *actionargs)
 {
-   Mobj *actor = actionargs->actor;
-   int checkdirs[NUMDIRS];
+    Mobj *actor = actionargs->actor;
+    int   checkdirs[NUMDIRS];
 
-   for(int &checkdir : checkdirs)
-      checkdir = 0;
+    for(int &checkdir : checkdirs)
+        checkdir = 0;
 
-   // turn toward movement direction
-   if(actor->movedir < 8)
-   {
-      int delta = (actor->angle &= (7 << 29)) - (actor->movedir << 29);
+    // turn toward movement direction
+    if(actor->movedir < 8)
+    {
+        int delta = (actor->angle &= (7 << 29)) - (actor->movedir << 29);
 
-      if(delta > 0)
-         actor->angle -= ANG90 / 2;
-      else if(delta < 0)
-         actor->angle += ANG90 / 2;
-   }
-   
-   // time to move?
-   if(--actor->movecount < 0 || !P_Move(actor, 0))
-   {
-      dirtype_t tdir;
-      dirtype_t turnaround = actor->movedir;
-      bool      dirfound = false;
+        if(delta > 0)
+            actor->angle -= ANG90 / 2;
+        else if(delta < 0)
+            actor->angle += ANG90 / 2;
+    }
 
-      if(P_Random(pr_rndwspawn) < 24)
-      {
-         P_SetMobjState(actor, actor->info->spawnstate);
-         return;
-      }
-   
-      if(turnaround != DI_NODIR) // find reverse direction
-         turnaround ^= 4;
+    // time to move?
+    if(--actor->movecount < 0 || !P_Move(actor, 0))
+    {
+        dirtype_t tdir;
+        dirtype_t turnaround = actor->movedir;
+        bool      dirfound   = false;
 
-      // try a completely random direction
-      tdir = P_Random(pr_rndwnewdir) & 7;
-      if(tdir != turnaround && (actor->movedir = tdir, P_Move(actor, 0)))
-      {
-         checkdirs[tdir] = 1;
-         dirfound = true;
-      }
+        if(P_Random(pr_rndwspawn) < 24)
+        {
+            P_SetMobjState(actor, actor->info->spawnstate);
+            return;
+        }
 
-      // randomly determine search direction
-      if(!dirfound)
-      {
-         if(tdir & 1)
-         {
-            for(tdir = DI_EAST; tdir <= DI_SOUTHEAST; ++tdir)
+        if(turnaround != DI_NODIR) // find reverse direction
+            turnaround ^= 4;
+
+        // try a completely random direction
+        tdir = P_Random(pr_rndwnewdir) & 7;
+        if(tdir != turnaround && (actor->movedir = tdir, P_Move(actor, 0)))
+        {
+            checkdirs[tdir] = 1;
+            dirfound        = true;
+        }
+
+        // randomly determine search direction
+        if(!dirfound)
+        {
+            if(tdir & 1)
             {
-               // don't try the one we already tried before
-               if(checkdirs[tdir])
-                  continue;
-               
-               if(tdir != turnaround &&  (actor->movedir = tdir, P_Move(actor, 0)))
-               {
-                  dirfound = true;
-                  break;
-               }
+                for(tdir = DI_EAST; tdir <= DI_SOUTHEAST; ++tdir)
+                {
+                    // don't try the one we already tried before
+                    if(checkdirs[tdir])
+                        continue;
+
+                    if(tdir != turnaround && (actor->movedir = tdir, P_Move(actor, 0)))
+                    {
+                        dirfound = true;
+                        break;
+                    }
+                }
             }
-         }
-         else
-         {
-            for(tdir = DI_SOUTHEAST; tdir != DI_EAST - 1; --tdir)
+            else
             {
-               // don't try the one we already tried before
-               if(checkdirs[tdir])
-                  continue;
+                for(tdir = DI_SOUTHEAST; tdir != DI_EAST - 1; --tdir)
+                {
+                    // don't try the one we already tried before
+                    if(checkdirs[tdir])
+                        continue;
 
-               if(tdir != turnaround && (actor->movedir = tdir, P_Move(actor, 0)))
-               {
-                  dirfound = true;
-                  break;
-               }
+                    if(tdir != turnaround && (actor->movedir = tdir, P_Move(actor, 0)))
+                    {
+                        dirfound = true;
+                        break;
+                    }
+                }
             }
-         }
-      }
+        }
 
-      // if didn't find a direction, try the opposite direction
-      if(!dirfound)
-      {
-         if((actor->movedir = turnaround) != DI_NODIR && !P_Move(actor, 0))
-            actor->movedir = DI_NODIR;
-         else
-            dirfound = true;
-      }
-      
-      // if moving, reset movecount
-      if(dirfound)
-         actor->movecount = P_Random(pr_rndwmovect) & 15;
-   }
+        // if didn't find a direction, try the opposite direction
+        if(!dirfound)
+        {
+            if((actor->movedir = turnaround) != DI_NODIR && !P_Move(actor, 0))
+                actor->movedir = DI_NODIR;
+            else
+                dirfound = true;
+        }
 
-   // make active sound
-   P_MakeActiveSound(actor);
+        // if moving, reset movecount
+        if(dirfound)
+            actor->movecount = P_Random(pr_rndwmovect) & 15;
+    }
+
+    // make active sound
+    P_MakeActiveSound(actor);
 }
 
 void A_Scream(actionargs_t *actionargs)
 {
-   Mobj *actor = actionargs->actor;
-   int sound;
-   
-   switch(actor->info->deathsound)
-   {
-   case 0:
-      return;
+    Mobj *actor = actionargs->actor;
+    int   sound;
 
-   case sfx_podth1:
-   case sfx_podth2:
-   case sfx_podth3:
-      sound = sfx_podth1 + P_Random(pr_scream)%3;
-      break;
-      
-   case sfx_bgdth1:
-   case sfx_bgdth2:
-      sound = sfx_bgdth1 + P_Random(pr_scream)%2;
-      break;
-      
-   default:
-      sound = actor->info->deathsound;
-      break;
-   }
+    switch(actor->info->deathsound)
+    {
+    case 0: //
+        return;
 
-   // Check for bosses.
-   // haleyjd: generalize to all bosses
-   if((actor->flags2 & MF2_BOSS) || (actor->flags5 & MF5_FULLVOLSOUNDS))
-      S_StartSound(nullptr, sound); // full volume
-   else
-      S_StartSound(actor, sound);
+    case sfx_podth1:
+    case sfx_podth2:
+    case sfx_podth3: //
+        sound = sfx_podth1 + P_Random(pr_scream) % 3;
+        break;
+
+    case sfx_bgdth1:
+    case sfx_bgdth2: //
+        sound = sfx_bgdth1 + P_Random(pr_scream) % 2;
+        break;
+
+    default: //
+        sound = actor->info->deathsound;
+        break;
+    }
+
+    // Check for bosses.
+    // haleyjd: generalize to all bosses
+    if((actor->flags2 & MF2_BOSS) || (actor->flags5 & MF5_FULLVOLSOUNDS))
+        S_StartSound(nullptr, sound); // full volume
+    else
+        S_StartSound(actor, sound);
 }
 
 void A_PlayerScream(actionargs_t *actionargs)
 {
-   Mobj *mo = actionargs->actor;
-   int sound;
+    Mobj *mo = actionargs->actor;
+    int   sound;
 
-   if(mo->player && strcasecmp(mo->player->skin->sounds[sk_plwdth], "none") &&
-      mo->intflags & MIF_WIMPYDEATH)
-   {
-      // haleyjd 09/29/07: wimpy death, if supported
-      sound = sk_plwdth;
-   }
-   else if((GameModeInfo->flags & GIF_NODIEHI) || mo->health >= -50)
-   {
-      // Default death sound
-      sound = sk_pldeth; 
-   }
-   else
-   {
-      // IF THE PLAYER DIES LESS THAN -50% WITHOUT GIBBING
-      sound = sk_pdiehi;
-   }
+    if(mo->player && strcasecmp(mo->player->skin->sounds[sk_plwdth], "none") && mo->intflags & MIF_WIMPYDEATH)
+    {
+        // haleyjd 09/29/07: wimpy death, if supported
+        sound = sk_plwdth;
+    }
+    else if((GameModeInfo->flags & GIF_NODIEHI) || mo->health >= -50)
+    {
+        // Default death sound
+        sound = sk_pldeth;
+    }
+    else
+    {
+        // IF THE PLAYER DIES LESS THAN -50% WITHOUT GIBBING
+        sound = sk_pdiehi;
+    }
 
-   // if died falling, gross falling death sound
-   if(!getComp(comp_fallingdmg) && demo_version >= 329 &&
-      mo->intflags & MIF_DIEDFALLING)
-      sound = sk_fallht;
-      
-   S_StartSound(mo, GameModeInfo->playerSounds[sound]);
+    // if died falling, gross falling death sound
+    if(!getComp(comp_fallingdmg) && demo_version >= 329 && mo->intflags & MIF_DIEDFALLING)
+        sound = sk_fallht;
+
+    S_StartSound(mo, GameModeInfo->playerSounds[sound]);
 }
 
 //
@@ -584,37 +575,35 @@ void A_PlayerScream(actionargs_t *actionargs)
 //
 void A_RavenPlayerScream(actionargs_t *actionargs)
 {
-   Mobj *actor = actionargs->actor;
-   int sound;
+    Mobj *actor = actionargs->actor;
+    int   sound;
 
-   if(actor->player && 
-      strcasecmp(actor->player->skin->sounds[sk_plwdth], "none") &&
-      actor->intflags & MIF_WIMPYDEATH)
-   {
-      // Wimpy death sound
-      sound = sk_plwdth;
-   }
-   else if(actor->health > -50)
-   {
-      // Normal death sound
-      sound = sk_pldeth; 
-   }
-   else if(actor->health > -100)
-   {
-      // Crazy death sound
-      sound = sk_pdiehi;
-   }
-   else
-   {
-      // Extreme death sound
-      sound = sk_slop;
-   }
+    if(actor->player && strcasecmp(actor->player->skin->sounds[sk_plwdth], "none") && actor->intflags & MIF_WIMPYDEATH)
+    {
+        // Wimpy death sound
+        sound = sk_plwdth;
+    }
+    else if(actor->health > -50)
+    {
+        // Normal death sound
+        sound = sk_pldeth;
+    }
+    else if(actor->health > -100)
+    {
+        // Crazy death sound
+        sound = sk_pdiehi;
+    }
+    else
+    {
+        // Extreme death sound
+        sound = sk_slop;
+    }
 
-   // if died falling, gross falling death sound
-   if(!getComp(comp_fallingdmg) && actor->intflags & MIF_DIEDFALLING)
-      sound = sk_fallht;
-      
-   S_StartSound(actor, GameModeInfo->playerSounds[sound]);
+    // if died falling, gross falling death sound
+    if(!getComp(comp_fallingdmg) && actor->intflags & MIF_DIEDFALLING)
+        sound = sk_fallht;
+
+    S_StartSound(actor, GameModeInfo->playerSounds[sound]);
 }
 
 // PCLASS_FIXME: skull height a playerclass property?
@@ -622,77 +611,77 @@ void A_RavenPlayerScream(actionargs_t *actionargs)
 
 void A_PlayerSkull(actionargs_t *actionargs)
 {
-   Mobj *actor = actionargs->actor;
-   Mobj *head;
+    Mobj *actor = actionargs->actor;
+    Mobj *head;
 
-   // PCLASS_FIXME: skull type a playerclass property?
-   int skullType = E_SafeThingType(MT_HPLAYERSKULL);
+    // PCLASS_FIXME: skull type a playerclass property?
+    int skullType = E_SafeThingType(MT_HPLAYERSKULL);
 
-   head = P_SpawnMobj(actor->x, actor->y, actor->z + SKULLHEIGHT, skullType);
+    head = P_SpawnMobj(actor->x, actor->y, actor->z + SKULLHEIGHT, skullType);
 
-   // transfer player to head
-   head->player = actor->player;
-   head->health = actor->health;
-   head->angle  = actor->angle;
+    // transfer player to head
+    head->player = actor->player;
+    head->health = actor->health;
+    head->angle  = actor->angle;
 
-   // player object needs to backup new view angle
-   head->backupPosition();
+    // player object needs to backup new view angle
+    head->backupPosition();
 
-   // clear old body of player
-   actor->flags &= ~MF_SOLID;
-   actor->player = nullptr;
+    // clear old body of player
+    actor->flags  &= ~MF_SOLID;
+    actor->player  = nullptr;
 
-   // fiddle with player properties
-   if(head->player)
-   {
-      head->player->mo          = head;  // set player's thing to head
-      head->player->pitch       = 0;     // don't look up or down
-      head->player->prevpitch   = 0;     // and snap to central view immediately
-      head->player->damagecount = 32;    // see red for a while
-      P_SetPlayerAttacker(*head->player, actor); // look at old body
-   }
-   
-   // send head flying
-   head->momx = 512 * P_SubRandom(pr_skullpop);
-   head->momy = 512 * P_SubRandom(pr_skullpop);
-   head->momz =  64 * P_Random(pr_skullpop) + 2 * FRACUNIT;
+    // fiddle with player properties
+    if(head->player)
+    {
+        head->player->mo          = head;          // set player's thing to head
+        head->player->pitch       = 0;             // don't look up or down
+        head->player->prevpitch   = 0;             // and snap to central view immediately
+        head->player->damagecount = 32;            // see red for a while
+        P_SetPlayerAttacker(*head->player, actor); // look at old body
+    }
+
+    // send head flying
+    head->momx = 512 * P_SubRandom(pr_skullpop);
+    head->momy = 512 * P_SubRandom(pr_skullpop);
+    head->momz = 64 * P_Random(pr_skullpop) + 2 * FRACUNIT;
 }
 
 void A_XScream(actionargs_t *actionargs)
 {
-   Mobj *actor = actionargs->actor;
-   int sound   = GameModeInfo->playerSounds[sk_slop];
-   
-   // haleyjd: falling damage
-   if(!getComp(comp_fallingdmg) && demo_version >= 329)
-   {
-      if(actor->player && actor->intflags & MIF_DIEDFALLING)
-         sound = GameModeInfo->playerSounds[sk_fallht];
-   }
-   
-   S_StartSound(actor, sound);
+    Mobj *actor = actionargs->actor;
+    int   sound = GameModeInfo->playerSounds[sk_slop];
+
+    // haleyjd: falling damage
+    if(!getComp(comp_fallingdmg) && demo_version >= 329)
+    {
+        if(actor->player && actor->intflags & MIF_DIEDFALLING)
+            sound = GameModeInfo->playerSounds[sk_fallht];
+    }
+
+    S_StartSound(actor, sound);
 }
 
 void A_Pain(actionargs_t *actionargs)
 {
-   S_StartSound(actionargs->actor, actionargs->actor->info->painsound);
+    S_StartSound(actionargs->actor, actionargs->actor->info->painsound);
 }
 
 void A_Fall(actionargs_t *actionargs)
 {
-   // actor is on ground, it can be walked over
-   actionargs->actor->flags &= ~MF_SOLID;
+    // actor is on ground, it can be walked over
+    actionargs->actor->flags &= ~MF_SOLID;
 
-   // haleyjd 08/06/13: toss-type dropitems are spawned now
-   P_DropItems(actionargs->actor, true);
+    // haleyjd 08/06/13: toss-type dropitems are spawned now
+    P_DropItems(actionargs->actor, true);
 }
 
 // killough 11/98: kill an object
 void A_Die(actionargs_t *actionargs)
 {
-   Mobj *actor = actionargs->actor;
-   actor->flags2 &= ~MF2_INVULNERABLE;  // haleyjd: just in case
-   P_DamageMobj(actor, nullptr, nullptr, actor->health, MOD_UNKNOWN);
+    Mobj *actor    = actionargs->actor;
+    actor->flags2 &= ~MF2_INVULNERABLE; // haleyjd: just in case
+    P_DamageMobj(actor, nullptr, nullptr, actor->health, MOD_UNKNOWN);
 }
 
 //
@@ -700,14 +689,14 @@ void A_Die(actionargs_t *actionargs)
 //
 void A_Explode(actionargs_t *actionargs)
 {
-   Mobj *thingy = actionargs->actor;
-   P_RadiusAttack(thingy, thingy->target, 128, 128, thingy->info->mod, 0);
+    Mobj *thingy = actionargs->actor;
+    P_RadiusAttack(thingy, thingy->target, 128, 128, thingy->info->mod, 0);
 
-   // ioanch 20160116: portal aware Z
-   // VANILLA_HERETIC: apply the same check as in vanilla.
-   // NOTE: no slopes in vanilla, no need to go more complex than "floor height".
-   if(!vanilla_heretic || thingy->zref.floor == thingy->subsector->sector->srf.floor.height)
-      E_ExplosionHitWater(thingy, 128);
+    // ioanch 20160116: portal aware Z
+    // VANILLA_HERETIC: apply the same check as in vanilla.
+    // NOTE: no slopes in vanilla, no need to go more complex than "floor height".
+    if(!vanilla_heretic || thingy->zref.floor == thingy->subsector->sector->srf.floor.height)
+        E_ExplosionHitWater(thingy, 128);
 }
 
 //
@@ -717,33 +706,32 @@ void A_Explode(actionargs_t *actionargs)
 //
 void A_Nailbomb(actionargs_t *actionargs)
 {
-   Mobj *thing = actionargs->actor;
-   int i;
+    Mobj *thing = actionargs->actor;
+    int   i;
 
-   arglist_t *args = actionargs->args;
-   int damage = E_ArgAsInt(args, 0, 128);
-   int radius = E_ArgAsInt(args, 1, 128);
-   int numnails = E_ArgAsInt(args, 2, 30);
-   int dmgfactor = E_ArgAsInt(args, 3, 10);
-   int dmgmod = eclamp(E_ArgAsInt(args, 4, 1), 1, 256);
-   const char *pufftype = E_ArgAsString(args, 5, nullptr);
-   
-   P_RadiusAttack(thing, thing->target, damage, radius, thing->info->mod, 0);
+    arglist_t  *args      = actionargs->args;
+    int         damage    = E_ArgAsInt(args, 0, 128);
+    int         radius    = E_ArgAsInt(args, 1, 128);
+    int         numnails  = E_ArgAsInt(args, 2, 30);
+    int         dmgfactor = E_ArgAsInt(args, 3, 10);
+    int         dmgmod    = eclamp(E_ArgAsInt(args, 4, 1), 1, 256);
+    const char *pufftype  = E_ArgAsString(args, 5, nullptr);
 
-   // haleyjd: added here as of 3.31b3 -- was overlooked
-   // ioanch 20160116: portal aware Z
-   if(demo_version >= 331)
-      E_ExplosionHitWater(thing, radius);
+    P_RadiusAttack(thing, thing->target, damage, radius, thing->info->mod, 0);
 
-   for(i = 0; i < numnails; ++i)
-   {
-      int dmg = dmgfactor;
-      if(dmgmod > 1)
-         dmg *= P_Random(pr_nailbombshoot) % dmgmod + 1;
-      P_LineAttack(thing, i*(ANG180/numnails*2), MISSILERANGE, 0, dmg, pufftype);
-   }
+    // haleyjd: added here as of 3.31b3 -- was overlooked
+    // ioanch 20160116: portal aware Z
+    if(demo_version >= 331)
+        E_ExplosionHitWater(thing, radius);
+
+    for(i = 0; i < numnails; ++i)
+    {
+        int dmg = dmgfactor;
+        if(dmgmod > 1)
+            dmg *= P_Random(pr_nailbombshoot) % dmgmod + 1;
+        P_LineAttack(thing, i * (ANG180 / numnails * 2), MISSILERANGE, 0, dmg, pufftype);
+    }
 }
-
 
 //
 // A_Detonate
@@ -752,14 +740,14 @@ void A_Nailbomb(actionargs_t *actionargs)
 //
 void A_Detonate(actionargs_t *actionargs)
 {
-   Mobj *mo = actionargs->actor;
+    Mobj *mo = actionargs->actor;
 
-   P_RadiusAttack(mo, mo->target, mo->damage, mo->damage, mo->info->mod, 0);
+    P_RadiusAttack(mo, mo->target, mo->damage, mo->damage, mo->info->mod, 0);
 
-   // haleyjd: added here as of 3.31b3 -- was overlooked
-   // ioanch 20160116: portal aware Z
-   if(demo_version >= 331)
-      E_ExplosionHitWater(mo, mo->damage);
+    // haleyjd: added here as of 3.31b3 -- was overlooked
+    // ioanch 20160116: portal aware Z
+    if(demo_version >= 331)
+        E_ExplosionHitWater(mo, mo->damage);
 }
 
 //=============================================================================
@@ -769,43 +757,43 @@ void A_Detonate(actionargs_t *actionargs)
 
 void A_HideThing(actionargs_t *actionargs)
 {
-   actionargs->actor->flags2 |= MF2_DONTDRAW;
+    actionargs->actor->flags2 |= MF2_DONTDRAW;
 }
 
 void A_UnHideThing(actionargs_t *actionargs)
 {
-   actionargs->actor->flags2 &= ~MF2_DONTDRAW;
+    actionargs->actor->flags2 &= ~MF2_DONTDRAW;
 }
 
 void A_RestoreArtifact(actionargs_t *actionargs)
 {
-   Mobj *arti = actionargs->actor;
+    Mobj *arti = actionargs->actor;
 
-   arti->flags |= MF_SPECIAL;
-   P_SetMobjState(arti, arti->info->spawnstate);
-   S_StartSound(arti, arti->info->seesound);
+    arti->flags |= MF_SPECIAL;
+    P_SetMobjState(arti, arti->info->spawnstate);
+    S_StartSound(arti, arti->info->seesound);
 }
 
 void A_RestoreSpecialThing1(actionargs_t *actionargs)
 {
-   Mobj       *thing = actionargs->actor;
-   const char *spot  = thing->info->meta->getString("itemrespawnat", "");
- 
-   // Check for randomized respawns at collections (was Fire Mace specific)   
-   MobjCollection *col;
-   if(*spot && (col = MobjCollections.collectionForName(spot)))
-      col->moveToRandom(thing);
+    Mobj       *thing = actionargs->actor;
+    const char *spot  = thing->info->meta->getString("itemrespawnat", "");
 
-   thing->flags2 &= ~MF2_DONTDRAW;
-   S_StartSound(thing, thing->info->seesound);
+    // Check for randomized respawns at collections (was Fire Mace specific)
+    MobjCollection *col;
+    if(*spot && (col = MobjCollections.collectionForName(spot)))
+        col->moveToRandom(thing);
+
+    thing->flags2 &= ~MF2_DONTDRAW;
+    S_StartSound(thing, thing->info->seesound);
 }
 
 void A_RestoreSpecialThing2(actionargs_t *actionargs)
 {
-   Mobj *thing = actionargs->actor;
+    Mobj *thing = actionargs->actor;
 
-   thing->flags |= MF_SPECIAL;
-   P_SetMobjState(thing, thing->info->spawnstate);
+    thing->flags |= MF_SPECIAL;
+    P_SetMobjState(thing, thing->info->spawnstate);
 }
 
 //
@@ -815,34 +803,33 @@ void A_RestoreSpecialThing2(actionargs_t *actionargs)
 //
 void P_CheckCustomBossActions(const Mobj &mo, const player_t &player)
 {
-   bool deathchecked = false;
-   for(levelaction_t *action = LevelInfo.actions; action; action = action->next)
-   {
-      // the non-boss-only ones are handled in LevelActionThinker
-      if(!(action->flags & levelaction_t::BOSS_ONLY))
-         continue;
-      if(mo.type != action->mobjtype)
-         continue;
-      // scan the remaining thinkers to see if all bosses are dead
-      if(!deathchecked)
-         for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
-         {
-            Mobj *mo2;
-            if((mo2 = thinker_cast<Mobj *>(th)))
-               if(mo2 != &mo && mo2->type == mo.type && mo2->health > 0)
-                  return;         // other boss not dead; quit
-         }
-      deathchecked = true;  // mark not to check twice
-      if(action->flags & levelaction_t::CLASSIC_SPECIAL)
-         EV_ActivateSpecialNum(action->special, action->args, player.mo, true);
-      else
-      {
-         ev_action_t *evaction = EV_UDMFEternityActionForSpecial(action->special);
-         if(evaction)
-            EV_ActivateAction(evaction, action->args, player.mo);
-      }
-
-   }
+    bool deathchecked = false;
+    for(levelaction_t *action = LevelInfo.actions; action; action = action->next)
+    {
+        // the non-boss-only ones are handled in LevelActionThinker
+        if(!(action->flags & levelaction_t::BOSS_ONLY))
+            continue;
+        if(mo.type != action->mobjtype)
+            continue;
+        // scan the remaining thinkers to see if all bosses are dead
+        if(!deathchecked)
+            for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+            {
+                Mobj *mo2;
+                if((mo2 = thinker_cast<Mobj *>(th)))
+                    if(mo2 != &mo && mo2->type == mo.type && mo2->health > 0)
+                        return; // other boss not dead; quit
+            }
+        deathchecked = true; // mark not to check twice
+        if(action->flags & levelaction_t::CLASSIC_SPECIAL)
+            EV_ActivateSpecialNum(action->special, action->args, player.mo, true);
+        else
+        {
+            ev_action_t *evaction = EV_UDMFEternityActionForSpecial(action->special);
+            if(evaction)
+                EV_ActivateAction(evaction, action->args, player.mo);
+        }
+    }
 }
 
 // EOF

@@ -36,20 +36,17 @@
 //
 struct GL_versioninfo
 {
-   int minorversion;
-   int majorversion;
+    int minorversion;
+    int majorversion;
 
-   static int makeVersion(int major, int minor)
-   {
-      return major * 10 + minor;
-   }
+    static int makeVersion(int major, int minor) { return major * 10 + minor; }
 
-   int compareVersion(int version)
-   {
-      int compositeversion = makeVersion(majorversion, minorversion);
+    int compareVersion(int version)
+    {
+        int compositeversion = makeVersion(majorversion, minorversion);
 
-      return version - compositeversion;
-   }  
+        return version - compositeversion;
+    }
 };
 
 extern GL_versioninfo GL_version;

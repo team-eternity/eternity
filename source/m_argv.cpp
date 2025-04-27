@@ -22,8 +22,7 @@
 //
 
 #include "z_zone.h"
-#include "d_io.h"   // SoM 3/14/2002: strncasecmp
-
+#include "d_io.h" // SoM 3/14/2002: strncasecmp
 
 int    myargc;
 char **myargv;
@@ -38,15 +37,15 @@ char **myargv;
 //
 int M_CheckParm(const char *check)
 {
-   int i;
+    int i;
 
-   for(i = 1; i < myargc; ++i)
-   {
-      if(!strcasecmp(check, myargv[i]))
-         return i;
-   }
+    for(i = 1; i < myargc; ++i)
+    {
+        if(!strcasecmp(check, myargv[i]))
+            return i;
+    }
 
-   return 0;
+    return 0;
 }
 
 //
@@ -57,19 +56,19 @@ int M_CheckParm(const char *check)
 //
 int M_CheckMultiParm(const char **parms, int numargs)
 {
-   int i = 0;
-   const char *parm;
+    int         i = 0;
+    const char *parm;
 
-   while((parm = parms[i++]))
-   {
-      int p = M_CheckParm(parm);
+    while((parm = parms[i++]))
+    {
+        int p = M_CheckParm(parm);
 
-      // it is only found if the expected number of arguments are available
-      if(p && p < myargc - numargs)
-         return p;
-   }
+        // it is only found if the expected number of arguments are available
+        if(p && p < myargc - numargs)
+            return p;
+    }
 
-   return 0; // none were found
+    return 0; // none were found
 }
 
 //----------------------------------------------------------------------------

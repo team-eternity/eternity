@@ -44,37 +44,37 @@ const char ZIP_LOCAL_FILE_SIG[] = "PK\x3\x4";
 
 struct ZIPLocalFileHeader
 {
-   uint32_t signature;    // Must be PK\x3\x4
-   uint16_t extrVersion;  // Version needed to extract
-   uint16_t gpFlags;      // General purpose flags
-   uint16_t method;       // Compression method
-   uint16_t fileTime;     // DOS file modification time
-   uint16_t fileDate;     // DOS file modification date
-   uint32_t crc32;        // Checksum
-   uint32_t compressed;   // Compressed file size
-   uint32_t uncompressed; // Uncompressed file size
-   uint16_t nameLength;   // Length of file name following struct
-   uint16_t extraLength;  // Length of "extra" field following name
+    uint32_t signature;    // Must be PK\x3\x4
+    uint16_t extrVersion;  // Version needed to extract
+    uint16_t gpFlags;      // General purpose flags
+    uint16_t method;       // Compression method
+    uint16_t fileTime;     // DOS file modification time
+    uint16_t fileDate;     // DOS file modification date
+    uint32_t crc32;        // Checksum
+    uint32_t compressed;   // Compressed file size
+    uint32_t uncompressed; // Uncompressed file size
+    uint16_t nameLength;   // Length of file name following struct
+    uint16_t extraLength;  // Length of "extra" field following name
 
-   // Following structure:
-   // const char *filename;
-   // const char *extra;
+    // Following structure:
+    // const char *filename;
+    // const char *extra;
 };
 
 using ZLFH_t = ZIPLocalFileHeader;
 
-static MStructReader<ZLFH_t> localFileReader([] (MStructReader<ZLFH_t> &obj) {
-   obj.addField(&ZLFH_t::signature   );
-   obj.addField(&ZLFH_t::extrVersion );
-   obj.addField(&ZLFH_t::gpFlags     );
-   obj.addField(&ZLFH_t::method      );
-   obj.addField(&ZLFH_t::fileTime    );
-   obj.addField(&ZLFH_t::fileDate    );
-   obj.addField(&ZLFH_t::crc32       );
-   obj.addField(&ZLFH_t::compressed  );
-   obj.addField(&ZLFH_t::uncompressed);
-   obj.addField(&ZLFH_t::nameLength  );
-   obj.addField(&ZLFH_t::extraLength );
+static MStructReader<ZLFH_t> localFileReader([](MStructReader<ZLFH_t> &obj) {
+    obj.addField(&ZLFH_t::signature);
+    obj.addField(&ZLFH_t::extrVersion);
+    obj.addField(&ZLFH_t::gpFlags);
+    obj.addField(&ZLFH_t::method);
+    obj.addField(&ZLFH_t::fileTime);
+    obj.addField(&ZLFH_t::fileDate);
+    obj.addField(&ZLFH_t::crc32);
+    obj.addField(&ZLFH_t::compressed);
+    obj.addField(&ZLFH_t::uncompressed);
+    obj.addField(&ZLFH_t::nameLength);
+    obj.addField(&ZLFH_t::extraLength);
 });
 
 constexpr const char ZIP_CENTRAL_DIR_SIG[] = "PK\x1\x2";
@@ -82,50 +82,50 @@ constexpr const char ZIP_CENTRAL_DIR_SIG[] = "PK\x1\x2";
 
 struct ZIPCentralDirEntry
 {
-   uint32_t signature;     // Must be "PK\x1\x2"
-   uint16_t madeByVersion; // Version "made by"
-   uint16_t extrVersion;   // Version needed to extract
-   uint16_t gpFlags;       // General purpose flags
-   uint16_t method;        // Compression method
-   uint16_t fileTime;      // DOS file modification time
-   uint16_t fileDate;      // DOS file modification date
-   uint32_t crc32;         // Checksum
-   uint32_t compressed;    // Compressed file size
-   uint32_t uncompressed;  // Uncompressed file size
-   uint16_t nameLength;    // Length of name following structure
-   uint16_t extraLength;   // Length of extra field following name
-   uint16_t commentLength; // Length of comment following extra
-   uint16_t diskStartNum;  // Starting disk # for file
-   uint16_t intAttribs;    // Internal file attribute bitflags
-   uint32_t extAttribs;    // External file attribute bitflags
-   uint32_t localOffset;   // Offset to ZIPLocalFileHeader
+    uint32_t signature;     // Must be "PK\x1\x2"
+    uint16_t madeByVersion; // Version "made by"
+    uint16_t extrVersion;   // Version needed to extract
+    uint16_t gpFlags;       // General purpose flags
+    uint16_t method;        // Compression method
+    uint16_t fileTime;      // DOS file modification time
+    uint16_t fileDate;      // DOS file modification date
+    uint32_t crc32;         // Checksum
+    uint32_t compressed;    // Compressed file size
+    uint32_t uncompressed;  // Uncompressed file size
+    uint16_t nameLength;    // Length of name following structure
+    uint16_t extraLength;   // Length of extra field following name
+    uint16_t commentLength; // Length of comment following extra
+    uint16_t diskStartNum;  // Starting disk # for file
+    uint16_t intAttribs;    // Internal file attribute bitflags
+    uint32_t extAttribs;    // External file attribute bitflags
+    uint32_t localOffset;   // Offset to ZIPLocalFileHeader
 
-   // Following structure:
-   // const char *filename;
-   // const char *extra;
-   // const char *comment;
+    // Following structure:
+    // const char *filename;
+    // const char *extra;
+    // const char *comment;
 };
 
 using ZCDE_t = ZIPCentralDirEntry;
 
-static MStructReader<ZCDE_t> centralDirReader([] (MStructReader<ZCDE_t> &obj) {
-   obj.addField(&ZCDE_t::signature    );
-   obj.addField(&ZCDE_t::madeByVersion);
-   obj.addField(&ZCDE_t::extrVersion  );
-   obj.addField(&ZCDE_t::gpFlags      );
-   obj.addField(&ZCDE_t::method       );
-   obj.addField(&ZCDE_t::fileTime     );
-   obj.addField(&ZCDE_t::fileDate     );
-   obj.addField(&ZCDE_t::crc32        );
-   obj.addField(&ZCDE_t::compressed   );
-   obj.addField(&ZCDE_t::uncompressed );
-   obj.addField(&ZCDE_t::nameLength   );
-   obj.addField(&ZCDE_t::extraLength  );
-   obj.addField(&ZCDE_t::commentLength);
-   obj.addField(&ZCDE_t::diskStartNum );
-   obj.addField(&ZCDE_t::intAttribs   );
-   obj.addField(&ZCDE_t::extAttribs   );
-   obj.addField(&ZCDE_t::localOffset  );
+static MStructReader<ZCDE_t> centralDirReader([](MStructReader<ZCDE_t> &obj) {
+    obj.addField(&ZCDE_t::signature);
+    obj.addField(&ZCDE_t::madeByVersion);
+    obj.addField(&ZCDE_t::extrVersion);
+    obj.addField(&ZCDE_t::gpFlags);
+    obj.addField(&ZCDE_t::method);
+    obj.addField(&ZCDE_t::fileTime);
+    obj.addField(&ZCDE_t::fileDate);
+    obj.addField(&ZCDE_t::crc32);
+    obj.addField(&ZCDE_t::compressed);
+    obj.addField(&ZCDE_t::uncompressed);
+    obj.addField(&ZCDE_t::nameLength);
+    obj.addField(&ZCDE_t::extraLength);
+    obj.addField(&ZCDE_t::commentLength);
+    obj.addField(&ZCDE_t::diskStartNum);
+    obj.addField(&ZCDE_t::intAttribs);
+    obj.addField(&ZCDE_t::extAttribs);
+    obj.addField(&ZCDE_t::localOffset);
 });
 
 constexpr const char ZIP_END_OF_DIR_SIG[] = "PK\x5\x6";
@@ -133,30 +133,30 @@ constexpr const char ZIP_END_OF_DIR_SIG[] = "PK\x5\x6";
 
 struct ZIPEndOfCentralDir
 {
-   uint32_t signature;        // Must be "PK\x5\x6"
-   uint16_t diskNum;          // Disk number (NB: multi-partite zips are NOT supported)
-   uint16_t centralDirDiskNo; // Disk number containing the central directory
-   uint16_t numEntriesOnDisk; // Number of entries on this disk
-   uint16_t numEntriesTotal;  // Total entries in the central directory
-   uint32_t centralDirSize;   // Central directory size in bytes
-   uint32_t centralDirOffset; // Offset of central directory
-   uint16_t zipCommentLength; // Length of following zip file comment
+    uint32_t signature;        // Must be "PK\x5\x6"
+    uint16_t diskNum;          // Disk number (NB: multi-partite zips are NOT supported)
+    uint16_t centralDirDiskNo; // Disk number containing the central directory
+    uint16_t numEntriesOnDisk; // Number of entries on this disk
+    uint16_t numEntriesTotal;  // Total entries in the central directory
+    uint32_t centralDirSize;   // Central directory size in bytes
+    uint32_t centralDirOffset; // Offset of central directory
+    uint16_t zipCommentLength; // Length of following zip file comment
 
-   // Following structure:
-   // const char *comment;
+    // Following structure:
+    // const char *comment;
 };
 
 using ZECD_t = ZIPEndOfCentralDir;
 
-static MStructReader<ZECD_t> endCentralDirReader([] (MStructReader<ZECD_t> &obj) {
-   obj.addField(&ZECD_t::signature       );
-   obj.addField(&ZECD_t::diskNum         );
-   obj.addField(&ZECD_t::centralDirDiskNo);
-   obj.addField(&ZECD_t::numEntriesOnDisk);
-   obj.addField(&ZECD_t::numEntriesTotal );
-   obj.addField(&ZECD_t::centralDirSize  );
-   obj.addField(&ZECD_t::centralDirOffset);
-   obj.addField(&ZECD_t::zipCommentLength);
+static MStructReader<ZECD_t> endCentralDirReader([](MStructReader<ZECD_t> &obj) {
+    obj.addField(&ZECD_t::signature);
+    obj.addField(&ZECD_t::diskNum);
+    obj.addField(&ZECD_t::centralDirDiskNo);
+    obj.addField(&ZECD_t::numEntriesOnDisk);
+    obj.addField(&ZECD_t::numEntriesTotal);
+    obj.addField(&ZECD_t::centralDirSize);
+    obj.addField(&ZECD_t::centralDirOffset);
+    obj.addField(&ZECD_t::zipCommentLength);
 });
 
 #define ZF_ENCRYPTED   0x01
@@ -166,8 +166,8 @@ static MStructReader<ZECD_t> endCentralDirReader([] (MStructReader<ZECD_t> &obj)
 // ZIP_FindEndOfCentralDir
 //
 // Derived from ZDoom, which derived it from Quake 3 unzip.c, where it is
-// named unzlocal_SearchCentralDir and is derived from unzip.c by Gilles 
-// Vollant, under the following BSD-style license (which ZDoom does NOT 
+// named unzlocal_SearchCentralDir and is derived from unzip.c by Gilles
+// Vollant, under the following BSD-style license (which ZDoom does NOT
 // properly preserve in its own code):
 //
 // unzip.h -- IO for uncompress .zip files using zlib
@@ -181,11 +181,11 @@ static MStructReader<ZECD_t> endCentralDirReader([] (MStructReader<ZECD_t> &obj)
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
 // arising from the use of this software.
-// 
+//
 // Permission is granted to anyone to use this software for any purpose,
 // including commercial applications, and to alter it and redistribute it
 // freely, subject to the following restrictions:
-// 
+//
 // 1. The origin of this software must not be misrepresented; you must not
 //    claim that you wrote the original software. If you use this software
 //    in a product, an acknowledgment in the product documentation would be
@@ -196,53 +196,53 @@ static MStructReader<ZECD_t> endCentralDirReader([] (MStructReader<ZECD_t> &obj)
 //
 static bool ZIP_FindEndOfCentralDir(InBuffer &fin, long &position)
 {
-   uint8_t buf[BUFREADCOMMENT + 4];
-   long    FileSize  = 0;  // haleyjd: file offsets should be long
-   long    uBackRead = 0;
-   long    uMaxBack  = 0;
-   long    uPosFound = 0;
+    uint8_t buf[BUFREADCOMMENT + 4];
+    long    FileSize  = 0; // haleyjd: file offsets should be long
+    long    uBackRead = 0;
+    long    uMaxBack  = 0;
+    long    uPosFound = 0;
 
-   if(fin.seek(0, SEEK_END))
-      return false;
+    if(fin.seek(0, SEEK_END))
+        return false;
 
-   FileSize  = fin.tell();
-   uMaxBack  = emin<long>(0xffff, FileSize);
-   uBackRead = 4;
+    FileSize  = fin.tell();
+    uMaxBack  = emin<long>(0xffff, FileSize);
+    uBackRead = 4;
 
-   while(uBackRead < uMaxBack)
-   {
-      long uReadSize, uReadPos;
+    while(uBackRead < uMaxBack)
+    {
+        long uReadSize, uReadPos;
 
-      if(uBackRead + BUFREADCOMMENT > uMaxBack)
-         uBackRead = uMaxBack;
-      else
-         uBackRead += BUFREADCOMMENT;
+        if(uBackRead + BUFREADCOMMENT > uMaxBack)
+            uBackRead = uMaxBack;
+        else
+            uBackRead += BUFREADCOMMENT;
 
-      uReadPos  = FileSize - uBackRead;
-      uReadSize = emin<long>(BUFREADCOMMENT + 4, FileSize - uReadPos);
+        uReadPos  = FileSize - uBackRead;
+        uReadSize = emin<long>(BUFREADCOMMENT + 4, FileSize - uReadPos);
 
-      if(fin.seek(uReadPos, SEEK_SET))
-         return false;
+        if(fin.seek(uReadPos, SEEK_SET))
+            return false;
 
-      size_t sizeReadSize = static_cast<size_t>(uReadSize);
-      if(fin.read(buf, sizeReadSize) != sizeReadSize)
-         return false;
+        size_t sizeReadSize = static_cast<size_t>(uReadSize);
+        if(fin.read(buf, sizeReadSize) != sizeReadSize)
+            return false;
 
-      for(long i = uReadSize - 3; (i--) > 0; )
-      {
-         if(buf[i] == 'P' && buf[i+1] == 'K' && buf[i+2] == 5 && buf[i+3] == 6)
-         {
-            uPosFound = uReadPos + i;
+        for(long i = uReadSize - 3; (i--) > 0;)
+        {
+            if(buf[i] == 'P' && buf[i + 1] == 'K' && buf[i + 2] == 5 && buf[i + 3] == 6)
+            {
+                uPosFound = uReadPos + i;
+                break;
+            }
+        }
+
+        if(uPosFound != 0)
             break;
-         }
-      }
+    }
 
-      if(uPosFound != 0)
-         break;
-   }
-
-   position = uPosFound;
-   return true;
+    position = uPosFound;
+    return true;
 }
 
 //=============================================================================
@@ -255,43 +255,43 @@ static bool ZIP_FindEndOfCentralDir(InBuffer &fin, long &position)
 //
 ZipFile::~ZipFile()
 {
-   // free the directory
-   if(lumps && numLumps)
-   {
-      // free lump names
-      for(int i = 0; i < numLumps; i++)
-      {
-         if(lumps[i].name)
-            efree(lumps[i].name);
-      }
+    // free the directory
+    if(lumps && numLumps)
+    {
+        // free lump names
+        for(int i = 0; i < numLumps; i++)
+        {
+            if(lumps[i].name)
+                efree(lumps[i].name);
+        }
 
-      // free the lump directory
-      efree(lumps);
-      lumps    = nullptr;
-      numLumps = 0;
-   }
+        // free the lump directory
+        efree(lumps);
+        lumps    = nullptr;
+        numLumps = 0;
+    }
 
-   // free zipwads
-   if(wads)
-   {
-      DLListItem<ZipWad> *rover = wads;
-      while(rover)
-      {
-         ZipWad &zw = **rover;
-         rover = rover->dllNext;
+    // free zipwads
+    if(wads)
+    {
+        DLListItem<ZipWad> *rover = wads;
+        while(rover)
+        {
+            ZipWad &zw = **rover;
+            rover      = rover->dllNext;
 
-         efree(zw.buffer); // free the in-memory wad file
-         efree(&zw);       // free the ZipWad structure
-      }
-      wads = nullptr;
-   }
+            efree(zw.buffer); // free the in-memory wad file
+            efree(&zw);       // free the ZipWad structure
+        }
+        wads = nullptr;
+    }
 
-   // close the disk file if it is open
-   if(file)
-   {
-      fclose(file);
-      file = nullptr;
-   }
+    // close the disk file if it is open
+    if(file)
+    {
+        fclose(file);
+        file = nullptr;
+    }
 }
 
 //
@@ -301,30 +301,29 @@ ZipFile::~ZipFile()
 //
 bool ZipFile::readEndOfCentralDir(InBuffer &fin, ZIPEndOfCentralDir &zcd)
 {
-   long centralDirEnd;
+    long centralDirEnd;
 
-   // Locate the central directory
-   if(!ZIP_FindEndOfCentralDir(fin, centralDirEnd) || !centralDirEnd)
-      return false; 
+    // Locate the central directory
+    if(!ZIP_FindEndOfCentralDir(fin, centralDirEnd) || !centralDirEnd)
+        return false;
 
-   if(fin.seek(centralDirEnd, SEEK_SET))
-      return false;
+    if(fin.seek(centralDirEnd, SEEK_SET))
+        return false;
 
-   if(!endCentralDirReader.readFields(zcd, fin))
-      return false;
+    if(!endCentralDirReader.readFields(zcd, fin))
+        return false;
 
-   // Basic sanity checks
+    // Basic sanity checks
 
-   // Multi-disk zips aren't supported
-   if(zcd.numEntriesTotal != zcd.numEntriesOnDisk ||
-      zcd.diskNum != 0 || zcd.centralDirDiskNo != 0)
-      return false;
+    // Multi-disk zips aren't supported
+    if(zcd.numEntriesTotal != zcd.numEntriesOnDisk || zcd.diskNum != 0 || zcd.centralDirDiskNo != 0)
+        return false;
 
-   // Allocate directory
-   numLumps = zcd.numEntriesTotal;
-   lumps    = ecalloc(ZipLump *, numLumps + 1, sizeof(ZipLump));
+    // Allocate directory
+    numLumps = zcd.numEntriesTotal;
+    lumps    = ecalloc(ZipLump *, numLumps + 1, sizeof(ZipLump));
 
-   return true;
+    return true;
 }
 
 //
@@ -339,80 +338,78 @@ bool ZipFile::readEndOfCentralDir(InBuffer &fin, ZIPEndOfCentralDir &zcd)
 //
 bool ZipFile::readCentralDirEntry(InBuffer &fin, ZipLump &lump, bool &skip)
 {
-   qstring namestr;
-   edefstructvar(ZIPCentralDirEntry, entry);
+    qstring namestr;
+    edefstructvar(ZIPCentralDirEntry, entry);
 
-   if(!centralDirReader.readFields(entry, fin))
-      return false;
+    if(!centralDirReader.readFields(entry, fin))
+        return false;
 
-   // verify signature
-   if(memcmp(&entry.signature, ZIP_CENTRAL_DIR_SIG, 4))
-      return false;
+    // verify signature
+    if(memcmp(&entry.signature, ZIP_CENTRAL_DIR_SIG, 4))
+        return false;
 
-   // Read out the name, entry, and comment together.
-   // This will position the InBuffer at the next directory entry.
-   size_t totalStrLen = 
-      entry.nameLength + entry.extraLength + entry.commentLength;
-   ZAutoBuffer nameBuffer(totalStrLen + 1, true);
-   char *name = nameBuffer.getAs<char *>();
+    // Read out the name, entry, and comment together.
+    // This will position the InBuffer at the next directory entry.
+    size_t      totalStrLen = entry.nameLength + entry.extraLength + entry.commentLength;
+    ZAutoBuffer nameBuffer(totalStrLen + 1, true);
+    char       *name = nameBuffer.getAs<char *>();
 
-   if(fin.read(name, totalStrLen) != totalStrLen)
-      return false;
+    if(fin.read(name, totalStrLen) != totalStrLen)
+        return false;
 
-   // skip bogus unnamed entries and directories
-   if(!entry.nameLength ||
-      (name[entry.nameLength - 1] == '/' && entry.uncompressed == 0))
-   {
-      skip = true;
-      return true;
-   }
+    // skip bogus unnamed entries and directories
+    if(!entry.nameLength || (name[entry.nameLength - 1] == '/' && entry.uncompressed == 0))
+    {
+        skip = true;
+        return true;
+    }
 
-   // check for supported compression method
-   // TODO: support some additional methods
-   switch(entry.method)
-   {
-   case METHOD_STORED:
-   case METHOD_DEFLATE:
-      break;
-   default:
-      skip = true; // unsupported method
-      return true;
-   }
+    // check for supported compression method
+    // TODO: support some additional methods
+    switch(entry.method)
+    {
+    case METHOD_STORED:
+    case METHOD_DEFLATE: //
+        break;
+    default:
+        skip = true; // unsupported method
+        return true;
+    }
 
-   // check against encryption (bit 0 of general purpose flags == 1)
-   if(entry.gpFlags & ZF_ENCRYPTED)
-   {
-      skip = true;
-      return true;
-   }
-   
-   // Save and normalize the name
-   namestr.copy(name, entry.nameLength);
-   namestr.toLower();
-   namestr.replace("\\", '/');
+    // check against encryption (bit 0 of general purpose flags == 1)
+    if(entry.gpFlags & ZF_ENCRYPTED)
+    {
+        skip = true;
+        return true;
+    }
 
-   // Save important directory information
-   lump.name       = namestr.duplicate();
-   lump.gpFlags    = entry.gpFlags;
-   lump.method     = entry.method;
-   lump.compressed = entry.compressed;
-   lump.size       = entry.uncompressed;
-   lump.offset     = entry.localOffset;
+    // Save and normalize the name
+    namestr.copy(name, entry.nameLength);
+    namestr.toLower();
+    namestr.replace("\\", '/');
 
-   // Lump will need true offset to file data calculated the first time it is
-   // read from the file.
-   lump.flags |= LF_CALCOFFSET;
+    // Save important directory information
+    lump.name       = namestr.duplicate();
+    lump.gpFlags    = entry.gpFlags;
+    lump.method     = entry.method;
+    lump.compressed = entry.compressed;
+    lump.size       = entry.uncompressed;
+    lump.offset     = entry.localOffset;
 
-   // Remember our parent ZipFile
-   lump.file = this;
+    // Lump will need true offset to file data calculated the first time it is
+    // read from the file.
+    lump.flags |= LF_CALCOFFSET;
 
-   // Is this lump an embedded wad file?
-   const char *dotpos = strrchr(lump.name, '.');
-   // Must block macOS archiving artifacts
-   if(dotpos && strncmp(lump.name, "__macosx/", 9) && !strncmp(dotpos, ".wad", 4))
-      lump.flags |= LF_ISEMBEDDEDWAD;
+    // Remember our parent ZipFile
+    lump.file = this;
 
-   return true;
+    // Is this lump an embedded wad file?
+    const char *dotpos = strrchr(lump.name, '.');
+    // Must block macOS archiving artifacts
+    if(dotpos && strncmp(lump.name, "__macosx/", 9) && !strncmp(dotpos, ".wad", 4))
+        lump.flags |= LF_ISEMBEDDEDWAD;
+
+    return true;
 }
 
 //
@@ -423,30 +420,30 @@ bool ZipFile::readCentralDirEntry(InBuffer &fin, ZipLump &lump, bool &skip)
 //
 bool ZipFile::readCentralDirectory(InBuffer &fin, long offset, uint32_t size)
 {
-   int lumpidx = 0; // current index into lumps[]
+    int lumpidx = 0; // current index into lumps[]
 
-   // seek to start of directory
-   if(fin.seek(offset, SEEK_SET))
-      return false;
-  
-   for(int i = 0; i < numLumps; i++)
-   {
-      ZipLump &lump    = lumps[lumpidx];
-      bool     skipped = false;
-      
-      if(readCentralDirEntry(fin, lump, skipped))
-      {
-         if(!skipped)
-            ++lumpidx; // advance if not skipped
-      }
-      else
-         return false; // an error occurred
-   }
+    // seek to start of directory
+    if(fin.seek(offset, SEEK_SET))
+        return false;
 
-   // Adjust numLumps to omit skipped lumps
-   numLumps = lumpidx;
+    for(int i = 0; i < numLumps; i++)
+    {
+        ZipLump &lump    = lumps[lumpidx];
+        bool     skipped = false;
 
-   return true;
+        if(readCentralDirEntry(fin, lump, skipped))
+        {
+            if(!skipped)
+                ++lumpidx; // advance if not skipped
+        }
+        else
+            return false; // an error occurred
+    }
+
+    // Adjust numLumps to omit skipped lumps
+    numLumps = lumpidx;
+
+    return true;
 }
 
 //
@@ -456,10 +453,10 @@ bool ZipFile::readCentralDirectory(InBuffer &fin, long offset, uint32_t size)
 //
 static int ZIP_LumpSortCB(const void *va, const void *vb)
 {
-   const ZipLump *lumpA = static_cast<const ZipLump *>(va);
-   const ZipLump *lumpB = static_cast<const ZipLump *>(vb);
+    const ZipLump *lumpA = static_cast<const ZipLump *>(va);
+    const ZipLump *lumpB = static_cast<const ZipLump *>(vb);
 
-   return strcmp(lumpA->name, lumpB->name);
+    return strcmp(lumpA->name, lumpB->name);
 }
 
 //
@@ -469,27 +466,27 @@ static int ZIP_LumpSortCB(const void *va, const void *vb)
 //
 bool ZipFile::readFromFile(FILE *f)
 {
-   InBuffer reader;
-   edefstructvar(ZIPEndOfCentralDir, zcd);
+    InBuffer reader;
+    edefstructvar(ZIPEndOfCentralDir, zcd);
 
-   // remember our disk file
-   file = f;
+    // remember our disk file
+    file = f;
 
-   reader.openExisting(f, InBuffer::LENDIAN);
+    reader.openExisting(f, InBuffer::LENDIAN);
 
-   // read in the end-of-central-directory structure
-   if(!readEndOfCentralDir(reader, zcd))
-      return false;
+    // read in the end-of-central-directory structure
+    if(!readEndOfCentralDir(reader, zcd))
+        return false;
 
-   // read in the directory
-   if(!readCentralDirectory(reader, zcd.centralDirOffset, zcd.centralDirSize))
-      return false;
+    // read in the directory
+    if(!readCentralDirectory(reader, zcd.centralDirOffset, zcd.centralDirSize))
+        return false;
 
-   // sort the directory
-   if(numLumps > 1)
-      qsort(lumps, numLumps, sizeof(ZipLump), ZIP_LumpSortCB);
+    // sort the directory
+    if(numLumps > 1)
+        qsort(lumps, numLumps, sizeof(ZipLump), ZIP_LumpSortCB);
 
-   return true;
+    return true;
 }
 
 //
@@ -500,28 +497,28 @@ bool ZipFile::readFromFile(FILE *f)
 //
 void ZipFile::checkForWadFiles(WadDirectory &parentDir)
 {
-   for(int i = 0; i < numLumps; i++)
-   {
-      if(!(lumps[i].flags & LF_ISEMBEDDEDWAD))
-         continue;
+    for(int i = 0; i < numLumps; i++)
+    {
+        if(!(lumps[i].flags & LF_ISEMBEDDEDWAD))
+            continue;
 
-      // will not consider any lump less than 28 in size 
-      // (valid wad header, plus at least one lump in the directory)
-      if(lumps[i].size < 28)
-         continue;
+        // will not consider any lump less than 28 in size
+        // (valid wad header, plus at least one lump in the directory)
+        if(lumps[i].size < 28)
+            continue;
 
-      ZipWad *zipwad = estructalloc(ZipWad, 1);
+        ZipWad *zipwad = estructalloc(ZipWad, 1);
 
-      zipwad->size   = static_cast<size_t>(lumps[i].size);
-      zipwad->buffer = Z_Malloc(zipwad->size, PU_STATIC, nullptr);
+        zipwad->size   = static_cast<size_t>(lumps[i].size);
+        zipwad->buffer = Z_Malloc(zipwad->size, PU_STATIC, nullptr);
 
-      lumps[i].read(zipwad->buffer);
+        lumps[i].read(zipwad->buffer);
 
-      parentDir.addInMemoryWad(zipwad->buffer, zipwad->size);
+        parentDir.addInMemoryWad(zipwad->buffer, zipwad->size);
 
-      // remember this zipwad
-      zipwad->links.insert(zipwad, &wads);
-   }
+        // remember this zipwad
+        zipwad->links.insert(zipwad, &wads);
+    }
 }
 
 //
@@ -531,7 +528,7 @@ void ZipFile::checkForWadFiles(WadDirectory &parentDir)
 //
 void ZipFile::linkTo(DLListItem<ZipFile> **head)
 {
-   links.insert(this, head);
+    links.insert(this, head);
 }
 
 //
@@ -542,10 +539,10 @@ void ZipFile::linkTo(DLListItem<ZipFile> **head)
 //
 ZipLump &ZipFile::getLump(int lumpNum)
 {
-   if(lumpNum < 0 || lumpNum >= numLumps)
-      I_Error("ZipFile::getLump: %d >= numLumps\n", lumpNum);
+    if(lumpNum < 0 || lumpNum >= numLumps)
+        I_Error("ZipFile::getLump: %d >= numLumps\n", lumpNum);
 
-   return lumps[lumpNum];
+    return lumps[lumpNum];
 }
 
 //
@@ -553,20 +550,20 @@ ZipLump &ZipFile::getLump(int lumpNum)
 //
 // For use in a pinch only; does a linear search on the loaded directory to
 // find a given lump, if it exists. Returns the highest matching lump number,
-// or -1 if not found. WadDirectory takes care of hashing at runtime, so this 
+// or -1 if not found. WadDirectory takes care of hashing at runtime, so this
 // class doesn't bother.
 //
 int ZipFile::findLump(const char *name) const
 {
-   int lumpnum = -1;
+    int lumpnum = -1;
 
-   for(int i = 0; i < numLumps; i++)
-   {
-      if(!strcasecmp(lumps[i].name, name))
-         lumpnum = i;
-   }
+    for(int i = 0; i < numLumps; i++)
+    {
+        if(!strcasecmp(lumps[i].name, name))
+            lumpnum = i;
+    }
 
-   return lumpnum;
+    return lumpnum;
 }
 
 //=============================================================================
@@ -587,8 +584,8 @@ int ZipFile::findLump(const char *name) const
 //
 static void ZIP_ReadStored(InBuffer &fin, void *buffer, uint32_t len)
 {
-   if(fin.read(buffer, len) != len)
-      I_Error("ZIP_ReadStored: failed to read stored file\n");
+    if(fin.read(buffer, len) != len)
+        I_Error("ZIP_ReadStored: failed to read stored file\n");
 }
 
 #define DEFLATE_BUFF_SIZE 4096
@@ -601,66 +598,62 @@ static void ZIP_ReadStored(InBuffer &fin, void *buffer, uint32_t len)
 class ZIPDeflateReader
 {
 protected:
-   InBuffer &fin;       // input buffered file
-   z_stream  zlStream;  // zlib data structure
-   bool      atEOF;     // hit EOF in InBuffer::Read
-   
-   byte deflateBuffer[DEFLATE_BUFF_SIZE]; // buffer for input to zlib
+    InBuffer &fin;      // input buffered file
+    z_stream  zlStream; // zlib data structure
+    bool      atEOF;    // hit EOF in InBuffer::Read
 
-   void buffer()
-   {
-      size_t bytesRead;
+    byte deflateBuffer[DEFLATE_BUFF_SIZE]; // buffer for input to zlib
 
-      bytesRead = fin.read(deflateBuffer, DEFLATE_BUFF_SIZE);
+    void buffer()
+    {
+        size_t bytesRead;
 
-      if(bytesRead != DEFLATE_BUFF_SIZE)
-         atEOF = true;
+        bytesRead = fin.read(deflateBuffer, DEFLATE_BUFF_SIZE);
 
-      zlStream.next_in  = deflateBuffer;
-      zlStream.avail_in = uInt(bytesRead);
-   }
+        if(bytesRead != DEFLATE_BUFF_SIZE)
+            atEOF = true;
+
+        zlStream.next_in  = deflateBuffer;
+        zlStream.avail_in = uInt(bytesRead);
+    }
 
 public:
-   ZIPDeflateReader(InBuffer &pFin) 
-      : fin(pFin), zlStream(), atEOF(false)
-   {
-      int code;
-      
-      zlStream.zalloc = nullptr;
-      zlStream.zfree  = nullptr;
+    ZIPDeflateReader(InBuffer &pFin) : fin(pFin), zlStream(), atEOF(false)
+    {
+        int code;
 
-      buffer();
-      
-      if((code = inflateInit2(&zlStream, -MAX_WBITS)) != Z_OK)
-         I_Error("ZIPDeflateReader: inflateInit2 failed with code %d\n", code);
-   }
+        zlStream.zalloc = nullptr;
+        zlStream.zfree  = nullptr;
 
-   ~ZIPDeflateReader()
-   {
-      inflateEnd(&zlStream);
-   }
+        buffer();
 
-   void read(void *outbuffer, size_t len)
-   {
-      int code;
+        if((code = inflateInit2(&zlStream, -MAX_WBITS)) != Z_OK)
+            I_Error("ZIPDeflateReader: inflateInit2 failed with code %d\n", code);
+    }
 
-      zlStream.next_out  = static_cast<Bytef *>(outbuffer);
-      zlStream.avail_out = static_cast<uInt>(len);
+    ~ZIPDeflateReader() { inflateEnd(&zlStream); }
 
-      do
-      {
-         code = inflate(&zlStream, Z_SYNC_FLUSH);
-         if(zlStream.avail_in == 0 && !atEOF)
-            buffer();
-      }
-      while(code == Z_OK && zlStream.avail_out);
+    void read(void *outbuffer, size_t len)
+    {
+        int code;
 
-      if(code != Z_OK && code != Z_STREAM_END)
-         I_Error("ZIPDeflateReader::read: invalid deflate stream\n");
+        zlStream.next_out  = static_cast<Bytef *>(outbuffer);
+        zlStream.avail_out = static_cast<uInt>(len);
 
-      if(zlStream.avail_out != 0)
-         I_Error("ZIPDeflateReader::read: truncated deflate stream\n");
-   }
+        do
+        {
+            code = inflate(&zlStream, Z_SYNC_FLUSH);
+            if(zlStream.avail_in == 0 && !atEOF)
+                buffer();
+        }
+        while(code == Z_OK && zlStream.avail_out);
+
+        if(code != Z_OK && code != Z_STREAM_END)
+            I_Error("ZIPDeflateReader::read: invalid deflate stream\n");
+
+        if(zlStream.avail_out != 0)
+            I_Error("ZIPDeflateReader::read: truncated deflate stream\n");
+    }
 };
 
 //
@@ -670,9 +663,9 @@ public:
 //
 static void ZIP_ReadDeflated(InBuffer &fin, void *buffer, size_t len)
 {
-   ZIPDeflateReader reader(fin);
+    ZIPDeflateReader reader(fin);
 
-   reader.read(buffer, len);
+    reader.read(buffer, len);
 }
 
 //
@@ -684,32 +677,32 @@ static void ZIP_ReadDeflated(InBuffer &fin, void *buffer, size_t len)
 //
 void ZipLump::setAddress(InBuffer &fin)
 {
-   edefstructvar(ZIPLocalFileHeader, lfh);
+    edefstructvar(ZIPLocalFileHeader, lfh);
 
-   if(!(flags & ZipFile::LF_CALCOFFSET))
-      return;
+    if(!(flags & ZipFile::LF_CALCOFFSET))
+        return;
 
-   if(fin.seek(offset, SEEK_SET))
-      I_Error("ZipLump::setAddress: could not seek to '%s'\n", name);
+    if(fin.seek(offset, SEEK_SET))
+        I_Error("ZipLump::setAddress: could not seek to '%s'\n", name);
 
-   if(!localFileReader.readFields(lfh, fin))
-      I_Error("ZipLump::setAddress: could not read local header for '%s'\n", name);
+    if(!localFileReader.readFields(lfh, fin))
+        I_Error("ZipLump::setAddress: could not read local header for '%s'\n", name);
 
-   // verify signature
-   if(memcmp(&lfh.signature, ZIP_LOCAL_FILE_SIG, 4))
-      I_Error("ZipLump::setAddress: invalid local signature for '%s'\n", name);
+    // verify signature
+    if(memcmp(&lfh.signature, ZIP_LOCAL_FILE_SIG, 4))
+        I_Error("ZipLump::setAddress: invalid local signature for '%s'\n", name);
 
-   size_t skipSize = lfh.nameLength + lfh.extraLength;
+    size_t skipSize = lfh.nameLength + lfh.extraLength;
 
-   // skip over name and extra
-   if(skipSize > 0 && fin.skip(skipSize))
-      I_Error("ZipLump::setAddress: could not skip local name for '%s'\n", name);
+    // skip over name and extra
+    if(skipSize > 0 && fin.skip(skipSize))
+        I_Error("ZipLump::setAddress: could not skip local name for '%s'\n", name);
 
-   // calculate total length of the local file header and advance offset
-   offset += static_cast<long>(ZIP_LOCAL_FILE_SIZE + skipSize);
+    // calculate total length of the local file header and advance offset
+    offset += static_cast<long>(ZIP_LOCAL_FILE_SIZE + skipSize);
 
-   // clear LF_CALCOFFSET flag
-   flags &= ~ZipFile::LF_CALCOFFSET;
+    // clear LF_CALCOFFSET flag
+    flags &= ~ZipFile::LF_CALCOFFSET;
 }
 
 //
@@ -719,36 +712,35 @@ void ZipLump::setAddress(InBuffer &fin)
 //
 void ZipLump::read(void *buffer)
 {
-   InBuffer reader;
+    InBuffer reader;
 
-   reader.openExisting(file->getFile(), InBuffer::LENDIAN);
+    reader.openExisting(file->getFile(), InBuffer::LENDIAN);
 
-   // Calculate an offset beyond the lump's local file header, if such hasn't
-   // been done already. This will modify Lump::offset. Note if we call this,
-   // we'll end up in reading position, so a seek is unnecessary then.
-   if(flags & ZipFile::LF_CALCOFFSET)
-      setAddress(reader);
-   else
-   {
-      if(reader.seek(offset, SEEK_SET))
-         I_Error("ZipLump::read: could not seek to lump '%s'\n", name);
-   }
+    // Calculate an offset beyond the lump's local file header, if such hasn't
+    // been done already. This will modify Lump::offset. Note if we call this,
+    // we'll end up in reading position, so a seek is unnecessary then.
+    if(flags & ZipFile::LF_CALCOFFSET)
+        setAddress(reader);
+    else
+    {
+        if(reader.seek(offset, SEEK_SET))
+            I_Error("ZipLump::read: could not seek to lump '%s'\n", name);
+    }
 
-   // Read the file according to its indicated storage method.
-   switch(method)
-   {
-   case ZipFile::METHOD_STORED:
-      ZIP_ReadStored(reader, buffer, size);
-      break;
-   case ZipFile::METHOD_DEFLATE:
-      ZIP_ReadDeflated(reader, buffer, size);
-      break;
-   default:
-      // shouldn't happen; files with other methods are removed from the directory
-      I_Error("ZipLump::read: internal error - unsupported compression type %d\n",
-              method);
-      break;
-   }
+    // Read the file according to its indicated storage method.
+    switch(method)
+    {
+    case ZipFile::METHOD_STORED: //
+        ZIP_ReadStored(reader, buffer, size);
+        break;
+    case ZipFile::METHOD_DEFLATE: //
+        ZIP_ReadDeflated(reader, buffer, size);
+        break;
+    default:
+        // shouldn't happen; files with other methods are removed from the directory
+        I_Error("ZipLump::read: internal error - unsupported compression type %d\n", method);
+        break;
+    }
 }
 
 //
@@ -758,14 +750,14 @@ void ZipLump::read(void *buffer)
 //
 void ZipLump::read(ZAutoBuffer &buf, bool asString)
 {
-   uint32_t totalSize = size;
-   if(asString)
-      totalSize += 1;
-   if(totalSize)
-   {
-      buf.alloc(totalSize, true);
-      read(buf.get());
-   }
+    uint32_t totalSize = size;
+    if(asString)
+        totalSize += 1;
+    if(totalSize)
+    {
+        buf.alloc(totalSize, true);
+        read(buf.get());
+    }
 }
 
 // EOF

@@ -53,66 +53,66 @@
 // Looking for the start of a new token
 void XLTokenizer::doStateScan()
 {
-   char c = input[idx];
+    char c = input[idx];
 
-   switch(c)
-   {
-   case ' ':
-   case '\t':
-   case '\r':
-      // remain in this state
-      break; 
-   case '\n':
-      // if linebreak tokens are enabled, return one now
-      if(flags & TF_LINEBREAKS)
-      {
-         tokentype = TOKEN_LINEBREAK;
-         state     = STATE_DONE;
-      }
-      // otherwise, remain in STATE_SCAN
-      break;
-   case '\0': // end of input
-      tokentype = TOKEN_EOF;
-      state     = STATE_DONE;
-      break;
-   case ';': // start of a comment
-      state = STATE_COMMENT;
-      break;
-   case '"': // start of quoted string
-      tokentype = TOKEN_STRING;
-      state     = STATE_QUOTED;
-      break;
-   default:
-      // anything else is the start of a new token
-      if(c == '#' && (flags & TF_HASHCOMMENTS)) // possible start of hash comment
-      {
-         state = STATE_COMMENT;
-         break;
-      }
-      else if(c == '/' && input[idx+1] == '/' && (flags & TF_SLASHCOMMENTS))
-      {
-         state = STATE_COMMENT;
-         break;
-      }
-      else if(c == '/' && input[idx+1] == '*' && (flags & TF_BLOCKCOMMENTS))
-      {
-          state     = STATE_INBCOMMENT;
-          break;
-      }
-      else if(c == '[' && (flags & TF_BRACKETS))
-      {
-         tokentype = TOKEN_BRACKETSTR;
-         state     = STATE_INBRACKETS;
-         break;
-      }
-      else if(c == '$' || flags & TF_STRINGSQUOTED) // detect $ keywords (or without $ if flagged)
-         tokentype = TOKEN_KEYWORD;
-      else
-         tokentype = TOKEN_STRING;
-      state = STATE_INTOKEN;
-      token += c;
-      break;
-   }
+    switch(c)
+    {
+    case ' ':
+    case '\t':
+    case '\r':
+        // remain in this state
+        break;
+    case '\n':
+        // if linebreak tokens are enabled, return one now
+        if(flags & TF_LINEBREAKS)
+        {
+            tokentype = TOKEN_LINEBREAK;
+            state     = STATE_DONE;
+        }
+        // otherwise, remain in STATE_SCAN
+        break;
+    case '\0': // end of input
+        tokentype = TOKEN_EOF;
+        state     = STATE_DONE;
+        break;
+    case ';': // start of a comment
+        state = STATE_COMMENT;
+        break;
+    case '"': // start of quoted string
+        tokentype = TOKEN_STRING;
+        state     = STATE_QUOTED;
+        break;
+    default:
+        // anything else is the start of a new token
+        if(c == '#' && (flags & TF_HASHCOMMENTS)) // possible start of hash comment
+        {
+            state = STATE_COMMENT;
+            break;
+        }
+        else if(c == '/' && input[idx + 1] == '/' && (flags & TF_SLASHCOMMENTS))
+        {
+            state = STATE_COMMENT;
+            break;
+        }
+        else if(c == '/' && input[idx + 1] == '*' && (flags & TF_BLOCKCOMMENTS))
+        {
+            state = STATE_INBCOMMENT;
+            break;
+        }
+        else if(c == '[' && (flags & TF_BRACKETS))
+        {
+            tokentype = TOKEN_BRACKETSTR;
+            state     = STATE_INBRACKETS;
+            break;
+        }
+        else if(c == '$' || flags & TF_STRINGSQUOTED) // detect $ keywords (or without $ if flagged)
+            tokentype = TOKEN_KEYWORD;
+        else
+            tokentype = TOKEN_STRING;
+        state  = STATE_INTOKEN;
+        token += c;
+        break;
+    }
 }
 
 //
@@ -120,226 +120,207 @@ void XLTokenizer::doStateScan()
 //
 inline static bool XL_isIdentifierChar(char c)
 {
-   return ectype::isAlnum(c) || c == '_';
+    return ectype::isAlnum(c) || c == '_';
 }
 
 // Scanning inside a token
-void XLTokenizer::doStateInToken() 
+void XLTokenizer::doStateInToken()
 {
-   char c = input[idx];
+    char c = input[idx];
 
-   switch(c)
-   {
-   case '\n':
-      if(flags & TF_LINEBREAKS) // if linebreaks are tokens, we need to back up
-         --idx;
-      // fall through
-   case ' ':  // whitespace
-   case '\t':
-   case '\r':
-      // end of token
-      state = STATE_DONE;
-      break;
-   case '\0':  // end of input -OR- start of a comment
-   case ';':   
-      --idx;   // backup, next call will handle it in STATE_SCAN.
-      state = STATE_DONE;
-      break;
-   default:
-      if((c == '#' && flags & TF_HASHCOMMENTS) ||
-         (c == '/' && input[idx+1] == '/' && flags & TF_SLASHCOMMENTS) ||
-         (c == '/' && input[idx+1] == '*' && flags & TF_BLOCKCOMMENTS) ||
-         (flags & TF_OPERATORS && !token.empty() &&
-          XL_isIdentifierChar(c) != XL_isIdentifierChar(token[0])) ||
-         (c == '"' && tokentype == TOKEN_KEYWORD))
-      {
-         // hashes may conditionally be supported as comments
-         // double slashes may conditionally be supported as comments
-         // block comments may be conditionally supported as comments
-         // operators and identifiers are separate
-         // starting strings next to keywords should be detected
-         --idx;
-         state = STATE_DONE;
-         break;
-      }
-      token += c;
-      break;
-   }
+    switch(c)
+    {
+    case '\n':
+        if(flags & TF_LINEBREAKS) // if linebreaks are tokens, we need to back up
+            --idx;
+        // fall through
+    case ' ': // whitespace
+    case '\t':
+    case '\r':
+        // end of token
+        state = STATE_DONE;
+        break;
+    case '\0': // end of input -OR- start of a comment
+    case ';':
+        --idx; // backup, next call will handle it in STATE_SCAN.
+        state = STATE_DONE;
+        break;
+    default:
+        if((c == '#' && flags & TF_HASHCOMMENTS) || (c == '/' && input[idx + 1] == '/' && flags & TF_SLASHCOMMENTS) ||
+           (c == '/' && input[idx + 1] == '*' && flags & TF_BLOCKCOMMENTS) ||
+           (flags & TF_OPERATORS && !token.empty() && XL_isIdentifierChar(c) != XL_isIdentifierChar(token[0])) ||
+           (c == '"' && tokentype == TOKEN_KEYWORD))
+        {
+            // hashes may conditionally be supported as comments
+            // double slashes may conditionally be supported as comments
+            // block comments may be conditionally supported as comments
+            // operators and identifiers are separate
+            // starting strings next to keywords should be detected
+            --idx;
+            state = STATE_DONE;
+            break;
+        }
+        token += c;
+        break;
+    }
 }
 
 // Reading out a bracketed string token
 void XLTokenizer::doStateInBrackets()
 {
-   switch(input[idx])
-   {
-   case ']':  // end of bracketed token
-      state = STATE_DONE;
-      break;
-   case '\0': // end of input (technically, malformed)
-      --idx;
-      state = STATE_DONE;
-      break;
-   default:   // anything else is part of the token
-      token += input[idx];
-      break;
-   }
+    switch(input[idx])
+    {
+    case ']': // end of bracketed token
+        state = STATE_DONE;
+        break;
+    case '\0': // end of input (technically, malformed)
+        --idx;
+        state = STATE_DONE;
+        break;
+    default: // anything else is part of the token
+        token += input[idx];
+        break;
+    }
 }
 
 // Reading out a quoted string token
 void XLTokenizer::doStateQuoted()
 {
-   char c;
-   int i;
+    char c;
+    int  i;
 
-   switch(input[idx])
-   {
-   case '"':  // end of quoted string
-      state = STATE_DONE;
-      break;
-   case '\0': // end of input (technically, this is malformed)
-      --idx;
-      state = STATE_DONE;
-      break;
-   case '\\':
-      if(!(flags & TF_ESCAPESTRINGS))
-      {
-         token += input[idx];
-         break;
-      }
-      // Increase IDX, check against '\0' for guarding.
-      if(input[++idx] == '\0')
-      {
-         --idx;
-         state = STATE_DONE;
-         break;
-      }
-      switch(input[idx])   // these correspond to the C escape sequences
-      {
-         case 'a':
-            token += '\a';
+    switch(input[idx])
+    {
+    case '"': // end of quoted string
+        state = STATE_DONE;
+        break;
+    case '\0': // end of input (technically, this is malformed)
+        --idx;
+        state = STATE_DONE;
+        break;
+    case '\\':
+        if(!(flags & TF_ESCAPESTRINGS))
+        {
+            token += input[idx];
             break;
-         case 'b':
-            token += '\b';
+        }
+        // Increase IDX, check against '\0' for guarding.
+        if(input[++idx] == '\0')
+        {
+            --idx;
+            state = STATE_DONE;
             break;
-         case 'f':
-            token += '\f';
+        }
+        switch(input[idx]) // these correspond to the C escape sequences
+        {
+        case 'a': token += '\a'; break;
+        case 'b': token += '\b'; break;
+        case 'f': token += '\f'; break;
+        case 'n': token += '\n'; break;
+        case 't': token += '\t'; break;
+        case 'r': token += '\r'; break;
+        case 'v': token += '\v'; break;
+        case '?': token += '\?'; break;
+        case '\n': // for escaping newlines
             break;
-         case 'n':
-            token += '\n';
-            break;
-         case 't':
-            token += '\t';
-            break;
-         case 'r':
-            token += '\r';
-            break;
-         case 'v':
-            token += '\v';
-            break;
-         case '?':
-            token += '\?';
-            break;
-         case '\n':  // for escaping newlines
-            break;
-         case 'x':
-         case 'X':
+        case 'x':
+        case 'X':
             c = 0;
             for(i = 0; i < 2; ++i)
             {
-               idx++;
-               if(input[idx] >= '0' && input[idx] <= '9')
-                  c = (c << 4) + input[idx] - '0';
-               else if(input[idx] >= 'a' && input[idx] <= 'f')
-                  c = (c << 4) + 10 + input[idx] - 'a';
-               else if(input[idx] >= 'A' && input[idx] <= 'F')
-                  c = (c << 4) + 10 + input[idx] - 'A';
-               else
-               {
-                  idx--;
-                  break;
-               }
+                idx++;
+                if(input[idx] >= '0' && input[idx] <= '9')
+                    c = (c << 4) + input[idx] - '0';
+                else if(input[idx] >= 'a' && input[idx] <= 'f')
+                    c = (c << 4) + 10 + input[idx] - 'a';
+                else if(input[idx] >= 'A' && input[idx] <= 'F')
+                    c = (c << 4) + 10 + input[idx] - 'A';
+                else
+                {
+                    idx--;
+                    break;
+                }
             }
             token += c;
             break;
-         case '0':
-         case '1':
-         case '2':
-         case '3':
-         case '4':
-         case '5':
-         case '6':
-         case '7':
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
             c = input[idx] - '0';
             for(i = 0; i < 2; ++i)
             {
-               idx++;
-               if(input[idx] >= '0' && input[idx] <= '7')
-                  c = (c << 3) + input[idx] - '0';
-               else
-               {
-                  idx--;
-                  break;
-               }
+                idx++;
+                if(input[idx] >= '0' && input[idx] <= '7')
+                    c = (c << 3) + input[idx] - '0';
+                else
+                {
+                    idx--;
+                    break;
+                }
             }
             token += c;
             break;
-         default:
+        default: //
             token += input[idx];
             break;
-      }
-      break;
-   default:
-      token += input[idx];
-      break;
-   }
+        }
+        break;
+    default: //
+        token += input[idx];
+        break;
+    }
 }
 
 // Reading out a single-line comment
 void XLTokenizer::doStateComment()
 {
-   // consume all input to the end of the line
-   if(input[idx] == '\n')
-   {
-      // if linebreak tokens are enabled, send one now
-      if(flags & TF_LINEBREAKS)
-      {
-         tokentype = TOKEN_LINEBREAK;
-         state     = STATE_DONE;
-      }
-      else
-         state = STATE_SCAN;
-   }
-   else if(input[idx] == '\0') // end of input
-   {
-      tokentype = TOKEN_EOF;
-      state     = STATE_DONE;
-   }
+    // consume all input to the end of the line
+    if(input[idx] == '\n')
+    {
+        // if linebreak tokens are enabled, send one now
+        if(flags & TF_LINEBREAKS)
+        {
+            tokentype = TOKEN_LINEBREAK;
+            state     = STATE_DONE;
+        }
+        else
+            state = STATE_SCAN;
+    }
+    else if(input[idx] == '\0') // end of input
+    {
+        tokentype = TOKEN_EOF;
+        state     = STATE_DONE;
+    }
 }
 
 void XLTokenizer::doStateBlockComment()
 {
     // consume all input until next '*/'
-    if((input[idx] == '*' && input[idx+1] == '/'))
+    if((input[idx] == '*' && input[idx + 1] == '/'))
     {
-        idx++; //push ahead then start to scan again
+        idx++; // push ahead then start to scan again
         state = STATE_SCAN;
-    } 
+    }
     else if(input[idx] == '\0') // end of input (technically malformed)
     {
-       tokentype = TOKEN_EOF;
-       state     = STATE_DONE;
+        tokentype = TOKEN_EOF;
+        state     = STATE_DONE;
     }
 }
 
 // State table for the tokenizer - static array of method pointers :)
-void (XLTokenizer::* XLTokenizer::States[])() =
-{
-   &XLTokenizer::doStateScan,
-   &XLTokenizer::doStateInToken,
-   &XLTokenizer::doStateInBrackets,
-   &XLTokenizer::doStateQuoted,
-   &XLTokenizer::doStateComment,
-   &XLTokenizer::doStateBlockComment
+void (XLTokenizer::*XLTokenizer::States[])() = {
+    &XLTokenizer::doStateScan,         //
+    &XLTokenizer::doStateInToken,      //
+    &XLTokenizer::doStateInBrackets,   //
+    &XLTokenizer::doStateQuoted,       //
+    &XLTokenizer::doStateComment,      //
+    &XLTokenizer::doStateBlockComment, //
 };
 
 //
@@ -351,27 +332,27 @@ void (XLTokenizer::* XLTokenizer::States[])() =
 //
 int XLTokenizer::getNextToken()
 {
-   token.clear();
-   state     = STATE_SCAN; // always start out scanning for a new token
-   tokentype = TOKEN_NONE; // nothing has been determined yet
+    token.clear();
+    state     = STATE_SCAN; // always start out scanning for a new token
+    tokentype = TOKEN_NONE; // nothing has been determined yet
 
-   // already at end of input?
-   if(input[idx] != '\0')
-   {
-      while(state != STATE_DONE)
-      {
-         (this->*States[state])();
-         ++idx;
-      }
-   }
-   else
-      tokentype = TOKEN_EOF;
+    // already at end of input?
+    if(input[idx] != '\0')
+    {
+        while(state != STATE_DONE)
+        {
+            (this->*States[state])();
+            ++idx;
+        }
+    }
+    else
+        tokentype = TOKEN_EOF;
 
-   return tokentype;
+    return tokentype;
 }
 
 //=============================================================================
-// 
+//
 // XLParser
 //
 // Base class for Hexen lump parsers
@@ -382,48 +363,48 @@ int XLTokenizer::getNextToken()
 //
 // Parses a single lump.
 //
-void XLParser::parseLump(WadDirectory &dir, lumpinfo_t *lump, bool global) 
+void XLParser::parseLump(WadDirectory &dir, lumpinfo_t *lump, bool global)
 {
-   // free any previously loaded lump
-   if(lumpdata)
-   {
-      efree(lumpdata);
-      lumpdata = nullptr;
-   }
+    // free any previously loaded lump
+    if(lumpdata)
+    {
+        efree(lumpdata);
+        lumpdata = nullptr;
+    }
 
-   // can't parse empty lumps
-   if(!lump->size)
-      return;
+    // can't parse empty lumps
+    if(!lump->size)
+        return;
 
-   waddir = &dir;
-   startLump();
+    waddir = &dir;
+    startLump();
 
-   // allocate at lump->size + 2 for null termination and look-ahead padding
-   lumpdata = ecalloc(char *, 1, lump->size + 2);
-   dir.readLump(lump->selfindex, lumpdata);
+    // allocate at lump->size + 2 for null termination and look-ahead padding
+    lumpdata = ecalloc(char *, 1, lump->size + 2);
+    dir.readLump(lump->selfindex, lumpdata);
 
-   // check with EDF SHA-1 cache that this lump hasn't already been processed,
-   // unless the data source is marked as non-global (which means, parse it every time)
-   if(!global || E_CheckInclude(lumpdata, lump->size))
-   {
-      XLTokenizer tokenizer(lumpdata);
-      bool early = false;
+    // check with EDF SHA-1 cache that this lump hasn't already been processed,
+    // unless the data source is marked as non-global (which means, parse it every time)
+    if(!global || E_CheckInclude(lumpdata, lump->size))
+    {
+        XLTokenizer tokenizer(lumpdata);
+        bool        early = false;
 
-      // allow subclasses to alter properties of the tokenizer now before parsing begins
-      initTokenizer(tokenizer);
+        // allow subclasses to alter properties of the tokenizer now before parsing begins
+        initTokenizer(tokenizer);
 
-      while(tokenizer.getNextToken() != XLTokenizer::TOKEN_EOF)
-      {
-         if(!doToken(tokenizer))
-         {
-            early = true;
-            break; // the subclassed parser wants to stop parsing
-         }
-      }
+        while(tokenizer.getNextToken() != XLTokenizer::TOKEN_EOF)
+        {
+            if(!doToken(tokenizer))
+            {
+                early = true;
+                break; // the subclassed parser wants to stop parsing
+            }
+        }
 
-      // allow subclasses to handle EOF
-      onEOF(early);
-   }
+        // allow subclasses to handle EOF
+        onEOF(early);
+    }
 }
 
 //
@@ -434,16 +415,15 @@ void XLParser::parseLump(WadDirectory &dir, lumpinfo_t *lump, bool global)
 //
 void XLParser::parseLumpRecursive(WadDirectory &dir, lumpinfo_t *curlump)
 {
-   lumpinfo_t **lumpinfo = dir.getLumpInfo();
+    lumpinfo_t **lumpinfo = dir.getLumpInfo();
 
-   // Recurse to parse next lump on the chain first
-   if(curlump->next != -1)
-      parseLumpRecursive(dir, lumpinfo[curlump->next]);
+    // Recurse to parse next lump on the chain first
+    if(curlump->next != -1)
+        parseLumpRecursive(dir, lumpinfo[curlump->next]);
 
-   // Parse this lump, provided it matches by name and is global
-   if(!strncasecmp(curlump->name, lumpname, 8) &&
-      curlump->li_namespace == lumpinfo_t::ns_global)
-      parseLump(dir, curlump, true);
+    // Parse this lump, provided it matches by name and is global
+    if(!strncasecmp(curlump->name, lumpname, 8) && curlump->li_namespace == lumpinfo_t::ns_global)
+        parseLump(dir, curlump, true);
 }
 
 //
@@ -453,10 +433,10 @@ void XLParser::parseLumpRecursive(WadDirectory &dir, lumpinfo_t *curlump)
 //
 void XLParser::parseAll(WadDirectory &dir)
 {
-   lumpinfo_t **lumpinfo = dir.getLumpInfo();
-   lumpinfo_t  *root     = dir.getLumpNameChain(lumpname);
-   if(root->index >= 0)
-      parseLumpRecursive(dir, lumpinfo[root->index]);
+    lumpinfo_t **lumpinfo = dir.getLumpInfo();
+    lumpinfo_t  *root     = dir.getLumpNameChain(lumpname);
+    if(root->index >= 0)
+        parseLumpRecursive(dir, lumpinfo[root->index]);
 }
 
 //
@@ -466,9 +446,9 @@ void XLParser::parseAll(WadDirectory &dir)
 //
 void XLParser::parseNew(WadDirectory &dir)
 {
-   int lumpnum = dir.checkNumForName(lumpname);
-   if(lumpnum >= 0)
-      parseLump(dir, dir.getLumpInfo()[lumpnum], true);
+    int lumpnum = dir.checkNumForName(lumpname);
+    if(lumpnum >= 0)
+        parseLump(dir, dir.getLumpInfo()[lumpnum], true);
 }
 
 //
@@ -476,20 +456,20 @@ void XLParser::parseNew(WadDirectory &dir)
 //
 static void XL_buildInterMapInfo()
 {
-   // First, visit UMAPINFO
-   XL_BuildInterUMapInfo();
-   // Then, override with EMAPINFO
-   XL_BuildInterEMapInfo();
+    // First, visit UMAPINFO
+    XL_BuildInterUMapInfo();
+    // Then, override with EMAPINFO
+    XL_BuildInterEMapInfo();
 
-   // Episode menu from UMAPINFO
-   XL_BuildUMapInfoEpisodes();
+    // Episode menu from UMAPINFO
+    XL_BuildUMapInfoEpisodes();
 
-   // FIXME: MAPINFO is meant only for Hexen, which doesn't have Doom-style in-
-   // termission anyway. But maybe we should use its fields.
+    // FIXME: MAPINFO is meant only for Hexen, which doesn't have Doom-style in-
+    // termission anyway. But maybe we should use its fields.
 }
 
 //=============================================================================
-// 
+//
 // External Interface
 //
 
@@ -500,14 +480,14 @@ static void XL_buildInterMapInfo()
 //
 void XL_ParseHexenScripts()
 {
-   XL_ParseEMapInfo(); // Eternity: EMAPINFO
-   XL_ParseMapInfo();  // Hexen:    MAPINFO
-   XL_ParseMusInfo();  // Risen3D:  MUSINFO
-   XL_ParseAnimDefs();  // Hexen: ANIMDEFS
+    XL_ParseEMapInfo(); // Eternity: EMAPINFO
+    XL_ParseMapInfo();  // Hexen:    MAPINFO
+    XL_ParseMusInfo();  // Risen3D:  MUSINFO
+    XL_ParseAnimDefs(); // Hexen:    ANIMDEFS
 
-   XL_ParseUMapInfo();  // Universal MAPINFO new format
+    XL_ParseUMapInfo(); // Universal MAPINFO new format
 
-   XL_buildInterMapInfo();
+    XL_buildInterMapInfo();
 }
 
 // EOF

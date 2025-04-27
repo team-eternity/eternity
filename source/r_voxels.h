@@ -29,13 +29,12 @@
 
 struct rvoxelmodel_t
 {
-   int  xsize, ysize, zsize; // dimensions
-   byte *voxels;             // three-dimensional voxel buffer
-   byte palette[768];        // original palette
+    int   xsize, ysize, zsize; // dimensions
+    byte *voxels;              // three-dimensional voxel buffer
+    byte  palette[768];        // original palette
 };
 
 #endif
 
 // EOF
-
 

@@ -34,22 +34,19 @@
 class VAllocItem
 {
 public:
-   using allocfn_t = void (*)(int w, int h);
+    using allocfn_t = void (*)(int w, int h);
 
 protected:
-   static DLListItem<VAllocItem> *vAllocList;
+    static DLListItem<VAllocItem> *vAllocList;
 
-   DLListItem<VAllocItem> links;
-   allocfn_t allocator;
+    DLListItem<VAllocItem> links;
+    allocfn_t              allocator;
 
 public:
-   explicit VAllocItem(allocfn_t p_allocator) : links(), allocator(p_allocator) 
-   {
-      links.insert(this, &vAllocList);
-   }
+    explicit VAllocItem(allocfn_t p_allocator) : links(), allocator(p_allocator) { links.insert(this, &vAllocList); }
 
-   static void FreeAllocs();
-   static void SetNewMode(int w, int h);
+    static void FreeAllocs();
+    static void SetNewMode(int w, int h);
 };
 
 #define VALLOCFNNAME(name) VAllocFn_ ## name
@@ -58,9 +55,9 @@ public:
 #define VALLOCFNDEF(name)  static void VALLOCFNNAME(name) (int w, int h)
 
 #define VALLOCATION(name) \
-   VALLOCFNSIG(name);     \
-   VALLOCDECL(name);      \
-   VALLOCFNDEF(name)
+    VALLOCFNSIG(name);    \
+    VALLOCDECL(name);     \
+    VALLOCFNDEF(name)
 
 #endif
 

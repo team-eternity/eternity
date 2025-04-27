@@ -27,31 +27,35 @@
 #ifndef __D_IO_H__
 #define __D_IO_H__
 
+// clang-format off
+
 // SoM 3/12/2002: Take all of this out of the source files themselves
 
 #ifdef _MSC_VER
 
-   #include <direct.h>
-   #include <io.h>
-   #define F_OK 0
-   #define W_OK 2
-   #define R_OK 4
-   #define S_ISDIR(x) (((x & S_IFDIR)==S_IFDIR)?1:0)
-   #ifndef PATH_MAX
-      #define PATH_MAX _MAX_PATH
-   #endif
+    #include <direct.h>
+    #include <io.h>
+    #define F_OK 0
+    #define W_OK 2
+    #define R_OK 4
+    #define S_ISDIR(x) (((x & S_IFDIR)==S_IFDIR)?1:0)
+    #ifndef PATH_MAX
+        #define PATH_MAX _MAX_PATH
+    #endif
 
 #else
 #include <unistd.h>
 #endif
 
 #ifdef LINUX
-   #ifdef __FreeBSD__ // [Kate] Yeeaah...
-   #include <limits.h>
-   #else
-   #include <linux/limits.h>
-   #endif
+    #ifdef __FreeBSD__ // [Kate] Yeeaah...
+    #include <limits.h>
+    #else
+    #include <linux/limits.h>
+    #endif
 #endif
+
+// clang-format on
 
 #endif
 

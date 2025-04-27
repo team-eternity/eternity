@@ -20,8 +20,8 @@
 // Purpose: File/WAD Standard Input Routines
 //
 //  This code was moved here from d_deh.c and generalized to make a consistent
-//  interface for emulating stdio functions on wad lumps. The structure here 
-//  handles either external files or wad lumps, depending on how it is 
+//  interface for emulating stdio functions on wad lumps. The structure here
+//  handles either external files or wad lumps, depending on how it is
 //  initialized, and emulates stdio regardless.
 //
 // Authors: James Haley
@@ -38,19 +38,15 @@
 //
 // Constructor
 //
-DWFILE::DWFILE()
-   : type(0), inp(nullptr), lump(nullptr), data(nullptr), size(0), origsize(0), 
-     lumpnum(0)
-{
-}
+DWFILE::DWFILE() : type(0), inp(nullptr), lump(nullptr), data(nullptr), size(0), origsize(0), lumpnum(0) {}
 
 //
 // Destructor
 //
 DWFILE::~DWFILE()
 {
-   if(isOpen())
-      close();
+    if(isOpen())
+        close();
 }
 
 //
@@ -60,27 +56,27 @@ DWFILE::~DWFILE()
 //
 char *DWFILE::getStr(char *buf, size_t n)
 {
-   // If this is a real file, return regular fgets
-   if(type == DWF_FILE)
-      return fgets(buf, static_cast<int>(n), (FILE *)inp);
-   
-   // If no more characters
-   if(!n || size <= 0 || !*inp)
-      return nullptr;
-  
-   if(n == 1)
-   {
-      size--;
-      *buf = *inp++;
-   }
-   else
-   {  // copy buffer
-      char *p = buf;
-      while(n > 1 && size && *inp && (n--, size--, *p++ = *inp++) != '\n')
-         ;
-      *p = 0;
-   }
-   return buf; // Return buffer pointer
+    // If this is a real file, return regular fgets
+    if(type == DWF_FILE)
+        return fgets(buf, static_cast<int>(n), (FILE *)inp);
+
+    // If no more characters
+    if(!n || size <= 0 || !*inp)
+        return nullptr;
+
+    if(n == 1)
+    {
+        size--;
+        *buf = *inp++;
+    }
+    else
+    { // copy buffer
+        char *p = buf;
+        while(n > 1 && size && *inp && (n--, size--, *p++ = *inp++) != '\n')
+            ;
+        *p = 0;
+    }
+    return buf; // Return buffer pointer
 }
 
 //
@@ -90,8 +86,8 @@ char *DWFILE::getStr(char *buf, size_t n)
 //
 int DWFILE::atEof() const
 {
-   return (type == DWF_FILE) ? 
-           feof((FILE *)inp) : size <= 0 || !*inp;;
+    return (type == DWF_FILE) ? feof((FILE *)inp) : size <= 0 || !*inp;
+    ;
 }
 
 //
@@ -101,8 +97,7 @@ int DWFILE::atEof() const
 //
 int DWFILE::getChar()
 {
-   return (type == DWF_FILE) ? 
-   fgetc((FILE *)inp) : size > 0 ? size--, *inp++ : EOF;
+    return (type == DWF_FILE) ? fgetc((FILE *)inp) : size > 0 ? size--, *inp++ : EOF;
 }
 
 //
@@ -110,14 +105,13 @@ int DWFILE::getChar()
 //
 // Equivalent to ungetc
 //
-// haleyjd 04/03/03: note that wad lump buffers will not be 
+// haleyjd 04/03/03: note that wad lump buffers will not be
 // written into by this function -- this is necessary to
 // maintain cacheability.
 //
 int DWFILE::unGetChar(int c)
 {
-   return (type == DWF_FILE) ? 
-   ungetc(c, (FILE *)inp) : size < origsize ? size++, *(--inp) : EOF;
+    return (type == DWF_FILE) ? ungetc(c, (FILE *)inp) : size < origsize ? size++, *(--inp) : EOF;
 }
 
 //
@@ -127,18 +121,18 @@ int DWFILE::unGetChar(int c)
 //
 void DWFILE::openFile(const char *filename, const char *mode)
 {
-   if(isOpen())
-      close();
+    if(isOpen())
+        close();
 
-   inp     = (byte *)fopen(filename, mode);
-   lumpnum = -1;
-   type    = DWF_FILE;
+    inp     = (byte *)fopen(filename, mode);
+    lumpnum = -1;
+    type    = DWF_FILE;
 
-   // zero out fields not used for file reading
-   data     = nullptr;
-   lump     = nullptr;
-   origsize = 0;
-   size     = 0;
+    // zero out fields not used for file reading
+    data     = nullptr;
+    lump     = nullptr;
+    origsize = 0;
+    size     = 0;
 }
 
 //
@@ -149,28 +143,30 @@ void DWFILE::openFile(const char *filename, const char *mode)
 //
 void DWFILE::openLump(int p_lumpnum)
 {
-   if(isOpen())
-      close();
+    if(isOpen())
+        close();
 
-   // haleyjd 04/03/03: added origsize field for D_Ungetc
-   lumpnum = p_lumpnum;
-   size    = origsize = W_LumpLength(lumpnum);
-   inp     = lump     = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
-   type    = DWF_LUMP;
+    // haleyjd 04/03/03: added origsize field for D_Ungetc
+    lumpnum  = p_lumpnum;
+    origsize = W_LumpLength(lumpnum);
+    size     = origsize;
+    lump     = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
+    inp      = lump;
+    type     = DWF_LUMP;
 
-   // zero out fields not used for lump reading
-   data = nullptr;
+    // zero out fields not used for lump reading
+    data = nullptr;
 }
 
 /*
 // TODO: support this properly
 void D_OpenData(DWFILE *infile, byte *data, int size)
 {
-   memset(infile, 0, sizeof(*infile));
-   infile->size = infile->origsize = size;
-   infile->inp = infile->data = data;
-   infile->lumpnum = -1;
-   infile->type = DWF_DATA;
+    memset(infile, 0, sizeof(*infile));
+    infile->size    = infile->origsize = size;
+    infile->inp     = infile->data = data;
+    infile->lumpnum = -1;
+    infile->type    = DWF_DATA;
 }
 */
 
@@ -182,25 +178,25 @@ void D_OpenData(DWFILE *infile, byte *data, int size)
 //
 void DWFILE::close()
 {
-   if(!isOpen())
-      return;
+    if(!isOpen())
+        return;
 
-   switch(type)
-   {
-   case DWF_LUMP:
-      Z_ChangeTag(lump, PU_CACHE);
-      break;
-   case DWF_DATA:
-      efree(data);
-      break;
-   case DWF_FILE:
-      fclose((FILE *)inp);
-      break;
-   default:
-      break;
-   }
+    switch(type)
+    {
+    case DWF_LUMP: //
+        Z_ChangeTag(lump, PU_CACHE);
+        break;
+    case DWF_DATA: //
+        efree(data);
+        break;
+    case DWF_FILE: //
+        fclose((FILE *)inp);
+        break;
+    default: //
+        break;
+    }
 
-   inp = lump = data = nullptr;
+    inp = lump = data = nullptr;
 }
 
 //
@@ -210,23 +206,23 @@ void DWFILE::close()
 //
 size_t DWFILE::read(void *dest, size_t p_size, size_t p_num)
 {
-   if(type == DWF_FILE)
-      return fread(dest, p_size, p_num, (FILE *)inp);
-   else
-   {
-      size_t numbytes = p_size * p_num;
-      size_t numbytesread = 0;
-      byte *d = (byte *)dest;
+    if(type == DWF_FILE)
+        return fread(dest, p_size, p_num, (FILE *)inp);
+    else
+    {
+        size_t numbytes     = p_size * p_num;
+        size_t numbytesread = 0;
+        byte  *d            = (byte *)dest;
 
-      while(numbytesread < numbytes && size)
-      {
-         *d++ = *inp++;
-         size--;
-         numbytesread++;
-      }
+        while(numbytesread < numbytes && size)
+        {
+            *d++ = *inp++;
+            size--;
+            numbytesread++;
+        }
 
-      return numbytesread;
-   }
+        return numbytesread;
+    }
 }
 
 //
@@ -236,7 +232,7 @@ size_t DWFILE::read(void *dest, size_t p_size, size_t p_num)
 //
 long DWFILE::fileLength() const
 {
-   return (type == DWF_FILE) ? M_FileLength((FILE *)inp) : origsize;
+    return (type == DWF_FILE) ? M_FileLength((FILE *)inp) : origsize;
 }
 
 // EOF

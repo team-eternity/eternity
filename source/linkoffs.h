@@ -30,7 +30,7 @@
 
 #ifndef R_NOGROUP
 // No link group. I know this means there is a signed limit on portal groups but
-// do you think anyone is going to make a level with 2147483647 groups that 
+// do you think anyone is going to make a level with 2147483647 groups that
 // doesn't have NUTS in the wad name? I didn't think so either.
 #define R_NOGROUP -1
 #endif
@@ -38,7 +38,7 @@
 using linkoffset_t = v3fixed_t;
 
 extern linkoffset_t **linktable;
-extern linkoffset_t zerolink;
+extern linkoffset_t   zerolink;
 
 linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup);
 linkoffset_t *P_GetLinkIfExists(int fromgroup, int togroup);

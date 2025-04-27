@@ -36,10 +36,10 @@
 class SDLGamePadDriver : public HALGamePadDriver
 {
 public:
-   virtual bool initialize();
-   virtual void shutdown();
-   virtual void enumerateDevices();
-   virtual int  getBaseDeviceNum() { return 0; }
+    virtual bool initialize();
+    virtual void shutdown();
+    virtual void enumerateDevices();
+    virtual int  getBaseDeviceNum() { return 0; }
 };
 
 extern SDLGamePadDriver i_sdlGamePadDriver;
@@ -49,19 +49,19 @@ extern SDLGamePadDriver i_sdlGamePadDriver;
 //
 class SDLHapticInterface : public HALHapticInterface
 {
-   DECLARE_RTTI_TYPE(SDLHapticInterface, HALHapticInterface)
+    DECLARE_RTTI_TYPE(SDLHapticInterface, HALHapticInterface)
 
 protected:
-   bool pauseState;
+    bool pauseState;
 
-   void zeroState();
+    void zeroState();
 
 public:
-   SDLHapticInterface();
-   virtual void startEffect(effect_e effect, int data1, int data2) override;
-   virtual void pauseEffects(bool effectsPaused) override;
-   virtual void updateEffects() override;
-   virtual void clearEffects() override;
+    SDLHapticInterface();
+    virtual void startEffect(effect_e effect, int data1, int data2) override;
+    virtual void pauseEffects(bool effectsPaused) override;
+    virtual void updateEffects() override;
+    virtual void clearEffects() override;
 };
 
 //
@@ -70,26 +70,25 @@ public:
 //
 class SDLGamePad : public HALGamePad
 {
-   DECLARE_RTTI_TYPE(SDLGamePad, HALGamePad)
+    DECLARE_RTTI_TYPE(SDLGamePad, HALGamePad)
 
 protected:
-   int sdlIndex; // SDL gamepad number
-   SDLHapticInterface haptics;
+    int                sdlIndex; // SDL gamepad number
+    SDLHapticInterface haptics;
 
-   float normAxis(float value, int threshold, int maxvalue);
-   void  normAxisPair(float &axisx, float &axisy, int threshold, int min, int max);
-
+    float normAxis(float value, int threshold, int maxvalue);
+    void  normAxisPair(float &axisx, float &axisy, int threshold, int min, int max);
 
 public:
-   SDLGamePad(int idx = 0);
+    SDLGamePad(int idx = 0);
 
-   virtual bool select() override;
-   virtual void deselect() override;
-   virtual void poll() override;
+    virtual bool select() override;
+    virtual void deselect() override;
+    virtual void poll() override;
 
-   virtual HALHapticInterface *getHapticInterface() override { return &haptics; }
+    virtual HALHapticInterface *getHapticInterface() override { return &haptics; }
 
-   virtual const char *getAxisName(const int axis) override;
+    virtual const char *getAxisName(const int axis) override;
 };
 
 #endif

@@ -34,12 +34,12 @@ struct polyobj_t;
 //
 enum
 {
-   LINECLIP_OVER3DMIDTEX = 1,    // clip thing is over this 3DMidTex
-   LINECLIP_UNDER3DMIDTEX = 2,   // clip thing is under this 3DMidTex
+    LINECLIP_OVER3DMIDTEX  = 1, // clip thing is over this 3DMidTex
+    LINECLIP_UNDER3DMIDTEX = 2, // clip thing is under this 3DMidTex
 
-   // basic flags
-   LINECLIP_ABOVEPORTAL = 4,     // floor portal is below line, both sides
-   LINECLIP_UNDERPORTAL = 8,     // ceiling portal is above line, both sides
+    // basic flags
+    LINECLIP_ABOVEPORTAL = 4, // floor portal is below line, both sides
+    LINECLIP_UNDERPORTAL = 8, // ceiling portal is above line, both sides
 };
 
 bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context);

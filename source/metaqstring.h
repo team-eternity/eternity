@@ -35,41 +35,27 @@
 
 class MetaQString : public MetaObject
 {
-   DECLARE_RTTI_TYPE(MetaQString, MetaObject)
+    DECLARE_RTTI_TYPE(MetaQString, MetaObject)
 
 public:
-   qstring value;
+    qstring value;
 
-   MetaQString() : Super(), value()
-   {
-   }
+    MetaQString() : Super(), value() {}
 
-   explicit MetaQString(const char *key) : Super(key), value()
-   {
-   }
+    explicit MetaQString(const char *key) : Super(key), value() {}
 
-   MetaQString(const char *key, const qstring &initValue)
-      : Super(key), value(initValue)
-   {
-   }
+    MetaQString(const char *key, const qstring &initValue) : Super(key), value(initValue) {}
 
-   MetaQString(const char *key, const char *ccvalue)
-      : Super(key), value(ccvalue)
-   {
-   }
+    MetaQString(const char *key, const char *ccvalue) : Super(key), value(ccvalue) {}
 
-   MetaQString(const MetaQString &other)
-      : Super(other), value(other.value)
-   {
-   }
+    MetaQString(const MetaQString &other) : Super(other), value(other.value) {}
 
-   // Virtuals
-   MetaObject *clone()    const override { return new MetaQString(*this); }
-   const char *toString() const override { return value.constPtr(); }
+    // Virtuals
+    MetaObject *clone() const override { return new MetaQString(*this); }
+    const char *toString() const override { return value.constPtr(); }
 };
 
 #endif
 
 // EOF
-
 

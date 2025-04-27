@@ -38,11 +38,11 @@ HALTimer i_haltimer;
 
 // killough 4/13/98: Make clock rate adjustable by scale factor
 int     realtic_clock_rate = 100;
-int64_t I_GetTime_Scale = CLOCK_UNIT;
+int64_t I_GetTime_Scale    = CLOCK_UNIT;
 
 static void I_HALTimerError()
 {
-   I_Error("I_HALTimerError: no timer driver is available.\n");
+    I_Error("I_HALTimerError: no timer driver is available.\n");
 }
 
 //=============================================================================
@@ -55,37 +55,40 @@ static void I_HALTimerError()
 //
 struct haltimerdriveritem_t
 {
-   int id;                             // HAL driver ID number
-   const char *name;                   // name of driver
-   HAL_TimerInitFunc       Init;       // pointer to driver init routine, if supported
-   HAL_ChangeClockRateFunc ChangeRate; // runtime rate change function
-
+    int                     id;         // HAL driver ID number
+    const char             *name;       // name of driver
+    HAL_TimerInitFunc       Init;       // pointer to driver init routine, if supported
+    HAL_ChangeClockRateFunc ChangeRate; // runtime rate change function
 };
 
 static haltimerdriveritem_t *timer;
 
+// clang-format off
+
 static haltimerdriveritem_t halTimerDrivers[] =
 {
-   // SDL Timer Driver
-   {
-      0, 
-      "SDL Timer",
+    // SDL Timer Driver
+    {
+        0, 
+        "SDL Timer",
 #ifdef _SDL_VER
-      I_SDLInitTimer,
-      I_SDLChangeClockRate
+        I_SDLInitTimer,
+        I_SDLChangeClockRate
 #else
-      nullptr,
-      nullptr
+        nullptr,
+        nullptr
 #endif
-   },
+    },
 
    // Dummy
-   {
-      1,
-      "No Timer",
-      I_HALTimerError
-   }
+    {
+       1,
+        "No Timer",
+        I_HALTimerError
+    }
 };
+
+// clang-format on
 
 //
 // I_InitHALTimer
@@ -94,41 +97,39 @@ static haltimerdriveritem_t halTimerDrivers[] =
 //
 void I_InitHALTimer()
 {
-   int clockRate = realtic_clock_rate;
-   int p;
-   
-   if((p = M_CheckParm("-speed")) && p < myargc-1 &&
-      (p = atoi(myargv[p+1])) >= 10 && p <= 1000)
-      clockRate = p;
-   
-   if(clockRate != 100)
-      I_GetTime_Scale = ((int64_t)clockRate << CLOCK_BITS) / 100;
+    int clockRate = realtic_clock_rate;
+    int p;
 
-   // choose the first available timer driver
-   for(size_t i = 0; i < earrlen(halTimerDrivers); i++)
-   {
-      if(halTimerDrivers[i].Init)
-      {
-         timer = &halTimerDrivers[i];
-         break;
-      }
-   }
+    if((p = M_CheckParm("-speed")) && p < myargc - 1 && (p = atoi(myargv[p + 1])) >= 10 && p <= 1000)
+        clockRate = p;
 
-   // initialize the timer
-   timer->Init();
+    if(clockRate != 100)
+        I_GetTime_Scale = ((int64_t)clockRate << CLOCK_BITS) / 100;
+
+    // choose the first available timer driver
+    for(size_t i = 0; i < earrlen(halTimerDrivers); i++)
+    {
+        if(halTimerDrivers[i].Init)
+        {
+            timer = &halTimerDrivers[i];
+            break;
+        }
+    }
+
+    // initialize the timer
+    timer->Init();
 }
 
-VARIABLE_INT(realtic_clock_rate, nullptr,  0, 500, nullptr);
+VARIABLE_INT(realtic_clock_rate, nullptr, 0, 500, nullptr);
 CONSOLE_VARIABLE(i_gamespeed, realtic_clock_rate, 0)
 {
-   if(realtic_clock_rate != 100)
-      I_GetTime_Scale = ((int64_t) realtic_clock_rate << CLOCK_BITS) / 100;
-   else
-      I_GetTime_Scale = CLOCK_UNIT;
+    if(realtic_clock_rate != 100)
+        I_GetTime_Scale = ((int64_t)realtic_clock_rate << CLOCK_BITS) / 100;
+    else
+        I_GetTime_Scale = CLOCK_UNIT;
 
-   timer->ChangeRate();
+    timer->ChangeRate();
 }
-
 
 // EOF
 

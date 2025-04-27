@@ -29,10 +29,10 @@
 // Bounding box coordinate storage.
 enum
 {
-   BOXTOP,
-   BOXBOTTOM,
-   BOXLEFT,
-   BOXRIGHT
+    BOXTOP,
+    BOXBOTTOM,
+    BOXLEFT,
+    BOXRIGHT
 };
 
 // Bounding box functions.
@@ -46,8 +46,8 @@ void M_AddToBox2(float *box, float x, float y);
 
 inline static bool M_BoxesTouch(const fixed_t bbox1[4], const fixed_t bbox2[4])
 {
-   return bbox1[BOXTOP] >= bbox2[BOXBOTTOM] && bbox1[BOXBOTTOM] <= bbox2[BOXTOP] &&
-      bbox1[BOXLEFT] <= bbox2[BOXRIGHT] && bbox1[BOXRIGHT] >= bbox2[BOXLEFT];
+    return bbox1[BOXTOP] >= bbox2[BOXBOTTOM] && bbox1[BOXBOTTOM] <= bbox2[BOXTOP] &&
+           bbox1[BOXLEFT] <= bbox2[BOXRIGHT] && bbox1[BOXRIGHT] >= bbox2[BOXLEFT];
 }
 
 #endif

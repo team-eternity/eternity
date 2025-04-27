@@ -24,7 +24,6 @@
 // Authors: James Haley
 //
 
-
 #ifndef XL_SNDINFO_H__
 #define XL_SNDINFO_H__
 

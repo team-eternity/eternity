@@ -83,7 +83,7 @@ extern int ee_current_compiler;
 // platform flags
 enum
 {
-   EE_PLATF_CSFS = 0x00000001 // Case-sensitive file system(s)
+    EE_PLATF_CSFS = 0x00000001 // Case-sensitive file system(s)
 };
 
 // Flags for each platform
@@ -91,7 +91,7 @@ extern int ee_platform_flags[EE_PLATFORM_MAX];
 
 // Test platform flags against a set of flag values
 #define EE_PLATFORM_TEST(flags) \
-   ((ee_platform_flags[ee_current_platform] & (flags)) == (flags))
+    ((ee_platform_flags[ee_current_platform] & (flags)) == (flags))
 
 #endif
 

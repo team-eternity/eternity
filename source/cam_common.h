@@ -29,23 +29,23 @@
 #include "r_defs.h"
 
 #define VALID_ALLOC(set, n) ((set) = ecalloc(byte *, 1, (((n) + 7) & ~7) / 8))
-#define VALID_FREE(set) efree(set)
+#define VALID_FREE(set)     efree(set)
 
 //
 // PathTraverser setup
 //
 struct PTDef
 {
-   enum earlyout_e
-   {
-      eo_no,
-      eo_always,
-      eo_noearlycheck,
-   };
+    enum earlyout_e
+    {
+        eo_no,
+        eo_always,
+        eo_noearlycheck,
+    };
 
-   bool(*trav)(const intercept_t *in, void *context, const divline_t &trace);
-   earlyout_e earlyOut;
-   uint32_t flags;
+    bool       (*trav)(const intercept_t *in, void *context, const divline_t &trace);
+    earlyout_e earlyOut;
+    uint32_t   flags;
 };
 
 //
@@ -54,35 +54,33 @@ struct PTDef
 class PathTraverser
 {
 public:
-   bool traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty);
-   bool traverse(v2fixed_t c, v2fixed_t t)
-   {
-      return traverse(c.x, c.y, t.x, t.y);
-   }
-   PathTraverser(const PTDef &indef, void *incontext);
-   ~PathTraverser()
-   {
-      VALID_FREE(validlines);
-      VALID_FREE(validpolys);
-   }
+    bool traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty);
+    bool traverse(v2fixed_t c, v2fixed_t t) { return traverse(c.x, c.y, t.x, t.y); }
+    PathTraverser(const PTDef &indef, void *incontext);
+    ~PathTraverser()
+    {
+        VALID_FREE(validlines);
+        VALID_FREE(validpolys);
+    }
 
-   divline_t trace;
+    divline_t trace;
+
 private:
-   bool checkLine(size_t linenum);
-   bool blockLinesIterator(int x, int y);
-   bool blockThingsIterator(int x, int y);
-   bool traverseIntercepts() const;
+    bool checkLine(size_t linenum);
+    bool blockLinesIterator(int x, int y);
+    bool blockThingsIterator(int x, int y);
+    bool traverseIntercepts() const;
 
-   const PTDef def;
-   void *const context;
-   byte *validlines;
-   byte *validpolys;
-   struct
-   {
-      bool hitpblock;
-      bool addedportal;
-   } portalguard;
-   PODCollection<intercept_t> intercepts;
+    const PTDef def;
+    void *const context;
+    byte       *validlines;
+    byte       *validpolys;
+    struct
+    {
+        bool hitpblock;
+        bool addedportal;
+    } portalguard;
+    PODCollection<intercept_t> intercepts;
 };
 
 //
@@ -90,11 +88,11 @@ private:
 //
 struct tracelineopening_t
 {
-   fixed_t openrange;
-   Surfaces<fixed_t> open;
+    fixed_t           openrange;
+    Surfaces<fixed_t> open;
 
-   void calculate(const line_t *linedef);
-   void calculateAtPoint(const line_t &line, v2fixed_t pos);
+    void calculate(const line_t *linedef);
+    void calculateAtPoint(const line_t &line, v2fixed_t pos);
 };
 
 #endif

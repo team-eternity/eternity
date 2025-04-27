@@ -34,8 +34,8 @@ using EVSectorSpecialFunc = void (*)(sector_t *);
 // Sector special binding
 struct ev_sectorbinding_t
 {
-   int special;               // special number
-   EVSectorSpecialFunc apply; // function which applies the special
+    int                 special; // special number
+    EVSectorSpecialFunc apply;   // function which applies the special
 };
 
 void EV_SpawnSectorSpecials();

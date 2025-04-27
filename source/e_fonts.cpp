@@ -107,112 +107,110 @@ constexpr const char ITEM_COLOR_CUSTOM2[] = "custom2";
 constexpr const char ITEM_COLOR_CUSTOM3[] = "custom3";
 constexpr const char ITEM_COLOR_CUSTOM4[] = "custom4";
 
-constexpr const char ITEM_DELTA_NAME[]    = "name";
+constexpr const char ITEM_DELTA_NAME[] = "name";
 
-static cfg_opt_t filter_opts[] =
-{
-   CFG_STR(ITEM_FILTER_CHARS, nullptr, CFGF_LIST),
-   CFG_STR(ITEM_FILTER_START, "",      CFGF_NONE),
-   CFG_STR(ITEM_FILTER_END,   "",      CFGF_NONE),
-   CFG_STR(ITEM_FILTER_MASK,  "",      CFGF_NONE),
-   CFG_END()
+// clang-format off
+
+static cfg_opt_t filter_opts[] = {
+    CFG_STR(ITEM_FILTER_CHARS, nullptr, CFGF_LIST),
+    CFG_STR(ITEM_FILTER_START, "",      CFGF_NONE),
+    CFG_STR(ITEM_FILTER_END,   "",      CFGF_NONE),
+    CFG_STR(ITEM_FILTER_MASK,  "",      CFGF_NONE),
+    CFG_END()
 };
 
-static const char *fontcolornames[CR_LIMIT] =
-{
-   ITEM_COLOR_BRICK,
-   ITEM_COLOR_TAN,
-   ITEM_COLOR_GRAY,
-   ITEM_COLOR_GREEN,
-   ITEM_COLOR_BROWN,
-   ITEM_COLOR_GOLD,
-   ITEM_COLOR_RED,
-   ITEM_COLOR_BLUE,
-   ITEM_COLOR_ORANGE,
-   ITEM_COLOR_YELLOW,
-   ITEM_COLOR_CUSTOM1,
-   ITEM_COLOR_CUSTOM2,
-   ITEM_COLOR_CUSTOM3,
-   ITEM_COLOR_CUSTOM4
+static const char *fontcolornames[CR_LIMIT] = {
+    ITEM_COLOR_BRICK,
+    ITEM_COLOR_TAN,
+    ITEM_COLOR_GRAY,
+    ITEM_COLOR_GREEN,
+    ITEM_COLOR_BROWN,
+    ITEM_COLOR_GOLD,
+    ITEM_COLOR_RED,
+    ITEM_COLOR_BLUE,
+    ITEM_COLOR_ORANGE,
+    ITEM_COLOR_YELLOW,
+    ITEM_COLOR_CUSTOM1,
+    ITEM_COLOR_CUSTOM2,
+    ITEM_COLOR_CUSTOM3,
+    ITEM_COLOR_CUSTOM4
 };
 
-static cfg_opt_t color_opts[] =
-{
-   CFG_STR(ITEM_COLOR_BRICK,   "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_TAN,     "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_GRAY,    "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_GREEN,   "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_BROWN,   "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_GOLD,    "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_RED,     "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_BLUE,    "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_ORANGE,  "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_YELLOW,  "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_CUSTOM1, "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_CUSTOM2, "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_CUSTOM3, "", CFGF_LIST),
-   CFG_STR(ITEM_COLOR_CUSTOM4, "", CFGF_LIST),
-   CFG_END()
+static cfg_opt_t color_opts[] = {
+    CFG_STR(ITEM_COLOR_BRICK,   "", CFGF_LIST),
+    CFG_STR(ITEM_COLOR_TAN,     "", CFGF_LIST),
+    CFG_STR(ITEM_COLOR_GRAY,    "", CFGF_LIST),
+    CFG_STR(ITEM_COLOR_GREEN,   "", CFGF_LIST),
+    CFG_STR(ITEM_COLOR_BROWN,   "", CFGF_LIST),
+    CFG_STR(ITEM_COLOR_GOLD,    "", CFGF_LIST),
+    CFG_STR(ITEM_COLOR_RED,     "", CFGF_LIST),
+    CFG_STR(ITEM_COLOR_BLUE,    "", CFGF_LIST),
+    CFG_STR(ITEM_COLOR_ORANGE,  "", CFGF_LIST),
+    CFG_STR(ITEM_COLOR_YELLOW,  "", CFGF_LIST),
+    CFG_STR(ITEM_COLOR_CUSTOM1, "", CFGF_LIST),
+    CFG_STR(ITEM_COLOR_CUSTOM2, "", CFGF_LIST),
+    CFG_STR(ITEM_COLOR_CUSTOM3, "", CFGF_LIST),
+    CFG_STR(ITEM_COLOR_CUSTOM4, "", CFGF_LIST),
+    CFG_END()
 };
 
 #define FONT_FIELDS \
-   CFG_INT(ITEM_FONT_ID,     -1,          CFGF_NONE), \
-   CFG_STR(ITEM_FONT_START,  "",          CFGF_NONE), \
-   CFG_STR(ITEM_FONT_END,    "",          CFGF_NONE), \
-   CFG_INT(ITEM_FONT_CY,     0,           CFGF_NONE), \
-   CFG_INT(ITEM_FONT_SPACE,  0,           CFGF_NONE), \
-   CFG_INT(ITEM_FONT_DW,     0,           CFGF_NONE), \
-   CFG_INT(ITEM_FONT_ABSH,   0,           CFGF_NONE), \
-   CFG_INT(ITEM_FONT_CW,     0,           CFGF_NONE), \
-   CFG_STR(ITEM_FONT_LFMT,   "linear",    CFGF_NONE), \
-   CFG_STR(ITEM_FONT_LLUMP,  "",          CFGF_NONE), \
-   CFG_INT(ITEM_FONT_POFFS,  0,           CFGF_NONE), \
-   CFG_SEC(ITEM_FONT_FILTER, filter_opts, CFGF_MULTI|CFGF_NOCASE), \
-   CFG_SEC(ITEM_FONT_COLORS, color_opts,  CFGF_NOCASE), \
-   CFG_STR(ITEM_FONT_COLORD, "",          CFGF_NONE), \
-   CFG_STR(ITEM_FONT_COLORN, "",          CFGF_NONE), \
-   CFG_STR(ITEM_FONT_COLORH, "",          CFGF_NONE), \
-   CFG_STR(ITEM_FONT_COLORE, "",          CFGF_NONE), \
-                                                      \
-   CFG_BOOL(ITEM_FONT_COLOR,  false,      CFGF_NONE), \
-   CFG_BOOL(ITEM_FONT_UPPER,  false,      CFGF_NONE), \
-   CFG_BOOL(ITEM_FONT_CENTER, false,      CFGF_NONE), \
-   CFG_BOOL(ITEM_FONT_USPACE, false,      CFGF_NONE), \
-   CFG_BOOL(ITEM_FONT_REQUAN, false,      CFGF_NONE), \
-                                                      \
-   CFG_END()
+    CFG_INT(ITEM_FONT_ID,     -1,          CFGF_NONE), \
+    CFG_STR(ITEM_FONT_START,  "",          CFGF_NONE), \
+    CFG_STR(ITEM_FONT_END,    "",          CFGF_NONE), \
+    CFG_INT(ITEM_FONT_CY,     0,           CFGF_NONE), \
+    CFG_INT(ITEM_FONT_SPACE,  0,           CFGF_NONE), \
+    CFG_INT(ITEM_FONT_DW,     0,           CFGF_NONE), \
+    CFG_INT(ITEM_FONT_ABSH,   0,           CFGF_NONE), \
+    CFG_INT(ITEM_FONT_CW,     0,           CFGF_NONE), \
+    CFG_STR(ITEM_FONT_LFMT,   "linear",    CFGF_NONE), \
+    CFG_STR(ITEM_FONT_LLUMP,  "",          CFGF_NONE), \
+    CFG_INT(ITEM_FONT_POFFS,  0,           CFGF_NONE), \
+    CFG_SEC(ITEM_FONT_FILTER, filter_opts, CFGF_MULTI|CFGF_NOCASE), \
+    CFG_SEC(ITEM_FONT_COLORS, color_opts,  CFGF_NOCASE), \
+    CFG_STR(ITEM_FONT_COLORD, "",          CFGF_NONE), \
+    CFG_STR(ITEM_FONT_COLORN, "",          CFGF_NONE), \
+    CFG_STR(ITEM_FONT_COLORH, "",          CFGF_NONE), \
+    CFG_STR(ITEM_FONT_COLORE, "",          CFGF_NONE), \
+                                                       \
+    CFG_BOOL(ITEM_FONT_COLOR,  false,      CFGF_NONE), \
+    CFG_BOOL(ITEM_FONT_UPPER,  false,      CFGF_NONE), \
+    CFG_BOOL(ITEM_FONT_CENTER, false,      CFGF_NONE), \
+    CFG_BOOL(ITEM_FONT_USPACE, false,      CFGF_NONE), \
+    CFG_BOOL(ITEM_FONT_REQUAN, false,      CFGF_NONE), \
+                                                       \
+    CFG_END()
 
-cfg_opt_t edf_font_opts[] =
-{
-   FONT_FIELDS
+cfg_opt_t edf_font_opts[] = {
+    FONT_FIELDS
 };
 
-cfg_opt_t edf_fntdelta_opts[] =
-{
-   CFG_STR(ITEM_DELTA_NAME, nullptr, CFGF_NONE),
-   FONT_FIELDS
+cfg_opt_t edf_fntdelta_opts[] = {
+    CFG_STR(ITEM_DELTA_NAME, nullptr, CFGF_NONE),
+    FONT_FIELDS
 };
+
+// clang-format on
 
 // linear font formats
 enum
 {
-   FONT_FMT_LINEAR,
-   FONT_FMT_PATCH,
-   FONT_FMT_PNG,
-   NUM_FONT_FMTS
+    FONT_FMT_LINEAR,
+    FONT_FMT_PATCH,
+    FONT_FMT_PNG,
+    NUM_FONT_FMTS
 };
 
 // NOTE: unused
 /*
-static const char *fontfmts[NUM_FONT_FMTS] =
-{
-   "linear",  // a linear block of pixel data; the default format.
-   "patch",   // a DOOM patch, which will be converted to linear.
-   "png"      // a PNG graphic
+static const char *fontfmts[NUM_FONT_FMTS] = {
+    "linear",  // a linear block of pixel data; the default format.
+    "patch",   // a DOOM patch, which will be converted to linear.
+    "png"      // a PNG graphic
 };
 */
 
-using EFontNumHash = EHashTable<vfont_t, EIntHashKey, &vfont_t::num, &vfont_t::numlinks>;
+using EFontNumHash  = EHashTable<vfont_t, EIntHashKey, &vfont_t::num, &vfont_t::numlinks>;
 using EFontNameHash = EHashTable<vfont_t, ENCStringHashKey, &vfont_t::name, &vfont_t::namelinks>;
 
 static EFontNumHash  e_font_numhash;
@@ -233,7 +231,7 @@ static Collection<qstring> e_linearLumpNames;
 //
 static void E_AddFontToNameHash(vfont_t *font)
 {
-   e_font_namehash.addObject(font);
+    e_font_namehash.addObject(font);
 }
 
 // need forward declaration for E_AutoAllocFontNum
@@ -251,32 +249,32 @@ static int edf_alloc_fontnum = D_MAXINT;
 //
 static bool E_AutoAllocFontNum(vfont_t *font)
 {
-   int num;
+    int num;
 
 #ifdef RANGECHECK
-   if(font->num > 0)
-      I_Error("E_AutoAllocFontNum: called for vfont_t with valid num\n");
+    if(font->num > 0)
+        I_Error("E_AutoAllocFontNum: called for vfont_t with valid num\n");
 #endif
 
-   // cannot assign because we're out of dehnums?
-   if(edf_alloc_fontnum < 0)
-      return false;
+    // cannot assign because we're out of dehnums?
+    if(edf_alloc_fontnum < 0)
+        return false;
 
-   do
-   {
-      num = edf_alloc_fontnum--;
-   } 
-   while(num >= 0 && E_FontForNum(num));
+    do
+    {
+        num = edf_alloc_fontnum--;
+    }
+    while(num >= 0 && E_FontForNum(num));
 
-   // ran out while looking for an unused number?
-   if(num < 0)
-      return false;
+    // ran out while looking for an unused number?
+    if(num < 0)
+        return false;
 
-   // assign it!
-   font->num = num;
-   E_AddFontToNumHash(font);
+    // assign it!
+    font->num = num;
+    E_AddFontToNumHash(font);
 
-   return true;
+    return true;
 }
 
 //
@@ -286,15 +284,15 @@ static bool E_AutoAllocFontNum(vfont_t *font)
 //
 static void E_AddFontToNumHash(vfont_t *font)
 {
-   // Auto-assign a numeric key to all fonts which don't have
-   // a valid one explicitly specified.
-   if(font->num < 0)
-   {
-      E_AutoAllocFontNum(font);
-      return;
-   }
+    // Auto-assign a numeric key to all fonts which don't have
+    // a valid one explicitly specified.
+    if(font->num < 0)
+    {
+        E_AutoAllocFontNum(font);
+        return;
+    }
 
-   e_font_numhash.addObject(font);
+    e_font_numhash.addObject(font);
 }
 
 //
@@ -305,7 +303,7 @@ static void E_AddFontToNumHash(vfont_t *font)
 //
 static void E_DelFontFromNumHash(vfont_t *font)
 {
-   e_font_numhash.removeObject(font);
+    e_font_numhash.removeObject(font);
 }
 
 //=============================================================================
@@ -322,18 +320,17 @@ static void E_DelFontFromNumHash(vfont_t *font)
 //
 static bool E_IsLinearLumpUsed(vfont_t *font, byte *data)
 {
-   vfont_t *rover = nullptr;
+    vfont_t *rover = nullptr;
 
-   // run down all hash chains
-   while((rover = e_font_namehash.tableIterator(rover)))
-   {
-      if(rover != font && rover->linear && rover->data &&
-         rover->data == data)
-         return true; // is used
-   }
+    // run down all hash chains
+    while((rover = e_font_namehash.tableIterator(rover)))
+    {
+        if(rover != font && rover->linear && rover->data && rover->data == data)
+            return true; // is used
+    }
 
-   // didn't find one, doc
-   return false;
+    // didn't find one, doc
+    return false;
 }
 
 //
@@ -344,22 +341,22 @@ static bool E_IsLinearLumpUsed(vfont_t *font, byte *data)
 //
 static bool E_IsPatchUsed(vfont_t *font, patch_t *p)
 {
-   vfont_t *rover = nullptr;
+    vfont_t *rover = nullptr;
 
-   // run down all hash chains
-   while((rover = e_font_namehash.tableIterator(rover)))
-   {
-      if(rover != font && rover->fontgfx)
-      {
-         // run down the font graphics
-         for(unsigned int j = 0; j < font->size; j++)
-            if(font->fontgfx[j] == p)
-               return true; // got a match
-      }
-   }
+    // run down all hash chains
+    while((rover = e_font_namehash.tableIterator(rover)))
+    {
+        if(rover != font && rover->fontgfx)
+        {
+            // run down the font graphics
+            for(unsigned int j = 0; j < font->size; j++)
+                if(font->fontgfx[j] == p)
+                    return true; // got a match
+        }
+    }
 
-   // didn't find one, doc
-   return false;
+    // didn't find one, doc
+    return false;
 }
 
 //
@@ -369,18 +366,18 @@ static bool E_IsPatchUsed(vfont_t *font, patch_t *p)
 //
 static void E_DisposePatches(vfont_t *font)
 {
-   if(!font->fontgfx)
-      return;
+    if(!font->fontgfx)
+        return;
 
-   for(unsigned int i = 0; i < font->size; i++)
-   {
-      if(font->fontgfx[i] && !E_IsPatchUsed(font, font->fontgfx[i]))
-         Z_ChangeTag(font->fontgfx[i], PU_CACHE); // make purgable
-   }
+    for(unsigned int i = 0; i < font->size; i++)
+    {
+        if(font->fontgfx[i] && !E_IsPatchUsed(font, font->fontgfx[i]))
+            Z_ChangeTag(font->fontgfx[i], PU_CACHE); // make purgable
+    }
 
-   // get rid of the patch array
-   efree(font->fontgfx);
-   font->fontgfx = nullptr;
+    // get rid of the patch array
+    efree(font->fontgfx);
+    font->fontgfx = nullptr;
 }
 
 //=============================================================================
@@ -391,102 +388,100 @@ static void E_DisposePatches(vfont_t *font)
 //
 // E_LoadLinearFont
 //
-// Populates a pre-allocated vfont_t with information on a linear font 
+// Populates a pre-allocated vfont_t with information on a linear font
 // graphic.
 //
-static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt,
-                             bool requantize)
+static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt, bool requantize)
 {
-   int w = 0, h = 0, size = 0, i, lumpnum;
-   bool foundsize = false;
+    int  w = 0, h = 0, size = 0, i, lumpnum;
+    bool foundsize = false;
 
-   // in case this font was changed from patch to block:
-   E_DisposePatches(font);
+    // in case this font was changed from patch to block:
+    E_DisposePatches(font);
 
-   // handle disposal of previous font graphics 
-   if(font->data && !E_IsLinearLumpUsed(font, font->data))
-   {
-      efree(font->data);
-      font->data = nullptr;
-   }
+    // handle disposal of previous font graphics
+    if(font->data && !E_IsLinearLumpUsed(font, font->data))
+    {
+        efree(font->data);
+        font->data = nullptr;
+    }
 
-   lumpnum = W_GetNumForName(name);
+    lumpnum = W_GetNumForName(name);
 
-   size = W_LumpLength(lumpnum);
+    size = W_LumpLength(lumpnum);
 
-   if(fmt == FONT_FMT_PNG)
-   {
-      // convert PNG to linear
-      VPNGImage fontpng;
+    if(fmt == FONT_FMT_PNG)
+    {
+        // convert PNG to linear
+        VPNGImage fontpng;
 
-      if(fontpng.readFromLump(wGlobalDir, lumpnum))
-      {
-         AutoPalette pal(wGlobalDir);
-         bool is8Bit256    = (fontpng.getBitDepth() == 8 && 
-                              fontpng.getNumColors() == 256);
-         bool doRequantize = (!is8Bit256 || requantize);
+        if(fontpng.readFromLump(wGlobalDir, lumpnum))
+        {
+            AutoPalette pal(wGlobalDir);
+            bool        is8Bit256    = (fontpng.getBitDepth() == 8 && fontpng.getNumColors() == 256);
+            bool        doRequantize = (!is8Bit256 || requantize);
 
-         font->data = fontpng.getAs8Bit(doRequantize ? pal.get() : nullptr);
+            font->data = fontpng.getAs8Bit(doRequantize ? pal.get() : nullptr);
 
-         w = static_cast<int>(fontpng.getWidth());
-         h = static_cast<int>(fontpng.getHeight());
+            w = static_cast<int>(fontpng.getWidth());
+            h = static_cast<int>(fontpng.getHeight());
 
-         size = w * h;
-      }
-   }
-   else if(fmt == FONT_FMT_PATCH)
-   {
-      // convert patch to linear
-      patch_t *p = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_STATIC);
-      font->data = V_PatchToLinear(p, false, 0, &w, &h);
+            size = w * h;
+        }
+    }
+    else if(fmt == FONT_FMT_PATCH)
+    {
+        // convert patch to linear
+        patch_t *p = PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_STATIC);
+        font->data = V_PatchToLinear(p, false, 0, &w, &h);
 
-      // done with lump
-      Z_ChangeTag(p, PU_CACHE);
+        // done with lump
+        Z_ChangeTag(p, PU_CACHE);
 
-      size = w * h;
-   }
-   else
-      font->data = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
+        size = w * h;
+    }
+    else
+        font->data = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
 
-   // check for proper dimensions
-   for(i = 5; i <= 32; i++)
-   {
-      if(i * i * 128 == size)
-      {
-         font->lsize = i;
-         foundsize = true;
-         break;
-      }
-   }
-   
-   if(!foundsize)
-   {
-      E_EDFLoggedWarning(2, "Invalid lump dimensions for linear font %s\n", name);
-      if(!E_IsLinearLumpUsed(font, font->data))
-         efree(font->data);
-      font->data = nullptr; // This font won't be able to draw, too bad.
-   }
+    // check for proper dimensions
+    for(i = 5; i <= 32; i++)
+    {
+        if(i * i * 128 == size)
+        {
+            font->lsize = i;
+            foundsize   = true;
+            break;
+        }
+    }
 
-   font->start = 0;
-   font->end   = 127;
-   font->size  = 128; // full ASCII range is supported
+    if(!foundsize)
+    {
+        E_EDFLoggedWarning(2, "Invalid lump dimensions for linear font %s\n", name);
+        if(!E_IsLinearLumpUsed(font, font->data))
+            efree(font->data);
+        font->data = nullptr; // This font won't be able to draw, too bad.
+    }
 
-   // set metrics - linear fonts are monospace
-   font->cw    = font->lsize;
-   font->cy    = font->lsize;
-   font->dw    = 0;
-   font->absh  = font->lsize;
-   if(!font->useSpaceSize)
-      font->space = font->lsize;
+    font->start = 0;
+    font->end   = 127;
+    font->size  = 128; // full ASCII range is supported
 
-   // set flags
-   font->centered = false; // not block-centered
-   font->color    = true;  // supports color translations
-   font->linear   = true;  // is linear, obviously ;)
-   font->upper    = false; // not all-caps
+    // set metrics - linear fonts are monospace
+    font->cw   = font->lsize;
+    font->cy   = font->lsize;
+    font->dw   = 0;
+    font->absh = font->lsize;
+    if(!font->useSpaceSize)
+        font->space = font->lsize;
 
-   // patch array is unused
-   font->fontgfx = nullptr;
+    // set flags
+    font->centered = false; // not block-centered
+    font->color    = true;  // supports color translations
+    font->linear   = true;  // is linear, obviously ;)
+    font->upper    = false; // not all-caps
+
+    // patch array is unused
+    font->fontgfx = nullptr;
 }
 
 //
@@ -497,54 +492,50 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt,
 //
 static void E_VerifyFilter(const char *str)
 {
-   const char *rover = str;
-   bool inpct = false;
-   bool foundpct = false;
+    const char *rover    = str;
+    bool        inpct    = false;
+    bool        foundpct = false;
 
-   while(*rover != '\0')
-   {
-      if(inpct)
-      {
-         // formatting lengths are ok, and are indeed necessary
-         if((*rover >= '0' && *rover <= '9') || *rover == '.')
-         {
-            ++rover;
-            continue;
-         }
+    while(*rover != '\0')
+    {
+        if(inpct)
+        {
+            // formatting lengths are ok, and are indeed necessary
+            if((*rover >= '0' && *rover <= '9') || *rover == '.')
+            {
+                ++rover;
+                continue;
+            }
 
-         switch(*rover)
-         {
-         // allowed characters:
-         case 'c': // char
-         case 'i': // general int
-         case 'd': // int
-         case 'x': // hex
-         case 'X': // upper-case hex
-         case 'o': // octal
-         case 'u': // unsigned
-            inpct = false;
-            break;
-         default: // screw you, hacker boy
-            E_EDFLoggedErr(2, 
-               "E_VerifyFilter: '%s' has bad format specifier '%c'\n",
-               str, *rover);
-         }
-      }
-      
-      if(*rover == '%')
-      {
-         if(foundpct) // already found one? dirty hackers.
-         {
-            E_EDFLoggedErr(2, 
-               "E_VerifyFilter: '%s' has too many format specifiers\n",
-               str);
-         }
-         foundpct = true;
-         inpct = true;
-      }
+            switch(*rover)
+            {
+            // allowed characters:
+            case 'c': // char
+            case 'i': // general int
+            case 'd': // int
+            case 'x': // hex
+            case 'X': // upper-case hex
+            case 'o': // octal
+            case 'u': // unsigned
+                inpct = false;
+                break;
+            default: // screw you, hacker boy
+                E_EDFLoggedErr(2, "E_VerifyFilter: '%s' has bad format specifier '%c'\n", str, *rover);
+            }
+        }
 
-      ++rover; // let's not forget to do this!
-   }
+        if(*rover == '%')
+        {
+            if(foundpct) // already found one? dirty hackers.
+            {
+                E_EDFLoggedErr(2, "E_VerifyFilter: '%s' has too many format specifiers\n", str);
+            }
+            foundpct = true;
+            inpct    = true;
+        }
+
+        ++rover; // let's not forget to do this!
+    }
 }
 
 //
@@ -552,17 +543,17 @@ static void E_VerifyFilter(const char *str)
 //
 static void E_FreeFilterData(vfontfilter_t *f)
 {
-   if(f->chars)
-   {
-      efree(f->chars);
-      f->chars = nullptr;
-   }
+    if(f->chars)
+    {
+        efree(f->chars);
+        f->chars = nullptr;
+    }
 
-   if(f->mask)
-   {
-      efree((void *)f->mask);
-      f->mask = nullptr;
-   }
+    if(f->mask)
+    {
+        efree((void *)f->mask);
+        f->mask = nullptr;
+    }
 }
 
 //
@@ -572,14 +563,14 @@ static void E_FreeFilterData(vfontfilter_t *f)
 //
 static void E_FreeFontFilters(vfont_t *font)
 {
-   if(!font->filters)
-      return;
+    if(!font->filters)
+        return;
 
-   for(unsigned int i = 0; i < font->numfilters; ++i)
-      E_FreeFilterData(&(font->filters[i]));
+    for(unsigned int i = 0; i < font->numfilters; ++i)
+        E_FreeFilterData(&(font->filters[i]));
 
-   efree(font->filters);
-   font->filters = nullptr;
+    efree(font->filters);
+    font->filters = nullptr;
 }
 
 //
@@ -593,66 +584,66 @@ static void E_FreeFontFilters(vfont_t *font)
 //
 static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
 {
-   unsigned int numchars;
-   const char *tempstr;
-   char *pos = nullptr;
-   int tempnum = 0;
+    unsigned int numchars;
+    const char  *tempstr;
+    char        *pos     = nullptr;
+    int          tempnum = 0;
 
-   // the filter works in one of two ways:
-   // 1. specifies a list of characters to which it applies
-   // 2. specifies a range of characters from start to end
+    // the filter works in one of two ways:
+    // 1. specifies a list of characters to which it applies
+    // 2. specifies a range of characters from start to end
 
-   // is it a list?
-   if((numchars = cfg_size(sec, ITEM_FILTER_CHARS)) > 0)
-   {
-      f->chars    = ecalloc(unsigned int *, numchars, sizeof(unsigned int));
-      f->numchars = numchars;
+    // is it a list?
+    if((numchars = cfg_size(sec, ITEM_FILTER_CHARS)) > 0)
+    {
+        f->chars    = ecalloc(unsigned int *, numchars, sizeof(unsigned int));
+        f->numchars = numchars;
 
-      for(unsigned int i = 0; i < numchars; i++)
-      {
-         pos = nullptr;
-         tempstr = cfg_getnstr(sec, ITEM_FILTER_CHARS, i);
+        for(unsigned int i = 0; i < numchars; i++)
+        {
+            pos     = nullptr;
+            tempstr = cfg_getnstr(sec, ITEM_FILTER_CHARS, i);
 
-         if(strlen(tempstr) > 1)
+            if(strlen(tempstr) > 1)
+                tempnum = static_cast<int>(strtol(tempstr, &pos, 0));
+
+            if(pos && *pos == '\0')
+                f->chars[i] = tempnum;
+            else
+                f->chars[i] = *tempstr;
+        }
+    }
+    else
+    {
+        // get fields
+        pos     = nullptr;
+        tempstr = cfg_getstr(sec, ITEM_FILTER_START);
+
+        if(strlen(tempstr) > 1)
             tempnum = static_cast<int>(strtol(tempstr, &pos, 0));
 
-         if(pos && *pos == '\0')
-            f->chars[i] = tempnum;
-         else
-            f->chars[i] = *tempstr;
-      }
-   }
-   else
-   {
-      // get fields
-      pos = nullptr;
-      tempstr = cfg_getstr(sec, ITEM_FILTER_START);
-      
-      if(strlen(tempstr) > 1)
-         tempnum = static_cast<int>(strtol(tempstr, &pos, 0));
+        if(pos && *pos == '\0') // is it a number?
+            f->start = tempnum;
+        else
+            f->start = *tempstr; // interpret as character
 
-      if(pos && *pos == '\0') // is it a number?
-         f->start = tempnum;
-      else
-         f->start = *tempstr; // interpret as character
+        pos     = nullptr;
+        tempstr = cfg_getstr(sec, ITEM_FILTER_END);
 
-      pos = nullptr;
-      tempstr = cfg_getstr(sec, ITEM_FILTER_END);
-      
-      if(strlen(tempstr) > 1)
-         tempnum = static_cast<int>(strtol(tempstr, &pos, 0));
+        if(strlen(tempstr) > 1)
+            tempnum = static_cast<int>(strtol(tempstr, &pos, 0));
 
-      if(pos && *pos == '\0') // is it a number?
-         f->end = tempnum;
-      else
-         f->end = *tempstr; // interpret as character
-   }
+        if(pos && *pos == '\0') // is it a number?
+            f->end = tempnum;
+        else
+            f->end = *tempstr; // interpret as character
+    }
 
-   // get mask
-   f->mask = cfg_getstrdup(sec, ITEM_FILTER_MASK);
+    // get mask
+    f->mask = cfg_getstrdup(sec, ITEM_FILTER_MASK);
 
-   // verify mask string to prevent hacks
-   E_VerifyFilter(f->mask);
+    // verify mask string to prevent hacks
+    E_VerifyFilter(f->mask);
 }
 
 //
@@ -660,78 +651,77 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
 //
 // Creates the fontgfx array and precaches all patches as determined via
 // execution of the filter objects in the font.
-// 
+//
 static void E_LoadPatchFont(vfont_t *font)
 {
-   unsigned int i, j, k, m;
-   char lumpname[9];
+    unsigned int i, j, k, m;
+    char         lumpname[9];
 
-   // dump any pre-existing patch array
-   E_DisposePatches(font);
+    // dump any pre-existing patch array
+    E_DisposePatches(font);
 
-   // in case this font was changed from block to patch:
-   if(font->data && !E_IsLinearLumpUsed(font, font->data))
-   {
-      efree(font->data);
-      font->data = nullptr;
-      font->linear = false;
-   }
+    // in case this font was changed from block to patch:
+    if(font->data && !E_IsLinearLumpUsed(font, font->data))
+    {
+        efree(font->data);
+        font->data   = nullptr;
+        font->linear = false;
+    }
 
-   // first calculate font size
-   font->size = (font->end - font->start + 1);
+    // first calculate font size
+    font->size = (font->end - font->start + 1);
 
-   if(font->size <= 0)
-      E_EDFLoggedErr(2, "E_LoadPatchFont: font %s size <= 0\n", font->name);
+    if(font->size <= 0)
+        E_EDFLoggedErr(2, "E_LoadPatchFont: font %s size <= 0\n", font->name);
 
-   // init all to nullptr at beginning
-   font->fontgfx = ecalloc(patch_t **, font->size, sizeof(patch_t *));
+    // init all to nullptr at beginning
+    font->fontgfx = ecalloc(patch_t **, font->size, sizeof(patch_t *));
 
-   for(i = 0, j = font->start; i < font->size; i++, j++)
-   {
-      vfontfilter_t *filter, *filtertouse = nullptr;
+    for(i = 0, j = font->start; i < font->size; i++, j++)
+    {
+        vfontfilter_t *filter, *filtertouse = nullptr;
 
-      // run down filters until a match is found
-      for(k = 0; k < font->numfilters; k++)
-      {
-         filter = &(font->filters[k]);
-         if(filter->numchars)
-         {
-            for(m = 0; m < filter->numchars; m++)
-               if(j == filter->chars[m])
-                  filtertouse = filter;
-         }
-         else if(j >= filter->start && j <= filter->end)
-            filtertouse = filter;
+        // run down filters until a match is found
+        for(k = 0; k < font->numfilters; k++)
+        {
+            filter = &(font->filters[k]);
+            if(filter->numchars)
+            {
+                for(m = 0; m < filter->numchars; m++)
+                    if(j == filter->chars[m])
+                        filtertouse = filter;
+            }
+            else if(j >= filter->start && j <= filter->end)
+                filtertouse = filter;
 
-         if(filtertouse)
-            break;
-      }
+            if(filtertouse)
+                break;
+        }
 
-      if(filtertouse)
-      {
-         int lnum;
+        if(filtertouse)
+        {
+            int lnum;
 
-         memset(lumpname, 0, sizeof(lumpname));
-         psnprintf(lumpname, sizeof(lumpname), 
-                   filtertouse->mask, j - font->patchnumoffset);
+            memset(lumpname, 0, sizeof(lumpname));
+            psnprintf(lumpname, sizeof(lumpname), filtertouse->mask, j - font->patchnumoffset);
 
-         if((lnum = W_CheckNumForName(lumpname)) >= 0) // no errors here.
-            font->fontgfx[i] = PatchLoader::CacheNum(wGlobalDir, lnum, PU_STATIC);
-      }
-   }
+            if((lnum = W_CheckNumForName(lumpname)) >= 0) // no errors here.
+                font->fontgfx[i] = PatchLoader::CacheNum(wGlobalDir, lnum, PU_STATIC);
+        }
+    }
 }
 
 //
 // E_setFontColor
 //
-static void E_setFontColor(cfg_t *sec, vfont_t *font, const char *name,
-                           int vfont_t::*field, int gamemodeinfo_t::*gmiField)
+static void E_setFontColor(cfg_t *sec, vfont_t *font, const char *name, int vfont_t::*field,
+                           int gamemodeinfo_t::*gmiField)
 {
-   int color = E_StrToNumLinear(fontcolornames, CR_LIMIT, cfg_getstr(sec, name));
-   if(color >= 0 && color < CR_LIMIT)
-      font->*field = color;
-   else
-      font->*field = GameModeInfo->*gmiField;
+    int color = E_StrToNumLinear(fontcolornames, CR_LIMIT, cfg_getstr(sec, name));
+    if(color >= 0 && color < CR_LIMIT)
+        font->*field = color;
+    else
+        font->*field = GameModeInfo->*gmiField;
 }
 
 //
@@ -739,37 +729,35 @@ static void E_setFontColor(cfg_t *sec, vfont_t *font, const char *name,
 //
 static void E_loadTranslation(vfont_t *font, int index, const char *lumpname)
 {
-   if(index >= 0 && index < CR_LIMIT)
-   {
-      font->colrngs[index] = colrngs[index]; // start out with global colrng
+    if(index >= 0 && index < CR_LIMIT)
+    {
+        font->colrngs[index] = colrngs[index]; // start out with global colrng
 
-      // defaults are all blank
-      if(strlen(lumpname) == 0)
-         return;
+        // defaults are all blank
+        if(strlen(lumpname) == 0)
+            return;
 
-      // identity map?
-      if(!strcasecmp(lumpname, "@identity"))
-      {
-         font->colrngs[index] = R_GetIdentityMap();
-         return;
-      }
+        // identity map?
+        if(!strcasecmp(lumpname, "@identity"))
+        {
+            font->colrngs[index] = R_GetIdentityMap();
+            return;
+        }
 
-      int lumpnum = 
-         wGlobalDir.checkNumForNameNSG(lumpname, lumpinfo_t::ns_translations);
-      if(lumpnum >= 0)
-      {
-         if(wGlobalDir.lumpLength(lumpnum) >= 256)
-         {
-            font->colrngs[index] = 
-               static_cast<byte *>(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
-         }
-      }
-      else
-      {
-         // Try parsing it as a color translation string
-         font->colrngs[index] = E_ParseTranslation(lumpname, PU_STATIC);
-      }
-   }
+        int lumpnum = wGlobalDir.checkNumForNameNSG(lumpname, lumpinfo_t::ns_translations);
+        if(lumpnum >= 0)
+        {
+            if(wGlobalDir.lumpLength(lumpnum) >= 256)
+            {
+                font->colrngs[index] = static_cast<byte *>(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
+            }
+        }
+        else
+        {
+            // Try parsing it as a color translation string
+            font->colrngs[index] = E_ParseTranslation(lumpname, PU_STATIC);
+        }
+    }
 }
 
 //=============================================================================
@@ -784,235 +772,227 @@ static void E_loadTranslation(vfont_t *font, int index, const char *lumpname)
 //
 static void E_ProcessFont(cfg_t *const sec, bool delta)
 {
-   vfont_t *font;
-   const char *tempstr;
-   int tempnum = 0;
+    vfont_t    *font;
+    const char *tempstr;
+    int         tempnum = 0;
 
-   const char *title = delta ? cfg_getstr(sec, ITEM_DELTA_NAME) : cfg_title(sec);
+    const char *title = delta ? cfg_getstr(sec, ITEM_DELTA_NAME) : cfg_title(sec);
 
-   // The fonts were already pre-created; retrieve the vfont_t structure for
-   // this definition.
-   font = E_FontForName(title);
+    // The fonts were already pre-created; retrieve the vfont_t structure for
+    // this definition.
+    font = E_FontForName(title);
 
-   if(delta && font == nullptr)
-      E_EDFLoggedErr(2, "E_ProcessFont: Invalid delta 'name' value: '%s'\n", title);
+    if(delta && font == nullptr)
+        E_EDFLoggedErr(2, "E_ProcessFont: Invalid delta 'name' value: '%s'\n", title);
 
-   // If the font is neither linear nor has any filters, it hasn't been 
-   // processed before, or in other words, this is a new font by name.
-   // Otherwise, this definition's fields are treated additively over the
-   // existing font's data.
-   const bool def = !(font->linear || font->numfilters);
+    // If the font is neither linear nor has any filters, it hasn't been
+    // processed before, or in other words, this is a new font by name.
+    // Otherwise, this definition's fields are treated additively over the
+    // existing font's data.
+    const bool def = !(font->linear || font->numfilters);
 
-   const auto IS_SET = [sec, def](const char *const name) -> bool {
-      return def || cfg_size(sec, name) > 0;
-   };
+    const auto IS_SET = [sec, def](const char *const name) -> bool { return def || cfg_size(sec, name) > 0; };
 
-   // process start
-   if(IS_SET(ITEM_FONT_START))
-   {
-      char *pos = nullptr;
-      tempstr = cfg_getstr(sec, ITEM_FONT_START);
+    // process start
+    if(IS_SET(ITEM_FONT_START))
+    {
+        char *pos = nullptr;
+        tempstr   = cfg_getstr(sec, ITEM_FONT_START);
 
-      if(strlen(tempstr) > 1)
-         tempnum = static_cast<int>(strtol(tempstr, &pos, 0));
+        if(strlen(tempstr) > 1)
+            tempnum = static_cast<int>(strtol(tempstr, &pos, 0));
 
-      if(pos && *pos == '\0') // it is a number?
-         font->start = tempnum; 
-      else
-         font->start = *tempstr; // interpret as character
-   }
+        if(pos && *pos == '\0') // it is a number?
+            font->start = tempnum;
+        else
+            font->start = *tempstr; // interpret as character
+    }
 
-   // process end
-   if(IS_SET(ITEM_FONT_END))
-   {
-      char *pos = nullptr;
-      tempstr = cfg_getstr(sec, ITEM_FONT_END);
+    // process end
+    if(IS_SET(ITEM_FONT_END))
+    {
+        char *pos = nullptr;
+        tempstr   = cfg_getstr(sec, ITEM_FONT_END);
 
-      if(strlen(tempstr) > 1)
-         tempnum = static_cast<int>(strtol(tempstr, &pos, 0));
+        if(strlen(tempstr) > 1)
+            tempnum = static_cast<int>(strtol(tempstr, &pos, 0));
 
-      if(pos && *pos == '\0') // is it a number?
-         font->end = tempnum;
-      else
-         font->end = *tempstr; // interpret as character
-   }
+        if(pos && *pos == '\0') // is it a number?
+            font->end = tempnum;
+        else
+            font->end = *tempstr; // interpret as character
+    }
 
-   // process linebreak height
-   if(IS_SET(ITEM_FONT_CY))
-      font->cy = cfg_getint(sec, ITEM_FONT_CY);
+    // process linebreak height
+    if(IS_SET(ITEM_FONT_CY))
+        font->cy = cfg_getint(sec, ITEM_FONT_CY);
 
-   // process space size
-   if(IS_SET(ITEM_FONT_SPACE))
-      font->space = cfg_getint(sec, ITEM_FONT_SPACE);
+    // process space size
+    if(IS_SET(ITEM_FONT_SPACE))
+        font->space = cfg_getint(sec, ITEM_FONT_SPACE);
 
-   // process width delta
-   if(IS_SET(ITEM_FONT_DW))
-      font->dw = cfg_getint(sec, ITEM_FONT_DW);
+    // process width delta
+    if(IS_SET(ITEM_FONT_DW))
+        font->dw = cfg_getint(sec, ITEM_FONT_DW);
 
-   // process absolute height (tallest character)
-   if(IS_SET(ITEM_FONT_ABSH))
-      font->absh = cfg_getint(sec, ITEM_FONT_ABSH);
+    // process absolute height (tallest character)
+    if(IS_SET(ITEM_FONT_ABSH))
+        font->absh = cfg_getint(sec, ITEM_FONT_ABSH);
 
-   // process centered width
-   if(IS_SET(ITEM_FONT_CW))
-      font->cw = cfg_getint(sec, ITEM_FONT_CW);
+    // process centered width
+    if(IS_SET(ITEM_FONT_CW))
+        font->cw = cfg_getint(sec, ITEM_FONT_CW);
 
-   // process colorable flag
-   if(IS_SET(ITEM_FONT_COLOR))
-      font->color = cfg_getbool(sec, ITEM_FONT_COLOR);
+    // process colorable flag
+    if(IS_SET(ITEM_FONT_COLOR))
+        font->color = cfg_getbool(sec, ITEM_FONT_COLOR);
 
-   // process uppercase flag
-   if(IS_SET(ITEM_FONT_UPPER))
-      font->upper = cfg_getbool(sec, ITEM_FONT_UPPER);
+    // process uppercase flag
+    if(IS_SET(ITEM_FONT_UPPER))
+        font->upper = cfg_getbool(sec, ITEM_FONT_UPPER);
 
-   // process blockcentered flag
-   if(IS_SET(ITEM_FONT_CENTER))
-      font->centered = cfg_getbool(sec, ITEM_FONT_CENTER);
+    // process blockcentered flag
+    if(IS_SET(ITEM_FONT_CENTER))
+        font->centered = cfg_getbool(sec, ITEM_FONT_CENTER);
 
-   if(IS_SET(ITEM_FONT_USPACE))
-      font->useSpaceSize = cfg_getbool(sec, ITEM_FONT_USPACE);
+    if(IS_SET(ITEM_FONT_USPACE))
+        font->useSpaceSize = cfg_getbool(sec, ITEM_FONT_USPACE);
 
-   // haleyjd 09/06/12: colors
-   // default color
-   if(IS_SET(ITEM_FONT_COLORD))
-   {
-      E_setFontColor(sec, font, ITEM_FONT_COLORD,
-         &vfont_t::colorDefault, &gamemodeinfo_t::defTextTrans);
-   }
+    // haleyjd 09/06/12: colors
+    // default color
+    if(IS_SET(ITEM_FONT_COLORD))
+    {
+        E_setFontColor(sec, font, ITEM_FONT_COLORD, &vfont_t::colorDefault, &gamemodeinfo_t::defTextTrans);
+    }
 
-   // normal color
-   if(IS_SET(ITEM_FONT_COLORN))
-   {
-      E_setFontColor(sec, font, ITEM_FONT_COLORN, 
-         &vfont_t::colorNormal, &gamemodeinfo_t::colorNormal);
-   }
-   
-   // high color
-   if(IS_SET(ITEM_FONT_COLORH))
-   {
-      E_setFontColor(sec, font, ITEM_FONT_COLORH, 
-         &vfont_t::colorHigh, &gamemodeinfo_t::colorHigh);
-   }
+    // normal color
+    if(IS_SET(ITEM_FONT_COLORN))
+    {
+        E_setFontColor(sec, font, ITEM_FONT_COLORN, &vfont_t::colorNormal, &gamemodeinfo_t::colorNormal);
+    }
 
-   // error color
-   if(IS_SET(ITEM_FONT_COLORE))
-   {
-      E_setFontColor(sec, font, ITEM_FONT_COLORE, 
-         &vfont_t::colorError, &gamemodeinfo_t::colorError);
-   }
+    // high color
+    if(IS_SET(ITEM_FONT_COLORH))
+    {
+        E_setFontColor(sec, font, ITEM_FONT_COLORH, &vfont_t::colorHigh, &gamemodeinfo_t::colorHigh);
+    }
 
-   // haleyjd 09/06/12: translation tables
-   if(cfg_size(sec, ITEM_FONT_COLORS) > 0)
-   {
-      cfg_t *colors = cfg_getsec(sec, ITEM_FONT_COLORS);
+    // error color
+    if(IS_SET(ITEM_FONT_COLORE))
+    {
+        E_setFontColor(sec, font, ITEM_FONT_COLORE, &vfont_t::colorError, &gamemodeinfo_t::colorError);
+    }
 
-      for(int col = 0; col < CR_LIMIT; col++)
-      {
-         qstring translation;
-         
-         E_CfgListToCommaString(colors, fontcolornames[col], translation);
+    // haleyjd 09/06/12: translation tables
+    if(cfg_size(sec, ITEM_FONT_COLORS) > 0)
+    {
+        cfg_t *colors = cfg_getsec(sec, ITEM_FONT_COLORS);
 
-         E_loadTranslation(font, col, translation.constPtr());
-      }
-   }
-   else if(def)
-   {
-      // When defining, adapt defaults for all colors if none were specified
-      for(int col = 0; col < CR_LIMIT; col++)
-         E_loadTranslation(font, col, "");
-   }
+        for(int col = 0; col < CR_LIMIT; col++)
+        {
+            qstring translation;
 
-   // process linear lump - if defined, this is a linear font automatically
-   if(cfg_size(sec, ITEM_FONT_LLUMP) > 0)
-   {
-      if(delta && font->numfilters)
-      {
-         // handle disposal of pre-existing filters
-         E_FreeFontFilters(font);
-      }
+            E_CfgListToCommaString(colors, fontcolornames[col], translation);
 
-      bool requantize = false;
-      int format;
-      tempstr = cfg_getstr(sec, ITEM_FONT_LLUMP);
+            E_loadTranslation(font, col, translation.constPtr());
+        }
+    }
+    else if(def)
+    {
+        // When defining, adapt defaults for all colors if none were specified
+        for(int col = 0; col < CR_LIMIT; col++)
+            E_loadTranslation(font, col, "");
+    }
 
-      // try intuit the font's image format
-      ZAutoBuffer lumpBuffer;
-      vimgformat_e vfmt = FORMAT_INVALID;
-      int lumpnum = W_GetNumForName(tempstr);
-      wGlobalDir.cacheLumpAuto(lumpnum, lumpBuffer);
-      vfmt = VImageManager::detectResourceFormat(lumpBuffer.get(), lumpBuffer.getSize());
+    // process linear lump - if defined, this is a linear font automatically
+    if(cfg_size(sec, ITEM_FONT_LLUMP) > 0)
+    {
+        if(delta && font->numfilters)
+        {
+            // handle disposal of pre-existing filters
+            E_FreeFontFilters(font);
+        }
 
-      switch(vfmt)
-      {
-      case FORMAT_LINEAR:
-         format = FONT_FMT_LINEAR;
-         break;
-      case FORMAT_PATCH:
-         format = FONT_FMT_PATCH;
-         break;
-      case FORMAT_PNG:
-         format = FONT_FMT_PNG;
-         break;
-      case FORMAT_INVALID:
-      default:
-         format = NUM_FONT_FMTS;
-         break;
-      }
+        bool requantize = false;
+        int  format;
+        tempstr = cfg_getstr(sec, ITEM_FONT_LLUMP);
 
-      if(format == NUM_FONT_FMTS)
-         E_EDFLoggedErr(2, "E_ProcessFont: couldn't detect format of linearlump of font '%s'\n", tempstr);
+        // try intuit the font's image format
+        ZAutoBuffer  lumpBuffer;
+        vimgformat_e vfmt    = FORMAT_INVALID;
+        int          lumpnum = W_GetNumForName(tempstr);
+        wGlobalDir.cacheLumpAuto(lumpnum, lumpBuffer);
+        vfmt = VImageManager::detectResourceFormat(lumpBuffer.get(), lumpBuffer.getSize());
 
-      // check for requantization flag (for PNGs)
-      requantize = cfg_getbool(sec, ITEM_FONT_REQUAN);
+        switch(vfmt)
+        {
+        case FORMAT_LINEAR: //
+            format = FONT_FMT_LINEAR;
+            break;
+        case FORMAT_PATCH: //
+            format = FONT_FMT_PATCH;
+            break;
+        case FORMAT_PNG: //
+            format = FONT_FMT_PNG;
+            break;
+        case FORMAT_INVALID: //
+        default:             //
+            format = NUM_FONT_FMTS;
+            break;
+        }
 
-      e_linearLumpNames.add(qstring(tempstr));
-      font->linearreload.nameIndex = e_linearLumpNames.getLength() - 1;
-      font->linearreload.format = format;
-      font->linearreload.requantize = requantize;
-      E_LoadLinearFont(font, tempstr, format, requantize);
-   }
-   else
-   {
-      unsigned int curnumfilters = font->numfilters;
-      unsigned int numfilters    = cfg_size(sec, ITEM_FONT_FILTER);
+        if(format == NUM_FONT_FMTS)
+            E_EDFLoggedErr(2, "E_ProcessFont: couldn't detect format of linearlump of font '%s'\n", tempstr);
 
-      if(delta && font->linear)
-      {
-         if(font->data && !E_IsLinearLumpUsed(font, font->data))
-            efree(font->data);
-         font->data  = nullptr;
-         font->linear = false;
-      }
+        // check for requantization flag (for PNGs)
+        requantize = cfg_getbool(sec, ITEM_FONT_REQUAN);
 
-      // at least one filter is required; if this font is being modified, it 
-      // may already possess filters.
-      if(!curnumfilters && !numfilters)
-         E_EDFLoggedErr(2, "E_ProcessFont: at least one filter is required\n");
+        e_linearLumpNames.add(qstring(tempstr));
+        font->linearreload.nameIndex  = e_linearLumpNames.getLength() - 1;
+        font->linearreload.format     = format;
+        font->linearreload.requantize = requantize;
+        E_LoadLinearFont(font, tempstr, format, requantize);
+    }
+    else
+    {
+        unsigned int curnumfilters = font->numfilters;
+        unsigned int numfilters    = cfg_size(sec, ITEM_FONT_FILTER);
 
-      if(numfilters)
-      {
-         // handle disposal of pre-existing filters
-         E_FreeFontFilters(font);
+        if(delta && font->linear)
+        {
+            if(font->data && !E_IsLinearLumpUsed(font, font->data))
+                efree(font->data);
+            font->data   = nullptr;
+            font->linear = false;
+        }
 
-         // allocate the font filters
-         font->filters    = ecalloc(vfontfilter_t *, numfilters, sizeof(vfontfilter_t));
-         font->numfilters = numfilters;
-      
-         for(unsigned int i = 0; i < numfilters; i++)
-         {
-            E_ProcessFontFilter(cfg_getnsec(sec, ITEM_FONT_FILTER, i), 
-                                &(font->filters[i]));
-         }
+        // at least one filter is required; if this font is being modified, it
+        // may already possess filters.
+        if(!curnumfilters && !numfilters)
+            E_EDFLoggedErr(2, "E_ProcessFont: at least one filter is required\n");
 
-         font->patchnumoffset = cfg_getint(sec, ITEM_FONT_POFFS);
+        if(numfilters)
+        {
+            // handle disposal of pre-existing filters
+            E_FreeFontFilters(font);
 
-         // load the font
-         E_LoadPatchFont(font);
-      }
-   }
+            // allocate the font filters
+            font->filters    = ecalloc(vfontfilter_t *, numfilters, sizeof(vfontfilter_t));
+            font->numfilters = numfilters;
 
-   E_EDFLogPrintf("\t\t%s font %s\n", 
-                  def && !delta ? "Defined" : "Modified", font->name);
+            for(unsigned int i = 0; i < numfilters; i++)
+            {
+                E_ProcessFontFilter(cfg_getnsec(sec, ITEM_FONT_FILTER, i), &(font->filters[i]));
+            }
+
+            font->patchnumoffset = cfg_getint(sec, ITEM_FONT_POFFS);
+
+            // load the font
+            E_LoadPatchFont(font);
+        }
+    }
+
+    E_EDFLogPrintf("\t\t%s font %s\n", def && !delta ? "Defined" : "Modified", font->name);
 }
 
 //
@@ -1022,21 +1002,25 @@ static void E_ProcessFont(cfg_t *const sec, bool delta)
 //
 static void E_ProcessFontVars(cfg_t *cfg)
 {
-   // 02/25/09: set native module font names
-   E_ReplaceString(hud_fontname,      cfg_getstrdup(cfg, ITEM_FONT_HUD));
-   E_ReplaceString(hud_overfontname,  cfg_getstrdup(cfg, ITEM_FONT_HUDO));
-   E_ReplaceString(hud_fssmallname,   cfg_getstrdup(cfg, ITEM_FONT_HUDFSS));
-   E_ReplaceString(hud_fsmediumname,  cfg_getstrdup(cfg, ITEM_FONT_HUDFSM));
-   E_ReplaceString(hud_fslargename,   cfg_getstrdup(cfg, ITEM_FONT_HUDFSL));
-   E_ReplaceString(mn_fontname,       cfg_getstrdup(cfg, ITEM_FONT_MENU));
-   E_ReplaceString(mn_bigfontname,    cfg_getstrdup(cfg, ITEM_FONT_BMENU));
-   E_ReplaceString(mn_normalfontname, cfg_getstrdup(cfg, ITEM_FONT_NMENU));
-   E_ReplaceString(f_fontname,        cfg_getstrdup(cfg, ITEM_FONT_FINAL));
-   E_ReplaceString(f_titlefontname,   cfg_getstrdup(cfg, ITEM_FONT_FTITLE));
-   E_ReplaceString(in_fontname,       cfg_getstrdup(cfg, ITEM_FONT_INTR));
-   E_ReplaceString(in_bigfontname,    cfg_getstrdup(cfg, ITEM_FONT_INTRB));
-   E_ReplaceString(in_bignumfontname, cfg_getstrdup(cfg, ITEM_FONT_INTRBN));
-   E_ReplaceString(c_fontname,        cfg_getstrdup(cfg, ITEM_FONT_CONS));
+    // clang-format off
+
+    // 02/25/09: set native module font names
+    E_ReplaceString(hud_fontname,      cfg_getstrdup(cfg, ITEM_FONT_HUD));
+    E_ReplaceString(hud_overfontname,  cfg_getstrdup(cfg, ITEM_FONT_HUDO));
+    E_ReplaceString(hud_fssmallname,   cfg_getstrdup(cfg, ITEM_FONT_HUDFSS));
+    E_ReplaceString(hud_fsmediumname,  cfg_getstrdup(cfg, ITEM_FONT_HUDFSM));
+    E_ReplaceString(hud_fslargename,   cfg_getstrdup(cfg, ITEM_FONT_HUDFSL));
+    E_ReplaceString(mn_fontname,       cfg_getstrdup(cfg, ITEM_FONT_MENU));
+    E_ReplaceString(mn_bigfontname,    cfg_getstrdup(cfg, ITEM_FONT_BMENU));
+    E_ReplaceString(mn_normalfontname, cfg_getstrdup(cfg, ITEM_FONT_NMENU));
+    E_ReplaceString(f_fontname,        cfg_getstrdup(cfg, ITEM_FONT_FINAL));
+    E_ReplaceString(f_titlefontname,   cfg_getstrdup(cfg, ITEM_FONT_FTITLE));
+    E_ReplaceString(in_fontname,       cfg_getstrdup(cfg, ITEM_FONT_INTR));
+    E_ReplaceString(in_bigfontname,    cfg_getstrdup(cfg, ITEM_FONT_INTRB));
+    E_ReplaceString(in_bignumfontname, cfg_getstrdup(cfg, ITEM_FONT_INTRBN));
+    E_ReplaceString(c_fontname,        cfg_getstrdup(cfg, ITEM_FONT_CONS));
+
+    // clang-format on
 }
 
 //
@@ -1047,39 +1031,39 @@ static void E_ProcessFontVars(cfg_t *cfg)
 //
 static void E_hashFonts(cfg_t *cfg, unsigned int numfonts)
 {
-   for(unsigned int i = 0; i < numfonts; i++)
-   {
-      cfg_t      *sec   = cfg_getnsec(cfg, EDF_SEC_FONT, i);
-      const char *title = cfg_title(sec);
-      int         num   = cfg_getint(sec, ITEM_FONT_ID);
-      vfont_t    *font;
+    for(unsigned int i = 0; i < numfonts; i++)
+    {
+        cfg_t      *sec   = cfg_getnsec(cfg, EDF_SEC_FONT, i);
+        const char *title = cfg_title(sec);
+        int         num   = cfg_getint(sec, ITEM_FONT_ID);
+        vfont_t    *font;
 
-      // if one exists by this name already, modify it
-      if((font = E_FontForName(title)))
-      {
-         // remove from numeric hash
-         E_DelFontFromNumHash(font);
+        // if one exists by this name already, modify it
+        if((font = E_FontForName(title)))
+        {
+            // remove from numeric hash
+            E_DelFontFromNumHash(font);
 
-         // change the numeric key if a new one is specified
-         if(num >= 0)
-            font->num = num;
+            // change the numeric key if a new one is specified
+            if(num >= 0)
+                font->num = num;
 
-         // rehash (even if the key didn't change, this moves it to the front
-         // of its hash chain)
-         E_AddFontToNumHash(font);
-      }
-      else
-      {
-         font = estructalloc(vfont_t, 1);
+            // rehash (even if the key didn't change, this moves it to the front
+            // of its hash chain)
+            E_AddFontToNumHash(font);
+        }
+        else
+        {
+            font = estructalloc(vfont_t, 1);
 
-         font->name = estrdup(title);
-         font->num  = num;
+            font->name = estrdup(title);
+            font->num  = num;
 
-         // add to hash tables
-         E_AddFontToNameHash(font);
-         E_AddFontToNumHash(font);
-      }
-   }
+            // add to hash tables
+            E_AddFontToNameHash(font);
+            E_AddFontToNumHash(font);
+        }
+    }
 }
 
 //=============================================================================
@@ -1094,21 +1078,22 @@ static void E_hashFonts(cfg_t *cfg, unsigned int numfonts)
 //
 void E_ProcessFonts(cfg_t *cfg)
 {
-   unsigned int numfonts = cfg_size(cfg, EDF_SEC_FONT);
+    unsigned int numfonts = cfg_size(cfg, EDF_SEC_FONT);
 
-   // create and hash fonts
-   E_EDFLogPrintf("\t* Hashing fonts\n"
-                  "\t\t%u font(s) defined\n", numfonts);
-   E_hashFonts(cfg, numfonts);
-   
-   // process fonts
-   E_EDFLogPrintf("\t* Processing fonts\n");
+    // create and hash fonts
+    E_EDFLogPrintf("\t* Hashing fonts\n"
+                   "\t\t%u font(s) defined\n",
+                   numfonts);
+    E_hashFonts(cfg, numfonts);
 
-   for(unsigned int i = 0; i < numfonts; i++)
-      E_ProcessFont(cfg_getnsec(cfg, EDF_SEC_FONT, i), false);
+    // process fonts
+    E_EDFLogPrintf("\t* Processing fonts\n");
 
-   // process global font variables
-   E_ProcessFontVars(cfg);
+    for(unsigned int i = 0; i < numfonts; i++)
+        E_ProcessFont(cfg_getnsec(cfg, EDF_SEC_FONT, i), false);
+
+    // process global font variables
+    E_ProcessFontVars(cfg);
 }
 
 //
@@ -1116,22 +1101,22 @@ void E_ProcessFonts(cfg_t *cfg)
 //
 void E_ProcessFontDeltas(cfg_t *cfg)
 {
-   unsigned int numfontdeltas = cfg_size(cfg, EDF_SEC_FNTDELTA);
-   
-   // process fonts
-   E_EDFLogPrintf("\t* Processing fontdeltas\n");
+    unsigned int numfontdeltas = cfg_size(cfg, EDF_SEC_FNTDELTA);
 
-   for(unsigned int i = 0; i < numfontdeltas; i++)
-   {
-      cfg_t *deltasec = cfg_getnsec(cfg, EDF_SEC_FNTDELTA, i);
-      if(!cfg_size(deltasec, ITEM_DELTA_NAME))
-         E_EDFLoggedErr(2, "E_ProcessFontDeltas: fontdelta requires name field\n");
+    // process fonts
+    E_EDFLogPrintf("\t* Processing fontdeltas\n");
 
-      E_ProcessFont(deltasec, true);
-   }
+    for(unsigned int i = 0; i < numfontdeltas; i++)
+    {
+        cfg_t *deltasec = cfg_getnsec(cfg, EDF_SEC_FNTDELTA, i);
+        if(!cfg_size(deltasec, ITEM_DELTA_NAME))
+            E_EDFLoggedErr(2, "E_ProcessFontDeltas: fontdelta requires name field\n");
 
-   // process global font variables
-   E_ProcessFontVars(cfg);
+        E_ProcessFont(deltasec, true);
+    }
+
+    // process global font variables
+    E_ProcessFontVars(cfg);
 }
 
 //
@@ -1139,23 +1124,21 @@ void E_ProcessFontDeltas(cfg_t *cfg)
 //
 void E_ReloadFonts()
 {
-   vfont_t *font = nullptr;
+    vfont_t *font = nullptr;
 
-   // run down all hash chains
-   // WARNING: do not use e_font_namehash here, because it's already iterated
-   // inside the called function.
-   while((font = e_font_numhash.tableIterator(font)))
-   {
-      if(!font->linear)
-         E_LoadPatchFont(font);
-      else if(font->linearreload.nameIndex < e_linearLumpNames.getLength())
-      {
-         E_LoadLinearFont(font,
-            e_linearLumpNames[font->linearreload.nameIndex].constPtr(),
-            font->linearreload.format,
-            font->linearreload.requantize);
-      }
-   }
+    // run down all hash chains
+    // WARNING: do not use e_font_namehash here, because it's already iterated
+    // inside the called function.
+    while((font = e_font_numhash.tableIterator(font)))
+    {
+        if(!font->linear)
+            E_LoadPatchFont(font);
+        else if(font->linearreload.nameIndex < e_linearLumpNames.getLength())
+        {
+            E_LoadLinearFont(font, e_linearLumpNames[font->linearreload.nameIndex].constPtr(),
+                             font->linearreload.format, font->linearreload.requantize);
+        }
+    }
 }
 
 //
@@ -1166,7 +1149,7 @@ void E_ReloadFonts()
 //
 vfont_t *E_FontForName(const char *name)
 {
-   return e_font_namehash.objectForKey(name);
+    return e_font_namehash.objectForKey(name);
 }
 
 //
@@ -1177,7 +1160,7 @@ vfont_t *E_FontForName(const char *name)
 //
 vfont_t *E_FontForNum(int num)
 {
-   return e_font_numhash.objectForKey(num);
+    return e_font_numhash.objectForKey(num);
 }
 
 //
@@ -1187,10 +1170,10 @@ vfont_t *E_FontForNum(int num)
 // the name does not exist.
 //
 int E_FontNumForName(const char *name)
-{ 
-   vfont_t *font = E_FontForName(name);
+{
+    vfont_t *font = E_FontForName(name);
 
-   return font ? font->num : -1;
+    return font ? font->num : -1;
 }
 
 // EOF

@@ -26,13 +26,12 @@
 int ee_current_platform = EE_CURRENT_PLATFORM;
 int ee_current_compiler = EE_CURRENT_COMPILER;
 
-int ee_platform_flags[EE_PLATFORM_MAX] =
-{
-   0,             // Windows
-   EE_PLATF_CSFS, // Linux
-   EE_PLATF_CSFS, // FreeBSD
-   0,             // MacOS X
-   0              // Unknown
+int ee_platform_flags[EE_PLATFORM_MAX] = {
+    0,             // Windows
+    EE_PLATF_CSFS, // Linux
+    EE_PLATF_CSFS, // FreeBSD
+    0,             // MacOS X
+    0              // Unknown
 };
 
 // EOF

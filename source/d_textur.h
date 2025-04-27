@@ -23,7 +23,6 @@
 // Authors: James Haley
 //
 
-
 #ifndef D_TEXTUR_H__
 #define D_TEXTUR_H__
 
@@ -42,11 +41,10 @@
 // a pic is an unmasked block of pixels
 struct pic_t
 {
-   byte  width;
-   byte  height;
-   byte  data;
+    byte width;
+    byte height;
+    byte data;
 };
-
 
 #endif
 

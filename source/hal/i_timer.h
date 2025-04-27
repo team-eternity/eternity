@@ -26,11 +26,13 @@
 
 #include "../m_fixed.h"
 
-//sf: made a #define, changed to 16
+// sf: made a #define, changed to 16
 #define CLOCK_BITS 16
 #define CLOCK_UNIT (1<<CLOCK_BITS)
 extern int     realtic_clock_rate;
 extern int64_t I_GetTime_Scale;
+
+// clang-format off
 
 using HAL_TimerInitFunc       = void         (*)();
 using HAL_ChangeClockRateFunc = void         (*)();
@@ -43,6 +45,8 @@ using HAL_EndDisplayFunc      = void         (*)();
 using HAL_GetFracFunc         = fixed_t      (*)();
 using HAL_SaveMSFunc          = void         (*)();
 
+// clang-format on
+
 //
 // HALTimer
 //
@@ -53,14 +57,14 @@ using HAL_SaveMSFunc          = void         (*)();
 //
 struct HALTimer
 {
-   HAL_GetTimeFunc         GetTime;         // get time in gametics, possibly scaled
-   HAL_GetTimeFunc         GetRealTime;     // get time in gametics regardless of scaling
-   HAL_GetTicksFunc        GetTicks;        // get time in milliseconds
-   HAL_SleepFunc           Sleep;           // sleep for time in milliseconds
-   HAL_StartDisplayFunc    StartDisplay;    // call at beginning of drawing for interpolation
-   HAL_EndDisplayFunc      EndDisplay;      // call at end of drawing for interpolation
-   HAL_GetFracFunc         GetFrac;         // get fractional interpolation multiplier
-   HAL_SaveMSFunc          SaveMS;          // save timing data at end of gametic processing
+    HAL_GetTimeFunc      GetTime;      // get time in gametics, possibly scaled
+    HAL_GetTimeFunc      GetRealTime;  // get time in gametics regardless of scaling
+    HAL_GetTicksFunc     GetTicks;     // get time in milliseconds
+    HAL_SleepFunc        Sleep;        // sleep for time in milliseconds
+    HAL_StartDisplayFunc StartDisplay; // call at beginning of drawing for interpolation
+    HAL_EndDisplayFunc   EndDisplay;   // call at end of drawing for interpolation
+    HAL_GetFracFunc      GetFrac;      // get fractional interpolation multiplier
+    HAL_SaveMSFunc       SaveMS;       // save timing data at end of gametic processing
 };
 
 extern HALTimer i_haltimer;

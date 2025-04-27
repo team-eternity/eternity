@@ -39,7 +39,7 @@ DLListItem<VAllocItem> *VAllocItem::vAllocList;
 //
 void VAllocItem::FreeAllocs()
 {
-   Z_FreeTags(PU_VALLOC, PU_VALLOC);
+    Z_FreeTags(PU_VALLOC, PU_VALLOC);
 }
 
 //
@@ -49,15 +49,14 @@ void VAllocItem::FreeAllocs()
 //
 void VAllocItem::SetNewMode(int w, int h)
 {
-   DLListItem<VAllocItem> *cur = vAllocList;
+    DLListItem<VAllocItem> *cur = vAllocList;
 
-   while(cur)
-   {
-      (*cur)->allocator(w, h);
-      cur = cur->dllNext;
-   }
+    while(cur)
+    {
+        (*cur)->allocator(w, h);
+        cur = cur->dllNext;
+    }
 }
-
 
 // EOF
 

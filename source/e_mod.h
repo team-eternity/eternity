@@ -45,15 +45,15 @@ struct playerclass_t;
 //
 enum
 {
-   MorphExcludeListEnd = -1,     // this is the terminator of the "exclude" list
-   MorphExcludeInanimate = -2,   // from @inanimate
+    MorphExcludeListEnd   = -1, // this is the terminator of the "exclude" list
+    MorphExcludeInanimate = -2, // from @inanimate
 };
 
 struct emodmorph_t
 {
-   mobjtype_t speciesID;
-   mobjtype_t *excludedID;
-   playerclass_t *pclass;
+    mobjtype_t     speciesID;
+    mobjtype_t    *excludedID;
+    playerclass_t *pclass;
 };
 
 //
@@ -63,24 +63,24 @@ struct emodmorph_t
 //
 struct emod_t
 {
-   DLListItem<emod_t>  numlinks;  // for numeric hash
-   DLListItem<emod_t>  namelinks; // for name hash
-   char               *name;      // name key
-   int                 num;       // number key
+    DLListItem<emod_t> numlinks;  // for numeric hash
+    DLListItem<emod_t> namelinks; // for name hash
+    char              *name;      // name key
+    int                num;       // number key
 
-   char *obituary;
-   char *selfobituary;
-   bool obitIsIndirect;
-   bool selfObitIsIndirect;
-   bool sourceless;
+    char *obituary;
+    char *selfobituary;
+    bool  obitIsIndirect;
+    bool  selfObitIsIndirect;
+    bool  sourceless;
 
-   emodmorph_t morph;
+    emodmorph_t morph;
 
-   fixed_t absolutePush;   // if set, push things by this amount
-   fixed_t absoluteHop;    // if set, hop gravity things by this amount
+    fixed_t absolutePush; // if set, push things by this amount
+    fixed_t absoluteHop;  // if set, hop gravity things by this amount
 
-   // For faster damagetype lookups in metatables
-   size_t dfKeyIndex;
+    // For faster damagetype lookups in metatables
+    size_t dfKeyIndex;
 };
 
 emod_t *E_DamageTypeForName(const char *name);
@@ -93,7 +93,7 @@ const char *E_ModFieldName(const char *base, const emod_t *mod);
 // EDF-only stuff
 #ifdef NEED_EDF_DEFINITIONS
 
-constexpr const char EDF_SEC_MOD[] = "damagetype";
+constexpr const char EDF_SEC_MOD[]       = "damagetype";
 constexpr const char EDF_SEC_MORPHTYPE[] = "morphtype";
 
 extern cfg_opt_t edf_dmgtype_opts[];

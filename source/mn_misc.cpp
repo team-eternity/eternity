@@ -29,7 +29,7 @@
 #include "c_runcmd.h"
 #include "d_dehtbl.h"
 #include "d_event.h"
-#include "d_gi.h"      // haleyjd: gamemode info
+#include "d_gi.h" // haleyjd: gamemode info
 #include "d_main.h"
 #include "doomstat.h"
 #include "e_fonts.h"
@@ -55,8 +55,8 @@
 
 // haleyjd 02/24/02: bug fix -- MN_Alert and MN_Question replaced
 // M_StartMessage in SMMU, but fraggle didn't put code in them to
-// properly set the menuactive state based on whether or not menus 
-// were active at the time of the call, leading to weird menu 
+// properly set the menuactive state based on whether or not menus
+// were active at the time of the call, leading to weird menu
 // behavior
 static bool popupMenuActive;
 
@@ -75,147 +75,141 @@ menuwidget_t popup_widget = { MN_PopupDrawer, MN_PopupResponder };
 //
 static void (*popup_callback)(void) = nullptr;
 
-static enum
-{
-   popup_alert,
-   popup_question
-} popup_message_type;
+static enum { popup_alert, popup_question } popup_message_type;
 
 //
 // WriteCenteredText
 //
 // Local routine to draw centered messages. Candidate for
 // absorption into future generalized font code. Rewritten
-// 02/22/04 to use qstring module. 
+// 02/22/04 to use qstring module.
 //
 static void WriteCenteredText(char *message)
 {
-   static qstring qstr;
-   char *rover;
-   const char *buffer;
-   int x, y;
-   int w, h;
+    static qstring qstr;
+    char          *rover;
+    const char    *buffer;
+    int            x, y;
+    int            w, h;
 
-   qstr.clearOrCreate(128);
-   
-   // rather than reallocate memory every time we draw it,
-   // use one buffer and increase the size as neccesary
-   // haleyjd 02/22/04: qstring handles this for us now
+    qstr.clearOrCreate(128);
 
-   w = V_FontStringWidth(menu_font_normal, popup_message);
-   h = V_FontStringHeight(menu_font_normal, popup_message);
+    // rather than reallocate memory every time we draw it,
+    // use one buffer and increase the size as neccesary
+    // haleyjd 02/22/04: qstring handles this for us now
 
-   x = (SCREENWIDTH  - w) / 2;
-   y = (SCREENHEIGHT - h) / 2;
-   qstr.clear();
-   rover = message;
+    w = V_FontStringWidth(menu_font_normal, popup_message);
+    h = V_FontStringHeight(menu_font_normal, popup_message);
 
-   if(popup_widget.prev) // up over another widget?
-      V_DrawBox(x - 8, y - 8, w + 16, h + 16);
+    x = (SCREENWIDTH - w) / 2;
+    y = (SCREENHEIGHT - h) / 2;
+    qstr.clear();
+    rover = message;
 
-   while(*rover)
-   {
-      if(*rover == '\n')
-      {
-         buffer = qstr.constPtr();
-         x = (SCREENWIDTH - V_FontStringWidth(menu_font_normal, buffer)) / 2;
-         V_FontWriteText(menu_font_normal, buffer, x, y, &subscreen43);         
-         qstr.clear(); // clear buffer
-         y += menu_font_normal->absh; // next line
-      }
-      else      // add next char
-         qstr += *rover;
+    if(popup_widget.prev) // up over another widget?
+        V_DrawBox(x - 8, y - 8, w + 16, h + 16);
 
-      ++rover;
-   }
+    while(*rover)
+    {
+        if(*rover == '\n')
+        {
+            buffer = qstr.constPtr();
+            x      = (SCREENWIDTH - V_FontStringWidth(menu_font_normal, buffer)) / 2;
+            V_FontWriteText(menu_font_normal, buffer, x, y, &subscreen43);
+            qstr.clear();                // clear buffer
+            y += menu_font_normal->absh; // next line
+        }
+        else // add next char
+            qstr += *rover;
 
-   // dont forget the last line.. prob. not \n terminated
-   buffer = qstr.constPtr();
-   x = (SCREENWIDTH - V_FontStringWidth(menu_font_normal, buffer)) / 2;
-   V_FontWriteText(menu_font_normal, buffer, x, y, &subscreen43);   
+        ++rover;
+    }
+
+    // dont forget the last line.. prob. not \n terminated
+    buffer = qstr.constPtr();
+    x      = (SCREENWIDTH - V_FontStringWidth(menu_font_normal, buffer)) / 2;
+    V_FontWriteText(menu_font_normal, buffer, x, y, &subscreen43);
 }
 
 static void MN_PopupDrawer(void)
 {
-   // haleyjd 08/31/12: If we popped up over another widget, draw it.
-   if(popup_widget.prev && popup_widget.prev->drawer)
-      popup_widget.prev->drawer();
-   
-   WriteCenteredText(popup_message);
+    // haleyjd 08/31/12: If we popped up over another widget, draw it.
+    if(popup_widget.prev && popup_widget.prev->drawer)
+        popup_widget.prev->drawer();
+
+    WriteCenteredText(popup_message);
 }
 
 static bool MN_PopupResponder(event_t *ev, int action)
 {
-   int *menuSounds = GameModeInfo->menuSounds;
-   char ch;
-   
-   if(ev->type != ev_keydown && ev->type != ev_text && ev->type != ev_quit)
-      return false;
+    int *menuSounds = GameModeInfo->menuSounds;
+    char ch;
 
-   if(ev->type == ev_text)
-      ch = ectype::toLower(ev->data1);
-   else if (ev->type == ev_quit && menuactive &&
-            popup_message_type == popup_question &&
+    if(ev->type != ev_keydown && ev->type != ev_text && ev->type != ev_quit)
+        return false;
+
+    if(ev->type == ev_text)
+        ch = ectype::toLower(ev->data1);
+    else if(ev->type == ev_quit && menuactive && popup_message_type == popup_question &&
             !strcmp(popup_message_command, "quit"))
-      ch = 'y';
-   else if(!ectype::isPrint(ev->data1))
-      ch = ev->data1;
-   else if(ev->type == ev_keydown && ectype::isPrint(ev->data1) &&
-           popup_message_type == popup_question)
-   {
-      // Also support non-QWERTY keyboards and it's a y/n question (use the scan code). This aligns
-      // with internationalized ports like GZDoom, allowing muscle memory to allow y/n even if it's
-      // not such on user's keyboard layout.
-      ch = ev->data1;
-   }
-   else
-      return false;
-   
-   switch(popup_message_type)
-   {
-   case popup_alert:
-      {
-         // haleyjd 02/24/02: restore saved menuactive state
-         menuactive = popupMenuActive;
-         // kill message
-         MN_PopWidget(consumeText_e::NO);
-         S_StartInterfaceSound(menuSounds[MN_SND_DEACTIVATE]);
-      }
-      break;
+        ch = 'y';
+    else if(!ectype::isPrint(ev->data1))
+        ch = ev->data1;
+    else if(ev->type == ev_keydown && ectype::isPrint(ev->data1) && popup_message_type == popup_question)
+    {
+        // Also support non-QWERTY keyboards and it's a y/n question (use the scan code). This aligns
+        // with internationalized ports like GZDoom, allowing muscle memory to allow y/n even if it's
+        // not such on user's keyboard layout.
+        ch = ev->data1;
+    }
+    else
+        return false;
 
-   case popup_question:
-      if(ch == 'y' || action == ka_menu_confirm) // yes!
-      {
-         // run command and kill message
-         // haleyjd 02/24/02: restore saved menuactive state
-         menuactive = popupMenuActive;
-         if(popup_callback)
-         {
-            popup_callback();
-         }
-         else
-         {
-            Console.cmdtype = c_menu;
-            C_RunTextCmd(popup_message_command);
-         }
-         S_StartInterfaceSound(menuSounds[MN_SND_COMMAND]);
-         MN_PopWidget(consumeText_e::NO);  // kill message
-      }
-      if(ch == 'n' || action == ka_menu_toggle || action == ka_menu_previous) // no!
-      {
-         // kill message
-         // haleyjd 02/24/02: restore saved menuactive state
-         menuactive = popupMenuActive;
-         S_StartInterfaceSound(menuSounds[MN_SND_DEACTIVATE]);
-         MN_PopWidget(consumeText_e::NO); // kill message
-      }
-      break;
-      
-   default:
-      break;
-   }
-   
-   return true; // always eat key
+    switch(popup_message_type)
+    {
+    case popup_alert:
+    {
+        // haleyjd 02/24/02: restore saved menuactive state
+        menuactive = popupMenuActive;
+        // kill message
+        MN_PopWidget(consumeText_e::NO);
+        S_StartInterfaceSound(menuSounds[MN_SND_DEACTIVATE]);
+    }
+    break;
+
+    case popup_question:
+        if(ch == 'y' || action == ka_menu_confirm) // yes!
+        {
+            // run command and kill message
+            // haleyjd 02/24/02: restore saved menuactive state
+            menuactive = popupMenuActive;
+            if(popup_callback)
+            {
+                popup_callback();
+            }
+            else
+            {
+                Console.cmdtype = c_menu;
+                C_RunTextCmd(popup_message_command);
+            }
+            S_StartInterfaceSound(menuSounds[MN_SND_COMMAND]);
+            MN_PopWidget(consumeText_e::NO); // kill message
+        }
+        if(ch == 'n' || action == ka_menu_toggle || action == ka_menu_previous) // no!
+        {
+            // kill message
+            // haleyjd 02/24/02: restore saved menuactive state
+            menuactive = popupMenuActive;
+            S_StartInterfaceSound(menuSounds[MN_SND_DEACTIVATE]);
+            MN_PopWidget(consumeText_e::NO); // kill message
+        }
+        break;
+
+    default: //
+        break;
+    }
+
+    return true; // always eat key
 }
 
 //
@@ -226,20 +220,20 @@ static bool MN_PopupResponder(event_t *ev, int action)
 //
 void MN_Alert(E_FORMAT_STRING(const char *message), ...)
 {
-   va_list args;
-   
-   // haleyjd 02/24/02: bug fix for menuactive state
-   popupMenuActive = menuactive;
-   
-   MN_ActivateMenu();
-   
-   // hook in widget so message will be displayed
-   MN_PushWidget(&popup_widget);
-   popup_message_type = popup_alert;
-   
-   va_start(args, message);
-   pvsnprintf(popup_message, sizeof(popup_message), message, args);
-   va_end(args);
+    va_list args;
+
+    // haleyjd 02/24/02: bug fix for menuactive state
+    popupMenuActive = menuactive;
+
+    MN_ActivateMenu();
+
+    // hook in widget so message will be displayed
+    MN_PushWidget(&popup_widget);
+    popup_message_type = popup_alert;
+
+    va_start(args, message);
+    pvsnprintf(popup_message, sizeof(popup_message), message, args);
+    va_end(args);
 }
 
 //
@@ -250,22 +244,22 @@ void MN_Alert(E_FORMAT_STRING(const char *message), ...)
 //
 void MN_Question(const char *message, const char *command)
 {
-   // haleyjd 02/24/02: bug fix for menuactive state
-   popupMenuActive = menuactive;
-   
-   MN_ActivateMenu();
-   
-   // hook in widget so message will be displayed
-   MN_PushWidget(&popup_widget);
+    // haleyjd 02/24/02: bug fix for menuactive state
+    popupMenuActive = menuactive;
 
-   // If a widget we popped up over is fullscreen, so are we, since
-   // we'll call down to its drawer. Otherwise, not.
-   popup_widget.fullscreen = (popup_widget.prev && popup_widget.prev->fullscreen);
+    MN_ActivateMenu();
 
-   strncpy(popup_message, message, 1024);
-   popup_message_type = popup_question;
-   popup_message_command = command;
-   popup_callback = nullptr;
+    // hook in widget so message will be displayed
+    MN_PushWidget(&popup_widget);
+
+    // If a widget we popped up over is fullscreen, so are we, since
+    // we'll call down to its drawer. Otherwise, not.
+    popup_widget.fullscreen = (popup_widget.prev && popup_widget.prev->fullscreen);
+
+    strncpy(popup_message, message, 1024);
+    popup_message_type    = popup_question;
+    popup_message_command = command;
+    popup_callback        = nullptr;
 }
 
 //
@@ -278,21 +272,21 @@ void MN_Question(const char *message, const char *command)
 //
 void MN_QuestionFunc(const char *message, void (*handler)(void))
 {
-   popupMenuActive = menuactive;
-   
-   MN_ActivateMenu();
-   
-   // hook in widget so message will be displayed
-   MN_PushWidget(&popup_widget);
+    popupMenuActive = menuactive;
 
-   // If a widget we popped up over is fullscreen, so are we, since
-   // we'll call down to its drawer. Otherwise, not.
-   popup_widget.fullscreen = (popup_widget.prev && popup_widget.prev->fullscreen);
-   
-   strncpy(popup_message, message, 1024);
-   popup_message_type = popup_question;
-   popup_message_command = nullptr;
-   popup_callback = handler;
+    MN_ActivateMenu();
+
+    // hook in widget so message will be displayed
+    MN_PushWidget(&popup_widget);
+
+    // If a widget we popped up over is fullscreen, so are we, since
+    // we'll call down to its drawer. Otherwise, not.
+    popup_widget.fullscreen = (popup_widget.prev && popup_widget.prev->fullscreen);
+
+    strncpy(popup_message, message, 1024);
+    popup_message_type    = popup_question;
+    popup_message_command = nullptr;
+    popup_callback        = handler;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -304,24 +298,24 @@ void MN_DrawCredits(void);
 
 struct helpscreen_t
 {
-   int lumpnum;
-   void (*Drawer)(); // alternate drawer
+    int  lumpnum;
+    void (*Drawer)(); // alternate drawer
 };
 
-static helpscreen_t helpscreens[120];  // 100 + credit/built-in help screens
-static int num_helpscreens;
-static int viewing_helpscreen;     // currently viewing help screen
-extern bool inhelpscreens; // indicates we are in or just left a help screen
+static helpscreen_t helpscreens[120]; // 100 + credit/built-in help screens
+static int          num_helpscreens;
+static int          viewing_helpscreen; // currently viewing help screen
+extern bool         inhelpscreens;      // indicates we are in or just left a help screen
 
 static void AddHelpScreen(const char *screenname)
 {
-   int lumpnum;
-   
-   if((lumpnum = W_CheckNumForName(screenname)) != -1)
-   {
-      helpscreens[num_helpscreens].Drawer = nullptr;   // no drawer
-      helpscreens[num_helpscreens++].lumpnum = lumpnum;
-   }  
+    int lumpnum;
+
+    if((lumpnum = W_CheckNumForName(screenname)) != -1)
+    {
+        helpscreens[num_helpscreens].Drawer    = nullptr; // no drawer
+        helpscreens[num_helpscreens++].lumpnum = lumpnum;
+    }
 }
 
 // build help screens differently according to whether displaying
@@ -329,248 +323,236 @@ static void AddHelpScreen(const char *screenname)
 
 static void MN_FindCreditScreens(void)
 {
-   num_helpscreens = 0;  // reset
-   
-   // add dynamic smmu credits screen
-   
-   helpscreens[num_helpscreens++].Drawer = MN_DrawCredits;
-   
-   // other help screens
+    num_helpscreens = 0; // reset
 
-   // haleyjd: do / do not want certain screens for different
-   // game modes, even though its not necessary to weed them out
-   // if they're not in the wad
+    // add dynamic smmu credits screen
 
-   if(GameModeInfo->type == Game_Heretic)
-      AddHelpScreen(DEH_String("ORDER"));
-   else
-      AddHelpScreen(DEH_String("HELP2"));
-   
-   AddHelpScreen(DEH_String("CREDIT"));
+    helpscreens[num_helpscreens++].Drawer = MN_DrawCredits;
+
+    // other help screens
+
+    // haleyjd: do / do not want certain screens for different
+    // game modes, even though its not necessary to weed them out
+    // if they're not in the wad
+
+    if(GameModeInfo->type == Game_Heretic)
+        AddHelpScreen(DEH_String("ORDER"));
+    else
+        AddHelpScreen(DEH_String("HELP2"));
+
+    AddHelpScreen(DEH_String("CREDIT"));
 }
 
 static void MN_FindHelpScreens(void)
 {
-   int custom;
-   
-   num_helpscreens = 0;
-   
-   // add custom menus first
-   
-   for(custom = 0; custom < 100; ++custom)
-   {
-      char tempstr[10];
+    int custom;
 
-      snprintf(tempstr, sizeof(tempstr), "HELP%.02i", custom);
-      AddHelpScreen(tempstr);
-   }
-   
-   // now the default original doom ones
-   
-   // sf: keep original help screens until key bindings rewritten
-   // and i can restore the dynamic help screens
+    num_helpscreens = 0;
 
-   if(GameModeInfo->type == Game_Heretic)
-      AddHelpScreen(DEH_String("ORDER"));
-   else
-      AddHelpScreen("HELP");
-   
-   AddHelpScreen("HELP1");
-   
-   // promote the registered version at every availability
-   // haleyjd: HELP2 is a help screen in heretic too
-   
-   AddHelpScreen(DEH_String("HELP2")); 
+    // add custom menus first
+
+    for(custom = 0; custom < 100; ++custom)
+    {
+        char tempstr[10];
+
+        snprintf(tempstr, sizeof(tempstr), "HELP%.02i", custom);
+        AddHelpScreen(tempstr);
+    }
+
+    // now the default original doom ones
+
+    // sf: keep original help screens until key bindings rewritten
+    // and i can restore the dynamic help screens
+
+    if(GameModeInfo->type == Game_Heretic)
+        AddHelpScreen(DEH_String("ORDER"));
+    else
+        AddHelpScreen("HELP");
+
+    AddHelpScreen("HELP1");
+
+    // promote the registered version at every availability
+    // haleyjd: HELP2 is a help screen in heretic too
+
+    AddHelpScreen(DEH_String("HELP2"));
 }
 
 enum
 {
-   CAT_PROGRAMMING,
-   CAT_BASEDON,
-   CAT_GRAPHICS,
-   CAT_SPECIALTHANKS,
-   NUMCATS
+    CAT_PROGRAMMING,
+    CAT_BASEDON,
+    CAT_GRAPHICS,
+    CAT_SPECIALTHANKS,
+    NUMCATS
 };
 
-static const char *cat_strs[NUMCATS] =
-{
-   FC_ABSCENTER FC_HI "Programming",
-   FC_ABSCENTER FC_HI "Based On",
-   FC_ABSCENTER FC_HI "Graphics",
-   FC_ABSCENTER FC_HI "Special Thanks",
+static const char *cat_strs[NUMCATS] = {
+    FC_ABSCENTER FC_HI "Programming",
+    FC_ABSCENTER FC_HI "Based On",
+    FC_ABSCENTER FC_HI "Graphics",
+    FC_ABSCENTER FC_HI "Special Thanks",
 };
 
 struct val_str_t
 {
-   const char *l; // String in the left column
-   const char *m; // String in the middle (if no string is on either side)
-   const char *r; // String in the right column
+    const char *l; // String in the left column
+    const char *m; // String in the middle (if no string is on either side)
+    const char *r; // String in the right column
 
-   bool isNull() const { return l == nullptr && m == nullptr && r == nullptr; }
+    bool isNull() const { return l == nullptr && m == nullptr && r == nullptr; }
 };
 
-static const val_str_t val_programmers[] =
-{
-   { "James Haley", nullptr,     "David Hill"                  },
-   { "Ioan Chera",  nullptr,     "Max Waine"                   },
-   { nullptr,       FC_ABSCENTER "Stephen McGranahan", nullptr },
-   { nullptr, nullptr, nullptr }
+static const val_str_t val_programmers[] = {
+    { "James Haley", nullptr,                           "David Hill" },
+    { "Ioan Chera",  nullptr,                           "Max Waine"  },
+    { nullptr,       FC_ABSCENTER "Stephen McGranahan", nullptr      },
+    { nullptr,       nullptr,                           nullptr      }
 };
 
-static const val_str_t val_basedon[] =
-{
-   { nullptr, FC_ABSCENTER FC_HI "SMMU" FC_NORMAL " by Simon Howard", nullptr },
-   { nullptr, nullptr, nullptr }
+static const val_str_t val_basedon[] = {
+    { nullptr, FC_ABSCENTER FC_HI "SMMU" FC_NORMAL " by Simon Howard", nullptr },
+    { nullptr, nullptr,                                                nullptr }
 };
 
 static const val_str_t val_graphics[] = {
-   { "Sarah Mancuso", nullptr, "Sven Ruthner" },
-   { nullptr, nullptr, nullptr }
+    { "Sarah Mancuso", nullptr, "Sven Ruthner" },
+    { nullptr,         nullptr, nullptr        }
 };
 
-static const val_str_t val_thanks[] =
-{
-   { "Joe Kennedy",  nullptr, "Julian Aubourg"   },
-   { "Joel Murdoch", nullptr, "Anders Astrand"   },
-   { "SargeBaldy",   nullptr, "Kaitlyn Anne Fox" },
-   { nullptr, nullptr, nullptr }
+static const val_str_t val_thanks[] = {
+    { "Joe Kennedy",  nullptr, "Julian Aubourg"   },
+    { "Joel Murdoch", nullptr, "Anders Astrand"   },
+    { "SargeBaldy",   nullptr, "Kaitlyn Anne Fox" },
+    { nullptr,        nullptr, nullptr            }
 };
 
-static const val_str_t *val_strs[NUMCATS] =
-{
-   val_programmers,
-   val_basedon,
-   val_graphics,
-   val_thanks
-};
+static const val_str_t *val_strs[NUMCATS] = { val_programmers, val_basedon, val_graphics, val_thanks };
 
 extern bool help_prev_menuactive;
 
 void MN_DrawCredits()
 {
-   static int startTic = 0;
-   static int lastTic  = 0;
-   static int yOffset  = 0;
+    static int startTic = 0;
+    static int lastTic  = 0;
+    static int yOffset  = 0;
 
-   static int line_x = -1;
-   int i, y;
-   const char *str;
+    static int  line_x = -1;
+    int         i, y;
+    const char *str;
 
-   // Reset scoll if a full second has passed or we opened the menu
-   if(gametic - lastTic > TICRATE || (help_prev_menuactive && gametic == mn_lastSelectTic + 1))
-   {
-      startTic = gametic;
-      yOffset  = 0;
-   }
-   lastTic = gametic;
+    // Reset scoll if a full second has passed or we opened the menu
+    if(gametic - lastTic > TICRATE || (help_prev_menuactive && gametic == mn_lastSelectTic + 1))
+    {
+        startTic = gametic;
+        yOffset  = 0;
+    }
+    lastTic = gametic;
 
-   if(line_x == -1)
-      line_x = SCREENWIDTH >> 1;
+    if(line_x == -1)
+        line_x = SCREENWIDTH >> 1;
 
-   inhelpscreens = true;
+    inhelpscreens = true;
 
-   // sf: altered for SMMU
-   // haleyjd: altered for Eternity :)
-   
-   V_DrawDistortedBackground(GameModeInfo->creditBackground, &vbscreen);
+    // sf: altered for SMMU
+    // haleyjd: altered for Eternity :)
 
-   y = GameModeInfo->creditY - yOffset;
-   str = FC_ABSCENTER FC_HI "The Eternity Engine";
-   V_FontWriteTextShadowed(menu_font_big, str, 0, y, &subscreen43);
-   y += V_FontStringHeight(menu_font_big, str) + GameModeInfo->creditTitleStep;
+    V_DrawDistortedBackground(GameModeInfo->creditBackground, &vbscreen);
 
-   // draw info categories
-   for(i = 0; i < NUMCATS; ++i)
-   {
-      V_FontWriteText(menu_font_normal, cat_strs[i], 0, y, &subscreen43);
+    y   = GameModeInfo->creditY - yOffset;
+    str = FC_ABSCENTER FC_HI "The Eternity Engine";
+    V_FontWriteTextShadowed(menu_font_big, str, 0, y, &subscreen43);
+    y += V_FontStringHeight(menu_font_big, str) + GameModeInfo->creditTitleStep;
 
-      y += V_FontStringHeight(menu_font_normal, cat_strs[i]);
+    // draw info categories
+    for(i = 0; i < NUMCATS; ++i)
+    {
+        V_FontWriteText(menu_font_normal, cat_strs[i], 0, y, &subscreen43);
 
-      // Iterate through the val_str_t's for the current category.
-      // TODO: Figure out if there's a way to process all the val_str_t's at once for a single
-      // category. ATM it iterates through so it can correctly align the left strings.
-      for(int j = 0; !val_strs[i][j].isNull(); j++)
-      {
-         // Write left if need be
-         if(val_strs[i][j].l != nullptr)
-         {
-            int valStrLWidth = V_FontStringWidth(menu_font_normal, val_strs[i][j].l);
-            V_FontWriteText(menu_font_normal, val_strs[i][j].l, line_x - valStrLWidth - 8,
-                            y, &subscreen43);
-         }
+        y += V_FontStringHeight(menu_font_normal, cat_strs[i]);
 
-         // Write right if need be
-         if(val_strs[i][j].r != nullptr)
-            V_FontWriteText(menu_font_normal, val_strs[i][j].r, line_x + 8, y, &subscreen43);
+        // Iterate through the val_str_t's for the current category.
+        // TODO: Figure out if there's a way to process all the val_str_t's at once for a single
+        // category. ATM it iterates through so it can correctly align the left strings.
+        for(int j = 0; !val_strs[i][j].isNull(); j++)
+        {
+            // Write left if need be
+            if(val_strs[i][j].l != nullptr)
+            {
+                int valStrLWidth = V_FontStringWidth(menu_font_normal, val_strs[i][j].l);
+                V_FontWriteText(menu_font_normal, val_strs[i][j].l, line_x - valStrLWidth - 8, y, &subscreen43);
+            }
 
-         // Write middle if need be
-         if(val_strs[i][j].m != nullptr)
-            V_FontWriteText(menu_font_normal, val_strs[i][j].m, 0,  y, &subscreen43);
+            // Write right if need be
+            if(val_strs[i][j].r != nullptr)
+                V_FontWriteText(menu_font_normal, val_strs[i][j].r, line_x + 8, y, &subscreen43);
 
-         y += V_FontStringHeight(menu_font_normal, "");
-       }
+            // Write middle if need be
+            if(val_strs[i][j].m != nullptr)
+                V_FontWriteText(menu_font_normal, val_strs[i][j].m, 0, y, &subscreen43);
 
-      y += V_FontStringHeight(menu_font_normal, "");
-   }
+            y += V_FontStringHeight(menu_font_normal, "");
+        }
 
-   // MaxW: I'm going to hell for this. Automatically update copyright year.
-   static const char *const copyright_text = []() {
-      static char temp[] = FC_ABSCENTER "Copyright YEAR Team Eternity et al.";
-      memcpy(temp + 11, &__DATE__[7], 4); // Overwrite YEAR in temp.
-      return temp;
-   }();
+        y += V_FontStringHeight(menu_font_normal, "");
+    }
 
-   V_FontWriteText(menu_font_normal, copyright_text, 0, y, &subscreen43);
-   y += V_FontStringHeight(menu_font_normal, "");
+    // MaxW: I'm going to hell for this. Automatically update copyright year.
+    static const char *const copyright_text = []() {
+        static char temp[] = FC_ABSCENTER "Copyright YEAR Team Eternity et al.";
+        memcpy(temp + 11, &__DATE__[7], 4); // Overwrite YEAR in temp.
+        return temp;
+    }();
 
+    V_FontWriteText(menu_font_normal, copyright_text, 0, y, &subscreen43);
+    y += V_FontStringHeight(menu_font_normal, "");
 
-   // Scroll the credits
-   constexpr int   WAIT_TICS              = TICRATE * 2;
-   constexpr float PIXELS_PER_GAMETIC     = 0.5f;
+    // Scroll the credits
+    constexpr int   WAIT_TICS          = TICRATE * 2;
+    constexpr float PIXELS_PER_GAMETIC = 0.5f;
 
-   static const int maximumDesiredY = SCREENHEIGHT - GameModeInfo->creditY;
-   static const int maximumY        = y;
-   static const int maximumScroll   = maximumY - maximumDesiredY;
-   static const int transitionTics  = int(maximumScroll / PIXELS_PER_GAMETIC);
-   static const int loopTics        = WAIT_TICS + transitionTics + WAIT_TICS + transitionTics;
-   if(maximumY > SCREENHEIGHT)
-   {
-      // Goes _/-\ then loops
-      const int sequenceTic = (gametic - startTic) % loopTics;
-      if(sequenceTic < WAIT_TICS)
-         yOffset = 0;
-      else if(sequenceTic < WAIT_TICS + transitionTics)
-         yOffset = int((sequenceTic - WAIT_TICS) * PIXELS_PER_GAMETIC);
-      else if(sequenceTic < WAIT_TICS + transitionTics + WAIT_TICS)
-         yOffset = maximumScroll;
-      else
-         yOffset = int((loopTics - sequenceTic) * PIXELS_PER_GAMETIC);
+    static const int maximumDesiredY = SCREENHEIGHT - GameModeInfo->creditY;
+    static const int maximumY        = y;
+    static const int maximumScroll   = maximumY - maximumDesiredY;
+    static const int transitionTics  = int(maximumScroll / PIXELS_PER_GAMETIC);
+    static const int loopTics        = WAIT_TICS + transitionTics + WAIT_TICS + transitionTics;
+    if(maximumY > SCREENHEIGHT)
+    {
+        // Goes _/-\ then loops
+        const int sequenceTic = (gametic - startTic) % loopTics;
+        if(sequenceTic < WAIT_TICS)
+            yOffset = 0;
+        else if(sequenceTic < WAIT_TICS + transitionTics)
+            yOffset = int((sequenceTic - WAIT_TICS) * PIXELS_PER_GAMETIC);
+        else if(sequenceTic < WAIT_TICS + transitionTics + WAIT_TICS)
+            yOffset = maximumScroll;
+        else
+            yOffset = int((loopTics - sequenceTic) * PIXELS_PER_GAMETIC);
 
-      yOffset = emin(maximumScroll, yOffset);
-   }
+        yOffset = emin(maximumScroll, yOffset);
+    }
 }
 
 extern menuwidget_t helpscreen_widget; // actually just below...
 
 static void MN_HelpDrawer()
 {
-   if(helpscreens[viewing_helpscreen].Drawer)
-   {
-      helpscreens[viewing_helpscreen].Drawer();   // call drawer
-   }
-   else
-   {
-      // haleyjd: support raw lumps
-      int lumpnum = helpscreens[viewing_helpscreen].lumpnum;
+    if(helpscreens[viewing_helpscreen].Drawer)
+    {
+        helpscreens[viewing_helpscreen].Drawer(); // call drawer
+    }
+    else
+    {
+        // haleyjd: support raw lumps
+        int lumpnum = helpscreens[viewing_helpscreen].lumpnum;
 
-      // if the screen is larger than 4:3, we need to draw pillars ourselves,
-      // as D_Display won't be able to know if this widget is fullscreen or not
-      // in time to do it as usual.
-      D_DrawPillars();
+        // if the screen is larger than 4:3, we need to draw pillars ourselves,
+        // as D_Display won't be able to know if this widget is fullscreen or not
+        // in time to do it as usual.
+        D_DrawPillars();
 
-      // haleyjd 05/18/09: use smart background drawer
-      V_DrawFSBackground(&vbscreenyscaled, lumpnum);
-   }
+        // haleyjd 05/18/09: use smart background drawer
+        V_DrawFSBackground(&vbscreenyscaled, lumpnum);
+    }
 }
 
 // haleyjd 05/29/06: record state of menu activation
@@ -578,82 +560,83 @@ bool help_prev_menuactive;
 
 static bool MN_HelpResponder(event_t *ev, int action)
 {
-   int *menuSounds = GameModeInfo->menuSounds;
-   
-   if(ev->type != ev_keydown) return false;
-   
-   if(action == ka_menu_previous)
-   {
-      // go to previous screen
-      // haleyjd: only make sound if we really went back
-      viewing_helpscreen--;
-      if(viewing_helpscreen < 0)
-      {
-         // cancel
-         goto cancel;
-      }
-      else
-         S_StartInterfaceSound(menuSounds[MN_SND_PREVIOUS]);
-   }
+    int *menuSounds = GameModeInfo->menuSounds;
 
-   if(action == ka_menu_confirm)
-   {
-      // go to next helpscreen
-      viewing_helpscreen++;
-      if(viewing_helpscreen >= num_helpscreens)
-      {
-         // cancel
-         goto cancel;
-      }
-      else
-         S_StartInterfaceSound(menuSounds[MN_SND_COMMAND]);
-   }
+    if(ev->type != ev_keydown)
+        return false;
 
-   if(action == ka_menu_toggle)
-   {
-      // cancel helpscreen
-cancel:
-      MN_PopWidget();
-      // haleyjd 05/29/06: maintain previous menu activation state
-      if(!help_prev_menuactive)
-         menuactive = false;
-      S_StartInterfaceSound(menuSounds[MN_SND_DEACTIVATE]);
-   }
+    if(action == ka_menu_previous)
+    {
+        // go to previous screen
+        // haleyjd: only make sound if we really went back
+        viewing_helpscreen--;
+        if(viewing_helpscreen < 0)
+        {
+            // cancel
+            goto cancel;
+        }
+        else
+            S_StartInterfaceSound(menuSounds[MN_SND_PREVIOUS]);
+    }
 
-   // always eatkey
-   return false;
+    if(action == ka_menu_confirm)
+    {
+        // go to next helpscreen
+        viewing_helpscreen++;
+        if(viewing_helpscreen >= num_helpscreens)
+        {
+            // cancel
+            goto cancel;
+        }
+        else
+            S_StartInterfaceSound(menuSounds[MN_SND_COMMAND]);
+    }
+
+    if(action == ka_menu_toggle)
+    {
+        // cancel helpscreen
+    cancel:
+        MN_PopWidget();
+        // haleyjd 05/29/06: maintain previous menu activation state
+        if(!help_prev_menuactive)
+            menuactive = false;
+        S_StartInterfaceSound(menuSounds[MN_SND_DEACTIVATE]);
+    }
+
+    // always eatkey
+    return false;
 }
 
-menuwidget_t helpscreen_widget = {MN_HelpDrawer, MN_HelpResponder, nullptr, true};
+menuwidget_t helpscreen_widget = { MN_HelpDrawer, MN_HelpResponder, nullptr, true };
 
 CONSOLE_COMMAND(help, 0)
 {
-   // haleyjd 05/29/06: record state of menu activation
-   help_prev_menuactive = menuactive;
+    // haleyjd 05/29/06: record state of menu activation
+    help_prev_menuactive = menuactive;
 
-   MN_ActivateMenu();
-   MN_FindHelpScreens();        // search for help screens
-   
-   // hook in widget to display menu
-   MN_PushWidget(&helpscreen_widget);
-   
-   // start on first screen
-   viewing_helpscreen = 0;
+    MN_ActivateMenu();
+    MN_FindHelpScreens(); // search for help screens
+
+    // hook in widget to display menu
+    MN_PushWidget(&helpscreen_widget);
+
+    // start on first screen
+    viewing_helpscreen = 0;
 }
 
 CONSOLE_COMMAND(credits, 0)
 {
-   // haleyjd 05/29/06: record state of menu activation
-   help_prev_menuactive = menuactive;
+    // haleyjd 05/29/06: record state of menu activation
+    help_prev_menuactive = menuactive;
 
-   MN_ActivateMenu();
-   MN_FindCreditScreens();        // search for help screens
-   
-   // hook in widget to display menu
-   MN_PushWidget(&helpscreen_widget);
-   
-   // start on first screen
-   viewing_helpscreen = 0;
+    MN_ActivateMenu();
+    MN_FindCreditScreens(); // search for help screens
+
+    // hook in widget to display menu
+    MN_PushWidget(&helpscreen_widget);
+
+    // start on first screen
+    viewing_helpscreen = 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -664,114 +647,108 @@ CONSOLE_COMMAND(credits, 0)
 // selection of automap colours for menu.
 
 command_t *colour_command;
-int selected_colour;
+int        selected_colour;
 
 #define HIGHLIGHT_COLOUR (GameModeInfo->whiteIndex)
 
-template <mapColorType_e mapColorType>
+template<mapColorType_e mapColorType>
 static void MN_mapColorDrawer()
 {
-   patch_t *patch;
-   int x, y;
-   int u, v;
-   byte block[BLOCK_SIZE*BLOCK_SIZE];
+    patch_t *patch;
+    int      x, y;
+    int      u, v;
+    byte     block[BLOCK_SIZE * BLOCK_SIZE];
 
-   // draw the menu in the background
-   
-   MN_DrawMenu(current_menu);
+    // draw the menu in the background
 
-   // draw colours table
-   
-   patch = PatchLoader::CacheName(wGlobalDir, "M_COLORS", PU_CACHE);
-   
-   x = (SCREENWIDTH  - patch->width ) / 2;
-   y = (SCREENHEIGHT - patch->height) / 2;
-   
-   V_DrawPatch(x, y, &subscreen43, patch);
-   
-   x += 4 + 8 * (selected_colour % 16);
-   y += 4 + 8 * (selected_colour / 16);
+    MN_DrawMenu(current_menu);
 
-   // build block
-   
-   // border
-   memset(block, HIGHLIGHT_COLOUR, BLOCK_SIZE*BLOCK_SIZE);
-  
-   // draw colour inside
-   for(u = 1; u < BLOCK_SIZE - 1; ++u)
-      for(v = 1; v < BLOCK_SIZE - 1; ++v)
-         block[v*BLOCK_SIZE + u] = selected_colour;
-  
-   // draw block
-   V_DrawBlock(x, y, &subscreen43, BLOCK_SIZE, BLOCK_SIZE, block);
+    // draw colours table
 
-   if constexpr(mapColorType == mapColorType_e::optional)
-   {
-      if(!selected_colour)
-         V_DrawPatch(x+1, y+1, &subscreen43, PatchLoader::CacheName(wGlobalDir, "M_PALNO", PU_CACHE));
-   }
+    patch = PatchLoader::CacheName(wGlobalDir, "M_COLORS", PU_CACHE);
+
+    x = (SCREENWIDTH - patch->width) / 2;
+    y = (SCREENHEIGHT - patch->height) / 2;
+
+    V_DrawPatch(x, y, &subscreen43, patch);
+
+    x += 4 + 8 * (selected_colour % 16);
+    y += 4 + 8 * (selected_colour / 16);
+
+    // build block
+
+    // border
+    memset(block, HIGHLIGHT_COLOUR, BLOCK_SIZE * BLOCK_SIZE);
+
+    // draw colour inside
+    for(u = 1; u < BLOCK_SIZE - 1; ++u)
+        for(v = 1; v < BLOCK_SIZE - 1; ++v)
+            block[v * BLOCK_SIZE + u] = selected_colour;
+
+    // draw block
+    V_DrawBlock(x, y, &subscreen43, BLOCK_SIZE, BLOCK_SIZE, block);
+
+    if constexpr(mapColorType == mapColorType_e::optional)
+    {
+        if(!selected_colour)
+            V_DrawPatch(x + 1, y + 1, &subscreen43, PatchLoader::CacheName(wGlobalDir, "M_PALNO", PU_CACHE));
+    }
 }
 
 static bool MN_MapColourResponder(event_t *ev, int action)
 {
-   if(action == ka_menu_left)
-      selected_colour--;
+    if(action == ka_menu_left)
+        selected_colour--;
 
-   if(action == ka_menu_right)
-      selected_colour++;
-   
-   if(action == ka_menu_up)
-      selected_colour -= 16;
-   
-   if(action == ka_menu_down)
-      selected_colour += 16;
-   
-   if(action == ka_menu_toggle || action == ka_menu_previous)
-   {
-      // cancel colour selection
-      MN_PopWidget();
-      return true;
-   }
+    if(action == ka_menu_right)
+        selected_colour++;
 
-   if(action == ka_menu_confirm)
-   {
-      static char tempstr[128];
-      snprintf(tempstr, sizeof(tempstr), "%i", selected_colour);
-     
-      // run command
-      C_RunCommand(colour_command, tempstr);
-      
-      // kill selector
-      MN_PopWidget();
-      return true;
-   }
+    if(action == ka_menu_up)
+        selected_colour -= 16;
 
-   if(selected_colour < 0) 
-      selected_colour = 0;
-   if(selected_colour > 255) 
-      selected_colour = 255;
-   
-   return true; // always eat key
+    if(action == ka_menu_down)
+        selected_colour += 16;
+
+    if(action == ka_menu_toggle || action == ka_menu_previous)
+    {
+        // cancel colour selection
+        MN_PopWidget();
+        return true;
+    }
+
+    if(action == ka_menu_confirm)
+    {
+        static char tempstr[128];
+        snprintf(tempstr, sizeof(tempstr), "%i", selected_colour);
+
+        // run command
+        C_RunCommand(colour_command, tempstr);
+
+        // kill selector
+        MN_PopWidget();
+        return true;
+    }
+
+    if(selected_colour < 0)
+        selected_colour = 0;
+    if(selected_colour > 255)
+        selected_colour = 255;
+
+    return true; // always eat key
 }
 
-template <mapColorType_e mapColorType>
-menuwidget_t colour_widget =
-{
-   MN_mapColorDrawer<mapColorType>,
-   MN_MapColourResponder,
-   nullptr,
-   true
-};
+template<mapColorType_e mapColorType>
+menuwidget_t colour_widget = { MN_mapColorDrawer<mapColorType>, MN_MapColourResponder, nullptr, true };
 
 void MN_SelectColor(const char *variable_name, const mapColorType_e color_type)
 {
-   if(color_type == mapColorType_e::mandatory)
-      MN_PushWidget(&colour_widget<mapColorType_e::mandatory>);
-   else
-      MN_PushWidget(&colour_widget<mapColorType_e::optional>);
+    if(color_type == mapColorType_e::mandatory)
+        MN_PushWidget(&colour_widget<mapColorType_e::mandatory>);
+    else
+        MN_PushWidget(&colour_widget<mapColorType_e::optional>);
 
-   colour_command = C_GetCmdForName(variable_name);
-   selected_colour = *(int *)colour_command->variable->variable;
+    colour_command  = C_GetCmdForName(variable_name);
+    selected_colour = *(int *)colour_command->variable->variable;
 }
 
 //=============================================================================
@@ -784,65 +761,59 @@ static qstring  teststr;  // string for test
 
 static void MN_fontTestDrawer()
 {
-   int totalHeight = SCREENHEIGHT - testfont->absh * 2;
-   int itemHeight  = totalHeight / (CR_BUILTIN + 1);   
-   int x = 160 - V_FontStringWidth(testfont, teststr.constPtr())/2;
-   int y = testfont->absh;
+    int totalHeight = SCREENHEIGHT - testfont->absh * 2;
+    int itemHeight  = totalHeight / (CR_BUILTIN + 1);
+    int x           = 160 - V_FontStringWidth(testfont, teststr.constPtr()) / 2;
+    int y           = testfont->absh;
 
-   V_DrawBackground(mn_background_flat, &vbscreen);
-   
-   for(int i = 0; i <= CR_BUILTIN; i++)
-   {
-      V_FontWriteTextColored(testfont, teststr.constPtr(), i, x, y);
-      y += itemHeight;
-   }
+    V_DrawBackground(mn_background_flat, &vbscreen);
+
+    for(int i = 0; i <= CR_BUILTIN; i++)
+    {
+        V_FontWriteTextColored(testfont, teststr.constPtr(), i, x, y);
+        y += itemHeight;
+    }
 }
 
 static bool MN_fontTestResponder(event_t *ev, int action)
 {
-   if(action == ka_menu_toggle || action == ka_menu_previous)
-   {
-      // exit widget
-      MN_PopWidget();
-      teststr.freeBuffer();
-   }
+    if(action == ka_menu_toggle || action == ka_menu_previous)
+    {
+        // exit widget
+        MN_PopWidget();
+        teststr.freeBuffer();
+    }
 
-   return true;
+    return true;
 }
 
-static menuwidget_t fonttest_widget = 
-{
-   MN_fontTestDrawer, 
-   MN_fontTestResponder, 
-   nullptr,
-   true
-};
+static menuwidget_t fonttest_widget = { MN_fontTestDrawer, MN_fontTestResponder, nullptr, true };
 
 CONSOLE_COMMAND(mn_testfont, 0)
 {
-   vfont_t *font;
-   const char *fontName;
+    vfont_t    *font;
+    const char *fontName;
 
-   if(Console.argc < 1)
-   {
-      C_Puts(FC_ERROR "Usage: mn_testfont fontname [message]");
-      return;
-   }
-   
-   fontName = Console.argv[0]->constPtr();
-   if(!(font = E_FontForName(fontName)))
-   {
-      C_Printf(FC_ERROR "Unknown font %s\n", fontName);
-      return;
-   }
+    if(Console.argc < 1)
+    {
+        C_Puts(FC_ERROR "Usage: mn_testfont fontname [message]");
+        return;
+    }
 
-   if(Console.argc >= 2)
-      teststr = *Console.argv[1];
-   else
-      teststr = "ABCDEFGHIJKL";
+    fontName = Console.argv[0]->constPtr();
+    if(!(font = E_FontForName(fontName)))
+    {
+        C_Printf(FC_ERROR "Unknown font %s\n", fontName);
+        return;
+    }
 
-   testfont = font;   
-   MN_PushWidget(&fonttest_widget);
+    if(Console.argc >= 2)
+        teststr = *Console.argv[1];
+    else
+        teststr = "ABCDEFGHIJKL";
+
+    testfont = font;
+    MN_PushWidget(&fonttest_widget);
 }
 
 // EOF

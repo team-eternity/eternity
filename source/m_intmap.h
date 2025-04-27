@@ -35,12 +35,10 @@
 class BaseIntListMap : public ZoneObject
 {
 public:
-   virtual ~BaseIntListMap()
-   {
-      efree(mData);
-   }
+    virtual ~BaseIntListMap() { efree(mData); }
+
 protected:
-   int *mData = nullptr;
+    int *mData = nullptr;
 };
 
 //
@@ -51,8 +49,8 @@ protected:
 class IntListMap : public BaseIntListMap
 {
 public:
-   void load(const Collection<PODCollection<int>> &source);
-   const int *getList(int index, int *length) const;
+    void       load(const Collection<PODCollection<int>> &source);
+    const int *getList(int index, int *length) const;
 };
 
 //
@@ -61,9 +59,8 @@ public:
 class DualIntListMap : public BaseIntListMap
 {
 public:
-   void load(const Collection<PODCollection<int>> &first,
-             const Collection<PODCollection<int>> &second);
-   const int *getList(int index, int which, int *length) const;
+    void       load(const Collection<PODCollection<int>> &first, const Collection<PODCollection<int>> &second);
+    const int *getList(int index, int which, int *length) const;
 };
 
 #endif /* M_INTMAP_H_ */

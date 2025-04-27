@@ -62,75 +62,70 @@
 
 enum
 {
-   CPC_LESS,
-   CPC_LESSOREQUAL,
-   CPC_GREATER,
-   CPC_GREATEROREQUAL,
-   CPC_EQUAL,
-   CPC_NOTEQUAL,
-   CPC_BITWISEAND,
+    CPC_LESS,
+    CPC_LESSOREQUAL,
+    CPC_GREATER,
+    CPC_GREATEROREQUAL,
+    CPC_EQUAL,
+    CPC_NOTEQUAL,
+    CPC_BITWISEAND,
 
-   CPC_CNTR_LESS,           // alternate counter versions
-   CPC_CNTR_LESSOREQUAL,
-   CPC_CNTR_GREATER,
-   CPC_CNTR_GREATEROREQUAL,
-   CPC_CNTR_EQUAL,
-   CPC_CNTR_NOTEQUAL,
-   CPC_CNTR_BITWISEAND,
+    CPC_CNTR_LESS, // alternate counter versions
+    CPC_CNTR_LESSOREQUAL,
+    CPC_CNTR_GREATER,
+    CPC_CNTR_GREATEROREQUAL,
+    CPC_CNTR_EQUAL,
+    CPC_CNTR_NOTEQUAL,
+    CPC_CNTR_BITWISEAND,
 
-   CPC_NUMIMMEDIATE = CPC_BITWISEAND + 1
+    CPC_NUMIMMEDIATE = CPC_BITWISEAND + 1
 };
 
 // Codepointer operation types
 
 enum
 {
-   CPOP_ASSIGN,
-   CPOP_ADD,
-   CPOP_SUB,
-   CPOP_MUL,
-   CPOP_DIV,
-   CPOP_MOD,
-   CPOP_AND,
-   CPOP_ANDNOT,
-   CPOP_OR,
-   CPOP_XOR,
-   CPOP_RND,
-   CPOP_RNDMOD,
-   CPOP_DAMAGE,
-   CPOP_SHIFTLEFT,
-   CPOP_SHIFTRIGHT,
+    CPOP_ASSIGN,
+    CPOP_ADD,
+    CPOP_SUB,
+    CPOP_MUL,
+    CPOP_DIV,
+    CPOP_MOD,
+    CPOP_AND,
+    CPOP_ANDNOT,
+    CPOP_OR,
+    CPOP_XOR,
+    CPOP_RND,
+    CPOP_RNDMOD,
+    CPOP_DAMAGE,
+    CPOP_SHIFTLEFT,
+    CPOP_SHIFTRIGHT,
 
-   // unary operators
-   CPOP_ABS,
-   CPOP_NEGATE,
-   CPOP_NOT,
-   CPOP_INVERT,
+    // unary operators
+    CPOP_ABS,
+    CPOP_NEGATE,
+    CPOP_NOT,
+    CPOP_INVERT,
 };
 
-static const char *kwds_CPCOps[] =
-{
-   "less",                   // 0
-   "lessorequal",            // 1
-   "greater",                // 2
-   "greaterorequal",         // 3
-   "equal",                  // 4
-   "notequal",               // 5
-   "and",                    // 6
-   "less_counter",           // 7
-   "lessorequal_counter",    // 8
-   "greater_counter",        // 9
-   "greaterorequal_counter", // 10
-   "equal_counter",          // 11
-   "notequal_counter",       // 12
-   "and_counter",            // 13
+static const char *kwds_CPCOps[] = {
+    "less",                   // 0
+    "lessorequal",            // 1
+    "greater",                // 2
+    "greaterorequal",         // 3
+    "equal",                  // 4
+    "notequal",               // 5
+    "and",                    // 6
+    "less_counter",           // 7
+    "lessorequal_counter",    // 8
+    "greater_counter",        // 9
+    "greaterorequal_counter", // 10
+    "equal_counter",          // 11
+    "notequal_counter",       // 12
+    "and_counter",            // 13
 };
 
-static argkeywd_t cpckwds =
-{
-   kwds_CPCOps,
-   sizeof(kwds_CPCOps) / sizeof(const char *)
-};
+static argkeywd_t cpckwds = { kwds_CPCOps, sizeof(kwds_CPCOps) / sizeof(const char *) };
 
 //
 // A_HealthJump
@@ -144,57 +139,49 @@ static argkeywd_t cpckwds =
 //
 void A_HealthJump(actionargs_t *actionargs)
 {
-   Mobj      *mo   = actionargs->actor;
-   arglist_t *args = actionargs->args;
-   bool branch = false;
-   int statenum, checktype, checkhealth;
+    Mobj      *mo     = actionargs->actor;
+    arglist_t *args   = actionargs->args;
+    bool       branch = false;
+    int        statenum, checktype, checkhealth;
 
-   statenum    = E_ArgAsStateNumNI(args, 0, mo);
-   checktype   = E_ArgAsKwd(args, 1, &cpckwds, 0);
-   checkhealth = E_ArgAsInt(args, 2, 0);
+    statenum    = E_ArgAsStateNumNI(args, 0, mo);
+    checktype   = E_ArgAsKwd(args, 1, &cpckwds, 0);
+    checkhealth = E_ArgAsInt(args, 2, 0);
 
-   // validate state
-   if(statenum < 0)
-      return;
+    // validate state
+    if(statenum < 0)
+        return;
 
-   // 08/02/04:
-   // support getting check value from a counter
-   // if checktype is greater than the last immediate operator,
-   // then the checkhealth value is actually a counter number
+    // 08/02/04:
+    // support getting check value from a counter
+    // if checktype is greater than the last immediate operator,
+    // then the checkhealth value is actually a counter number
 
-   if(checktype >= CPC_NUMIMMEDIATE)
-   {
-      // turn it into the corresponding immediate operation
-      checktype -= CPC_NUMIMMEDIATE;
+    if(checktype >= CPC_NUMIMMEDIATE)
+    {
+        // turn it into the corresponding immediate operation
+        checktype -= CPC_NUMIMMEDIATE;
 
-      if(checkhealth < 0 || checkhealth >= NUMMOBJCOUNTERS)
-         return; // invalid counter number
+        if(checkhealth < 0 || checkhealth >= NUMMOBJCOUNTERS)
+            return; // invalid counter number
 
-      checkhealth = mo->counters[checkhealth];
-   }
+        checkhealth = mo->counters[checkhealth];
+    }
 
-   switch(checktype)
-   {
-   case CPC_LESS:
-      branch = (mo->health < checkhealth);  break;
-   case CPC_LESSOREQUAL:
-      branch = (mo->health <= checkhealth); break;
-   case CPC_GREATER:
-      branch = (mo->health > checkhealth);  break;
-   case CPC_GREATEROREQUAL:
-      branch = (mo->health >= checkhealth); break;
-   case CPC_EQUAL:
-      branch = (mo->health == checkhealth); break;
-   case CPC_NOTEQUAL:
-      branch = (mo->health != checkhealth); break;
-   case CPC_BITWISEAND:
-      branch = !!(mo->health & checkhealth);  break;
-   default:
-      break;
-   }
+    switch(checktype)
+    {
+    case CPC_LESS:           branch = (mo->health < checkhealth); break;
+    case CPC_LESSOREQUAL:    branch = (mo->health <= checkhealth); break;
+    case CPC_GREATER:        branch = (mo->health > checkhealth); break;
+    case CPC_GREATEROREQUAL: branch = (mo->health >= checkhealth); break;
+    case CPC_EQUAL:          branch = (mo->health == checkhealth); break;
+    case CPC_NOTEQUAL:       branch = (mo->health != checkhealth); break;
+    case CPC_BITWISEAND:     branch = !!(mo->health & checkhealth); break;
+    default:                 break;
+    }
 
-   if(branch)
-      P_SetMobjState(mo, statenum);
+    if(branch)
+        P_SetMobjState(mo, statenum);
 }
 
 //
@@ -210,64 +197,56 @@ void A_HealthJump(actionargs_t *actionargs)
 //
 void A_CounterJump(actionargs_t *actionargs)
 {
-   Mobj      *mo   = actionargs->actor;
-   arglist_t *args = actionargs->args;
-   bool branch = false;
-   int statenum, checktype, value, cnum;
-   int *counter;
+    Mobj      *mo     = actionargs->actor;
+    arglist_t *args   = actionargs->args;
+    bool       branch = false;
+    int        statenum, checktype, value, cnum;
+    int       *counter;
 
-   statenum  = E_ArgAsStateNumNI(args, 0, mo);
-   checktype = E_ArgAsKwd(args, 1, &cpckwds, 0);
-   value     = E_ArgAsInt(args, 2, 0);
-   cnum      = E_ArgAsInt(args, 3, 0);
+    statenum  = E_ArgAsStateNumNI(args, 0, mo);
+    checktype = E_ArgAsKwd(args, 1, &cpckwds, 0);
+    value     = E_ArgAsInt(args, 2, 0);
+    cnum      = E_ArgAsInt(args, 3, 0);
 
-   // validate state
-   if(statenum < 0)
-      return;
+    // validate state
+    if(statenum < 0)
+        return;
 
-   if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
-      return; // invalid
+    if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
+        return; // invalid
 
-   counter = &(mo->counters[cnum]);
+    counter = &(mo->counters[cnum]);
 
-   // 08/02/04:
-   // support getting check value from a counter
-   // if checktype is greater than the last immediate operator,
-   // then the comparison value is actually a counter number
+    // 08/02/04:
+    // support getting check value from a counter
+    // if checktype is greater than the last immediate operator,
+    // then the comparison value is actually a counter number
 
-   if(checktype >= CPC_NUMIMMEDIATE)
-   {
-      // turn it into the corresponding immediate operation
-      checktype -= CPC_NUMIMMEDIATE;
+    if(checktype >= CPC_NUMIMMEDIATE)
+    {
+        // turn it into the corresponding immediate operation
+        checktype -= CPC_NUMIMMEDIATE;
 
-      if(value < 0 || value >= NUMMOBJCOUNTERS)
-         return; // invalid counter number
+        if(value < 0 || value >= NUMMOBJCOUNTERS)
+            return; // invalid counter number
 
-      value = mo->counters[value];
-   }
+        value = mo->counters[value];
+    }
 
-   switch(checktype)
-   {
-   case CPC_LESS:
-      branch = (*counter < value);  break;
-   case CPC_LESSOREQUAL:
-      branch = (*counter <= value); break;
-   case CPC_GREATER:
-      branch = (*counter > value);  break;
-   case CPC_GREATEROREQUAL:
-      branch = (*counter >= value); break;
-   case CPC_EQUAL:
-      branch = (*counter == value); break;
-   case CPC_NOTEQUAL:
-      branch = (*counter != value); break;
-   case CPC_BITWISEAND:
-      branch = !!(*counter & value);  break;
-   default:
-      break;
-   }
+    switch(checktype)
+    {
+    case CPC_LESS:           branch = (*counter < value); break;
+    case CPC_LESSOREQUAL:    branch = (*counter <= value); break;
+    case CPC_GREATER:        branch = (*counter > value); break;
+    case CPC_GREATEROREQUAL: branch = (*counter >= value); break;
+    case CPC_EQUAL:          branch = (*counter == value); break;
+    case CPC_NOTEQUAL:       branch = (*counter != value); break;
+    case CPC_BITWISEAND:     branch = !!(*counter & value); break;
+    default:                 break;
+    }
 
-   if(branch)
-      P_SetMobjState(mo, statenum);
+    if(branch)
+        P_SetMobjState(mo, statenum);
 }
 
 //
@@ -281,63 +260,55 @@ void A_CounterJump(actionargs_t *actionargs)
 //
 void A_CounterJumpEx(actionargs_t *actionargs)
 {
-   Mobj      *mo   = actionargs->actor;
-   arglist_t *args = actionargs->args;
-   bool branch = false;
-   int checktype, value, cnum;
-   state_t *state;
+    Mobj      *mo     = actionargs->actor;
+    arglist_t *args   = actionargs->args;
+    bool       branch = false;
+    int        checktype, value, cnum;
+    state_t   *state;
 
-   state     = E_ArgAsStateLabel(mo, args, 0);
-   checktype = E_ArgAsKwd(args, 1, &cpckwds, 0);
-   value     = E_ArgAsInt(args, 2, 0);
-   cnum      = E_ArgAsInt(args, 3, 0);
+    state     = E_ArgAsStateLabel(mo, args, 0);
+    checktype = E_ArgAsKwd(args, 1, &cpckwds, 0);
+    value     = E_ArgAsInt(args, 2, 0);
+    cnum      = E_ArgAsInt(args, 3, 0);
 
-   // validate state
-   if(!state)
-      return;
+    // validate state
+    if(!state)
+        return;
 
-   if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
-      return; // invalid
+    if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
+        return; // invalid
 
-   int &counter = mo->counters[cnum];
+    int &counter = mo->counters[cnum];
 
-   // support getting check value from a counter
-   // if checktype is greater than the last immediate operator,
-   // then the comparison value is actually a counter number
+    // support getting check value from a counter
+    // if checktype is greater than the last immediate operator,
+    // then the comparison value is actually a counter number
 
-   if(checktype >= CPC_NUMIMMEDIATE)
-   {
-      // turn it into the corresponding immediate operation
-      checktype -= CPC_NUMIMMEDIATE;
+    if(checktype >= CPC_NUMIMMEDIATE)
+    {
+        // turn it into the corresponding immediate operation
+        checktype -= CPC_NUMIMMEDIATE;
 
-      if(value < 0 || value >= NUMMOBJCOUNTERS)
-         return; // invalid counter number
+        if(value < 0 || value >= NUMMOBJCOUNTERS)
+            return; // invalid counter number
 
-      value = mo->counters[value];
-   }
+        value = mo->counters[value];
+    }
 
-   switch(checktype)
-   {
-   case CPC_LESS:
-      branch = (counter < value);  break;
-   case CPC_LESSOREQUAL:
-      branch = (counter <= value); break;
-   case CPC_GREATER:
-      branch = (counter > value);  break;
-   case CPC_GREATEROREQUAL:
-      branch = (counter >= value); break;
-   case CPC_EQUAL:
-      branch = (counter == value); break;
-   case CPC_NOTEQUAL:
-      branch = (counter != value); break;
-   case CPC_BITWISEAND:
-      branch = !!(counter & value);  break;
-   default:
-      break;
-   }
+    switch(checktype)
+    {
+    case CPC_LESS:           branch = (counter < value); break;
+    case CPC_LESSOREQUAL:    branch = (counter <= value); break;
+    case CPC_GREATER:        branch = (counter > value); break;
+    case CPC_GREATEROREQUAL: branch = (counter >= value); break;
+    case CPC_EQUAL:          branch = (counter == value); break;
+    case CPC_NOTEQUAL:       branch = (counter != value); break;
+    case CPC_BITWISEAND:     branch = !!(counter & value); break;
+    default:                 break;
+    }
 
-   if(branch)
-      P_SetMobjState(mo, state->index);
+    if(branch)
+        P_SetMobjState(mo, state->index);
 }
 
 //
@@ -354,35 +325,35 @@ void A_CounterJumpEx(actionargs_t *actionargs)
 //
 void A_CounterSwitch(actionargs_t *actionargs)
 {
-   Mobj      *mo   = actionargs->actor;
-   arglist_t *args = actionargs->args;
-   int cnum, startstate, numstates;
-   int *counter;
+    Mobj      *mo   = actionargs->actor;
+    arglist_t *args = actionargs->args;
+    int        cnum, startstate, numstates;
+    int       *counter;
 
-   cnum       = E_ArgAsInt       (args, 0,  0);
-   startstate = E_ArgAsStateNumNI(args, 1, mo);
-   numstates  = E_ArgAsInt       (args, 2,  0) - 1;
+    cnum       = E_ArgAsInt(args, 0, 0);
+    startstate = E_ArgAsStateNumNI(args, 1, mo);
+    numstates  = E_ArgAsInt(args, 2, 0) - 1;
 
-   // get counter
-   if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
-      return; // invalid
+    // get counter
+    if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
+        return; // invalid
 
-   counter = &(mo->counters[cnum]);
+    counter = &(mo->counters[cnum]);
 
-   // verify startstate
-   if(startstate < 0)
-      return;
+    // verify startstate
+    if(startstate < 0)
+        return;
 
-   // verify last state is < NUMSTATES
-   if(startstate + numstates >= NUMSTATES)
-      return;
+    // verify last state is < NUMSTATES
+    if(startstate + numstates >= NUMSTATES)
+        return;
 
-   // verify counter is in range
-   if(*counter < 0 || *counter > numstates)
-      return;
+    // verify counter is in range
+    if(*counter < 0 || *counter > numstates)
+        return;
 
-   // jump!
-   P_SetMobjState(mo, startstate + *counter);
+    // jump!
+    P_SetMobjState(mo, startstate + *counter);
 }
 
 //
@@ -396,54 +367,50 @@ void A_CounterSwitch(actionargs_t *actionargs)
 //
 void A_CounterSwitchEx(actionargs_t *actionargs)
 {
-   Mobj      *mo   = actionargs->actor;
-   arglist_t *args = actionargs->args;
-   int cnum, numstates;
-   state_t *state;
+    Mobj      *mo   = actionargs->actor;
+    arglist_t *args = actionargs->args;
+    int        cnum, numstates;
+    state_t   *state;
 
-   cnum = E_ArgAsInt(args, 0, 0);
+    cnum = E_ArgAsInt(args, 0, 0);
 
-   // numstates is the top index
-   numstates = args->numargs - 2;
+    // numstates is the top index
+    numstates = args->numargs - 2;
 
-   // get counter
-   if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
-      return; // invalid
+    // get counter
+    if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
+        return; // invalid
 
-   int &counter = mo->counters[cnum];
+    int &counter = mo->counters[cnum];
 
-   // verify counter is in range
-   if(counter < 0 || counter > numstates)
-      return;
+    // verify counter is in range
+    if(counter < 0 || counter > numstates)
+        return;
 
-   // validate state
-   if((state = E_ArgAsStateLabel(mo, args, 1 + counter)))
-      P_SetMobjState(mo, state->index); // jump!
+    // validate state
+    if((state = E_ArgAsStateLabel(mo, args, 1 + counter)))
+        P_SetMobjState(mo, state->index); // jump!
 }
 
-static const char *kwds_CPSetOps[] =
-{
-   "assign",         //  0
-   "add",            //  1
-   "sub",            //  2
-   "mul",            //  3
-   "div",            //  4
-   "mod",            //  5
-   "and",            //  6
-   "andnot",         //  7
-   "or",             //  8
-   "xor",            //  9
-   "rand",           //  10
-   "randmod",        //  11
-   "{DUMMY}",        //  12
-   "rshift",         //  13
-   "lshift",         //  14
+static const char *kwds_CPSetOps[] = {
+    "assign",  //  0
+    "add",     //  1
+    "sub",     //  2
+    "mul",     //  3
+    "div",     //  4
+    "mod",     //  5
+    "and",     //  6
+    "andnot",  //  7
+    "or",      //  8
+    "xor",     //  9
+    "rand",    //  10
+    "randmod", //  11
+    "{DUMMY}", //  12
+    "rshift",  //  13
+    "lshift",  //  14
 };
 
-static argkeywd_t cpsetkwds =
-{
-   kwds_CPSetOps, sizeof(kwds_CPSetOps) / sizeof(const char *)
-};
+static argkeywd_t cpsetkwds = { kwds_CPSetOps, sizeof(kwds_CPSetOps) / sizeof(const char *) };
 
 //
 // A_SetCounter
@@ -458,88 +425,73 @@ static argkeywd_t cpsetkwds =
 //
 void A_SetCounter(actionargs_t *actionargs)
 {
-   Mobj      *mo   = actionargs->actor;
-   arglist_t *args = actionargs->args;
-   int cnum, value, specialop;
-   int *counter;
+    Mobj      *mo   = actionargs->actor;
+    arglist_t *args = actionargs->args;
+    int        cnum, value, specialop;
+    int       *counter;
 
-   cnum      = E_ArgAsInt(args, 0, 0);
-   value     = E_ArgAsInt(args, 1, 0);
-   specialop = E_ArgAsKwd(args, 2, &cpsetkwds, 0);
+    cnum      = E_ArgAsInt(args, 0, 0);
+    value     = E_ArgAsInt(args, 1, 0);
+    specialop = E_ArgAsKwd(args, 2, &cpsetkwds, 0);
 
-   if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
-      return; // invalid
+    if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
+        return; // invalid
 
-   counter = &(mo->counters[cnum]);
+    counter = &(mo->counters[cnum]);
 
-   switch(specialop)
-   {
-   case CPOP_ASSIGN:
-      *counter = value; break;
-   case CPOP_ADD:
-      *counter += value; break;
-   case CPOP_SUB:
-      *counter -= value; break;
-   case CPOP_MUL:
-      *counter *= value; break;
-   case CPOP_DIV:
-      if(value) // don't divide by zero
-         *counter /= value;
-      break;
-   case CPOP_MOD:
-      if(value > 0) // only allow modulus by positive values
-         *counter %= value;
-      break;
-   case CPOP_AND:
-      *counter &= value; break;
-   case CPOP_ANDNOT:
-      *counter &= ~value; break; // compound and-not operation
-   case CPOP_OR:
-      *counter |= value; break;
-   case CPOP_XOR:
-      *counter ^= value; break;
-   case CPOP_RND:
-      *counter = P_Random(pr_setcounter); break;
-   case CPOP_RNDMOD:
-      if(value > 0)
-         *counter = P_Random(pr_setcounter) % value;
-      break;
-   case CPOP_SHIFTLEFT:
-      *counter <<= value; break;
-   case CPOP_SHIFTRIGHT:
-      *counter >>= value; break;
-   default:
-      break;
-   }
+    switch(specialop)
+    {
+    case CPOP_ASSIGN: *counter = value; break;
+    case CPOP_ADD:    *counter += value; break;
+    case CPOP_SUB:    *counter -= value; break;
+    case CPOP_MUL:    *counter *= value; break;
+    case CPOP_DIV:
+        if(value) // don't divide by zero
+            *counter /= value;
+        break;
+    case CPOP_MOD:
+        if(value > 0) // only allow modulus by positive values
+            *counter %= value;
+        break;
+    case CPOP_AND:    *counter &= value; break;
+    case CPOP_ANDNOT: *counter &= ~value; break; // compound and-not operation
+    case CPOP_OR:     *counter |= value; break;
+    case CPOP_XOR:    *counter ^= value; break;
+    case CPOP_RND:    *counter = P_Random(pr_setcounter); break;
+    case CPOP_RNDMOD:
+        if(value > 0)
+            *counter = P_Random(pr_setcounter) % value;
+        break;
+    case CPOP_SHIFTLEFT:  *counter <<= value; break;
+    case CPOP_SHIFTRIGHT: *counter >>= value; break;
+    default: //
+        break;
+    }
 }
 
-static const char *kwds_CPOps[] =
-{
-   "{DUMMY}",        //  0
-   "add",            //  1
-   "sub",            //  2
-   "mul",            //  3
-   "div",            //  4
-   "mod",            //  5
-   "and",            //  6
-   "{DUMMY}",        //  7
-   "or",             //  8
-   "xor",            //  9
-   "{DUMMY}",        //  10
-   "{DUMMY}",        //  11
-   "hitdice",        //  12
-   "rshift",         //  13
-   "lshift",         //  14
-   "abs",            //  15
-   "negate",         //  16
-   "not",            //  17
-   "invert",         //  18
+static const char *kwds_CPOps[] = {
+    "{DUMMY}", //  0
+    "add",     //  1
+    "sub",     //  2
+    "mul",     //  3
+    "div",     //  4
+    "mod",     //  5
+    "and",     //  6
+    "{DUMMY}", //  7
+    "or",      //  8
+    "xor",     //  9
+    "{DUMMY}", //  10
+    "{DUMMY}", //  11
+    "hitdice", //  12
+    "rshift",  //  13
+    "lshift",  //  14
+    "abs",     //  15
+    "negate",  //  16
+    "not",     //  17
+    "invert",  //  18
 };
 
-static argkeywd_t cpopkwds =
-{
-   kwds_CPOps, sizeof(kwds_CPOps) / sizeof(const char *)
-};
+static argkeywd_t cpopkwds = { kwds_CPOps, sizeof(kwds_CPOps) / sizeof(const char *) };
 
 //
 // A_CounterOp
@@ -554,75 +506,63 @@ static argkeywd_t cpopkwds =
 //
 void A_CounterOp(actionargs_t *actionargs)
 {
-   Mobj      *mo   = actionargs->actor;
-   arglist_t *args = actionargs->args;
-   int c_oper1_num, c_oper2_num, c_dest_num, specialop;
-   int *c_oper1, *c_oper2, *c_dest;
+    Mobj      *mo   = actionargs->actor;
+    arglist_t *args = actionargs->args;
+    int        c_oper1_num, c_oper2_num, c_dest_num, specialop;
+    int       *c_oper1, *c_oper2, *c_dest;
 
-   c_oper1_num = E_ArgAsInt(args, 0, 0);
-   c_oper2_num = E_ArgAsInt(args, 1, 0);
-   c_dest_num  = E_ArgAsInt(args, 2, 0);
-   specialop   = E_ArgAsKwd(args, 3, &cpopkwds, 0);
+    c_oper1_num = E_ArgAsInt(args, 0, 0);
+    c_oper2_num = E_ArgAsInt(args, 1, 0);
+    c_dest_num  = E_ArgAsInt(args, 2, 0);
+    specialop   = E_ArgAsKwd(args, 3, &cpopkwds, 0);
 
-   if(c_oper1_num < 0 || c_oper1_num >= NUMMOBJCOUNTERS)
-      return; // invalid
+    if(c_oper1_num < 0 || c_oper1_num >= NUMMOBJCOUNTERS)
+        return; // invalid
 
-   c_oper1 = &(mo->counters[c_oper1_num]);
+    c_oper1 = &(mo->counters[c_oper1_num]);
 
-   if(c_oper2_num < 0 || c_oper2_num >= NUMMOBJCOUNTERS)
-      return; // invalid
+    if(c_oper2_num < 0 || c_oper2_num >= NUMMOBJCOUNTERS)
+        return; // invalid
 
-   c_oper2 = &(mo->counters[c_oper2_num]);
+    c_oper2 = &(mo->counters[c_oper2_num]);
 
-   if(c_dest_num < 0 || c_dest_num >= NUMMOBJCOUNTERS)
-      return; // invalid
+    if(c_dest_num < 0 || c_dest_num >= NUMMOBJCOUNTERS)
+        return; // invalid
 
-   c_dest = &(mo->counters[c_dest_num]);
+    c_dest = &(mo->counters[c_dest_num]);
 
-   switch(specialop)
-   {
-   case CPOP_ADD:
-      *c_dest = *c_oper1 + *c_oper2; break;
-   case CPOP_SUB:
-      *c_dest = *c_oper1 - *c_oper2; break;
-   case CPOP_MUL:
-      *c_dest = *c_oper1 * *c_oper2; break;
-   case CPOP_DIV:
-      if(c_oper2) // don't divide by zero
-         *c_dest = *c_oper1 / *c_oper2;
-      break;
-   case CPOP_MOD:
-      if(*c_oper2 > 0) // only allow modulus by positive values
-         *c_dest = *c_oper1 % *c_oper2;
-      break;
-   case CPOP_AND:
-      *c_dest = *c_oper1 & *c_oper2; break;
-   case CPOP_OR:
-      *c_dest = *c_oper1 | *c_oper2; break;
-   case CPOP_XOR:
-      *c_dest = *c_oper1 ^ *c_oper2; break;
-   case CPOP_DAMAGE:
-      // do a HITDICE-style calculation
-      if(*c_oper2 > 0) // the modulus must be positive
-         *c_dest = *c_oper1 * ((P_Random(pr_setcounter) % *c_oper2) + 1);
-      break;
-   case CPOP_SHIFTLEFT:
-      *c_dest = *c_oper1 << *c_oper2; break;
-   case CPOP_SHIFTRIGHT:
-      *c_dest = *c_oper1 >> *c_oper2; break;
+    switch(specialop)
+    {
+    case CPOP_ADD: *c_dest = *c_oper1 + *c_oper2; break;
+    case CPOP_SUB: *c_dest = *c_oper1 - *c_oper2; break;
+    case CPOP_MUL: *c_dest = *c_oper1 * *c_oper2; break;
+    case CPOP_DIV:
+        if(c_oper2) // don't divide by zero
+            *c_dest = *c_oper1 / *c_oper2;
+        break;
+    case CPOP_MOD:
+        if(*c_oper2 > 0) // only allow modulus by positive values
+            *c_dest = *c_oper1 % *c_oper2;
+        break;
+    case CPOP_AND: *c_dest = *c_oper1 & *c_oper2; break;
+    case CPOP_OR:  *c_dest = *c_oper1 | *c_oper2; break;
+    case CPOP_XOR: *c_dest = *c_oper1 ^ *c_oper2; break;
+    case CPOP_DAMAGE:
+        // do a HITDICE-style calculation
+        if(*c_oper2 > 0) // the modulus must be positive
+            *c_dest = *c_oper1 * ((P_Random(pr_setcounter) % *c_oper2) + 1);
+        break;
+    case CPOP_SHIFTLEFT:  *c_dest = *c_oper1 << *c_oper2; break;
+    case CPOP_SHIFTRIGHT: *c_dest = *c_oper1 >> *c_oper2; break;
 
-      // unary operations (c_oper2 is unused for these)
-   case CPOP_ABS:
-      *c_dest = abs(*c_oper1); break;
-   case CPOP_NEGATE:
-      *c_dest = -(*c_oper1); break;
-   case CPOP_NOT:
-      *c_dest = !(*c_oper1); break;
-   case CPOP_INVERT:
-      *c_dest = ~(*c_oper1); break;
-   default:
-      break;
-   }
+    // unary operations (c_oper2 is unused for these)
+    case CPOP_ABS:    *c_dest = abs(*c_oper1); break;
+    case CPOP_NEGATE: *c_dest = -(*c_oper1); break;
+    case CPOP_NOT:    *c_dest = !(*c_oper1); break;
+    case CPOP_INVERT: *c_dest = ~(*c_oper1); break;
+    default: //
+        break;
+    }
 }
 
 //
@@ -635,25 +575,25 @@ void A_CounterOp(actionargs_t *actionargs)
 //
 void A_CopyCounter(actionargs_t *actionargs)
 {
-   Mobj      *mo   = actionargs->actor;
-   arglist_t *args = actionargs->args;
-   int cnum1, cnum2;
-   int *src, *dest;
+    Mobj      *mo   = actionargs->actor;
+    arglist_t *args = actionargs->args;
+    int        cnum1, cnum2;
+    int       *src, *dest;
 
-   cnum1 = E_ArgAsInt(args, 0, 0);
-   cnum2 = E_ArgAsInt(args, 1, 0);
+    cnum1 = E_ArgAsInt(args, 0, 0);
+    cnum2 = E_ArgAsInt(args, 1, 0);
 
-   if(cnum1 < 0 || cnum1 >= NUMMOBJCOUNTERS)
-      return; // invalid
+    if(cnum1 < 0 || cnum1 >= NUMMOBJCOUNTERS)
+        return; // invalid
 
-   src = &(mo->counters[cnum1]);
+    src = &(mo->counters[cnum1]);
 
-   if(cnum2 < 0 || cnum2 >= NUMMOBJCOUNTERS)
-      return; // invalid
+    if(cnum2 < 0 || cnum2 >= NUMMOBJCOUNTERS)
+        return; // invalid
 
-   dest = &(mo->counters[cnum2]);
+    dest = &(mo->counters[cnum2]);
 
-   *dest = *src;
+    *dest = *src;
 }
 
 //
@@ -664,39 +604,31 @@ void A_CopyCounter(actionargs_t *actionargs)
 // haleyjd 03/31/06
 //
 
-static const char *kwds_A_WeaponCtrJump[] =
-{
-   "less",                   // 0
-   "lessorequal",            // 1
-   "greater",                // 2
-   "greaterorequal",         // 3
-   "equal",                  // 4
-   "notequal",               // 5
-   "and",                    // 6
-   "less_counter",           // 7
-   "lessorequal_counter",    // 8
-   "greater_counter",        // 9
-   "greaterorequal_counter", // 10
-   "equal_counter",          // 11
-   "notequal_counter",       // 12
-   "and_counter",            // 13
+static const char *kwds_A_WeaponCtrJump[] = {
+    "less",                   // 0
+    "lessorequal",            // 1
+    "greater",                // 2
+    "greaterorequal",         // 3
+    "equal",                  // 4
+    "notequal",               // 5
+    "and",                    // 6
+    "less_counter",           // 7
+    "lessorequal_counter",    // 8
+    "greater_counter",        // 9
+    "greaterorequal_counter", // 10
+    "equal_counter",          // 11
+    "notequal_counter",       // 12
+    "and_counter",            // 13
 };
 
-static argkeywd_t weapctrkwds =
-{
-   kwds_A_WeaponCtrJump, sizeof(kwds_A_WeaponCtrJump) / sizeof(const char *)
+static argkeywd_t weapctrkwds = { kwds_A_WeaponCtrJump, sizeof(kwds_A_WeaponCtrJump) / sizeof(const char *) };
+
+static const char *kwds_pspr_choice[] = {
+    "weapon", // 0
+    "flash",  // 1
 };
 
-static const char *kwds_pspr_choice[] =
-{
-   "weapon",                // 0
-   "flash",                 // 1
-};
-
-static argkeywd_t psprkwds =
-{
-   kwds_pspr_choice, sizeof(kwds_pspr_choice) / sizeof(const char *)
-};
+static argkeywd_t psprkwds = { kwds_pspr_choice, sizeof(kwds_pspr_choice) / sizeof(const char *) };
 
 //
 // A_WeaponCtrJump
@@ -712,85 +644,72 @@ static argkeywd_t psprkwds =
 //
 void A_WeaponCtrJump(actionargs_t *actionargs)
 {
-   bool branch = false;
-   int statenum, checktype, cnum, psprnum;
-   int value, *counter;
-   player_t  *player = actionargs->actor->player;
-   pspdef_t  *pspr   = actionargs->pspr;
-   arglist_t *args   = actionargs->args;
+    bool       branch = false;
+    int        statenum, checktype, cnum, psprnum;
+    int        value, *counter;
+    player_t  *player = actionargs->actor->player;
+    pspdef_t  *pspr   = actionargs->pspr;
+    arglist_t *args   = actionargs->args;
 
-   if(!player || !pspr)
-      return;
+    if(!player || !pspr)
+        return;
 
-   statenum  = E_ArgAsStateNumNI(args, 0, player);
-   checktype = E_ArgAsKwd(args, 1, &weapctrkwds, 0);
-   value     = E_ArgAsInt(args, 2, 0);
-   cnum      = E_ArgAsInt(args, 3, 0);
-   psprnum   = E_ArgAsKwd(args, 4, &psprkwds, 0);
+    statenum  = E_ArgAsStateNumNI(args, 0, player);
+    checktype = E_ArgAsKwd(args, 1, &weapctrkwds, 0);
+    value     = E_ArgAsInt(args, 2, 0);
+    cnum      = E_ArgAsInt(args, 3, 0);
+    psprnum   = E_ArgAsKwd(args, 4, &psprkwds, 0);
 
-   // validate state
-   if(statenum < 0)
-      return;
+    // validate state
+    if(statenum < 0)
+        return;
 
-   // validate psprite number
-   if(psprnum < 0 || psprnum >= NUMPSPRITES)
-      return;
+    // validate psprite number
+    if(psprnum < 0 || psprnum >= NUMPSPRITES)
+        return;
 
-   switch(cnum)
-   {
-   case 0:
-   case 1:
-   case 2:
-      counter = E_GetIndexedWepCtrForPlayer(player, cnum);
-      break;
-   default:
-      return;
-   }
+    switch(cnum)
+    {
+    case 0:
+    case 1:
+    case 2:  counter = E_GetIndexedWepCtrForPlayer(player, cnum); break;
+    default: return;
+    }
 
-   // 08/02/04:
-   // support getting check value from a counter
-   // if checktype is greater than the last immediate operator,
-   // then the comparison value is actually a counter number
+    // 08/02/04:
+    // support getting check value from a counter
+    // if checktype is greater than the last immediate operator,
+    // then the comparison value is actually a counter number
 
-   if(checktype >= CPC_NUMIMMEDIATE)
-   {
-      // turn it into the corresponding immediate operation
-      checktype -= CPC_NUMIMMEDIATE;
+    if(checktype >= CPC_NUMIMMEDIATE)
+    {
+        // turn it into the corresponding immediate operation
+        checktype -= CPC_NUMIMMEDIATE;
 
-      switch(value)
-      {
-      case 0:
-      case 1:
-      case 2:
-         value = *E_GetIndexedWepCtrForPlayer(player, value);
-         break;
-      default:
-         return; // invalid counter number
-      }
-   }
+        switch(value)
+        {
+        case 0:
+        case 1:
+        case 2:  value = *E_GetIndexedWepCtrForPlayer(player, value); break;
+        default: return; // invalid counter number
+        }
+    }
 
-   switch(checktype)
-   {
-   case CPC_LESS:
-      branch = (*counter < value); break;
-   case CPC_LESSOREQUAL:
-      branch = (*counter <= value); break;
-   case CPC_GREATER:
-      branch = (*counter > value); break;
-   case CPC_GREATEROREQUAL:
-      branch = (*counter >= value); break;
-   case CPC_EQUAL:
-      branch = (*counter == value); break;
-   case CPC_NOTEQUAL:
-      branch = (*counter != value); break;
-   case CPC_BITWISEAND:
-      branch = !!(*counter & value); break;
-   default:
-      break;
-   }
+    switch(checktype)
+    {
+    case CPC_LESS:           branch = (*counter < value); break;
+    case CPC_LESSOREQUAL:    branch = (*counter <= value); break;
+    case CPC_GREATER:        branch = (*counter > value); break;
+    case CPC_GREATEROREQUAL: branch = (*counter >= value); break;
+    case CPC_EQUAL:          branch = (*counter == value); break;
+    case CPC_NOTEQUAL:       branch = (*counter != value); break;
+    case CPC_BITWISEAND:     branch = !!(*counter & value); break;
+    default: //
+        break;
+    }
 
-   if(branch)
-      P_SetPsprite(*player, psprnum, statenum);
+    if(branch)
+        P_SetPsprite(*player, psprnum, statenum);
 }
 
 //
@@ -805,86 +724,73 @@ void A_WeaponCtrJump(actionargs_t *actionargs)
 //
 void A_WeaponCtrJumpEx(actionargs_t *actionargs)
 {
-   bool branch = false;
-   int checktype, cnum, psprnum;
-   int value, *counter;
-   state_t   *state;
-   player_t  *player = actionargs->actor->player;
-   pspdef_t  *pspr   = actionargs->pspr;
-   arglist_t *args   = actionargs->args;
+    bool       branch = false;
+    int        checktype, cnum, psprnum;
+    int        value, *counter;
+    state_t   *state;
+    player_t  *player = actionargs->actor->player;
+    pspdef_t  *pspr   = actionargs->pspr;
+    arglist_t *args   = actionargs->args;
 
-   if(!player || !pspr)
-      return;
+    if(!player || !pspr)
+        return;
 
-   state     = E_ArgAsStateLabel(player, args, 0);
-   checktype = E_ArgAsKwd(args, 1, &weapctrkwds, 0);
-   value     = E_ArgAsInt(args, 2, 0);
-   cnum      = E_ArgAsInt(args, 3, 0);
-   psprnum   = E_ArgAsKwd(args, 4, &psprkwds, 0);
+    state     = E_ArgAsStateLabel(player, args, 0);
+    checktype = E_ArgAsKwd(args, 1, &weapctrkwds, 0);
+    value     = E_ArgAsInt(args, 2, 0);
+    cnum      = E_ArgAsInt(args, 3, 0);
+    psprnum   = E_ArgAsKwd(args, 4, &psprkwds, 0);
 
-   // validate state
-   if(!state)
-      return;
+    // validate state
+    if(!state)
+        return;
 
-   // validate psprite number
-   if(psprnum < 0 || psprnum >= NUMPSPRITES)
-      return;
+    // validate psprite number
+    if(psprnum < 0 || psprnum >= NUMPSPRITES)
+        return;
 
-   switch(cnum)
-   {
-   case 0:
-   case 1:
-   case 2:
-      counter = E_GetIndexedWepCtrForPlayer(player, cnum);
-      break;
-   default:
-      return;
-   }
+    switch(cnum)
+    {
+    case 0:
+    case 1:
+    case 2:  counter = E_GetIndexedWepCtrForPlayer(player, cnum); break;
+    default: return;
+    }
 
-   // 08/02/04:
-   // support getting check value from a counter
-   // if checktype is greater than the last immediate operator,
-   // then the comparison value is actually a counter number
+    // 08/02/04:
+    // support getting check value from a counter
+    // if checktype is greater than the last immediate operator,
+    // then the comparison value is actually a counter number
 
-   if(checktype >= CPC_NUMIMMEDIATE)
-   {
-      // turn it into the corresponding immediate operation
-      checktype -= CPC_NUMIMMEDIATE;
+    if(checktype >= CPC_NUMIMMEDIATE)
+    {
+        // turn it into the corresponding immediate operation
+        checktype -= CPC_NUMIMMEDIATE;
 
-      switch(value)
-      {
-      case 0:
-      case 1:
-      case 2:
-         value = *E_GetIndexedWepCtrForPlayer(player, value);
-         break;
-      default:
-         return; // invalid counter number
-      }
-   }
+        switch(value)
+        {
+        case 0:
+        case 1:
+        case 2:  value = *E_GetIndexedWepCtrForPlayer(player, value); break;
+        default: return; // invalid counter number
+        }
+    }
 
-   switch(checktype)
-   {
-   case CPC_LESS:
-      branch = (*counter < value); break;
-   case CPC_LESSOREQUAL:
-      branch = (*counter <= value); break;
-   case CPC_GREATER:
-      branch = (*counter > value); break;
-   case CPC_GREATEROREQUAL:
-      branch = (*counter >= value); break;
-   case CPC_EQUAL:
-      branch = (*counter == value); break;
-   case CPC_NOTEQUAL:
-      branch = (*counter != value); break;
-   case CPC_BITWISEAND:
-      branch = !!(*counter & value); break;
-   default:
-      break;
-   }
+    switch(checktype)
+    {
+    case CPC_LESS:           branch = (*counter < value); break;
+    case CPC_LESSOREQUAL:    branch = (*counter <= value); break;
+    case CPC_GREATER:        branch = (*counter > value); break;
+    case CPC_GREATEROREQUAL: branch = (*counter >= value); break;
+    case CPC_EQUAL:          branch = (*counter == value); break;
+    case CPC_NOTEQUAL:       branch = (*counter != value); break;
+    case CPC_BITWISEAND:     branch = !!(*counter & value); break;
+    default: //
+        break;
+    }
 
-   if(branch)
-      P_SetPsprite(*player, psprnum, state->index);
+    if(branch)
+        P_SetPsprite(*player, psprnum, state->index);
 }
 
 //
@@ -902,75 +808,71 @@ void A_WeaponCtrJumpEx(actionargs_t *actionargs)
 //
 void A_WeaponCtrSwitch(actionargs_t *actionargs)
 {
-   int cnum, startstate, numstates, psprnum;
-   int       *counter;
-   player_t  *player = actionargs->actor->player;
-   pspdef_t  *pspr   = actionargs->pspr;
-   arglist_t *args   = actionargs->args;
+    int        cnum, startstate, numstates, psprnum;
+    int       *counter;
+    player_t  *player = actionargs->actor->player;
+    pspdef_t  *pspr   = actionargs->pspr;
+    arglist_t *args   = actionargs->args;
 
-   if(!player || !pspr)
-      return;
+    if(!player || !pspr)
+        return;
 
-   cnum       = E_ArgAsInt(args, 0, 0);
-   startstate = E_ArgAsStateNumNI(args, 1, player);
-   numstates  = E_ArgAsInt(args, 2, 0) - 1;
-   psprnum    = E_ArgAsKwd(args, 3, &psprkwds, 0);
+    cnum       = E_ArgAsInt(args, 0, 0);
+    startstate = E_ArgAsStateNumNI(args, 1, player);
+    numstates  = E_ArgAsInt(args, 2, 0) - 1;
+    psprnum    = E_ArgAsKwd(args, 3, &psprkwds, 0);
 
-   // validate psprite number
-   if(psprnum < 0 || psprnum >= NUMPSPRITES)
-      return;
+    // validate psprite number
+    if(psprnum < 0 || psprnum >= NUMPSPRITES)
+        return;
 
-   // get counter
-   switch(cnum)
-   {
-   case 0:
-   case 1:
-   case 2:
-      counter = E_GetIndexedWepCtrForPlayer(player, cnum);
-      break;
-   default:
-      return;
-   }
+    // get counter
+    switch(cnum)
+    {
+    case 0:
+    case 1:
+    case 2: //
+        counter = E_GetIndexedWepCtrForPlayer(player, cnum);
+        break;
+    default: //
+        return;
+    }
 
-   // verify startstate
-   if(startstate < 0)
-      return;
+    // verify startstate
+    if(startstate < 0)
+        return;
 
-   // verify last state is < NUMSTATES
-   if(startstate + numstates >= NUMSTATES)
-      return;
+    // verify last state is < NUMSTATES
+    if(startstate + numstates >= NUMSTATES)
+        return;
 
-   // verify counter is in range
-   if(*counter < 0 || *counter > numstates)
-      return;
+    // verify counter is in range
+    if(*counter < 0 || *counter > numstates)
+        return;
 
-   // jump!
-   P_SetPsprite(*player, psprnum, startstate + *counter);
+    // jump!
+    P_SetPsprite(*player, psprnum, startstate + *counter);
 }
 
-static const char *kwds_A_WeaponSetCtr[] =
-{
-   "assign",           //  0
-   "add",              //  1
-   "sub",              //  2
-   "mul",              //  3
-   "div",              //  4
-   "mod",              //  5
-   "and",              //  6
-   "andnot",           //  7
-   "or",               //  8
-   "xor",              //  9
-   "rand",             //  10
-   "randmod",          //  11
-   "{DUMMY}",          //  12
-   "rshift",           //  13
-   "lshift",           //  14
+static const char *kwds_A_WeaponSetCtr[] = {
+    "assign",  //  0
+    "add",     //  1
+    "sub",     //  2
+    "mul",     //  3
+    "div",     //  4
+    "mod",     //  5
+    "and",     //  6
+    "andnot",  //  7
+    "or",      //  8
+    "xor",     //  9
+    "rand",    //  10
+    "randmod", //  11
+    "{DUMMY}", //  12
+    "rshift",  //  13
+    "lshift",  //  14
 };
 
-static argkeywd_t weapsetkwds =
-{
-   kwds_A_WeaponSetCtr, sizeof(kwds_A_WeaponSetCtr) / sizeof(const char *)
-};
+static argkeywd_t weapsetkwds = { kwds_A_WeaponSetCtr, sizeof(kwds_A_WeaponSetCtr) / sizeof(const char *) };
 
 //
 // A_WeaponSetCtr
@@ -985,100 +887,82 @@ static argkeywd_t weapsetkwds =
 //
 void A_WeaponSetCtr(actionargs_t *actionargs)
 {
-   int cnum;
-   int value;
-   int specialop;
-   int       *counter;
-   player_t  *player = actionargs->actor->player;
-   pspdef_t  *pspr   = actionargs->pspr;
-   arglist_t *args   = actionargs->args;
+    int        cnum;
+    int        value;
+    int        specialop;
+    int       *counter;
+    player_t  *player = actionargs->actor->player;
+    pspdef_t  *pspr   = actionargs->pspr;
+    arglist_t *args   = actionargs->args;
 
-   if(!player || !pspr)
-      return;
+    if(!player || !pspr)
+        return;
 
-   cnum      = E_ArgAsInt(args, 0, 0);
-   value     = E_ArgAsInt(args, 1, 0);
-   specialop = E_ArgAsKwd(args, 2, &weapsetkwds, 0);
+    cnum      = E_ArgAsInt(args, 0, 0);
+    value     = E_ArgAsInt(args, 1, 0);
+    specialop = E_ArgAsKwd(args, 2, &weapsetkwds, 0);
 
-   switch(cnum)
-   {
-   case 0:
-   case 1:
-   case 2:
-      counter = E_GetIndexedWepCtrForPlayer(player, cnum);
-      break;
-   default:
-      return;
-   }
+    switch(cnum)
+    {
+    case 0:
+    case 1:
+    case 2:  counter = E_GetIndexedWepCtrForPlayer(player, cnum); break;
+    default: return;
+    }
 
-   switch(specialop)
-   {
-   case CPOP_ASSIGN:
-      *counter = value; break;
-   case CPOP_ADD:
-      *counter += value; break;
-   case CPOP_SUB:
-      *counter -= value; break;
-   case CPOP_MUL:
-      *counter *= value; break;
-   case CPOP_DIV:
-      if(value) // don't divide by zero
-         *counter /= value;
-      break;
-   case CPOP_MOD:
-      if(value > 0) // only allow modulus by positive values
-         *counter %= value;
-      break;
-   case CPOP_AND:
-      *counter &= value; break;
-   case CPOP_ANDNOT:
-      *counter &= ~value; break; // compound and-not operation
-   case CPOP_OR:
-      *counter |= value; break;
-   case CPOP_XOR:
-      *counter ^= value; break;
-   case CPOP_RND:
-      *counter = P_Random(pr_weapsetctr); break;
-   case CPOP_RNDMOD:
-      if(value > 0)
-         *counter = P_Random(pr_weapsetctr) % value;
-      break;
-   case CPOP_SHIFTLEFT:
-      *counter <<= value; break;
-   case CPOP_SHIFTRIGHT:
-      *counter >>= value; break;
-   default:
-      break;
-   }
+    switch(specialop)
+    {
+    case CPOP_ASSIGN: *counter = value; break;
+    case CPOP_ADD:    *counter += value; break;
+    case CPOP_SUB:    *counter -= value; break;
+    case CPOP_MUL:    *counter *= value; break;
+    case CPOP_DIV:
+        if(value) // don't divide by zero
+            *counter /= value;
+        break;
+    case CPOP_MOD:
+        if(value > 0) // only allow modulus by positive values
+            *counter %= value;
+        break;
+    case CPOP_AND:    *counter &= value; break;
+    case CPOP_ANDNOT: *counter &= ~value; break; // compound and-not operation
+    case CPOP_OR:     *counter |= value; break;
+    case CPOP_XOR:    *counter ^= value; break;
+    case CPOP_RND:    *counter = P_Random(pr_weapsetctr); break;
+    case CPOP_RNDMOD:
+        if(value > 0)
+            *counter = P_Random(pr_weapsetctr) % value;
+        break;
+    case CPOP_SHIFTLEFT:  *counter <<= value; break;
+    case CPOP_SHIFTRIGHT: *counter >>= value; break;
+    default: //
+        break;
+    }
 }
 
-static const char *kwds_A_WeaponCtrOp[] =
-{
-   "{DUMMY}",           // 0
-   "add",               // 1
-   "sub",               // 2
-   "mul",               // 3
-   "div",               // 4
-   "mod",               // 5
-   "and",               // 6
-   "{DUMMY}",           // 7
-   "or",                // 8
-   "xor",               // 9
-   "{DUMMY}",           // 10
-   "{DUMMY}",           // 11
-   "hitdice",           // 12
-   "rshift",            // 13
-   "lshift",            // 14
-   "abs",               // 15
-   "negate",            // 16
-   "not",               // 17
-   "invert",            // 18
+static const char *kwds_A_WeaponCtrOp[] = {
+    "{DUMMY}", // 0
+    "add",     // 1
+    "sub",     // 2
+    "mul",     // 3
+    "div",     // 4
+    "mod",     // 5
+    "and",     // 6
+    "{DUMMY}", // 7
+    "or",      // 8
+    "xor",     // 9
+    "{DUMMY}", // 10
+    "{DUMMY}", // 11
+    "hitdice", // 12
+    "rshift",  // 13
+    "lshift",  // 14
+    "abs",     // 15
+    "negate",  // 16
+    "not",     // 17
+    "invert",  // 18
 };
 
-static argkeywd_t weapctropkwds =
-{
-   kwds_A_WeaponCtrOp, sizeof(kwds_A_WeaponCtrOp) / sizeof(const char *)
-};
+static argkeywd_t weapctropkwds = { kwds_A_WeaponCtrOp, sizeof(kwds_A_WeaponCtrOp) / sizeof(const char *) };
 
 //
 // A_WeaponCtrOp
@@ -1093,101 +977,89 @@ static argkeywd_t weapctropkwds =
 //
 void A_WeaponCtrOp(actionargs_t *actionargs)
 {
-   player_t  *player = actionargs->actor->player;
-   pspdef_t  *pspr   = actionargs->pspr;
-   arglist_t *args   = actionargs->args;
-   int c_oper1_num;
-   int c_oper2_num;
-   int c_dest_num;
-   int specialop;
+    player_t  *player = actionargs->actor->player;
+    pspdef_t  *pspr   = actionargs->pspr;
+    arglist_t *args   = actionargs->args;
+    int        c_oper1_num;
+    int        c_oper2_num;
+    int        c_dest_num;
+    int        specialop;
 
-   int *c_oper1, *c_oper2, *c_dest;
+    int *c_oper1, *c_oper2, *c_dest;
 
-   if(!player || !pspr)
-      return;
+    if(!player || !pspr)
+        return;
 
-   c_oper1_num = E_ArgAsInt(args, 0, 0);
-   c_oper2_num = E_ArgAsInt(args, 1, 0);
-   c_dest_num  = E_ArgAsInt(args, 2, 0);
-   specialop   = E_ArgAsKwd(args, 3, &weapctropkwds, 0);
+    c_oper1_num = E_ArgAsInt(args, 0, 0);
+    c_oper2_num = E_ArgAsInt(args, 1, 0);
+    c_dest_num  = E_ArgAsInt(args, 2, 0);
+    specialop   = E_ArgAsKwd(args, 3, &weapctropkwds, 0);
 
-   switch(c_oper1_num)
-   {
-   case 0:
-   case 1:
-   case 2:
-      c_oper1 = E_GetIndexedWepCtrForPlayer(player, c_oper1_num);
-      break;
-   default:
-      return;
-   }
+    switch(c_oper1_num)
+    {
+    case 0:
+    case 1:
+    case 2: //
+        c_oper1 = E_GetIndexedWepCtrForPlayer(player, c_oper1_num);
+        break;
+    default: //
+        return;
+    }
 
-   switch(c_oper2_num)
-   {
-   case 0:
-   case 1:
-   case 2:
-      c_oper2 = E_GetIndexedWepCtrForPlayer(player, c_oper2_num);
-      break;
-   default:
-      return;
-   }
+    switch(c_oper2_num)
+    {
+    case 0:
+    case 1:
+    case 2: //
+        c_oper2 = E_GetIndexedWepCtrForPlayer(player, c_oper2_num);
+        break;
+    default: //
+        return;
+    }
 
-   switch(c_dest_num)
-   {
-   case 0:
-   case 1:
-   case 2:
-      c_dest = E_GetIndexedWepCtrForPlayer(player, c_dest_num);
-      break;
-   default:
-      return;
-   }
+    switch(c_dest_num)
+    {
+    case 0:
+    case 1:
+    case 2: //
+        c_dest = E_GetIndexedWepCtrForPlayer(player, c_dest_num);
+        break;
+    default: //
+        return;
+    }
 
-   switch(specialop)
-   {
-   case CPOP_ADD:
-      *c_dest = *c_oper1 + *c_oper2; break;
-   case CPOP_SUB:
-      *c_dest = *c_oper1 - *c_oper2; break;
-   case CPOP_MUL:
-      *c_dest = *c_oper1 * *c_oper2; break;
-   case CPOP_DIV:
-      if(c_oper2) // don't divide by zero
-         *c_dest = *c_oper1 / *c_oper2;
-      break;
-   case CPOP_MOD:
-      if(*c_oper2 > 0) // only allow modulus by positive values
-         *c_dest = *c_oper1 % *c_oper2;
-      break;
-   case CPOP_AND:
-      *c_dest = *c_oper1 & *c_oper2; break;
-   case CPOP_OR:
-      *c_dest = *c_oper1 | *c_oper2; break;
-   case CPOP_XOR:
-      *c_dest = *c_oper1 ^ *c_oper2; break;
-   case CPOP_DAMAGE:
-      // do a HITDICE-style calculation
-      if(*c_oper2 > 0) // the modulus must be positive
-         *c_dest = *c_oper1 * ((P_Random(pr_weapsetctr) % *c_oper2) + 1);
-      break;
-   case CPOP_SHIFTLEFT:
-      *c_dest = *c_oper1 << *c_oper2; break;
-   case CPOP_SHIFTRIGHT:
-      *c_dest = *c_oper1 >> *c_oper2; break;
+    switch(specialop)
+    {
+    case CPOP_ADD: *c_dest = *c_oper1 + *c_oper2; break;
+    case CPOP_SUB: *c_dest = *c_oper1 - *c_oper2; break;
+    case CPOP_MUL: *c_dest = *c_oper1 * *c_oper2; break;
+    case CPOP_DIV:
+        if(c_oper2) // don't divide by zero
+            *c_dest = *c_oper1 / *c_oper2;
+        break;
+    case CPOP_MOD:
+        if(*c_oper2 > 0) // only allow modulus by positive values
+            *c_dest = *c_oper1 % *c_oper2;
+        break;
+    case CPOP_AND: *c_dest = *c_oper1 & *c_oper2; break;
+    case CPOP_OR:  *c_dest = *c_oper1 | *c_oper2; break;
+    case CPOP_XOR: *c_dest = *c_oper1 ^ *c_oper2; break;
+    case CPOP_DAMAGE:
+        // do a HITDICE-style calculation
+        if(*c_oper2 > 0) // the modulus must be positive
+            *c_dest = *c_oper1 * ((P_Random(pr_weapsetctr) % *c_oper2) + 1);
+        break;
+    case CPOP_SHIFTLEFT:  *c_dest = *c_oper1 << *c_oper2; break;
+    case CPOP_SHIFTRIGHT: *c_dest = *c_oper1 >> *c_oper2; break;
 
-      // unary operations (c_oper2 is unused for these)
-   case CPOP_ABS:
-      *c_dest = abs(*c_oper1); break;
-   case CPOP_NEGATE:
-      *c_dest = -(*c_oper1); break;
-   case CPOP_NOT:
-      *c_dest = !(*c_oper1); break;
-   case CPOP_INVERT:
-      *c_dest = ~(*c_oper1); break;
-   default:
-      break;
-   }
+    // unary operations (c_oper2 is unused for these)
+    case CPOP_ABS:    *c_dest = abs(*c_oper1); break;
+    case CPOP_NEGATE: *c_dest = -(*c_oper1); break;
+    case CPOP_NOT:    *c_dest = !(*c_oper1); break;
+    case CPOP_INVERT: *c_dest = ~(*c_oper1); break;
+    default: //
+        break;
+    }
 }
 
 //
@@ -1200,41 +1072,41 @@ void A_WeaponCtrOp(actionargs_t *actionargs)
 //
 void A_WeaponCopyCtr(actionargs_t *actionargs)
 {
-   int cnum1, cnum2;
-   int *src, *dest;
-   player_t  *player = actionargs->actor->player;
-   pspdef_t  *pspr   = actionargs->pspr;
-   arglist_t *args   = actionargs->args;
+    int        cnum1, cnum2;
+    int       *src, *dest;
+    player_t  *player = actionargs->actor->player;
+    pspdef_t  *pspr   = actionargs->pspr;
+    arglist_t *args   = actionargs->args;
 
-   if(!player || !pspr)
-      return;
+    if(!player || !pspr)
+        return;
 
-   cnum1 = E_ArgAsInt(args, 0, 0);
-   cnum2 = E_ArgAsInt(args, 1, 0);
+    cnum1 = E_ArgAsInt(args, 0, 0);
+    cnum2 = E_ArgAsInt(args, 1, 0);
 
-   switch(cnum1)
-   {
-   case 0:
-   case 1:
-   case 2:
-      src = E_GetIndexedWepCtrForPlayer(player, cnum1);
-      break;
-   default:
-      return;
-   }
+    switch(cnum1)
+    {
+    case 0:
+    case 1:
+    case 2: //
+        src = E_GetIndexedWepCtrForPlayer(player, cnum1);
+        break;
+    default: //
+        return;
+    }
 
-   switch(cnum2)
-   {
-   case 0:
-   case 1:
-   case 2:
-      dest = E_GetIndexedWepCtrForPlayer(player, cnum2);
-      break;
-   default:
-      return;
-   }
+    switch(cnum2)
+    {
+    case 0:
+    case 1:
+    case 2: //
+        dest = E_GetIndexedWepCtrForPlayer(player, cnum2);
+        break;
+    default: //
+        return;
+    }
 
-   *dest = *src;
+    *dest = *src;
 }
 
 //
@@ -1252,101 +1124,85 @@ void A_WeaponCopyCtr(actionargs_t *actionargs)
 //
 void A_CheckReloadEx(actionargs_t *actionargs)
 {
-   bool branch = false;
-   int statenum, checktype, psprnum, value, ammo;
-   player_t        *player = actionargs->actor->player;
-   pspdef_t        *pspr   = actionargs->pspr;
-   arglist_t       *args   = actionargs->args;
-   weaponinfo_t    *w;
+    bool          branch = false;
+    int           statenum, checktype, psprnum, value, ammo;
+    player_t     *player = actionargs->actor->player;
+    pspdef_t     *pspr   = actionargs->pspr;
+    arglist_t    *args   = actionargs->args;
+    weaponinfo_t *w;
 
-   if(!player || !pspr)
-      return;
+    if(!player || !pspr)
+        return;
 
-   w = player->readyweapon;
-   if(!w->ammo) // no-ammo weapon?
-      return;
+    w = player->readyweapon;
+    if(!w->ammo) // no-ammo weapon?
+        return;
 
-   ammo      = E_GetItemOwnedAmount(*player, w->ammo);
-   statenum  = E_ArgAsStateNumNI(args, 0, player);
-   checktype = E_ArgAsKwd(args, 1, &weapctrkwds, 0);
-   value     = E_ArgAsInt(args, 2, 0);
-   psprnum   = E_ArgAsKwd(args, 3, &psprkwds, 0);
+    ammo      = E_GetItemOwnedAmount(*player, w->ammo);
+    statenum  = E_ArgAsStateNumNI(args, 0, player);
+    checktype = E_ArgAsKwd(args, 1, &weapctrkwds, 0);
+    value     = E_ArgAsInt(args, 2, 0);
+    psprnum   = E_ArgAsKwd(args, 3, &psprkwds, 0);
 
-   // validate state number
-   if(statenum < 0)
-      return;
+    // validate state number
+    if(statenum < 0)
+        return;
 
-   // validate psprite number
-   if(psprnum < 0 || psprnum >= NUMPSPRITES)
-      return;
+    // validate psprite number
+    if(psprnum < 0 || psprnum >= NUMPSPRITES)
+        return;
 
-   // 08/02/04:
-   // support getting check value from a counter
-   // if checktype is greater than the last immediate operator,
-   // then the comparison value is actually a counter number
+    // 08/02/04:
+    // support getting check value from a counter
+    // if checktype is greater than the last immediate operator,
+    // then the comparison value is actually a counter number
 
-   if(checktype >= CPC_NUMIMMEDIATE)
-   {
-      // turn it into the corresponding immediate operation
-      checktype -= CPC_NUMIMMEDIATE;
+    if(checktype >= CPC_NUMIMMEDIATE)
+    {
+        // turn it into the corresponding immediate operation
+        checktype -= CPC_NUMIMMEDIATE;
 
-      switch(value)
-      {
-      case 0:
-      case 1:
-      case 2:
-         value = *E_GetIndexedWepCtrForPlayer(player, value);
-         break;
-      default:
-         return; // invalid counter number
-      }
-   }
+        switch(value)
+        {
+        case 0:
+        case 1:
+        case 2: //
+            value = *E_GetIndexedWepCtrForPlayer(player, value);
+            break;
+        default:    //
+            return; // invalid counter number
+        }
+    }
 
-   switch(checktype)
-   {
-   case CPC_LESS:
-      branch = (ammo < value); break;
-   case CPC_LESSOREQUAL:
-      branch = (ammo <= value); break;
-   case CPC_GREATER:
-      branch = (ammo > value); break;
-   case CPC_GREATEROREQUAL:
-      branch = (ammo >= value); break;
-   case CPC_EQUAL:
-      branch = (ammo == value); break;
-   case CPC_NOTEQUAL:
-      branch = (ammo != value); break;
-   case CPC_BITWISEAND:
-      branch = !!(ammo & value); break;
-   default:
-      break;
-   }
+    switch(checktype)
+    {
+    case CPC_LESS:           branch = (ammo < value); break;
+    case CPC_LESSOREQUAL:    branch = (ammo <= value); break;
+    case CPC_GREATER:        branch = (ammo > value); break;
+    case CPC_GREATEROREQUAL: branch = (ammo >= value); break;
+    case CPC_EQUAL:          branch = (ammo == value); break;
+    case CPC_NOTEQUAL:       branch = (ammo != value); break;
+    case CPC_BITWISEAND:     branch = !!(ammo & value); break;
+    default:                 break;
+    }
 
-   if(branch)
-      P_SetPsprite(*player, psprnum, statenum);
+    if(branch)
+        P_SetPsprite(*player, psprnum, statenum);
 }
 
-static const char *kwds_CPSetOrAdd[] =
-{
-   "assign", //  0
-   "add",    //  1
+static const char *kwds_CPSetOrAdd[] = {
+    "assign", //  0
+    "add",    //  1
 };
 
-static argkeywd_t cpsetoradd =
-{
-   kwds_CPSetOrAdd, earrlen(kwds_CPSetOrAdd)
+static argkeywd_t cpsetoradd = { kwds_CPSetOrAdd, earrlen(kwds_CPSetOrAdd) };
+
+static const char *kwds_CPRollTypes[] = {
+    "multiplyone", //  0
+    "rollmany",    //  1
 };
 
-static const char *kwds_CPRollTypes[] =
-{
-   "multiplyone", //  0
-   "rollmany",    //  1
-};
-
-static argkeywd_t cprolltypes =
-{
-   kwds_CPRollTypes, earrlen(kwds_CPRollTypes)
-};
+static argkeywd_t cprolltypes = { kwds_CPRollTypes, earrlen(kwds_CPRollTypes) };
 
 //
 // Performs a TTRPG-style damage dice calculation
@@ -1360,38 +1216,38 @@ static argkeywd_t cprolltypes =
 //
 void A_CounterDiceRoll(actionargs_t *actionargs)
 {
-   Mobj      *mo   = actionargs->actor;
-   arglist_t *args = actionargs->args;
+    Mobj      *mo   = actionargs->actor;
+    arglist_t *args = actionargs->args;
 
-   const int cnum         = E_ArgAsInt(args, 0, 0);
-   const int numdice      = E_ArgAsInt(args, 1, 0);
-   const int numdicesides = E_ArgAsInt(args, 2, 0);
-   const int staticdamage = E_ArgAsInt(args, 3, 0);
-   const int adddamage    = E_ArgAsKwd(args, 4, &cpsetoradd,  0);
-   const int type         = E_ArgAsKwd(args, 5, &cprolltypes, 0);
+    const int cnum         = E_ArgAsInt(args, 0, 0);
+    const int numdice      = E_ArgAsInt(args, 1, 0);
+    const int numdicesides = E_ArgAsInt(args, 2, 0);
+    const int staticdamage = E_ArgAsInt(args, 3, 0);
+    const int adddamage    = E_ArgAsKwd(args, 4, &cpsetoradd, 0);
+    const int type         = E_ArgAsKwd(args, 5, &cprolltypes, 0);
 
-   if(cnum < 0 || cnum >= NUMMOBJCOUNTERS || numdicesides <= 0)
-      return; // invalid
+    if(cnum < 0 || cnum >= NUMMOBJCOUNTERS || numdicesides <= 0)
+        return; // invalid
 
-   int &counter = mo->counters[cnum];
+    int &counter = mo->counters[cnum];
 
-   int val = 0;
-   if(type == 0)
-      val = ((P_Random(pr_setcounter) % numdicesides) + 1) * numdice;
-   else if(type == 1)
-   {
-      if(numdice < 0)
-         return;
+    int val = 0;
+    if(type == 0)
+        val = ((P_Random(pr_setcounter) % numdicesides) + 1) * numdice;
+    else if(type == 1)
+    {
+        if(numdice < 0)
+            return;
 
-      for(int i = 0; i < numdice; i++)
-         val += (P_Random(pr_setcounter) % numdicesides) + 1;
-   }
-   val += staticdamage;
+        for(int i = 0; i < numdice; i++)
+            val += (P_Random(pr_setcounter) % numdicesides) + 1;
+    }
+    val += staticdamage;
 
-   if(adddamage == 0)
-      counter = val;
-   else if(adddamage == 1)
-      counter += val;
+    if(adddamage == 0)
+        counter = val;
+    else if(adddamage == 1)
+        counter += val;
 }
 
 // EOF

@@ -30,88 +30,85 @@
 #include "z_zone.h"
 #include "m_dllist.h"
 
-class  InBuffer;
-class  WadDirectory;
-class  ZAutoBuffer;
+class InBuffer;
+class WadDirectory;
+class ZAutoBuffer;
 struct ZIPEndOfCentralDir;
-class  ZipFile;
+class ZipFile;
 
 struct ZipLump
 {
-   int       gpFlags;    // GP flags from zip directory entry
-   int       flags;      // internal flags
-   int       method;     // compression method
-   uint32_t  compressed; // compressed size
-   uint32_t  size;       // uncompressed size
-   long      offset;     // file offset
-   char     *name;       // full name 
-   ZipFile  *file;       // parent zipfile
+    int      gpFlags;    // GP flags from zip directory entry
+    int      flags;      // internal flags
+    int      method;     // compression method
+    uint32_t compressed; // compressed size
+    uint32_t size;       // uncompressed size
+    long     offset;     // file offset
+    char    *name;       // full name
+    ZipFile *file;       // parent zipfile
 
-   void setAddress(InBuffer &fin);
-   void read(void *buffer);
-   void read(ZAutoBuffer &buf, bool asString);
+    void setAddress(InBuffer &fin);
+    void read(void *buffer);
+    void read(ZAutoBuffer &buf, bool asString);
 };
 
 struct ZipWad
 {
-   void   *buffer;
-   size_t  size;
+    void  *buffer;
+    size_t size;
 
-   DLListItem<ZipWad> links;
+    DLListItem<ZipWad> links;
 };
 
 class ZipFile : public ZoneObject
 {
 public:
-   // Compression methods (definition does not imply support)
-   enum 
-   {
-      METHOD_STORED  = 0,
-      METHOD_SHRINK  = 1,
-      METHOD_IMPLODE = 6,
-      METHOD_DEFLATE = 8,
-      METHOD_BZIP2   = 12,
-      METHOD_LZMA    = 14,
-      METHOD_PPMD    = 98
-   };
+    // Compression methods (definition does not imply support)
+    enum
+    {
+        METHOD_STORED  = 0,
+        METHOD_SHRINK  = 1,
+        METHOD_IMPLODE = 6,
+        METHOD_DEFLATE = 8,
+        METHOD_BZIP2   = 12,
+        METHOD_LZMA    = 14,
+        METHOD_PPMD    = 98
+    };
 
-   // Lump flags
-   enum
-   {
-      LF_CALCOFFSET    = 0x00000001, // Needs true data offset calculated
-      LF_ISEMBEDDEDWAD = 0x00000002  // Is an embedded WAD file
-   };
+    // Lump flags
+    enum
+    {
+        LF_CALCOFFSET    = 0x00000001, // Needs true data offset calculated
+        LF_ISEMBEDDEDWAD = 0x00000002  // Is an embedded WAD file
+    };
 
 protected:
-   ZipLump *lumps;    // directory
-   int      numLumps; // directory size
-   FILE    *file;     // physical disk file
+    ZipLump *lumps;    // directory
+    int      numLumps; // directory size
+    FILE    *file;     // physical disk file
 
-   DLListItem<ZipFile> links; // links for use by WadDirectory
+    DLListItem<ZipFile> links; // links for use by WadDirectory
 
-   DLListItem<ZipWad> *wads;  // wads loaded from inside the zip
+    DLListItem<ZipWad> *wads; // wads loaded from inside the zip
 
-   bool readEndOfCentralDir(InBuffer &fin, ZIPEndOfCentralDir &zcd);
-   bool readCentralDirEntry(InBuffer &fin, ZipLump &lump, bool &skip);
-   bool readCentralDirectory(InBuffer &fin, long offset, uint32_t size);
+    bool readEndOfCentralDir(InBuffer &fin, ZIPEndOfCentralDir &zcd);
+    bool readCentralDirEntry(InBuffer &fin, ZipLump &lump, bool &skip);
+    bool readCentralDirectory(InBuffer &fin, long offset, uint32_t size);
 
 public:
-   ZipFile() 
-      : ZoneObject(), lumps(nullptr), numLumps(0), file(nullptr), links(), wads(nullptr) 
-   {
-   }
-   
-   ~ZipFile();
+    ZipFile() : ZoneObject(), lumps(nullptr), numLumps(0), file(nullptr), links(), wads(nullptr) {}
 
-   bool readFromFile(FILE *f);
+    ~ZipFile();
 
-   void checkForWadFiles(WadDirectory &parentDir);
+    bool readFromFile(FILE *f);
 
-   void     linkTo(DLListItem<ZipFile> **head);
-   ZipLump &getLump(int lumpNum);
-   int      findLump(const char *name) const;
-   int      getNumLumps() const { return numLumps; }   
-   FILE    *getFile()     const { return file;     }
+    void checkForWadFiles(WadDirectory &parentDir);
+
+    void     linkTo(DLListItem<ZipFile> **head);
+    ZipLump &getLump(int lumpNum);
+    int      findLump(const char *name) const;
+    int      getNumLumps() const { return numLumps; }
+    FILE    *getFile() const { return file; }
 };
 
 #endif

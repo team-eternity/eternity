@@ -40,7 +40,7 @@ void E_EDFLogPuts(const char *msg);
 void E_EDFLogPrintf(E_FORMAT_STRING(const char *msg), ...) E_PRINTF(1, 2);
 
 [[noreturn]] void E_EDFLoggedErr(int lv, E_FORMAT_STRING(const char *msg), ...) E_PRINTF(2, 3);
-void E_EDFLoggedWarning(int lv, E_FORMAT_STRING(const char *msg), ...) E_PRINTF(2, 3);
+void              E_EDFLoggedWarning(int lv, E_FORMAT_STRING(const char *msg), ...) E_PRINTF(2, 3);
 
 #endif
 

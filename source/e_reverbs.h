@@ -32,28 +32,28 @@
 // reverb flags
 enum
 {
-   REVERB_ENABLED   = 0x00000001, // represents an actual effect
-   REVERB_EQUALIZED = 0x00000002  // equalizer is enabled.
+    REVERB_ENABLED   = 0x00000001, // represents an actual effect
+    REVERB_EQUALIZED = 0x00000002  // equalizer is enabled.
 };
 
 // EDF reverb data structure
 struct ereverb_t
 {
-   DLListItem<ereverb_t> links; // hash by id
-   int    id;                   // id number
+    DLListItem<ereverb_t> links; // hash by id
+    int                   id;    // id number
 
-   double roomsize;
-   double dampening;
-   double wetscale;
-   double dryscale;
-   double width;
-   int    predelay;
-   double eqlowfreq;
-   double eqhighfreq;
-   double eqlowgain;
-   double eqmidgain;
-   double eqhighgain;
-   unsigned int flags;
+    double       roomsize;
+    double       dampening;
+    double       wetscale;
+    double       dryscale;
+    double       width;
+    int          predelay;
+    double       eqlowfreq;
+    double       eqhighfreq;
+    double       eqlowgain;
+    double       eqmidgain;
+    double       eqhighgain;
+    unsigned int flags;
 };
 
 ereverb_t *E_GetDefaultReverb();            // returns the built-in default reverb

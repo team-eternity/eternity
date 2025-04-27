@@ -39,7 +39,7 @@
 #include "d_dwfile.h"
 #include "d_event.h"
 #include "d_gi.h"
-#include "d_io.h"        // SoM 3/14/2002: strncasecmp
+#include "d_io.h" // SoM 3/14/2002: strncasecmp
 #include "d_main.h"
 #include "d_net.h"
 #include "doomdef.h"
@@ -63,8 +63,8 @@
 
 enum
 {
-   at_variable,
-   at_conscmd     // console command
+    at_variable,
+    at_conscmd // console command
 };
 
 //
@@ -73,128 +73,127 @@ enum
 
 struct keyaction_t
 {
-   const char *name;  // text description
-   int bclass;        // haleyjd 07/03/04: key binding classes
-   int type;          // type of action (at_variable or at_conscmd)
-   int num;           // unique ID number (for at_variable, index into keyactions)
-   keyaction_t *next; // haleyjd: used for console bindings
+    const char  *name;   // text description
+    int          bclass; // haleyjd 07/03/04: key binding classes
+    int          type;   // type of action (at_variable or at_conscmd)
+    int          num;    // unique ID number (for at_variable, index into keyactions)
+    keyaction_t *next;   // haleyjd: used for console bindings
 };
 
-keyaction_t keyactions[NUMKEYACTIONS] =
-{
-   // Null Action
-   { nullptr,             kac_game,    at_variable },
+keyaction_t keyactions[NUMKEYACTIONS] = {
+    // Null Action
+    { nullptr,             kac_game,    at_variable },
 
-   // Game Actions
+    // Game Actions
 
-   { "forward",           kac_game,    at_variable },
-   { "backward",          kac_game,    at_variable },
-   { "left",              kac_game,    at_variable },
-   { "right",             kac_game,    at_variable },
-   { "moveleft",          kac_game,    at_variable },
-   { "moveright",         kac_game,    at_variable },
-   { "use",               kac_game,    at_variable },
-   { "strafe",            kac_game,    at_variable },
-   { "attack",            kac_game,    at_variable },
-   { "altattack",         kac_game,    at_variable },
-   { "reload",            kac_game,    at_variable },
-   { "zoom",              kac_game,    at_variable },
-   { "user1",             kac_game,    at_variable },
-   { "user2",             kac_game,    at_variable },
-   { "user3",             kac_game,    at_variable },
-   { "user4",             kac_game,    at_variable },
-   { "flip",              kac_game,    at_variable },
-   { "speed",             kac_game,    at_variable },
-   { "jump",              kac_game,    at_variable }, // -- joek 12/22/07
-   { "autorun",           kac_game,    at_variable },
+    { "forward",           kac_game,    at_variable },
+    { "backward",          kac_game,    at_variable },
+    { "left",              kac_game,    at_variable },
+    { "right",             kac_game,    at_variable },
+    { "moveleft",          kac_game,    at_variable },
+    { "moveright",         kac_game,    at_variable },
+    { "use",               kac_game,    at_variable },
+    { "strafe",            kac_game,    at_variable },
+    { "attack",            kac_game,    at_variable },
+    { "altattack",         kac_game,    at_variable },
+    { "reload",            kac_game,    at_variable },
+    { "zoom",              kac_game,    at_variable },
+    { "user1",             kac_game,    at_variable },
+    { "user2",             kac_game,    at_variable },
+    { "user3",             kac_game,    at_variable },
+    { "user4",             kac_game,    at_variable },
+    { "flip",              kac_game,    at_variable },
+    { "speed",             kac_game,    at_variable },
+    { "jump",              kac_game,    at_variable }, // -- joek 12/22/07
+    { "autorun",           kac_game,    at_variable },
 
-   { "mlook",             kac_game,    at_variable },
-   { "lookup",            kac_game,    at_variable },
-   { "lookdown",          kac_game,    at_variable },
-   { "center",            kac_game,    at_variable },
+    { "mlook",             kac_game,    at_variable },
+    { "lookup",            kac_game,    at_variable },
+    { "lookdown",          kac_game,    at_variable },
+    { "center",            kac_game,    at_variable },
 
-   { "flyup",             kac_game,    at_variable },
-   { "flydown",           kac_game,    at_variable },
-   { "flycenter",         kac_game,    at_variable },
+    { "flyup",             kac_game,    at_variable },
+    { "flydown",           kac_game,    at_variable },
+    { "flycenter",         kac_game,    at_variable },
 
-   { "weapon1",           kac_game,    at_variable },
-   { "weapon2",           kac_game,    at_variable },
-   { "weapon3",           kac_game,    at_variable },
-   { "weapon4",           kac_game,    at_variable },
-   { "weapon5",           kac_game,    at_variable },
-   { "weapon6",           kac_game,    at_variable },
-   { "weapon7",           kac_game,    at_variable },
-   { "weapon8",           kac_game,    at_variable },
-   { "weapon9",           kac_game,    at_variable },
-   { "nextweapon",        kac_game,    at_variable },
-   { "weaponup",          kac_game,    at_variable },
-   { "weapondown",        kac_game,    at_variable },
+    { "weapon1",           kac_game,    at_variable },
+    { "weapon2",           kac_game,    at_variable },
+    { "weapon3",           kac_game,    at_variable },
+    { "weapon4",           kac_game,    at_variable },
+    { "weapon5",           kac_game,    at_variable },
+    { "weapon6",           kac_game,    at_variable },
+    { "weapon7",           kac_game,    at_variable },
+    { "weapon8",           kac_game,    at_variable },
+    { "weapon9",           kac_game,    at_variable },
+    { "nextweapon",        kac_game,    at_variable },
+    { "weaponup",          kac_game,    at_variable },
+    { "weapondown",        kac_game,    at_variable },
 
-   // HUD Actions
+    // HUD Actions
 
-   { "frags",             kac_hud,     at_variable },
+    { "frags",             kac_hud,     at_variable },
 
-   // Menu Actions
+    // Menu Actions
 
-   { "menu_toggle",       kac_menu,    at_variable },
-   { "menu_help",         kac_menu,    at_variable },
-   { "menu_setup",        kac_menu,    at_variable },
-   { "menu_up",           kac_menu,    at_variable },
-   { "menu_down",         kac_menu,    at_variable },
-   { "menu_confirm",      kac_menu,    at_variable },
-   { "menu_previous",     kac_menu,    at_variable },
-   { "menu_left",         kac_menu,    at_variable },
-   { "menu_right",        kac_menu,    at_variable },
-   { "menu_pageup",       kac_menu,    at_variable },
-   { "menu_pagedown",     kac_menu,    at_variable },
-   { "menu_contents",     kac_menu,    at_variable },
+    { "menu_toggle",       kac_menu,    at_variable },
+    { "menu_help",         kac_menu,    at_variable },
+    { "menu_setup",        kac_menu,    at_variable },
+    { "menu_up",           kac_menu,    at_variable },
+    { "menu_down",         kac_menu,    at_variable },
+    { "menu_confirm",      kac_menu,    at_variable },
+    { "menu_previous",     kac_menu,    at_variable },
+    { "menu_left",         kac_menu,    at_variable },
+    { "menu_right",        kac_menu,    at_variable },
+    { "menu_pageup",       kac_menu,    at_variable },
+    { "menu_pagedown",     kac_menu,    at_variable },
+    { "menu_contents",     kac_menu,    at_variable },
 
-   // Automap Actions
+    // Automap Actions
 
-   { "map_right",         kac_map,     at_variable },
-   { "map_left",          kac_map,     at_variable },
-   { "map_up",            kac_map,     at_variable },
-   { "map_down",          kac_map,     at_variable },
-   { "map_zoomin",        kac_map,     at_variable },
-   { "map_zoomout",       kac_map,     at_variable },
-   { "map_toggle",        kac_map,     at_variable },
-   { "map_gobig",         kac_map,     at_variable },
-   { "map_follow",        kac_map,     at_variable },
-   { "map_mark",          kac_map,     at_variable },
-   { "map_clear",         kac_map,     at_variable },
-   { "map_grid",          kac_map,     at_variable },
-   { "map_overlay",       kac_map,     at_variable },
+    { "map_right",         kac_map,     at_variable },
+    { "map_left",          kac_map,     at_variable },
+    { "map_up",            kac_map,     at_variable },
+    { "map_down",          kac_map,     at_variable },
+    { "map_zoomin",        kac_map,     at_variable },
+    { "map_zoomout",       kac_map,     at_variable },
+    { "map_toggle",        kac_map,     at_variable },
+    { "map_gobig",         kac_map,     at_variable },
+    { "map_follow",        kac_map,     at_variable },
+    { "map_mark",          kac_map,     at_variable },
+    { "map_clear",         kac_map,     at_variable },
+    { "map_grid",          kac_map,     at_variable },
+    { "map_overlay",       kac_map,     at_variable },
 
-   // Console Actions
+    // Console Actions
 
-   { "console_pageup",    kac_console, at_variable },
-   { "console_pagedown",  kac_console, at_variable },
-   { "console_toggle",    kac_console, at_variable },
-   { "console_tab",       kac_console, at_variable },
-   { "console_enter",     kac_console, at_variable },
-   { "console_up",        kac_console, at_variable },
-   { "console_down",      kac_console, at_variable },
-   { "console_backspace", kac_console, at_variable },
+    { "console_pageup",    kac_console, at_variable },
+    { "console_pagedown",  kac_console, at_variable },
+    { "console_toggle",    kac_console, at_variable },
+    { "console_tab",       kac_console, at_variable },
+    { "console_enter",     kac_console, at_variable },
+    { "console_up",        kac_console, at_variable },
+    { "console_down",      kac_console, at_variable },
+    { "console_backspace", kac_console, at_variable },
 
-   // Inventory Actions
+    // Inventory Actions
 
-   { "inventory_left",     kac_game,    at_variable },
-   { "inventory_right",    kac_game,    at_variable },
-   { "inventory_use",      kac_game,    at_variable },
-   { "inventory_drop",     kac_game,    at_variable },
+    { "inventory_left",    kac_game,    at_variable },
+    { "inventory_right",   kac_game,    at_variable },
+    { "inventory_use",     kac_game,    at_variable },
+    { "inventory_drop",    kac_game,    at_variable },
 
-   // Demos
+    // Demos
 
-   { "joindemo",          kac_game,    at_variable },
+    { "joindemo",          kac_game,    at_variable },
 };
 
 // Console Bindings
 //
-// Console bindings are stored seperately and are added to list 
+// Console bindings are stored seperately and are added to list
 // dynamically.
 //
 // haleyjd: fraggle used an array of these and reallocated it every
-// time it was full. Not exactly model efficiency. I have modified the 
+// time it was full. Not exactly model efficiency. I have modified the
 // system to use a linked list.
 
 static keyaction_t *cons_keyactions = nullptr;
@@ -205,9 +204,9 @@ static keyaction_t *cons_keyactions = nullptr;
 
 struct doomkey_t
 {
-   const char *name;
-   bool keydown[NUMKEYACTIONCLASSES];
-   keyaction_t *bindings[NUMKEYACTIONCLASSES];
+    const char  *name;
+    bool         keydown[NUMKEYACTIONCLASSES];
+    keyaction_t *bindings[NUMKEYACTIONCLASSES];
 };
 
 static doomkey_t keybindings[NUMKEYS];
@@ -220,141 +219,139 @@ static keyaction_t *G_KeyActionForName(const char *name);
 // generated for them at startup.
 struct keyname_t
 {
-   int keyCode;
-   const char *name;
-} keyNames[] =
-{
-   { KEYD_COMMA,              "<"                  },
-   { KEYD_PERIOD,             ">"                  },
-   { KEYD_ACCGRAVE,           "tilde"              },
-   { KEYD_RIGHTARROW,         "rightarrow"         },
-   { KEYD_LEFTARROW,          "leftarrow"          },
-   { KEYD_UPARROW,            "uparrow"            },
-   { KEYD_DOWNARROW,          "downarrow"          },
-   { KEYD_ESCAPE,             "escape"             },
-   { KEYD_ENTER,              "enter"              },
-   { KEYD_TAB,                "tab"                },
-   { KEYD_F1,                 "f1"                 },
-   { KEYD_F2,                 "f2"                 },
-   { KEYD_F3,                 "f3"                 },
-   { KEYD_F4,                 "f4"                 },
-   { KEYD_F5,                 "f5"                 },
-   { KEYD_F6,                 "f6"                 },
-   { KEYD_F7,                 "f7"                 },
-   { KEYD_F8,                 "f8"                 },
-   { KEYD_F9,                 "f9"                 },
-   { KEYD_F10,                "f10"                },
-   { KEYD_F11,                "f11"                },
-   { KEYD_F12,                "f12"                },
-   { KEYD_BACKSPACE,          "backspace"          },
-   { KEYD_NONUSBACKSLASH,     "iso key 1"          },
-   { KEYD_NONUSHASH,          "iso key 2"          },
-   { KEYD_PAUSE,              "pause"              },
-   { KEYD_MINUS,              "-"                  },
-   { KEYD_RSHIFT,             "shift"              },
-   { KEYD_RCTRL,              "ctrl"               },
-   { KEYD_RALT,               "alt"                },
-   { KEYD_CAPSLOCK,           "capslock"           },
-   { KEYD_INSERT,             "insert"             },
-   { KEYD_HOME,               "home"               },
-   { KEYD_END,                "end"                },
-   { KEYD_PAGEUP,             "pgup"               },
-   { KEYD_PAGEDOWN,           "pgdn"               },
-   { KEYD_PRINTSCREEN,        "printscreen"        },
-   { KEYD_SCROLLLOCK,         "scrolllock"         },
-   { KEYD_SPACEBAR,           "space"              },
-   { KEYD_NUMLOCK,            "numlock"            },
-   { KEYD_DEL,                "delete"             },
-   { KEYD_MOUSE1,             "mouse1"             },
-   { KEYD_MOUSE2,             "mouse2"             },
-   { KEYD_MOUSE3,             "mouse3"             },
-   { KEYD_MOUSE4,             "mouse4"             },
-   { KEYD_MOUSE5,             "mouse5"             },
-   { KEYD_MOUSE6,             "mouse6"             },
-   { KEYD_MOUSE7,             "mouse7"             },
-   { KEYD_MOUSE8,             "mouse8"             },
-   { KEYD_MWHEELUP,           "wheelup"            },
-   { KEYD_MWHEELDOWN,         "wheeldown"          },
-   { KEYD_KP0,                "kp_0"               },
-   { KEYD_KP1,                "kp_1"               },
-   { KEYD_KP2,                "kp_2"               },
-   { KEYD_KP3,                "kp_3"               },
-   { KEYD_KP4,                "kp_4"               },
-   { KEYD_KP5,                "kp_5"               },
-   { KEYD_KP6,                "kp_6"               },
-   { KEYD_KP7,                "kp_7"               },
-   { KEYD_KP8,                "kp_8"               },
-   { KEYD_KP9,                "kp_9"               },
-   { KEYD_KPPERIOD,           "kp_period"          },
-   { KEYD_KPDIVIDE,           "kp_slash"           },
-   { KEYD_KPMULTIPLY,         "kp_star"            },
-   { KEYD_KPMINUS,            "kp_minus"           },
-   { KEYD_KPPLUS,             "kp_plus"            },
-   { KEYD_KPENTER,            "kp_enter"           },
-   { KEYD_KPEQUALS,           "kp_equals"          },
-   { KEYD_JOY_A,              "joy_a"              },
-   { KEYD_JOY_B,              "joy_b"              },
-   { KEYD_JOY_X,              "joy_x"              },
-   { KEYD_JOY_Y,              "joy_y"              },
-   { KEYD_JOY_BACK,           "joy_back"           },
-   { KEYD_JOY_GUIDE,          "joy_guide"          },
-   { KEYD_JOY_START,          "joy_start"          },
-   { KEYD_JOY_STICK_LEFT,     "joy_stick_left"     },
-   { KEYD_JOY_STICK_RIGHT,    "joy_stick_right"    },
-   { KEYD_JOY_SHOULDER_LEFT,  "joy_shoulder_left"  },
-   { KEYD_JOY_SHOULDER_RIGHT, "joy_shoulder_right" },
-   { KEYD_JOY_DPAD_UP,        "joy_dpad_up"        },
-   { KEYD_JOY_DPAD_DOWN,      "joy_dpad_down"      },
-   { KEYD_JOY_DPAD_LEFT,      "joy_dpad_left"      },
-   { KEYD_JOY_DPAD_RIGHT,     "joy_dpad_right"     },
-   { KEYD_JOY_MISC1,          "joy_misc1"          }, // see doomdef.h
-   { KEYD_JOY_MISC2,          "joy17"              },
-   { KEYD_JOY_MISC3,          "joy18"              },
-   { KEYD_JOY_MISC4,          "joy19"              },
-   { KEYD_JOY_MISC5,          "joy20"              },
-   { KEYD_JOY_TOUCHPAD,       "joy_touchpad"       },
-   { KEYD_JOY_21,             "joy22"              },
-   { KEYD_JOY_22,             "joy23"              },
-   { KEYD_JOY_23,             "joy24"              },
-   { KEYD_AXIS_LEFT_X,        "joy_left_x"         },
-   { KEYD_AXIS_LEFT_Y,        "joy_left_y"         },
-   { KEYD_AXIS_RIGHT_X,       "joy_right_x"        },
-   { KEYD_AXIS_RIGHT_Y,       "joy_right_y"        },
-   { KEYD_AXIS_TRIGGER_LEFT,  "joy_trigger_left"   },
-   { KEYD_AXIS_TRIGGER_RIGHT, "joy_trigger_right"  },
-   { KEYD_AXISON07,           "axis7"              },
-   { KEYD_AXISON08,           "axis8"              },
+    int         keyCode;
+    const char *name;
+} keyNames[] = {
+    { KEYD_COMMA,              "<"                  },
+    { KEYD_PERIOD,             ">"                  },
+    { KEYD_ACCGRAVE,           "tilde"              },
+    { KEYD_RIGHTARROW,         "rightarrow"         },
+    { KEYD_LEFTARROW,          "leftarrow"          },
+    { KEYD_UPARROW,            "uparrow"            },
+    { KEYD_DOWNARROW,          "downarrow"          },
+    { KEYD_ESCAPE,             "escape"             },
+    { KEYD_ENTER,              "enter"              },
+    { KEYD_TAB,                "tab"                },
+    { KEYD_F1,                 "f1"                 },
+    { KEYD_F2,                 "f2"                 },
+    { KEYD_F3,                 "f3"                 },
+    { KEYD_F4,                 "f4"                 },
+    { KEYD_F5,                 "f5"                 },
+    { KEYD_F6,                 "f6"                 },
+    { KEYD_F7,                 "f7"                 },
+    { KEYD_F8,                 "f8"                 },
+    { KEYD_F9,                 "f9"                 },
+    { KEYD_F10,                "f10"                },
+    { KEYD_F11,                "f11"                },
+    { KEYD_F12,                "f12"                },
+    { KEYD_BACKSPACE,          "backspace"          },
+    { KEYD_NONUSBACKSLASH,     "iso key 1"          },
+    { KEYD_NONUSHASH,          "iso key 2"          },
+    { KEYD_PAUSE,              "pause"              },
+    { KEYD_MINUS,              "-"                  },
+    { KEYD_RSHIFT,             "shift"              },
+    { KEYD_RCTRL,              "ctrl"               },
+    { KEYD_RALT,               "alt"                },
+    { KEYD_CAPSLOCK,           "capslock"           },
+    { KEYD_INSERT,             "insert"             },
+    { KEYD_HOME,               "home"               },
+    { KEYD_END,                "end"                },
+    { KEYD_PAGEUP,             "pgup"               },
+    { KEYD_PAGEDOWN,           "pgdn"               },
+    { KEYD_PRINTSCREEN,        "printscreen"        },
+    { KEYD_SCROLLLOCK,         "scrolllock"         },
+    { KEYD_SPACEBAR,           "space"              },
+    { KEYD_NUMLOCK,            "numlock"            },
+    { KEYD_DEL,                "delete"             },
+    { KEYD_MOUSE1,             "mouse1"             },
+    { KEYD_MOUSE2,             "mouse2"             },
+    { KEYD_MOUSE3,             "mouse3"             },
+    { KEYD_MOUSE4,             "mouse4"             },
+    { KEYD_MOUSE5,             "mouse5"             },
+    { KEYD_MOUSE6,             "mouse6"             },
+    { KEYD_MOUSE7,             "mouse7"             },
+    { KEYD_MOUSE8,             "mouse8"             },
+    { KEYD_MWHEELUP,           "wheelup"            },
+    { KEYD_MWHEELDOWN,         "wheeldown"          },
+    { KEYD_KP0,                "kp_0"               },
+    { KEYD_KP1,                "kp_1"               },
+    { KEYD_KP2,                "kp_2"               },
+    { KEYD_KP3,                "kp_3"               },
+    { KEYD_KP4,                "kp_4"               },
+    { KEYD_KP5,                "kp_5"               },
+    { KEYD_KP6,                "kp_6"               },
+    { KEYD_KP7,                "kp_7"               },
+    { KEYD_KP8,                "kp_8"               },
+    { KEYD_KP9,                "kp_9"               },
+    { KEYD_KPPERIOD,           "kp_period"          },
+    { KEYD_KPDIVIDE,           "kp_slash"           },
+    { KEYD_KPMULTIPLY,         "kp_star"            },
+    { KEYD_KPMINUS,            "kp_minus"           },
+    { KEYD_KPPLUS,             "kp_plus"            },
+    { KEYD_KPENTER,            "kp_enter"           },
+    { KEYD_KPEQUALS,           "kp_equals"          },
+    { KEYD_JOY_A,              "joy_a"              },
+    { KEYD_JOY_B,              "joy_b"              },
+    { KEYD_JOY_X,              "joy_x"              },
+    { KEYD_JOY_Y,              "joy_y"              },
+    { KEYD_JOY_BACK,           "joy_back"           },
+    { KEYD_JOY_GUIDE,          "joy_guide"          },
+    { KEYD_JOY_START,          "joy_start"          },
+    { KEYD_JOY_STICK_LEFT,     "joy_stick_left"     },
+    { KEYD_JOY_STICK_RIGHT,    "joy_stick_right"    },
+    { KEYD_JOY_SHOULDER_LEFT,  "joy_shoulder_left"  },
+    { KEYD_JOY_SHOULDER_RIGHT, "joy_shoulder_right" },
+    { KEYD_JOY_DPAD_UP,        "joy_dpad_up"        },
+    { KEYD_JOY_DPAD_DOWN,      "joy_dpad_down"      },
+    { KEYD_JOY_DPAD_LEFT,      "joy_dpad_left"      },
+    { KEYD_JOY_DPAD_RIGHT,     "joy_dpad_right"     },
+    { KEYD_JOY_MISC1,          "joy_misc1"          }, // see doomdef.h
+    { KEYD_JOY_MISC2,          "joy17"              },
+    { KEYD_JOY_MISC3,          "joy18"              },
+    { KEYD_JOY_MISC4,          "joy19"              },
+    { KEYD_JOY_MISC5,          "joy20"              },
+    { KEYD_JOY_TOUCHPAD,       "joy_touchpad"       },
+    { KEYD_JOY_21,             "joy22"              },
+    { KEYD_JOY_22,             "joy23"              },
+    { KEYD_JOY_23,             "joy24"              },
+    { KEYD_AXIS_LEFT_X,        "joy_left_x"         },
+    { KEYD_AXIS_LEFT_Y,        "joy_left_y"         },
+    { KEYD_AXIS_RIGHT_X,       "joy_right_x"        },
+    { KEYD_AXIS_RIGHT_Y,       "joy_right_y"        },
+    { KEYD_AXIS_TRIGGER_LEFT,  "joy_trigger_left"   },
+    { KEYD_AXIS_TRIGGER_RIGHT, "joy_trigger_right"  },
+    { KEYD_AXISON07,           "axis7"              },
+    { KEYD_AXISON08,           "axis8"              },
 };
 
 struct altkeyname_t
 {
-   const char *name;
-   int keyCode;
-} altKeyNames[] =
-{
-   { "joy1",   KEYD_JOY_A,              },
-   { "joy2",   KEYD_JOY_B,              },
-   { "joy3",   KEYD_JOY_X,              },
-   { "joy4",   KEYD_JOY_Y,              },
-   { "joy5",   KEYD_JOY_BACK,           },
-   { "joy6",   KEYD_JOY_GUIDE,          },
-   { "joy7",   KEYD_JOY_START,          },
-   { "joy8",   KEYD_JOY_STICK_LEFT,     },
-   { "joy9",   KEYD_JOY_STICK_RIGHT,    },
-   { "joy10",  KEYD_JOY_SHOULDER_LEFT,  },
-   { "joy11",  KEYD_JOY_SHOULDER_RIGHT, },
-   { "joy12",  KEYD_JOY_DPAD_UP,        },
-   { "joy13",  KEYD_JOY_DPAD_DOWN,      },
-   { "joy14",  KEYD_JOY_DPAD_LEFT,      },
-   { "joy15",  KEYD_JOY_DPAD_RIGHT,     },
-   { "joy16",  KEYD_JOY_MISC1,          }, // see doomdef.h
-   { "joy21",  KEYD_JOY_TOUCHPAD,       },
-   { "axis1",  KEYD_AXIS_LEFT_X,        },
-   { "axis2",  KEYD_AXIS_LEFT_Y,        },
-   { "axis3",  KEYD_AXIS_RIGHT_X,       },
-   { "axis4",  KEYD_AXIS_RIGHT_Y,       },
-   { "axis5",  KEYD_AXIS_TRIGGER_LEFT,  },
-   { "axis6",  KEYD_AXIS_TRIGGER_RIGHT, },
+    const char *name;
+    int         keyCode;
+} altKeyNames[] = {
+    { "joy1",  KEYD_JOY_A              },
+    { "joy2",  KEYD_JOY_B              },
+    { "joy3",  KEYD_JOY_X              },
+    { "joy4",  KEYD_JOY_Y              },
+    { "joy5",  KEYD_JOY_BACK           },
+    { "joy6",  KEYD_JOY_GUIDE          },
+    { "joy7",  KEYD_JOY_START          },
+    { "joy8",  KEYD_JOY_STICK_LEFT     },
+    { "joy9",  KEYD_JOY_STICK_RIGHT    },
+    { "joy10", KEYD_JOY_SHOULDER_LEFT  },
+    { "joy11", KEYD_JOY_SHOULDER_RIGHT },
+    { "joy12", KEYD_JOY_DPAD_UP        },
+    { "joy13", KEYD_JOY_DPAD_DOWN      },
+    { "joy14", KEYD_JOY_DPAD_LEFT      },
+    { "joy15", KEYD_JOY_DPAD_RIGHT     },
+    { "joy16", KEYD_JOY_MISC1          }, // see doomdef.h
+    { "joy21", KEYD_JOY_TOUCHPAD       },
+    { "axis1", KEYD_AXIS_LEFT_X        },
+    { "axis2", KEYD_AXIS_LEFT_Y        },
+    { "axis3", KEYD_AXIS_RIGHT_X       },
+    { "axis4", KEYD_AXIS_RIGHT_Y       },
+    { "axis5", KEYD_AXIS_TRIGGER_LEFT  },
+    { "axis6", KEYD_AXIS_TRIGGER_RIGHT },
 };
 
 constexpr size_t numAltKeyNames = earrlen(altKeyNames);
@@ -366,42 +363,42 @@ constexpr size_t numAltKeyNames = earrlen(altKeyNames);
 //
 void G_InitKeyBindings()
 {
-   // various names for different keys
-   for(size_t kn = 0; kn < earrlen(keyNames); kn++)
-      keybindings[keyNames[kn].keyCode].name = keyNames[kn].name;
+    // various names for different keys
+    for(size_t kn = 0; kn < earrlen(keyNames); kn++)
+        keybindings[keyNames[kn].keyCode].name = keyNames[kn].name;
 
-   for(int i = 0; i < NUMKEYS; i++)
-   {
-      // fill in name if not set yet
+    for(int i = 0; i < NUMKEYS; i++)
+    {
+        // fill in name if not set yet
 
-      if(!keybindings[i].name)
-      {
-         char tempstr[32];
+        if(!keybindings[i].name)
+        {
+            char tempstr[32];
 
-         // build generic name
-         if(ectype::isPrint(i))
-            snprintf(tempstr, sizeof(tempstr), "%c", i);
-         else
-            snprintf(tempstr, sizeof(tempstr), "key%x", i);
+            // build generic name
+            if(ectype::isPrint(i))
+                snprintf(tempstr, sizeof(tempstr), "%c", i);
+            else
+                snprintf(tempstr, sizeof(tempstr), "key%x", i);
 
-         keybindings[i].name = Z_Strdup(tempstr, PU_STATIC, nullptr);
-      }
+            keybindings[i].name = Z_Strdup(tempstr, PU_STATIC, nullptr);
+        }
 
-      memset(keybindings[i].bindings, 0, NUMKEYACTIONCLASSES * sizeof(keyaction_t *));
-   }
+        memset(keybindings[i].bindings, 0, NUMKEYACTIONCLASSES * sizeof(keyaction_t *));
+    }
 
-   for(int i = 0; i < NUMKEYACTIONS; i++)
-      keyactions[i].num = i;
+    for(int i = 0; i < NUMKEYACTIONS; i++)
+        keyactions[i].num = i;
 }
 
 void G_ClearKeyStates()
 {
-   for(doomkey_t &keybinding : keybindings)
-   {
-      for(bool &curkey : keybinding.keydown)
-         curkey = false;
-   }
-   memset(gGameKeyCount, 0, sizeof(gGameKeyCount));
+    for(doomkey_t &keybinding : keybindings)
+    {
+        for(bool &curkey : keybinding.keydown)
+            curkey = false;
+    }
+    memset(gGameKeyCount, 0, sizeof(gGameKeyCount));
 }
 
 //
@@ -411,65 +408,66 @@ void G_ClearKeyStates()
 //
 static keyaction_t *G_KeyActionForName(const char *name)
 {
-   static int cons_actionnum = NUMKEYACTIONS;
-   keyaction_t *prev, *temp, *newaction;
+    static int   cons_actionnum = NUMKEYACTIONS;
+    keyaction_t *prev, *temp, *newaction;
 
-   // sequential search
-   // this is only called every now and then
+    // sequential search
+    // this is only called every now and then
 
-   for(keyaction_t &keyaction : keyactions)
-   {
-      if(!keyaction.name)
-         continue;
-      if(!strcasecmp(name, keyaction.name))
-         return &keyaction;
-   }
+    for(keyaction_t &keyaction : keyactions)
+    {
+        if(!keyaction.name)
+            continue;
+        if(!strcasecmp(name, keyaction.name))
+            return &keyaction;
+    }
 
-   // check console keyactions
-   // haleyjd: TOTALLY rewritten to use linked list
+    // check console keyactions
+    // haleyjd: TOTALLY rewritten to use linked list
 
-   if(cons_keyactions)
-   {
-      temp = cons_keyactions;
-      while(temp)
-      {
-         if(!strcasecmp(name, temp->name))
-            return temp;
+    if(cons_keyactions)
+    {
+        temp = cons_keyactions;
+        while(temp)
+        {
+            if(!strcasecmp(name, temp->name))
+                return temp;
 
-         temp = temp->next;
-      }
-   }
-   else
-   {
-      // first time only - cons_keyactions was nullptr
-      cons_keyactions = estructalloc(keyaction_t, 1);
-      cons_keyactions->bclass = kac_cmd;
-      cons_keyactions->type   = at_conscmd;
-      cons_keyactions->name   = Z_Strdup(name, PU_STATIC, nullptr);
-      cons_keyactions->next   = nullptr;
-      cons_keyactions->num    = cons_actionnum++;
+            temp = temp->next;
+        }
+    }
+    else
+    {
+        // first time only - cons_keyactions was nullptr
+        cons_keyactions         = estructalloc(keyaction_t, 1);
+        cons_keyactions->bclass = kac_cmd;
+        cons_keyactions->type   = at_conscmd;
+        cons_keyactions->name   = Z_Strdup(name, PU_STATIC, nullptr);
+        cons_keyactions->next   = nullptr;
+        cons_keyactions->num    = cons_actionnum++;
 
-      return cons_keyactions;
-   }
+        return cons_keyactions;
+    }
 
-   // not in list -- add
-   prev = nullptr;
-   temp = cons_keyactions;
-   while(temp)
-   {
-      prev = temp;
-      temp = temp->next;
-   }
-   newaction = estructalloc(keyaction_t, 1);
-   newaction->bclass = kac_cmd;
-   newaction->type = at_conscmd;
-   newaction->name = Z_Strdup(name, PU_STATIC, nullptr);
-   newaction->next = nullptr;
-   newaction->num  = cons_actionnum++;
+    // not in list -- add
+    prev = nullptr;
+    temp = cons_keyactions;
+    while(temp)
+    {
+        prev = temp;
+        temp = temp->next;
+    }
+    newaction         = estructalloc(keyaction_t, 1);
+    newaction->bclass = kac_cmd;
+    newaction->type   = at_conscmd;
+    newaction->name   = Z_Strdup(name, PU_STATIC, nullptr);
+    newaction->next   = nullptr;
+    newaction->num    = cons_actionnum++;
 
-   if(prev) prev->next = newaction;
+    if(prev)
+        prev->next = newaction;
 
-   return newaction;
+    return newaction;
 }
 
 //
@@ -479,18 +477,18 @@ static keyaction_t *G_KeyActionForName(const char *name)
 //
 static int G_KeyForName(const char *name)
 {
-   for(int i = 0; i < NUMKEYS; i++)
-   {
-      if(!strcasecmp(keybindings[i].name, name))
-         return ectype::toLower(i);
-   }
-   for(int i = 0; i < numAltKeyNames; i++)
-   {
-      if(!strcasecmp(altKeyNames[i].name, name))
-         return ectype::toLower(altKeyNames[i].keyCode);
-   }
+    for(int i = 0; i < NUMKEYS; i++)
+    {
+        if(!strcasecmp(keybindings[i].name, name))
+            return ectype::toLower(i);
+    }
+    for(int i = 0; i < numAltKeyNames; i++)
+    {
+        if(!strcasecmp(altKeyNames[i].name, name))
+            return ectype::toLower(altKeyNames[i].keyCode);
+    }
 
-   return -1;
+    return -1;
 }
 
 //
@@ -498,25 +496,25 @@ static int G_KeyForName(const char *name)
 //
 static void G_BindKeyToAction(const char *key_name, const char *action_name)
 {
-   int key;
-   keyaction_t *action;
-   
-   // get key
-   if((key = G_KeyForName(key_name)) < 0)
-   {
-      C_Printf("unknown key '%s'\n", key_name);
-      return;
-   }
+    int          key;
+    keyaction_t *action;
 
-   // get action   
-   if(!(action = G_KeyActionForName(action_name)))
-   {
-      C_Printf("unknown action '%s'\n", action_name);
-      return;
-   }
+    // get key
+    if((key = G_KeyForName(key_name)) < 0)
+    {
+        C_Printf("unknown key '%s'\n", key_name);
+        return;
+    }
 
-   // haleyjd 07/03/04: support multiple binding classes
-   keybindings[key].bindings[action->bclass] = action;
+    // get action
+    if(!(action = G_KeyActionForName(action_name)))
+    {
+        C_Printf("unknown action '%s'\n", action_name);
+        return;
+    }
+
+    // haleyjd 07/03/04: support multiple binding classes
+    keybindings[key].bindings[action->bclass] = action;
 }
 
 //
@@ -526,57 +524,57 @@ static void G_BindKeyToAction(const char *key_name, const char *action_name)
 //
 void G_BoundKeys(const char *action, qstring &outstr)
 {
-   keyaction_t *ke;
+    keyaction_t *ke;
 
-   if(!(ke = G_KeyActionForName(action)))
-   {
-      outstr = "unknown action";
-      return;
-   }
+    if(!(ke = G_KeyActionForName(action)))
+    {
+        outstr = "unknown action";
+        return;
+    }
 
-   // sequential search -ugh
-   for(doomkey_t &keybinding : keybindings)
-   {
-      if(keybinding.bindings[ke->bclass] == ke)
-      {
-         if(outstr.length() > 0)
-            outstr += " + ";
-         outstr += keybinding.name;
-      }
-   }
+    // sequential search -ugh
+    for(doomkey_t &keybinding : keybindings)
+    {
+        if(keybinding.bindings[ke->bclass] == ke)
+        {
+            if(outstr.length() > 0)
+                outstr += " + ";
+            outstr += keybinding.name;
+        }
+    }
 
-   if(!outstr.length())
-      outstr = "none";
+    if(!outstr.length())
+        outstr = "none";
 }
 
 //
 // G_FirstBoundKey
 //
-// Get an ascii description of the first key bound to a particular 
+// Get an ascii description of the first key bound to a particular
 // action.
 //
 const char *G_FirstBoundKey(const char *action)
 {
-   static char ret[1024];
-   keyaction_t *ke;
+    static char  ret[1024];
+    keyaction_t *ke;
 
-   if(!(ke = G_KeyActionForName(action)))
-      return "unknown action";
+    if(!(ke = G_KeyActionForName(action)))
+        return "unknown action";
 
-   ret[0] = '\0';   // clear ret
+    ret[0] = '\0'; // clear ret
 
-   // sequential search -ugh
+    // sequential search -ugh
 
-   for(doomkey_t &keybinding : keybindings)
-   {
-      if(keybinding.bindings[ke->bclass] == ke)
-      {
-         strcpy(ret, keybinding.name);
-         break;
-      }
-   }
+    for(doomkey_t &keybinding : keybindings)
+    {
+        if(keybinding.bindings[ke->bclass] == ke)
+        {
+            strcpy(ret, keybinding.name);
+            break;
+        }
+    }
 
-   return ret[0] ? ret : "none";
+    return ret[0] ? ret : "none";
 }
 
 //
@@ -586,62 +584,62 @@ const char *G_FirstBoundKey(const char *action)
 //
 int G_KeyResponder(const event_t *ev, int bclass, bool *allreleased)
 {
-   int ret = ka_nothing;
-   keyaction_t *action = nullptr;
+    int          ret    = ka_nothing;
+    keyaction_t *action = nullptr;
 
-   if(allreleased)
-      *allreleased = false;
+    if(allreleased)
+        *allreleased = false;
 
-   // do not index out of bounds
-   if(ev->data1 >= NUMKEYS)
-      return ret;
-   
-   if(ev->type == ev_keydown)
-   {
-      int key = ectype::toLower(ev->data1);
+    // do not index out of bounds
+    if(ev->data1 >= NUMKEYS)
+        return ret;
 
-      bool wasdown = keybindings[key].keydown[bclass];
-      keybindings[key].keydown[bclass] = true;
+    if(ev->type == ev_keydown)
+    {
+        int key = ectype::toLower(ev->data1);
 
-      if((action = keybindings[key].bindings[bclass]))
-      {
-         switch(keybindings[key].bindings[bclass]->type)
-         {
-         case at_conscmd:
-            if(!consoleactive) // haleyjd: not in console.
-               C_RunTextCmd(keybindings[key].bindings[bclass]->name);
-            break;
+        bool wasdown                     = keybindings[key].keydown[bclass];
+        keybindings[key].keydown[bclass] = true;
 
-         default:
-            break;
-         }
+        if((action = keybindings[key].bindings[bclass]))
+        {
+            switch(keybindings[key].bindings[bclass]->type)
+            {
+            case at_conscmd:
+                if(!consoleactive) // haleyjd: not in console.
+                    C_RunTextCmd(keybindings[key].bindings[bclass]->name);
+                break;
 
-         ret = action->num;
-         if(!wasdown && ret < NUMKEYACTIONS)
-            ++gGameKeyCount[bclass][ret];
-      }
-   }
-   else if(ev->type == ev_keyup)
-   {
-      int key = ectype::toLower(ev->data1);
+            default: //
+                break;
+            }
 
-      bool wasdown = keybindings[key].keydown[bclass];
-      keybindings[key].keydown[bclass] = false;
+            ret = action->num;
+            if(!wasdown && ret < NUMKEYACTIONS)
+                ++gGameKeyCount[bclass][ret];
+        }
+    }
+    else if(ev->type == ev_keyup)
+    {
+        int key = ectype::toLower(ev->data1);
 
-      if((action = keybindings[key].bindings[bclass]))
-      {
-         ret = action->num;
-         if(ret < NUMKEYACTIONS)
-         {
-            if(wasdown)
-               --gGameKeyCount[bclass][ret];
-            if(allreleased && !gGameKeyCount[bclass][ret])
-               *allreleased = true;
-         }
-      }
-   }
+        bool wasdown                     = keybindings[key].keydown[bclass];
+        keybindings[key].keydown[bclass] = false;
 
-   return ret;
+        if((action = keybindings[key].bindings[bclass]))
+        {
+            ret = action->num;
+            if(ret < NUMKEYACTIONS)
+            {
+                if(wasdown)
+                    --gGameKeyCount[bclass][ret];
+                if(allreleased && !gGameKeyCount[bclass][ret])
+                    *allreleased = true;
+            }
+        }
+    }
+
+    return ret;
 }
 
 //===========================================================================
@@ -663,22 +661,22 @@ extern vfont_t *menu_font_normal;
 //
 static void G_BindDrawer()
 {
-   const char *msg = "\n -= input new key =- \n";
-   int x, y, width, height;
-   
-   // draw the menu in the background   
-   MN_DrawMenu(current_menu);
-   
-   width  = V_FontStringWidth(menu_font_normal, msg);
-   height = V_FontStringHeight(menu_font_normal, msg);
-   x = (SCREENWIDTH  - width)  / 2;
-   y = (SCREENHEIGHT - height) / 2;
-   
-   // draw box   
-   V_DrawBox(x - 4, y - 4, width + 8, height + 8);
+    const char *msg = "\n -= input new key =- \n";
+    int         x, y, width, height;
 
-   // write text in box   
-   V_FontWriteText(menu_font_normal, msg, x, y, &subscreen43);
+    // draw the menu in the background
+    MN_DrawMenu(current_menu);
+
+    width  = V_FontStringWidth(menu_font_normal, msg);
+    height = V_FontStringHeight(menu_font_normal, msg);
+    x      = (SCREENWIDTH - width) / 2;
+    y      = (SCREENHEIGHT - height) / 2;
+
+    // draw box
+    V_DrawBox(x - 4, y - 4, width + 8, height + 8);
+
+    // write text in box
+    V_FontWriteText(menu_font_normal, msg, x, y, &subscreen43);
 }
 
 //
@@ -688,42 +686,42 @@ static void G_BindDrawer()
 //
 static bool G_BindResponder(event_t *ev, int mnaction)
 {
-   keyaction_t *action;
-   
-   if(ev->type != ev_keydown)
-      return false;
+    keyaction_t *action;
 
-   // do not index out of bounds
-   if(ev->data1 >= NUMKEYS)
-      return false;
-   
-   // got a key - close box
-   MN_PopWidget();
+    if(ev->type != ev_keydown)
+        return false;
 
-   if(mnaction == ka_menu_toggle) // cancel
-      return true;
-   
-   if(!(action = G_KeyActionForName(binding_action)))
-   {
-      C_Printf(FC_ERROR "unknown action '%s'\n", binding_action);
-      return true;
-   }
+    // do not index out of bounds
+    if(ev->data1 >= NUMKEYS)
+        return false;
 
-   // bind new key to action, if it is not already bound -- if it is,
-   // remove it
-   
-   if(keybindings[ev->data1].bindings[action->bclass] != action)
-      keybindings[ev->data1].bindings[action->bclass] = action;
-   else
-      keybindings[ev->data1].bindings[action->bclass] = nullptr;
+    // got a key - close box
+    MN_PopWidget();
 
-   // haleyjd 10/16/05: clear state of action involved
-   bool wasdown = keybindings[ev->data1].keydown[action->bclass];
-   keybindings[ev->data1].keydown[action->bclass] = false;
-   if(wasdown && action->num < NUMKEYACTIONS)
-      --gGameKeyCount[action->bclass][action->num];
-   
-   return true;
+    if(mnaction == ka_menu_toggle) // cancel
+        return true;
+
+    if(!(action = G_KeyActionForName(binding_action)))
+    {
+        C_Printf(FC_ERROR "unknown action '%s'\n", binding_action);
+        return true;
+    }
+
+    // bind new key to action, if it is not already bound -- if it is,
+    // remove it
+
+    if(keybindings[ev->data1].bindings[action->bclass] != action)
+        keybindings[ev->data1].bindings[action->bclass] = action;
+    else
+        keybindings[ev->data1].bindings[action->bclass] = nullptr;
+
+    // haleyjd 10/16/05: clear state of action involved
+    bool wasdown                                   = keybindings[ev->data1].keydown[action->bclass];
+    keybindings[ev->data1].keydown[action->bclass] = false;
+    if(wasdown && action->num < NUMKEYACTIONS)
+        --gGameKeyCount[action->bclass][action->num];
+
+    return true;
 }
 
 menuwidget_t binding_widget = { G_BindDrawer, G_BindResponder, nullptr, true };
@@ -735,8 +733,8 @@ menuwidget_t binding_widget = { G_BindDrawer, G_BindResponder, nullptr, true };
 //
 void G_EditBinding(const char *action)
 {
-   MN_PushWidget(&binding_widget);
-   binding_action = action;
+    MN_PushWidget(&binding_widget);
+    binding_action = action;
 }
 
 //===========================================================================
@@ -751,14 +749,8 @@ int axisActions[HALGamePad::MAXAXES];
 int axisOrientation[HALGamePad::MAXAXES];
 
 // Names for axis actions
-static const char *axisActionNames[axis_max] =
-{
-   "none",
-   "move",
-   "strafe",
-   "turn",
-   "look",
-   "fly",
+static const char *axisActionNames[axis_max] = {
+    "none", "move", "strafe", "turn", "look", "fly",
 };
 
 //
@@ -768,45 +760,45 @@ static const char *axisActionNames[axis_max] =
 //
 void G_CreateAxisActionVars()
 {
-   for(int i = 0; i < HALGamePad::MAXAXES; i++)
-   {
-      qstring     name;
-      variable_t *variable;
-      command_t  *command;
+    for(int i = 0; i < HALGamePad::MAXAXES; i++)
+    {
+        qstring     name;
+        variable_t *variable;
+        command_t  *command;
 
-      variable = estructalloc(variable_t, 1);
-      variable->variable  = &axisActions[i];
-      variable->v_default = nullptr;
-      variable->type      = vt_int;
-      variable->min       = axis_none;
-      variable->max       = axis_max - 1;
-      variable->defines   = axisActionNames;
+        variable            = estructalloc(variable_t, 1);
+        variable->variable  = &axisActions[i];
+        variable->v_default = nullptr;
+        variable->type      = vt_int;
+        variable->min       = axis_none;
+        variable->max       = axis_max - 1;
+        variable->defines   = axisActionNames;
 
-      command = estructalloc(command_t, 1);
-      name << "g_axisaction" << i+1;
-      command->name     = name.duplicate();
-      command->type     = ct_variable;
-      command->variable = variable;
+        command = estructalloc(command_t, 1);
+        name << "g_axisaction" << i + 1;
+        command->name     = name.duplicate();
+        command->type     = ct_variable;
+        command->variable = variable;
 
-      C_AddCommand(command);
+        C_AddCommand(command);
 
-      variable = estructalloc(variable_t, 1);
-      variable->variable  = &axisOrientation[i];
-      variable->v_default = nullptr;
-      variable->type      = vt_int;
-      variable->min       = -1;
-      variable->max       =  1;
-      static const char *orientationDefines[] = { "reversed", "default", "normal" };
-      variable->defines = orientationDefines;
+        variable                                = estructalloc(variable_t, 1);
+        variable->variable                      = &axisOrientation[i];
+        variable->v_default                     = nullptr;
+        variable->type                          = vt_int;
+        variable->min                           = -1;
+        variable->max                           = 1;
+        static const char *orientationDefines[] = { "reversed", "default", "normal" };
+        variable->defines                       = orientationDefines;
 
-      command = estructalloc(command_t, 1);
-      name.clear() << "g_axisorientation" << i+1;
-      command->name     = name.duplicate();
-      command->type     = ct_variable;
-      command->variable = variable;
+        command = estructalloc(command_t, 1);
+        name.clear() << "g_axisorientation" << i + 1;
+        command->name     = name.duplicate();
+        command->type     = ct_variable;
+        command->variable = variable;
 
-      C_AddCommand(command);
-   }
+        C_AddCommand(command);
+    }
 }
 
 //===========================================================================
@@ -822,26 +814,26 @@ void G_CreateAxisActionVars()
 //
 static void G_clearGamepadBindings()
 {
-   // clear button bindings
-   for(int key = 0; key < HALGamePad::MAXBUTTONS; key++)
-   {
-      int vkc = KEYD_JOY_BASE + key;
+    // clear button bindings
+    for(int key = 0; key < HALGamePad::MAXBUTTONS; key++)
+    {
+        int vkc = KEYD_JOY_BASE + key;
 
-      for(keyaction_t *&binding : keybindings[vkc].bindings)
-         binding = nullptr;
-   }
+        for(keyaction_t *&binding : keybindings[vkc].bindings)
+            binding = nullptr;
+    }
 
-   // clear axis actions, orientations, and trigger bindings
-   for(int axis = 0; axis < HALGamePad::MAXAXES; axis++)
-   {
-      axisActions[axis] = axis_none;
-      axisOrientation[axis] = 0;     // zero is agnostic
+    // clear axis actions, orientations, and trigger bindings
+    for(int axis = 0; axis < HALGamePad::MAXAXES; axis++)
+    {
+        axisActions[axis]     = axis_none;
+        axisOrientation[axis] = 0; // zero is agnostic
 
-      int vkc = KEYD_AXIS_BASE + axis;
+        int vkc = KEYD_AXIS_BASE + axis;
 
-      for(keyaction_t *&binding : keybindings[vkc].bindings)
-         binding = nullptr;
-   }
+        for(keyaction_t *&binding : keybindings[vkc].bindings)
+            binding = nullptr;
+    }
 }
 
 //
@@ -851,10 +843,10 @@ static void G_clearGamepadBindings()
 //
 static int G_profileForName(const char *name)
 {
-   qstring lfn;
-   lfn << "gamepads/" << name;
-   lfn.addDefaultExtension(".txt");
-   return wGlobalDir.checkNumForLFN(lfn.constPtr(), lumpinfo_t::ns_pads);
+    qstring lfn;
+    lfn << "gamepads/" << name;
+    lfn.addDefaultExtension(".txt");
+    return wGlobalDir.checkNumForLFN(lfn.constPtr(), lumpinfo_t::ns_pads);
 }
 
 //
@@ -865,34 +857,34 @@ static int G_profileForName(const char *name)
 //
 bool G_ExecuteGamepadProfile(const char *name)
 {
-   int lumpnum;
+    int lumpnum;
 
-   if((lumpnum = G_profileForName(name)) >= 0)
-   {
-      DWFILE dwfile;
+    if((lumpnum = G_profileForName(name)) >= 0)
+    {
+        DWFILE dwfile;
 
-      dwfile.openLump(lumpnum);
+        dwfile.openLump(lumpnum);
 
-      if(dwfile.isOpen())
-      {
-         G_clearGamepadBindings();
-         C_RunScript(&dwfile);
-         return true;
-      }
-   }
+        if(dwfile.isOpen())
+        {
+            G_clearGamepadBindings();
+            C_RunScript(&dwfile);
+            return true;
+        }
+    }
 
-   return false;
+    return false;
 }
 
 CONSOLE_COMMAND(g_padprofile, 0)
 {
-   if(Console.argc < 1)
-   {
-      C_Printf("Usage: g_padprofile profilename\n");
-      return;
-   }
+    if(Console.argc < 1)
+    {
+        C_Printf("Usage: g_padprofile profilename\n");
+        return;
+    }
 
-   G_ExecuteGamepadProfile(Console.argv[0]->constPtr());
+    G_ExecuteGamepadProfile(Console.argv[0]->constPtr());
 }
 
 //===========================================================================
@@ -902,102 +894,100 @@ CONSOLE_COMMAND(g_padprofile, 0)
 
 // default script:
 
-static char *cfg_file = nullptr; 
+static char *cfg_file = nullptr;
 
 void G_LoadDefaults()
 {
-   qstring temp;
-   DWFILE dwfile;
+    qstring temp;
+    DWFILE  dwfile;
 
-   // haleyjd 11/23/06: use basegamepath
-   // haleyjd 08/29/09: allow use_doom_config override
-   if(GameModeInfo->type == Game_DOOM && use_doom_config)
-   {
-      temp = userpath;
-      temp.pathConcatenate("doom/keys.csc");
-   }
-   else
-   {
-      temp = usergamepath;
-      temp.pathConcatenate("keys.csc");
-   }
+    // haleyjd 11/23/06: use basegamepath
+    // haleyjd 08/29/09: allow use_doom_config override
+    if(GameModeInfo->type == Game_DOOM && use_doom_config)
+    {
+        temp = userpath;
+        temp.pathConcatenate("doom/keys.csc");
+    }
+    else
+    {
+        temp = usergamepath;
+        temp.pathConcatenate("keys.csc");
+    }
 
-   cfg_file = temp.duplicate();
+    cfg_file = temp.duplicate();
 
-   if(access(cfg_file, R_OK))
-   {
-      C_Printf("keys.csc not found, using defaults\n");
-      dwfile.openLump(W_GetNumForName("KEYDEFS"));
-   }
-   else
-      dwfile.openFile(cfg_file, "r");
+    if(access(cfg_file, R_OK))
+    {
+        C_Printf("keys.csc not found, using defaults\n");
+        dwfile.openLump(W_GetNumForName("KEYDEFS"));
+    }
+    else
+        dwfile.openFile(cfg_file, "r");
 
-   if(!dwfile.isOpen())
-      I_Error("G_LoadDefaults: couldn't open default key bindings\n");
+    if(!dwfile.isOpen())
+        I_Error("G_LoadDefaults: couldn't open default key bindings\n");
 
-   // haleyjd 03/08/06: test for zero length
-   if(!dwfile.isLump() && dwfile.fileLength() == 0)
-   {
-      // try the lump because the file is zero-length...
-      C_Printf("keys.csc is zero length, trying KEYDEFS\n");
-      dwfile.openLump(W_GetNumForName("KEYDEFS"));
-      if(!dwfile.isOpen() || dwfile.fileLength() == 0)
-         I_Error("G_LoadDefaults: KEYDEFS lump is empty\n");
-   }
+    // haleyjd 03/08/06: test for zero length
+    if(!dwfile.isLump() && dwfile.fileLength() == 0)
+    {
+        // try the lump because the file is zero-length...
+        C_Printf("keys.csc is zero length, trying KEYDEFS\n");
+        dwfile.openLump(W_GetNumForName("KEYDEFS"));
+        if(!dwfile.isOpen() || dwfile.fileLength() == 0)
+            I_Error("G_LoadDefaults: KEYDEFS lump is empty\n");
+    }
 
-   C_RunScript(&dwfile);
+    C_RunScript(&dwfile);
 }
 
 void G_SaveDefaults()
 {
-   FILE *file;
+    FILE *file;
 
-   if(!cfg_file)         // check defaults have been loaded
-      return;
+    if(!cfg_file) // check defaults have been loaded
+        return;
 
-   if(!(file = fopen(cfg_file, "w")))
-   {
-      C_Printf(FC_ERROR "Couldn't open keys.csc for write access.\n");
-      return;
-   }
+    if(!(file = fopen(cfg_file, "w")))
+    {
+        C_Printf(FC_ERROR "Couldn't open keys.csc for write access.\n");
+        return;
+    }
 
-   // write key bindings
+    // write key bindings
 
-   for(doomkey_t &keybinding : keybindings)
-   {
-      // haleyjd 07/03/04: support multiple binding classes
-      for(keyaction_t *&binding : keybinding.bindings)
-      {
-         if(binding)
-         {
-            const char *keyname = keybinding.name;
+    for(doomkey_t &keybinding : keybindings)
+    {
+        // haleyjd 07/03/04: support multiple binding classes
+        for(keyaction_t *&binding : keybinding.bindings)
+        {
+            if(binding)
+            {
+                const char *keyname = keybinding.name;
 
-            // haleyjd 07/10/09: semicolon requires special treatment.
-            if(keyname[0] == ';')
-               keyname = "\";\"";
+                // haleyjd 07/10/09: semicolon requires special treatment.
+                if(keyname[0] == ';')
+                    keyname = "\";\"";
 
-            fprintf(file, "bind %s \"%s\"\n", keyname, binding->name);
-         }
-      }
-   }
+                fprintf(file, "bind %s \"%s\"\n", keyname, binding->name);
+            }
+        }
+    }
 
-   // write axis actions and orientations
+    // write axis actions and orientations
 
-   for(int i = 0; i < HALGamePad::MAXAXES; i++)
-   {
-      if(axisActions[i] != axis_none)
-      {
-         fprintf(file, "g_axisaction%d %s\n",
-                 i+1, axisActionNames[axisActions[i]]);
-      }
-      if(axisOrientation[i] != 0)
-      {
-         fprintf(file, "g_axisorientation%d %d\n",
-                 i+1, axisOrientation[i]);
-      }
-   }
+    for(int i = 0; i < HALGamePad::MAXAXES; i++)
+    {
+        if(axisActions[i] != axis_none)
+        {
+            fprintf(file, "g_axisaction%d %s\n", i + 1, axisActionNames[axisActions[i]]);
+        }
+        if(axisOrientation[i] != 0)
+        {
+            fprintf(file, "g_axisorientation%d %d\n", i + 1, axisOrientation[i]);
+        }
+    }
 
-   fclose(file);
+    fclose(file);
 }
 
 //===========================================================================
@@ -1007,128 +997,123 @@ void G_SaveDefaults()
 
 CONSOLE_COMMAND(bind, 0)
 {
-   if(Console.argc >= 2)
-   {
-      G_BindKeyToAction(Console.argv[0]->constPtr(),
-                        Console.argv[1]->constPtr());
-   }
-   else if(Console.argc == 1)
-   {
-      int key = G_KeyForName(Console.argv[0]->constPtr());
+    if(Console.argc >= 2)
+    {
+        G_BindKeyToAction(Console.argv[0]->constPtr(), Console.argv[1]->constPtr());
+    }
+    else if(Console.argc == 1)
+    {
+        int key = G_KeyForName(Console.argv[0]->constPtr());
 
-      if(key < 0)
-         C_Printf(FC_ERROR "no such key!\n");
-      else
-      {
-         // haleyjd 07/03/04: multiple binding class support
-         bool foundBinding = false;
+        if(key < 0)
+            C_Printf(FC_ERROR "no such key!\n");
+        else
+        {
+            // haleyjd 07/03/04: multiple binding class support
+            bool foundBinding = false;
 
-         for(keyaction_t *&binding : keybindings[key].bindings)
-         {
-            if(binding)
+            for(keyaction_t *&binding : keybindings[key].bindings)
             {
-               C_Printf("%s bound to %s (class %d)\n",
-                        keybindings[key].name,
-                        binding->name,
-                        binding->bclass);
-               foundBinding = true;
+                if(binding)
+                {
+                    C_Printf("%s bound to %s (class %d)\n", keybindings[key].name, binding->name, binding->bclass);
+                    foundBinding = true;
+                }
             }
-         }
-         if(!foundBinding)
-            C_Printf("%s not bound\n", keybindings[key].name);
-      }
-   }
-   else
-      C_Printf("usage: bind key action\n");
+            if(!foundBinding)
+                C_Printf("%s not bound\n", keybindings[key].name);
+        }
+    }
+    else
+        C_Printf("usage: bind key action\n");
 }
 
 // haleyjd: utility functions
 CONSOLE_COMMAND(listactions, 0)
 {
-   for(keyaction_t &keyaction : keyactions)
-   {
-      if(keyaction.name)
-         C_Printf("%s\n", keyaction.name);
-   }
+    for(keyaction_t &keyaction : keyactions)
+    {
+        if(keyaction.name)
+            C_Printf("%s\n", keyaction.name);
+    }
 }
 
 CONSOLE_COMMAND(listkeys, 0)
 {
-   for(doomkey_t &keybinding : keybindings)
-      C_Printf("%s\n", keybinding.name);
+    for(doomkey_t &keybinding : keybindings)
+        C_Printf("%s\n", keybinding.name);
 }
 
 CONSOLE_COMMAND(unbind, 0)
 {
-   int key;
-   int bclass = -1;
+    int key;
+    int bclass = -1;
 
-   if(Console.argc < 1)
-   {
-      C_Printf("usage: unbind key [class]\n");
-      return;
-   }
+    if(Console.argc < 1)
+    {
+        C_Printf("usage: unbind key [class]\n");
+        return;
+    }
 
-   // allow specification of a binding class
-   if(Console.argc == 2)
-   {
-      bclass = Console.argv[1]->toInt();
+    // allow specification of a binding class
+    if(Console.argc == 2)
+    {
+        bclass = Console.argv[1]->toInt();
 
-      if(bclass < 0 || bclass >= NUMKEYACTIONCLASSES)
-      {
-         C_Printf(FC_ERROR "invalid action class %d\n", bclass);
-         return;
-      }
-   }
-   
-   if((key = G_KeyForName(Console.argv[0]->constPtr())) != -1)
-   {
-      if(bclass == -1)
-      {
-         // unbind all actions
-         int j;
+        if(bclass < 0 || bclass >= NUMKEYACTIONCLASSES)
+        {
+            C_Printf(FC_ERROR "invalid action class %d\n", bclass);
+            return;
+        }
+    }
 
-         C_Printf("unbound key %s from all actions\n", Console.argv[0]->constPtr());
+    if((key = G_KeyForName(Console.argv[0]->constPtr())) != -1)
+    {
+        if(bclass == -1)
+        {
+            // unbind all actions
+            int j;
 
-         if(keybindings[key].bindings[kac_menu] ||
-            keybindings[key].bindings[kac_console])
-         {
-            C_Printf(FC_ERROR " console and menu actions ignored\n");
-         }
+            C_Printf("unbound key %s from all actions\n", Console.argv[0]->constPtr());
 
-         for(j = 0; j < NUMKEYACTIONCLASSES; j++)
-         {
-            // do not release menu or console actions in this manner
-            if(j != kac_menu && j != kac_console)
-               keybindings[key].bindings[j] = nullptr;
-         }
-      }
-      else
-      {
-         keyaction_t *ke = keybindings[key].bindings[bclass];
+            if(keybindings[key].bindings[kac_menu] || keybindings[key].bindings[kac_console])
+            {
+                C_Printf(FC_ERROR " console and menu actions ignored\n");
+            }
 
-         if(ke)
-         {
-            C_Printf("unbound key %s from action %s\n", Console.argv[0]->constPtr(), ke->name);
-            keybindings[key].bindings[bclass] = nullptr;
-         }
-         else
-            C_Printf("key %s has no binding in class %d\n", Console.argv[0]->constPtr(), bclass);
-      }
-   }
-   else
-      C_Printf("unknown key %s\n", Console.argv[0]->constPtr());
+            for(j = 0; j < NUMKEYACTIONCLASSES; j++)
+            {
+                // do not release menu or console actions in this manner
+                if(j != kac_menu && j != kac_console)
+                    keybindings[key].bindings[j] = nullptr;
+            }
+        }
+        else
+        {
+            keyaction_t *ke = keybindings[key].bindings[bclass];
+
+            if(ke)
+            {
+                C_Printf("unbound key %s from action %s\n", Console.argv[0]->constPtr(), ke->name);
+                keybindings[key].bindings[bclass] = nullptr;
+            }
+            else
+                C_Printf("key %s has no binding in class %d\n", Console.argv[0]->constPtr(), bclass);
+        }
+    }
+    else
+        C_Printf("unknown key %s\n", Console.argv[0]->constPtr());
 }
 
 CONSOLE_COMMAND(unbindall, 0)
 {
-   C_Printf("clearing all key bindings\n");
+    C_Printf("clearing all key bindings\n");
 
-   for(doomkey_t &keybinding : keybindings)
-   {
-      for(keyaction_t *&binding : keybinding.bindings)
-         binding = nullptr;
-   }
+    for(doomkey_t &keybinding : keybindings)
+    {
+        for(keyaction_t *&binding : keybinding.bindings)
+            binding = nullptr;
+    }
 }
 
 //
@@ -1139,18 +1124,16 @@ CONSOLE_COMMAND(unbindall, 0)
 //
 CONSOLE_COMMAND(bindings, 0)
 {
-   for(doomkey_t &keybinding : keybindings)
-   {
-      for(keyaction_t *&binding : keybinding.bindings)
-      {
-         if(binding)
-         {
-            C_Printf("%s : %s\n",
-                     keybinding.name,
-                     binding->name);
-         }
-      }
-   }
+    for(doomkey_t &keybinding : keybindings)
+    {
+        for(keyaction_t *&binding : keybinding.bindings)
+        {
+            if(binding)
+            {
+                C_Printf("%s : %s\n", keybinding.name, binding->name);
+            }
+        }
+    }
 }
 
 // EOF

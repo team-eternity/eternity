@@ -43,25 +43,21 @@ class mobjCollectionSetPimpl;
 class MobjCollection : public PODCollection<Mobj *>
 {
 protected:
-   DLListItem<MobjCollection> hashLinks; // links for MobjCollectionSet hash
+    DLListItem<MobjCollection> hashLinks; // links for MobjCollectionSet hash
 
-   friend class mobjCollectionSetPimpl;
+    friend class mobjCollectionSetPimpl;
 
 public:
-   MobjCollection() 
-      : PODCollection<Mobj *>(), hashLinks(), mobjType(), enabled(true) 
-   {
-   }
+    MobjCollection() : PODCollection<Mobj *>(), hashLinks(), mobjType(), enabled(true) {}
 
-   // public properties
-   qstring mobjType;
-   bool    enabled;
+    // public properties
+    qstring mobjType;
+    bool    enabled;
 
-   void collectThings();
-   bool spawnAtRandom(const char *type, pr_class_t prnum, 
-                      int spchance, int coopchance, int dmchance);
-   bool startupSpawn();
-   void moveToRandom(Mobj *actor);
+    void collectThings();
+    bool spawnAtRandom(const char *type, pr_class_t prnum, int spchance, int coopchance, int dmchance);
+    bool startupSpawn();
+    void moveToRandom(Mobj *actor);
 };
 
 // MobjCollectionSet maintains a global hash of MobjCollection objects that
@@ -71,14 +67,14 @@ public:
 class MobjCollectionSet
 {
 private:
-   mobjCollectionSetPimpl *pImpl; // yet another private implementation idiom
+    mobjCollectionSetPimpl *pImpl; // yet another private implementation idiom
 
 public:
-   MobjCollectionSet();
-   MobjCollection *collectionForName(const char *name);
-   void addCollection(const char *mobjType);
-   void setCollectionEnabled(const char *mobjType, bool enabled);
-   void collectAllThings();
+    MobjCollectionSet();
+    MobjCollection *collectionForName(const char *name);
+    void            addCollection(const char *mobjType);
+    void            setCollectionEnabled(const char *mobjType, bool enabled);
+    void            collectAllThings();
 };
 
 extern MobjCollectionSet MobjCollections;

@@ -37,25 +37,16 @@
 class ENCQStrHashKey
 {
 public:
-   using basic_type = qstring;
-   using param_type = const char *;
+    using basic_type = qstring;
+    using param_type = const char *;
 
-   // NB: HashCode must be implemented for both types when they are distinct.
+    // NB: HashCode must be implemented for both types when they are distinct.
 
-   static unsigned int HashCode(const char *input)
-   {
-      return qstring::HashCodeStatic(input);
-   }
+    static unsigned int HashCode(const char *input) { return qstring::HashCodeStatic(input); }
 
-   static unsigned int HashCode(const qstring &qstr)
-   {
-      return qstr.hashCode();
-   }
+    static unsigned int HashCode(const qstring &qstr) { return qstr.hashCode(); }
 
-   static bool Compare(const qstring &first, const char *second)
-   {
-      return !first.strCaseCmp(second);
-   }
+    static bool Compare(const qstring &first, const char *second) { return !first.strCaseCmp(second); }
 };
 
 //
@@ -66,25 +57,15 @@ public:
 class EQStrHashKey
 {
 public:
-   using basic_type = qstring;
-   using param_type = const char *;
+    using basic_type = qstring;
+    using param_type = const char *;
 
-   static unsigned int HashCode(const char *input)
-   {
-      return qstring::HashCodeCaseStatic(input);
-   }
+    static unsigned int HashCode(const char *input) { return qstring::HashCodeCaseStatic(input); }
 
-   static unsigned int HashCode(const qstring &qstr)
-   {
-      return qstr.hashCodeCase();
-   }
+    static unsigned int HashCode(const qstring &qstr) { return qstr.hashCodeCase(); }
 
-   static bool Compare(const qstring &first, const char *second)
-   {
-      return first == second;
-   }
+    static bool Compare(const qstring &first, const char *second) { return first == second; }
 };
 
 #endif
-
 

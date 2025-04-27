@@ -36,7 +36,7 @@ extern int demo_version;
 //
 inline static linkdata_t *R_FPLink(const rendersector_t *s)
 {
-   return &(s->srf.floor.portal->data.link);
+    return &(s->srf.floor.portal->data.link);
 }
 
 //
@@ -46,7 +46,7 @@ inline static linkdata_t *R_FPLink(const rendersector_t *s)
 //
 inline static linkdata_t *R_CPLink(const rendersector_t *s)
 {
-   return &(s->srf.ceiling.portal->data.link);
+    return &(s->srf.ceiling.portal->data.link);
 }
 
 //
@@ -54,7 +54,7 @@ inline static linkdata_t *R_CPLink(const rendersector_t *s)
 //
 inline static const linkdata_t *R_PLink(surf_e surf, const rendersector_t &s)
 {
-   return &s.srf[surf].portal->data.link;
+    return &s.srf[surf].portal->data.link;
 }
 
 #endif

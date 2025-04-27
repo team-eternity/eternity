@@ -35,18 +35,17 @@
 // Push a textured quad of size (w, h) at upper-left-hand coordinate (x, y) with
 // texture coordinates starting from the (x, y) corner. Intended for use in an
 // ortho projection. Bind texture beforehand and call glBegin(GL_QUADS).
-// 
-void GL_OrthoQuadTextured(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
-                          GLfloat smax, GLfloat tmax)
+//
+void GL_OrthoQuadTextured(GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat smax, GLfloat tmax)
 {
-   glTexCoord2f(0.0f, 0.0f);
-   glVertex2f(x, y);
-   glTexCoord2f(0.0f, tmax);     
-   glVertex2f(x, y + h);
-   glTexCoord2f(smax, tmax);
-   glVertex2f(x + w, y + h);
-   glTexCoord2f(smax, 0.0f);
-   glVertex2f(x + w, y);
+    glTexCoord2f(0.0f, 0.0f);
+    glVertex2f(x, y);
+    glTexCoord2f(0.0f, tmax);
+    glVertex2f(x, y + h);
+    glTexCoord2f(smax, tmax);
+    glVertex2f(x + w, y + h);
+    glTexCoord2f(smax, 0.0f);
+    glVertex2f(x + w, y);
 }
 
 //
@@ -55,14 +54,13 @@ void GL_OrthoQuadTextured(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
 // Push a flat shaded quad of size (w, h) at upper-left-hand coordinate (x, y)
 // with all vertices colored as specified by the (r,g,b) parameters.
 //
-void GL_OrthoQuadFlat(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
-                      GLfloat r, GLfloat b, GLfloat g)
+void GL_OrthoQuadFlat(GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat r, GLfloat b, GLfloat g)
 {
-   glColor3f(r, g, b);
-   glVertex2f(x,     y);
-   glVertex2f(x,     y + h);
-   glVertex2f(x + w, y + h);
-   glVertex2f(x + w, y);
+    glColor3f(r, g, b);
+    glVertex2f(x, y);
+    glVertex2f(x, y + h);
+    glVertex2f(x + w, y + h);
+    glVertex2f(x + w, y);
 }
 
 #endif

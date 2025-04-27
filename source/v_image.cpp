@@ -37,8 +37,6 @@
 // VPalette
 //
 
-
-
 //=============================================================================
 //
 // VImage
@@ -51,8 +49,8 @@
 //
 VImage *VImage::FromPNG(const vimageprops_t &props, int lumpnum, VPalette *pal)
 {
-   // TODO
-   return nullptr;
+    // TODO
+    return nullptr;
 }
 
 //
@@ -62,8 +60,8 @@ VImage *VImage::FromPNG(const vimageprops_t &props, int lumpnum, VPalette *pal)
 //
 VImage *VImage::FromPatch(const vimageprops_t &props, int lumpnum, VPalette *pal)
 {
-   // TODO
-   return nullptr;
+    // TODO
+    return nullptr;
 }
 
 //
@@ -73,8 +71,8 @@ VImage *VImage::FromPatch(const vimageprops_t &props, int lumpnum, VPalette *pal
 //
 VImage *VImage::FromLinear(const vimageprops_t &props, int lumpnum, VPalette *pal)
 {
-   // TODO
-   return nullptr;
+    // TODO
+    return nullptr;
 }
 
 //=============================================================================
@@ -88,15 +86,13 @@ VImage *VImage::FromLinear(const vimageprops_t &props, int lumpnum, VPalette *pa
 class VImageManagerPimpl : public ZoneObject
 {
 public:
-   VImageManagerPimpl() : defaultResources(), hash(10247)
-   {      
-   }
+    VImageManagerPimpl() : defaultResources(), hash(10247) {}
 
-   // Default resources
-   DLList<VImage, &VImage::links> defaultResources;
+    // Default resources
+    DLList<VImage, &VImage::links> defaultResources;
 
-   // Resource hash table
-   EHashTable<VImage, EIntHashKey, &VImage::lumpnum, &VImage::links> hash;
+    // Resource hash table
+    EHashTable<VImage, EIntHashKey, &VImage::lumpnum, &VImage::links> hash;
 };
 
 //
@@ -104,7 +100,7 @@ public:
 //
 VImageManager::VImageManager()
 {
-   pImpl = new VImageManagerPimpl;
+    pImpl = new VImageManagerPimpl;
 }
 
 //
@@ -112,34 +108,33 @@ VImageManager::VImageManager()
 //
 // Resolve a WadDirectory lump name to lump number.
 //
-int VImageManager::lookupResourceNum(WadDirectory &dir, const char *name, 
-                                     int li_namespace, bool allowglobal)
+int VImageManager::lookupResourceNum(WadDirectory &dir, const char *name, int li_namespace, bool allowglobal)
 {
-   bool useNSG = false;
-   bool lfn = false;
+    bool useNSG = false;
+    bool lfn    = false;
 
-   if(allowglobal && li_namespace != lumpinfo_t::ns_global)
-      useNSG = true;
+    if(allowglobal && li_namespace != lumpinfo_t::ns_global)
+        useNSG = true;
 
-   if(strlen(name) > 8 || strchr(name, '/') != nullptr)
-      lfn = true;
+    if(strlen(name) > 8 || strchr(name, '/') != nullptr)
+        lfn = true;
 
-   // NSG lookup prefers a resource in the given namespace if it is available,
-   // but will fall back to ns_global if it's not.
-   if(useNSG)
-   {
-      if(lfn)
-         return dir.checkNumForLFNNSG(name, li_namespace);
-      else
-         return dir.checkNumForNameNSG(name, li_namespace);
-   }
-   else
-   {
-      if(lfn)
-         return dir.checkNumForLFN(name, li_namespace);
-      else
-         return dir.checkNumForName(name, li_namespace);
-   }
+    // NSG lookup prefers a resource in the given namespace if it is available,
+    // but will fall back to ns_global if it's not.
+    if(useNSG)
+    {
+        if(lfn)
+            return dir.checkNumForLFNNSG(name, li_namespace);
+        else
+            return dir.checkNumForNameNSG(name, li_namespace);
+    }
+    else
+    {
+        if(lfn)
+            return dir.checkNumForLFN(name, li_namespace);
+        else
+            return dir.checkNumForName(name, li_namespace);
+    }
 }
 
 //
@@ -150,22 +145,21 @@ int VImageManager::lookupResourceNum(WadDirectory &dir, const char *name,
 //
 VImage *VImageManager::findDefaultResource(int expectedWidth, int expectedHeight)
 {
-   VImage *ret = nullptr;
-   auto img = pImpl->defaultResources.head;
+    VImage *ret = nullptr;
+    auto    img = pImpl->defaultResources.head;
 
-   while(img)
-   {
-      if((*img)->props.width  == expectedWidth && 
-         (*img)->props.height == expectedHeight)
-      {
-         ret = *img;
-         break;
-      }
+    while(img)
+    {
+        if((*img)->props.width == expectedWidth && (*img)->props.height == expectedHeight)
+        {
+            ret = *img;
+            break;
+        }
 
-      img = img->dllNext;
-   }
+        img = img->dllNext;
+    }
 
-   return ret;
+    return ret;
 }
 
 //
@@ -177,16 +171,16 @@ VImage *VImageManager::findDefaultResource(int expectedWidth, int expectedHeight
 //
 VImage *VImageManager::generateDefaultResource(int expectedWidth, int expectedHeight)
 {
-   VImage *ret = nullptr;
+    VImage *ret = nullptr;
 
-   // check if we already have a default resource with these properties
-   if((ret = findDefaultResource(expectedWidth, expectedHeight)))
-      return ret;
+    // check if we already have a default resource with these properties
+    if((ret = findDefaultResource(expectedWidth, expectedHeight)))
+        return ret;
 
-   // generate a new one.
-   // TODO
+    // generate a new one.
+    // TODO
 
-   return ret;
+    return ret;
 }
 
 //
@@ -195,50 +189,50 @@ VImage *VImageManager::generateDefaultResource(int expectedWidth, int expectedHe
 //
 bool VImageManager::resourceIsPatch(void *data, size_t size)
 {
-   // Must be at least as large as the header.
-   if(size < 8)
-      return false; // invalid header
+    // Must be at least as large as the header.
+    if(size < 8)
+        return false; // invalid header
 
-   auto    base   = static_cast<uint8_t *>(data);
-   auto    header = base;
-   int16_t width  = GetBinaryWord(header);
-   int16_t height = GetBinaryWord(header);
-   int16_t left   = GetBinaryWord(header);
-   int16_t top    = GetBinaryWord(header);
+    auto    base   = static_cast<uint8_t *>(data);
+    auto    header = base;
+    int16_t width  = GetBinaryWord(header);
+    int16_t height = GetBinaryWord(header);
+    int16_t left   = GetBinaryWord(header);
+    int16_t top    = GetBinaryWord(header);
 
-   // Check for sane header values
-   if(width <= 0     || width >= 4096 || height <= 0     || height >= 4096 ||
-      left  <= -2000 || left  >= 2000 || top    <= -2000 || top    >= 2000)
-      return false; // invalid or very unlikely graphic size
+    // Check for sane header values
+    if(width <= 0 || width >= 4096 || height <= 0 || height >= 4096 || left <= -2000 || left >= 2000 || top <= -2000 ||
+       top >= 2000)
+        return false; // invalid or very unlikely graphic size
 
-   // Number of bytes needed for columnofs
-   size_t numBytesNeeded = width * 4;
-   if(size - 8 < numBytesNeeded)
-      return false; // invalid columnofs table size
+    // Number of bytes needed for columnofs
+    size_t numBytesNeeded = width * 4;
+    if(size - 8 < numBytesNeeded)
+        return false; // invalid columnofs table size
 
-   // Verify all columns
-   for(int i = 0; i < width; i++)
-   {
-      size_t offset = static_cast<size_t>(GetBinaryUDWord(header));
+    // Verify all columns
+    for(int i = 0; i < width; i++)
+    {
+        size_t offset = static_cast<size_t>(GetBinaryUDWord(header));
 
-      if(offset < 12 || offset >= size)
-         return false; // offset lies outside the data
+        if(offset < 12 || offset >= size)
+            return false; // offset lies outside the data
 
-      // Verify the series of posts at that offset
-      byte *rover = base + offset;
-      while(*rover != 0xff)
-      {
-         byte *nextPost = rover + *(rover + 1) + 4;
+        // Verify the series of posts at that offset
+        byte *rover = base + offset;
+        while(*rover != 0xff)
+        {
+            byte *nextPost = rover + *(rover + 1) + 4;
 
-         if(nextPost >= base + size)
-            return false; // Unterminated series of posts, or too long
+            if(nextPost >= base + size)
+                return false; // Unterminated series of posts, or too long
 
-         rover = nextPost;
-      }
-   }
+            rover = nextPost;
+        }
+    }
 
-   // Patch is valid!
-   return true;
+    // Patch is valid!
+    return true;
 }
 
 //
@@ -246,13 +240,13 @@ bool VImageManager::resourceIsPatch(void *data, size_t size)
 //
 bool VImageManager::resourceIsPNG(void *data, size_t size)
 {
-   constexpr byte PNG_SIGNATURE[8] = { 137, 80, 78, 71, 13, 10, 26, 10 };
+    constexpr byte PNG_SIGNATURE[8] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
-   // check minimum size (need at least a bit more than the header)
-   if(size <= 8)
-      return false;
+    // check minimum size (need at least a bit more than the header)
+    if(size <= 8)
+        return false;
 
-   return !memcmp(data, PNG_SIGNATURE, sizeof(PNG_SIGNATURE));
+    return !memcmp(data, PNG_SIGNATURE, sizeof(PNG_SIGNATURE));
 }
 
 //
@@ -260,7 +254,7 @@ bool VImageManager::resourceIsPNG(void *data, size_t size)
 //
 bool VImageManager::resourceIsLinear(void *data, size_t size)
 {
-   return (size != 0);
+    return (size != 0);
 }
 
 //
@@ -272,14 +266,14 @@ bool VImageManager::resourceIsLinear(void *data, size_t size)
 //
 static void V_linearOptimalSize(size_t lumpsize, int &w, int &h)
 {
-   size_t v = lumpsize;
-   size_t r = 0;
-   
-   while(v >>= 1)
-      ++r;
+    size_t v = lumpsize;
+    size_t r = 0;
 
-   h = static_cast<int>(1 << (r / 2));
-   w = static_cast<int>(lumpsize / h);
+    while(v >>= 1)
+        ++r;
+
+    h = static_cast<int>(1 << (r / 2));
+    w = static_cast<int>(lumpsize / h);
 }
 
 //
@@ -288,78 +282,75 @@ static void V_linearOptimalSize(size_t lumpsize, int &w, int &h)
 // reasons there are multiple ways to do this depending on the resource format
 // hint.
 //
-void VImageManager::determineLinearDimensions(void *data, size_t size, 
-                                              int &w, int &h, int ew, int eh, 
+void VImageManager::determineLinearDimensions(void *data, size_t size, int &w, int &h, int ew, int eh,
                                               vimgformathint_e expectedFormat)
 {
-   // if exact match for expectations, use them.
-   if(size == (size_t)ew * (size_t)eh)
-   {
-      w = ew;
-      h = ew;
-      return;
-   }
+    // if exact match for expectations, use them.
+    if(size == (size_t)ew * (size_t)eh)
+    {
+        w = ew;
+        h = ew;
+        return;
+    }
 
-   if(expectedFormat == FORMAT_HINT_FLAT) // image is a flat
-   {
-      switch(size)
-      {
-      case 4160: // Heretic 64x65 scrolling flats
-      case 8192: // Hexen 64x128 scrolling flats
-         w = h = 64;
-         break;
-      default: 
-         V_linearOptimalSize(size, w, h);
-         break;
-      }
-   }
-   else if(expectedFormat == FORMAT_HINT_FONT) // image is a font
-   {
-      for(int i = 5; i <= 32; i++)
-      {
-         if(static_cast<size_t>(i * i * 128) == size)
-         {
-            w = i * 16;
-            h = i * 8;
-            return;
-         }
-      }
-      // can calculate optimal size, but, font code will reject it.
-      V_linearOptimalSize(size, w, h);
-   }
-   else // screen graphics
-   {
-      switch(size)
-      {
-      case 120:  // special case - "gnum" format
-         w = 10;
-         h = 12;
-         break;
-      case 2048: // special case (Strife startup sprite)
-         w = 32;
-         h = 64;
-         break;
-      case 2304: // special case (Strife startup sprite)
-         w = h = 48;
-         break;
-      case 4160: // stupid Heretic flats
-         w = h = 64;
-         break;
-      case 8192: // special case
-         w = 64;
-         h = 128;
-         break;
-      default:
-         if(!(size % 320)) // covers fullscreen gfx and Heretic AUTOPAGE
-         {
-            w = 320;
-            h = static_cast<int>(size / 320);
-         }
-         else
-            V_linearOptimalSize(size, w, h);
-         break;
-      }
-   }
+    if(expectedFormat == FORMAT_HINT_FLAT) // image is a flat
+    {
+        switch(size)
+        {
+        case 4160: // Heretic 64x65 scrolling flats
+        case 8192: // Hexen 64x128 scrolling flats
+            w = h = 64;
+            break;
+        default: V_linearOptimalSize(size, w, h); break;
+        }
+    }
+    else if(expectedFormat == FORMAT_HINT_FONT) // image is a font
+    {
+        for(int i = 5; i <= 32; i++)
+        {
+            if(static_cast<size_t>(i * i * 128) == size)
+            {
+                w = i * 16;
+                h = i * 8;
+                return;
+            }
+        }
+        // can calculate optimal size, but, font code will reject it.
+        V_linearOptimalSize(size, w, h);
+    }
+    else // screen graphics
+    {
+        switch(size)
+        {
+        case 120: // special case - "gnum" format
+            w = 10;
+            h = 12;
+            break;
+        case 2048: // special case (Strife startup sprite)
+            w = 32;
+            h = 64;
+            break;
+        case 2304: // special case (Strife startup sprite)
+            w = h = 48;
+            break;
+        case 4160: // stupid Heretic flats
+            w = h = 64;
+            break;
+        case 8192: // special case
+            w = 64;
+            h = 128;
+            break;
+        default:
+            if(!(size % 320)) // covers fullscreen gfx and Heretic AUTOPAGE
+            {
+                w = 320;
+                h = static_cast<int>(size / 320);
+            }
+            else
+                V_linearOptimalSize(size, w, h);
+            break;
+        }
+    }
 }
 
 //
@@ -368,33 +359,31 @@ void VImageManager::determineLinearDimensions(void *data, size_t size,
 //
 vimgformat_e VImageManager::detectResourceFormat(void *data, size_t size)
 {
-   using fmtmethod_t = bool (*)(void *, size_t);
+    using fmtmethod_t = bool (*)(void *, size_t);
 
-   static fmtmethod_t methods[3] =
-   {
-      &VImageManager::resourceIsPNG,
-      &VImageManager::resourceIsPatch,
-      &VImageManager::resourceIsLinear
-   };
-   static vimgformat_e fmts[3] =
-   {
-      FORMAT_PNG,
-      FORMAT_PATCH,
-      FORMAT_LINEAR
-   };
+    static fmtmethod_t methods[3] = {
+        &VImageManager::resourceIsPNG,
+        &VImageManager::resourceIsPatch,
+        &VImageManager::resourceIsLinear,
+    };
+    static vimgformat_e fmts[3] = {
+        FORMAT_PNG,
+        FORMAT_PATCH,
+        FORMAT_LINEAR,
+    };
 
-   vimgformat_e fmt = FORMAT_INVALID;
+    vimgformat_e fmt = FORMAT_INVALID;
 
-   for(size_t i = 0; i < earrlen(methods); i++)
-   {
-      if((*(methods[i]))(data, size))
-      {
-         fmt = fmts[i];
-         break;
-      }
-   }
+    for(size_t i = 0; i < earrlen(methods); i++)
+    {
+        if((*(methods[i]))(data, size))
+        {
+            fmt = fmts[i];
+            break;
+        }
+    }
 
-   return fmt;
+    return fmt;
 }
 
 //
@@ -402,60 +391,56 @@ vimgformat_e VImageManager::detectResourceFormat(void *data, size_t size)
 // allow storage of information in the image about what was expected by the
 // program versus whatever may be actually found.
 //
-VImage *VImageManager::loadResource(WadDirectory &dir, int lumpnum,
-                                    vimgformathint_e expectedFormat,
-                                    int expectedWidth, int expectedHeight)
+VImage *VImageManager::loadResource(WadDirectory &dir, int lumpnum, vimgformathint_e expectedFormat, int expectedWidth,
+                                    int expectedHeight)
 {
-   VImage *ret = nullptr;
+    VImage *ret = nullptr;
 
-   // missing resource, generate a default with characteristics that best
-   // match any expected ones passed in.
-   if(lumpnum < 0)
-      return generateDefaultResource(expectedWidth, expectedHeight);
-  
-   // cached already?
-   if(hasResource(lumpnum))
-      return pImpl->hash.objectForKey(lumpnum);
+    // missing resource, generate a default with characteristics that best
+    // match any expected ones passed in.
+    if(lumpnum < 0)
+        return generateDefaultResource(expectedWidth, expectedHeight);
 
-   // check size
-   size_t size;
-   if(!(size = static_cast<size_t>(dir.lumpLength(lumpnum))))
-      return generateDefaultResource(expectedWidth, expectedHeight);
+    // cached already?
+    if(hasResource(lumpnum))
+        return pImpl->hash.objectForKey(lumpnum);
 
-   // load wad lump
-   void *rawdata = dir.cacheLumpNum(lumpnum, PU_STATIC);
+    // check size
+    size_t size;
+    if(!(size = static_cast<size_t>(dir.lumpLength(lumpnum))))
+        return generateDefaultResource(expectedWidth, expectedHeight);
 
-   // detect format
-   vimgformat_e fmt;
-   // if invalid, generate default resource
-   if((fmt = detectResourceFormat(rawdata, size)) == FORMAT_INVALID)
-      return generateDefaultResource(expectedWidth, expectedHeight);
-   
-   // TODO
+    // load wad lump
+    void *rawdata = dir.cacheLumpNum(lumpnum, PU_STATIC);
 
-   // change wad lump to PU_CACHE
-   Z_ChangeTag(rawdata, PU_CACHE);
+    // detect format
+    vimgformat_e fmt;
+    // if invalid, generate default resource
+    if((fmt = detectResourceFormat(rawdata, size)) == FORMAT_INVALID)
+        return generateDefaultResource(expectedWidth, expectedHeight);
 
-   return ret;
+    // TODO
+
+    // change wad lump to PU_CACHE
+    Z_ChangeTag(rawdata, PU_CACHE);
+
+    return ret;
 }
 
 //
 // VImageManager::loadResource
 //
 // Loads resource from a wad directory by name. If lfn is true, the resource
-// name is a "long file name," such as for a resource in a zip. Optional 
+// name is a "long file name," such as for a resource in a zip. Optional
 // parameters allow storage of information in the image about what was expected
 // by the program versus whatever may be actually found.
 //
-VImage *VImageManager::loadResource(WadDirectory &dir, const char *name,
-                                    int li_namespace, bool allowglobal,
-                                    vimgformathint_e expectedFormat,
-                                    int expectedWidth, int expectedHeight)
+VImage *VImageManager::loadResource(WadDirectory &dir, const char *name, int li_namespace, bool allowglobal,
+                                    vimgformathint_e expectedFormat, int expectedWidth, int expectedHeight)
 {
-   int lumpnum = lookupResourceNum(dir, name, li_namespace, allowglobal);
-   return loadResource(dir, lumpnum, expectedFormat, expectedWidth, expectedHeight);
+    int lumpnum = lookupResourceNum(dir, name, li_namespace, allowglobal);
+    return loadResource(dir, lumpnum, expectedFormat, expectedWidth, expectedHeight);
 }
-
 
 //
 // VImageManager::hasResource
@@ -464,7 +449,7 @@ VImage *VImageManager::loadResource(WadDirectory &dir, const char *name,
 //
 bool VImageManager::hasResource(int lumpnum) const
 {
-   return pImpl->hash.objectForKey(lumpnum) != nullptr;
+    return pImpl->hash.objectForKey(lumpnum) != nullptr;
 }
 
 // EOF

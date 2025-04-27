@@ -24,8 +24,8 @@
 #ifndef M_SHOTS_H__
 #define M_SHOTS_H__
 
-extern int screenshot_pcx;                                   // killough 10/98
-extern int screenshot_gamma;                                 // haleyjd  03/06
+extern int screenshot_pcx;   // killough 10/98
+extern int screenshot_gamma; // haleyjd  03/06
 
 void M_ScreenShot(void);
 

@@ -43,7 +43,7 @@
 ceilinglist_t *activeceilings;
 
 // ioanch 20160306: vanilla demo compatibility stuff
-static const int vanilla_MAXCEILINGS = 30;
+static const int       vanilla_MAXCEILINGS = 30;
 static CeilingThinker *vanilla_activeceilings[vanilla_MAXCEILINGS];
 
 //
@@ -53,26 +53,20 @@ static CeilingThinker *vanilla_activeceilings[vanilla_MAXCEILINGS];
 //
 void P_CeilingSequence(sector_t *s, int noiseLevel)
 {
-   if(silentmove(s))
-      return;
+    if(silentmove(s))
+        return;
 
-   if(s->sndSeqID >= 0)
-      S_StartSectorSequence(s, SEQ_CEILING);
-   else
-   {
-      switch(noiseLevel)
-      {
-      case CNOISE_NORMAL:
-         S_StartSectorSequenceName(s, "EECeilingNormal", SEQ_ORIGIN_SECTOR_C);
-         break;
-      case CNOISE_SEMISILENT:
-         S_StartSectorSequenceName(s, "EECeilingSemiSilent", SEQ_ORIGIN_SECTOR_C);
-         break;
-      case CNOISE_SILENT:
-         S_StartSectorSequenceName(s, "EECeilingSilent", SEQ_ORIGIN_SECTOR_C);
-         break;
-      }
-   }
+    if(s->sndSeqID >= 0)
+        S_StartSectorSequence(s, SEQ_CEILING);
+    else
+    {
+        switch(noiseLevel)
+        {
+        case CNOISE_NORMAL:     S_StartSectorSequenceName(s, "EECeilingNormal", SEQ_ORIGIN_SECTOR_C); break;
+        case CNOISE_SEMISILENT: S_StartSectorSequenceName(s, "EECeilingSemiSilent", SEQ_ORIGIN_SECTOR_C); break;
+        case CNOISE_SILENT:     S_StartSectorSequenceName(s, "EECeilingSilent", SEQ_ORIGIN_SECTOR_C); break;
+        }
+    }
 }
 
 //
@@ -82,17 +76,17 @@ void P_CeilingSequence(sector_t *s, int noiseLevel)
 //
 void P_SetSectorCeilingPic(sector_t *sector, int pic)
 {
-   // clear sky flag
-   sector->intflags &= ~SIF_SKY;
+    // clear sky flag
+    sector->intflags &= ~SIF_SKY;
 
-   R_CacheTexture(pic);
-   R_CacheIfSkyTexture(sector->srf.ceiling.pic, pic);
+    R_CacheTexture(pic);
+    R_CacheIfSkyTexture(sector->srf.ceiling.pic, pic);
 
-   sector->srf.ceiling.pic = pic;
+    sector->srf.ceiling.pic = pic;
 
-   // reset the sky flag
-   if(R_IsSkyFlat(sector->srf.ceiling.pic))
-      sector->intflags |= SIF_SKY;
+    // reset the sky flag
+    if(R_IsSkyFlat(sector->srf.ceiling.pic))
+        sector->intflags |= SIF_SKY;
 }
 
 /////////////////////////////////////////////////////////////////
@@ -111,204 +105,194 @@ IMPLEMENT_THINKER_TYPE(CeilingThinker)
 // Passed a CeilingThinker structure that contains all the info about the move.
 // see P_SPEC.H for fields. No return value.
 //
-// jff 02/08/98 all cases with labels beginning with gen added to support 
+// jff 02/08/98 all cases with labels beginning with gen added to support
 // generalized line type behaviors.
 //
 void CeilingThinker::Think()
 {
-   result_e  res;
+    result_e res;
 
-   if(inStasis)
-      return;
+    if(inStasis)
+        return;
 
-   switch(direction)
-   {
-   case plat_stop:
-      // If ceiling in stasis, do nothing
-      break;
+    switch(direction)
+    {
+    case plat_stop:
+        // If ceiling in stasis, do nothing
+        break;
 
-   case plat_up:
-      // Ceiling is moving up
-      res = T_MoveCeilingUp(sector, speed, topheight, -1);
+    case plat_up:
+        // Ceiling is moving up
+        res = T_MoveCeilingUp(sector, speed, topheight, -1);
 
-      // if not a silent crusher, make moving sound
-      // haleyjd: now handled through sound sequences
+        // if not a silent crusher, make moving sound
+        // haleyjd: now handled through sound sequences
 
-      // handle reaching destination height
-      if(res == pastdest)
-      {
-         switch(type)
-         {
-            // plain movers are just removed
-         case raiseToHighest:
-         case genCeiling:
-         case paramHexenCrushRaiseStay:   // ioanch 20160306
-         case paramHexenLowerCrush:
-            P_RemoveActiveCeiling(this);
-            break;
-
-            // movers with texture change, change the texture then get removed
-         case genCeilingChgT:
-         case genCeilingChg0:
-            //jff 3/14/98 transfer old special field as well
-            P_TransferSectorSpecial(sector, &special);
-         case genCeilingChg:
-            P_SetSectorCeilingPic(sector, texture);
-            P_RemoveActiveCeiling(this);
-            break;
-
-            // crushers reverse direction at the top
-         case silentCrushAndRaise:
-            // haleyjd: if not playing a looping sequence, start one
-            if(!S_CheckSectorSequenceLoop(sector, SEQ_ORIGIN_SECTOR_C))
-               P_CeilingSequence(sector, CNOISE_SEMISILENT);
-         case genSilentCrusher:
-         case genCrusher:
-            // ioanch 20160314: Generic_Crusher support
-            if(type != silentCrushAndRaise)
-               speed = oldspeed;
-         case fastCrushAndRaise:
-         case crushAndRaise:
-            direction = plat_down;
-            break;
-
-         // ioanch 20160305
-         case paramHexenCrush:
-            // preserve the weird Hexen behaviour where the crusher becomes mute
-            // after any pastdest.
-            if(P_LevelIsVanillaHexen())
-               S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
-            else if(crushflags & crushSilent &&
-               !S_CheckSectorSequenceLoop(sector, SEQ_ORIGIN_SECTOR_C))
-            {
-               P_CeilingSequence(sector, CNOISE_SEMISILENT);
-            }
-            direction = plat_down;
-            speed = oldspeed;   // restore the speed to the designated DOWN one
-            break;
-            
-         default:
-            break;
-         }
-      }
-      break;
-  
-   case plat_down:
-      // Ceiling moving down
-      // ioanch 20160305: allow resting
-      res = T_MoveCeilingDown(sector, speed, bottomheight, crush, 
-         !!(crushflags & crushRest));
-
-      // if not silent crusher type make moving sound
-      // haleyjd: now handled through sound sequences
-
-      // handle reaching destination height
-      if(res == pastdest)
-      {
-         switch(this->type)
-         {
-            // 02/09/98 jff change slow crushers' speed back to normal
-            // start back up
-         case genSilentCrusher:
-         case genCrusher:
-            if(oldspeed < CEILSPEED*3)
-               speed = this->upspeed;  // ioanch 20160314: use up speed
-            direction = plat_up; //jff 2/22/98 make it go back up!
-            break;
-            
-            // make platform stop at bottom of all crusher strokes
-            // except generalized ones, reset speed, start back up
-         case silentCrushAndRaise:
-            // haleyjd: if not playing a looping sequence, start one
-            if(!S_CheckSectorSequenceLoop(sector, SEQ_ORIGIN_SECTOR_C))
-               P_CeilingSequence(sector, CNOISE_SEMISILENT);
-         case crushAndRaise: 
-            speed = CEILSPEED;
-         case fastCrushAndRaise:
-            direction = plat_up;
-            break;
-            
-            // in the case of ceiling mover/changer, change the texture
-            // then remove the active ceiling
-         case genCeilingChgT:
-         case genCeilingChg0:
-            //jff add to fix bug in special transfers from changes
-            P_TransferSectorSpecial(sector, &special);
-         case genCeilingChg:
-            P_SetSectorCeilingPic(sector, texture);
-            P_RemoveActiveCeiling(this);
-            break;
-
-            // all other case, just remove the active ceiling
-         case lowerAndCrush:
-         case lowerToFloor:
-         case lowerToLowest:
-         case lowerToMaxFloor:
-         case genCeiling:
-         case paramHexenLowerCrush:
-            P_RemoveActiveCeiling(this);
-            break;
-         // ioanch 20160305
-         case paramHexenCrush:
-         case paramHexenCrushRaiseStay:
-            // preserve the weird Hexen behaviour where the crusher becomes mute
-            // after any pastdest (only in maps for vanilla Hexen).
-            if(P_LevelIsVanillaHexen())
-               S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
-            else if(crushflags & crushSilent &&
-               !S_CheckSectorSequenceLoop(sector, SEQ_ORIGIN_SECTOR_C))
-            {
-               P_CeilingSequence(sector, CNOISE_SEMISILENT);
-            }
-
-            direction = plat_up;
-            // keep old speed in case it was decreased by crushing like Doom.
-            speed = upspeed;  // set to the different up speed
-            break;
-            
-         default:
-            break;
-         }
-      }
-      else // ( res != pastdest )
-      {
-         // handle the crusher encountering an obstacle
-         if(res == crushed)
-         {
+        // handle reaching destination height
+        if(res == pastdest)
+        {
             switch(type)
             {
-               //jff 02/08/98 slow down slow crushers on obstacle
-            case genCrusher:  
-            case genSilentCrusher:
-               if(oldspeed < CEILSPEED*3)
-                  speed = CEILSPEED / 8;
-               break;
+                // plain movers are just removed
+            case raiseToHighest:
+            case genCeiling:
+            case paramHexenCrushRaiseStay: // ioanch 20160306
+            case paramHexenLowerCrush:
+                P_RemoveActiveCeiling(this);
+                break;
+
+                // movers with texture change, change the texture then get removed
+            case genCeilingChgT:
+            case genCeilingChg0:
+                // jff 3/14/98 transfer old special field as well
+                P_TransferSectorSpecial(sector, &special);
+            case genCeilingChg:
+                P_SetSectorCeilingPic(sector, texture);
+                P_RemoveActiveCeiling(this);
+                break;
+
+                // crushers reverse direction at the top
             case silentCrushAndRaise:
-            case crushAndRaise:
+                // haleyjd: if not playing a looping sequence, start one
+                if(!S_CheckSectorSequenceLoop(sector, SEQ_ORIGIN_SECTOR_C))
+                    P_CeilingSequence(sector, CNOISE_SEMISILENT);
+            case genSilentCrusher:
+            case genCrusher:
+                // ioanch 20160314: Generic_Crusher support
+                if(type != silentCrushAndRaise)
+                    speed = oldspeed;
+            case fastCrushAndRaise:
+            case crushAndRaise:     direction = plat_down; break;
+
+            // ioanch 20160305
+            case paramHexenCrush:
+                // preserve the weird Hexen behaviour where the crusher becomes mute
+                // after any pastdest.
+                if(P_LevelIsVanillaHexen())
+                    S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
+                else if(crushflags & crushSilent && !S_CheckSectorSequenceLoop(sector, SEQ_ORIGIN_SECTOR_C))
+                {
+                    P_CeilingSequence(sector, CNOISE_SEMISILENT);
+                }
+                direction = plat_down;
+                speed     = oldspeed; // restore the speed to the designated DOWN one
+                break;
+
+            default: //
+                break;
+            }
+        }
+        break;
+
+    case plat_down:
+        // Ceiling moving down
+        // ioanch 20160305: allow resting
+        res = T_MoveCeilingDown(sector, speed, bottomheight, crush, !!(crushflags & crushRest));
+
+        // if not silent crusher type make moving sound
+        // haleyjd: now handled through sound sequences
+
+        // handle reaching destination height
+        if(res == pastdest)
+        {
+            switch(this->type)
+            {
+                // 02/09/98 jff change slow crushers' speed back to normal
+                // start back up
+            case genSilentCrusher:
+            case genCrusher:
+                if(oldspeed < CEILSPEED * 3)
+                    speed = this->upspeed; // ioanch 20160314: use up speed
+                direction = plat_up;       // jff 2/22/98 make it go back up!
+                break;
+
+                // make platform stop at bottom of all crusher strokes
+                // except generalized ones, reset speed, start back up
+            case silentCrushAndRaise:
+                // haleyjd: if not playing a looping sequence, start one
+                if(!S_CheckSectorSequenceLoop(sector, SEQ_ORIGIN_SECTOR_C))
+                    P_CeilingSequence(sector, CNOISE_SEMISILENT);
+            case crushAndRaise: speed = CEILSPEED;
+            case fastCrushAndRaise:
+                direction = plat_up;
+                break;
+
+                // in the case of ceiling mover/changer, change the texture
+                // then remove the active ceiling
+            case genCeilingChgT:
+            case genCeilingChg0:
+                // jff add to fix bug in special transfers from changes
+                P_TransferSectorSpecial(sector, &special);
+            case genCeilingChg:
+                P_SetSectorCeilingPic(sector, texture);
+                P_RemoveActiveCeiling(this);
+                break;
+
+                // all other case, just remove the active ceiling
             case lowerAndCrush:
-               speed = CEILSPEED / 8;
-               break;
+            case lowerToFloor:
+            case lowerToLowest:
+            case lowerToMaxFloor:
+            case genCeiling:
+            case paramHexenLowerCrush: P_RemoveActiveCeiling(this); break;
+            // ioanch 20160305
             case paramHexenCrush:
             case paramHexenCrushRaiseStay:
-            case paramHexenLowerCrush:
-            case genCeiling:  // ioanch: also emulate Doom ceiling fake crush
-                              // slowdown
-               // if crusher doesn't rest on victims:
-               // this is like ZDoom: if a ceiling speed is set exactly to 8,
-               // then apply the Doom crusher slowdown. Otherwise, keep speed
-               // constant. This may not apply to all crushing specials in
-               // ZDoom, but for simplicity it has been applied generally here.
-               if(!(crushflags & crushRest) && (crushflags & crushParamSlow))
-                  speed = CEILSPEED / 8;
-               break;
-               
-            default:
-               break;
+                // preserve the weird Hexen behaviour where the crusher becomes mute
+                // after any pastdest (only in maps for vanilla Hexen).
+                if(P_LevelIsVanillaHexen())
+                    S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
+                else if(crushflags & crushSilent && !S_CheckSectorSequenceLoop(sector, SEQ_ORIGIN_SECTOR_C))
+                {
+                    P_CeilingSequence(sector, CNOISE_SEMISILENT);
+                }
+
+                direction = plat_up;
+                // keep old speed in case it was decreased by crushing like Doom.
+                speed = upspeed; // set to the different up speed
+                break;
+
+            default: //
+                break;
             }
-         }
-      } // end else
-      break;
-   } // end switch
+        }
+        else // ( res != pastdest )
+        {
+            // handle the crusher encountering an obstacle
+            if(res == crushed)
+            {
+                switch(type)
+                {
+                    // jff 02/08/98 slow down slow crushers on obstacle
+                case genCrusher:
+                case genSilentCrusher:
+                    if(oldspeed < CEILSPEED * 3)
+                        speed = CEILSPEED / 8;
+                    break;
+                case silentCrushAndRaise:
+                case crushAndRaise:
+                case lowerAndCrush:       speed = CEILSPEED / 8; break;
+                case paramHexenCrush:
+                case paramHexenCrushRaiseStay:
+                case paramHexenLowerCrush:
+                case genCeiling: // ioanch: also emulate Doom ceiling fake crush
+                                 // slowdown
+                    // if crusher doesn't rest on victims:
+                    // this is like ZDoom: if a ceiling speed is set exactly to 8,
+                    // then apply the Doom crusher slowdown. Otherwise, keep speed
+                    // constant. This may not apply to all crushing specials in
+                    // ZDoom, but for simplicity it has been applied generally here.
+                    if(!(crushflags & crushRest) && (crushflags & crushParamSlow))
+                        speed = CEILSPEED / 8;
+                    break;
+
+                default: //
+                    break;
+                }
+            }
+        } // end else
+        break;
+    } // end switch
 }
 
 //
@@ -318,18 +302,18 @@ void CeilingThinker::Think()
 //
 void CeilingThinker::serialize(SaveArchive &arc)
 {
-   Super::serialize(arc);
+    Super::serialize(arc);
 
-   arc << type << bottomheight << topheight << speed << oldspeed << crush << special;
-   Archive_Flat(arc, texture);
-   arc << direction << inStasis << tag << olddirection;
+    arc << type << bottomheight << topheight << speed << oldspeed << crush << special;
+    Archive_Flat(arc, texture);
+    arc << direction << inStasis << tag << olddirection;
 
-   if((arc.saveVersion() >= 3))
-      arc << upspeed << crushflags;
+    if((arc.saveVersion() >= 3))
+        arc << upspeed << crushflags;
 
-   // Reattach to active ceilings list
-   if(arc.isLoading())
-      P_AddActiveCeiling(this);
+    // Reattach to active ceilings list
+    if(arc.isLoading())
+        P_AddActiveCeiling(this);
 }
 
 //
@@ -340,20 +324,20 @@ void CeilingThinker::serialize(SaveArchive &arc)
 //
 bool CeilingThinker::reTriggerVerticalDoor(bool player)
 {
-   if(!demo_compatibility)
-      return false;
+    if(!demo_compatibility)
+        return false;
 
-   if(speed == plat_down)
-      speed = plat_up;
-   else
-   {
-      if(!player)
-         return false;
+    if(speed == plat_down)
+        speed = plat_up;
+    else
+    {
+        if(!player)
+            return false;
 
-      speed = plat_down;
-   }
+        speed = plat_down;
+    }
 
-   return true;
+    return true;
 }
 
 //
@@ -366,100 +350,96 @@ bool CeilingThinker::reTriggerVerticalDoor(bool player)
 //
 int EV_DoCeiling(const line_t *line, int tag, ceiling_e type)
 {
-   int       secnum = -1;
-   int       rtn = 0;
-   int       noise = CNOISE_NORMAL; // haleyjd 09/28/06
-   sector_t  *sec;
-   CeilingThinker *ceiling;
-      
-   // Reactivate in-stasis ceilings...for certain types.
-   // This restarts a crusher after it has been stopped
-   switch(type)
-   {
-   case fastCrushAndRaise:
-   case silentCrushAndRaise:
-   case crushAndRaise:
-      //jff 4/5/98 return if activated
-      rtn = P_ActivateInStasisCeiling(line, tag);
-   default:
-      break;
-   }
-  
-   // affects all sectors with the same tag as the linedef
-   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
-   {
-      sec = &sectors[secnum];
-      
-      // if ceiling already moving, don't start a second function on it
-      if(P_SectorActive(ceiling_special, sec))  //jff 2/22/98
-         continue;
-  
-      // create a new ceiling thinker
-      rtn = 1;
-      ceiling = new CeilingThinker;
-      ceiling->addThinker();
-      sec->srf.ceiling.data = ceiling;               //jff 2/22/98
-      ceiling->sector = sec;
-      ceiling->crush = -1;
-      ceiling->crushflags = 0;   // ioanch 20160305
-  
-      // setup ceiling structure according to type of function
-      switch(type)
-      {
-      case fastCrushAndRaise:
-         ceiling->crush = 10;
-         ceiling->topheight = sec->srf.ceiling.height;
-         ceiling->bottomheight = sec->srf.floor.height + (8*FRACUNIT)
-            + pSlopeHeights[secnum].touchheight;
-         ceiling->direction = plat_down;
-         ceiling->speed = CEILSPEED * 2;
-         break;
+    int             secnum = -1;
+    int             rtn    = 0;
+    int             noise  = CNOISE_NORMAL; // haleyjd 09/28/06
+    sector_t       *sec;
+    CeilingThinker *ceiling;
 
-      case silentCrushAndRaise:
-         noise = CNOISE_SEMISILENT;
-      case crushAndRaise:
-         ceiling->crush = 10;
-         ceiling->topheight = sec->srf.ceiling.height;
-      case lowerAndCrush:
-      case lowerToFloor:
-         ceiling->bottomheight = sec->srf.floor.height + pSlopeHeights[secnum].touchheight;
-         if(type != lowerToFloor)
-            ceiling->bottomheight += 8*FRACUNIT;
-         ceiling->direction = plat_down;
-         ceiling->speed = CEILSPEED;
-         break;
+    // Reactivate in-stasis ceilings...for certain types.
+    // This restarts a crusher after it has been stopped
+    switch(type)
+    {
+    case fastCrushAndRaise:
+    case silentCrushAndRaise:
+    case crushAndRaise:
+        // jff 4/5/98 return if activated
+        rtn = P_ActivateInStasisCeiling(line, tag);
+    default: //
+        break;
+    }
 
-      case raiseToHighest:
-         ceiling->topheight = P_FindHighestCeilingSurrounding(sec);
-         ceiling->direction = plat_up;
-         ceiling->speed = CEILSPEED;
-         break;
-         
-      case lowerToLowest:
-         ceiling->bottomheight = P_FindLowestCeilingSurrounding(sec);
-         ceiling->direction = plat_down;
-         ceiling->speed = CEILSPEED;
-         break;
-         
-      case lowerToMaxFloor:
-         ceiling->bottomheight = P_FindHighestFloorSurrounding(sec);
-         ceiling->direction = plat_down;
-         ceiling->speed = CEILSPEED;
-         break;
-         
-      default:
-         break;
-      }
-    
-      // add the ceiling to the active list
-      ceiling->tag = sec->tag;
-      ceiling->type = type;
-      P_AddActiveCeiling(ceiling);
+    // affects all sectors with the same tag as the linedef
+    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
+    {
+        sec = &sectors[secnum];
 
-      // haleyjd 09/28/06: sound sequences
-      P_CeilingSequence(ceiling->sector, noise);
-   }
-   return rtn;
+        // if ceiling already moving, don't start a second function on it
+        if(P_SectorActive(ceiling_special, sec)) // jff 2/22/98
+            continue;
+
+        // create a new ceiling thinker
+        rtn     = 1;
+        ceiling = new CeilingThinker;
+        ceiling->addThinker();
+        sec->srf.ceiling.data = ceiling; // jff 2/22/98
+        ceiling->sector       = sec;
+        ceiling->crush        = -1;
+        ceiling->crushflags   = 0; // ioanch 20160305
+
+        // setup ceiling structure according to type of function
+        switch(type)
+        {
+        case fastCrushAndRaise:
+            ceiling->crush        = 10;
+            ceiling->topheight    = sec->srf.ceiling.height;
+            ceiling->bottomheight = sec->srf.floor.height + (8 * FRACUNIT) + pSlopeHeights[secnum].touchheight;
+            ceiling->direction    = plat_down;
+            ceiling->speed        = CEILSPEED * 2;
+            break;
+
+        case silentCrushAndRaise: noise = CNOISE_SEMISILENT;
+        case crushAndRaise:       ceiling->crush = 10; ceiling->topheight = sec->srf.ceiling.height;
+        case lowerAndCrush:
+        case lowerToFloor:
+            ceiling->bottomheight = sec->srf.floor.height + pSlopeHeights[secnum].touchheight;
+            if(type != lowerToFloor)
+                ceiling->bottomheight += 8 * FRACUNIT;
+            ceiling->direction = plat_down;
+            ceiling->speed     = CEILSPEED;
+            break;
+
+        case raiseToHighest:
+            ceiling->topheight = P_FindHighestCeilingSurrounding(sec);
+            ceiling->direction = plat_up;
+            ceiling->speed     = CEILSPEED;
+            break;
+
+        case lowerToLowest:
+            ceiling->bottomheight = P_FindLowestCeilingSurrounding(sec);
+            ceiling->direction    = plat_down;
+            ceiling->speed        = CEILSPEED;
+            break;
+
+        case lowerToMaxFloor:
+            ceiling->bottomheight = P_FindHighestFloorSurrounding(sec);
+            ceiling->direction    = plat_down;
+            ceiling->speed        = CEILSPEED;
+            break;
+
+        default: //
+            break;
+        }
+
+        // add the ceiling to the active list
+        ceiling->tag  = sec->tag;
+        ceiling->type = type;
+        P_AddActiveCeiling(ceiling);
+
+        // haleyjd 09/28/06: sound sequences
+        P_CeilingSequence(ceiling->sector, noise);
+    }
+    return rtn;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -473,7 +453,7 @@ int EV_DoCeiling(const line_t *line, int tag, ceiling_e type)
 // The following were all rewritten by Lee Killough
 // to use the new structure which places no limits
 // on active ceilings. It also avoids spending as much
-// time searching for active ceilings. Previously a 
+// time searching for active ceilings. Previously a
 // fixed-size array was used, with nullptr indicating
 // empty entries, while now a doubly-linked list
 // is used.
@@ -486,69 +466,67 @@ int EV_DoCeiling(const line_t *line, int tag, ceiling_e type)
 // Passed the line reactivating the crusher
 // Returns true if a ceiling reactivated
 //
-//jff 4/5/98 return if activated
-//ioanch 20160305: added manual parameter, for backside access
+// jff 4/5/98 return if activated
+// ioanch 20160305: added manual parameter, for backside access
 //
 int P_ActivateInStasisCeiling(const line_t *line, int tag, bool manual)
 {
-   int rtn = 0;
-   
-   // ioanch 20160314: avoid code duplication
-   auto resumeceiling = [&rtn](CeilingThinker *ceiling)
-   {
-      int noise;
+    int rtn = 0;
 
-      ceiling->direction = ceiling->olddirection;
-      ceiling->inStasis = false;
+    // ioanch 20160314: avoid code duplication
+    auto resumeceiling = [&rtn](CeilingThinker *ceiling) {
+        int noise;
 
-      // haleyjd: restart sound sequence
-      switch(ceiling->type)
-      {
-      case silentCrushAndRaise:
-         noise = CNOISE_SEMISILENT;
-         break;
-      case genSilentCrusher:
-         noise = CNOISE_SILENT;
-         break;
-      default:
-         // ioanch 20160314: mind the semi-silent variants
-         noise = ceiling->crushflags & CeilingThinker::crushSilent ?
-                     CNOISE_SEMISILENT : CNOISE_NORMAL;
-         break;
-      }
-      P_CeilingSequence(ceiling->sector, noise);
+        ceiling->direction = ceiling->olddirection;
+        ceiling->inStasis  = false;
 
-      //jff 4/5/98 return if activated
-      rtn = 1;
-   };
+        // haleyjd: restart sound sequence
+        switch(ceiling->type)
+        {
+        case silentCrushAndRaise: //
+            noise = CNOISE_SEMISILENT;
+            break;
+        case genSilentCrusher: //
+            noise = CNOISE_SILENT;
+            break;
+        default:
+            // ioanch 20160314: mind the semi-silent variants
+            noise = ceiling->crushflags & CeilingThinker::crushSilent ? CNOISE_SEMISILENT : CNOISE_NORMAL;
+            break;
+        }
+        P_CeilingSequence(ceiling->sector, noise);
 
-   // ioanch 20160306: restore old vanilla bug only for demos
-   if(demo_compatibility || P_LevelIsVanillaHexen())
-   {
-      for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
-      {
-         CeilingThinker *ceiling = vanilla_activeceilings[i];
-         if(ceiling && ceiling->tag == tag && ceiling->direction == plat_stop)
-         {
+        // jff 4/5/98 return if activated
+        rtn = 1;
+    };
+
+    // ioanch 20160306: restore old vanilla bug only for demos
+    if(demo_compatibility || P_LevelIsVanillaHexen())
+    {
+        for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
+        {
+            CeilingThinker *ceiling = vanilla_activeceilings[i];
+            if(ceiling && ceiling->tag == tag && ceiling->direction == plat_stop)
+            {
+                resumeceiling(ceiling);
+            }
+        }
+        return rtn;
+    }
+
+    // ioanch: normal setup
+    ceilinglist_t *cl;
+
+    for(cl = activeceilings; cl; cl = cl->next)
+    {
+        CeilingThinker *ceiling = cl->ceiling;
+        if(((manual && line && line->backsector == ceiling->sector) || (!manual && ceiling->tag == tag)) &&
+           ceiling->direction == 0)
+        {
             resumeceiling(ceiling);
-         }
-      }
-      return rtn;
-   }
-
-   // ioanch: normal setup
-   ceilinglist_t *cl;
-   
-   for(cl = activeceilings; cl; cl = cl->next)
-   {
-      CeilingThinker *ceiling = cl->ceiling;
-      if(((manual && line && line->backsector == ceiling->sector) ||
-         (!manual && ceiling->tag == tag)) && ceiling->direction == 0)
-      {
-         resumeceiling(ceiling);
-      }
-   }
-   return rtn;
+        }
+    }
+    return rtn;
 }
 
 //
@@ -556,18 +534,17 @@ int P_ActivateInStasisCeiling(const line_t *line, int tag, bool manual)
 //
 static void P_putThinkerInStasis(CeilingThinker *ceiling)
 {
-   ceiling->olddirection = ceiling->direction;
-   ceiling->direction = plat_stop;
-   ceiling->inStasis = true;
-   // ioanch 20160314: like in vanilla, do not make click sound when stopping
-   // these types
-   if(ceiling->type == silentCrushAndRaise ||
-      ceiling->crushflags & CeilingThinker::crushSilent)
-   {
-      S_SquashSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C);
-   }
-   else
-      S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
+    ceiling->olddirection = ceiling->direction;
+    ceiling->direction    = plat_stop;
+    ceiling->inStasis     = true;
+    // ioanch 20160314: like in vanilla, do not make click sound when stopping
+    // these types
+    if(ceiling->type == silentCrushAndRaise || ceiling->crushflags & CeilingThinker::crushSilent)
+    {
+        S_SquashSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C);
+    }
+    else
+        S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
 }
 
 //
@@ -580,55 +557,54 @@ static void P_putThinkerInStasis(CeilingThinker *ceiling)
 //
 int EV_CeilingCrushStop(int tag, bool removeThinker)
 {
-   int rtn = 0;
-   
-   // ioanch 20160306
-   if(demo_compatibility || P_LevelIsVanillaHexen())
-   {
-      for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
-      {
-         CeilingThinker *ceiling = vanilla_activeceilings[i];
-         if(removeThinker)
-         {
-            if(ceiling && ceiling->tag == tag)
+    int rtn = 0;
+
+    // ioanch 20160306
+    if(demo_compatibility || P_LevelIsVanillaHexen())
+    {
+        for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
+        {
+            CeilingThinker *ceiling = vanilla_activeceilings[i];
+            if(removeThinker)
             {
-               // in Hexen, just kill the crusher thinker
-               rtn = 1;
-               P_RemoveActiveCeiling(ceiling);
-               break;   // get out after killing a single crusher
+                if(ceiling && ceiling->tag == tag)
+                {
+                    // in Hexen, just kill the crusher thinker
+                    rtn = 1;
+                    P_RemoveActiveCeiling(ceiling);
+                    break; // get out after killing a single crusher
+                }
             }
-         }
-         else if(ceiling && ceiling->tag == tag && 
-            ceiling->direction != plat_stop)
-         {
+            else if(ceiling && ceiling->tag == tag && ceiling->direction != plat_stop)
+            {
+                P_putThinkerInStasis(ceiling);
+                rtn = 1;
+            }
+        }
+        return rtn;
+    }
+
+    // ioanch: normal setup
+    ceilinglist_t *cl;
+    for(cl = activeceilings; cl; cl = cl->next)
+    {
+        CeilingThinker *ceiling = cl->ceiling;
+        if(removeThinker)
+        {
+            if(ceiling->tag == tag)
+            {
+                P_RemoveActiveCeiling(ceiling);
+                rtn = 1;
+            }
+        }
+        else if(ceiling->direction != plat_stop && ceiling->tag == tag)
+        {
             P_putThinkerInStasis(ceiling);
             rtn = 1;
-         }
-      }
-      return rtn;
-   }
+        }
+    }
 
-   // ioanch: normal setup
-   ceilinglist_t *cl;
-   for(cl = activeceilings; cl; cl = cl->next)
-   {
-      CeilingThinker *ceiling = cl->ceiling;
-      if(removeThinker)
-      {
-         if(ceiling->tag == tag)
-         {
-            P_RemoveActiveCeiling(ceiling);
-            rtn = 1;
-         }
-      }
-      else if(ceiling->direction != plat_stop && ceiling->tag == tag)
-      {
-         P_putThinkerInStasis(ceiling);
-         rtn = 1;
-      }
-   }
-
-   return rtn;
+    return rtn;
 }
 
 //
@@ -641,29 +617,28 @@ int EV_CeilingCrushStop(int tag, bool removeThinker)
 //
 void P_AddActiveCeiling(CeilingThinker *ceiling)
 {
-   // ioanch 20160306
-   if(demo_compatibility || P_LevelIsVanillaHexen())
-   {
-      for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
-      {
-         if(!vanilla_activeceilings[i])
-         {
-            vanilla_activeceilings[i] = ceiling;
-            break;
-         }
-      }
-      return;
-   }
+    // ioanch 20160306
+    if(demo_compatibility || P_LevelIsVanillaHexen())
+    {
+        for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
+        {
+            if(!vanilla_activeceilings[i])
+            {
+                vanilla_activeceilings[i] = ceiling;
+                break;
+            }
+        }
+        return;
+    }
 
-   // ioanch: normal setup
-   ceilinglist_t *list = estructalloc(ceilinglist_t, 1);
-   list->ceiling = ceiling;
-   ceiling->list = list;
-   if((list->next = activeceilings))
-      list->next->prev = &list->next;
-   list->prev = &activeceilings;
-   activeceilings = list;
-
+    // ioanch: normal setup
+    ceilinglist_t *list = estructalloc(ceilinglist_t, 1);
+    list->ceiling       = ceiling;
+    ceiling->list       = list;
+    if((list->next = activeceilings))
+        list->next->prev = &list->next;
+    list->prev     = &activeceilings;
+    activeceilings = list;
 }
 
 //
@@ -674,33 +649,33 @@ void P_AddActiveCeiling(CeilingThinker *ceiling)
 // Passed the ceiling motion structure
 // Returns nothing
 //
-void P_RemoveActiveCeiling(CeilingThinker* ceiling)
+void P_RemoveActiveCeiling(CeilingThinker *ceiling)
 {
-   // ioanch 20160306
-   if(demo_compatibility || P_LevelIsVanillaHexen())
-   {
-      for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
-      {
-         if(vanilla_activeceilings[i] == ceiling)
-         {
-            ceiling->sector->srf.ceiling.data = nullptr;
-            S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C);
-            ceiling->remove();
-            vanilla_activeceilings[i] = nullptr;
-            break;
-         }
-      }
-      return;
-   }
+    // ioanch 20160306
+    if(demo_compatibility || P_LevelIsVanillaHexen())
+    {
+        for(int i = 0; i < vanilla_MAXCEILINGS; ++i)
+        {
+            if(vanilla_activeceilings[i] == ceiling)
+            {
+                ceiling->sector->srf.ceiling.data = nullptr;
+                S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C);
+                ceiling->remove();
+                vanilla_activeceilings[i] = nullptr;
+                break;
+            }
+        }
+        return;
+    }
 
-   // ioanch: normal setup
-   ceilinglist_t *list = ceiling->list;
-   ceiling->sector->srf.ceiling.data = nullptr;   //jff 2/22/98
-   S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
-   ceiling->remove();
-   if((*list->prev = list->next))
-      list->next->prev = list->prev;
-   efree(list);
+    // ioanch: normal setup
+    ceilinglist_t *list               = ceiling->list;
+    ceiling->sector->srf.ceiling.data = nullptr;                // jff 2/22/98
+    S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
+    ceiling->remove();
+    if((*list->prev = list->next))
+        list->next->prev = list->prev;
+    efree(list);
 }
 
 //
@@ -712,21 +687,21 @@ void P_RemoveActiveCeiling(CeilingThinker* ceiling)
 //
 void P_RemoveAllActiveCeilings()
 {
-   // ioanch 20160306
-   if(demo_compatibility || P_LevelIsVanillaHexen())
-   {
-      memset(vanilla_activeceilings, 0, sizeof(vanilla_activeceilings));
-      return;
-   }
+    // ioanch 20160306
+    if(demo_compatibility || P_LevelIsVanillaHexen())
+    {
+        memset(vanilla_activeceilings, 0, sizeof(vanilla_activeceilings));
+        return;
+    }
 
-   // normal setup
+    // normal setup
 
-   while(activeceilings)
-   {  
-      ceilinglist_t *next = activeceilings->next;
-      efree(activeceilings);
-      activeceilings = next;
-   }
+    while(activeceilings)
+    {
+        ceilinglist_t *next = activeceilings->next;
+        efree(activeceilings);
+        activeceilings = next;
+    }
 }
 
 //
@@ -736,18 +711,18 @@ void P_RemoveAllActiveCeilings()
 //
 void P_ChangeCeilingTex(const char *name, int tag)
 {
-   int flatnum;
-   int secnum = -1;
+    int flatnum;
+    int secnum = -1;
 
-   if((flatnum = R_CheckForFlat(name)) == -1)
-      return;
-   R_CacheTexture(flatnum);
+    if((flatnum = R_CheckForFlat(name)) == -1)
+        return;
+    R_CacheTexture(flatnum);
 
-   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
-   {
-      R_CacheIfSkyTexture(sectors[secnum].srf.ceiling.pic, flatnum);
-      P_SetSectorCeilingPic(&sectors[secnum], flatnum);
-   }
+    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
+    {
+        R_CacheIfSkyTexture(sectors[secnum].srf.ceiling.pic, flatnum);
+        P_SetSectorCeilingPic(&sectors[secnum], flatnum);
+    }
 }
 
 //=============================================================================
@@ -766,53 +741,52 @@ IMPLEMENT_THINKER_TYPE(CeilingWaggleThinker)
 //
 void CeilingWaggleThinker::Think()
 {
-   fixed_t destheight;
-   fixed_t dist;
-   extern fixed_t FloatBobOffsets[64];
+    fixed_t        destheight;
+    fixed_t        dist;
+    extern fixed_t FloatBobOffsets[64];
 
-   switch(state)
-   {
-   case WGLSTATE_EXPAND:
-      if((scale += scaleDelta) >= targetScale)
-      {
-         scale = targetScale;
-         state = WGLSTATE_STABLE;
-      }
-      break;
+    switch(state)
+    {
+    case WGLSTATE_EXPAND:
+        if((scale += scaleDelta) >= targetScale)
+        {
+            scale = targetScale;
+            state = WGLSTATE_STABLE;
+        }
+        break;
 
-   case WGLSTATE_REDUCE:
-      if((scale -= scaleDelta) <= 0)
-      {
-         // Remove
-         destheight = originalHeight;
-         dist       = originalHeight - sector->srf.ceiling.height;
+    case WGLSTATE_REDUCE:
+        if((scale -= scaleDelta) <= 0)
+        {
+            // Remove
+            destheight = originalHeight;
+            dist       = originalHeight - sector->srf.ceiling.height;
 
-         T_MoveCeilingInDirection(sector, abs(dist),
-            destheight, 8, destheight >= sector->srf.ceiling.height ? plat_up : plat_down);
+            T_MoveCeilingInDirection(sector, abs(dist), destheight, 8,
+                                     destheight >= sector->srf.ceiling.height ? plat_up : plat_down);
 
-         sector->srf.ceiling.data = nullptr;
-         remove();
-         return;
-      }
-      break;
+            sector->srf.ceiling.data = nullptr;
+            remove();
+            return;
+        }
+        break;
 
-   case WGLSTATE_STABLE:
-      if(ticker != -1)
-      {
-         if(!--ticker)
-            state = WGLSTATE_REDUCE;
-      }
-      break;
-   }
+    case WGLSTATE_STABLE:
+        if(ticker != -1)
+        {
+            if(!--ticker)
+                state = WGLSTATE_REDUCE;
+        }
+        break;
+    }
 
-   accumulator += accDelta;
+    accumulator += accDelta;
 
-   destheight = originalHeight +
-                FixedMul(FloatBobOffsets[(accumulator >> FRACBITS) & 63], scale);
-   dist = destheight - sector->srf.ceiling.height;
+    destheight = originalHeight + FixedMul(FloatBobOffsets[(accumulator >> FRACBITS) & 63], scale);
+    dist       = destheight - sector->srf.ceiling.height;
 
-   T_MoveCeilingInDirection(sector, abs(dist), destheight, 8,
-      destheight >= sector->srf.ceiling.height ? plat_up : plat_down);
+    T_MoveCeilingInDirection(sector, abs(dist), destheight, 8,
+                             destheight >= sector->srf.ceiling.height ? plat_up : plat_down);
 }
 
 //
@@ -820,66 +794,63 @@ void CeilingWaggleThinker::Think()
 //
 void CeilingWaggleThinker::serialize(SaveArchive &arc)
 {
-   Super::serialize(arc);
+    Super::serialize(arc);
 
-   arc << originalHeight << accumulator << accDelta << targetScale
-       << scale << scaleDelta << ticker << state;
+    arc << originalHeight << accumulator << accDelta << targetScale << scale << scaleDelta << ticker << state;
 }
 
-int EV_StartCeilingWaggle(const line_t *line, int tag, int height, int speed,
-                         int offset, int timer)
+int EV_StartCeilingWaggle(const line_t *line, int tag, int height, int speed, int offset, int timer)
 {
-   int       sectorIndex = -1;
-   int       retCode = 0;
-   bool      manual = false;
-   sector_t *sector;
-   CeilingWaggleThinker *waggle;
+    int                   sectorIndex = -1;
+    int                   retCode     = 0;
+    bool                  manual      = false;
+    sector_t             *sector;
+    CeilingWaggleThinker *waggle;
 
-   if(tag == 0)
-   {
-      if(!line || !(sector = line->backsector))
-         return retCode;
-      sectorIndex = eindex(sector - sectors);
-      manual = true;
-      goto manual_waggle;
-   }
-
-   while((sectorIndex = P_FindSectorFromTag(tag, sectorIndex)) >= 0)
-   {
-      sector = &sectors[sectorIndex];
-
-manual_waggle:
-      // Already busy with another thinker
-      if(sector->srf.ceiling.data)
-      {
-         if(manual)
+    if(tag == 0)
+    {
+        if(!line || !(sector = line->backsector))
             return retCode;
-         else
-            continue;
-      }
+        sectorIndex = eindex(sector - sectors);
+        manual      = true;
+        goto manual_waggle;
+    }
 
-      retCode = 1;
-      waggle = new CeilingWaggleThinker;
-      sector->srf.ceiling.data = waggle;
-      waggle->addThinker();
+    while((sectorIndex = P_FindSectorFromTag(tag, sectorIndex)) >= 0)
+    {
+        sector = &sectors[sectorIndex];
 
-      waggle->sector         = sector;
-      waggle->originalHeight = sector->srf.ceiling.height;
-      waggle->accumulator    = offset * FRACUNIT;
-      waggle->accDelta       = speed << 10;
-      waggle->scale          = 0;
-      waggle->targetScale    = height << 10;
-      waggle->scaleDelta     = waggle->targetScale / (35+((3*35)*height)/255);
-      waggle->ticker         = timer ? timer * 35 : -1;
-      waggle->state          = WGLSTATE_EXPAND;
+    manual_waggle:
+        // Already busy with another thinker
+        if(sector->srf.ceiling.data)
+        {
+            if(manual)
+                return retCode;
+            else
+                continue;
+        }
 
-      if(manual)
-         return retCode;
-   }
+        retCode                  = 1;
+        waggle                   = new CeilingWaggleThinker;
+        sector->srf.ceiling.data = waggle;
+        waggle->addThinker();
 
-   return retCode;
+        waggle->sector         = sector;
+        waggle->originalHeight = sector->srf.ceiling.height;
+        waggle->accumulator    = offset * FRACUNIT;
+        waggle->accDelta       = speed << 10;
+        waggle->scale          = 0;
+        waggle->targetScale    = height << 10;
+        waggle->scaleDelta     = waggle->targetScale / (35 + ((3 * 35) * height) / 255);
+        waggle->ticker         = timer ? timer * 35 : -1;
+        waggle->state          = WGLSTATE_EXPAND;
+
+        if(manual)
+            return retCode;
+    }
+
+    return retCode;
 }
-
 
 //----------------------------------------------------------------------------
 //

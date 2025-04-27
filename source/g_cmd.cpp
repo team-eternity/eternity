@@ -29,7 +29,7 @@
 #include "c_net.h"
 #include "c_runcmd.h"
 #include "d_files.h"
-#include "d_gi.h"     // haleyjd: gamemode pertinent info
+#include "d_gi.h" // haleyjd: gamemode pertinent info
 #include "d_io.h"
 #include "d_mod.h"
 #include "doomdef.h"
@@ -49,14 +49,14 @@
 #include "m_syscfg.h"
 #include "m_utils.h"
 #include "mn_engin.h"
-#include "mn_misc.h"  // haleyjd
+#include "mn_misc.h" // haleyjd
 #include "p_inter.h"
 #include "p_mobj.h"
 #include "p_partcl.h" // haleyjd: add particle event cmds
 #include "p_setup.h"
 #include "p_user.h"
-#include "s_sound.h"  // haleyjd: restored exit sounds
-#include "sounds.h"   // haleyjd: restored exit sounds
+#include "s_sound.h" // haleyjd: restored exit sounds
+#include "sounds.h"  // haleyjd: restored exit sounds
 #include "v_misc.h"
 #include "v_video.h"
 #include "w_levels.h"
@@ -73,47 +73,47 @@ extern int keylookspeed;
 
 CONSOLE_COMMAND(i_exitwithmessage, 0)
 {
-   I_ExitWithMessage("%s\n", Console.args.constPtr());
+    I_ExitWithMessage("%s\n", Console.args.constPtr());
 }
 
 CONSOLE_COMMAND(i_fatalerror, 0)
 {
-   I_FatalError(I_ERR_KILL, "%s\n", Console.args.constPtr());
+    I_FatalError(I_ERR_KILL, "%s\n", Console.args.constPtr());
 }
 
 CONSOLE_COMMAND(i_error, 0)
 {
-   I_Error("%s\n", Console.args.constPtr());
+    I_Error("%s\n", Console.args.constPtr());
 }
 
 CONSOLE_COMMAND(z_print, cf_hidden)
 {
-   Z_PrintZoneHeap();
+    Z_PrintZoneHeap();
 }
 
 CONSOLE_COMMAND(z_dumpcore, cf_hidden)
 {
-   Z_DumpCore();
+    Z_DumpCore();
 }
 
 CONSOLE_COMMAND(starttitle, cf_notnet)
 {
-   // haleyjd 04/18/03
-   if(demorecording || singledemo)
-      G_CheckDemoStatus();
+    // haleyjd 04/18/03
+    if(demorecording || singledemo)
+        G_CheckDemoStatus();
 
-   MN_ClearMenus();         // put menu away
-   D_StartTitle();
+    MN_ClearMenus(); // put menu away
+    D_StartTitle();
 }
 
 CONSOLE_COMMAND(endgame, cf_notnet)
 {
-   C_SetConsole();
+    C_SetConsole();
 }
 
 CONSOLE_COMMAND(pause, cf_server)
 {
-   sendpause = true;
+    sendpause = true;
 }
 
 //
@@ -121,42 +121,40 @@ CONSOLE_COMMAND(pause, cf_server)
 //
 static void G_QuitDoom()
 {
-   // haleyjd: re-added code for playing random sound before exit
-   extern int snd_card;
+    // haleyjd: re-added code for playing random sound before exit
+    extern int snd_card;
 
-   if((!netgame || demoplayback) && !nosfxparm && snd_card &&
-      GameModeInfo->flags & GIF_HASEXITSOUNDS)
-   {
-      S_StartInterfaceSound(GameModeInfo->exitSounds[(gametic>>2)&7]);
-      i_haltimer.Sleep(1500);
-   }
+    if((!netgame || demoplayback) && !nosfxparm && snd_card && GameModeInfo->flags & GIF_HASEXITSOUNDS)
+    {
+        S_StartInterfaceSound(GameModeInfo->exitSounds[(gametic >> 2) & 7]);
+        i_haltimer.Sleep(1500);
+    }
 
-   I_Exit(0);
+    I_Exit(0);
 }
 
 CONSOLE_COMMAND(quit, 0)
 {
-   G_QuitDoom();
+    G_QuitDoom();
 }
 
 CONSOLE_COMMAND(animshot, 0)
 {
-   if(!Console.argc)
-   {
-      C_Printf(
-         "animated screenshot.\n"
-         "usage: animshot <frames>\n");
-      return;
-   }
-   animscreenshot = Console.argv[0]->toInt();
-   C_InstaPopup();    // turn off console
+    if(!Console.argc)
+    {
+        C_Printf("animated screenshot.\n"
+                 "usage: animshot <frames>\n");
+        return;
+    }
+    animscreenshot = Console.argv[0]->toInt();
+    C_InstaPopup(); // turn off console
 }
 
 CONSOLE_COMMAND(screenshot, 0)
 {
-   if(Console.cmdtype != c_typed)
-      C_InstaPopup();
-   G_ScreenShot();
+    if(Console.cmdtype != c_typed)
+        C_InstaPopup();
+    G_ScreenShot();
 }
 
 // particle stuff
@@ -186,12 +184,12 @@ CONSOLE_VARIABLE(bfg_cloud, drawbfgcloud, 0) {}
 
 // always mlook
 
-VARIABLE_BOOLEAN(automlook, nullptr,        onoff);
+VARIABLE_BOOLEAN(automlook, nullptr, onoff);
 CONSOLE_VARIABLE(alwaysmlook, automlook, 0) {}
 
 // invert mouse
 
-VARIABLE_BOOLEAN(invert_mouse, nullptr,     onoff);
+VARIABLE_BOOLEAN(invert_mouse, nullptr, onoff);
 CONSOLE_VARIABLE(invertmouse, invert_mouse, 0) {}
 
 VARIABLE_BOOLEAN(invert_padlook, nullptr, onoff);
@@ -213,13 +211,12 @@ int mouseSensitivity_c;
 VARIABLE_INT(mouseSensitivity_c, nullptr, 0, 16, nullptr);
 CONSOLE_VARIABLE(sens_combined, mouseSensitivity_c, 0)
 {
-   mouseSensitivity_horiz = mouseSensitivity_vert = mouseSensitivity_c * 4;
+    mouseSensitivity_horiz = mouseSensitivity_vert = mouseSensitivity_c * 4;
 }
 
 // [CG] 01/20/12: Create "vanilla" and "raw" mouse sensitivities.
 bool default_vanilla_mouse_sensitivity = true;
-VARIABLE_TOGGLE(mouseSensitivity_vanilla, &default_vanilla_mouse_sensitivity,
-                yesno);
+VARIABLE_TOGGLE(mouseSensitivity_vanilla, &default_vanilla_mouse_sensitivity, yesno);
 CONSOLE_VARIABLE(sens_vanilla, mouseSensitivity_vanilla, 0) {}
 
 // player bobbing -- haleyjd: altered to read default, use netcmd
@@ -236,20 +233,20 @@ CONSOLE_VARIABLE(weapon_hotkey_holding, weapon_hotkey_holding, 0) {}
 // turbo scale
 
 int turbo_scale = 100;
-VARIABLE_INT(turbo_scale, nullptr,      10, 400, nullptr);
+VARIABLE_INT(turbo_scale, nullptr, 10, 400, nullptr);
 CONSOLE_VARIABLE(turbo, turbo_scale, 0)
 {
-   C_Printf("turbo scale: %i%%\n",turbo_scale);
-   E_ApplyTurbo(turbo_scale);
+    C_Printf("turbo scale: %i%%\n", turbo_scale);
+    E_ApplyTurbo(turbo_scale);
 }
 
-CONSOLE_NETCMD(exitlevel, cf_server|cf_level, netcmd_exitlevel)
+CONSOLE_NETCMD(exitlevel, cf_server | cf_level, netcmd_exitlevel)
 {
-   // haleyjd 09/04/02: prevent exit if dead, unless comp flag on
-   player_t *player = &players[Console.cmdsrc];
+    // haleyjd 09/04/02: prevent exit if dead, unless comp flag on
+    player_t *player = &players[Console.cmdsrc];
 
-   if((player->health > 0) || getComp(comp_zombie))
-      G_ExitLevel();
+    if((player->health > 0) || getComp(comp_zombie))
+        G_ExitLevel();
 }
 
 //=============================================================================
@@ -259,47 +256,41 @@ CONSOLE_NETCMD(exitlevel, cf_server|cf_level, netcmd_exitlevel)
 
 CONSOLE_COMMAND(playdemo, cf_notnet)
 {
-   if(Console.argc < 1)
-   {
-      C_Printf("usage: playdemo demoname\n");
-      return;
-   }
+    if(Console.argc < 1)
+    {
+        C_Printf("usage: playdemo demoname\n");
+        return;
+    }
 
-   // haleyjd 02/15/10: check in both ns_demos and ns_global
-   if(wGlobalDir.checkNumForNameNSG(Console.argv[0]->constPtr(), lumpinfo_t::ns_demos) < 0)
-   {
-      C_Printf(FC_ERROR "%s not found\n", Console.argv[0]->constPtr());
-      return;
-   }
+    // haleyjd 02/15/10: check in both ns_demos and ns_global
+    if(wGlobalDir.checkNumForNameNSG(Console.argv[0]->constPtr(), lumpinfo_t::ns_demos) < 0)
+    {
+        C_Printf(FC_ERROR "%s not found\n", Console.argv[0]->constPtr());
+        return;
+    }
 
-   G_DeferedPlayDemo(Console.argv[0]->constPtr());
-   singledemo = true;            // quit after one demo
+    G_DeferedPlayDemo(Console.argv[0]->constPtr());
+    singledemo = true; // quit after one demo
 }
-
 
 CONSOLE_COMMAND(stopdemo, cf_notnet)
 {
-   G_StopDemo();
+    G_StopDemo();
 }
 
 CONSOLE_COMMAND(timedemo, cf_notnet)
 {
-   if(Console.argc != 2)
-   {
-      C_Printf("usage: timedemo demoname showmenu\n");
-      return;
-   }
-   G_TimeDemo(Console.argv[0]->constPtr(), !!Console.argv[1]->toInt());
+    if(Console.argc != 2)
+    {
+        C_Printf("usage: timedemo demoname showmenu\n");
+        return;
+    }
+    G_TimeDemo(Console.argv[0]->constPtr(), !!Console.argv[1]->toInt());
 }
 
 // 'cool' demo
 
-const char *cooldemo_modes[] =
-{
-   "off",
-   "random",
-   "follow"
-};
+const char *cooldemo_modes[] = { "off", "random", "follow" };
 
 VARIABLE_INT(cooldemo, nullptr, 0, 2, cooldemo_modes);
 CONSOLE_VARIABLE(cooldemo, cooldemo, 0) {}
@@ -312,21 +303,21 @@ CONSOLE_VARIABLE(cooldemo, cooldemo, 0) {}
 // load new wad
 // buffered command: r_init during load
 
-CONSOLE_COMMAND(addfile, cf_notnet|cf_buffered)
+CONSOLE_COMMAND(addfile, cf_notnet | cf_buffered)
 {
-   if(GameModeInfo->flags & GIF_SHAREWARE)
-   {
-      C_Printf(FC_ERROR "command not available in shareware games\n");
-      return;
-   }
-   D_AddNewFile(Console.argv[0]->constPtr());
+    if(GameModeInfo->flags & GIF_SHAREWARE)
+    {
+        C_Printf(FC_ERROR "command not available in shareware games\n");
+        return;
+    }
+    D_AddNewFile(Console.argv[0]->constPtr());
 }
 
 // list loaded wads
 
 CONSOLE_COMMAND(listwads, 0)
 {
-   D_ListWads();
+    D_ListWads();
 }
 
 // random seed
@@ -338,89 +329,89 @@ CONSOLE_CONST(rngseed, rngseed);
 
 CONSOLE_NETCMD(kill, cf_level, netcmd_kill)
 {
-   Mobj *mobj;
-   int playernum;
+    Mobj *mobj;
+    int   playernum;
 
-   playernum = Console.cmdsrc;
+    playernum = Console.cmdsrc;
 
-   mobj = players[playernum].mo;
-   P_DamageMobj(mobj, nullptr, nullptr,
-                2*(players[playernum].health+players[playernum].armorpoints),
-                MOD_SUICIDE);
-   mobj->momx = mobj->momy = mobj->momz = 0;
-   players[playernum].momx = players[playernum].momy = 0;
+    mobj = players[playernum].mo;
+    P_DamageMobj(mobj, nullptr, nullptr, 2 * (players[playernum].health + players[playernum].armorpoints), MOD_SUICIDE);
+    mobj->momx = mobj->momy = mobj->momz = 0;
+    players[playernum].momx = players[playernum].momy = 0;
 }
 
 // change level
 
 CONSOLE_NETCMD(map, cf_server, netcmd_map)
 {
-   int lumpnum;
+    int lumpnum;
 
-   if(!Console.argc)
-   {
-      C_Printf("usage: map <mapname>\n");
-      return;
-   }
+    if(!Console.argc)
+    {
+        C_Printf("usage: map <mapname>\n");
+        return;
+    }
 
-   G_StopDemo();
+    G_StopDemo();
 
-   // check for .wad files
-   // i'm not particularly a fan of this myself, but..
+    // check for .wad files
+    // i'm not particularly a fan of this myself, but..
 
-   // haleyjd 03/12/06: no .wad loading in netgames
-   // haleyjd 05/24/13: or in shareware!
+    // haleyjd 03/12/06: no .wad loading in netgames
+    // haleyjd 05/24/13: or in shareware!
 
-   if(!netgame && !(GameModeInfo->flags & GIF_SHAREWARE) && Console.argv[0]->length() > 4)
-   {
-      const char *extension;
-      extension = Console.argv[0]->bufferAt(Console.argv[0]->length() - 4);
-      if(!strcasecmp(extension, ".wad"))
-      {
-         if(D_AddNewFile(Console.argv[0]->constPtr()))
-         {
-            C_Popup();
-            D_StartTitle();
-         }
-         return;
-      }
-   }
+    if(!netgame && !(GameModeInfo->flags & GIF_SHAREWARE) && Console.argv[0]->length() > 4)
+    {
+        const char *extension;
+        extension = Console.argv[0]->bufferAt(Console.argv[0]->length() - 4);
+        if(!strcasecmp(extension, ".wad"))
+        {
+            if(D_AddNewFile(Console.argv[0]->constPtr()))
+            {
+                C_Popup();
+                D_StartTitle();
+            }
+            return;
+        }
+    }
 
-   // haleyjd 02/23/04: strict error checking
-   lumpnum = W_CheckNumForName(Console.argv[0]->constPtr());
+    // haleyjd 02/23/04: strict error checking
+    lumpnum = W_CheckNumForName(Console.argv[0]->constPtr());
 
-   if(lumpnum != -1 && P_CheckLevel(&wGlobalDir, lumpnum) != LEVEL_FORMAT_INVALID)
-      G_DeferedInitNew(gameskill, Console.argv[0]->constPtr());
-   else
-      C_Printf(FC_ERROR "%s not found or is not a valid map\n", Console.argv[0]->constPtr());
+    if(lumpnum != -1 && P_CheckLevel(&wGlobalDir, lumpnum) != LEVEL_FORMAT_INVALID)
+        G_DeferedInitNew(gameskill, Console.argv[0]->constPtr());
+    else
+        C_Printf(FC_ERROR "%s not found or is not a valid map\n", Console.argv[0]->constPtr());
 }
 
 // restart map (shorthand for doing the map command to the same level)
 
-CONSOLE_NETCMD(restartmap, cf_server|cf_level, netcmd_restartmap)
+CONSOLE_NETCMD(restartmap, cf_server | cf_level, netcmd_restartmap)
 {
-   G_DeferedInitNew(gameskill, gamemapname);
+    G_DeferedInitNew(gameskill, gamemapname);
 }
 
-        // player name
-VARIABLE_STRING(default_name, nullptr,          20);
+// player name
+VARIABLE_STRING(default_name, nullptr, 20);
 CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
 {
-   int playernum;
+    int playernum;
 
-   if(Console.argc < 1)
-      return;
+    if(Console.argc < 1)
+        return;
 
-   playernum = Console.cmdsrc;
+    playernum = Console.cmdsrc;
 
-   Console.argv[0]->copyInto(players[playernum].name, 20);
+    Console.argv[0]->copyInto(players[playernum].name, 20);
 
-   if(playernum == consoleplayer)
-   {
-      efree(default_name);
-      default_name = Console.argv[0]->duplicate(PU_STATIC);
-   }
+    if(playernum == consoleplayer)
+    {
+        efree(default_name);
+        default_name = Console.argv[0]->duplicate(PU_STATIC);
+    }
 }
+
+// clang-format off
 
 // screenshot type
 
@@ -440,7 +431,7 @@ CONSOLE_VARIABLE(textmode_startup, textmode_startup, 0) {}
 // demo insurance
 
 extern int demo_insurance;
-const char *insure_str[]={"off", "on", "when recording"};
+const char *insure_str[] = { "off", "on", "when recording" };
 VARIABLE_INT(demo_insurance, &default_demo_insurance, 0, 2, insure_str);
 CONSOLE_VARIABLE(demo_insurance, demo_insurance, cf_notnet) {}
 
@@ -450,9 +441,8 @@ CONSOLE_VARIABLE(smooth_turning, smooth_turning, 0) {}
 
 // SoM: mouse accel
 acceltype_e default_mouse_accel_type = ACCELTYPE_NONE;
-const char *accel_options[]={ "off", "linear", "choco", "custom" };
-VARIABLE_INT(mouseAccel_type, &default_mouse_accel_type,
-             ACCELTYPE_NONE, ACCELTYPE_MAX, accel_options);
+const char *accel_options[]          = { "off", "linear", "choco", "custom" };
+VARIABLE_INT(mouseAccel_type, &default_mouse_accel_type, ACCELTYPE_NONE, ACCELTYPE_MAX, accel_options);
 CONSOLE_VARIABLE(mouse_accel_type, mouseAccel_type, ACCELTYPE_NONE) {}
 
 // [CG] 01/20/12: Custom mouse acceleration (threshold & value).
@@ -517,108 +507,114 @@ VARIABLE_STRING(gi_path_id24res,       nullptr, UL);
 VARIABLE_STRING(w_masterlevelsdirname, nullptr, UL);
 VARIABLE_STRING(w_norestpath,          nullptr, UL);
 
+// clang-format on
+
 static bool G_TestIWADPath(char *path)
 {
-   M_NormalizeSlashes(path);
+    M_NormalizeSlashes(path);
 
-   // test for read access, and warn if non-existent
-   if(access(path, R_OK))
-   {
-      if(menuactive)
-         MN_ErrorMsg("Warning: cannot access filepath");
-      else
-         C_Printf(FC_ERROR "Warning: cannot access filepath\n");
+    // test for read access, and warn if non-existent
+    if(access(path, R_OK))
+    {
+        if(menuactive)
+            MN_ErrorMsg("Warning: cannot access filepath");
+        else
+            C_Printf(FC_ERROR "Warning: cannot access filepath\n");
 
-      return false;
-   }
+        return false;
+    }
 
-   return true;
+    return true;
 }
+
+// clang-format off
 
 CONSOLE_VARIABLE(iwad_doom_shareware,    gi_path_doomsw,   cf_allowblank)
 {
-   G_TestIWADPath(gi_path_doomsw);
+    G_TestIWADPath(gi_path_doomsw);
 }
 
 CONSOLE_VARIABLE(iwad_doom,              gi_path_doomreg,  cf_allowblank)
 {
-   G_TestIWADPath(gi_path_doomreg);
+    G_TestIWADPath(gi_path_doomreg);
 }
 
 CONSOLE_VARIABLE(iwad_ultimate_doom,     gi_path_doomu,    cf_allowblank)
 {
-   G_TestIWADPath(gi_path_doomu);
+    G_TestIWADPath(gi_path_doomu);
 }
 
 CONSOLE_VARIABLE(iwad_doom2,             gi_path_doom2,    cf_allowblank)
 {
-   G_TestIWADPath(gi_path_doom2);
+    G_TestIWADPath(gi_path_doom2);
 }
 
 CONSOLE_VARIABLE(iwad_bfgdoom2,          gi_path_bfgdoom2, cf_allowblank)
 {
-   G_TestIWADPath(gi_path_bfgdoom2);
+    G_TestIWADPath(gi_path_bfgdoom2);
 }
 
 CONSOLE_VARIABLE(iwad_tnt,               gi_path_tnt,      cf_allowblank)
 {
-   G_TestIWADPath(gi_path_tnt);
+    G_TestIWADPath(gi_path_tnt);
 }
 
 CONSOLE_VARIABLE(iwad_plutonia,          gi_path_plut,     cf_allowblank)
 {
-   G_TestIWADPath(gi_path_plut);
+    G_TestIWADPath(gi_path_plut);
 }
 
 CONSOLE_VARIABLE(iwad_hacx,              gi_path_hacx,     cf_allowblank)
 {
-   G_TestIWADPath(gi_path_hacx);
+    G_TestIWADPath(gi_path_hacx);
 }
 
 CONSOLE_VARIABLE(iwad_heretic_shareware, gi_path_hticsw,   cf_allowblank)
 {
-   G_TestIWADPath(gi_path_hticsw);
+    G_TestIWADPath(gi_path_hticsw);
 }
 
 CONSOLE_VARIABLE(iwad_heretic,           gi_path_hticreg,  cf_allowblank)
 {
-   G_TestIWADPath(gi_path_hticreg);
+    G_TestIWADPath(gi_path_hticreg);
 }
 
 CONSOLE_VARIABLE(iwad_heretic_sosr,      gi_path_sosr,     cf_allowblank)
 {
-   G_TestIWADPath(gi_path_sosr);
+    G_TestIWADPath(gi_path_sosr);
 }
 
 CONSOLE_VARIABLE(iwad_freedoom,          gi_path_fdoom,    cf_allowblank)
 {
-   G_TestIWADPath(gi_path_fdoom);
+    G_TestIWADPath(gi_path_fdoom);
 }
 
 CONSOLE_VARIABLE(iwad_freedoomu,         gi_path_fdoomu,   cf_allowblank)
 {
-   G_TestIWADPath(gi_path_fdoomu);
+    G_TestIWADPath(gi_path_fdoomu);
 }
 
 CONSOLE_VARIABLE(iwad_freedm,            gi_path_freedm,   cf_allowblank)
 {
-   G_TestIWADPath(gi_path_freedm);
+    G_TestIWADPath(gi_path_freedm);
 }
+
+// clang-format on
 
 CONSOLE_VARIABLE(pwad_id24res, gi_path_id24res, cf_allowblank)
 {
-   G_TestIWADPath(gi_path_id24res);
+    G_TestIWADPath(gi_path_id24res);
 }
 
 CONSOLE_VARIABLE(master_levels_dir, w_masterlevelsdirname, cf_allowblank)
 {
-   if(G_TestIWADPath(w_masterlevelsdirname))
-      W_EnumerateMasterLevels(true);
+    if(G_TestIWADPath(w_masterlevelsdirname))
+        W_EnumerateMasterLevels(true);
 }
 
 CONSOLE_VARIABLE(w_norestpath, w_norestpath, cf_allowblank)
 {
-   G_TestIWADPath(w_norestpath);
+    G_TestIWADPath(w_norestpath);
 }
 
 VARIABLE_BOOLEAN(use_doom_config, nullptr, yesno);
@@ -626,48 +622,48 @@ CONSOLE_VARIABLE(use_doom_config, use_doom_config, 0) {}
 
 CONSOLE_COMMAND(spectate_prev, 0)
 {
-   int i = displayplayer - 1;
+    int i = displayplayer - 1;
 
-   if((gamestate != GS_LEVEL) || ((!demoplayback) && (GameType == gt_dm)))
-      return;
+    if((gamestate != GS_LEVEL) || ((!demoplayback) && (GameType == gt_dm)))
+        return;
 
-   for(; i != displayplayer; i--)
-   {
-      if(i == -1)
-         i = (MAXPLAYERS - 1);
+    for(; i != displayplayer; i--)
+    {
+        if(i == -1)
+            i = (MAXPLAYERS - 1);
 
-      if(playeringame[i])
-         break;
-   }
+        if(playeringame[i])
+            break;
+    }
 
-   P_SetDisplayPlayer(i);
+    P_SetDisplayPlayer(i);
 }
 
 CONSOLE_COMMAND(spectate_next, 0)
 {
-   int i = displayplayer + 1;
+    int i = displayplayer + 1;
 
-   if((gamestate != GS_LEVEL) || ((!demoplayback) && (GameType == gt_dm)))
-      return;
+    if((gamestate != GS_LEVEL) || ((!demoplayback) && (GameType == gt_dm)))
+        return;
 
-   for(; i != displayplayer; i++)
-   {
-      if(i >= MAXPLAYERS)
-         i = 0;
+    for(; i != displayplayer; i++)
+    {
+        if(i >= MAXPLAYERS)
+            i = 0;
 
-      if(playeringame[i])
-         break;
-   }
+        if(playeringame[i])
+            break;
+    }
 
-   P_SetDisplayPlayer(i);
+    P_SetDisplayPlayer(i);
 }
 
 CONSOLE_COMMAND(spectate_self, 0)
 {
-   if((gamestate != GS_LEVEL) || ((!demoplayback) && (GameType == gt_dm)))
-      return;
+    if((gamestate != GS_LEVEL) || ((!demoplayback) && (GameType == gt_dm)))
+        return;
 
-   P_SetDisplayPlayer(consoleplayer);
+    P_SetDisplayPlayer(consoleplayer);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -677,36 +673,36 @@ CONSOLE_COMMAND(spectate_self, 0)
 
 void G_AddChatMacros()
 {
-   for(int i = 0; i < 10; i++)
-   {
-      variable_t *variable;
-      command_t  *command;
-      char tempstr[32];
+    for(int i = 0; i < 10; i++)
+    {
+        variable_t *variable;
+        command_t  *command;
+        char        tempstr[32];
 
-      memset(tempstr, 0, 32);
+        memset(tempstr, 0, 32);
 
-      // create the variable first
-      variable = estructalloc(variable_t, 1);
-      variable->variable  = &chat_macros[i];
-      variable->v_default = nullptr;
-      variable->type      = vt_string;      // string value
-      variable->min       = 0;
-      variable->max       = 128;
-      variable->defines   = nullptr;
+        // create the variable first
+        variable            = estructalloc(variable_t, 1);
+        variable->variable  = &chat_macros[i];
+        variable->v_default = nullptr;
+        variable->type      = vt_string; // string value
+        variable->min       = 0;
+        variable->max       = 128;
+        variable->defines   = nullptr;
 
-      // now the command
-      command = estructalloc(command_t, 1);
+        // now the command
+        command = estructalloc(command_t, 1);
 
-      snprintf(tempstr, sizeof(tempstr), "chatmacro%i", i);
-      command->name     = estrdup(tempstr);
-      command->type     = ct_variable;
-      command->flags    = 0;
-      command->variable = variable;
-      command->handler  = nullptr;
-      command->netcmd   = 0;
+        snprintf(tempstr, sizeof(tempstr), "chatmacro%i", i);
+        command->name     = estrdup(tempstr);
+        command->type     = ct_variable;
+        command->flags    = 0;
+        command->variable = variable;
+        command->handler  = nullptr;
+        command->netcmd   = 0;
 
-      C_AddCommand(command); // hook into cmdlist
-   }
+        C_AddCommand(command); // hook into cmdlist
+    }
 }
 
 ///////////////////////////////////////////////////////////////
@@ -716,57 +712,55 @@ void G_AddChatMacros()
 // haleyjd 03/13/06
 //
 
-static const char *autoload_names[] =
-{
-   "auto_wad_1",
-   "auto_wad_2",
-   "auto_deh_1",
-   "auto_deh_2",
-   "auto_csc_1",
-   "auto_csc_2",
+static const char *autoload_names[] = {
+    "auto_wad_1", //
+    "auto_wad_2", //
+    "auto_deh_1", //
+    "auto_deh_2", //
+    "auto_csc_1", //
+    "auto_csc_2", //
 };
 
 extern char *wad_files[];
 extern char *deh_files[];
 extern char *csc_files[];
 
-static char **autoload_ptrs[] =
-{
-   &wad_files[0],
-   &wad_files[1],
-   &deh_files[0],
-   &deh_files[1],
-   &csc_files[0],
-   &csc_files[1],
+static char **autoload_ptrs[] = {
+    &wad_files[0], //
+    &wad_files[1], //
+    &deh_files[0], //
+    &deh_files[1], //
+    &csc_files[0], //
+    &csc_files[1], //
 };
 
 void G_AddAutoloadFiles()
 {
-   variable_t *variable;
-   command_t  *command;
+    variable_t *variable;
+    command_t  *command;
 
-   for(int i = 0; i < 6; i++)
-   {
-      // create the variable first
-      variable = estructalloc(variable_t, 1);
-      variable->variable  = autoload_ptrs[i];
-      variable->v_default = nullptr;
-      variable->type      = vt_string;
-      variable->min       = 0;
-      variable->max       = 1024;
-      variable->defines   = nullptr;
+    for(int i = 0; i < 6; i++)
+    {
+        // create the variable first
+        variable            = estructalloc(variable_t, 1);
+        variable->variable  = autoload_ptrs[i];
+        variable->v_default = nullptr;
+        variable->type      = vt_string;
+        variable->min       = 0;
+        variable->max       = 1024;
+        variable->defines   = nullptr;
 
-      // now the command
-      command = estructalloc(command_t, 1);
-      command->name     = autoload_names[i];
-      command->type     = ct_variable;
-      command->flags    = cf_allowblank;
-      command->variable = variable;
-      command->handler  = nullptr;
-      command->netcmd   = 0;
+        // now the command
+        command           = estructalloc(command_t, 1);
+        command->name     = autoload_names[i];
+        command->type     = ct_variable;
+        command->flags    = cf_allowblank;
+        command->variable = variable;
+        command->handler  = nullptr;
+        command->netcmd   = 0;
 
-      C_AddCommand(command); // hook into cmdlist
-   }
+        C_AddCommand(command); // hook into cmdlist
+    }
 }
 
 ///////////////////////////////////////////////////////////////
@@ -775,85 +769,84 @@ void G_AddAutoloadFiles()
 //
 
 // names given to cmds
-const char *comp_strings[] =
-{
-   "telefrag",
-   "dropoff",
-   "vile",
-   "pain",
-   "skull",
-   "blazing",
-   "doorlight",
-   "model",
-   "god",
-   "falloff",
-   "floors",
-   "skymap",
-   "pursuit",
-   "doorstuck",
-   "staylift",
-   "zombie",
-   "stairs",
-   "infcheat",
-   "zerotags",
-   "terrain",    // haleyjd: TerrainTypes
-   "respawnfix", //          Nightmare respawn location fix
-   "fallingdmg", //          Players take falling damage
-   "soul",       //          Lost soul bouncing
-   "theights",   //          Thing heights fix
-   "overunder",  //          10/19/02: z checking
-   "planeshoot", //          09/22/07: plane shooting
-   "special",    //          08/29/09: special failure behavior
-   "ninja",      //          04/18/10: ninja spawn
-   "aircontrol"
+const char *comp_strings[] = {
+    "telefrag",   //
+    "dropoff",    //
+    "vile",       //
+    "pain",       //
+    "skull",      //
+    "blazing",    //
+    "doorlight",  //
+    "model",      //
+    "god",        //
+    "falloff",    //
+    "floors",     //
+    "skymap",     //
+    "pursuit",    //
+    "doorstuck",  //
+    "staylift",   //
+    "zombie",     //
+    "stairs",     //
+    "infcheat",   //
+    "zerotags",   //
+    "terrain",    // haleyjd: TerrainTypes
+    "respawnfix", //          Nightmare respawn location fix
+    "fallingdmg", //          Players take falling damage
+    "soul",       //          Lost soul bouncing
+    "theights",   //          Thing heights fix
+    "overunder",  //          10/19/02: z checking
+    "planeshoot", //          09/22/07: plane shooting
+    "special",    //          08/29/09: special failure behavior
+    "ninja",      //          04/18/10: ninja spawn
+    "aircontrol", //
 };
 
 static void Handler_CompTHeights()
 {
-   P_ChangeThingHeights();
+    P_ChangeThingHeights();
 }
 
 void G_AddCompat()
 {
-   for(int i = 0; i < COMP_NUM_USED; i++)   // haleyjd: update this regularly
-   {
-      variable_t *variable;
-      command_t  *command;
-      char tempstr[32];
+    for(int i = 0; i < COMP_NUM_USED; i++) // haleyjd: update this regularly
+    {
+        variable_t *variable;
+        command_t  *command;
+        char        tempstr[32];
 
-      // create the variable first
-      variable = estructalloc(variable_t, 1);
-      variable->variable  = &comp[i];
-      variable->v_default = &default_comp[i];
-      variable->type      = vt_int;
-      variable->min       = 0;
-      variable->max       = 1;
-      variable->defines   = yesno;
+        // create the variable first
+        variable            = estructalloc(variable_t, 1);
+        variable->variable  = &comp[i];
+        variable->v_default = &default_comp[i];
+        variable->type      = vt_int;
+        variable->min       = 0;
+        variable->max       = 1;
+        variable->defines   = yesno;
 
-      // now the command
-      command = estructalloc(command_t, 1);
+        // now the command
+        command = estructalloc(command_t, 1);
 
-      psnprintf(tempstr, sizeof(tempstr), "comp_%s", comp_strings[i]);
-      command->name = estrdup(tempstr);
-      command->type = ct_variable;
+        psnprintf(tempstr, sizeof(tempstr), "comp_%s", comp_strings[i]);
+        command->name = estrdup(tempstr);
+        command->type = ct_variable;
 
-      switch(i)
-      {
-      case comp_theights:
-         command->flags   = cf_server | cf_netvar;
-         command->handler = Handler_CompTHeights;
-         break;
-      default:
-         command->flags   = cf_server | cf_netvar;
-         command->handler = nullptr;
-         break;
-      }
+        switch(i)
+        {
+        case comp_theights:
+            command->flags   = cf_server | cf_netvar;
+            command->handler = Handler_CompTHeights;
+            break;
+        default:
+            command->flags   = cf_server | cf_netvar;
+            command->handler = nullptr;
+            break;
+        }
 
-      command->variable = variable;
-      command->netcmd   = NETCMD_COMP_0 + i;
+        command->variable = variable;
+        command->netcmd   = NETCMD_COMP_0 + i;
 
-      C_AddCommand(command); // hook into cmdlist
-   }
+        C_AddCommand(command); // hook into cmdlist
+    }
 }
 
 // EOF

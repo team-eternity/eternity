@@ -37,7 +37,7 @@
 
 enum
 {
-   COOLDOWN = 30
+    COOLDOWN = 30
 };
 
 //
@@ -45,10 +45,10 @@ enum
 //
 struct musinfo_t
 {
-   Mobj *mapthing;      // keep track of touched music changers
-   Mobj *lastmapthing;
-   int tics;            // set a cooldown
-   int savedmusic;      // current music must be archived. -1 means no change.
+    Mobj *mapthing; // keep track of touched music changers
+    Mobj *lastmapthing;
+    int   tics;       // set a cooldown
+    int   savedmusic; // current music must be archived. -1 means no change.
 };
 
 static musinfo_t musinfo;
@@ -58,8 +58,8 @@ static musinfo_t musinfo;
 //
 void S_MusInfoClear()
 {
-   memset(&musinfo, 0, sizeof(musinfo));
-   musinfo.savedmusic = -1;
+    memset(&musinfo, 0, sizeof(musinfo));
+    musinfo.savedmusic = -1;
 }
 
 //
@@ -67,13 +67,12 @@ void S_MusInfoClear()
 //
 void S_MusInfoThink(Mobj &thing)
 {
-   if(musinfo.mapthing != &thing &&
-      thing.subsector->sector == players[consoleplayer].mo->subsector->sector)
-   {
-      P_SetTarget(&musinfo.lastmapthing, musinfo.mapthing);
-      P_SetTarget(&musinfo.mapthing, &thing);
-      musinfo.tics = COOLDOWN;
-   }
+    if(musinfo.mapthing != &thing && thing.subsector->sector == players[consoleplayer].mo->subsector->sector)
+    {
+        P_SetTarget(&musinfo.lastmapthing, musinfo.mapthing);
+        P_SetTarget(&musinfo.mapthing, &thing);
+        musinfo.tics = COOLDOWN;
+    }
 }
 
 //
@@ -81,11 +80,11 @@ void S_MusInfoThink(Mobj &thing)
 //
 static void S_updateMusic()
 {
-   if(musinfo.savedmusic < 0)
-      return;
-   const char *lumpname = P_GetMusInfoMusic(gamemapname, musinfo.savedmusic);
-   if(lumpname)
-      S_ChangeMusicName(lumpname, 1);
+    if(musinfo.savedmusic < 0)
+        return;
+    const char *lumpname = P_GetMusInfoMusic(gamemapname, musinfo.savedmusic);
+    if(lumpname)
+        S_ChangeMusicName(lumpname, 1);
 }
 
 //
@@ -93,18 +92,18 @@ static void S_updateMusic()
 //
 void S_MusInfoUpdate()
 {
-   if(musinfo.tics < 0 || !musinfo.mapthing)
-      return;
-   if(musinfo.tics > 0)
-   {
-      musinfo.tics--;
-      return;
-   }
-   if(!musinfo.tics && musinfo.lastmapthing != musinfo.mapthing)
-   {
-      musinfo.savedmusic = musinfo.mapthing->args[0];
-      S_updateMusic();
-   }
+    if(musinfo.tics < 0 || !musinfo.mapthing)
+        return;
+    if(musinfo.tics > 0)
+    {
+        musinfo.tics--;
+        return;
+    }
+    if(!musinfo.tics && musinfo.lastmapthing != musinfo.mapthing)
+    {
+        musinfo.savedmusic = musinfo.mapthing->args[0];
+        S_updateMusic();
+    }
 }
 
 //
@@ -112,9 +111,9 @@ void S_MusInfoUpdate()
 //
 void S_MusInfoArchive(SaveArchive &arc)
 {
-   arc << musinfo.savedmusic;
-   if(arc.isLoading())
-      S_updateMusic();
+    arc << musinfo.savedmusic;
+    if(arc.isLoading())
+        S_updateMusic();
 }
 
 // EOF

@@ -28,21 +28,21 @@ struct actionargs_t;
 
 struct deh_bexptr
 {
-   void (*cptr)(actionargs_t *); // actual pointer to the subroutine
-   const char *lookup;           // mnemonic lookup string to be specified in BEX
-   int next;                     // haleyjd: for bex hash chaining   
+    void        (*cptr)(actionargs_t *); // actual pointer to the subroutine
+    const char *lookup;                  // mnemonic lookup string to be specified in BEX
+    int         next;                    // haleyjd: for bex hash chaining
 };
 
 extern deh_bexptr deh_bexptrs[]; // still needed in d_deh.c
-extern int num_bexptrs;
+extern int        num_bexptrs;
 
 struct dehstr_t
 {
-   const char **ppstr;   // doubly indirect pointer to string   
-   const char *lookup;   // pointer to lookup string name
-   const char *original; // haleyjd 10/08/06: original string
-   size_t bnext;         // haleyjd: for bex hash chaining (by mnemonic)
-   size_t dnext;         // haleyjd: for deh hash chaining (by value)
+    const char **ppstr;    // doubly indirect pointer to string
+    const char  *lookup;   // pointer to lookup string name
+    const char  *original; // haleyjd 10/08/06: original string
+    size_t       bnext;    // haleyjd: for bex hash chaining (by mnemonic)
+    size_t       dnext;    // haleyjd: for deh hash chaining (by value)
 };
 
 extern char **deh_spritenames;
@@ -56,8 +56,8 @@ dehstr_t *D_GetDEHStr(const char *string);
 
 // haleyjd 10/08/06: new string fetching functions
 const char *DEH_String(const char *mnemonic);
-bool DEH_StringChanged(const char *mnemonic);
-void DEH_ReplaceString(const char *mnemonic, const char *newstr);
+bool        DEH_StringChanged(const char *mnemonic);
+void        DEH_ReplaceString(const char *mnemonic, const char *newstr);
 
 deh_bexptr *D_GetBexPtr(const char *mnemonic);
 
@@ -68,28 +68,28 @@ void D_BuildBEXTables();
 // ExtraData usage
 struct dehflags_t
 {
-   const char *name;
-   unsigned int value;
-   int index;
+    const char  *name;
+    unsigned int value;
+    int          index;
 };
 
 inline constexpr int MAXFLAGFIELDS = 5;
 
 enum
 {
-   DEHFLAGS_MODE1,
-   DEHFLAGS_MODE2,
-   DEHFLAGS_MODE3,
-   DEHFLAGS_MODE4,
-   DEHFLAGS_MODE5,
-   DEHFLAGS_MODE_ALL
+    DEHFLAGS_MODE1,
+    DEHFLAGS_MODE2,
+    DEHFLAGS_MODE3,
+    DEHFLAGS_MODE4,
+    DEHFLAGS_MODE5,
+    DEHFLAGS_MODE_ALL
 };
 
 struct dehflagset_t
 {
-   dehflags_t *flaglist;
-   int mode;
-   unsigned int results[MAXFLAGFIELDS];
+    dehflags_t  *flaglist;
+    int          mode;
+    unsigned int results[MAXFLAGFIELDS];
 };
 
 dehflags_t   *deh_ParseFlag(const dehflagset_t *flagset, const char *name);

@@ -32,14 +32,14 @@ struct polyobj_t;
 extern bool useportalgroups;
 
 // ioanch 20160109: true if sector portals are in map
-extern bool gMapHasSectorPortals;
-extern bool gMapHasLinePortals;  // ioanch 20160131: also check line portals
-extern bool *gGroupVisit;  // ioanch 20160121: a global helper array
-extern const polyobj_t **gGroupPolyobject; // ioanch 20160227
+extern bool              gMapHasSectorPortals;
+extern bool              gMapHasLinePortals; // ioanch 20160131: also check line portals
+extern bool             *gGroupVisit;        // ioanch 20160121: a global helper array
+extern const polyobj_t **gGroupPolyobject;   // ioanch 20160227
 
 #ifndef R_NOGROUP
 // No link group. I know this means there is a signed limit on portal groups but
-// do you think anyone is going to make a level with 2147483647 groups that 
+// do you think anyone is going to make a level with 2147483647 groups that
 // doesn't have NUTS in the wad name? I didn't think so either.
 #define R_NOGROUP -1
 #endif
@@ -54,21 +54,21 @@ struct sector_t;
 //
 enum
 {
-   paramPortal_argType = 1,
-   paramPortal_argPlane = 2,
-   paramPortal_argMisc = 3,
+    paramPortal_argType  = 1,
+    paramPortal_argPlane = 2,
+    paramPortal_argMisc  = 3,
 
-   paramPortal_planeFloor = 0,
-   paramPortal_planeCeiling = 1,
-   paramPortal_planeBoth = 2,
+    paramPortal_planeFloor   = 0,
+    paramPortal_planeCeiling = 1,
+    paramPortal_planeBoth    = 2,
 
-   paramPortal_normal = 0,
-   paramPortal_copied = 1,
-   paramPortal_skybox = 2,
-   paramPortal_pplane = 3,
-   paramPortal_horizon = 4,
-   paramPortal_copyline = 5,
-   paramPortal_linked = 6,
+    paramPortal_normal   = 0,
+    paramPortal_copied   = 1,
+    paramPortal_skybox   = 2,
+    paramPortal_pplane   = 3,
+    paramPortal_horizon  = 4,
+    paramPortal_copyline = 5,
+    paramPortal_linked   = 6,
 };
 
 //
@@ -89,7 +89,7 @@ int P_CreatePortalGroup(sector_t *from);
 //
 void P_GatherSectors(sector_t *from, int groupid);
 
-void P_FindPolyobjectSectorCouples();  // called in P_SpawnSpecials
+void P_FindPolyobjectSectorCouples(); // called in P_SpawnSpecials
 
 //
 // R_BuildLinkTable
@@ -145,7 +145,7 @@ void P_SetFPortalBehavior(sector_t *sec, int newbehavior);
 //
 // P_SetCPortalBehavior
 //
-// This function sets the behavior flags for the ceiling portal of a given 
+// This function sets the behavior flags for the ceiling portal of a given
 // sector and updates the state flags for the surface.
 //
 void P_SetCPortalBehavior(sector_t *sec, int newbehavior);
@@ -158,36 +158,35 @@ void P_SetCPortalBehavior(sector_t *sec, int newbehavior);
 //
 void P_SetLPortalBehavior(line_t *line, int newbehavior);
 
-void P_MoveGroupCluster(int outgroup, int ingroup, bool *groupvisit, fixed_t dx,
-                        fixed_t dy, bool setpolyref, const polyobj_t *po);
-void P_ForEachClusterGroup(int outgroup, int ingroup, bool *groupvisit,
-                           bool (*func)(int groupid, void *context), void *context);
+void P_MoveGroupCluster(int outgroup, int ingroup, bool *groupvisit, fixed_t dx, fixed_t dy, bool setpolyref,
+                        const polyobj_t *po);
+void P_ForEachClusterGroup(int outgroup, int ingroup, bool *groupvisit, bool (*func)(int groupid, void *context),
+                           void *context);
 
-fixed_t P_PortalZ(const surface_t &surface, fixed_t x, fixed_t y);
+fixed_t               P_PortalZ(const surface_t &surface, fixed_t x, fixed_t y);
 inline static fixed_t P_PortalZ(const surface_t &surface, v2fixed_t v)
 {
-   return P_PortalZ(surface, v.x, v.y);
+    return P_PortalZ(surface, v.x, v.y);
 }
-fixed_t P_PortalZ(const surface_t &surface);
+fixed_t               P_PortalZ(const surface_t &surface);
 inline static fixed_t P_PortalZ(surf_e surf, const rendersector_t &sector)
 {
-   return P_PortalZ(sector.srf[surf]);
+    return P_PortalZ(sector.srf[surf]);
 }
 
 // Group mappings
-void P_BuildSectorGroupMappings();
+void       P_BuildSectorGroupMappings();
 const int *P_GetSectorsWithGroupId(int groupid, int *count);
-bool P_PortalLayersByPoly(int groupid1, int groupid2);
+bool       P_PortalLayersByPoly(int groupid1, int groupid2);
 
-const int *P_GetSectorPortalNeighbors(const sector_t &sector, surf_e surf,
-                                      int *count);
+const int *P_GetSectorPortalNeighbors(const sector_t &sector, surf_e surf, int *count);
 
 //
 // True if it's a passable portal with overlay
 //
 inline static bool P_IsLiquidOverlaylinkedPortal(const surface_t &surface)
 {
-   return (surface.pflags & (PS_PASSABLE | PS_OVERLAY)) == (PS_PASSABLE | PS_OVERLAY);
+    return (surface.pflags & (PS_PASSABLE | PS_OVERLAY)) == (PS_PASSABLE | PS_OVERLAY);
 }
 
 #endif

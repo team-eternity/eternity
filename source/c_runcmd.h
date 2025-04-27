@@ -27,7 +27,7 @@
 #include "m_dllist.h"
 #include "m_qstr.h"
 
-// NETCODE_FIXME -- CONSOLE_FIXME -- CONFIG_FIXME: Commands and 
+// NETCODE_FIXME -- CONSOLE_FIXME -- CONFIG_FIXME: Commands and
 // variables need tweaks and extensions to fully support archiving in
 // the configuration and possibly in savegames, and also telling what
 // commands and variables are sync-critical. The main addition needed
@@ -57,55 +57,55 @@ struct variable_t;
 //              C_Printf("hello!\n");
 //        }
 //
-#define CONSOLE_COMMAND(name, flags)                     \
-   static void Handler_ ## name(void);                   \
-   static command_t Cmd_ ## name = { # name, ct_command, \
-                  flags, nullptr, Handler_ ## name,      \
-                  0, nullptr };                          \
-   static CCmdRegistry regCmd ## name (&Cmd_ ## name);   \
-   static void Handler_ ## name(void)
+#define CONSOLE_COMMAND(name, flags)                      \
+    static void Handler_ ## name(void);                   \
+    static command_t Cmd_ ## name = { # name, ct_command, \
+                    flags, nullptr, Handler_ ## name,     \
+                    0, nullptr };                         \
+    static CCmdRegistry regCmd ## name (&Cmd_ ## name);   \
+    static void Handler_ ## name(void)
 
 //
 // CONSOLE_VARIABLE
 //
-// You must define the range of values etc. for the variable using the other 
+// You must define the range of values etc. for the variable using the other
 // macros below. You must also provide a handler function even if it is just {}
 //
-#define CONSOLE_VARIABLE(name, variable, flags)                \
-   static void Handler_ ## name(void);                         \
-   static command_t Cmd_ ## name = { # name, ct_variable,      \
-                   flags, &var_ ## variable, Handler_ ## name, \
-                   0, nullptr };                               \
-   static CCmdRegistry regCmd ## name (&Cmd_ ## name);         \
-   static void Handler_ ## name(void)
+#define CONSOLE_VARIABLE(name, variable, flags)                 \
+    static void Handler_ ## name(void);                         \
+    static command_t Cmd_ ## name = { # name, ct_variable,      \
+                    flags, &var_ ## variable, Handler_ ## name, \
+                    0, nullptr };                               \
+    static CCmdRegistry regCmd ## name (&Cmd_ ## name);         \
+    static void Handler_ ## name(void)
 
 //
 // CONSOLE_NETCMD
 //
-// Same as CONSOLE_COMMAND, but sync-ed across network. When this command is 
+// Same as CONSOLE_COMMAND, but sync-ed across network. When this command is
 // executed, it is run on all computers. You must assign your variable a unique
 // netgame variable (list in c_net.h)
 //
-#define CONSOLE_NETCMD(name, flags, netcmd)              \
-   static void Handler_ ## name(void);                   \
-   static command_t Cmd_ ## name = { # name, ct_command, \
-                  (flags) | cf_netvar, nullptr,          \
-                  Handler_ ## name, netcmd, nullptr };   \
-   static CCmdRegistry regCmd ## name (&Cmd_ ## name);   \
-   static void Handler_ ## name()
+#define CONSOLE_NETCMD(name, flags, netcmd)               \
+    static void Handler_ ## name(void);                   \
+    static command_t Cmd_ ## name = { # name, ct_command, \
+                    (flags) | cf_netvar, nullptr,         \
+                    Handler_ ## name, netcmd, nullptr };  \
+    static CCmdRegistry regCmd ## name (&Cmd_ ## name);   \
+    static void Handler_ ## name()
 
 //
 // CONSOLE_NETVAR
 //
 // As for CONSOLE_VARIABLE, but for net, see above
 //
-#define CONSOLE_NETVAR(name, variable, flags, netcmd)      \
-   static void Handler_ ## name(void);                     \
-   static command_t Cmd_ ## name = { # name, ct_variable,  \
-                   cf_netvar | (flags), &var_ ## variable, \
-                   Handler_ ## name, netcmd, nullptr };    \
-   static CCmdRegistry regCmd ## name (&Cmd_ ## name);     \
-   static void Handler_ ## name(void)
+#define CONSOLE_NETVAR(name, variable, flags, netcmd)       \
+    static void Handler_ ## name(void);                     \
+    static command_t Cmd_ ## name = { # name, ct_variable,  \
+                    cf_netvar | (flags), &var_ ## variable, \
+                    Handler_ ## name, netcmd, nullptr };    \
+    static CCmdRegistry regCmd ## name (&Cmd_ ## name);     \
+    static void Handler_ ## name(void)
 
 //
 // CONSOLE_CONST
@@ -113,12 +113,12 @@ struct variable_t;
 // Create a constant. You must declare the variable holding the constant using
 // the variable macros below.
 //
-#define CONSOLE_CONST(name, variable)                         \
-    static command_t Cmd_ ## name = { # name, ct_constant, 0, \
-       &var_ ## variable, nullptr, 0, nullptr };              \
-    static CCmdRegistry regCmd ## name (&Cmd_ ## name);
+#define CONSOLE_CONST(name, variable)                          \
+     static command_t Cmd_ ## name = { # name, ct_constant, 0, \
+        &var_ ## variable, nullptr, 0, nullptr };              \
+     static CCmdRegistry regCmd ## name (&Cmd_ ## name);
 
-        /*********** variable macros *************/
+/*********** variable macros *************/
 
 // Each console variable has a corresponding C variable.
 // It also has a variable_t which contains data such as,
@@ -132,8 +132,7 @@ struct variable_t;
 // Basic VARIABLE macro. You must specify all the data needed.
 //
 #define VARIABLE(name, defaultvar, type, min, max, strings)  \
-        variable_t var_ ## name = { &name, defaultvar,       \
-                  type, min, max, strings, 0, 0, nullptr, nullptr};
+        variable_t var_ ## name = { &name, defaultvar, type, min, max, strings, 0, 0, nullptr, nullptr};
 
 //
 // VARIABLE_INT
@@ -157,14 +156,13 @@ struct variable_t;
 // haleyjd 03/13/06: support static strings as cvars
 //
 #define VARIABLE_CHARARRAY(name, defaultvar, max)            \
-        variable_t var_ ## name = { name, defaultvar,        \
-                  vt_chararray, 0, max, nullptr, 0, 0, nullptr, nullptr};
+        variable_t var_ ## name = { name, defaultvar, vt_chararray, 0, max, nullptr, 0, 0, nullptr, nullptr};
 
 //
 // VARIABLE_BOOLEAN
 //
-// Boolean. Note that although the name here is boolean, the actual type is 
-// int. 
+// Boolean. Note that although the name here is boolean, the actual type is
+// int.
 // haleyjd 07/05/10: For real booleans, use vt_toggle type with VARIABLE_TOGGLE
 //
 #define VARIABLE_BOOLEAN(name, defaultvar, strings)          \
@@ -202,138 +200,136 @@ struct variable_t;
 // cmdtype values
 enum
 {
-   c_typed,        // typed at console
-   c_menu,
-   c_netcmd,
-   c_script,	  // haleyjd: started by command script
-   C_CMDTYPES
+    c_typed, // typed at console
+    c_menu,
+    c_netcmd,
+    c_script, // haleyjd: started by command script
+    C_CMDTYPES
 };
 
 // command type
 enum
 {
-   ct_command,
-   ct_variable,
-   ct_constant,
-   ct_end
+    ct_command,
+    ct_variable,
+    ct_constant,
+    ct_end
 };
 
 // command flags
 enum
 {
-   cf_notnet       = 0x001, // not in netgames
-   cf_netonly      = 0x002, // only in netgames
-   cf_server       = 0x004, // server only
-   cf_handlerset   = 0x008, // if set, the handler sets the variable,
-                            // not c_runcmd.c itself
-   cf_netvar       = 0x010, // sync with other pcs
-   cf_level        = 0x020, // only works in levels
-   cf_hidden       = 0x040, // hidden in cmdlist
-   cf_buffered     = 0x080, // buffer command: wait til all screen
-                            // rendered before running command
-   cf_allowblank   = 0x100, // string variable allows empty value
+    cf_notnet     = 0x001, // not in netgames
+    cf_netonly    = 0x002, // only in netgames
+    cf_server     = 0x004, // server only
+    cf_handlerset = 0x008, // if set, the handler sets the variable,
+                           // not c_runcmd.c itself
+    cf_netvar   = 0x010,   // sync with other pcs
+    cf_level    = 0x020,   // only works in levels
+    cf_hidden   = 0x040,   // hidden in cmdlist
+    cf_buffered = 0x080,   // buffer command: wait til all screen
+                           // rendered before running command
+    cf_allowblank = 0x100, // string variable allows empty value
 };
 
 // variable types
 enum
 {
-   vt_int,       // normal integer
-   vt_float,     // decimal
-   vt_string,    // string
-   vt_chararray, // char array -- haleyjd 03/13/06
-   vt_toggle     // boolean (for real bool-type variables)
+    vt_int,       // normal integer
+    vt_float,     // decimal
+    vt_string,    // string
+    vt_chararray, // char array -- haleyjd 03/13/06
+    vt_toggle     // boolean (for real bool-type variables)
 };
 
 //=============================================================================
-// 
+//
 // Structures
 //
 
 struct variable_t
 {
-   // Static type-safe factories
-   template<typename T>
-   static variable_t makeInt(T *target, T *defaultTarget, int min, int max,
-                             const char **strings)
-   {
-      static_assert(sizeof(T) == sizeof(int), "Type T must be int-like");
-      return { target, defaultTarget, vt_int, min, max, strings, 0, 0, nullptr, nullptr };
-   }
-   // Stupid boilerplate though
-   template<typename T>
-   static variable_t makeInt(T *target, std::nullptr_t, int min, int max, const char **strings)
-   {
-      static_assert(sizeof(T) == sizeof(int), "Type T must be int-like");
-      return { target, nullptr, vt_int, min, max, strings, 0, 0, nullptr, nullptr };
-   }
+    // Static type-safe factories
+    template<typename T>
+    static variable_t makeInt(T *target, T *defaultTarget, int min, int max, const char **strings)
+    {
+        static_assert(sizeof(T) == sizeof(int), "Type T must be int-like");
+        return { target, defaultTarget, vt_int, min, max, strings, 0, 0, nullptr, nullptr };
+    }
+    // Stupid boilerplate though
+    template<typename T>
+    static variable_t makeInt(T *target, std::nullptr_t, int min, int max, const char **strings)
+    {
+        static_assert(sizeof(T) == sizeof(int), "Type T must be int-like");
+        return { target, nullptr, vt_int, min, max, strings, 0, 0, nullptr, nullptr };
+    }
 
-   // String variable factory
-   static variable_t makeString(char **target, char **defaultTarget, int max)
-   {
-      return { target, defaultTarget, vt_string, 0, max, nullptr, 0, 0, nullptr, nullptr };
-   }
+    // String variable factory
+    static variable_t makeString(char **target, char **defaultTarget, int max)
+    {
+        return { target, defaultTarget, vt_string, 0, max, nullptr, 0, 0, nullptr, nullptr };
+    }
 
-   // Boolean as int
-   static variable_t makeBoolInt(int *target, int *defaultTarget, const char **strings)
-   {
-      return { target, defaultTarget, vt_int, 0, 1, strings, 0, 0, nullptr, nullptr };
-   }
+    // Boolean as int
+    static variable_t makeBoolInt(int *target, int *defaultTarget, const char **strings)
+    {
+        return { target, defaultTarget, vt_int, 0, 1, strings, 0, 0, nullptr, nullptr };
+    }
 
-   // Real boolean
-   static variable_t makeBool(bool *target, bool *defaultTarget, const char **strings)
-   {
-      return { target, defaultTarget, vt_toggle, 0, 1, strings, 0, 0, nullptr, nullptr };
-   }
+    // Real boolean
+    static variable_t makeBool(bool *target, bool *defaultTarget, const char **strings)
+    {
+        return { target, defaultTarget, vt_toggle, 0, 1, strings, 0, 0, nullptr, nullptr };
+    }
 
-   // Floating point
-   static variable_t makeDouble(double *target, double *defaultTarget, double min, double max)
-   {
-      return { target, defaultTarget, vt_float, 0, 0, nullptr, min, max, nullptr, nullptr };
-   }
+    // Floating point
+    static variable_t makeDouble(double *target, double *defaultTarget, double min, double max)
+    {
+        return { target, defaultTarget, vt_float, 0, 0, nullptr, min, max, nullptr, nullptr };
+    }
 
-   // Constants
-   template<typename T>
-   static variable_t makeConstInt(T *target)
-   {
-      static_assert(sizeof(T) == sizeof(int), "Type T must be int-like");
-      return { target, nullptr, vt_int, -1, -1, nullptr, 0, 0, nullptr, nullptr };
-   }
-   static variable_t makeConstString(char **target)
-   {
-      return { target, nullptr, vt_string, -1, -1, nullptr, 0, 0, nullptr, nullptr };
-   }
+    // Constants
+    template<typename T>
+    static variable_t makeConstInt(T *target)
+    {
+        static_assert(sizeof(T) == sizeof(int), "Type T must be int-like");
+        return { target, nullptr, vt_int, -1, -1, nullptr, 0, 0, nullptr, nullptr };
+    }
+    static variable_t makeConstString(char **target)
+    {
+        return { target, nullptr, vt_string, -1, -1, nullptr, 0, 0, nullptr, nullptr };
+    }
 
+    void        *variable;  // NB: for strings, this is char ** not char *
+    void        *v_default; // the default
+    int          type;      // vt_?? variable type: int, string
+    int          min;       // minimum value or string length
+    int          max;       // maximum value/length
+    const char **defines;   // strings representing the value: eg "on" not "1"
+    double       dmin;      // haleyjd 04/21/10: min for double vars
+    double       dmax;      //                   max for double vars
 
-   void *variable;        // NB: for strings, this is char ** not char *
-   void *v_default;       // the default
-   int type;              // vt_?? variable type: int, string
-   int min;               // minimum value or string length
-   int max;               // maximum value/length
-   const char **defines;  // strings representing the value: eg "on" not "1"
-   double dmin;           // haleyjd 04/21/10: min for double vars
-   double dmax;           //                   max for double vars
-
-   default_t *cfgDefault; // haleyjd 07/04/10: pointer to config default
-   command_t *command;           // haleyjd 08/15/10: parent command
+    default_t *cfgDefault; // haleyjd 07/04/10: pointer to config default
+    command_t *command;    // haleyjd 08/15/10: parent command
 };
 
 struct command_t
 {
-   const char *name;
-   int type;              // ct_?? command type
-   int flags;             // cf_??
-   variable_t *variable;
-   void (*handler)(void); // handler
-   int netcmd;            // network command number
-   command_t *next;       // for hashing
+    const char *name;
+    int         type;  // ct_?? command type
+    int         flags; // cf_??
+    variable_t *variable;
+    void        (*handler)(void); // handler
+    int         netcmd;           // network command number
+    command_t  *next;             // for hashing
 };
 
 struct alias_t
 {
-   char *name;
-   char *command;
+    char *name;
+    char *command;
 
-   alias_t *next; // haleyjd 04/14/03
+    alias_t *next; // haleyjd 04/14/03
 };
 
 //=============================================================================
@@ -348,25 +344,25 @@ struct alias_t
 class CCmdRegistry
 {
 protected:
-   DLListItem<CCmdRegistry> links; // list links
-   command_t *command;             // command to register
-   
-   static DLListItem<CCmdRegistry> *commands; // static list of commands
+    DLListItem<CCmdRegistry> links;   // list links
+    command_t               *command; // command to register
+
+    static DLListItem<CCmdRegistry> *commands; // static list of commands
 
 public:
-   //
-   // Constructor
-   //
-   // Register the command on the global list of commands. The list is walked
-   // during program init (after all instances have constructed).
-   //
-   explicit CCmdRegistry(command_t *pCmd)
-   {
-      command = pCmd;
-      links.insert(this, &commands);
-   }
+    //
+    // Constructor
+    //
+    // Register the command on the global list of commands. The list is walked
+    // during program init (after all instances have constructed).
+    //
+    explicit CCmdRegistry(command_t *pCmd)
+    {
+        command = pCmd;
+        links.insert(this, &commands);
+    }
 
-   static void AddCommands();
+    static void AddCommands();
 };
 
 //=============================================================================
@@ -378,21 +374,21 @@ public:
 // haleyjd 05/20/10
 //
 // Console state is now stored in the console_t structure.
-// 
+//
 struct console_t
 {
-   int prev_height;    // previous height for interpolation
-   int current_height; // current height of console
-   int current_target; // target height of console
-   bool showprompt;    // toggles input prompt on or off
-   bool enabled;       // enabled state of console
-   int cmdsrc;         // player source of current command being run
-   int cmdtype;        // source type of command (console, menu, etc)
-   command_t *command; // current command being run
-   int  argc;          // number of argv's
-   qstring   args;     // args as single string   
-   qstring **argv;     // argument values to current command
-   int numargvsalloc;  // number of arguments available to command parsing
+    int        prev_height;    // previous height for interpolation
+    int        current_height; // current height of console
+    int        current_target; // target height of console
+    bool       showprompt;     // toggles input prompt on or off
+    bool       enabled;        // enabled state of console
+    int        cmdsrc;         // player source of current command being run
+    int        cmdtype;        // source type of command (console, menu, etc)
+    command_t *command;        // current command being run
+    int        argc;           // number of argv's
+    qstring    args;           // args as single string
+    qstring  **argv;           // argument values to current command
+    int        numargvsalloc;  // number of arguments available to command parsing
 };
 
 extern console_t Console; // the one and only Console object
@@ -416,14 +412,14 @@ void C_RunCmdLineScripts(void);
 
 /**** tab completion ****/
 
-void C_InitTab(void);
+void     C_InitTab(void);
 qstring &C_NextTab(qstring &key);
 qstring &C_PrevTab(qstring &key);
 
 /**** aliases ****/
 
 extern alias_t aliases; // haleyjd 04/14/03: changed to linked list
-extern char *cmdoptions;
+extern char   *cmdoptions;
 
 alias_t *C_NewAlias(const char *aliasname, const char *command);
 void     C_RemoveAlias(qstring *aliasname);
@@ -431,8 +427,7 @@ alias_t *C_GetAlias(const char *name);
 
 /**** command buffers ****/
 
-void C_BufferCommand(int cmdtype, command_t *command,
-                     const char *options, int cmdsrc);
+void C_BufferCommand(int cmdtype, command_t *command, const char *options, int cmdsrc);
 void C_RunBuffers();
 void C_RunBuffer(int cmtype);
 void C_BufferDelay(int, int);
@@ -440,11 +435,11 @@ void C_ClearBuffer(int);
 
 /**** hashing ****/
 
-extern command_t *cmdroots[CMDCHAINS];   // the commands in hash chains
+extern command_t *cmdroots[CMDCHAINS]; // the commands in hash chains
 
-void C_AddCommand(command_t *command);
-void C_AddCommandList(command_t *list);
-void C_AddCommands();
+void       C_AddCommand(command_t *command);
+void       C_AddCommandList(command_t *list);
+void       C_AddCommands();
 command_t *C_GetCmdForName(const char *cmdname);
 
 /***** define strings for variables *****/

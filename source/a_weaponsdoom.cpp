@@ -57,37 +57,37 @@
 //
 void A_Punch(actionargs_t *actionargs)
 {
-   angle_t angle;
-   fixed_t slope;
-   fixed_t range;
-   int damage = (P_Random(pr_punch) % 10 + 1) << 1;
-   Mobj     *mo     = actionargs->actor;
-   player_t *player = mo->player;
+    angle_t   angle;
+    fixed_t   slope;
+    fixed_t   range;
+    int       damage = (P_Random(pr_punch) % 10 + 1) << 1;
+    Mobj     *mo     = actionargs->actor;
+    player_t *player = mo->player;
 
-   if(!player)
-      return;
-   
-   if(player->powers[pw_strength].isActive())
-      damage *= 10;
-   
-   angle = mo->angle;
+    if(!player)
+        return;
 
-   // haleyjd 08/05/04: use new function
-   angle += P_SubRandom(pr_punchangle) << 18;
+    if(player->powers[pw_strength].isActive())
+        damage *= 10;
 
-   range = mbf21_demo ? player->mo->info->meleerange : MELEERANGE;
+    angle = mo->angle;
 
-   slope = P_DoAutoAim(mo, angle, range);
+    // haleyjd 08/05/04: use new function
+    angle += P_SubRandom(pr_punchangle) << 18;
 
-   P_LineAttack(mo, angle, range, slope, damage);
+    range = mbf21_demo ? player->mo->info->meleerange : MELEERANGE;
 
-   if(!clip.linetarget)
-      return;
+    slope = P_DoAutoAim(mo, angle, range);
 
-   P_WeaponSound(mo, GameModeInfo->playerSounds[sk_punch]);
+    P_LineAttack(mo, angle, range, slope, damage);
 
-   // turn to face target
-   mo->angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
+    if(!clip.linetarget)
+        return;
+
+    P_WeaponSound(mo, GameModeInfo->playerSounds[sk_punch]);
+
+    // turn to face target
+    mo->angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
 }
 
 //
@@ -95,51 +95,51 @@ void A_Punch(actionargs_t *actionargs)
 //
 void A_Saw(actionargs_t *actionargs)
 {
-   fixed_t slope;
-   int     damage = 2 * (P_Random(pr_saw) % 10 + 1);
-   Mobj   *mo    = actionargs->actor;
-   angle_t angle = mo->angle;
-   fixed_t range;
+    fixed_t slope;
+    int     damage = 2 * (P_Random(pr_saw) % 10 + 1);
+    Mobj   *mo     = actionargs->actor;
+    angle_t angle  = mo->angle;
+    fixed_t range;
 
-   // haleyjd 08/05/04: use new function
-   angle += P_SubRandom(pr_saw) << 18;
+    // haleyjd 08/05/04: use new function
+    angle += P_SubRandom(pr_saw) << 18;
 
-   range = (mbf21_demo ? mo->info->meleerange : MELEERANGE) + 1;
+    range = (mbf21_demo ? mo->info->meleerange : MELEERANGE) + 1;
 
-   // Use meleerange + 1 so that the puff doesn't skip the flash
-   slope = P_DoAutoAim(mo, angle, range);
-   P_LineAttack(mo, angle, range, slope, damage);
+    // Use meleerange + 1 so that the puff doesn't skip the flash
+    slope = P_DoAutoAim(mo, angle, range);
+    P_LineAttack(mo, angle, range, slope, damage);
 
-   I_StartHaptic(HALHapticInterface::EFFECT_CONSTANT, 4, 108);
+    I_StartHaptic(HALHapticInterface::EFFECT_CONSTANT, 4, 108);
 
-   if(!clip.linetarget)
-   {
-      P_WeaponSound(mo, sfx_sawful);
-      return;
-   }
+    if(!clip.linetarget)
+    {
+        P_WeaponSound(mo, sfx_sawful);
+        return;
+    }
 
-   P_WeaponSound(mo, sfx_sawhit);
-   I_StartHaptic(HALHapticInterface::EFFECT_RUMBLE, 5, 108);
+    P_WeaponSound(mo, sfx_sawhit);
+    I_StartHaptic(HALHapticInterface::EFFECT_RUMBLE, 5, 108);
 
-   // turn to face target
-   angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
+    // turn to face target
+    angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
 
-   if(angle - mo->angle > ANG180)
-   {
-      if(angle - mo->angle < -ANG90/20)
-         mo->angle = angle + ANG90/21;
-      else
-         mo->angle -= ANG90/20;
-   }
-   else
-   {
-      if(angle - mo->angle > ANG90/20)
-         mo->angle = angle - ANG90/21;
-      else
-         mo->angle += ANG90/20;
-   }
+    if(angle - mo->angle > ANG180)
+    {
+        if(angle - mo->angle < -ANG90 / 20)
+            mo->angle = angle + ANG90 / 21;
+        else
+            mo->angle -= ANG90 / 20;
+    }
+    else
+    {
+        if(angle - mo->angle > ANG90 / 20)
+            mo->angle = angle - ANG90 / 21;
+        else
+            mo->angle += ANG90 / 20;
+    }
 
-   mo->flags |= MF_JUSTATTACKED;
+    mo->flags |= MF_JUSTATTACKED;
 }
 
 //
@@ -147,14 +147,14 @@ void A_Saw(actionargs_t *actionargs)
 //
 void A_FireMissile(actionargs_t *actionargs)
 {
-   player_t *player = actionargs->actor->player;
+    player_t *player = actionargs->actor->player;
 
-   if(!player)
-      return;
+    if(!player)
+        return;
 
-   P_SubtractAmmo(*player, 1);
+    P_SubtractAmmo(*player, 1);
 
-   P_SpawnPlayerMissile(player->mo, E_SafeThingType(MT_ROCKET));
+    P_SpawnPlayerMissile(player->mo, E_SafeThingType(MT_ROCKET));
 }
 
 //
@@ -165,16 +165,16 @@ void A_FireMissile(actionargs_t *actionargs)
 
 void A_FireBFG(actionargs_t *actionargs)
 {
-   Mobj *mo;
-   player_t *player = actionargs->actor->player;
+    Mobj     *mo;
+    player_t *player = actionargs->actor->player;
 
-   if(!player)
-      return;
+    if(!player)
+        return;
 
-   P_SubtractAmmo(*player, BFGCELLS);
+    P_SubtractAmmo(*player, BFGCELLS);
 
-   mo = P_SpawnPlayerMissile(actionargs->actor, E_SafeThingType(MT_BFG));
-   mo->extradata.bfgcount = BFGBOUNCE;   // for bouncing bfg - redundant
+    mo                     = P_SpawnPlayerMissile(actionargs->actor, E_SafeThingType(MT_BFG));
+    mo->extradata.bfgcount = BFGBOUNCE; // for bouncing bfg - redundant
 }
 
 //
@@ -188,102 +188,100 @@ void A_FireBFG(actionargs_t *actionargs)
 //
 void A_FireOldBFG(actionargs_t *actionargs)
 {
-   Mobj *mo  = actionargs->actor;
-   int type1 = E_SafeThingType(MT_PLASMA1);
-   int type2 = E_SafeThingType(MT_PLASMA2);
-   int type;
-   player_t *player = mo->player;
-   weaponinfo_t *wp;
+    Mobj         *mo    = actionargs->actor;
+    int           type1 = E_SafeThingType(MT_PLASMA1);
+    int           type2 = E_SafeThingType(MT_PLASMA2);
+    int           type;
+    player_t     *player = mo->player;
+    weaponinfo_t *wp;
 
-   if(!player)
-      return;
+    if(!player)
+        return;
 
-   // FIXME: This is ugly and bad, but I can't figure out how to
-   // dynamically have the player switch different versions of the BFG
-   wp = player->readyweapon->dehnum == wp_bfg && bfgtype == bfg_classic ?
-                                       E_WeaponForName("OldBFG") : player->readyweapon;
+    // FIXME: This is ugly and bad, but I can't figure out how to
+    // dynamically have the player switch different versions of the BFG
+    wp = player->readyweapon->dehnum == wp_bfg && bfgtype == bfg_classic ? E_WeaponForName("OldBFG") :
+                                                                           player->readyweapon;
 
-   if(!wp)
-      return;
+    if(!wp)
+        return;
 
-   type = type1;
+    type = type1;
 
-   // PCLASS_FIXME: second attack state
-   
-   // sf: make sure the player is in firing frame, or it looks silly
-   if(demo_version > 300)
-      P_SetMobjState(mo, player->pclass->altattack);
-   
-   // WEAPON_FIXME: recoil for classic BFG
+    // PCLASS_FIXME: second attack state
 
-   if(weapon_recoil && !(mo->flags & MF_NOCLIP))
-      P_Thrust(*player, ANG180 + mo->angle, 0, 512 * wp->recoil);
+    // sf: make sure the player is in firing frame, or it looks silly
+    if(demo_version > 300)
+        P_SetMobjState(mo, player->pclass->altattack);
 
-   auto weapon   = player->readyweapon;
-   auto ammoType = weapon->ammo;   
-   if(ammoType && !(player->cheats & CF_INFAMMO))
-      E_RemoveInventoryItem(*player, ammoType, wp->ammopershot);
+    // WEAPON_FIXME: recoil for classic BFG
 
-   if(LevelInfo.useFullBright) // haleyjd
-      player->extralight = 2;
+    if(weapon_recoil && !(mo->flags & MF_NOCLIP))
+        P_Thrust(*player, ANG180 + mo->angle, 0, 512 * wp->recoil);
 
-   do
-   {
-      Mobj *th;
-      angle_t an = mo->angle;
-      angle_t an1 = ((P_Random(pr_bfg) & 127) - 64) * (ANG90 / 768) + an;
-      angle_t an2 = ((P_Random(pr_bfg) & 127) - 64) * (ANG90 / 640) + ANG90;
-      extern int autoaim;
-      fixed_t slope;
+    auto weapon   = player->readyweapon;
+    auto ammoType = weapon->ammo;
+    if(ammoType && !(player->cheats & CF_INFAMMO))
+        E_RemoveInventoryItem(*player, ammoType, wp->ammopershot);
 
-      if(autoaim)
-      {
-         // killough 8/2/98: make autoaiming prefer enemies
-         bool mask = true;
-         do
-         {
-            slope = P_AimLineAttack(mo, an, 16*64*FRACUNIT, mask);
-            if(!clip.linetarget)
-               slope = P_AimLineAttack(mo, an += 1<<26, 16*64*FRACUNIT, mask);
-            if(!clip.linetarget)
-               slope = P_AimLineAttack(mo, an -= 2<<26, 16*64*FRACUNIT, mask);
-            if(!clip.linetarget) // sf: looking up/down
+    if(LevelInfo.useFullBright) // haleyjd
+        player->extralight = 2;
+
+    do
+    {
+        Mobj      *th;
+        angle_t    an  = mo->angle;
+        angle_t    an1 = ((P_Random(pr_bfg) & 127) - 64) * (ANG90 / 768) + an;
+        angle_t    an2 = ((P_Random(pr_bfg) & 127) - 64) * (ANG90 / 640) + ANG90;
+        extern int autoaim;
+        fixed_t    slope;
+
+        if(autoaim)
+        {
+            // killough 8/2/98: make autoaiming prefer enemies
+            bool mask = true;
+            do
             {
-               slope = finetangent[(ANG90-player->pitch)>>ANGLETOFINESHIFT];
-               an = mo->angle;
+                slope = P_AimLineAttack(mo, an, 16 * 64 * FRACUNIT, mask);
+                if(!clip.linetarget)
+                    slope = P_AimLineAttack(mo, an += 1 << 26, 16 * 64 * FRACUNIT, mask);
+                if(!clip.linetarget)
+                    slope = P_AimLineAttack(mo, an -= 2 << 26, 16 * 64 * FRACUNIT, mask);
+                if(!clip.linetarget) // sf: looking up/down
+                {
+                    slope = finetangent[(ANG90 - player->pitch) >> ANGLETOFINESHIFT];
+                    an    = mo->angle;
+                }
             }
-         }
-         while(mask && (mask=false, !clip.linetarget));     // killough 8/2/98
-         an1 += an - mo->angle;
-         // sf: despite killough's infinite wisdom.. even
-         // he is prone to mistakes. seems negative numbers
-         // won't survive a bitshift!
-         if(slope < 0 && demo_version >= 303)
-            an2 -= tantoangle[-slope >> DBITS];
-         else
-            an2 += tantoangle[slope >> DBITS];
-      }
-      else
-      {
-         slope = finetangent[(ANG90-player->pitch)>>ANGLETOFINESHIFT];
-         if(slope < 0 && demo_version >= 303)
-            an2 -= tantoangle[-slope >> DBITS];
-         else
-            an2 += tantoangle[slope >> DBITS];
-      }
+            while(mask && (mask = false, !clip.linetarget)); // killough 8/2/98
+            an1 += an - mo->angle;
+            // sf: despite killough's infinite wisdom.. even
+            // he is prone to mistakes. seems negative numbers
+            // won't survive a bitshift!
+            if(slope < 0 && demo_version >= 303)
+                an2 -= tantoangle[-slope >> DBITS];
+            else
+                an2 += tantoangle[slope >> DBITS];
+        }
+        else
+        {
+            slope = finetangent[(ANG90 - player->pitch) >> ANGLETOFINESHIFT];
+            if(slope < 0 && demo_version >= 303)
+                an2 -= tantoangle[-slope >> DBITS];
+            else
+                an2 += tantoangle[slope >> DBITS];
+        }
 
-      th = P_SpawnMobj(mo->x, mo->y,
-                       mo->z + 62*FRACUNIT - player->psprites[ps_weapon].playpos.y,
-                       type);
+        th = P_SpawnMobj(mo->x, mo->y, mo->z + 62 * FRACUNIT - player->psprites[ps_weapon].playpos.y, type);
 
-      P_SetTarget<Mobj>(&th->target, mo);
-      th->angle = an1;
-      th->momx = finecosine[an1>>ANGLETOFINESHIFT] * 25;
-      th->momy = finesine[an1>>ANGLETOFINESHIFT] * 25;
-      th->momz = finetangent[an2>>ANGLETOFINESHIFT] * 25;
-      P_CheckMissileSpawn(th);
-   }
-   while((type != type2) && (type = type2)); //killough: obfuscated!
+        P_SetTarget<Mobj>(&th->target, mo);
+        th->angle = an1;
+        th->momx  = finecosine[an1 >> ANGLETOFINESHIFT] * 25;
+        th->momy  = finesine[an1 >> ANGLETOFINESHIFT] * 25;
+        th->momz  = finetangent[an2 >> ANGLETOFINESHIFT] * 25;
+        P_CheckMissileSpawn(th);
+    }
+    while((type != type2) && (type = type2)); // killough: obfuscated!
 }
 
 //
@@ -291,18 +289,18 @@ void A_FireOldBFG(actionargs_t *actionargs)
 //
 void A_FirePlasma(actionargs_t *actionargs)
 {
-   Mobj     *mo     = actionargs->actor;
-   player_t *player = mo->player;
+    Mobj     *mo     = actionargs->actor;
+    player_t *player = mo->player;
 
-   if(!player)
-      return;
+    if(!player)
+        return;
 
-   P_SubtractAmmo(*player, 1);
+    P_SubtractAmmo(*player, 1);
 
-   A_FireSomething(*player, P_Random(pr_plasma) & 1);
+    A_FireSomething(*player, P_Random(pr_plasma) & 1);
 
-   // sf: removed beta
-   P_SpawnPlayerMissile(mo, E_SafeThingType(MT_PLASMA));
+    // sf: removed beta
+    P_SpawnPlayerMissile(mo, E_SafeThingType(MT_PLASMA));
 }
 
 //
@@ -310,13 +308,13 @@ void A_FirePlasma(actionargs_t *actionargs)
 //
 static void P_GunShot(Mobj *mo, bool accurate)
 {
-   int damage = 5 * (P_Random(pr_gunshot) % 3 + 1);
-   angle_t angle = mo->angle;
-   
-   if(!accurate)
-      angle += P_SubRandom(pr_misfire) << 18;
-   
-   P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage);
+    int     damage = 5 * (P_Random(pr_gunshot) % 3 + 1);
+    angle_t angle  = mo->angle;
+
+    if(!accurate)
+        angle += P_SubRandom(pr_misfire) << 18;
+
+    P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage);
 }
 
 //
@@ -324,23 +322,23 @@ static void P_GunShot(Mobj *mo, bool accurate)
 //
 void A_FirePistol(actionargs_t *actionargs)
 {
-   Mobj     *mo     = actionargs->actor;
-   player_t *player = mo->player;
+    Mobj     *mo     = actionargs->actor;
+    player_t *player = mo->player;
 
-   if(!player)
-      return;
+    if(!player)
+        return;
 
-   P_WeaponSound(mo, sfx_pistol);
-   
-   // PCLASS_FIXME: attack state two
+    P_WeaponSound(mo, sfx_pistol);
 
-   P_SetMobjState(mo, player->pclass->altattack);
+    // PCLASS_FIXME: attack state two
 
-   P_SubtractAmmo(*player, 1);
+    P_SetMobjState(mo, player->pclass->altattack);
 
-   A_FireSomething(*player, 0); // phares
-   P_BulletSlope(mo);
-   P_GunShot(mo, !player->refire);
+    P_SubtractAmmo(*player, 1);
+
+    A_FireSomething(*player, 0); // phares
+    P_BulletSlope(mo);
+    P_GunShot(mo, !player->refire);
 }
 
 //
@@ -348,24 +346,24 @@ void A_FirePistol(actionargs_t *actionargs)
 //
 void A_FireShotgun(actionargs_t *actionargs)
 {
-   int i;
-   Mobj     *mo     = actionargs->actor;
-   player_t *player = mo->player;
+    int       i;
+    Mobj     *mo     = actionargs->actor;
+    player_t *player = mo->player;
 
-   if(!player)
-      return;
+    if(!player)
+        return;
 
-   P_WeaponSound(mo, sfx_shotgn);
-   P_SetMobjState(mo, player->pclass->altattack);
-   
-   P_SubtractAmmo(*player, 1);
+    P_WeaponSound(mo, sfx_shotgn);
+    P_SetMobjState(mo, player->pclass->altattack);
 
-   A_FireSomething(*player, 0); // phares
+    P_SubtractAmmo(*player, 1);
 
-   P_BulletSlope(mo);
-   
-   for(i = 0; i < 7; ++i)
-      P_GunShot(mo, false);
+    A_FireSomething(*player, 0); // phares
+
+    P_BulletSlope(mo);
+
+    for(i = 0; i < 7; ++i)
+        P_GunShot(mo, false);
 }
 
 //
@@ -373,32 +371,31 @@ void A_FireShotgun(actionargs_t *actionargs)
 //
 void A_FireShotgun2(actionargs_t *actionargs)
 {
-   int i;
-   Mobj     *mo     = actionargs->actor;
-   player_t *player = mo->player;
+    int       i;
+    Mobj     *mo     = actionargs->actor;
+    player_t *player = mo->player;
 
-   if(!player)
-      return;
+    if(!player)
+        return;
 
-   P_WeaponSound(mo, sfx_dshtgn);
-   P_SetMobjState(mo, player->pclass->altattack);
+    P_WeaponSound(mo, sfx_dshtgn);
+    P_SetMobjState(mo, player->pclass->altattack);
 
-   P_SubtractAmmo(*player, 2);
+    P_SubtractAmmo(*player, 2);
 
-   A_FireSomething(*player, 0); // phares
+    A_FireSomething(*player, 0); // phares
 
-   P_BulletSlope(mo);
-   
-   for(i = 0; i < 20; i++)
-   {
-      int damage = 5 * (P_Random(pr_shotgun) % 3 + 1);
-      angle_t angle = mo->angle;
+    P_BulletSlope(mo);
 
-      angle += P_SubRandom(pr_shotgun) << 19;
-      
-      P_LineAttack(mo, angle, MISSILERANGE, bulletslope +
-                   (P_SubRandom(pr_shotgun) << 5), damage);
-   }
+    for(i = 0; i < 20; i++)
+    {
+        int     damage = 5 * (P_Random(pr_shotgun) % 3 + 1);
+        angle_t angle  = mo->angle;
+
+        angle += P_SubRandom(pr_shotgun) << 19;
+
+        P_LineAttack(mo, angle, MISSILERANGE, bulletslope + (P_SubRandom(pr_shotgun) << 5), damage);
+    }
 }
 
 // MaxW: 2018/01/04: moved all the Doom codepointers here!
@@ -406,18 +403,18 @@ void A_FireShotgun2(actionargs_t *actionargs)
 
 void A_OpenShotgun2(actionargs_t *actionargs)
 {
-   P_WeaponSound(actionargs->actor, sfx_dbopn);
+    P_WeaponSound(actionargs->actor, sfx_dbopn);
 }
 
 void A_LoadShotgun2(actionargs_t *actionargs)
 {
-   P_WeaponSound(actionargs->actor, sfx_dbload);
+    P_WeaponSound(actionargs->actor, sfx_dbload);
 }
 
 void A_CloseShotgun2(actionargs_t *actionargs)
 {
-   P_WeaponSound(actionargs->actor, sfx_dbcls);
-   A_ReFire(actionargs);
+    P_WeaponSound(actionargs->actor, sfx_dbcls);
+    A_ReFire(actionargs);
 }
 
 //
@@ -425,41 +422,40 @@ void A_CloseShotgun2(actionargs_t *actionargs)
 //
 void A_FireCGun(actionargs_t *actionargs)
 {
-   Mobj     *mo = actionargs->actor;
-   player_t *player;
-   pspdef_t *psp;
+    Mobj     *mo = actionargs->actor;
+    player_t *player;
+    pspdef_t *psp;
 
-   if(!(player = mo->player))
-      return;
+    if(!(player = mo->player))
+        return;
 
-   if(!(psp = actionargs->pspr))
-      return;
+    if(!(psp = actionargs->pspr))
+        return;
 
-   P_WeaponSound(mo, sfx_chgun);
+    P_WeaponSound(mo, sfx_chgun);
 
-   if(!P_WeaponHasAmmo(*player, player->readyweapon))
-      return;
-   
-   P_SetMobjState(mo, player->pclass->altattack);
-   
-   P_SubtractAmmo(*player, 1);
+    if(!P_WeaponHasAmmo(*player, player->readyweapon))
+        return;
 
-   // haleyjd 08/28/03: this is not safe for DeHackEd/EDF, so it
-   // needs some modification to be safer
-   // haleyjd WEAPON_FIXME: hackish and dangerous for EDF, needs fix.
-   if(demo_version < 331 || 
-      (psp->state->index >= E_StateNumForDEHNum(S_CHAIN1) &&
-       psp->state->index < E_StateNumForDEHNum(S_CHAIN3)))
-   {      
-      // phares
-      A_FireSomething(*player, psp->state->index - states[E_SafeState(S_CHAIN1)]->index);
-   }
-   else
-      A_FireSomething(*player, 0); // new default behavior
-   
-   P_BulletSlope(mo);
-   
-   P_GunShot(mo, !player->refire);
+    P_SetMobjState(mo, player->pclass->altattack);
+
+    P_SubtractAmmo(*player, 1);
+
+    // haleyjd 08/28/03: this is not safe for DeHackEd/EDF, so it
+    // needs some modification to be safer
+    // haleyjd WEAPON_FIXME: hackish and dangerous for EDF, needs fix.
+    if(demo_version < 331 ||
+       (psp->state->index >= E_StateNumForDEHNum(S_CHAIN1) && psp->state->index < E_StateNumForDEHNum(S_CHAIN3)))
+    {
+        // phares
+        A_FireSomething(*player, psp->state->index - states[E_SafeState(S_CHAIN1)]->index);
+    }
+    else
+        A_FireSomething(*player, 0); // new default behavior
+
+    P_BulletSlope(mo);
+
+    P_GunShot(mo, !player->refire);
 }
 
 void A_BouncingBFG(actionargs_t *actionargs);
@@ -479,58 +475,47 @@ void A_BFGBurst(actionargs_t *actionargs); // haleyjd
 //
 void A_BFGSpray(actionargs_t *actionargs)
 {
-   // WEAPON_FIXME: BFG type stuff
-   switch(bfgtype)
-   {
-   case bfg_11k:
-      A_BFG11KHit(actionargs);
-      return;
-   case bfg_bouncing:
-      A_BouncingBFG(actionargs);
-      return;
-   case bfg_burst:
-      A_BFGBurst(actionargs);
-      return;
-   default:
-      break;
-   }
+    // WEAPON_FIXME: BFG type stuff
+    switch(bfgtype)
+    {
+    case bfg_11k:      A_BFG11KHit(actionargs); return;
+    case bfg_bouncing: A_BouncingBFG(actionargs); return;
+    case bfg_burst:    A_BFGBurst(actionargs); return;
+    default:           break;
+    }
 
-   int sprayType = E_ArgAsThingNumG0(actionargs->args, 0);
-   if(sprayType < 0)
-      sprayType = E_SafeThingType(MT_EXTRABFG);
-   const int     numRays     = E_ArgAsInt(actionargs->args,   1, 40);
-   const int     damageCount = E_ArgAsInt(actionargs->args,   2, 15);
-   const angle_t fov         = E_ArgAsAngle(actionargs->args, 3, ANG90);
-   const fixed_t maxDist     = E_ArgAsFixed(actionargs->args, 4, 16*64*FRACUNIT);
+    int sprayType = E_ArgAsThingNumG0(actionargs->args, 0);
+    if(sprayType < 0)
+        sprayType = E_SafeThingType(MT_EXTRABFG);
+    const int     numRays     = E_ArgAsInt(actionargs->args, 1, 40);
+    const int     damageCount = E_ArgAsInt(actionargs->args, 2, 15);
+    const angle_t fov         = E_ArgAsAngle(actionargs->args, 3, ANG90);
+    const fixed_t maxDist     = E_ArgAsFixed(actionargs->args, 4, 16 * 64 * FRACUNIT);
 
-   Mobj *mo = actionargs->actor;
-   
-   for(int i = 0; i < 40; i++)  // offset angles from its attack angle
-   {
-      int j, damage;
-      angle_t an = mo->angle - fov/2 + fov/40*i;
-      
-      // mo->target is the originator (player) of the missile
-      
-      // killough 8/2/98: make autoaiming prefer enemies
-      if(demo_version < 203 || 
-         (P_AimLineAttack(mo->target, an, maxDist, true),
-         !clip.linetarget))
-         P_AimLineAttack(mo->target, an, maxDist, false);
-      
-      if(!clip.linetarget)
-         continue;
-      
-      P_SpawnMobj(clip.linetarget->x, clip.linetarget->y,
-                  clip.linetarget->z + (clip.linetarget->height>>2), 
-                  sprayType);
-      
-      for(damage = j = 0; j < damageCount; j++)
-         damage += (P_Random(pr_bfg)&7) + 1;
-      
-      P_DamageMobj(clip.linetarget, mo->target, mo->target, damage,
-                   MOD_BFG_SPLASH);
-   }
+    Mobj *mo = actionargs->actor;
+
+    for(int i = 0; i < 40; i++) // offset angles from its attack angle
+    {
+        int     j, damage;
+        angle_t an = mo->angle - fov / 2 + fov / 40 * i;
+
+        // mo->target is the originator (player) of the missile
+
+        // killough 8/2/98: make autoaiming prefer enemies
+        if(demo_version < 203 || (P_AimLineAttack(mo->target, an, maxDist, true), !clip.linetarget))
+            P_AimLineAttack(mo->target, an, maxDist, false);
+
+        if(!clip.linetarget)
+            continue;
+
+        P_SpawnMobj(clip.linetarget->x, clip.linetarget->y, clip.linetarget->z + (clip.linetarget->height >> 2),
+                    sprayType);
+
+        for(damage = j = 0; j < damageCount; j++)
+            damage += (P_Random(pr_bfg) & 7) + 1;
+
+        P_DamageMobj(clip.linetarget, mo->target, mo->target, damage, MOD_BFG_SPLASH);
+    }
 }
 
 //
@@ -540,69 +525,68 @@ void A_BFGSpray(actionargs_t *actionargs)
 //
 void A_BouncingBFG(actionargs_t *actionargs)
 {
-   Mobj *mo = actionargs->actor;
-   Mobj *newmo;
-   
-   if(!mo->extradata.bfgcount)
-      return;
-   
-   for(int i = 0 ; i < 40 ; i++)  // offset angles from its attack angle
-   {
-      angle_t an2, an = (ANG360/40)*i;
-      int dist;
-      
-      P_AimLineAttack(mo, an, 16*64*FRACUNIT,false);
-      
-      // haleyjd: track last target with mo->tracer, don't fire
-      // at same target more than one time in a row
-      if(!clip.linetarget || (mo->tracer && mo->tracer == clip.linetarget))
-         continue;
-      if(an/6 == mo->angle/6) continue;
-      
-      // don't aim for shooter, or for friends of shooter
-      if(clip.linetarget == mo->target ||
-         (clip.linetarget->flags & mo->target->flags & MF_FRIEND))
-         continue; 
-      
-      P_SpawnMobj(clip.linetarget->x, clip.linetarget->y,
-                  clip.linetarget->z + (clip.linetarget->height>>2),
-                  E_SafeThingType(MT_EXTRABFG));
+    Mobj *mo = actionargs->actor;
+    Mobj *newmo;
 
-      // spawn new bfg      
-      // haleyjd: can't use P_SpawnMissile here
-      newmo = P_SpawnMobj(mo->x, mo->y, mo->z, E_SafeThingType(MT_BFG));
-      S_StartSound(newmo, newmo->info->seesound);
-      P_SetTarget<Mobj>(&newmo->target, mo->target); // pass on the player
+    if(!mo->extradata.bfgcount)
+        return;
 
-      // ioanch 20151230: make portal aware
-      fixed_t ltx = getThingX(newmo, clip.linetarget);
-      fixed_t lty = getThingY(newmo, clip.linetarget);
-      fixed_t ltz = getThingZ(newmo, clip.linetarget);
+    for(int i = 0; i < 40; i++) // offset angles from its attack angle
+    {
+        angle_t an2, an = (ANG360 / 40) * i;
+        int     dist;
 
-      an2 = P_PointToAngle(newmo->x, newmo->y, ltx, lty);
-      newmo->angle = an2;
-      
-      an2 >>= ANGLETOFINESHIFT;
-      newmo->momx = FixedMul(newmo->info->speed, finecosine[an2]);
-      newmo->momy = FixedMul(newmo->info->speed, finesine[an2]);
+        P_AimLineAttack(mo, an, 16 * 64 * FRACUNIT, false);
 
-      dist = P_AproxDistance(ltx - newmo->x, lty - newmo->y);
-      dist = dist / newmo->info->speed;
-      
-      if(dist < 1)
-         dist = 1;
-      
-      newmo->momz = (ltz + (clip.linetarget->height>>1) - newmo->z) / dist;
+        // haleyjd: track last target with mo->tracer, don't fire
+        // at same target more than one time in a row
+        if(!clip.linetarget || (mo->tracer && mo->tracer == clip.linetarget))
+            continue;
+        if(an / 6 == mo->angle / 6)
+            continue;
 
-      newmo->extradata.bfgcount = mo->extradata.bfgcount - 1; // count down
-      P_SetTarget<Mobj>(&newmo->tracer, clip.linetarget); // haleyjd: track target
+        // don't aim for shooter, or for friends of shooter
+        if(clip.linetarget == mo->target || (clip.linetarget->flags & mo->target->flags & MF_FRIEND))
+            continue;
 
-      P_CheckMissileSpawn(newmo);
+        P_SpawnMobj(clip.linetarget->x, clip.linetarget->y, clip.linetarget->z + (clip.linetarget->height >> 2),
+                    E_SafeThingType(MT_EXTRABFG));
 
-      mo->remove(); // remove the old one
+        // spawn new bfg
+        // haleyjd: can't use P_SpawnMissile here
+        newmo = P_SpawnMobj(mo->x, mo->y, mo->z, E_SafeThingType(MT_BFG));
+        S_StartSound(newmo, newmo->info->seesound);
+        P_SetTarget<Mobj>(&newmo->target, mo->target); // pass on the player
 
-      break; //only spawn 1
-   }
+        // ioanch 20151230: make portal aware
+        fixed_t ltx = getThingX(newmo, clip.linetarget);
+        fixed_t lty = getThingY(newmo, clip.linetarget);
+        fixed_t ltz = getThingZ(newmo, clip.linetarget);
+
+        an2          = P_PointToAngle(newmo->x, newmo->y, ltx, lty);
+        newmo->angle = an2;
+
+        an2         >>= ANGLETOFINESHIFT;
+        newmo->momx   = FixedMul(newmo->info->speed, finecosine[an2]);
+        newmo->momy   = FixedMul(newmo->info->speed, finesine[an2]);
+
+        dist = P_AproxDistance(ltx - newmo->x, lty - newmo->y);
+        dist = dist / newmo->info->speed;
+
+        if(dist < 1)
+            dist = 1;
+
+        newmo->momz = (ltz + (clip.linetarget->height >> 1) - newmo->z) / dist;
+
+        newmo->extradata.bfgcount = mo->extradata.bfgcount - 1; // count down
+        P_SetTarget<Mobj>(&newmo->tracer, clip.linetarget);     // haleyjd: track target
+
+        P_CheckMissileSpawn(newmo);
+
+        mo->remove(); // remove the old one
+
+        break; // only spawn 1
+    }
 }
 
 //
@@ -612,59 +596,56 @@ void A_BouncingBFG(actionargs_t *actionargs)
 //
 void A_BFG11KHit(actionargs_t *actionargs)
 {
-   int i = 0;
-   int j, damage;
-   int origdist;
-   Mobj *mo = actionargs->actor;
+    int   i = 0;
+    int   j, damage;
+    int   origdist;
+    Mobj *mo = actionargs->actor;
 
-   if(!mo->target)
-      return;
-   
-   // check the originator and hurt them if too close
-   origdist = P_AproxDistance(mo->x - getTargetX(mo), mo->y - getTargetY(mo));
-   
-   if(origdist < 96*FRACUNIT)
-   {
-      // decide on damage
-      // damage decreases with distance
-      for(damage = j = 0; j < 48 - (origdist/(FRACUNIT*2)); j++)
-         damage += (P_Random(pr_bfg)&7) + 1;
-      
-      // flash
-      P_SpawnMobj(mo->target->x, mo->target->y,
-                  mo->target->z + (mo->target->height>>2), 
-                  E_SafeThingType(MT_EXTRABFG));
-      
-      P_DamageMobj(mo->target, mo, mo->target, damage, 
-                   MOD_BFG11K_SPLASH);
-   }
-   
-   // now check everyone else
-   
-   for(i = 0 ; i < 40 ; i++)  // offset angles from its attack angle
-   {
-      angle_t an = (ANG360/40)*i;
-      
-      // mo->target is the originator (player) of the missile
-      
-      P_AimLineAttack(mo, an, 16*64*FRACUNIT,false);
-      
-      if(!clip.linetarget) continue;
-      if(clip.linetarget == mo->target)
-         continue;
-      
-      // decide on damage
-      for(damage = j = 0; j < 20; j++)
-         damage += (P_Random(pr_bfg)&7) + 1;
-      
-      // dumbass flash
-      P_SpawnMobj(clip.linetarget->x, clip.linetarget->y,
-                  clip.linetarget->z + (clip.linetarget->height>>2), 
-                  E_SafeThingType(MT_EXTRABFG));
-      
-      P_DamageMobj(clip.linetarget, mo->target, mo->target, damage,
-                   MOD_BFG_SPLASH);
-   }
+    if(!mo->target)
+        return;
+
+    // check the originator and hurt them if too close
+    origdist = P_AproxDistance(mo->x - getTargetX(mo), mo->y - getTargetY(mo));
+
+    if(origdist < 96 * FRACUNIT)
+    {
+        // decide on damage
+        // damage decreases with distance
+        for(damage = j = 0; j < 48 - (origdist / (FRACUNIT * 2)); j++)
+            damage += (P_Random(pr_bfg) & 7) + 1;
+
+        // flash
+        P_SpawnMobj(mo->target->x, mo->target->y, mo->target->z + (mo->target->height >> 2),
+                    E_SafeThingType(MT_EXTRABFG));
+
+        P_DamageMobj(mo->target, mo, mo->target, damage, MOD_BFG11K_SPLASH);
+    }
+
+    // now check everyone else
+
+    for(i = 0; i < 40; i++) // offset angles from its attack angle
+    {
+        angle_t an = (ANG360 / 40) * i;
+
+        // mo->target is the originator (player) of the missile
+
+        P_AimLineAttack(mo, an, 16 * 64 * FRACUNIT, false);
+
+        if(!clip.linetarget)
+            continue;
+        if(clip.linetarget == mo->target)
+            continue;
+
+        // decide on damage
+        for(damage = j = 0; j < 20; j++)
+            damage += (P_Random(pr_bfg) & 7) + 1;
+
+        // dumbass flash
+        P_SpawnMobj(clip.linetarget->x, clip.linetarget->y, clip.linetarget->z + (clip.linetarget->height >> 2),
+                    E_SafeThingType(MT_EXTRABFG));
+
+        P_DamageMobj(clip.linetarget, mo->target, mo->target, damage, MOD_BFG_SPLASH);
+    }
 }
 
 //
@@ -678,26 +659,26 @@ void A_BFG11KHit(actionargs_t *actionargs)
 //
 void A_BFGBurst(actionargs_t *actionargs)
 {
-   int      a;
-   angle_t  an = 0;
-   Mobj    *mo = actionargs->actor;
-   Mobj    *th;
-   int      plasmaType = E_SafeThingType(MT_PLASMA3);
+    int     a;
+    angle_t an = 0;
+    Mobj   *mo = actionargs->actor;
+    Mobj   *th;
+    int     plasmaType = E_SafeThingType(MT_PLASMA3);
 
-   for(a = 0; a < 40; a++)
-   {
-      an += ANG90 / 10;
+    for(a = 0; a < 40; a++)
+    {
+        an += ANG90 / 10;
 
-      th = P_SpawnMobj(mo->x, mo->y, mo->z, plasmaType);
-      P_SetTarget<Mobj>(&th->target, mo->target);
+        th = P_SpawnMobj(mo->x, mo->y, mo->z, plasmaType);
+        P_SetTarget<Mobj>(&th->target, mo->target);
 
-      th->angle = an;
-      th->momx = finecosine[an >> ANGLETOFINESHIFT] << 4;
-      th->momy = finesine[an >> ANGLETOFINESHIFT] << 4;
-      th->momz = FRACUNIT * ((16 - P_Random(pr_bfg)) >> 5);
+        th->angle = an;
+        th->momx  = finecosine[an >> ANGLETOFINESHIFT] << 4;
+        th->momy  = finesine[an >> ANGLETOFINESHIFT] << 4;
+        th->momz  = FRACUNIT * ((16 - P_Random(pr_bfg)) >> 5);
 
-      P_CheckMissileSpawn(th);      
-   }
+        P_CheckMissileSpawn(th);
+    }
 }
 
 //
@@ -705,14 +686,13 @@ void A_BFGBurst(actionargs_t *actionargs)
 //
 void A_BFGsound(actionargs_t *actionargs)
 {
-   Mobj *mo = actionargs->actor;
+    Mobj *mo = actionargs->actor;
 
-   P_WeaponSound(mo, sfx_bfg);
+    P_WeaponSound(mo, sfx_bfg);
 
-   if(mo->player == &players[consoleplayer])
-      I_StartHaptic(HALHapticInterface::EFFECT_RAMPUP, 5, 850);
+    if(mo->player == &players[consoleplayer])
+        I_StartHaptic(HALHapticInterface::EFFECT_RAMPUP, 5, 850);
 }
-
 
 // EOF
 

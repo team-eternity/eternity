@@ -60,40 +60,40 @@ extern int waitAtExit;
 
 struct atexit_listentry_t
 {
-   atexit_func_t func;
-   atexit_listentry_t *next;
+    atexit_func_t       func;
+    atexit_listentry_t *next;
 };
 
 static atexit_listentry_t *exit_funcs = NULL;
 
 void I_AtExit(atexit_func_t func)
 {
-   atexit_listentry_t *entry;
+    atexit_listentry_t *entry;
 
-   entry = (atexit_listentry_t *)malloc(sizeof(*entry));
+    entry = (atexit_listentry_t *)malloc(sizeof(*entry));
 
-   entry->func = func;
-   entry->next = exit_funcs;
-   exit_funcs = entry;
+    entry->func = func;
+    entry->next = exit_funcs;
+    exit_funcs  = entry;
 }
 
 void I_Exit(int status)
 {
-   atexit_listentry_t *entry, *next;
+    atexit_listentry_t *entry, *next;
 
-   // Run through all exit functions
+    // Run through all exit functions
 
-   entry = exit_funcs;
+    entry = exit_funcs;
 
-   while (entry != NULL)
-   {
-      entry->func();
-      next = entry->next;
-      free(entry);
-      entry = next;
-   }
+    while(entry != NULL)
+    {
+        entry->func();
+        next = entry->next;
+        free(entry);
+        entry = next;
+    }
 
-   exit(status);
+    exit(status);
 }
 
 //
@@ -101,14 +101,14 @@ void I_Exit(int status)
 //
 ticcmd_t *I_BaseTiccmd()
 {
-   static ticcmd_t emptycmd; // killough
-   return &emptycmd;
+    static ticcmd_t emptycmd; // killough
+    return &emptycmd;
 }
 
 int mousepresent;
 
-extern int autorun;          // Autorun state
-static SDL_Keymod oldmod; // SoM 3/20/2002: save old modifier key state
+extern int        autorun; // Autorun state
+static SDL_Keymod oldmod;  // SoM 3/20/2002: save old modifier key state
 
 //
 // I_Shutdown
@@ -117,7 +117,7 @@ static SDL_Keymod oldmod; // SoM 3/20/2002: save old modifier key state
 //
 void I_Shutdown()
 {
-   SDL_SetModState(oldmod);
+    SDL_SetModState(oldmod);
 }
 
 //
@@ -125,31 +125,31 @@ void I_Shutdown()
 //
 void I_Init()
 {
-   // haleyjd 01/10/14: initialize timer
-   I_InitHALTimer();
+    // haleyjd 01/10/14: initialize timer
+    I_InitHALTimer();
 
-   // haleyjd 04/15/02: initialize joystick
-   I_InitGamePads(MN_UpdateGamepadMenus);
- 
-   I_AtExit(I_Shutdown);
-   
-   // killough 2/21/98: avoid sound initialization if no sound & no music
-   extern bool nomusicparm, nosfxparm;
-   if(!(nomusicparm && nosfxparm))
-      I_InitSound();
+    // haleyjd 04/15/02: initialize joystick
+    I_InitGamePads(MN_UpdateGamepadMenus);
+
+    I_AtExit(I_Shutdown);
+
+    // killough 2/21/98: avoid sound initialization if no sound & no music
+    extern bool nomusicparm, nosfxparm;
+    if(!(nomusicparm && nosfxparm))
+        I_InitSound();
 }
 
-static i_errhandler_t i_error_handler;  // special handler for I_Error run before exiting
-static thread_local char errmsg[2048];  // buffer of error message -- killough
+static i_errhandler_t    i_error_handler; // special handler for I_Error run before exiting
+static thread_local char errmsg[2048];    // buffer of error message -- killough
 
 static bool has_exited;
 
 enum
 {
-   I_ERRORLEVEL_NONE,    // no error
-   I_ERRORLEVEL_MESSAGE, // not really an error, just an exit message
-   I_ERRORLEVEL_NORMAL,  // a "normal" error (such as a missing patch)
-   I_ERRORLEVEL_FATAL    // kill with a vengeance
+    I_ERRORLEVEL_NONE,    // no error
+    I_ERRORLEVEL_MESSAGE, // not really an error, just an exit message
+    I_ERRORLEVEL_NORMAL,  // a "normal" error (such as a missing patch)
+    I_ERRORLEVEL_FATAL    // kill with a vengeance
 };
 
 // haleyjd: if non-0, an error has occurred. The level of error is set
@@ -170,43 +170,42 @@ static bool speedyexit = false;
 //
 void I_Quit(void)
 {
-   has_exited = true;   /* Prevent infinitely recursive exits -- killough */
-   
-   // haleyjd 06/05/10: not in fatal error situations; causes heap calls
-   if(error_exitcode < I_ERRORLEVEL_FATAL && demorecording)
-      G_CheckDemoStatus();
-   
-   // sf : rearrange this so the errmsg doesn't get messed up
-   if(error_exitcode >= I_ERRORLEVEL_MESSAGE)
-      puts(errmsg);   // killough 8/8/98
-   else if(!speedyexit) // MaxW: The user didn't Alt+F4
-      I_EndDoom();
+    has_exited = true; /* Prevent infinitely recursive exits -- killough */
 
-   // Shutdown joystick (after ENDOOM so user can still input to exit it)
-   I_ShutdownGamePads();
+    // haleyjd 06/05/10: not in fatal error situations; causes heap calls
+    if(error_exitcode < I_ERRORLEVEL_FATAL && demorecording)
+        G_CheckDemoStatus();
 
-   // SoM: 7/5/2002: Why I didn't remember this in the first place I'll never know.
-   // haleyjd 10/09/05: moved down here
-   SDL_Quit();
+    // sf : rearrange this so the errmsg doesn't get messed up
+    if(error_exitcode >= I_ERRORLEVEL_MESSAGE)
+        puts(errmsg);    // killough 8/8/98
+    else if(!speedyexit) // MaxW: The user didn't Alt+F4
+        I_EndDoom();
 
-   // haleyjd 03/18/10: none of these should be called in fatal error situations.
-   //         06/06/10: check each call, as an I_FatalError called from any of this
-   //                   code could escalate the error status.
+    // Shutdown joystick (after ENDOOM so user can still input to exit it)
+    I_ShutdownGamePads();
 
-   IFNOTFATAL(M_SaveDefaults());
-   IFNOTFATAL(M_SaveSysConfig());
-   IFNOTFATAL(G_SaveDefaults()); // haleyjd
-   
+    // SoM: 7/5/2002: Why I didn't remember this in the first place I'll never know.
+    // haleyjd 10/09/05: moved down here
+    SDL_Quit();
+
+    // haleyjd 03/18/10: none of these should be called in fatal error situations.
+    //         06/06/10: check each call, as an I_FatalError called from any of this
+    //                   code could escalate the error status.
+
+    IFNOTFATAL(M_SaveDefaults());
+    IFNOTFATAL(M_SaveSysConfig());
+    IFNOTFATAL(G_SaveDefaults()); // haleyjd
+
 #ifdef _MSC_VER
-   // Under Visual C++, the console window likes to rudely slam
-   // shut -- this can stop it, but is now optional except when an error occurs
-   // ioanch 20160313: do not pause if demo logging is enabled
-   if(!G_DemoLogEnabled() && 
-      (error_exitcode >= I_ERRORLEVEL_NORMAL || waitAtExit))
-   {
-      puts("Press any key to continue\n");
-      getch();
-   }
+    // Under Visual C++, the console window likes to rudely slam
+    // shut -- this can stop it, but is now optional except when an error occurs
+    // ioanch 20160313: do not pause if demo logging is enabled
+    if(!G_DemoLogEnabled() && (error_exitcode >= I_ERRORLEVEL_NORMAL || waitAtExit))
+    {
+        puts("Press any key to continue\n");
+        getch();
+    }
 #endif
 }
 
@@ -215,9 +214,9 @@ void I_Quit(void)
 //
 void I_QuitFast()
 {
-   puts("Eternity quit quickly.");
-   speedyexit = true;
-   I_Exit(0);
+    puts("Eternity quit quickly.");
+    speedyexit = true;
+    I_Exit(0);
 }
 
 //
@@ -228,37 +227,37 @@ void I_QuitFast()
 //
 void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...)
 {
-   // Flag a fatal error, so that some shutdown code will not be executed;
-   // chiefly, saving the configuration files, which can malfunction in
-   // unpredictable ways when heap corruption is present. We do this even
-   // if an error has already occurred, since, for example, if a Z_ChangeTag
-   // error happens during M_SaveDefaults, we do not want to subsequently
-   // run M_SaveSysConfig etc. in I_Quit.
-   error_exitcode = I_ERRORLEVEL_FATAL;
+    // Flag a fatal error, so that some shutdown code will not be executed;
+    // chiefly, saving the configuration files, which can malfunction in
+    // unpredictable ways when heap corruption is present. We do this even
+    // if an error has already occurred, since, for example, if a Z_ChangeTag
+    // error happens during M_SaveDefaults, we do not want to subsequently
+    // run M_SaveSysConfig etc. in I_Quit.
+    error_exitcode = I_ERRORLEVEL_FATAL;
 
-   if(code == I_ERR_ABORT)
-   {
-      // kill with utmost contempt
-      abort();
-   }
-   else
-   {
-      if(!*errmsg)   // ignore all but the first message -- killough
-      {
-         va_list argptr;
-         va_start(argptr,error);
-         pvsnprintf(errmsg, sizeof(errmsg), error, argptr);
-         va_end(argptr);
-      }
+    if(code == I_ERR_ABORT)
+    {
+        // kill with utmost contempt
+        abort();
+    }
+    else
+    {
+        if(!*errmsg) // ignore all but the first message -- killough
+        {
+            va_list argptr;
+            va_start(argptr, error);
+            pvsnprintf(errmsg, sizeof(errmsg), error, argptr);
+            va_end(argptr);
+        }
 
-      if(!has_exited)    // If it hasn't exited yet, exit now -- killough
-      {
-         has_exited = true; // Prevent infinitely recursive exits -- killough
-         I_Exit(-1);
-      }
-      else
-         abort(); // double fault, must abort
-   }
+        if(!has_exited) // If it hasn't exited yet, exit now -- killough
+        {
+            has_exited = true; // Prevent infinitely recursive exits -- killough
+            I_Exit(-1);
+        }
+        else
+            abort(); // double fault, must abort
+    }
 }
 
 //
@@ -269,23 +268,23 @@ void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...)
 //
 void I_ExitWithMessage(E_FORMAT_STRING(const char *msg), ...)
 {
-   // do not demote error level
-   if(error_exitcode < I_ERRORLEVEL_MESSAGE)
-      error_exitcode = I_ERRORLEVEL_MESSAGE; // just a message
+    // do not demote error level
+    if(error_exitcode < I_ERRORLEVEL_MESSAGE)
+        error_exitcode = I_ERRORLEVEL_MESSAGE; // just a message
 
-   if(!*errmsg)   // ignore all but the first message -- killough
-   {
-      va_list argptr;
-      va_start(argptr, msg);
-      pvsnprintf(errmsg, sizeof(errmsg), msg, argptr);
-      va_end(argptr);
-   }
+    if(!*errmsg) // ignore all but the first message -- killough
+    {
+        va_list argptr;
+        va_start(argptr, msg);
+        pvsnprintf(errmsg, sizeof(errmsg), msg, argptr);
+        va_end(argptr);
+    }
 
-   if(!has_exited)       // If it hasn't exited yet, exit now -- killough
-   {
-      has_exited = true; // Prevent infinitely recursive exits -- killough
-      I_Exit(0);
-   }
+    if(!has_exited) // If it hasn't exited yet, exit now -- killough
+    {
+        has_exited = true; // Prevent infinitely recursive exits -- killough
+        I_Exit(0);
+    }
 }
 
 //
@@ -293,7 +292,7 @@ void I_ExitWithMessage(E_FORMAT_STRING(const char *msg), ...)
 //
 void I_SetErrorHandler(const i_errhandler_t handler)
 {
-   i_error_handler = handler;
+    i_error_handler = handler;
 }
 
 //
@@ -303,28 +302,28 @@ void I_SetErrorHandler(const i_errhandler_t handler)
 //
 void I_Error(E_FORMAT_STRING(const char *error), ...)
 {
-   // do not demote error level
-   if(error_exitcode < I_ERRORLEVEL_NORMAL)
-      error_exitcode = I_ERRORLEVEL_NORMAL; // a normal error
+    // do not demote error level
+    if(error_exitcode < I_ERRORLEVEL_NORMAL)
+        error_exitcode = I_ERRORLEVEL_NORMAL; // a normal error
 
-   if(!*errmsg)   // ignore all but the first message -- killough
-   {
-      va_list argptr;
-      va_start(argptr,error);
-      pvsnprintf(errmsg, sizeof(errmsg), error, argptr);
-      va_end(argptr);
-   }
+    if(!*errmsg) // ignore all but the first message -- killough
+    {
+        va_list argptr;
+        va_start(argptr, error);
+        pvsnprintf(errmsg, sizeof(errmsg), error, argptr);
+        va_end(argptr);
+    }
 
-   if(i_error_handler)
-      i_error_handler(errmsg);
+    if(i_error_handler)
+        i_error_handler(errmsg);
 
-   if(!has_exited)       // If it hasn't exited yet, exit now -- killough
-   {
-      has_exited = true; // Prevent infinitely recursive exits -- killough
-      I_Exit(-1);
-   }
-   else
-      I_FatalError(I_ERR_ABORT, "I_Error: double faulted\n");
+    if(!has_exited) // If it hasn't exited yet, exit now -- killough
+    {
+        has_exited = true; // Prevent infinitely recursive exits -- killough
+        I_Exit(-1);
+    }
+    else
+        I_FatalError(I_ERR_ABORT, "I_Error: double faulted\n");
 }
 
 //
@@ -334,20 +333,20 @@ void I_Error(E_FORMAT_STRING(const char *error), ...)
 //
 void I_ErrorVA(E_FORMAT_STRING(const char *error), va_list args)
 {
-   // do not demote error level
-   if(error_exitcode < I_ERRORLEVEL_NORMAL)
-      error_exitcode = I_ERRORLEVEL_NORMAL;
+    // do not demote error level
+    if(error_exitcode < I_ERRORLEVEL_NORMAL)
+        error_exitcode = I_ERRORLEVEL_NORMAL;
 
-   if(!*errmsg)
-      pvsnprintf(errmsg, sizeof(errmsg), error, args);
+    if(!*errmsg)
+        pvsnprintf(errmsg, sizeof(errmsg), error, args);
 
-   if(!has_exited)
-   {
-      has_exited = true;
-      I_Exit(-1);
-   }
-   else
-      I_FatalError(I_ERR_ABORT, "I_ErrorVA: double faulted\n");
+    if(!has_exited)
+    {
+        has_exited = true;
+        I_Exit(-1);
+    }
+    else
+        I_FatalError(I_ERR_ABORT, "I_ErrorVA: double faulted\n");
 }
 
 // haleyjd: made everything optional
@@ -364,69 +363,70 @@ int endoomdelay;
 //
 void I_EndDoom()
 {
-   unsigned char *endoom_data;
-   unsigned char *screendata;
-   int start_ms;
-   int lumpnum;
-   
-   // haleyjd: it's possible to have quit before we even initialized
-   // GameModeInfo, so be sure it's valid before using it here. Also,
-   // allow ENDOOM disable in configuration.
-   if(!GameModeInfo || !showendoom)
-      return;
-   
-   if((lumpnum = wGlobalDir.checkNumForName(GameModeInfo->endTextName)) < 0)
-      return;
+    unsigned char *endoom_data;
+    unsigned char *screendata;
+    int            start_ms;
+    int            lumpnum;
 
-   endoom_data = (unsigned char *)wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC);
-   
-   // Set up text mode screen   
-   if(!TXT_Init())
-      return;
-   
-   // Make sure the new window has the right title and icon
-   TXT_SetWindowTitle("Thanks for using the Eternity Engine!");
-   
-   // Write the data to the screen memory   
-   screendata = TXT_GetScreenData();
-   memcpy(screendata, endoom_data, 4000);
-   
-   // Wait for 10 seconds, or until a keypress or mouse click
-   // haleyjd: delay period specified in config (default = 350)
-   start_ms = i_haltimer.GetTime();
-   
-   while(i_haltimer.GetTime() < start_ms + endoomdelay)
-   {
-      TXT_UpdateScreen();
+    // haleyjd: it's possible to have quit before we even initialized
+    // GameModeInfo, so be sure it's valid before using it here. Also,
+    // allow ENDOOM disable in configuration.
+    if(!GameModeInfo || !showendoom)
+        return;
 
-      if(TXT_GetChar() > 0)
-         break;
+    if((lumpnum = wGlobalDir.checkNumForName(GameModeInfo->endTextName)) < 0)
+        return;
 
-      TXT_Sleep(0);
-   }
-   
-   // Shut down text mode screen   
-   TXT_Shutdown();
+    endoom_data = (unsigned char *)wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC);
+
+    // Set up text mode screen
+    if(!TXT_Init())
+        return;
+
+    // Make sure the new window has the right title and icon
+    TXT_SetWindowTitle("Thanks for using the Eternity Engine!");
+
+    // Write the data to the screen memory
+    screendata = TXT_GetScreenData();
+    memcpy(screendata, endoom_data, 4000);
+
+    // Wait for 10 seconds, or until a keypress or mouse click
+    // haleyjd: delay period specified in config (default = 350)
+    start_ms = i_haltimer.GetTime();
+
+    while(i_haltimer.GetTime() < start_ms + endoomdelay)
+    {
+        TXT_UpdateScreen();
+
+        if(TXT_GetChar() > 0)
+            break;
+
+        TXT_Sleep(0);
+    }
+
+    // Shut down text mode screen
+    TXT_Shutdown();
 }
 
 // check for ESC button pressed, regardless of keyboard handler
 int I_CheckAbort()
 {
-   SDL_Event ev;
+    SDL_Event ev;
 
-   if(SDL_PollEvent(&ev))
-   {
-      switch(ev.type)
-      {
-      case SDL_KEYDOWN:
-         if(ev.key.keysym.sym == SDLK_ESCAPE)
-            return true;
-      default:
-         break;
-      }
-   }
+    if(SDL_PollEvent(&ev))
+    {
+        switch(ev.type)
+        {
+        case SDL_KEYDOWN:
+            if(ev.key.keysym.sym == SDLK_ESCAPE)
+                return true;
+            break;
+        default: //
+            break;
+        }
+    }
 
-   return false;
+    return false;
 }
 
 /*************************
@@ -434,7 +434,7 @@ int I_CheckAbort()
  *************************/
 int leds_always_off;
 
-VARIABLE_BOOLEAN(leds_always_off, nullptr,  yesno);
+VARIABLE_BOOLEAN(leds_always_off, nullptr, yesno);
 CONSOLE_VARIABLE(i_ledsoff, leds_always_off, 0) {}
 
 #ifdef _SDL_VER

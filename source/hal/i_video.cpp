@@ -22,7 +22,7 @@
 //  Max Waine
 //
 
-#include "../z_zone.h"   /* memory allocation wrappers -- killough */
+#include "../z_zone.h" /* memory allocation wrappers -- killough */
 
 // Need platform defines
 #include "i_platform.h"
@@ -75,60 +75,62 @@ int i_videodriverid = -1;
 
 struct haldriveritem_t
 {
-   int id;                 // unique ID # assigned here by the HAL
-   const char *name;       // descriptive name of this driver
-   HALVideoDriver *driver; // driver object
+    int             id;     // unique ID # assigned here by the HAL
+    const char     *name;   // descriptive name of this driver
+    HALVideoDriver *driver; // driver object
 };
 
 // Help string for system.cfg:
-const char *const i_videohelpstr =
-   "Select video backend (-1 = default"
+const char *const i_videohelpstr = "Select video backend (-1 = default"
 #ifdef _SDL_VER
-   ", 0 = SDL Default"
+                                   ", 0 = SDL Default"
 #ifdef EE_FEATURE_OPENGL
-   ", 1 = SDL GL2D"
+                                   ", 1 = SDL GL2D"
 #endif
 #endif
-   ")";
+                                   ")";
+
+// clang-format off
 
 // Driver table
-static haldriveritem_t halVideoDriverTable[VDR_MAXDRIVERS] =
-{
-   // SDL GL2D Driver
-   {
-      VDR_SDLGL2D,
-      "SDL GL2D",
+static haldriveritem_t halVideoDriverTable[VDR_MAXDRIVERS] = {
+    // SDL GL2D Driver
+    {
+        VDR_SDLGL2D,
+        "SDL GL2D",
 #if defined(_SDL_VER) && defined(EE_FEATURE_OPENGL)
-      &i_sdlgl2dvideodriver
+        &i_sdlgl2dvideodriver
 #else
-      nullptr
+        nullptr
 #endif
-   },
+    },
 
-   // SDL Whatever-it-chooses Driver
-   {
-      VDR_SDLDEFAULT,
-      "SDL Default",
+    // SDL Whatever-it-chooses Driver
+    {
+        VDR_SDLDEFAULT,
+        "SDL Default",
 #ifdef _SDL_VER
-      &i_sdlvideodriver
+        &i_sdlvideodriver
 #else
-      nullptr
+        nullptr
 #endif
-   }
+    }
 };
+
+// clang-format on
 
 //
 // Find the currently selected video driver by ID
 //
 static haldriveritem_t *I_FindHALVDRByID(int id)
 {
-   for(unsigned int i = 0; i < VDR_MAXDRIVERS; i++)
-   {
-      if(halVideoDriverTable[i].id == id && halVideoDriverTable[i].driver)
-         return &halVideoDriverTable[i];
-   }
+    for(unsigned int i = 0; i < VDR_MAXDRIVERS; i++)
+    {
+        if(halVideoDriverTable[i].id == id && halVideoDriverTable[i].driver)
+            return &halVideoDriverTable[i];
+    }
 
-   return nullptr;
+    return nullptr;
 }
 
 //
@@ -139,27 +141,27 @@ static haldriveritem_t *I_FindHALVDRByID(int id)
 //
 static haldriveritem_t *I_DefaultVideoDriver()
 {
-   haldriveritem_t *item;
+    haldriveritem_t *item;
 
-   if(!(item = I_FindHALVDRByID(i_videodriverid)))
-   {
-      // Default or plain invalid setting, or unsupported driver on current
-      // compile. Find the lowest-numbered valid driver and use it.
-      for(unsigned int i = 0; i < VDR_MAXDRIVERS; i++)
-      {
-         if(halVideoDriverTable[i].driver)
-         {
-            item = &halVideoDriverTable[i];
-            break;
-         }
-      }
+    if(!(item = I_FindHALVDRByID(i_videodriverid)))
+    {
+        // Default or plain invalid setting, or unsupported driver on current
+        // compile. Find the lowest-numbered valid driver and use it.
+        for(unsigned int i = 0; i < VDR_MAXDRIVERS; i++)
+        {
+            if(halVideoDriverTable[i].driver)
+            {
+                item = &halVideoDriverTable[i];
+                break;
+            }
+        }
 
-      // Nothing?! Somebody borked up their configure/makefile.
-      if(!item)
-        I_Error("I_DefaultVideoDriver: no valid drivers for this platform!\n");
-   }
+        // Nothing?! Somebody borked up their configure/makefile.
+        if(!item)
+            I_Error("I_DefaultVideoDriver: no valid drivers for this platform!\n");
+    }
 
-   return item;
+    return item;
 }
 
 //=============================================================================
@@ -168,15 +170,15 @@ static haldriveritem_t *I_DefaultVideoDriver()
 //
 
 extern int  grabmouse;
-extern int  usemouse;   // killough 10/98
+extern int  usemouse; // killough 10/98
 extern bool fullscreen;
 
 void I_InitMouse();
 
 void I_StartTic()
 {
-   if(!D_noWindow())
-      I_StartTicInWindow(i_video_driver->window);
+    if(!D_noWindow())
+        I_StartTicInWindow(i_video_driver->window);
 }
 
 //=============================================================================
@@ -184,7 +186,7 @@ void I_StartTic()
 // Graphics Code
 //
 
-int  use_vsync;     // killough 2/8/98: controls whether vsync is called
+int  use_vsync; // killough 2/8/98: controls whether vsync is called
 bool noblit;
 
 static bool in_graphics_mode;
@@ -202,8 +204,8 @@ bool i_letterbox;
 //
 void I_FinishUpdate()
 {
-   if(!noblit && in_graphics_mode)
-      i_video_driver->FinishUpdate();
+    if(!noblit && in_graphics_mode)
+        i_video_driver->FinishUpdate();
 }
 
 //
@@ -211,7 +213,7 @@ void I_FinishUpdate()
 //
 void I_ReadScreen(byte *scr)
 {
-   i_video_driver->ReadScreen(scr);
+    i_video_driver->ReadScreen(scr);
 }
 
 //
@@ -219,18 +221,18 @@ void I_ReadScreen(byte *scr)
 //
 void I_SetPalette(byte *palette)
 {
-   if(in_graphics_mode)             // killough 8/11/98
-      i_video_driver->SetPalette(palette);
+    if(in_graphics_mode) // killough 8/11/98
+        i_video_driver->SetPalette(palette);
 }
 
 void I_ShutdownGraphics()
 {
-   if(in_graphics_mode)
-   {
-      i_video_driver->ShutdownGraphics();
-      in_graphics_mode = false;
-      in_textmode = true;
-   }
+    if(in_graphics_mode)
+    {
+        i_video_driver->ShutdownGraphics();
+        in_graphics_mode = false;
+        in_textmode      = true;
+    }
 }
 
 constexpr const char BADVID[] = "video mode not supported";
@@ -242,100 +244,98 @@ extern bool setsizeneeded;
 //
 enum class GeomParseState
 {
-   width,
-   height,
-   flags,
-   finished
+    width,
+    height,
+    flags,
+    finished
 };
 
 //
 // Function to parse resolution description strings in the form [wwww]x[hhhh].
 // This is now the primary way in which Eternity stores its renderer resolution setting.
 //
-void I_ParseResolution(const char *resolution, int &width, int &height, const int window_w,
-                       const int window_h)
+void I_ParseResolution(const char *resolution, int &width, int &height, const int window_w, const int window_h)
 {
-   if(!strcasecmp(resolution, "native"))
-   {
-      width = window_w;
-      height = window_h;
-      return;
-   }
+    if(!strcasecmp(resolution, "native"))
+    {
+        width  = window_w;
+        height = window_h;
+        return;
+    }
 
-   const char *c = resolution;
-   GeomParseState state = GeomParseState::width;
-   int tmpwidth = window_w, tmpheight = window_h;
-   qstring qstr;
-   bool errorflag = false;
+    const char    *c        = resolution;
+    GeomParseState state    = GeomParseState::width;
+    int            tmpwidth = window_w, tmpheight = window_h;
+    qstring        qstr;
+    bool           errorflag = false;
 
-   while(*c && state != GeomParseState::finished)
-   {
-      switch(state)
-      {
-      case GeomParseState::width:
-         if(*c >= '0' && *c <= '9')
-            qstr += *c;
-         else
-         {
-            int width = qstr.toInt();
-            if(width < Geom::minimumWidth || width > MAX_SCREENWIDTH)
-            {
-               state = GeomParseState::finished;
-               errorflag = true;
-            }
+    while(*c && state != GeomParseState::finished)
+    {
+        switch(state)
+        {
+        case GeomParseState::width:
+            if(*c >= '0' && *c <= '9')
+                qstr += *c;
             else
             {
-               tmpwidth = width;
-               qstr.clear();
-               state = GeomParseState::height;
+                int width = qstr.toInt();
+                if(width < Geom::minimumWidth || width > MAX_SCREENWIDTH)
+                {
+                    state     = GeomParseState::finished;
+                    errorflag = true;
+                }
+                else
+                {
+                    tmpwidth = width;
+                    qstr.clear();
+                    state = GeomParseState::height;
+                }
             }
-         }
-         break;
-      case GeomParseState::height:
-         if(*c >= '0' && *c <= '9')
-            qstr += *c;
-         else
-         {
-            int height = qstr.toInt();
-            if(height < Geom::minimumHeight || height > MAX_SCREENHEIGHT)
-            {
-               state = GeomParseState::finished;
-               errorflag = true;
-            }
+            break;
+        case GeomParseState::height:
+            if(*c >= '0' && *c <= '9')
+                qstr += *c;
             else
             {
-               tmpheight = height;
-               state = GeomParseState::finished;
-               continue; // don't increment the pointer
+                int height = qstr.toInt();
+                if(height < Geom::minimumHeight || height > MAX_SCREENHEIGHT)
+                {
+                    state     = GeomParseState::finished;
+                    errorflag = true;
+                }
+                else
+                {
+                    tmpheight = height;
+                    state     = GeomParseState::finished;
+                    continue; // don't increment the pointer
+                }
             }
-         }
-         break;
-      default:
-         break;
-      }
-      ++c;
-   }
+            break;
+        default: break;
+        }
+        ++c;
+    }
 
-   // handle termination of loop during STATE_HEIGHT (expected behaviour)
-   if(state == GeomParseState::height)
-   {
-      int height = qstr.toInt();
+    // handle termination of loop during STATE_HEIGHT (expected behaviour)
+    if(state == GeomParseState::height)
+    {
+        int height = qstr.toInt();
 
-      if(height < Geom::minimumHeight || height > MAX_SCREENHEIGHT)
-         errorflag = true;
-      else
-         tmpheight = height;
-   }
+        if(height < Geom::minimumHeight || height > MAX_SCREENHEIGHT)
+            errorflag = true;
+        else
+            tmpheight = height;
+    }
 
-   // if an error occurs setting w/h, we default.
-   if(errorflag)
-   {
-      tmpwidth = window_w;
-      tmpheight = window_h;
-   }
+    // if an error occurs setting w/h, we default.
+    if(errorflag)
+    {
+        tmpwidth  = window_w;
+        tmpheight = window_h;
+    }
 
-   width = tmpwidth;
-   height = tmpheight;
+    width  = tmpwidth;
+    height = tmpheight;
 }
 
 //
@@ -346,53 +346,53 @@ void I_ParseResolution(const char *resolution, int &width, int &height, const in
 //
 void Geom::parse(const char *geom)
 {
-   if(!geom)   // sanity
-      return;
-   char *pos = nullptr;
-   int newWidth = (int)strtol(geom, &pos, 10);
-   // Only parse width if given
-   if(pos > geom)
-      width = validateWidth(newWidth) ? newWidth : fallbackWidth;
-   // Only wait for height if 'x' is found after number, otherwise assume it's all flags afterwards
-   if(ectype::toLower(*pos) == 'x')
-   {
-      const char *prevpos = pos;
-      int newHeight = (int)strtol(pos + 1, &pos, 10);
-      if(pos != prevpos + 1)
-         height = validateHeight(newHeight) ? newHeight : fallbackHeight;
-   }
-   for(; *pos; ++pos)
-   {
-      switch(ectype::toLower(*pos))
-      {
-         case 'w': // window
+    if(!geom) // sanity
+        return;
+    char *pos      = nullptr;
+    int   newWidth = (int)strtol(geom, &pos, 10);
+    // Only parse width if given
+    if(pos > geom)
+        width = validateWidth(newWidth) ? newWidth : fallbackWidth;
+    // Only wait for height if 'x' is found after number, otherwise assume it's all flags afterwards
+    if(ectype::toLower(*pos) == 'x')
+    {
+        const char *prevpos   = pos;
+        int         newHeight = (int)strtol(pos + 1, &pos, 10);
+        if(pos != prevpos + 1)
+            height = validateHeight(newHeight) ? newHeight : fallbackHeight;
+    }
+    for(; *pos; ++pos)
+    {
+        switch(ectype::toLower(*pos))
+        {
+        case 'w': // window
             screentype = screentype_e::WINDOWED;
             break;
-         case 'd': // fullscreen desktop
+        case 'd': // fullscreen desktop
             screentype = screentype_e::FULLSCREEN_DESKTOP;
             break;
-         case 'f': // fullscreen
+        case 'f': // fullscreen
             screentype = screentype_e::FULLSCREEN;
             break;
-         case 'a': // async update
+        case 'a': // async update
             vsync = TriState::off;
             break;
-         case 'v': // vsync update
+        case 'v': // vsync update
             vsync = TriState::on;
             break;
-         case 's': // software
+        case 's': // software
             hardware = false;
             break;
-         case 'h': // hardware 
+        case 'h': // hardware
             hardware = true;
             break;
-         case 'n': // noframe
+        case 'n': // noframe
             wantframe = false;
             break;
-         default:
+        default: //
             break;
-      }
-   }
+        }
+    }
 }
 
 //
@@ -400,7 +400,7 @@ void Geom::parse(const char *geom)
 //
 bool Geom::validateWidth(int width)
 {
-   return width >= minimumWidth && width <= MAX_SCREENWIDTH;
+    return width >= minimumWidth && width <= MAX_SCREENWIDTH;
 }
 
 //
@@ -408,7 +408,7 @@ bool Geom::validateWidth(int width)
 //
 bool Geom::validateHeight(int height)
 {
-   return height >= minimumHeight && height <= MAX_SCREENHEIGHT;
+    return height >= minimumHeight && height <= MAX_SCREENHEIGHT;
 }
 
 //
@@ -416,36 +416,25 @@ bool Geom::validateHeight(int height)
 //
 qstring Geom::toString() const
 {
-   qstring result;
-   result.Printf(15, "%dx%d", width, height);
-   switch(screentype)
-   {
-      case screentype_e::FULLSCREEN:
-         result.Putc('f');
-         break;
-      case screentype_e::FULLSCREEN_DESKTOP:
-         result.Putc('d');
-         break;
-      case screentype_e::WINDOWED:
-         result.Putc('w');
-         break;
-   }
-   switch(vsync)
-   {
-      case TriState::on:
-         result.Putc('v');
-         break;
-      case TriState::off:
-         result.Putc('a');
-         break;
-      default:
-         break;
-   }
-   if(hardware)
-      result.Putc('h');
-   if(!wantframe)
-      result.Putc('n');
-   return result;
+    qstring result;
+    result.Printf(15, "%dx%d", width, height);
+    switch(screentype)
+    {
+    case screentype_e::FULLSCREEN:         result.Putc('f'); break;
+    case screentype_e::FULLSCREEN_DESKTOP: result.Putc('d'); break;
+    case screentype_e::WINDOWED:           result.Putc('w'); break;
+    }
+    switch(vsync)
+    {
+    case TriState::on:  result.Putc('v'); break;
+    case TriState::off: result.Putc('a'); break;
+    default:            break;
+    }
+    if(hardware)
+        result.Putc('h');
+    if(!wantframe)
+        result.Putc('n');
+    return result;
 }
 
 //
@@ -457,38 +446,36 @@ qstring Geom::toString() const
 //
 void I_CheckVideoCmdsOnce(Geom &geom)
 {
-   static bool firsttime = true;
-   if(firsttime)
-   {
-      firsttime = false;
-      int p;
-      if((p = M_CheckParm("-geom")) && p < myargc - 1)
-         geom.parse(myargv[p + 1]);
-      if((p = M_CheckParm("-vwidth")) && p < myargc - 1 &&
-         Geom::validateWidth(p = atoi(myargv[p + 1])))
-      {
-         geom.width = p;
-      }
-      if((p = M_CheckParm("-vheight")) && p < myargc - 1 &&
-         Geom::validateHeight(p = atoi(myargv[p + 1])))
-      {
-         geom.height = p;
-      }
-      if(M_CheckParm("-vsync"))
-         geom.vsync = Geom::TriState::on;
-      if(M_CheckParm("-novsync"))
-         geom.vsync = Geom::TriState::off;
+    static bool firsttime = true;
+    if(firsttime)
+    {
+        firsttime = false;
+        int p;
+        if((p = M_CheckParm("-geom")) && p < myargc - 1)
+            geom.parse(myargv[p + 1]);
+        if((p = M_CheckParm("-vwidth")) && p < myargc - 1 && Geom::validateWidth(p = atoi(myargv[p + 1])))
+        {
+            geom.width = p;
+        }
+        if((p = M_CheckParm("-vheight")) && p < myargc - 1 && Geom::validateHeight(p = atoi(myargv[p + 1])))
+        {
+            geom.height = p;
+        }
+        if(M_CheckParm("-vsync"))
+            geom.vsync = Geom::TriState::on;
+        if(M_CheckParm("-novsync"))
+            geom.vsync = Geom::TriState::off;
 
-      if(M_CheckParm("-hardware"))
-         geom.hardware = true;
-      if(M_CheckParm("-software"))
-         geom.hardware = false;
+        if(M_CheckParm("-hardware"))
+            geom.hardware = true;
+        if(M_CheckParm("-software"))
+            geom.hardware = false;
 
-      if(M_CheckParm("-frame"))
-         geom.wantframe = true;
-      if(M_CheckParm("-noframe"))
-         geom.wantframe = false;
-   }
+        if(M_CheckParm("-frame"))
+            geom.wantframe = true;
+        if(M_CheckParm("-noframe"))
+            geom.wantframe = false;
+    }
 }
 
 #ifdef _MSC_VER
@@ -503,44 +490,44 @@ extern void I_DisableSysMenu(SDL_Window *window);
 //
 static bool I_InitGraphicsMode()
 {
-   bool result; 
+    bool result;
 
-   if(!i_default_resolution)
-      i_default_resolution = estrdup("windowsize");
+    if(!i_default_resolution)
+        i_default_resolution = estrdup("windowsize");
 
-   if(!i_resolution)
-      i_resolution = estrdup(i_default_resolution);
+    if(!i_resolution)
+        i_resolution = estrdup(i_default_resolution);
 
-   if(!i_default_videomode)
-      i_default_videomode = estrdup("640x480w");
+    if(!i_default_videomode)
+        i_default_videomode = estrdup("640x480w");
 
-   if(!i_videomode)
-      i_videomode = estrdup(i_default_videomode);
+    if(!i_videomode)
+        i_videomode = estrdup(i_default_videomode);
 
-   if(D_noWindow())
-      return false;
+    if(D_noWindow())
+        return false;
 
-   // A false return value from HALVideoDriver::InitGraphicsMode means that no
-   // errors have occured and we should continue with initialization.
-   if(!(result = i_video_driver->InitGraphicsMode()))
-   {
-      // Reset renderer field of view
-      R_ResetFOV(video.width, video.height);
+    // A false return value from HALVideoDriver::InitGraphicsMode means that no
+    // errors have occured and we should continue with initialization.
+    if(!(result = i_video_driver->InitGraphicsMode()))
+    {
+        // Reset renderer field of view
+        R_ResetFOV(video.width, video.height);
 
 #ifdef _MSC_VER
-      // Win32 specific hacks
-      if(!D_noWindow())
-         I_DisableSysMenu(i_video_driver->window);
+        // Win32 specific hacks
+        if(!D_noWindow())
+            I_DisableSysMenu(i_video_driver->window);
 #endif
 
-      V_Init();                 // initialize high-level video
+        V_Init(); // initialize high-level video
 
-      in_graphics_mode = true;  // now in graphics mode
-      in_textmode      = false; // no longer in text mode
-      setsizeneeded    = true;  // should initialize screen size
-   }
+        in_graphics_mode = true;  // now in graphics mode
+        in_textmode      = false; // no longer in text mode
+        setsizeneeded    = true;  // should initialize screen size
+    }
 
-   return result;
+    return result;
 }
 
 //
@@ -552,101 +539,101 @@ static bool I_InitGraphicsMode()
 //
 static void I_ResetScreen()
 {
-   // Switch out of old graphics mode
-   if(in_graphics_mode)
-   {
-      R_FreeContexts();
-      i_video_driver->ShutdownGraphicsPartway();
-      in_graphics_mode = false;
-      in_textmode = true;
-   }
-   
-   // Switch to new graphics mode
-   // check for errors -- we may be setting to a different mode instead
-   if(I_InitGraphicsMode())
-      return;
-   
-   // reset other modules
-   
-   // Reset automap dimensions
-   if(automapactive)
-      AM_Start();
-   
-   // Reset palette
-   ST_Start();
+    // Switch out of old graphics mode
+    if(in_graphics_mode)
+    {
+        R_FreeContexts();
+        i_video_driver->ShutdownGraphicsPartway();
+        in_graphics_mode = false;
+        in_textmode      = true;
+    }
 
-   // haleyjd: reset wipe engine
-   Wipe_ScreenReset();
-   
-   // A LOT of heap activity just happened, so check it.
-   Z_CheckHeap();
+    // Switch to new graphics mode
+    // check for errors -- we may be setting to a different mode instead
+    if(I_InitGraphicsMode())
+        return;
+
+    // reset other modules
+
+    // Reset automap dimensions
+    if(automapactive)
+        AM_Start();
+
+    // Reset palette
+    ST_Start();
+
+    // haleyjd: reset wipe engine
+    Wipe_ScreenReset();
+
+    // A LOT of heap activity just happened, so check it.
+    Z_CheckHeap();
 }
 
 void I_InitGraphics()
 {
-   static int firsttime = true;
-   haldriveritem_t *driveritem = nullptr;
-   
-   if(!firsttime)
-      return;
-   
-   firsttime = false;
-   
-   // Select video driver based on configuration (out of those available in 
-   // the current compile), or get the default driver if unspecified
-   if(!(driveritem = I_DefaultVideoDriver()))
-   {
-      I_Error("I_InitGraphics: invalid video driver %d\n", i_videodriverid);
-   }
-   else
-   {
-      i_video_driver  = driveritem->driver;
-      i_videodriverid = driveritem->id;
-      usermsg(" (using video driver '%s')", driveritem->name);
-   }
-   
-   // haleyjd: not a good idea for SDL :(
-   // if(nodrawers) // killough 3/2/98: possibly avoid gfx mode
-   //    return;
+    static int       firsttime  = true;
+    haldriveritem_t *driveritem = nullptr;
 
-   // haleyjd 05/10/11: init mouse
-   I_InitMouse();
+    if(!firsttime)
+        return;
 
-   //
-   // enter graphics mode
-   //
-   
-   I_AtExit(I_ShutdownGraphics);
-   
-   I_SetMode();
-   
-   Z_CheckHeap();
+    firsttime = false;
+
+    // Select video driver based on configuration (out of those available in
+    // the current compile), or get the default driver if unspecified
+    if(!(driveritem = I_DefaultVideoDriver()))
+    {
+        I_Error("I_InitGraphics: invalid video driver %d\n", i_videodriverid);
+    }
+    else
+    {
+        i_video_driver  = driveritem->driver;
+        i_videodriverid = driveritem->id;
+        usermsg(" (using video driver '%s')", driveritem->name);
+    }
+
+    // haleyjd: not a good idea for SDL :(
+    // if(nodrawers) // killough 3/2/98: possibly avoid gfx mode
+    //    return;
+
+    // haleyjd 05/10/11: init mouse
+    I_InitMouse();
+
+    //
+    // enter graphics mode
+    //
+
+    I_AtExit(I_ShutdownGraphics);
+
+    I_SetMode();
+
+    Z_CheckHeap();
 }
 
 void I_SetMode()
 {
-   static int firsttime = true;    // the first time to set mode
-   
-   if(firsttime)
-      I_InitGraphicsMode();
-   else
-      I_ResetScreen();
-   
-   firsttime = false;
+    static int firsttime = true; // the first time to set mode
+
+    if(firsttime)
+        I_InitGraphicsMode();
+    else
+        I_ResetScreen();
+
+    firsttime = false;
 }
 
 //
 // I_VideoShouldLetterbox
 //
-// Determine from the screen aspect ratio and user settings whether or not 
+// Determine from the screen aspect ratio and user settings whether or not
 // letterboxing should be active.
 //
 bool I_VideoShouldLetterbox(int w, int h)
 {
-   fixed_t aspect = w * FRACUNIT / h;
-   fixed_t cutoff = 5 * FRACUNIT / 4; // 5:4 is the upper bound of letterboxed aspects
+    fixed_t aspect = w * FRACUNIT / h;
+    fixed_t cutoff = 5 * FRACUNIT / 4; // 5:4 is the upper bound of letterboxed aspects
 
-   return (i_letterbox && aspect <= cutoff);
+    return (i_letterbox && aspect <= cutoff);
 }
 
 //
@@ -656,7 +643,7 @@ bool I_VideoShouldLetterbox(int w, int h)
 //
 int I_VideoLetterboxHeight(int w)
 {
-   return (((w * 3 / 4) + 1) & ~1); // round up and make even
+    return (((w * 3 / 4) + 1) & ~1); // round up and make even
 }
 
 //
@@ -667,7 +654,7 @@ int I_VideoLetterboxHeight(int w)
 //
 int I_VideoLetterboxOffset(int h, int hl)
 {
-   return ((h - hl) / 2);
+    return ((h - hl) / 2);
 }
 
 //
@@ -675,18 +662,18 @@ int I_VideoLetterboxOffset(int h, int hl)
 //
 void I_ToggleFullscreen()
 {
-   C_RunTextCmd("togglefullscreen");
+    C_RunTextCmd("togglefullscreen");
 }
 
 bool I_IsViewOccluded()
 {
-   if(!i_video_driver)
-      return true;
-   
+    if(!i_video_driver)
+        return true;
+
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
-   return I_IsMacViewOccluded(i_video_driver->window);
+    return I_IsMacViewOccluded(i_video_driver->window);
 #endif
-   return false;
+    return false;
 }
 
 /************************
@@ -699,55 +686,54 @@ bool I_IsViewOccluded()
 //
 static void I_updateVideoMode(const Geom *geom)
 {
-   if(geom)
-   {
-      efree(i_videomode);
-      i_videomode = geom->toString().duplicate();
-   }
+    if(geom)
+    {
+        efree(i_videomode);
+        i_videomode = geom->toString().duplicate();
+    }
 
-   I_SetMode();
+    I_SetMode();
 
-   if(i_default_videomode)
-      efree(i_default_videomode);
-   i_default_videomode = estrdup(i_videomode);
+    if(i_default_videomode)
+        efree(i_default_videomode);
+    i_default_videomode = estrdup(i_videomode);
 }
 
 CONSOLE_COMMAND(togglefullscreen, cf_buffered)
 {
-   Geom geom(i_videomode);
-   static bool lastWasFullscreenDesktop;
-   switch(geom.screentype)
-   {
-      case screentype_e::FULLSCREEN_DESKTOP:
-         lastWasFullscreenDesktop = true;
-         geom.screentype = screentype_e::WINDOWED;
-         break;
-      case screentype_e::FULLSCREEN:
-         lastWasFullscreenDesktop = false;
-         geom.screentype = screentype_e::WINDOWED;
-         break;
+    Geom        geom(i_videomode);
+    static bool lastWasFullscreenDesktop;
+    switch(geom.screentype)
+    {
+    case screentype_e::FULLSCREEN_DESKTOP:
+        lastWasFullscreenDesktop = true;
+        geom.screentype          = screentype_e::WINDOWED;
+        break;
+    case screentype_e::FULLSCREEN:
+        lastWasFullscreenDesktop = false;
+        geom.screentype          = screentype_e::WINDOWED;
+        break;
 
-      case screentype_e::WINDOWED:
-         geom.screentype = lastWasFullscreenDesktop ? screentype_e::FULLSCREEN_DESKTOP :
-               screentype_e::FULLSCREEN;
-         break;
-   }
+    case screentype_e::WINDOWED:
+        geom.screentype = lastWasFullscreenDesktop ? screentype_e::FULLSCREEN_DESKTOP : screentype_e::FULLSCREEN;
+        break;
+    }
 
-   I_updateVideoMode(&geom);
+    I_updateVideoMode(&geom);
 }
 
-VARIABLE_BOOLEAN(use_vsync, nullptr,  yesno);
+VARIABLE_BOOLEAN(use_vsync, nullptr, yesno);
 
 CONSOLE_VARIABLE(v_retrace, use_vsync, 0)
 {
-   Geom geom(i_videomode);
-   // reset the geom's state to neutral so this takes precedence
-   geom.vsync = Geom::TriState::neutral;
+    Geom geom(i_videomode);
+    // reset the geom's state to neutral so this takes precedence
+    geom.vsync = Geom::TriState::neutral;
 
-   I_updateVideoMode(&geom);
+    I_updateVideoMode(&geom);
 }
 
-VARIABLE_BOOLEAN(usemouse,    nullptr, yesno);
+VARIABLE_BOOLEAN(usemouse, nullptr, yesno);
 
 CONSOLE_VARIABLE(i_usemouse, usemouse, 0) {}
 
@@ -758,34 +744,29 @@ CONSOLE_VARIABLE(i_grabmouse, grabmouse, 0) {}
 VARIABLE_STRING(i_resolution, nullptr, UL);
 CONSOLE_VARIABLE(i_resolution, i_resolution, cf_buffered)
 {
-   I_SetMode();
+    I_SetMode();
 
-   if(i_default_resolution)
-      efree(i_default_resolution);
+    if(i_default_resolution)
+        efree(i_default_resolution);
 
-   i_default_resolution = estrdup(i_resolution);
+    i_default_resolution = estrdup(i_resolution);
 }
 
 VARIABLE_STRING(i_videomode, nullptr, UL);
 CONSOLE_VARIABLE(i_videomode, i_videomode, cf_buffered)
 {
-   I_updateVideoMode(nullptr);
+    I_updateVideoMode(nullptr);
 }
 
-static const char *i_videodrivernames[] = 
-{
-   "default",
-   "SDL Default",
-   "SDL GL2D"
-};
+static const char *i_videodrivernames[] = { "default", "SDL Default", "SDL GL2D" };
 
-VARIABLE_INT(i_videodriverid, nullptr, -1, VDR_MAXDRIVERS-1, i_videodrivernames);
+VARIABLE_INT(i_videodriverid, nullptr, -1, VDR_MAXDRIVERS - 1, i_videodrivernames);
 CONSOLE_VARIABLE(i_videodriverid, i_videodriverid, 0) {}
 
 VARIABLE_TOGGLE(i_letterbox, nullptr, yesno);
 CONSOLE_VARIABLE(i_letterbox, i_letterbox, cf_buffered)
 {
-   I_SetMode();
+    I_SetMode();
 }
 
 // EOF

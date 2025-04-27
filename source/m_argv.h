@@ -27,14 +27,14 @@
 //
 // MISC
 //
-extern int  myargc;
+extern int    myargc;
 extern char **myargv;
 
 // Returns the position of the given parameter in the arg list (0 if not found).
 int M_CheckParm(const char *check);
 
 // Returns position of the first argument found in the null-terminated 'parms'
-// array for which the number of arguments to the command-line parameter 
+// array for which the number of arguments to the command-line parameter
 // specified in 'numargs' is available.
 int M_CheckMultiParm(const char **parms, int numargs);
 

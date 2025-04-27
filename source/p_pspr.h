@@ -68,28 +68,25 @@ struct sfxinfo_t;
 
 enum psprnum_t
 {
-   ps_weapon,
-   ps_flash,
-   NUMPSPRITES
+    ps_weapon,
+    ps_flash,
+    NUMPSPRITES
 };
 
 struct pspdef_t
 {
-   state_t *state;       // a nullptr state means not active
-   int     tics;
-   v2fixed_t prevpos;
-   v2fixed_t playpos;
-   v2fixed_t renderpos;
-   int trans;
+    state_t  *state; // a nullptr state means not active
+    int       tics;
+    v2fixed_t prevpos;
+    v2fixed_t playpos;
+    v2fixed_t renderpos;
+    int       trans;
 
-   void backupPosition()
-   {
-      prevpos = renderpos;
-   }
+    void backupPosition() { prevpos = renderpos; }
 };
 
-int P_WeaponPreferred(int w1, int w2);
-extern int action_from_pspr;                     // haleyjd 05/21/08
+int        P_WeaponPreferred(int w1, int w2);
+extern int action_from_pspr; // haleyjd 05/21/08
 
 void P_SetPspritePtr(const player_t &player, pspdef_t *psp, statenum_t stnum);
 void P_SetPsprite(player_t &player, int position, statenum_t stnum);
@@ -101,15 +98,15 @@ int P_NextWeapon(const player_t &player, uint8_t *slotindex = nullptr);
 int P_PrevWeapon(const player_t &player, uint8_t *slotindex = nullptr);
 
 weapontype_t P_SwitchWeaponOldDoom(const player_t &player);
-bool P_CheckAmmo(player_t &player);
-void P_SubtractAmmo(const player_t &player, int compat_amt);
-void P_SubtractAmmoAmount(player_t &player, int amount);
-void P_SetupPsprites(player_t &curplayer);
-void P_MovePsprites(player_t &curplayer);
-void P_DropWeapon(player_t &player);
+bool         P_CheckAmmo(player_t &player);
+void         P_SubtractAmmo(const player_t &player, int compat_amt);
+void         P_SubtractAmmoAmount(player_t &player, int amount);
+void         P_SetupPsprites(player_t &curplayer);
+void         P_MovePsprites(player_t &curplayer);
+void         P_DropWeapon(player_t &player);
 
 extern fixed_t bulletslope;
-void P_BulletSlope(Mobj *mo);
+void           P_BulletSlope(Mobj *mo);
 
 weaponinfo_t *P_GetPlayerWeapon(const player_t &player, int slot);
 
@@ -119,7 +116,7 @@ void P_WeaponSound(Mobj *mo, int sfx_id);
 void P_WeaponRecoil(player_t &player);
 
 void A_ReFire(actionargs_t *actionargs);
-void A_FireSomething(player_t& player, int adder);
+void A_FireSomething(player_t &player, int adder);
 
 fixed_t P_DoAutoAim(Mobj *mo, angle_t angle, fixed_t distance);
 

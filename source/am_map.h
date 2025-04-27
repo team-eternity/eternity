@@ -29,8 +29,8 @@
 // Used by ST StatusBar stuff.
 enum
 {
-   AM_MSGENTERED,
-   AM_MSGEXITED
+    AM_MSGENTERED,
+    AM_MSGEXITED
 };
 
 struct event_t;
@@ -55,7 +55,7 @@ void AM_Start();
 
 void AM_UpdateWindowHeight(bool fullscreen);
 
-//jff 4/16/98 make externally available
+// jff 4/16/98 make externally available
 
 void AM_clearMarks(void);
 
@@ -64,7 +64,7 @@ void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z);
 
 struct mpoint_t
 {
-   double x, y;
+    double x, y;
 };
 
 //
@@ -72,50 +72,50 @@ struct mpoint_t
 //
 struct markpoint_t
 {
-   double x, y;
-   int groupid;
+    double x, y;
+    int    groupid;
 };
 
 extern markpoint_t *markpoints;
-extern int markpointnum, markpointnum_max;
-extern int followplayer;
-extern int automap_grid;
+extern int          markpointnum, markpointnum_max;
+extern int          followplayer;
+extern int          automap_grid;
 
 // end changes -- killough 2/22/98
 
 // killough 5/2/98: moved from m_misc.c
 
-//jff 1/7/98 automap colors added
-extern int mapcolor_back;     // map background
-extern int mapcolor_grid;     // grid lines color
-extern int mapcolor_wall;     // normal 1s wall color
-extern int mapcolor_fchg;     // line at floor height change color
-extern int mapcolor_cchg;     // line at ceiling height change color
-extern int mapcolor_clsd;     // line at sector with floor=ceiling color
-extern int mapcolor_rkey;     // red key color
-extern int mapcolor_bkey;     // blue key color
-extern int mapcolor_ykey;     // yellow key color
-extern int mapcolor_rdor;     // red door color (diff from keys to allow option)
-extern int mapcolor_bdor;     // blue door color (of enabling one not other)
-extern int mapcolor_ydor;     // yellow door color
-extern int mapcolor_tele;     // teleporter line color
-extern int mapcolor_secr;     // secret sector boundary color
-//jff 4/23/98
-extern int mapcolor_exit;     // exit line
-extern int mapcolor_unsn;     // computer map unseen line color
-extern int mapcolor_flat;     // line with no floor/ceiling changes
-extern int mapcolor_sprt;     // general sprite color
-extern int mapcolor_hair;     // crosshair color
-extern int mapcolor_sngl;     // single player arrow color
-extern int mapcolor_plyr[4];  // colors for player arrows in multiplayer
-extern int mapcolor_frnd;     // killough 8/8/98: colors for friends
-//jff 3/9/98
-extern int map_secret_after;  // secrets do not appear til after bagged
+// jff 1/7/98 automap colors added
+extern int mapcolor_back; // map background
+extern int mapcolor_grid; // grid lines color
+extern int mapcolor_wall; // normal 1s wall color
+extern int mapcolor_fchg; // line at floor height change color
+extern int mapcolor_cchg; // line at ceiling height change color
+extern int mapcolor_clsd; // line at sector with floor=ceiling color
+extern int mapcolor_rkey; // red key color
+extern int mapcolor_bkey; // blue key color
+extern int mapcolor_ykey; // yellow key color
+extern int mapcolor_rdor; // red door color (diff from keys to allow option)
+extern int mapcolor_bdor; // blue door color (of enabling one not other)
+extern int mapcolor_ydor; // yellow door color
+extern int mapcolor_tele; // teleporter line color
+extern int mapcolor_secr; // secret sector boundary color
+// jff 4/23/98
+extern int mapcolor_exit;    // exit line
+extern int mapcolor_unsn;    // computer map unseen line color
+extern int mapcolor_flat;    // line with no floor/ceiling changes
+extern int mapcolor_sprt;    // general sprite color
+extern int mapcolor_hair;    // crosshair color
+extern int mapcolor_sngl;    // single player arrow color
+extern int mapcolor_plyr[4]; // colors for player arrows in multiplayer
+extern int mapcolor_frnd;    // killough 8/8/98: colors for friends
+// jff 3/9/98
+extern int map_secret_after; // secrets do not appear til after bagged
 
-extern int map_point_coordinates;  // killough 10/98
+extern int map_point_coordinates; // killough 10/98
 
 extern int mapcolor_prtl;
-extern int mapportal_overlay; // julian: changed to int 
+extern int mapportal_overlay; // julian: changed to int
                               // (size problem, could lead to memory error)
 
 extern bool map_antialias; // do antialiased line drawing

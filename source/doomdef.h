@@ -35,10 +35,10 @@
 // Identify language to use, software localization.
 enum Language_t
 {
-   english,
-   french,
-   german,
-   unknown
+    english,
+    french,
+    german,
+    unknown
 };
 
 //
@@ -85,14 +85,14 @@ enum Language_t
 
 enum gamestate_t
 {
-   GS_NOSTATE = -1, // haleyjd: for C++ conversion, initial value of oldgamestate
-   GS_LEVEL,
-   GS_INTERMISSION,
-   GS_FINALE,
-   GS_DEMOSCREEN,
-   GS_CONSOLE,
-   GS_STARTUP, // haleyjd: value given to gamestate during startup to avoid thinking it's GS_LEVEL
-   GS_LOADING  // haleyjd: value given to gamestate during level load
+    GS_NOSTATE = -1, // haleyjd: for C++ conversion, initial value of oldgamestate
+    GS_LEVEL,
+    GS_INTERMISSION,
+    GS_FINALE,
+    GS_DEMOSCREEN,
+    GS_CONSOLE,
+    GS_STARTUP, // haleyjd: value given to gamestate during startup to avoid thinking it's GS_LEVEL
+    GS_LOADING  // haleyjd: value given to gamestate during level load
 };
 
 //
@@ -132,22 +132,22 @@ enum gamestate_t
 //
 enum
 {
-   // will appear on skill 1 if MTF_EASY is not set
-   // will not appear on skill 1 if MTF_EASY is set
-   MTF_EX_BABY_TOGGLE = 1,
+    // will appear on skill 1 if MTF_EASY is not set
+    // will not appear on skill 1 if MTF_EASY is set
+    MTF_EX_BABY_TOGGLE = 1,
 
-   // will appear on skill 5 if MTF_HARD is not set
-   // will not appear on skill 5 if MTF_HARD is set
-   MTF_EX_NIGHTMARE_TOGGLE = 2,
+    // will appear on skill 5 if MTF_HARD is not set
+    // will not appear on skill 5 if MTF_HARD is set
+    MTF_EX_NIGHTMARE_TOGGLE = 2,
 
-   // Strife standing monster
-   MTF_EX_STAND = 4,
+    // Strife standing monster
+    MTF_EX_STAND = 4,
 };
 
 // sf: sector flags, not me =)
-                // kill all sound in sector
+// kill all sound in sector
 #define SF_KILLSOUND          1024
-                // kill all sounds due to moving
+// kill all sounds due to moving
 #define SF_KILLMOVESOUND      2048
 
 // a macro to find out whether to make moving sounds in a sector
@@ -155,12 +155,12 @@ enum
 
 enum skill_t : int
 {
-   sk_none = -1, //jff 3/24/98 create unpicked skill setting
-   sk_baby = 0,
-   sk_easy,
-   sk_medium,
-   sk_hard,
-   sk_nightmare
+    sk_none = -1, // jff 3/24/98 create unpicked skill setting
+    sk_baby = 0,
+    sk_easy,
+    sk_medium,
+    sk_hard,
+    sk_nightmare
 };
 
 //
@@ -169,73 +169,73 @@ enum skill_t : int
 
 enum card_t
 {
-   it_bluecard,
-   it_yellowcard,
-   it_redcard,
-   it_blueskull,
-   it_yellowskull,
-   it_redskull,
-   NUMCARDS
+    it_bluecard,
+    it_yellowcard,
+    it_redcard,
+    it_blueskull,
+    it_yellowskull,
+    it_redskull,
+    NUMCARDS
 };
 
 // The defined weapons, including a marker
 // indicating user has not changed weapon.
 enum
 {
-   wp_fist,
-   wp_pistol,
-   wp_shotgun,
-   wp_chaingun,
-   wp_missile,
-   wp_plasma,
-   wp_bfg,
-   wp_chainsaw,
-   wp_supershotgun,
+    wp_fist,
+    wp_pistol,
+    wp_shotgun,
+    wp_chaingun,
+    wp_missile,
+    wp_plasma,
+    wp_bfg,
+    wp_chainsaw,
+    wp_supershotgun,
 
-   NUMWEAPONS,
-   wp_nochange              // No pending weapon change.
+    NUMWEAPONS,
+    wp_nochange // No pending weapon change.
 };
 using weapontype_t = int;
 
 // Ammunition types defined.
 enum
 {
-   am_clip,    // Pistol / chaingun ammo.
-   am_shell,   // Shotgun / double barreled shotgun.
-   am_cell,    // Plasma rifle, BFG.
-   am_misl,    // Missile launcher.
+    am_clip,  // Pistol / chaingun ammo.
+    am_shell, // Shotgun / double barreled shotgun.
+    am_cell,  // Plasma rifle, BFG.
+    am_misl,  // Missile launcher.
 
-   NUMAMMO,
-   am_noammo   // Unlimited for chainsaw / fist.
+    NUMAMMO,
+    am_noammo // Unlimited for chainsaw / fist.
 };
 using ammotype_t = int;
 
 // Power up artifacts.
 enum powertype_t
 {
-   pw_invulnerability,
-   pw_strength,
-   pw_invisibility,
-   pw_ironfeet,
-   pw_allmap,
-   pw_infrared,
-   pw_totalinvis,  // haleyjd: total invisibility
-   pw_ghost,       // haleyjd: heretic ghost
-   pw_silencer,    // haleyjd: silencer
-   pw_flight,      // haleyjd: flight
-   pw_torch,       // haleyjd: infrared w/flicker
-   pw_weaponlevel2, //  MaxW: powered-up weapons (tome of power)
-   NUMPOWERS
+    pw_invulnerability,
+    pw_strength,
+    pw_invisibility,
+    pw_ironfeet,
+    pw_allmap,
+    pw_infrared,
+    pw_totalinvis,   // haleyjd: total invisibility
+    pw_ghost,        // haleyjd: heretic ghost
+    pw_silencer,     // haleyjd: silencer
+    pw_flight,       // haleyjd: flight
+    pw_torch,        // haleyjd: infrared w/flicker
+    pw_weaponlevel2, //  MaxW: powered-up weapons (tome of power)
+    NUMPOWERS
 };
 
 // Power up durations (how many seconds till expiration).
 enum powerduration_e
 {
-   INVULNTICS  = ( 30  * TICRATE),
-   INVISTICS   = ( 60  * TICRATE),
-   INFRATICS   = ( 120 * TICRATE),
-   IRONTICS    = ( 60  * TICRATE),
-   FLIGHTTICS  = ( 60  * TICRATE),  // flight tics, for Heretic
+    INVULNTICS = (30 * TICRATE),
+    INVISTICS  = (60 * TICRATE),
+    INFRATICS  = (120 * TICRATE),
+    IRONTICS   = (60 * TICRATE),
+    FLIGHTTICS = (60 * TICRATE), // flight tics, for Heretic
 };
 
 // DOOM keyboard definition.
@@ -244,132 +244,132 @@ enum powerduration_e
 
 enum keycode_e
 {
-   KEYD_TAB            = 0x09,
-   KEYD_ENTER          = 0x0d,
-   KEYD_ESCAPE         = 0x1b,
+    KEYD_TAB    = 0x09,
+    KEYD_ENTER  = 0x0d,
+    KEYD_ESCAPE = 0x1b,
 
-   KEYD_SPACEBAR       = 0x20,
+    KEYD_SPACEBAR = 0x20,
 
-   KEYD_COMMA          = 0x2c,
-   KEYD_MINUS,
-   KEYD_PERIOD,
+    KEYD_COMMA = 0x2c,
+    KEYD_MINUS,
+    KEYD_PERIOD,
 
-   KEYD_EQUALS         = 0x3d,
-   
-   KEYD_ACCGRAVE       = 0x60,
+    KEYD_EQUALS = 0x3d,
 
-   KEYD_BACKSPACE      = 0x7f,
+    KEYD_ACCGRAVE = 0x60,
 
-   // FIXME: The values for these two might need adjusting
-   KEYD_NONUSBACKSLASH = 0x80,
-   KEYD_NONUSHASH,
+    KEYD_BACKSPACE = 0x7f,
 
-   KEYD_RCTRL          = 0x9d,
+    // FIXME: The values for these two might need adjusting
+    KEYD_NONUSBACKSLASH = 0x80,
+    KEYD_NONUSHASH,
 
-   KEYD_LEFTARROW      = 0xac,
-   KEYD_UPARROW,
-   KEYD_RIGHTARROW,
-   KEYD_DOWNARROW,
+    KEYD_RCTRL = 0x9d,
 
-   KEYD_RSHIFT         = 0xb6,
-   KEYD_RALT           = 0xb8,
-   KEYD_LALT           = KEYD_RALT,
+    KEYD_LEFTARROW = 0xac,
+    KEYD_UPARROW,
+    KEYD_RIGHTARROW,
+    KEYD_DOWNARROW,
 
-   KEYD_CAPSLOCK       = 0xba, // phares 
+    KEYD_RSHIFT = 0xb6,
+    KEYD_RALT   = 0xb8,
+    KEYD_LALT   = KEYD_RALT,
 
-   KEYD_F1             = 0xbb,
-   KEYD_F2,
-   KEYD_F3,
-   KEYD_F4,
-   KEYD_F5,
-   KEYD_F6,
-   KEYD_F7,
-   KEYD_F8,
-   KEYD_F9,
-   KEYD_F10,
-   KEYD_PRINTSCREEN,
-   KEYD_NUMLOCK,
-   KEYD_SCROLLLOCK,
-   KEYD_HOME,   
-   KEYD_PAGEUP,
-   KEYD_END            = 0xcf,
-   KEYD_PAGEDOWN       = 0xd1,
-   KEYD_INSERT         = 0xd2,
+    KEYD_CAPSLOCK = 0xba, // phares
 
-   KEYD_F11            = 0xd7,
-   KEYD_F12,
+    KEYD_F1 = 0xbb,
+    KEYD_F2,
+    KEYD_F3,
+    KEYD_F4,
+    KEYD_F5,
+    KEYD_F6,
+    KEYD_F7,
+    KEYD_F8,
+    KEYD_F9,
+    KEYD_F10,
+    KEYD_PRINTSCREEN,
+    KEYD_NUMLOCK,
+    KEYD_SCROLLLOCK,
+    KEYD_HOME,
+    KEYD_PAGEUP,
+    KEYD_END      = 0xcf,
+    KEYD_PAGEDOWN = 0xd1,
+    KEYD_INSERT   = 0xd2,
 
-   // haleyjd: virtual keys for mouse
-   KEYD_MOUSE1         = 0xe0,
-   KEYD_MOUSE2,
-   KEYD_MOUSE3,
-   KEYD_MOUSE4,
-   KEYD_MOUSE5,
-   KEYD_MOUSE6,
-   KEYD_MOUSE7,
-   KEYD_MOUSE8,
-   KEYD_MWHEELUP,
-   KEYD_MWHEELDOWN,
+    KEYD_F11 = 0xd7,
+    KEYD_F12,
 
-   KEYD_KP0            = 0xed,
-   KEYD_KP1,
-   KEYD_KP2,
-   KEYD_KP3,
-   KEYD_KP4,
-   KEYD_KP5,
-   KEYD_KP6,
-   KEYD_KP7,
-   KEYD_KP8,
-   KEYD_KP9,
-   KEYD_KPPERIOD,
-   KEYD_KPDIVIDE,
-   KEYD_KPMULTIPLY,
-   KEYD_KPMINUS,
-   KEYD_KPPLUS,
-   KEYD_KPENTER,
-   KEYD_KPEQUALS,
-   KEYD_DEL,
-   KEYD_PAUSE, // 0xff
+    // haleyjd: virtual keys for mouse
+    KEYD_MOUSE1 = 0xe0,
+    KEYD_MOUSE2,
+    KEYD_MOUSE3,
+    KEYD_MOUSE4,
+    KEYD_MOUSE5,
+    KEYD_MOUSE6,
+    KEYD_MOUSE7,
+    KEYD_MOUSE8,
+    KEYD_MWHEELUP,
+    KEYD_MWHEELDOWN,
 
-   // virtual key codes for gamepad buttons
-   KEYD_JOY_BASE = 0x100,
-   KEYD_JOY_A = KEYD_JOY_BASE,
-   KEYD_JOY_B,
-   KEYD_JOY_X,
-   KEYD_JOY_Y,
-   KEYD_JOY_BACK,
-   KEYD_JOY_GUIDE,
-   KEYD_JOY_START,
-   KEYD_JOY_STICK_LEFT,
-   KEYD_JOY_STICK_RIGHT,
-   KEYD_JOY_SHOULDER_LEFT,
-   KEYD_JOY_SHOULDER_RIGHT,
-   KEYD_JOY_DPAD_UP,
-   KEYD_JOY_DPAD_DOWN,
-   KEYD_JOY_DPAD_LEFT,
-   KEYD_JOY_DPAD_RIGHT,
-   KEYD_JOY_MISC1, // Xbox Series X share, PS5 microphone, Switch Pro capture button
-   KEYD_JOY_MISC2,
-   KEYD_JOY_MISC3,
-   KEYD_JOY_MISC4,
-   KEYD_JOY_MISC5,
-   KEYD_JOY_TOUCHPAD,
-   KEYD_JOY_21,
-   KEYD_JOY_22,
-   KEYD_JOY_23,
+    KEYD_KP0 = 0xed,
+    KEYD_KP1,
+    KEYD_KP2,
+    KEYD_KP3,
+    KEYD_KP4,
+    KEYD_KP5,
+    KEYD_KP6,
+    KEYD_KP7,
+    KEYD_KP8,
+    KEYD_KP9,
+    KEYD_KPPERIOD,
+    KEYD_KPDIVIDE,
+    KEYD_KPMULTIPLY,
+    KEYD_KPMINUS,
+    KEYD_KPPLUS,
+    KEYD_KPENTER,
+    KEYD_KPEQUALS,
+    KEYD_DEL,
+    KEYD_PAUSE, // 0xff
 
-   // axis activation events
-   KEYD_AXIS_BASE,
-   KEYD_AXIS_LEFT_X = KEYD_AXIS_BASE,
-   KEYD_AXIS_LEFT_Y,
-   KEYD_AXIS_RIGHT_X,
-   KEYD_AXIS_RIGHT_Y,
-   KEYD_AXIS_TRIGGER_LEFT,
-   KEYD_AXIS_TRIGGER_RIGHT,
-   KEYD_AXISON07,
-   KEYD_AXISON08,
+    // virtual key codes for gamepad buttons
+    KEYD_JOY_BASE = 0x100,
+    KEYD_JOY_A    = KEYD_JOY_BASE,
+    KEYD_JOY_B,
+    KEYD_JOY_X,
+    KEYD_JOY_Y,
+    KEYD_JOY_BACK,
+    KEYD_JOY_GUIDE,
+    KEYD_JOY_START,
+    KEYD_JOY_STICK_LEFT,
+    KEYD_JOY_STICK_RIGHT,
+    KEYD_JOY_SHOULDER_LEFT,
+    KEYD_JOY_SHOULDER_RIGHT,
+    KEYD_JOY_DPAD_UP,
+    KEYD_JOY_DPAD_DOWN,
+    KEYD_JOY_DPAD_LEFT,
+    KEYD_JOY_DPAD_RIGHT,
+    KEYD_JOY_MISC1, // Xbox Series X share, PS5 microphone, Switch Pro capture button
+    KEYD_JOY_MISC2,
+    KEYD_JOY_MISC3,
+    KEYD_JOY_MISC4,
+    KEYD_JOY_MISC5,
+    KEYD_JOY_TOUCHPAD,
+    KEYD_JOY_21,
+    KEYD_JOY_22,
+    KEYD_JOY_23,
 
-   NUMKEYS
+    // axis activation events
+    KEYD_AXIS_BASE,
+    KEYD_AXIS_LEFT_X = KEYD_AXIS_BASE,
+    KEYD_AXIS_LEFT_Y,
+    KEYD_AXIS_RIGHT_X,
+    KEYD_AXIS_RIGHT_Y,
+    KEYD_AXIS_TRIGGER_LEFT,
+    KEYD_AXIS_TRIGGER_RIGHT,
+    KEYD_AXISON07,
+    KEYD_AXISON08,
+
+    NUMKEYS
 };
 
 // phares 4/19/98:
@@ -378,17 +378,17 @@ enum keycode_e
 
 enum ss_types
 {
-   ss_none,
-   ss_keys,
-   ss_weap,
-   ss_stat,
-   ss_auto,
-   ss_enem,
-   ss_mess,
-   ss_chat,
-   ss_gen,       // killough 10/98
-   ss_comp,      // killough 10/98
-   ss_max
+    ss_none,
+    ss_keys,
+    ss_weap,
+    ss_stat,
+    ss_auto,
+    ss_enem,
+    ss_mess,
+    ss_chat,
+    ss_gen,  // killough 10/98
+    ss_comp, // killough 10/98
+    ss_max
 };
 
 // phares 3/20/98:
@@ -417,7 +417,7 @@ enum ss_types
 
 #define HTIC_GHOST_TRANS 26624
 
-#endif          // __DOOMDEF__
+#endif // __DOOMDEF__
 
 //----------------------------------------------------------------------------
 //

@@ -70,7 +70,7 @@ void I_StartTicInWindow(SDL_Window *window);
 // This ticcmd will then be modified by the gameloop
 // for normal input.
 
-ticcmd_t* I_BaseTiccmd();
+ticcmd_t *I_BaseTiccmd();
 
 // atexit handler -- killough
 
@@ -83,8 +83,8 @@ void I_QuitFast();
 // haleyjd 05/21/10: error codes for I_FatalError
 enum
 {
-   I_ERR_KILL,  // exit and do not perform shutdown actions
-   I_ERR_ABORT  // call abort()
+    I_ERR_KILL, // exit and do not perform shutdown actions
+    I_ERR_ABORT // call abort()
 };
 
 // haleyjd 06/05/10
@@ -105,9 +105,9 @@ void I_SetErrorHandler(const i_errhandler_t handler);
 #define I_Assert(condition, ...)
 #endif
 
-extern int mousepresent;                // killough
+extern int mousepresent; // killough
 
-void I_EndDoom();         // killough 2/22/98: endgame screen
+void I_EndDoom(); // killough 2/22/98: endgame screen
 
 int I_CheckAbort();
 

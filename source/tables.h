@@ -47,13 +47,13 @@
 #define ANGLETOFINESHIFT        19
 
 // Effective size is 10240.
-extern const fixed_t finesine[5*FINEANGLES/4];
+extern const fixed_t finesine[5 * FINEANGLES / 4];
 
 // Re-use data, is just PI/2 phase shift.
 extern const fixed_t *const finecosine;
 
 // Effective size is 4096.
-extern const fixed_t finetangent[FINEANGLES/2];
+extern const fixed_t finetangent[FINEANGLES / 2];
 
 // Binary Angle Measument, BAM.
 #define ANG45   0x20000000
@@ -83,7 +83,7 @@ using angle_t = uint32_t;
 // The +1 size is to handle the case when x==y without additional checking.
 
 extern const angle_t tantoangle[2049];
-extern angle_t tantoangle_acc[2049];
+extern angle_t       tantoangle_acc[2049];
 
 void Table_InitTanToAngle(void);
 
@@ -97,32 +97,32 @@ void Table_InitTanToAngle(void);
 //
 inline static angle_t FixedToAngle(fixed_t a)
 {
-   return (angle_t)(((uint64_t)a * ANGLE_1) >> FRACBITS);
+    return (angle_t)(((uint64_t)a * ANGLE_1) >> FRACBITS);
 }
 
 inline static fixed_t AngleToFixed(angle_t a)
 {
-   return (fixed_t)(((uint64_t)a << FRACBITS) / ANGLE_1);
+    return (fixed_t)(((uint64_t)a << FRACBITS) / ANGLE_1);
 }
 
 // [XA] Clamped angle->slope, for convenience
 inline static fixed_t AngleToSlope(int a)
 {
-   if(a > ANG90)
-      return finetangent[0];
-   else if(-a > ANG90)
-      return finetangent[FINEANGLES / 2 - 1];
-   else
-      return finetangent[(ANG90 - a) >> ANGLETOFINESHIFT];
+    if(a > ANG90)
+        return finetangent[0];
+    else if(-a > ANG90)
+        return finetangent[FINEANGLES / 2 - 1];
+    else
+        return finetangent[(ANG90 - a) >> ANGLETOFINESHIFT];
 }
 
 // [XA] Ditto, using fixed-point-degrees input
 inline static fixed_t DegToSlope(fixed_t a)
 {
-   if(a >= 0)
-      return AngleToSlope(FixedToAngle(a));
-   else
-      return AngleToSlope(-(int)FixedToAngle(-a));
+    if(a >= 0)
+        return AngleToSlope(FixedToAngle(a));
+    else
+        return AngleToSlope(-(int)FixedToAngle(-a));
 }
 
 #endif

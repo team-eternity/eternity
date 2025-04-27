@@ -55,148 +55,151 @@ constexpr const char SEC_EDFFILE[]  = "edffile";
 constexpr const char SEC_IWAD[]     = "iwad";
 constexpr const char SEC_BASEPATH[] = "basepath";
 
-static cfg_opt_t gfs_opts[] =
-{
-   CFG_STR(SEC_WADFILE,   nullptr, CFGF_MULTI),
-   CFG_STR(SEC_DEHFILE,   nullptr, CFGF_MULTI),
-   CFG_STR(SEC_CSCFILE,   nullptr, CFGF_MULTI),
-   CFG_STR(SEC_EDFFILE,   nullptr, CFGF_NONE),
-   CFG_STR(SEC_IWAD,      nullptr, CFGF_NONE),
-   CFG_STR(SEC_BASEPATH,  nullptr, CFGF_NONE),
-   CFG_END()
+// clang-format off
+
+static cfg_opt_t gfs_opts[] = {
+    CFG_STR(SEC_WADFILE,   nullptr, CFGF_MULTI),
+    CFG_STR(SEC_DEHFILE,   nullptr, CFGF_MULTI),
+    CFG_STR(SEC_CSCFILE,   nullptr, CFGF_MULTI),
+    CFG_STR(SEC_EDFFILE,   nullptr, CFGF_NONE),
+    CFG_STR(SEC_IWAD,      nullptr, CFGF_NONE),
+    CFG_STR(SEC_BASEPATH,  nullptr, CFGF_NONE),
+    CFG_END()
 };
+
+// clang-format on
 
 gfs_t *G_LoadGFS(const char *filename)
 {
-   static bool loaded = false;
-   int i;
-   cfg_t *cfg;
+    static bool loaded = false;
+    int         i;
+    cfg_t      *cfg;
 
-   // only one GFS can be loaded per session
-   if(loaded)
-      return nullptr;
+    // only one GFS can be loaded per session
+    if(loaded)
+        return nullptr;
 
-   cfg = cfg_init(gfs_opts, CFGF_NOCASE);
+    cfg = cfg_init(gfs_opts, CFGF_NOCASE);
 
-   cfg_set_error_function(cfg, E_ErrorCB);
+    cfg_set_error_function(cfg, E_ErrorCB);
 
-   if(cfg_parse(cfg, filename))
-      I_Error("G_LoadGFS: failed to parse GFS file\n");
+    if(cfg_parse(cfg, filename))
+        I_Error("G_LoadGFS: failed to parse GFS file\n");
 
-   // count number of options
-   gfs.numwads = cfg_size(cfg, SEC_WADFILE);
-   gfs.numdehs = cfg_size(cfg, SEC_DEHFILE);
-   gfs.numcsc  = cfg_size(cfg, SEC_CSCFILE);
+    // count number of options
+    gfs.numwads = cfg_size(cfg, SEC_WADFILE);
+    gfs.numdehs = cfg_size(cfg, SEC_DEHFILE);
+    gfs.numcsc  = cfg_size(cfg, SEC_CSCFILE);
 
-   if(gfs.numwads)
-      gfs.wadnames = ecalloc(char **, gfs.numwads, sizeof(char *));
+    if(gfs.numwads)
+        gfs.wadnames = ecalloc(char **, gfs.numwads, sizeof(char *));
 
-   if(gfs.numdehs)
-      gfs.dehnames = ecalloc(char **, gfs.numdehs, sizeof(char *));
+    if(gfs.numdehs)
+        gfs.dehnames = ecalloc(char **, gfs.numdehs, sizeof(char *));
 
-   if(gfs.numcsc)
-      gfs.cscnames = ecalloc(char **, gfs.numcsc,  sizeof(char *));
+    if(gfs.numcsc)
+        gfs.cscnames = ecalloc(char **, gfs.numcsc, sizeof(char *));
 
-   // load wads, dehs, csc
-   for(i = 0; i < gfs.numwads; i++)
-   {
-      const char *str = cfg_getnstr(cfg, SEC_WADFILE, i);
+    // load wads, dehs, csc
+    for(i = 0; i < gfs.numwads; i++)
+    {
+        const char *str = cfg_getnstr(cfg, SEC_WADFILE, i);
 
-      gfs.wadnames[i] = estrdup(str);
-   }
-   for(i = 0; i < gfs.numdehs; i++)
-   {
-      const char *str = cfg_getnstr(cfg, SEC_DEHFILE, i);
-      
-      gfs.dehnames[i] = estrdup(str);
-   }
-   for(i = 0; i < gfs.numcsc; i++)
-   {
-      const char *str = cfg_getnstr(cfg, SEC_CSCFILE, i);
+        gfs.wadnames[i] = estrdup(str);
+    }
+    for(i = 0; i < gfs.numdehs; i++)
+    {
+        const char *str = cfg_getnstr(cfg, SEC_DEHFILE, i);
 
-      gfs.cscnames[i] = estrdup(str);
-   }
+        gfs.dehnames[i] = estrdup(str);
+    }
+    for(i = 0; i < gfs.numcsc; i++)
+    {
+        const char *str = cfg_getnstr(cfg, SEC_CSCFILE, i);
 
-   // haleyjd 07/05/03: support root EDF specification
-   if(cfg_size(cfg, SEC_EDFFILE) >= 1)
-   {
-      const char *str = cfg_getstr(cfg, SEC_EDFFILE);
+        gfs.cscnames[i] = estrdup(str);
+    }
 
-      gfs.edf = estrdup(str);
+    // haleyjd 07/05/03: support root EDF specification
+    if(cfg_size(cfg, SEC_EDFFILE) >= 1)
+    {
+        const char *str = cfg_getstr(cfg, SEC_EDFFILE);
 
-      gfs.hasEDF = true;
-   }
+        gfs.edf = estrdup(str);
 
-   // haleyjd 04/16/03: support iwad specification for end-users
-   // (this is not useful to mod authors, UNLESS their mod happens
-   // to be an IWAD file ;)
-   if(cfg_size(cfg, SEC_IWAD) >= 1)
-   {
-      const char *str = cfg_getstr(cfg, SEC_IWAD);
+        gfs.hasEDF = true;
+    }
 
-      gfs.iwad = estrdup(str);
+    // haleyjd 04/16/03: support iwad specification for end-users
+    // (this is not useful to mod authors, UNLESS their mod happens
+    // to be an IWAD file ;)
+    if(cfg_size(cfg, SEC_IWAD) >= 1)
+    {
+        const char *str = cfg_getstr(cfg, SEC_IWAD);
 
-      gfs.hasIWAD = true;
-   }
+        gfs.iwad = estrdup(str);
 
-   // haleyjd 04/16/03: basepath support
-   if(cfg_size(cfg, SEC_BASEPATH) >= 1)
-   {
-      const char *str = cfg_getstr(cfg, SEC_BASEPATH);
+        gfs.hasIWAD = true;
+    }
 
-      gfs.filepath = estrdup(str);
-   }
-   else
-   {
-      gfs.filepath = emalloc(char *, strlen(filename) + 1);
-      M_GetFilePath(filename, gfs.filepath, strlen(filename));
-   }
+    // haleyjd 04/16/03: basepath support
+    if(cfg_size(cfg, SEC_BASEPATH) >= 1)
+    {
+        const char *str = cfg_getstr(cfg, SEC_BASEPATH);
 
-   cfg_free(cfg);
+        gfs.filepath = estrdup(str);
+    }
+    else
+    {
+        gfs.filepath = emalloc(char *, strlen(filename) + 1);
+        M_GetFilePath(filename, gfs.filepath, strlen(filename));
+    }
 
-   loaded = true;
+    cfg_free(cfg);
 
-   return &gfs;
+    loaded = true;
+
+    return &gfs;
 }
 
 void G_FreeGFS(gfs_t *lgfs)
 {
-   int i;
+    int i;
 
-   // free all filenames, and then free the arrays they were in
-   // as well
+    // free all filenames, and then free the arrays they were in
+    // as well
 
-   for(i = 0; i < lgfs->numwads; i++)
-   {
-      efree(lgfs->wadnames[i]);
-   }
-   efree(lgfs->wadnames);
+    for(i = 0; i < lgfs->numwads; i++)
+    {
+        efree(lgfs->wadnames[i]);
+    }
+    efree(lgfs->wadnames);
 
-   for(i = 0; i < lgfs->numdehs; i++)
-   {
-      efree(lgfs->dehnames[i]);
-   }
-   efree(lgfs->dehnames);
+    for(i = 0; i < lgfs->numdehs; i++)
+    {
+        efree(lgfs->dehnames[i]);
+    }
+    efree(lgfs->dehnames);
 
-   for(i = 0; i < lgfs->numcsc; i++)
-   {
-      efree(lgfs->cscnames[i]);
-   }
-   efree(lgfs->cscnames);
+    for(i = 0; i < lgfs->numcsc; i++)
+    {
+        efree(lgfs->cscnames[i]);
+    }
+    efree(lgfs->cscnames);
 
-   if(lgfs->edf)
-      efree(lgfs->edf);
-   lgfs->edf = nullptr;
-   lgfs->hasEDF = false;
+    if(lgfs->edf)
+        efree(lgfs->edf);
+    lgfs->edf    = nullptr;
+    lgfs->hasEDF = false;
 
-   if(lgfs->iwad)
-      efree(lgfs->iwad);
-   lgfs->iwad = nullptr;
-   lgfs->hasIWAD = false;
+    if(lgfs->iwad)
+        efree(lgfs->iwad);
+    lgfs->iwad    = nullptr;
+    lgfs->hasIWAD = false;
 
-   if(lgfs->filepath)
-      efree(lgfs->filepath);
-   lgfs->filepath = nullptr;
+    if(lgfs->filepath)
+        efree(lgfs->filepath);
+    lgfs->filepath = nullptr;
 }
 
 //
@@ -209,10 +212,10 @@ void G_FreeGFS(gfs_t *lgfs)
 //
 const char *G_GFSCheckIWAD(void)
 {
-   if(gfs.hasIWAD)
-      return gfs.iwad;
-   else
-      return nullptr;
+    if(gfs.hasIWAD)
+        return gfs.iwad;
+    else
+        return nullptr;
 }
 
 //
@@ -222,10 +225,10 @@ const char *G_GFSCheckIWAD(void)
 //
 const char *G_GFSCheckEDF(void)
 {
-   if(gfs.hasEDF)
-      return gfs.edf;
-   else
-      return nullptr;
+    if(gfs.hasEDF)
+        return gfs.edf;
+    else
+        return nullptr;
 }
 
 // EOF

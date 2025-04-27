@@ -51,8 +51,7 @@
 
 // haleyjd: made dynamic via EDF
 char **sprnames;
-int NUMSPRITES = 0;
-
+int    NUMSPRITES = 0;
 
 // ********************************************************************
 // Function addresses or Code Pointers
@@ -62,7 +61,6 @@ int NUMSPRITES = 0;
 // allows more extensive changes (see d_deh.c)
 
 // haleyjd: removed codepointer prototypes, unneeded
-
 
 // ********************************************************************
 // State or "frame" information
@@ -85,9 +83,8 @@ int NUMSPRITES = 0;
 
 // haleyjd: made dynamic via EDF
 // haleyjd 6/18/09: made into pointer-to-pointer
-state_t **states = nullptr;
-int NUMSTATES = 0;
-
+state_t **states    = nullptr;
+int       NUMSTATES = 0;
 
 // ********************************************************************
 // Object "Thing" definitions
@@ -115,9 +112,8 @@ int NUMSTATES = 0;
 
 // haleyjd: made dynamic via EDF
 // haleyjd 11/03/11: made into pointer-to-pointer
-mobjinfo_t **mobjinfo = nullptr;
-int NUMMOBJTYPES = 0;
-
+mobjinfo_t **mobjinfo     = nullptr;
+int          NUMMOBJTYPES = 0;
 
 //----------------------------------------------------------------------------
 //

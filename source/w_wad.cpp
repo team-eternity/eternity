@@ -36,7 +36,7 @@ namespace fs = std::experimental::filesystem;
 #include "z_zone.h"
 #include "i_system.h"
 #include "doomstat.h"
-#include "d_io.h"  // SoM 3/12/2002: moved unistd stuff into d_io.h
+#include "d_io.h" // SoM 3/12/2002: moved unistd stuff into d_io.h
 
 #include "c_io.h"
 #include "d_dehtbl.h"
@@ -70,12 +70,11 @@ int WadDirectory::source;            // haleyjd 03/18/10: next source ID# to use
 int WadDirectory::IWADSource   = -1; // sf: the handle of the main iwad
 int WadDirectory::ResWADSource = -1; // haleyjd: track handle of first wad added
 
-static EHashTable<lumpinfo_t, EStringHashKey, &lumpinfo_t::lfn,
-                  &lumpinfo_t::lfnlinks> e_LFNHash;
+static EHashTable<lumpinfo_t, EStringHashKey, &lumpinfo_t::lfn, &lumpinfo_t::lfnlinks> e_LFNHash;
 
 lumpinfo_t *W_NextInLFNHash(lumpinfo_t *lumpinfo)
 {
-   return e_LFNHash.keyIterator(lumpinfo, lumpinfo->lfn);
+    return e_LFNHash.keyIterator(lumpinfo, lumpinfo->lfn);
 }
 
 //
@@ -85,35 +84,20 @@ lumpinfo_t *W_NextInLFNHash(lumpinfo_t *lumpinfo)
 
 struct lumptype_t
 {
-   size_t (*readLump)(lumpinfo_t *, void *);
+    size_t (*readLump)(lumpinfo_t *, void *);
 };
 
 static size_t W_DirectReadLump(lumpinfo_t *, void *);
 static size_t W_MemoryReadLump(lumpinfo_t *, void *);
-static size_t W_FileReadLump  (lumpinfo_t *, void *);
-static size_t W_ZipReadLump   (lumpinfo_t *, void *);
+static size_t W_FileReadLump(lumpinfo_t *, void *);
+static size_t W_ZipReadLump(lumpinfo_t *, void *);
 
-static lumptype_t LumpHandlers[lumpinfo_t::lump_numtypes] =
-{
-   // direct lump
-   {
-      W_DirectReadLump,
-   },
+static lumptype_t LumpHandlers[lumpinfo_t::lump_numtypes] = {
+    { W_DirectReadLump }, // direct lump
+    { W_MemoryReadLump }, // memory lump
+    { W_FileReadLump },   // directory file lump
+    { W_ZipReadLump },    // zip file lump
 
-   // memory lump
-   {
-      W_MemoryReadLump,
-   },
-
-   // directory file lump
-   {
-      W_FileReadLump,
-   },
-
-   // zip file lump
-   {
-      W_ZipReadLump,
-   },
 };
 
 //=============================================================================
@@ -128,36 +112,33 @@ static lumptype_t LumpHandlers[lumpinfo_t::lump_numtypes] =
 class WadDirectoryPimpl : public ZoneObject
 {
 public:
-   // Static collection of source filenames
-   static qstring FnPrototype;
-   static Collection<qstring> SourceFileNames;
+    // Static collection of source filenames
+    static qstring             FnPrototype;
+    static Collection<qstring> SourceFileNames;
 
-   //
-   // Add a source filename
-   //
-   static void AddFileName(const char *fn)
-   {
-      SourceFileNames.setPrototype(&FnPrototype);
-      SourceFileNames.addNew() << fn;
-   }
+    //
+    // Add a source filename
+    //
+    static void AddFileName(const char *fn)
+    {
+        SourceFileNames.setPrototype(&FnPrototype);
+        SourceFileNames.addNew() << fn;
+    }
 
-   //
-   // Get a filename for a source number
-   //
-   static const char *FileNameForSource(size_t source)
-   {
-      if(source >= SourceFileNames.getLength())
-         return nullptr;
-      return SourceFileNames[source].constPtr();
-   }
+    //
+    // Get a filename for a source number
+    //
+    static const char *FileNameForSource(size_t source)
+    {
+        if(source >= SourceFileNames.getLength())
+            return nullptr;
+        return SourceFileNames[source].constPtr();
+    }
 
-   PODCollection<lumpinfo_t *>  infoptrs; // lumpinfo_t allocations
-   DLListItem<ZipFile>         *zipFiles; // zip files attached to this waddir
+    PODCollection<lumpinfo_t *> infoptrs; // lumpinfo_t allocations
+    DLListItem<ZipFile>        *zipFiles; // zip files attached to this waddir
 
-   WadDirectoryPimpl()
-      : ZoneObject(), infoptrs(), zipFiles(nullptr)
-   {
-   }
+    WadDirectoryPimpl() : ZoneObject(), infoptrs(), zipFiles(nullptr) {}
 };
 
 qstring             WadDirectoryPimpl::FnPrototype;
@@ -173,11 +154,10 @@ Collection<qstring> WadDirectoryPimpl::SourceFileNames;
 //
 // WadDirectory Constructor
 //
-WadDirectory::WadDirectory()
- : ZoneObject(), lumpinfo(nullptr), numlumps(0), ispublic(false), type(0)
+WadDirectory::WadDirectory() : ZoneObject(), lumpinfo(nullptr), numlumps(0), ispublic(false), type(0)
 {
-   pImpl = new WadDirectoryPimpl();
-   memset(m_namespaces, 0, sizeof(m_namespaces));
+    pImpl = new WadDirectoryPimpl();
+    memset(m_namespaces, 0, sizeof(m_namespaces));
 }
 
 //
@@ -185,11 +165,11 @@ WadDirectory::WadDirectory()
 //
 WadDirectory::~WadDirectory()
 {
-   if(pImpl)
-   {
-      delete pImpl;
-      pImpl = nullptr;
-   }
+    if(pImpl)
+    {
+        delete pImpl;
+        pImpl = nullptr;
+    }
 }
 
 //
@@ -201,7 +181,7 @@ WadDirectory::~WadDirectory()
 //
 void WadDirectory::addInfoPtr(lumpinfo_t *infoptr)
 {
-   pImpl->infoptrs.add(infoptr);
+    pImpl->infoptrs.add(infoptr);
 }
 
 //
@@ -211,11 +191,11 @@ void WadDirectory::addInfoPtr(lumpinfo_t *infoptr)
 //
 void WadDirectory::incrementSource(const openwad_t &openData)
 {
-   // haleyjd: push source filename
-   WadDirectoryPimpl::AddFileName(openData.filename);
+    // haleyjd: push source filename
+    WadDirectoryPimpl::AddFileName(openData.filename);
 
-   // haleyjd: increment source
-   ++source;
+    // haleyjd: increment source
+    ++source;
 }
 
 //
@@ -223,21 +203,19 @@ void WadDirectory::incrementSource(const openwad_t &openData)
 //
 // Protected method to handle errors during archive file open.
 //
-void WadDirectory::handleOpenError(openwad_t &openData,
-                                   const wfileadd_t &addInfo,
-                                   const char *filename) const
+void WadDirectory::handleOpenError(openwad_t &openData, const wfileadd_t &addInfo, const char *filename) const
 {
-   if(addInfo.flags & WFA_OPENFAILFATAL)
-      I_Error("Error: couldn't open %s\n", filename);
-   else
-   {
-      if(in_textmode)
-         printf(" Warning: couldn't open %s\n", filename);
-      else
-         C_Printf(FC_ERROR "Couldn't open %s\n", filename);
-   }
+    if(addInfo.flags & WFA_OPENFAILFATAL)
+        I_Error("Error: couldn't open %s\n", filename);
+    else
+    {
+        if(in_textmode)
+            printf(" Warning: couldn't open %s\n", filename);
+        else
+            C_Printf(FC_ERROR "Couldn't open %s\n", filename);
+    }
 
-   openData.error = true;
+    openData.error = true;
 }
 
 //
@@ -248,33 +226,32 @@ void WadDirectory::handleOpenError(openwad_t &openData,
 //
 WadDirectory::openwad_t WadDirectory::openFile(const wfileadd_t &addInfo) const
 {
-   edefstructvar(openwad_t, openData);
-   qstring   filename;
-   bool      allowInexact = (addInfo.flags & WFA_ALLOWINEXACTFN) == WFA_ALLOWINEXACTFN;
+    edefstructvar(openwad_t, openData);
+    qstring filename;
+    bool    allowInexact = (addInfo.flags & WFA_ALLOWINEXACTFN) == WFA_ALLOWINEXACTFN;
 
-   // Try opening the file
-   filename = addInfo.filename;
-   if(!(openData.handle = W_TryOpenFile(filename, allowInexact)))
-   {
-      handleOpenError(openData, addInfo, filename.constPtr());
-      return openData;
-   }
+    // Try opening the file
+    filename = addInfo.filename;
+    if(!(openData.handle = W_TryOpenFile(filename, allowInexact)))
+    {
+        handleOpenError(openData, addInfo, filename.constPtr());
+        return openData;
+    }
 
-   // Figure out the file format
-   openData.format = W_DetermineFileFormat(openData.handle, 0);
+    // Figure out the file format
+    openData.format = W_DetermineFileFormat(openData.handle, 0);
 
-   // Check against format requirements
-   if(addInfo.flags & WFA_REQUIREFORMAT &&
-      openData.format != addInfo.requiredFmt)
-   {
-      handleOpenError(openData, addInfo, filename.constPtr());
-      return openData;
-   }
+    // Check against format requirements
+    if(addInfo.flags & WFA_REQUIREFORMAT && openData.format != addInfo.requiredFmt)
+    {
+        handleOpenError(openData, addInfo, filename.constPtr());
+        return openData;
+    }
 
-   // Successfully opened!
-   openData.filename = filename.duplicateAuto();
-   openData.error    = false;
-   return openData;
+    // Successfully opened!
+    openData.filename = filename.duplicateAuto();
+    openData.error    = false;
+    return openData;
 }
 
 //
@@ -286,24 +263,24 @@ WadDirectory::openwad_t WadDirectory::openFile(const wfileadd_t &addInfo) const
 //
 lumpinfo_t *WadDirectory::reAllocLumpInfo(int numnew, int startlump)
 {
-   lumpinfo_t *newlumps = nullptr;
+    lumpinfo_t *newlumps = nullptr;
 
-   numlumps += numnew;
+    numlumps += numnew;
 
-   // Fill in lumpinfo
-   lumpinfo = erealloc(lumpinfo_t **, lumpinfo, numlumps * sizeof(lumpinfo_t *));
+    // Fill in lumpinfo
+    lumpinfo = erealloc(lumpinfo_t **, lumpinfo, numlumps * sizeof(lumpinfo_t *));
 
-   // space for new lumps
-   newlumps = estructalloc(lumpinfo_t, numlumps - startlump);
+    // space for new lumps
+    newlumps = estructalloc(lumpinfo_t, numlumps - startlump);
 
-   // haleyjd: keep track of this allocation of lumps
-   addInfoPtr(newlumps);
+    // haleyjd: keep track of this allocation of lumps
+    addInfoPtr(newlumps);
 
-   // haleyjd: fill in new pointers here, instead of everywhere this is used.
-   for(int i = startlump; i < numlumps; i++)
-      lumpinfo[i] = newlumps + (i - startlump);
+    // haleyjd: fill in new pointers here, instead of everywhere this is used.
+    for(int i = startlump; i < numlumps; i++)
+        lumpinfo[i] = newlumps + (i - startlump);
 
-   return newlumps;
+    return newlumps;
 }
 
 //
@@ -311,33 +288,32 @@ lumpinfo_t *WadDirectory::reAllocLumpInfo(int numnew, int startlump)
 //
 // haleyjd 10/27/12: Load a single file into the wad directory.
 //
-bool WadDirectory::addSingleFile(openwad_t &openData, const wfileadd_t &addInfo,
-                                 int startlump)
+bool WadDirectory::addSingleFile(openwad_t &openData, const wfileadd_t &addInfo, int startlump)
 {
-   edefstructvar(filelump_t, singleinfo);
-   lumpinfo_t *lump_p;
+    edefstructvar(filelump_t, singleinfo);
+    lumpinfo_t *lump_p;
 
-   singleinfo.filepos = 0;
-   singleinfo.size    = static_cast<int>(M_FileLength(openData.handle));
-   M_ExtractFileBase(openData.filename, singleinfo.name);
+    singleinfo.filepos = 0;
+    singleinfo.size    = static_cast<int>(M_FileLength(openData.handle));
+    M_ExtractFileBase(openData.filename, singleinfo.name);
 
-   lump_p = reAllocLumpInfo(1, startlump);
+    lump_p = reAllocLumpInfo(1, startlump);
 
-   lump_p->type   = lumpinfo_t::lump_direct; // haleyjd: lump type
-   lump_p->size   = static_cast<size_t>(singleinfo.size);
-   lump_p->source = source;                  // haleyjd: source id
+    lump_p->type   = lumpinfo_t::lump_direct; // haleyjd: lump type
+    lump_p->size   = static_cast<size_t>(singleinfo.size);
+    lump_p->source = source; // haleyjd: source id
 
-   // setup for direct file IO
-   lump_p->direct.file     = openData.handle;
-   lump_p->direct.position = static_cast<size_t>(singleinfo.filepos);
+    // setup for direct file IO
+    lump_p->direct.file     = openData.handle;
+    lump_p->direct.position = static_cast<size_t>(singleinfo.filepos);
 
-   lump_p->li_namespace = addInfo.li_namespace; // killough 4/17/98
+    lump_p->li_namespace = addInfo.li_namespace; // killough 4/17/98
 
-   strncpy(lump_p->name, singleinfo.name, 8);
+    strncpy(lump_p->name, singleinfo.name, 8);
 
-   incrementSource(openData);
+    incrementSource(openData);
 
-   return true;
+    return true;
 }
 
 //
@@ -345,72 +321,71 @@ bool WadDirectory::addSingleFile(openwad_t &openData, const wfileadd_t &addInfo,
 //
 // haleyjd 10/31/12: Add an id wadlink file stored in memory into the directory.
 //
-bool WadDirectory::addMemoryWad(openwad_t &openData, const wfileadd_t &addInfo,
-                                int startlump)
+bool WadDirectory::addMemoryWad(openwad_t &openData, const wfileadd_t &addInfo, int startlump)
 {
-   // haleyjd 04/07/11
-   wadinfo_t    header;
-   ZAutoBuffer  fileinfo2free; // killough
-   filelump_t  *fileinfo;
-   size_t       length;
-   size_t       info_offset;
-   lumpinfo_t  *lump_p;
+    // haleyjd 04/07/11
+    wadinfo_t   header;
+    ZAutoBuffer fileinfo2free; // killough
+    filelump_t *fileinfo;
+    size_t      length;
+    size_t      info_offset;
+    lumpinfo_t *lump_p;
 
-   // Read in the header
-   memcpy(&header, openData.base, sizeof(header));
+    // Read in the header
+    memcpy(&header, openData.base, sizeof(header));
 
-   header.numlumps     = SwapLong(header.numlumps);
-   header.infotableofs = SwapLong(header.infotableofs);
+    header.numlumps     = SwapLong(header.numlumps);
+    header.infotableofs = SwapLong(header.infotableofs);
 
-   // allocate enough fileinfo_t's to hold the wad directory
-   length = header.numlumps * sizeof(filelump_t);
+    // allocate enough fileinfo_t's to hold the wad directory
+    length = header.numlumps * sizeof(filelump_t);
 
-   fileinfo2free.alloc(length, true);              // killough
-   fileinfo = fileinfo2free.getAs<filelump_t *>();
+    fileinfo2free.alloc(length, true); // killough
+    fileinfo = fileinfo2free.getAs<filelump_t *>();
 
-   info_offset = static_cast<size_t>(header.infotableofs);
+    info_offset = static_cast<size_t>(header.infotableofs);
 
-   // seek to the directory
-   if(info_offset + header.numlumps * sizeof(filelump_t)  > openData.size)
-   {
-      if(addInfo.flags & WFA_OPENFAILFATAL)
-         I_Error("Failed reading directory for in-memory file\n");
-      else
-      {
-         if(in_textmode)
-            printf("Failed reading directory for in-memory file\n");
-         else
-            C_Printf(FC_ERROR "Failed reading directory for in-memory file\n");
-         return false;
-      }
-   }
+    // seek to the directory
+    if(info_offset + header.numlumps * sizeof(filelump_t) > openData.size)
+    {
+        if(addInfo.flags & WFA_OPENFAILFATAL)
+            I_Error("Failed reading directory for in-memory file\n");
+        else
+        {
+            if(in_textmode)
+                printf("Failed reading directory for in-memory file\n");
+            else
+                C_Printf(FC_ERROR "Failed reading directory for in-memory file\n");
+            return false;
+        }
+    }
 
-   // read it in.
-   byte *directoryBase = static_cast<byte *>(openData.base) + info_offset;
-   memcpy(fileinfo, directoryBase, header.numlumps * sizeof(filelump_t));
+    // read it in.
+    byte *directoryBase = static_cast<byte *>(openData.base) + info_offset;
+    memcpy(fileinfo, directoryBase, header.numlumps * sizeof(filelump_t));
 
-   // Add lumpinfo_t's for all lumps in the wad file
-   lump_p = reAllocLumpInfo(header.numlumps, startlump);
+    // Add lumpinfo_t's for all lumps in the wad file
+    lump_p = reAllocLumpInfo(header.numlumps, startlump);
 
-   // Merge into the directory
-   for(int i = startlump; i < numlumps; i++, lump_p++, fileinfo++)
-   {
-      lump_p->type   = lumpinfo_t::lump_memory; // haleyjd
-      lump_p->size   = (size_t)(SwapLong(fileinfo->size));
-      lump_p->source = source; // haleyjd
+    // Merge into the directory
+    for(int i = startlump; i < numlumps; i++, lump_p++, fileinfo++)
+    {
+        lump_p->type   = lumpinfo_t::lump_memory; // haleyjd
+        lump_p->size   = (size_t)(SwapLong(fileinfo->size));
+        lump_p->source = source; // haleyjd
 
-      // setup for memory IO
-      lump_p->memory.data     = openData.base;
-      lump_p->memory.position = (size_t)(SwapLong(fileinfo->filepos));
+        // setup for memory IO
+        lump_p->memory.data     = openData.base;
+        lump_p->memory.position = (size_t)(SwapLong(fileinfo->filepos));
 
-      lump_p->li_namespace = addInfo.li_namespace;     // killough 4/17/98
+        lump_p->li_namespace = addInfo.li_namespace; // killough 4/17/98
 
-      strncpy(lump_p->name, fileinfo->name, 8);
-   }
+        strncpy(lump_p->name, fileinfo->name, 8);
+    }
 
-   incrementSource(openData);
+    incrementSource(openData);
 
-   return true;
+    return true;
 }
 
 //
@@ -418,150 +393,149 @@ bool WadDirectory::addMemoryWad(openwad_t &openData, const wfileadd_t &addInfo,
 //
 // haleyjd 10/28/12: Add an id wadlink file into the directory.
 //
-bool WadDirectory::addWadFile(openwad_t &openData, const wfileadd_t &addInfo,
-                              int startlump)
+bool WadDirectory::addWadFile(openwad_t &openData, const wfileadd_t &addInfo, int startlump)
 {
-   // haleyjd 04/07/11
-   HashData     wadHash  = HashData(HashData::SHA1);
-   bool         showHash = false;
-   bool         doHacks  = (addInfo.flags & WFA_ALLOWHACKS) == WFA_ALLOWHACKS;
-   long         baseoffset = static_cast<long>(addInfo.baseoffset);
-   wadinfo_t    header;
-   ZAutoBuffer  fileinfo2free; // killough
-   filelump_t  *fileinfo;
-   size_t       length;
-   long         info_offset;
-   lumpinfo_t  *lump_p;
+    // haleyjd 04/07/11
+    HashData    wadHash    = HashData(HashData::SHA1);
+    bool        showHash   = false;
+    bool        doHacks    = (addInfo.flags & WFA_ALLOWHACKS) == WFA_ALLOWHACKS;
+    long        baseoffset = static_cast<long>(addInfo.baseoffset);
+    wadinfo_t   header;
+    ZAutoBuffer fileinfo2free; // killough
+    filelump_t *fileinfo;
+    size_t      length;
+    long        info_offset;
+    lumpinfo_t *lump_p;
 
-   // check for in-memory wads
-   if(addInfo.flags & WFA_INMEMORY)
-      return addMemoryWad(openData, addInfo, startlump);
+    // check for in-memory wads
+    if(addInfo.flags & WFA_INMEMORY)
+        return addMemoryWad(openData, addInfo, startlump);
 
-   // haleyjd: seek to baseoffset first when loading a subfile
-   if(addInfo.flags & WFA_SUBFILE)
-      fseek(openData.handle, baseoffset, SEEK_SET);
+    // haleyjd: seek to baseoffset first when loading a subfile
+    if(addInfo.flags & WFA_SUBFILE)
+        fseek(openData.handle, baseoffset, SEEK_SET);
 
-   // -nowadhacks disables all wad directory hacks, in case of unforeseen
-   // compatibility problems that would last until the next release
-   if(M_CheckParm("-nowadhacks"))
-      doHacks = false;
+    // -nowadhacks disables all wad directory hacks, in case of unforeseen
+    // compatibility problems that would last until the next release
+    if(M_CheckParm("-nowadhacks"))
+        doHacks = false;
 
-   // -showhashes enables display of the computed SHA-1 hash used to apply
-   // wad directory hacks. Quite useful for when a new hack needs to be added.
-   if(M_CheckParm("-showhashes"))
-      showHash = true;
+    // -showhashes enables display of the computed SHA-1 hash used to apply
+    // wad directory hacks. Quite useful for when a new hack needs to be added.
+    if(M_CheckParm("-showhashes"))
+        showHash = true;
 
-   if(fread(&header, sizeof(header), 1, openData.handle) < 1)
-   {
-      if(addInfo.flags & WFA_OPENFAILFATAL)
-         I_Error("Failed reading header for wad file %s\n", openData.filename);
-      else
-      {
-         fclose(openData.handle);
-         if(in_textmode)
-            printf("Failed reading header for wad file %s\n", openData.filename);
-         else
-            C_Printf(FC_ERROR "Failed reading header for wad file %s", openData.filename);
+    if(fread(&header, sizeof(header), 1, openData.handle) < 1)
+    {
+        if(addInfo.flags & WFA_OPENFAILFATAL)
+            I_Error("Failed reading header for wad file %s\n", openData.filename);
+        else
+        {
+            fclose(openData.handle);
+            if(in_textmode)
+                printf("Failed reading header for wad file %s\n", openData.filename);
+            else
+                C_Printf(FC_ERROR "Failed reading header for wad file %s", openData.filename);
 
-         return false;
-      }
-   }
+            return false;
+        }
+    }
 
-   // Feed the wad header data into the hash computation
-   if(doHacks || showHash)
-      wadHash.addData((const uint8_t *)&header, (uint32_t)sizeof(header));
+    // Feed the wad header data into the hash computation
+    if(doHacks || showHash)
+        wadHash.addData((const uint8_t *)&header, (uint32_t)sizeof(header));
 
-   header.numlumps     = SwapLong(header.numlumps);
-   header.infotableofs = SwapLong(header.infotableofs);
+    header.numlumps     = SwapLong(header.numlumps);
+    header.infotableofs = SwapLong(header.infotableofs);
 
-   // allocate enough fileinfo_t's to hold the wad directory
-   length = header.numlumps * sizeof(filelump_t);
+    // allocate enough fileinfo_t's to hold the wad directory
+    length = header.numlumps * sizeof(filelump_t);
 
-   fileinfo2free.alloc(length, true);              // killough
-   fileinfo = fileinfo2free.getAs<filelump_t *>();
+    fileinfo2free.alloc(length, true); // killough
+    fileinfo = fileinfo2free.getAs<filelump_t *>();
 
-   info_offset = static_cast<long>(header.infotableofs);
+    info_offset = static_cast<long>(header.infotableofs);
 
-   // subfile wads may exist at a positive base offset in the container file
-   if(addInfo.flags & WFA_SUBFILE)
-      info_offset += baseoffset;
+    // subfile wads may exist at a positive base offset in the container file
+    if(addInfo.flags & WFA_SUBFILE)
+        info_offset += baseoffset;
 
-   // seek to the directory
-   fseek(openData.handle, info_offset, SEEK_SET);
+    // seek to the directory
+    fseek(openData.handle, info_offset, SEEK_SET);
 
-   // read it in.
-   if(fread(fileinfo, length, 1, openData.handle) < 1)
-   {
-      if(addInfo.flags & WFA_OPENFAILFATAL)
-         I_Error("Failed reading directory for wad file %s\n", openData.filename);
-      else
-      {
-         fclose(openData.handle);
-         if(in_textmode)
-            printf("Failed reading directory for wad file %s\n", openData.filename);
-         else
-            C_Printf(FC_ERROR "Failed reading directory for wad file %s", openData.filename);
-         return false;
-      }
-   }
+    // read it in.
+    if(fread(fileinfo, length, 1, openData.handle) < 1)
+    {
+        if(addInfo.flags & WFA_OPENFAILFATAL)
+            I_Error("Failed reading directory for wad file %s\n", openData.filename);
+        else
+        {
+            fclose(openData.handle);
+            if(in_textmode)
+                printf("Failed reading directory for wad file %s\n", openData.filename);
+            else
+                C_Printf(FC_ERROR "Failed reading directory for wad file %s", openData.filename);
+            return false;
+        }
+    }
 
-   // Feed the wad directory into the hash computation, wrap it up, and if requested,
-   // output it to the console.
-   if(doHacks || showHash)
-   {
-      wadHash.addData((const uint8_t *)fileinfo, (uint32_t)length);
-      wadHash.wrapUp();
-      if(in_textmode && showHash)
-         printf("\thash = %s\n", wadHash.digestToString());
-      // haleyjd 04/08/11: apply wad directory hacks as needed
-      if(doHacks)
-         W_CheckDirectoryHacks(wadHash, fileinfo, header.numlumps);
-   }
+    // Feed the wad directory into the hash computation, wrap it up, and if requested,
+    // output it to the console.
+    if(doHacks || showHash)
+    {
+        wadHash.addData((const uint8_t *)fileinfo, (uint32_t)length);
+        wadHash.wrapUp();
+        if(in_textmode && showHash)
+            printf("\thash = %s\n", wadHash.digestToString());
+        // haleyjd 04/08/11: apply wad directory hacks as needed
+        if(doHacks)
+            W_CheckDirectoryHacks(wadHash, fileinfo, header.numlumps);
+    }
 
-   // update IWAD handle?
-   // haleyjd: Must be a public wad file.
-   if(!(addInfo.flags & WFA_PRIVATE) && this->ispublic)
-   {
-      // haleyjd 06/21/04: track handle of first wad added also
-      if(ResWADSource == -1)
-         ResWADSource = source;
+    // update IWAD handle?
+    // haleyjd: Must be a public wad file.
+    if(!(addInfo.flags & WFA_PRIVATE) && this->ispublic)
+    {
+        // haleyjd 06/21/04: track handle of first wad added also
+        if(ResWADSource == -1)
+            ResWADSource = source;
 
-      // haleyjd 07/13/09: only track the first IWAD found
-      // haleyjd 11/03/12: Status as the IWAD is now determined by how the file
-      // was added to the game (ie., -iwad or -disk, vs. -file, autoloads, etc.)
-      if(IWADSource < 0 && (addInfo.flags & WFA_ISIWADFILE))
-         IWADSource = source;
-   }
+        // haleyjd 07/13/09: only track the first IWAD found
+        // haleyjd 11/03/12: Status as the IWAD is now determined by how the file
+        // was added to the game (ie., -iwad or -disk, vs. -file, autoloads, etc.)
+        if(IWADSource < 0 && (addInfo.flags & WFA_ISIWADFILE))
+            IWADSource = source;
+    }
 
-   // Add lumpinfo_t's for all lumps in the wad file
-   lump_p = reAllocLumpInfo(header.numlumps, startlump);
+    // Add lumpinfo_t's for all lumps in the wad file
+    lump_p = reAllocLumpInfo(header.numlumps, startlump);
 
-   // Merge into the directory
-   for(int i = startlump; i < this->numlumps; i++, lump_p++, fileinfo++)
-   {
-      lump_p->type      = lumpinfo_t::lump_direct; // haleyjd
-      lump_p->size      = (size_t)(SwapLong(fileinfo->size));
-      lump_p->source    = source; // haleyjd
+    // Merge into the directory
+    for(int i = startlump; i < this->numlumps; i++, lump_p++, fileinfo++)
+    {
+        lump_p->type   = lumpinfo_t::lump_direct; // haleyjd
+        lump_p->size   = (size_t)(SwapLong(fileinfo->size));
+        lump_p->source = source; // haleyjd
 
-      // setup for direct IO
-      lump_p->direct.file     = openData.handle;
-      lump_p->direct.position = (size_t)(SwapLong(fileinfo->filepos));
+        // setup for direct IO
+        lump_p->direct.file     = openData.handle;
+        lump_p->direct.position = (size_t)(SwapLong(fileinfo->filepos));
 
-      // for subfiles, add baseoffset to the lump offset
-      if(addInfo.flags & WFA_SUBFILE)
-         lump_p->direct.position += static_cast<size_t>(baseoffset);
+        // for subfiles, add baseoffset to the lump offset
+        if(addInfo.flags & WFA_SUBFILE)
+            lump_p->direct.position += static_cast<size_t>(baseoffset);
 
-      lump_p->li_namespace = addInfo.li_namespace;     // killough 4/17/98
+        lump_p->li_namespace = addInfo.li_namespace; // killough 4/17/98
 
-      strncpy(lump_p->name, fileinfo->name, 8);
-   }
+        strncpy(lump_p->name, fileinfo->name, 8);
+    }
 
-   if(ispublic)
-      D_NewWadLumps(source);
+    if(ispublic)
+        D_NewWadLumps(source);
 
-   incrementSource(openData);
+    incrementSource(openData);
 
-   return true;
+    return true;
 }
 
 //
@@ -569,72 +543,71 @@ bool WadDirectory::addWadFile(openwad_t &openData, const wfileadd_t &addInfo,
 //
 // Add a zip file into the directory.
 //
-bool WadDirectory::addZipFile(openwad_t &openData,
-                              const wfileadd_t &addInfo, int startlump)
+bool WadDirectory::addZipFile(openwad_t &openData, const wfileadd_t &addInfo, int startlump)
 {
-   std::unique_ptr<ZipFile> zip(new ZipFile());
-   int         numZipLumps;
-   lumpinfo_t *lump_p;
+    std::unique_ptr<ZipFile> zip(new ZipFile());
+    int                      numZipLumps;
+    lumpinfo_t              *lump_p;
 
-   // Read in the ZIP file's header and directory information
-   if(!zip->readFromFile(openData.handle))
-   {
-      handleOpenError(openData, addInfo, openData.filename);
-      return false;
-   }
+    // Read in the ZIP file's header and directory information
+    if(!zip->readFromFile(openData.handle))
+    {
+        handleOpenError(openData, addInfo, openData.filename);
+        return false;
+    }
 
-   if(!(numZipLumps = zip->getNumLumps()))
-   {
-      // load was successful, but this zip file is useless.
-      return true;
-   }
+    if(!(numZipLumps = zip->getNumLumps()))
+    {
+        // load was successful, but this zip file is useless.
+        return true;
+    }
 
-   // update IWAD handle?
-   if(!(addInfo.flags & WFA_PRIVATE) && this->ispublic)
-   {
-      if(IWADSource < 0 && (addInfo.flags & WFA_ISIWADFILE))
-         IWADSource = source;
-   }
+    // update IWAD handle?
+    if(!(addInfo.flags & WFA_PRIVATE) && this->ispublic)
+    {
+        if(IWADSource < 0 && (addInfo.flags & WFA_ISIWADFILE))
+            IWADSource = source;
+    }
 
-   // Allocate lumpinfo_t structures for the zip file's internal file lumps
-   lump_p = reAllocLumpInfo(numZipLumps, startlump);
+    // Allocate lumpinfo_t structures for the zip file's internal file lumps
+    lump_p = reAllocLumpInfo(numZipLumps, startlump);
 
-   // Initialize the wad directory copies of the zip lumps
-   for(int i = startlump; i < numlumps; i++, lump_p++)
-   {
-      ZipLump &zipLump = zip->getLump(i - startlump);
+    // Initialize the wad directory copies of the zip lumps
+    for(int i = startlump; i < numlumps; i++, lump_p++)
+    {
+        ZipLump &zipLump = zip->getLump(i - startlump);
 
-      lump_p->type   = lumpinfo_t::lump_zip;
-      lump_p->size   = zipLump.size;
-      lump_p->source = source;
+        lump_p->type   = lumpinfo_t::lump_zip;
+        lump_p->size   = zipLump.size;
+        lump_p->source = source;
 
-      // setup for zip file IO
-      lump_p->zip.zipLump = &zipLump;
+        // setup for zip file IO
+        lump_p->zip.zipLump = &zipLump;
 
-      // Initialize short name, if found appropriate to do so. Lumps that are
-      // not given a short name or namespace here will not be hashed by
-      // WadDirectory::initLumpHash.
-      int li_namespace;
-      if((li_namespace = W_NamespaceForFilePath(zipLump.name)) != -1)
-      {
-         lump_p->li_namespace = li_namespace;
-         W_LumpNameFromFilePath(zipLump.name, lump_p->name, li_namespace);
-      }
+        // Initialize short name, if found appropriate to do so. Lumps that are
+        // not given a short name or namespace here will not be hashed by
+        // WadDirectory::initLumpHash.
+        int li_namespace;
+        if((li_namespace = W_NamespaceForFilePath(zipLump.name)) != -1)
+        {
+            lump_p->li_namespace = li_namespace;
+            W_LumpNameFromFilePath(zipLump.name, lump_p->name, li_namespace);
+        }
 
-      // Copy lfn
-      lump_p->lfn = estrdup(zipLump.name);
-   }
+        // Copy lfn
+        lump_p->lfn = estrdup(zipLump.name);
+    }
 
-   // Hook the ZipFile instance into the WadDirectory's list of zips
-   zip->linkTo(&pImpl->zipFiles);
+    // Hook the ZipFile instance into the WadDirectory's list of zips
+    zip->linkTo(&pImpl->zipFiles);
 
-   incrementSource(openData);
+    incrementSource(openData);
 
-   // Check for embedded wad files
-   zip->checkForWadFiles(*this);
+    // Check for embedded wad files
+    zip->checkForWadFiles(*this);
 
-   zip.release(); // don't destroy the ZipFile
-   return true;
+    zip.release(); // don't destroy the ZipFile
+    return true;
 }
 
 //
@@ -650,84 +623,80 @@ bool WadDirectory::addZipFile(openwad_t &openData,
 //
 bool WadDirectory::addFile(wfileadd_t &addInfo)
 {
-   // Directory file addition callback type
-   using AddFileCB = bool (WadDirectory::*)(openwad_t &, const wfileadd_t &,
-                                            int);
+    // Directory file addition callback type
+    using AddFileCB = bool (WadDirectory::*)(openwad_t &, const wfileadd_t &, int);
 
-   static AddFileCB fileadders[W_FORMAT_MAX] =
-   {
-      &WadDirectory::addWadFile,             // W_FORMAT_WAD
-      &WadDirectory::addZipFile,             // W_FORMAT_ZIP
-      &WadDirectory::addSingleFile,          // W_FORMAT_FILE
-      &WadDirectory::addDirectoryAsArchive   // W_FORMAT_DIR
-   };
+    static AddFileCB fileadders[W_FORMAT_MAX] = {
+        &WadDirectory::addWadFile,           // W_FORMAT_WAD
+        &WadDirectory::addZipFile,           // W_FORMAT_ZIP
+        &WadDirectory::addSingleFile,        // W_FORMAT_FILE
+        &WadDirectory::addDirectoryAsArchive // W_FORMAT_DIR
+    };
 
-   edefstructvar(openwad_t, openData);
+    edefstructvar(openwad_t, openData);
 
-   // When loading a subfile, the physical file is already open.
-   if(addInfo.flags & WFA_SUBFILE)
-   {
-      openData.filename = addInfo.filename;
-      openData.handle   = addInfo.f;
+    // When loading a subfile, the physical file is already open.
+    if(addInfo.flags & WFA_SUBFILE)
+    {
+        openData.filename = addInfo.filename;
+        openData.handle   = addInfo.f;
 
-      // Only WAD files are currently supported as subfiles.
-      if(W_DetermineFileFormat(openData.handle,
-            static_cast<long>(addInfo.baseoffset)) != W_FORMAT_WAD)
-      {
-         addInfo.flags |= WFA_OPENFAILFATAL;
-         handleOpenError(openData, addInfo, openData.filename);
-         return false; // it'll actually I_Error, but whatever.
-      }
-      openData.format = W_FORMAT_WAD;
-   }
-   else if(addInfo.flags & WFA_INMEMORY)
-   {
-      openData.base     = addInfo.memory;
-      openData.size     = addInfo.size;
-      openData.filename = "memory";
-      openData.format   = W_FORMAT_WAD; // wad handler will deal with this.
-   }
-   else if(addInfo.flags & WFA_DIRECTORY_ARCHIVE)
-   {
-      openData.filename = addInfo.filename;
-      openData.format = W_FORMAT_DIR;
-   }
-   else
-   {
-      // Open the physical archive file and determine its format
-      openData = openFile(addInfo);
-      if(openData.error)
-         return false;
-   }
+        // Only WAD files are currently supported as subfiles.
+        if(W_DetermineFileFormat(openData.handle, static_cast<long>(addInfo.baseoffset)) != W_FORMAT_WAD)
+        {
+            addInfo.flags |= WFA_OPENFAILFATAL;
+            handleOpenError(openData, addInfo, openData.filename);
+            return false; // it'll actually I_Error, but whatever.
+        }
+        openData.format = W_FORMAT_WAD;
+    }
+    else if(addInfo.flags & WFA_INMEMORY)
+    {
+        openData.base     = addInfo.memory;
+        openData.size     = addInfo.size;
+        openData.filename = "memory";
+        openData.format   = W_FORMAT_WAD; // wad handler will deal with this.
+    }
+    else if(addInfo.flags & WFA_DIRECTORY_ARCHIVE)
+    {
+        openData.filename = addInfo.filename;
+        openData.format   = W_FORMAT_DIR;
+    }
+    else
+    {
+        // Open the physical archive file and determine its format
+        openData = openFile(addInfo);
+        if(openData.error)
+            return false;
+    }
 
-   // Show adding message if at startup and not a private directory or
-   // in-memory wad
-   if(!(addInfo.flags & (WFA_PRIVATE|WFA_INMEMORY)) &&
-      this->ispublic && in_textmode)
-   {
-      printf(" adding %s\n", openData.filename);   // killough 8/8/98
-   }
+    // Show adding message if at startup and not a private directory or
+    // in-memory wad
+    if(!(addInfo.flags & (WFA_PRIVATE | WFA_INMEMORY)) && this->ispublic && in_textmode)
+    {
+        printf(" adding %s\n", openData.filename); // killough 8/8/98
+    }
 
-   // Call the appropriate file directory addition routine for this format
+    // Call the appropriate file directory addition routine for this format
 #ifdef RANGECHECK
-   if(openData.format < 0 || openData.format >= W_FORMAT_MAX)
-      I_Error("WadDirectory::addFile: invalid file format %d\n", openData.format);
+    if(openData.format < 0 || openData.format >= W_FORMAT_MAX)
+        I_Error("WadDirectory::addFile: invalid file format %d\n", openData.format);
 #endif
 
-   if(!(this->*fileadders[openData.format])(openData, addInfo, numlumps))
-   {
-      handleOpenError(openData, addInfo, openData.filename);
-      return false;
-   }
+    if(!(this->*fileadders[openData.format])(openData, addInfo, numlumps))
+    {
+        handleOpenError(openData, addInfo, openData.filename);
+        return false;
+    }
 
-   return true; // no error
+    return true; // no error
 }
 
 struct dirfile_t
 {
-   char   *fullfn;
-   bool    isdir;
-   size_t  size;
+    char  *fullfn;
+    bool   isdir;
+    size_t size;
 };
 
 //
@@ -737,99 +706,101 @@ struct dirfile_t
 //
 int WadDirectory::addDirectory(const char *dirpath)
 {
-   fs::path dir;
-   int     localcount = 0;
-   int     totalcount = 0;
-   int     startlump;
-   int     usinglump  = 0;
-   int     globallump = 0;
-   size_t  i, fileslen;
+    fs::path dir;
+    int      localcount = 0;
+    int      totalcount = 0;
+    int      startlump;
+    int      usinglump  = 0;
+    int      globallump = 0;
+    size_t   i, fileslen;
 
-   PODCollection<dirfile_t> files;
-   lumpinfo_t *newlumps;
+    PODCollection<dirfile_t> files;
+    lumpinfo_t              *newlumps;
 
-   dir = fs::path(dirpath);
-   if(!fs::exists(dir))
-      return 0;
+    dir = fs::path(dirpath);
+    if(!fs::exists(dir))
+        return 0;
 
-   const fs::directory_iterator itr(dir);
+    const fs::directory_iterator itr(dir);
 
-   // count the files in the directory
-   for(const fs::directory_entry &ent : itr)
-   {
-      edefstructvar(dirfile_t, newfile);
-      const auto filename = ent.path().filename().generic_u8string();
+    // count the files in the directory
+    for(const fs::directory_entry &ent : itr)
+    {
+        edefstructvar(dirfile_t, newfile);
+        const auto filename = ent.path().filename().generic_u8string();
 
-      newfile.fullfn = M_SafeFilePath(dirpath, reinterpret_cast<const char *>(filename.c_str())); // C++20_FIXME: Cast to make C++20 builds compile
+        newfile.fullfn = M_SafeFilePath(
+            dirpath,
+            reinterpret_cast<const char *>(filename.c_str())); // C++20_FIXME: Cast to make C++20 builds compile
 
-      if(ent.exists()) // check for existence
-      {
-         if(ent.is_directory()) // if it's a directory, mark it
-            newfile.isdir = true;
-         else
-         {
-            newfile.isdir = false;
-            newfile.size  = static_cast<size_t>(ent.file_size());
-            ++localcount;
-         }
+        if(ent.exists()) // check for existence
+        {
+            if(ent.is_directory()) // if it's a directory, mark it
+                newfile.isdir = true;
+            else
+            {
+                newfile.isdir = false;
+                newfile.size  = static_cast<size_t>(ent.file_size());
+                ++localcount;
+            }
 
-         files.add(newfile);
-      }
-   }
+            files.add(newfile);
+        }
+    }
 
-   fileslen = files.getLength();
+    fileslen = files.getLength();
 
-   for(i = 0; i < fileslen; i++)
-   {
-      // recurse into subdirectories first.
-      if(files[i].isdir)
-         totalcount += addDirectory(files[i].fullfn);
-   }
+    for(i = 0; i < fileslen; i++)
+    {
+        // recurse into subdirectories first.
+        if(files[i].isdir)
+            totalcount += addDirectory(files[i].fullfn);
+    }
 
-   // No lumps to add for this directory?
-   if(!localcount)
-      return totalcount;
+    // No lumps to add for this directory?
+    if(!localcount)
+        return totalcount;
 
-   // Fill in lumpinfo
-   startlump = numlumps;
-   numlumps += localcount;
-   lumpinfo = erealloc(lumpinfo_t **, lumpinfo, numlumps * sizeof(lumpinfo_t *));
+    // Fill in lumpinfo
+    startlump  = numlumps;
+    numlumps  += localcount;
+    lumpinfo   = erealloc(lumpinfo_t **, lumpinfo, numlumps * sizeof(lumpinfo_t *));
 
-   // create lumpinfo_t structures for the files
-   newlumps = estructalloc(lumpinfo_t, localcount);
+    // create lumpinfo_t structures for the files
+    newlumps = estructalloc(lumpinfo_t, localcount);
 
-   // keep track of this allocation of lumps
-   addInfoPtr(newlumps);
+    // keep track of this allocation of lumps
+    addInfoPtr(newlumps);
 
-   for(i = 0, globallump = startlump; i < fileslen; i++)
-   {
-      if(!files[i].isdir)
-      {
-         lumpinfo_t *lump = &newlumps[usinglump++];
+    for(i = 0, globallump = startlump; i < fileslen; i++)
+    {
+        if(!files[i].isdir)
+        {
+            lumpinfo_t *lump = &newlumps[usinglump++];
 
-         M_ExtractFileBase(files[i].fullfn, lump->name);
-         M_Strupr(lump->name);
-         lump->li_namespace = lumpinfo_t::ns_global; // TODO
-         lump->type         = lumpinfo_t::lump_file;
-         lump->lfn          = estrdup(files[i].fullfn);
-         lump->filepath     = estrdup(files[i].fullfn);
-         lump->source       = source;
-         lump->size         = files[i].size;
+            M_ExtractFileBase(files[i].fullfn, lump->name);
+            M_Strupr(lump->name);
+            lump->li_namespace = lumpinfo_t::ns_global; // TODO
+            lump->type         = lumpinfo_t::lump_file;
+            lump->lfn          = estrdup(files[i].fullfn);
+            lump->filepath     = estrdup(files[i].fullfn);
+            lump->source       = source;
+            lump->size         = files[i].size;
 
-         lumpinfo[globallump++] = lump;
-      }
-   }
+            lumpinfo[globallump++] = lump;
+        }
+    }
 
-   // push source filename
-   WadDirectoryPimpl::AddFileName(dirpath);
+    // push source filename
+    WadDirectoryPimpl::AddFileName(dirpath);
 
-   // increment source
-   ++source;
+    // increment source
+    ++source;
 
-   if(ispublic && in_textmode)
-      printf(" adding directory %s\n", dirpath);
+    if(ispublic && in_textmode)
+        printf(" adding directory %s\n", dirpath);
 
-   return totalcount + localcount;
+    return totalcount + localcount;
 }
 
 //
@@ -838,170 +809,162 @@ int WadDirectory::addDirectory(const char *dirpath)
 class ArchiveDirFile
 {
 public:
-   qstring path;        // path from current directory (for reading)
-   qstring innerpath;   // path from within the archive dir (for namespace)
-   off_t size;          // file size
+    qstring path;      // path from current directory (for reading)
+    qstring innerpath; // path from within the archive dir (for namespace)
+    off_t   size;      // file size
 
-   ArchiveDirFile() : path(), innerpath(), size(0)
-   {
-   }
+    ArchiveDirFile() : path(), innerpath(), size(0) {}
 
-   // for sorting
-   bool operator < (const ArchiveDirFile &o) const
-   {
-      return innerpath.strCaseCmp(o.innerpath.constPtr()) < 0;
-   }
+    // for sorting
+    bool operator<(const ArchiveDirFile &o) const { return innerpath.strCaseCmp(o.innerpath.constPtr()) < 0; }
 };
 
 //
 // Helper function to add a path to a collection, from a base.
 //
-static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
-                           const char *subpath, Collection<qstring> &prevPaths,
-                           int depth)
+static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base, const char *subpath,
+                           Collection<qstring> &prevPaths, int depth)
 {
     static constexpr int MAX_DEPTH = 10; // I seriously doubt anybody needs more than a depth of 10
 
-   qstring path(base);
-   path.pathConcatenate(subpath);
+    qstring path(base);
+    path.pathConcatenate(subpath);
 
-   fs::path dir(path.constPtr());
-   if(!fs::exists(dir))
-      return;
+    fs::path dir(path.constPtr());
+    if(!fs::exists(dir))
+        return;
 
-   // Prevent repeated visits to the same paths due to symbolic links and the
-   // like, if possible
-   qstring real;
-   I_GetRealPath(path.constPtr(), real);
-   for(const qstring &prevPath : prevPaths)
-   {
-      if(prevPath == real)
-         return;  // avoid duplicate paths
-   }
+    // Prevent repeated visits to the same paths due to symbolic links and the
+    // like, if possible
+    qstring real;
+    I_GetRealPath(path.constPtr(), real);
+    for(const qstring &prevPath : prevPaths)
+    {
+        if(prevPath == real)
+            return; // avoid duplicate paths
+    }
 
-   prevPaths.add(real);
+    prevPaths.add(real);
 
-   const fs::directory_iterator itr(dir);
-   for(const fs::directory_entry &ent : itr)
-   {
-      auto filename = ent.path().filename().generic_u8string();
+    const fs::directory_iterator itr(dir);
+    for(const fs::directory_entry &ent : itr)
+    {
+        auto filename = ent.path().filename().generic_u8string();
 
-      // Skip UNIX hidden files and directory tree entries
-      if(filename[0] == '.')
-         continue;
+        // Skip UNIX hidden files and directory tree entries
+        if(filename[0] == '.')
+            continue;
 
-      path = base;
-      path.pathConcatenate(subpath).pathConcatenate(reinterpret_cast<const char *>(filename.c_str())); // C++20_FIXME: Cast to make C++20 builds compile
+        path = base;
+        path.pathConcatenate(subpath).pathConcatenate(
+            reinterpret_cast<const char *>(filename.c_str())); // C++20_FIXME: Cast to make C++20 builds compile
 
-      if(ent.exists()) // check for existence
-      {
-         if(ent.is_directory()) // if it's a directory, recurse in it
-         {
-            if(depth < MAX_DEPTH)
+        if(ent.exists()) // check for existence
+        {
+            if(ent.is_directory()) // if it's a directory, recurse in it
             {
-               // we need to go deeper.
-               path = subpath;
-               path.pathConcatenate(reinterpret_cast<const char *>(filename.c_str())); // C++20_FIXME: Cast to make C++20 builds compile
-               W_recurseFiles(paths, base, path.constPtr(), prevPaths, depth + 1);
+                if(depth < MAX_DEPTH)
+                {
+                    // we need to go deeper.
+                    path = subpath;
+                    path.pathConcatenate(reinterpret_cast<const char *>(
+                        filename.c_str())); // C++20_FIXME: Cast to make C++20 builds compile
+                    W_recurseFiles(paths, base, path.constPtr(), prevPaths, depth + 1);
+                }
             }
-         }
-         else
-         {
-            // Remove the leading path component
-            ArchiveDirFile &adf = paths.addNew();
+            else
+            {
+                // Remove the leading path component
+                ArchiveDirFile &adf = paths.addNew();
 
-            adf.path = path;
-            path = subpath;
-            path.pathConcatenate(reinterpret_cast<const char *>(filename.c_str())); // C++20_FIXME: Cast to make C++20 builds compile
+                adf.path = path;
+                path     = subpath;
+                path.pathConcatenate(
+                    reinterpret_cast<const char *>(filename.c_str())); // C++20_FIXME: Cast to make C++20 builds compile
 
-            // Normalize the subpath
-            path.toLower();
-            path.replace("\\", '/');
+                // Normalize the subpath
+                path.toLower();
+                path.replace("\\", '/');
 
-            adf.innerpath = path;
-            adf.size = static_cast<off_t>(ent.file_size());
-         }
-      }
-   }
+                adf.innerpath = path;
+                adf.size      = static_cast<off_t>(ent.file_size());
+            }
+        }
+    }
 }
 
 //
 // Used to add directories arranged the same as PKE/PK3 files. Uses the same
 // namespace system. It's different from addDirectory.
 //
-bool WadDirectory::addDirectoryAsArchive(openwad_t &openData,
-                                         const wfileadd_t &addInfo,
-                                         int startlump)
+bool WadDirectory::addDirectoryAsArchive(openwad_t &openData, const wfileadd_t &addInfo, int startlump)
 {
-   // Check if it's a directory
-   if(std::error_code ec; !fs::is_directory(openData.filename, ec))
-   {
-      handleOpenError(openData, addInfo, openData.filename);
-      return false;
-   }
+    // Check if it's a directory
+    if(std::error_code ec; !fs::is_directory(openData.filename, ec))
+    {
+        handleOpenError(openData, addInfo, openData.filename);
+        return false;
+    }
 
-   // read the file
-   Collection<ArchiveDirFile> paths;
-   ArchiveDirFile proto;
-   paths.setPrototype(&proto);
+    // read the file
+    Collection<ArchiveDirFile> paths;
+    ArchiveDirFile             proto;
+    paths.setPrototype(&proto);
 
-   Collection<qstring> prevPaths;
-   W_recurseFiles(paths, openData.filename, "", prevPaths, 0);
+    Collection<qstring> prevPaths;
+    W_recurseFiles(paths, openData.filename, "", prevPaths, 0);
 
-   if(!paths.isEmpty())
-   {
-      Collection<qstring> wadPaths; // only lists the wads
+    if(!paths.isEmpty())
+    {
+        Collection<qstring> wadPaths; // only lists the wads
 
-      // Sort the list in a case insensitive way, to prevent platform-dependent
-      // ordering
-      std::sort(paths.begin(), paths.end());
+        // Sort the list in a case insensitive way, to prevent platform-dependent
+        // ordering
+        std::sort(paths.begin(), paths.end());
 
-      // we now have the files neatly ordered
-      lumpinfo_t *lump_p = reAllocLumpInfo(static_cast<int>(paths.getLength()),
-                                           startlump);
+        // we now have the files neatly ordered
+        lumpinfo_t *lump_p = reAllocLumpInfo(static_cast<int>(paths.getLength()), startlump);
 
-      for(int i = startlump; i < numlumps; i++, lump_p++)
-      {
-         const ArchiveDirFile &adf = paths[i - startlump];
+        for(int i = startlump; i < numlumps; i++, lump_p++)
+        {
+            const ArchiveDirFile &adf = paths[i - startlump];
 
-         size_t length = adf.innerpath.length();
-         if(length > 4 && adf.size >= 28 &&
-            !strcasecmp(adf.innerpath.constPtr() + length - 4, ".wad"))
-         {
-            // This is a WAD. Put it into the separate list instead of adding its
-            // name as a duplicate lump
-            wadPaths.add(adf.path);
-            continue;
-         }
+            size_t length = adf.innerpath.length();
+            if(length > 4 && adf.size >= 28 && !strcasecmp(adf.innerpath.constPtr() + length - 4, ".wad"))
+            {
+                // This is a WAD. Put it into the separate list instead of adding its
+                // name as a duplicate lump
+                wadPaths.add(adf.path);
+                continue;
+            }
 
-         lump_p->type     = lumpinfo_t::lump_file;
-         lump_p->lfn      = adf.innerpath.duplicate();
-         lump_p->filepath = adf.path.duplicate();
-         lump_p->size     = adf.size;
-         lump_p->source   = source;
-         int li_namespace;
-         if((li_namespace = W_NamespaceForFilePath(adf.innerpath.constPtr())) != -1)
-         {
-            lump_p->li_namespace = li_namespace;
-            W_LumpNameFromFilePath(adf.innerpath.constPtr(),
-                                   lump_p->name, li_namespace);
-         }
-      }
+            lump_p->type     = lumpinfo_t::lump_file;
+            lump_p->lfn      = adf.innerpath.duplicate();
+            lump_p->filepath = adf.path.duplicate();
+            lump_p->size     = adf.size;
+            lump_p->source   = source;
+            int li_namespace;
+            if((li_namespace = W_NamespaceForFilePath(adf.innerpath.constPtr())) != -1)
+            {
+                lump_p->li_namespace = li_namespace;
+                W_LumpNameFromFilePath(adf.innerpath.constPtr(), lump_p->name, li_namespace);
+            }
+        }
 
-      // check for WAD files
-      for(const qstring &wadPath : wadPaths)
-      {
-         edefstructvar(wfileadd_t, addInfo);
-         addInfo.filename = wadPath.constPtr();
-         addInfo.li_namespace = lumpinfo_t::ns_global;
-         addInfo.requiredFmt = -1;
-         addFile(addInfo);
-      }
-   }
+        // check for WAD files
+        for(const qstring &wadPath : wadPaths)
+        {
+            edefstructvar(wfileadd_t, addInfo);
+            addInfo.filename     = wadPath.constPtr();
+            addInfo.li_namespace = lumpinfo_t::ns_global;
+            addInfo.requiredFmt  = -1;
+            addFile(addInfo);
+        }
+    }
 
-   incrementSource(openData);
+    incrementSource(openData);
 
-   return true;
+    return true;
 }
 
 //
@@ -1012,18 +975,18 @@ bool WadDirectory::addDirectoryAsArchive(openwad_t &openData,
 //
 bool WadDirectory::addInMemoryWad(void *buffer, size_t size)
 {
-   wfileadd_t addInfo;
+    wfileadd_t addInfo;
 
-   memset(&addInfo, 0, sizeof(addInfo));
+    memset(&addInfo, 0, sizeof(addInfo));
 
-   addInfo.memory = buffer;
-   addInfo.size   = size;
-   addInfo.flags  = WFA_OPENFAILFATAL | WFA_INMEMORY;
+    addInfo.memory = buffer;
+    addInfo.size   = size;
+    addInfo.flags  = WFA_OPENFAILFATAL | WFA_INMEMORY;
 
-   if(!ispublic)
-      addInfo.flags |= WFA_PRIVATE;
+    if(!ispublic)
+        addInfo.flags |= WFA_PRIVATE;
 
-   return addFile(addInfo);
+    return addFile(addInfo);
 }
 
 // jff 1/23/98 Create routines to reorder the master directory
@@ -1035,33 +998,31 @@ bool WadDirectory::addInMemoryWad(void *buffer, size_t size)
 
 static int W_IsMarker(const char *marker, const char *name)
 {
-   return !strncasecmp(name, marker, 8) ||
-      (*name == *marker && !strncasecmp(name+1, marker, 7));
+    return !strncasecmp(name, marker, 8) || (*name == *marker && !strncasecmp(name + 1, marker, 7));
 }
 
 // namespace data
 struct nsdata_t
 {
-   const char *startMarker;
-   const char *endMarker;
-   int li_namespace;
+    const char *startMarker;
+    const char *endMarker;
+    int         li_namespace;
 };
 
 // namespaces
-static nsdata_t wadNameSpaces[lumpinfo_t::ns_max] =
-{
-   { nullptr,    nullptr,  lumpinfo_t::ns_global       },
-   { "S_START",  "S_END",  lumpinfo_t::ns_sprites      },
-   { "F_START",  "F_END",  lumpinfo_t::ns_flats        },
-   { "C_START",  "C_END",  lumpinfo_t::ns_colormaps    },
-   { "T_START",  "T_END",  lumpinfo_t::ns_translations },
-   { nullptr,    nullptr,  lumpinfo_t::ns_demos        },
-   { "A_START",  "A_END",  lumpinfo_t::ns_acs          },
-   { nullptr,    nullptr,  lumpinfo_t::ns_pads         },
-   { "TX_START", "TX_END", lumpinfo_t::ns_textures     },
-   { nullptr,    nullptr,  lumpinfo_t::ns_graphics     },
-   { nullptr,    nullptr,  lumpinfo_t::ns_sounds       },
-   { "HI_START", "HI_END", lumpinfo_t::ns_hires        }, // TODO: Implement
+static nsdata_t wadNameSpaces[lumpinfo_t::ns_max] = {
+    { nullptr,    nullptr,  lumpinfo_t::ns_global       },
+    { "S_START",  "S_END",  lumpinfo_t::ns_sprites      },
+    { "F_START",  "F_END",  lumpinfo_t::ns_flats        },
+    { "C_START",  "C_END",  lumpinfo_t::ns_colormaps    },
+    { "T_START",  "T_END",  lumpinfo_t::ns_translations },
+    { nullptr,    nullptr,  lumpinfo_t::ns_demos        },
+    { "A_START",  "A_END",  lumpinfo_t::ns_acs          },
+    { nullptr,    nullptr,  lumpinfo_t::ns_pads         },
+    { "TX_START", "TX_END", lumpinfo_t::ns_textures     },
+    { nullptr,    nullptr,  lumpinfo_t::ns_graphics     },
+    { nullptr,    nullptr,  lumpinfo_t::ns_sounds       },
+    { "HI_START", "HI_END", lumpinfo_t::ns_hires        }, // TODO: Implement
 };
 
 //
@@ -1073,92 +1034,87 @@ static nsdata_t wadNameSpaces[lumpinfo_t::ns_max] =
 class WadNamespace
 {
 protected:
-   bool inMarkers;                     // currently between markers?
-   nsdata_t *nsdata;
-   PODCollection<lumpinfo_t *> marked; // lumps in namespace
-   int numMarked;                      // number added
+    bool                        inMarkers; // currently between markers?
+    nsdata_t                   *nsdata;
+    PODCollection<lumpinfo_t *> marked;    // lumps in namespace
+    int                         numMarked; // number added
 
-   // Returns true if the lump is a start marker for this namespace
-   bool lumpIsStartMarker(lumpinfo_t *lump) const
-   {
-      return (nsdata->startMarker &&
-              W_IsMarker(nsdata->startMarker, lump->name));
-   }
+    // Returns true if the lump is a start marker for this namespace
+    bool lumpIsStartMarker(lumpinfo_t *lump) const
+    {
+        return (nsdata->startMarker && W_IsMarker(nsdata->startMarker, lump->name));
+    }
 
-   // Returns false if the lump is an end marker for this namespace
-   bool lumpIsEndMarker(lumpinfo_t *lump) const
-   {
-      return (nsdata->endMarker &&
-              W_IsMarker(nsdata->endMarker, lump->name));
-   }
+    // Returns false if the lump is an end marker for this namespace
+    bool lumpIsEndMarker(lumpinfo_t *lump) const
+    {
+        return (nsdata->endMarker && W_IsMarker(nsdata->endMarker, lump->name));
+    }
 
 public:
-   WadNamespace()
-      : inMarkers(false), nsdata(nullptr), marked(), numMarked(0)
-   {
-   }
+    WadNamespace() : inMarkers(false), nsdata(nullptr), marked(), numMarked(0) {}
 
-   // Initialize from static data
-   void setNSData(nsdata_t *pNsData) { nsdata = pNsData; }
+    // Initialize from static data
+    void setNSData(nsdata_t *pNsData) { nsdata = pNsData; }
 
-   // Add a lump into this namespace
-   void addLump(lumpinfo_t *lump)
-   {
-      marked.add(lump);
-      lump->li_namespace = nsdata->li_namespace;
-      ++numMarked;
-   }
+    // Add a lump into this namespace
+    void addLump(lumpinfo_t *lump)
+    {
+        marked.add(lump);
+        lump->li_namespace = nsdata->li_namespace;
+        ++numMarked;
+    }
 
-   // Check if a lump belongs in this namespace
-   void checkLump(lumpinfo_t *lump)
-   {
-      if(lumpIsStartMarker(lump))
-         inMarkers = true;
-      else if(lumpIsEndMarker(lump))
-         inMarkers = false;
-      else if(inMarkers || lump->li_namespace == nsdata->li_namespace)
-      {
-         // we are either between markers, or dealing with a pre-marked lump;
-         // special cases:
-         switch(nsdata->li_namespace)
-         {
-         case lumpinfo_t::ns_sprites:
-            // sf 10/26/99: ignore sprite lumps smaller than 8 bytes (the
-            // smallest possible) in size -- this was used by some dmadds
-            // wads as an 'empty' graphics resource
-            if(lump->size > 8)
-               addLump(lump);
-            break;
-         case lumpinfo_t::ns_flats:
-            // SoM: Ignore marker lumps inside F_START and F_END
-            if(lump->size > 0)
-               addLump(lump);
-            break;
-         case lumpinfo_t::ns_hires:
-            // MaxW: Ignore these, as they're to be implemented later and cause issues otherwise
-            lump->li_namespace = nsdata->li_namespace;
-            break;
-         default:
-            addLump(lump);
-            break;
-         }
-      }
-   }
+    // Check if a lump belongs in this namespace
+    void checkLump(lumpinfo_t *lump)
+    {
+        if(lumpIsStartMarker(lump))
+            inMarkers = true;
+        else if(lumpIsEndMarker(lump))
+            inMarkers = false;
+        else if(inMarkers || lump->li_namespace == nsdata->li_namespace)
+        {
+            // we are either between markers, or dealing with a pre-marked lump;
+            // special cases:
+            switch(nsdata->li_namespace)
+            {
+            case lumpinfo_t::ns_sprites:
+                // sf 10/26/99: ignore sprite lumps smaller than 8 bytes (the
+                // smallest possible) in size -- this was used by some dmadds
+                // wads as an 'empty' graphics resource
+                if(lump->size > 8)
+                    addLump(lump);
+                break;
+            case lumpinfo_t::ns_flats:
+                // SoM: Ignore marker lumps inside F_START and F_END
+                if(lump->size > 0)
+                    addLump(lump);
+                break;
+            case lumpinfo_t::ns_hires:
+                // MaxW: Ignore these, as they're to be implemented later and cause issues otherwise
+                lump->li_namespace = nsdata->li_namespace;
+                break;
+            default: //
+                addLump(lump);
+                break;
+            }
+        }
+    }
 
-   // Get the number of lumps marked as belonging
-   int getNumMarked() const { return numMarked; }
+    // Get the number of lumps marked as belonging
+    int getNumMarked() const { return numMarked; }
 
-   // Merge this namespace back into the master directory
-   int mergeToDirectory(lumpinfo_t **lumpinfo, int index)
-   {
-      int i;
+    // Merge this namespace back into the master directory
+    int mergeToDirectory(lumpinfo_t **lumpinfo, int index)
+    {
+        int i;
 
-      // append the marked list to the current end of the directory
-      for(i = 0; i < numMarked; i++)
-         lumpinfo[index + i] = marked[i];
+        // append the marked list to the current end of the directory
+        for(i = 0; i < numMarked; i++)
+            lumpinfo[index + i] = marked[i];
 
-      return index + i;
-   }
+        return index + i;
+    }
 };
 
 //
@@ -1168,46 +1124,46 @@ public:
 //
 void WadDirectory::coalesceMarkedResources()
 {
-   WadNamespace namespaces[lumpinfo_t::ns_max];
-   int i, ns;
+    WadNamespace namespaces[lumpinfo_t::ns_max];
+    int          i, ns;
 
-   for(i = 0; i < lumpinfo_t::ns_max; i++)
-      namespaces[i].setNSData(&wadNameSpaces[i]);
+    for(i = 0; i < lumpinfo_t::ns_max; i++)
+        namespaces[i].setNSData(&wadNameSpaces[i]);
 
-   // scan the entire wad directory; save off lumps that belong in each
-   // namespace
-   for(ns = lumpinfo_t::ns_MIN_LOCAL; ns < lumpinfo_t::ns_max; ns++)
-   {
-      for(int lumpnum = 0; lumpnum < numlumps; lumpnum++)
-         namespaces[ns].checkLump(lumpinfo[lumpnum]);
-   }
+    // scan the entire wad directory; save off lumps that belong in each
+    // namespace
+    for(ns = lumpinfo_t::ns_MIN_LOCAL; ns < lumpinfo_t::ns_max; ns++)
+    {
+        for(int lumpnum = 0; lumpnum < numlumps; lumpnum++)
+            namespaces[ns].checkLump(lumpinfo[lumpnum]);
+    }
 
-   // now add any remaining unmarked lumps to ns_global
-   for(i = 0; i < numlumps; i++)
-      namespaces[lumpinfo_t::ns_global].checkLump(lumpinfo[i]);
+    // now add any remaining unmarked lumps to ns_global
+    for(i = 0; i < numlumps; i++)
+        namespaces[lumpinfo_t::ns_global].checkLump(lumpinfo[i]);
 
-   // re-allocate lumpinfo if necessary
-   int totalLumps = 0;
-   for(ns = 0; ns < lumpinfo_t::ns_max; ns++)
-   {
-      int numMarked = namespaces[ns].getNumMarked();
-      m_namespaces[ns].numLumps = numMarked;
-      totalLumps += numMarked;
-   }
+    // re-allocate lumpinfo if necessary
+    int totalLumps = 0;
+    for(ns = 0; ns < lumpinfo_t::ns_max; ns++)
+    {
+        int numMarked              = namespaces[ns].getNumMarked();
+        m_namespaces[ns].numLumps  = numMarked;
+        totalLumps                += numMarked;
+    }
 
-   if(totalLumps != numlumps)
-   {
-      lumpinfo = erealloc(lumpinfo_t **, lumpinfo, totalLumps * sizeof(*lumpinfo));
-      numlumps = totalLumps;
-   }
+    if(totalLumps != numlumps)
+    {
+        lumpinfo = erealloc(lumpinfo_t **, lumpinfo, totalLumps * sizeof(*lumpinfo));
+        numlumps = totalLumps;
+    }
 
-   // re-order the directory so that all namespaces are contiguous
-   int curLump = 0;
-   for(ns = 0; ns < lumpinfo_t::ns_max; ns++)
-   {
-      m_namespaces[ns].firstLump = curLump;
-      curLump = namespaces[ns].mergeToDirectory(lumpinfo, curLump);
-   }
+    // re-order the directory so that all namespaces are contiguous
+    int curLump = 0;
+    for(ns = 0; ns < lumpinfo_t::ns_max; ns++)
+    {
+        m_namespaces[ns].firstLump = curLump;
+        curLump                    = namespaces[ns].mergeToDirectory(lumpinfo, curLump);
+    }
 }
 
 //
@@ -1220,21 +1176,26 @@ void WadDirectory::coalesceMarkedResources()
 //
 unsigned int WadDirectory::LumpNameHash(const char *s)
 {
-   using namespace ectype;
-   unsigned int hash;
-   if(!*s)
-      return 0;
+    using namespace ectype;
+    unsigned int hash;
+    if(!*s)
+        return 0;
 
-   (void) ((hash =        toUpper(s[0]), s[1]) &&
-           (hash = hash*3+toUpper(s[1]), s[2]) &&
-           (hash = hash*2+toUpper(s[2]), s[3]) &&
-           (hash = hash*2+toUpper(s[3]), s[4]) &&
-           (hash = hash*2+toUpper(s[4]), s[5]) &&
-           (hash = hash*2+toUpper(s[5]), s[6]) &&
-           (hash = hash*2+toUpper(s[6]),
-            hash = hash*2+toUpper(s[7]))
-           );
-   return hash;
+    // clang-format off
+
+    (void) ((hash =        toUpper(s[0]), s[1]) &&
+            (hash = hash*3+toUpper(s[1]), s[2]) &&
+            (hash = hash*2+toUpper(s[2]), s[3]) &&
+            (hash = hash*2+toUpper(s[3]), s[4]) &&
+            (hash = hash*2+toUpper(s[4]), s[5]) &&
+            (hash = hash*2+toUpper(s[5]), s[6]) &&
+            (hash = hash*2+toUpper(s[6]),
+             hash = hash*2+toUpper(s[7]))
+            );
+
+    // clang-format on
+
+    return hash;
 }
 
 //
@@ -1259,24 +1220,23 @@ unsigned int WadDirectory::LumpNameHash(const char *s)
 //
 int WadDirectory::checkNumForName(const char *name, int li_namespace) const
 {
-   // Hash function maps the name to one of possibly numlump chains.
-   // It has been tuned so that the average chain length never exceeds 2.
+    // Hash function maps the name to one of possibly numlump chains.
+    // It has been tuned so that the average chain length never exceeds 2.
 
-   unsigned int hashkey = LumpNameHash(name) % (unsigned int)numlumps;
-   int i = lumpinfo[hashkey]->index;
+    unsigned int hashkey = LumpNameHash(name) % (unsigned int)numlumps;
+    int          i       = lumpinfo[hashkey]->index;
 
-   // We search along the chain until end, looking for case-insensitive
-   // matches which also match a namespace tag. Separate hash tables are
-   // not used for each namespace, because the performance benefit is not
-   // worth the overhead, considering namespace collisions are rare in
-   // Doom wads.
+    // We search along the chain until end, looking for case-insensitive
+    // matches which also match a namespace tag. Separate hash tables are
+    // not used for each namespace, because the performance benefit is not
+    // worth the overhead, considering namespace collisions are rare in
+    // Doom wads.
 
-   while(i >= 0 && (strncasecmp(lumpinfo[i]->name, name, 8) ||
-         lumpinfo[i]->li_namespace != li_namespace))
-      i = lumpinfo[i]->next;
+    while(i >= 0 && (strncasecmp(lumpinfo[i]->name, name, 8) || lumpinfo[i]->li_namespace != li_namespace))
+        i = lumpinfo[i]->next;
 
-   // Return the matching lump, or -1 if none found.
-   return i;
+    // Return the matching lump, or -1 if none found.
+    return i;
 }
 
 //
@@ -1286,7 +1246,7 @@ int WadDirectory::checkNumForName(const char *name, int li_namespace) const
 //
 int W_CheckNumForName(const char *name)
 {
-   return wGlobalDir.checkNumForName(name);
+    return wGlobalDir.checkNumForName(name);
 }
 
 //
@@ -1296,7 +1256,7 @@ int W_CheckNumForName(const char *name)
 //
 int W_CheckNumForNameNS(const char *name, int li_namespace)
 {
-   return wGlobalDir.checkNumForName(name, li_namespace);
+    return wGlobalDir.checkNumForName(name, li_namespace);
 }
 
 //
@@ -1309,23 +1269,23 @@ int W_CheckNumForNameNS(const char *name, int li_namespace)
 //
 int WadDirectory::checkNumForNameNSG(const char *name, int ns) const
 {
-   int num = -1;
-   int inNS, inGlobal;
-   lumpinfo_t *nsLump = nullptr, *globalLump = nullptr;
+    int         num = -1;
+    int         inNS, inGlobal;
+    lumpinfo_t *nsLump = nullptr, *globalLump = nullptr;
 
-   if((inNS = checkNumForName(name, ns)) >= 0)
-      nsLump = lumpinfo[inNS];
-   if((inGlobal = checkNumForName(name, lumpinfo_t::ns_global)) >= 0)
-      globalLump = lumpinfo[inGlobal];
+    if((inNS = checkNumForName(name, ns)) >= 0)
+        nsLump = lumpinfo[inNS];
+    if((inGlobal = checkNumForName(name, lumpinfo_t::ns_global)) >= 0)
+        globalLump = lumpinfo[inGlobal];
 
-   if(!nsLump)
-      num = inGlobal;
-   else if(!globalLump)
-      num = inNS;
-   else
-      num = nsLump->source >= globalLump->source ? inNS : inGlobal;
+    if(!nsLump)
+        num = inGlobal;
+    else if(!globalLump)
+        num = inNS;
+    else
+        num = nsLump->source >= globalLump->source ? inNS : inGlobal;
 
-   return num;
+    return num;
 }
 
 //
@@ -1333,12 +1293,12 @@ int WadDirectory::checkNumForNameNSG(const char *name, int ns) const
 //
 // Calls W_CheckNumForName, but bombs out if not found.
 //
-int WadDirectory::getNumForName(const char* name) const     // killough -- const added
+int WadDirectory::getNumForName(const char *name) const // killough -- const added
 {
-   int i = checkNumForName(name);
-   if(i == -1)
-      I_Error("WadDirectory::getNumForName: %.8s not found!\n", name); // killough .8 added
-   return i;
+    int i = checkNumForName(name);
+    if(i == -1)
+        I_Error("WadDirectory::getNumForName: %.8s not found!\n", name); // killough .8 added
+    return i;
 }
 
 //
@@ -1346,15 +1306,15 @@ int WadDirectory::getNumForName(const char* name) const     // killough -- const
 //
 int WadDirectory::getNumForNameNSG(const char *name, int ns) const
 {
-   int i = checkNumForNameNSG(name, ns);
-   if(i == -1)
-      I_Error("WadDirectory::getNumForNameNSG: %.8s not found!\n", name);
-   return i;
+    int i = checkNumForNameNSG(name, ns);
+    if(i == -1)
+        I_Error("WadDirectory::getNumForNameNSG: %.8s not found!\n", name);
+    return i;
 }
 
 int W_GetNumForName(const char *name)
 {
-   return wGlobalDir.getNumForName(name);
+    return wGlobalDir.getNumForName(name);
 }
 
 //
@@ -1364,12 +1324,12 @@ int W_GetNumForName(const char *name)
 //
 int WadDirectory::checkNumForLFN(const char *lfn, int li_namespace) const
 {
-   lumpinfo_t *currinfo = e_LFNHash.keyIterator(nullptr, lfn);
+    lumpinfo_t *currinfo = e_LFNHash.keyIterator(nullptr, lfn);
 
-   while(currinfo != nullptr && currinfo->li_namespace != li_namespace)
-       currinfo = e_LFNHash.keyIterator(currinfo, lfn);
+    while(currinfo != nullptr && currinfo->li_namespace != li_namespace)
+        currinfo = e_LFNHash.keyIterator(currinfo, lfn);
 
-   return currinfo ? currinfo->selfindex : -1;
+    return currinfo ? currinfo->selfindex : -1;
 }
 
 //
@@ -1380,23 +1340,23 @@ int WadDirectory::checkNumForLFN(const char *lfn, int li_namespace) const
 //
 int WadDirectory::checkNumForLFNNSG(const char *name, int ns) const
 {
-   int num = -1;
-   int inNS, inGlobal;
-   lumpinfo_t *nsLump = nullptr, *globalLump = nullptr;
+    int         num = -1;
+    int         inNS, inGlobal;
+    lumpinfo_t *nsLump = nullptr, *globalLump = nullptr;
 
-   if((inNS = checkNumForLFN(name, ns)) >= 0)
-      nsLump = lumpinfo[inNS];
-   if((inGlobal = checkNumForLFN(name, lumpinfo_t::ns_global)) >= 0)
-      globalLump = lumpinfo[inGlobal];
+    if((inNS = checkNumForLFN(name, ns)) >= 0)
+        nsLump = lumpinfo[inNS];
+    if((inGlobal = checkNumForLFN(name, lumpinfo_t::ns_global)) >= 0)
+        globalLump = lumpinfo[inGlobal];
 
-   if(!nsLump)
-      num = inGlobal;
-   else if(!globalLump)
-      num = inNS;
-   else
-      num = nsLump->source >= globalLump->source ? inNS : inGlobal;
+    if(!nsLump)
+        num = inGlobal;
+    else if(!globalLump)
+        num = inNS;
+    else
+        num = nsLump->source >= globalLump->source ? inNS : inGlobal;
 
-   return num;
+    return num;
 }
 
 //
@@ -1407,7 +1367,7 @@ int WadDirectory::checkNumForLFNNSG(const char *name, int ns) const
 //
 lumpinfo_t *WadDirectory::getLumpNameChain(const char *name) const
 {
-   return lumpinfo[LumpNameHash(name) % (unsigned int)numlumps];
+    return lumpinfo[LumpNameHash(name) % (unsigned int)numlumps];
 }
 
 //
@@ -1415,7 +1375,7 @@ lumpinfo_t *WadDirectory::getLumpNameChain(const char *name) const
 //
 lumpinfo_t *WadDirectory::getLumpLFNChain(const char *name) const
 {
-   return e_LFNHash.objectForKey(name);
+    return e_LFNHash.objectForKey(name);
 }
 
 //
@@ -1425,10 +1385,10 @@ lumpinfo_t *WadDirectory::getLumpLFNChain(const char *name) const
 //
 const char *WadDirectory::getLumpName(int lumpnum) const
 {
-   if(lumpnum < 0 || lumpnum >= numlumps)
-      I_Error("WadDirectory::getLumpName: bad lump number %d\n", lumpnum);
+    if(lumpnum < 0 || lumpnum >= numlumps)
+        I_Error("WadDirectory::getLumpName: bad lump number %d\n", lumpnum);
 
-   return lumpinfo[lumpnum]->name;
+    return lumpinfo[lumpnum]->name;
 }
 
 //
@@ -1438,11 +1398,11 @@ const char *WadDirectory::getLumpName(int lumpnum) const
 //
 const char *WadDirectory::getLumpFileName(int lump) const
 {
-   if(lump < 0 || lump >= numlumps)
-      return nullptr;
+    if(lump < 0 || lump >= numlumps)
+        return nullptr;
 
-   size_t lumpIdx = static_cast<size_t>(lump);
-   return WadDirectoryPimpl::FileNameForSource(lumpinfo[lumpIdx]->source);
+    size_t lumpIdx = static_cast<size_t>(lump);
+    return WadDirectoryPimpl::FileNameForSource(lumpinfo[lumpIdx]->source);
 }
 
 //
@@ -1452,32 +1412,32 @@ const char *WadDirectory::getLumpFileName(int lump) const
 //
 void WadDirectory::initLumpHashes()
 {
-   int i;
+    int i;
 
-   for(i = 0; i < numlumps; i++)
-   {
-      lumpinfo[i]->index     = -1; // mark slots empty
-      lumpinfo[i]->selfindex =  i; // haleyjd: record position in array
-   }
+    for(i = 0; i < numlumps; i++)
+    {
+        lumpinfo[i]->index     = -1; // mark slots empty
+        lumpinfo[i]->selfindex = i;  // haleyjd: record position in array
+    }
 
-   // Insert nodes to the beginning of each chain, in first-to-last
-   // lump order, so that the last lump of a given name appears first
-   // in any chain, observing pwad ordering rules. killough
+    // Insert nodes to the beginning of each chain, in first-to-last
+    // lump order, so that the last lump of a given name appears first
+    // in any chain, observing pwad ordering rules. killough
 
-   for(i = 0; i < numlumps; i++)
-   {                                           // hash function:
-      // haleyjd 10/28/12: if lump name is empty, do not add it into the hash.
-      if(lumpinfo[i]->name[0])
-      {
-         const unsigned int j = LumpNameHash(lumpinfo[i]->name) % (unsigned int)numlumps;
-         lumpinfo[i]->next    = lumpinfo[j]->index; // Prepend to list
-         lumpinfo[j]->index   = i;
-      }
+    for(i = 0; i < numlumps; i++)
+    { // hash function:
+        // haleyjd 10/28/12: if lump name is empty, do not add it into the hash.
+        if(lumpinfo[i]->name[0])
+        {
+            const unsigned int j = LumpNameHash(lumpinfo[i]->name) % (unsigned int)numlumps;
+            lumpinfo[i]->next    = lumpinfo[j]->index; // Prepend to list
+            lumpinfo[j]->index   = i;
+        }
 
-      // haleyjd 04/21/12: add to lfn hash also if has a valid LFN
-      if(lumpinfo[i]->lfn && *lumpinfo[i]->lfn)
-         e_LFNHash.addObject(lumpinfo[i]);
-   }
+        // haleyjd 04/21/12: add to lfn hash also if has a valid LFN
+        if(lumpinfo[i]->lfn && *lumpinfo[i]->lfn)
+            e_LFNHash.addObject(lumpinfo[i]);
+    }
 }
 
 // End of lump hashing -- killough 1/31/98
@@ -1487,15 +1447,15 @@ void WadDirectory::initLumpHashes()
 //
 void WadDirectory::initResources() // sf
 {
-   // jff 1/23/98
-   // get all the sprites and flats into one marked block each
-   coalesceMarkedResources();
+    // jff 1/23/98
+    // get all the sprites and flats into one marked block each
+    coalesceMarkedResources();
 
-   // set up caching
-   // sf: caching now done in the lumpinfo_t's
+    // set up caching
+    // sf: caching now done in the lumpinfo_t's
 
-   // killough 1/31/98: initialize lump hash table
-   initLumpHashes();
+    // killough 1/31/98: initialize lump hash table
+    initLumpHashes();
 }
 
 //
@@ -1510,74 +1470,74 @@ void WadDirectory::initResources() // sf
 //
 void WadDirectory::initMultipleFiles(wfileadd_t *files)
 {
-   wfileadd_t *curfile;
+    wfileadd_t *curfile;
 
-   // Basic initialization
-   numlumps = 0;
-   lumpinfo = nullptr;
-   ispublic = true;   // Is a public wad directory
-   type     = NORMAL; // Not a managed directory
+    // Basic initialization
+    numlumps = 0;
+    lumpinfo = nullptr;
+    ispublic = true;   // Is a public wad directory
+    type     = NORMAL; // Not a managed directory
 
-   curfile = files;
+    curfile = files;
 
-   // open all the files, load headers, and count lumps
-   while(curfile->filename)
-   {
-      // haleyjd 07/11/09: ignore empty filenames
-      if((curfile->filename)[0])
-      {
-         if(curfile->flags & WFA_DIRECTORY_RAW)
-            addDirectory(curfile->filename);
-         else
-            addFile(*curfile);
-      }
+    // open all the files, load headers, and count lumps
+    while(curfile->filename)
+    {
+        // haleyjd 07/11/09: ignore empty filenames
+        if((curfile->filename)[0])
+        {
+            if(curfile->flags & WFA_DIRECTORY_RAW)
+                addDirectory(curfile->filename);
+            else
+                addFile(*curfile);
+        }
 
-      ++curfile;
-   }
+        ++curfile;
+    }
 
-   if(!numlumps)
-      I_Error("WadDirectory::InitMultipleFiles: no files found\n");
+    if(!numlumps)
+        I_Error("WadDirectory::InitMultipleFiles: no files found\n");
 
-   initResources();
+    initResources();
 }
 
 bool WadDirectory::addNewFile(const char *filename)
 {
-   wfileadd_t newfile;
+    wfileadd_t newfile;
 
-   newfile.filename     = filename;
-   newfile.f            = nullptr;
-   newfile.baseoffset   = 0;
-   newfile.li_namespace = lumpinfo_t::ns_global;
-   newfile.requiredFmt  = -1;
-   newfile.flags        = WFA_ALLOWINEXACTFN | WFA_ALLOWHACKS;
+    newfile.filename     = filename;
+    newfile.f            = nullptr;
+    newfile.baseoffset   = 0;
+    newfile.li_namespace = lumpinfo_t::ns_global;
+    newfile.requiredFmt  = -1;
+    newfile.flags        = WFA_ALLOWINEXACTFN | WFA_ALLOWHACKS;
 
-   if(!addFile(newfile))
-      return false;
+    if(!addFile(newfile))
+        return false;
 
-   initResources();         // reinit lump lookups etc
-   return true;
+    initResources(); // reinit lump lookups etc
+    return true;
 }
 
 bool WadDirectory::addNewPrivateFile(const char *filename)
 {
-   wfileadd_t newfile;
+    wfileadd_t newfile;
 
-   newfile.filename     = filename;
-   newfile.f            = nullptr;
-   newfile.baseoffset   = 0;
-   newfile.li_namespace = lumpinfo_t::ns_global;
-   newfile.requiredFmt  = -1;
-   newfile.flags        = WFA_PRIVATE;
+    newfile.filename     = filename;
+    newfile.f            = nullptr;
+    newfile.baseoffset   = 0;
+    newfile.li_namespace = lumpinfo_t::ns_global;
+    newfile.requiredFmt  = -1;
+    newfile.flags        = WFA_PRIVATE;
 
-   if(!addFile(newfile))
-      return false;
+    if(!addFile(newfile))
+        return false;
 
-   // there is no resource coalescence on this particular brand of private
-   // wad file, so just call W_InitLumpHash.
-   initLumpHashes();
+    // there is no resource coalescence on this particular brand of private
+    // wad file, so just call W_InitLumpHash.
+    initLumpHashes();
 
-   return true;
+    return true;
 }
 
 //
@@ -1587,14 +1547,14 @@ bool WadDirectory::addNewPrivateFile(const char *filename)
 //
 int WadDirectory::lumpLength(int lump) const
 {
-   if(lump < 0 || lump >= numlumps)
-      I_Error("WadDirectory::LumpLength: %i >= numlumps\n", lump);
-   return static_cast<int>(lumpinfo[lump]->size);
+    if(lump < 0 || lump >= numlumps)
+        I_Error("WadDirectory::LumpLength: %i >= numlumps\n", lump);
+    return static_cast<int>(lumpinfo[lump]->size);
 }
 
 int W_LumpLength(int lump)
 {
-   return wGlobalDir.lumpLength(lump);
+    return wGlobalDir.lumpLength(lump);
 }
 
 //
@@ -1602,49 +1562,47 @@ int W_LumpLength(int lump)
 //
 // Loads the lump into the given buffer, which must be >= W_LumpLength().
 //
-void WadDirectory::readLump(int lump, void *dest,
-                            const WadLumpLoader *lfmt) const
+void WadDirectory::readLump(int lump, void *dest, const WadLumpLoader *lfmt) const
 {
-   size_t c;
-   lumpinfo_t *lptr;
+    size_t      c;
+    lumpinfo_t *lptr;
 
-   if(lump < 0 || lump >= numlumps)
-      I_Error("WadDirectory::ReadLump: %d >= numlumps\n", lump);
+    if(lump < 0 || lump >= numlumps)
+        I_Error("WadDirectory::ReadLump: %d >= numlumps\n", lump);
 
-   lptr = lumpinfo[lump];
+    lptr = lumpinfo[lump];
 
-   // don't read from zero-size lump, or into a null buffer
-   if(!lptr->size || !dest)
-      return;
+    // don't read from zero-size lump, or into a null buffer
+    if(!lptr->size || !dest)
+        return;
 
-   // killough 1/31/98: Reload hack (-wart) removed
+    // killough 1/31/98: Reload hack (-wart) removed
 
-   c = LumpHandlers[lptr->type].readLump(lptr, dest);
-   if(c < lptr->size)
-   {
-      I_Error("WadDirectory::readLump: only read %d of %d on lump %d\n",
-              (int)c, (int)lptr->size, lump);
-   }
+    c = LumpHandlers[lptr->type].readLump(lptr, dest);
+    if(c < lptr->size)
+    {
+        I_Error("WadDirectory::readLump: only read %d of %d on lump %d\n", (int)c, (int)lptr->size, lump);
+    }
 
-   // haleyjd 06/26/11: Apply lump formatting/preprocessing if provided
-   if(lfmt)
-   {
-      WadLumpLoader::Code code = lfmt->verifyData(lptr);
+    // haleyjd 06/26/11: Apply lump formatting/preprocessing if provided
+    if(lfmt)
+    {
+        WadLumpLoader::Code code = lfmt->verifyData(lptr);
 
-      switch(code)
-      {
-      case WadLumpLoader::CODE_OK:
-         // When OK is returned, do formatting
-         code = lfmt->formatData(lptr);
-         break;
-      default:
-         break;
-      }
+        switch(code)
+        {
+        case WadLumpLoader::CODE_OK:
+            // When OK is returned, do formatting
+            code = lfmt->formatData(lptr);
+            break;
+        default: //
+            break;
+        }
 
-      // Does the formatter want us to bomb out in response to an error?
-      if(code == WadLumpLoader::CODE_FATAL)
-         I_Error("WadDirectory::readLump: lump %s is malformed\n", lptr->name);
-   }
+        // Does the formatter want us to bomb out in response to an error?
+        if(code == WadLumpLoader::CODE_FATAL)
+            I_Error("WadDirectory::readLump: lump %s is malformed\n", lptr->name);
+    }
 }
 
 //
@@ -1653,19 +1611,19 @@ void WadDirectory::readLump(int lump, void *dest,
 //
 void *WadDirectory::getCachedLumpNum(int lump, const WadLumpLoader *lfmt) const
 {
-   lumpinfo_t::lumpformat fmt = lumpinfo_t::fmt_default;
+    lumpinfo_t::lumpformat fmt = lumpinfo_t::fmt_default;
 
-   if(lfmt)
-      fmt = lfmt->formatIndex();
+    if(lfmt)
+        fmt = lfmt->formatIndex();
 
-   // haleyjd 08/14/02: again, should not be RANGECHECK only
-   if(lump < 0 || lump >= numlumps)
-      I_Error("WadDirectory::getCachedLumpNum: %i >= numlumps\n", lump);
+    // haleyjd 08/14/02: again, should not be RANGECHECK only
+    if(lump < 0 || lump >= numlumps)
+        I_Error("WadDirectory::getCachedLumpNum: %i >= numlumps\n", lump);
 
-   if(!(lumpinfo[lump]->cache[fmt]))
-      I_Error("WadDirectory::getCachedLumpNum %s not cached\n", getLumpName(lump));
+    if(!(lumpinfo[lump]->cache[fmt]))
+        I_Error("WadDirectory::getCachedLumpNum %s not cached\n", getLumpName(lump));
 
-   return lumpinfo[lump]->cache[fmt];
+    return lumpinfo[lump]->cache[fmt];
 }
 
 //
@@ -1673,37 +1631,34 @@ void *WadDirectory::getCachedLumpNum(int lump, const WadLumpLoader *lfmt) const
 //
 // killough 4/25/98: simplified
 //
-void *WadDirectory::cacheLumpNum(int lump, int tag,
-                                 const WadLumpLoader *lfmt) const
+void *WadDirectory::cacheLumpNum(int lump, int tag, const WadLumpLoader *lfmt) const
 {
-   lumpinfo_t::lumpformat fmt = lumpinfo_t::fmt_default;
+    lumpinfo_t::lumpformat fmt = lumpinfo_t::fmt_default;
 
-   if(lfmt)
-      fmt = lfmt->formatIndex();
+    if(lfmt)
+        fmt = lfmt->formatIndex();
 
-   // haleyjd 08/14/02: again, should not be RANGECHECK only
-   if(lump < 0 || lump >= numlumps)
-      I_Error("WadDirectory::CacheLumpNum: %i >= numlumps\n", lump);
+    // haleyjd 08/14/02: again, should not be RANGECHECK only
+    if(lump < 0 || lump >= numlumps)
+        I_Error("WadDirectory::CacheLumpNum: %i >= numlumps\n", lump);
 
-   if(!(lumpinfo[lump]->cache[fmt]))      // read the lump in
-   {
-      readLump(lump,
-               Z_Malloc(lumpLength(lump), tag, &(lumpinfo[lump]->cache[fmt])),
-               lfmt);
-   }
-   else
-   {
-      // haleyjd: do not lower cache level and cause static users to lose their
-      // data unexpectedly (ie, do not change PU_STATIC into PU_CACHE -- that
-      // must be done using Z_ChangeTag explicitly)
+    if(!(lumpinfo[lump]->cache[fmt])) // read the lump in
+    {
+        readLump(lump, Z_Malloc(lumpLength(lump), tag, &(lumpinfo[lump]->cache[fmt])), lfmt);
+    }
+    else
+    {
+        // haleyjd: do not lower cache level and cause static users to lose their
+        // data unexpectedly (ie, do not change PU_STATIC into PU_CACHE -- that
+        // must be done using Z_ChangeTag explicitly)
 
-      int oldtag = Z_CheckTag(lumpinfo[lump]->cache[fmt]);
+        int oldtag = Z_CheckTag(lumpinfo[lump]->cache[fmt]);
 
-      if(tag < oldtag)
-         Z_ChangeTag(lumpinfo[lump]->cache[fmt], tag);
-   }
+        if(tag < oldtag)
+            Z_ChangeTag(lumpinfo[lump]->cache[fmt], tag);
+    }
 
-   return lumpinfo[lump]->cache[fmt];
+    return lumpinfo[lump]->cache[fmt];
 }
 
 //
@@ -1712,10 +1667,9 @@ void *WadDirectory::cacheLumpNum(int lump, int tag,
 // haleyjd 06/26/11: Restored to status as a method of WadDirectory instead of
 // being a macro, as it needs to take an optional parameter now.
 //
-void *WadDirectory::cacheLumpName(const char *name, int tag,
-                                  const WadLumpLoader *lfmt) const
+void *WadDirectory::cacheLumpName(const char *name, int tag, const WadLumpLoader *lfmt) const
 {
-   return cacheLumpNum(getNumForName(name), tag, lfmt);
+    return cacheLumpNum(getNumForName(name), tag, lfmt);
 }
 
 //
@@ -1725,13 +1679,13 @@ void *WadDirectory::cacheLumpName(const char *name, int tag,
 //
 void WadDirectory::cacheLumpAuto(int lumpnum, ZAutoBuffer &buffer) const
 {
-   if(lumpnum < 0 || lumpnum >= numlumps)
-      I_Error("WadDirectory::cacheLumpAuto: %i >= numlumps\n", lumpnum);
+    if(lumpnum < 0 || lumpnum >= numlumps)
+        I_Error("WadDirectory::cacheLumpAuto: %i >= numlumps\n", lumpnum);
 
-   size_t size = lumpinfo[lumpnum]->size;
+    size_t size = lumpinfo[lumpnum]->size;
 
-   buffer.alloc(size, false);
-   readLump(lumpnum, buffer.get());
+    buffer.alloc(size, false);
+    readLump(lumpnum, buffer.get());
 }
 
 //
@@ -1741,7 +1695,7 @@ void WadDirectory::cacheLumpAuto(int lumpnum, ZAutoBuffer &buffer) const
 //
 void WadDirectory::cacheLumpAuto(const char *name, ZAutoBuffer &buffer) const
 {
-   cacheLumpAuto(getNumForName(name), buffer);
+    cacheLumpAuto(getNumForName(name), buffer);
 }
 
 //
@@ -1751,18 +1705,17 @@ void WadDirectory::cacheLumpAuto(const char *name, ZAutoBuffer &buffer) const
 //
 bool WadDirectory::writeLump(const char *lumpname, const char *destpath) const
 {
-   int    lumpnum;
-   size_t size;
+    int    lumpnum;
+    size_t size;
 
-   if((lumpnum = checkNumForName(lumpname)) >= 0 &&
-      (size    = lumpinfo[lumpnum]->size  ) >  0)
-   {
-      ZAutoBuffer lumpData(size, false);
-      readLump(lumpnum, lumpData.get());
-      return M_WriteFile(destpath, lumpData.get(), size);
-   }
-   else
-      return false;
+    if((lumpnum = checkNumForName(lumpname)) >= 0 && (size = lumpinfo[lumpnum]->size) > 0)
+    {
+        ZAutoBuffer lumpData(size, false);
+        readLump(lumpnum, lumpData.get());
+        return M_WriteFile(destpath, lumpData.get(), size);
+    }
+    else
+        return false;
 }
 
 // Predefined lumps removed -- sf
@@ -1775,10 +1728,10 @@ bool WadDirectory::writeLump(const char *lumpname, const char *destpath) const
 //
 uint32_t W_LumpCheckSum(int lumpnum)
 {
-   uint8_t  *lump    = (uint8_t *)(wGlobalDir.cacheLumpNum(lumpnum, PU_CACHE));
-   uint32_t  lumplen = (uint32_t )(wGlobalDir.lumpLength(lumpnum));
+    uint8_t *lump    = (uint8_t *)(wGlobalDir.cacheLumpNum(lumpnum, PU_CACHE));
+    uint32_t lumplen = (uint32_t)(wGlobalDir.lumpLength(lumpnum));
 
-   return HashData(HashData::CRC32, lump, lumplen).getDigestPart(0);
+    return HashData(HashData::CRC32, lump, lumplen).getDigestPart(0);
 }
 
 //
@@ -1796,24 +1749,24 @@ uint32_t W_LumpCheckSum(int lumpnum)
 //
 void WadDirectory::freeDirectoryLumps()
 {
-   int i, j;
-   lumpinfo_t **li = lumpinfo;
+    int          i, j;
+    lumpinfo_t **li = lumpinfo;
 
-   for(i = 0; i < numlumps; i++)
-   {
-      for(j = 0; j != lumpinfo_t::fmt_maxfmts; j++)
-      {
-         if(li[i]->cache[j])
-         {
-            Z_Free(li[i]->cache[j]);
-            li[i]->cache[j] = nullptr;
-         }
-      }
+    for(i = 0; i < numlumps; i++)
+    {
+        for(j = 0; j != lumpinfo_t::fmt_maxfmts; j++)
+        {
+            if(li[i]->cache[j])
+            {
+                Z_Free(li[i]->cache[j]);
+                li[i]->cache[j] = nullptr;
+            }
+        }
 
-      // free long filenames
-      if(li[i]->lfn)
-         efree(li[i]->lfn);
-   }
+        // free long filenames
+        if(li[i]->lfn)
+            efree(li[i]->lfn);
+    }
 }
 
 //
@@ -1824,13 +1777,13 @@ void WadDirectory::freeDirectoryLumps()
 //
 void WadDirectory::freeDirectoryAllocs()
 {
-   size_t i, len = pImpl->infoptrs.getLength();
+    size_t i, len = pImpl->infoptrs.getLength();
 
-   // free each lumpinfo_t allocation
-   for(i = 0; i < len; i++)
-      efree(pImpl->infoptrs[i]);
+    // free each lumpinfo_t allocation
+    for(i = 0; i < len; i++)
+        efree(pImpl->infoptrs[i]);
 
-   pImpl->infoptrs.clear();
+    pImpl->infoptrs.clear();
 }
 
 //
@@ -1840,23 +1793,23 @@ void WadDirectory::freeDirectoryAllocs()
 //
 void WadDirectory::close()
 {
-   // close the wad file if it is open; public directories can't be closed
-   if(lumpinfo && !ispublic)
-   {
-      // free all resources loaded from the wad
-      freeDirectoryLumps();
+    // close the wad file if it is open; public directories can't be closed
+    if(lumpinfo && !ispublic)
+    {
+        // free all resources loaded from the wad
+        freeDirectoryLumps();
 
-      if(lumpinfo[0]->type == lumpinfo_t::lump_direct && lumpinfo[0]->direct.file)
-         fclose(lumpinfo[0]->direct.file);
+        if(lumpinfo[0]->type == lumpinfo_t::lump_direct && lumpinfo[0]->direct.file)
+            fclose(lumpinfo[0]->direct.file);
 
-      // free all lumpinfo_t's allocated for the wad
-      freeDirectoryAllocs();
+        // free all lumpinfo_t's allocated for the wad
+        freeDirectoryAllocs();
 
-      // free the private wad directory
-      Z_Free(lumpinfo);
+        // free the private wad directory
+        Z_Free(lumpinfo);
 
-      lumpinfo = nullptr;
-   }
+        lumpinfo = nullptr;
+    }
 }
 
 //=============================================================================
@@ -1872,15 +1825,15 @@ void WadDirectory::close()
 
 static size_t W_DirectReadLump(lumpinfo_t *l, void *dest)
 {
-   size_t size = l->size;
-   size_t ret;
-   directlump_t &direct = l->direct;
+    size_t        size = l->size;
+    size_t        ret;
+    directlump_t &direct = l->direct;
 
-   // killough 10/98: Add flashing disk indicator
-   fseek(direct.file, static_cast<long>(direct.position), SEEK_SET);
-   ret = fread(dest, 1, size, direct.file);
+    // killough 10/98: Add flashing disk indicator
+    fseek(direct.file, static_cast<long>(direct.position), SEEK_SET);
+    ret = fread(dest, 1, size, direct.file);
 
-   return ret;
+    return ret;
 }
 
 //
@@ -1889,13 +1842,13 @@ static size_t W_DirectReadLump(lumpinfo_t *l, void *dest)
 
 static size_t W_MemoryReadLump(lumpinfo_t *l, void *dest)
 {
-   size_t size = l->size;
-   memorylump_t &memory = l->memory;
+    size_t        size   = l->size;
+    memorylump_t &memory = l->memory;
 
-   // killough 1/31/98: predefined lump data
-   memcpy(dest, (byte *)(memory.data) + memory.position, size);
+    // killough 1/31/98: predefined lump data
+    memcpy(dest, (byte *)(memory.data) + memory.position, size);
 
-   return size;
+    return size;
 }
 
 //
@@ -1905,17 +1858,17 @@ static size_t W_MemoryReadLump(lumpinfo_t *l, void *dest)
 
 static size_t W_FileReadLump(lumpinfo_t *l, void *dest)
 {
-   FILE *f;
-   size_t size     = l->size;
-   size_t sizeread = 0;
+    FILE  *f;
+    size_t size     = l->size;
+    size_t sizeread = 0;
 
-   if((f = fopen(l->filepath, "rb")))
-   {
-      sizeread = fread(dest, 1, size, f);
-      fclose(f);
-   }
+    if((f = fopen(l->filepath, "rb")))
+    {
+        sizeread = fread(dest, 1, size, f);
+        fclose(f);
+    }
 
-   return sizeread;
+    return sizeread;
 }
 
 //
@@ -1925,11 +1878,11 @@ static size_t W_FileReadLump(lumpinfo_t *l, void *dest)
 
 static size_t W_ZipReadLump(lumpinfo_t *l, void *dest)
 {
-   l->zip.zipLump->read(dest);
+    l->zip.zipLump->read(dest);
 
-   // if I_Error wasn't invoked, we can assume the full read was
-   // successful.
-   return l->size;
+    // if I_Error wasn't invoked, we can assume the full read was
+    // successful.
+    return l->size;
 }
 
 //----------------------------------------------------------------------------

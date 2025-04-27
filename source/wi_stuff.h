@@ -30,10 +30,10 @@
 
 enum stateenum_t
 {
-   NoState = -1,
-   StatCount,
-   ShowNextLoc,
-   IntrEnding, // haleyjd 03/16/06: fix for bug fraggle found
+    NoState = -1,
+    StatCount,
+    ShowNextLoc,
+    IntrEnding, // haleyjd 03/16/06: fix for bug fraggle found
 };
 
 // haleyjd: DOOM intermission object

@@ -63,8 +63,8 @@ using inventoryindex_t = int;
 // being carried. That's all it does.
 struct inventoryslot_t
 {
-   inventoryitemid_t item;   // The item.
-   int               amount; // Amount possessed.
+    inventoryitemid_t item;   // The item.
+    int               amount; // Amount possessed.
 };
 
 // Inventory
@@ -78,12 +78,12 @@ using inventory_t = inventoryslot_t *;
 //
 enum
 {
-   // Playing or camping.
-   PST_LIVE,
-   // Dead on the ground, view follows killer.
-   PST_DEAD,
-   // Ready to restart/respawn???
-   PST_REBORN
+    // Playing or camping.
+    PST_LIVE,
+    // Dead on the ground, view follows killer.
+    PST_DEAD,
+    // Ready to restart/respawn???
+    PST_REBORN
 };
 
 using playerstate_t = int;
@@ -93,44 +93,40 @@ using playerstate_t = int;
 //
 enum cheat_t
 {
-   // No clipping, walk through barriers.
-   CF_NOCLIP           = 1,
-   // No damage, no health loss.
-   CF_GODMODE          = 2,
-   // Not really a cheat, just a debug aid.
-   CF_NOMOMENTUM       = 4,
-   // haleyjd 03/18/03: infinite ammo
-   CF_INFAMMO          = 8,
-   // haleyjd 12/29/10: immortality cheat
-   CF_IMMORTAL         = 0x10,
-};
+    CF_NOCLIP     = 1,    // No clipping, walk through barriers.
+    CF_GODMODE    = 2,    // No damage, no health loss.
+    CF_NOMOMENTUM = 4,    // Not really a cheat, just a debug aid.
+    CF_INFAMMO    = 8,    // haleyjd 03/18/03: infinite ammo
+    CF_IMMORTAL   = 0x10, // haleyjd 12/29/10: immortality cheat
 
+};
 
 // TODO: Maybe re-add curpos
 // The problem is adapting code to handle variable lengths of inventory bars.
-struct invbarstate_t {
-   bool inventory;  // inventory is currently being viewed?
-   int  ArtifactFlash;
+struct invbarstate_t
+{
+    bool inventory; // inventory is currently being viewed?
+    int  ArtifactFlash;
 };
 
 enum attacktype_e : unsigned int
 {
-   AT_NONE      = 0,
-   AT_PRIMARY   = 1,
-   AT_SECONDARY = 2,
-   AT_ITEM      = 4, // temporarily ORed in, indicates not to subtract ammo
-   AT_UNKNOWN   = 8,
+    AT_NONE      = 0,
+    AT_PRIMARY   = 1,
+    AT_SECONDARY = 2,
+    AT_ITEM      = 4, // temporarily ORed in, indicates not to subtract ammo
+    AT_UNKNOWN   = 8,
 
-   AT_ALL = (AT_PRIMARY + AT_SECONDARY),
+    AT_ALL = (AT_PRIMARY + AT_SECONDARY),
 };
 
 struct powerduration_t
 {
-   int  tics;
-   bool infinite;
+    int  tics;
+    bool infinite;
 
-   inline bool isActive() const { return tics != 0 || infinite; }
-   inline bool shouldCount() const { return tics != 0 && !infinite; }
+    inline bool isActive() const { return tics != 0 || infinite; }
+    inline bool shouldCount() const { return tics != 0 && !infinite; }
 };
 
 //
@@ -138,101 +134,100 @@ struct powerduration_t
 //
 struct player_t
 {
-   Mobj          *mo;
-   playerclass_t *pclass;      // haleyjd 09/27/07: player class
-   skin_t        *skin;        // skin
-   playerstate_t  playerstate; // live, dead, reborn, etc.
-   ticcmd_t       cmd;         // current input
+    Mobj          *mo;
+    playerclass_t *pclass;      // haleyjd 09/27/07: player class
+    skin_t        *skin;        // skin
+    playerstate_t  playerstate; // live, dead, reborn, etc.
+    ticcmd_t       cmd;         // current input
 
-   // Determine POV,
-   //  including viewpoint bobbing during movement.
-  
-   fixed_t        viewz;           // Focal origin above r.z  
-   fixed_t        prevviewz;       // haleyjd 01/04/14: previous vewz, for interpolation
-   fixed_t        viewheight;      // Base height above floor for viewz.  
-   fixed_t        deltaviewheight; // Bob/squat speed.
-   fixed_t        bob;             // bounded/scaled total momentum.
-   fixed_t        pitch;           // haleyjd 04/03/05: true pitch angle
-   fixed_t        prevpitch;       // MaxW 2016/08/02: Prev pitch angle, for iterpolation
+    // Determine POV,
+    //  including viewpoint bobbing during movement.
 
-   // killough 10/98: used for realistic bobbing (i.e. not simply overall speed)
-   // mo->momx and mo->momy represent true momenta experienced by player.
-   // This only represents the thrust that the player applies himself.
-   // This avoids anomolies with such things as Boom ice and conveyors.
-   fixed_t        momx, momy;      // killough 10/98
+    fixed_t viewz;           // Focal origin above r.z
+    fixed_t prevviewz;       // haleyjd 01/04/14: previous vewz, for interpolation
+    fixed_t viewheight;      // Base height above floor for viewz.
+    fixed_t deltaviewheight; // Bob/squat speed.
+    fixed_t bob;             // bounded/scaled total momentum.
+    fixed_t pitch;           // haleyjd 04/03/05: true pitch angle
+    fixed_t prevpitch;       // MaxW 2016/08/02: Prev pitch angle, for iterpolation
 
-   int            health;       // This is only used between levels
-   int            armorpoints;
-   int            armorfactor;  // haleyjd 07/29/13: numerator for armor save calculation
-   int            armordivisor; // haleyjd 07/29/13: denominator for armor save calculation
+    // killough 10/98: used for realistic bobbing (i.e. not simply overall speed)
+    // mo->momx and mo->momy represent true momenta experienced by player.
+    // This only represents the thrust that the player applies himself.
+    // This avoids anomolies with such things as Boom ice and conveyors.
+    fixed_t momx, momy; // killough 10/98
 
-   // Power ups. invinc and invis are tic counters.
-   powerduration_t powers[NUMPOWERS];
-  
-   // Frags, kills of other players.
-   int            frags[MAXPLAYERS];
-   int            totalfrags;
-   
-   weaponinfo_t  *readyweapon;
-   weaponinfo_t  *pendingweapon; // Is nullptr if not changing.
+    int health; // This is only used between levels
+    int armorpoints;
+    int armorfactor;  // haleyjd 07/29/13: numerator for armor save calculation
+    int armordivisor; // haleyjd 07/29/13: denominator for armor save calculation
 
-   weaponslot_t  *readyweaponslot;
-   weaponslot_t  *pendingweaponslot; // Is nullptr if not changing.
+    // Power ups. invinc and invis are tic counters.
+    powerduration_t powers[NUMPOWERS];
 
-   // MaxW: 2018/01/02: Changed from `int weaponctrs[NUMWEAPONS][3]`
-   WeaponCounterTree *weaponctrs; // haleyjd 03/31/06
+    // Frags, kills of other players.
+    int frags[MAXPLAYERS];
+    int totalfrags;
 
-   int            extralight;    // So gun flashes light up areas.
-   
-   attacktype_e   attackdown; // True if button down last tic.
-   int            usedown;
+    weaponinfo_t *readyweapon;
+    weaponinfo_t *pendingweapon; // Is nullptr if not changing.
 
-   int            cheats;      // Bit flags, for cheats and debug.
+    weaponslot_t *readyweaponslot;
+    weaponslot_t *pendingweaponslot; // Is nullptr if not changing.
 
-   int            refire;      // Refired shots are less accurate.
+    // MaxW: 2018/01/02: Changed from `int weaponctrs[NUMWEAPONS][3]`
+    WeaponCounterTree *weaponctrs; // haleyjd 03/31/06
 
-   // For Heretic chicken and similar
-   int            morphTics;   // player is morphed if > 0
-   int            headThrust;  // chicken peck countdown
-   inventory_t    unmorphInventory; // weapons are moved here when polymorphed to another creature
-   weaponinfo_t  *unmorphWeapon;
-   weaponslot_t  *unmorphWeaponSlot;
-   playerclass_t *unmorphClass;
-   skin_t        *unmorphSkin;
+    int extralight; // So gun flashes light up areas.
 
-   // For intermission stats.
-   int            killcount;
-   int            itemcount;
-   int            secretcount;
-   bool           didsecret;    // True if secret level has been done.
-  
-   // For screen flashing (red or bright).
-   int            damagecount;
-   int            bonuscount;
-   int            fixedcolormap; // Current PLAYPAL, for pain etc.
-   int            newtorch;      // haleyjd 08/31/13: change torch level?
-   int            torchdelta;    // haleyjd 08/31/13: amount to change torch level
+    attacktype_e attackdown; // True if button down last tic.
+    int          usedown;
 
-   Mobj          *attacker;      // Who did damage (nullptr for floors/ceilings).
+    int cheats; // Bit flags, for cheats and debug.
 
-   int            colormap;      // colorshift for player sprites
+    int refire; // Refired shots are less accurate.
 
-   // Overlay view sprites (gun, etc).
-   pspdef_t       psprites[NUMPSPRITES];
-  
-   int            quake;         // If > 0, player is experiencing an earthquake
-   int            jumptime;      // If > 0, player can't jump again yet
-   int            flyheight;     // haleyjd 06/05/12: flying
+    // For Heretic chicken and similar
+    int            morphTics;        // player is morphed if > 0
+    int            headThrust;       // chicken peck countdown
+    inventory_t    unmorphInventory; // weapons are moved here when polymorphed to another creature
+    weaponinfo_t  *unmorphWeapon;
+    weaponslot_t  *unmorphWeaponSlot;
+    playerclass_t *unmorphClass;
+    skin_t        *unmorphSkin;
 
-   // Inventory
-   inventory_t      inventory;   // haleyjd 07/06/13: player's inventory
-   inventoryindex_t inv_ptr;     // MaxW: 2017/12/28: Player's currently selected item
-   invbarstate_t    invbarstate; // MaxW: 2017/12/28: player's inventory bar state
+    // For intermission stats.
+    int  killcount;
+    int  itemcount;
+    int  secretcount;
+    bool didsecret; // True if secret level has been done.
 
-   // Player name
-   char           name[20];
+    // For screen flashing (red or bright).
+    int damagecount;
+    int bonuscount;
+    int fixedcolormap; // Current PLAYPAL, for pain etc.
+    int newtorch;      // haleyjd 08/31/13: change torch level?
+    int torchdelta;    // haleyjd 08/31/13: amount to change torch level
+
+    Mobj *attacker; // Who did damage (nullptr for floors/ceilings).
+
+    int colormap; // colorshift for player sprites
+
+    // Overlay view sprites (gun, etc).
+    pspdef_t psprites[NUMPSPRITES];
+
+    int quake;     // If > 0, player is experiencing an earthquake
+    int jumptime;  // If > 0, player can't jump again yet
+    int flyheight; // haleyjd 06/05/12: flying
+
+    // Inventory
+    inventory_t      inventory;   // haleyjd 07/06/13: player's inventory
+    inventoryindex_t inv_ptr;     // MaxW: 2017/12/28: Player's currently selected item
+    invbarstate_t    invbarstate; // MaxW: 2017/12/28: player's inventory bar state
+
+    // Player name
+    char name[20];
 };
-
 
 //
 // INTERMISSION
@@ -240,55 +235,54 @@ struct player_t
 //
 struct wbplayerstruct_t
 {
-   bool        in;     // whether the player is in game
+    bool in; // whether the player is in game
 
-   // Player stats, kills, collected items etc.
-   int         skills;
-   int         sitems;
-   int         ssecret;
-   int         stime;
-   int         frags[4];
-   int         score;  // current score on entry, modified on return
+    // Player stats, kills, collected items etc.
+    int skills;
+    int sitems;
+    int ssecret;
+    int stime;
+    int frags[4];
+    int score; // current score on entry, modified on return
 };
 
 struct wbstartstruct_t
 {
-   int         epsd;   // episode # (0-2)
-   int         nextEpisode; // next episode (0-based) in case of custom level info
+    int epsd;        // episode # (0-2)
+    int nextEpisode; // next episode (0-based) in case of custom level info
 
-   // if true, splash the secret level
-   bool        didsecret;
+    // if true, splash the secret level
+    bool didsecret;
 
-   // haleyjd: if player is going to secret map
-   bool        gotosecret;
+    // haleyjd: if player is going to secret map
+    bool gotosecret;
 
-   // previous and next levels, origin 0
-   int         last;
-   int         next;
-   bool        nextexplicit; // true if next was set by g_destmap
+    // previous and next levels, origin 0
+    int  last;
+    int  next;
+    bool nextexplicit; // true if next was set by g_destmap
 
-   // Explicit level-info stuff
-   const char *li_lastlevelname;
-   const char *li_nextlevelname;
-   const char *li_lastlevelpic;
-   const char *li_nextlevelpic;
-   const char *li_lastexitpic;
-   const char *li_nextenterpic;
+    // Explicit level-info stuff
+    const char *li_lastlevelname;
+    const char *li_nextlevelname;
+    const char *li_lastlevelpic;
+    const char *li_nextlevelpic;
+    const char *li_lastexitpic;
+    const char *li_nextenterpic;
 
-   int         maxkills;
-   int         maxitems;
-   int         maxsecret;
-   int         maxfrags;
+    int maxkills;
+    int maxitems;
+    int maxsecret;
+    int maxfrags;
 
-   // the par time
-   int         partime;
+    // the par time
+    int partime;
 
-   // index of this player in game
-   int         pnum;
+    // index of this player in game
+    int pnum;
 
-   wbplayerstruct_t    plyr[MAXPLAYERS];
+    wbplayerstruct_t plyr[MAXPLAYERS];
 };
-
 
 #endif
 

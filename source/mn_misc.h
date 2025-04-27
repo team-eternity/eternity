@@ -36,8 +36,8 @@ void MN_QuestionFunc(const char *message, void (*handler)(void));
 
 enum class mapColorType_e : bool
 {
-   mandatory,
-   optional
+    mandatory,
+    optional
 };
 
 void MN_SelectColor(const char *variable_name, const mapColorType_e color_type);

@@ -29,7 +29,6 @@
 
 class qstring;
 
-
 bool I_CreateDirectory(qstring const &path);
 
 const char *I_PlatformInstallDirectory();

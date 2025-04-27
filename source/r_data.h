@@ -33,41 +33,39 @@ class ZoneHeap;
 
 enum
 {
-    // Flag applied on sector_t topmap/midmap/bottommap when colormap should 
+    // Flag applied on sector_t topmap/midmap/bottommap when colormap should
     // render like in Boom. Remove it to get the real colormap index.
-    COLORMAP_BOOMKIND = 0x80000000, 
+    COLORMAP_BOOMKIND = 0x80000000,
 };
 
 // haleyjd 08/30/02: externalized these structures
 
 enum cmptype_e
 {
-   TC_PATCH,
-   TC_FLAT,
+    TC_PATCH,
+    TC_FLAT,
 };
 
 // Generalized graphic
 struct tcomponent_t
 {
-   int32_t   originx, originy;  // Block origin, which has already accounted
-   uint32_t  width, height;     // Unscaled dimensions of the graphic. 
+    int32_t  originx, originy; // Block origin, which has already accounted
+    uint32_t width, height;    // Unscaled dimensions of the graphic.
 
-   int32_t   lump;              // Lump number of the
+    int32_t lump; // Lump number of the
 
-   cmptype_e type;              // Type of lump
+    cmptype_e type; // Type of lump
 };
-
 
 // SoM: Columns are used inside the texture struct to reference the linear
 // buffer the textures are painted to.
 struct texcol_t
 {
-   uint16_t yoff, len;
-   uint32_t ptroff;
-   
-   texcol_t *next;
-};
+    uint16_t yoff, len;
+    uint32_t ptroff;
 
+    texcol_t *next;
+};
 
 // A maptexturedef_t describes a rectangular texture, which is composed
 // of one or more mappatch_t structures that arrange graphic patches.
@@ -75,62 +73,56 @@ struct texcol_t
 // and flats.
 enum texflag_e
 {
-   // Set if the texture contains see-thru portions
-   TF_MASKED    = 0x01u,
-   // Set by animation code marks this texture as being swirly
-   TF_SWIRLY    = 0x02u,
-   // Set if the texture can be used as a flat. 
-   TF_CANBEFLAT = 0x04u,
-   // Set if the texture is animated
-   TF_ANIMATED  = 0x08u,
-   // Set if texture width is non-power-of-two
-   TF_WIDTHNP2  = 0x10u,
-   // Set if texture was loaded in non-vanilla ways (i.e. not by TEXTUREx/PNAMES)
-   TF_NONVANILLA = 0x20u,
+    TF_MASKED     = 0x01u, // Set if the texture contains see-thru portions
+    TF_SWIRLY     = 0x02u, // Set by animation code marks this texture as being swirly
+    TF_CANBEFLAT  = 0x04u, // Set if the texture can be used as a flat.
+    TF_ANIMATED   = 0x08u, // Set if the texture is animated
+    TF_WIDTHNP2   = 0x10u, // Set if texture width is non-power-of-two
+    TF_NONVANILLA = 0x20u, // Set if texture was loaded in non-vanilla ways (i.e. not by TEXTUREx/PNAMES)
 };
 
 struct texture_t
 {
-   // SoM: New dog's in town
-   DLListItem<texture_t> link;
-   
-   // Index within the texture array of this object.
-   int           index;
+    // SoM: New dog's in town
+    DLListItem<texture_t> link;
 
-   // For use with ehash stuff
-   char      *name;
-   char       namebuf[9];       // Keep name for switch changing, etc.
-   int16_t    width, height;
-   
-   // SoM: These are no longer kept in separate arrays
-   int32_t    widthmask;
-   int32_t    heightfrac;
-   
-   // SoM: texture attributes
-   uint32_t   flags;
-   
-   // SoM: If the texture can be used as an optimized flat, this is the size
-   // of the flat
-   byte       flatsize;
-   
-   texcol_t   **columns;     // SoM: width length list of columns
-   byte       *bufferalloc;   // ioanch: allocate this one with a leading padding for safety
-   byte       *bufferdata;    // SoM: Linear buffer the texture occupies (ioanch: points to real data)
-   
-   // New texture system can put either textures or flats (or anything, really)
-   // into a texture, so the old patches idea has been scrapped for 'graphics'
-   // which can be either patch graphics or linear graphics.
-   int16_t        ccount;
-   tcomponent_t   components[1]; // back-to-front into the cached texture.
+    // Index within the texture array of this object.
+    int index;
+
+    // For use with ehash stuff
+    char   *name;
+    char    namebuf[9]; // Keep name for switch changing, etc.
+    int16_t width, height;
+
+    // SoM: These are no longer kept in separate arrays
+    int32_t widthmask;
+    int32_t heightfrac;
+
+    // SoM: texture attributes
+    uint32_t flags;
+
+    // SoM: If the texture can be used as an optimized flat, this is the size
+    // of the flat
+    byte flatsize;
+
+    texcol_t **columns;     // SoM: width length list of columns
+    byte      *bufferalloc; // ioanch: allocate this one with a leading padding for safety
+    byte      *bufferdata;  // SoM: Linear buffer the texture occupies (ioanch: points to real data)
+
+    // New texture system can put either textures or flats (or anything, really)
+    // into a texture, so the old patches idea has been scrapped for 'graphics'
+    // which can be either patch graphics or linear graphics.
+    int16_t      ccount;
+    tcomponent_t components[1]; // back-to-front into the cached texture.
 };
 
 // Retrieve column data for span blitting.
-//byte *R_GetColumn(int tex, int32_t col);
+// byte *R_GetColumn(int tex, int32_t col);
 
-// SoM: This is replaced with two functions. For solid walls/skies, we only 
+// SoM: This is replaced with two functions. For solid walls/skies, we only
 // need the raw column data (direct buffer ptr). For masked mid-textures, we
 // need to return columns from the column list
-const byte *R_GetRawColumn(ZoneHeap &heap, int tex, int32_t col);
+const byte     *R_GetRawColumn(ZoneHeap &heap, int tex, int32_t col);
 const texcol_t *R_GetMaskedColumn(int tex, int32_t col);
 
 // SoM: This function returns the linear texture buffer (recache if needed)
@@ -139,23 +131,23 @@ const byte *R_GetLinearBuffer(int tex);
 // Cache a given texture
 // Returns the texture for chaining.
 texture_t *R_GetTexture(int num);
-void R_CacheTexture(int num);
+void       R_CacheTexture(int num);
 
 // SoM: all textures/flats are now stored in a single array (textures)
-// Walls start from wallstart to (wallstop - 1) and flats go from flatstart 
+// Walls start from wallstart to (wallstop - 1) and flats go from flatstart
 // to (flatstop - 1)
-extern int         flatstart, flatstop;
-extern int         numflats;
+extern int flatstart, flatstop;
+extern int numflats;
 
 // SoM: Index of the BAADF00D invalid texture marker
-extern int         badtex;
+extern int badtex;
 
 extern int         texturecount;
 extern texture_t **textures;
 
-// SoM: Because all textures and flats are stored in the same array, the 
+// SoM: Because all textures and flats are stored in the same array, the
 // translation tables are now combined.
-extern int        *texturetranslation;
+extern int *texturetranslation;
 
 // I/O, setting up the stuff.
 void R_InitData(void);
@@ -167,17 +159,17 @@ void R_InitSpriteProjSpan();
 // Retrieval.
 // Floor/ceiling opaque texture tiles,
 // lookup by name.
-int R_FindFlat(const char *name);   // killough -- const added
+int R_FindFlat(const char *name); // killough -- const added
 int R_CheckForFlat(const char *name);
 
 // Called by P_Ticker for switches and animations,
 // returns the texture number for the texture name.
-int R_FindWall(const char *name);       // killough -- const added
-int R_CheckForWall(const char *name); 
+int R_FindWall(const char *name); // killough -- const added
+int R_CheckForWall(const char *name);
 
-void R_InitTranMap(bool force);      // killough 3/6/98: translucency initialization
-void R_InitSubMap(bool force);
-int  R_ColormapNumForName(const char *name);      // killough 4/4/98
+void        R_InitTranMap(bool force); // killough 3/6/98: translucency initialization
+void        R_InitSubMap(bool force);
+int         R_ColormapNumForName(const char *name); // killough 4/4/98
 const char *R_ColormapNameForNum(int index);
 
 // haleyjd: new global colormap method

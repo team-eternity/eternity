@@ -38,37 +38,30 @@
 //
 class MetaCollectionSpawn : public MetaObject
 {
-   DECLARE_RTTI_TYPE(MetaCollectionSpawn, MetaObject)
+    DECLARE_RTTI_TYPE(MetaCollectionSpawn, MetaObject)
 
 public:
-   // public data
-   qstring type;
-   int     spchance;
-   int     coopchance;
-   int     dmchance;
+    // public data
+    qstring type;
+    int     spchance;
+    int     coopchance;
+    int     dmchance;
 
-   // Constructors
+    // Constructors
 
-   MetaCollectionSpawn() 
-      : Super(), type(), spchance(0), coopchance(0), dmchance(0)
-   {
-   }
+    MetaCollectionSpawn() : Super(), type(), spchance(0), coopchance(0), dmchance(0) {}
 
-   MetaCollectionSpawn(const char *key, const char *pType, 
-                       int pSpchance, int pCoopchance, int pDmchance)
-      : Super(key), type(pType), spchance(pSpchance), coopchance(pCoopchance),
-        dmchance(pDmchance)
-   {
-   }
+    MetaCollectionSpawn(const char *key, const char *pType, int pSpchance, int pCoopchance, int pDmchance)
+        : Super(key), type(pType), spchance(pSpchance), coopchance(pCoopchance), dmchance(pDmchance)
+    {}
 
-   MetaCollectionSpawn(const MetaCollectionSpawn &other)
-      : Super(other), type(other.type), spchance(other.spchance),
-        coopchance(other.coopchance), dmchance(other.dmchance)
-   {
-   }
+    MetaCollectionSpawn(const MetaCollectionSpawn &other)
+        : Super(other), type(other.type), spchance(other.spchance), coopchance(other.coopchance),
+          dmchance(other.dmchance)
+    {}
 
-   virtual MetaObject *clone()    const override { return new MetaCollectionSpawn(*this); }
-   virtual const char *toString() const override { return type.constPtr(); }
+    virtual MetaObject *clone() const override { return new MetaCollectionSpawn(*this); }
+    virtual const char *toString() const override { return type.constPtr(); }
 };
 
 #endif

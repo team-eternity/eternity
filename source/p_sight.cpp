@@ -43,10 +43,10 @@
 
 struct los_t
 {
-   fixed_t sightzstart, t2x, t2y;   // eye z of looker
-   divline_t strace;                // from t1 to t2
-   fixed_t topslope, bottomslope;   // slopes to top and bottom of target
-   fixed_t bbox[4];
+    fixed_t   sightzstart, t2x, t2y; // eye z of looker
+    divline_t strace;                // from t1 to t2
+    fixed_t   topslope, bottomslope; // slopes to top and bottom of target
+    fixed_t   bbox[4];
 };
 
 //
@@ -64,34 +64,34 @@ struct los_t
 template<typename T>
 static int P_DivlineSide(fixed_t x, fixed_t y, const T &node)
 {
-   if(!node.dx)
-   {
-      if(x == node.x)
-         return 2;
-      if(x <= node.x)
-         return node.dy > 0;
-      return node.dy < 0;
-   }
+    if(!node.dx)
+    {
+        if(x == node.x)
+            return 2;
+        if(x <= node.x)
+            return node.dy > 0;
+        return node.dy < 0;
+    }
 
-   if(!node.dy)
-   {
-      if((demo_version < 331 ? x : y) == node.y) // here's the bug...
-         return 2;
-      if(y <= node.y)
-         return node.dx < 0;
-      return node.dx > 0;
-   }
+    if(!node.dy)
+    {
+        if((demo_version < 331 ? x : y) == node.y) // here's the bug...
+            return 2;
+        if(y <= node.y)
+            return node.dx < 0;
+        return node.dx > 0;
+    }
 
-   fixed_t left  = ((x - node.x) >> FRACBITS) * (node.dy >> FRACBITS);
-   fixed_t right = ((y - node.y) >> FRACBITS) * (node.dx >> FRACBITS);
+    fixed_t left  = ((x - node.x) >> FRACBITS) * (node.dy >> FRACBITS);
+    fixed_t right = ((y - node.y) >> FRACBITS) * (node.dx >> FRACBITS);
 
-   if(right < left)
-      return 0; // front side
+    if(right < left)
+        return 0; // front side
 
-   if(left == right)
-      return 2; // on
+    if(left == right)
+        return 2; // on
 
-   return 1;    // back side
+    return 1; // back side
 }
 
 //
@@ -102,19 +102,16 @@ static int P_DivlineSide(fixed_t x, fixed_t y, const T &node)
 // killough 4/19/98: made static, cleaned up
 // haleyjd  9/23/02: reformatted
 //
-static fixed_t P_InterceptVector2(const divline_t *v2, 
-                                  const divline_t *v1)
+static fixed_t P_InterceptVector2(const divline_t *v2, const divline_t *v1)
 {
-   fixed_t den;
+    fixed_t den;
 
-   if((den = FixedMul(v1->dy>>8, v2->dx) - FixedMul(v1->dx>>8, v2->dy)))
-   {
-      return 
-         FixedDiv(FixedMul((v1->x - v2->x)>>8, v1->dy) +
-                  FixedMul((v2->y - v1->y)>>8, v1->dx), den);
-   }
+    if((den = FixedMul(v1->dy >> 8, v2->dx) - FixedMul(v1->dx >> 8, v2->dy)))
+    {
+        return FixedDiv(FixedMul((v1->x - v2->x) >> 8, v1->dy) + FixedMul((v2->y - v1->y) >> 8, v1->dx), den);
+    }
 
-   return 0;
+    return 0;
 }
 
 //
@@ -125,182 +122,173 @@ static fixed_t P_InterceptVector2(const divline_t *v2,
 //
 static bool P_CrossSubsecPolyObj(polyobj_t *po, los_t *los)
 {
-   int i;
+    int i;
 
-   for(i = 0; i < po->numLines; ++i)
-   {
-      line_t *line = po->lines[i];
-      divline_t divl;
-      const vertex_t *v1,*v2;
-      
-      // already checked other side?
-      if(line->validcount == validcount)
-         continue;
+    for(i = 0; i < po->numLines; ++i)
+    {
+        line_t         *line = po->lines[i];
+        divline_t       divl;
+        const vertex_t *v1, *v2;
 
-      line->validcount = validcount;
-      
-      // OPTIMIZE: killough 4/20/98: Added quick bounding-box rejection test
-      if(line->bbox[BOXLEFT  ] > los->bbox[BOXRIGHT ] ||
-         line->bbox[BOXRIGHT ] < los->bbox[BOXLEFT  ] ||
-         line->bbox[BOXBOTTOM] > los->bbox[BOXTOP   ] ||
-         line->bbox[BOXTOP]    < los->bbox[BOXBOTTOM])
-         continue;
+        // already checked other side?
+        if(line->validcount == validcount)
+            continue;
 
-      v1 = line->v1;
-      v2 = line->v2;
-      
-      // line isn't crossed?
-      if(P_DivlineSide(v1->x, v1->y, los->strace) ==
-         P_DivlineSide(v2->x, v2->y, los->strace))
-         continue;
+        line->validcount = validcount;
 
-      divl.dx = v2->x - (divl.x = v1->x);
-      divl.dy = v2->y - (divl.y = v1->y);
-      
-      // line isn't crossed?
-      if(P_DivlineSide(los->strace.x, los->strace.y, divl) ==
-         P_DivlineSide(los->t2x, los->t2y, divl))
-         continue;
+        // OPTIMIZE: killough 4/20/98: Added quick bounding-box rejection test
+        if(line->bbox[BOXLEFT] > los->bbox[BOXRIGHT] || line->bbox[BOXRIGHT] < los->bbox[BOXLEFT] ||
+           line->bbox[BOXBOTTOM] > los->bbox[BOXTOP] || line->bbox[BOXTOP] < los->bbox[BOXBOTTOM])
+            continue;
 
-      // stop because it is not two sided
-      return false;
-   }
-   
-   return true;
+        v1 = line->v1;
+        v2 = line->v2;
+
+        // line isn't crossed?
+        if(P_DivlineSide(v1->x, v1->y, los->strace) == P_DivlineSide(v2->x, v2->y, los->strace))
+            continue;
+
+        divl.dx = v2->x - (divl.x = v1->x);
+        divl.dy = v2->y - (divl.y = v1->y);
+
+        // line isn't crossed?
+        if(P_DivlineSide(los->strace.x, los->strace.y, divl) == P_DivlineSide(los->t2x, los->t2y, divl))
+            continue;
+
+        // stop because it is not two sided
+        return false;
+    }
+
+    return true;
 }
 
 //
 // P_CrossSubsector
-// 
+//
 // Returns true if strace crosses the given subsector successfully.
 //
 // killough 4/19/98: made static and cleaned up
 //
 static bool P_CrossSubsector(int num, los_t *los)
 {
-   seg_t *lseg;
-   int count;
-   DLListItem<rpolyobj_t> *link; // haleyjd 05/16/08
-   
+    seg_t                  *lseg;
+    int                     count;
+    DLListItem<rpolyobj_t> *link; // haleyjd 05/16/08
+
 #ifdef RANGECHECK
-   if(num >= numsubsectors)
-      I_Error("P_CrossSubsector: ss %i with numss = %i\n", num, numsubsectors);
+    if(num >= numsubsectors)
+        I_Error("P_CrossSubsector: ss %i with numss = %i\n", num, numsubsectors);
 #endif
 
-   // haleyjd 02/23/06: this assignment should be after the above check
-   lseg = segs + subsectors[num].firstline;
+    // haleyjd 02/23/06: this assignment should be after the above check
+    lseg = segs + subsectors[num].firstline;
 
-   // haleyjd 02/23/06: check polyobject lines
-   if((link = subsectors[num].polyList))
-   {
-      while(link)
-      {
-         polyobj_t *po = (*link)->polyobj;
+    // haleyjd 02/23/06: check polyobject lines
+    if((link = subsectors[num].polyList))
+    {
+        while(link)
+        {
+            polyobj_t *po = (*link)->polyobj;
 
-         if(po->validcount != validcount)
-         {
-            po->validcount = validcount;
-            if(!P_CrossSubsecPolyObj(po, los))
-               return false;
-         }
-         link = link->dllNext;
-      }
-   }
+            if(po->validcount != validcount)
+            {
+                po->validcount = validcount;
+                if(!P_CrossSubsecPolyObj(po, los))
+                    return false;
+            }
+            link = link->dllNext;
+        }
+    }
 
-   for(count = subsectors[num].numlines; --count >= 0; lseg++)  // check lines
-   {
-      line_t *line = lseg->linedef;
-      divline_t divl;
-      fixed_t opentop, openbottom;
-      const sector_t *front, *back;
-      const vertex_t *v1,*v2;
-      fixed_t frac;
-      
-      // already checked other side?
-      if(line->validcount == validcount)
-         continue;
+    for(count = subsectors[num].numlines; --count >= 0; lseg++) // check lines
+    {
+        line_t         *line = lseg->linedef;
+        divline_t       divl;
+        fixed_t         opentop, openbottom;
+        const sector_t *front, *back;
+        const vertex_t *v1, *v2;
+        fixed_t         frac;
 
-      line->validcount = validcount;
-      
-      // OPTIMIZE: killough 4/20/98: Added quick bounding-box rejection test
-      // haleyjd: another demo compatibility fix by cph -- who knows
-      // why this is a problem, though
-      // 11/11/02: see P_DivlineSide above to find out why
-      if(!demo_compatibility)
-      {
-         if(line->bbox[BOXLEFT  ] > los->bbox[BOXRIGHT ] ||
-            line->bbox[BOXRIGHT ] < los->bbox[BOXLEFT  ] ||
-            line->bbox[BOXBOTTOM] > los->bbox[BOXTOP   ] ||
-            line->bbox[BOXTOP   ] < los->bbox[BOXBOTTOM])
+        // already checked other side?
+        if(line->validcount == validcount)
             continue;
-      }
 
-      v1 = line->v1;
-      v2 = line->v2;
-      
-      // line isn't crossed?
-      if(P_DivlineSide(v1->x, v1->y, los->strace) ==
-         P_DivlineSide(v2->x, v2->y, los->strace))
-         continue;
+        line->validcount = validcount;
 
-      divl.dx = v2->x - (divl.x = v1->x);
-      divl.dy = v2->y - (divl.y = v1->y);
-      
-      // line isn't crossed?
-      if(P_DivlineSide(los->strace.x, los->strace.y, divl) ==
-         P_DivlineSide(los->t2x, los->t2y, divl))
-         continue;
+        // OPTIMIZE: killough 4/20/98: Added quick bounding-box rejection test
+        // haleyjd: another demo compatibility fix by cph -- who knows
+        // why this is a problem, though
+        // 11/11/02: see P_DivlineSide above to find out why
+        if(!demo_compatibility)
+        {
+            if(line->bbox[BOXLEFT] > los->bbox[BOXRIGHT] || line->bbox[BOXRIGHT] < los->bbox[BOXLEFT] ||
+               line->bbox[BOXBOTTOM] > los->bbox[BOXTOP] || line->bbox[BOXTOP] < los->bbox[BOXBOTTOM])
+                continue;
+        }
 
-      // stop because it is not two sided anyway
-      if(!(line->flags & ML_TWOSIDED))
-         return false;
+        v1 = line->v1;
+        v2 = line->v2;
 
-      // haleyjd 04/30/11: stop on BLOCKALL lines
-      if(line->extflags & EX_ML_BLOCKALL)
-         return false;
+        // line isn't crossed?
+        if(P_DivlineSide(v1->x, v1->y, los->strace) == P_DivlineSide(v2->x, v2->y, los->strace))
+            continue;
 
-      // crosses a two sided line
-      // no wall to block sight with?
-      if((front = lseg->frontsector)->srf.floor.height ==
-         (back = lseg->backsector)->srf.floor.height &&
-         front->srf.ceiling.height == back->srf.ceiling.height)
-         continue;
+        divl.dx = v2->x - (divl.x = v1->x);
+        divl.dy = v2->y - (divl.y = v1->y);
 
-      // possible occluder
-      // because of ceiling height differences
-      opentop = front->srf.ceiling.height < back->srf.ceiling.height ?
-         front->srf.ceiling.height : back->srf.ceiling.height;
+        // line isn't crossed?
+        if(P_DivlineSide(los->strace.x, los->strace.y, divl) == P_DivlineSide(los->t2x, los->t2y, divl))
+            continue;
 
-      // because of floor height differences
-      openbottom = front->srf.floor.height > back->srf.floor.height ?
-         front->srf.floor.height : back->srf.floor.height;
+        // stop because it is not two sided anyway
+        if(!(line->flags & ML_TWOSIDED))
+            return false;
 
-      // quick test for totally closed doors
-      if(openbottom >= opentop)
-         return false;               // stop
+        // haleyjd 04/30/11: stop on BLOCKALL lines
+        if(line->extflags & EX_ML_BLOCKALL)
+            return false;
 
-      frac = P_InterceptVector2(&los->strace, &divl);
+        // crosses a two sided line
+        // no wall to block sight with?
+        if((front = lseg->frontsector)->srf.floor.height == (back = lseg->backsector)->srf.floor.height &&
+           front->srf.ceiling.height == back->srf.ceiling.height)
+            continue;
 
-      if(front->srf.floor.height != back->srf.floor.height)
-      {
-         fixed_t slope = FixedDiv(openbottom - los->sightzstart , frac);
-         if(slope > los->bottomslope)
-            los->bottomslope = slope;
-      }
+        // possible occluder
+        // because of ceiling height differences
+        opentop =
+            front->srf.ceiling.height < back->srf.ceiling.height ? front->srf.ceiling.height : back->srf.ceiling.height;
 
-      if(front->srf.ceiling.height != back->srf.ceiling.height)
-      {
-         fixed_t slope = FixedDiv(opentop - los->sightzstart , frac);
-         if(slope < los->topslope)
-            los->topslope = slope;
-      }
+        // because of floor height differences
+        openbottom =
+            front->srf.floor.height > back->srf.floor.height ? front->srf.floor.height : back->srf.floor.height;
 
-      if (los->topslope <= los->bottomslope)
-         return false;               // stop
-   }
+        // quick test for totally closed doors
+        if(openbottom >= opentop)
+            return false; // stop
 
-   // passed the subsector ok
-   return true;
+        frac = P_InterceptVector2(&los->strace, &divl);
+
+        if(front->srf.floor.height != back->srf.floor.height)
+        {
+            fixed_t slope = FixedDiv(openbottom - los->sightzstart, frac);
+            if(slope > los->bottomslope)
+                los->bottomslope = slope;
+        }
+
+        if(front->srf.ceiling.height != back->srf.ceiling.height)
+        {
+            fixed_t slope = FixedDiv(opentop - los->sightzstart, frac);
+            if(slope < los->topslope)
+                los->topslope = slope;
+        }
+
+        if(los->topslope <= los->bottomslope)
+            return false; // stop
+    }
+
+    // passed the subsector ok
+    return true;
 }
 
 //
@@ -311,22 +299,21 @@ static bool P_CrossSubsector(int num, los_t *los)
 //
 static bool P_CrossBSPNode(int bspnum, los_t *los)
 {
-   while(!(bspnum & NF_SUBSECTOR))
-   {
-      const node_t &bsp = nodes[bspnum];
-      int side = P_DivlineSide(los->strace.x, los->strace.y, bsp)&1;
-      if(side == P_DivlineSide(los->t2x,      los->t2y,      bsp))
-         bspnum = bsp.children[side]; // doesn't touch the other side
-      else         // the partition plane is crossed here
-      {
-         if(!P_CrossBSPNode(bsp.children[side], los))
-            return 0;  // cross the starting side
-         else
-            bspnum = bsp.children[side^1];  // cross the ending side
-      }
-   }
-   return 
-      P_CrossSubsector((bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR), los);
+    while(!(bspnum & NF_SUBSECTOR))
+    {
+        const node_t &bsp  = nodes[bspnum];
+        int           side = P_DivlineSide(los->strace.x, los->strace.y, bsp) & 1;
+        if(side == P_DivlineSide(los->t2x, los->t2y, bsp))
+            bspnum = bsp.children[side]; // doesn't touch the other side
+        else                             // the partition plane is crossed here
+        {
+            if(!P_CrossBSPNode(bsp.children[side], los))
+                return 0; // cross the starting side
+            else
+                bspnum = bsp.children[side ^ 1]; // cross the ending side
+        }
+    }
+    return P_CrossSubsector((bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR), los);
 }
 
 //
@@ -339,89 +326,82 @@ static bool P_CrossBSPNode(int bspnum, los_t *los)
 //
 bool P_CheckSight(Mobj *t1, Mobj *t2)
 {
-   // VANILLA_HERETIC: both in modern and Heretic demo gameplay use CAM_CheckSight
-   if(full_demo_version >= make_full_version(340, 24) || vanilla_heretic)
-   {
-      camsightparams_t camparams;
-      camparams.prev = nullptr;
-      camparams.setLookerMobj(t1);
-      camparams.setTargetMobj(t2);
-      return CAM_CheckSight(camparams);
-   }
+    // VANILLA_HERETIC: both in modern and Heretic demo gameplay use CAM_CheckSight
+    if(full_demo_version >= make_full_version(340, 24) || vanilla_heretic)
+    {
+        camsightparams_t camparams;
+        camparams.prev = nullptr;
+        camparams.setLookerMobj(t1);
+        camparams.setTargetMobj(t2);
+        return CAM_CheckSight(camparams);
+    }
 
-   const sector_t *s1 = t1->subsector->sector;
-   const sector_t *s2 = t2->subsector->sector;
-   int pnum = eindex(s1-sectors)*numsectors + eindex(s2-sectors);
-   los_t los;
+    const sector_t *s1   = t1->subsector->sector;
+    const sector_t *s2   = t2->subsector->sector;
+    int             pnum = eindex(s1 - sectors) * numsectors + eindex(s2 - sectors);
+    los_t           los;
 
-   // First check for trivial rejection.
-   // Determine subsector entries in REJECT table.
-   //
-   // Check in REJECT table.
+    // First check for trivial rejection.
+    // Determine subsector entries in REJECT table.
+    //
+    // Check in REJECT table.
 
-   if(rejectmatrix[pnum>>3] & (1 << (pnum&7)))   // can't possibly be connected
-      return false;
+    if(rejectmatrix[pnum >> 3] & (1 << (pnum & 7))) // can't possibly be connected
+        return false;
 
-   // killough 4/19/98: make fake floors and ceilings block monster view
-   if((s1->heightsec != -1 &&
-       ((t1->z + t1->height <= sectors[s1->heightsec].srf.floor.height &&
-         t2->z >= sectors[s1->heightsec].srf.floor.height) ||
-        (t1->z >= sectors[s1->heightsec].srf.ceiling.height &&
-         t2->z + t1->height <= sectors[s1->heightsec].srf.ceiling.height)))
-      ||
-      (s2->heightsec != -1 &&
-       ((t2->z + t2->height <= sectors[s2->heightsec].srf.floor.height &&
-         t1->z >= sectors[s2->heightsec].srf.floor.height) ||
-        (t2->z >= sectors[s2->heightsec].srf.ceiling.height &&
-         t1->z + t2->height <= sectors[s2->heightsec].srf.ceiling.height))))
-      return false;
+    // killough 4/19/98: make fake floors and ceilings block monster view
+    if((s1->heightsec != -1 && ((t1->z + t1->height <= sectors[s1->heightsec].srf.floor.height &&
+                                 t2->z >= sectors[s1->heightsec].srf.floor.height) ||
+                                (t1->z >= sectors[s1->heightsec].srf.ceiling.height &&
+                                 t2->z + t1->height <= sectors[s1->heightsec].srf.ceiling.height))) ||
+       (s2->heightsec != -1 && ((t2->z + t2->height <= sectors[s2->heightsec].srf.floor.height &&
+                                 t1->z >= sectors[s2->heightsec].srf.floor.height) ||
+                                (t2->z >= sectors[s2->heightsec].srf.ceiling.height &&
+                                 t1->z + t2->height <= sectors[s2->heightsec].srf.ceiling.height))))
+        return false;
 
-   // killough 11/98: shortcut for melee situations
-   // same subsector? obviously visible
-   // haleyjd: compatibility optioned for old demos -- thanks to cph
-   // haleyjd 02/23/06: can't do this if there are polyobjects in the subsec
-   // haleyjd 12/28/10: This "fix" was not in BOOM 200-202 either!
+    // killough 11/98: shortcut for melee situations
+    // same subsector? obviously visible
+    // haleyjd: compatibility optioned for old demos -- thanks to cph
+    // haleyjd 02/23/06: can't do this if there are polyobjects in the subsec
+    // haleyjd 12/28/10: This "fix" was not in BOOM 200-202 either!
 
-   if(demo_version >= 203 && !t1->subsector->polyList &&
-      t1->subsector == t2->subsector)
-      return true;
+    if(demo_version >= 203 && !t1->subsector->polyList && t1->subsector == t2->subsector)
+        return true;
 
-   // An unobstructed LOS is possible.
-   // Now look from eyes of t1 to any part of t2.
+    // An unobstructed LOS is possible.
+    // Now look from eyes of t1 to any part of t2.
 
-   validcount++;
+    validcount++;
 
-   los.topslope =
-      (los.bottomslope = t2->z - (los.sightzstart =
-                                 t1->z + t1->height -
-                                  (t1->height>>2))) + t2->height;
-   los.strace.dx = (los.t2x = t2->x) - (los.strace.x = t1->x);
-   los.strace.dy = (los.t2y = t2->y) - (los.strace.y = t1->y);
+    los.topslope  = (los.bottomslope = t2->z - (los.sightzstart = t1->z + t1->height - (t1->height >> 2))) + t2->height;
+    los.strace.dx = (los.t2x = t2->x) - (los.strace.x = t1->x);
+    los.strace.dy = (los.t2y = t2->y) - (los.strace.y = t1->y);
 
-   if(t1->x > t2->x)
-   {
-      los.bbox[BOXRIGHT] = t1->x;
-      los.bbox[BOXLEFT] = t2->x;
-   }
-   else
-   {
-      los.bbox[BOXRIGHT] = t2->x;
-      los.bbox[BOXLEFT] = t1->x;
-   }
+    if(t1->x > t2->x)
+    {
+        los.bbox[BOXRIGHT] = t1->x;
+        los.bbox[BOXLEFT]  = t2->x;
+    }
+    else
+    {
+        los.bbox[BOXRIGHT] = t2->x;
+        los.bbox[BOXLEFT]  = t1->x;
+    }
 
-   if(t1->y > t2->y)
-   {
-      los.bbox[BOXTOP] = t1->y;
-      los.bbox[BOXBOTTOM] = t2->y;
-   }
-   else
-   {
-      los.bbox[BOXTOP] = t2->y;
-      los.bbox[BOXBOTTOM] = t1->y;
-   }
-   
-   // the head node is the last node output
-   return P_CrossBSPNode(numnodes-1, &los);
+    if(t1->y > t2->y)
+    {
+        los.bbox[BOXTOP]    = t1->y;
+        los.bbox[BOXBOTTOM] = t2->y;
+    }
+    else
+    {
+        los.bbox[BOXTOP]    = t2->y;
+        los.bbox[BOXBOTTOM] = t1->y;
+    }
+
+    // the head node is the last node output
+    return P_CrossBSPNode(numnodes - 1, &los);
 }
 
 //----------------------------------------------------------------------------

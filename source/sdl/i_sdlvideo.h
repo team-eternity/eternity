@@ -28,7 +28,7 @@
 #define I_SDLVIDEO_H__
 
 // Grab the HAL video definitions
-#include "../i_video.h" 
+#include "../i_video.h"
 
 //
 // SDL Video Driver
@@ -36,16 +36,16 @@
 class SDLVideoDriver : public HALVideoDriver
 {
 protected:
-   virtual void SetPrimaryBuffer();
-   virtual void UnsetPrimaryBuffer();
+    virtual void SetPrimaryBuffer();
+    virtual void UnsetPrimaryBuffer();
 
 public:
-   virtual void FinishUpdate();
-   virtual void ReadScreen(byte *scr);
-   virtual void SetPalette(byte *pal);
-   virtual void ShutdownGraphics();
-   virtual void ShutdownGraphicsPartway();
-   virtual bool InitGraphicsMode();
+    virtual void FinishUpdate();
+    virtual void ReadScreen(byte *scr);
+    virtual void SetPalette(byte *pal);
+    virtual void ShutdownGraphics();
+    virtual void ShutdownGraphicsPartway();
+    virtual bool InitGraphicsMode();
 };
 
 // Global singleton instance

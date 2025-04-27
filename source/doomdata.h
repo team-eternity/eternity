@@ -46,67 +46,67 @@
 // to provide a complete scene geometry description.
 enum
 {
-   ML_LABEL,             // A separator, name, ExMx or MAPxx
-   ML_THINGS,            // Monsters, items..
-   ML_LINEDEFS,          // LineDefs, from editing
-   ML_SIDEDEFS,          // SideDefs, from editing
-   ML_VERTEXES,          // Vertices, edited and BSP splits generated
-   ML_SEGS,              // LineSegs, from LineDefs split by BSP
-   ML_SSECTORS,          // SubSectors, list of LineSegs
-   ML_NODES,             // BSP nodes
-   ML_SECTORS,           // Sectors, from editing
-   ML_REJECT,            // LUT, sector-sector visibility
-   ML_BLOCKMAP,          // LUT, motion clipping, walls/grid element
-   ML_BEHAVIOR,          // haleyjd 10/03/05: behavior, used to id hexen maps
+    ML_LABEL,    // A separator, name, ExMx or MAPxx
+    ML_THINGS,   // Monsters, items..
+    ML_LINEDEFS, // LineDefs, from editing
+    ML_SIDEDEFS, // SideDefs, from editing
+    ML_VERTEXES, // Vertices, edited and BSP splits generated
+    ML_SEGS,     // LineSegs, from LineDefs split by BSP
+    ML_SSECTORS, // SubSectors, list of LineSegs
+    ML_NODES,    // BSP nodes
+    ML_SECTORS,  // Sectors, from editing
+    ML_REJECT,   // LUT, sector-sector visibility
+    ML_BLOCKMAP, // LUT, motion clipping, walls/grid element
+    ML_BEHAVIOR, // haleyjd 10/03/05: behavior, used to id hexen maps
 
-   // PSX
-   ML_LEAFS = ML_BEHAVIOR, // haleyjd 12/12/13: for identifying console map formats
+    // PSX
+    ML_LEAFS = ML_BEHAVIOR, // haleyjd 12/12/13: for identifying console map formats
 
-   // Doom 64
-   ML_LIGHTS,
-   ML_MACROS
+    // Doom 64
+    ML_LIGHTS,
+    ML_MACROS
 };
 
 // A single Vertex.
 struct mapvertex_t
 {
-   int16_t x, y;
+    int16_t x, y;
 };
 
 // A SideDef, defining the visual appearance of a wall,
 // by setting textures and offsets.
 struct mapsidedef_t
 {
-   int16_t textureoffset;
-   int16_t rowoffset;
-   char    toptexture[8];
-   char    bottomtexture[8];
-   char    midtexture[8];
-   int16_t sector;  // Front sector, towards viewer.
+    int16_t textureoffset;
+    int16_t rowoffset;
+    char    toptexture[8];
+    char    bottomtexture[8];
+    char    midtexture[8];
+    int16_t sector; // Front sector, towards viewer.
 };
 
 // A LineDef, as used for editing, and as input to the BSP builder.
 
 struct maplinedef_t
 {
-   int16_t v1;
-   int16_t v2;
-   int16_t flags;
-   int16_t special;
-   int16_t tag;
-   int16_t sidenum[2];  // sidenum[1] will be -1 if one sided
+    int16_t v1;
+    int16_t v2;
+    int16_t flags;
+    int16_t special;
+    int16_t tag;
+    int16_t sidenum[2]; // sidenum[1] will be -1 if one sided
 };
 
 #define NUMHXLINEARGS 5
 
 struct maplinedefhexen_t
 {
-   int16_t v1;
-   int16_t v2;
-   int16_t flags;
-   byte    special;
-   byte    args[NUMHXLINEARGS];
-   int16_t sidenum[2];
+    int16_t v1;
+    int16_t v2;
+    int16_t flags;
+    byte    special;
+    byte    args[NUMHXLINEARGS];
+    int16_t sidenum[2];
 };
 
 //
@@ -149,8 +149,8 @@ struct maplinedefhexen_t
 // Set if already seen, thus drawn in automap.
 #define ML_MAPPED               256
 
-//jff 3/21/98 Set if line absorbs use by player
-//allow multiple push/switch triggers to be used on one push
+// jff 3/21/98 Set if line absorbs use by player
+// allow multiple push/switch triggers to be used on one push
 #define ML_PASSUSE              512
 
 // SoM 9/02/02: 3D Middletexture flag!
@@ -171,84 +171,84 @@ struct maplinedefhexen_t
 // haleyjd 01/22/11: internal line flags
 enum
 {
-   MLI_DYNASEGLINE = 0x01, // Consider only via dynasegs for rendering, etc.
-   MLI_FLOORPORTALCOPIED = 0x02, // ioanch 20160219: for type 385
-   MLI_CEILINGPORTALCOPIED = 0x04, // ioanch 20160219: for type 385
-   MLI_1SPORTALLINE = 0x08,   // wall portal from a single-sided line
-   MLI_MOVINGPORTAL = 0x10,   // line is on a moving portal
+    MLI_DYNASEGLINE         = 0x01, // Consider only via dynasegs for rendering, etc.
+    MLI_FLOORPORTALCOPIED   = 0x02, // ioanch 20160219: for type 385
+    MLI_CEILINGPORTALCOPIED = 0x04, // ioanch 20160219: for type 385
+    MLI_1SPORTALLINE        = 0x08, // wall portal from a single-sided line
+    MLI_MOVINGPORTAL        = 0x10, // line is on a moving portal
 };
 
 // internal sidedef flags
 enum
 {
-   SDI_VERTICALLYSCROLLING = 0x0001,   // sidedef is targeted for vertical scrolling (needed by skies)
+    SDI_VERTICALLYSCROLLING = 0x0001, // sidedef is targeted for vertical scrolling (needed by skies)
 
-   SDI_SKEW_TOP_MASK       = 0x000E,   // top solid seg skew type: bits 2, 3, and 4
-   SDI_SKEW_TOP_SHIFT      = 1,
+    SDI_SKEW_TOP_MASK  = 0x000E, // top solid seg skew type: bits 2, 3, and 4
+    SDI_SKEW_TOP_SHIFT = 1,
 
-   SDI_SKEW_BOTTOM_MASK    = 0x0070,   // bottom solid seg skew type: bits 5, 6, and 7
-   SDI_SKEW_BOTTOM_SHIFT   = 4,
+    SDI_SKEW_BOTTOM_MASK  = 0x0070, // bottom solid seg skew type: bits 5, 6, and 7
+    SDI_SKEW_BOTTOM_SHIFT = 4,
 
-   SDI_SKEW_MIDDLE_MASK    = 0x0380,   // middle masked seg skew type: bits 8, 9, and 10
-   SDI_SKEW_MIDDLE_SHIFT   = 7,
+    SDI_SKEW_MIDDLE_MASK  = 0x0380, // middle masked seg skew type: bits 8, 9, and 10
+    SDI_SKEW_MIDDLE_SHIFT = 7,
 };
 
 // sidedef flags
 enum
 {
-   SDF_LIGHT_BASE_ABSOLUTE   = 0x0001,
-   SDF_LIGHT_TOP_ABSOLUTE    = 0x0002,
-   SDF_LIGHT_MID_ABSOLUTE    = 0x0004,
-   SDF_LIGHT_BOTTOM_ABSOLUTE = 0x0008,
+    SDF_LIGHT_BASE_ABSOLUTE   = 0x0001,
+    SDF_LIGHT_TOP_ABSOLUTE    = 0x0002,
+    SDF_LIGHT_MID_ABSOLUTE    = 0x0004,
+    SDF_LIGHT_BOTTOM_ABSOLUTE = 0x0008,
 };
 
 // Sector definition, from editing.
 struct mapsector_t
 {
-   int16_t floorheight;
-   int16_t ceilingheight;
-   char  floorpic[8];
-   char  ceilingpic[8];
-   int16_t lightlevel;
-   int16_t special;
-   int16_t tag;
+    int16_t floorheight;
+    int16_t ceilingheight;
+    char    floorpic[8];
+    char    ceilingpic[8];
+    int16_t lightlevel;
+    int16_t special;
+    int16_t tag;
 };
 
 // SubSector, as generated by BSP.
 struct mapsubsector_t
 {
-   int16_t numsegs;
-   int16_t firstseg;    // Index of first one; segs are stored sequentially.
+    int16_t numsegs;
+    int16_t firstseg; // Index of first one; segs are stored sequentially.
 };
 
 // ioanch 20160204: DeePBSP subsector, thanks to PrBoom for the implementation
 struct mapsubsector_v4_t
 {
-   uint16_t numsegs; // same signedness as in PrBoom
-   int32_t firstseg;
+    uint16_t numsegs; // same signedness as in PrBoom
+    int32_t  firstseg;
 };
 
 // LineSeg, generated by splitting LineDefs
 // using partition lines selected by BSP builder.
 struct mapseg_t
 {
-   int16_t v1;
-   int16_t v2;
-   int16_t angle;
-   int16_t linedef;
-   int16_t side;
-   int16_t offset;
+    int16_t v1;
+    int16_t v2;
+    int16_t angle;
+    int16_t linedef;
+    int16_t side;
+    int16_t offset;
 };
 
 // ioanch 20160204: DEEPBSP seg (based on PRBOOM implementation)
 struct mapseg_v4_t
 {
-   int32_t v1;
-   int32_t v2;
-   int16_t angle;
-   int16_t linedef;
-   int16_t side;
-   int16_t offset;
+    int32_t v1;
+    int32_t v2;
+    int16_t angle;
+    int16_t linedef;
+    int16_t side;
+    int16_t offset;
 };
 
 // BSP node structure.
@@ -258,51 +258,51 @@ struct mapseg_v4_t
 
 struct mapnode_t
 {
-   int16_t x;  // Partition line from (x,y) to x+dx,y+dy)
-   int16_t y;
-   int16_t dx;
-   int16_t dy;
-   // Bounding box for each child, clip against view frustum.
-   int16_t bbox[2][4];
-   // If NF_SUBSECTOR its a subsector, else it's a node of another subtree.
-   uint16_t children[2];
+    int16_t x; // Partition line from (x,y) to x+dx,y+dy)
+    int16_t y;
+    int16_t dx;
+    int16_t dy;
+    // Bounding box for each child, clip against view frustum.
+    int16_t bbox[2][4];
+    // If NF_SUBSECTOR its a subsector, else it's a node of another subtree.
+    uint16_t children[2];
 };
 
 // ioanch 20160204: add DEEPBSP nodes
 struct mapnode_v4_t
 {
-   int16_t x;
-   int16_t y;
-   int16_t dx;
-   int16_t dy;
-   int16_t bbox[2][4];
-   int32_t children[2]; // 32-bit here.
+    int16_t x;
+    int16_t y;
+    int16_t dx;
+    int16_t dy;
+    int16_t bbox[2][4];
+    int32_t children[2]; // 32-bit here.
 };
 
 // Thing definition, position, orientation and type,
 // plus skill/visibility flags and attributes.
 struct mapthingdoom_t
 {
-   int16_t x;
-   int16_t y;
-   int16_t angle;
-   int16_t type;
-   int16_t options;
+    int16_t x;
+    int16_t y;
+    int16_t angle;
+    int16_t type;
+    int16_t options;
 };
 
 #define NUMHXTARGS 5
 
 struct mapthinghexen_t
 {
-   int16_t tid;
-   int16_t x;
-   int16_t y;
-   int16_t height;
-   int16_t angle;
-   int16_t type;
-   int16_t options;
-   byte    special;
-   byte    args[NUMHXTARGS];
+    int16_t tid;
+    int16_t x;
+    int16_t y;
+    int16_t height;
+    int16_t angle;
+    int16_t type;
+    int16_t options;
+    byte    special;
+    byte    args[NUMHXTARGS];
 };
 
 // haleyjd 03/03/07: New mapthing_t structure. The structures above are used to
@@ -315,22 +315,22 @@ struct mapthinghexen_t
 
 struct mapthing_t
 {
-   int16_t tid;       // scripting id
-   fixed_t x;         // x coord
-   fixed_t y;         // y coord
-   fixed_t height;    // z height relative to floor
-   int16_t angle;     // angle in wad format
-   int16_t type;      // doomednum
-   int16_t options;   // bitflags
-   uint32_t extOptions; // ioanch 20151218: extended options (needed by UDMF)
-   fixed_t healthModifier; // Overriding health, based on UDMF thing health.
-                           // 0 to ignore
+    int16_t  tid;            // scripting id
+    fixed_t  x;              // x coord
+    fixed_t  y;              // y coord
+    fixed_t  height;         // z height relative to floor
+    int16_t  angle;          // angle in wad format
+    int16_t  type;           // doomednum
+    int16_t  options;        // bitflags
+    uint32_t extOptions;     // ioanch 20151218: extended options (needed by UDMF)
+    fixed_t  healthModifier; // Overriding health, based on UDMF thing health.
+                             // 0 to ignore
 
-   int     special;   // scripting special
-   int     args[NUMMTARGS]; // arguments for special
+    int special;         // scripting special
+    int args[NUMMTARGS]; // arguments for special
 
-   int     recordnum; // for ExtraData hashing
-   int     next;
+    int recordnum; // for ExtraData hashing
+    int next;
 };
 
 #if defined(_MSC_VER) || defined(__GNUC__)

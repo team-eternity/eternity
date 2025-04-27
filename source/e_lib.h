@@ -34,11 +34,13 @@ struct dehflagset_t;
 
 struct E_Enable_t
 {
-   const char *name;
-   int enabled;
+    const char *name;
+    int         enabled;
 };
 
 #ifdef NEED_EDF_DEFINITIONS
+
+// clang-format off
 
 // basic stuff
 void E_ErrorCB(const cfg_t *const cfg, const char *fmt, va_list ap);
@@ -65,10 +67,10 @@ int E_ColorStrCB   (cfg_t *, cfg_opt_t *, const char *, void *);
 // MetaTable adapter utilities
 class MetaTable;
 void E_MetaStringFromCfgString(MetaTable *meta, cfg_t *cfg, const char *prop);
-void E_MetaIntFromCfgInt(MetaTable *meta, cfg_t *cfg, const char *prop);
-void E_MetaIntFromCfgBool(MetaTable *meta, cfg_t *cfg, const char *prop);
-void E_MetaIntFromCfgFlag(MetaTable *meta, cfg_t *cfg, const char *prop);
-void E_MetaTableFromCfg(cfg_t *cfg, MetaTable *table, MetaTable *prototype = nullptr);
+void E_MetaIntFromCfgInt      (MetaTable *meta, cfg_t *cfg, const char *prop);
+void E_MetaIntFromCfgBool     (MetaTable *meta, cfg_t *cfg, const char *prop);
+void E_MetaIntFromCfgFlag     (MetaTable *meta, cfg_t *cfg, const char *prop);
+void E_MetaTableFromCfg       (cfg_t *cfg, MetaTable *table, MetaTable *prototype = nullptr);
 
 // Prefix flag stuff
 void E_SetFlagsFromPrefixCfg(cfg_t *cfg, unsigned &flags, const dehflags_t *set);
@@ -77,6 +79,8 @@ void E_SetFlagsFromPrefixCfg(cfg_t *cfg, unsigned &flags, const dehflags_t *set)
 class qstring;
 void E_CfgListToCommaString(cfg_t *sec, const char *optname, qstring &output);
 
+// clang-format on
+
 #endif
 
 bool E_CheckInclude(const char *data, size_t size);
@@ -84,13 +88,13 @@ bool E_CheckInclude(const char *data, size_t size);
 const char *E_BuildDefaultFn(const char *filename);
 
 // misc utilities
-int E_EnableNumForName(const char *name, E_Enable_t *enables);
-int E_StrToNumLinear(const char *const *const strings, int numstrings, const char *const value);
+int          E_EnableNumForName(const char *name, E_Enable_t *enables);
+int          E_StrToNumLinear(const char *const *const strings, int numstrings, const char *const value);
 unsigned int E_ParseFlags(const char *str, dehflagset_t *flagset);
-const char *E_ExtractPrefix(const char *value, char *prefixbuf, int buflen);
-void E_ReplaceString(char *&dest, char *newvalue);
-char *E_GetHeredocLine(char **src);
-byte *E_ParseTranslation(const char *str, int tag);
+const char  *E_ExtractPrefix(const char *value, char *prefixbuf, int buflen);
+void         E_ReplaceString(char *&dest, char *newvalue);
+char        *E_GetHeredocLine(char **src);
+byte        *E_ParseTranslation(const char *str, int tag);
 
 #define E_MAXCMDTOKENS 8
 
@@ -101,7 +105,7 @@ byte *E_ParseTranslation(const char *str, int tag);
 //
 struct tempcmd_t
 {
-   const char *strs[E_MAXCMDTOKENS]; // command and up to 2 arguments
+    const char *strs[E_MAXCMDTOKENS]; // command and up to 2 arguments
 };
 
 tempcmd_t E_ParseTextLine(char *str);
@@ -109,5 +113,4 @@ tempcmd_t E_ParseTextLine(char *str);
 #endif
 
 // EOF
-
 

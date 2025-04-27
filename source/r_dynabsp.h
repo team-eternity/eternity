@@ -28,21 +28,20 @@
 
 struct rpolynode_t
 {
-   dynaseg_t   *partition;   // partition dynaseg
-   rpolynode_t *children[2]; // child node lists (0=right, 1=left)
-   dseglink_t  *owned;       // owned segs created by partition splits
-   dseglink_t  *altered;     // polyobject-owned segs altered by partitions.
+    dynaseg_t   *partition;   // partition dynaseg
+    rpolynode_t *children[2]; // child node lists (0=right, 1=left)
+    dseglink_t  *owned;       // owned segs created by partition splits
+    dseglink_t  *altered;     // polyobject-owned segs altered by partitions.
 };
 
 struct rpolybsp_t
 {
-   bool         dirty; // needs to be rebuilt if true
-   rpolynode_t *root;  // root of tree
+    bool         dirty; // needs to be rebuilt if true
+    rpolynode_t *root;  // root of tree
 };
 
 rpolybsp_t *R_BuildDynaBSP(const subsector_t *subsec);
-void R_FreeDynaBSP(rpolybsp_t *bsp);
-
+void        R_FreeDynaBSP(rpolybsp_t *bsp);
 
 //
 // R_PointOnDynaSegSide
@@ -51,11 +50,11 @@ void R_FreeDynaBSP(rpolybsp_t *bsp);
 //
 static inline int R_PointOnDynaSegSide(const dynaseg_t *ds, float x, float y)
 {
-   return ((ds->pdx * (y - ds->psy)) >= (ds->pdy * (x - ds->psx)));
+    return ((ds->pdx * (y - ds->psy)) >= (ds->pdy * (x - ds->psx)));
 }
 
 void R_ComputeIntersection(const dynaseg_t *part, const dynaseg_t *seg, double &outx, double &outy,
-   v2float_t *fbackup = nullptr);
+                           v2float_t *fbackup = nullptr);
 
 #endif
 

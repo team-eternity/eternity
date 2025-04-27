@@ -32,23 +32,27 @@
 
 struct VBuffer;
 
+// clang-format off
+
 class BoomHUD : public HUDOverlay
 {
 protected:
-   virtual void DrawStatus (int x, int y);
-   virtual void DrawHealth (int x, int y);
-   virtual void DrawArmor  (int x, int y);
-   virtual void DrawWeapons(int x, int y);
-   virtual void DrawAmmo   (int x, int y);
-   virtual void DrawKeys   (int x, int y);
-   virtual void DrawFrags  (int x, int y);
+    virtual void DrawStatus (int x, int y);
+    virtual void DrawHealth (int x, int y);
+    virtual void DrawArmor  (int x, int y);
+    virtual void DrawWeapons(int x, int y);
+    virtual void DrawAmmo   (int x, int y);
+    virtual void DrawKeys   (int x, int y);
+    virtual void DrawFrags  (int x, int y);
 
-   VBuffer *m_screen;
+    VBuffer *m_screen;
 public:
-   virtual void Setup();
+    virtual void Setup();
 };
 
 extern BoomHUD boom_overlay;
+
+// clang-format on
 
 #endif
 

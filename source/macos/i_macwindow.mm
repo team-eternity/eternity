@@ -34,25 +34,25 @@
 
 bool I_IsMacViewOccluded(SDL_Window *window)
 {
-   if(!window)
-      return true;
+    if(!window)
+        return true;
    
-   edefstructvar(SDL_SysWMinfo, info);
-   SDL_VERSION(&info.version);
+    edefstructvar(SDL_SysWMinfo, info);
+    SDL_VERSION(&info.version);
    
-   if(!SDL_GetWindowWMInfo(window, &info))
-   {
-      NSLog(@"%s: get WM info failed: %s", __func__, SDL_GetError());
-      return false;
-   }
-   if(info.subsystem != SDL_SYSWM_COCOA)
-   {
-      NSLog(@"%s: bad subsystem %d", __func__, info.subsystem);
-      return false;
-   }
+    if(!SDL_GetWindowWMInfo(window, &info))
+    {
+        NSLog(@"%s: get WM info failed: %s", __func__, SDL_GetError());
+        return false;
+    }
+    if(info.subsystem != SDL_SYSWM_COCOA)
+    {
+        NSLog(@"%s: bad subsystem %d", __func__, info.subsystem);
+        return false;
+    }
    
-   NSWindow *macwindow = info.info.cocoa.window;
-   return !(macwindow.occlusionState & NSWindowOcclusionStateVisible);
+    NSWindow *macwindow = info.info.cocoa.window;
+    return !(macwindow.occlusionState & NSWindowOcclusionStateVisible);
 }
 
 // EOF

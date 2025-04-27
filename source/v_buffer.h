@@ -32,41 +32,40 @@
 #include "m_fixed.h"
 
 #define VBADDRESS(vb, x, y) \
-   ((vb)->data + (vb)->pitch * (x) + (vb)->pixelsize * (y))
+    ((vb)->data + (vb)->pitch * (x) + (vb)->pixelsize * (y))
 
 struct VBuffer
 {
-   int  width;
-   int  height;
-   int  pitch, pixelsize; // This is TRANSPOSED, PRE-TRANSFORMED pitch
+    int width;
+    int height;
+    int pitch, pixelsize; // This is TRANSPOSED, PRE-TRANSFORMED pitch
 
-   byte *data; // video memory
-   bool  owndata;
-   int   subx, suby;
+    byte *data; // video memory
+    bool  owndata;
+    int   subx, suby;
 
-   void (*BlockDrawer)(int, int, VBuffer *, int, int, const byte *);
-   void (*MaskedBlockDrawer)(int, int, VBuffer *, int, int, int, 
-                             const byte *, byte *);
-   void (*TileBlock64)(VBuffer *, const byte *);
+    void (*BlockDrawer)(int, int, VBuffer *, int, int, const byte *);
+    void (*MaskedBlockDrawer)(int, int, VBuffer *, int, int, int, const byte *, byte *);
+    void (*TileBlock64)(VBuffer *, const byte *);
 
-   // SoM: Include the screen size
-   bool  scaled, freelookups;
-   int   unscaledw, unscaledh;
-   int  *x1lookup;
-   int  *y1lookup;
-   int  *x2lookup;
-   int  *y2lookup;
-   fixed_t ixscale;
-   fixed_t iyscale;
+    // SoM: Include the screen size
+    bool    scaled, freelookups;
+    int     unscaledw, unscaledh;
+    int    *x1lookup;
+    int    *y1lookup;
+    int    *x2lookup;
+    int    *y2lookup;
+    fixed_t ixscale;
+    fixed_t iyscale;
 
-   // Only change this if you want memory leaks and/or crashes :P
-   bool needfree;
+    // Only change this if you want memory leaks and/or crashes :P
+    bool needfree;
 
-   fixed_t getRealAspectRatio()    const;
-   fixed_t getVirtualAspectRatio() const;
+    fixed_t getRealAspectRatio() const;
+    fixed_t getVirtualAspectRatio() const;
 
-   int mapXFromOther(const int x, const VBuffer &other) const;
-   int mapYFromOther(const int y, const VBuffer &other) const;
+    int mapXFromOther(const int x, const VBuffer &other) const;
+    int mapYFromOther(const int y, const VBuffer &other) const;
 };
 
 // V_InitVBuffer
@@ -89,11 +88,11 @@ void V_InitVBufferFrom(VBuffer *vb, int width, int height, int pitch, int bitdep
 VBuffer *V_CreateVBufferFrom(int width, int height, int pitch, int bitdepth, byte *data);
 
 // V_InitSubVBuffer
-// 
+//
 void V_InitSubVBuffer(VBuffer *vb, VBuffer *parent, int x, int y, int width, int height);
 
 // V_SubVBuffer
-// Allocates a new VBuffer object that shares pixel data with another. 
+// Allocates a new VBuffer object that shares pixel data with another.
 VBuffer *V_SubVBuffer(VBuffer *parent, int x, int y, int width, int height);
 
 // V_FreeVBuffer
@@ -102,24 +101,20 @@ VBuffer *V_SubVBuffer(VBuffer *parent, int x, int y, int width, int height);
 // the child buffers will be given their own pixeldata.
 void V_FreeVBuffer(VBuffer *buffer);
 
-
 // V_SetScaling
 // Creates and sets up scaling information in the given VBuffer
 void V_SetScaling(VBuffer *buffer, int scaledw, int scaledh);
-
 
 // V_UnsetScaling
 // Deletes the scaling information in the given VBuffer
 void V_UnsetScaling(VBuffer *buffer);
 
-
 // V_BlitVBuffer
 // Copies the contents of one VBuffer to the other.
-void V_BlitVBuffer(VBuffer *dest, int dx, int dy, VBuffer *src, 
-                   unsigned int sx, unsigned int sy, unsigned int width, 
+void V_BlitVBuffer(VBuffer *dest, int dx, int dy, VBuffer *src, unsigned int sx, unsigned int sy, unsigned int width,
                    unsigned int height);
 
-#endif //V_BUFFER_H__
+#endif // V_BUFFER_H__
 
 // EOF
 

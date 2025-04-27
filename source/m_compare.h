@@ -32,9 +32,10 @@
 //
 // Return a reference to the lesser of two objects.
 //
-template<typename T> inline const T &emin(const T &a, const T &b)
+template<typename T>
+inline const T &emin(const T &a, const T &b)
 {
-   return ((b < a) ? b : a);
+    return ((b < a) ? b : a);
 }
 
 //
@@ -42,9 +43,10 @@ template<typename T> inline const T &emin(const T &a, const T &b)
 //
 // Return a reference to the greater of two objects.
 //
-template<typename T> inline const T &emax(const T &a, const T &b)
+template<typename T>
+inline const T &emax(const T &a, const T &b)
 {
-   return ((a < b) ? b : a);
+    return ((a < b) ? b : a);
 }
 
 //
@@ -52,9 +54,10 @@ template<typename T> inline const T &emax(const T &a, const T &b)
 //
 // Clamp a value to a given range, inclusive.
 //
-template<typename T> inline const T &eclamp(const T &a, const T &min, const T &max)
+template<typename T>
+inline const T &eclamp(const T &a, const T &min, const T &max)
 {
-   return (a < min ? min : (max < a ? max : a));
+    return (a < min ? min : (max < a ? max : a));
 }
 
 #endif

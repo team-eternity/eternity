@@ -58,27 +58,18 @@ int hud_overlayid = -1;
 
 struct hudoverlayitem_t
 {
-   int id;              // unique ID #
-   const char *name;    // descriptive name of this HUD
-   HUDOverlay *overlay; // overlay object
+    int         id;      // unique ID #
+    const char *name;    // descriptive name of this HUD
+    HUDOverlay *overlay; // overlay object
 };
 
 // Driver table
-static hudoverlayitem_t hudOverlayItemTable[HUO_MAXOVERLAYS] =
-{
-   // Modern HUD Overlay
-   {
-      HUO_MODERN,
-      "Modern Overlay",
-      &modern_overlay
-   },
+static hudoverlayitem_t hudOverlayItemTable[HUO_MAXOVERLAYS] = {
+    // Modern HUD Overlay
+    { HUO_MODERN, "Modern Overlay", &modern_overlay },
 
-   // BOOM HUD Overlay
-   {
-      HUO_BOOM,
-      "BOOM Overlay",
-      &boom_overlay
-   }
+    // BOOM HUD Overlay
+    { HUO_BOOM,   "BOOM Overlay",   &boom_overlay   }
 };
 
 //
@@ -86,13 +77,13 @@ static hudoverlayitem_t hudOverlayItemTable[HUO_MAXOVERLAYS] =
 //
 static hudoverlayitem_t *I_findHUDOverlayByID(int id)
 {
-   for(unsigned int i = 0; i < HUO_MAXOVERLAYS; i++)
-   {
-      if(hudOverlayItemTable[i].id == id && hudOverlayItemTable[i].overlay)
-         return &hudOverlayItemTable[i];
-   }
+    for(unsigned int i = 0; i < HUO_MAXOVERLAYS; i++)
+    {
+        if(hudOverlayItemTable[i].id == id && hudOverlayItemTable[i].overlay)
+            return &hudOverlayItemTable[i];
+    }
 
-   return nullptr;
+    return nullptr;
 }
 
 //
@@ -101,23 +92,23 @@ static hudoverlayitem_t *I_findHUDOverlayByID(int id)
 //
 static hudoverlayitem_t *I_defaultHUDOverlay()
 {
-   hudoverlayitem_t *item;
+    hudoverlayitem_t *item;
 
-   if(!(item = I_findHUDOverlayByID(hud_overlayid)))
-   {
-      // Default or plain invalid setting.
-      // Find the lowest-numbered valid driver and use it.
-      for(unsigned int i = 0; i < HUO_MAXOVERLAYS; i++)
-      {
-         if(hudOverlayItemTable[i].overlay)
-         {
-            item = &hudOverlayItemTable[i];
-            break;
-         }
-      }
-   }
+    if(!(item = I_findHUDOverlayByID(hud_overlayid)))
+    {
+        // Default or plain invalid setting.
+        // Find the lowest-numbered valid driver and use it.
+        for(unsigned int i = 0; i < HUO_MAXOVERLAYS; i++)
+        {
+            if(hudOverlayItemTable[i].overlay)
+            {
+                item = &hudOverlayItemTable[i];
+                break;
+            }
+        }
+    }
 
-   return item;
+    return item;
 }
 
 //=============================================================================
@@ -131,50 +122,49 @@ static hudoverlayitem_t *I_defaultHUDOverlay()
 // Get the player's ammo for the given weapon, or 0 if am_noammo
 int HU_WC_PlayerAmmo(const weaponinfo_t *w)
 {
-   return E_GetItemOwnedAmount(hu_player, w->ammo);
+    return E_GetItemOwnedAmount(hu_player, w->ammo);
 }
 
 // Determine if the player has enough ammo for one shot with the given weapon
 bool HU_WC_NoAmmo(const weaponinfo_t *w)
 {
-   const itemeffect_t *const ammo = w->ammo;
+    const itemeffect_t *const ammo = w->ammo;
 
-   // no-ammo weapons are always considered to have ammo
-   if(ammo)
-   {
-      const int amount = E_GetItemOwnedAmount(hu_player, ammo);
-      return amount < w->ammopershot;
-   }
-   else
-      return false;
+    // no-ammo weapons are always considered to have ammo
+    if(ammo)
+    {
+        const int amount = E_GetItemOwnedAmount(hu_player, ammo);
+        return amount < w->ammopershot;
+    }
+    else
+        return false;
 }
 
 // Get the player's maxammo for the given weapon, or 0 if am_noammo
 int HU_WC_MaxAmmo(const weaponinfo_t *w)
 {
-   int amount = 0;
-   itemeffect_t *ammo = w->ammo;
+    int           amount = 0;
+    itemeffect_t *ammo   = w->ammo;
 
-   if(ammo)
-      amount = E_GetMaxAmountForArtifact(hu_player, ammo);
+    if(ammo)
+        amount = E_GetMaxAmountForArtifact(hu_player, ammo);
 
-   return amount;
+    return amount;
 }
 
 // Determine the color to use for the given weapon's number and ammo bar/count
 char HU_WeapColor(const weaponinfo_t *w)
 {
-   const int  maxammo = HU_WC_MaxAmmo(w);
-   const bool noammo  = HU_WC_NoAmmo(w);
-   const int  pammo   = HU_WC_PlayerAmmo(w);
+    const int  maxammo = HU_WC_MaxAmmo(w);
+    const bool noammo  = HU_WC_NoAmmo(w);
+    const int  pammo   = HU_WC_PlayerAmmo(w);
 
-   return
-      (!maxammo                                ? *FC_GRAY    :
-       noammo                                  ? *FC_CUSTOM1 :
-       pammo == maxammo                        ? *FC_BLUE    :
-       pammo < ((maxammo * ammo_red   ) / 100) ? *FC_RED     :
-       pammo < ((maxammo * ammo_yellow) / 100) ? *FC_GOLD    :
-                                                 *FC_GREEN);
+    return (!maxammo                                ? *FC_GRAY :
+            noammo                                  ? *FC_CUSTOM1 :
+            pammo == maxammo                        ? *FC_BLUE :
+            pammo < ((maxammo * ammo_red) / 100)    ? *FC_RED :
+            pammo < ((maxammo * ammo_yellow) / 100) ? *FC_GOLD :
+                                                      *FC_GREEN);
 }
 
 //
@@ -182,25 +172,26 @@ char HU_WeapColor(const weaponinfo_t *w)
 //
 static char HU_weapSlotColor(const int slot)
 {
-   if(!hu_player.pclass->weaponslots[slot])
-      return 0;
+    if(!hu_player.pclass->weaponslots[slot])
+        return 0;
 
-   const weaponinfo_t *weapon = nullptr;
+    const weaponinfo_t *weapon = nullptr;
 
-   BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(hu_player.pclass->weaponslots[slot]);
-   do
-   {
-      if(E_PlayerOwnsWeapon(hu_player, weaponslot->bdObject->weapon))
-      {
-         if(weapon == nullptr)
-            weapon = weaponslot->bdObject->weapon;
-         else if(weapon->ammo != weaponslot->bdObject->weapon->ammo)
-            return *FC_GRAY; // TODO: Change "more than one ammo type in slot" color
-      }
-      weaponslot = weaponslot->bdNext;
-   } while(!weaponslot->isDummy());
+    BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(hu_player.pclass->weaponslots[slot]);
+    do
+    {
+        if(E_PlayerOwnsWeapon(hu_player, weaponslot->bdObject->weapon))
+        {
+            if(weapon == nullptr)
+                weapon = weaponslot->bdObject->weapon;
+            else if(weapon->ammo != weaponslot->bdObject->weapon->ammo)
+                return *FC_GRAY; // TODO: Change "more than one ammo type in slot" color
+        }
+        weaponslot = weaponslot->bdNext;
+    }
+    while(!weaponslot->isDummy());
 
-   return weapon->ammo ? HU_WeapColor(weapon) : *FC_GRAY;
+    return weapon->ammo ? HU_WeapColor(weapon) : *FC_GRAY;
 }
 
 //
@@ -208,65 +199,65 @@ static char HU_weapSlotColor(const int slot)
 //
 char HU_WeaponColourGeneralized(const player_t &player, int index, bool *had)
 {
-   if(E_NumWeaponsInSlotPlayerOwns(player, index))
-   {
-      if(had)
-         *had = true;
-      return HU_weapSlotColor(index);
-   }
-   if(E_PlayerOwnsWeaponForDEHNum(player, index))
-   {
-      if(had)
-         *had = true;
-      const weaponinfo_t *weapon = E_WeaponForDEHNum(index);
-      return weapon->ammo ? HU_WeapColor(weapon) : *FC_GRAY;
-   }
-   if(E_PlayerOwnsWeaponInSlot(player, index))
-   {
-      if(had)
-         *had = true;
-      const weaponinfo_t *weapon = P_GetPlayerWeapon(player, index);
-      return weapon->ammo ? HU_WeapColor(weapon) : *FC_GRAY;
-   }
-   if(had)
-      *had = false;
-   return *FC_CUSTOM2;
+    if(E_NumWeaponsInSlotPlayerOwns(player, index))
+    {
+        if(had)
+            *had = true;
+        return HU_weapSlotColor(index);
+    }
+    if(E_PlayerOwnsWeaponForDEHNum(player, index))
+    {
+        if(had)
+            *had = true;
+        const weaponinfo_t *weapon = E_WeaponForDEHNum(index);
+        return weapon->ammo ? HU_WeapColor(weapon) : *FC_GRAY;
+    }
+    if(E_PlayerOwnsWeaponInSlot(player, index))
+    {
+        if(had)
+            *had = true;
+        const weaponinfo_t *weapon = P_GetPlayerWeapon(player, index);
+        return weapon->ammo ? HU_WeapColor(weapon) : *FC_GRAY;
+    }
+    if(had)
+        *had = false;
+    return *FC_CUSTOM2;
 }
 
 // Determine the color to use for a given player's health
 char HU_HealthColor()
 {
-   return hu_player.health  < health_red    ? *FC_RED   :
-          hu_player.health  < health_yellow ? *FC_GOLD  :
-          hu_player.health <= health_green  ? *FC_GREEN :
+    return hu_player.health < health_red    ? *FC_RED :
+           hu_player.health < health_yellow ? *FC_GOLD :
+           hu_player.health <= health_green ? *FC_GREEN :
                                               *FC_BLUE;
 }
 
 // Determine the color to use for a given player's armor
 char HU_ArmorColor()
 {
-   if(hu_player.armorpoints < armor_red)
-      return *FC_RED;
-   else if(hu_player.armorpoints < armor_yellow)
-      return *FC_GOLD;
-   else if(armor_byclass)
-   {
-      fixed_t armorclass = 0;
-      if(hu_player.armordivisor)
-         armorclass = (hu_player.armorfactor * FRACUNIT) / hu_player.armordivisor;
-      return (armorclass > FRACUNIT / 3 ? *FC_BLUE : *FC_GREEN);
-   }
-   else if(hu_player.armorpoints <= armor_green)
-      return *FC_GREEN;
-   else
-      return *FC_BLUE;
+    if(hu_player.armorpoints < armor_red)
+        return *FC_RED;
+    else if(hu_player.armorpoints < armor_yellow)
+        return *FC_GOLD;
+    else if(armor_byclass)
+    {
+        fixed_t armorclass = 0;
+        if(hu_player.armordivisor)
+            armorclass = (hu_player.armorfactor * FRACUNIT) / hu_player.armordivisor;
+        return (armorclass > FRACUNIT / 3 ? *FC_BLUE : *FC_GREEN);
+    }
+    else if(hu_player.armorpoints <= armor_green)
+        return *FC_GREEN;
+    else
+        return *FC_BLUE;
 }
 
 // Globals
 int hud_overlaylayout = HUD_BOOM;
-int hud_enabled      = 1;
-int hud_hidestats   = 0;
-int hud_hidesecrets  = 0;
+int hud_enabled       = 1;
+int hud_hidestats     = 0;
+int hud_hidesecrets   = 0;
 
 //=============================================================================
 //
@@ -296,16 +287,16 @@ bool     hud_fontsloaded = false;
 //
 void HU_LoadFonts()
 {
-   if(!(hud_overfont = E_FontForName(hud_overfontname)))
-      I_Error("HU_LoadFonts: bad EDF hu_font name %s\n", hud_overfontname);
-   if(!(hud_fssmall = E_FontForName(hud_fssmallname)))
-      I_Error("HU_LoadFonts: bad EDF hu_font name %s\n", hud_fssmallname);
-   if(!(hud_fsmedium = E_FontForName(hud_fsmediumname)))
-      I_Error("HU_LoadFonts: bad EDF hu_font name %s\n", hud_fsmediumname);
-   if(!(hud_fslarge = E_FontForName(hud_fslargename)))
-      I_Error("HU_LoadFonts: bad EDF hu_font name %s\n", hud_fslargename);
+    if(!(hud_overfont = E_FontForName(hud_overfontname)))
+        I_Error("HU_LoadFonts: bad EDF hu_font name %s\n", hud_overfontname);
+    if(!(hud_fssmall = E_FontForName(hud_fssmallname)))
+        I_Error("HU_LoadFonts: bad EDF hu_font name %s\n", hud_fssmallname);
+    if(!(hud_fsmedium = E_FontForName(hud_fsmediumname)))
+        I_Error("HU_LoadFonts: bad EDF hu_font name %s\n", hud_fsmediumname);
+    if(!(hud_fslarge = E_FontForName(hud_fslargename)))
+        I_Error("HU_LoadFonts: bad EDF hu_font name %s\n", hud_fslargename);
 
-   hud_fontsloaded = true;
+    hud_fontsloaded = true;
 }
 
 //
@@ -316,7 +307,7 @@ void HU_LoadFonts()
 //
 int HU_StringWidth(const char *s)
 {
-   return V_FontStringWidth(hud_overfont, s);
+    return V_FontStringWidth(hud_overfont, s);
 }
 
 //
@@ -327,7 +318,7 @@ int HU_StringWidth(const char *s)
 //
 int HU_StringHeight(const char *s)
 {
-   return V_FontStringHeight(hud_overfont, s);
+    return V_FontStringHeight(hud_overfont, s);
 }
 
 //
@@ -335,14 +326,14 @@ int HU_StringHeight(const char *s)
 //
 static inline void HU_overlaySetup()
 {
-   if(!hu_overlay)
-   {
-      hudoverlayitem_t *item = I_defaultHUDOverlay();
-      hud_overlayid = item->id;
-      hu_overlay = item->overlay;
-   }
+    if(!hu_overlay)
+    {
+        hudoverlayitem_t *item = I_defaultHUDOverlay();
+        hud_overlayid          = item->id;
+        hu_overlay             = item->overlay;
+    }
 
-   hu_overlay->Setup();
+    hu_overlay->Setup();
 }
 
 //=============================================================================
@@ -357,20 +348,19 @@ static inline void HU_overlaySetup()
 //
 void HU_ToggleHUD()
 {
-   hud_enabled = !hud_enabled;
+    hud_enabled = !hud_enabled;
 }
 
 //
 // HU_DisableHUD
 //
-// haleyjd: Called from CONSOLE_COMMAND(screensize). Added since SMMU; is 
+// haleyjd: Called from CONSOLE_COMMAND(screensize). Added since SMMU; is
 // required to properly support changing between fullscreen/status bar/HUD.
 //
 void HU_DisableHUD()
 {
-   hud_enabled = false;
+    hud_enabled = false;
 }
-
 
 //=============================================================================
 //
@@ -383,46 +373,40 @@ void HU_DisableHUD()
 //
 void HU_OverlayDraw(int &leftoffset, int &rightoffset)
 {
-   // SoM 2-4-04: ANYRES
-   leftoffset = 0;
-   rightoffset = 0;
-   if(viewwindow.height != video.height || (automapactive && !automap_overlay) || !hud_enabled)
-      return;  // fullscreen only
+    // SoM 2-4-04: ANYRES
+    leftoffset  = 0;
+    rightoffset = 0;
+    if(viewwindow.height != video.height || (automapactive && !automap_overlay) || !hud_enabled)
+        return; // fullscreen only
 
-   HU_overlaySetup();
+    HU_overlaySetup();
 
-   for(unsigned int i = 0; i < NUMOVERLAY; i++)
-      hu_overlay->DrawOverlay(static_cast<overlay_e>(i));
+    for(unsigned int i = 0; i < NUMOVERLAY; i++)
+        hu_overlay->DrawOverlay(static_cast<overlay_e>(i));
 
-   leftoffset = hu_overlay->leftoffset;   // set output parameters only if HUD gets drawn at all.
-   rightoffset = hu_overlay->rightoffset;
+    leftoffset  = hu_overlay->leftoffset; // set output parameters only if HUD gets drawn at all.
+    rightoffset = hu_overlay->rightoffset;
 }
 
-static const char *hud_overlaynames[] =
-{
-   "default",
-   "Modern HUD",
-   "Boom HUD",
+static const char *hud_overlaynames[] = {
+    "default",
+    "Modern HUD",
+    "Boom HUD",
 };
 
 VARIABLE_INT(hud_overlayid, nullptr, -1, HUO_MAXOVERLAYS - 1, hud_overlaynames);
 CONSOLE_VARIABLE(hu_overlayid, hud_overlayid, 0)
 {
-   hudoverlayitem_t *item = I_defaultHUDOverlay();
-   if(hud_overlayid < -1 || hud_overlayid > HUO_MAXOVERLAYS - 1)
-      hud_overlayid = item->id;
-   hu_overlay = item->overlay;
+    hudoverlayitem_t *item = I_defaultHUDOverlay();
+    if(hud_overlayid < -1 || hud_overlayid > HUO_MAXOVERLAYS - 1)
+        hud_overlayid = item->id;
+    hu_overlay = item->overlay;
 }
 
-
 // HUD type names
-const char *str_style[HUD_NUMHUDS] =
-{
-   "off",
-   "boom style",
-   "flat",
-   "distributed",
-   "graphical",   // haleyjd 01/11/05
+const char *str_style[HUD_NUMHUDS] = {
+    "off",       "boom style", "flat", "distributed",
+    "graphical", // haleyjd 01/11/05
 };
 
 VARIABLE_INT(hud_overlaylayout, nullptr, HUD_OFF, HUD_GRAPHICAL, str_style);
@@ -437,7 +421,7 @@ CONSOLE_VARIABLE(hu_hidesecrets, hud_hidesecrets, 0) {}
 VARIABLE_TOGGLE(hud_restrictoverlaywidth, nullptr, yesno);
 CONSOLE_VARIABLE(hu_restrictoverlaywidth, hud_restrictoverlaywidth, cf_buffered)
 {
-   V_InitSubScreenModernHUD();
+    V_InitSubScreenModernHUD();
 }
 
 // EOF

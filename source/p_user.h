@@ -25,7 +25,7 @@
 #define P_USER_H__
 
 struct player_t;
-class  Mobj;
+class Mobj;
 
 // haleyjd 10/31/02: moved to header
 // Index of the special effects (INVUL inverse) map.
@@ -41,8 +41,8 @@ void P_SetPlayerAttacker(player_t &player, Mobj *attacker);
 void P_SetDisplayPlayer(int new_displayplayer);
 void P_PlayerStartFlight(player_t &player, bool thrustup);
 void P_PlayerStopFlight(player_t &player);
-void P_GiveRebornInventory(player_t& player);
-bool P_UnmorphPlayer(player_t& player, bool onexit);
+void P_GiveRebornInventory(player_t &player);
+bool P_UnmorphPlayer(player_t &player, bool onexit);
 
 extern bool pitchedflight;
 extern bool default_pitchedflight;

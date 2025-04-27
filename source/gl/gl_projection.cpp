@@ -35,17 +35,17 @@
 //
 void GL_SetOrthoMode(int w, int h)
 {
-   // Clear model-view matrix
-   glMatrixMode(GL_MODELVIEW);
-   glLoadIdentity();
+    // Clear model-view matrix
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 
-   // Set projection matrix to a standard orthogonal projection
-   glMatrixMode(GL_PROJECTION);
-   glLoadIdentity();
-   glOrtho(0.0, (GLdouble)w, (GLdouble)h, 0.0, -1.0, 1.0);
+    // Set projection matrix to a standard orthogonal projection
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0, (GLdouble)w, (GLdouble)h, 0.0, -1.0, 1.0);
 
-   // Disable depth buffer test
-   glDisable(GL_DEPTH_TEST);
+    // Disable depth buffer test
+    glDisable(GL_DEPTH_TEST);
 }
 
 #endif

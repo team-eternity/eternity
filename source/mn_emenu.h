@@ -21,8 +21,6 @@
 // Authors: James Haley, Ioan Chera
 //
 
-
-
 #ifndef MN_EMENU_H__
 #define MN_EMENU_H__
 

@@ -35,9 +35,9 @@
 //
 struct diskentry_t
 {
-   char name[64];
-   size_t offset;
-   size_t length;
+    char   name[64];
+    size_t offset;
+    size_t length;
 };
 
 //
@@ -45,9 +45,9 @@ struct diskentry_t
 //
 struct diskfileint_t
 {
-   FILE *f;              // physical disk file
-   size_t numfiles;      // number of files
-   diskentry_t *entries; // directory entries
+    FILE        *f;        // physical disk file
+    size_t       numfiles; // number of files
+    diskentry_t *entries;  // directory entries
 };
 
 //
@@ -57,32 +57,32 @@ struct diskfileint_t
 //
 static bool D_readDiskFileDirectory(diskfileint_t *dfi)
 {
-   size_t i;
-   uint32_t temp;
+    size_t   i;
+    uint32_t temp;
 
-   for(i = 0; i < dfi->numfiles; ++i)
-   {
-      diskentry_t *ent = &(dfi->entries[i]);
+    for(i = 0; i < dfi->numfiles; ++i)
+    {
+        diskentry_t *ent = &(dfi->entries[i]);
 
-      if(fread(ent->name, sizeof(ent->name), 1, dfi->f) < 1) // filename
-         return false;
+        if(fread(ent->name, sizeof(ent->name), 1, dfi->f) < 1) // filename
+            return false;
 
-      // lower-case names
-      M_Strlwr(ent->name);
+        // lower-case names
+        M_Strlwr(ent->name);
 
-      if(fread(&temp, sizeof(temp), 1, dfi->f) < 1)          // offset
-         return false;
-      ent->offset = SwapBigULong(temp);
+        if(fread(&temp, sizeof(temp), 1, dfi->f) < 1) // offset
+            return false;
+        ent->offset = SwapBigULong(temp);
 
-      // adjust offset from file to account for header
-      ent->offset += 8 + 72 * dfi->numfiles;
+        // adjust offset from file to account for header
+        ent->offset += 8 + 72 * dfi->numfiles;
 
-      if(fread(&temp, sizeof(temp), 1, dfi->f) < 1)          // length
-         return false;
-      ent->length = SwapBigULong(temp);
-   }
+        if(fread(&temp, sizeof(temp), 1, dfi->f) < 1) // length
+            return false;
+        ent->length = SwapBigULong(temp);
+    }
 
-   return true;
+    return true;
 }
 
 //
@@ -92,35 +92,35 @@ static bool D_readDiskFileDirectory(diskfileint_t *dfi)
 //
 diskfile_t *D_OpenDiskFile(const char *filename)
 {
-   diskfile_t *df;
-   diskfileint_t *dfi;
-   uint32_t temp;
+    diskfile_t    *df;
+    diskfileint_t *dfi;
+    uint32_t       temp;
 
-   // allocate a diskfile structure and internal fields
-   df  = estructalloc(diskfile_t,    1);
-   dfi = estructalloc(diskfileint_t, 1);
+    // allocate a diskfile structure and internal fields
+    df  = estructalloc(diskfile_t, 1);
+    dfi = estructalloc(diskfileint_t, 1);
 
-   df->opaque = dfi;
+    df->opaque = dfi;
 
-   // open the physical file
-   if(!(dfi->f = fopen(filename, "rb")))
-      I_Error("D_OpenDiskFile: couldn't open file %s\n", filename);
+    // open the physical file
+    if(!(dfi->f = fopen(filename, "rb")))
+        I_Error("D_OpenDiskFile: couldn't open file %s\n", filename);
 
-   // read number of files in the directory
-   if(fread(&temp, sizeof(temp), 1, dfi->f) < 1)
-      I_Error("D_OpenDiskFile: couldn't read number of entries\n");
+    // read number of files in the directory
+    if(fread(&temp, sizeof(temp), 1, dfi->f) < 1)
+        I_Error("D_OpenDiskFile: couldn't read number of entries\n");
 
-   // make big-endian file value host-endian
-   dfi->numfiles = SwapBigULong(temp);
+    // make big-endian file value host-endian
+    dfi->numfiles = SwapBigULong(temp);
 
-   // allocate directory
-   dfi->entries = estructalloc(diskentry_t, dfi->numfiles);
+    // allocate directory
+    dfi->entries = estructalloc(diskentry_t, dfi->numfiles);
 
-   // read directory entries
-   if(!D_readDiskFileDirectory(dfi))
-      I_Error("D_OpenDiskFile: failed reading directory\n");
+    // read directory entries
+    if(!D_readDiskFileDirectory(dfi))
+        I_Error("D_OpenDiskFile: failed reading directory\n");
 
-   return df;
+    return df;
 }
 
 //
@@ -132,34 +132,34 @@ diskfile_t *D_OpenDiskFile(const char *filename)
 //
 diskwad_t D_FindWadInDiskFile(diskfile_t *df, const char *filename)
 {
-   size_t i;
-   diskwad_t wad;
-   diskfileint_t *dfi = static_cast<diskfileint_t *>(df->opaque);
-   char *name = estrdup(filename);
+    size_t         i;
+    diskwad_t      wad;
+    diskfileint_t *dfi  = static_cast<diskfileint_t *>(df->opaque);
+    char          *name = estrdup(filename);
 
-   memset(&wad, 0, sizeof(wad));
+    memset(&wad, 0, sizeof(wad));
 
-   // lower-case a copy of the filename for case-insensitive substring comparison
-   M_Strlwr(name);
+    // lower-case a copy of the filename for case-insensitive substring comparison
+    M_Strlwr(name);
 
-   for(i = 0; i < dfi->numfiles; ++i)
-   {
-      diskentry_t *entry = &(dfi->entries[i]);
+    for(i = 0; i < dfi->numfiles; ++i)
+    {
+        diskentry_t *entry = &(dfi->entries[i]);
 
-      // if the filename is contained as a substring, and this entry is
-      // a .wad file, return it.
-      if(strstr(entry->name, ".wad") && strstr(entry->name, name))
-      {
-         wad.offset = entry->offset;
-         wad.f      = dfi->f;
-         wad.name   = entry->name;         
-         break;
-      }
-   }
+        // if the filename is contained as a substring, and this entry is
+        // a .wad file, return it.
+        if(strstr(entry->name, ".wad") && strstr(entry->name, name))
+        {
+            wad.offset = entry->offset;
+            wad.f      = dfi->f;
+            wad.name   = entry->name;
+            break;
+        }
+    }
 
-   efree(name);
+    efree(name);
 
-   return wad;
+    return wad;
 }
 
 //
@@ -172,41 +172,41 @@ diskwad_t D_FindWadInDiskFile(diskfile_t *df, const char *filename)
 //
 void *D_CacheDiskFileResource(diskfile_t *df, const char *path, bool text)
 {
-   size_t i, len;
-   diskfileint_t *dfi = static_cast<diskfileint_t *>(df->opaque);
-   diskentry_t *entry = nullptr;
-   void *buffer;
+    size_t         i, len;
+    diskfileint_t *dfi   = static_cast<diskfileint_t *>(df->opaque);
+    diskentry_t   *entry = nullptr;
+    void          *buffer;
 
-   // find the resource
-   for(i = 0; i < dfi->numfiles; ++i)
-   {
-      if(!strcasecmp(dfi->entries[i].name, path))
-      {
-         entry = &(dfi->entries[i]);
-         break;
-      }
-   }
+    // find the resource
+    for(i = 0; i < dfi->numfiles; ++i)
+    {
+        if(!strcasecmp(dfi->entries[i].name, path))
+        {
+            entry = &(dfi->entries[i]);
+            break;
+        }
+    }
 
-   // return if not found
-   if(!entry)
-      return nullptr;
+    // return if not found
+    if(!entry)
+        return nullptr;
 
-   len = entry->length;
+    len = entry->length;
 
-   // increment the buffer length by one if we are loading a text resource
-   if(text)
-      len++;
+    // increment the buffer length by one if we are loading a text resource
+    if(text)
+        len++;
 
-   // allocate a buffer, read the resource, and return it
-   buffer = ecalloc(void *, 1, len);
+    // allocate a buffer, read the resource, and return it
+    buffer = ecalloc(void *, 1, len);
 
-   if(fseek(dfi->f, static_cast<long>(entry->offset), SEEK_SET))
-      I_Error("D_CacheDiskFileResource: can't seek to resource %s\n", entry->name);
+    if(fseek(dfi->f, static_cast<long>(entry->offset), SEEK_SET))
+        I_Error("D_CacheDiskFileResource: can't seek to resource %s\n", entry->name);
 
-   if(fread(buffer, entry->length, 1, dfi->f) < 1)
-      I_Error("D_CacheDiskFileResource: can't read resource %s\n", entry->name);
+    if(fread(buffer, entry->length, 1, dfi->f) < 1)
+        I_Error("D_CacheDiskFileResource: can't read resource %s\n", entry->name);
 
-   return buffer;
+    return buffer;
 }
 
 //
@@ -218,30 +218,30 @@ void *D_CacheDiskFileResource(diskfile_t *df, const char *path, bool text)
 //
 void D_CloseDiskFile(diskfile_t *df, bool closefile)
 {
-   diskfileint_t *dfi = static_cast<diskfileint_t *>(df->opaque);
+    diskfileint_t *dfi = static_cast<diskfileint_t *>(df->opaque);
 
-   if(dfi)
-   {
-      if(dfi->f && closefile)
-      {
-         fclose(dfi->f);
-         dfi->f = nullptr;
-      }
+    if(dfi)
+    {
+        if(dfi->f && closefile)
+        {
+            fclose(dfi->f);
+            dfi->f = nullptr;
+        }
 
-      // free the entries
-      if(dfi->entries)
-      {
-         efree(dfi->entries);
-         dfi->entries = nullptr;
-      }
+        // free the entries
+        if(dfi->entries)
+        {
+            efree(dfi->entries);
+            dfi->entries = nullptr;
+        }
 
-      // free the internal structure
-      efree(dfi);
-      df->opaque = nullptr;
-   }
+        // free the internal structure
+        efree(dfi);
+        df->opaque = nullptr;
+    }
 
-   // free the structure itself
-   efree(df);
+    // free the structure itself
+    efree(df);
 }
 
 // EOF

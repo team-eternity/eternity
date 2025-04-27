@@ -33,39 +33,37 @@
 struct camera_t;
 struct divline_t;
 struct intercept_t;
-struct player_t;  // ioanch 20160131: for use
-class  Mobj;
+struct player_t; // ioanch 20160131: for use
+class Mobj;
 
-static constexpr fixed_t DEFAULT_AIM_SLOPE = 100 * FRACUNIT / 160;
-static constexpr int AUTOAIM_PITCH_DEGREES = 32;
+static constexpr fixed_t DEFAULT_AIM_SLOPE     = 100 * FRACUNIT / 160;
+static constexpr int     AUTOAIM_PITCH_DEGREES = 32;
 
 struct camsightparams_t
 {
-   fixed_t cx;       // camera (or "looker") coordinates
-   fixed_t cy;
-   fixed_t cz;
-   fixed_t tx;       // target coordinates
-   fixed_t ty;
-   fixed_t tz;
-   fixed_t cheight;  // top height of camera above cz
-   fixed_t theight;  // top height of target above cz
-   int     cgroupid; // camera portal groupid
-   int     tgroupid; // target portal groupid
+    fixed_t cx; // camera (or "looker") coordinates
+    fixed_t cy;
+    fixed_t cz;
+    fixed_t tx; // target coordinates
+    fixed_t ty;
+    fixed_t tz;
+    fixed_t cheight;  // top height of camera above cz
+    fixed_t theight;  // top height of target above cz
+    int     cgroupid; // camera portal groupid
+    int     tgroupid; // target portal groupid
 
-   const camsightparams_t *prev; // previous invocation
+    const camsightparams_t *prev; // previous invocation
 
-   void setCamera(const camera_t &camera, fixed_t height);
-   void setLookerMobj(const Mobj *mo);
-   void setTargetMobj(const Mobj *mo);
+    void setCamera(const camera_t &camera, fixed_t height);
+    void setLookerMobj(const Mobj *mo);
+    void setTargetMobj(const Mobj *mo);
 };
 
 bool CAM_CheckSight(const camsightparams_t &params);
 
-fixed_t CAM_AimLineAttack(const Mobj *t1, angle_t angle, fixed_t distance, 
-                          bool mask, Mobj **outTarget);
+fixed_t CAM_AimLineAttack(const Mobj *t1, angle_t angle, fixed_t distance, bool mask, Mobj **outTarget);
 // ioanch 20160101: bullet attack
-void CAM_LineAttack(Mobj *source, angle_t angle, fixed_t distance, 
-                    fixed_t slope, int damage, size_t puffidx);
+void CAM_LineAttack(Mobj *source, angle_t angle, fixed_t distance, fixed_t slope, int damage, size_t puffidx);
 
 // ioanch 20160131: use lines
 void CAM_UseLines(const player_t *player);
@@ -82,15 +80,13 @@ void CAM_UseLines(const player_t *player);
 //
 enum
 {
-   CAM_ADDLINES = 1,             // look for lines in blocks
-   CAM_ADDTHINGS = 2,            // look for things in blocks
-   CAM_REQUIRELINEPORTALS = 4,   // skip blocks without line portals
+    CAM_ADDLINES           = 1, // look for lines in blocks
+    CAM_ADDTHINGS          = 2, // look for things in blocks
+    CAM_REQUIRELINEPORTALS = 4, // skip blocks without line portals
 };
 
-bool CAM_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, 
-                      uint32_t flags, void *data,
-                      bool (*trav)(const intercept_t *in, void *data,
-                                   const divline_t &trace));
+bool CAM_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, uint32_t flags, void *data,
+                      bool (*trav)(const intercept_t *in, void *data, const divline_t &trace));
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -40,32 +40,32 @@ extern const char *big_num_font_name;
 // haleyjd 10/30/06: enum for text control characters
 enum
 {
-   TEXT_COLOR_BRICK = 0x80,
-   TEXT_COLOR_TAN,
-   TEXT_COLOR_GRAY,
-   TEXT_COLOR_GREEN,
-   TEXT_COLOR_BROWN,
-   TEXT_COLOR_GOLD,
-   TEXT_COLOR_RED,
-   TEXT_COLOR_BLUE,
-   TEXT_COLOR_ORANGE,
-   TEXT_COLOR_YELLOW,
-   TEXT_COLOR_CUSTOM1,
-   TEXT_COLOR_CUSTOM2,
-   TEXT_COLOR_CUSTOM3,
-   TEXT_COLOR_CUSTOM4,
+    TEXT_COLOR_BRICK = 0x80,
+    TEXT_COLOR_TAN,
+    TEXT_COLOR_GRAY,
+    TEXT_COLOR_GREEN,
+    TEXT_COLOR_BROWN,
+    TEXT_COLOR_GOLD,
+    TEXT_COLOR_RED,
+    TEXT_COLOR_BLUE,
+    TEXT_COLOR_ORANGE,
+    TEXT_COLOR_YELLOW,
+    TEXT_COLOR_CUSTOM1,
+    TEXT_COLOR_CUSTOM2,
+    TEXT_COLOR_CUSTOM3,
+    TEXT_COLOR_CUSTOM4,
 
-   TEXT_COLOR_MIN = TEXT_COLOR_BRICK,
-   TEXT_COLOR_MAX = TEXT_COLOR_CUSTOM4,
+    TEXT_COLOR_MIN = TEXT_COLOR_BRICK,
+    TEXT_COLOR_MAX = TEXT_COLOR_CUSTOM4,
 
-   TEXT_CONTROL_TRANS = 0xfa,
-   TEXT_COLOR_NORMAL,
-   TEXT_COLOR_HI,
-   TEXT_COLOR_ERROR,
-   TEXT_CONTROL_SHADOW,
-   TEXT_CONTROL_ABSCENTER,
+    TEXT_CONTROL_TRANS = 0xfa,
+    TEXT_COLOR_NORMAL,
+    TEXT_COLOR_HI,
+    TEXT_COLOR_ERROR,
+    TEXT_CONTROL_SHADOW,
+    TEXT_CONTROL_ABSCENTER,
 
-   TEXT_CONTROL_MAX
+    TEXT_CONTROL_MAX
 };
 
 // normal font colors -- 128 through 137
@@ -85,9 +85,9 @@ enum
 #define FC_CUSTOM3      "\x8c"
 #define FC_CUSTOM4      "\x8d"
 
-// haleyjd: translucent text support 
+// haleyjd: translucent text support
 #define FC_TRANS        "\xfa"
-// haleyjd 08/20/02: new characters for internal color usage 
+// haleyjd 08/20/02: new characters for internal color usage
 #define FC_NORMAL       "\xfb"
 #define FC_HI           "\xfc"
 #define FC_ERROR        "\xfd"
@@ -118,8 +118,8 @@ void V_LoadingSetTo(int amount);
 // FPS ticker
 //
 
-void V_FPSDrawer();
-void V_FPSTicker();
+void       V_FPSDrawer();
+void       V_FPSTicker();
 extern int v_ticker;
 
 //=============================================================================
@@ -131,31 +131,31 @@ struct VBuffer;
 
 void V_DrawBackgroundCached(const byte *src, VBuffer *back_dest);
 void V_DrawBackground(const char *patchname, VBuffer *back_dest);
-void V_DrawDistortedBackground(const char* patchname, VBuffer *back_dest);
+void V_DrawDistortedBackground(const char *patchname, VBuffer *back_dest);
 
 // SoM: replaced globals with a struct and a single global
 struct cb_video_t
 {
-   // SoM: Not implemented (yet)
-   int         bitdepth, pixelsize;
+    // SoM: Not implemented (yet)
+    int bitdepth, pixelsize;
 
-   int         width, height;
-   int         pitch; // This is TRANSPOSED, PRE-TRANSFORMED pitch
-   fixed_t     widthfrac, heightfrac;
-   fixed_t     xscale, yscale;
-   fixed_t     xstep, ystep;
+    int     width, height;
+    int     pitch; // This is TRANSPOSED, PRE-TRANSFORMED pitch
+    fixed_t widthfrac, heightfrac;
+    fixed_t xscale, yscale;
+    fixed_t xstep, ystep;
 
-   float       xscalef, yscalef;
-   float       xstepf, ystepf;
-   bool        scaled; // SoM: should be set when the scale values are
+    float xscalef, yscalef;
+    float xstepf, ystepf;
+    bool  scaled; // SoM: should be set when the scale values are
 
-   byte        *screens[4];
+    byte *screens[4];
 
-   // SoM 1-31-04: This will insure that scaled patches and such are put in the right places
-   int x1lookup[321];
-   int y1lookup[201];
-   int x2lookup[321];
-   int y2lookup[201];
+    // SoM 1-31-04: This will insure that scaled patches and such are put in the right places
+    int x1lookup[321];
+    int y1lookup[201];
+    int x2lookup[321];
+    int y2lookup[201];
 };
 
 extern cb_video_t video;

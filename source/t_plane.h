@@ -21,7 +21,6 @@
 // Authors: James Haley, Stephen McGranahan, Ioan Chera
 //
 
-
 #ifndef T_PLANE_H__
 #define T_PLANE_H__
 
@@ -33,23 +32,20 @@ struct sector_t;
 // crush check returns
 enum result_e
 {
-   ok,
-   crushed,
-   pastdest
+    ok,
+    crushed,
+    pastdest
 };
 
-result_e T_MoveFloorDown  (sector_t *sector, fixed_t speed, fixed_t dest, int crush);
-result_e T_MoveFloorUp    (sector_t *sector, fixed_t speed, fixed_t dest, int crush,
-                           bool emulateStairCrush);
-result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest,
-                           int crush, bool crushrest = false);
-result_e T_MoveCeilingUp  (sector_t *sector, fixed_t speed, fixed_t dest, int crush);
+result_e T_MoveFloorDown(sector_t *sector, fixed_t speed, fixed_t dest, int crush);
+result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush, bool emulateStairCrush);
+result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest, int crush, bool crushrest = false);
+result_e T_MoveCeilingUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush);
 
-result_e T_MoveFloorInDirection(sector_t *sector, fixed_t speed, fixed_t dest, 
-                                int crush, int direction, bool emulateStairCrush);
+result_e T_MoveFloorInDirection(sector_t *sector, fixed_t speed, fixed_t dest, int crush, int direction,
+                                bool emulateStairCrush);
 
-result_e T_MoveCeilingInDirection(sector_t *sector, fixed_t speed, fixed_t dest, 
-                                  int crush, int direction);
+result_e T_MoveCeilingInDirection(sector_t *sector, fixed_t speed, fixed_t dest, int crush, int direction);
 
 #endif
 

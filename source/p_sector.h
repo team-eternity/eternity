@@ -29,8 +29,8 @@ struct sector_t;
 
 enum ssurftype_e
 {
-   ssurf_floor,
-   ssurf_ceiling,
+    ssurf_floor,
+    ssurf_ceiling,
 };
 
 void P_SaveSectorPositions();
@@ -39,12 +39,9 @@ void P_SaveSectorPosition(const sector_t &sec, ssurftype_e surf);
 void P_NewSectorActionFromMobj(Mobj *actor);
 void P_SetSectorZoneFromMobj(Mobj *actor);
 
-int EV_SectorSetRotation(const line_t *line, int tag, int floorangle,
-                         int ceilingangle);
-int EV_SectorSetCeilingPanning(const line_t *line, int tag, fixed_t xoffs,
-                               fixed_t yoffs);
-int EV_SectorSetFloorPanning(const line_t *line, int tag, fixed_t xoffs,
-                             fixed_t yoffs);
+int EV_SectorSetRotation(const line_t *line, int tag, int floorangle, int ceilingangle);
+int EV_SectorSetCeilingPanning(const line_t *line, int tag, fixed_t xoffs, fixed_t yoffs);
+int EV_SectorSetFloorPanning(const line_t *line, int tag, fixed_t xoffs, fixed_t yoffs);
 int EV_SectorSoundChange(int tag, int sndSeqID);
 
 #endif

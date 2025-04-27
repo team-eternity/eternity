@@ -40,39 +40,39 @@ extern inventoryindex_t e_maxvisiblesortorder;
 // Effect Types
 enum
 {
-   ITEMFX_NONE,        // has no effect
-   ITEMFX_HEALTH,      // an immediate-use health item
-   ITEMFX_ARMOR,       // an immediate-use armor item
-   ITEMFX_AMMO,        // an ammo giving item; not to be confused with an ammo type
-   ITEMFX_POWER,       // a power-up giver
-   ITEMFX_WEAPONGIVER, // gives a weapon
-   ITEMFX_ARTIFACT,    // an item that enters the inventory, for later use or tracking
-   NUMITEMFX
+    ITEMFX_NONE,        // has no effect
+    ITEMFX_HEALTH,      // an immediate-use health item
+    ITEMFX_ARMOR,       // an immediate-use armor item
+    ITEMFX_AMMO,        // an ammo giving item; not to be confused with an ammo type
+    ITEMFX_POWER,       // a power-up giver
+    ITEMFX_WEAPONGIVER, // gives a weapon
+    ITEMFX_ARTIFACT,    // an item that enters the inventory, for later use or tracking
+    NUMITEMFX
 };
 using itemeffecttype_t = int;
 
 // Artifact sub-types
 enum
 {
-   ARTI_NORMAL,   // an ordinary artifact
-   ARTI_AMMO,     // ammo type
-   ARTI_KEY,      // key
-   ARTI_PUZZLE,   // puzzle item
-   ARTI_POWER,    // powerup token
-   ARTI_WEAPON,   // weapon token
-   ARTI_QUEST,    // quest token
-   NUMARTITYPES
+    ARTI_NORMAL, // an ordinary artifact
+    ARTI_AMMO,   // ammo type
+    ARTI_KEY,    // key
+    ARTI_PUZZLE, // puzzle item
+    ARTI_POWER,  // powerup token
+    ARTI_WEAPON, // weapon token
+    ARTI_QUEST,  // quest token
+    NUMARTITYPES
 };
 using artitype_t = int;
 
 // Autouse health types
 enum class AutoUseHealthMode : int
 {
-   none,
-   heretic,
-   // TODO: add this when we support strife
-//   strife,   
-   MAX
+    none,
+    heretic,
+    // TODO: add this when we support strife
+    //   strife,
+    MAX
 };
 
 // Hard-coded names for specially treated items (needed in DeHackEd, etc.)
@@ -131,31 +131,31 @@ using itemeffect_t = MetaTable;
 
 enum pickupflags_e : unsigned int
 {
-   PXFX_NONE              = 0x00000000,
-   PFXF_ALWAYSPICKUP      = 0x00000001, // item is picked up even if not useful
-   PFXF_LEAVEINMULTI      = 0x00000002, // item is left in multiplayer games
-   PFXF_NOSCREENFLASH     = 0x00000004, // does not cause bonuscount increment
-   PFXF_SILENTNOBENEFIT   = 0x00000008, // no pickup effects if picked up without benefit
-   PFXF_COMMERCIALONLY    = 0x00000010, // can only be picked up in commercial gamemodes
-   PFXF_GIVESBACKPACKAMMO = 0x00000020, // gives backpack ammo
+    PXFX_NONE              = 0x00000000,
+    PFXF_ALWAYSPICKUP      = 0x00000001, // item is picked up even if not useful
+    PFXF_LEAVEINMULTI      = 0x00000002, // item is left in multiplayer games
+    PFXF_NOSCREENFLASH     = 0x00000004, // does not cause bonuscount increment
+    PFXF_SILENTNOBENEFIT   = 0x00000008, // no pickup effects if picked up without benefit
+    PFXF_COMMERCIALONLY    = 0x00000010, // can only be picked up in commercial gamemodes
+    PFXF_GIVESBACKPACKAMMO = 0x00000020, // gives backpack ammo
 };
 
 struct e_pickupfx_t
 {
-   char          *name;         // name
-   char          *compatname;   // compat name, if any
-   spritenum_t    sprnum;       // sprite number, -1 if not set
-   unsigned int   numEffects;   // number of effects
-   itemeffect_t **effects;      // item given, if any
-   weaponinfo_t  *changeweapon; // weapon to change to, if any
-   char          *message;      // message, if any
-   char          *sound;        // sound, if any
-   pickupflags_e  flags;        // pickup flags
+    char          *name;         // name
+    char          *compatname;   // compat name, if any
+    spritenum_t    sprnum;       // sprite number, -1 if not set
+    unsigned int   numEffects;   // number of effects
+    itemeffect_t **effects;      // item given, if any
+    weaponinfo_t  *changeweapon; // weapon to change to, if any
+    char          *message;      // message, if any
+    char          *sound;        // sound, if any
+    pickupflags_e  flags;        // pickup flags
 
-   // EDF Hashing
-   DLListItem<e_pickupfx_t> namelinks;   // hash by name
-   DLListItem<e_pickupfx_t> cnamelinks;  // hash by compat name
-   DLListItem<e_pickupfx_t> sprnumlinks; // hash by sprite num
+    // EDF Hashing
+    DLListItem<e_pickupfx_t> namelinks;   // hash by name
+    DLListItem<e_pickupfx_t> cnamelinks;  // hash by compat name
+    DLListItem<e_pickupfx_t> sprnumlinks; // hash by sprite num
 };
 
 //
@@ -163,9 +163,9 @@ struct e_pickupfx_t
 //
 struct e_autouseid_t
 {
-   int amount;                   // heal amount
-   unsigned restriction;         // restriction, if any
-   const itemeffect_t *artifact; // the inventory artifact effect
+    int                 amount;      // heal amount
+    unsigned            restriction; // restriction, if any
+    const itemeffect_t *artifact;    // the inventory artifact effect
 };
 
 //
@@ -190,8 +190,8 @@ size_t E_GetNumAmmoTypes();
 // enum for E_GiveAllAmmo behavior
 enum giveallammo_e
 {
-   GAA_MAXAMOUNT,      // give max amount
-   GAA_CUSTOM          // use amount argument
+    GAA_MAXAMOUNT, // give max amount
+    GAA_CUSTOM     // use amount argument
 };
 
 // Give the player a certain amount of all ammo types
@@ -213,7 +213,7 @@ int E_GiveAllKeys(player_t &player);
 int E_TakeAllKeys(const player_t &player);
 
 // Upon morphing a player, move all original class weapons to a secondary inventory
-void E_StashOriginalMorphWeapons(player_t& player);
+void E_StashOriginalMorphWeapons(player_t &player);
 
 // After returning to normal form, restore all weapons. Delete existing weapons
 void E_UnstashWeaponsForUnmorphing(player_t &player);
@@ -240,23 +240,19 @@ void E_TryUseItem(player_t &player, inventoryitemid_t ID);
 itemeffect_t *E_EffectForInventoryItemID(inventoryitemid_t id);
 
 // Obtain an item effect definition for a player's inventory index
-itemeffect_t *E_EffectForInventoryIndex(const player_t &player,
-                                        inventoryindex_t idx);
+itemeffect_t *E_EffectForInventoryIndex(const player_t &player, inventoryindex_t idx);
 
 // Get the slot being used for a particular inventory item, by ID, if one
 // exists. Returns nullptr if the item isn't in the player's inventory.
-inventoryslot_t *E_InventorySlotForItemID(const player_t &player,
-                                          inventoryitemid_t id);
+inventoryslot_t *E_InventorySlotForItemID(const player_t &player, inventoryitemid_t id);
 
 // Get the slot being used for a particular inventory item, by item pointer, if
 // one exists. Returns nullptr if the item isn't in the player's inventory.
-inventoryslot_t *E_InventorySlotForItem(const player_t &player,
-                                        const itemeffect_t *effect);
+inventoryslot_t *E_InventorySlotForItem(const player_t &player, const itemeffect_t *effect);
 
 // Get the slot being used for a particular inventory item, by name, if one
 // exists. Returns nullptr if the item isn't in the player's inventory.
-inventoryslot_t *E_InventorySlotForItemName(const player_t &player,
-                                            const char *name);
+inventoryslot_t *E_InventorySlotForItemName(const player_t &player, const char *name);
 
 // Returns the item ID for a given item effect name. Returns -1 if not found.
 int E_ItemIDForName(const char *name);
@@ -271,8 +267,7 @@ bool E_GiveBackpack(player_t &player);
 bool E_RemoveBackpack(const player_t &player);
 
 // Lookup the maximum amount a player can carry of a specific artifact type.
-int E_GetMaxAmountForArtifact(const player_t &player,
-                              const itemeffect_t *artifact);
+int E_GetMaxAmountForArtifact(const player_t &player, const itemeffect_t *artifact);
 
 // Get amount of an item owned for a specific artifact type
 int E_GetItemOwnedAmount(const player_t &player, const itemeffect_t *artifact);
@@ -295,20 +290,19 @@ const PODCollection<e_autouseid_t> &E_GetAutouseList();
 // return value enumeration for E_RemoveInventoryItem
 enum itemremoved_e
 {
-   INV_NOTREMOVED, // could not remove
-   INV_REMOVED,    // removed requested number but left slot
-   INV_REMOVEDSLOT // removed number AND slot
+    INV_NOTREMOVED, // could not remove
+    INV_REMOVED,    // removed requested number but left slot
+    INV_REMOVEDSLOT // removed number AND slot
 };
 
 enum autousehealthrestrict_flags : unsigned
 {
-   AHR_BABY = 1,
-   AHR_DEATHMATCH = 2,
+    AHR_BABY       = 1,
+    AHR_DEATHMATCH = 2,
 };
 
 // Remove an item from a player's inventory.
-itemremoved_e E_RemoveInventoryItem(const player_t &player,
-                                    const itemeffect_t *artifact, int amount);
+itemremoved_e E_RemoveInventoryItem(const player_t &player, const itemeffect_t *artifact, int amount);
 
 // Call at the end of a hub, or a level that isn't part of a hub, to clear
 // out items that don't persist.
@@ -320,10 +314,8 @@ void E_ClearInventory(player_t *player);
 // Get allocated size of player inventory arrays
 int E_GetInventoryAllocSize();
 
-int E_GetPClassHealth(const itemeffect_t &effect, size_t keyIndex, const playerclass_t &pclass,
-                      int def);
-int E_GetPClassHealth(const itemeffect_t &effect, const char *key, const playerclass_t &pclass,
-                      int def);
+int E_GetPClassHealth(const itemeffect_t &effect, size_t keyIndex, const playerclass_t &pclass, int def);
+int E_GetPClassHealth(const itemeffect_t &effect, const char *key, const playerclass_t &pclass, int def);
 
 extern MetaKeyIndex keyAmount;
 extern MetaKeyIndex keyBackpackAmount;

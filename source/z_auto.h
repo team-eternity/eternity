@@ -42,59 +42,58 @@
 class ZAutoBuffer
 {
 protected:
-   void   *buffer;
-   size_t  size;
+    void  *buffer;
+    size_t size;
 
 public:
-   ZAutoBuffer() : buffer(nullptr), size(0) {}
+    ZAutoBuffer() : buffer(nullptr), size(0) {}
 
-   ZAutoBuffer(size_t pSize, bool initZero) 
-      : buffer(nullptr), size(pSize)
-   {
-      alloc(size, initZero);
-   }
+    ZAutoBuffer(size_t pSize, bool initZero) : buffer(nullptr), size(pSize) { alloc(size, initZero); }
 
-   // Efficiency notice: if you copy a ZAutoBuffer, you copy its buffer;
-   // there is no attempt at a reference counting scheme.
-   ZAutoBuffer(const ZAutoBuffer &other)
-   {
-      size   = other.size;
-      buffer = emalloc(void *, size);
-      memcpy(buffer, other.buffer, size);
-   }
+    // Efficiency notice: if you copy a ZAutoBuffer, you copy its buffer;
+    // there is no attempt at a reference counting scheme.
+    ZAutoBuffer(const ZAutoBuffer &other)
+    {
+        size   = other.size;
+        buffer = emalloc(void *, size);
+        memcpy(buffer, other.buffer, size);
+    }
 
-   ~ZAutoBuffer()
-   {
-      if(buffer)
-      {
-         efree(buffer);
-         buffer = nullptr;
-      }
-   }
+    ~ZAutoBuffer()
+    {
+        if(buffer)
+        {
+            efree(buffer);
+            buffer = nullptr;
+        }
+    }
 
-   void *alloc(size_t pSize, bool initZero)
-   {
-      if(buffer)
-      {
-         efree(buffer);
-         buffer = nullptr;
-      }
+    void *alloc(size_t pSize, bool initZero)
+    {
+        if(buffer)
+        {
+            efree(buffer);
+            buffer = nullptr;
+        }
 
-      if((size = pSize))
-      {
-         buffer = emalloc(void *, size);
-         if(initZero)
-            memset(buffer, 0, size);
-      }
+        if((size = pSize))
+        {
+            buffer = emalloc(void *, size);
+            if(initZero)
+                memset(buffer, 0, size);
+        }
 
-      return buffer;
-   }
+        return buffer;
+    }
 
-   void  *get()     const { return buffer; }
-   size_t getSize() const { return size;   }
+    void  *get() const { return buffer; }
+    size_t getSize() const { return size; }
 
-   template<typename T>
-   T getAs() const { return static_cast<T>(buffer); }
+    template<typename T>
+    T getAs() const
+    {
+        return static_cast<T>(buffer);
+    }
 };
 
 #endif

@@ -30,9 +30,9 @@
 // Supported texture filtering types
 enum
 {
-   CFG_GL_LINEAR,
-   CFG_GL_NEAREST,
-   CFG_GL_NUMFILTERS
+    CFG_GL_LINEAR,
+    CFG_GL_NEAREST,
+    CFG_GL_NUMFILTERS
 };
 
 extern int  cfg_gl_colordepth;

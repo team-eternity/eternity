@@ -30,10 +30,11 @@ class ZoneHeap;
 
 enum
 {
-   SWIRL_TICS = 65536   // the amount to set in definition lumps
+    SWIRL_TICS = 65536 // the amount to set in definition lumps
 };
 
 byte *R_DistortedFlat(ZoneHeap &heap, int flatnum, bool usegametic = false);
+
 extern int r_swirl;
 
 #endif

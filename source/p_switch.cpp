@@ -50,15 +50,15 @@
 
 // killough 2/8/98: Remove switch limit
 
-static int *switchlist;                           // killough
-static int max_numswitches;                       // killough
-static int numswitches;                           // killough
+static int *switchlist;      // killough
+static int  max_numswitches; // killough
+static int  numswitches;     // killough
 
 static Collection<qstring> switchsounds;
 static Collection<qstring> offswitchsounds;
 
-button_t *buttonlist     = nullptr; // haleyjd 04/16/08: made dynamic
-int      numbuttonsalloc = 0;       // haleyjd 04/16/08: number allocated
+button_t *buttonlist      = nullptr; // haleyjd 04/16/08: made dynamic
+int       numbuttonsalloc = 0;       // haleyjd 04/16/08: number allocated
 
 //
 // Being given an EDF switch, check if we have SWITCHES entries which can be
@@ -66,27 +66,27 @@ int      numbuttonsalloc = 0;       // haleyjd 04/16/08: number allocated
 //
 static bool P_replaceSwitchWithEDF(const ESwitchDef &esd)
 {
-   int pic = R_FindWall(esd.offpic.constPtr());
-   for(int i = 0; i < numswitches; ++i)
-   {
-      if(switchlist[2 * i] == pic)
-      {
-         // Got one.
-         if(!esd.onpic.empty())
-            switchlist[2 * i + 1] = R_FindWall(esd.onpic.constPtr());
+    int pic = R_FindWall(esd.offpic.constPtr());
+    for(int i = 0; i < numswitches; ++i)
+    {
+        if(switchlist[2 * i] == pic)
+        {
+            // Got one.
+            if(!esd.onpic.empty())
+                switchlist[2 * i + 1] = R_FindWall(esd.onpic.constPtr());
 
-         // only replace if set
-         if(!esd.onsound.empty())
-            switchsounds[i] = esd.onsound;
+            // only replace if set
+            if(!esd.onsound.empty())
+                switchsounds[i] = esd.onsound;
 
-         if(!esd.offsound.empty())
-            offswitchsounds[i] = esd.offsound;
-         else if(!esd.onsound.empty() && offswitchsounds[i].empty())
-            offswitchsounds[i] = esd.onsound;   // only if original had nothing
-         return true;
-      }
-   }
-   return false;
+            if(!esd.offsound.empty())
+                offswitchsounds[i] = esd.offsound;
+            else if(!esd.onsound.empty() && offswitchsounds[i].empty())
+                offswitchsounds[i] = esd.onsound; // only if original had nothing
+            return true;
+        }
+    }
+    return false;
 }
 
 //
@@ -110,89 +110,84 @@ static bool P_replaceSwitchWithEDF(const ESwitchDef &esd)
 //
 void P_InitSwitchList(void)
 {
-   int index = 0;
-   int episode; 
-   switchlist_t *alphSwitchList;         //jff 3/23/98 pointer to switch table
-   int lumpnum = -1;
+    int           index = 0;
+    int           episode;
+    switchlist_t *alphSwitchList; // jff 3/23/98 pointer to switch table
+    int           lumpnum = -1;
 
-   episode = GameModeInfo->switchEpisode;
+    episode = GameModeInfo->switchEpisode;
 
-   //jff 3/23/98 read the switch table from a predefined lump
+    // jff 3/23/98 read the switch table from a predefined lump
 
-   // haleyjd 08/29/09: run down the hash chain for SWITCHES
-   WadChainIterator wci(wGlobalDir, "SWITCHES");
-   for(wci.begin(); wci.current(); wci.next())
-   {
-      // look for a lump which is of a possibly good size
-      if(wci.testLump() &&
-         (*wci)->size % sizeof(switchlist_t) == 0)
-      {
-         lumpnum = (*wci)->selfindex;
-         break;
-      }
-   }
-
-   if(lumpnum < 0)
-      I_Error("P_InitSwitchList: missing SWITCHES lump\n");
-
-   alphSwitchList = (switchlist_t *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
-
-   for(int i = 0; ; i++)
-   {
-      // Check for a deleting EDF definition
-      const ESwitchDef *esd = E_SwitchForName(alphSwitchList[i].name1);
-      if(esd && (esd->offpic.empty() || esd->emptyDef() ||
-                 esd->episode > episode))
-      {
-         // skip it now, because it's too hard to retroactively delete when we
-         // scan EDF below
-         continue;
-      }
-
-      if(index + 1 >= max_numswitches)
-      {
-         max_numswitches = max_numswitches ? max_numswitches * 2 : 8;
-         switchlist = erealloc(int *, switchlist, sizeof(*switchlist) * max_numswitches);
-      }
-      if(SwapShort(alphSwitchList[i].episode) <= episode) //jff 5/11/98 endianess
-      {
-         if(!SwapShort(alphSwitchList[i].episode))
+    // haleyjd 08/29/09: run down the hash chain for SWITCHES
+    WadChainIterator wci(wGlobalDir, "SWITCHES");
+    for(wci.begin(); wci.current(); wci.next())
+    {
+        // look for a lump which is of a possibly good size
+        if(wci.testLump() && (*wci)->size % sizeof(switchlist_t) == 0)
+        {
+            lumpnum = (*wci)->selfindex;
             break;
-         switchlist[index++] =
-            R_FindWall(alphSwitchList[i].name1);
-         switchlist[index++] =
-            R_FindWall(alphSwitchList[i].name2);
-         switchsounds.add(qstring());  // empty means default
-         offswitchsounds.add(qstring());
-      }
-   }
+        }
+    }
 
-   // update now so we can scan the list while adding EDF
-   numswitches = index / 2;
+    if(lumpnum < 0)
+        I_Error("P_InitSwitchList: missing SWITCHES lump\n");
 
-   // Now read the EDF/ANIMDEFS switches.
-   for(const ESwitchDef *esd : eswitches)
-   {
-      if(esd->offpic.empty() || esd->emptyDef() || esd->episode > episode ||
-         P_replaceSwitchWithEDF(*esd))
-      {
-         continue;
-      }
+    alphSwitchList = (switchlist_t *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
 
-      if(index + 1 >= max_numswitches)
-      {
-         max_numswitches = max_numswitches ? max_numswitches * 2 : 8;
-         switchlist = erealloc(int *, switchlist, sizeof(*switchlist) * max_numswitches);
-      }
-      switchlist[index++] = R_FindWall(esd->offpic.constPtr());
-      switchlist[index++] = R_FindWall(esd->onpic.constPtr());
-      switchsounds.add(esd->onsound);
-      offswitchsounds.add(esd->offsound.empty() ? esd->onsound : esd->offsound);
-   }
+    for(int i = 0;; i++)
+    {
+        // Check for a deleting EDF definition
+        const ESwitchDef *esd = E_SwitchForName(alphSwitchList[i].name1);
+        if(esd && (esd->offpic.empty() || esd->emptyDef() || esd->episode > episode))
+        {
+            // skip it now, because it's too hard to retroactively delete when we
+            // scan EDF below
+            continue;
+        }
 
-   numswitches = index / 2;
-   switchlist[index] = -1;
-   Z_ChangeTag(alphSwitchList, PU_CACHE); //jff 3/23/98 allow table to be freed
+        if(index + 1 >= max_numswitches)
+        {
+            max_numswitches = max_numswitches ? max_numswitches * 2 : 8;
+            switchlist      = erealloc(int *, switchlist, sizeof(*switchlist) * max_numswitches);
+        }
+        if(SwapShort(alphSwitchList[i].episode) <= episode) // jff 5/11/98 endianess
+        {
+            if(!SwapShort(alphSwitchList[i].episode))
+                break;
+            switchlist[index++] = R_FindWall(alphSwitchList[i].name1);
+            switchlist[index++] = R_FindWall(alphSwitchList[i].name2);
+            switchsounds.add(qstring()); // empty means default
+            offswitchsounds.add(qstring());
+        }
+    }
+
+    // update now so we can scan the list while adding EDF
+    numswitches = index / 2;
+
+    // Now read the EDF/ANIMDEFS switches.
+    for(const ESwitchDef *esd : eswitches)
+    {
+        if(esd->offpic.empty() || esd->emptyDef() || esd->episode > episode || P_replaceSwitchWithEDF(*esd))
+        {
+            continue;
+        }
+
+        if(index + 1 >= max_numswitches)
+        {
+            max_numswitches = max_numswitches ? max_numswitches * 2 : 8;
+            switchlist      = erealloc(int *, switchlist, sizeof(*switchlist) * max_numswitches);
+        }
+        switchlist[index++] = R_FindWall(esd->offpic.constPtr());
+        switchlist[index++] = R_FindWall(esd->onpic.constPtr());
+        switchsounds.add(esd->onsound);
+        offswitchsounds.add(esd->offsound.empty() ? esd->onsound : esd->offsound);
+    }
+
+    numswitches       = index / 2;
+    switchlist[index] = -1;
+    Z_ChangeTag(alphSwitchList, PU_CACHE); // jff 3/23/98 allow table to be freed
 }
 
 //
@@ -202,27 +197,27 @@ void P_InitSwitchList(void)
 //
 static button_t *P_FindFreeButton()
 {
-   int i;
-   int oldnumbuttons;
+    int i;
+    int oldnumbuttons;
 
-   // look for a free button
-   for(i = 0; i < numbuttonsalloc; ++i)
-   {
-      if(!buttonlist[i].btimer)
-         return &buttonlist[i];
-   }
+    // look for a free button
+    for(i = 0; i < numbuttonsalloc; ++i)
+    {
+        if(!buttonlist[i].btimer)
+            return &buttonlist[i];
+    }
 
-   // if we get here, there are no free buttons. Reallocate.
-   oldnumbuttons = numbuttonsalloc;
-   numbuttonsalloc = numbuttonsalloc ? numbuttonsalloc * 2 : MAXPLAYERS * 4;
-   buttonlist = erealloc(button_t *, buttonlist, numbuttonsalloc * sizeof(button_t));
+    // if we get here, there are no free buttons. Reallocate.
+    oldnumbuttons   = numbuttonsalloc;
+    numbuttonsalloc = numbuttonsalloc ? numbuttonsalloc * 2 : MAXPLAYERS * 4;
+    buttonlist      = erealloc(button_t *, buttonlist, numbuttonsalloc * sizeof(button_t));
 
-   // 05/04/08: be sure all the new buttons are initialized
-   for(i = oldnumbuttons; i < numbuttonsalloc; ++i)
-      memset(&buttonlist[i], 0, sizeof(button_t));
+    // 05/04/08: be sure all the new buttons are initialized
+    for(i = oldnumbuttons; i < numbuttonsalloc; ++i)
+        memset(&buttonlist[i], 0, sizeof(button_t));
 
-   // return the first new button
-   return &buttonlist[oldnumbuttons];
+    // return the first new button
+    return &buttonlist[oldnumbuttons];
 }
 
 //
@@ -237,37 +232,36 @@ static button_t *P_FindFreeButton()
 //
 // haleyjd 04/16/08: rewritten to store indices instead of pointers
 //
-static void P_StartButton(int sidenum, line_t *line, sector_t *sector, 
-                          bwhere_e w, int texture, int time, bool dopopout,
+static void P_StartButton(int sidenum, line_t *line, sector_t *sector, bwhere_e w, int texture, int time, bool dopopout,
                           const char *startsound, int swindex)
 {
-   int i;
-   button_t *button;
-   
-   // See if button is already pressed
-   for(i = 0; i < numbuttonsalloc; ++i)
-   {
-      if(buttonlist[i].btimer && buttonlist[i].side == sidenum)
-         return;
-   }
+    int       i;
+    button_t *button;
 
-   button = P_FindFreeButton();
-   
-   button->line     = eindex(line - lines);
-   button->side     = sidenum;
-   button->where    = w;
-   button->btexture = texture;
-   button->btimer   = time;
-   button->dopopout = dopopout;
-   button->switchindex = swindex;
+    // See if button is already pressed
+    for(i = 0; i < numbuttonsalloc; ++i)
+    {
+        if(buttonlist[i].btimer && buttonlist[i].side == sidenum)
+            return;
+    }
 
-   // 04/19/09: rewritten to use linedef sound origin
+    button = P_FindFreeButton();
 
-   // switch activation sound
-   S_StartSoundName(&line->soundorg, startsound);
-   
-   // haleyjd 04/16/08: and thus dies one of the last static limits.
-   // I_Error("P_StartButton: no button slots left!");
+    button->line        = eindex(line - lines);
+    button->side        = sidenum;
+    button->where       = w;
+    button->btexture    = texture;
+    button->btimer      = time;
+    button->dopopout    = dopopout;
+    button->switchindex = swindex;
+
+    // 04/19/09: rewritten to use linedef sound origin
+
+    // switch activation sound
+    S_StartSoundName(&line->soundorg, startsound);
+
+    // haleyjd 04/16/08: and thus dies one of the last static limits.
+    // I_Error("P_StartButton: no button slots left!");
 }
 
 //
@@ -277,8 +271,8 @@ static void P_StartButton(int sidenum, line_t *line, sector_t *sector,
 //
 void P_ClearButtons()
 {
-   if(numbuttonsalloc)
-      memset(buttonlist, 0, numbuttonsalloc * sizeof(button_t));
+    if(numbuttonsalloc)
+        memset(buttonlist, 0, numbuttonsalloc * sizeof(button_t));
 }
 
 //
@@ -290,54 +284,45 @@ void P_ClearButtons()
 //
 void P_RunButtons()
 {
-   int i;
-   button_t *button;
+    int       i;
+    button_t *button;
 
-   for(i = 0; i < numbuttonsalloc; ++i)
-   {
-      button = &buttonlist[i];
+    for(i = 0; i < numbuttonsalloc; ++i)
+    {
+        button = &buttonlist[i];
 
-      if(button->btimer)
-      {
-         button->btimer--;
-         if(!button->btimer)
-         {
-            // haleyjd 04/16/08: these are even used for one-use switches now,
-            // so that every switch press can have its own sound origin. Only
-            // change texture back and make pop-out sound if this is a reusable
-            // switch.
-            if(button->dopopout)
+        if(button->btimer)
+        {
+            button->btimer--;
+            if(!button->btimer)
             {
-               line_t *line = &lines[button->line]; // 04/19/09: line soundorgs
+                // haleyjd 04/16/08: these are even used for one-use switches now,
+                // so that every switch press can have its own sound origin. Only
+                // change texture back and make pop-out sound if this is a reusable
+                // switch.
+                if(button->dopopout)
+                {
+                    line_t *line = &lines[button->line]; // 04/19/09: line soundorgs
 
-               switch(button->where)
-               {
-               case top:
-                  sides[button->side].toptexture = button->btexture;
-                  break;
-                  
-               case middle:
-                  sides[button->side].midtexture = button->btexture;
-                  break;
-                  
-               case bottom:
-                  sides[button->side].bottomtexture = button->btexture;
-                  break;
-               }
+                    switch(button->where)
+                    {
+                    case top:    sides[button->side].toptexture = button->btexture; break;
+                    case middle: sides[button->side].midtexture = button->btexture; break;
+                    case bottom: sides[button->side].bottomtexture = button->btexture; break;
+                    }
 
-               int idx = button->switchindex;
-               const char *sound =
-               (idx % 2 ? switchsounds : offswitchsounds)[idx / 2].constPtr();
-               if(!*sound)
-                  sound = "EE_SwitchOn";
-               S_StartSoundName(&line->soundorg, sound);
+                    int         idx   = button->switchindex;
+                    const char *sound = (idx % 2 ? switchsounds : offswitchsounds)[idx / 2].constPtr();
+                    if(!*sound)
+                        sound = "EE_SwitchOn";
+                    S_StartSoundName(&line->soundorg, sound);
+                }
+
+                // clear out the button
+                memset(button, 0, sizeof(button_t));
             }
-            
-            // clear out the button
-            memset(button, 0, sizeof(button_t));
-         }
-      }
-   }
+        }
+    }
 }
 
 //
@@ -355,86 +340,84 @@ void P_RunButtons()
 //
 void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
 {
-   int       texTop;
-   int       texMid;
-   int       texBot;
-   int       i;
-   const char *defsound;     // haleyjd
-   const char *sound;
-   int       sidenum;
-   sector_t *sector;
-   
-   if(!useAgain)
-      line->special = 0;
+    int         texTop;
+    int         texMid;
+    int         texBot;
+    int         i;
+    const char *defsound; // haleyjd
+    const char *sound;
+    int         sidenum;
+    sector_t   *sector;
 
-   sidenum = line->sidenum[side];
+    if(!useAgain)
+        line->special = 0;
 
-   // haleyjd: cannot start a button on a non-existent side
-   if(sidenum == -1)
-      return;
+    sidenum = line->sidenum[side];
 
-   // haleyjd 04/16/08: get proper sector pointer
-   sector = side ? line->backsector : line->frontsector;
+    // haleyjd: cannot start a button on a non-existent side
+    if(sidenum == -1)
+        return;
 
-   if(!sector) // ???; really should not happen.
-      return;
+    // haleyjd 04/16/08: get proper sector pointer
+    sector = side ? line->backsector : line->frontsector;
 
-   texTop = sides[sidenum].toptexture;
-   texMid = sides[sidenum].midtexture;
-   texBot = sides[sidenum].bottomtexture;
+    if(!sector) // ???; really should not happen.
+        return;
 
-   defsound = "EE_SwitchOn"; // haleyjd
-   
-   // EXIT SWITCH?
-   if(EV_CompositeActionFlags(EV_ActionForSpecial(line->special)) &
-      EV_ISMAPPEDEXIT)
-   {
-      defsound = "EE_SwitchEx"; // haleyjd
-   }
+    texTop = sides[sidenum].toptexture;
+    texMid = sides[sidenum].midtexture;
+    texBot = sides[sidenum].bottomtexture;
 
-   for(i = 0; i < numswitches * 2; ++i)
-   {
-      // haleyjd 07/02/09: we do not match "-" as a switch texture
-      if(switchlist[i] == 0)
-         continue;
+    defsound = "EE_SwitchOn"; // haleyjd
 
-      // Check if the switch has a dedicated sound ("none" can silence it)
-      sound = (i % 2 ? offswitchsounds : switchsounds)[i / 2].constPtr();
-      if(!*sound)
-         sound = defsound;
+    // EXIT SWITCH?
+    if(EV_CompositeActionFlags(EV_ActionForSpecial(line->special)) & EV_ISMAPPEDEXIT)
+    {
+        defsound = "EE_SwitchEx"; // haleyjd
+    }
 
-      if(switchlist[i] == texTop) // if an upper texture
-      {
-         sides[sidenum].toptexture = switchlist[i^1]; // chg texture
-         R_CacheTexture(switchlist[i ^ 1]);
-         R_CacheIfSkyTexture(switchlist[i], switchlist[i ^ 1]); // Sky transfers are only off of top textures
+    for(i = 0; i < numswitches * 2; ++i)
+    {
+        // haleyjd 07/02/09: we do not match "-" as a switch texture
+        if(switchlist[i] == 0)
+            continue;
 
-         P_StartButton(sidenum, line, sector, top, switchlist[i], BUTTONTIME,
-                       !!useAgain, sound, i); // start timer
+        // Check if the switch has a dedicated sound ("none" can silence it)
+        sound = (i % 2 ? offswitchsounds : switchsounds)[i / 2].constPtr();
+        if(!*sound)
+            sound = defsound;
 
-         return;
-      }
-      else if(switchlist[i] == texMid) // if a normal texture
-      {
-         sides[sidenum].midtexture = switchlist[i^1]; // chg texture
-         R_CacheTexture(switchlist[i ^ 1]);
+        if(switchlist[i] == texTop) // if an upper texture
+        {
+            sides[sidenum].toptexture = switchlist[i ^ 1]; // chg texture
+            R_CacheTexture(switchlist[i ^ 1]);
+            R_CacheIfSkyTexture(switchlist[i], switchlist[i ^ 1]); // Sky transfers are only off of top textures
 
-         P_StartButton(sidenum, line, sector, middle, switchlist[i], BUTTONTIME,
-                       !!useAgain, sound, i); // start timer
+            P_StartButton(sidenum, line, sector, top, switchlist[i], BUTTONTIME, !!useAgain, sound, i); // start timer
 
-         return;
-      }
-      else if(switchlist[i] == texBot) // if a lower texture
-      {
-         sides[sidenum].bottomtexture = switchlist[i^1]; //chg texture
-         R_CacheTexture(switchlist[i ^ 1]);
+            return;
+        }
+        else if(switchlist[i] == texMid) // if a normal texture
+        {
+            sides[sidenum].midtexture = switchlist[i ^ 1]; // chg texture
+            R_CacheTexture(switchlist[i ^ 1]);
 
-         P_StartButton(sidenum, line, sector, bottom, switchlist[i], BUTTONTIME,
-                       !!useAgain, sound, i); // start timer
+            P_StartButton(sidenum, line, sector, middle, switchlist[i], BUTTONTIME, !!useAgain, sound,
+                          i); // start timer
 
-         return;
-      }
-   }
+            return;
+        }
+        else if(switchlist[i] == texBot) // if a lower texture
+        {
+            sides[sidenum].bottomtexture = switchlist[i ^ 1]; // chg texture
+            R_CacheTexture(switchlist[i ^ 1]);
+
+            P_StartButton(sidenum, line, sector, bottom, switchlist[i], BUTTONTIME, !!useAgain, sound,
+                          i); // start timer
+
+            return;
+        }
+    }
 }
 
 //
@@ -449,7 +432,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
 //
 bool P_UseSpecialLine(Mobj *thing, line_t *line, int side)
 {
-   return EV_ActivateSpecialLineWithSpac(line, side, thing, nullptr, SPAC_USE, false);
+    return EV_ActivateSpecialLineWithSpac(line, side, thing, nullptr, SPAC_USE, false);
 }
 
 //----------------------------------------------------------------------------

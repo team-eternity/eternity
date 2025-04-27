@@ -36,7 +36,7 @@
 //
 struct diskfile_t
 {
-   void *opaque;
+    void *opaque;
 };
 
 //
@@ -47,15 +47,15 @@ struct diskfile_t
 //
 struct diskwad_t
 {
-   FILE *f;          // file pointer
-   size_t offset;    // offset of wad within physical file
-   const char *name; // canonical file name
+    FILE       *f;      // file pointer
+    size_t      offset; // offset of wad within physical file
+    const char *name;   // canonical file name
 };
 
 diskfile_t *D_OpenDiskFile(const char *filename);
-diskwad_t D_FindWadInDiskFile(diskfile_t *df, const char *filename);
-void *D_CacheDiskFileResource(diskfile_t *df, const char *path, bool text);
-void D_CloseDiskFile(diskfile_t *df, bool closefile);
+diskwad_t   D_FindWadInDiskFile(diskfile_t *df, const char *filename);
+void       *D_CacheDiskFileResource(diskfile_t *df, const char *path, bool text);
+void        D_CloseDiskFile(diskfile_t *df, bool closefile);
 
 #endif
 

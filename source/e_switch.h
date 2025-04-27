@@ -42,32 +42,27 @@ struct cfg_t;
 class ESwitchDef : public ZoneObject
 {
 public:
-   ESwitchDef() : episode(), link()
-   {
-   }
+    ESwitchDef() : episode(), link() {}
 
-   //
-   // Call reset on an unlinked definition
-   //
-   void reset();
-   bool emptyDef() const
-   {
-      return onpic.empty() && onsound.empty() && offsound.empty();
-   }
+    //
+    // Call reset on an unlinked definition
+    //
+    void reset();
+    bool emptyDef() const { return onpic.empty() && onsound.empty() && offsound.empty(); }
 
-   qstring offpic;
-   qstring onpic;
-   qstring onsound;
-   qstring offsound;
-   int episode;
-   DLListItem<ESwitchDef> link;
+    qstring                offpic;
+    qstring                onpic;
+    qstring                onsound;
+    qstring                offsound;
+    int                    episode;
+    DLListItem<ESwitchDef> link;
 };
 
-extern cfg_opt_t edf_switch_opts[];
+extern cfg_opt_t                   edf_switch_opts[];
 extern PODCollection<ESwitchDef *> eswitches;
 
-void E_ProcessSwitches(cfg_t *cfg);
-void E_AddSwitchDef(const ESwitchDef &def);
+void              E_ProcessSwitches(cfg_t *cfg);
+void              E_AddSwitchDef(const ESwitchDef &def);
 const ESwitchDef *E_SwitchForName(const char *name);
 
 #endif

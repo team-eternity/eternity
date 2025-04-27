@@ -36,28 +36,28 @@ class Mobj;
 
 struct camera_t
 {
-   fixed_t x;
-   fixed_t y;
-   fixed_t z;
-   angle_t angle;
-   fixed_t pitch;
-   fixed_t prevpitch;
-   int     groupid;
-   bool    flying;
+    fixed_t x;
+    fixed_t y;
+    fixed_t z;
+    angle_t angle;
+    fixed_t pitch;
+    fixed_t prevpitch;
+    int     groupid;
+    bool    flying;
 
-   prevpos_t prevpos; // previous position for interpolation
-   
-   // Save the current camera position for interpolation purposes.
-   void backupPosition()
-   {
-      prevpos.x     = x;
-      prevpos.y     = y;
-      prevpos.z     = z;
-      prevpos.angle = angle;
-      prevpitch     = pitch;
+    prevpos_t prevpos; // previous position for interpolation
 
-      // TODO: misc. interpolation stuff
-   }
+    // Save the current camera position for interpolation purposes.
+    void backupPosition()
+    {
+        prevpos.x     = x;
+        prevpos.y     = y;
+        prevpos.z     = z;
+        prevpos.angle = angle;
+        prevpitch     = pitch;
+
+        // TODO: misc. interpolation stuff
+    }
 };
 
 extern int chasex;
@@ -85,7 +85,6 @@ void P_WalkTicker();
 void P_WalkStart();
 void P_WalkEnd();
 void P_ResetWalkcam();
-
 
 void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY);
 void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target);

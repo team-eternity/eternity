@@ -35,21 +35,21 @@ class SaveArchive;
 // NOTE: all functions here begin with Archive_ instead of P_, since they're not really influential
 // on playsim.
 
-void Archive_Colormap(SaveArchive &arc, int &colormap);
-void Archive_ColorTranslation(SaveArchive &arc, int &colour);
-void Archive_Flat(SaveArchive &arc, int &flat);
-void Archive_Flat(SaveArchive &arc, int16_t &flat);
-void Archive_MobjState_Save(SaveArchive &arc, const state_t &state);
+void     Archive_Colormap(SaveArchive &arc, int &colormap);
+void     Archive_ColorTranslation(SaveArchive &arc, int &colour);
+void     Archive_Flat(SaveArchive &arc, int &flat);
+void     Archive_Flat(SaveArchive &arc, int16_t &flat);
+void     Archive_MobjState_Save(SaveArchive &arc, const state_t &state);
 state_t &Archive_MobjState_Load(SaveArchive &arc);
-void Archive_MobjType(SaveArchive &arc, mobjtype_t &type);
-void Archive_PlayerClass(SaveArchive &arc, playerclass_t *&pclass);
-void Archive_PSpriteState_Save(SaveArchive &arc, const state_t *state);
+void     Archive_MobjType(SaveArchive &arc, mobjtype_t &type);
+void     Archive_PlayerClass(SaveArchive &arc, playerclass_t *&pclass);
+void     Archive_PSpriteState_Save(SaveArchive &arc, const state_t *state);
 state_t *Archive_PSpriteState_Load(SaveArchive &arc);
-void Archive_Skin(SaveArchive &arc, skin_t *&skin);
-void Archive_SpriteNum(SaveArchive &arc, spritenum_t &sprite);
-void Archive_Texture(SaveArchive &arc, int &texture);
-void Archive_Texture(SaveArchive &arc, int16_t &texture);
-void Archive_TranslucencyMap(SaveArchive &arc, int &tranmap);
+void     Archive_Skin(SaveArchive &arc, skin_t *&skin);
+void     Archive_SpriteNum(SaveArchive &arc, spritenum_t &sprite);
+void     Archive_Texture(SaveArchive &arc, int &texture);
+void     Archive_Texture(SaveArchive &arc, int16_t &texture);
+void     Archive_TranslucencyMap(SaveArchive &arc, int &tranmap);
 
 #endif
 

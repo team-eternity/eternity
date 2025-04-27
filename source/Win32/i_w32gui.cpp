@@ -36,39 +36,31 @@
 
 qstring I_OpenWindowsDirectory()
 {
-   BROWSEINFOA info {
-      nullptr, nullptr, nullptr,
-      " Select the folder where your game files (IWADs) are stored",
-      BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE
-   };
+    BROWSEINFOA info{ nullptr, nullptr, nullptr, " Select the folder where your game files (IWADs) are stored",
+                      BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE };
 
-   if(LPITEMIDLIST pidl = SHBrowseForFolderA(&info); pidl)
-   {
-      TCHAR path[MAX_PATH];
-      SHGetPathFromIDListA(pidl, path);
+    if(LPITEMIDLIST pidl = SHBrowseForFolderA(&info); pidl)
+    {
+        TCHAR path[MAX_PATH];
+        SHGetPathFromIDListA(pidl, path);
 
-      IMalloc *imalloc = nullptr;
-      if(SUCCEEDED(SHGetMalloc(&imalloc)))
-      {
-         imalloc->Free(pidl);
-         imalloc->Release();
-      }
+        IMalloc *imalloc = nullptr;
+        if(SUCCEEDED(SHGetMalloc(&imalloc)))
+        {
+            imalloc->Free(pidl);
+            imalloc->Release();
+        }
 
+        return qstring(path);
+    }
 
-      return qstring(path);
-   }
-
-   return qstring();
+    return qstring();
 }
 
 bool I_TryIWADSearchAgain()
 {
-   return MessageBoxA(
-      nullptr,
-      "No game files (IWADs) found in selected folder. Do you wish to select a new one?",
-      nullptr,
-      MB_YESNO | MB_SETFOREGROUND
-   ) == IDYES;
+    return MessageBoxA(nullptr, "No game files (IWADs) found in selected folder. Do you wish to select a new one?",
+                       nullptr, MB_YESNO | MB_SETFOREGROUND) == IDYES;
 }
 
 #endif

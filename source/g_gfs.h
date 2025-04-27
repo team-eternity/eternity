@@ -36,23 +36,23 @@
 
 struct gfs_t
 {
-   char **wadnames;
-   char **dehnames;
-   char **cscnames;
+    char **wadnames;
+    char **dehnames;
+    char **cscnames;
 
-   char *iwad;
-   char *filepath;
-   char *edf;
+    char *iwad;
+    char *filepath;
+    char *edf;
 
-   int numwads;
-   int numdehs;
-   int numcsc;
-   bool hasIWAD;
-   bool hasEDF;
+    int  numwads;
+    int  numdehs;
+    int  numcsc;
+    bool hasIWAD;
+    bool hasEDF;
 };
 
-gfs_t *G_LoadGFS(const char *filename);
-void G_FreeGFS(gfs_t *lgfs);
+gfs_t      *G_LoadGFS(const char *filename);
+void        G_FreeGFS(gfs_t *lgfs);
 const char *G_GFSCheckIWAD(void);
 const char *G_GFSCheckEDF(void);
 

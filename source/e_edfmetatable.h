@@ -32,8 +32,7 @@ class MetaTable;
 
 extern cfg_opt_t edf_generic_tprops[];
 
-void E_BuildGlobalMetaTableFromEDF(cfg_t *cfg, const char *secname,
-                                   const char *deltaname, MetaTable &table);
+void E_BuildGlobalMetaTableFromEDF(cfg_t *cfg, const char *secname, const char *deltaname, MetaTable &table);
 
 #endif
 

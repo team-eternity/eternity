@@ -46,7 +46,7 @@ static Uint64 basefreq    = 0;
 
 static int MSToTic(uint32_t time)
 {
-   return time * TICRATE / 1000;
+    return time * TICRATE / 1000;
 }
 
 // FIXME: unused
@@ -64,12 +64,12 @@ static uint64_t TicToCounter(int tic)
 //
 static unsigned int I_SDLGetTicks()
 {
-   const Uint64 counter = SDL_GetPerformanceCounter();
+    const Uint64 counter = SDL_GetPerformanceCounter();
 
-   if(basecounter == 0)
-      basecounter = counter;
+    if(basecounter == 0)
+        basecounter = counter;
 
-   return int(((counter - basecounter) * 1000ull) / basefreq);
+    return int(((counter - basecounter) * 1000ull) / basefreq);
 }
 
 static int time_scale = 100;
@@ -79,14 +79,14 @@ static int time_scale = 100;
 //
 static uint64_t I_SDLGetPerfCounter_Scaled()
 {
-   uint64_t counter;
+    uint64_t counter;
 
-   counter = SDL_GetPerformanceCounter() * time_scale / 100;
+    counter = SDL_GetPerformanceCounter() * time_scale / 100;
 
-   if(basecounter == 0)
-      basecounter = counter;
+    if(basecounter == 0)
+        basecounter = counter;
 
-   return counter - basecounter;
+    return counter - basecounter;
 }
 
 //
@@ -94,12 +94,12 @@ static uint64_t I_SDLGetPerfCounter_Scaled()
 //
 static unsigned int I_SDLGetTicks_Scaled()
 {
-   const Uint64 counter = SDL_GetPerformanceCounter() * time_scale / 100;
+    const Uint64 counter = SDL_GetPerformanceCounter() * time_scale / 100;
 
-   if(basecounter == 0)
-      basecounter = counter;
+    if(basecounter == 0)
+        basecounter = counter;
 
-   return int(((counter - basecounter) * 1000ull) / basefreq);
+    return int(((counter - basecounter) * 1000ull) / basefreq);
 }
 
 //
@@ -107,7 +107,7 @@ static unsigned int I_SDLGetTicks_Scaled()
 //
 static int I_SDLGetTime_RealTime()
 {
-   return MSToTic(I_SDLGetTicks());
+    return MSToTic(I_SDLGetTicks());
 }
 
 //
@@ -115,7 +115,7 @@ static int I_SDLGetTime_RealTime()
 //
 static int I_SDLGetTime_Scaled()
 {
-   return MSToTic(I_SDLGetTicks_Scaled());
+    return MSToTic(I_SDLGetTicks_Scaled());
 }
 
 //
@@ -123,8 +123,8 @@ static int I_SDLGetTime_Scaled()
 //
 static int I_SDLGetTime_FastDemo()
 {
-   static int fasttic;
-   return fasttic++;
+    static int fasttic;
+    return fasttic++;
 }
 
 //
@@ -134,7 +134,7 @@ static int I_SDLGetTime_FastDemo()
 //
 static void I_SDLSleep(int ms)
 {
-   SDL_Delay(ms);
+    SDL_Delay(ms);
 }
 
 //=============================================================================
@@ -158,7 +158,7 @@ static float        rendertic_msec;
 //
 static void I_SDLSetMSec()
 {
-   rendertic_msec = (float)time_scale * TICRATE / 100000.0f;
+    rendertic_msec = (float)time_scale * TICRATE / 100000.0f;
 }
 
 //
@@ -168,7 +168,7 @@ static void I_SDLSetMSec()
 //
 static fixed_t I_SDLGetTimeFrac()
 {
-   return I_SDLGetTicks_Scaled() * TICRATE % 1000 * FRACUNIT / 1000;
+    return I_SDLGetTicks_Scaled() * TICRATE % 1000 * FRACUNIT / 1000;
 }
 
 //
@@ -178,7 +178,7 @@ static fixed_t I_SDLGetTimeFrac()
 //
 static void I_SDLStartDisplay()
 {
-   start_displaytime = SDL_GetTicks();
+    start_displaytime = SDL_GetTicks();
 }
 
 //
@@ -188,7 +188,7 @@ static void I_SDLStartDisplay()
 //
 static void I_SDLEndDisplay()
 {
-   displaytime = SDL_GetTicks() - start_displaytime;
+    displaytime = SDL_GetTicks() - start_displaytime;
 }
 
 //
@@ -198,9 +198,9 @@ static void I_SDLEndDisplay()
 //
 static void I_SDLSaveMS()
 {
-   rendertic_start = SDL_GetTicks();
-   rendertic_next  = (unsigned int)((rendertic_start * rendertic_msec + 1.0f) / rendertic_msec);
-   rendertic_step  = rendertic_next - rendertic_start;
+    rendertic_start = SDL_GetTicks();
+    rendertic_next  = (unsigned int)((rendertic_start * rendertic_msec + 1.0f) / rendertic_msec);
+    rendertic_step  = rendertic_next - rendertic_start;
 }
 
 //=============================================================================
@@ -215,31 +215,31 @@ static void I_SDLSaveMS()
 //
 void I_SDLInitTimer()
 {
-   basefreq   = SDL_GetPerformanceFrequency();
-   time_scale = realtic_clock_rate;
+    basefreq   = SDL_GetPerformanceFrequency();
+    time_scale = realtic_clock_rate;
 
-   // initialize GetTime, which gets time in gametics
-   // killough 4/14/98: Adjustable speedup based on realtic_clock_rate
-   if(fastdemo)
-      i_haltimer.GetTime = I_SDLGetTime_FastDemo;
-   else
-   {
-      if(I_GetTime_Scale != CLOCK_UNIT)
-         i_haltimer.GetTime = I_SDLGetTime_Scaled;
-      else
-         i_haltimer.GetTime = I_SDLGetTime_RealTime;
-   }
+    // initialize GetTime, which gets time in gametics
+    // killough 4/14/98: Adjustable speedup based on realtic_clock_rate
+    if(fastdemo)
+        i_haltimer.GetTime = I_SDLGetTime_FastDemo;
+    else
+    {
+        if(I_GetTime_Scale != CLOCK_UNIT)
+            i_haltimer.GetTime = I_SDLGetTime_Scaled;
+        else
+            i_haltimer.GetTime = I_SDLGetTime_RealTime;
+    }
 
-   I_SDLSetMSec();
+    I_SDLSetMSec();
 
-   // initialize constant methods
-   i_haltimer.GetRealTime  = I_SDLGetTime_RealTime;
-   i_haltimer.GetTicks     = I_SDLGetTicks;
-   i_haltimer.Sleep        = I_SDLSleep;
-   i_haltimer.StartDisplay = I_SDLStartDisplay;
-   i_haltimer.EndDisplay   = I_SDLEndDisplay;
-   i_haltimer.GetFrac      = I_SDLGetTimeFrac;
-   i_haltimer.SaveMS       = I_SDLSaveMS;
+    // initialize constant methods
+    i_haltimer.GetRealTime  = I_SDLGetTime_RealTime;
+    i_haltimer.GetTicks     = I_SDLGetTicks;
+    i_haltimer.Sleep        = I_SDLSleep;
+    i_haltimer.StartDisplay = I_SDLStartDisplay;
+    i_haltimer.EndDisplay   = I_SDLEndDisplay;
+    i_haltimer.GetFrac      = I_SDLGetTimeFrac;
+    i_haltimer.SaveMS       = I_SDLSaveMS;
 }
 
 //
@@ -249,19 +249,19 @@ void I_SDLInitTimer()
 //
 void I_SDLChangeClockRate()
 {
-   if(fastdemo)
-      return;
+    if(fastdemo)
+        return;
 
-   const uint64_t counter = I_SDLGetPerfCounter_Scaled();
-   time_scale = realtic_clock_rate;
-   basecounter += (I_SDLGetPerfCounter_Scaled() - counter);
+    const uint64_t counter  = I_SDLGetPerfCounter_Scaled();
+    time_scale              = realtic_clock_rate;
+    basecounter            += (I_SDLGetPerfCounter_Scaled() - counter);
 
-   if(I_GetTime_Scale != CLOCK_UNIT)
-      i_haltimer.GetTime = I_SDLGetTime_Scaled;
-   else
-      i_haltimer.GetTime = I_SDLGetTime_RealTime;
+    if(I_GetTime_Scale != CLOCK_UNIT)
+        i_haltimer.GetTime = I_SDLGetTime_Scaled;
+    else
+        i_haltimer.GetTime = I_SDLGetTime_RealTime;
 
-   I_SDLSetMSec();
+    I_SDLSetMSec();
 }
 
 // EOF

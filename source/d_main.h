@@ -29,18 +29,18 @@
 
 // jff make startskill globally visible
 extern skill_t startskill;
-extern char *startlevel;
+extern char   *startlevel;
 
 void D_SetGameName(const char *iwad);
 
-char *D_DoomExeDir(void);       // killough 2/16/98: path to executable's dir
-extern char *basesavegame;      // killough 2/16/98: savegame path
+char        *D_DoomExeDir(void); // killough 2/16/98: path to executable's dir
+extern char *basesavegame;       // killough 2/16/98: savegame path
 
-//jff 1/24/98 make command line copies of play modes available
+// jff 1/24/98 make command line copies of play modes available
 extern bool clnomonsters;  // checkparm of -nomonsters
 extern bool clrespawnparm; // checkparm of -respawn
 extern bool clfastparm;    // checkparm of -fast
-//jff end of external declaration of command line playmode
+// jff end of external declaration of command line playmode
 
 extern bool nodrawers;
 extern bool nosfxparm;
@@ -48,12 +48,12 @@ extern bool nomusicparm;
 
 inline static bool D_noWindow()
 {
-   return nodrawers && nosfxparm && nomusicparm;
+    return nodrawers && nosfxparm && nomusicparm;
 }
 
 // Called by IO functions when input is detected.
 struct event_t;
-void D_PostEvent(const event_t* ev);
+void D_PostEvent(const event_t *ev);
 
 struct camera_t;
 extern camera_t *camera;

@@ -41,8 +41,8 @@ struct sector_t;
 //
 enum class portalblocktype_e
 {
-   line,
-   sector
+    line,
+    sector
 };
 
 //
@@ -50,21 +50,21 @@ enum class portalblocktype_e
 //
 struct portalblockentry_t
 {
-   const linkdata_t *ldata;   // the concerned linked portal data.
-   portalblocktype_e type;    // whether it is sector or line based.
-   union
-   {
-      struct
-      {
-         const line_t *line;  // source line. Unique per block.
-         int linerefindex;    // index of this entry in the lineref array.
-      };
-      struct
-      {
-         const sector_t *sector; // source sector. Pair sector/ldata unique per block.
-         surf_e surf;   // on which surface is it?
-      };
-   };   
+    const linkdata_t *ldata; // the concerned linked portal data.
+    portalblocktype_e type;  // whether it is sector or line based.
+    union
+    {
+        struct
+        {
+            const line_t *line;         // source line. Unique per block.
+            int           linerefindex; // index of this entry in the lineref array.
+        };
+        struct
+        {
+            const sector_t *sector; // source sector. Pair sector/ldata unique per block.
+            surf_e          surf;   // on which surface is it?
+        };
+    };
 };
 
 //
@@ -73,41 +73,35 @@ struct portalblockentry_t
 class PortalBlockmap final
 {
 public:
-   void mapInit();
-   void mapDeinit()
-   {
-      isInit = false;
-   }
-   void unlinkLine(const line_t &line);
-   void linkLine(const line_t &line);
+    void mapInit();
+    void mapDeinit() { isInit = false; }
+    void unlinkLine(const line_t &line);
+    void linkLine(const line_t &line);
 
-   const PODCollection<portalblockentry_t> &operator[](int index) const
-   {
-      return mBlocks[index];
-   }
-   
-   bool isInit = false;
+    const PODCollection<portalblockentry_t> &operator[](int index) const { return mBlocks[index]; }
+
+    bool isInit = false;
 
 private:
-   //
-   // Line reference in blockmap
-   //
-   struct lineref_t
-   {
-      int mapindex;     // position in blockmap
-      int blockindex;   // position in block
-   };
+    //
+    // Line reference in blockmap
+    //
+    struct lineref_t
+    {
+        int mapindex;   // position in blockmap
+        int blockindex; // position in block
+    };
 
-   // The blockmap. As big as the map.
-   Collection<PODCollection<portalblockentry_t>> mBlocks;
+    // The blockmap. As big as the map.
+    Collection<PODCollection<portalblockentry_t>> mBlocks;
 
-   // line references to their owning blocks. Useful for moving lines. As big as numlines.
-   Collection<PODCollection<lineref_t>> mLineRef;
+    // line references to their owning blocks. Useful for moving lines. As big as numlines.
+    Collection<PODCollection<lineref_t>> mLineRef;
 
-   // Set to true during initialization
-   bool mInitializing;
+    // Set to true during initialization
+    bool mInitializing;
 
-   void checkLinkSector(const sector_t &sector, const portal_t *portal, surf_e surf, int mapindex);
+    void checkLinkSector(const sector_t &sector, const portal_t *portal, surf_e surf, int mapindex);
 };
 
 bool P_BlockHasLinkedPortals(int index, bool includesectors);

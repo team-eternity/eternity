@@ -59,44 +59,45 @@
 //
 // [XA] 03/02/20: Common A_Mushroom* stuff.
 //
-void P_Mushroom(Mobj *actor, const int ShotType, const int n, const fixed_t misc1, const fixed_t misc2, const int damage, const int radius)
+void P_Mushroom(Mobj *actor, const int ShotType, const int n, const fixed_t misc1, const fixed_t misc2,
+                const int damage, const int radius)
 {
-   int i, j;
+    int i, j;
 
-   if(actor == nullptr) {
-      return;
-   }
+    if(actor == nullptr)
+    {
+        return;
+    }
 
-   // make normal explosion
-   P_RadiusAttack(actor, actor->target, damage, radius, actor->info->mod, 0);
-   E_ExplosionHitWater(actor, radius);
+    // make normal explosion
+    P_RadiusAttack(actor, actor->target, damage, radius, actor->info->mod, 0);
+    E_ExplosionHitWater(actor, radius);
 
-   // launch mushroom cloud
-   for(i = -n; i <= n; i += 8)
-   {
-      for(j = -n; j <= n; j += 8)
-      {
-         // haleyjd 08/07/11: This is bad. Very bad.
-         // Rewritten to use P_SpawnMissileWithDest function.
-         //Mobj target = *actor, *mo;
-         Mobj *mo;
-         fixed_t x, y, z;
+    // launch mushroom cloud
+    for(i = -n; i <= n; i += 8)
+    {
+        for(j = -n; j <= n; j += 8)
+        {
+            // haleyjd 08/07/11: This is bad. Very bad.
+            // Rewritten to use P_SpawnMissileWithDest function.
+            // Mobj target = *actor, *mo;
+            Mobj   *mo;
+            fixed_t x, y, z;
 
-         x = actor->x + (i << FRACBITS); // Aim in many directions from source
-         y = actor->y + (j << FRACBITS);
-         z = actor->z + P_AproxDistance(i, j) * misc1; // Aim fairly high
-       
-         mo = P_SpawnMissileWithDest(actor, actor, 
-                                     ShotType,          // Launch fireball
-                                     actor->z + actor->info->missileheight,
-                                     x, y, z);
-         
-         mo->momx = FixedMul(mo->momx, misc2);
-         mo->momy = FixedMul(mo->momy, misc2);         // Slow down a bit
-         mo->momz = FixedMul(mo->momz, misc2);
-         mo->flags &= ~MF_NOGRAVITY;   // Make debris fall under gravity
-      }
-   }
+            x = actor->x + (i << FRACBITS); // Aim in many directions from source
+            y = actor->y + (j << FRACBITS);
+            z = actor->z + P_AproxDistance(i, j) * misc1; // Aim fairly high
+
+            mo = P_SpawnMissileWithDest(actor, actor,
+                                        ShotType, // Launch fireball
+                                        actor->z + actor->info->missileheight, x, y, z);
+
+            mo->momx   = FixedMul(mo->momx, misc2);
+            mo->momy   = FixedMul(mo->momy, misc2); // Slow down a bit
+            mo->momz   = FixedMul(mo->momz, misc2);
+            mo->flags &= ~MF_NOGRAVITY; // Make debris fall under gravity
+        }
+    }
 }
 
 //
@@ -105,26 +106,24 @@ void P_Mushroom(Mobj *actor, const int ShotType, const int n, const fixed_t misc
 //
 void A_Mushroom(actionargs_t *actionargs)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args  = actionargs->args;
-   int n = actor->damage;
-   int ShotType;
-   
-   // Mushroom parameters are part of code pointer's state
-   fixed_t misc1 = 
-      actor->state->misc1 ? actor->state->misc1 : FRACUNIT*4;
-   fixed_t misc2 = 
-      actor->state->misc2 ? actor->state->misc2 : FRACUNIT/2;
+    Mobj      *actor = actionargs->actor;
+    arglist_t *args  = actionargs->args;
+    int        n     = actor->damage;
+    int        ShotType;
 
-   // haleyjd: extended parameter support requested by Mordeth:
-   // allow specification of thing type in args[0]
+    // Mushroom parameters are part of code pointer's state
+    fixed_t misc1 = actor->state->misc1 ? actor->state->misc1 : FRACUNIT * 4;
+    fixed_t misc2 = actor->state->misc2 ? actor->state->misc2 : FRACUNIT / 2;
 
-   ShotType = E_ArgAsThingNumG0(args, 0);
+    // haleyjd: extended parameter support requested by Mordeth:
+    // allow specification of thing type in args[0]
 
-   if(ShotType < 0/* || ShotType == -1*/)
-      ShotType = E_SafeThingType(MT_FATSHOT);
+    ShotType = E_ArgAsThingNumG0(args, 0);
 
-   P_Mushroom(actor, ShotType, n, misc1, misc2, 128, 128);
+    if(ShotType < 0 /* || ShotType == -1*/)
+        ShotType = E_SafeThingType(MT_FATSHOT);
+
+    P_Mushroom(actor, ShotType, n, misc1, misc2, 128, 128);
 }
 
 //
@@ -141,21 +140,21 @@ void A_Mushroom(actionargs_t *actionargs)
 //
 void A_MushroomEx(actionargs_t *actionargs)
 {
-   Mobj     *actor = actionargs->actor;
-   arglist_t *args = actionargs->args;
-   int thingtype;
-   int thingcount;
-   fixed_t vrange, hrange;
-   int damage, radius;
+    Mobj      *actor = actionargs->actor;
+    arglist_t *args  = actionargs->args;
+    int        thingtype;
+    int        thingcount;
+    fixed_t    vrange, hrange;
+    int        damage, radius;
 
-   thingtype  = E_ArgAsThingNumG0(args, 0);
-   thingcount = E_ArgAsInt       (args, 1, actor->damage);
-   vrange     = E_ArgAsFixed     (args, 2, 4 * FRACUNIT);
-   hrange     = E_ArgAsFixed     (args, 3, 1 * FRACUNIT / 2);
-   damage     = E_ArgAsInt       (args, 4, 128);
-   radius     = E_ArgAsInt       (args, 5, 128);
+    thingtype  = E_ArgAsThingNumG0(args, 0);
+    thingcount = E_ArgAsInt(args, 1, actor->damage);
+    vrange     = E_ArgAsFixed(args, 2, 4 * FRACUNIT);
+    hrange     = E_ArgAsFixed(args, 3, 1 * FRACUNIT / 2);
+    damage     = E_ArgAsInt(args, 4, 128);
+    radius     = E_ArgAsInt(args, 5, 128);
 
-   P_Mushroom(actor, thingtype, thingcount, vrange, hrange, damage, radius);
+    P_Mushroom(actor, thingtype, thingcount, vrange, hrange, damage, radius);
 }
 
 //
@@ -168,38 +167,25 @@ void A_MushroomEx(actionargs_t *actionargs)
 
 void A_Spawn(actionargs_t *actionargs)
 {
-   Mobj *mo = actionargs->actor;
+    Mobj *mo = actionargs->actor;
 
-   if(mo->state->misc1)
-   {
-      Mobj *newmobj;
+    if(mo->state->misc1)
+    {
+        Mobj *newmobj;
 
-      // haleyjd 03/06/03 -- added error check
-      //         07/05/03 -- adjusted for EDF
-      int thingtype = E_SafeThingType(mo->state->misc1);
-      
-      newmobj = 
-         P_SpawnMobj(mo->x, mo->y, 
-                     (mo->state->misc2 << FRACBITS) + mo->z,
-                     thingtype);
-      if(newmobj)
-         P_transferFriendship(*newmobj, *mo);
-   }
+        // haleyjd 03/06/03 -- added error check
+        //         07/05/03 -- adjusted for EDF
+        int thingtype = E_SafeThingType(mo->state->misc1);
+
+        newmobj = P_SpawnMobj(mo->x, mo->y, (mo->state->misc2 << FRACBITS) + mo->z, thingtype);
+        if(newmobj)
+            P_transferFriendship(*newmobj, *mo);
+    }
 }
 
-static const char *kwds_A_Turn[] =
-{
-   "usemisc1",
-   "usecounterasdeg",
-   "usecounterasbam",
-   "useconstant"
-};
+static const char *kwds_A_Turn[] = { "usemisc1", "usecounterasdeg", "usecounterasbam", "useconstant" };
 
-static argkeywd_t turnkwds =
-{
-   kwds_A_Turn,
-   sizeof(kwds_A_Turn) / sizeof(const char *)
-};
+static argkeywd_t turnkwds = { kwds_A_Turn, sizeof(kwds_A_Turn) / sizeof(const char *) };
 
 //
 // Parameterized turn.
@@ -214,45 +200,45 @@ static argkeywd_t turnkwds =
 //
 void A_Turn(actionargs_t *actionargs)
 {
-   Mobj      *mo   = actionargs->actor;
-   arglist_t *args = actionargs->args;
-   int cnum;
-   int mode;
-   angle_t angle;
+    Mobj      *mo   = actionargs->actor;
+    arglist_t *args = actionargs->args;
+    int        cnum;
+    int        mode;
+    angle_t    angle;
 
-   mode = E_ArgAsKwd(args, 0, &turnkwds, 0);
+    mode = E_ArgAsKwd(args, 0, &turnkwds, 0);
 
-   switch(mode)
-   {
-   default:
-   case 0: // default, compatibility mode
-      angle = static_cast<angle_t>((static_cast<uint64_t>(mo->state->misc1) << 32) / 360);
-      break;
-   case 1: // use a counter as degrees
-      cnum = E_ArgAsInt(args, 1, 0);
+    switch(mode)
+    {
+    default:
+    case 0: // default, compatibility mode
+        angle = static_cast<angle_t>((static_cast<uint64_t>(mo->state->misc1) << 32) / 360);
+        break;
+    case 1: // use a counter as degrees
+        cnum = E_ArgAsInt(args, 1, 0);
 
-      if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
-         return; // invalid
+        if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
+            return; // invalid
 
-      if(const int degs = mo->counters[cnum]; degs % 45)
-         angle = static_cast<angle_t>(ANGLE_1 * degs);
-      else
-         angle = static_cast<angle_t>(ANG45 * (degs / 45));
-      break;
-   case 2: // use a counter as angle_t
-      cnum = E_ArgAsInt(args, 1, 0);
+        if(const int degs = mo->counters[cnum]; degs % 45)
+            angle = static_cast<angle_t>(ANGLE_1 * degs);
+        else
+            angle = static_cast<angle_t>(ANG45 * (degs / 45));
+        break;
+    case 2: // use a counter as angle_t
+        cnum = E_ArgAsInt(args, 1, 0);
 
-      if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
-         return; // invalid
+        if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
+            return; // invalid
 
-      angle = static_cast<angle_t>(mo->counters[cnum]);
-      break;
-   case 3: // use constant ("immediate operand" mode)
-      angle = E_ArgAsAngle(args, 1, 0);
-      break;
-   }
+        angle = static_cast<angle_t>(mo->counters[cnum]);
+        break;
+    case 3: // use constant ("immediate operand" mode)
+        angle = E_ArgAsAngle(args, 1, 0);
+        break;
+    }
 
-   mo->angle += angle;
+    mo->angle += angle;
 }
 
 //
@@ -260,34 +246,24 @@ void A_Turn(actionargs_t *actionargs)
 //
 void A_TurnProjectile(actionargs_t *actionargs)
 {
-   Mobj *mo = actionargs->actor;
+    Mobj *mo = actionargs->actor;
 
-   A_Turn(actionargs);
+    A_Turn(actionargs);
 
-   const angle_t an = mo->angle >> ANGLETOFINESHIFT;
-   mo->momx = FixedMul(mo->info->speed, finecosine[an]);
-   mo->momy = FixedMul(mo->info->speed, finesine[an]);
+    const angle_t an = mo->angle >> ANGLETOFINESHIFT;
+    mo->momx         = FixedMul(mo->info->speed, finecosine[an]);
+    mo->momy         = FixedMul(mo->info->speed, finesine[an]);
 }
 
 void A_Face(actionargs_t *actionargs)
 {
-   Mobj *mo = actionargs->actor;
-   mo->angle = (angle_t)(((uint64_t) mo->state->misc1 << 32) / 360);
+    Mobj *mo  = actionargs->actor;
+    mo->angle = (angle_t)(((uint64_t)mo->state->misc1 << 32) / 360);
 }
 
-static const char *kwds_A_Scratch[] =
-{
-   "usemisc1",
-   "usedamage",
-   "usecounter",
-   "useconstant"
-};
+static const char *kwds_A_Scratch[] = { "usemisc1", "usedamage", "usecounter", "useconstant" };
 
-static argkeywd_t scratchkwds =
-{
-   kwds_A_Scratch,
-   sizeof(kwds_A_Scratch) / sizeof(const char *)
-};
+static argkeywd_t scratchkwds = { kwds_A_Scratch, sizeof(kwds_A_Scratch) / sizeof(const char *) };
 
 //
 // Parameterized melee attack.
@@ -306,81 +282,81 @@ static argkeywd_t scratchkwds =
 //
 void A_Scratch(actionargs_t *actionargs)
 {
-   Mobj      *mo   = actionargs->actor;
-   arglist_t *args = actionargs->args;
-   int damage, cnum;
-   int mode;
+    Mobj      *mo   = actionargs->actor;
+    arglist_t *args = actionargs->args;
+    int        damage, cnum;
+    int        mode;
 
-   // haleyjd: demystified
-   if(!mo->target)
-      return;
+    // haleyjd: demystified
+    if(!mo->target)
+        return;
 
-   mode = E_ArgAsKwd(args, 0, &scratchkwds, 0);
+    mode = E_ArgAsKwd(args, 0, &scratchkwds, 0);
 
-   // haleyjd 08/02/04: extensions to get damage from multiple sources
-   switch(mode)
-   {
-   default:
-   case 0: // default, compatibility mode
-      damage = mo->state->misc1;
-      break;
-   case 1: // use mo->damage
-      damage = mo->damage;
-      break;
-   case 2: // use a counter
-      cnum = E_ArgAsInt(args, 1, 0);
+    // haleyjd 08/02/04: extensions to get damage from multiple sources
+    switch(mode)
+    {
+    default:
+    case 0: // default, compatibility mode
+        damage = mo->state->misc1;
+        break;
+    case 1: // use mo->damage
+        damage = mo->damage;
+        break;
+    case 2: // use a counter
+        cnum = E_ArgAsInt(args, 1, 0);
 
-      if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
-         return; // invalid
+        if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
+            return; // invalid
 
-      damage = mo->counters[cnum];
-      break;
-   case 3: // use constant ("immediate operand" mode)
-      damage = E_ArgAsInt(args, 1, 0);
-      break;
-   }
+        damage = mo->counters[cnum];
+        break;
+    case 3: // use constant ("immediate operand" mode)
+        damage = E_ArgAsInt(args, 1, 0);
+        break;
+    }
 
-   A_FaceTarget(actionargs);
+    A_FaceTarget(actionargs);
 
-   if(P_CheckMeleeRange(mo))
-   {
-      if(mo->state->misc2)
-         S_StartSound(mo, mo->state->misc2);
-      else
-      {
-         soundparams_t params;
+    if(P_CheckMeleeRange(mo))
+    {
+        if(mo->state->misc2)
+            S_StartSound(mo, mo->state->misc2);
+        else
+        {
+            soundparams_t params;
 
-         // check to see if args[2] is a valid sound
-         if((params.sfx = E_ArgAsSound(args, 2)))
-            S_StartSfxInfo(params.setNormalDefaults(mo));
-      }
+            // check to see if args[2] is a valid sound
+            if((params.sfx = E_ArgAsSound(args, 2)))
+                S_StartSfxInfo(params.setNormalDefaults(mo));
+        }
 
-      // Set mod to 4th arg
-      const int mod = E_ArgAsDamageType(args, 3, MOD_HIT)->num;
-      P_DamageMobj(mo->target, mo, mo, damage, mod);
-   }
+        // Set mod to 4th arg
+        const int mod = E_ArgAsDamageType(args, 3, MOD_HIT)->num;
+        P_DamageMobj(mo->target, mo, mo, damage, mod);
+    }
 }
 
 void A_PlaySound(actionargs_t *actionargs)
 {
-   Mobj *mo = actionargs->actor;
-   S_StartSound(mo->state->misc2 ? nullptr : mo, mo->state->misc1);
+    Mobj *mo = actionargs->actor;
+    S_StartSound(mo->state->misc2 ? nullptr : mo, mo->state->misc1);
 }
 
 void A_RandomJump(actionargs_t *actionargs)
 {
-   Mobj *mo = actionargs->actor;
+    Mobj *mo = actionargs->actor;
 
-   // haleyjd 03/06/03: rewrote to be failsafe
-   //         07/05/03: adjusted for EDF
-   int statenum = mo->state->misc1;
+    // haleyjd 03/06/03: rewrote to be failsafe
+    //         07/05/03: adjusted for EDF
+    int statenum = mo->state->misc1;
 
-   statenum = E_StateNumForDEHNum(statenum);
-   if(statenum < 0)
-      return;
+    statenum = E_StateNumForDEHNum(statenum);
+    if(statenum < 0)
+        return;
 
-   if(P_Random(pr_randomjump) < mo->state->misc2)
-      P_SetMobjState(mo, statenum);
+    if(P_Random(pr_randomjump) < mo->state->misc2)
+        P_SetMobjState(mo, statenum);
 }
 
 //
@@ -388,35 +364,35 @@ void A_RandomJump(actionargs_t *actionargs)
 //
 void A_LineEffect(actionargs_t *actionargs)
 {
-   Mobj *mo = actionargs->actor;
+    Mobj *mo = actionargs->actor;
 
-   // haleyjd 05/02/04: bug fix:
-   // This line can end up being referred to long after this
-   // function returns, thus it must be made static or memory
-   // corruption is possible.
-   I_Assert(numlinesPlusExtra > numlines, "Must have one extra line\n");
+    // haleyjd 05/02/04: bug fix:
+    // This line can end up being referred to long after this
+    // function returns, thus it must be made static or memory
+    // corruption is possible.
+    I_Assert(numlinesPlusExtra > numlines, "Must have one extra line\n");
 
-   // ioanch: use the footer "shadow" linedef from the lines list. This will allow any thinkers who
-   // adopt this linedef to be serialized properly when saving, so it won't crash after loading.
-   line_t &junk = lines[numlines];
+    // ioanch: use the footer "shadow" linedef from the lines list. This will allow any thinkers who
+    // adopt this linedef to be serialized properly when saving, so it won't crash after loading.
+    line_t &junk = lines[numlines];
 
-   if(!(mo->intflags & MIF_LINEDONE))                // Unless already used up
-   {
-      junk = *lines;                                 // Fake linedef set to 1st
-      if((junk.special = mo->state->misc1))          // Linedef type
-      {
-         // ioanch: remove the fake player, it was causing undefined behaviour and crashes.
-         // Instead, mark the activation instance as "byCodepointer", which will allow the monster
-         // to trigger linedefs and open locked doors, just like in MBF.
+    if(!(mo->intflags & MIF_LINEDONE)) // Unless already used up
+    {
+        junk = *lines;                        // Fake linedef set to 1st
+        if((junk.special = mo->state->misc1)) // Linedef type
+        {
+            // ioanch: remove the fake player, it was causing undefined behaviour and crashes.
+            // Instead, mark the activation instance as "byCodepointer", which will allow the monster
+            // to trigger linedefs and open locked doors, just like in MBF.
 
-         junk.args[0] = junk.tag = mo->state->misc2;            // Sector tag for linedef
-         // Only try use or cross
-         if(!EV_ActivateSpecialLineWithSpac(&junk, 0, mo, nullptr, SPAC_USE, true))
-            EV_ActivateSpecialLineWithSpac(&junk, 0, mo, nullptr, SPAC_CROSS, true);
-         if(!junk.special)                           // If type cleared,
-            mo->intflags |= MIF_LINEDONE;            // no more for this thing
-      }
-   }
+            junk.args[0] = junk.tag = mo->state->misc2; // Sector tag for linedef
+            // Only try use or cross
+            if(!EV_ActivateSpecialLineWithSpac(&junk, 0, mo, nullptr, SPAC_USE, true))
+                EV_ActivateSpecialLineWithSpac(&junk, 0, mo, nullptr, SPAC_CROSS, true);
+            if(!junk.special)                 // If type cleared,
+                mo->intflags |= MIF_LINEDONE; // no more for this thing
+        }
+    }
 }
 
 //
@@ -435,21 +411,21 @@ void A_LineEffect(actionargs_t *actionargs)
 //
 void A_SpawnAbove(actionargs_t *actionargs)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args  = actionargs->args;
-   int thingtype;
-   int statenum;
-   fixed_t zamt;
-   Mobj *mo;
+    Mobj      *actor = actionargs->actor;
+    arglist_t *args  = actionargs->args;
+    int        thingtype;
+    int        statenum;
+    fixed_t    zamt;
+    Mobj      *mo;
 
-   thingtype = E_ArgAsThingNum(args, 0);
-   statenum  = E_ArgAsStateNumG0(args, 1, actor);
-   zamt      = (fixed_t)(E_ArgAsInt(args, 2, 0) * FRACUNIT);
+    thingtype = E_ArgAsThingNum(args, 0);
+    statenum  = E_ArgAsStateNumG0(args, 1, actor);
+    zamt      = (fixed_t)(E_ArgAsInt(args, 2, 0) * FRACUNIT);
 
-   mo = P_SpawnMobj(actor->x, actor->y, actor->z + zamt, thingtype);
+    mo = P_SpawnMobj(actor->x, actor->y, actor->z + zamt, thingtype);
 
-   if(statenum >= 0 && statenum < NUMSTATES)
-      P_SetMobjState(mo, statenum);
+    if(statenum >= 0 && statenum < NUMSTATES)
+        P_SetMobjState(mo, statenum);
 }
 
 //
@@ -464,61 +440,59 @@ void A_SpawnAbove(actionargs_t *actionargs)
 //
 void A_SpawnGlitter(actionargs_t *actionargs)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args  = actionargs->args;
-   Mobj      *glitter;
-   int        glitterType;
-   fixed_t    initMomentum;
-   fixed_t    x, y, z;
+    Mobj      *actor = actionargs->actor;
+    arglist_t *args  = actionargs->args;
+    Mobj      *glitter;
+    int        glitterType;
+    fixed_t    initMomentum;
+    fixed_t    x, y, z;
 
-   glitterType  = E_ArgAsThingNum(args, 0);
-   initMomentum = (fixed_t)(E_ArgAsInt(args, 1, 0) * FRACUNIT / 8);
+    glitterType  = E_ArgAsThingNum(args, 0);
+    initMomentum = (fixed_t)(E_ArgAsInt(args, 1, 0) * FRACUNIT / 8);
 
-   // special defaults
+    // special defaults
 
-   // default momentum of zero == 1/4 unit per tic
-   if(!initMomentum)
-      initMomentum = FRACUNIT >> 2;
+    // default momentum of zero == 1/4 unit per tic
+    if(!initMomentum)
+        initMomentum = FRACUNIT >> 2;
 
-   // randomize spawning coordinates within a 32-unit square
-   // ioanch 20160107: correctly spawn behind line portal
-   fixed_t dx = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
-   fixed_t dy = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
-   v2fixed_t pos = P_LinePortalCrossing(*actor, dx, dy);
-   
-   x = pos.x;
-   y = pos.y;
+    // randomize spawning coordinates within a 32-unit square
+    // ioanch 20160107: correctly spawn behind line portal
+    fixed_t   dx  = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
+    fixed_t   dy  = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
+    v2fixed_t pos = P_LinePortalCrossing(*actor, dx, dy);
 
-   z = actor->zref.floor;
+    x = pos.x;
+    y = pos.y;
 
-   glitter = P_SpawnMobj(x, y, z, glitterType);
+    z = actor->zref.floor;
 
-   // give it some upward momentum
-   glitter->momz = initMomentum;
+    glitter = P_SpawnMobj(x, y, z, glitterType);
+
+    // give it some upward momentum
+    glitter->momz = initMomentum;
 }
 
 enum spawnex_flags : unsigned int
 {
-   SPAWNEX_ABSOLUTEANGLE    = 0x00000001,
-   SPAWNEX_ABSOLUTEVELOCITY = 0x00000002,
-   SPAWNEX_ABSOLUTEPOSITION = 0x00000004,
-   SPAWNEX_CHECKPOSITION    = 0x00000008
+    SPAWNEX_ABSOLUTEANGLE    = 0x00000001,
+    SPAWNEX_ABSOLUTEVELOCITY = 0x00000002,
+    SPAWNEX_ABSOLUTEPOSITION = 0x00000004,
+    SPAWNEX_CHECKPOSITION    = 0x00000008
 };
 
-static dehflags_t spawnex_flaglist[] =
-{
-   { "normal",           0x00000000               },
-   { "absoluteangle",    SPAWNEX_ABSOLUTEANGLE    },
-   { "absolutevelocity", SPAWNEX_ABSOLUTEVELOCITY },
-   { "absoluteposition", SPAWNEX_ABSOLUTEPOSITION },
-   { "checkposition"   , SPAWNEX_CHECKPOSITION    },
-   { nullptr,            0 }
+static dehflags_t spawnex_flaglist[] = {
+    { "normal",           0x00000000               },
+    { "absoluteangle",    SPAWNEX_ABSOLUTEANGLE    },
+    { "absolutevelocity", SPAWNEX_ABSOLUTEVELOCITY },
+    { "absoluteposition", SPAWNEX_ABSOLUTEPOSITION },
+    { "checkposition",    SPAWNEX_CHECKPOSITION    },
+    { nullptr,            0                        }
 };
 
-static dehflagset_t spawnex_flagset =
-{
-   spawnex_flaglist, // flaglist
-   0,                // mode
+static dehflagset_t spawnex_flagset = {
+    spawnex_flaglist, // flaglist
+    0,                // mode
 };
 
 //
@@ -540,72 +514,73 @@ static dehflagset_t spawnex_flagset =
 //
 void A_SpawnEx(actionargs_t *actionargs)
 {
-   Mobj     *actor = actionargs->actor;
-   arglist_t *args = actionargs->args;
-   int thingtype;
-   unsigned int flags;
-   angle_t angle;
-   fixed_t xpos, ypos, zpos;
-   fixed_t xvel, yvel, zvel;
-   v2fixed_t tempvec;
-   int spawnchance;
-   Mobj *mo;
+    Mobj        *actor = actionargs->actor;
+    arglist_t   *args  = actionargs->args;
+    int          thingtype;
+    unsigned int flags;
+    angle_t      angle;
+    fixed_t      xpos, ypos, zpos;
+    fixed_t      xvel, yvel, zvel;
+    v2fixed_t    tempvec;
+    int          spawnchance;
+    Mobj        *mo;
 
-   // [XA] check spawnchance first since there's no point in
-   // even grabbing the rest of the args if we're doing nothing.
-   spawnchance = E_ArgAsInt(args, 9, 256);
-   if(P_Random(pr_spawnexchance) >= spawnchance)
-      return; // look, ma, it's nothing!
+    // [XA] check spawnchance first since there's no point in
+    // even grabbing the rest of the args if we're doing nothing.
+    spawnchance = E_ArgAsInt(args, 9, 256);
+    if(P_Random(pr_spawnexchance) >= spawnchance)
+        return; // look, ma, it's nothing!
 
-   thingtype = E_ArgAsThingNumG0(args, 0);
-   flags = E_ArgAsFlags(args, 1, &spawnex_flagset);
-   xpos = E_ArgAsFixed(args, 2, 0);
-   ypos = E_ArgAsFixed(args, 3, 0);
-   zpos = E_ArgAsFixed(args, 4, 0);
-   xvel = E_ArgAsFixed(args, 5, 0);
-   yvel = E_ArgAsFixed(args, 6, 0);
-   zvel = E_ArgAsFixed(args, 7, 0);
-   angle = E_ArgAsAngle(args, 8, 0);
+    thingtype = E_ArgAsThingNumG0(args, 0);
+    flags     = E_ArgAsFlags(args, 1, &spawnex_flagset);
+    xpos      = E_ArgAsFixed(args, 2, 0);
+    ypos      = E_ArgAsFixed(args, 3, 0);
+    zpos      = E_ArgAsFixed(args, 4, 0);
+    xvel      = E_ArgAsFixed(args, 5, 0);
+    yvel      = E_ArgAsFixed(args, 6, 0);
+    zvel      = E_ArgAsFixed(args, 7, 0);
+    angle     = E_ArgAsAngle(args, 8, 0);
 
-   if(!(flags & SPAWNEX_ABSOLUTEANGLE))
-      angle += actor->angle;
-   P_RotatePoint(xpos, ypos, angle);
+    if(!(flags & SPAWNEX_ABSOLUTEANGLE))
+        angle += actor->angle;
+    P_RotatePoint(xpos, ypos, angle);
 
-   if(!(flags & SPAWNEX_ABSOLUTEPOSITION)) {
-      tempvec = P_LinePortalCrossing(*actor, xpos, ypos);
-      xpos = tempvec.x;
-      ypos = tempvec.y;
-      zpos += actor->z;
-   }
+    if(!(flags & SPAWNEX_ABSOLUTEPOSITION))
+    {
+        tempvec  = P_LinePortalCrossing(*actor, xpos, ypos);
+        xpos     = tempvec.x;
+        ypos     = tempvec.y;
+        zpos    += actor->z;
+    }
 
-   if(!(flags & SPAWNEX_ABSOLUTEVELOCITY))
-      P_RotatePoint(xvel, yvel, angle);
+    if(!(flags & SPAWNEX_ABSOLUTEVELOCITY))
+        P_RotatePoint(xvel, yvel, angle);
 
-   mo = P_SpawnMobj(xpos, ypos, zpos, thingtype);
-   if(mo == nullptr)
-      return;
+    mo = P_SpawnMobj(xpos, ypos, zpos, thingtype);
+    if(mo == nullptr)
+        return;
 
-   if((flags & SPAWNEX_CHECKPOSITION) && !P_CheckPositionExt(mo, mo->x, mo->y, mo->z))
-      mo->remove();
-   else
-   {
-      P_transferFriendship(*mo, *actor);
-      mo->angle = angle;
-      mo->momx = xvel;
-      mo->momy = yvel;
-      mo->momz = zvel;
+    if((flags & SPAWNEX_CHECKPOSITION) && !P_CheckPositionExt(mo, mo->x, mo->y, mo->z))
+        mo->remove();
+    else
+    {
+        P_transferFriendship(*mo, *actor);
+        mo->angle = angle;
+        mo->momx  = xvel;
+        mo->momy  = yvel;
+        mo->momz  = zvel;
 
-      // TODO: Flag to make it set tracer?
-      // If we're spawning a projectile then we want to set its target as its owner
-      if(mo->flags & MF_MISSILE)
-      {
-         // If the spawner is (or spawned as) a projectile then set target as spawner's owner (if it exists)
-         if(((actor->flags & MF_MISSILE) || actor->info->flags & MF_MISSILE) && actor->target)
-            P_SetTarget<Mobj>(&mo->target, actor->target);
-         else
-            P_SetTarget<Mobj>(&mo->target, actor);
-      }
-   }
+        // TODO: Flag to make it set tracer?
+        // If we're spawning a projectile then we want to set its target as its owner
+        if(mo->flags & MF_MISSILE)
+        {
+            // If the spawner is (or spawned as) a projectile then set target as spawner's owner (if it exists)
+            if(((actor->flags & MF_MISSILE) || actor->info->flags & MF_MISSILE) && actor->target)
+                P_SetTarget<Mobj>(&mo->target, actor->target);
+            else
+                P_SetTarget<Mobj>(&mo->target, actor);
+        }
+    }
 }
 
 //
@@ -618,49 +593,39 @@ void A_SpawnEx(actionargs_t *actionargs)
 //
 void A_SetFlags(actionargs_t *actionargs)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args  = actionargs->args;
-   int flagfield;
-   unsigned int *flags;
+    Mobj         *actor = actionargs->actor;
+    arglist_t    *args  = actionargs->args;
+    int           flagfield;
+    unsigned int *flags;
 
-   flagfield = E_ArgAsInt(args, 0, 0);
+    flagfield = E_ArgAsInt(args, 0, 0);
 
-   if(!(flags = E_ArgAsThingFlags(args, 1)))
-      return;
+    if(!(flags = E_ArgAsThingFlags(args, 1)))
+        return;
 
-   unsigned preflags = actor->flags;
-   
-   switch(flagfield)
-   {
-   case 0:
-      actor->flags  |= (unsigned int)flags[0];
-      actor->flags2 |= (unsigned int)flags[1];
-      actor->flags3 |= (unsigned int)flags[2];
-      actor->flags4 |= (unsigned int)flags[3];
-      actor->flags5 |= (unsigned int)flags[4];
-      break;
-   case 1:
-      actor->flags  |= (unsigned int)flags[0];
-      break;
-   case 2:
-      actor->flags2 |= (unsigned int)flags[1];
-      break;
-   case 3:
-      actor->flags3 |= (unsigned int)flags[2];
-      break;
-   case 4:
-      actor->flags4 |= (unsigned int)flags[3];
-      break;
-   case 5:
-      actor->flags5 |= (unsigned int)flags[4];
-      break;
-   }
+    unsigned preflags = actor->flags;
 
-   // Must do it after the change, to avoid nested functions interpreting the current state.
-   if(!(preflags & MF_NOSECTOR) && flags[0] & MF_NOSECTOR)
-      P_UnsetThingSectorLink(actor, false);
-   if(!(preflags & MF_NOBLOCKMAP) && flags[0] & MF_NOBLOCKMAP)
-      P_UnsetThingBlockLink(actor);
+    switch(flagfield)
+    {
+    case 0:
+        actor->flags  |= (unsigned int)flags[0];
+        actor->flags2 |= (unsigned int)flags[1];
+        actor->flags3 |= (unsigned int)flags[2];
+        actor->flags4 |= (unsigned int)flags[3];
+        actor->flags5 |= (unsigned int)flags[4];
+        break;
+    case 1: actor->flags |= (unsigned int)flags[0]; break;
+    case 2: actor->flags2 |= (unsigned int)flags[1]; break;
+    case 3: actor->flags3 |= (unsigned int)flags[2]; break;
+    case 4: actor->flags4 |= (unsigned int)flags[3]; break;
+    case 5: actor->flags5 |= (unsigned int)flags[4]; break;
+    }
+
+    // Must do it after the change, to avoid nested functions interpreting the current state.
+    if(!(preflags & MF_NOSECTOR) && flags[0] & MF_NOSECTOR)
+        P_UnsetThingSectorLink(actor, false);
+    if(!(preflags & MF_NOBLOCKMAP) && flags[0] & MF_NOBLOCKMAP)
+        P_UnsetThingBlockLink(actor);
 }
 
 //
@@ -673,62 +638,47 @@ void A_SetFlags(actionargs_t *actionargs)
 //
 void A_UnSetFlags(actionargs_t *actionargs)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args  = actionargs->args;
-   int flagfield;
-   unsigned int *flags;
+    Mobj         *actor = actionargs->actor;
+    arglist_t    *args  = actionargs->args;
+    int           flagfield;
+    unsigned int *flags;
 
-   flagfield = E_ArgAsInt(args, 0, 0);
+    flagfield = E_ArgAsInt(args, 0, 0);
 
-   if(!(flags = E_ArgAsThingFlags(args, 1)))
-      return;
+    if(!(flags = E_ArgAsThingFlags(args, 1)))
+        return;
 
-   unsigned preflags = actor->flags;
+    unsigned preflags = actor->flags;
 
-   switch(flagfield)
-   {
-   case 0:
-      actor->flags  &= ~flags[0];
-      actor->flags2 &= ~flags[1];
-      actor->flags3 &= ~flags[2];
-      actor->flags4 &= ~flags[3];
-      actor->flags5 &= ~flags[4];
-      break;
-   case 1:
-      actor->flags  &= ~flags[0];
-      break;
-   case 2:
-      actor->flags2 &= ~flags[1];
-      break;
-   case 3:
-      actor->flags3 &= ~flags[2];
-      break;
-   case 4:
-      actor->flags4 &= ~flags[3];
-      break;
-   case 5:
-      actor->flags5 &= ~flags[4];
-      break;
-   }
+    switch(flagfield)
+    {
+    case 0:
+        actor->flags  &= ~flags[0];
+        actor->flags2 &= ~flags[1];
+        actor->flags3 &= ~flags[2];
+        actor->flags4 &= ~flags[3];
+        actor->flags5 &= ~flags[4];
+        break;
+    case 1: actor->flags &= ~flags[0]; break;
+    case 2: actor->flags2 &= ~flags[1]; break;
+    case 3: actor->flags3 &= ~flags[2]; break;
+    case 4: actor->flags4 &= ~flags[3]; break;
+    case 5: actor->flags5 &= ~flags[4]; break;
+    }
 
-   if(preflags & MF_NOSECTOR && flags[0] & MF_NOSECTOR)
-      P_SetThingSectorLink(actor, nullptr);
-   if(preflags & MF_NOBLOCKMAP && flags[0] & MF_NOBLOCKMAP)
-      P_SetThingBlockLink(actor);
+    if(preflags & MF_NOSECTOR && flags[0] & MF_NOSECTOR)
+        P_SetThingSectorLink(actor, nullptr);
+    if(preflags & MF_NOBLOCKMAP && flags[0] & MF_NOBLOCKMAP)
+        P_SetThingBlockLink(actor);
 }
 
-static const char *kwds_A_StartScript[] =
-{
-   "gamescript",  // 0
-   "levelscript", // 1
-   "acs"          // 2
+static const char *kwds_A_StartScript[] = {
+    "gamescript",  // 0
+    "levelscript", // 1
+    "acs"          // 2
 };
 
-static argkeywd_t sscriptkwds =
-{
-   kwds_A_StartScript,
-   sizeof(kwds_A_StartScript) / sizeof(const char *)
-};
+static argkeywd_t sscriptkwds = { kwds_A_StartScript, sizeof(kwds_A_StartScript) / sizeof(const char *) };
 
 //
 // A_StartScript
@@ -741,34 +691,34 @@ static argkeywd_t sscriptkwds =
 //
 void A_StartScript(actionargs_t *actionargs)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args  = actionargs->args;
-   int scriptnum = E_ArgAsInt(args, 0, 0);
-   int selectvm  = E_ArgAsKwd(args, 1, &sscriptkwds, 0);
-   
-   if(selectvm < 2)
-   {
-      /* nothing */ ;
-   }
-   else
-   {
-      int argc = E_GetArgCount(args);
+    Mobj      *actor     = actionargs->actor;
+    arglist_t *args      = actionargs->args;
+    int        scriptnum = E_ArgAsInt(args, 0, 0);
+    int        selectvm  = E_ArgAsKwd(args, 1, &sscriptkwds, 0);
 
-      if(argc > 2)
-      {
-         uint32_t argv[EMAXARGS - 2];
-         argc -= 2;
+    if(selectvm < 2)
+    {
+        /* nothing */;
+    }
+    else
+    {
+        int argc = E_GetArgCount(args);
 
-         for(int i = 0; i < argc; ++i)
-             argv[i] = E_ArgAsInt(args, i + 2, 0);
+        if(argc > 2)
+        {
+            uint32_t argv[EMAXARGS - 2];
+            argc -= 2;
 
-         ACS_ExecuteScriptIResult(scriptnum, argv, argc, actor, nullptr, 0, nullptr);
-      }
-      else
-      {
-         ACS_ExecuteScriptIResult(scriptnum, nullptr, 0, actor, nullptr, 0, nullptr);
-      }
-   }
+            for(int i = 0; i < argc; ++i)
+                argv[i] = E_ArgAsInt(args, i + 2, 0);
+
+            ACS_ExecuteScriptIResult(scriptnum, argv, argc, actor, nullptr, 0, nullptr);
+        }
+        else
+        {
+            ACS_ExecuteScriptIResult(scriptnum, nullptr, 0, actor, nullptr, 0, nullptr);
+        }
+    }
 }
 
 //
@@ -778,34 +728,34 @@ void A_StartScript(actionargs_t *actionargs)
 //
 void A_StartScriptNamed(actionargs_t *actionargs)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args  = actionargs->args;
-   const char *scriptname = E_ArgAsString(args, 0, "");
-   int selectvm = E_ArgAsKwd(args, 1, &sscriptkwds, 0);
+    Mobj       *actor      = actionargs->actor;
+    arglist_t  *args       = actionargs->args;
+    const char *scriptname = E_ArgAsString(args, 0, "");
+    int         selectvm   = E_ArgAsKwd(args, 1, &sscriptkwds, 0);
 
-   if(selectvm < 2)
-   {
-      /* nothing */ ;
-   }
-   else
-   {
-      int argc = E_GetArgCount(args);
+    if(selectvm < 2)
+    {
+        /* nothing */;
+    }
+    else
+    {
+        int argc = E_GetArgCount(args);
 
-      if(argc > 2)
-      {
-         uint32_t argv[EMAXARGS - 2];
-         argc -= 2;
+        if(argc > 2)
+        {
+            uint32_t argv[EMAXARGS - 2];
+            argc -= 2;
 
-         for(int i = 0; i < argc; ++i)
-             argv[i] = E_ArgAsInt(args, i + 2, 0);
+            for(int i = 0; i < argc; ++i)
+                argv[i] = E_ArgAsInt(args, i + 2, 0);
 
-         ACS_ExecuteScriptSResult(scriptname, argv, argc, actor, nullptr, 0, nullptr);
-      }
-      else
-      {
-         ACS_ExecuteScriptSResult(scriptname, nullptr, 0, actor, nullptr, 0, nullptr);
-      }
-   }
+            ACS_ExecuteScriptSResult(scriptname, argv, argc, actor, nullptr, 0, nullptr);
+        }
+        else
+        {
+            ACS_ExecuteScriptSResult(scriptname, nullptr, 0, actor, nullptr, 0, nullptr);
+        }
+    }
 }
 
 //
@@ -816,11 +766,11 @@ void A_StartScriptNamed(actionargs_t *actionargs)
 //
 void A_FaceMoveDir(actionargs_t *actionargs)
 {
-   Mobj *actor = actionargs->actor;
-   static angle_t moveangles[NUMDIRS] = { 0, 32, 64, 96, 128, 160, 192, 224 };
+    Mobj          *actor               = actionargs->actor;
+    static angle_t moveangles[NUMDIRS] = { 0, 32, 64, 96, 128, 160, 192, 224 };
 
-   if(actor->movedir != DI_NODIR)
-      actor->angle = moveangles[actor->movedir] << 24;
+    if(actor->movedir != DI_NODIR)
+        actor->angle = moveangles[actor->movedir] << 24;
 }
 
 //
@@ -833,33 +783,33 @@ void A_FaceMoveDir(actionargs_t *actionargs)
 //
 void A_GenRefire(actionargs_t *actionargs)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args  = actionargs->args;
-   int statenum;
-   int chance;
+    Mobj      *actor = actionargs->actor;
+    arglist_t *args  = actionargs->args;
+    int        statenum;
+    int        chance;
 
-   statenum = E_ArgAsStateNum(args, 0, actor);
-   chance   = E_ArgAsInt(args, 1, 0);
+    statenum = E_ArgAsStateNum(args, 0, actor);
+    chance   = E_ArgAsInt(args, 1, 0);
 
-   A_FaceTarget(actionargs);
+    A_FaceTarget(actionargs);
 
-   // check for friends in the way
-   if(actor->flags & MF_FRIEND && P_HitFriend(actor))
-   {
-      P_SetMobjState(actor, statenum);
-      return;
-   }
+    // check for friends in the way
+    if(actor->flags & MF_FRIEND && P_HitFriend(actor))
+    {
+        P_SetMobjState(actor, statenum);
+        return;
+    }
 
-   // random chance of continuing to fire
-   if(P_Random(pr_genrefire) < chance)
-      return;
+    // random chance of continuing to fire
+    if(P_Random(pr_genrefire) < chance)
+        return;
 
-   if(!actor->target || actor->target->health <= 0 ||
-      (actor->flags & actor->target->flags & MF_FRIEND) ||
-      !P_CheckSight(actor, actor->target))
-   {
-      P_SetMobjState(actor, statenum);
-   }
+    if(!actor->target || actor->target->health <= 0 ||      //
+       (actor->flags & actor->target->flags & MF_FRIEND) || //
+       !P_CheckSight(actor, actor->target))
+    {
+        P_SetMobjState(actor, statenum);
+    }
 }
 
 #define TRACEANGLE 0xc000000
@@ -871,73 +821,68 @@ void A_GenRefire(actionargs_t *actionargs)
 //
 void A_GenTracer(actionargs_t *actionargs)
 {
-   Mobj    *actor = actionargs->actor;
-   angle_t  exact;
-   fixed_t  dist;
-   fixed_t  slope;
-   Mobj    *dest;
-  
-   // adjust direction
-   dest = actor->tracer;
-   
-   if(!dest || dest->health <= 0)
-      return;
+    Mobj   *actor = actionargs->actor;
+    angle_t exact;
+    fixed_t dist;
+    fixed_t slope;
+    Mobj   *dest;
 
-   // ioanch 20151230: portal-aware
-   fixed_t dx = getThingX(actor, dest);
-   fixed_t dy = getThingY(actor, dest);
-   fixed_t dz = getThingZ(actor, dest);
+    // adjust direction
+    dest = actor->tracer;
 
-   // change angle
-   exact = P_PointToAngle(actor->x, actor->y, dx, dy);
+    if(!dest || dest->health <= 0)
+        return;
 
-   if(exact != actor->angle)
-   {
-      if(exact - actor->angle > 0x80000000)
-      {
-         actor->angle -= TRACEANGLE;
-         if(exact - actor->angle < 0x80000000)
-            actor->angle = exact;
-      }
-      else
-      {
-         actor->angle += TRACEANGLE;
-         if(exact - actor->angle > 0x80000000)
-            actor->angle = exact;
-      }
-   }
+    // ioanch 20151230: portal-aware
+    fixed_t dx = getThingX(actor, dest);
+    fixed_t dy = getThingY(actor, dest);
+    fixed_t dz = getThingZ(actor, dest);
 
-   exact = actor->angle>>ANGLETOFINESHIFT;
-   actor->momx = FixedMul(actor->info->speed, finecosine[exact]);
-   actor->momy = FixedMul(actor->info->speed, finesine[exact]);
+    // change angle
+    exact = P_PointToAngle(actor->x, actor->y, dx, dy);
 
-   // change slope
-   dist = P_AproxDistance(dx - actor->x, dy - actor->y);
-   
-   dist = dist / actor->info->speed;
+    if(exact != actor->angle)
+    {
+        if(exact - actor->angle > 0x80000000)
+        {
+            actor->angle -= TRACEANGLE;
+            if(exact - actor->angle < 0x80000000)
+                actor->angle = exact;
+        }
+        else
+        {
+            actor->angle += TRACEANGLE;
+            if(exact - actor->angle > 0x80000000)
+                actor->angle = exact;
+        }
+    }
 
-   if(dist < 1)
-      dist = 1;
+    exact       = actor->angle >> ANGLETOFINESHIFT;
+    actor->momx = FixedMul(actor->info->speed, finecosine[exact]);
+    actor->momy = FixedMul(actor->info->speed, finesine[exact]);
 
-   slope = (dz + 40*FRACUNIT - actor->z) / dist;
-   
-   if(slope < actor->momz)
-      actor->momz -= FRACUNIT/8;
-   else
-      actor->momz += FRACUNIT/8;
+    // change slope
+    dist = P_AproxDistance(dx - actor->x, dy - actor->y);
+
+    dist = dist / actor->info->speed;
+
+    if(dist < 1)
+        dist = 1;
+
+    slope = (dz + 40 * FRACUNIT - actor->z) / dist;
+
+    if(slope < actor->momz)
+        actor->momz -= FRACUNIT / 8;
+    else
+        actor->momz += FRACUNIT / 8;
 }
 
-static const char *kwds_A_SetTics[] =
-{
-   "constant", //          0
-   "counter",  //          1
+static const char *kwds_A_SetTics[] = {
+    "constant", //          0
+    "counter",  //          1
 };
 
-static argkeywd_t settickwds =
-{
-   kwds_A_SetTics,
-   sizeof(kwds_A_SetTics)/sizeof(const char *)
-};
+static argkeywd_t settickwds = { kwds_A_SetTics, sizeof(kwds_A_SetTics) / sizeof(const char *) };
 
 //
 // A_SetTics
@@ -949,63 +894,58 @@ static argkeywd_t settickwds =
 //
 void A_SetTics(actionargs_t *actionargs)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args  = actionargs->args;
-   int baseamt = E_ArgAsInt(args, 0, 0);
-   int rnd     = E_ArgAsInt(args, 1, 0);
-   int counter = E_ArgAsKwd(args, 2, &settickwds, 0);
+    Mobj      *actor   = actionargs->actor;
+    arglist_t *args    = actionargs->args;
+    int        baseamt = E_ArgAsInt(args, 0, 0);
+    int        rnd     = E_ArgAsInt(args, 1, 0);
+    int        counter = E_ArgAsKwd(args, 2, &settickwds, 0);
 
-   // if counter toggle is set, args[0] is a counter number
-   if(counter)
-   {
-      if(baseamt < 0 || baseamt >= NUMMOBJCOUNTERS)
-         return; // invalid
-      baseamt = actor->counters[baseamt];
-   }
+    // if counter toggle is set, args[0] is a counter number
+    if(counter)
+    {
+        if(baseamt < 0 || baseamt >= NUMMOBJCOUNTERS)
+            return; // invalid
+        baseamt = actor->counters[baseamt];
+    }
 
-   actor->tics = baseamt + (rnd ? P_Random(pr_settics) % rnd : 0);
+    actor->tics = baseamt + (rnd ? P_Random(pr_settics) % rnd : 0);
 }
 
-void A_WeaponSetTics(actionargs_t* actionargs)
+void A_WeaponSetTics(actionargs_t *actionargs)
 {
-   arglist_t* args = actionargs->args;
-   const player_t* player = actionargs->actor ? actionargs->actor->player : nullptr;
-   pspdef_t* pspr = actionargs->pspr;
-   if (!player || !pspr)
-   {
-      doom_warningf("Invalid A_WeaponSetTics from non-player");
-      return;  // invalid
-   }
+    arglist_t      *args   = actionargs->args;
+    const player_t *player = actionargs->actor ? actionargs->actor->player : nullptr;
+    pspdef_t       *pspr   = actionargs->pspr;
+    if(!player || !pspr)
+    {
+        doom_warningf("Invalid A_WeaponSetTics from non-player");
+        return; // invalid
+    }
 
-   int baseamt = E_ArgAsInt(args, 0, 0);
-   int rnd = E_ArgAsInt(args, 1, 0);
-   int usecounter = E_ArgAsKwd(args, 2, &settickwds, 0);
+    int baseamt    = E_ArgAsInt(args, 0, 0);
+    int rnd        = E_ArgAsInt(args, 1, 0);
+    int usecounter = E_ArgAsKwd(args, 2, &settickwds, 0);
 
-   // if counter toggle is set, args[0] is a counter number
-   if (usecounter)
-   {
-      if (baseamt < 0 || baseamt >= NUMWEAPCOUNTERS)
-      {
-         doom_warningf("Invalid A_WeaponSetTics counter %d", baseamt);
-         return; // invalid
-      }
-      baseamt = *E_GetIndexedWepCtrForPlayer(player, baseamt);
-   }
+    // if counter toggle is set, args[0] is a counter number
+    if(usecounter)
+    {
+        if(baseamt < 0 || baseamt >= NUMWEAPCOUNTERS)
+        {
+            doom_warningf("Invalid A_WeaponSetTics counter %d", baseamt);
+            return; // invalid
+        }
+        baseamt = *E_GetIndexedWepCtrForPlayer(player, baseamt);
+    }
 
-   pspr->tics = baseamt + (rnd ? P_Random(pr_wpnsettics) % rnd : 0);
+    pspr->tics = baseamt + (rnd ? P_Random(pr_wpnsettics) % rnd : 0);
 }
 
-static const char *kwds_A_MissileAttack[] =
-{
-   "normal",        //  0
-   "homing",        //  1
+static const char *kwds_A_MissileAttack[] = {
+    "normal", //  0
+    "homing", //  1
 };
 
-static argkeywd_t missileatkkwds =
-{
-   kwds_A_MissileAttack,
-   sizeof(kwds_A_MissileAttack) / sizeof(const char *)
-};
+static argkeywd_t missileatkkwds = { kwds_A_MissileAttack, sizeof(kwds_A_MissileAttack) / sizeof(const char *) };
 
 //
 // A_MissileAttack
@@ -1020,71 +960,69 @@ static argkeywd_t missileatkkwds =
 //
 void A_MissileAttack(actionargs_t *actionargs)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args  = actionargs->args;
-   Mobj      *mo;
-   int        type, a, statenum;
-   bool       homing, hastarget = true;
-   fixed_t    z;
-   angle_t    ang;
+    Mobj      *actor = actionargs->actor;
+    arglist_t *args  = actionargs->args;
+    Mobj      *mo;
+    int        type, a, statenum;
+    bool       homing, hastarget = true;
+    fixed_t    z;
+    angle_t    ang;
 
-   if(!actor->target || actor->target->health <= 0)
-      hastarget = false;
+    if(!actor->target || actor->target->health <= 0)
+        hastarget = false;
 
-   type     = E_ArgAsThingNum(args, 0);   
-   homing   = !!E_ArgAsKwd(args, 1, &missileatkkwds, 0);   
-   z        = (fixed_t)(E_ArgAsInt(args, 2, 0) * FRACUNIT);
-   a        = E_ArgAsInt(args, 3, 0);
-   statenum = E_ArgAsStateNumG0(args, 4, actor);
+    type     = E_ArgAsThingNum(args, 0);
+    homing   = !!E_ArgAsKwd(args, 1, &missileatkkwds, 0);
+    z        = (fixed_t)(E_ArgAsInt(args, 2, 0) * FRACUNIT);
+    a        = E_ArgAsInt(args, 3, 0);
+    statenum = E_ArgAsStateNumG0(args, 4, actor);
 
-   if(hastarget)
-   {
-      A_FaceTarget(actionargs);
+    if(hastarget)
+    {
+        A_FaceTarget(actionargs);
 
-      if(statenum >= 0 && statenum < NUMSTATES)
-      {
-         if(P_CheckMeleeRange(actor))
-         {
-            P_SetMobjState(actor, statenum);
-            return;
-         }
-      }
-   }
+        if(statenum >= 0 && statenum < NUMSTATES)
+        {
+            if(P_CheckMeleeRange(actor))
+            {
+                P_SetMobjState(actor, statenum);
+                return;
+            }
+        }
+    }
 
-   // adjust angle -> BAM (must adjust negative angles too)
-   while(a >= 360)
-      a -= 360;
-   while(a < 0)
-      a += 360;
+    // adjust angle -> BAM (must adjust negative angles too)
+    while(a >= 360)
+        a -= 360;
+    while(a < 0)
+        a += 360;
 
-   ang = (angle_t)(((uint64_t)a << 32) / 360);
+    ang = (angle_t)(((uint64_t)a << 32) / 360);
 
-   // adjust z coordinate
-   z = actor->z + actor->info->missileheight + z;
+    // adjust z coordinate
+    z = actor->z + actor->info->missileheight + z;
 
-   if(!hastarget)
-   {
-      P_SpawnMissileAngle(actor, type, actor->angle + ang, 0, z);
-      return;
-   }
-   
-   if(!a)
-      mo = P_SpawnMissile(actor, actor->target, type, z);
-   else
-   {
-      // calculate z momentum
-      Mobj *target = actor->target;
+    if(!hastarget)
+    {
+        P_SpawnMissileAngle(actor, type, actor->angle + ang, 0, z);
+        return;
+    }
 
-      fixed_t momz = P_MissileMomz(target->x - actor->x,
-                                   target->y - actor->y,
-                                   target->z - actor->z,
-                                   mobjinfo[type]->speed);
+    if(!a)
+        mo = P_SpawnMissile(actor, actor->target, type, z);
+    else
+    {
+        // calculate z momentum
+        Mobj *target = actor->target;
 
-      mo = P_SpawnMissileAngle(actor, type, actor->angle + ang, momz, z);
-   }
+        fixed_t momz =
+            P_MissileMomz(target->x - actor->x, target->y - actor->y, target->z - actor->z, mobjinfo[type]->speed);
 
-   if(homing)
-      P_SetTarget<Mobj>(&mo->tracer, actor->target);
+        mo = P_SpawnMissileAngle(actor, type, actor->angle + ang, momz, z);
+    }
+
+    if(homing)
+        P_SetTarget<Mobj>(&mo->tracer, actor->target);
 }
 
 //
@@ -1100,94 +1038,83 @@ void A_MissileAttack(actionargs_t *actionargs)
 //
 void A_MissileSpread(actionargs_t *actionargs)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args  = actionargs->args;
-   int     type, num, a, i;
-   fixed_t z, momz;
-   angle_t angsweep, ang, astep;
-   int     statenum;
+    Mobj      *actor = actionargs->actor;
+    arglist_t *args  = actionargs->args;
+    int        type, num, a, i;
+    fixed_t    z, momz;
+    angle_t    angsweep, ang, astep;
+    int        statenum;
 
-   if(!actor->target)
-      return;
+    if(!actor->target)
+        return;
 
-   type     = E_ArgAsThingNum(args,      0);
-   num      = E_ArgAsInt(args,           1, 0);
-   z        = (fixed_t)(E_ArgAsInt(args, 2, 0) * FRACUNIT);
-   a        = E_ArgAsInt(args,           3, 0);
-   statenum = E_ArgAsStateNumG0(args,    4, actor);
+    type     = E_ArgAsThingNum(args, 0);
+    num      = E_ArgAsInt(args, 1, 0);
+    z        = (fixed_t)(E_ArgAsInt(args, 2, 0) * FRACUNIT);
+    a        = E_ArgAsInt(args, 3, 0);
+    statenum = E_ArgAsStateNumG0(args, 4, actor);
 
-   if(num < 2)
-      return;
+    if(num < 2)
+        return;
 
-   A_FaceTarget(actionargs);
+    A_FaceTarget(actionargs);
 
-   if(statenum >= 0 && statenum < NUMSTATES)
-   {
-      if(P_CheckMeleeRange(actor))
-      {
-         P_SetMobjState(actor, statenum);
-         return;
-      }
-   }
+    if(statenum >= 0 && statenum < NUMSTATES)
+    {
+        if(P_CheckMeleeRange(actor))
+        {
+            P_SetMobjState(actor, statenum);
+            return;
+        }
+    }
 
-   // adjust angle -> BAM (must adjust negative angles too)
-   while(a >= 360)
-      a -= 360;
-   while(a < 0)
-      a += 360;
+    // adjust angle -> BAM (must adjust negative angles too)
+    while(a >= 360)
+        a -= 360;
+    while(a < 0)
+        a += 360;
 
-   angsweep = (angle_t)(((uint64_t)a << 32) / 360);
+    angsweep = (angle_t)(((uint64_t)a << 32) / 360);
 
-   // adjust z coordinate
-   z = actor->z + actor->info->missileheight + z;
+    // adjust z coordinate
+    z = actor->z + actor->info->missileheight + z;
 
-   ang = actor->angle - angsweep / 2;
-   astep = angsweep / (num - 1);
+    ang   = actor->angle - angsweep / 2;
+    astep = angsweep / (num - 1);
 
-   for(i = 0; i < num; ++i)
-   {
-      // calculate z momentum
-      momz = P_MissileMomz(getTargetX(actor) - actor->x,
-                           getTargetY(actor) - actor->y,
-                           getTargetZ(actor) - actor->z, mobjinfo[type]->speed);
+    for(i = 0; i < num; ++i)
+    {
+        // calculate z momentum
+        momz = P_MissileMomz(getTargetX(actor) - actor->x, getTargetY(actor) - actor->y, getTargetZ(actor) - actor->z,
+                             mobjinfo[type]->speed);
 
-      P_SpawnMissileAngle(actor, type, ang, momz, z);
+        P_SpawnMissileAngle(actor, type, ang, momz, z);
 
-      ang += astep;
-   }
+        ang += astep;
+    }
 }
 
 // old keywords - deprecated
-static const char *kwds_A_BulletAttack[] =
-{
-   "{DUMMY}",
-   "ba_always",   // 1
-   "ba_never",    // 2
-   "ba_ssg",      // 3
-   "ba_monster",  // 4
+static const char *kwds_A_BulletAttack[] = {
+    "{DUMMY}",
+    "ba_always",  // 1
+    "ba_never",   // 2
+    "ba_ssg",     // 3
+    "ba_monster", // 4
 };
 
-static argkeywd_t bulletkwdsold =
-{
-   kwds_A_BulletAttack,
-   sizeof(kwds_A_BulletAttack) / sizeof(const char *)
-};
+static argkeywd_t bulletkwdsold = { kwds_A_BulletAttack, sizeof(kwds_A_BulletAttack) / sizeof(const char *) };
 
 // new keywords - preferred
-static const char *kwds_A_BulletAttack2[] =
-{
-   "{DUMMY}",
-   "always",   // 1
-   "never",    // 2
-   "ssg",      // 3
-   "monster",  // 4
+static const char *kwds_A_BulletAttack2[] = {
+    "{DUMMY}",
+    "always",  // 1
+    "never",   // 2
+    "ssg",     // 3
+    "monster", // 4
 };
 
-static argkeywd_t bulletkwdsnew =
-{
-   kwds_A_BulletAttack2,
-   sizeof(kwds_A_BulletAttack2) / sizeof(const char *)
-};
+static argkeywd_t bulletkwdsnew = { kwds_A_BulletAttack2, sizeof(kwds_A_BulletAttack2) / sizeof(const char *) };
 
 //
 // A_BulletAttack
@@ -1203,239 +1130,228 @@ static argkeywd_t bulletkwdsnew =
 //
 void A_BulletAttack(actionargs_t *actionargs)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args = actionargs->args;
-   soundparams_t params;
-   int i, accurate, numbullets, damage, dmgmod, slope;
-   
-   if(!actor->target)
-      return;
+    Mobj         *actor = actionargs->actor;
+    arglist_t    *args  = actionargs->args;
+    soundparams_t params;
+    int           i, accurate, numbullets, damage, dmgmod, slope;
 
-   params.sfx = E_ArgAsSound(args, 0);
-   numbullets = E_ArgAsInt(args,   2, 0);
-   damage     = E_ArgAsInt(args,   3, 0);
-   dmgmod     = E_ArgAsInt(args,   4, 0);
-   const char *pufftype = E_ArgAsString(args, 5, nullptr);
+    if(!actor->target)
+        return;
 
-   // handle accuracy
+    params.sfx           = E_ArgAsSound(args, 0);
+    numbullets           = E_ArgAsInt(args, 2, 0);
+    damage               = E_ArgAsInt(args, 3, 0);
+    dmgmod               = E_ArgAsInt(args, 4, 0);
+    const char *pufftype = E_ArgAsString(args, 5, nullptr);
 
-   // try old keywords first
-   accurate = E_ArgAsKwd(args, 1, &bulletkwdsold, -1);
+    // handle accuracy
 
-   // try new keywords second
-   if(accurate == -1)
-   {
-      E_ResetArgEval(args, 1);
-      accurate = E_ArgAsKwd(args, 1, &bulletkwdsnew, 0);
-   }
+    // try old keywords first
+    accurate = E_ArgAsKwd(args, 1, &bulletkwdsold, -1);
 
-   if(!accurate)
-      accurate = 1;
+    // try new keywords second
+    if(accurate == -1)
+    {
+        E_ResetArgEval(args, 1);
+        accurate = E_ArgAsKwd(args, 1, &bulletkwdsnew, 0);
+    }
 
-   if(dmgmod < 1)
-      dmgmod = 1;
-   else if(dmgmod > 256)
-      dmgmod = 256;
+    if(!accurate)
+        accurate = 1;
 
-   A_FaceTarget(actionargs);
-   S_StartSfxInfo(params.setNormalDefaults(actor));
+    if(dmgmod < 1)
+        dmgmod = 1;
+    else if(dmgmod > 256)
+        dmgmod = 256;
 
-   slope = P_AimLineAttack(actor, actor->angle, MISSILERANGE, false);
+    A_FaceTarget(actionargs);
+    S_StartSfxInfo(params.setNormalDefaults(actor));
 
-   // loop on numbullets
-   for(i = 0; i < numbullets; i++)
-   {
-      int dmg = damage * (P_Random(pr_monbullets)%dmgmod + 1);
-      angle_t angle = actor->angle;
-      
-      if(accurate <= 2 || accurate == 4)
-      {
-         // if never accurate or monster accurate,
-         // add some to the angle
-         if(accurate == 2 || accurate == 4)
-         {
-            int aimshift = ((accurate == 4) ? 20 : 18);
-            angle += P_SubRandom(pr_monmisfire) << aimshift;
-         }
+    slope = P_AimLineAttack(actor, actor->angle, MISSILERANGE, false);
 
-         P_LineAttack(actor, angle, MISSILERANGE, slope, dmg, pufftype);
-      }
-      else if(accurate == 3) // ssg spread
-      {
-         angle += P_SubRandom(pr_monmisfire) << 19;         
-         slope += P_SubRandom(pr_monmisfire) << 5;
+    // loop on numbullets
+    for(i = 0; i < numbullets; i++)
+    {
+        int     dmg   = damage * (P_Random(pr_monbullets) % dmgmod + 1);
+        angle_t angle = actor->angle;
 
-         P_LineAttack(actor, angle, MISSILERANGE, slope, dmg, pufftype);
-      }
-   }
+        if(accurate <= 2 || accurate == 4)
+        {
+            // if never accurate or monster accurate,
+            // add some to the angle
+            if(accurate == 2 || accurate == 4)
+            {
+                int aimshift  = ((accurate == 4) ? 20 : 18);
+                angle        += P_SubRandom(pr_monmisfire) << aimshift;
+            }
+
+            P_LineAttack(actor, angle, MISSILERANGE, slope, dmg, pufftype);
+        }
+        else if(accurate == 3) // ssg spread
+        {
+            angle += P_SubRandom(pr_monmisfire) << 19;
+            slope += P_SubRandom(pr_monmisfire) << 5;
+
+            P_LineAttack(actor, angle, MISSILERANGE, slope, dmg, pufftype);
+        }
+    }
 }
 
-static const char *kwds_A_ThingSummon_KR[] =
-{
-   "kill",           //  0
-   "remove",         //  1
+static const char *kwds_A_ThingSummon_KR[] = {
+    "kill",   //  0
+    "remove", //  1
 };
 
-static argkeywd_t killremovekwds =
-{
-   kwds_A_ThingSummon_KR,
-   2
+static argkeywd_t killremovekwds = { kwds_A_ThingSummon_KR, 2 };
+
+static const char *kwds_A_ThingSummon_MC[] = {
+    "normal",    //  0
+    "makechild", //  1
 };
 
-static const char *kwds_A_ThingSummon_MC[] =
-{
-   "normal",         //  0
-   "makechild",      //  1
-};
-
-static argkeywd_t makechildkwds =
-{
-   kwds_A_ThingSummon_MC,
-   2
-};
+static argkeywd_t makechildkwds = { kwds_A_ThingSummon_MC, 2 };
 
 void A_ThingSummon(actionargs_t *actionargs)
 {
-   fixed_t    x, y, z;
-   Mobj      *actor = actionargs->actor;
-   Mobj      *newmobj;
-   arglist_t *args = actionargs->args;
-   angle_t    an;
-   int        type, prestep, deltaz, kill_or_remove, make_child;
+    fixed_t    x, y, z;
+    Mobj      *actor = actionargs->actor;
+    Mobj      *newmobj;
+    arglist_t *args = actionargs->args;
+    angle_t    an;
+    int        type, prestep, deltaz, kill_or_remove, make_child;
 
-   type    = E_ArgAsThingNum(args, 0);
-   prestep = E_ArgAsInt(args, 1, 0) << FRACBITS;
-   deltaz  = E_ArgAsInt(args, 2, 0) << FRACBITS;
+    type    = E_ArgAsThingNum(args, 0);
+    prestep = E_ArgAsInt(args, 1, 0) << FRACBITS;
+    deltaz  = E_ArgAsInt(args, 2, 0) << FRACBITS;
 
-   kill_or_remove = !!E_ArgAsKwd(args, 3, &killremovekwds, 0);
-   make_child     = !!E_ArgAsKwd(args, 4, &makechildkwds, 0);
-   
-   // good old-fashioned pain elemental style spawning
-   
-   an = actor->angle >> ANGLETOFINESHIFT;
-   
-   prestep = prestep + 3*(actor->info->radius + mobjinfo[type]->radius)/2;
-   
-   // ioanch 20160107: spawn past portals in front of spawner
-   v2fixed_t relpos = { actor->x + FixedMul(prestep, finecosine[an]),
-                        actor->y + FixedMul(prestep, finesine[an]) };
-   v2fixed_t pos = P_LinePortalCrossing(*actor, relpos - v2fixed_t{ actor->x, actor->y });
+    kill_or_remove = !!E_ArgAsKwd(args, 3, &killremovekwds, 0);
+    make_child     = !!E_ArgAsKwd(args, 4, &makechildkwds, 0);
 
-   x = pos.x;
-   y = pos.y;
-   z = actor->z + deltaz;
+    // good old-fashioned pain elemental style spawning
 
-   // Check whether the thing is being spawned through a 1-sided
-   // wall or an impassible line, or a "monsters can't cross" line.
-   // If it is, then we don't allow the spawn.
-   
-   // ioanch 20160107: use position directly next to summoner.
-   if(Check_Sides(actor, relpos.x, relpos.y, type))
-      return;
+    an = actor->angle >> ANGLETOFINESHIFT;
 
-   newmobj = P_SpawnMobj(x, y, z, type);
-   
-   // Check to see if the new thing's z value is above the
-   // ceiling of its new sector, or below the floor. If so, kill it.
+    prestep = prestep + 3 * (actor->info->radius + mobjinfo[type]->radius) / 2;
 
-   if(!P_CheckFloorCeilingForSpawning(*newmobj))
-   {
-      actionargs_t dieaction;
+    // ioanch 20160107: spawn past portals in front of spawner
+    v2fixed_t relpos = { actor->x + FixedMul(prestep, finecosine[an]), actor->y + FixedMul(prestep, finesine[an]) };
+    v2fixed_t pos    = P_LinePortalCrossing(*actor, relpos - v2fixed_t{ actor->x, actor->y });
 
-      dieaction.actiontype = actionargs_t::MOBJFRAME;
-      dieaction.actor      = newmobj;
-      dieaction.args       = ESAFEARGS(newmobj);
-      dieaction.pspr       = nullptr;
+    x = pos.x;
+    y = pos.y;
+    z = actor->z + deltaz;
 
-      // kill it immediately
-      switch(kill_or_remove)
-      {
-      case 0:
-         A_Die(&dieaction);
-         break;
-      case 1:
-         newmobj->remove();
-         break;
-      }
-      return;
-   }                                                         
-   
-   // spawn thing with same friendliness
-   P_transferFriendship(*newmobj, *actor);
+    // Check whether the thing is being spawned through a 1-sided
+    // wall or an impassible line, or a "monsters can't cross" line.
+    // If it is, then we don't allow the spawn.
 
-   // killough 8/29/98: add to appropriate thread
-   newmobj->updateThinker();
-   
-   // Check for movements.
-   // killough 3/15/98: don't jump over dropoffs:
+    // ioanch 20160107: use position directly next to summoner.
+    if(Check_Sides(actor, relpos.x, relpos.y, type))
+        return;
 
-   if(!P_TryMove(newmobj, newmobj->x, newmobj->y, false))
-   {
-      actionargs_t dieaction;
+    newmobj = P_SpawnMobj(x, y, z, type);
 
-      dieaction.actiontype = actionargs_t::MOBJFRAME;
-      dieaction.actor      = newmobj;
-      dieaction.args       = ESAFEARGS(newmobj);
-      dieaction.pspr       = nullptr;
+    // Check to see if the new thing's z value is above the
+    // ceiling of its new sector, or below the floor. If so, kill it.
 
-      // kill it immediately
-      switch(kill_or_remove)
-      {
-      case 0:
-         A_Die(&dieaction);
-         break;
-      case 1:
-         newmobj->remove();
-         break;
-      }
-      return;
-   }
+    if(!P_CheckFloorCeilingForSpawning(*newmobj))
+    {
+        actionargs_t dieaction;
 
-   // give same target
-   P_SetTarget<Mobj>(&newmobj->target, actor->target);
+        dieaction.actiontype = actionargs_t::MOBJFRAME;
+        dieaction.actor      = newmobj;
+        dieaction.args       = ESAFEARGS(newmobj);
+        dieaction.pspr       = nullptr;
 
-   // set child properties
-   if(make_child)
-   {
-      P_SetTarget<Mobj>(&newmobj->tracer, actor);
-      newmobj->intflags |= MIF_ISCHILD;
-   }
+        // kill it immediately
+        switch(kill_or_remove)
+        {
+        case 0: //
+            A_Die(&dieaction);
+            break;
+        case 1: //
+            newmobj->remove();
+            break;
+        }
+        return;
+    }
+
+    // spawn thing with same friendliness
+    P_transferFriendship(*newmobj, *actor);
+
+    // killough 8/29/98: add to appropriate thread
+    newmobj->updateThinker();
+
+    // Check for movements.
+    // killough 3/15/98: don't jump over dropoffs:
+
+    if(!P_TryMove(newmobj, newmobj->x, newmobj->y, false))
+    {
+        actionargs_t dieaction;
+
+        dieaction.actiontype = actionargs_t::MOBJFRAME;
+        dieaction.actor      = newmobj;
+        dieaction.args       = ESAFEARGS(newmobj);
+        dieaction.pspr       = nullptr;
+
+        // kill it immediately
+        switch(kill_or_remove)
+        {
+        case 0: //
+            A_Die(&dieaction);
+            break;
+        case 1: //
+            newmobj->remove();
+            break;
+        }
+        return;
+    }
+
+    // give same target
+    P_SetTarget<Mobj>(&newmobj->target, actor->target);
+
+    // set child properties
+    if(make_child)
+    {
+        P_SetTarget<Mobj>(&newmobj->tracer, actor);
+        newmobj->intflags |= MIF_ISCHILD;
+    }
 }
 
 void A_KillChildren(actionargs_t *actionargs)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args  = actionargs->args;
-   Thinker   *th;
-   int kill_or_remove = !!E_ArgAsKwd(args, 0, &killremovekwds, 0);
+    Mobj      *actor = actionargs->actor;
+    arglist_t *args  = actionargs->args;
+    Thinker   *th;
+    int        kill_or_remove = !!E_ArgAsKwd(args, 0, &killremovekwds, 0);
 
-   for(th = thinkercap.next; th != &thinkercap; th = th->next)
-   {
-      Mobj *mo;
+    for(th = thinkercap.next; th != &thinkercap; th = th->next)
+    {
+        Mobj *mo;
 
-      if(!(mo = thinker_cast<Mobj *>(th)))
-         continue;
+        if(!(mo = thinker_cast<Mobj *>(th)))
+            continue;
 
-      if(mo->intflags & MIF_ISCHILD && mo->tracer == actor)
-      {
-         actionargs_t dieaction;
+        if(mo->intflags & MIF_ISCHILD && mo->tracer == actor)
+        {
+            actionargs_t dieaction;
 
-         dieaction.actiontype = actionargs_t::MOBJFRAME;
-         dieaction.actor      = mo;
-         dieaction.args       = ESAFEARGS(mo);
-         dieaction.pspr       = nullptr;
+            dieaction.actiontype = actionargs_t::MOBJFRAME;
+            dieaction.actor      = mo;
+            dieaction.args       = ESAFEARGS(mo);
+            dieaction.pspr       = nullptr;
 
-         switch(kill_or_remove)
-         {
-         case 0:
-            A_Die(&dieaction);
-            break;
-         case 1:
-            mo->remove();
-            break;
-         }
-      }
-   }
+            switch(kill_or_remove)
+            {
+            case 0: //
+                A_Die(&dieaction);
+                break;
+            case 1: //
+                mo->remove();
+                break;
+            }
+        }
+    }
 }
 
 //
@@ -1447,42 +1363,37 @@ void A_KillChildren(actionargs_t *actionargs)
 //
 void A_AproxDistance(actionargs_t *actionargs)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args  = actionargs->args;
-   int *dest = nullptr;
-   fixed_t distance;
-   int cnum;
+    Mobj      *actor = actionargs->actor;
+    arglist_t *args  = actionargs->args;
+    int       *dest  = nullptr;
+    fixed_t    distance;
+    int        cnum;
 
-   cnum = E_ArgAsInt(args, 0, 0);
+    cnum = E_ArgAsInt(args, 0, 0);
 
-   if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
-      return; // invalid
+    if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
+        return; // invalid
 
-   dest = &(actor->counters[cnum]);
+    dest = &(actor->counters[cnum]);
 
-   if(!actor->target)
-   {
-      *dest = -1;
-      return;
-   }
-   
-   distance = P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor));
+    if(!actor->target)
+    {
+        *dest = -1;
+        return;
+    }
 
-   *dest = distance >> FRACBITS;
+    distance = P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor));
+
+    *dest = distance >> FRACBITS;
 }
 
-static const char *kwds_A_ShowMessage[] =
-{
-   "msg_console",          //  0
-   "msg_normal",           //  1
-   "msg_center",           //  2
+static const char *kwds_A_ShowMessage[] = {
+    "msg_console", //  0
+    "msg_normal",  //  1
+    "msg_center",  //  2
 };
 
-static argkeywd_t messagekwds =
-{
-   kwds_A_ShowMessage,
-   sizeof(kwds_A_ShowMessage) / sizeof(const char *)
-};
+static argkeywd_t messagekwds = { kwds_A_ShowMessage, sizeof(kwds_A_ShowMessage) / sizeof(const char *) };
 
 //
 // A_ShowMessage
@@ -1495,28 +1406,28 @@ static argkeywd_t messagekwds =
 //
 void A_ShowMessage(actionargs_t *actionargs)
 {
-   arglist_t *args = actionargs->args;
-   edf_string_t *msg;
-   int type;
+    arglist_t    *args = actionargs->args;
+    edf_string_t *msg;
+    int           type;
 
-   // find the message
-   if(!(msg = E_ArgAsEDFString(args, 0)))
-      return;
+    // find the message
+    if(!(msg = E_ArgAsEDFString(args, 0)))
+        return;
 
-   type = E_ArgAsKwd(args, 1, &messagekwds, 0);
+    type = E_ArgAsKwd(args, 1, &messagekwds, 0);
 
-   switch(type)
-   {
-   case 0:
-      C_Printf("%s", msg->string);
-      break;
-   case 1:
-      doom_printf("%s", msg->string);
-      break;
-   case 2:
-      HU_CenterMessage(msg->string);
-      break;
-   }
+    switch(type)
+    {
+    case 0: //
+        C_Printf("%s", msg->string);
+        break;
+    case 1: //
+        doom_printf("%s", msg->string);
+        break;
+    case 2: //
+        HU_CenterMessage(msg->string);
+        break;
+    }
 }
 
 //
@@ -1526,102 +1437,102 @@ void A_ShowMessage(actionargs_t *actionargs)
 //
 void A_AmbientThinker(actionargs_t *actionargs)
 {
-   soundparams_t  params;
-   Mobj          *mo  = actionargs->actor;
-   EAmbience_t   *amb = E_AmbienceForNum(mo->args[0]);
+    soundparams_t params;
+    Mobj         *mo  = actionargs->actor;
+    EAmbience_t  *amb = E_AmbienceForNum(mo->args[0]);
 
-   // nothing to play?
-   if(!amb || !amb->sound)
-      return;
+    // nothing to play?
+    if(!amb || !amb->sound)
+        return;
 
-   params.loop = false;
+    params.loop = false;
 
-   // run thinker actions for corresponding ambience type
-   switch(amb->type)
-   {
-   case E_AMBIENCE_CONTINUOUS:
-      if(S_CheckSoundPlaying(mo, amb->sound)) // not time yet?
-         return;
-      params.loop = true;
-      break;
-   case E_AMBIENCE_PERIODIC:
-      if(mo->counters[0]-- >= 0) // not time yet?
-         return;
-      mo->counters[0] = amb->period; // reset sound period
-      break;
-   case E_AMBIENCE_RANDOM:
-      if(mo->counters[0]-- >= 0) // not time yet?
-         return;
-      mo->counters[0] = (int)M_RangeRandomEx(amb->minperiod, amb->maxperiod);
-      break;
-   default: // ???
-      return;
-   }
+    // run thinker actions for corresponding ambience type
+    switch(amb->type)
+    {
+    case E_AMBIENCE_CONTINUOUS:
+        if(S_CheckSoundPlaying(mo, amb->sound)) // not time yet?
+            return;
+        params.loop = true;
+        break;
+    case E_AMBIENCE_PERIODIC:
+        if(mo->counters[0]-- >= 0) // not time yet?
+            return;
+        mo->counters[0] = amb->period; // reset sound period
+        break;
+    case E_AMBIENCE_RANDOM:
+        if(mo->counters[0]-- >= 0) // not time yet?
+            return;
+        mo->counters[0] = (int)M_RangeRandomEx(amb->minperiod, amb->maxperiod);
+        break;
+    default: // ???
+        return;
+    }
 
-   params.origin      = mo;
-   params.sfx         = amb->sound;
-   params.volumeScale = amb->volume;
-   params.attenuation = amb->attenuation;
-   params.subchannel  = CHAN_AUTO;
-   params.reverb      = amb->reverb;
+    params.origin      = mo;
+    params.sfx         = amb->sound;
+    params.volumeScale = amb->volume;
+    params.attenuation = amb->attenuation;
+    params.subchannel  = CHAN_AUTO;
+    params.reverb      = amb->reverb;
 
-   // time to play the sound
-   S_StartSfxInfo(params);
+    // time to play the sound
+    S_StartSfxInfo(params);
 }
 
 void A_SteamSpawn(actionargs_t *actionargs)
 {
-   Mobj      *mo   = actionargs->actor;
-   arglist_t *args = actionargs->args;
-   Mobj *steamthing;
-   int thingtype;
-   int vrange, hrange;
-   int tvangle, thangle;
-   angle_t vangle, hangle;
-   fixed_t speed, angularspeed;
-   
-   // Get the thingtype of the thing we're spewing (a steam cloud for example)
-   thingtype = E_ArgAsThingNum(args, 0);
-   
-   // And the speed to fire it out at
-   speed = (fixed_t)(E_ArgAsInt(args, 4, 0) << FRACBITS);
+    Mobj      *mo   = actionargs->actor;
+    arglist_t *args = actionargs->args;
+    Mobj      *steamthing;
+    int        thingtype;
+    int        vrange, hrange;
+    int        tvangle, thangle;
+    angle_t    vangle, hangle;
+    fixed_t    speed, angularspeed;
 
-   // Make our angles byteangles
-   hangle = (mo->angle / (ANG90/64));
-   thangle = hangle;
-   tvangle = (E_ArgAsInt(args, 2, 0) * 256) / 360;
-   // As well as the spread ranges
-   hrange = (E_ArgAsInt(args, 1, 0) * 256) / 360;
-   vrange = (E_ArgAsInt(args, 3, 0) * 256) / 360;
-   
-   // Get the angles we'll be firing the things in, factoring in 
-   // where within the range it will lie
-   thangle += (hrange >> 1) - (P_Random(pr_steamspawn) * hrange / 255);
-   tvangle += (vrange >> 1) - (P_Random(pr_steamspawn) * vrange / 255);
-   
-   while(thangle >= 256)
-      thangle -= 256;
-   while(thangle < 0)
-      thangle += 256;
-         
-   while(tvangle >= 256)
-      tvangle -= 256;
-   while(tvangle < 0)
-      tvangle += 256;
-   
-   // Make angles angle_t
-   hangle = ((unsigned int)thangle * (ANG90/64));
-   vangle = ((unsigned int)tvangle * (ANG90/64));
+    // Get the thingtype of the thing we're spewing (a steam cloud for example)
+    thingtype = E_ArgAsThingNum(args, 0);
 
-   // Spawn thing
-   steamthing = P_SpawnMobj(mo->x, mo->y, mo->z, thingtype);
-   
-   // Give it some momentum
-   // angular speed is the hypotenuse of the x and y speeds
-   angularspeed     = FixedMul(speed,        finecosine[vangle >> ANGLETOFINESHIFT]);
-   steamthing->momx = FixedMul(angularspeed, finecosine[hangle >> ANGLETOFINESHIFT]);
-   steamthing->momy = FixedMul(angularspeed, finesine[hangle >> ANGLETOFINESHIFT]);
-   steamthing->momz = FixedMul(speed,        finesine[vangle >> ANGLETOFINESHIFT]);
+    // And the speed to fire it out at
+    speed = (fixed_t)(E_ArgAsInt(args, 4, 0) << FRACBITS);
+
+    // Make our angles byteangles
+    hangle  = (mo->angle / (ANG90 / 64));
+    thangle = hangle;
+    tvangle = (E_ArgAsInt(args, 2, 0) * 256) / 360;
+    // As well as the spread ranges
+    hrange = (E_ArgAsInt(args, 1, 0) * 256) / 360;
+    vrange = (E_ArgAsInt(args, 3, 0) * 256) / 360;
+
+    // Get the angles we'll be firing the things in, factoring in
+    // where within the range it will lie
+    thangle += (hrange >> 1) - (P_Random(pr_steamspawn) * hrange / 255);
+    tvangle += (vrange >> 1) - (P_Random(pr_steamspawn) * vrange / 255);
+
+    while(thangle >= 256)
+        thangle -= 256;
+    while(thangle < 0)
+        thangle += 256;
+
+    while(tvangle >= 256)
+        tvangle -= 256;
+    while(tvangle < 0)
+        tvangle += 256;
+
+    // Make angles angle_t
+    hangle = ((unsigned int)thangle * (ANG90 / 64));
+    vangle = ((unsigned int)tvangle * (ANG90 / 64));
+
+    // Spawn thing
+    steamthing = P_SpawnMobj(mo->x, mo->y, mo->z, thingtype);
+
+    // Give it some momentum
+    // angular speed is the hypotenuse of the x and y speeds
+    angularspeed     = FixedMul(speed, finecosine[vangle >> ANGLETOFINESHIFT]);
+    steamthing->momx = FixedMul(angularspeed, finecosine[hangle >> ANGLETOFINESHIFT]);
+    steamthing->momy = FixedMul(angularspeed, finesine[hangle >> ANGLETOFINESHIFT]);
+    steamthing->momz = FixedMul(speed, finesine[vangle >> ANGLETOFINESHIFT]);
 }
 
 //
@@ -1634,20 +1545,20 @@ void A_SteamSpawn(actionargs_t *actionargs)
 //
 void A_TargetJump(actionargs_t *actionargs)
 {
-   Mobj      *mo   = actionargs->actor;
-   arglist_t *args = actionargs->args;
-   int statenum;
-   
-   if((statenum = E_ArgAsStateNumNI(args, 0, mo)) < 0)
-      return;
-   
-   // 1) must be valid
-   // 2) must be alive
-   // 3) if a super friend, target cannot be a friend
-   if(mo->target && mo->target->health > 0 &&
-      !((mo->flags & mo->target->flags & MF_FRIEND) && 
-        mo->flags3 & MF3_SUPERFRIEND))
-      P_SetMobjState(mo, statenum);
+    Mobj      *mo   = actionargs->actor;
+    arglist_t *args = actionargs->args;
+    int        statenum;
+
+    if((statenum = E_ArgAsStateNumNI(args, 0, mo)) < 0)
+        return;
+
+    // 1) must be valid
+    // 2) must be alive
+    // 3) if a super friend, target cannot be a friend
+    if(mo->target && mo->target->health > 0 &&
+       !((mo->flags & mo->target->flags & MF_FRIEND) && //
+         mo->flags3 & MF3_SUPERFRIEND))
+        P_SetMobjState(mo, statenum);
 }
 
 //
@@ -1662,50 +1573,50 @@ void A_TargetJump(actionargs_t *actionargs)
 //
 void A_EjectCasing(actionargs_t *actionargs)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args  = actionargs->args;
-   angle_t    angle = actor->angle;
-   fixed_t    x, y, z;
-   fixed_t    frontdist;
-   int        frontdisti;
-   fixed_t    sidedist;
-   fixed_t    zheight;
-   int        thingtype;
-   Mobj      *mo;
+    Mobj      *actor = actionargs->actor;
+    arglist_t *args  = actionargs->args;
+    angle_t    angle = actor->angle;
+    fixed_t    x, y, z;
+    fixed_t    frontdist;
+    int        frontdisti;
+    fixed_t    sidedist;
+    fixed_t    zheight;
+    int        thingtype;
+    Mobj      *mo;
 
-   frontdisti = E_ArgAsInt(args, 0, 0);
-   
-   frontdist  = frontdisti * FRACUNIT / 16;
-   sidedist   = E_ArgAsInt(args, 1, 0) * FRACUNIT / 16;
-   zheight    = E_ArgAsInt(args, 2, 0) * FRACUNIT / 16;
+    frontdisti = E_ArgAsInt(args, 0, 0);
 
-   // account for mlook - EXPERIMENTAL
-   if(actor->player)
-   {
-      int pitch = actor->player->pitch;
-            
-      z = actor->z + actor->player->viewheight + zheight;
-      
-      // modify height according to pitch - hack warning.
-      z -= (pitch / ANGLE_1) * ((10 * frontdisti / 256) * FRACUNIT / 32);
-   }
-   else
-      z = actor->z + zheight;
+    frontdist = frontdisti * FRACUNIT / 16;
+    sidedist  = E_ArgAsInt(args, 1, 0) * FRACUNIT / 16;
+    zheight   = E_ArgAsInt(args, 2, 0) * FRACUNIT / 16;
 
-   x = actor->x + FixedMul(frontdist, finecosine[angle>>ANGLETOFINESHIFT]);
-   y = actor->y + FixedMul(frontdist, finesine[angle>>ANGLETOFINESHIFT]);
+    // account for mlook - EXPERIMENTAL
+    if(actor->player)
+    {
+        int pitch = actor->player->pitch;
 
-   // adjust x/y along a vector orthogonal to the source object's angle
-   angle = angle - ANG90;
+        z = actor->z + actor->player->viewheight + zheight;
 
-   x += FixedMul(sidedist, finecosine[angle>>ANGLETOFINESHIFT]);
-   y += FixedMul(sidedist, finesine[angle>>ANGLETOFINESHIFT]);
+        // modify height according to pitch - hack warning.
+        z -= (pitch / ANGLE_1) * ((10 * frontdisti / 256) * FRACUNIT / 32);
+    }
+    else
+        z = actor->z + zheight;
 
-   thingtype = E_ArgAsThingNum(args, 3);
+    x = actor->x + FixedMul(frontdist, finecosine[angle >> ANGLETOFINESHIFT]);
+    y = actor->y + FixedMul(frontdist, finesine[angle >> ANGLETOFINESHIFT]);
 
-   mo = P_SpawnMobj(x, y, z, thingtype);
+    // adjust x/y along a vector orthogonal to the source object's angle
+    angle = angle - ANG90;
 
-   mo->angle = sidedist >= 0 ? angle : angle + ANG180;
+    x += FixedMul(sidedist, finecosine[angle >> ANGLETOFINESHIFT]);
+    y += FixedMul(sidedist, finesine[angle >> ANGLETOFINESHIFT]);
+
+    thingtype = E_ArgAsThingNum(args, 3);
+
+    mo = P_SpawnMobj(x, y, z, thingtype);
+
+    mo->angle = sidedist >= 0 ? angle : angle + ANG180;
 }
 
 //
@@ -1717,20 +1628,20 @@ void A_EjectCasing(actionargs_t *actionargs)
 //
 void A_CasingThrust(actionargs_t *actionargs)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args  = actionargs->args;
-   fixed_t moml, momz;
+    Mobj      *actor = actionargs->actor;
+    arglist_t *args  = actionargs->args;
+    fixed_t    moml, momz;
 
-   moml = E_ArgAsInt(args, 0, 0) * FRACUNIT / 16;
-   momz = E_ArgAsInt(args, 1, 0) * FRACUNIT / 16;
-   
-   actor->momx = FixedMul(moml, finecosine[actor->angle>>ANGLETOFINESHIFT]);
-   actor->momy = FixedMul(moml, finesine[actor->angle>>ANGLETOFINESHIFT]);
-   
-   // randomize
-   actor->momx += P_SubRandom(pr_casing) << 8;
-   actor->momy += P_SubRandom(pr_casing) << 8;
-   actor->momz  = momz + (P_SubRandom(pr_casing) << 8);
+    moml = E_ArgAsInt(args, 0, 0) * FRACUNIT / 16;
+    momz = E_ArgAsInt(args, 1, 0) * FRACUNIT / 16;
+
+    actor->momx = FixedMul(moml, finecosine[actor->angle >> ANGLETOFINESHIFT]);
+    actor->momy = FixedMul(moml, finesine[actor->angle >> ANGLETOFINESHIFT]);
+
+    // randomize
+    actor->momx += P_SubRandom(pr_casing) << 8;
+    actor->momy += P_SubRandom(pr_casing) << 8;
+    actor->momz  = momz + (P_SubRandom(pr_casing) << 8);
 }
 
 //
@@ -1750,44 +1661,44 @@ void A_CasingThrust(actionargs_t *actionargs)
 //
 void A_DetonateEx(actionargs_t *actionargs)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args  = actionargs->args;
-   int   damage   =  E_ArgAsInt(args, 0, 128);
-   int   radius   =  E_ArgAsInt(args, 1, 128);
-   bool  hurtself = (E_ArgAsInt(args, 2, 1) == 1);
-   bool  alert    = (E_ArgAsInt(args, 3, 0) == 1);
-   bool  zclip    = (E_ArgAsInt(args, 7, 0) == 1);
-   bool  spotsrc  = (E_ArgAsInt(args, 8, 0) == 1);
-   Mobj *source   = actor->target;
-   unsigned int flags = 0;
+    Mobj        *actor    = actionargs->actor;
+    arglist_t   *args     = actionargs->args;
+    int          damage   = E_ArgAsInt(args, 0, 128);
+    int          radius   = E_ArgAsInt(args, 1, 128);
+    bool         hurtself = (E_ArgAsInt(args, 2, 1) == 1);
+    bool         alert    = (E_ArgAsInt(args, 3, 0) == 1);
+    bool         zclip    = (E_ArgAsInt(args, 7, 0) == 1);
+    bool         spotsrc  = (E_ArgAsInt(args, 8, 0) == 1);
+    Mobj        *source   = actor->target;
+    unsigned int flags    = 0;
 
-   // invalid damage or radius, return immediately.
-   if(damage <= 0 || radius <= 0)
-      return;
+    // invalid damage or radius, return immediately.
+    if(damage <= 0 || radius <= 0)
+        return;
 
-   // if there's no target, or spot is designated as being the source,
-   // set source == actor.
-   if(!source || spotsrc)
-      source = actor;
+    // if there's no target, or spot is designated as being the source,
+    // set source == actor.
+    if(!source || spotsrc)
+        source = actor;
 
-   // doesn't damage self?
-   if(!hurtself)
-      flags |= RAF_NOSELFDAMAGE;
+    // doesn't damage self?
+    if(!hurtself)
+        flags |= RAF_NOSELFDAMAGE;
 
-   // checks z height?
-   if(zclip)
-      flags |= RAF_CLIPHEIGHT;
+    // checks z height?
+    if(zclip)
+        flags |= RAF_CLIPHEIGHT;
 
-   // Do it.
-   P_RadiusAttack(actor, source, damage, radius, actor->info->mod, flags);
+    // Do it.
+    P_RadiusAttack(actor, source, damage, radius, actor->info->mod, flags);
 
-   // optional noise alert, as in Strife 
-   if(alert)
-      P_NoiseAlert(source, actor);
+    // optional noise alert, as in Strife
+    if(alert)
+        P_NoiseAlert(source, actor);
 
-   // cause a terrain hit
-   // ioanch 20160116: portal aware Z
-   E_ExplosionHitWater(actor, radius);
+    // cause a terrain hit
+    // ioanch 20160116: portal aware Z
+    E_ExplosionHitWater(actor, radius);
 }
 
 //
@@ -1799,12 +1710,12 @@ void A_DetonateEx(actionargs_t *actionargs)
 //
 void A_SelfDestruct(actionargs_t *actionargs)
 {
-   Mobj *actor = actionargs->actor;
+    Mobj *actor = actionargs->actor;
 
-   if(actor->flags & (MF_MISSILE | MF_BOUNCES))
-      P_ExplodeMissile(actor, nullptr);
-   else
-      A_Die(actionargs);
+    if(actor->flags & (MF_MISSILE | MF_BOUNCES))
+        P_ExplodeMissile(actor, nullptr);
+    else
+        A_Die(actionargs);
 }
 
 // EOF

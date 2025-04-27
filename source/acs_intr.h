@@ -34,11 +34,12 @@
 #include "ACSVM/Environment.hpp"
 #include "ACSVM/Thread.hpp"
 
-class  qstring;
-class  Mobj;
+class qstring;
+class Mobj;
+class WadDirectory;
+
 struct line_t;
 struct polyobj_t;
-class  WadDirectory;
 
 //
 // Defines
@@ -56,122 +57,122 @@ class  WadDirectory;
 
 enum
 {
-   ACS_MODE_DOOM = 0x00000001,
-   ACS_MODE_HTIC = 0x00000002,
-   ACS_MODE_ALL  = ACS_MODE_DOOM | ACS_MODE_HTIC,
+    ACS_MODE_DOOM = 0x00000001,
+    ACS_MODE_HTIC = 0x00000002,
+    ACS_MODE_ALL  = ACS_MODE_DOOM | ACS_MODE_HTIC,
 };
 
 // Script types.
 enum acs_stype_t
 {
-   ACS_STYPE_Closed,
-   ACS_STYPE_Enter,
-   ACS_STYPE_Open,
+    ACS_STYPE_Closed,
+    ACS_STYPE_Enter,
+    ACS_STYPE_Open,
 };
 
 // Tag types.
 enum acs_tagtype_t
 {
-   ACS_TAGTYPE_POLYOBJ,
-   ACS_TAGTYPE_SECTOR,
+    ACS_TAGTYPE_POLYOBJ,
+    ACS_TAGTYPE_SECTOR,
 };
 
 // Level Properties.
 enum
 {
-   ACS_LP_ParTime        = 0,
-   ACS_LP_ClusterNumber  = 1,
-   ACS_LP_LevelNumber    = 2,
-   ACS_LP_TotalSecrets   = 3,
-   ACS_LP_FoundSecrets   = 4,
-   ACS_LP_TotalItems     = 5,
-   ACS_LP_FoundItems     = 6,
-   ACS_LP_TotalMonsters  = 7,
-   ACS_LP_KilledMonsters = 8,
-   ACS_LP_SuckTime       = 9,
+    ACS_LP_ParTime        = 0,
+    ACS_LP_ClusterNumber  = 1,
+    ACS_LP_LevelNumber    = 2,
+    ACS_LP_TotalSecrets   = 3,
+    ACS_LP_FoundSecrets   = 4,
+    ACS_LP_TotalItems     = 5,
+    ACS_LP_FoundItems     = 6,
+    ACS_LP_TotalMonsters  = 7,
+    ACS_LP_KilledMonsters = 8,
+    ACS_LP_SuckTime       = 9,
 
-   ACS_LPMAX
+    ACS_LPMAX
 };
 
 // Thing properties.
 enum
 {
-   ACS_TP_Health       =  0,
-   ACS_TP_Speed        =  1,
-   ACS_TP_Damage       =  2,
-   ACS_TP_Alpha        =  3,
-   ACS_TP_RenderStyle  =  4,
-   ACS_TP_SeeSound     =  5,
-   ACS_TP_AttackSound  =  6,
-   ACS_TP_PainSound    =  7,
-   ACS_TP_DeathSound   =  8,
-   ACS_TP_ActiveSound  =  9,
-   ACS_TP_Ambush       = 10,
-   ACS_TP_Invulnerable = 11,
-   ACS_TP_JumpZ        = 12,
-   ACS_TP_ChaseGoal    = 13,
-   ACS_TP_Frightened   = 14,
-   ACS_TP_Gravity      = 15,
-   ACS_TP_Friendly     = 16,
-   ACS_TP_SpawnHealth  = 17,
-   ACS_TP_Dropped      = 18,
-   ACS_TP_NoTarget     = 19,
-   ACS_TP_Species      = 20,
-   ACS_TP_NameTag      = 21,
-   ACS_TP_Score        = 22,
-   ACS_TP_NoTrigger    = 23,
-   ACS_TP_DamageFactor = 24,
-   ACS_TP_MasterTID    = 25,
-   ACS_TP_TargetTID    = 26,
-   ACS_TP_TracerTID    = 27,
-   ACS_TP_WaterLevel   = 28,
-   ACS_TP_ScaleX       = 29,
-   ACS_TP_ScaleY       = 30,
-   ACS_TP_Dormant      = 31,
-   ACS_TP_Mass         = 32,
-   ACS_TP_Accuracy     = 33,
-   ACS_TP_Stamina      = 34,
-   ACS_TP_Height       = 35,
-   ACS_TP_Radius       = 36,
-   ACS_TP_ReactionTime = 37,
-   ACS_TP_MeleeRange   = 38,
-   ACS_TP_ViewHeight   = 39,
-   ACS_TP_AttackZOff   = 40,
-   ACS_TP_StencilColor = 41,
-   ACS_TP_Friction     = 42,
-   ACS_TP_DamageMult   = 43,
+    ACS_TP_Health       = 0,
+    ACS_TP_Speed        = 1,
+    ACS_TP_Damage       = 2,
+    ACS_TP_Alpha        = 3,
+    ACS_TP_RenderStyle  = 4,
+    ACS_TP_SeeSound     = 5,
+    ACS_TP_AttackSound  = 6,
+    ACS_TP_PainSound    = 7,
+    ACS_TP_DeathSound   = 8,
+    ACS_TP_ActiveSound  = 9,
+    ACS_TP_Ambush       = 10,
+    ACS_TP_Invulnerable = 11,
+    ACS_TP_JumpZ        = 12,
+    ACS_TP_ChaseGoal    = 13,
+    ACS_TP_Frightened   = 14,
+    ACS_TP_Gravity      = 15,
+    ACS_TP_Friendly     = 16,
+    ACS_TP_SpawnHealth  = 17,
+    ACS_TP_Dropped      = 18,
+    ACS_TP_NoTarget     = 19,
+    ACS_TP_Species      = 20,
+    ACS_TP_NameTag      = 21,
+    ACS_TP_Score        = 22,
+    ACS_TP_NoTrigger    = 23,
+    ACS_TP_DamageFactor = 24,
+    ACS_TP_MasterTID    = 25,
+    ACS_TP_TargetTID    = 26,
+    ACS_TP_TracerTID    = 27,
+    ACS_TP_WaterLevel   = 28,
+    ACS_TP_ScaleX       = 29,
+    ACS_TP_ScaleY       = 30,
+    ACS_TP_Dormant      = 31,
+    ACS_TP_Mass         = 32,
+    ACS_TP_Accuracy     = 33,
+    ACS_TP_Stamina      = 34,
+    ACS_TP_Height       = 35,
+    ACS_TP_Radius       = 36,
+    ACS_TP_ReactionTime = 37,
+    ACS_TP_MeleeRange   = 38,
+    ACS_TP_ViewHeight   = 39,
+    ACS_TP_AttackZOff   = 40,
+    ACS_TP_StencilColor = 41,
+    ACS_TP_Friction     = 42,
+    ACS_TP_DamageMult   = 43,
 
-   ACS_TP_Counter0     = 100,
-   ACS_TP_Counter1     = 101,
-   ACS_TP_Counter2     = 102,
-   ACS_TP_Counter3     = 103,
-   ACS_TP_Counter4     = 104,
-   ACS_TP_Counter5     = 105,
-   ACS_TP_Counter6     = 106,
-   ACS_TP_Counter7     = 107,
+    ACS_TP_Counter0 = 100,
+    ACS_TP_Counter1 = 101,
+    ACS_TP_Counter2 = 102,
+    ACS_TP_Counter3 = 103,
+    ACS_TP_Counter4 = 104,
+    ACS_TP_Counter5 = 105,
+    ACS_TP_Counter6 = 106,
+    ACS_TP_Counter7 = 107,
 
-   // Internal properties, not meant for external use.
-   ACS_TP_Angle,
-   ACS_TP_Armor,
-   ACS_TP_CeilTex,
-   ACS_TP_CeilZ,
-   ACS_TP_FloorTex,
-   ACS_TP_FloorZ,
-   ACS_TP_Frags,
-   ACS_TP_LightLevel,
-   ACS_TP_MomX,
-   ACS_TP_MomY,
-   ACS_TP_MomZ,
-   ACS_TP_Pitch,
-   ACS_TP_PlayerNumber,
-   ACS_TP_SigilPieces,
-   ACS_TP_TID,
-   ACS_TP_Type,
-   ACS_TP_X,
-   ACS_TP_Y,
-   ACS_TP_Z,
+    // Internal properties, not meant for external use.
+    ACS_TP_Angle,
+    ACS_TP_Armor,
+    ACS_TP_CeilTex,
+    ACS_TP_CeilZ,
+    ACS_TP_FloorTex,
+    ACS_TP_FloorZ,
+    ACS_TP_Frags,
+    ACS_TP_LightLevel,
+    ACS_TP_MomX,
+    ACS_TP_MomY,
+    ACS_TP_MomZ,
+    ACS_TP_Pitch,
+    ACS_TP_PlayerNumber,
+    ACS_TP_SigilPieces,
+    ACS_TP_TID,
+    ACS_TP_Type,
+    ACS_TP_X,
+    ACS_TP_Y,
+    ACS_TP_Z,
 
-   ACS_TPMAX
+    ACS_TPMAX
 };
 
 //
@@ -184,38 +185,37 @@ enum
 class ACSEnvironment : public ACSVM::Environment
 {
 protected:
-   virtual ACSVM::Thread *allocThread();
+    virtual ACSVM::Thread *allocThread();
 
-   virtual ACSVM::Word callSpecImpl(ACSVM::Thread *thread, ACSVM::Word spec,
-                                    const ACSVM::Word *argV, ACSVM::Word argC);
+    virtual ACSVM::Word callSpecImpl(ACSVM::Thread *thread, ACSVM::Word spec, const ACSVM::Word *argV,
+                                     ACSVM::Word argC);
 
 public:
-   using ACSVM::Environment::getModuleName;
+    using ACSVM::Environment::getModuleName;
 
-   ACSEnvironment();
+    ACSEnvironment();
 
-   virtual bool checkTag(ACSVM::Word type, ACSVM::Word tag);
+    virtual bool checkTag(ACSVM::Word type, ACSVM::Word tag);
 
-   virtual ACSVM::ModuleName getModuleName(char const *str, size_t len);
+    virtual ACSVM::ModuleName getModuleName(char const *str, size_t len);
 
-   virtual std::pair<ACSVM::Word /*type*/, ACSVM::Word /*name*/>
-   getScriptTypeACS0(ACSVM::Word name);
-   virtual ACSVM::Word getScriptTypeACSE(ACSVM::Word type);
+    virtual std::pair<ACSVM::Word /*type*/, ACSVM::Word /*name*/> getScriptTypeACS0(ACSVM::Word name);
+    virtual ACSVM::Word                                           getScriptTypeACSE(ACSVM::Word type);
 
-   virtual void loadModule(ACSVM::Module *module);
+    virtual void loadModule(ACSVM::Module *module);
 
-   virtual void loadState(ACSVM::Serial &in);
+    virtual void loadState(ACSVM::Serial &in);
 
-   virtual ACSVM::ModuleName readModuleName(ACSVM::Serial &in) const;
+    virtual ACSVM::ModuleName readModuleName(ACSVM::Serial &in) const;
 
-   virtual void refStrings();
+    virtual void refStrings();
 
-   WadDirectory       *dir;
-   ACSVM::GlobalScope *global;
-   ACSVM::HubScope    *hub;
-   ACSVM::MapScope    *map;
+    WadDirectory       *dir;
+    ACSVM::GlobalScope *global;
+    ACSVM::HubScope    *hub;
+    ACSVM::MapScope    *map;
 
-   size_t errors;
+    size_t errors;
 };
 
 //
@@ -224,39 +224,35 @@ public:
 class ACSThreadInfo : public ACSVM::ThreadInfo
 {
 public:
-   ACSThreadInfo() : mo{ nullptr }, line{ nullptr }, side{ 0 }, po{ nullptr } {}
+    ACSThreadInfo() : mo{ nullptr }, line{ nullptr }, side{ 0 }, po{ nullptr } {}
 
-   ACSThreadInfo(const ACSThreadInfo &info) :
-      mo{ nullptr }, line{ info.line }, side{ info.side }, po{ info.po }
-   {
-      P_SetTarget(&mo, info.mo);
-   }
+    ACSThreadInfo(const ACSThreadInfo &info) : mo{ nullptr }, line{ info.line }, side{ info.side }, po{ info.po }
+    {
+        P_SetTarget(&mo, info.mo);
+    }
 
-   ACSThreadInfo(Mobj *mo_, line_t *line_, int side_, polyobj_t *po_) :
-      mo{nullptr}, line{line_}, side{side_}, po{po_}
-   {
-      P_SetTarget(&mo, mo_);
-   }
+    ACSThreadInfo(Mobj *mo_, line_t *line_, int side_, polyobj_t *po_)
+        : mo{ nullptr }, line{ line_ }, side{ side_ }, po{ po_ }
+    {
+        P_SetTarget(&mo, mo_);
+    }
 
-   ~ACSThreadInfo()
-   {
-      P_SetTarget<Mobj>(&mo, nullptr);
-   }
+    ~ACSThreadInfo() { P_SetTarget<Mobj>(&mo, nullptr); }
 
-   ACSThreadInfo &operator = (const ACSThreadInfo &info)
-   {
-      P_SetTarget(&mo, info.mo);
-      line = info.line;
-      side = info.side;
-      po = info.po;
+    ACSThreadInfo &operator=(const ACSThreadInfo &info)
+    {
+        P_SetTarget(&mo, info.mo);
+        line = info.line;
+        side = info.side;
+        po   = info.po;
 
-      return *this;
-   }
+        return *this;
+    }
 
-   Mobj   *mo;   // Mobj that activated.
-   line_t *line; // Line that activated.
-   int     side; // Side of actived line.
-   polyobj_t *po;
+    Mobj      *mo;   // Mobj that activated.
+    line_t    *line; // Line that activated.
+    int        side; // Side of actived line.
+    polyobj_t *po;
 };
 
 //
@@ -265,24 +261,23 @@ public:
 class ACSThread : public ACSVM::Thread
 {
 public:
-   explicit ACSThread(ACSVM::Environment *env_) : ACSVM::Thread{env_} {}
+    explicit ACSThread(ACSVM::Environment *env_) : ACSVM::Thread{ env_ } {}
 
-   virtual ACSVM::ThreadInfo const *getInfo() const {return &info;}
+    virtual ACSVM::ThreadInfo const *getInfo() const { return &info; }
 
-   virtual void loadState(ACSVM::Serial &in);
+    virtual void loadState(ACSVM::Serial &in);
 
-   virtual void saveState(ACSVM::Serial &out) const;
+    virtual void saveState(ACSVM::Serial &out) const;
 
-   virtual void start(ACSVM::Script *script, ACSVM::MapScope *map,
-      const ACSVM::ThreadInfo *info, const ACSVM::Word *argV, ACSVM::Word argC);
+    virtual void start(ACSVM::Script *script, ACSVM::MapScope *map, const ACSVM::ThreadInfo *info,
+                       const ACSVM::Word *argV, ACSVM::Word argC);
 
-   virtual void stop();
+    virtual void stop();
 
-   ACSThreadInfo info;
+    ACSThreadInfo info;
 
-   static int saveLoadVersion;   // context information stored when saving and loading
+    static int saveLoadVersion; // context information stored when saving and loading
 };
-
 
 // Global function prototypes
 
@@ -296,22 +291,22 @@ void ACS_Exec();
 void ACS_Archive(SaveArchive &arc);
 
 // Script control.
-bool ACS_ExecuteScriptI(uint32_t name, uint32_t mapnum, const uint32_t *argv,
-                        uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po);
-bool ACS_ExecuteScriptIAlways(uint32_t name, uint32_t mapnum, const uint32_t *argv,
-                              uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po);
-uint32_t ACS_ExecuteScriptIResult(uint32_t name, const uint32_t *argv,
-                                 uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po);
-bool ACS_ExecuteScriptS(const char *name, uint32_t mapnum, const uint32_t *argv,
-                        uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po);
-bool ACS_ExecuteScriptSAlways(const char *name, uint32_t mapnum, const uint32_t *argv,
-                              uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po);
-uint32_t ACS_ExecuteScriptSResult(const char *name, const uint32_t *argv,
-                                 uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po);
-bool ACS_SuspendScriptI(uint32_t name, uint32_t mapnum);
-bool ACS_SuspendScriptS(const char *name, uint32_t mapnum);
-bool ACS_TerminateScriptI(uint32_t name, uint32_t mapnum);
-bool ACS_TerminateScriptS(const char *name, uint32_t mapnum);
+bool     ACS_ExecuteScriptI(uint32_t name, uint32_t mapnum, const uint32_t *argv, uint32_t argc, Mobj *mo, line_t *line,
+                            int side, polyobj_t *po);
+bool     ACS_ExecuteScriptIAlways(uint32_t name, uint32_t mapnum, const uint32_t *argv, uint32_t argc, Mobj *mo,
+                                  line_t *line, int side, polyobj_t *po);
+uint32_t ACS_ExecuteScriptIResult(uint32_t name, const uint32_t *argv, uint32_t argc, Mobj *mo, line_t *line, int side,
+                                  polyobj_t *po);
+bool ACS_ExecuteScriptS(const char *name, uint32_t mapnum, const uint32_t *argv, uint32_t argc, Mobj *mo, line_t *line,
+                        int side, polyobj_t *po);
+bool ACS_ExecuteScriptSAlways(const char *name, uint32_t mapnum, const uint32_t *argv, uint32_t argc, Mobj *mo,
+                              line_t *line, int side, polyobj_t *po);
+uint32_t ACS_ExecuteScriptSResult(const char *name, const uint32_t *argv, uint32_t argc, Mobj *mo, line_t *line,
+                                  int side, polyobj_t *po);
+bool     ACS_SuspendScriptI(uint32_t name, uint32_t mapnum);
+bool     ACS_SuspendScriptS(const char *name, uint32_t mapnum);
+bool     ACS_TerminateScriptI(uint32_t name, uint32_t mapnum);
+bool     ACS_TerminateScriptS(const char *name, uint32_t mapnum);
 
 // Utilities.
 uint32_t ACS_GetLevelProp(uint32_t prop);

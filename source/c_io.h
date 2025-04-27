@@ -36,7 +36,7 @@ void C_Init(void);
 void C_InitBackdrop();
 void C_Ticker(void);
 void C_Drawer(void);
-bool C_Responder(event_t* ev);
+bool C_Responder(event_t *ev);
 void C_Update(void);
 
 void C_Printf(E_FORMAT_STRING(const char *s), ...) E_PRINTF(1, 2);
@@ -56,8 +56,8 @@ void C_DumpMessages(qstring *filename);
 #define consoleactive (Console.current_height || gamestate == GS_CONSOLE)
 #define c_moving      (Console.current_height != Console.current_target)
 
-extern int c_height;     // the height of the console
-extern int c_speed;       // pixels/tic it moves
+extern int c_height; // the height of the console
+extern int c_speed;  // pixels/tic it moves
 
 extern char *c_fontname;
 

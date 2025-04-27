@@ -18,8 +18,8 @@
 //------------------------------------------------------------------------------
 //
 // Purpose: Patches.
-//  A patch holds one or more columns. Patches are used for sprites and all 
-//  masked pictures, and we compose textures from the TEXTURE1/2 lists of 
+//  A patch holds one or more columns. Patches are used for sprites and all
+//  masked pictures, and we compose textures from the TEXTURE1/2 lists of
 //  patches.
 //
 // haleyjd 11/21/10: Separated from r_defs.h to help resolve circular
@@ -41,19 +41,19 @@
 // posts are runs of non masked source pixels
 struct post_t
 {
-   byte topdelta; // -1 is the last post in a column
-   byte length;   // length data bytes follows
+    byte topdelta; // -1 is the last post in a column
+    byte length;   // length data bytes follows
 };
 
 // column_t is a list of 0 or more post_t, (byte)-1 terminated
 using column_t = post_t;
 
 struct patch_t
-{ 
-   int16_t width, height;  // bounding box size 
-   int16_t leftoffset;     // pixels to the left of origin 
-   int16_t topoffset;      // pixels below the origin 
-   int32_t columnofs[8];   // only [width] used
+{
+    int16_t width, height; // bounding box size
+    int16_t leftoffset;    // pixels to the left of origin
+    int16_t topoffset;     // pixels below the origin
+    int32_t columnofs[8];  // only [width] used
 };
 
 #if defined(_MSC_VER) || defined(__GNUC__)
@@ -63,5 +63,4 @@ struct patch_t
 #endif
 
 // EOF
-
 

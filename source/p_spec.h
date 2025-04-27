@@ -38,15 +38,15 @@
 #include "tables.h"
 
 struct line_t;
-class  Mobj;
 struct player_t;
 struct polyobj_t;
 struct portal_t;
-class  SaveArchive;
 struct sector_t;
 struct side_t;
-class  UDMFSetupSettings;
 struct v3fixed_t;
+class Mobj;
+class SaveArchive;
+class UDMFSetupSettings;
 
 //      Define values for map objects
 #define MO_TELEPORTMAN  14
@@ -78,7 +78,7 @@ struct v3fixed_t;
 // killough 2/14/98: redefine in terms of MAXPLAYERS
 // #define MAXBUTTONS    (MAXPLAYERS*4)
 
-// 1 second, in ticks. 
+// 1 second, in ticks.
 #define BUTTONTIME  TICRATE
 
 // p_lights
@@ -89,7 +89,7 @@ struct v3fixed_t;
 #define FASTDARK        15
 #define SLOWDARK        35
 
-//jff 3/14/98 add bits and shifts for generalized sector types
+// jff 3/14/98 add bits and shifts for generalized sector types
 #define LIGHT_MASK      0x1f
 #define DAMAGE_MASK     0x60
 #define DAMAGE_SHIFT    5
@@ -115,10 +115,10 @@ struct v3fixed_t;
 // haleyjd 12/28/08: mask used to get generalized special bits that are now
 // part of the sector flags
 #define GENSECTOFLAGSMASK \
-   (SECRET_MASK|FRICTION_MASK|PUSH_MASK|KILLSOUND_MASK|MOVESOUND_MASK|INSTANTDEATH_MASK|MONSTERDEATH_MASK)
+    (SECRET_MASK|FRICTION_MASK|PUSH_MASK|KILLSOUND_MASK|MOVESOUND_MASK|INSTANTDEATH_MASK|MONSTERDEATH_MASK)
 
-//jff 02/04/98 Define masks, shifts, for fields in 
-// generalized linedef types
+// jff 02/04/98 Define masks, shifts, for fields in
+//  generalized linedef types
 
 #define GenFloorBase          0x6000
 #define GenCeilingBase        0x4000
@@ -134,13 +134,13 @@ struct v3fixed_t;
 // haleyjd: Generalized type enumeration
 enum
 {
-   GenTypeFloor,
-   GenTypeCeiling,
-   GenTypeDoor,
-   GenTypeLocked,
-   GenTypeLift,
-   GenTypeStairs,
-   GenTypeCrusher
+    GenTypeFloor,
+    GenTypeCeiling,
+    GenTypeDoor,
+    GenTypeLocked,
+    GenTypeLift,
+    GenTypeStairs,
+    GenTypeCrusher
 };
 
 // define masks and shifts for the floor type fields
@@ -158,7 +158,7 @@ enum
 #define FloorDirectionShift        6
 #define FloorModelShift            5
 #define FloorSpeedShift            3
-                               
+
 // define masks and shifts for the ceiling type fields
 
 #define CeilingCrush          0x1000
@@ -239,151 +239,151 @@ enum
 
 enum triggertype_e
 {
-   WalkOnce,
-   WalkMany,
-   SwitchOnce,
-   SwitchMany,
-   GunOnce,
-   GunMany,
-   PushOnce,
-   PushMany
+    WalkOnce,
+    WalkMany,
+    SwitchOnce,
+    SwitchMany,
+    GunOnce,
+    GunMany,
+    PushOnce,
+    PushMany
 };
 
 // define names for the Speed field of the general linedefs
 
 enum motionspeed_e
 {
-   SpeedSlow,
-   SpeedNormal,
-   SpeedFast,
-   SpeedTurbo,  
-   SpeedParam  // haleyjd 05/04/04: parameterized extension 
+    SpeedSlow,
+    SpeedNormal,
+    SpeedFast,
+    SpeedTurbo,
+    SpeedParam // haleyjd 05/04/04: parameterized extension
 };
 
 // define names for the Target field of the general floor
 
 enum floortarget_e
 {
-   FtoHnF,
-   FtoLnF,
-   FtoNnF,
-   FtoLnC,
-   FtoC,
-   FbyST,
-   Fby24,
-   Fby32,
-  
-   FbyParam, // haleyjd 05/07/04: parameterized extensions
-   FtoAbs,
-   FInst,
-   FtoLnCInclusive
+    FtoHnF,
+    FtoLnF,
+    FtoNnF,
+    FtoLnC,
+    FtoC,
+    FbyST,
+    Fby24,
+    Fby32,
+
+    FbyParam, // haleyjd 05/07/04: parameterized extensions
+    FtoAbs,
+    FInst,
+    FtoLnCInclusive
 };
 
 // define names for the Changer Type field of the general floor
 
 enum floorchange_e
 {
-   FNoChg,
-   FChgZero,
-   FChgTxt,
-   FChgTyp
+    FNoChg,
+    FChgZero,
+    FChgTxt,
+    FChgTyp
 };
 
 // define names for the Change Model field of the general floor
 
 enum floormodel_t
 {
-   FTriggerModel,
-   FNumericModel
+    FTriggerModel,
+    FNumericModel
 };
 
 // define names for the Target field of the general ceiling
 
 enum ceilingtarget_e
 {
-   CtoHnC,
-   CtoLnC,
-   CtoNnC,
-   CtoHnF,
-   CtoF,
-   CbyST,
-   Cby24,
-   Cby32,
+    CtoHnC,
+    CtoLnC,
+    CtoNnC,
+    CtoHnF,
+    CtoF,
+    CbyST,
+    Cby24,
+    Cby32,
 
-   CbyParam, // haleyjd 05/07/04: parameterized extensions
-   CtoAbs,
-   CInst
+    CbyParam, // haleyjd 05/07/04: parameterized extensions
+    CtoAbs,
+    CInst
 };
 
 // define names for the Changer Type field of the general ceiling
 
 enum ceilingchange_e
 {
-   CNoChg,
-   CChgZero,
-   CChgTxt,
-   CChgTyp
+    CNoChg,
+    CChgZero,
+    CChgTxt,
+    CChgTyp
 };
 
 // define names for the Change Model field of the general ceiling
 
 enum ceilingmodel_t
 {
-   CTriggerModel,
-   CNumericModel
+    CTriggerModel,
+    CNumericModel
 };
 
 // define names for the Target field of the general lift
 
 enum lifttarget_e
 {
-   F2LnF,
-   F2NnF,
-   F2LnC,
-   LnF2HnF,
+    F2LnF,
+    F2NnF,
+    F2LnC,
+    LnF2HnF,
 
-   lifttarget_upValue
+    lifttarget_upValue
 };
 
 // haleyjd 10/06/05: defines for generalized stair step sizes
- 
+
 enum genstairsize_e
 {
-   StepSize4,
-   StepSize8,
-   StepSize16,
-   StepSize24,
+    StepSize4,
+    StepSize8,
+    StepSize16,
+    StepSize24,
 
-   StepSizeParam  // haleyjd 10/06/05: parameterized extension
+    StepSizeParam // haleyjd 10/06/05: parameterized extension
 };
 
 // define names for the door Kind field of the general ceiling
 
 enum doorkind_e
 {
-   OdCDoor,
-   ODoor,
-   CdODoor,
-   CDoor,
-  
-   // haleyjd 03/01/05: new param types with initial delays
-   pDOdCDoor,
-   pDCDoor
+    OdCDoor,
+    ODoor,
+    CdODoor,
+    CDoor,
+
+    // haleyjd 03/01/05: new param types with initial delays
+    pDOdCDoor,
+    pDCDoor
 };
 
 // define names for the locked door Kind field of the general ceiling
 
 enum keykind_e
 {
-   AnyKey,
-   RCard,
-   BCard,
-   YCard,
-   RSkull,
-   BSkull,
-   YSkull,
-   AllKeys,
-   MaxKeyKind
+    AnyKey,
+    RCard,
+    BCard,
+    YCard,
+    RSkull,
+    BSkull,
+    YSkull,
+    AllKeys,
+    MaxKeyKind
 };
 
 //////////////////////////////////////////////////////////////////
@@ -392,51 +392,51 @@ enum keykind_e
 //
 //////////////////////////////////////////////////////////////////
 
-//jff 2/23/98 identify the special classes that can share sectors
+// jff 2/23/98 identify the special classes that can share sectors
 
 enum special_e
 {
-   floor_special,
-   ceiling_special,
-   lighting_special
+    floor_special,
+    ceiling_special,
+    lighting_special
 };
 
-//jff 3/15/98 pure texture/type change for better generalized support
+// jff 3/15/98 pure texture/type change for better generalized support
 enum change_e
 {
-   trigChangeOnly,
-   numChangeOnly
+    trigChangeOnly,
+    numChangeOnly
 };
 
 // p_plats
 
 enum plattype_e
 {
-   perpetualRaise,
-   downWaitUpStay,
-   raiseAndChange,
-   raiseToNearestAndChange,
-   blazeDWUS,
-   genLift,       // jff added to support generalized Plat types
-   genPerpetual, 
-   toggleUpDn,    // jff 3/14/98 added to support instant toggle type
-   upWaitDownStay // haleyjd 2/18/13: Hexen and Strife reverse plats
+    perpetualRaise,
+    downWaitUpStay,
+    raiseAndChange,
+    raiseToNearestAndChange,
+    blazeDWUS,
+    genLift, // jff added to support generalized Plat types
+    genPerpetual,
+    toggleUpDn,    // jff 3/14/98 added to support instant toggle type
+    upWaitDownStay // haleyjd 2/18/13: Hexen and Strife reverse plats
 
 };
 
 // haleyjd 02/18/13: parameterized plat trigger types
 enum paramplattype_e
 {
-   paramDownWaitUpStay,
-   paramDownByValueWaitUpStay,
-   paramUpWaitDownStay,
-   paramUpByValueWaitDownStay,
-   paramPerpetualRaise,
-   paramUpByValueStayAndChange,
-   paramRaiseToNearestAndChange,
-   paramToggleCeiling,
-   paramDownWaitUpStayLip,
-   paramPerpetualRaiseLip
+    paramDownWaitUpStay,
+    paramDownByValueWaitUpStay,
+    paramUpWaitDownStay,
+    paramUpByValueWaitDownStay,
+    paramPerpetualRaise,
+    paramUpByValueStayAndChange,
+    paramRaiseToNearestAndChange,
+    paramToggleCeiling,
+    paramDownWaitUpStayLip,
+    paramPerpetualRaiseLip
 };
 
 // p_doors
@@ -447,171 +447,171 @@ enum paramplattype_e
 
 enum vldoor_e
 {
-   doorNormal,
-   closeThenOpen,
-   doorClose,
-   doorOpen,
-   doorRaiseIn,
-   blazeRaise,
-   blazeOpen,
-   blazeClose,
+    doorNormal,
+    closeThenOpen,
+    doorClose,
+    doorOpen,
+    doorRaiseIn,
+    blazeRaise,
+    blazeOpen,
+    blazeClose,
 
-   // jff 02/05/98 add generalize door types
-   // haleyjd 01/22/12: no distinction is necessary any longer
+    // jff 02/05/98 add generalize door types
+    // haleyjd 01/22/12: no distinction is necessary any longer
 
-   // haleyjd 03/01/05: exclusively param door types
-   paramCloseIn
+    // haleyjd 03/01/05: exclusively param door types
+    paramCloseIn
 };
 
 // haleyjd 05/04/04: door wait types
 enum doorwait_e
 {
-   doorWaitOneSec,
-   doorWaitStd,
-   doorWaitStd2x,
-   doorWaitStd7x,
-   doorWaitParam
+    doorWaitOneSec,
+    doorWaitStd,
+    doorWaitStd2x,
+    doorWaitStd7x,
+    doorWaitParam
 };
 
 // p_ceilng
 
 enum ceiling_e
 {
-   lowerToFloor,
-   raiseToHighest,
-   lowerToLowest,
-   lowerToMaxFloor,
-   lowerAndCrush,
-   crushAndRaise,
-   fastCrushAndRaise,
-   silentCrushAndRaise,
+    lowerToFloor,
+    raiseToHighest,
+    lowerToLowest,
+    lowerToMaxFloor,
+    lowerAndCrush,
+    crushAndRaise,
+    fastCrushAndRaise,
+    silentCrushAndRaise,
 
-   //jff 02/04/98 add types for generalized ceiling mover
-   genCeiling,
-   genCeilingChg,
-   genCeilingChg0,
-   genCeilingChgT,
+    // jff 02/04/98 add types for generalized ceiling mover
+    genCeiling,
+    genCeilingChg,
+    genCeilingChg0,
+    genCeilingChgT,
 
-   //jff 02/05/98 add types for generalized ceiling mover
-   genCrusher,
-   genSilentCrusher,
+    // jff 02/05/98 add types for generalized ceiling mover
+    genCrusher,
+    genSilentCrusher,
 
-   // ioanch 20160305
-   paramHexenCrush,
-   paramHexenCrushRaiseStay,
-   paramHexenLowerCrush,
+    // ioanch 20160305
+    paramHexenCrush,
+    paramHexenCrushRaiseStay,
+    paramHexenLowerCrush,
 };
 
 // ioanch 20160313: crushing mode, compatible with ZDoom. Decided from
 // parameterized crusher arg
 enum crushmode_e
 {
-   crushmodeCompat = 0, // choose
-   crushmodeDoom   = 1, // press
-   crushmodeHexen  = 2, // rest
-   crushmodeDoomSlow=3, // slow
+    crushmodeCompat   = 0, // choose
+    crushmodeDoom     = 1, // press
+    crushmodeHexen    = 2, // rest
+    crushmodeDoomSlow = 3, // slow
 };
 
 // p_floor
 
 enum floor_e
 {
-   // lower floor to highest surrounding floor
-   lowerFloor,
-  
-   // lower floor to lowest surrounding floor
-   lowerFloorToLowest,
-  
-   // lower floor to highest surrounding floor VERY FAST
-   turboLower,
-  
-   // raise floor to lowest surrounding CEILING
-   raiseFloor,
-  
-   // raise floor to next highest surrounding floor
-   raiseFloorToNearest,
+    // lower floor to highest surrounding floor
+    lowerFloor,
 
-   //jff 02/03/98 lower floor to next lowest neighbor
-   lowerFloorToNearest,
+    // lower floor to lowest surrounding floor
+    lowerFloorToLowest,
 
-   //jff 02/03/98 lower floor 24 absolute
-   lowerFloor24,
+    // lower floor to highest surrounding floor VERY FAST
+    turboLower,
 
-   //jff 02/03/98 lower floor 32 absolute
-   lowerFloor32Turbo,
+    // raise floor to lowest surrounding CEILING
+    raiseFloor,
 
-   // raise floor to shortest height texture around it
-   raiseToTexture,
-  
-   // lower floor to lowest surrounding floor
-   //  and change floorpic
-   lowerAndChange,
+    // raise floor to next highest surrounding floor
+    raiseFloorToNearest,
 
-   raiseFloor24,
+    // jff 02/03/98 lower floor to next lowest neighbor
+    lowerFloorToNearest,
 
-   //jff 02/03/98 raise floor 32 absolute
-   raiseFloor32Turbo,
+    // jff 02/03/98 lower floor 24 absolute
+    lowerFloor24,
 
-   raiseFloor24AndChange,
-   raiseFloorCrush,
+    // jff 02/03/98 lower floor 32 absolute
+    lowerFloor32Turbo,
 
-   // raise to next highest floor, turbo-speed
-   raiseFloorTurbo,       
-   donutRaise,
-   raiseFloor512,
+    // raise floor to shortest height texture around it
+    raiseToTexture,
 
-   //jff 02/04/98  add types for generalized floor mover
-   genFloor,
-   genFloorChg,
-   genFloorChg0,
-   genFloorChgT,
+    // lower floor to lowest surrounding floor
+    //  and change floorpic
+    lowerAndChange,
 
-   //new types for stair builders
-   buildStair,
-   genBuildStair,
-   genWaitStair,  // haleyjd 10/10/05: stair resetting
-   genDelayStair, // haleyjd 10/13/05: delayed stair
-   genResetStair, 
+    raiseFloor24,
 
-   // new types for supporting other idTech games
-   turboLowerA    // haleyjd 02/09/13: for Heretic turbo floors
+    // jff 02/03/98 raise floor 32 absolute
+    raiseFloor32Turbo,
+
+    raiseFloor24AndChange,
+    raiseFloorCrush,
+
+    // raise to next highest floor, turbo-speed
+    raiseFloorTurbo,
+    donutRaise,
+    raiseFloor512,
+
+    // jff 02/04/98  add types for generalized floor mover
+    genFloor,
+    genFloorChg,
+    genFloorChg0,
+    genFloorChgT,
+
+    // new types for stair builders
+    buildStair,
+    genBuildStair,
+    genWaitStair,  // haleyjd 10/10/05: stair resetting
+    genDelayStair, // haleyjd 10/13/05: delayed stair
+    genResetStair,
+
+    // new types for supporting other idTech games
+    turboLowerA // haleyjd 02/09/13: for Heretic turbo floors
 };
 
 enum stair_e
 {
-   build8, // slowly build by 8
-   turbo16 // quickly build by 16    
+    build8, // slowly build by 8
+    turbo16 // quickly build by 16
 };
 
 enum elevator_e
 {
-   elevateUp,
-   elevateDown,
-   elevateCurrent,
-   elevateByValue // for Hexen additions
+    elevateUp,
+    elevateDown,
+    elevateCurrent,
+    elevateByValue // for Hexen additions
 };
 
 // haleyjd 01/09/07: p_lights
 
 enum setlight_e
 {
-   setlight_set, // set light to given level
-   setlight_add, // add to light level
-   setlight_sub  // subtract from light level
+    setlight_set, // set light to given level
+    setlight_add, // add to light level
+    setlight_sub  // subtract from light level
 };
 
 enum lightfade_e
 {
-   fade_once, // just a normal fade effect
-   fade_glow  // glow effect
+    fade_once, // just a normal fade effect
+    fade_glow  // glow effect
 };
 
 // haleyjd 06/29/14: second argument to P_SpawnPSXGlowingLight
 enum psxglow_e
 {
-   psxglow_low, // glow down to lowest neighboring lightlevel
-   psxglow_10,  // glow down to 10 from sector->lightlevel
-   psxglow_255  // glow up to 255 from sector->lightlevel
+    psxglow_low, // glow down to lowest neighboring lightlevel
+    psxglow_10,  // glow down to 10 from sector->lightlevel
+    psxglow_255  // glow up to 255 from sector->lightlevel
 };
 
 //////////////////////////////////////////////////////////////////
@@ -623,9 +623,9 @@ enum psxglow_e
 // texture type enum
 enum bwhere_e
 {
-   top,
-   middle,
-   bottom      
+    top,
+    middle,
+    bottom
 };
 
 //=============================================================================
@@ -636,48 +636,47 @@ enum bwhere_e
 // haleyjd 10/13/2011: base class for sector action types
 class SectorThinker : public Thinker
 {
-   DECLARE_THINKER_TYPE(SectorThinker, Thinker)
+    DECLARE_THINKER_TYPE(SectorThinker, Thinker)
 
 protected:
-   // sector attach points
-   enum attachpoint_e
-   {
-      ATTACH_NONE, 
-      ATTACH_FLOOR,
-      ATTACH_CEILING,
-      ATTACH_FLOORCEILING,
-      ATTACH_LIGHT
-   };
+    // sector attach points
+    enum attachpoint_e
+    {
+        ATTACH_NONE,
+        ATTACH_FLOOR,
+        ATTACH_CEILING,
+        ATTACH_FLOORCEILING,
+        ATTACH_LIGHT
+    };
 
-   // Methods
-   virtual attachpoint_e getAttachPoint() const { return ATTACH_NONE; }
+    // Methods
+    virtual attachpoint_e getAttachPoint() const { return ATTACH_NONE; }
 
 public:
-   SectorThinker() : Thinker(), sector(nullptr) {}
+    SectorThinker() : Thinker(), sector(nullptr) {}
 
-   // Methods
-   virtual void serialize(SaveArchive &arc) override;
-   virtual bool reTriggerVerticalDoor(bool player) { return false; }
+    // Methods
+    virtual void serialize(SaveArchive &arc) override;
+    virtual bool reTriggerVerticalDoor(bool player) { return false; }
 
-   // Data Members
-   sector_t *sector;
+    // Data Members
+    sector_t *sector;
 };
-
 
 // p_switch
 
 // switch animation structure type
 
-//jff 3/23/98 pack to read from memory
+// jff 3/23/98 pack to read from memory
 #if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(push, 1)
 #endif
 
 struct switchlist_t
 {
-   char    name1[9];
-   char    name2[9];
-   int16_t episode;
+    char    name1[9];
+    char    name2[9];
+    int16_t episode;
 };
 
 #if defined(_MSC_VER) || defined(__GNUC__)
@@ -686,112 +685,112 @@ struct switchlist_t
 
 struct button_t
 {
-   int      line;
-   int      side;
-   int      where;
-   int      btexture;
-   int      btimer;
-   bool     dopopout;
-   int switchindex;  // for sounds
+    int  line;
+    int  side;
+    int  where;
+    int  btexture;
+    int  btimer;
+    bool dopopout;
+    int  switchindex; // for sounds
 };
 
 // haleyjd 04/17/08: made buttonlist/numbuttonsalloc external for savegames
 extern button_t *buttonlist;
-extern int numbuttonsalloc;
+extern int       numbuttonsalloc;
 
 // p_lights
 
 class FireFlickerThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(FireFlickerThinker, SectorThinker)
+    DECLARE_THINKER_TYPE(FireFlickerThinker, SectorThinker)
 
 protected:
-   void Think() override;
+    void Think() override;
 
 public:
-   // Methods
-   virtual void serialize(SaveArchive &arc) override;
-   
-   // Data Members
-   int count;
-   int maxlight;
-   int minlight;
+    // Methods
+    virtual void serialize(SaveArchive &arc) override;
+
+    // Data Members
+    int count;
+    int maxlight;
+    int minlight;
 };
 
 class LightFlashThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(LightFlashThinker, SectorThinker)
+    DECLARE_THINKER_TYPE(LightFlashThinker, SectorThinker)
 
 protected:
-   void Think() override;
+    void Think() override;
 
 public:
-   // Methods
-   virtual void serialize(SaveArchive &arc) override;
-   virtual bool reTriggerVerticalDoor(bool player) override;
-   
-   // Data Members
-   int count;
-   int maxlight;
-   int minlight;
-   int maxtime;
-   int mintime;
+    // Methods
+    virtual void serialize(SaveArchive &arc) override;
+    virtual bool reTriggerVerticalDoor(bool player) override;
+
+    // Data Members
+    int count;
+    int maxlight;
+    int minlight;
+    int maxtime;
+    int mintime;
 };
 
 class StrobeThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(StrobeThinker, SectorThinker)
+    DECLARE_THINKER_TYPE(StrobeThinker, SectorThinker)
 
 protected:
-   void Think() override;
+    void Think() override;
 
 public:
-   // Methods
-   virtual void serialize(SaveArchive &arc) override;
-   virtual bool reTriggerVerticalDoor(bool player) override;
+    // Methods
+    virtual void serialize(SaveArchive &arc) override;
+    virtual bool reTriggerVerticalDoor(bool player) override;
 
-   // Data Members
-   int count;
-   int minlight;
-   int maxlight;
-   int darktime;
-   int brighttime;
+    // Data Members
+    int count;
+    int minlight;
+    int maxlight;
+    int darktime;
+    int brighttime;
 };
 
 class GlowThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(GlowThinker, SectorThinker)
+    DECLARE_THINKER_TYPE(GlowThinker, SectorThinker)
 
 protected:
-   void Think() override;
+    void Think() override;
 
 public:
-   // Methods
-   virtual void serialize(SaveArchive &arc) override;
-   
-   // Data Members
-   int     minlight;
-   int     maxlight;
-   int     direction;
+    // Methods
+    virtual void serialize(SaveArchive &arc) override;
+
+    // Data Members
+    int minlight;
+    int maxlight;
+    int direction;
 };
 
 // haleyjd: For PSX lighting
 class SlowGlowThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(SlowGlowThinker, SectorThinker)
+    DECLARE_THINKER_TYPE(SlowGlowThinker, SectorThinker)
 
 protected:
-   void Think() override;
+    void Think() override;
 
 public:
-   // Methods
-   virtual void serialize(SaveArchive &arc) override;
-   
-   // Data Members
-   int     minlight;
-   int     maxlight;
-   int     direction;
-   fixed_t accum;
+    // Methods
+    virtual void serialize(SaveArchive &arc) override;
+
+    // Data Members
+    int     minlight;
+    int     maxlight;
+    int     direction;
+    fixed_t accum;
 };
 
 // sf 13/10/99
@@ -799,101 +798,101 @@ public:
 
 class LightFadeThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(LightFadeThinker, SectorThinker)
+    DECLARE_THINKER_TYPE(LightFadeThinker, SectorThinker)
 
 protected:
-   void Think() override;
+    void Think() override;
 
 public:
-   // Methods
-   virtual void serialize(SaveArchive &arc) override;
-   
-   // Data Members
-   fixed_t lightlevel;
-   fixed_t destlevel;
-   fixed_t step;
-   fixed_t glowmin;
-   fixed_t glowmax;
-   int     glowspeed;
-   int     type;
+    // Methods
+    virtual void serialize(SaveArchive &arc) override;
+
+    // Data Members
+    fixed_t lightlevel;
+    fixed_t destlevel;
+    fixed_t step;
+    fixed_t glowmin;
+    fixed_t glowmax;
+    int     glowspeed;
+    int     type;
 };
 
 class PhasedLightThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(PhasedLightThinker, SectorThinker)
+    DECLARE_THINKER_TYPE(PhasedLightThinker, SectorThinker)
 
 protected:
-   void Think() override;
+    void Think() override;
 
-   // Data members
-   int base;
-   int index;
+    // Data members
+    int base;
+    int index;
 
 public:
-   // Methods
-   virtual void serialize(SaveArchive &arc) override;
+    // Methods
+    virtual void serialize(SaveArchive &arc) override;
 
-   // Statics
-   static void Spawn(sector_t *sector, int base, int index);
-   static void SpawnSequence(sector_t *sector, int step);
+    // Statics
+    static void Spawn(sector_t *sector, int base, int index);
+    static void SpawnSequence(sector_t *sector, int step);
 };
 
 // p_plats
 
 class PlatThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(PlatThinker, SectorThinker)
+    DECLARE_THINKER_TYPE(PlatThinker, SectorThinker)
 
 public:
-   // Enumerations
-   enum plat_e
-   {
-      up,
-      down,
-      waiting,
-      in_stasis
-   };
+    // Enumerations
+    enum plat_e
+    {
+        up,
+        down,
+        waiting,
+        in_stasis
+    };
 
-   // This enum is for determining what behaviour a raiseToNearestAndChange
-   // platform uses, as Plat_RaiseAndStayTx0 requires this as a parameter.
-   enum rnctype_e
-   {
-      PRNC_DEFAULT,
-      PRNC_DOOM,
-      PRNC_HERETIC
-   };
+    // This enum is for determining what behaviour a raiseToNearestAndChange
+    // platform uses, as Plat_RaiseAndStayTx0 requires this as a parameter.
+    enum rnctype_e
+    {
+        PRNC_DEFAULT,
+        PRNC_DOOM,
+        PRNC_HERETIC
+    };
 
 protected:
-   void Think() override;
+    void Think() override;
 
-   virtual attachpoint_e getAttachPoint() const override { return ATTACH_FLOOR; }
+    virtual attachpoint_e getAttachPoint() const override { return ATTACH_FLOOR; }
 
 public:
-   // Overridden Methods
-   virtual void serialize(SaveArchive &arc) override;
-   virtual bool reTriggerVerticalDoor(bool player) override;
+    // Overridden Methods
+    virtual void serialize(SaveArchive &arc) override;
+    virtual bool reTriggerVerticalDoor(bool player) override;
 
-   // Methods
-   void addActivePlat();
-   void removeActivePlat();
+    // Methods
+    void addActivePlat();
+    void removeActivePlat();
 
-   // Static Methods
-   static void ActivateInStasis(int tag);
-   static void RemoveAllActivePlats();    // killough
+    // Static Methods
+    static void ActivateInStasis(int tag);
+    static void RemoveAllActivePlats(); // killough
 
-   // Data Members
-   fixed_t speed;
-   fixed_t low;
-   fixed_t high;
-   int wait;
-   int count;
-   int status;
-   int oldstatus;
-   int crush;
-   int tag;
-   int type;
-   rnctype_e rnctype;
-   struct platlist_t *list;   // killough   
+    // Data Members
+    fixed_t            speed;
+    fixed_t            low;
+    fixed_t            high;
+    int                wait;
+    int                count;
+    int                status;
+    int                oldstatus;
+    int                crush;
+    int                tag;
+    int                type;
+    rnctype_e          rnctype;
+    struct platlist_t *list; // killough
 };
 
 // p_ceilng
@@ -901,396 +900,394 @@ public:
 // haleyjd: ceiling noise levels
 enum
 {
-   CNOISE_NORMAL,     // plays plat move sound
-   CNOISE_SEMISILENT, // plays plat stop at end of strokes
-   CNOISE_SILENT,     // plays silence sequence (not same as silent flag!)
+    CNOISE_NORMAL,     // plays plat move sound
+    CNOISE_SEMISILENT, // plays plat stop at end of strokes
+    CNOISE_SILENT,     // plays silence sequence (not same as silent flag!)
 };
 
 class VerticalDoorThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(VerticalDoorThinker, SectorThinker)
+    DECLARE_THINKER_TYPE(VerticalDoorThinker, SectorThinker)
 
 protected:
-   void Think() override;
+    void Think() override;
 
-   virtual attachpoint_e getAttachPoint() const override { return ATTACH_CEILING; }
+    virtual attachpoint_e getAttachPoint() const override { return ATTACH_CEILING; }
 
 public:
-   // Methods
-   virtual void serialize(SaveArchive &arc) override;
-   virtual bool reTriggerVerticalDoor(bool player) override;
+    // Methods
+    virtual void serialize(SaveArchive &arc) override;
+    virtual bool reTriggerVerticalDoor(bool player) override;
 
-   // Data Members
-   int type;
-   fixed_t topheight;
-   fixed_t speed;
+    // Data Members
+    int     type;
+    fixed_t topheight;
+    fixed_t speed;
 
-   // 1 = up, 0 = waiting at top, -1 = down
-   int direction;
+    // 1 = up, 0 = waiting at top, -1 = down
+    int direction;
 
-   // tics to wait at the top
-   int topwait;
-   // (keep in case a door going down is reset)
-   // when it reaches 0, start going down
-   int topcountdown;
+    // tics to wait at the top
+    int topwait;
+    // (keep in case a door going down is reset)
+    // when it reaches 0, start going down
+    int topcountdown;
 
-   int lighttag; //killough 10/98: sector tag for gradual lighting effects
+    int lighttag; // killough 10/98: sector tag for gradual lighting effects
 
-   bool turbo;     // haleyjd: behave as a turbo door, independent of speed
+    bool turbo; // haleyjd: behave as a turbo door, independent of speed
 };
 
 // door data flags
 enum
 {
-   DDF_HAVETRIGGERTYPE = 0x00000001, // BOOM-style generalized trigger
-   DDF_HAVESPAC        = 0x00000002, // Hexen-style parameterized trigger
-   DDF_USEALTLIGHTTAG  = 0x00000004, // use the altlighttag field
-   DDF_REUSABLE        = 0x00000008, // action can be retriggered
+    DDF_HAVETRIGGERTYPE = 0x00000001, // BOOM-style generalized trigger
+    DDF_HAVESPAC        = 0x00000002, // Hexen-style parameterized trigger
+    DDF_USEALTLIGHTTAG  = 0x00000004, // use the altlighttag field
+    DDF_REUSABLE        = 0x00000008, // action can be retriggered
 };
 
 // haleyjd 05/04/04: extended data struct for gen/param doors
 struct doordata_t
 {
-   int     flags;         // flags for action; use DDF values above.
-   int     spac;          // valid IFF DDF_HAVESPAC is set
-   int     trigger_type;  // valid IFF DDF_HAVETRIGGERTYPE is set
+    int flags;        // flags for action; use DDF values above.
+    int spac;         // valid IFF DDF_HAVESPAC is set
+    int trigger_type; // valid IFF DDF_HAVETRIGGERTYPE is set
 
-   int     kind;          // kind of door action
-   fixed_t speed_value;   // speed of door action
-   int     delay_value;   // delay between open and close
-   int     altlighttag;   // alternate light tag, if DDF_USEALTLIGHTTAG is set
-   int     topcountdown;  // delay before initial activation
+    int     kind;         // kind of door action
+    fixed_t speed_value;  // speed of door action
+    int     delay_value;  // delay between open and close
+    int     altlighttag;  // alternate light tag, if DDF_USEALTLIGHTTAG is set
+    int     topcountdown; // delay before initial activation
 
-   Mobj   *thing;         // activating thing, if any
+    Mobj *thing; // activating thing, if any
 };
 
 // haleyjd 09/06/07: sector special transfer structure
 
 struct spectransfer_t
 {
-   int newspecial;
-   unsigned int flags;
-   int damage;
-   int damagemask;
-   int damagemod;
-   unsigned int damageflags;
-   int leakiness;
+    int          newspecial;
+    unsigned int flags;
+    int          damage;
+    int          damagemask;
+    int          damagemod;
+    unsigned int damageflags;
+    int          leakiness;
 };
 
 // p_doors
 
 class CeilingThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(CeilingThinker, SectorThinker)
+    DECLARE_THINKER_TYPE(CeilingThinker, SectorThinker)
 
 protected:
-   void Think() override;
+    void Think() override;
 
-   virtual attachpoint_e getAttachPoint() const override { return ATTACH_CEILING; }
+    virtual attachpoint_e getAttachPoint() const override { return ATTACH_CEILING; }
 
 public:
+    // ioanch 20160305: crush flags. Mostly derived from Hexen different
+    // behaviour
+    enum
+    {
+        crushRest      = 1, // ceiling will rest while crushing things
+        crushSilent    = 2, // needed because of special pastdest behavior
+        crushParamSlow = 4, // needed for slowed-down param. crushers
+    };
 
-   // ioanch 20160305: crush flags. Mostly derived from Hexen different
-   // behaviour
-   enum
-   {
-      crushRest       = 1, // ceiling will rest while crushing things
-      crushSilent     = 2, // needed because of special pastdest behavior
-      crushParamSlow  = 4, // needed for slowed-down param. crushers
-   };
+    // Methods
+    virtual void serialize(SaveArchive &arc) override;
+    virtual bool reTriggerVerticalDoor(bool player) override;
 
-   // Methods
-   virtual void serialize(SaveArchive &arc) override;
-   virtual bool reTriggerVerticalDoor(bool player) override;
+    // Data Members
+    int      type;
+    fixed_t  bottomheight;
+    fixed_t  topheight;
+    fixed_t  speed;
+    fixed_t  upspeed;
+    fixed_t  oldspeed;
+    int      crush;
+    uint32_t crushflags; // ioanch 20160305: flags for crushing
 
-   // Data Members
-   int type;
-   fixed_t bottomheight;
-   fixed_t topheight;
-   fixed_t speed;
-   fixed_t upspeed;
-   fixed_t oldspeed;
-   int crush;
-   uint32_t crushflags;   // ioanch 20160305: flags for crushing
+    // jff 02/04/98 add these to support ceiling changers
+    // jff 3/14/98 add to fix bug in change transfers
+    spectransfer_t special; // haleyjd 09/06/07: spectransfer
+    int            texture;
 
-   //jff 02/04/98 add these to support ceiling changers
-   //jff 3/14/98 add to fix bug in change transfers
-   spectransfer_t special; // haleyjd 09/06/07: spectransfer
-   int texture;
+    // 1 = up, 0 = waiting, -1 = down
+    int direction;
 
-   // 1 = up, 0 = waiting, -1 = down
-   int direction;
+    // haleyjd: stasis
+    bool inStasis;
 
-   // haleyjd: stasis
-   bool inStasis;
-
-   // ID
-   int tag;                   
-   int olddirection;
-   struct ceilinglist_t *list;   // jff 2/22/98 copied from killough's plats
+    // ID
+    int                   tag;
+    int                   olddirection;
+    struct ceilinglist_t *list; // jff 2/22/98 copied from killough's plats
 };
 
 struct ceilinglist_t
 {
-   CeilingThinker *ceiling;
-   ceilinglist_t *next,**prev;
+    CeilingThinker *ceiling;
+    ceilinglist_t  *next, **prev;
 };
 
 // haleyjd 01/09/12: ceiling data flags
 enum
 {
-   CDF_HAVETRIGGERTYPE = 0x00000001, // has BOOM-style gen action trigger
-   CDF_HAVESPAC        = 0x00000002, // has Hexen-style spac
-   CDF_PARAMSILENT     = 0x00000004, // ioanch 20160314: parameterized silent
-   CDF_HACKFORDESTF    = 0x00000008, // ioanch: hack to emulate fake-crush Doom
-   CDF_CHANGEONSTART   = 0x00000010, // ioanch: change sector properties on start
+    CDF_HAVETRIGGERTYPE = 0x00000001, // has BOOM-style gen action trigger
+    CDF_HAVESPAC        = 0x00000002, // has Hexen-style spac
+    CDF_PARAMSILENT     = 0x00000004, // ioanch 20160314: parameterized silent
+    CDF_HACKFORDESTF    = 0x00000008, // ioanch: hack to emulate fake-crush Doom
+    CDF_CHANGEONSTART   = 0x00000010, // ioanch: change sector properties on start
 };
 
 // haleyjd 10/05/05: extended data struct for parameterized ceilings
 struct ceilingdata_t
 {
-   int flags;        // combination of values above
-   int trigger_type; // valid IFF (flags & CDF_HAVETRIGGERTYPE)
-   int spac;         // valid IFF (flags & CDF_HAVESPAC)
+    int flags;        // combination of values above
+    int trigger_type; // valid IFF (flags & CDF_HAVETRIGGERTYPE)
+    int spac;         // valid IFF (flags & CDF_HAVESPAC)
 
-   // generalized values
-   int crush;
-   int direction;
-   int speed_type;
-   int change_type;
-   int change_model;
-   int target_type;
+    // generalized values
+    int crush;
+    int direction;
+    int speed_type;
+    int change_type;
+    int change_model;
+    int target_type;
 
-   // parameterized values
-   fixed_t height_value;
-   fixed_t speed_value;
-   fixed_t ceiling_gap;
+    // parameterized values
+    fixed_t height_value;
+    fixed_t speed_value;
+    fixed_t ceiling_gap;
 };
 
 // ioanch 20160305
 struct crusherdata_t
 {
-   int flags;        // combination of values above
-   int trigger_type; // valid IFF (flags & CDF_HAVETRIGGERTYPE)
-   int spac;         // valid IFF (flags & CDF_HAVESPAC)
+    int flags;        // combination of values above
+    int trigger_type; // valid IFF (flags & CDF_HAVETRIGGERTYPE)
+    int spac;         // valid IFF (flags & CDF_HAVESPAC)
 
-   // generalized values
-   ceiling_e type;
-   int speed_type;
+    // generalized values
+    ceiling_e type;
+    int       speed_type;
 
-   // parameterized values
-   fixed_t speed_value;
-   fixed_t upspeed;
-   fixed_t ground_dist;
-   int damage;
-   crushmode_e crushmode;
+    // parameterized values
+    fixed_t     speed_value;
+    fixed_t     upspeed;
+    fixed_t     ground_dist;
+    int         damage;
+    crushmode_e crushmode;
 };
-
 
 // p_floor
 
 class FloorMoveThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(FloorMoveThinker, SectorThinker)
+    DECLARE_THINKER_TYPE(FloorMoveThinker, SectorThinker)
 
 protected:
-   void Think() override;
+    void Think() override;
 
-   virtual attachpoint_e getAttachPoint() const override { return ATTACH_FLOOR; }
+    virtual attachpoint_e getAttachPoint() const override { return ATTACH_FLOOR; }
 
 public:
-   // Methods
-   virtual void serialize(SaveArchive &arc) override;
-   virtual bool reTriggerVerticalDoor(bool player) override;
+    // Methods
+    virtual void serialize(SaveArchive &arc) override;
+    virtual bool reTriggerVerticalDoor(bool player) override;
 
-   // Data Members
-   int type;
-   int crush;
-   int direction;
+    // Data Members
+    int type;
+    int crush;
+    int direction;
 
-   // jff 3/14/98 add to fix bug in change transfers
-   // haleyjd 09/06/07: spectransfer
-   spectransfer_t special;
+    // jff 3/14/98 add to fix bug in change transfers
+    // haleyjd 09/06/07: spectransfer
+    spectransfer_t special;
 
-   int16_t texture;
-   fixed_t floordestheight;
-   fixed_t speed;
-   int resetTime;       // haleyjd 10/13/05: resetting stairs
-   fixed_t resetHeight;
-   int stepRaiseTime;   // haleyjd 10/13/05: delayed stairs
-   int delayTime;       
-   int delayTimer;
+    int16_t texture;
+    fixed_t floordestheight;
+    fixed_t speed;
+    int     resetTime; // haleyjd 10/13/05: resetting stairs
+    fixed_t resetHeight;
+    int     stepRaiseTime; // haleyjd 10/13/05: delayed stairs
+    int     delayTime;
+    int     delayTimer;
 
-   // ioanch: emulate vanilla Doom undefined crushing behaviour
-   // This emulates a vanilla crush value which is non-0, non-1 boolean value,
-   // so some (== true) checks would fail. Needed for some Cyberdreams demos.
-   // Only use it in demo_compatibility.
-   bool emulateStairCrush;
+    // ioanch: emulate vanilla Doom undefined crushing behaviour
+    // This emulates a vanilla crush value which is non-0, non-1 boolean value,
+    // so some (== true) checks would fail. Needed for some Cyberdreams demos.
+    // Only use it in demo_compatibility.
+    bool emulateStairCrush;
 };
 
 // Floor data flags
 enum
 {
-   FDF_HAVESPAC        = 0x00000001, // has Hexen-style SPAC activation
-   FDF_HAVETRIGGERTYPE = 0x00000002, // has BOOM-style generalized trigger type
-   FDF_HACKFORDESTHNF  = 0x00000004  // adjust and force_adjust are valid
+    FDF_HAVESPAC        = 0x00000001, // has Hexen-style SPAC activation
+    FDF_HAVETRIGGERTYPE = 0x00000002, // has BOOM-style generalized trigger type
+    FDF_HACKFORDESTHNF  = 0x00000004  // adjust and force_adjust are valid
 };
 
 // haleyjd 05/07/04: extended data struct for parameterized floors
 struct floordata_t
 {
-   // generalized values
-   int flags;
-   int spac;         // valid IFF flags & FDF_HAVESPAC
-   int trigger_type; // valid IFF flags & FDF_HAVETRIGGERTYPE
+    // generalized values
+    int flags;
+    int spac;         // valid IFF flags & FDF_HAVESPAC
+    int trigger_type; // valid IFF flags & FDF_HAVETRIGGERTYPE
 
-   int crush;
-   int direction;
-   int speed_type;
-   int change_type;
-   int change_model;
-   int target_type;
+    int crush;
+    int direction;
+    int speed_type;
+    int change_type;
+    int change_model;
+    int target_type;
 
-   // parameterized values
-   fixed_t height_value;
-   fixed_t speed_value;
-   int     adjust;        // valid IFF flags & FDF_HACKFORDESTHNF
-   int     force_adjust;  // valid IFF flags & FDF_HACKFORDESTHNF
-   bool    changeOnStart; // change texture and type immediately, not on landing
+    // parameterized values
+    fixed_t height_value;
+    fixed_t speed_value;
+    int     adjust;        // valid IFF flags & FDF_HACKFORDESTHNF
+    int     force_adjust;  // valid IFF flags & FDF_HACKFORDESTHNF
+    bool    changeOnStart; // change texture and type immediately, not on landing
 };
 
 // haleyjd 01/21/13: stairdata flags
 enum
 {
-   SDF_HAVESPAC        = 0x00000001, // Hexen-style activation
-   SDF_HAVETRIGGERTYPE = 0x00000002, // BOOM-style activation
-   SDF_IGNORETEXTURES  = 0x00000004, // whether or not to ignore floor textures
-   SDF_SYNCHRONIZED    = 0x00000008, // if set, build in sync
+    SDF_HAVESPAC        = 0x00000001, // Hexen-style activation
+    SDF_HAVETRIGGERTYPE = 0x00000002, // BOOM-style activation
+    SDF_IGNORETEXTURES  = 0x00000004, // whether or not to ignore floor textures
+    SDF_SYNCHRONIZED    = 0x00000008, // if set, build in sync
 };
 
 // haleyjd 10/06/05: extended data struct for parameterized stairs
 struct stairdata_t
 {
-   int flags;
-   int spac;
-   int trigger_type;
+    int flags;
+    int spac;
+    int trigger_type;
 
-   // generalized values
-   int direction;
-   int stepsize_type;
-   int speed_type;
+    // generalized values
+    int direction;
+    int stepsize_type;
+    int speed_type;
 
-   // parameterized values
-   fixed_t stepsize_value;
-   fixed_t speed_value;
-   int delay_value;
-   int reset_value;
-   bool crush; // does it crush
+    // parameterized values
+    fixed_t stepsize_value;
+    fixed_t speed_value;
+    int     delay_value;
+    int     reset_value;
+    bool    crush; // does it crush
 };
 
 class ElevatorThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(ElevatorThinker, SectorThinker)
+    DECLARE_THINKER_TYPE(ElevatorThinker, SectorThinker)
 
 protected:
-   void Think() override;
+    void Think() override;
 
-   virtual attachpoint_e getAttachPoint() const override { return ATTACH_FLOORCEILING; }
+    virtual attachpoint_e getAttachPoint() const override { return ATTACH_FLOORCEILING; }
 
 public:
-   // Methods
-   virtual void serialize(SaveArchive &arc) override;
-   
-   // Data Members
-   int type;
-   int direction;
-   fixed_t floordestheight;
-   fixed_t ceilingdestheight;
-   fixed_t speed;
+    // Methods
+    virtual void serialize(SaveArchive &arc) override;
+
+    // Data Members
+    int     type;
+    int     direction;
+    fixed_t floordestheight;
+    fixed_t ceilingdestheight;
+    fixed_t speed;
 };
 
 // joek: pillars
 class PillarThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(PillarThinker, SectorThinker)
+    DECLARE_THINKER_TYPE(PillarThinker, SectorThinker)
 
 protected:
-   void Think() override;
+    void Think() override;
 
-   virtual attachpoint_e getAttachPoint() const override { return ATTACH_FLOORCEILING; }
+    virtual attachpoint_e getAttachPoint() const override { return ATTACH_FLOORCEILING; }
 
 public:
-   // Methods
-   virtual void serialize(SaveArchive &arc) override;
-   
-   // Data Members
-   int ceilingSpeed;
-   int floorSpeed;
-   int floordest;
-   int ceilingdest;
-   int direction;
-   int crush;
+    // Methods
+    virtual void serialize(SaveArchive &arc) override;
+
+    // Data Members
+    int ceilingSpeed;
+    int floorSpeed;
+    int floordest;
+    int ceilingdest;
+    int direction;
+    int crush;
 };
 
 // haleyjd 10/21/06: data struct for param pillars
 struct pillardata_t
 {
-   fixed_t speed;  // speed of furthest moving surface
-   fixed_t fdist;  // for open, how far to open floor
-   fixed_t cdist;  // for open, how far to open ceiling
-   fixed_t height; // for close, where to meet
-   int     crush;  // amount of crushing damage
-   int     tag;    // tag
+    fixed_t speed;  // speed of furthest moving surface
+    fixed_t fdist;  // for open, how far to open floor
+    fixed_t cdist;  // for open, how far to open ceiling
+    fixed_t height; // for close, where to meet
+    int     crush;  // amount of crushing damage
+    int     tag;    // tag
 };
 
 // haleyjd 06/30/09: waggle floors
 class FloorWaggleThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(FloorWaggleThinker, SectorThinker)
+    DECLARE_THINKER_TYPE(FloorWaggleThinker, SectorThinker)
 
 protected:
-   void Think() override;
+    void Think() override;
 
-   virtual attachpoint_e getAttachPoint() const override { return ATTACH_FLOOR; }
+    virtual attachpoint_e getAttachPoint() const override { return ATTACH_FLOOR; }
 
 public:
-   // Methods
-   virtual void serialize(SaveArchive &arc) override;
+    // Methods
+    virtual void serialize(SaveArchive &arc) override;
 
-   // Data Members
-   fixed_t originalHeight;
-   fixed_t accumulator;
-   fixed_t accDelta;
-   fixed_t targetScale;
-   fixed_t scale;
-   fixed_t scaleDelta;
-   int ticker;
-   int state;
+    // Data Members
+    fixed_t originalHeight;
+    fixed_t accumulator;
+    fixed_t accDelta;
+    fixed_t targetScale;
+    fixed_t scale;
+    fixed_t scaleDelta;
+    int     ticker;
+    int     state;
 };
 
 // MaxW: 2019/02/15: waggle ceilings
 class CeilingWaggleThinker : public SectorThinker
 {
-   DECLARE_THINKER_TYPE(CeilingWaggleThinker, SectorThinker)
+    DECLARE_THINKER_TYPE(CeilingWaggleThinker, SectorThinker)
 
 protected:
-   void Think() override;
+    void Think() override;
 
-   virtual attachpoint_e getAttachPoint() const override { return ATTACH_CEILING; }
+    virtual attachpoint_e getAttachPoint() const override { return ATTACH_CEILING; }
 
 public:
-   // Methods
-   virtual void serialize(SaveArchive &arc) override;
+    // Methods
+    virtual void serialize(SaveArchive &arc) override;
 
-   // Data Members
-   fixed_t originalHeight;
-   fixed_t accumulator;
-   fixed_t accDelta;
-   fixed_t targetScale;
-   fixed_t scale;
-   fixed_t scaleDelta;
-   int ticker;
-   int state;
+    // Data Members
+    fixed_t originalHeight;
+    fixed_t accumulator;
+    fixed_t accDelta;
+    fixed_t targetScale;
+    fixed_t scale;
+    fixed_t scaleDelta;
+    int     ticker;
+    int     state;
 };
 
 // p_spec
@@ -1300,31 +1297,30 @@ public:
 
 class FrictionThinker : public Thinker
 {
-   DECLARE_THINKER_TYPE(FrictionThinker, Thinker)
+    DECLARE_THINKER_TYPE(FrictionThinker, Thinker)
 
 protected:
-   void Think() override;
+    void Think() override;
 
 public:
-   // Methods
-   virtual void serialize(SaveArchive &arc) override;
-   
-   // Data Members
-   int friction;      // friction value (E800 = normal)
-   int movefactor;    // inertia factor when adding to momentum
-   int affectee;      // Number of affected sector
+    // Methods
+    virtual void serialize(SaveArchive &arc) override;
+
+    // Data Members
+    int friction;   // friction value (E800 = normal)
+    int movefactor; // inertia factor when adding to momentum
+    int affectee;   // Number of affected sector
 };
 
 // sf: direction plat moving
 
 enum
 {
-   plat_stop     =  0,
-   plat_up       =  1,
-   plat_down     = -1,
-   plat_special  =  2,  // haleyjd 02/24/05
+    plat_stop    = 0,
+    plat_up      = 1,
+    plat_down    = -1,
+    plat_special = 2, // haleyjd 02/24/05
 };
-
 
 //////////////////////////////////////////////////////////////////
 //
@@ -1337,10 +1333,10 @@ enum
 // frags limit (-frags)
 //
 
-extern int             levelTimeLimit;
-extern int             levelFragLimit;
+extern int levelTimeLimit;
+extern int levelFragLimit;
 
-extern ceilinglist_t *activeceilings;  // jff 2/22/98
+extern ceilinglist_t *activeceilings; // jff 2/22/98
 
 ////////////////////////////////////////////////////////////////
 //
@@ -1354,41 +1350,33 @@ sector_t *getSector(int currentSector, int line, int side);
 
 side_t *getSide(int currentSector, int line, int side);
 
-fixed_t P_ExtremeHeightOnLine(const sector_t& sector, const line_t& line, surf_e surf,
-   const fixed_t& (*comp)(const fixed_t&, const fixed_t&));
+fixed_t P_ExtremeHeightOnLine(const sector_t &sector, const line_t &line, surf_e surf,
+                              const fixed_t &(*comp)(const fixed_t &, const fixed_t &));
 
 fixed_t P_FindLowestFloorSurrounding(const sector_t *sec);
-
 fixed_t P_FindHighestFloorSurrounding(const sector_t *sec);
 
 fixed_t P_FindNextHighestFloor(const sector_t *sec, int currentheight);
-
 fixed_t P_FindNextLowestFloor(const sector_t *sec, int currentheight);
 
-fixed_t P_FindLowestCeilingSurrounding(const sector_t *sec); // jff 2/04/98
-
+fixed_t P_FindLowestCeilingSurrounding(const sector_t *sec);  // jff 2/04/98
 fixed_t P_FindHighestCeilingSurrounding(const sector_t *sec); // jff 2/04/98
 
-fixed_t P_FindNextLowestCeiling(const sector_t *sec, int currentheight);
-   // jff 2/04/98
-
-fixed_t P_FindNextHighestCeiling(const sector_t *sec, int currentheight);
-   // jff 2/04/98
+fixed_t P_FindNextLowestCeiling(const sector_t *sec, int currentheight);  // jff 2/04/98
+fixed_t P_FindNextHighestCeiling(const sector_t *sec, int currentheight); // jff 2/04/98
 
 fixed_t P_FindShortestTextureAround(int secnum); // jff 2/04/98
+fixed_t P_FindShortestUpperAround(int secnum);   // jff 2/04/98
 
-fixed_t P_FindShortestUpperAround(int secnum); // jff 2/04/98
-
-sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum); //jff 02/04/98
-
-sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum); //jff 02/04/98 
+sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum);  // jff 02/04/98
+sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum); // jff 02/04/98
 
 int P_FindSectorFromLineArg0(const line_t *line, int start); // killough 4/17/98
 
 int P_FindLineFromTag(int tag, int start);
 int P_FindLineFromLineArg0(const line_t *line, int start);
 
-int P_FindSectorFromTag(const int tag, int start);        // sf
+int P_FindSectorFromTag(const int tag, int start); // sf
 
 int P_FindMinSurroundingLight(const sector_t *sector, int max);
 
@@ -1415,10 +1403,10 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side);
 //
 enum teleangle_e : int8_t
 {
-   teleangle_keep,               // keep current thing angle (Hexen silent teleport)
-   teleangle_absolute,           // totally change angle (ZDoom extension)
-   teleangle_relative_boom,      // Use relative linedef/landing angle (Boom)
-   teleangle_relative_correct,   // Same as ZDoom's correction for Boom
+    teleangle_keep,             // keep current thing angle (Hexen silent teleport)
+    teleangle_absolute,         // totally change angle (ZDoom extension)
+    teleangle_relative_boom,    // Use relative linedef/landing angle (Boom)
+    teleangle_relative_correct, // Same as ZDoom's correction for Boom
 };
 
 //
@@ -1426,9 +1414,9 @@ enum teleangle_e : int8_t
 //
 struct teleparms_t
 {
-   bool keepheight;
-   bool alwaysfrag;
-   teleangle_e teleangle;
+    bool        keepheight;
+    bool        alwaysfrag;
+    teleangle_e teleangle;
 };
 
 bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle, bool alwaysfrag);
@@ -1436,22 +1424,18 @@ bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle, bool al
 int EV_Teleport(int tag, int side, Mobj *thing, bool alwaysfrag);
 
 // killough 2/14/98: Add silent teleporter
-int EV_SilentTeleport(const line_t *line, int tag, int side, Mobj *thing,
-                      teleparms_t parms);
+int EV_SilentTeleport(const line_t *line, int tag, int side, Mobj *thing, teleparms_t parms);
 
 // killough 1/31/98: Add silent line teleporter
-int EV_SilentLineTeleport(const line_t *line, int lineid, int side,
-			              Mobj *thing, bool reverse, bool alwaysfrag);
+int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing, bool reverse, bool alwaysfrag);
 
 // ioanch 20160330: parameterized teleport
 int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing, bool alwaysfrag);
-int EV_ParamSilentTeleport(int tid, const line_t *line, int tag, int side,
-                           Mobj *thing, teleparms_t parms);
+int EV_ParamSilentTeleport(int tid, const line_t *line, int tag, int side, Mobj *thing, teleparms_t parms);
 
 // p_floor
 
-int EV_DoElevator(const line_t *line, const Mobj *mo, const polyobj_t *po,
-                  int tag, elevator_e type, fixed_t speed,
+int EV_DoElevator(const line_t *line, const Mobj *mo, const polyobj_t *po, int tag, elevator_e type, fixed_t speed,
                   fixed_t amount, bool isParam);
 
 int EV_BuildStairs(int tag, stair_e type);
@@ -1480,27 +1464,25 @@ void EV_CloseDoor(int sectag, int speed);
 
 // p_lights
 
-int EV_StartLightStrobing(const line_t *line, int tag, int darkTime,
-                          int brightTime, bool isParam);
+int EV_StartLightStrobing(const line_t *line, int tag, int darkTime, int brightTime, bool isParam);
 
 int EV_TurnTagLightsOff(const line_t *line, int tag, bool isParam);
 
 int EV_LightTurnOn(const line_t *line, int tag, int bright, bool paramSpecial);
 
-int EV_LightTurnOnPartway(int tag, fixed_t level);  // killough 10/10/98
+int EV_LightTurnOnPartway(int tag, fixed_t level); // killough 10/10/98
 
 int EV_SetLight(const line_t *, int tag, setlight_e type, int lvl);
-   // haleyjd 01/09/07
+// haleyjd 01/09/07
 
 int EV_FadeLight(const line_t *, int tag, int destvalue, int speed);
-   // haleyjd 01/10/07
+// haleyjd 01/10/07
 
 // haleyjd 01/10/07:
 int EV_GlowLight(const line_t *, int tag, int maxval, int minval, int speed);
 
 // haleyjd 01/16/07:
-int EV_StrobeLight(const line_t *, int tag, int maxval, int minval,
-                   int maxtime, int mintime);
+int EV_StrobeLight(const line_t *, int tag, int maxval, int minval, int maxtime, int mintime);
 
 int EV_FlickerLight(const line_t *, int tag, int maxval, int minval);
 
@@ -1511,19 +1493,16 @@ int EV_DoChange(const line_t *line, int tag, change_e changetype, bool isParam);
 void EV_SetFriction(const int tag, int amount);
 
 // ioanch: now it's parameterized
-int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
-                    fixed_t pspeed, fixed_t sspeed);
+int EV_DoParamDonut(const line_t *line, int tag, bool havespac, fixed_t pspeed, fixed_t sspeed);
 
 int EV_PillarBuild(const line_t *line, const pillardata_t *pd);
-   // joek: pillars
+// joek: pillars
 
 int EV_PillarOpen(const line_t *line, const pillardata_t *pd);
 
-int EV_StartFloorWaggle(const line_t *line, int tag, int height, int speed,
-                        int offset, int timer);
+int EV_StartFloorWaggle(const line_t *line, int tag, int height, int speed, int offset, int timer);
 
-int EV_StartCeilingWaggle(const line_t *line, int tag, int height, int speed,
-                         int offset, int timer);
+int EV_StartCeilingWaggle(const line_t *line, int tag, int height, int speed, int offset, int timer);
 
 void P_ChangeFloorTex(const char *name, int tag);
 
@@ -1541,12 +1520,11 @@ int EV_DoGenFloor(const line_t *line, int special, int tag);
 int EV_DoParamCeiling(const line_t *line, int tag, const ceilingdata_t *cd);
 int EV_DoGenCeiling(const line_t *line, int special, int tag);
 
-int EV_DoFloorAndCeiling(const line_t *line, int tag, const floordata_t &fd,
-                         const ceilingdata_t &cd);
+int EV_DoFloorAndCeiling(const line_t *line, int tag, const floordata_t &fd, const ceilingdata_t &cd);
 
 int EV_DoGenLift(const line_t *line, int special, int tag);
-int EV_DoGenLiftByParameters(bool manualtrig, const line_t *line, int tag, fixed_t speed, int delay,
-                             int target, fixed_t height);
+int EV_DoGenLiftByParameters(bool manualtrig, const line_t *line, int tag, fixed_t speed, int delay, int target,
+                             fixed_t height);
 
 int EV_DoParamStairs(const line_t *line, int tag, const stairdata_t *sd);
 int EV_DoGenStairs(line_t *line, int special, int tag);
@@ -1577,7 +1555,6 @@ int EV_ThingDestroy(int tid, int flags, int sectortag);
 int EV_HealThing(Mobj *actor, int amount, int maxhealth);
 int EV_ThingRemove(int tid);
 
-
 ////////////////////////////////////////////////////////////////
 //
 // Linedef and sector special thinker spawning
@@ -1586,10 +1563,10 @@ int EV_ThingRemove(int tid);
 
 enum portal_effect
 {
-   portal_ceiling,
-   portal_floor,
-   portal_both,
-   portal_lineonly, // SoM: Added for linked line-line portals.
+    portal_ceiling,
+    portal_floor,
+    portal_both,
+    portal_lineonly, // SoM: Added for linked line-line portals.
 };
 
 // at game start
@@ -1600,10 +1577,10 @@ void P_InitSwitchList();
 // at map load
 void P_SpawnSpecials(UDMFSetupSettings &setupSettings);
 
-// 
+//
 // P_SpawnDeferredSpecials
 //
-// SoM: Specials that copy slopes, ect., need to be collected in a separate 
+// SoM: Specials that copy slopes, ect., need to be collected in a separate
 // pass
 void P_SpawnDeferredSpecials(UDMFSetupSettings &setupSettings);
 
@@ -1638,8 +1615,7 @@ void P_SpawnFireFlicker(sector_t *sector);
 
 void P_SpawnLightFlash(sector_t *sector);
 
-void P_SpawnStrobeFlash(sector_t *sector, int darkTime, int brightTime,
-                        int inSync);
+void P_SpawnStrobeFlash(sector_t *sector, int darkTime, int brightTime, int inSync);
 
 void P_SpawnPSXStrobeFlash(sector_t *sector, int speed, bool inSync);
 
@@ -1667,9 +1643,9 @@ void P_StairSequence(sector_t *s);
 
 void P_SetSectorCeilingPic(sector_t *sector, int pic); // haleyjd 08/30/09
 
-void P_RemoveActiveCeiling(CeilingThinker *ceiling);  //jff 2/22/98
+void P_RemoveActiveCeiling(CeilingThinker *ceiling); // jff 2/22/98
 
-void P_RemoveAllActiveCeilings();                //jff 2/22/98
+void P_RemoveAllActiveCeilings(); // jff 2/22/98
 
 void P_AddActiveCeiling(CeilingThinker *c);
 
@@ -1681,12 +1657,10 @@ void P_CeilingSequence(sector_t *s, int noiseLevel);
 
 // SoM 9/19/02: 3dside movement. :)
 void P_AttachLines(const line_t *cline, bool ceiling);
-bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
-                    int crush, bool nointerp);
+bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta, int crush, bool nointerp);
 void P_AttachSectors(const line_t *line, int staticFn);
 
-bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta,
-                     int crush);
+bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta, int crush);
 
 void P_CalcFriction(int length, int &friction, int &movefactor); // ioanch
 
@@ -1712,16 +1686,16 @@ v3fixed_t P_GetArrivalTelefogLocation(v3fixed_t landing, angle_t angle);
 // param special activation types
 enum specialactivation_e : int
 {
-   SPAC_CROSS,
-   SPAC_USE,
-   SPAC_IMPACT,
-   SPAC_PUSH,
+    SPAC_CROSS,
+    SPAC_USE,
+    SPAC_IMPACT,
+    SPAC_PUSH,
 };
 
 enum sectoractivation_e : int
 {
-   SEAC_ENTER,
-   SEAC_EXIT,
+    SEAC_ENTER,
+    SEAC_EXIT,
 };
 
 extern void P_StartLineScript(line_t *line, int side, Mobj *thing, polyobj_t *po);

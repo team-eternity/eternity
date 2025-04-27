@@ -31,4 +31,3 @@ int pvsnprintf(char *str, size_t n, E_FORMAT_STRING(const char *format), va_list
 
 #endif /* ifdef PSNPRINTF_H */
 
-

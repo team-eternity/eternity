@@ -34,7 +34,7 @@
 
 #define BDLISTMAGIC 0xABADCAFEu
 
-// 
+//
 // BDListItem<T>
 //
 // Like DLListItem, class is intentionally a POD and will most likely remain
@@ -47,52 +47,50 @@
 // performed. Calling the static Init method yourself will clear out the list,
 // but make sure you are not leaking the objects in it by doing that :)
 //
-template<typename T> class BDListItem
+template<typename T>
+class BDListItem
 {
 public:
-   BDListItem<T> *bdNext;
-   BDListItem<T> *bdPrev;
-   T             *bdObject; // pointer back to object
-   unsigned int   bdData;   // arbitrary data cached at node
+    BDListItem<T> *bdNext;
+    BDListItem<T> *bdPrev;
+    T             *bdObject; // pointer back to object
+    unsigned int   bdData;   // arbitrary data cached at node
 
-   inline static void Init(BDListItem<T> &listHead)
-   {
-      listHead.bdPrev = listHead.bdNext = &listHead;
-      listHead.bdData = BDLISTMAGIC;
-   }
+    inline static void Init(BDListItem<T> &listHead)
+    {
+        listHead.bdPrev = listHead.bdNext = &listHead;
+        listHead.bdData                   = BDLISTMAGIC;
+    }
 
-   inline void insert(T *parentObject, BDListItem<T> &listHead)
-   {
-      if(listHead.bdData != BDLISTMAGIC)
-         Init(listHead);
+    inline void insert(T *parentObject, BDListItem<T> &listHead)
+    {
+        if(listHead.bdData != BDLISTMAGIC)
+            Init(listHead);
 
-      listHead.bdPrev->bdNext = this;
-      this->bdNext = &listHead;
-      this->bdPrev = listHead.bdPrev;
-      listHead.bdPrev = this;
+        listHead.bdPrev->bdNext = this;
+        this->bdNext            = &listHead;
+        this->bdPrev            = listHead.bdPrev;
+        listHead.bdPrev         = this;
 
-      this->bdObject = parentObject;
-   }
+        this->bdObject = parentObject;
+    }
 
-   // WARNING: If you are iterating over the list, you MUST pass your
-   // iteration pointer in *myIterator or you will have to restart the
-   // iteration from the beginning of the list. Do *NOT* attempt to
-   // cache next/prev values from the object around this call yourself.
+    // WARNING: If you are iterating over the list, you MUST pass your
+    // iteration pointer in *myIterator or you will have to restart the
+    // iteration from the beginning of the list. Do *NOT* attempt to
+    // cache next/prev values from the object around this call yourself.
 
-   inline void remove(BDListItem<T> **myIterator = nullptr)
-   {
-      BDListItem<T> *lnext = this->bdNext;
+    inline void remove(BDListItem<T> **myIterator = nullptr)
+    {
+        BDListItem<T> *lnext = this->bdNext;
 
-      if(myIterator)
-         *myIterator = this->bdPrev;
+        if(myIterator)
+            *myIterator = this->bdPrev;
 
-      (lnext->bdPrev = this->bdPrev)->bdNext = lnext;
-   }
+        (lnext->bdPrev = this->bdPrev)->bdNext = lnext;
+    }
 
-   inline bool isDummy() const
-   {
-      return this->bdData == BDLISTMAGIC;
-   }
+    inline bool isDummy() const { return this->bdData == BDLISTMAGIC; }
 };
 
 #undef BDLISTMAGIC

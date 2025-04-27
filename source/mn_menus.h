@@ -41,25 +41,25 @@ extern int mn_classic_menus;
 // menu aspect ratio settings enum
 enum
 {
-   AR_LEGACY,
-   AR_5TO4,
-   AR_4TO3,
-   AR_3TO2,
-   AR_16TO10,
-   AR_5TO3,
-   AR_WSVGA,  // 128:75 (1024x600 mode)
-   AR_16TO9,
-   AR_21TO9,
-   AR_NUMASPECTRATIOS
+    AR_LEGACY,
+    AR_5TO4,
+    AR_4TO3,
+    AR_3TO2,
+    AR_16TO10,
+    AR_5TO3,
+    AR_WSVGA, // 128:75 (1024x600 mode)
+    AR_16TO9,
+    AR_21TO9,
+    AR_NUMASPECTRATIOS
 };
 
 // menu screen types
 enum
 {
-   MN_WINDOWED,
-   MN_FULLSCREEN_DESKTOP,
-   MN_FULLSCREEN,
-   MN_NUMSCREENTYPES
+    MN_WINDOWED,
+    MN_FULLSCREEN_DESKTOP,
+    MN_FULLSCREEN,
+    MN_NUMSCREENTYPES
 };
 
 extern int mn_favaspectratio;

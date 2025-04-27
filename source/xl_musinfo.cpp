@@ -32,45 +32,42 @@
 
 //=============================================================================
 //
-// Risen3D MUSINFO 
+// Risen3D MUSINFO
 //
 
 class XLMusInfoParser : public XLParser
 {
 protected:
-   // state enumeration
-   enum
-   {
-      STATE_EXPECTMAP,
-      STATE_EXPECTMAPNUM,
-      STATE_EXPECTMAPNUM2,
-      STATE_EXPECTMUSLUMP
-   };
+    // state enumeration
+    enum
+    {
+        STATE_EXPECTMAP,
+        STATE_EXPECTMAPNUM,
+        STATE_EXPECTMAPNUM2,
+        STATE_EXPECTMUSLUMP
+    };
 
-   int     state;
-   qstring mapname;
-   qstring lumpname;
-   int     mapnum;
+    int     state;
+    qstring mapname;
+    qstring lumpname;
+    int     mapnum;
 
-   void doStateExpectMap(XLTokenizer &token);
-   void doStateExpectMapNum(XLTokenizer &token);
-   void doStateExpectMapNum2(XLTokenizer &token);
-   void doStateExpectMusLump(XLTokenizer &token);
+    void doStateExpectMap(XLTokenizer &token);
+    void doStateExpectMapNum(XLTokenizer &token);
+    void doStateExpectMapNum2(XLTokenizer &token);
+    void doStateExpectMusLump(XLTokenizer &token);
 
-   void pushMusInfoDef();
+    void pushMusInfoDef();
 
-   // State table declaration
-   static void (XLMusInfoParser::*States[])(XLTokenizer &);
+    // State table declaration
+    static void (XLMusInfoParser::*States[])(XLTokenizer &);
 
-   virtual bool doToken(XLTokenizer &token);
-   virtual void startLump();
+    virtual bool doToken(XLTokenizer &token);
+    virtual void startLump();
 
 public:
-   // Constructor
-   XLMusInfoParser() 
-      : XLParser("MUSINFO"), state(STATE_EXPECTMAP), mapname(), mapnum(0)
-   {
-   }
+    // Constructor
+    XLMusInfoParser() : XLParser("MUSINFO"), state(STATE_EXPECTMAP), mapname(), mapnum(0) {}
 };
 
 //
@@ -80,17 +77,16 @@ public:
 //
 void XLMusInfoParser::doStateExpectMap(XLTokenizer &token)
 {
-   qstring &tokenText = token.getToken();
+    qstring &tokenText = token.getToken();
 
-   switch(token.getTokenType())
-   {
-   case XLTokenizer::TOKEN_STRING:  // a normal string
-      mapname = tokenText;          // remember the map name
-      state = STATE_EXPECTMAPNUM;
-      break;
-   default:
-      break;
-   }
+    switch(token.getTokenType())
+    {
+    case XLTokenizer::TOKEN_STRING: // a normal string
+        mapname = tokenText;        // remember the map name
+        state   = STATE_EXPECTMAPNUM;
+        break;
+    default: break;
+    }
 }
 
 //
@@ -100,8 +96,8 @@ void XLMusInfoParser::doStateExpectMap(XLTokenizer &token)
 //
 void XLMusInfoParser::doStateExpectMapNum(XLTokenizer &token)
 {
-   mapnum = token.getToken().toInt();
-   state = STATE_EXPECTMUSLUMP;
+    mapnum = token.getToken().toInt();
+    state  = STATE_EXPECTMUSLUMP;
 }
 
 //
@@ -111,14 +107,13 @@ void XLMusInfoParser::doStateExpectMapNum(XLTokenizer &token)
 //
 void XLMusInfoParser::pushMusInfoDef()
 {
-   if(mapnum >= 0 &&
-      waddir->checkNumForName(mapname.constPtr())  >= 0 &&
-      waddir->checkNumForName(lumpname.constPtr()) >= 0)
-   {
-      P_AddMusInfoMusic(mapname.constPtr(), mapnum, lumpname.constPtr());
-   }
-   mapnum = -1;
-   lumpname.clear();
+    if(mapnum >= 0 && waddir->checkNumForName(mapname.constPtr()) >= 0 &&
+       waddir->checkNumForName(lumpname.constPtr()) >= 0)
+    {
+        P_AddMusInfoMusic(mapname.constPtr(), mapnum, lumpname.constPtr());
+    }
+    mapnum = -1;
+    lumpname.clear();
 }
 
 //
@@ -128,24 +123,24 @@ void XLMusInfoParser::pushMusInfoDef()
 //
 void XLMusInfoParser::doStateExpectMapNum2(XLTokenizer &token)
 {
-   char *end = nullptr;
-   qstring &tokenText = token.getToken();
-   long num = tokenText.toLong(&end, 10);
+    char    *end       = nullptr;
+    qstring &tokenText = token.getToken();
+    long     num       = tokenText.toLong(&end, 10);
 
-   if(end && *end != '\0') // not a number?
-   {
-      // push out any current definition
-      pushMusInfoDef();
+    if(end && *end != '\0') // not a number?
+    {
+        // push out any current definition
+        pushMusInfoDef();
 
-      // return to STATE_EXPECTMAP immediately
-      state = STATE_EXPECTMAP;
-      doStateExpectMap(token);
-   }
-   else
-   {
-      mapnum = (int)num;
-      state = STATE_EXPECTMUSLUMP;
-   }
+        // return to STATE_EXPECTMAP immediately
+        state = STATE_EXPECTMAP;
+        doStateExpectMap(token);
+    }
+    else
+    {
+        mapnum = (int)num;
+        state  = STATE_EXPECTMUSLUMP;
+    }
 }
 
 //
@@ -155,20 +150,19 @@ void XLMusInfoParser::doStateExpectMapNum2(XLTokenizer &token)
 //
 void XLMusInfoParser::doStateExpectMusLump(XLTokenizer &token)
 {
-   lumpname = token.getToken();
-   pushMusInfoDef(); // push out the complete definition
-   
-   // expecting either another mapnum, or a new mapname token
-   state = STATE_EXPECTMAPNUM2;
+    lumpname = token.getToken();
+    pushMusInfoDef(); // push out the complete definition
+
+    // expecting either another mapnum, or a new mapname token
+    state = STATE_EXPECTMAPNUM2;
 }
 
 // State table for MUSINFO parser
-void (XLMusInfoParser::* XLMusInfoParser::States[])(XLTokenizer &) =
-{
-   &XLMusInfoParser::doStateExpectMap,
-   &XLMusInfoParser::doStateExpectMapNum,
-   &XLMusInfoParser::doStateExpectMapNum2,
-   &XLMusInfoParser::doStateExpectMusLump
+void (XLMusInfoParser::*XLMusInfoParser::States[])(XLTokenizer &) = {
+    &XLMusInfoParser::doStateExpectMap,     //
+    &XLMusInfoParser::doStateExpectMapNum,  //
+    &XLMusInfoParser::doStateExpectMapNum2, //
+    &XLMusInfoParser::doStateExpectMusLump  //
 };
 
 //
@@ -178,8 +172,8 @@ void (XLMusInfoParser::* XLMusInfoParser::States[])(XLTokenizer &) =
 //
 bool XLMusInfoParser::doToken(XLTokenizer &token)
 {
-   (this->*States[state])(token);
-   return true;
+    (this->*States[state])(token);
+    return true;
 }
 
 //
@@ -187,11 +181,11 @@ bool XLMusInfoParser::doToken(XLTokenizer &token)
 //
 void XLMusInfoParser::startLump()
 {
-   // clear all data
-   state = STATE_EXPECTMAP;
-   mapname.clear();
-   lumpname.clear();
-   mapnum = -1;
+    // clear all data
+    state = STATE_EXPECTMAP;
+    mapname.clear();
+    lumpname.clear();
+    mapnum = -1;
 }
 
 //=============================================================================
@@ -201,9 +195,9 @@ void XLMusInfoParser::startLump()
 
 void XL_ParseMusInfo()
 {
-   XLMusInfoParser musInfoParser;
+    XLMusInfoParser musInfoParser;
 
-   musInfoParser.parseAll(wGlobalDir);
+    musInfoParser.parseAll(wGlobalDir);
 }
 
 // EOF

@@ -32,8 +32,8 @@
 struct emod_t;
 struct mobjinfo_t;
 struct state_t;
-class  Mobj;
-enum   bloodaction_e : int;
+class Mobj;
+enum bloodaction_e : int;
 
 // Global Data
 extern int UnknownThingType;
@@ -57,10 +57,10 @@ extern cfg_opt_t edf_tgroup_opts[];
 //
 enum
 {
-   TGF_PROJECTILEALLIANCE = 1,   // things in group are immune to their projectiles
-   TGF_DAMAGEIGNORE = 2,         // things in group don't react to being damaged
-   TGF_INHERITED = 4,            // make sure to also apply these to inheriting objects
-   TGF_NOSPLASHDAMAGE = 8,       // things in group immune to splash damage
+    TGF_PROJECTILEALLIANCE = 1, // things in group are immune to their projectiles
+    TGF_DAMAGEIGNORE       = 2, // things in group don't react to being damaged
+    TGF_INHERITED          = 4, // make sure to also apply these to inheriting objects
+    TGF_NOSPLASHDAMAGE     = 8, // things in group immune to splash damage
 };
 
 // Global Functions
@@ -94,24 +94,22 @@ void E_SetDropItem(mobjinfo_t *mi, const int itemnum);
 void E_ThingDefaultGibHealth(mobjinfo_t *mi);
 
 // thingtype custom-damagetype pain/death states
-state_t *E_StateForMod(const mobjinfo_t *mi, const char *base,
-                       const emod_t *mod);
+state_t *E_StateForMod(const mobjinfo_t *mi, const char *base, const emod_t *mod);
 state_t *E_StateForModNum(const mobjinfo_t *mi, const char *base, int num);
 
-void     E_SplitTypeAndState(char *src, char **type, char **state);
-int     *E_GetNativeStateLoc(mobjinfo_t *mi, const char *label);
-inline static const int *E_GetNativeStateLoc(const mobjinfo_t *mi,
-                                             const char *label)
+void                     E_SplitTypeAndState(char *src, char **type, char **state);
+int                     *E_GetNativeStateLoc(mobjinfo_t *mi, const char *label);
+inline static const int *E_GetNativeStateLoc(const mobjinfo_t *mi, const char *label)
 {
-   return E_GetNativeStateLoc(const_cast<mobjinfo_t *>(mi), label);
+    return E_GetNativeStateLoc(const_cast<mobjinfo_t *>(mi), label);
 }
 state_t *E_GetStateForMobjInfo(const mobjinfo_t *mi, const char *label);
 state_t *E_GetStateForMobj(const Mobj *mo, const char *label);
 
 // Thing groups
-bool E_ThingPairValid(int t1, int t2, unsigned flags);
-void E_AddToMBF21ThingGroup(int idnum, unsigned flag, int type, bool inclusive);
-void E_RemoveFromExistingThingPairs(int type, unsigned flag);
+bool                      E_ThingPairValid(int t1, int t2, unsigned flags);
+void                      E_AddToMBF21ThingGroup(int idnum, unsigned flag, int type, bool inclusive);
+void                      E_RemoveFromExistingThingPairs(int type, unsigned flag);
 const PODCollection<int> *E_GetThingsFromGroup(const char *name);
 
 // ioanch 20160220: metastate key names used throughout the code. They also
@@ -123,23 +121,22 @@ const char METASTATE_CRUNCH_ZDOOM_COMPATIBILITY[] = "Crush";
 // blood types
 enum bloodtype_e : int
 {
-   BLOODTYPE_DOOM, 
-   BLOODTYPE_HERETIC, 
-   BLOODTYPE_HERETICRIP, 
-   BLOODTYPE_HEXEN,
-   BLOODTYPE_HEXENRIP,
-   BLOODTYPE_STRIFE,
-   BLOODTYPE_CRUSH,
-   BLOODTYPE_CUSTOM,
+    BLOODTYPE_DOOM,
+    BLOODTYPE_HERETIC,
+    BLOODTYPE_HERETICRIP,
+    BLOODTYPE_HEXEN,
+    BLOODTYPE_HEXENRIP,
+    BLOODTYPE_STRIFE,
+    BLOODTYPE_CRUSH,
+    BLOODTYPE_CUSTOM,
 
-   BLOODTYPE_MAX // must be last
+    BLOODTYPE_MAX // must be last
 };
 
-int E_BloodTypeForThing(const Mobj *mo, bloodaction_e action);
+int         E_BloodTypeForThing(const Mobj *mo, bloodaction_e action);
 bloodtype_e E_GetBloodBehaviorForAction(mobjinfo_t *info, bloodaction_e action);
 
-void E_ForEachMobjInfoWithAnyFlags2(unsigned flags,
-   bool (*func)(const mobjinfo_t &info, void *context), void *context);
+void E_ForEachMobjInfoWithAnyFlags2(unsigned flags, bool (*func)(const mobjinfo_t &info, void *context), void *context);
 
 int E_GetCrunchFrame(const Mobj *mo);
 

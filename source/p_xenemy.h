@@ -36,22 +36,22 @@
 
 class QuakeThinker : public PointThinker
 {
-   DECLARE_THINKER_TYPE(QuakeThinker, PointThinker)
+    DECLARE_THINKER_TYPE(QuakeThinker, PointThinker)
 
 protected:
-   void Think() override;
+    void Think() override;
 
 public:
-   // Methods
-   virtual void serialize(SaveArchive &arc) override;
+    // Methods
+    virtual void serialize(SaveArchive &arc) override;
 
-   // Data Members
-   int intensity;        // richter scale (hardly realistic)
-   int duration;         // how long it lasts
-   fixed_t quakeRadius;  // radius of shaking effects
-   fixed_t damageRadius; // radius of damage effects (if any)
+    // Data Members
+    int     intensity;    // richter scale (hardly realistic)
+    int     duration;     // how long it lasts
+    fixed_t quakeRadius;  // radius of shaking effects
+    fixed_t damageRadius; // radius of damage effects (if any)
 
-   qstring soundName;    // name of sound to play (default: Earthquake)
+    qstring soundName; // name of sound to play (default: Earthquake)
 };
 
 bool P_StartQuake(const int *args, Mobj *activator);

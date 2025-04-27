@@ -28,7 +28,7 @@
 
 struct command_t;
 struct event_t;
-class  qstring;
+class qstring;
 struct variable_t;
 struct vfont_t;
 
@@ -52,110 +52,110 @@ struct vfont_t;
 // haleyjd 05/01/10: item alignment defines
 enum
 {
-   ALIGNMENT_RIGHT,
-   ALIGNMENT_LEFT,
-   ALIGNMENT_CENTER
+    ALIGNMENT_RIGHT,
+    ALIGNMENT_LEFT,
+    ALIGNMENT_CENTER
 };
 
 // item types
 enum menuitemtype_e
 {
-   it_gap,              // empty line
-   it_runcmd,           // run console command
-   it_variable,         // variable; enter pressed to type in new value
-   it_variable_nd,      // variable, but doesn't set default value -- haleyjd
-   it_toggle,           // togglable variable; can use left/right to change value
-   it_title,            // the menu title
-   it_info,             // information / section header
-   it_slider,           // slider
-   it_bigslider,        // big slider -- haleyjd 08/30/06
-   it_automap,          // an automap colour
-   it_automap_opt,      // an optional automap colour
-   it_binding,		      // haleyjd: a key binding
-   it_end,              // last menuitem in the list
+    it_gap,         // empty line
+    it_runcmd,      // run console command
+    it_variable,    // variable; enter pressed to type in new value
+    it_variable_nd, // variable, but doesn't set default value -- haleyjd
+    it_toggle,      // togglable variable; can use left/right to change value
+    it_title,       // the menu title
+    it_info,        // information / section header
+    it_slider,      // slider
+    it_bigslider,   // big slider -- haleyjd 08/30/06
+    it_automap,     // an automap colour
+    it_automap_opt, // an optional automap colour
+    it_binding,     // haleyjd: a key binding
+    it_end,         // last menuitem in the list
 
-   it_numtypes          // number of item types
+    it_numtypes // number of item types
 };
 
 struct menuitem_t
 {
-   int type; // item types
+    int type; // item types
 
-   const char *description;  // the describing name of this item
+    const char *description; // the describing name of this item
 
-   // useful data for the item:
-   // console command if console
-   // variable name if variable, etc
-   const char *data;
+    // useful data for the item:
+    // console command if console
+    // variable name if variable, etc
+    const char *data;
 
-   const char *patch; // patch to use or nullptr
+    const char *patch; // patch to use or nullptr
 
-   unsigned int flags;   // haleyjd 03/29/05: menu item flags
+    unsigned int flags; // haleyjd 03/29/05: menu item flags
 
-   /*** internal stuff used by menu code ***/
-   int x, y;
-   variable_t *var;        // ptr to console variable
-   char *dyndescription;   // for EDF use only
-   char *dyndata;
-   char *dynpatch;
+    /*** internal stuff used by menu code ***/
+    int         x, y;
+    variable_t *var;            // ptr to console variable
+    char       *dyndescription; // for EDF use only
+    char       *dyndata;
+    char       *dynpatch;
 };
 
 // haleyjd 10/07/05: Menu engine changes:
 // 1. menuitems are no longer contained inside the menu_t structure,
 //    since this was wasting tons of memory.
-// 2. paged menu support -- menus may have more than one page of 
+// 2. paged menu support -- menus may have more than one page of
 //    options again, just like they did in BOOM.
 // 3. (10/15/05) table of contents support
 
 // menu flags
 enum
 {
-   mf_skullmenu     = 1,   // show skull rather than highlight
-   mf_background    = 2,   // show background
-   mf_leftaligned   = 4,   // left-aligned menu
-   mf_centeraligned = 8,   // center-aligned menu - haleyjd 02/04/06
-   mf_emulated      = 16,  // emulated old menu   - haleyjd 08/30/06
-   mf_bigfont       = 32,  // draw all items big  - haleyjd 05/08/13
+    mf_skullmenu     = 1,  // show skull rather than highlight
+    mf_background    = 2,  // show background
+    mf_leftaligned   = 4,  // left-aligned menu
+    mf_centeraligned = 8,  // center-aligned menu - haleyjd 02/04/06
+    mf_emulated      = 16, // emulated old menu   - haleyjd 08/30/06
+    mf_bigfont       = 32, // draw all items big  - haleyjd 05/08/13
 
-   // internal flags - don't expose these to EDF; if you add more 
-   // user flags, put them above and bump the value of these up.
-   mf_initialized   = 64   // already init'd      - haleyjd 05/08/13
+    // internal flags - don't expose these to EDF; if you add more
+    // user flags, put them above and bump the value of these up.
+    mf_initialized = 64 // already init'd      - haleyjd 05/08/13
 };
 
 struct menu_t
 {
-   // 10/07/05: pointer to item array
-   menuitem_t *menuitems;
+    // 10/07/05: pointer to item array
+    menuitem_t *menuitems;
 
-   // 10/07/05: pointers to additional page menus
-   menu_t *prevpage;
-   menu_t *nextpage;
-   menu_t *rootpage;   // haleyjd 11/02/06: first page of a set
+    // 10/07/05: pointers to additional page menus
+    menu_t *prevpage;
+    menu_t *nextpage;
+    menu_t *rootpage; // haleyjd 11/02/06: first page of a set
 
-   // x,y offset of menu
-   int x, y;
-  
-   // currently selected item
-   int selected;
-   
-   // menu flags
-   unsigned int flags;               
-   
-   void (*drawer)(void);              // separate drawer function 
+    // x,y offset of menu
+    int x, y;
 
-   const char **content_names;    // table of contents stuff, optional
-   menu_t     **content_pages;
-   
-   int gap_override;              // haleyjd 10/09/05: override gap size
+    // currently selected item
+    int selected;
 
-   void (*open)(menu_t *menu);    // haleyjd 11/12/09: special open menu function
+    // menu flags
+    unsigned int flags;
 
-   // internal fields
-   char name[33];                 // haleyjd 03/14/06: for dynamic menus
-   menu_t *dynanext;
+    void (*drawer)(void); // separate drawer function
 
-   menu_t *curpage;               // haleyjd 10/02/06: for multipage menus
-   int widest_width;              // haleyjd 03/22/09: for LALIGNED flag
+    const char **content_names; // table of contents stuff, optional
+    menu_t     **content_pages;
+
+    int gap_override; // haleyjd 10/09/05: override gap size
+
+    void (*open)(menu_t *menu); // haleyjd 11/12/09: special open menu function
+
+    // internal fields
+    char    name[33]; // haleyjd 03/14/06: for dynamic menus
+    menu_t *dynanext;
+
+    menu_t *curpage;      // haleyjd 10/02/06: for multipage menus
+    int     widest_width; // haleyjd 03/22/09: for LALIGNED flag
 };
 
 // menu 'widgets':
@@ -169,18 +169,18 @@ struct menu_t
 
 struct menuwidget_t
 {
-   void (*drawer)();
-   bool (*responder)(event_t *ev, int);
-   void (*ticker)();   // haleyjd 05/29/06
-   bool fullscreen;    // haleyjd: optimization for fullscreen widgets
+    void (*drawer)();
+    bool (*responder)(event_t *ev, int);
+    void (*ticker)(); // haleyjd 05/29/06
+    bool fullscreen;  // haleyjd: optimization for fullscreen widgets
 
-   menuwidget_t *prev; // haleyjd 08/31/12: previous on stack, if any
+    menuwidget_t *prev; // haleyjd 08/31/12: previous on stack, if any
 };
 
 enum class consumeText_e : bool
 {
-   YES = true,
-   NO  = false
+    YES = true,
+    NO  = false
 };
 
 // haleyjd 08/31/12: A proper widget stack
@@ -217,12 +217,12 @@ void MN_StartControlPanel();
 
 void MN_ForcedLoadGame(const char *msg); // killough 5/15/98: forced loadgames
 
-void MN_DrawCredits();    // killough 11/98
+void MN_DrawCredits(); // killough 11/98
 
 void MN_ActivateMenu();
-void MN_StartMenu(menu_t *menu);         // sf 10/99
+void MN_StartMenu(menu_t *menu); // sf 10/99
 void MN_PrevMenu();
-void MN_ClearMenus();                    // sf 10/99
+void MN_ClearMenus(); // sf 10/99
 
 // font functions
 void MN_WriteText(const char *s, int x, int y);
@@ -234,11 +234,10 @@ void MN_ErrorMsg(E_FORMAT_STRING(const char *s), ...) E_PRINTF(1, 2);
 
 enum boxwidget_e
 {
-   boxwidget_menupage,
-   boxwidget_command
+    boxwidget_menupage,
+    boxwidget_command
 };
-void MN_SetupBoxWidget(const char *title, const char **item_names,
-                       boxwidget_e type, menu_t **pages, const char **cmds);
+void MN_SetupBoxWidget(const char *title, const char **item_names, boxwidget_e type, menu_t **pages, const char **cmds);
 void MN_ShowBoxWidget();
 
 void MN_DrawSmallPtr(int x, int y); // haleyjd 03/13/06
@@ -247,41 +246,41 @@ void MN_SetRightSmallPtr(int x, int y, int width, int height);
 
 void MN_GetItemVariable(menuitem_t *item);
 
-extern menu_t *current_menu;                  // current menu active
-extern menu_t *drawing_menu;                  // current menu drawing
-extern menuwidget_t *current_menuwidget;      // current widget being drawn
+extern menu_t       *current_menu;       // current menu active
+extern menu_t       *drawing_menu;       // current menu drawing
+extern menuwidget_t *current_menuwidget; // current widget being drawn
 
 // size of automap colour blocks
 #define BLOCK_SIZE 9
 
 // haleyjd 08/30/06: emulated old menus have fixed item size of 16
-#define EMULATED_ITEM_SIZE 16 
+#define EMULATED_ITEM_SIZE 16
 
 // menu error message
 extern char menu_error_message[128];
-extern int menu_error_time;
+extern int  menu_error_time;
 
 extern int hide_menu;
 extern int menutime;
 
 // haleyjd
-extern bool menu_toggleisback;
-extern char *mn_fontname;
-extern char *mn_bigfontname;
-extern char *mn_normalfontname;
-extern char *mn_background;
+extern bool        menu_toggleisback;
+extern char       *mn_fontname;
+extern char       *mn_bigfontname;
+extern char       *mn_normalfontname;
+extern char       *mn_background;
 extern const char *mn_background_flat;
-extern int mn_lastSelectTic;
-extern int mn_lastScrollTic;
+extern int         mn_lastSelectTic;
+extern int         mn_lastScrollTic;
 
 extern vfont_t *menu_font;
 extern vfont_t *menu_font_big;
 extern vfont_t *menu_font_normal;
 
 extern command_t *input_command;
-extern int input_cmdtype;
-qstring &MN_GetInputBuffer();
+extern int        input_cmdtype;
+qstring          &MN_GetInputBuffer();
 
 #endif
-                            
+
 // EOF

@@ -100,7 +100,7 @@ struct SndSeq_t
 
    PointThinker *origin;         // the origin of the sequence
    sfxinfo_t *currentSound;      // current sound being played
-   
+
    int delayCounter;             // delay time counter
    int volume;                   // current volume
    int attenuation;              // current attenuation type
@@ -116,9 +116,9 @@ struct SndSeq_t
 extern DLListItem<SndSeq_t> *SoundSequences;
 extern SndSeq_t *EnviroSequence;
 
-void S_StartSequenceNum(PointThinker *mo, int seqnum, int seqtype, 
+void S_StartSequenceNum(PointThinker *mo, int seqnum, int seqtype,
                         int seqOriginType, int seqOriginIdx);
-void S_StartSequenceName(PointThinker *mo, const char *seqname, 
+void S_StartSequenceName(PointThinker *mo, const char *seqname,
                          int seqOriginType, int seqOriginIdx);
 void S_StopSequence(const PointThinker *mo);
 void S_SquashSequence(PointThinker *mo);

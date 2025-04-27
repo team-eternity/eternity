@@ -47,50 +47,50 @@
 #include "r_draw.h"
 #include "v_misc.h"
 
-
 /***************************************************************************
                 'defines': string values for variables
 ***************************************************************************/
 
-const char *yesno[] = { "no",  "yes" };
-const char *onoff[] = { "off", "on"  };
+const char *yesno[] = { "no", "yes" };
+const char *onoff[] = { "off", "on" };
+
+// clang-format off
 
 const char *colournames[] = 
 { 
-   "green",  "indigo", "brown",  "red", 
-   "tomato", "dirt",   "blue",   "gold",
-   "sea",    "black",  "purple", "orange", 
-   "pink",   "cream",  "white"
+    "green",  "indigo", "brown",  "red",
+    "tomato", "dirt",   "blue",   "gold",
+    "sea",    "black",  "purple", "orange",
+    "pink",   "cream",  "white"
 };
 
-const char *textcolours[]=
+const char *textcolours[] =
 {
-   FC_BRICK  "brick"  FC_NORMAL,
-   FC_TAN    "tan"    FC_NORMAL,
-   FC_GRAY   "gray"   FC_NORMAL,
-   FC_GREEN  "green"  FC_NORMAL,
-   FC_BROWN  "brown"  FC_NORMAL,
-   FC_GOLD   "gold"   FC_NORMAL,
-   FC_RED    "red"    FC_NORMAL,
-   FC_BLUE   "blue"   FC_NORMAL,
-   FC_ORANGE "orange" FC_NORMAL,
-   FC_YELLOW "yellow" FC_NORMAL
+    FC_BRICK  "brick"  FC_NORMAL,
+    FC_TAN    "tan"    FC_NORMAL,
+    FC_GRAY   "gray"   FC_NORMAL,
+    FC_GREEN  "green"  FC_NORMAL,
+    FC_BROWN  "brown"  FC_NORMAL,
+    FC_GOLD   "gold"   FC_NORMAL,
+    FC_RED    "red"    FC_NORMAL,
+    FC_BLUE   "blue"   FC_NORMAL,
+    FC_ORANGE "orange" FC_NORMAL,
+    FC_YELLOW "yellow" FC_NORMAL
 };
 
 const char *skills[]=
 {
-   "im too young to die",
-   "hey not too rough",
-   "hurt me plenty",
-   "ultra violence",
-   "nightmare"
+    "im too young to die",
+    "hey not too rough",
+    "hurt me plenty",
+    "ultra violence",
+    "nightmare"
 };
 
-const char *bfgtypestr[5] = 
-{ 
-   "bfg9000", "press release", "bfg11k", "bouncing", "plasma burst"
-};
-const char *dmstr[] = { "single", "coop", "deathmatch" };
+// clang-format on
+
+const char *bfgtypestr[5] = { "bfg9000", "press release", "bfg11k", "bouncing", "plasma burst" };
+const char *dmstr[]       = { "single", "coop", "deathmatch" };
 
 /*************************************************************************
         Constants
@@ -99,7 +99,7 @@ const char *dmstr[] = { "single", "coop", "deathmatch" };
 // haleyjd: had to change this into a command
 CONSOLE_COMMAND(creator, 0)
 {
-   C_Printf("creator is '%s'\n", LevelInfo.creator);
+    C_Printf("creator is '%s'\n", LevelInfo.creator);
 }
 
 /*************************************************************************
@@ -120,32 +120,32 @@ CONSOLE_COMMAND(creator, 0)
 VARIABLE_INT(default_colour, nullptr, 0, TRANSLATIONCOLOURS, colournames);
 CONSOLE_NETVAR(colour, default_colour, cf_handlerset, netcmd_colour)
 {
-   int playernum, colour;
+    int playernum, colour;
 
-   if(!Console.argc)
-      return;
-   
-   playernum = Console.cmdsrc;
+    if(!Console.argc)
+        return;
 
-   colour = Console.argv[0]->toInt();
+    playernum = Console.cmdsrc;
 
-   if(colour < 0)
-      colour = 0;
-   if(colour > TRANSLATIONCOLOURS)
-      colour = TRANSLATIONCOLOURS;
-   
-   players[playernum].colormap = colour;
-   if(gamestate == GS_LEVEL)
-      players[playernum].mo->colour = colour;
-   
-   if(playernum == consoleplayer) 
-      default_colour = colour; // typed
+    colour = Console.argv[0]->toInt();
+
+    if(colour < 0)
+        colour = 0;
+    if(colour > TRANSLATIONCOLOURS)
+        colour = TRANSLATIONCOLOURS;
+
+    players[playernum].colormap = colour;
+    if(gamestate == GS_LEVEL)
+        players[playernum].mo->colour = colour;
+
+    if(playernum == consoleplayer)
+        default_colour = colour; // typed
 }
 
 // deathmatch
 
-//VARIABLE_INT(deathmatch, nullptr,               0, 3, dmstr);
-//CONSOLE_NETVAR(deathmatch, deathmatch, cf_server, netcmd_deathmatch) {}
+// VARIABLE_INT(deathmatch, nullptr,               0, 3, dmstr);
+// CONSOLE_NETVAR(deathmatch, deathmatch, cf_server, netcmd_deathmatch) {}
 
 //
 // NETCODE_FIXME: Changing gametype at run time could present problems
@@ -155,21 +155,21 @@ CONSOLE_NETVAR(colour, default_colour, cf_handlerset, netcmd_colour)
 VARIABLE_INT(GameType, &DefaultGameType, gt_single, gt_dm, dmstr);
 CONSOLE_NETVAR(gametype, GameType, cf_server, netcmd_deathmatch)
 {
-   if(netgame && GameType == gt_single) // not allowed
-      GameType = DefaultGameType = gt_coop;
+    if(netgame && GameType == gt_single) // not allowed
+        GameType = DefaultGameType = gt_coop;
 }
 
 // skill level
 
-VARIABLE_INT(gameskill, &defaultskill,          0, 4, skills);
+VARIABLE_INT(gameskill, &defaultskill, 0, 4, skills);
 CONSOLE_NETVAR(skill, gameskill, cf_server, netcmd_skill)
 {
-   if(!Console.argc)
-      return;
+    if(!Console.argc)
+        return;
 
-   startskill = gameskill = (skill_t)(Console.argv[0]->toInt());
-   if(Console.cmdsrc == consoleplayer)
-      defaultskill = static_cast<skill_t>(gameskill + 1);
+    startskill = gameskill = (skill_t)(Console.argv[0]->toInt());
+    if(Console.cmdsrc == consoleplayer)
+        defaultskill = static_cast<skill_t>(gameskill + 1);
 }
 
 // allow mlook
@@ -185,21 +185,21 @@ CONSOLE_NETVAR(allowmlook, allowmlook, cf_server, netcmd_allowmlook) {}
 // weapon system.
 //
 
-VARIABLE_INT(bfgtype, &default_bfgtype,         0, 4, bfgtypestr);
+VARIABLE_INT(bfgtype, &default_bfgtype, 0, 4, bfgtypestr);
 CONSOLE_NETVAR(bfgtype, bfgtype, cf_server, netcmd_bfgtype) {}
 
-// autoaiming 
+// autoaiming
 
 //
 // NETCODE_FIXME: Players should be able to have their own autoaim
-// settings. Changing this will also require propagated changes to 
+// settings. Changing this will also require propagated changes to
 // the weapon system.
 //
 
-VARIABLE_BOOLEAN(autoaim, &default_autoaim,         onoff);
+VARIABLE_BOOLEAN(autoaim, &default_autoaim, onoff);
 CONSOLE_NETVAR(autoaim, autoaim, cf_server, netcmd_autoaim) {}
 
-// weapons recoil 
+// weapons recoil
 
 VARIABLE_BOOLEAN(weapon_recoil, &default_weapon_recoil, onoff);
 CONSOLE_NETVAR(recoil, weapon_recoil, cf_server, netcmd_recoil) {}
@@ -212,11 +212,11 @@ CONSOLE_NETVAR(pushers, allow_pushers, cf_server, netcmd_pushers) {}
 // varying friction
 
 VARIABLE_BOOLEAN(variable_friction, &default_variable_friction, onoff);
-CONSOLE_NETVAR(varfriction, variable_friction, cf_server, netcmd_varfriction){}
+CONSOLE_NETVAR(varfriction, variable_friction, cf_server, netcmd_varfriction) {}
 
 // enable nukage
 
-extern int enable_nuke;         // p_spec.c
+extern int enable_nuke; // p_spec.c
 VARIABLE_BOOLEAN(enable_nuke, nullptr, onoff);
 CONSOLE_NETVAR(nukage, enable_nuke, cf_server, netcmd_nukage) {}
 
@@ -228,43 +228,42 @@ CONSOLE_NETVAR(p_pitchedflight, pitchedflight, cf_server, netcmd_pitchedflight) 
 
 // 'auto exit' variables
 
-VARIABLE_INT(levelTimeLimit,    nullptr,        0, 100,         nullptr);
+VARIABLE_INT(levelTimeLimit, nullptr, 0, 100, nullptr);
 CONSOLE_NETVAR(timelimit, levelTimeLimit, cf_server, netcmd_timelimit) {}
 
-VARIABLE_INT(levelFragLimit,    nullptr,        0, 100,         nullptr);
+VARIABLE_INT(levelFragLimit, nullptr, 0, 100, nullptr);
 CONSOLE_NETVAR(fraglimit, levelFragLimit, cf_server, netcmd_fraglimit) {}
-
 
 /************** monster variables ***********/
 
 // fast monsters
 
-VARIABLE_TOGGLE(fastparm, &clfastparm,                    onoff);
+VARIABLE_TOGGLE(fastparm, &clfastparm, onoff);
 CONSOLE_NETVAR(fast, fastparm, cf_server, netcmd_fast)
 {
-   G_SetFastParms(fastparm); // killough 4/10/98: set -fast parameter correctly
+    G_SetFastParms(fastparm); // killough 4/10/98: set -fast parameter correctly
 }
 
 // no monsters
 
-VARIABLE_TOGGLE(nomonsters, &clnomonsters,                  onoff);
+VARIABLE_TOGGLE(nomonsters, &clnomonsters, onoff);
 CONSOLE_NETVAR(nomonsters, nomonsters, cf_server, netcmd_nomonsters)
 {
-   if(gamestate == GS_LEVEL)
-      C_Printf("note: nomonsters will not change until next level\n");
-   if(menuactive)
-      MN_ErrorMsg("does not take effect until next level");
+    if(gamestate == GS_LEVEL)
+        C_Printf("note: nomonsters will not change until next level\n");
+    if(menuactive)
+        MN_ErrorMsg("does not take effect until next level");
 }
 
 // respawning monsters
 
-VARIABLE_TOGGLE(respawnparm, &clrespawnparm,                 onoff);
+VARIABLE_TOGGLE(respawnparm, &clrespawnparm, onoff);
 CONSOLE_NETVAR(respawn, respawnparm, cf_server, netcmd_respawn)
 {
-   if(gamestate == GS_LEVEL)
-      C_Printf("note: respawn will change on new game\n");
-   if(menuactive)
-      MN_ErrorMsg("will take effect on new game");
+    if(gamestate == GS_LEVEL)
+        C_Printf("note: respawn will change on new game\n");
+    if(menuactive)
+        MN_ErrorMsg("will take effect on new game");
 }
 
 // monsters remember
@@ -294,7 +293,7 @@ CONSOLE_NETVAR(mon_friction, monster_friction, cf_server, netcmd_monfriction) {}
 
 // monsters climb tall steps
 
-VARIABLE_BOOLEAN(monkeys, &default_monkeys,         onoff);
+VARIABLE_BOOLEAN(monkeys, &default_monkeys, onoff);
 CONSOLE_NETVAR(mon_climb, monkeys, cf_server, netcmd_monclimb) {}
 
 // help dying friends
@@ -304,7 +303,7 @@ CONSOLE_NETVAR(mon_helpfriends, help_friends, cf_server, netcmd_monhelpfriends) 
 
 // distance friends keep from player
 
-VARIABLE_INT(distfriend, &default_distfriend,   0, 1024, nullptr);
+VARIABLE_INT(distfriend, &default_distfriend, 0, 1024, nullptr);
 CONSOLE_NETVAR(mon_distfriend, distfriend, cf_server, netcmd_mondistfriend) {}
 
 static const char *spechit_strs[] = { "off", "chocodoom", "prboomplus" };
@@ -335,35 +334,34 @@ CONSOLE_VARIABLE(wipetype, wipetype, 0) {}
 void P_Chase_AddCommands(void);
 void P_Skin_AddCommands(void);
 
-CONSOLE_COMMAND(spacejump, cf_hidden|cf_notnet)
+CONSOLE_COMMAND(spacejump, cf_hidden | cf_notnet)
 {
-   if(gamestate == GS_LEVEL)
-      players[0].mo->momz = 10*FRACUNIT;
+    if(gamestate == GS_LEVEL)
+        players[0].mo->momz = 10 * FRACUNIT;
 }
 
 CONSOLE_COMMAND(puke, cf_notnet)
 {
-   if(Console.argc < 1)
-      return;
+    if(Console.argc < 1)
+        return;
 
-   uint32_t args[5] = { 0, 0, 0, 0, 0 };
+    uint32_t args[5] = { 0, 0, 0, 0, 0 };
 
-   for(int i = 1; i < Console.argc && i <= 5; i++)
-      args[i - 1] = Console.argv[i]->toInt();
+    for(int i = 1; i < Console.argc && i <= 5; i++)
+        args[i - 1] = Console.argv[i]->toInt();
 
-   ACS_ExecuteScriptIAlways(Console.argv[0]->toInt(), gamemap,
-                           args, 5, nullptr, nullptr, 0, nullptr);
+    ACS_ExecuteScriptIAlways(Console.argv[0]->toInt(), gamemap, args, 5, nullptr, nullptr, 0, nullptr);
 }
 
 CONSOLE_COMMAND(enable_lightning, 0)
 {
-   LevelInfo.hasLightning = true;
-   P_InitLightning();
+    LevelInfo.hasLightning = true;
+    P_InitLightning();
 }
 
 CONSOLE_COMMAND(thunder, 0)
 {
-   P_ForceLightning();
+    P_ForceLightning();
 }
 
 // EOF

@@ -32,74 +32,71 @@ struct patch_t;
 
 struct PatchInfo
 {
-   patch_t *patch;
-   int x, y;        // screen coordinates
-   bool flipped;    // flipped?
-   int drawstyle;   // drawing style (normal, tr, tl, trtl, etc.)
+    patch_t *patch;
+    int      x, y;      // screen coordinates
+    bool     flipped;   // flipped?
+    int      drawstyle; // drawing style (normal, tr, tl, trtl, etc.)
 };
-
 
 // VBuffer moved
 #include "v_buffer.h"
 
 enum
 {
-   PSTYLE_NORMAL,
-   PSTYLE_TLATED,
-   PSTYLE_TRANSLUC,
-   PSTYLE_TLTRANSLUC,
-   PSTYLE_ADD,
-   PSTYLE_TLADD,
-   PSTYLE_TLATEDLIT,
-   PSTYLE_NUMSTYLES
+    PSTYLE_NORMAL,
+    PSTYLE_TLATED,
+    PSTYLE_TRANSLUC,
+    PSTYLE_TLTRANSLUC,
+    PSTYLE_ADD,
+    PSTYLE_TLADD,
+    PSTYLE_TLATEDLIT,
+    PSTYLE_NUMSTYLES
 };
 
 void V_DrawPatchInt(cb_patch_column_t &patchcol, PatchInfo *pi, VBuffer *buffer);
 
 enum
 {
-   DRAWTYPE_UNSCALED,
-   DRAWTYPE_GENSCALED
+    DRAWTYPE_UNSCALED,
+    DRAWTYPE_GENSCALED
 };
 
 void V_SetupBufferFuncs(VBuffer *buffer, int drawtype);
 void V_InitUnscaledBuffer(VBuffer *vbuf, byte *data);
 
 // SoM: In my continual effort to weed out multiple column drawers I discovered
-// the new patch system is derived from the old screen sprite code. I've 
+// the new patch system is derived from the old screen sprite code. I've
 // cleaned it up a bit.
 
-struct cb_patch_column_t  // It's cardboard now, bitches!
+struct cb_patch_column_t // It's cardboard now, bitches!
 {
-   int x;
-   int y1, y2;
+    int x;
+    int y1, y2;
 
-   fixed_t frac; 
-   fixed_t step;
+    fixed_t frac;
+    fixed_t step;
 
-   byte   *source;
-   byte   *translation;
-   byte   *light;        // haleyjd 01/22/12: lighting
+    byte *source;
+    byte *translation;
+    byte *light; // haleyjd 01/22/12: lighting
 
-   VBuffer *buffer;
+    VBuffer *buffer;
 
-   void (*colfunc)(const cb_patch_column_t &);
+    void (*colfunc)(const cb_patch_column_t &);
 
-   // haleyjd: translucency lookups
-   unsigned int *fg2rgb;
-   unsigned int *bg2rgb;
-}; 
+    // haleyjd: translucency lookups
+    unsigned int *fg2rgb;
+    unsigned int *bg2rgb;
+};
 
 // Conversion routines
 
-byte *V_PatchToLinear(patch_t *patch, bool flipped, byte fillcolor,
-                      int *width, int *height);
+byte *V_PatchToLinear(patch_t *patch, bool flipped, byte fillcolor, int *width, int *height);
 
-patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize, 
-                         int tag, void **user = nullptr);
+patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize, int tag, void **user = nullptr);
 
-patch_t *V_LinearToTransPatch(const byte *linear, int w, int h, size_t *memsize,
-                              int color_key, int tag, void **user = nullptr);
+patch_t *V_LinearToTransPatch(const byte *linear, int w, int h, size_t *memsize, int color_key, int tag,
+                              void **user = nullptr);
 
 bool V_WritePatchAsPNG(const char *lump, const char *filename, byte fillcolor);
 

@@ -64,7 +64,7 @@ static int activeIdx = -1;
 //
 bool SDLGamePadDriver::initialize()
 {
-   return true;
+    return true;
 }
 
 //
@@ -72,12 +72,12 @@ bool SDLGamePadDriver::initialize()
 //
 void SDLGamePadDriver::shutdown()
 {
-   // if the GameController is still active, shut it down.
-   if(gamecontroller)
-   {
-      SDL_GameControllerClose(gamecontroller);
-      gamecontroller = nullptr;
-   }
+    // if the GameController is still active, shut it down.
+    if(gamecontroller)
+    {
+        SDL_GameControllerClose(gamecontroller);
+        gamecontroller = nullptr;
+    }
 }
 
 //
@@ -86,23 +86,23 @@ void SDLGamePadDriver::shutdown()
 //
 void SDLGamePadDriver::enumerateDevices()
 {
-   SDLGamePad *sdlDev;
+    SDLGamePad *sdlDev;
 
-   for(int i = 0; i < SDL_NumJoysticks(); i++)
-   {
-      // Use only valid gamepads
-      if(SDL_IsGameController(i))
-      {
-         // Skip this controller if it can't be opened
-         if(SDL_GameController *temp = SDL_GameControllerOpen(i); !temp)
-            continue;
-         else
-            SDL_GameControllerClose(temp);
+    for(int i = 0; i < SDL_NumJoysticks(); i++)
+    {
+        // Use only valid gamepads
+        if(SDL_IsGameController(i))
+        {
+            // Skip this controller if it can't be opened
+            if(SDL_GameController *temp = SDL_GameControllerOpen(i); !temp)
+                continue;
+            else
+                SDL_GameControllerClose(temp);
 
-         sdlDev = new SDLGamePad(i);
-         addDevice(sdlDev);
-      }
-   }
+            sdlDev = new SDLGamePad(i);
+            addDevice(sdlDev);
+        }
+    }
 }
 
 // The one and only instance of SDLGamePadDriver
@@ -118,11 +118,10 @@ IMPLEMENT_RTTI_TYPE(SDLGamePad)
 //
 // Constructor
 //
-SDLGamePad::SDLGamePad(int idx)
-   : Super(), sdlIndex(idx), haptics()
+SDLGamePad::SDLGamePad(int idx) : Super(), sdlIndex(idx), haptics()
 {
-   name << "SDL " << SDL_GameControllerNameForIndex(sdlIndex);
-   num = i_sdlGamePadDriver.getBaseDeviceNum() + sdlIndex;
+    name << "SDL " << SDL_GameControllerNameForIndex(sdlIndex);
+    num = i_sdlGamePadDriver.getBaseDeviceNum() + sdlIndex;
 }
 
 //
@@ -130,20 +129,20 @@ SDLGamePad::SDLGamePad(int idx)
 //
 bool SDLGamePad::select()
 {
-   if(gamecontroller) // one is still open? (should not happen)
-      return false;
+    if(gamecontroller) // one is still open? (should not happen)
+        return false;
 
-   // remember who is in use internally
-   activeIdx = sdlIndex;
+    // remember who is in use internally
+    activeIdx = sdlIndex;
 
-   if((gamecontroller = SDL_GameControllerOpen(sdlIndex)) != nullptr)
-   {
-      numAxes    = SDL_CONTROLLER_AXIS_MAX;
-      numButtons = SDL_CONTROLLER_BUTTON_MAX;
-      return true;
-   }
-   else
-      return false;
+    if((gamecontroller = SDL_GameControllerOpen(sdlIndex)) != nullptr)
+    {
+        numAxes    = SDL_CONTROLLER_AXIS_MAX;
+        numButtons = SDL_CONTROLLER_BUTTON_MAX;
+        return true;
+    }
+    else
+        return false;
 }
 
 //
@@ -151,15 +150,15 @@ bool SDLGamePad::select()
 //
 void SDLGamePad::deselect()
 {
-   if(activeIdx != sdlIndex) // should not happen
-      return;
+    if(activeIdx != sdlIndex) // should not happen
+        return;
 
-   if(gamecontroller)
-   {
-      SDL_GameControllerClose(gamecontroller);
-      gamecontroller = nullptr;
-      activeIdx      = -1;
-   }
+    if(gamecontroller)
+    {
+        SDL_GameControllerClose(gamecontroller);
+        gamecontroller = nullptr;
+        activeIdx      = -1;
+    }
 }
 
 //
@@ -167,10 +166,10 @@ void SDLGamePad::deselect()
 //
 float SDLGamePad::normAxis(float value, int threshold, int maxvalue)
 {
-   if(abs(value) > threshold)
-      return float(value) / maxvalue;
-   else
-      return 0.0f;
+    if(abs(value) > threshold)
+        return float(value) / maxvalue;
+    else
+        return 0.0f;
 }
 
 //
@@ -178,35 +177,35 @@ float SDLGamePad::normAxis(float value, int threshold, int maxvalue)
 //
 void SDLGamePad::normAxisPair(float &axisx, float &axisy, int threshold, int min, int max)
 {
-   v2float_t   vec      = { axisx, axisy };
+    v2float_t vec = { axisx, axisy };
 
-   // put components into the range of -1.0 to 1.0
-   vec.x = (axisx - min) * 2.0f / (max - min) - 1.0f;
-   vec.y = (axisy - min) * 2.0f / (max - min) - 1.0f;
+    // put components into the range of -1.0 to 1.0
+    vec.x = (axisx - min) * 2.0f / (max - min) - 1.0f;
+    vec.y = (axisy - min) * 2.0f / (max - min) - 1.0f;
 
-   const float magnitude = M_MagnitudeVec2(vec);
-   const float deadzone  = float(threshold) / max;
-   if(magnitude <= deadzone)
-   {
-      axisx = 0.0f;
-      axisy = 0.0f;
-   }
-   else
-   {
-      M_NormalizeVec2(vec);
+    const float magnitude = M_MagnitudeVec2(vec);
+    const float deadzone  = float(threshold) / max;
+    if(magnitude <= deadzone)
+    {
+        axisx = 0.0f;
+        axisy = 0.0f;
+    }
+    else
+    {
+        M_NormalizeVec2(vec);
 
-      // rescale to smooth edge of deadzone
-      vec.x /= magnitude;
-      vec.y /= magnitude;
-      vec.x *= ((magnitude - deadzone) / (1 - deadzone));
-      vec.y *= ((magnitude - deadzone) / (1 - deadzone));
+        // rescale to smooth edge of deadzone
+        vec.x /= magnitude;
+        vec.y /= magnitude;
+        vec.x *= ((magnitude - deadzone) / (1 - deadzone));
+        vec.y *= ((magnitude - deadzone) / (1 - deadzone));
 
-      eclamp(vec.x, -1.0f, 1.0f);
-      eclamp(vec.y, -1.0f, 1.0f);
+        eclamp(vec.x, -1.0f, 1.0f);
+        eclamp(vec.y, -1.0f, 1.0f);
 
-      axisx = vec.x;
-      axisy = vec.y;
-   }
+        axisx = vec.x;
+        axisy = vec.y;
+    }
 }
 
 //
@@ -214,34 +213,37 @@ void SDLGamePad::normAxisPair(float &axisx, float &axisy, int threshold, int min
 //
 void SDLGamePad::poll()
 {
-   SDL_GameControllerUpdate();
+    SDL_GameControllerUpdate();
 
-   // save old button and axis states
-   backupState();
+    // save old button and axis states
+    backupState();
 
-   // get button states
-   for(int i = 0; i < numButtons && i < SDL_CONTROLLER_BUTTON_MAX; i++)
-      state.buttons[i] = !!SDL_GameControllerGetButton(gamecontroller, SDL_GameControllerButton(i));
+    // get button states
+    for(int i = 0; i < numButtons && i < SDL_CONTROLLER_BUTTON_MAX; i++)
+        state.buttons[i] = !!SDL_GameControllerGetButton(gamecontroller, SDL_GameControllerButton(i));
 
-   // get axis states
-   for(int i = 0; i < numAxes && i < SDL_CONTROLLER_AXIS_MAX; i++)
-      state.axes[i] = SDL_GameControllerGetAxis(gamecontroller, SDL_GameControllerAxis(i));
+    // get axis states
+    for(int i = 0; i < numAxes && i < SDL_CONTROLLER_AXIS_MAX; i++)
+        state.axes[i] = SDL_GameControllerGetAxis(gamecontroller, SDL_GameControllerAxis(i));
 
-   normAxisPair(state.axes[SDL_CONTROLLER_AXIS_LEFTX],  state.axes[SDL_CONTROLLER_AXIS_LEFTY],  i_joy_deadzone_left,  -32768, 32767);
-   normAxisPair(state.axes[SDL_CONTROLLER_AXIS_RIGHTX], state.axes[SDL_CONTROLLER_AXIS_RIGHTY], i_joy_deadzone_right, -32768, 32767);
+    normAxisPair(state.axes[SDL_CONTROLLER_AXIS_LEFTX], state.axes[SDL_CONTROLLER_AXIS_LEFTY], i_joy_deadzone_left,
+                 -32768, 32767);
+    normAxisPair(state.axes[SDL_CONTROLLER_AXIS_RIGHTX], state.axes[SDL_CONTROLLER_AXIS_RIGHTY], i_joy_deadzone_right,
+                 -32768, 32767);
 
-   state.axes[SDL_CONTROLLER_AXIS_TRIGGERLEFT]  = normAxis(state.axes[SDL_CONTROLLER_AXIS_TRIGGERLEFT],  i_joy_deadzone_trigger, 32767);
-   state.axes[SDL_CONTROLLER_AXIS_TRIGGERRIGHT] = normAxis(state.axes[SDL_CONTROLLER_AXIS_TRIGGERRIGHT], i_joy_deadzone_trigger, 32767);
+    state.axes[SDL_CONTROLLER_AXIS_TRIGGERLEFT] =
+        normAxis(state.axes[SDL_CONTROLLER_AXIS_TRIGGERLEFT], i_joy_deadzone_trigger, 32767);
+    state.axes[SDL_CONTROLLER_AXIS_TRIGGERRIGHT] =
+        normAxis(state.axes[SDL_CONTROLLER_AXIS_TRIGGERRIGHT], i_joy_deadzone_trigger, 32767);
 }
 
-static constexpr const char *stringForAxis[SDL_CONTROLLER_AXIS_MAX] =
-{
-   "Left X",
-   "Left Y",
-   "Right X",
-   "Right Y",
-   "Left Trigger",
-   "Right Trigger",
+static constexpr const char *stringForAxis[SDL_CONTROLLER_AXIS_MAX] = {
+    "Left X",        //
+    "Left Y",        //
+    "Right X",       //
+    "Right Y",       //
+    "Left Trigger",  //
+    "Right Trigger", //
 };
 
 //
@@ -249,11 +251,11 @@ static constexpr const char *stringForAxis[SDL_CONTROLLER_AXIS_MAX] =
 //
 const char *SDLGamePad::getAxisName(const int axis)
 {
-   const SDL_GameControllerAxis controllerAxis = SDL_GameControllerAxis(axis);
-   if(controllerAxis > SDL_CONTROLLER_AXIS_INVALID && controllerAxis < SDL_CONTROLLER_AXIS_MAX)
-      return stringForAxis[axis];
-   else
-      return Super::getAxisName(axis);
+    const SDL_GameControllerAxis controllerAxis = SDL_GameControllerAxis(axis);
+    if(controllerAxis > SDL_CONTROLLER_AXIS_INVALID && controllerAxis < SDL_CONTROLLER_AXIS_MAX)
+        return stringForAxis[axis];
+    else
+        return Super::getAxisName(axis);
 }
 
 //=============================================================================
@@ -268,14 +270,14 @@ IMPLEMENT_RTTI_TYPE(SDLHapticInterface)
 // motor types
 enum motor_e
 {
-   MOTOR_LEFT,
-   MOTOR_RIGHT
+    MOTOR_LEFT,
+    MOTOR_RIGHT
 };
 
 struct sdlRumbleVibration_t
 {
-   uint16_t leftMotorSpeed;
-   uint16_t rightMotorSpeed;
+    uint16_t leftMotorSpeed;
+    uint16_t rightMotorSpeed;
 };
 
 //
@@ -284,22 +286,22 @@ struct sdlRumbleVibration_t
 class SDLBaseEffect : public ZoneObject
 {
 protected:
-   uint32_t startTime;
-   uint32_t duration;
-   static void AddClamped(sdlRumbleVibration_t &sdlvid, motor_e which, uint16_t addValue);
+    uint32_t    startTime;
+    uint32_t    duration;
+    static void AddClamped(sdlRumbleVibration_t &sdlvid, motor_e which, uint16_t addValue);
 
-   bool checkDone(uint32_t curTime) { return (curTime > startTime + duration); }
+    bool checkDone(uint32_t curTime) { return (curTime > startTime + duration); }
 
 public:
-   SDLBaseEffect(uint32_t p_startTime, uint32_t p_duration);
-   virtual ~SDLBaseEffect();
+    SDLBaseEffect(uint32_t p_startTime, uint32_t p_duration);
+    virtual ~SDLBaseEffect();
 
-   DLListItem<SDLBaseEffect> links;
+    DLListItem<SDLBaseEffect> links;
 
-   virtual void evolve(sdlRumbleVibration_t &sdlvid, uint32_t curTime) = 0;
+    virtual void evolve(sdlRumbleVibration_t &sdlvid, uint32_t curTime) = 0;
 
-   static void RunEffectsList(sdlRumbleVibration_t &sdlvid, uint32_t curTime);
-   static void ClearEffectsList();
+    static void RunEffectsList(sdlRumbleVibration_t &sdlvid, uint32_t curTime);
+    static void ClearEffectsList();
 };
 
 static DLList<SDLBaseEffect, &SDLBaseEffect::links> effects;
@@ -308,9 +310,9 @@ static DLList<SDLBaseEffect, &SDLBaseEffect::links> effects;
 // SDLBaseEffect Constructor
 //
 SDLBaseEffect::SDLBaseEffect(uint32_t p_startTime, uint32_t p_duration)
-   : ZoneObject(), startTime(p_startTime), duration(p_duration), links()
+    : ZoneObject(), startTime(p_startTime), duration(p_duration), links()
 {
-   effects.insert(this);
+    effects.insert(this);
 }
 
 //
@@ -318,7 +320,7 @@ SDLBaseEffect::SDLBaseEffect(uint32_t p_startTime, uint32_t p_duration)
 //
 SDLBaseEffect::~SDLBaseEffect()
 {
-   effects.remove(this);
+    effects.remove(this);
 }
 
 //
@@ -326,28 +328,23 @@ SDLBaseEffect::~SDLBaseEffect()
 //
 void SDLBaseEffect::AddClamped(sdlRumbleVibration_t &sdlvid, motor_e which, uint16_t addValue)
 {
-   uint32_t expanded;
-   uint16_t sdlRumbleVibration_t::* value;
+    uint32_t expanded;
+    uint16_t sdlRumbleVibration_t::*value;
 
-   switch(which)
-   {
-   case MOTOR_LEFT:
-      value = &sdlRumbleVibration_t::leftMotorSpeed;
-      break;
-   case MOTOR_RIGHT:
-      value = &sdlRumbleVibration_t::rightMotorSpeed;
-      break;
-   default:
-      return;
-   }
+    switch(which)
+    {
+    case MOTOR_LEFT:  value = &sdlRumbleVibration_t::leftMotorSpeed; break;
+    case MOTOR_RIGHT: value = &sdlRumbleVibration_t::rightMotorSpeed; break;
+    default:          return;
+    }
 
-   expanded = sdlvid.*value;
-   expanded += addValue;
+    expanded  = sdlvid.*value;
+    expanded += addValue;
 
-   if(expanded > 65535)
-      expanded = 65535;
+    if(expanded > 65535)
+        expanded = 65535;
 
-   sdlvid.*value = uint16_t(expanded);
+    sdlvid.*value = uint16_t(expanded);
 }
 
 //
@@ -356,14 +353,14 @@ void SDLBaseEffect::AddClamped(sdlRumbleVibration_t &sdlvid, motor_e which, uint
 //
 void SDLBaseEffect::RunEffectsList(sdlRumbleVibration_t &sdlvid, uint32_t curTime)
 {
-   auto link = effects.head;
+    auto link = effects.head;
 
-   while(link)
-   {
-      auto next = link->dllNext;
-      (*link)->evolve(sdlvid, curTime);
-      link = next;
-   }
+    while(link)
+    {
+        auto next = link->dllNext;
+        (*link)->evolve(sdlvid, curTime);
+        link = next;
+    }
 }
 
 //
@@ -371,14 +368,14 @@ void SDLBaseEffect::RunEffectsList(sdlRumbleVibration_t &sdlvid, uint32_t curTim
 //
 void SDLBaseEffect::ClearEffectsList()
 {
-   auto link = effects.head;
+    auto link = effects.head;
 
-   while(link)
-   {
-      auto next = link->dllNext;
-      delete link->dllObject;
-      link = next;
-   }
+    while(link)
+    {
+        auto next = link->dllNext;
+        delete link->dllObject;
+        link = next;
+    }
 }
 
 //
@@ -392,22 +389,22 @@ void SDLBaseEffect::ClearEffectsList()
 class SDLLinearEffect : public SDLBaseEffect
 {
 protected:
-   motor_e  which;
-   uint16_t initStrength;
-   uint16_t endStrength;
-   int      direction;
+    motor_e  which;
+    uint16_t initStrength;
+    uint16_t endStrength;
+    int      direction;
 
 public:
-   SDLLinearEffect(uint32_t p_startTime, uint32_t p_duration, motor_e p_which,
-                  uint16_t p_initStrength, uint16_t p_endStrength)
-      : SDLBaseEffect(p_startTime, p_duration), which(p_which),
-        initStrength(p_initStrength), endStrength(p_endStrength)
-   {
-      direction = (initStrength < endStrength) ? 1 : -1;
-   }
-   virtual ~SDLLinearEffect() {}
+    SDLLinearEffect(uint32_t p_startTime, uint32_t p_duration, motor_e p_which, uint16_t p_initStrength,
+                    uint16_t p_endStrength)
+        : SDLBaseEffect(p_startTime, p_duration), which(p_which), initStrength(p_initStrength),
+          endStrength(p_endStrength)
+    {
+        direction = (initStrength < endStrength) ? 1 : -1;
+    }
+    virtual ~SDLLinearEffect() {}
 
-   virtual void evolve(sdlRumbleVibration_t &sdlvid, uint32_t curTime);
+    virtual void evolve(sdlRumbleVibration_t &sdlvid, uint32_t curTime);
 };
 
 //
@@ -416,20 +413,18 @@ public:
 class SDLRumbleEffect : public SDLBaseEffect
 {
 protected:
-   motor_e  which;          // which motor to apply the effect to
-   uint16_t minStrength;    // minimum strength
-   uint16_t maxStrength;    // maximum strength
+    motor_e  which;       // which motor to apply the effect to
+    uint16_t minStrength; // minimum strength
+    uint16_t maxStrength; // maximum strength
 
 public:
-   SDLRumbleEffect(uint32_t p_startTime, uint32_t p_duration, motor_e p_which,
-                  uint16_t p_minStrength, uint16_t p_maxStrength)
-      : SDLBaseEffect(p_startTime, p_duration), which(p_which), 
-        minStrength(p_minStrength), maxStrength(p_maxStrength)
-   {
-   }
-   virtual ~SDLRumbleEffect() {}
+    SDLRumbleEffect(uint32_t p_startTime, uint32_t p_duration, motor_e p_which, uint16_t p_minStrength,
+                    uint16_t p_maxStrength)
+        : SDLBaseEffect(p_startTime, p_duration), which(p_which), minStrength(p_minStrength), maxStrength(p_maxStrength)
+    {}
+    virtual ~SDLRumbleEffect() {}
 
-   virtual void evolve(sdlRumbleVibration_t &sdlvid, uint32_t curTime);
+    virtual void evolve(sdlRumbleVibration_t &sdlvid, uint32_t curTime);
 };
 
 //
@@ -438,39 +433,38 @@ public:
 class SDLConstantEffect : public SDLBaseEffect
 {
 protected:
-   motor_e  which;
-   uint16_t strength;
-   static SDLConstantEffect *CurrentLeft;
-   static SDLConstantEffect *CurrentRight;
+    motor_e                   which;
+    uint16_t                  strength;
+    static SDLConstantEffect *CurrentLeft;
+    static SDLConstantEffect *CurrentRight;
 
 public:
-   SDLConstantEffect(uint32_t p_startTime, uint32_t p_duration, motor_e p_which, uint16_t p_strength)
-      : SDLBaseEffect(p_startTime, p_duration), which(p_which), strength(p_strength)
-   {
-      // this effect is singleton
-      if(which == MOTOR_LEFT)
-      {
-         if(CurrentLeft)
-            delete CurrentLeft;
-         CurrentLeft = this;
-      }
-      else
-      {
-         if(CurrentRight)
-            delete CurrentRight;
-         CurrentRight = this;
-      }
+    SDLConstantEffect(uint32_t p_startTime, uint32_t p_duration, motor_e p_which, uint16_t p_strength)
+        : SDLBaseEffect(p_startTime, p_duration), which(p_which), strength(p_strength)
+    {
+        // this effect is singleton
+        if(which == MOTOR_LEFT)
+        {
+            if(CurrentLeft)
+                delete CurrentLeft;
+            CurrentLeft = this;
+        }
+        else
+        {
+            if(CurrentRight)
+                delete CurrentRight;
+            CurrentRight = this;
+        }
+    }
+    virtual ~SDLConstantEffect()
+    {
+        if(CurrentLeft == this)
+            CurrentLeft = nullptr;
+        if(CurrentRight == this)
+            CurrentRight = nullptr;
+    }
 
-   }
-   virtual ~SDLConstantEffect()
-   {
-      if(CurrentLeft == this)
-         CurrentLeft = nullptr;
-      if(CurrentRight == this)
-         CurrentRight = nullptr;
-   }
-
-   virtual void evolve(sdlRumbleVibration_t &sdlvid, uint32_t curTime);
+    virtual void evolve(sdlRumbleVibration_t &sdlvid, uint32_t curTime);
 };
 
 SDLConstantEffect *SDLConstantEffect::CurrentLeft;
@@ -482,16 +476,15 @@ SDLConstantEffect *SDLConstantEffect::CurrentRight;
 class SDLDamageEffect : public SDLBaseEffect
 {
 protected:
-   uint16_t strength;
+    uint16_t strength;
 
 public:
-   SDLDamageEffect(uint32_t p_startTime, uint32_t p_duration, uint16_t p_strength)
-      : SDLBaseEffect(p_startTime, p_duration), strength(p_strength)
-   {
-   }
-   virtual ~SDLDamageEffect() {}
+    SDLDamageEffect(uint32_t p_startTime, uint32_t p_duration, uint16_t p_strength)
+        : SDLBaseEffect(p_startTime, p_duration), strength(p_strength)
+    {}
+    virtual ~SDLDamageEffect() {}
 
-   virtual void evolve(sdlRumbleVibration_t &sdlvid, uint32_t curtime);
+    virtual void evolve(sdlRumbleVibration_t &sdlvid, uint32_t curtime);
 };
 
 //
@@ -504,28 +497,28 @@ public:
 //
 void SDLLinearEffect::evolve(sdlRumbleVibration_t &sdlvid, uint32_t curTime)
 {
-   if(checkDone(curTime))
-   {
-      delete this;
-      return;
-   }
+    if(checkDone(curTime))
+    {
+        delete this;
+        return;
+    }
 
-   uint16_t curStrength;
+    uint16_t curStrength;
 
-   if(direction < 0)
-   {
-      // slope down
-      uint16_t deltaStrength = (initStrength - endStrength);
-      curStrength = initStrength - deltaStrength * (curTime - startTime) / duration;
-   }
-   else
-   {
-      // slope up
-      const uint16_t deltaStrength = (endStrength - initStrength);
-      curStrength = initStrength + deltaStrength * (curTime - startTime) / duration;
-   }
+    if(direction < 0)
+    {
+        // slope down
+        uint16_t deltaStrength = (initStrength - endStrength);
+        curStrength            = initStrength - deltaStrength * (curTime - startTime) / duration;
+    }
+    else
+    {
+        // slope up
+        const uint16_t deltaStrength = (endStrength - initStrength);
+        curStrength                  = initStrength + deltaStrength * (curTime - startTime) / duration;
+    }
 
-   AddClamped(sdlvid, which, curStrength);
+    AddClamped(sdlvid, which, curStrength);
 }
 
 //
@@ -533,17 +526,17 @@ void SDLLinearEffect::evolve(sdlRumbleVibration_t &sdlvid, uint32_t curTime)
 //
 void SDLRumbleEffect::evolve(sdlRumbleVibration_t &sdlvid, uint32_t curTime)
 {
-   if(checkDone(curTime))
-   {
-      delete this;
-      return;
-   }
+    if(checkDone(curTime))
+    {
+        delete this;
+        return;
+    }
 
-   int minStr = minStrength;
-   int rndStr = abs(rand()) % (maxStrength - minStrength);
+    int minStr = minStrength;
+    int rndStr = abs(rand()) % (maxStrength - minStrength);
 
-   const uint16_t totStr = uint16_t(minStr + rndStr);
-   AddClamped(sdlvid, which, totStr);
+    const uint16_t totStr = uint16_t(minStr + rndStr);
+    AddClamped(sdlvid, which, totStr);
 }
 
 //
@@ -551,12 +544,12 @@ void SDLRumbleEffect::evolve(sdlRumbleVibration_t &sdlvid, uint32_t curTime)
 //
 void SDLConstantEffect::evolve(sdlRumbleVibration_t &sdlvid, uint32_t curTime)
 {
-   if(checkDone(curTime))
-   {
-      delete this;
-      return;
-   }
-   AddClamped(sdlvid, which, strength);
+    if(checkDone(curTime))
+    {
+        delete this;
+        return;
+    }
+    AddClamped(sdlvid, which, strength);
 }
 
 //
@@ -564,32 +557,32 @@ void SDLConstantEffect::evolve(sdlRumbleVibration_t &sdlvid, uint32_t curTime)
 //
 void SDLDamageEffect::evolve(sdlRumbleVibration_t &sdlvid, uint32_t curTime)
 {
-   if(checkDone(curTime))
-   {
-      delete this;
-      return;
-   }
+    if(checkDone(curTime))
+    {
+        delete this;
+        return;
+    }
 
-   // Do left motor processing
-   const uint32_t endStrength   = strength * 40 / 64;
-   const uint32_t deltaStrength = (strength - endStrength);
-   uint32_t       curStrength   = strength - deltaStrength * (curTime - startTime) / duration;
+    // Do left motor processing
+    const uint32_t endStrength   = strength * 40 / 64;
+    const uint32_t deltaStrength = (strength - endStrength);
+    uint32_t       curStrength   = strength - deltaStrength * (curTime - startTime) / duration;
 
-   AddClamped(sdlvid, MOTOR_LEFT, uint16_t(curStrength));
+    AddClamped(sdlvid, MOTOR_LEFT, uint16_t(curStrength));
 
-   // Do right motor processing
-   if(curTime - startTime < duration / 2)
-   {
-      // Right motor is constant during first half of effect
-      AddClamped(sdlvid, MOTOR_RIGHT, strength / 2);
-   }
-   else
-   {
-      // Linear descent to zero
-      curStrength = strength / 2;
-      curStrength -= curStrength * (curTime - startTime) / duration;
-      AddClamped(sdlvid, MOTOR_RIGHT, uint16_t(curStrength));
-   }
+    // Do right motor processing
+    if(curTime - startTime < duration / 2)
+    {
+        // Right motor is constant during first half of effect
+        AddClamped(sdlvid, MOTOR_RIGHT, strength / 2);
+    }
+    else
+    {
+        // Linear descent to zero
+        curStrength  = strength / 2;
+        curStrength -= curStrength * (curTime - startTime) / duration;
+        AddClamped(sdlvid, MOTOR_RIGHT, uint16_t(curStrength));
+    }
 }
 
 //=============================================================================
@@ -602,10 +595,7 @@ void SDLDamageEffect::evolve(sdlRumbleVibration_t &sdlvid, uint32_t curTime)
 //
 // Constructor
 //
-SDLHapticInterface::SDLHapticInterface()
-   : Super(), pauseState(false)
-{
-}
+SDLHapticInterface::SDLHapticInterface() : Super(), pauseState(false) {}
 
 //
 // SDLHapticInterface::zeroState
@@ -614,7 +604,7 @@ SDLHapticInterface::SDLHapticInterface()
 //
 void SDLHapticInterface::zeroState()
 {
-   SDL_GameControllerRumble(gamecontroller, 0, 0, 0);
+    SDL_GameControllerRumble(gamecontroller, 0, 0, 0);
 }
 
 //
@@ -622,47 +612,47 @@ void SDLHapticInterface::zeroState()
 //
 void SDLHapticInterface::startEffect(effect_e effect, int data1, int data2)
 {
-   uint32_t curTime = i_haltimer.GetTicks();
+    uint32_t curTime = i_haltimer.GetTicks();
 
-   switch(effect)
-   {
-   case EFFECT_FIRE:
-      // weapon fire
-      // * data1 should be power scale from 1 to 10
-      // * data2 should be duration scale from 1 to 10
-      new SDLLinearEffect(curTime, 175 + 20 * data2, MOTOR_LEFT, 21000 + 4400 * data1, 0);
-      break;
-   case EFFECT_RAMPUP:
-      // ramping up effect, ie. for BFG warmup
-      // * data1 is max strength, scale 1 to 10
-      // * data2 is duration in ms
-      new SDLLinearEffect(curTime, data2, MOTOR_RIGHT, 1000, 21000 + 3100 * data1);
-      break;
-   case EFFECT_RUMBLE:
-      // rumble effect
-      // * data1 should be richters from 1 to 10
-      // * data2 should be duration in ms
-      new SDLRumbleEffect(curTime, data2, MOTOR_LEFT, 0, 5000 + 6700 * (data1 - 1));
-      break;
-   case EFFECT_BUZZ:
-      // buzz; same as rumble, but uses high frequency motor
-      new SDLRumbleEffect(curTime, data2, MOTOR_RIGHT, 0, 5000 + 6700 * (data1 - 1));
-      break;
-   case EFFECT_CONSTANT:
-      // constant: continue pulsing the motor at a steady rate
-      // * data1 should be strength from 1 to 10
-      // * data2 should be duration in ms
-      new SDLConstantEffect(curTime, data2, MOTOR_RIGHT, 6500 * data1);
-      break;
-   case EFFECT_DAMAGE:
-      // damage: taking a hit from something
-      // * data1 should be strength from 1 to 100
-      // * data2 should be duration in ms
-      new SDLDamageEffect(curTime, data2, 25000 + data1 * 400);
-      break;
-   default:
-      break;
-   }
+    switch(effect)
+    {
+    case EFFECT_FIRE:
+        // weapon fire
+        // * data1 should be power scale from 1 to 10
+        // * data2 should be duration scale from 1 to 10
+        new SDLLinearEffect(curTime, 175 + 20 * data2, MOTOR_LEFT, 21000 + 4400 * data1, 0);
+        break;
+    case EFFECT_RAMPUP:
+        // ramping up effect, ie. for BFG warmup
+        // * data1 is max strength, scale 1 to 10
+        // * data2 is duration in ms
+        new SDLLinearEffect(curTime, data2, MOTOR_RIGHT, 1000, 21000 + 3100 * data1);
+        break;
+    case EFFECT_RUMBLE:
+        // rumble effect
+        // * data1 should be richters from 1 to 10
+        // * data2 should be duration in ms
+        new SDLRumbleEffect(curTime, data2, MOTOR_LEFT, 0, 5000 + 6700 * (data1 - 1));
+        break;
+    case EFFECT_BUZZ:
+        // buzz; same as rumble, but uses high frequency motor
+        new SDLRumbleEffect(curTime, data2, MOTOR_RIGHT, 0, 5000 + 6700 * (data1 - 1));
+        break;
+    case EFFECT_CONSTANT:
+        // constant: continue pulsing the motor at a steady rate
+        // * data1 should be strength from 1 to 10
+        // * data2 should be duration in ms
+        new SDLConstantEffect(curTime, data2, MOTOR_RIGHT, 6500 * data1);
+        break;
+    case EFFECT_DAMAGE:
+        // damage: taking a hit from something
+        // * data1 should be strength from 1 to 100
+        // * data2 should be duration in ms
+        new SDLDamageEffect(curTime, data2, 25000 + data1 * 400);
+        break;
+    default: //
+        break;
+    }
 }
 
 //
@@ -672,42 +662,42 @@ void SDLHapticInterface::startEffect(effect_e effect, int data1, int data2)
 //
 void SDLHapticInterface::pauseEffects(bool effectsPaused)
 {
-   if(!pauseState && effectsPaused)
-   {
-      zeroState();
-      pauseState = true;
-   }
-   else
-      pauseState = false;
+    if(!pauseState && effectsPaused)
+    {
+        zeroState();
+        pauseState = true;
+    }
+    else
+        pauseState = false;
 }
 
 //
 // Called from the main loop; push the newest summation of state to the
-// SDL force motors (high and low frequency) while ticking the 
+// SDL force motors (high and low frequency) while ticking the
 // scheduled effects. Remove effects once they have completed.
 //
 void SDLHapticInterface::updateEffects()
 {
 #if SDL_VERSION_ATLEAST(2, 0, 18)
-   // Don't try updating if controller doesn't have rumble
-   if(SDL_GameControllerHasRumble(gamecontroller) == SDL_FALSE)
-      return;
+    // Don't try updating if controller doesn't have rumble
+    if(SDL_GameControllerHasRumble(gamecontroller) == SDL_FALSE)
+        return;
 #endif
 
-   // paused?
-   if(pauseState)
-   {
-      zeroState();
-      return;
-   }
+    // paused?
+    if(pauseState)
+    {
+        zeroState();
+        return;
+    }
 
-   sdlRumbleVibration_t sdlvib = { 0, 0 };
-   auto curTime = i_haltimer.GetTicks();
+    sdlRumbleVibration_t sdlvib  = { 0, 0 };
+    auto                 curTime = i_haltimer.GetTicks();
 
-   SDLBaseEffect::RunEffectsList(sdlvib, curTime);
+    SDLBaseEffect::RunEffectsList(sdlvib, curTime);
 
-   // set state to the device using the summation of the effects
-   SDL_GameControllerRumble(gamecontroller, sdlvib.leftMotorSpeed, sdlvib.rightMotorSpeed, 1000);
+    // set state to the device using the summation of the effects
+    SDL_GameControllerRumble(gamecontroller, sdlvib.leftMotorSpeed, sdlvib.rightMotorSpeed, 1000);
 }
 
 //
@@ -715,10 +705,10 @@ void SDLHapticInterface::updateEffects()
 //
 void SDLHapticInterface::clearEffects()
 {
-   zeroState();
+    zeroState();
 
-   // clear effects
-   SDLBaseEffect::ClearEffectsList();
+    // clear effects
+    SDLBaseEffect::ClearEffectsList();
 }
 
 // EOF

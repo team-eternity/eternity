@@ -31,7 +31,7 @@
 //
 // GL_MakeTextureDimension
 //
-// Gets the next higher power of two, which will be a suitable texture 
+// Gets the next higher power of two, which will be a suitable texture
 // dimension for standard OpenGL textures.
 //
 // Based on:
@@ -39,18 +39,18 @@
 //
 unsigned int GL_MakeTextureDimension(unsigned int i)
 {
-   if(i)
-   {
-      --i;
-      i |= i >> 1;
-      i |= i >> 2;
-      i |= i >> 4;
-      i |= i >> 8;
-      i |= i >> 16;
-      ++i;
-   }
+    if(i)
+    {
+        --i;
+        i |= i >> 1;
+        i |= i >> 2;
+        i |= i >> 4;
+        i |= i >> 8;
+        i |= i >> 16;
+        ++i;
+    }
 
-   return i;
+    return i;
 }
 
 static GLuint boundtexture;
@@ -63,8 +63,8 @@ static GLuint boundtexture;
 //
 void GL_BindTextureAndRemember(GLuint texture)
 {
-   glBindTexture(GL_TEXTURE_2D, texture);
-   boundtexture = texture;
+    glBindTexture(GL_TEXTURE_2D, texture);
+    boundtexture = texture;
 }
 
 //
@@ -75,18 +75,17 @@ void GL_BindTextureAndRemember(GLuint texture)
 //
 void GL_BindTextureIfNeeded(GLuint texture)
 {
-   if(boundtexture != texture)
-      glBindTexture(GL_TEXTURE_2D, texture);
+    if(boundtexture != texture)
+        glBindTexture(GL_TEXTURE_2D, texture);
 }
-
 
 //
 // Rebinds the currently-bound texture
 //
 void GL_RebindBoundTexture()
 {
-   if(boundtexture)
-      glBindTexture(GL_TEXTURE_2D, boundtexture);
+    if(boundtexture)
+        glBindTexture(GL_TEXTURE_2D, boundtexture);
 }
 
 //
@@ -96,7 +95,7 @@ void GL_RebindBoundTexture()
 //
 void GL_ClearBoundTexture()
 {
-   boundtexture = 0;
+    boundtexture = 0;
 }
 
 #endif

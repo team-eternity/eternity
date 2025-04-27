@@ -38,8 +38,8 @@ struct cfg_t;
 //
 enum overridableSetting_e
 {
-   overridableSetting_stsTraditionalKeys,
-   NUM_overridableSetting
+    overridableSetting_stsTraditionalKeys,
+    NUM_overridableSetting
 };
 
 extern cfg_opt_t edf_compatibility_opts[];

@@ -35,21 +35,20 @@ struct menuitem_t;
 //
 class MenuItem : public RTTIObject
 {
-   DECLARE_RTTI_TYPE(MenuItem, RTTIObject)
+    DECLARE_RTTI_TYPE(MenuItem, RTTIObject)
 
 protected:
-   virtual int  adjustPatchXCoord(int x, int16_t width) { return x; }
-   virtual bool shouldDrawDescription(menuitem_t *item) { return true; }
+    virtual int  adjustPatchXCoord(int x, int16_t width) { return x; }
+    virtual bool shouldDrawDescription(menuitem_t *item) { return true; }
 
 public:
-   virtual bool drawPatchForItem(menuitem_t *item, int &item_height, int alignment);
-   virtual void drawDescription(menuitem_t *item, int &item_height, int &item_width,
-                                int alignment, int color);
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) {}
-   virtual const char *getHelpString(menuitem_t *item, char *msgbuffer) { return ""; }
-   virtual void onConfirm(menuitem_t *item) {}
-   virtual void onLeft(menuitem_t *item, bool altdown, bool shiftdown) {}
-   virtual void onRight(menuitem_t *item, bool altdown, bool shiftdown) {}
+    virtual bool        drawPatchForItem(menuitem_t *item, int &item_height, int alignment);
+    virtual void        drawDescription(menuitem_t *item, int &item_height, int &item_width, int alignment, int color);
+    virtual void        drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) {}
+    virtual const char *getHelpString(menuitem_t *item, char *msgbuffer) { return ""; }
+    virtual void        onConfirm(menuitem_t *item) {}
+    virtual void        onLeft(menuitem_t *item, bool altdown, bool shiftdown) {}
+    virtual void        onRight(menuitem_t *item, bool altdown, bool shiftdown) {}
 };
 
 extern MenuItem *MenuItemInstanceForType[];

@@ -31,13 +31,13 @@ struct mobjinfo_t;
 struct state_t;
 
 int E_GetAddStateNumForDEHNum(int dehnum, bool forceAdd);
-int E_StateNumForDEHNum(int dehnum);        // dehnum lookup
-int E_GetStateNumForDEHNum(int dehnum);     //    fatal error version
-int E_SafeState(int dehnum);                //    fallback version
-int E_SafeStateName(const char *name);      //    fallback by name
-int E_StateNumForName(const char *name);    // mnemonic lookup
-int E_GetStateNumForName(const char *name); //    fatal error version
-int E_StateNumForNameIncludingDecorate(const char *name);   // Full lookup for saves
+int E_StateNumForDEHNum(int dehnum);                      // dehnum lookup
+int E_GetStateNumForDEHNum(int dehnum);                   //    fatal error version
+int E_SafeState(int dehnum);                              //    fallback version
+int E_SafeStateName(const char *name);                    //    fallback by name
+int E_StateNumForName(const char *name);                  // mnemonic lookup
+int E_GetStateNumForName(const char *name);               //    fatal error version
+int E_StateNumForNameIncludingDecorate(const char *name); // Full lookup for saves
 int E_StateNumForNameOnlyDecorate(const char *name);
 
 void E_AddDecorateStateNameToHash(state_t *st); // called from e_dstate

@@ -31,104 +31,107 @@
 // Input event types.
 enum evtype_t : int
 {
-   ev_keydown,
-   ev_keyup,
-   ev_mouse,
-   ev_joystick,
-   ev_text,
+    ev_keydown,
+    ev_keyup,
+    ev_mouse,
+    ev_joystick,
+    ev_text,
 
-   // Quit event. Triggered when the user clicks the "close" button
-   // to terminate the application.
-   ev_quit,
+    // Quit event. Triggered when the user clicks the "close" button
+    // to terminate the application.
+    ev_quit,
 };
 
 // Event structure.
 struct event_t
 {
-   evtype_t  type;
-   int       data1;     // keys / mouse/joystick buttons
-   double    data2;     // mouse/joystick x move
-   double    data3;     // mouse/joystick y move
-   bool      repeat;    // true if this input is a repeat
+    evtype_t type;
+    int      data1;  // keys / mouse/joystick buttons
+    double   data2;  // mouse/joystick x move
+    double   data3;  // mouse/joystick y move
+    bool     repeat; // true if this input is a repeat
 };
 
 enum gameaction_t
 {
-   ga_nothing,
-   ga_loadlevel,
-   ga_newgame,
-   ga_loadgame,
-   ga_savegame,
-   ga_playdemo,
-   ga_completed,
-   ga_victory,
-   ga_worlddone,
-   ga_screenshot
+    ga_nothing,
+    ga_loadlevel,
+    ga_newgame,
+    ga_loadgame,
+    ga_savegame,
+    ga_playdemo,
+    ga_completed,
+    ga_victory,
+    ga_worlddone,
+    ga_screenshot
 };
+
+// clang-format off
 
 //
 // Button/action code definitions.
 //
 enum buttoncode_t
 {
-   // Press "Fire".
-   BT_ATTACK       = 1,
+    // Press "Fire".
+    BT_ATTACK         = 1,
 
-   // Use button, to open doors, activate switches.
-   BT_USE          = 2,
+    // Use button, to open doors, activate switches.
+    BT_USE            = 2,
 
-   // Flag: game events, not really buttons.
-   BT_SPECIAL      = 128,
-   //  BT_SPECIALMASK  = 3,   killough 9/29/98: unused now
+    // Flag: game events, not really buttons.
+    BT_SPECIAL        = 128,
+    //  BT_SPECIALMASK  = 3,   killough 9/29/98: unused now
 
-   // Flag, weapon change pending.
-   // If true, the next 4 bits hold weapon num.
-   BT_CHANGE       = 4,
+    // Flag, weapon change pending.
+    // If true, the next 4 bits hold weapon num.
+    BT_CHANGE         = 4,
 
-   // The 4bit weapon mask and shift, convenience.
-   // ioanch 20160426: added demo compat weapon mask
-   BT_WEAPONMASK_OLD = (8+16+32),
-   BT_WEAPONMASK   = (8+16+32+64), // extended to pick up SSG        // phares
-   BT_WEAPONSHIFT  = 3,
+    // The 4bit weapon mask and shift, convenience.
+    // ioanch 20160426: added demo compat weapon mask
+    BT_WEAPONMASK_OLD = (8+16+32),
+    BT_WEAPONMASK     = (8+16+32+64), // extended to pick up SSG        // phares
+    BT_WEAPONSHIFT    = 3,
 
-   // Pause the game.
-   BTS_PAUSE       = 1,
+    // Pause the game.
+    BTS_PAUSE         = 1,
 
-   // Save the game at each console.
-   BTS_SAVEGAME    = 2,
+    // Save the game at each console.
+    BTS_SAVEGAME      = 2,
 
-   // Savegame slot numbers occupy the second byte of buttons.
-   BTS_SAVEMASK    = (4+8+16),
-   BTS_SAVESHIFT   = 2,
+    // Savegame slot numbers occupy the second byte of buttons.
+    BTS_SAVEMASK      = (4+8+16),
+    BTS_SAVESHIFT     = 2,
 
-   // New buttons, used in v4.01+, as the old weapon bits (5 of them!) are unused
+    // New buttons, used in v4.01+, as the old weapon bits (5 of them!) are unused
 
-   // Press "Alt-fire".
-   BTN_ATTACK_ALT  = 4,
+    // Press "Alt-fire".
+    BTN_ATTACK_ALT    = 4,
 
-   // Next weapon button
-   BTN_WEAPON_UP   = 8,
+    // Next weapon button
+    BTN_WEAPON_UP     = 8,
 
-   // Previous weapon button
-   BTN_WEAPON_DOWN = 16,
-
+    // Previous weapon button
+    BTN_WEAPON_DOWN   = 16,
 };
+
+// clang-format on
 
 //
 // Player action code definitions (jumping etc) -- joek 12/22/07
 //
 enum actioncode_t
 {
-   // Bouncy bouncy jump jump
-   AC_JUMP       = 1,
+    // Bouncy bouncy jump jump
+    AC_JUMP = 1,
 
-   // New weapon buttons
-   AC_RELOAD     = 2,
-   AC_ZOOM       = 4,
-   AC_USER1      = 8,
-   AC_USER2      = 16,
-   AC_USER3      = 32,
-   AC_USER4      = 64,
+    // New weapon buttons
+    AC_RELOAD = 2,
+    AC_ZOOM   = 4,
+    AC_USER1  = 8,
+    AC_USER2  = 16,
+    AC_USER3  = 32,
+    AC_USER4  = 64,
 };
 
 //

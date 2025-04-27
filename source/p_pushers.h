@@ -27,47 +27,46 @@
 #include "p_tick.h" // for Thinker
 
 struct line_t;
-class  Mobj;
-class  SaveArchive;
+class Mobj;
+class SaveArchive;
 
 // phares 3/20/98: added new model of Pushers for push/pull effects
 
 class PushThinker : public Thinker
 {
-   DECLARE_THINKER_TYPE(PushThinker, Thinker)
+    DECLARE_THINKER_TYPE(PushThinker, Thinker)
 
 protected:
-   void Think() override;
+    void Think() override;
 
 public:
-   // Methods
-   virtual void serialize(SaveArchive &arc) override;
-   
-   // Data Members
-   enum
-   {
-      p_push,
-      p_pull,
-      p_wind,
-      p_current,
-   }; 
+    // Methods
+    virtual void serialize(SaveArchive &arc) override;
 
-   int   type;
-   Mobj *source;        // Point source if point pusher
-   int   x_mag;         // X Strength
-   int   y_mag;         // Y Strength
-   int   magnitude;     // Vector strength for point pusher
-   int   radius;        // Effective radius for point pusher
-   int   x;             // X of point source if point pusher
-   int   y;             // Y of point source if point pusher
-   int   affectee;      // Number of affected sector
+    // Data Members
+    enum
+    {
+        p_push,
+        p_pull,
+        p_wind,
+        p_current,
+    };
+
+    int   type;
+    Mobj *source;    // Point source if point pusher
+    int   x_mag;     // X Strength
+    int   y_mag;     // Y Strength
+    int   magnitude; // Vector strength for point pusher
+    int   radius;    // Effective radius for point pusher
+    int   x;         // X of point source if point pusher
+    int   y;         // Y of point source if point pusher
+    int   affectee;  // Number of affected sector
 };
 
 Mobj *P_GetPushThing(int); // phares 3/23/98
-void P_SpawnPushers();
+void  P_SpawnPushers();
 
 #endif
 
 // EOF
-
 

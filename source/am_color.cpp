@@ -49,8 +49,8 @@ extern int mapcolor_plyr[4]; // colors for player arrows in multiplayer
 extern int mapcolor_frnd;    // colors for friends of player
 extern int mapcolor_prtl;    // SoM: color for lines not in player portal group
 
-// SoM: map mode. True means the portal groups are overlayed (the group the 
-// player is in being displayed in color and the other groups being grayed out 
+// SoM: map mode. True means the portal groups are overlayed (the group the
+// player is in being displayed in color and the other groups being grayed out
 // and underneath) and false means the map is not modified.
 extern int mapportal_overlay;
 

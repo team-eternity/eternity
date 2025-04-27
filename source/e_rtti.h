@@ -40,157 +40,144 @@
 class RTTIObject : public ZoneObject
 {
 public:
-   // RTTI Proxy Type
-   // This acts as the ultimate base class of all other proxy types.
-   class Type
-   {
-   private:
-      enum { NUMTYPECHAINS = 67 };
+    // RTTI Proxy Type
+    // This acts as the ultimate base class of all other proxy types.
+    class Type
+    {
+    private:
+        enum
+        {
+            NUMTYPECHAINS = 67
+        };
 
-      // addType is invoked by the constructor and places the type into a
-      // global hash table for lookups by class name.
-      void addType();
+        // addType is invoked by the constructor and places the type into a
+        // global hash table for lookups by class name.
+        void addType();
 
-      Type *next; // next type on the same hash chain
-      
-      static Type *rttiTypes[NUMTYPECHAINS]; // hash table
+        Type *next; // next type on the same hash chain
 
-   protected:
-      // The constructor is always protected, but the type being proxied is
-      // always a friend so that it can construct a singleton instance of the
-      // proxy type as a static class member.
-      Type(const char *pName, Type *pParent)
-        : parent(pParent), name(pName)
-      {
-         addType();
-      }
+        static Type *rttiTypes[NUMTYPECHAINS]; // hash table
 
-      Type       *const parent; // Pointer to the parent class's proxy instance
-      const char *const name;   // Name of this class
+    protected:
+        // The constructor is always protected, but the type being proxied is
+        // always a friend so that it can construct a singleton instance of the
+        // proxy type as a static class member.
+        Type(const char *pName, Type *pParent) : parent(pParent), name(pName) { addType(); }
 
-   public:
-      using Class = RTTIObject; // Type of the class being proxied
-      friend class RTTIObject;  // The proxied class is always a friend.
+        Type *const       parent; // Pointer to the parent class's proxy instance
+        const char *const name;   // Name of this class
 
-      // Accessors
-      Type       *getParent() const { return parent; }
-      const char *getName()   const { return name;   }
+    public:
+        using Class = RTTIObject; // Type of the class being proxied
+        friend class RTTIObject;  // The proxied class is always a friend.
 
-      //
-      // isAncestorOf
-      //
-      // Returns true if:
-      // * This proxy represents the actual type referred to by "type".
-      // * This proxy represents a super class of the type referred to by "type".
-      //
-      bool isAncestorOf(const Type *type) const
-      {
-         while(type)
-         {
-            if(type == this)
-               return true;
-            type = type->parent;
-         }
-         return false;
-      }
+        // Accessors
+        Type       *getParent() const { return parent; }
+        const char *getName() const { return name; }
 
-      // Find a type by name at runtime
-      static Type *FindType(const char *pName);
+        //
+        // isAncestorOf
+        //
+        // Returns true if:
+        // * This proxy represents the actual type referred to by "type".
+        // * This proxy represents a super class of the type referred to by "type".
+        //
+        bool isAncestorOf(const Type *type) const
+        {
+            while(type)
+            {
+                if(type == this)
+                    return true;
+                type = type->parent;
+            }
+            return false;
+        }
 
-      // Find a type by name at runtime, and require that it be a descendant of
-      // a particular RTTIObject-inheriting class at the same time.
-      template<typename T> static T *FindType(const char *pName)
-      {
-         Type *type = FindType(pName);
+        // Find a type by name at runtime
+        static Type *FindType(const char *pName);
 
-         if(!T::Class::StaticType.isAncestorOf(type))
-            return nullptr;
+        // Find a type by name at runtime, and require that it be a descendant of
+        // a particular RTTIObject-inheriting class at the same time.
+        template<typename T>
+        static T *FindType(const char *pName)
+        {
+            Type *type = FindType(pName);
 
-         return static_cast<T *>(type);
-      }
+            if(!T::Class::StaticType.isAncestorOf(type))
+                return nullptr;
 
-      // Virtual constructor factory method
-      virtual RTTIObject *newObject() const { return new RTTIObject; }
-   };
+            return static_cast<T *>(type);
+        }
 
-   // RTTIObject's proxy type instance.
-   static Type StaticType;
+        // Virtual constructor factory method
+        virtual RTTIObject *newObject() const { return new RTTIObject; }
+    };
 
-   // getDynamicType will always return the most-derived (or "actual") type of
-   // the object even when invoked through pointers or references to super 
-   // classes. You are required to override this method.
-   virtual const Type *getDynamicType() const { return &StaticType; }
+    // RTTIObject's proxy type instance.
+    static Type StaticType;
 
-   // getClassName will always return the name of the most-derived (or "actual")
-   // type of the object even when invoked through pointers or references to 
-   // super classes.
-   const char *getClassName() const { return getDynamicType()->name; }
+    // getDynamicType will always return the most-derived (or "actual") type of
+    // the object even when invoked through pointers or references to super
+    // classes. You are required to override this method.
+    virtual const Type *getDynamicType() const { return &StaticType; }
 
-   //
-   // isInstanceOf
-   //
-   // Returns true *only* if "type" represents the actual type of this object.
-   //
-   bool isInstanceOf(const Type *type) const
-   {
-      return (getDynamicType() == type);
-   }
+    // getClassName will always return the name of the most-derived (or "actual")
+    // type of the object even when invoked through pointers or references to
+    // super classes.
+    const char *getClassName() const { return getDynamicType()->name; }
 
-   //
-   // isInstanceOf(const char *className)
-   //
-   // Returns true if the object's actual type matches the passed-in name.
-   //
-   bool isInstanceOf(const char *className) const 
-   {
-      return !strcmp(getClassName(), className);
-   }
+    //
+    // isInstanceOf
+    //
+    // Returns true *only* if "type" represents the actual type of this object.
+    //
+    bool isInstanceOf(const Type *type) const { return (getDynamicType() == type); }
 
-   //
-   // isAncestorOf
-   //
-   // Returns true if "type" represents the actual type of this object, or
-   // a type which is a descendant type.
-   //
-   bool isAncestorOf(const Type *type) const
-   {
-      return getDynamicType()->isAncestorOf(type);
-   }
+    //
+    // isInstanceOf(const char *className)
+    //
+    // Returns true if the object's actual type matches the passed-in name.
+    //
+    bool isInstanceOf(const char *className) const { return !strcmp(getClassName(), className); }
 
-   //
-   // isDescendantOf
-   //
-   // Returns true if "type" represents the actual type of this object, or
-   // a type which is an ancestral type.
-   //
-   bool isDescendantOf(const Type *type) const
-   {
-      return type->isAncestorOf(getDynamicType());
-   }
+    //
+    // isAncestorOf
+    //
+    // Returns true if "type" represents the actual type of this object, or
+    // a type which is a descendant type.
+    //
+    bool isAncestorOf(const Type *type) const { return getDynamicType()->isAncestorOf(type); }
 
-   //
-   // Forwarding statics for Type class utilities
-   //
+    //
+    // isDescendantOf
+    //
+    // Returns true if "type" represents the actual type of this object, or
+    // a type which is an ancestral type.
+    //
+    bool isDescendantOf(const Type *type) const { return type->isAncestorOf(getDynamicType()); }
 
-   // Find a type by name at runtime.
-   static Type *FindType(const char *pName)
-   {
-      return Type::FindType(pName);
-   }
+    //
+    // Forwarding statics for Type class utilities
+    //
 
-   // Find a type by name at runtime, and require that it be a descendant of a
-   // particular RTTIObject-inheriting class at the same time.
-   template<typename T> static T *FindType(const char *pName)
-   {
-      return Type::FindType<T>(pName);
-   }
+    // Find a type by name at runtime.
+    static Type *FindType(const char *pName) { return Type::FindType(pName); }
 
-   // As above, but phrased in terms of the base type rather than its RTTI
-   // proxy inner class. Just a convenience shortcut, really.
-   template<typename T> static typename T::Type *FindTypeCls(const char *pName)
-   {
-      return Type::FindType<typename T::Type>(pName);
-   }
+    // Find a type by name at runtime, and require that it be a descendant of a
+    // particular RTTIObject-inheriting class at the same time.
+    template<typename T>
+    static T *FindType(const char *pName)
+    {
+        return Type::FindType<T>(pName);
+    }
+
+    // As above, but phrased in terms of the base type rather than its RTTI
+    // proxy inner class. Just a convenience shortcut, really.
+    template<typename T>
+    static typename T::Type *FindTypeCls(const char *pName)
+    {
+        return Type::FindType<typename T::Type>(pName);
+    }
 };
 
 //
@@ -200,17 +187,17 @@ public:
 // This is now optional in order to allow abstract classes to use RTTI.
 //
 #define RTTI_VIRTUAL_CONSTRUCTOR(name) \
-   virtual name *newObject() const { return new name ; }
+    virtual name *newObject() const { return new name ; }
 
 //
 // RTTI_ABSTRACT_CONSTRUCTOR
 //
 // Defines the virtual factory construction method for an abstract descendant
-// of RTTIObject. As a result of the class being abstract, it cannot be 
+// of RTTIObject. As a result of the class being abstract, it cannot be
 // instantiated and therefore this method returns nullptr.
 //
 #define RTTI_ABSTRACT_CONSTRUCTOR(name) \
-   virtual name *newObject() const { return nullptr; }
+    virtual name *newObject() const { return nullptr; }
 
 //
 // DECLARE_RTTI_TYPE_CTOR
@@ -225,8 +212,8 @@ public:
 // class Type;
 // * This is the class's RTTI proxy type and it automatically inherits from the
 //   Super class's proxy. The constructor is protected. The proxy class exposes
-//   the type it proxies for (ie., name) as Type::Class, and a virtual 
-//   newObject() factory constructor method. Note that the DECLARE_RTTI_TYPE 
+//   the type it proxies for (ie., name) as Type::Class, and a virtual
+//   newObject() factory constructor method. Note that the DECLARE_RTTI_TYPE
 //   macro will exact the requirement of a default constructor on the RTTIObject
 //   descendant. Otherwise, use DECLARE_ABSTRACT_TYPE.
 //
@@ -235,30 +222,30 @@ public:
 //   descendant. It is instantiated by the IMPLEMENT_RTTI_TYPE macro below.
 //
 // virtual const Type *getDynamicType() const;
-// * This method of the RTTIObject descendant will return the StaticType 
+// * This method of the RTTIObject descendant will return the StaticType
 //   member, which in the context of each individual class, is the instance
-//   representing the actual most-derived type of the object, ie., 
+//   representing the actual most-derived type of the object, ie.,
 //   name::StaticType (the parent instances of StaticType are progressively
 //   hidden in each descendant scope).
 //
-#define DECLARE_RTTI_TYPE_CTOR(name, inherited, ctor) \
-public:                                               \
-   using Super = inherited;                           \
-   class Type : public Super::Type                    \
-   {                                                  \
-   protected:                                         \
-      Type(char const *pName, Super::Type *pParent)   \
-       : Super::Type( pName, pParent ) {}             \
-   public:                                            \
-      using Class = name;                             \
-      friend class name;                              \
-      ctor                                            \
-   };                                                 \
-   static Type StaticType;                            \
-   virtual const Type *getDynamicType() const override\
-   {                                                  \
-      return &StaticType;                             \
-   }                                                  \
+#define DECLARE_RTTI_TYPE_CTOR(name, inherited, ctor)   \
+public:                                                 \
+    using Super = inherited;                            \
+    class Type : public Super::Type                     \
+    {                                                   \
+    protected:                                          \
+        Type(char const *pName, Super::Type *pParent)   \
+         : Super::Type( pName, pParent ) {}             \
+    public:                                             \
+        using Class = name;                             \
+        friend class name;                              \
+        ctor                                            \
+    };                                                  \
+    static Type StaticType;                             \
+    virtual const Type *getDynamicType() const override \
+    {                                                   \
+        return &StaticType;                             \
+    }                                                   \
 private:
 
 //
@@ -267,7 +254,7 @@ private:
 // Instantiates the above macro with an ordinary virtual factory constructor.
 //
 #define DECLARE_RTTI_TYPE(name, inherited) \
-   DECLARE_RTTI_TYPE_CTOR(name, inherited, RTTI_VIRTUAL_CONSTRUCTOR(name))
+    DECLARE_RTTI_TYPE_CTOR(name, inherited, RTTI_VIRTUAL_CONSTRUCTOR(name))
 
 //
 // DECLARE_ABSTRACT_TYPE
@@ -276,7 +263,7 @@ private:
 // support default construction. Factory construction is not supported.
 //
 #define DECLARE_ABSTRACT_TYPE(name, inherited) \
-   DECLARE_RTTI_TYPE_CTOR(name, inherited, RTTI_ABSTRACT_CONSTRUCTOR(name))
+    DECLARE_RTTI_TYPE_CTOR(name, inherited, RTTI_ABSTRACT_CONSTRUCTOR(name))
 
 //
 // IMPLEMENT_RTTI_TYPE
@@ -286,9 +273,9 @@ private:
 //
 // Example:
 //   IMPLEMENT_RTTI_TYPE(FireFlickerThinker)
-//   This defines FireFlickerThinker::StaticType and constructs it with 
+//   This defines FireFlickerThinker::StaticType and constructs it with
 //   "FireFlickerThinker" as its class name.
-// 
+//
 #define IMPLEMENT_RTTI_TYPE(name) \
 name::Type name::StaticType(#name, &Super::StaticType);
 
@@ -302,18 +289,18 @@ name::Type name::StaticType(#name, &Super::StaticType);
 //
 // runtime_cast
 //
-// This is the most general equivalent of dynamic_cast which uses the custom 
+// This is the most general equivalent of dynamic_cast which uses the custom
 // RTTI system instead of C++'s built-in typeid structures.
 //
-template<typename T> inline T runtime_cast(RTTIObject *robj)
+template<typename T>
+inline T runtime_cast(RTTIObject *robj)
 {
-   using base_type = typename std::remove_pointer<T>::type;
+    using base_type = typename std::remove_pointer<T>::type;
 
-   return (robj && robj->isDescendantOf(&base_type::StaticType)) ?
-      static_cast<T>(robj) : nullptr;
+    return (robj && robj->isDescendantOf(&base_type::StaticType)) ? static_cast<T>(robj) : nullptr;
 }
 
-#endif //E_RTTI_H__
+#endif // E_RTTI_H__
 
 // EOF
 

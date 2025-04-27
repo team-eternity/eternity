@@ -29,21 +29,20 @@
 struct gfs_t;
 
 struct wfileadd_t;
-extern wfileadd_t *wadfiles;     // killough 11/98
+extern wfileadd_t *wadfiles; // killough 11/98
 
 // enumeration for D_AddFile flags parameter
 enum dafflags_e
 {
-   DAF_NONE    = 0,          // no special behaviors
-   DAF_PRIVATE = 0x00000001, // is a private directory file
-   DAF_IWAD    = 0x00000002, // is the IWAD
-   DAF_DEMO    = 0x00000004  // is a demo
+    DAF_NONE    = 0,          // no special behaviors
+    DAF_PRIVATE = 0x00000001, // is a private directory file
+    DAF_IWAD    = 0x00000002, // is the IWAD
+    DAF_DEMO    = 0x00000004  // is a demo
 };
 
 // WAD Files
-int D_GetNumWadFiles();
-void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
-               dafflags_e addflags);
+int  D_GetNumWadFiles();
+void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset, dafflags_e addflags);
 void D_AddDirectory(const char *dir);
 void D_ListWads();
 void D_NewWadLumps(int source);
@@ -55,11 +54,11 @@ void D_ProcessGFSWads(gfs_t *gfs);
 void D_ProcessGFSCsc(gfs_t *gfs);
 
 // Drag-and-Drop Support
-void D_LooseWads();
-void D_LooseDehs();
-gfs_t *D_LooseGFS();
+void        D_LooseWads();
+void        D_LooseDehs();
+gfs_t      *D_LooseGFS();
 const char *D_LooseDemo();
-bool D_LooseEDF(char **buffer);
+bool        D_LooseEDF(char **buffer);
 
 // EDF
 void D_LoadEDF(gfs_t *gfs);

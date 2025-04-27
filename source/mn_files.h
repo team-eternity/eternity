@@ -33,23 +33,20 @@
 
 struct mndir_t
 {
-   const char *dirpath; // physical file system path of directory
-   char **filenames;    // array of file names
-   int  numfiles;       // number of files
-   int  numfilesalloc;  // number of files allocated
+    const char *dirpath;       // physical file system path of directory
+    char      **filenames;     // array of file names
+    int         numfiles;      // number of files
+    int         numfilesalloc; // number of files allocated
 };
 
 extern char *wad_directory;
 extern char *mn_wadname;
 
-int MN_ReadDirectory(mndir_t *dir, const char *read_dir, 
-                     const char *const *read_wildcards, 
-                     size_t numwildcards, bool allowsubdirs);
+int  MN_ReadDirectory(mndir_t *dir, const char *read_dir, const char *const *read_wildcards, size_t numwildcards,
+                      bool allowsubdirs);
 void MN_ClearDirectory(mndir_t *dir);
 
-void MN_DisplayFileSelector(mndir_t *dir, const char *title, 
-                            const char *command, bool dismissOnSelect,
-                            bool allowExit);
+void MN_DisplayFileSelector(mndir_t *dir, const char *title, const char *command, bool dismissOnSelect, bool allowExit);
 
 #endif
 

@@ -33,44 +33,44 @@ struct player_t;
 
 enum
 {
-   sk_plpain,
-   sk_pdiehi,
-   sk_oof,
-   sk_slop,
-   sk_punch,
-   sk_radio,
-   sk_pldeth,
-   sk_plfall, // haleyjd: new sounds -- breaks compatibility
-   sk_plfeet,
-   sk_fallht,
-   sk_plwdth, // haleyjd: wimpy death
-   sk_noway,  // haleyjd: noway sound, separate from oof
-   sk_jump,
-   NUMSKINSOUNDS
+    sk_plpain,
+    sk_pdiehi,
+    sk_oof,
+    sk_slop,
+    sk_punch,
+    sk_radio,
+    sk_pldeth,
+    sk_plfall, // haleyjd: new sounds -- breaks compatibility
+    sk_plfeet,
+    sk_fallht,
+    sk_plwdth, // haleyjd: wimpy death
+    sk_noway,  // haleyjd: noway sound, separate from oof
+    sk_jump,
+    NUMSKINSOUNDS
 };
 
 // haleyjd 09/26/04: skin type enumeration
 
 enum skintype_e
 {
-   SKIN_PLAYER,
-   SKIN_MONSTER,
-   SKIN_NUMTYPES
+    SKIN_PLAYER,
+    SKIN_MONSTER,
+    SKIN_NUMTYPES
 };
 
 struct skin_t
 {
-   skintype_e  type;          // haleyjd: type of skin
-   char        *spritename;   // 4 chars
-   char        *skinname;     // name of the skin: eg 'marine'
-   spritenum_t sprite;        // set by initskins
-   char        *sounds[NUMSKINSOUNDS];
-   char        *facename;     // statusbar face
-   patch_t     **faces;
+    skintype_e  type;       // haleyjd: type of skin
+    char       *spritename; // 4 chars
+    char       *skinname;   // name of the skin: eg 'marine'
+    spritenum_t sprite;     // set by initskins
+    char       *sounds[NUMSKINSOUNDS];
+    char       *facename; // statusbar face
+    patch_t   **faces;
 
-   // haleyjd 11/07/06: for EDF hashing
-   skin_t *ehashnext;
-   bool    edfskin; // if true, is an EDF skin
+    // haleyjd 11/07/06: for EDF hashing
+    skin_t *ehashnext;
+    bool    edfskin; // if true, is an EDF skin
 };
 
 extern char **spritelist; // new spritelist, same format as sprnames
@@ -78,9 +78,9 @@ extern char **spritelist; // new spritelist, same format as sprnames
 
 void P_InitSkins(void);
 
-void P_ParseSkin(int lumpnum);
+void    P_ParseSkin(int lumpnum);
 skin_t *P_SkinForName(const char *s);
-void P_SetSkin(skin_t *skin, int playernum);
+void    P_SetSkin(skin_t *skin, int playernum);
 
 skin_t *P_GetDefaultSkin(player_t *player);
 

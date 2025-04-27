@@ -39,9 +39,9 @@
 // VIDEO
 //
 
-//jff 2/16/98 palette color ranges for translation
-//jff 2/18/98 conversion to palette lookups for speed
-//jff 4/24/98 now pointers to lumps loaded 
+// jff 2/16/98 palette color ranges for translation
+// jff 2/18/98 conversion to palette lookups for speed
+// jff 4/24/98 now pointers to lumps loaded
 extern byte *cr_brick;
 extern byte *cr_tan;
 extern byte *cr_gray;
@@ -50,38 +50,38 @@ extern byte *cr_brown;
 extern byte *cr_gold;
 extern byte *cr_red;
 extern byte *cr_blue;
-extern byte *cr_blue_status; //killough 2/28/98
+extern byte *cr_blue_status; // killough 2/28/98
 extern byte *cr_orange;
 extern byte *cr_yellow;
 
 // symbolic indices into color translation table pointer array
 enum crange_idx_e
 {
-   CR_BRICK,   //0
-   CR_TAN,     //1
-   CR_GRAY,    //2
-   CR_GREEN,   //3
-   CR_BROWN,   //4
-   CR_GOLD,    //5
-   CR_RED,     //6
-   CR_BLUE,    //7
-   CR_ORANGE,  //8
-   CR_YELLOW,  //9
+    CR_BRICK,  // 0
+    CR_TAN,    // 1
+    CR_GRAY,   // 2
+    CR_GREEN,  // 3
+    CR_BROWN,  // 4
+    CR_GOLD,   // 5
+    CR_RED,    // 6
+    CR_BLUE,   // 7
+    CR_ORANGE, // 8
+    CR_YELLOW, // 9
 
-   CR_BUILTIN = CR_YELLOW,
+    CR_BUILTIN = CR_YELLOW,
 
-   // haleyjd: "custom" colors do not have built-in translations;
-   // they are free for user definition via EDF.
-   CR_CUSTOM1, //10
-   CR_CUSTOM2, //11
-   CR_CUSTOM3, //12
-   CR_CUSTOM4, //13
+    // haleyjd: "custom" colors do not have built-in translations;
+    // they are free for user definition via EDF.
+    CR_CUSTOM1, // 10
+    CR_CUSTOM2, // 11
+    CR_CUSTOM3, // 12
+    CR_CUSTOM4, // 13
 
-   CR_MAXCUSTOM = CR_CUSTOM4,
+    CR_MAXCUSTOM = CR_CUSTOM4,
 
-   CR_LIMIT    //jff 2/27/98 added for range check
+    CR_LIMIT // jff 2/27/98 added for range check
 };
-//jff 1/16/98 end palette color range additions
+// jff 1/16/98 end palette color range additions
 
 // array of pointers to color translation tables
 extern byte *colrngs[CR_LIMIT];
@@ -94,11 +94,10 @@ extern int  usegamma;
 // ----------------------------------------------------------------------------
 // haleyjd: DOSDoom-style translucency lookup tables
 
-extern bool flexTranInit;
-extern unsigned int Col2RGB8[65][256];
+extern bool          flexTranInit;
+extern unsigned int  Col2RGB8[65][256];
 extern unsigned int *Col2RGB8_LessPrecision[65];
-extern byte RGB32k[32][32][32];
-
+extern byte          RGB32k[32][32][32];
 
 // ----------------------------------------------------------------------------
 // Initalization
@@ -112,7 +111,7 @@ void V_InitSubScreenModernHUD();
 
 // V_Init
 // Allocates buffer screens and sets up the VBuffers for the screen surfaces.
-void V_Init (void);
+void V_Init(void);
 
 // V_InitFlexTranTable
 // Initializes the tables used in Flex translucency calculations, given the
@@ -127,68 +126,59 @@ void V_InitFlexTranTable(const byte *palette);
 // scaling enabled, the coordinates of the rectangle will all be scaled
 // according to the destination scaling information, but the actual pixels are
 // copied directly.
-void V_CopyRect(int srcx,  int srcy,  VBuffer *src, int width, int height,
-		          int destx, int desty, VBuffer *dest);
+void V_CopyRect(int srcx, int srcy, VBuffer *src, int width, int height, int destx, int desty, VBuffer *dest);
 
 // V_DrawPatchGeneral (killough 11/98)
 // Consolidated V_DrawPatch and V_DrawPatchFlipped. This function renders a
 // patch to a VBuffer object utilizing any scaling information the buffer has.
-void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch, 
-                        bool flipped);
+void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch, bool flipped);
 
 // V_DrawPatch
 // Macro-ized version of V_DrawPatchGeneral
-#define V_DrawPatch(x,y,s,p)        V_DrawPatchGeneral(x,y,s,p,false)
+#define V_DrawPatch(x, y, s, p)        V_DrawPatchGeneral(x,y,s,p,false)
 
 // V_DrawPatchFlipped
 // Macro-ized version of V_DrawPatchGeneral
-#define V_DrawPatchFlipped(x,y,s,p) V_DrawPatchGeneral(x,y,s,p,true)
-
+#define V_DrawPatchFlipped(x, y, s, p) V_DrawPatchGeneral(x,y,s,p,true)
 
 // V_DrawPatchTranslated
 // Renders a patch to the given VBuffer like V_DrawPatchGeneral, but applies
 // The given color translation to the patch.
-void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch, 
-                           byte *outr, bool flipped);
+void V_DrawPatchTranslated(int x, int y, VBuffer *buffer, patch_t *patch, byte *outr, bool flipped);
 
 // V_DrawPatchTranslatedLit
 // As above, but with an additional lighttable remapping.
-void V_DrawPatchTranslatedLit(int x, int y, VBuffer *buffer, patch_t *patch,
-                              byte *outr, byte *lighttable, bool flipped);
+void V_DrawPatchTranslatedLit(int x, int y, VBuffer *buffer, patch_t *patch, byte *outr, byte *lighttable,
+                              bool flipped);
 
 // V_DrawPatchTL
 // Renders a patch to the given VBuffer like V_DrawPatchGeneral, but renders
 // the patch with the given opacity. If a color translation table is supplied
 // (outr != nullptr) the patch is translated as well.
-void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch, 
-                   byte *outr, int tl);
+void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch, byte *outr, int tl);
 
 // V_DrawPatchAdd
 // Renders a patch to the given VBuffer like V_DrawPatchGeneral, but renders
 // the patch with additive blending of the given amount. If a color translation
 // table is supplied (outr != nullptr) the patch is translated as well.
-void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch,
-                    byte *outr, int tl);
+void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch, byte *outr, int tl);
 
 // V_DrawPatchShadowed
 // Renders a patch to the given VBuffer like V_DrawPatchGeneral, but renders
 // the patch twice, first 2 units to the left and down using colormap 33, and
 // then again at the specified location with the normal parameters.
-void V_DrawPatchShadowed(int x, int y, VBuffer *buffer, patch_t *patch,
-                         byte *outr, int tl);
-
+void V_DrawPatchShadowed(int x, int y, VBuffer *buffer, patch_t *patch, byte *outr, int tl);
 
 // V_DrawBlock
 // Draw a linear block of pixels into the view buffer, using the buffer's
 // scaling information (if present)
-void V_DrawBlock(int x, int y, VBuffer *buffer, int width, int height, 
-                 const byte *src);
+void V_DrawBlock(int x, int y, VBuffer *buffer, int width, int height, const byte *src);
 
 // V_DrawMaskedBlockTR
 // Draw a translated, masked linear block of pixels into a view buffer, using
 //  the buffer's scaling information (if present)
-void V_DrawMaskedBlockTR(int x, int y, VBuffer *buffer, int width, int height,
-                         int srcpitch, const byte *src, byte *cmap);
+void V_DrawMaskedBlockTR(int x, int y, VBuffer *buffer, int width, int height, int srcpitch, const byte *src,
+                         byte *cmap);
 
 // haleyjd 05/18/09: Fullscreen background drawing helpers
 void V_DrawBlockFS(VBuffer *buffer, const byte *src);
@@ -198,7 +188,6 @@ void V_DrawFSBackground(VBuffer *dest, int lumpnum);
 // V_FindBestColor (haleyjd)
 // A function that requantizes a color into the default game palette
 byte V_FindBestColor(const byte *palette, int r, int g, int b);
-
 
 // V_CacheBlock
 // Copies a block of pixels from the source linear buffer into the destination

@@ -39,7 +39,6 @@
 // Max computers/players in a game.
 #define MAXNETNODES             8
 
-
 // Networking and tick handling related.
 #define BACKUPTICS              12
 
@@ -52,8 +51,8 @@
 
 enum
 {
-    CMD_SEND    = 1,
-    CMD_GET     = 2
+    CMD_SEND = 1,
+    CMD_GET  = 2
 };
 
 // haleyjd 10/19/07: moved here from g_game.h:
@@ -71,18 +70,18 @@ enum
 struct doomdata_t
 {
     // High bit is retransmit request.
-    uint32_t     checksum;
+    uint32_t checksum;
     // Only valid if NCMD_RETRANSMIT.
-    byte         retransmitfrom;
-    
-    byte         starttic;
-    byte         player;
-    byte         numtics;
+    byte retransmitfrom;
+
+    byte starttic;
+    byte player;
+    byte numtics;
 
     union packetdata_u
     {
-       byte      data[GAME_OPTION_SIZE];
-       ticcmd_t  cmds[BACKUPTICS];
+        byte     data[GAME_OPTION_SIZE];
+        ticcmd_t cmds[BACKUPTICS];
     } d;
 };
 
@@ -119,48 +118,47 @@ struct doomdata_t
 struct doomcom_t
 {
     // Supposed to be DOOMCOM_ID?
-    int32_t             id;
-    
+    int32_t id;
+
     // DOOM executes an int to execute commands.
-    int16_t             intnum;         
+    int16_t intnum;
     // Communication between DOOM and the driver.
     // Is CMD_SEND or CMD_GET.
-    int16_t             command;
+    int16_t command;
     // Is dest for send, set by get (-1 = no packet).
-    int16_t             remotenode;
-    
+    int16_t remotenode;
+
     // Info common to all nodes.
     // Console is allways node 0.
-    int16_t             numnodes;
+    int16_t numnodes;
     // Flag: 1 = no duplication, 2-5 = dup for slow nets.
-    int16_t             ticdup;
+    int16_t ticdup;
     // Flag: 1 = send a backup tic in every packet.
-    int16_t             extratics;
+    int16_t extratics;
     // Flag: 1 = deathmatch.
-    int16_t             deathmatch;
+    int16_t deathmatch;
     // Flag: -1 = new game, 0-5 = load savegame
-    int16_t             savegame;
-    int16_t             episode;        // 1-3
-    int16_t             map;            // 1-9
-    int16_t             skill;          // 1-5
+    int16_t savegame;
+    int16_t episode; // 1-3
+    int16_t map;     // 1-9
+    int16_t skill;   // 1-5
 
     // Info specific to this node.
-    int16_t             consoleplayer;
-    int16_t             numplayers;
-    
+    int16_t consoleplayer;
+    int16_t numplayers;
+
     // These are related to the 3-display mode,
     //  in which two drones looking left and right
     //  were used to render two additional views
     //  on two additional computers.
     // Probably not operational anymore.
     // 1 = left, 0 = center, -1 = right
-    int16_t             angleoffset;
+    int16_t angleoffset;
     // 1 = drone
-    int16_t             drone;          
+    int16_t drone;
 
     // The packet data to be sent.
-    doomdata_t          data;
-    
+    doomdata_t data;
 };
 
 // haleyjd 10/16/07

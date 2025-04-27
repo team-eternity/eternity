@@ -42,7 +42,7 @@ extern skin_t *edf_skins[NUMEDFSKINCHAINS];
 
 enum rebornitemflag_e
 {
-   RBIF_IGNORE = 0x01 // this reborn item has been canceled, ie., by DeHackEd
+    RBIF_IGNORE = 0x01 // this reborn item has been canceled, ie., by DeHackEd
 };
 
 //
@@ -50,18 +50,18 @@ enum rebornitemflag_e
 //
 enum
 {
-   PCF_ALWAYSJUMP = 1,   // class is designed to jump, do not allow disabling it
-   PCF_CHICKENTWITCH = 2,  // random twitching like Heretic chicken
-   PCF_NOBOB = 4, // disable bobbing
-   PCF_NOHEALTHAUTOUSE = 8,   // disable health auto-use on emergency
+    PCF_ALWAYSJUMP      = 1, // class is designed to jump, do not allow disabling it
+    PCF_CHICKENTWITCH   = 2, // random twitching like Heretic chicken
+    PCF_NOBOB           = 4, // disable bobbing
+    PCF_NOHEALTHAUTOUSE = 8, // disable health auto-use on emergency
 };
 
 // default inventory items
 struct reborninventory_t
 {
-   char         *itemname; // EDF itemeffect name
-   int           amount;   // amount of item to give when reborn
-   unsigned int  flags;    // special flags
+    char        *itemname; // EDF itemeffect name
+    int          amount;   // amount of item to give when reborn
+    unsigned int flags;    // special flags
 };
 
 //
@@ -69,41 +69,41 @@ struct reborninventory_t
 //
 struct playerclass_t
 {
-   skin_t *defaultskin;  // pointer to default skin
-   mobjtype_t type;      // index of mobj type used
-   statenum_t altattack; // index of alternate attack state for weapon code
-   int initialhealth;    // initial health when reborn
-   int maxhealth;        // max health for regular items, HealThing and Gauntlets
-   int superhealth;      // max health for superchargers and HealThing
-   fixed_t viewheight;   // [XA] view height, relative to player's 'z' position
+    skin_t    *defaultskin;   // pointer to default skin
+    mobjtype_t type;          // index of mobj type used
+    statenum_t altattack;     // index of alternate attack state for weapon code
+    int        initialhealth; // initial health when reborn
+    int        maxhealth;     // max health for regular items, HealThing and Gauntlets
+    int        superhealth;   // max health for superchargers and HealThing
+    fixed_t    viewheight;    // [XA] view height, relative to player's 'z' position
 
-   // speeds
-   fixed_t forwardmove[2];
-   fixed_t sidemove[2];
-   fixed_t angleturn[3]; // + slow turn
-   fixed_t lookspeed[2]; // haleyjd: look speeds (from zdoom)
-   fixed_t jumpspeed;
+    // speeds
+    fixed_t forwardmove[2];
+    fixed_t sidemove[2];
+    fixed_t angleturn[3]; // + slow turn
+    fixed_t lookspeed[2]; // haleyjd: look speeds (from zdoom)
+    fixed_t jumpspeed;
 
-   // original speeds - before turbo is applied.
-   fixed_t oforwardmove[2];
-   fixed_t osidemove[2];
+    // original speeds - before turbo is applied.
+    fixed_t oforwardmove[2];
+    fixed_t osidemove[2];
 
-   fixed_t speedfactor;
+    fixed_t speedfactor;
 
-   // reborn inventory
-   unsigned int       numrebornitems;
-   reborninventory_t *rebornitems;
+    // reborn inventory
+    unsigned int       numrebornitems;
+    reborninventory_t *rebornitems;
 
-   // weaponslots
-   weaponslot_t *weaponslots[NUMWEAPONSLOTS];
-   bool          hasslots;
+    // weaponslots
+    weaponslot_t *weaponslots[NUMWEAPONSLOTS];
+    bool          hasslots;
 
-   // flags
-   unsigned flags;
+    // flags
+    unsigned flags;
 
-   // hashing data
-   char mnemonic[129];
-   playerclass_t *next;
+    // hashing data
+    char           mnemonic[129];
+    playerclass_t *next;
 };
 
 playerclass_t *E_PlayerClassForName(const char *);
@@ -120,12 +120,12 @@ bool E_MayJumpIfOverriden(const playerclass_t &pclass);
 #ifdef NEED_EDF_DEFINITIONS
 
 constexpr const char EDF_SEC_SKIN[] = "skin";
-extern cfg_opt_t edf_skin_opts[];
+extern cfg_opt_t     edf_skin_opts[];
 
 constexpr const char EDF_SEC_PCLASS[] = "playerclass";
 constexpr const char EDF_SEC_PDELTA[] = "playerdelta";
-extern cfg_opt_t edf_pclass_opts[];
-extern cfg_opt_t edf_pdelta_opts[];
+extern cfg_opt_t     edf_pclass_opts[];
+extern cfg_opt_t     edf_pdelta_opts[];
 
 void E_ProcessSkins(cfg_t *cfg);
 void E_ProcessPlayerClasses(cfg_t *cfg);

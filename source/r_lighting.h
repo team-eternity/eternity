@@ -45,21 +45,25 @@ using lighttable_t = byte;
 
 // Lighting constants.
 
+// clang-format off
+
 // SoM: I am really speechless at this... just... why?
 // Lighting in doom was originally clamped off to just 16 brightness levels
 // for sector lighting. Simply changing the constants is enough to change this
-// it seriously boggles the mind why this wasn't done in doom from the start 
-// except for maybe memory usage savings. 
+// it seriously boggles the mind why this wasn't done in doom from the start
+// except for maybe memory usage savings.
 //#define OLDMAPS
 #ifdef OLDMAPS
-   #define LIGHTLEVELS       16
-   #define LIGHTSEGSHIFT      4
-   #define LIGHTBRIGHT        1
+    #define LIGHTLEVELS       16
+    #define LIGHTSEGSHIFT      4
+    #define LIGHTBRIGHT        1
 #else
-   #define LIGHTLEVELS       32
-   #define LIGHTSEGSHIFT      3
-   #define LIGHTBRIGHT        2
+    #define LIGHTLEVELS       32
+    #define LIGHTSEGSHIFT      3
+    #define LIGHTBRIGHT        2
 #endif
+
+// clang-format on
 
 
 // Number of diminishing brightness levels.

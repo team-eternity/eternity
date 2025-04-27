@@ -40,8 +40,8 @@ using hackhandler_t = void (*)(filelump_t *, int);
 //
 struct w_dirhack_t
 {
-   const char *sha1;
-   hackhandler_t handler;
+    const char   *sha1;
+    hackhandler_t handler;
 };
 
 //
@@ -56,33 +56,33 @@ struct w_dirhack_t
 //
 static void W_doGothic2Hack(filelump_t *fileinfo, int numlumps)
 {
-   filelump_t *lump = nullptr;
-   int i;
+    filelump_t *lump = nullptr;
+    int         i;
 
-   // scan backward and look for ADEL_Y08
-   for(i = numlumps - 1; i >= 0; --i)
-   {
-      if(!strncasecmp(fileinfo[i].name, "ADEL_Y08", 8))
-      {
-         lump = &fileinfo[i];
-         break;
-      }
-   }
+    // scan backward and look for ADEL_Y08
+    for(i = numlumps - 1; i >= 0; --i)
+    {
+        if(!strncasecmp(fileinfo[i].name, "ADEL_Y08", 8))
+        {
+            lump = &fileinfo[i];
+            break;
+        }
+    }
 
-   if(lump)
-   {
-      // Move ADEL_Y08 to the end of the wad directory, overwriting the
-      // erroneous FF_START lump that is there.
-      filelump_t *lastlump = &fileinfo[numlumps - 1];
-      lastlump->filepos = lump->filepos;
-      lastlump->size    = lump->size;
-      strncpy(lastlump->name, lump->name, 8);
+    if(lump)
+    {
+        // Move ADEL_Y08 to the end of the wad directory, overwriting the
+        // erroneous FF_START lump that is there.
+        filelump_t *lastlump = &fileinfo[numlumps - 1];
+        lastlump->filepos    = lump->filepos;
+        lastlump->size       = lump->size;
+        strncpy(lastlump->name, lump->name, 8);
 
-      // Now, replace the original ADEL_Y08 with an FF_START.
-      lump->filepos = 0;
-      lump->size    = 0;
-      strncpy(lump->name, "FF_START", 8);
-   }
+        // Now, replace the original ADEL_Y08 with an FF_START.
+        lump->filepos = 0;
+        lump->size    = 0;
+        strncpy(lump->name, "FF_START", 8);
+    }
 }
 
 //
@@ -93,14 +93,14 @@ static void W_doGothic2Hack(filelump_t *fileinfo, int numlumps)
 //
 static void W_doNerveHack(filelump_t *fileinfo, int numlumps)
 {
-   static bool firsttime = true;
+    static bool firsttime = true;
 
-   if(firsttime) // don't do this more than once, in case of runtime loading
-   {
-      // When loaded this way, the metadata definitions apply to global gameplay
-      D_DeferredMissionMetaData("ENRVMETA", MD_NONE);
-      firsttime = false;
-   }
+    if(firsttime) // don't do this more than once, in case of runtime loading
+    {
+        // When loaded this way, the metadata definitions apply to global gameplay
+        D_DeferredMissionMetaData("ENRVMETA", MD_NONE);
+        firsttime = false;
+    }
 }
 
 //
@@ -110,13 +110,13 @@ static void W_doNerveHack(filelump_t *fileinfo, int numlumps)
 //
 static void W_doPS3MLHack(filelump_t *fileinfo, int numlumps)
 {
-   static bool firsttime = true;
+    static bool firsttime = true;
 
-   if(firsttime)
-   {
-      D_DeferredMissionMetaData("EMLSMETA", MD_NONE);
-      firsttime = false;
-   }
+    if(firsttime)
+    {
+        D_DeferredMissionMetaData("EMLSMETA", MD_NONE);
+        firsttime = false;
+    }
 }
 
 //
@@ -126,32 +126,32 @@ static void W_doPS3MLHack(filelump_t *fileinfo, int numlumps)
 //
 static void W_doOtakonHack(filelump_t *fileinfo, int numlumps)
 {
-   // ensure the expected directory size
-   if(numlumps != 268)
-      return;
+    // ensure the expected directory size
+    if(numlumps != 268)
+        return;
 
-   filelump_t *templumps = estructalloc(filelump_t, 72);
-   int curnum = 0;
+    filelump_t *templumps = estructalloc(filelump_t, 72);
+    int         curnum    = 0;
 
-   // back up lumps that are in the wrong namespace
-   for(int i = 109; i < 176; i++, curnum++)
-      templumps[curnum] = fileinfo[i]; // STFST01-DSSAWHIT
-   for(int i = 251; i < 255; i++, curnum++)
-      templumps[curnum] = fileinfo[i]; // D_DDTBLU-D_COUNTD
-   templumps[curnum] = fileinfo[256];  // D_STALKS
+    // back up lumps that are in the wrong namespace
+    for(int i = 109; i < 176; i++, curnum++)
+        templumps[curnum] = fileinfo[i]; // STFST01-DSSAWHIT
+    for(int i = 251; i < 255; i++, curnum++)
+        templumps[curnum] = fileinfo[i]; // D_DDTBLU-D_COUNTD
+    templumps[curnum] = fileinfo[256];   // D_STALKS
 
-   // move up sprites into the cleared out space
-   curnum = 109;
-   for(int i = 176; i < 251; i++, curnum++)
-      fileinfo[curnum] = fileinfo[i];  // CHGFA0-CSAWA0
-   fileinfo[curnum++] = fileinfo[255]; // SGN2A0
-   fileinfo[curnum++] = fileinfo[257]; // S_END
+    // move up sprites into the cleared out space
+    curnum = 109;
+    for(int i = 176; i < 251; i++, curnum++)
+        fileinfo[curnum] = fileinfo[i]; // CHGFA0-CSAWA0
+    fileinfo[curnum++] = fileinfo[255]; // SGN2A0
+    fileinfo[curnum++] = fileinfo[257]; // S_END
 
-   // fill the saved off lumps back in at the end
-   for(int i = 0; i < 72; i++, curnum++)
-      fileinfo[curnum] = templumps[i];
+    // fill the saved off lumps back in at the end
+    for(int i = 0; i < 72; i++, curnum++)
+        fileinfo[curnum] = templumps[i];
 
-   efree(templumps);
+    efree(templumps);
 }
 
 //
@@ -163,15 +163,14 @@ static void W_doOtakonHack(filelump_t *fileinfo, int numlumps)
 // can be applied based on a match to the SHA-1 hash computed from the wad
 // file's header and directory during WadDirectory::AddFile.
 //
-static w_dirhack_t w_dirhacks[] =
-{
-   { "9a296941da455d0009ee3988b55d50ea363a4a84", W_doGothic2Hack }, // gothic2.wad
-   { "5b9a4f587edbd08031d9bbf7dd80dec25433e827", W_doPS3MLHack   }, // masterlevels.wad
-   { "fe650cc58c8f12a3642b6f5ef2b3368630a4aaa6", W_doNerveHack   }, // nerve.wad
-   { "9f823104462d9575750bf0ba6a4a3a6df0f766e3", W_doOtakonHack  }, // otakugfx.wad
+static w_dirhack_t w_dirhacks[] = {
+    { "9a296941da455d0009ee3988b55d50ea363a4a84", W_doGothic2Hack }, // gothic2.wad
+    { "5b9a4f587edbd08031d9bbf7dd80dec25433e827", W_doPS3MLHack   }, // masterlevels.wad
+    { "fe650cc58c8f12a3642b6f5ef2b3368630a4aaa6", W_doNerveHack   }, // nerve.wad
+    { "9f823104462d9575750bf0ba6a4a3a6df0f766e3", W_doOtakonHack  }, // otakugfx.wad
 
-   // Terminator, must be last
-   { nullptr, nullptr }
+    // Terminator, must be last
+    { nullptr,                                    nullptr         }
 };
 
 //
@@ -182,21 +181,21 @@ static w_dirhack_t w_dirhacks[] =
 //
 void W_CheckDirectoryHacks(const HashData &hash, filelump_t *fileinfo, int numlumps)
 {
-   HashData localHash = HashData(HashData::SHA1);
-   w_dirhack_t *curhack = w_dirhacks;
+    HashData     localHash = HashData(HashData::SHA1);
+    w_dirhack_t *curhack   = w_dirhacks;
 
-   while(curhack->sha1)
-   {
-      localHash.stringToDigest(curhack->sha1);
+    while(curhack->sha1)
+    {
+        localHash.stringToDigest(curhack->sha1);
 
-      if(localHash == hash) 
-      {
-         // found a match
-         curhack->handler(fileinfo, numlumps);
-         return;
-      }
-      ++curhack;
-   }
+        if(localHash == hash)
+        {
+            // found a match
+            curhack->handler(fileinfo, numlumps);
+            return;
+        }
+        ++curhack;
+    }
 }
 
 // EOF

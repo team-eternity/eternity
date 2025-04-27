@@ -29,18 +29,18 @@
 
 class LevelActionThinker : public Thinker
 {
-   DECLARE_THINKER_TYPE(LevelActionThinker, Thinker)
+    DECLARE_THINKER_TYPE(LevelActionThinker, Thinker)
 
 protected:
-   int special;
-   int args[NUMLINEARGS];
-   int mobjtype;
+    int special;
+    int args[NUMLINEARGS];
+    int mobjtype;
 
 public:
-   virtual void Think() override;
-   virtual void serialize(SaveArchive &arc) override;
+    virtual void Think() override;
+    virtual void serialize(SaveArchive &arc) override;
 
-   static void Spawn(int pSpecial, int *pArgs, int pMobjType);
+    static void Spawn(int pSpecial, int *pArgs, int pMobjType);
 };
 
 void P_SpawnLevelActions();

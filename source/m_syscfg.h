@@ -24,12 +24,11 @@
 #ifndef M_SYSCFG_H__
 #define M_SYSCFG_H__
 
-void M_LoadSysConfig(const char *filename);
-void M_SaveSysConfig(void);
+void       M_LoadSysConfig(const char *filename);
+void       M_SaveSysConfig(void);
 default_t *M_GetSysDefaults(void);
 
 #endif
 
 // EOF
-
 

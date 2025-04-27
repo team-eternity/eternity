@@ -40,10 +40,10 @@
 class XInputGamePadDriver : public HALGamePadDriver
 {
 public:
-   virtual bool initialize();
-   virtual void shutdown();
-   virtual void enumerateDevices();
-   virtual int  getBaseDeviceNum() { return 0x10000; }
+    virtual bool initialize();
+    virtual void shutdown();
+    virtual void enumerateDevices();
+    virtual int  getBaseDeviceNum() { return 0x10000; }
 };
 
 extern XInputGamePadDriver i_xinputGamePadDriver;
@@ -55,20 +55,20 @@ extern XInputGamePadDriver i_xinputGamePadDriver;
 //
 class XInputHapticInterface : public HALHapticInterface
 {
-   DECLARE_RTTI_TYPE(XInputHapticInterface, HALHapticInterface)
+    DECLARE_RTTI_TYPE(XInputHapticInterface, HALHapticInterface)
 
 protected:
-   unsigned long dwUserIndex;
-   bool pauseState;
+    unsigned long dwUserIndex;
+    bool          pauseState;
 
-   void zeroState();
+    void zeroState();
 
 public:
-   XInputHapticInterface(unsigned long userIdx = 0);
-   virtual void startEffect(effect_e effect, int data1, int data2);
-   virtual void pauseEffects(bool effectsPaused);
-   virtual void updateEffects();
-   virtual void clearEffects();
+    XInputHapticInterface(unsigned long userIdx = 0);
+    virtual void startEffect(effect_e effect, int data1, int data2);
+    virtual void pauseEffects(bool effectsPaused);
+    virtual void updateEffects();
+    virtual void clearEffects();
 };
 
 //
@@ -78,44 +78,43 @@ public:
 //
 class XInputGamePad : public HALGamePad
 {
-   DECLARE_RTTI_TYPE(XInputGamePad, HALGamePad)
+    DECLARE_RTTI_TYPE(XInputGamePad, HALGamePad)
 
 protected:
-   unsigned long dwUserIndex;
-   XInputHapticInterface haptics;
+    unsigned long         dwUserIndex;
+    XInputHapticInterface haptics;
 
-   float normAxis(int value, int threshold, int maxvalue);
-   void  normAxisPair(float &axisx, float &axisy, int threshold, int min, int max);
+    float normAxis(int value, int threshold, int maxvalue);
+    void  normAxisPair(float &axisx, float &axisy, int threshold, int min, int max);
 
-   static inline constexpr const char *stringForAxis[6] =
-   {
-      "Left X",
-      "Left Y",
-      "Right X",
-      "Right Y",
-      "Left Trigger",
-      "Right Trigger",
-   };
+    static inline constexpr const char *stringForAxis[6] = {
+        "Left X",        //
+        "Left Y",        //
+        "Right X",       //
+        "Right Y",       //
+        "Left Trigger",  //
+        "Right Trigger", //
+    };
 
 public:
-   XInputGamePad(unsigned long userIdx = 0);
+    XInputGamePad(unsigned long userIdx = 0);
 
-   virtual bool select();
-   virtual void deselect();
-   virtual void poll();
+    virtual bool select();
+    virtual void deselect();
+    virtual void poll();
 
-   virtual HALHapticInterface *getHapticInterface() { return &haptics; }
+    virtual HALHapticInterface *getHapticInterface() { return &haptics; }
 
-   //
-   // Gets a name for an axis (if possible)
-   //
-   virtual const char *getAxisName(const int axis) override
-   {
-      if(axis >= 0 && axis < 6)
-         return stringForAxis[axis];
-      else
-         return Super::getAxisName(axis);
-   }
+    //
+    // Gets a name for an axis (if possible)
+    //
+    virtual const char *getAxisName(const int axis) override
+    {
+        if(axis >= 0 && axis < 6)
+            return stringForAxis[axis];
+        else
+            return Super::getAxisName(axis);
+    }
 };
 
 #endif

@@ -33,15 +33,13 @@ struct VBuffer;
 
 void V_ColorBlockScaled(VBuffer *buffer, byte color, int x, int y, int w, int h);
 
-void V_ColorBlockTLScaled(VBuffer *dest, byte color, int x, int y, int w, int h, 
-                          int tl);
+void V_ColorBlockTLScaled(VBuffer *dest, byte color, int x, int y, int w, int h, int tl);
 
 // haleyjd 02/02/05: color block drawing functions
 
 void V_ColorBlock(VBuffer *buffer, byte color, int x, int y, int w, int h);
 
-void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y, int w, 
-                    int h, int tl);
+void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y, int w, int h, int tl);
 
 // buffer fill w/texture
 void V_FillBuffer(VBuffer *buffer, const byte *src, int texw, int texh);
@@ -52,6 +50,4 @@ void V_SetBlockFuncs(VBuffer *, int);
 #endif
 
 // EOF
-
-
 

@@ -38,10 +38,10 @@
 // enumeration for metaerrno
 enum
 {
-   META_ERR_NOERR,        // 0 is not an error
-   META_ERR_NOSUCHOBJECT,
-   META_ERR_NOSUCHTYPE,
-   META_NUMERRS
+    META_ERR_NOERR, // 0 is not an error
+    META_ERR_NOSUCHOBJECT,
+    META_ERR_NOSUCHTYPE,
+    META_NUMERRS
 };
 
 extern int metaerrno;
@@ -53,58 +53,56 @@ class MetaTablePimpl;
 //
 class MetaObject : public RTTIObject
 {
-   DECLARE_RTTI_TYPE(MetaObject, RTTIObject)
+    DECLARE_RTTI_TYPE(MetaObject, RTTIObject)
 
 protected:
-   DLListItem<MetaObject> links;     // links by key
-   DLListItem<MetaObject> typelinks; // links by type
-   const char *key;                  // primary hash key
-   const char *type;                 // type hash key
-   size_t      keyIdx;               // index of interned key
+    DLListItem<MetaObject> links;     // links by key
+    DLListItem<MetaObject> typelinks; // links by type
+    const char            *key;       // primary hash key
+    const char            *type;      // type hash key
+    size_t                 keyIdx;    // index of interned key
 
-   // For efficiency, we are friends with the private implementation
-   // object for MetaTable. It needs direct access to the links and
-   // typelinks for use with EHashTable.
-   friend class MetaTablePimpl;
+    // For efficiency, we are friends with the private implementation
+    // object for MetaTable. It needs direct access to the links and
+    // typelinks for use with EHashTable.
+    friend class MetaTablePimpl;
 
 public:
-   // Constructors/Destructor
-   MetaObject();
-   explicit MetaObject(size_t keyIndex);
-   explicit MetaObject(const char *pKey);
-   MetaObject(const MetaObject &other)
-      : Super(), links(), typelinks(), key(other.key),
-        type(nullptr), keyIdx(other.keyIdx)
-   {
-   }
+    // Constructors/Destructor
+    MetaObject();
+    explicit MetaObject(size_t keyIndex);
+    explicit MetaObject(const char *pKey);
+    MetaObject(const MetaObject &other)
+        : Super(), links(), typelinks(), key(other.key), type(nullptr), keyIdx(other.keyIdx)
+    {}
 
-   virtual ~MetaObject() {}
+    virtual ~MetaObject() {}
 
-   //
-   // MetaObject::setType
-   //
-   // This will set the MetaObject's internal type to its RTTI class name. This
-   // is really only for use by MetaTable but calling it yourself wouldn't screw
-   // anything up. It's just redundant.
-   //
-   void setType() { type = getClassName(); }
+    //
+    // MetaObject::setType
+    //
+    // This will set the MetaObject's internal type to its RTTI class name. This
+    // is really only for use by MetaTable but calling it yourself wouldn't screw
+    // anything up. It's just redundant.
+    //
+    void setType() { type = getClassName(); }
 
-   const char *getKey()    const { return key;    }
-   size_t      getKeyIdx() const { return keyIdx; }
+    const char *getKey() const { return key; }
+    size_t      getKeyIdx() const { return keyIdx; }
 
-   // Virtual Methods
+    // Virtual Methods
 
-   //
-   // MetaObject::clone
-   //
-   // Virtual factory method for metaobjects; when invoked through the metatable,
-   // a descendent class will return an object of the proper type matching itself.
-   // This base class implementation doesn't really do anything, but I'm not fond
-   // of pure virtuals so here it is. Don't call it from the parent implementation
-   // as that is not what any of the implementations should do.
-   //
-   virtual MetaObject *clone()    const { return new MetaObject(*this); }
-   virtual const char *toString() const;   
+    //
+    // MetaObject::clone
+    //
+    // Virtual factory method for metaobjects; when invoked through the metatable,
+    // a descendent class will return an object of the proper type matching itself.
+    // This base class implementation doesn't really do anything, but I'm not fond
+    // of pure virtuals so here it is. Don't call it from the parent implementation
+    // as that is not what any of the implementations should do.
+    //
+    virtual MetaObject *clone() const { return new MetaObject(*this); }
+    virtual const char *toString() const;
 };
 
 // MetaObject specializations for basic types
@@ -116,35 +114,26 @@ public:
 //
 class MetaInteger : public MetaObject
 {
-   DECLARE_RTTI_TYPE(MetaInteger, MetaObject)
+    DECLARE_RTTI_TYPE(MetaInteger, MetaObject)
 
 protected:
-   int value;
+    int value;
 
 public:
-   MetaInteger() : Super(), value(0) {}
-   MetaInteger(size_t keyIndex, int i)
-      : Super(keyIndex), value(i)
-   {
-   }
-   MetaInteger(const char *key, int i) 
-      : Super(key), value(i)
-   {
-   }
-   MetaInteger(const MetaInteger &other)
-      : Super(other), value(other.value)
-   {
-   }
+    MetaInteger() : Super(), value(0) {}
+    MetaInteger(size_t keyIndex, int i) : Super(keyIndex), value(i) {}
+    MetaInteger(const char *key, int i) : Super(key), value(i) {}
+    MetaInteger(const MetaInteger &other) : Super(other), value(other.value) {}
 
-   // Virtual Methods
-   virtual MetaObject *clone()    const override { return new MetaInteger(*this); }
-   virtual const char *toString() const override;
+    // Virtual Methods
+    virtual MetaObject *clone() const override { return new MetaInteger(*this); }
+    virtual const char *toString() const override;
 
-   // Accessors
-   int getValue() const { return value; }
-   void setValue(int i) { value = i;    }
+    // Accessors
+    int  getValue() const { return value; }
+    void setValue(int i) { value = i; }
 
-   friend class MetaTable;
+    friend class MetaTable;
 };
 
 //
@@ -154,31 +143,25 @@ public:
 //
 class MetaDouble : public MetaObject
 {
-   DECLARE_RTTI_TYPE(MetaDouble, MetaObject)
+    DECLARE_RTTI_TYPE(MetaDouble, MetaObject)
 
 protected:
-   double value;
+    double value;
 
 public:
-   MetaDouble() : Super(), value(0.0) {}
-   MetaDouble(const char *key, double d)
-      : Super(key), value(d)
-   {
-   }
-   MetaDouble(const MetaDouble &other)
-      : Super(other), value(other.value)
-   {
-   }
+    MetaDouble() : Super(), value(0.0) {}
+    MetaDouble(const char *key, double d) : Super(key), value(d) {}
+    MetaDouble(const MetaDouble &other) : Super(other), value(other.value) {}
 
-   // Virtual Methods
-   virtual MetaObject *clone()    const override { return new MetaDouble(*this); }
-   virtual const char *toString() const override;
+    // Virtual Methods
+    virtual MetaObject *clone() const override { return new MetaDouble(*this); }
+    virtual const char *toString() const override;
 
-   // Accessors
-   double getValue() const { return value; }
-   void setValue(double d) { value = d;    }
+    // Accessors
+    double getValue() const { return value; }
+    void   setValue(double d) { value = d; }
 
-   friend class MetaTable;
+    friend class MetaTable;
 };
 
 //
@@ -189,37 +172,31 @@ public:
 //
 class MetaString : public MetaObject
 {
-   DECLARE_RTTI_TYPE(MetaString, MetaObject)
+    DECLARE_RTTI_TYPE(MetaString, MetaObject)
 
 protected:
-   char *value;
+    char *value;
 
 public:
-   MetaString() : Super(), value(estrdup("")) {}
-   MetaString(const char *key, const char *s)
-      : Super(key), value(estrdup(s))
-   {
-   }
-   MetaString(const MetaString &other)
-      : Super(other), value(estrdup(other.value))
-   {
-   }
-   virtual ~MetaString()
-   {
-      if(value)
-         efree(value);
-      value = nullptr;
-   }
+    MetaString() : Super(), value(estrdup("")) {}
+    MetaString(const char *key, const char *s) : Super(key), value(estrdup(s)) {}
+    MetaString(const MetaString &other) : Super(other), value(estrdup(other.value)) {}
+    virtual ~MetaString()
+    {
+        if(value)
+            efree(value);
+        value = nullptr;
+    }
 
-   // Virtual Methods
-   virtual MetaObject *clone()    const override { return new MetaString(*this); }
-   virtual const char *toString() const override { return value; }
+    // Virtual Methods
+    virtual MetaObject *clone() const override { return new MetaString(*this); }
+    virtual const char *toString() const override { return value; }
 
-   // Accessors
-   const char *getValue() const { return value; }
-   virtual void setValue(const char *s, char **ret = nullptr);
+    // Accessors
+    const char  *getValue() const { return value; }
+    virtual void setValue(const char *s, char **ret = nullptr);
 
-   friend class MetaTable;
+    friend class MetaTable;
 };
 
 //
@@ -230,54 +207,47 @@ public:
 //
 class MetaVariant : public MetaString
 {
-   DECLARE_RTTI_TYPE(MetaVariant, MetaString)
+    DECLARE_RTTI_TYPE(MetaVariant, MetaString)
 
 public:
-   enum varianttype_e
-   {
-      VARIANT_NONE,   // not yet interpreted
-      VARIANT_INT,    // integer
-      VARIANT_BOOL,   // boolean
-      VARIANT_FLOAT,  // float
-      VARIANT_DOUBLE, // double
+    enum varianttype_e
+    {
+        VARIANT_NONE,   // not yet interpreted
+        VARIANT_INT,    // integer
+        VARIANT_BOOL,   // boolean
+        VARIANT_FLOAT,  // float
+        VARIANT_DOUBLE, // double
 
-      VARIANT_MAX
-   };
+        VARIANT_MAX
+    };
 
 protected:
-   varianttype_e cachedType;
+    varianttype_e cachedType;
 
-   union variantcache_u
-   {
-      int    i;
-      bool   b;
-      float  f;
-      double d;
-   } cachedValue;
+    union variantcache_u
+    {
+        int    i;
+        bool   b;
+        float  f;
+        double d;
+    } cachedValue;
 
 public:
-   MetaVariant() : Super(), cachedType(VARIANT_NONE) 
-   {
-      cachedValue.i = 0;
-   }
-   MetaVariant(const char *key, const char *s) 
-      : Super(key, s), cachedType(VARIANT_NONE)
-   {
-      cachedValue.i = 0;
-   }
-   MetaVariant(const MetaVariant &other);
+    MetaVariant() : Super(), cachedType(VARIANT_NONE) { cachedValue.i = 0; }
+    MetaVariant(const char *key, const char *s) : Super(key, s), cachedType(VARIANT_NONE) { cachedValue.i = 0; }
+    MetaVariant(const MetaVariant &other);
 
-   // Virtual Methods
-   virtual MetaObject *clone() const override { return new MetaVariant(*this); }
-   virtual void setValue(const char *s, char **ret = nullptr) override;
+    // Virtual Methods
+    virtual MetaObject *clone() const override { return new MetaVariant(*this); }
+    virtual void        setValue(const char *s, char **ret = nullptr) override;
 
-   // Accessors
-   int    getInt();
-   bool   getBool();
-   float  getFloat();
-   double getDouble();
+    // Accessors
+    int    getInt();
+    bool   getBool();
+    float  getFloat();
+    double getDouble();
 
-   varianttype_e getCachedType() const { return cachedType;}
+    varianttype_e getCachedType() const { return cachedType; }
 };
 
 //
@@ -288,36 +258,27 @@ public:
 //
 class MetaConstString : public MetaObject
 {
-   DECLARE_RTTI_TYPE(MetaConstString, MetaObject)
+    DECLARE_RTTI_TYPE(MetaConstString, MetaObject)
 
 protected:
-   const char *value;
+    const char *value;
 
 public:
-   MetaConstString() : Super(), value(nullptr) {}
-   MetaConstString(size_t keyIndex, const char *s)
-      : Super(keyIndex), value(s)
-   {
-   }
-   MetaConstString(const char *key, const char *s)
-      : Super(key), value(s)
-   {
-   }
-   MetaConstString(const MetaConstString &other)
-      : Super(other), value(other.value)
-   {
-   }
-   virtual ~MetaConstString() {}
+    MetaConstString() : Super(), value(nullptr) {}
+    MetaConstString(size_t keyIndex, const char *s) : Super(keyIndex), value(s) {}
+    MetaConstString(const char *key, const char *s) : Super(key), value(s) {}
+    MetaConstString(const MetaConstString &other) : Super(other), value(other.value) {}
+    virtual ~MetaConstString() {}
 
-   // Virtual Methods
-   virtual MetaObject *clone()    const override { return new MetaConstString(*this); }
-   virtual const char *toString() const override { return value; }
+    // Virtual Methods
+    virtual MetaObject *clone() const override { return new MetaConstString(*this); }
+    virtual const char *toString() const override { return value; }
 
-   // Accessors
-   const char *getValue() const { return value; }
-   void setValue(const char *s) { value = s;    }
+    // Accessors
+    const char *getValue() const { return value; }
+    void        setValue(const char *s) { value = s; }
 
-   friend class MetaTable;
+    friend class MetaTable;
 };
 
 //
@@ -330,167 +291,173 @@ public:
 //
 class MetaTable : public MetaObject
 {
-   DECLARE_RTTI_TYPE(MetaTable, MetaObject)
+    DECLARE_RTTI_TYPE(MetaTable, MetaObject)
 
 private:
-   // Private implementation details are in metaapi.cpp
-   MetaTablePimpl *pImpl;
+    // Private implementation details are in metaapi.cpp
+    MetaTablePimpl *pImpl;
 
 public:
-   MetaTable();
-   explicit MetaTable(const char *name);
-   MetaTable(const MetaTable &other);
-   virtual ~MetaTable();
+    MetaTable();
+    explicit MetaTable(const char *name);
+    MetaTable(const MetaTable &other);
+    virtual ~MetaTable();
 
-   // MetaObject overrides
-   virtual MetaObject *clone() const override;
-   virtual const char *toString() const override;
+    // MetaObject overrides
+    virtual MetaObject *clone() const override;
+    virtual const char *toString() const override;
 
-   // EHashTable API exposures
-   float        getLoadFactor() const; // returns load factor of the key hash table
-   unsigned int getNumItems()   const; // returns number of items in the table
+    // EHashTable API exposures
+    float        getLoadFactor() const; // returns load factor of the key hash table
+    unsigned int getNumItems() const;   // returns number of items in the table
 
-   // Search functions. Frankly, it's more efficient to just use the "get" routines :P
-   bool hasKey(const char *key) const;
-   bool hasType(const char *type) const;
-   bool hasKeyAndType(const char *key, const char *type) const;
+    // Search functions. Frankly, it's more efficient to just use the "get" routines :P
+    bool hasKey(const char *key) const;
+    bool hasType(const char *type) const;
+    bool hasKeyAndType(const char *key, const char *type) const;
 
-   // Count functions.
-   int countOfKey(const char *key) const;
-   int countOfType(const char *type) const;
-   int countOfKeyAndType(const char *key, const char *type) const;
+    // Count functions.
+    int countOfKey(const char *key) const;
+    int countOfType(const char *type) const;
+    int countOfKeyAndType(const char *key, const char *type) const;
 
-   // Add/Remove Objects
-   void addObject(MetaObject *object);
-   void addObject(MetaObject &object);
-   void removeObject(MetaObject *object);
-   void removeObject(MetaObject &object);
-   void removeAndDeleteAllObjects(size_t keyIndex);
-   void removeAndDeleteAllObjects(const char *key);
-   void removeAndDeleteAllObjects(size_t keyIndex, const MetaObject::Type *type);
-   void removeAndDeleteAllObjects(const char *key, const MetaObject::Type *type);
+    // Add/Remove Objects
+    void addObject(MetaObject *object);
+    void addObject(MetaObject &object);
+    void removeObject(MetaObject *object);
+    void removeObject(MetaObject &object);
+    void removeAndDeleteAllObjects(size_t keyIndex);
+    void removeAndDeleteAllObjects(const char *key);
+    void removeAndDeleteAllObjects(size_t keyIndex, const MetaObject::Type *type);
+    void removeAndDeleteAllObjects(const char *key, const MetaObject::Type *type);
 
-   // Find objects in the table:
-   // * By Key
-   MetaObject *getObject(const char *key) const;
-   MetaObject *getObject(size_t keyIndex) const;
-   // * By Type
-   MetaObject *getObjectType(const char *type) const;
-   MetaObject *getObjectType(const MetaObject::Type &type) const;
-   // * By Key AND Type
-   MetaObject *getObjectKeyAndType(const char *key, const MetaObject::Type *type) const;
-   MetaObject *getObjectKeyAndType(const char *key, const char *type) const;
-   MetaObject *getObjectKeyAndType(size_t keyIndex, const MetaObject::Type *type) const;
-   MetaObject *getObjectKeyAndType(size_t keyIndex, const char *type) const;
+    // Find objects in the table:
+    // * By Key
+    MetaObject *getObject(const char *key) const;
+    MetaObject *getObject(size_t keyIndex) const;
+    // * By Type
+    MetaObject *getObjectType(const char *type) const;
+    MetaObject *getObjectType(const MetaObject::Type &type) const;
+    // * By Key AND Type
+    MetaObject *getObjectKeyAndType(const char *key, const MetaObject::Type *type) const;
+    MetaObject *getObjectKeyAndType(const char *key, const char *type) const;
+    MetaObject *getObjectKeyAndType(size_t keyIndex, const MetaObject::Type *type) const;
+    MetaObject *getObjectKeyAndType(size_t keyIndex, const char *type) const;
 
-   // Template finders
-   template<typename M> M *getObjectTypeEx() const
-   {
-      return static_cast<M *>(getObjectType(M::StaticType));
-   }
+    // Template finders
+    template<typename M>
+    M *getObjectTypeEx() const
+    {
+        return static_cast<M *>(getObjectType(M::StaticType));
+    }
 
-   template<typename M> M *getObjectKeyAndTypeEx(const char *key) const
-   {
-      return static_cast<M *>(getObjectKeyAndType(key, RTTI(M)));
-   }
+    template<typename M>
+    M *getObjectKeyAndTypeEx(const char *key) const
+    {
+        return static_cast<M *>(getObjectKeyAndType(key, RTTI(M)));
+    }
 
-   template<typename M> M *getObjectKeyAndTypeEx(size_t keyIndex) const
-   {
-      return static_cast<M *>(getObjectKeyAndType(keyIndex, RTTI(M)));
-   }
+    template<typename M>
+    M *getObjectKeyAndTypeEx(size_t keyIndex) const
+    {
+        return static_cast<M *>(getObjectKeyAndType(keyIndex, RTTI(M)));
+    }
 
-   // Iterators
-   // * By Key
-   MetaObject *getNextObject(MetaObject *object, const char *key) const;
-   MetaObject *getNextObject(MetaObject *object, size_t keyIndex) const;
-   // * By Type
-   MetaObject *getNextType(MetaObject *object, const char *type) const;
-   MetaObject *getNextType(MetaObject *object, const MetaObject::Type *type) const;
-   // * By Key AND Type
-   MetaObject *getNextKeyAndType(MetaObject *object, const char *key, const char *type) const;
-   MetaObject *getNextKeyAndType(MetaObject *object, size_t keyIdx,   const char *type) const;
-   MetaObject *getNextKeyAndType(MetaObject *object, const char *key, const MetaObject::Type *type) const;
-   MetaObject *getNextKeyAndType(MetaObject *object, size_t keyIdx,   const MetaObject::Type *type) const;
-   const MetaObject *getNextKeyAndType(const MetaObject *object, const char *key, const char *type) const;
-   const MetaObject *getNextKeyAndType(const MetaObject *object, size_t keyIdx,   const char *type) const;
-   const MetaObject *getNextKeyAndType(const MetaObject *object, const char *key, const MetaObject::Type *type) const;
-   const MetaObject *getNextKeyAndType(const MetaObject *object, size_t keyIdx,   const MetaObject::Type *type) const;
-   // * Full table iterators
-   MetaObject *tableIterator(MetaObject *object) const;
-   const MetaObject *tableIterator(const MetaObject *object) const;
+    // Iterators
+    // * By Key
+    MetaObject *getNextObject(MetaObject *object, const char *key) const;
+    MetaObject *getNextObject(MetaObject *object, size_t keyIndex) const;
+    // * By Type
+    MetaObject *getNextType(MetaObject *object, const char *type) const;
+    MetaObject *getNextType(MetaObject *object, const MetaObject::Type *type) const;
+    // * By Key AND Type
+    MetaObject       *getNextKeyAndType(MetaObject *object, const char *key, const char *type) const;
+    MetaObject       *getNextKeyAndType(MetaObject *object, size_t keyIdx, const char *type) const;
+    MetaObject       *getNextKeyAndType(MetaObject *object, const char *key, const MetaObject::Type *type) const;
+    MetaObject       *getNextKeyAndType(MetaObject *object, size_t keyIdx, const MetaObject::Type *type) const;
+    const MetaObject *getNextKeyAndType(const MetaObject *object, const char *key, const char *type) const;
+    const MetaObject *getNextKeyAndType(const MetaObject *object, size_t keyIdx, const char *type) const;
+    const MetaObject *getNextKeyAndType(const MetaObject *object, const char *key, const MetaObject::Type *type) const;
+    const MetaObject *getNextKeyAndType(const MetaObject *object, size_t keyIdx, const MetaObject::Type *type) const;
+    // * Full table iterators
+    MetaObject       *tableIterator(MetaObject *object) const;
+    const MetaObject *tableIterator(const MetaObject *object) const;
 
-   // Template iterators
-   template<typename M> M *getNextTypeEx(M *object) const
-   {
-      return static_cast<M *>(getNextType(object, RTTI(M)));
-   }
+    // Template iterators
+    template<typename M>
+    M *getNextTypeEx(M *object) const
+    {
+        return static_cast<M *>(getNextType(object, RTTI(M)));
+    }
 
-   template<typename M> M *getNextKeyAndTypeEx(M *object, const char *key) const
-   {
-      return static_cast<M *>(getNextKeyAndType(object, key, RTTI(M)));
-   }
+    template<typename M>
+    M *getNextKeyAndTypeEx(M *object, const char *key) const
+    {
+        return static_cast<M *>(getNextKeyAndType(object, key, RTTI(M)));
+    }
 
-   template<typename M> M *getNextKeyAndTypeEx(M *object, size_t keyIdx) const
-   {
-      return static_cast<M *>(getNextKeyAndType(object, keyIdx, RTTI(M)));
-   }
+    template<typename M>
+    M *getNextKeyAndTypeEx(M *object, size_t keyIdx) const
+    {
+        return static_cast<M *>(getNextKeyAndType(object, keyIdx, RTTI(M)));
+    }
 
-   // Add/Get/Set Convenience Methods for Basic MetaObjects
-   
-   // Signed integer
-   void addInt(size_t keyIndex, int value);
-   void addInt(const char *key, int value);
-   int  getInt(size_t keyIndex, int defValue) const;
-   int  getInt(const char *key, int defValue) const;
-   void setInt(size_t keyIndex, int newValue);
-   void setInt(const char *key, int newValue);
-   int  removeInt(const char *key);
+    // Add/Get/Set Convenience Methods for Basic MetaObjects
 
-   // Double floating-point
-   void   addDouble(const char *key, double value);
-   double getDouble(const char *key, double defValue) const;
-   double getDouble(size_t keyIndex, double defValue) const;
-   void   setDouble(const char *key, double newValue);
-   double removeDouble(const char *key);
+    // Signed integer
+    void addInt(size_t keyIndex, int value);
+    void addInt(const char *key, int value);
+    int  getInt(size_t keyIndex, int defValue) const;
+    int  getInt(const char *key, int defValue) const;
+    void setInt(size_t keyIndex, int newValue);
+    void setInt(const char *key, int newValue);
+    int  removeInt(const char *key);
 
-   // Managed strings
-   void        addString(const char *key, const char *value);
-   const char *getString(size_t  keyIndex, const char *defValue) const;
-   const char *getString(const char *key, const char *defValue) const;
-   void        setString(const char *key, const char *newValue);
-   char       *removeString(const char *key);
-   char       *removeString(size_t keyIndex);
-   void        removeStringNR(const char *key);
-   void        removeStringNR(size_t keyIndex);
+    // Double floating-point
+    void   addDouble(const char *key, double value);
+    double getDouble(const char *key, double defValue) const;
+    double getDouble(size_t keyIndex, double defValue) const;
+    void   setDouble(const char *key, double newValue);
+    double removeDouble(const char *key);
 
-   // Constant shared strings
-   void        addConstString(size_t keyIndex, const char *value);
-   void        addConstString(const char *key, const char *value);
-   const char *getConstString(const char *key, const char *defValue) const;
-   const char *getConstString(size_t keyIndex, const char *defValue) const;
-   void        setConstString(size_t keyIndex, const char *newValue);
-   void        setConstString(const char *key, const char *newValue);
-   const char *removeConstString(const char *key);
-   const char *removeConstString(size_t keyIndex);
+    // Managed strings
+    void        addString(const char *key, const char *value);
+    const char *getString(size_t keyIndex, const char *defValue) const;
+    const char *getString(const char *key, const char *defValue) const;
+    void        setString(const char *key, const char *newValue);
+    char       *removeString(const char *key);
+    char       *removeString(size_t keyIndex);
+    void        removeStringNR(const char *key);
+    void        removeStringNR(size_t keyIndex);
 
-   // Nested MetaTable
-   void       addMetaTable(size_t keyIndex, MetaTable *value);
-   void       addMetaTable(const char *key, MetaTable *newValue);
-   MetaTable *getMetaTable(size_t keyIndex, MetaTable *defValue) const;
-   MetaTable *getMetaTable(const char *key, MetaTable *defValue) const;
-   void       setMetaTable(size_t keyIndex, MetaTable *value);
-   void       setMetaTable(const char *key, MetaTable *value);
-   void       removeMetaTableNR(size_t keyIndex);
+    // Constant shared strings
+    void        addConstString(size_t keyIndex, const char *value);
+    void        addConstString(const char *key, const char *value);
+    const char *getConstString(const char *key, const char *defValue) const;
+    const char *getConstString(size_t keyIndex, const char *defValue) const;
+    void        setConstString(size_t keyIndex, const char *newValue);
+    void        setConstString(const char *key, const char *newValue);
+    const char *removeConstString(const char *key);
+    const char *removeConstString(size_t keyIndex);
 
-   // Copy routine - clones the entire MetaTable
-   void copyTableTo(MetaTable *dest) const;
-   void copyTableFrom(const MetaTable *source);
+    // Nested MetaTable
+    void       addMetaTable(size_t keyIndex, MetaTable *value);
+    void       addMetaTable(const char *key, MetaTable *newValue);
+    MetaTable *getMetaTable(size_t keyIndex, MetaTable *defValue) const;
+    MetaTable *getMetaTable(const char *key, MetaTable *defValue) const;
+    void       setMetaTable(size_t keyIndex, MetaTable *value);
+    void       setMetaTable(const char *key, MetaTable *value);
+    void       removeMetaTableNR(size_t keyIndex);
 
-   // Clearing
-   void clearTable();
+    // Copy routine - clones the entire MetaTable
+    void copyTableTo(MetaTable *dest) const;
+    void copyTableFrom(const MetaTable *source);
 
-   // Statics
-   static size_t IndexForKey(const char *key);
+    // Clearing
+    void clearTable();
+
+    // Statics
+    static size_t IndexForKey(const char *key);
 };
 
 //
@@ -503,26 +470,24 @@ public:
 class MetaKeyIndex
 {
 protected:
-   const char *key;
-   size_t keyIndex;
-   bool   haveIndex;
+    const char *key;
+    size_t      keyIndex;
+    bool        haveIndex;
 
 public:
-   explicit MetaKeyIndex(const char *pKey) : key(pKey), keyIndex(0), haveIndex(false) 
-   {
-   }
+    explicit MetaKeyIndex(const char *pKey) : key(pKey), keyIndex(0), haveIndex(false) {}
 
-   size_t getIndex() 
-   { 
-      if(!haveIndex)
-      {
-         keyIndex  = MetaTable::IndexForKey(key);
-         haveIndex = true;
-      }
-      return keyIndex;
-   }
+    size_t getIndex()
+    {
+        if(!haveIndex)
+        {
+            keyIndex  = MetaTable::IndexForKey(key);
+            haveIndex = true;
+        }
+        return keyIndex;
+    }
 
-   operator size_t () { return getIndex(); }
+    operator size_t() { return getIndex(); }
 };
 
 MetaTable &M_GetTableOrDefault(MetaTable &table, const char *key);

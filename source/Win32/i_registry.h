@@ -21,7 +21,6 @@
 // Authors: James Haley, Max Waine
 //
 
-
 // Do not define EE_FEATURE_REGISTRYSCAN unless you are using a compatible
 // compiler.
 
@@ -49,9 +48,9 @@
 //
 struct registry_value_t
 {
-   HKEY root;         // registry root (ie. HKEY_LOCAL_MACHINE)
-   const char *path;  // registry path
-   const char *value; // registry key
+    HKEY        root;  // registry root (ie. HKEY_LOCAL_MACHINE)
+    const char *path;  // registry path
+    const char *value; // registry key
 };
 
 //
@@ -61,41 +60,40 @@ struct registry_value_t
 class AutoRegKey
 {
 protected:
-   HKEY key;
-   bool valid;
+    HKEY key;
+    bool valid;
 
 public:
-   // Constructor. Open the key described by rval.
-   explicit AutoRegKey(const registry_value_t &rval) : valid(false)
-   {
-      if(!RegOpenKeyEx(rval.root, rval.path, 0, KEY_READ, &key))
-         valid = true;
-   }
+    // Constructor. Open the key described by rval.
+    explicit AutoRegKey(const registry_value_t &rval) : valid(false)
+    {
+        if(!RegOpenKeyEx(rval.root, rval.path, 0, KEY_READ, &key))
+            valid = true;
+    }
 
-   // Disallow copying
-   AutoRegKey(const AutoRegKey &) = delete;
-   AutoRegKey &operator = (const AutoRegKey &) = delete;
+    // Disallow copying
+    AutoRegKey(const AutoRegKey &)            = delete;
+    AutoRegKey &operator=(const AutoRegKey &) = delete;
 
-   // Destructor. Close the key handle, if it is valid.
-   ~AutoRegKey()
-   {
-      if(valid)
-      {
-         RegCloseKey(key);
-         key   = nullptr;
-         valid = false;
-      }
-   }
+    // Destructor. Close the key handle, if it is valid.
+    ~AutoRegKey()
+    {
+        if(valid)
+        {
+            RegCloseKey(key);
+            key   = nullptr;
+            valid = false;
+        }
+    }
 
-   // Test if the key is open.
-   bool operator ! () const { return !valid; }
+    // Test if the key is open.
+    bool operator!() const { return !valid; }
 
-   // Query the key value using the Win32 API RegQueryValueEx.
-   LONG queryValueEx(LPCTSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType,
-                     LPBYTE lpData, LPDWORD lpcbData)
-   {
-      return RegQueryValueEx(key, lpValueName, lpReserved, lpType, lpData, lpcbData);
-   }
+    // Query the key value using the Win32 API RegQueryValueEx.
+    LONG queryValueEx(LPCTSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData)
+    {
+        return RegQueryValueEx(key, lpValueName, lpReserved, lpType, lpData, lpcbData);
+    }
 };
 
 //
@@ -105,33 +103,33 @@ public:
 //
 static bool I_GetRegistryString(const registry_value_t &regval, qstring &str)
 {
-   DWORD  len;
-   DWORD  valtype;
-   LPBYTE result;
+    DWORD  len;
+    DWORD  valtype;
+    LPBYTE result;
 
-   // Open the key (directory where the value is stored)
-   AutoRegKey key(regval);
-   if(!key)
-      return false;
+    // Open the key (directory where the value is stored)
+    AutoRegKey key(regval);
+    if(!key)
+        return false;
 
-   // Find the type and length of the string
-   if(key.queryValueEx(regval.value, nullptr, &valtype, nullptr, &len))
-      return false;
+    // Find the type and length of the string
+    if(key.queryValueEx(regval.value, nullptr, &valtype, nullptr, &len))
+        return false;
 
-   // Only accept strings
-   if(valtype != REG_SZ)
-      return false;
+    // Only accept strings
+    if(valtype != REG_SZ)
+        return false;
 
-   // Allocate a buffer for the value and read the value
-   ZAutoBuffer buffer(len, true);
-   result = buffer.getAs<LPBYTE>();
+    // Allocate a buffer for the value and read the value
+    ZAutoBuffer buffer(len, true);
+    result = buffer.getAs<LPBYTE>();
 
-   if(key.queryValueEx(regval.value, nullptr, &valtype, result, &len))
-      return false;
+    if(key.queryValueEx(regval.value, nullptr, &valtype, result, &len))
+        return false;
 
-   str = reinterpret_cast<char *>(result);
+    str = reinterpret_cast<char *>(result);
 
-   return true;
+    return true;
 }
 
 #endif // defined(EE_FEATURE_REGISTRYSCAN)

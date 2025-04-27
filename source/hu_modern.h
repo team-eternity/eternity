@@ -32,20 +32,24 @@
 
 struct VBuffer;
 
+// clang-format off
+
 class ModernHUD : public HUDOverlay
 {
 protected:
-   virtual void DrawStatus (int x, int y);
-   virtual void DrawHealth (int x, int y);
-   virtual void DrawArmor  (int x, int y);
-   virtual void DrawWeapons(int x, int y);
-   virtual void DrawAmmo   (int x, int y);
-   virtual void DrawKeys   (int x, int y);
-   virtual void DrawFrags  (int x, int y);
-   virtual void Setup();
+    virtual void DrawStatus (int x, int y);
+    virtual void DrawHealth (int x, int y);
+    virtual void DrawArmor  (int x, int y);
+    virtual void DrawWeapons(int x, int y);
+    virtual void DrawAmmo   (int x, int y);
+    virtual void DrawKeys   (int x, int y);
+    virtual void DrawFrags  (int x, int y);
+    virtual void Setup();
 
-   VBuffer *m_screen;
+    VBuffer *m_screen;
 };
+
+// clang-format on
 
 extern ModernHUD modern_overlay;
 

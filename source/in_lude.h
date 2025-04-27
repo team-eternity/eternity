@@ -31,10 +31,10 @@ struct wbstartstruct_t;
 // Intermission object struct
 struct interfns_t
 {
-   void (*Ticker)(void);         // called by IN_Ticker
-   void (*DrawBackground)(void); // called various places
-   void (*Drawer)(void);         // called by IN_Drawer
-   void (*Start)(wbstartstruct_t *wbstartstruct); // called by IN_Start
+    void (*Ticker)(void);                          // called by IN_Ticker
+    void (*DrawBackground)(void);                  // called various places
+    void (*Drawer)(void);                          // called by IN_Drawer
+    void (*Start)(wbstartstruct_t *wbstartstruct); // called by IN_Start
 };
 
 // intercam
@@ -45,7 +45,7 @@ extern int acceleratestage;
 
 class MobjCollection;
 extern MobjCollection camerathings;
-extern Mobj *wi_camera;
+extern Mobj          *wi_camera;
 
 extern char *in_fontname;
 extern char *in_bigfontname;
@@ -64,13 +64,13 @@ void IN_Start(wbstartstruct_t *wbstartstruct);
 //
 struct intermapinfo_t
 {
-   const char *lumpname;   // this works as key too
-   DLListItem<intermapinfo_t> link;
+    const char                *lumpname; // this works as key too
+    DLListItem<intermapinfo_t> link;
 
-   const char *levelname;  // the level name in the automap
-   const char *levelpic;   // the level pic in the intermission
-   const char *enterpic;   // intermission background picture for entrance
-   const char *exitpic;    // intermission exit picture
+    const char *levelname; // the level name in the automap
+    const char *levelpic;  // the level pic in the intermission
+    const char *enterpic;  // intermission background picture for entrance
+    const char *exitpic;   // intermission exit picture
 };
 
 intermapinfo_t &IN_GetMapInfo(const char *lumpname);

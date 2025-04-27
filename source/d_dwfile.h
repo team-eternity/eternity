@@ -44,39 +44,39 @@
 class DWFILE
 {
 protected:
-   int type;
-   byte *inp, *lump, *data; // Pointer to lump, FILE, or data
-   int size;
-   int origsize;            // for ungetc
-   int lumpnum;             // haleyjd 03/08/06: need to save this
+    int   type;
+    byte *inp, *lump, *data; // Pointer to lump, FILE, or data
+    int   size;
+    int   origsize; // for ungetc
+    int   lumpnum;  // haleyjd 03/08/06: need to save this
 
 public:
-   DWFILE();
-   ~DWFILE();
+    DWFILE();
+    ~DWFILE();
 
-   char  *getStr(char *buf, size_t n);
-   int    atEof() const;
-   int    getChar();
-   int    unGetChar(int c);
-   void   openFile(const char *filename, const char *mode);
-   void   openLump(int p_lumpnum);
-   void   close();
-   size_t read(void *dest, size_t p_size, size_t p_num);
-   long   fileLength() const;
+    char  *getStr(char *buf, size_t n);
+    int    atEof() const;
+    int    getChar();
+    int    unGetChar(int c);
+    void   openFile(const char *filename, const char *mode);
+    void   openLump(int p_lumpnum);
+    void   close();
+    size_t read(void *dest, size_t p_size, size_t p_num);
+    long   fileLength() const;
 
-   inline bool isOpen()     const { return !!inp;   }
-   inline bool isLump()     const { return !!lump;  }
-   inline bool isData()     const { return !!data;  }
-   inline int  getLumpNum() const { return lumpnum; }
+    inline bool isOpen() const { return !!inp; }
+    inline bool isLump() const { return !!lump; }
+    inline bool isData() const { return !!data; }
+    inline int  getLumpNum() const { return lumpnum; }
 
-   // haleyjd 03/21/10
-   enum DWFType
-   {
-      DWF_FILE,
-      DWF_LUMP,
-      DWF_DATA,
-      DWF_NUMTYPES
-   };
+    // haleyjd 03/21/10
+    enum DWFType
+    {
+        DWF_FILE,
+        DWF_LUMP,
+        DWF_DATA,
+        DWF_NUMTYPES
+    };
 };
 
 #endif

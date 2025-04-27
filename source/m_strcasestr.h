@@ -26,8 +26,12 @@
 #ifndef M_STRCASESTR_H__
 #define M_STRCASESTR_H__
 
+// clang-format off
+
 const char *M_StrCaseStr(const char *haystack, const char *needle);
       char *M_StrCaseStr(      char *haystack, const char *needle);
+
+// clang-format on
 
 #endif
 

@@ -33,23 +33,23 @@
 //
 void IntListMap::load(const Collection<PODCollection<int>> &source)
 {
-   size_t size = source.getLength() + 1;
-   for(const PODCollection<int> &element : source)
-      size += element.getLength();
-   efree(mData);
-   mData = emalloc(decltype(mData), size * sizeof(*mData));
+    size_t size = source.getLength() + 1;
+    for(const PODCollection<int> &element : source)
+        size += element.getLength();
+    efree(mData);
+    mData = emalloc(decltype(mData), size * sizeof(*mData));
 
-   size_t pos = source.getLength() + 1;
-   int *ptr = mData;
-   for(size_t i = 0; i < source.getLength(); ++i)
-   {
-      *ptr++ = static_cast<int>(pos);
-      pos += source[i].getLength();
-   }
-   *ptr++ = static_cast<int>(pos); // also the final one to determine size
-   for(const PODCollection<int> &element : source)
-      for(int value : element)
-         *ptr++ = value;
+    size_t pos = source.getLength() + 1;
+    int   *ptr = mData;
+    for(size_t i = 0; i < source.getLength(); ++i)
+    {
+        *ptr++  = static_cast<int>(pos);
+        pos    += source[i].getLength();
+    }
+    *ptr++ = static_cast<int>(pos); // also the final one to determine size
+    for(const PODCollection<int> &element : source)
+        for(int value : element)
+            *ptr++ = value;
 }
 
 //
@@ -57,8 +57,8 @@ void IntListMap::load(const Collection<PODCollection<int>> &source)
 //
 const int *IntListMap::getList(int index, int *length) const
 {
-   *length = mData[index + 1] - mData[index];
-   return mData + mData[index];
+    *length = mData[index + 1] - mData[index];
+    return mData + mData[index];
 }
 
 //
@@ -67,43 +67,42 @@ const int *IntListMap::getList(int index, int *length) const
 // LAYOUT: num_lists + 1 items
 //         then for each list pair, address of second list, followed by first list, then second list
 //
-void DualIntListMap::load(const Collection<PODCollection<int>> &first,
-                          const Collection<PODCollection<int>> &second)
+void DualIntListMap::load(const Collection<PODCollection<int>> &first, const Collection<PODCollection<int>> &second)
 {
-   size_t length = first.getLength();
-   assert(length == second.getLength());
-   size_t size = length + 1;
+    size_t length = first.getLength();
+    assert(length == second.getLength());
+    size_t size = length + 1;
 
-   for(size_t i = 0; i < length; ++i)
-   {
-      if(!first[i].isEmpty() || !second[i].isEmpty()) // don't waste time with unit if both empty
-         size += 1 + first[i].getLength() + second[i].getLength();
-   }
+    for(size_t i = 0; i < length; ++i)
+    {
+        if(!first[i].isEmpty() || !second[i].isEmpty()) // don't waste time with unit if both empty
+            size += 1 + first[i].getLength() + second[i].getLength();
+    }
 
-   efree(mData);
-   mData = emalloc(decltype(mData), size * sizeof(*mData));
+    efree(mData);
+    mData = emalloc(decltype(mData), size * sizeof(*mData));
 
-   size_t pos = length + 1;
-   int *ptr = mData;
-   for(size_t i = 0; i < length; ++i)
-   {
-      *ptr++ = static_cast<int>(pos);
-      if(!first[i].isEmpty() || !second[i].isEmpty())
-         pos += 1 + first[i].getLength() + second[i].getLength();
-   }
-   *ptr++ = static_cast<int>(pos);
-   pos = length + 1;
-   for(size_t i = 0; i < length; ++i)
-   {
-      if(first[i].isEmpty() && second[i].isEmpty())
-         continue;
-      *ptr++ = static_cast<int>(pos + 1 + first[i].getLength());
-      for(int value : first[i])
-         *ptr++ = value;
-      for(int value : second[i])
-         *ptr++ = value;
-      pos += 1 + first[i].getLength() + second[i].getLength();
-   }
+    size_t pos = length + 1;
+    int   *ptr = mData;
+    for(size_t i = 0; i < length; ++i)
+    {
+        *ptr++ = static_cast<int>(pos);
+        if(!first[i].isEmpty() || !second[i].isEmpty())
+            pos += 1 + first[i].getLength() + second[i].getLength();
+    }
+    *ptr++ = static_cast<int>(pos);
+    pos    = length + 1;
+    for(size_t i = 0; i < length; ++i)
+    {
+        if(first[i].isEmpty() && second[i].isEmpty())
+            continue;
+        *ptr++ = static_cast<int>(pos + 1 + first[i].getLength());
+        for(int value : first[i])
+            *ptr++ = value;
+        for(int value : second[i])
+            *ptr++ = value;
+        pos += 1 + first[i].getLength() + second[i].getLength();
+    }
 }
 
 //
@@ -111,20 +110,20 @@ void DualIntListMap::load(const Collection<PODCollection<int>> &first,
 //
 const int *DualIntListMap::getList(int index, int which, int *length) const
 {
-   int fullLength = mData[index + 1] - mData[index];
-   if(!fullLength)
-   {
-      *length = 0;
-      return mData;  // just return something
-   }
-   if(!which)  // first one
-   {
-      *length = mData[mData[index]] - mData[index] - 1;
-      return mData + mData[index] + 1;
-   }
-   // second one
-   *length = mData[index + 1] - mData[mData[index]];
-   return mData + mData[mData[index]];
+    int fullLength = mData[index + 1] - mData[index];
+    if(!fullLength)
+    {
+        *length = 0;
+        return mData; // just return something
+    }
+    if(!which) // first one
+    {
+        *length = mData[mData[index]] - mData[index] - 1;
+        return mData + mData[index] + 1;
+    }
+    // second one
+    *length = mData[index + 1] - mData[mData[index]];
+    return mData + mData[mData[index]];
 }
 
 // EOF

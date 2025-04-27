@@ -27,12 +27,12 @@
 
 enum
 {
-   RESET_TYPE_DEFAULT = -1,
-   RESET_TYPE_NONE,
-   RESET_TYPE_GS,
-   RESET_TYPE_GM,
-   RESET_TYPE_GM2,
-   RESET_TYPE_XG,
+    RESET_TYPE_DEFAULT = -1,
+    RESET_TYPE_NONE,
+    RESET_TYPE_GS,
+    RESET_TYPE_GM,
+    RESET_TYPE_GM2,
+    RESET_TYPE_XG,
 };
 
 extern int winmm_reset_type;

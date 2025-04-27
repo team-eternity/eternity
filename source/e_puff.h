@@ -57,7 +57,7 @@ extern MetaKeyIndex keyPuffTargetShooter;
 extern cfg_opt_t edf_puff_opts[];
 extern cfg_opt_t edf_puff_delta_opts[];
 
-void E_ProcessPuffs(cfg_t *cfg);
+void             E_ProcessPuffs(cfg_t *cfg);
 const MetaTable *E_PuffForName(const char *name);
 const MetaTable *E_PuffForIndex(size_t index);
 

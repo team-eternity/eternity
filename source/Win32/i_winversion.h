@@ -39,37 +39,37 @@
 //
 inline bool I_IsWindowsVistaOrHigher()
 {
-   static const CHAR kernel32[] = "\\kernel32.dll";
-   CHAR *path;
-   void *ver, *block;
-   UINT  dirLength;
-   DWORD versionSize;
-   UINT  blockSize;
-   VS_FIXEDFILEINFO *vInfo;
-   WORD  majorVer;
+    static const CHAR kernel32[] = "\\kernel32.dll";
+    CHAR             *path;
+    void             *ver, *block;
+    UINT              dirLength;
+    DWORD             versionSize;
+    UINT              blockSize;
+    VS_FIXEDFILEINFO *vInfo;
+    WORD              majorVer;
 
-   path = emalloc(CHAR *, sizeof(*path) * MAX_PATH);
+    path = emalloc(CHAR *, sizeof(*path) * MAX_PATH);
 
-   dirLength = GetSystemDirectory(path, MAX_PATH);
-   if(dirLength >= MAX_PATH || dirLength == 0 || dirLength > MAX_PATH - earrlen(kernel32))
-      I_Error("I_IsWindowsVistaOrHigher: Location of kernel32.dll longer than MAX_PATH.");
-   memcpy(path + dirLength, kernel32, sizeof(kernel32));
+    dirLength = GetSystemDirectory(path, MAX_PATH);
+    if(dirLength >= MAX_PATH || dirLength == 0 || dirLength > MAX_PATH - earrlen(kernel32))
+        I_Error("I_IsWindowsVistaOrHigher: Location of kernel32.dll longer than MAX_PATH.");
+    memcpy(path + dirLength, kernel32, sizeof(kernel32));
 
-   versionSize = GetFileVersionInfoSize(path, nullptr);
-   if(versionSize == 0)
-      abort();
-   ver = emalloc(void *, versionSize);
-   if(!GetFileVersionInfo(path, 0, versionSize, ver))
-      I_Error("I_IsWindowsVistaOrHigher: GetFileVersionInfo failed.");
-   if(!VerQueryValue(ver, "\\", &block, &blockSize) || blockSize < sizeof(VS_FIXEDFILEINFO))
-      I_Error("I_IsWindowsVistaOrHigher: VerQueryValue failed.");
-   vInfo = static_cast<VS_FIXEDFILEINFO *>(block);
-   majorVer = HIWORD(vInfo->dwProductVersionMS);
-   //minorVer = LOWORD(vInfo->dwProductVersionMS);
-   //buildNum = HIWORD(vInfo->dwProductVersionLS);
-   efree(path);
-   efree(ver);
-   return majorVer >= 6; // Vista is NT 6.0
+    versionSize = GetFileVersionInfoSize(path, nullptr);
+    if(versionSize == 0)
+        abort();
+    ver = emalloc(void *, versionSize);
+    if(!GetFileVersionInfo(path, 0, versionSize, ver))
+        I_Error("I_IsWindowsVistaOrHigher: GetFileVersionInfo failed.");
+    if(!VerQueryValue(ver, "\\", &block, &blockSize) || blockSize < sizeof(VS_FIXEDFILEINFO))
+        I_Error("I_IsWindowsVistaOrHigher: VerQueryValue failed.");
+    vInfo    = static_cast<VS_FIXEDFILEINFO *>(block);
+    majorVer = HIWORD(vInfo->dwProductVersionMS);
+    // minorVer = LOWORD(vInfo->dwProductVersionMS);
+    // buildNum = HIWORD(vInfo->dwProductVersionLS);
+    efree(path);
+    efree(ver);
+    return majorVer >= 6; // Vista is NT 6.0
 }
 
 #endif

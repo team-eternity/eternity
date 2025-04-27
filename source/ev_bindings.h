@@ -29,8 +29,8 @@
 
 struct ev_lockdef_t
 {
-   int special; // special number
-   int lockID;  // lockdef ID number
+    int special; // special number
+    int lockID;  // lockdef ID number
 };
 
 #define EV_LOCKDEF_NULL        0
@@ -47,8 +47,8 @@ struct ev_lockdef_t
 #define EV_LOCKDEF_YELLOW      131
 #define EV_LOCKDEF_ALL3        229
 
-extern ev_action_t  NullAction;
-extern ev_action_t  BoomGenAction;
+extern ev_action_t NullAction;
+extern ev_action_t BoomGenAction;
 
 extern ev_binding_t DOOMBindings[];
 extern ev_binding_t HereticBindings[];

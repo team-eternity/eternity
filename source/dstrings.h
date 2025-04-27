@@ -24,7 +24,6 @@
 #ifndef DSTRINGS_H__
 #define DSTRINGS_H__
 
-
 // All important printed strings.
 // Language selection (message strings).
 // Use -DFRENCH etc.
@@ -38,7 +37,6 @@
 // Misc. other strings.
 constexpr const char SAVEGAMENAME[] = "doomsav";
 
-
 //
 // File locations,
 //  relative to current position.
@@ -47,14 +45,12 @@ constexpr const char SAVEGAMENAME[] = "doomsav";
 constexpr const char DEVMAPS[] = "devmaps";
 constexpr const char DEVDATA[] = "devdata";
 
-
 // Not done in french?
 
 // QuitDOOM messages
 #define NUM_QUITMESSAGES   22
 
 extern const char *endmsg[];
-
 
 #ifndef BOOM_KEY_STRINGS // some files don't have boom-specific things
 
@@ -67,8 +63,8 @@ constexpr const char PD_YELLOWS[]    = "You need a yellow skull to open this doo
 constexpr const char PD_ANY[]        = "Any key will open this door";
 constexpr const char PD_ALL3[]       = "You need all three keys to open this door";
 constexpr const char PD_ALL6[]       = "You need all six keys to open this door";
-constexpr const char STSTR_COMPON[]  = "Compatibility Mode On";            // phares
-constexpr const char STSTR_COMPOFF[] = "Compatibility Mode Off";           // phares
+constexpr const char STSTR_COMPON[]  = "Compatibility Mode On";  // phares
+constexpr const char STSTR_COMPOFF[] = "Compatibility Mode Off"; // phares
 
 #endif
 

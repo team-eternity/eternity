@@ -33,14 +33,13 @@ struct cb_span_t;
 // haleyjd 05/02/13
 struct rrect_t
 {
-   int x;
-   int y;
-   int width;
-   int height;
+    int x;
+    int y;
+    int width;
+    int height;
 
-   void scaledFromScreenBlocks(int blocks);
-   void viewFromScaled(int blocks, int vwidth, int vheight, 
-                       const rrect_t &scaled);
+    void scaledFromScreenBlocks(int blocks);
+    void viewFromScaled(int blocks, int vwidth, int vheight, const rrect_t &scaled);
 };
 
 extern rrect_t scaledwindow;
@@ -49,13 +48,13 @@ extern rrect_t viewwindow;
 // haleyjd 01/22/11: vissprite drawstyles
 enum
 {
-   VS_DRAWSTYLE_NORMAL,  // Normal
-   VS_DRAWSTYLE_SHADOW,  // Spectre draw
-   VS_DRAWSTYLE_ALPHA,   // Flex translucent
-   VS_DRAWSTYLE_ADD,     // Additive flex translucent
-   VS_DRAWSTYLE_SUB,     // Static SUBMAP translucent
-   VS_DRAWSTYLE_TRANMAP, // Static TRANMAP translucent
-   VS_NUMSTYLES
+    VS_DRAWSTYLE_NORMAL,  // Normal
+    VS_DRAWSTYLE_SHADOW,  // Spectre draw
+    VS_DRAWSTYLE_ALPHA,   // Flex translucent
+    VS_DRAWSTYLE_ADD,     // Additive flex translucent
+    VS_DRAWSTYLE_SUB,     // Static SUBMAP translucent
+    VS_DRAWSTYLE_TRANMAP, // Static TRANMAP translucent
+    VS_NUMSTYLES
 };
 
 using R_ColumnFunc = void (*)(cb_column_t &);
@@ -67,21 +66,21 @@ using R_ColumnFunc = void (*)(cb_column_t &);
 //
 struct columndrawer_t
 {
-   R_ColumnFunc DrawColumn;       // normal
-   R_ColumnFunc DrawSkyColumn;    // sky column (uses median color)
-   R_ColumnFunc DrawNewSkyColumn; // double-sky drawing (index 0 = transparent)
-   R_ColumnFunc DrawTLColumn;     // translucent
-   R_ColumnFunc DrawTRColumn;     // translated
-   R_ColumnFunc DrawTLTRColumn;   // translucent/translated
-   R_ColumnFunc DrawFuzzColumn;   // spectre fuzz
-   R_ColumnFunc DrawFlexColumn;   // flex translucent
-   R_ColumnFunc DrawFlexTRColumn; // flex translucent/translated
-   R_ColumnFunc DrawAddColumn;    // additive flextran
-   R_ColumnFunc DrawAddTRColumn;  // additive flextran/translated
+    R_ColumnFunc DrawColumn;       // normal
+    R_ColumnFunc DrawSkyColumn;    // sky column (uses median color)
+    R_ColumnFunc DrawNewSkyColumn; // double-sky drawing (index 0 = transparent)
+    R_ColumnFunc DrawTLColumn;     // translucent
+    R_ColumnFunc DrawTRColumn;     // translated
+    R_ColumnFunc DrawTLTRColumn;   // translucent/translated
+    R_ColumnFunc DrawFuzzColumn;   // spectre fuzz
+    R_ColumnFunc DrawFlexColumn;   // flex translucent
+    R_ColumnFunc DrawFlexTRColumn; // flex translucent/translated
+    R_ColumnFunc DrawAddColumn;    // additive flextran
+    R_ColumnFunc DrawAddTRColumn;  // additive flextran/translated
 
-   void       (*ResetBuffer)();   // reset function (may be null)
+    void (*ResetBuffer)(); // reset function (may be null)
 
-   R_ColumnFunc ByVisSpriteStyle[VS_NUMSTYLES][2];
+    R_ColumnFunc ByVisSpriteStyle[VS_NUMSTYLES][2];
 };
 
 extern columndrawer_t r_normal_drawer;
@@ -98,31 +97,31 @@ void R_VideoEraseScaled(unsigned int x, unsigned int y, unsigned int w, unsigned
 extern byte **translationtables; // haleyjd 01/12/04: now ptr-to-ptr
 
 // Until we put it in gamemodeinfo and EDF...
-static const int hereticPlayerTranslationRemap[] = {0, 7, 3, 6};
+static const int hereticPlayerTranslationRemap[] = { 0, 7, 3, 6 };
 
-extern int rTintTableIndex;   // check if we have a TINTTAB lump in the directory
+extern int rTintTableIndex; // check if we have a TINTTAB lump in the directory
 
 // haleyjd 06/22/08: Span styles enumeration
 enum
 {
-   SPAN_STYLE_NORMAL,
-   SPAN_STYLE_TL,
-   SPAN_STYLE_ADD,
-   SPAN_STYLE_NORMAL_MASKED,
-   SPAN_STYLE_TL_MASKED,
-   SPAN_STYLE_ADD_MASKED,
-   SPAN_NUMSTYLES
+    SPAN_STYLE_NORMAL,
+    SPAN_STYLE_TL,
+    SPAN_STYLE_ADD,
+    SPAN_STYLE_NORMAL_MASKED,
+    SPAN_STYLE_TL_MASKED,
+    SPAN_STYLE_ADD_MASKED,
+    SPAN_NUMSTYLES
 };
 
 // haleyjd 06/22/08: Flat sizes enumeration
 enum
 {
-   FLAT_64,           // 64x64
-   FLAT_128,          // 128x128
-   FLAT_256,          // 256x256
-   FLAT_512,          // 512x512
-   FLAT_GENERALIZED,  // rectangular texture, power of two dims.
-   FLAT_NUMSIZES
+    FLAT_64,          // 64x64
+    FLAT_128,         // 128x128
+    FLAT_256,         // 256x256
+    FLAT_512,         // 512x512
+    FLAT_GENERALIZED, // rectangular texture, power of two dims.
+    FLAT_NUMSIZES
 };
 
 //
@@ -134,12 +133,12 @@ enum
 //
 struct spandrawer_t
 {
-   void (*DrawSpan [SPAN_NUMSTYLES][FLAT_NUMSIZES])(const cb_span_t &);
-   void (*DrawSlope[SPAN_NUMSTYLES][FLAT_NUMSIZES])(const cb_slopespan_t &, const cb_span_t &);
+    void (*DrawSpan[SPAN_NUMSTYLES][FLAT_NUMSIZES])(const cb_span_t &);
+    void (*DrawSlope[SPAN_NUMSTYLES][FLAT_NUMSIZES])(const cb_slopespan_t &, const cb_span_t &);
 };
 
-extern spandrawer_t r_lpspandrawer;  // low-precision
-extern spandrawer_t r_spandrawer;    // normal
+extern spandrawer_t r_lpspandrawer; // low-precision
+extern spandrawer_t r_spandrawer;   // normal
 
 void R_InitBuffer(int width, int height);
 
@@ -147,7 +146,7 @@ void R_InitBuffer(int width, int height);
 void R_InitTranslationTables();
 
 // haleyjd 09/13/09: translation num-for-name lookup function
-int R_TranslationNumForName(const char *name);
+int         R_TranslationNumForName(const char *name);
 const char *R_TranslationNameForNum(int num);
 
 // haleyjd: 09/08/12: global identity translation map
@@ -163,26 +162,26 @@ extern byte *main_tranmap; // killough 4/11/98
 extern byte *main_submap;  // haleyjd 11/30/13
 
 #define R_ADDRESS(px, py) \
-   (renderscreen + (viewwindow.y + (py)) + linesize * (viewwindow.x + (px)))
+    (renderscreen + (viewwindow.y + (py)) + linesize * (viewwindow.x + (px)))
 
 // Cardboard
 struct cb_column_t
 {
-   int x, y1, y2;
+    int x, y1, y2;
 
-   fixed_t step;
-   int texheight;
+    fixed_t step;
+    int     texheight;
 
-   int texmid;
+    int texmid;
 
-   // 8-bit lighting
-   const lighttable_t *colormap;
-   const byte *translation;
-   byte *tranmap;
-   fixed_t translevel; // haleyjd: zdoom style trans level
-   byte skycolor; // the sky color
+    // 8-bit lighting
+    const lighttable_t *colormap;
+    const byte         *translation;
+    byte               *tranmap;
+    fixed_t             translevel; // haleyjd: zdoom style trans level
+    byte                skycolor;   // the sky color
 
-   const void *source;
+    const void *source;
 };
 
 #endif

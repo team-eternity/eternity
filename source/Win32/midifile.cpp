@@ -20,7 +20,6 @@
 // Authors: Simon Howard, James Haley, Roman Fomin, Max Waine
 //
 
-
 #include "SDL.h"
 
 #include <stdio.h>
@@ -46,16 +45,16 @@ constexpr const char TRACK_CHUNK_ID[]  = "MTrk";
 
 struct PACKED_PREFIX chunk_header_t
 {
-   byte chunk_id[4];
-   unsigned int chunk_size;
+    byte         chunk_id[4];
+    unsigned int chunk_size;
 } PACKED_SUFFIX;
 
 struct PACKED_PREFIX midi_header_t
 {
-   chunk_header_t chunk_header;
-   unsigned short format_type;
-   unsigned short num_tracks;
-   unsigned short time_division;
+    chunk_header_t chunk_header;
+    unsigned short format_type;
+    unsigned short num_tracks;
+    unsigned short time_division;
 } PACKED_SUFFIX;
 
 // haleyjd 09/09/10: packing off.
@@ -65,98 +64,96 @@ struct PACKED_PREFIX midi_header_t
 
 struct midi_track_t
 {
-   // Length in bytes
-   unsigned int data_len;
+    // Length in bytes
+    unsigned int data_len;
 
-   // Events in this track:
-   midi_event_t *events;
-   int num_events;
+    // Events in this track:
+    midi_event_t *events;
+    int           num_events;
 };
 
 struct midi_track_iter_t
 {
-   midi_track_t *track;
-   unsigned int position;
-   unsigned int loop_point;
+    midi_track_t *track;
+    unsigned int  position;
+    unsigned int  loop_point;
 };
 
 struct midi_file_t
 {
-   midi_header_t header;
+    midi_header_t header;
 
-   // All tracks in this file:
-   midi_track_t *tracks;
-   unsigned int num_tracks;
+    // All tracks in this file:
+    midi_track_t *tracks;
+    unsigned int  num_tracks;
 
-   // Data buffer used to store data read for SysEx or meta events:
-   byte *buffer;
-   unsigned int buffer_size;
+    // Data buffer used to store data read for SysEx or meta events:
+    byte        *buffer;
+    unsigned int buffer_size;
 };
 
 // Check the header of a chunk:
 
 static bool CheckChunkHeader(chunk_header_t *chunk, const char *expected_id)
 {
-   const bool result = (memcmp((char *)chunk->chunk_id, expected_id, 4) == 0);
+    const bool result = (memcmp((char *)chunk->chunk_id, expected_id, 4) == 0);
 
-   if(!result)
-   {
-      printf(
-         "CheckChunkHeader: Expected '%s' chunk header, got '%c%c%c%c'\n",
-         expected_id, chunk->chunk_id[0], chunk->chunk_id[1], chunk->chunk_id[2], chunk->chunk_id[3]
-      );
-   }
+    if(!result)
+    {
+        printf("CheckChunkHeader: Expected '%s' chunk header, got '%c%c%c%c'\n", expected_id, chunk->chunk_id[0],
+               chunk->chunk_id[1], chunk->chunk_id[2], chunk->chunk_id[3]);
+    }
 
-   return result;
+    return result;
 }
 
 // Read a single byte.  Returns false on error.
 
 static bool ReadByte(byte *result, SDL_RWops *stream)
 {
-   int c;
+    int c;
 
-   if(SDL_RWread(stream, &c, 1, 1) == 0)
-   {
-      printf("ReadByte: Unexpected end of file\n");
-      return false;
-   }
-   else
-   {
-      *result = byte(c);
+    if(SDL_RWread(stream, &c, 1, 1) == 0)
+    {
+        printf("ReadByte: Unexpected end of file\n");
+        return false;
+    }
+    else
+    {
+        *result = byte(c);
 
-      return true;
-   }
+        return true;
+    }
 }
 
 // Read a variable-length value.
 
 static bool ReadVariableLength(unsigned int *result, SDL_RWops *stream)
 {
-   byte b = 0;
+    byte b = 0;
 
-   *result = 0;
+    *result = 0;
 
-   for(int i = 0; i < 4; ++i)
-   {
-      if(!ReadByte(&b, stream))
-      {
-         printf("ReadVariableLength: Error while reading variable-length value\n");
-         return false;
-      }
+    for(int i = 0; i < 4; ++i)
+    {
+        if(!ReadByte(&b, stream))
+        {
+            printf("ReadVariableLength: Error while reading variable-length value\n");
+            return false;
+        }
 
-      // Insert the bottom seven bits from this byte
-      *result <<= 7;
-      *result |= b & 0x7f;
+        // Insert the bottom seven bits from this byte
+        *result <<= 7;
+        *result  |= b & 0x7f;
 
-      // If the top bit is not set, this is the end
-      if((b & 0x80) == 0)
-         return true;
-   }
+        // If the top bit is not set, this is the end
+        if((b & 0x80) == 0)
+            return true;
+    }
 
-   printf("ReadVariableLength: Variable-length value too "
-      "long: maximum of four bytes\n");
-   return false;
+    printf("ReadVariableLength: Variable-length value too "
+           "long: maximum of four bytes\n");
+    return false;
 }
 
 //
@@ -164,32 +161,32 @@ static bool ReadVariableLength(unsigned int *result, SDL_RWops *stream)
 //
 static byte *ReadByteSequence(unsigned int num_bytes, SDL_RWops *stream)
 {
-   byte *result;
+    byte *result;
 
-   // Allocate a buffer. Allocate one extra byte, as malloc(0) is
-   // non-portable.
+    // Allocate a buffer. Allocate one extra byte, as malloc(0) is
+    // non-portable.
 
-   result = emalloc(byte *, num_bytes + 1);
+    result = emalloc(byte *, num_bytes + 1);
 
-   if(result == nullptr)
-   {
-      printf("ReadByteSequence: Failed to allocate buffer\n");
-      return nullptr;
-   }
+    if(result == nullptr)
+    {
+        printf("ReadByteSequence: Failed to allocate buffer\n");
+        return nullptr;
+    }
 
-   // Read the data:
+    // Read the data:
 
-   for(unsigned int i = 0; i < num_bytes; ++i)
-   {
-      if(!ReadByte(&result[i], stream))
-      {
-         printf("ReadByteSequence: Error while reading byte %u\n", i);
-         efree(result);
-         return nullptr;
-      }
-   }
+    for(unsigned int i = 0; i < num_bytes; ++i)
+    {
+        if(!ReadByte(&result[i], stream))
+        {
+            printf("ReadByteSequence: Error while reading byte %u\n", i);
+            efree(result);
+            return nullptr;
+        }
+    }
 
-   return result;
+    return result;
 }
 
 // Read a MIDI channel event.
@@ -198,262 +195,258 @@ static byte *ReadByteSequence(unsigned int num_bytes, SDL_RWops *stream)
 
 static bool ReadChannelEvent(midi_event_t *event, byte event_type, bool two_param, SDL_RWops *stream)
 {
-   byte b = 0;
+    byte b = 0;
 
-   // Set basics:
+    // Set basics:
 
-   event->event_type = midi_event_type_e(event_type & 0xf0);
-   event->data.channel.channel = event_type & 0x0f;
+    event->event_type           = midi_event_type_e(event_type & 0xf0);
+    event->data.channel.channel = event_type & 0x0f;
 
-   // Read parameters:
+    // Read parameters:
 
-   if(!ReadByte(&b, stream))
-   {
-      printf("ReadChannelEvent: Error while reading channel event parameters\n");
-      return false;
-   }
+    if(!ReadByte(&b, stream))
+    {
+        printf("ReadChannelEvent: Error while reading channel event parameters\n");
+        return false;
+    }
 
-   event->data.channel.param1 = b;
+    event->data.channel.param1 = b;
 
-   // Second parameter:
+    // Second parameter:
 
-   if(two_param)
-   {
-      if(!ReadByte(&b, stream))
-      {
-         printf("ReadChannelEvent: Error while reading channel event parameters\n");
-         return false;
-      }
+    if(two_param)
+    {
+        if(!ReadByte(&b, stream))
+        {
+            printf("ReadChannelEvent: Error while reading channel event parameters\n");
+            return false;
+        }
 
-      event->data.channel.param2 = b;
-   }
+        event->data.channel.param2 = b;
+    }
 
-   return true;
+    return true;
 }
 
 // Read sysex event:
 
 static bool ReadSysExEvent(midi_event_t *event, int event_type, SDL_RWops *stream)
 {
-   event->event_type = midi_event_type_e(event_type);
+    event->event_type = midi_event_type_e(event_type);
 
-   if(!ReadVariableLength(&event->data.sysex.length, stream))
-   {
-      printf("ReadSysExEvent: Failed to read length of SysEx block\n");
-      return false;
-   }
+    if(!ReadVariableLength(&event->data.sysex.length, stream))
+    {
+        printf("ReadSysExEvent: Failed to read length of SysEx block\n");
+        return false;
+    }
 
-   // Read the byte sequence:
+    // Read the byte sequence:
 
-   event->data.sysex.data = ReadByteSequence(event->data.sysex.length, stream);
+    event->data.sysex.data = ReadByteSequence(event->data.sysex.length, stream);
 
-   if(event->data.sysex.data == nullptr)
-   {
-      printf("ReadSysExEvent: Failed while reading SysEx event\n");
-      return false;
-   }
+    if(event->data.sysex.data == nullptr)
+    {
+        printf("ReadSysExEvent: Failed while reading SysEx event\n");
+        return false;
+    }
 
-   return true;
+    return true;
 }
 
 // Read meta event:
 
 static bool ReadMetaEvent(midi_event_t *event, SDL_RWops *stream)
 {
-   byte b = 0;
+    byte b = 0;
 
-   event->event_type = MIDI_EVENT_META;
+    event->event_type = MIDI_EVENT_META;
 
-   // Read meta event type:
+    // Read meta event type:
 
-   if(!ReadByte(&b, stream))
-   {
-      printf("ReadMetaEvent: Failed to read meta event type\n");
-      return false;
-   }
+    if(!ReadByte(&b, stream))
+    {
+        printf("ReadMetaEvent: Failed to read meta event type\n");
+        return false;
+    }
 
-   event->data.meta.type = b;
+    event->data.meta.type = b;
 
-   // Read length of meta event data:
+    // Read length of meta event data:
 
-   if(!ReadVariableLength(&event->data.meta.length, stream))
-   {
-      printf("ReadSysExEvent: Failed to read length of SysEx block\n");
-      return false;
-   }
+    if(!ReadVariableLength(&event->data.meta.length, stream))
+    {
+        printf("ReadSysExEvent: Failed to read length of SysEx block\n");
+        return false;
+    }
 
-   // Read the byte sequence:
+    // Read the byte sequence:
 
-   event->data.meta.data = ReadByteSequence(event->data.meta.length, stream);
+    event->data.meta.data = ReadByteSequence(event->data.meta.length, stream);
 
-   if(event->data.meta.data == nullptr)
-   {
-      printf("ReadSysExEvent: Failed while reading SysEx event\n");
-      return false;
-   }
+    if(event->data.meta.data == nullptr)
+    {
+        printf("ReadSysExEvent: Failed while reading SysEx event\n");
+        return false;
+    }
 
-   return true;
+    return true;
 }
 
-static bool ReadEvent(midi_event_t *event, unsigned int *last_event_type,
-   SDL_RWops *stream)
+static bool ReadEvent(midi_event_t *event, unsigned int *last_event_type, SDL_RWops *stream)
 {
-   byte event_type = 0;
+    byte event_type = 0;
 
-   if(!ReadVariableLength(&event->delta_time, stream))
-   {
-      printf("ReadEvent: Failed to read event timestamp\n");
-      return false;
-   }
+    if(!ReadVariableLength(&event->delta_time, stream))
+    {
+        printf("ReadEvent: Failed to read event timestamp\n");
+        return false;
+    }
 
-   if(!ReadByte(&event_type, stream))
-   {
-      printf("ReadEvent: Failed to read event type\n");
-      return false;
-   }
+    if(!ReadByte(&event_type, stream))
+    {
+        printf("ReadEvent: Failed to read event type\n");
+        return false;
+    }
 
-   // All event types have their top bit set.  Therefore, if 
-   // the top bit is not set, it is because we are using the "same
-   // as previous event type" shortcut to save a byte.  Skip back
-   // a byte so that we read this byte again.
+    // All event types have their top bit set.  Therefore, if
+    // the top bit is not set, it is because we are using the "same
+    // as previous event type" shortcut to save a byte.  Skip back
+    // a byte so that we read this byte again.
 
-   if((event_type & 0x80) == 0)
-   {
-      event_type = *last_event_type;
+    if((event_type & 0x80) == 0)
+    {
+        event_type = *last_event_type;
 
-      if(SDL_RWseek(stream, -1, RW_SEEK_CUR) < 0)
-      {
-         printf("ReadEvent: Unable to seek in stream\n");
-         return false;
-      }
-   }
-   else
-      *last_event_type = event_type;
+        if(SDL_RWseek(stream, -1, RW_SEEK_CUR) < 0)
+        {
+            printf("ReadEvent: Unable to seek in stream\n");
+            return false;
+        }
+    }
+    else
+        *last_event_type = event_type;
 
-   // Check event type:
+    // Check event type:
 
-   switch(event_type & 0xf0)
-   {
-      // Two parameter channel events:
+    switch(event_type & 0xf0)
+    {
+        // Two parameter channel events:
 
-   case MIDI_EVENT_NOTE_OFF:
-   case MIDI_EVENT_NOTE_ON:
-   case MIDI_EVENT_AFTERTOUCH:
-   case MIDI_EVENT_CONTROLLER:
-   case MIDI_EVENT_PITCH_BEND:
-      return ReadChannelEvent(event, event_type, true, stream);
+    case MIDI_EVENT_NOTE_OFF:
+    case MIDI_EVENT_NOTE_ON:
+    case MIDI_EVENT_AFTERTOUCH:
+    case MIDI_EVENT_CONTROLLER:
+    case MIDI_EVENT_PITCH_BEND: //
+        return ReadChannelEvent(event, event_type, true, stream);
 
-      // Single parameter channel events:
+        // Single parameter channel events:
 
-   case MIDI_EVENT_PROGRAM_CHANGE:
-   case MIDI_EVENT_CHAN_AFTERTOUCH:
-      return ReadChannelEvent(event, event_type, false, stream);
+    case MIDI_EVENT_PROGRAM_CHANGE:
+    case MIDI_EVENT_CHAN_AFTERTOUCH: //
+        return ReadChannelEvent(event, event_type, false, stream);
 
-   default:
-      break;
-   }
+    default: break;
+    }
 
-   // Specific value?
+    // Specific value?
 
-   switch(event_type)
-   {
-   case MIDI_EVENT_SYSEX:
-   case MIDI_EVENT_SYSEX_SPLIT:
-      return ReadSysExEvent(event, event_type, stream);
+    switch(event_type)
+    {
+    case MIDI_EVENT_SYSEX:
+    case MIDI_EVENT_SYSEX_SPLIT: //
+        return ReadSysExEvent(event, event_type, stream);
 
-   case MIDI_EVENT_META:
-      return ReadMetaEvent(event, stream);
+    case MIDI_EVENT_META: return ReadMetaEvent(event, stream);
 
-   default:
-      break;
-   }
+    default: break;
+    }
 
-   printf("ReadEvent: Unknown MIDI event type: 0x%x\n", event_type);
-   return false;
+    printf("ReadEvent: Unknown MIDI event type: 0x%x\n", event_type);
+    return false;
 }
 
 // Free an event:
 
 static void FreeEvent(midi_event_t *event)
 {
-   // Some event types have dynamically allocated buffers assigned
-   // to them that must be freed.
+    // Some event types have dynamically allocated buffers assigned
+    // to them that must be freed.
 
-   switch(event->event_type)
-   {
-   case MIDI_EVENT_SYSEX:
-   case MIDI_EVENT_SYSEX_SPLIT:
-      efree(event->data.sysex.data);
-      break;
+    switch(event->event_type)
+    {
+    case MIDI_EVENT_SYSEX:
+    case MIDI_EVENT_SYSEX_SPLIT: //
+        efree(event->data.sysex.data);
+        break;
 
-   case MIDI_EVENT_META:
-      efree(event->data.meta.data);
-      break;
+    case MIDI_EVENT_META: //
+        efree(event->data.meta.data);
+        break;
 
-   default:
-      // Nothing to do.
-      break;
-   }
+    default:
+        // Nothing to do.
+        break;
+    }
 }
 
 // Read and check the track chunk header
 
 static bool ReadTrackHeader(midi_track_t *track, SDL_RWops *stream)
 {
-   size_t records_read;
-   chunk_header_t chunk_header;
+    size_t         records_read;
+    chunk_header_t chunk_header;
 
-   records_read = SDL_RWread(stream, &chunk_header, sizeof(chunk_header_t), 1);
+    records_read = SDL_RWread(stream, &chunk_header, sizeof(chunk_header_t), 1);
 
-   if(records_read < 1)
-      return false;
+    if(records_read < 1)
+        return false;
 
-   if(!CheckChunkHeader(&chunk_header, TRACK_CHUNK_ID))
-      return false;
+    if(!CheckChunkHeader(&chunk_header, TRACK_CHUNK_ID))
+        return false;
 
-   track->data_len = SwapBigULong(chunk_header.chunk_size);
+    track->data_len = SwapBigULong(chunk_header.chunk_size);
 
-   return true;
+    return true;
 }
 
 static bool ReadTrack(midi_track_t *track, SDL_RWops *stream)
 {
-   midi_event_t *new_events;
-   midi_event_t *event;
-   unsigned int  last_event_type;
+    midi_event_t *new_events;
+    midi_event_t *event;
+    unsigned int  last_event_type;
 
-   track->num_events = 0;
-   track->events     = nullptr;
+    track->num_events = 0;
+    track->events     = nullptr;
 
-   // Read the header:
+    // Read the header:
 
-   if(!ReadTrackHeader(track, stream))
-      return false;
+    if(!ReadTrackHeader(track, stream))
+        return false;
 
-   // Then the events:
+    // Then the events:
 
-   last_event_type = 0;
+    last_event_type = 0;
 
-   for(;;)
-   {
-      // Resize the track slightly larger to hold another event:
+    for(;;)
+    {
+        // Resize the track slightly larger to hold another event:
 
-      new_events    = erealloc(midi_event_t *, track->events, sizeof(midi_event_t) * (track->num_events + 1));
-      track->events = new_events;
+        new_events    = erealloc(midi_event_t *, track->events, sizeof(midi_event_t) * (track->num_events + 1));
+        track->events = new_events;
 
-      // Read the next event:
-      event = &track->events[track->num_events];
-      if(!ReadEvent(event, &last_event_type, stream))
-         return false;
+        // Read the next event:
+        event = &track->events[track->num_events];
+        if(!ReadEvent(event, &last_event_type, stream))
+            return false;
 
-      ++track->num_events;
+        ++track->num_events;
 
-      // End of track?
-      if(event->event_type == MIDI_EVENT_META && event->data.meta.type == MIDI_META_END_OF_TRACK)
-         break;
-   }
+        // End of track?
+        if(event->event_type == MIDI_EVENT_META && event->data.meta.type == MIDI_META_END_OF_TRACK)
+            break;
+    }
 
-   return true;
+    return true;
 }
 
 //
@@ -461,205 +454,203 @@ static bool ReadTrack(midi_track_t *track, SDL_RWops *stream)
 //
 static void FreeTrack(midi_track_t *track)
 {
-   for(int i = 0; i < track->num_events; ++i)
-      FreeEvent(&track->events[i]);
+    for(int i = 0; i < track->num_events; ++i)
+        FreeEvent(&track->events[i]);
 
-   efree(track->events);
+    efree(track->events);
 }
 
 static bool ReadAllTracks(midi_file_t *file, SDL_RWops *stream)
 {
-   // Allocate list of tracks
-   file->tracks = estructalloc(midi_track_t, file->num_tracks);
+    // Allocate list of tracks
+    file->tracks = estructalloc(midi_track_t, file->num_tracks);
 
-   if(file->tracks == nullptr)
-      return false;
+    if(file->tracks == nullptr)
+        return false;
 
-   // Read each track
-   for(unsigned int i = 0; i < file->num_tracks; ++i)
-   {
-      if(!ReadTrack(&file->tracks[i], stream))
-         return false;
-   }
+    // Read each track
+    for(unsigned int i = 0; i < file->num_tracks; ++i)
+    {
+        if(!ReadTrack(&file->tracks[i], stream))
+            return false;
+    }
 
-   return true;
+    return true;
 }
 
 // Read and check the header chunk.
 
 static bool ReadFileHeader(midi_file_t *file, SDL_RWops *stream)
 {
-   size_t records_read;
-   unsigned int format_type;
+    size_t       records_read;
+    unsigned int format_type;
 
-   records_read = SDL_RWread(stream, &file->header, sizeof(midi_header_t), 1);
+    records_read = SDL_RWread(stream, &file->header, sizeof(midi_header_t), 1);
 
-   if(records_read < 1)
-      return false;
+    if(records_read < 1)
+        return false;
 
-   if(!CheckChunkHeader(&file->header.chunk_header, HEADER_CHUNK_ID) ||
-      SwapBigULong(file->header.chunk_header.chunk_size) != 6)
-   {
-      printf(
-         "ReadFileHeader: Invalid MIDI chunk header! chunk_size=%i\n",
-         SwapBigULong(file->header.chunk_header.chunk_size)
-      );
-      return false;
-   }
+    if(!CheckChunkHeader(&file->header.chunk_header, HEADER_CHUNK_ID) ||
+       SwapBigULong(file->header.chunk_header.chunk_size) != 6)
+    {
+        printf("ReadFileHeader: Invalid MIDI chunk header! chunk_size=%i\n",
+               SwapBigULong(file->header.chunk_header.chunk_size));
+        return false;
+    }
 
-   format_type      = SwapBigUShort(file->header.format_type);
-   file->num_tracks = SwapBigUShort(file->header.num_tracks);
+    format_type      = SwapBigUShort(file->header.format_type);
+    file->num_tracks = SwapBigUShort(file->header.num_tracks);
 
-   if((format_type != 0 && format_type != 1) || file->num_tracks < 1)
-   {
-      printf("ReadFileHeader: Only type 0/1 MIDI files supported!\n");
-      return false;
-   }
+    if((format_type != 0 && format_type != 1) || file->num_tracks < 1)
+    {
+        printf("ReadFileHeader: Only type 0/1 MIDI files supported!\n");
+        return false;
+    }
 
-   return true;
+    return true;
 }
 
 void MIDI_FreeFile(midi_file_t *file)
 {
-   if(file->tracks != nullptr)
-   {
-      for(unsigned int i = 0; i < file->num_tracks; ++i)
-         FreeTrack(&file->tracks[i]);
+    if(file->tracks != nullptr)
+    {
+        for(unsigned int i = 0; i < file->num_tracks; ++i)
+            FreeTrack(&file->tracks[i]);
 
-      efree(file->tracks);
-   }
+        efree(file->tracks);
+    }
 
-   efree(file);
+    efree(file);
 }
 
 midi_file_t *MIDI_LoadFile(SDL_RWops *stream)
 {
-   midi_file_t *file;
+    midi_file_t *file;
 
-   file = estructalloc(midi_file_t, 1);
+    file = estructalloc(midi_file_t, 1);
 
-   if(file == nullptr)
-      return nullptr;
+    if(file == nullptr)
+        return nullptr;
 
-   // Open file
-   if(stream == nullptr)
-   {
-      printf("MIDI_LoadFile: Failed to load\n");
-      MIDI_FreeFile(file);
-      return nullptr;
-   }
+    // Open file
+    if(stream == nullptr)
+    {
+        printf("MIDI_LoadFile: Failed to load\n");
+        MIDI_FreeFile(file);
+        return nullptr;
+    }
 
-   // Read MIDI file header
-   if(!ReadFileHeader(file, stream))
-   {
-      SDL_RWclose(stream);
-      MIDI_FreeFile(file);
-      return nullptr;
-   }
+    // Read MIDI file header
+    if(!ReadFileHeader(file, stream))
+    {
+        SDL_RWclose(stream);
+        MIDI_FreeFile(file);
+        return nullptr;
+    }
 
-   // Read all tracks
-   if(!ReadAllTracks(file, stream))
-   {
-      SDL_RWclose(stream);
-      MIDI_FreeFile(file);
-      return nullptr;
-   }
+    // Read all tracks
+    if(!ReadAllTracks(file, stream))
+    {
+        SDL_RWclose(stream);
+        MIDI_FreeFile(file);
+        return nullptr;
+    }
 
-   SDL_RWclose(stream);
+    SDL_RWclose(stream);
 
-   return file;
+    return file;
 }
 
 // Get the number of tracks in a MIDI file.
 
 unsigned int MIDI_NumTracks(midi_file_t *file)
 {
-   return file->num_tracks;
+    return file->num_tracks;
 }
 
 // Start iterating over the events in a track.
 
 midi_track_iter_t *MIDI_IterateTrack(midi_file_t *file, unsigned int track)
 {
-   midi_track_iter_t *iter;
+    midi_track_iter_t *iter;
 
-   if(track >= file->num_tracks)
-      I_Error("MIDI_IterateTrack: Track number greater than or equal to number of tracks\n");
+    if(track >= file->num_tracks)
+        I_Error("MIDI_IterateTrack: Track number greater than or equal to number of tracks\n");
 
-   iter = estructalloc(midi_track_iter_t, 1);
-   iter->track      = &file->tracks[track];
-   iter->position   = 0;
-   iter->loop_point = 0;
+    iter             = estructalloc(midi_track_iter_t, 1);
+    iter->track      = &file->tracks[track];
+    iter->position   = 0;
+    iter->loop_point = 0;
 
-   return iter;
+    return iter;
 }
 
 void MIDI_FreeIterator(midi_track_iter_t *iter)
 {
-   efree(iter);
+    efree(iter);
 }
 
 // Get the time until the next MIDI event in a track.
 
 unsigned int MIDI_GetDeltaTime(midi_track_iter_t *iter)
 {
-   if(int(iter->position) < iter->track->num_events)
-   {
-      midi_event_t *next_event;
+    if(int(iter->position) < iter->track->num_events)
+    {
+        midi_event_t *next_event;
 
-      next_event = &iter->track->events[iter->position];
+        next_event = &iter->track->events[iter->position];
 
-      return next_event->delta_time;
-   }
-   else
-   {
-      return 0;
-   }
+        return next_event->delta_time;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 // Get a pointer to the next MIDI event.
 
 int MIDI_GetNextEvent(midi_track_iter_t *iter, midi_event_t **event)
 {
-   if(int(iter->position) < iter->track->num_events)
-   {
-      *event = &iter->track->events[iter->position];
-      ++iter->position;
+    if(int(iter->position) < iter->track->num_events)
+    {
+        *event = &iter->track->events[iter->position];
+        ++iter->position;
 
-      return 1;
-   }
-   else
-   {
-      return 0;
-   }
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 unsigned int MIDI_GetFileTimeDivision(midi_file_t *file)
 {
-   short result = SwapBigUShort(file->header.time_division);
+    short result = SwapBigUShort(file->header.time_division);
 
-   // Negative time division indicates SMPTE time and must be handled
-   // differently.
-   if(result < 0)
-      return int(-(result / 256)) * int(result & 0xFF);
-   else
-      return result;
+    // Negative time division indicates SMPTE time and must be handled
+    // differently.
+    if(result < 0)
+        return int(-(result / 256)) * int(result & 0xFF);
+    else
+        return result;
 }
 
 void MIDI_RestartIterator(midi_track_iter_t *iter)
 {
-   iter->position   = 0;
-   iter->loop_point = 0;
+    iter->position   = 0;
+    iter->loop_point = 0;
 }
 
 void MIDI_SetLoopPoint(midi_track_iter_t *iter)
 {
-   iter->loop_point = iter->position;
+    iter->loop_point = iter->position;
 }
 
 void MIDI_RestartAtLoopPoint(midi_track_iter_t *iter)
 {
-   iter->position = iter->loop_point;
+    iter->position = iter->loop_point;
 }
 
 // EOF

@@ -31,7 +31,6 @@
 // shotgun. This may need to change a bit when dynamic weapons are finished.
 bool enable_ssg = false;
 
-
 // MaxW: 2018/05/30: This comment (mostly) preserved for historical purposes
 
 //
@@ -40,10 +39,9 @@ bool enable_ssg = false;
 //
 void D_InitWeaponInfo()
 {
-   // haleyjd 11/28/08: SSG enable
-   if(GameModeInfo->type == Game_DOOM &&
-      W_CheckNumForNameNS("SHT2A0", lumpinfo_t::ns_sprites) > 0)
-      enable_ssg = true;
+    // haleyjd 11/28/08: SSG enable
+    if(GameModeInfo->type == Game_DOOM && W_CheckNumForNameNS("SHT2A0", lumpinfo_t::ns_sprites) > 0)
+        enable_ssg = true;
 }
 
 //----------------------------------------------------------------------------

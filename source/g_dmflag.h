@@ -29,13 +29,13 @@
 
 enum
 {
-   DM_ITEMRESPAWN   = 0x00000001, // items respawn
-   DM_WEAPONSTAY    = 0x00000002, // weapons stay
-   DM_BARRELRESPAWN = 0x00000004, // barrels respawn (dm3)
-   DM_PLAYERDROP    = 0x00000008, // players drop items (dm3)
-   DM_RESPAWNSUPER  = 0x00000010, // respawning super powerups
-   DM_INSTAGIB      = 0x00000020, // any damage gibs players
-   DM_KEEPITEMS     = 0x00000040, // keep items when reborn
+    DM_ITEMRESPAWN   = 0x00000001, // items respawn
+    DM_WEAPONSTAY    = 0x00000002, // weapons stay
+    DM_BARRELRESPAWN = 0x00000004, // barrels respawn (dm3)
+    DM_PLAYERDROP    = 0x00000008, // players drop items (dm3)
+    DM_RESPAWNSUPER  = 0x00000010, // respawning super powerups
+    DM_INSTAGIB      = 0x00000020, // any damage gibs players
+    DM_KEEPITEMS     = 0x00000040, // keep items when reborn
 };
 
 // Default dmflags for certain game modes

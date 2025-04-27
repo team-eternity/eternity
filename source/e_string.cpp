@@ -45,15 +45,18 @@ constexpr const char ITEM_STRING_VAL[]    = "val";
 constexpr const char ITEM_STRING_BEXDST[] = "bexdest";
 constexpr const char ITEM_STRING_BEXSRC[] = "bexsource";
 
+// clang-format off
+
 // String Options
-cfg_opt_t edf_string_opts[] =
-{
-   CFG_STR(ITEM_STRING_VAL,    "", CFGF_NONE),
-   CFG_INT(ITEM_STRING_NUM,    -1, CFGF_NONE),
-   CFG_STR(ITEM_STRING_BEXDST, "", CFGF_NONE),
-   CFG_STR(ITEM_STRING_BEXSRC, "", CFGF_NONE),
-   CFG_END()
+cfg_opt_t edf_string_opts[] = {
+    CFG_STR(ITEM_STRING_VAL,    "", CFGF_NONE),
+    CFG_INT(ITEM_STRING_NUM,    -1, CFGF_NONE),
+    CFG_STR(ITEM_STRING_BEXDST, "", CFGF_NONE),
+    CFG_STR(ITEM_STRING_BEXSRC, "", CFGF_NONE),
+    CFG_END()
 };
+
+// clang-format on
 
 constexpr int NUM_EDFSTR_CHAINS = 257;
 
@@ -77,9 +80,9 @@ static DLListItem<edf_string_t> *edf_str_numchains[NUM_EDFSTR_CHAINS];
 //
 static void E_AddStringToNumHash(edf_string_t *str)
 {
-   int idx = str->numkey % NUM_EDFSTR_CHAINS;
+    int idx = str->numkey % NUM_EDFSTR_CHAINS;
 
-   str->numlinks.insert(str, &edf_str_numchains[idx]);
+    str->numlinks.insert(str, &edf_str_numchains[idx]);
 }
 
 //
@@ -91,7 +94,7 @@ static void E_AddStringToNumHash(edf_string_t *str)
 //
 static void E_DelStringFromNumHash(edf_string_t *str)
 {
-   str->numlinks.remove();
+    str->numlinks.remove();
 }
 
 //
@@ -105,58 +108,57 @@ static void E_DelStringFromNumHash(edf_string_t *str)
 //
 edf_string_t *E_CreateString(const char *value, const char *key, int num)
 {
-   edf_string_t *newStr;
+    edf_string_t *newStr;
 
-   if((newStr = E_StringForName(key)))
-   {
-      // Modify existing object.
-      E_ReplaceString(newStr->string, estrdup(value));
+    if((newStr = E_StringForName(key)))
+    {
+        // Modify existing object.
+        E_ReplaceString(newStr->string, estrdup(value));
 
-      // Modify numeric id and rehash object if necessary
-      if(num != newStr->numkey)
-      {
-         // If old key is >= 0, must remove from hash first
-         if(newStr->numkey >= 0)
-            E_DelStringFromNumHash(newStr);
+        // Modify numeric id and rehash object if necessary
+        if(num != newStr->numkey)
+        {
+            // If old key is >= 0, must remove from hash first
+            if(newStr->numkey >= 0)
+                E_DelStringFromNumHash(newStr);
 
-         // Set new key
-         newStr->numkey = num;
+            // Set new key
+            newStr->numkey = num;
 
-         // If new key >= 0, add back to hash
-         if(newStr->numkey >= 0)
+            // If new key >= 0, add back to hash
+            if(newStr->numkey >= 0)
+                E_AddStringToNumHash(newStr);
+        }
+    }
+    else
+    {
+        // Create a new string object
+        newStr = estructalloc(edf_string_t, 1);
+
+        // copy keys into string object
+        if(strlen(key) >= sizeof(newStr->key))
+        {
+            E_EDFLoggedErr(2, "E_CreateString: invalid string mnemonic '%s'\n", key);
+        }
+        strncpy(newStr->key, key, sizeof(newStr->key));
+
+        newStr->numkey = num;
+
+        // duplicate value
+        newStr->string = estrdup(value);
+
+        // add to hash tables
+
+        int keyval             = D_HashTableKey(newStr->key) % NUM_EDFSTR_CHAINS;
+        newStr->next           = edf_str_chains[keyval];
+        edf_str_chains[keyval] = newStr;
+
+        // numeric key is not required
+        if(num >= 0)
             E_AddStringToNumHash(newStr);
-      }
-   }
-   else
-   {
-      // Create a new string object
-      newStr = estructalloc(edf_string_t, 1);
+    }
 
-      // copy keys into string object
-      if(strlen(key) >= sizeof(newStr->key))
-      {
-         E_EDFLoggedErr(2,
-            "E_CreateString: invalid string mnemonic '%s'\n", key);
-      }
-      strncpy(newStr->key, key, sizeof(newStr->key));
-
-      newStr->numkey = num;
-
-      // duplicate value
-      newStr->string = estrdup(value);
-
-      // add to hash tables
-
-      int keyval = D_HashTableKey(newStr->key) % NUM_EDFSTR_CHAINS;
-      newStr->next = edf_str_chains[keyval];
-      edf_str_chains[keyval] = newStr;
-
-      // numeric key is not required
-      if(num >= 0)
-         E_AddStringToNumHash(newStr);
-   }
-
-   return newStr;
+    return newStr;
 }
 
 //
@@ -167,13 +169,13 @@ edf_string_t *E_CreateString(const char *value, const char *key, int num)
 //
 edf_string_t *E_StringForName(const char *key)
 {
-   int keyval = D_HashTableKey(key) % NUM_EDFSTR_CHAINS;
-   edf_string_t *cur = edf_str_chains[keyval];
+    int           keyval = D_HashTableKey(key) % NUM_EDFSTR_CHAINS;
+    edf_string_t *cur    = edf_str_chains[keyval];
 
-   while(cur && strncasecmp(cur->key, key, sizeof(cur->key)))
-      cur = cur->next;
+    while(cur && strncasecmp(cur->key, key, sizeof(cur->key)))
+        cur = cur->next;
 
-   return cur;
+    return cur;
 }
 
 //
@@ -183,12 +185,12 @@ edf_string_t *E_StringForName(const char *key)
 //
 edf_string_t *E_GetStringForName(const char *key)
 {
-   edf_string_t *str = E_StringForName(key);
+    edf_string_t *str = E_StringForName(key);
 
-   if(!str)
-      I_Error("E_GetStringForName: no such string '%s'\n", key);
+    if(!str)
+        I_Error("E_GetStringForName: no such string '%s'\n", key);
 
-   return str;
+    return str;
 }
 
 //
@@ -199,13 +201,13 @@ edf_string_t *E_GetStringForName(const char *key)
 //
 edf_string_t *E_StringForNum(int num)
 {
-   int keyval = num % NUM_EDFSTR_CHAINS;
-   DLListItem<edf_string_t> *cur = edf_str_numchains[keyval];
+    int                       keyval = num % NUM_EDFSTR_CHAINS;
+    DLListItem<edf_string_t> *cur    = edf_str_numchains[keyval];
 
-   while(cur && (*cur)->numkey != num)
-      cur = cur->dllNext;
+    while(cur && (*cur)->numkey != num)
+        cur = cur->dllNext;
 
-   return cur ? cur->dllObject : nullptr;
+    return cur ? cur->dllObject : nullptr;
 }
 
 //
@@ -215,12 +217,12 @@ edf_string_t *E_StringForNum(int num)
 //
 edf_string_t *E_GetStringForNum(int num)
 {
-   edf_string_t *str = E_StringForNum(num);
+    edf_string_t *str = E_StringForNum(num);
 
-   if(!str)
-      I_Error("E_GetStringForNum: no such string with id #%d\n", num);
+    if(!str)
+        I_Error("E_GetStringForNum: no such string with id #%d\n", num);
 
-   return str;
+    return str;
 }
 
 //
@@ -230,12 +232,12 @@ edf_string_t *E_GetStringForNum(int num)
 //
 const char *E_StringOrDehForName(const char *mnemonic)
 {
-   const edf_string_t *result = E_StringForName(mnemonic);
+    const edf_string_t *result = E_StringForName(mnemonic);
 
-   if(!result)
-      return DEH_String(mnemonic);
-   else
-      return result->string;
+    if(!result)
+        return DEH_String(mnemonic);
+    else
+        return result->string;
 }
 
 //
@@ -250,45 +252,46 @@ const char *E_StringOrDehForName(const char *mnemonic)
 //
 void E_ProcessStrings(cfg_t *cfg)
 {
-   unsigned int i, numstrings = cfg_size(cfg, EDF_SEC_STRING);
+    unsigned int i, numstrings = cfg_size(cfg, EDF_SEC_STRING);
 
-   E_EDFLogPrintf("\t* Processing strings\n"
-                  "\t\t%d string(s) defined\n", numstrings);
+    E_EDFLogPrintf("\t* Processing strings\n"
+                   "\t\t%d string(s) defined\n",
+                   numstrings);
 
-   for(i = 0; i < numstrings; ++i)
-   {
-      cfg_t *sec = cfg_getnsec(cfg, EDF_SEC_STRING, i);
-      const char *mnemonic, *value, *bex, *bexsource;
-      int number;
-      dehstr_t *dehstr;
+    for(i = 0; i < numstrings; ++i)
+    {
+        cfg_t      *sec = cfg_getnsec(cfg, EDF_SEC_STRING, i);
+        const char *mnemonic, *value, *bex, *bexsource;
+        int         number;
+        dehstr_t   *dehstr;
 
-      mnemonic = cfg_title(sec);
-      value    = cfg_getstr(sec, ITEM_STRING_VAL);
-      number   = cfg_getint(sec, ITEM_STRING_NUM);
+        mnemonic = cfg_title(sec);
+        value    = cfg_getstr(sec, ITEM_STRING_VAL);
+        number   = cfg_getint(sec, ITEM_STRING_NUM);
 
-      // haleyjd 09/16/07: support also assigning the value of a BEX string,
-      // and filling this string object with the value of a BEX string
-      bex       = cfg_getstr(sec, ITEM_STRING_BEXDST);
-      bexsource = cfg_getstr(sec, ITEM_STRING_BEXSRC);
+        // haleyjd 09/16/07: support also assigning the value of a BEX string,
+        // and filling this string object with the value of a BEX string
+        bex       = cfg_getstr(sec, ITEM_STRING_BEXDST);
+        bexsource = cfg_getstr(sec, ITEM_STRING_BEXSRC);
 
-      // if bexsource is a valid BEX mnemonic, the value to use becomes the
-      // value of that BEX string rather than any specified in this string object.
-      if((dehstr = D_GetBEXStr(bexsource)))
-         value = *(dehstr->ppstr);
+        // if bexsource is a valid BEX mnemonic, the value to use becomes the
+        // value of that BEX string rather than any specified in this string object.
+        if((dehstr = D_GetBEXStr(bexsource)))
+            value = *(dehstr->ppstr);
 
-      E_CreateString(value, mnemonic, number);
+        E_CreateString(value, mnemonic, number);
 
-      E_EDFLogPrintf("\t\tDefined string '%s' (#%d)\n"
-                     "\t\t\tvalue = '%s'\n",
-                     mnemonic, number, value);
+        E_EDFLogPrintf("\t\tDefined string '%s' (#%d)\n"
+                       "\t\t\tvalue = '%s'\n",
+                       mnemonic, number, value);
 
-      if((dehstr = D_GetBEXStr(bex)))
-      {
-         *(dehstr->ppstr) = estrdup(value);
+        if((dehstr = D_GetBEXStr(bex)))
+        {
+            *(dehstr->ppstr) = estrdup(value);
 
-         E_EDFLogPrintf("\t\t\tCopied to BEX string '%s'\n", bex);
-      }
-   }
+            E_EDFLogPrintf("\t\t\tCopied to BEX string '%s'\n", bex);
+        }
+    }
 }
 
 // EOF

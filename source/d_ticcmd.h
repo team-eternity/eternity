@@ -58,18 +58,18 @@
 // plus a checksum for internal state consistency.
 struct ticcmd_t
 {
-   int8_t  forwardmove; // *2048 for move
-   int8_t  sidemove;    // *2048 for move
-   int8_t  fly;         // haleyjd: flight
-   int16_t look;        // haleyjd: <<16 for look delta
-   int16_t angleturn;   // <<16 for angle delta
-   int16_t consistency; // checks for net game
-   byte    chatchar;
-   byte    buttons;
-   byte    actions;
-   uint16_t itemID;     // MaxW: ID of used inventory item (+ 1)
-   uint16_t weaponID;   // MaxW: ID of weapon to be made pending (+ 1)
-   uint8_t  slotIndex;  // MaxW: Index of slot to switch to (if weaponID != 0)
+    int8_t   forwardmove; // *2048 for move
+    int8_t   sidemove;    // *2048 for move
+    int8_t   fly;         // haleyjd: flight
+    int16_t  look;        // haleyjd: <<16 for look delta
+    int16_t  angleturn;   // <<16 for angle delta
+    int16_t  consistency; // checks for net game
+    byte     chatchar;
+    byte     buttons;
+    byte     actions;
+    uint16_t itemID;    // MaxW: ID of used inventory item (+ 1)
+    uint16_t weaponID;  // MaxW: ID of weapon to be made pending (+ 1)
+    uint8_t  slotIndex; // MaxW: Index of slot to switch to (if weaponID != 0)
 };
 
 #if defined(_MSC_VER) || defined(__GNUC__)

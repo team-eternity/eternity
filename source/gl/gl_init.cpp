@@ -54,20 +54,20 @@ GL_versioninfo GL_version;
 #if 0
 static void GL_GetVersion()
 {
-   const char *versionStr;
-   int majversion = 0, minversion = 0;
+    const char *versionStr;
+    int         majversion = 0, minversion = 0;
 
-   // Default to 1.0
-   GL_version.majorversion = 1;
-   GL_version.minorversion = 0;
+    // Default to 1.0
+    GL_version.majorversion = 1;
+    GL_version.minorversion = 0;
 
-   versionStr = (const char *)(glGetString(GL_VERSION));
+    versionStr = (const char *)(glGetString(GL_VERSION));
 
-   if(sscanf(versionStr, "%d.%d", &majversion, &minversion) == 2)
-   {
-      GL_version.majorversion = majversion;
-      GL_version.minorversion = minversion;
-   }
+    if(sscanf(versionStr, "%d.%d", &majversion, &minversion) == 2)
+    {
+        GL_version.majorversion = majversion;
+        GL_version.minorversion = minversion;
+    }
 }
 #endif
 
