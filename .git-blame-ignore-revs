@@ -1,0 +1,9 @@
+# Use this file either with:
+#  * git blame --ignore-revs-file .git-blame-ignore-revs
+#  * git config --global blame.ignoreRevsFile .git-blame-ignore-revs
+
+# reformatting-and-cleanup commits
+98af11b7313dbf97f8c95800b1ae5b172a021920
+351492477913e3366d189ad8fa7068a22053f798
+619ee103b9ee45390df4464e72e68276b8759c92
+
