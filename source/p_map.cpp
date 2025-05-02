@@ -1681,8 +1681,8 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
     PODCollection<line_t *>  pushhit;
     PODCollection<line_t *> *pPushHit = full_demo_version >= make_full_version(401, 0) ? &pushhit : nullptr;
 
-    edefstructvar(portalcrossingoutcome_t, crossoutcome);
-    crossoutcome.finalgroup = thing->groupid;
+    portalcrossingoutcome_t crossoutcome = {};
+    crossoutcome.finalgroup              = thing->groupid;
 
     // haleyjd: OVER_UNDER
     if(P_Use3DClipping())
@@ -3202,7 +3202,7 @@ static bool PIT_transPortalGetSectors(int x, int y, int groupid, void *data)
             }
         }
     }
-    edefstructvar(getSectors_t, getSectorsContext);
+    getSectors_t getSectorsContext    = {};
     getSectorsContext.which_thinglist = context->which_thinglist;
     P_BlockLinesIterator(x, y, PIT_GetSectors, groupid, &getSectorsContext, context->visit);
     return true;
@@ -3265,7 +3265,8 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y, fixed_t radiu
         // FIXME: unfortunately all sectors need to be added, because this function
         // is only called on XY coordinate change.
 
-        edefstructvar(transPortalGetSectors_t, context);
+        transPortalGetSectors_t context = {};
+
         context.curgroupid      = R_NOGROUP;
         context.clip            = pClip;
         context.which_thinglist = which_thinglist;
@@ -3281,7 +3282,7 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y, fixed_t radiu
         int yl = (pClip->bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
         int yh = (pClip->bbox[BOXTOP] - bmaporgy) >> MAPBLOCKSHIFT;
 
-        edefstructvar(getSectors_t, context);
+        getSectors_t context    = {};
         context.which_thinglist = which_thinglist;
 
         for(int bx = xl; bx <= xh; bx++)

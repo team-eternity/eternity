@@ -512,10 +512,10 @@ void R_HticTextureHacks(texture_t *t)
 static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int nummappatches, int texnum, int *errors,
                              texturehash_t &duptable)
 {
-    int   i, j;
-    byte *directory = tlump->directory;
-    edefstructvar(maptexture_t, tt);
-    edefstructvar(mappatch_t, tp);
+    int          i, j;
+    byte        *directory = tlump->directory;
+    maptexture_t tt        = {};
+    mappatch_t   tp        = {};
 
     for(i = 0; i < tlump->numtextures; i++, texnum++)
     {

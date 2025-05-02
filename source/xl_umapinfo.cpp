@@ -567,9 +567,9 @@ void XL_BuildUMapInfoEpisodes()
     PODCollection<menuitem_t> items;
     int                       prefixGaps = 0; // number of prefix lines with blanks
 
-    const menu_t *base = GameModeInfo->episodeMenu;
-    edefstructvar(menu_t, newmenu);
-    bool finishedPrefix = false;
+    const menu_t *base           = GameModeInfo->episodeMenu;
+    menu_t        newmenu        = {};
+    bool          finishedPrefix = false;
     if(base)
     {
         newmenu = *base; // copy the vanilla menu properties
@@ -632,11 +632,13 @@ void XL_BuildUMapInfoEpisodes()
             auto eptable = runtime_cast<MetaTable *>(epentry);
             if(!eptable) // hit a "clear" entry
                 break;
-            edefstructvar(episodeinfo_t, epinfo);
-            epinfo.patch = eptable->getString("patch", nullptr);
+            episodeinfo_t epinfo = {};
+            epinfo.patch         = eptable->getString("patch", nullptr);
+            epinfo.name          = eptable->getString("name", nullptr);
+
             assert(epinfo.patch);
-            epinfo.name = eptable->getString("name", nullptr);
             assert(epinfo.name);
+
             epinfos.add(epinfo);
         }
 
@@ -648,7 +650,7 @@ void XL_BuildUMapInfoEpisodes()
             qstring ccmd("mn_start_mapname ");
             ccmd += levelname;
 
-            edefstructvar(menuitem_t, newitem);
+            menuitem_t newitem  = {};
             newitem.type        = it_runcmd;
             newitem.description = epinfo.name;
             newitem.data        = ccmd.duplicate(PU_STATIC);

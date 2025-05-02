@@ -63,9 +63,9 @@ inline static fixed_t P_visibleHeight(const surface_t &surface, v2fixed_t pos)
 //
 static lineheights_t P_getLineHeights(const line_t *ld, v2fixed_t pos)
 {
-    edefstructvar(lineheights_t, result);
-    result.bottomend = P_visibleHeight<surf_floor>(ld->frontsector->srf.floor, pos);
-    result.topend    = P_visibleHeight<surf_ceil>(ld->frontsector->srf.ceiling, pos);
+    lineheights_t result = {};
+    result.bottomend     = P_visibleHeight<surf_floor>(ld->frontsector->srf.floor, pos);
+    result.topend        = P_visibleHeight<surf_ceil>(ld->frontsector->srf.ceiling, pos);
 
     if(ld->backsector)
     {

@@ -265,7 +265,7 @@ void V_FontWriteTextEx(const vtextdraw_t &textdraw)
 //
 void V_FontWriteText(vfont_t *font, const char *s, int x, int y, VBuffer *screen)
 {
-    edefstructvar(vtextdraw_t, text);
+    vtextdraw_t text = {};
 
     text.font   = font;
     text.s      = s;
@@ -290,7 +290,7 @@ void V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int 
         return;
     }
 
-    edefstructvar(vtextdraw_t, text);
+    vtextdraw_t text = {};
 
     text.font   = font;
     text.s      = s;
@@ -311,7 +311,7 @@ void V_FontWriteTextColored(vfont_t *font, const char *s, int color, int x, int 
 //
 void V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map, VBuffer *screen)
 {
-    edefstructvar(vtextdraw_t, text);
+    vtextdraw_t text = {};
 
     text.font   = font;
     text.s      = s;
@@ -331,7 +331,7 @@ void V_FontWriteTextMapped(vfont_t *font, const char *s, int x, int y, char *map
 //
 void V_FontWriteTextShadowed(vfont_t *font, const char *s, int x, int y, VBuffer *screen, int color)
 {
-    edefstructvar(vtextdraw_t, text);
+    vtextdraw_t text = {};
 
     text.font   = font;
     text.s      = s;

@@ -1780,8 +1780,8 @@ void Mobj::Think()
 
     int oldwaterstate, waterstate = 0;
 
-    edefstructvar(portalSplash_t, portalSplash);
-    fixed_t lz;
+    portalSplash_t portalSplash = {};
+    fixed_t        lz;
 
     // haleyjd 01/04/14: backup current position at start of frame;
     // note players do this for themselves in P_PlayerThink.
@@ -3786,9 +3786,7 @@ Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t an
     // NOTE: playersightslope is added to z in vanilla Heretic.
     z = source->z + 4 * 8 * FRACUNIT + playersightslope;
 
-    edefstructvar(missileinfo_t, missileinfo);
-
-    memset(&missileinfo, 0, sizeof(missileinfo));
+    missileinfo_t missileinfo = {};
 
     missileinfo.source = source;
     missileinfo.type   = type;

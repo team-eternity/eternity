@@ -338,8 +338,8 @@ bool ZipFile::readEndOfCentralDir(InBuffer &fin, ZIPEndOfCentralDir &zcd)
 //
 bool ZipFile::readCentralDirEntry(InBuffer &fin, ZipLump &lump, bool &skip)
 {
-    qstring namestr;
-    edefstructvar(ZIPCentralDirEntry, entry);
+    qstring            namestr;
+    ZIPCentralDirEntry entry = {};
 
     if(!centralDirReader.readFields(entry, fin))
         return false;
@@ -466,8 +466,8 @@ static int ZIP_LumpSortCB(const void *va, const void *vb)
 //
 bool ZipFile::readFromFile(FILE *f)
 {
-    InBuffer reader;
-    edefstructvar(ZIPEndOfCentralDir, zcd);
+    InBuffer           reader;
+    ZIPEndOfCentralDir zcd = {};
 
     // remember our disk file
     file = f;
@@ -677,7 +677,7 @@ static void ZIP_ReadDeflated(InBuffer &fin, void *buffer, size_t len)
 //
 void ZipLump::setAddress(InBuffer &fin)
 {
-    edefstructvar(ZIPLocalFileHeader, lfh);
+    ZIPLocalFileHeader lfh = {};
 
     if(!(flags & ZipFile::LF_CALCOFFSET))
         return;

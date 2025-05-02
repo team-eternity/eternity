@@ -226,9 +226,9 @@ void WadDirectory::handleOpenError(openwad_t &openData, const wfileadd_t &addInf
 //
 WadDirectory::openwad_t WadDirectory::openFile(const wfileadd_t &addInfo) const
 {
-    edefstructvar(openwad_t, openData);
-    qstring filename;
-    bool    allowInexact = (addInfo.flags & WFA_ALLOWINEXACTFN) == WFA_ALLOWINEXACTFN;
+    openwad_t openData = {};
+    qstring   filename;
+    bool      allowInexact = (addInfo.flags & WFA_ALLOWINEXACTFN) == WFA_ALLOWINEXACTFN;
 
     // Try opening the file
     filename = addInfo.filename;
@@ -290,7 +290,7 @@ lumpinfo_t *WadDirectory::reAllocLumpInfo(int numnew, int startlump)
 //
 bool WadDirectory::addSingleFile(openwad_t &openData, const wfileadd_t &addInfo, int startlump)
 {
-    edefstructvar(filelump_t, singleinfo);
+    filelump_t  singleinfo = {};
     lumpinfo_t *lump_p;
 
     singleinfo.filepos = 0;
@@ -633,7 +633,7 @@ bool WadDirectory::addFile(wfileadd_t &addInfo)
         &WadDirectory::addDirectoryAsArchive // W_FORMAT_DIR
     };
 
-    edefstructvar(openwad_t, openData);
+    openwad_t openData = {};
 
     // When loading a subfile, the physical file is already open.
     if(addInfo.flags & WFA_SUBFILE)
@@ -726,7 +726,7 @@ int WadDirectory::addDirectory(const char *dirpath)
     // count the files in the directory
     for(const fs::directory_entry &ent : itr)
     {
-        edefstructvar(dirfile_t, newfile);
+        dirfile_t  newfile  = {};
         const auto filename = ent.path().filename().generic_u8string();
 
         newfile.fullfn = M_SafeFilePath(
@@ -954,7 +954,7 @@ bool WadDirectory::addDirectoryAsArchive(openwad_t &openData, const wfileadd_t &
         // check for WAD files
         for(const qstring &wadPath : wadPaths)
         {
-            edefstructvar(wfileadd_t, addInfo);
+            wfileadd_t addInfo   = {};
             addInfo.filename     = wadPath.constPtr();
             addInfo.li_namespace = lumpinfo_t::ns_global;
             addInfo.requiredFmt  = -1;

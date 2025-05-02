@@ -535,8 +535,8 @@ static void R_incrementWorldPortalID(portalcontext_t &context)
 //
 portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum, bool allowrotate, bool flipped, fixed_t zoffset)
 {
-    portal_t *rover, *ret;
-    edefstructvar(anchordata_t, adata);
+    portal_t    *rover, *ret;
+    anchordata_t adata = {};
 
     R_calculateTransform(markerlinenum, anchorlinenum, &adata.transform, allowrotate, flipped, zoffset);
 
@@ -565,8 +565,8 @@ portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum, bool allowro
 //
 portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum, bool allowrotate, bool flipped, fixed_t zoffset)
 {
-    portal_t *rover, *ret;
-    edefstructvar(anchordata_t, adata);
+    portal_t    *rover, *ret;
+    anchordata_t adata = {};
 
     R_calculateTransform(markerlinenum, anchorlinenum, &adata.transform, allowrotate, flipped, zoffset);
 
@@ -1174,7 +1174,7 @@ pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t
     // being able to share a single window set.
     // ioanch: also added plane checks
 
-    edefstructvar(windowlinegen_t, linegenTransformed);
+    windowlinegen_t linegenTransformed = {};
     if(portalrender.active && portalrender.w->line)
     {
         linegenTransformed = portalrender.w->barrier.linegen;
@@ -1419,8 +1419,8 @@ void portaltransform_t::updateFromLines(bool allowrotate)
 
 portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, fixed_t planez, int fromid, int toid)
 {
-    portal_t *rover, *ret;
-    edefstructvar(linkdata_t, ldata);
+    portal_t  *rover, *ret;
+    linkdata_t ldata = {};
 
     ldata.fromid = fromid;
     ldata.toid   = toid;
@@ -1728,9 +1728,9 @@ void R_DefinePortal(const line_t &line)
     }
 
     // Done
-    edefstructvar(portalentry_t, entry);
-    entry.id     = portalid;
-    entry.portal = portal;
+    portalentry_t entry = {};
+    entry.id            = portalid;
+    entry.portal        = portal;
     gPortals.add(entry);
     if(mirrorportal)
     {

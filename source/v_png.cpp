@@ -176,9 +176,9 @@ static int V_pngReadUnknownChunk(png_structp png_ptr, png_unknown_chunkp chunk)
 //
 bool VPNGImagePimpl::readImage(const void *data)
 {
-    edefstructvar(vpngiostruct_t, ioStruct);
-    bool          readSuccess = true;
-    png_color_16 *transv;
+    vpngiostruct_t ioStruct    = {};
+    bool           readSuccess = true;
+    png_color_16  *transv;
 
     ioStruct.data = static_cast<const byte *>(data);
 

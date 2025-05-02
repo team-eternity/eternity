@@ -1989,8 +1989,8 @@ static void P_ResurrectPlayer()
 
     if(p->health <= 0 || p->mo->health <= 0 || p->playerstate == PST_DEAD)
     {
-        edefstructvar(mapthing_t, mthing);
-        Mobj *oldmo = p->mo;
+        mapthing_t mthing = {};
+        Mobj      *oldmo  = p->mo;
 
         // IOANCH 20151218: 32-bit mapthing_t coordinates
         // To avoid any change, keep truncating the subunit values

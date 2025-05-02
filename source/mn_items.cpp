@@ -392,7 +392,7 @@ protected:
         // draw the description centered
         const char *text = item->description;
 
-        edefstructvar(vtextdraw_t, vdt);
+        vtextdraw_t vdt = {};
         vdt.font        = menu_font_big;
         vdt.s           = text;
         vdt.x           = (SCREENWIDTH - V_FontStringWidth(menu_font_big, text)) / 2;

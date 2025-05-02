@@ -388,7 +388,7 @@ void HUDMessageWidget::drawer()
     if(!showMessages)
         return;
 
-    edefstructvar(vtextdraw_t, vtd);
+    vtextdraw_t vtd = {};
 
     vtd.font        = hud_font;
     vtd.screen      = &vbscreenyscaled;
@@ -724,7 +724,7 @@ void HUDTextWidget::drawer()
 
     if(message && (!cleartic || leveltime < cleartic))
     {
-        edefstructvar(vtextdraw_t, vdt);
+        vtextdraw_t vdt = {};
 
         vdt.font   = font;
         vdt.s      = message;

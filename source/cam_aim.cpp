@@ -341,11 +341,11 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
         if(!P_CheckThingAimAvailability(th, context.thing, context.aimflagsmask))
             return true;
 
-        edefstructvar(linetracer_t, atrace);
-        atrace.attackrange = context.attackrange;
-        atrace.z           = context.state.c.z;
-        atrace.bottomslope = context.state.slope.floor;
-        atrace.topslope    = context.state.slope.ceiling;
+        linetracer_t atrace = {};
+        atrace.attackrange  = context.attackrange;
+        atrace.z            = context.state.c.z;
+        atrace.bottomslope  = context.state.slope.floor;
+        atrace.topslope     = context.state.slope.ceiling;
         if(!P_CheckThingAimSlopes(th, context.state.origindist, in->frac, atrace))
             return true;
 

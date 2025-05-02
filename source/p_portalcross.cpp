@@ -261,9 +261,9 @@ static const line_t *P_exactTraverseClosest(const divline_t &trace, fixed_t &fra
     bbox[BOXBOTTOM] = eclamp(bbox[BOXBOTTOM], 0, bmapheight - 1);
     bbox[BOXTOP]    = eclamp(bbox[BOXTOP], 0, bmapheight - 1);
 
-    edefstructvar(exacttraverse_t, data);
-    data.trace       = &trace;
-    data.closestdist = D_MAXINT;
+    exacttraverse_t data = {};
+    data.trace           = &trace;
+    data.closestdist     = D_MAXINT;
 
     // Collect all linedefs from this map block
     for(int y = bbox[BOXBOTTOM]; y <= bbox[BOXTOP]; ++y)

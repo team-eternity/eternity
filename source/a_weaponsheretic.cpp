@@ -399,7 +399,7 @@ void A_FireCrossbowPL1(actionargs_t *actionargs)
 
     P_SubtractAmmo(*player, -1);
 
-    edefstructvar(playertargetinfo_t, targetinfo);
+    playertargetinfo_t targetinfo = {};
     P_SpawnPlayerMissile(pmo, E_SafeThingType(MT_CRBOWFX1), SPM_ADDSLOPETOZ, &targetinfo);
     P_SpawnPlayerMissileAngleHeretic(pmo, tnum, pmo->angle - (ANG45 / 10), SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
     P_SpawnPlayerMissileAngleHeretic(pmo, tnum, pmo->angle + (ANG45 / 10), SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
@@ -417,7 +417,7 @@ void A_FireCrossbowPL2(actionargs_t *actionargs)
 
     P_SubtractAmmo(*player, -1);
 
-    edefstructvar(playertargetinfo_t, targetinfo);
+    playertargetinfo_t targetinfo = {};
     P_SpawnPlayerMissile(pmo, tnum2, SPM_ADDSLOPETOZ, &targetinfo);
     P_SpawnPlayerMissileAngleHeretic(pmo, tnum2, pmo->angle - (ANG45 / 10), SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
     P_SpawnPlayerMissileAngleHeretic(pmo, tnum2, pmo->angle + (ANG45 / 10), SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
@@ -900,8 +900,8 @@ void A_HticMorphOvum(actionargs_t *actionargs)
     Mobj *mo = actionargs->actor;
     if(!mo)
         return;
-    edefstructvar(playertargetinfo_t, targetinfo);
-    mobjtype_t eggtype = E_SafeThingName("EggShot");
+    playertargetinfo_t targetinfo = {};
+    mobjtype_t         eggtype    = E_SafeThingName("EggShot");
     P_SpawnPlayerMissile(mo, eggtype, SPM_ADDSLOPETOZ, &targetinfo);
     P_SpawnPlayerMissileAngleHeretic(mo, eggtype, mo->angle - ANG45 / 6, SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
     P_SpawnPlayerMissileAngleHeretic(mo, eggtype, mo->angle + ANG45 / 6, SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);

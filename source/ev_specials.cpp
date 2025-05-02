@@ -1494,7 +1494,7 @@ static int EV_ActivateSpecial(ev_action_t *action, ev_instance_t *instance)
 bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, polyobj_t *poly, int spac, bool byALineEffect)
 {
     ev_action_t *action;
-    INIT_STRUCT(ev_instance_t, instance);
+    ev_instance_t instance = {};
 
     // setup instance
     instance.actor         = thing;
@@ -1535,7 +1535,7 @@ bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, polyobj
 bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing, bool nonParamOnly)
 {
     ev_action_t *action;
-    INIT_STRUCT(ev_instance_t, instance);
+    ev_instance_t instance = {};
 
     // setup instance
     instance.actor   = thing;
@@ -1560,7 +1560,7 @@ bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing, bool nonParamOnl
 int EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing, polyobj_t *poly)
 {
     ev_action_t *action;
-    INIT_STRUCT(ev_instance_t, instance);
+    ev_instance_t instance = {};
 
     // setup instance
     instance.actor   = thing;
@@ -1589,7 +1589,7 @@ bool EV_ActivateAction(ev_action_t *action, int *args, Mobj *thing)
     if(!action)
         return false;
 
-    INIT_STRUCT(ev_instance_t, instance);
+    ev_instance_t instance = {};
 
     // setup instance
     instance.actor = thing;
@@ -1671,7 +1671,7 @@ int EV_ActivateSectorAction(sector_t *sector, Mobj *thing, int seac)
 
     for(auto *links = sector->actions; links; links = links->dllNext)
     {
-        INIT_STRUCT(ev_instance_t, instance);
+        ev_instance_t instance = {};
         sectoraction_t *sectoraction = links->dllObject;
 
         // setup instance

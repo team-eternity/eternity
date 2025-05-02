@@ -515,8 +515,8 @@ bool S_LoadDigitalSoundEffect(sfxinfo_t *sfx)
 
     if(!sfx->data)
     {
-        edefstructvar(sounddata_t, sd);
-        byte *lumpdata = (byte *)wGlobalDir.cacheLumpNum(lump, PU_STATIC);
+        sounddata_t sd       = {};
+        byte       *lumpdata = (byte *)wGlobalDir.cacheLumpNum(lump, PU_STATIC);
 
         if(S_detectSoundFormat(sd, lumpdata, lumplen))
         {

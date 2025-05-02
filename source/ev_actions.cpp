@@ -43,8 +43,6 @@
 #include "r_defs.h"
 #include "s_sound.h"
 
-#define INIT_STRUCT edefstructvar
-
 //=============================================================================
 //
 // Utilities
@@ -958,10 +956,10 @@ DEFINE_ACTION(EV_ActionSilentTeleport)
     // case 268: (W1 - BOOM Extended)
     // case 269: (WR - BOOM Extended)
     // jff 4/14/98 add monster-only silent
-    INIT_STRUCT(teleparms_t, parms);
-    parms.teleangle  = teleangle_relative_boom;
-    parms.keepheight = true;
-    parms.alwaysfrag = instance->byALineEffect;
+    teleparms_t parms = {};
+    parms.teleangle   = teleangle_relative_boom;
+    parms.keepheight  = true;
+    parms.alwaysfrag  = instance->byALineEffect;
     return EV_SilentTeleport(line, instance->tag, side, thing, parms);
 }
 
@@ -1188,7 +1186,7 @@ DEFINE_ACTION(EV_ActionLowerFloorTurboA)
 //
 DEFINE_ACTION(EV_ActionHereticDoorRaise3x)
 {
-    INIT_STRUCT(doordata_t, dd);
+    doordata_t dd = {};
 
     dd.kind         = OdCDoor;
     dd.spac         = SPAC_CROSS;
@@ -1213,7 +1211,7 @@ DEFINE_ACTION(EV_ActionHereticDoorRaise3x)
 //
 DEFINE_ACTION(EV_ActionHereticStairsBuildUp8FS)
 {
-    INIT_STRUCT(stairdata_t, sd);
+    stairdata_t sd = {};
 
     sd.flags          = SDF_HAVESPAC;
     sd.spac           = instance->spac;
@@ -1236,7 +1234,7 @@ DEFINE_ACTION(EV_ActionHereticStairsBuildUp8FS)
 //
 DEFINE_ACTION(EV_ActionHereticStairsBuildUp16FS)
 {
-    INIT_STRUCT(stairdata_t, sd);
+    stairdata_t sd = {};
 
     sd.flags          = SDF_HAVESPAC;
     sd.spac           = instance->spac;
@@ -1284,8 +1282,8 @@ DEFINE_ACTION(EV_ActionBoomGen)
 //
 DEFINE_ACTION(EV_ActionParamDoorRaise)
 {
-    INIT_STRUCT(doordata_t, dd);
-    int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
+    doordata_t dd       = {};
+    int        extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
 
     dd.kind         = OdCDoor;
     dd.spac         = instance->spac;
@@ -1311,8 +1309,8 @@ DEFINE_ACTION(EV_ActionParamDoorRaise)
 //
 DEFINE_ACTION(EV_ActionParamDoorOpen)
 {
-    INIT_STRUCT(doordata_t, dd);
-    int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
+    doordata_t dd       = {};
+    int        extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
 
     dd.kind         = ODoor;
     dd.spac         = instance->spac;
@@ -1338,8 +1336,8 @@ DEFINE_ACTION(EV_ActionParamDoorOpen)
 //
 DEFINE_ACTION(EV_ActionParamDoorClose)
 {
-    INIT_STRUCT(doordata_t, dd);
-    int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
+    doordata_t dd       = {};
+    int        extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
 
     dd.kind         = CDoor;
     dd.spac         = instance->spac;
@@ -1365,8 +1363,8 @@ DEFINE_ACTION(EV_ActionParamDoorClose)
 //
 DEFINE_ACTION(EV_ActionParamDoorCloseWaitOpen)
 {
-    INIT_STRUCT(doordata_t, dd);
-    int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
+    doordata_t dd       = {};
+    int        extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
 
     dd.kind         = CdODoor;
     dd.spac         = instance->spac;
@@ -1392,8 +1390,8 @@ DEFINE_ACTION(EV_ActionParamDoorCloseWaitOpen)
 //
 DEFINE_ACTION(EV_ActionParamDoorWaitRaise)
 {
-    INIT_STRUCT(doordata_t, dd);
-    int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
+    doordata_t dd       = {};
+    int        extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
 
     dd.kind         = pDOdCDoor;
     dd.spac         = instance->spac;
@@ -1419,8 +1417,8 @@ DEFINE_ACTION(EV_ActionParamDoorWaitRaise)
 //
 DEFINE_ACTION(EV_ActionParamDoorWaitClose)
 {
-    INIT_STRUCT(doordata_t, dd);
-    int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
+    doordata_t dd       = {};
+    int        extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
 
     dd.kind         = pDCDoor;
     dd.spac         = instance->spac;
@@ -1446,7 +1444,7 @@ DEFINE_ACTION(EV_ActionParamDoorWaitClose)
 //
 DEFINE_ACTION(EV_ActionParamFloorRaiseToHighest)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction = 1;           // up
     if(P_LevelIsVanillaHexen()) // vanilla Hexen compatibility
@@ -1475,7 +1473,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToHighest)
 //
 DEFINE_ACTION(EV_ActionParamEEFloorLowerToHighest)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction   = 0;              // down
     fd.target_type = FtoHnF;         // to highest neighboring floor
@@ -1498,7 +1496,7 @@ DEFINE_ACTION(EV_ActionParamEEFloorLowerToHighest)
 //
 DEFINE_ACTION(EV_ActionParamFloorLowerToHighest)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction    = 0;
     fd.target_type  = FtoHnF;
@@ -1522,7 +1520,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerToHighest)
 //
 DEFINE_ACTION(EV_ActionParamFloorRaiseToLowest)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction   = 1;              // up
     fd.target_type = FtoLnF;         // to lowest neighboring floor
@@ -1545,7 +1543,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToLowest)
 //
 DEFINE_ACTION(EV_ActionParamFloorLowerToLowest)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction   = 0;              // down
     fd.target_type = FtoLnF;         // to lowest neighboring floor
@@ -1568,7 +1566,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerToLowest)
 //
 DEFINE_ACTION(EV_ActionParamFloorRaiseToNearest)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction   = 1;              // up
     fd.target_type = FtoNnF;         // to nearest neighboring floor
@@ -1592,7 +1590,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToNearest)
 //
 DEFINE_ACTION(EV_ActionParamFloorLowerToNearest)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction = 0; // down
     if(P_LevelIsVanillaHexen())
@@ -1618,7 +1616,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerToNearest)
 //
 DEFINE_ACTION(EV_ActionParamFloorRaiseToLowestCeiling)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction   = 1;               // up
     fd.target_type = FtoLnCInclusive; // to lowest neighboring ceiling
@@ -1643,7 +1641,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToLowestCeiling)
 //
 DEFINE_ACTION(EV_ActionParamFloorLowerToLowestCeiling)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction   = 0;              // down
     fd.target_type = FtoLnC;         // to lowest neighboring ceiling
@@ -1666,7 +1664,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerToLowestCeiling)
 //
 DEFINE_ACTION(EV_ActionParamFloorRaiseToCeiling)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction   = 1;              // up
     fd.target_type = FtoC;           // to sector ceiling
@@ -1691,7 +1689,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseToCeiling)
 //
 DEFINE_ACTION(EV_ActionParamFloorRaiseByTexture)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction   = 1;              // up
     fd.target_type = FbyST;          // by shortest lower texture
@@ -1715,7 +1713,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseByTexture)
 //
 DEFINE_ACTION(EV_ActionParamFloorLowerByTexture)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction   = 0;              // down
     fd.target_type = FbyST;          // by shortest lower texture
@@ -1738,7 +1736,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerByTexture)
 //
 DEFINE_ACTION(EV_ActionParamFloorRaiseByValue)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction    = 1;              // up
     fd.target_type  = FbyParam;       // by value
@@ -1763,7 +1761,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseByValue)
 //
 DEFINE_ACTION(EV_ActionParamFloorRaiseByValueTimes8)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction    = 1;              // up
     fd.target_type  = FbyParam;       // by value
@@ -1788,7 +1786,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseByValueTimes8)
 //
 DEFINE_ACTION(EV_ActionParamFloorLowerByValue)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction    = 0;              // down
     fd.target_type  = FbyParam;       // by value
@@ -1812,7 +1810,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerByValue)
 //
 DEFINE_ACTION(EV_ActionParamFloorLowerByValueTimes8)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction    = 0;              // down
     fd.target_type  = FbyParam;       // by value
@@ -1836,7 +1834,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerByValueTimes8)
 //
 DEFINE_ACTION(EV_ActionParamFloorMoveToValue)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction    = 1;              // not used; direction is relative to target
     fd.target_type  = FtoAbs;         // to absolute height
@@ -1862,7 +1860,7 @@ DEFINE_ACTION(EV_ActionParamFloorMoveToValue)
 //
 DEFINE_ACTION(EV_ActionParamFloorMoveToValueTimes8)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction    = 1;              // not used; direction is relative to target
     fd.target_type  = FtoAbs;         // to absolute height
@@ -1888,7 +1886,7 @@ DEFINE_ACTION(EV_ActionParamFloorMoveToValueTimes8)
 //
 DEFINE_ACTION(EV_ActionParamFloorRaiseInstant)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction    = 1;              // up
     fd.target_type  = FInst;          // always move instantly
@@ -1911,7 +1909,7 @@ DEFINE_ACTION(EV_ActionParamFloorRaiseInstant)
 //
 DEFINE_ACTION(EV_ActionParamFloorLowerInstant)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction    = 0;              // down
     fd.target_type  = FInst;          // always move instantly
@@ -1934,7 +1932,7 @@ DEFINE_ACTION(EV_ActionParamFloorLowerInstant)
 //
 DEFINE_ACTION(EV_ActionParamFloorToCeilingInstant)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction   = 0;              // down (to cause instant movement)
     fd.target_type = FtoC;           // to sector ceiling
@@ -1957,7 +1955,7 @@ DEFINE_ACTION(EV_ActionParamFloorToCeilingInstant)
 //
 DEFINE_ACTION(EV_ActionParamCeilingRaiseToHighest)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
+    ceilingdata_t cd = {};
 
     cd.direction   = 1;              // up
     cd.target_type = CtoHnC;         // to highest neighboring ceiling
@@ -1980,7 +1978,7 @@ DEFINE_ACTION(EV_ActionParamCeilingRaiseToHighest)
 //
 DEFINE_ACTION(EV_ActionParamCeilingToHighestInstant)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
+    ceilingdata_t cd = {};
 
     cd.direction   = 0;              // down (to cause instant movement)
     cd.target_type = CtoHnC;         // to highest neighboring ceiling
@@ -2002,7 +2000,7 @@ DEFINE_ACTION(EV_ActionParamCeilingToHighestInstant)
 //
 DEFINE_ACTION(EV_ActionParamCeilingRaiseToNearest)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
+    ceilingdata_t cd = {};
 
     cd.direction   = 1;              // up
     cd.target_type = CtoNnC;         // to nearest neighboring ceiling
@@ -2025,7 +2023,7 @@ DEFINE_ACTION(EV_ActionParamCeilingRaiseToNearest)
 //
 DEFINE_ACTION(EV_ActionParamCeilingLowerToNearest)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
+    ceilingdata_t cd = {};
 
     cd.direction   = 0;              // down
     cd.target_type = CtoNnC;         // to nearest neighboring ceiling
@@ -2048,7 +2046,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToNearest)
 //
 DEFINE_ACTION(EV_ActionParamCeilingRaiseToLowest)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
+    ceilingdata_t cd = {};
 
     cd.direction   = 1;              // up
     cd.target_type = CtoLnC;         // to lowest neighboring ceiling
@@ -2071,7 +2069,7 @@ DEFINE_ACTION(EV_ActionParamCeilingRaiseToLowest)
 //
 DEFINE_ACTION(EV_ActionParamCeilingLowerToLowest)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
+    ceilingdata_t cd = {};
 
     cd.direction   = 0;              // down
     cd.target_type = CtoLnC;         // to lowest neighboring ceiling
@@ -2094,7 +2092,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToLowest)
 //
 DEFINE_ACTION(EV_ActionParamCeilingRaiseToHighestFloor)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
+    ceilingdata_t cd = {};
 
     cd.direction   = 1;              // up
     cd.target_type = CtoHnF;         // to highest neighboring floor
@@ -2117,7 +2115,7 @@ DEFINE_ACTION(EV_ActionParamCeilingRaiseToHighestFloor)
 //
 DEFINE_ACTION(EV_ActionParamCeilingLowerToHighestFloor)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
+    ceilingdata_t cd = {};
 
     cd.direction   = 0;              // down
     cd.target_type = CtoHnF;         // to highest neighboring floor
@@ -2141,7 +2139,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToHighestFloor)
 //
 DEFINE_ACTION(EV_ActionParamCeilingToFloorInstant)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
+    ceilingdata_t cd = {};
 
     cd.direction   = 1;              // up (to cause instant movement)
     cd.target_type = CtoF;           // to sector floor
@@ -2164,7 +2162,7 @@ DEFINE_ACTION(EV_ActionParamCeilingToFloorInstant)
 //
 DEFINE_ACTION(EV_ActionParamCeilingLowerToFloor)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
+    ceilingdata_t cd = {};
 
     cd.direction   = 0;              // down
     cd.target_type = CtoF;           // to sector floor
@@ -2188,7 +2186,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerToFloor)
 //
 DEFINE_ACTION(EV_ActionParamCeilingRaiseByTexture)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
+    ceilingdata_t cd = {};
 
     cd.direction   = 1;              // up
     cd.target_type = CbyST;          // by shortest upper texture
@@ -2211,7 +2209,7 @@ DEFINE_ACTION(EV_ActionParamCeilingRaiseByTexture)
 //
 DEFINE_ACTION(EV_ActionParamCeilingLowerByTexture)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
+    ceilingdata_t cd = {};
 
     cd.direction   = 0;              // down
     cd.target_type = CbyST;          // by shortest upper texture
@@ -2234,7 +2232,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerByTexture)
 //
 DEFINE_ACTION(EV_ActionParamCeilingRaiseByValue)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
+    ceilingdata_t cd = {};
 
     cd.direction    = 1;              // up
     cd.target_type  = CbyParam;       // by value
@@ -2258,7 +2256,7 @@ DEFINE_ACTION(EV_ActionParamCeilingRaiseByValue)
 //
 DEFINE_ACTION(EV_ActionParamCeilingLowerByValue)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
+    ceilingdata_t cd = {};
 
     cd.direction    = 0;              // down
     cd.target_type  = CbyParam;       // by value
@@ -2281,7 +2279,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerByValue)
 //
 DEFINE_ACTION(EV_ActionParamCeilingRaiseByValueTimes8)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
+    ceilingdata_t cd = {};
 
     cd.direction    = 1;              // up
     cd.target_type  = CbyParam;       // by value
@@ -2304,7 +2302,7 @@ DEFINE_ACTION(EV_ActionParamCeilingRaiseByValueTimes8)
 //
 DEFINE_ACTION(EV_ActionParamCeilingLowerByValueTimes8)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
+    ceilingdata_t cd = {};
 
     cd.direction    = 0;              // down
     cd.target_type  = CbyParam;       // by value
@@ -2328,7 +2326,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerByValueTimes8)
 //
 DEFINE_ACTION(EV_ActionParamCeilingMoveToValue)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
+    ceilingdata_t cd = {};
 
     cd.direction    = 1;              // not used; motion is relative to target
     cd.target_type  = CtoAbs;         // move to absolute height
@@ -2353,7 +2351,7 @@ DEFINE_ACTION(EV_ActionParamCeilingMoveToValue)
 //
 DEFINE_ACTION(EV_ActionParamCeilingMoveToValueTimes8)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
+    ceilingdata_t cd = {};
 
     cd.direction    = 1;              // not used; motion is relative to target
     cd.target_type  = CtoAbs;         // move to absolute height
@@ -2379,7 +2377,7 @@ DEFINE_ACTION(EV_ActionParamCeilingMoveToValueTimes8)
 //
 DEFINE_ACTION(EV_ActionParamCeilingRaiseInstant)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
+    ceilingdata_t cd = {};
 
     cd.direction    = 1;              // up
     cd.target_type  = CInst;          // instant motion to dest height
@@ -2402,7 +2400,7 @@ DEFINE_ACTION(EV_ActionParamCeilingRaiseInstant)
 //
 DEFINE_ACTION(EV_ActionParamCeilingLowerInstant)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
+    ceilingdata_t cd = {};
 
     cd.direction    = 0;              // down
     cd.target_type  = CInst;          // instant motion to dest height
@@ -2425,7 +2423,7 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerInstant)
 //
 DEFINE_ACTION(EV_ActionParamStairsBuildUpDoom)
 {
-    INIT_STRUCT(stairdata_t, sd);
+    stairdata_t sd = {};
 
     sd.flags          = SDF_HAVESPAC;
     sd.spac           = instance->spac; // Hexen-style activation
@@ -2449,7 +2447,7 @@ DEFINE_ACTION(EV_ActionParamStairsBuildUpDoom)
 //
 DEFINE_ACTION(EV_ActionParamStairsBuildDownDoom)
 {
-    INIT_STRUCT(stairdata_t, sd);
+    stairdata_t sd = {};
 
     sd.flags          = SDF_HAVESPAC;
     sd.spac           = instance->spac; // Hexen-style activation
@@ -2473,7 +2471,7 @@ DEFINE_ACTION(EV_ActionParamStairsBuildDownDoom)
 //
 DEFINE_ACTION(EV_ActionParamStairsBuildUpDoomSync)
 {
-    INIT_STRUCT(stairdata_t, sd);
+    stairdata_t sd = {};
 
     sd.flags          = SDF_HAVESPAC | SDF_SYNCHRONIZED;
     sd.spac           = instance->spac;
@@ -2497,7 +2495,7 @@ DEFINE_ACTION(EV_ActionParamStairsBuildUpDoomSync)
 //
 DEFINE_ACTION(EV_ActionParamStairsBuildDownDoomSync)
 {
-    INIT_STRUCT(stairdata_t, sd);
+    stairdata_t sd = {};
 
     sd.flags          = SDF_HAVESPAC | SDF_SYNCHRONIZED;
     sd.spac           = instance->spac;
@@ -2521,7 +2519,7 @@ DEFINE_ACTION(EV_ActionParamStairsBuildDownDoomSync)
 //
 DEFINE_ACTION(EV_ActionParamGenStairs)
 {
-    edefstructvar(stairdata_t, sd);
+    stairdata_t sd = {};
 
     int flags         = instance->args[3];
     sd.flags          = SDF_HAVESPAC;
@@ -2548,7 +2546,7 @@ DEFINE_ACTION(EV_ActionParamGenStairs)
 //
 DEFINE_ACTION(EV_ActionPolyobjDoorSlide)
 {
-    INIT_STRUCT(polydoordata_t, pdd);
+    polydoordata_t pdd = {};
 
     pdd.doorType   = POLY_DOOR_SLIDE;
     pdd.polyObjNum = instance->args[0];                  // id
@@ -2569,7 +2567,7 @@ DEFINE_ACTION(EV_ActionPolyobjDoorSlide)
 //
 DEFINE_ACTION(EV_ActionPolyobjDoorSwing)
 {
-    INIT_STRUCT(polydoordata_t, pdd);
+    polydoordata_t pdd = {};
 
     pdd.doorType   = POLY_DOOR_SWING;
     pdd.polyObjNum = instance->args[0]; // id
@@ -2589,7 +2587,7 @@ DEFINE_ACTION(EV_ActionPolyobjDoorSwing)
 //
 DEFINE_ACTION(EV_ActionPolyobjMove)
 {
-    INIT_STRUCT(polymovedata_t, pmd);
+    polymovedata_t pmd = {};
 
     pmd.polyObjNum = instance->args[0];                  // id
     pmd.speed      = instance->args[1] * (FRACUNIT / 8); // speed
@@ -2608,7 +2606,7 @@ DEFINE_ACTION(EV_ActionPolyobjMove)
 //
 DEFINE_ACTION(EV_ActionPolyobjMoveTimes8)
 {
-    INIT_STRUCT(polymovedata_t, pmd);
+    polymovedata_t pmd = {};
 
     pmd.polyObjNum = instance->args[0];                  // id
     pmd.speed      = instance->args[1] * (FRACUNIT / 8); // speed
@@ -2626,14 +2624,15 @@ DEFINE_ACTION(EV_ActionPolyobjMoveTimes8)
 //
 DEFINE_ACTION(EV_ActionPolyobjMoveTo)
 {
-    INIT_STRUCT(polymoveto_t, pmd);
-    pmd.polyObjNum = instance->args[0];
-    pmd.speed      = instance->args[1] * (FRACUNIT / 8);
-    pmd.targetMobj = false;
-    pmd.pos.x      = instance->args[2] * FRACUNIT;
-    pmd.pos.y      = instance->args[3] * FRACUNIT;
-    pmd.overRide   = false;
-    pmd.activator  = nullptr; // absolute XY destination won't use activator, unlike spot TID
+    polymoveto_t pmd = {};
+
+    pmd.polyObjNum   = instance->args[0];
+    pmd.speed        = instance->args[1] * (FRACUNIT / 8);
+    pmd.targetMobj   = false;
+    pmd.pos.x        = instance->args[2] * FRACUNIT;
+    pmd.pos.y        = instance->args[3] * FRACUNIT;
+    pmd.overRide     = false;
+    pmd.activator    = nullptr; // absolute XY destination won't use activator, unlike spot TID
     return EV_DoPolyObjMoveToSpot(pmd);
 }
 
@@ -2644,13 +2643,14 @@ DEFINE_ACTION(EV_ActionPolyobjMoveTo)
 //
 DEFINE_ACTION(EV_ActionPolyobjMoveToSpot)
 {
-    INIT_STRUCT(polymoveto_t, pmd);
-    pmd.polyObjNum = instance->args[0];
-    pmd.speed      = instance->args[1] * (FRACUNIT / 8);
-    pmd.targetMobj = true;
-    pmd.tid        = instance->args[2];
-    pmd.overRide   = false;
-    pmd.activator  = instance->actor;
+    polymoveto_t pmd = {};
+
+    pmd.polyObjNum   = instance->args[0];
+    pmd.speed        = instance->args[1] * (FRACUNIT / 8);
+    pmd.targetMobj   = true;
+    pmd.tid          = instance->args[2];
+    pmd.overRide     = false;
+    pmd.activator    = instance->actor;
     return EV_DoPolyObjMoveToSpot(pmd);
 }
 
@@ -2663,7 +2663,7 @@ DEFINE_ACTION(EV_ActionPolyobjMoveToSpot)
 //
 DEFINE_ACTION(EV_ActionPolyobjORMove)
 {
-    INIT_STRUCT(polymovedata_t, pmd);
+    polymovedata_t pmd = {};
 
     pmd.polyObjNum = instance->args[0];                  // id
     pmd.speed      = instance->args[1] * (FRACUNIT / 8); // speed
@@ -2682,7 +2682,7 @@ DEFINE_ACTION(EV_ActionPolyobjORMove)
 //
 DEFINE_ACTION(EV_ActionPolyobjORMoveTimes8)
 {
-    INIT_STRUCT(polymovedata_t, pmd);
+    polymovedata_t pmd = {};
 
     pmd.polyObjNum = instance->args[0];                  // id
     pmd.speed      = instance->args[1] * (FRACUNIT / 8); // speed
@@ -2700,14 +2700,15 @@ DEFINE_ACTION(EV_ActionPolyobjORMoveTimes8)
 //
 DEFINE_ACTION(EV_ActionPolyobjORMoveTo)
 {
-    INIT_STRUCT(polymoveto_t, pmd);
-    pmd.polyObjNum = instance->args[0];
-    pmd.speed      = instance->args[1] * (FRACUNIT / 8);
-    pmd.targetMobj = false;
-    pmd.pos.x      = instance->args[2] * FRACUNIT;
-    pmd.pos.y      = instance->args[3] * FRACUNIT;
-    pmd.overRide   = true;
-    pmd.activator  = nullptr;
+    polymoveto_t pmd = {};
+
+    pmd.polyObjNum   = instance->args[0];
+    pmd.speed        = instance->args[1] * (FRACUNIT / 8);
+    pmd.targetMobj   = false;
+    pmd.pos.x        = instance->args[2] * FRACUNIT;
+    pmd.pos.y        = instance->args[3] * FRACUNIT;
+    pmd.overRide     = true;
+    pmd.activator    = nullptr;
     return EV_DoPolyObjMoveToSpot(pmd);
 }
 
@@ -2718,13 +2719,14 @@ DEFINE_ACTION(EV_ActionPolyobjORMoveTo)
 //
 DEFINE_ACTION(EV_ActionPolyobjORMoveToSpot)
 {
-    INIT_STRUCT(polymoveto_t, pmd);
-    pmd.polyObjNum = instance->args[0];
-    pmd.speed      = instance->args[1] * (FRACUNIT / 8);
-    pmd.targetMobj = true;
-    pmd.tid        = instance->args[2];
-    pmd.overRide   = true;
-    pmd.activator  = instance->actor;
+    polymoveto_t pmd = {};
+
+    pmd.polyObjNum   = instance->args[0];
+    pmd.speed        = instance->args[1] * (FRACUNIT / 8);
+    pmd.targetMobj   = true;
+    pmd.tid          = instance->args[2];
+    pmd.overRide     = true;
+    pmd.activator    = instance->actor;
     return EV_DoPolyObjMoveToSpot(pmd);
 }
 
@@ -2737,7 +2739,7 @@ DEFINE_ACTION(EV_ActionPolyobjORMoveToSpot)
 //
 DEFINE_ACTION(EV_ActionPolyobjRotateRight)
 {
-    INIT_STRUCT(polyrotdata_t, prd);
+    polyrotdata_t prd = {};
 
     prd.polyObjNum = instance->args[0]; // id
     prd.speed      = instance->args[1]; // angular speed (byte angle)
@@ -2757,7 +2759,7 @@ DEFINE_ACTION(EV_ActionPolyobjRotateRight)
 //
 DEFINE_ACTION(EV_ActionPolyobjORRotateRight)
 {
-    INIT_STRUCT(polyrotdata_t, prd);
+    polyrotdata_t prd = {};
 
     prd.polyObjNum = instance->args[0]; // id
     prd.speed      = instance->args[1]; // angular speed (byte angle)
@@ -2777,7 +2779,7 @@ DEFINE_ACTION(EV_ActionPolyobjORRotateRight)
 //
 DEFINE_ACTION(EV_ActionPolyobjRotateLeft)
 {
-    INIT_STRUCT(polyrotdata_t, prd);
+    polyrotdata_t prd = {};
 
     prd.polyObjNum = instance->args[0]; // id
     prd.speed      = instance->args[1]; // angular speed (byte angle)
@@ -2797,7 +2799,7 @@ DEFINE_ACTION(EV_ActionPolyobjRotateLeft)
 //
 DEFINE_ACTION(EV_ActionPolyobjORRotateLeft)
 {
-    INIT_STRUCT(polyrotdata_t, prd);
+    polyrotdata_t prd = {};
 
     prd.polyObjNum = instance->args[0]; // id
     prd.speed      = instance->args[1]; // angular speed (byte angle)
@@ -2829,7 +2831,7 @@ DEFINE_ACTION(EV_ActionPolyobjStop)
 //
 DEFINE_ACTION(EV_ActionPillarBuild)
 {
-    INIT_STRUCT(pillardata_t, pd);
+    pillardata_t pd = {};
 
     pd.tag    = instance->tag;
     pd.speed  = instance->args[1] * (FRACUNIT / 8);
@@ -2848,7 +2850,7 @@ DEFINE_ACTION(EV_ActionPillarBuild)
 //
 DEFINE_ACTION(EV_ActionPillarBuildAndCrush)
 {
-    INIT_STRUCT(pillardata_t, pd);
+    pillardata_t pd = {};
 
     pd.tag    = instance->tag;
     pd.speed  = instance->args[1] * (FRACUNIT / 8);
@@ -2868,7 +2870,7 @@ DEFINE_ACTION(EV_ActionPillarBuildAndCrush)
 //
 DEFINE_ACTION(EV_ActionPillarOpen)
 {
-    INIT_STRUCT(pillardata_t, pd);
+    pillardata_t pd = {};
 
     pd.tag   = instance->args[0];
     pd.speed = instance->args[1] * (FRACUNIT / 8);
@@ -3376,8 +3378,8 @@ DEFINE_ACTION(EV_ActionThingDestroy)
 //
 DEFINE_ACTION(EV_ActionParamDoorLockedRaise)
 {
-    INIT_STRUCT(doordata_t, dd);
-    int extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
+    doordata_t dd       = {};
+    int        extflags = instance->line ? instance->line->extflags : EX_ML_REPEAT;
 
     int delay = instance->args[2];
 
@@ -3478,7 +3480,8 @@ DEFINE_ACTION(EV_ActionParamDonut)
 //
 DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaise)
 {
-    INIT_STRUCT(crusherdata_t, cd);
+    crusherdata_t cd = {};
+
     cd.flags       = CDF_HAVESPAC;
     cd.damage      = instance->args[2];
     cd.speed_value = instance->args[1] * (FRACUNIT / 8);
@@ -3525,7 +3528,8 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushStop)
 //
 DEFINE_ACTION(EV_ActionParamCeilingCrushRaiseAndStay)
 {
-    INIT_STRUCT(crusherdata_t, cd);
+    crusherdata_t cd = {};
+
     cd.flags       = CDF_HAVESPAC;
     cd.damage      = instance->args[2];
     cd.speed_value = instance->args[1] * (FRACUNIT / 8);
@@ -3547,7 +3551,8 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushRaiseAndStay)
 //
 DEFINE_ACTION(EV_ActionParamCeilingLowerAndCrush)
 {
-    INIT_STRUCT(crusherdata_t, cd);
+    crusherdata_t cd = {};
+
     cd.flags       = CDF_HAVESPAC;
     cd.damage      = instance->args[2];
     cd.speed_value = instance->args[1] * (FRACUNIT / 8);
@@ -3568,7 +3573,8 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerAndCrush)
 //
 DEFINE_ACTION(EV_ActionParamCeilingLowerAndCrushDist)
 {
-    INIT_STRUCT(crusherdata_t, cd);
+    crusherdata_t cd = {};
+
     cd.flags       = CDF_HAVESPAC;
     cd.damage      = instance->args[2];
     cd.speed_value = instance->args[1] * (FRACUNIT / 8);
@@ -3589,7 +3595,8 @@ DEFINE_ACTION(EV_ActionParamCeilingLowerAndCrushDist)
 //
 DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseDist)
 {
-    INIT_STRUCT(crusherdata_t, cd);
+    crusherdata_t cd = {};
+
     cd.flags       = CDF_HAVESPAC;
     cd.damage      = instance->args[3];
     cd.speed_value = instance->args[2] * (FRACUNIT / 8);
@@ -3611,7 +3618,8 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseDist)
 //
 DEFINE_ACTION(EV_ActionParamCeilingCrushRaiseAndStayA)
 {
-    INIT_STRUCT(crusherdata_t, cd);
+    crusherdata_t cd = {};
+
     cd.flags       = CDF_HAVESPAC;
     cd.damage      = instance->args[3];
     cd.speed_value = instance->args[1] * (FRACUNIT / 8);
@@ -3633,7 +3641,8 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushRaiseAndStayA)
 //
 DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseA)
 {
-    INIT_STRUCT(crusherdata_t, cd);
+    crusherdata_t cd = {};
+
     cd.flags       = CDF_HAVESPAC;
     cd.damage      = instance->args[3];
     cd.speed_value = instance->args[1] * (FRACUNIT / 8);
@@ -3655,7 +3664,8 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseA)
 //
 DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseSilentA)
 {
-    INIT_STRUCT(crusherdata_t, cd);
+    crusherdata_t cd = {};
+
     cd.flags       = CDF_HAVESPAC | CDF_PARAMSILENT;
     cd.damage      = instance->args[3];
     cd.speed_value = instance->args[1] * (FRACUNIT / 8);
@@ -3677,7 +3687,8 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseSilentA)
 //
 DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseSilentDist)
 {
-    INIT_STRUCT(crusherdata_t, cd);
+    crusherdata_t cd = {};
+
     cd.flags       = CDF_HAVESPAC | CDF_PARAMSILENT;
     cd.damage      = instance->args[3];
     cd.speed_value = instance->args[2] * (FRACUNIT / 8);
@@ -3699,7 +3710,8 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushAndRaiseSilentDist)
 //
 DEFINE_ACTION(EV_ActionParamCeilingCrushRaiseAndStaySilA)
 {
-    INIT_STRUCT(crusherdata_t, cd);
+    crusherdata_t cd = {};
+
     cd.flags       = CDF_HAVESPAC | CDF_PARAMSILENT;
     cd.damage      = instance->args[3];
     cd.speed_value = instance->args[1] * (FRACUNIT / 8);
@@ -3721,7 +3733,8 @@ DEFINE_ACTION(EV_ActionParamCeilingCrushRaiseAndStaySilA)
 //
 DEFINE_ACTION(EV_ActionParamGenCrusher)
 {
-    INIT_STRUCT(crusherdata_t, cd);
+    crusherdata_t cd = {};
+
     cd.flags       = CDF_HAVESPAC;
     cd.damage      = instance->args[4];
     cd.speed_value = instance->args[1] * (FRACUNIT / 8);
@@ -3756,7 +3769,7 @@ DEFINE_ACTION(EV_ActionParamTeleport)
 //
 DEFINE_ACTION(EV_ActionParamTeleportNoFog)
 {
-    INIT_STRUCT(teleparms_t, parms);
+    teleparms_t parms = {};
     switch(instance->args[1])
     {
     case 0: // hexen
@@ -3875,7 +3888,7 @@ DEFINE_ACTION(EV_ActionTeleportNewMap)
 //
 DEFINE_ACTION(EV_ActionParamFloorRaiseAndCrush)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
 
     fd.direction   = 1;    // up
     fd.target_type = FtoC; // to sector ceiling
@@ -3911,7 +3924,7 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingLowerByValue)
     // If level is vanilla Hexen, try to emulate its behavior as much as possible
     if(P_LevelIsVanillaHexen())
     {
-        INIT_STRUCT(floordata_t, fd);
+        floordata_t fd = {};
 
         fd.direction    = 0; // down
         fd.target_type  = FbyParam;
@@ -3922,7 +3935,7 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingLowerByValue)
         fd.height_value = instance->args[2] * FRACUNIT;
         fd.crush        = -1;
 
-        INIT_STRUCT(ceilingdata_t, cd);
+        ceilingdata_t cd = {};
 
         cd.direction    = 0;
         cd.target_type  = CbyParam;
@@ -3952,7 +3965,7 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingRaiseByValue)
 {
     if(P_LevelIsVanillaHexen())
     {
-        INIT_STRUCT(floordata_t, fd);
+        floordata_t fd = {};
 
         fd.direction    = 1; // up
         fd.target_type  = FbyParam;
@@ -3963,7 +3976,7 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingRaiseByValue)
         fd.height_value = instance->args[2] * FRACUNIT;
         fd.crush        = -1;
 
-        INIT_STRUCT(ceilingdata_t, cd);
+        ceilingdata_t cd = {};
 
         cd.direction    = 1;
         cd.target_type  = CbyParam;
@@ -4056,7 +4069,8 @@ DEFINE_ACTION(EV_ActionParamLightStrobeDoom)
 //
 DEFINE_ACTION(EV_ActionParamFloorGeneric)
 {
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
+
     int flags      = instance->args[4];
     fd.crush       = (flags & 16) ? 10 : -1;
     fd.change_type = flags & 3;
@@ -4112,7 +4126,8 @@ DEFINE_ACTION(EV_ActionParamFloorGeneric)
 //
 DEFINE_ACTION(EV_ActionParamCeilingGeneric)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
+    ceilingdata_t cd = {};
+
     int flags      = instance->args[4];
     cd.crush       = (flags & 16) ? 10 : -1;
     cd.change_type = flags & 3;
@@ -4174,20 +4189,20 @@ DEFINE_ACTION(EV_ActionParamCeilingGeneric)
 //
 DEFINE_ACTION(EV_ActionParamFloorCeilingLowerRaise)
 {
-    INIT_STRUCT(ceilingdata_t, cd);
-    cd.direction   = 1; // up
-    cd.target_type = CtoHnC;
-    cd.spac        = instance->spac;
-    cd.flags       = CDF_HAVESPAC;
-    cd.speed_type  = SpeedParam;
-    cd.speed_value = instance->args[2] * (FRACUNIT / 8);
-    cd.crush       = -1;
+    ceilingdata_t cd = {};
+    cd.direction     = 1; // up
+    cd.target_type   = CtoHnC;
+    cd.spac          = instance->spac;
+    cd.flags         = CDF_HAVESPAC;
+    cd.speed_type    = SpeedParam;
+    cd.speed_value   = instance->args[2] * (FRACUNIT / 8);
+    cd.crush         = -1;
 
     int rtn = EV_DoParamCeiling(instance->line, instance->tag, &cd);
     if(instance->args[3] == 1998 && rtn) // Boom specials 166/185 emulation
         return rtn;
 
-    INIT_STRUCT(floordata_t, fd);
+    floordata_t fd = {};
     fd.direction   = 0; // down
     fd.target_type = FtoLnF;
     fd.spac        = instance->spac;
@@ -4361,7 +4376,7 @@ DEFINE_ACTION(EV_ActionParamPlatPerpetualRaiseLip)
 //
 DEFINE_ACTION(EV_ActionParamStairsBuildUpDoomCrush)
 {
-    INIT_STRUCT(stairdata_t, sd);
+    stairdata_t sd = {};
 
     sd.flags          = SDF_HAVESPAC;
     sd.spac           = instance->spac; // Hexen-style activation

@@ -384,7 +384,8 @@ ShootContext::ShootContext(const params_t &params, const State *instate) : param
 //
 void CAM_LineAttack(Mobj *source, angle_t angle, fixed_t distance, fixed_t slope, int damage, size_t puffidx)
 {
-    edefstructvar(ShootContext::params_t, params);
+    ShootContext::params_t params = {};
+
     params.thing       = source;
     params.angle       = angle;
     params.attackrange = distance;

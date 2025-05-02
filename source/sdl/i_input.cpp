@@ -257,7 +257,7 @@ static void I_JoystickEvents()
     // turn padstate into button input events
     for(int button = 0; button < HALGamePad::MAXBUTTONS; button++)
     {
-        edefstructvar(event_t, ev);
+        event_t ev = {};
 
         if(padstate->buttons[button] != padstate->prevbuttons[button])
         {
@@ -273,7 +273,7 @@ static void I_JoystickEvents()
         // fire axis state change events
         if(padstate->axes[axis] != padstate->prevaxes[axis])
         {
-            edefstructvar(event_t, ev);
+            event_t ev = {};
 
             // if previous state was off, key down
             if(padstate->prevaxes[axis] == 0.0)
@@ -288,10 +288,10 @@ static void I_JoystickEvents()
         }
 
         // post analog axis state
-        edefstructvar(event_t, ev);
-        ev.type  = ev_joystick;
-        ev.data1 = axis;
-        ev.data2 = padstate->axes[axis];
+        event_t ev = {};
+        ev.type    = ev_joystick;
+        ev.data1   = axis;
+        ev.data2   = padstate->axes[axis];
         if(axisOrientation[axis]) // may need to flip, if orientation == -1
             ev.data2 *= axisOrientation[axis];
         D_PostEvent(&ev);

@@ -171,11 +171,6 @@ void  Z_SysFree(void *p);
 // Get the size of a static array
 #define earrlen(a) (sizeof(a) / sizeof(*a))
 
-// Define a struct var and ensure it is fully initialized
-#define edefstructvar(type, name)  \
-    type name;                     \
-    memset(&name, 0, sizeof(name))
-
 // Classify a string as either lengthful (non-nullptr, not zero length), or empty
 #define estrnonempty(str) ((str) && *(str))
 #define estrempty(str)    (!estrnonempty((str)))

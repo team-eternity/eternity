@@ -92,13 +92,16 @@ static bool P_processUMapInfoBossActions(MetaTable *info, qstring *error)
         auto bosstable = runtime_cast<MetaTable *>(bossentry);
         if(!bosstable) // hit a "clear" entry
             break;
-        edefstructvar(bossaction_t, bossinfo);
-        bossinfo.mobjclass = bosstable->getString("thingtype", nullptr);
+
+        bossaction_t bossinfo = {};
+        bossinfo.mobjclass    = bosstable->getString("thingtype", nullptr);
+        bossinfo.special      = bosstable->getInt("linespecial", XL_UMAPINFO_SPECVAL_NOT_SET);
+        bossinfo.tag          = bosstable->getInt("tag", XL_UMAPINFO_SPECVAL_NOT_SET);
+
         assert(bossinfo.mobjclass);
-        bossinfo.special = bosstable->getInt("linespecial", XL_UMAPINFO_SPECVAL_NOT_SET);
         assert(bossinfo.special != XL_UMAPINFO_SPECVAL_NOT_SET);
-        bossinfo.tag = bosstable->getInt("tag", XL_UMAPINFO_SPECVAL_NOT_SET);
         assert(bossinfo.tag != XL_UMAPINFO_SPECVAL_NOT_SET);
+
         actions.add(bossinfo);
     }
 

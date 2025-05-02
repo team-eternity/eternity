@@ -632,8 +632,8 @@ int EV_DoParamCeiling(const line_t *line, int tag, const ceilingdata_t *cd)
 //
 int EV_DoGenCeiling(const line_t *line, int special, int tag)
 {
-    edefstructvar(ceilingdata_t, cd);
-    int value = special - GenCeilingBase;
+    ceilingdata_t cd    = {};
+    int           value = special - GenCeilingBase;
 
     // parse the bit fields in the line's special type
 
@@ -1057,9 +1057,9 @@ int EV_DoParamStairs(const line_t *line, int tag, const stairdata_t *sd)
 //
 int EV_DoGenStairs(line_t *line, int special, int tag)
 {
-    edefstructvar(stairdata_t, sd);
-    int rtn;
-    int value = special - GenStairsBase;
+    stairdata_t sd = {};
+    int         rtn;
+    int         value = special - GenStairsBase;
 
     // parse the bit fields in the line's special type
     sd.direction     = (value & StairDirection) >> StairDirectionShift;
@@ -1233,8 +1233,8 @@ int EV_DoParamCrusher(const line_t *line, int tag, const crusherdata_t *cd)
 //
 int EV_DoGenCrusher(const line_t *line, int special, int tag)
 {
-    edefstructvar(crusherdata_t, cd);
-    int value = special - GenCrusherBase;
+    crusherdata_t cd    = {};
+    int           value = special - GenCrusherBase;
 
     cd.type         = ((value & CrusherSilent) >> CrusherSilentShift != 0) ? genSilentCrusher : genCrusher;
     cd.speed_type   = (value & CrusherSpeed) >> CrusherSpeedShift;

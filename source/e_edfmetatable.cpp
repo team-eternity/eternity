@@ -125,7 +125,7 @@ static void E_addDelta(const context_t &ctx, cfg_t *sec)
 //
 void E_BuildGlobalMetaTableFromEDF(cfg_t *cfg, const char *secname, const char *deltaname, MetaTable &table)
 {
-    edefstructvar(context_t, ctx);
+    context_t ctx = {};
     ctx.cfg       = cfg;
     ctx.secname   = secname;
     ctx.deltaname = deltaname;
