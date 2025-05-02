@@ -645,7 +645,7 @@ static const char *kwds_A_HticExplode[] = {
     "timebomb",      //    3
 };
 
-static argkeywd_t hticexpkwds = { kwds_A_HticExplode, sizeof(kwds_A_HticExplode) / sizeof(const char *) };
+static argkeywd_t hticexpkwds = { kwds_A_HticExplode, earrlen(kwds_A_HticExplode) };
 
 //
 // A_HticExplode

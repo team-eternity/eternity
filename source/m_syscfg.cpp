@@ -268,7 +268,7 @@ static default_t sysdefaults[] = {
 //
 static defaultfile_t sysdeffile = {
     sysdefaults,
-    sizeof(sysdefaults) / sizeof(*sysdefaults) - 1,
+    earrlen(sysdefaults) - 1,
 };
 
 //

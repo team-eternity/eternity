@@ -125,7 +125,7 @@ static const char *kwds_CPCOps[] = {
     "and_counter",            // 13
 };
 
-static argkeywd_t cpckwds = { kwds_CPCOps, sizeof(kwds_CPCOps) / sizeof(const char *) };
+static argkeywd_t cpckwds = { kwds_CPCOps, earrlen(kwds_CPCOps) };
 
 //
 // A_HealthJump
@@ -410,7 +410,7 @@ static const char *kwds_CPSetOps[] = {
     "lshift",  //  14
 };
 
-static argkeywd_t cpsetkwds = { kwds_CPSetOps, sizeof(kwds_CPSetOps) / sizeof(const char *) };
+static argkeywd_t cpsetkwds = { kwds_CPSetOps, earrlen(kwds_CPSetOps) };
 
 //
 // A_SetCounter
@@ -491,7 +491,7 @@ static const char *kwds_CPOps[] = {
     "invert",  //  18
 };
 
-static argkeywd_t cpopkwds = { kwds_CPOps, sizeof(kwds_CPOps) / sizeof(const char *) };
+static argkeywd_t cpopkwds = { kwds_CPOps, earrlen(kwds_CPOps) };
 
 //
 // A_CounterOp
@@ -621,14 +621,14 @@ static const char *kwds_A_WeaponCtrJump[] = {
     "and_counter",            // 13
 };
 
-static argkeywd_t weapctrkwds = { kwds_A_WeaponCtrJump, sizeof(kwds_A_WeaponCtrJump) / sizeof(const char *) };
+static argkeywd_t weapctrkwds = { kwds_A_WeaponCtrJump, earrlen(kwds_A_WeaponCtrJump) };
 
 static const char *kwds_pspr_choice[] = {
     "weapon", // 0
     "flash",  // 1
 };
 
-static argkeywd_t psprkwds = { kwds_pspr_choice, sizeof(kwds_pspr_choice) / sizeof(const char *) };
+static argkeywd_t psprkwds = { kwds_pspr_choice, earrlen(kwds_pspr_choice) };
 
 //
 // A_WeaponCtrJump
@@ -872,7 +872,7 @@ static const char *kwds_A_WeaponSetCtr[] = {
     "lshift",  //  14
 };
 
-static argkeywd_t weapsetkwds = { kwds_A_WeaponSetCtr, sizeof(kwds_A_WeaponSetCtr) / sizeof(const char *) };
+static argkeywd_t weapsetkwds = { kwds_A_WeaponSetCtr, earrlen(kwds_A_WeaponSetCtr) };
 
 //
 // A_WeaponSetCtr
@@ -962,7 +962,7 @@ static const char *kwds_A_WeaponCtrOp[] = {
     "invert",  // 18
 };
 
-static argkeywd_t weapctropkwds = { kwds_A_WeaponCtrOp, sizeof(kwds_A_WeaponCtrOp) / sizeof(const char *) };
+static argkeywd_t weapctropkwds = { kwds_A_WeaponCtrOp, earrlen(kwds_A_WeaponCtrOp) };
 
 //
 // A_WeaponCtrOp

@@ -98,7 +98,7 @@ static const char *mnitem_types[] = {
     "binding",      //
 };
 
-#define NUM_MNITEM_TYPES (sizeof(mnitem_types) / sizeof(char *))
+static constexpr size_t NUM_MNITEM_TYPES = earrlen(mnitem_types);
 
 // Menu Flag dehflags structure
 

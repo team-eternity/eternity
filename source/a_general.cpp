@@ -185,7 +185,7 @@ void A_Spawn(actionargs_t *actionargs)
 
 static const char *kwds_A_Turn[] = { "usemisc1", "usecounterasdeg", "usecounterasbam", "useconstant" };
 
-static argkeywd_t turnkwds = { kwds_A_Turn, sizeof(kwds_A_Turn) / sizeof(const char *) };
+static argkeywd_t turnkwds = { kwds_A_Turn, earrlen(kwds_A_Turn) };
 
 //
 // Parameterized turn.
@@ -263,7 +263,7 @@ void A_Face(actionargs_t *actionargs)
 
 static const char *kwds_A_Scratch[] = { "usemisc1", "usedamage", "usecounter", "useconstant" };
 
-static argkeywd_t scratchkwds = { kwds_A_Scratch, sizeof(kwds_A_Scratch) / sizeof(const char *) };
+static argkeywd_t scratchkwds = { kwds_A_Scratch, earrlen(kwds_A_Scratch) };
 
 //
 // Parameterized melee attack.
@@ -678,7 +678,7 @@ static const char *kwds_A_StartScript[] = {
     "acs"          // 2
 };
 
-static argkeywd_t sscriptkwds = { kwds_A_StartScript, sizeof(kwds_A_StartScript) / sizeof(const char *) };
+static argkeywd_t sscriptkwds = { kwds_A_StartScript, earrlen(kwds_A_StartScript) };
 
 //
 // A_StartScript
@@ -882,7 +882,7 @@ static const char *kwds_A_SetTics[] = {
     "counter",  //          1
 };
 
-static argkeywd_t settickwds = { kwds_A_SetTics, sizeof(kwds_A_SetTics) / sizeof(const char *) };
+static argkeywd_t settickwds = { kwds_A_SetTics, earrlen(kwds_A_SetTics) };
 
 //
 // A_SetTics
@@ -945,7 +945,7 @@ static const char *kwds_A_MissileAttack[] = {
     "homing", //  1
 };
 
-static argkeywd_t missileatkkwds = { kwds_A_MissileAttack, sizeof(kwds_A_MissileAttack) / sizeof(const char *) };
+static argkeywd_t missileatkkwds = { kwds_A_MissileAttack, earrlen(kwds_A_MissileAttack) };
 
 //
 // A_MissileAttack
@@ -1103,7 +1103,7 @@ static const char *kwds_A_BulletAttack[] = {
     "ba_monster", // 4
 };
 
-static argkeywd_t bulletkwdsold = { kwds_A_BulletAttack, sizeof(kwds_A_BulletAttack) / sizeof(const char *) };
+static argkeywd_t bulletkwdsold = { kwds_A_BulletAttack, earrlen(kwds_A_BulletAttack) };
 
 // new keywords - preferred
 static const char *kwds_A_BulletAttack2[] = {
@@ -1114,7 +1114,7 @@ static const char *kwds_A_BulletAttack2[] = {
     "monster", // 4
 };
 
-static argkeywd_t bulletkwdsnew = { kwds_A_BulletAttack2, sizeof(kwds_A_BulletAttack2) / sizeof(const char *) };
+static argkeywd_t bulletkwdsnew = { kwds_A_BulletAttack2, earrlen(kwds_A_BulletAttack2) };
 
 //
 // A_BulletAttack
@@ -1393,7 +1393,7 @@ static const char *kwds_A_ShowMessage[] = {
     "msg_center",  //  2
 };
 
-static argkeywd_t messagekwds = { kwds_A_ShowMessage, sizeof(kwds_A_ShowMessage) / sizeof(const char *) };
+static argkeywd_t messagekwds = { kwds_A_ShowMessage, earrlen(kwds_A_ShowMessage) };
 
 //
 // A_ShowMessage

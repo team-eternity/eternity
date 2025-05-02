@@ -944,7 +944,7 @@ default_or_t HereticDefaultORs[] = {
 // haleyjd 03/14/09: main defaultfile object
 static defaultfile_t maindefaults = {
     defaults,
-    sizeof defaults / sizeof *defaults - 1,
+    earrlen(defaults) - 1,
 };
 
 // killough 11/98: hash function for name lookup
