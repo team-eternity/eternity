@@ -143,10 +143,10 @@ sound ht_wizsit
 
 sound ht_wizatk
 {
-   lump          "wizatk"
-   priority      70
-   dehackednum   317
-   pitchvariance Heretic
+  lump          "wizatk"
+  priority      70
+  dehackednum   317
+  pitchvariance Heretic
 }
 
 sound ht_wizdth

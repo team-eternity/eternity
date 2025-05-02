@@ -33,7 +33,7 @@ artifact _WeaponTrackerTemplate
 //
 artifact BackpackItem
 {
-   interhubamount: 1;
+  interhubamount: 1;
 }
 
 //
@@ -44,8 +44,8 @@ artifact BackpackItem
 //
 healtheffect BerserkHealth
 {
-   amount:     100;
-   maxamount:  100;
+  amount:     100;
+  maxamount:  100;
 }
 
 //
@@ -55,15 +55,15 @@ healtheffect BerserkHealth
 // Any key lock
 lockdef 100
 {
-   message:       "$PD_ANY";
-   remotemessage: "Any key will activate this object";
+  message:       "$PD_ANY";
+  remotemessage: "Any key will activate this object";
 }
 
 // Copy of Any key lock, for ZDoom comp
 lockdef 228
 {
-   message:       "$PD_ANY";
-   remotemessage: "Any key will activate this object";
+  message:       "$PD_ANY";
+  remotemessage: "Any key will activate this object";
 }
 
 //

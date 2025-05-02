@@ -4,50 +4,50 @@
 
 splash Water
 {
-   smallclass = EETerrainWaterBase
-   smallclip  = 12
-   smallsound = eedrip
+  smallclass = EETerrainWaterBase
+  smallclip  = 12
+  smallsound = eedrip
 
-   baseclass  = EETerrainWaterBase
-   chunkclass = EETerrainWaterSplash
-   sound      = gloop
+  baseclass  = EETerrainWaterBase
+  chunkclass = EETerrainWaterSplash
+  sound      = gloop
 
-   chunkxvelshift = 8
-   chunkyvelshift = 8
-   chunkzvelshift = 8
-   chunkbasezvel  = 2
+  chunkxvelshift = 8
+  chunkyvelshift = 8
+  chunkzvelshift = 8
+  chunkbasezvel  = 2
 }
 
 splash Lava
 {
-   smallclass = EETerrainLavaSmoke
-   smallclip  = 12
-   smallsound = eehtsz
+  smallclass = EETerrainLavaSmoke
+  smallclip  = 12
+  smallsound = eehtsz
 
-   baseclass  = EETerrainLavaSplash
-   chunkclass = EETerrainLavaSmoke
-   sound      = burn
+  baseclass  = EETerrainLavaSplash
+  chunkclass = EETerrainLavaSmoke
+  sound      = burn
 
-   chunkxvelshift = -1
-   chunkyvelshift = -1
-   chunkzvelshift =  7
-   chunkbasezvel  =  1
+  chunkxvelshift = -1
+  chunkyvelshift = -1
+  chunkzvelshift =  7
+  chunkbasezvel  =  1
 }
 
 splash Sludge
 {
-   smallclass = EETerrainSludgeBase
-   smallclip  = 12
-   smallsound = muck
+  smallclass = EETerrainSludgeBase
+  smallclip  = 12
+  smallsound = muck
 
-   baseclass  = EETerrainSludgeBase
-   chunkclass = EETerrainSludgeChunk
-   sound      = muck
+  baseclass  = EETerrainSludgeBase
+  chunkclass = EETerrainSludgeChunk
+  sound      = muck
 
-   chunkxvelshift = 8
-   chunkyvelshift = 8
-   chunkzvelshift = 8
-   chunkbasezvel  = 1
+  chunkxvelshift = 8
+  chunkyvelshift = 8
+  chunkzvelshift = 8
+  chunkbasezvel  = 1
 }
 
 // Terrain Objects
@@ -60,37 +60,37 @@ splash Sludge
 
 terrain Water
 {
-   splash   = Water
-   footclip = 10
-   liquid   = true
+  splash   = Water
+  footclip = 10
+  liquid   = true
 
-   useptclcolors = true
-   ptclcolor1    = "127 127 255"
-   ptclcolor2    = "0 0 255"
+  useptclcolors = true
+  ptclcolor1    = "127 127 255"
+  ptclcolor2    = "0 0 255"
 
-   minversion = 329
+  minversion = 329
 }
 
 terrain Lava
 {
-   splash   = Lava
-   footclip = 10
-   liquid   = true
+  splash   = Lava
+  footclip = 10
+  liquid   = true
 
-   useptclcolors = true
-   ptclcolor1    = "255 120 0"
-   ptclcolor2    = "165 0 0"
+  useptclcolors = true
+  ptclcolor1    = "255 120 0"
+  ptclcolor2    = "165 0 0"
 
-   minversion = 329
+  minversion = 329
 }
 
 terrain Sludge
 {
-   splash   = Sludge
-   footclip = 10
-   liquid   = true
+  splash   = Sludge
+  footclip = 10
+ liquid   = true
 
-   minversion = 329
+ minversion = 329
 }
 
 // Floors: These vary by game type

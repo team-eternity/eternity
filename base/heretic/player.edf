@@ -14,22 +14,22 @@ skin chicken {}
 
 playerclass Corvus
 {
-   defaultskin    corvus
-   thingtype      HereticPlayer
-   altattackstate S_HPLAY_ATK2
+  defaultskin    corvus
+  thingtype      HereticPlayer
+  altattackstate S_HPLAY_ATK2
 
-   weaponslot 1 { weapons : Gauntlets, Staff }
-   weaponslot 2 { weapons : GoldWand }
-   weaponslot 3 { weapons : Crossbow }
-   weaponslot 4 { weapons : Blaster }
-   weaponslot 5 { weapons : SkullRod }
-   weaponslot 6 { weapons : PhoenixRod }
-   weaponslot 7 { weapons : Mace }
-   weaponslot 8 { weapons : Gauntlets }
+  weaponslot 1 { weapons : Gauntlets, Staff }
+  weaponslot 2 { weapons : GoldWand }
+  weaponslot 3 { weapons : Crossbow }
+  weaponslot 4 { weapons : Blaster }
+  weaponslot 5 { weapons : SkullRod }
+  weaponslot 6 { weapons : PhoenixRod }
+  weaponslot 7 { weapons : Mace }
+  weaponslot 8 { weapons : Gauntlets }
 
-   rebornitem AmmoWandCrystal, 50
-   rebornitem Staff
-   rebornitem GoldWand
+  rebornitem AmmoWandCrystal, 50
+  rebornitem Staff
+  rebornitem GoldWand
 }
 
 playerclass Chicken
