@@ -6,7 +6,7 @@
 //
 
 // Sprite names -- strings MUST be four characters each, order is unimportant.
-//    Sprites can be added to this list by another file through use of this 
+//    Sprites can be added to this list by another file through use of this
 //    syntax:
 //    spritenames += { FOO1, ... }
 //    As with all strings, quotations are not required when the string contains

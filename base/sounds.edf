@@ -68,7 +68,7 @@ sound fallht
 sound burn { pitchvariance Doom; priority 32; dehackednum 121 }
 
 sound eehtsz
-{ 
+{
   pitchvariance Doom
   priority      100
   dehackednum   122
@@ -233,7 +233,7 @@ soundsequence EEPlatRaise
 
 endif()
 
-// This may seem pointless, but defining it allows the silent behavior of 
+// This may seem pointless, but defining it allows the silent behavior of
 // instant move plats to be overridden by redefining this sequence.
 soundsequence EEPlatSilent
 {
@@ -356,7 +356,7 @@ reverb SmallHallBright : 254, 5
   +equalized
   eq.lowgain  0.79
   eq.midgain  0.92
-  eq.highgain 0.32  
+  eq.highgain 0.32
 }
 
 reverb SmallHallDark : 254, 6

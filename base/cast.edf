@@ -2,10 +2,10 @@
 // cast.edf - EDF file for Eternity Engine v3.33.33
 //
 // DOOM II cast call information is stored here. Cast members can be defined
-// elsewhere. If the castorder array is not defined, cast members will appear 
+// elsewhere. If the castorder array is not defined, cast members will appear
 // in the order they are defined. If a name is not defined by any of the first
-// 17 cast members defined, those cast members will use the corresponding 
-// default name normally defined through DeHackEd/BEX string replacement. 
+// 17 cast members defined, those cast members will use the corresponding
+// default name normally defined through DeHackEd/BEX string replacement.
 // See the EDF documentation for more information.
 //
 

@@ -53,7 +53,7 @@ thingtype ClassicHereticSolid
 }
 
 //
-// Common Heretic projectile behavior. 
+// Common Heretic projectile behavior.
 //
 thingtype HereticMissile
 {
@@ -66,11 +66,11 @@ thingtype HereticMissile
 thingtype CrystalVial : HereticPickup, 7081, 300
 {
   addflags FLOATBOB
-  acs_spawndata 
-  { 
-    num   23 
+  acs_spawndata
+  {
+    num   23
     modes heretic
-  } 
+  }
 
   firstdecoratestate S_ITEM_PTN1_1
   states
@@ -84,9 +84,9 @@ thingtype CrystalVial : HereticPickup, 7081, 300
 thingtype SilverShield : HereticPickup, 7085, 301
 {
   addflags FLOATBOB
-  acs_spawndata 
+  acs_spawndata
   {
-    num   68 
+    num   68
     modes heretic
   }
 
@@ -104,7 +104,7 @@ thingtype EnchantedShield : HereticPickup, 7031, 302
   addflags FLOATBOB|NOTSHAREWARE
   acs_spawndata
   {
-    num   69 
+    num   69
     modes heretic
   }
 
@@ -120,9 +120,9 @@ thingtype EnchantedShield : HereticPickup, 7031, 302
 thingtype BagOfHolding : HereticPickup, 7008, 303
 {
   addflags COUNTITEM|FLOATBOB
-  acs_spawndata 
+  acs_spawndata
   {
-    num   136 
+    num   136
     modes heretic
   }
 
@@ -139,8 +139,8 @@ thingtype MapScroll : HereticPickup, 7035, 304
 {
   compatname SuperMap
   addflags   COUNTITEM|FLOATBOB
-  acs_spawndata 
-  { 
+  acs_spawndata
+  {
     num 137
     modes heretic
   }
@@ -165,7 +165,7 @@ thingtype Pod : ClassicHereticSolid, 7235, 305
   mod         Barrel
   acs_spawndata
   {
-    num   125 
+    num   125
     modes heretic
   }
 
@@ -215,7 +215,7 @@ thingtype PodGenerator : Mobj, 7043, 307
   cflags NOSECTOR|NOBLOCKMAP
   acs_spawndata
   {
-    num   126 
+    num   126
     modes heretic
   }
 
@@ -243,7 +243,7 @@ thingtype HangingSkull70 : Mobj, 7017, 308
   "@
 }
 
-thingtype HangingSkull60 : Mobj, 7024, 309 
+thingtype HangingSkull60 : Mobj, 7024, 309
 {
   compatname SkullHang60
   height     60.0
@@ -288,7 +288,7 @@ thingtype HangingSkull35 : Mobj, 7026, 311
   "@
 }
 
-thingtype Chandelier : Mobj, 7028, 312 
+thingtype Chandelier : Mobj, 7028, 312
 {
   height 60.0
   cflags SPAWNCEILING|NOGRAVITY
@@ -605,7 +605,7 @@ thingtype TeleGlitterRed : HereticMissile, -1, 332
   compatname TeleGlitter1
   acs_spawndata
   {
-    num   166 
+    num   166
     modes heretic
   }
 
@@ -732,7 +732,7 @@ thingtype NitroGolem : Golem, 7045, 337
   obituary_melee  "was beaten by a Nitrogolem"
   acs_spawndata
   {
-    num   2 
+    num   2
     modes heretic
   }
 
@@ -757,7 +757,7 @@ thingtype GolemGhost : Golem, 7069, 338
   obituary_melee "was spooked by a Golem Ghost"
   acs_spawndata
   {
-    num   8 
+    num   8
     modes heretic
   }
 }
@@ -802,7 +802,7 @@ thingtype GolemShot : HereticMissile, -1, 341
   acs_spawndata
   {
     num   131
-    modes heretic 
+    modes heretic
   }
 
   firstdecoratestate S_MUMMYFX1_1
@@ -841,7 +841,7 @@ thingtype Weredragon : ClassicHereticSolid, 7070, 342
   acs_spawndata
   {
     num   3
-    modes heretic 
+    modes heretic
   }
 
   firstdecoratestate S_BEAST_LOOK1
@@ -876,7 +876,7 @@ thingtype Weredragon : ClassicHereticSolid, 7070, 342
     BEAS M  6
     BEAS N  5
     BEAS O  6 A_Fall
-    BEAS P  5 
+    BEAS P  5
     BEAS Q -1
     stop
   "@
@@ -946,7 +946,7 @@ thingtype Ophidian : ClassicHereticSolid, 7092, 345
   acs_spawndata
   {
     num   132
-    modes heretic 
+    modes heretic
   }
 
   firstdecoratestate S_SNAKE_LOOK1
@@ -991,7 +991,7 @@ thingtype OphidianShotA : HereticMissile, -1, 346
   acs_spawndata
   {
     num   138
-    modes heretic 
+    modes heretic
   }
 
   firstdecoratestate S_SNAKEPRO_A1
@@ -1144,7 +1144,7 @@ thingtype Disciple : ClassicHereticSolid, 7015, 349
   Death:
     WZRD F  6 A_GhostOff
     WZRD G  6 A_Scream
-    WZRD HI 6 
+    WZRD HI 6
     WZRD J  6 A_Fall
     WZRD KL 6
     WZRD M -1
@@ -1244,7 +1244,7 @@ thingtype DeathKnightGhost : DeathKnight, 7065, 352
   acs_spawndata
   {
     num   129
-    modes heretic 
+    modes heretic
   }
 }
 
@@ -1328,7 +1328,7 @@ thingtype SerpentRiderDsparil : ClassicHereticSolid, 7007, 355
   acs_spawndata
   {
     num   142
-    modes heretic 
+    modes heretic
   }
 
   firstdecoratestate S_SRCR1_LOOK1
@@ -1383,7 +1383,7 @@ thingtype SRDsparilShot1 : HereticMissile, -1, 356
   acs_spawndata
   {
     num   144
-    modes heretic 
+    modes heretic
   }
 
   firstdecoratestate S_SRCRFX1_1
@@ -1689,7 +1689,7 @@ thingtype VolcanoBall : HereticMissile, -1, 369
   acs_spawndata
   {
     num   123
-    modes heretic 
+    modes heretic
   }
 
   firstdecoratestate S_VOLCANOBALL1
@@ -1827,7 +1827,7 @@ thingtype MaulotaurShot : HereticMissile, -1, 372
   addflags   FIREDAMAGE
   acs_spawndata
   {
-    num   115     // note: different from zdoom  
+    num   115     // note: different from zdoom
     modes heretic
   }
 
@@ -2202,7 +2202,7 @@ thingtype HAmmoSkullWimpy : HereticPickup, 7020, 387
   addflags    NOTSHAREWARE
   acs_spawndata
   {
-    num   158 
+    num   158
     modes heretic
   }
 
@@ -2594,7 +2594,7 @@ thingtype HArtiFly : HereticArtifact, 7083, 402
   "@
 }
 
-thingtype HArtiInvulnerability : HereticArtifact, 7084, 403 
+thingtype HArtiInvulnerability : HereticArtifact, 7084, 403
 {
   compatname ArtiInvulnerability
   addflags   COUNTITEM|FLOATBOB|SUPERITEM
@@ -3040,9 +3040,9 @@ thingtype HereticMaceSpot : Mobj, 7202, 431
 {
   compatname MaceSpawner
   cflags     NOTSHAREWARE
-   
+
   collectionspawn HWeaponFireMace, 64, 64
-   
+
   states
   @"
   Spawn:
@@ -3358,7 +3358,7 @@ thingtype HereticRainPlayer1 : HereticMissile, -1, 445
   damage 5
 
   mod PoweredHellStaffRain
-  
+
   firstdecoratestate S_RAINPLR1_1
   states
   @"
@@ -3371,7 +3371,7 @@ thingtype HereticRainPlayer1 : HereticMissile, -1, 445
     stop
   AirDeath:
     FX20 GHI 4 bright
-    stop 
+    stop
   "@
 }
 
@@ -3405,9 +3405,9 @@ thingtype Chicken : ClassicHereticSolid, -1, 449
   radius 9.0
   height 22.0
   mass 40
-  
+
   addflags SHOOTABLE|DROPOFF|COUNTKILL|WINDTHRUST|FOOTCLIP|SPACMONSTER|PASSMOBJ
-  
+
   firstdecoratestate S_CHICKEN_LOOK1
   states
   @"
@@ -3488,7 +3488,7 @@ thingtype ChickenPlayer : ClassicHereticSolid, -1, 452
   activesound ht_chicact
 
   addflags SHOOTABLE|DROPOFF|NOTDMATCH|FOOTCLIP|SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ|LOGRAV|NOSOUNDCUTOFF|STICKYCARRY
-  
+
   deathstate S_CHICKEN_DIE1
 
   firstdecoratestate S_CHICPLAY

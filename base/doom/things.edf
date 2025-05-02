@@ -84,7 +84,7 @@ thingtype Zombieman : Mobj, 3004, 2
   Missile:
     POSS E 10 A_FaceTarget
     POSS F  8 A_PosAttack
-    POSS E  8 
+    POSS E  8
     goto See
   Pain:
     POSS G 3

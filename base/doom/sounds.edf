@@ -34,15 +34,15 @@ sound stnmov { pitchvariance = Doom;    priority = 119; dehackednum =  22 }
 sound swtchn { pitchvariance = Doom;    priority =  78; dehackednum =  23 }
 sound swtchx { pitchvariance = Doom;    priority =  78; dehackednum =  24 }
 
-sound plpain 
-{ 
+sound plpain
+{
    pitchvariance = Doom
    priority = 96
    dehackednum = 25
    skinindex = sk_plpain
 }
 
-sound dmpain 
+sound dmpain
 {
    pitchvariance = Doom
    priority = 96
@@ -54,7 +54,7 @@ sound popain
 {
    pitchvariance = Doom
    priority = 96
-   dehackednum =  27 
+   dehackednum =  27
    nopcsound = true
 }
 
@@ -63,7 +63,7 @@ sound mnpain { pitchvariance = Doom; priority =  96; dehackednum =  29 }
 sound pepain { pitchvariance = Doom; priority =  96; dehackednum =  30 }
 
 sound slop
-{ 
+{
    pitchvariance = Doom
    priority = 78
    dehackednum = 31
@@ -112,15 +112,15 @@ sound vilatk { pitchvariance = Doom; priority =  70; dehackednum =  54 }
 sound claw   { pitchvariance = Doom; priority =  70; dehackednum =  55 }
 sound skeswg { pitchvariance = Doom; priority =  70; dehackednum =  56 }
 
-sound pldeth 
-{ 
+sound pldeth
+{
    pitchvariance = Doom
    priority = 32
    dehackednum = 57
    skinindex = sk_pldeth
 }
 
-sound pdiehi 
+sound pdiehi
 {
    pitchvariance = Doom
    priority = 32
@@ -145,23 +145,23 @@ sound kntdth { pitchvariance = Doom; priority =  32; dehackednum =  72 }
 sound pedth  { pitchvariance = Doom; priority =  32; dehackednum =  73 }
 sound skedth { pitchvariance = Doom; priority =  32; dehackednum =  74 }
 
-sound posact 
-{ 
+sound posact
+{
    pitchvariance = Doom
    priority = 120
-   dehackednum =  75 
+   dehackednum =  75
    nopcsound = true
 }
 
 sound bgact
-{ 
+{
    pitchvariance = Doom
-   priority = 120; 
-   dehackednum =  76 
+   priority = 120;
+   dehackednum =  76
    nopcsound = true
 }
 
-sound dmact  
+sound dmact
 {
    pitchvariance = Doom
    priority = 120
@@ -195,7 +195,7 @@ sound flame  { pitchvariance = Doom; priority =  32; dehackednum =  91 }
 sound flamst { pitchvariance = Doom; priority =  32; dehackednum =  92 }
 
 sound getpow
-{ 
+{
    pitchvariance = Doom
    priority = 60
    dehackednum = 93
@@ -222,9 +222,9 @@ sound radio  { pitchvariance = Doom; priority =  60; dehackednum = 108 }
 // Doom didn't have this feature. To use this, provide a DSPLWDTH sound in a wad
 // and it will be enabled in the default Marine skin automatically.
 
-sound plwdth 
-{ 
-   pitchvariance = Doom; priority =  32; dehackednum = 125; 
+sound plwdth
+{
+   pitchvariance = Doom; priority =  32; dehackednum = 125;
    skinindex = sk_plwdth
 }
 

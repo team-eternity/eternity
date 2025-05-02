@@ -7,11 +7,11 @@ splash Water
    smallclass = EETerrainWaterBase
    smallclip  = 12
    smallsound = eedrip
-   
+
    baseclass  = EETerrainWaterBase
    chunkclass = EETerrainWaterSplash
-   sound      = gloop   
-   
+   sound      = gloop
+
    chunkxvelshift = 8
    chunkyvelshift = 8
    chunkzvelshift = 8
@@ -23,11 +23,11 @@ splash Lava
    smallclass = EETerrainLavaSmoke
    smallclip  = 12
    smallsound = eehtsz
-   
+
    baseclass  = EETerrainLavaSplash
    chunkclass = EETerrainLavaSmoke
    sound      = burn
-   
+
    chunkxvelshift = -1
    chunkyvelshift = -1
    chunkzvelshift =  7
@@ -39,11 +39,11 @@ splash Sludge
    smallclass = EETerrainSludgeBase
    smallclip  = 12
    smallsound = muck
-   
+
    baseclass  = EETerrainSludgeBase
    chunkclass = EETerrainSludgeChunk
    sound      = muck
-   
+
    chunkxvelshift = 8
    chunkyvelshift = 8
    chunkzvelshift = 8
@@ -63,11 +63,11 @@ terrain Water
    splash   = Water
    footclip = 10
    liquid   = true
-   
+
    useptclcolors = true
    ptclcolor1    = "127 127 255"
    ptclcolor2    = "0 0 255"
-   
+
    minversion = 329
 }
 
@@ -76,11 +76,11 @@ terrain Lava
    splash   = Lava
    footclip = 10
    liquid   = true
-   
+
    useptclcolors = true
    ptclcolor1    = "255 120 0"
    ptclcolor2    = "165 0 0"
-   
+
    minversion = 329
 }
 
@@ -88,8 +88,8 @@ terrain Sludge
 {
    splash   = Sludge
    footclip = 10
-   liquid   = true 
-   
+   liquid   = true
+
    minversion = 329
 }
 

@@ -16,9 +16,9 @@ font ee_smallfont
    tallestchar 10
    colorable   true
    uppercase   true
-   
+
    patchnumoffset 32
-   
+
    filter { chars { 91 };        mask "FONTA00"   }
    filter { chars { 95 };        mask "FONTA59"   }
    filter { start '!'; end 0x7f; mask "FONTA%.2d" }
@@ -35,7 +35,7 @@ font ee_hudfont
    tallestchar 8
    colorable   true
    uppercase   true
-   
+
    filter { start '0'; end '9';           mask "DIG%c"  }
    filter { start 'A'; end 'Z';           mask "DIG%c"  }
    filter { chars { 45, 47, 58, 91, 93 }; mask "DIG%i"  }
@@ -43,7 +43,7 @@ font ee_hudfont
    filter { chars { '_' };                mask "DIG45"  }
    filter { chars { '(' };                mask "DIG91"  }
    filter { chars { ')' };                mask "DIG93"  }
-   
+
    defaultcolor red
    colortables
    {
@@ -53,7 +53,7 @@ font ee_hudfont
       gray   "145=20,151=26,156=31,160=35"
       green  "145=209,151=215,156=220,160=224"
       brown  "145=66,151=72,156=77,160=81"
-      gold   "145=244,151=243,156=242,160=241" 
+      gold   "145=244,151=243,156=242,160=241"
       blue   "145=185,151=191,156=196,160=200"
       orange "145=247,151=246,156=245,160=244"
       yellow "145=138,151=140,156=142,160=144"
@@ -148,9 +148,9 @@ font ee_bigfont
    widthdelta  1
    tallestchar 20   // FIXME: not correct?
    uppercase   true
-   
+
    patchnumoffset = 32;
-   
+
    filter { start '!'; end 'Z'; mask "FONTB%.2d" }
 }
 
@@ -168,7 +168,7 @@ font ee_bignumfont
    blockcentered true
 
    patchnumoffset 32
-      
+
    filter { start '!'; end 'Z'; mask "FONTB%.2d" }
 }
 
@@ -194,9 +194,9 @@ font ee_finalefont
    tallestchar 10
    colorable   true
    uppercase   true
-   
+
    patchnumoffset = 32;
-   
+
    filter { chars { 91 };        mask "FONTA00"   }
    filter { chars { 95 };        mask "FONTA59"   }
    filter { start '!'; end 0x7f; mask "FONTA%.2d" }

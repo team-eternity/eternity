@@ -287,7 +287,7 @@ sound ht_kgtsit
 
 sound ht_kgtatk
 {
-  lump          "kgtatk" 
+  lump          "kgtatk"
   priority      70
   dehackednum   335
   pitchvariance Heretic
@@ -1074,7 +1074,7 @@ sound EE_FCMove     { alias  ht_dormov }
 
 
 // Heretic Environmental Ambience Sequences
- 
+
 soundsequence EEHticAmbScream
 {
   type     environment
@@ -1084,7 +1084,7 @@ soundsequence EEHticAmbScream
     play ht_amb1
     nostopcutoff
   "@
-   
+
   randomplayvol true
   attenuation   none
 }
@@ -1098,7 +1098,7 @@ soundsequence EEHticAmbSquish
     playuntildone ht_amb2
     nostopcutoff
   "@
-   
+
   randomplayvol true
   attenuation   none
 }
@@ -1107,7 +1107,7 @@ soundsequence EEHticAmbDrops
 {
   type environment
   id   2
-  commands 
+  commands
   @"
     play ht_amb3
     delay 16
@@ -1129,7 +1129,7 @@ soundsequence EEHticAmbDrops
     delayrand 0 31
     nostopcutoff
   "@
-   
+
   randomplayvol true
   attenuation   none
 }
@@ -1156,7 +1156,7 @@ soundsequence EEHticSlowFootSteps
     playrelvol ht_amb11 -3
     nostopcutoff
   "@
-   
+
   randomplayvol true
   attenuation   none
 }
@@ -1173,7 +1173,7 @@ soundsequence EEHticHeartBeat
     play ht_amb5
     nostopcutoff
   "@
-   
+
   randomplayvol true
   attenuation   none
 }
@@ -1192,7 +1192,7 @@ soundsequence EEHticBells
     playrelvol ht_amb6 -8
     nostopcutoff
   "@
-   
+
   randomplayvol true
   attenuation   none
 }
@@ -1206,7 +1206,7 @@ soundsequence EEHticGrowl
     play ht_bstsit
     nostopcutoff
   "@
-   
+
   randomplayvol true
   attenuation   none
 }
@@ -1220,7 +1220,7 @@ soundsequence EEHticMagic
     play ht_amb8
     nostopcutoff
   "@
-   
+
   randomplayvol true
   attenuation   none
 }
@@ -1243,7 +1243,7 @@ soundsequence EEHticLaughter
     playrelvol ht_amb10 -4
     nostopcutoff
   "@
-   
+
   randomplayvol true
   attenuation   none
 }
@@ -1270,7 +1270,7 @@ soundsequence EEHticFastFootSteps
     playrelvol ht_amb11 -3
     nostopcutoff
   "@
-  
+
   randomplayvol true
   attenuation   none
 }
