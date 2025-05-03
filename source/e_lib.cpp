@@ -1547,7 +1547,7 @@ static tr_pfunc trpfuncs[TR_PSTATE_NUMSTATES] = {
     DoPStateCommaOrEnd // TR_PSTATE_COMMAOREND
 };
 
-static inline constexpr fixed_t RANGE_CLAMP(const fixed_t c, const fixed_t end)
+inline static constexpr fixed_t RANGE_CLAMP(const fixed_t c, const fixed_t end)
 {
     return c <= end ? c : end;
 }

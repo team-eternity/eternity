@@ -749,7 +749,7 @@ static void P_RavenRespawn(Mobj *special)
 // Get the special message for the given pickup.
 // Basically exists to sort out the awful BFG message hack.
 //
-static inline const char *P_getSpecialMessage(Mobj *special, const char *def)
+inline static const char *P_getSpecialMessage(Mobj *special, const char *def)
 {
     if(strcasecmp(special->info->name, "WeaponBFG"))
         return def;

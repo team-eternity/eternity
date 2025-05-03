@@ -280,7 +280,7 @@ uint64_t R_GetVisitID(const rendercontext_t &context);
 // * Contributor(s):
 // *   IBM Corp.
 //
-static inline uint32_t R_doubleToUint32(double d)
+inline static uint32_t R_doubleToUint32(double d)
 {
 #ifdef SDL_BYTEORDER
     // TODO: Use C++ std::endian when C++20 can be used

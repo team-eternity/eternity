@@ -760,7 +760,7 @@ static void R_drawMaskedColumn(const R_ColumnFunc colfunc, cb_column_t &column, 
 // drawing a singular pixel where sparklies may occur (if they will occur at all),
 // and then removing those pixels from main column drawing.
 //
-static inline void R_drawNewMaskedColumnThreadSafe(const R_ColumnFunc colfunc, cb_column_t &column,
+inline static void R_drawNewMaskedColumnThreadSafe(const R_ColumnFunc colfunc, cb_column_t &column,
                                                    const texture_t *const tex, const texcol_t *tcol)
 {
     const byte *const texend     = tex->bufferdata + tex->width * tex->height + 1;
@@ -815,7 +815,7 @@ static inline void R_drawNewMaskedColumnThreadSafe(const R_ColumnFunc colfunc, c
 // improvements relative to R_drawNewMaskedColumnThreadSafe it will not be dynamically dispatched to if
 // appropriate, since it doesn't seem worthwhile.
 //
-static inline void R_drawNewMaskedColumnSingleThread(
+inline static void R_drawNewMaskedColumnSingleThread(
    const R_ColumnFunc colfunc, cb_column_t &column, const texture_t *const tex, const texcol_t *tcol)
 {
    const byte *const texend = tex->bufferdata + tex->width * tex->height + 1;
@@ -1018,7 +1018,7 @@ static void R_interpolatePSpritePosition(const pspdef_t &pspr, v2fixed_t &pos)
 //
 // haleyjd 01/22/11: determine special drawstyles
 //
-static inline byte R_getDrawStyle(const Mobj *const thing, int *tranmaplump)
+inline static byte R_getDrawStyle(const Mobj *const thing, int *tranmaplump)
 {
     if(thing->flags & MF_SHADOW)
         return VS_DRAWSTYLE_SHADOW;
@@ -1456,7 +1456,7 @@ static void R_projectSprite(cmapcontext_t &cmapcontext, spritecontext_t &spritec
 // Checks if a sprite has already been rendered
 // and adds it to the marked sprite hash table if it hasn't
 //
-static inline bool R_checkAndMarkSprite(spritecontext_t &spritecontext, ZoneHeap &heap, const Mobj *const thing)
+inline static bool R_checkAndMarkSprite(spritecontext_t &spritecontext, ZoneHeap &heap, const Mobj *const thing)
 {
     const size_t   thing_hash  = std::hash<const Mobj *>{}(thing) % NUMSPRITEMARKS;
     drawnsprite_t *prevSprite  = nullptr;

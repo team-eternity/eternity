@@ -137,12 +137,12 @@ extern double s_highgain; // high band gain
 
 extern bool s_reverbactive;
 
-static inline bool I_IsSoundBufferSizePowerOf2(int i)
+inline static bool I_IsSoundBufferSizePowerOf2(int i)
 {
     return (i & (i - 1)) == 0;
 }
 
-static inline int I_MakeSoundBufferSize(int i)
+inline static int I_MakeSoundBufferSize(int i)
 {
     --i;
     i |= i >> 1;

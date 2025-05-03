@@ -869,7 +869,7 @@ static void E_populateWeaponSlot(BDListItem<weaponslot_t> &slotlist, WeaponSlotN
 //
 // Creates a weapon slot from a given tree, then assigns it to the appropriate pclass slot
 //
-static inline void E_createWeaponSlotFromTree(playerclass_t *pc, int slotindex, WeaponSlotTree &slottree)
+inline static void E_createWeaponSlotFromTree(playerclass_t *pc, int slotindex, WeaponSlotTree &slottree)
 {
     weaponslot_t *initslot             = estructalloc(weaponslot_t, 1);
     initslot->slotindex                = slotindex;

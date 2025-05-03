@@ -87,7 +87,7 @@ protected:
     float normAxis(int value, int threshold, int maxvalue);
     void  normAxisPair(float &axisx, float &axisy, int threshold, int min, int max);
 
-    static inline constexpr const char *stringForAxis[6] = {
+    inline static constexpr const char *stringForAxis[6] = {
         "Left X",        //
         "Left Y",        //
         "Right X",       //

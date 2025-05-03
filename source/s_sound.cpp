@@ -69,7 +69,7 @@
 // sf: sound/music hashing
 // use sound_hash for music hash too
 
-static inline int sound_hash(const char *s)
+inline static int sound_hash(const char *s)
 {
     return D_HashTableKey(s) % SOUND_HASHSLOTS;
 }

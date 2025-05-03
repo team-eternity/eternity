@@ -732,22 +732,22 @@ static char *D_IWADPathForIWADParam(const char *iwad)
 
 // Inlines for CheckIWAD
 
-static inline bool isMapExMy(const char *const name)
+inline static bool isMapExMy(const char *const name)
 {
     return name[0] == 'E' && name[2] == 'M' && !name[4];
 }
 
-static inline bool isMapMAPxy(const char *const name)
+inline static bool isMapMAPxy(const char *const name)
 {
     return name[0] == 'M' && name[1] == 'A' && name[2] == 'P' && !name[5];
 }
 
-static inline bool isCAV(const char *const name)
+inline static bool isCAV(const char *const name)
 {
     return name[0] == 'C' && name[1] == 'A' && name[2] == 'V' && !name[7];
 }
 
-static inline bool isMC(const char *const name)
+inline static bool isMC(const char *const name)
 {
     return name[0] == 'M' && name[1] == 'C' && !name[3];
 }

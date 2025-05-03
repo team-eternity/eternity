@@ -324,7 +324,7 @@ int HU_StringHeight(const char *s)
 //
 // HU_overlaySetup
 //
-static inline void HU_overlaySetup()
+inline static void HU_overlaySetup()
 {
     if(!hu_overlay)
     {

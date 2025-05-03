@@ -96,7 +96,7 @@ struct cb_slopespan_t
 
     const void *source;
 
-    static inline const lighttable_t **colormap;
+    inline static const lighttable_t **colormap;
 };
 
 using R_FlatFunc  = void (*)(const cb_span_t &);

@@ -47,9 +47,9 @@ struct spanconsts
 // Structure for inlining accesses to the cb_span_t structure for orthogonal spans
 struct spanvalues
 {
-    static inline int XShift() { return span.xshift; }
-    static inline int YShift() { return span.yshift; }
-    static inline int XMask()  { return span.xmask;  }
+    inline static int XShift() { return span.xshift; }
+    inline static int YShift() { return span.yshift; }
+    inline static int XMask()  { return span.xmask;  }
 };
 
 // Template structure for inlining constant values for slope spans
@@ -64,9 +64,9 @@ struct slopeconsts
 // Structure for inlining accesses to the cb_span_t structure for slope spans
 struct slopevalues
 {
-    static inline int XShift() { return span.xshift; }
-    static inline int XMask()  { return span.xmask;  }
-    static inline int YMask()  { return span.ymask;  }
+    inline static int XShift() { return span.xshift; }
+    inline static int XMask()  { return span.xmask;  }
+    inline static int YMask()  { return span.ymask;  }
 };
 */
 
@@ -577,12 +577,12 @@ struct Sampler
 {
     struct Solid
     {
-        static inline byte Sample(const byte fgColor, const byte bgColor, const cb_span_t &span) { return fgColor; }
+        inline static byte Sample(const byte fgColor, const byte bgColor, const cb_span_t &span) { return fgColor; }
     };
 
     struct Translucent
     {
-        static inline byte Sample(const byte fgColor, const byte bgColor, const cb_span_t &span)
+        inline static byte Sample(const byte fgColor, const byte bgColor, const cb_span_t &span)
         {
             int t;
 
@@ -594,7 +594,7 @@ struct Sampler
 
     struct Additive
     {
-        static inline byte Sample(const byte fgColor, const byte bgColor, const cb_span_t &span)
+        inline static byte Sample(const byte fgColor, const byte bgColor, const cb_span_t &span)
         {
             unsigned int a, b;
 
@@ -650,7 +650,7 @@ while(count--)
     } while(false)
 
 template<maskedSlope_e masked, typename Sampler, int xshift, int xmask, int ymask>
-static inline void R_drawSlope_8(const cb_slopespan_t &slopespan, const cb_span_t &span)
+inline static void R_drawSlope_8(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
     double iu = slopespan.iufrac, iv = slopespan.ivfrac;
     double ius = slopespan.iustep, ivs = slopespan.ivstep;
@@ -731,7 +731,7 @@ static inline void R_drawSlope_8(const cb_slopespan_t &slopespan, const cb_span_
 }
 
 template<maskedSlope_e masked, typename Sampler>
-static inline void R_drawSlope_8_GEN(const cb_slopespan_t &slopespan, const cb_span_t &span)
+inline static void R_drawSlope_8_GEN(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
     double iu = slopespan.iufrac, iv = slopespan.ivfrac;
     double ius = slopespan.iustep, ivs = slopespan.ivstep;

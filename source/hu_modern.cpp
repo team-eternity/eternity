@@ -68,7 +68,7 @@ extern patch_t *nfs_inf;
 //
 // Writes right-aligned text
 //
-static inline void FontWriteTextRAlign(vfont_t *font, const char *s, const int x, const int y, VBuffer *screen)
+inline static void FontWriteTextRAlign(vfont_t *font, const char *s, const int x, const int y, VBuffer *screen)
 {
     V_FontWriteText(font, s, x - V_FontStringWidth(font, s), y, screen);
 }
@@ -76,7 +76,7 @@ static inline void FontWriteTextRAlign(vfont_t *font, const char *s, const int x
 //
 // Right-justifies a given string for a given font and maximum length for the string
 //
-static inline int RJustify(vfont_t *font, const qstring &qstr, const int maxstrlen, const int x)
+inline static int RJustify(vfont_t *font, const qstring &qstr, const int maxstrlen, const int x)
 {
     return x + ((V_FontMaxWidth(font) * maxstrlen) - V_FontStringWidth(font, qstr.constPtr()));
 }
@@ -85,7 +85,7 @@ static inline int RJustify(vfont_t *font, const qstring &qstr, const int maxstrl
 // Writes right-justified text within a left-aligned line
 // Used to properly align health and armour digits regardless of their values
 //
-static inline void FontWriteTextRJustify(vfont_t *font, const qstring &qstr, const int maxstrlen, const int x,
+inline static void FontWriteTextRJustify(vfont_t *font, const qstring &qstr, const int maxstrlen, const int x,
                                          const int y, VBuffer *screen)
 {
     V_FontWriteText(font, qstr.constPtr(), RJustify(font, qstr, maxstrlen, x), y, screen);

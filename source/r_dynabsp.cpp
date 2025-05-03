@@ -110,7 +110,7 @@ static void R_setupDSForBSP(dynaseg_t &ds)
 // I am not TOO worried about accuracy during partition selection, but...
 #define CHECK_EPSILON 0.0001
 
-static inline bool nearzero(double d)
+inline static bool nearzero(double d)
 {
     return (d < CHECK_EPSILON && d > -CHECK_EPSILON);
 }

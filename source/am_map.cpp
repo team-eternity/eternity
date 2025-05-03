@@ -326,34 +326,34 @@ static void AM_getIslope(mline_t *ml, islope_t *is)
 
 // translates between frame-buffer and map distances
 template<typename T>
-static inline double FTOM(const T x)
+inline static double FTOM(const T x)
 {
     return x * scale_ftom;
 }
 template<typename T>
-static inline double MTOF(const T x)
+inline static double MTOF(const T x)
 {
     return x * scale_mtof;
 }
 // translates between frame-buffer and map coordinates
 template<typename T>
-static inline int CXMTOF(const T x)
+inline static int CXMTOF(const T x)
 {
     return f_x + int(MTOF(x) - m_x);
 }
 template<typename T>
-static inline int CYMTOF(const T y)
+inline static int CYMTOF(const T y)
 {
     return f_y + int(MTOF(y) - m_y);
 }
 
 // haleyjd: movement scaling factors for panning consistency at different
 // resolutions
-static inline double HORZ_PAN_SCALE(const double x)
+inline static double HORZ_PAN_SCALE(const double x)
 {
     return x * f_w / SCREENWIDTH;
 }
-static inline double VERT_PAN_SCALE(const double y)
+inline static double VERT_PAN_SCALE(const double y)
 {
     return y * f_h / SCREENHEIGHT;
 }
@@ -1332,7 +1332,7 @@ static bool AM_clipMline(mline_t *ml, fline_t *fl)
 #undef DOOUTCODE
 
 // haleyjd 06/12/09: this macro is now shared by Bresenham and Wu
-static inline void PUTDOT(const int xx, const int yy, const int cc)
+inline static void PUTDOT(const int xx, const int yy, const int cc)
 {
     *VBADDRESS(&vbscreen, xx, yy) = cc;
 }

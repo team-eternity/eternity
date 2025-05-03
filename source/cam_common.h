@@ -28,12 +28,12 @@
 #include "p_maputl.h"
 #include "r_defs.h"
 
-static inline void VALID_ALLOC(byte *&set, const int n)
+inline static void VALID_ALLOC(byte *&set, const int n)
 {
     set = ecalloc(byte *, 1, ((n + 7) & ~7) / 8);
 }
 
-static inline void VALID_FREE(byte *const set)
+inline static void VALID_FREE(byte *const set)
 {
     efree(set);
 }

@@ -94,7 +94,7 @@ enum cfg_dialect_t
     CFG_NUMDIALECTS      /**< keep this last */
 };
 
-static inline bool is_set(const int f, const cfg_flag_t x)
+inline static bool is_set(const int f, const cfg_flag_t x)
 {
     return (f & x) == f;
 }

@@ -2063,7 +2063,7 @@ void E_createThingPickupEffect(mobjinfo_t &mi)
 //
 // Process a pickup effect
 //
-static inline void E_processThingPickupEffect(mobjinfo_t &mi, cfg_t *thingsec)
+inline static void E_processThingPickupEffect(mobjinfo_t &mi, cfg_t *thingsec)
 {
     const char *str;
     cfg_t      *pfx_cfg = cfg_getsec(thingsec, ITEM_TNG_PFX_PICKUPFX);
@@ -3559,7 +3559,7 @@ static void E_destroyThingPickupEffect(mobjinfo_t *mi)
 // Process a single thingtype's or thingdelta's pickupeffect
 // this cannot be done during first pass thingtype processing.
 //
-static inline void E_processThingPickup(cfg_t *sec, const char *thingname)
+inline static void E_processThingPickup(cfg_t *sec, const char *thingname)
 {
     int thingnum = E_ThingNumForName(thingname);
     if(cfg_size(sec, ITEM_TNG_PFX_CLRPICKFX))

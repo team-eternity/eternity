@@ -49,7 +49,7 @@
 
 // TODO: This will probably be defined elsewhere at some point
 #undef PO2
-static inline constexpr int PO2(const int x)
+inline static constexpr int PO2(const int x)
 {
     return 1 << x;
 }

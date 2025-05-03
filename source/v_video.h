@@ -136,7 +136,7 @@ void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch, bool flip
 //
 // Inline version of V_DrawPatchGeneral.
 //
-static inline void V_DrawPatch(int x, int y, VBuffer *buffer, patch_t *patch)
+inline static void V_DrawPatch(int x, int y, VBuffer *buffer, patch_t *patch)
 {
     V_DrawPatchGeneral(x, y, buffer, patch, false);
 }
@@ -144,7 +144,7 @@ static inline void V_DrawPatch(int x, int y, VBuffer *buffer, patch_t *patch)
 //
 // Inline version of V_DrawPatchGeneral.
 //
-static inline void V_DrawPatchFlipped(int x, int y, VBuffer *buffer, patch_t *patch)
+inline static void V_DrawPatchFlipped(int x, int y, VBuffer *buffer, patch_t *patch)
 {
     V_DrawPatchGeneral(x, y, buffer, patch, true);
 }

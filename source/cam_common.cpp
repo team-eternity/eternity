@@ -39,12 +39,12 @@
 #include "r_portal.h"
 #include "r_state.h"
 
-static inline bool VALID_ISSET(const byte *const set, const int i)
+inline static bool VALID_ISSET(const byte *const set, const int i)
 {
     return set[i >> 3] & (1 << (i & 7));
 }
 
-static inline void VALID_SET(byte *const set, const int i)
+inline static void VALID_SET(byte *const set, const int i)
 {
     set[i >> 3] |= 1 << (i & 7);
 }

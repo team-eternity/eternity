@@ -86,7 +86,7 @@
 // denorms
 //
 
-static inline void undenormalize(double &d)
+inline static void undenormalize(double &d)
 {
     static const double anti_denormal  = 1e-18;
     d                                 += anti_denormal;

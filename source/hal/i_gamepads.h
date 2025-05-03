@@ -118,8 +118,8 @@ public:
 
     // In interest of efficiency, we have caps on the number of device inputs
     // we will monitor.
-    static inline constexpr int MAXAXES    = 8;
-    static inline constexpr int MAXBUTTONS = 24;
+    inline static constexpr int MAXAXES    = 8;
+    inline static constexpr int MAXBUTTONS = 24;
 
     // Selection
     virtual bool select()   = 0; // Select as the input device

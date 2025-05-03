@@ -48,7 +48,7 @@ void        R_FreeDynaBSP(rpolybsp_t *bsp);
 //
 // Returns 0 for front/right, 1 for back/left.
 //
-static inline int R_PointOnDynaSegSide(const dynaseg_t *ds, float x, float y)
+inline static int R_PointOnDynaSegSide(const dynaseg_t *ds, float x, float y)
 {
     return ((ds->pdx * (y - ds->psy)) >= (ds->pdy * (x - ds->psx)));
 }

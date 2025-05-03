@@ -805,7 +805,7 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s, int set
 }
 
 // haleyjd 08/30/09: local-origin netcmds need love too
-static inline bool cmd_setdefault()
+inline static bool cmd_setdefault()
 {
     return Console.cmdtype == c_typed || (Console.cmdtype == c_netcmd && Console.cmdsrc == consoleplayer);
 }

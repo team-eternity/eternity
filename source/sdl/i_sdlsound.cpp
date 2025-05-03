@@ -437,7 +437,7 @@ static void inline I_SDLConvertSoundBuffer(Uint8 *stream, int len)
 // Mix the two primary mixing buffers together. This allows sounds to bypass
 // environmental effects on a per-channel basis.
 //
-static inline void I_SDLMixBuffers()
+inline static void I_SDLMixBuffers()
 {
     float *bptr = mixbuffer[0];
     float *end  = bptr + mixbuffer_size;
