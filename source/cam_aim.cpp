@@ -38,7 +38,7 @@
 #include "r_pcheck.h"
 #include "r_portal.h"
 
-#define RECURSION_LIMIT 64
+static constexpr int RECURSION_LIMIT = 64;
 
 //
 // The entire context used during autoaiming

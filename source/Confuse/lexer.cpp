@@ -36,7 +36,7 @@
 
 // file include stack
 
-#define MAX_INCLUDE_DEPTH 16
+static constexpr int MAX_INCLUDE_DEPTH = 16;
 
 static struct cfginclude_s
 {

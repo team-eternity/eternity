@@ -1956,9 +1956,9 @@ unsigned int D_HashTableKeyCase(const char *str)
 // value (DEH style).
 //
 
-#define NUMSTRCHAINS (earrlen(deh_strlookup) + 61)
-static size_t bexstrhashchains[NUMSTRCHAINS];
-static size_t dehstrhashchains[NUMSTRCHAINS];
+static constexpr size_t NUMSTRCHAINS = earrlen(deh_strlookup) + 61;
+static size_t           bexstrhashchains[NUMSTRCHAINS];
+static size_t           dehstrhashchains[NUMSTRCHAINS];
 
 static void D_DEHStrHashInit()
 {
@@ -2116,7 +2116,7 @@ void DEH_ReplaceString(const char *mnemonic, const char *newstr)
 // BEX Code Pointer Hash Table
 //
 
-#define NUMCPTRCHAINS (earrlen(deh_bexptrs) + 35)
+static constexpr int NUMCPTRCHAINS = earrlen(deh_bexptrs) + 35;
 
 static int bexcpchains[NUMCPTRCHAINS];
 

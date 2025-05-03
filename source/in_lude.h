@@ -38,7 +38,7 @@ struct interfns_t
 };
 
 // intercam
-#define MAXCAMERAS 128
+static constexpr int MAXCAMERAS = 128;
 
 extern int intertime;
 extern int acceleratestage;

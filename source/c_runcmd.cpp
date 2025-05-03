@@ -805,9 +805,10 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s, int set
 }
 
 // haleyjd 08/30/09: local-origin netcmds need love too
-#define cmd_setdefault \
-   (Console.cmdtype == c_typed || \
-    (Console.cmdtype == c_netcmd && Console.cmdsrc == consoleplayer))
+static inline bool cmd_setdefault()
+{
+    return Console.cmdtype == c_typed || (Console.cmdtype == c_netcmd && Console.cmdsrc == consoleplayer);
+}
 
 //
 // C_SetVariable
@@ -919,7 +920,7 @@ static void C_SetVariable(command_t *command)
         case vt_int:
             if(setflags & CCF_CANSETVAR)
                 *(int *)variable->variable = size;
-            if((setflags & CCF_CANSETDEF) && cmd_setdefault) // default
+            if((setflags & CCF_CANSETDEF) && cmd_setdefault()) // default
                 *(int *)variable->v_default = size;
             break;
 
@@ -927,7 +928,7 @@ static void C_SetVariable(command_t *command)
             // haleyjd 07/05/10
             if(setflags & CCF_CANSETVAR)
                 *(bool *)variable->variable = !!size;
-            if((setflags & CCF_CANSETDEF) && cmd_setdefault) // default
+            if((setflags & CCF_CANSETDEF) && cmd_setdefault()) // default
                 *(bool *)variable->v_default = !!size;
             break;
 
@@ -937,7 +938,7 @@ static void C_SetVariable(command_t *command)
                 efree(*(char **)variable->variable);
                 *(char **)variable->variable = Console.argv[0]->duplicate(PU_STATIC);
             }
-            if((setflags & CCF_CANSETDEF) && cmd_setdefault) // default
+            if((setflags & CCF_CANSETDEF) && cmd_setdefault()) // default
             {
                 efree(*(char **)variable->v_default);
                 *(char **)variable->v_default = Console.argv[0]->duplicate(PU_STATIC);
@@ -951,7 +952,7 @@ static void C_SetVariable(command_t *command)
                 memset(variable->variable, 0, variable->max + 1);
                 Console.argv[0]->copyInto((char *)variable->variable, variable->max + 1);
             }
-            if((setflags & CCF_CANSETDEF) && cmd_setdefault)
+            if((setflags & CCF_CANSETDEF) && cmd_setdefault())
             {
                 memset(variable->v_default, 0, variable->max + 1);
                 strcpy((char *)variable->v_default, Console.argv[0]->constPtr());
@@ -962,7 +963,7 @@ static void C_SetVariable(command_t *command)
             // haleyjd 04/21/10: implemented vt_float
             if(setflags & CCF_CANSETVAR)
                 *(double *)variable->variable = fs;
-            if((setflags & CCF_CANSETDEF) && cmd_setdefault)
+            if((setflags & CCF_CANSETDEF) && cmd_setdefault())
                 *(double *)variable->v_default = fs;
             break;
 

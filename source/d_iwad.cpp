@@ -89,9 +89,9 @@ static void D_addDoomWadPath(const char *path)
 
 // haleyjd 01/17/11: Use a different separator on Windows than on POSIX platforms
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
-#define DOOMWADPATHSEP ';'
+static constexpr char DOOMWADPATHSEP = ';';
 #else
-#define DOOMWADPATHSEP ':'
+static constexpr char DOOMWADPATHSEP = ':';
 #endif
 
 //
@@ -730,19 +730,27 @@ static char *D_IWADPathForIWADParam(const char *iwad)
     return nullptr; // nothing was found
 }
 
-// macros for CheckIWAD
+// Inlines for CheckIWAD
 
-#define isMapExMy(name) \
-   ((name)[0] == 'E' && (name)[2] == 'M' && !(name)[4])
+static inline bool isMapExMy(const char *const name)
+{
+    return name[0] == 'E' && name[2] == 'M' && !name[4];
+}
 
-#define isMapMAPxy(name) \
-   ((name)[0] == 'M' && (name)[1] == 'A' && (name)[2] == 'P' && !(name)[5])
+static inline bool isMapMAPxy(const char *const name)
+{
+    return name[0] == 'M' && name[1] == 'A' && name[2] == 'P' && !name[5];
+}
 
-#define isCAV(name) \
-   ((name)[0] == 'C' && (name)[1] == 'A' && (name)[2] == 'V' && !(name)[7])
+static inline bool isCAV(const char *const name)
+{
+    return name[0] == 'C' && name[1] == 'A' && name[2] == 'V' && !name[7];
+}
 
-#define isMC(name) \
-   ((name)[0] == 'M' && (name)[1] == 'C' && !(name)[3])
+static inline bool isMC(const char *const name)
+{
+    return name[0] == 'M' && name[1] == 'C' && !name[3];
+}
 
 // haleyjd 10/13/05: special stuff for FreeDOOM :)
 bool freedoom = false;

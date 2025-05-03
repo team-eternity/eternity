@@ -30,13 +30,10 @@
 #include "m_fixed.h"
 
 // The sky map is 256*128*4 maps.
-#define ANGLETOSKYSHIFT         22
+static constexpr int ANGLETOSKYSHIFT = 22;
 
 // Necessary height of sky to prevent stretching for looking up
-enum
-{
-    SKY_FREELOOK_HEIGHT = 200,
-};
+static constexpr int SKY_FREELOOK_HEIGHT = 200;
 
 // haleyjd: information on sky flats
 struct skyflat_t
@@ -53,7 +50,7 @@ struct skyflat_t
 
 // haleyjd: hashed sky texture information
 
-#define NUMSKYCHAINS 13
+static constexpr int NUMSKYCHAINS = 13;
 
 struct skytexture_t
 {

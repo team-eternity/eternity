@@ -33,8 +33,8 @@ class PointThinker;
 
 // when to clip out sounds
 // Does not fit the large outdoor areas.
-#define S_CLIPPING_DIST_I 1200
-#define S_CLIPPING_DIST (S_CLIPPING_DIST_I << FRACBITS)
+static constexpr int     S_CLIPPING_DIST_I = 1200;
+static constexpr fixed_t S_CLIPPING_DIST   = S_CLIPPING_DIST_I << FRACBITS;
 
 // Distance to origin when sounds should be maxed out.
 // This should relate to movement clipping resolution
@@ -44,8 +44,8 @@ class PointThinker;
 // killough 12/98: restore original
 // #define S_CLOSE_DIST (160<<FRACBITS)
 
-#define S_CLOSE_DIST_I 200
-#define S_CLOSE_DIST (S_CLOSE_DIST_I << FRACBITS)
+static constexpr int     S_CLOSE_DIST_I = 200;
+static constexpr fixed_t S_CLOSE_DIST   = S_CLOSE_DIST_I << FRACBITS;
 
 //
 // Initializes sound stuff, including volume
@@ -159,7 +159,7 @@ extern int default_numChannels; // killough 10/98
 extern char *mus_LoadName;
 
 // haleyjd 11/03/06: moved/added to header
-#define SOUND_HASHSLOTS 257
+static constexpr int SOUND_HASHSLOTS = 257;
 
 extern musicinfo_t *musicinfos[];
 

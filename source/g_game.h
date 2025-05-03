@@ -143,7 +143,7 @@ extern bool sendpause;
 extern int mouse_vert; // haleyjd
 extern int smooth_turning;
 
-#define VERSIONSIZE   16
+static constexpr int VERSIONSIZE = 16;
 
 // killough 2/22/98: version id string format for savegames
 constexpr const char VERSIONID[] = "EE";
@@ -156,7 +156,7 @@ extern WadDirectory *d_dir;
 // or savegame. This is used to prevent problems, in
 // case more players in a game are supported later.
 
-#define MIN_MAXPLAYERS 32
+static constexpr int MIN_MAXPLAYERS = 32;
 
 #endif
 

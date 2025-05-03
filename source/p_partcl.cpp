@@ -103,8 +103,9 @@ static struct particleColorList
 // Public License.
 //
 
-#define BEAMLENGTH       16
-#define NUMVERTEXNORMALS 162
+static constexpr int BEAMLENGTH       = 16;
+static constexpr int NUMVERTEXNORMALS = 162;
+
 using vec3_t = float[3];
 
 static vec3_t avelocities[NUMVERTEXNORMALS];
@@ -554,10 +555,20 @@ void P_RunEffects(void)
 // about struct member order and alignment in memory
 //
 
-#define FADEFROMTTL(a) (FRACUNIT/(a))
+inline static constexpr fixed_t FADEFROMTTL(const int a)
+{
+    return FRACUNIT / a;
+}
 
-#define PARTICLE_VELRND ((FRACUNIT / 4096)  * (M_Random() - 128))
-#define PARTICLE_ACCRND ((FRACUNIT / 16384) * (M_Random() - 128))
+inline static fixed_t PARTICLE_VELRND()
+{
+    return (FRACUNIT / 4096) * (M_Random() - 128);
+}
+
+inline static fixed_t PARTICLE_ACCRND()
+{
+    return (FRACUNIT / 16384) * (M_Random() - 128);
+}
 
 static particle_t *JitterParticle(int ttl)
 {
@@ -566,14 +577,14 @@ static particle_t *JitterParticle(int ttl)
     if(particle)
     {
         // Set initial velocities
-        particle->velx = PARTICLE_VELRND;
-        particle->vely = PARTICLE_VELRND;
-        particle->velz = PARTICLE_VELRND;
+        particle->velx = PARTICLE_VELRND();
+        particle->vely = PARTICLE_VELRND();
+        particle->velz = PARTICLE_VELRND();
 
         // Set initial accelerations
-        particle->accx = PARTICLE_ACCRND;
-        particle->accy = PARTICLE_ACCRND;
-        particle->accz = PARTICLE_ACCRND;
+        particle->accx = PARTICLE_ACCRND();
+        particle->accy = PARTICLE_ACCRND();
+        particle->accz = PARTICLE_ACCRND();
 
         particle->trans = FRACUNIT; // fully opaque
         particle->ttl   = ttl;

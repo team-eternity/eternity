@@ -135,16 +135,16 @@ constexpr const char BANNER_UNKNOWN[]   = "Public DOOM";
 constexpr const char INTERPIC_DOOM[]    = "INTERPIC";
 
 // Default finales caused by Teleport_EndGame special
-#define DEF_DOOM_FINALE  FINALE_DOOM_CREDITS
-#define DEF_HTIC_FINALE  FINALE_HTIC_CREDITS
+static constexpr int DEF_DOOM_FINALE = FINALE_DOOM_CREDITS;
+static constexpr int DEF_HTIC_FINALE = FINALE_HTIC_CREDITS;
 
 // Default translations for MF4_AUTOTRANSLATE flag.
 // Graphic is assumed to be in the DOOM palette.
 constexpr const char DEFTL_HERETIC[]  = "TR_DINH";
 
 // Default cast call text string coordinates
-#define CAST_DEFTITLEY 20
-#define CAST_DEFNAMEY  180
+static constexpr int CAST_DEFTITLEY = 20;
+static constexpr int CAST_DEFNAMEY  = 180;
 
 //
 // Common Flags
@@ -153,15 +153,15 @@ constexpr const char DEFTL_HERETIC[]  = "TR_DINH";
 // of the intrinsic gametypes.
 //
 
-#define DOOM_GIFLAGS \
-    (GIF_PRBOOMTALLSKY | GIF_FLIGHTINERTIA | GIF_HASEXITSOUNDS | GIF_CLASSICMENUS | \
-     GIF_SKILL5RESPAWN | GIF_SKILL5WARNING | GIF_HUDSTATBARNAME | GIF_DOOMWEAPONOFFSET)
+static constexpr unsigned int DOOM_GIFLAGS = GIF_PRBOOMTALLSKY | GIF_FLIGHTINERTIA | GIF_HASEXITSOUNDS |
+                                             GIF_CLASSICMENUS | GIF_SKILL5RESPAWN | GIF_SKILL5WARNING |
+                                             GIF_HUDSTATBARNAME | GIF_DOOMWEAPONOFFSET;
 
-#define HERETIC_GIFLAGS \
-    (GIF_MNBIGFONT | GIF_SAVESOUND | GIF_HASADVISORY | GIF_SHADOWTITLES | \
-     GIF_HASMADMELEE | GIF_CENTERHUDMSG | GIF_CHEATSOUND | GIF_CHASEFAST | GIF_WPNSWITCHSUPER)
+static constexpr unsigned int HERETIC_GIFLAGS = GIF_MNBIGFONT | GIF_SAVESOUND | GIF_HASADVISORY | GIF_SHADOWTITLES |
+                                                GIF_HASMADMELEE | GIF_CENTERHUDMSG | GIF_CHEATSOUND | GIF_CHASEFAST |
+                                                GIF_WPNSWITCHSUPER;
 
-#define FINALDOOM_MIFLAGS (MI_DEMOIFDEMO4 | MI_NOTELEPORTZ)
+static constexpr unsigned int FINALDOOM_MIFLAGS = MI_DEMOIFDEMO4 | MI_NOTELEPORTZ;
 
 extern menu_t menu_episode, menu_episodeDoom2Stub, menu_hepisode;
 // globals
@@ -856,7 +856,7 @@ static missioninfo_t gmFinalPlutonia = {
 // * Has MAP33: Betray w/secret exit on MAP02
 // * Supports Doom 2 managed mission pack selection menu
 // * Has a stupid M_GDHIGH lump
-#define BFGMISSIONFLAGS (MI_WOLFNAMEHACKS|MI_HASBETRAY|MI_DOOM2MISSIONS|MI_NOGDHIGH)
+static constexpr unsigned int BFGMISSIONFLAGS = MI_WOLFNAMEHACKS | MI_HASBETRAY | MI_DOOM2MISSIONS | MI_NOGDHIGH;
 
 //
 // Disk version (Xbox and BFG Edition)

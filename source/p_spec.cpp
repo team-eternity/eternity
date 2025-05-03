@@ -124,7 +124,8 @@ struct animdef_t
 #pragma pack(pop)
 #endif
 
-#define MAXANIMS 32                   // no longer a strict limit -- killough
+static constexpr int MAXANIMS = 32; // no longer a strict limit -- killough
+
 static anim_t *lastanim, *anims; // new structure w/o limits -- killough
 static size_t  maxanims;
 
@@ -2123,8 +2124,8 @@ void P_SetLineID(line_t *line, int id)
 // haleyjd 12/28/08: the following sector flags are considered to be part of
 // the sector special (not all sector flags may be considered to be such).
 
-#define SPECIALFLAGSMASK \
-    (SECF_SECRET|SECF_FRICTION|SECF_PUSH|SECF_KILLSOUND|SECF_KILLMOVESOUND|SECF_INSTANTDEATH|SECF_MONSTERDEATH)
+static constexpr unsigned int SPECIALFLAGSMASK = SECF_SECRET | SECF_FRICTION | SECF_PUSH | SECF_KILLSOUND |
+                                                 SECF_KILLMOVESOUND | SECF_INSTANTDEATH | SECF_MONSTERDEATH;
 
 //
 // P_SetupSpecialTransfer

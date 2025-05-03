@@ -50,8 +50,6 @@
 
 #include "p_map.h"
 
-#define BFGCELLS bfgcells        /* Ty 03/09/98 externalized in p_inter.c */
-
 //
 // A_Punch
 //
@@ -161,7 +159,7 @@ void A_FireMissile(actionargs_t *actionargs)
 // A_FireBFG
 //
 
-#define BFGBOUNCE 16
+static constexpr int BFGBOUNCE = 16;
 
 void A_FireBFG(actionargs_t *actionargs)
 {
@@ -171,7 +169,7 @@ void A_FireBFG(actionargs_t *actionargs)
     if(!player)
         return;
 
-    P_SubtractAmmo(*player, BFGCELLS);
+    P_SubtractAmmo(*player, bfgcells);
 
     mo                     = P_SpawnPlayerMissile(actionargs->actor, E_SafeThingType(MT_BFG));
     mo->extradata.bfgcount = BFGBOUNCE; // for bouncing bfg - redundant

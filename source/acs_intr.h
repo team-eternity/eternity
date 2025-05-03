@@ -45,7 +45,7 @@ struct polyobj_t;
 // Defines
 //
 
-#define ACS_NUM_THINGTYPES 256
+constexpr int32_t ACS_NUM_THINGTYPES = 256;
 
 #define ACS_CF_ARGS ACSVM::Thread *thread, const ACSVM::Word *argV, ACSVM::Word argC
 

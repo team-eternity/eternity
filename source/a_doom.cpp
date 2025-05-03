@@ -440,7 +440,7 @@ void A_SkelMissile(actionargs_t *actionargs)
     P_SetTarget<Mobj>(&mo->tracer, actor->target); // killough 11/98
 }
 
-#define TRACEANGLE 0xc000000   /* killough 9/9/98: change to #define */
+static constexpr sangle_t TRACEANGLE = 0xc000000; /* killough 9/9/98: change to #define */
 
 //
 // A_Tracer
@@ -871,7 +871,7 @@ void A_VileAttack(actionargs_t *actionargs)
 // in three different directions?
 // Doesn't look like it.            - haleyjd: weird comment #345932
 
-#define FATSPREAD       (ANG90/8)
+static constexpr sangle_t FATSPREAD = ANG90 / 8;
 
 //
 // A_FatRaise
@@ -990,7 +990,7 @@ void A_FatAttack3(actionargs_t *actionargs)
 // Lost Soul and Pain Elemental
 //
 
-#define SKULLSPEED              (20*FRACUNIT)
+constexpr fixed_t SKULLSPEED = 20 * FRACUNIT;
 
 //
 // A_SkullAttack
@@ -1229,7 +1229,7 @@ struct boss_spec_t
     unsigned int level_flag;
 };
 
-#define NUM_BOSS_SPECS 7
+static constexpr int NUM_BOSS_SPECS = 7;
 
 static boss_spec_t boss_specs[NUM_BOSS_SPECS] = {
     { MF2_MAP07BOSS1, BSPEC_MAP07_1 },

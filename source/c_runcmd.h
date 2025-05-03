@@ -43,8 +43,8 @@ struct variable_t;
 // Macros
 //
 
-#define MAXTOKENS 64
-#define CMDCHAINS 16
+static constexpr int MAXTOKENS = 64;
+static constexpr int CMDCHAINS = 16;
 
 // zdoom _inspired_:
 

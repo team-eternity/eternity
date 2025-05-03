@@ -30,10 +30,10 @@
 // Fixed point, 32bit as 16.16.
 //
 
-#define FRACBITS 16
-#define FRACUNIT (1<<FRACBITS)
-
 using fixed_t = int32_t;
+
+static constexpr int     FRACBITS = 16;
+static constexpr fixed_t FRACUNIT = 1 << FRACBITS;
 
 //
 // Absolute Value
@@ -75,14 +75,26 @@ inline static fixed_t FixedDiv(fixed_t a, fixed_t b)
 
 // SoM: this is only the case for 16.16 bit fixed point. If a different
 // precision is desired, this must be changed accordingly
-#define FPFRACUNIT 65536.0
+static constexpr double FPFRACUNIT = 65536.0;
 
 // SoM 5/10/09: These are now macroized for the sake of uniformity
-#define M_FloatToFixed(f) ((fixed_t)((f) * FPFRACUNIT))
-#define M_FixedToFloat(f) ((float)((f) / FPFRACUNIT))
+inline constexpr fixed_t M_FloatToFixed(const float f)
+{
+    return fixed_t(f * FPFRACUNIT);
+}
+inline constexpr float M_FixedToFloat(const fixed_t f)
+{
+    return float(f / FPFRACUNIT);
+}
 
-#define M_FixedToDouble(f) ((double)((f) / FPFRACUNIT))
-#define M_DoubleToFixed(f) ((fixed_t)((f) * FPFRACUNIT))
+inline constexpr fixed_t M_DoubleToFixed(const double f)
+{
+    return fixed_t(f * FPFRACUNIT);
+}
+inline constexpr double M_FixedToDouble(const fixed_t f)
+{
+    return double(f / FPFRACUNIT);
+}
 
 #endif
 

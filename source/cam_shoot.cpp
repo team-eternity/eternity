@@ -42,7 +42,7 @@
 #include "r_portal.h"
 #include "r_sky.h"
 
-#define RECURSION_LIMIT 64
+static constexpr int RECURSION_LIMIT = 64;
 
 //
 // For bullet attacks

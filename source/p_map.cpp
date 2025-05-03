@@ -129,7 +129,8 @@ void P_PopClipStack(void)
 }
 
 int spechits_emulation;
-#define MAXSPECHIT_OLD 8         // haleyjd 09/20/06: old limit for overflow emu
+
+static constexpr int MAXSPECHIT_OLD = 8; // haleyjd 09/20/06: old limit for overflow emu
 
 // haleyjd 09/20/06: moved to top for maximum visibility
 static int crushchange;
@@ -2572,10 +2573,10 @@ struct bombdata_t
     unsigned int bombflags; // haleyjd 12/22/12
 };
 
-#define MAXBOMBS 128               // a static limit to prevent stack faults.
-static int         bombindex;       // current index into bombs array
-static bombdata_t  bombs[MAXBOMBS]; // bombs away!
-static bombdata_t *theBomb;         // it's the bomb, man. (the current explosion)
+static constexpr int MAXBOMBS = 128;  // a static limit to prevent stack faults.
+static int           bombindex;       // current index into bombs array
+static bombdata_t    bombs[MAXBOMBS]; // bombs away!
+static bombdata_t   *theBomb;         // it's the bomb, man. (the current explosion)
 
 //
 // Check if the actors are immune to each other's radius attack. This is a MBF21 feature.

@@ -691,7 +691,7 @@ struct boss_spec_htic_t
     int          flagfield;
 };
 
-#define NUM_HBOSS_SPECS 5
+static constexpr int NUM_HBOSS_SPECS = 5;
 
 static boss_spec_htic_t hboss_specs[NUM_HBOSS_SPECS] = {
     { MF2_E1M8BOSS, BSPEC_E1M8, 2 },
@@ -819,7 +819,7 @@ void A_RemovePod(actionargs_t *actionargs)
 // begin flying around the map like mad. So, this limit isn't a
 // good candidate for removal; it's a necessity.
 
-#define MAXGENPODS 16
+static constexpr int MAXGENPODS = 16;
 
 void A_MakePod(actionargs_t *actionargs)
 {

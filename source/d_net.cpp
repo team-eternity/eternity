@@ -64,8 +64,8 @@ doomdata_t *netbuffer; // points inside doomcom
 //
 // a gametic cannot be run until nettics[] > gametic for all players
 //
-#define RESENDCOUNT 10
-#define PL_DRONE    0x80    /* bit flag in doomdata->player */
+static constexpr int          RESENDCOUNT = 10;
+static constexpr unsigned int PL_DRONE = 0x80; /* bit flag in doomdata->player */
 
 static ticcmd_t localcmds[BACKUPTICS];
 

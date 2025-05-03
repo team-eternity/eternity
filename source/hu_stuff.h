@@ -93,7 +93,8 @@ void HU_PlayerMsg(const char *s);
 void HU_CenterMessage(const char *s);
 void HU_CenterMsgTimedColor(const char *s, const char *color, int tics);
 
-#define CROSSHAIRS 3
+static constexpr int CROSSHAIRS = 3;
+
 extern int  crosshairnum; // 0= none
 extern bool crosshair_hilite;
 extern bool crosshair_scale;

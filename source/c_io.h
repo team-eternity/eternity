@@ -26,8 +26,8 @@
 
 #include "d_keywds.h"
 
-#define INPUTLENGTH 512
-#define LINELENGTH  128
+static constexpr int INPUTLENGTH = 512;
+static constexpr int LINELENGTH  = 128;
 
 struct event_t;
 class qstring;

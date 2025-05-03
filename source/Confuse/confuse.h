@@ -57,27 +57,34 @@ enum cfg_type_t
 };
 
 using cfg_type_t = enum cfg_type_t;
+using cfg_flag_t = int;
 
 // haleyjd 07/11/03: changed to match libConfuse 2.0 cvs
 /** Flags. */
-#define CFGF_NONE        0x00000000
-#define CFGF_MULTI       0x00000001 /**< option may be specified multiple times */
-#define CFGF_LIST        0x00000002 /**< option is a list */
-#define CFGF_NOCASE      0x00000004 /**< configuration file is case insensitive */
-#define CFGF_TITLE       0x00000008 /**< option has a title (only applies to section) */
-#define CFGF_ALLOCATED   0x00000010
-#define CFGF_RESET       0x00000020
-#define CFGF_DEFINIT     0x00000040
-// haleyjd: custom flags
-#define CFGF_LOOKFORFUNC 0x00000080 /**< will do nothing until "lookfor" function is found */
-#define CFGF_STRSPACE    0x00000100 /**< unquoted strings within this section may contain spaces */
-#define CFGF_SIGNPREFIX  0x00000200 /**< CFGT_FLAG items expect a + or - prefix on the property */
-#define CFGF_TITLEPROPS  0x00000400 /**< MVPROP with this flag defines the section's title properties */
+enum
+{
+    CFGF_NONE      = 0x00000000,
+    CFGF_MULTI     = 0x00000001, /**< option may be specified multiple times */
+    CFGF_LIST      = 0x00000002, /**< option is a list */
+    CFGF_NOCASE    = 0x00000004, /**< configuration file is case insensitive */
+    CFGF_TITLE     = 0x00000008, /**< option has a title (only applies to section) */
+    CFGF_ALLOCATED = 0x00000010,
+    CFGF_RESET     = 0x00000020,
+    CFGF_DEFINIT   = 0x00000040,
+    // haleyjd: custom flags
+    CFGF_LOOKFORFUNC = 0x00000080, /**< will do nothing until "lookfor" function is found */
+    CFGF_STRSPACE    = 0x00000100, /**< unquoted strings within this section may contain spaces */
+    CFGF_SIGNPREFIX  = 0x00000200, /**< CFGT_FLAG items expect a + or - prefix on the property */
+    CFGF_TITLEPROPS  = 0x00000400, /**< MVPROP with this flag defines the section's title properties */
+};
 
 /** Return codes from cfg_parse(). */
-#define CFG_SUCCESS     0
-#define CFG_FILE_ERROR -1
-#define CFG_PARSE_ERROR 1
+enum
+{
+    CFG_SUCCESS     = 0,
+    CFG_FILE_ERROR  = -1,
+    CFG_PARSE_ERROR = 1,
+};
 
 /** Dialects - haleyjd */
 enum cfg_dialect_t
@@ -87,13 +94,14 @@ enum cfg_dialect_t
     CFG_NUMDIALECTS      /**< keep this last */
 };
 
-#define is_set(f, x) ((f & x) == f)
+static inline bool is_set(const int f, const cfg_flag_t x)
+{
+    return (f & x) == f;
+}
 
 union cfg_value_t;
 struct cfg_opt_t;
 struct cfg_t;
-
-using cfg_flag_t = int;
 
 /** Function prototype used by CFGT_FUNC options.
  *

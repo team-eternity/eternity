@@ -24,7 +24,7 @@
 #ifndef R_THINGS_H__
 #define R_THINGS_H__
 
-#define MAX_SPRITE_FRAMES 29          /* Macroized -- killough 1/25/98 */
+static constexpr int MAX_SPRITE_FRAMES = 29; // Macroized -- killough 1/25/98
 
 struct line_t;
 struct sector_t;

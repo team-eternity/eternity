@@ -46,7 +46,7 @@
 
 using pcsound_callback_func = void (*)(int *duration, int *frequency);
 
-#define SQUARE_WAVE_AMP 0x2000
+static constexpr int SQUARE_WAVE_AMP = 0x2000;
 
 // Callback function to invoke when we want new sound data
 
@@ -244,7 +244,7 @@ static const float frequencies[] = {
 
 // clang-format on
 
-#define NUMFREQUENCIES earrlen(frequencies)
+static constexpr size_t NUMFREQUENCIES = earrlen(frequencies);
 
 //=============================================================================
 //

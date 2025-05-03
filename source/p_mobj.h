@@ -54,31 +54,30 @@ class BloodSpawner;
 // [XA] VIEWHEIGHT is now a playerclass property
 
 // sf: gravity >>> defaultgravity
-#define DEFAULTGRAVITY  FRACUNIT
-#define MAXMOVE         (30*FRACUNIT)
+static constexpr fixed_t DEFAULTGRAVITY = FRACUNIT;
+static constexpr fixed_t MAXMOVE        = 30 * FRACUNIT;
 
-#define ONFLOORZ        D_MININT
-#define ONCEILINGZ      D_MAXINT
-// haleyjd 10/13/02: floatrand
-#define FLOATRANDZ     (D_MAXINT - 1)
-#define MINFLTRNDZ     (40*FRACUNIT)
+static constexpr fixed_t ONFLOORZ   = D_MININT;
+static constexpr fixed_t ONCEILINGZ = D_MAXINT;
+static constexpr fixed_t FLOATRANDZ = D_MAXINT - 1; // haleyjd 10/13/02: floatrand
+static constexpr fixed_t MINFLTRNDZ = 40 * FRACUNIT;
 
 // Time interval for item respawning.
-#define ITEMQUESIZE     128
+static constexpr int ITEMQUESIZE = 128;
 
-#define FLOATSPEED      (FRACUNIT*4)
-#define STOPSPEED       (FRACUNIT/16)
+static constexpr fixed_t FLOATSPEED = FRACUNIT * 4;
+static constexpr fixed_t STOPSPEED  = FRACUNIT / 16;
 
 // killough 11/98:
 // For torque simulation:
-#define OVERDRIVE 6
-#define MAXGEAR (OVERDRIVE+16)
+static constexpr int OVERDRIVE = 6;
+static constexpr int MAXGEAR   = OVERDRIVE + 16;
 
 // haleyjd 11/28/02: default z coord addend for missile spawn
 // #define DEFAULTMISSILEZ (4*8*FRACUNIT)
 // DEFAULTMISSILEZ is now a mobjinfo property (missileheight)
 
-#define NUMMOBJCOUNTERS 8
+static constexpr int NUMMOBJCOUNTERS = 8;
 
 // Mobjs are attached to subsectors by pointer.
 struct line_t;
@@ -571,11 +570,6 @@ void P_ChangeThingHeights(void);
 // extern data
 extern fixed_t FloatBobOffsets[64];
 
-// Made these use getThing* to eliminate the code duplication
-#define getTargetX(mo) getThingX((mo), (mo)->target)
-#define getTargetY(mo) getThingY((mo), (mo)->target)
-#define getTargetZ(mo) getThingZ((mo), (mo)->target)
-
 // haleyjd 05/21/08: Functions like the above, but when we have a specific
 // Mobj pointer we want to use, and not mo->target.
 
@@ -604,6 +598,22 @@ inline static fixed_t getThingZ(Mobj *mo1, Mobj *mo2)
     if(!mo1)
         return mo2->z;
     return mo2->z + P_GetLinkOffset(mo2->groupid, mo1->groupid)->z;
+}
+
+// Made these use getThing* to eliminate the code duplication
+inline static fixed_t getTargetX(Mobj *mo)
+{
+    return getThingX(mo, mo->target);
+}
+
+inline static fixed_t getTargetY(Mobj *mo)
+{
+    return getThingY(mo, mo->target);
+}
+
+inline static fixed_t getTargetZ(Mobj *mo)
+{
+    return getThingZ(mo, mo->target);
 }
 
 bool P_CheckFloorCeilingForSpawning(const Mobj &mobj);

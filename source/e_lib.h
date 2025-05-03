@@ -96,7 +96,7 @@ void         E_ReplaceString(char *&dest, char *newvalue);
 char        *E_GetHeredocLine(char **src);
 byte        *E_ParseTranslation(const char *str, int tag);
 
-#define E_MAXCMDTOKENS 8
+static constexpr int E_MAXCMDTOKENS = 8;
 
 //
 // This structure is returned by E_ParseTextLine and is used to hold pointers

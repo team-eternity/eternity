@@ -203,8 +203,8 @@ static cfg_opt_t cast_opts[] = {
 // EDF Root Options
 //
 
-#define EDF_TSEC_FLAGS (CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE)
-#define EDF_NSEC_FLAGS (CFGF_MULTI | CFGF_NOCASE)
+static constexpr cfg_flag_t EDF_TSEC_FLAGS = CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE;
+static constexpr cfg_flag_t EDF_NSEC_FLAGS = CFGF_MULTI | CFGF_NOCASE;
 
 // clang-format off
 

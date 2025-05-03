@@ -80,13 +80,15 @@ extern int global_cmap_index; // haleyjd: NGCS
 //
 // Defines
 
-#define MINZ        (FRACUNIT*4)
-#define BASEYCENTER 100
+static constexpr fixed_t MINZ        = FRACUNIT * 4;
+static constexpr int     BASEYCENTER = 100;
 
-#define IS_FULLBRIGHT(actor) \
-   (((actor)->frame & FF_FULLBRIGHT) || ((actor)->flags4 & MF4_BRIGHT))
+inline static bool IS_FULLBRIGHT(const Mobj *const actor)
+{
+    return (actor->frame & FF_FULLBRIGHT) || (actor->flags4 & MF4_BRIGHT);
+}
 
-#define CLIP_UNDEF (-2)
+static constexpr float CLIP_UNDEF = -2.0f;
 
 enum
 {
@@ -414,7 +416,10 @@ static void R_installSpriteLump(const lumpinfo_t *lump, int lumpnum, unsigned fr
 
 // Empirically verified to have excellent hash
 // properties across standard Doom sprites:
-#define R_SpriteNameHash(s) ((unsigned int)((s)[0]-((s)[1]*3-(s)[3]*2-(s)[2])*2))
+inline static uint32_t R_SpriteNameHash(const char *const s)
+{
+    return uint32_t((s)[0] - ((s)[1] * 3 - (s)[3] * 2 - (s)[2]) * 2);
+}
 
 // haleyjd 10/10/11: externalized structure due to template limitations with
 // local struct types in the pre-C++11 standard
@@ -1779,7 +1784,10 @@ void R_DrawPlayerSprites()
     }
 }
 
-#define bcopyp(d, s, n) memcpy(d, s, (n) * sizeof(void *))
+inline static void bcopyp(vissprite_t **d, vissprite_t **s, int n)
+{
+    memcpy(d, s, (n) * sizeof(void *));
+}
 
 //
 // killough 9/2/98: merge sort

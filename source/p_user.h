@@ -30,7 +30,7 @@ class Mobj;
 // haleyjd 10/31/02: moved to header
 // Index of the special effects (INVUL inverse) map.
 
-#define INVERSECOLORMAP 32
+static constexpr int INVERSECOLORMAP = 32;
 
 void P_PlayerThink(player_t &player);
 void P_CalcHeight(player_t &player);

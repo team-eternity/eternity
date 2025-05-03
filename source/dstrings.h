@@ -48,7 +48,7 @@ constexpr const char DEVDATA[] = "devdata";
 // Not done in french?
 
 // QuitDOOM messages
-#define NUM_QUITMESSAGES   22
+static constexpr int NUM_QUITMESSAGES = 22;
 
 extern const char *endmsg[];
 

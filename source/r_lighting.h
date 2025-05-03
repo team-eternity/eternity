@@ -37,11 +37,11 @@
 using lighttable_t = byte;
 
 // sf: moved from r_main.h for coloured lighting
-#define MAXLIGHTZ        128
-#define MAXLIGHTSCALE     48
-#define LIGHTSCALESHIFT   12
-#define LIGHTZSHIFT       20
-#define LIGHTZDIV         16.0f
+static constexpr int   MAXLIGHTZ       = 128;
+static constexpr int   MAXLIGHTSCALE   = 48;
+static constexpr int   LIGHTSCALESHIFT = 12;
+static constexpr int   LIGHTZSHIFT     = 20;
+static constexpr float LIGHTZDIV       = 16.0f;
 
 // Lighting constants.
 
@@ -54,22 +54,21 @@ using lighttable_t = byte;
 // except for maybe memory usage savings.
 //#define OLDMAPS
 #ifdef OLDMAPS
-    #define LIGHTLEVELS       16
-    #define LIGHTSEGSHIFT      4
-    #define LIGHTBRIGHT        1
+    static constexpr int LIGHTLEVELS   = 16;
+    static constexpr int LIGHTSEGSHIFT =  4;
+    static constexpr int LIGHTBRIGHT   =  1;
 #else
-    #define LIGHTLEVELS       32
-    #define LIGHTSEGSHIFT      3
-    #define LIGHTBRIGHT        2
+    static constexpr int LIGHTLEVELS   = 32;
+    static constexpr int LIGHTSEGSHIFT =  3;
+    static constexpr int LIGHTBRIGHT   =  2;
 #endif
 
 // clang-format on
 
-
 // Number of diminishing brightness levels.
 // There a 0-31, i.e. 32 LUT in the COLORMAP lump.
 
-#define NUMCOLORMAPS 32
+static constexpr int NUMCOLORMAPS = 32;
 
 //
 // Lighting LUT.
@@ -78,11 +77,11 @@ using lighttable_t = byte;
 //
 
 // killough 3/20/98: Allow colormaps to be dynamic (e.g. underwater)
-extern int numcolormaps;    // killough 4/4/98: dynamic number of maps
+extern int            numcolormaps; // killough 4/4/98: dynamic number of maps
 extern lighttable_t **colormaps;
 // killough 3/20/98, 4/4/98: end dynamic colormaps
 
-extern int           extralight;
+extern int extralight;
 
 #endif
 

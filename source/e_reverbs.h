@@ -63,8 +63,8 @@ ereverb_t *E_ReverbForID(int id);           // for combined ID
 #ifdef NEED_EDF_DEFINITIONS
 
 // EDF section name and options array
-#define EDF_SEC_REVERB "reverb"
-extern cfg_opt_t edf_reverb_opts[];
+static constexpr const char EDF_SEC_REVERB[] = "reverb";
+extern cfg_opt_t            edf_reverb_opts[];
 
 // Main processing function
 void E_ProcessReverbs(cfg_t *cfg);

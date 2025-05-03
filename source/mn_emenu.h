@@ -28,7 +28,7 @@ struct menu_t;
 
 #ifdef NEED_EDF_DEFINITIONS
 
-#define EDF_SEC_MENU "menu"
+static constexpr const char EDF_SEC_MENU[] = "menu";
 
 extern cfg_opt_t edf_menu_opts[];
 

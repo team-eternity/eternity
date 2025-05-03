@@ -48,17 +48,17 @@ struct sfxinfo_t;
 // handles maximum brightness (torches, muzzle flare, light sources)
 //
 
-#define FF_FULLBRIGHT   0x8000  /* flag in thing->frame */
-#define FF_FRAMEMASK    0x7fff
+static constexpr int FF_FULLBRIGHT = 0x8000; // flag in thing->frame
+static constexpr int FF_FRAMEMASK  = 0x7fff;
 
 // haleyjd 09/16/07: silencer weapon volume reduction
-#define WEAPON_VOLUME_SILENCED 50
+static constexpr int WEAPON_VOLUME_SILENCED = 50;
 
 // Defines needed for weapon codepointers
-#define LOWERSPEED   (FRACUNIT*6)
-#define RAISESPEED   (FRACUNIT*6)
-#define WEAPONBOTTOM (FRACUNIT*128)
-#define WEAPONTOP    (FRACUNIT*32)
+static constexpr fixed_t LOWERSPEED   = FRACUNIT * 6;
+static constexpr fixed_t RAISESPEED   = FRACUNIT * 6;
+static constexpr fixed_t WEAPONBOTTOM = FRACUNIT * 128;
+static constexpr fixed_t WEAPONTOP    = FRACUNIT * 32;
 
 //
 // Overlay psprites are scaled shapes

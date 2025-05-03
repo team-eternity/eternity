@@ -97,7 +97,7 @@ struct maplinedef_t
     int16_t sidenum[2]; // sidenum[1] will be -1 if one sided
 };
 
-#define NUMHXLINEARGS 5
+static constexpr int NUMHXLINEARGS = 5;
 
 struct maplinedefhexen_t
 {
@@ -113,60 +113,42 @@ struct maplinedefhexen_t
 // LineDef attributes.
 //
 
-// Solid, is an obstacle.
-#define ML_BLOCKING             1
+enum
+{
+    ML_BLOCKING      = 0x00000001, // Solid, is an obstacle.
+    ML_BLOCKMONSTERS = 0x00000002, // Blocks monsters only.
+    ML_TWOSIDED      = 0x00000004, // Backside will not be drawn if not two sided.
 
-// Blocks monsters only.
-#define ML_BLOCKMONSTERS        2
+    // If a texture is pegged, the texture will have
+    // the end exposed to air held constant at the
+    // top or bottom of the texture (stairs or pulled
+    // down things) and will move with a height change
+    // of one of the neighbor sectors.
+    // Unpegged textures always have the first row of
+    // the texture at the top pixel of the line for both
+    // top and bottom textures (use next to windows).
 
-// Backside will not be drawn if not two sided.
-#define ML_TWOSIDED             4
+    ML_DONTPEGTOP    = 0x00000008, // upper texture unpegged
+    ML_DONTPEGBOTTOM = 0x00000010, // lower texture unpegged
+    ML_SECRET        = 0x00000020, // In AutoMap: don't map as two sided: IT'S A SECRET!
+    ML_SOUNDBLOCK    = 0x00000040, // Sound rendering: don't let sound cross two of these.
+    ML_DONTDRAW      = 0x00000080, // Don't draw on the automap at all.
+    ML_MAPPED        = 0x00000100, // Set if already seen, thus drawn in automap.
+    ML_PASSUSE       = 0x00000200, // Allow multiple push/switch triggers to be used on one push
+    ML_3DMIDTEX      = 0x00000400, // SoM 9/02/02: 3D Middletexture flag!
 
-// If a texture is pegged, the texture will have
-// the end exposed to air held constant at the
-// top or bottom of the texture (stairs or pulled
-// down things) and will move with a height change
-// of one of the neighbor sectors.
-// Unpegged textures always have the first row of
-// the texture at the top pixel of the line for both
-// top and bottom textures (use next to windows).
+    // haleyjd 05/02/06: Although it was believed until now that a reserved line
+    // flag was unnecessary, a problem with Ultimate DOOM E2M7 has disproven this
+    // theory. It has roughly 1000 linedefs with 0xFE00 masked into the flags, so
+    // making the next line flag reserved and using it to toggle off ALL extended
+    // flags will preserve compatibility for such maps. I have been told this map
+    // is one of the first ever created, so it may have something to do with that.
+    ML_RESERVED = 0x00000800,
 
-// upper texture unpegged
-#define ML_DONTPEGTOP           8
-
-// lower texture unpegged
-#define ML_DONTPEGBOTTOM        16
-
-// In AutoMap: don't map as two sided: IT'S A SECRET!
-#define ML_SECRET               32
-
-// Sound rendering: don't let sound cross two of these.
-#define ML_SOUNDBLOCK           64
-
-// Don't draw on the automap at all.
-#define ML_DONTDRAW             128
-
-// Set if already seen, thus drawn in automap.
-#define ML_MAPPED               256
-
-// jff 3/21/98 Set if line absorbs use by player
-// allow multiple push/switch triggers to be used on one push
-#define ML_PASSUSE              512
-
-// SoM 9/02/02: 3D Middletexture flag!
-#define ML_3DMIDTEX             1024
-
-// haleyjd 05/02/06: Although it was believed until now that a reserved line
-// flag was unnecessary, a problem with Ultimate DOOM E2M7 has disproven this
-// theory. It has roughly 1000 linedefs with 0xFE00 masked into the flags, so
-// making the next line flag reserved and using it to toggle off ALL extended
-// flags will preserve compatibility for such maps. I have been told this map
-// is one of the first ever created, so it may have something to do with that.
-#define ML_RESERVED             2048
-
-// MBF21
-#define ML_BLOCKLANDMONSTERS    4096
-#define ML_BLOCKPLAYERS         8192
+    // MBF21
+    ML_BLOCKLANDMONSTERS = 0x00001000,
+    ML_BLOCKPLAYERS      = 0x00002000,
+};
 
 // haleyjd 01/22/11: internal line flags
 enum
@@ -254,7 +236,7 @@ struct mapseg_v4_t
 // BSP node structure.
 
 // Indicate a leaf.
-#define NF_SUBSECTOR    0x80000000
+static constexpr uint32_t NF_SUBSECTOR = 0x80000000;
 
 struct mapnode_t
 {
@@ -290,7 +272,7 @@ struct mapthingdoom_t
     int16_t options;
 };
 
-#define NUMHXTARGS 5
+static constexpr int NUMHXTARGS = 5;
 
 struct mapthinghexen_t
 {
@@ -311,7 +293,7 @@ struct mapthinghexen_t
 
 // ioanch 20151218: use fixed point coordinates.
 
-#define NUMMTARGS 5
+static constexpr int NUMMTARGS = 5;
 
 struct mapthing_t
 {

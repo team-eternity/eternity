@@ -220,8 +220,8 @@ struct texturelump_t
 };
 
 // locations of pad[3] and pad[4] relative to start of maptexture_t
-#define MTEX_OFFSET_PAD3 18
-#define MTEX_OFFSET_PAD4 19
+static constexpr int MTEX_OFFSET_PAD3 = 18;
+static constexpr int MTEX_OFFSET_PAD4 = 19;
 
 //
 // Binary texture reading routines
@@ -232,13 +232,21 @@ struct texturelump_t
 // Doom and Strife.
 //
 
-#define TEXSHORT(x) (*(x) | (((int16_t)*((x) + 1)) << 8)); (x) += 2
+inline static int16_t TEXSHORT(byte *&x)
+{
+    const int16_t ret = *x | (int16_t(*(x + 1)) << 8);
 
-#define TEXINT(x)  \
-    (*(x) | \
-     (((int32_t)*((x) + 1)) <<  8) | \
-     (((int32_t)*((x) + 2)) << 16) | \
-     (((int32_t)*((x) + 3)) << 24)); (x) += 4
+    x += 2;
+    return ret;
+}
+
+inline static int32_t TEXINT(byte *&x)
+{
+    int32_t ret = *x | (int32_t(*(x + 1)) << 8) | (int32_t(*(x + 2)) << 16) | (int32_t(*(x + 3)) << 24);
+
+    x += 4;
+    return ret;
+}
 
 static byte *R_ReadDoomPatch(byte *rawpatch, mappatch_t &tp)
 {

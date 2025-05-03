@@ -28,8 +28,15 @@
 #include "p_maputl.h"
 #include "r_defs.h"
 
-#define VALID_ALLOC(set, n) ((set) = ecalloc(byte *, 1, (((n) + 7) & ~7) / 8))
-#define VALID_FREE(set)     efree(set)
+static inline void VALID_ALLOC(byte *&set, const int n)
+{
+    set = ecalloc(byte *, 1, ((n + 7) & ~7) / 8);
+}
+
+static inline void VALID_FREE(byte *const set)
+{
+    efree(set);
+}
 
 //
 // PathTraverser setup

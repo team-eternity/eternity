@@ -191,29 +191,29 @@ void       M_LoadDefaults(void);
 void       M_SaveDefaults(void);
 default_t *M_FindDefaultForCVar(variable_t *var);
 
-#define UL (-123456789) /* magic number for no min or max for parameter */
+static constexpr int UL = -123456789; /* magic number for no min or max for parameter */
 
 // clang-format off
 
 // haleyjd 06/24/02: platform-dependent macros for sound/music defaults
 #if defined(_SDL_VER)
-    #define SND_DEFAULT -1
-    #define SND_MIN     -1
-    #define SND_MAX      1
-    #define SND_DESCR    "code to select digital sound; -1 is SDL sound, 0 is no sound, 1 is PC speaker emulation"
-    #define MUS_DEFAULT -1
-    #define MUS_MIN     -1
-    #define MUS_MAX      0
-    #define MUS_DESCR    "code to select music device; -1 is SDL_mixer, 0 is no music"
+    constexpr int        SND_DEFAULT = -1;
+    constexpr int        SND_MIN     = -1;
+    constexpr int        SND_MAX     =  1;
+    constexpr const char SND_DESCR[] = "code to select digital sound; -1 is SDL sound, 0 is no sound, 1 is PC speaker emulation";
+    constexpr int        MUS_DEFAULT = -1;
+    constexpr int        MUS_MIN     = -1;
+    constexpr int        MUS_MAX     =  0;
+    constexpr const char MUS_DESCR[] = "code to select music device; -1 is SDL_mixer, 0 is no music";
 #else
-    #define SND_DEFAULT  0
-    #define SND_MIN      0
-    #define SND_MAX      0
-    #define SND_DESCR    "no sound driver available for this platform"
-    #define MUS_DEFAULT  0
-    #define MUS_MIN      0
-    #define MUS_MAX      0
-    #define MUS_DESCR    "no midi driver available for this platform"
+    constexpr int        SND_DEFAULT = 0;
+    constexpr int        SND_MIN     = 0;
+    constexpr int        SND_MAX     = 0;
+    constexpr const char SND_DESCR[] = "no sound driver available for this platform";
+    constexpr int        MUS_DEFAULT = 0;
+    constexpr int        MUS_MIN     = 0;
+    constexpr int        MUS_MAX     = 0;
+    constexpr const char MUS_DESCR[] = "no midi driver available for this platform";
 #endif
 
 // clang-format on

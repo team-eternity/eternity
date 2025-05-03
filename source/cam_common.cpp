@@ -39,8 +39,15 @@
 #include "r_portal.h"
 #include "r_state.h"
 
-#define VALID_ISSET(set, i) ((set)[(i) >> 3] & (1 << ((i) & 7)))
-#define VALID_SET(set, i)   ((set)[(i) >> 3] |= 1 << ((i) & 7))
+static inline bool VALID_ISSET(const byte *const set, const int i)
+{
+    return set[i >> 3] & (1 << (i & 7));
+}
+
+static inline void VALID_SET(byte *const set, const int i)
+{
+    set[i >> 3] |= 1 << (i & 7);
+}
 
 //
 // Constructor. Initializes dynamic structures

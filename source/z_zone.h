@@ -91,7 +91,7 @@ enum
     PU_MAX // Must always be last -- killough
 };
 
-#define PU_PURGELEVEL PU_CACHE        /* First purgable tag's level */
+static constexpr int PU_PURGELEVEL = PU_CACHE; // First purgable tag's level.
 
 // killough 3/22/98: add file/line info
 

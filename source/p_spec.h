@@ -48,88 +48,85 @@ class Mobj;
 class SaveArchive;
 class UDMFSetupSettings;
 
-//      Define values for map objects
-#define MO_TELEPORTMAN  14
-
 // p_floor
 
-#define ELEVATORSPEED (FRACUNIT*4)
-#define FLOORSPEED     FRACUNIT
+static constexpr fixed_t ELEVATORSPEED = FRACUNIT * 4;
+static constexpr fixed_t FLOORSPEED    = FRACUNIT;
 
 // p_ceilng
 
-#define CEILSPEED   FRACUNIT
-#define CEILWAIT    150
+static constexpr fixed_t CEILSPEED = FRACUNIT;
+static constexpr int     CEILWAIT  = 150;
 
 // p_doors
 
-#define VDOORSPEED  (FRACUNIT*2)
-#define VDOORWAIT   150
+static constexpr fixed_t VDOORSPEED = FRACUNIT * 2;
+static constexpr fixed_t VDOORWAIT  = 150;
 
 // p_plats
 
-#define PLATWAIT    3
+static constexpr int PLATWAIT = 3;
 
-#define PLATSPEED   FRACUNIT
+static constexpr fixed_t PLATSPEED = FRACUNIT;
 
 // p_switch
 
 // 4 players, 4 buttons each at once, max.
 // killough 2/14/98: redefine in terms of MAXPLAYERS
-// #define MAXBUTTONS    (MAXPLAYERS*4)
+// static constexpr int MAXBUTTONS    = (MAXPLAYERS*4);
 
 // 1 second, in ticks.
-#define BUTTONTIME  TICRATE
+static constexpr int BUTTONTIME = TICRATE;
 
 // p_lights
 
-#define GLOWSPEED       8
-#define GLOWSPEEDSLOW   3*FRACUNIT/2
-#define STROBEBRIGHT    5
-#define FASTDARK        15
-#define SLOWDARK        35
+static constexpr int     GLOWSPEED     = 8;
+static constexpr fixed_t GLOWSPEEDSLOW = 3 * FRACUNIT / 2;
+static constexpr int     STROBEBRIGHT  = 5;
+static constexpr int     FASTDARK      = 15;
+static constexpr int     SLOWDARK      = 35;
 
 // jff 3/14/98 add bits and shifts for generalized sector types
-#define LIGHT_MASK      0x1f
-#define DAMAGE_MASK     0x60
-#define DAMAGE_SHIFT    5
-#define SECRET_MASK     0x80
-#define SECRET_SHIFT    7
-#define FRICTION_MASK   0x100
-#define FRICTION_SHIFT  8
-#define PUSH_MASK       0x200
-#define PUSH_SHIFT      9
-#define KILLSOUND_MASK  0x400
-#define KILLSOUND_SHIFT 10
-#define MOVESOUND_MASK  0x800
-#define MOVESOUND_SHIFT 11
-#define INSTANTDEATH_MASK  0x1000
-#define INSTANTDEATH_SHIFT 12
-#define MONSTERDEATH_MASK  0x2000
-#define MONSTERDEATH_SHIFT 13
+static constexpr int LIGHT_MASK         = 0x1f;
+static constexpr int DAMAGE_MASK        = 0x60;
+static constexpr int DAMAGE_SHIFT       = 5;
+static constexpr int SECRET_MASK        = 0x80;
+static constexpr int SECRET_SHIFT       = 7;
+static constexpr int FRICTION_MASK      = 0x100;
+static constexpr int FRICTION_SHIFT     = 8;
+static constexpr int PUSH_MASK          = 0x200;
+static constexpr int PUSH_SHIFT         = 9;
+static constexpr int KILLSOUND_MASK     = 0x400;
+static constexpr int KILLSOUND_SHIFT    = 10;
+static constexpr int MOVESOUND_MASK     = 0x800;
+static constexpr int MOVESOUND_SHIFT    = 11;
+static constexpr int INSTANTDEATH_MASK  = 0x1000;
+static constexpr int INSTANTDEATH_SHIFT = 12;
+static constexpr int MONSTERDEATH_MASK  = 0x2000;
+static constexpr int MONSTERDEATH_SHIFT = 13;
 
-#define UDMF_SEC_MASK   0xff  // 0-255 are the UDMF non-Boom gen specials
+static constexpr int UDMF_SEC_MASK = 0xff; // 0-255 are the UDMF non-Boom gen pecials
 // right-shift from UDMF generalized namespace to Boom generalized namespace
-#define UDMF_BOOM_SHIFT 3
+static constexpr int UDMF_BOOM_SHIFT = 3;
 
 // haleyjd 12/28/08: mask used to get generalized special bits that are now
 // part of the sector flags
-#define GENSECTOFLAGSMASK \
-    (SECRET_MASK|FRICTION_MASK|PUSH_MASK|KILLSOUND_MASK|MOVESOUND_MASK|INSTANTDEATH_MASK|MONSTERDEATH_MASK)
+static constexpr unsigned int GENSECTOFLAGSMASK =
+    SECRET_MASK | FRICTION_MASK | PUSH_MASK | KILLSOUND_MASK | MOVESOUND_MASK | INSTANTDEATH_MASK | MONSTERDEATH_MASK;
 
 // jff 02/04/98 Define masks, shifts, for fields in
 //  generalized linedef types
 
-#define GenFloorBase          0x6000
-#define GenCeilingBase        0x4000
-#define GenDoorBase           0x3c00
-#define GenLockedBase         0x3800
-#define GenLiftBase           0x3400
-#define GenStairsBase         0x3000
-#define GenCrusherBase        0x2F80
+static constexpr int GenFloorBase   = 0x6000;
+static constexpr int GenCeilingBase = 0x4000;
+static constexpr int GenDoorBase    = 0x3c00;
+static constexpr int GenLockedBase  = 0x3800;
+static constexpr int GenLiftBase    = 0x3400;
+static constexpr int GenStairsBase  = 0x3000;
+static constexpr int GenCrusherBase = 0x2F80;
 
-#define TriggerType           0x0007
-#define TriggerTypeShift      0
+static constexpr int TriggerType      = 0x0007;
+static constexpr int TriggerTypeShift = 0;
 
 // haleyjd: Generalized type enumeration
 enum
@@ -145,95 +142,95 @@ enum
 
 // define masks and shifts for the floor type fields
 
-#define FloorCrush            0x1000
-#define FloorChange           0x0c00
-#define FloorTarget           0x0380
-#define FloorDirection        0x0040
-#define FloorModel            0x0020
-#define FloorSpeed            0x0018
+static constexpr int FloorCrush     = 0x1000;
+static constexpr int FloorChange    = 0x0c00;
+static constexpr int FloorTarget    = 0x0380;
+static constexpr int FloorDirection = 0x0040;
+static constexpr int FloorModel     = 0x0020;
+static constexpr int FloorSpeed     = 0x0018;
 
-#define FloorCrushShift           12
-#define FloorChangeShift          10
-#define FloorTargetShift           7
-#define FloorDirectionShift        6
-#define FloorModelShift            5
-#define FloorSpeedShift            3
+static constexpr int FloorCrushShift     = 12;
+static constexpr int FloorChangeShift    = 10;
+static constexpr int FloorTargetShift    = 7;
+static constexpr int FloorDirectionShift = 6;
+static constexpr int FloorModelShift     = 5;
+static constexpr int FloorSpeedShift     = 3;
 
 // define masks and shifts for the ceiling type fields
 
-#define CeilingCrush          0x1000
-#define CeilingChange         0x0c00
-#define CeilingTarget         0x0380
-#define CeilingDirection      0x0040
-#define CeilingModel          0x0020
-#define CeilingSpeed          0x0018
+static constexpr int CeilingCrush     = 0x1000;
+static constexpr int CeilingChange    = 0x0c00;
+static constexpr int CeilingTarget    = 0x0380;
+static constexpr int CeilingDirection = 0x0040;
+static constexpr int CeilingModel     = 0x0020;
+static constexpr int CeilingSpeed     = 0x0018;
 
-#define CeilingCrushShift         12
-#define CeilingChangeShift        10
-#define CeilingTargetShift         7
-#define CeilingDirectionShift      6
-#define CeilingModelShift          5
-#define CeilingSpeedShift          3
+static constexpr int CeilingCrushShift     = 12;
+static constexpr int CeilingChangeShift    = 10;
+static constexpr int CeilingTargetShift    = 7;
+static constexpr int CeilingDirectionShift = 6;
+static constexpr int CeilingModelShift     = 5;
+static constexpr int CeilingSpeedShift     = 3;
 
 // define masks and shifts for the lift type fields
 
-#define LiftTarget            0x0300
-#define LiftDelay             0x00c0
-#define LiftMonster           0x0020
-#define LiftSpeed             0x0018
+static constexpr int LiftTarget  = 0x0300;
+static constexpr int LiftDelay   = 0x00c0;
+static constexpr int LiftMonster = 0x0020;
+static constexpr int LiftSpeed   = 0x0018;
 
-#define LiftTargetShift            8
-#define LiftDelayShift             6
-#define LiftMonsterShift           5
-#define LiftSpeedShift             3
+static constexpr int LiftTargetShift  = 8;
+static constexpr int LiftDelayShift   = 6;
+static constexpr int LiftMonsterShift = 5;
+static constexpr int LiftSpeedShift   = 3;
 
 // define masks and shifts for the stairs type fields
 
-#define StairIgnore           0x0200
-#define StairDirection        0x0100
-#define StairStep             0x00c0
-#define StairMonster          0x0020
-#define StairSpeed            0x0018
+static constexpr int StairIgnore    = 0x0200;
+static constexpr int StairDirection = 0x0100;
+static constexpr int StairStep      = 0x00c0;
+static constexpr int StairMonster   = 0x0020;
+static constexpr int StairSpeed     = 0x0018;
 
-#define StairIgnoreShift           9
-#define StairDirectionShift        8
-#define StairStepShift             6
-#define StairMonsterShift          5
-#define StairSpeedShift            3
+static constexpr int StairIgnoreShift    = 9;
+static constexpr int StairDirectionShift = 8;
+static constexpr int StairStepShift      = 6;
+static constexpr int StairMonsterShift   = 5;
+static constexpr int StairSpeedShift     = 3;
 
 // define masks and shifts for the crusher type fields
 
-#define CrusherSilent         0x0040
-#define CrusherMonster        0x0020
-#define CrusherSpeed          0x0018
+static constexpr int CrusherSilent  = 0x0040;
+static constexpr int CrusherMonster = 0x0020;
+static constexpr int CrusherSpeed   = 0x0018;
 
-#define CrusherSilentShift         6
-#define CrusherMonsterShift        5
-#define CrusherSpeedShift          3
+static constexpr int CrusherSilentShift  = 6;
+static constexpr int CrusherMonsterShift = 5;
+static constexpr int CrusherSpeedShift   = 3;
 
 // define masks and shifts for the door type fields
 
-#define DoorDelay             0x0300
-#define DoorMonster           0x0080
-#define DoorKind              0x0060
-#define DoorSpeed             0x0018
+static constexpr int DoorDelay   = 0x0300;
+static constexpr int DoorMonster = 0x0080;
+static constexpr int DoorKind    = 0x0060;
+static constexpr int DoorSpeed   = 0x0018;
 
-#define DoorDelayShift             8
-#define DoorMonsterShift           7
-#define DoorKindShift              5
-#define DoorSpeedShift             3
+static constexpr int DoorDelayShift   = 8;
+static constexpr int DoorMonsterShift = 7;
+static constexpr int DoorKindShift    = 5;
+static constexpr int DoorSpeedShift   = 3;
 
 // define masks and shifts for the locked door type fields
 
-#define LockedNKeys           0x0200
-#define LockedKey             0x01c0
-#define LockedKind            0x0020
-#define LockedSpeed           0x0018
+static constexpr int LockedNKeys = 0x0200;
+static constexpr int LockedKey   = 0x01c0;
+static constexpr int LockedKind  = 0x0020;
+static constexpr int LockedSpeed = 0x0018;
 
-#define LockedNKeysShift           9
-#define LockedKeyShift             6
-#define LockedKindShift            5
-#define LockedSpeedShift           3
+static constexpr int LockedNKeysShift = 9;
+static constexpr int LockedKeyShift   = 6;
+static constexpr int LockedKindShift  = 5;
+static constexpr int LockedSpeedShift = 3;
 
 // define names for the TriggerType field of the general linedefs
 

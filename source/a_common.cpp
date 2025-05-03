@@ -607,7 +607,7 @@ void A_RavenPlayerScream(actionargs_t *actionargs)
 }
 
 // PCLASS_FIXME: skull height a playerclass property?
-#define SKULLHEIGHT (48 * FRACUNIT)
+constexpr fixed_t SKULLHEIGHT = 48 * FRACUNIT;
 
 void A_PlayerSkull(actionargs_t *actionargs)
 {

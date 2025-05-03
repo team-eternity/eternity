@@ -36,9 +36,9 @@ struct patch_t;
 // Size of statusbar.
 // Now sensitive for scaling.
 
-#define ST_HEIGHT (32*SCREEN_MUL)
-#define ST_WIDTH  SCREENWIDTH
-#define ST_Y      (SCREENHEIGHT - ST_HEIGHT)
+static constexpr int ST_HEIGHT = 32 * SCREEN_MUL;
+static constexpr int ST_WIDTH  = SCREENWIDTH;
+static constexpr int ST_Y      = SCREENHEIGHT - ST_HEIGHT;
 
 //
 // STATUS BAR
@@ -107,18 +107,16 @@ extern int  sts_traditional_keys; // display keys the traditional way
 extern int  st_fsalpha;           // haleyjd 02/27/10: fullscreen hud alpha
 
 // Number of status faces.
-#define ST_NUMPAINFACES         5
-#define ST_NUMSTRAIGHTFACES     3
-#define ST_NUMTURNFACES         2
-#define ST_NUMSPECIALFACES      3
+static constexpr int ST_NUMPAINFACES     = 5;
+static constexpr int ST_NUMSTRAIGHTFACES = 3;
+static constexpr int ST_NUMTURNFACES     = 2;
+static constexpr int ST_NUMSPECIALFACES  = 3;
 
-#define ST_FACESTRIDE \
-            (ST_NUMSTRAIGHTFACES+ST_NUMTURNFACES+ST_NUMSPECIALFACES)
+static constexpr int ST_FACESTRIDE = ST_NUMSTRAIGHTFACES + ST_NUMTURNFACES + ST_NUMSPECIALFACES;
 
-#define ST_NUMEXTRAFACES        2
+static constexpr int ST_NUMEXTRAFACES = 2;
 
-#define ST_NUMFACES \
-            (ST_FACESTRIDE*ST_NUMPAINFACES+ST_NUMEXTRAFACES)
+static constexpr int ST_NUMFACES = ST_FACESTRIDE * ST_NUMPAINFACES + ST_NUMEXTRAFACES;
 
 extern patch_t *default_faces[ST_NUMFACES];
 

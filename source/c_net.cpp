@@ -70,7 +70,7 @@ int   default_colour;
 
 // basic chat char stuff: taken from hu_stuff.c and renamed
 
-#define QUEUESIZE   1024
+static constexpr int QUEUESIZE = 1024;
 
 static char chatchars[QUEUESIZE];
 static int  head = 0;

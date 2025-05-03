@@ -34,20 +34,20 @@
 //  be transmitted.
 //
 
-#define DOOMCOM_ID              0x12345678l
+static constexpr int32_t DOOMCOM_ID = 0x12345678;
 
 // Max computers/players in a game.
-#define MAXNETNODES             8
+static constexpr int MAXNETNODES = 8;
 
 // Networking and tick handling related.
-#define BACKUPTICS              12
+static constexpr int BACKUPTICS = 12;
 
 // haleyjd 10/19/07: moved here from d_net.c
-#define NCMD_EXIT               0x80000000
-#define NCMD_RETRANSMIT         0x40000000
-#define NCMD_SETUP              0x20000000
-#define NCMD_KILL               0x10000000      /* kill game */
-#define NCMD_CHECKSUM           0x0fffffff
+static constexpr uint32_t NCMD_EXIT       = 0x80000000;
+static constexpr uint32_t NCMD_RETRANSMIT = 0x40000000;
+static constexpr uint32_t NCMD_SETUP      = 0x20000000;
+static constexpr uint32_t NCMD_KILL       = 0x10000000; /* kill game */
+static constexpr uint32_t NCMD_CHECKSUM   = 0x0fffffff;
 
 enum
 {
@@ -57,7 +57,7 @@ enum
 
 // haleyjd 10/19/07: moved here from g_game.h:
 // killough 5/2/98: number of bytes reserved for saving options
-#define GAME_OPTION_SIZE 64
+static constexpr int GAME_OPTION_SIZE = 64;
 
 // haleyjd 10/16/07: structures in this file must be packed
 #if defined(_MSC_VER) || defined(__GNUC__)

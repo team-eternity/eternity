@@ -28,7 +28,7 @@
 #include "doomtype.h" // for byte
 #include "m_fixed.h"  // for fixed_t
 
-#define NUM_LINES_EXTRA 1  // number of extra lines for hackish purposes
+static constexpr int NUM_LINES_EXTRA = 1; // number of extra lines for hackish purposes
 
 struct seg_t;
 class Mobj;

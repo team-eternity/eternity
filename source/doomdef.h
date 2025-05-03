@@ -45,40 +45,40 @@ enum Language_t
 // For resize of screen, at start of game.
 //
 
-#define BASE_WIDTH 320
+static constexpr int BASE_WIDTH = 320;
 
 // It is educational but futile to change this
 //  scaling e.g. to 2. Drawing of status bar,
 //  menues etc. is tied to the scale implied
 //  by the graphics.
 
-#define SCREEN_MUL         1
-#define INV_ASPECT_RATIO   0.625 /* 0.75, ideally */
+static constexpr int    SCREEN_MUL       = 1;
+static constexpr double INV_ASPECT_RATIO = 0.625; /* 0.75, ideally */
 
 // haleyjd 02/17/14: MAX_SCREENWIDTH/HEIGHT are now only a limit on the highest
 // resolution that Eternity will allow to attempt to be set. They are no longer
 // used to size any arrays in the renderer.
 
 // SoM 2-4-04: ANYRES
-#define MAX_SCREENWIDTH  32767
-#define MAX_SCREENHEIGHT 32767
+static constexpr int MAX_SCREENWIDTH  = 32767;
+static constexpr int MAX_SCREENHEIGHT = 32767;
 
-#define SCREENWIDTH      320
-#define SCREENHEIGHT     200
+static constexpr int SCREENWIDTH  = 320;
+static constexpr int SCREENHEIGHT = 200;
 
 // The maximum number of players, multiplayer/networking.
-#define MAXPLAYERS       4
+static constexpr int MAXPLAYERS = 4;
 
 // phares 5/14/98:
 // DOOM Editor Numbers (aka doomednum in Mobj)
 
-#define DEN_PLAYER5 4001
-#define DEN_PLAYER6 4002
-#define DEN_PLAYER7 4003
-#define DEN_PLAYER8 4004
+static constexpr int DEN_PLAYER5 = 4001;
+static constexpr int DEN_PLAYER6 = 4002;
+static constexpr int DEN_PLAYER7 = 4003;
+static constexpr int DEN_PLAYER8 = 4004;
 
 // State updates, number of tics / second.
-#define TICRATE          35
+static constexpr int TICRATE = 35;
 
 // The current state of the game: whether we are playing, gazing
 // at the intermission screen, the game final animation, or a demo.
@@ -100,32 +100,39 @@ enum gamestate_t
 //
 // These are Thing flags
 
-// Skill flags.
-#define MTF_EASY                1
-#define MTF_NORMAL              2
-#define MTF_HARD                4
-// Deaf monsters/do not react to sound.
-#define MTF_AMBUSH              8
+enum
+{
+    MTF_EASY   = 0x000000001, // Easy skill flag.
+    MTF_NORMAL = 0x000000002, // Normal skill flag.
+    MTF_HARD   = 0x000000004, // Hard skill flag.
+    MTF_AMBUSH = 0x000000008, // Deaf monsters/do not react to sound.
 
-// killough 11/98
-#define MTF_NOTSINGLE          16
-#define MTF_NOTDM              32
-#define MTF_NOTCOOP            64
-#define MTF_FRIEND            128
-#define MTF_RESERVED          256
+    // killough 11/98
+    MTF_NOTSINGLE = 0x000000010,
+    MTF_NOTDM     = 0x000000020,
+    MTF_NOTCOOP   = 0x000000040,
+    MTF_FRIEND    = 0x000000080,
+    MTF_RESERVED  = 0x000000100,
 
-// haleyjd
-#define MTF_DORMANT           512
+    // haleyjd
+    MTF_DORMANT = 0x000000200,
+};
 
 // haleyjd: PSX flags
-#define MTF_PSX_NIGHTMARE (32|128)
-#define MTF_PSX_SPECTRE   (32|64|128)
+enum
+{
+    MTF_PSX_NIGHTMARE = 32 | 128,
+    MTF_PSX_SPECTRE   = 32 | 64 | 128,
+};
 
 // Strife flags
-#define MTF_STRIFE_STAND       32   // WARNING: this is already in MTF_EX_STAND
-#define MTF_STRIFE_FRIEND      64
-#define MTF_STRIFE_TRANSLUCENT 256
-#define MTF_STRIFE_MVCIS       512
+enum
+{
+    MTF_STRIFE_STAND       = 0x000000020, // WARNING: this is already in MTF_EX_STAND
+    MTF_STRIFE_FRIEND      = 0x000000040,
+    MTF_STRIFE_TRANSLUCENT = 0x000000100,
+    MTF_STRIFE_MVCIS       = 0x000000200,
+};
 
 //
 // ioanch 20151218: mapthing_t::extOptions (extended) flags: needed by UDMF
@@ -143,12 +150,6 @@ enum
     // Strife standing monster
     MTF_EX_STAND = 4,
 };
-
-// sf: sector flags, not me =)
-// kill all sound in sector
-#define SF_KILLSOUND          1024
-// kill all sounds due to moving
-#define SF_KILLMOVESOUND      2048
 
 // a macro to find out whether to make moving sounds in a sector
 #define silentmove(s) ((s)->flags & SECF_KILLMOVESOUND)
@@ -397,14 +398,14 @@ enum ss_types
 // linedefs. More friction can create mud, sludge,
 // magnetized floors, etc. Less friction can create ice.
 
-#define MORE_FRICTION_MOMENTUM 15000       // mud factor based on momentum
-#define ORIG_FRICTION          0xE800      // original value
-#define ORIG_FRICTION_FACTOR   2048        // original value
-#define FRICTION_FLY           0xEB00      // haleyjd: Raven flying player
+static constexpr int MORE_FRICTION_MOMENTUM = 15000;  // mud factor based on momentum
+static constexpr int ORIG_FRICTION          = 0xE800; // original value
+static constexpr int ORIG_FRICTION_FACTOR   = 2048;   // original value
+static constexpr int FRICTION_FLY           = 0xEB00; // haleyjd: Raven flying player
 
 // haleyjd 06/05/12: flying
-#define FLIGHT_CENTER      -8
-#define FLIGHT_IMPULSE_AMT  5
+static constexpr int FLIGHT_CENTER      = -8;
+static constexpr int FLIGHT_IMPULSE_AMT = 5;
 
 // sf: some useful macros
 //
@@ -413,9 +414,12 @@ enum ss_types
 // isMAPxy }
 //
 
-#define isnumchar(c) ((c) >= '0' && (c) <= '9')
+inline constexpr bool isnumchar(const char c)
+{
+    return c >= '0' && c <= '9';
+}
 
-#define HTIC_GHOST_TRANS 26624
+static constexpr int HTIC_GHOST_TRANS = 26624;
 
 #endif // __DOOMDEF__
 

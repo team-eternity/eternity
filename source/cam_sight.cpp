@@ -52,7 +52,7 @@
 #include "r_state.h"
 #include "s_sound.h" // ioanch 20160131: for use
 
-#define RECURSION_LIMIT 64
+static constexpr int RECURSION_LIMIT = 64;
 
 //=============================================================================
 //

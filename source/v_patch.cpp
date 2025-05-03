@@ -184,23 +184,16 @@ static void V_drawPatchColumnTRLit(const cb_patch_column_t &patchcol)
     }
 }
 
-#define DO_COLOR_BLEND() \
-    fg = patchcol.fg2rgb[source[frac >> FRACBITS]]; \
-    bg = patchcol.bg2rgb[*dest];                    \
-    fg = (fg + bg) | 0x1f07c1f;                     \
-    *dest = RGB32k[0][0][fg & (fg >> 15)]
-
 //
 // Draws a translucent patch column. The DosDoom/zdoom-style
 // translucency lookups must be set before getting here.
 //
 void V_drawPatchColumnTL(const cb_patch_column_t &patchcol)
 {
-    int          count;
-    byte        *dest; // killough
-    fixed_t      frac; // killough
-    fixed_t      fracstep;
-    unsigned int fg, bg;
+    int     count;
+    byte   *dest; // killough
+    fixed_t frac; // killough
+    fixed_t fracstep;
 
     if((count = patchcol.y2 - patchcol.y1 + 1) <= 0)
         return; // Zero length, column does not exceed a pixel.
@@ -221,6 +214,15 @@ void V_drawPatchColumnTL(const cb_patch_column_t &patchcol)
     {
         const byte *source = patchcol.source;
 
+        auto DO_COLOR_BLEND = [&patchcol, &dest, &frac, &source]() {
+            unsigned int fg, bg;
+
+            fg    = patchcol.fg2rgb[source[frac >> FRACBITS]];
+            bg    = patchcol.bg2rgb[*dest];
+            fg    = (fg + bg) | 0x1f07c1f;
+            *dest = RGB32k[0][0][fg & (fg >> 15)];
+        };
+
         while((count -= 2) >= 0)
         {
             DO_COLOR_BLEND();
@@ -239,14 +241,6 @@ void V_drawPatchColumnTL(const cb_patch_column_t &patchcol)
         }
     }
 }
-
-#undef DO_COLOR_BLEND
-
-#define DO_COLOR_BLEND() \
-    fg = patchcol.fg2rgb[patchcol.translation[source[frac >> FRACBITS]]]; \
-    bg = patchcol.bg2rgb[*dest];                                          \
-    fg = (fg + bg) | 0x1f07c1f;                                           \
-    *dest = RGB32k[0][0][fg & (fg >> 15)]
 
 //
 // Draws translated translucent patch columns.
@@ -279,6 +273,15 @@ void V_drawPatchColumnTRTL(const cb_patch_column_t &patchcol)
     {
         const byte *source = patchcol.source;
 
+        auto DO_COLOR_BLEND = [&patchcol, &dest, &frac, &source]() {
+            unsigned int fg, bg;
+
+            fg    = patchcol.fg2rgb[patchcol.translation[source[frac >> FRACBITS]]];
+            bg    = patchcol.bg2rgb[*dest];
+            fg    = (fg + bg) | 0x1f07c1f;
+            *dest = RGB32k[0][0][fg & (fg >> 15)];
+        };
+
         while((count -= 2) >= 0)
         {
             DO_COLOR_BLEND();
@@ -297,23 +300,6 @@ void V_drawPatchColumnTRTL(const cb_patch_column_t &patchcol)
         }
     }
 }
-
-#undef DO_COLOR_BLEND
-
-// clang-format off
-
-#define DO_COLOR_BLEND() \
-    /* mask out LSBs in green and red to allow overflow */ \
-    a = patchcol.fg2rgb[source[frac >> FRACBITS]] + patchcol.bg2rgb[*dest]; \
-    b = a;                                                                  \
-    a |= 0x01f07c1f;                                                        \
-    b &= 0x40100400;                                                        \
-    a &= 0x3fffffff;                                                        \
-    b  = b - (b >> 5);                                                      \
-    a |= b;                                                                 \
-    *dest = RGB32k[0][0][a & (a >> 15)]
-
-// clang-format on
 
 //
 // Draws a patch column with additive translucency.
@@ -345,6 +331,20 @@ void V_drawPatchColumnAdd(const cb_patch_column_t &patchcol)
     {
         const byte *source = patchcol.source;
 
+        auto DO_COLOR_BLEND = [&patchcol, &dest, &frac, &source]() {
+            unsigned int a, b;
+
+            // Mask out LSBs in green and red to allow overflow.
+            a      = patchcol.fg2rgb[source[frac >> FRACBITS]] + patchcol.bg2rgb[*dest];
+            b      = a;
+            a     |= 0x01f07c1f;
+            b     &= 0x40100400;
+            a     &= 0x3fffffff;
+            b      = b - (b >> 5);
+            a     |= b;
+            *dest  = RGB32k[0][0][a & (a >> 15)];
+        };
+
         while((count -= 2) >= 0)
         {
             DO_COLOR_BLEND();
@@ -363,23 +363,6 @@ void V_drawPatchColumnAdd(const cb_patch_column_t &patchcol)
         }
     }
 }
-
-#undef DO_COLOR_BLEND
-
-// clang-format off
-
-#define DO_COLOR_BLEND() \
-    /* mask out LSBs in green and red to allow overflow */                                        \
-    a = patchcol.fg2rgb[patchcol.translation[source[frac >> FRACBITS]]] + patchcol.bg2rgb[*dest]; \
-    b = a;                                                                                        \
-    a |= 0x01f07c1f;                                                                              \
-    b &= 0x40100400;                                                                              \
-    a &= 0x3fffffff;                                                                              \
-    b  = b - (b >> 5);                                                                            \
-    a |= b;                                                                                       \
-    *dest = RGB32k[0][0][a & (a >> 15)]
-
-// clang-format on
 
 //
 // Draws a patch column with additive translucency and
@@ -412,6 +395,20 @@ void V_drawPatchColumnAddTR(const cb_patch_column_t &patchcol)
     {
         const byte *source = patchcol.source;
 
+        auto DO_COLOR_BLEND = [&patchcol, &dest, &frac, &source]() {
+            unsigned int a, b;
+
+            // Mask out LSBs in green and red to allow overflow.
+            a      = patchcol.fg2rgb[patchcol.translation[source[frac >> FRACBITS]]] + patchcol.bg2rgb[*dest];
+            b      = a;
+            a     |= 0x01f07c1f;
+            b     &= 0x40100400;
+            a     &= 0x3fffffff;
+            b      = b - (b >> 5);
+            a     |= b;
+            *dest  = RGB32k[0][0][a & (a >> 15)];
+        };
+
         while((count -= 2) >= 0)
         {
             DO_COLOR_BLEND();
@@ -430,8 +427,6 @@ void V_drawPatchColumnAddTR(const cb_patch_column_t &patchcol)
         }
     }
 }
-
-#undef DO_COLOR_BLEND
 
 static void V_drawMaskedColumn(cb_patch_column_t &patchcol, const int ytop, column_t *column)
 {
@@ -840,19 +835,27 @@ public:
     Collection<VPatchPost> posts;
 };
 
-#define PUTBYTE(r, v) *r = (uint8_t)(v); ++r
+inline static void PUTBYTE(byte *&r, const byte v)
+{
+    *r = v;
+    ++r;
+}
 
-#define PUTSHORT(r, v)                            \
-    *(r+0) = (byte)(((uint16_t)(v) >> 0) & 0xff); \
-    *(r+1) = (byte)(((uint16_t)(v) >> 8) & 0xff); \
-    r += 2
+inline static void PUTSHORT(byte *&r, const uint16_t v)
+{
+    *(r + 0)  = byte((v >> 0) & 0xff);
+    *(r + 1)  = byte((v >> 8) & 0xff);
+    r        += 2;
+}
 
-#define PUTLONG(r, v)                              \
-    *(r+0) = (byte)(((uint32_t)(v) >>  0) & 0xff); \
-    *(r+1) = (byte)(((uint32_t)(v) >>  8) & 0xff); \
-    *(r+2) = (byte)(((uint32_t)(v) >> 16) & 0xff); \
-    *(r+3) = (byte)(((uint32_t)(v) >> 24) & 0xff); \
-    r += 4
+inline static void PUTLONG(byte *&r, const uint32_t v)
+{
+    *(r + 0)  = byte((v >> 0) & 0xff);
+    *(r + 1)  = byte((v >> 8) & 0xff);
+    *(r + 2)  = byte((v >> 16) & 0xff);
+    *(r + 3)  = byte((v >> 24) & 0xff);
+    r        += 4;
+}
 
 //
 // Converts a linear graphic to a patch with transparency.

@@ -40,11 +40,11 @@ enum
 
 // Default dmflags for certain game modes
 
-#define DMD_SINGLE      (0)
-#define DMD_COOP        (DM_WEAPONSTAY)
-#define DMD_DEATHMATCH  (DM_WEAPONSTAY)
-#define DMD_DEATHMATCH2 (DM_ITEMRESPAWN)
-#define DMD_DEATHMATCH3 (DM_ITEMRESPAWN|DM_WEAPONSTAY|DM_BARRELRESPAWN|DM_PLAYERDROP)
+static constexpr uint32_t DMD_SINGLE      = 0;
+static constexpr uint32_t DMD_COOP        = DM_WEAPONSTAY;
+static constexpr uint32_t DMD_DEATHMATCH  = DM_WEAPONSTAY;
+static constexpr uint32_t DMD_DEATHMATCH2 = DM_ITEMRESPAWN;
+static constexpr uint32_t DMD_DEATHMATCH3 = DM_ITEMRESPAWN | DM_WEAPONSTAY | DM_BARRELRESPAWN | DM_PLAYERDROP;
 
 extern unsigned int dmflags;
 extern unsigned int default_dmflags;

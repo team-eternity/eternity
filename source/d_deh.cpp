@@ -105,9 +105,9 @@ struct dehflagremap_t
     int          outIndex;
 };
 
-#define DEH_BUFFERMAX 1024 // input buffer area size, hardcoded for now
-#define DEH_MAXKEYLEN 32   // as much of any key as we'll look at
-#define DEH_MAXKEYLEN_FMT "31"  // for scanf format strings
+static constexpr int DEH_BUFFERMAX = 1024; // input buffer area size, hardcoded for now
+static constexpr int DEH_MAXKEYLEN = 32;   // as much of any key as we'll look at
+#define DEH_MAXKEYLEN_FMT "31" // for scanf format strings
 
 // clang-format off
 

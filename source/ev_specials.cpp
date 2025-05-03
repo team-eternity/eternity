@@ -52,8 +52,6 @@
 #include "r_state.h"
 #include "s_sound.h"
 
-#define INIT_STRUCT edefstructvar
-
 //=============================================================================
 //
 // Utilities

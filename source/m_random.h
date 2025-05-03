@@ -288,9 +288,6 @@ extern rng_t rng; // The rng's state
 
 extern unsigned int rngseed; // The starting seed (not part of state)
 
-// Returns a number from 0 to 255,
-#define M_Random() P_Random(pr_misc)
-
 // As M_Random, but used by the play simulation.
 int P_Random(pr_class_t);
 
@@ -300,7 +297,16 @@ int P_SubRandom(pr_class_t);
 // haleyjd: function to get a random within a given range
 int P_RangeRandom(pr_class_t pr_class, int min, int max);
 
-#define M_RangeRandom(min, max) P_RangeRandom(pr_misc, (min), (max))
+// Returns a number from 0 to 255,
+inline int M_Random()
+{
+    return P_Random(pr_misc);
+}
+
+inline int M_RangeRandom(const int min, const int max)
+{
+    return P_RangeRandom(pr_misc, min, max);
+}
 
 int M_VHereticPRandom(pr_class_t pr_class);
 
@@ -309,8 +315,14 @@ unsigned int P_RandomEx(pr_class_t);
 unsigned int P_RangeRandomEx(pr_class_t, unsigned int, unsigned int);
 int          P_SubRandomEx(pr_class_t pr_class, unsigned max);
 
-#define M_RandomEx() P_RandomEx(pr_misc)
-#define M_RangeRandomEx(min, max) P_RangeRandomEx(pr_misc, (min), (max))
+inline int M_RandomEx()
+{
+    return P_RandomEx(pr_misc);
+}
+inline int M_RangeRandomEx(const int min, const int max)
+{
+    return P_RangeRandomEx(pr_misc, min, max);
+}
 
 // Fix randoms for demos.
 void M_ClearRandom(void);

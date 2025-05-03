@@ -85,7 +85,7 @@ struct columndrawer_t
 
 extern columndrawer_t r_normal_drawer;
 
-#define TRANSLATIONCOLOURS 14
+static constexpr int TRANSLATIONCOLOURS = 14;
 
 extern int   linesize;     // killough 11/98
 extern byte *renderscreen; // haleyjd 07/02/14
@@ -161,8 +161,10 @@ void R_DrawViewBorder();
 extern byte *main_tranmap; // killough 4/11/98
 extern byte *main_submap;  // haleyjd 11/30/13
 
-#define R_ADDRESS(px, py) \
-    (renderscreen + (viewwindow.y + (py)) + linesize * (viewwindow.x + (px)))
+inline static byte *R_ADDRESS(const int px, const int py)
+{
+    return renderscreen + (viewwindow.y + py) + linesize * (viewwindow.x + px);
+}
 
 // Cardboard
 struct cb_column_t

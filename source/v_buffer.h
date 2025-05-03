@@ -31,9 +31,6 @@
 
 #include "m_fixed.h"
 
-#define VBADDRESS(vb, x, y) \
-    ((vb)->data + (vb)->pitch * (x) + (vb)->pixelsize * (y))
-
 struct VBuffer
 {
     int width;
@@ -67,6 +64,11 @@ struct VBuffer
     int mapXFromOther(const int x, const VBuffer &other) const;
     int mapYFromOther(const int y, const VBuffer &other) const;
 };
+
+inline static byte *VBADDRESS(VBuffer *vb, const int x, const int y)
+{
+    return vb->data + vb->pitch * x + vb->pixelsize * y;
+}
 
 // V_InitVBuffer
 // Initializes the given vbuffer and allocates pixeldata for it.

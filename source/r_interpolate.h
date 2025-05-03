@@ -60,7 +60,7 @@ inline float lerpCoordf(fixed_t lerp, float oldpos, float newpos)
     return oldpos + lerp / (float)FPFRACUNIT * (newpos - oldpos);
 }
 
-#define LLANG360 4294967296LL
+static constexpr int64_t LLANG360 = 4294967296LL;
 
 //
 // lerpAngle

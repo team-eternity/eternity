@@ -812,7 +812,7 @@ void A_GenRefire(actionargs_t *actionargs)
     }
 }
 
-#define TRACEANGLE 0xc000000
+static constexpr sangle_t TRACEANGLE = 0xc000000;
 
 //
 // A_GenTracer

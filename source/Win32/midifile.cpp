@@ -34,9 +34,9 @@
 #include "i_system.h"
 #include "midifile.h"
 
-constexpr const char HEADER_CHUNK_ID[] = "MThd";
-constexpr const char TRACK_CHUNK_ID[]  = "MTrk";
-#define MAX_BUFFER_SIZE 0x10000
+static constexpr const char HEADER_CHUNK_ID[] = "MThd";
+static constexpr const char TRACK_CHUNK_ID[]  = "MTrk";
+static constexpr int        MAX_BUFFER_SIZE   = 0x10000;
 
 // haleyjd 09/09/10: packing required
 #ifdef _MSC_VER

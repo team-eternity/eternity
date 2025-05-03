@@ -38,16 +38,13 @@ struct vfont_t;
 
 // menu item flags
 
-#define MENUITEM_POSINIT  0x00000001
-#define MENUITEM_BIGFONT  0x00000002
-#define MENUITEM_CENTERED 0x00000004
-#define MENUITEM_LALIGNED 0x00000008
-
-// whether a menu item is a 'gap' item
-// ie. one that cannot be selected
-
-#define is_a_gap(it) \
-   ((it)->type == it_gap  || (it)->type == it_title || (it)->type == it_info)
+enum
+{
+    MENUITEM_POSINIT  = 0x00000001,
+    MENUITEM_BIGFONT  = 0x00000002,
+    MENUITEM_CENTERED = 0x00000004,
+    MENUITEM_LALIGNED = 0x00000008,
+};
 
 // haleyjd 05/01/10: item alignment defines
 enum
@@ -183,6 +180,14 @@ enum class consumeText_e : bool
     NO  = false
 };
 
+//
+// Whether a menu item is a 'gap' item i.e. one that cannot be selected.
+//
+inline bool is_a_gap(const menuitem_t *const it)
+{
+    return it->type == it_gap || it->type == it_title || it->type == it_info;
+}
+
 // haleyjd 08/31/12: A proper widget stack
 void   MN_PushWidget(menuwidget_t *widget);
 void   MN_PopWidget(const consumeText_e consume = consumeText_e::YES);
@@ -251,10 +256,10 @@ extern menu_t       *drawing_menu;       // current menu drawing
 extern menuwidget_t *current_menuwidget; // current widget being drawn
 
 // size of automap colour blocks
-#define BLOCK_SIZE 9
+static constexpr size_t BLOCK_SIZE = 9;
 
 // haleyjd 08/30/06: emulated old menus have fixed item size of 16
-#define EMULATED_ITEM_SIZE 16
+static constexpr int EMULATED_ITEM_SIZE = 16;
 
 // menu error message
 extern char menu_error_message[128];

@@ -28,7 +28,7 @@ using SDL_RWops = struct SDL_RWops;
 struct midi_file_t;
 struct midi_track_iter_t;
 
-#define MIDI_CHANNELS_PER_TRACK 16
+static constexpr int MIDI_CHANNELS_PER_TRACK = 16;
 
 enum midi_event_type_e
 {
@@ -93,7 +93,7 @@ enum midi_meta_event_type_e
     MIDI_META_SEQUENCER_SPECIFIC = 0x7F,
 };
 
-#define EMIDI_LOOP_FLAG 0x7F
+static constexpr unsigned int EMIDI_LOOP_FLAG = 0x7F;
 
 enum emidi_device_t
 {

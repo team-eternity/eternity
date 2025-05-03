@@ -92,9 +92,6 @@ int map_secret_after;
 // Antialias map drawing
 bool map_antialias;
 
-// drawing stuff
-#define FB    0
-
 // haleyjd 05/17/08: ability to draw node lines on map
 static bool am_drawnodelines;
 static bool am_dynasegs_bysubsec;
@@ -103,30 +100,18 @@ static bool am_drawsegs;
 // haleyjd 07/07/04: removed key_map* variables
 
 // scale on entry
-#define INITSCALEMTOF (0.2)
+static constexpr double INITSCALEMTOF = 0.2;
 // how much the automap moves window per tic in frame-buffer coordinates
 // moves 140 pixels in 1 second
-#define F_PANINC  4.0
+static constexpr double F_PANINC = 4.0;
 // how much zoom-in per tic
 // goes to 2x in 1 second
-#define M_ZOOMIN        (1.02)
+static constexpr double M_ZOOMIN = 1.02;
 // how much zoom-out per tic
 // pulls out to 0.5x in 1 second
-#define M_ZOOMOUT       (1.0/1.02)
+static constexpr double M_ZOOMOUT = 1.0 / 1.02;
 // how much zoom in/out on each mousewheel scroll
 static constexpr double M_ZOOMWHEEL = 1.3;
-
-// translates between frame-buffer and map distances
-#define FTOM(x) ((x) * scale_ftom)
-#define MTOF(x) ((x) * scale_mtof)
-// translates between frame-buffer and map coordinates
-#define CXMTOF(x)  (f_x + (int)(MTOF((x) - m_x)))
-#define CYMTOF(y)  (f_y + (f_h - (int)(MTOF((y) - m_y))))
-
-// haleyjd: movement scaling factors for panning consistency at different
-// resolutions
-#define HORZ_PAN_SCALE(x) ((x) * f_w / SCREENWIDTH )
-#define VERT_PAN_SCALE(y) ((y) * f_h / SCREENHEIGHT)
 
 struct fpoint_t
 {
@@ -149,16 +134,17 @@ struct islope_t
 };
 
 // haleyjd: moved here, as this is the only place it is used
-#define PLAYERRADIUS    (16.0)
+constexpr double PLAYERRADIUS = 16.0;
 
 // clang-format off
+
+constexpr double R = (8 * PLAYERRADIUS) / 7;
 
 //
 // The vector graphics for the automap.
 //  A line drawing of the player pointing right,
 //   starting from the middle.
 //
-#define R ((8*PLAYERRADIUS)/7)
 static constexpr mline_t player_arrow[] = {
     { { -R+R/8,   0 }, {  R,      0   } }, // -----
     { {  R,       0 }, {  R-R/2,  R/4 } }, // ----->
@@ -182,18 +168,16 @@ static constexpr mline_t player_arrow_raven[] = {
 };
 // "Wet nurse" drawing of Heretic keys on map
 static constexpr mline_t am_hereticKeySquare[] = {
-    { { 0, 0 }, { R/4, -R/2 } },
-    { { R/4, -R/2 }, { R/2, -R/2 } },
-    { { R/2, -R/2 }, { R/2, R/2 } },
-    { { R/2, R/2 }, { R/4, R/2 } },
-    { { R/4, R/2 }, { 0, 0 } }, // handle part type thing
-    { { 0, 0 }, { -R, 0 } }, // stem
-    { { -R, 0 }, { -R, -R/2 } }, // end lockpick part
-    { { -3*R/4, 0 }, { -3*R/4, -R/4 } }
+    { {  0,        0     }, {  R / 4,     -R / 2 } },
+    { {  R / 4,   -R / 2 }, {  R / 2,     -R / 2 } },
+    { {  R / 2,   -R / 2 }, {  R / 2,      R / 2 } },
+    { {  R / 2,    R / 2 }, {  R / 4,      R / 2 } },
+    { {  R / 4,    R / 2 }, {  0,          0     } }, // handle part type thing
+    { {  0,        0     }, { -R,          0     } }, // stem
+    { { -R,        0     }, { -R,         -R / 2 } }, // end lockpick part
+    { { -3 * R /4, 0     }, { -3 * R / 4, -R / 4 } }
 };
-#undef R
 
-#define R ((8*PLAYERRADIUS)/7)
 static constexpr mline_t cheat_player_arrow[] = { // killough 3/22/98: He's alive, Jim :)
     { { -R+R/8,         0   }, {  R,             0   } }, // -----
     { {  R,             0   }, {  R-R/2,         R/4 } }, // ----->
@@ -210,7 +194,6 @@ static constexpr mline_t cheat_player_arrow[] = { // killough 3/22/98: He's aliv
     { { -R/10+R/4,      R/4 }, { -R/10+R/4,     -R/4 } }, // F
     { { -R/10+R/4,      R/4 }, { -R/10+R/4+R/8,  R/4 } },
 };
-#undef R
 
 //jff 1/5/98 new symbol for keys on automap
 static constexpr mline_t cross_mark[] = {
@@ -340,6 +323,40 @@ static void AM_getIslope(mline_t *ml, islope_t *is)
         is->slp = dy / dx;
 }
 #endif
+
+// translates between frame-buffer and map distances
+template<typename T>
+static inline double FTOM(const T x)
+{
+    return x * scale_ftom;
+}
+template<typename T>
+static inline double MTOF(const T x)
+{
+    return x * scale_mtof;
+}
+// translates between frame-buffer and map coordinates
+template<typename T>
+static inline int CXMTOF(const T x)
+{
+    return f_x + int(MTOF(x) - m_x);
+}
+template<typename T>
+static inline int CYMTOF(const T y)
+{
+    return f_y + int(MTOF(y) - m_y);
+}
+
+// haleyjd: movement scaling factors for panning consistency at different
+// resolutions
+static inline double HORZ_PAN_SCALE(const double x)
+{
+    return x * f_w / SCREENWIDTH;
+}
+static inline double VERT_PAN_SCALE(const double y)
+{
+    return y * f_h / SCREENHEIGHT;
+}
 
 //
 // AM_activateNewScale()
@@ -1204,12 +1221,18 @@ static bool AM_clipMline(mline_t *ml, fline_t *fl)
     int      dx;
     int      dy;
 
-#define DOOUTCODE(oc, mx, my) \
-   (oc) = 0; \
-   if ((my) < 0) (oc) |= TOP; \
-   else if ((my) >= f_h) (oc) |= BOTTOM; \
-   if ((mx) < 0) (oc) |= LEFT; \
-   else if ((mx) >= f_w) (oc) |= RIGHT;
+    auto DOOUTCODE = [](const int mx, const int my) -> int {
+        int oc = 0;
+        if(my < 0)
+            oc |= TOP;
+        else if(my >= f_h)
+            oc |= BOTTOM;
+        if(mx < 0)
+            oc |= LEFT;
+        else if(mx >= f_w)
+            oc |= RIGHT;
+        return oc;
+    };
 
     // do trivial rejects and outcodes
     if(ml->a.y > m_y2)
@@ -1244,8 +1267,8 @@ static bool AM_clipMline(mline_t *ml, fline_t *fl)
     fl->b.x = CXMTOF(ml->b.x);
     fl->b.y = CYMTOF(ml->b.y);
 
-    DOOUTCODE(outcode1, fl->a.x, fl->a.y);
-    DOOUTCODE(outcode2, fl->b.x, fl->b.y);
+    outcode1 = DOOUTCODE(fl->a.x, fl->a.y);
+    outcode2 = DOOUTCODE(fl->b.x, fl->b.y);
 
     if(outcode1 & outcode2)
         return false;
@@ -1291,13 +1314,13 @@ static bool AM_clipMline(mline_t *ml, fline_t *fl)
 
         if(outside == outcode1)
         {
-            fl->a = tmp;
-            DOOUTCODE(outcode1, fl->a.x, fl->a.y);
+            fl->a    = tmp;
+            outcode1 = DOOUTCODE(fl->a.x, fl->a.y);
         }
         else
         {
-            fl->b = tmp;
-            DOOUTCODE(outcode2, fl->b.x, fl->b.y);
+            fl->b    = tmp;
+            outcode2 = DOOUTCODE(fl->b.x, fl->b.y);
         }
 
         if(outcode1 & outcode2)
@@ -1309,7 +1332,10 @@ static bool AM_clipMline(mline_t *ml, fline_t *fl)
 #undef DOOUTCODE
 
 // haleyjd 06/12/09: this macro is now shared by Bresenham and Wu
-#define PUTDOT(xx, yy, cc) *(VBADDRESS(&vbscreen, xx, yy)) = (cc)
+static inline void PUTDOT(const int xx, const int yy, const int cc)
+{
+    *VBADDRESS(&vbscreen, xx, yy) = cc;
+}
 
 //
 // AM_drawFline()
@@ -1411,10 +1437,10 @@ static void AM_putWuDot(int x, int y, int color, int weight)
 // Given 65536, we need 2048; 65536 / 2048 == 32 == 2^5
 // Why 2048? ANG90 == 0x40000000 which >> 19 == 0x800 == 2048.
 // The trigonometric correction is based on an angle from 0 to 90.
-#define wu_fineshift 5
+static constexpr int wu_fineshift = 5;
 
 // Given 64 levels in the Col2RGB8 table, 65536 / 64 == 1024 == 2^10
-#define wu_fixedshift 10
+static constexpr int wu_fixedshift = 10;
 
 //
 // AM_drawFlineWu
@@ -2188,7 +2214,7 @@ static void AM_drawPlayers()
         else
         {
             // sf: extended colour range
-#define GREEN 112
+            static constexpr int GREEN = 112;
             if(their_color == 0)
             {
                 color = GREEN;

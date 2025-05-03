@@ -97,7 +97,7 @@ struct i_musicdriver_t
 void I_InitMusic();
 void I_ShutdownMusic();
 
-#define DEFAULT_MIDI_DEVICE -1 // use saved music module device
+static constexpr int DEFAULT_MIDI_DEVICE = -1; // use saved music module device
 
 // Volume.
 void I_SetMusicVolume(int volume);

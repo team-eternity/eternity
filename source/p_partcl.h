@@ -36,11 +36,14 @@ struct subsector_t;
 // haleyjd: particle variables and structures
 
 // particle style flags -- 07/03/03
-#define PS_FULLBRIGHT   0x0001
-#define PS_FLOORCLIP    0x0002
-#define PS_FALLTOGROUND 0x0004
-#define PS_HITGROUND    0x0008
-#define PS_SPLASH       0x0010
+enum
+{
+    PS_FULLBRIGHT   = 0x0001,
+    PS_FLOORCLIP    = 0x0002,
+    PS_FALLTOGROUND = 0x0004,
+    PS_HITGROUND    = 0x0008,
+    PS_SPLASH       = 0x0010,
+};
 
 struct particle_t
 {
@@ -66,22 +69,25 @@ extern int         inactiveParticles;
 extern particle_t *Particles;
 extern int         particle_trans;
 
-#define FX_ROCKET		    0x00000001
-#define FX_GRENADE		    0x00000002
-#define FX_FLIES            0x00000004
-#define FX_BFG              0x00000008
-#define FX_FLIESONDEATH     0x00000010
-#define FX_DRIP             0x00000020
+enum
+{
+    FX_ROCKET       = 0x00000001,
+    FX_GRENADE      = 0x00000002,
+    FX_FLIES        = 0x00000004,
+    FX_BFG          = 0x00000008,
+    FX_FLIESONDEATH = 0x00000010,
+    FX_DRIP         = 0x00000020,
 
-#define FX_FOUNTAINMASK		0x00070000
-#define FX_FOUNTAINSHIFT	16
-#define FX_REDFOUNTAIN		0x00010000
-#define FX_GREENFOUNTAIN	0x00020000
-#define FX_BLUEFOUNTAIN		0x00030000
-#define FX_YELLOWFOUNTAIN	0x00040000
-#define FX_PURPLEFOUNTAIN	0x00050000
-#define FX_BLACKFOUNTAIN	0x00060000
-#define FX_WHITEFOUNTAIN	0x00070000
+    FX_FOUNTAINMASK   = 0x00070000,
+    FX_FOUNTAINSHIFT  = 16,
+    FX_REDFOUNTAIN    = 0x00010000,
+    FX_GREENFOUNTAIN  = 0x00020000,
+    FX_BLUEFOUNTAIN   = 0x00030000,
+    FX_YELLOWFOUNTAIN = 0x00040000,
+    FX_PURPLEFOUNTAIN = 0x00050000,
+    FX_BLACKFOUNTAIN  = 0x00060000,
+    FX_WHITEFOUNTAIN  = 0x00070000,
+};
 
 enum
 {
@@ -96,8 +102,6 @@ enum
     MBC_ORANGE,
     NUMBLOODCOLORS
 };
-
-#define MBC_BLOODMASK 32768
 
 // haleyjd 05/20/02: particle events
 enum

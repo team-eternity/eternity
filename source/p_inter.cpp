@@ -69,7 +69,7 @@
 #include "v_misc.h"
 #include "v_video.h"
 
-#define BONUSADD        6
+static constexpr int BONUSADD = 6;
 
 enum
 {

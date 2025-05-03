@@ -90,7 +90,7 @@
 #include "xl_scripts.h"
 
 // killough 10/98: preloaded files
-#define MAXLOADFILES 2
+static constexpr size_t MAXLOADFILES = 2;
 char *wad_files[MAXLOADFILES], *deh_files[MAXLOADFILES];
 // haleyjd: allow two auto-loaded console scripts
 char *csc_files[MAXLOADFILES];
@@ -177,7 +177,7 @@ void startupmsg(const char *func, const char *desc)
 // Events can be discarded if no responder claims them
 //
 
-#define MAXEVENTS 64
+static constexpr int MAXEVENTS = 64;
 
 static event_t events[MAXEVENTS];
 static int     eventhead, eventtail;
@@ -868,7 +868,7 @@ void D_InitPaths()
 
 // MAXARGVS: a reasonable(?) limit on response file arguments
 
-#define MAXARGVS 100
+static constexpr int MAXARGVS = 100;
 
 //
 // FindResponseFile

@@ -40,11 +40,16 @@
 
 #include "m_fixed.h"
 
-#define FINEANGLES              8192
-#define FINEMASK                (FINEANGLES-1)
+// PORTABILITY WARNING: angle_t depends on 32-bit math overflow
+
+using angle_t  = uint32_t;
+using sangle_t = int32_t; // For replacing angle macros w/ constexprs w/o changing behaviour of code using them.
+
+static constexpr int FINEANGLES = 8192;
+static constexpr int FINEMASK   = FINEANGLES - 1;
 
 // 0x100000000 to 0x2000
-#define ANGLETOFINESHIFT        19
+static constexpr int ANGLETOFINESHIFT = 19;
 
 // Effective size is 10240.
 extern const fixed_t finesine[5 * FINEANGLES / 4];
@@ -56,28 +61,24 @@ extern const fixed_t *const finecosine;
 extern const fixed_t finetangent[FINEANGLES / 2];
 
 // Binary Angle Measument, BAM.
-#define ANG45   0x20000000
-#define ANG90   0x40000000
-#define ANG180  0x80000000
-#define ANG270  0xc0000000
+static constexpr sangle_t ANG45  = 0x20000000;
+static constexpr sangle_t ANG90  = 0x40000000;
+static constexpr angle_t  ANG180 = 0x80000000;
+static constexpr angle_t  ANG270 = 0xc0000000;
 
-#define ANG360  0xffffffff
+static constexpr angle_t ANG360 = 0xffffffff;
 
 // haleyjd 1/17/00
 
-#define ANGLE_1 (ANG45/45)
+static constexpr sangle_t ANGLE_1 = ANG45 / 45;
 
 // haleyjd 08/06/13: Heretic uses a value of "ANGLE_1" that is off
 // by 40% - the correct value is 0xb60b60. This is rougly 1.4 degrees.
-#define HTICANGLE_1 0x1000000
+static constexpr sangle_t HTICANGLE_1 = 0x1000000;
 
-#define SLOPERANGE 2048
-#define SLOPEBITS    11
-#define DBITS      (FRACBITS-SLOPEBITS)
-
-// PORTABILITY WARNING: angle_t depends on 32-bit math overflow
-
-using angle_t = uint32_t;
+static constexpr int SLOPERANGE = 2048;
+static constexpr int SLOPEBITS  = 11;
+static constexpr int DBITS      = FRACBITS - SLOPEBITS;
 
 // Effective size is 2049;
 // The +1 size is to handle the case when x==y without additional checking.

@@ -61,9 +61,18 @@
 
 // some macros to decode mus event bit fields
 
-#define last(e)         ((UBYTE)((e) & 0x80))
-#define event_type(e)   ((UBYTE)(((e) & 0x7F) >> 4))
-#define channel(e)      ((UBYTE)((e) & 0x0F))
+inline static UBYTE last(const int e)
+{
+    return UBYTE(e & 0x80);
+}
+inline static UBYTE event_type(const int e)
+{
+    return UBYTE((e & 0x7F) >> 4);
+}
+inline static UBYTE channel(const int e)
+{
+    return UBYTE(e & 0x0F);
+}
 
 // event types
 
@@ -309,7 +318,7 @@ static UBYTE MidiEvent(MIDI *mididata, UBYTE midicode, UBYTE MIDIchannel, UBYTE 
     return newevent;
 }
 
-#define MAX_HEADER_SCAN 32
+static constexpr int MAX_HEADER_SCAN = 32;
 
 //
 // mmuscheckformat

@@ -33,19 +33,19 @@ struct ev_lockdef_t
     int lockID;  // lockdef ID number
 };
 
-#define EV_LOCKDEF_NULL        0
-#define EV_LOCKDEF_REDCARD     1
-#define EV_LOCKDEF_BLUECARD    2
-#define EV_LOCKDEF_YELLOWCARD  3
-#define EV_LOCKDEF_REDSKULL    4
-#define EV_LOCKDEF_BLUESKULL   5
-#define EV_LOCKDEF_YELLOWSKULL 6
-#define EV_LOCKDEF_ANYKEY      100
-#define EV_LOCKDEF_ALL6        101
-#define EV_LOCKDEF_REDGREEN    129
-#define EV_LOCKDEF_BLUE        130
-#define EV_LOCKDEF_YELLOW      131
-#define EV_LOCKDEF_ALL3        229
+static constexpr int EV_LOCKDEF_NULL        = 0;
+static constexpr int EV_LOCKDEF_REDCARD     = 1;
+static constexpr int EV_LOCKDEF_BLUECARD    = 2;
+static constexpr int EV_LOCKDEF_YELLOWCARD  = 3;
+static constexpr int EV_LOCKDEF_REDSKULL    = 4;
+static constexpr int EV_LOCKDEF_BLUESKULL   = 5;
+static constexpr int EV_LOCKDEF_YELLOWSKULL = 6;
+static constexpr int EV_LOCKDEF_ANYKEY      = 100;
+static constexpr int EV_LOCKDEF_ALL6        = 101;
+static constexpr int EV_LOCKDEF_REDGREEN    = 129;
+static constexpr int EV_LOCKDEF_BLUE        = 130;
+static constexpr int EV_LOCKDEF_YELLOW      = 131;
+static constexpr int EV_LOCKDEF_ALL3        = 229;
 
 extern ev_action_t NullAction;
 extern ev_action_t BoomGenAction;

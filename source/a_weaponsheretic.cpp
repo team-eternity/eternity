@@ -49,7 +49,10 @@
 
 // TODO: This will probably be defined elsewhere at some point
 #undef PO2
-#define PO2(x) (1 << x)
+static inline constexpr int PO2(const int x)
+{
+    return 1 << x;
+}
 
 void A_StaffAttackPL1(actionargs_t *actionargs)
 {

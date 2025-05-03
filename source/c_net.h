@@ -118,7 +118,7 @@ extern command_t *c_netcmds[NUMNETCMDS];
 extern char      *default_name;
 extern int        default_colour;
 
-#define CN_BROADCAST 128
+static constexpr int CN_BROADCAST = 128;
 
 #endif
 

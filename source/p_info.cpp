@@ -714,7 +714,7 @@ static void P_InfoDefaultLevelName()
         LevelInfo.levelName = DEH_String(lnd.bexName);
 }
 
-#define NUMMAPINFOSOUNDS 10
+static constexpr int NUMMAPINFOSOUNDS = 10;
 
 static const char *DefSoundNames[NUMMAPINFOSOUNDS] = {
     "EE_DoorOpen",   //

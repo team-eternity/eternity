@@ -127,8 +127,8 @@ static dehflagset_t mnitemflagset = { mnitemflagvalues, 0 };
 
 // dynamic menu hash table
 
-#define NUMMENUCHAINS 7
-static menu_t *dynaMenuChains[NUMMENUCHAINS];
+static constexpr size_t NUMMENUCHAINS = 7;
+static menu_t          *dynaMenuChains[NUMMENUCHAINS];
 
 //
 // MN_DynamicMenuForName

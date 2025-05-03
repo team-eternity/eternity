@@ -260,8 +260,8 @@ void SaveArchive::archiveCachedString(qstring &string)
     }
 }
 
-#define SAVE_MIN_SIZEOF_SIZE_T 4
-#define SAVE_MAX_SIZEOF_SIZE_T 8
+static constexpr size_t SAVE_MIN_SIZEOF_SIZE_T = 4;
+static constexpr size_t SAVE_MAX_SIZEOF_SIZE_T = 8;
 
 //
 // Archive a size_t
@@ -1520,7 +1520,7 @@ static void P_ArchiveACS(SaveArchive &arc)
 // Saving - Main Routine
 //
 
-#define SAVESTRINGSIZE 24
+static constexpr size_t SAVESTRINGSIZE = 24;
 
 void P_SaveCurrentLevel(char *filename, char *description)
 {

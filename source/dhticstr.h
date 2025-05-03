@@ -191,7 +191,7 @@ constexpr const char HHUSTR_E5M8[] = "E5M8:  FIELD OF JUDGEMENT";
 constexpr const char HHUSTR_E5M9[] = "E5M9:  SKEIN OF D'SPARIL";
 
 // haleyjd: note: not externalized (use s_QUITMSG)
-#define HTICQUITMSG "ARE YOU SURE YOU WANT TO QUIT?"
+constexpr const char HTICQUITMSG[] = "ARE YOU SURE YOU WANT TO QUIT?";
 
 // item messages
 constexpr const char HGOTBLUEKEY[]              = "BLUE KEY";

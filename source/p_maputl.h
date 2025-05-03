@@ -27,6 +27,7 @@
 
 #include <vector>
 #include "linkoffs.h" // ioanch 20160108: for R_NOGROUP
+#include "m_fixed.h"
 #include "m_vector.h"
 #include "tables.h" // for angle_t
 
@@ -39,15 +40,18 @@ struct sector_t;
 struct subsector_t;
 
 // mapblocks are used to check movement against lines and things
-#define MAPBLOCKUNITS   128
-#define MAPBLOCKSIZE    (MAPBLOCKUNITS*FRACUNIT)
-#define MAPBLOCKSHIFT   (FRACBITS+7)
-#define MAPBMASK        (MAPBLOCKSIZE-1)
-#define MAPBTOFRAC      (MAPBLOCKSHIFT-FRACBITS)
+static constexpr int     MAPBLOCKUNITS = 128;
+static constexpr fixed_t MAPBLOCKSIZE  = MAPBLOCKUNITS * FRACUNIT;
+static constexpr int     MAPBLOCKSHIFT = FRACBITS + 7;
+static constexpr int     MAPBMASK      = MAPBLOCKSIZE - 1;
+static constexpr int     MAPBTOFRAC    = MAPBLOCKSHIFT - FRACBITS;
 
-#define PT_ADDLINES     1
-#define PT_ADDTHINGS    2
-#define PT_EARLYOUT     4
+enum
+{
+    PT_ADDLINES  = 1,
+    PT_ADDTHINGS = 2,
+    PT_EARLYOUT  = 4,
+};
 
 struct divline_t
 {

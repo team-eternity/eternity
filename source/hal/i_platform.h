@@ -90,8 +90,10 @@ enum
 extern int ee_platform_flags[EE_PLATFORM_MAX];
 
 // Test platform flags against a set of flag values
-#define EE_PLATFORM_TEST(flags) \
-    ((ee_platform_flags[ee_current_platform] & (flags)) == (flags))
+inline bool EE_PLATFORM_TEST(int flags)
+{
+    return (ee_platform_flags[ee_current_platform] & flags) == flags;
+}
 
 #endif
 

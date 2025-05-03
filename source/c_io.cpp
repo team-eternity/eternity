@@ -59,9 +59,9 @@
 #include "v_patchfmt.h"
 #include "z_auto.h"
 
-#define MESSAGES 512
+static constexpr int MESSAGES = 512;
 // keep the last 32 typed commands
-#define HISTORY 32
+static constexpr int HISTORY = 32;
 
 extern const char *shiftxform;
 static void        Egg();
@@ -579,7 +579,7 @@ void C_Update(void)
 
 // haleyjd 05/30/11: Number of messages to cut from the history buffer when
 // the buffer is full.
-#define MESSAGECUT 64
+static constexpr int MESSAGECUT = 64;
 
 //
 // C_ScrollUp

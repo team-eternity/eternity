@@ -201,7 +201,7 @@ struct pslope_t
 // Sector Actions
 //
 
-#define NUMLINEARGS 5
+static constexpr int NUMLINEARGS = 5;
 
 // sector action flags
 enum sectoractionflags_e : unsigned int

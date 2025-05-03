@@ -39,7 +39,7 @@
 #include "r_portal.h"
 #include "s_sound.h"
 
-#define RECURSION_LIMIT 64
+static constexpr int RECURSION_LIMIT = 64;
 
 //
 // UseContext

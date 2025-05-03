@@ -73,48 +73,39 @@ extern char gamemapname[9];
 // This is supposedly ignored for commercial
 //  release (aka DOOM II), which had 34 maps
 //  in one episode. So there.
-#define NUMEPISODES 4
-#define NUMMAPS     9
-
-// Not used
-// in tics
-// U #define PAUSELEN    (TICRATE*2)
-// U #define SCORESTEP    100
-// U #define ANIMPERIOD    32
-// pixel distance from "(YOU)" to "PLAYER N"
-// U #define STARDIST  10
-// U #define WK 1
+static constexpr int NUMEPISODES = 4;
+static constexpr int NUMMAPS     = 9;
 
 // GLOBAL LOCATIONS
-#define WI_TITLEY      2
-#define WI_SPACINGY   33
+static constexpr int WI_TITLEY   = 2;
+static constexpr int WI_SPACINGY = 33;
 
 // SINGLE-PLAYER STUFF
-#define SP_STATSX     50
-#define SP_STATSY     50
+static constexpr int SP_STATSX = 50;
+static constexpr int SP_STATSY = 50;
 
-#define SP_TIMEX      16
-#define SP_TIMEY      (SCREENHEIGHT-32)
+static constexpr int SP_TIMEX = 16;
+static constexpr int SP_TIMEY = SCREENHEIGHT - 32;
 
 // NET GAME STUFF
 #define NG_STATSY     50
 #define NG_STATSX     (32 + star->width/2 + 32*!dofrags)
 
-#define NG_SPACINGX   64
+static constexpr int NG_SPACINGX = 64;
 
 // Used to display the frags matrix at endgame
 // DEATHMATCH STUFF
-#define DM_MATRIXX    42
-#define DM_MATRIXY    68
+static constexpr int DM_MATRIXX = 42;
+static constexpr int DM_MATRIXY = 68;
 
-#define DM_SPACINGX   40
+static constexpr int DM_SPACINGX = 40;
 
-#define DM_TOTALSX   269
+static constexpr int DM_TOTALSX = 269;
 
-#define DM_KILLERSX   10
-#define DM_KILLERSY  100
-#define DM_VICTIMSX    5
-#define DM_VICTIMSY   50
+static constexpr int DM_KILLERSX = 10;
+static constexpr int DM_KILLERSY = 100;
+static constexpr int DM_VICTIMSX = 5;
+static constexpr int DM_VICTIMSY = 50;
 
 enum
 {
@@ -286,21 +277,9 @@ static anim_t *anims[NUMEPISODES] = {
 //
 // Locally used stuff.
 //
-#define FB 0
-
-// States for single-player
-#define SP_KILLS    0
-#define SP_ITEMS    2
-#define SP_SECRET   4
-#define SP_FRAGS    6
-#define SP_TIME     8
-#define SP_PAR      ST_TIME
-
-#define SP_PAUSE    1
 
 // in seconds
-#define SHOWNEXTLOCDELAY  4
-// #define SHOWLASTLOCDELAY  SHOWNEXTLOCDELAY
+static constexpr int SHOWNEXTLOCDELAY = 4;
 
 // wbs->pnum
 static int me;

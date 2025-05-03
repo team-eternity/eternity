@@ -40,10 +40,10 @@
 
 // haleyjd: use zdoom-compatible doomednums
 
-#define POLYOBJ_ANCHOR_DOOMEDNUM      9300
-#define POLYOBJ_SPAWN_DOOMEDNUM       9301
-#define POLYOBJ_SPAWNCRUSH_DOOMEDNUM  9302
-#define POLYOBJ_SPAWNDAMAGE_DOOMEDNUM 9303
+static constexpr int POLYOBJ_ANCHOR_DOOMEDNUM      = 9300;
+static constexpr int POLYOBJ_SPAWN_DOOMEDNUM       = 9301;
+static constexpr int POLYOBJ_SPAWNCRUSH_DOOMEDNUM  = 9302;
+static constexpr int POLYOBJ_SPAWNDAMAGE_DOOMEDNUM = 9303;
 
 //
 // Polyobject Flags

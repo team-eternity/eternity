@@ -27,10 +27,10 @@
 #include "../m_fixed.h"
 
 // sf: made a #define, changed to 16
-#define CLOCK_BITS 16
-#define CLOCK_UNIT (1<<CLOCK_BITS)
-extern int     realtic_clock_rate;
-extern int64_t I_GetTime_Scale;
+static constexpr int     CLOCK_BITS = 16;
+static constexpr int64_t CLOCK_UNIT = 1 << CLOCK_BITS;
+extern int               realtic_clock_rate;
+extern int64_t           I_GetTime_Scale;
 
 // clang-format off
 

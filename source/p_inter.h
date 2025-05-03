@@ -34,7 +34,7 @@ class MetaTable;
 using itemeffect_t = MetaTable;
 
 // follow a player exlusively for 3 seconds
-#define BASETHRESHOLD   (100)
+static constexpr int16_t BASETHRESHOLD = 100;
 
 enum
 {

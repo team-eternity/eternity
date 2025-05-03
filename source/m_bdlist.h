@@ -32,7 +32,7 @@
 #ifndef M_BDLIST_H__
 #define M_BDLIST_H__
 
-#define BDLISTMAGIC 0xABADCAFEu
+static constexpr uint32_t BDLISTMAGIC = 0xABADCAFEu;
 
 //
 // BDListItem<T>
@@ -92,8 +92,6 @@ public:
 
     inline bool isDummy() const { return this->bdData == BDLISTMAGIC; }
 };
-
-#undef BDLISTMAGIC
 
 #endif
 

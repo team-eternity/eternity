@@ -34,9 +34,9 @@ using byte = uint8_t;
 // SoM: resolve platform-specific range symbol issues
 
 #include <limits.h>
-#define D_MAXINT INT_MAX
-#define D_MININT INT_MIN
-#define D_MAXSHORT  SHRT_MAX
+static constexpr int D_MAXINT    = INT_MAX;
+static constexpr int D_MININT    = INT_MIN;
+static constexpr int D_MAXSHORT  = SHRT_MAX;
 
 // The packed attribute forces structures to be packed into the minimum
 // space necessary.  If this is not done, the compiler may align structure

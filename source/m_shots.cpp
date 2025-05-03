@@ -189,7 +189,7 @@ static bool pcx_Writer(OutBuffer *ob, byte *data, uint32_t width, uint32_t heigh
 // Changed type names to avoid conflicts with endianess functions
 //
 
-#define BI_RGB 0L
+static constexpr uint32_t BI_RGB = 0;
 
 // SoM 6/5/02: Chu-Chu-Chu-Chu-Chu-Changes... heh
 

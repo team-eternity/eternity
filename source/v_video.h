@@ -86,7 +86,7 @@ enum crange_idx_e
 // array of pointers to color translation tables
 extern byte *colrngs[CR_LIMIT];
 
-#define CR_DEFAULT CR_RED   /* default value for out of range colors */
+static constexpr int CR_DEFAULT = CR_RED; // Default value for out of range colors.
 
 extern byte gammatable[5][256];
 extern int  usegamma;
@@ -133,13 +133,21 @@ void V_CopyRect(int srcx, int srcy, VBuffer *src, int width, int height, int des
 // patch to a VBuffer object utilizing any scaling information the buffer has.
 void V_DrawPatchGeneral(int x, int y, VBuffer *buffer, patch_t *patch, bool flipped);
 
-// V_DrawPatch
-// Macro-ized version of V_DrawPatchGeneral
-#define V_DrawPatch(x, y, s, p)        V_DrawPatchGeneral(x,y,s,p,false)
+//
+// Inline version of V_DrawPatchGeneral.
+//
+static inline void V_DrawPatch(int x, int y, VBuffer *buffer, patch_t *patch)
+{
+    V_DrawPatchGeneral(x, y, buffer, patch, false);
+}
 
-// V_DrawPatchFlipped
-// Macro-ized version of V_DrawPatchGeneral
-#define V_DrawPatchFlipped(x, y, s, p) V_DrawPatchGeneral(x,y,s,p,true)
+//
+// Inline version of V_DrawPatchGeneral.
+//
+static inline void V_DrawPatchFlipped(int x, int y, VBuffer *buffer, patch_t *patch)
+{
+    V_DrawPatchGeneral(x, y, buffer, patch, true);
+}
 
 // V_DrawPatchTranslated
 // Renders a patch to the given VBuffer like V_DrawPatchGeneral, but applies

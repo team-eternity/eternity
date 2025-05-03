@@ -49,7 +49,7 @@ using ULONG = uint32_t; // a four-byte int (assumes int 4 bytes)
 #endif
 
 #ifndef DJGPP // proff: This is from allegro.h
-#define MIDI_TRACKS           32
+static constexpr int MIDI_TRACKS = 32;
 
 struct MIDI /* a midi file */
 {

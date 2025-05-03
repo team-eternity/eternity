@@ -28,7 +28,7 @@
 #include "p_maputl.h"
 #include "r_defs.h"
 
-#define SECTOR_PORTAL_LOOP_PROTECTION 128
+static constexpr int SECTOR_PORTAL_LOOP_PROTECTION = 128;
 
 struct bspcontext_t;
 struct cb_seg_t;
