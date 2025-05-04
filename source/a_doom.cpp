@@ -1313,7 +1313,8 @@ void A_BossDeath(actionargs_t *actionargs)
                 // open sectors tagged 666 as blazing doors
                 EV_DoDoor(666, blazeOpen);
                 break;
-            default: break;
+            default: //
+                break;
             } // end switch
         } // end if
     } // end for
