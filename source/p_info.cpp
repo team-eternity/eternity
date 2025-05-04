@@ -510,6 +510,7 @@ static void TmplStateInTitle(tmplpstate_t *state)
             break;
         }
         // intentional fall-through for titles (end of title)
+        [[fallthrough]];
     case '\n':
     case '\r':
         // done

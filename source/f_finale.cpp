@@ -719,7 +719,7 @@ static void F_DrawUnderwater()
 
             finalestage = 3;
         }
-        // fall through
+        [[fallthrough]];
     case 3:
         Console.enabled = false; // let console key fall through
         paused          = 0;

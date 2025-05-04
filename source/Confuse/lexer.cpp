@@ -423,6 +423,7 @@ static int lexer_state_stringcoalesce(lexerstate_t *ls)
     {
     case '\n': // increment line count, and fall through.
         ls->cfg->line++;
+        [[fallthrough]];
     case ' ': // whitespace, continue scanning
     case '\t': return -1;
     case '"':                          // quotations: coalesce with previous token
@@ -595,6 +596,7 @@ static int lexer_state_none(lexerstate_t *ls)
             break;
         }
         // fall through, @ is not special unless followed by " or '
+        [[fallthrough]];
     default: // anything else is part of an unquoted string
         if(ls->c == ':' && currentDialect >= CFG_DIALECT_ALFHEIM)
         {

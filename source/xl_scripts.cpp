@@ -133,7 +133,7 @@ void XLTokenizer::doStateInToken()
     case '\n':
         if(flags & TF_LINEBREAKS) // if linebreaks are tokens, we need to back up
             --idx;
-        // fall through
+        [[fallthrough]];
     case ' ': // whitespace
     case '\t':
     case '\r':

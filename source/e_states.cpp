@@ -1025,13 +1025,13 @@ static char *E_CmpTokenizer(const char *text, int *index, qstring *token)
                 }
                 *token += c;
                 continue;
-            case ')': //
+            case ')':
                 if(in_action && early_args_found)
                 {
                     early_args_end = true;
                     continue;
                 }
-                // fall through
+                [[fallthrough]];
             default: // everything else == part of value
                 *token += c;
                 continue;

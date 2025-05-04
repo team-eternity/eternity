@@ -1076,7 +1076,7 @@ static void PIT_CeilingLower(Mobj *thing)
         switch(P_PushDown(thing))
         {
         case 2: //
-                // intentional fall-through
+            [[fallthrough]];
         case 1: //
             if(onfloor)
                 thing->z = thing->zref.floor;

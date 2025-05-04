@@ -949,9 +949,9 @@ static int E_ProcessGenSpec(const char *value)
 
     switch(trigger)
     {
-    case GenFloorBase:
+    case GenFloorBase: //
         forc = 1;
-        // fall through
+        [[fallthrough]];
     case GenCeilingBase:
         NEXTTOKEN(); // get crushing value
         trigger += (E_BooleanArg(curtoken) << FloorCrushShift);

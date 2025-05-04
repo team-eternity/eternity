@@ -758,7 +758,7 @@ void A_HticBossDeath(actionargs_t *actionargs)
                 // if an enemy boss dies, kill only enemies
                 P_Massacre((actor->flags & MF_FRIEND) ? 1 : 2);
 
-                // fall through
+                [[fallthrough]];
             case BSPEC_E1M8: //
                 EV_DoFloor(nullptr, 666, lowerFloor);
                 break;
