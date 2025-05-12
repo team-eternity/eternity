@@ -272,6 +272,7 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/e_things.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/e_ttypes.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/e_udmf.h"
+      "${CMAKE_CURRENT_SOURCE_DIR}/e_udmftokens.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/e_weapons.h"
       SOURCE_GROUP "Source Files\\\\E_\\\\E_ Source"
       "${CMAKE_CURRENT_SOURCE_DIR}/e_anim.cpp"

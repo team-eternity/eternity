@@ -24,13 +24,14 @@
 // Authors: Ioan Chera, Max Waine
 //
 
-#ifndef E_ARGS_H_
-#define E_ARGS_H_
+#ifndef E_UDMF_H_
+#define E_UDMF_H_
 
 #include "m_collection.h"
 #include "m_fixed.h"
 #include "m_qstr.h"
 
+struct keytoken_t;
 class WadDirectory;
 
 //
@@ -431,6 +432,12 @@ private:
 
         bool xset, yset, typeset;
     };
+
+    void readLinedefToken(ULinedef *linedef, const keytoken_t *kt) const;
+    void readSidedefToken(USidedef *sidedef, const keytoken_t *kt) const;
+    void readVertexToken(uvertex_t *vertex, const keytoken_t *kt) const;
+    void readSectorToken(USector *sector, const keytoken_t *kt) const;
+    void readThingToken(uthing_t *thing, const keytoken_t *kt) const;
 
     void setData(const char *data, size_t size);
     void reset();

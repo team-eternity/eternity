@@ -605,341 +605,7 @@ bool UDMFParser::loadThings()
 // switch/case
 //
 
-enum token_e
-{
-    t_alpha,
-    t_alphaceiling,
-    t_alphafloor,
-    t_ambush,
-    t_angle,
-    t_arg0,
-    t_arg1,
-    t_arg2,
-    t_arg3,
-    t_arg4,
-    t_attachceiling,
-    t_attachfloor,
-    t_blockeverything,
-    t_blockfloaters,
-    t_blocking,
-    t_blocklandmonsters,
-    t_blockmonsters,
-    t_blockplayers,
-    t_blocksound,
-    t_ceilingid,
-    t_ceilingterrain,
-    t_class1,
-    t_class2,
-    t_class3,
-    t_clipmidtex,
-    t_colormapbottom,
-    t_colormapmid,
-    t_colormaptop,
-    t_coop,
-    t_copyceilingportal,
-    t_copyfloorportal,
-    t_damage_endgodmode,
-    t_damage_exitlevel,
-    t_damageamount,
-    t_damageinterval,
-    t_damageterraineffect,
-    t_damagetype,
-    t_dm,
-    t_dontdraw,
-    t_dontpegbottom,
-    t_dontpegtop,
-    t_dormant,
-    t_firstsideonly,
-    t_floorid,
-    t_floorterrain,
-    t_friction,
-    t_friend,
-    t_health,
-    t_height,
-    t_heightceiling,
-    t_heightfloor,
-    t_id,
-    t_impact,
-    t_invisible,
-    t_jumpover,
-    t_leakiness,
-    t_light,
-    t_light_top,
-    t_light_mid,
-    t_light_bottom,
-    t_lightabsolute,
-    t_lightabsolute_top,
-    t_lightabsolute_mid,
-    t_lightabsolute_bottom,
-    t_lightceiling,
-    t_lightceilingabsolute,
-    t_lightfloor,
-    t_lightfloorabsolute,
-    t_lightlevel,
-    t_lightseqalt,
-    t_lightsequence,
-    t_lowerportal,
-    t_mapped,
-    t_midtex3d,
-    t_midtex3dimpassible,
-    t_missilecross,
-    t_monstercross,
-    t_monsterpush,
-    t_monstershoot,
-    t_monsteruse,
-    t_offsetx,
-    t_offsety,
-    t_offsetx_bottom,
-    t_offsety_bottom,
-    t_offsetx_mid,
-    t_offsety_mid,
-    t_offsetx_top,
-    t_offsety_top,
-    t_phasedlight,
-    t_polycross,
-    t_portal,
-    t_portalceiling,
-    t_portal_ceil_attached,
-    t_portal_ceil_blocksound,
-    t_portal_ceil_disabled,
-    t_portal_ceil_nopass,
-    t_portal_ceil_norender,
-    t_portal_ceil_overlaytype,
-    t_portal_ceil_useglobaltex,
-    t_portalfloor,
-    t_portal_floor_attached,
-    t_portal_floor_blocksound,
-    t_portal_floor_disabled,
-    t_portal_floor_nopass,
-    t_portal_floor_norender,
-    t_portal_floor_overlaytype,
-    t_portal_floor_useglobaltex,
-    t_passuse,
-    t_playercross,
-    t_playerpush,
-    t_playeruse,
-    t_renderstyle,
-    t_repeatspecial,
-    t_rotationceiling,
-    t_rotationfloor,
-    t_scroll_ceil_x,
-    t_scroll_ceil_y,
-    t_scroll_ceil_type,
-    t_scroll_floor_x,
-    t_scroll_floor_y,
-    t_scroll_floor_type,
-    t_secret,
-    t_sector,
-    t_sideback,
-    t_sidefront,
-    t_single,
-    t_skew_bottom_type,
-    t_skew_middle_type,
-    t_skew_top_type,
-    t_skill1,
-    t_skill2,
-    t_skill3,
-    t_skill4,
-    t_skill5,
-    t_soundsequence,
-    t_special,
-    t_standing,
-    t_strifeally,
-    t_texturebottom,
-    t_textureceiling,
-    t_texturefloor,
-    t_texturemiddle,
-    t_texturetop,
-    t_tranmap,
-    t_translucent,
-    t_twosided,
-    t_type,
-    t_upperportal,
-    t_v1,
-    t_v2,
-    t_x,
-    t_xpanningceiling,
-    t_xpanningfloor,
-    t_xscaleceiling,
-    t_xscalefloor,
-    t_y,
-    t_ypanningceiling,
-    t_ypanningfloor,
-    t_yscaleceiling,
-    t_yscalefloor,
-    t_zoneboundary,
-};
-
-struct keytoken_t
-{
-    const char            *string;
-    DLListItem<keytoken_t> link;
-    token_e                token;
-};
-
-#define TOKEN(a) { #a, DLListItem<keytoken_t>(), t_##a }
-
-static keytoken_t gTokenList[] = {
-    TOKEN(alpha),
-    TOKEN(alphaceiling),
-    TOKEN(alphafloor),
-    TOKEN(ambush),
-    TOKEN(angle),
-    TOKEN(arg0),
-    TOKEN(arg1),
-    TOKEN(arg2),
-    TOKEN(arg3),
-    TOKEN(arg4),
-    TOKEN(attachceiling),
-    TOKEN(attachfloor),
-    TOKEN(blockeverything),
-    TOKEN(blockfloaters),
-    TOKEN(blocking),
-    TOKEN(blocklandmonsters),
-    TOKEN(blockmonsters),
-    TOKEN(blockplayers),
-    TOKEN(blocksound),
-    TOKEN(ceilingid),
-    TOKEN(ceilingterrain),
-    TOKEN(class1),
-    TOKEN(class2),
-    TOKEN(class3),
-    TOKEN(clipmidtex),
-    TOKEN(colormapbottom),
-    TOKEN(colormapmid),
-    TOKEN(colormaptop),
-    TOKEN(coop),
-    TOKEN(damage_endgodmode),
-    TOKEN(damage_exitlevel),
-    TOKEN(damageamount),
-    TOKEN(damageinterval),
-    TOKEN(damageterraineffect),
-    TOKEN(damagetype),
-    TOKEN(dm),
-    TOKEN(dontdraw),
-    TOKEN(dontpegbottom),
-    TOKEN(dontpegtop),
-    TOKEN(dormant),
-    TOKEN(firstsideonly),
-    TOKEN(floorid),
-    TOKEN(floorterrain),
-    TOKEN(friction),
-    TOKEN(friend),
-    TOKEN(health),
-    TOKEN(height),
-    TOKEN(heightceiling),
-    TOKEN(heightfloor),
-    TOKEN(id),
-    TOKEN(impact),
-    TOKEN(invisible),
-    TOKEN(jumpover),
-    TOKEN(leakiness),
-    TOKEN(light),
-    TOKEN(light_top),
-    TOKEN(light_mid),
-    TOKEN(light_bottom),
-    TOKEN(lightabsolute),
-    TOKEN(lightabsolute_top),
-    TOKEN(lightabsolute_mid),
-    TOKEN(lightabsolute_bottom),
-    TOKEN(lightceiling),
-    TOKEN(lightceilingabsolute),
-    TOKEN(lightfloor),
-    TOKEN(lightfloorabsolute),
-    TOKEN(lightlevel),
-    TOKEN(lightseqalt),
-    TOKEN(lightsequence),
-    TOKEN(lowerportal),
-    TOKEN(mapped),
-    TOKEN(midtex3d),
-    TOKEN(midtex3dimpassible),
-    TOKEN(missilecross),
-    TOKEN(monstercross),
-    TOKEN(monsterpush),
-    TOKEN(monstershoot),
-    TOKEN(monsteruse),
-    TOKEN(offsetx),
-    TOKEN(offsety),
-    TOKEN(offsetx_bottom),
-    TOKEN(offsety_bottom),
-    TOKEN(offsetx_mid),
-    TOKEN(offsety_mid),
-    TOKEN(offsetx_top),
-    TOKEN(offsety_top),
-    TOKEN(polycross),
-    TOKEN(portal),
-    TOKEN(portalceiling),
-    TOKEN(portal_ceil_attached),
-    TOKEN(portal_ceil_blocksound),
-    TOKEN(portal_ceil_disabled),
-    TOKEN(portal_ceil_nopass),
-    TOKEN(portal_ceil_norender),
-    TOKEN(portal_ceil_overlaytype),
-    TOKEN(portal_ceil_useglobaltex),
-    TOKEN(portalfloor),
-    TOKEN(portal_floor_attached),
-    TOKEN(portal_floor_blocksound),
-    TOKEN(portal_floor_disabled),
-    TOKEN(portal_floor_nopass),
-    TOKEN(portal_floor_norender),
-    TOKEN(portal_floor_overlaytype),
-    TOKEN(portal_floor_useglobaltex),
-    TOKEN(passuse),
-    TOKEN(phasedlight),
-    TOKEN(playercross),
-    TOKEN(playerpush),
-    TOKEN(playeruse),
-    TOKEN(renderstyle),
-    TOKEN(repeatspecial),
-    TOKEN(rotationceiling),
-    TOKEN(rotationfloor),
-    TOKEN(scroll_ceil_x),
-    TOKEN(scroll_ceil_y),
-    TOKEN(scroll_ceil_type),
-    TOKEN(scroll_floor_x),
-    TOKEN(scroll_floor_y),
-    TOKEN(scroll_floor_type),
-    TOKEN(secret),
-    TOKEN(sector),
-    TOKEN(sideback),
-    TOKEN(sidefront),
-    TOKEN(single),
-    TOKEN(skew_bottom_type),
-    TOKEN(skew_middle_type),
-    TOKEN(skew_top_type),
-    TOKEN(skill1),
-    TOKEN(skill2),
-    TOKEN(skill3),
-    TOKEN(skill4),
-    TOKEN(skill5),
-    TOKEN(soundsequence),
-    TOKEN(special),
-    TOKEN(standing),
-    TOKEN(strifeally),
-    TOKEN(texturebottom),
-    TOKEN(textureceiling),
-    TOKEN(texturefloor),
-    TOKEN(texturemiddle),
-    TOKEN(texturetop),
-    TOKEN(tranmap),
-    TOKEN(translucent),
-    TOKEN(twosided),
-    TOKEN(type),
-    TOKEN(upperportal),
-    TOKEN(v1),
-    TOKEN(v2),
-    TOKEN(x),
-    TOKEN(xpanningceiling),
-    TOKEN(xpanningfloor),
-    TOKEN(xscaleceiling),
-    TOKEN(xscalefloor),
-    TOKEN(y),
-    TOKEN(ypanningceiling),
-    TOKEN(ypanningfloor),
-    TOKEN(yscaleceiling),
-    TOKEN(yscalefloor),
-    TOKEN(zoneboundary),
-};
+#include "e_udmftokens.h"
 
 static EHashTable<keytoken_t, ENCStringHashKey, &keytoken_t::string, &keytoken_t::link> gTokenTable;
 
@@ -999,6 +665,304 @@ bool UDMFParser::checkForCompatibilityFlag(qstring nstext)
     return true;
 }
 
+#define READ_NUMBER(obj, field)          case t_##field: readNumber(obj->field);               break
+#define READ_BOOL(obj, field)            case t_##field: readBool(obj->field);                 break
+#define READ_STRING(obj, field)          case t_##field: readString(obj->field);               break
+#define READ_FIXED(obj, field)           case t_##field: readFixed(obj->field);                break
+#define REQUIRE_INT(obj, field, flag)    case t_##field: requireInt(obj->field, obj->flag);    break
+#define REQUIRE_STRING(obj, field, flag) case t_##field: requireString(obj->field, obj->flag); break
+#define REQUIRE_FIXED(obj, field, flag)  case t_##field: requireFixed(obj->field, obj->flag);  break
+
+#define READ_ETERNITY_FIXED_ELSE_NUMBER(obj, field) case t_##field:\
+    if(mNamespace == namespace_Eternity) \
+        readFixed(obj->field); \
+    else \
+        readNumber(obj->field); \
+    break
+
+// clang-format off
+
+//
+// Set a single linedef property based on the passed in token.
+//
+void UDMFParser::readLinedefToken(ULinedef *linedef, const keytoken_t *kt) const
+{
+    switch(kt->token)
+    {
+        case t_id: readNumber(linedef->identifier); break;
+        REQUIRE_INT(linedef, v1, v1set);
+        REQUIRE_INT(linedef, v2, v2set);
+        REQUIRE_INT(linedef, sidefront, sfrontset);
+        READ_NUMBER(linedef, sideback);
+
+        READ_BOOL(linedef,   blocking);
+        READ_BOOL(linedef,   blocklandmonsters);
+        READ_BOOL(linedef,   blockmonsters);
+        READ_BOOL(linedef,   blockplayers);
+        READ_BOOL(linedef,   twosided);
+        READ_BOOL(linedef,   dontpegtop);
+        READ_BOOL(linedef,   dontpegbottom);
+        READ_BOOL(linedef,   secret);
+        READ_BOOL(linedef,   blocksound);
+        READ_BOOL(linedef,   dontdraw);
+        READ_BOOL(linedef,   mapped);
+        READ_BOOL(linedef,   passuse);
+        READ_BOOL(linedef,   translucent);
+        READ_BOOL(linedef,   jumpover);
+        READ_BOOL(linedef,   blockfloaters);
+
+        READ_NUMBER(linedef, special);
+        case t_arg0: readNumber(linedef->arg[0]); break;
+        case t_arg1: readNumber(linedef->arg[1]); break;
+        case t_arg2: readNumber(linedef->arg[2]); break;
+        case t_arg3: readNumber(linedef->arg[3]); break;
+        case t_arg4: readNumber(linedef->arg[4]); break;
+
+        READ_BOOL(linedef,   playercross);
+        READ_BOOL(linedef,   playeruse);
+        READ_BOOL(linedef,   monstercross);
+        READ_BOOL(linedef,   monsteruse);
+        READ_BOOL(linedef,   impact);
+        READ_BOOL(linedef,   monstershoot);
+        READ_BOOL(linedef,   playerpush);
+        READ_BOOL(linedef,   monsterpush);
+        READ_BOOL(linedef,   missilecross);
+        READ_BOOL(linedef,   repeatspecial);
+        READ_BOOL(linedef,   polycross);
+
+        READ_BOOL(linedef,   midtex3d);
+        READ_BOOL(linedef,   midtex3dimpassible);
+        READ_BOOL(linedef,   firstsideonly);
+        READ_BOOL(linedef,   blockeverything);
+        READ_BOOL(linedef,   zoneboundary);
+        READ_BOOL(linedef,   clipmidtex);
+        READ_BOOL(linedef,   lowerportal);
+        READ_BOOL(linedef,   upperportal);
+
+        READ_NUMBER(linedef, portal);
+        READ_NUMBER(linedef, alpha);
+        READ_STRING(linedef, renderstyle);
+        READ_STRING(linedef, tranmap);
+        default:
+            break;
+    }
+}
+
+//
+// Set a single sidedef property based on the passed in token.
+//
+void UDMFParser::readSidedefToken(USidedef *sidedef, const keytoken_t *kt) const
+{
+    switch(kt->token)
+    {
+        READ_ETERNITY_FIXED_ELSE_NUMBER(sidedef, offsetx);
+        READ_ETERNITY_FIXED_ELSE_NUMBER(sidedef, offsety);
+
+        READ_STRING(sidedef, texturetop);
+        READ_STRING(sidedef, texturebottom);
+        READ_STRING(sidedef, texturemiddle);
+
+        REQUIRE_INT(sidedef, sector, sset);
+        default:
+            break;
+    }
+
+    if(mNamespace == namespace_Eternity)
+    {
+        switch(kt->token)
+        {
+            READ_FIXED(sidedef, offsetx_bottom);
+            READ_FIXED(sidedef, offsety_bottom);
+            READ_FIXED(sidedef, offsetx_mid);
+            READ_FIXED(sidedef, offsety_mid);
+            READ_FIXED(sidedef, offsetx_top);
+            READ_FIXED(sidedef, offsety_top);
+
+            READ_NUMBER(sidedef, light);
+            READ_NUMBER(sidedef, light_top);
+            READ_NUMBER(sidedef, light_mid);
+            READ_NUMBER(sidedef, light_bottom);
+            READ_BOOL(sidedef,   lightabsolute);
+            READ_BOOL(sidedef,   lightabsolute_top);
+            READ_BOOL(sidedef,   lightabsolute_mid);
+            READ_BOOL(sidedef,   lightabsolute_bottom);
+
+            READ_STRING(sidedef, skew_bottom_type);
+            READ_STRING(sidedef, skew_middle_type);
+            READ_STRING(sidedef, skew_top_type);
+            default:
+                break;
+        }
+    }
+}
+
+//
+// Set a single linedef property based on the passed in token.
+//
+void UDMFParser::readVertexToken(uvertex_t *vertex, const keytoken_t *kt) const
+{
+    if(kt->token == t_x)
+        requireFixed(vertex->x, vertex->xset);
+    else if(kt->token == t_y)
+        requireFixed(vertex->y, vertex->yset);
+}
+
+//
+// Set a single sector property based on the passed in token.
+//
+void UDMFParser::readSectorToken(USector *sector, const keytoken_t *kt) const
+{
+    switch(kt->token)
+    {
+        REQUIRE_STRING(sector, texturefloor, tfloorset);
+        REQUIRE_STRING(sector, textureceiling, tceilset);
+        READ_NUMBER(sector,    lightlevel);
+        READ_NUMBER(sector,    special);
+        case t_id: readNumber(sector->identifier); break;
+        READ_ETERNITY_FIXED_ELSE_NUMBER(sector, heightfloor);
+        READ_ETERNITY_FIXED_ELSE_NUMBER(sector, heightceiling);
+        default:
+            break;
+    }
+    if(mNamespace == namespace_Eternity)
+    {
+        switch(kt->token)
+        {
+            READ_FIXED(sector,  xpanningfloor);
+            READ_FIXED(sector,  ypanningfloor);
+            READ_FIXED(sector,  xpanningceiling);
+            READ_FIXED(sector,  ypanningceiling);
+            READ_NUMBER(sector, xscaleceiling);
+            READ_NUMBER(sector, xscalefloor);
+            READ_NUMBER(sector, yscaleceiling);
+            READ_NUMBER(sector, yscalefloor);
+            READ_NUMBER(sector, rotationfloor);
+            READ_NUMBER(sector, rotationceiling);
+
+            READ_NUMBER(sector, scroll_ceil_x);
+            READ_NUMBER(sector, scroll_ceil_y);
+            READ_STRING(sector, scroll_ceil_type);
+
+            READ_NUMBER(sector, scroll_floor_x);
+            READ_NUMBER(sector, scroll_floor_y);
+            READ_STRING(sector, scroll_floor_type);
+
+            READ_BOOL(sector,   secret);
+            READ_NUMBER(sector, friction);
+
+            READ_NUMBER(sector, lightfloor);
+            READ_NUMBER(sector, lightceiling);
+            READ_BOOL(sector,   lightfloorabsolute);
+            READ_BOOL(sector,   lightceilingabsolute);
+            READ_BOOL(sector,   phasedlight);
+            READ_BOOL(sector,   lightsequence);
+            READ_BOOL(sector,   lightseqalt);
+
+            READ_STRING(sector, colormaptop);
+            READ_STRING(sector, colormapmid);
+            READ_STRING(sector, colormapbottom);
+
+            READ_NUMBER(sector, leakiness);
+            READ_NUMBER(sector, damageamount);
+            READ_NUMBER(sector, damageinterval);
+            READ_BOOL(sector,   damage_endgodmode);
+            READ_BOOL(sector,   damage_exitlevel);
+            READ_BOOL(sector,   damageterraineffect);
+            READ_STRING(sector, damagetype);
+
+            READ_STRING(sector, floorterrain);
+            READ_STRING(sector, ceilingterrain);
+
+            READ_NUMBER(sector, floorid);
+            READ_NUMBER(sector, ceilingid);
+            READ_NUMBER(sector, attachfloor);
+            READ_NUMBER(sector, attachceiling);
+
+            READ_STRING(sector, soundsequence);
+
+            READ_STRING(sector, portal_floor_overlaytype);
+            READ_NUMBER(sector, alphafloor);
+            READ_BOOL(sector,   portal_floor_blocksound);
+            READ_BOOL(sector,   portal_floor_disabled);
+            READ_BOOL(sector,   portal_floor_nopass);
+            READ_BOOL(sector,   portal_floor_norender);
+            READ_BOOL(sector,   portal_floor_useglobaltex);
+            READ_BOOL(sector,   portal_floor_attached);
+
+            READ_STRING(sector, portal_ceil_overlaytype);
+            READ_NUMBER(sector, alphaceiling);
+            READ_BOOL(sector,   portal_ceil_blocksound);
+            READ_BOOL(sector,   portal_ceil_disabled);
+            READ_BOOL(sector,   portal_ceil_nopass);
+            READ_BOOL(sector,   portal_ceil_norender);
+            READ_BOOL(sector,   portal_ceil_useglobaltex);
+            READ_BOOL(sector,   portal_ceil_attached);
+
+            READ_NUMBER(sector, portalceiling);
+            READ_NUMBER(sector, portalfloor);
+            default:
+                break;
+        }
+    }
+}
+
+//
+// Set a single thing property based on the passed in token.
+//
+void UDMFParser::readThingToken(uthing_t *thing, const keytoken_t *kt) const
+{
+    switch(kt->token)
+    {
+        case t_id: readNumber(thing->identifier); break;
+        REQUIRE_FIXED(thing, x, xset);
+        REQUIRE_FIXED(thing, y, yset);
+        READ_FIXED(thing,    height);
+        READ_NUMBER(thing,   angle);
+        REQUIRE_INT(thing,   type, typeset);
+
+        READ_BOOL(thing,     skill1);
+        READ_BOOL(thing,     skill2);
+        READ_BOOL(thing,     skill3);
+        READ_BOOL(thing,     skill4);
+        READ_BOOL(thing,     skill5);
+
+        READ_BOOL(thing,     ambush);
+        READ_BOOL(thing,     single);
+        READ_BOOL(thing,     dm);
+        READ_BOOL(thing,     coop);
+        case t_friend: readBool(thing->friendly); break;
+        READ_BOOL(thing,     dormant);
+        READ_BOOL(thing,     class1);
+        READ_BOOL(thing,     class2);
+        READ_BOOL(thing,     class3);
+        READ_BOOL(thing,     standing);
+        READ_BOOL(thing,     strifeally);
+        READ_BOOL(thing,     translucent);
+        READ_BOOL(thing,     invisible);
+
+        READ_NUMBER(thing,   special);
+        case t_arg0: readNumber(thing->arg[0]); break;
+        case t_arg1: readNumber(thing->arg[1]); break;
+        case t_arg2: readNumber(thing->arg[2]); break;
+        case t_arg3: readNumber(thing->arg[3]); break;
+        case t_arg4: readNumber(thing->arg[4]); break;
+        default:
+            break;
+    }
+
+    if(mNamespace == namespace_Eternity)
+    {
+        switch(kt->token)
+        {
+            READ_NUMBER(thing, health);
+            default:
+                break;
+        }
+    }
+}
+
+// clang-format on
+
 //
 // Tries to parse a UDMF TEXTMAP document. If it fails, it returns false and
 // you can check the error message with error()
@@ -1038,8 +1002,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
     else if(!checkForCompatibilityFlag(mValue.text))
         return false;
 
-    // Gamestuff. Must be null when out of block and only one be set when in
-    // block
+    // Gamestuff. Must be null when out of block and only one be set when in block.
     ULinedef  *linedef = nullptr;
     USidedef  *sidedef = nullptr;
     uvertex_t *vertex  = nullptr;
@@ -1082,289 +1045,20 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
         }
         if(result == result_Assignment && mInBlock)
         {
-
-#define READ_NUMBER(obj, field)          case t_##field: readNumber(obj->field);               break
-#define READ_BOOL(obj, field)            case t_##field: readBool(obj->field);                 break
-#define READ_STRING(obj, field)          case t_##field: readString(obj->field);               break
-#define READ_FIXED(obj, field)           case t_##field: readFixed(obj->field);                break
-#define REQUIRE_INT(obj, field, flag)    case t_##field: requireInt(obj->field, obj->flag);    break
-#define REQUIRE_STRING(obj, field, flag) case t_##field: requireString(obj->field, obj->flag); break
-#define REQUIRE_FIXED(obj, field, flag)  case t_##field: requireFixed(obj->field, obj->flag);  break
-
-#define READ_ETERNITY_FIXED_ELSE_NUMBER(obj, field) case t_##field:\
-    if(mNamespace == namespace_Eternity) \
-        readFixed(obj->field); \
-    else \
-        readNumber(obj->field); \
-    break
-
-            // clang-format off
             const keytoken_t *kt = gTokenTable.objectForKey(mKey.constPtr());
             if(kt)
             {
                 if(linedef)
-                {
-                    switch(kt->token)
-                    {
-                        case t_id: readNumber(linedef->identifier); break;
-                        REQUIRE_INT(linedef, v1, v1set);
-                        REQUIRE_INT(linedef, v2, v2set);
-                        REQUIRE_INT(linedef, sidefront, sfrontset);
-                        READ_NUMBER(linedef, sideback);
-
-                        READ_BOOL(linedef, blocking);
-                        READ_BOOL(linedef, blocklandmonsters);
-                        READ_BOOL(linedef, blockmonsters);
-                        READ_BOOL(linedef, blockplayers);
-                        READ_BOOL(linedef, twosided);
-                        READ_BOOL(linedef, dontpegtop);
-                        READ_BOOL(linedef, dontpegbottom);
-                        READ_BOOL(linedef, secret);
-                        READ_BOOL(linedef, blocksound);
-                        READ_BOOL(linedef, dontdraw);
-                        READ_BOOL(linedef, mapped);
-                        READ_BOOL(linedef, passuse);
-                        READ_BOOL(linedef, translucent);
-                        READ_BOOL(linedef, jumpover);
-                        READ_BOOL(linedef, blockfloaters);
-
-                        READ_NUMBER(linedef, special);
-                        case t_arg0: readNumber(linedef->arg[0]); break;
-                        case t_arg1: readNumber(linedef->arg[1]); break;
-                        case t_arg2: readNumber(linedef->arg[2]); break;
-                        case t_arg3: readNumber(linedef->arg[3]); break;
-                        case t_arg4: readNumber(linedef->arg[4]); break;
-
-                        READ_BOOL(linedef, playercross);
-                        READ_BOOL(linedef, playeruse);
-                        READ_BOOL(linedef, monstercross);
-                        READ_BOOL(linedef, monsteruse);
-                        READ_BOOL(linedef, impact);
-                        READ_BOOL(linedef, monstershoot);
-                        READ_BOOL(linedef, playerpush);
-                        READ_BOOL(linedef, monsterpush);
-                        READ_BOOL(linedef, missilecross);
-                        READ_BOOL(linedef, repeatspecial);
-                        READ_BOOL(linedef, polycross);
-
-                        READ_BOOL(linedef, midtex3d);
-                        READ_BOOL(linedef, midtex3dimpassible);
-                        READ_BOOL(linedef, firstsideonly);
-                        READ_BOOL(linedef, blockeverything);
-                        READ_BOOL(linedef, zoneboundary);
-                        READ_BOOL(linedef, clipmidtex);
-                        READ_BOOL(linedef, lowerportal);
-                        READ_BOOL(linedef, upperportal);
-
-                        READ_NUMBER(linedef, portal);
-                        READ_NUMBER(linedef, alpha);
-                        READ_STRING(linedef, renderstyle);
-                        READ_STRING(linedef, tranmap);
-                        default:
-                            break;
-                    }
-
-                }
+                    readLinedefToken(linedef, kt);
                 else if(sidedef)
-                {
-                    switch(kt->token)
-                    {
-                        READ_ETERNITY_FIXED_ELSE_NUMBER(sidedef, offsetx);
-                        READ_ETERNITY_FIXED_ELSE_NUMBER(sidedef, offsety);
-
-                        READ_STRING(sidedef, texturetop);
-                        READ_STRING(sidedef, texturebottom);
-                        READ_STRING(sidedef, texturemiddle);
-
-                        REQUIRE_INT(sidedef, sector, sset);
-                        default:
-                            break;
-                    }
-
-                    if(mNamespace == namespace_Eternity)
-                    {
-                        switch(kt->token)
-                        {
-                            READ_FIXED(sidedef, offsetx_bottom);
-                            READ_FIXED(sidedef, offsety_bottom);
-                            READ_FIXED(sidedef, offsetx_mid);
-                            READ_FIXED(sidedef, offsety_mid);
-                            READ_FIXED(sidedef, offsetx_top);
-                            READ_FIXED(sidedef, offsety_top);
-
-                            READ_NUMBER(sidedef, light);
-                            READ_NUMBER(sidedef, light_top);
-                            READ_NUMBER(sidedef, light_mid);
-                            READ_NUMBER(sidedef, light_bottom);
-                            READ_BOOL(sidedef,   lightabsolute);
-                            READ_BOOL(sidedef,   lightabsolute_top);
-                            READ_BOOL(sidedef,   lightabsolute_mid);
-                            READ_BOOL(sidedef,   lightabsolute_bottom);
-
-                            READ_STRING(sidedef, skew_bottom_type);
-                            READ_STRING(sidedef, skew_middle_type);
-                            READ_STRING(sidedef, skew_top_type);
-                        default:
-                            break;
-                        }
-                    }
-                }
+                    readSidedefToken(sidedef, kt);
                 else if(vertex)
-                {
-                    if(kt->token == t_x)
-                        requireFixed(vertex->x, vertex->xset);
-                    else if(kt->token == t_y)
-                        requireFixed(vertex->y, vertex->yset);
-                }
+                    readVertexToken(vertex, kt);
                 else if(sector)
-                {
-                    switch(kt->token)
-                    {
-                        REQUIRE_STRING(sector, texturefloor, tfloorset);
-                        REQUIRE_STRING(sector, textureceiling, tceilset);
-                        READ_NUMBER(sector, lightlevel);
-                        READ_NUMBER(sector, special);
-                        case t_id:
-                            readNumber(sector->identifier);
-                            break;
-                        READ_ETERNITY_FIXED_ELSE_NUMBER(sector, heightfloor);
-                        READ_ETERNITY_FIXED_ELSE_NUMBER(sector, heightceiling);
-                        default:
-                            break;
-                    }
-                    if(mNamespace == namespace_Eternity)
-                    {
-                        switch(kt->token)
-                        {
-                            READ_FIXED(sector,  xpanningfloor);
-                            READ_FIXED(sector,  ypanningfloor);
-                            READ_FIXED(sector,  xpanningceiling);
-                            READ_FIXED(sector,  ypanningceiling);
-                            READ_NUMBER(sector, xscaleceiling);
-                            READ_NUMBER(sector, xscalefloor);
-                            READ_NUMBER(sector, yscaleceiling);
-                            READ_NUMBER(sector, yscalefloor);
-                            READ_NUMBER(sector, rotationfloor);
-                            READ_NUMBER(sector, rotationceiling);
-
-                            READ_NUMBER(sector, scroll_ceil_x);
-                            READ_NUMBER(sector, scroll_ceil_y);
-                            READ_STRING(sector, scroll_ceil_type);
-
-                            READ_NUMBER(sector, scroll_floor_x);
-                            READ_NUMBER(sector, scroll_floor_y);
-                            READ_STRING(sector, scroll_floor_type);
-
-                            READ_BOOL(sector,   secret);
-                            READ_NUMBER(sector, friction);
-
-                            READ_NUMBER(sector, lightfloor);
-                            READ_NUMBER(sector, lightceiling);
-                            READ_BOOL(sector,   lightfloorabsolute);
-                            READ_BOOL(sector,   lightceilingabsolute);
-                            READ_BOOL(sector,   phasedlight);
-                            READ_BOOL(sector,   lightsequence);
-                            READ_BOOL(sector,   lightseqalt);
-
-                            READ_STRING(sector, colormaptop);
-                            READ_STRING(sector, colormapmid);
-                            READ_STRING(sector, colormapbottom);
-
-                            READ_NUMBER(sector, leakiness);
-                            READ_NUMBER(sector, damageamount);
-                            READ_NUMBER(sector, damageinterval);
-                            READ_BOOL(sector,   damage_endgodmode);
-                            READ_BOOL(sector,   damage_exitlevel);
-                            READ_BOOL(sector,   damageterraineffect);
-                            READ_STRING(sector, damagetype);
-
-                            READ_STRING(sector, floorterrain);
-                            READ_STRING(sector, ceilingterrain);
-
-                            READ_NUMBER(sector, floorid);
-                            READ_NUMBER(sector, ceilingid);
-                            READ_NUMBER(sector, attachfloor);
-                            READ_NUMBER(sector, attachceiling);
-
-                            READ_STRING(sector, soundsequence);
-
-                            READ_STRING(sector, portal_floor_overlaytype);
-                            READ_NUMBER(sector, alphafloor);
-                            READ_BOOL(sector,   portal_floor_blocksound);
-                            READ_BOOL(sector,   portal_floor_disabled);
-                            READ_BOOL(sector,   portal_floor_nopass);
-                            READ_BOOL(sector,   portal_floor_norender);
-                            READ_BOOL(sector,   portal_floor_useglobaltex);
-                            READ_BOOL(sector,   portal_floor_attached);
-
-                            READ_STRING(sector, portal_ceil_overlaytype);
-                            READ_NUMBER(sector, alphaceiling);
-                            READ_BOOL(sector,   portal_ceil_blocksound);
-                            READ_BOOL(sector,   portal_ceil_disabled);
-                            READ_BOOL(sector,   portal_ceil_nopass);
-                            READ_BOOL(sector,   portal_ceil_norender);
-                            READ_BOOL(sector,   portal_ceil_useglobaltex);
-                            READ_BOOL(sector,   portal_ceil_attached);
-
-                            READ_NUMBER(sector, portalceiling);
-                            READ_NUMBER(sector, portalfloor);
-                            default:
-                                break;
-                        }
-                    }
-                }
+                    readSectorToken(sector, kt);
                 else if(thing)
-                {
-                    switch(kt->token)
-                    {
-                        case t_id: readNumber(thing->identifier); break;
-                        REQUIRE_FIXED(thing, x, xset);
-                        REQUIRE_FIXED(thing, y, yset);
-                        READ_FIXED(thing,    height);
-                        READ_NUMBER(thing,   angle);
-                        REQUIRE_INT(thing,   type, typeset);
-
-                        READ_BOOL(thing, skill1);
-                        READ_BOOL(thing, skill2);
-                        READ_BOOL(thing, skill3);
-                        READ_BOOL(thing, skill4);
-                        READ_BOOL(thing, skill5);
-
-                        READ_BOOL(thing, ambush);
-                        READ_BOOL(thing, single);
-                        READ_BOOL(thing, dm);
-                        READ_BOOL(thing, coop);
-                        case t_friend: readBool(thing->friendly); break;
-                        READ_BOOL(thing, dormant);
-                        READ_BOOL(thing, class1);
-                        READ_BOOL(thing, class2);
-                        READ_BOOL(thing, class3);
-                        READ_BOOL(thing, standing);
-                        READ_BOOL(thing, strifeally);
-                        READ_BOOL(thing, translucent);
-                        READ_BOOL(thing, invisible);
-
-                        READ_NUMBER(thing, special);
-                        case t_arg0: readNumber(thing->arg[0]); break;
-                        case t_arg1: readNumber(thing->arg[1]); break;
-                        case t_arg2: readNumber(thing->arg[2]); break;
-                        case t_arg3: readNumber(thing->arg[3]); break;
-                        case t_arg4: readNumber(thing->arg[4]); break;
-                        default:     break;
-                    }
-                    if(mNamespace == namespace_Eternity)
-                    {
-                        switch(kt->token)
-                        {
-                            READ_NUMBER(thing, health);
-                            default:
-                                break;
-                        }
-                    }
-                }
+                    readThingToken(thing, kt);
             }
-
-            // clang-format on
 
             continue;
         }
