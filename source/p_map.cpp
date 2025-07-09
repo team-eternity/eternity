@@ -2403,8 +2403,11 @@ static void P_HitSlideLine(line_t *ld)
    // killough 3/2/98:
    // The moveangle+=10 breaks v1.9 demo compatibility in
    // some demos, so it needs demo_compatibility switch.
+
+   // This also no longer works in modern demos due to there no longer being rounding errors,
+   // so must be disabled for Eternity versions 4.05.00 and later.
    
-   if(!demo_compatibility)
+   if(!demo_compatibility && demo_version < 405)
       moveangle += 10;
    // ^ prevents sudden path reversal due to rounding error // phares
 

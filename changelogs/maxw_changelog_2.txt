@@ -364,6 +364,10 @@ Added support for DSDHacked sounds.
 Added support for spray type, num rays, damage count, field of view, and maximum
 distance to A_BFGSpray.
 
+--------------------------------------------------------------------------------
+2025/07/09
+Fixed elastic collisions being far more common than expected.
+
 ================================================================================
 EOF
 ================================================================================
