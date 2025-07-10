@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Utilities for storing and checking command-line parameters.
-//    
-//-----------------------------------------------------------------------------
-
+// Purpose: Utilities for storing and checking command-line parameters.
+// Authors: James Haley
+//
 
 #ifndef __M_ARGV__
 #define __M_ARGV__
@@ -30,14 +27,14 @@
 //
 // MISC
 //
-extern int  myargc;
+extern int    myargc;
 extern char **myargv;
 
 // Returns the position of the given parameter in the arg list (0 if not found).
 int M_CheckParm(const char *check);
 
 // Returns position of the first argument found in the null-terminated 'parms'
-// array for which the number of arguments to the command-line parameter 
+// array for which the number of arguments to the command-line parameter
 // specified in 'numargs' is available.
 int M_CheckMultiParm(const char **parms, int numargs);
 

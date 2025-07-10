@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// EDF Strings Module
+// Purpose: EDF strings module.
+// Authors: James Haley, Alison Gray Watson
 //
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #ifndef E_STRING_H__
 #define E_STRING_H__
@@ -34,12 +31,12 @@
 
 struct edf_string_t
 {
-   DLListItem<edf_string_t> numlinks; // next, prev links for numeric hash chain
-   edf_string_t *next;                 // next in mnemonic hash chain
+    DLListItem<edf_string_t> numlinks; // next, prev links for numeric hash chain
+    edf_string_t            *next;     // next in mnemonic hash chain
 
-   char *string;       // string value
-   char key[129];      // mnemonic for hashing
-   int  numkey;        // number for hashing
+    char *string;   // string value
+    char  key[129]; // mnemonic for hashing
+    int   numkey;   // number for hashing
 };
 
 edf_string_t *E_CreateString(const char *value, const char *key, int num);
@@ -51,8 +48,8 @@ edf_string_t *E_GetStringForNum(int num);
 const char *E_StringOrDehForName(const char *mnemonic);
 
 #ifdef NEED_EDF_DEFINITIONS
-#define EDF_SEC_STRING "string"
-extern cfg_opt_t edf_string_opts[];
+constexpr const char EDF_SEC_STRING[] = "string";
+extern cfg_opt_t     edf_string_opts[];
 
 void E_ProcessStrings(cfg_t *cfg);
 #endif

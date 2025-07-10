@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,11 +17,9 @@
 //
 //------------------------------------------------------------------------------
 //
-// $Id: version.c,v 1.2 1998/05/03 22:59:31 killough Exp $
+// Purpose: Version ID constants.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-// Description: Version ID constants
-//
-//-----------------------------------------------------------------------------
 
 #include "version.h"
 

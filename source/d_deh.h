@@ -1,6 +1,6 @@
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,18 +15,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DeHackEd Externals
+// Purpose: DeHackEd externals.
+// Authors: James Haley, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef D_DEH_H__
 #define D_DEH_H__
 
-#define DEH_KEY_INFIGHTING_GROUP "Infighting group"
-#define DEH_KEY_PROJECTILE_GROUP "Projectile group"
-#define DEH_KEY_SPLASH_GROUP "Splash group"
+constexpr const char DEH_KEY_INFIGHTING_GROUP[] = "Infighting group";
+constexpr const char DEH_KEY_PROJECTILE_GROUP[] = "Projectile group";
+constexpr const char DEH_KEY_SPLASH_GROUP[]     = "Splash group";
 
 // from g_game.c, prefix for savegame name like "boomsav"
 extern const char *savegamename;
@@ -60,7 +60,7 @@ extern bool deh_pars;
 //
 // Revision 1.4  1998/04/10  06:47:29  killough
 // Fix CVS stuff
-//   
+//
 //
 //--------------------------------------------------------------------
 

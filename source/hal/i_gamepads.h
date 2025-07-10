@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//    Hardware Abstraction Layer for Gamepads and Joysticks
+// Purpose: Hardware abstraction layer for gamepads and joysticks.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef I_GAMEPADS_H__
 #define I_GAMEPADS_H__
@@ -55,20 +53,20 @@ extern int i_joy_deadzone_trigger;
 class HALGamePadDriver
 {
 protected:
-   void addDevice(HALGamePad *device);
+    void addDevice(HALGamePad *device);
 
 public:
-   HALGamePadDriver() : devices() {}
-   virtual ~HALGamePadDriver() {}
+    HALGamePadDriver() : devices() {}
+    virtual ~HALGamePadDriver() {}
 
-   // Gamepad Driver API
-   virtual bool initialize()       = 0; // Perform any required startup init
-   virtual void shutdown()         = 0; // Perform shutdown operations
-   virtual void enumerateDevices() = 0; // Enumerate supported devices
-   virtual int  getBaseDeviceNum() = 0; // Get base device number
+    // Gamepad Driver API
+    virtual bool initialize()       = 0; // Perform any required startup init
+    virtual void shutdown()         = 0; // Perform shutdown operations
+    virtual void enumerateDevices() = 0; // Enumerate supported devices
+    virtual int  getBaseDeviceNum() = 0; // Get base device number
 
-   // Data
-   PODCollection<HALGamePad *> devices;    // Supported devices
+    // Data
+    PODCollection<HALGamePad *> devices; // Supported devices
 };
 
 //
@@ -79,28 +77,28 @@ public:
 //
 class HALHapticInterface : public RTTIObject
 {
-   DECLARE_ABSTRACT_TYPE(HALHapticInterface, RTTIObject)
+    DECLARE_ABSTRACT_TYPE(HALHapticInterface, RTTIObject)
 
 public:
-   HALHapticInterface() : Super() {}
+    HALHapticInterface() : Super() {}
 
-   // Generic device-independent haptic effect names
-   enum effect_e
-   {
-      EFFECT_DAMAGE,   // taking damage 
-      EFFECT_FIRE,     // firing weapon
-      EFFECT_IMPACT,   // hitting something (floor or wall)
-      EFFECT_BUZZ,     // light shaking
-      EFFECT_RUMBLE,   // earthquake or other heavy shaking
-      EFFECT_CONSTANT, // constant effect
-      EFFECT_RAMPUP,   // ramping up effect
-      EFFECT_MAX
-   };
+    // Generic device-independent haptic effect names
+    enum effect_e
+    {
+        EFFECT_DAMAGE,   // taking damage
+        EFFECT_FIRE,     // firing weapon
+        EFFECT_IMPACT,   // hitting something (floor or wall)
+        EFFECT_BUZZ,     // light shaking
+        EFFECT_RUMBLE,   // earthquake or other heavy shaking
+        EFFECT_CONSTANT, // constant effect
+        EFFECT_RAMPUP,   // ramping up effect
+        EFFECT_MAX
+    };
 
-   virtual void startEffect(effect_e effect, int data1, int data2) = 0;
-   virtual void pauseEffects(bool effectsPaused) = 0;
-   virtual void updateEffects() = 0;
-   virtual void clearEffects()  = 0;
+    virtual void startEffect(effect_e effect, int data1, int data2) = 0;
+    virtual void pauseEffects(bool effectsPaused)                   = 0;
+    virtual void updateEffects()                                    = 0;
+    virtual void clearEffects()                                     = 0;
 };
 
 //
@@ -110,66 +108,66 @@ public:
 //
 class HALGamePad : public RTTIObject
 {
-   DECLARE_ABSTRACT_TYPE(HALGamePad, RTTIObject)
+    DECLARE_ABSTRACT_TYPE(HALGamePad, RTTIObject)
 
 protected:
-   void backupState();
+    void backupState();
 
 public:
-   HALGamePad();
+    HALGamePad();
 
-   // In interest of efficiency, we have caps on the number of device inputs
-   // we will monitor.
-   static inline constexpr int MAXAXES = 8;
-   static inline constexpr int MAXBUTTONS = 24;
+    // In interest of efficiency, we have caps on the number of device inputs
+    // we will monitor.
+    inline static constexpr int MAXAXES    = 8;
+    inline static constexpr int MAXBUTTONS = 24;
 
-   // Selection
-   virtual bool select()   = 0; // Select as the input device
-   virtual void deselect() = 0; // Deselect from input device status
+    // Selection
+    virtual bool select()   = 0; // Select as the input device
+    virtual void deselect() = 0; // Deselect from input device status
 
-   // Input
-   virtual void poll() = 0;     // Refresh all input state data
+    // Input
+    virtual void poll() = 0; // Refresh all input state data
 
-   // Haptic interface
-   virtual HALHapticInterface *getHapticInterface() { return nullptr; }
+    // Haptic interface
+    virtual HALHapticInterface *getHapticInterface() { return nullptr; }
 
-   // Data
-   int     num;         // Device number
-   qstring name;        // Device name
-   int     numAxes;     // Number of axes supported
-   int     numButtons;  // Number of buttons supported
+    // Data
+    int     num;        // Device number
+    qstring name;       // Device name
+    int     numAxes;    // Number of axes supported
+    int     numButtons; // Number of buttons supported
 
-   virtual const char *getAxisName(const int axis)
-   {
-      static char output[16];
-      if(axis >= 0 && axis < MAXAXES)
-         psnprintf(output, sizeof(output), "Axis %d", axis);
-      else
-         strncpy(output, "Invalid axis", 16);
+    virtual const char *getAxisName(const int axis)
+    {
+        static char output[16];
+        if(axis >= 0 && axis < MAXAXES)
+            psnprintf(output, sizeof(output), "Axis %d", axis);
+        else
+            strncpy(output, "Invalid axis", 16);
 
-      return output;
-   };
+        return output;
+    };
 
-   struct padstate_t
-   {
-      bool  prevbuttons[MAXBUTTONS]; // backed-up previous button states
-      bool  buttons[MAXBUTTONS];     // current button states
-      float prevaxes[MAXAXES];       // backed-up previous axis states
-      float axes[MAXAXES];           // normalized axis states (-1.0 : 1.0)
-   };
-   padstate_t state;
+    struct padstate_t
+    {
+        bool  prevbuttons[MAXBUTTONS]; // backed-up previous button states
+        bool  buttons[MAXBUTTONS];     // current button states
+        float prevaxes[MAXAXES];       // backed-up previous axis states
+        float axes[MAXAXES];           // normalized axis states (-1.0 : 1.0)
+    };
+    padstate_t state;
 };
 
 // Global interface
 
-typedef void (*gamePadChangeCallback_t)();
+using gamePadChangeCallback_t = void (*)();
 
-bool I_SelectDefaultGamePad();
-void I_InitGamePads(gamePadChangeCallback_t callback);
-void I_ShutdownGamePads();
+bool                    I_SelectDefaultGamePad();
+void                    I_InitGamePads(gamePadChangeCallback_t callback);
+void                    I_ShutdownGamePads();
 HALGamePad::padstate_t *I_PollActiveGamePad();
 
-size_t I_GetNumGamePads();
+size_t      I_GetNumGamePads();
 HALGamePad *I_GetGamePad(size_t index);
 HALGamePad *I_GetActivePad();
 

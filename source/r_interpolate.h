@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//    Tools for renderer frame interpolation
+// Purpose: Tools for renderer frame interpolation.
+// Authors: James Haley, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef R_INTERPOLATE_H__
 #define R_INTERPOLATE_H__
@@ -37,13 +35,13 @@ struct surface_t;
 // frame interpolation in the renderer. - haleyjd 01/04/14
 struct prevpos_t
 {
-   fixed_t x;
-   fixed_t y;
-   fixed_t z;
-   angle_t angle;
-   const line_t *portalline;  // portal line being passed for interpolation
-   const linkdata_t *ldata;   // portal sector data being passed
-   const surface_t *portalsurface;  // portal surface for interpolation
+    fixed_t           x;
+    fixed_t           y;
+    fixed_t           z;
+    angle_t           angle;
+    const line_t     *portalline;    // portal line being passed for interpolation
+    const linkdata_t *ldata;         // portal sector data being passed
+    const surface_t  *portalsurface; // portal surface for interpolation
 };
 
 //
@@ -54,15 +52,15 @@ struct prevpos_t
 //
 inline fixed_t lerpCoord(fixed_t lerp, fixed_t oldpos, fixed_t newpos)
 {
-   return oldpos + FixedMul(lerp, newpos - oldpos);
+    return oldpos + FixedMul(lerp, newpos - oldpos);
 }
 // Intentionally give a different name to prevent accidental overloads
 inline float lerpCoordf(fixed_t lerp, float oldpos, float newpos)
 {
-   return oldpos + lerp / (float)FPFRACUNIT * (newpos - oldpos);
+    return oldpos + lerp / (float)FPFRACUNIT * (newpos - oldpos);
 }
 
-#define LLANG360 4294967296LL
+static constexpr int64_t LLANG360 = 4294967296LL;
 
 //
 // lerpAngle
@@ -71,21 +69,21 @@ inline float lerpCoordf(fixed_t lerp, float oldpos, float newpos)
 //
 inline angle_t lerpAngle(fixed_t lerp, angle_t astart, angle_t aend)
 {
-   int64_t start = astart;
-   int64_t end   = aend;
-   int64_t value = llabs(start - end);
-   if(value > ANG180)
-   {
-      if(end > start)
-         start += LLANG360;
-      else
-         end += LLANG360;
-   }
-   value = start + ((end - start) * lerp / 65536);
-   if(value >= 0 && value < LLANG360)
-      return (angle_t)value;
-   else
-      return (angle_t)(value % LLANG360);
+    int64_t start = astart;
+    int64_t end   = aend;
+    int64_t value = llabs(start - end);
+    if(value > ANG180)
+    {
+        if(end > start)
+            start += LLANG360;
+        else
+            end += LLANG360;
+    }
+    value = start + ((end - start) * lerp / 65536);
+    if(value >= 0 && value < LLANG360)
+        return (angle_t)value;
+    else
+        return (angle_t)(value % LLANG360);
 }
 
 #endif

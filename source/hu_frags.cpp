@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,16 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Heads up frag counter
+// Purpose: Heads up frag counter.
 //
-// Counts the frags by each player and sorts them so that the best
-// player is at the top of the list
+//  Counts the frags by each player and sorts them so that the best
+//  player is at the top of the list
 //
-// By Simon Howard
+// Authors: Simon Howard, James Haley, Charles Gunyon, Ioan Chera
 //
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 
@@ -61,13 +59,11 @@
 player_t *sortedplayers[MAXPLAYERS];
 
 int num_players;
-int show_scores;   // enable scores (for config)
+int show_scores; // enable scores (for config)
 
 bool hu_showfrags; // showing frags currently
 
-void HU_FragsInit(void)
-{
-}
+void HU_FragsInit(void) {}
 
 extern vfont_t *hud_font;
 
@@ -75,104 +71,101 @@ static bool fragsdrawn;
 
 void HU_FragsDrawer(void)
 {
-   int i, x, y;
-   char tempstr[50];
-   patch_t *fragtitle;
+    int      i, x, y;
+    char     tempstr[50];
+    patch_t *fragtitle;
 
-   if(!show_scores)
-      return;
+    if(!show_scores)
+        return;
 
-   if(((players[displayplayer].playerstate != PST_DEAD || walkcam_active)
-      && !hu_showfrags) || GameType != gt_dm || (automapactive && !automap_overlay))
-      return;
+    if(((players[displayplayer].playerstate != PST_DEAD || walkcam_active) && !hu_showfrags) || GameType != gt_dm ||
+       (automapactive && !automap_overlay))
+        return;
 
-   // "frags"
+    // "frags"
 
-   // haleyjd 04/08/10: draw more intelligently
-   fragtitle = PatchLoader::CacheName(wGlobalDir, "HU_FRAGS", PU_CACHE);
-   x = (SCREENWIDTH - fragtitle->width ) / 2;
-   y = (NAMEY       - fragtitle->height) / 2;
+    // haleyjd 04/08/10: draw more intelligently
+    fragtitle = PatchLoader::CacheName(wGlobalDir, "HU_FRAGS", PU_CACHE);
+    x         = (SCREENWIDTH - fragtitle->width) / 2;
+    y         = (NAMEY - fragtitle->height) / 2;
 
-   V_DrawPatch(x, y, &vbscreen, fragtitle);
+    V_DrawPatch(x, y, &vbscreen, fragtitle);
 
-   y = NAMEY;
-   
-   for(i = 0; i < num_players; ++i)
-   {
-      // write their name
-      psnprintf(tempstr, sizeof(tempstr), "%s%s", !demoplayback && 
-         sortedplayers[i]==players+consoleplayer ? FC_HI : FC_NORMAL,
-         sortedplayers[i]->name);
-      
-      V_FontWriteText(hud_font, tempstr, 
-                      NAMEX - V_FontStringWidth(hud_font, tempstr), y,
-                      &subscreen43);
-      
-      // box behind frag pic
-      // haleyjd 01/12/04: changed translation handling
+    y = NAMEY;
 
-      V_DrawPatchTranslated(FRAGNUMX, y, &subscreen43,
-                            PatchLoader::CacheName(wGlobalDir, "HU_FRGBX", PU_CACHE),
-                            sortedplayers[i]->colormap ?
-                            translationtables[(sortedplayers[i]->colormap - 1)] :
-                            nullptr, false);
-      // draw the frags
-      psnprintf(tempstr, sizeof(tempstr), "%i", sortedplayers[i]->totalfrags);
-      V_FontWriteText(hud_font, tempstr, 
-                      FRAGNUMX + 16 - V_FontStringWidth(hud_font, tempstr)/2, y,
-                      &subscreen43);
-      y += 10;
-   }
+    for(i = 0; i < num_players; ++i)
+    {
+        // write their name
+        psnprintf(tempstr, sizeof(tempstr), "%s%s",
+                  !demoplayback && sortedplayers[i] == players + consoleplayer ? FC_HI : FC_NORMAL,
+                  sortedplayers[i]->name);
 
-   fragsdrawn = true;
+        V_FontWriteText(hud_font, tempstr, NAMEX - V_FontStringWidth(hud_font, tempstr), y, &subscreen43);
+
+        // box behind frag pic
+        // haleyjd 01/12/04: changed translation handling
+
+        V_DrawPatchTranslated(
+            FRAGNUMX, y, &subscreen43, PatchLoader::CacheName(wGlobalDir, "HU_FRGBX", PU_CACHE),
+            sortedplayers[i]->colormap ? translationtables[(sortedplayers[i]->colormap - 1)] : nullptr, false);
+        // draw the frags
+        psnprintf(tempstr, sizeof(tempstr), "%i", sortedplayers[i]->totalfrags);
+        V_FontWriteText(hud_font, tempstr, FRAGNUMX + 16 - V_FontStringWidth(hud_font, tempstr) / 2, y, &subscreen43);
+        y += 10;
+    }
+
+    fragsdrawn = true;
 }
 
 void HU_FragsUpdate(void)
 {
-   int i,j;
-   int change;
-   player_t *temp;
+    int       i, j;
+    int       change;
+    player_t *temp;
 
-   num_players = 0;
+    num_players = 0;
 
-   for(i=0; i<MAXPLAYERS; i++)
-   {
-      if(!playeringame[i]) continue;
+    for(i = 0; i < MAXPLAYERS; i++)
+    {
+        if(!playeringame[i])
+            continue;
 
-      // found a real player
-      // add to list
+        // found a real player
+        // add to list
 
-      sortedplayers[num_players] = &players[i];
-      num_players++;
+        sortedplayers[num_players] = &players[i];
+        num_players++;
 
-      players[i].totalfrags = 0; // reset frag count
+        players[i].totalfrags = 0; // reset frag count
 
-      for(j=0; j<MAXPLAYERS; j++)  // add all frags for this player
-      {
-         if(!playeringame[j]) continue;
-         if(i==j) players[i].totalfrags-=players[i].frags[j];
-         else players[i].totalfrags+=players[i].frags[j];
-      }
-   }
+        for(j = 0; j < MAXPLAYERS; j++) // add all frags for this player
+        {
+            if(!playeringame[j])
+                continue;
+            if(i == j)
+                players[i].totalfrags -= players[i].frags[j];
+            else
+                players[i].totalfrags += players[i].frags[j];
+        }
+    }
 
-   // use the bubble sort algorithm to sort the players
+    // use the bubble sort algorithm to sort the players
 
-   change = true;
-   while(change)
-   {
-      change = false;
-      for(i=0; i<num_players-1; i++)
-      {
-         if(sortedplayers[i]->totalfrags <
-            sortedplayers[i+1]->totalfrags)
-         {
-            temp = sortedplayers[i];
-            sortedplayers[i] = sortedplayers[i+1];
-            sortedplayers[i+1] = temp;
-            change = true;
-         }
-      }
-   }
+    change = true;
+    while(change)
+    {
+        change = false;
+        for(i = 0; i < num_players - 1; i++)
+        {
+            if(sortedplayers[i]->totalfrags < sortedplayers[i + 1]->totalfrags)
+            {
+                temp                 = sortedplayers[i];
+                sortedplayers[i]     = sortedplayers[i + 1];
+                sortedplayers[i + 1] = temp;
+                change               = true;
+            }
+        }
+    }
 }
 
 //=============================================================================
@@ -182,17 +175,15 @@ void HU_FragsUpdate(void)
 
 CONSOLE_COMMAND(frags, 0)
 {
-   int i;
-   
-   for(i = 0; i < num_players; ++i)
-   {
-      C_Printf(FC_HI "%i" FC_NORMAL " %s\n",
-               sortedplayers[i]->totalfrags,
-               sortedplayers[i]->name);
-   }
+    int i;
+
+    for(i = 0; i < num_players; ++i)
+    {
+        C_Printf(FC_HI "%i" FC_NORMAL " %s\n", sortedplayers[i]->totalfrags, sortedplayers[i]->name);
+    }
 }
 
-VARIABLE_BOOLEAN(show_scores,       nullptr,        onoff);
-CONSOLE_VARIABLE(show_scores,   show_scores,    0)      {}
+VARIABLE_BOOLEAN(show_scores, nullptr, onoff);
+CONSOLE_VARIABLE(show_scores, show_scores, 0) {}
 
 // EOF

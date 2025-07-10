@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,14 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Status bar code.
-//      Does the face/direction indicator animatin.
-//      Does palette indicators as well (red pain/berserk, bright pickup)
+// Purpose: Status bar code.
+//  Does the face/direction indicator animatin.
+//  Does palette indicators as well (red pain/berserk, bright pickup).
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Ioan Chera
+//
 
 #ifndef ST_STUFF_H__
 #define ST_STUFF_H__
@@ -37,16 +36,16 @@ struct patch_t;
 // Size of statusbar.
 // Now sensitive for scaling.
 
-#define ST_HEIGHT (32*SCREEN_MUL)
-#define ST_WIDTH  SCREENWIDTH
-#define ST_Y      (SCREENHEIGHT - ST_HEIGHT)
+static constexpr int ST_HEIGHT = 32 * SCREEN_MUL;
+static constexpr int ST_WIDTH  = SCREENWIDTH;
+static constexpr int ST_Y      = SCREENHEIGHT - ST_HEIGHT;
 
 //
 // STATUS BAR
 //
 
 // Called by main loop.
-bool ST_Responder(const event_t* ev);
+bool ST_Responder(const event_t *ev);
 
 // Called by main loop.
 void ST_Ticker(void);
@@ -70,15 +69,15 @@ bool ST_IsHUDLike();
 
 struct stbarfns_t
 {
-   // data
-   int  height;
+    // data
+    int height;
 
-   // function pointers
-   void (*Ticker)(void);   // tic processing
-   void (*Drawer)(void);   // drawing
-   void (*FSDrawer)(void); // fullscreen drawer
-   void (*Start)(void);    // reinit
-   void (*Init)(void);     // initialize at startup   
+    // function pointers
+    void (*Ticker)(void);   // tic processing
+    void (*Drawer)(void);   // drawing
+    void (*FSDrawer)(void); // fullscreen drawer
+    void (*Start)(void);    // reinit
+    void (*Init)(void);     // initialize at startup
 };
 
 extern stbarfns_t DoomStatusBar;
@@ -87,39 +86,37 @@ extern stbarfns_t HticStatusBar;
 // States for status bar code.
 enum st_stateenum_t
 {
-   AutomapState,
-   FirstPersonState
+    AutomapState,
+    FirstPersonState
 };
 
 // killough 5/2/98: moved from m_misc.c:
 
-extern int  health_red;     // health amount less than which status is red
-extern int  health_yellow;  // health amount less than which status is yellow
-extern int  health_green;   // health amount above is blue, below is green
-extern int  armor_red;      // armor amount less than which status is red
-extern int  armor_yellow;   // armor amount less than which status is yellow
-extern int  armor_green;    // armor amount above is blue, below is green
-extern bool armor_byclass;  // reflect armor class with blue vs green
-extern int  ammo_red;       // ammo percent less than which status is red
-extern int  ammo_yellow;    // ammo percent less is yellow more green
-extern int  sts_always_red; // status numbers do not change colors
+extern int  health_red;           // health amount less than which status is red
+extern int  health_yellow;        // health amount less than which status is yellow
+extern int  health_green;         // health amount above is blue, below is green
+extern int  armor_red;            // armor amount less than which status is red
+extern int  armor_yellow;         // armor amount less than which status is yellow
+extern int  armor_green;          // armor amount above is blue, below is green
+extern bool armor_byclass;        // reflect armor class with blue vs green
+extern int  ammo_red;             // ammo percent less than which status is red
+extern int  ammo_yellow;          // ammo percent less is yellow more green
+extern int  sts_always_red;       // status numbers do not change colors
 extern int  sts_pct_always_gray;  // status percents do not change colors
 extern int  sts_traditional_keys; // display keys the traditional way
-extern int  st_fsalpha;     // haleyjd 02/27/10: fullscreen hud alpha
+extern int  st_fsalpha;           // haleyjd 02/27/10: fullscreen hud alpha
 
 // Number of status faces.
-#define ST_NUMPAINFACES         5
-#define ST_NUMSTRAIGHTFACES     3
-#define ST_NUMTURNFACES         2
-#define ST_NUMSPECIALFACES      3
+static constexpr int ST_NUMPAINFACES     = 5;
+static constexpr int ST_NUMSTRAIGHTFACES = 3;
+static constexpr int ST_NUMTURNFACES     = 2;
+static constexpr int ST_NUMSPECIALFACES  = 3;
 
-#define ST_FACESTRIDE \
-          (ST_NUMSTRAIGHTFACES+ST_NUMTURNFACES+ST_NUMSPECIALFACES)
+static constexpr int ST_FACESTRIDE = ST_NUMSTRAIGHTFACES + ST_NUMTURNFACES + ST_NUMSPECIALFACES;
 
-#define ST_NUMEXTRAFACES        2
+static constexpr int ST_NUMEXTRAFACES = 2;
 
-#define ST_NUMFACES \
-          (ST_FACESTRIDE*ST_NUMPAINFACES+ST_NUMEXTRAFACES)
+static constexpr int ST_NUMFACES = ST_FACESTRIDE * ST_NUMPAINFACES + ST_NUMEXTRAFACES;
 
 extern patch_t *default_faces[ST_NUMFACES];
 

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   BOOM Push / Pull / Current Effects
+// Purpose: Boom push / pull / current effects.
+// Authors: James Haley, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 
@@ -34,7 +32,7 @@
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
-#include "p_portal.h"   // ioanch 20160115: portal aware
+#include "p_portal.h" // ioanch 20160115: portal aware
 #include "p_portalcross.h"
 #include "p_pushers.h"
 #include "p_saveg.h"
@@ -94,24 +92,23 @@ static constexpr int PUSH_FACTOR = 7;
 //
 // Add a push thinker to the thinker list
 //
-static void Add_Pusher(int type, int x_mag, int y_mag,
-                       Mobj *source, int affectee)
+static void Add_Pusher(int type, int x_mag, int y_mag, Mobj *source, int affectee)
 {
-   PushThinker *p = new PushThinker;
-   
-   p->source = source;
-   p->type = type;
-   p->x_mag = x_mag>>FRACBITS;
-   p->y_mag = y_mag>>FRACBITS;
-   p->magnitude = P_AproxDistance(p->x_mag,p->y_mag);
-   if(source) // point source exist?
-   {
-      p->radius = (p->magnitude)<<(FRACBITS+1); // where force goes to zero
-      p->x = p->source->x;
-      p->y = p->source->y;
-   }
-   p->affectee = affectee;
-   p->addThinker();
+    PushThinker *p = new PushThinker;
+
+    p->source    = source;
+    p->type      = type;
+    p->x_mag     = x_mag >> FRACBITS;
+    p->y_mag     = y_mag >> FRACBITS;
+    p->magnitude = P_AproxDistance(p->x_mag, p->y_mag);
+    if(source) // point source exist?
+    {
+        p->radius = (p->magnitude) << (FRACBITS + 1); // where force goes to zero
+        p->x      = p->source->x;
+        p->y      = p->source->y;
+    }
+    p->affectee = affectee;
+    p->addThinker();
 }
 
 static PushThinker *tmpusher; // pusher structure for blockmap searches
@@ -124,209 +121,208 @@ static PushThinker *tmpusher; // pusher structure for blockmap searches
 //
 // killough 10/98: allow to affect things besides players
 //
-static bool PIT_PushThing(Mobj* thing, void *context)
+static bool PIT_PushThing(Mobj *thing, void *context)
 {
-   if(demo_version < 203  ?     // killough 10/98: made more general
-      thing->player && !(thing->flags & (MF_NOCLIP | MF_NOGRAVITY)) :
-      (sentient(thing) || thing->flags & MF_SHOOTABLE) &&
-      !(thing->flags & MF_NOCLIP) &&
-      !(thing->flags2 & MF2_NOTHRUST)) // haleyjd
-   {
-      angle_t pushangle;
-      fixed_t speed;
-      fixed_t sx = tmpusher->x;
-      fixed_t sy = tmpusher->y;
+    if(demo_version < 203 ? // killough 10/98: made more general
+           thing->player && !(thing->flags & (MF_NOCLIP | MF_NOGRAVITY)) :
+           (sentient(thing) || thing->flags & MF_SHOOTABLE) && !(thing->flags & MF_NOCLIP) &&
+               !(thing->flags2 & MF2_NOTHRUST)) // haleyjd
+    {
+        angle_t pushangle;
+        fixed_t speed;
+        fixed_t sx = tmpusher->x;
+        fixed_t sy = tmpusher->y;
 
-      speed = (tmpusher->magnitude -
-               ((P_AproxDistance(thing->x - sx,thing->y - sy)
-                 >>FRACBITS)>>1))<<(FRACBITS-PUSH_FACTOR-1);
+        speed = (tmpusher->magnitude - ((P_AproxDistance(thing->x - sx, thing->y - sy) >> FRACBITS) >> 1))
+                << (FRACBITS - PUSH_FACTOR - 1);
 
-      // killough 10/98: make magnitude decrease with square
-      // of distance, making it more in line with real nature,
-      // so long as it's still in range with original formula.
-      //
-      // Removes angular distortion, and makes effort required
-      // to stay close to source, grow increasingly hard as you
-      // get closer, as expected. Still, it doesn't consider z :(
+        // killough 10/98: make magnitude decrease with square
+        // of distance, making it more in line with real nature,
+        // so long as it's still in range with original formula.
+        //
+        // Removes angular distortion, and makes effort required
+        // to stay close to source, grow increasingly hard as you
+        // get closer, as expected. Still, it doesn't consider z :(
 
-      if(speed > 0 && demo_version >= 203)
-      {
-         int x = (thing->x-sx) >> FRACBITS;
-         int y = (thing->y-sy) >> FRACBITS;
-         speed = (fixed_t)(((int64_t)tmpusher->magnitude << 23) / (x*x+y*y+1));
-      }
+        if(speed > 0 && demo_version >= 203)
+        {
+            int x = (thing->x - sx) >> FRACBITS;
+            int y = (thing->y - sy) >> FRACBITS;
+            speed = (fixed_t)(((int64_t)tmpusher->magnitude << 23) / (x * x + y * y + 1));
+        }
 
-      // If speed <= 0, you're outside the effective radius. You also have
-      // to be able to see the push/pull source point.
+        // If speed <= 0, you're outside the effective radius. You also have
+        // to be able to see the push/pull source point.
 
-      if(speed > 0 && P_CheckSight(thing, tmpusher->source))
-      {
-         pushangle = P_PointToAngle(thing->x, thing->y, sx, sy);
-         
-         if(tmpusher->source->type == E_ThingNumForDEHNum(MT_PUSH))
-            pushangle += ANG180;    // away
-         
-         P_ThrustMobj(thing, pushangle, speed);
-      }
-   }
-   return true;
+        if(speed > 0 && P_CheckSight(thing, tmpusher->source))
+        {
+            pushangle = P_PointToAngle(thing->x, thing->y, sx, sy);
+
+            if(tmpusher->source->type == E_ThingNumForDEHNum(MT_PUSH))
+                pushangle += ANG180; // away
+
+            P_ThrustMobj(thing, pushangle, speed);
+        }
+    }
+    return true;
 }
 
 IMPLEMENT_THINKER_TYPE(PushThinker)
 
 //
-// T_Pusher 
+// T_Pusher
 //
-// Thinker function for BOOM push/pull effects that looks for all 
+// Thinker function for BOOM push/pull effects that looks for all
 // objects that are inside the radius of the effect.
 //
 void PushThinker::Think()
 {
-   sector_t   *sec;
-   Mobj     *thing;
-   msecnode_t *node;
-   int xspeed, yspeed;
-   int xl, xh, yl, yh, bx, by;
-   int radius;
-   const surface_t *boundary = nullptr;
-   
-   if(!allow_pushers)
-      return;
+    sector_t        *sec;
+    Mobj            *thing;
+    msecnode_t      *node;
+    int              xspeed, yspeed;
+    int              xl, xh, yl, yh, bx, by;
+    int              radius;
+    const surface_t *boundary = nullptr;
 
-   sec = sectors + this->affectee;
-   
-   // Be sure the special sector type is still turned on. If so, proceed.
-   // Else, bail out; the sector type has been changed on us.
-   
-   if(!(sec->flags & SECF_PUSH))
-      return;
+    if(!allow_pushers)
+        return;
 
-   // For constant pushers (wind/current) there are 3 situations:
-   //
-   // 1) Affected Thing is above the floor.
-   //
-   //    Apply the full force if wind, no force if current.
-   //
-   // 2) Affected Thing is on the ground.
-   //
-   //    Apply half force if wind, full force if current.
-   //
-   // 3) Affected Thing is below the ground (underwater effect).
-   //
-   //    Apply no force if wind, full force if current.
-   //
-   // haleyjd:
-   // 4) Affected thing bears MF2_NOTHRUST flag
-   //
-   //    Apply nothing at any time!
+    sec = sectors + this->affectee;
 
-   if(this->type == PushThinker::p_push)
-   {
-      // Seek out all pushable things within the force radius of this
-      // point pusher. Crosses sectors, so use blockmap.
+    // Be sure the special sector type is still turned on. If so, proceed.
+    // Else, bail out; the sector type has been changed on us.
 
-      tmpusher = this; // PUSH/PULL point source
-      radius = this->radius; // where force goes to zero
-      clip.bbox[BOXTOP]    = this->y + radius;
-      clip.bbox[BOXBOTTOM] = this->y - radius;
-      clip.bbox[BOXRIGHT]  = this->x + radius;
-      clip.bbox[BOXLEFT]   = this->x - radius;
-      
-      xl = (clip.bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
-      xh = (clip.bbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
-      yl = (clip.bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
-      yh = (clip.bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
+    if(!(sec->flags & SECF_PUSH))
+        return;
 
-      for (bx = xl; bx <= xh; bx++)
-      {
-         for(by = yl; by <= yh; by++)
-            P_BlockThingsIterator(bx, by, PIT_PushThing);
-      }
-      return;
-   }
+    // For constant pushers (wind/current) there are 3 situations:
+    //
+    // 1) Affected Thing is above the floor.
+    //
+    //    Apply the full force if wind, no force if current.
+    //
+    // 2) Affected Thing is on the ground.
+    //
+    //    Apply half force if wind, full force if current.
+    //
+    // 3) Affected Thing is below the ground (underwater effect).
+    //
+    //    Apply no force if wind, full force if current.
+    //
+    // haleyjd:
+    // 4) Affected thing bears MF2_NOTHRUST flag
+    //
+    //    Apply nothing at any time!
 
-   // constant pushers p_wind and p_current
-   
-   if(sec->heightsec != -1) // special water sector?
-      boundary = &sectors[sec->heightsec].srf.floor;
-
-   node = sec->touching_thinglist; // things touching this sector
-
-   for( ; node; node = node->m_snext)
+    if(this->type == PushThinker::p_push)
     {
-      // ioanch 20160115: portal aware
-      if(useportalgroups && full_demo_version >= make_full_version(340, 48) &&
-         !P_SectorTouchesThingVertically(sec, node->m_thing))
-      {
-         continue;
-      }
+        // Seek out all pushable things within the force radius of this
+        // point pusher. Crosses sectors, so use blockmap.
 
-      thing = node->m_thing;
-      if(!thing->player || 
-         (thing->flags2 & MF2_NOTHRUST) ||                // haleyjd
-         (thing->flags & (MF_NOGRAVITY | MF_NOCLIP)))
-         continue;
+        tmpusher             = this;         // PUSH/PULL point source
+        radius               = this->radius; // where force goes to zero
+        clip.bbox[BOXTOP]    = this->y + radius;
+        clip.bbox[BOXBOTTOM] = this->y - radius;
+        clip.bbox[BOXRIGHT]  = this->x + radius;
+        clip.bbox[BOXLEFT]   = this->x - radius;
 
-      if(this->type == PushThinker::p_wind)
-      {
-         if(sec->heightsec == -1) // NOT special water sector
-         {
-            if(thing->z > thing->zref.floor) // above ground
+        xl = (clip.bbox[BOXLEFT] - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
+        xh = (clip.bbox[BOXRIGHT] - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
+        yl = (clip.bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
+        yh = (clip.bbox[BOXTOP] - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
+
+        for(bx = xl; bx <= xh; bx++)
+        {
+            for(by = yl; by <= yh; by++)
+                P_BlockThingsIterator(bx, by, PIT_PushThing);
+        }
+        return;
+    }
+
+    // constant pushers p_wind and p_current
+
+    if(sec->heightsec != -1) // special water sector?
+        boundary = &sectors[sec->heightsec].srf.floor;
+
+    node = sec->touching_thinglist; // things touching this sector
+
+    for(; node; node = node->m_snext)
+    {
+        // ioanch 20160115: portal aware
+        if(useportalgroups && full_demo_version >= make_full_version(340, 48) &&
+           !P_SectorTouchesThingVertically(sec, node->m_thing))
+        {
+            continue;
+        }
+
+        thing = node->m_thing;
+        if(!thing->player || (thing->flags2 & MF2_NOTHRUST) || // haleyjd
+           (thing->flags & (MF_NOGRAVITY | MF_NOCLIP)))
+            continue;
+
+        if(this->type == PushThinker::p_wind)
+        {
+            if(sec->heightsec == -1) // NOT special water sector
             {
-               xspeed = this->x_mag; // full force
-               yspeed = this->y_mag;
+                if(thing->z > thing->zref.floor) // above ground
+                {
+                    xspeed = this->x_mag; // full force
+                    yspeed = this->y_mag;
+                }
+                else // on ground
+                {
+                    xspeed = (this->x_mag) >> 1; // half force
+                    yspeed = (this->y_mag) >> 1;
+                }
             }
-            else // on ground
+            else // special water sector
             {
-               xspeed = (this->x_mag)>>1; // half force
-               yspeed = (this->y_mag)>>1;
+                fixed_t ht = boundary->getZAt(thing->x, thing->y);
+                if(thing->z > ht) // above ground
+                {
+                    xspeed = this->x_mag; // full force
+                    yspeed = this->y_mag;
+                }
+                else if(thing->player->viewz < ht) // underwater
+                    xspeed = yspeed = 0;           // no force
+                else                               // wading in water
+                {
+                    xspeed = (this->x_mag) >> 1; // half force
+                    yspeed = (this->y_mag) >> 1;
+                }
             }
-         }
-         else // special water sector
-         {
-            fixed_t ht = boundary->getZAt(thing->x, thing->y);
-            if(thing->z > ht) // above ground
+        }
+        else // p_current
+        {
+            if(sec->heightsec == -1) // NOT special water sector
             {
-               xspeed = this->x_mag; // full force
-               yspeed = this->y_mag;
+                if((!sec->srf.floor.slope && thing->z > sec->srf.floor.height) ||
+                   (sec->srf.floor.slope &&
+                    (thing->zref.sector.floor != sec || thing->z > thing->zref.floor))) // above ground
+                {
+                    xspeed = yspeed = 0; // no force
+                }
+                else // on ground
+                {
+                    xspeed = this->x_mag; // full force
+                    yspeed = this->y_mag;
+                }
             }
-            else if(thing->player->viewz < ht) // underwater
-               xspeed = yspeed = 0; // no force
-            else // wading in water
+            else // special water sector
             {
-               xspeed = (this->x_mag)>>1; // half force
-               yspeed = (this->y_mag)>>1;
+                if(thing->z > boundary->getZAt(thing->x, thing->y)) // above ground
+                    xspeed = yspeed = 0;                            // no force
+                else                                                // underwater
+                {
+                    xspeed = this->x_mag; // full force
+                    yspeed = this->y_mag;
+                }
             }
-         }
-      }
-      else // p_current
-      {
-         if(sec->heightsec == -1) // NOT special water sector
-         {
-            if((!sec->srf.floor.slope && thing->z > sec->srf.floor.height) || (sec->srf.floor.slope && (thing->zref.sector.floor != sec || thing->z > thing->zref.floor))) // above ground
-            {
-               xspeed = yspeed = 0; // no force
-            }
-            else // on ground
-            {
-               xspeed = this->x_mag; // full force
-               yspeed = this->y_mag;
-            }
-         }
-         else // special water sector
-         {
-            if(thing->z > boundary->getZAt(thing->x, thing->y)) // above ground
-               xspeed = yspeed = 0; // no force
-            else // underwater
-            {
-               xspeed = this->x_mag; // full force
-               yspeed = this->y_mag;
-            }
-         }
-      }
-      thing->momx += xspeed<<(FRACBITS-PUSH_FACTOR);
-      thing->momy += yspeed<<(FRACBITS-PUSH_FACTOR);
-   }
+        }
+        thing->momx += xspeed << (FRACBITS - PUSH_FACTOR);
+        thing->momy += yspeed << (FRACBITS - PUSH_FACTOR);
+    }
 }
 
 //
@@ -336,13 +332,13 @@ void PushThinker::Think()
 //
 void PushThinker::serialize(SaveArchive &arc)
 {
-   Super::serialize(arc);
+    Super::serialize(arc);
 
-   arc << type << x_mag << y_mag << magnitude << radius << x << y << affectee;
+    arc << type << x_mag << y_mag << magnitude << radius << x << y << affectee;
 
-   // Restore point source origin if loading
-   if(arc.isLoading())
-      source = P_GetPushThing(affectee);
+    // Restore point source origin if loading
+    if(arc.isLoading())
+        source = P_GetPushThing(affectee);
 }
 
 //
@@ -350,25 +346,25 @@ void PushThinker::serialize(SaveArchive &arc)
 //
 // returns a pointer to an PUSH or PULL thing, nullptr otherwise.
 //
-Mobj* P_GetPushThing(int s)
+Mobj *P_GetPushThing(int s)
 {
-   Mobj *thing;
-   sector_t *sec;
-   int PushType = E_ThingNumForDEHNum(MT_PUSH); 
-   int PullType = E_ThingNumForDEHNum(MT_PULL);
+    Mobj     *thing;
+    sector_t *sec;
+    int       PushType = E_ThingNumForDEHNum(MT_PUSH);
+    int       PullType = E_ThingNumForDEHNum(MT_PULL);
 
-   sec = sectors + s;
-   thing = sec->thinglist;
+    sec   = sectors + s;
+    thing = sec->thinglist;
 
-   while(thing)
-   {
-      if(thing->type == PushType || thing->type == PullType)
-         return thing;
+    while(thing)
+    {
+        if(thing->type == PushType || thing->type == PullType)
+            return thing;
 
-      thing = thing->snext;
-   }
-   
-   return nullptr;
+        thing = thing->snext;
+    }
+
+    return nullptr;
 }
 
 //
@@ -378,23 +374,23 @@ Mobj* P_GetPushThing(int s)
 //
 static void P_spawnHereticWind(int tag, fixed_t x_mag, fixed_t y_mag, int pushType)
 {
-   int s;
-   angle_t lineAngle;
-   fixed_t magnitude;
+    int     s;
+    angle_t lineAngle;
+    fixed_t magnitude;
 
-   lineAngle = P_PointToAngle(0, 0, x_mag, y_mag);
-   magnitude = (P_AproxDistance(x_mag, y_mag) >> FRACBITS) * 512;
+    lineAngle = P_PointToAngle(0, 0, x_mag, y_mag);
+    magnitude = (P_AproxDistance(x_mag, y_mag) >> FRACBITS) * 512;
 
-   // types 20-39 affect the player in P_PlayerThink
-   // types 40-51 affect MF3_WINDTHRUST things in P_MobjThinker
-   // this is selected by use of lines 294 or 293, respectively
+    // types 20-39 affect the player in P_PlayerThink
+    // types 40-51 affect MF3_WINDTHRUST things in P_MobjThinker
+    // this is selected by use of lines 294 or 293, respectively
 
-   for(s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0; )
-   {
-      sectors[s].hticPushType  = pushType;
-      sectors[s].hticPushAngle = lineAngle;
-      sectors[s].hticPushForce = magnitude;
-   }
+    for(s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0;)
+    {
+        sectors[s].hticPushType  = pushType;
+        sectors[s].hticPushAngle = lineAngle;
+        sectors[s].hticPushForce = magnitude;
+    }
 }
 
 //
@@ -402,19 +398,19 @@ static void P_spawnHereticWind(int tag, fixed_t x_mag, fixed_t y_mag, int pushTy
 //
 static void P_getPusherParams(const line_t *line, int &x_mag, int &y_mag)
 {
-   if(line->args[ev_SetWind_Arg_Flags] & ev_SetWind_Flag_UseLine)
-   {
-      x_mag = line->dx;
-      y_mag = line->dy;
-   }
-   else
-   {
-      fixed_t strength = line->args[ev_SetWind_Arg_Strength] << FRACBITS;
-      angle_t angle = line->args[ev_SetWind_Arg_Angle] << 24;
-      int fineangle = angle >> ANGLETOFINESHIFT;
-      x_mag = FixedMul(strength, finecosine[fineangle]);
-      y_mag = FixedMul(strength, finesine[fineangle]);
-   }
+    if(line->args[ev_SetWind_Arg_Flags] & ev_SetWind_Flag_UseLine)
+    {
+        x_mag = line->dx;
+        y_mag = line->dy;
+    }
+    else
+    {
+        fixed_t strength  = line->args[ev_SetWind_Arg_Strength] << FRACBITS;
+        angle_t angle     = line->args[ev_SetWind_Arg_Angle] << 24;
+        int     fineangle = angle >> ANGLETOFINESHIFT;
+        x_mag             = FixedMul(strength, finecosine[fineangle]);
+        y_mag             = FixedMul(strength, finesine[fineangle]);
+    }
 }
 
 //
@@ -424,125 +420,124 @@ static void P_getPusherParams(const line_t *line, int &x_mag, int &y_mag)
 //
 void P_SpawnPushers()
 {
-   int i, s;
-   line_t *line = lines;
+    int     i, s;
+    line_t *line = lines;
 
-   for(i = 0; i < numlines; i++, line++)
-   {
-      // haleyjd 02/03/13: get special binding
-      int staticFn;
-      if(!(staticFn = EV_StaticInitForSpecial(line->special)))
-         continue;
+    for(i = 0; i < numlines; i++, line++)
+    {
+        // haleyjd 02/03/13: get special binding
+        int staticFn;
+        if(!(staticFn = EV_StaticInitForSpecial(line->special)))
+            continue;
 
-      switch(staticFn)
-      {
-      case EV_STATIC_WIND_CONTROL: // wind
-         for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
-            Add_Pusher(PushThinker::p_wind, line->dx, line->dy, nullptr, s);
-         break;
+        switch(staticFn)
+        {
+        case EV_STATIC_WIND_CONTROL: // wind
+            for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0;)
+                Add_Pusher(PushThinker::p_wind, line->dx, line->dy, nullptr, s);
+            break;
 
-      case EV_STATIC_WIND_CONTROL_PARAM:
-         {
+        case EV_STATIC_WIND_CONTROL_PARAM:
+        {
             int x_mag, y_mag;
             P_getPusherParams(line, x_mag, y_mag);
 
             if(line->args[ev_SetWind_Arg_Flags] & ev_SetWind_Flag_Heretic)
-               P_spawnHereticWind(line->args[0], x_mag, y_mag, SECTOR_HTIC_WIND);
+                P_spawnHereticWind(line->args[0], x_mag, y_mag, SECTOR_HTIC_WIND);
             else
             {
-               for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
-                  Add_Pusher(PushThinker::p_wind, x_mag, y_mag, nullptr, s);
+                for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0;)
+                    Add_Pusher(PushThinker::p_wind, x_mag, y_mag, nullptr, s);
             }
             break;
-         }
+        }
 
-      case EV_STATIC_CURRENT_CONTROL: // current
-         for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
-            Add_Pusher(PushThinker::p_current, line->dx, line->dy, nullptr, s);
-         break;
+        case EV_STATIC_CURRENT_CONTROL: // current
+            for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0;)
+                Add_Pusher(PushThinker::p_current, line->dx, line->dy, nullptr, s);
+            break;
 
-      case EV_STATIC_CURRENT_CONTROL_PARAM:
-         {
+        case EV_STATIC_CURRENT_CONTROL_PARAM:
+        {
             int x_mag, y_mag;
             P_getPusherParams(line, x_mag, y_mag);
 
             if(line->args[ev_SetWind_Arg_Flags] & ev_SetWind_Flag_Heretic)
-               P_spawnHereticWind(line->args[0], x_mag, y_mag, SECTOR_HTIC_CURRENT);
-            else 
+                P_spawnHereticWind(line->args[0], x_mag, y_mag, SECTOR_HTIC_CURRENT);
+            else
             {
-               for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
-                  Add_Pusher(PushThinker::p_current, x_mag, y_mag, nullptr, s);
+                for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0;)
+                    Add_Pusher(PushThinker::p_current, x_mag, y_mag, nullptr, s);
             }
             break;
-         }
+        }
 
-      case EV_STATIC_PUSHPULL_CONTROL: // push/pull
-         for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
-         {
-            Mobj *thing = P_GetPushThing(s);
-            if(thing) // No P* means no effect
-               Add_Pusher(PushThinker::p_push, line->dx, line->dy, thing, s);
-         }
-         break;
+        case EV_STATIC_PUSHPULL_CONTROL: // push/pull
+            for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0;)
+            {
+                Mobj *thing = P_GetPushThing(s);
+                if(thing) // No P* means no effect
+                    Add_Pusher(PushThinker::p_push, line->dx, line->dy, thing, s);
+            }
+            break;
 
-      case EV_STATIC_PUSHPULL_CONTROL_PARAM:
-         {
+        case EV_STATIC_PUSHPULL_CONTROL_PARAM:
+        {
             int tag = line->args[0];
             int x_mag, y_mag;
             if(line->args[3] & ~1)
             {
-               doom_warningf("PointPush_SetForce line %d: invalid arg4 %d", i, line->args[3]);
-               break;   // kill it quickly
+                doom_warningf("PointPush_SetForce line %d: invalid arg4 %d", i, line->args[3]);
+                break; // kill it quickly
             }
             if(line->args[3] & 1)
             {
-               x_mag = line->dx;
-               y_mag = line->dy;
+                x_mag = line->dx;
+                y_mag = line->dy;
             }
             else
             {
-               x_mag = line->args[2] << FRACBITS;
-               y_mag = 0;
+                x_mag = line->args[2] << FRACBITS;
+                y_mag = 0;
             }
 
             if(tag)
             {
-               for(s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0; )
-               {
-                  Mobj *thing = P_GetPushThing(s);
-                  if(thing) // No P* means no effect
-                     Add_Pusher(PushThinker::p_push, x_mag, y_mag, thing, s);
-               }
+                for(s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0;)
+                {
+                    Mobj *thing = P_GetPushThing(s);
+                    if(thing) // No P* means no effect
+                        Add_Pusher(PushThinker::p_push, x_mag, y_mag, thing, s);
+                }
             }
             else
             {
-               Mobj *thing = nullptr;
-               const int PushType = E_ThingNumForDEHNum(MT_PUSH);
-               const int PullType = E_ThingNumForDEHNum(MT_PULL);
-               while((thing = P_FindMobjFromTID(line->args[1], thing, nullptr)))
-               {
-                  if(thing->type == PushType || thing->type == PullType)
-                  {
-                     Add_Pusher(PushThinker::p_push, x_mag, y_mag, thing,
-                                eindex(thing->subsector->sector - sectors));
-                  }
-               }
+                Mobj     *thing    = nullptr;
+                const int PushType = E_ThingNumForDEHNum(MT_PUSH);
+                const int PullType = E_ThingNumForDEHNum(MT_PULL);
+                while((thing = P_FindMobjFromTID(line->args[1], thing, nullptr)))
+                {
+                    if(thing->type == PushType || thing->type == PullType)
+                    {
+                        Add_Pusher(PushThinker::p_push, x_mag, y_mag, thing,
+                                   eindex(thing->subsector->sector - sectors));
+                    }
+                }
             }
             break;
-         }
+        }
 
-      case EV_STATIC_HERETIC_WIND:
-      case EV_STATIC_HERETIC_CURRENT:
-         // haleyjd 03/12/03: Heretic wind and current transfer specials
-         P_spawnHereticWind(line->args[0], line->dx, line->dy, 
-            staticFn == EV_STATIC_HERETIC_CURRENT ? SECTOR_HTIC_CURRENT 
-                                                  : SECTOR_HTIC_WIND);
-         break;
+        case EV_STATIC_HERETIC_WIND:
+        case EV_STATIC_HERETIC_CURRENT:
+            // haleyjd 03/12/03: Heretic wind and current transfer specials
+            P_spawnHereticWind(line->args[0], line->dx, line->dy,
+                               staticFn == EV_STATIC_HERETIC_CURRENT ? SECTOR_HTIC_CURRENT : SECTOR_HTIC_WIND);
+            break;
 
-      default: // not a function we handle here
-         break;
-      }
-   }
+        default: // not a function we handle here
+            break;
+        }
+    }
 }
 
 //

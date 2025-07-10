@@ -1,5 +1,5 @@
 //
-// Copyright(C) 2017 Simon Howard
+// Copyright (C) 2017 Simon Howard
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License

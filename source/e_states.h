@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// EDF States Module
+// Purpose: EDF states module.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #ifndef E_STATES_H__
 #define E_STATES_H__
@@ -34,13 +31,13 @@ struct mobjinfo_t;
 struct state_t;
 
 int E_GetAddStateNumForDEHNum(int dehnum, bool forceAdd);
-int E_StateNumForDEHNum(int dehnum);        // dehnum lookup
-int E_GetStateNumForDEHNum(int dehnum);     //    fatal error version
-int E_SafeState(int dehnum);                //    fallback version
-int E_SafeStateName(const char *name);      //    fallback by name
-int E_StateNumForName(const char *name);    // mnemonic lookup
-int E_GetStateNumForName(const char *name); //    fatal error version
-int E_StateNumForNameIncludingDecorate(const char *name);   // Full lookup for saves
+int E_StateNumForDEHNum(int dehnum);                      // dehnum lookup
+int E_GetStateNumForDEHNum(int dehnum);                   //    fatal error version
+int E_SafeState(int dehnum);                              //    fallback version
+int E_SafeStateName(const char *name);                    //    fallback by name
+int E_StateNumForName(const char *name);                  // mnemonic lookup
+int E_GetStateNumForName(const char *name);               //    fatal error version
+int E_StateNumForNameIncludingDecorate(const char *name); // Full lookup for saves
 int E_StateNumForNameOnlyDecorate(const char *name);
 
 void E_AddDecorateStateNameToHash(state_t *st); // called from e_dstate

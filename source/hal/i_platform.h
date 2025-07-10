@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//    Platform Defines
+// Purpose: Platform defines.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef I_PLATFORM_H__
 #define I_PLATFORM_H__
@@ -85,15 +83,17 @@ extern int ee_current_compiler;
 // platform flags
 enum
 {
-   EE_PLATF_CSFS = 0x00000001 // Case-sensitive file system(s)
+    EE_PLATF_CSFS = 0x00000001 // Case-sensitive file system(s)
 };
 
 // Flags for each platform
 extern int ee_platform_flags[EE_PLATFORM_MAX];
 
 // Test platform flags against a set of flag values
-#define EE_PLATFORM_TEST(flags) \
-   ((ee_platform_flags[ee_current_platform] & (flags)) == (flags))
+inline bool EE_PLATFORM_TEST(int flags)
+{
+    return (ee_platform_flags[ee_current_platform] & flags) == flags;
+}
 
 #endif
 

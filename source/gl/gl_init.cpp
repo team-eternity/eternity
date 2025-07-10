@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,14 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   
-//  OpenGL Initialization/Setup Functions
-//  haleyjd 05/15/11
+// Purpose: OpenGL initialization/setup functions.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifdef EE_FEATURE_OPENGL
 
@@ -58,20 +54,20 @@ GL_versioninfo GL_version;
 #if 0
 static void GL_GetVersion()
 {
-   const char *versionStr;
-   int majversion = 0, minversion = 0;
+    const char *versionStr;
+    int         majversion = 0, minversion = 0;
 
-   // Default to 1.0
-   GL_version.majorversion = 1;
-   GL_version.minorversion = 0;
+    // Default to 1.0
+    GL_version.majorversion = 1;
+    GL_version.minorversion = 0;
 
-   versionStr = (const char *)(glGetString(GL_VERSION));
+    versionStr = (const char *)(glGetString(GL_VERSION));
 
-   if(sscanf(versionStr, "%d.%d", &majversion, &minversion) == 2)
-   {
-      GL_version.majorversion = majversion;
-      GL_version.minorversion = minversion;
-   }
+    if(sscanf(versionStr, "%d.%d", &majversion, &minversion) == 2)
+    {
+        GL_version.majorversion = majversion;
+        GL_version.minorversion = minversion;
+    }
 }
 #endif
 

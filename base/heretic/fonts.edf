@@ -7,199 +7,199 @@ ifgametype(HERETIC)
 // Small font - this is used by the HUD and V-system by default
 font ee_smallfont
 {
-   id          0
-   start       '!'
-   end         0x7f
-   linesize    9
-   spacesize   5
-   widthdelta  1
-   tallestchar 10
-   colorable   true
-   uppercase   true
-   
-   patchnumoffset 32
-   
-   filter { chars { 91 };        mask "FONTA00"   }
-   filter { chars { 95 };        mask "FONTA59"   }
-   filter { start '!'; end 0x7f; mask "FONTA%.2d" }
+  id          0
+  start       '!'
+  end         0x7f
+  linesize    9
+  spacesize   5
+  widthdelta  1
+  tallestchar 10
+  colorable   true
+  uppercase   true
+
+  patchnumoffset 32
+
+  filter { chars { 91 };        mask "FONTA00"   }
+  filter { chars { 95 };        mask "FONTA59"   }
+  filter { start '!'; end 0x7f; mask "FONTA%.2d" }
 }
 
 // Hud overlay font - used by BOOM-style HUD
 font ee_hudfont
 {
-   id          1
-   start       '!'
-   end         0x7f
-   linesize    8
-   spacesize   4
-   tallestchar 8
-   colorable   true
-   uppercase   true
-   
-   filter { start '0'; end '9';           mask "DIG%c"  }
-   filter { start 'A'; end 'Z';           mask "DIG%c"  }
-   filter { chars { 45, 47, 58, 91, 93 }; mask "DIG%i"  }
-   filter { start 123; end 127;           mask "STBR%i" }
-   filter { chars { '_' };                mask "DIG45"  }
-   filter { chars { '(' };                mask "DIG91"  }
-   filter { chars { ')' };                mask "DIG93"  }
-   
-   defaultcolor red
-   colortables
-   {
-      red    @identity
-      brick  "145=145,151=149,156=152,160=155"
-      tan    "145=77,151=83,156=88,160=92"
-      gray   "145=20,151=26,156=31,160=35"
-      green  "145=209,151=215,156=220,160=224"
-      brown  "145=66,151=72,156=77,160=81"
-      gold   "145=244,151=243,156=242,160=241" 
-      blue   "145=185,151=191,156=196,160=200"
-      orange "145=247,151=246,156=245,160=244"
-      yellow "145=138,151=140,156=142,160=144"
-   }
+  id          1
+  start       '!'
+  end         0x7f
+  linesize    8
+  spacesize   4
+  tallestchar 8
+  colorable   true
+  uppercase   true
+
+  filter { start '0'; end '9';           mask "DIG%c"  }
+  filter { start 'A'; end 'Z';           mask "DIG%c"  }
+  filter { chars { 45, 47, 58, 91, 93 }; mask "DIG%i"  }
+  filter { start 123; end 127;           mask "STBR%i" }
+  filter { chars { '_' };                mask "DIG45"  }
+  filter { chars { '(' };                mask "DIG91"  }
+  filter { chars { ')' };                mask "DIG93"  }
+
+  defaultcolor red
+  colortables
+  {
+    red    @identity
+    brick  "145=145,151=149,156=152,160=155"
+    tan    "145=77,151=83,156=88,160=92"
+    gray   "145=20,151=26,156=31,160=35"
+    green  "145=209,151=215,156=220,160=224"
+    brown  "145=66,151=72,156=77,160=81"
+    gold   "145=244,151=243,156=242,160=241"
+    blue   "145=185,151=191,156=196,160=200"
+    orange "145=247,151=246,156=245,160=244"
+    yellow "145=138,151=140,156=142,160=144"
+  }
 }
 
 // Modern HUD overlay small font - arms numbers and kills/items/secrets
 font ee_fshudsmallfont
 {
-   start       '/'
-   end         'Z'
-   colorable   true
-   uppercase   true
-   spacesize   1
-   tallestchar 6
-   defaultcolor gray
+  start       '/'
+  end         'Z'
+  colorable   true
+  uppercase   true
+  spacesize   1
+  tallestchar 6
+  defaultcolor gray
 
-   filter { chars { '/' };                mask "NHUD_SLS"  }
-   filter { start 'A'; end = 'Z';         mask "NHUD_%c"   }
-   filter { start '0'; end = '9';         mask "NHUD_DS%c" }
+  filter { chars { '/' };                mask "NHUD_SLS"  }
+  filter { start 'A'; end = 'Z';         mask "NHUD_%c"   }
+  filter { start '0'; end = '9';         mask "NHUD_DS%c" }
 
-   colortables
-   {
-      gray:    @identity
-      green:   "33=223,19=218"
-      gold:    "33=143,19=124"
-      red:     "33=160,19=153"
-      blue:    "33=183,19=180"
-      custom1: "33=110,19=104"
-      custom2: "33=16,95=12"
-   }
+  colortables
+  {
+    gray:    @identity
+    green:   "33=223,19=218"
+    gold:    "33=143,19=124"
+    red:     "33=160,19=153"
+    blue:    "33=183,19=180"
+    custom1: "33=110,19=104"
+    custom2: "33=16,95=12"
+  }
 }
 
 // Modern HUD overlay medium font - ammo numbers
 font ee_fshudmediumfont
 {
-   start       '/'
-   end         '9'
-   colorable   true
-   uppercase   true
-   spacesize   1
-   tallestchar 6
-   defaultcolor gray
+  start       '/'
+  end         '9'
+  colorable   true
+  uppercase   true
+  spacesize   1
+  tallestchar 6
+  defaultcolor gray
 
-   filter { chars { '/' };                mask "NHUD_SLS"  }
-   filter { start '0'; end = '9';         mask "NHUD_DM%c" }
+  filter { chars { '/' };                mask "NHUD_SLS"  }
+  filter { start '0'; end = '9';         mask "NHUD_DM%c" }
 
-   colortables
-   {
-      gray:    @identity
-      green:   "33=223,19=218"
-      gold:    "33=143,19=124"
-      red:     "33=160,19=153"
-      blue:    "33=183,19=180"
-      custom1: "33=110,19=104"
-      custom2: "33=16,95=12"
-   }
+  colortables
+  {
+    gray:    @identity
+    green:   "33=223,19=218"
+    gold:    "33=143,19=124"
+    red:     "33=160,19=153"
+    blue:    "33=183,19=180"
+    custom1: "33=110,19=104"
+    custom2: "33=16,95=12"
+  }
 }
 
 // Modern HUD overlay large font - health/armor numbers
 font ee_fshudslargefont
 {
-   start       '0'
-   end         '9'
-   colorable   true
-   uppercase   true
-   spacesize   10
-   tallestchar 10
+  start       '0'
+  end         '9'
+  colorable   true
+  uppercase   true
+  spacesize   10
+  tallestchar 10
 
-   filter { start '0'; end = '9';         mask "NHUD_DL%c" }
+  filter { start '0'; end = '9';         mask "NHUD_DL%c" }
 
-   colortables
-   {
-      gray:    @identity
-      green:   "33=223,19=218"
-      gold:    "33=143,19=124"
-      red:     "33=160,19=153"
-      blue:    "33=183,19=180"
-      custom1: "33=110,19=104"
-      custom2: "33=16,95=12"
-   }
+  colortables
+  {
+    gray:    @identity
+    green:   "33=223,19=218"
+    gold:    "33=143,19=124"
+    red:     "33=160,19=153"
+    blue:    "33=183,19=180"
+    custom1: "33=110,19=104"
+    custom2: "33=16,95=12"
+  }
 }
 
 // Big font - used by intermission and menus occasionally
 font ee_bigfont
 {
-   id          2
-   start       '!'
-   end         'Z'
-   linesize    20
-   spacesize   8
-   widthdelta  1
-   tallestchar 20   // FIXME: not correct?
-   uppercase   true
-   
-   patchnumoffset = 32;
-   
-   filter { start '!'; end 'Z'; mask "FONTB%.2d" }
+  id          2
+  start       '!'
+  end         'Z'
+  linesize    20
+  spacesize   8
+  widthdelta  1
+  tallestchar 20   // FIXME: not correct?
+  uppercase   true
+
+  patchnumoffset = 32;
+
+  filter { start '!'; end 'Z'; mask "FONTB%.2d" }
 }
 
 // Big number font - used only in special circumstances
 font ee_bignumfont
 {
-   id            3
-   start         '!'
-   end           'Z'
-   linesize      20
-   spacesize     12
-   tallestchar   20   // FIXME: not correct?
-   centerwidth   12
-   uppercase     true
-   blockcentered true
+  id            3
+  start         '!'
+  end           'Z'
+  linesize      20
+  spacesize     12
+  tallestchar   20   // FIXME: not correct?
+  centerwidth   12
+  uppercase     true
+  blockcentered true
 
-   patchnumoffset 32
-      
-   filter { start '!'; end 'Z'; mask "FONTB%.2d" }
+  patchnumoffset 32
+
+  filter { start '!'; end 'Z'; mask "FONTB%.2d" }
 }
 
 // Menu font - it's just the console font but as a patch
 font ee_menufont
 {
-   id           5
-   linearlump   MENCHARS
-   linearformat patch
-   spacesize    4
-   usespacesize true
+  id           5
+  linearlump   MENCHARS
+  linearformat patch
+  spacesize    4
+  usespacesize true
 }
 
 // Finale font - yet another copy of the smallfont. This one does NOT
 // have a widthdelta.
 font ee_finalefont
 {
-   id          6
-   start       '!'
-   end         0x7f
-   linesize    9
-   spacesize   5
-   tallestchar 10
-   colorable   true
-   uppercase   true
-   
-   patchnumoffset = 32;
-   
-   filter { chars { 91 };        mask "FONTA00"   }
-   filter { chars { 95 };        mask "FONTA59"   }
-   filter { start '!'; end 0x7f; mask "FONTA%.2d" }
+  id          6
+  start       '!'
+  end         0x7f
+  linesize    9
+  spacesize   5
+  tallestchar 10
+  colorable   true
+  uppercase   true
+
+  patchnumoffset = 32;
+
+  filter { chars { 91 };        mask "FONTA00"   }
+  filter { chars { 95 };        mask "FONTA59"   }
+  filter { start '!'; end 0x7f; mask "FONTA%.2d" }
 }
 
 endif()

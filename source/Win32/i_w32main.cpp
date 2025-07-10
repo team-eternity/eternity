@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2017 James Haley, Max Waine, et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,14 +18,14 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Win32-specific main function, used in release mode. Provides proper
-//   exception handling instead of the silent dump-out to console that the 
-//   SDL parachute now provides.   
+// Purpose: Win32-specific main function, used in release mode. Provides proper
+//  exception handling instead of the silent dump-out to console that the
+//  SDL parachute now provides.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Max Waine
+//
 
 #include "../hal/i_platform.h"
 
@@ -50,13 +49,13 @@ int disable_sysmenu;
 static void I_untweakConsole()
 {
 #if _WIN32_WINNT > 0x500
-   HWND hwnd = GetConsoleWindow();
+    HWND hwnd = GetConsoleWindow();
 
-   if(hwnd)
-   {
-      HMENU hMenu = GetSystemMenu(hwnd, FALSE);
-      EnableMenuItem(hMenu, SC_CLOSE, MF_ENABLED);
-   }
+    if(hwnd)
+    {
+        HMENU hMenu = GetSystemMenu(hwnd, FALSE);
+        EnableMenuItem(hMenu, SC_CLOSE, MF_ENABLED);
+    }
 #endif
 }
 
@@ -66,34 +65,35 @@ static void I_untweakConsole()
 static void I_tweakConsole()
 {
 #if _WIN32_WINNT > 0x500
-   HWND hwnd = GetConsoleWindow();
+    HWND hwnd = GetConsoleWindow();
 
-   if(hwnd)
-   {
-      HMENU hMenu = GetSystemMenu(hwnd, FALSE);
-      EnableMenuItem(hMenu, SC_CLOSE, MF_DISABLED|MF_GRAYED);
-      I_AtExit(I_untweakConsole);
-   }
-   SetConsoleTitle("Eternity Engine System Console");
+    if(hwnd)
+    {
+        HMENU hMenu = GetSystemMenu(hwnd, FALSE);
+        EnableMenuItem(hMenu, SC_CLOSE, MF_DISABLED | MF_GRAYED);
+        I_AtExit(I_untweakConsole);
+    }
+    SetConsoleTitle("Eternity Engine System Console");
 #endif
 }
 
 #if !defined(_DEBUG)
 int main(int argc, char **argv)
 {
-   I_W32InitExceptionHandler();
+    I_W32InitExceptionHandler();
 
-   __try
-   {
-      I_tweakConsole();
-      common_main(argc, argv);
-   }
-   __except(I_W32ExceptionHandler(GetExceptionInformation()))
-   {
-      I_FatalError(0, "Exception caught in main: see CRASHLOG.TXT for info, and in the same directory please upload eternity.dmp along with the crash log\n");
-   }
+    __try
+    {
+        I_tweakConsole();
+        common_main(argc, argv);
+    }
+    __except(I_W32ExceptionHandler(GetExceptionInformation()))
+    {
+        I_FatalError(0, "Exception caught in main: see CRASHLOG.TXT for info, and in the same directory please upload "
+                        "eternity.dmp along with the crash log\n");
+    }
 
-   return 0;
+    return 0;
 }
 #endif
 
@@ -107,19 +107,19 @@ int main(int argc, char **argv)
 //
 void I_DisableSysMenu(SDL_Window *window)
 {
-   if(disable_sysmenu)
-   {
-      SDL_SysWMinfo info;
-      
-      SDL_VERSION(&info.version); // this is important!
-      
-      if(SDL_GetWindowWMInfo(window, &info))
-      {
-         LONG_PTR window_style = GetWindowLongPtr(info.info.win.window, GWL_STYLE);
-         window_style &= ~WS_SYSMENU;
-         SetWindowLongPtr(info.info.win.window, GWL_STYLE, window_style);
-      }
-   }
+    if(disable_sysmenu)
+    {
+        SDL_SysWMinfo info;
+
+        SDL_VERSION(&info.version); // this is important!
+
+        if(SDL_GetWindowWMInfo(window, &info))
+        {
+            LONG_PTR window_style  = GetWindowLongPtr(info.info.win.window, GWL_STYLE);
+            window_style          &= ~WS_SYSMENU;
+            SetWindowLongPtr(info.info.win.window, GWL_STYLE, window_style);
+        }
+    }
 }
 
 #endif

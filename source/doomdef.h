@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,13 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Internally used data structures for virtually everything,
-//   key definitions, lots of other stuff.
+// Purpose: Internally used data structures for virtually everything,
+//  key definitions, lots of other stuff.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Stephen McGranahan, Ioan Chera, Max Waine
+//
 
 #ifndef DOOMDEF_H__
 #define DOOMDEF_H__
@@ -36,64 +35,64 @@
 // Identify language to use, software localization.
 enum Language_t
 {
-   english,
-   french,
-   german,
-   unknown
+    english,
+    french,
+    german,
+    unknown
 };
 
 //
 // For resize of screen, at start of game.
 //
 
-#define BASE_WIDTH 320
+static constexpr int BASE_WIDTH = 320;
 
 // It is educational but futile to change this
 //  scaling e.g. to 2. Drawing of status bar,
 //  menues etc. is tied to the scale implied
 //  by the graphics.
 
-#define SCREEN_MUL         1
-#define INV_ASPECT_RATIO   0.625 /* 0.75, ideally */
+static constexpr int    SCREEN_MUL       = 1;
+static constexpr double INV_ASPECT_RATIO = 0.625; /* 0.75, ideally */
 
 // haleyjd 02/17/14: MAX_SCREENWIDTH/HEIGHT are now only a limit on the highest
 // resolution that Eternity will allow to attempt to be set. They are no longer
 // used to size any arrays in the renderer.
 
 // SoM 2-4-04: ANYRES
-#define MAX_SCREENWIDTH  32767
-#define MAX_SCREENHEIGHT 32767
+static constexpr int MAX_SCREENWIDTH  = 32767;
+static constexpr int MAX_SCREENHEIGHT = 32767;
 
-#define SCREENWIDTH      320
-#define SCREENHEIGHT     200
+static constexpr int SCREENWIDTH  = 320;
+static constexpr int SCREENHEIGHT = 200;
 
 // The maximum number of players, multiplayer/networking.
-#define MAXPLAYERS       4
+static constexpr int MAXPLAYERS = 4;
 
 // phares 5/14/98:
 // DOOM Editor Numbers (aka doomednum in Mobj)
 
-#define DEN_PLAYER5 4001
-#define DEN_PLAYER6 4002
-#define DEN_PLAYER7 4003
-#define DEN_PLAYER8 4004
+static constexpr int DEN_PLAYER5 = 4001;
+static constexpr int DEN_PLAYER6 = 4002;
+static constexpr int DEN_PLAYER7 = 4003;
+static constexpr int DEN_PLAYER8 = 4004;
 
 // State updates, number of tics / second.
-#define TICRATE          35
+static constexpr int TICRATE = 35;
 
 // The current state of the game: whether we are playing, gazing
 // at the intermission screen, the game final animation, or a demo.
 
 enum gamestate_t
 {
-   GS_NOSTATE = -1, // haleyjd: for C++ conversion, initial value of oldgamestate
-   GS_LEVEL,
-   GS_INTERMISSION,
-   GS_FINALE,
-   GS_DEMOSCREEN,
-   GS_CONSOLE,
-   GS_STARTUP, // haleyjd: value given to gamestate during startup to avoid thinking it's GS_LEVEL
-   GS_LOADING  // haleyjd: value given to gamestate during level load
+    GS_NOSTATE = -1, // haleyjd: for C++ conversion, initial value of oldgamestate
+    GS_LEVEL,
+    GS_INTERMISSION,
+    GS_FINALE,
+    GS_DEMOSCREEN,
+    GS_CONSOLE,
+    GS_STARTUP, // haleyjd: value given to gamestate during startup to avoid thinking it's GS_LEVEL
+    GS_LOADING  // haleyjd: value given to gamestate during level load
 };
 
 //
@@ -101,67 +100,68 @@ enum gamestate_t
 //
 // These are Thing flags
 
-// Skill flags.
-#define MTF_EASY                1
-#define MTF_NORMAL              2
-#define MTF_HARD                4
-// Deaf monsters/do not react to sound.
-#define MTF_AMBUSH              8
+enum
+{
+    MTF_EASY   = 0x000000001, // Easy skill flag.
+    MTF_NORMAL = 0x000000002, // Normal skill flag.
+    MTF_HARD   = 0x000000004, // Hard skill flag.
+    MTF_AMBUSH = 0x000000008, // Deaf monsters/do not react to sound.
 
-// killough 11/98
-#define MTF_NOTSINGLE          16
-#define MTF_NOTDM              32
-#define MTF_NOTCOOP            64
-#define MTF_FRIEND            128
-#define MTF_RESERVED          256
+    // killough 11/98
+    MTF_NOTSINGLE = 0x000000010,
+    MTF_NOTDM     = 0x000000020,
+    MTF_NOTCOOP   = 0x000000040,
+    MTF_FRIEND    = 0x000000080,
+    MTF_RESERVED  = 0x000000100,
 
-// haleyjd
-#define MTF_DORMANT           512
+    // haleyjd
+    MTF_DORMANT = 0x000000200,
+};
 
 // haleyjd: PSX flags
-#define MTF_PSX_NIGHTMARE (32|128)
-#define MTF_PSX_SPECTRE   (32|64|128)
+enum
+{
+    MTF_PSX_NIGHTMARE = 32 | 128,
+    MTF_PSX_SPECTRE   = 32 | 64 | 128,
+};
 
 // Strife flags
-#define MTF_STRIFE_STAND       32   // WARNING: this is already in MTF_EX_STAND
-#define MTF_STRIFE_FRIEND      64
-#define MTF_STRIFE_TRANSLUCENT 256
-#define MTF_STRIFE_MVCIS       512
+enum
+{
+    MTF_STRIFE_STAND       = 0x000000020, // WARNING: this is already in MTF_EX_STAND
+    MTF_STRIFE_FRIEND      = 0x000000040,
+    MTF_STRIFE_TRANSLUCENT = 0x000000100,
+    MTF_STRIFE_MVCIS       = 0x000000200,
+};
 
 //
 // ioanch 20151218: mapthing_t::extOptions (extended) flags: needed by UDMF
 //
 enum
 {
-   // will appear on skill 1 if MTF_EASY is not set
-   // will not appear on skill 1 if MTF_EASY is set
-   MTF_EX_BABY_TOGGLE = 1,
+    // will appear on skill 1 if MTF_EASY is not set
+    // will not appear on skill 1 if MTF_EASY is set
+    MTF_EX_BABY_TOGGLE = 1,
 
-   // will appear on skill 5 if MTF_HARD is not set
-   // will not appear on skill 5 if MTF_HARD is set
-   MTF_EX_NIGHTMARE_TOGGLE = 2,
+    // will appear on skill 5 if MTF_HARD is not set
+    // will not appear on skill 5 if MTF_HARD is set
+    MTF_EX_NIGHTMARE_TOGGLE = 2,
 
-   // Strife standing monster
-   MTF_EX_STAND = 4,
+    // Strife standing monster
+    MTF_EX_STAND = 4,
 };
-
-// sf: sector flags, not me =)
-                // kill all sound in sector
-#define SF_KILLSOUND          1024
-                // kill all sounds due to moving
-#define SF_KILLMOVESOUND      2048
 
 // a macro to find out whether to make moving sounds in a sector
 #define silentmove(s) ((s)->flags & SECF_KILLMOVESOUND)
 
 enum skill_t : int
 {
-   sk_none = -1, //jff 3/24/98 create unpicked skill setting
-   sk_baby = 0,
-   sk_easy,
-   sk_medium,
-   sk_hard,
-   sk_nightmare
+    sk_none = -1, // jff 3/24/98 create unpicked skill setting
+    sk_baby = 0,
+    sk_easy,
+    sk_medium,
+    sk_hard,
+    sk_nightmare
 };
 
 //
@@ -170,74 +170,73 @@ enum skill_t : int
 
 enum card_t
 {
-   it_bluecard,
-   it_yellowcard,
-   it_redcard,
-   it_blueskull,
-   it_yellowskull,
-   it_redskull,
-   NUMCARDS
+    it_bluecard,
+    it_yellowcard,
+    it_redcard,
+    it_blueskull,
+    it_yellowskull,
+    it_redskull,
+    NUMCARDS
 };
 
 // The defined weapons, including a marker
 // indicating user has not changed weapon.
 enum
 {
-   wp_fist,
-   wp_pistol,
-   wp_shotgun,
-   wp_chaingun,
-   wp_missile,
-   wp_plasma,
-   wp_bfg,
-   wp_chainsaw,
-   wp_supershotgun,
+    wp_fist,
+    wp_pistol,
+    wp_shotgun,
+    wp_chaingun,
+    wp_missile,
+    wp_plasma,
+    wp_bfg,
+    wp_chainsaw,
+    wp_supershotgun,
 
-   NUMWEAPONS,
-   wp_nochange              // No pending weapon change.
+    NUMWEAPONS,
+    wp_nochange // No pending weapon change.
 };
-
-typedef int weapontype_t;
+using weapontype_t = int;
 
 // Ammunition types defined.
 enum
 {
-   am_clip,    // Pistol / chaingun ammo.
-   am_shell,   // Shotgun / double barreled shotgun.
-   am_cell,    // Plasma rifle, BFG.
-   am_misl,    // Missile launcher.
+    am_clip,  // Pistol / chaingun ammo.
+    am_shell, // Shotgun / double barreled shotgun.
+    am_cell,  // Plasma rifle, BFG.
+    am_misl,  // Missile launcher.
 
-   NUMAMMO,
-   am_noammo   // Unlimited for chainsaw / fist.
+    NUMAMMO,
+    am_noammo // Unlimited for chainsaw / fist.
 };
-typedef int ammotype_t;
+using ammotype_t = int;
 
 // Power up artifacts.
 enum powertype_t
 {
-   pw_invulnerability,
-   pw_strength,
-   pw_invisibility,
-   pw_ironfeet,
-   pw_allmap,
-   pw_infrared,
-   pw_totalinvis,  // haleyjd: total invisibility
-   pw_ghost,       // haleyjd: heretic ghost
-   pw_silencer,    // haleyjd: silencer
-   pw_flight,      // haleyjd: flight
-   pw_torch,       // haleyjd: infrared w/flicker
-   pw_weaponlevel2, //  MaxW: powered-up weapons (tome of power)
-   NUMPOWERS
+    pw_invulnerability,
+    pw_strength,
+    pw_invisibility,
+    pw_ironfeet,
+    pw_allmap,
+    pw_infrared,
+    pw_totalinvis,   // haleyjd: total invisibility
+    pw_ghost,        // haleyjd: heretic ghost
+    pw_silencer,     // haleyjd: silencer
+    pw_flight,       // haleyjd: flight
+    pw_torch,        // haleyjd: infrared w/flicker
+    pw_weaponlevel2, //  MaxW: powered-up weapons (tome of power)
+    NUMPOWERS
 };
 
 // Power up durations (how many seconds till expiration).
 enum powerduration_e
 {
-   INVULNTICS  = ( 30  * TICRATE),
-   INVISTICS   = ( 60  * TICRATE),
-   INFRATICS   = ( 120 * TICRATE),
-   IRONTICS    = ( 60  * TICRATE),
-   FLIGHTTICS  = ( 60  * TICRATE),  // flight tics, for Heretic
+    INVULNTICS = (30 * TICRATE),
+    INVISTICS  = (60 * TICRATE),
+    INFRATICS  = (120 * TICRATE),
+    IRONTICS   = (60 * TICRATE),
+    FLIGHTTICS = (60 * TICRATE), // flight tics, for Heretic
 };
 
 // DOOM keyboard definition.
@@ -246,132 +245,132 @@ enum powerduration_e
 
 enum keycode_e
 {
-   KEYD_TAB            = 0x09,
-   KEYD_ENTER          = 0x0d,
-   KEYD_ESCAPE         = 0x1b,
+    KEYD_TAB    = 0x09,
+    KEYD_ENTER  = 0x0d,
+    KEYD_ESCAPE = 0x1b,
 
-   KEYD_SPACEBAR       = 0x20,
+    KEYD_SPACEBAR = 0x20,
 
-   KEYD_COMMA          = 0x2c,
-   KEYD_MINUS,
-   KEYD_PERIOD,
+    KEYD_COMMA = 0x2c,
+    KEYD_MINUS,
+    KEYD_PERIOD,
 
-   KEYD_EQUALS         = 0x3d,
-   
-   KEYD_ACCGRAVE       = 0x60,
+    KEYD_EQUALS = 0x3d,
 
-   KEYD_BACKSPACE      = 0x7f,
+    KEYD_ACCGRAVE = 0x60,
 
-   // FIXME: The values for these two might need adjusting
-   KEYD_NONUSBACKSLASH = 0x80,
-   KEYD_NONUSHASH,
+    KEYD_BACKSPACE = 0x7f,
 
-   KEYD_RCTRL          = 0x9d,
+    // FIXME: The values for these two might need adjusting
+    KEYD_NONUSBACKSLASH = 0x80,
+    KEYD_NONUSHASH,
 
-   KEYD_LEFTARROW      = 0xac,
-   KEYD_UPARROW,
-   KEYD_RIGHTARROW,
-   KEYD_DOWNARROW,
+    KEYD_RCTRL = 0x9d,
 
-   KEYD_RSHIFT         = 0xb6,
-   KEYD_RALT           = 0xb8,
-   KEYD_LALT           = KEYD_RALT,
+    KEYD_LEFTARROW = 0xac,
+    KEYD_UPARROW,
+    KEYD_RIGHTARROW,
+    KEYD_DOWNARROW,
 
-   KEYD_CAPSLOCK       = 0xba, // phares 
+    KEYD_RSHIFT = 0xb6,
+    KEYD_RALT   = 0xb8,
+    KEYD_LALT   = KEYD_RALT,
 
-   KEYD_F1             = 0xbb,
-   KEYD_F2,
-   KEYD_F3,
-   KEYD_F4,
-   KEYD_F5,
-   KEYD_F6,
-   KEYD_F7,
-   KEYD_F8,
-   KEYD_F9,
-   KEYD_F10,
-   KEYD_PRINTSCREEN,
-   KEYD_NUMLOCK,
-   KEYD_SCROLLLOCK,
-   KEYD_HOME,   
-   KEYD_PAGEUP,
-   KEYD_END            = 0xcf,
-   KEYD_PAGEDOWN       = 0xd1,
-   KEYD_INSERT         = 0xd2,
+    KEYD_CAPSLOCK = 0xba, // phares
 
-   KEYD_F11            = 0xd7,
-   KEYD_F12,
+    KEYD_F1 = 0xbb,
+    KEYD_F2,
+    KEYD_F3,
+    KEYD_F4,
+    KEYD_F5,
+    KEYD_F6,
+    KEYD_F7,
+    KEYD_F8,
+    KEYD_F9,
+    KEYD_F10,
+    KEYD_PRINTSCREEN,
+    KEYD_NUMLOCK,
+    KEYD_SCROLLLOCK,
+    KEYD_HOME,
+    KEYD_PAGEUP,
+    KEYD_END      = 0xcf,
+    KEYD_PAGEDOWN = 0xd1,
+    KEYD_INSERT   = 0xd2,
 
-   // haleyjd: virtual keys for mouse
-   KEYD_MOUSE1         = 0xe0,
-   KEYD_MOUSE2,
-   KEYD_MOUSE3,
-   KEYD_MOUSE4,
-   KEYD_MOUSE5,
-   KEYD_MOUSE6,
-   KEYD_MOUSE7,
-   KEYD_MOUSE8,
-   KEYD_MWHEELUP,
-   KEYD_MWHEELDOWN,
+    KEYD_F11 = 0xd7,
+    KEYD_F12,
 
-   KEYD_KP0            = 0xed,
-   KEYD_KP1,
-   KEYD_KP2,
-   KEYD_KP3,
-   KEYD_KP4,
-   KEYD_KP5,
-   KEYD_KP6,
-   KEYD_KP7,
-   KEYD_KP8,
-   KEYD_KP9,
-   KEYD_KPPERIOD,
-   KEYD_KPDIVIDE,
-   KEYD_KPMULTIPLY,
-   KEYD_KPMINUS,
-   KEYD_KPPLUS,
-   KEYD_KPENTER,
-   KEYD_KPEQUALS,
-   KEYD_DEL,
-   KEYD_PAUSE, // 0xff
+    // haleyjd: virtual keys for mouse
+    KEYD_MOUSE1 = 0xe0,
+    KEYD_MOUSE2,
+    KEYD_MOUSE3,
+    KEYD_MOUSE4,
+    KEYD_MOUSE5,
+    KEYD_MOUSE6,
+    KEYD_MOUSE7,
+    KEYD_MOUSE8,
+    KEYD_MWHEELUP,
+    KEYD_MWHEELDOWN,
 
-   // virtual key codes for gamepad buttons
-   KEYD_JOY_BASE = 0x100,
-   KEYD_JOY_A = KEYD_JOY_BASE,
-   KEYD_JOY_B,
-   KEYD_JOY_X,
-   KEYD_JOY_Y,
-   KEYD_JOY_BACK,
-   KEYD_JOY_GUIDE,
-   KEYD_JOY_START,
-   KEYD_JOY_STICK_LEFT,
-   KEYD_JOY_STICK_RIGHT,
-   KEYD_JOY_SHOULDER_LEFT,
-   KEYD_JOY_SHOULDER_RIGHT,
-   KEYD_JOY_DPAD_UP,
-   KEYD_JOY_DPAD_DOWN,
-   KEYD_JOY_DPAD_LEFT,
-   KEYD_JOY_DPAD_RIGHT,
-   KEYD_JOY_MISC1, // Xbox Series X share, PS5 microphone, Switch Pro capture button
-   KEYD_JOY_MISC2,
-   KEYD_JOY_MISC3,
-   KEYD_JOY_MISC4,
-   KEYD_JOY_MISC5,
-   KEYD_JOY_TOUCHPAD,
-   KEYD_JOY_21,
-   KEYD_JOY_22,
-   KEYD_JOY_23,
+    KEYD_KP0 = 0xed,
+    KEYD_KP1,
+    KEYD_KP2,
+    KEYD_KP3,
+    KEYD_KP4,
+    KEYD_KP5,
+    KEYD_KP6,
+    KEYD_KP7,
+    KEYD_KP8,
+    KEYD_KP9,
+    KEYD_KPPERIOD,
+    KEYD_KPDIVIDE,
+    KEYD_KPMULTIPLY,
+    KEYD_KPMINUS,
+    KEYD_KPPLUS,
+    KEYD_KPENTER,
+    KEYD_KPEQUALS,
+    KEYD_DEL,
+    KEYD_PAUSE, // 0xff
 
-   // axis activation events
-   KEYD_AXIS_BASE,
-   KEYD_AXIS_LEFT_X = KEYD_AXIS_BASE,
-   KEYD_AXIS_LEFT_Y,
-   KEYD_AXIS_RIGHT_X,
-   KEYD_AXIS_RIGHT_Y,
-   KEYD_AXIS_TRIGGER_LEFT,
-   KEYD_AXIS_TRIGGER_RIGHT,
-   KEYD_AXISON07,
-   KEYD_AXISON08,
+    // virtual key codes for gamepad buttons
+    KEYD_JOY_BASE = 0x100,
+    KEYD_JOY_A    = KEYD_JOY_BASE,
+    KEYD_JOY_B,
+    KEYD_JOY_X,
+    KEYD_JOY_Y,
+    KEYD_JOY_BACK,
+    KEYD_JOY_GUIDE,
+    KEYD_JOY_START,
+    KEYD_JOY_STICK_LEFT,
+    KEYD_JOY_STICK_RIGHT,
+    KEYD_JOY_SHOULDER_LEFT,
+    KEYD_JOY_SHOULDER_RIGHT,
+    KEYD_JOY_DPAD_UP,
+    KEYD_JOY_DPAD_DOWN,
+    KEYD_JOY_DPAD_LEFT,
+    KEYD_JOY_DPAD_RIGHT,
+    KEYD_JOY_MISC1, // Xbox Series X share, PS5 microphone, Switch Pro capture button
+    KEYD_JOY_MISC2,
+    KEYD_JOY_MISC3,
+    KEYD_JOY_MISC4,
+    KEYD_JOY_MISC5,
+    KEYD_JOY_TOUCHPAD,
+    KEYD_JOY_21,
+    KEYD_JOY_22,
+    KEYD_JOY_23,
 
-   NUMKEYS
+    // axis activation events
+    KEYD_AXIS_BASE,
+    KEYD_AXIS_LEFT_X = KEYD_AXIS_BASE,
+    KEYD_AXIS_LEFT_Y,
+    KEYD_AXIS_RIGHT_X,
+    KEYD_AXIS_RIGHT_Y,
+    KEYD_AXIS_TRIGGER_LEFT,
+    KEYD_AXIS_TRIGGER_RIGHT,
+    KEYD_AXISON07,
+    KEYD_AXISON08,
+
+    NUMKEYS
 };
 
 // phares 4/19/98:
@@ -380,17 +379,17 @@ enum keycode_e
 
 enum ss_types
 {
-   ss_none,
-   ss_keys,
-   ss_weap,
-   ss_stat,
-   ss_auto,
-   ss_enem,
-   ss_mess,
-   ss_chat,
-   ss_gen,       // killough 10/98
-   ss_comp,      // killough 10/98
-   ss_max
+    ss_none,
+    ss_keys,
+    ss_weap,
+    ss_stat,
+    ss_auto,
+    ss_enem,
+    ss_mess,
+    ss_chat,
+    ss_gen,  // killough 10/98
+    ss_comp, // killough 10/98
+    ss_max
 };
 
 // phares 3/20/98:
@@ -399,14 +398,14 @@ enum ss_types
 // linedefs. More friction can create mud, sludge,
 // magnetized floors, etc. Less friction can create ice.
 
-#define MORE_FRICTION_MOMENTUM 15000       // mud factor based on momentum
-#define ORIG_FRICTION          0xE800      // original value
-#define ORIG_FRICTION_FACTOR   2048        // original value
-#define FRICTION_FLY           0xEB00      // haleyjd: Raven flying player
+static constexpr int MORE_FRICTION_MOMENTUM = 15000;  // mud factor based on momentum
+static constexpr int ORIG_FRICTION          = 0xE800; // original value
+static constexpr int ORIG_FRICTION_FACTOR   = 2048;   // original value
+static constexpr int FRICTION_FLY           = 0xEB00; // haleyjd: Raven flying player
 
 // haleyjd 06/05/12: flying
-#define FLIGHT_CENTER      -8
-#define FLIGHT_IMPULSE_AMT  5
+static constexpr int FLIGHT_CENTER      = -8;
+static constexpr int FLIGHT_IMPULSE_AMT = 5;
 
 // sf: some useful macros
 //
@@ -415,11 +414,14 @@ enum ss_types
 // isMAPxy }
 //
 
-#define isnumchar(c) ((c) >= '0' && (c) <= '9')
+inline constexpr bool isnumchar(const char c)
+{
+    return c >= '0' && c <= '9';
+}
 
-#define HTIC_GHOST_TRANS 26624
+static constexpr int HTIC_GHOST_TRANS = 26624;
 
-#endif          // __DOOMDEF__
+#endif // __DOOMDEF__
 
 //----------------------------------------------------------------------------
 //

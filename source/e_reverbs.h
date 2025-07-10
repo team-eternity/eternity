@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// EDF Reverb Module
+// Purpose: EDF Reverb Module
+// Authors: James Haley
 //
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #ifndef E_REVERBS_H__
 #define E_REVERBS_H__
@@ -35,28 +32,28 @@
 // reverb flags
 enum
 {
-   REVERB_ENABLED   = 0x00000001, // represents an actual effect
-   REVERB_EQUALIZED = 0x00000002  // equalizer is enabled.
+    REVERB_ENABLED   = 0x00000001, // represents an actual effect
+    REVERB_EQUALIZED = 0x00000002  // equalizer is enabled.
 };
 
 // EDF reverb data structure
 struct ereverb_t
 {
-   DLListItem<ereverb_t> links; // hash by id
-   int    id;                   // id number
+    DLListItem<ereverb_t> links; // hash by id
+    int                   id;    // id number
 
-   double roomsize;
-   double dampening;
-   double wetscale;
-   double dryscale;
-   double width;
-   int    predelay;
-   double eqlowfreq;
-   double eqhighfreq;
-   double eqlowgain;
-   double eqmidgain;
-   double eqhighgain;
-   unsigned int flags;
+    double       roomsize;
+    double       dampening;
+    double       wetscale;
+    double       dryscale;
+    double       width;
+    int          predelay;
+    double       eqlowfreq;
+    double       eqhighfreq;
+    double       eqlowgain;
+    double       eqmidgain;
+    double       eqhighgain;
+    unsigned int flags;
 };
 
 ereverb_t *E_GetDefaultReverb();            // returns the built-in default reverb
@@ -66,8 +63,8 @@ ereverb_t *E_ReverbForID(int id);           // for combined ID
 #ifdef NEED_EDF_DEFINITIONS
 
 // EDF section name and options array
-#define EDF_SEC_REVERB "reverb"
-extern cfg_opt_t edf_reverb_opts[];
+static constexpr const char EDF_SEC_REVERB[] = "reverb";
+extern cfg_opt_t            edf_reverb_opts[];
 
 // Main processing function
 void E_ProcessReverbs(cfg_t *cfg);

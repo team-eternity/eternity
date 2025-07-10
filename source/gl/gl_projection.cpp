@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,14 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   
-//  OpenGL Projection Functions
-//  haleyjd 05/15/11
+// Purpose: OpenGL projection functions.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifdef EE_FEATURE_OPENGL
 
@@ -39,17 +35,17 @@
 //
 void GL_SetOrthoMode(int w, int h)
 {
-   // Clear model-view matrix
-   glMatrixMode(GL_MODELVIEW);
-   glLoadIdentity();
+    // Clear model-view matrix
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 
-   // Set projection matrix to a standard orthogonal projection
-   glMatrixMode(GL_PROJECTION);
-   glLoadIdentity();
-   glOrtho(0.0, (GLdouble)w, (GLdouble)h, 0.0, -1.0, 1.0);
+    // Set projection matrix to a standard orthogonal projection
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0, (GLdouble)w, (GLdouble)h, 0.0, -1.0, 1.0);
 
-   // Disable depth buffer test
-   glDisable(GL_DEPTH_TEST);
+    // Disable depth buffer test
+    glDisable(GL_DEPTH_TEST);
 }
 
 #endif

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,22 +15,20 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      System configuration
+// Purpose: System configuration.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef M_SYSCFG_H__
 #define M_SYSCFG_H__
 
-void M_LoadSysConfig(const char *filename);
-void M_SaveSysConfig(void);
+void       M_LoadSysConfig(const char *filename);
+void       M_SaveSysConfig(void);
 default_t *M_GetSysDefaults(void);
 
 #endif
 
 // EOF
-
 

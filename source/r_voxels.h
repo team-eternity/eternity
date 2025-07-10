@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,24 +18,23 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: Voxels.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef R_VOXELS_H__
 #define R_VOXELS_H__
 
 struct rvoxelmodel_t
 {
-   int  xsize, ysize, zsize; // dimensions
-   byte *voxels;             // three-dimensional voxel buffer
-   byte palette[768];        // original palette
+    int   xsize, ysize, zsize; // dimensions
+    byte *voxels;              // three-dimensional voxel buffer
+    byte  palette[768];        // original palette
 };
 
 #endif
 
 // EOF
-
 

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,14 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   
-//  OpenGL Initialization/Setup Functions
-//  haleyjd 05/15/11
+// Purpose: OpenGL initialization/setup functions.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef GL_INIT_H__
 #define GL_INIT_H__
@@ -40,20 +36,17 @@
 //
 struct GL_versioninfo
 {
-   int minorversion;
-   int majorversion;
+    int minorversion;
+    int majorversion;
 
-   static int makeVersion(int major, int minor)
-   {
-      return major * 10 + minor;
-   }
+    static int makeVersion(int major, int minor) { return major * 10 + minor; }
 
-   int compareVersion(int version)
-   {
-      int compositeversion = makeVersion(majorversion, minorversion);
+    int compareVersion(int version)
+    {
+        int compositeversion = makeVersion(majorversion, minorversion);
 
-      return version - compositeversion;
-   }  
+        return version - compositeversion;
+    }
 };
 
 extern GL_versioninfo GL_version;

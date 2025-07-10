@@ -90,7 +90,7 @@ lockdef 1
 {
   require  KeyGreen
   mapcolor 220
-   
+
   message       "$HPD_GREENK"
   remotemessage "$HPD_GREENO"
 }
@@ -100,7 +100,7 @@ lockdef 2
 {
   require  KeyBlue
   mapcolor 197
-   
+
   message       "$PD_BLUEK"
   remotemessage "$PD_BLUEO"
 }
@@ -110,7 +110,7 @@ lockdef 3
 {
   require  KeyYellow
   mapcolor 144
-   
+
   message       "$PD_YELLOWK"
   remotemessage "$PD_YELLOWO"
 }
@@ -120,7 +120,7 @@ lockdef 129
 {
   require  KeyGreen
   mapcolor 220
-   
+
   message       "$HPD_GREENK"
   remotemessage "$HPD_GREENO"
 }
@@ -130,7 +130,7 @@ lockdef 130
 {
   require  KeyBlue
   mapcolor 197
-   
+
   message       "$PD_BLUEK"
   remotemessage "$PD_BLUEO"
 }
@@ -140,7 +140,7 @@ lockdef 131
 {
   require  KeyYellow
   mapcolor 144
-   
+
   message       "$PD_YELLOWK"
   remotemessage "$PD_YELLOWO"
 }
@@ -151,7 +151,7 @@ lockdef 229
   require KeyGreen
   require KeyYellow
   require KeyBlue
-   
+
   message       "$PD_ALL3"
   remotemessage "You need all 3 keys to activate this object"
 }
@@ -162,7 +162,7 @@ lockdef 101
   require KeyGreen
   require KeyYellow
   require KeyBlue
-   
+
   message       "$PD_ALL3"
   remotemessage "You need all 3 keys to activate this object"
 }
@@ -408,7 +408,7 @@ artifact ArtiHealth
 
   autouse.health.mode     heretic
   autouse.health.restrict baby
-  
+
   +invbar
 
   artifacttype   Normal

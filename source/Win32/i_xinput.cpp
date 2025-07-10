@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// XInput Gamepad Support
+// Purpose: XInput gamepad support.
+// Authors: James Haley
 //
-// By James Haley
-//
-//-----------------------------------------------------------------------------
 
 #ifdef EE_FEATURE_XINPUT
 
@@ -50,9 +47,9 @@
 // We load everything dynamically because XInput 9.1.0 is not available on
 // Windows XP, as far as I'm aware.
 
-typedef DWORD (WINAPI *PXINPUTGETSTATE)(DWORD, XINPUT_STATE *);
-typedef DWORD (WINAPI *PXINPUTSETSTATE)(DWORD, XINPUT_VIBRATION *);
-typedef DWORD (WINAPI *PXINPUTGETCAPS )(DWORD, XINPUT_CAPABILITIES *);
+typedef DWORD(WINAPI *PXINPUTGETSTATE)(DWORD, XINPUT_STATE *);
+typedef DWORD(WINAPI *PXINPUTSETSTATE)(DWORD, XINPUT_VIBRATION *);
+typedef DWORD(WINAPI *PXINPUTGETCAPS)(DWORD, XINPUT_CAPABILITIES *);
 
 static PXINPUTGETSTATE pXInputGetState;
 static PXINPUTSETSTATE pXInputSetState;
@@ -83,16 +80,16 @@ static PXINPUTGETCAPS  pXInputGetCapabilities;
 //
 bool XInputGamePadDriver::initialize()
 {
-   HMODULE pXInputLib = LoadLibrary(XINPUT_DLL_A);
+    HMODULE pXInputLib = LoadLibrary(XINPUT_DLL_A);
 
-   if(!pXInputLib)
-      return false;
+    if(!pXInputLib)
+        return false;
 
-   LOADXINPUTAPI(XInputGetState,        PXINPUTGETSTATE);
-   LOADXINPUTAPI(XInputSetState,        PXINPUTSETSTATE);
-   LOADXINPUTAPI(XInputGetCapabilities, PXINPUTGETCAPS );
+    LOADXINPUTAPI(XInputGetState, PXINPUTGETSTATE);
+    LOADXINPUTAPI(XInputSetState, PXINPUTSETSTATE);
+    LOADXINPUTAPI(XInputGetCapabilities, PXINPUTGETCAPS);
 
-   return true;
+    return true;
 }
 
 //
@@ -100,8 +97,8 @@ bool XInputGamePadDriver::initialize()
 //
 void XInputGamePadDriver::shutdown()
 {
-   for(HALGamePad *&it : devices)
-      it->getHapticInterface()->clearEffects();
+    for(HALGamePad *&it : devices)
+        it->getHapticInterface()->clearEffects();
 }
 
 //
@@ -112,18 +109,18 @@ void XInputGamePadDriver::shutdown()
 //
 void XInputGamePadDriver::enumerateDevices()
 {
-   XINPUT_STATE testState;
+    XINPUT_STATE testState;
 
-   for(DWORD i = 0; i < MAX_XINPUT_PADS; i++)
-   {
-      memset(&testState, 0, sizeof(testState));
+    for(DWORD i = 0; i < MAX_XINPUT_PADS; i++)
+    {
+        memset(&testState, 0, sizeof(testState));
 
-      if(!pXInputGetState(i, &testState))
-      {
-         XInputGamePad *pad = new XInputGamePad(i);
-         addDevice(pad);
-      }  
-   }
+        if(!pXInputGetState(i, &testState))
+        {
+            XInputGamePad *pad = new XInputGamePad(i);
+            addDevice(pad);
+        }
+    }
 }
 
 // The one and only instance of XInputGamePadDriver
@@ -139,16 +136,15 @@ IMPLEMENT_RTTI_TYPE(XInputGamePad)
 //
 // Constructor
 //
-XInputGamePad::XInputGamePad(unsigned long userIdx)
-   : Super(), dwUserIndex(userIdx), haptics(userIdx)
+XInputGamePad::XInputGamePad(unsigned long userIdx) : Super(), dwUserIndex(userIdx), haptics(userIdx)
 {
-   int index = static_cast<int>(dwUserIndex);
-   name << "XInput Gamepad " << index + 1;
-   num = i_xinputGamePadDriver.getBaseDeviceNum() + index;
+    int index = static_cast<int>(dwUserIndex);
+    name << "XInput Gamepad " << index + 1;
+    num = i_xinputGamePadDriver.getBaseDeviceNum() + index;
 
-   // number of axes and buttons supported is constant
-   numAxes    = MAX_XINPUT_AXES;
-   numButtons = MAX_XINPUT_BUTTONS;
+    // number of axes and buttons supported is constant
+    numAxes    = MAX_XINPUT_AXES;
+    numButtons = MAX_XINPUT_BUTTONS;
 }
 
 //
@@ -156,18 +152,18 @@ XInputGamePad::XInputGamePad(unsigned long userIdx)
 //
 bool XInputGamePad::select()
 {
-   XINPUT_STATE testState;
-   bool connected = false;
+    XINPUT_STATE testState;
+    bool         connected = false;
 
-   memset(&testState, 0, sizeof(testState));
+    memset(&testState, 0, sizeof(testState));
 
-   if(!pXInputGetState(dwUserIndex, &testState))
-   {
-      haptics.clearEffects();
-      connected = true;
-   }
+    if(!pXInputGetState(dwUserIndex, &testState))
+    {
+        haptics.clearEffects();
+        connected = true;
+    }
 
-   return connected;
+    return connected;
 }
 
 //
@@ -175,31 +171,30 @@ bool XInputGamePad::select()
 //
 void XInputGamePad::deselect()
 {
-   haptics.clearEffects();
+    haptics.clearEffects();
 }
 
 struct buttonenum_t
 {
-   int xInputButton;
-   int halButton;
+    int xInputButton;
+    int halButton;
 };
 
-static buttonenum_t buttonTable[] =
-{
-   { XINPUT_GAMEPAD_DPAD_UP,         0 },
-   { XINPUT_GAMEPAD_DPAD_DOWN,       1 },
-   { XINPUT_GAMEPAD_DPAD_LEFT,       2 },
-   { XINPUT_GAMEPAD_DPAD_RIGHT,      3 },
-   { XINPUT_GAMEPAD_START,           4 },
-   { XINPUT_GAMEPAD_BACK,            5 },
-   { XINPUT_GAMEPAD_LEFT_THUMB,      6 },
-   { XINPUT_GAMEPAD_RIGHT_THUMB,     7 },
-   { XINPUT_GAMEPAD_LEFT_SHOULDER,   8 },
-   { XINPUT_GAMEPAD_RIGHT_SHOULDER,  9 },
-   { XINPUT_GAMEPAD_A,              10 },
-   { XINPUT_GAMEPAD_B,              11 },
-   { XINPUT_GAMEPAD_X,              12 },
-   { XINPUT_GAMEPAD_Y,              13 },
+static buttonenum_t buttonTable[] = {
+    { XINPUT_GAMEPAD_DPAD_UP,        0  },
+    { XINPUT_GAMEPAD_DPAD_DOWN,      1  },
+    { XINPUT_GAMEPAD_DPAD_LEFT,      2  },
+    { XINPUT_GAMEPAD_DPAD_RIGHT,     3  },
+    { XINPUT_GAMEPAD_START,          4  },
+    { XINPUT_GAMEPAD_BACK,           5  },
+    { XINPUT_GAMEPAD_LEFT_THUMB,     6  },
+    { XINPUT_GAMEPAD_RIGHT_THUMB,    7  },
+    { XINPUT_GAMEPAD_LEFT_SHOULDER,  8  },
+    { XINPUT_GAMEPAD_RIGHT_SHOULDER, 9  },
+    { XINPUT_GAMEPAD_A,              10 },
+    { XINPUT_GAMEPAD_B,              11 },
+    { XINPUT_GAMEPAD_X,              12 },
+    { XINPUT_GAMEPAD_Y,              13 },
 };
 
 //
@@ -209,10 +204,10 @@ static buttonenum_t buttonTable[] =
 //
 float XInputGamePad::normAxis(int value, int threshold, int maxvalue)
 {
-   if(abs(value) > threshold)
-      return static_cast<float>(value) / maxvalue;
-   else
-      return 0.0f;
+    if(abs(value) > threshold)
+        return static_cast<float>(value) / maxvalue;
+    else
+        return 0.0f;
 }
 
 //
@@ -220,31 +215,30 @@ float XInputGamePad::normAxis(int value, int threshold, int maxvalue)
 //
 // Normalize a bonded pair of analog axes.
 //
-void XInputGamePad::normAxisPair(float &axisx, float &axisy, int threshold, 
-                                 int min, int max)
+void XInputGamePad::normAxisPair(float &axisx, float &axisy, int threshold, int min, int max)
 {
-   float deadzone = (float)threshold / max;
-   v2float_t vec = { axisx, axisy };
+    float     deadzone = (float)threshold / max;
+    v2float_t vec      = { axisx, axisy };
 
-   // put components into the range of -1.0 to 1.0
-   vec.x = (vec.x - min) * 2.0f / (max - min) - 1.0f;
-   vec.y = (vec.y - min) * 2.0f / (max - min) - 1.0f;
+    // put components into the range of -1.0 to 1.0
+    vec.x = (vec.x - min) * 2.0f / (max - min) - 1.0f;
+    vec.y = (vec.y - min) * 2.0f / (max - min) - 1.0f;
 
-   float magnitude = M_MagnitudeVec2(vec);
+    float magnitude = M_MagnitudeVec2(vec);
 
-   if(magnitude < deadzone)
-   {
-      axisx = 0.0f;
-      axisy = 0.0f;
-   }
-   else
-   {
-      M_NormalizeVec2(vec, magnitude);
+    if(magnitude < deadzone)
+    {
+        axisx = 0.0f;
+        axisy = 0.0f;
+    }
+    else
+    {
+        M_NormalizeVec2(vec, magnitude);
 
-      // rescale to smooth edge of deadzone
-      axisx = vec.x * ((magnitude - deadzone) / (1 - deadzone));
-      axisy = vec.y * ((magnitude - deadzone) / (1 - deadzone));
-   }
+        // rescale to smooth edge of deadzone
+        axisx = vec.x * ((magnitude - deadzone) / (1 - deadzone));
+        axisy = vec.y * ((magnitude - deadzone) / (1 - deadzone));
+    }
 }
 
 //
@@ -252,36 +246,36 @@ void XInputGamePad::normAxisPair(float &axisx, float &axisy, int threshold,
 //
 void XInputGamePad::poll()
 {
-   XINPUT_STATE xstate;
-   XINPUT_GAMEPAD &pad = xstate.Gamepad;
-   
-   memset(&xstate, 0, sizeof(xstate));
+    XINPUT_STATE    xstate;
+    XINPUT_GAMEPAD &pad = xstate.Gamepad;
 
-   if(!pXInputGetState(dwUserIndex, &xstate))
-   {
-      // save old button and axis states
-      backupState();
+    memset(&xstate, 0, sizeof(xstate));
 
-      // read button states
-      for(size_t i = 0; i < earrlen(buttonTable); i++)
-      {
-         state.buttons[buttonTable[i].halButton] = 
-            ((pad.wButtons & buttonTable[i].xInputButton) == buttonTable[i].xInputButton);
-      }
+    if(!pXInputGetState(dwUserIndex, &xstate))
+    {
+        // save old button and axis states
+        backupState();
 
-      // read axis states
-      
-      state.axes[0] = pad.sThumbLX;
-      state.axes[1] = pad.sThumbLY;
-      state.axes[2] = pad.sThumbRX;
-      state.axes[3] = pad.sThumbRY;
+        // read button states
+        for(size_t i = 0; i < earrlen(buttonTable); i++)
+        {
+            state.buttons[buttonTable[i].halButton] =
+                ((pad.wButtons & buttonTable[i].xInputButton) == buttonTable[i].xInputButton);
+        }
 
-      normAxisPair(state.axes[0], state.axes[1], XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE,  -32768, 32767);
-      normAxisPair(state.axes[2], state.axes[3], XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE, -32768, 32767);
-      
-      state.axes[4] = normAxis(pad.bLeftTrigger,  XINPUT_GAMEPAD_TRIGGER_THRESHOLD, 255);
-      state.axes[5] = normAxis(pad.bRightTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD, 255);
-   }
+        // read axis states
+
+        state.axes[0] = pad.sThumbLX;
+        state.axes[1] = pad.sThumbLY;
+        state.axes[2] = pad.sThumbRX;
+        state.axes[3] = pad.sThumbRY;
+
+        normAxisPair(state.axes[0], state.axes[1], XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE, -32768, 32767);
+        normAxisPair(state.axes[2], state.axes[3], XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE, -32768, 32767);
+
+        state.axes[4] = normAxis(pad.bLeftTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD, 255);
+        state.axes[5] = normAxis(pad.bRightTrigger, XINPUT_GAMEPAD_TRIGGER_THRESHOLD, 255);
+    }
 }
 
 //=============================================================================
@@ -296,8 +290,8 @@ IMPLEMENT_RTTI_TYPE(XInputHapticInterface)
 // motor types
 enum motor_e
 {
-   MOTOR_LEFT,
-   MOTOR_RIGHT
+    MOTOR_LEFT,
+    MOTOR_RIGHT
 };
 
 //
@@ -306,22 +300,22 @@ enum motor_e
 class XIBaseEffect : public ZoneObject
 {
 protected:
-   uint32_t startTime;   
-   uint32_t duration;
-   static void AddClamped(XINPUT_VIBRATION &xvib, motor_e which, WORD addValue);
+    uint32_t    startTime;
+    uint32_t    duration;
+    static void AddClamped(XINPUT_VIBRATION &xvib, motor_e which, WORD addValue);
 
-   bool checkDone(uint32_t curTime) { return (curTime > startTime + duration); }
+    bool checkDone(uint32_t curTime) { return (curTime > startTime + duration); }
 
 public:
-   XIBaseEffect(uint32_t p_startTime, uint32_t p_duration);
-   virtual ~XIBaseEffect();
+    XIBaseEffect(uint32_t p_startTime, uint32_t p_duration);
+    virtual ~XIBaseEffect();
 
-   DLListItem<XIBaseEffect> links;
+    DLListItem<XIBaseEffect> links;
 
-   virtual void evolve(XINPUT_VIBRATION &xvib, uint32_t curTime) = 0;
+    virtual void evolve(XINPUT_VIBRATION &xvib, uint32_t curTime) = 0;
 
-   static void RunEffectsList(XINPUT_VIBRATION &xvib, uint32_t curTime);
-   static void ClearEffectsList();
+    static void RunEffectsList(XINPUT_VIBRATION &xvib, uint32_t curTime);
+    static void ClearEffectsList();
 };
 
 static DLList<XIBaseEffect, &XIBaseEffect::links> effects;
@@ -330,9 +324,9 @@ static DLList<XIBaseEffect, &XIBaseEffect::links> effects;
 // XIBaseEffect Constructor
 //
 XIBaseEffect::XIBaseEffect(uint32_t p_startTime, uint32_t p_duration)
-   : ZoneObject(), startTime(p_startTime), duration(p_duration), links() 
+    : ZoneObject(), startTime(p_startTime), duration(p_duration), links()
 {
-   effects.insert(this);
+    effects.insert(this);
 }
 
 //
@@ -340,7 +334,7 @@ XIBaseEffect::XIBaseEffect(uint32_t p_startTime, uint32_t p_duration)
 //
 XIBaseEffect::~XIBaseEffect()
 {
-   effects.remove(this);
+    effects.remove(this);
 }
 
 //
@@ -350,28 +344,23 @@ XIBaseEffect::~XIBaseEffect()
 //
 void XIBaseEffect::AddClamped(XINPUT_VIBRATION &xvib, motor_e which, WORD addValue)
 {
-   DWORD expanded;
-   WORD XINPUT_VIBRATION::* value;
+    DWORD expanded;
+    WORD XINPUT_VIBRATION::*value;
 
-   switch(which)
-   {
-   case MOTOR_LEFT:
-      value = &XINPUT_VIBRATION::wLeftMotorSpeed;
-      break;
-   case MOTOR_RIGHT:
-      value = &XINPUT_VIBRATION::wRightMotorSpeed;
-      break;
-   default:
-      return;
-   }
+    switch(which)
+    {
+    case MOTOR_LEFT:  value = &XINPUT_VIBRATION::wLeftMotorSpeed; break;
+    case MOTOR_RIGHT: value = &XINPUT_VIBRATION::wRightMotorSpeed; break;
+    default:          return;
+    }
 
-   expanded = xvib.*value;
-   expanded += addValue;
+    expanded  = xvib.*value;
+    expanded += addValue;
 
-   if(expanded > 65535)
-      expanded = 65535;
+    if(expanded > 65535)
+        expanded = 65535;
 
-   xvib.*value = static_cast<WORD>(expanded);
+    xvib.*value = static_cast<WORD>(expanded);
 }
 
 //
@@ -382,31 +371,31 @@ void XIBaseEffect::AddClamped(XINPUT_VIBRATION &xvib, motor_e which, WORD addVal
 //
 void XIBaseEffect::RunEffectsList(XINPUT_VIBRATION &xvib, uint32_t curTime)
 {
-   auto link = effects.head;
+    auto link = effects.head;
 
-   while(link)
-   {
-      auto next = link->dllNext;
-      (*link)->evolve(xvib, curTime);
-      link = next;
-   }
+    while(link)
+    {
+        auto next = link->dllNext;
+        (*link)->evolve(xvib, curTime);
+        link = next;
+    }
 }
 
-// 
+//
 // XIBaseEffect::ClearEffectsList
 //
 // Delete all active effects.
 //
 void XIBaseEffect::ClearEffectsList()
 {
-   auto link = effects.head;
+    auto link = effects.head;
 
-   while(link)
-   {
-      auto next = link->dllNext;
-      delete link->dllObject;
-      link = next;
-   }
+    while(link)
+    {
+        auto next = link->dllNext;
+        delete link->dllObject;
+        link = next;
+    }
 }
 
 //
@@ -422,47 +411,43 @@ void XIBaseEffect::ClearEffectsList()
 class XILinearEffect : public XIBaseEffect
 {
 protected:
-   motor_e  which;
-   WORD     initStrength;
-   WORD     endStrength;
-   int      direction;
+    motor_e which;
+    WORD    initStrength;
+    WORD    endStrength;
+    int     direction;
 
 public:
-   XILinearEffect(uint32_t p_startTime, uint32_t p_duration, motor_e p_which,
-                  WORD p_initStrength, WORD p_endStrength)
-      : XIBaseEffect(p_startTime, p_duration), which(p_which), 
-        initStrength(p_initStrength), endStrength(p_endStrength)
-   {
-      direction = (initStrength < endStrength) ? 1 : -1;
-   }
-   virtual ~XILinearEffect() {}
+    XILinearEffect(uint32_t p_startTime, uint32_t p_duration, motor_e p_which, WORD p_initStrength, WORD p_endStrength)
+        : XIBaseEffect(p_startTime, p_duration), which(p_which), initStrength(p_initStrength),
+          endStrength(p_endStrength)
+    {
+        direction = (initStrength < endStrength) ? 1 : -1;
+    }
+    virtual ~XILinearEffect() {}
 
-   virtual void evolve(XINPUT_VIBRATION &xvib, uint32_t curTime);
+    virtual void evolve(XINPUT_VIBRATION &xvib, uint32_t curTime);
 };
 
 //
 // XIRumbleEffect
 //
-// Tracks a single motor effect that sends randomized impulses to a single 
+// Tracks a single motor effect that sends randomized impulses to a single
 // motor.
 //
 class XIRumbleEffect : public XIBaseEffect
 {
 protected:
-   motor_e  which;          // which motor to apply the effect to
-   WORD     minStrength;    // minimum strength
-   WORD     maxStrength;    // maximum strength
+    motor_e which;       // which motor to apply the effect to
+    WORD    minStrength; // minimum strength
+    WORD    maxStrength; // maximum strength
 
 public:
-   XIRumbleEffect(uint32_t p_startTime, uint32_t p_duration, motor_e p_which,
-                  WORD p_minStrength, WORD p_maxStrength)
-      : XIBaseEffect(p_startTime, p_duration), which(p_which), 
-        minStrength(p_minStrength), maxStrength(p_maxStrength)
-   {
-   }
-   virtual ~XIRumbleEffect() {}
+    XIRumbleEffect(uint32_t p_startTime, uint32_t p_duration, motor_e p_which, WORD p_minStrength, WORD p_maxStrength)
+        : XIBaseEffect(p_startTime, p_duration), which(p_which), minStrength(p_minStrength), maxStrength(p_maxStrength)
+    {}
+    virtual ~XIRumbleEffect() {}
 
-   virtual void evolve(XINPUT_VIBRATION &xvib, uint32_t curTime);
+    virtual void evolve(XINPUT_VIBRATION &xvib, uint32_t curTime);
 };
 
 //
@@ -473,42 +458,40 @@ public:
 class XIConstantEffect : public XIBaseEffect
 {
 protected:
-   motor_e which;
-   WORD    strength;
-   static XIConstantEffect *CurrentLeft;
-   static XIConstantEffect *CurrentRight;
+    motor_e                  which;
+    WORD                     strength;
+    static XIConstantEffect *CurrentLeft;
+    static XIConstantEffect *CurrentRight;
 
 public:
-   XIConstantEffect(uint32_t p_startTime, uint32_t p_duration, motor_e p_which,
-                    WORD p_strength)
-      : XIBaseEffect(p_startTime, p_duration), which(p_which), strength(p_strength)
-   {
-      // this effect is singleton
-      if(which == MOTOR_LEFT)
-      {
-         if(CurrentLeft)
-            delete CurrentLeft;
-         CurrentLeft = this;
-      }
-      else
-      {
-         if(CurrentRight)
-            delete CurrentRight;
-         CurrentRight = this;
-      }
+    XIConstantEffect(uint32_t p_startTime, uint32_t p_duration, motor_e p_which, WORD p_strength)
+        : XIBaseEffect(p_startTime, p_duration), which(p_which), strength(p_strength)
+    {
+        // this effect is singleton
+        if(which == MOTOR_LEFT)
+        {
+            if(CurrentLeft)
+                delete CurrentLeft;
+            CurrentLeft = this;
+        }
+        else
+        {
+            if(CurrentRight)
+                delete CurrentRight;
+            CurrentRight = this;
+        }
+    }
+    virtual ~XIConstantEffect()
+    {
+        if(CurrentLeft == this)
+            CurrentLeft = nullptr;
+        if(CurrentRight == this)
+            CurrentRight = nullptr;
+    }
 
-   }
-   virtual ~XIConstantEffect() 
-   {
-      if(CurrentLeft == this)
-         CurrentLeft = nullptr;
-      if(CurrentRight == this)
-         CurrentRight = nullptr;
-   }
-
-   virtual void evolve(XINPUT_VIBRATION &xvib, uint32_t curTime);
+    virtual void evolve(XINPUT_VIBRATION &xvib, uint32_t curTime);
 };
-   
+
 XIConstantEffect *XIConstantEffect::CurrentLeft;
 XIConstantEffect *XIConstantEffect::CurrentRight;
 
@@ -520,16 +503,15 @@ XIConstantEffect *XIConstantEffect::CurrentRight;
 class XIDamageEffect : public XIBaseEffect
 {
 protected:
-   WORD strength;
+    WORD strength;
 
 public:
-   XIDamageEffect(uint32_t p_startTime, uint32_t p_duration, WORD p_strength)
-      : XIBaseEffect(p_startTime, p_duration), strength(p_strength)
-   {
-   }
-   virtual ~XIDamageEffect() {}
+    XIDamageEffect(uint32_t p_startTime, uint32_t p_duration, WORD p_strength)
+        : XIBaseEffect(p_startTime, p_duration), strength(p_strength)
+    {}
+    virtual ~XIDamageEffect() {}
 
-   virtual void evolve(XINPUT_VIBRATION &xvib, uint32_t curtime);
+    virtual void evolve(XINPUT_VIBRATION &xvib, uint32_t curtime);
 };
 
 //
@@ -544,28 +526,28 @@ public:
 //
 void XILinearEffect::evolve(XINPUT_VIBRATION &xvib, uint32_t curTime)
 {
-   if(checkDone(curTime))
-   {
-      delete this;
-      return;
-   }
+    if(checkDone(curTime))
+    {
+        delete this;
+        return;
+    }
 
-   WORD curStrength;
+    WORD curStrength;
 
-   if(direction < 0)
-   {
-      // slope down
-      WORD deltaStrength = (initStrength - endStrength);
-      curStrength = initStrength - deltaStrength * (curTime - startTime) / duration;
-   }
-   else
-   {
-      // slope up
-      WORD deltaStrength = (endStrength - initStrength);
-      curStrength = initStrength + deltaStrength * (curTime - startTime) / duration;
-   }
-   
-   AddClamped(xvib, which, curStrength);   
+    if(direction < 0)
+    {
+        // slope down
+        WORD deltaStrength = (initStrength - endStrength);
+        curStrength        = initStrength - deltaStrength * (curTime - startTime) / duration;
+    }
+    else
+    {
+        // slope up
+        WORD deltaStrength = (endStrength - initStrength);
+        curStrength        = initStrength + deltaStrength * (curTime - startTime) / duration;
+    }
+
+    AddClamped(xvib, which, curStrength);
 }
 
 //
@@ -575,36 +557,36 @@ void XILinearEffect::evolve(XINPUT_VIBRATION &xvib, uint32_t curTime)
 //
 void XIRumbleEffect::evolve(XINPUT_VIBRATION &xvib, uint32_t curTime)
 {
-   if(checkDone(curTime))
-   {
-      delete this;
-      return;
-   }
+    if(checkDone(curTime))
+    {
+        delete this;
+        return;
+    }
 
-   int minStr = minStrength;
-   int rndStr = abs(rand()) % (maxStrength - minStrength);
+    int minStr = minStrength;
+    int rndStr = abs(rand()) % (maxStrength - minStrength);
 
-   WORD totStr = static_cast<WORD>(minStr + rndStr);
-   AddClamped(xvib, which, totStr);
+    WORD totStr = static_cast<WORD>(minStr + rndStr);
+    AddClamped(xvib, which, totStr);
 }
 
 //
 // XIConstantEffect::evolve
 //
 // Pulse the motor at a constant strength. Due to the behavior of the XBox360
-// controller's non-solenoid motors however, there's a bit of "catch" which 
-// adds some unavoidable pseudo-random variance into the mix. Depending on 
-// where it stopped last time, you get no response at all until it seems to 
+// controller's non-solenoid motors however, there's a bit of "catch" which
+// adds some unavoidable pseudo-random variance into the mix. Depending on
+// where it stopped last time, you get no response at all until it seems to
 // "roll over" the catch, at which point you get more than you asked for.
 //
 void XIConstantEffect::evolve(XINPUT_VIBRATION &xvib, uint32_t curTime)
 {
-   if(checkDone(curTime))
-   {
-      delete this;
-      return;
-   }
-   AddClamped(xvib, which, strength);
+    if(checkDone(curTime))
+    {
+        delete this;
+        return;
+    }
+    AddClamped(xvib, which, strength);
 }
 
 //
@@ -614,32 +596,32 @@ void XIConstantEffect::evolve(XINPUT_VIBRATION &xvib, uint32_t curTime)
 //
 void XIDamageEffect::evolve(XINPUT_VIBRATION &xvib, uint32_t curTime)
 {
-   if(checkDone(curTime))
-   {
-      delete this;
-      return;
-   }
+    if(checkDone(curTime))
+    {
+        delete this;
+        return;
+    }
 
-   // Do left motor processing
-   DWORD endStrength   = strength * 40 / 64;
-   DWORD deltaStrength = (strength - endStrength);
-   DWORD curStrength   = strength - deltaStrength * (curTime - startTime) / duration;
-   
-   AddClamped(xvib, MOTOR_LEFT, static_cast<WORD>(curStrength));
+    // Do left motor processing
+    DWORD endStrength   = strength * 40 / 64;
+    DWORD deltaStrength = (strength - endStrength);
+    DWORD curStrength   = strength - deltaStrength * (curTime - startTime) / duration;
 
-   // Do right motor processing
-   if(curTime - startTime < duration / 2)
-   {
-      // Right motor is constant during first half of effect
-      AddClamped(xvib, MOTOR_RIGHT, strength / 2);
-   }
-   else
-   {
-      // Linear descent to zero
-      curStrength = strength / 2;
-      curStrength -= curStrength * (curTime - startTime) / duration;
-      AddClamped(xvib, MOTOR_RIGHT, static_cast<WORD>(curStrength));
-   }
+    AddClamped(xvib, MOTOR_LEFT, static_cast<WORD>(curStrength));
+
+    // Do right motor processing
+    if(curTime - startTime < duration / 2)
+    {
+        // Right motor is constant during first half of effect
+        AddClamped(xvib, MOTOR_RIGHT, strength / 2);
+    }
+    else
+    {
+        // Linear descent to zero
+        curStrength  = strength / 2;
+        curStrength -= curStrength * (curTime - startTime) / duration;
+        AddClamped(xvib, MOTOR_RIGHT, static_cast<WORD>(curStrength));
+    }
 }
 
 //=============================================================================
@@ -653,10 +635,8 @@ void XIDamageEffect::evolve(XINPUT_VIBRATION &xvib, uint32_t curTime)
 //
 // Constructor
 //
-XInputHapticInterface::XInputHapticInterface(unsigned long userIdx)
-   : Super(), dwUserIndex(userIdx), pauseState(false) 
-{
-}
+XInputHapticInterface::XInputHapticInterface(unsigned long userIdx) : Super(), dwUserIndex(userIdx), pauseState(false)
+{}
 
 //
 // XInputHapticInterface::zeroState
@@ -665,8 +645,8 @@ XInputHapticInterface::XInputHapticInterface(unsigned long userIdx)
 //
 void XInputHapticInterface::zeroState()
 {
-   XINPUT_VIBRATION xvib = { 0, 0 };
-   pXInputSetState(dwUserIndex, &xvib);
+    XINPUT_VIBRATION xvib = { 0, 0 };
+    pXInputSetState(dwUserIndex, &xvib);
 }
 
 //
@@ -676,47 +656,46 @@ void XInputHapticInterface::zeroState()
 //
 void XInputHapticInterface::startEffect(effect_e effect, int data1, int data2)
 {
-   uint32_t curTime = i_haltimer.GetTicks();
+    uint32_t curTime = i_haltimer.GetTicks();
 
-   switch(effect)
-   {
-   case EFFECT_FIRE:   
-      // weapon fire 
-      // * data1 should be power scale from 1 to 10
-      // * data2 should be duration scale from 1 to 10
-      new XILinearEffect(curTime, 175 + 20 * data2, MOTOR_LEFT, 21000 + 4400 * data1, 0);
-      break;
-   case EFFECT_RAMPUP:
-      // ramping up effect, ie. for BFG warmup
-      // * data1 is max strength, scale 1 to 10
-      // * data2 is duration in ms
-      new XILinearEffect(curTime, data2, MOTOR_RIGHT, 1000, 21000 + 3100 * data1);
-      break;
-   case EFFECT_RUMBLE: 
-      // rumble effect 
-      // * data1 should be richters from 1 to 10
-      // * data2 should be duration in ms
-      new XIRumbleEffect(curTime, data2, MOTOR_LEFT, 0, 5000 + 6700 * (data1 - 1));
-      break;
-   case EFFECT_BUZZ:   
-      // buzz; same as rumble, but uses high frequency motor
-      new XIRumbleEffect(curTime, data2, MOTOR_RIGHT, 0, 5000 + 6700 * (data1 - 1));
-      break;
-   case EFFECT_CONSTANT:
-      // constant: continue pulsing the motor at a steady rate
-      // * data1 should be strength from 1 to 10
-      // * data2 should be duration in ms
-      new XIConstantEffect(curTime, data2, MOTOR_RIGHT, 6500 * data1);
-      break;
-   case EFFECT_DAMAGE:
-      // damage: taking a hit from something
-      // * data1 should be strength from 1 to 100
-      // * data2 should be duration in ms
-      new XIDamageEffect(curTime, data2, 25000 + data1 * 400);
-      break;
-   default:
-      break;
-   }
+    switch(effect)
+    {
+    case EFFECT_FIRE:
+        // weapon fire
+        // * data1 should be power scale from 1 to 10
+        // * data2 should be duration scale from 1 to 10
+        new XILinearEffect(curTime, 175 + 20 * data2, MOTOR_LEFT, 21000 + 4400 * data1, 0);
+        break;
+    case EFFECT_RAMPUP:
+        // ramping up effect, ie. for BFG warmup
+        // * data1 is max strength, scale 1 to 10
+        // * data2 is duration in ms
+        new XILinearEffect(curTime, data2, MOTOR_RIGHT, 1000, 21000 + 3100 * data1);
+        break;
+    case EFFECT_RUMBLE:
+        // rumble effect
+        // * data1 should be richters from 1 to 10
+        // * data2 should be duration in ms
+        new XIRumbleEffect(curTime, data2, MOTOR_LEFT, 0, 5000 + 6700 * (data1 - 1));
+        break;
+    case EFFECT_BUZZ:
+        // buzz; same as rumble, but uses high frequency motor
+        new XIRumbleEffect(curTime, data2, MOTOR_RIGHT, 0, 5000 + 6700 * (data1 - 1));
+        break;
+    case EFFECT_CONSTANT:
+        // constant: continue pulsing the motor at a steady rate
+        // * data1 should be strength from 1 to 10
+        // * data2 should be duration in ms
+        new XIConstantEffect(curTime, data2, MOTOR_RIGHT, 6500 * data1);
+        break;
+    case EFFECT_DAMAGE:
+        // damage: taking a hit from something
+        // * data1 should be strength from 1 to 100
+        // * data2 should be duration in ms
+        new XIDamageEffect(curTime, data2, 25000 + data1 * 400);
+        break;
+    default: break;
+    }
 }
 
 //
@@ -728,38 +707,38 @@ void XInputHapticInterface::startEffect(effect_e effect, int data1, int data2)
 //
 void XInputHapticInterface::pauseEffects(bool effectsPaused)
 {
-   if(!pauseState && effectsPaused)
-   {
-      zeroState();
-      pauseState = true;
-   }
-   else
-      pauseState = false;
+    if(!pauseState && effectsPaused)
+    {
+        zeroState();
+        pauseState = true;
+    }
+    else
+        pauseState = false;
 }
 
 //
 // XInputHapticInterface::updateEffects
 //
 // Called from the main loop; push the newest summation of state to the
-// XInput force motors (high and low frequency) while ticking the 
+// XInput force motors (high and low frequency) while ticking the
 // scheduled effects. Remove effects once they have completed.
 //
 void XInputHapticInterface::updateEffects()
 {
-   // paused?
-   if(pauseState)
-   {
-      zeroState();
-      return;
-   }
+    // paused?
+    if(pauseState)
+    {
+        zeroState();
+        return;
+    }
 
-   XINPUT_VIBRATION xvib = { 0, 0 };
-   auto curTime = i_haltimer.GetTicks();
+    XINPUT_VIBRATION xvib    = { 0, 0 };
+    auto             curTime = i_haltimer.GetTicks();
 
-   XIBaseEffect::RunEffectsList(xvib, curTime);
-   
-   // set state to the device using the summation of the effects
-   pXInputSetState(dwUserIndex, &xvib);
+    XIBaseEffect::RunEffectsList(xvib, curTime);
+
+    // set state to the device using the summation of the effects
+    pXInputSetState(dwUserIndex, &xvib);
 }
 
 //
@@ -769,10 +748,10 @@ void XInputHapticInterface::updateEffects()
 //
 void XInputHapticInterface::clearEffects()
 {
-   zeroState();
-   
-   // clear effects
-   XIBaseEffect::ClearEffectsList();
+    zeroState();
+
+    // clear effects
+    XIBaseEffect::ClearEffectsList();
 }
 
 #endif

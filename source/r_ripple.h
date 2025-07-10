@@ -1,6 +1,6 @@
-//--------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//
+// Purpose: Flat ripple warping.
+// Authors: James Haley, Ioan Chera, Max Waine
+//
 
 #ifndef __R_RIPPLE_H__
 #define __R_RIPPLE_H__
@@ -26,10 +30,11 @@ class ZoneHeap;
 
 enum
 {
-   SWIRL_TICS = 65536   // the amount to set in definition lumps
+    SWIRL_TICS = 65536 // the amount to set in definition lumps
 };
 
 byte *R_DistortedFlat(ZoneHeap &heap, int flatnum, bool usegametic = false);
+
 extern int r_swirl;
 
 #endif

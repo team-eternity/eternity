@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,68 +15,64 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Main loop menu stuff.
-//      Random number LUT.
-//      Default Config File.
-//      PCX Screenshots.
+// Purpose: Bounding-box routines (clipping, bsp, etc).
+// Authors: James Haley, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #include <float.h>
 #include "m_bbox.h"
 
 void M_ClearBox(fixed_t *box)
 {
-   box[BOXTOP]    = box[BOXRIGHT] = D_MININT;
-   box[BOXBOTTOM] = box[BOXLEFT]  = D_MAXINT;
+    box[BOXTOP] = box[BOXRIGHT] = D_MININT;
+    box[BOXBOTTOM] = box[BOXLEFT] = D_MAXINT;
 }
 
 void M_ClearBox(float *box)
 {
-   box[BOXTOP] = box[BOXRIGHT] = -FLT_MAX;
-   box[BOXBOTTOM] = box[BOXLEFT] = FLT_MAX;
+    box[BOXTOP] = box[BOXRIGHT] = -FLT_MAX;
+    box[BOXBOTTOM] = box[BOXLEFT] = FLT_MAX;
 }
 
 void M_AddToBox(fixed_t *box, fixed_t x, fixed_t y)
 {
-   if(x < box[BOXLEFT])
-      box[BOXLEFT] = x;
-   else if(x > box[BOXRIGHT])
-      box[BOXRIGHT] = x;
-      
-   if(y < box[BOXBOTTOM])
-      box[BOXBOTTOM] = y;
-   else if(y > box[BOXTOP])
-      box[BOXTOP] = y;
+    if(x < box[BOXLEFT])
+        box[BOXLEFT] = x;
+    else if(x > box[BOXRIGHT])
+        box[BOXRIGHT] = x;
+
+    if(y < box[BOXBOTTOM])
+        box[BOXBOTTOM] = y;
+    else if(y > box[BOXTOP])
+        box[BOXTOP] = y;
 }
 
 void M_AddToBox2(fixed_t *box, fixed_t x, fixed_t y)
 {
-   if(x < box[BOXLEFT])
-      box[BOXLEFT] = x;
-   if(x > box[BOXRIGHT])
-      box[BOXRIGHT] = x;
+    if(x < box[BOXLEFT])
+        box[BOXLEFT] = x;
+    if(x > box[BOXRIGHT])
+        box[BOXRIGHT] = x;
 
-   if(y < box[BOXBOTTOM])
-      box[BOXBOTTOM] = y;
-   if(y > box[BOXTOP])
-      box[BOXTOP] = y;
+    if(y < box[BOXBOTTOM])
+        box[BOXBOTTOM] = y;
+    if(y > box[BOXTOP])
+        box[BOXTOP] = y;
 }
 
 void M_AddToBox2(float *box, float x, float y)
 {
-   if(x < box[BOXLEFT])
-      box[BOXLEFT] = x;
-   if(x > box[BOXRIGHT])
-      box[BOXRIGHT] = x;
+    if(x < box[BOXLEFT])
+        box[BOXLEFT] = x;
+    if(x > box[BOXRIGHT])
+        box[BOXRIGHT] = x;
 
-   if(y < box[BOXBOTTOM])
-      box[BOXBOTTOM] = y;
-   if(y > box[BOXTOP])
-      box[BOXTOP] = y;
+    if(y < box[BOXBOTTOM])
+        box[BOXBOTTOM] = y;
+    if(y > box[BOXTOP])
+        box[BOXTOP] = y;
 }
 
 //----------------------------------------------------------------------------

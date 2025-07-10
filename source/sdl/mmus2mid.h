@@ -1,6 +1,7 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,11 +16,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// $Id: mmus2mid.h,v 1.6 1998/05/10 23:00:48 jim Exp $
+// Purpose: MUS to MIDI.
+// Authors: James Haley, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef MMUS2MID_H__
 #define MMUS2MID_H__
@@ -28,42 +29,43 @@
 
 enum error_code_t
 {
-   MUSDATACOR,    // MUS data corrupt
-   TOOMCHAN,      // Too many channels
-   MEMALLOC,      // Memory allocation error
-   MUSDATAMT,     // MUS file empty
-   BADMUSCTL,     // MUS event 5 or 7 found
-   BADSYSEVT,     // MUS system event not in 10-14 range
-   BADCTLCHG,     // MUS control change larger than 9
-   TRACKOVF,      // MIDI track exceeds allocation
-   BADMIDHDR,     // bad midi header detected
+    MUSDATACOR, // MUS data corrupt
+    TOOMCHAN,   // Too many channels
+    MEMALLOC,   // Memory allocation error
+    MUSDATAMT,  // MUS file empty
+    BADMUSCTL,  // MUS event 5 or 7 found
+    BADSYSEVT,  // MUS system event not in 10-14 range
+    BADCTLCHG,  // MUS control change larger than 9
+    TRACKOVF,   // MIDI track exceeds allocation
+    BADMIDHDR,  // bad midi header detected
 };
 
-// some names for integers of various sizes, all unsigned 
-typedef uint8_t  UBYTE;  // a one-byte int 
-typedef uint16_t UWORD; // a two-byte int 
+// some names for integers of various sizes, all unsigned
+using UBYTE = uint8_t;  // a one-byte int
+using UWORD = uint16_t; // a two-byte int
 #ifndef BASETYPES
 // proff: changed from unsigned int to unsigned long to avoid warning
-typedef uint32_t ULONG;   // a four-byte int (assumes int 4 bytes) 
+using ULONG = uint32_t; // a four-byte int (assumes int 4 bytes)
 #endif
 
 #ifndef DJGPP // proff: This is from allegro.h
-#define MIDI_TRACKS           32       
+static constexpr int MIDI_TRACKS = 32;
 
-struct MIDI                    /* a midi file */
+struct MIDI /* a midi file */
 {
-   int divisions;                      /* number of ticks per quarter note */
-   struct {
-      unsigned char *data;             /* MIDI message stream */
-      size_t len;                      /* length of the track data */
-   } track[MIDI_TRACKS];
+    int divisions; /* number of ticks per quarter note */
+    struct
+    {
+        unsigned char *data; /* MIDI message stream */
+        size_t         len;  /* length of the track data */
+    } track[MIDI_TRACKS];
 };
 #endif // DJGPP
 
 bool mmuscheckformat(UBYTE *mus, int size);
 int  mmus2mid(UBYTE *mus, size_t size, MIDI *mid, UWORD division, int nocomp);
 int  MIDIToMidi(const MIDI *mididata, UBYTE **mid, int *midlen);
-int  MidiToMIDI(UBYTE *mid,MIDI *mididata);
+int  MidiToMIDI(UBYTE *mid, MIDI *mididata);
 void FreeMIDIData(MIDI *mididata);
 
 #endif

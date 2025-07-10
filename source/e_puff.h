@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2018 James Haley et al.
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: EDF hitscan puffs
+//------------------------------------------------------------------------------
+//
+// Purpose: EDF hitscan puffs.
 // Authors: Ioan Chera
 //
 
@@ -55,7 +57,7 @@ extern MetaKeyIndex keyPuffTargetShooter;
 extern cfg_opt_t edf_puff_opts[];
 extern cfg_opt_t edf_puff_delta_opts[];
 
-void E_ProcessPuffs(cfg_t *cfg);
+void             E_ProcessPuffs(cfg_t *cfg);
 const MetaTable *E_PuffForName(const char *name);
 const MetaTable *E_PuffForIndex(size_t index);
 

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//    Code to deal with disk files.
-//    
-//-----------------------------------------------------------------------------
+// Purpose: Code to deal with disk files.
+// Authors: James Haley
+//
 
 #ifndef D_DISK_H__
 #define D_DISK_H__
@@ -38,7 +36,7 @@
 //
 struct diskfile_t
 {
-   void *opaque;
+    void *opaque;
 };
 
 //
@@ -49,15 +47,15 @@ struct diskfile_t
 //
 struct diskwad_t
 {
-   FILE *f;          // file pointer
-   size_t offset;    // offset of wad within physical file
-   const char *name; // canonical file name
+    FILE       *f;      // file pointer
+    size_t      offset; // offset of wad within physical file
+    const char *name;   // canonical file name
 };
 
 diskfile_t *D_OpenDiskFile(const char *filename);
-diskwad_t D_FindWadInDiskFile(diskfile_t *df, const char *filename);
-void *D_CacheDiskFileResource(diskfile_t *df, const char *path, bool text);
-void D_CloseDiskFile(diskfile_t *df, bool closefile);
+diskwad_t   D_FindWadInDiskFile(diskfile_t *df, const char *filename);
+void       *D_CacheDiskFileResource(diskfile_t *df, const char *path, bool text);
+void        D_CloseDiskFile(diskfile_t *df, bool closefile);
 
 #endif
 

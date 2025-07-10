@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright(C) 2020 James Haley, Max Waine, et al.
+// Copyright (C) 2025 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,9 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Purpose: Win32 GUI stuff (message boxes, folder dialogues, etc.)
+// Purpose: Win32 GUI stuff (message boxes, folder dialogues, etc.).
 // Authors: Max Waine
 //
 
@@ -36,39 +36,31 @@
 
 qstring I_OpenWindowsDirectory()
 {
-   BROWSEINFOA info {
-      nullptr, nullptr, nullptr,
-      " Select the folder where your game files (IWADs) are stored",
-      BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE
-   };
+    BROWSEINFOA info{ nullptr, nullptr, nullptr, " Select the folder where your game files (IWADs) are stored",
+                      BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE };
 
-   if(LPITEMIDLIST pidl = SHBrowseForFolderA(&info); pidl)
-   {
-      TCHAR path[MAX_PATH];
-      SHGetPathFromIDListA(pidl, path);
+    if(LPITEMIDLIST pidl = SHBrowseForFolderA(&info); pidl)
+    {
+        TCHAR path[MAX_PATH];
+        SHGetPathFromIDListA(pidl, path);
 
-      IMalloc *imalloc = nullptr;
-      if(SUCCEEDED(SHGetMalloc(&imalloc)))
-      {
-         imalloc->Free(pidl);
-         imalloc->Release();
-      }
+        IMalloc *imalloc = nullptr;
+        if(SUCCEEDED(SHGetMalloc(&imalloc)))
+        {
+            imalloc->Free(pidl);
+            imalloc->Release();
+        }
 
+        return qstring(path);
+    }
 
-      return qstring(path);
-   }
-
-   return qstring();
+    return qstring();
 }
 
 bool I_TryIWADSearchAgain()
 {
-   return MessageBoxA(
-      nullptr,
-      "No game files (IWADs) found in selected folder. Do you wish to select a new one?",
-      nullptr,
-      MB_YESNO | MB_SETFOREGROUND
-   ) == IDYES;
+    return MessageBoxA(nullptr, "No game files (IWADs) found in selected folder. Do you wish to select a new one?",
+                       nullptr, MB_YESNO | MB_SETFOREGROUND) == IDYES;
 }
 
 #endif

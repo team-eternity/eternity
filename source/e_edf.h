@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// EDF Core
+// Purpose: EDF core.
+// Authors: James Haley, Max Waine
 //
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #ifndef __E_EDF_H__
 #define __E_EDF_H__
@@ -43,7 +40,7 @@ void E_EDFLogPuts(const char *msg);
 void E_EDFLogPrintf(E_FORMAT_STRING(const char *msg), ...) E_PRINTF(1, 2);
 
 [[noreturn]] void E_EDFLoggedErr(int lv, E_FORMAT_STRING(const char *msg), ...) E_PRINTF(2, 3);
-void E_EDFLoggedWarning(int lv, E_FORMAT_STRING(const char *msg), ...) E_PRINTF(2, 3);
+void              E_EDFLoggedWarning(int lv, E_FORMAT_STRING(const char *msg), ...) E_PRINTF(2, 3);
 
 #endif
 

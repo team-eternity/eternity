@@ -3,8 +3,8 @@
 //
 // Frames for Doom gamemode objects.
 //
-// Note that most of these now only serve to reserve space in the states array 
-// for data that will be filled in by DECORATE-format state blocks in the 
+// Note that most of these now only serve to reserve space in the states array
+// for data that will be filled in by DECORATE-format state blocks in the
 // thingtypes. This is only required so that the frames have global visibility
 // by name and DeHackEd number, which can't be assigned via DECORATE states.
 //
@@ -1051,7 +1051,7 @@ frame S_BLOODYTWITCH2 { +decorate; dehackednum 889 }
 frame S_BLOODYTWITCH3 { +decorate; dehackednum 890 }
 frame S_BLOODYTWITCH4 { +decorate; dehackednum 891 }
 
-// More unused frames: These are left over from the alphas and used to display 
+// More unused frames: These are left over from the alphas and used to display
 // two different halves of a torn-in-half player corpse. No object is assigned
 // to use these and even if one were, the original graphics aren't available in
 // the IWAD, so they just look like more useless dead/dying players.

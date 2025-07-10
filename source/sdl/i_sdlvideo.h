@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,19 +18,17 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   
-//   SDL-specific graphics code.
+// Purpose: SDL-specific graphics code.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef I_SDLVIDEO_H__
 #define I_SDLVIDEO_H__
 
 // Grab the HAL video definitions
-#include "../i_video.h" 
+#include "../i_video.h"
 
 //
 // SDL Video Driver
@@ -39,16 +36,16 @@
 class SDLVideoDriver : public HALVideoDriver
 {
 protected:
-   virtual void SetPrimaryBuffer();
-   virtual void UnsetPrimaryBuffer();
+    virtual void SetPrimaryBuffer();
+    virtual void UnsetPrimaryBuffer();
 
 public:
-   virtual void FinishUpdate();
-   virtual void ReadScreen(byte *scr);
-   virtual void SetPalette(byte *pal);
-   virtual void ShutdownGraphics();
-   virtual void ShutdownGraphicsPartway();
-   virtual bool InitGraphicsMode();
+    virtual void FinishUpdate();
+    virtual void ReadScreen(byte *scr);
+    virtual void SetPalette(byte *pal);
+    virtual void ShutdownGraphics();
+    virtual void ShutdownGraphicsPartway();
+    virtual bool InitGraphicsMode();
 };
 
 // Global singleton instance

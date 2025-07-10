@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,15 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Action Pointer Functions
-//      that are associated with states/frames.
+// Purpose: Common action functions shared by all games.
+// Authors: James Haley, Ioan Chera
 //
-//      Common action functions shared by all games.
-//
-//-----------------------------------------------------------------------------
 
 #ifndef A_COMMON_H__
 #define A_COMMON_H__
@@ -34,7 +29,7 @@
 
 struct actionargs_t;
 struct player_t;
-class  Mobj;
+class Mobj;
 class SaveArchive;
 
 void P_MakeSeeSound(Mobj *actor, pr_class_t rngnum);
@@ -48,7 +43,7 @@ void A_Look(actionargs_t *actionargs);
 void A_Pain(actionargs_t *actionargs);
 
 void P_CheckCustomBossActions(const Mobj &mo, const player_t &player);
-void P_ArchiveHereticWeapons(SaveArchive& arc);
+void P_ArchiveHereticWeapons(SaveArchive &arc);
 
 #endif
 

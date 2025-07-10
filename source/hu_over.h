@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,7 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//
+// Purpose: Heads up 'overlay' for fullscreen.
+// Authors: James Haley, Ioan Chera, Max Waine, Sarah Woodie
+//
 
 #ifndef HU_OVER_H__
 #define HU_OVER_H__
@@ -30,26 +33,26 @@ struct weaponinfo_t;
 // HUD styles
 enum hudstyle_e : unsigned int
 {
-   HUD_OFF,
-   HUD_BOOM,
-   HUD_FLAT,
-   HUD_DISTRIB,
-   HUD_GRAPHICAL,
-   HUD_NUMHUDS
+    HUD_OFF,
+    HUD_BOOM,
+    HUD_FLAT,
+    HUD_DISTRIB,
+    HUD_GRAPHICAL,
+    HUD_NUMHUDS
 };
 
 // overlay enumeration
 enum overlay_e : unsigned int
 {
-   ol_status,
-   ol_health,
-   ol_armor,
-   ol_weap,
-   ol_ammo,
-   ol_key,
-   ol_frag,
-   ol_invcurr,
-   NUMOVERLAY
+    ol_status,
+    ol_health,
+    ol_armor,
+    ol_weap,
+    ol_ammo,
+    ol_key,
+    ol_frag,
+    ol_invcurr,
+    NUMOVERLAY
 };
 
 //
@@ -60,91 +63,76 @@ enum overlay_e : unsigned int
 class HUDOverlay
 {
 protected:
-   struct
-   {
-      int x, y;
-      bool enabled;
-   } drawerdata[NUMOVERLAY];
+    struct
+    {
+        int  x, y;
+        bool enabled;
+    } drawerdata[NUMOVERLAY];
 
-   virtual void DrawStatus (int x, int y) = 0;
-   virtual void DrawHealth (int x, int y) = 0;
-   virtual void DrawArmor  (int x, int y) = 0;
-   virtual void DrawWeapons(int x, int y) = 0;
-   virtual void DrawAmmo   (int x, int y) = 0;
-   virtual void DrawKeys   (int x, int y) = 0;
-   virtual void DrawFrags  (int x, int y) = 0;
+    // clang-format off
+
+    virtual void DrawStatus (int x, int y) = 0;
+    virtual void DrawHealth (int x, int y) = 0;
+    virtual void DrawArmor  (int x, int y) = 0;
+    virtual void DrawWeapons(int x, int y) = 0;
+    virtual void DrawAmmo   (int x, int y) = 0;
+    virtual void DrawKeys   (int x, int y) = 0;
+    virtual void DrawFrags  (int x, int y) = 0;
+
+    // clang-format on
 
 public:
-   virtual void Setup() = 0;
+    virtual void Setup() = 0;
 
-   //
-   // Draws the overlay
-   //
-   inline void DrawOverlay(overlay_e overlay)
-   {
-      if(!drawerdata[overlay].enabled)
-         return;
+    //
+    // Draws the overlay
+    //
+    inline void DrawOverlay(overlay_e overlay)
+    {
+        if(!drawerdata[overlay].enabled)
+            return;
 
-      // TODO: Structured binding when we move over to C++17 fully
-      const int x = drawerdata[overlay].x;
-      const int y = drawerdata[overlay].y;
+        // TODO: Structured binding when we move over to C++17 fully
+        const int x = drawerdata[overlay].x;
+        const int y = drawerdata[overlay].y;
 
-      switch(overlay)
-      {
-      case ol_status:
-         DrawStatus(x, y);
-         break;
-      case ol_health:
-         DrawHealth(x, y);
-         break;
-      case ol_armor:
-         DrawArmor(x, y);
-         break;
-      case ol_weap:
-         DrawWeapons(x, y);
-         break;
-      case ol_ammo:
-         DrawAmmo(x, y);
-         break;
-      case ol_key:
-         DrawKeys(x, y);
-         break;
-      case ol_frag:
-         DrawFrags(x, y);
-         break;
-      case ol_invcurr:
-         HU_InventoryDrawCurrentBox(x, y);
-         break;
-      default:
-         break;
-      }
-   }
+        switch(overlay)
+        {
+        case ol_status:  DrawStatus(x, y); break;
+        case ol_health:  DrawHealth(x, y); break;
+        case ol_armor:   DrawArmor(x, y); break;
+        case ol_weap:    DrawWeapons(x, y); break;
+        case ol_ammo:    DrawAmmo(x, y); break;
+        case ol_key:     DrawKeys(x, y); break;
+        case ol_frag:    DrawFrags(x, y); break;
+        case ol_invcurr: HU_InventoryDrawCurrentBox(x, y); break;
+        default:         break;
+        }
+    }
 
-   //
-   // Sets up the offsets of a given overlay
-   //
-   inline void SetupOverlay(overlay_e o, int x, int y)
-   {
-      drawerdata[o].x = x;
-      drawerdata[o].y = y;
-   }
+    //
+    // Sets up the offsets of a given overlay
+    //
+    inline void SetupOverlay(overlay_e o, int x, int y)
+    {
+        drawerdata[o].x = x;
+        drawerdata[o].y = y;
+    }
 
-   //
-   // Default constructor
-   //
-   HUDOverlay() : drawerdata{}, leftoffset{}, rightoffset{}
-   {
-   }
+    //
+    // Default constructor
+    //
+    HUDOverlay() : drawerdata{}, leftoffset{}, rightoffset{} {}
 
-   int leftoffset, rightoffset;
+    int leftoffset, rightoffset;
 };
 
 // Overlays enumeration
 enum hudoverlay_e : unsigned int
 {
-   HUO_MODERN,
-   HUO_BOOM,
-   HUO_MAXOVERLAYS
+    HUO_MODERN,
+    HUO_BOOM,
+    HUO_MAXOVERLAYS
 };
 
 int  HU_WC_PlayerAmmo(const weaponinfo_t *w);
@@ -155,7 +143,6 @@ char HU_WeaponColourGeneralized(const player_t &player, int index, bool *had);
 
 char HU_HealthColor();
 char HU_ArmorColor();
-
 
 // heads up font
 void HU_LoadFonts();

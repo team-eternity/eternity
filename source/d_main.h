@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      System specific interface stuff.
+// Purpose: System specific interface stuff.
+// Authors: James Haley, Ioan Chera, Derek MacDonald
 //
-//-----------------------------------------------------------------------------
 
 #ifndef D_MAIN_H__
 #define D_MAIN_H__
@@ -31,18 +29,18 @@
 
 // jff make startskill globally visible
 extern skill_t startskill;
-extern char *startlevel;
+extern char   *startlevel;
 
 void D_SetGameName(const char *iwad);
 
-char *D_DoomExeDir(void);       // killough 2/16/98: path to executable's dir
-extern char *basesavegame;      // killough 2/16/98: savegame path
+char        *D_DoomExeDir(void); // killough 2/16/98: path to executable's dir
+extern char *basesavegame;       // killough 2/16/98: savegame path
 
-//jff 1/24/98 make command line copies of play modes available
+// jff 1/24/98 make command line copies of play modes available
 extern bool clnomonsters;  // checkparm of -nomonsters
 extern bool clrespawnparm; // checkparm of -respawn
 extern bool clfastparm;    // checkparm of -fast
-//jff end of external declaration of command line playmode
+// jff end of external declaration of command line playmode
 
 extern bool nodrawers;
 extern bool nosfxparm;
@@ -50,12 +48,12 @@ extern bool nomusicparm;
 
 inline static bool D_noWindow()
 {
-   return nodrawers && nosfxparm && nomusicparm;
+    return nodrawers && nosfxparm && nomusicparm;
 }
 
 // Called by IO functions when input is detected.
 struct event_t;
-void D_PostEvent(const event_t* ev);
+void D_PostEvent(const event_t *ev);
 
 struct camera_t;
 extern camera_t *camera;

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,31 +15,28 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Simple basic typedefs, isolated here to make it easier
-//       separating modules.
+// Purpose: Simple basic typedefs, isolated here to make it easier
+//  separating modules.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley
+//
 
 #ifndef DOOMTYPE_H__
 #define DOOMTYPE_H__
 
 #include <inttypes.h>
 
-#ifndef BYTEBOOL__
-#define BYTEBOOL__
 // haleyjd 04/10/11: boolean typedef eliminated in pref. of direct use of bool
-typedef uint8_t byte;
-#endif
+using byte = uint8_t;
 
 // SoM: resolve platform-specific range symbol issues
 
 #include <limits.h>
-#define D_MAXINT INT_MAX
-#define D_MININT INT_MIN
-#define D_MAXSHORT  SHRT_MAX
+static constexpr int D_MAXINT    = INT_MAX;
+static constexpr int D_MININT    = INT_MIN;
+static constexpr int D_MAXSHORT  = SHRT_MAX;
 
 // The packed attribute forces structures to be packed into the minimum
 // space necessary.  If this is not done, the compiler may align structure
@@ -49,20 +45,24 @@ typedef uint8_t byte;
 // structures where alignment is important, particularly data read/written
 // to disk.
 
+// clang-format off
+
 #if defined(__GNUC__)
-   #define PACKED_PREFIX
-   #if defined(_WIN32) && !defined(__clang__)
-      #define PACKED_SUFFIX __attribute__((packed,gcc_struct))
-   #else
-      #define PACKED_SUFFIX __attribute__((packed))
-   #endif
+    #define PACKED_PREFIX
+    #if defined(_WIN32) && !defined(__clang__)
+        #define PACKED_SUFFIX __attribute__((packed,gcc_struct))
+    #else
+        #define PACKED_SUFFIX __attribute__((packed))
+    #endif
 #elif defined(__WATCOMC__)
-   #define PACKED_PREFIX _Packed
-   #define PACKED_SUFFIX
+    #define PACKED_PREFIX _Packed
+    #define PACKED_SUFFIX
 #else
-   #define PACKED_PREFIX
-   #define PACKED_SUFFIX
+    #define PACKED_PREFIX
+    #define PACKED_SUFFIX
 #endif
+
+// clang-format on
 
 #endif
 

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      The not so system specific sound interface.
+// Purpose: The not so system specific sound interface.
+// Authors: James Haley, Ioan Chera, Alison Gray Watson, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef S_SOUND_H__
 #define S_SOUND_H__
@@ -35,8 +33,8 @@ class PointThinker;
 
 // when to clip out sounds
 // Does not fit the large outdoor areas.
-#define S_CLIPPING_DIST_I 1200
-#define S_CLIPPING_DIST (S_CLIPPING_DIST_I << FRACBITS)
+static constexpr int     S_CLIPPING_DIST_I = 1200;
+static constexpr fixed_t S_CLIPPING_DIST   = S_CLIPPING_DIST_I << FRACBITS;
 
 // Distance to origin when sounds should be maxed out.
 // This should relate to movement clipping resolution
@@ -46,8 +44,8 @@ class PointThinker;
 // killough 12/98: restore original
 // #define S_CLOSE_DIST (160<<FRACBITS)
 
-#define S_CLOSE_DIST_I 200
-#define S_CLOSE_DIST (S_CLOSE_DIST_I << FRACBITS)
+static constexpr int     S_CLOSE_DIST_I = 200;
+static constexpr fixed_t S_CLOSE_DIST   = S_CLOSE_DIST_I << FRACBITS;
 
 //
 // Initializes sound stuff, including volume
@@ -66,34 +64,34 @@ void S_Start();
 // haleyjd 05/30/06: sound attenuation types
 enum
 {
-   ATTN_NORMAL, // normal: use the data stored in sfxinfo_t
-   ATTN_IDLE,   // idle: use DOOM's old values all the time
-   ATTN_STATIC, // static: fade out quickly
-   ATTN_NONE,   // none: Moooo!
-   ATTN_NUM     // number of types
+    ATTN_NORMAL, // normal: use the data stored in sfxinfo_t
+    ATTN_IDLE,   // idle: use DOOM's old values all the time
+    ATTN_STATIC, // static: fade out quickly
+    ATTN_NONE,   // none: Moooo!
+    ATTN_NUM     // number of types
 };
 
 struct soundparams_t
 {
-   const PointThinker *origin;
-   sfxinfo_t    *sfx;
-   int           volumeScale;
-   int           attenuation;
-   bool          loop;
-   int           subchannel;
-   bool          reverb;
+    const PointThinker *origin;
+    sfxinfo_t          *sfx;
+    int                 volumeScale;
+    int                 attenuation;
+    bool                loop;
+    int                 subchannel;
+    bool                reverb;
 
-   soundparams_t &setNormalDefaults(PointThinker *pOrigin)
-   {
-      origin      = pOrigin;
-      volumeScale = 127;
-      attenuation = ATTN_NORMAL;
-      loop        = false;
-      subchannel  = CHAN_AUTO;
-      reverb      = true;
+    soundparams_t &setNormalDefaults(PointThinker *pOrigin)
+    {
+        origin      = pOrigin;
+        volumeScale = 127;
+        attenuation = ATTN_NORMAL;
+        loop        = false;
+        subchannel  = CHAN_AUTO;
+        reverb      = true;
 
-      return *this;
-   }
+        return *this;
+    }
 };
 
 //
@@ -104,11 +102,8 @@ void S_StartSfxInfo(const soundparams_t &params);
 void S_StartSound(const PointThinker *origin, int sound_id);
 void S_StartSoundLooped(const PointThinker *origin, int sound_id);
 void S_StartSoundName(const PointThinker *origin, const char *name);
-void S_StartSoundAtVolume(const PointThinker *origin, int sfx_id,
-                          int volume, int attn, int subchannel);
-void S_StartSoundNameAtVolume(const PointThinker *origin, const char *name,
-                              int volume, int attn,
-                              int subchannel);
+void S_StartSoundAtVolume(const PointThinker *origin, int sfx_id, int volume, int attn, int subchannel);
+void S_StartSoundNameAtVolume(const PointThinker *origin, const char *name, int volume, int attn, int subchannel);
 void S_StartInterfaceSound(int sound_id);
 void S_StartInterfaceSound(const char *name);
 void S_StartInterfaceSound(sfxinfo_t *sfx);
@@ -135,7 +130,7 @@ void S_PauseSound(void);
 void S_ResumeSound(void);
 
 sfxinfo_t *S_SfxInfoForName(const char *name);
-void S_Chgun();
+void       S_Chgun();
 
 musicinfo_t *S_MusicForName(const char *name);
 
@@ -158,13 +153,13 @@ extern int s_precache;
 
 // machine-independent sound params
 extern int numChannels;
-extern int default_numChannels;  // killough 10/98
+extern int default_numChannels; // killough 10/98
 
 // MaxW: Holds music num to load.
 extern char *mus_LoadName;
 
 // haleyjd 11/03/06: moved/added to header
-#define SOUND_HASHSLOTS 257
+static constexpr int SOUND_HASHSLOTS = 257;
 
 extern musicinfo_t *musicinfos[];
 

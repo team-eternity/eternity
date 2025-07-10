@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2013 David Hill et al.
+// The Eternity Engine
+// Copyright (C) 2025 David Hill et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//    Directory Manipulation
+// Purpose: Directory manipulation.
+// Authors: James Haley, David Hill, Ioan Chera, Max Waine, Joshua T. Woodie
 //
-//-----------------------------------------------------------------------------
 
 #include "i_platform.h"
 
@@ -44,9 +42,8 @@ namespace fs = std::filesystem;
 //
 // All this for PATH_MAX
 //
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX \
- || EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX \
- || EE_CURRENT_PLATFORM == EE_PLATFORM_FREEBSD
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX || EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX || \
+    EE_CURRENT_PLATFORM == EE_PLATFORM_FREEBSD
 #include <limits.h>
 #elif EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
 #include <windows.h>
@@ -63,11 +60,11 @@ namespace fs = std::filesystem;
 bool I_CreateDirectory(const qstring &path)
 {
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
-   if(!mkdir(path.constPtr(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH))
-      return true;
+    if(!mkdir(path.constPtr(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH))
+        return true;
 #endif
 
-   return false;
+    return false;
 }
 
 //
@@ -76,18 +73,18 @@ bool I_CreateDirectory(const qstring &path)
 const char *I_PlatformInstallDirectory()
 {
 #ifdef BUILD_FLATPAK
-   return "/app/share/eternity/base";
+    return "/app/share/eternity/base";
 #elif EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
-   struct stat sbuf;
+    struct stat sbuf;
 
-   // Prefer /usr/local, but fall back to just /usr.
-   if(!stat("/usr/local/share/eternity/base", &sbuf) && S_ISDIR(sbuf.st_mode))
-      return "/usr/local/share/eternity/base";
-   else
-      return "/usr/share/eternity/base";
+    // Prefer /usr/local, but fall back to just /usr.
+    if(!stat("/usr/local/share/eternity/base", &sbuf) && S_ISDIR(sbuf.st_mode))
+        return "/usr/local/share/eternity/base";
+    else
+        return "/usr/share/eternity/base";
 #endif
 
-   return nullptr;
+    return nullptr;
 }
 
 //
@@ -97,35 +94,33 @@ const char *I_PlatformInstallDirectory()
 void I_GetRealPath(const char *path, qstring &real)
 {
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
-   fs::path pathobj(path);
-   pathobj = fs::canonical(pathobj);
+    fs::path pathobj(path);
+    pathobj = fs::canonical(pathobj);
 
-   // Has to be converted since fs::value_type is wchar_t on Windows
-   std::wstring wpath(pathobj.c_str());
-   char *ret = ecalloc(char *, wpath.length() + 1, 1);
-   WideCharToMultiByte(CP_UTF8, 0, wpath.c_str(), -1, ret,
-                       static_cast<int>(wpath.length()), nullptr, nullptr);
-   real = ret;
-   efree(ret);
+    // Has to be converted since fs::value_type is wchar_t on Windows
+    std::wstring wpath(pathobj.c_str());
+    char        *ret = ecalloc(char *, wpath.length() + 1, 1);
+    WideCharToMultiByte(CP_UTF8, 0, wpath.c_str(), -1, ret, static_cast<int>(wpath.length()), nullptr, nullptr);
+    real = ret;
+    efree(ret);
 
-   // wstring_convert became deprecated and didn't get replaced
-   //std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-   //std::string spath(convertor.to_bytes(wpath));
-   //real = spath.c_str();
+    // wstring_convert became deprecated and didn't get replaced
+    // std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+    // std::string spath(convertor.to_bytes(wpath));
+    // real = spath.c_str();
 
-#elif EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX \
-   || EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX \
-   || EE_CURRENT_PLATFORM == EE_PLATFORM_FREEBSD
+#elif EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX || EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX || \
+    EE_CURRENT_PLATFORM == EE_PLATFORM_FREEBSD
 
-   char result[PATH_MAX + 1];
-   if(realpath(path, result))
-      real = result;
-   else
-      real = path;   // failure
+    char result[PATH_MAX + 1];
+    if(realpath(path, result))
+        real = result;
+    else
+        real = path; // failure
 
 #else
-#warning Unknown platform; this will merely copy "path" to "real"
-   real = path;
+#warning "Unknown platform; this will merely copy \"path\" to \"real\""
+    real = path;
 #endif
 }
 

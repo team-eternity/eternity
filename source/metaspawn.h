@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: Classes for random spot spawns.
+// Authors: James Haley
 //
-//   Classes for random spot spawns.
-//
-//-----------------------------------------------------------------------------
 
 #ifndef METASPAWN_H__
 #define METASPAWN_H__
@@ -41,37 +38,30 @@
 //
 class MetaCollectionSpawn : public MetaObject
 {
-   DECLARE_RTTI_TYPE(MetaCollectionSpawn, MetaObject)
+    DECLARE_RTTI_TYPE(MetaCollectionSpawn, MetaObject)
 
 public:
-   // public data
-   qstring type;
-   int     spchance;
-   int     coopchance;
-   int     dmchance;
+    // public data
+    qstring type;
+    int     spchance;
+    int     coopchance;
+    int     dmchance;
 
-   // Constructors
+    // Constructors
 
-   MetaCollectionSpawn() 
-      : Super(), type(), spchance(0), coopchance(0), dmchance(0)
-   {
-   }
+    MetaCollectionSpawn() : Super(), type(), spchance(0), coopchance(0), dmchance(0) {}
 
-   MetaCollectionSpawn(const char *key, const char *pType, 
-                       int pSpchance, int pCoopchance, int pDmchance)
-      : Super(key), type(pType), spchance(pSpchance), coopchance(pCoopchance),
-        dmchance(pDmchance)
-   {
-   }
+    MetaCollectionSpawn(const char *key, const char *pType, int pSpchance, int pCoopchance, int pDmchance)
+        : Super(key), type(pType), spchance(pSpchance), coopchance(pCoopchance), dmchance(pDmchance)
+    {}
 
-   MetaCollectionSpawn(const MetaCollectionSpawn &other)
-      : Super(other), type(other.type), spchance(other.spchance),
-        coopchance(other.coopchance), dmchance(other.dmchance)
-   {
-   }
+    MetaCollectionSpawn(const MetaCollectionSpawn &other)
+        : Super(other), type(other.type), spchance(other.spchance), coopchance(other.coopchance),
+          dmchance(other.dmchance)
+    {}
 
-   virtual MetaObject *clone()    const override { return new MetaCollectionSpawn(*this); }
-   virtual const char *toString() const override { return type.constPtr(); }
+    virtual MetaObject *clone() const override { return new MetaCollectionSpawn(*this); }
+    virtual const char *toString() const override { return type.constPtr(); }
 };
 
 #endif

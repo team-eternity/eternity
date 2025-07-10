@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Generalized line action system - Actions
+// Purpose: Generalized line action system - Actions.
+// Authors: James Haley, David Hill, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef EV_ACTIONS_H__
 #define EV_ACTIONS_H__
@@ -76,23 +74,23 @@ DECLARE_ACTION(EV_ActionTurnTagLightsOff);
 DECLARE_ACTION(EV_ActionDoorBlazeRaise);
 DECLARE_ACTION(EV_ActionDoorBlazeOpen);
 DECLARE_ACTION(EV_ActionDoorBlazeClose);
-DECLARE_ACTION(EV_ActionFloorRaiseToNearest );
+DECLARE_ACTION(EV_ActionFloorRaiseToNearest);
 DECLARE_ACTION(EV_ActionPlatBlazeDWUS);
 DECLARE_ACTION(EV_ActionSecretExit);
 DECLARE_ACTION(EV_ActionSwitchSecretExit);
 DECLARE_ACTION(EV_ActionGunSecretExit);
 DECLARE_ACTION(EV_ActionRaiseFloorTurbo);
-DECLARE_ACTION(EV_ActionSilentCrushAndRaise );
+DECLARE_ACTION(EV_ActionSilentCrushAndRaise);
 DECLARE_ACTION(EV_ActionRaiseFloor512);
 DECLARE_ACTION(EV_ActionPlatRaise24Change);
 DECLARE_ACTION(EV_ActionPlatRaise32Change);
-DECLARE_ACTION(EV_ActionCeilingLowerToFloor );
+DECLARE_ACTION(EV_ActionCeilingLowerToFloor);
 DECLARE_ACTION(EV_ActionDoDonut);
 DECLARE_ACTION(EV_ActionCeilingLowerToLowest);
 DECLARE_ACTION(EV_ActionCeilingLowerToMaxFloor);
 DECLARE_ACTION(EV_ActionSilentTeleport);
 DECLARE_ACTION(EV_ActionChangeOnly);
-DECLARE_ACTION(EV_ActionChangeOnlyNumeric  );
+DECLARE_ACTION(EV_ActionChangeOnlyNumeric);
 DECLARE_ACTION(EV_ActionFloorLowerToNearest);
 DECLARE_ACTION(EV_ActionElevatorUp);
 DECLARE_ACTION(EV_ActionElevatorDown);
@@ -138,7 +136,7 @@ DECLARE_ACTION(EV_ActionParamFloorRaiseByValueTimes8);
 DECLARE_ACTION(EV_ActionParamFloorLowerByValue);
 DECLARE_ACTION(EV_ActionParamFloorLowerByValueTimes8);
 DECLARE_ACTION(EV_ActionParamFloorMoveToValue);
-DECLARE_ACTION(EV_ActionParamFloorMoveToValueTimes8 );
+DECLARE_ACTION(EV_ActionParamFloorMoveToValueTimes8);
 DECLARE_ACTION(EV_ActionParamFloorRaiseInstant);
 DECLARE_ACTION(EV_ActionParamFloorLowerInstant);
 DECLARE_ACTION(EV_ActionParamFloorToCeilingInstant);
@@ -203,7 +201,7 @@ DECLARE_ACTION(EV_ActionPolyobjRotateLeft);
 DECLARE_ACTION(EV_ActionPolyobjORRotateLeft);
 DECLARE_ACTION(EV_ActionPolyobjStop);
 DECLARE_ACTION(EV_ActionPillarBuild);
-DECLARE_ACTION(EV_ActionPillarBuildAndCrush );
+DECLARE_ACTION(EV_ActionPillarBuildAndCrush);
 DECLARE_ACTION(EV_ActionPillarOpen);
 DECLARE_ACTION(EV_ActionACSExecute);
 DECLARE_ACTION(EV_ActionACSExecuteAlways);
@@ -218,7 +216,7 @@ DECLARE_ACTION(EV_ActionParamLightChangeToValue);
 DECLARE_ACTION(EV_ActionParamLightFade);
 DECLARE_ACTION(EV_ActionParamLightGlow);
 DECLARE_ACTION(EV_ActionParamLightFlicker);
-DECLARE_ACTION(EV_ActionParamLightStrobe );
+DECLARE_ACTION(EV_ActionParamLightStrobe);
 DECLARE_ACTION(EV_ActionParamLightStrobeDoom);
 DECLARE_ACTION(EV_ActionRadiusQuake);
 DECLARE_ACTION(EV_ActionCeilingWaggle);
@@ -237,7 +235,7 @@ DECLARE_ACTION(EV_ActionThingStop);
 DECLARE_ACTION(EV_ActionThrustThing);
 DECLARE_ACTION(EV_ActionThrustThingZ);
 DECLARE_ACTION(EV_ActionDamageThing);
-DECLARE_ACTION(EV_ActionDamageThingEx);   // Thing_Damage
+DECLARE_ACTION(EV_ActionDamageThingEx); // Thing_Damage
 DECLARE_ACTION(EV_ActionThingDestroy);
 DECLARE_ACTION(EV_ActionThingRemove);
 DECLARE_ACTION(EV_ActionParamPlatPerpetualRaise);

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//    Dynamic BSP sub-trees for dynaseg sorting.
+// Purpose: Dynamic BSP sub-trees for dynaseg sorting.
+// Authors: James Haley, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef R_DYNABSP_H__
 #define R_DYNABSP_H__
@@ -30,34 +28,33 @@
 
 struct rpolynode_t
 {
-   dynaseg_t   *partition;   // partition dynaseg
-   rpolynode_t *children[2]; // child node lists (0=right, 1=left)
-   dseglink_t  *owned;       // owned segs created by partition splits
-   dseglink_t  *altered;     // polyobject-owned segs altered by partitions.
+    dynaseg_t   *partition;   // partition dynaseg
+    rpolynode_t *children[2]; // child node lists (0=right, 1=left)
+    dseglink_t  *owned;       // owned segs created by partition splits
+    dseglink_t  *altered;     // polyobject-owned segs altered by partitions.
 };
 
 struct rpolybsp_t
 {
-   bool         dirty; // needs to be rebuilt if true
-   rpolynode_t *root;  // root of tree
+    bool         dirty; // needs to be rebuilt if true
+    rpolynode_t *root;  // root of tree
 };
 
 rpolybsp_t *R_BuildDynaBSP(const subsector_t *subsec);
-void R_FreeDynaBSP(rpolybsp_t *bsp);
-
+void        R_FreeDynaBSP(rpolybsp_t *bsp);
 
 //
 // R_PointOnDynaSegSide
 //
 // Returns 0 for front/right, 1 for back/left.
 //
-static inline int R_PointOnDynaSegSide(const dynaseg_t *ds, float x, float y)
+inline static int R_PointOnDynaSegSide(const dynaseg_t *ds, float x, float y)
 {
-   return ((ds->pdx * (y - ds->psy)) >= (ds->pdy * (x - ds->psx)));
+    return ((ds->pdx * (y - ds->psy)) >= (ds->pdy * (x - ds->psx)));
 }
 
 void R_ComputeIntersection(const dynaseg_t *part, const dynaseg_t *seg, double &outx, double &outy,
-   v2float_t *fbackup = nullptr);
+                           v2float_t *fbackup = nullptr);
 
 #endif
 

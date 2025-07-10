@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//    Generic hash table implementation - Hash Key classes
+// Purpose: Generic hash table implementation - Hash Key classes.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef E_HASHKEYS_H__
 #define E_HASHKEYS_H__
@@ -35,23 +33,23 @@ unsigned int D_HashTableKeyCase(const char *str);
 //
 // E*HashKey
 //
-// haleyjd 12/12/10: These POD classes replace ehashable_i with go-between 
-// objects that know how to deal with the internal key of the type of object 
-// being stored in an EHashTable, while not restricting a given type to only 
+// haleyjd 12/12/10: These POD classes replace ehashable_i with go-between
+// objects that know how to deal with the internal key of the type of object
+// being stored in an EHashTable, while not restricting a given type to only
 // being able to use EHashTable in a single way, as it would if an inheritance
 // solution were used.
 //
 // The EHashTable class specifies the following interface which to key objects
 // must adhere:
-// * They should expose the type of their basic literal key field in a 
+// * They should expose the type of their basic literal key field in a
 //   public typedef called basic_type.
 // * They should expose a secondary type that is comparable with the basic key
-//   type for use as the function parameter to EHashTable's objectForKey and 
+//   type for use as the function parameter to EHashTable's objectForKey and
 //   chainForKey methods. This can be the same as the basic type, or different.
 // * They should define a HashCode method returning an unsigned int. If the
 //   basic and param types differ, implement overloads for both types.
-// * They should define a Compare method taking one param_type and one 
-//   basic_type parameter, and returning boolean value true if there is a 
+// * They should define a Compare method taking one param_type and one
+//   basic_type parameter, and returning boolean value true if there is a
 //   match, and false otherwise.
 //
 // Specializations are provided here for integers, C strings, and case-
@@ -64,18 +62,12 @@ unsigned int D_HashTableKeyCase(const char *str);
 class EIntHashKey
 {
 public:
-   typedef int basic_type;
-   typedef int param_type;
+    using basic_type = int;
+    using param_type = int;
 
-   static unsigned int HashCode(int input)
-   {
-      return (unsigned int)input;
-   }
+    static unsigned int HashCode(int input) { return (unsigned int)input; }
 
-   static bool Compare(int first, int second)
-   {
-      return (first == second);
-   }
+    static bool Compare(int first, int second) { return (first == second); }
 };
 
 //
@@ -84,18 +76,12 @@ public:
 class EInt64HashKey
 {
 public:
-   typedef int64_t basic_type;
-   typedef int64_t param_type;
+    using basic_type = int64_t;
+    using param_type = int64_t;
 
-   static unsigned HashCode(int64_t input)
-   {
-      return static_cast<unsigned>(input ^ (input >> 32));
-   }
+    static unsigned HashCode(int64_t input) { return static_cast<unsigned>(input ^ (input >> 32)); }
 
-   static bool Compare(int64_t first, int64_t second)
-   {
-      return first == second;
-   }
+    static bool Compare(int64_t first, int64_t second) { return first == second; }
 };
 
 //
@@ -103,39 +89,27 @@ public:
 //
 class EStringHashKey
 {
-public: 
-   typedef const char *basic_type;
-   typedef const char *param_type;
+public:
+    using basic_type = const char *;
+    using param_type = const char *;
 
-   static unsigned int HashCode(const char *input)
-   {
-      return D_HashTableKeyCase(input);
-   }
+    static unsigned int HashCode(const char *input) { return D_HashTableKeyCase(input); }
 
-   static bool Compare(const char *first, const char *second)
-   {
-      return !strcmp(first, second);
-   }
+    static bool Compare(const char *first, const char *second) { return !strcmp(first, second); }
 };
 
-// 
+//
 // POD case-insensitive string key
 //
 class ENCStringHashKey
 {
 public:
-   typedef const char *basic_type;
-   typedef const char *param_type;
+    using basic_type = const char *;
+    using param_type = const char *;
 
-   static unsigned int HashCode(const char *input)
-   {
-      return D_HashTableKey(input);
-   }
+    static unsigned int HashCode(const char *input) { return D_HashTableKey(input); }
 
-   static bool Compare(const char *first, const char *second)
-   {
-      return !strcasecmp(first, second);
-   }
+    static bool Compare(const char *first, const char *second) { return !strcasecmp(first, second); }
 };
 
 #endif

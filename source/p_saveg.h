@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Savegame I/O, archiving, persistence.
+// Purpose: Savegame I/O, archiving, persistence.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef __P_SAVEG__
 #define __P_SAVEG__
@@ -36,20 +34,20 @@
 class CachedString : public ZoneObject
 {
 public:
-   qstring string;   // this is also the key
-   int identifier;   // can't use "id" due to objective-C reserved use.
+    qstring string;     // this is also the key
+    int     identifier; // can't use "id" due to objective-C reserved use.
 
-   DLListItem<CachedString> stringLink;
-   DLListItem<CachedString> idLink;
+    DLListItem<CachedString> stringLink;
+    DLListItem<CachedString> idLink;
 };
 
 // Persistent storage/archiving.
 // These are the load / save game routines.
 
-class  Thinker;
-class  Mobj;
-class  OutBuffer;
-class  InBuffer;
+class Thinker;
+class Mobj;
+class OutBuffer;
+class InBuffer;
 struct inventoryslot_t;
 struct spectransfer_t;
 struct mapthing_t;
@@ -61,89 +59,86 @@ struct zrefs_t;
 class SaveArchive
 {
 private:
-   // The string table for this save archive. Mapped both by string and by ID, depending on use
-   EHashTable<CachedString, ENCQStrHashKey, &CachedString::string, &CachedString::stringLink>
-      mStringTable;
-   EHashTable<CachedString, EIntHashKey, &CachedString::identifier, &CachedString::idLink>
-      mIdTable;
-   int mNextCachedStringID = 0;
-   PODCollection<CachedString *> mCacheStringHolder;  // to be cleared on destruction
+    // The string table for this save archive. Mapped both by string and by ID, depending on use
+    EHashTable<CachedString, ENCQStrHashKey, &CachedString::string, &CachedString::stringLink> mStringTable;
+    EHashTable<CachedString, EIntHashKey, &CachedString::identifier, &CachedString::idLink>    mIdTable;
+    int                                                                                        mNextCachedStringID = 0;
+    PODCollection<CachedString *> mCacheStringHolder; // to be cleared on destruction
 
 protected:
-   OutBuffer *savefile;        // valid when saving
-   InBuffer  *loadfile;        // valid when loading
+    OutBuffer *savefile; // valid when saving
+    InBuffer  *loadfile; // valid when loading
 
-   static constexpr int WRITE_SAVE_VERSION = 22; // Version of saves that EE writes
-   int read_save_version;                        // Version of currently-read save
-
+    static constexpr int WRITE_SAVE_VERSION = 22; // Version of saves that EE writes
+    int                  read_save_version;       // Version of currently-read save
 
 public:
-   explicit SaveArchive(OutBuffer *pSaveFile);
-   explicit SaveArchive(InBuffer  *pLoadFile);
-   ~SaveArchive()
-   {
-      for(CachedString *string : mCacheStringHolder)
-         delete string;
-   }
+    explicit SaveArchive(OutBuffer *pSaveFile);
+    explicit SaveArchive(InBuffer *pLoadFile);
+    ~SaveArchive()
+    {
+        for(CachedString *string : mCacheStringHolder)
+            delete string;
+    }
 
-   // Accessors
-   bool isSaving()  const   { return (savefile != nullptr); }
-   bool isLoading() const   { return (loadfile != nullptr); }
-   OutBuffer *getSaveFile() { return savefile; }
-   InBuffer  *getLoadFile() { return loadfile; }
+    // Accessors
+    bool       isSaving() const { return (savefile != nullptr); }
+    bool       isLoading() const { return (loadfile != nullptr); }
+    OutBuffer *getSaveFile() { return savefile; }
+    InBuffer  *getLoadFile() { return loadfile; }
 
-   int saveVersion() const
-   {
-      if(savefile)
-         return WRITE_SAVE_VERSION;
-      else if(loadfile)
-         return read_save_version;
-      return -1;
-   }
+    int saveVersion() const
+    {
+        if(savefile)
+            return WRITE_SAVE_VERSION;
+        else if(loadfile)
+            return read_save_version;
+        return -1;
+    }
 
-   // Methods
-   void archiveCString(char *str,  size_t maxLen);
-   void archiveLString(char *&str, size_t &len);
-   
-   // writeLString is valid during saving only. This is to accomodate const
-   // char *'s which must be saved, and are read into temporary buffers 
-   // during loading.
-   void writeLString(const char *str, size_t len = 0);
+    // Methods
+    void archiveCString(char *str, size_t maxLen);
+    void archiveLString(char *&str, size_t &len);
 
-   void archiveCachedString(qstring &str);
+    // writeLString is valid during saving only. This is to accomodate const
+    // char *'s which must be saved, and are read into temporary buffers
+    // during loading.
+    void writeLString(const char *str, size_t len = 0);
 
-   // archive a size_t
-   void archiveSize(size_t &value);
+    void archiveCachedString(qstring &str);
 
-   // read in the version number
-   bool readSaveVersion();
-   // write out the version number
-   void writeSaveVersion();
+    // archive a size_t
+    void archiveSize(size_t &value);
 
-   // Operators
-   // Similar to ZDoom's FArchive class, these are symmetric - they are used
-   // both for reading and writing.
-   // Basic types:
-   SaveArchive &operator << (int64_t  &x);
-   SaveArchive &operator << (uint64_t &x);
-   SaveArchive &operator << (int32_t  &x);
-   SaveArchive &operator << (uint32_t &x);
-   SaveArchive &operator << (int16_t  &x);
-   SaveArchive &operator << (uint16_t &x);
-   SaveArchive &operator << (int8_t   &x);
-   SaveArchive &operator << (uint8_t  &x); 
-   SaveArchive &operator << (bool     &x);
-   SaveArchive &operator << (float    &x);
-   SaveArchive &operator << (double   &x);
-   // Pointers:
-   SaveArchive &operator << (sector_t *&s);
-   SaveArchive &operator << (line_t   *&ln);
-   // Structures:
-   SaveArchive &operator << (spectransfer_t  &st);
-   SaveArchive &operator << (mapthing_t      &mt);
-   SaveArchive &operator << (inventoryslot_t &slot);
-   SaveArchive &operator << (v2fixed_t &vec);
-   SaveArchive &operator << (zrefs_t &zref);
+    // read in the version number
+    bool readSaveVersion();
+    // write out the version number
+    void writeSaveVersion();
+
+    // Operators
+    // Similar to ZDoom's FArchive class, these are symmetric - they are used
+    // both for reading and writing.
+    // Basic types:
+    SaveArchive &operator<<(int64_t &x);
+    SaveArchive &operator<<(uint64_t &x);
+    SaveArchive &operator<<(int32_t &x);
+    SaveArchive &operator<<(uint32_t &x);
+    SaveArchive &operator<<(int16_t &x);
+    SaveArchive &operator<<(uint16_t &x);
+    SaveArchive &operator<<(int8_t &x);
+    SaveArchive &operator<<(uint8_t &x);
+    SaveArchive &operator<<(bool &x);
+    SaveArchive &operator<<(float &x);
+    SaveArchive &operator<<(double &x);
+    // Pointers:
+    SaveArchive &operator<<(sector_t *&s);
+    SaveArchive &operator<<(line_t *&ln);
+    // Structures:
+    SaveArchive &operator<<(spectransfer_t &st);
+    SaveArchive &operator<<(mapthing_t &mt);
+    SaveArchive &operator<<(inventoryslot_t &slot);
+    SaveArchive &operator<<(v2fixed_t &vec);
+    SaveArchive &operator<<(zrefs_t &zref);
 };
 
 // Global template functions for SaveArchive
@@ -154,26 +149,26 @@ public:
 // Archives an array. The base element of the array must have an
 // operator << overload for SaveArchive.
 //
-template <typename T>
+template<typename T>
 void P_ArchiveArray(SaveArchive &arc, T *ptrArray, int numElements)
 {
-   // Make sure to also archive the array length, because on later Eternity versions we may grow these arrays.
-   int numElementsActual = numElements;
-   if(arc.saveVersion() >= 13)
-   {
-      arc << numElementsActual;
-      if(numElementsActual > numElements)
-         numElementsActual = numElements; // prevent crashing anyway.
-   }
-   for(int i = 0; i < numElementsActual; i++)
-      arc << ptrArray[i];
+    // Make sure to also archive the array length, because on later Eternity versions we may grow these arrays.
+    int numElementsActual = numElements;
+    if(arc.saveVersion() >= 13)
+    {
+        arc << numElementsActual;
+        if(numElementsActual > numElements)
+            numElementsActual = numElements; // prevent crashing anyway.
+    }
+    for(int i = 0; i < numElementsActual; i++)
+        arc << ptrArray[i];
 }
 
 // haleyjd: These utilities are now needed for external serialization support
 // in Thinker-derived classes.
 unsigned int P_NumForThinker(Thinker *th);
-Thinker *P_ThinkerForNum(unsigned int n);
-void P_SetNewTarget(Mobj **mop, Mobj *targ);
+Thinker     *P_ThinkerForNum(unsigned int n);
+void         P_SetNewTarget(Mobj **mop, Mobj *targ);
 
 void P_SaveCurrentLevel(char *filename, char *description);
 void P_LoadGame(const char *filename);

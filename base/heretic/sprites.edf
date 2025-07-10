@@ -89,7 +89,7 @@ pickupeffect HArtiInvisibility
   effects ArtiInvisibility
   message $HITEMSHADOWSPHERE
   sound   ht_artiup
-  //flags   
+  //flags
 
   sprite INVS
 }
@@ -98,7 +98,7 @@ pickupeffect HArtiQuartzFlask
   effects ArtiHealth
   message $HITEMQUARTZFLASK
   sound   ht_artiup
-  //flags   
+  //flags
 
   sprite PTN2
 }
@@ -107,7 +107,7 @@ pickupeffect HArtiFly
   effects ArtiFly
   message $HITEMWINGSOFWRATH
   sound   ht_artiup
-  //flags   
+  //flags
 
   sprite SOAR
 }
@@ -116,7 +116,7 @@ pickupeffect HArtiInvulnerability
   effects ArtiInvulnerability
   message $HITEMRINGOFINVINCIBILITY
   sound   ht_artiup
-  //flags   
+  //flags
 
   sprite INVU
 }
@@ -125,7 +125,7 @@ pickupeffect HArtiTomeOfPower
   effects ArtiTomeOfPower
   message $HITEMTOMEOFPOWER
   sound   ht_artiup
-  //flags   
+  //flags
 
   sprite PWBK
 }
@@ -134,7 +134,7 @@ pickupeffect HArtiEgg
   effects ArtiEgg
   message $HITEMMORPHOVUM
   sound   ht_artiup
-  //flags   
+  //flags
 
   sprite EGGC
 }
@@ -143,7 +143,7 @@ pickupeffect HArtiSuperHeal
   effects ArtiSuperHealth
   message $HITEMMYSTICURN
   sound   ht_artiup
-  //flags   
+  //flags
 
   sprite SPHL
 }
@@ -152,7 +152,7 @@ pickupeffect HArtiTorch
   effects ArtiTorch
   message $HITEMTORCH
   sound   ht_artiup
-  //flags   
+  //flags
 
   sprite TRCH
 }
@@ -161,16 +161,16 @@ pickupeffect HArtiFireBomb
   effects ArtiTimeBomb
   message $HITEMTIMEBOMB
   sound   ht_artiup
-  //flags  
+  //flags
 
-  sprite FBMB 
+  sprite FBMB
 }
 pickupeffect HArtiTeleport
 {
   effects ArtiTeleport
   message $HITEMTELEPORT
   sound   ht_artiup
-  //flags   
+  //flags
 
   sprite ATLP
 }
