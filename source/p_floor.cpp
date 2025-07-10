@@ -180,13 +180,14 @@ void FloorMoveThinker::Think()
             case genFloorChg0:
                 // jff add to fix bug in special transfers from changes
                 P_TransferSectorSpecial(sector, &special);
-                // fall thru
+                [[fallthrough]];
             case genFloorChg:
                 R_CacheTexture(texture);
                 R_CacheIfSkyTexture(sector->srf.floor.pic, texture);
                 sector->srf.floor.pic = texture;
                 break;
-            default: break;
+            default: //
+                break;
             }
         }
         else if(direction == plat_down) // going down
@@ -204,7 +205,7 @@ void FloorMoveThinker::Think()
             case genFloorChg0:
                 // jff add to fix bug in special transfers from changes
                 P_TransferSectorSpecial(sector, &special);
-                // fall thru
+                [[fallthrough]];
             case genFloorChg:
                 R_CacheTexture(texture);
                 R_CacheIfSkyTexture(sector->srf.floor.pic, texture);
