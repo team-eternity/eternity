@@ -642,9 +642,13 @@ static void SendProgramMsg(int time, int channel, int program, midi_fallback_t *
         SendShortMsg(0, MIDI_EVENT_PROGRAM_CHANGE, channel, program, 0);
         break;
 
-    case FALLBACK_DRUMS: SendShortMsg(time, MIDI_EVENT_PROGRAM_CHANGE, channel, fallback->value, 0); break;
+    case FALLBACK_DRUMS: //
+        SendShortMsg(time, MIDI_EVENT_PROGRAM_CHANGE, channel, fallback->value, 0);
+        break;
 
-    default: SendShortMsg(time, MIDI_EVENT_PROGRAM_CHANGE, channel, program, 0); break;
+    default: //
+        SendShortMsg(time, MIDI_EVENT_PROGRAM_CHANGE, channel, program, 0);
+        break;
     }
 }
 
@@ -913,7 +917,9 @@ static bool AddToBuffer(unsigned int delta_time, midi_event_t *event, win_midi_t
                      event->data.channel.param1, 0);
         break;
 
-    default: SendNOPMsg(delta_time); break;
+    default: //
+        SendNOPMsg(delta_time);
+        break;
     }
 
     return true;

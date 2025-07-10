@@ -1581,7 +1581,9 @@ static void deh_procFrame(DWFILE *fpin, char *line, MetaTable &gatheredData)
             states[indexnum]->flags |= dehacked_mbf21stateflags.results[DEHFLAGS_MODE1];
             break;
         }
-        default: deh_LogPrintf("Invalid frame string index for '%s'\n", key); break;
+        default: //
+            deh_LogPrintf("Invalid frame string index for '%s'\n", key);
+            break;
         }
     }
 }
@@ -1994,7 +1996,9 @@ static void deh_procWeapon(DWFILE *fpin, char *line, MetaTable &gatheredData)
             weaponinfo.flags |= dehacked_mbf21weaponflags.results[DEHFLAGS_MODE1];
             break;
         }
-        default: deh_LogPrintf("Invalid weapon string index for '%s'\n", key); break;
+        default: //
+            deh_LogPrintf("Invalid weapon string index for '%s'\n", key);
+            break;
         }
     }
     return;

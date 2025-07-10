@@ -694,7 +694,8 @@ void XInputHapticInterface::startEffect(effect_e effect, int data1, int data2)
         // * data2 should be duration in ms
         new XIDamageEffect(curTime, data2, 25000 + data1 * 400);
         break;
-    default: break;
+    default: //
+        break;
     }
 }
 

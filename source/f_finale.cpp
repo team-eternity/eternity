@@ -261,7 +261,8 @@ void F_Ticker()
                 case FINALE_HTIC_DEMON: // demon scroller
                     F_InitDemonScroller();
                     break;
-                default: break;
+                default: //
+                    break;
                 }
             }
             else if(!demo_compatibility && midstage)

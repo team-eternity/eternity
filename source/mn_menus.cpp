@@ -426,7 +426,9 @@ CONSOLE_COMMAND(mn_startmission, cf_hidden | cf_notnet)
     case 2: // Master Levels
         W_DoMasterLevels(true, skill);
         break;
-    default: C_Printf(FC_ERROR "Unknown mission number %d\a\n", mn_missionNo); break;
+    default: //
+        C_Printf(FC_ERROR "Unknown mission number %d\a\n", mn_missionNo);
+        break;
     }
 }
 
@@ -1542,10 +1544,16 @@ static void MN_BuildVidmodeTables(const tableType_e type)
         {
             switch(userfs)
             {
-            case MN_FULLSCREEN:         description += 'f'; break;
-            case MN_FULLSCREEN_DESKTOP: description += 'd'; break;
+            case MN_FULLSCREEN: //
+                description += 'f';
+                break;
+            case MN_FULLSCREEN_DESKTOP: //
+                description += 'd';
+                break;
             case MN_WINDOWED:
-            default:                    description += 'w'; break;
+            default: //
+                description += 'w';
+                break;
             }
         }
 

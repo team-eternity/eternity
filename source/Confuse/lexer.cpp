@@ -288,7 +288,9 @@ static int lexer_state_string(lexerstate_t *ls)
         // a forward slash begins an escape sequence
         ls->state = STATE_ESCAPE;
         break;
-    default: qstr += ls->c; break;
+    default:
+        qstr += ls->c; //
+        break;
     }
 
     return -1;

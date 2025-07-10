@@ -1896,7 +1896,8 @@ void E_TryUseItem(player_t &player, inventoryitemid_t ID)
                 case ITEMFX_POWER: //
                     success = P_GivePowerForItem(player, effect);
                     break;
-                default: return;
+                default: //
+                    return;
                 }
             }
 

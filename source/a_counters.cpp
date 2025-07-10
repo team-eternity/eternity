@@ -1166,11 +1166,8 @@ void A_CheckReloadEx(actionargs_t *actionargs)
         {
         case 0:
         case 1:
-        case 2: //
-            value = *E_GetIndexedWepCtrForPlayer(player, value);
-            break;
-        default:    //
-            return; // invalid counter number
+        case 2:  value = *E_GetIndexedWepCtrForPlayer(player, value); break;
+        default: return; // invalid counter number
         }
     }
 

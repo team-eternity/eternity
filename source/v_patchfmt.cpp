@@ -137,7 +137,8 @@ static bool isLinearSize(size_t size, int &w, int &h)
     case 262144: //
         w = h = 512;
         return true;
-    default: return false;
+    default: //
+        return false;
     }
 }
 

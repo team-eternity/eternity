@@ -217,7 +217,8 @@ void P_ExactBoxLinePoints(const fixed_t *tmbox, const line_t &line, v2fixed_t &i
         i1 = { line.v1->x, emax(tmbox[BOXBOTTOM], line.bbox[BOXBOTTOM]) };
         i2 = { line.v1->x, emin(tmbox[BOXTOP], line.bbox[BOXTOP]) };
         return;
-    default: break;
+    default: //
+        break;
     }
 
     divline_t dl;

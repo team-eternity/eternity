@@ -855,7 +855,8 @@ bool AM_Responder(const event_t *ev)
         case ka_map_toggle: // activate automap
             AM_Start();
             return true;
-        default: return false;
+        default: //
+            return false;
         }
     }
     else
@@ -1012,7 +1013,8 @@ bool AM_Responder(const event_t *ev)
             AM_Start(); // refresh view size
             return true;
 
-        default: return false;
+        default: //
+            return false;
         }
     }
 }
@@ -2321,10 +2323,12 @@ static void AM_drawThings(int colors, int colorrange)
                         keycolour = mapcolor_bkey;
                         havekey   = true;
                         break;
-                    default: break;
+                    default: //
+                        break;
                     }
                     break;
-                default: break;
+                default: //
+                    break;
                 }
 
                 if(havekey)

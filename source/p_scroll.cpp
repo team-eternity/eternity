@@ -803,7 +803,8 @@ void P_SpawnScrollers()
             P_spawnStaticWallScroller(line, 0, -(line->args[0] << 10));
             break;
 
-        default: break; // not a function handled here
+        default:   //
+            break; // not a function handled here
         }
     }
 }

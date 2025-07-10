@@ -311,7 +311,8 @@ void I_ParseResolution(const char *resolution, int &width, int &height, const in
                 }
             }
             break;
-        default: break;
+        default: //
+            break;
         }
         ++c;
     }

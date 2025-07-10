@@ -429,7 +429,8 @@ bool C_Responder(event_t *ev)
         C_updateInputPoint(); // reset scrolling
         return true;
 
-    default: break;
+    default: //
+        break;
     }
 
     // none of these, probably just a normal character

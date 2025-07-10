@@ -916,9 +916,12 @@ bool G_Responder(const event_t *ev)
 
         return true; // eat events
 
-    case ev_joystick: joyaxes[axisActions[ev->data1]] = ev->data2; return true; // eat events
+    case ev_joystick: //
+        joyaxes[axisActions[ev->data1]] = ev->data2;
+        return true; // eat events
 
-    default: break;
+    default: //
+        break;
     }
 
     return false;

@@ -869,7 +869,8 @@ static void C_SetVariable(command_t *command)
         fs = Console.argv[0]->toDouble(nullptr);
         break;
 
-    default: return;
+    default: //
+        return;
     }
 
     // check the min/max sizes
@@ -967,7 +968,8 @@ static void C_SetVariable(command_t *command)
                 *(double *)variable->v_default = fs;
             break;
 
-        default: I_Error("C_SetVariable: unknown variable type %d\n", variable->type);
+        default: //
+            I_Error("C_SetVariable: unknown variable type %d\n", variable->type);
         }
     }
 
