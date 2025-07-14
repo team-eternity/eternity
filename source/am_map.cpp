@@ -339,12 +339,12 @@ inline static double MTOF(const T x)
 template<typename T>
 inline static int CXMTOF(const T x)
 {
-    return f_x + int(MTOF(x) - m_x);
+    return f_x + int(MTOF(x - m_x));
 }
 template<typename T>
 inline static int CYMTOF(const T y)
 {
-    return f_y + int(MTOF(y) - m_y);
+    return f_y + (f_h - int(MTOF(y - m_y)));
 }
 
 // haleyjd: movement scaling factors for panning consistency at different
