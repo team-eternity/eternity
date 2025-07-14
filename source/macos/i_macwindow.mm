@@ -37,7 +37,7 @@ bool I_IsMacViewOccluded(SDL_Window *window)
     if(!window)
         return true;
    
-    edefstructvar(SDL_SysWMinfo, info);
+	SDL_SysWMinfo info = {};
     SDL_VERSION(&info.version);
    
     if(!SDL_GetWindowWMInfo(window, &info))

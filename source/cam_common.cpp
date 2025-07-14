@@ -184,7 +184,7 @@ bool PathTraverser::checkLine(size_t linenum)
     int       s1, s2;
     divline_t dl;
 
-    VALID_SET(validlines, linenum);
+    VALID_SET(validlines, static_cast<int>(linenum));
 
     if(def.flags & CAM_REQUIRELINEPORTALS && !(ld->pflags & PS_PASSABLE))
         return true;
