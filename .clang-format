@@ -1,0 +1,106 @@
+---
+#
+# Copyright (C) 2021-2023 Lexi Mayfield, Nightdive Studios LLC
+#
+# Updated 2021-12-01: Added `AlignConsecutiveDeclarations: Consecutive`.
+# Updated 2022-04-04: Added `AlwaysBreakTemplateDeclarations: Yes`.
+# Updated 2023-03-31: Added `SortIncludes: false`.
+# Updated 2023-08-14: Added `SpaceAfterTemplateKeyword: false`.
+# Updated 2023-11-08: Added `AccessModifierOffset: -4`.
+#
+# clang-format configuration based on Kaiser's Artistic Style settings.
+#
+# Modern versions of Visual Studio should pick up on this config as soon as
+# you try to format a document - you'll see a popup box the first time.
+#
+# The following old settings were not converted:
+# -o, --keep-one-line-statements: clang-format has "SingleLine" settings for
+#                                 many things, but not multi-statements.
+# -k1, --align-pointer=type: Group consensus appeared to be on the identifier.
+#
+# The following settings are not yet enabled, but are planned in the future,
+# due to their reliance on newer versions of clang-format.
+#
+# InsertBraces: true
+#   Not working in VC++ 2019, works in VC++ 2022.
+# PackConstructorInitializers: Never
+#   Not working in VC++ 2019, works in VC++ 2022.
+
+#Standard: c++17
+
+#BasedOnStyle: Microsoft     # The only existing style that assumes Allman
+
+IndentWidth: 4
+NamespaceIndentation: Inner
+SpaceBeforeParens: Never
+SpacesInParentheses: false
+UseTab: Never
+
+AccessModifierOffset: -4
+
+AlignConsecutiveAssignments:
+  Enabled:               true
+  AcrossEmptyLines:      false
+  AcrossComments:        false
+  AlignCompound:         true
+  PadOperators:          true
+
+AlignConsecutiveDeclarations:
+  Enabled:               true
+  AcrossEmptyLines:      false
+  AcrossComments:        false
+  AlignFunctionPointers: true
+
+AlignEscapedNewlines: Left
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: false
+AlwaysBreakTemplateDeclarations: Yes
+ColumnLimit: 120
+PointerAlignment: Right
+SortIncludes: false
+SpaceAfterTemplateKeyword: false
+
+AlignArrayOfStructures: Left
+
+KeepEmptyLines:
+  AtEndOfFile: true
+
+AlignAfterOpenBracket: Align # UNCERTAIN: BlockIndent maybe
+#AllowShortCaseExpressionOnASingleLine: false # UNCERTAIN
+AllowShortCaseLabelsOnASingleLine : true
+AlignConsecutiveShortCaseStatements:
+  Enabled: true
+
+BreakBeforeBraces: Custom
+
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterControlStatement: Always
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: true
+  BeforeCatch: true
+  BeforeElse: true
+  BeforeWhile: true
+  BeforeLambdaBody: false
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+
+BreakBeforeTernaryOperators: false
+
+BreakConstructorInitializers: BeforeColon
+PackConstructorInitializers: BinPack
+
+Cpp11BracedListStyle: false
+
+SkipMacroDefinitionBody: true
+
+#IndentPPDirectives: BeforeHash
+
+...

@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Dynamic Menus -- EDF Subsystem 
+// Purpose: Dynamic menus -- EDF subsystem.
+// Authors: James Haley, Ioan Chera
 //
-// By James Haley
-//
-//-----------------------------------------------------------------------------
 
 #ifndef MN_EMENU_H__
 #define MN_EMENU_H__
@@ -31,7 +28,7 @@ struct menu_t;
 
 #ifdef NEED_EDF_DEFINITIONS
 
-#define EDF_SEC_MENU "menu"
+static constexpr const char EDF_SEC_MENU[] = "menu";
 
 extern cfg_opt_t edf_menu_opts[];
 

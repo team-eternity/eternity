@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2017 James Haley et al.
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,10 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: EDF animation definitions
+//------------------------------------------------------------------------------
+//
+// Purpose: EDF animation definitions.
 // Authors: Ioan Chera
 //
-
 
 #ifndef E_ANIM_H_
 #define E_ANIM_H_
@@ -39,60 +40,58 @@ constexpr const char EDF_SEC_ANIMATION[] = "animation";
 class EAnimDef : public ZoneObject
 {
 public:
-   //
-   // Type of animation
-   //
-   enum type_t
-   {
-      type_flat,
-      type_wall
-   };
+    //
+    // Type of animation
+    //
+    enum type_t
+    {
+        type_flat,
+        type_wall
+    };
 
-   //
-   // Flags
-   //
-   enum
-   {
-      SWIRL = 1,  // swirly texture
-   };
+    //
+    // Flags
+    //
+    enum
+    {
+        SWIRL = 1, // swirly texture
+    };
 
-   //
-   // Pic in sequence (if Hexen style)
-   //
-   class Pic : public ZoneObject
-   {
-   public:
-      Pic() : offset(), ticsmin(), ticsmax(), flags()
-      {
-      }
+    //
+    // Pic in sequence (if Hexen style)
+    //
+    class Pic : public ZoneObject
+    {
+    public:
+        Pic() : offset(), ticsmin(), ticsmax(), flags() {}
 
-      void reset();
+        void reset();
 
-      qstring name;  // either direct name
-      int offset;    // or offset to startpic. 1-based. If 0, name takes charge.
-      int ticsmin;   // minimum time
-      int ticsmax;   // if not -1, it's the maximum number of tics, randomly
-      unsigned flags;
-   };
+        qstring  name;    // either direct name
+        int      offset;  // or offset to startpic. 1-based. If 0, name takes charge.
+        int      ticsmin; // minimum time
+        int      ticsmax; // if not -1, it's the maximum number of tics, randomly
+        unsigned flags;
+    };
 
-   EAnimDef() : type(), tics(), flags(), link()
-   {
-      static Pic pic;
-      pics.setPrototype(&pic);
-   }
+    EAnimDef() : type(), tics(), flags(), link()
+    {
+        static Pic pic;
+        pics.setPrototype(&pic);
+    }
 
-   void reset(type_t intype = type_wall);
+    void reset(type_t intype = type_wall);
 
-   type_t type;      // kind (wall or flat)
-   qstring startpic; // animation start pic
-   qstring endpic;   // end pic (if Doom style)
-   int tics;         // tics to end pic
-   unsigned flags;
-   Collection<Pic> pics;   // sequence of pics (if Hexen style)
-   DLListItem<EAnimDef> link;
+    type_t               type;     // kind (wall or flat)
+    qstring              startpic; // animation start pic
+    qstring              endpic;   // end pic (if Doom style)
+    int                  tics;     // tics to end pic
+    unsigned             flags;
+    Collection<Pic>      pics; // sequence of pics (if Hexen style)
+    DLListItem<EAnimDef> link;
 };
 
-extern cfg_opt_t edf_anim_opts[];
+extern cfg_opt_t                 edf_anim_opts[];
 extern PODCollection<EAnimDef *> eanimations;
 
 void E_ProcessAnimations(cfg_t *cfg);

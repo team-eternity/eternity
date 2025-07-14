@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Generalized line action system - Macros
+// Purpose: Generalized line action system - Macros.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef EV_MACROS_H__
 #define EV_MACROS_H__
@@ -36,13 +34,13 @@
 
 // Call to require a valid actor
 #define REQUIRE_ACTOR(actor) \
-   if(!(actor))              \
-      return false
+    if(!(actor))             \
+        return false
 
 // Call to require a valid line
 #define REQUIRE_LINE(line) \
-   if(!(line))             \
-      return false
+    if(!(line))            \
+        return false
 
 #endif
 

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Refresh module, drawing LineSegs from BSP.
+// Purpose: Refresh module, drawing LineSegs from BSP.
+// Authors: James Haley, Stephen McGranahan, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef __R_SEGS__
 #define __R_SEGS__
@@ -35,17 +33,15 @@ struct drawseg_t;
 struct planecontext_t;
 struct portalcontext_t;
 struct viewpoint_t;
-class  ZoneHeap;
+class ZoneHeap;
 
 void R_FinishMappingLines();
 
-void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
-                            const viewpoint_t &viewpoint, drawseg_t *ds, int x1, int x2);
+void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const viewpoint_t &viewpoint, drawseg_t *ds, int x1, int x2);
 void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,
-                      portalcontext_t &portalcontext, ZoneHeap &heap,
-                      const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
-                      const contextbounds_t &bounds,
-                      const cb_seg_t &seg, const int start, const int stop);
+                      portalcontext_t &portalcontext, ZoneHeap &heap, const viewpoint_t &viewpoint,
+                      const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds, const cb_seg_t &seg,
+                      const int start, const int stop);
 
 fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
 
@@ -55,26 +51,26 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
 
 struct drawseg_t
 {
-   const seg_t *curline;
-   int x1, x2;
-   float dist1, dist2, diststep;
-   fixed_t bsilheight; // do not clip sprites above this
-   fixed_t tsilheight; // do not clip sprites below this
+    const seg_t *curline;
+    int          x1, x2;
+    float        dist1, dist2, diststep;
+    fixed_t      bsilheight; // do not clip sprites above this
+    fixed_t      tsilheight; // do not clip sprites below this
 
-   // sf: colormap to be used when drawing the drawseg
-   // for coloured lighting
-   const lighttable_t *const (*colormap)[MAXLIGHTSCALE];
-   const lighttable_t *fixedcolormap;
+    // sf: colormap to be used when drawing the drawseg
+    // for coloured lighting
+    const lighttable_t *const (*colormap)[MAXLIGHTSCALE];
+    const lighttable_t       *fixedcolormap;
 
-   // Pointers to lists for sprite clipping,
-   // all three adjusted so [x1] is first value.
-   const float *sprtopclip, *sprbottomclip;
-   float *maskedtexturecol;
-   float *maskedtextureskew;
+    // Pointers to lists for sprite clipping,
+    // all three adjusted so [x1] is first value.
+    const float *sprtopclip, *sprbottomclip;
+    float       *maskedtexturecol;
+    float       *maskedtextureskew;
 
-   byte silhouette; // 0=none, 1=bottom, 2=top, 3=both
+    byte silhouette; // 0=none, 1=bottom, 2=top, 3=both
 
-   fixed_t deltaz; // z offset if seen behind anchored portals
+    fixed_t deltaz; // z offset if seen behind anchored portals
 };
 
 #endif

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Functions to deal with retrieving data from raw binary.
+// Purpose: Functions to deal with retrieving data from raw binary.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef M_BINARY_H__
 #define M_BINARY_H__
@@ -36,11 +34,11 @@
 #define read16_le(b, t) ((b)[0] | ((t)((b)[1]) << 8))
 
 // haleyjd 10/30/10: Read a little-endian dword without alignment assumptions
-#define read32_le(b, t)   \
-   ((b)[0] |              \
-    ((t)((b)[1]) <<  8) | \
-    ((t)((b)[2]) << 16) | \
-    ((t)((b)[3]) << 24))
+#define read32_le(b, t)    \
+    ((b)[0] |              \
+     ((t)((b)[1]) <<  8) | \
+     ((t)((b)[2]) << 16) | \
+     ((t)((b)[3]) << 24))
 
 //
 // GetBinaryWord
@@ -49,10 +47,10 @@
 //
 inline int16_t GetBinaryWord(byte *&data)
 {
-   const int16_t val = SwapShort(read16_le(data, int16_t));
-   data += 2;
+    const int16_t val  = SwapShort(read16_le(data, int16_t));
+    data              += 2;
 
-   return val;
+    return val;
 }
 
 //
@@ -62,10 +60,10 @@ inline int16_t GetBinaryWord(byte *&data)
 //
 inline uint16_t GetBinaryUWord(byte *&data)
 {
-   const uint16_t val = SwapUShort(read16_le(data, uint16_t));
-   data += 2;
+    const uint16_t val  = SwapUShort(read16_le(data, uint16_t));
+    data               += 2;
 
-   return val;
+    return val;
 }
 
 //
@@ -75,10 +73,10 @@ inline uint16_t GetBinaryUWord(byte *&data)
 //
 inline int32_t GetBinaryDWord(byte *&data)
 {
-   const int32_t val = SwapLong(read32_le(data, int32_t));
-   data += 4;
+    const int32_t val  = SwapLong(read32_le(data, int32_t));
+    data              += 4;
 
-   return val;
+    return val;
 }
 
 //
@@ -88,25 +86,25 @@ inline int32_t GetBinaryDWord(byte *&data)
 //
 inline uint32_t GetBinaryUDWord(byte *&data)
 {
-   const uint32_t val = SwapULong(read32_le(data, uint32_t));
-   data += 4;
+    const uint32_t val  = SwapULong(read32_le(data, uint32_t));
+    data               += 4;
 
-   return val;
+    return val;
 }
 
 //
 // GetBinaryString
 //
-// Reads a "len"-byte string from the lump data and writes it into the 
+// Reads a "len"-byte string from the lump data and writes it into the
 // destination buffer. The read pointer is incremented by len bytes.
 //
 inline void GetBinaryString(byte *&data, char *dest, const int len)
 {
-   const char *loc = reinterpret_cast<const char *>(data);
+    const char *loc = reinterpret_cast<const char *>(data);
 
-   memcpy(dest, loc, len);
+    memcpy(dest, loc, len);
 
-   data += len;
+    data += len;
 }
 
 #endif

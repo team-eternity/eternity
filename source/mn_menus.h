@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,7 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//
+// Purpose: Menus.
+// Authors: James Haley, Ioan Chera, Max Waine
+//
 
 #ifndef MN_MENUS_H__
 #define MN_MENUS_H__
@@ -38,25 +41,25 @@ extern int mn_classic_menus;
 // menu aspect ratio settings enum
 enum
 {
-   AR_LEGACY,
-   AR_5TO4,
-   AR_4TO3,
-   AR_3TO2,
-   AR_16TO10,
-   AR_5TO3,
-   AR_WSVGA,  // 128:75 (1024x600 mode)
-   AR_16TO9,
-   AR_21TO9,
-   AR_NUMASPECTRATIOS
+    AR_LEGACY,
+    AR_5TO4,
+    AR_4TO3,
+    AR_3TO2,
+    AR_16TO10,
+    AR_5TO3,
+    AR_WSVGA, // 128:75 (1024x600 mode)
+    AR_16TO9,
+    AR_21TO9,
+    AR_NUMASPECTRATIOS
 };
 
 // menu screen types
 enum
 {
-   MN_WINDOWED,
-   MN_FULLSCREEN_DESKTOP,
-   MN_FULLSCREEN,
-   MN_NUMSCREENTYPES
+    MN_WINDOWED,
+    MN_FULLSCREEN_DESKTOP,
+    MN_FULLSCREEN,
+    MN_NUMSCREENTYPES
 };
 
 extern int mn_favaspectratio;

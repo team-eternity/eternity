@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,17 +18,17 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Win32-specific File Name Handling Routines.
-//      haleyjd 10/28/04
+// Purpose: Win32-specific file name handling routines.
+// Authors: James Haley
 //
-//      Note: You cannot include most of DOOM's header files into this
-//      module, due to namespace conflicts with the Win32 API.  Keep it
-//      isolated.
+
 //
-//-----------------------------------------------------------------------------
+// Note: You cannot include most of DOOM's header files into this
+// module, due to namespace conflicts with the Win32 API.  Keep it
+// isolated.
+//
 
 #define WIN32_LEAN_AND_MEAN
 
@@ -46,7 +45,7 @@ extern void M_GetFilePath(const char *fn, char *base, size_t len);
 // WIN_GetExeDir
 //
 // When compiling for Windows, D_DoomExeDir calls this instead of
-// the generalized M_GetFilePath on argv[0].  This is necessary 
+// the generalized M_GetFilePath on argv[0].  This is necessary
 // because some versions of Windows deliberately strip argv[0] down
 // to the file name, removing all path information. This causes a
 // serious malfunction under Windows XP which can only be corrected
@@ -56,21 +55,21 @@ extern void M_GetFilePath(const char *fn, char *base, size_t len);
 //
 void WIN_GetExeDir(char *buffer, unsigned int size)
 {
-   // get the name of the current process's module
-   DWORD nRet = GetModuleFileName(nullptr, (LPTSTR)buffer, (DWORD)size);
-   char *dupstr;
+    // get the name of the current process's module
+    DWORD nRet = GetModuleFileName(nullptr, (LPTSTR)buffer, (DWORD)size);
+    char *dupstr;
 
-   // if 0 or if the full buffer size, it's not a value we can use
-   // and the only available option is to exit the program
-   if(!nRet || nRet == size)
-      I_FatalError(0, "WIN_GetExeDir: could not determine module file name.\n");
+    // if 0 or if the full buffer size, it's not a value we can use
+    // and the only available option is to exit the program
+    if(!nRet || nRet == size)
+        I_FatalError(0, "WIN_GetExeDir: could not determine module file name.\n");
 
-   dupstr = strdup(buffer);
+    dupstr = strdup(buffer);
 
-   // remove the file name, leaving only the full path
-   M_GetFilePath(dupstr, buffer, size);
+    // remove the file name, leaving only the full path
+    M_GetFilePath(dupstr, buffer, size);
 
-   free(dupstr);
+    free(dupstr);
 }
 
 // EOF

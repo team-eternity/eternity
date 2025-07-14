@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*- 
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Misc menu stuff
+// Purpose: Misc menu stuff.
+// Authors: Simon Howard, Jamey Haley
 //
-// By Simon Howard 
-//
-//----------------------------------------------------------------------------
 
 #ifndef MN_MISC_H__
 #define MN_MISC_H__
@@ -39,8 +36,8 @@ void MN_QuestionFunc(const char *message, void (*handler)(void));
 
 enum class mapColorType_e : bool
 {
-   mandatory,
-   optional
+    mandatory,
+    optional
 };
 
 void MN_SelectColor(const char *variable_name, const mapColorType_e color_type);

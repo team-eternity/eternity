@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,14 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   
-//  OpenGL Configuration Variables
-//  haleyjd 05/30/11
+// Purpose: OpenGL configuration variables.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef GL_VARS_H__
 #define GL_VARS_H__
@@ -34,9 +30,9 @@
 // Supported texture filtering types
 enum
 {
-   CFG_GL_LINEAR,
-   CFG_GL_NEAREST,
-   CFG_GL_NUMFILTERS
+    CFG_GL_LINEAR,
+    CFG_GL_NEAREST,
+    CFG_GL_NUMFILTERS
 };
 
 extern int  cfg_gl_colordepth;

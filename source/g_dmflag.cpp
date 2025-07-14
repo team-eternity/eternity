@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Deathmatch Flags
+// Purpose: Deathmatch flags.
+// Authors: James Haley
 //
-// By James Haley
-//
-//---------------------------------------------------------------------------
 
 #include "z_zone.h"
 
@@ -48,30 +45,24 @@ unsigned int default_dmflags;
 //
 void G_SetDefaultDMFlags(int dmtype, bool setdefault)
 {
-   if(GameType == gt_single)
-      dmflags = DMD_SINGLE;
-   else if(GameType == gt_coop)
-      dmflags = DMD_COOP;
-   else
-   {
-      switch(dmtype)
-      {
-      default:
-      case 1:
-         dmflags = DMD_DEATHMATCH;
-         break;
-      case 2:
-         dmflags = DMD_DEATHMATCH2;
-         break;
-      case 3:
-         dmflags = DMD_DEATHMATCH3;
-         break;
-      }
-   }
+    if(GameType == gt_single)
+        dmflags = DMD_SINGLE;
+    else if(GameType == gt_coop)
+        dmflags = DMD_COOP;
+    else
+    {
+        switch(dmtype)
+        {
+        default:
+        case 1:  dmflags = DMD_DEATHMATCH; break;
+        case 2:  dmflags = DMD_DEATHMATCH2; break;
+        case 3:  dmflags = DMD_DEATHMATCH3; break;
+        }
+    }
 
-   // optionally propagate value to default_dmflags
-   if(setdefault)
-      default_dmflags = dmflags;
+    // optionally propagate value to default_dmflags
+    if(setdefault)
+        default_dmflags = dmflags;
 }
 
 VARIABLE_INT(dmflags, &default_dmflags, 0, D_MAXINT, nullptr);
@@ -81,61 +72,54 @@ CONSOLE_NETVAR(dmflags, dmflags, cf_server, netcmd_dmflags) {}
 
 CONSOLE_COMMAND(defdmflags, cf_server)
 {
-   int mode;
-   unsigned int flags = 0;
-   char cmdbuf[64];
-   const char *gm;
+    int          mode;
+    unsigned int flags = 0;
+    char         cmdbuf[64];
+    const char  *gm;
 
-   if(!Console.argc)
-   {
-      // no argument means set to default for current game type
-      switch(GameType)
-      {
-      default:
-      case gt_single:
-         mode = 0;
-         break;
-      case gt_coop:
-         mode = 1;
-         break;
-      case gt_dm:
-         mode = 2;
-         break;
-      }
-   }
-   else
-      mode = Console.argv[0]->toInt();
+    if(!Console.argc)
+    {
+        // no argument means set to default for current game type
+        switch(GameType)
+        {
+        default:
+        case gt_single: mode = 0; break;
+        case gt_coop:   mode = 1; break;
+        case gt_dm:     mode = 2; break;
+        }
+    }
+    else
+        mode = Console.argv[0]->toInt();
 
-   switch(mode)
-   {
-   default:
-   case 0: // SP
-      gm = "single player";
-      break;
-   case 1: // CO-OP
-      gm = "coop";
-      flags |= DMD_COOP;
-      break;
-   case 2: // normal dm
-      gm = "deathmatch";
-      flags |= DMD_DEATHMATCH;
-      break;
-   case 3: // altdeath
-      gm = "altdeath";
-      flags |= DMD_DEATHMATCH2;
-      break;
-   case 4: // trideath
-      gm = "trideath";
-      flags |= DMD_DEATHMATCH3;
-      break;
-   }
+    switch(mode)
+    {
+    default:
+    case 0: // SP
+        gm = "single player";
+        break;
+    case 1: // CO-OP
+        gm     = "coop";
+        flags |= DMD_COOP;
+        break;
+    case 2: // normal dm
+        gm     = "deathmatch";
+        flags |= DMD_DEATHMATCH;
+        break;
+    case 3: // altdeath
+        gm     = "altdeath";
+        flags |= DMD_DEATHMATCH2;
+        break;
+    case 4: // trideath
+        gm     = "trideath";
+        flags |= DMD_DEATHMATCH3;
+        break;
+    }
 
-   psnprintf(cmdbuf, sizeof(cmdbuf), "dmflags %u", flags);
-   C_RunTextCmd(cmdbuf);
+    psnprintf(cmdbuf, sizeof(cmdbuf), "dmflags %u", flags);
+    C_RunTextCmd(cmdbuf);
 
-   C_Printf("dmflags set to default for %s\n", gm);
+    C_Printf("dmflags set to default for %s\n", gm);
 }
 
 // EOF
-
 

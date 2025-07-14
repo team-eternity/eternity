@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Networking stuff.
+// Purpose: Networking stuff.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef D_NET_H__
 #define D_NET_H__
@@ -36,31 +34,30 @@
 //  be transmitted.
 //
 
-#define DOOMCOM_ID              0x12345678l
+static constexpr int32_t DOOMCOM_ID = 0x12345678;
 
 // Max computers/players in a game.
-#define MAXNETNODES             8
-
+static constexpr int MAXNETNODES = 8;
 
 // Networking and tick handling related.
-#define BACKUPTICS              12
+static constexpr int BACKUPTICS = 12;
 
 // haleyjd 10/19/07: moved here from d_net.c
-#define NCMD_EXIT               0x80000000
-#define NCMD_RETRANSMIT         0x40000000
-#define NCMD_SETUP              0x20000000
-#define NCMD_KILL               0x10000000      /* kill game */
-#define NCMD_CHECKSUM           0x0fffffff
+static constexpr uint32_t NCMD_EXIT       = 0x80000000;
+static constexpr uint32_t NCMD_RETRANSMIT = 0x40000000;
+static constexpr uint32_t NCMD_SETUP      = 0x20000000;
+static constexpr uint32_t NCMD_KILL       = 0x10000000; /* kill game */
+static constexpr uint32_t NCMD_CHECKSUM   = 0x0fffffff;
 
 enum
 {
-    CMD_SEND    = 1,
-    CMD_GET     = 2
+    CMD_SEND = 1,
+    CMD_GET  = 2
 };
 
 // haleyjd 10/19/07: moved here from g_game.h:
 // killough 5/2/98: number of bytes reserved for saving options
-#define GAME_OPTION_SIZE 64
+static constexpr int GAME_OPTION_SIZE = 64;
 
 // haleyjd 10/16/07: structures in this file must be packed
 #if defined(_MSC_VER) || defined(__GNUC__)
@@ -73,18 +70,18 @@ enum
 struct doomdata_t
 {
     // High bit is retransmit request.
-    uint32_t     checksum;
+    uint32_t checksum;
     // Only valid if NCMD_RETRANSMIT.
-    byte         retransmitfrom;
-    
-    byte         starttic;
-    byte         player;
-    byte         numtics;
+    byte retransmitfrom;
+
+    byte starttic;
+    byte player;
+    byte numtics;
 
     union packetdata_u
     {
-       byte      data[GAME_OPTION_SIZE];
-       ticcmd_t  cmds[BACKUPTICS];
+        byte     data[GAME_OPTION_SIZE];
+        ticcmd_t cmds[BACKUPTICS];
     } d;
 };
 
@@ -121,48 +118,47 @@ struct doomdata_t
 struct doomcom_t
 {
     // Supposed to be DOOMCOM_ID?
-    int32_t             id;
-    
+    int32_t id;
+
     // DOOM executes an int to execute commands.
-    int16_t             intnum;         
+    int16_t intnum;
     // Communication between DOOM and the driver.
     // Is CMD_SEND or CMD_GET.
-    int16_t             command;
+    int16_t command;
     // Is dest for send, set by get (-1 = no packet).
-    int16_t             remotenode;
-    
+    int16_t remotenode;
+
     // Info common to all nodes.
     // Console is allways node 0.
-    int16_t             numnodes;
+    int16_t numnodes;
     // Flag: 1 = no duplication, 2-5 = dup for slow nets.
-    int16_t             ticdup;
+    int16_t ticdup;
     // Flag: 1 = send a backup tic in every packet.
-    int16_t             extratics;
+    int16_t extratics;
     // Flag: 1 = deathmatch.
-    int16_t             deathmatch;
+    int16_t deathmatch;
     // Flag: -1 = new game, 0-5 = load savegame
-    int16_t             savegame;
-    int16_t             episode;        // 1-3
-    int16_t             map;            // 1-9
-    int16_t             skill;          // 1-5
+    int16_t savegame;
+    int16_t episode; // 1-3
+    int16_t map;     // 1-9
+    int16_t skill;   // 1-5
 
     // Info specific to this node.
-    int16_t             consoleplayer;
-    int16_t             numplayers;
-    
+    int16_t consoleplayer;
+    int16_t numplayers;
+
     // These are related to the 3-display mode,
     //  in which two drones looking left and right
     //  were used to render two additional views
     //  on two additional computers.
     // Probably not operational anymore.
     // 1 = left, 0 = center, -1 = right
-    int16_t             angleoffset;
+    int16_t angleoffset;
     // 1 = drone
-    int16_t             drone;          
+    int16_t drone;
 
     // The packet data to be sent.
-    doomdata_t          data;
-    
+    doomdata_t data;
 };
 
 // haleyjd 10/16/07

@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,55 +18,54 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// EDF Core Module
+// Purpose: EDF core module.
 //
-// EDF is the answer to moving most of the remaining static data
-// out of the executable and into user-editable data files. Uses
-// the customized version of libConfuse to allow for ease of editing
-// and parsing.
+//  EDF is the answer to moving most of the remaining static data
+//  out of the executable and into user-editable data files. Uses
+//  the customized version of libConfuse to allow for ease of editing
+//  and parsing.
 //
-// Current layout of EDF modules and their contents follows. Note
-// that these names are just the defaults; user EDF replacements
-// can use whatever names and layouts they so wish.
+//  Current layout of EDF modules and their contents follows. Note
+//  that these names are just the defaults; user EDF replacements
+//  can use whatever names and layouts they so wish.
 //
-// * root.edf ..... This file includes the others, and is opened by
-//                  E_ProcessEDF by default
-// * sprites.edf .. Includes the sprnames array and sprite-based
-//                  pickup item definitions
-// * sounds.edf ... Contains sfxinfo structures and sound sequences
-//                  See e_sound.c for implementation.
-// * frames.edf ... Contains the states structures
-//                  See e_states.c for implementation.
-// * things.edf ... Contains the mobjinfo structures
-//                  See e_things.c for implementation.
-// * cast.edf ..... Contains DOOM II cast call definitions
-// * terrain.edf .. Contains terrain-related structures.
-//                  See e_ttypes.c for implementation.
-// * misc.edf ..... Miscellaneous stuff
-// * player.edf ... EDF skins, weapons, and player classes
-//                  See e_player.c for implementation.
+//  * root.edf ..... This file includes the others, and is opened by
+//                   E_ProcessEDF by default
+//  * sprites.edf .. Includes the sprnames array and sprite-based
+//                   pickup item definitions
+//  * sounds.edf ... Contains sfxinfo structures and sound sequences
+//                   See e_sound.c for implementation.
+//  * frames.edf ... Contains the states structures
+//                   See e_states.c for implementation.
+//  * things.edf ... Contains the mobjinfo structures
+//                   See e_things.c for implementation.
+//  * cast.edf ..... Contains DOOM II cast call definitions
+//  * terrain.edf .. Contains terrain-related structures.
+//                   See e_ttypes.c for implementation.
+//  * misc.edf ..... Miscellaneous stuff
+//  * player.edf ... EDF skins, weapons, and player classes
+//                   See e_player.c for implementation.
 //
-// EDF can also be loaded from WAD lumps, starting from the newest
-// lump named "EDFROOT". EDF lumps currently take total precedence
-// over any EDF file specified via GFS or command-line.
+//  EDF can also be loaded from WAD lumps, starting from the newest
+//  lump named "EDFROOT". EDF lumps currently take total precedence
+//  over any EDF file specified via GFS or command-line.
 //
-// Other separately processed sources of EDF data include:
+//  Other separately processed sources of EDF data include:
 //
-// * ESTRINGS ..... Lump chain that can define more string objects.
-//                  See e_string.c for implementation.
-// * ETERRAIN ..... Lump chain that can define terrain-related objects.
-//                  See e_ttypes.c for implementation.
-// * EMENUS ....... Lump chain that can define menu objects.
-//                  See mn_emenu.c for implementation.
-// * ESNDINFO ..... Lump chain that can contain any type of sound definition.
-// * ESNDSEQ ...... Same as above.
-//                  See e_sound.c for implementation.
+//  * ESTRINGS ..... Lump chain that can define more string objects.
+//                   See e_string.c for implementation.
+//  * ETERRAIN ..... Lump chain that can define terrain-related objects.
+//                   See e_ttypes.c for implementation.
+//  * EMENUS ....... Lump chain that can define menu objects.
+//                   See mn_emenu.c for implementation.
+//  * ESNDINFO ..... Lump chain that can contain any type of sound definition.
+//  * ESNDSEQ ...... Same as above.
+//                   See e_sound.c for implementation.
 //
-// By James Haley
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-//----------------------------------------------------------------------------
 
 #include <errno.h>
 
@@ -141,7 +139,7 @@ constexpr const char SEC_CASTORDER[] = "castorder";
 
 // Boss types
 constexpr const char SEC_BOSSTYPES[] = "boss_spawner_types";
-constexpr const char SEC_BOSSPROBS[] = "boss_spawner_probs";  // schepe
+constexpr const char SEC_BOSSPROBS[] = "boss_spawner_probs"; // schepe
 
 // Miscellaneous variables
 constexpr const char ITEM_D2TITLETICS[] = "doom2_title_tics";
@@ -183,129 +181,137 @@ static int edf_ifngametype(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **ar
 // EDF libConfuse option structures
 //
 
+// clang-format off
+
 // cast call
-static cfg_opt_t cast_sound_opts[] =
-{
-   CFG_STR(ITEM_CAST_SOUNDFRAME, "S_NULL", CFGF_NONE),
-   CFG_STR(ITEM_CAST_SOUNDNAME,  "none",   CFGF_NONE),
-   CFG_END()
+static cfg_opt_t cast_sound_opts[] = {
+    CFG_STR(ITEM_CAST_SOUNDFRAME, "S_NULL", CFGF_NONE),
+    CFG_STR(ITEM_CAST_SOUNDNAME,  "none",   CFGF_NONE),
+    CFG_END()
 };
 
-static cfg_opt_t cast_opts[] =
-{
-   CFG_STR(ITEM_CAST_TYPE,  nullptr,         CFGF_NONE),
-   CFG_STR(ITEM_CAST_NAME,  "unknown",       CFGF_NONE),
-   CFG_BOOL(ITEM_CAST_SA,   false,           CFGF_NONE),
-   CFG_SEC(ITEM_CAST_SOUND, cast_sound_opts, CFGF_MULTI|CFGF_NOCASE),
-   CFG_END()
+static cfg_opt_t cast_opts[] = {
+    CFG_STR(ITEM_CAST_TYPE,  nullptr,         CFGF_NONE),
+    CFG_STR(ITEM_CAST_NAME,  "unknown",       CFGF_NONE),
+    CFG_BOOL(ITEM_CAST_SA,   false,           CFGF_NONE),
+    CFG_SEC(ITEM_CAST_SOUND, cast_sound_opts, CFGF_MULTI|CFGF_NOCASE),
+    CFG_END()
 };
+
+// clang-format on
 
 //=============================================================================
 //
 // EDF Root Options
 //
 
-#define EDF_TSEC_FLAGS (CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE)
-#define EDF_NSEC_FLAGS (CFGF_MULTI | CFGF_NOCASE)
+static constexpr cfg_flag_t EDF_TSEC_FLAGS = CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE;
+static constexpr cfg_flag_t EDF_NSEC_FLAGS = CFGF_MULTI | CFGF_NOCASE;
 
-static cfg_opt_t edf_opts[] =
-{
-   CFG_STR(SEC_SPRITE,          nullptr,           CFGF_LIST),
-   CFG_STR(ITEM_PLAYERSPRITE,   "PLAY",            CFGF_NONE),
-   CFG_STR(ITEM_BLANKSPRITE,    "TNT1",            CFGF_NONE),
-   CFG_SEC(EDF_SEC_ACTION,      edf_action_opts,   EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_SPRPKUP,     edf_sprpkup_opts,  EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_PICKUPFX,    edf_pkupfx_opts,   EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_SOUND,       edf_sound_opts,    EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_AMBIENCE,    edf_ambience_opts, EDF_NSEC_FLAGS),
-   CFG_SEC(EDF_SEC_SNDSEQ,      edf_sndseq_opts,   EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_ENVIROMGR,   edf_seqmgr_opts,   CFGF_NOCASE),
-   CFG_SEC(EDF_SEC_REVERB,      edf_reverb_opts,   EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_MOD,         edf_dmgtype_opts,  EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_MORPHTYPE,   edf_morphtype_opts, EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_FRAME,       edf_frame_opts,    EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_FRAMEBLOCK,  edf_fblock_opts,   EDF_NSEC_FLAGS),
-   CFG_SEC(EDF_SEC_THING,       edf_thing_opts,    EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_THINGGROUP,  edf_tgroup_opts,   EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_SKIN,        edf_skin_opts,     EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_HEALTHFX,    edf_healthfx_opts, EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_ARMORFX,     edf_armorfx_opts,  EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_AMMOFX,      edf_ammofx_opts,   EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_POWERFX,     edf_powerfx_opts,  EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_WEAPGFX,     edf_weapgfx_opts,  EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_ARTIFACT,    edf_artifact_opts, EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_HEALTHFXDELTA, edf_healthfx_delta_opts, EDF_NSEC_FLAGS),
-   CFG_SEC(EDF_SEC_ARMORFXDELTA,  edf_armorfx_delta_opts,  EDF_NSEC_FLAGS),
-   CFG_SEC(EDF_SEC_AMMOFXDELTA,   edf_ammofx_delta_opts,   EDF_NSEC_FLAGS),
-   CFG_SEC(EDF_SEC_POWERFXDELTA,  edf_powerfx_delta_opts,  EDF_NSEC_FLAGS),
-   CFG_SEC(EDF_SEC_WEAPGFXDELTA,  edf_weapgfx_delta_opts,  EDF_NSEC_FLAGS),
-   CFG_SEC(EDF_SEC_ARTIFACTDELTA, edf_artifact_delta_opts, EDF_NSEC_FLAGS),
-   CFG_SEC(EDF_SEC_LOCKDEF,     edf_lockdef_opts,  EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_PCLASS,      edf_pclass_opts,   EDF_TSEC_FLAGS),
-   CFG_SEC(SEC_CAST,            cast_opts,         EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_SPLASH,      edf_splash_opts,   EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_SPLASHDELTA, edf_spldelta_opts, EDF_NSEC_FLAGS),
-   CFG_SEC(EDF_SEC_TERRAIN,     edf_terrn_opts,    EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_TERDELTA,    edf_terdelta_opts, EDF_NSEC_FLAGS),
-   CFG_SEC(EDF_SEC_FLOOR,       edf_floor_opts,    EDF_NSEC_FLAGS),
-   CFG_SEC(EDF_SEC_MENU,        edf_menu_opts,     EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_FONT,        edf_font_opts,     EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_STRING,      edf_string_opts,   EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_GAMEPROPS,   edf_game_opts,     EDF_NSEC_FLAGS),
-   CFG_SEC(EDF_SEC_COMPATIBILITY, edf_compatibility_opts, EDF_NSEC_FLAGS),
-   CFG_SEC(EDF_SEC_SWITCH,      edf_switch_opts,   EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_ANIMATION,   edf_anim_opts,     EDF_NSEC_FLAGS),
-   CFG_SEC(EDF_SEC_WEAPONINFO,  edf_wpninfo_opts,  EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_PUFFTYPE,    edf_puff_opts,     EDF_TSEC_FLAGS),
-   CFG_SEC(EDF_SEC_PUFFDELTA,   edf_puff_delta_opts, EDF_NSEC_FLAGS),
-   CFG_STR(SEC_CASTORDER,       nullptr,           CFGF_LIST),
-   CFG_STR(SEC_BOSSTYPES,       nullptr,           CFGF_LIST),
-   CFG_INT(SEC_BOSSPROBS,       0,                 CFGF_LIST), // schepe
-   CFG_SEC(EDF_SEC_FRMDELTA,    edf_fdelta_opts,   EDF_NSEC_FLAGS),
-   CFG_SEC(EDF_SEC_TNGDELTA,    edf_tdelta_opts,   EDF_NSEC_FLAGS),
-   CFG_SEC(EDF_SEC_SDELTA,      edf_sdelta_opts,   EDF_NSEC_FLAGS),
-   CFG_SEC(EDF_SEC_WPNDELTA,    edf_wdelta_opts,   EDF_NSEC_FLAGS),
-   CFG_SEC(EDF_SEC_PDELTA,      edf_pdelta_opts,   EDF_NSEC_FLAGS),
-   CFG_SEC(EDF_SEC_FNTDELTA,    edf_fntdelta_opts, EDF_NSEC_FLAGS),
-   CFG_INT(ITEM_D2TITLETICS,    0,                 CFGF_NONE),
-   CFG_INT(ITEM_INTERPAUSE,     0,                 CFGF_NONE),
-   CFG_INT(ITEM_INTERFADE,     -1,                 CFGF_NONE),
-   CFG_INT_CB(ITEM_INTERTL,     0,                 CFGF_NONE, E_TranslucCB),
-   CFG_STR(ITEM_MN_EPISODE,     nullptr,           CFGF_NONE),
-   CFG_STR(ITEM_FONT_HUD,       "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_HUDO,      "ee_hudfont",      CFGF_NONE),
-   CFG_STR(ITEM_FONT_HUDFSS,    "ee_fshudsmallfont", CFGF_NONE),
-   CFG_STR(ITEM_FONT_HUDFSM,    "ee_fshudmediumfont", CFGF_NONE),
-   CFG_STR(ITEM_FONT_HUDFSL,    "ee_fshudslargefont", CFGF_NONE),
-   CFG_STR(ITEM_FONT_MENU,      "ee_menufont",     CFGF_NONE),
-   CFG_STR(ITEM_FONT_BMENU,     "ee_bigfont",      CFGF_NONE),
-   CFG_STR(ITEM_FONT_NMENU,     "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_FINAL,     "ee_finalefont",   CFGF_NONE),
-   CFG_STR(ITEM_FONT_FTITLE,    "",                CFGF_NONE),
-   CFG_STR(ITEM_FONT_INTR,      "ee_smallfont",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_INTRB,     "ee_bigfont",      CFGF_NONE),
-   CFG_STR(ITEM_FONT_INTRBN,    "ee_bignumfont",   CFGF_NONE),
-   CFG_STR(ITEM_FONT_CONS,      "ee_consolefont",  CFGF_NONE),
-   CFG_FUNC("setdialect",       E_SetDialect),
-   CFG_FUNC("include",          E_Include),
-   CFG_FUNC("lumpinclude",      E_LumpInclude),
-   CFG_FUNC("include_prev",     E_IncludePrev),    // DEPRECATED
-   CFG_FUNC("stdinclude",       E_StdInclude),
-   CFG_FUNC("userinclude",      E_UserInclude),
-   CFG_FUNC("bexinclude",       bex_include),      // DEPRECATED
-   CFG_FUNC("bexoverride",      bex_override),
-   CFG_FUNC("ifenabled",        edf_ifenabled),
-   CFG_FUNC("ifenabledany",     edf_ifenabledany),
-   CFG_FUNC("ifdisabled",       edf_ifdisabled),
-   CFG_FUNC("ifdisabledany",    edf_ifdisabledany),
-   CFG_FUNC("endif",            E_Endif),
-   CFG_FUNC("enable",           edf_enable),
-   CFG_FUNC("disable",          edf_disable),
-   CFG_FUNC("includeifenabled", edf_includeifenabled),
-   CFG_FUNC("ifgametype",       edf_ifgametype),
-   CFG_FUNC("ifngametype",      edf_ifngametype),
-   CFG_END()
+// clang-format off
+
+static cfg_opt_t edf_opts[] = {
+    CFG_STR(SEC_SPRITE,            nullptr,                 CFGF_LIST),
+    CFG_STR(ITEM_PLAYERSPRITE,     "PLAY",                  CFGF_NONE),
+    CFG_STR(ITEM_BLANKSPRITE,      "TNT1",                  CFGF_NONE),
+
+    CFG_SEC(EDF_SEC_SPRPKUP,       edf_sprpkup_opts,        EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_PICKUPFX,      edf_pkupfx_opts,         EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_SOUND,         edf_sound_opts,          EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_AMBIENCE,      edf_ambience_opts,       EDF_NSEC_FLAGS),
+    CFG_SEC(EDF_SEC_SNDSEQ,        edf_sndseq_opts,         EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_ENVIROMGR,     edf_seqmgr_opts,         CFGF_NOCASE),
+    CFG_SEC(EDF_SEC_REVERB,        edf_reverb_opts,         EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_MOD,           edf_dmgtype_opts,        EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_MORPHTYPE,     edf_morphtype_opts,      EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_FRAME,         edf_frame_opts,          EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_FRAMEBLOCK,    edf_fblock_opts,         EDF_NSEC_FLAGS),
+    CFG_SEC(EDF_SEC_THING,         edf_thing_opts,          EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_THINGGROUP,    edf_tgroup_opts,         EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_SKIN,          edf_skin_opts,           EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_HEALTHFX,      edf_healthfx_opts,       EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_ARMORFX,       edf_armorfx_opts,        EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_AMMOFX,        edf_ammofx_opts,         EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_POWERFX,       edf_powerfx_opts,        EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_WEAPGFX,       edf_weapgfx_opts,        EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_ARTIFACT,      edf_artifact_opts,       EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_HEALTHFXDELTA, edf_healthfx_delta_opts, EDF_NSEC_FLAGS),
+    CFG_SEC(EDF_SEC_ARMORFXDELTA,  edf_armorfx_delta_opts,  EDF_NSEC_FLAGS),
+    CFG_SEC(EDF_SEC_AMMOFXDELTA,   edf_ammofx_delta_opts,   EDF_NSEC_FLAGS),
+    CFG_SEC(EDF_SEC_POWERFXDELTA,  edf_powerfx_delta_opts,  EDF_NSEC_FLAGS),
+    CFG_SEC(EDF_SEC_WEAPGFXDELTA,  edf_weapgfx_delta_opts,  EDF_NSEC_FLAGS),
+    CFG_SEC(EDF_SEC_ARTIFACTDELTA, edf_artifact_delta_opts, EDF_NSEC_FLAGS),
+    CFG_SEC(EDF_SEC_LOCKDEF,       edf_lockdef_opts,        EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_PCLASS,        edf_pclass_opts,         EDF_TSEC_FLAGS),
+    CFG_SEC(SEC_CAST,              cast_opts,               EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_SPLASH,        edf_splash_opts,         EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_SPLASHDELTA,   edf_spldelta_opts,       EDF_NSEC_FLAGS),
+    CFG_SEC(EDF_SEC_TERRAIN,       edf_terrn_opts,          EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_TERDELTA,      edf_terdelta_opts,       EDF_NSEC_FLAGS),
+    CFG_SEC(EDF_SEC_FLOOR,         edf_floor_opts,          EDF_NSEC_FLAGS),
+    CFG_SEC(EDF_SEC_MENU,          edf_menu_opts,           EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_FONT,          edf_font_opts,           EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_STRING,        edf_string_opts,         EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_GAMEPROPS,     edf_game_opts,           EDF_NSEC_FLAGS),
+    CFG_SEC(EDF_SEC_COMPATIBILITY, edf_compatibility_opts,  EDF_NSEC_FLAGS),
+    CFG_SEC(EDF_SEC_SWITCH,        edf_switch_opts,         EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_ANIMATION,     edf_anim_opts,           EDF_NSEC_FLAGS),
+    CFG_SEC(EDF_SEC_WEAPONINFO,    edf_wpninfo_opts,        EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_PUFFTYPE,      edf_puff_opts,           EDF_TSEC_FLAGS),
+    CFG_SEC(EDF_SEC_PUFFDELTA,     edf_puff_delta_opts,     EDF_NSEC_FLAGS),
+    CFG_SEC(EDF_SEC_FRMDELTA,      edf_fdelta_opts,         EDF_NSEC_FLAGS),
+    CFG_SEC(EDF_SEC_TNGDELTA,      edf_tdelta_opts,         EDF_NSEC_FLAGS),
+    CFG_SEC(EDF_SEC_SDELTA,        edf_sdelta_opts,         EDF_NSEC_FLAGS),
+    CFG_SEC(EDF_SEC_WPNDELTA,      edf_wdelta_opts,         EDF_NSEC_FLAGS),
+    CFG_SEC(EDF_SEC_PDELTA,        edf_pdelta_opts,         EDF_NSEC_FLAGS),
+    CFG_SEC(EDF_SEC_FNTDELTA,      edf_fntdelta_opts,       EDF_NSEC_FLAGS),
+
+    CFG_STR(SEC_CASTORDER,          nullptr,                CFGF_LIST),
+    CFG_STR(SEC_BOSSTYPES,          nullptr,                CFGF_LIST),
+    CFG_INT(SEC_BOSSPROBS,          0,                      CFGF_LIST), // schepe
+    CFG_INT(ITEM_D2TITLETICS,       0,                      CFGF_NONE),
+    CFG_INT(ITEM_INTERPAUSE,        0,                      CFGF_NONE),
+    CFG_INT(ITEM_INTERFADE,        -1,                      CFGF_NONE),
+    CFG_INT_CB(ITEM_INTERTL,        0,                      CFGF_NONE, E_TranslucCB),
+    CFG_STR(ITEM_MN_EPISODE,        nullptr,                CFGF_NONE),
+    CFG_STR(ITEM_FONT_HUD,          "ee_smallfont",         CFGF_NONE),
+    CFG_STR(ITEM_FONT_HUDO,         "ee_hudfont",           CFGF_NONE),
+    CFG_STR(ITEM_FONT_HUDFSS,       "ee_fshudsmallfont",    CFGF_NONE),
+    CFG_STR(ITEM_FONT_HUDFSM,       "ee_fshudmediumfont",   CFGF_NONE),
+    CFG_STR(ITEM_FONT_HUDFSL,       "ee_fshudslargefont",   CFGF_NONE),
+    CFG_STR(ITEM_FONT_MENU,         "ee_menufont",          CFGF_NONE),
+    CFG_STR(ITEM_FONT_BMENU,        "ee_bigfont",           CFGF_NONE),
+    CFG_STR(ITEM_FONT_NMENU,        "ee_smallfont",         CFGF_NONE),
+    CFG_STR(ITEM_FONT_FINAL,        "ee_finalefont",        CFGF_NONE),
+    CFG_STR(ITEM_FONT_FTITLE,       "",                     CFGF_NONE),
+    CFG_STR(ITEM_FONT_INTR,         "ee_smallfont",         CFGF_NONE),
+    CFG_STR(ITEM_FONT_INTRB,        "ee_bigfont",           CFGF_NONE),
+    CFG_STR(ITEM_FONT_INTRBN,       "ee_bignumfont",        CFGF_NONE),
+    CFG_STR(ITEM_FONT_CONS,         "ee_consolefont",       CFGF_NONE),
+
+    CFG_FUNC("setdialect",          E_SetDialect),
+    CFG_FUNC("include",             E_Include),
+    CFG_FUNC("lumpinclude",         E_LumpInclude),
+    CFG_FUNC("include_prev",        E_IncludePrev),    // DEPRECATED
+    CFG_FUNC("stdinclude",          E_StdInclude),
+    CFG_FUNC("userinclude",         E_UserInclude),
+    CFG_FUNC("bexinclude",          bex_include),      // DEPRECATED
+    CFG_FUNC("bexoverride",         bex_override),
+    CFG_FUNC("ifenabled",           edf_ifenabled),
+    CFG_FUNC("ifenabledany",        edf_ifenabledany),
+    CFG_FUNC("ifdisabled",          edf_ifdisabled),
+    CFG_FUNC("ifdisabledany",       edf_ifdisabledany),
+    CFG_FUNC("endif",               E_Endif),
+    CFG_FUNC("enable",              edf_enable),
+    CFG_FUNC("disable",             edf_disable),
+    CFG_FUNC("includeifenabled",    edf_includeifenabled),
+    CFG_FUNC("ifgametype",          edf_ifgametype),
+    CFG_FUNC("ifngametype",         edf_ifngametype),
+
+    CFG_END()
 };
+
+// clang-format on
 
 //=============================================================================
 //
@@ -326,27 +332,27 @@ static FILE *edf_output = nullptr;
 //
 static void E_EDFOpenVerboseLog()
 {
-   if(edf_output)
-      return;
+    if(edf_output)
+        return;
 
-   if(!access(".", W_OK))
-   {
-      static int lognum;
-      char fn[16];
-      int tries = 100;
+    if(!access(".", W_OK))
+    {
+        static int lognum;
+        char       fn[16];
+        int        tries = 100;
 
-      do
-         psnprintf(fn, sizeof(fn), "edfout%.2d.txt", lognum++);
-      while(!access(fn, F_OK) && --tries);
+        do
+            psnprintf(fn, sizeof(fn), "edfout%.2d.txt", lognum++);
+        while(!access(fn, F_OK) && --tries);
 
-      if(tries)
-         edf_output = fopen(fn, "w");
-      else
-      {
-         if(in_textmode)
-            puts("Warning: Couldn't open EDF verbose log!\n");
-      }
-   }
+        if(tries)
+            edf_output = fopen(fn, "w");
+        else
+        {
+            if(in_textmode)
+                puts("Warning: Couldn't open EDF verbose log!\n");
+        }
+    }
 }
 
 //
@@ -356,13 +362,13 @@ static void E_EDFOpenVerboseLog()
 //
 static void E_EDFCloseVerboseLog()
 {
-   if(edf_output)
-   {
-      E_EDFLogPuts("Closing log file\n");
-      fclose(edf_output);
-   }
+    if(edf_output)
+    {
+        E_EDFLogPuts("Closing log file\n");
+        fclose(edf_output);
+    }
 
-   edf_output = nullptr;
+    edf_output = nullptr;
 }
 
 //
@@ -372,8 +378,8 @@ static void E_EDFCloseVerboseLog()
 //
 void E_EDFLogPuts(const char *msg)
 {
-   if(edf_output)
-      fputs(msg, edf_output);
+    if(edf_output)
+        fputs(msg, edf_output);
 }
 
 //
@@ -383,14 +389,14 @@ void E_EDFLogPuts(const char *msg)
 //
 void E_EDFLogPrintf(E_FORMAT_STRING(const char *msg), ...)
 {
-   if(edf_output)
-   {
-      va_list v;
+    if(edf_output)
+    {
+        va_list v;
 
-      va_start(v, msg);
-      vfprintf(edf_output, msg, v);
-      va_end(v);
-   }
+        va_start(v, msg);
+        vfprintf(edf_output, msg, v);
+        va_end(v);
+    }
 }
 
 //
@@ -402,27 +408,27 @@ void E_EDFLogPrintf(E_FORMAT_STRING(const char *msg), ...)
 //
 void E_EDFLoggedErr(int lv, E_FORMAT_STRING(const char *msg), ...)
 {
-   qstring msg_no_tabs;
-   va_list va;
+    qstring msg_no_tabs;
+    va_list va;
 
-   if(edf_output)
-   {
-      va_list va2;
+    if(edf_output)
+    {
+        va_list va2;
 
-      while(lv--)
-         putc('\t', edf_output);
+        while(lv--)
+            putc('\t', edf_output);
 
-      va_start(va2, msg);
-      vfprintf(edf_output, msg, va2);
-      va_end(va2);
-   }
+        va_start(va2, msg);
+        vfprintf(edf_output, msg, va2);
+        va_end(va2);
+    }
 
-   msg_no_tabs = msg;
-   msg_no_tabs.replace("\t", ' ');
+    msg_no_tabs = msg;
+    msg_no_tabs.replace("\t", ' ');
 
-   va_start(va, msg);
-   I_ErrorVA(msg_no_tabs.constPtr(), va);
-   va_end(va);
+    va_start(va, msg);
+    I_ErrorVA(msg_no_tabs.constPtr(), va);
+    va_end(va);
 }
 
 static int  edf_warning_count;
@@ -438,32 +444,32 @@ static bool edf_warning_out;
 //
 void E_EDFLoggedWarning(int lv, E_FORMAT_STRING(const char *msg), ...)
 {
-   ++edf_warning_count;
+    ++edf_warning_count;
 
-   if(edf_output)
-   {
-      va_list va;
-      while(lv--)
-         putc('\t', edf_output);
+    if(edf_output)
+    {
+        va_list va;
+        while(lv--)
+            putc('\t', edf_output);
 
-      va_start(va, msg);
-      vfprintf(edf_output, msg, va);
-      va_end(va);
-   }
+        va_start(va, msg);
+        vfprintf(edf_output, msg, va);
+        va_end(va);
+    }
 
-   // allow display of warning messages on the system console too
-   if(edf_warning_out)
-   {
-      qstring msg_no_tabs;
-      va_list va;
+    // allow display of warning messages on the system console too
+    if(edf_warning_out)
+    {
+        qstring msg_no_tabs;
+        va_list va;
 
-      msg_no_tabs = msg;
-      msg_no_tabs.replace("\t", ' ');
+        msg_no_tabs = msg;
+        msg_no_tabs.replace("\t", ' ');
 
-      va_start(va, msg);
-      vfprintf(stderr, msg_no_tabs.constPtr(), va);
-      va_end(va);
-   }
+        va_start(va, msg);
+        vfprintf(stderr, msg_no_tabs.constPtr(), va);
+        va_end(va);
+    }
 }
 
 //
@@ -473,13 +479,13 @@ void E_EDFLoggedWarning(int lv, E_FORMAT_STRING(const char *msg), ...)
 //
 static void E_EDFPrintWarningCount()
 {
-   if(in_textmode && edf_warning_count)
-   {
-      printf(" %d warnings occured during EDF processing.\n", edf_warning_count);
+    if(in_textmode && edf_warning_count)
+    {
+        printf(" %d warnings occured during EDF processing.\n", edf_warning_count);
 
-      if(!edf_warning_out)
-         printf(" To see warnings, run Eternity with the -edf-show-warnings parameter.\n");
-   }
+        if(!edf_warning_out)
+            printf(" To see warnings, run Eternity with the -edf-show-warnings parameter.\n");
+    }
 }
 
 //
@@ -489,9 +495,9 @@ static void E_EDFPrintWarningCount()
 //
 static void E_EDFResetWarnings()
 {
-   edf_warning_count = 0;
+    edf_warning_count = 0;
 
-   edf_warning_out = !!M_CheckParm("-edf-show-warnings");
+    edf_warning_out = !!M_CheckParm("-edf-show-warnings");
 }
 
 //=============================================================================
@@ -507,18 +513,18 @@ static void E_EDFResetWarnings()
 //
 static void edf_error(const cfg_t *const cfg, const char *fmt, va_list ap)
 {
-   E_EDFLogPuts("Exiting due to parser error\n");
+    E_EDFLogPuts("Exiting due to parser error\n");
 
-   // 12/16/03: improved error messages
-   if(cfg && cfg->filename)
-   {
-      if(cfg->line)
-         fprintf(stderr, "Error at %s:%d:\n", cfg->filename, cfg->line);
-      else
-         fprintf(stderr, "Error in %s:\n", cfg->filename);
-   }
+    // 12/16/03: improved error messages
+    if(cfg && cfg->filename)
+    {
+        if(cfg->line)
+            fprintf(stderr, "Error at %s:%d:\n", cfg->filename, cfg->line);
+        else
+            fprintf(stderr, "Error in %s:\n", cfg->filename);
+    }
 
-   I_ErrorVA(fmt, ap);
+    I_ErrorVA(fmt, ap);
 }
 
 //
@@ -532,38 +538,38 @@ static void edf_error(const cfg_t *const cfg, const char *fmt, va_list ap)
 //
 static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
-   char *currentpath;
-   char *filename = nullptr;
+    char *currentpath;
+    char *filename = nullptr;
 
-   // haleyjd 03/18/10: deprecation warning
-   E_EDFLoggedWarning(0, "Warning: bexinclude is deprecated. "
-                         "Please use a GFS or DEHACKED lump instead.\n");
+    // haleyjd 03/18/10: deprecation warning
+    E_EDFLoggedWarning(0, "Warning: bexinclude is deprecated. "
+                          "Please use a GFS or DEHACKED lump instead.\n");
 
-   if(argc != 1)
-   {
-      cfg_error(cfg, "wrong number of args to bexinclude()\n");
-      return 1;
-   }
-   if(!cfg->filename)
-   {
-      cfg_error(cfg, "bexinclude: cfg_t filename is undefined\n");
-      return 1;
-   }
-   if(cfg_lexer_source_type(cfg) >= 0)
-   {
-      cfg_error(cfg, "bexinclude: cannot call from a wad lump\n");
-      return 1;
-   }
+    if(argc != 1)
+    {
+        cfg_error(cfg, "wrong number of args to bexinclude()\n");
+        return 1;
+    }
+    if(!cfg->filename)
+    {
+        cfg_error(cfg, "bexinclude: cfg_t filename is undefined\n");
+        return 1;
+    }
+    if(cfg_lexer_source_type(cfg) >= 0)
+    {
+        cfg_error(cfg, "bexinclude: cannot call from a wad lump\n");
+        return 1;
+    }
 
-   currentpath = (char *)(Z_Alloca(strlen(cfg->filename) + 1));
-   M_GetFilePath(cfg->filename, currentpath, strlen(cfg->filename) + 1);
+    currentpath = (char *)(Z_Alloca(strlen(cfg->filename) + 1));
+    M_GetFilePath(cfg->filename, currentpath, strlen(cfg->filename) + 1);
 
-   filename = M_SafeFilePath(currentpath, argv[0]);
+    filename = M_SafeFilePath(currentpath, argv[0]);
 
-   // queue the file for later processing
-   D_QueueDEH(filename, 0);
+    // queue the file for later processing
+    D_QueueDEH(filename, 0);
 
-   return 0;
+    return 0;
 }
 
 //
@@ -574,7 +580,7 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 //
 static int bex_override(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
-   return 0;
+    return 0;
 }
 
 //=============================================================================
@@ -584,23 +590,22 @@ static int bex_override(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
 enum
 {
-   ENABLE_DOOM,
-   ENABLE_HERETIC,
-   NUMENABLES,
+    ENABLE_DOOM,
+    ENABLE_HERETIC,
+    NUMENABLES,
 };
 
 //
 // The enables values table -- this can be fiddled with by the
 // game engine using E_EDFSetEnableValue below.
 //
-static E_Enable_t edf_enables[] =
-{
-   // all game modes are enabled by default
-   { "DOOM",     1 },
-   { "HERETIC",  1 },
+static E_Enable_t edf_enables[] = {
+    // all game modes are enabled by default
+    { "DOOM",    1 },
+    { "HERETIC", 1 },
 
-   // terminator
-   { nullptr }
+    // terminator
+    { nullptr,   0 }
 };
 
 //
@@ -613,25 +618,23 @@ static E_Enable_t edf_enables[] =
 //
 void E_EDFSetEnableValue(const char *name, int value)
 {
-   int idx = E_EnableNumForName(name, edf_enables);
+    int idx = E_EnableNumForName(name, edf_enables);
 
-   if(idx != -1)
-      edf_enables[idx].enabled = value;
+    if(idx != -1)
+        edf_enables[idx].enabled = value;
 }
 
 static void E_EchoEnables()
 {
-   E_Enable_t *enable = edf_enables;
+    E_Enable_t *enable = edf_enables;
 
-   E_EDFLogPuts("\t* Final enable values:\n");
+    E_EDFLogPuts("\t* Final enable values:\n");
 
-   while(enable->name)
-   {
-      E_EDFLogPrintf("\t\t%s is %s\n",
-                     enable->name,
-                     enable->enabled ? "enabled" : "disabled");
-      ++enable;
-   }
+    while(enable->name)
+    {
+        E_EDFLogPrintf("\t\t%s is %s\n", enable->name, enable->enabled ? "enabled" : "disabled");
+        ++enable;
+    }
 }
 
 //
@@ -645,39 +648,39 @@ static void E_EchoEnables()
 //
 static int edf_ifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
-   int i, idx;
-   bool enabled = true;
+    int  i, idx;
+    bool enabled = true;
 
-   if(argc < 1)
-   {
-      cfg_error(cfg, "wrong number of args to ifenabled()\n");
-      return 1;
-   }
+    if(argc < 1)
+    {
+        cfg_error(cfg, "wrong number of args to ifenabled()\n");
+        return 1;
+    }
 
-   for(i = 0; i < argc; ++i)
-   {
-      if((idx = E_EnableNumForName(argv[i], edf_enables)) == -1)
-      {
-         cfg_error(cfg, "invalid enable value '%s'\n", argv[i]);
-         return 1;
-      }
+    for(i = 0; i < argc; ++i)
+    {
+        if((idx = E_EnableNumForName(argv[i], edf_enables)) == -1)
+        {
+            cfg_error(cfg, "invalid enable value '%s'\n", argv[i]);
+            return 1;
+        }
 
-      // use AND logic: the block will only be evaluated if ALL
-      // options are enabled
-      // use short circuit for efficiency
-      if(!(enabled = enabled && edf_enables[idx].enabled))
-         break;
-   }
+        // use AND logic: the block will only be evaluated if ALL
+        // options are enabled
+        // use short circuit for efficiency
+        if(!(enabled = enabled && edf_enables[idx].enabled))
+            break;
+    }
 
-   // some option was disabled: skip the block
-   if(!enabled)
-   {
-      // force libConfuse to look for an endif function
-      cfg->flags |= CFGF_LOOKFORFUNC;
-      cfg->lookfor = "endif";
-   }
+    // some option was disabled: skip the block
+    if(!enabled)
+    {
+        // force libConfuse to look for an endif function
+        cfg->flags   |= CFGF_LOOKFORFUNC;
+        cfg->lookfor  = "endif";
+    }
 
-   return 0;
+    return 0;
 }
 
 //
@@ -685,39 +688,39 @@ static int edf_ifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv
 //
 static int edf_ifenabledany(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
-   int i, idx;
-   bool enabled = false;
+    int  i, idx;
+    bool enabled = false;
 
-   if(argc < 1)
-   {
-      cfg_error(cfg, "wrong number of args to ifenabledany()\n");
-      return 1;
-   }
+    if(argc < 1)
+    {
+        cfg_error(cfg, "wrong number of args to ifenabledany()\n");
+        return 1;
+    }
 
-   for(i = 0; i < argc; ++i)
-   {
-      if((idx = E_EnableNumForName(argv[i], edf_enables)) == -1)
-      {
-         cfg_error(cfg, "invalid enable value '%s'\n", argv[i]);
-         return 1;
-      }
+    for(i = 0; i < argc; ++i)
+    {
+        if((idx = E_EnableNumForName(argv[i], edf_enables)) == -1)
+        {
+            cfg_error(cfg, "invalid enable value '%s'\n", argv[i]);
+            return 1;
+        }
 
-      // use OR logic: the block will be evaluated if ANY
-      // option is enabled
-      // use short circuit for efficiency
-      if((enabled = enabled || edf_enables[idx].enabled))
-         break;
-   }
+        // use OR logic: the block will be evaluated if ANY
+        // option is enabled
+        // use short circuit for efficiency
+        if((enabled = enabled || edf_enables[idx].enabled))
+            break;
+    }
 
-   // no options were enabled: skip the block
-   if(!enabled)
-   {
-      // force libConfuse to look for an endif function
-      cfg->flags |= CFGF_LOOKFORFUNC;
-      cfg->lookfor = "endif";
-   }
+    // no options were enabled: skip the block
+    if(!enabled)
+    {
+        // force libConfuse to look for an endif function
+        cfg->flags   |= CFGF_LOOKFORFUNC;
+        cfg->lookfor  = "endif";
+    }
 
-   return 0;
+    return 0;
 }
 
 //
@@ -727,37 +730,37 @@ static int edf_ifenabledany(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **a
 //
 static int edf_ifdisabled(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
-   int i, idx;
-   bool disabled = true;
+    int  i, idx;
+    bool disabled = true;
 
-   if(argc < 1)
-   {
-      cfg_error(cfg, "wrong number of args to ifdisabled()\n");
-      return 1;
-   }
+    if(argc < 1)
+    {
+        cfg_error(cfg, "wrong number of args to ifdisabled()\n");
+        return 1;
+    }
 
-   for(i = 0; i < argc; ++i)
-   {
-      if((idx = E_EnableNumForName(argv[i], edf_enables)) == -1)
-      {
-         cfg_error(cfg, "invalid enable value '%s'\n", argv[i]);
-         return 1;
-      }
+    for(i = 0; i < argc; ++i)
+    {
+        if((idx = E_EnableNumForName(argv[i], edf_enables)) == -1)
+        {
+            cfg_error(cfg, "invalid enable value '%s'\n", argv[i]);
+            return 1;
+        }
 
-      // use AND logic: the block will be evalued if ALL
-      // options are disabled.
-      if(!(disabled = disabled && !edf_enables[idx].enabled))
-         break;
-   }
+        // use AND logic: the block will be evalued if ALL
+        // options are disabled.
+        if(!(disabled = disabled && !edf_enables[idx].enabled))
+            break;
+    }
 
-   if(!disabled)
-   {
-      // force libConfuse to look for an endif function
-      cfg->flags |= CFGF_LOOKFORFUNC;
-      cfg->lookfor = "endif";
-   }
+    if(!disabled)
+    {
+        // force libConfuse to look for an endif function
+        cfg->flags   |= CFGF_LOOKFORFUNC;
+        cfg->lookfor  = "endif";
+    }
 
-   return 0;
+    return 0;
 }
 
 //
@@ -765,37 +768,37 @@ static int edf_ifdisabled(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **arg
 //
 static int edf_ifdisabledany(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
-   int i, idx;
-   bool disabled = false;
+    int  i, idx;
+    bool disabled = false;
 
-   if(argc < 1)
-   {
-      cfg_error(cfg, "wrong number of args to ifdisabledany()\n");
-      return 1;
-   }
+    if(argc < 1)
+    {
+        cfg_error(cfg, "wrong number of args to ifdisabledany()\n");
+        return 1;
+    }
 
-   for(i = 0; i < argc; ++i)
-   {
-      if((idx = E_EnableNumForName(argv[i], edf_enables)) == -1)
-      {
-         cfg_error(cfg, "invalid enable value '%s'\n", argv[i]);
-         return 1;
-      }
+    for(i = 0; i < argc; ++i)
+    {
+        if((idx = E_EnableNumForName(argv[i], edf_enables)) == -1)
+        {
+            cfg_error(cfg, "invalid enable value '%s'\n", argv[i]);
+            return 1;
+        }
 
-      // use OR logic: the block will be evalued if ANY
-      // option is disabled.
-      if((disabled = disabled || !edf_enables[idx].enabled))
-         break;
-   }
+        // use OR logic: the block will be evalued if ANY
+        // option is disabled.
+        if((disabled = disabled || !edf_enables[idx].enabled))
+            break;
+    }
 
-   if(!disabled)
-   {
-      // force libConfuse to look for an endif function
-      cfg->flags |= CFGF_LOOKFORFUNC;
-      cfg->lookfor = "endif";
-   }
+    if(!disabled)
+    {
+        // force libConfuse to look for an endif function
+        cfg->flags   |= CFGF_LOOKFORFUNC;
+        cfg->lookfor  = "endif";
+    }
 
-   return 0;
+    return 0;
 }
 
 //
@@ -803,22 +806,22 @@ static int edf_ifdisabledany(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **
 //
 static int edf_enable(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
-   int idx;
+    int idx;
 
-   if(argc != 1)
-   {
-      cfg_error(cfg, "wrong number of args to enable()\n");
-      return 1;
-   }
+    if(argc != 1)
+    {
+        cfg_error(cfg, "wrong number of args to enable()\n");
+        return 1;
+    }
 
-   if((idx = E_EnableNumForName(argv[0], edf_enables)) == -1)
-   {
-      cfg_error(cfg, "unknown enable value '%s'\n", argv[0]);
-      return 1;
-   }
+    if((idx = E_EnableNumForName(argv[0], edf_enables)) == -1)
+    {
+        cfg_error(cfg, "unknown enable value '%s'\n", argv[0]);
+        return 1;
+    }
 
-   edf_enables[idx].enabled = 1;
-   return 0;
+    edf_enables[idx].enabled = 1;
+    return 0;
 }
 
 //
@@ -826,28 +829,28 @@ static int edf_enable(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 //
 static int edf_disable(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
-   int idx;
+    int idx;
 
-   if(argc != 1)
-   {
-      cfg_error(cfg, "wrong number of args to disable()\n");
-      return 1;
-   }
+    if(argc != 1)
+    {
+        cfg_error(cfg, "wrong number of args to disable()\n");
+        return 1;
+    }
 
-   if((idx = E_EnableNumForName(argv[0], edf_enables)) == -1)
-   {
-      cfg_error(cfg, "unknown enable value '%s'\n", argv[0]);
-      return 1;
-   }
+    if((idx = E_EnableNumForName(argv[0], edf_enables)) == -1)
+    {
+        cfg_error(cfg, "unknown enable value '%s'\n", argv[0]);
+        return 1;
+    }
 
-   // 05/12/08: don't allow disabling the active gamemode
-   if(!((GameModeInfo->type == Game_DOOM    && idx == ENABLE_DOOM) ||
-        (GameModeInfo->type == Game_Heretic && idx == ENABLE_HERETIC)))
-   {
-      edf_enables[idx].enabled = 0;
-   }
+    // 05/12/08: don't allow disabling the active gamemode
+    if(!((GameModeInfo->type == Game_DOOM && idx == ENABLE_DOOM) ||
+         (GameModeInfo->type == Game_Heretic && idx == ENABLE_HERETIC)))
+    {
+        edf_enables[idx].enabled = 0;
+    }
 
-   return 0;
+    return 0;
 }
 
 //
@@ -856,37 +859,36 @@ static int edf_disable(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 //
 static int edf_includeifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
-   int i, idx;
-   bool enabled = false;
+    int  i, idx;
+    bool enabled = false;
 
-   if(argc < 2)
-   {
-      cfg_error(cfg, "wrong number of args to includeifenabled()\n");
-      return 1;
-   }
+    if(argc < 2)
+    {
+        cfg_error(cfg, "wrong number of args to includeifenabled()\n");
+        return 1;
+    }
 
-   for(i = 1; i < argc; ++i)
-   {
-      if((idx = E_EnableNumForName(argv[i], edf_enables)) == -1)
-      {
-         cfg_error(cfg, "invalid enable value '%s'\n", argv[i]);
-         return 1;
-      }
+    for(i = 1; i < argc; ++i)
+    {
+        if((idx = E_EnableNumForName(argv[i], edf_enables)) == -1)
+        {
+            cfg_error(cfg, "invalid enable value '%s'\n", argv[i]);
+            return 1;
+        }
 
-      // use OR logic: the block will be evaluated if ANY
-      // option is enabled
-      // use short circuit for efficiency
-      if((enabled = enabled || edf_enables[idx].enabled))
-         break;
-   }
+        // use OR logic: the block will be evaluated if ANY
+        // option is enabled
+        // use short circuit for efficiency
+        if((enabled = enabled || edf_enables[idx].enabled))
+            break;
+    }
 
-   // if any options were enabled, include the file
-   if(enabled)
-      return E_Include(cfg, opt, 1, argv);
-   else
-      return 0;
+    // if any options were enabled, include the file
+    if(enabled)
+        return E_Include(cfg, opt, 1, argv);
+    else
+        return 0;
 }
-
 
 //=============================================================================
 //
@@ -897,10 +899,9 @@ static int edf_includeifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc, const char
 // simply whether or not a given game's definitions are enabled.
 //
 
-static const char *e_typenames[] =
-{
-   "DOOM",
-   "HERETIC",
+static const char *e_typenames[] = {
+    "DOOM",
+    "HERETIC",
 };
 
 //
@@ -909,34 +910,34 @@ static const char *e_typenames[] =
 //
 static int edf_ifgametype(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
-   int i, type;
-   bool type_match = false;
+    int  i, type;
+    bool type_match = false;
 
-   if(argc < 1)
-   {
-      cfg_error(cfg, "wrong number of args to ifgametype()\n");
-      return 1;
-   }
+    if(argc < 1)
+    {
+        cfg_error(cfg, "wrong number of args to ifgametype()\n");
+        return 1;
+    }
 
-   for(i = 0; i < argc; ++i)
-   {
-      type = E_StrToNumLinear(e_typenames, NumGameModeTypes, argv[i]);
+    for(i = 0; i < argc; ++i)
+    {
+        type = E_StrToNumLinear(e_typenames, NumGameModeTypes, argv[i]);
 
-      // if the gametype matches ANY specified, we will process the
-      // block in question (can short circuit after first match)
-      if((type_match = (type_match || type == GameModeInfo->type)))
-         break;
-   }
+        // if the gametype matches ANY specified, we will process the
+        // block in question (can short circuit after first match)
+        if((type_match = (type_match || type == GameModeInfo->type)))
+            break;
+    }
 
-   // no type was matched?
-   if(!type_match)
-   {
-      // force libConfuse to look for an endif function
-      cfg->flags |= CFGF_LOOKFORFUNC;
-      cfg->lookfor = "endif";
-   }
+    // no type was matched?
+    if(!type_match)
+    {
+        // force libConfuse to look for an endif function
+        cfg->flags   |= CFGF_LOOKFORFUNC;
+        cfg->lookfor  = "endif";
+    }
 
-   return 0;
+    return 0;
 }
 
 //
@@ -944,37 +945,36 @@ static int edf_ifgametype(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **arg
 //
 // haleyjd 09/06/05: As above, but negated.
 //
-static int edf_ifngametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
-                           const char **argv)
+static int edf_ifngametype(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
-   int i, type;
-   bool type_nomatch = true;
+    int  i, type;
+    bool type_nomatch = true;
 
-   if(argc < 1)
-   {
-      cfg_error(cfg, "wrong number of args to ifngametype()\n");
-      return 1;
-   }
+    if(argc < 1)
+    {
+        cfg_error(cfg, "wrong number of args to ifngametype()\n");
+        return 1;
+    }
 
-   for(i = 0; i < argc; ++i)
-   {
-      type = E_StrToNumLinear(e_typenames, NumGameModeTypes, argv[i]);
+    for(i = 0; i < argc; ++i)
+    {
+        type = E_StrToNumLinear(e_typenames, NumGameModeTypes, argv[i]);
 
-      // if gametype equals NONE of the parameters, we will process
-      // the block (can short circuit after first failure)
-      if(!(type_nomatch = (type_nomatch && type != GameModeInfo->type)))
-         break;
-   }
+        // if gametype equals NONE of the parameters, we will process
+        // the block (can short circuit after first failure)
+        if(!(type_nomatch = (type_nomatch && type != GameModeInfo->type)))
+            break;
+    }
 
-   // did it match some type?
-   if(!type_nomatch)
-   {
-      // force libConfuse to look for an endif function
-      cfg->flags |= CFGF_LOOKFORFUNC;
-      cfg->lookfor = "endif";
-   }
+    // did it match some type?
+    if(!type_nomatch)
+    {
+        // force libConfuse to look for an endif function
+        cfg->flags   |= CFGF_LOOKFORFUNC;
+        cfg->lookfor  = "endif";
+    }
 
-   return 0;
+    return 0;
 }
 
 //=============================================================================
@@ -993,15 +993,15 @@ static int edf_ifngametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
 //
 static cfg_t *E_CreateCfg(cfg_opt_t *opts)
 {
-   cfg_t *cfg;
+    cfg_t *cfg;
 
-   E_EDFLogPuts("Creating global cfg_t object\n");
+    E_EDFLogPuts("Creating global cfg_t object\n");
 
-   cfg = cfg_init(opts, CFGF_NOCASE);
-   cfg_set_error_function(cfg, edf_error);
-   cfg_set_lexer_callback(cfg, E_CheckRoot);
+    cfg = cfg_init(opts, CFGF_NOCASE);
+    cfg_set_error_function(cfg, edf_error);
+    cfg_set_lexer_callback(cfg, E_CheckRoot);
 
-   return cfg;
+    return cfg;
 }
 
 //
@@ -1011,14 +1011,12 @@ static cfg_t *E_CreateCfg(cfg_opt_t *opts)
 //
 static void E_ParseEDFFile(cfg_t *cfg, const char *filename)
 {
-   int err;
+    int err;
 
-   if((err = cfg_parse(cfg, filename)))
-   {
-      E_EDFLoggedErr(1,
-         "E_ParseEDFFile: failed to parse %s (code %d)\n",
-         filename, err);
-   }
+    if((err = cfg_parse(cfg, filename)))
+    {
+        E_EDFLoggedErr(1, "E_ParseEDFFile: failed to parse %s (code %d)\n", filename, err);
+    }
 }
 
 //
@@ -1029,28 +1027,26 @@ static void E_ParseEDFFile(cfg_t *cfg, const char *filename)
 //
 static void E_ParseLumpRecursive(cfg_t *cfg, const char *name, int ln)
 {
-   if(ln >= 0) // terminal case - lumpnum is -1
-   {
-      lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
+    if(ln >= 0) // terminal case - lumpnum is -1
+    {
+        lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
 
-      // recurse on next item
-      E_ParseLumpRecursive(cfg, name, lumpinfo[ln]->next);
+        // recurse on next item
+        E_ParseLumpRecursive(cfg, name, lumpinfo[ln]->next);
 
-      // handle this lump
-      if(!strncasecmp(lumpinfo[ln]->name, name, 8) &&         // name match
-         lumpinfo[ln]->li_namespace == lumpinfo_t::ns_global) // is global
-      {
-         int err;
+        // handle this lump
+        if(!strncasecmp(lumpinfo[ln]->name, name, 8) &&         // name match
+           lumpinfo[ln]->li_namespace == lumpinfo_t::ns_global) // is global
+        {
+            int err;
 
-         // try to parse it
-         if((err = cfg_parselump(cfg, name, ln)))
-         {
-            E_EDFLoggedErr(1,
-               "E_ParseEDFLump: failed to parse EDF lump %s (#%d, code %d)\n",
-               name, ln, err);
-         }
-      }
-   }
+            // try to parse it
+            if((err = cfg_parselump(cfg, name, ln)))
+            {
+                E_EDFLoggedErr(1, "E_ParseEDFLump: failed to parse EDF lump %s (#%d, code %d)\n", name, ln, err);
+            }
+        }
+    }
 }
 
 //
@@ -1061,17 +1057,17 @@ static void E_ParseLumpRecursive(cfg_t *cfg, const char *name, int ln)
 //
 static void E_ParseEDFLump(cfg_t *cfg, const char *lumpname)
 {
-   lumpinfo_t *root;
+    lumpinfo_t *root;
 
-   // make sure there is at least one lump before starting recursive parsing
-   if(W_CheckNumForName(lumpname) < 0)
-      E_EDFLoggedErr(1, "E_ParseEDFLump: lump %s not found\n", lumpname);
+    // make sure there is at least one lump before starting recursive parsing
+    if(W_CheckNumForName(lumpname) < 0)
+        E_EDFLoggedErr(1, "E_ParseEDFLump: lump %s not found\n", lumpname);
 
-   // get root of the hash chain for the indicated name
-   root = wGlobalDir.getLumpNameChain(lumpname);
+    // get root of the hash chain for the indicated name
+    root = wGlobalDir.getLumpNameChain(lumpname);
 
-   // parse all lumps of this name recursively in last-to-first order
-   E_ParseLumpRecursive(cfg, lumpname, root->index);
+    // parse all lumps of this name recursively in last-to-first order
+    E_ParseLumpRecursive(cfg, lumpname, root->index);
 }
 
 //
@@ -1083,28 +1079,20 @@ static void E_ParseEDFLump(cfg_t *cfg, const char *lumpname)
 //
 static bool E_ParseEDFLumpOptional(cfg_t *cfg, const char *lumpname)
 {
-   // check first and return without an error
-   if(W_CheckNumForName(lumpname) == -1)
-      return false;
+    // check first and return without an error
+    if(W_CheckNumForName(lumpname) == -1)
+        return false;
 
-   E_ParseEDFLump(cfg, lumpname);
+    E_ParseEDFLump(cfg, lumpname);
 
-   return true;
+    return true;
 }
 
 //
 // Independent EDF Lump Names
 //
-static const char *edf_lumpnames[] =
-{
-   "ESTRINGS",
-   "ETERRAIN",
-   "EMENUS",
-   "ESNDSEQ",
-   "ESNDINFO",
-   "EFONTS",
-   "EREVERBS",
-   "EWEAPONS",
+static const char *edf_lumpnames[] = {
+    "ESTRINGS", "ETERRAIN", "EMENUS", "ESNDSEQ", "ESNDINFO", "EFONTS", "EREVERBS", "EWEAPONS",
 };
 
 //
@@ -1115,15 +1103,15 @@ static const char *edf_lumpnames[] =
 //
 static void E_ParseIndividualLumps(cfg_t *cfg)
 {
-   for(const char *lumpname : edf_lumpnames)
-   {
-      E_EDFLogPrintf("\t* Parsing %s lump", lumpname);
+    for(const char *lumpname : edf_lumpnames)
+    {
+        E_EDFLogPrintf("\t* Parsing %s lump", lumpname);
 
-      if(!E_ParseEDFLumpOptional(cfg, lumpname))
-         E_EDFLogPuts(" - not found, skipping.\n");
-      else
-         E_EDFLogPuts("\n");
-   }
+        if(!E_ParseEDFLumpOptional(cfg, lumpname))
+            E_EDFLogPuts(" - not found, skipping.\n");
+        else
+            E_EDFLogPuts("\n");
+    }
 }
 
 //
@@ -1135,53 +1123,62 @@ static void E_ParseIndividualLumps(cfg_t *cfg)
 //
 static void E_ProcessSpriteVars(cfg_t *cfg)
 {
-   static bool firsttime = true;
-   int sprnum;
-   const char *str;
+    static bool firsttime = true;
+    int         sprnum;
+    const char *str;
 
-   E_EDFLogPuts("\t* Processing sprite variables\n");
+    E_EDFLogPuts("\t* Processing sprite variables\n");
 
-   // haleyjd 11/11/09: removed processing of obsolete playersprite variable
+    // haleyjd 11/11/09: removed processing of obsolete playersprite variable
 
-   // haleyjd 11/21/11: on subsequent runs, only replace if changed
-   if(!firsttime && cfg_size(cfg, ITEM_BLANKSPRITE) == 0)
-      return;
+    // haleyjd 11/21/11: on subsequent runs, only replace if changed
+    if(!firsttime && cfg_size(cfg, ITEM_BLANKSPRITE) == 0)
+        return;
 
-   firsttime = false;
+    firsttime = false;
 
-   // load blank sprite number
+    // load blank sprite number
 
-   str = cfg_getstr(cfg, ITEM_BLANKSPRITE);
-   sprnum = E_SpriteNumForName(str);
-   if(sprnum == -1)
-   {
-      E_EDFLoggedErr(2,
-         "E_ProcessSpriteVars: invalid blank sprite name: '%s'\n", str);
-   }
-   E_EDFLogPrintf("\t\tSet sprite %s(#%d) as blank sprite\n", str, sprnum);
-   blankSpriteNum = sprnum;
+    str    = cfg_getstr(cfg, ITEM_BLANKSPRITE);
+    sprnum = E_SpriteNumForName(str);
+    if(sprnum == -1)
+    {
+        E_EDFLoggedErr(2, "E_ProcessSpriteVars: invalid blank sprite name: '%s'\n", str);
+    }
+    E_EDFLogPrintf("\t\tSet sprite %s(#%d) as blank sprite\n", str, sprnum);
+    blankSpriteNum = sprnum;
 }
 
 static char NullMnemonic[5] = "none";
 
 // haleyjd 04/13/08: this replaces S_sfx[0].
-sfxinfo_t NullSound =
-{
-   { 'n', 'o', 'n', 'e', '\0' },     // name
-   { '\0' },                         // pcslump
-   sfxinfo_t::sg_none,               // singularity
-   255, 0, 0,                        // priority, pitch, volume
-   sfxinfo_t::pitch_none,            // pitch_type
-   0,                                // skin sound
-   CHAN_AUTO,                        // subchannel
-   0, 0, 0,                          // flags, clipping_dist, close_dist
-   nullptr, nullptr, nullptr, 0,     // link, alias, random sounds
-   nullptr, 0, 0, 0,                 // data, length, alen, usefulness
-   NullMnemonic,                     // mnemomnic
-   nullptr, nullptr,                 // lfn, pcslfn
-   { nullptr, nullptr, nullptr, 0 }, // numlinks
-   nullptr,                          // next
-   0                                 // dehackednum
+sfxinfo_t NullSound = {
+    { 'n', 'o', 'n', 'e', '\0' }, // name
+    { '\0' }, // pcslump
+    sfxinfo_t::sg_none, // singularity
+    255,
+    0,
+    0, // priority, pitch, volume
+    sfxinfo_t::pitch_none, // pitch_type
+    0, // skin sound
+    CHAN_AUTO, // subchannel
+    0,
+    0,
+    0, // flags, clipping_dist, close_dist
+    nullptr,
+    nullptr,
+    nullptr,
+    0, // link, alias, random sounds
+    nullptr,
+    0,
+    0,
+    0, // data, length, alen, usefulness
+    NullMnemonic, // mnemomnic
+    nullptr,
+    nullptr, // lfn, pcslfn
+    { nullptr, nullptr, nullptr, 0 }, // numlinks
+    nullptr, // next
+    0  // dehackednum
 };
 
 //
@@ -1192,8 +1189,8 @@ sfxinfo_t NullSound =
 //
 static void E_CollectNames(cfg_t *cfg)
 {
-   E_CollectStates(cfg);    // see e_states.cpp
-   E_CollectThings(cfg);    // see e_things.cpp
+    E_CollectStates(cfg); // see e_states.cpp
+    E_CollectThings(cfg); // see e_things.cpp
 }
 
 //
@@ -1204,22 +1201,22 @@ static void E_CollectNames(cfg_t *cfg)
 //
 static void E_ProcessStatesAndThings(cfg_t *cfg)
 {
-   E_EDFLogPuts("\t* Beginning state and thing processing\n");
+    E_EDFLogPuts("\t* Beginning state and thing processing\n");
 
-   // allocate structures, build mnemonic and dehnum hash tables
-   E_CollectNames(cfg);
+    // allocate structures, build mnemonic and dehnum hash tables
+    E_CollectNames(cfg);
 
-   // process states: see e_states.c
-   E_ProcessStates(cfg);
+    // process states: see e_states.c
+    E_ProcessStates(cfg);
 
-   // process frameblocks, also in e_states.c
-   E_ProcessFrameBlocks(cfg);
+    // process frameblocks, also in e_states.c
+    E_ProcessFrameBlocks(cfg);
 
-   // process things: see e_things.c
-   E_ProcessThings(cfg);
+    // process things: see e_things.c
+    E_ProcessThings(cfg);
 
-   // process thing groups. Needs to be after things.
-   E_ProcessThingGroups(cfg);
+    // process thing groups. Needs to be after things.
+    E_ProcessThingGroups(cfg);
 }
 
 //
@@ -1229,8 +1226,8 @@ static void E_ProcessStatesAndThings(cfg_t *cfg)
 //
 static void E_ProcessPlayerData(cfg_t *cfg)
 {
-   E_ProcessSkins(cfg);
-   E_ProcessPlayerClasses(cfg);
+    E_ProcessSkins(cfg);
+    E_ProcessPlayerClasses(cfg);
 }
 
 //
@@ -1240,167 +1237,160 @@ static void E_ProcessPlayerData(cfg_t *cfg)
 //
 static void E_ProcessCast(cfg_t *cfg)
 {
-   static bool firsttime = true;
-   int numcastorder = 0, numcastsections = 0;
-   cfg_t **ci_order;
+    static bool firsttime    = true;
+    int         numcastorder = 0, numcastsections = 0;
+    cfg_t     **ci_order;
 
-   E_EDFLogPuts("\t* Processing cast call\n");
+    E_EDFLogPuts("\t* Processing cast call\n");
 
-   // get number of cast sections
-   numcastsections = cfg_size(cfg, SEC_CAST);
+    // get number of cast sections
+    numcastsections = cfg_size(cfg, SEC_CAST);
 
-   if(firsttime && !numcastsections) // on main parse, at least one is required.
-      E_EDFLoggedErr(2, "E_ProcessCast: no cast members defined.\n");
+    if(firsttime && !numcastsections) // on main parse, at least one is required.
+        E_EDFLoggedErr(2, "E_ProcessCast: no cast members defined.\n");
 
-   firsttime = false;
+    firsttime = false;
 
-   E_EDFLogPrintf("\t\t%d cast member(s) defined\n", numcastsections);
+    E_EDFLogPrintf("\t\t%d cast member(s) defined\n", numcastsections);
 
-   // haleyjd 11/21/11: allow multiple runs
-   if(castorder)
-   {
-      // free names
-      for(int i = 0; i < max_castorder; i++)
-      {
-         if(castorder[i].name)
-            efree(castorder[i].name);
-      }
-      // free castorder
-      efree(castorder);
-      castorder = nullptr;
-      max_castorder = 0;
-   }
+    // haleyjd 11/21/11: allow multiple runs
+    if(castorder)
+    {
+        // free names
+        for(int i = 0; i < max_castorder; i++)
+        {
+            if(castorder[i].name)
+                efree(castorder[i].name);
+        }
+        // free castorder
+        efree(castorder);
+        castorder     = nullptr;
+        max_castorder = 0;
+    }
 
-   // check if the "castorder" array is defined for imposing an
-   // order on the castinfo sections
-   numcastorder = cfg_size(cfg, SEC_CASTORDER);
+    // check if the "castorder" array is defined for imposing an
+    // order on the castinfo sections
+    numcastorder = cfg_size(cfg, SEC_CASTORDER);
 
-   E_EDFLogPrintf("\t\t%d cast member(s) in castorder\n", numcastorder);
+    E_EDFLogPrintf("\t\t%d cast member(s) in castorder\n", numcastorder);
 
-   // determine size of castorder
-   max_castorder = (numcastorder > 0) ? numcastorder : numcastsections;
+    // determine size of castorder
+    max_castorder = (numcastorder > 0) ? numcastorder : numcastsections;
 
-   // allocate with size+1 for an end marker
-   castorder = estructalloc(castinfo_t, max_castorder + 1);
-   ci_order  = ecalloc(cfg_t **, sizeof(cfg_t *), max_castorder);
+    // allocate with size+1 for an end marker
+    castorder = estructalloc(castinfo_t, max_castorder + 1);
+    ci_order  = ecalloc(cfg_t **, sizeof(cfg_t *), max_castorder);
 
-   if(numcastorder > 0)
-   {
-      for(int i = 0; i < numcastorder; i++)
-      {
-         const char *title = cfg_getnstr(cfg, SEC_CASTORDER, i);
-         cfg_t *section    = cfg_gettsec(cfg, SEC_CAST, title);
+    if(numcastorder > 0)
+    {
+        for(int i = 0; i < numcastorder; i++)
+        {
+            const char *title   = cfg_getnstr(cfg, SEC_CASTORDER, i);
+            cfg_t      *section = cfg_gettsec(cfg, SEC_CAST, title);
 
-         if(!section)
-         {
-            E_EDFLoggedErr(2,
-               "E_ProcessCast: unknown cast member '%s' in castorder\n",
-               title);
-         }
+            if(!section)
+            {
+                E_EDFLoggedErr(2, "E_ProcessCast: unknown cast member '%s' in castorder\n", title);
+            }
 
-         ci_order[i] = section;
-      }
-   }
-   else
-   {
-      // no castorder array is defined, so use the cast members
-      // in the order they are encountered (for backward compatibility)
-      for(int i = 0; i < numcastsections; i++)
-         ci_order[i] = cfg_getnsec(cfg, SEC_CAST, i);
-   }
+            ci_order[i] = section;
+        }
+    }
+    else
+    {
+        // no castorder array is defined, so use the cast members
+        // in the order they are encountered (for backward compatibility)
+        for(int i = 0; i < numcastsections; i++)
+            ci_order[i] = cfg_getnsec(cfg, SEC_CAST, i);
+    }
 
+    for(int i = 0; i < max_castorder; i++)
+    {
+        int         j;
+        const char *tempstr;
+        int         tempint = 0;
+        cfg_t      *castsec = ci_order[i];
+        mobjinfo_t *mi      = nullptr;
 
-   for(int i = 0; i < max_castorder; i++)
-   {
-      int j;
-      const char *tempstr;
-      int tempint = 0;
-      cfg_t *castsec = ci_order[i];
-      mobjinfo_t *mi = nullptr;
+        // resolve thing type
+        tempstr = cfg_getstr(castsec, ITEM_CAST_TYPE);
+        if(!tempstr || (tempint = E_ThingNumForName(tempstr)) == -1)
+        {
+            E_EDFLoggedWarning(2, "Warning: cast %d: unknown thing type %s\n", i, tempstr);
 
-      // resolve thing type
-      tempstr = cfg_getstr(castsec, ITEM_CAST_TYPE);
-      if(!tempstr ||
-         (tempint = E_ThingNumForName(tempstr)) == -1)
-      {
-         E_EDFLoggedWarning(2, "Warning: cast %d: unknown thing type %s\n",
-                            i, tempstr);
+            tempint = UnknownThingType;
+        }
+        castorder[i].type = tempint;
+        mi                = mobjinfo[castorder[i].type];
 
-         tempint = UnknownThingType;
-      }
-      castorder[i].type = tempint;
-      mi = mobjinfo[castorder[i].type];
+        // get cast name, if any -- the first seventeen entries can
+        // default to using the internal string editable via BEX strings
+        tempstr = cfg_getstr(castsec, ITEM_CAST_NAME);
+        if(cfg_size(castsec, ITEM_CAST_NAME) == 0 && i < 17)
+            castorder[i].name = nullptr; // set from DeHackEd
+        else
+            castorder[i].name = estrdup(tempstr); // store provided value
 
-      // get cast name, if any -- the first seventeen entries can
-      // default to using the internal string editable via BEX strings
-      tempstr = cfg_getstr(castsec, ITEM_CAST_NAME);
-      if(cfg_size(castsec, ITEM_CAST_NAME) == 0 && i < 17)
-         castorder[i].name = nullptr; // set from DeHackEd
-      else
-         castorder[i].name = estrdup(tempstr); // store provided value
+        // get stopattack flag (used by player)
+        castorder[i].stopattack = cfg_getbool(castsec, ITEM_CAST_SA);
 
-      // get stopattack flag (used by player)
-      castorder[i].stopattack = cfg_getbool(castsec, ITEM_CAST_SA);
-
-      // process sound blocks (up to four will be processed)
-      tempint = cfg_size(castsec, ITEM_CAST_SOUND);
-      for(j = 0; j < 4; j++)
-      {
-         castorder[i].sounds[j].frame = 0;
-         castorder[i].sounds[j].sound = 0;
-      }
-      for(j = 0; j < tempint && j < 4; j++)
-      {
-         sfxinfo_t *sfx;
-         const char *name;
-         cfg_t *soundsec = cfg_getnsec(castsec, ITEM_CAST_SOUND, j);
-
-         // if these are invalid, just fill them with zero rather
-         // than causing an error, as they're very unimportant
-
-         // name of sound to play
-         name = cfg_getstr(soundsec, ITEM_CAST_SOUNDNAME);
-
-         // haleyjd 03/22/06: modified to support dehnum auto-allocation
-         if((sfx = E_EDFSoundForName(name)) == nullptr)
-         {
-            E_EDFLoggedWarning(2, "Warning: cast member references invalid sound %s\n",
-                               name);
+        // process sound blocks (up to four will be processed)
+        tempint = cfg_size(castsec, ITEM_CAST_SOUND);
+        for(j = 0; j < 4; j++)
+        {
+            castorder[i].sounds[j].frame = 0;
             castorder[i].sounds[j].sound = 0;
-         }
-         else
-         {
-            if(sfx->dehackednum != -1 || E_AutoAllocSoundDEHNum(sfx))
-               castorder[i].sounds[j].sound = sfx->dehackednum;
+        }
+        for(j = 0; j < tempint && j < 4; j++)
+        {
+            sfxinfo_t  *sfx;
+            const char *name;
+            cfg_t      *soundsec = cfg_getnsec(castsec, ITEM_CAST_SOUND, j);
+
+            // if these are invalid, just fill them with zero rather
+            // than causing an error, as they're very unimportant
+
+            // name of sound to play
+            name = cfg_getstr(soundsec, ITEM_CAST_SOUNDNAME);
+
+            // haleyjd 03/22/06: modified to support dehnum auto-allocation
+            if((sfx = E_EDFSoundForName(name)) == nullptr)
+            {
+                E_EDFLoggedWarning(2, "Warning: cast member references invalid sound %s\n", name);
+                castorder[i].sounds[j].sound = 0;
+            }
             else
             {
-               E_EDFLoggedWarning(2, "Warning: could not auto-allocate a DeHackEd number "
-                                     "for sound %s\n", name);
-               castorder[i].sounds[j].sound = 0;
+                if(sfx->dehackednum != -1 || E_AutoAllocSoundDEHNum(sfx))
+                    castorder[i].sounds[j].sound = sfx->dehackednum;
+                else
+                {
+                    E_EDFLoggedWarning(2,
+                                       "Warning: could not auto-allocate a DeHackEd number "
+                                       "for sound %s\n",
+                                       name);
+                    castorder[i].sounds[j].sound = 0;
+                }
             }
-         }
 
-         // name of frame that triggers sound event
-         name = cfg_getstr(soundsec, ITEM_CAST_SOUNDFRAME);
-         castorder[i].sounds[j].frame = E_SafeStateNameOrLabel(mi, name);
-      }
-   }
+            // name of frame that triggers sound event
+            name                         = cfg_getstr(soundsec, ITEM_CAST_SOUNDFRAME);
+            castorder[i].sounds[j].frame = E_SafeStateNameOrLabel(mi, name);
+        }
+    }
 
-   // initialize the end marker to all zeroes
-   memset(&castorder[max_castorder], 0, sizeof(castinfo_t));
+    // initialize the end marker to all zeroes
+    memset(&castorder[max_castorder], 0, sizeof(castinfo_t));
 
-   // free the ci_order table
-   efree(ci_order);
+    // free the ci_order table
+    efree(ci_order);
 }
 
 // haleyjd 11/19/03:
 // a default probability array for the boss_spawn_probs list,
 // for backward compatibility
 
-static int BossDefaults[11] =
-{
-   50, 90, 120, 130, 160, 162, 172, 192, 222, 246, 256
-};
+static int BossDefaults[11] = { 50, 90, 120, 130, 160, 162, 172, 192, 222, 246, 256 };
 
 //
 // E_ProcessBossTypes
@@ -1412,87 +1402,83 @@ static int BossDefaults[11] =
 //
 static void E_ProcessBossTypes(cfg_t *cfg)
 {
-   int i, a = 0;
-   int numTypes = cfg_size(cfg, SEC_BOSSTYPES);
-   int numProbs = cfg_size(cfg, SEC_BOSSPROBS);
-   bool useProbs = true;
+    int  i, a = 0;
+    int  numTypes = cfg_size(cfg, SEC_BOSSTYPES);
+    int  numProbs = cfg_size(cfg, SEC_BOSSPROBS);
+    bool useProbs = true;
 
-   E_EDFLogPuts("\t* Processing boss spawn types\n");
+    E_EDFLogPuts("\t* Processing boss spawn types\n");
 
-   if(!numTypes)
-   {
-      // haleyjd 05/31/06: allow zero boss types
-      E_EDFLogPuts("\t\tNo boss types defined\n");
-      return;
-   }
+    if(!numTypes)
+    {
+        // haleyjd 05/31/06: allow zero boss types
+        E_EDFLogPuts("\t\tNo boss types defined\n");
+        return;
+    }
 
-   // haleyjd 11/19/03: allow defaults for boss spawn probs
-   if(!numProbs)
-      useProbs = false;
+    // haleyjd 11/19/03: allow defaults for boss spawn probs
+    if(!numProbs)
+        useProbs = false;
 
-   if(useProbs ? numTypes != numProbs : numTypes != 11)
-   {
-      E_EDFLoggedErr(2,
-         "E_ProcessBossTypes: %d boss types, %d boss probs\n",
-         numTypes, useProbs ? numProbs : 11);
-   }
+    if(useProbs ? numTypes != numProbs : numTypes != 11)
+    {
+        E_EDFLoggedErr(2, "E_ProcessBossTypes: %d boss types, %d boss probs\n", numTypes, useProbs ? numProbs : 11);
+    }
 
-   // haleyjd 11/21/11: allow multiple runs
-   if(BossSpawnTypes)
-   {
-      efree(BossSpawnTypes);
-      BossSpawnTypes = nullptr;
-   }
-   if(BossSpawnProbs)
-   {
-      efree(BossSpawnProbs);
-      BossSpawnProbs = nullptr;
-   }
+    // haleyjd 11/21/11: allow multiple runs
+    if(BossSpawnTypes)
+    {
+        efree(BossSpawnTypes);
+        BossSpawnTypes = nullptr;
+    }
+    if(BossSpawnProbs)
+    {
+        efree(BossSpawnProbs);
+        BossSpawnProbs = nullptr;
+    }
 
-   NumBossTypes = numTypes;
-   BossSpawnTypes = ecalloc(int *, numTypes, sizeof(int));
-   BossSpawnProbs = ecalloc(int *, numTypes, sizeof(int));
+    NumBossTypes   = numTypes;
+    BossSpawnTypes = ecalloc(int *, numTypes, sizeof(int));
+    BossSpawnProbs = ecalloc(int *, numTypes, sizeof(int));
 
-   // load boss spawn probabilities
-   for(i = 0; i < numTypes; ++i)
-   {
-      if(useProbs)
-      {
-         a += cfg_getnint(cfg, SEC_BOSSPROBS, i);
-         BossSpawnProbs[i] = a;
-      }
-      else
-         BossSpawnProbs[i] = BossDefaults[i];
-   }
+    // load boss spawn probabilities
+    for(i = 0; i < numTypes; ++i)
+    {
+        if(useProbs)
+        {
+            a                 += cfg_getnint(cfg, SEC_BOSSPROBS, i);
+            BossSpawnProbs[i]  = a;
+        }
+        else
+            BossSpawnProbs[i] = BossDefaults[i];
+    }
 
-   // check that the probabilities total 256
-   if(useProbs && a != 256)
-   {
-      E_EDFLoggedErr(2,
-         "E_ProcessBossTypes: boss spawn probs do not total 256\n");
-   }
+    // check that the probabilities total 256
+    if(useProbs && a != 256)
+    {
+        E_EDFLoggedErr(2, "E_ProcessBossTypes: boss spawn probs do not total 256\n");
+    }
 
-   for(i = 0; i < numTypes; ++i)
-   {
-      const char *typeName = cfg_getnstr(cfg, SEC_BOSSTYPES, i);
-      int typeNum = E_ThingNumForName(typeName);
+    for(i = 0; i < numTypes; ++i)
+    {
+        const char *typeName = cfg_getnstr(cfg, SEC_BOSSTYPES, i);
+        int         typeNum  = E_ThingNumForName(typeName);
 
-      if(typeNum == -1)
-      {
-         E_EDFLoggedWarning(2, "Warning: invalid boss type '%s'\n", typeName);
+        if(typeNum == -1)
+        {
+            E_EDFLoggedWarning(2, "Warning: invalid boss type '%s'\n", typeName);
 
-         typeNum = UnknownThingType;
-      }
+            typeNum = UnknownThingType;
+        }
 
-      BossSpawnTypes[i] = typeNum;
+        BossSpawnTypes[i] = typeNum;
 
-      E_EDFLogPrintf("\t\tAssigned type %s(#%d) to boss type %d\n",
-                     mobjinfo[typeNum]->name, typeNum, i);
-   }
+        E_EDFLogPrintf("\t\tAssigned type %s(#%d) to boss type %d\n", mobjinfo[typeNum]->name, typeNum, i);
+    }
 }
 
-extern int wi_pause_time;
-extern int wi_fade_color;
+extern int     wi_pause_time;
+extern int     wi_fade_color;
 extern fixed_t wi_tl_level;
 
 //
@@ -1502,31 +1488,31 @@ extern fixed_t wi_tl_level;
 //
 static void E_ProcessMiscVars(cfg_t *cfg)
 {
-   // allow setting of title length for DOOM II
-   if(cfg_size(cfg, ITEM_D2TITLETICS) > 0)
-      GameModeInfoObjects[commercial]->titleTics = cfg_getint(cfg, ITEM_D2TITLETICS);
+    // allow setting of title length for DOOM II
+    if(cfg_size(cfg, ITEM_D2TITLETICS) > 0)
+        GameModeInfoObjects[commercial]->titleTics = cfg_getint(cfg, ITEM_D2TITLETICS);
 
-   // allow setting a pause time for the intermission
-   if(cfg_size(cfg, ITEM_INTERPAUSE) > 0)
-      wi_pause_time = cfg_getint(cfg, ITEM_INTERPAUSE);
+    // allow setting a pause time for the intermission
+    if(cfg_size(cfg, ITEM_INTERPAUSE) > 0)
+        wi_pause_time = cfg_getint(cfg, ITEM_INTERPAUSE);
 
-   if(cfg_size(cfg, ITEM_INTERFADE) > 0)
-   {
-      wi_fade_color = cfg_getint(cfg, ITEM_INTERFADE);
-      if(wi_fade_color < 0)
-         wi_fade_color = 0;
-      else if(wi_fade_color > 255)
-         wi_fade_color = 255;
-   }
+    if(cfg_size(cfg, ITEM_INTERFADE) > 0)
+    {
+        wi_fade_color = cfg_getint(cfg, ITEM_INTERFADE);
+        if(wi_fade_color < 0)
+            wi_fade_color = 0;
+        else if(wi_fade_color > 255)
+            wi_fade_color = 255;
+    }
 
-   if(cfg_size(cfg, ITEM_INTERTL) > 0)
-   {
-      wi_tl_level = cfg_getint(cfg, ITEM_INTERTL);
-      if(wi_tl_level < 0)
-         wi_tl_level = 0;
-      else if(wi_tl_level > 65536)
-         wi_tl_level = 65536;
-   }
+    if(cfg_size(cfg, ITEM_INTERTL) > 0)
+    {
+        wi_tl_level = cfg_getint(cfg, ITEM_INTERTL);
+        if(wi_tl_level < 0)
+            wi_tl_level = 0;
+        else if(wi_tl_level > 65536)
+            wi_tl_level = 65536;
+    }
 }
 
 //=============================================================================
@@ -1541,15 +1527,15 @@ static void E_ProcessMiscVars(cfg_t *cfg)
 //
 static cfg_t *E_InitEDF()
 {
-   // set warning count to zero
-   E_EDFResetWarnings();
+    // set warning count to zero
+    E_EDFResetWarnings();
 
-   // Check for -edfout to enable verbose logging
-   if(M_CheckParm("-edfout"))
-      E_EDFOpenVerboseLog();
+    // Check for -edfout to enable verbose logging
+    if(M_CheckParm("-edfout"))
+        E_EDFOpenVerboseLog();
 
-   // Create the one and only cfg_t
-   return E_CreateCfg(edf_opts);
+    // Create the one and only cfg_t
+    return E_CreateCfg(edf_opts);
 }
 
 //
@@ -1559,32 +1545,32 @@ static cfg_t *E_InitEDF()
 //
 static void E_ParseEDF(cfg_t *cfg, const char *filename)
 {
-   E_EDFLogPuts("\n===================== Parsing Phase =====================\n");
+    E_EDFLogPuts("\n===================== Parsing Phase =====================\n");
 
-   // Parse the "root" EDF, which is either a chain of wad lumps named EDFROOT;
-   // or a single file, which is determined by the -edf parameter, a GFS script,
-   // the /base/game directory, or the default master EDF, which is root.edf in
-   // /base.
+    // Parse the "root" EDF, which is either a chain of wad lumps named EDFROOT;
+    // or a single file, which is determined by the -edf parameter, a GFS script,
+    // the /base/game directory, or the default master EDF, which is root.edf in
+    // /base.
 
-   if(W_CheckNumForName("EDFROOT") != -1)
-   {
-      puts("E_ProcessEDF: Loading root lump.\n");
-      E_EDFLogPuts("\t* Parsing lump EDFROOT\n");
+    if(W_CheckNumForName("EDFROOT") != -1)
+    {
+        puts("E_ProcessEDF: Loading root lump.\n");
+        E_EDFLogPuts("\t* Parsing lump EDFROOT\n");
 
-      E_ParseEDFLump(cfg, "EDFROOT");
-   }
-   else if(filename)
-   {
-      printf("E_ProcessEDF: Loading root file %s\n", filename);
-      E_EDFLogPrintf("\t* Parsing EDF file %s\n", filename);
+        E_ParseEDFLump(cfg, "EDFROOT");
+    }
+    else if(filename)
+    {
+        printf("E_ProcessEDF: Loading root file %s\n", filename);
+        E_EDFLogPrintf("\t* Parsing EDF file %s\n", filename);
 
-      E_ParseEDFFile(cfg, filename);
-   }
+        E_ParseEDFFile(cfg, filename);
+    }
 
-   // Parse independent EDF lumps, which are not supposed to have been included
-   // through any of the above (though if they have been, this is now accounted
-   // for via the SHA-1 hashing mechanism which avoids reparses).
-   E_ParseIndividualLumps(cfg);
+    // Parse independent EDF lumps, which are not supposed to have been included
+    // through any of the above (though if they have been, this is now accounted
+    // for via the SHA-1 hashing mechanism which avoids reparses).
+    E_ParseIndividualLumps(cfg);
 }
 
 //
@@ -1595,120 +1581,105 @@ static void E_ParseEDF(cfg_t *cfg, const char *filename)
 //
 static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
 {
-   E_EDFLogPuts("\n=================== Processing Phase ====================\n");
+    E_EDFLogPuts("\n=================== Processing Phase ====================\n");
 
-   // Echo final enable values to the log file for reference.
-   if(firsttime)
-      E_EchoEnables();
+    // Echo final enable values to the log file for reference.
+    if(firsttime)
+        E_EchoEnables();
 
-   // NOTE: The order of most of the following calls is extremely
-   // important and must be preserved, unless the static routines
-   // above and in other files are rewritten accordingly.
+    // NOTE: The order of most of the following calls is extremely
+    // important and must be preserved, unless the static routines
+    // above and in other files are rewritten accordingly.
 
-   // process strings
-   E_ProcessStrings(cfg);
+    // process strings
+    E_ProcessStrings(cfg);
 
-   // process sprites
-   E_ProcessSprites(cfg);
+    // process sprites
+    E_ProcessSprites(cfg);
 
-   // process sounds
-   E_ProcessSounds(cfg);
+    // process sounds
+    E_ProcessSounds(cfg);
 
-   // process ambience information
-   E_ProcessAmbience(cfg);
+    // process ambience information
+    E_ProcessAmbience(cfg);
 
-   // process sound sequences
-   E_ProcessSndSeqs(cfg);
+    // process sound sequences
+    E_ProcessSndSeqs(cfg);
 
-   // process reverb definitions (12/22/13)
-   E_ProcessReverbs(cfg);
+    // process reverb definitions (12/22/13)
+    E_ProcessReverbs(cfg);
 
-   // process damage types
-   E_ProcessDamageTypes(cfg);
-   E_PrepareMorphTypes(cfg);
+    // process damage types
+    E_ProcessDamageTypes(cfg);
+    E_PrepareMorphTypes(cfg);
 
+    // process frame and thing definitions (made dynamic 11/06/11)
+    E_ProcessStatesAndThings(cfg);
 
-   // -- AEON START --
+    // process sprite-related variables (made dynamic 11/21/11)
+    E_ProcessSpriteVars(cfg);
 
-   Aeon::ScriptManager::LoadRoots();
+    // process hitscan puff effects
+    E_ProcessPuffs(cfg);
 
-   // create actions (codepointers)
-   E_CreateActions(cfg);
+    // collect the weapons now, so that weapon tracker can be autogenerated
+    E_CollectWeapons(cfg);
 
-   Aeon::ScriptManager::Build();
+    // process inventory
+    E_ProcessInventory(cfg);
 
-   E_PopulateActions();
+    // process weapons
+    E_ProcessWeaponInfo(cfg);
 
-   // -- AEON END --
+    // process player sections
+    E_ProcessPlayerData(cfg);
 
+    // process morph types (like damage types but with class and mobj info)
+    E_ProcessMorphTypes(cfg);
 
-   // process frame and thing definitions (made dynamic 11/06/11)
-   E_ProcessStatesAndThings(cfg);
+    // process cast call (made dynamic 11/21/11)
+    E_ProcessCast(cfg);
 
-   // process sprite-related variables (made dynamic 11/21/11)
-   E_ProcessSpriteVars(cfg);
+    // process boss spawn types (made dynamic 11/21/11)
+    E_ProcessBossTypes(cfg);
 
-   // process hitscan puff effects
-   E_ProcessPuffs(cfg);
+    // process TerrainTypes
+    E_ProcessTerrainTypes(cfg);
 
-   // collect the weapons now, so that weapon tracker can be autogenerated
-   E_CollectWeapons(cfg);
+    // process switches and animations
+    E_ProcessSwitches(cfg);
+    E_ProcessAnimations(cfg);
 
-   // process inventory
-   E_ProcessInventory(cfg);
+    // process dynamic menus
+    MN_ProcessMenus(cfg);
 
-   // process weapons
-   E_ProcessWeaponInfo(cfg);
+    // process fonts
+    E_ProcessFonts(cfg);
 
-   // process player sections
-   E_ProcessPlayerData(cfg);
+    // process misc vars (made dynamic 11/21/11)
+    E_ProcessMiscVars(cfg);
 
-   // process morph types (like damage types but with class and mobj info)
-   E_ProcessMorphTypes(cfg);
+    // post main-processing
+    E_ProcessPickups(cfg);
+    E_ProcessThingPickups(cfg);
 
-   // process cast call (made dynamic 11/21/11)
-   E_ProcessCast(cfg);
+    // 08/30/03: apply deltas
+    E_ProcessSoundDeltas(cfg, true); // see e_sound.cpp
+    E_ProcessStateDeltas(cfg);       // see e_states.cpp
+    E_ProcessThingDeltas(cfg);       // see e_things.cpp
+    E_ProcessWeaponDeltas(cfg);      // see e_weapons.cpp
+    E_ProcessPlayerDeltas(cfg);      // see e_player.cpp
+    E_ProcessFontDeltas(cfg);        // see e_fonts.cpp
 
-   // process boss spawn types (made dynamic 11/21/11)
-   E_ProcessBossTypes(cfg);
+    // 07/19/12: game properties
+    E_ProcessGameProperties(cfg); // see e_gameprops.cpp
 
-   // process TerrainTypes
-   E_ProcessTerrainTypes(cfg);
+    // ioanch 2020-04-20: compatibility
+    E_ProcessCompatibilities(cfg);
 
-   // process switches and animations
-   E_ProcessSwitches(cfg);
-   E_ProcessAnimations(cfg);
-
-   // process dynamic menus
-   MN_ProcessMenus(cfg);
-
-   // process fonts
-   E_ProcessFonts(cfg);
-
-   // process misc vars (made dynamic 11/21/11)
-   E_ProcessMiscVars(cfg);
-
-   // post main-processing
-   E_ProcessPickups(cfg);
-   E_ProcessThingPickups(cfg);
-
-   // 08/30/03: apply deltas
-   E_ProcessSoundDeltas(cfg, true); // see e_sound.cpp
-   E_ProcessStateDeltas(cfg);       // see e_states.cpp
-   E_ProcessThingDeltas(cfg);       // see e_things.cpp
-   E_ProcessWeaponDeltas(cfg);      // see e_weapons.cpp
-   E_ProcessPlayerDeltas(cfg);      // see e_player.cpp
-   E_ProcessFontDeltas(cfg);        // see e_fonts.cpp
-
-   // 07/19/12: game properties
-   E_ProcessGameProperties(cfg);    // see e_gameprops.cpp
-
-   // ioanch 2020-04-20: compatibility
-   E_ProcessCompatibilities(cfg);
-
-   // post-processing routines
-   E_SetThingDefaultSprites();
-   E_ProcessFinalWeaponSlots();
+    // post-processing routines
+    E_SetThingDefaultSprites();
+    E_ProcessFinalWeaponSlots();
 }
 
 //
@@ -1718,21 +1689,21 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
 //
 static void E_CleanUpEDF(cfg_t *cfg)
 {
-   E_EDFLogPuts("\n==================== Shutdown Phase =====================\n");
+    E_EDFLogPuts("\n==================== Shutdown Phase =====================\n");
 
-   // Free the cfg_t object.
-   E_EDFLogPuts("\t* Freeing main cfg object\n");
-   cfg_free(cfg);
+    // Free the cfg_t object.
+    E_EDFLogPuts("\t* Freeing main cfg object\n");
+    cfg_free(cfg);
 
-   // check heap integrity for safety
-   E_EDFLogPuts("\t* Checking zone heap integrity\n");
-   Z_CheckHeap();
+    // check heap integrity for safety
+    E_EDFLogPuts("\t* Checking zone heap integrity\n");
+    Z_CheckHeap();
 
-   // close the verbose log file
-   E_EDFCloseVerboseLog();
+    // close the verbose log file
+    E_EDFCloseVerboseLog();
 
-   // Output warnings display
-   E_EDFPrintWarningCount();
+    // Output warnings display
+    E_EDFPrintWarningCount();
 }
 
 //
@@ -1744,32 +1715,32 @@ static void E_CleanUpEDF(cfg_t *cfg)
 //
 void E_ProcessEDF(const char *filename)
 {
-   cfg_t *cfg;
+    cfg_t *cfg;
 
-   //
-   // Initialization - open log and create a cfg_t
-   //
-   cfg = E_InitEDF();
+    //
+    // Initialization - open log and create a cfg_t
+    //
+    cfg = E_InitEDF();
 
-   //
-   // Parsing
-   //
-   // haleyjd 03/21/10: All parsing is now streamlined into a single process,
-   // using the unified cfg_t object created above.
-   //
-   E_ParseEDF(cfg, filename);
+    //
+    // Parsing
+    //
+    // haleyjd 03/21/10: All parsing is now streamlined into a single process,
+    // using the unified cfg_t object created above.
+    //
+    E_ParseEDF(cfg, filename);
 
-   //
-   // Processing
-   //
-   // Now we chew on all of the data accumulated from the various sources.
-   //
-   E_DoEDFProcessing(cfg, true);
+    //
+    // Processing
+    //
+    // Now we chew on all of the data accumulated from the various sources.
+    //
+    E_DoEDFProcessing(cfg, true);
 
-   //
-   // Shutdown and Cleanup
-   //
-   E_CleanUpEDF(cfg);
+    //
+    // Shutdown and Cleanup
+    //
+    E_CleanUpEDF(cfg);
 }
 
 //
@@ -1780,33 +1751,33 @@ void E_ProcessEDF(const char *filename)
 //
 void E_ProcessNewEDF()
 {
-   cfg_t *cfg;
+    cfg_t *cfg;
 
-   //
-   // Initialization - open log and create a cfg_t
-   //
-   cfg = E_InitEDF();
+    //
+    // Initialization - open log and create a cfg_t
+    //
+    cfg = E_InitEDF();
 
-   //
-   // Parsing - parse only EDFROOT lumps, not root.edf
-   //
-   E_ParseEDF(cfg, nullptr);
+    //
+    // Parsing - parse only EDFROOT lumps, not root.edf
+    //
+    E_ParseEDF(cfg, nullptr);
 
-   //
-   // Processing
-   //
-   E_DoEDFProcessing(cfg, false);
+    //
+    // Processing
+    //
+    E_DoEDFProcessing(cfg, false);
 
-   //
-   // Shutdown and Cleanup
-   //
-   E_CleanUpEDF(cfg);
+    //
+    // Shutdown and Cleanup
+    //
+    E_CleanUpEDF(cfg);
 
-   // clear cached state argument evaluations
-   E_ResetAllArgEvals();
+    // clear cached state argument evaluations
+    E_ResetAllArgEvals();
 
-   // clear cached sounds
-   E_UpdateSoundCache();
+    // clear cached sounds
+    E_UpdateSoundCache();
 }
 
 // EOF

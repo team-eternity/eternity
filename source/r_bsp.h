@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Refresh module, BSP traversal and handling.
+// Purpose: Refresh module, BSP traversal and handling.
+// Authors: James Haley, Stephen McGranahan, Max Waine, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef R_BSP_H__
 #define R_BSP_H__
@@ -45,9 +43,8 @@ struct rendersector_t;
 // of the line are rendered and the solidsegs array isn't being traversed.. >_<
 void R_MarkSolidSeg(bspcontext_t &context, int x1, int x2);
 
-bool R_SetupPortalClipsegs(bspcontext_t &context, const contextbounds_t &bounds,
-                           portalrender_t &portalrender,
-                           int minx, int maxx, const float *top, const float *bottom);
+bool R_SetupPortalClipsegs(bspcontext_t &context, const contextbounds_t &bounds, portalrender_t &portalrender, int minx,
+                           int maxx, const float *top, const float *bottom);
 
 void R_SetupSolidSegs();
 void R_ClearClipSegs(bspcontext_t &context, const contextbounds_t &bounds);
@@ -59,11 +56,11 @@ void R_PreRenderBSP();
 void R_RenderBSPNode(rendercontext_t &context, int bspnum);
 
 // killough 4/13/98: fake floors/ceilings for deep water / fake ceilings:
-int R_GetSurfaceLightLevel(surf_e surf, const rendersector_t *sec);
-const rendersector_t *R_FakeFlat(const viewpoint_t &, const sector_t *, rendersector_t *, Surfaces<pslope_t> &, int *, int *, bool);
-int R_FakeFlatSpriteLighting(const viewpoint_t &viewpoint, const sector_t *sec);
-bool R_PickNearestBoxLines(const cbviewpoint_t &cb_viewpoint,
-                           const float fbox[4], windowlinegen_t &linegen1,
+int                   R_GetSurfaceLightLevel(surf_e surf, const rendersector_t *sec);
+const rendersector_t *R_FakeFlat(const viewpoint_t &, const sector_t *, rendersector_t *, Surfaces<pslope_t> &, int *,
+                                 int *, bool);
+int                   R_FakeFlatSpriteLighting(const viewpoint_t &viewpoint, const sector_t *sec);
+bool R_PickNearestBoxLines(const cbviewpoint_t &cb_viewpoint, const float fbox[4], windowlinegen_t &linegen1,
                            windowlinegen_t &linegen2, slopetype_t *slope = nullptr);
 
 #endif

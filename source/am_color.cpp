@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,15 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Automap colours.
+// Purpose: Holds console commands (variables) for map colours.
+// Authors: Simon Howard, James Haley, Stephen McGranahan
 //
-// Holds console commands (variables) for map colours
-//
-// By Simon Howard
-//
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "doomdef.h"
@@ -54,8 +49,8 @@ extern int mapcolor_plyr[4]; // colors for player arrows in multiplayer
 extern int mapcolor_frnd;    // colors for friends of player
 extern int mapcolor_prtl;    // SoM: color for lines not in player portal group
 
-// SoM: map mode. True means the portal groups are overlayed (the group the 
-// player is in being displayed in color and the other groups being grayed out 
+// SoM: map mode. True means the portal groups are overlayed (the group the
+// player is in being displayed in color and the other groups being grayed out
 // and underneath) and false means the map is not modified.
 extern int mapportal_overlay;
 

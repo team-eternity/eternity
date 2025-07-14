@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   System specific interface stuff.
+// Purpose: System specific interface stuff.
+// Authors: James Haley, Joe Kennedy
 //
-//-----------------------------------------------------------------------------
 
 #ifndef D_TICCMD_H__
 #define D_TICCMD_H__
@@ -60,18 +58,18 @@
 // plus a checksum for internal state consistency.
 struct ticcmd_t
 {
-   int8_t  forwardmove; // *2048 for move
-   int8_t  sidemove;    // *2048 for move
-   int8_t  fly;         // haleyjd: flight
-   int16_t look;        // haleyjd: <<16 for look delta
-   int16_t angleturn;   // <<16 for angle delta
-   int16_t consistency; // checks for net game
-   byte    chatchar;
-   byte    buttons;
-   byte    actions;
-   uint16_t itemID;     // MaxW: ID of used inventory item (+ 1)
-   uint16_t weaponID;   // MaxW: ID of weapon to be made pending (+ 1)
-   uint8_t  slotIndex;  // MaxW: Index of slot to switch to (if weaponID != 0)
+    int8_t   forwardmove; // *2048 for move
+    int8_t   sidemove;    // *2048 for move
+    int8_t   fly;         // haleyjd: flight
+    int16_t  look;        // haleyjd: <<16 for look delta
+    int16_t  angleturn;   // <<16 for angle delta
+    int16_t  consistency; // checks for net game
+    byte     chatchar;
+    byte     buttons;
+    byte     actions;
+    uint16_t itemID;    // MaxW: ID of used inventory item (+ 1)
+    uint16_t weaponID;  // MaxW: ID of weapon to be made pending (+ 1)
+    uint8_t  slotIndex; // MaxW: Index of slot to switch to (if weaponID != 0)
 };
 
 #if defined(_MSC_VER) || defined(__GNUC__)

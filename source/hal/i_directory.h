@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2013 David Hill et al.
+// The Eternity Engine
+// Copyright (C) 2025 David Hill et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//    Directory Manipulation
+// Purpose: Directory manipulation.
+// Authors: James Haley, David Hill, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef I_DIRECTORY_H__
 #define I_DIRECTORY_H__
@@ -30,7 +28,6 @@
 #include "../m_qstr.h"
 
 class qstring;
-
 
 bool I_CreateDirectory(qstring const &path);
 

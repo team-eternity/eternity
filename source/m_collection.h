@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2016 James Haley et al.
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: Collection objects
+//------------------------------------------------------------------------------
+//
+// Purpose: Collection objects.
 // Authors: James Haley, David Hill, Ioan Chera
 //
 
@@ -35,133 +37,123 @@
 // This is a base class for functionality shared by the other collection types.
 // It cannot be used directly but must be inherited from.
 //
-template<typename T> 
+template<typename T>
 class BaseCollection : public ZoneObject
 {
 protected:
-   T *ptrArray;
-   size_t length;
-   size_t numalloc;
-   size_t wrapiterator;
+    T     *ptrArray;
+    size_t length;
+    size_t numalloc;
+    size_t wrapiterator;
 
-   BaseCollection()
-      : ZoneObject(), ptrArray(nullptr), length(0), numalloc(0), wrapiterator(0)
-   {
-   }
+    BaseCollection() : ZoneObject(), ptrArray(nullptr), length(0), numalloc(0), wrapiterator(0) {}
 
-   //
-   // Resizes the internal array by the amount provided
-   //
-   void baseResize(size_t amtToAdd)
-   {
-      size_t newnumalloc = numalloc + amtToAdd;
-      if(newnumalloc > numalloc)
-      {
-         ptrArray = erealloc(T *, ptrArray, newnumalloc * sizeof(T));
-         memset(static_cast<void *>(ptrArray + numalloc), 0, 
-                (newnumalloc - numalloc) * sizeof(T));
-         numalloc = newnumalloc;
-      }
-   }
+    //
+    // Resizes the internal array by the amount provided
+    //
+    void baseResize(size_t amtToAdd)
+    {
+        size_t newnumalloc = numalloc + amtToAdd;
+        if(newnumalloc > numalloc)
+        {
+            ptrArray = erealloc(T *, ptrArray, newnumalloc * sizeof(T));
+            memset(static_cast<void *>(ptrArray + numalloc), 0, (newnumalloc - numalloc) * sizeof(T));
+            numalloc = newnumalloc;
+        }
+    }
 
-   //
-   // Frees the storage, if any is allocated, and clears all member variables
-   //
-   void baseClear()
-   {
-      if(ptrArray)
-         efree(ptrArray);
-      ptrArray = nullptr;
-      length = 0;
-      numalloc = 0;
-      wrapiterator = 0;
-   }
+    //
+    // Frees the storage, if any is allocated, and clears all member variables
+    //
+    void baseClear()
+    {
+        if(ptrArray)
+            efree(ptrArray);
+        ptrArray     = nullptr;
+        length       = 0;
+        numalloc     = 0;
+        wrapiterator = 0;
+    }
 
-   //
-   // Certain operations may invalidate the wrap iterator.
-   //
-   void checkWrapIterator()
-   {
-      if(wrapiterator >= length)
-         wrapiterator = 0;
-   }
+    //
+    // Certain operations may invalidate the wrap iterator.
+    //
+    void checkWrapIterator()
+    {
+        if(wrapiterator >= length)
+            wrapiterator = 0;
+    }
 
 public:
-   // get the length of the collection
-   size_t getLength() const { return length; }
+    // get the length of the collection
+    size_t getLength() const { return length; }
 
-   // test if the collection is empty or not
-   bool isEmpty() const { return length == 0; }
-   
-   //
-   // Returns the next item in the collection, wrapping to the beginning
-   // once the end is reached. The iteration state is stored in the
-   // collection object, so you can only do one such iteration at a time.
-   //
-   T &wrapIterator()
-   {
-      if(!ptrArray || !length)
-         I_Error("BaseCollection::wrapIterator: called on empty collection\n");
+    // test if the collection is empty or not
+    bool isEmpty() const { return length == 0; }
 
-      T &ret = ptrArray[wrapiterator++];
+    //
+    // Returns the next item in the collection, wrapping to the beginning
+    // once the end is reached. The iteration state is stored in the
+    // collection object, so you can only do one such iteration at a time.
+    //
+    T &wrapIterator()
+    {
+        if(!ptrArray || !length)
+            I_Error("BaseCollection::wrapIterator: called on empty collection\n");
 
-      wrapiterator %= length;
+        T &ret = ptrArray[wrapiterator++];
 
-      return ret;
-   }
-   
-   // Obtain the wrap iterator position
-   size_t getWrapIteratorPos() const { return wrapiterator; }
-   
-   // Set the wrap iterator position, if the indicated position is valid
-   void setWrapIteratorPos(size_t i)
-   {
-      if(i < length)
-         wrapiterator = i;
-   }
+        wrapiterator %= length;
 
-   //
-   // Get the item at a given index. Index must be in range from 0 to length-1.
-   //
-   T &at(size_t index) const
-   {
-      if(!ptrArray || index >= length)
-         I_Error("BaseCollection::at: array index out of bounds\n");
-      return ptrArray[index];
-   }
+        return ret;
+    }
 
-   // Overloaded operator wrapper for at method.
-   T &operator [] (size_t index) const { return at(index); }
-   
-   //
-   // Returns a random item from the collection.
-   //
-   T &getRandom(pr_class_t rngnum)
-   {
-      size_t index;
+    // Obtain the wrap iterator position
+    size_t getWrapIteratorPos() const { return wrapiterator; }
 
-      if(!ptrArray || !length)
-         I_Error("BaseCollection::getRandom: called on empty collection\n");
-      
-      index = (size_t)P_Random(rngnum) % length;
+    // Set the wrap iterator position, if the indicated position is valid
+    void setWrapIteratorPos(size_t i)
+    {
+        if(i < length)
+            wrapiterator = i;
+    }
 
-      return ptrArray[index];
-   }
+    //
+    // Get the item at a given index. Index must be in range from 0 to length-1.
+    //
+    T &at(size_t index) const
+    {
+        if(!ptrArray || index >= length)
+            I_Error("BaseCollection::at: array index out of bounds\n");
+        return ptrArray[index];
+    }
 
-   // STL-compatible iterator semantics
-   typedef T *iterator;
+    // Overloaded operator wrapper for at method.
+    T &operator[](size_t index) const { return at(index); }
 
-   T *begin() const { return ptrArray; }
-   T *end()   const { return ptrArray + length; }
+    //
+    // Returns a random item from the collection.
+    //
+    T &getRandom(pr_class_t rngnum)
+    {
+        size_t index;
 
-   T &back()
-   {
-      return ptrArray[length - 1];
-   }
-   const T &back() const
-   {
-      return ptrArray[length - 1];
-   }
+        if(!ptrArray || !length)
+            I_Error("BaseCollection::getRandom: called on empty collection\n");
+
+        index = (size_t)P_Random(rngnum) % length;
+
+        return ptrArray[index];
+    }
+
+    // STL-compatible iterator semantics
+    using iterator = T *;
+
+    T *begin() const { return ptrArray; }
+    T *end() const { return ptrArray + length; }
+
+    T       &back() { return ptrArray[length - 1]; }
+    const T &back() const { return ptrArray[length - 1]; }
 };
 
 //
@@ -169,385 +161,349 @@ public:
 // not do any construction or destruction of the objects it stores; it is just
 // a simple reallocating array with maximum efficiency.
 //
-template<typename T> 
+template<typename T>
 class PODCollection : public BaseCollection<T>
 {
 protected:
-   //
-   // For move constructor and move assignment - transfer allocation from other
-   // and set other to empty state.
-   //
-   void moveFrom(PODCollection<T> &&other) noexcept
-   {
-      if(this->ptrArray == other.ptrArray) // same object?
-         return;
+    //
+    // For move constructor and move assignment - transfer allocation from other
+    // and set other to empty state.
+    //
+    void moveFrom(PODCollection<T> &&other) noexcept
+    {
+        if(this->ptrArray == other.ptrArray) // same object?
+            return;
 
-      this->clear();
-      this->ptrArray     = other.ptrArray;
-      this->length       = other.length;
-      this->numalloc     = other.numalloc;
-      this->wrapiterator = other.wrapiterator;
+        this->clear();
+        this->ptrArray     = other.ptrArray;
+        this->length       = other.length;
+        this->numalloc     = other.numalloc;
+        this->wrapiterator = other.wrapiterator;
 
-      other.ptrArray = nullptr;
-      other.length = other.numalloc = 0;
-      other.wrapiterator = 0;
-   }
+        other.ptrArray     = nullptr;
+        other.numalloc     = 0;
+        other.length       = 0;
+        other.wrapiterator = 0;
+    }
 
 public:
-   // Basic constructor
-   PODCollection() : BaseCollection<T>()
-   {
-   }
-   
-   // Parameterized constructor
-   explicit PODCollection(size_t initSize) : BaseCollection<T>()
-   {
-      this->baseResize(initSize);
-   }
+    // Basic constructor
+    PODCollection() : BaseCollection<T>() {}
 
-   // Assignment
-   void assign(const PODCollection<T> &other)
-   {
-      size_t oldlength = this->length;
+    // Parameterized constructor
+    explicit PODCollection(size_t initSize) : BaseCollection<T>() { this->baseResize(initSize); }
 
-      if(this->ptrArray == other.ptrArray) // same object?
-         return;
-      
-      this->length = other.length;
-      this->wrapiterator = other.wrapiterator;
-      
-      if(this->length > this->numalloc)
-         this->baseResize(this->length - oldlength);
+    // Assignment
+    void assign(const PODCollection<T> &other)
+    {
+        size_t oldlength = this->length;
 
-      memcpy(this->ptrArray, other.ptrArray, this->length * sizeof(T));
-   }
+        if(this->ptrArray == other.ptrArray) // same object?
+            return;
 
-   // Copy constructor
-   PODCollection(const PODCollection<T> &other)
-   {
-      this->assign(other);
-   }
+        this->length       = other.length;
+        this->wrapiterator = other.wrapiterator;
 
-   // Overloaded operator wrapper for assign method
-   PODCollection<T> &operator = (const PODCollection<T> &other)
-   {
-      this->assign(other);
-      return *this;
-   }
+        if(this->length > this->numalloc)
+            this->baseResize(this->length - oldlength);
 
-   // Move constructor
-   PODCollection(PODCollection<T> &&other) noexcept
-   {
-      moveFrom(std::move(other));
-   }
+        memcpy(this->ptrArray, other.ptrArray, this->length * sizeof(T));
+    }
 
-   // Move assignment
-   PODCollection<T> &operator = (PODCollection<T> &&other) noexcept 
-   { 
-      moveFrom(std::move(other)); 
-      return *this;
-   }
-   
-   // Destructor
-   ~PODCollection() { clear(); }
+    // Copy constructor
+    PODCollection(const PODCollection<T> &other) { this->assign(other); }
 
+    // Overloaded operator wrapper for assign method
+    PODCollection<T> &operator=(const PODCollection<T> &other)
+    {
+        this->assign(other);
+        return *this;
+    }
 
-   //
-   // Empties the collection and frees its storage.
-   //
-   void clear() { this->baseClear(); }
+    // Move constructor
+    PODCollection(PODCollection<T> &&other) noexcept { moveFrom(std::move(other)); }
 
-   //
-   // Marks the collection as empty but doesn't free the storage.
-   //
-   void makeEmpty()
-   {
-      this->length = this->wrapiterator = 0;
-      if(this->ptrArray)
-         memset(this->ptrArray, 0, this->numalloc * sizeof(T));
-   }
+    // Move assignment
+    PODCollection<T> &operator=(PODCollection<T> &&other) noexcept
+    {
+        moveFrom(std::move(other));
+        return *this;
+    }
 
-   //
-   // Zero out the storage but do not change any other properties, including
-   // length.
-   //
-   void zero()
-   {
-      if(this->ptrArray)
-         memset(this->ptrArray, 0, this->numalloc * sizeof(T));
-   }
+    // Destructor
+    ~PODCollection() { clear(); }
 
-   //
-   // Adds a new item to the end of the collection.
-   //
-   void add(const T &newItem)
-   {
-      if(this->length >= this->numalloc)
-         this->baseResize(this->length ? this->length : 32); // double array size
-      this->ptrArray[this->length] = newItem;
-      ++this->length;
-   }
+    //
+    // Empties the collection and frees its storage.
+    //
+    void clear() { this->baseClear(); }
 
-   //
-   // Adds a new zero-initialized item to the end of the collection.
-   //
-   T &addNew()
-   {
-      if(this->length >= this->numalloc)
-         this->baseResize(this->length ? this->length : 32);
-      memset(&(this->ptrArray[this->length]), 0, sizeof(T));
-      
-      return this->ptrArray[this->length++];
-   }
+    //
+    // Marks the collection as empty but doesn't free the storage.
+    //
+    void makeEmpty()
+    {
+        this->length = this->wrapiterator = 0;
+        if(this->ptrArray)
+            memset(this->ptrArray, 0, this->numalloc * sizeof(T));
+    }
 
-   //
-   // davidph 11/23/11: Returns the last item and decrements the length.
-   //
-   const T &pop()
-   {
-      if(!this->ptrArray || !this->length)
-         I_Error("PODCollection::pop: array underflow\n");
-      
-      const T &ret = this->ptrArray[--this->length];
-      this->checkWrapIterator();
+    //
+    // Zero out the storage but do not change any other properties, including
+    // length.
+    //
+    void zero()
+    {
+        if(this->ptrArray)
+            memset(this->ptrArray, 0, this->numalloc * sizeof(T));
+    }
 
-      return ret;
-   }
+    //
+    // Adds a new item to the end of the collection.
+    //
+    void add(const T &newItem)
+    {
+        if(this->length >= this->numalloc)
+            this->baseResize(this->length ? this->length : 32); // double array size
+        this->ptrArray[this->length] = newItem;
+        ++this->length;
+    }
 
-   //
-   // Change the length of the array.
-   //
-   void resize(size_t n)
-   {
-      // increasing?
-      if(n > this->length)
-      {
-         // need to reallocate?
-         if(n > this->numalloc)
-            this->baseResize(n - this->numalloc);
-         // ensure newly available slots are initialized
-         memset(&(this->ptrArray[this->length]), 0, (n - this->length) * sizeof(T));
-      }
-      // set the new length, in all cases.
-      this->length = n;
-      this->checkWrapIterator();
-   }
+    //
+    // Adds a new zero-initialized item to the end of the collection.
+    //
+    T &addNew()
+    {
+        if(this->length >= this->numalloc)
+            this->baseResize(this->length ? this->length : 32);
+        memset(&(this->ptrArray[this->length]), 0, sizeof(T));
+
+        return this->ptrArray[this->length++];
+    }
+
+    //
+    // davidph 11/23/11: Returns the last item and decrements the length.
+    //
+    const T &pop()
+    {
+        if(!this->ptrArray || !this->length)
+            I_Error("PODCollection::pop: array underflow\n");
+
+        const T &ret = this->ptrArray[--this->length];
+        this->checkWrapIterator();
+
+        return ret;
+    }
+
+    //
+    // Change the length of the array.
+    //
+    void resize(size_t n)
+    {
+        // increasing?
+        if(n > this->length)
+        {
+            // need to reallocate?
+            if(n > this->numalloc)
+                this->baseResize(n - this->numalloc);
+            // ensure newly available slots are initialized
+            memset(&(this->ptrArray[this->length]), 0, (n - this->length) * sizeof(T));
+        }
+        // set the new length, in all cases.
+        this->length = n;
+        this->checkWrapIterator();
+    }
 };
 
 //
-// This class can store any type of data, including objects that require 
+// This class can store any type of data, including objects that require
 // constructor/destructor calls and contain virtual methods.
 //
-template<typename T> 
+template<typename T>
 class Collection : public BaseCollection<T>
 {
 protected:
-   const T *prototype; // An unowned object of type T that serves as a prototype
+    const T *prototype; // An unowned object of type T that serves as a prototype
 
-   //
-   // For move constructor and move assignment - transfer allocation from other
-   // and set other to empty state.
-   //
-   void moveFrom(Collection<T> &&other) noexcept
-   {
-      if(this->ptrArray == other.ptrArray) // same object?
-         return;
+    //
+    // For move constructor and move assignment - transfer allocation from other
+    // and set other to empty state.
+    //
+    void moveFrom(Collection<T> &&other) noexcept
+    {
+        if(this->ptrArray == other.ptrArray) // same object?
+            return;
 
-      this->clear();
-      this->ptrArray     = other.ptrArray;
-      this->length       = other.length;
-      this->numalloc     = other.numalloc;
-      this->wrapiterator = other.wrapiterator;
-      this->prototype    = other.prototype;
+        this->clear();
+        this->ptrArray     = other.ptrArray;
+        this->length       = other.length;
+        this->numalloc     = other.numalloc;
+        this->wrapiterator = other.wrapiterator;
+        this->prototype    = other.prototype;
 
-      other.ptrArray = nullptr;
-      other.length = other.numalloc = 0;
-      other.wrapiterator = 0;
-   }
+        other.ptrArray = nullptr;
+        other.length = other.numalloc = 0;
+        other.wrapiterator            = 0;
+    }
 
 public:
-   // Basic constructor
-   Collection() : BaseCollection<T>(), prototype(nullptr)
-   {
-   }
-   
-   // Parameterized constructor
-   explicit Collection(size_t initSize) : BaseCollection<T>(), prototype(nullptr)
-   {
-      this->baseResize(initSize);
-   }
-   
-   // Assignment
-   void assign(const Collection<T> &other)
-   {
-      if(this->ptrArray == other.ptrArray) // same object?
-         return;
+    // Basic constructor
+    Collection() : BaseCollection<T>(), prototype(nullptr) {}
 
-      this->clear();
-      for(size_t i = 0; i < other.length; i++)
-         this->add(other[i]);
+    // Parameterized constructor
+    explicit Collection(size_t initSize) : BaseCollection<T>(), prototype(nullptr) { this->baseResize(initSize); }
 
-      this->prototype = other.prototype;
-   }
+    // Assignment
+    void assign(const Collection<T> &other)
+    {
+        if(this->ptrArray == other.ptrArray) // same object?
+            return;
 
-   // Copy constructor
-   Collection(const Collection<T> &other)
-   {
-      assign(other);
-   }
+        this->clear();
+        for(size_t i = 0; i < other.length; i++)
+            this->add(other[i]);
 
-   // Copy assignment
-   Collection<T> &operator = (const Collection<T> &other) 
-   { 
-      assign(other); 
-      return *this;
-   }
+        this->prototype = other.prototype;
+    }
 
-   // Move constructor
-   Collection(Collection<T> &&other) noexcept
-   {
-      moveFrom(std::move(other));
-   }
+    // Copy constructor
+    Collection(const Collection<T> &other) { assign(other); }
 
-   // Move assignment
-   Collection<T> &operator = (Collection<T> &&other) noexcept 
-   { 
-      moveFrom(std::move(other)); 
-      return *this;
-   }
+    // Copy assignment
+    Collection<T> &operator=(const Collection<T> &other)
+    {
+        assign(other);
+        return *this;
+    }
 
-   // Destructor
-   ~Collection() { this->clear(); }
+    // Move constructor
+    Collection(Collection<T> &&other) noexcept { moveFrom(std::move(other)); }
 
-   //
-   // Set the pointer to a prototype object of type T that can be used
-   // for construction of new items in the collection without constant
-   // instantiation of temporaries just for the purpose of passing into
-   // methods of this class.
-   // Ownership of the prototype is *not* assumed by the collection.
-   //
-   void setPrototype(const T *pPrototype) { prototype = pPrototype; }
-   const T *getPrototype() const { return prototype; }
+    // Move assignment
+    Collection<T> &operator=(Collection<T> &&other) noexcept
+    {
+        moveFrom(std::move(other));
+        return *this;
+    }
 
-   //
-   // Empties the collection and frees its storage.
-   //
-   void clear()
-   {
-      if(this->ptrArray)
-      {
-         // manually call all destructors
-         for(size_t i = 0; i < this->length; i++)
-            this->ptrArray[i].~T();
-      }
-      this->baseClear();
-   }
-   
-   //
-   // Marks the collection as empty but doesn't free the storage.
-   //
-   void makeEmpty()
-   {
-      if(this->ptrArray)
-      {
-         // manually call all destructors
-         for(size_t i = 0; i < this->length; i++)
-            this->ptrArray[i].~T();
+    // Destructor
+    ~Collection() { this->clear(); }
 
-         memset(static_cast<void *>(this->ptrArray), 0, this->numalloc * sizeof(T));
-      }
-      this->length = this->wrapiterator = 0;
-   }
+    //
+    // Set the pointer to a prototype object of type T that can be used
+    // for construction of new items in the collection without constant
+    // instantiation of temporaries just for the purpose of passing into
+    // methods of this class.
+    // Ownership of the prototype is *not* assumed by the collection.
+    //
+    void     setPrototype(const T *pPrototype) { prototype = pPrototype; }
+    const T *getPrototype() const { return prototype; }
 
-   //
-   // Adds a new item to the end of the collection.
-   //
-   void add(const T &newItem)
-   {
-      if(this->length >= this->numalloc)
-      {
-         size_t newnumalloc = this->numalloc + (this->length ? this->length : 32);
-
-         if(newnumalloc > this->numalloc)
-         {
-            T *newItems = ecalloc(T *, newnumalloc, sizeof(T));
+    //
+    // Empties the collection and frees its storage.
+    //
+    void clear()
+    {
+        if(this->ptrArray)
+        {
+            // manually call all destructors
             for(size_t i = 0; i < this->length; i++)
-            {
-               ::new (&newItems[i]) T(std::move(this->ptrArray[i]));
-               this->ptrArray[i].~T();
-            }
-            efree(this->ptrArray);
-            this->ptrArray = newItems;
-            this->numalloc = newnumalloc;
-         }
-      }
-      
-      // placement copy construct new item
-      ::new (&this->ptrArray[this->length]) T(newItem);
-      
-      ++this->length;
-   }
-   void add(T &&newItem)
-   {
-      if(this->length >= this->numalloc)
-      {
-         size_t newnumalloc = this->numalloc + (this->length ? this->length : 32);
+                this->ptrArray[i].~T();
+        }
+        this->baseClear();
+    }
 
-         if(newnumalloc > this->numalloc)
-         {
-            T *newItems = ecalloc(T *, newnumalloc, sizeof(T));
+    //
+    // Marks the collection as empty but doesn't free the storage.
+    //
+    void makeEmpty()
+    {
+        if(this->ptrArray)
+        {
+            // manually call all destructors
             for(size_t i = 0; i < this->length; i++)
+                this->ptrArray[i].~T();
+
+            memset(static_cast<void *>(this->ptrArray), 0, this->numalloc * sizeof(T));
+        }
+        this->length = this->wrapiterator = 0;
+    }
+
+    //
+    // Adds a new item to the end of the collection.
+    //
+    void add(const T &newItem)
+    {
+        if(this->length >= this->numalloc)
+        {
+            size_t newnumalloc = this->numalloc + (this->length ? this->length : 32);
+
+            if(newnumalloc > this->numalloc)
             {
-               ::new (&newItems[i]) T(std::move(this->ptrArray[i]));
-               this->ptrArray[i].~T();
+                T *newItems = ecalloc(T *, newnumalloc, sizeof(T));
+                for(size_t i = 0; i < this->length; i++)
+                {
+                    ::new(&newItems[i]) T(std::move(this->ptrArray[i]));
+                    this->ptrArray[i].~T();
+                }
+                efree(this->ptrArray);
+                this->ptrArray = newItems;
+                this->numalloc = newnumalloc;
             }
-            efree(this->ptrArray);
-            this->ptrArray = newItems;
-            this->numalloc = newnumalloc;
-         }
-      }
+        }
 
-      // placement copy construct new item
-      ::new (&this->ptrArray[this->length]) T(std::move(newItem));
+        // placement copy construct new item
+        ::new(&this->ptrArray[this->length]) T(newItem);
 
-      ++this->length;
-   }
+        ++this->length;
+    }
+    void add(T &&newItem)
+    {
+        if(this->length >= this->numalloc)
+        {
+            size_t newnumalloc = this->numalloc + (this->length ? this->length : 32);
 
-   //
-   // Adds a new item to the end of the collection, using the
-   // prototype as the copy source - the prototype must be valid!
-   //
-   void add()
-   {
-      if(!prototype)
-         I_Error("Collection::add: invalid prototype object\n");
+            if(newnumalloc > this->numalloc)
+            {
+                T *newItems = ecalloc(T *, newnumalloc, sizeof(T));
+                for(size_t i = 0; i < this->length; i++)
+                {
+                    ::new(&newItems[i]) T(std::move(this->ptrArray[i]));
+                    this->ptrArray[i].~T();
+                }
+                efree(this->ptrArray);
+                this->ptrArray = newItems;
+                this->numalloc = newnumalloc;
+            }
+        }
 
-      add(*prototype);
-   }
+        // placement copy construct new item
+        ::new(&this->ptrArray[this->length]) T(std::move(newItem));
 
-   //
-   // Adds a new item to the end of the collection, using the prototype
-   // as the copy source - must have a valid prototype!
-   //
-   T &addNew()
-   {
-      add();
-      return this->ptrArray[this->length - 1];
-   }
+        ++this->length;
+    }
 
-   //
-   // Returns the last item and decrements the length.
-   //
-   const T &pop()
-   {
-      if(!this->ptrArray || !this->length)
-         I_Error("Collection::pop: array underflow\n");
+    //
+    // Adds a new item to the end of the collection, using the
+    // prototype as the copy source - the prototype must be valid!
+    //
+    void add()
+    {
+        if(!prototype)
+            I_Error("Collection::add: invalid prototype object\n");
 
-      const T &ret = this->ptrArray[--this->length];
-      this->checkWrapIterator();
+        add(*prototype);
+    }
 
-      return ret;
-   }
+    //
+    // Adds a new item to the end of the collection, using the prototype
+    // as the copy source - must have a valid prototype!
+    //
+    T &addNew()
+    {
+        add();
+        return this->ptrArray[this->length - 1];
+    }
 };
 
 #endif

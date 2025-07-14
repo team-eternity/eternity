@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,13 +18,13 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//   New dynamic TerrainTypes system. Inspired heavily by zdoom, but
-//   all-original code.
+// Purpose: New dynamic TerrainTypes system. Inspired heavily by ZDoom, but
+// all-original code.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley
+//
 
 #ifndef E_TTYPES_H__
 #define E_TTYPES_H__
@@ -34,9 +33,9 @@
 #include "doomtype.h"
 #include "m_fixed.h"
 
-class  Mobj;
 struct particle_t;
 struct sector_t;
+class Mobj;
 
 #ifdef NEED_EDF_DEFINITIONS
 
@@ -45,11 +44,11 @@ constexpr const char EDF_SEC_TERRAIN[]     = "terrain";
 constexpr const char EDF_SEC_FLOOR[]       = "floor";
 constexpr const char EDF_SEC_SPLASHDELTA[] = "splashdelta";
 constexpr const char EDF_SEC_TERDELTA[]    = "terraindelta";
-extern cfg_opt_t edf_splash_opts[];
-extern cfg_opt_t edf_spldelta_opts[];
-extern cfg_opt_t edf_terrn_opts[];
-extern cfg_opt_t edf_terdelta_opts[];
-extern cfg_opt_t edf_floor_opts[];
+extern cfg_opt_t     edf_splash_opts[];
+extern cfg_opt_t     edf_spldelta_opts[];
+extern cfg_opt_t     edf_terrn_opts[];
+extern cfg_opt_t     edf_terdelta_opts[];
+extern cfg_opt_t     edf_floor_opts[];
 
 void E_ProcessTerrainTypes(cfg_t *cfg);
 
@@ -57,46 +56,46 @@ void E_ProcessTerrainTypes(cfg_t *cfg);
 
 struct ETerrainSplash
 {
-   int smallclass;        // mobjtype used for small splash
-   int smallclip;         // amount of floorclip to apply to small splash
-   char smallsound[129];  // sound to play for small splash
-   
-   int baseclass;         // mobjtype used for normal splash
-   int chunkclass;        // mobjtype used for normal splash chunk
-   int chunkxvelshift;    // chunk's x velocity factor
-   int chunkyvelshift;    // chunk's y velocity factor
-   int chunkzvelshift;    // chunk's z velocity factor
-   fixed_t chunkbasezvel; // base amount of z velocity for chunk
-   char sound[129];       // sound to play for normal splash
+    int  smallclass;      // mobjtype used for small splash
+    int  smallclip;       // amount of floorclip to apply to small splash
+    char smallsound[129]; // sound to play for small splash
 
-   struct ETerrainSplash *next; // hash link
-   char   name[129];            // hash name
+    int     baseclass;      // mobjtype used for normal splash
+    int     chunkclass;     // mobjtype used for normal splash chunk
+    int     chunkxvelshift; // chunk's x velocity factor
+    int     chunkyvelshift; // chunk's y velocity factor
+    int     chunkzvelshift; // chunk's z velocity factor
+    fixed_t chunkbasezvel;  // base amount of z velocity for chunk
+    char    sound[129];     // sound to play for normal splash
+
+    struct ETerrainSplash *next;      // hash link
+    char                   name[129]; // hash name
 };
 
 struct ETerrain
 {
-   ETerrainSplash *splash;  // pointer to splash object
-   int damageamount;        // damage amount at each chance to hurt
-   int damagetype;          // MOD to use for damage
-   int damagetimemask;      // time mask for damage chances
-   fixed_t footclip;        // footclip amount
-   bool liquid;             // is liquid?
-   bool splashalert;        // normal splash causes P_NoiseAlert?
-   bool usepcolors;         // use particle colors?   
-   byte pcolor_1;           // particle color 1
-   byte pcolor_2;           // particle color 2
+    ETerrainSplash *splash;         // pointer to splash object
+    int             damageamount;   // damage amount at each chance to hurt
+    int             damagetype;     // MOD to use for damage
+    int             damagetimemask; // time mask for damage chances
+    fixed_t         footclip;       // footclip amount
+    bool            liquid;         // is liquid?
+    bool            splashalert;    // normal splash causes P_NoiseAlert?
+    bool            usepcolors;     // use particle colors?
+    byte            pcolor_1;       // particle color 1
+    byte            pcolor_2;       // particle color 2
 
-   int minversion;          // minimum demo version for this terrain
+    int minversion; // minimum demo version for this terrain
 
-   struct ETerrain *next;   // hash link
-   char name[129];          // hash name
+    struct ETerrain *next;      // hash link
+    char             name[129]; // hash name
 };
 
 struct EFloor
 {
-   char name[9];        // flat name
-   ETerrain *terrain;   // terrain definition
-   struct EFloor *next; // hash link
+    char           name[9]; // flat name
+    ETerrain      *terrain; // terrain definition
+    struct EFloor *next;    // hash link
 };
 
 void      E_InitTerrainTypes(void);

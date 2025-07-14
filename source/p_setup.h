@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Setup a game, startup stuff.
+// Purpose: Set up a game, startup stuff.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef P_SETUP_H__
 #define P_SETUP_H__
@@ -30,32 +28,31 @@
 #include "doomtype.h" // for byte
 #include "m_fixed.h"  // for fixed_t
 
-#define NUM_LINES_EXTRA 1  // number of extra lines for hackish purposes
+static constexpr int NUM_LINES_EXTRA = 1; // number of extra lines for hackish purposes
 
-class  Mobj;
 struct seg_t;
+class Mobj;
 
 // haleyjd 10/03/05: let P_CheckLevel determine the map format
 enum
 {
-   LEVEL_FORMAT_INVALID,
-   LEVEL_FORMAT_DOOM,
-   LEVEL_FORMAT_HEXEN,
-   LEVEL_FORMAT_PSX,
-   LEVEL_FORMAT_DOOM64,
-   // LEVEL_FORMAT_UDMF_[NAMESPACE] is the format for UDMF namespaces that need their own definition
-   LEVEL_FORMAT_UDMF_ETERNITY,
+    LEVEL_FORMAT_INVALID,
+    LEVEL_FORMAT_DOOM,
+    LEVEL_FORMAT_HEXEN,
+    LEVEL_FORMAT_PSX,
+    LEVEL_FORMAT_DOOM64,
+    // LEVEL_FORMAT_UDMF_[NAMESPACE] is the format for UDMF namespaces that need their own definition
+    LEVEL_FORMAT_UDMF_ETERNITY,
 };
 
 class WadDirectory;
 // IOANCH 20151213: modify P_CheckLevel to support one extra parameter
 struct maplumpindex_t;
- // haleyjd: now used in d_main.c
-int P_CheckLevel(const WadDirectory *dir, int lumpnum, 
-                 maplumpindex_t *mgla = nullptr, bool *udmf = nullptr);
+// haleyjd: now used in d_main.c
+int P_CheckLevel(const WadDirectory *dir, int lumpnum, maplumpindex_t *mgla = nullptr, bool *udmf = nullptr);
 
 void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask, skill_t skill);
-void P_Init();                   // Called by startup code.
+void P_Init(); // Called by startup code.
 void P_InitThingLists();
 
 // IOANCH 20151210: made these global so they can be accessed from e_udmf
@@ -68,35 +65,34 @@ void P_SetupLevelError(const char *msg, const char *levelname);
 void P_InitSector(sector_t *ss);
 void P_InitLineDef(line_t *ld);
 void P_PostProcessLineFlags(line_t *ld);
-void P_SetupSidedefTextures(side_t &sd, const char *bottomTexture, 
-                            const char *midTexture, const char *topTexture);
+void P_SetupSidedefTextures(side_t &sd, const char *bottomTexture, const char *midTexture, const char *topTexture);
 bool P_CheckThingDoomBan(int16_t type);
 void P_ConvertHereticThing(mapthing_t *mthing);
 void P_ConvertDoomExtendedSpawnNum(mapthing_t *mthing);
 
-extern byte     *rejectmatrix;   // for fast sight rejection
+extern byte *rejectmatrix; // for fast sight rejection
 
 // killough 3/1/98: change blockmap from "short" to "long" offsets:
-extern int     *blockmaplump;    // offsets in blockmap are from here
-extern int     *blockmap;
-extern int      bmapwidth;
-extern int      bmapheight;      // in mapblocks
-extern fixed_t  bmaporgx;
-extern fixed_t  bmaporgy;        // origin of block map
-extern Mobj   **blocklinks;      // for thing chains
-extern byte    *portalmap;       // haleyjd: for fast linked portal checks
-extern bool     skipblstart;     // MaxW: Skip initial blocklist short
+extern int    *blockmaplump; // offsets in blockmap are from here
+extern int    *blockmap;
+extern int     bmapwidth;
+extern int     bmapheight; // in mapblocks
+extern fixed_t bmaporgx;
+extern fixed_t bmaporgy;    // origin of block map
+extern Mobj  **blocklinks;  // for thing chains
+extern byte   *portalmap;   // haleyjd: for fast linked portal checks
+extern bool    skipblstart; // MaxW: Skip initial blocklist short
 
 // haleyjd 05/17/13: portalmap flags
 enum
 {
-   PMF_LINE    = 0x01, // block contains one or more line portals
-   PMF_FLOOR   = 0x02, // block contains one or more floor portals
-   PMF_CEILING = 0x04  // block contains one or more ceiling portals
+    PMF_LINE    = 0x01, // block contains one or more line portals
+    PMF_FLOOR   = 0x02, // block contains one or more floor portals
+    PMF_CEILING = 0x04  // block contains one or more ceiling portals
 };
 
-extern bool     newlevel;
-extern char     levelmapname[10];
+extern bool newlevel;
+extern char levelmapname[10];
 
 #if 0
 struct olo_t                                // Standard OLO stuff, put in WADs

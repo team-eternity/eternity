@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Sprite animation.
+// Purpose: Sprite animation.
+// Authors: James Haley, Max Waine, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef P_PSPR_H__
 #define P_PSPR_H__
@@ -50,17 +48,17 @@ struct sfxinfo_t;
 // handles maximum brightness (torches, muzzle flare, light sources)
 //
 
-#define FF_FULLBRIGHT   0x8000  /* flag in thing->frame */
-#define FF_FRAMEMASK    0x7fff
+static constexpr int FF_FULLBRIGHT = 0x8000; // flag in thing->frame
+static constexpr int FF_FRAMEMASK  = 0x7fff;
 
 // haleyjd 09/16/07: silencer weapon volume reduction
-#define WEAPON_VOLUME_SILENCED 50
+static constexpr int WEAPON_VOLUME_SILENCED = 50;
 
 // Defines needed for weapon codepointers
-#define LOWERSPEED   (FRACUNIT*6)
-#define RAISESPEED   (FRACUNIT*6)
-#define WEAPONBOTTOM (FRACUNIT*128)
-#define WEAPONTOP    (FRACUNIT*32)
+static constexpr fixed_t LOWERSPEED   = FRACUNIT * 6;
+static constexpr fixed_t RAISESPEED   = FRACUNIT * 6;
+static constexpr fixed_t WEAPONBOTTOM = FRACUNIT * 128;
+static constexpr fixed_t WEAPONTOP    = FRACUNIT * 32;
 
 //
 // Overlay psprites are scaled shapes
@@ -70,28 +68,25 @@ struct sfxinfo_t;
 
 enum psprnum_t
 {
-   ps_weapon,
-   ps_flash,
-   NUMPSPRITES
+    ps_weapon,
+    ps_flash,
+    NUMPSPRITES
 };
 
 struct pspdef_t
 {
-   state_t *state;       // a nullptr state means not active
-   int     tics;
-   v2fixed_t prevpos;
-   v2fixed_t playpos;
-   v2fixed_t renderpos;
-   int trans;
+    state_t  *state; // a nullptr state means not active
+    int       tics;
+    v2fixed_t prevpos;
+    v2fixed_t playpos;
+    v2fixed_t renderpos;
+    int       trans;
 
-   void backupPosition()
-   {
-      prevpos = renderpos;
-   }
+    void backupPosition() { prevpos = renderpos; }
 };
 
-int P_WeaponPreferred(int w1, int w2);
-extern int action_from_pspr;                     // haleyjd 05/21/08
+int        P_WeaponPreferred(int w1, int w2);
+extern int action_from_pspr; // haleyjd 05/21/08
 
 void P_SetPspritePtr(const player_t &player, pspdef_t *psp, statenum_t stnum);
 void P_SetPsprite(player_t &player, int position, statenum_t stnum);
@@ -103,15 +98,15 @@ int P_NextWeapon(const player_t &player, uint8_t *slotindex = nullptr);
 int P_PrevWeapon(const player_t &player, uint8_t *slotindex = nullptr);
 
 weapontype_t P_SwitchWeaponOldDoom(const player_t &player);
-bool P_CheckAmmo(player_t &player);
-void P_SubtractAmmo(const player_t &player, int compat_amt);
-void P_SubtractAmmoAmount(player_t &player, int amount);
-void P_SetupPsprites(player_t &curplayer);
-void P_MovePsprites(player_t &curplayer);
-void P_DropWeapon(player_t &player);
+bool         P_CheckAmmo(player_t &player);
+void         P_SubtractAmmo(const player_t &player, int compat_amt);
+void         P_SubtractAmmoAmount(player_t &player, int amount);
+void         P_SetupPsprites(player_t &curplayer);
+void         P_MovePsprites(player_t &curplayer);
+void         P_DropWeapon(player_t &player);
 
 extern fixed_t bulletslope;
-void P_BulletSlope(Mobj *mo);
+void           P_BulletSlope(Mobj *mo);
 
 weaponinfo_t *P_GetPlayerWeapon(const player_t &player, int slot);
 
@@ -121,7 +116,7 @@ void P_WeaponSound(Mobj *mo, int sfx_id);
 void P_WeaponRecoil(player_t &player);
 
 void A_ReFire(actionargs_t *actionargs);
-void A_FireSomething(player_t& player, int adder);
+void A_FireSomething(player_t &player, int adder);
 
 fixed_t P_DoAutoAim(Mobj *mo, angle_t angle, fixed_t distance);
 

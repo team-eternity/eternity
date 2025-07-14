@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Refresh/render internal state variables (global).
+// Purpose: Refresh/render internal state variables (global).
+// Authors: James Haley, Stephen McGranahan, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef R_STATE_H__
 #define R_STATE_H__
@@ -52,6 +50,8 @@ struct visplane_t;
 //  for rendering.
 //
 
+// clang-format off
+
 // needed for pre rendering (fracs)
 extern fixed_t *spritewidth;
 extern fixed_t *spriteoffset;
@@ -61,10 +61,10 @@ extern float   *spriteheight;
 // ioanch: portal sprite copying cache info
 struct spritespan_t
 {
-   float top;
-   float bottom;
-   float side;
-   fixed_t sideFixed;
+    float top;
+    float bottom;
+    float side;
+    fixed_t sideFixed;
 };
 extern spritespan_t **r_spritespan;
 
@@ -72,9 +72,9 @@ extern lighttable_t **colormaps;         // killough 3/20/98, 4/4/98
 
 extern int firstflat;
 
-// SoM: Because all textures and flats are stored in the same array, the 
+// SoM: Because all textures and flats are stored in the same array, the
 // translation tables are now combined.
-extern int         *texturetranslation;
+extern int *texturetranslation;
 
 // Sprite....
 extern int firstspritelump;
@@ -115,7 +115,7 @@ extern line_t           *lines;
 extern int              numsides;
 extern side_t           *sides;
 
-        // sf: for scripting
+// sf: for scripting
 extern int              numthings;
 
 //
@@ -126,6 +126,8 @@ extern camera_t         *viewcamera;
 extern angle_t          clipangle;
 extern int              viewangletox[FINEANGLES/2];
 extern angle_t          *xtoviewangle;  // killough 2/8/98
+
+// clang-format on
 
 #endif
 

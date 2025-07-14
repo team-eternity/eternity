@@ -1,7 +1,8 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2013 Raven Software, James Haley, et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
+//
+// Copyright (C) 2013 Raven Software
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,13 +17,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Description:
+// Purpose: Mobj-related line specials. Mostly from Hexen.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-// Mobj-related line specials. Mostly from Hexen.
-//
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 
@@ -56,56 +55,56 @@
 //
 int EV_ThingProjectile(const int *args, bool gravity)
 {
-   int tid;
-   angle_t angle;
-   int fineAngle;
-   fixed_t speed;
-   fixed_t vspeed;
-   mobjtype_t moType;
-   Mobj *mobj = nullptr, *newMobj;
-   mobjinfo_t *mi;
-   bool success = false;
+    int         tid;
+    angle_t     angle;
+    int         fineAngle;
+    fixed_t     speed;
+    fixed_t     vspeed;
+    mobjtype_t  moType;
+    Mobj       *mobj = nullptr, *newMobj;
+    mobjinfo_t *mi;
+    bool        success = false;
 
-   tid    = args[0];
-   
-   if(args[1] >= 0 && args[1] < ACS_NUM_THINGTYPES)
-      moType = ACS_thingtypes[args[1]];
-   else
-      moType = UnknownThingType;
+    tid = args[0];
 
-   mi = mobjinfo[moType];
- 
-   // Don't spawn monsters if -nomonsters
-   if(nomonsters && (mi->flags & MF_COUNTKILL || mi->flags3 & MF3_KILLABLE))
-      return false;
+    if(args[1] >= 0 && args[1] < ACS_NUM_THINGTYPES)
+        moType = ACS_thingtypes[args[1]];
+    else
+        moType = UnknownThingType;
 
-   angle     = (angle_t)args[2] << 24;
-   fineAngle = angle >> ANGLETOFINESHIFT;
-   speed     = (fixed_t)args[3] << 13;
-   vspeed    = (fixed_t)args[4] << 13;
+    mi = mobjinfo[moType];
 
-   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
-   {
-      newMobj = P_SpawnMobj(mobj->x, mobj->y, mobj->z, moType);
-      if(newMobj->info->seesound)
-         S_StartSound(newMobj, newMobj->info->seesound);
-      P_SetTarget<Mobj>(&newMobj->target, mobj);
-      newMobj->angle   = angle;
-      newMobj->momx    = FixedMul(speed, finecosine[fineAngle]);
-      newMobj->momy    = FixedMul(speed, finesine[fineAngle]);
-      newMobj->momz    = vspeed;
-      // HEXEN TODO: ???
-      //newMobj->flags2 |= MF2_DROPPED; 
-      if(gravity)
-      {
-         newMobj->flags &= ~MF_NOGRAVITY;
-         newMobj->flags2 |= MF2_LOGRAV;
-      }
-      if(P_CheckMissileSpawn(newMobj))
-         success = true;
-   }
+    // Don't spawn monsters if -nomonsters
+    if(nomonsters && (mi->flags & MF_COUNTKILL || mi->flags3 & MF3_KILLABLE))
+        return false;
 
-   return success;
+    angle     = (angle_t)args[2] << 24;
+    fineAngle = angle >> ANGLETOFINESHIFT;
+    speed     = (fixed_t)args[3] << 13;
+    vspeed    = (fixed_t)args[4] << 13;
+
+    while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
+    {
+        newMobj = P_SpawnMobj(mobj->x, mobj->y, mobj->z, moType);
+        if(newMobj->info->seesound)
+            S_StartSound(newMobj, newMobj->info->seesound);
+        P_SetTarget<Mobj>(&newMobj->target, mobj);
+        newMobj->angle = angle;
+        newMobj->momx  = FixedMul(speed, finecosine[fineAngle]);
+        newMobj->momy  = FixedMul(speed, finesine[fineAngle]);
+        newMobj->momz  = vspeed;
+        // HEXEN TODO: ???
+        // newMobj->flags2 |= MF2_DROPPED;
+        if(gravity)
+        {
+            newMobj->flags  &= ~MF_NOGRAVITY;
+            newMobj->flags2 |= MF2_LOGRAV;
+        }
+        if(P_CheckMissileSpawn(newMobj))
+            success = true;
+    }
+
+    return success;
 }
 
 //
@@ -115,60 +114,59 @@ int EV_ThingProjectile(const int *args, bool gravity)
 //
 int EV_ThingSpawn(const int *args, bool fog)
 {
-   int tid, newtid;
-   angle_t angle;
-   Mobj *mobj = nullptr, *newMobj, *fogMobj;
-   mobjtype_t moType;
-   mobjinfo_t *mi;
-   bool success = false;
-   fixed_t z;
+    int         tid, newtid;
+    angle_t     angle;
+    Mobj       *mobj = nullptr, *newMobj, *fogMobj;
+    mobjtype_t  moType;
+    mobjinfo_t *mi;
+    bool        success = false;
+    fixed_t     z;
 
-   tid = args[0];
+    tid = args[0];
 
-   if(args[1] >= 0 && args[1] < ACS_NUM_THINGTYPES)
-      moType = ACS_thingtypes[args[1]];
-   else
-      moType = UnknownThingType;
+    if(args[1] >= 0 && args[1] < ACS_NUM_THINGTYPES)
+        moType = ACS_thingtypes[args[1]];
+    else
+        moType = UnknownThingType;
 
-   mi = mobjinfo[moType];
+    mi = mobjinfo[moType];
 
-   // Don't spawn monsters if -nomonsters
-   if(nomonsters && (mi->flags & MF_COUNTKILL || mi->flags3 & MF3_KILLABLE))
-      return false;
+    // Don't spawn monsters if -nomonsters
+    if(nomonsters && (mi->flags & MF_COUNTKILL || mi->flags3 & MF3_KILLABLE))
+        return false;
 
-   angle = (angle_t)args[2] << 24;
-   newtid = args[3];
+    angle  = (angle_t)args[2] << 24;
+    newtid = args[3];
 
-   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
-   {
-      z = mobj->z;
+    while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
+    {
+        z = mobj->z;
 
-      newMobj = P_SpawnMobj(mobj->x, mobj->y, z, moType);
+        newMobj = P_SpawnMobj(mobj->x, mobj->y, z, moType);
 
-      if(!P_CheckPositionExt(newMobj, newMobj->x, newMobj->y, newMobj->z)) // Didn't fit?
-         newMobj->remove();
-      else
-      {
-         if(newtid)
-            P_AddThingTID(newMobj, newtid);
-         newMobj->angle = angle;
+        if(!P_CheckPositionExt(newMobj, newMobj->x, newMobj->y, newMobj->z)) // Didn't fit?
+            newMobj->remove();
+        else
+        {
+            if(newtid)
+                P_AddThingTID(newMobj, newtid);
+            newMobj->angle = angle;
 
-         if(fog)
-         {
-            fogMobj = P_SpawnMobj(mobj->x, mobj->y,
-                                  mobj->z + GameModeInfo->teleFogHeight,
-                                  E_SafeThingName(GameModeInfo->teleFogType));
-            S_StartSound(fogMobj, GameModeInfo->teleSound);
-         }
+            if(fog)
+            {
+                fogMobj = P_SpawnMobj(mobj->x, mobj->y, mobj->z + GameModeInfo->teleFogHeight,
+                                      E_SafeThingName(GameModeInfo->teleFogType));
+                S_StartSound(fogMobj, GameModeInfo->teleSound);
+            }
 
-         // don't item-respawn
-         newMobj->flags3 |= MF3_NOITEMRESP;
+            // don't item-respawn
+            newMobj->flags3 |= MF3_NOITEMRESP;
 
-         success = true;
-      }
-   }
+            success = true;
+        }
+    }
 
-   return success;
+    return success;
 }
 
 //
@@ -178,32 +176,32 @@ int EV_ThingSpawn(const int *args, bool fog)
 //
 int EV_ThingActivate(int tid)
 {
-   Mobj *mobj = nullptr;
-   int success = 0;
+    Mobj *mobj    = nullptr;
+    int   success = 0;
 
-   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
-   {
-      if((mobj->flags & MF_COUNTKILL) || (mobj->flags3 & MF3_KILLABLE))
-      {
-         if(mobj->flags2 & MF2_DORMANT)
-         {
-            mobj->flags2 &= ~MF2_DORMANT;
-            mobj->tics = 1;
-            success = 1;
-         }
-      }
+    while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
+    {
+        if((mobj->flags & MF_COUNTKILL) || (mobj->flags3 & MF3_KILLABLE))
+        {
+            if(mobj->flags2 & MF2_DORMANT)
+            {
+                mobj->flags2 &= ~MF2_DORMANT;
+                mobj->tics    = 1;
+                success       = 1;
+            }
+        }
 
-      // HEXEN TODO: crazy special-case behaviors for spikes and bells...
+        // HEXEN TODO: crazy special-case behaviors for spikes and bells...
 
-      if(mobj->info->activestate != NullStateNum)
-         P_SetMobjState(mobj, mobj->info->activestate);
-      S_StartSound(mobj, mobj->info->activatesound);
+        if(mobj->info->activestate != NullStateNum)
+            P_SetMobjState(mobj, mobj->info->activestate);
+        S_StartSound(mobj, mobj->info->activatesound);
 
-      if(mobj->info->activestate || mobj->info->activatesound)
-         success = 1; // successful if anything actually happened
-   }
+        if(mobj->info->activestate || mobj->info->activatesound)
+            success = 1; // successful if anything actually happened
+    }
 
-   return success;
+    return success;
 }
 
 //
@@ -213,32 +211,32 @@ int EV_ThingActivate(int tid)
 //
 int EV_ThingDeactivate(int tid)
 {
-   Mobj *mobj = nullptr;
-   int success = 0;
+    Mobj *mobj    = nullptr;
+    int   success = 0;
 
-   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
-   {
-      if((mobj->flags & MF_COUNTKILL) || (mobj->flags3 & MF3_KILLABLE))
-      {
-         if(!(mobj->flags2 & MF2_DORMANT))
-         {
-            mobj->flags2 |= MF2_DORMANT;
-            mobj->tics = -1;
-            success = 1;
-         }
-      }
+    while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
+    {
+        if((mobj->flags & MF_COUNTKILL) || (mobj->flags3 & MF3_KILLABLE))
+        {
+            if(!(mobj->flags2 & MF2_DORMANT))
+            {
+                mobj->flags2 |= MF2_DORMANT;
+                mobj->tics    = -1;
+                success       = 1;
+            }
+        }
 
-      // HEXEN TODO: crazy special-case behavior for spikes...
+        // HEXEN TODO: crazy special-case behavior for spikes...
 
-      if(mobj->info->inactivestate != NullStateNum)
-         P_SetMobjState(mobj, mobj->info->inactivestate);
-      S_StartSound(mobj, mobj->info->deactivatesound);
+        if(mobj->info->inactivestate != NullStateNum)
+            P_SetMobjState(mobj, mobj->info->inactivestate);
+        S_StartSound(mobj, mobj->info->deactivatesound);
 
-      if(mobj->info->inactivestate || mobj->info->deactivatesound)
-         success = 1; // successful if anything actually happened
-   }
+        if(mobj->info->inactivestate || mobj->info->deactivatesound)
+            success = 1; // successful if anything actually happened
+    }
 
-   return success;
+    return success;
 }
 
 //
@@ -249,23 +247,23 @@ int EV_ThingDeactivate(int tid)
 //
 int EV_ThingChangeTID(Mobj *actor, int oldtid, int newtid)
 {
-   Mobj   *mo;
-   Mobj   *next   = nullptr;
-   bool    found;
+    Mobj *mo;
+    Mobj *next = nullptr;
+    bool  found;
 
-   mo    = P_FindMobjFromTID(oldtid, nullptr, actor);
-   found = mo != nullptr;
-   while(mo)
-   {
-      // Find next Mobj before changing TID.
-      next = P_FindMobjFromTID(oldtid, mo, actor);
+    mo    = P_FindMobjFromTID(oldtid, nullptr, actor);
+    found = mo != nullptr;
+    while(mo)
+    {
+        // Find next Mobj before changing TID.
+        next = P_FindMobjFromTID(oldtid, mo, actor);
 
-      P_RemoveThingTID(mo);
-      P_AddThingTID(mo, newtid);
-      mo = next;
-   }
+        P_RemoveThingTID(mo);
+        P_AddThingTID(mo, newtid);
+        mo = next;
+    }
 
-   return found;
+    return found;
 }
 
 //
@@ -275,17 +273,17 @@ int EV_ThingChangeTID(Mobj *actor, int oldtid, int newtid)
 //
 int EV_ThingRaise(Mobj *actor, int tid)
 {
-   Mobj *mobj = nullptr;
-   int success = 0;
-   while((mobj = P_FindMobjFromTID(tid, mobj, actor)))
-   {
-      if(!P_ThingIsCorpse(mobj) || !P_CheckCorpseRaiseSpace(mobj))
-         continue;
-      // no raiser allowed, no friendliness transferred
-      P_RaiseCorpse(mobj, nullptr, sfx_slop); 
-      success = 1;
-   }
-   return success;
+    Mobj *mobj    = nullptr;
+    int   success = 0;
+    while((mobj = P_FindMobjFromTID(tid, mobj, actor)))
+    {
+        if(!P_ThingIsCorpse(mobj) || !P_CheckCorpseRaiseSpace(mobj))
+            continue;
+        // no raiser allowed, no friendliness transferred
+        P_RaiseCorpse(mobj, nullptr, sfx_slop);
+        success = 1;
+    }
+    return success;
 }
 
 //
@@ -295,14 +293,14 @@ int EV_ThingRaise(Mobj *actor, int tid)
 //
 int EV_ThingStop(Mobj *actor, int tid)
 {
-   Mobj *mobj = nullptr;
-   int success = 0;
-   while((mobj = P_FindMobjFromTID(tid, mobj, actor)))
-   {
-      mobj->momx = mobj->momy = mobj->momz = 0; // same as A_Stop
-      success = 1;
-   }
-   return success;
+    Mobj *mobj    = nullptr;
+    int   success = 0;
+    while((mobj = P_FindMobjFromTID(tid, mobj, actor)))
+    {
+        mobj->momx = mobj->momy = mobj->momz = 0; // same as A_Stop
+        success                              = 1;
+    }
+    return success;
 }
 
 //
@@ -312,34 +310,34 @@ int EV_ThingStop(Mobj *actor, int tid)
 //
 int EV_ThrustThing(Mobj *actor, int side, int byteangle, int ispeed, int tid)
 {
-   // Hexen format maps cannot have ExtraData, and in Hexen activation is only
-   // done from the front side, so keep compatible with that. Otherwise, in
-   // ExtraData-possible maps and eventually UDMF, the author can choose.
-   
-   // args[2] is reserved. In the ZDoom equivalent, it has something to do with
-   // setting huge speeds (> 30.0)
+    // Hexen format maps cannot have ExtraData, and in Hexen activation is only
+    // done from the front side, so keep compatible with that. Otherwise, in
+    // ExtraData-possible maps and eventually UDMF, the author can choose.
 
-   int success = 0;
+    // args[2] is reserved. In the ZDoom equivalent, it has something to do with
+    // setting huge speeds (> 30.0)
 
-   // Either thrust if not compatible (i.e. modern) or only if the front
-   // side is touched (in Hexen). Back side will have no effect in plain Hexen
-   // maps.
-   if(!P_LevelIsVanillaHexen() || side == 0)
-   {
-      Mobj *mobj = nullptr;
+    int success = 0;
 
-      angle_t angle = byteangle * (ANG90 / 64);
-      fixed_t speed = ispeed << FRACBITS;
+    // Either thrust if not compatible (i.e. modern) or only if the front
+    // side is touched (in Hexen). Back side will have no effect in plain Hexen
+    // maps.
+    if(!P_LevelIsVanillaHexen() || side == 0)
+    {
+        Mobj *mobj = nullptr;
 
-      // tid argument is also in ZDoom
+        angle_t angle = byteangle * (ANG90 / 64);
+        fixed_t speed = ispeed << FRACBITS;
 
-      while((mobj = P_FindMobjFromTID(tid, mobj, actor)))
-      {
-         P_ThrustMobj(mobj, angle, speed);
-         success = 1;
-      }
-   }
-   return success;
+        // tid argument is also in ZDoom
+
+        while((mobj = P_FindMobjFromTID(tid, mobj, actor)))
+        {
+            P_ThrustMobj(mobj, angle, speed);
+            success = 1;
+        }
+    }
+    return success;
 }
 
 //
@@ -349,18 +347,18 @@ int EV_ThrustThing(Mobj *actor, int side, int byteangle, int ispeed, int tid)
 //
 int EV_ThrustThingZ(Mobj *actor, int tid, int ispeed, bool upDown, bool setAdd)
 {
-   fixed_t speed = ispeed << (FRACBITS - 2);
-   int sign = upDown ? -1 : 1;
+    fixed_t speed = ispeed << (FRACBITS - 2);
+    int     sign  = upDown ? -1 : 1;
 
-   int success = 0;
+    int success = 0;
 
-   Mobj *mobj = nullptr;
-   while((mobj = P_FindMobjFromTID(tid, mobj, actor)))
-   {
-      mobj->momz = (setAdd ? mobj->momz : 0) + speed * sign;
-      success = 1;
-   }
-   return success;
+    Mobj *mobj = nullptr;
+    while((mobj = P_FindMobjFromTID(tid, mobj, actor)))
+    {
+        mobj->momz = (setAdd ? mobj->momz : 0) + speed * sign;
+        success    = 1;
+    }
+    return success;
 }
 
 //
@@ -370,14 +368,14 @@ int EV_ThrustThingZ(Mobj *actor, int tid, int ispeed, bool upDown, bool setAdd)
 //
 int EV_DamageThing(Mobj *actor, int damage, int mod, int tid)
 {
-   Mobj *mobj = nullptr;
-   int success = 0;
-   while((mobj = P_FindMobjFromTID(tid, mobj, actor)))
-   {
-      P_DamageMobj(mobj, nullptr, nullptr, damage, mod);
-      success = 1;
-   }
-   return success;
+    Mobj *mobj    = nullptr;
+    int   success = 0;
+    while((mobj = P_FindMobjFromTID(tid, mobj, actor)))
+    {
+        P_DamageMobj(mobj, nullptr, nullptr, damage, mod);
+        success = 1;
+    }
+    return success;
 }
 
 //
@@ -387,61 +385,59 @@ int EV_DamageThing(Mobj *actor, int damage, int mod, int tid)
 //
 int EV_ThingDestroy(int tid, int flags, int sectortag)
 {
-   Mobj *mobj = nullptr;
-   int success = 0;
-   if(P_LevelIsVanillaHexen())   // Support vanilla Hexen behavior
-   {
-      while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
-      {
-         // Also support sector tags because it's harmless
-         if(mobj->flags & MF_SHOOTABLE && (!sectortag || mobj->subsector->sector->tag == sectortag))
-         {
-            P_DamageMobj(mobj, nullptr, nullptr, GOD_BREACH_DAMAGE, MOD_UNKNOWN);
-            success = 1;
-         }
-      }
-   }
-   else if(!tid && !sectortag)   // zero tagging: kill all monsters
-      success = M_NukeMonsters() > 0;
-   else
-   {
-      //
-      // Common function to kill iterated thing
-      //
-      auto killthing = [](Mobj *mobj, int sectortag, bool extreme)
-      {
-         if(!(mobj->flags & MF_SHOOTABLE) ||
-            (sectortag && mobj->subsector->sector->tag != sectortag))
-         {
-            return false;
-         }
-         int damage;
-         damage = extreme ? GOD_BREACH_DAMAGE : mobj->health;
-         P_DamageMobj(mobj, nullptr, nullptr, damage, MOD_UNKNOWN);
-         return true;
-      };
+    Mobj *mobj    = nullptr;
+    int   success = 0;
+    if(P_LevelIsVanillaHexen()) // Support vanilla Hexen behavior
+    {
+        while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
+        {
+            // Also support sector tags because it's harmless
+            if(mobj->flags & MF_SHOOTABLE && (!sectortag || mobj->subsector->sector->tag == sectortag))
+            {
+                P_DamageMobj(mobj, nullptr, nullptr, GOD_BREACH_DAMAGE, MOD_UNKNOWN);
+                success = 1;
+            }
+        }
+    }
+    else if(!tid && !sectortag) // zero tagging: kill all monsters
+        success = M_NukeMonsters() > 0;
+    else
+    {
+        //
+        // Common function to kill iterated thing
+        //
+        auto killthing = [](Mobj *mobj, int sectortag, bool extreme) {
+            if(!(mobj->flags & MF_SHOOTABLE) || (sectortag && mobj->subsector->sector->tag != sectortag))
+            {
+                return false;
+            }
+            int damage;
+            damage = extreme ? GOD_BREACH_DAMAGE : mobj->health;
+            P_DamageMobj(mobj, nullptr, nullptr, damage, MOD_UNKNOWN);
+            return true;
+        };
 
-      bool extreme = !!(flags & 1);
-      // Normal, GZDoom-compatible behavior
-      if(!tid)
-      {
-         for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
-         {
-            if(!(mobj = thinker_cast<Mobj *>(th)) || !killthing(mobj, sectortag, extreme))
-               continue;
-            success = 1;
-         }
-      }
-      else
-      {
-         while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
-         {
-            if(killthing(mobj, sectortag, extreme))
-               success = 1;
-         }
-      }
-   }
-   return success;
+        bool extreme = !!(flags & 1);
+        // Normal, GZDoom-compatible behavior
+        if(!tid)
+        {
+            for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+            {
+                if(!(mobj = thinker_cast<Mobj *>(th)) || !killthing(mobj, sectortag, extreme))
+                    continue;
+                success = 1;
+            }
+        }
+        else
+        {
+            while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
+            {
+                if(killthing(mobj, sectortag, extreme))
+                    success = 1;
+            }
+        }
+    }
+    return success;
 }
 
 //
@@ -451,21 +447,20 @@ int EV_ThingDestroy(int tid, int flags, int sectortag)
 //
 int EV_HealThing(Mobj *actor, int amount, int maxhealth)
 {
-   if(!actor || actor->health <= 0)
-      return 0;
+    if(!actor || actor->health <= 0)
+        return 0;
 
-   if(!maxhealth || !actor->player)
-   {
-      // If second arg is 0, or the activator isn't a player
-      // then set the maxhealth to the activator's spawning health or pclass maxhealth.
-      maxhealth = actor->player ? actor->player->pclass->maxhealth :
-            actor->getModifiedSpawnHealth();
-   }
-   else if(maxhealth == 1)
-      maxhealth = actor->player->pclass->superhealth;
+    if(!maxhealth || !actor->player)
+    {
+        // If second arg is 0, or the activator isn't a player
+        // then set the maxhealth to the activator's spawning health or pclass maxhealth.
+        maxhealth = actor->player ? actor->player->pclass->maxhealth : actor->getModifiedSpawnHealth();
+    }
+    else if(maxhealth == 1)
+        maxhealth = actor->player->pclass->superhealth;
 
-   // If the activator can be given health then activate the switch
-   return EV_DoHealThing(actor, amount, maxhealth) ? 1 : 0;
+    // If the activator can be given health then activate the switch
+    return EV_DoHealThing(actor, amount, maxhealth) ? 1 : 0;
 }
 
 //
@@ -473,34 +468,34 @@ int EV_HealThing(Mobj *actor, int amount, int maxhealth)
 //
 int EV_ThingRemove(int tid)
 {
-   Mobj *removed;
-   Mobj *mobj = nullptr;
-   mobj = P_FindMobjFromTID(tid, mobj, nullptr);
-   int rtn = 0;
-   while(mobj)
-   {
-      // don't attempt to remove player object because that would crash the game
-      // FIXME: removing voodoo dolls doesn't seem to work anyway
-      if(mobj->player && mobj->player->mo == mobj)
-      {
-         mobj = P_FindMobjFromTID(tid, mobj, nullptr);
-         continue;
-      }
+    Mobj *removed;
+    Mobj *mobj = nullptr;
+    mobj       = P_FindMobjFromTID(tid, mobj, nullptr);
+    int rtn    = 0;
+    while(mobj)
+    {
+        // don't attempt to remove player object because that would crash the game
+        // FIXME: removing voodoo dolls doesn't seem to work anyway
+        if(mobj->player && mobj->player->mo == mobj)
+        {
+            mobj = P_FindMobjFromTID(tid, mobj, nullptr);
+            continue;
+        }
 
-      // TODO: special handling for Hexen-like bridges
+        // TODO: special handling for Hexen-like bridges
 
-      removed = mobj;
-      mobj = P_FindMobjFromTID(tid, mobj, nullptr);
+        removed = mobj;
+        mobj    = P_FindMobjFromTID(tid, mobj, nullptr);
 
-      // clean up as best as we can
-      // FIXME: maybe P_NeutralizeForRemoval is better? Only change if absolutely needed or broken.
-      removed->health = 0;
-      removed->flags &= ~MF_SHOOTABLE;
-      removed->remove();
+        // clean up as best as we can
+        // FIXME: maybe P_NeutralizeForRemoval is better? Only change if absolutely needed or broken.
+        removed->health  = 0;
+        removed->flags  &= ~MF_SHOOTABLE;
+        removed->remove();
 
-      rtn = 1;
-   }
-   return rtn;
+        rtn = 1;
+    }
+    return rtn;
 }
 
 //=============================================================================
@@ -521,37 +516,37 @@ IMPLEMENT_THINKER_TYPE(LevelActionThinker)
 //
 void LevelActionThinker::Think()
 {
-   player_t *thePlayer = nullptr;
+    player_t *thePlayer = nullptr;
 
-   // Check for first living player
-   for(int i = 0; i < MAXPLAYERS; i++)
-   {
-      if(playeringame[i] && players[i].health > 0)
-      {
-         thePlayer = &players[i];
-         break;
-      }
-   }
-   if(!thePlayer)
-      return;
+    // Check for first living player
+    for(int i = 0; i < MAXPLAYERS; i++)
+    {
+        if(playeringame[i] && players[i].health > 0)
+        {
+            thePlayer = &players[i];
+            break;
+        }
+    }
+    if(!thePlayer)
+        return;
 
-   // Check if all monsters dead
-   Thinker *cap = &thinkerclasscap[th_enemies];
-   for(Thinker *th = cap->cnext; th != cap; th = th->cnext)
-   {
-      Mobj *mo;
+    // Check if all monsters dead
+    Thinker *cap = &thinkerclasscap[th_enemies];
+    for(Thinker *th = cap->cnext; th != cap; th = th->cnext)
+    {
+        Mobj *mo;
 
-      if((mo = thinker_cast<Mobj *>(th)))
-      {
-         if(mo->type == mobjtype && mo->health > 0)
-            return;
-      }
-   }
+        if((mo = thinker_cast<Mobj *>(th)))
+        {
+            if(mo->type == mobjtype && mo->health > 0)
+                return;
+        }
+    }
 
-   // Execute special
-   ev_action_t *action = EV_UDMFEternityActionForSpecial(special);
-   if(action && EV_ActivateAction(action, args, thePlayer->mo))
-      remove();
+    // Execute special
+    ev_action_t *action = EV_UDMFEternityActionForSpecial(special);
+    if(action && EV_ActivateAction(action, args, thePlayer->mo))
+        remove();
 }
 
 //
@@ -561,10 +556,10 @@ void LevelActionThinker::Think()
 //
 void LevelActionThinker::serialize(SaveArchive &arc)
 {
-   Super::serialize(arc);
-   arc << special;
-   Archive_MobjType(arc, mobjtype);
-   P_ArchiveArray(arc, args, NUMLINEARGS);
+    Super::serialize(arc);
+    arc << special;
+    Archive_MobjType(arc, mobjtype);
+    P_ArchiveArray(arc, args, NUMLINEARGS);
 }
 
 //
@@ -574,29 +569,29 @@ void LevelActionThinker::serialize(SaveArchive &arc)
 //
 void LevelActionThinker::Spawn(int pSpecial, int *pArgs, int pMobjType)
 {
-   auto lva = new LevelActionThinker();
+    auto lva = new LevelActionThinker();
 
-   lva->mobjtype = pMobjType;
-   lva->special  = pSpecial;
-   memcpy(lva->args, pArgs, sizeof(lva->args));
- 
-   lva->addThinker();
+    lva->mobjtype = pMobjType;
+    lva->special  = pSpecial;
+    memcpy(lva->args, pArgs, sizeof(lva->args));
+
+    lva->addThinker();
 }
 
 //
 // P_SpawnLevelActions
 //
-// Spawn all the levelactions specified in LevelInfo as LevelActionThinker 
+// Spawn all the levelactions specified in LevelInfo as LevelActionThinker
 // instances.
 //
 void P_SpawnLevelActions()
 {
-   for(auto action = LevelInfo.actions; action; action = action->next)
-   {
-      // boss-only actions are handled in A_BossDeath
-      if(!(action->flags & levelaction_t::BOSS_ONLY))
-         LevelActionThinker::Spawn(action->special, action->args, action->mobjtype);
-   }
+    for(auto action = LevelInfo.actions; action; action = action->next)
+    {
+        // boss-only actions are handled in A_BossDeath
+        if(!(action->flags & levelaction_t::BOSS_ONLY))
+            LevelActionThinker::Spawn(action->special, action->args, action->mobjtype);
+    }
 }
 
 // EOF

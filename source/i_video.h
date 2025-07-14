@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Hardware Abstraction Layer Video Interface
+// Purpose: Hardware abstraction layer video interface.
+// Authors: James Haley, Stephen McGranahan, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef I_VIDEO_H__
 #define I_VIDEO_H__
@@ -33,9 +31,9 @@ struct SDL_Window;
 
 enum class screentype_e : int
 {
-   WINDOWED,
-   FULLSCREEN_DESKTOP,
-   FULLSCREEN,
+    WINDOWED,
+    FULLSCREEN_DESKTOP,
+    FULLSCREEN,
 };
 
 //
@@ -46,18 +44,18 @@ enum class screentype_e : int
 class HALVideoDriver
 {
 protected:
-   virtual void SetPrimaryBuffer()        = 0;
-   virtual void UnsetPrimaryBuffer()      = 0;
+    virtual void SetPrimaryBuffer()   = 0;
+    virtual void UnsetPrimaryBuffer() = 0;
 
 public:
-   virtual void FinishUpdate()            = 0;
-   virtual void ReadScreen(byte *scr)     = 0;
-   virtual void SetPalette(byte *pal)     = 0;
-   virtual void ShutdownGraphics()        = 0;
-   virtual void ShutdownGraphicsPartway() = 0;
-   virtual bool InitGraphicsMode()        = 0;
+    virtual void FinishUpdate()            = 0;
+    virtual void ReadScreen(byte *scr)     = 0;
+    virtual void SetPalette(byte *pal)     = 0;
+    virtual void ShutdownGraphics()        = 0;
+    virtual void ShutdownGraphicsPartway() = 0;
+    virtual bool InitGraphicsMode()        = 0;
 
-   SDL_Window *window = nullptr;
+    SDL_Window *window = nullptr;
 };
 
 //
@@ -65,41 +63,38 @@ public:
 //
 struct Geom
 {
-   //
-   // Some fields may have neutral flags, as affected by other fields
-   //
-   enum class TriState
-   {
-      off,
-      on,
-      neutral
-   };
+    //
+    // Some fields may have neutral flags, as affected by other fields
+    //
+    enum class TriState
+    {
+        off,
+        on,
+        neutral
+    };
 
-   enum
-   {
-      minimumWidth = 320,
-      minimumHeight = 200,
-      fallbackWidth = 640,
-      fallbackHeight = 480,
-   };
+    enum
+    {
+        minimumWidth   = 320,
+        minimumHeight  = 200,
+        fallbackWidth  = 640,
+        fallbackHeight = 480,
+    };
 
-   Geom() = default;
-   Geom(const char *geom)
-   {
-      parse(geom);
-   }
+    Geom() = default;
+    Geom(const char *geom) { parse(geom); }
 
-   void parse(const char *geom);
-   static bool validateWidth(int width);
-   static bool validateHeight(int height);
-   qstring toString() const;
+    void        parse(const char *geom);
+    static bool validateWidth(int width);
+    static bool validateHeight(int height);
+    qstring     toString() const;
 
-   int width = fallbackWidth;
-   int height = fallbackHeight;
-   screentype_e screentype = screentype_e::WINDOWED;
-   TriState vsync = TriState::neutral;
-   bool hardware = false;
-   bool wantframe = true;
+    int          width      = fallbackWidth;
+    int          height     = fallbackHeight;
+    screentype_e screentype = screentype_e::WINDOWED;
+    TriState     vsync      = TriState::neutral;
+    bool         hardware   = false;
+    bool         wantframe  = true;
 };
 
 void I_StartTic();
@@ -129,7 +124,7 @@ int  I_VideoLetterboxOffset(int h, int hl);
 void I_ToggleFullscreen();
 bool I_IsViewOccluded();
 
-extern int use_vsync;  // killough 2/8/98: controls whether vsync is called
+extern int use_vsync; // killough 2/8/98: controls whether vsync is called
 
 // video modes
 
@@ -146,9 +141,9 @@ extern int   displaynum;
 // Driver enumeration
 enum halvdr_e
 {
-   VDR_SDLDEFAULT,
-   VDR_SDLGL2D,
-   VDR_MAXDRIVERS
+    VDR_SDLDEFAULT,
+    VDR_SDLGL2D,
+    VDR_MAXDRIVERS
 };
 
 extern const char *const i_videohelpstr;
@@ -156,8 +151,8 @@ extern const char *const i_videohelpstr;
 // Below here has been moved to i_input.c
 // haleyjd
 
-int I_DoomCode2ScanCode(int);   // killough
-int I_ScanCode2DoomCode(int);   // killough
+int I_DoomCode2ScanCode(int); // killough
+int I_ScanCode2DoomCode(int); // killough
 
 #endif
 

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Items: key cards, artifacts, weapon, ammunition.
-//
-//-----------------------------------------------------------------------------
+// Purpose: Items: key cards, artifacts, weapon, ammunition.
+// Authors: James Haley, Max Waine, Ioan Chera
 
 #ifndef D_ITEMS_H__
 #define D_ITEMS_H__
@@ -38,23 +35,23 @@ class qstring;
 //
 enum wepflags_e : unsigned int
 {
-   WPF_NOTHRUST       = 0x00000001, // doesn't thrust Mobj's
-   WPF_NOHITGHOSTS    = 0x00000002, // tracer-based weapon can't hit ghosts
-   WPF_NOTSHAREWARE   = 0x00000004, // not in shareware gamemodes
-   WPF_DISABLEAPS     = 0x00000008, // disables ammo-per-shot field
-   WPF_SILENCEABLE    = 0x00000010, // weapon supports silencer powerup
-   WPF_SILENT         = 0x00000020, // weapon is always silent
-   WPF_NOAUTOFIRE     = 0x00000040, // weapon won't autofire in A_WeaponReady
-   WPF_FLEEMELEE      = 0x00000080, // monsters consider it a melee weapon
-   WPF_ALWAYSRECOIL   = 0x00000100, // weapon always has recoil
-   WPF_NOHAPTICRECOIL = 0x00000200, // use no recoil-style haptic effect
-   WPF_READYSNDHALF   = 0x00000400, // readysound has 50% chance to play
-   WPF_AUTOSWITCHFROM = 0x00000800, // switches away if ammo for a better wep is picked up
-   WPF_POWEREDUP      = 0x00001000, // powered up weapon (tomed weapons in Heretic)
-   WPF_FORCETOREADY   = 0x00002000, // force to readystate on receiving/losing pw_weaponlevel2
-   WPF_PHOENIXRESET   = 0x00004000, // Phoenix rod tome reset behaviour
-   WPF_DEPOWERSWITCH  = 0x00008000, // visually switch weapon when tome of power runs out
-   WPF_NOAUTOSWITCHTO = 0x00010000, // cannot be automatically switched to
+    WPF_NOTHRUST       = 0x00000001, // doesn't thrust Mobj's
+    WPF_NOHITGHOSTS    = 0x00000002, // tracer-based weapon can't hit ghosts
+    WPF_NOTSHAREWARE   = 0x00000004, // not in shareware gamemodes
+    WPF_DISABLEAPS     = 0x00000008, // disables ammo-per-shot field
+    WPF_SILENCEABLE    = 0x00000010, // weapon supports silencer powerup
+    WPF_SILENT         = 0x00000020, // weapon is always silent
+    WPF_NOAUTOFIRE     = 0x00000040, // weapon won't autofire in A_WeaponReady
+    WPF_FLEEMELEE      = 0x00000080, // monsters consider it a melee weapon
+    WPF_ALWAYSRECOIL   = 0x00000100, // weapon always has recoil
+    WPF_NOHAPTICRECOIL = 0x00000200, // use no recoil-style haptic effect
+    WPF_READYSNDHALF   = 0x00000400, // readysound has 50% chance to play
+    WPF_AUTOSWITCHFROM = 0x00000800, // switches away if ammo for a better wep is picked up
+    WPF_POWEREDUP      = 0x00001000, // powered up weapon (tomed weapons in Heretic)
+    WPF_FORCETOREADY   = 0x00002000, // force to readystate on receiving/losing pw_weaponlevel2
+    WPF_PHOENIXRESET   = 0x00004000, // Phoenix rod tome reset behaviour
+    WPF_DEPOWERSWITCH  = 0x00008000, // visually switch weapon when tome of power runs out
+    WPF_NOAUTOSWITCHTO = 0x00010000, // cannot be automatically switched to
 };
 
 //
@@ -62,70 +59,70 @@ enum wepflags_e : unsigned int
 //
 enum wepinternalflags_e : uint8_t
 {
-   WIF_HASSORTORDER = 0x01, // has had a sort order assigned to it
-   WIF_INGLOBALSLOT = 0x02, // has been placed in the global weaponslots
-   WIF_SUPPRESSREADYSOUND = 0x04,   // for Dehacked chainsaw replacements
+    WIF_HASSORTORDER       = 0x01, // has had a sort order assigned to it
+    WIF_INGLOBALSLOT       = 0x02, // has been placed in the global weaponslots
+    WIF_SUPPRESSREADYSOUND = 0x04, // for Dehacked chainsaw replacements
 };
 
 // Weapon info: sprite frames, ammunition use.
 struct weaponinfo_t
 {
-   weapontype_t id;           // haleyjd 06/28/13: weapontype id number
-   const char  *name;         // haleyjd 06/29/13: name of weapon
-   int          dehnum;       // MaxW: 2017/12/30: DeHackEd number for fast access & compat.
+    weapontype_t id;     // haleyjd 06/28/13: weapontype id number
+    const char  *name;   // haleyjd 06/29/13: name of weapon
+    int          dehnum; // MaxW: 2017/12/30: DeHackEd number for fast access & compat.
 
-   MetaTable   *ammo;         // haleyjd 08/05/13: ammo artifact type
-   int          upstate;
-   int          downstate;
-   int          readystate;
-   int          atkstate;
-   int          flashstate;
-   int          holdstate;    // MaxW: 2018/01/01: state jumped to if fire is held
-   int          ammopershot;  // haleyjd 08/10/02: ammo per shot field
+    MetaTable *ammo; // haleyjd 08/05/13: ammo artifact type
+    int        upstate;
+    int        downstate;
+    int        readystate;
+    int        atkstate;
+    int        flashstate;
+    int        holdstate;   // MaxW: 2018/01/01: state jumped to if fire is held
+    int        ammopershot; // haleyjd 08/10/02: ammo per shot field
 
-   MetaTable   *ammo_alt;         // Alt ammo artifact type
-   int          atkstate_alt;     // Alt attack state
-   int          flashstate_alt;   // Alt flash state
-   int          holdstate_alt;    // Alt hold state
-   int          ammopershot_alt;  // Alt ammo per shot
+    MetaTable *ammo_alt;        // Alt ammo artifact type
+    int        atkstate_alt;    // Alt attack state
+    int        flashstate_alt;  // Alt flash state
+    int        holdstate_alt;   // Alt hold state
+    int        ammopershot_alt; // Alt ammo per shot
 
-   int          reloadstate; // Reload state
-   int          zoomstate;   // Zoom state
-   int          userstate_1; // The four user states
-   int          userstate_2;
-   int          userstate_3;
-   int          userstate_4;
+    int reloadstate; // Reload state
+    int zoomstate;   // Zoom state
+    int userstate_1; // The four user states
+    int userstate_2;
+    int userstate_3;
+    int userstate_4;
 
-   int           defaultslotindex;
-   fixed_t       defaultslotrank;
+    int     defaultslotindex;
+    fixed_t defaultslotrank;
 
-   fixed_t       sortorder;   // sort order (lower is higher priority)
-   weaponinfo_t *sisterWeapon; // sister weapon (e.g.: tomed variant, Strife-style "alt-fire")
+    fixed_t       sortorder;    // sort order (lower is higher priority)
+    weaponinfo_t *sisterWeapon; // sister weapon (e.g.: tomed variant, Strife-style "alt-fire")
 
-   // haleyjd 09/11/07: new fields in prep. for dynamic weapons
-   unsigned int flags;
-   uint8_t      intflags;
-   int          mod;
-   fixed_t      recoil;
-   int          hapticrecoil; // haptic recoil strength, from 1 to 10
-   int          haptictime;   // haptic recoil duration, from 1 to 10
-   const char  *upsound;      // sound made when weapon is being brought up
-   const char  *readysound;   // sound made when weapon is ready
+    // haleyjd 09/11/07: new fields in prep. for dynamic weapons
+    unsigned int flags;
+    uint8_t      intflags;
+    int          mod;
+    fixed_t      recoil;
+    int          hapticrecoil; // haptic recoil strength, from 1 to 10
+    int          haptictime;   // haptic recoil duration, from 1 to 10
+    const char  *upsound;      // sound made when weapon is being brought up
+    const char  *readysound;   // sound made when weapon is ready
 
-   int fullscreenoffset;   // how much to vertically offset a weapon on fullscreen (for Heretic)
+    int fullscreenoffset; // how much to vertically offset a weapon on fullscreen (for Heretic)
 
-   itemeffect_t *tracker;     // tracker artifact for weapon
+    itemeffect_t *tracker; // tracker artifact for weapon
 
-   // EDF hashing
-   DLListItem<weaponinfo_t> idlinks;   // hash by id
-   DLListItem<weaponinfo_t> namelinks; // hash by name
-   DLListItem<weaponinfo_t> dehlinks;  // hash by dehnum
+    // EDF hashing
+    DLListItem<weaponinfo_t> idlinks;   // hash by id
+    DLListItem<weaponinfo_t> namelinks; // hash by name
+    DLListItem<weaponinfo_t> dehlinks;  // hash by dehnum
 
-   int   generation;   // EDF generation number
+    int generation; // EDF generation number
 
-   MetaTable *meta; // metatable
+    MetaTable *meta; // metatable
 
-   weaponinfo_t *parent; // inheritance chain for DECORATE-like semantics where required
+    weaponinfo_t *parent; // inheritance chain for DECORATE-like semantics where required
 };
 
 // haleyjd: temporary hack

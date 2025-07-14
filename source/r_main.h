@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Main rendering module
+// Purpose: Main rendering module.
+// Authors: James Haley, Stephen McGranahan, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef R_MAIN_H__
 #define R_MAIN_H__
@@ -46,26 +44,26 @@ struct cmapcontext_t;
 // POV related.
 //
 
-extern int      centerx;
-extern int      centery;
-extern fixed_t  centerxfrac;
-extern fixed_t  centeryfrac;
+extern int     centerx;
+extern int     centery;
+extern fixed_t centerxfrac;
+extern fixed_t centeryfrac;
 
-extern int      validcount;
-extern int      linecount;
-extern int      loopcount;
+extern int validcount;
+extern int linecount;
+extern int loopcount;
 
-extern bool     showpsprites;
-extern bool     centerfire;
-extern bool     r_boomcolormaps;
+extern bool showpsprites;
+extern bool centerfire;
+extern bool r_boomcolormaps;
 
 // haleyjd 11/21/09: enumeration for R_DoomTLStyle
 enum
 {
-   R_TLSTYLE_NONE,
-   R_TLSTYLE_BOOM,
-   R_TLSTYLE_NEW,
-   R_TLSTYLE_NUM
+    R_TLSTYLE_NONE,
+    R_TLSTYLE_BOOM,
+    R_TLSTYLE_NEW,
+    R_TLSTYLE_NUM
 };
 
 extern int r_tlstyle;
@@ -77,10 +75,10 @@ void R_ResetTrans();
 // Enumeration for sprite projection style
 enum
 {
-   R_SPRPROJSTYLE_DEFAULT,
-   R_SPRPROJSTYLE_FAST,
-   R_SPRPROJSTYLE_THOROUGH,
-   R_SPRPROJSTYLE_NUM
+    R_SPRPROJSTYLE_DEFAULT,
+    R_SPRPROJSTYLE_FAST,
+    R_SPRPROJSTYLE_THOROUGH,
+    R_SPRPROJSTYLE_NUM
 };
 
 inline int r_sprprojstyle;
@@ -96,22 +94,22 @@ struct subsector_t;
 struct sector_t;
 struct viewpoint_t;
 
-int R_PointOnSideClassic(fixed_t x, fixed_t y, const node_t *node);
-int R_PointOnSidePrecise(fixed_t x, fixed_t y, const node_t *node);
+int        R_PointOnSideClassic(fixed_t x, fixed_t y, const node_t *node);
+int        R_PointOnSidePrecise(fixed_t x, fixed_t y, const node_t *node);
 extern int (*R_PointOnSide)(fixed_t, fixed_t, const node_t *);
 
 int R_PointOnSegSide(fixed_t x, fixed_t y, const seg_t *line);
 
-int SlopeDiv(unsigned int num, unsigned int den);
-angle_t R_PointToAngle(const fixed_t viewx, const fixed_t viewy, const fixed_t x, const fixed_t y);
-angle_t R_PointToAngle2(fixed_t pviewx, fixed_t pviewy, fixed_t x, fixed_t y);
+int          SlopeDiv(unsigned int num, unsigned int den);
+angle_t      R_PointToAngle(const fixed_t viewx, const fixed_t viewy, const fixed_t x, const fixed_t y);
+angle_t      R_PointToAngle2(fixed_t pviewx, fixed_t pviewy, fixed_t x, fixed_t y);
 subsector_t *R_PointInSubsector(fixed_t x, fixed_t y);
-fixed_t R_GetLerp(bool ignorepause);
-void R_SectorColormap(cmapcontext_t &context, const viewpoint_t &viewpoint, const rendersector_t *s);
+fixed_t      R_GetLerp(bool ignorepause);
+void         R_SectorColormap(cmapcontext_t &context, const viewpoint_t &viewpoint, const rendersector_t *s);
 
 inline static subsector_t *R_PointInSubsector(v2fixed_t v)
 {
-   return R_PointInSubsector(v.x, v.y);
+    return R_PointInSubsector(v.x, v.y);
 }
 
 //
@@ -128,16 +126,16 @@ void R_RenderPlayerView(player_t *player, camera_t *viewcamera);
 
 //
 // R_ResetFOV
-// 
+//
 // SoM: Called by I_InitGraphicsMode when the video mode is changed.
 // Sets the base-line fov for the given screen ratio.
 //
 void R_ResetFOV(int width, int height);
 
-void R_Init();                           // Called by startup code.
-void R_SetViewSize(int blocks);          // Called by M_Responder.
+void R_Init();                  // Called by startup code.
+void R_SetViewSize(int blocks); // Called by M_Responder.
 
-void R_InitLightTables();                // killough 8/9/98
+void R_InitLightTables(); // killough 8/9/98
 
 extern bool setsizeneeded;
 // SoM
@@ -148,12 +146,13 @@ angle_t R_WadToAngle(int wadangle);
 
 extern int viewdir;
 
-#define NUMCOLUMNENGINES 1
-#define NUMSPANENGINES 1
-extern int r_column_engine_num;
-extern int r_span_engine_num;
+static constexpr int NUMCOLUMNENGINES = 1;
+static constexpr int NUMSPANENGINES   = 1;
+
+extern int             r_column_engine_num;
+extern int             r_span_engine_num;
 extern columndrawer_t *r_column_engine;
-extern spandrawer_t *r_span_engine;
+extern spandrawer_t   *r_span_engine;
 
 void R_SetColumnEngine();
 void R_SetSpanEngine();
@@ -163,36 +162,36 @@ extern const float PI;
 
 struct cb_view_t
 {
-   float pitch;
+    float pitch;
 
-   float width, height;
-   float xcenter, ycenter;
-   
-   float xfoc, yfoc, focratio;
-   float fov;
-   float tan;
+    float width, height;
+    float xcenter, ycenter;
 
-   float pspritexscale, pspriteyscale;
-   float pspriteystep;
+    float xfoc, yfoc, focratio;
+    float fov;
+    float tan;
 
-   fixed_t   lerp;   // haleyjd: linear interpolation factor
-   const sector_t *sector; // haleyjd: view sector, because of interpolation
+    float pspritexscale, pspriteyscale;
+    float pspriteystep;
+
+    fixed_t         lerp;   // haleyjd: linear interpolation factor
+    const sector_t *sector; // haleyjd: view sector, because of interpolation
 };
 
 // haleyjd 3/11/10: markflags
 enum
 {
-   SEG_MARKCEILING = 0x01,
-   SEG_MARKCPORTAL = 0x02,
-   SEG_MARKFLOOR   = 0x04,
-   SEG_MARKFPORTAL = 0x08,
-   
-   // SoM
-   SEG_MARKCOVERLAY = 0x10,
-   SEG_MARKFOVERLAY = 0x20,
+    SEG_MARKCEILING = 0x01,
+    SEG_MARKCPORTAL = 0x02,
+    SEG_MARKFLOOR   = 0x04,
+    SEG_MARKFPORTAL = 0x08,
 
-   // ioanch
-   SEG_MARK1SLPORTAL = 0x40,
+    // SoM
+    SEG_MARKCOVERLAY = 0x10,
+    SEG_MARKFOVERLAY = 0x20,
+
+    // ioanch
+    SEG_MARK1SLPORTAL = 0x40,
 };
 
 struct side_t;
@@ -201,67 +200,66 @@ struct portal_t;
 
 struct cb_seg_t
 {
-   int x1, x2;
-   float x1frac, x2frac;
+    int   x1, x2;
+    float x1frac, x2frac;
 
-   float toffset_base_x,   toffset_base_y;
-   float toffset_top_x,    toffset_top_y;
-   float toffset_mid_x,    toffset_mid_y;
-   float toffset_bottom_x, toffset_bottom_y;
+    float toffset_base_x, toffset_base_y;
+    float toffset_top_x, toffset_top_y;
+    float toffset_mid_x, toffset_mid_y;
+    float toffset_bottom_x, toffset_bottom_y;
 
-   float dist, dist2, diststep;
-   float len, len2, lenstep;
+    float dist, dist2, diststep;
+    float len, len2, lenstep;
 
-   float top, top2, topstep;
-   float high, high2, highstep;
-   float low, low2, lowstep;
-   float bottom, bottom2, bottomstep;
+    float top, top2, topstep;
+    float high, high2, highstep;
+    float low, low2, lowstep;
+    float bottom, bottom2, bottomstep;
 
-   bool twosided, clipsolid, maskedtex;
-   int16_t toptex, midtex, bottomtex;
+    bool    twosided, clipsolid, maskedtex;
+    int16_t toptex, midtex, bottomtex;
 
-   unsigned int markflags; // haleyjd 03/11/10
+    unsigned int markflags; // haleyjd 03/11/10
 
-   bool segtextured;
+    bool segtextured;
 
-   int toptexmid, midtexmid, bottomtexmid;
-   int toptexh, midtexh, bottomtexh;
+    int toptexmid, midtexmid, bottomtexmid;
+    int toptexh, midtexh, bottomtexh;
 
-   // The portal ignore flags. If a portal should be rendered even if the camera
-   // is on the backface of it...
-   bool f_portalignore, c_portalignore;
+    // The portal ignore flags. If a portal should be rendered even if the camera
+    // is on the backface of it...
+    bool f_portalignore, c_portalignore;
 
-   // 8 bit tables
-   const lighttable_t *const *walllights_top;
-   const lighttable_t *const *walllights_mid;
-   const lighttable_t *const *walllights_bottom;
+    // 8 bit tables
+    const lighttable_t *const *walllights_top;
+    const lighttable_t *const *walllights_mid;
+    const lighttable_t *const *walllights_bottom;
 
-   const side_t *side;
-   const rendersector_t *frontsec, *backsec;
-   Surfaces<visplane_t *> plane;
-   const seg_t *line;
+    const side_t          *side;
+    const rendersector_t  *frontsec, *backsec;
+    Surfaces<visplane_t *> plane;
+    const seg_t           *line;
 
-   Surfaces<const portal_t *> portal;
-   pwindow_t *l_window, *b_window, *t_window;
-   Surfaces<pwindow_t *> secwindow;   // surface windows
-   // ioanch: added b_window for bottom edge portal
+    Surfaces<const portal_t *> portal;
+    pwindow_t                 *l_window, *b_window, *t_window;
+    Surfaces<pwindow_t *>      secwindow; // surface windows
+    // ioanch: added b_window for bottom edge portal
 
-   // Extreme plane point Z for sloped sectors: used for sprite-clipping silhouettes.
-   fixed_t maxfrontfloor, minfrontceil, maxbackfloor, minbackceil;
+    // Extreme plane point Z for sloped sectors: used for sprite-clipping silhouettes.
+    fixed_t maxfrontfloor, minfrontceil, maxbackfloor, minbackceil;
 
-   // Skew-related values
-   float skew_top_step, skew_mid_step, skew_bottom_step;
-   float skew_top_baseoffset, skew_mid_baseoffset, skew_bottom_baseoffset;
+    // Skew-related values
+    float skew_top_step, skew_mid_step, skew_bottom_step;
+    float skew_top_baseoffset, skew_mid_baseoffset, skew_bottom_baseoffset;
 
-   // If nonzero, require f_sky1 rendering
-   int skyflat;
+    // If nonzero, require f_sky1 rendering
+    int skyflat;
 };
 
-
-extern cb_view_t  view;
+extern cb_view_t view;
 
 // SoM: frameid frame counter.
-extern unsigned   frameid;
+extern unsigned frameid;
 
 uint64_t R_GetVisitID(const rendercontext_t &context);
 
@@ -282,40 +280,40 @@ uint64_t R_GetVisitID(const rendercontext_t &context);
 // * Contributor(s):
 // *   IBM Corp.
 //
-static inline uint32_t R_doubleToUint32(double d)
+inline static uint32_t R_doubleToUint32(double d)
 {
 #ifdef SDL_BYTEORDER
-   // TODO: Use C++ std::endian when C++20 can be used
-   // This bit (and the ifdef) isn't from SpiderMonkey.
-   // Credit goes to Marrub and David Hill
-   return reinterpret_cast<uint32_t *>(&(d += 6755399441055744.0))[SDL_BYTEORDER == SDL_BIG_ENDIAN];
+    // TODO: Use C++ std::endian when C++20 can be used
+    // This bit (and the ifdef) isn't from SpiderMonkey.
+    // Credit goes to Marrub and David Hill
+    return reinterpret_cast<uint32_t *>(&(d += 6755399441055744.0))[SDL_BYTEORDER == SDL_BIG_ENDIAN];
 #else
-   int32_t i;
-   bool    neg;
-   double  two32;
+    int32_t i;
+    bool    neg;
+    double  two32;
 
-   // FIXME: should check for finiteness first, but we have no code for
-   // doing that in EE yet.
+    // FIXME: should check for finiteness first, but we have no code for
+    // doing that in EE yet.
 
-   //if (!JSDOUBLE_IS_FINITE(d))
-   //   return 0;
+    // if (!JSDOUBLE_IS_FINITE(d))
+    //    return 0;
 
-   // We check whether d fits int32, not uint32, as all but the ">>>" bit
-   // manipulation bytecode stores the result as int, not uint. When the
-   // result does not fit int jsval, it will be stored as a negative double.
-   i = (int32_t)d;
-   if((double)i == d)
-      return (int32_t)i;
+    // We check whether d fits int32, not uint32, as all but the ">>>" bit
+    // manipulation bytecode stores the result as int, not uint. When the
+    // result does not fit int jsval, it will be stored as a negative double.
+    i = (int32_t)d;
+    if((double)i == d)
+        return (int32_t)i;
 
-   neg = (d < 0);
-   d   = floor(neg ? -d : d);
-   d   = neg ? -d : d;
+    neg = (d < 0);
+    d   = floor(neg ? -d : d);
+    d   = neg ? -d : d;
 
-   // haleyjd: This is the important part: reduction modulo UINT_MAX.
-   two32 = 4294967296.0;
-   d     = fmod(d, two32);
+    // haleyjd: This is the important part: reduction modulo UINT_MAX.
+    two32 = 4294967296.0;
+    d     = fmod(d, two32);
 
-   return (uint32_t)(d >= 0 ? d : d + two32);
+    return (uint32_t)(d >= 0 ? d : d + two32);
 #endif
 }
 
@@ -324,7 +322,7 @@ static inline uint32_t R_doubleToUint32(double d)
 //
 inline static float cb_fixedAngleToFloat(angle_t angle)
 {
-   return (ANG90 - angle) * PI / ANG180;
+    return (ANG90 - angle) * PI / ANG180;
 }
 
 #endif

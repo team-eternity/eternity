@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      The status bar widget code.
+// Purpose: The status bar widget code.
+// Authors: James Haley, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 
@@ -36,10 +34,10 @@
 #include "v_video.h"
 #include "w_wad.h"
 
-int sts_always_red;      //jff 2/18/98 control to disable status color changes
+int sts_always_red;      // jff 2/18/98 control to disable status color changes
 int sts_pct_always_gray; // killough 2/21/98: always gray %'s? bug or feature?
 
-patch_t*    sttminus;
+patch_t *sttminus;
 
 //
 // STlib_init()
@@ -50,7 +48,7 @@ patch_t*    sttminus;
 //
 void STlib_init()
 {
-   sttminus = PatchLoader::CacheName(wGlobalDir, "STTMINUS", PU_STATIC);
+    sttminus = PatchLoader::CacheName(wGlobalDir, "STTMINUS", PU_STATIC);
 }
 
 //
@@ -62,22 +60,21 @@ void STlib_init()
 // to the value displayed, a pointer to the on/off control, and the width
 // Returns nothing
 //
-void STlib_initNum(st_number_t *n, int x, int y, patch_t **pl, int num,
-                   int max, bool *on, int width)
+void STlib_initNum(st_number_t *n, int x, int y, patch_t **pl, int num, int max, bool *on, int width)
 {
-   n->x     = x;
-   n->y     = y;
-   n->width = width;
-   n->num   = num;
-   n->max   = max;
-   n->on    = on;
-   n->p     = pl;
+    n->x     = x;
+    n->y     = y;
+    n->width = width;
+    n->num   = num;
+    n->max   = max;
+    n->on    = on;
+    n->p     = pl;
 }
 
 //
 // STlib_drawNum()
-// 
-// A fairly efficient way to draw a number based on differences from the 
+//
+// A fairly efficient way to draw a number based on differences from the
 // old number.
 //
 // Passed a st_number_t widget, a color range for output, and a flag
@@ -88,59 +85,56 @@ void STlib_initNum(st_number_t *n, int x, int y, patch_t **pl, int num,
 //
 static void STlib_drawNum(st_number_t *n, byte *outrng, int alpha)
 {
-   int   numdigits = n->width;
-   int   num = n->num;
-   int   w = n->p[0]->width;
-   int   x;
+    int numdigits = n->width;
+    int num       = n->num;
+    int w         = n->p[0]->width;
+    int x;
 
-   int   neg;
+    int neg;
 
-   // if non-number, do not draw it
-   if(num == INT_MIN)
-      return;
+    // if non-number, do not draw it
+    if(num == INT_MIN)
+        return;
 
-   neg = num < 0;
+    neg = num < 0;
 
-   if(neg)
-   {
-      if(numdigits == 2 && num < -9)
-         num = -9;
-      else if(numdigits == 3 && num < -99)
-         num = -99;
+    if(neg)
+    {
+        if(numdigits == 2 && num < -9)
+            num = -9;
+        else if(numdigits == 3 && num < -99)
+            num = -99;
 
-      num = -num;
-   }
+        num = -num;
+    }
 
-   x = n->x;
+    x = n->x;
 
-   //jff 2/16/98 add color translation to digit output
-   // in the special case of 0, you draw 0
-   if(!num)
-   {
-      //jff 2/18/98 allow use of faster draw routine from config
-      V_DrawPatchTL(x - w, n->y, &subscreen43, n->p[0], 
-                    sts_always_red ? nullptr : outrng, alpha);
-   }
+    // jff 2/16/98 add color translation to digit output
+    //  in the special case of 0, you draw 0
+    if(!num)
+    {
+        // jff 2/18/98 allow use of faster draw routine from config
+        V_DrawPatchTL(x - w, n->y, &subscreen43, n->p[0], sts_always_red ? nullptr : outrng, alpha);
+    }
 
-   // draw the new number
-   //jff 2/16/98 add color translation to digit output
-   while(num && numdigits--)
-   {
-      x -= w;
-      //jff 2/18/98 allow use of faster draw routine from config
-      V_DrawPatchTL(x, n->y, &subscreen43, n->p[ num % 10 ],
-                    sts_always_red ? nullptr : outrng, alpha);
-      num /= 10;
-   }
+    // draw the new number
+    // jff 2/16/98 add color translation to digit output
+    while(num && numdigits--)
+    {
+        x -= w;
+        // jff 2/18/98 allow use of faster draw routine from config
+        V_DrawPatchTL(x, n->y, &subscreen43, n->p[num % 10], sts_always_red ? nullptr : outrng, alpha);
+        num /= 10;
+    }
 
-   // draw a minus sign if necessary
-   //jff 2/16/98 add color translation to digit output
-   if(neg)
-   {
-      //jff 2/18/98 allow use of faster draw routine from config
-      V_DrawPatchTL(x - 8, n->y, &subscreen43, sttminus,
-                    sts_always_red ? nullptr : outrng, alpha);
-   }
+    // draw a minus sign if necessary
+    // jff 2/16/98 add color translation to digit output
+    if(neg)
+    {
+        // jff 2/18/98 allow use of faster draw routine from config
+        V_DrawPatchTL(x - 8, n->y, &subscreen43, sttminus, sts_always_red ? nullptr : outrng, alpha);
+    }
 }
 
 //
@@ -155,8 +149,8 @@ static void STlib_drawNum(st_number_t *n, byte *outrng, int alpha)
 //
 void STlib_updateNum(st_number_t *n, byte *outrng, int alpha)
 {
-   if(*n->on)
-      STlib_drawNum(n, outrng, alpha);
+    if(*n->on)
+        STlib_drawNum(n, outrng, alpha);
 }
 
 //
@@ -169,11 +163,10 @@ void STlib_updateNum(st_number_t *n, byte *outrng, int alpha)
 // for the percent sign.
 // Returns nothing.
 //
-void STlib_initPercent(st_percent_t *p, int x, int y, patch_t **pl, int num,
-                       bool *on, patch_t *percent)
+void STlib_initPercent(st_percent_t *p, int x, int y, patch_t **pl, int num, bool *on, patch_t *percent)
 {
-   STlib_initNum(&p->n, x, y, pl, num, 200, on, 3);
-   p->p = percent;
+    STlib_initNum(&p->n, x, y, pl, num, 200, on, 3);
+    p->p = percent;
 }
 
 //
@@ -188,19 +181,19 @@ void STlib_initPercent(st_percent_t *p, int x, int y, patch_t **pl, int num,
 //
 void STlib_updatePercent(st_percent_t *per, byte *outrng, int alpha)
 {
-   if(*per->n.on) // killough 2/21/98: fix percents not updated
-   {
-      byte *tlate = nullptr;
+    if(*per->n.on) // killough 2/21/98: fix percents not updated
+    {
+        byte *tlate = nullptr;
 
-      // jff 2/18/98 allow use of faster draw routine from config
-      // also support gray-only percents
-      if(!sts_always_red)
-         tlate = sts_pct_always_gray ? cr_gray : outrng;
+        // jff 2/18/98 allow use of faster draw routine from config
+        // also support gray-only percents
+        if(!sts_always_red)
+            tlate = sts_pct_always_gray ? cr_gray : outrng;
 
-      V_DrawPatchTL(per->n.x, per->n.y, &subscreen43, per->p, tlate, alpha);
-   }
-   
-   STlib_updateNum(&per->n, outrng, alpha);
+        V_DrawPatchTL(per->n.x, per->n.y, &subscreen43, per->p, tlate, alpha);
+    }
+
+    STlib_updateNum(&per->n, outrng, alpha);
 }
 
 //
@@ -213,14 +206,13 @@ void STlib_updatePercent(st_percent_t *per, byte *outrng, int alpha)
 // to the numbers representing what to display, and pointer to the enable flag
 // Returns nothing.
 //
-void STlib_initMultIcon(st_multicon_t *i, int x, int y, patch_t **il, int *inum,
-                        bool *on)
+void STlib_initMultIcon(st_multicon_t *i, int x, int y, patch_t **il, int *inum, bool *on)
 {
-   i->x       = x;
-   i->y       = y;
-   i->inum    = inum;
-   i->on      = on;
-   i->p       = il;
+    i->x    = x;
+    i->y    = y;
+    i->inum = inum;
+    i->on   = on;
+    i->p    = il;
 }
 
 //
@@ -235,12 +227,12 @@ void STlib_initMultIcon(st_multicon_t *i, int x, int y, patch_t **il, int *inum,
 //
 void STlib_updateMultIcon(st_multicon_t *mi, int alpha)
 {
-   if(*mi->on)
-   {
-      // killough 2/16/98: redraw only if != -1
-      if(*mi->inum != -1)
-         V_DrawPatchTL(mi->x, mi->y, &subscreen43, mi->p[*mi->inum], nullptr, alpha);
-   }
+    if(*mi->on)
+    {
+        // killough 2/16/98: redraw only if != -1
+        if(*mi->inum != -1)
+            V_DrawPatchTL(mi->x, mi->y, &subscreen43, mi->p[*mi->inum], nullptr, alpha);
+    }
 }
 
 //
@@ -253,14 +245,13 @@ void STlib_updateMultIcon(st_multicon_t *mi, int alpha)
 // to the flags representing what is displayed, and pointer to the enable flag
 // Returns nothing.
 //
-void STlib_initBinIcon(st_binicon_t *b, int x, int y, patch_t *i, 
-                       bool *val, bool *on)
+void STlib_initBinIcon(st_binicon_t *b, int x, int y, patch_t *i, bool *val, bool *on)
 {
-   b->x   = x;
-   b->y   = y;
-   b->val = val;
-   b->on  = on;
-   b->p   = i;
+    b->x   = x;
+    b->y   = y;
+    b->val = val;
+    b->on  = on;
+    b->p   = i;
 }
 
 //
@@ -275,11 +266,11 @@ void STlib_initBinIcon(st_binicon_t *b, int x, int y, patch_t *i,
 //
 void STlib_updateBinIcon(st_binicon_t *bi)
 {
-   if(*bi->on)
-   {
-      if(*bi->val)
-         V_DrawPatch(bi->x, bi->y, &subscreen43, bi->p);
-   }
+    if(*bi->on)
+    {
+        if(*bi->val)
+            V_DrawPatch(bi->x, bi->y, &subscreen43, bi->p);
+    }
 }
 
 //----------------------------------------------------------------------------

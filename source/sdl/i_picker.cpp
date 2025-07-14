@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2017 James Haley, Max Waine, et al.
+// Copyright (C) 2025 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// Purpose: Startup IWAD picker
+//------------------------------------------------------------------------------
+//
+// Purpose: Startup IWAD picker.
 // Authors: James Haley, Max Waine
 //
 
@@ -43,46 +45,44 @@ static bool         *haveIWADArray; // valid IWADs, passed here from d_main.c
 
 static SDL_GameController **controllers; // All controllers
 
-extern int           displaynum;  // What number display to place windows on
+extern int displaynum; // What number display to place windows on
 
 // name of title screen lumps in startup.wad
-static const char *iwadPicNames[NUMPICKIWADS] =
-{
-   "DOOMSW",
-   "DOOMREG",
-   "UDOOM",
-   "DOOM2",
-   "BFGDOOM2",
-   "TNT",
-   "PLUTONIA",
-   "HACX",
-   "HTICSW",
-   "HERETIC",
-   "HTICSOSR",
-   "FREEDOOM",
-   "ULTFD",
-   "FREEDM",
-   "REKKR",
+static const char *iwadPicNames[NUMPICKIWADS] = {
+    "DOOMSW",   //
+    "DOOMREG",  //
+    "UDOOM",    //
+    "DOOM2",    //
+    "BFGDOOM2", //
+    "TNT",      //
+    "PLUTONIA", //
+    "HACX",     //
+    "HTICSW",   //
+    "HERETIC",  //
+    "HTICSOSR", //
+    "FREEDOOM", //
+    "ULTFD",    //
+    "FREEDM",   //
+    "REKKR",    //
 };
 
 // IWAD game names
-static const char *titles[NUMPICKIWADS] =
-{
-   "DOOM Shareware Version",
-   "DOOM Registered Version",
-   "The Ultimate DOOM",
-   "DOOM II: Hell on Earth",
-   "DOOM II: Hell on Earth - BFG Edition",
-   "Final DOOM: TNT - Evilution",
-   "Final DOOM: The Plutonia Experiment",
-   "HACX - Twitch 'n Kill",
-   "Heretic Shareware Version",
-   "Heretic Registered Version",
-   "Heretic: Shadow of the Serpent Riders",
-   "Freedoom Phase 2",
-   "Freedoom Phase 1",
-   "FreeDM",
-   "Rekkr",
+static const char *titles[NUMPICKIWADS] = {
+    "DOOM Shareware Version",
+    "DOOM Registered Version",
+    "The Ultimate DOOM",
+    "DOOM II: Hell on Earth",
+    "DOOM II: Hell on Earth - BFG Edition",
+    "Final DOOM: TNT - Evilution",
+    "Final DOOM: The Plutonia Experiment",
+    "HACX - Twitch 'n Kill",
+    "Heretic Shareware Version",
+    "Heretic Registered Version",
+    "Heretic: Shadow of the Serpent Riders",
+    "Freedoom Phase 2",
+    "Freedoom Phase 1",
+    "FreeDM",
+    "Rekkr",
 };
 
 static byte *bgframe;                // background graphics
@@ -90,7 +90,7 @@ static byte *iwadpics[NUMPICKIWADS]; // iwad title pics
 static byte *pals[NUMPICKIWADS];     // palettes
 
 //=============================================================================
-// 
+//
 // Data
 //
 
@@ -101,21 +101,21 @@ static byte *pals[NUMPICKIWADS];     // palettes
 //
 static void I_Pick_LoadGfx(void)
 {
-   int lumpnum;
+    int lumpnum;
 
-   if((lumpnum = pickwad.checkNumForName("FRAME")) != -1)
-   {
-      VPNGImage png;
-      void *lump = pickwad.cacheLumpNum(lumpnum, PU_STATIC);
-      
-      if(png.readImage(lump))
-      {
-         if(png.getWidth() == 540 && png.getHeight() == 380)
-            bgframe = png.getAs24Bit();
-      }
+    if((lumpnum = pickwad.checkNumForName("FRAME")) != -1)
+    {
+        VPNGImage png;
+        void     *lump = pickwad.cacheLumpNum(lumpnum, PU_STATIC);
 
-      efree(lump);
-   }
+        if(png.readImage(lump))
+        {
+            if(png.getWidth() == 540 && png.getHeight() == 380)
+                bgframe = png.getAs24Bit();
+        }
+
+        efree(lump);
+    }
 }
 
 //
@@ -125,29 +125,29 @@ static void I_Pick_LoadGfx(void)
 //
 static void I_Pick_LoadIWAD(int num)
 {
-   int lumpnum;
-   const char *lumpname;
+    int         lumpnum;
+    const char *lumpname;
 
-   lumpname = iwadPicNames[num];
+    lumpname = iwadPicNames[num];
 
-   if((lumpnum = pickwad.checkNumForName(lumpname)) != -1)
-   {
-      VPNGImage png;
-      void *lump = pickwad.cacheLumpNum(lumpnum, PU_STATIC);
+    if((lumpnum = pickwad.checkNumForName(lumpname)) != -1)
+    {
+        VPNGImage png;
+        void     *lump = pickwad.cacheLumpNum(lumpnum, PU_STATIC);
 
-      if(png.readImage(lump))
-      {
-         byte *pngPalette = png.expandPalette();
+        if(png.readImage(lump))
+        {
+            byte *pngPalette = png.expandPalette();
 
-         if(png.getWidth() == 320 && png.getHeight() == 240 && pngPalette)
-         {
-            iwadpics[num] = png.getAs8Bit(nullptr);
-            pals[num]     = pngPalette;
-         }
-      }
-      
-      efree(lump);
-   }
+            if(png.getWidth() == 320 && png.getHeight() == 240 && pngPalette)
+            {
+                iwadpics[num] = png.getAs8Bit(nullptr);
+                pals[num]     = pngPalette;
+            }
+        }
+
+        efree(lump);
+    }
 }
 
 //
@@ -159,13 +159,13 @@ static void I_Pick_LoadIWAD(int num)
 //
 static bool I_Pick_OpenWad(void)
 {
-   char *filename;
-   int size;
+    char *filename;
+    int   size;
 
-   size = M_StringAlloca(&filename, 2, 1, basepath, "/startup.wad");
-   psnprintf(filename, size, "%s/startup.wad", basepath);
+    size = M_StringAlloca(&filename, 2, 1, basepath, "/startup.wad");
+    psnprintf(filename, size, "%s/startup.wad", basepath);
 
-   return pickwad.addNewFile(filename);
+    return pickwad.addNewFile(filename);
 }
 
 //
@@ -178,28 +178,28 @@ static bool I_Pick_OpenWad(void)
 //
 static void I_Pick_FreeWad(void)
 {
-   // close the wad file if it is open
-   pickwad.close();
+    // close the wad file if it is open
+    pickwad.close();
 }
 
 static void I_Pick_FreeImages(void)
 {
-   if(bgframe)
-   {
-      efree(bgframe);
-      bgframe = nullptr;
-   }
+    if(bgframe)
+    {
+        efree(bgframe);
+        bgframe = nullptr;
+    }
 
-   for(int i = 0; i < NUMPICKIWADS; i++)
-   {
-      if(iwadpics[i])
-         efree(iwadpics[i]);
-      iwadpics[i] = nullptr;
+    for(int i = 0; i < NUMPICKIWADS; i++)
+    {
+        if(iwadpics[i])
+            efree(iwadpics[i]);
+        iwadpics[i] = nullptr;
 
-      if(pals[i])
-         efree(pals[i]);
-      pals[i] = nullptr;
-   }
+        if(pals[i])
+            efree(pals[i]);
+        pals[i] = nullptr;
+    }
 }
 
 //=============================================================================
@@ -214,8 +214,8 @@ static void I_Pick_FreeImages(void)
 //
 static void I_Pick_ClearScreen()
 {
-   SDL_SetRenderDrawColor(pickrenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-   SDL_RenderClear(pickrenderer);
+    SDL_SetRenderDrawColor(pickrenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+    SDL_RenderClear(pickrenderer);
 }
 
 //
@@ -226,27 +226,27 @@ static void I_Pick_ClearScreen()
 //
 static void I_Pick_DrawBG()
 {
-   byte *src;
-   int x, y;
+    byte *src;
+    int   x, y;
 
-   if(!bgframe)
-      return;
-   
-   src = bgframe;
+    if(!bgframe)
+        return;
 
-   for(y = 0; y < 380; ++y)
-   {
-      for(x = 0; x < 540; ++x)
-      {
-         byte r, g, b;
-         r = *src++;
-         g = *src++;
-         b = *src++;
+    src = bgframe;
 
-         SDL_SetRenderDrawColor(pickrenderer, r, g, b, SDL_ALPHA_OPAQUE);
-         SDL_RenderDrawPoint(pickrenderer, x, y);
-      }
-   }
+    for(y = 0; y < 380; ++y)
+    {
+        for(x = 0; x < 540; ++x)
+        {
+            byte r, g, b;
+            r = *src++;
+            g = *src++;
+            b = *src++;
+
+            SDL_SetRenderDrawColor(pickrenderer, r, g, b, SDL_ALPHA_OPAQUE);
+            SDL_RenderDrawPoint(pickrenderer, x, y);
+        }
+    }
 }
 
 //
@@ -258,33 +258,33 @@ static void I_Pick_DrawBG()
 //
 static void I_Pick_DrawIWADPic(int pic)
 {
-   byte *src;
-   byte *pal;
-   int x, y;
+    byte *src;
+    byte *pal;
+    int   x, y;
 
-   if(!iwadpics[pic] || !pals[pic])
-      return;
-   
-   src = iwadpics[pic];
-   pal = pals[pic];
+    if(!iwadpics[pic] || !pals[pic])
+        return;
 
-   for(y = 19; y < 240 + 19; ++y)
-   {
-      for(x = 202; x < 522; ++x)
-      {
-         Uint32 color;
-         byte r, g, b;
+    src = iwadpics[pic];
+    pal = pals[pic];
 
-         color = *src++;
+    for(y = 19; y < 240 + 19; ++y)
+    {
+        for(x = 202; x < 522; ++x)
+        {
+            Uint32 color;
+            byte   r, g, b;
 
-         r = pal[color * 3 + 0];
-         g = pal[color * 3 + 1];
-         b = pal[color * 3 + 2];
+            color = *src++;
 
-         SDL_SetRenderDrawColor(pickrenderer, r, g, b, SDL_ALPHA_OPAQUE);
-         SDL_RenderDrawPoint(pickrenderer, x, y);
-      }
-   }
+            r = pal[color * 3 + 0];
+            g = pal[color * 3 + 1];
+            b = pal[color * 3 + 2];
+
+            SDL_SetRenderDrawColor(pickrenderer, r, g, b, SDL_ALPHA_OPAQUE);
+            SDL_RenderDrawPoint(pickrenderer, x, y);
+        }
+    }
 }
 
 //
@@ -294,14 +294,14 @@ static void I_Pick_DrawIWADPic(int pic)
 //
 static void I_Pick_Drawer(void)
 {
-   I_Pick_DrawBG();
+    I_Pick_DrawBG();
 
-   if(!iwadpics[currentiwad])
-      I_Pick_LoadIWAD(currentiwad);
+    if(!iwadpics[currentiwad])
+        I_Pick_LoadIWAD(currentiwad);
 
-   I_Pick_DrawIWADPic(currentiwad);
+    I_Pick_DrawIWADPic(currentiwad);
 
-   SDL_RenderPresent(pickrenderer);
+    SDL_RenderPresent(pickrenderer);
 }
 
 //=============================================================================
@@ -314,12 +314,13 @@ static void I_Pick_Drawer(void)
 //
 static void I_Pick_InitControllers()
 {
-   controllers = ecalloc(SDL_GameController **, SDL_NumJoysticks(), sizeof(SDL_GameController *));;
-   for(int i = 0; i < SDL_NumJoysticks(); i++)
-   {
-      if(SDL_IsGameController(i))
-         controllers[i] = SDL_GameControllerOpen(i);
-   }
+    controllers = ecalloc(SDL_GameController **, SDL_NumJoysticks(), sizeof(SDL_GameController *));
+    ;
+    for(int i = 0; i < SDL_NumJoysticks(); i++)
+    {
+        if(SDL_IsGameController(i))
+            controllers[i] = SDL_GameControllerOpen(i);
+    }
 }
 
 //
@@ -327,33 +328,33 @@ static void I_Pick_InitControllers()
 //
 static void I_Pick_CloseControllers()
 {
-   for(int i = 0; i < SDL_NumJoysticks(); i++)
-   {
-      if(controllers[i])
-         SDL_GameControllerClose(controllers[i]);
-   }
-   efree(controllers);
+    for(int i = 0; i < SDL_NumJoysticks(); i++)
+    {
+        if(controllers[i])
+            SDL_GameControllerClose(controllers[i]);
+    }
+    efree(controllers);
 }
 
 //
 // I_Pick_DoLeft
 //
-// Called for left arrow keydown and mouse click events. Moves the IWAD 
+// Called for left arrow keydown and mouse click events. Moves the IWAD
 // selection back to the previous valid IWAD.
 //
 static void I_Pick_DoLeft(void)
 {
-   int startwad = currentiwad;
-   
-   do
-   {
-      --currentiwad;
-      if(currentiwad < 0)
-         currentiwad = NUMPICKIWADS - 1;
-   }
-   while(!haveIWADArray[currentiwad] && currentiwad != startwad);
-   
-   SDL_SetWindowTitle(pickwindow, titles[currentiwad]);
+    int startwad = currentiwad;
+
+    do
+    {
+        --currentiwad;
+        if(currentiwad < 0)
+            currentiwad = NUMPICKIWADS - 1;
+    }
+    while(!haveIWADArray[currentiwad] && currentiwad != startwad);
+
+    SDL_SetWindowTitle(pickwindow, titles[currentiwad]);
 }
 
 //
@@ -364,17 +365,17 @@ static void I_Pick_DoLeft(void)
 //
 static void I_Pick_DoRight(void)
 {
-   int startwad = currentiwad;
-   
-   do
-   {
-      ++currentiwad;
-      if(currentiwad >= NUMPICKIWADS)
-         currentiwad = 0;
-   }
-   while(!haveIWADArray[currentiwad] && currentiwad != startwad);
-   
-   SDL_SetWindowTitle(pickwindow, titles[currentiwad]);
+    int startwad = currentiwad;
+
+    do
+    {
+        ++currentiwad;
+        if(currentiwad >= NUMPICKIWADS)
+            currentiwad = 0;
+    }
+    while(!haveIWADArray[currentiwad] && currentiwad != startwad);
+
+    SDL_SetWindowTitle(pickwindow, titles[currentiwad]);
 }
 
 //
@@ -384,7 +385,7 @@ static void I_Pick_DoRight(void)
 //
 static void I_Pick_DoAbort(void)
 {
-   I_ExitWithMessage("Eternity Engine aborted.\n");
+    I_ExitWithMessage("Eternity Engine aborted.\n");
 }
 
 //
@@ -395,8 +396,7 @@ static void I_Pick_DoAbort(void)
 //
 static bool I_Pick_MouseInRect(Uint16 x, Uint16 y, SDL_Rect *rect)
 {
-   return (x >= rect->x && x <= rect->x + rect->w &&
-           y >= rect->y && y <= rect->y + rect->h);
+    return (x >= rect->x && x <= rect->x + rect->w && y >= rect->y && y <= rect->y + rect->h);
 }
 
 //
@@ -406,62 +406,62 @@ static bool I_Pick_MouseInRect(Uint16 x, Uint16 y, SDL_Rect *rect)
 //
 static void I_Pick_MouseEvent(SDL_Event *ev, bool *doloop)
 {
-   SDL_Rect r;
-   Uint16 x, y;
+    SDL_Rect r;
+    Uint16   x, y;
 
-   x = ev->button.x;
-   y = ev->button.y;
+    x = ev->button.x;
+    y = ev->button.y;
 
-   r.y = 293;
-   r.h = 340 - 293 + 1;
+    r.y = 293;
+    r.h = 340 - 293 + 1;
 
-   // check for left arrow
-   r.x = 24;
-   r.w = 76 - 24 + 1;
+    // check for left arrow
+    r.x = 24;
+    r.w = 76 - 24 + 1;
 
-   if(I_Pick_MouseInRect(x, y, &r))
-   {
-      I_Pick_DoLeft();
-      return;
-   }
+    if(I_Pick_MouseInRect(x, y, &r))
+    {
+        I_Pick_DoLeft();
+        return;
+    }
 
-   // check for right arrow
-   r.x = 86;
-   r.w = 139 - 86 + 1;
+    // check for right arrow
+    r.x = 86;
+    r.w = 139 - 86 + 1;
 
-   if(I_Pick_MouseInRect(x, y, &r))
-   {
-      I_Pick_DoRight();
-      return;
-   }
+    if(I_Pick_MouseInRect(x, y, &r))
+    {
+        I_Pick_DoRight();
+        return;
+    }
 
-   // check for escape
-   r.x = 201;
-   r.w = 267 - 201 + 1;
+    // check for escape
+    r.x = 201;
+    r.w = 267 - 201 + 1;
 
-   if(I_Pick_MouseInRect(x, y, &r))
-   {
-      I_Pick_DoAbort();
-      return;
-   }
+    if(I_Pick_MouseInRect(x, y, &r))
+    {
+        I_Pick_DoAbort();
+        return;
+    }
 
-   // check for backspace
-   r.x = 284;
-   r.w = 412 - 284 + 1;
+    // check for backspace
+    r.x = 284;
+    r.w = 412 - 284 + 1;
 
-   if(I_Pick_MouseInRect(x, y, &r))
-   {
-      *doloop = false;
-      currentiwad = -1;
-      return;
-   }
+    if(I_Pick_MouseInRect(x, y, &r))
+    {
+        *doloop     = false;
+        currentiwad = -1;
+        return;
+    }
 
-   // check for enter
-   r.x = 429;
-   r.w = 515 - 429 + 1;
+    // check for enter
+    r.x = 429;
+    r.w = 515 - 429 + 1;
 
-   if(I_Pick_MouseInRect(x, y, &r))
-      *doloop = false;
+    if(I_Pick_MouseInRect(x, y, &r))
+        *doloop = false;
 }
 
 //=============================================================================
@@ -476,83 +476,83 @@ static void I_Pick_MouseEvent(SDL_Event *ev, bool *doloop)
 //
 static void I_Pick_MainLoop(void)
 {
-   bool doloop = true;
-   SDL_Event ev;
+    bool      doloop = true;
+    SDL_Event ev;
 
-   while(doloop)
-   {
-      // draw
-      I_Pick_Drawer();
+    while(doloop)
+    {
+        // draw
+        I_Pick_Drawer();
 
-      // get input
-      while(SDL_PollEvent(&ev))
-      {
-         switch(ev.type)
-         {
-         case SDL_QUIT:
-            I_Pick_DoAbort();
-            break;
-         case SDL_MOUSEBUTTONDOWN:
-            I_Pick_MouseEvent(&ev, &doloop);
-            break;
-         case SDL_KEYDOWN:
-            switch(ev.key.keysym.scancode)
+        // get input
+        while(SDL_PollEvent(&ev))
+        {
+            switch(ev.type)
             {
-            case SDL_SCANCODE_ESCAPE:
-               I_Pick_DoAbort();
-               break;
-            case SDL_SCANCODE_BACKSPACE:
-               doloop = false;
-               currentiwad = -1; // erase selection
-               break;
-            case SDL_SCANCODE_KP_ENTER:
-            case SDL_SCANCODE_RETURN:
-               doloop = false;
-               break;
-            case SDL_SCANCODE_KP_6:
-            case SDL_SCANCODE_RIGHT:
-               I_Pick_DoRight();
-               break;
-            case SDL_SCANCODE_KP_4:
-            case SDL_SCANCODE_LEFT:
-               I_Pick_DoLeft();
-               break;
-            default:
-               break;
+            case SDL_QUIT: //
+                I_Pick_DoAbort();
+                break;
+            case SDL_MOUSEBUTTONDOWN: //
+                I_Pick_MouseEvent(&ev, &doloop);
+                break;
+            case SDL_KEYDOWN: //
+                switch(ev.key.keysym.scancode)
+                {
+                case SDL_SCANCODE_ESCAPE: //
+                    I_Pick_DoAbort();
+                    break;
+                case SDL_SCANCODE_BACKSPACE: //
+                    doloop      = false;
+                    currentiwad = -1; // erase selection
+                    break;
+                case SDL_SCANCODE_KP_ENTER:
+                case SDL_SCANCODE_RETURN: //
+                    doloop = false;
+                    break;
+                case SDL_SCANCODE_KP_6:
+                case SDL_SCANCODE_RIGHT: //
+                    I_Pick_DoRight();
+                    break;
+                case SDL_SCANCODE_KP_4:
+                case SDL_SCANCODE_LEFT: //
+                    I_Pick_DoLeft();
+                    break;
+                default: //
+                    break;
+                }
+                break;
+            case SDL_CONTROLLERBUTTONDOWN:
+                switch(ev.cbutton.button)
+                {
+                case SDL_CONTROLLER_BUTTON_Y: //
+                    I_Pick_DoAbort();
+                    break;
+                case SDL_CONTROLLER_BUTTON_A:
+                case SDL_CONTROLLER_BUTTON_B:
+                case SDL_CONTROLLER_BUTTON_X:
+                case SDL_CONTROLLER_BUTTON_START: //
+                    doloop = false;
+                    break;
+                case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+                case SDL_CONTROLLER_BUTTON_DPAD_LEFT: //
+                    I_Pick_DoLeft();
+                    break;
+                case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+                case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: //
+                    I_Pick_DoRight();
+                    break;
+                default: //
+                    break;
+                }
+                break;
+            default: //
+                break;
             }
-            break;
-         case SDL_CONTROLLERBUTTONDOWN:
-            switch(ev.cbutton.button)
-            {
-            case SDL_CONTROLLER_BUTTON_Y:
-               I_Pick_DoAbort();
-               break;
-            case SDL_CONTROLLER_BUTTON_A:
-            case SDL_CONTROLLER_BUTTON_B:
-            case SDL_CONTROLLER_BUTTON_X:
-            case SDL_CONTROLLER_BUTTON_START:
-               doloop = false;
-               break;
-            case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
-            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-               I_Pick_DoLeft();
-               break;
-            case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
-            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-               I_Pick_DoRight();
-               break;
-            default:
-               break;
-            }
-            break;
-         default:
-            break;
-         }
-      }
-      
-      // sleep
-      SDL_Delay(1);
-   }
+        }
+
+        // sleep
+        SDL_Delay(1);
+    }
 }
 
 //=============================================================================
@@ -569,18 +569,18 @@ static bool pickvideoinit = false;
 //
 static void I_Pick_Shutdown(void)
 {
-   I_Pick_FreeWad();
-   I_Pick_FreeImages();
+    I_Pick_FreeWad();
+    I_Pick_FreeImages();
 
-   // the window needs to be destroyed
-   if(pickvideoinit)
-      SDL_DestroyWindow(pickwindow);
+    // the window needs to be destroyed
+    if(pickvideoinit)
+        SDL_DestroyWindow(pickwindow);
 
-//   haleyjd: I hate SDL.
-//   if(pickvideoinit)
-//      SDL_QuitSubSystem(SDL_INIT_VIDEO);
-   
-   pickvideoinit = false;
+    //   haleyjd: I hate SDL.
+    //   if(pickvideoinit)
+    //      SDL_QuitSubSystem(SDL_INIT_VIDEO);
+
+    pickvideoinit = false;
 }
 
 //=============================================================================
@@ -597,82 +597,80 @@ static void I_Pick_Shutdown(void)
 //
 int I_Pick_DoPicker(bool haveIWADs[], int startchoice)
 {
-   int v_displaynum = 0;
+    int v_displaynum = 0;
 
-   haveIWADArray = haveIWADs;
+    haveIWADArray = haveIWADs;
 
-   pickvideoinit = true;
+    pickvideoinit = true;
 
-   if(displaynum < SDL_GetNumVideoDisplays())
-      v_displaynum = displaynum;
-   else
-      displaynum = 0;
+    if(displaynum < SDL_GetNumVideoDisplays())
+        v_displaynum = displaynum;
+    else
+        displaynum = 0;
 
-   // create the window
-   if(!(pickwindow = SDL_CreateWindow(nullptr,
-                                      SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
-                                      SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
-                                      540, 380, 0)))
-      return -1;
+    // create the window
+    if(!(pickwindow = SDL_CreateWindow(nullptr, SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
+                                       SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum), 540, 380, 0)))
+        return -1;
 
-   // create the renderer
-   if(!(pickrenderer = SDL_CreateRenderer(pickwindow, -1, SDL_RENDERER_SOFTWARE)))
-      return -1;
+    // create the renderer
+    if(!(pickrenderer = SDL_CreateRenderer(pickwindow, -1, SDL_RENDERER_SOFTWARE)))
+        return -1;
 
-   // bring the window to the front
-   SDL_RaiseWindow(pickwindow);
+    // bring the window to the front
+    SDL_RaiseWindow(pickwindow);
 
-   // open startup.wad (private to this module)
-   if(!I_Pick_OpenWad())
-   {
-      I_Pick_Shutdown();
-      return -1;
-   }
+    // open startup.wad (private to this module)
+    if(!I_Pick_OpenWad())
+    {
+        I_Pick_Shutdown();
+        return -1;
+    }
 
-   // load basic graphics
-   I_Pick_LoadGfx();
+    // load basic graphics
+    I_Pick_LoadGfx();
 
-   // clear the screen
-   I_Pick_ClearScreen();
+    // clear the screen
+    I_Pick_ClearScreen();
 
-   // see if prior choice is valid
-   if(startchoice != -1 && haveIWADs[startchoice])
-      currentiwad = startchoice;
-   else
-   {
-      // find first valid iwad
-      currentiwad = -1;
-      do
-      {
-         ++currentiwad;
-      }
-      while(currentiwad < NUMPICKIWADS && !haveIWADs[currentiwad]);
-   }
+    // see if prior choice is valid
+    if(startchoice != -1 && haveIWADs[startchoice])
+        currentiwad = startchoice;
+    else
+    {
+        // find first valid iwad
+        currentiwad = -1;
+        do
+        {
+            ++currentiwad;
+        }
+        while(currentiwad < NUMPICKIWADS && !haveIWADs[currentiwad]);
+    }
 
-   // this really shouldn't happen, but I check for safety
-   if(currentiwad < 0 || currentiwad >= NUMPICKIWADS)
-   {
-      I_Pick_Shutdown();
-      return -1;
-   }
+    // this really shouldn't happen, but I check for safety
+    if(currentiwad < 0 || currentiwad >= NUMPICKIWADS)
+    {
+        I_Pick_Shutdown();
+        return -1;
+    }
 
-   // set window title to currently selected game
-   SDL_SetWindowTitle(pickwindow, titles[currentiwad]);
+    // set window title to currently selected game
+    SDL_SetWindowTitle(pickwindow, titles[currentiwad]);
 
-   // initialise controllers for input handling
-   I_Pick_InitControllers();
+    // initialise controllers for input handling
+    I_Pick_InitControllers();
 
-   // run the program
-   I_Pick_MainLoop();
+    // run the program
+    I_Pick_MainLoop();
 
-   // user is finished, free stuff and get everything back to normal
-   I_Pick_Shutdown();
+    // user is finished, free stuff and get everything back to normal
+    I_Pick_Shutdown();
 
-   // close the controllers since we're done with them for now
-   I_Pick_CloseControllers();
+    // close the controllers since we're done with them for now
+    I_Pick_CloseControllers();
 
-   // the currently selected file is returned to d_main.c
-   return currentiwad;
+    // the currently selected file is returned to d_main.c
+    return currentiwad;
 }
 
 // EOF

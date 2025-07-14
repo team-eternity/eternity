@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2016 James Haley et al.
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: Object-oriented portable structure IO
+//------------------------------------------------------------------------------
+//
+// Purpose: Object-oriented portable structure IO.
 // Authors: James Haley
 //
 
@@ -36,75 +38,57 @@ template<typename S>
 class MFieldDescriptor
 {
 public:
-   enum mfdtype_e
-   {
-      MFD_UINT16,
-      MFD_UINT32
-   };
+    enum mfdtype_e
+    {
+        MFD_UINT16,
+        MFD_UINT32
+    };
 
 protected:
-   // pointer-to-member
-   union mfdfield_u
-   {
-      uint16_t S::*u16;
-      uint32_t S::*u32;
-   } fields;
+    // pointer-to-member
+    union mfdfield_u
+    {
+        uint16_t S::*u16;
+        uint32_t S::*u32;
+    } fields;
 
-   // type of field
-   mfdtype_e type;
+    // type of field
+    mfdtype_e type;
 
 public:
-   MFieldDescriptor(uint16_t S::*field) : type(MFD_UINT16)
-   {
-      fields.u16 = field;
-   }
+    MFieldDescriptor(uint16_t S::*field) : type(MFD_UINT16) { fields.u16 = field; }
 
-   MFieldDescriptor(uint32_t S::*field) : type(MFD_UINT32)
-   {
-      fields.u32 = field;
-   }
+    MFieldDescriptor(uint32_t S::*field) : type(MFD_UINT32) { fields.u32 = field; }
 
-   MFieldDescriptor(const MFieldDescriptor &other) : type(other.type)
-   {
-      switch(type)
-      {
-      case MFD_UINT16:
-         fields.u16 = other.fields.u16;
-         break;
-      case MFD_UINT32:
-         fields.u32 = other.fields.u32;
-         break;
-      }
-   }
+    MFieldDescriptor(const MFieldDescriptor &other) : type(other.type)
+    {
+        switch(type)
+        {
+        case MFD_UINT16: fields.u16 = other.fields.u16; break;
+        case MFD_UINT32: fields.u32 = other.fields.u32; break;
+        }
+    }
 
-   MFieldDescriptor(MFieldDescriptor &&other) noexcept
-      : type(other.type)
-   {
-      switch(type)
-      {
-      case MFD_UINT16:
-         fields.u16 = other.fields.u16;
-         break;
-      case MFD_UINT32:
-         fields.u32 = other.fields.u32;
-         break;
-      }
-   }
+    MFieldDescriptor(MFieldDescriptor &&other) noexcept : type(other.type)
+    {
+        switch(type)
+        {
+        case MFD_UINT16: fields.u16 = other.fields.u16; break;
+        case MFD_UINT32: fields.u32 = other.fields.u32; break;
+        }
+    }
 
-   // Returns true if the field was successfully read from the input stream, 
-   // and false otherwise.
-   bool readField(S &instance, InBuffer &fin)
-   {
-      switch(type)
-      {
-      case MFD_UINT16:
-         return fin.readUint16(instance.*(fields.u16));
-      case MFD_UINT32:
-         return fin.readUint32(instance.*(fields.u32));
-      default:
-         return false;
-      }
-   }
+    // Returns true if the field was successfully read from the input stream,
+    // and false otherwise.
+    bool readField(S &instance, InBuffer &fin)
+    {
+        switch(type)
+        {
+        case MFD_UINT16: return fin.readUint16(instance.*(fields.u16));
+        case MFD_UINT32: return fin.readUint32(instance.*(fields.u32));
+        default:         return false;
+        }
+    }
 };
 
 //
@@ -117,36 +101,33 @@ template<typename S>
 class MStructReader
 {
 public:
-   typedef void (*fieldadd_t)(MStructReader<S> &);
+    using fieldadd_t = void (*)(MStructReader<S> &);
 
 protected:
-   Collection<MFieldDescriptor<S>> descriptors;
+    Collection<MFieldDescriptor<S>> descriptors;
 
 public:
-   MStructReader(fieldadd_t fieldAdder) : descriptors()
-   {
-      fieldAdder(*this);
-   }
+    MStructReader(fieldadd_t fieldAdder) : descriptors() { fieldAdder(*this); }
 
-   // Add a field to the structure reader
-   template<typename T>
-   void addField(T S::*field)
-   {
-      descriptors.add(MFieldDescriptor<S>(field));
-   }
+    // Add a field to the structure reader
+    template<typename T>
+    void addField(T S::*field)
+    {
+        descriptors.add(MFieldDescriptor<S>(field));
+    }
 
-   // Read all the structure's fields from the input buffer. 
-   // Returns true if all reads were successful, false otherwise.
-   bool readFields(S &instance, InBuffer &fin)
-   {
-      for(auto &obj : descriptors)
-      {
-         if(!obj.readField(instance, fin))
-            return false;
-      }
+    // Read all the structure's fields from the input buffer.
+    // Returns true if all reads were successful, false otherwise.
+    bool readFields(S &instance, InBuffer &fin)
+    {
+        for(auto &obj : descriptors)
+        {
+            if(!obj.readField(instance, fin))
+                return false;
+        }
 
-      return true;
-   }
+        return true;
+    }
 };
 
 #endif

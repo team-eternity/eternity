@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,14 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   
-//  OpenGL Texture Mapping Functions
-//  haleyjd 05/15/11
+// Purpose: OpenGL texture mapping functions.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef GL_TEXTURE_H__
 #define GL_TEXTURE_H__
@@ -34,10 +30,10 @@
 #ifdef EE_FEATURE_OPENGL
 
 unsigned int GL_MakeTextureDimension(unsigned int i);
-void GL_BindTextureAndRemember(GLuint texture);
-void GL_BindTextureIfNeeded(GLuint texture);
-void GL_RebindBoundTexture();
-void GL_ClearBoundTexture();
+void         GL_BindTextureAndRemember(GLuint texture);
+void         GL_BindTextureIfNeeded(GLuint texture);
+void         GL_RebindBoundTexture();
+void         GL_ClearBoundTexture();
 
 #endif
 

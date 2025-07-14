@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2014 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Generalized sector special system
+// Purpose: Generalized sector special system.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 
@@ -62,8 +60,8 @@
 //
 static void EV_SectorLightRandomOff(sector_t *sector)
 {
-   // random off
-   P_SpawnLightFlash(sector);
+    // random off
+    P_SpawnLightFlash(sector);
 }
 
 //
@@ -72,12 +70,12 @@ static void EV_SectorLightRandomOff(sector_t *sector)
 // Spawns a StrobeThinker set to FASTDARK, non-synchronized
 // * DOOM: 2
 // * Heretic: 2
-// * Generalized: (sector->special & 31) == 2 
+// * Generalized: (sector->special & 31) == 2
 //
 static void EV_SectorLightStrobeFast(sector_t *sector)
 {
-   // strobe fast
-   P_SpawnStrobeFlash(sector, FASTDARK, STROBEBRIGHT, 0);
+    // strobe fast
+    P_SpawnStrobeFlash(sector, FASTDARK, STROBEBRIGHT, 0);
 }
 
 //
@@ -90,29 +88,29 @@ static void EV_SectorLightStrobeFast(sector_t *sector)
 //
 static void EV_SectorLightStrobeSlow(sector_t *sector)
 {
-   // strobe slow
-   P_SpawnStrobeFlash(sector, SLOWDARK, STROBEBRIGHT, 0);
+    // strobe slow
+    P_SpawnStrobeFlash(sector, SLOWDARK, STROBEBRIGHT, 0);
 }
 
 //
 // EV_SectorLightStrobeHurt
 //
-// Spawns a StrobeThinker set to FASTDARK, non-synchronized, and 
-// sets up 20-per-32 damage with leaky suit. Overrides generalized 
+// Spawns a StrobeThinker set to FASTDARK, non-synchronized, and
+// sets up 20-per-32 damage with leaky suit. Overrides generalized
 // sector damage properties.
 // * DOOM: 4
 // * Generalized: (sector->special & 31) == 4
 //
 static void EV_SectorLightStrobeHurt(sector_t *sector)
 {
-   // strobe fast/death slime
-   P_SpawnStrobeFlash(sector, FASTDARK, STROBEBRIGHT, 0);
-   
-   // haleyjd 12/31/08: sector damage conversion
-   sector->damage       = 20;
-   sector->damagemask   = 32;
-   sector->damagemod    = MOD_SLIME;
-   sector->leakiness    = 5;
+    // strobe fast/death slime
+    P_SpawnStrobeFlash(sector, FASTDARK, STROBEBRIGHT, 0);
+
+    // haleyjd 12/31/08: sector damage conversion
+    sector->damage     = 20;
+    sector->damagemask = 32;
+    sector->damagemod  = MOD_SLIME;
+    sector->leakiness  = 5;
 }
 
 //
@@ -123,9 +121,9 @@ static void EV_SectorLightStrobeHurt(sector_t *sector)
 //
 static void EV_SectorDamageHellSlime(sector_t *sector)
 {
-   sector->damage     = 10;
-   sector->damagemask = 32;
-   sector->damagemod  = MOD_SLIME;
+    sector->damage     = 10;
+    sector->damagemask = 32;
+    sector->damagemod  = MOD_SLIME;
 }
 
 //
@@ -136,9 +134,9 @@ static void EV_SectorDamageHellSlime(sector_t *sector)
 //
 static void EV_SectorDamageNukage(sector_t *sector)
 {
-   sector->damage     = 5;
-   sector->damagemask = 32;
-   sector->damagemod  = MOD_SLIME;
+    sector->damage     = 5;
+    sector->damagemask = 32;
+    sector->damagemod  = MOD_SLIME;
 }
 
 //
@@ -151,8 +149,8 @@ static void EV_SectorDamageNukage(sector_t *sector)
 //
 static void EV_SectorLightGlow(sector_t *sector)
 {
-   // glowing light
-   P_SpawnGlowingLight(sector);
+    // glowing light
+    P_SpawnGlowingLight(sector);
 }
 
 //
@@ -164,11 +162,11 @@ static void EV_SectorLightGlow(sector_t *sector)
 //
 static void EV_SectorSecret(sector_t *sector)
 {
-   if(!(sector->flags & SECF_SECRET))
-   {
-      ++totalsecret;
-      sector->flags |= SECF_SECRET;
-   }
+    if(!(sector->flags & SECF_SECRET))
+    {
+        ++totalsecret;
+        sector->flags |= SECF_SECRET;
+    }
 }
 
 //
@@ -182,7 +180,7 @@ static void EV_SectorSecret(sector_t *sector)
 //
 static void EV_SectorDoorCloseIn30(sector_t *sector)
 {
-   P_SpawnDoorCloseIn30(sector);
+    P_SpawnDoorCloseIn30(sector);
 }
 
 //
@@ -194,11 +192,11 @@ static void EV_SectorDoorCloseIn30(sector_t *sector)
 //
 static void EV_SectorExitSuperDamage(sector_t *sector)
 {
-   sector->damage       = 20;
-   sector->damagemask   = 32;
-   sector->damagemod    = MOD_SLIME;
-   sector->damageflags |= SDMG_ENDGODMODE|SDMG_EXITLEVEL;
-   sector->leakiness    = 256;
+    sector->damage       = 20;
+    sector->damagemask   = 32;
+    sector->damagemod    = MOD_SLIME;
+    sector->damageflags |= SDMG_ENDGODMODE | SDMG_EXITLEVEL;
+    sector->leakiness    = 256;
 }
 
 //
@@ -211,8 +209,8 @@ static void EV_SectorExitSuperDamage(sector_t *sector)
 //
 static void EV_SectorLightStrobeSlowSync(sector_t *sector)
 {
-   // sync strobe slow
-   P_SpawnStrobeFlash(sector, SLOWDARK, STROBEBRIGHT, 1);
+    // sync strobe slow
+    P_SpawnStrobeFlash(sector, SLOWDARK, STROBEBRIGHT, 1);
 }
 
 //
@@ -221,12 +219,12 @@ static void EV_SectorLightStrobeSlowSync(sector_t *sector)
 // Spawns a StrobeThinker set to FASTDARK, synchronized
 // * DOOM: 13
 // * Heretic: 13
-// * Generalized: (sector->special & 31) == 13 
+// * Generalized: (sector->special & 31) == 13
 //
 static void EV_SectorLightStrobeFastSync(sector_t *sector)
 {
-   // sync strobe fast
-   P_SpawnStrobeFlash(sector, FASTDARK, STROBEBRIGHT, 1);
+    // sync strobe fast
+    P_SpawnStrobeFlash(sector, FASTDARK, STROBEBRIGHT, 1);
 }
 
 //
@@ -240,7 +238,7 @@ static void EV_SectorLightStrobeFastSync(sector_t *sector)
 //
 static void EV_SectorDoorRaiseIn5Mins(sector_t *sector)
 {
-   P_SpawnDoorRaiseIn5Mins(sector);
+    P_SpawnDoorRaiseIn5Mins(sector);
 }
 
 //
@@ -251,10 +249,10 @@ static void EV_SectorDoorRaiseIn5Mins(sector_t *sector)
 //
 static void EV_SectorDamageSuperHellSlime(sector_t *sector)
 {
-   sector->damage       = 20;
-   sector->damagemask   = 32;
-   sector->damagemod    = MOD_SLIME;
-   sector->leakiness    = 5;
+    sector->damage     = 20;
+    sector->damagemask = 32;
+    sector->damagemod  = MOD_SLIME;
+    sector->leakiness  = 5;
 }
 
 //
@@ -267,7 +265,7 @@ static void EV_SectorDamageSuperHellSlime(sector_t *sector)
 //
 static void EV_SectorLightFireFlicker(sector_t *sector)
 {
-   P_SpawnFireFlicker(sector);
+    P_SpawnFireFlicker(sector);
 }
 
 //
@@ -282,21 +280,21 @@ static void EV_SectorLightFireFlicker(sector_t *sector)
 //
 static void EV_SectorHticScrollEastLavaDamage(sector_t *sector)
 {
-   P_SpawnStrobeFlash(sector, FASTDARK, STROBEBRIGHT, 0);
+    P_SpawnStrobeFlash(sector, FASTDARK, STROBEBRIGHT, 0);
 
-   // custom damage parameters:
-   sector->damage       = 5;
-   sector->damagemask   = 16;
-   sector->damagemod    = MOD_LAVA;
-   sector->damageflags |= SDMG_TERRAINHIT;
+    // custom damage parameters:
+    sector->damage       = 5;
+    sector->damagemask   = 16;
+    sector->damagemod    = MOD_LAVA;
+    sector->damageflags |= SDMG_TERRAINHIT;
 
-   // heretic current pusher type:
-   sector->hticPushType  = SECTOR_HTIC_CURRENT;
-   sector->hticPushAngle = 0;
-   sector->hticPushForce = 2048*28;
-   
-   // scrolls to the east:
-   Add_Scroller(ScrollThinker::sc_floor, (-FRACUNIT/2) * 8, 0, -1, eindex(sector - sectors), 0);
+    // heretic current pusher type:
+    sector->hticPushType  = SECTOR_HTIC_CURRENT;
+    sector->hticPushAngle = 0;
+    sector->hticPushForce = 2048 * 28;
+
+    // scrolls to the east:
+    Add_Scroller(ScrollThinker::sc_floor, (-FRACUNIT / 2) * 8, 0, -1, eindex(sector - sectors), 0);
 }
 
 //
@@ -307,10 +305,10 @@ static void EV_SectorHticScrollEastLavaDamage(sector_t *sector)
 //
 static void EV_SectorHticDamageLavaWimpy(sector_t *sector)
 {
-   sector->damage       = 5;
-   sector->damagemask   = 16;
-   sector->damagemod    = MOD_LAVA;
-   sector->damageflags |= SDMG_TERRAINHIT;
+    sector->damage       = 5;
+    sector->damagemask   = 16;
+    sector->damagemod    = MOD_LAVA;
+    sector->damageflags |= SDMG_TERRAINHIT;
 }
 
 //
@@ -321,9 +319,9 @@ static void EV_SectorHticDamageLavaWimpy(sector_t *sector)
 //
 static void EV_SectorHticDamageSludge(sector_t *sector)
 {
-   sector->damage     = 4;
-   sector->damagemask = 32;
-   sector->damagemod  = MOD_SLIME;
+    sector->damage     = 4;
+    sector->damagemask = 32;
+    sector->damagemod  = MOD_SLIME;
 }
 
 //
@@ -334,9 +332,9 @@ static void EV_SectorHticDamageSludge(sector_t *sector)
 //
 static void EV_SectorHticFrictionLow(sector_t *sector)
 {
-   sector->friction    = 0xf900;
-   sector->movefactor  = ORIG_FRICTION_FACTOR >> 2;
-   sector->flags      |= SECF_FRICTION; // set friction bit
+    sector->friction    = 0xf900;
+    sector->movefactor  = ORIG_FRICTION_FACTOR >> 2;
+    sector->flags      |= SECF_FRICTION; // set friction bit
 }
 
 //
@@ -347,10 +345,10 @@ static void EV_SectorHticFrictionLow(sector_t *sector)
 //
 static void EV_SectorHticDamageLavaHefty(sector_t *sector)
 {
-   sector->damage       = 8;
-   sector->damagemask   = 16;
-   sector->damagemod    = MOD_LAVA;
-   sector->damageflags |= SDMG_TERRAINHIT;
+    sector->damage       = 8;
+    sector->damagemask   = 16;
+    sector->damagemod    = MOD_LAVA;
+    sector->damageflags |= SDMG_TERRAINHIT;
 }
 
 //
@@ -360,12 +358,12 @@ static void EV_SectorHticDamageLavaHefty(sector_t *sector)
 //
 static void EV_setupHereticPusher(sector_t *sector, angle_t angle, int type, int force)
 {
-   // Heretic push forces table
-   static fixed_t pushForces[5] = { 2048*5, 2048*10, 2048*25, 2048*30, 2048*35 };
+    // Heretic push forces table
+    static fixed_t pushForces[5] = { 2048 * 5, 2048 * 10, 2048 * 25, 2048 * 30, 2048 * 35 };
 
-   sector->hticPushType  = type;
-   sector->hticPushAngle = angle;
-   sector->hticPushForce = pushForces[force];
+    sector->hticPushType  = type;
+    sector->hticPushAngle = angle;
+    sector->hticPushForce = pushForces[force];
 }
 
 //
@@ -375,21 +373,20 @@ static void EV_setupHereticPusher(sector_t *sector, angle_t angle, int type, int
 //
 static void EV_setupHereticScroller(sector_t *sector, int force)
 {
-   Add_Scroller(ScrollThinker::sc_floor, (-FRACUNIT/2) << force,
-                0, -1, eindex(sector-sectors), 0);
+    Add_Scroller(ScrollThinker::sc_floor, (-FRACUNIT / 2) << force, 0, -1, eindex(sector - sectors), 0);
 }
 
 //
 // EV_SectorHticScrollEast
-// 
+//
 // Sets up scroll east with current.
 // * Heretic: 20, 21, 22, 23, 24
 //
 template<int force>
 static void EV_SectorHticScrollEast(sector_t *sector)
 {
-   EV_setupHereticPusher(sector, 0, SECTOR_HTIC_CURRENT, force);
-   EV_setupHereticScroller(sector, force);
+    EV_setupHereticPusher(sector, 0, SECTOR_HTIC_CURRENT, force);
+    EV_setupHereticScroller(sector, force);
 }
 
 //
@@ -403,7 +400,7 @@ static void EV_SectorHticScrollEast(sector_t *sector)
 template<angle_t angle, int force>
 static void EV_SectorHticScroll(sector_t *sector)
 {
-   EV_setupHereticPusher(sector, angle, SECTOR_HTIC_CURRENT, force);
+    EV_setupHereticPusher(sector, angle, SECTOR_HTIC_CURRENT, force);
 }
 
 //
@@ -418,7 +415,7 @@ static void EV_SectorHticScroll(sector_t *sector)
 template<angle_t angle, int force>
 static void EV_SectorHticWind(sector_t *sector)
 {
-   EV_setupHereticPusher(sector, angle, SECTOR_HTIC_WIND, force);
+    EV_setupHereticPusher(sector, angle, SECTOR_HTIC_WIND, force);
 }
 
 //
@@ -434,7 +431,7 @@ static void EV_SectorHticWind(sector_t *sector)
 //
 static void EV_SectorHexenLightPhased(sector_t *sector)
 {
-   PhasedLightThinker::Spawn(sector, 80, -1);
+    PhasedLightThinker::Spawn(sector, 80, -1);
 }
 
 //
@@ -444,7 +441,7 @@ static void EV_SectorHexenLightPhased(sector_t *sector)
 //
 static void EV_SectorHexenLightSeqStart(sector_t *sector)
 {
-   sector->flags |= SECF_PHASEDLIGHT;
+    sector->flags |= SECF_PHASEDLIGHT;
 }
 
 //
@@ -455,7 +452,7 @@ static void EV_SectorHexenLightSeqStart(sector_t *sector)
 //
 static void EV_SectorHexenLightSequence(sector_t *sector)
 {
-   sector->flags |= SECF_LIGHTSEQUENCE;
+    sector->flags |= SECF_LIGHTSEQUENCE;
 }
 
 //
@@ -465,7 +462,7 @@ static void EV_SectorHexenLightSequence(sector_t *sector)
 //
 static void EV_SectorHexenLightSeqAlt(sector_t *sector)
 {
-   sector->flags |= SECF_LIGHTSEQALT;
+    sector->flags |= SECF_LIGHTSEQALT;
 }
 
 //
@@ -479,7 +476,7 @@ static void EV_SectorHexenLightSeqAlt(sector_t *sector)
 //
 static void EV_SectorStrifeInstantKill(sector_t *sector)
 {
-   sector->flags |= SECF_INSTANTDEATH;
+    sector->flags |= SECF_INSTANTDEATH;
 }
 
 //
@@ -495,7 +492,7 @@ static void EV_SectorStrifeInstantKill(sector_t *sector)
 //
 static void EV_SectorLightPSXGlowLow(sector_t *sector)
 {
-   P_SpawnPSXGlowingLight(sector, psxglow_low);
+    P_SpawnPSXGlowingLight(sector, psxglow_low);
 }
 
 //
@@ -506,7 +503,7 @@ static void EV_SectorLightPSXGlowLow(sector_t *sector)
 //
 static void EV_SectorLightPSXGlow10(sector_t *sector)
 {
-   P_SpawnPSXGlowingLight(sector, psxglow_10);
+    P_SpawnPSXGlowingLight(sector, psxglow_10);
 }
 
 //
@@ -517,7 +514,7 @@ static void EV_SectorLightPSXGlow10(sector_t *sector)
 //
 static void EV_SectorLightPSXGlow255(sector_t *sector)
 {
-   P_SpawnPSXGlowingLight(sector, psxglow_255);
+    P_SpawnPSXGlowingLight(sector, psxglow_255);
 }
 
 //
@@ -528,7 +525,7 @@ static void EV_SectorLightPSXGlow255(sector_t *sector)
 //
 static void EV_SectorLightPSXStrobeHyper(sector_t *sector)
 {
-   P_SpawnPSXStrobeFlash(sector, 3, true);
+    P_SpawnPSXStrobeFlash(sector, 3, true);
 }
 
 //
@@ -539,7 +536,7 @@ static void EV_SectorLightPSXStrobeHyper(sector_t *sector)
 //
 static void EV_SectorLightPSXStrobeFast(sector_t *sector)
 {
-   P_SpawnPSXStrobeFlash(sector, 8, false);
+    P_SpawnPSXStrobeFlash(sector, 8, false);
 }
 
 //=============================================================================
@@ -548,99 +545,98 @@ static void EV_SectorLightPSXStrobeFast(sector_t *sector)
 //
 
 // Doom sector specials
-static ev_sectorbinding_t DoomSectorBindings[] =
-{
-   {  1, EV_SectorLightRandomOff       },
-   {  2, EV_SectorLightStrobeFast      },
-   {  3, EV_SectorLightStrobeSlow      },
-   {  4, EV_SectorLightStrobeHurt      },
-   {  5, EV_SectorDamageHellSlime      },
-   {  7, EV_SectorDamageNukage         },
-   {  8, EV_SectorLightGlow            },
-   {  9, EV_SectorSecret               },
-   { 10, EV_SectorDoorCloseIn30        },
-   { 11, EV_SectorExitSuperDamage      },
-   { 12, EV_SectorLightStrobeSlowSync  },
-   { 13, EV_SectorLightStrobeFastSync  },
-   { 14, EV_SectorDoorRaiseIn5Mins     },
-   { 16, EV_SectorDamageSuperHellSlime },
-   { 17, EV_SectorLightFireFlicker     }
+static ev_sectorbinding_t DoomSectorBindings[] = {
+    { 1,  EV_SectorLightRandomOff       },
+    { 2,  EV_SectorLightStrobeFast      },
+    { 3,  EV_SectorLightStrobeSlow      },
+    { 4,  EV_SectorLightStrobeHurt      },
+    { 5,  EV_SectorDamageHellSlime      },
+    { 7,  EV_SectorDamageNukage         },
+    { 8,  EV_SectorLightGlow            },
+    { 9,  EV_SectorSecret               },
+    { 10, EV_SectorDoorCloseIn30        },
+    { 11, EV_SectorExitSuperDamage      },
+    { 12, EV_SectorLightStrobeSlowSync  },
+    { 13, EV_SectorLightStrobeFastSync  },
+    { 14, EV_SectorDoorRaiseIn5Mins     },
+    { 16, EV_SectorDamageSuperHellSlime },
+    { 17, EV_SectorLightFireFlicker     }
 };
 
+// clang-format off
+
 // Heretic sector specials
-static ev_sectorbinding_t HticSectorBindings[] =
-{
-   {  1, EV_SectorLightRandomOff           },
-   {  2, EV_SectorLightStrobeFast          },
-   {  3, EV_SectorLightStrobeSlow          },
-   {  4, EV_SectorHticScrollEastLavaDamage },
-   {  5, EV_SectorHticDamageLavaWimpy      },
-   {  7, EV_SectorHticDamageSludge         },
-   {  8, EV_SectorLightGlow                },
-   {  9, EV_SectorSecret                   },
-   { 10, EV_SectorDoorCloseIn30            },
-   { 11, EV_SectorExitSuperDamage          },
-   { 12, EV_SectorLightStrobeSlowSync      },
-   { 13, EV_SectorLightStrobeFastSync      },
-   { 14, EV_SectorDoorRaiseIn5Mins         },
-   { 15, EV_SectorHticFrictionLow          },
-   { 16, EV_SectorHticDamageLavaHefty      },
-   { 17, EV_SectorLightFireFlicker         },
-   { 20, EV_SectorHticScrollEast<0>        },
-   { 21, EV_SectorHticScrollEast<1>        },
-   { 22, EV_SectorHticScrollEast<2>        },
-   { 23, EV_SectorHticScrollEast<3>        },
-   { 24, EV_SectorHticScrollEast<4>        },
-   { 25, EV_SectorHticScroll<ANG90,  0>    },
-   { 26, EV_SectorHticScroll<ANG90,  1>    },
-   { 27, EV_SectorHticScroll<ANG90,  2>    },
-   { 28, EV_SectorHticScroll<ANG90,  3>    },
-   { 29, EV_SectorHticScroll<ANG90,  4>    },
-   { 30, EV_SectorHticScroll<ANG270, 0>    },
-   { 31, EV_SectorHticScroll<ANG270, 1>    },
-   { 32, EV_SectorHticScroll<ANG270, 2>    },
-   { 33, EV_SectorHticScroll<ANG270, 3>    },
-   { 34, EV_SectorHticScroll<ANG270, 4>    },
-   { 35, EV_SectorHticScroll<ANG180, 0>    },
-   { 36, EV_SectorHticScroll<ANG180, 1>    },
-   { 37, EV_SectorHticScroll<ANG180, 2>    },
-   { 38, EV_SectorHticScroll<ANG180, 3>    },
-   { 39, EV_SectorHticScroll<ANG180, 4>    },
-   { 40, EV_SectorHticWind<0,      0>      },
-   { 41, EV_SectorHticWind<0,      1>      },
-   { 42, EV_SectorHticWind<0,      2>      },
-   { 43, EV_SectorHticWind<ANG90,  0>      },
-   { 44, EV_SectorHticWind<ANG90,  1>      },
-   { 45, EV_SectorHticWind<ANG90,  2>      },
-   { 46, EV_SectorHticWind<ANG270, 0>      },
-   { 47, EV_SectorHticWind<ANG270, 1>      },
-   { 48, EV_SectorHticWind<ANG270, 2>      },
-   { 49, EV_SectorHticWind<ANG180, 0>      },
-   { 50, EV_SectorHticWind<ANG180, 1>      },
-   { 51, EV_SectorHticWind<ANG180, 2>      }
+static ev_sectorbinding_t HticSectorBindings[] = {
+    {  1, EV_SectorLightRandomOff           },
+    {  2, EV_SectorLightStrobeFast          },
+    {  3, EV_SectorLightStrobeSlow          },
+    {  4, EV_SectorHticScrollEastLavaDamage },
+    {  5, EV_SectorHticDamageLavaWimpy      },
+    {  7, EV_SectorHticDamageSludge         },
+    {  8, EV_SectorLightGlow                },
+    {  9, EV_SectorSecret                   },
+    { 10, EV_SectorDoorCloseIn30            },
+    { 11, EV_SectorExitSuperDamage          },
+    { 12, EV_SectorLightStrobeSlowSync      },
+    { 13, EV_SectorLightStrobeFastSync      },
+    { 14, EV_SectorDoorRaiseIn5Mins         },
+    { 15, EV_SectorHticFrictionLow          },
+    { 16, EV_SectorHticDamageLavaHefty      },
+    { 17, EV_SectorLightFireFlicker         },
+    { 20, EV_SectorHticScrollEast<0>        },
+    { 21, EV_SectorHticScrollEast<1>        },
+    { 22, EV_SectorHticScrollEast<2>        },
+    { 23, EV_SectorHticScrollEast<3>        },
+    { 24, EV_SectorHticScrollEast<4>        },
+    { 25, EV_SectorHticScroll<ANG90,  0>    },
+    { 26, EV_SectorHticScroll<ANG90,  1>    },
+    { 27, EV_SectorHticScroll<ANG90,  2>    },
+    { 28, EV_SectorHticScroll<ANG90,  3>    },
+    { 29, EV_SectorHticScroll<ANG90,  4>    },
+    { 30, EV_SectorHticScroll<ANG270, 0>    },
+    { 31, EV_SectorHticScroll<ANG270, 1>    },
+    { 32, EV_SectorHticScroll<ANG270, 2>    },
+    { 33, EV_SectorHticScroll<ANG270, 3>    },
+    { 34, EV_SectorHticScroll<ANG270, 4>    },
+    { 35, EV_SectorHticScroll<ANG180, 0>    },
+    { 36, EV_SectorHticScroll<ANG180, 1>    },
+    { 37, EV_SectorHticScroll<ANG180, 2>    },
+    { 38, EV_SectorHticScroll<ANG180, 3>    },
+    { 39, EV_SectorHticScroll<ANG180, 4>    },
+    { 40, EV_SectorHticWind<0,      0>      },
+    { 41, EV_SectorHticWind<0,      1>      },
+    { 42, EV_SectorHticWind<0,      2>      },
+    { 43, EV_SectorHticWind<ANG90,  0>      },
+    { 44, EV_SectorHticWind<ANG90,  1>      },
+    { 45, EV_SectorHticWind<ANG90,  2>      },
+    { 46, EV_SectorHticWind<ANG270, 0>      },
+    { 47, EV_SectorHticWind<ANG270, 1>      },
+    { 48, EV_SectorHticWind<ANG270, 2>      },
+    { 49, EV_SectorHticWind<ANG180, 0>      },
+    { 50, EV_SectorHticWind<ANG180, 1>      },
+    { 51, EV_SectorHticWind<ANG180, 2>      }
 };
 
 // Hexen sector specials
-static ev_sectorbinding_t HexenSectorBindings[] =
-{
-   {  1, EV_SectorHexenLightPhased         },
-   {  2, EV_SectorHexenLightSeqStart       },
-   {  3, EV_SectorHexenLightSequence       },
-   {  4, EV_SectorHexenLightSeqAlt         },
-   {  9, EV_SectorSecret                   },
+static ev_sectorbinding_t HexenSectorBindings[] = {
+    {  1, EV_SectorHexenLightPhased         },
+    {  2, EV_SectorHexenLightSeqStart       },
+    {  3, EV_SectorHexenLightSequence       },
+    {  4, EV_SectorHexenLightSeqAlt         },
+    {  9, EV_SectorSecret                   },
    // TODO: 26, 27 for stairs
-   { 40, EV_SectorHticWind<0,      0>      },
-   { 41, EV_SectorHticWind<0,      1>      },
-   { 42, EV_SectorHticWind<0,      2>      },
-   { 43, EV_SectorHticWind<ANG90,  0>      },
-   { 44, EV_SectorHticWind<ANG90,  1>      },
-   { 45, EV_SectorHticWind<ANG90,  2>      },
-   { 46, EV_SectorHticWind<ANG270, 0>      },
-   { 47, EV_SectorHticWind<ANG270, 1>      },
-   { 48, EV_SectorHticWind<ANG270, 2>      },
-   { 49, EV_SectorHticWind<ANG180, 0>      },
-   { 50, EV_SectorHticWind<ANG180, 1>      },
-   { 51, EV_SectorHticWind<ANG180, 2>      }
+    { 40, EV_SectorHticWind<0,      0>      },
+    { 41, EV_SectorHticWind<0,      1>      },
+    { 42, EV_SectorHticWind<0,      2>      },
+    { 43, EV_SectorHticWind<ANG90,  0>      },
+    { 44, EV_SectorHticWind<ANG90,  1>      },
+    { 45, EV_SectorHticWind<ANG90,  2>      },
+    { 46, EV_SectorHticWind<ANG270, 0>      },
+    { 47, EV_SectorHticWind<ANG270, 1>      },
+    { 48, EV_SectorHticWind<ANG270, 2>      },
+    { 49, EV_SectorHticWind<ANG180, 0>      },
+    { 50, EV_SectorHticWind<ANG180, 1>      },
+    { 51, EV_SectorHticWind<ANG180, 2>      }
    // TODO: 198 Lightning
    // TODO: 199 Lightning Flash
    // TODO: 200 Sky2
@@ -648,110 +644,113 @@ static ev_sectorbinding_t HexenSectorBindings[] =
    // TODO: ZDoom extensions
 };
 
+// clang-format on
+
 // PSX sector types
-static ev_sectorbinding_t PSXSectorBindings[] =
-{
-   {   8, EV_SectorLightPSXGlowLow     },
-   { 200, EV_SectorLightPSXGlow10      },
-   { 201, EV_SectorLightPSXGlow255     },
-   { 202, EV_SectorLightPSXStrobeHyper },
-   { 204, EV_SectorLightPSXStrobeFast  }
+static ev_sectorbinding_t PSXSectorBindings[] = {
+    { 8,   EV_SectorLightPSXGlowLow     },
+    { 200, EV_SectorLightPSXGlow10      },
+    { 201, EV_SectorLightPSXGlow255     },
+    { 202, EV_SectorLightPSXStrobeHyper },
+    { 204, EV_SectorLightPSXStrobeFast  }
 };
 
 // Sector specials allowed as the low 5 bits of generalized specials
-static ev_sectorbinding_t GenBindings[] =
-{
-   {  1, EV_SectorLightRandomOff       },
-   {  2, EV_SectorLightStrobeFast      },
-   {  3, EV_SectorLightStrobeSlow      },
-   {  4, EV_SectorLightStrobeHurt      },
-   {  8, EV_SectorLightGlow            },
-   { 10, EV_SectorDoorCloseIn30        },
-   { 12, EV_SectorLightStrobeSlowSync  },
-   { 13, EV_SectorLightStrobeFastSync  },
-   { 14, EV_SectorDoorRaiseIn5Mins     },
-   { 17, EV_SectorLightFireFlicker     }
+static ev_sectorbinding_t GenBindings[] = {
+    { 1,  EV_SectorLightRandomOff      },
+    { 2,  EV_SectorLightStrobeFast     },
+    { 3,  EV_SectorLightStrobeSlow     },
+    { 4,  EV_SectorLightStrobeHurt     },
+    { 8,  EV_SectorLightGlow           },
+    { 10, EV_SectorDoorCloseIn30       },
+    { 12, EV_SectorLightStrobeSlowSync },
+    { 13, EV_SectorLightStrobeFastSync },
+    { 14, EV_SectorDoorRaiseIn5Mins    },
+    { 17, EV_SectorLightFireFlicker    }
 };
 
-static ev_sectorbinding_t UDMFEternitySectorBindings[] =
-{
-   {   1, EV_SectorHexenLightPhased },
-   {   2, EV_SectorHexenLightSeqStart },
-   {   3, EV_SectorHexenLightSequence },
-   {   4, EV_SectorHexenLightSeqAlt },
-   // TODO: 26, 27 for stairs
-   {  40, EV_SectorHticWind<0,      0> },
-   {  41, EV_SectorHticWind<0,      1> },
-   {  42, EV_SectorHticWind<0,      2> },
-   {  43, EV_SectorHticWind<ANG90,  0> },
-   {  44, EV_SectorHticWind<ANG90,  1> },
-   {  45, EV_SectorHticWind<ANG90,  2> },
-   {  46, EV_SectorHticWind<ANG270, 0> },
-   {  47, EV_SectorHticWind<ANG270, 1> },
-   {  48, EV_SectorHticWind<ANG270, 2> },
-   {  49, EV_SectorHticWind<ANG180, 0> },
-   {  50, EV_SectorHticWind<ANG180, 1> },
-   {  51, EV_SectorHticWind<ANG180, 2> },
-   {  65, EV_SectorLightRandomOff },
-   {  66, EV_SectorLightStrobeFast },
-   {  67, EV_SectorLightStrobeSlow },
-   {  68, EV_SectorLightStrobeHurt },
-   {  69, EV_SectorDamageHellSlime },
-   {  71, EV_SectorDamageNukage },
-   {  72, EV_SectorLightGlow },
-   {  74, EV_SectorDoorCloseIn30 },
-   {  75, EV_SectorExitSuperDamage },
-   {  76, EV_SectorLightStrobeSlowSync },
-   {  77, EV_SectorLightStrobeFastSync },
-   {  78, EV_SectorDoorRaiseIn5Mins },
-   {  79, EV_SectorHticFrictionLow},
-   {  80, EV_SectorDamageSuperHellSlime },
-   {  81, EV_SectorLightFireFlicker },
-   {  82, EV_SectorHticDamageLavaWimpy },
-   {  83, EV_SectorHticDamageLavaHefty },
-   {  84, EV_SectorHticScrollEastLavaDamage },
-   {  85, EV_SectorHticDamageSludge },
-   // Need to look for the appropriate specials for this initial block,
-   // as some of these may have appropriate functions already there.
-   // TODO: 87 Outside Fog
-   // TODO: 104 5% Damage + Light On + Off Randomly
-   // TODO: 105 Delayed damage weak
-   { 115, EV_SectorStrifeInstantKill },
-   // TODO: 116 Delayed damage strong
-   // TODO: 118 Carry player by tag
-   // TODO: 195 Hidden
-   // TODO: 196 Healing Sector
-   // TODO 197: Outdoor Lightning
+// clang-format off
 
-   // MaxW: 2016/29/06: This block was not written by me, so this stuff does need
-   // new functions.
-   // TODO: 198 Lightning
-   // TODO: 199 Lightning Flash
-   // TODO: 200 Sky2
-   // TODO: 201-224 current scrollers
-   // TODO: ZDoom extensions
+static ev_sectorbinding_t UDMFEternitySectorBindings[] = {
+    {   1, EV_SectorHexenLightPhased },
+    {   2, EV_SectorHexenLightSeqStart },
+    {   3, EV_SectorHexenLightSequence },
+    {   4, EV_SectorHexenLightSeqAlt },
+    // TODO: 26, 27 for stairs
+    {  40, EV_SectorHticWind<0,      0>      },
+    {  41, EV_SectorHticWind<0,      1>      },
+    {  42, EV_SectorHticWind<0,      2>      },
+    {  43, EV_SectorHticWind<ANG90,  0>      },
+    {  44, EV_SectorHticWind<ANG90,  1>      },
+    {  45, EV_SectorHticWind<ANG90,  2>      },
+    {  46, EV_SectorHticWind<ANG270, 0>      },
+    {  47, EV_SectorHticWind<ANG270, 1>      },
+    {  48, EV_SectorHticWind<ANG270, 2>      },
+    {  49, EV_SectorHticWind<ANG180, 0>      },
+    {  50, EV_SectorHticWind<ANG180, 1>      },
+    {  51, EV_SectorHticWind<ANG180, 2>      },
+    {  65, EV_SectorLightRandomOff           },
+    {  66, EV_SectorLightStrobeFast          },
+    {  67, EV_SectorLightStrobeSlow          },
+    {  68, EV_SectorLightStrobeHurt          },
+    {  69, EV_SectorDamageHellSlime          },
+    {  71, EV_SectorDamageNukage             },
+    {  72, EV_SectorLightGlow                },
+    {  74, EV_SectorDoorCloseIn30            },
+    {  75, EV_SectorExitSuperDamage          },
+    {  76, EV_SectorLightStrobeSlowSync      },
+    {  77, EV_SectorLightStrobeFastSync      },
+    {  78, EV_SectorDoorRaiseIn5Mins         },
+    {  79, EV_SectorHticFrictionLow          },
+    {  80, EV_SectorDamageSuperHellSlime     },
+    {  81, EV_SectorLightFireFlicker         },
+    {  82, EV_SectorHticDamageLavaWimpy      },
+    {  83, EV_SectorHticDamageLavaHefty      },
+    {  84, EV_SectorHticScrollEastLavaDamage },
+    {  85, EV_SectorHticDamageSludge         },
+    // Need to look for the appropriate specials for this initial block,
+    // as some of these may have appropriate functions already there.
+    // TODO: 87 Outside Fog
+    // TODO: 104 5% Damage + Light On + Off Randomly
+    // TODO: 105 Delayed damage weak
+    { 115, EV_SectorStrifeInstantKill },
+    // TODO: 116 Delayed damage strong
+    // TODO: 118 Carry player by tag
+    // TODO: 195 Hidden
+    // TODO: 196 Healing Sector
+    // TODO 197: Outdoor Lightning
 
-   { 225, EV_SectorHticScrollEast<0> },
-   { 226, EV_SectorHticScrollEast<1> },
-   { 227, EV_SectorHticScrollEast<2> },
-   { 228, EV_SectorHticScrollEast<3> },
-   { 229, EV_SectorHticScrollEast<4> },
-   { 230, EV_SectorHticScroll<ANG90,  0> },
-   { 231, EV_SectorHticScroll<ANG90,  1> },
-   { 232, EV_SectorHticScroll<ANG90,  2> },
-   { 233, EV_SectorHticScroll<ANG90,  3> },
-   { 234, EV_SectorHticScroll<ANG90,  4> },
-   { 235, EV_SectorHticScroll<ANG270, 0> },
-   { 236, EV_SectorHticScroll<ANG270, 1> },
-   { 237, EV_SectorHticScroll<ANG270, 2> },
-   { 238, EV_SectorHticScroll<ANG270, 3> },
-   { 239, EV_SectorHticScroll<ANG270, 4> },
-   { 240, EV_SectorHticScroll<ANG180, 0> },
-   { 241, EV_SectorHticScroll<ANG180, 1> },
-   { 242, EV_SectorHticScroll<ANG180, 2> },
-   { 243, EV_SectorHticScroll<ANG180, 3> },
-   { 244, EV_SectorHticScroll<ANG180, 4> }
+    // MaxW: 2016/29/06: This block was not written by me, so this stuff does need
+    // new functions.
+    // TODO: 198 Lightning
+    // TODO: 199 Lightning Flash
+    // TODO: 200 Sky2
+    // TODO: 201-224 current scrollers
+    // TODO: ZDoom extensions
+
+    { 225, EV_SectorHticScrollEast<0>     },
+    { 226, EV_SectorHticScrollEast<1>     },
+    { 227, EV_SectorHticScrollEast<2>     },
+    { 228, EV_SectorHticScrollEast<3>     },
+    { 229, EV_SectorHticScrollEast<4>     },
+    { 230, EV_SectorHticScroll<ANG90,  0> },
+    { 231, EV_SectorHticScroll<ANG90,  1> },
+    { 232, EV_SectorHticScroll<ANG90,  2> },
+    { 233, EV_SectorHticScroll<ANG90,  3> },
+    { 234, EV_SectorHticScroll<ANG90,  4> },
+    { 235, EV_SectorHticScroll<ANG270, 0> },
+    { 236, EV_SectorHticScroll<ANG270, 1> },
+    { 237, EV_SectorHticScroll<ANG270, 2> },
+    { 238, EV_SectorHticScroll<ANG270, 3> },
+    { 239, EV_SectorHticScroll<ANG270, 4> },
+    { 240, EV_SectorHticScroll<ANG180, 0> },
+    { 241, EV_SectorHticScroll<ANG180, 1> },
+    { 242, EV_SectorHticScroll<ANG180, 2> },
+    { 243, EV_SectorHticScroll<ANG180, 3> },
+    { 244, EV_SectorHticScroll<ANG180, 4> }
 };
+
+// clang-format on
 
 //
 // EV_findBinding
@@ -759,20 +758,19 @@ static ev_sectorbinding_t UDMFEternitySectorBindings[] =
 // Look up a sector binding in a given set. The sets are small so this is just
 // a linear search.
 //
-static ev_sectorbinding_t *EV_findBinding(ev_sectorbinding_t *bindings, 
-                                          size_t numBindings, int special)
+static ev_sectorbinding_t *EV_findBinding(ev_sectorbinding_t *bindings, size_t numBindings, int special)
 {
-   // early return for zero special
-   if(!special)
-      return nullptr;
+    // early return for zero special
+    if(!special)
+        return nullptr;
 
-   for(size_t i = 0; i < numBindings; i++)
-   {
-      if(bindings[i].special == special)
-         return &bindings[i];
-   }
+    for(size_t i = 0; i < numBindings; i++)
+    {
+        if(bindings[i].special == special)
+            return &bindings[i];
+    }
 
-   return nullptr;         
+    return nullptr;
 }
 
 //
@@ -782,7 +780,7 @@ static ev_sectorbinding_t *EV_findBinding(ev_sectorbinding_t *bindings,
 //
 static ev_sectorbinding_t *EV_DOOMBindingForSectorSpecial(int special)
 {
-   return EV_findBinding(DoomSectorBindings, earrlen(DoomSectorBindings), special);
+    return EV_findBinding(DoomSectorBindings, earrlen(DoomSectorBindings), special);
 }
 
 //
@@ -793,14 +791,13 @@ static ev_sectorbinding_t *EV_DOOMBindingForSectorSpecial(int special)
 //
 static ev_sectorbinding_t *EV_PSXBindingForSectorSpecial(int special)
 {
-   ev_sectorbinding_t *binding;
+    ev_sectorbinding_t *binding;
 
-   if(!(binding = EV_findBinding(PSXSectorBindings, earrlen(PSXSectorBindings), special)))
-      binding = EV_DOOMBindingForSectorSpecial(special);
+    if(!(binding = EV_findBinding(PSXSectorBindings, earrlen(PSXSectorBindings), special)))
+        binding = EV_DOOMBindingForSectorSpecial(special);
 
-   return binding;
+    return binding;
 }
-   
 
 //
 // EV_HereticBindingForSectorSpecial
@@ -809,7 +806,7 @@ static ev_sectorbinding_t *EV_PSXBindingForSectorSpecial(int special)
 //
 static ev_sectorbinding_t *EV_HereticBindingForSectorSpecial(int special)
 {
-   return EV_findBinding(HticSectorBindings, earrlen(HticSectorBindings), special);
+    return EV_findBinding(HticSectorBindings, earrlen(HticSectorBindings), special);
 }
 
 //
@@ -819,7 +816,7 @@ static ev_sectorbinding_t *EV_HereticBindingForSectorSpecial(int special)
 //
 static ev_sectorbinding_t *EV_HexenBindingForSectorSpecial(int special)
 {
-   return EV_findBinding(HexenSectorBindings, earrlen(HexenSectorBindings), special);
+    return EV_findBinding(HexenSectorBindings, earrlen(HexenSectorBindings), special);
 }
 
 //
@@ -829,7 +826,7 @@ static ev_sectorbinding_t *EV_HexenBindingForSectorSpecial(int special)
 //
 static ev_sectorbinding_t *EV_GenBindingForSectorSpecial(int special)
 {
-   return EV_findBinding(GenBindings, earrlen(GenBindings), special & LIGHT_MASK);
+    return EV_findBinding(GenBindings, earrlen(GenBindings), special & LIGHT_MASK);
 }
 
 //
@@ -839,46 +836,46 @@ static ev_sectorbinding_t *EV_GenBindingForSectorSpecial(int special)
 //
 static ev_sectorbinding_t *EV_UDMFEternityBindingForSectorSpecial(int special)
 {
-   return EV_findBinding(UDMFEternitySectorBindings, earrlen(UDMFEternitySectorBindings), special);
+    return EV_findBinding(UDMFEternitySectorBindings, earrlen(UDMFEternitySectorBindings), special);
 }
 
 //
 // EV_BindingForSectorSpecial
 //
-// Gets the binding for a given special depending on the level format and 
+// Gets the binding for a given special depending on the level format and
 // gamemode.
 //
 static ev_sectorbinding_t *EV_BindingForSectorSpecial(int special)
 {
-   ev_sectorbinding_t *binding = nullptr;
+    ev_sectorbinding_t *binding = nullptr;
 
-   switch(LevelInfo.mapFormat)
-   {
-   case LEVEL_FORMAT_UDMF_ETERNITY:
-      binding = EV_UDMFEternityBindingForSectorSpecial(special);
-      break;
-   case LEVEL_FORMAT_HEXEN:
-      binding = EV_HexenBindingForSectorSpecial(special);
-      break;
-   case LEVEL_FORMAT_PSX:
-      binding = EV_PSXBindingForSectorSpecial(special);
-      break;
-   default:
-      switch(LevelInfo.levelType)
-      {
-      case LI_TYPE_DOOM:
-         binding = EV_DOOMBindingForSectorSpecial(special);
-         break;
-      case LI_TYPE_HERETIC:
-         binding = EV_HereticBindingForSectorSpecial(special);
-         break;
-      default:
-         break; // others TODO
-      }
-      break;
-   }
+    switch(LevelInfo.mapFormat)
+    {
+    case LEVEL_FORMAT_UDMF_ETERNITY: //
+        binding = EV_UDMFEternityBindingForSectorSpecial(special);
+        break;
+    case LEVEL_FORMAT_HEXEN: //
+        binding = EV_HexenBindingForSectorSpecial(special);
+        break;
+    case LEVEL_FORMAT_PSX: //
+        binding = EV_PSXBindingForSectorSpecial(special);
+        break;
+    default:
+        switch(LevelInfo.levelType)
+        {
+        case LI_TYPE_DOOM: //
+            binding = EV_DOOMBindingForSectorSpecial(special);
+            break;
+        case LI_TYPE_HERETIC: //
+            binding = EV_HereticBindingForSectorSpecial(special);
+            break;
+        default:   //
+            break; // others TODO
+        }
+        break;
+    }
 
-   return binding;
+    return binding;
 }
 
 //=============================================================================
@@ -893,13 +890,13 @@ static ev_sectorbinding_t *EV_BindingForSectorSpecial(int special)
 //
 static bool EV_IsGenSectorSpecial(int special)
 {
-   // UDMF (based on ZDoom's) sector specials
-   if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
-      return (special > UDMF_SEC_MASK);   // from 256 up
-   if(LevelInfo.mapFormat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_DOOM)
-      return (special > LIGHT_MASK);
+    // UDMF (based on ZDoom's) sector specials
+    if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
+        return (special > UDMF_SEC_MASK); // from 256 up
+    if(LevelInfo.mapFormat == LEVEL_FORMAT_DOOM && LevelInfo.levelType == LI_TYPE_DOOM)
+        return (special > LIGHT_MASK);
 
-   return false;
+    return false;
 }
 
 //
@@ -907,55 +904,56 @@ static bool EV_IsGenSectorSpecial(int special)
 //
 // Pull out the flag bits from a BOOM generalized sector special and set them
 // as sector flags.
-// 
+//
 static void EV_setGeneralizedSectorFlags(sector_t *sector)
 {
-   // generalized sectors don't exist in old demos
-   if(demo_version < 200)
-      return;
+    // generalized sectors don't exist in old demos
+    if(demo_version < 200)
+        return;
 
-   // haleyjd 12/28/08: convert BOOM generalized sector types into sector flags
-   //         12/31/08: convert BOOM generalized damage
+    // haleyjd 12/28/08: convert BOOM generalized sector types into sector flags
+    //         12/31/08: convert BOOM generalized damage
 
-   // convert special bits into flags (correspondence is direct by design)
-   int16_t special = sector->special;
-   if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
-      special >>= UDMF_BOOM_SHIFT;  // to get the flags, we need to move bits
-   
-   sector->flags |= (special & GENSECTOFLAGSMASK) >> SECRET_SHIFT;
+    // convert special bits into flags (correspondence is direct by design)
+    int16_t special = sector->special;
+    if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
+        special >>= UDMF_BOOM_SHIFT; // to get the flags, we need to move bits
+
+    sector->flags |= (special & GENSECTOFLAGSMASK) >> SECRET_SHIFT;
 }
 
 static void EV_applyGeneralizedDamage(sector_t *sector, bool udmf)
 {
-   // Apply slime damage UNLESS the MBF21 insta-death bit is set, which changes rules
-   // convert damage
-   int damagetype = (sector->special >> (udmf ? UDMF_BOOM_SHIFT : 0) & DAMAGE_MASK) >> DAMAGE_SHIFT;
-   bool instadeath = mbf21_demo && sector->flags & SECF_INSTANTDEATH;
-   // Don't just make a new nukage type with GOD_BREACH_DAMAGE, because most subtypes work 
-   // differently
+    // Apply slime damage UNLESS the MBF21 insta-death bit is set, which changes rules
+    // convert damage
+    int  damagetype = (sector->special >> (udmf ? UDMF_BOOM_SHIFT : 0) & DAMAGE_MASK) >> DAMAGE_SHIFT;
+    bool instadeath = mbf21_demo && sector->flags & SECF_INSTANTDEATH;
+    // Don't just make a new nukage type with GOD_BREACH_DAMAGE, because most subtypes work
+    // differently
 
-   switch(damagetype)
-   {
-   case 1:
-      if(instadeath)
-         sector->damageflags |= SDMG_IGNORESUIT;
-      else
-         EV_SectorDamageNukage(sector); // 5 per 32 tics
-      break;
-   case 2:
-      if(instadeath)
-         sector->damageflags |= SDMG_INSTAEXITNORMAL | SDMG_IGNORESUIT;
-      else
-         EV_SectorDamageHellSlime(sector); // 10 per 32 tics
-      break;
-   case 3:
-      if(instadeath)
-         sector->damageflags |= SDMG_INSTAEXITSECRET | SDMG_IGNORESUIT;
-      else
-         EV_SectorDamageSuperHellSlime(sector); // 20 per 32 tics w/LEAKYSUIT
-   default:
-      break;
-   }
+    switch(damagetype)
+    {
+    case 1:
+        if(instadeath)
+            sector->damageflags |= SDMG_IGNORESUIT;
+        else
+            EV_SectorDamageNukage(sector); // 5 per 32 tics
+        break;
+    case 2:
+        if(instadeath)
+            sector->damageflags |= SDMG_INSTAEXITNORMAL | SDMG_IGNORESUIT;
+        else
+            EV_SectorDamageHellSlime(sector); // 10 per 32 tics
+        break;
+    case 3:
+        if(instadeath)
+            sector->damageflags |= SDMG_INSTAEXITSECRET | SDMG_IGNORESUIT;
+        else
+            EV_SectorDamageSuperHellSlime(sector); // 20 per 32 tics w/LEAKYSUIT
+        break;
+    default: //
+        break;
+    }
 }
 
 //
@@ -966,33 +964,32 @@ static void EV_applyGeneralizedDamage(sector_t *sector, bool udmf)
 //
 static void EV_initGeneralizedSector(sector_t *sector)
 {
-   // generalized sectors don't exist in old demos (they would have caused the
-   // game to bomb out anyway).
-   if(demo_version < 200)
-   {
-      sector->special = 0;
-      return;
-   }
+    // generalized sectors don't exist in old demos (they would have caused the
+    // game to bomb out anyway).
+    if(demo_version < 200)
+    {
+        sector->special = 0;
+        return;
+    }
 
-   // UDMF format handled right here
-   if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
-   {
-      EV_applyGeneralizedDamage(sector, true);
+    // UDMF format handled right here
+    if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
+    {
+        EV_applyGeneralizedDamage(sector, true);
 
-      // mask it by the smallest 8 bits
-      auto binding = EV_UDMFEternityBindingForSectorSpecial(sector->special
-                                                            & UDMF_SEC_MASK);
-      if(binding)
-         binding->apply(sector);
-      return;
-   }
+        // mask it by the smallest 8 bits
+        auto binding = EV_UDMFEternityBindingForSectorSpecial(sector->special & UDMF_SEC_MASK);
+        if(binding)
+            binding->apply(sector);
+        return;
+    }
 
-   EV_applyGeneralizedDamage(sector, false);
+    EV_applyGeneralizedDamage(sector, false);
 
-   // apply "light" specials (some are allowed that are not lighting specials)
-   auto binding = EV_GenBindingForSectorSpecial(sector->special);
-   if(binding)
-      binding->apply(sector);
+    // apply "light" specials (some are allowed that are not lighting specials)
+    auto binding = EV_GenBindingForSectorSpecial(sector->special);
+    if(binding)
+        binding->apply(sector);
 }
 
 //=============================================================================
@@ -1007,30 +1004,30 @@ static void EV_initGeneralizedSector(sector_t *sector)
 //
 void EV_SpawnSectorSpecials()
 {
-   for(int i = 0; i < numsectors; i++)
-   {
-      auto sector = &sectors[i];
-      bool isgen  = EV_IsGenSectorSpecial(sector->special);
-      
-      if(isgen)
-        EV_setGeneralizedSectorFlags(sector);
+    for(int i = 0; i < numsectors; i++)
+    {
+        auto sector = &sectors[i];
+        bool isgen  = EV_IsGenSectorSpecial(sector->special);
 
-      // count generalized secrets
-      if(sector->flags & SECF_SECRET)
-         ++totalsecret;
+        if(isgen)
+            EV_setGeneralizedSectorFlags(sector);
 
-      if(!sector->special)
-         continue;
+        // count generalized secrets
+        if(sector->flags & SECF_SECRET)
+            ++totalsecret;
 
-      if(isgen)
-         EV_initGeneralizedSector(sector);
-      else
-      {
-         auto binding = EV_BindingForSectorSpecial(sector->special);
-         if(binding)
-            binding->apply(sector);         
-      }
-   }
+        if(!sector->special)
+            continue;
+
+        if(isgen)
+            EV_initGeneralizedSector(sector);
+        else
+        {
+            auto binding = EV_BindingForSectorSpecial(sector->special);
+            if(binding)
+                binding->apply(sector);
+        }
+    }
 }
 
 //=============================================================================
@@ -1045,19 +1042,18 @@ void EV_SpawnSectorSpecials()
 //
 CONSOLE_COMMAND(ev_mapsectorspecs, cf_level)
 {
-   for(int i = 0; i < numsectors; i++)
-   {
-      sector_t *sec = &sectors[i];
+    for(int i = 0; i < numsectors; i++)
+    {
+        sector_t *sec = &sectors[i];
 
-      if(!sec->special)
-         continue;
+        if(!sec->special)
+            continue;
 
-      bool isgen = EV_IsGenSectorSpecial(sec->special);
-      auto bind  = EV_BindingForSectorSpecial(sec->special);
+        bool isgen = EV_IsGenSectorSpecial(sec->special);
+        auto bind  = EV_BindingForSectorSpecial(sec->special);
 
-      C_Printf("%5d: %5d %3d (%s type)\n", i, sec->special, sec->tag, 
-               (isgen || bind) ? "known" : "unknown");
-   }
+        C_Printf("%5d: %5d %3d (%s type)\n", i, sec->special, sec->tag, (isgen || bind) ? "known" : "unknown");
+    }
 }
 
 // EOF

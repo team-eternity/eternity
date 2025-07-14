@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2017 James Haley, Ioan Chera, et al.
+// Copyright (C) 2025 James Haley, Ioan Chera, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: Isolated demo logging functions
+//------------------------------------------------------------------------------
+//
+// Purpose: Isolated demo logging functions.
 // Authors: Ioan Chera
 //
 

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,26 +18,20 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   
-//  OpenGL Primitives
-//  haleyjd 05/15/11
+// Purpose: OpenGL primitives.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef GL_PRIMITIVES_H__
 #define GL_PRIMITIVES_H__
 
 #ifdef EE_FEATURE_OPENGL
 
-void GL_OrthoQuadTextured(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
-                          GLfloat smax, GLfloat tmax);
+void GL_OrthoQuadTextured(GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat smax, GLfloat tmax);
 
-void GL_OrthoQuadFlat(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
-                      GLfloat r, GLfloat b, GLfloat g);
-
+void GL_OrthoQuadFlat(GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat r, GLfloat b, GLfloat g);
 
 #endif
 

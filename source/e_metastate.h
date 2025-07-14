@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Metastates
+// Purpose: Metastates.
+// Authors: James Haley
 //
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #ifndef E_METASTATE_H__
 #define E_METASTATE_H__
@@ -42,32 +39,25 @@
 //
 class MetaState : public MetaObject
 {
-   DECLARE_RTTI_TYPE(MetaState, MetaObject)
+    DECLARE_RTTI_TYPE(MetaState, MetaObject)
 
 public:
-   state_t *state;      // the state
+    state_t *state; // the state
 
-   // Default constructor
-   MetaState() : Super(), state(nullptr)
-   {
-   }
+    // Default constructor
+    MetaState() : Super(), state(nullptr) {}
 
-   // Parameterized constructor
-   MetaState(const char *key, state_t *pState) : Super(key), state(pState)
-   {
-   }
+    // Parameterized constructor
+    MetaState(const char *key, state_t *pState) : Super(key), state(pState) {}
 
-   // Copy constructor
-   MetaState(const MetaState &other) 
-      : Super(other), state(other.state)
-   {
-   }
+    // Copy constructor
+    MetaState(const MetaState &other) : Super(other), state(other.state) {}
 
-   // Clone - virtual copy constructor
-   virtual MetaObject *clone() const override { return new MetaState(*this); }
+    // Clone - virtual copy constructor
+    virtual MetaObject *clone() const override { return new MetaState(*this); }
 
-   // toString - virtual method for nice display of metastate properties.
-   virtual const char *toString() const override { return state->name; }
+    // toString - virtual method for nice display of metastate properties.
+    virtual const char *toString() const override { return state->name; }
 };
 
 //
@@ -77,39 +67,32 @@ public:
 //
 class MetaDropItem : public MetaObject
 {
-   DECLARE_RTTI_TYPE(MetaDropItem, MetaObject)
+    DECLARE_RTTI_TYPE(MetaDropItem, MetaObject)
 
 public:
-   qstring item;
-   int     chance;
-   int     amount;
-   bool    toss;
+    qstring item;
+    int     chance;
+    int     amount;
+    bool    toss;
 
-   // Default constructor
-   MetaDropItem() : Super(), item(), chance(255), amount(0), toss(false)
-   {
-   }
+    // Default constructor
+    MetaDropItem() : Super(), item(), chance(255), amount(0), toss(false) {}
 
-   // Parameterized constructor
-   MetaDropItem(const char *key, const char *p_item, int p_chance, 
-                int p_amount, bool p_toss)
-      : Super(key), item(p_item), chance(p_chance), amount(p_amount), 
-        toss(p_toss)
-   {
-   }
+    // Parameterized constructor
+    MetaDropItem(const char *key, const char *p_item, int p_chance, int p_amount, bool p_toss)
+        : Super(key), item(p_item), chance(p_chance), amount(p_amount), toss(p_toss)
+    {}
 
-   // Copy constructor
-   MetaDropItem(const MetaDropItem &other) 
-      : Super(other), item(other.item), chance(other.chance), 
-        amount(other.amount), toss(other.toss)
-   {
-   }
+    // Copy constructor
+    MetaDropItem(const MetaDropItem &other)
+        : Super(other), item(other.item), chance(other.chance), amount(other.amount), toss(other.toss)
+    {}
 
-   // Clone - virtual copy constructor
-   virtual MetaObject *clone() const override { return new MetaDropItem(*this); }
+    // Clone - virtual copy constructor
+    virtual MetaObject *clone() const override { return new MetaDropItem(*this); }
 
-   // toString - virtual method for nice display of metastate properties.
-   virtual const char *toString() const override { return item.constPtr(); }
+    // toString - virtual method for nice display of metastate properties.
+    virtual const char *toString() const override { return item.constPtr(); }
 };
 
 enum bloodaction_e : int;
@@ -122,37 +105,31 @@ enum bloodtype_e : int;
 //
 class MetaBloodBehavior : public MetaObject
 {
-   DECLARE_RTTI_TYPE(MetaBloodBehavior, MetaObject)
+    DECLARE_RTTI_TYPE(MetaBloodBehavior, MetaObject)
 
 public:
-   bloodaction_e action;
-   bloodtype_e   behavior;
-   
-   // Default constructor
-   MetaBloodBehavior() : Super(), action(), behavior()
-   {
-   }
+    bloodaction_e action;
+    bloodtype_e   behavior;
 
-   // Parameterized constructor
-   MetaBloodBehavior(const char *key, bloodaction_e pAction, bloodtype_e pBehavior)
-      : Super(key), action(pAction), behavior(pBehavior)
-   {
-   }
+    // Default constructor
+    MetaBloodBehavior() : Super(), action(), behavior() {}
 
-   // Copy constructor
-   MetaBloodBehavior(const MetaBloodBehavior &other) 
-      : Super(other), action(other.action), behavior(other.behavior)
-   {
-   }
+    // Parameterized constructor
+    MetaBloodBehavior(const char *key, bloodaction_e pAction, bloodtype_e pBehavior)
+        : Super(key), action(pAction), behavior(pBehavior)
+    {}
 
-   // Clone - virtual copy constructor
-   virtual MetaObject *clone() const override { return new MetaBloodBehavior(*this); }
+    // Copy constructor
+    MetaBloodBehavior(const MetaBloodBehavior &other) : Super(other), action(other.action), behavior(other.behavior) {}
 
-   // toString - virtual method for nice display of metastate properties.
-   virtual const char *toString() const override
-   { 
-      return "MetaBloodBehavior"; // TODO
-   }
+    // Clone - virtual copy constructor
+    virtual MetaObject *clone() const override { return new MetaBloodBehavior(*this); }
+
+    // toString - virtual method for nice display of metastate properties.
+    virtual const char *toString() const override
+    {
+        return "MetaBloodBehavior"; // TODO
+    }
 };
 
 #endif

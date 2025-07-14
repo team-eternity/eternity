@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Generalized line action system - Bindings
+// Purpose: Generalized line action system - Bindings.
+// Authors: James Haley, David Hill, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 
@@ -44,99 +42,91 @@
 // Heretic defers to DOOM's bindings for types it does not implement, it needs
 // to hide BOOM type 99 with a null action binding.
 //
-ev_action_t NullAction =
-{
-   &NullActionType,
-   EV_ActionNull,
-   0,
-   0,
-   "None",
-   0
-};
+ev_action_t NullAction = { &NullActionType, EV_ActionNull, 0, 0, "None", 0 };
 
 // Macro to declare a DOOM-style W1 line action
 #define W1LINE(name, action, flags, version) \
-   static ev_action_t name =                 \
-   {                                         \
-      &W1ActionType,                         \
-      EV_Action ## action,                   \
-      flags,                                 \
-      version,                               \
-      #name,                                 \
-      0                                      \
-   }
+    static ev_action_t name =                \
+    {                                        \
+        &W1ActionType,                       \
+        EV_Action ## action,                 \
+        flags,                               \
+        version,                             \
+        #name,                               \
+        0                                    \
+    }
 
 // Macro to declare a DOOM-style WR line action
 #define WRLINE(name, action, flags, version) \
-   static ev_action_t name =                 \
-   {                                         \
-      &WRActionType,                         \
-      EV_Action ## action,                   \
-      flags,                                 \
-      version,                               \
-      #name,                                 \
-      0                                      \
-   }
+    static ev_action_t name =                \
+    {                                        \
+        &WRActionType,                       \
+        EV_Action ## action,                 \
+        flags,                               \
+        version,                             \
+        #name,                               \
+        0                                    \
+    }
 
 // Macro to declare a DOOM-style S1 line action
 #define S1LINE(name, action, flags, version) \
-   static ev_action_t name =                 \
-   {                                         \
-      &S1ActionType,                         \
-      EV_Action ## action,                   \
-      flags,                                 \
-      version,                               \
-      #name,                                 \
-      0                                      \
-   }
+    static ev_action_t name =                \
+    {                                        \
+        &S1ActionType,                       \
+        EV_Action ## action,                 \
+        flags,                               \
+        version,                             \
+        #name,                               \
+        0                                    \
+    }
 
 // Macro to declare a DOOM-style SR line action
 #define SRLINE(name, action, flags, version) \
-   static ev_action_t name =                 \
-   {                                         \
-      &SRActionType,                         \
-      EV_Action ## action,                   \
-      flags,                                 \
-      version,                               \
-      #name,                                 \
-      0                                      \
-   }
+    static ev_action_t name =                \
+    {                                        \
+        &SRActionType,                       \
+        EV_Action ## action,                 \
+        flags,                               \
+        version,                             \
+        #name,                               \
+        0                                    \
+    }
 
 // Macro to declare a DOOM-style DR line action
 #define DRLINE(name, action, flags, version) \
-   static ev_action_t name =                 \
-   {                                         \
-      &DRActionType,                         \
-      EV_Action ## action,                   \
-      flags,                                 \
-      version,                               \
-      #name,                                 \
-      0                                      \
-   }
+    static ev_action_t name =                \
+    {                                        \
+        &DRActionType,                       \
+        EV_Action ## action,                 \
+        flags,                               \
+        version,                             \
+        #name,                               \
+        0                                    \
+    }
 
 // Macro to declare a DOOM-style G1 line action
 #define G1LINE(name, action, flags, version) \
-   static ev_action_t name =                 \
-   {                                         \
-      &G1ActionType,                         \
-      EV_Action ## action,                   \
-      flags,                                 \
-      version,                               \
-      #name,                                 \
-      0                                      \
-   }
+    static ev_action_t name =                \
+    {                                        \
+        &G1ActionType,                       \
+        EV_Action ## action,                 \
+        flags,                               \
+        version,                             \
+        #name,                               \
+        0                                    \
+    }
 
 // Macro to declare a DOOM-style GR line action
 #define GRLINE(name, action, flags, version) \
-   static ev_action_t name =                 \
-   {                                         \
-      &GRActionType,                         \
-      EV_Action ## action,                   \
-      flags,                                 \
-      version,                               \
-      #name,                                 \
-      0                                      \
-   }
+    static ev_action_t name =                \
+    {                                        \
+        &GRActionType,                       \
+        EV_Action ## action,                 \
+        flags,                               \
+        version,                             \
+        #name,                               \
+        0                                    \
+    }
 
 // DOOM Line Type 1 - DR Raise Door
 DRLINE(DRRaiseDoor, VerticalDoor, EV_PREALLOWMONSTERS, 0);
@@ -274,7 +264,7 @@ SRLINE(SRCeilingLowerToFloor, CeilingLowerToFloor, 0, 0);
 // DOOM Line Type 44 - W1 Ceiling Crush
 W1LINE(W1CeilingLowerAndCrush, CeilingLowerAndCrush, 0, 0);
 
-// DOOM Line Type 45 - SR Floor Lower to Surr. Floor 
+// DOOM Line Type 45 - SR Floor Lower to Surr. Floor
 SRLINE(SRLowerFloor, LowerFloor, 0, 0);
 
 // DOOM Line Type 46 - GR Open Door
@@ -510,10 +500,12 @@ WRLINE(WRSecretExit, SecretExit, EV_PREALLOWZEROTAG | EV_ISMAPPEDEXIT, 0);
 
 // DOOM Line Type 125 - W1 Teleport Monsters Only
 // jff 3/5/98 add ability of monsters etc. to use teleporters
-W1LINE(W1TeleportMonsters, Teleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS | EV_PREMONSTERSONLY | EV_ISTELEPORTER, 0);
+W1LINE(W1TeleportMonsters, Teleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS | EV_PREMONSTERSONLY | EV_ISTELEPORTER,
+       0);
 
 // DOOM Line Type 126 - WR Teleport Monsters Only
-WRLINE(WRTeleportMonsters, Teleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS | EV_PREMONSTERSONLY | EV_ISTELEPORTER, 0);
+WRLINE(WRTeleportMonsters, Teleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTERS | EV_PREMONSTERSONLY | EV_ISTELEPORTER,
+       0);
 
 // DOOM Line Type 127 - S1 Build Stairs Up Turbo 16
 S1LINE(S1BuildStairsTurbo16, BuildStairsTurbo16, 0, 0);
@@ -945,14 +937,13 @@ S1LINE(S1HereticStairsBuildUp16FS, HereticStairsBuildUp16FS, 0, 0);
 // BOOM Generalized Line Action
 //
 
-ev_action_t BoomGenAction =
-{                                         
-   &BoomGenActionType,    // use generalized action type
-   EV_ActionBoomGen,      // use a single action function
-   0,                     // flags aren't used
-   200,                   // BOOM or up
-   "BoomGenAction",       // display name
-   0                      // lock ID
+ev_action_t BoomGenAction = {
+    &BoomGenActionType, // use generalized action type
+    EV_ActionBoomGen,   // use a single action function
+    0,                  // flags aren't used
+    200,                // BOOM or up
+    "BoomGenAction",    // display name
+    0                   // lock ID
 };
 
 //=============================================================================
@@ -962,38 +953,38 @@ ev_action_t BoomGenAction =
 
 // Macro to declare a parameterized line action
 
-#define PARAMLINE(name)      \
-   static ev_action_t name = \
-   {                         \
-      &ParamActionType,      \
-      EV_Action ## name,     \
-      0,                     \
-      333,                   \
-      #name,                 \
-      0                      \
-   }
+#define PARAMLINE(name)       \
+    static ev_action_t name = \
+    {                         \
+        &ParamActionType,     \
+        EV_Action ## name,    \
+        0,                    \
+        333,                  \
+        #name,                \
+        0                     \
+    }
 
 #define PARAMLINELOCKED(name, lockid) \
-   static ev_action_t name =          \
-   {                                  \
-      &ParamActionType,               \
-      EV_Action ## name,              \
-      EV_PARAMLOCKID,                 \
-      333,                            \
-      #name,                          \
-      lockid                          \
-   }
+    static ev_action_t name =         \
+    {                                 \
+        &ParamActionType,             \
+        EV_Action ## name,            \
+        EV_PARAMLOCKID,               \
+        333,                          \
+        #name,                        \
+        lockid                        \
+    }
 
 #define PARAMLINEFLAGGED(name, flags) \
-   static ev_action_t name =          \
-   {                                  \
-      &ParamActionType,               \
-      EV_Action ## name,              \
-      flags,                          \
-      333,                            \
-      #name,                          \
-      0                               \
-   }
+    static ev_action_t name =         \
+    {                                 \
+        &ParamActionType,             \
+        EV_Action ## name,            \
+        flags,                        \
+        333,                          \
+        #name,                        \
+        0                             \
+    }
 
 PARAMLINE(ParamDoorRaise);
 PARAMLINE(ParamDoorOpen);
@@ -1003,7 +994,7 @@ PARAMLINE(ParamDoorWaitRaise);
 PARAMLINE(ParamDoorWaitClose);
 PARAMLINELOCKED(ParamDoorLockedRaise, 3);
 PARAMLINE(ParamFloorRaiseToHighest);
-PARAMLINE(ParamEEFloorLowerToHighest); 
+PARAMLINE(ParamEEFloorLowerToHighest);
 PARAMLINE(ParamFloorLowerToHighest);
 PARAMLINE(ParamFloorRaiseToLowest);
 PARAMLINE(ParamFloorLowerToLowest);
@@ -1118,7 +1109,7 @@ PARAMLINE(ThingStop);
 PARAMLINE(ThrustThing);
 PARAMLINE(ThrustThingZ);
 PARAMLINE(DamageThing);
-PARAMLINE(DamageThingEx);  // Thing_Damage essentially
+PARAMLINE(DamageThingEx); // Thing_Damage essentially
 PARAMLINE(ThingDestroy);
 PARAMLINE(ThingRemove);
 PARAMLINE(ParamPlatPerpetualRaise);
@@ -1161,10 +1152,12 @@ PARAMLINE(ACSScrollCeiling);
 //
 // Special Bindings
 //
-// Each level type (DOOM, Heretic, Strife, Hexen) has its own set of line 
-// specials. Heretic and Strife's sets are based on DOOM's with certain 
+// Each level type (DOOM, Heretic, Strife, Hexen) has its own set of line
+// specials. Heretic and Strife's sets are based on DOOM's with certain
 // additions (many of which conflict with BOOM extensions).
 //
+
+// clang-format off
 
 #define LINESPEC(number, action)            { number, &action, nullptr },
 #define LINESPECNAMED(number, action, name) { number, &action, name    },
@@ -1172,426 +1165,425 @@ PARAMLINE(ACSScrollCeiling);
 // DOOM Bindings
 ev_binding_t DOOMBindings[] =
 {
-   LINESPEC(  1, DRRaiseDoor)
-   LINESPEC(  2, W1OpenDoor)
-   LINESPEC(  3, W1CloseDoor)
-   LINESPEC(  4, W1RaiseDoor)
-   LINESPEC(  5, W1RaiseFloor)
-   LINESPEC(  6, W1FastCeilCrushRaise)
-   LINESPEC(  7, S1BuildStairsUp8)
-   LINESPEC(  8, W1BuildStairsUp8)
-   LINESPEC(  9, S1DoDonut)
-   LINESPEC( 10, W1PlatDownWaitUpStay)
-   LINESPEC( 11, S1ExitLevel)
-   LINESPEC( 12, W1LightTurnOn)
-   LINESPEC( 13, W1LightTurnOn255)
-   LINESPEC( 14, S1PlatRaise32Change)
-   LINESPEC( 15, S1PlatRaise24Change)
-   LINESPEC( 16, W1CloseDoor30)
-   LINESPEC( 17, W1StartLightStrobing)
-   LINESPEC( 18, S1FloorRaiseToNearest)
-   LINESPEC( 19, W1LowerFloor)
-   LINESPEC( 20, S1PlatRaiseNearestChange)
-   LINESPEC( 21, S1PlatDownWaitUpStay)
-   LINESPEC( 22, W1PlatRaiseNearestChange)
-   LINESPEC( 23, S1FloorLowerToLowest)
-   LINESPEC( 24, G1RaiseFloor)
-   LINESPEC( 25, W1CeilingCrushAndRaise)
-   LINESPEC( 26, DRRaiseDoorBlue)
-   LINESPEC( 27, DRRaiseDoorYellow)
-   LINESPEC( 28, DRRaiseDoorRed)
-   LINESPEC( 29, S1RaiseDoor)
-   LINESPEC( 30, W1FloorRaiseToTexture)
-   LINESPEC( 31, D1OpenDoor)
-   LINESPEC( 32, D1OpenDoorBlue)
-   LINESPEC( 33, D1OpenDoorRed)
-   LINESPEC( 34, D1OpenDoorYellow)
-   LINESPEC( 35, W1LightsVeryDark)
-   LINESPEC( 36, W1LowerFloorTurbo)
-   LINESPEC( 37, W1FloorLowerAndChange)
-   LINESPEC( 38, W1FloorLowerToLowest)
-   LINESPEC( 39, W1Teleport)
-   LINESPEC( 40, W1RaiseCeilingLowerFloor)
-   LINESPEC( 41, S1CeilingLowerToFloor)
-   LINESPEC( 42, SRCloseDoor)
-   LINESPEC( 43, SRCeilingLowerToFloor)
-   LINESPEC( 44, W1CeilingLowerAndCrush)
-   LINESPEC( 45, SRLowerFloor)
-   LINESPEC( 46, GROpenDoor)
-   LINESPEC( 47, G1PlatRaiseNearestChange)
-   LINESPEC( 49, S1CeilingCrushAndRaise)
-   LINESPEC( 50, S1CloseDoor)
-   LINESPEC( 51, S1SecretExit)
-   LINESPEC( 52, WRExitLevel)
-   LINESPEC( 53, W1PlatPerpetualRaise)
-   LINESPEC( 54, W1PlatStop)
-   LINESPEC( 55, S1FloorRaiseCrush)
-   LINESPEC( 56, W1FloorRaiseCrush)
-   LINESPEC( 57, W1CeilingCrushStop)
-   LINESPEC( 58, W1RaiseFloor24)
-   LINESPEC( 59, W1RaiseFloor24Change)
-   LINESPEC( 60, SRFloorLowerToLowest)
-   LINESPEC( 61, SROpenDoor)
-   LINESPEC( 62, SRPlatDownWaitUpStay)
-   LINESPEC( 63, SRRaiseDoor)
-   LINESPEC( 64, SRRaiseFloor)
-   LINESPEC( 65, SRFloorRaiseCrush)
-   LINESPEC( 66, SRPlatRaise24Change)
-   LINESPEC( 67, SRPlatRaise32Change)
-   LINESPEC( 68, SRPlatRaiseNearestChange)
-   LINESPEC( 69, SRFloorRaiseToNearest)
-   LINESPEC( 70, SRLowerFloorTurbo)
-   LINESPEC( 71, S1LowerFloorTurbo)
-   LINESPEC( 72, WRCeilingLowerAndCrush)
-   LINESPEC( 73, WRCeilingCrushAndRaise)
-   LINESPEC( 74, WRCeilingCrushStop)
-   LINESPEC( 75, WRCloseDoor)
-   LINESPEC( 76, WRCloseDoor30)
-   LINESPEC( 77, WRFastCeilCrushRaise)
-   LINESPEC( 78, SRChangeOnlyNumeric)
-   LINESPEC( 79, WRLightsVeryDark)
-   LINESPEC( 80, WRLightTurnOn)
-   LINESPEC( 81, WRLightTurnOn255)
-   LINESPEC( 82, WRFloorLowerToLowest)
-   LINESPEC( 83, WRLowerFloor)
-   LINESPEC( 84, WRFloorLowerAndChange)
-   LINESPEC( 86, WROpenDoor)
-   LINESPEC( 87, WRPlatPerpetualRaise)
-   LINESPEC( 88, WRPlatDownWaitUpStay)
-   LINESPEC( 89, WRPlatStop)
-   LINESPEC( 90, WRRaiseDoor)
-   LINESPEC( 91, WRRaiseFloor)
-   LINESPEC( 92, WRRaiseFloor24)
-   LINESPEC( 93, WRRaiseFloor24Change)
-   LINESPEC( 94, WRFloorRaiseCrush)
-   LINESPEC( 95, WRPlatRaiseNearestChange)
-   LINESPEC( 96, WRFloorRaiseToTexture)
-   LINESPEC( 97, WRTeleport)
-   LINESPEC( 98, WRLowerFloorTurbo)
-   LINESPEC( 99, SRDoorBlazeOpenBlue)
-   LINESPEC(100, W1BuildStairsTurbo16)
-   LINESPEC(101, S1RaiseFloor)
-   LINESPEC(102, S1LowerFloor)
-   LINESPEC(103, S1OpenDoor)
-   LINESPEC(104, W1TurnTagLightsOff)
-   LINESPEC(105, WRDoorBlazeRaise)
-   LINESPEC(106, WRDoorBlazeOpen)
-   LINESPEC(107, WRDoorBlazeClose)
-   LINESPEC(108, W1DoorBlazeRaise)
-   LINESPEC(109, W1DoorBlazeOpen)
-   LINESPEC(110, W1DoorBlazeClose)
-   LINESPEC(111, S1DoorBlazeRaise)
-   LINESPEC(112, S1DoorBlazeOpen)
-   LINESPEC(113, S1DoorBlazeClose)
-   LINESPEC(114, SRDoorBlazeRaise)
-   LINESPEC(115, SRDoorBlazeOpen)
-   LINESPEC(116, SRDoorBlazeClose)
-   LINESPEC(117, DRDoorBlazeRaise)
-   LINESPEC(118, D1DoorBlazeOpen)
-   LINESPEC(119, W1FloorRaiseToNearest)
-   LINESPEC(120, WRPlatBlazeDWUS)
-   LINESPEC(121, W1PlatBlazeDWUS)
-   LINESPEC(122, S1PlatBlazeDWUS)
-   LINESPEC(123, SRPlatBlazeDWUS)
-   LINESPEC(124, WRSecretExit)
-   LINESPEC(125, W1TeleportMonsters)
-   LINESPEC(126, WRTeleportMonsters)
-   LINESPEC(127, S1BuildStairsTurbo16)
-   LINESPEC(128, WRFloorRaiseToNearest)
-   LINESPEC(129, WRRaiseFloorTurbo)
-   LINESPEC(130, W1RaiseFloorTurbo)
-   LINESPEC(131, S1RaiseFloorTurbo)
-   LINESPEC(132, SRRaiseFloorTurbo)
-   LINESPEC(133, S1DoorBlazeOpenBlue)
-   LINESPEC(134, SRDoorBlazeOpenRed)
-   LINESPEC(135, S1DoorBlazeOpenRed)
-   LINESPEC(136, SRDoorBlazeOpenYellow)
-   LINESPEC(137, S1DoorBlazeOpenYellow)
-   LINESPEC(138, SRLightTurnOn255)
-   LINESPEC(139, SRLightsVeryDark)
-   LINESPEC(140, S1RaiseFloor512)
-   LINESPEC(141, W1SilentCrushAndRaise)
-   LINESPEC(142, W1RaiseFloor512)
-   LINESPEC(143, W1PlatRaise24Change)
-   LINESPEC(144, W1PlatRaise32Change)
-   LINESPEC(145, W1CeilingLowerToFloor)
-   LINESPEC(146, W1DoDonut)
-   LINESPEC(147, WRRaiseFloor512)
-   LINESPEC(148, WRPlatRaise24Change)
-   LINESPEC(149, WRPlatRaise32Change)
-   LINESPEC(150, WRSilentCrushAndRaise)
-   LINESPEC(151, WRRaiseCeilingLowerFloor)
-   LINESPEC(152, WRCeilingLowerToFloor)
-   LINESPEC(153, W1ChangeOnly)
-   LINESPEC(154, WRChangeOnly)
-   LINESPEC(155, WRDoDonut)
-   LINESPEC(156, WRStartLightStrobing)
-   LINESPEC(157, WRTurnTagLightsOff)
-   LINESPEC(158, S1FloorRaiseToTexture)
-   LINESPEC(159, S1FloorLowerAndChange)
-   LINESPEC(160, S1RaiseFloor24Change)
-   LINESPEC(161, S1RaiseFloor24)
-   LINESPEC(162, S1PlatPerpetualRaise)
-   LINESPEC(163, S1PlatStop)
-   LINESPEC(164, S1FastCeilCrushRaise)
-   LINESPEC(165, S1SilentCrushAndRaise)
-   LINESPEC(166, S1BOOMRaiseCeilingOrLowerFloor)
-   LINESPEC(167, S1CeilingLowerAndCrush)
-   LINESPEC(168, S1CeilingCrushStop)
-   LINESPEC(169, S1LightTurnOn)
-   LINESPEC(170, S1LightsVeryDark)
-   LINESPEC(171, S1LightTurnOn255)
-   LINESPEC(172, S1StartLightStrobing)
-   LINESPEC(173, S1TurnTagLightsOff)
-   LINESPEC(174, S1Teleport)
-   LINESPEC(175, S1CloseDoor30)
-   LINESPEC(176, SRFloorRaiseToTexture)
-   LINESPEC(177, SRFloorLowerAndChange)
-   LINESPEC(178, SRRaiseFloor512)
-   LINESPEC(179, SRRaiseFloor24Change)
-   LINESPEC(180, SRRaiseFloor24)
-   LINESPEC(181, SRPlatPerpetualRaise)
-   LINESPEC(182, SRPlatStop)
-   LINESPEC(183, SRFastCeilCrushRaise)
-   LINESPEC(184, SRCeilingCrushAndRaise)
-   LINESPEC(185, SRSilentCrushAndRaise)
-   LINESPEC(186, SRBOOMRaiseCeilingOrLowerFloor)
-   LINESPEC(187, SRCeilingLowerAndCrush)
-   LINESPEC(188, SRCeilingCrushStop)
-   LINESPEC(189, S1ChangeOnly)
-   LINESPEC(190, SRChangeOnly)
-   LINESPEC(191, SRDoDonut)
-   LINESPEC(192, SRLightTurnOn)
-   LINESPEC(193, SRStartLightStrobing)
-   LINESPEC(194, SRTurnTagLightsOff)
-   LINESPEC(195, SRTeleport)
-   LINESPEC(196, SRCloseDoor30)
-   LINESPEC(197, G1ExitLevel)
-   LINESPEC(198, G1SecretExit)
-   LINESPEC(199, W1CeilingLowerToLowest)
-   LINESPEC(200, W1CeilingLowerToMaxFloor)
-   LINESPEC(201, WRCeilingLowerToLowest)
-   LINESPEC(202, WRCeilingLowerToMaxFloor)
-   LINESPEC(203, S1CeilingLowerToLowest)
-   LINESPEC(204, S1CeilingLowerToMaxFloor)
-   LINESPEC(205, SRCeilingLowerToLowest)
-   LINESPEC(206, SRCeilingLowerToMaxFloor)
-   LINESPEC(207, W1SilentTeleport)
-   LINESPEC(208, WRSilentTeleport)
-   LINESPEC(209, S1SilentTeleport)
-   LINESPEC(210, SRSilentTeleport)
-   LINESPEC(211, SRPlatToggleUpDown)
-   LINESPEC(212, WRPlatToggleUpDown)
-   LINESPEC(219, W1FloorLowerToNearest)
-   LINESPEC(220, WRFloorLowerToNearest)
-   LINESPEC(221, S1FloorLowerToNearest)
-   LINESPEC(222, SRFloorLowerToNearest)
-   LINESPEC(227, W1ElevatorUp)
-   LINESPEC(228, WRElevatorUp)
-   LINESPEC(229, S1ElevatorUp)
-   LINESPEC(230, SRElevatorUp)
-   LINESPEC(231, W1ElevatorDown)
-   LINESPEC(232, WRElevatorDown)
-   LINESPEC(233, S1ElevatorDown)
-   LINESPEC(234, SRElevatorDown)
-   LINESPEC(235, W1ElevatorCurrent)
-   LINESPEC(236, WRElevatorCurrent)
-   LINESPEC(237, S1ElevatorCurrent)
-   LINESPEC(238, SRElevatorCurrent)
-   LINESPEC(239, W1ChangeOnlyNumeric)
-   LINESPEC(240, WRChangeOnlyNumeric)
-   LINESPEC(241, S1ChangeOnlyNumeric)
-   LINESPEC(243, W1SilentLineTeleport)
-   LINESPEC(244, WRSilentLineTeleport)
-   LINESPEC(256, WRBuildStairsUp8)
-   LINESPEC(257, WRBuildStairsTurbo16)
-   LINESPEC(258, SRBuildStairsUp8)
-   LINESPEC(259, SRBuildStairsTurbo16)
-   LINESPEC(262, W1SilentLineTeleportReverse)
-   LINESPEC(263, WRSilentLineTeleportReverse)
-   LINESPEC(264, W1SilentLineTRMonsters)
-   LINESPEC(265, WRSilentLineTRMonsters)
-   LINESPEC(266, W1SilentLineTeleMonsters)
-   LINESPEC(267, WRSilentLineTeleMonsters)
-   LINESPEC(268, W1SilentTeleportMonsters)
-   LINESPEC(269, WRSilentTeleportMonsters)
-   LINESPEC(273, WRStartLineScript1S)
-   LINESPEC(274, W1StartLineScript)
-   LINESPEC(275, W1StartLineScript1S)
-   LINESPEC(276, SRStartLineScript)
-   LINESPEC(277, S1StartLineScript)
-   LINESPEC(278, GRStartLineScript)
-   LINESPEC(279, G1StartLineScript)
-   LINESPEC(280, WRStartLineScript)
+    LINESPEC(  1, DRRaiseDoor)
+    LINESPEC(  2, W1OpenDoor)
+    LINESPEC(  3, W1CloseDoor)
+    LINESPEC(  4, W1RaiseDoor)
+    LINESPEC(  5, W1RaiseFloor)
+    LINESPEC(  6, W1FastCeilCrushRaise)
+    LINESPEC(  7, S1BuildStairsUp8)
+    LINESPEC(  8, W1BuildStairsUp8)
+    LINESPEC(  9, S1DoDonut)
+    LINESPEC( 10, W1PlatDownWaitUpStay)
+    LINESPEC( 11, S1ExitLevel)
+    LINESPEC( 12, W1LightTurnOn)
+    LINESPEC( 13, W1LightTurnOn255)
+    LINESPEC( 14, S1PlatRaise32Change)
+    LINESPEC( 15, S1PlatRaise24Change)
+    LINESPEC( 16, W1CloseDoor30)
+    LINESPEC( 17, W1StartLightStrobing)
+    LINESPEC( 18, S1FloorRaiseToNearest)
+    LINESPEC( 19, W1LowerFloor)
+    LINESPEC( 20, S1PlatRaiseNearestChange)
+    LINESPEC( 21, S1PlatDownWaitUpStay)
+    LINESPEC( 22, W1PlatRaiseNearestChange)
+    LINESPEC( 23, S1FloorLowerToLowest)
+    LINESPEC( 24, G1RaiseFloor)
+    LINESPEC( 25, W1CeilingCrushAndRaise)
+    LINESPEC( 26, DRRaiseDoorBlue)
+    LINESPEC( 27, DRRaiseDoorYellow)
+    LINESPEC( 28, DRRaiseDoorRed)
+    LINESPEC( 29, S1RaiseDoor)
+    LINESPEC( 30, W1FloorRaiseToTexture)
+    LINESPEC( 31, D1OpenDoor)
+    LINESPEC( 32, D1OpenDoorBlue)
+    LINESPEC( 33, D1OpenDoorRed)
+    LINESPEC( 34, D1OpenDoorYellow)
+    LINESPEC( 35, W1LightsVeryDark)
+    LINESPEC( 36, W1LowerFloorTurbo)
+    LINESPEC( 37, W1FloorLowerAndChange)
+    LINESPEC( 38, W1FloorLowerToLowest)
+    LINESPEC( 39, W1Teleport)
+    LINESPEC( 40, W1RaiseCeilingLowerFloor)
+    LINESPEC( 41, S1CeilingLowerToFloor)
+    LINESPEC( 42, SRCloseDoor)
+    LINESPEC( 43, SRCeilingLowerToFloor)
+    LINESPEC( 44, W1CeilingLowerAndCrush)
+    LINESPEC( 45, SRLowerFloor)
+    LINESPEC( 46, GROpenDoor)
+    LINESPEC( 47, G1PlatRaiseNearestChange)
+    LINESPEC( 49, S1CeilingCrushAndRaise)
+    LINESPEC( 50, S1CloseDoor)
+    LINESPEC( 51, S1SecretExit)
+    LINESPEC( 52, WRExitLevel)
+    LINESPEC( 53, W1PlatPerpetualRaise)
+    LINESPEC( 54, W1PlatStop)
+    LINESPEC( 55, S1FloorRaiseCrush)
+    LINESPEC( 56, W1FloorRaiseCrush)
+    LINESPEC( 57, W1CeilingCrushStop)
+    LINESPEC( 58, W1RaiseFloor24)
+    LINESPEC( 59, W1RaiseFloor24Change)
+    LINESPEC( 60, SRFloorLowerToLowest)
+    LINESPEC( 61, SROpenDoor)
+    LINESPEC( 62, SRPlatDownWaitUpStay)
+    LINESPEC( 63, SRRaiseDoor)
+    LINESPEC( 64, SRRaiseFloor)
+    LINESPEC( 65, SRFloorRaiseCrush)
+    LINESPEC( 66, SRPlatRaise24Change)
+    LINESPEC( 67, SRPlatRaise32Change)
+    LINESPEC( 68, SRPlatRaiseNearestChange)
+    LINESPEC( 69, SRFloorRaiseToNearest)
+    LINESPEC( 70, SRLowerFloorTurbo)
+    LINESPEC( 71, S1LowerFloorTurbo)
+    LINESPEC( 72, WRCeilingLowerAndCrush)
+    LINESPEC( 73, WRCeilingCrushAndRaise)
+    LINESPEC( 74, WRCeilingCrushStop)
+    LINESPEC( 75, WRCloseDoor)
+    LINESPEC( 76, WRCloseDoor30)
+    LINESPEC( 77, WRFastCeilCrushRaise)
+    LINESPEC( 78, SRChangeOnlyNumeric)
+    LINESPEC( 79, WRLightsVeryDark)
+    LINESPEC( 80, WRLightTurnOn)
+    LINESPEC( 81, WRLightTurnOn255)
+    LINESPEC( 82, WRFloorLowerToLowest)
+    LINESPEC( 83, WRLowerFloor)
+    LINESPEC( 84, WRFloorLowerAndChange)
+    LINESPEC( 86, WROpenDoor)
+    LINESPEC( 87, WRPlatPerpetualRaise)
+    LINESPEC( 88, WRPlatDownWaitUpStay)
+    LINESPEC( 89, WRPlatStop)
+    LINESPEC( 90, WRRaiseDoor)
+    LINESPEC( 91, WRRaiseFloor)
+    LINESPEC( 92, WRRaiseFloor24)
+    LINESPEC( 93, WRRaiseFloor24Change)
+    LINESPEC( 94, WRFloorRaiseCrush)
+    LINESPEC( 95, WRPlatRaiseNearestChange)
+    LINESPEC( 96, WRFloorRaiseToTexture)
+    LINESPEC( 97, WRTeleport)
+    LINESPEC( 98, WRLowerFloorTurbo)
+    LINESPEC( 99, SRDoorBlazeOpenBlue)
+    LINESPEC(100, W1BuildStairsTurbo16)
+    LINESPEC(101, S1RaiseFloor)
+    LINESPEC(102, S1LowerFloor)
+    LINESPEC(103, S1OpenDoor)
+    LINESPEC(104, W1TurnTagLightsOff)
+    LINESPEC(105, WRDoorBlazeRaise)
+    LINESPEC(106, WRDoorBlazeOpen)
+    LINESPEC(107, WRDoorBlazeClose)
+    LINESPEC(108, W1DoorBlazeRaise)
+    LINESPEC(109, W1DoorBlazeOpen)
+    LINESPEC(110, W1DoorBlazeClose)
+    LINESPEC(111, S1DoorBlazeRaise)
+    LINESPEC(112, S1DoorBlazeOpen)
+    LINESPEC(113, S1DoorBlazeClose)
+    LINESPEC(114, SRDoorBlazeRaise)
+    LINESPEC(115, SRDoorBlazeOpen)
+    LINESPEC(116, SRDoorBlazeClose)
+    LINESPEC(117, DRDoorBlazeRaise)
+    LINESPEC(118, D1DoorBlazeOpen)
+    LINESPEC(119, W1FloorRaiseToNearest)
+    LINESPEC(120, WRPlatBlazeDWUS)
+    LINESPEC(121, W1PlatBlazeDWUS)
+    LINESPEC(122, S1PlatBlazeDWUS)
+    LINESPEC(123, SRPlatBlazeDWUS)
+    LINESPEC(124, WRSecretExit)
+    LINESPEC(125, W1TeleportMonsters)
+    LINESPEC(126, WRTeleportMonsters)
+    LINESPEC(127, S1BuildStairsTurbo16)
+    LINESPEC(128, WRFloorRaiseToNearest)
+    LINESPEC(129, WRRaiseFloorTurbo)
+    LINESPEC(130, W1RaiseFloorTurbo)
+    LINESPEC(131, S1RaiseFloorTurbo)
+    LINESPEC(132, SRRaiseFloorTurbo)
+    LINESPEC(133, S1DoorBlazeOpenBlue)
+    LINESPEC(134, SRDoorBlazeOpenRed)
+    LINESPEC(135, S1DoorBlazeOpenRed)
+    LINESPEC(136, SRDoorBlazeOpenYellow)
+    LINESPEC(137, S1DoorBlazeOpenYellow)
+    LINESPEC(138, SRLightTurnOn255)
+    LINESPEC(139, SRLightsVeryDark)
+    LINESPEC(140, S1RaiseFloor512)
+    LINESPEC(141, W1SilentCrushAndRaise)
+    LINESPEC(142, W1RaiseFloor512)
+    LINESPEC(143, W1PlatRaise24Change)
+    LINESPEC(144, W1PlatRaise32Change)
+    LINESPEC(145, W1CeilingLowerToFloor)
+    LINESPEC(146, W1DoDonut)
+    LINESPEC(147, WRRaiseFloor512)
+    LINESPEC(148, WRPlatRaise24Change)
+    LINESPEC(149, WRPlatRaise32Change)
+    LINESPEC(150, WRSilentCrushAndRaise)
+    LINESPEC(151, WRRaiseCeilingLowerFloor)
+    LINESPEC(152, WRCeilingLowerToFloor)
+    LINESPEC(153, W1ChangeOnly)
+    LINESPEC(154, WRChangeOnly)
+    LINESPEC(155, WRDoDonut)
+    LINESPEC(156, WRStartLightStrobing)
+    LINESPEC(157, WRTurnTagLightsOff)
+    LINESPEC(158, S1FloorRaiseToTexture)
+    LINESPEC(159, S1FloorLowerAndChange)
+    LINESPEC(160, S1RaiseFloor24Change)
+    LINESPEC(161, S1RaiseFloor24)
+    LINESPEC(162, S1PlatPerpetualRaise)
+    LINESPEC(163, S1PlatStop)
+    LINESPEC(164, S1FastCeilCrushRaise)
+    LINESPEC(165, S1SilentCrushAndRaise)
+    LINESPEC(166, S1BOOMRaiseCeilingOrLowerFloor)
+    LINESPEC(167, S1CeilingLowerAndCrush)
+    LINESPEC(168, S1CeilingCrushStop)
+    LINESPEC(169, S1LightTurnOn)
+    LINESPEC(170, S1LightsVeryDark)
+    LINESPEC(171, S1LightTurnOn255)
+    LINESPEC(172, S1StartLightStrobing)
+    LINESPEC(173, S1TurnTagLightsOff)
+    LINESPEC(174, S1Teleport)
+    LINESPEC(175, S1CloseDoor30)
+    LINESPEC(176, SRFloorRaiseToTexture)
+    LINESPEC(177, SRFloorLowerAndChange)
+    LINESPEC(178, SRRaiseFloor512)
+    LINESPEC(179, SRRaiseFloor24Change)
+    LINESPEC(180, SRRaiseFloor24)
+    LINESPEC(181, SRPlatPerpetualRaise)
+    LINESPEC(182, SRPlatStop)
+    LINESPEC(183, SRFastCeilCrushRaise)
+    LINESPEC(184, SRCeilingCrushAndRaise)
+    LINESPEC(185, SRSilentCrushAndRaise)
+    LINESPEC(186, SRBOOMRaiseCeilingOrLowerFloor)
+    LINESPEC(187, SRCeilingLowerAndCrush)
+    LINESPEC(188, SRCeilingCrushStop)
+    LINESPEC(189, S1ChangeOnly)
+    LINESPEC(190, SRChangeOnly)
+    LINESPEC(191, SRDoDonut)
+    LINESPEC(192, SRLightTurnOn)
+    LINESPEC(193, SRStartLightStrobing)
+    LINESPEC(194, SRTurnTagLightsOff)
+    LINESPEC(195, SRTeleport)
+    LINESPEC(196, SRCloseDoor30)
+    LINESPEC(197, G1ExitLevel)
+    LINESPEC(198, G1SecretExit)
+    LINESPEC(199, W1CeilingLowerToLowest)
+    LINESPEC(200, W1CeilingLowerToMaxFloor)
+    LINESPEC(201, WRCeilingLowerToLowest)
+    LINESPEC(202, WRCeilingLowerToMaxFloor)
+    LINESPEC(203, S1CeilingLowerToLowest)
+    LINESPEC(204, S1CeilingLowerToMaxFloor)
+    LINESPEC(205, SRCeilingLowerToLowest)
+    LINESPEC(206, SRCeilingLowerToMaxFloor)
+    LINESPEC(207, W1SilentTeleport)
+    LINESPEC(208, WRSilentTeleport)
+    LINESPEC(209, S1SilentTeleport)
+    LINESPEC(210, SRSilentTeleport)
+    LINESPEC(211, SRPlatToggleUpDown)
+    LINESPEC(212, WRPlatToggleUpDown)
+    LINESPEC(219, W1FloorLowerToNearest)
+    LINESPEC(220, WRFloorLowerToNearest)
+    LINESPEC(221, S1FloorLowerToNearest)
+    LINESPEC(222, SRFloorLowerToNearest)
+    LINESPEC(227, W1ElevatorUp)
+    LINESPEC(228, WRElevatorUp)
+    LINESPEC(229, S1ElevatorUp)
+    LINESPEC(230, SRElevatorUp)
+    LINESPEC(231, W1ElevatorDown)
+    LINESPEC(232, WRElevatorDown)
+    LINESPEC(233, S1ElevatorDown)
+    LINESPEC(234, SRElevatorDown)
+    LINESPEC(235, W1ElevatorCurrent)
+    LINESPEC(236, WRElevatorCurrent)
+    LINESPEC(237, S1ElevatorCurrent)
+    LINESPEC(238, SRElevatorCurrent)
+    LINESPEC(239, W1ChangeOnlyNumeric)
+    LINESPEC(240, WRChangeOnlyNumeric)
+    LINESPEC(241, S1ChangeOnlyNumeric)
+    LINESPEC(243, W1SilentLineTeleport)
+    LINESPEC(244, WRSilentLineTeleport)
+    LINESPEC(256, WRBuildStairsUp8)
+    LINESPEC(257, WRBuildStairsTurbo16)
+    LINESPEC(258, SRBuildStairsUp8)
+    LINESPEC(259, SRBuildStairsTurbo16)
+    LINESPEC(262, W1SilentLineTeleportReverse)
+    LINESPEC(263, WRSilentLineTeleportReverse)
+    LINESPEC(264, W1SilentLineTRMonsters)
+    LINESPEC(265, WRSilentLineTRMonsters)
+    LINESPEC(266, W1SilentLineTeleMonsters)
+    LINESPEC(267, WRSilentLineTeleMonsters)
+    LINESPEC(268, W1SilentTeleportMonsters)
+    LINESPEC(269, WRSilentTeleportMonsters)
+    LINESPEC(273, WRStartLineScript1S)
+    LINESPEC(274, W1StartLineScript)
+    LINESPEC(275, W1StartLineScript1S)
+    LINESPEC(276, SRStartLineScript)
+    LINESPEC(277, S1StartLineScript)
+    LINESPEC(278, GRStartLineScript)
+    LINESPEC(279, G1StartLineScript)
+    LINESPEC(280, WRStartLineScript)
 
-   LINESPECNAMED(300, ParamDoorRaise,                      "Door_Raise")
-   LINESPECNAMED(301, ParamDoorOpen,                       "Door_Open")
-   LINESPECNAMED(302, ParamDoorClose,                      "Door_Close")
-   LINESPECNAMED(303, ParamDoorCloseWaitOpen,              "Door_CloseWaitOpen")
-   LINESPECNAMED(304, ParamDoorWaitRaise,                  "Door_WaitRaise")
-   LINESPECNAMED(305, ParamDoorWaitClose,                  "Door_WaitClose")
-   LINESPECNAMED(306, ParamFloorRaiseToHighest,            "Floor_RaiseToHighest")
-   LINESPECNAMED(307, ParamEEFloorLowerToHighest,          "Floor_LowerToHighestEE")
-   LINESPECNAMED(308, ParamFloorRaiseToLowest,             "Floor_RaiseToLowest")
-   LINESPECNAMED(309, ParamFloorLowerToLowest,             "Floor_LowerToLowest")
-   LINESPECNAMED(310, ParamFloorRaiseToNearest,            "Floor_RaiseToNearest")
-   LINESPECNAMED(311, ParamFloorLowerToNearest,            "Floor_LowerToNearest")
-   LINESPECNAMED(312, ParamFloorRaiseToLowestCeiling,      "Floor_RaiseToLowestCeiling")
-   LINESPECNAMED(313, ParamFloorLowerToLowestCeiling,      "Floor_LowerToLowestCeiling")
-   LINESPECNAMED(314, ParamFloorRaiseToCeiling,            "Floor_RaiseToCeiling")
-   LINESPECNAMED(315, ParamFloorRaiseByTexture,            "Floor_RaiseByTexture")
-   LINESPECNAMED(316, ParamFloorLowerByTexture,            "Floor_LowerByTexture")
-   LINESPECNAMED(317, ParamFloorRaiseByValue,              "Floor_RaiseByValue")
-   LINESPECNAMED(318, ParamFloorLowerByValue,              "Floor_LowerByValue")
-   LINESPECNAMED(319, ParamFloorMoveToValue,               "Floor_MoveToValue")
-   LINESPECNAMED(320, ParamFloorRaiseInstant,              "Floor_RaiseInstant")
-   LINESPECNAMED(321, ParamFloorLowerInstant,              "Floor_LowerInstant")
-   LINESPECNAMED(322, ParamFloorToCeilingInstant,          "Floor_ToCeilingInstant")
-   LINESPECNAMED(323, ParamCeilingRaiseToHighest,          "Ceiling_RaiseToHighest")
-   LINESPECNAMED(324, ParamCeilingToHighestInstant,        "Ceiling_ToHighestInstant")
-   LINESPECNAMED(325, ParamCeilingRaiseToNearest,          "Ceiling_RaiseToNearest")
-   LINESPECNAMED(326, ParamCeilingLowerToNearest,          "Ceiling_LowerToNearest")
-   LINESPECNAMED(327, ParamCeilingRaiseToLowest,           "Ceiling_RaiseToLowest")
-   LINESPECNAMED(328, ParamCeilingLowerToLowest,           "Ceiling_LowerToLowest")
-   LINESPECNAMED(329, ParamCeilingRaiseToHighestFloor,     "Ceiling_RaiseToHighestFloor")
-   LINESPECNAMED(330, ParamCeilingLowerToHighestFloor,     "Ceiling_LowerToHighestFloor")
-   LINESPECNAMED(331, ParamCeilingToFloorInstant,          "Ceiling_ToFloorInstant")
-   LINESPECNAMED(332, ParamCeilingLowerToFloor,            "Ceiling_LowerToFloor")
-   LINESPECNAMED(333, ParamCeilingRaiseByTexture,          "Ceiling_RaiseByTexture")
-   LINESPECNAMED(334, ParamCeilingLowerByTexture,          "Ceiling_LowerByTexture")
-   LINESPECNAMED(335, ParamCeilingRaiseByValue,            "Ceiling_RaiseByValue")
-   LINESPECNAMED(336, ParamCeilingLowerByValue,            "Ceiling_LowerByValue")
-   LINESPECNAMED(337, ParamCeilingMoveToValue,             "Ceiling_MoveToValue")
-   LINESPECNAMED(338, ParamCeilingRaiseInstant,            "Ceiling_RaiseInstant")
-   LINESPECNAMED(339, ParamCeilingLowerInstant,            "Ceiling_LowerInstant")
-   LINESPECNAMED(340, ParamStairsBuildUpDoom,              "Stairs_BuildUpDoom")
-   LINESPECNAMED(341, ParamStairsBuildDownDoom,            "Stairs_BuildDownDoom")
-   LINESPECNAMED(342, ParamStairsBuildUpDoomSync,          "Stairs_BuildUpDoomSync")
-   LINESPECNAMED(343, ParamStairsBuildDownDoomSync,        "Stairs_BuildDownDoomSync")
-   LINESPECNAMED(350, PolyobjDoorSlide,                    "Polyobj_DoorSlide")
-   LINESPECNAMED(351, PolyobjDoorSwing,                    "Polyobj_DoorSwing")
-   LINESPECNAMED(352, PolyobjMove,                         "Polyobj_Move")
-   LINESPECNAMED(353, PolyobjORMove,                       "Polyobj_OR_Move")
-   LINESPECNAMED(354, PolyobjRotateRight,                  "Polyobj_RotateRight")
-   LINESPECNAMED(355, PolyobjORRotateRight,                "Polyobj_OR_RotateRight")
-   LINESPECNAMED(356, PolyobjRotateLeft,                   "Polyobj_RotateLeft")
-   LINESPECNAMED(357, PolyobjORRotateLeft,                 "Polyobj_OR_RotateLeft")
-   LINESPECNAMED(362, PillarBuild,                         "Pillar_Build")
-   LINESPECNAMED(363, PillarBuildAndCrush,                 "Pillar_BuildAndCrush")
-   LINESPECNAMED(364, PillarOpen,                          "Pillar_Open")
-   LINESPECNAMED(365, ACSExecute,                          "ACS_Execute")
-   LINESPECNAMED(366, ACSSuspend,                          "ACS_Suspend")
-   LINESPECNAMED(367, ACSTerminate,                        "ACS_Terminate")
-   LINESPECNAMED(368, ParamLightRaiseByValue,              "Light_RaiseByValue")
-   LINESPECNAMED(369, ParamLightLowerByValue,              "Light_LowerByValue")
-   LINESPECNAMED(370, ParamLightChangeToValue,             "Light_ChangeToValue")
-   LINESPECNAMED(371, ParamLightFade,                      "Light_Fade")
-   LINESPECNAMED(372, ParamLightGlow,                      "Light_Glow")
-   LINESPECNAMED(373, ParamLightFlicker,                   "Light_Flicker")
-   LINESPECNAMED(374, ParamLightStrobe,                    "Light_Strobe")
-   LINESPECNAMED(375, RadiusQuake,                         "Radius_Quake")
-   LINESPECNAMED(397, FloorWaggle,                         "Floor_Waggle")
-   LINESPECNAMED(398, ThingSpawn,                          "Thing_Spawn")
-   LINESPECNAMED(399, ThingSpawnNoFog,                     "Thing_SpawnNoFog")
-   LINESPECNAMED(400, TeleportEndGame,                     "Teleport_EndGame")
-   LINESPECNAMED(402, ThingProjectile,                     "Thing_Projectile")
-   LINESPECNAMED(403, ThingProjectileGravity,              "Thing_ProjectileGravity")
-   LINESPECNAMED(404, ThingActivate,                       "Thing_Activate")
-   LINESPECNAMED(405, ThingDeactivate,                     "Thing_Deactivate")
-   LINESPECNAMED(410, ParamPlatPerpetualRaise,             "Plat_PerpetualRaise")
-   LINESPECNAMED(411, ParamPlatStop,                       "Plat_Stop")
-   LINESPECNAMED(412, ParamPlatDWUS,                       "Plat_DownWaitUpStay")
-   LINESPECNAMED(413, ParamPlatDownByValue,                "Plat_DownByValue")
-   LINESPECNAMED(414, ParamPlatUWDS,                       "Plat_UpWaitDownStay")
-   LINESPECNAMED(415, ParamPlatUpByValue,                  "Plat_UpByValue")
-   LINESPECNAMED(416, ParamFloorLowerToHighest,            "Floor_LowerToHighest")
-   LINESPECNAMED(420, ACSExecuteWithResult,                "ACS_ExecuteWithResult")
-   LINESPECNAMED(421, ThingChangeTID,                      "Thing_ChangeTID")
-   LINESPECNAMED(422, ThingRaise,                          "Thing_Raise")
-   LINESPECNAMED(423, ThingStop,                           "Thing_Stop")
-   LINESPECNAMED(424, ThrustThing,                         "ThrustThing")
-   LINESPECNAMED(425, ThrustThingZ,                        "ThrustThingZ")
-   LINESPECNAMED(426, DamageThing,                         "DamageThing")
-   LINESPECNAMED(427, DamageThingEx,                       "Thing_Damage")
-   LINESPECNAMED(428, ThingDestroy,                        "Thing_Destroy")
-   LINESPECNAMED(429, ParamDoorLockedRaise,                "Door_LockedRaise")
-   LINESPECNAMED(430, ACSLockedExecute,                    "ACS_LockedExecute")
-   LINESPECNAMED(431, ParamDonut,                          "Floor_Donut")
-   LINESPECNAMED(432, ParamCeilingCrushAndRaise,           "Ceiling_CrushAndRaise")
-   LINESPECNAMED(433, ParamCeilingCrushStop,               "Ceiling_CrushStop")
-   LINESPECNAMED(434, ParamCeilingCrushRaiseAndStay,       "Ceiling_CrushRaiseAndStay")
-   LINESPECNAMED(435, ParamCeilingLowerAndCrush,           "Ceiling_LowerAndCrush")
-   LINESPECNAMED(436, ParamCeilingLowerAndCrushDist,       "Ceiling_LowerAndCrushDist")
-   LINESPECNAMED(437, ParamCeilingCrushAndRaiseDist,       "Ceiling_CrushAndRaiseDist")
-   LINESPECNAMED(438, ParamCeilingCrushRaiseAndStayA,      "Ceiling_CrushRaiseAndStayA")
-   LINESPECNAMED(439, ParamCeilingCrushAndRaiseA,          "Ceiling_CrushAndRaiseA")
-   LINESPECNAMED(440, ParamCeilingCrushAndRaiseSilentA,    "Ceiling_CrushAndRaiseSilentA")
-   LINESPECNAMED(441, ParamCeilingCrushAndRaiseSilentDist, "Ceiling_CrushAndRaiseSilentDist")
-   LINESPECNAMED(442, ParamCeilingCrushRaiseAndStaySilA,   "Ceiling_CrushRaiseAndStaySilA")
-   LINESPECNAMED(443, ParamGenCrusher,                     "Generic_Crusher")
-   LINESPECNAMED(444, ParamTeleport,                       "Teleport")
-   LINESPECNAMED(445, ParamTeleportNoFog,                  "Teleport_NoFog")
-   LINESPECNAMED(446, ParamTeleportLine,                   "Teleport_Line")
-   LINESPECNAMED(447, ParamExitNormal,                     "Exit_Normal")
-   LINESPECNAMED(448, ParamExitSecret,                     "Exit_Secret")
-   LINESPECNAMED(449, TeleportNewMap,                      "Teleport_NewMap")
-   LINESPECNAMED(451, ParamFloorRaiseAndCrush,             "Floor_RaiseAndCrush")
-   LINESPECNAMED(452, ParamFloorCrushStop,                 "Floor_CrushStop")
-   LINESPECNAMED(453, ParamFloorCeilingLowerByValue,       "FloorAndCeiling_LowerByValue")
-   LINESPECNAMED(454, ParamFloorCeilingRaiseByValue,       "FloorAndCeiling_RaiseByValue")
-   LINESPECNAMED(458, ParamElevatorUp,                     "Elevator_RaiseToNearest")
-   LINESPECNAMED(459, ParamElevatorDown,                   "Elevator_LowerToNearest")
-   LINESPECNAMED(460, ParamElevatorCurrent,                "Elevator_MoveToFloor")
-   LINESPECNAMED(461, LightTurnOn,                         "Light_MaxNeighbor")
-   LINESPECNAMED(462, ChangeSkill,                         "ChangeSkill")
-   LINESPECNAMED(463, ParamLightStrobeDoom,                "Light_StrobeDoom")
-   LINESPECNAMED(464, ParamFloorGeneric,                   "Generic_Floor")
-   LINESPECNAMED(465, ParamCeilingGeneric,                 "Generic_Ceiling")
-   LINESPECNAMED(466, ChangeOnly,                          "Floor_TransferTrigger")
-   LINESPECNAMED(467, ChangeOnlyNumeric,                   "Floor_TransferNumeric")
-   LINESPECNAMED(468, ParamFloorCeilingLowerRaise,         "FloorAndCeiling_LowerRaise")
-   LINESPECNAMED(469, HealThing,                           "HealThing")
-   LINESPECNAMED(470, ParamSectorSetRotation,              "Sector_SetRotation")
-   LINESPECNAMED(471, ParamSectorSetFloorPanning,          "Sector_SetFloorPanning")
-   LINESPECNAMED(472, ParamSectorSetCeilingPanning,        "Sector_SetCeilingPanning")
-   LINESPECNAMED(473, TurnTagLightsOff,                    "Light_MinNeighbor")
-   LINESPECNAMED(474, PolyobjStop,                         "Polyobj_Stop")
-   LINESPECNAMED(475, ParamPlatRaiseNearestChange,         "Plat_RaiseAndStayTx0")
-   LINESPECNAMED(476, ParamPlatRaiseChange,                "Plat_UpByValueStayTx")
-   LINESPECNAMED(477, ACSExecuteAlways,                    "ACS_ExecuteAlways")
-   LINESPECNAMED(478, ThingRemove,                         "Thing_Remove")
-   LINESPECNAMED(487, ParamPlatToggleCeiling,              "Plat_ToggleCeiling")
-   LINESPECNAMED(488, ParamPlatDWUSLip,                    "Plat_DownWaitUpStayLip")
-   LINESPECNAMED(489, ParamPlatPerpetualRaiseLip,          "Plat_PerpetualRaiseLip")
-   LINESPECNAMED(490, ACSLockedExecuteDoor,                "ACS_LockedExecuteDoor")
-   LINESPECNAMED(494, ParamStairsBuildUpDoomCrush,         "Stairs_BuildUpDoomCrush")
-   LINESPECNAMED(495, ParamSectorChangeSound,              "Sector_ChangeSound")
-   LINESPECNAMED(496, PolyobjMoveToSpot,                   "Polyobj_MoveToSpot")
-   LINESPECNAMED(497, PolyobjMoveTo,                       "Polyobj_MoveTo")
-   LINESPECNAMED(498, PolyobjORMoveTo,                     "Polyobj_OR_MoveTo")
-   LINESPECNAMED(499, PolyobjORMoveToSpot,                 "Polyobj_OR_MoveToSpot")
-   LINESPECNAMED(500, CeilingWaggle,                       "Ceiling_Waggle")
-   LINESPECNAMED(501, ParamPlatGeneric,                    "Generic_Lift")
-   LINESPECNAMED(502, ParamGenStairs,                      "Generic_Stairs")
+    LINESPECNAMED(300, ParamDoorRaise,                      "Door_Raise")
+    LINESPECNAMED(301, ParamDoorOpen,                       "Door_Open")
+    LINESPECNAMED(302, ParamDoorClose,                      "Door_Close")
+    LINESPECNAMED(303, ParamDoorCloseWaitOpen,              "Door_CloseWaitOpen")
+    LINESPECNAMED(304, ParamDoorWaitRaise,                  "Door_WaitRaise")
+    LINESPECNAMED(305, ParamDoorWaitClose,                  "Door_WaitClose")
+    LINESPECNAMED(306, ParamFloorRaiseToHighest,            "Floor_RaiseToHighest")
+    LINESPECNAMED(307, ParamEEFloorLowerToHighest,          "Floor_LowerToHighestEE")
+    LINESPECNAMED(308, ParamFloorRaiseToLowest,             "Floor_RaiseToLowest")
+    LINESPECNAMED(309, ParamFloorLowerToLowest,             "Floor_LowerToLowest")
+    LINESPECNAMED(310, ParamFloorRaiseToNearest,            "Floor_RaiseToNearest")
+    LINESPECNAMED(311, ParamFloorLowerToNearest,            "Floor_LowerToNearest")
+    LINESPECNAMED(312, ParamFloorRaiseToLowestCeiling,      "Floor_RaiseToLowestCeiling")
+    LINESPECNAMED(313, ParamFloorLowerToLowestCeiling,      "Floor_LowerToLowestCeiling")
+    LINESPECNAMED(314, ParamFloorRaiseToCeiling,            "Floor_RaiseToCeiling")
+    LINESPECNAMED(315, ParamFloorRaiseByTexture,            "Floor_RaiseByTexture")
+    LINESPECNAMED(316, ParamFloorLowerByTexture,            "Floor_LowerByTexture")
+    LINESPECNAMED(317, ParamFloorRaiseByValue,              "Floor_RaiseByValue")
+    LINESPECNAMED(318, ParamFloorLowerByValue,              "Floor_LowerByValue")
+    LINESPECNAMED(319, ParamFloorMoveToValue,               "Floor_MoveToValue")
+    LINESPECNAMED(320, ParamFloorRaiseInstant,              "Floor_RaiseInstant")
+    LINESPECNAMED(321, ParamFloorLowerInstant,              "Floor_LowerInstant")
+    LINESPECNAMED(322, ParamFloorToCeilingInstant,          "Floor_ToCeilingInstant")
+    LINESPECNAMED(323, ParamCeilingRaiseToHighest,          "Ceiling_RaiseToHighest")
+    LINESPECNAMED(324, ParamCeilingToHighestInstant,        "Ceiling_ToHighestInstant")
+    LINESPECNAMED(325, ParamCeilingRaiseToNearest,          "Ceiling_RaiseToNearest")
+    LINESPECNAMED(326, ParamCeilingLowerToNearest,          "Ceiling_LowerToNearest")
+    LINESPECNAMED(327, ParamCeilingRaiseToLowest,           "Ceiling_RaiseToLowest")
+    LINESPECNAMED(328, ParamCeilingLowerToLowest,           "Ceiling_LowerToLowest")
+    LINESPECNAMED(329, ParamCeilingRaiseToHighestFloor,     "Ceiling_RaiseToHighestFloor")
+    LINESPECNAMED(330, ParamCeilingLowerToHighestFloor,     "Ceiling_LowerToHighestFloor")
+    LINESPECNAMED(331, ParamCeilingToFloorInstant,          "Ceiling_ToFloorInstant")
+    LINESPECNAMED(332, ParamCeilingLowerToFloor,            "Ceiling_LowerToFloor")
+    LINESPECNAMED(333, ParamCeilingRaiseByTexture,          "Ceiling_RaiseByTexture")
+    LINESPECNAMED(334, ParamCeilingLowerByTexture,          "Ceiling_LowerByTexture")
+    LINESPECNAMED(335, ParamCeilingRaiseByValue,            "Ceiling_RaiseByValue")
+    LINESPECNAMED(336, ParamCeilingLowerByValue,            "Ceiling_LowerByValue")
+    LINESPECNAMED(337, ParamCeilingMoveToValue,             "Ceiling_MoveToValue")
+    LINESPECNAMED(338, ParamCeilingRaiseInstant,            "Ceiling_RaiseInstant")
+    LINESPECNAMED(339, ParamCeilingLowerInstant,            "Ceiling_LowerInstant")
+    LINESPECNAMED(340, ParamStairsBuildUpDoom,              "Stairs_BuildUpDoom")
+    LINESPECNAMED(341, ParamStairsBuildDownDoom,            "Stairs_BuildDownDoom")
+    LINESPECNAMED(342, ParamStairsBuildUpDoomSync,          "Stairs_BuildUpDoomSync")
+    LINESPECNAMED(343, ParamStairsBuildDownDoomSync,        "Stairs_BuildDownDoomSync")
+    LINESPECNAMED(350, PolyobjDoorSlide,                    "Polyobj_DoorSlide")
+    LINESPECNAMED(351, PolyobjDoorSwing,                    "Polyobj_DoorSwing")
+    LINESPECNAMED(352, PolyobjMove,                         "Polyobj_Move")
+    LINESPECNAMED(353, PolyobjORMove,                       "Polyobj_OR_Move")
+    LINESPECNAMED(354, PolyobjRotateRight,                  "Polyobj_RotateRight")
+    LINESPECNAMED(355, PolyobjORRotateRight,                "Polyobj_OR_RotateRight")
+    LINESPECNAMED(356, PolyobjRotateLeft,                   "Polyobj_RotateLeft")
+    LINESPECNAMED(357, PolyobjORRotateLeft,                 "Polyobj_OR_RotateLeft")
+    LINESPECNAMED(362, PillarBuild,                         "Pillar_Build")
+    LINESPECNAMED(363, PillarBuildAndCrush,                 "Pillar_BuildAndCrush")
+    LINESPECNAMED(364, PillarOpen,                          "Pillar_Open")
+    LINESPECNAMED(365, ACSExecute,                          "ACS_Execute")
+    LINESPECNAMED(366, ACSSuspend,                          "ACS_Suspend")
+    LINESPECNAMED(367, ACSTerminate,                        "ACS_Terminate")
+    LINESPECNAMED(368, ParamLightRaiseByValue,              "Light_RaiseByValue")
+    LINESPECNAMED(369, ParamLightLowerByValue,              "Light_LowerByValue")
+    LINESPECNAMED(370, ParamLightChangeToValue,             "Light_ChangeToValue")
+    LINESPECNAMED(371, ParamLightFade,                      "Light_Fade")
+    LINESPECNAMED(372, ParamLightGlow,                      "Light_Glow")
+    LINESPECNAMED(373, ParamLightFlicker,                   "Light_Flicker")
+    LINESPECNAMED(374, ParamLightStrobe,                    "Light_Strobe")
+    LINESPECNAMED(375, RadiusQuake,                         "Radius_Quake")
+    LINESPECNAMED(397, FloorWaggle,                         "Floor_Waggle")
+    LINESPECNAMED(398, ThingSpawn,                          "Thing_Spawn")
+    LINESPECNAMED(399, ThingSpawnNoFog,                     "Thing_SpawnNoFog")
+    LINESPECNAMED(400, TeleportEndGame,                     "Teleport_EndGame")
+    LINESPECNAMED(402, ThingProjectile,                     "Thing_Projectile")
+    LINESPECNAMED(403, ThingProjectileGravity,              "Thing_ProjectileGravity")
+    LINESPECNAMED(404, ThingActivate,                       "Thing_Activate")
+    LINESPECNAMED(405, ThingDeactivate,                     "Thing_Deactivate")
+    LINESPECNAMED(410, ParamPlatPerpetualRaise,             "Plat_PerpetualRaise")
+    LINESPECNAMED(411, ParamPlatStop,                       "Plat_Stop")
+    LINESPECNAMED(412, ParamPlatDWUS,                       "Plat_DownWaitUpStay")
+    LINESPECNAMED(413, ParamPlatDownByValue,                "Plat_DownByValue")
+    LINESPECNAMED(414, ParamPlatUWDS,                       "Plat_UpWaitDownStay")
+    LINESPECNAMED(415, ParamPlatUpByValue,                  "Plat_UpByValue")
+    LINESPECNAMED(416, ParamFloorLowerToHighest,            "Floor_LowerToHighest")
+    LINESPECNAMED(420, ACSExecuteWithResult,                "ACS_ExecuteWithResult")
+    LINESPECNAMED(421, ThingChangeTID,                      "Thing_ChangeTID")
+    LINESPECNAMED(422, ThingRaise,                          "Thing_Raise")
+    LINESPECNAMED(423, ThingStop,                           "Thing_Stop")
+    LINESPECNAMED(424, ThrustThing,                         "ThrustThing")
+    LINESPECNAMED(425, ThrustThingZ,                        "ThrustThingZ")
+    LINESPECNAMED(426, DamageThing,                         "DamageThing")
+    LINESPECNAMED(427, DamageThingEx,                       "Thing_Damage")
+    LINESPECNAMED(428, ThingDestroy,                        "Thing_Destroy")
+    LINESPECNAMED(429, ParamDoorLockedRaise,                "Door_LockedRaise")
+    LINESPECNAMED(430, ACSLockedExecute,                    "ACS_LockedExecute")
+    LINESPECNAMED(431, ParamDonut,                          "Floor_Donut")
+    LINESPECNAMED(432, ParamCeilingCrushAndRaise,           "Ceiling_CrushAndRaise")
+    LINESPECNAMED(433, ParamCeilingCrushStop,               "Ceiling_CrushStop")
+    LINESPECNAMED(434, ParamCeilingCrushRaiseAndStay,       "Ceiling_CrushRaiseAndStay")
+    LINESPECNAMED(435, ParamCeilingLowerAndCrush,           "Ceiling_LowerAndCrush")
+    LINESPECNAMED(436, ParamCeilingLowerAndCrushDist,       "Ceiling_LowerAndCrushDist")
+    LINESPECNAMED(437, ParamCeilingCrushAndRaiseDist,       "Ceiling_CrushAndRaiseDist")
+    LINESPECNAMED(438, ParamCeilingCrushRaiseAndStayA,      "Ceiling_CrushRaiseAndStayA")
+    LINESPECNAMED(439, ParamCeilingCrushAndRaiseA,          "Ceiling_CrushAndRaiseA")
+    LINESPECNAMED(440, ParamCeilingCrushAndRaiseSilentA,    "Ceiling_CrushAndRaiseSilentA")
+    LINESPECNAMED(441, ParamCeilingCrushAndRaiseSilentDist, "Ceiling_CrushAndRaiseSilentDist")
+    LINESPECNAMED(442, ParamCeilingCrushRaiseAndStaySilA,   "Ceiling_CrushRaiseAndStaySilA")
+    LINESPECNAMED(443, ParamGenCrusher,                     "Generic_Crusher")
+    LINESPECNAMED(444, ParamTeleport,                       "Teleport")
+    LINESPECNAMED(445, ParamTeleportNoFog,                  "Teleport_NoFog")
+    LINESPECNAMED(446, ParamTeleportLine,                   "Teleport_Line")
+    LINESPECNAMED(447, ParamExitNormal,                     "Exit_Normal")
+    LINESPECNAMED(448, ParamExitSecret,                     "Exit_Secret")
+    LINESPECNAMED(449, TeleportNewMap,                      "Teleport_NewMap")
+    LINESPECNAMED(451, ParamFloorRaiseAndCrush,             "Floor_RaiseAndCrush")
+    LINESPECNAMED(452, ParamFloorCrushStop,                 "Floor_CrushStop")
+    LINESPECNAMED(453, ParamFloorCeilingLowerByValue,       "FloorAndCeiling_LowerByValue")
+    LINESPECNAMED(454, ParamFloorCeilingRaiseByValue,       "FloorAndCeiling_RaiseByValue")
+    LINESPECNAMED(458, ParamElevatorUp,                     "Elevator_RaiseToNearest")
+    LINESPECNAMED(459, ParamElevatorDown,                   "Elevator_LowerToNearest")
+    LINESPECNAMED(460, ParamElevatorCurrent,                "Elevator_MoveToFloor")
+    LINESPECNAMED(461, LightTurnOn,                         "Light_MaxNeighbor")
+    LINESPECNAMED(462, ChangeSkill,                         "ChangeSkill")
+    LINESPECNAMED(463, ParamLightStrobeDoom,                "Light_StrobeDoom")
+    LINESPECNAMED(464, ParamFloorGeneric,                   "Generic_Floor")
+    LINESPECNAMED(465, ParamCeilingGeneric,                 "Generic_Ceiling")
+    LINESPECNAMED(466, ChangeOnly,                          "Floor_TransferTrigger")
+    LINESPECNAMED(467, ChangeOnlyNumeric,                   "Floor_TransferNumeric")
+    LINESPECNAMED(468, ParamFloorCeilingLowerRaise,         "FloorAndCeiling_LowerRaise")
+    LINESPECNAMED(469, HealThing,                           "HealThing")
+    LINESPECNAMED(470, ParamSectorSetRotation,              "Sector_SetRotation")
+    LINESPECNAMED(471, ParamSectorSetFloorPanning,          "Sector_SetFloorPanning")
+    LINESPECNAMED(472, ParamSectorSetCeilingPanning,        "Sector_SetCeilingPanning")
+    LINESPECNAMED(473, TurnTagLightsOff,                    "Light_MinNeighbor")
+    LINESPECNAMED(474, PolyobjStop,                         "Polyobj_Stop")
+    LINESPECNAMED(475, ParamPlatRaiseNearestChange,         "Plat_RaiseAndStayTx0")
+    LINESPECNAMED(476, ParamPlatRaiseChange,                "Plat_UpByValueStayTx")
+    LINESPECNAMED(477, ACSExecuteAlways,                    "ACS_ExecuteAlways")
+    LINESPECNAMED(478, ThingRemove,                         "Thing_Remove")
+    LINESPECNAMED(487, ParamPlatToggleCeiling,              "Plat_ToggleCeiling")
+    LINESPECNAMED(488, ParamPlatDWUSLip,                    "Plat_DownWaitUpStayLip")
+    LINESPECNAMED(489, ParamPlatPerpetualRaiseLip,          "Plat_PerpetualRaiseLip")
+    LINESPECNAMED(490, ACSLockedExecuteDoor,                "ACS_LockedExecuteDoor")
+    LINESPECNAMED(494, ParamStairsBuildUpDoomCrush,         "Stairs_BuildUpDoomCrush")
+    LINESPECNAMED(495, ParamSectorChangeSound,              "Sector_ChangeSound")
+    LINESPECNAMED(496, PolyobjMoveToSpot,                   "Polyobj_MoveToSpot")
+    LINESPECNAMED(497, PolyobjMoveTo,                       "Polyobj_MoveTo")
+    LINESPECNAMED(498, PolyobjORMoveTo,                     "Polyobj_OR_MoveTo")
+    LINESPECNAMED(499, PolyobjORMoveToSpot,                 "Polyobj_OR_MoveToSpot")
+    LINESPECNAMED(500, CeilingWaggle,                       "Ceiling_Waggle")
+    LINESPECNAMED(501, ParamPlatGeneric,                    "Generic_Lift")
+    LINESPECNAMED(502, ParamGenStairs,                      "Generic_Stairs")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
 
 // DOOM Lockdef ID Lookup (Doubles for Heretic)
-ev_lockdef_t DOOMLockDefs[] =
-{
-   {  26, EV_LOCKDEF_BLUE     },
-   {  27, EV_LOCKDEF_YELLOW   },
-   {  28, EV_LOCKDEF_REDGREEN },
-   {  32, EV_LOCKDEF_BLUE     },
-   {  33, EV_LOCKDEF_REDGREEN },
-   {  34, EV_LOCKDEF_YELLOW   },
-   {  99, EV_LOCKDEF_BLUE     },
-   { 133, EV_LOCKDEF_BLUE     }, 
-   { 134, EV_LOCKDEF_REDGREEN },
-   { 135, EV_LOCKDEF_REDGREEN },
-   { 136, EV_LOCKDEF_YELLOW   },
-   { 137, EV_LOCKDEF_YELLOW   },
+ev_lockdef_t DOOMLockDefs[] = {
+    {  26, EV_LOCKDEF_BLUE     },
+    {  27, EV_LOCKDEF_YELLOW   },
+    {  28, EV_LOCKDEF_REDGREEN },
+    {  32, EV_LOCKDEF_BLUE     },
+    {  33, EV_LOCKDEF_REDGREEN },
+    {  34, EV_LOCKDEF_YELLOW   },
+    {  99, EV_LOCKDEF_BLUE     },
+    { 133, EV_LOCKDEF_BLUE     }, 
+    { 134, EV_LOCKDEF_REDGREEN },
+    { 135, EV_LOCKDEF_REDGREEN },
+    { 136, EV_LOCKDEF_YELLOW   },
+    { 137, EV_LOCKDEF_YELLOW   },
 };
 
 const size_t DOOMLockDefsLen = earrlen(DOOMLockDefs);
@@ -1600,8 +1592,7 @@ const size_t DOOMLockDefsLen = earrlen(DOOMLockDefs);
 // All this does is remap line type 99 to lockdef 0, as linetype
 // 99 is not a locked door in Heretic. All other bindings will defer
 // to the DOOM lookup.
-ev_lockdef_t HereticLockDefs[] =
-{
+ev_lockdef_t HereticLockDefs[] = {
    { 99, EV_LOCKDEF_NULL },
 };
 
@@ -1611,217 +1602,214 @@ const size_t HereticLockDefsLen = earrlen(HereticLockDefs);
 // Heretic's bindings are additive over DOOM's.
 // Special thanks to Gez for saving me a ton of trouble by reporting missing
 // differences in behavior for types 7, 8, 10, 36, 49, 70, 71, 88, and 98
-ev_binding_t HereticBindings[] =
-{
-   LINESPEC(  7, S1HereticStairsBuildUp8FS)
-   LINESPEC(  8, W1HereticStairsBuildUp8FS)
-   LINESPEC( 10, W1HticPlatDownWaitUpStay)
-   LINESPEC( 36, W1LowerFloorTurboA)
-   LINESPEC( 49, S1CeilingLowerAndCrush)
-   LINESPEC( 70, SRLowerFloorTurboA)
-   LINESPEC( 71, S1LowerFloorTurboA)
-   LINESPEC( 88, WRHticPlatDownWaitUpStay)
-   LINESPEC( 98, WRLowerFloorTurboA)
-   LINESPEC( 99, NullAction)                 // Hide BOOM type 99
-   LINESPEC(100, WRHereticDoorRaise3x)
-   LINESPEC(105, WRSecretExit)
-   LINESPEC(106, W1HereticStairsBuildUp16FS)
-   LINESPEC(107, S1HereticStairsBuildUp16FS)
+ev_binding_t HereticBindings[] = {
+    LINESPEC(  7, S1HereticStairsBuildUp8FS)
+    LINESPEC(  8, W1HereticStairsBuildUp8FS)
+    LINESPEC( 10, W1HticPlatDownWaitUpStay)
+    LINESPEC( 36, W1LowerFloorTurboA)
+    LINESPEC( 49, S1CeilingLowerAndCrush)
+    LINESPEC( 70, SRLowerFloorTurboA)
+    LINESPEC( 71, S1LowerFloorTurboA)
+    LINESPEC( 88, WRHticPlatDownWaitUpStay)
+    LINESPEC( 98, WRLowerFloorTurboA)
+    LINESPEC( 99, NullAction)                 // Hide BOOM type 99
+    LINESPEC(100, WRHereticDoorRaise3x)
+    LINESPEC(105, WRSecretExit)
+    LINESPEC(106, W1HereticStairsBuildUp16FS)
+    LINESPEC(107, S1HereticStairsBuildUp16FS)
 };
 
 const size_t HereticBindingsLen = earrlen(HereticBindings);
 
 // Hexen Bindings
-ev_binding_t HexenBindings[] =
-{
-   LINESPECNAMED(2,   PolyobjRotateLeft,                   "Polyobj_RotateLeft")
-   LINESPECNAMED(3,   PolyobjRotateRight,                  "Polyobj_RotateRight")
-   LINESPECNAMED(4,   PolyobjMove,                         "Polyobj_Move")
-   LINESPECNAMED(6,   PolyobjMoveTimes8,                   "Polyobj_MoveTimes8")
-   LINESPECNAMED(7,   PolyobjDoorSwing,                    "Polyobj_DoorSwing")
-   LINESPECNAMED(8,   PolyobjDoorSlide,                    "Polyobj_DoorSlide")
-   LINESPECNAMED(10,  ParamDoorClose,                      "Door_Close")
-   LINESPECNAMED(11,  ParamDoorOpen,                       "Door_Open")
-   LINESPECNAMED(12,  ParamDoorRaise,                      "Door_Raise")
-   LINESPECNAMED(13,  ParamDoorLockedRaise,                "Door_LockedRaise")
-   LINESPECNAMED(17,  ThingRaise,                          "Thing_Raise")
-   LINESPECNAMED(19,  ThingStop,                           "Thing_Stop")
-   LINESPECNAMED(20,  ParamFloorLowerByValue,              "Floor_LowerByValue")
-   LINESPECNAMED(21,  ParamFloorLowerToLowest,             "Floor_LowerToLowest")
-   LINESPECNAMED(22,  ParamFloorLowerToNearest,            "Floor_LowerToNearest")
-   LINESPECNAMED(23,  ParamFloorRaiseByValue,              "Floor_RaiseByValue")
-   LINESPECNAMED(24,  ParamFloorRaiseToHighest,            "Floor_RaiseToHighest")
-   LINESPECNAMED(25,  ParamFloorRaiseToNearest,            "Floor_RaiseToNearest")
-   LINESPECNAMED(28,  ParamFloorRaiseAndCrush,             "Floor_RaiseAndCrush")
-   LINESPECNAMED(29,  PillarBuild,                         "Pillar_Build")
-   LINESPECNAMED(30,  PillarOpen,                          "Pillar_Open")
-   LINESPECNAMED(35,  ParamFloorRaiseByValueTimes8,        "Floor_RaiseByValueTimes8")
-   LINESPECNAMED(36,  ParamFloorLowerByValueTimes8,        "Floor_LowerByValueTimes8")
-   LINESPECNAMED(37,  ParamFloorMoveToValue,               "Floor_MoveToValue")
-   LINESPECNAMED(38,  CeilingWaggle,                       "Ceiling_Waggle")
-   LINESPECNAMED(40,  ParamCeilingLowerByValue,            "Ceiling_LowerByValue")
-   LINESPECNAMED(41,  ParamCeilingRaiseByValue,            "Ceiling_RaiseByValue")
-   LINESPECNAMED(42,  ParamCeilingCrushAndRaise,           "Ceiling_CrushAndRaise")
-   LINESPECNAMED(43,  ParamCeilingLowerAndCrush,           "Ceiling_LowerAndCrush")
-   LINESPECNAMED(44,  ParamCeilingCrushStop,               "Ceiling_CrushStop")
-   LINESPECNAMED(45,  ParamCeilingCrushRaiseAndStay,       "Ceiling_CrushRaiseAndStay")
-   LINESPECNAMED(46,  ParamFloorCrushStop,                 "Floor_CrushStop")
-   LINESPECNAMED(47,  ParamCeilingMoveToValue,             "Ceiling_MoveToValue")
-   LINESPECNAMED(59,  PolyobjORMoveToSpot,                 "Polyobj_OR_MoveToSpot")
-   LINESPECNAMED(60,  ParamPlatPerpetualRaise,             "Plat_PerpetualRaise")
-   LINESPECNAMED(61,  ParamPlatStop,                       "Plat_Stop")
-   LINESPECNAMED(62,  ParamPlatDWUS,                       "Plat_DownWaitUpStay")
-   LINESPECNAMED(63,  ParamPlatDownByValue,                "Plat_DownByValue")
-   LINESPECNAMED(64,  ParamPlatUWDS,                       "Plat_UpWaitDownStay")
-   LINESPECNAMED(65,  ParamPlatUpByValue,                  "Plat_UpByValue")
-   LINESPECNAMED(66,  ParamFloorLowerInstant,              "Floor_LowerInstant")
-   LINESPECNAMED(67,  ParamFloorRaiseInstant,              "Floor_RaiseInstant")
-   LINESPECNAMED(68,  ParamFloorMoveToValueTimes8,         "Floor_MoveToValueTimes8")
-   LINESPECNAMED(69,  ParamCeilingMoveToValueTimes8,       "Ceiling_MoveToValueTimes8")
-   LINESPECNAMED(70,  ParamTeleport,                       "Teleport")
-   LINESPECNAMED(71,  ParamTeleportNoFog,                  "Teleport_NoFog")
-   LINESPECNAMED(72,  ThrustThing,                         "ThrustThing")
-   LINESPECNAMED(73,  DamageThing,                         "DamageThing")
-   LINESPECNAMED(74,  TeleportNewMap,                      "Teleport_NewMap")
-   LINESPECNAMED(75,  TeleportEndGame,                     "Teleport_EndGame")
-   LINESPECNAMED(80,  ACSExecute,                          "ACS_Execute")
-   LINESPECNAMED(81,  ACSSuspend,                          "ACS_Suspend")
-   LINESPECNAMED(82,  ACSTerminate,                        "ACS_Terminate")
-   LINESPECNAMED(83,  ACSLockedExecute,                    "ACS_LockedExecute")
-   LINESPECNAMED(84,  ACSExecuteWithResult,                "ACS_ExecuteWithResult")
-   LINESPECNAMED(85,  ACSLockedExecuteDoor,                "ACS_LockedExecuteDoor")
-   LINESPECNAMED(86,  PolyobjMoveToSpot,                   "Polyobj_MoveToSpot")
-   LINESPECNAMED(87,  PolyobjStop,                         "Polyobj_Stop")
-   LINESPECNAMED(88,  PolyobjMoveTo,                       "Polyobj_MoveTo")
-   LINESPECNAMED(89,  PolyobjORMoveTo,                     "Polyobj_OR_MoveTo")
-   LINESPECNAMED(90,  PolyobjORRotateLeft,                 "Polyobj_OR_RotateLeft")
-   LINESPECNAMED(91,  PolyobjORRotateRight,                "Polyobj_OR_RotateRight")
-   LINESPECNAMED(92,  PolyobjORMove,                       "Polyobj_OR_Move")
-   LINESPECNAMED(93,  PolyobjORMoveTimes8,                 "Polyobj_OR_MoveTimes8")
-   LINESPECNAMED(94,  PillarBuildAndCrush,                 "Pillar_BuildAndCrush")
-   LINESPECNAMED(95,  ParamFloorCeilingLowerByValue,       "FloorAndCeiling_LowerByValue")
-   LINESPECNAMED(96,  ParamFloorCeilingRaiseByValue,       "FloorAndCeiling_RaiseByValue")
-   LINESPECNAMED(97,  ParamCeilingLowerAndCrushDist,       "Ceiling_LowerAndCrushDist")
-   LINESPECNAMED(104, ParamCeilingCrushAndRaiseSilentDist, "Ceiling_CrushAndRaiseSilentDist")
-   LINESPECNAMED(105, ParamDoorWaitRaise,                  "Door_WaitRaise")
-   LINESPECNAMED(106, ParamDoorWaitClose,                  "Door_WaitClose")
-   LINESPECNAMED(110, ParamLightRaiseByValue,              "Light_RaiseByValue")
-   LINESPECNAMED(111, ParamLightLowerByValue,              "Light_LowerByValue")
-   LINESPECNAMED(112, ParamLightChangeToValue,             "Light_ChangeToValue")
-   LINESPECNAMED(113, ParamLightFade,                      "Light_Fade")
-   LINESPECNAMED(114, ParamLightGlow,                      "Light_Glow")
-   LINESPECNAMED(115, ParamLightFlicker,                   "Light_Flicker")
-   LINESPECNAMED(116, ParamLightStrobe,                    "Light_Strobe")
-   LINESPECNAMED(119, DamageThingEx,                       "Thing_Damage")
-   LINESPECNAMED(120, RadiusQuake,                         "Radius_Quake")
-   LINESPECNAMED(128, ThrustThingZ,                        "ThrustThingZ")
-   LINESPECNAMED(130, ThingActivate,                       "Thing_Activate")
-   LINESPECNAMED(131, ThingDeactivate,                     "Thing_Deactivate")
-   LINESPECNAMED(132, ThingRemove,                         "Thing_Remove")
-   LINESPECNAMED(133, ThingDestroy,                        "Thing_Destroy")
-   LINESPECNAMED(134, ThingProjectile,                     "Thing_Projectile")
-   LINESPECNAMED(135, ThingSpawn,                          "Thing_Spawn")
-   LINESPECNAMED(136, ThingProjectileGravity,              "Thing_ProjectileGravity")
-   LINESPECNAMED(137, ThingSpawnNoFog,                     "Thing_SpawnNoFog")
-   LINESPECNAMED(138, FloorWaggle,                         "Floor_Waggle")
-   LINESPECNAMED(140, ParamSectorChangeSound,              "Sector_ChangeSound")
-   LINESPECNAMED(168, ParamCeilingCrushAndRaiseDist,       "Ceiling_CrushAndRaiseDist")
-   LINESPECNAMED(176, ThingChangeTID,                      "Thing_ChangeTID")
-   LINESPECNAMED(179, ChangeSkill,                         "ChangeSkill")
-   LINESPECNAMED(185, ParamSectorSetRotation,              "Sector_SetRotation")
-   LINESPECNAMED(186, ParamSectorSetCeilingPanning,        "Sector_SetCeilingPanning")
-   LINESPECNAMED(187, ParamSectorSetFloorPanning,          "Sector_SetFloorPanning")
-   LINESPECNAMED(192, ParamCeilingLowerToHighestFloor,     "Ceiling_LowerToHighestFloor")
-   LINESPECNAMED(193, ParamCeilingLowerInstant,            "Ceiling_LowerInstant")
-   LINESPECNAMED(194, ParamCeilingRaiseInstant,            "Ceiling_RaiseInstant")
-   LINESPECNAMED(195, ParamCeilingCrushRaiseAndStayA,      "Ceiling_CrushRaiseAndStayA")
-   LINESPECNAMED(196, ParamCeilingCrushAndRaiseA,          "Ceiling_CrushAndRaiseA")
-   LINESPECNAMED(197, ParamCeilingCrushAndRaiseSilentA,    "Ceiling_CrushAndRaiseSilentA")
-   LINESPECNAMED(198, ParamCeilingRaiseByValueTimes8,      "Ceiling_RaiseByValueTimes8")
-   LINESPECNAMED(199, ParamCeilingLowerByValueTimes8,      "Ceiling_LowerByValueTimes8")
-   LINESPECNAMED(200, ParamFloorGeneric,                   "Generic_Floor")
-   LINESPECNAMED(201, ParamCeilingGeneric,                 "Generic_Ceiling")
-   LINESPECNAMED(203, ParamPlatGeneric,                    "Generic_Lift")
-   LINESPECNAMED(204, ParamGenStairs,                      "Generic_Stairs")
-   LINESPECNAMED(205, ParamGenCrusher,                     "Generic_Crusher")
-   LINESPECNAMED(206, ParamPlatDWUSLip,                    "Plat_DownWaitUpStayLip")
-   LINESPECNAMED(207, ParamPlatPerpetualRaiseLip,          "Plat_PerpetualRaiseLip")
-   LINESPECNAMED(215, ParamTeleportLine,                   "Teleport_Line")
-   LINESPECNAMED(217, ParamStairsBuildUpDoom,              "Stairs_BuildUpDoom")
-   LINESPECNAMED(226, ACSExecuteAlways,                    "ACS_ExecuteAlways")
-   LINESPECNAMED(228, ParamPlatRaiseNearestChange,         "Plat_RaiseAndStayTx0")
-   LINESPECNAMED(230, ParamPlatRaiseChange,                "Plat_UpByValueStayTx")
-   LINESPECNAMED(231, ParamPlatToggleCeiling,              "Plat_ToggleCeiling")
-   LINESPECNAMED(232, ParamLightStrobeDoom,                "Light_StrobeDoom")
-   LINESPECNAMED(233, TurnTagLightsOff,                    "Light_MinNeighbor")
-   LINESPECNAMED(234, LightTurnOn,                         "Light_MaxNeighbor")
-   LINESPECNAMED(235, ChangeOnly,                          "Floor_TransferTrigger")
-   LINESPECNAMED(236, ChangeOnlyNumeric,                   "Floor_TransferNumeric")
-   LINESPECNAMED(238, ParamFloorRaiseToLowestCeiling,      "Floor_RaiseToLowestCeiling")
-   LINESPECNAMED(240, ParamFloorRaiseByTexture,            "Floor_RaiseByTexture")
-   LINESPECNAMED(242, ParamFloorLowerToHighest,            "Floor_LowerToHighest")
-   LINESPECNAMED(243, ParamExitNormal,                     "Exit_Normal")
-   LINESPECNAMED(244, ParamExitSecret,                     "Exit_Secret")
-   LINESPECNAMED(245, ParamElevatorUp,                     "Elevator_RaiseToNearest")
-   LINESPECNAMED(246, ParamElevatorCurrent,                "Elevator_MoveToFloor")
-   LINESPECNAMED(247, ParamElevatorDown,                   "Elevator_LowerToNearest")
-   LINESPECNAMED(248, HealThing,                           "HealThing")
-   LINESPECNAMED(249, ParamDoorCloseWaitOpen,              "Door_CloseWaitOpen")
-   LINESPECNAMED(250, ParamDonut,                          "Floor_Donut")
-   LINESPECNAMED(251, ParamFloorCeilingLowerRaise,         "FloorAndCeiling_LowerRaise")
-   LINESPECNAMED(252, ParamCeilingRaiseToNearest,          "Ceiling_RaiseToNearest")
-   LINESPECNAMED(253, ParamCeilingLowerToLowest,           "Ceiling_LowerToLowest")
-   LINESPECNAMED(254, ParamCeilingLowerToFloor,            "Ceiling_LowerToFloor")
-   LINESPECNAMED(255, ParamCeilingCrushRaiseAndStaySilA,   "Ceiling_CrushRaiseAndStaySilA")
+ev_binding_t HexenBindings[] = {
+    LINESPECNAMED(2,   PolyobjRotateLeft,                   "Polyobj_RotateLeft")
+    LINESPECNAMED(3,   PolyobjRotateRight,                  "Polyobj_RotateRight")
+    LINESPECNAMED(4,   PolyobjMove,                         "Polyobj_Move")
+    LINESPECNAMED(6,   PolyobjMoveTimes8,                   "Polyobj_MoveTimes8")
+    LINESPECNAMED(7,   PolyobjDoorSwing,                    "Polyobj_DoorSwing")
+    LINESPECNAMED(8,   PolyobjDoorSlide,                    "Polyobj_DoorSlide")
+    LINESPECNAMED(10,  ParamDoorClose,                      "Door_Close")
+    LINESPECNAMED(11,  ParamDoorOpen,                       "Door_Open")
+    LINESPECNAMED(12,  ParamDoorRaise,                      "Door_Raise")
+    LINESPECNAMED(13,  ParamDoorLockedRaise,                "Door_LockedRaise")
+    LINESPECNAMED(17,  ThingRaise,                          "Thing_Raise")
+    LINESPECNAMED(19,  ThingStop,                           "Thing_Stop")
+    LINESPECNAMED(20,  ParamFloorLowerByValue,              "Floor_LowerByValue")
+    LINESPECNAMED(21,  ParamFloorLowerToLowest,             "Floor_LowerToLowest")
+    LINESPECNAMED(22,  ParamFloorLowerToNearest,            "Floor_LowerToNearest")
+    LINESPECNAMED(23,  ParamFloorRaiseByValue,              "Floor_RaiseByValue")
+    LINESPECNAMED(24,  ParamFloorRaiseToHighest,            "Floor_RaiseToHighest")
+    LINESPECNAMED(25,  ParamFloorRaiseToNearest,            "Floor_RaiseToNearest")
+    LINESPECNAMED(28,  ParamFloorRaiseAndCrush,             "Floor_RaiseAndCrush")
+    LINESPECNAMED(29,  PillarBuild,                         "Pillar_Build")
+    LINESPECNAMED(30,  PillarOpen,                          "Pillar_Open")
+    LINESPECNAMED(35,  ParamFloorRaiseByValueTimes8,        "Floor_RaiseByValueTimes8")
+    LINESPECNAMED(36,  ParamFloorLowerByValueTimes8,        "Floor_LowerByValueTimes8")
+    LINESPECNAMED(37,  ParamFloorMoveToValue,               "Floor_MoveToValue")
+    LINESPECNAMED(38,  CeilingWaggle,                       "Ceiling_Waggle")
+    LINESPECNAMED(40,  ParamCeilingLowerByValue,            "Ceiling_LowerByValue")
+    LINESPECNAMED(41,  ParamCeilingRaiseByValue,            "Ceiling_RaiseByValue")
+    LINESPECNAMED(42,  ParamCeilingCrushAndRaise,           "Ceiling_CrushAndRaise")
+    LINESPECNAMED(43,  ParamCeilingLowerAndCrush,           "Ceiling_LowerAndCrush")
+    LINESPECNAMED(44,  ParamCeilingCrushStop,               "Ceiling_CrushStop")
+    LINESPECNAMED(45,  ParamCeilingCrushRaiseAndStay,       "Ceiling_CrushRaiseAndStay")
+    LINESPECNAMED(46,  ParamFloorCrushStop,                 "Floor_CrushStop")
+    LINESPECNAMED(47,  ParamCeilingMoveToValue,             "Ceiling_MoveToValue")
+    LINESPECNAMED(59,  PolyobjORMoveToSpot,                 "Polyobj_OR_MoveToSpot")
+    LINESPECNAMED(60,  ParamPlatPerpetualRaise,             "Plat_PerpetualRaise")
+    LINESPECNAMED(61,  ParamPlatStop,                       "Plat_Stop")
+    LINESPECNAMED(62,  ParamPlatDWUS,                       "Plat_DownWaitUpStay")
+    LINESPECNAMED(63,  ParamPlatDownByValue,                "Plat_DownByValue")
+    LINESPECNAMED(64,  ParamPlatUWDS,                       "Plat_UpWaitDownStay")
+    LINESPECNAMED(65,  ParamPlatUpByValue,                  "Plat_UpByValue")
+    LINESPECNAMED(66,  ParamFloorLowerInstant,              "Floor_LowerInstant")
+    LINESPECNAMED(67,  ParamFloorRaiseInstant,              "Floor_RaiseInstant")
+    LINESPECNAMED(68,  ParamFloorMoveToValueTimes8,         "Floor_MoveToValueTimes8")
+    LINESPECNAMED(69,  ParamCeilingMoveToValueTimes8,       "Ceiling_MoveToValueTimes8")
+    LINESPECNAMED(70,  ParamTeleport,                       "Teleport")
+    LINESPECNAMED(71,  ParamTeleportNoFog,                  "Teleport_NoFog")
+    LINESPECNAMED(72,  ThrustThing,                         "ThrustThing")
+    LINESPECNAMED(73,  DamageThing,                         "DamageThing")
+    LINESPECNAMED(74,  TeleportNewMap,                      "Teleport_NewMap")
+    LINESPECNAMED(75,  TeleportEndGame,                     "Teleport_EndGame")
+    LINESPECNAMED(80,  ACSExecute,                          "ACS_Execute")
+    LINESPECNAMED(81,  ACSSuspend,                          "ACS_Suspend")
+    LINESPECNAMED(82,  ACSTerminate,                        "ACS_Terminate")
+    LINESPECNAMED(83,  ACSLockedExecute,                    "ACS_LockedExecute")
+    LINESPECNAMED(84,  ACSExecuteWithResult,                "ACS_ExecuteWithResult")
+    LINESPECNAMED(85,  ACSLockedExecuteDoor,                "ACS_LockedExecuteDoor")
+    LINESPECNAMED(86,  PolyobjMoveToSpot,                   "Polyobj_MoveToSpot")
+    LINESPECNAMED(87,  PolyobjStop,                         "Polyobj_Stop")
+    LINESPECNAMED(88,  PolyobjMoveTo,                       "Polyobj_MoveTo")
+    LINESPECNAMED(89,  PolyobjORMoveTo,                     "Polyobj_OR_MoveTo")
+    LINESPECNAMED(90,  PolyobjORRotateLeft,                 "Polyobj_OR_RotateLeft")
+    LINESPECNAMED(91,  PolyobjORRotateRight,                "Polyobj_OR_RotateRight")
+    LINESPECNAMED(92,  PolyobjORMove,                       "Polyobj_OR_Move")
+    LINESPECNAMED(93,  PolyobjORMoveTimes8,                 "Polyobj_OR_MoveTimes8")
+    LINESPECNAMED(94,  PillarBuildAndCrush,                 "Pillar_BuildAndCrush")
+    LINESPECNAMED(95,  ParamFloorCeilingLowerByValue,       "FloorAndCeiling_LowerByValue")
+    LINESPECNAMED(96,  ParamFloorCeilingRaiseByValue,       "FloorAndCeiling_RaiseByValue")
+    LINESPECNAMED(97,  ParamCeilingLowerAndCrushDist,       "Ceiling_LowerAndCrushDist")
+    LINESPECNAMED(104, ParamCeilingCrushAndRaiseSilentDist, "Ceiling_CrushAndRaiseSilentDist")
+    LINESPECNAMED(105, ParamDoorWaitRaise,                  "Door_WaitRaise")
+    LINESPECNAMED(106, ParamDoorWaitClose,                  "Door_WaitClose")
+    LINESPECNAMED(110, ParamLightRaiseByValue,              "Light_RaiseByValue")
+    LINESPECNAMED(111, ParamLightLowerByValue,              "Light_LowerByValue")
+    LINESPECNAMED(112, ParamLightChangeToValue,             "Light_ChangeToValue")
+    LINESPECNAMED(113, ParamLightFade,                      "Light_Fade")
+    LINESPECNAMED(114, ParamLightGlow,                      "Light_Glow")
+    LINESPECNAMED(115, ParamLightFlicker,                   "Light_Flicker")
+    LINESPECNAMED(116, ParamLightStrobe,                    "Light_Strobe")
+    LINESPECNAMED(119, DamageThingEx,                       "Thing_Damage")
+    LINESPECNAMED(120, RadiusQuake,                         "Radius_Quake")
+    LINESPECNAMED(128, ThrustThingZ,                        "ThrustThingZ")
+    LINESPECNAMED(130, ThingActivate,                       "Thing_Activate")
+    LINESPECNAMED(131, ThingDeactivate,                     "Thing_Deactivate")
+    LINESPECNAMED(132, ThingRemove,                         "Thing_Remove")
+    LINESPECNAMED(133, ThingDestroy,                        "Thing_Destroy")
+    LINESPECNAMED(134, ThingProjectile,                     "Thing_Projectile")
+    LINESPECNAMED(135, ThingSpawn,                          "Thing_Spawn")
+    LINESPECNAMED(136, ThingProjectileGravity,              "Thing_ProjectileGravity")
+    LINESPECNAMED(137, ThingSpawnNoFog,                     "Thing_SpawnNoFog")
+    LINESPECNAMED(138, FloorWaggle,                         "Floor_Waggle")
+    LINESPECNAMED(140, ParamSectorChangeSound,              "Sector_ChangeSound")
+    LINESPECNAMED(168, ParamCeilingCrushAndRaiseDist,       "Ceiling_CrushAndRaiseDist")
+    LINESPECNAMED(176, ThingChangeTID,                      "Thing_ChangeTID")
+    LINESPECNAMED(179, ChangeSkill,                         "ChangeSkill")
+    LINESPECNAMED(185, ParamSectorSetRotation,              "Sector_SetRotation")
+    LINESPECNAMED(186, ParamSectorSetCeilingPanning,        "Sector_SetCeilingPanning")
+    LINESPECNAMED(187, ParamSectorSetFloorPanning,          "Sector_SetFloorPanning")
+    LINESPECNAMED(192, ParamCeilingLowerToHighestFloor,     "Ceiling_LowerToHighestFloor")
+    LINESPECNAMED(193, ParamCeilingLowerInstant,            "Ceiling_LowerInstant")
+    LINESPECNAMED(194, ParamCeilingRaiseInstant,            "Ceiling_RaiseInstant")
+    LINESPECNAMED(195, ParamCeilingCrushRaiseAndStayA,      "Ceiling_CrushRaiseAndStayA")
+    LINESPECNAMED(196, ParamCeilingCrushAndRaiseA,          "Ceiling_CrushAndRaiseA")
+    LINESPECNAMED(197, ParamCeilingCrushAndRaiseSilentA,    "Ceiling_CrushAndRaiseSilentA")
+    LINESPECNAMED(198, ParamCeilingRaiseByValueTimes8,      "Ceiling_RaiseByValueTimes8")
+    LINESPECNAMED(199, ParamCeilingLowerByValueTimes8,      "Ceiling_LowerByValueTimes8")
+    LINESPECNAMED(200, ParamFloorGeneric,                   "Generic_Floor")
+    LINESPECNAMED(201, ParamCeilingGeneric,                 "Generic_Ceiling")
+    LINESPECNAMED(203, ParamPlatGeneric,                    "Generic_Lift")
+    LINESPECNAMED(204, ParamGenStairs,                      "Generic_Stairs")
+    LINESPECNAMED(205, ParamGenCrusher,                     "Generic_Crusher")
+    LINESPECNAMED(206, ParamPlatDWUSLip,                    "Plat_DownWaitUpStayLip")
+    LINESPECNAMED(207, ParamPlatPerpetualRaiseLip,          "Plat_PerpetualRaiseLip")
+    LINESPECNAMED(215, ParamTeleportLine,                   "Teleport_Line")
+    LINESPECNAMED(217, ParamStairsBuildUpDoom,              "Stairs_BuildUpDoom")
+    LINESPECNAMED(226, ACSExecuteAlways,                    "ACS_ExecuteAlways")
+    LINESPECNAMED(228, ParamPlatRaiseNearestChange,         "Plat_RaiseAndStayTx0")
+    LINESPECNAMED(230, ParamPlatRaiseChange,                "Plat_UpByValueStayTx")
+    LINESPECNAMED(231, ParamPlatToggleCeiling,              "Plat_ToggleCeiling")
+    LINESPECNAMED(232, ParamLightStrobeDoom,                "Light_StrobeDoom")
+    LINESPECNAMED(233, TurnTagLightsOff,                    "Light_MinNeighbor")
+    LINESPECNAMED(234, LightTurnOn,                         "Light_MaxNeighbor")
+    LINESPECNAMED(235, ChangeOnly,                          "Floor_TransferTrigger")
+    LINESPECNAMED(236, ChangeOnlyNumeric,                   "Floor_TransferNumeric")
+    LINESPECNAMED(238, ParamFloorRaiseToLowestCeiling,      "Floor_RaiseToLowestCeiling")
+    LINESPECNAMED(240, ParamFloorRaiseByTexture,            "Floor_RaiseByTexture")
+    LINESPECNAMED(242, ParamFloorLowerToHighest,            "Floor_LowerToHighest")
+    LINESPECNAMED(243, ParamExitNormal,                     "Exit_Normal")
+    LINESPECNAMED(244, ParamExitSecret,                     "Exit_Secret")
+    LINESPECNAMED(245, ParamElevatorUp,                     "Elevator_RaiseToNearest")
+    LINESPECNAMED(246, ParamElevatorCurrent,                "Elevator_MoveToFloor")
+    LINESPECNAMED(247, ParamElevatorDown,                   "Elevator_LowerToNearest")
+    LINESPECNAMED(248, HealThing,                           "HealThing")
+    LINESPECNAMED(249, ParamDoorCloseWaitOpen,              "Door_CloseWaitOpen")
+    LINESPECNAMED(250, ParamDonut,                          "Floor_Donut")
+    LINESPECNAMED(251, ParamFloorCeilingLowerRaise,         "FloorAndCeiling_LowerRaise")
+    LINESPECNAMED(252, ParamCeilingRaiseToNearest,          "Ceiling_RaiseToNearest")
+    LINESPECNAMED(253, ParamCeilingLowerToLowest,           "Ceiling_LowerToLowest")
+    LINESPECNAMED(254, ParamCeilingLowerToFloor,            "Ceiling_LowerToFloor")
+    LINESPECNAMED(255, ParamCeilingCrushRaiseAndStaySilA,   "Ceiling_CrushRaiseAndStaySilA")
 };
 
 const size_t HexenBindingsLen = earrlen(HexenBindings);
 
 // PSX Mission Bindings
 // * TODO: type 142 ("start Club DOOM music")
-ev_binding_t PSXBindings[] =
-{
-   LINESPEC(142, NullAction) // TODO
+ev_binding_t PSXBindings[] = {
+    LINESPEC(142, NullAction) // TODO
 };
 
 const size_t PSXBindingsLen = earrlen(PSXBindings);
 
 // UDMF "Eternity" Namespace Bindings
-ev_binding_t UDMFEternityBindings[] =
-{
-   // No bindings for ExtraData as it isn't required any more \o/
-   LINESPECNAMED(256, ParamEEFloorLowerToHighest,      "Floor_LowerToHighestEE")
-   LINESPECNAMED(257, ParamFloorRaiseToLowest,         "Floor_RaiseToLowest")
-   LINESPECNAMED(258, ParamFloorLowerToLowestCeiling,  "Floor_LowerToLowestCeiling")
-   LINESPECNAMED(259, ParamFloorRaiseToCeiling,        "Floor_RaiseToCeiling")
-   LINESPECNAMED(260, ParamFloorToCeilingInstant,      "Floor_ToCeilingInstant")
-   LINESPECNAMED(261, ParamFloorLowerByTexture,        "Floor_LowerByTexture")
-   LINESPECNAMED(262, ParamCeilingRaiseToHighest,      "Ceiling_RaiseToHighest")
-   LINESPECNAMED(263, ParamCeilingToHighestInstant,    "Ceiling_ToHighestInstant")
-   LINESPECNAMED(264, ParamCeilingLowerToNearest,      "Ceiling_LowerToNearest")
-   LINESPECNAMED(265, ParamCeilingRaiseToLowest,       "Ceiling_RaiseToLowest")
-   LINESPECNAMED(266, ParamCeilingRaiseToHighestFloor, "Ceiling_RaiseToHighestFloor")
-   LINESPECNAMED(267, ParamCeilingToFloorInstant,      "Ceiling_ToFloorInstant")
-   LINESPECNAMED(268, ParamCeilingRaiseByTexture,      "Ceiling_RaiseByTexture")
-   LINESPECNAMED(269, ParamCeilingLowerByTexture,      "Ceiling_LowerByTexture")
-   LINESPECNAMED(270, ParamStairsBuildDownDoom,        "Stairs_BuildDownDoom")
-   LINESPECNAMED(271, ParamStairsBuildUpDoomSync,      "Stairs_BuildUpDoomSync")
-   LINESPECNAMED(272, ParamStairsBuildDownDoomSync,    "Stairs_BuildDownDoomSync")
-   LINESPECNAMED(273, ParamStairsBuildUpDoomCrush,     "Stairs_BuildUpDoomCrush")
+ev_binding_t UDMFEternityBindings[] = {
+    // No bindings for ExtraData as it isn't required any more \o/
+    LINESPECNAMED(256, ParamEEFloorLowerToHighest,      "Floor_LowerToHighestEE")
+    LINESPECNAMED(257, ParamFloorRaiseToLowest,         "Floor_RaiseToLowest")
+    LINESPECNAMED(258, ParamFloorLowerToLowestCeiling,  "Floor_LowerToLowestCeiling")
+    LINESPECNAMED(259, ParamFloorRaiseToCeiling,        "Floor_RaiseToCeiling")
+    LINESPECNAMED(260, ParamFloorToCeilingInstant,      "Floor_ToCeilingInstant")
+    LINESPECNAMED(261, ParamFloorLowerByTexture,        "Floor_LowerByTexture")
+    LINESPECNAMED(262, ParamCeilingRaiseToHighest,      "Ceiling_RaiseToHighest")
+    LINESPECNAMED(263, ParamCeilingToHighestInstant,    "Ceiling_ToHighestInstant")
+    LINESPECNAMED(264, ParamCeilingLowerToNearest,      "Ceiling_LowerToNearest")
+    LINESPECNAMED(265, ParamCeilingRaiseToLowest,       "Ceiling_RaiseToLowest")
+    LINESPECNAMED(266, ParamCeilingRaiseToHighestFloor, "Ceiling_RaiseToHighestFloor")
+    LINESPECNAMED(267, ParamCeilingToFloorInstant,      "Ceiling_ToFloorInstant")
+    LINESPECNAMED(268, ParamCeilingRaiseByTexture,      "Ceiling_RaiseByTexture")
+    LINESPECNAMED(269, ParamCeilingLowerByTexture,      "Ceiling_LowerByTexture")
+    LINESPECNAMED(270, ParamStairsBuildDownDoom,        "Stairs_BuildDownDoom")
+    LINESPECNAMED(271, ParamStairsBuildUpDoomSync,      "Stairs_BuildUpDoomSync")
+    LINESPECNAMED(272, ParamStairsBuildDownDoomSync,    "Stairs_BuildDownDoomSync")
+    LINESPECNAMED(273, ParamStairsBuildUpDoomCrush,     "Stairs_BuildUpDoomCrush")
 };
 
 const size_t UDMFEternityBindingsLen = earrlen(UDMFEternityBindings);
 
 // ACS-specific bindings, for functions that are static but need to be
 // accessible by ACS, or that have multiple definitions, one for lines, one for ACS
-ev_binding_t ACSBindings[] =
-{
-   LINESPEC(219, ACSSetFriction)
-   LINESPEC(223, ACSScrollFloor)
-   LINESPEC(224, ACSScrollCeiling)
+ev_binding_t ACSBindings[] = {
+    LINESPEC(219, ACSSetFriction)
+    LINESPEC(223, ACSScrollFloor)
+    LINESPEC(224, ACSScrollCeiling)
 };
 
 const size_t ACSBindingsLen = earrlen(ACSBindings);
+
+// clang-format on
 
 //=============================================================================
 //
@@ -1837,49 +1825,47 @@ const size_t ACSBindingsLen = earrlen(ACSBindings);
 //
 void EV_InitUDMFToExtraDataLookup()
 {
-   static bool isInit = false;
+    static bool isInit = false;
 
-   if(isInit)
-      return;
-   isInit = true;
+    if(isInit)
+        return;
+    isInit = true;
 
-   // do the Hexen binding table first
-   for(size_t i = 0; i < HexenBindingsLen; i++)
-   {
-      ev_binding_t &hexenBind = HexenBindings[i];
+    // do the Hexen binding table first
+    for(size_t i = 0; i < HexenBindingsLen; i++)
+    {
+        ev_binding_t &hexenBind = HexenBindings[i];
 
-      // try to find the same action in the DOOM bindings table
-      for(size_t j = 0; j < DOOMBindingsLen; j++)
-      {
-         ev_binding_t &doomBind = DOOMBindings[j];
+        // try to find the same action in the DOOM bindings table
+        for(size_t j = 0; j < DOOMBindingsLen; j++)
+        {
+            ev_binding_t &doomBind = DOOMBindings[j];
 
-         if(doomBind.action == hexenBind.action)
-         {
-            hexenBind.pEDBinding = &doomBind;
-            break;
-         }
-      }
-   }
+            if(doomBind.action == hexenBind.action)
+            {
+                hexenBind.pEDBinding = &doomBind;
+                break;
+            }
+        }
+    }
 
-   // also do the UDMF table
-   for(size_t i = 0; i < UDMFEternityBindingsLen; i++)
-   {
-      ev_binding_t &udmfBind = UDMFEternityBindings[i];
+    // also do the UDMF table
+    for(size_t i = 0; i < UDMFEternityBindingsLen; i++)
+    {
+        ev_binding_t &udmfBind = UDMFEternityBindings[i];
 
-      for(size_t j = 0; j < DOOMBindingsLen; j++)
-      {
-         ev_binding_t &doomBind = DOOMBindings[j];
+        for(size_t j = 0; j < DOOMBindingsLen; j++)
+        {
+            ev_binding_t &doomBind = DOOMBindings[j];
 
-         if(doomBind.action == udmfBind.action)
-         {
-            udmfBind.pEDBinding = &doomBind;
-            break;
-         }
-      }
-   }
+            if(doomBind.action == udmfBind.action)
+            {
+                udmfBind.pEDBinding = &doomBind;
+                break;
+            }
+        }
+    }
 }
-
-
 
 // EOF
 

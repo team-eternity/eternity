@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Startup IWAD picker.
+// Purpose: Startup IWAD picker.
+// Authors: James Haley, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef I_PICKER_H__
 #define I_PICKER_H__
@@ -32,22 +30,22 @@
 // picker iwad enumeration
 enum
 {
-   IWAD_DOOMSW,
-   IWAD_DOOMREG,
-   IWAD_DOOMU,
-   IWAD_DOOM2,
-   IWAD_BFGDOOM2,
-   IWAD_TNT,
-   IWAD_PLUT,
-   IWAD_HACX,
-   IWAD_HTICSW,
-   IWAD_HTICREG,
-   IWAD_HTICSOSR,
-   IWAD_FREEDOOM,
-   IWAD_FREEDOOMU,
-   IWAD_FREEDM,
-   IWAD_REKKR,
-   NUMPICKIWADS
+    IWAD_DOOMSW,
+    IWAD_DOOMREG,
+    IWAD_DOOMU,
+    IWAD_DOOM2,
+    IWAD_BFGDOOM2,
+    IWAD_TNT,
+    IWAD_PLUT,
+    IWAD_HACX,
+    IWAD_HTICSW,
+    IWAD_HTICREG,
+    IWAD_HTICSOSR,
+    IWAD_FREEDOOM,
+    IWAD_FREEDOOMU,
+    IWAD_FREEDM,
+    IWAD_REKKR,
+    NUMPICKIWADS
 };
 
 int I_Pick_DoPicker(bool haveIWADs[], int startchoice);

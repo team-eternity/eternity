@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2009 James Haley
+// The Eternity Engine
+// Copyright (C) 2025 James Haley
 //
 // Derived from Chocolate Doom
 // Copyright 2009 Simon Howard
@@ -21,15 +20,12 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
-
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//    
-//   CPU-related system-specific module for POSIX systems
+// Purpose: CPU-related system-specific module for POSIX systems
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,9 +36,9 @@
 #endif
 
 // cannot include DOOM headers here; required externs:
-extern void startupmsg(const char *, const char *);
-extern int  M_CheckParm(const char *);
-extern int  myargc;
+extern void   startupmsg(const char *, const char *);
+extern int    M_CheckParm(const char *);
+extern int    myargc;
 extern char **myargv;
 
 unsigned int process_affinity_mask;
@@ -52,7 +48,7 @@ unsigned int process_affinity_mask;
 //
 // Due to ongoing problems with the SDL_mixer library and/or the SDL audio
 // core, it is necessary to support the restriction of Eternity to a single
-// core or CPU. Apparent thread contention issues cause the library to 
+// core or CPU. Apparent thread contention issues cause the library to
 // malfunction if multiple threads of the process run simultaneously.
 //
 // I wish SDL would fix their bullshit already.
@@ -60,29 +56,29 @@ unsigned int process_affinity_mask;
 void I_SetAffinityMask(void)
 {
 #ifdef HAVE_SCHED_SETAFFINITY
-   int p = M_CheckParm("-affinity");
+    int p = M_CheckParm("-affinity");
 
-   if(p && p < myargc - 1)
-      process_affinity_mask = atoi(myargv[p + 1]);
+    if(p && p < myargc - 1)
+        process_affinity_mask = atoi(myargv[p + 1]);
 
-   // Set the process affinity mask so that all threads
-   // run on the same processor.  This is a workaround for a bug in
-   // SDL_mixer that causes occasional crashes.
-   if(process_affinity_mask)
-   {
-      int i;
-      cpu_set_t set;
+    // Set the process affinity mask so that all threads
+    // run on the same processor.  This is a workaround for a bug in
+    // SDL_mixer that causes occasional crashes.
+    if(process_affinity_mask)
+    {
+        int       i;
+        cpu_set_t set;
 
-      CPU_ZERO(&set);
-      
-      for(i = 0; i < 16; ++i)
-         CPU_SET((process_affinity_mask>>i)&1, &set);
+        CPU_ZERO(&set);
 
-      if(sched_setaffinity(getpid(), sizeof(set), &set) == -1)
-         startupmsg("I_SetAffinityMask", "failed to set process affinity mask.");
-      else
-         startupmsg("I_SetAffinityMask", "applied affinity mask.");
-   }
+        for(i = 0; i < 16; ++i)
+            CPU_SET((process_affinity_mask >> i) & 1, &set);
+
+        if(sched_setaffinity(getpid(), sizeof(set), &set) == -1)
+            startupmsg("I_SetAffinityMask", "failed to set process affinity mask.");
+        else
+            startupmsg("I_SetAffinityMask", "applied affinity mask.");
+    }
 #endif
 }
 

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2008 James Haley, Stephen McGranahan, et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley, Stephen McGranahan, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Inline linked portal predicates.
-//      SoM created 12/23/07
+// Purpose: Inline linked portal predicates.
+// Authors: Stephen McGranahan, James Haley, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef R_PORTALCHECK_H__
 #define R_PORTALCHECK_H__
@@ -39,7 +36,7 @@ extern int demo_version;
 //
 inline static linkdata_t *R_FPLink(const rendersector_t *s)
 {
-   return &(s->srf.floor.portal->data.link);
+    return &(s->srf.floor.portal->data.link);
 }
 
 //
@@ -49,7 +46,7 @@ inline static linkdata_t *R_FPLink(const rendersector_t *s)
 //
 inline static linkdata_t *R_CPLink(const rendersector_t *s)
 {
-   return &(s->srf.ceiling.portal->data.link);
+    return &(s->srf.ceiling.portal->data.link);
 }
 
 //
@@ -57,7 +54,7 @@ inline static linkdata_t *R_CPLink(const rendersector_t *s)
 //
 inline static const linkdata_t *R_PLink(surf_e surf, const rendersector_t &s)
 {
-   return &s.srf[surf].portal->data.link;
+    return &s.srf[surf].portal->data.link;
 }
 
 #endif

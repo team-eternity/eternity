@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,11 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Weapon sprite animation, weapon objects.
-//      Action functions for weapons.
+// Purpose: Weapon sprite animation, weapon objects.
+//  Action functions for weapons.
+//
+// Authors: James Haley, David Hill, Ioan Chera, Max Waine, Xaser Acheron
+//
+
 //
 // NETCODE_FIXME -- DEMO_FIXME -- WEAPON_FIXME: Weapon changing, prefs,
 // etc. need overhaul for all of these. See comments in other modules
@@ -28,7 +30,6 @@
 // outside of ticcmd_t to indicate weapon changes now, and so will not
 // face the issue of being limited to 16 weapons.
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"
@@ -80,75 +81,74 @@
 //
 void P_SetPspritePtr(const player_t &player, pspdef_t *psp, statenum_t stnum)
 {
-   // haleyjd 06/22/13: rewrote again to use actionargs structure
-   do
-   {
-      state_t *state;
-      
-      if(!stnum)
-      {
-         // object removed itself
-         psp->state = nullptr;
-         break;
-      }
+    // haleyjd 06/22/13: rewrote again to use actionargs structure
+    do
+    {
+        state_t *state;
 
-      // WEAPON_FIXME: pre-beta bfg must become an alternate weapon under EDF
-
-      // killough 7/19/98: Pre-Beta BFG
-      if(stnum == E_StateNumForDEHNum(S_BFG1) && bfgtype == bfg_classic)
-         stnum = E_SafeState(S_OLDBFG1); // Skip to alternative weapon frame
-
-      state = states[stnum];
-      psp->state = state;
-      psp->tics = state->tics;        // could be 0
-
-      if(GameModeInfo->flags & GIF_DOOMWEAPONOFFSET)
-      {
-         if(state->misc1)
-         {
-            // coordinate set
-            psp->playpos.x = psp->renderpos.x = state->misc1 << FRACBITS;
-            psp->playpos.y = psp->renderpos.y = state->misc2 << FRACBITS;
-            if(!(state->flags & STATEF_INTERPOLATE))
-               psp->backupPosition();
-         }
-      }
-      else
-      {
-         if(state->misc1)
-         {
-            psp->playpos.x = psp->renderpos.x = state->misc1 << FRACBITS;
-            if(!(state->flags & STATEF_INTERPOLATE))
-               psp->prevpos.x = psp->renderpos.x;
-         }
-         if(state->misc2)
-         {
-            psp->playpos.y = psp->renderpos.y =  state->misc2 << FRACBITS;
-            if(!(state->flags & STATEF_INTERPOLATE))
-               psp->prevpos.y = psp->renderpos.y;
-         }
-      }
-
-      // Call action routine.
-      // Modified handling.
-      if(state->action)
-      {
-         actionargs_t action;
-
-         action.actiontype = actionargs_t::WEAPONFRAME;
-         action.actor      = player.mo;
-         action.args       = state->args;
-         action.pspr       = psp;
-         action.aeonaction = state->action->aeonaction;
-
-         state->action->codeptr(&action);
-
-         if(!psp->state)
+        if(!stnum)
+        {
+            // object removed itself
+            psp->state = nullptr;
             break;
-      }
-      stnum = psp->state->nextstate;
-   }
-   while(!psp->tics);   // an initial state of 0 could cycle through
+        }
+
+        // WEAPON_FIXME: pre-beta bfg must become an alternate weapon under EDF
+
+        // killough 7/19/98: Pre-Beta BFG
+        if(stnum == E_StateNumForDEHNum(S_BFG1) && bfgtype == bfg_classic)
+            stnum = E_SafeState(S_OLDBFG1); // Skip to alternative weapon frame
+
+        state      = states[stnum];
+        psp->state = state;
+        psp->tics  = state->tics; // could be 0
+
+        if(GameModeInfo->flags & GIF_DOOMWEAPONOFFSET)
+        {
+            if(state->misc1)
+            {
+                // coordinate set
+                psp->playpos.x = psp->renderpos.x = state->misc1 << FRACBITS;
+                psp->playpos.y = psp->renderpos.y = state->misc2 << FRACBITS;
+                if(!(state->flags & STATEF_INTERPOLATE))
+                    psp->backupPosition();
+            }
+        }
+        else
+        {
+            if(state->misc1)
+            {
+                psp->playpos.x = psp->renderpos.x = state->misc1 << FRACBITS;
+                if(!(state->flags & STATEF_INTERPOLATE))
+                    psp->prevpos.x = psp->renderpos.x;
+            }
+            if(state->misc2)
+            {
+                psp->playpos.y = psp->renderpos.y = state->misc2 << FRACBITS;
+                if(!(state->flags & STATEF_INTERPOLATE))
+                    psp->prevpos.y = psp->renderpos.y;
+            }
+        }
+
+        // Call action routine.
+        // Modified handling.
+        if(state->action)
+        {
+            actionargs_t action;
+
+            action.actiontype = actionargs_t::WEAPONFRAME;
+            action.actor      = player.mo;
+            action.args       = state->args;
+            action.pspr       = psp;
+
+            state->action(&action);
+
+            if(!psp->state)
+                break;
+        }
+        stnum = psp->state->nextstate;
+    }
+    while(!psp->tics); // an initial state of 0 could cycle through
 }
 
 //
@@ -158,7 +158,7 @@ void P_SetPspritePtr(const player_t &player, pspdef_t *psp, statenum_t stnum)
 //
 void P_SetPsprite(player_t &player, int position, statenum_t stnum)
 {
-   P_SetPspritePtr(player, &player.psprites[position], stnum);
+    P_SetPspritePtr(player, &player.psprites[position], stnum);
 }
 
 //
@@ -169,33 +169,33 @@ void P_SetPsprite(player_t &player, int position, statenum_t stnum)
 //
 static void P_BringUpWeapon(player_t &player)
 {
-   statenum_t newstate;
-   
-   if(player.pendingweapon == nullptr)
-   {
-      player.pendingweapon = player.readyweapon;
-      player.pendingweaponslot = player.readyweaponslot;
-   }
-   
-   weaponinfo_t *pendingweapon;
-   if((pendingweapon = player.pendingweapon))
-   {
-      pendingweapon = &E_TryPowered(player, *pendingweapon);
-      // haleyjd 06/28/13: weapon upsound
-      if(pendingweapon->upsound)
-         S_StartSoundName(player.mo, pendingweapon->upsound);
+    statenum_t newstate;
 
-      newstate = pendingweapon->upstate;
-  
-      player.pendingweapon = nullptr;
-      player.pendingweaponslot = nullptr;
+    if(player.pendingweapon == nullptr)
+    {
+        player.pendingweapon     = player.readyweapon;
+        player.pendingweaponslot = player.readyweaponslot;
+    }
 
-      // killough 12/98: prevent pistol from starting visibly at bottom of screen:
-      player.psprites[ps_weapon].playpos.y = player.psprites[ps_weapon].renderpos.y = demo_version >= 203 ?
-         WEAPONBOTTOM+FRACUNIT*2 : WEAPONBOTTOM;
-   
-      P_SetPsprite(player, ps_weapon, newstate);
-   }
+    weaponinfo_t *pendingweapon;
+    if((pendingweapon = player.pendingweapon))
+    {
+        pendingweapon = &E_TryPowered(player, *pendingweapon);
+        // haleyjd 06/28/13: weapon upsound
+        if(pendingweapon->upsound)
+            S_StartSoundName(player.mo, pendingweapon->upsound);
+
+        newstate = pendingweapon->upstate;
+
+        player.pendingweapon     = nullptr;
+        player.pendingweaponslot = nullptr;
+
+        // killough 12/98: prevent pistol from starting visibly at bottom of screen:
+        player.psprites[ps_weapon].playpos.y = player.psprites[ps_weapon].renderpos.y =
+            demo_version >= 203 ? WEAPONBOTTOM + FRACUNIT * 2 : WEAPONBOTTOM;
+
+        P_SetPsprite(player, ps_weapon, newstate);
+    }
 }
 
 //
@@ -205,15 +205,15 @@ static void P_BringUpWeapon(player_t &player)
 //
 bool P_WeaponHasAmmo(const player_t &player, const weaponinfo_t *weapon)
 {
-   weapon = &E_TryPowered(player, *weapon);
-   itemeffect_t *ammoType = weapon->ammo;
+    weapon                 = &E_TryPowered(player, *weapon);
+    itemeffect_t *ammoType = weapon->ammo;
 
-   // a weapon without an ammotype has infinite ammo
-   if(!ammoType)
-      return true;
+    // a weapon without an ammotype has infinite ammo
+    if(!ammoType)
+        return true;
 
-   // otherwise, read the inventory slot
-   return (E_GetItemOwnedAmount(player, ammoType) >= weapon->ammopershot);
+    // otherwise, read the inventory slot
+    return (E_GetItemOwnedAmount(player, ammoType) >= weapon->ammopershot);
 }
 
 //
@@ -221,14 +221,14 @@ bool P_WeaponHasAmmo(const player_t &player, const weaponinfo_t *weapon)
 //
 bool P_WeaponHasAmmoAlt(const player_t &player, const weaponinfo_t *weapon)
 {
-   itemeffect_t *ammoType = weapon->ammo_alt;
+    itemeffect_t *ammoType = weapon->ammo_alt;
 
-   // a weapon without an ammotype has infinite ammo
-   if(!ammoType)
-      return true;
+    // a weapon without an ammotype has infinite ammo
+    if(!ammoType)
+        return true;
 
-   // otherwise, read the inventory slot
-   return (E_GetItemOwnedAmount(player, ammoType) >= weapon->ammopershot_alt);
+    // otherwise, read the inventory slot
+    return (E_GetItemOwnedAmount(player, ammoType) >= weapon->ammopershot_alt);
 }
 
 //
@@ -236,17 +236,17 @@ bool P_WeaponHasAmmoAlt(const player_t &player, const weaponinfo_t *weapon)
 //
 static weaponslot_t *P_findFirstNonNullWeaponSlot(const player_t &player)
 {
-   // Don't ask
-   if(demo_version < 401)
-      return E_FindFirstWeaponSlot(player, player.readyweapon);
+    // Don't ask
+    if(demo_version < 401)
+        return E_FindFirstWeaponSlot(player, player.readyweapon);
 
-   for(weaponslot_t *&weaponslot : player.pclass->weaponslots)
-   {
-      if(weaponslot != nullptr)
-         return weaponslot;
-   }
+    for(weaponslot_t *&weaponslot : player.pclass->weaponslots)
+    {
+        if(weaponslot != nullptr)
+            return weaponslot;
+    }
 
-   return nullptr;
+    return nullptr;
 }
 
 //
@@ -257,59 +257,58 @@ static weaponslot_t *P_findFirstNonNullWeaponSlot(const player_t &player)
 //
 int P_NextWeapon(const player_t &player, uint8_t *slotindex)
 {
-   const weaponinfo_t             *currentweapon = player.readyweapon;
-   const weaponinfo_t             *newweapon     = player.readyweapon;
-   const weaponslot_t             *newweaponslot = player.readyweaponslot;
-   const BDListItem<weaponslot_t> *newweaponlink;
+    const weaponinfo_t             *currentweapon = player.readyweapon;
+    const weaponinfo_t             *newweapon     = player.readyweapon;
+    const weaponslot_t             *newweaponslot = player.readyweaponslot;
+    const BDListItem<weaponslot_t> *newweaponlink;
 
-   if(newweaponslot == nullptr)
-      newweaponslot = P_findFirstNonNullWeaponSlot(player);
-   newweaponlink = &newweaponslot->links;
+    if(newweaponslot == nullptr)
+        newweaponslot = P_findFirstNonNullWeaponSlot(player);
+    newweaponlink = &newweaponslot->links;
 
-   bool ownsweapon, canfireweapon, sameweapon, sameweaponslot;
-   do
-   {
-      newweaponlink = newweaponlink->bdPrev;
-      newweapon = newweaponlink->bdObject->weapon;
-      if(newweaponlink->isDummy())
-      {
-         const int slotindex = newweaponlink->bdObject->slotindex;
-         bool firsttime = true;
-         for(int i = (slotindex + 1) % NUMWEAPONSLOTS;
-             i  != slotindex + 1 || firsttime; i = (i + 1) % NUMWEAPONSLOTS)
-         {
-            if(player.pclass->weaponslots[i] != nullptr)
+    bool ownsweapon, canfireweapon, sameweapon, sameweaponslot;
+    do
+    {
+        newweaponlink = newweaponlink->bdPrev;
+        newweapon     = newweaponlink->bdObject->weapon;
+        if(newweaponlink->isDummy())
+        {
+            const int slotindex = newweaponlink->bdObject->slotindex;
+            bool      firsttime = true;
+            for(int i = (slotindex + 1) % NUMWEAPONSLOTS; i != slotindex + 1 || firsttime; i = (i + 1) % NUMWEAPONSLOTS)
             {
-               newweaponlink = E_LastInSlot(player.pclass->weaponslots[i]);
-               newweapon = newweaponlink->bdObject->weapon;
-               break;
+                if(player.pclass->weaponslots[i] != nullptr)
+                {
+                    newweaponlink = E_LastInSlot(player.pclass->weaponslots[i]);
+                    newweapon     = newweaponlink->bdObject->weapon;
+                    break;
+                }
+                firsttime = false;
             }
-            firsttime = false;
-         }
-      }
+        }
 
-      ownsweapon     = E_PlayerOwnsWeapon(player, newweapon);
-      canfireweapon  = P_WeaponHasAmmo(player, newweapon);
-      sameweapon     = newweapon->id == currentweapon->id;
-      sameweaponslot = &newweaponslot->links == newweaponlink;
-   }
-   while(((!ownsweapon || !canfireweapon) && !sameweapon) || (sameweapon && !sameweaponslot));
+        ownsweapon     = E_PlayerOwnsWeapon(player, newweapon);
+        canfireweapon  = P_WeaponHasAmmo(player, newweapon);
+        sameweapon     = newweapon->id == currentweapon->id;
+        sameweaponslot = &newweaponslot->links == newweaponlink;
+    }
+    while(((!ownsweapon || !canfireweapon) && !sameweapon) || (sameweapon && !sameweaponslot));
 
-   if(demo_version >= 401)
-   {
-      if(newweapon != currentweapon)
-      {
-         *slotindex = newweaponlink->bdObject->slotindex;
-         return newweapon->id;
-      }
-      else
-      {
-         *slotindex = -1;
-         return -1;
-      }
-   }
-   else
-      return newweapon != currentweapon ? newweapon->dehnum : wp_nochange;
+    if(demo_version >= 401)
+    {
+        if(newweapon != currentweapon)
+        {
+            *slotindex = newweaponlink->bdObject->slotindex;
+            return newweapon->id;
+        }
+        else
+        {
+            *slotindex = -1;
+            return -1;
+        }
+    }
+    else
+        return newweapon != currentweapon ? newweapon->dehnum : wp_nochange;
 }
 
 //
@@ -319,52 +318,51 @@ int P_NextWeapon(const player_t &player, uint8_t *slotindex)
 //
 int P_PrevWeapon(const player_t &player, uint8_t *slotindex)
 {
-   const weaponinfo_t             *currentweapon = player.readyweapon;
-   const weaponinfo_t             *newweapon     = player.readyweapon;
-   const weaponslot_t             *newweaponslot = player.readyweaponslot;
-   const BDListItem<weaponslot_t> *newweaponlink;
+    const weaponinfo_t             *currentweapon = player.readyweapon;
+    const weaponinfo_t             *newweapon     = player.readyweapon;
+    const weaponslot_t             *newweaponslot = player.readyweaponslot;
+    const BDListItem<weaponslot_t> *newweaponlink;
 
-   if(newweaponslot == nullptr)
-      newweaponslot = P_findFirstNonNullWeaponSlot(player);
-   newweaponlink = &newweaponslot->links;
+    if(newweaponslot == nullptr)
+        newweaponslot = P_findFirstNonNullWeaponSlot(player);
+    newweaponlink = &newweaponslot->links;
 
-   bool ownsweapon, canfireweapon, sameweapon, sameweaponslot;
-   do
-   {
-      newweaponlink = newweaponlink->bdNext;
-      newweapon = newweaponlink->bdObject->weapon;
-      if(newweaponlink->isDummy())
-      {
-         const int slotindex = newweaponlink->bdObject->slotindex;
-         bool firsttime = true;
-         for(int i = slotindex == 0 ? NUMWEAPONSLOTS - 1 : slotindex - 1;
-             i  != slotindex - 1 || firsttime; i = i == 0 ? NUMWEAPONSLOTS - 1 : i - 1)
-         {
-            if(player.pclass->weaponslots[i] != nullptr)
+    bool ownsweapon, canfireweapon, sameweapon, sameweaponslot;
+    do
+    {
+        newweaponlink = newweaponlink->bdNext;
+        newweapon     = newweaponlink->bdObject->weapon;
+        if(newweaponlink->isDummy())
+        {
+            const int slotindex = newweaponlink->bdObject->slotindex;
+            bool      firsttime = true;
+            for(int i = slotindex == 0 ? NUMWEAPONSLOTS - 1 : slotindex - 1; i != slotindex - 1 || firsttime;
+                i     = i == 0 ? NUMWEAPONSLOTS - 1 : i - 1)
             {
-               newweaponlink = E_FirstInSlot(player.pclass->weaponslots[i]);
-               newweapon = newweaponlink->bdObject->weapon;
-               break;
+                if(player.pclass->weaponslots[i] != nullptr)
+                {
+                    newweaponlink = E_FirstInSlot(player.pclass->weaponslots[i]);
+                    newweapon     = newweaponlink->bdObject->weapon;
+                    break;
+                }
             }
-         }
+        }
 
-      }
+        ownsweapon     = E_PlayerOwnsWeapon(player, newweapon);
+        canfireweapon  = P_WeaponHasAmmo(player, newweapon);
+        sameweapon     = newweapon->id == currentweapon->id;
+        sameweaponslot = &newweaponslot->links == newweaponlink;
+    }
+    while(((!ownsweapon || !canfireweapon) && !sameweapon) || (sameweapon && !sameweaponslot));
 
-      ownsweapon     = E_PlayerOwnsWeapon(player, newweapon);
-      canfireweapon  = P_WeaponHasAmmo(player, newweapon);
-      sameweapon     = newweapon->id == currentweapon->id;
-      sameweaponslot = &newweaponslot->links == newweaponlink;
-   }
-   while(((!ownsweapon || !canfireweapon) && !sameweapon) || (sameweapon && !sameweaponslot));
-
-   if(demo_version >= 401)
-   {
-      if(slotindex != nullptr)
-         *slotindex = newweaponlink->bdObject->slotindex;
-      return newweapon != currentweapon ? newweapon->id : -1;
-   }
-   else
-      return newweapon != currentweapon ? newweapon->dehnum : wp_nochange;
+    if(demo_version >= 401)
+    {
+        if(slotindex != nullptr)
+            *slotindex = newweaponlink->bdObject->slotindex;
+        return newweapon != currentweapon ? newweapon->id : -1;
+    }
+    else
+        return newweapon != currentweapon ? newweapon->dehnum : wp_nochange;
 }
 
 // The first set is where the weapon preferences from             // killough,
@@ -374,82 +372,77 @@ int P_PrevWeapon(const player_t &player, uint8_t *slotindex)
 
 // Exists for ye olde compat
 
-static int weapon_preferences[NUMWEAPONS+1] =
-{
-   6, 9, 4, 3, 2, 8, 5, 7, 1, 0
-};
+static int weapon_preferences[NUMWEAPONS + 1] = { 6, 9, 4, 3, 2, 8, 5, 7, 1, 0 };
 
 //
 // P_SwitchWeaponOld
 //
 // Checks current ammo levels and gives you the most preferred weapon with ammo.
-// It will not pick the currently raised weapon. When called from P_CheckAmmo 
+// It will not pick the currently raised weapon. When called from P_CheckAmmo
 // this won't matter, because the raised weapon has no ammo anyway. When called
 // from G_BuildTiccmd you want to toggle to a different weapon regardless.
 //
 weapontype_t P_SwitchWeaponOldDoom(const player_t &player)
 {
-   const int *prefer = weapon_preferences; // killough 3/22/98
-   weapontype_t currentweapon = player.readyweapon->dehnum;
-   weapontype_t newweapon = currentweapon;
-   int i = NUMWEAPONS + 1;   // killough 5/2/98   
+    const int   *prefer        = weapon_preferences; // killough 3/22/98
+    weapontype_t currentweapon = player.readyweapon->dehnum;
+    weapontype_t newweapon     = currentweapon;
+    int          i             = NUMWEAPONS + 1; // killough 5/2/98
 
-   int clips   = E_GetItemOwnedAmountName(player, "AmmoClip");
-   int shells  = E_GetItemOwnedAmountName(player, "AmmoShell");
-   int cells   = E_GetItemOwnedAmountName(player, "AmmoCell");
-   int rockets = E_GetItemOwnedAmountName(player, "AmmoMissile");
+    int clips   = E_GetItemOwnedAmountName(player, "AmmoClip");
+    int shells  = E_GetItemOwnedAmountName(player, "AmmoShell");
+    int cells   = E_GetItemOwnedAmountName(player, "AmmoCell");
+    int rockets = E_GetItemOwnedAmountName(player, "AmmoMissile");
 
-   do
-   {
-      switch(*prefer++)
-      {
-      case 1:
-         if(!player.powers[pw_strength].isActive())  // allow chainsaw override
+    do
+    {
+        switch(*prefer++)
+        {
+        case 1:
+            if(!player.powers[pw_strength].isActive()) // allow chainsaw override
+                break;
+        case 0: //
+            newweapon = wp_fist;
             break;
-      case 0:
-         newweapon = wp_fist;
-         break;
-      case 2:
-         if(clips)
-            newweapon = wp_pistol;
-         break;
-      case 3:
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun) && shells)
-            newweapon = wp_shotgun;
-         break;
-      case 4:
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_chaingun) && clips)
-            newweapon = wp_chaingun;
-         break;
-      case 5:
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_missile) && rockets)
-            newweapon = wp_missile;
-         break;
-      case 6:
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_plasma) && cells &&
-            GameModeInfo->id != shareware)
-            newweapon = wp_plasma;
-         break;
-      case 7:
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_bfg) && GameModeInfo->id != shareware &&
-            cells >= (demo_compatibility ? 41 : 40))
-            newweapon = wp_bfg;
-         break;
-      case 8:
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_chainsaw))
-            newweapon = wp_chainsaw;
-         break;
-      case 9:
-         if(E_PlayerOwnsWeaponForDEHNum(player, wp_supershotgun) &&
-            enable_ssg &&
-            shells >= (demo_compatibility ? 3 : 2))
-            newweapon = wp_supershotgun;
-         break;
-      }
-   }
-   while(newweapon == currentweapon && --i);        // killough 5/2/98
+        case 2:
+            if(clips)
+                newweapon = wp_pistol;
+            break;
+        case 3:
+            if(E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun) && shells)
+                newweapon = wp_shotgun;
+            break;
+        case 4:
+            if(E_PlayerOwnsWeaponForDEHNum(player, wp_chaingun) && clips)
+                newweapon = wp_chaingun;
+            break;
+        case 5:
+            if(E_PlayerOwnsWeaponForDEHNum(player, wp_missile) && rockets)
+                newweapon = wp_missile;
+            break;
+        case 6:
+            if(E_PlayerOwnsWeaponForDEHNum(player, wp_plasma) && cells && GameModeInfo->id != shareware)
+                newweapon = wp_plasma;
+            break;
+        case 7:
+            if(E_PlayerOwnsWeaponForDEHNum(player, wp_bfg) && GameModeInfo->id != shareware &&
+               cells >= (demo_compatibility ? 41 : 40))
+                newweapon = wp_bfg;
+            break;
+        case 8:
+            if(E_PlayerOwnsWeaponForDEHNum(player, wp_chainsaw))
+                newweapon = wp_chainsaw;
+            break;
+        case 9:
+            if(E_PlayerOwnsWeaponForDEHNum(player, wp_supershotgun) && enable_ssg &&
+               shells >= (demo_compatibility ? 3 : 2))
+                newweapon = wp_supershotgun;
+            break;
+        }
+    }
+    while(newweapon == currentweapon && --i); // killough 5/2/98
 
-   return newweapon;
+    return newweapon;
 }
 
 //
@@ -459,16 +452,21 @@ weapontype_t P_SwitchWeaponOldDoom(const player_t &player)
 //
 int P_WeaponPreferred(int w1, int w2)
 {
-   return
-      (weapon_preferences[0] != ++w2 && (weapon_preferences[0] == ++w1 ||
-      (weapon_preferences[1] !=   w2 && (weapon_preferences[1] ==   w1 ||
-      (weapon_preferences[2] !=   w2 && (weapon_preferences[2] ==   w1 ||
-      (weapon_preferences[3] !=   w2 && (weapon_preferences[3] ==   w1 ||
-      (weapon_preferences[4] !=   w2 && (weapon_preferences[4] ==   w1 ||
-      (weapon_preferences[5] !=   w2 && (weapon_preferences[5] ==   w1 ||
-      (weapon_preferences[6] !=   w2 && (weapon_preferences[6] ==   w1 ||
-      (weapon_preferences[7] !=   w2 && (weapon_preferences[7] ==   w1
-   ))))))))))))))));
+    return (weapon_preferences[0] != ++w2 &&
+            (weapon_preferences[0] == ++w1 ||
+             (weapon_preferences[1] != w2 &&
+              (weapon_preferences[1] == w1 ||
+               (weapon_preferences[2] != w2 &&
+                (weapon_preferences[2] == w1 ||
+                 (weapon_preferences[3] != w2 &&
+                  (weapon_preferences[3] == w1 ||
+                   (weapon_preferences[4] != w2 &&
+                    (weapon_preferences[4] == w1 ||
+                     (weapon_preferences[5] != w2 &&
+                      (weapon_preferences[5] == w1 ||
+                       (weapon_preferences[6] != w2 &&
+                        (weapon_preferences[6] == w1 ||
+                         (weapon_preferences[7] != w2 && (weapon_preferences[7] == w1))))))))))))))));
 }
 
 //
@@ -480,38 +478,38 @@ int P_WeaponPreferred(int w1, int w2)
 //
 bool P_CheckAmmo(player_t &player)
 {
-   // Return if current ammunition sufficient.
-   if(P_WeaponHasAmmo(player, player.readyweapon))
-      return true;
-   
-   // Out of ammo, pick a weapon to change to.
-   //
-   // killough 3/22/98: for old demos we do the switch here and now;
-   // for Boom games we cannot do this, and have different player
-   // preferences across demos or networks, so we have to use the
-   // G_BuildTiccmd() interface instead of making the switch here.
+    // Return if current ammunition sufficient.
+    if(P_WeaponHasAmmo(player, player.readyweapon))
+        return true;
 
-   // MaxW: 2023: We need to change pengingweapon here otherwise
-   //  otherwise players will switch to the same weapon twice when
-   //  they run out of ammo in netgames.
-   if(demo_version >= 401)
-   {
-      weaponinfo_t *temp = E_FindBestWeapon(player);
-      player.pendingweapon = temp;
-      player.pendingweaponslot = E_FindFirstWeaponSlot(player, temp);
-   }
-   if(demo_compatibility)
-   {
-      if(vanilla_heretic)
-         player.pendingweapon = E_FindBestWeapon(player);
-      else
-         player.pendingweapon = E_WeaponForDEHNum(P_SwitchWeaponOldDoom(player));      // phares
-      // Now set appropriate weapon overlay.
-      // WEAPON_FIXME
-      P_SetPsprite(player,ps_weapon,player.readyweapon->downstate);
-   }
-     
-   return false;
+    // Out of ammo, pick a weapon to change to.
+    //
+    // killough 3/22/98: for old demos we do the switch here and now;
+    // for Boom games we cannot do this, and have different player
+    // preferences across demos or networks, so we have to use the
+    // G_BuildTiccmd() interface instead of making the switch here.
+
+    // MaxW: 2023: We need to change pengingweapon here otherwise
+    //  otherwise players will switch to the same weapon twice when
+    //  they run out of ammo in netgames.
+    if(demo_version >= 401)
+    {
+        weaponinfo_t *temp       = E_FindBestWeapon(player);
+        player.pendingweapon     = temp;
+        player.pendingweaponslot = E_FindFirstWeaponSlot(player, temp);
+    }
+    if(demo_compatibility)
+    {
+        if(vanilla_heretic)
+            player.pendingweapon = E_FindBestWeapon(player);
+        else
+            player.pendingweapon = E_WeaponForDEHNum(P_SwitchWeaponOldDoom(player)); // phares
+        // Now set appropriate weapon overlay.
+        // WEAPON_FIXME
+        P_SetPsprite(player, ps_weapon, player.readyweapon->downstate);
+    }
+
+    return false;
 }
 
 //
@@ -523,32 +521,29 @@ bool P_CheckAmmo(player_t &player)
 //
 void P_SubtractAmmo(const player_t &player, int compat_amt)
 {
-   weaponinfo_t *weapon = player.readyweapon;
-   itemeffect_t *ammo;
-   int amount;
+    weaponinfo_t *weapon = player.readyweapon;
+    itemeffect_t *ammo;
+    int           amount;
 
-   // EDF_FEATURES_FIXME: Needs to fire the wimpy version's amount of ammo if in deathmatch, or at least
-   // do it for Heretic.
-   if(demo_version >= 401 && (player.attackdown & AT_ITEM))
-      return;
-   else if(demo_version >= 401 && (player.attackdown & AT_SECONDARY))
-   {
-      ammo = weapon->ammo_alt;
-      amount = (!(weapon->flags & WPF_DISABLEAPS) || compat_amt < 0) ? weapon->ammopershot_alt :
-                                                                       compat_amt;
-   }
-   else
-   {
-      ammo = weapon->ammo;
-      amount = (!(weapon->flags & WPF_DISABLEAPS) || compat_amt < 0) ? weapon->ammopershot :
-                                                                       compat_amt;
-   }
+    // EDF_FEATURES_FIXME: Needs to fire the wimpy version's amount of ammo if in deathmatch, or at least
+    // do it for Heretic.
+    if(demo_version >= 401 && (player.attackdown & AT_ITEM))
+        return;
+    else if(demo_version >= 401 && (player.attackdown & AT_SECONDARY))
+    {
+        ammo   = weapon->ammo_alt;
+        amount = (!(weapon->flags & WPF_DISABLEAPS) || compat_amt < 0) ? weapon->ammopershot_alt : compat_amt;
+    }
+    else
+    {
+        ammo   = weapon->ammo;
+        amount = (!(weapon->flags & WPF_DISABLEAPS) || compat_amt < 0) ? weapon->ammopershot : compat_amt;
+    }
 
-   if(player.cheats & CF_INFAMMO || !ammo)
-      return;
+    if(player.cheats & CF_INFAMMO || !ammo)
+        return;
 
-   
-   E_RemoveInventoryItem(player, ammo, amount);
+    E_RemoveInventoryItem(player, ammo, amount);
 }
 
 //
@@ -556,31 +551,31 @@ void P_SubtractAmmo(const player_t &player, int compat_amt)
 //
 void P_SubtractAmmoAmount(player_t &player, int amount)
 {
-   weaponinfo_t *weapon = player.readyweapon;
-   itemeffect_t *ammo;
+    weaponinfo_t *weapon = player.readyweapon;
+    itemeffect_t *ammo;
 
-   if(demo_version >= 401 && (player.attackdown & AT_ITEM))
-      return;
-   else if(demo_version >= 401 && (player.attackdown & AT_SECONDARY))
-   {
-      ammo = weapon->ammo_alt;
-      if(amount == INT_MIN)
-         amount = weapon->ammopershot_alt;
-   }
-   else
-   {
-      ammo = weapon->ammo;
-      if(amount == INT_MIN)
-         amount = weapon->ammopershot;
-   }
+    if(demo_version >= 401 && (player.attackdown & AT_ITEM))
+        return;
+    else if(demo_version >= 401 && (player.attackdown & AT_SECONDARY))
+    {
+        ammo = weapon->ammo_alt;
+        if(amount == INT_MIN)
+            amount = weapon->ammopershot_alt;
+    }
+    else
+    {
+        ammo = weapon->ammo;
+        if(amount == INT_MIN)
+            amount = weapon->ammopershot;
+    }
 
-   if(player.cheats & CF_INFAMMO || !ammo)
-      return;
+    if(player.cheats & CF_INFAMMO || !ammo)
+        return;
 
-   if(amount < 0)
-      E_GiveInventoryItem(player, ammo, -amount);
-   else
-      E_RemoveInventoryItem(player, ammo, amount);
+    if(amount < 0)
+        E_GiveInventoryItem(player, ammo, -amount);
+    else
+        E_RemoveInventoryItem(player, ammo, amount);
 }
 
 int lastshottic; // killough 3/22/98
@@ -590,25 +585,24 @@ int lastshottic; // killough 3/22/98
 //
 static void P_FireWeapon(player_t &player)
 {
-   statenum_t    newstate;
-   weaponinfo_t *weapon;
+    statenum_t    newstate;
+    weaponinfo_t *weapon;
 
-   if(!P_CheckAmmo(player))
-      return;
+    if(!P_CheckAmmo(player))
+        return;
 
-   weapon = player.readyweapon;
+    weapon = player.readyweapon;
 
-   P_SetMobjState(player.mo, player.mo->info->missilestate);
-   newstate = player.refire && weapon->holdstate ? weapon->holdstate : weapon->atkstate;
-   P_SetPsprite(player, ps_weapon, newstate);
+    P_SetMobjState(player.mo, player.mo->info->missilestate);
+    newstate = player.refire && weapon->holdstate ? weapon->holdstate : weapon->atkstate;
+    P_SetPsprite(player, ps_weapon, newstate);
 
-   // haleyjd 04/06/03: silencer powerup
-   // haleyjd 09/14/07: per-weapon silencer, always silent support
-   if(!(weapon->flags & WPF_SILENCEABLE && player.powers[pw_silencer].isActive()) &&
-      !(weapon->flags & WPF_SILENT))
-      P_NoiseAlert(player.mo, player.mo);
+    // haleyjd 04/06/03: silencer powerup
+    // haleyjd 09/14/07: per-weapon silencer, always silent support
+    if(!(weapon->flags & WPF_SILENCEABLE && player.powers[pw_silencer].isActive()) && !(weapon->flags & WPF_SILENT))
+        P_NoiseAlert(player.mo, player.mo);
 
-   lastshottic = gametic;                       // killough 3/22/98
+    lastshottic = gametic; // killough 3/22/98
 }
 
 //
@@ -616,24 +610,22 @@ static void P_FireWeapon(player_t &player)
 //
 static void P_fireWeaponAlt(player_t &player)
 {
-   statenum_t    newstate;
-   weaponinfo_t *weapon = player.readyweapon;
+    statenum_t    newstate;
+    weaponinfo_t *weapon = player.readyweapon;
 
-   if(!P_WeaponHasAmmoAlt(player, weapon) || !E_WeaponHasAltFire(weapon))
-      return;
+    if(!P_WeaponHasAmmoAlt(player, weapon) || !E_WeaponHasAltFire(weapon))
+        return;
 
-   P_SetMobjState(player.mo, player.mo->info->missilestate);
-   newstate = player.refire && weapon->holdstate_alt ? weapon->holdstate_alt :
-                                                        weapon->atkstate_alt;
-   P_SetPsprite(player, ps_weapon, newstate);
+    P_SetMobjState(player.mo, player.mo->info->missilestate);
+    newstate = player.refire && weapon->holdstate_alt ? weapon->holdstate_alt : weapon->atkstate_alt;
+    P_SetPsprite(player, ps_weapon, newstate);
 
-   // haleyjd 04/06/03: silencer powerup
-   // haleyjd 09/14/07: per-weapon silencer, always silent support
-   if(!(weapon->flags & WPF_SILENCEABLE && player.powers[pw_silencer].isActive()) &&
-      !(weapon->flags & WPF_SILENT))
-      P_NoiseAlert(player.mo, player.mo);
+    // haleyjd 04/06/03: silencer powerup
+    // haleyjd 09/14/07: per-weapon silencer, always silent support
+    if(!(weapon->flags & WPF_SILENCEABLE && player.powers[pw_silencer].isActive()) && !(weapon->flags & WPF_SILENT))
+        P_NoiseAlert(player.mo, player.mo);
 
-   lastshottic = gametic;                       // killough 3/22/98
+    lastshottic = gametic; // killough 3/22/98
 }
 
 //
@@ -641,13 +633,13 @@ static void P_fireWeaponAlt(player_t &player)
 //
 static bool P_executeWeaponState(player_t *player, const int weaponinfo_t::*state)
 {
-   const int statenum = player->readyweapon->*state;
-   if(statenum == E_SafeState(S_NULL))
-      return false;
+    const int statenum = player->readyweapon->*state;
+    if(statenum == E_SafeState(S_NULL))
+        return false;
 
-   P_SetMobjState(player->mo, player->mo->info->missilestate);
-   P_SetPsprite(*player, ps_weapon, statenum);
-   return true;
+    P_SetMobjState(player->mo, player->mo->info->missilestate);
+    P_SetPsprite(*player, ps_weapon, statenum);
+    return true;
 }
 
 //
@@ -656,51 +648,51 @@ static bool P_executeWeaponState(player_t *player, const int weaponinfo_t::*stat
 //
 static bool P_tryExecuteWeaponState(player_t &player, pspdef_t *psp)
 {
-   if(player.cmd.buttons & BT_ATTACK)
-   {
-      if(!(player.attackdown & AT_ALL) || !(player.readyweapon->flags & WPF_NOAUTOFIRE))
-      {
-         player.attackdown = AT_PRIMARY;
-         P_FireWeapon(player);
-         if(centerfire)
-         {
-            psp->renderpos = { FRACUNIT, WEAPONTOP };
-            psp->backupPosition();
-         }
-         return true;
-      }
-   }
-   else if(player.cmd.buttons & BTN_ATTACK_ALT && E_WeaponHasAltFire(player.readyweapon))
-   {
-      if(!(player.attackdown & AT_ALL) || !(player.readyweapon->flags & WPF_NOAUTOFIRE))
-      {
-         player.attackdown = AT_SECONDARY;
-         P_fireWeaponAlt(player);
-         if(centerfire)
-         {
-            psp->renderpos = { FRACUNIT, WEAPONTOP };
-            psp->backupPosition();
-         }
-         return true;
-      }
-   }
-   else
-      player.attackdown = AT_NONE;
+    if(player.cmd.buttons & BT_ATTACK)
+    {
+        if(!(player.attackdown & AT_ALL) || !(player.readyweapon->flags & WPF_NOAUTOFIRE))
+        {
+            player.attackdown = AT_PRIMARY;
+            P_FireWeapon(player);
+            if(centerfire)
+            {
+                psp->renderpos = { FRACUNIT, WEAPONTOP };
+                psp->backupPosition();
+            }
+            return true;
+        }
+    }
+    else if(player.cmd.buttons & BTN_ATTACK_ALT && E_WeaponHasAltFire(player.readyweapon))
+    {
+        if(!(player.attackdown & AT_ALL) || !(player.readyweapon->flags & WPF_NOAUTOFIRE))
+        {
+            player.attackdown = AT_SECONDARY;
+            P_fireWeaponAlt(player);
+            if(centerfire)
+            {
+                psp->renderpos = { FRACUNIT, WEAPONTOP };
+                psp->backupPosition();
+            }
+            return true;
+        }
+    }
+    else
+        player.attackdown = AT_NONE;
 
-   if(player.cmd.actions & AC_RELOAD)
-      return P_executeWeaponState(&player, &weaponinfo_t::reloadstate);
-   else if(player.cmd.actions & AC_ZOOM)
-      return P_executeWeaponState(&player, &weaponinfo_t::zoomstate);
-   else if(player.cmd.actions & AC_USER1)
-      return P_executeWeaponState(&player, &weaponinfo_t::userstate_1);
-   else if(player.cmd.actions & AC_USER2)
-      return P_executeWeaponState(&player, &weaponinfo_t::userstate_2);
-   else if(player.cmd.actions & AC_USER3)
-      return P_executeWeaponState(&player, &weaponinfo_t::userstate_3);
-   else if(player.cmd.actions & AC_USER4)
-      return P_executeWeaponState(&player, &weaponinfo_t::userstate_4);
+    if(player.cmd.actions & AC_RELOAD)
+        return P_executeWeaponState(&player, &weaponinfo_t::reloadstate);
+    else if(player.cmd.actions & AC_ZOOM)
+        return P_executeWeaponState(&player, &weaponinfo_t::zoomstate);
+    else if(player.cmd.actions & AC_USER1)
+        return P_executeWeaponState(&player, &weaponinfo_t::userstate_1);
+    else if(player.cmd.actions & AC_USER2)
+        return P_executeWeaponState(&player, &weaponinfo_t::userstate_2);
+    else if(player.cmd.actions & AC_USER3)
+        return P_executeWeaponState(&player, &weaponinfo_t::userstate_3);
+    else if(player.cmd.actions & AC_USER4)
+        return P_executeWeaponState(&player, &weaponinfo_t::userstate_4);
 
-   return false;
+    return false;
 }
 
 //
@@ -710,7 +702,7 @@ static bool P_tryExecuteWeaponState(player_t &player, pspdef_t *psp)
 //
 void P_DropWeapon(player_t &player)
 {
-   P_SetPsprite(player, ps_weapon, player.readyweapon->downstate);
+    P_SetPsprite(player, ps_weapon, player.readyweapon->downstate);
 }
 
 //=============================================================================
@@ -728,79 +720,77 @@ void P_DropWeapon(player_t &player)
 //
 weaponinfo_t *P_GetPlayerWeapon(const player_t &player, int slot)
 {
-   if(demo_version < 401 && GameModeInfo->type == Game_DOOM)
-      return E_WeaponForDEHNum(slot);
+    if(demo_version < 401 && GameModeInfo->type == Game_DOOM)
+        return E_WeaponForDEHNum(slot);
 
-   if(!player.pclass->weaponslots[slot])
-      return nullptr;
+    if(!player.pclass->weaponslots[slot])
+        return nullptr;
 
-   // Backup demo compat code, in case something goes *really*
-   // wrong with the DeHackEd num check.
-   /*if(demo_version < 401 && GameModeInfo->type == Game_DOOM)
-   {
-      DLListItem<weaponslot_t> *weaponslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
-      while(!weaponslot->dllNext->isDummy())
-         weaponslot = weaponslot->dllNext;
-      return weaponslot->dllObject->weapon;
-   }*/
+    // Backup demo compat code, in case something goes *really*
+    // wrong with the DeHackEd num check.
+    /*if(demo_version < 401 && GameModeInfo->type == Game_DOOM)
+    {
+       DLListItem<weaponslot_t> *weaponslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
+       while(!weaponslot->dllNext->isDummy())
+          weaponslot = weaponslot->dllNext;
+       return weaponslot->dllObject->weapon;
+    }*/
 
-   bool hit = false;
-   BDListItem<weaponslot_t> *weaponslot, *baseslot;
-   const auto *wp = E_IsPoweredVariant(player.readyweapon) ?
-                    player.readyweapon->sisterWeapon : player.readyweapon;
+    bool                      hit = false;
+    BDListItem<weaponslot_t> *weaponslot, *baseslot;
+    const auto *wp = E_IsPoweredVariant(player.readyweapon) ? player.readyweapon->sisterWeapon : player.readyweapon;
 
-   if(!weapon_hotkey_cycling)
-   {
-      weaponslot = E_LastInSlot(player.pclass->weaponslots[slot]);
-      if(!E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
-         return nullptr;
-      else
-         return weaponslot ? weaponslot->bdObject->weapon : nullptr;
-   }
+    if(!weapon_hotkey_cycling)
+    {
+        weaponslot = E_LastInSlot(player.pclass->weaponslots[slot]);
+        if(!E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
+            return nullptr;
+        else
+            return weaponslot ? weaponslot->bdObject->weapon : nullptr;
+    }
 
-   // This initial call assures us that
-   // player->pclass->weaponslots[slot]->bdNext is valid.
-   baseslot = E_FirstInSlot(player.pclass->weaponslots[slot]);
+    // This initial call assures us that
+    // player->pclass->weaponslots[slot]->bdNext is valid.
+    baseslot = E_FirstInSlot(player.pclass->weaponslots[slot]);
 
-   // Try finding the player's currently-equipped weapon.
-   while(!baseslot->isDummy())
-   {
-      if(baseslot->bdObject->weapon->id == wp->id)
-      {
-         hit = true;
-         break;
-      }
-      else
-         baseslot = baseslot->bdNext;
-   }
+    // Try finding the player's currently-equipped weapon.
+    while(!baseslot->isDummy())
+    {
+        if(baseslot->bdObject->weapon->id == wp->id)
+        {
+            hit = true;
+            break;
+        }
+        else
+            baseslot = baseslot->bdNext;
+    }
 
-   // Reset starting point if we couldn't find player's weapon in this slot.
-   if(baseslot->isDummy())
-      baseslot = baseslot->bdNext;
+    // Reset starting point if we couldn't find player's weapon in this slot.
+    if(baseslot->isDummy())
+        baseslot = baseslot->bdNext;
 
-   weaponslot = baseslot;
+    weaponslot = baseslot;
 
-   // If we found the player's readyweapon in the current slot, or the player
-   // doesn't own the first weapon in the slot, we'll need to iterate through.
-   if(hit || !E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
-   {
-      // The next weapon we find that the player owns is what we're looking for.
-      do
-      {
-         weaponslot = weaponslot->bdNext;
-         // Start from the start the list if we get to the end.
-         if(weaponslot->isDummy())
+    // If we found the player's readyweapon in the current slot, or the player
+    // doesn't own the first weapon in the slot, we'll need to iterate through.
+    if(hit || !E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
+    {
+        // The next weapon we find that the player owns is what we're looking for.
+        do
+        {
             weaponslot = weaponslot->bdNext;
+            // Start from the start the list if we get to the end.
+            if(weaponslot->isDummy())
+                weaponslot = weaponslot->bdNext;
+        }
+        while(weaponslot != baseslot && !E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon));
 
-      } while(weaponslot != baseslot &&
-              !E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon));
+        // If the player doesn't own weaponslot's weapon, don't allow the change.
+        if(!E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
+            weaponslot = nullptr;
+    }
 
-      // If the player doesn't own weaponslot's weapon, don't allow the change.
-      if(!E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
-         weaponslot = nullptr;
-   }
-
-   return weaponslot ? weaponslot->bdObject->weapon : nullptr;
+    return weaponslot ? weaponslot->bdObject->weapon : nullptr;
 }
 
 //
@@ -810,16 +800,15 @@ weaponinfo_t *P_GetPlayerWeapon(const player_t &player, int slot)
 //
 void P_WeaponSoundInfo(Mobj *mo, sfxinfo_t *sound)
 {
-   soundparams_t params;
-   
-   params.sfx = sound;
-   params.setNormalDefaults(mo);
+    soundparams_t params;
 
-   if(mo->player && mo->player->powers[pw_silencer].isActive() &&
-      mo->player->readyweapon->flags & WPF_SILENCEABLE)
-      params.volumeScale = WEAPON_VOLUME_SILENCED;
+    params.sfx = sound;
+    params.setNormalDefaults(mo);
 
-   S_StartSfxInfo(params);
+    if(mo->player && mo->player->powers[pw_silencer].isActive() && mo->player->readyweapon->flags & WPF_SILENCEABLE)
+        params.volumeScale = WEAPON_VOLUME_SILENCED;
+
+    S_StartSfxInfo(params);
 }
 
 //
@@ -829,20 +818,18 @@ void P_WeaponSoundInfo(Mobj *mo, sfxinfo_t *sound)
 //
 void P_WeaponSound(Mobj *mo, int sfx_id)
 {
-   int volume = 127;
+    int volume = 127;
 
-   if(mo->player && mo->player->powers[pw_silencer].isActive() &&
-      mo->player->readyweapon->flags & WPF_SILENCEABLE)
-      volume = WEAPON_VOLUME_SILENCED;
+    if(mo->player && mo->player->powers[pw_silencer].isActive() && mo->player->readyweapon->flags & WPF_SILENCEABLE)
+        volume = WEAPON_VOLUME_SILENCED;
 
-   S_StartSoundAtVolume(mo, sfx_id, volume, ATTN_NORMAL, CHAN_AUTO);
+    S_StartSoundAtVolume(mo, sfx_id, volume, ATTN_NORMAL, CHAN_AUTO);
 }
 
 //
 // End dynamic weapon systems functions
 //
 //=============================================================================
-
 
 //
 // A_WeaponReady
@@ -854,127 +841,125 @@ void P_WeaponSound(Mobj *mo, int sfx_id)
 //
 void A_WeaponReady(actionargs_t *actionargs)
 {
-   Mobj     *mo = actionargs->actor;
-   player_t *player;
-   pspdef_t *psp;
+    Mobj     *mo = actionargs->actor;
+    player_t *player;
+    pspdef_t *psp;
 
-   static const unsigned WRF_NOBOB = 1;
-   static dehflags_t flaglist[] =
-   {
-      { "WRF_NOBOB", WRF_NOBOB },
-   };
-   static dehflagset_t flagset = { flaglist, 0 };
+    static const unsigned WRF_NOBOB  = 1;
+    static dehflags_t     flaglist[] = {
+        { "WRF_NOBOB", WRF_NOBOB },
+    };
+    static dehflagset_t flagset = { flaglist, 0 };
 
-   if(!(player = mo->player))
-      return;
+    if(!(player = mo->player))
+        return;
 
-   if(!(psp = actionargs->pspr))
-      return;
+    if(!(psp = actionargs->pspr))
+        return;
 
-   unsigned flags = E_ArgAsFlags(actionargs->args, 0, &flagset);
+    unsigned flags = E_ArgAsFlags(actionargs->args, 0, &flagset);
 
-   // EDF_FEATURES_FIXME: Demo guard this as well?
-   if(!player->pendingweapon && !E_PlayerOwnsWeapon(*player, player->readyweapon) &&
-      player->readyweapon->id != UnknownWeaponInfo)
-   {
-      player->pendingweapon = E_FindBestWeapon(*player);
-      player->pendingweaponslot = E_FindFirstWeaponSlot(*player, player->pendingweapon);
-   }
+    // EDF_FEATURES_FIXME: Demo guard this as well?
+    if(!player->pendingweapon && !E_PlayerOwnsWeapon(*player, player->readyweapon) &&
+       player->readyweapon->id != UnknownWeaponInfo)
+    {
+        player->pendingweapon     = E_FindBestWeapon(*player);
+        player->pendingweaponslot = E_FindFirstWeaponSlot(*player, player->pendingweapon);
+    }
 
-   // get out of attack state
-   if(mo->state == states[mo->info->missilestate] || mo->state == states[player->pclass->altattack])
-      P_SetMobjState(mo, mo->info->spawnstate);
+    // get out of attack state
+    if(mo->state == states[mo->info->missilestate] || mo->state == states[player->pclass->altattack])
+        P_SetMobjState(mo, mo->info->spawnstate);
 
-   // Play sound if the readyweapon has a sound to play and the current
-   // state is the ready state, and do it only 50% of the time if the
-   // according flag is set.
-   if(player->readyweapon->readysound &&
-      psp->state->index == player->readyweapon->readystate &&
-      (!(player->readyweapon->flags & WPF_READYSNDHALF) || M_VHereticPRandom(pr_wpnreadysnd) < 128) &&
-      !(player->readyweapon->intflags & WIF_SUPPRESSREADYSOUND))
-   {
-      S_StartSoundName(player->mo, player->readyweapon->readysound);
-   }
+    // Play sound if the readyweapon has a sound to play and the current
+    // state is the ready state, and do it only 50% of the time if the
+    // according flag is set.
+    if(player->readyweapon->readysound && psp->state->index == player->readyweapon->readystate &&
+       (!(player->readyweapon->flags & WPF_READYSNDHALF) || M_VHereticPRandom(pr_wpnreadysnd) < 128) &&
+       !(player->readyweapon->intflags & WIF_SUPPRESSREADYSOUND))
+    {
+        S_StartSoundName(player->mo, player->readyweapon->readysound);
+    }
 
-   // WEAPON_FIXME: chainsaw particulars (haptic feedback)
-   if(E_WeaponIsCurrentDEHNum(player, wp_chainsaw) && psp->state == states[E_SafeState(S_SAW)])
-   {
-      if(player == &players[consoleplayer])
-         I_StartHaptic(HALHapticInterface::EFFECT_CONSTANT, 3, 108);
-   }
+    // WEAPON_FIXME: chainsaw particulars (haptic feedback)
+    if(E_WeaponIsCurrentDEHNum(player, wp_chainsaw) && psp->state == states[E_SafeState(S_SAW)])
+    {
+        if(player == &players[consoleplayer])
+            I_StartHaptic(HALHapticInterface::EFFECT_CONSTANT, 3, 108);
+    }
 
-   // check for change
-   //  if player is dead, put the weapon away
-   
-   if(player->pendingweapon != nullptr || !player->health)
-   {
-      // change weapon (pending weapon should already be validated)
-      statenum_t newstate = player->readyweapon->downstate;
-      P_SetPsprite(*player, ps_weapon, newstate);
-      return;
-   }
+    // check for change
+    //  if player is dead, put the weapon away
 
-   // check for fire
-   // certain weapons do not auto fire
-   if(demo_version >= 401)
-   {
-      if(P_tryExecuteWeaponState(*player, psp))
-         return;
-   }
-   else if(player->cmd.buttons & BT_ATTACK)
-   {
-      if(!(player->attackdown & AT_PRIMARY) || !(player->readyweapon->flags & WPF_NOAUTOFIRE))
-      {
-         player->attackdown = AT_PRIMARY;
-         P_FireWeapon(*player);
-         if(centerfire)
-         {
-            psp->renderpos = { FRACUNIT, WEAPONTOP };
-            psp->backupPosition();
-         }
-         return;
-      }
-   }
-   else
-      player->attackdown = AT_NONE;
+    if(player->pendingweapon != nullptr || !player->health)
+    {
+        // change weapon (pending weapon should already be validated)
+        statenum_t newstate = player->readyweapon->downstate;
+        P_SetPsprite(*player, ps_weapon, newstate);
+        return;
+    }
 
-   // bob the weapon based on movement speed
-   if(!(flags & WRF_NOBOB))
-   {
-      int angle = (128*leveltime) & FINEMASK;
-      psp->playpos.x = psp->renderpos.x = FRACUNIT + FixedMul(player->bob, finecosine[angle]);
-      angle &= FINEANGLES/2-1;
-      psp->playpos.y = psp->renderpos.y = WEAPONTOP + FixedMul(player->bob, finesine[angle]);
-   }
+    // check for fire
+    // certain weapons do not auto fire
+    if(demo_version >= 401)
+    {
+        if(P_tryExecuteWeaponState(*player, psp))
+            return;
+    }
+    else if(player->cmd.buttons & BT_ATTACK)
+    {
+        if(!(player->attackdown & AT_PRIMARY) || !(player->readyweapon->flags & WPF_NOAUTOFIRE))
+        {
+            player->attackdown = AT_PRIMARY;
+            P_FireWeapon(*player);
+            if(centerfire)
+            {
+                psp->renderpos = { FRACUNIT, WEAPONTOP };
+                psp->backupPosition();
+            }
+            return;
+        }
+    }
+    else
+        player->attackdown = AT_NONE;
+
+    // bob the weapon based on movement speed
+    if(!(flags & WRF_NOBOB))
+    {
+        int angle      = (128 * leveltime) & FINEMASK;
+        psp->playpos.x = psp->renderpos.x  = FRACUNIT + FixedMul(player->bob, finecosine[angle]);
+        angle                             &= FINEANGLES / 2 - 1;
+        psp->playpos.y = psp->renderpos.y = WEAPONTOP + FixedMul(player->bob, finesine[angle]);
+    }
 }
 
 static void A_reFireNew(actionargs_t *actionargs)
 {
-   player_t *player = actionargs->actor->player;
+    player_t *player = actionargs->actor->player;
 
-   if(!player)
-      return;
+    if(!player)
+        return;
 
-   // check for fire
-   //  (if a weaponchange is pending, let it go through instead)
+    // check for fire
+    //  (if a weaponchange is pending, let it go through instead)
 
-   if((player->cmd.buttons & BT_ATTACK) && player->pendingweapon == nullptr &&
-       player->health && !(player->attackdown & AT_SECONDARY))
-   {
-      player->refire++;
-      P_FireWeapon(*player);
-   }
-   else if((player->cmd.buttons & BTN_ATTACK_ALT) && player->pendingweapon == nullptr &&
-            player->health && !(player->attackdown & AT_PRIMARY))
-   {
-      player->refire++;
-      P_fireWeaponAlt(*player);
-   }
-   else
-   {
-      player->refire = 0;
-      P_CheckAmmo(*player);
-   }
+    if((player->cmd.buttons & BT_ATTACK) && player->pendingweapon == nullptr && player->health &&
+       !(player->attackdown & AT_SECONDARY))
+    {
+        player->refire++;
+        P_FireWeapon(*player);
+    }
+    else if((player->cmd.buttons & BTN_ATTACK_ALT) && player->pendingweapon == nullptr && player->health &&
+            !(player->attackdown & AT_PRIMARY))
+    {
+        player->refire++;
+        P_fireWeaponAlt(*player);
+    }
+    else
+    {
+        player->refire = 0;
+        P_CheckAmmo(*player);
+    }
 }
 
 //
@@ -985,51 +970,50 @@ static void A_reFireNew(actionargs_t *actionargs)
 //
 void A_ReFire(actionargs_t *actionargs)
 {
-   if(demo_version >= 401)
-   {
-      A_reFireNew(actionargs);
-      return;
-   }
+    if(demo_version >= 401)
+    {
+        A_reFireNew(actionargs);
+        return;
+    }
 
-   player_t *player = actionargs->actor->player;
+    player_t *player = actionargs->actor->player;
 
-   if(!player)
-      return;
+    if(!player)
+        return;
 
-   // check for fire
-   //  (if a weaponchange is pending, let it go through instead)
-   
-   if((player->cmd.buttons & BT_ATTACK)
-      && player->pendingweapon == nullptr && player->health)
-   {
-      player->refire++;
-      P_FireWeapon(*player);
-   }
-   else
-   {
-      player->refire = 0;
-      P_CheckAmmo(*player);
-   }
+    // check for fire
+    //  (if a weaponchange is pending, let it go through instead)
+
+    if((player->cmd.buttons & BT_ATTACK) && player->pendingweapon == nullptr && player->health)
+    {
+        player->refire++;
+        P_FireWeapon(*player);
+    }
+    else
+    {
+        player->refire = 0;
+        P_CheckAmmo(*player);
+    }
 }
 
 //
 // A_CheckReload
 //
-// cph 2002/08/08 - In old Doom, P_CheckAmmo would start the weapon 
-// lowering immediately. This was lost in Boom when the weapon 
-// switching logic was rewritten. But we must tell Doom that we 
-// don't need to complete the reload frames for the weapon here. 
+// cph 2002/08/08 - In old Doom, P_CheckAmmo would start the weapon
+// lowering immediately. This was lost in Boom when the weapon
+// switching logic was rewritten. But we must tell Doom that we
+// don't need to complete the reload frames for the weapon here.
 // G_BuildTiccmd will set ->pendingweapon for us later on.
 //
 void A_CheckReload(actionargs_t *actionargs)
 {
-   player_t *player = actionargs->actor->player;
+    player_t *player = actionargs->actor->player;
 
-   if(!player)
-      return;
+    if(!player)
+        return;
 
-   if(!P_CheckAmmo(*player) && demo_version >= 331)
-      P_SetPsprite(*player, ps_weapon, player->readyweapon->downstate);
+    if(!P_CheckAmmo(*player) && demo_version >= 331)
+        P_SetPsprite(*player, ps_weapon, player->readyweapon->downstate);
 }
 
 //
@@ -1039,49 +1023,49 @@ void A_CheckReload(actionargs_t *actionargs)
 //
 void A_Lower(actionargs_t *actionargs)
 {
-   player_t     *player;
-   pspdef_t     *psp;
-   arglist_t    *args = actionargs->args;
-   // WEAPON_FIXME: Default LOWERSPEED property of EDF weapons?
-   const fixed_t lowerspeed = FixedMul(FRACUNIT, E_ArgAsFixed(args, 0, LOWERSPEED));
+    player_t  *player;
+    pspdef_t  *psp;
+    arglist_t *args = actionargs->args;
+    // WEAPON_FIXME: Default LOWERSPEED property of EDF weapons?
+    const fixed_t lowerspeed = FixedMul(FRACUNIT, E_ArgAsFixed(args, 0, LOWERSPEED));
 
-   if(!(player = actionargs->actor->player))
-      return;
+    if(!(player = actionargs->actor->player))
+        return;
 
-   if(!(psp = actionargs->pspr))
-      return;
+    if(!(psp = actionargs->pspr))
+        return;
 
-   psp->playpos.y += lowerspeed;
-   psp->renderpos.y = psp->playpos.y;
+    psp->playpos.y   += lowerspeed;
+    psp->renderpos.y  = psp->playpos.y;
 
-   // Is already down.
-   if(psp->playpos.y < WEAPONBOTTOM)
-      return;
+    // Is already down.
+    if(psp->playpos.y < WEAPONBOTTOM)
+        return;
 
-   // Player is dead.
-   if(player->playerstate == PST_DEAD)
-   {
-      psp->playpos.y = psp->renderpos.y = WEAPONBOTTOM;
-      return;      // don't bring weapon back up
-   }
+    // Player is dead.
+    if(player->playerstate == PST_DEAD)
+    {
+        psp->playpos.y = psp->renderpos.y = WEAPONBOTTOM;
+        return; // don't bring weapon back up
+    }
 
-   // The old weapon has been lowered off the screen,
-   // so change the weapon and start raising it
+    // The old weapon has been lowered off the screen,
+    // so change the weapon and start raising it
 
-   if(!player->health)
-   {      // Player is dead, so keep the weapon off screen.
-      P_SetPsprite(*player,  ps_weapon, NullStateNum);
-      return;
-   }
+    if(!player->health)
+    { // Player is dead, so keep the weapon off screen.
+        P_SetPsprite(*player, ps_weapon, NullStateNum);
+        return;
+    }
 
-   // haleyjd 03/28/10: do not assume pendingweapon is valid
-   if(player->pendingweapon != nullptr)
-   {
-      player->readyweapon = &E_TryPowered(*player, *player->pendingweapon);
-      player->readyweaponslot = player->pendingweaponslot;
-   }
+    // haleyjd 03/28/10: do not assume pendingweapon is valid
+    if(player->pendingweapon != nullptr)
+    {
+        player->readyweapon     = &E_TryPowered(*player, *player->pendingweapon);
+        player->readyweaponslot = player->pendingweaponslot;
+    }
 
-   P_BringUpWeapon(*player);
+    P_BringUpWeapon(*player);
 }
 
 //
@@ -1089,33 +1073,33 @@ void A_Lower(actionargs_t *actionargs)
 //
 void A_Raise(actionargs_t *actionargs)
 {
-   statenum_t    newstate;
-   player_t     *player;
-   pspdef_t     *psp;
-   arglist_t    *args = actionargs->args;
-   // WEAPON_FIXME: Default RAISESPEED property of EDF weapons?
-   const fixed_t raisespeed = FixedMul(FRACUNIT, E_ArgAsFixed(args, 0, RAISESPEED));
+    statenum_t newstate;
+    player_t  *player;
+    pspdef_t  *psp;
+    arglist_t *args = actionargs->args;
+    // WEAPON_FIXME: Default RAISESPEED property of EDF weapons?
+    const fixed_t raisespeed = FixedMul(FRACUNIT, E_ArgAsFixed(args, 0, RAISESPEED));
 
-   if(!(player = actionargs->actor->player))
-      return;
+    if(!(player = actionargs->actor->player))
+        return;
 
-   if(!(psp = actionargs->pspr))
-      return;
+    if(!(psp = actionargs->pspr))
+        return;
 
-   psp->playpos.y -= raisespeed;
-   psp->renderpos.y = psp->playpos.y;
+    psp->playpos.y   -= raisespeed;
+    psp->renderpos.y  = psp->playpos.y;
 
-   if(psp->playpos.y > WEAPONTOP)
-      return;
+    if(psp->playpos.y > WEAPONTOP)
+        return;
 
-   psp->playpos.y = psp->renderpos.y = WEAPONTOP;
+    psp->playpos.y = psp->renderpos.y = WEAPONTOP;
 
-   // The weapon has been raised all the way,
-   //  so change to the ready state.
+    // The weapon has been raised all the way,
+    //  so change to the ready state.
 
-   newstate = player->readyweapon->readystate;
+    newstate = player->readyweapon->readystate;
 
-   P_SetPsprite(*player, ps_weapon, newstate);
+    P_SetPsprite(*player, ps_weapon, newstate);
 }
 
 //
@@ -1125,23 +1109,22 @@ void A_Raise(actionargs_t *actionargs)
 //
 void P_WeaponRecoil(player_t &player)
 {
-   weaponinfo_t *readyweapon = player.readyweapon;
+    weaponinfo_t *readyweapon = player.readyweapon;
 
-   // killough 3/27/98: prevent recoil in no-clipping mode
-   if(!(player.mo->flags & MF_NOCLIP))
-   {
-      // haleyjd 08/18/08: added ALWAYSRECOIL weapon flag; recoil in weaponinfo
-      if(readyweapon->flags & WPF_ALWAYSRECOIL ||
-         (weapon_recoil && (demo_version >= 203 || !compatibility)))
-      {
-         // MaxW: 2018/11/04: Changed to allow for fixed-point recoil
-         P_Thrust(player, ANG180 + player.mo->angle, 0, readyweapon->recoil / 32);
-      }
-   }
+    // killough 3/27/98: prevent recoil in no-clipping mode
+    if(!(player.mo->flags & MF_NOCLIP))
+    {
+        // haleyjd 08/18/08: added ALWAYSRECOIL weapon flag; recoil in weaponinfo
+        if(readyweapon->flags & WPF_ALWAYSRECOIL || (weapon_recoil && (demo_version >= 203 || !compatibility)))
+        {
+            // MaxW: 2018/11/04: Changed to allow for fixed-point recoil
+            P_Thrust(player, ANG180 + player.mo->angle, 0, readyweapon->recoil / 32);
+        }
+    }
 
-   // haleyjd 06/05/13: if weapon is flagged for it, do haptic recoil effect here.
-   if(&player == &players[consoleplayer] && (readyweapon->flags & WPF_NOHAPTICRECOIL) == 0)
-      I_StartHaptic(HALHapticInterface::EFFECT_FIRE, readyweapon->hapticrecoil, readyweapon->haptictime);
+    // haleyjd 06/05/13: if weapon is flagged for it, do haptic recoil effect here.
+    if(&player == &players[consoleplayer] && (readyweapon->flags & WPF_NOHAPTICRECOIL) == 0)
+        I_StartHaptic(HALHapticInterface::EFFECT_FIRE, readyweapon->hapticrecoil, readyweapon->haptictime);
 }
 
 // Weapons now recoil, amount depending on the weapon.              // phares
@@ -1153,14 +1136,14 @@ void P_WeaponRecoil(player_t &player)
 //
 // WEAPON_FIXME: "adder" parameter is not reliable for EDF editing
 //
-void A_FireSomething(player_t& player, int adder)
+void A_FireSomething(player_t &player, int adder)
 {
-   if(demo_version >= 401 && player.attackdown & AT_SECONDARY)
-      P_SetPsprite(player, ps_flash, player.readyweapon->flashstate_alt);
-   else
-      P_SetPsprite(player, ps_flash, player.readyweapon->flashstate+adder);
+    if(demo_version >= 401 && player.attackdown & AT_SECONDARY)
+        P_SetPsprite(player, ps_flash, player.readyweapon->flashstate_alt);
+    else
+        P_SetPsprite(player, ps_flash, player.readyweapon->flashstate + adder);
 
-   P_WeaponRecoil(player);
+    P_WeaponRecoil(player);
 }
 
 //
@@ -1169,14 +1152,14 @@ void A_FireSomething(player_t& player, int adder)
 
 void A_GunFlash(actionargs_t *actionargs)
 {
-   player_t *player = actionargs->actor->player;
+    player_t *player = actionargs->actor->player;
 
-   if(!player)
-      return;
+    if(!player)
+        return;
 
-   P_SetMobjState(actionargs->actor, player->pclass->altattack);
-   
-   A_FireSomething(*player, 0);                               // phares
+    P_SetMobjState(actionargs->actor, player->pclass->altattack);
+
+    A_FireSomething(*player, 0); // phares
 }
 
 //=============================================================================
@@ -1192,20 +1175,20 @@ void A_GunFlash(actionargs_t *actionargs)
 //
 fixed_t P_DoAutoAim(Mobj *mo, angle_t angle, fixed_t distance)
 {
-   if(demo_version >= 203)
-   {
-      // killough 8/2/98: make autoaiming prefer enemies
-      fixed_t slope = P_AimLineAttack(mo, angle, distance, true);
+    if(demo_version >= 203)
+    {
+        // killough 8/2/98: make autoaiming prefer enemies
+        fixed_t slope = P_AimLineAttack(mo, angle, distance, true);
 
-      // autoaiming is disabled?
-      if(full_demo_version > make_full_version(340, 15) && !autoaim && mo->player)
-         return P_PlayerPitchSlope(mo->player);
+        // autoaiming is disabled?
+        if(full_demo_version > make_full_version(340, 15) && !autoaim && mo->player)
+            return P_PlayerPitchSlope(mo->player);
 
-      if(clip.linetarget)
-         return slope;
-   }
-   
-   return P_AimLineAttack(mo, angle, distance, false);
+        if(clip.linetarget)
+            return slope;
+    }
+
+    return P_AimLineAttack(mo, angle, distance, false);
 }
 
 //=============================================================================
@@ -1223,60 +1206,60 @@ fixed_t bulletslope;
 //
 void P_BulletSlope(Mobj *mo)
 {
-   angle_t an = mo->angle;    // see which target is to be aimed at
-   
-   // killough 8/2/98: make autoaiming prefer enemies
-   int mask = demo_version < 203 ? false : true;
+    angle_t an = mo->angle; // see which target is to be aimed at
 
-   // haleyjd 08/09/11: allow autoaim disable
-   if(full_demo_version > make_full_version(340, 15) && !autoaim && mo->player)
-   {
-      P_AimLineAttack(mo, an, 16*64*FRACUNIT, mask);
-      bulletslope = P_PlayerPitchSlope(mo->player);
-      return;
-   }
-   
-   do
-   {
-      bulletslope = P_AimLineAttack(mo, an, 16*64*FRACUNIT, mask);
-      if(!clip.linetarget)
-         bulletslope = P_AimLineAttack(mo, an += 1<<26, 16*64*FRACUNIT, mask);
-      if(!clip.linetarget)
-         bulletslope = P_AimLineAttack(mo, an -= 2<<26, 16*64*FRACUNIT, mask);
-   }
-   while (mask && (mask=false, !clip.linetarget));  // killough 8/2/98
+    // killough 8/2/98: make autoaiming prefer enemies
+    int mask = demo_version < 203 ? false : true;
+
+    // haleyjd 08/09/11: allow autoaim disable
+    if(full_demo_version > make_full_version(340, 15) && !autoaim && mo->player)
+    {
+        P_AimLineAttack(mo, an, 16 * 64 * FRACUNIT, mask);
+        bulletslope = P_PlayerPitchSlope(mo->player);
+        return;
+    }
+
+    do
+    {
+        bulletslope = P_AimLineAttack(mo, an, 16 * 64 * FRACUNIT, mask);
+        if(!clip.linetarget)
+            bulletslope = P_AimLineAttack(mo, an += 1 << 26, 16 * 64 * FRACUNIT, mask);
+        if(!clip.linetarget)
+            bulletslope = P_AimLineAttack(mo, an -= 2 << 26, 16 * 64 * FRACUNIT, mask);
+    }
+    while(mask && (mask = false, !clip.linetarget)); // killough 8/2/98
 }
 
 void A_Light0(actionargs_t *actionargs)
 {
-   Mobj *mo = actionargs->actor;
+    Mobj *mo = actionargs->actor;
 
-   if(!mo->player)
-      return;
+    if(!mo->player)
+        return;
 
-   mo->player->extralight = 0;
+    mo->player->extralight = 0;
 }
 
 void A_Light1(actionargs_t *actionargs)
 {
-   Mobj *mo = actionargs->actor;
+    Mobj *mo = actionargs->actor;
 
-   if(!mo->player)
-      return;
+    if(!mo->player)
+        return;
 
-   if(LevelInfo.useFullBright) // haleyjd
-      mo->player->extralight = 1;
+    if(LevelInfo.useFullBright) // haleyjd
+        mo->player->extralight = 1;
 }
 
 void A_Light2(actionargs_t *actionargs)
 {
-   Mobj *mo = actionargs->actor;
+    Mobj *mo = actionargs->actor;
 
-   if(!mo->player)
-      return;
+    if(!mo->player)
+        return;
 
-   if(LevelInfo.useFullBright) // haleyjd
-      mo->player->extralight = 2;
+    if(LevelInfo.useFullBright) // haleyjd
+        mo->player->extralight = 2;
 }
 
 //
@@ -1286,14 +1269,14 @@ void A_Light2(actionargs_t *actionargs)
 //
 void P_SetupPsprites(player_t &player)
 {
-   // remove all psprites
-   for(pspdef_t &psprite : player.psprites)
-      psprite.state = nullptr;
+    // remove all psprites
+    for(pspdef_t &psprite : player.psprites)
+        psprite.state = nullptr;
 
-   // spawn the gun
-   player.pendingweapon     = player.readyweapon;
-   player.pendingweaponslot = player.readyweaponslot;
-   P_BringUpWeapon(player);
+    // spawn the gun
+    player.pendingweapon     = player.readyweapon;
+    player.pendingweaponslot = player.readyweaponslot;
+    P_BringUpWeapon(player);
 }
 
 //
@@ -1303,26 +1286,26 @@ void P_SetupPsprites(player_t &player)
 //
 void P_MovePsprites(player_t &player)
 {
-   pspdef_t *psp = player.psprites;
-   int i;
+    pspdef_t *psp = player.psprites;
+    int       i;
 
-   // a null state means not active
-   // drop tic count and possibly change state
-   // a -1 tic count never changes
+    // a null state means not active
+    // drop tic count and possibly change state
+    // a -1 tic count never changes
 
-   player.psprites[ps_weapon].backupPosition();
-   player.psprites[ps_flash].backupPosition();
+    player.psprites[ps_weapon].backupPosition();
+    player.psprites[ps_flash].backupPosition();
 
-   for(i = 0; i < NUMPSPRITES; ++i, ++psp)
-   {
-      if(psp->state && psp->tics != -1 && !--psp->tics)
-         P_SetPsprite(player, i, psp->state->nextstate);
-   }
-   
-   player.psprites[ps_flash].playpos   = player.psprites[ps_weapon].playpos;
-   player.psprites[ps_flash].renderpos = player.psprites[ps_weapon].renderpos;
-   // also preserve interpolation
-   player.psprites[ps_flash].prevpos   = player.psprites[ps_weapon].prevpos;
+    for(i = 0; i < NUMPSPRITES; ++i, ++psp)
+    {
+        if(psp->state && psp->tics != -1 && !--psp->tics)
+            P_SetPsprite(player, i, psp->state->nextstate);
+    }
+
+    player.psprites[ps_flash].playpos   = player.psprites[ps_weapon].playpos;
+    player.psprites[ps_flash].renderpos = player.psprites[ps_weapon].renderpos;
+    // also preserve interpolation
+    player.psprites[ps_flash].prevpos = player.psprites[ps_weapon].prevpos;
 }
 
 //===============================
@@ -1333,33 +1316,28 @@ void P_MovePsprites(player_t &player)
 
 enum custombulletaccuracy_e : uint8_t
 {
-   CBA_NONE,
-   CBA_ALWAYS, // MaxW: It me
-   CBA_FIRST,
-   CBA_NEVER,
-   CBA_SSG,
-   CBA_MONSTER,
-   CBA_CUSTOM,
+    CBA_NONE,
+    CBA_ALWAYS, // MaxW: It me
+    CBA_FIRST,
+    CBA_NEVER,
+    CBA_SSG,
+    CBA_MONSTER,
+    CBA_CUSTOM,
 
-   NUMCUSTOMBULLETACCURACIES
+    NUMCUSTOMBULLETACCURACIES
 };
 
-static const char *kwds_A_FireCustomBullets[NUMCUSTOMBULLETACCURACIES] =
-{
-   "{DUMMY}",           // 0
-   "always",            // 1
-   "first",             // 2
-   "never",             // 3
-   "ssg",               // 4
-   "monster",           // 5
-   "custom",            // 6
+static const char *kwds_A_FireCustomBullets[NUMCUSTOMBULLETACCURACIES] = {
+    "{DUMMY}", // 0
+    "always",  // 1
+    "first",   // 2
+    "never",   // 3
+    "ssg",     // 4
+    "monster", // 5
+    "custom",  // 6
 };
 
-static argkeywd_t fcbkwds =
-{
-   kwds_A_FireCustomBullets,
-   earrlen(kwds_A_FireCustomBullets)
-};
+static argkeywd_t fcbkwds = { kwds_A_FireCustomBullets, earrlen(kwds_A_FireCustomBullets) };
 
 //
 // A_FireCustomBullets
@@ -1378,121 +1356,117 @@ static argkeywd_t fcbkwds =
 //
 void A_FireCustomBullets(actionargs_t *actionargs)
 {
-   Mobj      *mo   = actionargs->actor;
-   arglist_t *args = actionargs->args;
-   int i, numbullets, damage, dmgmod;
-   int flashint, flashstate;
-   angle_t horizontal, vertical;
-   sfxinfo_t *sfx;
-   player_t *player;
-   pspdef_t *psp;
-   custombulletaccuracy_e accurate;
+    Mobj                  *mo   = actionargs->actor;
+    arglist_t             *args = actionargs->args;
+    int                    i, numbullets, damage, dmgmod;
+    int                    flashint, flashstate;
+    angle_t                horizontal, vertical;
+    sfxinfo_t             *sfx;
+    player_t              *player;
+    pspdef_t              *psp;
+    custombulletaccuracy_e accurate;
 
-   if(!(player = mo->player))
-      return;
+    if(!(player = mo->player))
+        return;
 
-   if(!(psp = actionargs->pspr))
-      return;
+    if(!(psp = actionargs->pspr))
+        return;
 
-   sfx        = E_ArgAsSound(args, 0);
-   accurate   = static_cast<custombulletaccuracy_e>(E_ArgAsKwd(args, 1, &fcbkwds, CBA_NONE));
-   numbullets = E_ArgAsInt(args, 2, 0);
-   damage     = E_ArgAsInt(args, 3, 0);
-   dmgmod     = E_ArgAsInt(args, 4, 0);
-   
-   flashint   = E_ArgAsInt(args, 5, 0);
-   flashstate = E_ArgAsStateNum(args, 5, player);
+    sfx        = E_ArgAsSound(args, 0);
+    accurate   = static_cast<custombulletaccuracy_e>(E_ArgAsKwd(args, 1, &fcbkwds, CBA_NONE));
+    numbullets = E_ArgAsInt(args, 2, 0);
+    damage     = E_ArgAsInt(args, 3, 0);
+    dmgmod     = E_ArgAsInt(args, 4, 0);
 
-   horizontal = E_ArgAsAngle(args, 6, 0);
-   vertical   = E_ArgAsAngle(args, 7, 0);
+    flashint   = E_ArgAsInt(args, 5, 0);
+    flashstate = E_ArgAsStateNum(args, 5, player);
 
-   const char *pufftype = E_ArgAsString(args, 8, nullptr);
+    horizontal = E_ArgAsAngle(args, 6, 0);
+    vertical   = E_ArgAsAngle(args, 7, 0);
 
-   if(accurate == CBA_NONE)
-      accurate = CBA_ALWAYS;
+    const char *pufftype = E_ArgAsString(args, 8, nullptr);
 
-   if(dmgmod < 1)
-      dmgmod = 1;
-   else if(dmgmod > 256)
-      dmgmod = 256;
+    if(accurate == CBA_NONE)
+        accurate = CBA_ALWAYS;
 
-   P_WeaponSoundInfo(mo, sfx);
+    if(dmgmod < 1)
+        dmgmod = 1;
+    else if(dmgmod > 256)
+        dmgmod = 256;
 
-   P_SetMobjState(mo, player->pclass->altattack);
+    P_WeaponSoundInfo(mo, sfx);
 
-   // subtract ammo amount
-   P_SubtractAmmo(*player, -1);
+    P_SetMobjState(mo, player->pclass->altattack);
 
-   // have a flash state?
-   if(flashint >= 0 && flashstate != NullStateNum)
-      P_SetPsprite(*player, ps_flash, flashstate);
-   else if(flashint == 0) // zero means default behavior
-      P_SetPsprite(*player, ps_flash, player->readyweapon->flashstate);
+    // subtract ammo amount
+    P_SubtractAmmo(*player, -1);
 
-   P_WeaponRecoil(*player);
+    // have a flash state?
+    if(flashint >= 0 && flashstate != NullStateNum)
+        P_SetPsprite(*player, ps_flash, flashstate);
+    else if(flashint == 0) // zero means default behavior
+        P_SetPsprite(*player, ps_flash, player->readyweapon->flashstate);
 
-   P_BulletSlope(mo);
+    P_WeaponRecoil(*player);
 
-   // loop on numbullets
-   for(i = 0; i < numbullets; ++i)
-   {
-      int dmg = damage * (P_Random(pr_custombullets)%dmgmod + 1);
-      angle_t angle = mo->angle;
-      fixed_t slope = bulletslope; // haleyjd 01/03/07: bug fix
-      
-      if(accurate == CBA_CUSTOM)
-      {
-         constexpr unsigned int ANG_VALS = ANGLE_1;
-         angle += (static_cast<int64_t>(P_SubRandomEx(pr_custommisfire, ANG_VALS)) * horizontal) /
-                  (ANG_VALS * 2);
-         const angle_t pitch = static_cast<angle_t>((static_cast<int64_t>(P_SubRandomEx(pr_custommisfire, ANG_VALS)) * vertical) /
-                                                    (ANG_VALS * 2));
-         // convert pitch to the same "unit" as slope, then add it on
-         slope += finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT];
+    P_BulletSlope(mo);
 
-         P_LineAttack(mo, angle, MISSILERANGE, slope, dmg, pufftype);
-      }
-      else if(accurate <= CBA_NEVER || accurate == CBA_MONSTER)
-      {
-         // if never accurate, monster accurate, or accurate only on 
-         // refire and player is refiring, add some to the angle
-         if(accurate == CBA_NEVER || accurate == CBA_MONSTER ||
-            (accurate == CBA_FIRST && player->refire))
-         {
-            int aimshift = ((accurate == CBA_MONSTER) ? 20 : 18);
-            angle += P_SubRandom(pr_custommisfire) << aimshift;
-         }
+    // loop on numbullets
+    for(i = 0; i < numbullets; ++i)
+    {
+        int     dmg   = damage * (P_Random(pr_custombullets) % dmgmod + 1);
+        angle_t angle = mo->angle;
+        fixed_t slope = bulletslope; // haleyjd 01/03/07: bug fix
 
-         P_LineAttack(mo, angle, MISSILERANGE, slope, dmg, pufftype);
-      }
-      else if(accurate == CBA_SSG) // ssg spread
-      {
-         angle += P_SubRandom(pr_custommisfire) << 19;
-         slope += P_SubRandom(pr_custommisfire) << 5;
+        if(accurate == CBA_CUSTOM)
+        {
+            constexpr unsigned int ANG_VALS = ANGLE_1;
+            angle += (static_cast<int64_t>(P_SubRandomEx(pr_custommisfire, ANG_VALS)) * horizontal) / (ANG_VALS * 2);
+            const angle_t pitch = static_cast<angle_t>(
+                (static_cast<int64_t>(P_SubRandomEx(pr_custommisfire, ANG_VALS)) * vertical) / (ANG_VALS * 2));
+            // convert pitch to the same "unit" as slope, then add it on
+            slope += finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT];
 
-         P_LineAttack(mo, angle, MISSILERANGE, slope, dmg, pufftype);
-      }
-   }
+            P_LineAttack(mo, angle, MISSILERANGE, slope, dmg, pufftype);
+        }
+        else if(accurate <= CBA_NEVER || accurate == CBA_MONSTER)
+        {
+            // if never accurate, monster accurate, or accurate only on
+            // refire and player is refiring, add some to the angle
+            if(accurate == CBA_NEVER || accurate == CBA_MONSTER || (accurate == CBA_FIRST && player->refire))
+            {
+                int aimshift  = ((accurate == CBA_MONSTER) ? 20 : 18);
+                angle        += P_SubRandom(pr_custommisfire) << aimshift;
+            }
+
+            P_LineAttack(mo, angle, MISSILERANGE, slope, dmg, pufftype);
+        }
+        else if(accurate == CBA_SSG) // ssg spread
+        {
+            angle += P_SubRandom(pr_custommisfire) << 19;
+            slope += P_SubRandom(pr_custommisfire) << 5;
+
+            P_LineAttack(mo, angle, MISSILERANGE, slope, dmg, pufftype);
+        }
+    }
 }
 
 enum fireplayermissile_flags : unsigned int
 {
-   FIREPLAYERMISSILE_HOMING = 0x00000001,
-   FIREPLAYERMISSILE_NOAMMO = 0x00000002
+    FIREPLAYERMISSILE_HOMING = 0x00000001,
+    FIREPLAYERMISSILE_NOAMMO = 0x00000002
 };
 
-static dehflags_t fireplayermissile_flaglist[] =
-{
-   { "normal",    0x00000000               }, // [XA] explicit no-op. :P
-   { "homing",    FIREPLAYERMISSILE_HOMING },
-   { "noammo",    FIREPLAYERMISSILE_NOAMMO },
-   { nullptr,     0 }
+static dehflags_t fireplayermissile_flaglist[] = {
+    { "normal", 0x00000000               }, // [XA] explicit no-op. :P
+    { "homing", FIREPLAYERMISSILE_HOMING },
+    { "noammo", FIREPLAYERMISSILE_NOAMMO },
+    { nullptr,  0                        }
 };
 
-static dehflagset_t fireplayermissile_flagset =
-{
-   fireplayermissile_flaglist, // flaglist
-   0,                          // mode
+static dehflagset_t fireplayermissile_flagset = {
+    fireplayermissile_flaglist, // flaglist
+    0,                          // mode
 };
 
 //
@@ -1508,55 +1482,50 @@ static dehflagset_t fireplayermissile_flagset =
 //
 void A_FirePlayerMissile(actionargs_t *actionargs)
 {
-   int thingnum;
-   Mobj *actor = actionargs->actor;
-   Mobj *mo;
-   unsigned int flags;
-   player_t  *player;
-   pspdef_t  *psp;
-   arglist_t *args = actionargs->args;
+    int          thingnum;
+    Mobj        *actor = actionargs->actor;
+    Mobj        *mo;
+    unsigned int flags;
+    player_t    *player;
+    pspdef_t    *psp;
+    arglist_t   *args = actionargs->args;
 
-   if(!(player = actor->player))
-      return;
+    if(!(player = actor->player))
+        return;
 
-   if(!(psp = actionargs->pspr))
-      return;
+    if(!(psp = actionargs->pspr))
+        return;
 
-   thingnum = E_ArgAsThingNumG0(args, 0);
-   flags    = E_ArgAsFlags(args, 1, &fireplayermissile_flagset);
+    thingnum = E_ArgAsThingNumG0(args, 0);
+    flags    = E_ArgAsFlags(args, 1, &fireplayermissile_flagset);
 
-   // validate thingtype
-   if(thingnum < 0/* || thingnum == -1*/)
-      return;
+    // validate thingtype
+    if(thingnum < 0 /* || thingnum == -1*/)
+        return;
 
-   // decrement ammo if appropriate
-   if(!(flags & FIREPLAYERMISSILE_NOAMMO))
-      P_SubtractAmmo(*player, -1);
+    // decrement ammo if appropriate
+    if(!(flags & FIREPLAYERMISSILE_NOAMMO))
+        P_SubtractAmmo(*player, -1);
 
-   mo = P_SpawnPlayerMissile(actor, thingnum);
+    mo = P_SpawnPlayerMissile(actor, thingnum);
 
-   if(mo && (flags & FIREPLAYERMISSILE_HOMING))
-   {
-      P_BulletSlope(actor);
+    if(mo && (flags & FIREPLAYERMISSILE_HOMING))
+    {
+        P_BulletSlope(actor);
 
-      if(clip.linetarget)
-         P_SetTarget<Mobj>(&mo->tracer, clip.linetarget);
-   }
+        if(clip.linetarget)
+            P_SetTarget<Mobj>(&mo->tracer, clip.linetarget);
+    }
 }
 
-const char *kwds_A_CustomPlayerMelee[] =
-{
-   "{DUMMY}",          //  0
-   "none",             //  1
-   "punch",            //  2
-   "chainsaw",         //  3
+const char *kwds_A_CustomPlayerMelee[] = {
+    "{DUMMY}",  //  0
+    "none",     //  1
+    "punch",    //  2
+    "chainsaw", //  3
 };
 
-static argkeywd_t cpmkwds =
-{
-   kwds_A_CustomPlayerMelee,
-   earrlen(kwds_A_CustomPlayerMelee)
-};
+static argkeywd_t cpmkwds = { kwds_A_CustomPlayerMelee, earrlen(kwds_A_CustomPlayerMelee) };
 
 //
 // A_CustomPlayerMelee
@@ -1573,117 +1542,112 @@ static argkeywd_t cpmkwds =
 //
 void A_CustomPlayerMelee(actionargs_t *actionargs)
 {
-   angle_t angle;
-   fixed_t slope;
-   int damage, dmgfactor, dmgmod, berzerkmul, deftype;
-   fixed_t range;
-   sfxinfo_t *sfx;
-   Mobj      *mo = actionargs->actor;
-   player_t  *player;
-   pspdef_t  *psp;
-   arglist_t *args = actionargs->args;
+    angle_t    angle;
+    fixed_t    slope;
+    int        damage, dmgfactor, dmgmod, berzerkmul, deftype;
+    fixed_t    range;
+    sfxinfo_t *sfx;
+    Mobj      *mo = actionargs->actor;
+    player_t  *player;
+    pspdef_t  *psp;
+    arglist_t *args = actionargs->args;
 
-   if(!(player = mo->player))
-      return;
+    if(!(player = mo->player))
+        return;
 
-   if(!(psp = actionargs->pspr))
-      return;
+    if(!(psp = actionargs->pspr))
+        return;
 
-   dmgfactor  = E_ArgAsInt(args, 0, 0);
-   dmgmod     = E_ArgAsInt(args, 1, 0);
-   berzerkmul = E_ArgAsInt(args, 2, 0);
-   deftype    = E_ArgAsKwd(args, 3, &cpmkwds, 0);
-   sfx        = E_ArgAsSound(args, 4);
-   range      = E_ArgAsFixed(args, 5, MELEERANGE);
-   const char *pufftype = E_ArgAsString(args, 6, nullptr);
+    dmgfactor            = E_ArgAsInt(args, 0, 0);
+    dmgmod               = E_ArgAsInt(args, 1, 0);
+    berzerkmul           = E_ArgAsInt(args, 2, 0);
+    deftype              = E_ArgAsKwd(args, 3, &cpmkwds, 0);
+    sfx                  = E_ArgAsSound(args, 4);
+    range                = E_ArgAsFixed(args, 5, MELEERANGE);
+    const char *pufftype = E_ArgAsString(args, 6, nullptr);
 
-   // adjust parameters
+    // adjust parameters
 
-   if(dmgmod < 1)
-      dmgmod = 1;
-   else if(dmgmod > 256)
-      dmgmod = 256;
+    if(dmgmod < 1)
+        dmgmod = 1;
+    else if(dmgmod > 256)
+        dmgmod = 256;
 
-   // calculate damage
-   damage = dmgfactor * ((P_Random(pr_custompunch)%dmgmod) + 1);
+    // calculate damage
+    damage = dmgfactor * ((P_Random(pr_custompunch) % dmgmod) + 1);
 
-   // apply berzerk multiplier
-   if(player->powers[pw_strength].isActive())
-      damage *= berzerkmul;
+    // apply berzerk multiplier
+    if(player->powers[pw_strength].isActive())
+        damage *= berzerkmul;
 
-   // decrement ammo if appropriate
-   P_SubtractAmmo(*player, -1);
+    // decrement ammo if appropriate
+    P_SubtractAmmo(*player, -1);
 
-   angle = player->mo->angle;
+    angle = player->mo->angle;
 
-   if(deftype == 2 || deftype == 3)
-      angle += P_SubRandom(pr_custompunch) << 18;
+    if(deftype == 2 || deftype == 3)
+        angle += P_SubRandom(pr_custompunch) << 18;
 
-   slope = P_DoAutoAim(mo, angle, range);
+    slope = P_DoAutoAim(mo, angle, range);
 
-   // WEAPON_FIXME: does this pointer fail to set the player into an attack state?
-   // WEAPON_FIXME: check ALL new weapon pointers for this problem.
+    // WEAPON_FIXME: does this pointer fail to set the player into an attack state?
+    // WEAPON_FIXME: check ALL new weapon pointers for this problem.
 
-   P_LineAttack(mo, angle, range, slope, damage, pufftype);
+    P_LineAttack(mo, angle, range, slope, damage, pufftype);
 
-   if(!clip.linetarget)
-   {
-      // assume they want sawful on miss if sawhit specified
-      if(sfx && sfx->dehackednum == sfx_sawhit)
-         P_WeaponSound(mo, sfx_sawful);
-      return;
-   }
+    if(!clip.linetarget)
+    {
+        // assume they want sawful on miss if sawhit specified
+        if(sfx && sfx->dehackednum == sfx_sawhit)
+            P_WeaponSound(mo, sfx_sawful);
+        return;
+    }
 
-   // start sound
-   P_WeaponSoundInfo(mo, sfx);
+    // start sound
+    P_WeaponSoundInfo(mo, sfx);
 
-   // turn to face target
-   player->mo->angle = P_PointToAngle(mo->x, mo->y,
-                                      getThingX(mo, clip.linetarget),
-                                      getThingY(mo, clip.linetarget));
+    // turn to face target
+    player->mo->angle = P_PointToAngle(mo->x, mo->y, getThingX(mo, clip.linetarget), getThingY(mo, clip.linetarget));
 
-   // apply chainsaw deflection if selected
-   if(deftype == 3)
-   {
-      if(angle - mo->angle > ANG180)
-      {
-         if(angle - mo->angle < static_cast<angle_t>(-ANG90/20))
-            mo->angle = angle + ANG90/21;
-         else
-            mo->angle -= ANG90/20;
-      }
-      else
-      {
-         if(angle - mo->angle > ANG90/20)
-            mo->angle = angle - ANG90/21;
-         else
-            mo->angle += ANG90/20;
-      }
+    // apply chainsaw deflection if selected
+    if(deftype == 3)
+    {
+        if(angle - mo->angle > ANG180)
+        {
+            if(angle - mo->angle < static_cast<angle_t>(-ANG90 / 20))
+                mo->angle = angle + ANG90 / 21;
+            else
+                mo->angle -= ANG90 / 20;
+        }
+        else
+        {
+            if(angle - mo->angle > ANG90 / 20)
+                mo->angle = angle - ANG90 / 21;
+            else
+                mo->angle += ANG90 / 20;
+        }
 
-      mo->flags |= MF_JUSTATTACKED;
-   }
+        mo->flags |= MF_JUSTATTACKED;
+    }
 }
 
-static const char *kwds_A_PlayerThunk1[] =
-{
-   "noface", // 0
-   "face",   // 1
+static const char *kwds_A_PlayerThunk1[] = {
+    "noface", // 0
+    "face",   // 1
 };
 
 static argkeywd_t facekwds = { kwds_A_PlayerThunk1, 2 };
 
-static const char *kwds_A_PlayerThunk2[] =
-{
-   "attacker",  // 0
-   "aimtarget", // 1
+static const char *kwds_A_PlayerThunk2[] = {
+    "attacker",  // 0
+    "aimtarget", // 1
 };
 
-static argkeywd_t targetkwds = { kwds_A_PlayerThunk2, 2};
+static argkeywd_t targetkwds = { kwds_A_PlayerThunk2, 2 };
 
-static const char *kwds_A_PlayerThunk3[] =
-{
-   "nouseammo", // 0
-   "useammo",   // 1
+static const char *kwds_A_PlayerThunk3[] = {
+    "nouseammo", // 0
+    "useammo",   // 1
 };
 
 static argkeywd_t ammokwds = { kwds_A_PlayerThunk3, 2 };
@@ -1701,88 +1665,88 @@ static argkeywd_t ammokwds = { kwds_A_PlayerThunk3, 2 };
 //
 void A_PlayerThunk(actionargs_t *actionargs)
 {
-   bool face;
-   bool settarget;
-   bool useammo;
-   int cptrnum, statenum;
-   state_t *oldstate = nullptr;
-   Mobj *oldtarget = nullptr, *localtarget = nullptr;
-   Mobj *mo = actionargs->actor;
-   player_t  *player;
-   pspdef_t  *psp;
-   arglist_t *args = actionargs->args;
+    bool       face;
+    bool       settarget;
+    bool       useammo;
+    int        cptrnum, statenum;
+    state_t   *oldstate  = nullptr;
+    Mobj      *oldtarget = nullptr, *localtarget = nullptr;
+    Mobj      *mo = actionargs->actor;
+    player_t  *player;
+    pspdef_t  *psp;
+    arglist_t *args = actionargs->args;
 
-   if(!(player = mo->player))
-      return;
+    if(!(player = mo->player))
+        return;
 
-   if(!(psp = actionargs->pspr))
-      return;
+    if(!(psp = actionargs->pspr))
+        return;
 
-   cptrnum   =   E_ArgAsBexptr(args, 0);
-   face      = !!E_ArgAsKwd(args, 1, &facekwds, 0);
-   statenum  =   E_ArgAsStateNumG0(args, 2, player);
-   settarget = !!E_ArgAsKwd(args, 3, &targetkwds, 0);
-   useammo   = !!E_ArgAsKwd(args, 4, &ammokwds, 0);
+    cptrnum   = E_ArgAsBexptr(args, 0);
+    face      = !!E_ArgAsKwd(args, 1, &facekwds, 0);
+    statenum  = E_ArgAsStateNumG0(args, 2, player);
+    settarget = !!E_ArgAsKwd(args, 3, &targetkwds, 0);
+    useammo   = !!E_ArgAsKwd(args, 4, &ammokwds, 0);
 
-   // validate codepointer index
-   if(cptrnum < 0)
-      return;
+    // validate codepointer index
+    if(cptrnum < 0)
+        return;
 
-   // set player's target to thing being autoaimed at if this
-   // behavior is requested.
-   if(settarget)
-   {
-      // record old target
-      oldtarget = mo->target;
-      P_BulletSlope(mo);
-      if(clip.linetarget)
-      {
-         P_SetTarget<Mobj>(&(mo->target), clip.linetarget);
-         localtarget = clip.linetarget;
-      }
-      else
-         return;
-   }
+    // set player's target to thing being autoaimed at if this
+    // behavior is requested.
+    if(settarget)
+    {
+        // record old target
+        oldtarget = mo->target;
+        P_BulletSlope(mo);
+        if(clip.linetarget)
+        {
+            P_SetTarget<Mobj>(&(mo->target), clip.linetarget);
+            localtarget = clip.linetarget;
+        }
+        else
+            return;
+    }
 
-   // possibly disable the FaceTarget pointer using MIF_NOFACE
-   if(!face)
-      mo->intflags |= MIF_NOFACE;
+    // possibly disable the FaceTarget pointer using MIF_NOFACE
+    if(!face)
+        mo->intflags |= MIF_NOFACE;
 
-   // If a state has been provided, place the player into it. This
-   // allows use of parameterized codepointers.
-   if(statenum >= 0 && statenum < NUMSTATES)
-   {
-      oldstate = mo->state;
-      mo->state = states[statenum];
-   }
+    // If a state has been provided, place the player into it. This
+    // allows use of parameterized codepointers.
+    if(statenum >= 0 && statenum < NUMSTATES)
+    {
+        oldstate  = mo->state;
+        mo->state = states[statenum];
+    }
 
-   // if ammo should be used, subtract it now
-   if(useammo)
-      P_SubtractAmmo(*player, -1);
+    // if ammo should be used, subtract it now
+    if(useammo)
+        P_SubtractAmmo(*player, -1);
 
-   actionargs_t thunkargs;
-   thunkargs.actiontype = actionargs_t::WEAPONFRAME;
-   thunkargs.actor      = mo;
-   thunkargs.args       = ESAFEARGS(mo);
-   thunkargs.pspr       = actionargs->pspr;
+    actionargs_t thunkargs;
+    thunkargs.actiontype = actionargs_t::WEAPONFRAME;
+    thunkargs.actor      = mo;
+    thunkargs.args       = ESAFEARGS(mo);
+    thunkargs.pspr       = actionargs->pspr;
 
-   // execute the codepointer
-   deh_bexptrs[cptrnum].cptr(&thunkargs);
+    // execute the codepointer
+    deh_bexptrs[cptrnum].cptr(&thunkargs);
 
-   // remove MIF_NOFACE
-   mo->intflags &= ~MIF_NOFACE;
+    // remove MIF_NOFACE
+    mo->intflags &= ~MIF_NOFACE;
 
-   // restore player's old target if a new one was found & set
-   if(settarget && localtarget)
-   {
-      P_SetTarget<Mobj>(&(mo->target), oldtarget);
-   }
+    // restore player's old target if a new one was found & set
+    if(settarget && localtarget)
+    {
+        P_SetTarget<Mobj>(&(mo->target), oldtarget);
+    }
 
-   // put player back into his normal state
-   if(statenum >= 0 && statenum < NUMSTATES)
-   {
-      mo->state = oldstate;
-   }
+    // put player back into his normal state
+    if(statenum >= 0 && statenum < NUMSTATES)
+    {
+        mo->state = oldstate;
+    }
 }
 
 //----------------------------------------------------------------------------

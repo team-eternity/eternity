@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,14 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//    Typedefs related to to textures etc.,
-//    isolated here to make it easier separating modules.
-//    
-//-----------------------------------------------------------------------------
-
+// Purpose: Typedefs related to to textures etc.,
+//  isolated here to make it easier separating modules.
+//
+// Authors: James Haley
+//
 
 #ifndef D_TEXTUR_H__
 #define D_TEXTUR_H__
@@ -43,11 +41,10 @@
 // a pic is an unmasked block of pixels
 struct pic_t
 {
-   byte  width;
-   byte  height;
-   byte  data;
+    byte width;
+    byte height;
+    byte data;
 };
-
 
 #endif
 

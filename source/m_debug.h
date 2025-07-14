@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2018 James Haley et al.
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// Purpose: Helper functions for logging and debugging. Should be disabled in release builds.
+//------------------------------------------------------------------------------
+//
+// Purpose: Helper functions for logging and debugging.
+//  Should be disabled in release builds.
+//
 // Authors: Ioan Chera
 //
 
@@ -27,14 +31,14 @@
 class Profiler
 {
 public:
-   Profiler(int gametic, const char *func, double crashlimit = 0);
-   ~Profiler();
+    Profiler(int gametic, const char *func, double crashlimit = 0);
+    ~Profiler();
 
 private:
-   double starttime;
-   int gametic;
-   double climit;
-   const char *name;
+    double      starttime;
+    int         gametic;
+    double      climit;
+    const char *name;
 };
 
 #endif
@@ -61,53 +65,53 @@ struct vertex_t;
 class DebugLogger
 {
 public:
-   DebugLogger();
-   ~DebugLogger();
+    DebugLogger();
+    ~DebugLogger();
 
-   // Fundamental types
-   DebugLogger &operator << (const char *text);
+    // Fundamental types
+    DebugLogger &operator<<(const char *text);
 
-   DebugLogger &operator << (char character);
-   DebugLogger &operator << (int number);
-   DebugLogger &operator << (unsigned number);
-   DebugLogger &operator << (long number);
-   DebugLogger &operator << (unsigned long number);
-   DebugLogger &operator << (long long number);
-   DebugLogger &operator << (double number);
+    DebugLogger &operator<<(char character);
+    DebugLogger &operator<<(int number);
+    DebugLogger &operator<<(unsigned number);
+    DebugLogger &operator<<(long number);
+    DebugLogger &operator<<(unsigned long number);
+    DebugLogger &operator<<(long long number);
+    DebugLogger &operator<<(double number);
 
-   // Convenience
-   DebugLogger &operator >> (fixed_t number);
+    // Convenience
+    DebugLogger &operator>>(fixed_t number);
 
-   // Structural types
-   DebugLogger &operator << (const divline_t &divline);
-   DebugLogger &operator << (const line_t &line);
-   DebugLogger &operator << (const pwindow_t &window);
-   DebugLogger &operator << (const side_t &side);
-   DebugLogger &operator << (const sector_t &sector);
-   DebugLogger &operator << (const seg_t &seg);
-   DebugLogger &operator << (const v2double_t &vec);
-   DebugLogger &operator << (const v2fixed_t &vec);
-   DebugLogger &operator << (const v3fixed_t &vec);
-   DebugLogger &operator << (const vertex_t &vertex);
+    // Structural types
+    DebugLogger &operator<<(const divline_t &divline);
+    DebugLogger &operator<<(const line_t &line);
+    DebugLogger &operator<<(const pwindow_t &window);
+    DebugLogger &operator<<(const side_t &side);
+    DebugLogger &operator<<(const sector_t &sector);
+    DebugLogger &operator<<(const seg_t &seg);
+    DebugLogger &operator<<(const v2double_t &vec);
+    DebugLogger &operator<<(const v2fixed_t &vec);
+    DebugLogger &operator<<(const v3fixed_t &vec);
+    DebugLogger &operator<<(const vertex_t &vertex);
 
-   template<typename T>
-   DebugLogger &operator << (const T *item)
-   {
-      return item ? *this << *item : *this << "null(" << typeid(T).name() << ')';
-   }
+    template<typename T>
+    DebugLogger &operator<<(const T *item)
+    {
+        return item ? *this << *item : *this << "null(" << typeid(T).name() << ')';
+    }
 
 private:
-   enum lastsym
-   {
-      ls_start,
-      ls_string,
-      ls_char,
-      ls_number
-   };
+    enum lastsym
+    {
+        ls_start,
+        ls_string,
+        ls_char,
+        ls_number
+    };
 
-   void checkspace(lastsym newsym);
+    void checkspace(lastsym newsym);
 
-   lastsym lsym;
+    lastsym lsym;
 };
 
 #endif

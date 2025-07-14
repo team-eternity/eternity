@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright(C) 2017 James Haley, Ioan Chera, et al.
+// Copyright (C) 2025 James Haley, Ioan Chera, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,8 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: linked portal crossing calculations. Separated from p_portal due to
-//          becoming too many.
+//------------------------------------------------------------------------------
+//
+// Purpose: Linked portal crossing calculations. Separated from p_portal due to
+//  becoming too many.
+//
 // Authors: Ioan Chera
 //
 
@@ -38,21 +41,19 @@ struct sector_t;
 // portals. Needed because some objects are spawned at given offsets from
 // others, and there's no other way to detect line portal change.
 //
-v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
-                               int *group = nullptr,
+v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy, int *group = nullptr,
                                const line_t **passed = nullptr);
 
-template <typename T>
-inline static v2fixed_t P_LinePortalCrossing(T &&u, fixed_t dx, fixed_t dy,
-                                             int *group = nullptr)
+template<typename T>
+inline static v2fixed_t P_LinePortalCrossing(T &&u, fixed_t dx, fixed_t dy, int *group = nullptr)
 {
-   return P_LinePortalCrossing(u.x, u.y, dx, dy, group);
+    return P_LinePortalCrossing(u.x, u.y, dx, dy, group);
 }
 
-template <typename T, typename U>
+template<typename T, typename U>
 inline static v2fixed_t P_LinePortalCrossing(T &&u, U &&dv, int *group = nullptr)
 {
-   return P_LinePortalCrossing(u.x, u.y, dv.x, dv.y, group);
+    return P_LinePortalCrossing(u.x, u.y, dv.x, dv.y, group);
 }
 
 //
@@ -60,20 +61,18 @@ inline static v2fixed_t P_LinePortalCrossing(T &&u, U &&dv, int *group = nullptr
 //
 struct portalcrossingoutcome_t
 {
-   int finalgroup;            // the final reached group ID
-   const line_t *lastpassed;  // the last passed linedef
-   bool multipassed;          // whether multiple lines have been passed
+    int           finalgroup;  // the final reached group ID
+    const line_t *lastpassed;  // the last passed linedef
+    bool          multipassed; // whether multiple lines have been passed
 };
 
-v2fixed_t P_PrecisePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
-                                  portalcrossingoutcome_t &outcome);
+v2fixed_t P_PrecisePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy, portalcrossingoutcome_t &outcome);
 
 //
 // P_ExtremeSectorAtPoint
 // ioanch 20160107
 //
-sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, surf_e surf,
-                                 sector_t *preCalcSector = nullptr,
+sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, surf_e surf, sector_t *preCalcSector = nullptr,
                                  v2fixed_t *totaldelta = nullptr);
 
 sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, surf_e surf, v2fixed_t *totaldelta = nullptr);
@@ -81,21 +80,17 @@ sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, surf_e surf, v2fixed_t *totalde
 // P_TransPortalBlockWalker
 // ioanch 20160107
 //
-bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
-                              void *data,
+bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst, void *data,
                               bool (*func)(int x, int y, int groupid, void *data));
 
 // variant with generic callable
-template <typename C> inline static
-bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
-                              C &&callable)
+template<typename C>
+inline static bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst, C &&callable)
 {
-   return P_TransPortalBlockWalker(bbox, groupid, xfirst, &callable,
-                                   [](int x, int y, int groupid, void *data)
-                                   {
-                                      auto c = static_cast<C *>(data);
-                                      return (*c)(x, y, groupid);
-                                   });
+    return P_TransPortalBlockWalker(bbox, groupid, xfirst, &callable, [](int x, int y, int groupid, void *data) {
+        auto c = static_cast<C *>(data);
+        return (*c)(x, y, groupid);
+    });
 }
 
 //
@@ -105,12 +100,9 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
 bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj);
 
 // ioanch 20160222
-sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
-                                        int cgroupid, int tgroupid,
-                                        sector_t *csector, fixed_t midzhint,
-                                        surf_e *surf = nullptr);
-sector_t *P_ThingReachesGroupVertically(const Mobj *mo, int groupid,
-                                        fixed_t midzhint);
+sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz, int cgroupid, int tgroupid,
+                                        sector_t *csector, fixed_t midzhint, surf_e *surf = nullptr);
+sector_t *P_ThingReachesGroupVertically(const Mobj *mo, int groupid, fixed_t midzhint);
 
 #endif
 
