@@ -57,7 +57,7 @@
 //
 // Handle a floor plane moving downward.
 //
-result_e T_MoveFloorDown(sector_t *sector, fixed_t speed, fixed_t dest, int crush)
+result_e T_MoveFloorDown(sector_t *const sector, fixed_t speed, fixed_t dest, int crush)
 {
     fixed_t lastpos;
 
@@ -168,7 +168,7 @@ result_e T_MoveFloorDown(sector_t *sector, fixed_t speed, fixed_t dest, int crus
 //
 // Handle a floor plane moving upward.
 //
-result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush, bool emulateStairCrush)
+result_e T_MoveFloorUp(sector_t *const sector, fixed_t speed, fixed_t dest, int crush, bool emulateStairCrush)
 {
     fixed_t destheight;
     fixed_t lastpos;
@@ -288,7 +288,7 @@ result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush,
 // Handle a ceiling plane moving downward.
 // ioanch 20160305: added crushrest parameter
 //
-result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest, int crush, bool crushrest)
+result_e T_MoveCeilingDown(sector_t *const sector, fixed_t speed, fixed_t dest, int crush, bool crushrest)
 {
     fixed_t destheight;
     fixed_t lastpos;
@@ -411,7 +411,7 @@ result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest, int cr
 //
 // Handle a ceiling plane moving upward.
 //
-result_e T_MoveCeilingUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush)
+result_e T_MoveCeilingUp(sector_t *const sector, fixed_t speed, fixed_t dest, int crush)
 {
     fixed_t lastpos;
 
