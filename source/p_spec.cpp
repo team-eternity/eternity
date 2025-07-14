@@ -2685,7 +2685,7 @@ static void P_attachSectors(UDMFSetupSettings &settings)
                 }
             }
         }
-        if(!floornew.isEmpty())
+        if(attach.floorid && !floornew.isEmpty())
         {
             efree(sectors[i].srf.floor.asurfaces);
             sectors[i].srf.floor.asurfaces     = estructalloctag(attachedsurface_t, floornew.getLength(), PU_LEVEL);
@@ -2693,7 +2693,7 @@ static void P_attachSectors(UDMFSetupSettings &settings)
             memcpy(sectors[i].srf.floor.asurfaces, &floornew[0],
                    sectors[i].srf.floor.asurfacecount * sizeof(attachedsurface_t));
         }
-        if(!ceilingnew.isEmpty())
+        if(attach.ceilingid && !ceilingnew.isEmpty())
         {
             efree(sectors[i].srf.ceiling.asurfaces);
             sectors[i].srf.ceiling.asurfaces     = estructalloctag(attachedsurface_t, ceilingnew.getLength(), PU_LEVEL);
