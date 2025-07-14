@@ -1328,9 +1328,9 @@ static void doAction(pstate_t *ps, const char *fn)
     {
         DLListItem<estatebuf_t> *link     = DSP.curbufstate;
         int                      statenum = DSP.currentstate;
-        deh_bexptr              *ptr      = D_GetBexPtr(ps->tokenbuffer->constPtr());
+        action_t                 *action   = E_GetAction(ps->tokenbuffer->constPtr());
 
-        if(!ptr)
+        if(!action)
         {
             E_EDFLoggedWarning(2, "%s: unknown action %s\n", fn, ps->tokenbuffer->constPtr());
             ps->error = true;
@@ -1340,7 +1340,7 @@ static void doAction(pstate_t *ps, const char *fn)
         while(link && (*link)->type == BUF_STATE && (*link)->linenum == (*DSP.curbufstate)->linenum)
         {
             if(states[statenum]->flags & STATEFI_DECORATE)
-                states[statenum]->action = states[statenum]->oldaction = ptr->cptr;
+                states[statenum]->action = action;
 
             ++statenum;           // move forward one state in states[]
             link = link->dllNext; // move forward one buffered state

@@ -151,6 +151,19 @@ enum
 
 };
 
+using codeptr_t = void (*)(actionargs_t *);
+
+// Encapsulates action functions, both native and AngelScript
+struct action_t
+{
+    const char  *name;       // name of the action
+    codeptr_t    codeptr;    // code pointer to function for action if any
+    codeptr_t    oldcptr;    // haleyjd: original action, for DeHackEd
+    actiondef_t *aeonaction; // pointer to Aeon action if any
+
+    DLListItem<action_t> links; // hashing by name
+};
+
 using statenum_t = int;
 
 // state flags
@@ -171,17 +184,16 @@ struct state_t
     DLListItem<state_t> namelinks; // haleyjd 03/30/10: new hashing: by name
     DLListItem<state_t> numlinks;  // haleyjd 03/30/10: new hashing: by dehnum
 
-    spritenum_t  sprite;                       // sprite number to show
-    int          frame;                        // which frame/subframe of the sprite is shown
-    int          tics;                         // number of gametics this frame should last
-    void         (*action)(actionargs_t *);    // code pointer to function for action if any
-    void         (*oldaction)(actionargs_t *); // haleyjd: original action, for DeHackEd
-    statenum_t   nextstate;                    // index of next state, or -1
-    int          misc1, misc2;                 // used for psprite positioning
-    int          particle_evt;                 // haleyjd: determines an event to run
-    arglist_t   *args;                         // haleyjd: state arguments
-    unsigned int flags;                        // haleyjd: flags
-    bool         adddeh;                       // MaxW: Created by additive dehacked
+    spritenum_t  sprite;       // sprite number to show
+    int          frame;        // which frame/subframe of the sprite is shown
+    int          tics;         // number of gametics this frame should last
+    action_t    *action;       // Old action members & AngelScript encapsulated
+    statenum_t   nextstate;    // index of next state, or -1
+    int          misc1, misc2; // used for psprite positioning
+    int          particle_evt; // haleyjd: determines an event to run
+    arglist_t   *args;         // haleyjd: state arguments
+    unsigned int flags;        // haleyjd: flags
+    bool         adddeh;       // MaxW: Created by additive dehacked
 
     // haleyjd: fields needed for EDF identification and hashing
     char *name;   // buffer for name
@@ -447,7 +459,7 @@ struct mobjinfo_t
 
     e_pickupfx_t *pickupfx;
 
-    void (*nukespec)(actionargs_t *); // haleyjd 08/18/09: nukespec made a native property
+    action_t *nukespec; // haleyjd 08/18/09: nukespec made a native property
 
     // haleyjd: fields needed for EDF identification and hashing
     DLListItem<mobjinfo_t> namelinks;  // hashing: by name

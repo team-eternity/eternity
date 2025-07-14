@@ -1855,9 +1855,10 @@ static useaction_t *E_addUseAction(const itemeffect_t *artifact, const action_t 
             return nullptr;
     }
 
-    toadd->artifactname = artifact->getKey(); // FIXME: This is safe, right?
+    toadd->artifactname = artifact->getKey();
     toadd->actiontype   = actionargs_t::ARTIFACT;
     toadd->args         = args;
+    toadd->aeonaction   = action->aeonaction;
     e_UseActionHash.addObject(toadd);
     return toadd;
 }
@@ -1879,7 +1880,7 @@ void E_TryUseItem(player_t &player, inventoryitemid_t ID)
         {
             bool success = false;
 
-            const char   *useeffectstr = artifact->getString(keyUseEffect, "");
+            const char   *useeffectstr = artifact->getString(keyUseEffect, nullptr);
             itemeffect_t *effect       = E_ItemEffectForName(useeffectstr);
             if(effect)
             {
@@ -1902,35 +1903,35 @@ void E_TryUseItem(player_t &player, inventoryitemid_t ID)
             }
 
             const char *useactionstr = artifact->getString(keyUseAction, "");
-            deh_bexptr *ptr          = D_GetBexPtr(useactionstr);
-            if(ptr)
+            action_t   *action       = E_GetAction(useactionstr);
+            if(action)
             {
                 // Try and get the cached useaction, and if we fail, make one
                 useaction_t *useaction = E_useActionForArtifactName(artifact->getKey());
                 if(useaction == nullptr)
                 {
-                    if((useaction = E_addUseAction(artifact)) == nullptr)
+                    if((useaction = E_addUseAction(artifact, action)) == nullptr)
                     {
                         doom_printf("Too many args specified in useaction for artifact '%s'\a\n", artifact->getKey());
                     }
                 }
                 if(useaction != nullptr)
                 {
-                    actionargs_t action = *useaction;
+                    actionargs_t args = *useaction;
 
                     // Temporarily note down that the called codepointer shouldn't subtract ammo
                     player.attackdown = static_cast<attacktype_e>(player.attackdown | AT_ITEM);
                     // We ALWAYS update the actor and psprite
-                    action.actor = player.mo;
-                    action.pspr  = player.psprites;
-                    ptr->cptr(&action);
+                    args.actor = player.mo;
+                    args.pspr  = player.psprites;
+                    action->codeptr(&args);
                     success           = true;
                     player.attackdown = static_cast<attacktype_e>(player.attackdown & ~AT_ITEM);
                 }
             }
             else if(estrnonempty(useactionstr))
             {
-                doom_printf("Codepointer '%s' not found in useaction for artifact '%s'\a\n", useactionstr,
+                doom_printf("Codepointer/action '%s' not found in useaction for artifact '%s'\a\n", useactionstr,
                             artifact->getKey());
             }
 
@@ -1939,10 +1940,11 @@ void E_TryUseItem(player_t &player, inventoryitemid_t ID)
                 const char *sound;
                 E_RemoveInventoryItem(player, artifact, 1);
 
-                sound = artifact->getString(keyUseSound, "");
+                sound = artifact->getString(keyUseSound, nullptr);
                 if(estrnonempty(sound))
                     S_StartSoundName(player.mo, sound);
 
+                // TODO: Make this not hard-coded
                 invbarstate.ArtifactFlash = 5;
             }
             else

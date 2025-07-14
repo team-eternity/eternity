@@ -720,7 +720,7 @@ int qstring::strCmp(const char *str) const
 //
 int qstring::strCmp(const qstring &str) const
 {
-   return strCmp(str.constPtr());
+    return strCmp(str.constPtr());
 }
 
 //

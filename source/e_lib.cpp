@@ -170,10 +170,9 @@ static int E_FindLumpInclude(const int includinglumpnum, const char *name)
 {
     lumpinfo_t  *inclump;
     lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
-    int          includinglumpnum;
 
     // this is not for files
-    if((includinglumpnum = cfg_lexer_source_type(src)) < 0)
+    if(includinglumpnum < 0)
         return -1;
 
     // get a pointer to the including lump's lumpinfo
@@ -204,10 +203,9 @@ int E_FindFileInclude(const char *parentfile, const int includinglumpnum, const 
     lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
     qstring      qname    = qstring(name).toLower();
     qstring      includepath;
-    int          includinglumpnum;
 
     // this is not for files
-    if((includinglumpnum = cfg_lexer_source_type(src)) < 0)
+    if(includinglumpnum < 0)
         return -1;
 
     // get a pointer to the including lump's lumpinfo
@@ -216,7 +214,7 @@ int E_FindFileInclude(const char *parentfile, const int includinglumpnum, const 
     qname.replace("\\", '/');
     if(qname[0] != '/')
     {
-        qstring parentdir    = qstring(src->filename);
+        qstring parentdir    = qstring(parentfile);
         size_t  lastslashloc = parentdir.findLastOf('/');
         parentdir.truncate(lastslashloc + 1);
         includepath << parentdir;
@@ -244,7 +242,7 @@ int E_FindFileInclude(const char *parentfile, const int includinglumpnum, const 
         }
     }
 
-    return strlen(name) > 8 ? -1 : E_FindLumpInclude(src, name); // not found
+    return strlen(name) > 8 ? -1 : E_FindLumpInclude(includinglumpnum, name); // not found
 }
 
 //
@@ -340,7 +338,7 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
     default: // data source
         // haleyjd 03/19/10:
         // find a lump of the requested name in the same data source only
-        if((lumpnum = E_findFileInclude(cfg, argv[0])) < 0)
+        if((lumpnum = E_FindFileInclude(cfg->filename, cfg_lexer_source_type(cfg), argv[0])) < 0)
         {
             cfg_error(cfg, "include: %s not found\n", argv[0]);
             return 1;
@@ -376,7 +374,7 @@ int E_LumpInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
     case -1: // from a file - include the newest lump
         return E_OpenAndCheckInclude(cfg, argv[0], W_GetNumForName(argv[0]));
     default: // lump
-        if((lumpnum = E_FindLumpInclude(cfg, argv[0])) < 0)
+        if((lumpnum = E_FindLumpInclude(cfg_lexer_source_type(cfg), argv[0])) < 0)
         {
             cfg_error(cfg, "lumpinclude: %s not found\n", argv[0]);
             return 1;

@@ -92,7 +92,7 @@
 
 // killough 10/98: preloaded files
 static constexpr size_t MAXLOADFILES = 2;
-char *wad_files[MAXLOADFILES], *deh_files[MAXLOADFILES];
+char                   *wad_files[MAXLOADFILES], *deh_files[MAXLOADFILES];
 // haleyjd: allow two auto-loaded console scripts
 char *csc_files[MAXLOADFILES];
 
@@ -1607,6 +1607,9 @@ static void D_DoomInit()
 
     // Init bex hash chaining before EDF
     D_BuildBEXHashChains();
+
+    // Init Aeon before EDF
+    Aeon::ScriptManager::Init();
 
     // Identify root EDF file and process EDF
     D_LoadEDF(gfs);

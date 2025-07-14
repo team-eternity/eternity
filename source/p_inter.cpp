@@ -1315,7 +1315,7 @@ static bool P_touchBossTeleport(dmgspecdata_t *dmgspec)
     statenum_t missilestate = target->info->missilestate;
 
     // Determine it's D'Sparil by noticing the missilestate
-    if(missilestate == NullStateNum || states[target->info->missilestate]->action != A_Srcr2Decide ||
+    if(missilestate == NullStateNum || states[target->info->missilestate]->action->codeptr != A_Srcr2Decide ||
        P_Random(pr_touchbossteleport) >= 96)
     {
         return false;

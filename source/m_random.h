@@ -274,6 +274,7 @@ enum pr_class_t
     pr_wpnsettics,         // A_WeaponSetTics
     pr_chickenplayerthink, // P_ChickenPlayerThink
 
+    pr_aeon,   // Aeon RNG
     NUMPRCLASS // MUST be last item in list
 };
 

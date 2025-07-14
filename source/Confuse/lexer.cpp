@@ -215,7 +215,8 @@ enum
     STATE_LINECONTINUANCE,
     STATE_STRINGCOALESCE,
     STATE_UNQUOTEDSTRING,
-    STATE_HEREDOC
+    STATE_HEREDOC,
+    STATE_RAWSTRING,
 };
 
 //
@@ -502,25 +503,24 @@ static int lexer_state_heredoc(lexerstate_t *ls)
 //
 static int lexer_state_rawstring(lexerstate_t *ls)
 {
-   // check for end of raw string
-   if(ls->c == ')' && *bufferpos == '"')
-   {
-      ++bufferpos; // move forward past @
-      mytext = qstr.constPtr();
+    // check for end of raw string
+    if(ls->c == ')' && *bufferpos == '"')
+    {
+        ++bufferpos; // move forward past @
+        mytext = qstr.constPtr();
 
-      return CFGT_STR; // return a string token
-   }
-   else // normal characters -- everything is literal
-   {
-      if(ls->c == '\n')
-         ls->cfg->line++; // still need to track line numbers
+        return CFGT_STR; // return a string token
+    }
+    else // normal characters -- everything is literal
+    {
+        if(ls->c == '\n')
+            ls->cfg->line++; // still need to track line numbers
 
-      qstr += ls->c;
+        qstr += ls->c;
 
-      return -1; // continue parsing
-   }
+        return -1; // continue parsing
+    }
 }
-
 
 //
 // lexer_state_none
@@ -620,9 +620,20 @@ static int lexer_state_none(lexerstate_t *ls)
             ls->state = STATE_HEREDOC;
             break;
         }
-        // fall through, @ is not special unless followed by " or '
-        [[fallthrough]];
+        goto unquoted_string;
+        break;
+    case 'R':
+        if(*bufferpos == '"' && *(bufferpos + 1) == '(') // look ahead to next two character s
+        {
+            bufferpos += 2; // move past secondary delimiter characters
+            qstr.clear();
+            ls->state = STATE_RAWSTRING;
+            break;
+        }
+        goto unquoted_string;
+        break;
     default: // anything else is part of an unquoted string
+    unquoted_string:
         if(ls->c == ':' && currentDialect >= CFG_DIALECT_ALFHEIM)
         {
             mytext = ":";
@@ -644,7 +655,7 @@ static int lexer_state_none(lexerstate_t *ls)
 static lexfunc_t lexerfuncs[] = {
     lexer_state_none,           lexer_state_slcomment, lexer_state_mlcomment,       lexer_state_string,
     lexer_state_escape,         lexer_state_hexescape, lexer_state_linecontinuance, lexer_state_stringcoalesce,
-    lexer_state_unquotedstring, lexer_state_heredoc,
+    lexer_state_unquotedstring, lexer_state_heredoc,   lexer_state_rawstring,
 };
 
 //

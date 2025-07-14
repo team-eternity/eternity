@@ -36,7 +36,7 @@ namespace Aeon
 {
    static void subtractAmmo(player_t *plyr, int amount = -1)
    {
-      P_SubtractAmmo(plyr, amount);
+      P_SubtractAmmo(*plyr, amount);
    }
 
     static Mobj *spawnPlayerMissile(player_t *plyr, const qstring &name)
@@ -50,7 +50,7 @@ namespace Aeon
     {
        weaponinfo_t *wp = E_WeaponForName(name.constPtr());
 
-       return wp ? E_PlayerOwnsWeapon(plyr, wp) : false;
+       return wp ? E_PlayerOwnsWeapon(*plyr, wp) : false;
     }
 
    //
@@ -90,7 +90,7 @@ namespace Aeon
       if(wp == player->pendingweapon)
          player->readyweaponslot = player->pendingweaponslot; // I dunno how else to do this
       else
-         player->readyweaponslot = E_FindFirstWeaponSlot(player, wp);
+         player->readyweaponslot = E_FindFirstWeaponSlot(*player, wp);
    }
 
    static weaponinfo_t *getPendingWeapon(player_t *player)
@@ -100,10 +100,10 @@ namespace Aeon
 
    static void setPendingWeapon(const weaponinfo_t *wp, player_t *player)
    {
-      if(!E_PlayerOwnsWeapon(player, player->readyweapon) && player->readyweapon->id != UnknownWeaponInfo)
+      if(!E_PlayerOwnsWeapon(*player, player->readyweapon) && player->readyweapon->id != UnknownWeaponInfo)
       {
-         player->pendingweapon     = E_FindBestWeapon(player);
-         player->pendingweaponslot = E_FindFirstWeaponSlot(player, player->pendingweapon);
+         player->pendingweapon     = E_FindBestWeapon(*player);
+         player->pendingweaponslot = E_FindFirstWeaponSlot(*player, player->pendingweapon);
       }
    }
 

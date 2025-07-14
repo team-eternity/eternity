@@ -504,6 +504,20 @@ public:
         add();
         return this->ptrArray[this->length - 1];
     }
+
+    //
+    // Returns the last item and decrements the length.
+    //
+    const T &pop()
+    {
+        if(!this->ptrArray || !this->length)
+            I_Error("Collection::pop: array underflow\n");
+
+        const T &ret = this->ptrArray[--this->length];
+        this->checkWrapIterator();
+
+        return ret;
+    }
 };
 
 #endif

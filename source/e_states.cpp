@@ -632,14 +632,14 @@ static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **arg
 //
 static void E_StateAction(const char *tempstr, int i)
 {
-    deh_bexptr *dp = D_GetBexPtr(tempstr);
+    action_t *action = E_GetAction(tempstr);
 
-    if(!dp)
+    if(!action)
     {
         E_EDFLoggedErr(2, "E_ProcessState: frame '%s': bad action '%s'\n", states[i]->name, tempstr);
     }
 
-    states[i]->action = states[i]->oldaction = dp->cptr;
+    states[i]->action = action;
 }
 
 enum prefixkwd_e

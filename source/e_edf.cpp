@@ -215,6 +215,7 @@ static cfg_opt_t edf_opts[] = {
     CFG_STR(ITEM_PLAYERSPRITE,     "PLAY",                  CFGF_NONE),
     CFG_STR(ITEM_BLANKSPRITE,      "TNT1",                  CFGF_NONE),
 
+    CFG_SEC(EDF_SEC_ACTION,        edf_action_opts,         EDF_TSEC_FLAGS),
     CFG_SEC(EDF_SEC_SPRPKUP,       edf_sprpkup_opts,        EDF_TSEC_FLAGS),
     CFG_SEC(EDF_SEC_PICKUPFX,      edf_pkupfx_opts,         EDF_TSEC_FLAGS),
     CFG_SEC(EDF_SEC_SOUND,         edf_sound_opts,          EDF_TSEC_FLAGS),
@@ -1612,6 +1613,19 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
     // process damage types
     E_ProcessDamageTypes(cfg);
     E_PrepareMorphTypes(cfg);
+
+   // -- AEON START --
+
+    Aeon::ScriptManager::LoadRoots();
+
+    // create actions (codepointers)
+    E_CreateActions(cfg);
+
+    Aeon::ScriptManager::Build();
+
+    E_PopulateActions();
+
+    // -- AEON END --
 
     // process frame and thing definitions (made dynamic 11/06/11)
     E_ProcessStatesAndThings(cfg);

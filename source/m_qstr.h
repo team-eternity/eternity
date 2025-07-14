@@ -151,6 +151,7 @@ public:
 
     // Comparisons: C and C++ style
     int  strCmp(const char *str) const;
+    int  strCmp(const qstring &str) const;
     int  strNCmp(const char *str, size_t maxcount) const;
     int  strCaseCmp(const char *str) const;
     int  strNCaseCmp(const char *str, size_t maxcount) const;

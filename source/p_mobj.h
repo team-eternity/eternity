@@ -268,9 +268,10 @@ public:
     fixed_t height;
 
     // Momentums, used to update position.
-    fixed_t momx;
-    fixed_t momy;
-    fixed_t momz;
+    v3fixed_t mom;
+    fixed_t  &momx = mom.x;
+    fixed_t  &momy = mom.y;
+    fixed_t  &momz = mom.z;
 
     // If == validcount, already checked.
     int validcount;
