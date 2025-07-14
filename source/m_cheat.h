@@ -93,6 +93,7 @@ enum cheatnum_e
    CHEAT_HTICPOWER,
    CHEAT_HTICGIMME,
    CHEAT_HTICRAMBO,
+   CHEAT_HTICCOCKADOODLEDOO,
 
    // Shared Cheats
    CHEAT_COMP,

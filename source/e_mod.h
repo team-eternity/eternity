@@ -31,6 +31,26 @@
 
 #include "m_dllist.h"
 #include "m_fixed.h"
+#include "info.h"
+
+struct playerclass_t;
+
+//
+// morph species exclude placeholders. Values must be negative because positive values are
+// mobjtype_t
+//
+enum
+{
+   MorphExcludeListEnd = -1,     // this is the terminator of the "exclude" list
+   MorphExcludeInanimate = -2,   // from @inanimate
+};
+
+struct emodmorph_t
+{
+   mobjtype_t speciesID;
+   mobjtype_t *excludedID;
+   playerclass_t *pclass;
+};
 
 //
 // emod structure
@@ -50,6 +70,8 @@ struct emod_t
    bool selfObitIsIndirect;
    bool sourceless;
 
+   emodmorph_t morph;
+
    fixed_t absolutePush;   // if set, push things by this amount
    fixed_t absoluteHop;    // if set, hop gravity things by this amount
 
@@ -68,10 +90,14 @@ const char *E_ModFieldName(const char *base, const emod_t *mod);
 #ifdef NEED_EDF_DEFINITIONS
 
 constexpr const char EDF_SEC_MOD[] = "damagetype";
+constexpr const char EDF_SEC_MORPHTYPE[] = "morphtype";
 
 extern cfg_opt_t edf_dmgtype_opts[];
+extern cfg_opt_t edf_morphtype_opts[];
 
 void E_ProcessDamageTypes(cfg_t *cfg);
+void E_PrepareMorphTypes(cfg_t *cfg);
+void E_ProcessMorphTypes(cfg_t *cfg);
 
 #endif // NEED_EDF_DEFINITIONS
 

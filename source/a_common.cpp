@@ -654,7 +654,7 @@ void A_PlayerSkull(actionargs_t *actionargs)
       head->player->pitch       = 0;     // don't look up or down
       head->player->prevpitch   = 0;     // and snap to central view immediately
       head->player->damagecount = 32;    // see red for a while
-      P_SetPlayerAttacker(head->player, actor); // look at old body
+      P_SetPlayerAttacker(*head->player, actor); // look at old body
    }
    
    // send head flying

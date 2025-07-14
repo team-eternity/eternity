@@ -1,7 +1,10 @@
 Eternity version is defined in the following places. Make sure to update these files when incrementing the version:
 
-* CMakeLists.txt
-* source/version.cpp
+* CMakeLists.txt: from the root location
+* source/version.cpp: these three fields -
+    * int version
+    * unsigned char subversion
+    * const char ee_wmCaption[]
 
 Also update the following files:
 

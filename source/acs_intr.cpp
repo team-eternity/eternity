@@ -743,7 +743,7 @@ void ACS_LoadLevelScript(WadDirectory *dir, int lump)
       {
          if(playeringame[pnum])
          {
-            threadInfo.mo   = players[pnum].mo;
+            P_SetTarget(&threadInfo.mo, players[pnum].mo);
             scriptInfo.info = &threadInfo;
             ACSenv.map->scriptStartTypeForced(ACS_STYPE_Enter, scriptInfo);
          }

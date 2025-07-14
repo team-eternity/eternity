@@ -353,6 +353,21 @@ Updated SDL_net to 2.2.0 (from 2.0.1) on Windows.
 Added loading and saving of mid-level music changes.
 Fixed rare hard-lock when polyobjects start moving.
 
+--------------------------------------------------------------------------------
+2024/08/16
+Added support for scanning for Steam/GOG Doom + Doom II IWADs and
+No Rest for the Living (and Master Levels for Steam only).
+Added support for DSDHacked sounds.
+
+--------------------------------------------------------------------------------
+2025/04/06
+Added support for spray type, num rays, damage count, field of view, and maximum
+distance to A_BFGSpray.
+
+--------------------------------------------------------------------------------
+2025/07/09
+Fixed elastic collisions being far more common than expected.
+
 ================================================================================
 EOF
 ================================================================================

@@ -27,6 +27,7 @@
 #ifndef P_INTER_H__
 #define P_INTER_H__
 
+struct emodmorph_t;
 struct player_t;
 class  Mobj;
 class  MetaTable;
@@ -41,18 +42,19 @@ enum
    LESSER_GOD_BREACH_DAMAGE = 1000, // this one bypasses less cases but is there (P_DamageMobj)
 };
 
-bool P_GiveAmmoPickup(player_t *, const itemeffect_t *, bool, int);
-bool P_GiveBody(player_t *, const itemeffect_t *);
-bool P_GiveArmor(player_t *, const itemeffect_t *);
+bool P_GiveAmmoPickup(player_t &, const itemeffect_t *, bool, int);
+bool P_GiveBody(player_t &, const itemeffect_t *);
+bool P_GiveArmor(player_t &, const itemeffect_t *);
 // MaxW 2016/07/23: P_GivePower is no longer required for external use;
 // previously it was used in m_cheats, but the CheatX powereffects mean
 // that P_GivePowerForItem can be used.
-bool P_GivePowerForItem(player_t *, const itemeffect_t *);
+bool P_GivePowerForItem(player_t &, const itemeffect_t *);
 
-bool P_GivePower(player_t *player, int power, int duration, bool permanent, bool additiveTime);
+bool P_GivePower(player_t &player, int power, int duration, bool permanent, bool additiveTime);
 void P_TouchSpecialThing(Mobj *special, Mobj *toucher);
 void P_DamageMobj(Mobj *target,Mobj *inflictor,Mobj *source,int damage,int mod);
 void P_DropItems(Mobj *actor, bool tossitems);
+bool P_MorphPlayer(const emodmorph_t &minfo, player_t &player);
 
 void P_Whistle(Mobj *actor, int mobjtype);
 
@@ -79,6 +81,8 @@ typedef enum
    INFLICTOR_MINOTAUR,  // minotaur charge
    INFLICTOR_WHIRLWIND, // whirlwinds
    INFLICTOR_MACEBALL,  // powered mace ball
+   INFLICTOR_PHOENIXFIRE,  // powered Phoenix fire
+   INFLICTOR_BOSSTELEPORT, // determine bosses like D'Sparil to teleport
    INFLICTOR_NUMTYPES
 } inflictor_type_e;
 

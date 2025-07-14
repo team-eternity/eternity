@@ -10,6 +10,7 @@
 //
 
 skin corvus {}
+skin chicken {}
 
 playerclass Corvus
 {
@@ -29,6 +30,25 @@ playerclass Corvus
    rebornitem AmmoWandCrystal, 50
    rebornitem Staff
    rebornitem GoldWand
+}
+
+playerclass Chicken
+{
+  defaultskin chicken
+  thingtype ChickenPlayer
+  initialhealth 30
+  maxhealth 30
+  superhealth 30
+  viewheight 21.0
+  speedfactor 1.220703125
+
+  weaponslot 1 { weapons : Beak}
+
+  +ChickenTwitch
+  +NoBob
+  +NoHealthAutoUse
+
+  rebornitem Beak
 }
 
 //=============================================================================
@@ -455,7 +475,7 @@ weaponinfo Gauntlets
 
   sisterweapon GauntletsPowered
 
-  flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM
+  flags        NOTHRUST|FLEEMELEE|SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM
   //mod          ""
   upsound      ht_gntact
 
@@ -513,6 +533,54 @@ weaponinfo GauntletsPowered : Gauntlets
   "@
 }
 
+weaponinfo Beak
+{
+  selectionorder 8.0
+  sisterweapon BeakPowered
+  fullscreenoffset 15
+
+  flags FLEEMELEE|SILENCEABLE
+
+  firstdecoratestate S_BEAKREADY
+  states
+  @"
+  Ready:
+    BEAK A 1 A_WeaponReady(WRF_NOBOB)
+    loop
+  Deselect:
+    BEAK A 1 A_Lower(128)
+    loop
+  Select:
+    BEAK A 1 A_Raise(128)
+    loop
+  Fire:
+  Hold:
+    BEAK A 0 A_WeaponSound(ht_chicpk)
+    BEAK A 0 A_CustomPlayerMelee(1, 4, 1, none, none, 64.0, HereticBeakPuff)
+    BEAK A 11 A_ViewThrust
+    BEAK A 0 A_WeaponSetTics(0, 8, constant)
+    goto Ready
+  "@
+}
+
+weaponinfo BeakPowered : Beak
+{
+  sisterweapon Beak
+
+  addflags POWEREDUP
+
+  firstdecoratestate S_BEAK2SOUND
+  states
+  @"
+  Fire:
+  Hold:
+    BEAK A 0 A_WeaponSound(ht_chicpk)
+    BEAK A 0 A_CustomPlayerMelee(4, 8, 1, none, none, 64.0, HereticBeakPuff)
+    BEAK A 9 A_ViewThrust
+    BEAK A 0 A_WeaponSetTics(0, 4, constant)
+    goto Ready
+  "@
+}
 
 //=============================================================================
 //

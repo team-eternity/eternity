@@ -55,6 +55,7 @@ GL_versioninfo GL_version;
 //
 // FIXME: unused?
 //
+#if 0
 static void GL_GetVersion()
 {
    const char *versionStr;
@@ -72,6 +73,7 @@ static void GL_GetVersion()
       GL_version.minorversion = minversion;
    }
 }
+#endif
 
 #endif
 

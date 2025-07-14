@@ -108,6 +108,14 @@ void SDLVideoDriver::FinishUpdate()
       // Don't bother checking for errors. It should just cancel itself in that case.
       SDL_BlitSurface(primary_surface, nullptr, rgba_surface, nullptr);
       SDL_UpdateTexture(sdltexture, nullptr, rgba_surface->pixels, rgba_surface->pitch);
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+#ifdef __arm64__
+      // Must clear the renderer on ARM Apple systems, otherwise we get random garbled view on the
+      // edges of the display when running fullscreen letterboxed. See this problem:
+      // https://discourse.libsdl.org/t/strange-bug-with-sdl2-on-mac-m1/52279
+      SDL_RenderClear(renderer);
+#endif
+#endif
       SDL_RenderCopyEx(renderer, sdltexture, nullptr, destrect, 90.0, nullptr, SDL_FLIP_VERTICAL);
    }
 

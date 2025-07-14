@@ -94,6 +94,7 @@ struct rendersector_t;
 struct seg_t;
 struct subsector_t;
 struct sector_t;
+struct viewpoint_t;
 
 int R_PointOnSideClassic(fixed_t x, fixed_t y, const node_t *node);
 int R_PointOnSidePrecise(fixed_t x, fixed_t y, const node_t *node);
@@ -106,7 +107,7 @@ angle_t R_PointToAngle(const fixed_t viewx, const fixed_t viewy, const fixed_t x
 angle_t R_PointToAngle2(fixed_t pviewx, fixed_t pviewy, fixed_t x, fixed_t y);
 subsector_t *R_PointInSubsector(fixed_t x, fixed_t y);
 fixed_t R_GetLerp(bool ignorepause);
-void R_SectorColormap(cmapcontext_t &context, const fixed_t viewz, const rendersector_t *s);
+void R_SectorColormap(cmapcontext_t &context, const viewpoint_t &viewpoint, const rendersector_t *s);
 
 inline static subsector_t *R_PointInSubsector(v2fixed_t v)
 {

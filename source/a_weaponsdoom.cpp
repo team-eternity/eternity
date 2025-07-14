@@ -33,6 +33,7 @@
 #include "doomstat.h"
 #include "d_gi.h"
 #include "d_mod.h"
+#include "e_args.h"
 #include "e_inventory.h"
 #include "e_player.h"
 #include "e_states.h"
@@ -151,7 +152,7 @@ void A_FireMissile(actionargs_t *actionargs)
    if(!player)
       return;
 
-   P_SubtractAmmo(player, 1);
+   P_SubtractAmmo(*player, 1);
 
    P_SpawnPlayerMissile(player->mo, E_SafeThingType(MT_ROCKET));
 }
@@ -170,8 +171,8 @@ void A_FireBFG(actionargs_t *actionargs)
    if(!player)
       return;
 
-   P_SubtractAmmo(player, BFGCELLS);
-   
+   P_SubtractAmmo(*player, BFGCELLS);
+
    mo = P_SpawnPlayerMissile(actionargs->actor, E_SafeThingType(MT_BFG));
    mo->extradata.bfgcount = BFGBOUNCE;   // for bouncing bfg - redundant
 }
@@ -216,12 +217,12 @@ void A_FireOldBFG(actionargs_t *actionargs)
    // WEAPON_FIXME: recoil for classic BFG
 
    if(weapon_recoil && !(mo->flags & MF_NOCLIP))
-      P_Thrust(player, ANG180 + mo->angle, 0, 512 * wp->recoil);
+      P_Thrust(*player, ANG180 + mo->angle, 0, 512 * wp->recoil);
 
    auto weapon   = player->readyweapon;
    auto ammoType = weapon->ammo;   
    if(ammoType && !(player->cheats & CF_INFAMMO))
-      E_RemoveInventoryItem(player, ammoType, wp->ammopershot);
+      E_RemoveInventoryItem(*player, ammoType, wp->ammopershot);
 
    if(LevelInfo.useFullBright) // haleyjd
       player->extralight = 2;
@@ -296,10 +297,10 @@ void A_FirePlasma(actionargs_t *actionargs)
    if(!player)
       return;
 
-   P_SubtractAmmo(player, 1);
+   P_SubtractAmmo(*player, 1);
 
-   A_FireSomething(player, P_Random(pr_plasma) & 1);
-   
+   A_FireSomething(*player, P_Random(pr_plasma) & 1);
+
    // sf: removed beta
    P_SpawnPlayerMissile(mo, E_SafeThingType(MT_PLASMA));
 }
@@ -335,9 +336,9 @@ void A_FirePistol(actionargs_t *actionargs)
 
    P_SetMobjState(mo, player->pclass->altattack);
 
-   P_SubtractAmmo(player, 1);
-   
-   A_FireSomething(player, 0); // phares
+   P_SubtractAmmo(*player, 1);
+
+   A_FireSomething(*player, 0); // phares
    P_BulletSlope(mo);
    P_GunShot(mo, !player->refire);
 }
@@ -357,10 +358,10 @@ void A_FireShotgun(actionargs_t *actionargs)
    P_WeaponSound(mo, sfx_shotgn);
    P_SetMobjState(mo, player->pclass->altattack);
    
-   P_SubtractAmmo(player, 1);
-   
-   A_FireSomething(player, 0); // phares
-   
+   P_SubtractAmmo(*player, 1);
+
+   A_FireSomething(*player, 0); // phares
+
    P_BulletSlope(mo);
    
    for(i = 0; i < 7; ++i)
@@ -382,10 +383,10 @@ void A_FireShotgun2(actionargs_t *actionargs)
    P_WeaponSound(mo, sfx_dshtgn);
    P_SetMobjState(mo, player->pclass->altattack);
 
-   P_SubtractAmmo(player, 2);
-   
-   A_FireSomething(player, 0); // phares
-   
+   P_SubtractAmmo(*player, 2);
+
+   A_FireSomething(*player, 0); // phares
+
    P_BulletSlope(mo);
    
    for(i = 0; i < 20; i++)
@@ -436,12 +437,12 @@ void A_FireCGun(actionargs_t *actionargs)
 
    P_WeaponSound(mo, sfx_chgun);
 
-   if(!P_WeaponHasAmmo(player, player->readyweapon))
+   if(!P_WeaponHasAmmo(*player, player->readyweapon))
       return;
    
    P_SetMobjState(mo, player->pclass->altattack);
    
-   P_SubtractAmmo(player, 1);
+   P_SubtractAmmo(*player, 1);
 
    // haleyjd 08/28/03: this is not safe for DeHackEd/EDF, so it
    // needs some modification to be safer
@@ -451,10 +452,10 @@ void A_FireCGun(actionargs_t *actionargs)
        psp->state->index < E_StateNumForDEHNum(S_CHAIN3)))
    {      
       // phares
-      A_FireSomething(player, psp->state->index - states[E_SafeState(S_CHAIN1)]->index);
+      A_FireSomething(*player, psp->state->index - states[E_SafeState(S_CHAIN1)]->index);
    }
    else
-      A_FireSomething(player, 0); // new default behavior
+      A_FireSomething(*player, 0); // new default behavior
    
    P_BulletSlope(mo);
    
@@ -469,6 +470,12 @@ void A_BFGBurst(actionargs_t *actionargs); // haleyjd
 // A_BFGSpray
 //
 // Spawn a BFG explosion on every monster in view
+// NB: Args only apply for vanilla BFG spray behaviour
+// * args[0] = type to spawn at position of each hit shootable thing
+// * args[1] = how many rays to spread
+// * args[2] = iterations used to calculate data per ray
+// * args[3] = horizontal field of view of spray
+// * args[4] = maximum distance for each tracer
 //
 void A_BFGSpray(actionargs_t *actionargs)
 {
@@ -488,29 +495,37 @@ void A_BFGSpray(actionargs_t *actionargs)
       break;
    }
 
+   int sprayType = E_ArgAsThingNumG0(actionargs->args, 0);
+   if(sprayType < 0)
+      sprayType = E_SafeThingType(MT_EXTRABFG);
+   const int     numRays     = E_ArgAsInt(actionargs->args,   1, 40);
+   const int     damageCount = E_ArgAsInt(actionargs->args,   2, 15);
+   const angle_t fov         = E_ArgAsAngle(actionargs->args, 3, ANG90);
+   const fixed_t maxDist     = E_ArgAsFixed(actionargs->args, 4, 16*64*FRACUNIT);
+
    Mobj *mo = actionargs->actor;
    
    for(int i = 0; i < 40; i++)  // offset angles from its attack angle
    {
       int j, damage;
-      angle_t an = mo->angle - ANG90/2 + ANG90/40*i;
+      angle_t an = mo->angle - fov/2 + fov/40*i;
       
       // mo->target is the originator (player) of the missile
       
       // killough 8/2/98: make autoaiming prefer enemies
       if(demo_version < 203 || 
-         (P_AimLineAttack(mo->target, an, 16*64*FRACUNIT, true),
+         (P_AimLineAttack(mo->target, an, maxDist, true),
          !clip.linetarget))
-         P_AimLineAttack(mo->target, an, 16*64*FRACUNIT, false);
+         P_AimLineAttack(mo->target, an, maxDist, false);
       
       if(!clip.linetarget)
          continue;
       
       P_SpawnMobj(clip.linetarget->x, clip.linetarget->y,
                   clip.linetarget->z + (clip.linetarget->height>>2), 
-                  E_SafeThingType(MT_EXTRABFG));
+                  sprayType);
       
-      for(damage = j = 0; j < 15; j++)
+      for(damage = j = 0; j < damageCount; j++)
          damage += (P_Random(pr_bfg)&7) + 1;
       
       P_DamageMobj(clip.linetarget, mo->target, mo->target, damage,

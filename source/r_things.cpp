@@ -314,6 +314,7 @@ void R_ClearBadSpritesAndFrames()
       }
       mobj->sprite = blankSpriteNum;
       mobj->frame  = 0;
+      // Do not refresh touching sprite list here, as it's called during rendering.
    }
 
    while(g_badFrameMobjs.try_dequeue(mobj))
@@ -330,6 +331,7 @@ void R_ClearBadSpritesAndFrames()
       }
       mobj->sprite = blankSpriteNum;
       mobj->frame  = 0;
+      // Neither here
    }
 }
 
@@ -662,9 +664,11 @@ void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHe
       {
          post->masked = zhstructalloc(heap, maskedrange_t, 1);
 
-         float *buf = zhmalloc(heap, float *, 2 * bounds.numcolumns * sizeof(float)); // THREAD_FIXME: May not be load-balance friendly?
+         // Need to allocate it by video.width, because it will only be managed by VALLOCATION when
+         // video width changes.
+         float *buf = zhmalloc(heap, float *, 2 * video.width * sizeof(float)); // THREAD_FIXME: May not be load-balance friendly?
          post->masked->ceilingclip = buf;
-         post->masked->floorclip   = buf + bounds.numcolumns;
+         post->masked->floorclip   = buf + video.width;
       }
 
       for(i = pstacksize - 1; i >= 0; i--)
@@ -1039,11 +1043,16 @@ static inline byte R_getDrawStyle(const Mobj *const thing, int *tranmaplump)
          return VS_DRAWSTYLE_ALPHA;
       else if(thing->flags & MF_TRANSLUCENT)
          return VS_DRAWSTYLE_TRANMAP;
-      else if(rTintTableIndex != -1 && thing->flags3 & MF3_GHOST)
+      else if(thing->flags3 & MF3_GHOST)
       {
-         if(tranmaplump)
-            *tranmaplump = rTintTableIndex;
-         return VS_DRAWSTYLE_TRANMAP;
+         if(rTintTableIndex != -1)
+         {
+            if(tranmaplump)
+               *tranmaplump = rTintTableIndex;
+            return VS_DRAWSTYLE_TRANMAP;
+         }
+         else
+            return VS_DRAWSTYLE_ALPHA;
       }
    }
 
@@ -1351,12 +1360,12 @@ static void R_projectSprite(cmapcontext_t &cmapcontext,
       auto &hsec = sectors[heightsec];
       int   phs  = view.sector->heightsec;
 
-      if(phs != -1 && viewpoint.z < sectors[phs].srf.floor.height ?
-         thing->z >= hsec.srf.floor.height : gzt < hsec.srf.floor.height)
+      if(phs != -1 && viewpoint.z < sectors[phs].srf.floor.getZAt(viewpoint.x, viewpoint.y) ?
+         thing->z >= hsec.srf.floor.getZAt(spritepos.x, spritepos.y) : gzt < hsec.srf.floor.getZAt(spritepos.x, spritepos.y))
          return;
-      if(phs != -1 && viewpoint.z > sectors[phs].srf.ceiling.height ?
-         gzt < hsec.srf.ceiling.height && viewpoint.z >= hsec.srf.ceiling.height :
-         thing->z >= hsec.srf.ceiling.height)
+      if(phs != -1 && viewpoint.z > sectors[phs].srf.ceiling.getZAt(viewpoint.x, viewpoint.y) ?
+         gzt < hsec.srf.ceiling.getZAt(spritepos.x, spritepos.y) && viewpoint.z >= hsec.srf.ceiling.getZAt(viewpoint.x, viewpoint.y) :
+         thing->z >= hsec.srf.ceiling.getZAt(spritepos.x, spritepos.y))
          return;
    }
 
@@ -1465,7 +1474,7 @@ static inline bool R_checkAndMarkSprite(spritecontext_t &spritecontext,
                                         const Mobj *const thing)
 {
    const size_t thing_hash = std::hash<const Mobj *>{}(thing) % NUMSPRITEMARKS;
-   drawnsprite_t *prevSprite;
+   drawnsprite_t *prevSprite = nullptr;
    drawnsprite_t *drawnSprite = spritecontext.drawnSpriteHash[thing_hash];
    if(drawnSprite)
    {
@@ -1481,6 +1490,7 @@ static inline bool R_checkAndMarkSprite(spritecontext_t &spritecontext,
       if(drawnSprite)
          return true;
 
+      I_Assert(prevSprite != nullptr, "prevSprite should have been set");
       prevSprite->next = zhstructalloc(heap, drawnsprite_t, 1);
       prevSprite->next->thing = thing;
    }
@@ -1529,7 +1539,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
 
    // Even though the default way of rendering isn't as "correct"
    // the single-threaded performance gains are too significant to ignore
-   if((r_numcontexts == 1 && r_sprprojstyle == R_SPRPROJSTYLE_DEFAULT) || r_sprprojstyle == R_SPRPROJSTYLE_FAST)
+   if(! R_NeedThoroughSpriteCollection())
    {
       // Handle all things in sector.
       for(const Mobj *thing = sec->thinglist; thing; thing = thing->snext)
@@ -1543,7 +1553,8 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
    else
    {
       // Handle all things in (and touching) sector that haven't already been drawn this BSP traversal.
-      for(const msecnode_t *sectorNode = sec->touching_thinglist; sectorNode; sectorNode = sectorNode->m_snext)
+      for(const msecnode_t *sectorNode = sec->touching_thinglist_by_sprites; sectorNode;
+		  sectorNode = sectorNode->m_snext)
       {
          const Mobj *const thing = sectorNode->m_thing;
 
@@ -1554,7 +1565,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
          // otherwise the lighting behaviour will look incorrect
          const lighttable_t *const *mobjspritelights;
          {
-            const int mobjlightlevel = R_FakeFlatSpriteLighting(viewpoint.z, thing->subsector->sector);
+            const int mobjlightlevel = R_FakeFlatSpriteLighting(viewpoint, thing->subsector->sector);
             const int mobjlightnum   = (mobjlightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
 
             if(mobjlightnum < 0)
@@ -1650,7 +1661,6 @@ static void R_drawPSprite(const pspdef_t *psp,
    flip = !!(sprframe->flip[0] ^ lefthanded);
 
    // calculate edges of the shape
-   codeptr_t playeraction = viewplayer->psprites[0].state->action ? viewplayer->psprites[0].state->action->codeptr : nullptr;
    v2fixed_t pspos;
    R_interpolatePSpritePosition(*psp, pspos);
 
@@ -1771,20 +1781,22 @@ void R_DrawPlayerSprites()
    int i, lightnum;
    const pspdef_t *psp;
    sector_t tmpsec;
+   Surfaces<pslope_t> tempslopes;
    int floorlightlevel, ceilinglightlevel;
    const lighttable_t *const *spritelights;
    
    // sf: psprite switch
    if(!showpsprites || viewcamera) return;
    
-   R_SectorColormap(r_globalcontext.cmapcontext, r_globalcontext.view.z, view.sector);
+   R_SectorColormap(r_globalcontext.cmapcontext, r_globalcontext.view, view.sector);
 
    // get light level
    // killough 9/18/98: compute lightlevel from floor and ceiling lightlevels
    // (see r_bsp.c for similar calculations for non-player sprites)
 
-   R_FakeFlat(r_globalcontext.view.z, view.sector, &tmpsec, &floorlightlevel, &ceilinglightlevel, 0);
-   lightnum = ((floorlightlevel+ceilinglightlevel) >> (LIGHTSEGSHIFT+1)) 
+   R_FakeFlat(r_globalcontext.view, view.sector, &tmpsec, tempslopes, &floorlightlevel,
+              &ceilinglightlevel, 0);
+   lightnum = ((floorlightlevel+ceilinglightlevel) >> (LIGHTSEGSHIFT+1))
                  + (extralight * LIGHTBRIGHT);
 
    if(lightnum < 0)
@@ -1949,7 +1961,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
          {
             r1 = ds->x1 < spr->x1 ? spr->x1 : ds->x1;
             r2 = ds->x2 > spr->x2 ? spr->x2 : ds->x2;
-            R_RenderMaskedSegRange(cmapcontext, viewpoint.z, ds, r1, r2);
+            R_RenderMaskedSegRange(cmapcontext, viewpoint, ds, r1, r2);
          }
          return;                // seg is behind sprite
       }
@@ -2024,14 +2036,17 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
    {
       float h, mh;
       
-      int phs = view.sector->heightsec;
+      const int phs = view.sector->heightsec;
 
-      mh = M_FixedToFloat(sectors[spr->heightsec].srf.floor.height) - cb_viewpoint.z;
-      if(sectors[spr->heightsec].srf.floor.height > spr->gz &&
+      fixed_t heightsecheight = sectors[spr->heightsec].srf.floor.getZAt(spr->gx, spr->gy);
+      fixed_t phsheight = phs >= 0 ? sectors[phs].srf.floor.getZAt(viewpoint.x, viewpoint.y) : 0;
+      
+      mh = M_FixedToFloat(heightsecheight) - cb_viewpoint.z;
+      if(heightsecheight > spr->gz &&
          (h = view.ycenter - (mh * spr->scale)) >= 0.0f &&
          (h < view.height))
       {
-         if(mh <= 0.0 || (phs != -1 && viewpoint.z > sectors[phs].srf.floor.height))
+         if(mh <= 0.0 || (phs != -1 && viewpoint.z > phsheight))
          {
             // clip bottom
             for(x = spr->x1; x <= spr->x2; x++)
@@ -2042,7 +2057,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
          }
          else  // clip top
          {
-            if(phs != -1 && viewpoint.z <= sectors[phs].srf.floor.height) // killough 11/98
+            if(phs != -1 && viewpoint.z <= phsheight) // killough 11/98
             {
                for(x = spr->x1; x <= spr->x2; x++)
                {
@@ -2053,12 +2068,15 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
          }
       }
 
-      mh = M_FixedToFloat(sectors[spr->heightsec].srf.ceiling.height) - cb_viewpoint.z;
-      if(sectors[spr->heightsec].srf.ceiling.height < spr->gzt &&
+      heightsecheight = sectors[spr->heightsec].srf.ceiling.getZAt(spr->gx, spr->gy);
+      phsheight = phs >= 0 ? sectors[phs].srf.ceiling.getZAt(viewpoint.x, viewpoint.y) : 0;
+      
+      mh = M_FixedToFloat(heightsecheight) - cb_viewpoint.z;
+      if(heightsecheight < spr->gzt &&
          (h = view.ycenter - (mh * spr->scale)) >= 0.0f &&
          (h < view.height))
       {
-         if(phs != -1 && viewpoint.z >= sectors[phs].srf.ceiling.height)
+         if(phs != -1 && viewpoint.z >= phsheight)
          {
             // clip bottom
             for(x = spr->x1; x <= spr->x2; x++)
@@ -2085,9 +2103,11 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
       float h, mh;
 
       sector_t *sector = sectors + spr->sector;
+      
+      fixed_t sectorheight = sector->srf.floor.getZAt(spr->gx, spr->gy);
 
-      mh = M_FixedToFloat(sector->srf.floor.height) - cb_viewpoint.z;
-      if(sector->srf.floor.pflags & PS_PASSABLE && sector->srf.floor.height > spr->gz)
+      mh = M_FixedToFloat(sectorheight) - cb_viewpoint.z;
+      if(sector->srf.floor.pflags & PS_PASSABLE && sectorheight > spr->gz)
       {
          h = eclamp(view.ycenter - (mh * spr->scale), 0.0f, view.height - 1);
 
@@ -2098,8 +2118,10 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
          }
       }
 
-      mh = M_FixedToFloat(sector->srf.ceiling.height) - cb_viewpoint.z;
-      if(sector->srf.ceiling.pflags & PS_PASSABLE && sector->srf.ceiling.height < spr->gzt)
+      sectorheight = sector->srf.ceiling.getZAt(spr->gx, spr->gy);
+      
+      mh = M_FixedToFloat(sectorheight) - cb_viewpoint.z;
+      if(sector->srf.ceiling.pflags & PS_PASSABLE && sectorheight < spr->gzt)
       {
          // Add +1 to avoid overdrawing with the bottomclip of the above part
          h = eclamp(view.ycenter - (mh * spr->scale) + 1, 0.0f, view.height - 1);
@@ -2219,7 +2241,7 @@ void R_DrawPostBSP(rendercontext_t &context)
          for(ds = drawsegs + lastds; ds-- > drawsegs + firstds; )  // new -- killough
          {
             if(ds->maskedtexturecol)
-               R_RenderMaskedSegRange(context.cmapcontext, context.view.z, ds, ds->x1, ds->x2);
+               R_RenderMaskedSegRange(context.cmapcontext, context.view, ds, ds->x1, ds->x2);
          }
          
          // Done with the masked range
@@ -2473,29 +2495,30 @@ void R_LinkSpriteProj(Mobj &thing)
    };
    
    PODCollection<item_t> queue;
-   size_t queuepos = 0;
 
    queue.add({nullptr, {thing.x, thing.y}, {0, 0, 0}, thing.groupid});
 
-   while(queuepos < queue.getLength())
+   for(size_t queuepos = 0; queuepos < queue.getLength(); queuepos++)
    {
-      const item_t &item = queue[queuepos++];
+      const item_t &outeritem = queue[queuepos];
       
       fixed_t bbox[4];
-      bbox[BOXTOP] = item.coord.y + maxradius;
-      bbox[BOXBOTTOM] = item.coord.y - maxradius;
-      bbox[BOXLEFT] = item.coord.x - maxradius;
-      bbox[BOXRIGHT] = item.coord.x + maxradius;
-      
-      int bx1 = eclamp((bbox[BOXLEFT] - bmaporgx) / MAPBLOCKSIZE, 0, bmapwidth - 1);
-      int bx2 = eclamp((bbox[BOXRIGHT] - bmaporgx) / MAPBLOCKSIZE, 0, bmapwidth - 1);
-      int by1 = eclamp((bbox[BOXBOTTOM] - bmaporgy) / MAPBLOCKSIZE, 0, bmapheight - 1);
-      int by2 = eclamp((bbox[BOXTOP] - bmaporgy) / MAPBLOCKSIZE, 0, bmapheight - 1);
-         
+      bbox[BOXTOP] = outeritem.coord.y + maxradius;
+      bbox[BOXBOTTOM] = outeritem.coord.y - maxradius;
+      bbox[BOXLEFT] = outeritem.coord.x - maxradius;
+      bbox[BOXRIGHT] = outeritem.coord.x + maxradius;
+
+      const int bx1 = eclamp((bbox[BOXLEFT]   - bmaporgx) / MAPBLOCKSIZE, 0, bmapwidth  - 1);
+      const int bx2 = eclamp((bbox[BOXRIGHT]  - bmaporgx) / MAPBLOCKSIZE, 0, bmapwidth  - 1);
+      const int by1 = eclamp((bbox[BOXBOTTOM] - bmaporgy) / MAPBLOCKSIZE, 0, bmapheight - 1);
+      const int by2 = eclamp((bbox[BOXTOP]    - bmaporgy) / MAPBLOCKSIZE, 0, bmapheight - 1);
+
       for(int by = by1; by <= by2; ++by)
       {
          for(int bx = bx1; bx <= bx2; ++bx)
          {
+            const item_t &item = queue[queuepos];
+
             int index = by * bmapwidth + bx;
             const PODCollection<portalblockentry_t> &list = gPortalBlockmap[index];
             for(const portalblockentry_t &entry : list)
@@ -2504,7 +2527,7 @@ void R_LinkSpriteProj(Mobj &thing)
                   continue;
                const line_t *line = entry.line;
                I_Assert(line, "No line found at %d!", index);
-               if(line->frontsector->groupid != item.groupid || P_BoxOnLineSide(bbox, line) != -1)
+               if(line->frontsector->groupid != item.groupid || P_LineIntersectsBox(line, bbox) == false)
                   continue;
                I_Assert(entry.ldata, "No linkdata at %d!", index);
                
@@ -2517,6 +2540,16 @@ void R_LinkSpriteProj(Mobj &thing)
                    checknode = checknode->dllNext)
                {
                   if((*checknode)->delta == newdelta) // FIXME: also check if line proj?
+                  {
+                     already = true;
+                     break;
+                  }
+
+                  // Check for a 1/256 epsilon
+                  constexpr fixed_t epsilon = (1 << (FRACBITS - 8));
+                  if(D_abs((*checknode)->delta.x - newdelta.x) < epsilon && 
+                     D_abs((*checknode)->delta.y - newdelta.y) < epsilon &&
+                     D_abs((*checknode)->delta.z - newdelta.z) < epsilon )
                   {
                      already = true;
                      break;
@@ -2712,8 +2745,8 @@ static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &sprit
       sector = subsector->sector;
       heightsec = sector->heightsec;
 
-      if(particle->z < sector->srf.floor.height ||
-	 particle->z > sector->srf.ceiling.height)
+      if(particle->z < sector->srf.floor.getZAt(particle->x, particle->y) ||
+	 particle->z > sector->srf.ceiling.getZAt(particle->x, particle->y))
 	 return;
    }
 
@@ -2723,16 +2756,16 @@ static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &sprit
       int phs = view.sector->heightsec;
 
       if(phs != -1 &&
-	 viewpoint.z < sectors[phs].srf.floor.height ?
-	 particle->z >= sectors[heightsec].srf.floor.height :
-         gzt < sectors[heightsec].srf.floor.height)
+	 viewpoint.z < sectors[phs].srf.floor.getZAt(viewpoint.x, viewpoint.y) ?
+	 particle->z >= sectors[heightsec].srf.floor.getZAt(particle->x, particle->y) :
+         gzt < sectors[heightsec].srf.floor.getZAt(particle->x, particle->y))
          return;
 
       if(phs != -1 &&
-	 viewpoint.z > sectors[phs].srf.ceiling.height ?
-	 gzt < sectors[heightsec].srf.ceiling.height &&
-	 viewpoint.z >= sectors[heightsec].srf.ceiling.height :
-         particle->z >= sectors[heightsec].srf.ceiling.height)
+	 viewpoint.z > sectors[phs].srf.ceiling.getZAt(viewpoint.x, viewpoint.y) ?
+	 gzt < sectors[heightsec].srf.ceiling.getZAt(particle->x, particle->y) &&
+	 viewpoint.z >= sectors[heightsec].srf.ceiling.getZAt(viewpoint.x, viewpoint.y) :
+         particle->z >= sectors[heightsec].srf.ceiling.getZAt(particle->x, particle->y))
          return;
    }
 
@@ -2765,7 +2798,7 @@ static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &sprit
    } 
    else
    {
-      R_SectorColormap(cmapcontext, viewpoint.z, sector);
+      R_SectorColormap(cmapcontext, viewpoint, sector);
 
       if(LevelInfo.useFullBright && (particle->styleflags & PS_FULLBRIGHT))
       {
@@ -2775,9 +2808,10 @@ static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &sprit
       {
          const lighttable_t *const *ltable;
          static thread_local rendersector_t tmpsec;
+         static thread_local Surfaces<pslope_t> tempslopes;
          int floorlightlevel, ceilinglightlevel, lightnum, index;
 
-         R_FakeFlat(viewpoint.z, sector, &tmpsec, &floorlightlevel, &ceilinglightlevel, false);
+         R_FakeFlat(viewpoint, sector, &tmpsec, tempslopes, &floorlightlevel, &ceilinglightlevel, false);
 
          lightnum = (floorlightlevel + ceilinglightlevel) / 2;
          lightnum = (lightnum >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);

@@ -570,8 +570,6 @@ static void MN_loadGameDrawer()
 
 static bool MN_loadGameResponder(event_t *ev, int action)
 {
-   int *menuSounds = GameModeInfo->menuSounds;
-
    if(MN_handleSaveDeleteInput(loadID, ev, action))
       return true;
 
@@ -810,8 +808,6 @@ static void MN_saveGameDrawer()
 
 static bool MN_saveGameResponder(event_t *ev, int action)
 {
-   int *menuSounds = GameModeInfo->menuSounds;
-
    if(ev->type == ev_keydown && typing_save_desc)
    {
       if(action == ka_menu_toggle) // cancel input

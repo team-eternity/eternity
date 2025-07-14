@@ -762,6 +762,8 @@ static menuitem_t mn_wadiwad1_items[] =
    {it_variable, "Evilution:",          "iwad_tnt",               nullptr, MENUITEM_LALIGNED },
    {it_variable, "Plutonia:",           "iwad_plutonia",          nullptr, MENUITEM_LALIGNED },
    {it_variable, "HACX:",               "iwad_hacx",              nullptr, MENUITEM_LALIGNED },
+   {it_gap},
+   {it_variable, "ID24 Resources:",     "pwad_id24res",           nullptr, MENUITEM_LALIGNED },
    {it_end}
 };
 
@@ -2649,6 +2651,7 @@ static menuitem_t mn_hud_items[] =
    {it_info,       "HUD Overlay options"},
    {it_toggle,     "Overlay type",                 "hu_overlayid"   },
    {it_toggle,     "Overlay layout",               "hu_overlaystyle"},
+   {it_toggle,     "Hide stats",                   "hu_hidestats"   },
    {it_toggle,     "Hide secrets",                 "hu_hidesecrets" },
    {it_end}
 };

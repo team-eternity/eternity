@@ -78,7 +78,7 @@
 //
 // haleyjd 06/22/13: Set psprite state from pspdef_t
 //
-void P_SetPspritePtr(const player_t *player, pspdef_t *psp, statenum_t stnum)
+void P_SetPspritePtr(const player_t &player, pspdef_t *psp, statenum_t stnum)
 {
    // haleyjd 06/22/13: rewrote again to use actionargs structure
    do
@@ -136,7 +136,7 @@ void P_SetPspritePtr(const player_t *player, pspdef_t *psp, statenum_t stnum)
          actionargs_t action;
 
          action.actiontype = actionargs_t::WEAPONFRAME;
-         action.actor      = player->mo;
+         action.actor      = player.mo;
          action.args       = state->args;
          action.pspr       = psp;
          action.aeonaction = state->action->aeonaction;
@@ -156,9 +156,9 @@ void P_SetPspritePtr(const player_t *player, pspdef_t *psp, statenum_t stnum)
 //
 // haleyjd 03/31/06: Removed static.
 //
-void P_SetPsprite(player_t *player, int position, statenum_t stnum)
+void P_SetPsprite(player_t &player, int position, statenum_t stnum)
 {
-   P_SetPspritePtr(player, &player->psprites[position], stnum);
+   P_SetPspritePtr(player, &player.psprites[position], stnum);
 }
 
 //
@@ -167,30 +167,31 @@ void P_SetPsprite(player_t *player, int position, statenum_t stnum)
 // Starts bringing the pending weapon up from the bottom of the screen.
 // Uses player.
 //
-static void P_BringUpWeapon(player_t *player)
+static void P_BringUpWeapon(player_t &player)
 {
    statenum_t newstate;
    
-   if(player->pendingweapon == nullptr)
+   if(player.pendingweapon == nullptr)
    {
-      player->pendingweapon = player->readyweapon;
-      player->pendingweaponslot = player->readyweaponslot;
+      player.pendingweapon = player.readyweapon;
+      player.pendingweaponslot = player.readyweaponslot;
    }
    
    weaponinfo_t *pendingweapon;
-   if((pendingweapon = player->pendingweapon))
+   if((pendingweapon = player.pendingweapon))
    {
+      pendingweapon = &E_TryPowered(player, *pendingweapon);
       // haleyjd 06/28/13: weapon upsound
       if(pendingweapon->upsound)
-         S_StartSoundName(player->mo, pendingweapon->upsound);
-  
+         S_StartSoundName(player.mo, pendingweapon->upsound);
+
       newstate = pendingweapon->upstate;
   
-      player->pendingweapon = nullptr;
-      player->pendingweaponslot = nullptr;
-   
+      player.pendingweapon = nullptr;
+      player.pendingweaponslot = nullptr;
+
       // killough 12/98: prevent pistol from starting visibly at bottom of screen:
-      player->psprites[ps_weapon].playpos.y = player->psprites[ps_weapon].renderpos.y = demo_version >= 203 ?
+      player.psprites[ps_weapon].playpos.y = player.psprites[ps_weapon].renderpos.y = demo_version >= 203 ?
          WEAPONBOTTOM+FRACUNIT*2 : WEAPONBOTTOM;
    
       P_SetPsprite(player, ps_weapon, newstate);
@@ -202,8 +203,9 @@ static void P_BringUpWeapon(player_t *player)
 //
 // haleyjd 08/05/13: Test if a player has ammo for a weapon
 //
-bool P_WeaponHasAmmo(const player_t *player, const weaponinfo_t *weapon)
+bool P_WeaponHasAmmo(const player_t &player, const weaponinfo_t *weapon)
 {
+   weapon = &E_TryPowered(player, *weapon);
    itemeffect_t *ammoType = weapon->ammo;
 
    // a weapon without an ammotype has infinite ammo
@@ -217,7 +219,7 @@ bool P_WeaponHasAmmo(const player_t *player, const weaponinfo_t *weapon)
 //
 // MaxW: 2018/01/03: Test if a player has alt ammo for a weapon
 //
-bool P_WeaponHasAmmoAlt(const player_t *player, const weaponinfo_t *weapon)
+bool P_WeaponHasAmmoAlt(const player_t &player, const weaponinfo_t *weapon)
 {
    itemeffect_t *ammoType = weapon->ammo_alt;
 
@@ -232,13 +234,13 @@ bool P_WeaponHasAmmoAlt(const player_t *player, const weaponinfo_t *weapon)
 //
 // Find the first weaponslot that isn't nullptr for a given player
 //
-static weaponslot_t *P_findFirstNonNullWeaponSlot(const player_t *player)
+static weaponslot_t *P_findFirstNonNullWeaponSlot(const player_t &player)
 {
    // Don't ask
    if(demo_version < 401)
-      return E_FindFirstWeaponSlot(player, player->readyweapon);
+      return E_FindFirstWeaponSlot(player, player.readyweapon);
 
-   for(weaponslot_t *&weaponslot : player->pclass->weaponslots)
+   for(weaponslot_t *&weaponslot : player.pclass->weaponslots)
    {
       if(weaponslot != nullptr)
          return weaponslot;
@@ -253,11 +255,11 @@ static weaponslot_t *P_findFirstNonNullWeaponSlot(const player_t *player)
 // haleyjd 05/31/14: Rewritten to use next and previous in cycle pointers
 // in weaponinfo_t, for friendliness with future dynamic weapons system.
 //
-int P_NextWeapon(const player_t *player, uint8_t *slotindex)
+int P_NextWeapon(const player_t &player, uint8_t *slotindex)
 {
-   const weaponinfo_t             *currentweapon = player->readyweapon;
-   const weaponinfo_t             *newweapon     = player->readyweapon;
-   const weaponslot_t             *newweaponslot = player->readyweaponslot;
+   const weaponinfo_t             *currentweapon = player.readyweapon;
+   const weaponinfo_t             *newweapon     = player.readyweapon;
+   const weaponslot_t             *newweaponslot = player.readyweaponslot;
    const BDListItem<weaponslot_t> *newweaponlink;
 
    if(newweaponslot == nullptr)
@@ -276,9 +278,9 @@ int P_NextWeapon(const player_t *player, uint8_t *slotindex)
          for(int i = (slotindex + 1) % NUMWEAPONSLOTS;
              i  != slotindex + 1 || firsttime; i = (i + 1) % NUMWEAPONSLOTS)
          {
-            if(player->pclass->weaponslots[i] != nullptr)
+            if(player.pclass->weaponslots[i] != nullptr)
             {
-               newweaponlink = E_LastInSlot(player->pclass->weaponslots[i]);
+               newweaponlink = E_LastInSlot(player.pclass->weaponslots[i]);
                newweapon = newweaponlink->bdObject->weapon;
                break;
             }
@@ -315,11 +317,11 @@ int P_NextWeapon(const player_t *player, uint8_t *slotindex)
 //
 // haleyjd 03/06/09: Like the above.
 //
-int P_PrevWeapon(const player_t *player, uint8_t *slotindex)
+int P_PrevWeapon(const player_t &player, uint8_t *slotindex)
 {
-   const weaponinfo_t             *currentweapon = player->readyweapon;
-   const weaponinfo_t             *newweapon     = player->readyweapon;
-   const weaponslot_t             *newweaponslot = player->readyweaponslot;
+   const weaponinfo_t             *currentweapon = player.readyweapon;
+   const weaponinfo_t             *newweapon     = player.readyweapon;
+   const weaponslot_t             *newweaponslot = player.readyweaponslot;
    const BDListItem<weaponslot_t> *newweaponlink;
 
    if(newweaponslot == nullptr)
@@ -338,9 +340,9 @@ int P_PrevWeapon(const player_t *player, uint8_t *slotindex)
          for(int i = slotindex == 0 ? NUMWEAPONSLOTS - 1 : slotindex - 1;
              i  != slotindex - 1 || firsttime; i = i == 0 ? NUMWEAPONSLOTS - 1 : i - 1)
          {
-            if(player->pclass->weaponslots[i] != nullptr)
+            if(player.pclass->weaponslots[i] != nullptr)
             {
-               newweaponlink = E_FirstInSlot(player->pclass->weaponslots[i]);
+               newweaponlink = E_FirstInSlot(player.pclass->weaponslots[i]);
                newweapon = newweaponlink->bdObject->weapon;
                break;
             }
@@ -385,14 +387,14 @@ static int weapon_preferences[NUMWEAPONS+1] =
 // this won't matter, because the raised weapon has no ammo anyway. When called
 // from G_BuildTiccmd you want to toggle to a different weapon regardless.
 //
-weapontype_t P_SwitchWeaponOldDoom(const player_t *player)
+weapontype_t P_SwitchWeaponOldDoom(const player_t &player)
 {
    const int *prefer = weapon_preferences; // killough 3/22/98
-   weapontype_t currentweapon = player->readyweapon->dehnum;
+   weapontype_t currentweapon = player.readyweapon->dehnum;
    weapontype_t newweapon = currentweapon;
    int i = NUMWEAPONS + 1;   // killough 5/2/98   
 
-   int clips   = E_GetItemOwnedAmountName(player, "AmmoClip"); 
+   int clips   = E_GetItemOwnedAmountName(player, "AmmoClip");
    int shells  = E_GetItemOwnedAmountName(player, "AmmoShell");
    int cells   = E_GetItemOwnedAmountName(player, "AmmoCell");
    int rockets = E_GetItemOwnedAmountName(player, "AmmoMissile");
@@ -402,7 +404,7 @@ weapontype_t P_SwitchWeaponOldDoom(const player_t *player)
       switch(*prefer++)
       {
       case 1:
-         if(!player->powers[pw_strength].isActive())  // allow chainsaw override
+         if(!player.powers[pw_strength].isActive())  // allow chainsaw override
             break;
       case 0:
          newweapon = wp_fist;
@@ -476,10 +478,10 @@ int P_WeaponPreferred(int w1, int w2)
 // If not, selects the next weapon to use.
 // (only in demo_compatibility mode -- killough 3/22/98)
 //
-bool P_CheckAmmo(player_t *player)
+bool P_CheckAmmo(player_t &player)
 {
    // Return if current ammunition sufficient.
-   if(P_WeaponHasAmmo(player, player->readyweapon))
+   if(P_WeaponHasAmmo(player, player.readyweapon))
       return true;
    
    // Out of ammo, pick a weapon to change to.
@@ -495,18 +497,18 @@ bool P_CheckAmmo(player_t *player)
    if(demo_version >= 401)
    {
       weaponinfo_t *temp = E_FindBestWeapon(player);
-      player->pendingweapon = temp;
-      player->pendingweaponslot = E_FindFirstWeaponSlot(player, temp);
+      player.pendingweapon = temp;
+      player.pendingweaponslot = E_FindFirstWeaponSlot(player, temp);
    }
    if(demo_compatibility)
    {
       if(vanilla_heretic)
-         player->pendingweapon = E_FindBestWeapon(player);
+         player.pendingweapon = E_FindBestWeapon(player);
       else
-         player->pendingweapon = E_WeaponForDEHNum(P_SwitchWeaponOldDoom(player));      // phares
+         player.pendingweapon = E_WeaponForDEHNum(P_SwitchWeaponOldDoom(player));      // phares
       // Now set appropriate weapon overlay.
       // WEAPON_FIXME
-      P_SetPsprite(player,ps_weapon,player->readyweapon->downstate);
+      P_SetPsprite(player,ps_weapon,player.readyweapon->downstate);
    }
      
    return false;
@@ -519,17 +521,17 @@ bool P_CheckAmmo(player_t *player)
 // Subtracts ammo from weapons in a uniform fashion. Unfortunately, this
 // operation is complicated by compatibility issues and extra features.
 //
-void P_SubtractAmmo(const player_t *player, int compat_amt)
+void P_SubtractAmmo(const player_t &player, int compat_amt)
 {
-   weaponinfo_t *weapon = player->readyweapon;
+   weaponinfo_t *weapon = player.readyweapon;
    itemeffect_t *ammo;
    int amount;
 
    // EDF_FEATURES_FIXME: Needs to fire the wimpy version's amount of ammo if in deathmatch, or at least
    // do it for Heretic.
-   if(demo_version >= 401 && (player->attackdown & AT_ITEM))
+   if(demo_version >= 401 && (player.attackdown & AT_ITEM))
       return;
-   else if(demo_version >= 401 && (player->attackdown & AT_SECONDARY))
+   else if(demo_version >= 401 && (player.attackdown & AT_SECONDARY))
    {
       ammo = weapon->ammo_alt;
       amount = (!(weapon->flags & WPF_DISABLEAPS) || compat_amt < 0) ? weapon->ammopershot_alt :
@@ -542,7 +544,7 @@ void P_SubtractAmmo(const player_t *player, int compat_amt)
                                                                        compat_amt;
    }
 
-   if(player->cheats & CF_INFAMMO || !ammo)
+   if(player.cheats & CF_INFAMMO || !ammo)
       return;
 
    
@@ -552,15 +554,14 @@ void P_SubtractAmmo(const player_t *player, int compat_amt)
 //
 // As above but it always subtracts a specific amount
 //
-void P_SubtractAmmoAmount(player_t *player, int amount)
+void P_SubtractAmmoAmount(player_t &player, int amount)
 {
-   weaponinfo_t *weapon = player->readyweapon;
+   weaponinfo_t *weapon = player.readyweapon;
    itemeffect_t *ammo;
-   bool          addAmmo = amount < 0;
 
-   if(demo_version >= 401 && (player->attackdown & AT_ITEM))
+   if(demo_version >= 401 && (player.attackdown & AT_ITEM))
       return;
-   else if(demo_version >= 401 && (player->attackdown & AT_SECONDARY))
+   else if(demo_version >= 401 && (player.attackdown & AT_SECONDARY))
    {
       ammo = weapon->ammo_alt;
       if(amount == INT_MIN)
@@ -573,10 +574,10 @@ void P_SubtractAmmoAmount(player_t *player, int amount)
          amount = weapon->ammopershot;
    }
 
-   if(player->cheats & CF_INFAMMO || !ammo)
+   if(player.cheats & CF_INFAMMO || !ammo)
       return;
 
-   if(addAmmo)
+   if(amount < 0)
       E_GiveInventoryItem(player, ammo, -amount);
    else
       E_RemoveInventoryItem(player, ammo, amount);
@@ -587,7 +588,7 @@ int lastshottic; // killough 3/22/98
 //
 // P_FireWeapon.
 //
-static void P_FireWeapon(player_t *player)
+static void P_FireWeapon(player_t &player)
 {
    statenum_t    newstate;
    weaponinfo_t *weapon;
@@ -595,17 +596,17 @@ static void P_FireWeapon(player_t *player)
    if(!P_CheckAmmo(player))
       return;
 
-   weapon = player->readyweapon;
+   weapon = player.readyweapon;
 
-   P_SetMobjState(player->mo, player->mo->info->missilestate);
-   newstate = player->refire && weapon->holdstate ? weapon->holdstate : weapon->atkstate;
+   P_SetMobjState(player.mo, player.mo->info->missilestate);
+   newstate = player.refire && weapon->holdstate ? weapon->holdstate : weapon->atkstate;
    P_SetPsprite(player, ps_weapon, newstate);
 
    // haleyjd 04/06/03: silencer powerup
    // haleyjd 09/14/07: per-weapon silencer, always silent support
-   if(!(weapon->flags & WPF_SILENCEABLE && player->powers[pw_silencer].isActive()) &&
+   if(!(weapon->flags & WPF_SILENCEABLE && player.powers[pw_silencer].isActive()) &&
       !(weapon->flags & WPF_SILENT))
-      P_NoiseAlert(player->mo, player->mo);
+      P_NoiseAlert(player.mo, player.mo);
 
    lastshottic = gametic;                       // killough 3/22/98
 }
@@ -613,24 +614,24 @@ static void P_FireWeapon(player_t *player)
 //
 // Do a weapon's alt fire
 //
-static void P_fireWeaponAlt(player_t *player)
+static void P_fireWeaponAlt(player_t &player)
 {
    statenum_t    newstate;
-   weaponinfo_t *weapon = player->readyweapon;
+   weaponinfo_t *weapon = player.readyweapon;
 
    if(!P_WeaponHasAmmoAlt(player, weapon) || !E_WeaponHasAltFire(weapon))
       return;
 
-   P_SetMobjState(player->mo, player->mo->info->missilestate);
-   newstate = player->refire && weapon->holdstate_alt ? weapon->holdstate_alt :
+   P_SetMobjState(player.mo, player.mo->info->missilestate);
+   newstate = player.refire && weapon->holdstate_alt ? weapon->holdstate_alt :
                                                         weapon->atkstate_alt;
    P_SetPsprite(player, ps_weapon, newstate);
 
    // haleyjd 04/06/03: silencer powerup
    // haleyjd 09/14/07: per-weapon silencer, always silent support
-   if(!(weapon->flags & WPF_SILENCEABLE && player->powers[pw_silencer].isActive()) &&
+   if(!(weapon->flags & WPF_SILENCEABLE && player.powers[pw_silencer].isActive()) &&
       !(weapon->flags & WPF_SILENT))
-      P_NoiseAlert(player->mo, player->mo);
+      P_NoiseAlert(player.mo, player.mo);
 
    lastshottic = gametic;                       // killough 3/22/98
 }
@@ -645,7 +646,7 @@ static bool P_executeWeaponState(player_t *player, const int weaponinfo_t::*stat
       return false;
 
    P_SetMobjState(player->mo, player->mo->info->missilestate);
-   P_SetPsprite(player, ps_weapon, statenum);
+   P_SetPsprite(*player, ps_weapon, statenum);
    return true;
 }
 
@@ -653,13 +654,13 @@ static bool P_executeWeaponState(player_t *player, const int weaponinfo_t::*stat
 // Try to execute a weapon states if the user inputs that.
 // Returns true if a state is executed, and false otherwise.
 //
-static bool P_tryExecuteWeaponState(player_t *player, pspdef_t *psp)
+static bool P_tryExecuteWeaponState(player_t &player, pspdef_t *psp)
 {
-   if(player->cmd.buttons & BT_ATTACK)
+   if(player.cmd.buttons & BT_ATTACK)
    {
-      if(!(player->attackdown & AT_ALL) || !(player->readyweapon->flags & WPF_NOAUTOFIRE))
+      if(!(player.attackdown & AT_ALL) || !(player.readyweapon->flags & WPF_NOAUTOFIRE))
       {
-         player->attackdown = AT_PRIMARY;
+         player.attackdown = AT_PRIMARY;
          P_FireWeapon(player);
          if(centerfire)
          {
@@ -669,11 +670,11 @@ static bool P_tryExecuteWeaponState(player_t *player, pspdef_t *psp)
          return true;
       }
    }
-   else if(player->cmd.buttons & BTN_ATTACK_ALT && E_WeaponHasAltFire(player->readyweapon))
+   else if(player.cmd.buttons & BTN_ATTACK_ALT && E_WeaponHasAltFire(player.readyweapon))
    {
-      if(!(player->attackdown & AT_ALL) || !(player->readyweapon->flags & WPF_NOAUTOFIRE))
+      if(!(player.attackdown & AT_ALL) || !(player.readyweapon->flags & WPF_NOAUTOFIRE))
       {
-         player->attackdown = AT_SECONDARY;
+         player.attackdown = AT_SECONDARY;
          P_fireWeaponAlt(player);
          if(centerfire)
          {
@@ -684,20 +685,20 @@ static bool P_tryExecuteWeaponState(player_t *player, pspdef_t *psp)
       }
    }
    else
-      player->attackdown = AT_NONE;
+      player.attackdown = AT_NONE;
 
-   if(player->cmd.actions & AC_RELOAD)
-      return P_executeWeaponState(player, &weaponinfo_t::reloadstate);
-   else if(player->cmd.actions & AC_ZOOM)
-      return P_executeWeaponState(player, &weaponinfo_t::zoomstate);
-   else if(player->cmd.actions & AC_USER1)
-      return P_executeWeaponState(player, &weaponinfo_t::userstate_1);
-   else if(player->cmd.actions & AC_USER2)
-      return P_executeWeaponState(player, &weaponinfo_t::userstate_2);
-   else if(player->cmd.actions & AC_USER3)
-      return P_executeWeaponState(player, &weaponinfo_t::userstate_3);
-   else if(player->cmd.actions & AC_USER4)
-      return P_executeWeaponState(player, &weaponinfo_t::userstate_4);
+   if(player.cmd.actions & AC_RELOAD)
+      return P_executeWeaponState(&player, &weaponinfo_t::reloadstate);
+   else if(player.cmd.actions & AC_ZOOM)
+      return P_executeWeaponState(&player, &weaponinfo_t::zoomstate);
+   else if(player.cmd.actions & AC_USER1)
+      return P_executeWeaponState(&player, &weaponinfo_t::userstate_1);
+   else if(player.cmd.actions & AC_USER2)
+      return P_executeWeaponState(&player, &weaponinfo_t::userstate_2);
+   else if(player.cmd.actions & AC_USER3)
+      return P_executeWeaponState(&player, &weaponinfo_t::userstate_3);
+   else if(player.cmd.actions & AC_USER4)
+      return P_executeWeaponState(&player, &weaponinfo_t::userstate_4);
 
    return false;
 }
@@ -707,9 +708,9 @@ static bool P_tryExecuteWeaponState(player_t *player, pspdef_t *psp)
 //
 // Player died, so put the weapon away.
 //
-void P_DropWeapon(player_t *player)
+void P_DropWeapon(player_t &player)
 {
-   P_SetPsprite(player, ps_weapon, player->readyweapon->downstate);
+   P_SetPsprite(player, ps_weapon, player.readyweapon->downstate);
 }
 
 //=============================================================================
@@ -725,12 +726,12 @@ void P_DropWeapon(player_t *player)
 // haleyjd 09/16/07:
 // Gets weapon at given index for the given player.
 //
-weaponinfo_t *P_GetPlayerWeapon(const player_t *player, int slot)
+weaponinfo_t *P_GetPlayerWeapon(const player_t &player, int slot)
 {
    if(demo_version < 401 && GameModeInfo->type == Game_DOOM)
       return E_WeaponForDEHNum(slot);
 
-   if(!player->pclass->weaponslots[slot])
+   if(!player.pclass->weaponslots[slot])
       return nullptr;
 
    // Backup demo compat code, in case something goes *really*
@@ -745,12 +746,12 @@ weaponinfo_t *P_GetPlayerWeapon(const player_t *player, int slot)
 
    bool hit = false;
    BDListItem<weaponslot_t> *weaponslot, *baseslot;
-   const auto *wp = E_IsPoweredVariant(player->readyweapon) ?
-                    player->readyweapon->sisterWeapon : player->readyweapon;
+   const auto *wp = E_IsPoweredVariant(player.readyweapon) ?
+                    player.readyweapon->sisterWeapon : player.readyweapon;
 
    if(!weapon_hotkey_cycling)
    {
-      weaponslot = E_LastInSlot(player->pclass->weaponslots[slot]);
+      weaponslot = E_LastInSlot(player.pclass->weaponslots[slot]);
       if(!E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
          return nullptr;
       else
@@ -759,7 +760,7 @@ weaponinfo_t *P_GetPlayerWeapon(const player_t *player, int slot)
 
    // This initial call assures us that
    // player->pclass->weaponslots[slot]->bdNext is valid.
-   baseslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
+   baseslot = E_FirstInSlot(player.pclass->weaponslots[slot]);
 
    // Try finding the player's currently-equipped weapon.
    while(!baseslot->isDummy())
@@ -857,18 +858,27 @@ void A_WeaponReady(actionargs_t *actionargs)
    player_t *player;
    pspdef_t *psp;
 
+   static const unsigned WRF_NOBOB = 1;
+   static dehflags_t flaglist[] =
+   {
+      { "WRF_NOBOB", WRF_NOBOB },
+   };
+   static dehflagset_t flagset = { flaglist, 0 };
+
    if(!(player = mo->player))
       return;
 
    if(!(psp = actionargs->pspr))
       return;
 
+   unsigned flags = E_ArgAsFlags(actionargs->args, 0, &flagset);
+
    // EDF_FEATURES_FIXME: Demo guard this as well?
-   if(!player->pendingweapon && !E_PlayerOwnsWeapon(player, player->readyweapon) &&
+   if(!player->pendingweapon && !E_PlayerOwnsWeapon(*player, player->readyweapon) &&
       player->readyweapon->id != UnknownWeaponInfo)
    {
-      player->pendingweapon = E_FindBestWeapon(player);
-      player->pendingweaponslot = E_FindFirstWeaponSlot(player, player->pendingweapon);
+      player->pendingweapon = E_FindBestWeapon(*player);
+      player->pendingweaponslot = E_FindFirstWeaponSlot(*player, player->pendingweapon);
    }
 
    // get out of attack state
@@ -900,7 +910,7 @@ void A_WeaponReady(actionargs_t *actionargs)
    {
       // change weapon (pending weapon should already be validated)
       statenum_t newstate = player->readyweapon->downstate;
-      P_SetPsprite(player, ps_weapon, newstate);
+      P_SetPsprite(*player, ps_weapon, newstate);
       return;
    }
 
@@ -908,7 +918,7 @@ void A_WeaponReady(actionargs_t *actionargs)
    // certain weapons do not auto fire
    if(demo_version >= 401)
    {
-      if(P_tryExecuteWeaponState(player, psp))
+      if(P_tryExecuteWeaponState(*player, psp))
          return;
    }
    else if(player->cmd.buttons & BT_ATTACK)
@@ -916,7 +926,7 @@ void A_WeaponReady(actionargs_t *actionargs)
       if(!(player->attackdown & AT_PRIMARY) || !(player->readyweapon->flags & WPF_NOAUTOFIRE))
       {
          player->attackdown = AT_PRIMARY;
-         P_FireWeapon(player);
+         P_FireWeapon(*player);
          if(centerfire)
          {
             psp->renderpos = { FRACUNIT, WEAPONTOP };
@@ -929,10 +939,13 @@ void A_WeaponReady(actionargs_t *actionargs)
       player->attackdown = AT_NONE;
 
    // bob the weapon based on movement speed
-   int angle = (128*leveltime) & FINEMASK;
-   psp->playpos.x = psp->renderpos.x = FRACUNIT + FixedMul(player->bob, finecosine[angle]);
-   angle &= FINEANGLES/2-1;
-   psp->playpos.y = psp->renderpos.y = WEAPONTOP + FixedMul(player->bob, finesine[angle]);
+   if(!(flags & WRF_NOBOB))
+   {
+      int angle = (128*leveltime) & FINEMASK;
+      psp->playpos.x = psp->renderpos.x = FRACUNIT + FixedMul(player->bob, finecosine[angle]);
+      angle &= FINEANGLES/2-1;
+      psp->playpos.y = psp->renderpos.y = WEAPONTOP + FixedMul(player->bob, finesine[angle]);
+   }
 }
 
 static void A_reFireNew(actionargs_t *actionargs)
@@ -949,18 +962,18 @@ static void A_reFireNew(actionargs_t *actionargs)
        player->health && !(player->attackdown & AT_SECONDARY))
    {
       player->refire++;
-      P_FireWeapon(player);
+      P_FireWeapon(*player);
    }
    else if((player->cmd.buttons & BTN_ATTACK_ALT) && player->pendingweapon == nullptr &&
             player->health && !(player->attackdown & AT_PRIMARY))
    {
       player->refire++;
-      P_fireWeaponAlt(player);
+      P_fireWeaponAlt(*player);
    }
    else
    {
       player->refire = 0;
-      P_CheckAmmo(player);
+      P_CheckAmmo(*player);
    }
 }
 
@@ -990,12 +1003,12 @@ void A_ReFire(actionargs_t *actionargs)
       && player->pendingweapon == nullptr && player->health)
    {
       player->refire++;
-      P_FireWeapon(player);
+      P_FireWeapon(*player);
    }
    else
    {
       player->refire = 0;
-      P_CheckAmmo(player);
+      P_CheckAmmo(*player);
    }
 }
 
@@ -1015,8 +1028,8 @@ void A_CheckReload(actionargs_t *actionargs)
    if(!player)
       return;
 
-   if(!P_CheckAmmo(player) && demo_version >= 331)
-      P_SetPsprite(player, ps_weapon, player->readyweapon->downstate);
+   if(!P_CheckAmmo(*player) && demo_version >= 331)
+      P_SetPsprite(*player, ps_weapon, player->readyweapon->downstate);
 }
 
 //
@@ -1057,18 +1070,18 @@ void A_Lower(actionargs_t *actionargs)
 
    if(!player->health)
    {      // Player is dead, so keep the weapon off screen.
-      P_SetPsprite(player,  ps_weapon, NullStateNum);
+      P_SetPsprite(*player,  ps_weapon, NullStateNum);
       return;
    }
 
    // haleyjd 03/28/10: do not assume pendingweapon is valid
    if(player->pendingweapon != nullptr)
    {
-      player->readyweapon = player->pendingweapon;
+      player->readyweapon = &E_TryPowered(*player, *player->pendingweapon);
       player->readyweaponslot = player->pendingweaponslot;
    }
 
-   P_BringUpWeapon(player);
+   P_BringUpWeapon(*player);
 }
 
 //
@@ -1102,7 +1115,7 @@ void A_Raise(actionargs_t *actionargs)
 
    newstate = player->readyweapon->readystate;
 
-   P_SetPsprite(player, ps_weapon, newstate);
+   P_SetPsprite(*player, ps_weapon, newstate);
 }
 
 //
@@ -1110,24 +1123,24 @@ void A_Raise(actionargs_t *actionargs)
 //
 // haleyjd 12/11/12: Separated out of the below.
 //
-void P_WeaponRecoil(player_t *player)
+void P_WeaponRecoil(player_t &player)
 {
-   weaponinfo_t *readyweapon = player->readyweapon;
+   weaponinfo_t *readyweapon = player.readyweapon;
 
    // killough 3/27/98: prevent recoil in no-clipping mode
-   if(!(player->mo->flags & MF_NOCLIP))
+   if(!(player.mo->flags & MF_NOCLIP))
    {
       // haleyjd 08/18/08: added ALWAYSRECOIL weapon flag; recoil in weaponinfo
       if(readyweapon->flags & WPF_ALWAYSRECOIL ||
          (weapon_recoil && (demo_version >= 203 || !compatibility)))
       {
          // MaxW: 2018/11/04: Changed to allow for fixed-point recoil
-         P_Thrust(player, ANG180 + player->mo->angle, 0, readyweapon->recoil / 32);
+         P_Thrust(player, ANG180 + player.mo->angle, 0, readyweapon->recoil / 32);
       }
    }
 
    // haleyjd 06/05/13: if weapon is flagged for it, do haptic recoil effect here.
-   if(player == &players[consoleplayer] && (readyweapon->flags & WPF_NOHAPTICRECOIL) == 0)
+   if(&player == &players[consoleplayer] && (readyweapon->flags & WPF_NOHAPTICRECOIL) == 0)
       I_StartHaptic(HALHapticInterface::EFFECT_FIRE, readyweapon->hapticrecoil, readyweapon->haptictime);
 }
 
@@ -1140,13 +1153,13 @@ void P_WeaponRecoil(player_t *player)
 //
 // WEAPON_FIXME: "adder" parameter is not reliable for EDF editing
 //
-void A_FireSomething(player_t* player, int adder)
+void A_FireSomething(player_t& player, int adder)
 {
-   if(demo_version >= 401 && player->attackdown & AT_SECONDARY)
-      P_SetPsprite(player, ps_flash, player->readyweapon->flashstate_alt);
+   if(demo_version >= 401 && player.attackdown & AT_SECONDARY)
+      P_SetPsprite(player, ps_flash, player.readyweapon->flashstate_alt);
    else
-      P_SetPsprite(player, ps_flash, player->readyweapon->flashstate+adder);
- 
+      P_SetPsprite(player, ps_flash, player.readyweapon->flashstate+adder);
+
    P_WeaponRecoil(player);
 }
 
@@ -1163,7 +1176,7 @@ void A_GunFlash(actionargs_t *actionargs)
 
    P_SetMobjState(actionargs->actor, player->pclass->altattack);
    
-   A_FireSomething(player, 0);                               // phares
+   A_FireSomething(*player, 0);                               // phares
 }
 
 //=============================================================================
@@ -1271,15 +1284,15 @@ void A_Light2(actionargs_t *actionargs)
 //
 // Called at start of level for each player.
 //
-void P_SetupPsprites(player_t *player)
+void P_SetupPsprites(player_t &player)
 {
    // remove all psprites
-   for(pspdef_t &psprite : player->psprites)
+   for(pspdef_t &psprite : player.psprites)
       psprite.state = nullptr;
 
    // spawn the gun
-   player->pendingweapon     = player->readyweapon;
-   player->pendingweaponslot = player->readyweaponslot;
+   player.pendingweapon     = player.readyweapon;
+   player.pendingweaponslot = player.readyweaponslot;
    P_BringUpWeapon(player);
 }
 
@@ -1288,28 +1301,28 @@ void P_SetupPsprites(player_t *player)
 //
 // Called every tic by player thinking routine.
 //
-void P_MovePsprites(player_t *player)
+void P_MovePsprites(player_t &player)
 {
-   pspdef_t *psp = player->psprites;
+   pspdef_t *psp = player.psprites;
    int i;
 
    // a null state means not active
    // drop tic count and possibly change state
    // a -1 tic count never changes
 
-   player->psprites[ps_weapon].backupPosition();
-   player->psprites[ps_flash].backupPosition();
-   
+   player.psprites[ps_weapon].backupPosition();
+   player.psprites[ps_flash].backupPosition();
+
    for(i = 0; i < NUMPSPRITES; ++i, ++psp)
    {
       if(psp->state && psp->tics != -1 && !--psp->tics)
          P_SetPsprite(player, i, psp->state->nextstate);
    }
    
-   player->psprites[ps_flash].playpos   = player->psprites[ps_weapon].playpos;
-   player->psprites[ps_flash].renderpos = player->psprites[ps_weapon].renderpos;
+   player.psprites[ps_flash].playpos   = player.psprites[ps_weapon].playpos;
+   player.psprites[ps_flash].renderpos = player.psprites[ps_weapon].renderpos;
    // also preserve interpolation
-   player->psprites[ps_flash].prevpos   = player->psprites[ps_weapon].prevpos;
+   player.psprites[ps_flash].prevpos   = player.psprites[ps_weapon].prevpos;
 }
 
 //===============================
@@ -1408,15 +1421,15 @@ void A_FireCustomBullets(actionargs_t *actionargs)
    P_SetMobjState(mo, player->pclass->altattack);
 
    // subtract ammo amount
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
 
    // have a flash state?
    if(flashint >= 0 && flashstate != NullStateNum)
-      P_SetPsprite(player, ps_flash, flashstate);
+      P_SetPsprite(*player, ps_flash, flashstate);
    else if(flashint == 0) // zero means default behavior
-      P_SetPsprite(player, ps_flash, player->readyweapon->flashstate);
+      P_SetPsprite(*player, ps_flash, player->readyweapon->flashstate);
 
-   P_WeaponRecoil(player);
+   P_WeaponRecoil(*player);
 
    P_BulletSlope(mo);
 
@@ -1518,7 +1531,7 @@ void A_FirePlayerMissile(actionargs_t *actionargs)
 
    // decrement ammo if appropriate
    if(!(flags & FIREPLAYERMISSILE_NOAMMO))
-      P_SubtractAmmo(player, -1);
+      P_SubtractAmmo(*player, -1);
 
    mo = P_SpawnPlayerMissile(actor, thingnum);
 
@@ -1599,7 +1612,7 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
       damage *= berzerkmul;
 
    // decrement ammo if appropriate
-   P_SubtractAmmo(player, -1);
+   P_SubtractAmmo(*player, -1);
 
    angle = player->mo->angle;
 
@@ -1745,7 +1758,7 @@ void A_PlayerThunk(actionargs_t *actionargs)
 
    // if ammo should be used, subtract it now
    if(useammo)
-      P_SubtractAmmo(player, -1);
+      P_SubtractAmmo(*player, -1);
 
    actionargs_t thunkargs;
    thunkargs.actiontype = actionargs_t::WEAPONFRAME;

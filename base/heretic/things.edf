@@ -1318,10 +1318,13 @@ thingtype SerpentRiderDsparil : ClassicHereticSolid, 7007, 355
   attacksound     ht_bstatk
   painsound       ht_sbtpai
   deathsound      ht_sbtdth
-  addflags        SHOOTABLE|COUNTKILL|BOSS|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  addflags        SHOOTABLE|COUNTKILL|BOSS|FOOTCLIP|DMGIGNORED|SPACMONSTER|PASSMOBJ
   nukespecial     SorcNukeSpec
   obituary_normal "was burned by D'Sparil's serpent"
   obituary_melee  "was devoured by D'Sparil's serpent"
+
+  damagefactor    PoweredHellStaffRain, 0.2, rounded
+
   acs_spawndata
   {
     num   142
@@ -1411,6 +1414,9 @@ thingtype Dsparil : ClassicHereticSolid, -1, 357
   addflags        SHOOTABLE|DROPOFF|COUNTKILL|E3M8BOSS|BOSS|FOOTCLIP|LOUDACTIVE|DMGIGNORED|BOSSIGNORE|SPACMONSTER|PASSMOBJ
   obituary_normal "brought about the end of Parthoris"
   obituary_melee  "utterly failed to save Parthoris"
+
+  damagefactor    PoweredHellStaffRain, 0.2, rounded
+
   acs_spawndata
   {
     num   143
@@ -1747,6 +1753,9 @@ thingtype Maulotaur : ClassicHereticSolid, 7009, 371
   obituary_melee  "was pounded flat by the Maulotaur"
   dropitem        HAmmoPhoenixWimpy, 84, 10, +toss
   dropitem        HArtiSuperHeal,    51,  0, +toss
+
+  damagefactor    PoweredHellStaffRain, 0.2, rounded
+
   acs_spawndata
   {
     num   114     // note: different from zdoom
@@ -1928,6 +1937,12 @@ thingtype IronLich : ClassicHereticSolid, 7006, 376
   obituary_melee  "was bitten by the Iron Lich"
   dropitem        HArtiEgg,          51,  0, +toss
   dropitem        HAmmoBlasterWimpy, 84, 10, +toss
+
+  // These values will result in 0-1 damage equally distributed, with 0
+  // meaning no effect at all.
+  damagefactor    PoweredDragonClawImpact, 0.0588, rounded
+  damagefactor    PoweredDragonClawRip,    0.1429, rounded
+
   acs_spawndata
   {
     num   20
@@ -2858,6 +2873,7 @@ thingtype HereticRipper : HereticMissile, -1, 422
   radius     8.0
   height     6.0
   damage     1
+  mod        PoweredDragonClawRip
   addflags   RIP
 
   firstdecoratestate S_HRIPPER1
@@ -2928,37 +2944,6 @@ thingtype HereticHornRodFX1 : HereticMissile, -1, 425
   "@
 }
 
-thingtype HereticHornRodFX2 : HereticMissile, -1, 444
-{
-  compatname HornRodFX2
-  spawnhealth 140
-  speed 22.0
-  radius 12.0
-  height 8.0
-  damage 10
-  seesound ht_hrnsht
-  deathsound ht_ramphit
-
-  firstdecoratestate S_HRODFX2_1
-  states
-  @"
-  Spawn:
-    FX00 C 3 bright
-    FX00 D 3 bright A_SkullRodPL2Seek
-    FX00 E 3 bright
-    FX00 F 3 bright A_SkullRodPL2Seek
-    loop
-  Death:
-    FX00 H 5 bright A_AddPlayerRain
-    FX00 I 5 bright
-    FX00 J 4 bright
-    FX00 KLM 3 bright
-    FX00 G 1 A_HideInCeiling
-    FX00 G 1 A_SkullRodStorm
-    goto Death+7
-  "@
-}
-
 thingtype HereticGoldWandFX1 : HereticMissile, -1, 426
 {
   compatname GoldWandFX1
@@ -3024,6 +3009,7 @@ thingtype HereticPhoenixFX1 : HereticMissile, -1, 430
   radius     11.0
   height     8.0
   damage     20
+  dmgspecial BossTeleport
   seesound   ht_phosht
   deathsound ht_phohit
   addflags   THRUGHOST
@@ -3043,58 +3029,58 @@ thingtype HereticPhoenixFX1 : HereticMissile, -1, 430
   "@
 }
 
-thingtype HereticBlasterFX1 : HereticMissile, -1, 443
+//
+// Fire Mace
+//
+// The fire mace weapon has very special behavior in that it spawns randomly at
+// a given spot in the map, and in single player, may not spawn at all.
+//
+
+thingtype HereticMaceSpot : Mobj, 7202, 431
 {
-  compatname BlasterFX1
-  speed 184.0
-  radius 12.0
-  height 8.0
-  damage 2
-  missiletype RavenFast
-
-  trail.type HereticBlasterSmoke
-  trail.zoffset -8
-  trail.spawnchance 63
-  trail.sparsity 1
-
-  deathsound ht_blshit
-
-  firstdecoratestate S_BLASTERFX1_1
+  compatname MaceSpawner
+  cflags     NOTSHAREWARE
+   
+  collectionspawn HWeaponFireMace, 64, 64
+   
   states
   @"
   Spawn:
-    ACLO E 200
-    loop
-  Death:
-    FX18 A 3 bright A_SpawnRippers
-    FX18 B 3 bright
-    FX18 CDEFG 4 bright
+    TNT1 A -1
     stop
   "@
 }
 
-thingtype HereticPhoenixFX2 : HereticMissile, -1, 442
+thingtype HWeaponFireMace : HereticPickup, -1, 432
 {
-  compatname PhoenixFX2
-  speed      10.0
-  radius     6.0
-  height     8.0
-  damage     2
-  addflags   FIREDAMAGE
+  compatname    Mace
+  itemrespawnat HereticMaceSpot
 
-  //firstdecoratestate S_PHOENIXFX2_1
+  firstdecoratestate S_WMCE
   states
   @"
   Spawn:
-    FX09 ABABA 2 Bright
-    FX09 B 2 Bright A_FlameEnd
-    FX09 CDEF 2 Bright
+    WMCE A -1
+    stop
+  "@
+}
+
+//
+// Blood Splatter
+//
+
+thingtype HereticBloodSplatter : HereticMissile, -1, 433
+{
+  radius 2.0
+  height 4.0
+  remflags NOGRAVITY
+  states
+  @"
+  Spawn:
+    BLOD CBA 8
     stop
   Death:
-    FX09 G 3 Bright
-    FX09 H 3 Bright A_FloatPuff
-    FX09 I 4 Bright
-    FX09 JK 5 Bright
+    BLOD A 6
     stop
   "@
 }
@@ -3270,60 +3256,264 @@ thingtype MaceFX4 : MaceShotProto, -1, 441
   "@
 }
 
-//
-// Fire Mace
-//
-// The fire mace weapon has very special behavior in that it spawns randomly at
-// a given spot in the map, and in single player, may not spawn at all.
-//
 
-thingtype HereticMaceSpot : Mobj, 7202, 431
+thingtype HereticPhoenixFX2 : HereticMissile, -1, 442
 {
-  compatname MaceSpawner
-  cflags     NOTSHAREWARE
-   
-  collectionspawn HWeaponFireMace, 64, 64
-   
+  compatname PhoenixFX2
+  speed      10.0
+  radius     6.0
+  height     8.0
+  damage     2
+  dmgspecial PoweredPhoenixFire
+  addflags   FIREDAMAGE
+
+  //firstdecoratestate S_PHOENIXFX2_1
   states
   @"
   Spawn:
-    TNT1 A -1
+    FX09 ABABA 2 Bright
+    FX09 B 2 Bright A_FlameEnd
+    FX09 CDEF 2 Bright
+    stop
+  Death:
+    FX09 G 3 Bright
+    FX09 H 3 Bright A_FloatPuff
+    FX09 I 4 Bright
+    FX09 JK 5 Bright
     stop
   "@
 }
 
-thingtype HWeaponFireMace : HereticPickup, -1, 432
+thingtype HereticBlasterFX1 : HereticMissile, -1, 443
 {
-  compatname    Mace
-  itemrespawnat HereticMaceSpot
+  compatname BlasterFX1
+  speed 184.0
+  radius 12.0
+  height 8.0
+  damage 2
+  mod PoweredDragonClawImpact
+  missiletype RavenFast
 
-  firstdecoratestate S_WMCE
+  trail.type HereticBlasterSmoke
+  trail.zoffset -8
+  trail.spawnchance 63
+  trail.sparsity 1
+
+  deathsound ht_blshit
+
+  firstdecoratestate S_BLASTERFX1_1
   states
   @"
   Spawn:
-    WMCE A -1
+    ACLO E 200
+    loop
+  Death:
+    FX18 A 3 bright A_SpawnRippers
+    FX18 B 3 bright
+    FX18 CDEFG 4 bright
     stop
   "@
 }
 
-//
-// Blood Splatter
-//
 
-thingtype HereticBloodSplatter : HereticMissile, -1, 433
+thingtype HereticHornRodFX2 : HereticMissile, -1, 444
+{
+  compatname HornRodFX2
+  spawnhealth 140
+  speed 22.0
+  radius 12.0
+  height 8.0
+  damage 10
+  dmgspecial BossTeleport
+  seesound ht_hrnsht
+  deathsound ht_ramphit
+
+  firstdecoratestate S_HRODFX2_1
+  states
+  @"
+  Spawn:
+    FX00 C 3 bright
+    FX00 D 3 bright A_SkullRodPL2Seek
+    FX00 E 3 bright
+    FX00 F 3 bright A_SkullRodPL2Seek
+    loop
+  Death:
+    FX00 H 5 bright A_AddPlayerRain
+    FX00 I 5 bright
+    FX00 J 4 bright
+    FX00 KLM 3 bright
+    FX00 G 1 A_HideInCeiling
+    FX00 G 1 A_SkullRodStorm
+    goto Death+7
+  "@
+}
+
+thingtype HereticRainPlayer1 : HereticMissile, -1, 445
+{
+  compatname RainPillar
+
+  speed 12.0
+  radius 5.0
+  height 12.0
+  damage 5
+
+  mod PoweredHellStaffRain
+  
+  firstdecoratestate S_RAINPLR1_1
+  states
+  @"
+  Spawn:
+    FX20 A -1 bright
+    stop
+  Death:
+    FX20 B 4 bright A_RainImpact
+    FX20 CDEF 4 bright
+    stop
+  AirDeath:
+    FX20 GHI 4 bright
+    stop 
+  "@
+}
+
+spritenames += { FX21, FX22, FX23 }
+
+thingtype HereticRainPlayer2 : HereticRainPlayer1, -1, 446
+{
+  skinsprite FX21
+}
+
+thingtype HereticRainPlayer3 : HereticRainPlayer1, -1, 447
+{
+  skinsprite FX22
+}
+
+thingtype HereticRainPlayer4 : HereticRainPlayer1, -1, 448
+{
+  skinsprite FX23
+}
+
+thingtype Chicken : ClassicHereticSolid, -1, 449
+{
+  spawnhealth 10
+  seesound ht_chicpai
+  activesound ht_chicact
+  attacksound ht_chicatk
+  painchance 200
+  painsound ht_chicpai
+  deathsound ht_chicdth
+  speed 4
+  radius 9.0
+  height 22.0
+  mass 40
+  
+  addflags SHOOTABLE|DROPOFF|COUNTKILL|WINDTHRUST|FOOTCLIP|SPACMONSTER|PASSMOBJ
+  
+  firstdecoratestate S_CHICKEN_LOOK1
+  states
+  @"
+  Spawn:
+    CHKN AB 10 A_Look
+    loop
+  See:
+    CHKN AB 3 A_Chase
+    loop
+  Pain:
+    CHKN D 5 A_Feathers
+    CHKN C 5 A_Pain
+    goto See
+  Melee:
+    CHKN A 8 A_FaceTarget
+    CHKN C 10 A_MonsterMeleeAttack(1, 2)
+    goto See
+  Death:
+    CHKN E 6 A_Scream
+    CHKN F 6 A_Feathers
+    CHKN G 6
+    CHKN H 6 A_Fall
+    CHKN IJK 6
+    CHKN L -1
+    stop
+  "@
+}
+
+thingtype Feather : HereticMissile, -1, 450
 {
   radius 2.0
   height 4.0
+
   remflags NOGRAVITY
+  addflags CANNOTPUSH|LOGRAV|WINDTHRUST
+
+  firstdecoratestate S_FEATHER1
   states
   @"
   Spawn:
-    BLOD CBA 8
-    stop
+    CHKN MNOPQPON 3
+    loop
   Death:
-    BLOD A 6
+    CHKN N 6
     stop
   "@
+}
+
+thingtype EggShot : HereticMissile, -1, 451
+{
+  speed 18.0
+  radius 8.0
+  height 8.0
+  damage 1
+  mod ChickenMorph
+
+  firstdecoratestate S_EGGFX1
+  states
+  @"
+  Spawn:
+    EGGM ABCDE 4
+    loop
+  Death:
+    FX01 EFGH 3 bright
+    stop
+  "@
+}
+
+thingtype ChickenPlayer : ClassicHereticSolid, -1, 452
+{
+  spawnhealth 100
+  reactiontime 0
+  painchance 255
+  radius 16.0
+  height 24.0
+  painsound ht_chicpai
+  deathsound ht_chicdth
+  activesound ht_chicact
+
+  addflags SHOOTABLE|DROPOFF|NOTDMATCH|FOOTCLIP|SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ|LOGRAV|NOSOUNDCUTOFF|STICKYCARRY
+  
+  deathstate S_CHICKEN_DIE1
+
+  firstdecoratestate S_CHICPLAY
+  states
+  @"
+  Spawn:
+    CHKN A -1
+    stop
+  See:
+    CHKN ABAB 3
+    loop
+  Missile:
+    CHKN C 12
+    goto Spawn
+  Pain:
+    CHKN D 4 A_Feathers
+    CHKN C 4 A_Pain
+    goto Spawn
+  "@
+}
+
+// Thing groups ----------------------------------------------------------------
+thinggroup NoMorphBosses
+{
+  types Dsparil, IronLich, Maulotaur, SerpentRiderDsparil
 }
 
 // Damage Types ----------------------------------------------------------------
@@ -3335,4 +3525,16 @@ damagetype StaffPowered
 {
   absolute.push 10
   absolute.hop  5
+}
+
+// Bosses have resistance to this
+damagetype PoweredHellStaffRain {}
+damagetype PoweredDragonClawImpact {}
+damagetype PoweredDragonClawRip {}
+
+morphtype ChickenMorph
+{
+  monsterspecies Chicken
+  playerclass Chicken
+  exclude NoMorphBosses, @inanimate
 }

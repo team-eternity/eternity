@@ -70,6 +70,8 @@ struct dynaseg_t
    double pdx, pdy;           // delta x, delta y
    double ptmp;               // general line coefficient 'c'
    double len;                // length
+
+   int validcount;   // used to keep track of visiting
 };
 
 typedef DLListItem<dynaseg_t> dseglink_t;

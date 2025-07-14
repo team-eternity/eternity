@@ -211,6 +211,8 @@ void R_ForEachContext(F &&f)
    }
 }
 
+bool R_NeedThoroughSpriteCollection();
+
 #endif
 
 // EOF

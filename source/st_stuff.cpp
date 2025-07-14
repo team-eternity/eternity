@@ -408,7 +408,7 @@ static void ST_refreshBackground()
       // haleyjd 01/12/04: changed translation handling
       if(GameType != gt_single)
       {
-         V_DrawPatchTranslated(ST_FX, ST_FY, &vbscreenyscaled, faceback,
+         V_DrawPatchTranslated(ST_FX, ST_FY, &subscreen43, faceback,
             plyr->colormap ?
                translationtables[(plyr->colormap - 1)] :
                nullptr, 
@@ -679,7 +679,7 @@ static void ST_updateFaceWidget()
 static void ST_updateWeaponsOwned()
 {
    for(int i = 0; i < NUMWEAPONS; i++)
-      weaponsowned[i] = E_PlayerOwnsWeaponInSlot(plyr, i) ? 1 : 0;
+      weaponsowned[i] = E_PlayerOwnsWeaponInSlot(*plyr, i) ? 1 : 0;
 }
 
 int sts_traditional_keys; // killough 2/28/98: traditional status bar keys
@@ -698,8 +698,8 @@ static void ST_updateWidgets()
    auto weapon   = plyr->readyweapon;
    auto ammoType = weapon->ammo;
 
-   w_ready.num = ammoType ? E_GetItemOwnedAmount(plyr, ammoType) : INT_MIN;
-   w_ready.max = E_GetMaxAmountForArtifact(plyr, ammoType);
+   w_ready.num = ammoType ? E_GetItemOwnedAmount(*plyr, ammoType) : INT_MIN;
+   w_ready.max = E_GetMaxAmountForArtifact(*plyr, ammoType);
 
    // update armor
    w_armor.n.num = plyr->armorpoints;
@@ -712,20 +712,20 @@ static void ST_updateWidgets()
    {
       ammoType = E_ItemEffectForName(st_AmmoForNum[i]);
       
-      w_ammo[i].num    = E_GetItemOwnedAmount(plyr, ammoType);
-      w_maxammo[i].num = E_GetMaxAmountForArtifact(plyr, ammoType);      
+      w_ammo[i].num    = E_GetItemOwnedAmount(*plyr, ammoType);
+      w_maxammo[i].num = E_GetMaxAmountForArtifact(*plyr, ammoType);
    }
 
    // update keycard multiple widgets
    for(int i = 0; i < 3; i++)
    {
-      int amount  = E_GetItemOwnedAmountName(plyr, GameModeInfo->cardNames[i]);
+      int amount  = E_GetItemOwnedAmountName(*plyr, GameModeInfo->cardNames[i]);
       keyboxes[i] = (amount > 0 ? i : -1);
       
       //jff 2/24/98 select double key
       //killough 2/28/98: preserve traditional keys by config option
       
-      amount = E_GetItemOwnedAmountName(plyr, GameModeInfo->cardNames[i + 3]);
+      amount = E_GetItemOwnedAmountName(*plyr, GameModeInfo->cardNames[i + 3]);
       if(amount > 0)
          keyboxes[i] = ((keyboxes[i] == -1 || E_Get(overridableSetting_stsTraditionalKeys)) ? i + 3 : i + 6);
    }
@@ -892,13 +892,13 @@ static void ST_drawInventory()
    int i = -1;
    // E_MoveInventoryCursor returns false when it hits the boundary of the visible inventory,
    // so it's a useful iterator here.
-   while(E_MoveInventoryCursor(plyr, 1, i) && i < 7)
+   while(E_MoveInventoryCursor(*plyr, 1, i) && i < 7)
    {
       // Safety check that the player has an inventory item, then that the effect exists
       // for the selected item, then that there is an associated patch for that effect.
       if(plyr->inventory[i + leftoffs].amount > 0)
       {
-         itemeffect_t *artifact = E_EffectForInventoryIndex(plyr, i + leftoffs);
+         itemeffect_t *artifact = E_EffectForInventoryIndex(*plyr, i + leftoffs);
          if(artifact)
          {
             const char *patchname = artifact->getString("icon", nullptr);
@@ -913,7 +913,7 @@ static void ST_drawInventory()
 
                V_DrawPatch(ST_INVBARBGX + (i * 31) - xoffs, ST_INVBARBGY - yoffs,
                            &subscreen43, patch);
-               ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact),
+               ST_drawSmallNumber(E_GetItemOwnedAmount(*plyr, artifact),
                                   ST_INVBARBGX + 27 + (i * 31), ST_INVBARBGY + 22);
             }
          }
@@ -1358,7 +1358,7 @@ static void ST_initData()
    st_oldhealth = -1;
 
    for(i = 0; i < NUMWEAPONS; i++)
-      oldweaponsowned[i] = weaponsowned[i] = E_PlayerOwnsWeaponInSlot(plyr, i) ? 1 : 0;
+      oldweaponsowned[i] = weaponsowned[i] = E_PlayerOwnsWeaponInSlot(*plyr, i) ? 1 : 0;
 
    for(i = 0; i < 3; i++)
       keyboxes[i] = -1;

@@ -145,8 +145,8 @@ static deh_block deh_blocks[] =
 // flag to skip included deh-style text, used with INCLUDE NOTEXT directive
 static bool includenotext = false;
 
-// DSDHacked shit
-static bool dsdhacked = false;
+// additive dehacked
+static bool adddeh = false;
 static constexpr int DOOM_NUMSTATES    = 1076;
 static constexpr int DOOM_NUMMOBJTYPES = 145;
 static constexpr int DOOM_NUMSPRNAMES  = 245;
@@ -591,10 +591,12 @@ static constexpr const char *deh_sfxinfo[] =
 // Sprite redirection by offset into the text area - unsupported by BOOM
 // * sprites are base zero and dehacked uses it that way.
 
-static constexpr const char *deh_sprite[] =
-{
-   "Offset"      // supposed to be the offset into the text section
-};
+// COMMENTED OUT BECAUSE IT'S UNUSED
+
+//static constexpr const char *deh_sprite[] =
+//{
+//   "Offset"      // supposed to be the offset into the text section
+//};
 
 // AMMO - Dehacked block name = "Ammo"
 // usage = Ammo n (name)
@@ -659,6 +661,47 @@ dehflagremap_t dehacked_mbf21weaponflags_remappings[earrlen(deh_mbf21weaponflags
 // MISC - Dehacked block name = "Misc"
 // Usage: Misc 0
 // Always uses a zero in the dehacked file, for consistency.  No meaning.
+
+enum dehmiscid_e : int
+{
+   dehmiscid_initialHealth,
+   dehmiscid_maxHealth,
+   dehmiscid_maxArmor,
+   dehmiscid_greenArmorClass,
+   dehmiscid_blueArmorClass,
+   dehmiscid_maxSoulsphere,
+   dehmiscid_soulsphereHealth,
+   dehmiscid_megasphereHealth,
+   dehmiscid_godModeHealth,
+   dehmiscid_idfaArmor,
+   dehmiscid_idfaArmorClass,
+   dehmiscid_idkfaArmor,
+   dehmiscid_idkfaArmorClass,
+   dehmiscid_bfgCellsPerShot,
+   dehmiscid_initialBullets,
+   dehmiscid_monstersInfight,
+   NUMDEHMISCIDS
+};
+
+static constexpr const char *deh_misc[NUMDEHMISCIDS] =
+{
+   "Initial Health",
+   "Max Health",
+   "Max Armor",
+   "Green Armor Class",
+   "Blue Armor Class",
+   "Max Soulsphere",
+   "Soulsphere Health",
+   "Megasphere Health",
+   "God Mode Health",
+   "IDFA Armor",
+   "IDFA Armor Class",
+   "IDKFA Armor",
+   "IDKFA Armor Class",
+   "BFG Cells/Shot",
+   "Initial Bullets",
+   "Monsters Infight",
+};
 
 // CHEATS - Dehacked block name = "Cheat"
 // Usage: Cheat 0
@@ -890,7 +933,7 @@ void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum,
             deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
          }
 
-         dsdhacked = value == 2021;
+         adddeh = value == 2021;
 
          continue;
       }
@@ -917,14 +960,28 @@ void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum,
 
 
 //
-// For DSDHacked: Has the logic for getting the state num or making it (calls the functions)
+// For additive dehacked: Has the logic for getting the state num or making it (calls the functions)
 //
 static int deh_getStateNumForDEHNum(int indexnum)
 {
-   if(dsdhacked)
+   if(adddeh)
       return E_GetAddStateNumForDEHNum(indexnum, indexnum >= DOOM_NUMSTATES);
    else
       return E_GetStateNumForDEHNum(indexnum);
+}
+
+//
+// For additive dehacked: Has the logic for getting the state num or making it (calls the functions)
+//
+static int deh_getSoundNumForDEHNum(int indexnum)
+{
+   sfxinfo_t *sfx;
+   if(adddeh && indexnum >= DOOM_NUMSFX)
+      sfx = E_GetAddSoundForAddDEHNum(indexnum, indexnum >= DOOM_NUMSFX);
+   else
+      sfx = E_SoundForDEHNum(indexnum);
+
+   return sfx ? sfx->dehackednum : 0;
 }
 
 // ====================================================================
@@ -1182,13 +1239,13 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value, MetaTab
       mi->seestate = deh_getStateNumForDEHNum(value);
       break;
    case dehmobjinfoid_seesound:
-      mi->seesound = value;
+      mi->seesound = deh_getSoundNumForDEHNum(value);
       break;
    case dehmobjinfoid_reactiontime:
       mi->reactiontime = value;
       break;
    case dehmobjinfoid_attacksound:
-      mi->attacksound = value;
+      mi->attacksound = deh_getSoundNumForDEHNum(value);
       break;
    case dehmobjinfoid_painstate:
       mi->painstate = deh_getStateNumForDEHNum(value);
@@ -1197,7 +1254,7 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value, MetaTab
       mi->painchance = value;
       break;
    case dehmobjinfoid_painsound:
-      mi->painsound = value;
+      mi->painsound = deh_getSoundNumForDEHNum(value);
       break;
    case dehmobjinfoid_meleestate:
       mi->meleestate = deh_getStateNumForDEHNum(value);
@@ -1212,7 +1269,7 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value, MetaTab
       mi->xdeathstate = deh_getStateNumForDEHNum(value);
       break;
    case dehmobjinfoid_deathsound:
-      mi->deathsound = value;
+      mi->deathsound = deh_getSoundNumForDEHNum(value);
       break;
    case dehmobjinfoid_speed:
       mi->speed = value;
@@ -1231,7 +1288,7 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value, MetaTab
       mi->damage = value;
       break;
    case dehmobjinfoid_activesound:
-      mi->activesound = value;
+      mi->activesound = deh_getSoundNumForDEHNum(value);
       break;
    case dehmobjinfoid_flags:
       mi->flags = value;
@@ -1272,7 +1329,7 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value, MetaTab
       mi->meleerange = value;
       break;
    case dehmobjinfoid_ripsound:
-      mi->ripsound = value;
+      mi->ripsound = deh_getSoundNumForDEHNum(value);
       break;
    default:
       break;
@@ -1310,7 +1367,7 @@ static void deh_procThing(DWFILE *fpin, char *line, MetaTable &gatheredData)
    // haleyjd: not as big an issue with EDF, as it uses a hash lookup
    // --indexnum;  <-- old code
 
-   if(dsdhacked)
+   if(adddeh)
       indexnum = E_GetAddThingNumForDEHNum(indexnum, indexnum >= DOOM_NUMMOBJTYPES);
    else
       indexnum = E_GetThingNumForDEHNum(indexnum);
@@ -1872,7 +1929,7 @@ static void deh_procWeapon(DWFILE *fpin, char *line, MetaTable &gatheredData)
 
    // haleyjd 08/10/02: significant reformatting
 
-   strncpy(inbuffer,line,DEH_BUFFERMAX);
+   strncpy(inbuffer,line,DEH_BUFFERMAX);  // safe because line is same length when calling this
 
    // killough 8/98: allow hex numbers in input:
    sscanf(inbuffer,"%" DEH_MAXKEYLEN_FMT "s %i",key, &indexnum);
@@ -2208,16 +2265,101 @@ static void deh_procMisc(DWFILE *fpin, char *line, MetaTable &gatheredData) // d
       // Otherwise it's ok
       deh_LogPrintf("Processing Misc item '%s'\n", key);
 
-      if(!strcasecmp(key, "Initial Health"))
+      const int dehmiscid = E_StrToNumLinear(deh_misc, NUMDEHMISCIDS, key);
+      switch(dehmiscid)
       {
-         playerclass_t *pc;
-         if((pc = E_PlayerClassForName("DoomMarine")))
+      case dehmiscid_initialHealth:
+         if(playerclass_t *pc = E_PlayerClassForName("DoomMarine"); pc)
             pc->initialhealth = value;
-      }
-      else if(!strcasecmp(key, "Initial Bullets"))
-      {
-         playerclass_t *pc;
-         if((pc = E_PlayerClassForName("DoomMarine")))
+         break;
+      case dehmiscid_maxHealth:
+         if(fx = E_ItemEffectForName(ITEMNAME_HEALTHBONUS); fx)
+         {
+            fx->removeConstString("maxamount");
+            fx->setInt("maxamount", value * 2);
+         }
+         if(fx = E_ItemEffectForName(ITEMNAME_MEDIKIT); fx)
+            fx->setInt("compatmaxamount", value);
+         if(fx = E_ItemEffectForName(ITEMNAME_STIMPACK); fx)
+               fx->setInt("compatmaxamount", value);
+         break;
+      case dehmiscid_maxArmor:
+         if((fx = E_ItemEffectForName(ITEMNAME_ARMORBONUS)))
+            fx->setInt("maxsaveamount", value);
+         break;
+      case dehmiscid_greenArmorClass:
+         if(fx = E_ItemEffectForName(ITEMNAME_GREENARMOR); fx)
+         {
+            fx->setInt("saveamount", value * 100);
+            if(value > 1)
+            {
+               fx->setInt("savefactor",  1);
+               fx->setInt("savedivisor", 2);
+            }
+         }
+         break;
+      case dehmiscid_blueArmorClass:
+         if(fx = E_ItemEffectForName(ITEMNAME_BLUEARMOR); fx)
+         {
+            fx->setInt("saveamount", value * 100);
+            if(value <= 1)
+            {
+               fx->setInt("savefactor",  1);
+               fx->setInt("savedivisor", 3);
+            }
+         }
+         break;
+      case dehmiscid_maxSoulsphere:
+         if(fx = E_ItemEffectForName(ITEMNAME_SOULSPHERE); fx)
+         {
+            fx->removeConstString("maxamount");
+            fx->setInt("maxamount", value);
+         }
+         break;
+      case dehmiscid_soulsphereHealth:
+         if(fx = E_ItemEffectForName(ITEMNAME_SOULSPHERE); fx)
+         {
+            fx->removeConstString("amount");
+            fx->setInt("amount", value);
+         }
+         break;
+      case dehmiscid_megasphereHealth:
+         if(fx = E_ItemEffectForName(ITEMNAME_MEGASPHERE); fx)
+         {
+            fx->removeConstString("amount");
+            fx->setInt("amount",    value);
+            fx->removeConstString("maxamount");
+            fx->setInt("maxamount", value);
+         }
+         break;
+      case dehmiscid_godModeHealth:
+         god_health_override = value;
+         break;
+      case dehmiscid_idfaArmor:
+         if(fx = E_ItemEffectForName(ITEMNAME_IDFAARMOR); fx)
+            fx->setInt("saveamount", value);
+         break;
+      case dehmiscid_idfaArmorClass:
+         if(fx = E_ItemEffectForName(ITEMNAME_IDFAARMOR); fx)
+         {
+            fx->setInt("savefactor", 1);
+            fx->setInt("savedivisor", value > 1 ? 2 : 3);
+         }
+         break;
+      case dehmiscid_idkfaArmor:
+         ; //idkfa_armor = value;
+         break;
+      case dehmiscid_idkfaArmorClass:
+         ; //idkfa_armor_class = value;
+         break;
+      case dehmiscid_bfgCellsPerShot:
+         // haleyjd 08/10/02: propagate to weapon info
+         bfgcells = value;
+         if(weaponinfo_t *bfginfo = E_WeaponForDEHNum(wp_bfg); bfginfo)
+            bfginfo->ammopershot = value;
+         break;
+      case dehmiscid_initialBullets:
+         if(playerclass_t *pc = E_PlayerClassForName("DoomMarine"); pc)
          {
             for(unsigned int i = 0; i < pc->numrebornitems; i++)
             {
@@ -2229,103 +2371,8 @@ static void deh_procMisc(DWFILE *fpin, char *line, MetaTable &gatheredData) // d
                }
             }
          }
-      }
-      else if(!strcasecmp(key, "Max Health"))
-      {
-         if((fx = E_ItemEffectForName(ITEMNAME_HEALTHBONUS)))
-         {
-            fx->removeConstString("maxamount");
-            fx->setInt("maxamount", value * 2);
-         }
-         if((fx = E_ItemEffectForName(ITEMNAME_MEDIKIT)))
-            fx->setInt("compatmaxamount", value);
-         if((fx = E_ItemEffectForName(ITEMNAME_STIMPACK)))
-            fx->setInt("compatmaxamount", value);
-      }
-      else if(!strcasecmp(key, "Max Armor"))
-      {
-         if((fx = E_ItemEffectForName(ITEMNAME_ARMORBONUS)))
-            fx->setInt("maxsaveamount", value);
-      }
-      else if(!strcasecmp(key, "Green Armor Class"))
-      {
-         if((fx = E_ItemEffectForName(ITEMNAME_GREENARMOR)))
-         {
-            fx->setInt("saveamount", value * 100);
-            if(value > 1)
-            {
-               fx->setInt("savefactor",  1);
-               fx->setInt("savedivisor", 2);
-            }
-         }
-      }
-      else if(!strcasecmp(key, "Blue Armor Class"))  // Blue Armor Class
-      {
-         if((fx = E_ItemEffectForName(ITEMNAME_BLUEARMOR)))
-         {
-            fx->setInt("saveamount", value * 100);
-            if(value <= 1)
-            {
-               fx->setInt("savefactor",  1);
-               fx->setInt("savedivisor", 3);
-            }
-         }
-      }
-      else if(!strcasecmp(key, "Max Soulsphere"))
-      {
-         if((fx = E_ItemEffectForName(ITEMNAME_SOULSPHERE)))
-         {
-            fx->removeConstString("maxamount");
-            fx->setInt("maxamount", value);
-         }
-      }
-      else if(!strcasecmp(key, "Soulsphere Health"))
-      {
-         if((fx = E_ItemEffectForName(ITEMNAME_SOULSPHERE)))
-         {
-            fx->removeConstString("amount");
-            fx->setInt("amount", value);
-         }
-      }
-      else if(!strcasecmp(key, "Megasphere Health"))
-      {
-         if((fx = E_ItemEffectForName(ITEMNAME_MEGASPHERE)))
-         {
-            fx->removeConstString("amount");
-            fx->setInt("amount",    value);
-            fx->removeConstString("maxamount");
-            fx->setInt("maxamount", value);
-         }
-      }
-      else if(!strcasecmp(key, "God Mode Health"))
-      {
-         god_health_override = value;
-      }
-      else if(!strcasecmp(key, "IDFA Armor"))
-      {
-         if((fx = E_ItemEffectForName(ITEMNAME_IDFAARMOR)))
-            fx->setInt("saveamount", value);
-      }
-      else if(!strcasecmp(key, "IDFA Armor Class"))
-      {
-         if((fx = E_ItemEffectForName(ITEMNAME_IDFAARMOR)))
-         {
-            fx->setInt("savefactor", 1);
-            fx->setInt("savedivisor", value > 1 ? 2 : 3);
-         }
-      }
-      else if(!strcasecmp(key, "IDKFA Armor"))
-         ; //idkfa_armor = value;
-      else if(!strcasecmp(key, "IDKFA Armor Class"))
-         ; //idkfa_armor_class = value;
-      else if(!strcasecmp(key, "BFG Cells/Shot"))
-      {
-         // haleyjd 08/10/02: propagate to weapon info
-         weaponinfo_t &bfginfo = *E_WeaponForDEHNum(wp_bfg);
-         bfgcells = bfginfo.ammopershot = value;
-      }
-      else if(!strcasecmp(key, "Monsters Infight"))
-      {
+         break;
+      case dehmiscid_monstersInfight:
          // FROM CHOCOLATE-DOOM
          // Dehacked: "Monsters infight"
          // This controls whether monsters can harm other monsters of the same species. For example,
@@ -2333,19 +2380,21 @@ static void deh_procMisc(DWFILE *fpin, char *line, MetaTable &gatheredData) // d
          // weird - '202' means off, while '221' means on.
          switch(value)
          {
-            case 202:
-               deh_species_infighting = false;
-               break;
-            case 221:
-               deh_species_infighting = true;
-               break;
-            default:
-               deh_LogPrintf("Invalid value for 'Monsters Infight': %d\n", value);
-               break;
+         case 202:
+            deh_species_infighting = false;
+            break;
+         case 221:
+            deh_species_infighting = true;
+            break;
+         default:
+            deh_LogPrintf("Invalid value for 'Monsters Infight': %d\n", value);
+            break;
          }
-      }
-      else
+         break;
+      default:
          deh_LogPrintf("Invalid misc item string index for '%s'\n", key);
+         break;
+      }
    }
 }
 
@@ -2749,8 +2798,8 @@ static void deh_procBexSprites(DWFILE *fpin, char *line, MetaTable &gatheredData
          continue;
       }
 
-      bool processAsNumber = dsdhacked;
-      if(dsdhacked)
+      bool processAsNumber = adddeh;
+      if(adddeh)
       {
          for(int i = 0; key[i] && i < DEH_MAXKEYLEN; i++)
          {
@@ -2831,18 +2880,37 @@ static void deh_procBexSounds(DWFILE *fpin, char *line, MetaTable &gatheredData)
          continue;
       }
 
-      sfx = E_SoundForName(key);
-
-      if(!sfx)
+      bool processAsNumber = adddeh;
+      if(adddeh)
       {
-         deh_LogPrintf("Bad sound mnemonic '%s'\n", key);
-         continue;
+         for(int i = 0; key[i] && i < DEH_MAXKEYLEN; i++)
+         {
+            if(!ectype::isDigit(key[i]))
+            {
+               processAsNumber = false;
+               break;
+            }
+         }
+
+         if(processAsNumber)
+            E_UpdateAddSoundNameForNum(atoi(key), candidate, atoi(key) >= DOOM_NUMSFX);
       }
 
-      deh_LogPrintf("Substituting '%s' for sound '%s'\n",
-                    candidate, sfx->mnemonic);
+      if(!processAsNumber)
+      {
+         sfx = E_SoundForName(key);
 
-      strncpy(sfx->name, candidate, 9);
+         if(!sfx)
+         {
+            deh_LogPrintf("Bad sound mnemonic '%s'\n", key);
+            continue;
+         }
+
+         deh_LogPrintf("Substituting '%s' for sound '%s'\n",
+                       candidate, sfx->mnemonic);
+
+         strncpy(sfx->name, candidate, 9);
+      }
    }
 }
 

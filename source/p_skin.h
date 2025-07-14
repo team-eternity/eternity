@@ -74,6 +74,7 @@ extern char **spritelist; // new spritelist, same format as sprnames
 void P_InitSkins(void);
 
 void P_ParseSkin(int lumpnum);
+skin_t *P_SkinForName(const char *s);
 void P_SetSkin(skin_t *skin, int playernum);
 
 skin_t *P_GetDefaultSkin(player_t *player);

@@ -398,7 +398,7 @@ static bool EV_canUnlockGenDoor(int special, player_t *player)
    int lockdefID = EV_lockdefIDForGenSpec(special);
 
    itemeffect_t *yskull = E_ItemEffectForName(ARTI_YELLOWSKULL);
-   bool hasYellowSkull  = (E_GetItemOwnedAmount(player, yskull) > 0);
+   bool hasYellowSkull  = (E_GetItemOwnedAmount(*player, yskull) > 0);
 
    // MBF compatibility hack - if lockdef ID is ALL3 and the player has the 
    // YellowSkull, we have to take it away; if he doesn't have it, we have to 
@@ -406,20 +406,20 @@ static bool EV_canUnlockGenDoor(int special, player_t *player)
    if(demo_version == 203 && lockdefID == EV_LOCKDEF_ALL3)
    {
       if(hasYellowSkull)
-         E_RemoveInventoryItem(player, yskull, -1);
+         E_RemoveInventoryItem(*player, yskull, -1);
       else
-         E_GiveInventoryItem(player, yskull);
+         E_GiveInventoryItem(*player, yskull);
    }
 
-   bool result = E_PlayerCanUnlock(player, lockdefID, false);
+   bool result = E_PlayerCanUnlock(*player, lockdefID, false);
 
    // restore inventory state if lockdef was ALL3 and playing back an MBF demo
    if(demo_version == 203 && lockdefID == EV_LOCKDEF_ALL3)
    {
       if(hasYellowSkull)
-         E_GiveInventoryItem(player, yskull);
+         E_GiveInventoryItem(*player, yskull);
       else
-         E_RemoveInventoryItem(player, yskull, -1);
+         E_RemoveInventoryItem(*player, yskull, -1);
    }
 
    return result;

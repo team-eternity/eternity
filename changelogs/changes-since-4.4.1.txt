@@ -1,0 +1,28 @@
+Changes since v4.04.01
+======================
+
+Small improvements
+------------------
+
+* Confirmation yes/no views (such as for quitting) now accept non-QWERTY keyboard layouts for 'y' 
+  and 'n', i.e. the same keys which under QWERTY would be 'y' or 'n' will also work.
+* Do not terminate suddenly if user put flag names in the MBF21 flag codepointer. Just display an
+  in-game error message with sound. Also, the message is more accurate.
+* Explosions now trigger splashes on BOOM deep water surfaces by comparing their heights to the 
+  water surface, not to the solid surface beneath.
+* Splash terrain types now work with portal overlays.
+* Heretic Fire Mace projectiles now blow up when hitting anything under Boom water, without
+  bouncing, so as to behave consistently with shallow Heretic water. Currently this doesn't apply to
+  linked portal water however.
+* A_SetFlags, A_UnsetFlags, A_AddFlags and A_RemoveFlags now handle NOSECTOR and NOBLOCKMAP in a
+  stable manner.
+
+Bug fixes
+---------
+
+* Fixed A_JumpIfFlagsSet as it was completely broken.
+* Fixed wrong defaults in A_WeaponBulletAttack.
+* A_SkullRodStorm wasn't line portal aware.
+* Fixed UMAPINFO not recognizing spec-defined Deh_Actor_145 to Deh_Actor_249
+* Multithreaded rendering now renders very wide sprites properly (such as the trees in Eviternity 2
+  MAP14).

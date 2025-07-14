@@ -724,8 +724,11 @@ default_t defaults[] =
    DEFAULT_INT("hud_enabled",&hud_enabled, nullptr, 1, 0, 1, default_t::wad_game,
                "fullscreen hud enabled"),
    
-   DEFAULT_INT("hud_hidestatus",&hud_hidestatus, nullptr, 0, 0, 1, default_t::wad_game,
-               "hide kills/items/secrets info on fullscreen hud"),
+   DEFAULT_INT("hud_hidestats",&hud_hidestats, nullptr, 0, 0, 1, default_t::wad_game,
+               "hide kills/items/secrets info on automap and fullscreen hud"),
+
+   DEFAULT_INT("hud_hidesecrets", &hud_hidesecrets, nullptr, 0, 0, 1, default_t::wad_game,
+               "hide secrets info on automap and fullscreen hud"),
 
    DEFAULT_BOOL("hud_restrictoverlaywidth", &hud_restrictoverlaywidth, nullptr, true, default_t::wad_no,
                "restrict HUD overlays to be no wider than 16:9"),
@@ -970,6 +973,9 @@ default_or_t HereticDefaultORs[] =
    { "mapcolor_unsn",     40      },
    { "mapcolor_flat",     43      },
    { "mapcolor_prtl",     43      },
+   { "mapcolor_rkey",     220     },
+   { "mapcolor_ykey",     144     },
+   { "mapcolor_bkey",     197     },
    { "hu_timecolor",      CR_GRAY },
    { "hu_levelnamecolor", CR_GRAY },
    { "hu_coordscolor",    CR_GRAY },

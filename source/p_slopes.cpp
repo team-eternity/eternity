@@ -117,12 +117,63 @@ static pslope_t *P_CopySlope(const pslope_t *src, const surface_t &surface)
    return ret;
 }
 
+// Calculate difference from nominal floor height given by slope on top of a sector
+fixed_t P_GetSlopedSectorFloorDelta(const rendersector_t &sector, const pslope_t *slope)
+{
+   fixed_t maxz = D_MININT;
+   for(int j = 0; j < sector.linecount; ++j)
+   {
+      const line_t &line = *sector.lines[j];
+      fixed_t z = P_GetZAt(slope, line.v1->x, line.v1->y);
+      if(z > maxz)
+         maxz = z;
+      z = P_GetZAt(slope, line.v2->x, line.v2->y);
+      if(z > maxz)
+         maxz = z;
+   }
+   return maxz - sector.srf.floor.height;
+}
+// Same for ceiling
+fixed_t P_GetSlopedSectorCeilingDelta(const rendersector_t &sector, const pslope_t *slope)
+{
+   fixed_t minz = D_MAXINT;
+   for(int j = 0; j < sector.linecount; ++j)
+   {
+      const line_t &line = *sector.lines[j];
+      fixed_t z = P_GetZAt(slope, line.v1->x, line.v1->y);
+      if(z < minz)
+         minz = z;
+      z = P_GetZAt(slope, line.v2->x, line.v2->y);
+      if(z < minz)
+         minz = z;
+   }
+   return minz - sector.srf.ceiling.height;
+}
+
+fixed_t P_GetSlopedSectorBaseDelta(const rendersector_t &sector, surf_e surf, const pslope_t *slope)
+{
+   fixed_t extremum = surf == surf_floor ? D_MAXINT : D_MININT;
+   const surface_t &surface = sector.srf[surf];
+   for(int j = 0; j < sector.linecount; ++j)
+   {
+      const line_t &line = *sector.lines[j];
+      fixed_t z = P_GetZAt(slope, line.v1->x, line.v1->y);
+      if(isOuter(surf, z, extremum))
+         extremum = z;
+      z = P_GetZAt(slope, line.v2->x, line.v2->y);
+      if(isOuter(surf, z, extremum))
+         extremum = z;
+   }
+   return extremum - surface.height;
+}
 //
 // Sets up the slope height list per sector.
 //
 static void P_initSlopeHeights()
 {
-   pSlopeHeights = estructalloctag(slopeheight_t, numsectors, PU_LEVEL);
+   // Have a user pointer because we use this during setup, and we want it null
+   pSlopeHeights = ecalloctag(slopeheight_t *, numsectors, sizeof(*pSlopeHeights), PU_LEVEL,
+                              reinterpret_cast<void **>(&pSlopeHeights));
    for(int i = 0; i < numsectors; ++i)
    {
       const sector_t &sector = sectors[i];
@@ -130,34 +181,19 @@ static void P_initSlopeHeights()
          continue;
 
       if(sector.srf.floor.slope)
-      {
-         fixed_t maxz = D_MININT;
-         for(int j = 0; j < sector.linecount; ++j)
-         {
-            const line_t &line = *sector.lines[j];
-            fixed_t z = P_GetZAt(sector.srf.floor.slope, line.v1->x, line.v1->y);
-            if(z > maxz)
-               maxz = z;
-            z = P_GetZAt(sector.srf.floor.slope, line.v2->x, line.v2->y);
-            if(z > maxz)
-               maxz = z;
-         }
-         pSlopeHeights[i].floordelta = maxz - sector.srf.floor.height;
-      }
+         pSlopeHeights[i].floordelta = P_GetSlopedSectorFloorDelta(sector, sector.srf.floor.slope);
       if(sector.srf.ceiling.slope)
       {
-         fixed_t minz = D_MAXINT;
-         for(int j = 0; j < sector.linecount; ++j)
+         pSlopeHeights[i].ceilingdelta = P_GetSlopedSectorCeilingDelta(sector,
+                                                                       sector.srf.ceiling.slope);
+      }
+      for(surf_e surf : SURFS)
+      {
+         if(sector.srf[surf].slope)
          {
-            const line_t &line = *sector.lines[j];
-            fixed_t z = P_GetZAt(sector.srf.ceiling.slope, line.v1->x, line.v1->y);
-            if(z < minz)
-               minz = z;
-            z = P_GetZAt(sector.srf.ceiling.slope, line.v2->x, line.v2->y);
-            if(z < minz)
-               minz = z;
+            pSlopeHeights[i].slopebasedelta[surf] =
+                  P_GetSlopedSectorBaseDelta(sector, surf, sector.srf[surf].slope);
          }
-         pSlopeHeights[i].ceilingdelta = minz - sector.srf.ceiling.height;
       }
       if(!sector.srf.ceiling.slope)
          pSlopeHeights[i].touchheight = pSlopeHeights[i].floordelta;
@@ -623,6 +659,43 @@ bool P_SlopesEqual(const pslope_t &s1, const pslope_t &s2)
                          D_abs(s1.normal.y - s2.normal.y) < epsilon &&
                          D_abs(s1.normal.z - s2.normal.z) < epsilon &&
                          D_abs(P_DistFromPlane(s2.o, s1.o, s1.normal)) < epsilon);
+}
+
+// Flexible overload which also allows null checks
+bool P_SlopesEqual(const sector_t* s1, const sector_t* s2, surf_e surf)
+{
+   if (!s1 || !s2)
+      return false;
+   if (s1 == s2)
+      return true;
+   const surface_t& srf1 = s1->srf[surf];
+   const surface_t& srf2 = s2->srf[surf];
+   if (!srf1.slope && !srf2.slope)
+      return srf1.height == srf2.height;
+
+   // Also cover zero slopes
+   if (!srf1.slope)
+      return !srf2.slope->zdelta && srf2.slope->o.z == srf1.height;
+   if (!srf2.slope)
+      return !srf1.slope->zdelta && srf1.slope->o.z == srf2.height;
+
+   return P_SlopesEqual(*srf1.slope, *srf2.slope);
+}
+
+// Useful for model sector finder
+bool P_SlopesEqualAtGivenHeight(const pslope_t &s1, fixed_t destheight1, const pslope_t &s2)
+{
+   // Apply the same safety epsilon here as in R_CompareSlopes
+   static constexpr fixed_t epsilon = FRACUNIT >> 10;
+   
+   // Calculate how the origin would be as if height changed by P_SetSectorHeight
+   v3fixed_t s1o = s1.o;
+   s1o.z = destheight1 + s1.surfaceZOffset;
+
+   return &s1 == &s2 || (D_abs(s1.normal.x - s2.normal.x) < epsilon &&
+                         D_abs(s1.normal.y - s2.normal.y) < epsilon &&
+                         D_abs(s1.normal.z - s2.normal.z) < epsilon &&
+                         D_abs(P_DistFromPlane(s2.o, s1o, s1.normal)) < epsilon);
 }
 
 bool P_AnySlope(const line_t &line)

@@ -7,6 +7,57 @@ Dates are in dd.mm.yyyy format. Most recent update is first.
 Since v4.02.00 "Forseti"
 ========================
 --------------------------------------------------------------------------------
+06.10.2024
+
+BUGFIX: Fixed a crash happening involving weapon counter and saving/loading.
+
+        Fixed a long-standing problem with barrels having the wrong height,
+        breaking all sorts of scenarios which work correctly in Doom and other
+        ports.
+
+--------------------------------------------------------------------------------
+02.09.2024
+
+FEATURE: Added a new optional argument to thingtype's damagefactor, which can be
+         "rounded" (after the comma). This has two effects:
+
+         1. The damage value is rounded to the nearest, instead of to the lower
+            value, preventing round-off errors.
+         2. If damage ends up being 0 anyway, it will behave like full damage
+            immunity, without any side effects of damage.
+
+         Added some new dmgspecial values, for supporting the various Heretic
+         effects: PoweredPhoenixFire and BossTeleport.
+
+--------------------------------------------------------------------------------
+28.08.2024
+
+IMPROVEMENT: now the Doom 1 Episode 3 ending works better with widescreen
+             assets. Keep compatibility with non-widescreen assets by preserving
+             the pillarbox in that case.
+
+--------------------------------------------------------------------------------
+24.08.2024
+
+FEATURE: Slope physics is now largely implemented. Testing will be done.
+
+         Added patches/ as an alternative path to graphics/ for ZIP and archive
+         directories. Thanks to sink666 for the contribution.
+
+--------------------------------------------------------------------------------
+22.08.2024
+
+BUGFIX: Fixed wrong FOV when setting very wide aspect ratios.
+
+        Fixed fatal error happening at very big resolutions.
+
+--------------------------------------------------------------------------------
+26.07.2024
+
+BUGFIX: Fixed round-off errors with map thing angles. Now they match vanilla
+        DOOM angles if multiples of 45.
+
+--------------------------------------------------------------------------------
 12.08.2023
 
 FEATURE: Added support for Heretic powered Dragon Claw.

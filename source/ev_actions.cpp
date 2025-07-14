@@ -115,7 +115,7 @@ static void EV_ceilingChangeForArg(ceilingdata_t &cd, int arg)
 static bool EV_lockCheck(const Mobj *actor, int lockID, bool remote)
 {
    player_t *player = actor ? actor->player : nullptr;
-   return player && E_PlayerCanUnlock(player, lockID, remote);
+   return player && E_PlayerCanUnlock(*player, lockID, remote);
 }
 
 //

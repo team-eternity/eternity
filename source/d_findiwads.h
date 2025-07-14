@@ -29,7 +29,7 @@
 
 class qstring;
 
-void D_CheckPathForIWADs(const qstring &path);
+void D_CheckPathForWADs(const qstring &path);
 void D_FindIWADs();
 
 #endif

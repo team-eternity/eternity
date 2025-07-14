@@ -515,6 +515,8 @@ VARIABLE_STRING(gi_path_fdoom,    nullptr, UL);
 VARIABLE_STRING(gi_path_fdoomu,   nullptr, UL);
 VARIABLE_STRING(gi_path_freedm,   nullptr, UL);
 
+VARIABLE_STRING(gi_path_id24res,       nullptr, UL);
+
 VARIABLE_STRING(w_masterlevelsdirname, nullptr, UL);
 VARIABLE_STRING(w_norestpath,          nullptr, UL);
 
@@ -604,6 +606,11 @@ CONSOLE_VARIABLE(iwad_freedoomu,         gi_path_fdoomu,   cf_allowblank)
 CONSOLE_VARIABLE(iwad_freedm,            gi_path_freedm,   cf_allowblank)
 {
    G_TestIWADPath(gi_path_freedm);
+}
+
+CONSOLE_VARIABLE(pwad_id24res, gi_path_id24res, cf_allowblank)
+{
+   G_TestIWADPath(gi_path_id24res);
 }
 
 CONSOLE_VARIABLE(master_levels_dir, w_masterlevelsdirname, cf_allowblank)

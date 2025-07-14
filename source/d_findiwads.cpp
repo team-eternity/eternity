@@ -118,6 +118,7 @@ static const char *collectorsEditionSubDirs[] =
 // Order of GOG installation key values below.
 enum gogkeys_e
 {
+   GOG_KEY_DOOM_DOOM_II,
    GOG_KEY_ULTIMATE,
    GOG_KEY_DOOM2,
    GOG_KEY_FINAL,
@@ -129,6 +130,13 @@ enum gogkeys_e
 // GOG.com installation keys
 static registry_value_t gogInstallValues[GOG_KEY_MAX+1] =
 {
+   // Doom + Doom II install
+   {
+      HKEY_LOCAL_MACHINE,
+      SOFTWARE_KEY "\\GOG.com\\Games\\1413291984",
+      "PATH"
+   },
+
    // Ultimate Doom install
    {
       HKEY_LOCAL_MACHINE,
@@ -169,7 +177,7 @@ static registry_value_t gogInstallValues[GOG_KEY_MAX+1] =
 };
 
 // The paths loaded from the GOG.com keys have several subdirectories.
-// Ultimate Doom and SVE are stored straight in their top directories.
+// Doom + Doom II, Ultimate Doom, and SVE are stored straight in their top directories.
 static const char *gogInstallSubDirs[] =
 {
    "doom2",
@@ -253,7 +261,7 @@ static void D_addGogPaths(Collection<qstring> &paths)
 
       if(I_GetRegistryString(*regval, str))
       {
-         // Ultimate Doom and SVE are in their root installation paths
+         // Doom + Doom II and SVE are in their root installation paths
          paths.add(str);
 
          for(size_t i = 0; i < earrlen(gogInstallSubDirs); i++)
@@ -280,21 +288,22 @@ struct steamdir_t
 // Steam install directory subdirs
 static const steamdir_t steamInstallSubDirs[] =
 {
-   { DOOM2_STEAM_APPID,      "base"          },
-   { DOOM2_STEAM_APPID,      "finaldoombase" },
-   { FINAL_DOOM_STEAM_APPID, "base"          },
-   { UDOOM_STEAM_APPID,      "base"          },
-   { HEXEN_STEAM_APPID,      "base"          },
-   { HEXDD_STEAM_APPID,      "base"          },
-   { SOSR_STEAM_APPID,       "base"          },
-   { DOOM3_BFG_STEAM_APPID,  "base/wads"     },
-   { SVE_STEAM_APPID,        nullptr         },
+   { DOOM_DOOM_II_STEAM_APPID, "rerelease"     },
+   { DOOM2_STEAM_APPID,        "base"          },
+   { DOOM2_STEAM_APPID,        "finaldoombase" },
+   { FINAL_DOOM_STEAM_APPID,   "base"          },
+   { HEXEN_STEAM_APPID,        "base"          },
+   { HEXDD_STEAM_APPID,        "base"          },
+   { SOSR_STEAM_APPID,         "base"          },
+   { DOOM3_BFG_STEAM_APPID,    "base/wads"     },
+   { SVE_STEAM_APPID,          nullptr         },
 };
 
 // Master Levels
 static const steamdir_t steamMasterLevelsSubDirs[] =
 {
-   { MASTER_LEVELS_STEAM_APPID, "master/wads"            } , // Special thanks to Gez for getting this installation path.
+   { DOOM_DOOM_II_STEAM_APPID,  "base/master/wads"       },
+   { MASTER_LEVELS_STEAM_APPID, "master/wads"            }, // Special thanks to Gez for getting this installation path.
    { DOOM2_STEAM_APPID,         "masterbase/master/wads" },
 };
 
@@ -348,7 +357,9 @@ static const char *dosInstallPaths[] =
 // Default DOS install paths for add-ons.
 // Special thanks to GreyGhost for confirming these:
 static const char *masterLevelsDOSPath = "\\master\\wads";
-static const char *dkotdcDOSPath       = "\\hexendk"; // TODO: not used yet
+
+// TODO: not used yet
+// static const char *dkotdcDOSPath       = "\\hexendk";
 
 //
 // Add default DOS installation paths
@@ -574,9 +585,9 @@ static void D_determineIWADVersion(const qstring &fullpath)
 }
 
 //
-// Check a path for any of the standard IWAD file names.
+// Check a path for any of the standard IWAD (or addon WAD) file names.
 //
-void D_CheckPathForIWADs(const qstring &path)
+void D_CheckPathForWADs(const qstring &path)
 {
    if(std::error_code ec; !fs::is_directory(path.constPtr(), ec))
    {
@@ -606,41 +617,58 @@ void D_CheckPathForIWADs(const qstring &path)
             break; // break inner loop
          }
       }
+
+      if(estrempty(gi_path_id24res) && filename == "id24res.wad")
+      {
+         // C++20_FIXME: Cast to make C++20 builds compile
+         gi_path_id24res = estrdup(reinterpret_cast<const char*>(ent.path().generic_u8string().c_str()));
+         break;
+      }
    }
 }
 
 //
-// If we found a BFG Edition IWAD, check also for nerve.wad and configure its
-// mission pack path.
+// If we found a BFG Edition IWAD, or ID24 res,
+// check also for nerve.wad and configure its mission pack path.
 //
 static void D_checkForNoRest()
 {
-   // Need BFG Edition DOOM II IWAD
-   if(estrempty(gi_path_bfgdoom2))
-      return;
+   const char *const *const indicator_wad_path_ptrs[] = {
+      &gi_path_id24res,
+      &gi_path_bfgdoom2
+   };
 
-   // Need no NR4TL path already configured
-   if(estrnonempty(w_norestpath))
-      return;
-
-   qstring nrvpath;
-
-   nrvpath = gi_path_bfgdoom2;
-   nrvpath.removeFileSpec();
-
-   if(std::error_code ec; fs::is_directory(nrvpath.constPtr(), ec))
+   for(const char *const *const path_ptr : indicator_wad_path_ptrs)
    {
-      const fs::directory_iterator itr(nrvpath.constPtr());
-      for(const fs::directory_entry &ent : itr)
+      const char *path = *path_ptr;
+
+      // Need BFG Edition DOOM II IWAD
+      if(estrempty(path))
+         return;
+
+      // Need no NR4TL path already configured
+      if(estrnonempty(w_norestpath))
+         return;
+
+      qstring nrvpath;
+
+      nrvpath = path;
+      nrvpath.removeFileSpec();
+
+      if(std::error_code ec; fs::is_directory(nrvpath.constPtr(), ec))
       {
-         const qstring filename = qstring(
-            reinterpret_cast<const char *>(ent.path().filename().generic_u8string().c_str())
-         ).toLower();
-         if(filename == "nerve.wad")
+         const fs::directory_iterator itr(nrvpath.constPtr());
+         for(const fs::directory_entry &ent : itr)
          {
-            nrvpath.pathConcatenate(filename);
-            w_norestpath = nrvpath.duplicate();
-            break;
+            const qstring filename = qstring(
+               reinterpret_cast<const char *>(ent.path().filename().generic_u8string().c_str())
+            ).toLower();
+            if(filename == "nerve.wad")
+            {
+               nrvpath.pathConcatenate(filename);
+               w_norestpath = nrvpath.duplicate();
+               break;
+            }
          }
       }
    }
@@ -728,7 +756,7 @@ void D_FindIWADs()
 
    // Check all paths that were found for IWADs
    for(qstring &path : paths)
-      D_CheckPathForIWADs(path);
+      D_CheckPathForWADs(path);
 
    // Check for special WADs
    D_checkForNoRest(); // NR4TL

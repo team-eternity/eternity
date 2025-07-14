@@ -99,6 +99,9 @@ void R_VideoEraseScaled(unsigned int x, unsigned int y, unsigned int w, unsigned
 // start of a 64*64 tile image
 extern byte **translationtables; // haleyjd 01/12/04: now ptr-to-ptr
 
+// Until we put it in gamemodeinfo and EDF...
+static const int hereticPlayerTranslationRemap[] = {0, 7, 3, 6};
+
 extern int rTintTableIndex;   // check if we have a TINTTAB lump in the directory
 
 // haleyjd 06/22/08: Span styles enumeration

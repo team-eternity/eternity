@@ -27,6 +27,8 @@
 
 // HEADER_FIXME: Needs to be broken up, too much intermixed functionality.
 
+#include "m_surf.h"
+
 // Required for: fixed_t
 #include "m_fixed.h"
 
@@ -1352,6 +1354,9 @@ int twoSided(int sector, int line);
 sector_t *getSector(int currentSector, int line, int side);
 
 side_t *getSide(int currentSector, int line, int side);
+
+fixed_t P_ExtremeHeightOnLine(const sector_t& sector, const line_t& line, surf_e surf,
+   const fixed_t& (*comp)(const fixed_t&, const fixed_t&));
 
 fixed_t P_FindLowestFloorSurrounding(const sector_t *sec);
 

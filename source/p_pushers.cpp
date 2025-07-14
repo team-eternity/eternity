@@ -188,7 +188,7 @@ void PushThinker::Think()
    int xspeed, yspeed;
    int xl, xh, yl, yh, bx, by;
    int radius;
-   int ht = 0;
+   const surface_t *boundary = nullptr;
    
    if(!allow_pushers)
       return;
@@ -248,7 +248,7 @@ void PushThinker::Think()
    // constant pushers p_wind and p_current
    
    if(sec->heightsec != -1) // special water sector?
-      ht = sectors[sec->heightsec].srf.floor.height;
+      boundary = &sectors[sec->heightsec].srf.floor;
 
    node = sec->touching_thinglist; // things touching this sector
 
@@ -284,6 +284,7 @@ void PushThinker::Think()
          }
          else // special water sector
          {
+            fixed_t ht = boundary->getZAt(thing->x, thing->y);
             if(thing->z > ht) // above ground
             {
                xspeed = this->x_mag; // full force
@@ -302,8 +303,10 @@ void PushThinker::Think()
       {
          if(sec->heightsec == -1) // NOT special water sector
          {
-            if(thing->z > sec->srf.floor.height) // above ground
+            if((!sec->srf.floor.slope && thing->z > sec->srf.floor.height) || (sec->srf.floor.slope && (thing->zref.sector.floor != sec || thing->z > thing->zref.floor))) // above ground
+            {
                xspeed = yspeed = 0; // no force
+            }
             else // on ground
             {
                xspeed = this->x_mag; // full force
@@ -312,7 +315,7 @@ void PushThinker::Think()
          }
          else // special water sector
          {
-            if(thing->z > ht) // above ground
+            if(thing->z > boundary->getZAt(thing->x, thing->y)) // above ground
                xspeed = yspeed = 0; // no force
             else // underwater
             {

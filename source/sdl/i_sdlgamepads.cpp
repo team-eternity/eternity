@@ -84,7 +84,6 @@ void SDLGamePadDriver::shutdown()
 //
 void SDLGamePadDriver::enumerateDevices()
 {
-   int numpads = 0;
    SDLGamePad *sdlDev;
 
    for(int i = 0; i < SDL_NumJoysticks(); i++)
@@ -704,8 +703,6 @@ void SDLHapticInterface::updateEffects()
    auto curTime = i_haltimer.GetTicks();
 
    SDLBaseEffect::RunEffectsList(sdlvib, curTime);
-
-   static int prevx, prevy = 0;
 
    // set state to the device using the summation of the effects
    SDL_GameControllerRumble(gamecontroller, sdlvib.leftMotorSpeed, sdlvib.rightMotorSpeed, 1000);

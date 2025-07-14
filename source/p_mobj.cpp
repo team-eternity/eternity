@@ -48,6 +48,7 @@
 #include "in_lude.h"
 #include "m_bbox.h"
 #include "m_collection.h"
+#include "m_compare.h"
 #include "m_random.h"
 #include "p_chase.h"
 #include "p_enemy.h"
@@ -283,6 +284,7 @@ inline static void P_setSpriteBySkin(Mobj &mobj, const state_t &st)
       mobj.sprite = mobj.skin->sprite;
    else
       mobj.sprite = st.sprite;
+   // Do not change sprite touching sector list yet, this happens in calling code.
 }
 
 //
@@ -300,6 +302,49 @@ static void A_vanillaHereticPodFinalAction(actionargs_t *args)
    actor->flags3 &= ~MF3_PASSMOBJ;
 //   actor->player = NULL;
 };
+
+// Returns true if the morphed monster returns back to normal form.
+// This involves removing mobj and replacing with another one.
+static bool P_checkUnmorph(Mobj &mobj)
+{
+   if(mobj.unmorph.type == UnknownThingType || mobj.unmorph.tics <= 0)
+      return false;
+   mobj.unmorph.tics -= mobj.tics;
+   if(mobj.unmorph.tics > 0)
+      return false;
+   
+   v3fixed_t pos = {mobj.x, mobj.y, mobj.z};
+   Mobj *unmorph = P_SpawnMobj(pos.x, pos.y, pos.z, mobj.unmorph.type);
+      
+   // Temporarily remove the solid flag in order to check position without being blocked by this.
+   unsigned solidity = mobj.flags & MF_SOLID;
+   mobj.flags &= ~MF_SOLID;
+   bool fit = P_CheckPositionExt(unmorph, pos.x, pos.y, pos.z);
+   mobj.flags |= solidity;
+   
+   if(!fit)
+   {
+      // Didn't fit
+      unmorph->remove();
+      mobj.unmorph.tics = 5 * TICRATE; // Next try in 5 seconds
+      return false;
+   }
+   
+   P_transferFriendship(*unmorph, mobj);
+   unmorph->angle = mobj.angle;
+   unmorph->special = mobj.special;
+   memcpy(unmorph->args, mobj.args, sizeof(mobj.args));
+   P_AddThingTID(unmorph, mobj.tid);
+   P_SetTarget(&unmorph->target, mobj.target);
+   P_SetTarget(&unmorph->tracer, mobj.tracer);
+
+   P_NeutralizeForRemoval(mobj);
+   mobj.remove();
+   
+   S_StartSound(P_SpawnMobj(pos.x, pos.y, pos.z + GameModeInfo->teleFogHeight,
+      E_SafeThingName(GameModeInfo->teleFogType)), GameModeInfo->teleSound);
+   return true;
+}
 
 //
 // P_SetMobjState
@@ -352,9 +397,16 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
       mobj->state = st;
       mobj->tics = st->tics;
 
+      fixed_t prevSpriteRadius = P_GetSpriteOrBoxRadius(*mobj);
       P_setSpriteBySkin(*mobj, *st);
 
       mobj->frame = st->frame;
+
+      P_RefreshSpriteTouchingSectorList(mobj, prevSpriteRadius);
+      
+      // Handle unmorphing
+      if(P_checkUnmorph(*mobj))
+         return false;
 
       // Modified handling.
       // Call action functions when the state is set
@@ -422,18 +474,93 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
    // don't leave an object in a state with 0 tics
    mobj->tics = (st->tics > 0) ? st->tics : 1;
 
+   fixed_t prevSpriteRadius = P_GetSpriteOrBoxRadius(*mobj);
    P_setSpriteBySkin(*mobj, *st);
 
    mobj->frame = st->frame;
 
+   P_RefreshSpriteTouchingSectorList(mobj, prevSpriteRadius);
+
    return true;
 }
 
+//
+// Advanced (new to Eternity) P_ExplodeMissile sky vanishing. Not MBF or Heretic demo relevant, but
+// with necessary handling added for sloped skies, as well as edge cases against sky hacks.
+// 
+// If hitting sky, it will remove the mobj and return true. Otherwise it returns false.
+//
+static bool P_advancedSkyVanish(Mobj *mo, const sector_t *topedgesec, const zrefs_t *slopebumpz)
+{
+   // haleyjd: an attempt at fixing explosions on skies (works!)
+
+   const sector_t* ceilingsector = P_ExtremeSectorAtPoint(mo, surf_ceil);
+   const fixed_t theight = P_ThingInfoHeight(mo->info);
+
+   if ((ceilingsector->intflags & SIF_SKY ||
+      R_IsSkyLikePortalSurface(ceilingsector->srf.ceiling)))
+   {
+      if (ceilingsector->srf.ceiling.slope)
+      {
+         // Can hit either vertically or horizontally the slope, unlike the horizontal ceiling
+
+         if (P_SlopesEqual(mo->zref.sector.ceiling, ceilingsector, surf_ceil) &&
+            mo->z >= mo->zref.ceiling - theight)
+         {
+            mo->remove();
+            return true;
+         }
+         if (slopebumpz && P_SlopesEqual(mo->zref.sector.ceiling, slopebumpz->sector.ceiling,
+            surf_ceil) && mo->z >= slopebumpz->ceiling - theight)
+         {
+            mo->remove();
+            return true;
+         }
+      }
+      else if (mo->z >= ceilingsector->srf.ceiling.height - theight)
+      {
+         mo->remove(); // don't explode on the actual sky itself
+         return true;
+      }
+   }
+   if (topedgesec && demo_version >= 342 && (topedgesec->intflags & SIF_SKY ||
+      R_IsSkyLikePortalSurface(topedgesec->srf.ceiling)))
+   {
+      if (!topedgesec->srf.ceiling.slope)
+      {
+         if (mo->z >= topedgesec->srf.ceiling.height - theight)
+         {
+            mo->remove(); // don't explode on the edge
+            return true;
+         }
+      }
+      else if (slopebumpz && P_SlopesEqual(topedgesec, slopebumpz->sector.ceiling, surf_ceil) &&
+         mo->z >= slopebumpz->ceiling - theight)
+      {
+         mo->remove(); // don't explode on the edge
+         return true;
+      }
+   }
+   if(demo_version >= 403 && slopebumpz)
+   {
+      const sector_t *ceilsector = slopebumpz->sector.ceiling;
+      if(ceilsector && (ceilsector->intflags & SIF_SKY || R_IsSkyLikePortalSurface(ceilsector->srf.ceiling)) &&
+         ceilsector->srf.ceiling.slope && mo->z >= slopebumpz->ceiling - theight)
+      {
+         mo->remove();
+         return true;
+      }
+   }
+   return false;
+}
 
 //
 // P_ExplodeMissile
+// 
+// slopebumpz is in case P_TryMove hits a downward ceiling slope and needs to detect it from clip
+// WARNING: this can remove the mobj, MAKE SURE to check if it's removed after calling this.
 //
-void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec)
+void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec, const zrefs_t *slopebumpz)
 {
    // haleyjd 08/02/04: EXPLOCOUNT flag
    if(mo->flags3 & MF3_EXPLOCOUNT)
@@ -445,24 +572,8 @@ void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec)
    mo->momx = mo->momy = mo->momz = 0;
 
    // haleyjd: an attempt at fixing explosions on skies (works!)
-   if(demo_version >= 329)
-   {
-      const sector_t *ceilingsector = P_ExtremeSectorAtPoint(mo, surf_ceil);
-      if((ceilingsector->intflags & SIF_SKY ||
-         R_IsSkyLikePortalSurface(ceilingsector->srf.ceiling)) &&
-         mo->z >= ceilingsector->srf.ceiling.height - P_ThingInfoHeight(mo->info))
-      {
-         mo->remove(); // don't explode on the actual sky itself
-         return;
-      }
-      if(topedgesec && demo_version >= 342 && (topedgesec->intflags & SIF_SKY ||
-         R_IsSkyLikePortalSurface(topedgesec->srf.ceiling)) &&
-         mo->z >= topedgesec->srf.ceiling.height - P_ThingInfoHeight(mo->info))
-      {
-         mo->remove(); // don't explode on the edge
-         return;
-      }
-   }
+   if(demo_version >= 329 && P_advancedSkyVanish(mo, topedgesec, slopebumpz))
+      return;
 
    P_SetMobjState(mo, mobjinfo[mo->type]->deathstate);
 
@@ -762,8 +873,14 @@ void P_XYMovement(Mobj* mo)
                   clip.ceilingline->extflags & EX_ML_UPPERPORTAL &&
                   R_IsSkyLikePortalSurface(clip.ceilingline->backsector->srf.ceiling))))
             {
-               if (demo_compatibility ||  // killough
-                  mo->z > clip.ceilingline->backsector->srf.ceiling.height)
+               if (demo_compatibility) // killough
+               {
+                  mo->remove();
+                  return;
+               }
+               const surface_t &backceiling = clip.ceilingline->backsector->srf.ceiling;
+               // Slope handling is done in P_ExplodeMissile
+               if (!backceiling.slope && mo->z > backceiling.height)
                {
                   // Hack to prevent missiles exploding against the sky.
                   // Does not handle sky floors.
@@ -786,7 +903,13 @@ void P_XYMovement(Mobj* mo)
             }
 
             P_ExplodeMissile(mo, clip.ceilingline ? clip.ceilingline->backsector :
-               nullptr);
+               nullptr, &clip.zref);
+
+            // IMPORTANT TO CHECK THAT IT GOT REMOVED BY SKIES. Exiting P_XYMovement will also check
+            // for removal, so it's safe. Inside P_ExplodeMissile it only explodes outside old demos,
+            // so it's safe.
+            if (mo->isRemoved())
+               return;
          }
          else // whatever else it is, it is now standing still in (x,y)
          {
@@ -826,12 +949,32 @@ void P_XYMovement(Mobj* mo)
    // killough 9/15/98: add objects falling off ledges
    // killough 11/98: only include bouncers hanging off ledges
    // ioanch 20160116: portal aware
-   if(((mo->flags & MF_BOUNCES && mo->z > mo->zref.dropoff) ||
-       mo->flags & MF_CORPSE || mo->intflags & MIF_FALLING) &&
-      (mo->momx > FRACUNIT/4 || mo->momx < -FRACUNIT/4 ||
-       mo->momy > FRACUNIT/4 || mo->momy < -FRACUNIT/4) &&
-      mo->zref.floor != P_ExtremeSectorAtPoint(mo, surf_floor)->srf.floor.height)
-      return;  // do not stop sliding if halfway off a step with some momentum
+   if (((mo->flags & MF_BOUNCES && mo->z > mo->zref.dropoff) ||
+      mo->flags & MF_CORPSE || mo->intflags & MIF_FALLING) &&
+      (mo->momx > FRACUNIT / 4 || mo->momx < -FRACUNIT / 4 ||
+         mo->momy > FRACUNIT / 4 || mo->momy < -FRACUNIT / 4))
+   {
+      v2fixed_t totaldelta = {};
+      const sector_t* floorsector = P_ExtremeSectorAtPoint(mo, surf_floor, &totaldelta);
+      v2fixed_t pos = {mo->x + totaldelta.x, mo->y + totaldelta.y};
+      if (mo->zref.floor != floorsector->srf.floor.getZAt(pos))
+      {
+         // do not stop sliding if halfway off a step with some momentum
+         // BUT: stop sliding if actually on top of the slope that keeps it
+         bool keepgoing = false;
+         const sector_t* mofloorsector = mo->zref.sector.floor;
+         if (mofloorsector && mofloorsector->srf.floor.slope)
+         {
+            if (floorsector == mofloorsector || (floorsector->srf.floor.slope &&
+               P_SlopesEqual(*floorsector->srf.floor.slope, *mofloorsector->srf.floor.slope)))
+            {
+               keepgoing = true;
+            }
+         }
+         if(!keepgoing)
+            return;
+      }
+   }
 
    // Some objects never rest on other things
    if(mo->intflags & MIF_ONMOBJ && mo->flags4 & MF4_SLIDEOVERTHINGS)
@@ -973,7 +1116,10 @@ static bool P_planeBounce(Mobj &thing, surf_e surf, bool floordecay)
    if (thing.zref.sector[surf])
    {
       const pslope_t* slope = thing.zref.sector[surf]->srf[surf].slope;
-      if (slope && slope->zdelta)
+
+      // ONLY for no-gravity things, apply bouncing according to slope normal.
+      // For falling things it has been noticed it's too wacky and unrealistic.
+      if (thing.flags & MF_NOGRAVITY && slope && slope->zdelta)
       {
          // Get normal component of velocity
          fixed_t prod = FixedMul(slope->normal.x, thing.momx) + 
@@ -998,28 +1144,12 @@ static bool P_planeBounce(Mobj &thing, surf_e surf, bool floordecay)
                if(demo_version >= 331)
                   return false;  // haleyjd: return here for below fix
             }
-            else if(thing.flags & MF_NOGRAVITY)
+            else
             {
-               // bounce unless under gravity
+               // bounce
                thing.momx -= 2 * normcomp.x;
                thing.momy -= 2 * normcomp.y;
                thing.momz -= 2 * normcomp.z;
-            }
-         }
-         
-         if(floordecay && surf == surf_floor && !(thing.flags & MF_NOGRAVITY))
-         {
-            fixed_t decay = getBouncingDecay(thing.flags);
-            thing.momx = FixedMul(thing.momx, decay);
-            thing.momy = FixedMul(thing.momy, decay);
-            thing.momz = FixedMul(thing.momz, decay);
-            
-            // Bring it to rest below a certain speed
-            fixed_t threshold = P_getMBFBouncerGravity(thing, 4);
-            if(D_abs(thing.momx) <= threshold && D_abs(thing.momy) <= threshold &&
-               D_abs(thing.momz) <= threshold)
-            {
-               thing.momx = thing.momy = thing.momz = 0;
             }
          }
          return true;
@@ -1142,8 +1272,11 @@ static void P_ZMovement(Mobj* mo)
 
       if (mo->flags & MF_MISSILE)
       {
+         // FIXME: does this really execute here instead of P_TryMove?
+         // This check is for non-sloped ceilingline backsector
          if(clip.ceilingline &&
             clip.ceilingline->backsector &&
+            !clip.ceilingline->backsector->srf.ceiling.slope &&
             (mo->z > clip.ceilingline->backsector->srf.ceiling.height) &&
             (clip.ceilingline->backsector->intflags & SIF_SKY ||
             (demo_version >= 342 &&
@@ -1154,7 +1287,8 @@ static void P_ZMovement(Mobj* mo)
          }
          else
          {
-            P_ExplodeMissile(mo, 
+            // FIXME: do I have to put clip.zref here? It's already handled in P_XYMovement
+            P_ExplodeMissile(mo,
                clip.ceilingline ? clip.ceilingline->backsector : nullptr);
          }
       }
@@ -1256,7 +1390,7 @@ floater:
 
       if(mo->flags & MF_MISSILE && !(mo->flags & MF_NOCLIP))
       {
-         if(mo->flags4 & MF4_HERETICBOUNCES) // MaxW
+         if(mo->flags4 & MF4_HERETICBOUNCES && !E_UnderBoomLiquidFakeFloor(*mo)) // MaxW
          {
             P_floorHereticBounceMissile(mo);
             return;
@@ -1316,7 +1450,7 @@ floater:
       if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
       {
          P_ExplodeMissile (mo, 
-            clip.ceilingline ? clip.ceilingline->backsector : nullptr);
+            clip.ceilingline ? clip.ceilingline->backsector : nullptr, &clip.zref);
          return;
       }
    }
@@ -1359,7 +1493,7 @@ void P_NightmareRespawn(Mobj* mobj)
       subsector_t *newsubsec = R_PointInSubsector(x, y);
 
       fixed_t sheight = mobj->height;
-      fixed_t tz      = newsubsec->sector->srf.floor.height + mobj->spawnpoint.height;
+      fixed_t tz      = newsubsec->sector->srf.floor.getZAt(x, y) + mobj->spawnpoint.height;
 
       // need to restore real height before checking
       mobj->height = P_ThingInfoHeight(mobj->info);
@@ -1379,8 +1513,12 @@ void P_NightmareRespawn(Mobj* mobj)
 
    // spawn a teleport fog at old spot
    // because of removal of the body?
+   v2fixed_t sourcepos = {};
+   const sector_t *floorsector = P_ExtremeSectorAtPoint(mobj, surf_floor, &sourcepos);
+   sourcepos.x += mobj->x;
+   sourcepos.y += mobj->y;
    mo = P_SpawnMobj(mobj->x, mobj->y,
-                    P_ExtremeSectorAtPoint(mobj, surf_floor)->srf.floor.height +
+                    floorsector->srf.floor.getZAt(sourcepos) +
                        GameModeInfo->teleFogHeight,
                     E_SafeThingName(GameModeInfo->teleFogType));
 
@@ -1390,7 +1528,7 @@ void P_NightmareRespawn(Mobj* mobj)
    // spawn a teleport fog at the new spot
    ss = R_PointInSubsector(x, y);
    mo = P_SpawnMobj(x, y,
-                    ss->sector->srf.floor.height + GameModeInfo->teleFogHeight,
+                    ss->sector->srf.floor.getZAt(x, y) + GameModeInfo->teleFogHeight,
                     E_SafeThingName(GameModeInfo->teleFogType));
 
    S_StartSound(mo, GameModeInfo->teleSound);
@@ -1479,7 +1617,7 @@ static const line_t *P_avoidPortalEdges(Mobj &mobj, surf_e surf)
 //
 // Check for passing through an interactive portal plane.
 //
-bool P_CheckPortalTeleport(Mobj *mobj)
+bool P_CheckPortalTeleport(Mobj *mobj, surf_e *whichSurf)
 {
    static const int MAXIMUM_PER_TIC = 8;  // set some limit for maximum portals to cross per tic
 
@@ -1498,7 +1636,7 @@ bool P_CheckPortalTeleport(Mobj *mobj)
          fixed_t passheight, prevpassheight;
          if(mobj->player)
          {
-            P_CalcHeight(mobj->player);
+            P_CalcHeight(*mobj->player);
             passheight = mobj->player->viewz;
             prevpassheight = mobj->player->prevviewz;
          }
@@ -1532,6 +1670,8 @@ bool P_CheckPortalTeleport(Mobj *mobj)
                   mobj->player->prevviewz = mobj->player->viewz;
             }
             movedalready = true;  // signal not to attempt moving the other way now
+            if(whichSurf)
+               *whichSurf = surf;
          }
          else
             break;   // break out of the eight-attempt if there's no portal now
@@ -1586,10 +1726,81 @@ inline static void P_checkMobjProjections(Mobj &mobj)
 }
 
 //
+// Grouped info about portal terrain splash
+//
+struct portalSplash_t
+{
+   bool oldWaterState;
+   bool waterState;
+   const sector_t *sectorAbove;
+   surf_e passSurface;
+};
+
+//
+// Called before any movement
+//
+static void P_initializePortalSplash(portalSplash_t &splash, const Mobj &mobj)
+{
+   if(P_IsLiquidOverlaylinkedPortal(mobj.subsector->sector->srf.floor))
+   {
+      splash.waterState = mobj.z < P_PortalZ(mobj.subsector->sector->srf.floor, mobj.x, mobj.y);
+      splash.sectorAbove = mobj.subsector->sector;
+   }
+}
+
+//
+// Update state just before going through a portal (the splash boundary is the thing bottom, whereas
+// the portal transfer boundary is the thing middle or, if player, eye level)
+//
+static void P_updatePortalSplashBeforeTransfer(portalSplash_t &splash, const Mobj &mobj)
+{
+   // Must check here if we're about to pass a water portal
+   // NOTE: only handle it when going down from above water. Going up from underwater is handled
+   // differently (see below).
+   if(P_IsLiquidOverlaylinkedPortal(mobj.subsector->sector->srf.floor))
+   {
+      splash.oldWaterState = splash.waterState;
+      splash.waterState = mobj.z < P_PortalZ(mobj.subsector->sector->srf.floor, mobj.x, mobj.y);
+      // may need to update because of horizontal movement
+      splash.sectorAbove = mobj.subsector->sector;
+   }
+   // Do not handle up-from-water portal overlay changes here, because they're handled below,
+   // accounting for portal teleport.
+   if(splash.oldWaterState && !splash.waterState)
+      splash.oldWaterState = false;
+}
+
+//
+// Update state after portals were accounted for
+//
+static void P_updatePortalSplashAfterTransfer(portalSplash_t &splash, const Mobj &mobj)
+{
+   // We need to handle movement from below water surface, which typically happens through portal
+   if(splash.passSurface == surf_ceil && 
+      P_IsLiquidOverlaylinkedPortal(mobj.subsector->sector->srf.floor))
+   {
+      splash.oldWaterState = true;
+      splash.waterState = false;
+      splash.sectorAbove = mobj.subsector->sector;
+   }
+
+   // Conversely, it's possible we might end up right below some other liquid separator just as we
+   // pass a non-overlay portal
+   if(splash.passSurface == surf_floor &&
+      P_IsLiquidOverlaylinkedPortal(mobj.subsector->sector->srf.floor) && ! splash.oldWaterState &&
+      ! splash.waterState)
+   {
+      splash.waterState = mobj.z < P_PortalZ(mobj.subsector->sector->srf.floor, mobj.x, mobj.y);
+      splash.sectorAbove = mobj.subsector->sector;
+   }
+}
+
+//
 // P_MobjThinker
 //
 void Mobj::Think()
 {
+
    if(intflags & MIF_MUSICCHANGER)
    {
       S_MusInfoThink(*this);
@@ -1607,6 +1818,8 @@ void Mobj::Think()
    }
 
    int oldwaterstate, waterstate = 0;
+
+   edefstructvar(portalSplash_t, portalSplash);
    fixed_t lz;
 
    // haleyjd 01/04/14: backup current position at start of frame;
@@ -1625,8 +1838,10 @@ void Mobj::Think()
    {
       sector_t *hs = &sectors[subsector->sector->heightsec];
 
-      waterstate = (z < hs->srf.floor.height);
+      waterstate = (z < hs->srf.floor.getZAt(x, y));
    }
+
+   P_initializePortalSplash(portalSplash, *this);
 
    // Heretic Wind transfer specials
    if(!vanilla_heretic && (flags3 & MF3_WINDTHRUST) && !(flags & MF_NOCLIP))
@@ -1761,8 +1976,13 @@ void Mobj::Think()
 
    }
 
+   P_updatePortalSplashBeforeTransfer(portalSplash, *this);
+
    // check if we are passing an interactive portal plane
-   P_CheckPortalTeleport(this);
+   bool portalPassed = P_CheckPortalTeleport(this, &portalSplash.passSurface);
+
+   if(portalPassed)
+      P_updatePortalSplashAfterTransfer(portalSplash, *this);
 
    // handle crashstate here
    // VANILLA_HERETIC: move this check into Z_Movement.
@@ -1782,7 +2002,7 @@ void Mobj::Think()
    {
       sector_t *hs = &sectors[subsector->sector->heightsec];
 
-      waterstate = (z < hs->srf.floor.height);
+      waterstate = (z < hs->srf.floor.getZAt(x, y));
    }
    else
       waterstate = 0;
@@ -1790,14 +2010,15 @@ void Mobj::Think()
    if(flags & (MF_MISSILE|MF_BOUNCES))
    {
       // any time a missile or bouncer crosses, splash
-      if(oldwaterstate != waterstate)
+      if(portalSplash.oldWaterState != portalSplash.waterState)
+         E_HitWater(this, portalSplash.sectorAbove);
+      else if(oldwaterstate != waterstate)
          E_HitWater(this, subsector->sector);
-   }
+   }  // normal things only splash going into the water
+   else if(! portalSplash.oldWaterState && portalSplash.waterState)
+      E_HitWater(this, portalSplash.sectorAbove);
    else if(oldwaterstate == 0 && waterstate != 0)
-   {
-      // normal things only splash going into the water
       E_HitWater(this, subsector->sector);
-   }
 
    // cycle through states,
    // calling action functions at transitions
@@ -2016,6 +2237,12 @@ void Mobj::serialize(SaveArchive &arc)
    if(arc.saveVersion() >= 2)
       arc << flags5;
 
+   if (arc.saveVersion() >= 22)
+   {
+      arc << unmorph.tics;
+      Archive_MobjType(arc, unmorph.type);
+   }
+
    // Arrays
    P_ArchiveArray<int>(arc, counters, NUMMOBJCOUNTERS); // Counters
    P_ArchiveArray<int>(arc, args,     NUMMTARGS);       // Arguments
@@ -2061,14 +2288,18 @@ void Mobj::serialize(SaveArchive &arc)
          int playernum = temp - 1;
          (player = &players[playernum])->mo = this;
 
-         // PCLASS_FIXME: Need to save and restore proper player class!
-         // Temporary hack.
-         players[playernum].pclass = E_PlayerClassForName(GameModeInfo->defPClassName);
-         
-         // PCLASS_FIXME: Need to save skin and attempt to restore, then fall
-         // back to default for player class if non-existant. Note: must be 
-         // after player class is set.
-         P_SetSkin(P_GetDefaultSkin(&players[playernum]), playernum); // haleyjd
+         // Now we have a proper way to serialize this, in P_ArchivePlayers
+         if(arc.saveVersion() < 22)
+         {
+            // PCLASS_FIXME: Need to save and restore proper player class!
+            // Temporary hack.
+            players[playernum].pclass = E_PlayerClassForName(GameModeInfo->defPClassName);
+
+            // PCLASS_FIXME: Need to save skin and attempt to restore, then fall
+            // back to default for player class if non-existant. Note: must be
+            // after player class is set.
+            P_SetSkin(P_GetDefaultSkin(&players[playernum]), playernum); // haleyjd
+         }
       }
       else
       {
@@ -2280,6 +2511,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
 
    P_setSpriteBySkin(*mobj, *st);
    mobj->frame  = st->frame;
+   // Do not refresh sprite touching sector list here, as it will be done by P_SetThingPosition below.
 
    // ioanch 20160109: init spriteproj. They won't be set in P_SetThingPosition 
    // but P_CheckPortalTeleport
@@ -2351,9 +2583,18 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
          mobj->colour = mobj->info->colour;
       }
       else
+      {
          mobj->colour = (info->flags & MF_TRANSLATION) >> MF_TRANSSHIFT;
+
+         // FIXME: move this stuff to GameModeInfo/EDF
+         if(GameModeInfo->type == Game_Heretic)
+            mobj->colour = hereticPlayerTranslationRemap[mobj->colour];
+      }
    }
 
+   // Under vanilla Heretic type 0 is the crystal vial, so try to emulate that weirdness where
+   // respawned chickens turn into vials
+   mobj->unmorph.type = vanilla_heretic ? E_SafeThingName("CrystalVial") : UnknownThingType;
    return mobj;
 }
 
@@ -2405,21 +2646,24 @@ void Mobj::remove()
    P_RemoveThingTID(this);
 
    // unlink from sector and block lists
-   P_UnsetThingPosition(this);
+   P_UnsetThingPosition(this, true);
 
    // ioanch 20160109: remove portal sprite projections
    R_RemoveMobjProjections(this);
 
    // Delete all nodes on the current sector_list -- phares 3/16/98
    if(this->old_sectorlist)
-      P_DelSeclist(this->old_sectorlist);
+      P_DelSeclist(this->old_sectorlist, &sector_t::touching_thinglist);
+   if(this->old_sprite_sectorlist)
+      P_DelSeclist(this->old_sprite_sectorlist, &sector_t::touching_thinglist_by_sprites);
 
    // haleyjd 08/13/10: ensure that the object cannot be relinked, and
    // nullify old_sectorlist to avoid multiple release of msecnodes.
    if(demo_version > 337)
    {
       this->flags |= (MF_NOSECTOR | MF_NOBLOCKMAP);
-      this->old_sectorlist = nullptr; 
+      this->old_sectorlist = nullptr;
+      this->old_sprite_sectorlist = nullptr;
    }
 
    // killough 11/98: Remove any references to other mobjs.
@@ -2510,7 +2754,7 @@ void P_RespawnSpecials()
 
    // spawn a teleport fog at the new spot
    ss = R_PointInSubsector(x,y);
-   mo = P_SpawnMobj(x, y, ss->sector->srf.floor.height, E_SafeThingType(MT_IFOG));
+   mo = P_SpawnMobj(x, y, ss->sector->srf.floor.getZAt(x, y), E_SafeThingType(MT_IFOG));
    S_StartSound(mo, sfx_itmbk);
 
    // spawn it
@@ -2583,11 +2827,11 @@ void P_SpawnPlayer(mapthing_t* mthing)
 
    // setup gun psprite
 
-   P_SetupPsprites(p);
+   P_SetupPsprites(*p);
 
    // give all cards in death match mode
    if(GameType == gt_dm)
-      E_GiveAllKeys(p);
+      E_GiveAllKeys(*p);
 
    if(mthing->type - 1 == consoleplayer)
    {
@@ -3341,15 +3585,17 @@ bool P_CheckMissileSpawn(Mobj* th)
    // move a little forward so an angle can
    // be computed if it immediately explodes
 
+   int depower = th->info->missiletype == MISSILETYPE_RAVENFAST ? 3 : 1;
+
    int newgroupid = th->groupid;
-   v2fixed_t pos = P_LinePortalCrossing(th->x, th->y, th->momx >> 1,
-                                        th->momy >> 1, &newgroupid);
+   v2fixed_t pos = P_LinePortalCrossing(th->x, th->y, th->momx >> depower,
+                                        th->momy >> depower, &newgroupid);
 
    // ioanch: this was already hacky as hell. We still need to adjust
    // coordinates by portal, and group ID though.
    th->x = pos.x;
    th->y = pos.y;
-   th->z += th->momz >> 1;
+   th->z += th->momz >> depower;
    th->groupid = newgroupid;
 
    // killough 8/12/98: for non-missile objects (e.g. grenades)
@@ -3888,7 +4134,10 @@ void P_AdjustFloorClip(Mobj *thing)
    for(m = thing->touching_sectorlist; m; m = m->m_tnext)
    {
       if(m->m_sector->heightsec == -1 &&
-         thing->z == m->m_sector->srf.floor.height)
+         ((!m->m_sector->srf.floor.slope && thing->z == m->m_sector->srf.floor.height) || 
+          (m->m_sector->srf.floor.slope &&
+           P_SlopesEqual(thing->zref.sector.floor, m->m_sector, surf_floor) &&
+           thing->z == thing->zref.floor)))
       {
          fixed_t fclip = E_SectorFloorClip(m->m_sector);
 
@@ -4215,6 +4464,30 @@ void P_StartMobjFade(Mobj *mo, int alphavelocity)
 
    // otherwise, the existing thinker will pick up this change.
    mo->alphavelocity = alphavelocity;
+}
+
+// Common case of standing on ground, with z <= floor height for non-sloped, or floor sector being
+// the slope sector otherwise
+bool P_RestingOnGround(const Mobj &thing, const surface_t &floor)
+{
+   if(!floor.slope)
+      return thing.z <= floor.height;
+   // Sloped: must rest on this slope.
+   return thing.zref.sector.floor && &thing.zref.sector.floor->srf.floor == &floor &&
+         thing.z == thing.zref.floor;
+}
+
+void P_NeutralizeForRemoval(Mobj &mobj)
+{
+   // From Heretic, seems to do as much as possible to make a thing "inert" before it gets removed
+   mobj.momx = mobj.momy = mobj.momz = 0;
+   mobj.z = mobj.zref.ceiling + 4 * FRACUNIT;
+   mobj.flags &= ~(MF_SHOOTABLE | MF_FLOAT | MF_SKULLFLY | MF_SOLID | MF_COUNTKILL);
+   mobj.flags2 &= ~(MF2_LOGRAV);
+   mobj.flags2 |= MF2_DONTDRAW;
+   mobj.flags3 &= ~(MF3_PASSMOBJ);
+   mobj.player = nullptr;
+   mobj.health = -1000;
 }
 
 #if 0

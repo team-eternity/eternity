@@ -164,6 +164,14 @@ static bool MN_PopupResponder(event_t *ev, int action)
       ch = 'y';
    else if(!ectype::isPrint(ev->data1))
       ch = ev->data1;
+   else if(ev->type == ev_keydown && ectype::isPrint(ev->data1) &&
+           popup_message_type == popup_question)
+   {
+      // Also support non-QWERTY keyboards and it's a y/n question (use the scan code). This aligns
+      // with internationalized ports like GZDoom, allowing muscle memory to allow y/n even if it's
+      // not such on user's keyboard layout.
+      ch = ev->data1;
+   }
    else
       return false;
    

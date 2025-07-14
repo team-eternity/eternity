@@ -186,10 +186,11 @@ result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush,
    // Moving a floor up
    // jff 02/04/98 keep floor from moving thru ceilings
    // jff 2/22/98 weaken check to demo_compatibility
-   if(getComp(comp_floors) || dest < sector->srf.ceiling.height)
+   fixed_t ceilinglimit = sector->srf.ceiling.height - pSlopeHeights[sector - sectors].touchheight;
+   if(getComp(comp_floors) || dest < ceilinglimit)
       destheight = dest;
    else
-      destheight = sector->srf.ceiling.height;
+      destheight = ceilinglimit;
 
    if(sector->srf.floor.height + speed > destheight)
    {

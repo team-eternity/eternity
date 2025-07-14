@@ -27,20 +27,20 @@
 #include "version.h"
 
 // sf: made int from define
-int version = 403;
+int version = 405;
 
 // haleyjd: subversion -- range from 0 to 255
-unsigned char subversion = 0;
+unsigned char subversion = 3;
 
 const char version_date[] = __DATE__;
 const char version_time[] = __TIME__; // haleyjd
 
 // sf: version name -- at the suggestion of mystican
-const char version_name[] = "Glitnir";
+const char version_name[] = "Unnamed";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = "Eternity Engine v4.03.00 \"Glitnir\"";
+const char ee_wmCaption[] = "Eternity Engine v4.05.00-pre \"Unnamed\"";
 #endif
 
 // haleyjd: Eternity release history
@@ -59,30 +59,33 @@ const char ee_wmCaption[] = "Eternity Engine v4.03.00 \"Glitnir\"";
 // public beta         -- 3.31 public beta 6 02/29/04
 // public beta         -- 3.31 public beta 7 04/11/04
 
-// 3.31.10 'Delta'     -- 01/19/05
-// 3.33.00 'Genesis'   -- 05/26/05
-// 3.33.01 'Outcast'   -- 06/24/05
-// 3.33.02 'Warrior'   -- 10/01/05
-// 3.33.33 'Paladin'   -- 05/17/06
-// 3.33.50 'Phoenix'   -- 10/23/06
-// 3.35.90 'Simorgh'   -- 01/11/09
-// 3.35.92 'Nekhbet'   -- 03/22/09
-// 3.37.00 'Sekhmet'   -- 01/01/10
-// 3.39.20 'Resheph'   -- 10/10/10
-// 3.40.00 'Rebirth'   -- 01/08/11
-// 3.40.10 'Aasgard'   -- 05/01/11
-// 3.40.11 'Aasgard'   -- 05/02/11
-// 3.40.15 'Wodanaz'   -- 06/21/11
-// 3.40.20 'Mjolnir'   -- 12/25/11
-// 3.40.25 'Midgard'   -- 08/26/12
-// 3.40.30 'Alfheim'   -- 11/04/12
-// 3.40.37 'Gungnir'   -- 05/27/13
-// 3.40.46 'Bifrost'   -- 01/19/14
-// 3.42.02 'Heimdal'   -- 05/07/17
-// 3.42.03 'Heimdal 2' -- 08/02/17
-// 4.00.00 'Völuspá'   -- 03/17/18
-// 4.01.00 'Tyrfing'   -- 10/13/20
-// 4.02.00 'Forseti'   -- 01/24/21
+// 3.31.10 'Delta'            -- 01/19/05
+// 3.33.00 'Genesis'          -- 05/26/05
+// 3.33.01 'Outcast'          -- 06/24/05
+// 3.33.02 'Warrior'          -- 10/01/05
+// 3.33.33 'Paladin'          -- 05/17/06
+// 3.33.50 'Phoenix'          -- 10/23/06
+// 3.35.90 'Simorgh'          -- 01/11/09
+// 3.35.92 'Nekhbet'          -- 03/22/09
+// 3.37.00 'Sekhmet'          -- 01/01/10
+// 3.39.20 'Resheph'          -- 10/10/10
+// 3.40.00 'Rebirth'          -- 01/08/11
+// 3.40.10 'Aasgard'          -- 05/01/11
+// 3.40.11 'Aasgard'          -- 05/02/11
+// 3.40.15 'Wodanaz'          -- 06/21/11
+// 3.40.20 'Mjolnir'          -- 12/25/11
+// 3.40.25 'Midgard'          -- 08/26/12
+// 3.40.30 'Alfheim'          -- 11/04/12
+// 3.40.37 'Gungnir'          -- 05/27/13
+// 3.40.46 'Bifrost'          -- 01/19/14
+// 3.42.02 'Heimdal'          -- 05/07/17
+// 3.42.03 'Heimdal 2'        -- 08/02/17
+// 4.00.00 'Völuspá'          -- 03/17/18
+// 4.01.00 'Tyrfing'          -- 10/13/20
+// 4.02.00 'Forseti'          -- 01/24/21
+// 4.04.00 'Glitnir'          -- 10/13/24
+// 4.04.01 'Glitnir Update 1' -- 10/13/24
+// 4.04.02 'Glitnir Update 2' -- 11/19/25
 
 // auxilliary releases
 // Caverns of Darkness -- 3.29 dev beta 5 joel-2 04/24/02

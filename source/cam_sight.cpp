@@ -35,6 +35,7 @@
 #include "e_exdata.h"
 #include "m_collection.h"
 #include "p_chase.h"
+#include "p_info.h"
 #include "p_inter.h"    // ioanch 20160101: for damage
 #include "p_portal.h"
 #include "p_map.h"      // ioanch 20160131: for use
@@ -247,6 +248,13 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
          context.portalresult = context.portalexit = true;
          return false;
       }
+   }
+   
+   // Keep support for DOOM and Strife's lack of passing through misflagged lines
+   if(LevelInfo.levelType != LI_TYPE_HERETIC && 
+      LevelInfo.levelType != LI_TYPE_HEXEN && !(li->flags & ML_TWOSIDED))
+   {
+      return false;
    }
 
    // quick test for totally closed doors

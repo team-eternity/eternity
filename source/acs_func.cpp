@@ -805,7 +805,7 @@ bool ACS_CF_CheckInventory(ACS_CF_ARGS)
    if(!info->mo || !info->mo->player)
       thread->dataStk.push(0);
    else
-      thread->dataStk.push(E_GetItemOwnedAmount(info->mo->player, item));
+      thread->dataStk.push(E_GetItemOwnedAmount(*info->mo->player, item));
    return false;
 }
 
@@ -1672,7 +1672,7 @@ bool ACS_CF_SectorDamage(ACS_CF_ARGS)
          {
             if(!(flags & SECDAM_PLAYERS))
                continue;
-            if(estrnonempty(protector) && (E_GetItemOwnedAmountName(mo->player, protector) > 0 ||
+            if(estrnonempty(protector) && (E_GetItemOwnedAmountName(*mo->player, protector) > 0 ||
                                            E_PlayerHasPowerName(*mo->player, protector)))
             {
                continue;
@@ -2127,6 +2127,13 @@ bool ACS_CF_SetActorPosition(ACS_CF_ARGS)
    return false;
 }
 
+inline static void ACS_setThingXScale(Mobj &thing, fixed_t val)
+{
+   fixed_t prevSpriteRadius = P_GetSpriteOrBoxRadius(thing);
+   thing.xscale = M_FixedToFloat(val);
+   P_RefreshSpriteTouchingSectorList(&thing, prevSpriteRadius);
+}
+
 //
 // ACS_SetThingProp
 //
@@ -2168,7 +2175,7 @@ void ACS_SetThingProp(Mobj *thing, uint32_t var, uint32_t val)
    case ACS_TP_TargetTID:    P_SetTarget(&thing->target, P_FindMobjFromTID(val, nullptr, nullptr)); break;
    case ACS_TP_TracerTID:    P_SetTarget(&thing->tracer, P_FindMobjFromTID(val, nullptr, nullptr)); break;
    case ACS_TP_WaterLevel:   break;
-   case ACS_TP_ScaleX:       thing->xscale = M_FixedToFloat(val); break;
+   case ACS_TP_ScaleX:       ACS_setThingXScale(*thing, val); break;
    case ACS_TP_ScaleY:       thing->yscale = M_FixedToFloat(val); break;
    case ACS_TP_Dormant:      if(val) thing->flags2 |=  MF2_DORMANT;
                              else    thing->flags2 &= ~MF2_DORMANT; break;
@@ -2290,10 +2297,10 @@ bool ACS_CF_SetWeapon(ACS_CF_ARGS)
    }
 
    player_t *player = info->mo->player;
-   if(E_PlayerOwnsWeapon(player, weapon))
+   if(E_PlayerOwnsWeapon(*player, weapon))
    {
       player->pendingweapon     = weapon;
-      player->pendingweaponslot = E_FindFirstWeaponSlot(player, weapon);
+      player->pendingweaponslot = E_FindFirstWeaponSlot(*player, weapon);
       thread->dataStk.push(1);
    }
    else
@@ -2593,14 +2600,14 @@ bool ACS_CF_TakeInventory(ACS_CF_ARGS)
    {
       // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
       if(info->mo->player)
-         E_RemoveInventoryItem(info->mo->player, item, amount);
+         E_RemoveInventoryItem(*info->mo->player, item, amount);
    }
    else
    {
       for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
       {
          if(playeringame[pnum])
-            E_RemoveInventoryItem(&players[pnum], item, amount);
+            E_RemoveInventoryItem(players[pnum], item, amount);
       }
    }
    return false;

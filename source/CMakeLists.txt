@@ -67,7 +67,7 @@ endmacro()
 
 function(eternity_target_compile_definitions _TARGET)
    # General flags.
-   target_compile_definitions("${_TARGET}" PRIVATE _SDL_VER PUBLIC _CONSOLE HAVE_SPCLIB HAVE_ADLMIDILIB)
+   target_compile_definitions("${_TARGET}" PRIVATE _SDL_VER PUBLIC _CONSOLE HAVE_SPCLIB HAVE_ADLMIDILIB )
 
    # Library search flags.
    if(OPENGL_LIBRARY)
@@ -87,7 +87,7 @@ function(eternity_target_compile_definitions _TARGET)
    endif()
 
    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-      target_compile_definitions("${_TARGET}" PRIVATE EE_FEATURE_REGISTRYSCAN)
+      target_compile_definitions("${_TARGET}" PRIVATE EE_FEATURE_REGISTRYSCAN _DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR)
 
       if(MSVC)
          target_compile_definitions("${_TARGET}" PRIVATE EE_FEATURE_XINPUT)

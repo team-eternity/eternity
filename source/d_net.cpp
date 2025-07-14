@@ -413,7 +413,13 @@ static void D_InitPlayers()
       if(i != consoleplayer)
       {
          snprintf(players[i].name, sizeof(players[i].name), "player %i", i+1);
-         players[i].colormap = i % TRANSLATIONCOLOURS;
+
+         // FIXME: make this EDF/GameModeInfo
+         if(GameModeInfo->type == Game_Heretic)
+            players[i].colormap = hereticPlayerTranslationRemap[i % TRANSLATIONCOLOURS];
+         else
+            players[i].colormap = i % TRANSLATIONCOLOURS;
+
       }
 
       // PCLASS_FIXME: subject to the NETCODE_FIXME above; only allows

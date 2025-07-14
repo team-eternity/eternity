@@ -2161,6 +2161,9 @@ static void WI_Drawer()
       break;
 
    case IntrEnding: // haleyjd 03/16/06
+      // We need to draw background even now, because otherwise D_Display
+      // pillarboxes the view by default
+      IN_slamBackground();
       break;
    }
 }

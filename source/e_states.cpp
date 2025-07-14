@@ -535,7 +535,7 @@ int E_GetAddStateNumForDEHNum(int dehnum, bool forceAdd)
 
       statenum = newstate;
    }
-   else if(forceAdd && !states[statenum]->dsdhacked)
+   else if(forceAdd && !states[statenum]->adddeh)
    {
       state = states[statenum];
 
@@ -551,9 +551,9 @@ int E_GetAddStateNumForDEHNum(int dehnum, bool forceAdd)
    if(state)
    {
       qstring name;
-      name.Printf(0, "_S_DSDHACKED%d", dehnum);
+      name.Printf(0, "_S_ADDDEH%d", dehnum);
 
-      state->dsdhacked = true;
+      state->adddeh = true;
 
       state->index     = statenum;
       state->sprite    = blankSpriteNum;

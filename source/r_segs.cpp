@@ -64,9 +64,10 @@ void R_FinishMappingLines()
 // R_RenderMaskedSegRange
 //
 void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
-                            const fixed_t viewz, drawseg_t *ds, int x1, int x2)
+                            const viewpoint_t &viewpoint, drawseg_t *ds, int x1, int x2)
 {
    static thread_local rendersector_t tempsec; // killough 4/13/98
+   static thread_local Surfaces<pslope_t> tempslopes;
 
    const texcol_t *col;
    int      lightnum;
@@ -134,7 +135,8 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
          lightnum = segclip.line->sidedef->light_base >> LIGHTSEGSHIFT;
       else
       {
-         lightnum = R_FakeFlat(viewz, segclip.frontsec, &tempsec, nullptr, nullptr, false)->lightlevel >> LIGHTSEGSHIFT;
+         lightnum = R_FakeFlat(viewpoint, segclip.line->frontsector, &tempsec, tempslopes, nullptr, nullptr,
+                               false)->lightlevel >> LIGHTSEGSHIFT;
          lightnum += segclip.line->sidedef->light_base >> LIGHTSEGSHIFT;
       }
       lightnum += segclip.line->sidedef->light_mid >> LIGHTSEGSHIFT;
@@ -168,13 +170,13 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
    {
       column.texmid = segclip.frontsec->srf.floor.height > segclip.backsec->srf.floor.height
          ? segclip.frontsec->srf.floor.height : segclip.backsec->srf.floor.height;
-      column.texmid = column.texmid + textures[texnum]->heightfrac - viewz;
+      column.texmid = column.texmid + textures[texnum]->heightfrac - viewpoint.z;
    }
    else
    {
       column.texmid = segclip.frontsec->srf.ceiling.height < segclip.backsec->srf.ceiling.height
          ? segclip.frontsec->srf.ceiling.height : segclip.backsec->srf.ceiling.height;
-      column.texmid = column.texmid - viewz;
+      column.texmid = column.texmid - viewpoint.z;
    }
 
    column.texmid += segclip.line->sidedef->offset_base_y + segclip.line->sidedef->offset_mid_y - ds->deltaz;
@@ -1023,8 +1025,16 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
       // to check the line for textures at both ends...
       if(segclip.maxfrontfloor > segclip.maxbackfloor)
       {
-         ds_p->silhouette = SIL_BOTTOM;
-         ds_p->bsilheight = segclip.maxfrontfloor;
+         if(segclip.maxfrontfloor > viewpoint.z)   // above a raising floor slope
+         {
+            ds_p->silhouette = SIL_BOTTOM;
+            ds_p->bsilheight = D_MAXINT;
+         }
+         else
+         {
+            ds_p->silhouette = SIL_BOTTOM;
+            ds_p->bsilheight = segclip.maxfrontfloor;
+         }
       }
       else if(segclip.maxbackfloor > viewpoint.z)
       {
@@ -1038,8 +1048,16 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
       }
       if(segclip.minfrontceil < segclip.minbackceil)
       {
-         ds_p->silhouette |= SIL_TOP;
-         ds_p->tsilheight = segclip.minfrontceil;
+         if(segclip.minfrontceil < viewpoint.z)  // under a lowering ceiling slope
+         {
+            ds_p->silhouette |= SIL_TOP;
+            ds_p->tsilheight = D_MININT;
+         }
+         else
+         {
+            ds_p->silhouette |= SIL_TOP;
+            ds_p->tsilheight = segclip.minfrontceil;
+         }
       }
       else if(segclip.minbackceil < viewpoint.z)
       {
