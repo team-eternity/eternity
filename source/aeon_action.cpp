@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright(C) 2018 James Haley, Max Waine, et al.
+// Copyright (C) 2025 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: Aeon bindings for interop with ACS
+//------------------------------------------------------------------------------
+//
+// Purpose: Aeon bindings for interop with ACS.
 // Authors: Max Waine
 //
 
@@ -41,145 +43,129 @@
 
 namespace Aeon
 {
-   // This structure provides a record of unfound actions that Aeon has tried to call
-   struct actionrecord_t
-   {
-      const char *name;
-      DLListItem<actionrecord_t> links;
-   };
+    // This structure provides a record of unfound actions that Aeon has tried to call
+    struct actionrecord_t
+    {
+        const char                *name;
+        DLListItem<actionrecord_t> links;
+    };
 
-   static EHashTable<actionrecord_t, ENCStringHashKey,
-                     &actionrecord_t::name, &actionrecord_t::links> e_InvalidActionHash;
+    static EHashTable<actionrecord_t, ENCStringHashKey, &actionrecord_t::name, &actionrecord_t::links>
+        e_InvalidActionHash;
 
-   static void executeActionMobj(Mobj *mo, const qstring &name, const CScriptArray *argv)
-   {
-      const action_t *action  = E_GetAction(name.constPtr());
-      const int argc          = argv ? emin<int>(argv->GetSize(), EMAXARGS) : 0;
-      arglist_t arglist       = { {}, {}, argc };
-      actionargs_t actionargs;
+    static void executeActionMobj(Mobj *mo, const qstring &name, const CScriptArray *argv)
+    {
+        const action_t *action  = E_GetAction(name.constPtr());
+        const int       argc    = argv ? emin<int>(argv->GetSize(), EMAXARGS) : 0;
+        arglist_t       arglist = { {}, {}, argc };
+        actionargs_t    actionargs;
 
-      // Log if the desired action doesn't exist, if not already present in the hash table
-      if(!action)
-      {
-         if(!e_InvalidActionHash.objectForKey(name.constPtr()))
-         {
-            doom_printf("Aeon: EE::Mobj::executeAction: Action '%s' not found\a\n",
-                        name.constPtr());
-            actionrecord_t *record = estructalloc(actionrecord_t, 1);
-            record->name = name.duplicate();
-            e_InvalidActionHash.addObject(record);
-         }
-         return;
-      }
+        // Log if the desired action doesn't exist, if not already present in the hash table
+        if(!action)
+        {
+            if(!e_InvalidActionHash.objectForKey(name.constPtr()))
+            {
+                doom_printf("Aeon: EE::Mobj::executeAction: Action '%s' not found\a\n", name.constPtr());
+                actionrecord_t *record = estructalloc(actionrecord_t, 1);
+                record->name           = name.duplicate();
+                e_InvalidActionHash.addObject(record);
+            }
+            return;
+        }
 
-      // actionargs HAS to be assigned here
-      actionargs = { actionargs_t::MOBJFRAME, mo, nullptr, &arglist, action->aeonaction };
-      for(int i = 0; i < argc; i++)
-         arglist.args[i] = static_cast<qstring *>(const_cast<void *>(argv->At(i)))->getBuffer();
+        // actionargs HAS to be assigned here
+        actionargs = { actionargs_t::MOBJFRAME, mo, nullptr, &arglist, action->aeonaction };
+        for(int i = 0; i < argc; i++)
+            arglist.args[i] = static_cast<qstring *>(const_cast<void *>(argv->At(i)))->getBuffer();
 
-      action->codeptr(&actionargs);
-   }
+        action->codeptr(&actionargs);
+    }
 
-   //
-   // It's just a qstring, but we pretend it isn't
-   //
-   class ActionArg
-   {
-   public:
-      // CPP_FIXME: temporary placement construction for "action args"
-      static void Construct(qstring *self)
-      {
-         ::new(self)qstring();
-      }
-      static void IntConstructor(const int val, qstring *self)
-      {
-         ::new(self)qstring();
-         *self << val;
-      }
-      static void Destruct(qstring *self)
-      {
-         self->~qstring();
-      }
+    //
+    // It's just a qstring, but we pretend it isn't
+    //
+    class ActionArg
+    {
+    public:
+        // CPP_FIXME: temporary placement construction for "action args"
+        static void Construct(qstring *self) { ::new(self) qstring(); }
+        static void IntConstructor(const int val, qstring *self)
+        {
+            ::new(self) qstring();
+            *self << val;
+        }
+        static void Destruct(qstring *self) { self->~qstring(); }
 
-      // Assignment functions
-      static qstring &AssignString(const qstring &in, qstring *self)
-      {
-         return in.copyInto(*self);
-      }
-      static qstring &AssignInt(const int val, qstring *self)
-      {
-         self->clear();
-         *self << val;
-         return *self;
-      }
-      static qstring &AssignDouble(const double val, qstring *self)
-      {
-         self->clear();
-         *self << val;
-         return *self;
-      }
-      static qstring &AssignFixed(const fixed_t val, qstring *self)
-      {
-         char buf[19]; // minus, 5 digits max, dot, 11 digits max, null terminator
-         psnprintf(buf, sizeof(buf), "%.11f", M_FixedToDouble(val));
+        // Assignment functions
+        static qstring &AssignString(const qstring &in, qstring *self) { return in.copyInto(*self); }
+        static qstring &AssignInt(const int val, qstring *self)
+        {
+            self->clear();
+            *self << val;
+            return *self;
+        }
+        static qstring &AssignDouble(const double val, qstring *self)
+        {
+            self->clear();
+            *self << val;
+            return *self;
+        }
+        static qstring &AssignFixed(const fixed_t val, qstring *self)
+        {
+            char buf[19]; // minus, 5 digits max, dot, 11 digits max, null terminator
+            psnprintf(buf, sizeof(buf), "%.11f", M_FixedToDouble(val));
 
-         *self = buf;
-         return *self;
-      }
-   };
+            *self = buf;
+            return *self;
+        }
+    };
 
-   #define QSTRXFORM(m)  WRAP_MFN_PR(qstring, m, (const qstring &), qstring &)
+#define QSTRXFORM(m)  WRAP_MFN_PR(qstring, m, (const qstring &), qstring &)
 
-   #define ASSIGNSIG(arg) "actionarg_t &opAssign(" arg ")"
+#define ASSIGNSIG(arg) "actionarg_t &opAssign(" arg ")"
 
-   static const aeonfuncreg_t actionargFuncs[] =
-   {
-      { ASSIGNSIG("const actionarg_t &in"), QSTRXFORM(operator =)                  },
-      { ASSIGNSIG("const String &in"),      WRAP_OBJ_LAST(ActionArg::AssignString) },
-      { ASSIGNSIG("const int"),             WRAP_OBJ_LAST(ActionArg::AssignInt)    },
-      { ASSIGNSIG("const double"),          WRAP_OBJ_LAST(ActionArg::AssignDouble) },
-      { ASSIGNSIG("const fixed_t"),         WRAP_OBJ_LAST(ActionArg::AssignFixed)  }
-   };
+    static const aeonfuncreg_t actionargFuncs[] = {
+        { ASSIGNSIG("const actionarg_t &in"), QSTRXFORM(operator=)                   },
+        { ASSIGNSIG("const String &in"),      WRAP_OBJ_LAST(ActionArg::AssignString) },
+        { ASSIGNSIG("const int"),             WRAP_OBJ_LAST(ActionArg::AssignInt)    },
+        { ASSIGNSIG("const double"),          WRAP_OBJ_LAST(ActionArg::AssignDouble) },
+        { ASSIGNSIG("const fixed_t"),         WRAP_OBJ_LAST(ActionArg::AssignFixed)  }
+    };
 
-   #define EXECSIG(name) "void " name "(const String &name," \
-                                       "const array<EE::actionarg_t> @args = null)"
+#define EXECSIG(name) "void " name "(const String &name, const array<EE::actionarg_t> @args = null)"
 
-   static const aeonbehaviorreg_t actionargBehaviors[] =
-   {
-      { asBEHAVE_CONSTRUCT, "void f()",          WRAP_OBJ_LAST(ActionArg::Construct)      },
-      { asBEHAVE_CONSTRUCT, "void f(const int)", WRAP_OBJ_LAST(ActionArg::IntConstructor) },
-      { asBEHAVE_DESTRUCT,  "void f()",          WRAP_OBJ_LAST(ActionArg::Destruct)       },
-   };
+    static const aeonbehaviorreg_t actionargBehaviors[] = {
+        { asBEHAVE_CONSTRUCT, "void f()",          WRAP_OBJ_LAST(ActionArg::Construct)      },
+        { asBEHAVE_CONSTRUCT, "void f(const int)", WRAP_OBJ_LAST(ActionArg::IntConstructor) },
+        { asBEHAVE_DESTRUCT,  "void f()",          WRAP_OBJ_LAST(ActionArg::Destruct)       },
+    };
 
+    void ScriptObjAction::Init()
+    {
+        asIScriptEngine *const e = ScriptManager::Engine();
 
-   void ScriptObjAction::Init()
-   {
-      asIScriptEngine *const e = ScriptManager::Engine();
+        e->SetDefaultNamespace("EE");
 
-      e->SetDefaultNamespace("EE");
+        // Register actionarg_t, which is just a qstring that stuff automatically converts to
+        e->RegisterObjectType("actionarg_t", sizeof(qstring), asOBJ_VALUE | asOBJ_APP_CLASS_CD);
 
-      // Register actionarg_t, which is just a qstring that stuff automatically converts to
-      e->RegisterObjectType("actionarg_t", sizeof(qstring), asOBJ_VALUE | asOBJ_APP_CLASS_CD);
+        for(const aeonbehaviorreg_t &behavior : actionargBehaviors)
+            e->RegisterObjectBehaviour("actionarg_t", behavior.behavior, behavior.declaration, behavior.funcPointer,
+                                       asCALL_GENERIC);
 
-      for(const aeonbehaviorreg_t &behavior : actionargBehaviors)
-         e->RegisterObjectBehaviour("actionarg_t", behavior.behavior, behavior.declaration, behavior.funcPointer, asCALL_GENERIC);
+        for(const aeonfuncreg_t &fn : actionargFuncs)
+            e->RegisterObjectMethod("actionarg_t", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
-      for(const aeonfuncreg_t &fn : actionargFuncs)
-         e->RegisterObjectMethod("actionarg_t", fn.declaration, fn.funcPointer, asCALL_GENERIC);
+        e->RegisterObjectMethod("Mobj", EXECSIG("executeAction"), WRAP_OBJ_FIRST(executeActionMobj), asCALL_GENERIC);
 
-      e->RegisterObjectMethod(
-         "Mobj", EXECSIG("executeAction"),
-         WRAP_OBJ_FIRST(executeActionMobj), asCALL_GENERIC
-      );
+        // e->RegisterObjectMethod(
+        //    "Player", EXECSIG("executeAction"),
+        //    WRAP_OBJ_FIRST(executeActionPlayer), asCALL_GENERIC
+        //);
 
-      //e->RegisterObjectMethod(
-      //   "Player", EXECSIG("executeAction"),
-      //   WRAP_OBJ_FIRST(executeActionPlayer), asCALL_GENERIC
-      //);
-
-      e->SetDefaultNamespace("");
-   }
-}
+        e->SetDefaultNamespace("");
+    }
+} // namespace Aeon
 
 // EOF
 

@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright(C) 2018 James Haley, Max Waine, et al.
+// Copyright(C) 2025 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,72 +15,75 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// Purpose: Aeon system
+//------------------------------------------------------------------------------
+//
+// Purpose: Aeon system.
 // Authors: Samuel Villarreal, Max Waine
 //
 
 #ifndef AEON_SYSTEM_H__
 #define AEON_SYSTEM_H__
 
-class  asIScriptContext;
-class  asIScriptEngine;
-class  asIScriptFunction;
-class  asIScriptModule;
+class asIScriptContext;
+class asIScriptEngine;
+class asIScriptFunction;
+class asIScriptModule;
 struct asSMessageInfo;
 
 struct lumpinfo_t;
-class  qstring;
+class qstring;
 
 namespace Aeon
 {
-   //
-   // Adapted from Powerslave EX's kexScriptManager into (effectively) a static class
-   //
-   class ScriptManager
-   {
-   // aeon_system.cpp
-   public:
-      ScriptManager() = delete;
+    //
+    // Adapted from Powerslave EX's kexScriptManager into (effectively) a static class
+    //
+    class ScriptManager
+    {
+        // aeon_system.cpp
+    public:
+        ScriptManager() = delete;
 
-      static void Init();
-      static void Build();
-      static void Shutdown();
+        static void Init();
+        static void Build();
+        static void Shutdown();
 
-      static void LoadRoots();
+        static void LoadRoots();
 
-      static asIScriptEngine  *Engine()  { return engine; }
-      static asIScriptContext *Context() { return ctx;    }
-      static asIScriptModule  *Module()  { return module; }
+        static asIScriptEngine  *Engine() { return engine; }
+        static asIScriptContext *Context() { return ctx; }
+        static asIScriptModule  *Module() { return module; }
 
-      static void PushState();
-      static void PopState();
-      static bool PrepareFunction(asIScriptFunction *function);
-      static bool PrepareFunction(const char *function);
-      static bool Execute();
-   private:
-      static void RegisterPrimitivePrintFuncs();
-      static void RegisterTypedefs();
-      static void RegisterHandleOnlyClasses();
-      static void RegisterScriptObjs();
-      static void RegisterGlobalProperties();
-      static void MessageCallback(const asSMessageInfo *msg, void *param);
+        static void PushState();
+        static void PopState();
+        static bool PrepareFunction(asIScriptFunction *function);
+        static bool PrepareFunction(const char *function);
+        static bool Execute();
 
-      static void LoadAeonFileRecursive(const char *name, int lumpnum);
+    private:
+        static void RegisterPrimitivePrintFuncs();
+        static void RegisterTypedefs();
+        static void RegisterHandleOnlyClasses();
+        static void RegisterScriptObjs();
+        static void RegisterGlobalProperties();
+        static void MessageCallback(const asSMessageInfo *msg, void *param);
 
-      static asIScriptEngine  *engine;
-      static asIScriptContext *ctx;
-      static asIScriptModule  *module;
+        static void LoadAeonFileRecursive(const char *name, int lumpnum);
 
-      static int state;
+        static asIScriptEngine  *engine;
+        static asIScriptContext *ctx;
+        static asIScriptModule  *module;
 
-   // aeon_process.cpp
-   private:
-      static void InitMCPP();
+        static int state;
 
-      static void   ProcessAeonFile(lumpinfo_t *lumpinfo);
-      static size_t SkipStatement(qstring &fileStr, size_t pos);
-   };
-}
+        // aeon_process.cpp
+    private:
+        static void InitMCPP();
+
+        static void   ProcessAeonFile(lumpinfo_t *lumpinfo);
+        static size_t SkipStatement(qstring &fileStr, size_t pos);
+    };
+} // namespace Aeon
 
 #endif
 

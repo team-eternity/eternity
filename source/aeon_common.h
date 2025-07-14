@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright(C) 2018 James Haley, Max Waine, et al.
+// Copyright(C) 2025 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: Common Aeon functions and definitions
+//------------------------------------------------------------------------------
+//
+// Purpose: Common Aeon functions and definitions.
 // Authors: Max Waine
 //
 
@@ -30,27 +32,27 @@
 
 struct aeonbehaviorreg_t
 {
-   asEBehaviours  behavior;
-   const char    *declaration;
-   asSFuncPtr     funcPointer;
-   // TODO: Re-implement when ARM and Mac get non-generic calling conventions
-   //       i.e.: when AS_MAX_PORTABILITY doesn't need to be defined
-   // asDWORD     callConv;
+    asEBehaviours behavior;
+    const char   *declaration;
+    asSFuncPtr    funcPointer;
+    // TODO: Re-implement when ARM and Mac get non-generic calling conventions
+    //       i.e.: when AS_MAX_PORTABILITY doesn't need to be defined
+    // asDWORD     callConv;
 };
 
 struct aeonfuncreg_t
 {
-   const char *declaration;
-   asSFuncPtr  funcPointer;
-   // TODO: Re-implement when ARM and Mac get non-generic calling conventions
-   //       i.e.: when AS_MAX_PORTABILITY doesn't need to be defined
-   // asDWORD     callConv;
+    const char *declaration;
+    asSFuncPtr  funcPointer;
+    // TODO: Re-implement when ARM and Mac get non-generic calling conventions
+    //       i.e.: when AS_MAX_PORTABILITY doesn't need to be defined
+    // asDWORD     callConv;
 };
 
 struct aeonpropreg_t
 {
-   const char *declaration;
-   int         byteOffset;
+    const char *declaration;
+    int         byteOffset;
 };
 
 #endif

@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright(C) 2019 James Haley, Max Waine, et al.
+// Copyright(C) 2025 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: Aeon wrapper for player_t
+//------------------------------------------------------------------------------
+//
+// Purpose: Aeon wrapper for player_t.
 // Authors: Max Waine
 //
 
@@ -27,13 +29,13 @@
 
 namespace Aeon
 {
-   class ScriptObjPlayer
-   {
-   public:
-      static void PreInit();
-      static void Init();
-   };
-}
+    class ScriptObjPlayer
+    {
+    public:
+        static void PreInit();
+        static void Init();
+    };
+} // namespace Aeon
 
 #endif
 

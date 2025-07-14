@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright(C) 2021 James Haley, Max Waine, et al.
+// Copyright (C) 2025 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,9 +16,9 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Purpose: Aeon system
+// Purpose: Aeon system.
 // Authors: Max Waine, James Haley, Samuel Villarreal, Andreas Jönsson
 //
 // ScriptManager::ProcessAeonFile, ScriptManager::SkipStatement, and
@@ -48,29 +48,28 @@
 
 namespace Aeon
 {
-   static lumpinfo_t *ppLumpinfo; // Pre-processing lump info
+    static lumpinfo_t *ppLumpinfo; // Pre-processing lump info
 
-   void ScriptManager::InitMCPP()
-   {
-      mcpp_setopencallback(
-         [] (const char *fileName, const char *mode) -> void * {
-            DWFILE     dwfile;
-            size_t     buffsize;
-            byte      *buffer;
-            const int  lumpnum  = E_FindFileInclude(ppLumpinfo->name, ppLumpinfo->selfindex, fileName);
+    void ScriptManager::InitMCPP()
+    {
+        mcpp_setopencallback([](const char *fileName, const char *mode) -> void * {
+            DWFILE    dwfile;
+            size_t    buffsize;
+            byte     *buffer;
+            const int lumpnum = E_FindFileInclude(ppLumpinfo->name, ppLumpinfo->selfindex, fileName);
 
             if(lumpnum < 0)
             {
-               E_EDFLoggedWarning(2, "mcpp_setopencallback: #include '%s' not found\n", fileName);
-               return nullptr;
+                E_EDFLoggedWarning(2, "mcpp_setopencallback: #include '%s' not found\n", fileName);
+                return nullptr;
             }
 
             dwfile.openLump(lumpnum);
 
             if(!dwfile.isOpen())
             {
-               E_EDFLoggedWarning(2, "mcpp_setopencallback: could not open #include '%s'\n", fileName);
-               return nullptr;
+                E_EDFLoggedWarning(2, "mcpp_setopencallback: could not open #include '%s'\n", fileName);
+                return nullptr;
             }
 
             buffsize = dwfile.fileLength() + 1;
@@ -79,237 +78,229 @@ namespace Aeon
             buffer[buffsize - 1] = '\0';
 
             return mcpp_openmemory(buffer, buffsize);
-         }
-      );
+        });
 
-      mcpp_setclosecallback(
-         [] (void *data) {
+        mcpp_setclosecallback([](void *data) {
             if(data)
-               efree(data);
-         }
-      );
-   }
+                efree(data);
+        });
+    }
 
-   static const char *GetMCPPOutput(lumpinfo_t *lumpinfo)
-   {
-      PODCollection<char *> argv;
+    static const char *GetMCPPOutput(lumpinfo_t *lumpinfo)
+    {
+        PODCollection<char *> argv;
 
-      ppLumpinfo = lumpinfo;
-      argv.add(estrdup("mcpp.exe"));
-      argv.add(estrdup("-P"));
-      argv.add(estrdup(lumpinfo->name)); // FIXME: lfn if suitable
-      argv.add(estrdup("-Y"));
-      argv.add(estrdup("-e"));
-      argv.add(estrdup("utf8"));
+        ppLumpinfo = lumpinfo;
+        argv.add(estrdup("mcpp.exe"));
+        argv.add(estrdup("-P"));
+        argv.add(estrdup(lumpinfo->name)); // FIXME: lfn if suitable
+        argv.add(estrdup("-Y"));
+        argv.add(estrdup("-e"));
+        argv.add(estrdup("utf8"));
 
-      mcpp_use_mem_buffers(1);
-      mcpp_lib_main(int(argv.getLength()), &argv[0]);
+        mcpp_use_mem_buffers(1);
+        mcpp_lib_main(int(argv.getLength()), &argv[0]);
 
-      const char *output = mcpp_get_mem_buffer(OUTDEST::OUT);
-      const char *error  = mcpp_get_mem_buffer(OUTDEST::ERR);
-      const char *debug  = mcpp_get_mem_buffer(OUTDEST::DBG);
+        const char *output = mcpp_get_mem_buffer(OUTDEST::OUT);
+        const char *error  = mcpp_get_mem_buffer(OUTDEST::ERR);
+        const char *debug  = mcpp_get_mem_buffer(OUTDEST::DBG);
 
-      ppLumpinfo = nullptr;
-      for(char *const arg : argv)
-         efree(arg);
+        ppLumpinfo = nullptr;
+        for(char *const arg : argv)
+            efree(arg);
 
-      if(error)
-      {
-         E_EDFLoggedErr(
-            2,
-            "Aeon::GetMCPPOutput: Error encounted preprocessing Aeon files in %s:\n%s",
-            wGlobalDir.getLumpFileName(lumpinfo->selfindex), error
-         );
-      }
+        if(error)
+        {
+            E_EDFLoggedErr(2, "Aeon::GetMCPPOutput: Error encounted preprocessing Aeon files in %s:\n%s",
+                           wGlobalDir.getLumpFileName(lumpinfo->selfindex), error);
+        }
 
-      return output;
-   }
+        return output;
+    }
 
-   static void OverwriteCode(qstring &fileStr, size_t start, size_t len)
-   {
-      char *code = fileStr.bufferAt(start);
-      for(size_t n = 0; n < len; n++)
-      {
-         if(*code != '\n')
-            *code = ' ';
-         code++;
-      }
-   }
+    static void OverwriteCode(qstring &fileStr, size_t start, size_t len)
+    {
+        char *code = fileStr.bufferAt(start);
+        for(size_t n = 0; n < len; n++)
+        {
+            if(*code != '\n')
+                *code = ' ';
+            code++;
+        }
+    }
 
-   size_t ScriptManager::SkipStatement(qstring &fileStr, size_t pos)
-   {
-      asUINT len = 0;
+    size_t ScriptManager::SkipStatement(qstring &fileStr, size_t pos)
+    {
+        asUINT len = 0;
 
-      // Skip until ; or { whichever comes first
-      while(pos < fileStr.length() && fileStr[pos] != ';' && fileStr[pos] != '{')
-      {
-         engine->ParseToken(fileStr.bufferAt(pos), fileStr.getSize() - pos, &len);
-         pos += len;
-      }
-
-      // Skip entire statement block
-      if(pos < fileStr.length() && fileStr[pos] == '{')
-      {
-         pos += 1;
-
-         // Find the end of the statement block
-         int level = 1;
-         while(level > 0 && pos < fileStr.getSize())
-         {
-            asETokenClass t = engine->ParseToken(fileStr.bufferAt(pos), fileStr.getSize() - pos, &len);
-            if(t == asTC_KEYWORD)
-            {
-               if(fileStr[pos] == '{')
-                  level++;
-               else if(fileStr[pos] == '}')
-                  level--;
-            }
-
+        // Skip until ; or { whichever comes first
+        while(pos < fileStr.length() && fileStr[pos] != ';' && fileStr[pos] != '{')
+        {
+            engine->ParseToken(fileStr.bufferAt(pos), fileStr.getSize() - pos, &len);
             pos += len;
-         }
-      }
-      else
-         pos += 1;
+        }
 
-      return pos;
-   }
+        // Skip entire statement block
+        if(pos < fileStr.length() && fileStr[pos] == '{')
+        {
+            pos += 1;
 
-
-   static bool IsReservedNamespace(const qstring &ns)
-   {
-      return ns == "EE" || ns == "Math";
-   }
-
-   void ScriptManager::ProcessAeonFile(lumpinfo_t *lumpinfo)
-   {
-      // TODO: C preprocessing here
-      Collection<qstring> actions;
-      Collection<qstring> currNamespaces;
-
-      qstring fileStr{ GetMCPPOutput(lumpinfo) };
-
-      size_t pos = 0;
-      while(pos < fileStr.getSize())
-      {
-         asUINT len = 0;
-         asETokenClass t = engine->ParseToken(fileStr.bufferAt(pos), fileStr.getSize() - pos, &len);
-         if(t == asTC_COMMENT || t == asTC_WHITESPACE)
-         {
-            pos += len;
-            continue;
-         }
-
-         // Check if namespace
-         qstring tokStr;
-         tokStr.copy(fileStr.bufferAt(pos), len);
-         if(tokStr == "namespace")
-         {
-            // Get the identifier after "namespace"
-            do
+            // Find the end of the statement block
+            int level = 1;
+            while(level > 0 && pos < fileStr.getSize())
             {
-               pos += len;
-               t = engine->ParseToken(fileStr.bufferAt(pos), fileStr.getSize() - pos, &len);
+                asETokenClass t = engine->ParseToken(fileStr.bufferAt(pos), fileStr.getSize() - pos, &len);
+                if(t == asTC_KEYWORD)
+                {
+                    if(fileStr[pos] == '{')
+                        level++;
+                    else if(fileStr[pos] == '}')
+                        level--;
+                }
+
+                pos += len;
             }
-            while(t == asTC_COMMENT || t == asTC_WHITESPACE);
+        }
+        else
+            pos += 1;
 
-            qstring newNamespace;
-            newNamespace.copy(fileStr.bufferAt(pos), len);
-            if(currNamespaces.isEmpty() && IsReservedNamespace(newNamespace))
+        return pos;
+    }
+
+    static bool IsReservedNamespace(const qstring &ns)
+    {
+        return ns == "EE" || ns == "Math";
+    }
+
+    void ScriptManager::ProcessAeonFile(lumpinfo_t *lumpinfo)
+    {
+        // TODO: C preprocessing here
+        Collection<qstring> actions;
+        Collection<qstring> currNamespaces;
+
+        qstring fileStr{ GetMCPPOutput(lumpinfo) };
+
+        size_t pos = 0;
+        while(pos < fileStr.getSize())
+        {
+            asUINT        len = 0;
+            asETokenClass t   = engine->ParseToken(fileStr.bufferAt(pos), fileStr.getSize() - pos, &len);
+            if(t == asTC_COMMENT || t == asTC_WHITESPACE)
             {
-               E_EDFLoggedErr(
-                  2,
-                  "ScriptManager::ProcessAeonFile: Namespace '%s' is reserved and cannot be extended via Aeon\n",
-                  newNamespace.constPtr()
-               );
-            }
-            currNamespaces.add(std::move(newNamespace));
-
-            // Search until first { is encountered
-            while(pos < fileStr.length())
-            {
-               engine->ParseToken(fileStr.bufferAt(pos), fileStr.getSize() - pos, &len);
-
-               // If start of namespace section encountered stop
-               if(fileStr[pos] == '{')
-               {
-                  pos += len;
-                  break;
-               }
-
-               // Check next symbol
-               pos += len;
+                pos += len;
+                continue;
             }
 
-            continue;
-         }
-
-         // Check if end of namespace
-         if(!currNamespaces.isEmpty() && fileStr[pos] == '}')
-         {
-            currNamespaces.pop();
-            pos += len;
-            continue;
-         }
-
-         // Is this a preprocessor directive?
-         if(fileStr[pos] == '$' && (pos + 1 < fileStr.getSize()))
-         {
-            const size_t directiveStart = pos++;
-
-            t = engine->ParseToken(fileStr.bufferAt(pos), fileStr.getSize() - pos, &len);
-            if(t == asTC_IDENTIFIER)
+            // Check if namespace
+            qstring tokStr;
+            tokStr.copy(fileStr.bufferAt(pos), len);
+            if(tokStr == "namespace")
             {
-               qstring token;
-               token.copy(fileStr.bufferAt(pos), len);
-               if(token == "action")
-               {
+                // Get the identifier after "namespace"
+                do
+                {
+                    pos += len;
+                    t    = engine->ParseToken(fileStr.bufferAt(pos), fileStr.getSize() - pos, &len);
+                }
+                while(t == asTC_COMMENT || t == asTC_WHITESPACE);
 
-                  pos += len;
-                  t = engine->ParseToken(fileStr.bufferAt(pos), fileStr.getSize() - pos, &len);
-                  if(t == asTC_WHITESPACE)
-                  {
-                     pos += len;
-                     t = engine->ParseToken(fileStr.bufferAt(pos), fileStr.getSize() - pos, &len);
-                  }
+                qstring newNamespace;
+                newNamespace.copy(fileStr.bufferAt(pos), len);
+                if(currNamespaces.isEmpty() && IsReservedNamespace(newNamespace))
+                {
+                    E_EDFLoggedErr(
+                        2,
+                        "ScriptManager::ProcessAeonFile: Namespace '%s' is reserved and cannot be extended via Aeon\n",
+                        newNamespace.constPtr());
+                }
+                currNamespaces.add(std::move(newNamespace));
 
-                  if(t == asTC_IDENTIFIER)
-                  {
-                     // Get the action function
-                     qstring actionFunction;
-                     qstring fullyQualifiedAction;
+                // Search until first { is encountered
+                while(pos < fileStr.length())
+                {
+                    engine->ParseToken(fileStr.bufferAt(pos), fileStr.getSize() - pos, &len);
 
-                     actionFunction.copy(fileStr.bufferAt(pos), len);
+                    // If start of namespace section encountered stop
+                    if(fileStr[pos] == '{')
+                    {
+                        pos += len;
+                        break;
+                    }
 
-                     for(const qstring &currNS : currNamespaces)
-                        fullyQualifiedAction += currNS + "::";
-                     fullyQualifiedAction += actionFunction;
+                    // Check next symbol
+                    pos += len;
+                }
 
-                     pos += len;
-
-                     // Store it for later processing
-                     actions.add(std::move(fullyQualifiedAction));
-
-                     // Overwrite the action directive with space characters and 'void' to avoid compiler error
-                     OverwriteCode(fileStr, directiveStart, strlen("$action"));
-                     strncpy(fileStr.bufferAt(directiveStart), "void", strlen("void"));
-                  }
-               }
+                continue;
             }
-         }
-         else
-         {
-            // Don't search for metadata/actions within statement blocks or between tokens in statements
-            pos = SkipStatement(fileStr, pos);
-         }
-      }
 
-      // FIXME: Proper script section name. Maybe getLumpFileName and use that?
-      module->AddScriptSection("AEONROOT", fileStr.constPtr());
+            // Check if end of namespace
+            if(!currNamespaces.isEmpty() && fileStr[pos] == '}')
+            {
+                currNamespaces.pop();
+                pos += len;
+                continue;
+            }
 
-      for(const qstring &action : actions)
-         E_DefineAction(action.constPtr());
-   }
-};
+            // Is this a preprocessor directive?
+            if(fileStr[pos] == '$' && (pos + 1 < fileStr.getSize()))
+            {
+                const size_t directiveStart = pos++;
+
+                t = engine->ParseToken(fileStr.bufferAt(pos), fileStr.getSize() - pos, &len);
+                if(t == asTC_IDENTIFIER)
+                {
+                    qstring token;
+                    token.copy(fileStr.bufferAt(pos), len);
+                    if(token == "action")
+                    {
+
+                        pos += len;
+                        t    = engine->ParseToken(fileStr.bufferAt(pos), fileStr.getSize() - pos, &len);
+                        if(t == asTC_WHITESPACE)
+                        {
+                            pos += len;
+                            t    = engine->ParseToken(fileStr.bufferAt(pos), fileStr.getSize() - pos, &len);
+                        }
+
+                        if(t == asTC_IDENTIFIER)
+                        {
+                            // Get the action function
+                            qstring actionFunction;
+                            qstring fullyQualifiedAction;
+
+                            actionFunction.copy(fileStr.bufferAt(pos), len);
+
+                            for(const qstring &currNS : currNamespaces)
+                                fullyQualifiedAction += currNS + "::";
+                            fullyQualifiedAction += actionFunction;
+
+                            pos += len;
+
+                            // Store it for later processing
+                            actions.add(std::move(fullyQualifiedAction));
+
+                            // Overwrite the action directive with space characters and 'void' to avoid compiler error
+                            OverwriteCode(fileStr, directiveStart, strlen("$action"));
+                            strncpy(fileStr.bufferAt(directiveStart), "void", strlen("void"));
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Don't search for metadata/actions within statement blocks or between tokens in statements
+                pos = SkipStatement(fileStr, pos);
+            }
+        }
+
+        // FIXME: Proper script section name. Maybe getLumpFileName and use that?
+        module->AddScriptSection("AEONROOT", fileStr.constPtr());
+
+        for(const qstring &action : actions)
+            E_DefineAction(action.constPtr());
+    }
+}; // namespace Aeon
 
 // EOF
 

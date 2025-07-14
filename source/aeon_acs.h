@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright(C) 2018 James Haley, Max Waine, et al.
+// Copyright(C) 2025 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: Aeon bindings for interop with ACS
+//------------------------------------------------------------------------------
+//
+// Purpose: Aeon bindings for interop with ACS.
 // Authors: Max Waine
 //
 
@@ -27,12 +29,12 @@
 
 namespace Aeon
 {
-   class ScriptObjACS
-   {
-   public:
-      static void Init();
-   };
-}
+    class ScriptObjACS
+    {
+    public:
+        static void Init();
+    };
+} // namespace Aeon
 
 #endif
 

@@ -31,7 +31,7 @@
 #BasedOnStyle: Microsoft     # The only existing style that assumes Allman
 
 IndentWidth: 4
-NamespaceIndentation: Inner
+NamespaceIndentation: All # UNCERTAIN
 SpaceBeforeParens: Never
 SpacesInParentheses: false
 UseTab: Never

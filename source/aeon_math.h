@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright(C) 2018 James Haley, Max Waine, et al.
+// Copyright(C) 2025 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: Aeon maths bindings
+//------------------------------------------------------------------------------
+//
+// Purpose: Aeon maths bindings.
 // Authors: Max Waine
 //
 
@@ -32,58 +34,57 @@
 
 namespace Aeon
 {
-   class ScriptObjMath
-   {
-   public:
-      static void Init();
-   };
+    class ScriptObjMath
+    {
+    public:
+        static void Init();
+    };
 
-   class ScriptObjFixed
-   {
-   public:
-      static void    Construct(fixed_t *thisFixed);
-      static void    ConstructFromOther(const fixed_t other, fixed_t *thisFixed);
-      static void    ConstructFromDouble(double other, fixed_t *thisFixed);
-      static void    ConstructFromInt(int other, fixed_t *thisFixed);
-      static void    ConstructFromPair(int16_t integer, double frac, fixed_t *thisFixed);
-      static fixed_t ConstructFromBits(int bits);
+    class ScriptObjFixed
+    {
+    public:
+        static void    Construct(fixed_t *thisFixed);
+        static void    ConstructFromOther(const fixed_t other, fixed_t *thisFixed);
+        static void    ConstructFromDouble(double other, fixed_t *thisFixed);
+        static void    ConstructFromInt(int other, fixed_t *thisFixed);
+        static void    ConstructFromPair(int16_t integer, double frac, fixed_t *thisFixed);
+        static fixed_t ConstructFromBits(int bits);
 
-      static void Init();
-   };
+        static void Init();
+    };
 
-   class ScriptObjAngle
-   {
-   public:
-      static void    Construct(angle_t *thisAngle);
-      static void    ConstructFromOther(const angle_t other, angle_t *thisAngle);
-      static void    ConstructFromDouble(double other, angle_t *thisAngle);
-      static void    ConstructFromInt(int other, angle_t *thisAngle);
-      static angle_t ConstructFromBits(angle_t bits);
+    class ScriptObjAngle
+    {
+    public:
+        static void    Construct(angle_t *thisAngle);
+        static void    ConstructFromOther(const angle_t other, angle_t *thisAngle);
+        static void    ConstructFromDouble(double other, angle_t *thisAngle);
+        static void    ConstructFromInt(int other, angle_t *thisAngle);
+        static angle_t ConstructFromBits(angle_t bits);
 
-      static void Init();
-   };
+        static void Init();
+    };
 
-   class ScriptObjVector2
-   {
-   public:
-      static void Construct(v2fixed_t *thisVector);
-      static void ConstructFromOther(const v2fixed_t other, v2fixed_t *thisVector);
-      static void ConstructFromFixed(fixed_t x, fixed_t y, fixed_t z, v2fixed_t *thisVector);
+    class ScriptObjVector2
+    {
+    public:
+        static void Construct(v2fixed_t *thisVector);
+        static void ConstructFromOther(const v2fixed_t other, v2fixed_t *thisVector);
+        static void ConstructFromFixed(fixed_t x, fixed_t y, fixed_t z, v2fixed_t *thisVector);
 
-      static void Init();
+        static void Init();
+    };
 
-   };
+    class ScriptObjVector3
+    {
+    public:
+        static void Construct(v3fixed_t *thisVector);
+        static void ConstructFromOther(const v3fixed_t other, v3fixed_t *thisVector);
+        static void ConstructFromFixed(fixed_t x, fixed_t y, fixed_t z, v3fixed_t *thisVector);
 
-   class ScriptObjVector3
-   {
-   public:
-      static void Construct(v3fixed_t *thisVector);
-      static void ConstructFromOther(const v3fixed_t other, v3fixed_t *thisVector);
-      static void ConstructFromFixed(fixed_t x, fixed_t y, fixed_t z, v3fixed_t *thisVector);
-
-      static void Init();
-   };
-}
+        static void Init();
+    };
+} // namespace Aeon
 
 #endif
 

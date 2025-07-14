@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright(C) 2020 James Haley, Max Waine, et al.
+// Copyright (C) 2025 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
 //
 // A lot of this code is based on Quasar's astest.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Purpose: Aeon system
+// Purpose: Aeon system.
 // Authors: Samuel Villarreal, James Haley, Max Waine
 //
 
@@ -45,246 +45,238 @@
 
 namespace Aeon
 {
-   asIScriptEngine  *ScriptManager::engine = nullptr;
-   asIScriptContext *ScriptManager::ctx    = nullptr;
-   asIScriptModule  *ScriptManager::module = nullptr;
-   int               ScriptManager::state  = asEXECUTION_UNINITIALIZED;
+    asIScriptEngine  *ScriptManager::engine = nullptr;
+    asIScriptContext *ScriptManager::ctx    = nullptr;
+    asIScriptModule  *ScriptManager::module = nullptr;
+    int               ScriptManager::state  = asEXECUTION_UNINITIALIZED;
 
-   void asPrint(int i)
-   {
-      C_Printf("%d\n", i);
-   }
+    void asPrint(int i)
+    {
+        C_Printf("%d\n", i);
+    }
 
-   void asPrint(unsigned int u)
-   {
-      C_Printf("%u\n", u);
-   }
+    void asPrint(unsigned int u)
+    {
+        C_Printf("%u\n", u);
+    }
 
-   void asPrint(float f)
-   {
-      C_Printf("%f\n", f);
-   }
+    void asPrint(float f)
+    {
+        C_Printf("%f\n", f);
+    }
 
-   void ScriptManager::RegisterPrimitivePrintFuncs()
-   {
-      engine->RegisterGlobalFunction(
-         "void print(int)", WRAP_FN_PR(asPrint, (int), void), asCALL_GENERIC
-      );
-      engine->RegisterGlobalFunction(
-         "void print(uint)", WRAP_FN_PR(asPrint, (unsigned int), void), asCALL_GENERIC
-      );
-      engine->RegisterGlobalFunction(
-         "void print(float)", WRAP_FN_PR(asPrint, (float), void), asCALL_GENERIC
-      );
-   }
+    void ScriptManager::RegisterPrimitivePrintFuncs()
+    {
+        engine->RegisterGlobalFunction("void print(int)", WRAP_FN_PR(asPrint, (int), void), asCALL_GENERIC);
+        engine->RegisterGlobalFunction("void print(uint)", WRAP_FN_PR(asPrint, (unsigned int), void), asCALL_GENERIC);
+        engine->RegisterGlobalFunction("void print(float)", WRAP_FN_PR(asPrint, (float), void), asCALL_GENERIC);
+    }
 
-   void ScriptManager::RegisterTypedefs()
-   {
-      engine->RegisterTypedef("char",     "int8");
-      engine->RegisterTypedef("uchar",    "uint8");
+    void ScriptManager::RegisterTypedefs()
+    {
+        engine->RegisterTypedef("char", "int8");
+        engine->RegisterTypedef("uchar", "uint8");
 
-      engine->RegisterTypedef("int8_t",   "int8");
-      engine->RegisterTypedef("int16_t",  "int16");
-      engine->RegisterTypedef("int32_t",  "int32");
-      engine->RegisterTypedef("int64_t",  "int64");
-      engine->RegisterTypedef("uint8_t",  "uint8");
-      engine->RegisterTypedef("uint16_t", "uint16");
-      engine->RegisterTypedef("uint32_t", "uint32");
-      engine->RegisterTypedef("uint64_t", "uint64");
-   }
+        engine->RegisterTypedef("int8_t", "int8");
+        engine->RegisterTypedef("int16_t", "int16");
+        engine->RegisterTypedef("int32_t", "int32");
+        engine->RegisterTypedef("int64_t", "int64");
+        engine->RegisterTypedef("uint8_t", "uint8");
+        engine->RegisterTypedef("uint16_t", "uint16");
+        engine->RegisterTypedef("uint32_t", "uint32");
+        engine->RegisterTypedef("uint64_t", "uint64");
+    }
 
-   void ScriptManager::RegisterHandleOnlyClasses()
-   {
-      engine->SetDefaultNamespace("EE");
-      engine->RegisterObjectType("Sound",  sizeof(sfxinfo_t),    asOBJ_REF | asOBJ_NOCOUNT);
-      engine->RegisterObjectType("Weapon", sizeof(weaponinfo_t), asOBJ_REF | asOBJ_NOCOUNT);
-      engine->RegisterObjectType("State",  sizeof(state_t),      asOBJ_REF | asOBJ_NOCOUNT);
-      engine->SetDefaultNamespace("");
-   }
+    void ScriptManager::RegisterHandleOnlyClasses()
+    {
+        engine->SetDefaultNamespace("EE");
+        engine->RegisterObjectType("Sound", sizeof(sfxinfo_t), asOBJ_REF | asOBJ_NOCOUNT);
+        engine->RegisterObjectType("Weapon", sizeof(weaponinfo_t), asOBJ_REF | asOBJ_NOCOUNT);
+        engine->RegisterObjectType("State", sizeof(state_t), asOBJ_REF | asOBJ_NOCOUNT);
+        engine->SetDefaultNamespace("");
+    }
 
-   void ScriptManager::RegisterScriptObjs()
-   {
-      ScriptObjMobj::PreInit();
-      ScriptObjPlayer::PreInit();
+    void ScriptManager::RegisterScriptObjs()
+    {
+        ScriptObjMobj::PreInit();
+        ScriptObjPlayer::PreInit();
 
-      ScriptObjString::Init();
+        ScriptObjString::Init();
 
-      ScriptObjFixed::Init();
-      ScriptObjAngle::Init();
-      ScriptObjVector2::Init();
-      ScriptObjVector3::Init();
-      ScriptObjMath::Init();
+        ScriptObjFixed::Init();
+        ScriptObjAngle::Init();
+        ScriptObjVector2::Init();
+        ScriptObjVector3::Init();
+        ScriptObjMath::Init();
 
-      ScriptObjMobj::Init();
-      ScriptObjPlayer::Init();
-      ScriptObjAction::Init();
+        ScriptObjMobj::Init();
+        ScriptObjPlayer::Init();
+        ScriptObjAction::Init();
 
-      ScriptObjACS::Init();
-   }
+        ScriptObjACS::Init();
+    }
 
-   static fixed_t MISSILERANGE_prop(MISSILERANGE);
+    static fixed_t MISSILERANGE_prop(MISSILERANGE);
 
-   void ScriptManager::RegisterGlobalProperties()
-   {
-      engine->RegisterGlobalProperty("const fixed_t MISSILERANGE", static_cast<void *>(&MISSILERANGE_prop));
-   }
+    void ScriptManager::RegisterGlobalProperties()
+    {
+        engine->RegisterGlobalProperty("const fixed_t MISSILERANGE", static_cast<void *>(&MISSILERANGE_prop));
+    }
 
-   void ScriptManager::MessageCallback(const asSMessageInfo *msg, void *param)
-   {
-      const char *type = "ERR ";
-      if(msg->type == asMSGTYPE_WARNING)
-         type = "WARN";
-      else if(msg->type == asMSGTYPE_INFORMATION)
-         type = "INFO";
-      printf("%s (%d, %d) : %s : %s\n", msg->section, msg->row, msg->col, type, msg->message);
-   }
+    void ScriptManager::MessageCallback(const asSMessageInfo *msg, void *param)
+    {
+        const char *type = "ERR ";
+        if(msg->type == asMSGTYPE_WARNING)
+            type = "WARN";
+        else if(msg->type == asMSGTYPE_INFORMATION)
+            type = "INFO";
+        printf("%s (%d, %d) : %s : %s\n", msg->section, msg->row, msg->col, type, msg->message);
+    }
 
-   void ScriptManager::Init()
-   {
-      puts("Aeon::ScriptManager::Init: Setting up AngelScript.");
+    void ScriptManager::Init()
+    {
+        puts("Aeon::ScriptManager::Init: Setting up AngelScript.");
 
-      // create AngelScript engine instance
-      if(!(engine = asCreateScriptEngine(ANGELSCRIPT_VERSION)))
-         I_Error("Aeon::ScriptManager::Init: Could not create AngelScript engine\n");
+        // create AngelScript engine instance
+        if(!(engine = asCreateScriptEngine(ANGELSCRIPT_VERSION)))
+            I_Error("Aeon::ScriptManager::Init: Could not create AngelScript engine\n");
 
-      // set message callback
-      if(engine->SetMessageCallback(asFUNCTION(ScriptManager::MessageCallback),
-                                    nullptr, asCALL_CDECL) < 0)
-         I_Error("Aeon::ScriptManager::Init: Could not set AngelScript message callback\n");
+        // set message callback
+        if(engine->SetMessageCallback(asFUNCTION(ScriptManager::MessageCallback), nullptr, asCALL_CDECL) < 0)
+            I_Error("Aeon::ScriptManager::Init: Could not set AngelScript message callback\n");
 
-      // set engine properties
-      engine->SetEngineProperty(asEP_SCRIPT_SCANNER,         0); // ASCII
-      engine->SetEngineProperty(asEP_USE_CHARACTER_LITERALS, 1); // allow 'c' to be a char
+        // set engine properties
+        engine->SetEngineProperty(asEP_SCRIPT_SCANNER, 0);         // ASCII
+        engine->SetEngineProperty(asEP_USE_CHARACTER_LITERALS, 1); // allow 'c' to be a char
 
-      ::RegisterScriptArray(engine, true);
+        ::RegisterScriptArray(engine, true);
 
-      RegisterPrimitivePrintFuncs();
-      RegisterTypedefs();
-      RegisterHandleOnlyClasses();
-      RegisterScriptObjs();
-      RegisterGlobalProperties();
+        RegisterPrimitivePrintFuncs();
+        RegisterTypedefs();
+        RegisterHandleOnlyClasses();
+        RegisterScriptObjs();
+        RegisterGlobalProperties();
 
-      InitMCPP();
+        InitMCPP();
 
-      if(!(module = engine->GetModule("core", asGM_CREATE_IF_NOT_EXISTS)))
-         I_Error("Aeon::ScriptManager::Init: Could not create module\n");
+        if(!(module = engine->GetModule("core", asGM_CREATE_IF_NOT_EXISTS)))
+            I_Error("Aeon::ScriptManager::Init: Could not create module\n");
 
-      // create execution context
-      if(!(ctx = engine->CreateContext()))
-         I_Error("Aeon::ScriptManager::Init: Could not create execution context\n");
+        // create execution context
+        if(!(ctx = engine->CreateContext()))
+            I_Error("Aeon::ScriptManager::Init: Could not create execution context\n");
 
-      atexit(Shutdown);
-   }
+        atexit(Shutdown);
+    }
 
-   void ScriptManager::Build()
-   {
-      module->Build();
-   }
+    void ScriptManager::Build()
+    {
+        module->Build();
+    }
 
-   void ScriptManager::Shutdown()
-   {
-      ctx->Release();
-      engine->Release();
-   }
+    void ScriptManager::Shutdown()
+    {
+        ctx->Release();
+        engine->Release();
+    }
 
-   void ScriptManager::LoadAeonFileRecursive(const char *name, int lumpnum)
-   {
-      if(lumpnum >= 0) // terminal case - lumpnum is -1
-      {
-         lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
+    void ScriptManager::LoadAeonFileRecursive(const char *name, int lumpnum)
+    {
+        if(lumpnum >= 0) // terminal case - lumpnum is -1
+        {
+            lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
 
-         // recurse on next item
-         LoadAeonFileRecursive(name, lumpinfo[lumpnum]->next);
+            // recurse on next item
+            LoadAeonFileRecursive(name, lumpinfo[lumpnum]->next);
 
-         // handle this lump
-         if(!strncasecmp(lumpinfo[lumpnum]->name, name, 8) &&         // name match
-            lumpinfo[lumpnum]->li_namespace == lumpinfo_t::ns_global) // is global
-         {
-            if(!lumpinfo[lumpnum]->size)
-               return;  // just quit as if nothing happened
-
-            DWFILE dwfile; // haleyjd
-
-            dwfile.openLump(lumpnum);
-
-            if(!dwfile.isOpen())
+            // handle this lump
+            if(!strncasecmp(lumpinfo[lumpnum]->name, name, 8) &&         // name match
+               lumpinfo[lumpnum]->li_namespace == lumpinfo_t::ns_global) // is global
             {
-               // TODO: Some kind of error?
-               return;
+                if(!lumpinfo[lumpnum]->size)
+                    return; // just quit as if nothing happened
+
+                DWFILE dwfile; // haleyjd
+
+                dwfile.openLump(lumpnum);
+
+                if(!dwfile.isOpen())
+                {
+                    // TODO: Some kind of error?
+                    return;
+                }
+
+                ProcessAeonFile(lumpinfo[lumpnum]);
             }
+        }
+    }
 
-            ProcessAeonFile(lumpinfo[lumpnum]);
-         }
-      }
-   }
+    void ScriptManager::LoadRoots()
+    {
+        if(W_CheckNumForName("AEONROOT") != -1)
+        {
+            lumpinfo_t *lumpinfo = wGlobalDir.getLumpNameChain("AEONROOT");
+            LoadAeonFileRecursive("AEONROOT", lumpinfo->index);
+        }
+    }
 
-   void ScriptManager::LoadRoots()
-   {
-      if(W_CheckNumForName("AEONROOT") != -1)
-      {
-         lumpinfo_t *lumpinfo = wGlobalDir.getLumpNameChain("AEONROOT");
-         LoadAeonFileRecursive("AEONROOT", lumpinfo->index);
-      }
-   }
+    void ScriptManager::PushState()
+    {
+        state = ctx->GetState();
 
-   void ScriptManager::PushState()
-   {
-      state = ctx->GetState();
+        if(state == asEXECUTION_ACTIVE)
+            ctx->PushState();
+    }
 
-      if(state == asEXECUTION_ACTIVE)
-         ctx->PushState();
-   }
+    void ScriptManager::PopState()
+    {
+        if(state == asEXECUTION_ACTIVE)
+            ctx->PopState();
+    }
 
-   void ScriptManager::PopState()
-   {
-      if(state == asEXECUTION_ACTIVE)
-         ctx->PopState();
-   }
+    bool ScriptManager::PrepareFunction(asIScriptFunction *function)
+    {
+        if(function == nullptr)
+            return false;
+        if(ctx->GetState() == asEXECUTION_SUSPENDED)
+            return false;
 
-   bool ScriptManager::PrepareFunction(asIScriptFunction *function)
-   {
-      if(function == nullptr)
-         return false;
-      if(ctx->GetState() == asEXECUTION_SUSPENDED)
-         return false;
+        PushState();
 
-      PushState();
+        if(ctx->Prepare(function) != 0)
+        {
+            PopState();
+            return false;
+        }
 
-      if(ctx->Prepare(function) != 0)
-      {
-         PopState();
-         return false;
-      }
+        return true;
+    }
 
-      return true;
-   }
+    bool ScriptManager::PrepareFunction(const char *function)
+    {
+        return PrepareFunction(module->GetFunctionByName(function));
+    }
 
-   bool ScriptManager::PrepareFunction(const char *function)
-   {
-      return PrepareFunction(module->GetFunctionByName(function));
-   }
+    bool ScriptManager::Execute()
+    {
+        if(ctx->Execute() == asEXECUTION_EXCEPTION)
+        {
+            // Determine the function where the exception occurred
+            const asIScriptFunction *fn = ctx->GetExceptionFunction();
 
-   bool ScriptManager::Execute()
-   {
-      if(ctx->Execute() == asEXECUTION_EXCEPTION)
-      {
-         // Determine the function where the exception occurred
-         const asIScriptFunction *fn = ctx->GetExceptionFunction();
+            PopState();
+            I_Error("AeonScriptManager::Execute:\n"
+                    "Encountered AngelScript exception: %s\n"
+                    "Function: %s\n"
+                    "Relative line number: %d\n",
+                    ctx->GetExceptionString(), fn->GetDeclaration(), ctx->GetExceptionLineNumber());
+            return false;
+        }
 
-         PopState();
-         I_Error("AeonScriptManager::Execute:\n"
-                 "Encountered AngelScript exception: %s\n"
-                 "Function: %s\n"
-                 "Relative line number: %d\n",
-                 ctx->GetExceptionString(), fn->GetDeclaration(),
-                 ctx->GetExceptionLineNumber());
-         return false;
-      }
-
-      PopState();
-      return true;
-   }
-}
+        PopState();
+        return true;
+    }
+} // namespace Aeon
 
 // EOF
 

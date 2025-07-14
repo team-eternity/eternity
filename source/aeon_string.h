@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright(C) 2018 James Haley, Max Waine, et al.
+// Copyright(C) 2025 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: Aeon wrapper for qstring
+//------------------------------------------------------------------------------
+//
+// Purpose: Aeon wrapper for qstring.
 // Authors: Max Waine
 //
 
@@ -29,15 +31,14 @@ class qstring;
 
 namespace Aeon
 {
-   class ScriptObjString
-   {
-   public:
-      static void Init();
-   };
+    class ScriptObjString
+    {
+    public:
+        static void Init();
+    };
 
-
-   qstring *CreateRefQString(const char *str);
-}
+    qstring *CreateRefQString(const char *str);
+} // namespace Aeon
 
 #endif
 

@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2018 James Haley, Max Waine, et al.
+// Copyright (C) 2025 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Purpose: EDF Aeon Actions
+// Purpose: EDF Aeon actions.
 // Authors: Samuel Villarreal, Max Waine
 //
 
@@ -41,43 +41,43 @@ struct cfg_t;
 
 enum actionargtype_e : int8_t
 {
-   AAT_INVALID = -1,
-   AAT_INTEGER =  0,
-   AAT_FIXED,
-   AAT_STRING,
-   AAT_SOUND,
+    AAT_INVALID = -1,
+    AAT_INTEGER = 0,
+    AAT_FIXED,
+    AAT_STRING,
+    AAT_SOUND,
 };
 
 enum actioncalltype_e : uint8_t
 {
-   ACT_ACTIONARGS,
-   ACT_MOBJ,
-   ACT_PLAYER,
-   ACT_PLAYER_W_PSPRITE,
+    ACT_ACTIONARGS,
+    ACT_MOBJ,
+    ACT_PLAYER,
+    ACT_PLAYER_W_PSPRITE,
 };
 
 // AngelScript (Aeon) action
 struct actiondef_t
 {
-   const char      *name;
-   actionargtype_e  argTypes[EMAXARGS];
-   void             *defaultArgs[EMAXARGS];
-   int              numArgs;
-   actioncalltype_e callType;
+    const char      *name;
+    actionargtype_e  argTypes[EMAXARGS];
+    void            *defaultArgs[EMAXARGS];
+    int              numArgs;
+    actioncalltype_e callType;
 
-   DLListItem<actiondef_t> links;  // hash by name
+    DLListItem<actiondef_t> links; // hash by name
 };
 
 #ifdef NEED_EDF_DEFINITIONS
 
-#define EDF_SEC_ACTION "action"
+constexpr const char EDF_SEC_ACTION[] = "action";
 
 extern cfg_opt_t edf_action_opts[];
 
 #endif
 
 actiondef_t *E_AeonActionForName(const char *name);
-action_t *E_GetAction(const char *name);
+action_t    *E_GetAction(const char *name);
 
 void E_DefineAction(const char *name);
 void E_CreateActions(cfg_t *cfg);
