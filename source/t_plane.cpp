@@ -86,9 +86,9 @@ result_e T_MoveFloorDown(sector_t *sector, fixed_t speed, fixed_t dest, int crus
         }
         if(moveattached)
         {
-            if(!P_MoveAttached(sector, false, dest - lastpos, crush, instant))
+            if(!P_MoveAttached(sector, surf_floor, dest - lastpos, crush, instant))
             {
-                P_MoveAttached(sector, false, lastpos - dest, crush, instant);
+                P_MoveAttached(sector, surf_floor, lastpos - dest, crush, instant);
                 return crushed;
             }
         }
@@ -107,7 +107,7 @@ result_e T_MoveFloorDown(sector_t *sector, fixed_t speed, fixed_t dest, int crus
             if(move3dsides)
                 P_Scroll3DSides(sector, false, lastpos - dest, crush);
             if(moveattached)
-                P_MoveAttached(sector, false, lastpos - dest, crush, instant);
+                P_MoveAttached(sector, surf_floor, lastpos - dest, crush, instant);
 
             // Note from SoM: Shouldn't we return crushed if the
             // last move was rejected?
@@ -130,9 +130,9 @@ result_e T_MoveFloorDown(sector_t *sector, fixed_t speed, fixed_t dest, int crus
         }
         if(moveattached)
         {
-            if(!P_MoveAttached(sector, false, -speed, crush, false))
+            if(!P_MoveAttached(sector, surf_floor, -speed, crush, false))
             {
-                P_MoveAttached(sector, false, speed, crush, false);
+                P_MoveAttached(sector, surf_floor, speed, crush, false);
                 return crushed;
             }
         }
@@ -154,7 +154,7 @@ result_e T_MoveFloorDown(sector_t *sector, fixed_t speed, fixed_t dest, int crus
             if(move3dsides)
                 P_Scroll3DSides(sector, false, speed, crush);
             if(moveattached)
-                P_MoveAttached(sector, false, speed, crush, false);
+                P_MoveAttached(sector, surf_floor, speed, crush, false);
 
             return crushed;
         }
@@ -206,9 +206,9 @@ result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush,
         }
         if(moveattached)
         {
-            if(!P_MoveAttached(sector, false, destheight - lastpos, crush, instant))
+            if(!P_MoveAttached(sector, surf_floor, destheight - lastpos, crush, instant))
             {
-                P_MoveAttached(sector, false, lastpos - destheight, crush, instant);
+                P_MoveAttached(sector, surf_floor, lastpos - destheight, crush, instant);
                 return crushed;
             }
         }
@@ -225,7 +225,7 @@ result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush,
             if(move3dsides)
                 P_Scroll3DSides(sector, false, lastpos - destheight, crush);
             if(moveattached)
-                P_MoveAttached(sector, false, lastpos - destheight, crush, instant);
+                P_MoveAttached(sector, surf_floor, lastpos - destheight, crush, instant);
         }
         if(instant)
             P_SaveSectorPosition(*sector, ssurf_floor);
@@ -245,9 +245,9 @@ result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush,
         }
         if(moveattached)
         {
-            if(!P_MoveAttached(sector, false, speed, crush, false))
+            if(!P_MoveAttached(sector, surf_floor, speed, crush, false))
             {
-                P_MoveAttached(sector, false, -speed, crush, false);
+                P_MoveAttached(sector, surf_floor, -speed, crush, false);
                 return crushed;
             }
         }
@@ -273,7 +273,7 @@ result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush,
             if(move3dsides)
                 P_Scroll3DSides(sector, false, -speed, crush);
             if(moveattached)
-                P_MoveAttached(sector, false, -speed, crush, false);
+                P_MoveAttached(sector, surf_floor, -speed, crush, false);
 
             return crushed;
         }
@@ -327,9 +327,9 @@ result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest, int cr
         }
         if(moveattached)
         {
-            if(!P_MoveAttached(sector, true, destheight - lastpos, crush, instant))
+            if(!P_MoveAttached(sector, surf_ceil, destheight - lastpos, crush, instant))
             {
-                P_MoveAttached(sector, true, lastpos - destheight, crush, instant);
+                P_MoveAttached(sector, surf_ceil, lastpos - destheight, crush, instant);
                 return crushed;
             }
         }
@@ -347,7 +347,7 @@ result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest, int cr
             if(move3dsides)
                 P_Scroll3DSides(sector, true, lastpos - destheight, crush);
             if(moveattached)
-                P_MoveAttached(sector, true, lastpos - destheight, crush, instant);
+                P_MoveAttached(sector, surf_ceil, lastpos - destheight, crush, instant);
         }
 
         if(instant)
@@ -368,9 +368,9 @@ result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest, int cr
         }
         if(moveattached)
         {
-            if(!P_MoveAttached(sector, true, -speed, crush, false))
+            if(!P_MoveAttached(sector, surf_ceil, -speed, crush, false))
             {
-                P_MoveAttached(sector, true, speed, crush, false);
+                P_MoveAttached(sector, surf_ceil, speed, crush, false);
                 return crushed;
             }
         }
@@ -397,7 +397,7 @@ result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest, int cr
             if(move3dsides)
                 P_Scroll3DSides(sector, true, speed, crush);
             if(moveattached)
-                P_MoveAttached(sector, true, speed, crush, false);
+                P_MoveAttached(sector, surf_ceil, speed, crush, false);
 
             return crushed;
         }
@@ -441,9 +441,9 @@ result_e T_MoveCeilingUp(sector_t *sector, fixed_t speed, fixed_t dest, int crus
 
         if(moveattached)
         {
-            if(!P_MoveAttached(sector, true, dest - lastpos, crush, instant))
+            if(!P_MoveAttached(sector, surf_ceil, dest - lastpos, crush, instant))
             {
-                P_MoveAttached(sector, true, lastpos - dest, crush, instant);
+                P_MoveAttached(sector, surf_ceil, lastpos - dest, crush, instant);
                 return crushed;
             }
         }
@@ -460,7 +460,7 @@ result_e T_MoveCeilingUp(sector_t *sector, fixed_t speed, fixed_t dest, int crus
             if(move3dsides)
                 P_Scroll3DSides(sector, true, lastpos - dest, crush);
             if(moveattached)
-                P_MoveAttached(sector, true, lastpos - dest, crush, instant);
+                P_MoveAttached(sector, surf_ceil, lastpos - dest, crush, instant);
         }
         if(instant)
             P_SaveSectorPosition(*sector, ssurf_ceiling);
@@ -480,9 +480,9 @@ result_e T_MoveCeilingUp(sector_t *sector, fixed_t speed, fixed_t dest, int crus
 
         if(moveattached)
         {
-            if(!P_MoveAttached(sector, true, speed, crush, false))
+            if(!P_MoveAttached(sector, surf_ceil, speed, crush, false))
             {
-                P_MoveAttached(sector, true, -speed, crush, false);
+                P_MoveAttached(sector, surf_ceil, -speed, crush, false);
                 return crushed;
             }
         }

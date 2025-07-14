@@ -2518,7 +2518,7 @@ void P_AttachLines(const line_t *cline, bool ceiling)
 //
 // Moves all attached surfaces.
 //
-bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta, int crush, bool nointerp)
+bool P_MoveAttached(const sector_t *sector, surf_e surf, fixed_t delta, int crush, bool nointerp)
 {
     int i;
 
@@ -2527,16 +2527,8 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta, int cru
 
     bool ok = true;
 
-    if(ceiling)
-    {
-        count = sector->srf.ceiling.asurfacecount;
-        list  = sector->srf.ceiling.asurfaces;
-    }
-    else
-    {
-        count = sector->srf.floor.asurfacecount;
-        list  = sector->srf.floor.asurfaces;
-    }
+    count = sector->srf[surf].asurfacecount;
+    list  = sector->srf[surf].asurfaces;
 
     for(i = 0; i < count; i++)
     {
