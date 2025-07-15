@@ -26,6 +26,7 @@ Bug fixes
 * Fixed strange failure to start, happening on some Windows installations because of changes in the
   runtime.
   (issue here: https://stackoverflow.com/questions/78598141/first-stdmutexlock-crashes-in-application-built-with-latest-visual-studio)
+* Fixed bug with UDMF attached surfaces happening on unrelated sectors.
 * Fixed sudden termination due to "texture not cached" when playing back multiple level demos, or
   when the r_precache cvar was off.
 * Dehacked patch Frame omitted Args* fields didn't resolve to defaults, but 0. This was wrong com-
