@@ -356,9 +356,11 @@ static bool R_IntersectPoint(const seg_t *lseg, const node_t *node, dynavertex_t
     // get the fnode for the node
     fnode_t *bsp = &fnodes[node - nodes];
 
-    double a1 = lseg->v2->fy - lseg->v1->fy;
-    double b1 = lseg->v1->fx - lseg->v2->fx;
-    double c1 = lseg->v2->fx * lseg->v1->fy - lseg->v1->fx * lseg->v2->fy;
+    double a1 = (double)lseg->v2->fy - lseg->v1->fy;
+    double b1 = (double)lseg->v1->fx - lseg->v2->fx;
+
+    // CRUCIAL: keep precision high, otherwise we lose critical precision information
+    double c1 = (double)lseg->v2->fx * lseg->v1->fy - (double)lseg->v1->fx * lseg->v2->fy;
 
     v2float_t fbackup[2] = { lseg->dyv1->fbackup, lseg->dyv2->fbackup };
     double    ba1        = fbackup[1].y - fbackup[0].y;
@@ -509,8 +511,8 @@ static void R_SplitLine(dynaseg_t *dseg, dynaseg_t *backdseg, int bspnum)
         seg_t         *lseg  = &dseg->seg;
 
         // test vertices against node line
-        int side_v1 = R_PointOnSide(lseg->v1->x, lseg->v1->y, bsp);
-        int side_v2 = R_PointOnSide(lseg->v2->x, lseg->v2->y, bsp);
+        int side_v1 = R_PointOnSidePrecise(lseg->v1->x, lseg->v1->y, bsp);
+        int side_v2 = R_PointOnSidePrecise(lseg->v2->x, lseg->v2->y, bsp);
 
         // ioanch 20160226: fix the polyobject visual clipping bug
         M_AddToBox(bsp->bbox[side_v1], lseg->v1->x, lseg->v1->y);
@@ -531,7 +533,7 @@ static void R_SplitLine(dynaseg_t *dseg, dynaseg_t *backdseg, int bspnum)
             {
                 // both vertices are within epsilon distance; classify the seg
                 // with respect to the polyobject center point
-                side_v1 = side_v2 = R_PointOnSide(dseg->polyobj->centerPt.x, dseg->polyobj->centerPt.y, bsp);
+                side_v1 = side_v2 = R_PointOnSidePrecise(dseg->polyobj->centerPt.x, dseg->polyobj->centerPt.y, bsp);
             }
             else
                 side_v1 = side_v2; // v1 is very close; classify as v2 side
