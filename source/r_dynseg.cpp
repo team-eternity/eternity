@@ -363,9 +363,9 @@ static bool R_IntersectPoint(const seg_t *lseg, const node_t *node, dynavertex_t
     double c1 = (double)lseg->v2->fx * lseg->v1->fy - (double)lseg->v1->fx * lseg->v2->fy;
 
     v2float_t fbackup[2] = { lseg->dyv1->fbackup, lseg->dyv2->fbackup };
-    double    ba1        = fbackup[1].y - fbackup[0].y;
-    double    bb1        = fbackup[0].x - fbackup[1].x;
-    double    bc1        = fbackup[1].x * fbackup[0].y - fbackup[0].x * fbackup[1].y;
+    double    ba1        = (double)fbackup[1].y - fbackup[0].y;
+    double    bb1        = (double)fbackup[0].x - fbackup[1].x;
+    double    bc1        = (double)fbackup[1].x * fbackup[0].y - (double)fbackup[0].x * fbackup[1].y;
 
     // haleyjd 05/13/09: massive optimization
     double a2 = -bsp->a;
