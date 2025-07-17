@@ -35,3 +35,6 @@ Bug fixes
 * A_BFGSpray no longer crashes when used on a non-projectile thing which didn't acquire an enemy
   yet. This makes it compatible with vanilla DOOM Dehacked mods which can use this codepointer 
   liberally.
+* Fixed imprecise dynaseg splitting at high XY coordinates, with bad side 
+  effects such as polyobject portal infinite rendering recursion (and the 
+  "refused to draw portal" error popping up).
