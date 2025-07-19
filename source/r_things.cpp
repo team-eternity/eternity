@@ -863,7 +863,9 @@ void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc, cb_column_t &column, cons
         column.y2 = (int)((y2 > mfloorclip[column.x] ? mfloorclip[column.x] : y2));
 
         // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
-        if(column.y1 <= column.y2 && column.y2 < viewwindow.height)
+        // ioanch 20250719: prevent columns just above screen (but still not supposed to be seen) from trying to render.
+        // This might fix occasional crashes.
+        if(column.y1 <= column.y2 && (column.y2 != 0 || y2 >= 0) && column.y2 < viewwindow.height)
         {
             column.source = tex->bufferdata + tcol->ptroff;
             column.texmid = basetexturemid + M_FloatToFixed(skew) - (tcol->yoff << FRACBITS);
