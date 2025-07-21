@@ -38,3 +38,5 @@ Bug fixes
 * Fixed imprecise dynaseg splitting at high XY coordinates, with bad side 
   effects such as polyobject portal infinite rendering recursion (and the 
   "refused to draw portal" error popping up).
+* Fixed a possibly harmless access violation happening when rendering middle textures at a certain
+  distance.
