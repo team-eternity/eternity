@@ -470,6 +470,80 @@ bool ACS_CF_CheckFlag(ACS_CF_ARGS)
     return false;
 }
 
+enum
+{
+    SPAC_Cross      = 1,
+    SPAC_Use        = 2,
+    SPAC_MCross     = 4,
+    SPAC_Impact     = 8,
+    SPAC_Push       = 16,
+    SPAC_PCross     = 32,
+    SPAC_UseThrough = 64,
+    SPAC_AnyCross   = 128,
+    SPAC_MUse       = 256,
+    SPAC_MPush      = 512,
+    SPAC_UseBack    = 1024,
+
+    SPAC_None = 0,
+};
+
+//
+// void SetLineActivation(int lineid, int activation[, int repeat])
+//
+bool ACS_CF_SetLineActivation(ACS_CF_ARGS)
+{
+    auto    info = &static_cast<ACSThread *>(thread)->info;
+    line_t *l;
+    int     linenum    = -1;
+    int     activation = argV[1];
+    int     repeat     = argC > 2 ? argV[2] : -1;
+    while((l = P_FindLine(argV[0], &linenum, info->line)) != nullptr)
+    {
+        if(activation == SPAC_None)
+        {
+            l->flags    &= ~ML_PASSUSE;
+            l->extflags &= ~(EX_ML_CROSS | EX_ML_USE | EX_ML_IMPACT | EX_ML_PUSH | EX_ML_PLAYER | EX_ML_MONSTER |
+                             EX_ML_MISSILE | EX_ML_REPEAT | EX_ML_1SONLY | EX_ML_POLYOBJECT);
+        }
+        else
+        {
+            if(activation & SPAC_Cross)
+                l->extflags |= EX_ML_PLAYER | EX_ML_CROSS;
+            if(activation & SPAC_USE)
+                l->extflags |= EX_ML_PLAYER | EX_ML_USE | EX_ML_1SONLY;
+            if(activation & SPAC_MCross)
+                l->extflags |= EX_ML_MONSTER | EX_ML_CROSS;
+            if(activation & SPAC_Impact)
+                l->extflags |= EX_ML_PLAYER | EX_ML_MONSTER | EX_ML_IMPACT;
+            if(activation & SPAC_Push)
+                l->extflags |= EX_ML_PLAYER | EX_ML_PUSH;
+            if(activation & SPAC_PCross)
+                l->extflags |= EX_ML_MISSILE | EX_ML_CROSS;
+            if(activation & SPAC_UseThrough)
+            {
+                l->flags    |= ML_PASSUSE;
+                l->extflags |= EX_ML_PLAYER | EX_ML_USE | EX_ML_1SONLY;
+            }
+            if(activation & SPAC_AnyCross)
+            {
+                l->extflags |= EX_ML_PLAYER | EX_ML_MONSTER | EX_ML_MISSILE | EX_ML_POLYOBJECT | EX_ML_CROSS;
+            }
+            if(activation & SPAC_MUse)
+                l->extflags |= EX_ML_MONSTER | EX_ML_USE | EX_ML_1SONLY;
+            if(activation & SPAC_MPush)
+                l->extflags |= EX_ML_MONSTER | EX_ML_PUSH;
+            if(activation & SPAC_UseBack) // this may clear what was back
+                l->extflags &= ~EX_ML_1SONLY;
+        }
+        if(repeat > 0)
+            l->extflags |= EX_ML_REPEAT;
+        else if(!repeat)
+            l->extflags &= ~EX_ML_REPEAT;
+    }
+    thread->dataStk.push(0);
+    return false;
+}
+
 //
 // int CheckActorFloorTexture(int tid, str texture)
 //

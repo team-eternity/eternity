@@ -331,6 +331,7 @@ bool ACS_CF_CheckSight(ACS_CF_ARGS);
 bool ACS_CF_CheckWeapon(ACS_CF_ARGS);
 bool ACS_CF_CheckActorCeilingTexture(ACS_CF_ARGS);
 bool ACS_CF_CheckFlag(ACS_CF_ARGS);
+bool ACS_CF_SetLineActivation(ACS_CF_ARGS);
 bool ACS_CF_CheckActorFloorTexture(ACS_CF_ARGS);
 bool ACS_CF_CheckActorProperty(ACS_CF_ARGS);
 bool ACS_CF_CheckActorClass(ACS_CF_ARGS);

@@ -337,7 +337,7 @@ ACSEnvironment::ACSEnvironment() : dir{ nullptr }, global{ getGlobalScope(0) }, 
   //addFuncDataACS0( 73, addCallFunc(ACS_CF_CheckFont));
   //addFuncDataACS0( 74, addCallFunc(ACS_CF_DropItem));
     addFuncDataACS0( 75, addCallFunc(ACS_CF_CheckFlag));
-  //addFuncDataACS0( 76, addCallFunc(ACS_CF_SetLineActivation));
+    addFuncDataACS0( 76, addCallFunc(ACS_CF_SetLineActivation));
   //addFuncDataACS0( 77, addCallFunc(ACS_CF_GetLineActivation));
   //addFuncDataACS0( 78, addCallFunc(ACS_CF_GetThingPowerupTics));
     addFuncDataACS0( 79, addCallFunc(ACS_CF_ChangeActorAngle));

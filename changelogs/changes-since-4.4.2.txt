@@ -6,6 +6,8 @@ Improvements
 * New lindef parameterized special: Sector_ChangeFlags. Only the flags supported by Eternity are
   available.
 
+* New ACS function: SetLineActivation.
+
 * Automap improvements: now you can zoom in with the mouse wheel on the automap. You also have the
   option to hide all stats from both the automap and the overlay HUD, and hu_hidesecrets only hides
   secrets. Special thanks to SarahCosmosys for the contribution!
