@@ -1142,6 +1142,7 @@ PARAMLINE(ParamSectorSetRotation);
 PARAMLINE(ParamSectorSetFloorPanning);
 PARAMLINE(ParamSectorSetCeilingPanning);
 PARAMLINE(ParamSectorChangeSound);
+PARAMLINE(ParamSectorChangeFlags);
 PARAMLINE(TurnTagLightsOff);
 
 PARAMLINE(ACSSetFriction);
@@ -1566,6 +1567,7 @@ ev_binding_t DOOMBindings[] =
     LINESPECNAMED(500, CeilingWaggle,                       "Ceiling_Waggle")
     LINESPECNAMED(501, ParamPlatGeneric,                    "Generic_Lift")
     LINESPECNAMED(502, ParamGenStairs,                      "Generic_Stairs")
+	LINESPECNAMED(503, ParamSectorChangeFlags,              "Sector_ChangeFlags")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1656,6 +1658,7 @@ ev_binding_t HexenBindings[] = {
     LINESPECNAMED(45,  ParamCeilingCrushRaiseAndStay,       "Ceiling_CrushRaiseAndStay")
     LINESPECNAMED(46,  ParamFloorCrushStop,                 "Floor_CrushStop")
     LINESPECNAMED(47,  ParamCeilingMoveToValue,             "Ceiling_MoveToValue")
+	LINESPECNAMED(54,  ParamSectorChangeFlags,              "Sector_ChangeFlags")
     LINESPECNAMED(59,  PolyobjORMoveToSpot,                 "Polyobj_OR_MoveToSpot")
     LINESPECNAMED(60,  ParamPlatPerpetualRaise,             "Plat_PerpetualRaise")
     LINESPECNAMED(61,  ParamPlatStop,                       "Plat_Stop")

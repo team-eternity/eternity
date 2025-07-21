@@ -39,6 +39,25 @@
 #include "r_state.h"
 #include "v_misc.h"
 
+enum
+{
+    EV_SECF_SILENT = 1,          // SECF_KILLSOUND
+                                 //	EV_SECF_NOFALLINGDAMAGE = 2,
+                                 //	EV_SECF_FLOORDROP = 4,
+                                 //	EV_SECF_NORESPAWN = 8,
+    EV_SECF_FRICTION      = 16,  // SECF_FRICTION
+    EV_SECF_PUSH          = 32,  // SECF_PUSH
+    EV_SECF_SILENTMOVE    = 64,  // SECF_KILLMOVESOUND
+    EV_SECF_DMGTERRAINFX  = 128, // SDMG_TERRAINHIT
+    EV_SECF_DMGENDGODMODE = 256, // SDMG_ENDGODMODE
+    EV_SECF_DMGENDLEVEL   = 512, // SDMG_EXITLEVEL
+                                 //	EV_SECF_DMGHAZARD = 1024,
+
+    // For warning user if reserved flags are set
+    ALL_EV_SECF_FLAGS = EV_SECF_SILENT | EV_SECF_FRICTION | EV_SECF_PUSH | EV_SECF_SILENTMOVE | EV_SECF_DMGTERRAINFX |
+                        EV_SECF_DMGENDGODMODE | EV_SECF_DMGENDLEVEL,
+};
+
 //=============================================================================
 //
 // SectorThinker class methods
@@ -203,7 +222,6 @@ int EV_SectorSetFloorPanning(const line_t *line, int tag, fixed_t xoffs, fixed_t
         goto manualtrig;
     }
 
-    // TODO: Once UDMF, let this work for line arg0 when in UDMF config.
     while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
     {
         sector = sectors + secnum;
@@ -232,6 +250,64 @@ int EV_SectorSoundChange(int tag, int sndSeqID)
         rtn                      = true;
     }
     return rtn ? 1 : 0;
+}
+
+static void EV_flagsToInternal(int flags, unsigned &secflags, unsigned &dmgflags)
+{
+    secflags = 0;
+    dmgflags = 0;
+    if(flags & EV_SECF_SILENT)
+        secflags |= SECF_KILLSOUND;
+    if(flags & EV_SECF_FRICTION)
+        secflags |= SECF_FRICTION;
+    if(flags & EV_SECF_PUSH)
+        secflags |= SECF_PUSH;
+    if(flags & EV_SECF_SILENTMOVE)
+        secflags |= SECF_KILLMOVESOUND;
+    if(flags & EV_SECF_DMGTERRAINFX)
+        dmgflags |= SDMG_TERRAINHIT;
+    if(flags & EV_SECF_DMGENDGODMODE)
+        dmgflags |= SDMG_ENDGODMODE;
+    if(flags & EV_SECF_DMGENDLEVEL)
+        dmgflags |= SDMG_EXITLEVEL;
+
+    if(flags & ~ALL_EV_SECF_FLAGS)
+        doom_warningf("Use of undefined sector flags %d", flags);
+}
+
+int EV_SectorFlagsChange(const line_t *line, int tag, int setflags, int clearflags)
+{
+    sector_t *sector;
+    bool      manual = false;
+    int       secnum = -1;
+    bool      found  = false;
+    unsigned  setsec = 0, setdmg = 0, clearsec = 0, cleardmg = 0;
+    if(!tag)
+    {
+        if(!line || !(sector = line->backsector))
+            return 0;
+        manual = true;
+        goto manualtrig;
+    }
+
+    EV_flagsToInternal(setflags, setsec, setdmg);
+    EV_flagsToInternal(clearflags, clearsec, cleardmg);
+
+    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
+    {
+        sector = sectors + secnum;
+        found  = true;
+
+        sector->flags       |= setsec;
+        sector->damageflags |= setdmg;
+        sector->flags       &= ~clearsec;
+        sector->damageflags &= ~cleardmg;
+
+    manualtrig:
+        if(manual)
+            return 1;
+    }
+    return found ? 1 : 0;
 }
 
 //=============================================================================

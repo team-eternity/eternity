@@ -43,6 +43,7 @@ int EV_SectorSetRotation(const line_t *line, int tag, int floorangle, int ceilin
 int EV_SectorSetCeilingPanning(const line_t *line, int tag, fixed_t xoffs, fixed_t yoffs);
 int EV_SectorSetFloorPanning(const line_t *line, int tag, fixed_t xoffs, fixed_t yoffs);
 int EV_SectorSoundChange(int tag, int sndSeqID);
+int EV_SectorFlagsChange(const line_t *line, int tag, int setflags, int clearflags);
 
 #endif
 

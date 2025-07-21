@@ -2626,13 +2626,13 @@ DEFINE_ACTION(EV_ActionPolyobjMoveTo)
 {
     polymoveto_t pmd = {};
 
-    pmd.polyObjNum   = instance->args[0];
-    pmd.speed        = instance->args[1] * (FRACUNIT / 8);
-    pmd.targetMobj   = false;
-    pmd.pos.x        = instance->args[2] * FRACUNIT;
-    pmd.pos.y        = instance->args[3] * FRACUNIT;
-    pmd.overRide     = false;
-    pmd.activator    = nullptr; // absolute XY destination won't use activator, unlike spot TID
+    pmd.polyObjNum = instance->args[0];
+    pmd.speed      = instance->args[1] * (FRACUNIT / 8);
+    pmd.targetMobj = false;
+    pmd.pos.x      = instance->args[2] * FRACUNIT;
+    pmd.pos.y      = instance->args[3] * FRACUNIT;
+    pmd.overRide   = false;
+    pmd.activator  = nullptr; // absolute XY destination won't use activator, unlike spot TID
     return EV_DoPolyObjMoveToSpot(pmd);
 }
 
@@ -2645,12 +2645,12 @@ DEFINE_ACTION(EV_ActionPolyobjMoveToSpot)
 {
     polymoveto_t pmd = {};
 
-    pmd.polyObjNum   = instance->args[0];
-    pmd.speed        = instance->args[1] * (FRACUNIT / 8);
-    pmd.targetMobj   = true;
-    pmd.tid          = instance->args[2];
-    pmd.overRide     = false;
-    pmd.activator    = instance->actor;
+    pmd.polyObjNum = instance->args[0];
+    pmd.speed      = instance->args[1] * (FRACUNIT / 8);
+    pmd.targetMobj = true;
+    pmd.tid        = instance->args[2];
+    pmd.overRide   = false;
+    pmd.activator  = instance->actor;
     return EV_DoPolyObjMoveToSpot(pmd);
 }
 
@@ -2702,13 +2702,13 @@ DEFINE_ACTION(EV_ActionPolyobjORMoveTo)
 {
     polymoveto_t pmd = {};
 
-    pmd.polyObjNum   = instance->args[0];
-    pmd.speed        = instance->args[1] * (FRACUNIT / 8);
-    pmd.targetMobj   = false;
-    pmd.pos.x        = instance->args[2] * FRACUNIT;
-    pmd.pos.y        = instance->args[3] * FRACUNIT;
-    pmd.overRide     = true;
-    pmd.activator    = nullptr;
+    pmd.polyObjNum = instance->args[0];
+    pmd.speed      = instance->args[1] * (FRACUNIT / 8);
+    pmd.targetMobj = false;
+    pmd.pos.x      = instance->args[2] * FRACUNIT;
+    pmd.pos.y      = instance->args[3] * FRACUNIT;
+    pmd.overRide   = true;
+    pmd.activator  = nullptr;
     return EV_DoPolyObjMoveToSpot(pmd);
 }
 
@@ -2721,12 +2721,12 @@ DEFINE_ACTION(EV_ActionPolyobjORMoveToSpot)
 {
     polymoveto_t pmd = {};
 
-    pmd.polyObjNum   = instance->args[0];
-    pmd.speed        = instance->args[1] * (FRACUNIT / 8);
-    pmd.targetMobj   = true;
-    pmd.tid          = instance->args[2];
-    pmd.overRide     = true;
-    pmd.activator    = instance->actor;
+    pmd.polyObjNum = instance->args[0];
+    pmd.speed      = instance->args[1] * (FRACUNIT / 8);
+    pmd.targetMobj = true;
+    pmd.tid        = instance->args[2];
+    pmd.overRide   = true;
+    pmd.activator  = instance->actor;
     return EV_DoPolyObjMoveToSpot(pmd);
 }
 
@@ -4401,6 +4401,17 @@ DEFINE_ACTION(EV_ActionParamStairsBuildUpDoomCrush)
 DEFINE_ACTION(EV_ActionParamSectorChangeSound)
 {
     return EV_SectorSoundChange(instance->tag, instance->args[1]);
+}
+
+//
+// Implements Sector_ChangeFlags(tag, setflags, clearflags)
+//
+// * ExtraData: 503
+// * Hexen:     54
+//
+DEFINE_ACTION(EV_ActionParamSectorChangeFlags)
+{
+    return EV_SectorFlagsChange(instance->line, instance->tag, instance->args[1], instance->args[2]);
 }
 
 //=============================================================================
