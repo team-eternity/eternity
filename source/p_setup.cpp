@@ -268,8 +268,6 @@ inline static void ShortToNodeChild(int *loc, uint16_t value)
 }
 
 //
-// SafeUintIndex
-//
 // haleyjd 12/04/08: Inline routine to convert an effectively unsigned short
 // index into a long index, safely checking against the provided upper bound
 // and substituting the value of 0 in the event of an overflow.
@@ -288,14 +286,11 @@ inline static int SafeUintIndex(int16_t input, int limit, const char *func, int 
 }
 
 //
-// SafeRealUintIndex
+// Matching routine for indices that are already in uint32_t format.
 //
-// haleyjd 06/14/10: Matching routine for indices that are already in unsigned
-// short format.
-//
-inline static int SafeRealUintIndex(uint16_t input, int limit, const char *func, int index, const char *item)
+inline static int SafeRealUlongIndex(uint32_t input, int limit, const char *func, int index, const char *item)
 {
-    int ret = (int)(SwapUShort(input)) & 0xffff;
+    int ret = (int)(SwapULong(input)) & 0xffffffff;
 
     if(ret >= limit)
     {
@@ -1282,7 +1277,7 @@ static void P_LoadZSegs(byte *data, ZNodeType type)
             continue; // skip strictly GL nodes
         }
 
-        linedef = SafeRealUintIndex(ml.linedef, numlines, "seg", actualSegIndex, "line");
+        linedef = SafeRealUlongIndex(ml.linedef, numlines, "seg", actualSegIndex, "line");
 
         ldef        = &lines[linedef];
         li->linedef = ldef;
