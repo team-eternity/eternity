@@ -1211,7 +1211,7 @@ static bool P_minotaurChargeHit(dmgspecdata_t *dmgspec)
         angle  = P_PointToAngle(source->x, source->y, target->x, target->y);
         thrust = 16 * FRACUNIT + (P_Random(pr_mincharge) << 10);
 
-        P_ThrustMobj(target, angle, thrust);
+        P_ThrustMobj(target, angle, thrust, false);
         P_DamageMobj(target, nullptr, nullptr, ((P_Random(pr_mincharge) & 7) + 1) * 6, MOD_UNKNOWN);
 
         if(target->player)
@@ -1766,7 +1766,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source, int damage, int m
             thrust *= 4;
         }
 
-        P_ThrustMobj(target, ang, emod->absolutePush > 0 ? emod->absolutePush : thrust);
+        P_ThrustMobj(target, ang, emod->absolutePush > 0 ? emod->absolutePush : thrust, false);
         if(!(target->flags & MF_NOGRAVITY) && emod->absoluteHop > 0)
             target->momz += emod->absoluteHop;
 

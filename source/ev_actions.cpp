@@ -3309,13 +3309,14 @@ DEFINE_ACTION(EV_ActionThingStop)
 //
 // EV_ActionThrustThing
 //
-// Implements ThrustThing(angle, speed, reserved, tid)
+// Implements ThrustThing(angle, speed, nolimit, tid)
 // * ExtraData: 424
 // * Hexen:     72
 //
 DEFINE_ACTION(EV_ActionThrustThing)
 {
-    return EV_ThrustThing(instance->actor, instance->side, instance->args[0], instance->args[1], instance->args[3]);
+    return EV_ThrustThing(instance->actor, instance->side, instance->args[0], instance->args[1], instance->args[3],
+                          !!instance->args[2]);
 }
 
 //

@@ -308,7 +308,7 @@ int EV_ThingStop(Mobj *actor, int tid)
 //
 // Implements ThrustThing(angle, speed, reserved, tid)
 //
-int EV_ThrustThing(Mobj *actor, int side, int byteangle, int ispeed, int tid)
+int EV_ThrustThing(Mobj *actor, int side, int byteangle, int ispeed, int tid, bool nolimit)
 {
     // Hexen format maps cannot have ExtraData, and in Hexen activation is only
     // done from the front side, so keep compatible with that. Otherwise, in
@@ -333,7 +333,7 @@ int EV_ThrustThing(Mobj *actor, int side, int byteangle, int ispeed, int tid)
 
         while((mobj = P_FindMobjFromTID(tid, mobj, actor)))
         {
-            P_ThrustMobj(mobj, angle, speed);
+            P_ThrustMobj(mobj, angle, speed, nolimit);
             success = 1;
         }
     }

@@ -597,11 +597,13 @@ void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec, const zrefs_t *slope
     mo->effects = 0;
 }
 
-void P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move)
+void P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move, bool nolimit)
 {
-    angle    >>= ANGLETOFINESHIFT;
-    mo->momx  += FixedMul(move, finecosine[angle]);
-    mo->momy  += FixedMul(move, finesine[angle]);
+    angle >>= ANGLETOFINESHIFT;
+    if(nolimit)
+        mo->intflags |= MIF_NOSPEEDCAP;
+    mo->momx += FixedMul(move, finecosine[angle]);
+    mo->momy += FixedMul(move, finesine[angle]);
 }
 
 //
@@ -611,7 +613,7 @@ inline static void P_hereticWind(Mobj &mo)
 {
     const sector_t &sector = *mo.subsector->sector;
     if(sector.hticPushType == SECTOR_HTIC_WIND)
-        P_ThrustMobj(&mo, sector.hticPushAngle, sector.hticPushForce);
+        P_ThrustMobj(&mo, sector.hticPushAngle, sector.hticPushForce, false);
 }
 
 inline static const int kHitFloorGravityFactor = 8;
@@ -728,15 +730,18 @@ void P_XYMovement(Mobj *mo)
 
     P_applySlopeGravity(*mo);
 
-    if(mo->momx > MAXMOVE)
-        mo->momx = MAXMOVE;
-    else if(mo->momx < -MAXMOVE)
-        mo->momx = -MAXMOVE;
+    if(!(mo->intflags & MIF_NOSPEEDCAP))
+    {
+        if(mo->momx > MAXMOVE)
+            mo->momx = MAXMOVE;
+        else if(mo->momx < -MAXMOVE)
+            mo->momx = -MAXMOVE;
 
-    if(mo->momy > MAXMOVE)
-        mo->momy = MAXMOVE;
-    else if(mo->momy < -MAXMOVE)
-        mo->momy = -MAXMOVE;
+        if(mo->momy > MAXMOVE)
+            mo->momy = MAXMOVE;
+        else if(mo->momy < -MAXMOVE)
+            mo->momy = -MAXMOVE;
+    }
 
     // Adjust speed according to slope
     P_reduceVelocityBySlope(*mo);
@@ -757,8 +762,19 @@ void P_XYMovement(Mobj *mo)
         // This explains the tendency for Mancubus fireballs
         // to pass through walls.
 
-        if(xmove > MAXMOVE / 2 || ymove > MAXMOVE / 2 || // killough 8/9/98:
-           ((xmove < -MAXMOVE / 2 || ymove < -MAXMOVE / 2) && demo_version >= 203))
+        // ioanch 20250722: add support for uncapped speeds
+        if(xmove > MAXMOVE || ymove > MAXMOVE || xmove < -MAXMOVE || ymove < -MAXMOVE)
+        {
+            // Multiples of MAXMOVE / 2
+            fixed_t maxdist   = emax(D_abs(xmove), D_abs(ymove));
+            int     quotient  = maxdist / (MAXMOVE / 2);
+            ptryx             = mo->x + xmove / quotient;
+            ptryy             = mo->y + ymove / quotient;
+            xmove            -= xmove / quotient;
+            ymove            -= ymove / quotient;
+        }
+        else if(xmove > MAXMOVE / 2 || ymove > MAXMOVE / 2 || // killough 8/9/98:
+                ((xmove < -MAXMOVE / 2 || ymove < -MAXMOVE / 2) && demo_version >= 203))
         {
             ptryx   = mo->x + xmove / 2;
             ptryy   = mo->y + ymove / 2;
@@ -1810,6 +1826,10 @@ void Mobj::Think()
 
     // momentum movement
     clip.BlockingMobj = nullptr;
+    if(intflags & MIF_NOSPEEDCAP && momx >= -MAXMOVE && momx <= MAXMOVE && momy >= -MAXMOVE && momy <= MAXMOVE)
+    {
+        intflags &= ~MIF_NOSPEEDCAP; // clear when back in range
+    }
     if(momx | momy || flags & MF_SKULLFLY)
     {
         P_XYMovement(this);

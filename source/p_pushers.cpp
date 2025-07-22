@@ -161,7 +161,7 @@ static bool PIT_PushThing(Mobj *thing, void *context)
             if(tmpusher->source->type == E_ThingNumForDEHNum(MT_PUSH))
                 pushangle += ANG180; // away
 
-            P_ThrustMobj(thing, pushangle, speed);
+            P_ThrustMobj(thing, pushangle, speed, false);
         }
     }
     return true;

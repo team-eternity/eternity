@@ -554,7 +554,7 @@ Mobj *P_SpawnMissileWithDest(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t 
 // new Eternity mobj function prototypes  haleyjd
 void P_Massacre(int friends);                        // haleyjd 1/22/99:  kills everything
 bool P_SetMobjStateNF(Mobj *mobj, statenum_t state); // sets state without calling action function
-void P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move);
+void P_ThrustMobj(Mobj *mo, angle_t angle, fixed_t move, bool nolimit);
 
 // TIDs
 void  P_InitTIDHash(void);
@@ -817,6 +817,8 @@ enum
 
     MIF_MAYPLAYPARTICLESOUNDS = 0x00040000, // Hint that it may be playing particle sounds
     MIF_SKULLFLYSEE           = 0x00080000, // ioanch: when MF_SKULLFLY is set, return to seestate, not spawn
+
+    MIF_NOSPEEDCAP = 0x00100000, // Don't apply MAXMOVE speed limit when thrusted
 
     // these should be cleared when a thing is being raised
     MIF_CLEARRAISED = (MIF_DIEDFALLING | MIF_SCREAMED | MIF_CRASHED | MIF_SKULLFLYSEE | MIF_WIMPYDEATH),

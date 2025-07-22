@@ -6,6 +6,9 @@ Improvements
 * New lindef parameterized special: Sector_ChangeFlags. Only the flags supported by Eternity are
   available.
 
+* The ThrustThing linedef special now uses its third parameter: "nolimit" to allow speeds greater
+  than 30.
+
 * New ACS function: SetLineActivation.
 
 * Automap improvements: now you can zoom in with the mouse wheel on the automap. You also have the
