@@ -3316,7 +3316,7 @@ DEFINE_ACTION(EV_ActionThingStop)
 DEFINE_ACTION(EV_ActionThrustThing)
 {
     return EV_ThrustThing(instance->actor, instance->side, instance->args[0], instance->args[1], instance->args[3],
-                          !!instance->args[2]);
+                          instance->args[2]);
 }
 
 //
