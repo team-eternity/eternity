@@ -2068,10 +2068,14 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
 
         fixed_t sectorheight = sector->srf.floor.getZAt(spr->gx, spr->gy);
 
+        // Don't use the sprite scale as it will give erroneous results if scaled in EDF. Recalculate it without the EDF
+        // component.
+        float distyscale = spr->dist * view.yfoc;
+
         mh = M_FixedToFloat(sectorheight) - cb_viewpoint.z;
         if(sector->srf.floor.pflags & PS_PASSABLE && sectorheight > spr->gz)
         {
-            h = eclamp(view.ycenter - (mh * spr->scale), 0.0f, view.height - 1);
+            h = eclamp(view.ycenter - (mh * distyscale), 0.0f, view.height - 1);
 
             for(x = spr->x1; x <= spr->x2; x++)
             {
@@ -2086,7 +2090,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
         if(sector->srf.ceiling.pflags & PS_PASSABLE && sectorheight < spr->gzt)
         {
             // Add +1 to avoid overdrawing with the bottomclip of the above part
-            h = eclamp(view.ycenter - (mh * spr->scale) + 1, 0.0f, view.height - 1);
+            h = eclamp(view.ycenter - (mh * distyscale) + 1, 0.0f, view.height - 1);
 
             for(x = spr->x1; x <= spr->x2; x++)
             {

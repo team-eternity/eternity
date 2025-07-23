@@ -3,25 +3,23 @@ Changes since v4.04.02
 
 Improvements
 ------------
-* New lindef parameterized special: Sector_ChangeFlags. Only the flags supported by Eternity are
-  available.
+* New lindef parameterized special: Sector_ChangeFlags. Only the flags supported by Eternity are available.
 
-* The ThrustThing linedef special now uses its third parameter: "nolimit" to allow speeds greater
-  than 30.
+* The ThrustThing linedef special now uses its third parameter: "nolimit" to allow speeds greater than 30.
 
 * New ACS function: SetLineActivation.
 
-* Automap improvements: now you can zoom in with the mouse wheel on the automap. You also have the
-  option to hide all stats from both the automap and the overlay HUD, and hu_hidesecrets only hides
-  secrets. Special thanks to SarahCosmosys for the contribution!
+* Automap improvements: now you can zoom in with the mouse wheel on the automap. You also have the option to hide all 
+  stats from both the automap and the overlay HUD, and hu_hidesecrets only hides secrets. Special thanks to 
+  SarahCosmosys for the contribution!
   + New console variable for this purpose: hu_hidestats.
 
 * Now the 'gib' state of the crushed corpses is customizable in EDF in the following ways:
   + in EDF `thingtype`, using the `crunchstate` property;
-  + in EDF `thingtype` DECORATE-style `state` definition, using either the `Crunch:` or `Crush:`
-    label (the latter is on par with the name from ZDoom).
-  If unspecified, it will default to the game mode behavior: change to S_GIBS in Doom, or do not
-  change in Heretic. Thanks to sink666 for the implementation!
+  + in EDF `thingtype` DECORATE-style `state` definition, using either the `Crunch:` or `Crush:` label (the latter is on 
+    par with the name from ZDoom).
+  If unspecified, it will default to the game mode behavior: change to S_GIBS in Doom, or do not change in Heretic. 
+  Thanks to sink666 for the implementation!
 
 * Minor improvements with portal error messages.
 
@@ -29,22 +27,20 @@ Bug fixes
 ---------
 
 * Fixed crash happening when changing multithreaded rendering number of threads before demos start.
-* Fixed sprite glitching shortly followed by crash when starting with multithreaded renderer on a
-  small view, and then increasing the view.
-* Fixed strange failure to start, happening on some Windows installations because of changes in the
-  runtime.
-  (issue here: https://stackoverflow.com/questions/78598141/first-stdmutexlock-crashes-in-application-built-with-latest-visual-studio)
+* Fixed sprite glitching shortly followed by crash when starting with multithreaded renderer on a small view, and then 
+  increasing the view.
+* Fixed strange failure to start, happening on some Windows installations because of changes in the runtime.
+  (issue here:
+  https://stackoverflow.com/questions/78598141/first-stdmutexlock-crashes-in-application-built-with-latest-visual-studio)
 * Fixed bug with UDMF attached surfaces happening on unrelated sectors.
-* Fixed sudden termination due to "texture not cached" when playing back multiple level demos, or
-  when the r_precache cvar was off.
-* Dehacked patch Frame omitted Args* fields didn't resolve to defaults, but 0. This was wrong com-
-  pared to how ports such as DSDA-DOOM should handle it.
+* Fixed sudden termination due to "texture not cached" when playing back multiple level demos, or when the r_precache 
+  cvar was off.
+* Dehacked patch Frame omitted Args* fields didn't resolve to defaults, but 0. This was wrong compared to how ports such 
+  as DSDA-DOOM should handle it.
 * Fixed A_ConsumeAmmo bug when specifying 0 (ammo per shot) ammo.
-* A_BFGSpray no longer crashes when used on a non-projectile thing which didn't acquire an enemy
-  yet. This makes it compatible with vanilla DOOM Dehacked mods which can use this codepointer 
-  liberally.
-* Fixed imprecise dynaseg splitting at high XY coordinates, with bad side 
-  effects such as polyobject portal infinite rendering recursion (and the 
-  "refused to draw portal" error popping up).
-* Fixed a possibly harmless access violation happening when rendering middle textures at a certain
-  distance.
+* A_BFGSpray no longer crashes when used on a non-projectile thing which didn't acquire an enemy yet. This makes it 
+  compatible with vanilla DOOM Dehacked mods which can use this codepointer liberally.
+* Fixed imprecise dynaseg splitting at high XY coordinates, with bad side effects such as polyobject portal infinite 
+  rendering recursion (and the "refused to draw portal" error popping up).
+* Fixed wrong sprite sector portal clipping when scaled differently from 1.
+* Fixed a possibly harmless access violation happening when rendering middle textures at a certain distance.
