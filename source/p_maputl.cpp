@@ -604,7 +604,8 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
     lineopening_t open = clip.open;
 
     // NOTE: default to line center if ppoint unspecified
-    v2fixed_t point = ppoint ? *ppoint : v2fixed_t(linedef->soundorg.x, linedef->soundorg.y);
+    const v2fixed_t point     = ppoint ? *ppoint : v2fixed_t(linedef->soundorg.x, linedef->soundorg.y);
+    v2fixed_t       backpoint = point;
 
     fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
     int     frontfloorgroupid, backfloorgroupid;
@@ -627,7 +628,14 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
                                           linedef->beyondportalline->frontsector :
                                           nullptr;
     if(beyond)
+    {
         openbacksector = beyond;
+        if(linedef->portal && linedef->portal->type == R_LINKED)
+        {
+            backpoint.x += linedef->portal->data.link.delta.x;
+            backpoint.y += linedef->portal->data.link.delta.y;
+        }
+    }
 
     // SoM: ok, new plan. The only way a 2s line should give a lowered floor or hightened ceiling
     // z is if both sides of that line have the same portal.
@@ -647,17 +655,17 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
             {
                 *lineclipflags |= LINECLIP_UNDERPORTAL;
                 frontceilz      = frontceiling.getZAt(point);
-                backceilz       = backceiling.getZAt(point);
+                backceilz       = backceiling.getZAt(backpoint);
             }
         }
         else
         {
             frontceilz = frontceiling.getZAt(point);
-            backceilz  = backceiling.getZAt(point);
+            backceilz  = backceiling.getZAt(backpoint);
         }
 
         frontcz = frontceiling.getZAt(point);
-        backcz  = backceiling.getZAt(point);
+        backcz  = backceiling.getZAt(backpoint);
     }
 
     const surface_t &frontfloor = openfrontsector->srf.floor;
@@ -680,7 +688,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
                 *lineclipflags    |= LINECLIP_ABOVEPORTAL;
                 frontfloorz        = frontfloor.getZAt(point);
                 frontfloorgroupid  = openfrontsector->groupid;
-                backfloorz         = backfloor.getZAt(point);
+                backfloorz         = backfloor.getZAt(backpoint);
                 backfloorgroupid   = openbacksector->groupid;
             }
         }
@@ -688,12 +696,12 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
         {
             frontfloorz       = frontfloor.getZAt(point);
             frontfloorgroupid = openfrontsector->groupid;
-            backfloorz        = backfloor.getZAt(point);
+            backfloorz        = backfloor.getZAt(backpoint);
             backfloorgroupid  = openbacksector->groupid;
         }
 
         frontfz = frontfloor.getZAt(point);
-        backfz  = backfloor.getZAt(point);
+        backfz  = backfloor.getZAt(backpoint);
     }
 
     if(linedef->extflags & EX_ML_UPPERPORTAL && backceiling.pflags & PS_PASSABLE)
@@ -796,7 +804,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
             }
             // ioanch 20160318: mark if 3dmidtex affects clipping
             // Also don't flag lines that are offset into the floor/ceiling
-            if(portaldetect && (texbot < frontceiling.getZAt(point) || texbot < backceiling.getZAt(point)))
+            if(portaldetect && (texbot < frontceiling.getZAt(point) || texbot < backceiling.getZAt(backpoint)))
                 *lineclipflags |= LINECLIP_UNDER3DMIDTEX;
         }
         else
@@ -809,7 +817,7 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
             }
             // ioanch 20160318: mark if 3dmidtex affects clipping
             // Also don't flag lines that are offset into the floor/ceiling
-            if(portaldetect && (textop > frontfloor.getZAt(point) || textop > backfloor.getZAt(point)))
+            if(portaldetect && (textop > frontfloor.getZAt(point) || textop > backfloor.getZAt(backpoint)))
                 *lineclipflags |= LINECLIP_OVER3DMIDTEX;
 
             // The mobj is above the 3DMidTex, so check to see if it's ON the 3DMidTex

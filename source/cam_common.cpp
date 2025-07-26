@@ -539,23 +539,31 @@ void tracelineopening_t::calculateAtPoint(const line_t &line, v2fixed_t pos)
         return;
     }
 
-    const sector_t *front = line.frontsector;
-    const sector_t *back  = line.backsector;
+    const sector_t *front   = line.frontsector;
+    const sector_t *back    = line.backsector;
+    v2fixed_t       backpos = pos;
 
     const sector_t *beyond =
         line.intflags & MLI_1SPORTALLINE && line.beyondportalline ? line.beyondportalline->frontsector : nullptr;
     if(beyond)
+    {
         back = beyond;
+        if(line.portal && line.portal->type == R_LINKED)
+        {
+            backpos.x += line.portal->data.link.delta.x;
+            backpos.y += line.portal->data.link.delta.y;
+        }
+    }
 
     if(line.extflags & EX_ML_UPPERPORTAL && back->srf.ceiling.pflags & PS_PASSABLE)
         open.ceiling = front->srf.ceiling.getZAt(pos);
     else
-        open.ceiling = emin(front->srf.ceiling.getZAt(pos), back->srf.ceiling.getZAt(pos));
+        open.ceiling = emin(front->srf.ceiling.getZAt(pos), back->srf.ceiling.getZAt(backpos));
 
     if(line.extflags & EX_ML_LOWERPORTAL && back->srf.floor.pflags & PS_PASSABLE)
         open.floor = front->srf.floor.getZAt(pos);
     else
-        open.floor = emax(front->srf.floor.getZAt(pos), back->srf.floor.getZAt(pos));
+        open.floor = emax(front->srf.floor.getZAt(pos), back->srf.floor.getZAt(backpos));
     openrange = open.ceiling - open.floor;
 }
 
