@@ -40,6 +40,7 @@ Bug fixes
 * Fixed A_ConsumeAmmo bug when specifying 0 (ammo per shot) ammo.
 * A_BFGSpray no longer crashes when used on a non-projectile thing which didn't acquire an enemy yet. This makes it 
   compatible with vanilla DOOM Dehacked mods which can use this codepointer liberally.
+* Fixed slopes blocking access when on the other side of one-sided linedef wall portals. 
 * Fixed imprecise dynaseg splitting at high XY coordinates, with bad side effects such as polyobject portal infinite 
   rendering recursion (and the "refused to draw portal" error popping up).
 * Fixed wrong sprite sector portal clipping when scaled differently from 1.
