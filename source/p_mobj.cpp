@@ -1694,7 +1694,7 @@ inline static void P_checkMobjProjections(Mobj &mobj)
                            mobj.yscale != mobj.sprojlast.yscale))
     {
         bool checklines = gMapHasLinePortals && xychanged;
-        R_CheckMobjProjections(&mobj, checklines);
+        R_CheckMobjProjections(&mobj, checklines, false);
         mobj.sprojlast.pos.x  = mobj.x;
         mobj.sprojlast.pos.y  = mobj.y;
         mobj.sprojlast.pos.z  = mobj.z;

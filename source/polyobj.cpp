@@ -554,8 +554,20 @@ static void Polyobj_moveLinkedPortals(const polyobj_t *po, fixed_t dx, fixed_t d
             portal_t *partner  = ldata.polyportalpartner;
             if(partner)
             {
-                partner->data.link.delta.x += dx;
-                partner->data.link.delta.y += dy;
+                linkdata_t &pdata  = partner->data.link;
+                pdata.delta.x     += dx;
+                pdata.delta.y     += dy;
+                pdata.polymoved    = true; // mark the partner as moved
+
+                if(pdata.sectors)
+                {
+                    for(int *secid = pdata.sectors; *secid >= 0; ++secid)
+                    {
+                        sector_t &sec = sectors[*secid];
+                        for(Mobj *mo = sec.thinglist; mo; mo = mo->snext)
+                            R_CheckMobjProjections(mo, false, true);
+                    }
+                }
             }
             // mark the group as being moved by the portal or not.
             P_MoveGroupCluster(ldata.fromid, ldata.toid, groupvisit, dx, dy, true, cancel ? nullptr : po);

@@ -41,6 +41,8 @@
 #include "r_state.h"
 #include "v_misc.h"
 
+#include <unordered_map>
+
 //
 // Polyobject-generated sector couple. The couple is between the external box sector which houses
 // the polyobject prototype in the editor, and the spawn spot sector in the game world. This
@@ -1425,6 +1427,31 @@ const int *P_GetSectorsWithGroupId(int groupid, int *count)
 const int *P_GetSectorPortalNeighbors(const sector_t &sector, surf_e surf, int *count)
 {
     return gSectorNeighborsThroughPortals.getList(eindex(&sector - sectors), surf, count);
+}
+
+void P_CacheSectorReferencesToLinkedPortals()
+{
+    std::unordered_map<portal_t *, PODCollection<int>> map;
+    for(int i = 0; i < numsectors; ++i)
+    {
+        const sector_t &sector = sectors[i];
+        if(sector.srf.ceiling.portal && sector.srf.ceiling.portal->type == R_LINKED)
+            map[sector.srf.ceiling.portal].add(i);
+        if(sector.srf.floor.portal && sector.srf.floor.portal->type == R_LINKED &&
+           sector.srf.floor.portal != sector.srf.ceiling.portal)
+        {
+            map[sector.srf.floor.portal].add(i);
+        }
+    }
+    for(const auto &pair : map)
+    {
+        portal_t                 *portal = pair.first;
+        const PODCollection<int> &coll   = pair.second;
+        portal->data.link.sectors        = ecalloctag(int *, sizeof(int), coll.getLength() + 1, PU_LEVEL, nullptr);
+        for(int i = 0; i < coll.getLength(); ++i)
+            portal->data.link.sectors[i] = coll[i];
+        portal->data.link.sectors[coll.getLength()] = -1; // end marker
+    }
 }
 
 // EOF

@@ -133,6 +133,9 @@ struct linkdata_t
     // ioanch 20160226: access the partner portal (if any) in case of polyobject
     // cars
     portal_t *polyportalpartner;
+
+    int *sectors;   // -1 terminated cached list of sector indices which use this portal
+    bool polymoved; // true if the portal was moved by a polyobject. Used only by interior floor/ceiling windows
 };
 
 struct portaltransform_t

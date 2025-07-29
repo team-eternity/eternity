@@ -1721,6 +1721,7 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
         P_MarkPortalClusters();
     P_MarkPolyobjPortalLinks();
     P_BuildSectorGroupMappings();
+    P_CacheSectorReferencesToLinkedPortals();
 
     // haleyjd 06/18/14: spawn level actions
     P_SpawnLevelActions();
@@ -2912,6 +2913,8 @@ void P_AttachSectors(const line_t *line, int staticFn)
 
 //
 // P_SetPortal
+// WARNING: calling this invalidates the sector reference cache for each linked portal. Only call this during
+// P_SpawnSpecials
 //
 void P_SetPortal(sector_t *sec, line_t *line, portal_t *portal, portal_effect effects)
 {

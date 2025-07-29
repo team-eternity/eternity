@@ -131,7 +131,7 @@ struct spriteprojnode_t
 };
 
 void R_RemoveMobjProjections(Mobj *mobj);
-void R_CheckMobjProjections(Mobj *mobj, bool checklines);
+void R_CheckMobjProjections(Mobj *mobj, bool checklines, bool reset);
 
 ///////////////////////////////////////////////////////////////////////////////
 

@@ -2352,7 +2352,7 @@ struct mobjprojinfo_t
 //
 // Looks above and below for portals and prepares projection nodes
 //
-void R_CheckMobjProjections(Mobj *mobj, bool checklines)
+void R_CheckMobjProjections(Mobj *mobj, bool checklines, bool reset)
 {
     sector_t *sector = mobj->subsector->sector;
 
@@ -2371,6 +2371,9 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
         return;
     }
 
+    if(reset && item)
+        R_removeSectorMobjProjections(mobj);
+
     const linkdata_t *data;
 
     DLListItem<spriteprojnode_t> **tail = &mobj->spriteproj;
@@ -2383,7 +2386,8 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
     v3fixed_t delta    = { 0, 0, 0 };
     int       loopprot = 0;
     while(++loopprot < SECTOR_PORTAL_LOOP_PROTECTION && sector && sector->srf.floor.pflags & PS_PASSABLE &&
-          P_PortalZ(surf_floor, *sector) > emin(mobj->z, mobj->prevpos.z) + scaledbottom)
+          P_PortalZ(surf_floor, *sector) > emin(mobj->z, mobj->prevpos.z) + scaledbottom &&
+          !sector->srf.floor.portal->data.link.polymoved)
     {
         // always accept first sector
         data   = R_FPLink(sector);
@@ -2394,7 +2398,8 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
     sector  = mobj->subsector->sector;
     delta.x = delta.y = delta.z = 0;
     while(++loopprot < SECTOR_PORTAL_LOOP_PROTECTION && sector && sector->srf.ceiling.pflags & PS_PASSABLE &&
-          P_PortalZ(surf_ceil, *sector) < emax(mobj->z, mobj->prevpos.z) + scaledtop)
+          P_PortalZ(surf_ceil, *sector) < emax(mobj->z, mobj->prevpos.z) + scaledtop &&
+          !sector->srf.ceiling.portal->data.link.polymoved)
     {
         // always accept first sector
         data   = R_CPLink(sector);

@@ -189,6 +189,8 @@ inline static bool P_IsLiquidOverlaylinkedPortal(const surface_t &surface)
     return (surface.pflags & (PS_PASSABLE | PS_OVERLAY)) == (PS_PASSABLE | PS_OVERLAY);
 }
 
+void P_CacheSectorReferencesToLinkedPortals();
+
 #endif
 
 // EOF
