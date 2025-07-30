@@ -2352,7 +2352,7 @@ struct mobjprojinfo_t
 //
 // Looks above and below for portals and prepares projection nodes
 //
-void R_CheckMobjProjections(Mobj *mobj, bool checklines)
+void R_CheckMobjProjections(Mobj *mobj)
 {
     sector_t *sector = mobj->subsector->sector;
 
@@ -2364,7 +2364,7 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
         item = item->dllNext;
 
     if(mobj->flags & MF_NOSECTOR || overflown ||
-       (!(sector->srf.floor.pflags & PS_PASSABLE) && !(sector->srf.ceiling.pflags & PS_PASSABLE) && !checklines))
+       (!(sector->srf.floor.pflags & PS_PASSABLE) && !(sector->srf.ceiling.pflags & PS_PASSABLE)))
     {
         if(item)
             R_removeSectorMobjProjections(mobj);
