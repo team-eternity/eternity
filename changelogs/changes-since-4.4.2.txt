@@ -45,3 +45,4 @@ Bug fixes
   rendering recursion (and the "refused to draw portal" error popping up).
 * Fixed wrong sprite sector portal clipping when scaled differently from 1.
 * Fixed a possibly harmless access violation happening when rendering middle textures at a certain distance.
+* Fixed phantom sprite cloning when moving in a polyobject cabin with floor and ceiling portals also going outside.
