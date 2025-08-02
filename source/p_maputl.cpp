@@ -751,15 +751,15 @@ lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed
             open.floorpic = backfloor.pic;
     }
 
-    if(frontcz < backcz)
-        otop = frontcz;
+    if(frontceiling.height < backceiling.height)
+        otop = frontceiling.height;
     else
-        otop = backcz;
+        otop = backceiling.height;
 
-    if(frontfz > backfz)
-        obot = frontfz;
+    if(frontfloor.height > backfloor.height)
+        obot = frontfloor.height;
     else
-        obot = backfz;
+        obot = backfloor.height;
 
     open.sec = open.height;
 
