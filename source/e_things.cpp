@@ -3122,8 +3122,19 @@ void E_ProcessThing(int i, cfg_t *const thingsec, cfg_t *pcfg, const bool def)
     // 09/26/04: process alternate sprite
     if(IS_SET(ITEM_TNG_SKINSPRITE))
     {
-        tempstr                = cfg_getstr(thingsec, ITEM_TNG_SKINSPRITE);
-        mobjinfo[i]->altsprite = E_SpriteNumForName(tempstr);
+        tempstr       = cfg_getstr(thingsec, ITEM_TNG_SKINSPRITE);
+        int altsprite = E_SpriteNumForName(tempstr);
+        if(!strcasecmp(tempstr, "noskin"))
+            mobjinfo[i]->altsprite = -1;
+        else
+        {
+            if(altsprite < 0)
+            {
+                E_EDFLoggedWarning(2, "%s: thing '%s': invalid sprite '%s', you may need to add it to 'spritenames'\n",
+                                   __func__, mobjinfo[i]->name, tempstr);
+            }
+            mobjinfo[i]->altsprite = E_SpriteNumForName(tempstr);
+        }
     }
 
     // 06/11/08: process defaultsprite (for skin handling)
