@@ -21,6 +21,8 @@ Improvements
   If unspecified, it will default to the game mode behavior: change to S_GIBS in Doom, or do not change in Heretic. 
   Thanks to sink666 for the implementation!
 
+* EDF startup warnings are now always displayed, no more need for -edf-show-warnings.
+
 * Added EDF startup warning in case of missing skinsprite, or one which user didn't add to spritenames.
 
 * Minor improvements with portal error messages.
