@@ -85,7 +85,7 @@ void A_Punch(actionargs_t *actionargs)
     P_WeaponSound(mo, GameModeInfo->playerSounds[sk_punch]);
 
     // turn to face target
-    mo->angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
+    mo->angle = P_PointToAngle(mo->x, mo->y, getThingX(mo, clip.linetarget), getThingY(mo, clip.linetarget));
 }
 
 //
@@ -120,7 +120,7 @@ void A_Saw(actionargs_t *actionargs)
     I_StartHaptic(HALHapticInterface::EFFECT_RUMBLE, 5, 108);
 
     // turn to face target
-    angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
+    angle = P_PointToAngle(mo->x, mo->y, getThingX(mo, clip.linetarget), getThingY(mo, clip.linetarget));
 
     if(angle - mo->angle > ANG180)
     {

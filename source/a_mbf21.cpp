@@ -807,7 +807,8 @@ void A_WeaponMeleeAttack(actionargs_t *actionargs)
         P_WeaponSoundInfo(actor, hitsound);
 
     // turn to face target
-    actor->angle = R_PointToAngle2(actor->x, actor->y, clip.linetarget->x, clip.linetarget->y);
+    actor->angle =
+        R_PointToAngle2(actor->x, actor->y, getThingX(actor, clip.linetarget), getThingY(actor, clip.linetarget));
 }
 
 //

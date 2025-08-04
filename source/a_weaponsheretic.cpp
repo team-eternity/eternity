@@ -64,7 +64,7 @@ void A_StaffAttackPL1(actionargs_t *actionargs)
     P_LineAttack(mo, angle, MELEERANGE, slope, damage, "HereticStaffPuff");
     // Turn to face the target if necessary
     if(clip.linetarget)
-        mo->angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
+        mo->angle = P_PointToAngle(mo->x, mo->y, getThingX(mo, clip.linetarget), getThingY(mo, clip.linetarget));
 }
 
 void A_StaffAttackPL2(actionargs_t *actionargs)
@@ -77,7 +77,7 @@ void A_StaffAttackPL2(actionargs_t *actionargs)
     P_LineAttack(mo, angle, MELEERANGE, slope, damage, "HereticStaffPuff2");
     // Turn to face the target if necessary
     if(clip.linetarget)
-        mo->angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
+        mo->angle = P_PointToAngle(mo->x, mo->y, getThingX(mo, clip.linetarget), getThingY(mo, clip.linetarget));
 }
 
 void A_FireGoldWandPL1(actionargs_t *actionargs)
@@ -825,7 +825,7 @@ void A_GauntletAttack(actionargs_t *actionargs)
         P_WeaponSound(mo, sfx_gnthit);
 
     // turn to face target
-    angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
+    angle = P_PointToAngle(mo->x, mo->y, getThingX(mo, clip.linetarget), getThingY(mo, clip.linetarget));
 
     if(angle - mo->angle > ANG180)
     {
