@@ -25,6 +25,9 @@ Improvements
 
 * Added EDF startup warning in case of missing skinsprite, or one which user didn't add to spritenames.
 
+* macOS: now all the files available in the "add file" dialog box are available for drag-dropping or "opening with" from 
+  Finder.
+
 * Minor improvements with portal error messages.
 
 Bug fixes
