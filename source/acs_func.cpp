@@ -1213,11 +1213,18 @@ static bool ACS_validateSingleThingPointer(int pointer)
     return false;
 }
 
-static Mobj *ACS_getSingleThingFromPointer(const Mobj *activator, int pointer)
+static Mobj *ACS_getSingleThingFromPointer(Mobj *activator, int pointer)
 {
-    if(!pointer)
+    if(pointer == AAPTR_DEFAULT)
         return activator;
-    if(pointer & )
+    if(pointer & AAPTR_TARGET)
+        return activator ? activator->target : nullptr;
+    if(pointer & AAPTR_TRACER)
+        return activator ? activator->tracer : nullptr;
+    if(pointer & AAPTR_PLAYER_GETTARGET)
+        ;   // TODO
+    // TODO
+    return nullptr;
 }
 
 //
@@ -1237,9 +1244,17 @@ bool ACS_CF_GetPortalTranslatedX(ACS_CF_ARGS)
 
     if(!ACS_validateThingPointer(argV[1]))
     {
+        thread->dataStk.push(0);
+        return false;
+    }
+    if(!ACS_validateSingleThingPointer(argV[1]))
+    {
+        doom_warningf("ACS: Cannot use multiple actor pointers (%d)", argV[1]);
+        thread->dataStk.push(0);
         return false;
     }
 
+    thread->dataStk.push(0);
     return false;
 }
 
