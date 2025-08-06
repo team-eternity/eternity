@@ -349,6 +349,8 @@ bool ACS_CF_CheckInventory(ACS_CF_ARGS);
 bool ACS_CF_GetLevelInfo(ACS_CF_ARGS);
 bool ACS_CF_GetLineX(ACS_CF_ARGS);
 bool ACS_CF_GetLineY(ACS_CF_ARGS);
+bool ACS_CF_GetPortalTranslatedX(ACS_CF_ARGS);
+bool ACS_CF_GetPortalTranslatedY(ACS_CF_ARGS);
 bool ACS_CF_GetPlayerInput(ACS_CF_ARGS);
 bool ACS_CF_GetPolyobjX(ACS_CF_ARGS);
 bool ACS_CF_GetPolyobjY(ACS_CF_ARGS);

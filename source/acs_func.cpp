@@ -1155,6 +1155,94 @@ bool ACS_CF_SetPolyobjXY(ACS_CF_ARGS)
     return false;
 }
 
+enum
+{
+    AAPTR_DEFAULT = 0,
+    AAPTR_NULL = 1,
+    AAPTR_TARGET = 2,
+    // AAPTR_MASTER = 4,
+    AAPTR_TRACER = 8,
+    AAPTR_PLAYER_GETTARGET = 0x10,
+    // AAPTR_PLAYER_GETCONVERSATION = 0x20,
+    AAPTR_PLAYER1 = 0x40,
+    AAPTR_PLAYER2 = 0x80,
+    AAPTR_PLAYER3 = 0x100,
+    AAPTR_PLAYER4 = 0x200,
+    // AAPTR_PLAYER5 = 0x400,
+    // AAPTR_PLAYER6 = 0x800,
+    // AAPTR_PLAYER7 = 0x1000,
+    // AAPTR_PLAYER8 = 0x2000,
+    // AAPTR_FRIENDPLAYER = 0x4000,
+    AAPTR_GET_LINETARGET = 0x8000,
+};
+
+static bool ACS_validateThingPointer(int pointer)
+{
+    if(pointer & ~(AAPTR_NULL | AAPTR_TARGET | AAPTR_TRACER | AAPTR_PLAYER_GETTARGET | AAPTR_PLAYER1 | AAPTR_PLAYER2 |
+                   AAPTR_PLAYER3 | AAPTR_PLAYER4 | AAPTR_GET_LINETARGET))
+    {
+        doom_warningf("ACS: Invalid actor pointer %d", pointer);
+        return false;
+    }
+    return true;
+}
+
+static bool ACS_validateSingleThingPointer(int pointer)
+{
+    switch(pointer)
+    {
+    case AAPTR_NULL:
+    case AAPTR_DEFAULT:
+    case AAPTR_TARGET:
+    case AAPTR_NULL | AAPTR_TARGET:
+    case AAPTR_TRACER:
+    case AAPTR_NULL | AAPTR_TRACER:
+    case AAPTR_PLAYER_GETTARGET:
+    case AAPTR_NULL | AAPTR_PLAYER_GETTARGET:
+    case AAPTR_PLAYER1:
+    case AAPTR_NULL | AAPTR_PLAYER1:
+    case AAPTR_PLAYER2:
+    case AAPTR_NULL | AAPTR_PLAYER2:
+    case AAPTR_PLAYER3:
+    case AAPTR_NULL | AAPTR_PLAYER3:
+    case AAPTR_PLAYER4:
+    case AAPTR_NULL | AAPTR_PLAYER4:
+    case AAPTR_GET_LINETARGET:
+    case AAPTR_NULL | AAPTR_GET_LINETARGET:   return true;
+    }
+    return false;
+}
+
+static Mobj *ACS_getSingleThingFromPointer(const Mobj *activator, int pointer)
+{
+    if(!pointer)
+        return activator;
+    if(pointer & )
+}
+
+//
+// fixed GetPortalTranslatedX(int mytid, int pointer, int othertid);
+//
+bool ACS_CF_GetPortalTranslatedX(ACS_CF_ARGS)
+{
+    int mytid    = argV[0];
+    int othertid = argV[2];
+
+    Mobj *mo = P_FindMobjFromTID(argV[0], nullptr, static_cast<ACSThread *>(thread)->info.mo);
+    if(!mo)
+    {
+        thread->dataStk.push(0);
+        return false;
+    }
+
+    if(!ACS_validateThingPointer(argV[1]))
+    {
+        return false;
+    }
+
+    return false;
+}
+
 //
 // ACS_CF_GetScreenH
 //
