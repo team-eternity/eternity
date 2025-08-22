@@ -1255,6 +1255,12 @@ frame S_PLAY_GDIE7 { cmp "PLAY|U|*| 5|*          |@next"; dehackednum 1082 }
 frame S_PLAY_GDIE8 { cmp "PLAY|V|*| 5|*          |@next"; dehackednum 1083 }
 frame S_PLAY_GDIE9 { cmp "PLAY|W|*|-1|*          |@next"; dehackednum 1084 }
 
+// Filling in a gap to prevent errors
+frame S_GAPPLACEHOLDER1 { cmp "TNT1|A|*|-1|*|@this"; dehackednum 1085 }
+frame S_GAPPLACEHOLDER2 { cmp "TNT1|A|*|-1|*|@this"; dehackednum 1086 }
+frame S_GAPPLACEHOLDER3 { cmp "TNT1|A|*|-1|*|@this"; dehackednum 1087 }
+frame S_GAPPLACEHOLDER4 { cmp "TNT1|A|*|-1|*|@this"; dehackednum 1088 }
+
 // Doom Retro extra Dehacked states
 frame S_DREXTRASTATE0000 { cmp "TNT1|A|*|-1|*|@this"; dehackednum 1089 }
 frame S_DREXTRASTATE0001 { cmp "TNT1|A|*|-1|*|@this"; dehackednum 1090 }
