@@ -1177,7 +1177,9 @@ static void P_SetParTime()
 {
     if(LevelInfo.partime == -1) // if not set via MapInfo already
     {
-        if(!newlevel || deh_pars) // if not a new map, OR deh pars loaded
+        // Must always use par times in case of demos, otherwise they will desync if user presses key at the exact time
+        // in the intermission.
+        if(demo_version <= 203 || !newlevel || deh_pars) // if not a new map, OR deh pars loaded
             LevelInfo.partime = GameModeInfo->GetParTime(gameepisode, gamemap);
     }
     else
