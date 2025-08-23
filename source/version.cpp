@@ -33,11 +33,11 @@ const char version_date[] = __DATE__;
 const char version_time[] = __TIME__; // haleyjd
 
 // sf: version name -- at the suggestion of mystican
-const char version_name[] = "Unnamed";
+const char version_name[] = "Citadel";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = "Eternity Engine v4.05.00-pre \"Unnamed\"";
+const char ee_wmCaption[] = "Eternity Engine v4.05.03-pre \"Citadel\"";
 #endif
 
 // haleyjd: Eternity release history
@@ -83,6 +83,7 @@ const char ee_wmCaption[] = "Eternity Engine v4.05.00-pre \"Unnamed\"";
 // 4.04.00 'Glitnir'          -- 10/13/24
 // 4.04.01 'Glitnir Update 1' -- 10/13/24
 // 4.04.02 'Glitnir Update 2' -- 11/19/25
+// 4.05.03 'Citadel'          -- 08/23/25
 
 // auxilliary releases
 // Caverns of Darkness -- 3.29 dev beta 5 joel-2 04/24/02
