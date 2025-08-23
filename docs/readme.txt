@@ -1,5 +1,5 @@
 ===============================================================================
-Title                   : The Eternity Engine v4.05.03 "Glitnir" Update 2
+Title                   : The Eternity Engine v4.05.03 "Citadel"
 Filename                : ee-4.05.03-win64.zip, ee-4.05.03-win32.zip,
                           ee-4.05.03-win-legacy.zip,
                           ee-4.05.03-macos-applesilicon.dmg,
