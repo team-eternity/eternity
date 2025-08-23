@@ -509,7 +509,7 @@ bool ACS_CF_SetLineActivation(ACS_CF_ARGS)
         {
             if(activation & SPAC_Cross)
                 l->extflags |= EX_ML_PLAYER | EX_ML_CROSS;
-            if(activation & SPAC_USE)
+            if(activation & SPAC_Use)
                 l->extflags |= EX_ML_PLAYER | EX_ML_USE | EX_ML_1SONLY;
             if(activation & SPAC_MCross)
                 l->extflags |= EX_ML_MONSTER | EX_ML_CROSS;
