@@ -1,9 +1,9 @@
 ===============================================================================
-Title                   : The Eternity Engine v4.05.03 "Citadel"
-Filename                : ee-4.05.03-win64.zip, ee-4.05.03-win32.zip,
-                          ee-4.05.03-win-legacy.zip,
-                          ee-4.05.03-macos-applesilicon.dmg,
-                          ee-4.05.03-macos-intel.dmg,
+Title                   : The Eternity Engine v4.05.04 "Citadel"
+Filename                : ee-4.05.04-win64.zip, ee-4.05.04-win32.zip,
+                          ee-4.05.04-win-legacy.zip,
+                          ee-4.05.04-macos-applesilicon.dmg,
+                          ee-4.05.04-macos-intel.dmg,
 Release date            : 2025-08-23
 Author                  : Team Eternity:
                           Ioan Chera,
@@ -250,7 +250,7 @@ with any concerns.
 
 
 ===============================================================================
-* Features New to Version 4.05.03 *
+* Features New to Version 4.05.04 *
 
 Bug fixes and quality of life improvements:
 
@@ -313,7 +313,7 @@ These are features planned to debut in future versions of the Eternity Engine:
 
 * Dates are in mm/dd/yy *
 
-4.05.03 "Citadel" -- 8/23/25
+4.05.04 "Citadel" -- 8/23/25
 
   Bug fix and feature release.
 
@@ -525,7 +525,7 @@ These are features planned to debut in future versions of the Eternity Engine:
 ===============================================================================
 * Bugs Fixed, Known Issues *
 
-Bugs Fixed (between 4.04.02 and 4.05.03):
+Bugs Fixed (between 4.04.02 and 4.05.04):
 
 * Fixed crash happening when changing multithreaded rendering number of threads before demos start.
 * Fixed sprite glitching shortly followed by crash when starting with multithreaded renderer on a small view, and then 
@@ -552,7 +552,7 @@ Bugs Fixed (between 4.04.02 and 4.05.03):
 * Fixed demo desync caused by missing par time counter in the intermission.
 * Fixed harmless access violation happening in demos when getting harmed or killed by a destroyed lost soul.
 
-Known Issues in v4.05.03:
+Known Issues in v4.05.04:
 
 - Moving polyobject portal movement is not interpolated yet.
 
