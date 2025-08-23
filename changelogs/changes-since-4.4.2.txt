@@ -59,3 +59,4 @@ Bug fixes
 * Fixed a possibly harmless access violation happening when rendering middle textures at a certain distance.
 * Fixed phantom sprite cloning when moving in a polyobject cabin with floor and ceiling portals also going outside.
 * Fixed demo desync caused by missing par time counter in the intermission.
+* Fixed harmless access violation happening in demos when getting harmed or killed by a destroyed lost soul.

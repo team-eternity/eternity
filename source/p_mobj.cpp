@@ -2633,6 +2633,17 @@ void Mobj::remove()
         P_SetTarget<Mobj>(&this->lastenemy, nullptr);
     }
 
+    // For demo stability we must clear the attacker reference to this, otherwise it will fail with
+    // access violation. Not needed for current versions, because we use reference counting there.
+    if(full_demo_version < make_full_version(340, 17))
+    {
+        for(int i = 0; i < MAXPLAYERS; ++i)
+        {
+            if(players[i].attacker == this)
+                players[i].attacker = nullptr;
+        }
+    }
+
     // remove from thinker list
     Super::remove();
 }
