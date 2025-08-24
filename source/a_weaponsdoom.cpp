@@ -492,10 +492,10 @@ void A_BFGSpray(actionargs_t *actionargs)
 
     Mobj *mo = actionargs->actor;
 
-    for(int i = 0; i < 40; i++) // offset angles from its attack angle
+    for(int i = 0; i < numRays; i++) // offset angles from its attack angle
     {
         int     j, damage;
-        angle_t an = mo->angle - fov / 2 + fov / 40 * i;
+        angle_t an = mo->angle - fov / 2 + fov / numRays * i;
 
         // mo->target is the originator (player) of the missile
 
