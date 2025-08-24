@@ -1,0 +1,6 @@
+Changes since v4.05.04
+======================
+
+Bug fixes
+---------
+* Fixed A_BFGSpray not using the parameter, and always being locked at 40 rays.
