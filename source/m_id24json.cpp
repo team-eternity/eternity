@@ -27,6 +27,7 @@
 #include "z_zone.h"
 #include "m_id24json.h"
 
+#include "m_qstr.h"
 #include "w_wad.h"
 #include "z_auto.h"
 
@@ -75,7 +76,7 @@ static bool M_validateType(const char *type)
 }
 
 jsonlumpresult_e M_ParseJSONLump(const WadDirectory &dir, const char *lumpname, const char *lumptype,
-                                 const JSONLumpVersion &maxversion)
+                                 const JSONLumpVersion &maxversion, qstring &error)
 {
     int lumpnum = dir.checkNumForName(lumpname);
     if(lumpnum < 0)
@@ -87,10 +88,12 @@ jsonlumpresult_e M_ParseJSONLump(const WadDirectory &dir, const char *lumpname, 
     json root;
     try
     {
-        root = json::parse(jsonData.get());
+        auto strData = static_cast<const char *>(jsonData.get());
+        root = json::parse(strData, strData + jsonData.getSize());
     }
-    catch(const json::parse_error &)
+    catch(const json::parse_error &e)
     {
+        error.Printf(128, "%s (%s) parse error at byte %zu: %s", lumpname, lumptype, e.byte, e.what());
         return JLR_INVALID;
     }
 
@@ -101,32 +104,46 @@ jsonlumpresult_e M_ParseJSONLump(const WadDirectory &dir, const char *lumpname, 
        !root["version"].is_string() || !root.contains("metadata") || !root["metadata"].is_object() ||
        !root.contains("data") || !root["data"].is_object())
     {
+        error.Printf(128, "%s (%s) is missing required root fields", lumpname, lumptype);
         return JLR_INVALID;
     }
 
     JSONLumpVersion version;
-    if(!M_parseJSONVersion(root["version"].get<std::string>().c_str(), version))
+    std::string     versionStr = root["version"].get<std::string>();
+    if(!M_parseJSONVersion(versionStr.c_str(), version))
+    {
+        error.Printf(128, "%s (%s) has an invalid version string '%s'", lumpname, lumptype, versionStr.c_str());
         return JLR_INVALID;
+    }
 
     if(version.major > maxversion.major || (version.major == maxversion.major && version.minor > maxversion.minor) ||
        (version.major == maxversion.major && version.minor == maxversion.minor &&
         version.revision > maxversion.revision))
     {
+        error.Printf(128, "%s (%s) version %s is unsupported (max %d.%d.%d)", lumpname, lumptype, versionStr.c_str(),
+                     maxversion.major, maxversion.minor, maxversion.revision);
         return JLR_UNSUPPORTED_VERSION;
     }
 
-    std::string type = root["type"].get<std::string>();
-    if(!M_validateType(type.c_str()))
+    std::string typeStr = root["type"].get<std::string>();
+    if(!M_validateType(typeStr.c_str()))
+    {
+        error.Printf(128, "%s (%s) has an invalid type string '%s'. Capital letters not allowed.", lumpname, lumptype,
+                     typeStr.c_str());
         return JLR_INVALID;
+    }
 
-    if(strcmp(root["type"].get<std::string>().c_str(), lumptype))
+    if(strcmp(typeStr.c_str(), lumptype))
+    {
+        error.Printf(128, "%s (%s) has mismatched type '%s'", lumpname, lumptype, typeStr.c_str());
         return JLR_INVALID;
+    }
 
     json metadata = root["metadata"];
-    if(!metadata.contains("author") || !metadata["author"].is_string() ||
-       !metadata.contains("timestamp") || !metadata["timestamp"].is_string() ||
-       !metadata.contains("application") || !metadata["application"].is_string())
+    if(!metadata.contains("author") || !metadata["author"].is_string() || !metadata.contains("timestamp") ||
+       !metadata["timestamp"].is_string() || !metadata.contains("application") || !metadata["application"].is_string())
     {
+        error.Printf(128, "%s (%s) is missing required metadata fields", lumpname, lumptype);
         return JLR_INVALID;
     }
 

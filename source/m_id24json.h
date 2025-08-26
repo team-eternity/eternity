@@ -27,6 +27,7 @@
 #ifndef M_ID24JSON_H_
 #define M_ID24JSON_H_
 
+class qstring;
 class WadDirectory;
 
 enum jsonlumpresult_e
@@ -45,7 +46,7 @@ struct JSONLumpVersion
 };
 
 jsonlumpresult_e M_ParseJSONLump(const WadDirectory &dir, const char *lumpname, const char *lumptype,
-                                 const JSONLumpVersion &maxversion);
+                                 const JSONLumpVersion &maxversion, qstring &error);
 
 #endif
 // EOF
