@@ -32,47 +32,27 @@
 #include "z_auto.h"
 
 #include "nlohmann/json.hpp"
+#include <regex>
 
 using json = nlohmann::json;
 
 static bool M_parseJSONVersion(const char *versionString, JSONLumpVersion &version)
 {
-    size_t len = strlen(versionString);
-    if(len < 5)
+    std::regex pattern(R"(^(\d+)\.(\d+)\.(\d+)$)");
+    std::cmatch match;
+    if(!std::regex_match(versionString, match, pattern))
         return false;
     version = {};
-    char *endptr;
-    long  value = strtol(versionString, &endptr, 10);
-    if(endptr == versionString || *endptr != '.' || value < 0)
-        return false;
-    version.major = static_cast<int>(value);
-    versionString = endptr + 1;
-    value         = strtol(versionString, &endptr, 10);
-    if(endptr == versionString || *endptr != '.' || value < 0)
-        return false;
-    version.minor = static_cast<int>(value);
-    versionString = endptr + 1;
-    value         = strtol(versionString, &endptr, 10);
-    if(endptr == versionString || *endptr != '\0' || value < 0)
-        return false;
-    version.revision = static_cast<int>(value);
+    version.major = std::stoi(match[1].str(), nullptr, 10);
+    version.minor = std::stoi(match[2].str(), nullptr, 10);
+    version.revision = std::stoi(match[3].str(), nullptr, 10);
     return true;
 }
 
 static bool M_validateType(const char *type)
 {
-    for(const char *pc = type; *pc; pc++)
-    {
-        char c = *pc;
-        if(c >= 'a' && c <= 'z')
-            continue;
-        if(c >= '0' && c <= '9')
-            continue;
-        if(c == '_')
-            continue;
-        return false;
-    }
-    return true;
+    std::regex pattern(R"(^[a-z0-9_-]+$)");
+    return std::regex_match(type, pattern);
 }
 
 jsonlumpresult_e M_ParseJSONLump(const WadDirectory &dir, const char *lumpname, const char *lumptype,
