@@ -36,15 +36,20 @@
 
 using json = nlohmann::json;
 
+enum
+{
+    ERRLEN = 128,
+};
+
 static bool M_parseJSONVersion(const char *versionString, JSONLumpVersion &version)
 {
-    std::regex pattern(R"(^(\d+)\.(\d+)\.(\d+)$)");
+    std::regex  pattern(R"(^(\d+)\.(\d+)\.(\d+)$)");
     std::cmatch match;
     if(!std::regex_match(versionString, match, pattern))
         return false;
-    version = {};
-    version.major = std::stoi(match[1].str(), nullptr, 10);
-    version.minor = std::stoi(match[2].str(), nullptr, 10);
+    version          = {};
+    version.major    = std::stoi(match[1].str(), nullptr, 10);
+    version.minor    = std::stoi(match[2].str(), nullptr, 10);
     version.revision = std::stoi(match[3].str(), nullptr, 10);
     return true;
 }
@@ -53,6 +58,15 @@ static bool M_validateType(const char *type)
 {
     std::regex pattern(R"(^[a-z0-9_-]+$)");
     return std::regex_match(type, pattern);
+}
+
+bool JSONLumpVersion::operator>(const JSONLumpVersion &other) const
+{
+    if(major != other.major)
+        return major > other.major;
+    if(minor != other.minor)
+        return minor > other.minor;
+    return revision > other.revision;
 }
 
 jsonlumpresult_e M_ParseJSONLump(const WadDirectory &dir, const char *lumpname, const char *lumptype,
@@ -69,11 +83,11 @@ jsonlumpresult_e M_ParseJSONLump(const WadDirectory &dir, const char *lumpname, 
     try
     {
         auto strData = static_cast<const char *>(jsonData.get());
-        root = json::parse(strData, strData + jsonData.getSize());
+        root         = json::parse(strData, strData + jsonData.getSize());
     }
     catch(const json::parse_error &e)
     {
-        error.Printf(128, "%s (%s) parse error at byte %zu: %s", lumpname, lumptype, e.byte, e.what());
+        error.Printf(ERRLEN, "%s (%s) parse error at byte %zu: %s", lumpname, lumptype, e.byte, e.what());
         return JLR_INVALID;
     }
 
@@ -84,7 +98,7 @@ jsonlumpresult_e M_ParseJSONLump(const WadDirectory &dir, const char *lumpname, 
        !root["version"].is_string() || !root.contains("metadata") || !root["metadata"].is_object() ||
        !root.contains("data") || !root["data"].is_object())
     {
-        error.Printf(128, "%s (%s) is missing required root fields", lumpname, lumptype);
+        error.Printf(ERRLEN, "%s (%s) is missing required root fields", lumpname, lumptype);
         return JLR_INVALID;
     }
 
@@ -92,15 +106,13 @@ jsonlumpresult_e M_ParseJSONLump(const WadDirectory &dir, const char *lumpname, 
     std::string     versionStr = root["version"].get<std::string>();
     if(!M_parseJSONVersion(versionStr.c_str(), version))
     {
-        error.Printf(128, "%s (%s) has an invalid version string '%s'", lumpname, lumptype, versionStr.c_str());
+        error.Printf(ERRLEN, "%s (%s) has an invalid version string '%s'", lumpname, lumptype, versionStr.c_str());
         return JLR_INVALID;
     }
 
-    if(version.major > maxversion.major || (version.major == maxversion.major && version.minor > maxversion.minor) ||
-       (version.major == maxversion.major && version.minor == maxversion.minor &&
-        version.revision > maxversion.revision))
+    if(version > maxversion)
     {
-        error.Printf(128, "%s (%s) version %s is unsupported (max %d.%d.%d)", lumpname, lumptype, versionStr.c_str(),
+        error.Printf(ERRLEN, "%s (%s) version %s is unsupported (max %d.%d.%d)", lumpname, lumptype, versionStr.c_str(),
                      maxversion.major, maxversion.minor, maxversion.revision);
         return JLR_UNSUPPORTED_VERSION;
     }
@@ -108,14 +120,14 @@ jsonlumpresult_e M_ParseJSONLump(const WadDirectory &dir, const char *lumpname, 
     std::string typeStr = root["type"].get<std::string>();
     if(!M_validateType(typeStr.c_str()))
     {
-        error.Printf(128, "%s (%s) has an invalid type string '%s'. Capital letters not allowed.", lumpname, lumptype,
-                     typeStr.c_str());
+        error.Printf(ERRLEN, "%s (%s) has an invalid type string '%s'. Capital letters not allowed.", lumpname,
+                     lumptype, typeStr.c_str());
         return JLR_INVALID;
     }
 
     if(strcmp(typeStr.c_str(), lumptype))
     {
-        error.Printf(128, "%s (%s) has mismatched type '%s'", lumpname, lumptype, typeStr.c_str());
+        error.Printf(ERRLEN, "%s (%s) has mismatched type '%s'", lumpname, lumptype, typeStr.c_str());
         return JLR_INVALID;
     }
 
@@ -123,7 +135,7 @@ jsonlumpresult_e M_ParseJSONLump(const WadDirectory &dir, const char *lumpname, 
     if(!metadata.contains("author") || !metadata["author"].is_string() || !metadata.contains("timestamp") ||
        !metadata["timestamp"].is_string() || !metadata.contains("application") || !metadata["application"].is_string())
     {
-        error.Printf(128, "%s (%s) is missing required metadata fields", lumpname, lumptype);
+        error.Printf(ERRLEN, "%s (%s) is missing required metadata fields", lumpname, lumptype);
         return JLR_INVALID;
     }
 

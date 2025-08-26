@@ -40,6 +40,8 @@ enum jsonlumpresult_e
 
 struct JSONLumpVersion
 {
+    bool operator>(const JSONLumpVersion &other) const;
+
     int major;
     int minor;
     int revision;
