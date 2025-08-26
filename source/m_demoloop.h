@@ -20,41 +20,12 @@
 //
 //------------------------------------------------------------------------------
 //
-// Purpose: ID24 JSON format
-// https://docs.google.com/document/d/1SGWMFggsARYKWRsSHm_7BPMrGCEcm6t6DCpWiQyfjTY/
+// Purpose: ID24 DEMOLOOP format
+// https://docs.google.com/document/d/1WzsUc1EpYd4HX7Nrs7gjy2ZO3cAc62vq8TKNqbWtF7M
 //
 
-#ifndef M_ID24JSON_H_
-#define M_ID24JSON_H_
-
-#include "nlohmann/json.hpp"
-
-class qstring;
-
-enum jsonLumpResult_e
-{
-    JLR_OK,
-    JLR_NO_LUMP,
-    JLR_INVALID,
-    JLR_UNSUPPORTED_VERSION
-};
-
-struct JSONLumpVersion
-{
-    bool operator>(const JSONLumpVersion &other) const;
-
-    int major;
-    int minor;
-    int revision;
-};
-
-typedef void (*jsonWarning_t)(bool error, const char *msg);
-
-typedef jsonLumpResult_e (*jsonLumpFunc_t)(const nlohmann::json &data, void *context, jsonWarning_t warningFunc);
-
-jsonLumpResult_e M_ParseJSONLump(const void *rawdata, size_t rawsize, const char *lumptype,
-                                 const JSONLumpVersion &maxversion, jsonLumpFunc_t lumpFunc, void *context,
-                                 jsonWarning_t warningFunc);
+#ifndef M_DEMOLOOP_H_
+#define M_DEMOLOOP_H_
 
 #endif
 // EOF

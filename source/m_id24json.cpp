@@ -28,11 +28,8 @@
 #include "m_id24json.h"
 
 #include "m_qstr.h"
-#include "w_wad.h"
-#include "z_auto.h"
 
 #include "nlohmann/json.hpp"
-#include <regex>
 
 using json = nlohmann::json;
 
@@ -43,21 +40,56 @@ enum
 
 static bool M_parseJSONVersion(const char *versionString, JSONLumpVersion &version)
 {
-    std::regex  pattern(R"(^(\d+)\.(\d+)\.(\d+)$)");
-    std::cmatch match;
-    if(!std::regex_match(versionString, match, pattern))
+    const char *p = versionString;
+    char       *endptr;
+
+    version = {};
+
+    // Parse major version
+    version.major = std::strtol(p, &endptr, 10);
+    if(endptr == p || *endptr != '.' || version.major < 0)
         return false;
-    version          = {};
-    version.major    = std::stoi(match[1].str(), nullptr, 10);
-    version.minor    = std::stoi(match[2].str(), nullptr, 10);
-    version.revision = std::stoi(match[3].str(), nullptr, 10);
+    p = endptr + 1;
+
+    // Parse minor version
+    version.minor = std::strtol(p, &endptr, 10);
+    if(endptr == p || *endptr != '.' || version.minor < 0)
+        return false;
+    p = endptr + 1;
+
+    // Parse revision version
+    version.revision = std::strtol(p, &endptr, 10);
+    if(endptr == p || *endptr != '\0' || version.revision < 0)
+        return false;
+
     return true;
 }
 
 static bool M_validateType(const char *type)
 {
-    std::regex pattern(R"(^[a-z0-9_-]+$)");
-    return std::regex_match(type, pattern);
+    for(const char *p = type; *p; p++)
+    {
+        char c = *p;
+        if((c < 'a' || c > 'z') && (c < '0' || c > '9') && c != '_' && c != '-')
+            return false;
+    }
+
+    return true;
+}
+
+static void M_warnf(bool error, jsonWarning_t warningFunc, const char *fmt, ...)
+{
+    if(!warningFunc)
+        return;
+
+    char    buffer[ERRLEN];
+    va_list args;
+
+    va_start(args, fmt);
+    vsnprintf(buffer, sizeof(buffer), fmt, args);
+    va_end(args);
+
+    warningFunc(error, buffer);
 }
 
 bool JSONLumpVersion::operator>(const JSONLumpVersion &other) const
@@ -69,25 +101,19 @@ bool JSONLumpVersion::operator>(const JSONLumpVersion &other) const
     return revision > other.revision;
 }
 
-jsonlumpresult_e M_ParseJSONLump(const WadDirectory &dir, const char *lumpname, const char *lumptype,
-                                 const JSONLumpVersion &maxversion, qstring &error)
+jsonLumpResult_e M_ParseJSONLump(const void *rawdata, size_t rawsize, const char *lumptype,
+                                 const JSONLumpVersion &maxversion, jsonLumpFunc_t lumpFunc, void *context,
+                                 jsonWarning_t warningFunc)
 {
-    int lumpnum = dir.checkNumForName(lumpname);
-    if(lumpnum < 0)
-        return JLR_NO_LUMP;
-
-    ZAutoBuffer jsonData;
-    dir.cacheLumpAuto(lumpnum, jsonData);
-
     json root;
     try
     {
-        auto strData = static_cast<const char *>(jsonData.get());
-        root         = json::parse(strData, strData + jsonData.getSize());
+        auto strData = static_cast<const char *>(rawdata);
+        root         = json::parse(strData, strData + rawsize);
     }
     catch(const json::parse_error &e)
     {
-        error.Printf(ERRLEN, "%s (%s) parse error at byte %zu: %s", lumpname, lumptype, e.byte, e.what());
+        M_warnf(true, warningFunc, "%s parse error at byte %zu: %s", lumptype, e.byte, e.what());
         return JLR_INVALID;
     }
 
@@ -98,7 +124,7 @@ jsonlumpresult_e M_ParseJSONLump(const WadDirectory &dir, const char *lumpname, 
        !root["version"].is_string() || !root.contains("metadata") || !root["metadata"].is_object() ||
        !root.contains("data") || !root["data"].is_object())
     {
-        error.Printf(ERRLEN, "%s (%s) is missing required root fields", lumpname, lumptype);
+        M_warnf(true, warningFunc, "%s is missing required root fields", lumptype);
         return JLR_INVALID;
     }
 
@@ -106,28 +132,27 @@ jsonlumpresult_e M_ParseJSONLump(const WadDirectory &dir, const char *lumpname, 
     std::string     versionStr = root["version"].get<std::string>();
     if(!M_parseJSONVersion(versionStr.c_str(), version))
     {
-        error.Printf(ERRLEN, "%s (%s) has an invalid version string '%s'", lumpname, lumptype, versionStr.c_str());
+        M_warnf(true, warningFunc, "%s has an invalid version string '%s'", lumptype, versionStr.c_str());
         return JLR_INVALID;
     }
 
     if(version > maxversion)
     {
-        error.Printf(ERRLEN, "%s (%s) version %s is unsupported (max %d.%d.%d)", lumpname, lumptype, versionStr.c_str(),
-                     maxversion.major, maxversion.minor, maxversion.revision);
+        M_warnf(true, warningFunc, "%s version %s is unsupported (max %d.%d.%d)", lumptype, versionStr.c_str(),
+                maxversion.major, maxversion.minor, maxversion.revision);
         return JLR_UNSUPPORTED_VERSION;
     }
 
     std::string typeStr = root["type"].get<std::string>();
     if(!M_validateType(typeStr.c_str()))
     {
-        error.Printf(ERRLEN, "%s (%s) has an invalid type string '%s'. Capital letters not allowed.", lumpname,
-                     lumptype, typeStr.c_str());
-        return JLR_INVALID;
+        M_warnf(false, warningFunc, "%s has an invalid type string '%s'. Capital letters not officially allowed.",
+                lumptype, typeStr.c_str());
     }
 
-    if(strcmp(typeStr.c_str(), lumptype))
+    if(strcasecmp(typeStr.c_str(), lumptype))
     {
-        error.Printf(ERRLEN, "%s (%s) has mismatched type '%s'", lumpname, lumptype, typeStr.c_str());
+        M_warnf(true, warningFunc, "%s has mismatched type '%s'", lumptype, typeStr.c_str());
         return JLR_INVALID;
     }
 
@@ -135,9 +160,8 @@ jsonlumpresult_e M_ParseJSONLump(const WadDirectory &dir, const char *lumpname, 
     if(!metadata.contains("author") || !metadata["author"].is_string() || !metadata.contains("timestamp") ||
        !metadata["timestamp"].is_string() || !metadata.contains("application") || !metadata["application"].is_string())
     {
-        error.Printf(ERRLEN, "%s (%s) is missing required metadata fields", lumpname, lumptype);
-        return JLR_INVALID;
+        M_warnf(false, warningFunc, "%s metadata doesn't follow specs", lumptype);
     }
 
-    return JLR_OK;
+    return lumpFunc(root["data"], context, warningFunc);
 }
