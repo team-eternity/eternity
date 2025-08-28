@@ -91,7 +91,7 @@
 
 // killough 10/98: preloaded files
 static constexpr size_t MAXLOADFILES = 2;
-char *wad_files[MAXLOADFILES], *deh_files[MAXLOADFILES];
+char                   *wad_files[MAXLOADFILES], *deh_files[MAXLOADFILES];
 // haleyjd: allow two auto-loaded console scripts
 char *csc_files[MAXLOADFILES];
 
@@ -299,56 +299,56 @@ static void D_DrawTitleA(const char *name)
 // killough 11/98: tabulate demo sequences
 
 const demostate_t demostates_doom[] = {
-    { D_DrawTitle,       "TITLEPIC" }, // shareware, registered
-    { G_DeferedPlayDemo, "DEMO1"    },
-    { D_SetPageName,     nullptr    },
-    { G_DeferedPlayDemo, "DEMO2"    },
-    { D_SetPageName,     "HELP2"    },
-    { G_DeferedPlayDemo, "DEMO3"    },
-    { nullptr,           nullptr    }
+    { DSF_TITLE | DSF_ENDWIPE, "TITLEPIC", nullptr, mus_intro, -1 }, // shareware, registered
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO1", nullptr, mus_None, -1 },
+    { DSF_ENDWIPE, nullptr, nullptr, mus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO2", nullptr, mus_None, -1 },
+    { DSF_ENDWIPE, "HELP2", nullptr, mus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO3", nullptr, mus_None, -1 },
+    { DSF_END }
 };
 
 const demostate_t demostates_doom2[] = {
-    { D_DrawTitle,       "TITLEPIC" }, // commercial
-    { G_DeferedPlayDemo, "DEMO1"    },
-    { D_SetPageName,     nullptr    },
-    { G_DeferedPlayDemo, "DEMO2"    },
-    { D_SetPageName,     "CREDIT"   },
-    { G_DeferedPlayDemo, "DEMO3"    },
-    { nullptr,           nullptr    }
+    { DSF_TITLE | DSF_ENDWIPE, "TITLEPIC", nullptr, mus_dm2ttl, -1 }, // commercial
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO1", nullptr, mus_None, -1 },
+    { DSF_ENDWIPE, nullptr, nullptr, mus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO2", nullptr, mus_None, -1 },
+    { DSF_ENDWIPE, "CREDIT", nullptr, mus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO3", nullptr, mus_None, -1 },
+    { DSF_END }
 };
 
 const demostate_t demostates_udoom[] = {
-    { D_DrawTitle,       "TITLEPIC" }, // retail
-    { G_DeferedPlayDemo, "DEMO1"    },
-    { D_SetPageName,     nullptr    },
-    { G_DeferedPlayDemo, "DEMO2"    },
-    { D_SetPageName,     "CREDIT"   },
-    { G_DeferedPlayDemo, "DEMO3"    },
-    { G_DeferedPlayDemo, "DEMO4"    },
-    { nullptr,           nullptr    }
+    { DSF_TITLE | DSF_ENDWIPE, "TITLEPIC", nullptr, mus_intro, -1 }, // retail
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO1", nullptr, mus_None, -1 },
+    { DSF_ENDWIPE, nullptr, nullptr, mus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO2", nullptr, mus_None, -1 },
+    { DSF_ENDWIPE, "CREDIT", nullptr, mus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO3", nullptr, mus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO4", nullptr, mus_None, -1 },
+    { DSF_END }
 };
 
 const demostate_t demostates_hsw[] = {
-    { D_DrawTitle,       "TITLE" }, // heretic shareware
-    { D_DrawTitleA,      "TITLE" },
-    { G_DeferedPlayDemo, "DEMO1" },
-    { D_SetPageName,     "ORDER" },
-    { G_DeferedPlayDemo, "DEMO2" },
-    { D_SetPageName,     nullptr },
-    { G_DeferedPlayDemo, "DEMO3" },
-    { nullptr,           nullptr }
+    { DSF_TITLE, "TITLE", nullptr, hmus_titl, -1 }, // heretic shareware
+    { DSF_ADVISORY | DSF_ENDWIPE, "TITLE", nullptr, hmus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO1", nullptr, hmus_None, -1 },
+    { DSF_ENDWIPE, "ORDER", nullptr, hmus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO2", nullptr, hmus_None, -1 },
+    { DSF_ENDWIPE, nullptr, nullptr, hmus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO3", nullptr, hmus_None, -1 },
+    { DSF_END }
 };
 
 const demostate_t demostates_hreg[] = {
-    { D_DrawTitle,       "TITLE"  }, // heretic registered/sosr
-    { D_DrawTitleA,      "TITLE"  },
-    { G_DeferedPlayDemo, "DEMO1"  },
-    { D_SetPageName,     "CREDIT" },
-    { G_DeferedPlayDemo, "DEMO2"  },
-    { D_SetPageName,     nullptr  },
-    { G_DeferedPlayDemo, "DEMO3"  },
-    { nullptr,           nullptr  }
+    { DSF_TITLE, "TITLE", nullptr, hmus_titl, -1 }, // heretic registered/sosr
+    { DSF_ADVISORY | DSF_ENDWIPE, "TITLE", nullptr, hmus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO1", nullptr, hmus_None, -1 },
+    { DSF_ENDWIPE, "CREDIT", nullptr, hmus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO2", nullptr, hmus_None, -1 },
+    { DSF_ENDWIPE, nullptr, nullptr, hmus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO3", nullptr, hmus_None, -1 },
+    { DSF_END }
 };
 
 // NOTE: unused
@@ -382,12 +382,13 @@ void D_DoAdvanceDemo()
     // demo state resource names
     state = &(demostates[++demosequence]);
 
-    if(!state->func) // time to wrap?
+    if(state->flags & DSF_END) // time to wrap?
     {
         demosequence = 0;
         state        = &(demostates[0]);
     }
 
+    // TODO: new state flags handling
     state->func(DEH_String(state->name));
 
     C_InstaPopup(); // make console go away

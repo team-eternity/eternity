@@ -97,10 +97,22 @@ enum
 
 using dsfunc_t = void (*)(const char *);
 
+enum // demo state flags
+{
+    DSF_TITLE    = 1,  // Eternity extra for EDF gameproperties title tics
+    DSF_DEMO     = 2,  // static screen if not demo
+    DSF_ENDWIPE  = 4,  // suppress usual wipe if not (ID24)
+    DSF_ADVISORY = 8,  // special Eternity extra for Heretic content warning
+    DSF_END      = 16, // array terminator
+};
+
 struct demostate_t
 {
-    dsfunc_t    func;
-    const char *name;
+    unsigned    flags;
+    const char *lumpname;
+    const char *musicname; // only for non-demo
+    int         musicnum;  // alternate if musicname is null
+    int         tics;
 };
 
 extern const demostate_t demostates_doom[];
