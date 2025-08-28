@@ -388,8 +388,40 @@ void D_DoAdvanceDemo()
         state        = &(demostates[0]);
     }
 
-    // TODO: new state flags handling
-    state->func(DEH_String(state->name));
+    if(state->flags & DSF_DEMO)
+    {
+        G_DeferedPlayDemo(state->lumpname);
+    }
+    else
+    {
+        if(state->musicname)
+            S_ChangeMusicName(state->musicname, false);
+        else if(state->musicnum > 0)
+            S_StartMusic(state->musicnum);
+        else if(state->flags & DSF_TITLE)
+        {
+            if(GameModeInfo->titleMusName != nullptr && *GameModeInfo->titleMusName)
+                S_ChangeMusicName(GameModeInfo->titleMusName, false);
+            else
+                S_StartMusic(GameModeInfo->titleMusNum);
+        }
+
+        if(state->tics >= 0)
+            pagetic = state->tics;
+        else if(state->flags & DSF_TITLE)
+            pagetic = GameModeInfo->titleTics;
+        else if(state->flags & DSF_ADVISORY)
+            pagetic = GameModeInfo->advisorTics;
+        else
+            pagetic = GameModeInfo->pageTics;
+
+        if(state->lumpname)
+            D_SetPageName(state->lumpname);
+        else if(GameModeInfo->missionInfo->flags & MI_CONBACKTITLE)
+            D_SetPageName(GameModeInfo->consoleBack);
+        else
+            D_SetPageName(nullptr);
+    }
 
     C_InstaPopup(); // make console go away
 }
