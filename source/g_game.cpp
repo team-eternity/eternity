@@ -761,7 +761,12 @@ void G_DoLoadLevel()
     else
     { // sf: no screen wipe while changing hub level
         if(wipegamestate == GS_LEVEL)
-            wipegamestate = GS_NOSTATE; // force a wipe
+        {
+            if(wipesuppress)
+                wipesuppress = false; // don't wipe this time
+            else 
+                wipegamestate = GS_NOSTATE; // force a wipe
+        }
     }
 }
 

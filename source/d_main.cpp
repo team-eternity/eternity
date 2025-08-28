@@ -380,6 +380,9 @@ void D_DoAdvanceDemo()
 
     // haleyjd 10/08/06: changed to allow DEH/BEX replacement of
     // demo state resource names
+    const demostate_t *prevstate = nullptr;
+    if(demosequence >= 0)
+        prevstate = &(demostates[demosequence]);
     state = &(demostates[++demosequence]);
 
     if(state->flags & DSF_END) // time to wrap?
@@ -390,10 +393,25 @@ void D_DoAdvanceDemo()
 
     if(state->flags & DSF_DEMO)
     {
+        // We can't set wipegamestate to GS_LEVEL because the engine will then force a wipe anyway (via GS_NOSTATE), so
+        // use this secondary 'wipesuppress' variable instead
+        if(prevstate && !(prevstate->flags & DSF_ENDWIPE))
+        {
+            wipesuppress = true;
+            wipegamestate = GS_LEVEL;
+        }
         G_DeferedPlayDemo(state->lumpname);
     }
     else
     {
+        if(prevstate)
+        {
+            if(!(prevstate->flags & DSF_DEMO) && prevstate->flags & DSF_ENDWIPE)
+                wipegamestate = GS_NOSTATE; // artwork state needs an explicit wipe if so defined
+            else if(prevstate->flags & DSF_DEMO && !(prevstate->flags & DSF_ENDWIPE))
+                wipegamestate = GS_DEMOSCREEN; // block wipe by already setting it to upcoming gamestate
+        }
+
         if(state->musicname)
             S_ChangeMusicName(state->musicname, false);
         else if(state->musicnum > 0)
@@ -447,6 +465,7 @@ void D_StartTitle()
 
 gamestate_t oldgamestate  = GS_NOSTATE; // sf: globaled
 gamestate_t wipegamestate = GS_DEMOSCREEN;
+bool        wipesuppress;
 camera_t   *camera;
 extern bool setsizeneeded;
 int         wipewait; // haleyjd 10/09/07

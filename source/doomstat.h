@@ -338,6 +338,7 @@ extern char *usergamepath;
 // wipegamestate can be set to -1
 //  to force a wipe on the next draw
 extern gamestate_t wipegamestate;
+extern bool        wipesuppress;
 
 extern double mouseSensitivity_horiz; // killough
 extern double mouseSensitivity_vert;
