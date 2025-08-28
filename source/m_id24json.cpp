@@ -46,19 +46,19 @@ static bool M_parseJSONVersion(const char *versionString, JSONLumpVersion &versi
     version = {};
 
     // Parse major version
-    version.major = std::strtol(p, &endptr, 10);
+    version.major = (int)std::strtol(p, &endptr, 10);
     if(endptr == p || *endptr != '.' || version.major < 0)
         return false;
     p = endptr + 1;
 
     // Parse minor version
-    version.minor = std::strtol(p, &endptr, 10);
+    version.minor = (int)std::strtol(p, &endptr, 10);
     if(endptr == p || *endptr != '.' || version.minor < 0)
         return false;
     p = endptr + 1;
 
     // Parse revision version
-    version.revision = std::strtol(p, &endptr, 10);
+    version.revision = (int)std::strtol(p, &endptr, 10);
     if(endptr == p || *endptr != '\0' || version.revision < 0)
         return false;
 
