@@ -24,8 +24,13 @@
 // https://docs.google.com/document/d/1WzsUc1EpYd4HX7Nrs7gjy2ZO3cAc62vq8TKNqbWtF7M
 //
 
-#ifndef M_DEMOLOOP_H_
-#define M_DEMOLOOP_H_
+#ifndef ID24_DEMOLOOP_H_
+#define ID24_DEMOLOOP_H_
+
+namespace id24
+{
+void LoadDemoLoop();
+}
 
 #endif
 // EOF

@@ -25,7 +25,7 @@
 //
 
 #include "z_zone.h"
-#include "m_id24json.h"
+#include "id24_json.h"
 
 #include "m_qstr.h"
 
@@ -33,12 +33,15 @@
 
 using json = nlohmann::json;
 
+namespace id24
+{
+
 enum
 {
     ERRLEN = 128,
 };
 
-static bool M_parseJSONVersion(const char *versionString, JSONLumpVersion &version)
+static bool parseJSONVersion(const char *versionString, JSONLumpVersion &version)
 {
     const char *p = versionString;
     char       *endptr;
@@ -65,7 +68,7 @@ static bool M_parseJSONVersion(const char *versionString, JSONLumpVersion &versi
     return true;
 }
 
-static bool M_validateType(const char *type)
+static bool validateType(const char *type)
 {
     for(const char *p = type; *p; p++)
     {
@@ -77,7 +80,7 @@ static bool M_validateType(const char *type)
     return true;
 }
 
-static void M_warnf(bool error, jsonWarning_t warningFunc, const char *fmt, ...)
+static void warnf(bool error, jsonWarning_t warningFunc, const char *fmt, ...)
 {
     if(!warningFunc)
         return;
@@ -101,9 +104,9 @@ bool JSONLumpVersion::operator>(const JSONLumpVersion &other) const
     return revision > other.revision;
 }
 
-jsonLumpResult_e M_ParseJSONLump(const void *rawdata, size_t rawsize, const char *lumptype,
-                                 const JSONLumpVersion &maxversion, jsonLumpFunc_t lumpFunc, void *context,
-                                 jsonWarning_t warningFunc)
+jsonLumpResult_e ParseJSONLump(const void *rawdata, size_t rawsize, const char *lumptype,
+                               const JSONLumpVersion &maxversion, jsonLumpFunc_t lumpFunc, void *context,
+                               jsonWarning_t warningFunc)
 {
     json root;
     try
@@ -113,7 +116,7 @@ jsonLumpResult_e M_ParseJSONLump(const void *rawdata, size_t rawsize, const char
     }
     catch(const json::parse_error &e)
     {
-        M_warnf(true, warningFunc, "%s parse error at byte %zu: %s", lumptype, e.byte, e.what());
+        warnf(true, warningFunc, "%s parse error at byte %zu: %s", lumptype, e.byte, e.what());
         return JLR_INVALID;
     }
 
@@ -124,35 +127,35 @@ jsonLumpResult_e M_ParseJSONLump(const void *rawdata, size_t rawsize, const char
        !root["version"].is_string() || !root.contains("metadata") || !root["metadata"].is_object() ||
        !root.contains("data") || !root["data"].is_object())
     {
-        M_warnf(true, warningFunc, "%s is missing required root fields", lumptype);
+        warnf(true, warningFunc, "%s is missing required root fields", lumptype);
         return JLR_INVALID;
     }
 
     JSONLumpVersion version;
     std::string     versionStr = root["version"].get<std::string>();
-    if(!M_parseJSONVersion(versionStr.c_str(), version))
+    if(!parseJSONVersion(versionStr.c_str(), version))
     {
-        M_warnf(true, warningFunc, "%s has an invalid version string '%s'", lumptype, versionStr.c_str());
+        warnf(true, warningFunc, "%s has an invalid version string '%s'", lumptype, versionStr.c_str());
         return JLR_INVALID;
     }
 
     if(version > maxversion)
     {
-        M_warnf(true, warningFunc, "%s version %s is unsupported (max %d.%d.%d)", lumptype, versionStr.c_str(),
-                maxversion.major, maxversion.minor, maxversion.revision);
+        warnf(true, warningFunc, "%s version %s is unsupported (max %d.%d.%d)", lumptype, versionStr.c_str(),
+              maxversion.major, maxversion.minor, maxversion.revision);
         return JLR_UNSUPPORTED_VERSION;
     }
 
     std::string typeStr = root["type"].get<std::string>();
-    if(!M_validateType(typeStr.c_str()))
+    if(!validateType(typeStr.c_str()))
     {
-        M_warnf(false, warningFunc, "%s has an invalid type string '%s'. Capital letters not officially allowed.",
-                lumptype, typeStr.c_str());
+        warnf(false, warningFunc, "%s has an invalid type string '%s'. Capital letters not officially allowed.",
+              lumptype, typeStr.c_str());
     }
 
     if(strcasecmp(typeStr.c_str(), lumptype))
     {
-        M_warnf(true, warningFunc, "%s has mismatched type '%s'", lumptype, typeStr.c_str());
+        warnf(true, warningFunc, "%s has mismatched type '%s'", lumptype, typeStr.c_str());
         return JLR_INVALID;
     }
 
@@ -160,8 +163,12 @@ jsonLumpResult_e M_ParseJSONLump(const void *rawdata, size_t rawsize, const char
     if(!metadata.contains("author") || !metadata["author"].is_string() || !metadata.contains("timestamp") ||
        !metadata["timestamp"].is_string() || !metadata.contains("application") || !metadata["application"].is_string())
     {
-        M_warnf(false, warningFunc, "%s metadata doesn't follow specs", lumptype);
+        warnf(false, warningFunc, "%s metadata doesn't follow specs", lumptype);
     }
 
     return lumpFunc(root["data"], context, warningFunc);
 }
+
+} // namespace id24
+
+// EOF

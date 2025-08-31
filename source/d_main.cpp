@@ -64,6 +64,7 @@
 #include "i_sound.h"
 #include "i_system.h"
 #include "i_video.h"
+#include "id24_demoloop.h"
 #include "in_lude.h"
 #include "m_argv.h"
 #include "m_compare.h"
@@ -273,27 +274,6 @@ static void D_PageDrawer()
 static void D_SetPageName(const char *name)
 {
     pagename = name;
-}
-
-static void D_DrawTitle(const char *name)
-{
-    if(GameModeInfo->titleMusName != nullptr && *GameModeInfo->titleMusName)
-        S_ChangeMusicName(GameModeInfo->titleMusName, false);
-    else
-        S_StartMusic(GameModeInfo->titleMusNum);
-
-    pagetic = GameModeInfo->titleTics;
-
-    if(GameModeInfo->missionInfo->flags & MI_CONBACKTITLE)
-        D_SetPageName(GameModeInfo->consoleBack);
-    else
-        D_SetPageName(name);
-}
-
-static void D_DrawTitleA(const char *name)
-{
-    pagetic = GameModeInfo->advisorTics;
-    D_SetPageName(name);
 }
 
 // killough 11/98: tabulate demo sequences
@@ -1658,6 +1638,9 @@ static void D_DoomInit()
 
     // Init bex hash chaining before EDF
     D_BuildBEXHashChains();
+
+    // Load demo loop info (must be before EDF)
+    id24::LoadDemoLoop();
 
     // Identify root EDF file and process EDF
     D_LoadEDF(gfs);

@@ -24,13 +24,15 @@
 // https://docs.google.com/document/d/1SGWMFggsARYKWRsSHm_7BPMrGCEcm6t6DCpWiQyfjTY/
 //
 
-#ifndef M_ID24JSON_H_
-#define M_ID24JSON_H_
+#ifndef ID24_JSON_H_
+#define ID24_JSON_H_
 
 #include "nlohmann/json.hpp"
 
 class qstring;
 
+namespace id24
+{
 enum jsonLumpResult_e
 {
     JLR_OK,
@@ -38,7 +40,6 @@ enum jsonLumpResult_e
     JLR_INVALID,
     JLR_UNSUPPORTED_VERSION
 };
-
 struct JSONLumpVersion
 {
     bool operator>(const JSONLumpVersion &other) const;
@@ -47,14 +48,17 @@ struct JSONLumpVersion
     int minor;
     int revision;
 };
-
 typedef void (*jsonWarning_t)(bool error, const char *msg);
 
 typedef jsonLumpResult_e (*jsonLumpFunc_t)(const nlohmann::json &data, void *context, jsonWarning_t warningFunc);
 
-jsonLumpResult_e M_ParseJSONLump(const void *rawdata, size_t rawsize, const char *lumptype,
-                                 const JSONLumpVersion &maxversion, jsonLumpFunc_t lumpFunc, void *context,
-                                 jsonWarning_t warningFunc);
+jsonLumpResult_e ParseJSONLump(const void *rawdata, size_t rawsize, const char *lumptype,
+                               const JSONLumpVersion &maxversion, jsonLumpFunc_t lumpFunc, void *context,
+                               jsonWarning_t warningFunc);
+
+bool CoerceInt(const nlohmann::json &object, const char *fieldName, int &out, jsonWarning_t warningFunc);
+
+} // namespace id24
 
 #endif
 // EOF
