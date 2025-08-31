@@ -1,6 +1,10 @@
 Changes since v4.05.04
 ======================
 
+Features
+--------
+* Added support for the "author" property in UMAPINFO.
+
 Bug fixes
 ---------
 * Fixed A_BFGSpray not using the parameter, and always being locked at 40 rays.

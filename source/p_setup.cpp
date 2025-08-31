@@ -3384,7 +3384,11 @@ static void P_NewLevelMsg()
 {
     C_Printf("\n");
     C_Separator();
-    C_Printf(FC_GRAY "  %s\n\n", LevelInfo.levelName);
+    C_Printf(FC_GRAY "  %s\n", LevelInfo.levelName);
+    if(estrnonempty(LevelInfo.creator) && strcasecmp(LevelInfo.creator, "unknown"))
+        C_Printf("  by %s\n\n", LevelInfo.creator);
+    else
+        C_Puts("");
     C_InstaPopup(); // put console away
 }
 
