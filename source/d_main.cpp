@@ -1639,7 +1639,7 @@ static void D_DoomInit()
     // Init bex hash chaining before EDF
     D_BuildBEXHashChains();
 
-    // Load demo loop info (must be before EDF)
+    // Load demo loop info (must be before EDF, but after D_InitGMIPostWads)
     id24::LoadDemoLoop();
 
     // Identify root EDF file and process EDF
