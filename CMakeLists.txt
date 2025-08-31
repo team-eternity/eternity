@@ -117,7 +117,9 @@ add_subdirectory(acsvm)
 set(WITH_CPP_EXTRAS ON)
 add_subdirectory(adlmidi)
 
-add_subdirectory(zlib)
+if(NOT APPLE)  # Due to ongoing CI problems, stick to the system zlib on Mac.
+   add_subdirectory(zlib)
+endif()
 add_subdirectory(snes_spc)
 
 # WARNING: this section must be before add_subdirectory(libpng)

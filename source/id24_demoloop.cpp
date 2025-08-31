@@ -131,6 +131,7 @@ static jsonLumpResult_e parseFunc(const nlohmann::json &data, void *context, jso
     if(states->isEmpty())
     {
         warningFunc(true, "Empty demo loop.");
+		cleanStates();
         return JLR_INVALID;
     }
 
