@@ -24,10 +24,10 @@
 #include "version.h"
 
 // sf: made int from define
-int version = 405;
+int version = 406;
 
 // haleyjd: subversion -- range from 0 to 255
-unsigned char subversion = 5;
+unsigned char subversion = 0;
 
 const char version_date[] = __DATE__;
 const char version_time[] = __TIME__; // haleyjd
@@ -37,7 +37,7 @@ const char version_name[] = "Citadel";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = "Eternity Engine v4.05.05 \"Citadel\"";
+const char ee_wmCaption[] = "Eternity Engine v4.06.00 \"Citadel\"";
 #endif
 
 // haleyjd: Eternity release history
