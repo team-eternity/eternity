@@ -74,7 +74,7 @@ namespace ACSVM
    //
    void PrintBuf::formatv(char const *fmt, va_list arg)
    {
-      bufPtr += std::vsnprintf(bufPtr, bufEnd - bufPtr, fmt, arg);
+      bufPtr += std::vsprintf(bufPtr, fmt, arg);
    }
 
    //
@@ -104,7 +104,7 @@ namespace ACSVM
    void PrintBuf::push()
    {
       reserve(4);
-      WriteLE4(reinterpret_cast<Byte *>(bufPtr), static_cast<std::uint_fast32_t>(bufPtr - bufBeg));
+      WriteLE4(reinterpret_cast<Byte *>(bufPtr), bufPtr - bufBeg);
       bufBeg = bufPtr += 4;
    }
 

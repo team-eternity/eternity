@@ -864,38 +864,29 @@ bool ACS_TerminateScriptS(const char *str, uint32_t mapnum)
 //
 
 //
-// ACSBuffer
+// ACSSerial
 //
-// Wraps an InBuffer or OutBuffer in a std::streambuf for ACSVM serialization.
+// Wraps a SaveArchive for ACSVM serialization.
 //
-class ACSBuffer : public std::streambuf
+class ACSSerial : public ACSVM::Serial
 {
 public:
-    explicit ACSBuffer(InBuffer *in_) : in{ in_ }, out{ nullptr } {}
-    explicit ACSBuffer(OutBuffer *out_) : in{ nullptr }, out{ out_ } {}
+   explicit ACSSerial(SaveArchive &arc_) : arc{arc_} {}
 
-    InBuffer  *in;
-    OutBuffer *out;
+   virtual void read(char *data, std::size_t size)
+   {
+      if(arc.getLoadFile()->read(data, size) != size)
+         throw ACSVM::SerialError("failed read");
+   }
 
-protected:
-    virtual int overflow(int c)
-    {
-        // Write single byte to destination.
-        if(!out || !out->writeUint8(c))
-            return EOF;
-        return c;
-    }
+   virtual void write(char const *data, std::size_t size)
+   {
+      if(!arc.getSaveFile()->write(data, size))
+         throw ACSVM::SerialError("failed write");
+   }
 
-    virtual int underflow()
-    {
-        // Read single byte from source.
-        if(!in || in->read(buf, 1) != 1)
-            return EOF;
-        setg(buf, buf, buf + 1);
-        return static_cast<unsigned char>(buf[0]);
-    }
-
-    char buf[1];
+private:
+   SaveArchive &arc;
 };
 
 //
@@ -908,9 +899,7 @@ void ACS_Archive(SaveArchive &arc)
 
     if(arc.isLoading())
     {
-        ACSBuffer     buf{ arc.getLoadFile() };
-        std::istream  str{ &buf };
-        ACSVM::Serial in{ str };
+        ACSSerial in{arc};
 
         try
         {
@@ -925,9 +914,7 @@ void ACS_Archive(SaveArchive &arc)
     }
     else if(arc.isSaving())
     {
-        ACSBuffer     buf{ arc.getSaveFile() };
-        std::ostream  str{ &buf };
-        ACSVM::Serial out{ str };
+        ACSSerial out{arc};
 
         // Enable debug signatures.
         out.signs = true;

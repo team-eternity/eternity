@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015-2017 David Hill
+// Copyright (C) 2015-2025 David Hill
 //
 // See COPYING for license information.
 //
@@ -112,6 +112,7 @@ namespace ACSVM
    Environment::Environment() :
       branchLimit  {0},
       scriptLocRegC{ScriptLocRegCDefault},
+      longDelay{false},
 
       funcV{nullptr},
       funcC{0},
@@ -147,7 +148,7 @@ namespace ACSVM
    Word Environment::addCallFunc(CallFunc func)
    {
       pd->tableCallFunc.push_back(func);
-      return static_cast<Word>(pd->tableCallFunc.size() - 1);
+      return pd->tableCallFunc.size() - 1;
    }
 
    //
@@ -199,7 +200,7 @@ namespace ACSVM
       {
          Vector<Word> argTmp{argV, argC};
          for(auto &arg : argTmp) arg &= 0xFF;
-         return callSpecImpl(thread, spec, argTmp.data(), static_cast<Word>(argTmp.size()));
+         return callSpecImpl(thread, spec, argTmp.data(), argTmp.size());
       }
       else
          return callSpecImpl(thread, spec, argV, argC);
@@ -479,6 +480,14 @@ namespace ACSVM
    }
 
    //
+   // Environment::getScopeID
+   //
+   ScopeID Environment::getScopeID(Word mapnum) const
+   {
+      return {0, 0, mapnum};
+   }
+
+   //
    // Environment::hasActiveThread
    //
    bool Environment::hasActiveThread() const
@@ -650,7 +659,7 @@ namespace ACSVM
    //
    ScriptName Environment::readScriptName(Serial &in) const
    {
-      String *s = in.in->get() ? &stringTable[ReadVLN<Word>(in)] : nullptr;
+      String *s = in.readByte() ? &stringTable[ReadVLN<Word>(in)] : nullptr;
       Word    i = ReadVLN<Word>(in);
       return {s, i};
    }
@@ -661,7 +670,7 @@ namespace ACSVM
    String *Environment::readString(Serial &in) const
    {
       if(auto idx = ReadVLN<std::size_t>(in))
-         return &stringTable[static_cast<Word>(idx - 1)];
+         return &stringTable[idx - 1];
       else
          return nullptr;
    }
@@ -817,11 +826,11 @@ namespace ACSVM
    {
       if(in.s)
       {
-         out.out->put('\1');
+         out.writeByte(1);
          WriteVLN(out, in.s->idx);
       }
       else
-         out.out->put('\0');
+         out.writeByte(0);
 
       WriteVLN(out, in.i);
    }

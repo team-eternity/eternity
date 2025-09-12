@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015-2017 David Hill
+// Copyright (C) 2015-2025 David Hill
 //
 // See COPYING for license information.
 //
@@ -23,8 +23,6 @@
 
 namespace ACSVM
 {
-   extern "C" using MapScope_ScriptStartFuncC = void (*)(void *);
-
    //
    // GlobalScope
    //
@@ -71,6 +69,13 @@ namespace ACSVM
       ListLink<ScriptAction> scriptAction;
 
       bool active;
+
+
+      static void LoadArrV(Serial &in, Array *arrV, std::size_t arrC);
+      static void LoadRegV(Serial &in, Word *regV, std::size_t regC);
+
+      static void SaveArrV(Serial &out, Array const *arrV, std::size_t arrC);
+      static void SaveRegV(Serial &out, Word const *regV, std::size_t regC);
 
    private:
       struct PrivData;
@@ -138,9 +143,6 @@ namespace ACSVM
    class MapScope
    {
    public:
-      using ScriptStartFunc = void (*)(Thread *);
-      using ScriptStartFuncC = MapScope_ScriptStartFuncC;
-
       //
       // ScriptStartInfo
       //
@@ -148,17 +150,13 @@ namespace ACSVM
       {
       public:
          ScriptStartInfo() :
-            argV{nullptr}, func{nullptr}, funcc{nullptr}, info{nullptr}, argC{0} {}
+            argV{nullptr}, func{nullptr}, info{nullptr}, argC{0} {}
          ScriptStartInfo(Word const *argV_, std::size_t argC_,
             ThreadInfo const *info_ = nullptr, ScriptStartFunc func_ = nullptr) :
-            argV{argV_}, func{func_}, funcc{nullptr}, info{info_}, argC{argC_} {}
-         ScriptStartInfo(Word const *argV_, std::size_t argC_,
-            ThreadInfo const *info_, ScriptStartFuncC func_) :
-            argV{argV_}, func{nullptr}, funcc{func_}, info{info_}, argC{argC_} {}
+            argV{argV_}, func{func_}, info{info_}, argC{argC_} {}
 
          Word       const *argV;
          ScriptStartFunc   func;
-         ScriptStartFuncC  funcc;
          ThreadInfo const *info;
          std::size_t       argC;
       };

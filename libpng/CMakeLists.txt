@@ -25,8 +25,9 @@
 # For conditions of distribution and use, see the disclaimer
 # and license in png.h
 
-cmake_minimum_required(VERSION 3.1)
-cmake_policy(VERSION 3.1)
+# [DH] Bumped this from 3.1 to 3.5. Hopefully that will be OK.
+cmake_minimum_required(VERSION 3.5)
+cmake_policy(VERSION 3.5)
 
 project(libpng C ASM)
 enable_testing()

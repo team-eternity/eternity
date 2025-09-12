@@ -17,7 +17,7 @@
 ##
 ################################################################################
 ######################### CMake Configuration ##################################
-CMAKE_MINIMUM_REQUIRED (VERSION 2.4)
+CMAKE_MINIMUM_REQUIRED (VERSION 2.4...3.5)
 IF (COMMAND cmake_policy)
         CMAKE_POLICY (SET CMP0003 NEW)
 ENDIF (COMMAND cmake_policy)
