@@ -272,7 +272,7 @@ static void MN_readSaveStrings()
         saveslot_t newSlot;
         newSlot.fileNum = savename.toInt();
 
-        // file time
+        // File time.
         START_UTF8();
         struct stat statbuf;
         if(!stat(pathStr.constPtr(), &statbuf))
@@ -284,7 +284,7 @@ static void MN_readSaveStrings()
         }
         END_UTF8();
 
-        // description
+        // Description.
         memset(description, 0, sizeof(description));
         arc.archiveCString(description, SAVESTRINGSIZE);
         newSlot.description = description;
@@ -293,14 +293,14 @@ static void MN_readSaveStrings()
         if(!arc.readSaveVersion())
         {
             newSlot.saveVersion = 0;
-            // don't try to load anything else...
+            // Don't try to load anything else...
             loadFile.close();
             e_saveSlots.add(newSlot);
             continue;
         }
         newSlot.saveVersion = arc.saveVersion();
 
-        // compatibility, skill level, manager dir, vanilla mode
+        // Compatibility, skill level, manager dir, vanilla mode.
         arc << dummy << newSlot.skill << dummy << bdummy;
 
         // map
@@ -313,7 +313,7 @@ static void MN_readSaveStrings()
         }
         newSlot.mapName[8] = '\0';
 
-        // skip managed directory stuff, checksum (if present), and players
+        // Skip managed directory stuff, checksum (if present), and players.
         arc.archiveSize(len);
         loadFile.skip(len);
         if(arc.saveVersion() >= 4)
@@ -330,21 +330,32 @@ static void MN_readSaveStrings()
         for(int j = 0; j < MIN_MAXPLAYERS; j++)
             arc << bdummy;
 
-        // music num, gametype
-        arc << dummy << dummy;
+        auto foo = arc.getLoadFile()->tell();
 
-        // skip options
+        // Music num.
+        if(arc.saveVersion() < 20)
+            arc.getLoadFile()->skip(sizeof(int));
+        else
+        {
+            arc.archiveSize(len);
+            loadFile.skip(len);
+        }
+
+        // Game type.
+        arc << dummy;
+
+        // Skip options.
         byte options[GAME_OPTION_SIZE];
         loadFile.read(options, sizeof(options));
 
-        // level time
+        // Level time.
         arc << newSlot.levelTime;
 
         loadFile.close();
         e_saveSlots.add(newSlot);
     }
 
-    // Sort the slots from most recent to least recent
+    // Sort the slots from most recent to least recent.
     if(const size_t numSlots = e_saveSlots.getLength(); numSlots != 0)
     {
         Collection<saveslot_t> tempSlots;
