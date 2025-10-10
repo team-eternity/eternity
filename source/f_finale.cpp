@@ -50,6 +50,7 @@
 #include "v_font.h"
 #include "v_misc.h"
 #include "v_patchfmt.h"
+#include "v_png.h"
 #include "v_video.h"
 #include "w_wad.h"
 #include "z_auto.h"
@@ -713,10 +714,27 @@ static void F_DrawUnderwater()
         {
             byte *palette;
 
-            palette = (byte *)wGlobalDir.cacheLumpName("E2PAL", PU_CACHE);
-            I_SetPalette(palette);
+            int e2end = wGlobalDir.checkNumForName("E2END");
+            VPNGImage png;
+            bool havePNGPal = false;
+            if(e2end >= 0)
+            {
+                auto e2endData = static_cast<byte *>(wGlobalDir.cacheLumpNum(e2end, PU_CACHE));
+                if(png.readImage(e2endData))
+                {
+                    palette = png.expandPalette();
+                    I_SetPalette(palette);
+                    havePNGPal = true;
+                }
+            }
 
-            V_DrawFSBackground(&vbscreenyscaled, wGlobalDir.checkNumForName("E2END"));
+            if(!havePNGPal)
+            {
+                palette = (byte *)wGlobalDir.cacheLumpName("E2PAL", PU_CACHE);
+                I_SetPalette(palette);
+            }
+
+            V_DrawFSBackground(&vbscreenyscaled, e2end);
 
             finalestage = 3;
         }
