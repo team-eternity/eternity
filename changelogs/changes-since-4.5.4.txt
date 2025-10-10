@@ -10,3 +10,4 @@ Bug fixes
 ---------
 * Fixed A_BFGSpray not using the parameter, and always being locked at 40 rays.
 * Fixed bad rendering of specially paletted PNG file for the Heretic episode 2 ending screen.
+* Fixed bad implementation of TakeInventory.

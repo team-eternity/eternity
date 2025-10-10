@@ -2655,10 +2655,10 @@ bool ACS_CF_StopSound(ACS_CF_ARGS)
 //
 bool ACS_CF_TakeInventory(ACS_CF_ARGS)
 {
-    auto          info     = &static_cast<ACSThread *>(thread)->info;
-    char const   *itemname = thread->scopeMap->getString(argV[0])->str;
-    int           amount   = argV[1];
-    itemeffect_t *item     = E_ItemEffectForName(itemname);
+    const auto          info     = &static_cast<ACSThread *>(thread)->info;
+    char const         *itemname = thread->scopeMap->getString(argV[0])->str;
+    const int           amount   = argV[1];
+    itemeffect_t *const item     = E_ItemEffectForName(itemname);
 
     if(!item)
     {
@@ -2666,18 +2666,28 @@ bool ACS_CF_TakeInventory(ACS_CF_ARGS)
         return false;
     }
 
+    // Handle negative amounts: treat as 0 (don't remove anything)
+    if(amount <= 0)
+        return false;
+
+    auto alwaysRemove = [info, item, amount]() {
+        int owned = E_GetItemOwnedAmount(*info->mo->player, item);
+        // If amount exceeds what player has, take all they have
+        E_RemoveInventoryItem(*info->mo->player, item, emin(owned, amount));
+    };
+
     if(info->mo)
     {
         // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
         if(info->mo->player)
-            E_RemoveInventoryItem(*info->mo->player, item, amount);
+            alwaysRemove();
     }
     else
     {
         for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
         {
             if(playeringame[pnum])
-                E_RemoveInventoryItem(players[pnum], item, amount);
+                alwaysRemove();
         }
     }
     return false;
