@@ -47,6 +47,7 @@
 #include "r_state.h"
 #include "s_sound.h"
 #include "sounds.h"
+#include "v_block.h"
 #include "v_font.h"
 #include "v_misc.h"
 #include "v_patchfmt.h"
@@ -716,7 +717,7 @@ static void F_DrawUnderwater()
 
             int e2end = wGlobalDir.checkNumForName("E2END");
             VPNGImage png;
-            bool havePNGPal = false;
+            bool havePNGBlock = false;
             if(e2end >= 0)
             {
                 auto e2endData = static_cast<byte *>(wGlobalDir.cacheLumpNum(e2end, PU_CACHE));
@@ -724,17 +725,23 @@ static void F_DrawUnderwater()
                 {
                     palette = png.expandPalette();
                     I_SetPalette(palette);
-                    havePNGPal = true;
+                    efree(palette);
+                    byte *linear = png.getAs8Bit(nullptr);
+                    if(linear)
+                    {
+                        V_FillBuffer(&vbscreenyscaled, linear, png.getWidth(), png.getHeight());
+                        havePNGBlock = true;
+                        efree(linear);
+                    }
                 }
             }
 
-            if(!havePNGPal)
+            if(!havePNGBlock)
             {
                 palette = (byte *)wGlobalDir.cacheLumpName("E2PAL", PU_CACHE);
                 I_SetPalette(palette);
+                V_DrawFSBackground(&vbscreenyscaled, e2end);
             }
-
-            V_DrawFSBackground(&vbscreenyscaled, e2end);
 
             finalestage = 3;
         }
@@ -746,7 +753,28 @@ static void F_DrawUnderwater()
 
         // Redraw to cover possible pillarbox caused by D_Display
         if(initialstage == 3)
-            V_DrawFSBackground(&vbscreenyscaled, wGlobalDir.checkNumForName("E2END"));
+        {
+            int e2end = wGlobalDir.checkNumForName("E2END");
+            VPNGImage png;
+            bool havePNGBlock = false;
+            if(e2end >= 0)
+            {
+                auto e2endData = static_cast<byte *>(wGlobalDir.cacheLumpNum(e2end, PU_CACHE));
+                if(png.readImage(e2endData))
+                {
+                    byte *linear = png.getAs8Bit(nullptr);
+                    if(linear)
+                    {
+                        V_FillBuffer(&vbscreenyscaled, linear, png.getWidth(), png.getHeight());
+                        havePNGBlock = true;
+                        efree(linear);
+                    }
+                }
+            }
+
+            if(!havePNGBlock)
+                V_DrawFSBackground(&vbscreenyscaled, e2end);
+        }
         break;
 
     case 4:
