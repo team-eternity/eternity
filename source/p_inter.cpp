@@ -181,7 +181,7 @@ static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, int num, bool ignor
 //
 // Give the player ammo from an ammoeffect pickup.
 //
-bool P_GiveAmmoPickup(player_t &player, const itemeffect_t *pickup, bool dropped, int dropamount)
+bool P_GiveAmmoPickup(player_t &player, const itemeffect_t *pickup, bool dropped, int dropamount, int itemamount)
 {
     if(!pickup)
         return false;
@@ -200,7 +200,7 @@ bool P_GiveAmmoPickup(player_t &player, const itemeffect_t *pickup, bool dropped
 
     bool ignoreskill = !!pickup->getInt("ignoreskill", 0);
 
-    return P_GiveAmmo(player, give, giveamount, ignoreskill);
+    return P_GiveAmmo(player, give, giveamount * itemamount, ignoreskill);
 }
 
 //
@@ -439,7 +439,7 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropp
 //
 // Returns false if the body isn't needed at all
 //
-bool P_GiveBody(player_t &player, const itemeffect_t *effect)
+bool P_GiveBody(player_t &player, const itemeffect_t *effect, int itemamount)
 {
     if(!effect)
         return false;
@@ -467,7 +467,7 @@ bool P_GiveBody(player_t &player, const itemeffect_t *effect)
     if(effect->getInt("sethealth", 0))
         player.health = amount; // some items set health directly
     else
-        player.health += amount; // most items add to health
+        player.health += amount * itemamount; // most items add to health
 
     // cap to maxamount
     if(player.health > maxamount)
@@ -508,7 +508,7 @@ bool EV_DoHealThing(Mobj *actor, int amount, int max)
 // Returns false if the armor is worse
 // than the current armor.
 //
-bool P_GiveArmor(player_t &player, const itemeffect_t *effect)
+bool P_GiveArmor(player_t &player, const itemeffect_t *effect, int itemamount)
 {
     if(!effect)
         return false;
@@ -533,7 +533,7 @@ bool P_GiveArmor(player_t &player, const itemeffect_t *effect)
 
     if(additive)
     {
-        player.armorpoints += hits;
+        player.armorpoints += hits * itemamount;
         if(player.armorpoints > maxsaveamount)
             player.armorpoints = maxsaveamount;
     }
@@ -572,7 +572,7 @@ bool P_GiveArmor(player_t &player, const itemeffect_t *effect)
 //
 // Rewritten by Lee Killough
 //
-bool P_GivePower(player_t &player, int power, int duration, bool permament, bool additiveTime)
+bool P_GivePower(player_t &player, int power, int duration, bool permament, bool additiveTime, int itemamount)
 {
     switch(power)
     {
@@ -622,7 +622,7 @@ bool P_GivePower(player_t &player, int power, int duration, bool permament, bool
         if(permament)
             player.powers[power] = { 0, true };
         else
-            player.powers[power].tics = additiveTime ? players->powers[power].tics + duration : duration;
+            player.powers[power].tics = additiveTime ? players->powers[power].tics + duration * itemamount : duration;
     }
 
     return true;
@@ -648,7 +648,7 @@ const char *powerStrings[NUMPOWERS] = {
 //
 // Takes a powereffect and applies the power accordingly
 //
-bool P_GivePowerForItem(player_t &player, const itemeffect_t *power)
+bool P_GivePowerForItem(player_t &player, const itemeffect_t *power, int itemamount)
 {
     int         powerNum;
     const char *powerStr;
@@ -695,7 +695,7 @@ bool P_GivePowerForItem(player_t &player, const itemeffect_t *power)
             return true;
         }
 
-        return P_GivePower(player, powerNum, duration, permanent, additiveTime);
+        return P_GivePower(player, powerNum, duration, permanent, additiveTime, itemamount);
     }
 
     return true;

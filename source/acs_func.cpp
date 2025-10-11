@@ -65,6 +65,7 @@
 #include "s_sndseq.h"
 #include "v_misc.h"
 #include "doomstat.h"
+#include "metaapi.h"
 
 #include "ACSVM/Scope.hpp"
 #include "ACSVM/Thread.hpp"
@@ -2647,6 +2648,54 @@ bool ACS_CF_StopSound(ACS_CF_ARGS)
         S_StopSound(mo, chan);
 
     thread->dataStk.push(0);
+    return false;
+}
+
+//
+// void GiveInventory(str itemname, int amount);
+//
+bool ACS_CF_GiveInventory(ACS_CF_ARGS)
+{
+    const auto          info     = &static_cast<ACSThread *>(thread)->info;
+    char const         *itemname = thread->scopeMap->getString(argV[0])->str;
+    const int           amount   = argV[1];
+    itemeffect_t *const item     = E_ItemEffectForName(itemname);
+
+    if(!item)
+    {
+        doom_printf("ACS_CF_GiveInventory: Inventory item '%s' not found\a\n", itemname);
+        return false;
+    }
+
+    // Handle negative amounts: treat as 0 (don't give anything)
+    if(amount <= 0)
+        return false;
+
+    auto giveToPlayer = [item, amount](player_t *player) {
+        switch(item->getInt("class", ITEMFX_NONE))
+        {
+        case ITEMFX_HEALTH: P_GiveBody(*player, item, amount); break;
+        case ITEMFX_ARMOR:  P_GiveArmor(*player, item, amount); break;
+        case ITEMFX_AMMO:   P_GiveAmmoPickup(*player, item, false, 0, amount); break;
+        case ITEMFX_POWER:  P_GivePowerForItem(*player, item, amount); break;
+        default:            E_GiveInventoryItem(*player, item, amount); break;
+        }
+    };
+
+    if(info->mo)
+    {
+        // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
+        if(info->mo->player)
+            giveToPlayer(info->mo->player);
+    }
+    else
+    {
+        for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
+        {
+            if(playeringame[pnum])
+                giveToPlayer(&players[pnum]);
+        }
+    }
     return false;
 }
 

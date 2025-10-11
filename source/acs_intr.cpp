@@ -150,8 +150,8 @@ ACSEnvironment::ACSEnvironment() : dir{ nullptr }, global{ getGlobalScope(0) }, 
     addCodeDataACS0(140, {"",        1, addCallFunc(ACS_CF_SetAirControl)});
     addCodeDataACS0(141, {"W",       0, addCallFunc(ACS_CF_SetAirControl)});
   //addCodeDataACS0(142, {"",        0, addCallFunc(ACS_CF_ClrInventory)});
-  //addCodeDataACS0(143, {"",        2, addCallFunc(ACS_CF_AddInventory)});
-  //addCodeDataACS0(144, {"WSW",     0, addCallFunc(ACS_CF_AddInventory)});
+    addCodeDataACS0(143, {"",        2, addCallFunc(ACS_CF_GiveInventory)});
+    addCodeDataACS0(144, {"WSW",     0, addCallFunc(ACS_CF_GiveInventory)});
     addCodeDataACS0(145, {"",        2, addCallFunc(ACS_CF_TakeInventory)});
     addCodeDataACS0(146, {"WSW",     0, addCallFunc(ACS_CF_TakeInventory)});
     addCodeDataACS0(147, {"",        1, addCallFunc(ACS_CF_CheckInventory)});
