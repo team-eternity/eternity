@@ -6,9 +6,23 @@ Features
 * Added support for the "author" property in UMAPINFO.
 * Added DEMOLOOP id24 lump support.
 * Added new ACS functions: GiveInventory, ClearInventory.
+* Added a parameter to A_VileTarget codepointer: thing type to spawn (defaults to the one with Dehackednum 5, i.e.
+  "VileFire" in Doom). Thanks to sink666 for the wish to have this parameter in the pull request.
+* Made A_VileAttack codepointer paremeterized. Added the following args:
+  - sound to play (default: sfx_barexp)
+  - initial damage (default: 20)
+  - blast damage (default: 70)
+  - blast radius (default: 70)
+  - thrust factor (default: 1.0)
+  - damage type for initial hit (default: actor's MOD)
+  - damage type for blast (default: actor's MOD)
+  Thanks to sink666 for the wish to have parameters in the pull request.
+* Added damage type (MOD) argument to A_BFGSpray (default: BFG_Splash).
 
 Bug fixes
 ---------
 * Fixed A_BFGSpray not using the parameter, and always being locked at 40 rays.
 * Fixed bad rendering of specially paletted PNG file for the Heretic episode 2 ending screen.
 * Fixed bad implementation of TakeInventory.
+* Fixed A_CustomPlayerMelee wrong implementation of the angle deflection argument. Now it properly avoid rotating player
+  if set to "none". Thanks to sink666's pull request for the catch.
