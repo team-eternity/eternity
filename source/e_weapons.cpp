@@ -430,7 +430,8 @@ BDListItem<weaponslot_t> *E_LastInSlot(const weaponslot_t *dummyslot)
 //
 static weaponslot_t *E_findEntryForWeaponInSlot(const weaponinfo_t *wp, const weaponslot_t *slot)
 {
-    if(slot == nullptr)
+    // BUGFIX - Prevent attempt to switch to null wp, otherwise the game will crash
+    if(slot == nullptr || wp == nullptr)
         return nullptr;
 
     auto baseslot = E_FirstInSlot(slot);
