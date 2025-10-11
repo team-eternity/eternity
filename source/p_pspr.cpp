@@ -1605,7 +1605,7 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
     // start sound
     P_WeaponSoundInfo(mo, sfx);
 
-    // turn to face target if nonzero
+    // turn to face target
     angle = P_PointToAngle(mo->x, mo->y, getThingX(mo, clip.linetarget), getThingY(mo, clip.linetarget));
 
     // apply chainsaw deflection if selected
