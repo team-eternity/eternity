@@ -1585,8 +1585,7 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
 
     angle = player->mo->angle;
 
-    if(deftype == 2 || deftype == 3)
-        angle += P_SubRandom(pr_custompunch) << 18;
+    angle += P_SubRandom(pr_custompunch) << 18;
 
     slope = P_DoAutoAim(mo, angle, range);
 
@@ -1607,10 +1606,12 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
     P_WeaponSoundInfo(mo, sfx);
 
     // turn to face target
-    player->mo->angle = P_PointToAngle(mo->x, mo->y, getThingX(mo, clip.linetarget), getThingY(mo, clip.linetarget));
+    angle = P_PointToAngle(mo->x, mo->y, getThingX(mo, clip.linetarget), getThingY(mo, clip.linetarget));
 
     // apply chainsaw deflection if selected
-    if(deftype == 3)
+    if(deftype == 2)
+        mo->angle = angle;
+    else if(deftype == 3)
     {
         if(angle - mo->angle > ANG180)
         {
