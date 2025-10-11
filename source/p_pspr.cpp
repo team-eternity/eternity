@@ -1539,13 +1539,12 @@ static argkeywd_t cpmkwds = { kwds_A_CustomPlayerMelee, earrlen(kwds_A_CustomPla
 // args[4] : sound to make (dehacked number)
 // args[5] : range
 // args[6] : pufftype
-// args[7] : enable face-to-target (when nonzero)
 //
 void A_CustomPlayerMelee(actionargs_t *actionargs)
 {
     angle_t    angle;
     fixed_t    slope;
-    int        damage, dmgfactor, dmgmod, berzerkmul, deftype, forceview;
+    int        damage, dmgfactor, dmgmod, berzerkmul, deftype;
     fixed_t    range;
     sfxinfo_t *sfx;
     Mobj      *mo = actionargs->actor;
@@ -1566,7 +1565,6 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
     sfx                  = E_ArgAsSound(args, 4);
     range                = E_ArgAsFixed(args, 5, MELEERANGE);
     const char *pufftype = E_ArgAsString(args, 6, nullptr);
-    forceview  = E_ArgAsInt(args, 7, 1);
 
     // adjust parameters
 
@@ -1587,8 +1585,7 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
 
     angle = player->mo->angle;
 
-    if(deftype == 2 || deftype == 3)
-        angle += P_SubRandom(pr_custompunch) << 18;
+    angle += P_SubRandom(pr_custompunch) << 18;
 
     slope = P_DoAutoAim(mo, angle, range);
 
@@ -1608,14 +1605,13 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
     // start sound
     P_WeaponSoundInfo(mo, sfx);
 
-   // turn to face target if nonzero
-    if(forceview)
-    {
-        player->mo->angle = P_PointToAngle(mo->x, mo->y, getThingX(mo, clip.linetarget), getThingY(mo, clip.linetarget));
-    }
+    // turn to face target if nonzero
+    angle = P_PointToAngle(mo->x, mo->y, getThingX(mo, clip.linetarget), getThingY(mo, clip.linetarget));
 
     // apply chainsaw deflection if selected
-    if(deftype == 3)
+    if(deftype == 2)
+        mo->angle = angle;
+    else if(deftype == 3)
     {
         if(angle - mo->angle > ANG180)
         {
