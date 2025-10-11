@@ -31,7 +31,6 @@
 
 // Required for pr_class_t:
 #include "m_random.h"
-#include "tables.h"
 
 struct actionargs_t;
 struct player_t;
@@ -50,8 +49,6 @@ void A_Pain(actionargs_t *actionargs);
 
 void P_CheckCustomBossActions(const Mobj &mo, const player_t &player);
 void P_ArchiveHereticWeapons(SaveArchive& arc);
-
-void P_DoBFGSpray(int raynum, const Mobj *mo, angle_t fov, int thingnum, int damroll, int mod);
 
 #endif
 

@@ -1815,38 +1815,6 @@ void A_SelfDestruct(actionargs_t *actionargs)
 }
 
 //
-// Common routine for the BFG spray effect, shared by multiple codepointers
-//
-void P_DoBFGSpray(int raynum, const Mobj *mo, angle_t fov, int thingnum, int damroll, int mod)
-{
-   for(int i = 0; i < raynum; i++)  // offset angles from its attack angle
-   {
-      int j, damage;
-      angle_t an = mo->angle - fov / 2 + fov / raynum * i;
-
-      // mo->target is the originator (player) of the missile
-
-      // killough 8/2/98: make autoaiming prefer enemies
-      if(demo_version < 203 ||
-         (P_AimLineAttack(mo->target, an, 16 * 64 * FRACUNIT, true),
-          !clip.linetarget))
-         P_AimLineAttack(mo->target, an, 16 * 64 * FRACUNIT, false);
-
-      if(!clip.linetarget)
-         continue;
-
-      P_SpawnMobj(clip.linetarget->x, clip.linetarget->y,
-                  clip.linetarget->z + (clip.linetarget->height >> 2),
-                  thingnum);
-
-      for(damage = j = 0; j < damroll; j++)
-         damage += (P_Random(pr_bfg) & 7) + 1;
-
-      P_DamageMobj(clip.linetarget, mo->target, mo->target, damage, mod);
-   }
-}
-
-//
 // A_BFGSprayEx
 //
 // Similar to ZDoom A_BFGSpray extensions.
@@ -1873,8 +1841,32 @@ void A_BFGSprayEx(actionargs_t *actionargs)
    //validate thingtype
    if(thingnum < 0)
       return;
-
-   P_DoBFGSpray(raynum, mo, fov, thingnum, damroll, mod);
+   
+   for(int i = 0; i < raynum; i++)  // offset angles from its attack angle
+   {
+      int j, damage;
+      angle_t an = mo->angle - fov/2 + fov/raynum*i;
+      
+      // mo->target is the originator (player) of the missile
+      
+      // killough 8/2/98: make autoaiming prefer enemies
+      if(demo_version < 203 ||
+         (P_AimLineAttack(mo->target, an, 16*64*FRACUNIT, true),
+         !clip.linetarget))
+         P_AimLineAttack(mo->target, an, 16*64*FRACUNIT, false);
+      
+      if(!clip.linetarget)
+         continue;
+      
+      P_SpawnMobj(clip.linetarget->x, clip.linetarget->y,
+                  clip.linetarget->z + (clip.linetarget->height>>2),
+                  thingnum);
+      
+      for(damage = j = 0; j < damroll; j++)
+         damage += (P_Random(pr_bfg)&7) + 1;
+      
+      P_DamageMobj(clip.linetarget, mo->target, mo->target, damage, mod);
+   }
 }
 
 //
