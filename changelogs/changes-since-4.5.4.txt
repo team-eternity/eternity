@@ -5,7 +5,7 @@ Features
 --------
 * Added support for the "author" property in UMAPINFO.
 * Added DEMOLOOP id24 lump support.
-* Added new ACS function: GiveInventory.
+* Added new ACS functions: GiveInventory, ClearInventory.
 
 Bug fixes
 ---------
