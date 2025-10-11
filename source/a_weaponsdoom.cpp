@@ -35,6 +35,7 @@
 #include "d_mod.h"
 #include "e_args.h"
 #include "e_inventory.h"
+#include "e_mod.h"
 #include "e_player.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -470,6 +471,7 @@ void A_BFGBurst(actionargs_t *actionargs); // haleyjd
 // * args[2] = iterations used to calculate data per ray
 // * args[3] = horizontal field of view of spray
 // * args[4] = maximum distance for each tracer
+// * args[5] = damage type (default MOD_BFG_SPLASH)
 //
 void A_BFGSpray(actionargs_t *actionargs)
 {
@@ -489,6 +491,7 @@ void A_BFGSpray(actionargs_t *actionargs)
     const int     damageCount = E_ArgAsInt(actionargs->args, 2, 15);
     const angle_t fov         = E_ArgAsAngle(actionargs->args, 3, ANG90);
     const fixed_t maxDist     = E_ArgAsFixed(actionargs->args, 4, 16 * 64 * FRACUNIT);
+    const int     damageType  = E_ArgAsDamageType(actionargs->args, 5, MOD_BFG_SPLASH)->num;
 
     Mobj *mo = actionargs->actor;
 
@@ -512,7 +515,7 @@ void A_BFGSpray(actionargs_t *actionargs)
         for(damage = j = 0; j < damageCount; j++)
             damage += (P_Random(pr_bfg) & 7) + 1;
 
-        P_DamageMobj(clip.linetarget, mo->target, mo->target, damage, MOD_BFG_SPLASH);
+        P_DamageMobj(clip.linetarget, mo->target, mo->target, damage, damageType;
     }
 }
 
