@@ -2651,6 +2651,43 @@ bool ACS_CF_StopSound(ACS_CF_ARGS)
 }
 
 //
+// void GiveInventory(str itemname, int amount);
+//
+bool ACS_CF_GiveInventory(ACS_CF_ARGS)
+{
+    const auto          info     = &static_cast<ACSThread *>(thread)->info;
+    char const         *itemname = thread->scopeMap->getString(argV[0])->str;
+    const int           amount   = argV[1];
+    itemeffect_t *const item     = E_ItemEffectForName(itemname);
+
+    if(!item)
+    {
+        doom_printf("ACS_CF_GiveInventory: Inventory item '%s' not found\a\n", itemname);
+        return false;
+    }
+
+    // Handle negative amounts: treat as 0 (don't give anything)
+    if(amount <= 0)
+        return false;
+
+    if(info->mo)
+    {
+        // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
+        if(info->mo->player)
+            E_GiveInventoryItem(*info->mo->player, item, amount);
+    }
+    else
+    {
+        for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
+        {
+            if(playeringame[pnum])
+                E_GiveInventoryItem(players[pnum], item, amount);
+        }
+    }
+    return false;
+}
+
+//
 // void TakeInventory(str itemname, int amount);
 //
 bool ACS_CF_TakeInventory(ACS_CF_ARGS)
