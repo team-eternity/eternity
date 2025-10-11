@@ -25,13 +25,13 @@
 
 #include "a_args.h"
 #include "a_common.h"
-#include "a_doom.h" //sinku 14032024; for A_Fire access
 #include "acs_intr.h"
 #include "c_io.h"
 #include "d_gi.h"
 #include "d_mod.h"
 #include "doomstat.h"
 #include "e_args.h"
+#include "e_mod.h"
 #include "e_sound.h"
 #include "e_states.h"
 #include "e_string.h"
@@ -1717,7 +1717,6 @@ void A_SelfDestruct(actionargs_t *actionargs)
     else
         A_Die(actionargs);
 }
-
 
 // EOF
 
