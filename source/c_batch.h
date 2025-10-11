@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,22 +15,21 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Batched console commands.
+// Purpose: Batched console commands.
+// Authors: James Haley, Charles Gunyon
 //
-//----------------------------------------------------------------------------
 
 #ifndef C_BATCH__
 #define C_BATCH__
 
-void          C_ActivateCommandBatch();
-void          C_AddCommandBatch(const char *name, const char *commands);
-const char*   C_GetCommandBatch(const char *name);
-void          C_CommandBatchTicker();
-bool          C_CommandIsBatch(const char *name);
-void          C_SaveCommandBatches(FILE *file);
+void        C_ActivateCommandBatch();
+void        C_AddCommandBatch(const char *name, const char *commands);
+const char *C_GetCommandBatch(const char *name);
+void        C_CommandBatchTicker();
+bool        C_CommandIsBatch(const char *name);
+void        C_SaveCommandBatches(FILE *file);
 
 #endif
 

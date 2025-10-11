@@ -1,10 +1,10 @@
 ===============================================================================
-Title                   : The Eternity Engine v4.04.02 "Glitnir" Update 2
-Filename                : ee-4.04.02-win64.zip, ee-4.04.02-win32.zip,
-                          ee-4.04.02-win-legacy.zip,
-                          ee-4.04.02-macos-applesilicon.dmg,
-                          ee-4.04.02-macos-intel.dmg,
-Release date            : 2024-11-18
+Title                   : The Eternity Engine v4.05.04 "Citadel"
+Filename                : ee-4.05.04-win64.zip, ee-4.05.04-win32.zip,
+                          ee-4.05.04-win-legacy.zip,
+                          ee-4.05.04-macos-applesilicon.dmg,
+                          ee-4.05.04-macos-intel.dmg,
+Release date            : 2025-08-23
 Author                  : Team Eternity:
                           Ioan Chera,
                           James "Quasar" Haley,
@@ -250,28 +250,41 @@ with any concerns.
 
 
 ===============================================================================
-* Features New to Version 4.04.02 *
+* Features New to Version 4.05.04 *
 
 Bug fixes and quality of life improvements:
 
-* Multithreaded rendering now renders very wide sprites properly (such as the
-  trees in Eviternity 2 MAP14).
-* Confirmation yes/no views (such as for quitting) now accept non-QWERTY
-  keyboard layouts for 'y' and 'n', i.e. the same keys which under QWERTY would
-  be 'y' or 'n' will also work.
-* Do not terminate suddenly if user put flag names in the MBF21 flag
-  codepointer. Just display an in-game error message with sound. Also, the
-  message is more accurate.
-* Explosions now trigger splashes on BOOM deep water surfaces by comparing their
-  heights to the water surface, not to the solid surface beneath.
-* Splash terrain types now work with portal overlays.
-* Heretic Fire Mace projectiles now blow up when hitting anything under Boom
-  water, without bouncing, so as to behave consistently with shallow Heretic
-  water. Currently this doesn't apply to linked portal water however.
-* A_SetFlags, A_UnsetFlags, A_AddFlags and A_RemoveFlags now handle NOSECTOR and
-  NOBLOCKMAP in a stable manner.
+* New lindef parameterized special: Sector_ChangeFlags. Only the flags supported by Eternity are available.
 
-For actual bug fixes, see the end of this document.
+* The ThrustThing linedef special now uses its third parameter: "nolimit" to allow speeds greater than 30.
+
+* New ACS function: SetLineActivation.
+
+* Automap improvements: now you can zoom in with the mouse wheel on the automap. You also have the option to hide all 
+  stats from both the automap and the overlay HUD, and hu_hidesecrets only hides secrets. Special thanks to 
+  SarahCosmosys for the contribution!
+  + New console variable for this purpose: hu_hidestats.
+
+* Now the 'gib' state of the crushed corpses is customizable in EDF in the following ways:
+  + in EDF `thingtype`, using the `crunchstate` property;
+  + in EDF `thingtype` DECORATE-style `state` definition, using either the `Crunch:` or `Crush:` label (the latter is on 
+    par with the name from ZDoom).
+  If unspecified, it will default to the game mode behavior: change to S_GIBS in Doom, or do not change in Heretic. 
+  Thanks to sink666 for the implementation!
+
+* Frames with dehackednums 1085-1088 are now defined as placeholders just like the DEHEXTRA set, because some mods would
+  error out in Eternity but not in other ports. Thanks to aaaqqqddd for the heads-up.
+
+* EDF startup warnings are now always displayed, no more need for -edf-show-warnings.
+
+* Added EDF startup warning in case of missing skinsprite, or one which user didn't add to spritenames.
+
+* macOS: now all the files available in the "add file" dialog box are available for drag-dropping or "opening with" from 
+  Finder.
+
+* Minor improvements with portal error messages.
+
+For bug fixes, see the end of this document.
 
 ===============================================================================
 * Coming Soon *
@@ -282,6 +295,7 @@ These are features planned to debut in future versions of the Eternity Engine:
 
   ** ID24 standards support
   ** Aeon scripting system
+  Heretic 2025 Re-Release Support
   Hexen Support
   Strife Support                         (In progress)
   PSX Doom support                       (In progress)
@@ -298,6 +312,10 @@ These are features planned to debut in future versions of the Eternity Engine:
 * Revision History *
 
 * Dates are in mm/dd/yy *
+
+4.05.04 "Citadel" -- 8/23/25
+
+  Bug fix and feature release.
 
 4.04.02 "Glitnir" Update 2 -- 11/18/24
 
@@ -507,15 +525,34 @@ These are features planned to debut in future versions of the Eternity Engine:
 ===============================================================================
 * Bugs Fixed, Known Issues *
 
-Bugs Fixed (between 4.04.01 and 4.04.02):
+Bugs Fixed (between 4.04.02 and 4.05.04):
 
-* Fixed A_JumpIfFlagsSet as it was completely broken.
-* Fixed wrong defaults in A_WeaponBulletAttack.
-* A_SkullRodStorm wasn't line portal aware.
-* Fixed UMAPINFO not recognizing spec-defined Deh_Actor_145 to Deh_Actor_249
+* Fixed crash happening when changing multithreaded rendering number of threads before demos start.
+* Fixed sprite glitching shortly followed by crash when starting with multithreaded renderer on a small view, and then 
+  increasing the view.
+* Fixed strange failure to start, happening on some Windows installations because of changes in the runtime.
+  (issue here:
+  https://stackoverflow.com/questions/78598141/first-stdmutexlock-crashes-in-application-built-with-latest-visual-studio)
+* Fixed bug with UDMF attached surfaces happening on unrelated sectors.
+* Fixed sudden termination due to "texture not cached" when playing back multiple level demos, or when the r_precache 
+  cvar was off.
+* Dehacked patch Frame omitted Args* fields didn't resolve to defaults, but 0. This was wrong compared to how ports such 
+  as DSDA-DOOM should handle it.
+* Fixed A_ConsumeAmmo bug when specifying 0 (ammo per shot) ammo.
+* A_BFGSpray no longer crashes when used on a non-projectile thing which didn't acquire an enemy yet. This makes it 
+  compatible with vanilla DOOM Dehacked mods which can use this codepointer liberally.
+* Fixed bug with player melee attacks not being portal aware when adjusting angle towards target.
+* Fixed slopes blocking access when on the other side of one-sided linedef wall portals. 
+* Fixed wrong 3dmidtex physics when on sloped lines.
+* Fixed imprecise dynaseg splitting at high XY coordinates, with bad side effects such as polyobject portal infinite 
+  rendering recursion (and the "refused to draw portal" error popping up).
+* Fixed wrong sprite sector portal clipping when scaled differently from 1.
+* Fixed a possibly harmless access violation happening when rendering middle textures at a certain distance.
+* Fixed phantom sprite cloning when moving in a polyobject cabin with floor and ceiling portals also going outside.
+* Fixed demo desync caused by missing par time counter in the intermission.
+* Fixed harmless access violation happening in demos when getting harmed or killed by a destroyed lost soul.
 
-
-Known Issues in v4.04.02:
+Known Issues in v4.05.04:
 
 - Moving polyobject portal movement is not interpolated yet.
 
@@ -532,5 +569,3 @@ Known Issues in v4.04.02:
 
 - Some momentary interpolation glitches occur when an attached horizontal
   portal surface passes through you.
-
-- There are still known vanilla Heretic demos which desync.

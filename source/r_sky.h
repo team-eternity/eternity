@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Sky rendering.
+// Purpose: Sky rendering.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef R_SKY_H__
 #define R_SKY_H__
@@ -32,53 +30,50 @@
 #include "m_fixed.h"
 
 // The sky map is 256*128*4 maps.
-#define ANGLETOSKYSHIFT         22
+static constexpr int ANGLETOSKYSHIFT = 22;
 
 // Necessary height of sky to prevent stretching for looking up
-enum
-{
-   SKY_FREELOOK_HEIGHT = 200,
-};
+static constexpr int SKY_FREELOOK_HEIGHT = 200;
 
 // haleyjd: information on sky flats
 struct skyflat_t
 {
-   // static information (specified via GameModeInfo)
-   const char *flatname;   // flat name
-   const char *deftexture; // default texture, if any (may be null)
+    // static information (specified via GameModeInfo)
+    const char *flatname;   // flat name
+    const char *deftexture; // default texture, if any (may be null)
 
-   // runtime information
-   int flatnum;      // corresponding flat number
-   int texture;      // looked-up wall texture number from directory
-   int columnoffset; // scrolling info
+    // runtime information
+    int flatnum;      // corresponding flat number
+    int texture;      // looked-up wall texture number from directory
+    int columnoffset; // scrolling info
 };
 
 // haleyjd: hashed sky texture information
 
-#define NUMSKYCHAINS 13
+static constexpr int NUMSKYCHAINS = 13;
 
 struct skytexture_t
 {
-   int     texturenum; // hash key
-   int     height;     // true height of texture
-   fixed_t texturemid; // vertical offset
-   skytexture_t *next; // next skytexture in hash chain
-   byte medianColor; // median color for fading high pitch view of sky
+    int           texturenum;  // hash key
+    int           height;      // true height of texture
+    fixed_t       texturemid;  // vertical offset
+    skytexture_t *next;        // next skytexture in hash chain
+    byte          medianColor; // median color for fading high pitch view of sky
 };
 
-extern int stretchsky;  // DEPRECATED
+extern int stretchsky; // DEPRECATED
 
 // init sky at start of level
 void R_StartSky();
 
 // sky texture info hashing functions
-void R_CacheSkyTexture(int);
-void R_CacheIfSkyTexture(int, int);
-void R_CacheSkyTextureAnimFrame(int, int);
+void          R_CacheSkyTexture(int);
+void          R_CacheIfSkyTexture(int, int);
+void          R_CacheSkyTextureAnimFrame(int, int);
 skytexture_t *R_GetSkyTexture(int);
-void R_ClearSkyTextures();
+void          R_ClearSkyTextures();
 
-bool R_IsSkyFlat(int picnum);
+bool       R_IsSkyFlat(int picnum);
 skyflat_t *R_SkyFlatForIndex(int skynum);
 skyflat_t *R_SkyFlatForPicnum(int picnum);
 

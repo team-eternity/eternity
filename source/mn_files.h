@@ -1,5 +1,11 @@
 //
-// Copyright(C) 2019 Simon Howard, James Haley, et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
+//
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
+//
+// Copyright (C) 2019 Simon Howard
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,8 +20,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// Purpose: Menu file selector
-//  eg. For selecting a wad to load or demo to play
+//------------------------------------------------------------------------------
+//
+// Purpose: Menu file selector,
+//  eg. For selecting a wad to load or demo to play.
 //
 // Authors: Simon Howard, James Haley
 //
@@ -25,23 +33,20 @@
 
 struct mndir_t
 {
-   const char *dirpath; // physical file system path of directory
-   char **filenames;    // array of file names
-   int  numfiles;       // number of files
-   int  numfilesalloc;  // number of files allocated
+    const char *dirpath;       // physical file system path of directory
+    char      **filenames;     // array of file names
+    int         numfiles;      // number of files
+    int         numfilesalloc; // number of files allocated
 };
 
 extern char *wad_directory;
 extern char *mn_wadname;
 
-int MN_ReadDirectory(mndir_t *dir, const char *read_dir, 
-                     const char *const *read_wildcards, 
-                     size_t numwildcards, bool allowsubdirs);
+int  MN_ReadDirectory(mndir_t *dir, const char *read_dir, const char *const *read_wildcards, size_t numwildcards,
+                      bool allowsubdirs);
 void MN_ClearDirectory(mndir_t *dir);
 
-void MN_DisplayFileSelector(mndir_t *dir, const char *title, 
-                            const char *command, bool dismissOnSelect,
-                            bool allowExit);
+void MN_DisplayFileSelector(mndir_t *dir, const char *title, const char *command, bool dismissOnSelect, bool allowExit);
 
 #endif
 

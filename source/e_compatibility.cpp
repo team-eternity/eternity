@@ -1,5 +1,6 @@
 //
-// Copyright (C) 2020 James Haley, Max Waine, Ioan Chera et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley, Max Waine, Ioan Chera et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,7 +18,7 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
 // Purpose: EDF compatibility WAD support
 // Authors: Ioan Chera
@@ -37,95 +38,95 @@ constexpr const char ITEM_COMPATIBILITY_HASHES[]  = "hashes";
 constexpr const char ITEM_COMPATIBILITY_ENABLE[]  = "on";
 constexpr const char ITEM_COMPATIBILITY_DISABLE[] = "off";
 
-
 // The EDF-set table
 static MetaTable ontable;
 static MetaTable offtable;
+
+// clang-format off
 
 //
 // The fields
 //
 cfg_opt_t edf_compatibility_opts[] =
 {
-   CFG_STR(ITEM_COMPATIBILITY_HASHES,  nullptr, CFGF_LIST),
-   CFG_STR(ITEM_COMPATIBILITY_ENABLE,  nullptr, CFGF_LIST),
-   CFG_STR(ITEM_COMPATIBILITY_DISABLE, nullptr, CFGF_LIST),
+    CFG_STR(ITEM_COMPATIBILITY_HASHES,  nullptr, CFGF_LIST),
+    CFG_STR(ITEM_COMPATIBILITY_ENABLE,  nullptr, CFGF_LIST),
+    CFG_STR(ITEM_COMPATIBILITY_DISABLE, nullptr, CFGF_LIST),
 
-   CFG_END()
+    CFG_END()
 };
 
-static int s_overridden[NUM_overridableSetting];
-static bool s_overrideEnabled[NUM_overridableSetting];
-static int *const sk_overrideTarget[NUM_overridableSetting] =
-{
-   &sts_traditional_keys
-};
+// clang-format on
+
+static int        s_overridden[NUM_overridableSetting];
+static bool       s_overrideEnabled[NUM_overridableSetting];
+static int *const sk_overrideTarget[NUM_overridableSetting] = { &sts_traditional_keys };
 
 //
 // Processes a compatibility item
 //
-static void E_processCompatibility(cfg_t *cfg, cfg_t* compatibility)
+static void E_processCompatibility(cfg_t *cfg, cfg_t *compatibility)
 {
-   unsigned hashCount = cfg_size(compatibility, ITEM_COMPATIBILITY_HASHES);
-   unsigned onsettingCount = cfg_size(compatibility, ITEM_COMPATIBILITY_ENABLE);
-   unsigned offsettingCount = cfg_size(compatibility, ITEM_COMPATIBILITY_DISABLE);
+    unsigned hashCount       = cfg_size(compatibility, ITEM_COMPATIBILITY_HASHES);
+    unsigned onsettingCount  = cfg_size(compatibility, ITEM_COMPATIBILITY_ENABLE);
+    unsigned offsettingCount = cfg_size(compatibility, ITEM_COMPATIBILITY_DISABLE);
 
-   if(!hashCount || (!onsettingCount && !offsettingCount))
-      return;
+    if(!hashCount || (!onsettingCount && !offsettingCount))
+        return;
 
-   for(unsigned hashIndex = 0; hashIndex < hashCount; ++hashIndex)
-   {
-      const char *hash = cfg_getnstr(compatibility, ITEM_COMPATIBILITY_HASHES, hashIndex);
-      for(unsigned settingIndex = 0; settingIndex < onsettingCount; ++settingIndex)
-      {
-         const char *setting = cfg_getnstr(compatibility, ITEM_COMPATIBILITY_ENABLE, settingIndex);
+    for(unsigned hashIndex = 0; hashIndex < hashCount; ++hashIndex)
+    {
+        const char *hash = cfg_getnstr(compatibility, ITEM_COMPATIBILITY_HASHES, hashIndex);
+        for(unsigned settingIndex = 0; settingIndex < onsettingCount; ++settingIndex)
+        {
+            const char *setting = cfg_getnstr(compatibility, ITEM_COMPATIBILITY_ENABLE, settingIndex);
 
-         bool found = false;
-         MetaString *metaSetting = nullptr;
-         while((metaSetting = ontable.getNextKeyAndTypeEx(metaSetting, hash)))
-         {
-            if(!strcasecmp(metaSetting->getValue(), setting))
+            bool        found       = false;
+            MetaString *metaSetting = nullptr;
+            while((metaSetting = ontable.getNextKeyAndTypeEx(metaSetting, hash)))
             {
-               found = true;
-               break;
+                if(!strcasecmp(metaSetting->getValue(), setting))
+                {
+                    found = true;
+                    break;
+                }
             }
-         }
 
-         if(!found)
-            ontable.addString(hash, setting);
-      }
-      for(unsigned settingIndex = 0; settingIndex < offsettingCount; ++settingIndex)
-      {
-         const char *setting = cfg_getnstr(compatibility, ITEM_COMPATIBILITY_DISABLE, settingIndex);
+            if(!found)
+                ontable.addString(hash, setting);
+        }
+        for(unsigned settingIndex = 0; settingIndex < offsettingCount; ++settingIndex)
+        {
+            const char *setting = cfg_getnstr(compatibility, ITEM_COMPATIBILITY_DISABLE, settingIndex);
 
-         bool found = false;
-         MetaString *metaSetting = nullptr;
-         while((metaSetting = offtable.getNextKeyAndTypeEx(metaSetting, hash)))
-         {
-            if(!strcasecmp(metaSetting->getValue(), setting))
+            bool        found       = false;
+            MetaString *metaSetting = nullptr;
+            while((metaSetting = offtable.getNextKeyAndTypeEx(metaSetting, hash)))
             {
-               found = true;
-               break;
+                if(!strcasecmp(metaSetting->getValue(), setting))
+                {
+                    found = true;
+                    break;
+                }
             }
-         }
 
-         if(!found)
-            offtable.addString(hash, setting);
-      }
-   }
+            if(!found)
+                offtable.addString(hash, setting);
+        }
+    }
 }
 
 //
 // Process WAD compatibility
 //
-void E_ProcessCompatibilities(cfg_t* cfg)
+void E_ProcessCompatibilities(cfg_t *cfg)
 {
-   unsigned count = cfg_size(cfg, EDF_SEC_COMPATIBILITY);
-   for(unsigned i = 0; i < count; ++i)
-   {
-      cfg_t* compatibility = cfg_getnsec(cfg, EDF_SEC_COMPATIBILITY, i);
-      E_processCompatibility(cfg, compatibility);
-   }
+    unsigned count = cfg_size(cfg, EDF_SEC_COMPATIBILITY);
+    for(unsigned i = 0; i < count; ++i)
+    {
+        cfg_t *compatibility = cfg_getnsec(cfg, EDF_SEC_COMPATIBILITY, i);
+        E_processCompatibility(cfg, compatibility);
+    }
 }
 
 //
@@ -133,10 +134,10 @@ void E_ProcessCompatibilities(cfg_t* cfg)
 //
 void E_RestoreCompatibilities()
 {
-   memset(level_compat_comp, 0, sizeof(level_compat_comp));
-   memset(level_compat_compactive, 0, sizeof(level_compat_compactive));
-   memset(s_overridden, 0, sizeof(s_overridden));
-   memset(s_overrideEnabled, 0, sizeof(s_overrideEnabled));
+    memset(level_compat_comp, 0, sizeof(level_compat_comp));
+    memset(level_compat_compactive, 0, sizeof(level_compat_compactive));
+    memset(s_overridden, 0, sizeof(s_overridden));
+    memset(s_overrideEnabled, 0, sizeof(s_overrideEnabled));
 }
 
 //
@@ -147,33 +148,33 @@ void E_RestoreCompatibilities()
 //
 static void E_setItem(const char *name, bool enable)
 {
-   extern const char *comp_strings[];
+    extern const char *comp_strings[];
 
-   if(!strcasecmp(name, "sts_traditional_keys"))
-   {
-      s_overrideEnabled[overridableSetting_stsTraditionalKeys] = true;
-      s_overridden[overridableSetting_stsTraditionalKeys] = enable ? 1 : 0;
-      return;
-   }
+    if(!strcasecmp(name, "sts_traditional_keys"))
+    {
+        s_overrideEnabled[overridableSetting_stsTraditionalKeys] = true;
+        s_overridden[overridableSetting_stsTraditionalKeys]      = enable ? 1 : 0;
+        return;
+    }
 
-   // Look in the list of comp strings
-   if(demo_version >= 401 && !strncasecmp(name, "comp_", 5))
-   {
-      for(int i = 0; i < COMP_NUM_USED; ++i)
-      {
-         if(!strcasecmp(name + 5, comp_strings[i]))
-         {
-            level_compat_compactive[i] = true;
-            level_compat_comp[i] = enable ? 1 : 0;
-            return;
-         }
-      }
-      if(!strcasecmp(name, "comp_jump"))  // the only badly named entry
-      {
-         level_compat_compactive[comp_jump] = true;
-         level_compat_comp[comp_jump] = enable ? 1 : 0;
-      }
-   }
+    // Look in the list of comp strings
+    if(demo_version >= 401 && !strncasecmp(name, "comp_", 5))
+    {
+        for(int i = 0; i < COMP_NUM_USED; ++i)
+        {
+            if(!strcasecmp(name + 5, comp_strings[i]))
+            {
+                level_compat_compactive[i] = true;
+                level_compat_comp[i]       = enable ? 1 : 0;
+                return;
+            }
+        }
+        if(!strcasecmp(name, "comp_jump")) // the only badly named entry
+        {
+            level_compat_compactive[comp_jump] = true;
+            level_compat_comp[comp_jump]       = enable ? 1 : 0;
+        }
+    }
 }
 
 //
@@ -181,14 +182,14 @@ static void E_setItem(const char *name, bool enable)
 //
 void E_ApplyCompatibility(const char *digest)
 {
-   E_RestoreCompatibilities();
+    E_RestoreCompatibilities();
 
-   MetaString *metaSetting = nullptr;
-   while((metaSetting = ontable.getNextKeyAndTypeEx(metaSetting, digest)))
-      E_setItem(metaSetting->getValue(), true);
-   metaSetting = nullptr;
-   while((metaSetting = offtable.getNextKeyAndTypeEx(metaSetting, digest)))
-      E_setItem(metaSetting->getValue(), false);
+    MetaString *metaSetting = nullptr;
+    while((metaSetting = ontable.getNextKeyAndTypeEx(metaSetting, digest)))
+        E_setItem(metaSetting->getValue(), true);
+    metaSetting = nullptr;
+    while((metaSetting = offtable.getNextKeyAndTypeEx(metaSetting, digest)))
+        E_setItem(metaSetting->getValue(), false);
 }
 
 //
@@ -196,7 +197,7 @@ void E_ApplyCompatibility(const char *digest)
 //
 int E_Get(overridableSetting_e setting)
 {
-   return s_overrideEnabled[setting] ? s_overridden[setting] : *sk_overrideTarget[setting];
+    return s_overrideEnabled[setting] ? s_overridden[setting] : *sk_overrideTarget[setting];
 }
 
 // EOF

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Intermission.
+// Purpose: Intermission.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef WI_STUFF_H__
 #define WI_STUFF_H__
@@ -32,10 +30,10 @@
 
 enum stateenum_t
 {
-   NoState = -1,
-   StatCount,
-   ShowNextLoc,
-   IntrEnding, // haleyjd 03/16/06: fix for bug fraggle found
+    NoState = -1,
+    StatCount,
+    ShowNextLoc,
+    IntrEnding, // haleyjd 03/16/06: fix for bug fraggle found
 };
 
 // haleyjd: DOOM intermission object

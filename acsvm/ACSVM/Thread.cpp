@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015-2017 David Hill
+// Copyright (C) 2015-2025 David Hill
 //
 // See COPYING for license information.
 //
@@ -107,7 +107,7 @@ namespace ACSVM
 
       countFull = ReadVLN<std::size_t>(in);
       count     = ReadVLN<std::size_t>(in);
-      in.in->read(printBuf.getLoadBuf(countFull, count), countFull);
+      in.read(printBuf.getLoadBuf(countFull, count), countFull);
 
       state.state = static_cast<ThreadState::State>(ReadVLN<int>(in));
       state.data = ReadVLN<Word>(in);
@@ -204,7 +204,7 @@ namespace ACSVM
 
       WriteVLN(out, printBuf.sizeFull());
       WriteVLN(out, printBuf.size());
-      out.out->write(printBuf.dataFull(), printBuf.sizeFull());
+      out.write(printBuf.dataFull(), printBuf.sizeFull());
 
       WriteVLN<int>(out, state.state);
       WriteVLN(out, state.data);

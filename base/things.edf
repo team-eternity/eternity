@@ -1,13 +1,13 @@
-// 
+//
 // things.edf
-// 
+//
 // EDF for Eternity Engine v3.40.50
 //
 // thingtypes define monsters, fireballs, decorations, etc.
 // thingtypes may be defined elsewhere, and order is unimportant.
 // User-defined thing types should use DoomEd numbers greater than 20000, and
 // DeHackEd numbers greater than 10000 in all cases, to remain compatible with
-// future versions of Eternity. See the EDF documentation for important 
+// future versions of Eternity. See the EDF documentation for important
 // information on the format of thingtype fields.
 //
 
@@ -35,9 +35,9 @@ includeifenabled("heretic/things.edf", "HERETIC")
 thingtype _AdditiveDehackedThingtypeTemplate {}
 
 //
-// TeleportSpot 
+// TeleportSpot
 //
-// This is the object used to tag line-to-thing teleport exit spots. It is 
+// This is the object used to tag line-to-thing teleport exit spots. It is
 // shared by all gamemodes.
 //
 
@@ -85,7 +85,7 @@ thingtype MBFHelperDog : Mobj, 888, 140
   deathsound  dgdth
   cflags      SOLID|SHOOTABLE|COUNTKILL|JUMPDOWN|FOOTCLIP|SPACMONSTER|PASSMOBJ|AUTOTRANSLATE
   obituary_melee "was chased down by a rabid puppy"
-  
+
   firstdecoratestate S_DOGS_STND
   states
   @"
@@ -198,7 +198,7 @@ thingtype EEMapSpotGravity : Mobj, 9013, 1053
 
 // Particle fountains (9027 - 9033)
 
-thingtype EEParticleFountain 
+thingtype EEParticleFountain
 {
   spawnstate S_TNT1
   height     0.0
@@ -339,20 +339,20 @@ thingtype EESectorActionEnter : EESectorActionProto, 9998
 
 // Eternity TC Objects ---------------------------------------------------------
 
-// WARNING: NONE of the thingtypes below here are considered documented, and 
+// WARNING: NONE of the thingtypes below here are considered documented, and
 // many are subject to future removal -- most are left-over from Eternity TC
 // development and have not been removed because they use potentially useful
 // code that may be generalized for editor use. DO NOT depend upon the presence,
 // availability, or DeHackEd number of any object below this point.
 
-thingtype ETCFogSpawner 
+thingtype ETCFogSpawner
 {
   spawnstate  S_SPAWNFOG1
   flags       NOBLOCKMAP
   flags2      NOTHRUST|FLOATBOB|DONTDRAW
 }
 
-thingtype ETCSmallFog 
+thingtype ETCSmallFog
 {
   spawnstate  S_FOGPATCHS1
   deathstate  S_FOGPATCHS0
@@ -360,7 +360,7 @@ thingtype ETCSmallFog
   flags       NOBLOCKMAP|NOGRAVITY|NOCLIP|FLOAT|TRANSLUCENT
 }
 
-thingtype ETCMediumFog 
+thingtype ETCMediumFog
 {
   spawnstate  S_FOGPATCHM1
   deathstate  S_FOGPATCHM0
@@ -368,7 +368,7 @@ thingtype ETCMediumFog
   flags       NOBLOCKMAP|NOGRAVITY|NOCLIP|FLOAT|TRANSLUCENT
 }
 
-thingtype ETCLargeFog 
+thingtype ETCLargeFog
 {
   spawnstate  S_FOGPATCHL1
   deathstate  S_FOGPATCHL0
@@ -376,7 +376,7 @@ thingtype ETCLargeFog
   flags       NOBLOCKMAP|NOGRAVITY|NOCLIP|FLOAT|TRANSLUCENT
 }
 
-thingtype ETCTotalInvisiSphere 
+thingtype ETCTotalInvisiSphere
 {
   spawnstate  S_PNS2_1
   flags       SPECIAL|COUNTITEM|TRANSLUCENT
@@ -393,7 +393,7 @@ thingtype ETCTotalInvisiSphere
 // Normal damagetypes
 
 damagetype Fist       { num  1; obituary "$OB_FIST"       }
-damagetype Pistol     { num  2; obituary "$OB_PISTOL"     } 
+damagetype Pistol     { num  2; obituary "$OB_PISTOL"     }
 damagetype Shotgun    { num  3; obituary "$OB_SHOTGUN"    }
 damagetype Chaingun   { num  4; obituary "$OB_CHAINGUN"   }
 damagetype Plasma     { num  7; obituary "$OB_PLASMA"     }
@@ -419,7 +419,7 @@ damagetype Quake    { num 26; obituary "$OB_QUAKE";    sourceless true }
 // Damage types that can kill oneself, and thus have a special message for it.
 
 damagetype Rocket
-{ 
+{
    num 5
    obituary     "$OB_ROCKET"
    obituaryself "$OB_ROCKET_SELF"
@@ -435,7 +435,7 @@ damagetype R_Splash
 damagetype BFG11k_Splash { num 21; obituaryself "$OB_BFG11K_SELF" }
 
 damagetype Grenade
-{ 
+{
    num 25
    obituary     "$OB_GRENADE"
    obituaryself "$OB_GRENADE_SELF"
@@ -447,7 +447,7 @@ damagetype Grenade
 damagetype Hit        { num 20 }
 damagetype PlayerMisc { num 24 }
 
-// These damagetypes are special in that things with certain flag values will 
+// These damagetypes are special in that things with certain flag values will
 // inflict them regardless of the value of their mod field.
 
 damagetype Fire { num 27 }

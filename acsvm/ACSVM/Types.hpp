@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015-2017 David Hill
+// Copyright (C) 2015-2025 David Hill
 //
 // See COPYING for license information.
 //
@@ -15,6 +15,7 @@
 
 #include <cinttypes>
 #include <cstddef>
+#include <functional>
 
 
 //----------------------------------------------------------------------------|
@@ -75,6 +76,7 @@ namespace ACSVM
    class WordInit;
 
    using CallFunc = bool (*)(Thread *thread, Word const *argv, Word argc);
+   using ScriptStartFunc = std::function<void (Thread *)>;
 }
 
 #endif//ACSVM__Types_H__

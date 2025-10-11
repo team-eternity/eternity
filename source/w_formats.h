@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Resource archive file formats
+// Purpose: Resource archive file formats.
+// Authors: James Haley, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef W_FORMATS_H__
 #define W_FORMATS_H__
@@ -33,15 +31,15 @@ class qstring;
 
 FILE *W_TryOpenFile(qstring &filename, bool allowInexact);
 
-typedef enum
+enum WResourceFmt
 {
-   W_FORMAT_WAD,  // id wadlink file (IWAD or PWAD)
-   W_FORMAT_ZIP,  // PKZip archive (aka pk3)
-   W_FORMAT_FILE, // An ordinary flat physical file
-   W_FORMAT_DIR,  // PKE-like directory
-   
-   W_FORMAT_MAX   // Keep this last
-} WResourceFmt;
+    W_FORMAT_WAD,  // id wadlink file (IWAD or PWAD)
+    W_FORMAT_ZIP,  // PKZip archive (aka pk3)
+    W_FORMAT_FILE, // An ordinary flat physical file
+    W_FORMAT_DIR,  // PKE-like directory
+
+    W_FORMAT_MAX // Keep this last
+};
 
 WResourceFmt W_DetermineFileFormat(FILE *f, long baseoffset);
 

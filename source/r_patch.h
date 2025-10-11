@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,19 +15,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//
-// Patches.
-// A patch holds one or more columns. Patches are used for sprites and all 
-// masked pictures, and we compose textures from the TEXTURE1/2 lists of 
-// patches.
+// Purpose: Patches.
+//  A patch holds one or more columns. Patches are used for sprites and all
+//  masked pictures, and we compose textures from the TEXTURE1/2 lists of
+//  patches.
 //
 // haleyjd 11/21/10: Separated from r_defs.h to help resolve circular
 // #include dependency problems.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley
+//
 
 #ifndef R_PATCH_H__
 #define R_PATCH_H__
@@ -43,19 +41,19 @@
 // posts are runs of non masked source pixels
 struct post_t
 {
-   byte topdelta; // -1 is the last post in a column
-   byte length;   // length data bytes follows
+    byte topdelta; // -1 is the last post in a column
+    byte length;   // length data bytes follows
 };
 
 // column_t is a list of 0 or more post_t, (byte)-1 terminated
-typedef post_t column_t;
+using column_t = post_t;
 
 struct patch_t
-{ 
-   int16_t width, height;  // bounding box size 
-   int16_t leftoffset;     // pixels to the left of origin 
-   int16_t topoffset;      // pixels below the origin 
-   int32_t columnofs[8];   // only [width] used
+{
+    int16_t width, height; // bounding box size
+    int16_t leftoffset;    // pixels to the left of origin
+    int16_t topoffset;     // pixels below the origin
+    int32_t columnofs[8];  // only [width] used
 };
 
 #if defined(_MSC_VER) || defined(__GNUC__)
@@ -65,5 +63,4 @@ struct patch_t
 #endif
 
 // EOF
-
 

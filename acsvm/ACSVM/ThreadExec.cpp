@@ -209,7 +209,7 @@ namespace ACSVM
    static inline void OpFunc_DivX(Word &lop, Word rop)
    {
       if(rop)
-         lop = static_cast<Word>((SDWord(SWord(lop)) << 16) / SWord(rop));
+         lop = (SDWord(SWord(lop)) << 16) / SWord(rop);
       else
          lop = 0;
    }
@@ -243,7 +243,7 @@ namespace ACSVM
    //
    static inline void OpFunc_MulX(Word &lop, Word rop)
    {
-      lop = static_cast<Word>(DWord(SDWord(SWord(lop)) * SWord(rop)) >> 16);
+      lop = DWord(SDWord(SWord(lop)) * SWord(rop)) >> 16;
    }
 
    //
@@ -566,11 +566,11 @@ namespace ACSVM
 
       DeclCase(ScrDelay):
          dataStk.drop();
-         delay = dataStk[0];
+         delay = dataStk[0] + env->longDelay;
          goto exec_intr;
 
       DeclCase(ScrDelay_Lit):
-         delay = *codePtr++;
+         delay = *codePtr++ + env->longDelay;
          goto exec_intr;
 
       DeclCase(ScrHalt):

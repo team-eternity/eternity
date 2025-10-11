@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Win32-specific File Name Handling Routines.
-//      haleyjd 10/28/04
+// Purpose: Win32-specific file name handling routines.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef I_FNAMES_H__
 #define I_FNAMES_H__

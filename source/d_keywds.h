@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,16 +15,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Macros to resolve compiler-dependent keywords and language
+// Purpose: Macros to resolve compiler-dependent keywords and language
 //  extensions.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley
+//
 
 #ifndef D_KEYWDS_H__
 #define D_KEYWDS_H__
+
+// clang-format off
 
 // attribute hints are available only under GNU C
 // Note: The idea of E_PRINTF is lifted from q2pro's q_printf macro.
@@ -52,7 +53,7 @@
 //
 // These control the presence of custom code for some common
 // non-ANSI libc functions that are in m_misc.c -- in some cases
-// its not worth having the code when its already available in 
+// its not worth having the code when its already available in
 // the platform's libc
 //
 
@@ -64,24 +65,26 @@
 // known platforms with itoa -- you can add yours here, but it
 // isn't absolutely necessary
 #ifndef EE_HAVE_ITOA
-   #ifdef DJGPP
-      #define EE_HAVE_ITOA
-      #define ITOA_NAME itoa
-   #endif
-   #ifdef _MSC_VER
-      #define EE_HAVE_ITOA
-      #define ITOA_NAME _itoa
-   #endif
-   #ifdef __MINGW32__
-      #define EE_HAVE_ITOA
-      #define ITOA_NAME itoa
-   #endif
+    #ifdef DJGPP
+        #define EE_HAVE_ITOA
+        #define ITOA_NAME itoa
+    #endif
+    #ifdef _MSC_VER
+        #define EE_HAVE_ITOA
+        #define ITOA_NAME _itoa
+    #endif
+    #ifdef __MINGW32__
+        #define EE_HAVE_ITOA
+        #define ITOA_NAME itoa
+    #endif
 #endif
 
 #ifdef _MSC_VER
 #define strcasecmp  stricmp
 #define strncasecmp strnicmp
 #endif
+
+// clang-format on
 
 #endif // D_KEYWDS_H__
 

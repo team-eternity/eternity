@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2018 James Haley et al.
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,6 +18,8 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
+//------------------------------------------------------------------------------
+//
 // Purpose: Generic EDF metatable builder. Has features such as inheritance.
 // Authors: Ioan Chera
 //
@@ -30,8 +32,7 @@ class MetaTable;
 
 extern cfg_opt_t edf_generic_tprops[];
 
-void E_BuildGlobalMetaTableFromEDF(cfg_t *cfg, const char *secname,
-                                   const char *deltaname, MetaTable &table);
+void E_BuildGlobalMetaTableFromEDF(cfg_t *cfg, const char *secname, const char *deltaname, MetaTable &table);
 
 #endif
 

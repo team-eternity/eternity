@@ -955,7 +955,7 @@ frame S_BLASTERSMOKE5 { +decorate; dehackednum 2776 }
 // HereticRipper
 frame S_HRIPPER1  { +decorate; dehackednum 2777 }
 frame S_HRIPPER2  { +decorate; dehackednum 2778 }
-frame S_HRIPPERX1 { +decorate; dehackednum 2779 } 
+frame S_HRIPPERX1 { +decorate; dehackednum 2779 }
 frame S_HRIPPERX2 { +decorate; dehackednum 2780 }
 frame S_HRIPPERX3 { +decorate; dehackednum 2781 }
 frame S_HRIPPERX4 { +decorate; dehackednum 2782 }
@@ -979,7 +979,7 @@ frame S_BLASTERPUFF2_7 { +decorate; dehackednum 2795 }
 frame S_HRODFX1_1  { +decorate; dehackednum 2796 }
 frame S_HRODFX1_2  { +decorate; dehackednum 2797 }
 frame S_HRODFXI1_1 { +decorate; dehackednum 2798 }
-frame S_HRODFXI1_2 { +decorate; dehackednum 2799 } 
+frame S_HRODFXI1_2 { +decorate; dehackednum 2799 }
 frame S_HRODFXI1_3 { +decorate; dehackednum 2800 }
 frame S_HRODFXI1_4 { +decorate; dehackednum 2801 }
 frame S_HRODFXI1_5 { +decorate; dehackednum 2802 }
@@ -1089,7 +1089,7 @@ frame S_CHICPLAY_PAIN2 { +decorate; dehackednum 2888 }
 // S_HTICLIGHTDONE: Why is this here? I mean it's in the Heretic source but why is it there?
 frame S_HTICLIGHTDONE { cmp = "STFF|0|*|0|Light0" }
 
-// Staff 
+// Staff
 frame S_STAFFREADY  { +decorate }
 frame S_STAFFDOWN   { +decorate }
 frame S_STAFFUP     { +decorate }

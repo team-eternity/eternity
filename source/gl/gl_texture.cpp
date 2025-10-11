@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,14 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   
-//  OpenGL Texture Mapping Functions
-//  haleyjd 05/15/11
+// Purpose: OpenGL texture mapping functions.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifdef EE_FEATURE_OPENGL
 
@@ -35,7 +31,7 @@
 //
 // GL_MakeTextureDimension
 //
-// Gets the next higher power of two, which will be a suitable texture 
+// Gets the next higher power of two, which will be a suitable texture
 // dimension for standard OpenGL textures.
 //
 // Based on:
@@ -43,18 +39,18 @@
 //
 unsigned int GL_MakeTextureDimension(unsigned int i)
 {
-   if(i)
-   {
-      --i;
-      i |= i >> 1;
-      i |= i >> 2;
-      i |= i >> 4;
-      i |= i >> 8;
-      i |= i >> 16;
-      ++i;
-   }
+    if(i)
+    {
+        --i;
+        i |= i >> 1;
+        i |= i >> 2;
+        i |= i >> 4;
+        i |= i >> 8;
+        i |= i >> 16;
+        ++i;
+    }
 
-   return i;
+    return i;
 }
 
 static GLuint boundtexture;
@@ -67,8 +63,8 @@ static GLuint boundtexture;
 //
 void GL_BindTextureAndRemember(GLuint texture)
 {
-   glBindTexture(GL_TEXTURE_2D, texture);
-   boundtexture = texture;
+    glBindTexture(GL_TEXTURE_2D, texture);
+    boundtexture = texture;
 }
 
 //
@@ -79,18 +75,17 @@ void GL_BindTextureAndRemember(GLuint texture)
 //
 void GL_BindTextureIfNeeded(GLuint texture)
 {
-   if(boundtexture != texture)
-      glBindTexture(GL_TEXTURE_2D, texture);
+    if(boundtexture != texture)
+        glBindTexture(GL_TEXTURE_2D, texture);
 }
-
 
 //
 // Rebinds the currently-bound texture
 //
 void GL_RebindBoundTexture()
 {
-   if(boundtexture)
-      glBindTexture(GL_TEXTURE_2D, boundtexture);
+    if(boundtexture)
+        glBindTexture(GL_TEXTURE_2D, boundtexture);
 }
 
 //
@@ -100,7 +95,7 @@ void GL_RebindBoundTexture()
 //
 void GL_ClearBoundTexture()
 {
-   boundtexture = 0;
+    boundtexture = 0;
 }
 
 #endif

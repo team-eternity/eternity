@@ -1,5 +1,3 @@
-// Emacs style mode select -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
 // Copyright (C) 2005-2007 Free Software Foundation, Inc.
 // Written by Bruno Haible <bruno@clisp.org>, 2005.
@@ -17,17 +15,23 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// GNUlib strcasestr implementation for case-insensitive substring detection.
+// Purpose: GNUlib strcasestr implementation for case-insensitive
+//  substring detection.
 //
-//-----------------------------------------------------------------------------
+// Authors: Bruno Haible, James Haley
+//
 
 #ifndef M_STRCASESTR_H__
 #define M_STRCASESTR_H__
 
+// clang-format off
+
 const char *M_StrCaseStr(const char *haystack, const char *needle);
       char *M_StrCaseStr(      char *haystack, const char *needle);
+
+// clang-format on
 
 #endif
 

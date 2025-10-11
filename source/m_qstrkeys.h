@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Hash key classes for use of qstrings as hash keys.
+// Purpose: Hash key classes for use of qstrings as hash keys.
+// Authors: James Haley
 //
-// By James Haley
-//
-//-----------------------------------------------------------------------------
 
 #ifndef M_QSTRKEYS_H__
 #define M_QSTRKEYS_H__
@@ -40,25 +37,16 @@
 class ENCQStrHashKey
 {
 public:
-   typedef qstring     basic_type;
-   typedef const char *param_type;
+    using basic_type = qstring;
+    using param_type = const char *;
 
-   // NB: HashCode must be implemented for both types when they are distinct.
+    // NB: HashCode must be implemented for both types when they are distinct.
 
-   static unsigned int HashCode(const char *input)
-   {
-      return qstring::HashCodeStatic(input);
-   }
+    static unsigned int HashCode(const char *input) { return qstring::HashCodeStatic(input); }
 
-   static unsigned int HashCode(const qstring &qstr)
-   {
-      return qstr.hashCode();
-   }
+    static unsigned int HashCode(const qstring &qstr) { return qstr.hashCode(); }
 
-   static bool Compare(const qstring &first, const char *second)
-   {
-      return !first.strCaseCmp(second);
-   }
+    static bool Compare(const qstring &first, const char *second) { return !first.strCaseCmp(second); }
 };
 
 //
@@ -69,25 +57,15 @@ public:
 class EQStrHashKey
 {
 public:
-   typedef qstring     basic_type;
-   typedef const char *param_type;
+    using basic_type = qstring;
+    using param_type = const char *;
 
-   static unsigned int HashCode(const char *input)
-   {
-      return qstring::HashCodeCaseStatic(input);
-   }
+    static unsigned int HashCode(const char *input) { return qstring::HashCodeCaseStatic(input); }
 
-   static unsigned int HashCode(const qstring &qstr)
-   {
-      return qstr.hashCodeCase();
-   }
+    static unsigned int HashCode(const qstring &qstr) { return qstr.hashCodeCase(); }
 
-   static bool Compare(const qstring &first, const char *second)
-   {
-      return first == second;
-   }
+    static bool Compare(const qstring &first, const char *second) { return first == second; }
 };
 
 #endif
-
 

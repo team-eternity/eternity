@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,17 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: Hexen-inspired action functions.
 //
-// Hexen-inspired action functions
+//  DISCLAIMER: None of this code was taken from Hexen. Any
+//  resemblence is purely coincidental or is the result of work from
+//  a common base source.
 //
-// DISCLAIMER: None of this code was taken from Hexen. Any
-// resemblence is purely coincidental or is the result of work from
-// a common base source.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef P_XENEMY_H__
 #define P_XENEMY_H__
@@ -38,22 +36,22 @@
 
 class QuakeThinker : public PointThinker
 {
-   DECLARE_THINKER_TYPE(QuakeThinker, PointThinker)
+    DECLARE_THINKER_TYPE(QuakeThinker, PointThinker)
 
 protected:
-   void Think() override;
+    void Think() override;
 
 public:
-   // Methods
-   virtual void serialize(SaveArchive &arc) override;
+    // Methods
+    virtual void serialize(SaveArchive &arc) override;
 
-   // Data Members
-   int intensity;        // richter scale (hardly realistic)
-   int duration;         // how long it lasts
-   fixed_t quakeRadius;  // radius of shaking effects
-   fixed_t damageRadius; // radius of damage effects (if any)
+    // Data Members
+    int     intensity;    // richter scale (hardly realistic)
+    int     duration;     // how long it lasts
+    fixed_t quakeRadius;  // radius of shaking effects
+    fixed_t damageRadius; // radius of damage effects (if any)
 
-   qstring soundName;    // name of sound to play (default: Earthquake)
+    qstring soundName; // name of sound to play (default: Earthquake)
 };
 
 bool P_StartQuake(const int *args, Mobj *activator);

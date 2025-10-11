@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,15 +18,19 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//    Generic hash table implementation.
+// Purpose: ID24 DEMOLOOP format
+// https://docs.google.com/document/d/1WzsUc1EpYd4HX7Nrs7gjy2ZO3cAc62vq8TKNqbWtF7M
 //
-//-----------------------------------------------------------------------------
 
-// Extinct module, see e_hash.h for full definition of template class
-// EHashTable.
+#ifndef ID24_DEMOLOOP_H_
+#define ID24_DEMOLOOP_H_
 
+namespace id24
+{
+void LoadDemoLoop();
+}
+
+#endif
 // EOF
-

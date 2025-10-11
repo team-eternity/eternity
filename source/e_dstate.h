@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// EDF DECORATE States Implementation
+// Purpose: EDF DECORATE states implementation.
+// Authors: James Haley
 //
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #ifndef E_DSTATE_H__
 #define E_DSTATE_H__
@@ -36,14 +33,14 @@
 //
 // DECORATE state output structure 1:
 //
-// DECORATE state. This is a label plus a pointer to the state_t to which it 
+// DECORATE state. This is a label plus a pointer to the state_t to which it
 // refers (which is already a member of the states array). This can be assigned
 // to either a native state or a metastate by the calling code.
 //
 struct edecstate_t
 {
-   char    *label; // native state name or metastate key (allocated)
-   state_t *state; // pointer to state
+    char    *label; // native state name or metastate key (allocated)
+    state_t *state; // pointer to state
 };
 
 //
@@ -53,14 +50,14 @@ struct edecstate_t
 // resolution by the caller because it refers to an ancestral definition
 // (super state, or a label not defined within the current state block).
 // The data consists of the original jump label text, offset, and a pointer
-// to the nextstate field of the state_t which needs to have its nextstate 
+// to the nextstate field of the state_t which needs to have its nextstate
 // set.
 //
 struct egoto_t
 {
-   char       *label;     // label text (allocated)
-   int         offset;    // offset, if non-zero
-   statenum_t *nextstate; // pointer to field needing resolved value
+    char       *label;     // label text (allocated)
+    int         offset;    // offset, if non-zero
+    statenum_t *nextstate; // pointer to field needing resolved value
 };
 
 //
@@ -71,7 +68,7 @@ struct egoto_t
 //
 struct ekillstate_t
 {
-   char *killname; // native state name or metastate key to nullify/delete
+    char *killname; // native state name or metastate key to nullify/delete
 };
 
 //
@@ -79,20 +76,19 @@ struct ekillstate_t
 //
 struct edecstateout_t
 {
-   edecstate_t  *states;     // states to create
-   egoto_t      *gotos;      // gotos to resolve
-   ekillstate_t *killstates; // states to kill
-   int numstates;            // number of states to add
-   int numgotos;             // number of gotos to resolve
-   int numkillstates;        // number of states to kill
-   int numstatesalloc;       // number of state objects allocated
-   int numgotosalloc;        // number of goto objects allocated
-   int numkillsalloc;        // number of kill states allocated
+    edecstate_t  *states;         // states to create
+    egoto_t      *gotos;          // gotos to resolve
+    ekillstate_t *killstates;     // states to kill
+    int           numstates;      // number of states to add
+    int           numgotos;       // number of gotos to resolve
+    int           numkillstates;  // number of states to kill
+    int           numstatesalloc; // number of state objects allocated
+    int           numgotosalloc;  // number of goto objects allocated
+    int           numkillsalloc;  // number of kill states allocated
 };
 
-edecstateout_t *E_ParseDecorateStates(const char *owner, const char *input, 
-                                      const char *firststate);
-void E_FreeDSO(edecstateout_t *dso);
+edecstateout_t *E_ParseDecorateStates(const char *owner, const char *input, const char *firststate);
+void            E_FreeDSO(edecstateout_t *dso);
 
 #endif
 

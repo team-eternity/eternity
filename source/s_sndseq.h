@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,15 +18,14 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  Sound Sequences
+// Purpose: Sound Sequences, which are powered by EDF-defined data, implement a
+// way to script the sound behavior of sectors and global ambience effects.
+// Measures have been taken to keep it all fully backward-compatible.
 //
-// Sound Sequences, which are powered by EDF-defined data, implement a way to
-// script the sound behavior of sectors and global ambience effects. Measures
-// have been taken to keep it all fully backward-compatible.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef S_SNDSEQ_H__
 #define S_SNDSEQ_H__
@@ -102,7 +100,7 @@ struct SndSeq_t
 
    PointThinker *origin;         // the origin of the sequence
    sfxinfo_t *currentSound;      // current sound being played
-   
+
    int delayCounter;             // delay time counter
    int volume;                   // current volume
    int attenuation;              // current attenuation type
@@ -118,9 +116,9 @@ struct SndSeq_t
 extern DLListItem<SndSeq_t> *SoundSequences;
 extern SndSeq_t *EnviroSequence;
 
-void S_StartSequenceNum(PointThinker *mo, int seqnum, int seqtype, 
+void S_StartSequenceNum(PointThinker *mo, int seqnum, int seqtype,
                         int seqOriginType, int seqOriginIdx);
-void S_StartSequenceName(PointThinker *mo, const char *seqname, 
+void S_StartSequenceName(PointThinker *mo, const char *seqname,
                          int seqOriginType, int seqOriginIdx);
 void S_StopSequence(const PointThinker *mo);
 void S_SquashSequence(PointThinker *mo);

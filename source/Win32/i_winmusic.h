@@ -1,5 +1,8 @@
 //
-// Copyright(C) 2021 Roman Fomin
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
+//
+// Copyright (C) 2021 Roman Fomin
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -11,8 +14,11 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// DESCRIPTION:
-//      Windows native MIDI
+//------------------------------------------------------------------------------
+//
+// Purpose: Windows native MIDI.
+// Authors: Roman Fomin, Max Waine
+//
 
 #ifdef _WIN32
 
@@ -21,12 +27,12 @@
 
 enum
 {
-   RESET_TYPE_DEFAULT = -1,
-   RESET_TYPE_NONE,
-   RESET_TYPE_GS,
-   RESET_TYPE_GM,
-   RESET_TYPE_GM2,
-   RESET_TYPE_XG,
+    RESET_TYPE_DEFAULT = -1,
+    RESET_TYPE_NONE,
+    RESET_TYPE_GS,
+    RESET_TYPE_GM,
+    RESET_TYPE_GM2,
+    RESET_TYPE_XG,
 };
 
 extern int winmm_reset_type;

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,44 +18,41 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: GFS -- Game File Scripts.
 //
-// GFS -- Game File Scripts
+//  This is a radical new way for DOOM editing projects to provide
+//  file information to Eternity. A single GFS script, when provided
+//  via the -gfs command-line parameter, will affect the loading of
+//  an arbitrary number of WADs, DEH/BEX's, EDF files, and console
+//  scripts.
 //
-// This is a radical new way for DOOM editing projects to provide
-// file information to Eternity. A single GFS script, when provided
-// via the -gfs command-line parameter, will affect the loading of
-// an arbitrary number of WADs, DEH/BEX's, EDF files, and console
-// scripts.
+// Authors: James Haley
 //
-// By James Haley
-//
-//--------------------------------------------------------------------------
 
 #ifndef G_GFS_H__
 #define G_GFS_H__
 
 struct gfs_t
 {
-   char **wadnames;
-   char **dehnames;
-   char **cscnames;
+    char **wadnames;
+    char **dehnames;
+    char **cscnames;
 
-   char *iwad;
-   char *filepath;
-   char *edf;
+    char *iwad;
+    char *filepath;
+    char *edf;
 
-   int numwads;
-   int numdehs;
-   int numcsc;
-   bool hasIWAD;
-   bool hasEDF;
+    int  numwads;
+    int  numdehs;
+    int  numcsc;
+    bool hasIWAD;
+    bool hasEDF;
 };
 
-gfs_t *G_LoadGFS(const char *filename);
-void G_FreeGFS(gfs_t *lgfs);
+gfs_t      *G_LoadGFS(const char *filename);
+void        G_FreeGFS(gfs_t *lgfs);
 const char *G_GFSCheckIWAD(void);
 const char *G_GFSCheckEDF(void);
 

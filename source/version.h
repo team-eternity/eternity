@@ -1,6 +1,7 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,14 +16,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//
+// Purpose: Version values.
+// Authors: James Haley
+//
 
 #ifndef VERSION_H__
 #define VERSION_H__
 
 // DOOM version
 // enum { VERSION =  203 };
-extern int version;              // sf: made version an int
+extern int           version;    // sf: made version an int
 extern unsigned char subversion; // haleyjd
 
 extern const char version_date[];

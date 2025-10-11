@@ -1,5 +1,5 @@
 "The Eternity Engine"
-Copyright (c) 2024 James Haley, Stephen McGranahan, et al.
+Copyright (c) 2025 James Haley, Stephen McGranahan, et al.
 
 
 Team Eternity is:
@@ -147,6 +147,9 @@ DJGPP libc
 
 Freeverb - Public Domain Reverb Engine
    Jezar at Dreampoint Design and Engineering
+
+JSON for Modern C++
+   Niels Lohmann, https://json.nlohmann.me, https://orcid.org/0000-0001-9037-795X, MIT licensed
 
 libConfuse Parser Library
    Martin Hedenfalk

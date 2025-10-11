@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,7 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//
+// Purpose: Thinker, ticker.
+// Authors: James Haley, David Hill, Max Waine
+//
 
 #ifndef P_TICK_H__
 #define P_TICK_H__
@@ -33,134 +36,133 @@ class Thinker;
 //
 class Thinker : public RTTIObject
 {
-   DECLARE_RTTI_TYPE(Thinker, RTTIObject)
+    DECLARE_RTTI_TYPE(Thinker, RTTIObject)
 
 private:
-   // Private implementation details - Methods
-   void removeDelayed(); 
+    // Private implementation details - Methods
+    void removeDelayed();
 
-   // Data members
-   // killough 11/98: count of how many other objects reference
-   // this one using pointers. Used for garbage collection.
-   unsigned int references;
-   
-   // Statics
-   // Current position in list during RunThinkers
-   static Thinker *currentthinker;
+    // Data members
+    // killough 11/98: count of how many other objects reference
+    // this one using pointers. Used for garbage collection.
+    unsigned int references;
+
+    // Statics
+    // Current position in list during RunThinkers
+    static Thinker *currentthinker;
 
 protected:
-   // Virtual methods (overridables)
-   virtual void Think() {}
+    // Virtual methods (overridables)
+    virtual void Think() {}
 
-   // Methods
-   void addToThreadedList(int tclass);
+    // Methods
+    void addToThreadedList(int tclass);
 
-   // Data Members
-   bool removed;
+    // Data Members
+    bool removed;
 
-   // haleyjd 12/22/2010: for savegame enumeration
-   unsigned int ordinal;
+    // haleyjd 12/22/2010: for savegame enumeration
+    unsigned int ordinal;
 
 public:
-   // Constructor
-   Thinker() 
-      : Super(), references(0), removed(false), ordinal(0), prev(nullptr),
-        next(nullptr), cprev(nullptr), cnext(nullptr)
-   {
-   }
+    // Constructor
+    Thinker()
+        : Super(), references(0), removed(false), ordinal(0), prev(nullptr), next(nullptr), cprev(nullptr),
+          cnext(nullptr)
+    {}
 
-   // operator new, overriding ZoneObject::operator new (size_t)
-   void *operator new (size_t size) { return ZoneObject::operator new(size, PU_LEVEL); }
+    // operator new, overriding ZoneObject::operator new (size_t)
+    void *operator new(size_t size) { return ZoneObject::operator new(size, PU_LEVEL); }
 
-   // Static functions
-   static void InitThinkers();
-   static void RunThinkers();
+    // Static functions
+    static void InitThinkers();
+    static void RunThinkers();
 
-   // Methods
-   void addThinker();
-   
-   // Accessors
-   bool isRemoved() const { return removed; }
-   
-   // Reference counting
-   void addReference() { ++references; }
-   void delReference() { --references; }
+    // Methods
+    void addThinker();
 
-   // Enumeration 
-   // For thinkers needing savegame enumeration.
-   void setOrdinal(unsigned int i) { ordinal = shouldSerialize() ? i : 0; }
-   unsigned int getOrdinal() const { return ordinal; }
+    // Accessors
+    bool isRemoved() const { return removed; }
 
-   // Virtual methods (overridables)
-   virtual void updateThinker();
-   virtual void remove();
+    // Reference counting
+    void addReference() { ++references; }
+    void delReference() { --references; }
 
-   // Serialization
-   // When using serialize, always call your parent implementation!
-   virtual void serialize(SaveArchive &arc);
-   // De-swizzling should restore pointers to other thinkers.
-   virtual void deSwizzle() {}
-   virtual bool shouldSerialize() const { return !removed;  }
-   
-   // Data Members
+    // Enumeration
+    // For thinkers needing savegame enumeration.
+    void         setOrdinal(unsigned int i) { ordinal = shouldSerialize() ? i : 0; }
+    unsigned int getOrdinal() const { return ordinal; }
 
-   Thinker *prev;
-   Thinker *next;
-  
-   // killough 8/29/98: we maintain thinkers in several equivalence classes,
-   // according to various criteria, so as to allow quicker searches.
+    // Virtual methods (overridables)
+    virtual void updateThinker();
+    virtual void remove();
 
-   Thinker *cprev; // Next, previous thinkers in same class
-   Thinker *cnext;
+    // Serialization
+    // When using serialize, always call your parent implementation!
+    virtual void serialize(SaveArchive &arc);
+    // De-swizzling should restore pointers to other thinkers.
+    virtual void deSwizzle() {}
+    virtual bool shouldSerialize() const { return !removed; }
+
+    // Data Members
+
+    Thinker *prev;
+    Thinker *next;
+
+    // killough 8/29/98: we maintain thinkers in several equivalence classes,
+    // according to various criteria, so as to allow quicker searches.
+
+    Thinker *cprev; // Next, previous thinkers in same class
+    Thinker *cnext;
 };
 
 //
 // thinker_cast
 //
 // Use this dynamic_cast variant to automatically check if something is a valid
-// unremoved Thinker subclass instance. This is necessary because the old 
-// behavior of checking function pointer values effectively changed the type 
+// unremoved Thinker subclass instance. This is necessary because the old
+// behavior of checking function pointer values effectively changed the type
 // that a thinker was considered to be when it was set into a deferred removal
 // state, and C++ doesn't support that with virtual methods OR RTTI.
 //
-template<typename T> inline T thinker_cast(Thinker *th)
+template<typename T>
+inline T thinker_cast(Thinker *th)
 {
-   typedef typename std::remove_pointer<T>::type base_type;
+    using base_type = typename std::remove_pointer<T>::type;
 
-   return (th && !th->isRemoved() && th->isDescendantOf(&base_type::StaticType)) ?
-      static_cast<T>(th) : nullptr;
+    return (th && !th->isRemoved() && th->isDescendantOf(&base_type::StaticType)) ? static_cast<T>(th) : nullptr;
 }
-template<typename T> inline T thinker_cast(const Thinker *th)
+template<typename T>
+inline T thinker_cast(const Thinker *th)
 {
-   typedef typename std::remove_pointer<T>::type base_type;
+    using base_type = typename std::remove_pointer<T>::type;
 
-   return (th && !th->isRemoved() && th->isDescendantOf(&base_type::StaticType)) ?
-   static_cast<T>(th) : nullptr;
+    return (th && !th->isRemoved() && th->isDescendantOf(&base_type::StaticType)) ? static_cast<T>(th) : nullptr;
 }
-
 
 // Called by C_Ticker, can call G_PlayerExited.
 // Carries out all thinking of monsters and players.
 void P_Ticker(void);
 
-extern Thinker thinkercap;  // Both the head and tail of the thinker list
+extern Thinker thinkercap; // Both the head and tail of the thinker list
 
 //
 // P_NextThinker
 //
 // davidph 06/02/12: Finds the next Thinker of the specified type.
 //
-template<typename T> T *P_NextThinker(T *th)
+template<typename T>
+T *P_NextThinker(T *th)
 {
-   Thinker *itr;
+    Thinker *itr;
 
-   for(itr = th ? th->next : thinkercap.next; itr != &thinkercap; itr = itr->next)
-   {
-      if((th = thinker_cast<T *>(itr)))
-         return th;
-   }
+    for(itr = th ? th->next : thinkercap.next; itr != &thinkercap; itr = itr->next)
+    {
+        if((th = thinker_cast<T *>(itr)))
+            return th;
+    }
 
-   return nullptr;
+    return nullptr;
 }
 
 //
@@ -168,36 +170,38 @@ template<typename T> T *P_NextThinker(T *th)
 //
 // killough 11/98
 // This function is used to keep track of pointer references to mobj thinkers.
-// In Doom, objects such as lost souls could sometimes be removed despite 
+// In Doom, objects such as lost souls could sometimes be removed despite
 // their still being referenced. In Boom, 'target' mobj fields were tested
 // during each gametic, and any objects pointed to by them would be prevented
 // from being removed. But this was incomplete, and was slow (every mobj was
 // checked during every gametic). Now, we keep a count of the number of
 // references, and delay removal until the count is 0.
 //
-template<typename T> void P_SetTarget(T **mop, T *targ)
+template<typename T>
+void P_SetTarget(T **mop, T *targ)
 {
-   if(*mop)             // If there was a target already, decrease its refcount
-      (*mop)->delReference();
-   if((*mop = targ))    // Set new target and if non-nullptr, increase its counter
-      targ->addReference();
+    if(*mop) // If there was a target already, decrease its refcount
+        (*mop)->delReference();
+    if((*mop = targ)) // Set new target and if non-nullptr, increase its counter
+        targ->addReference();
 }
 
-template<typename T> void P_ClearTarget(T *&mop)
+template<typename T>
+void P_ClearTarget(T *&mop)
 {
-   if(mop)             // If there was a target already, decrease its refcount
-      mop->delReference();
-   mop = nullptr;
+    if(mop) // If there was a target already, decrease its refcount
+        mop->delReference();
+    mop = nullptr;
 }
 
 // killough 8/29/98: threads of thinkers, for more efficient searches
 enum th_class
 {
-   th_delete,  // haleyjd 11/09/06: giant bug fix
-   th_misc,
-   th_friends,
-   th_enemies,
-   NUMTHCLASS
+    th_delete, // haleyjd 11/09/06: giant bug fix
+    th_misc,
+    th_friends,
+    th_enemies,
+    NUMTHCLASS
 };
 
 extern Thinker thinkerclasscap[];
@@ -206,7 +210,7 @@ extern Thinker thinkerclasscap[];
 // DECLARE_THINKER_TYPE
 //
 #define DECLARE_THINKER_TYPE(name, inherited) DECLARE_RTTI_TYPE(name, inherited)
-   
+
 //
 // IMPLEMENT_THINKER_TYPE
 //

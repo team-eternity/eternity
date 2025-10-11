@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2016 James Haley et al.
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,6 +17,8 @@
 //
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
+//
+//------------------------------------------------------------------------------
 //
 // Purpose: Buffered file input/output
 // Authors: James Haley
@@ -40,10 +42,10 @@
 //
 void BufferedFileBase::initBuffer(size_t pLen, int pEndian)
 {
-   buffer = ecalloc(byte *, pLen, sizeof(byte));
-   len    = pLen;
-   idx    = 0;
-   endian = pEndian;
+    buffer = ecalloc(byte *, pLen, sizeof(byte));
+    len    = pLen;
+    idx    = 0;
+    endian = pEndian;
 }
 
 //
@@ -52,7 +54,7 @@ void BufferedFileBase::initBuffer(size_t pLen, int pEndian)
 //
 long BufferedFileBase::tell()
 {
-   return ftell(f);
+    return ftell(f);
 }
 
 //
@@ -60,22 +62,22 @@ long BufferedFileBase::tell()
 //
 void BufferedFileBase::close()
 {
-   if(f)
-   {
-      fclose(f);
-      f = nullptr;
-   }
+    if(f)
+    {
+        fclose(f);
+        f = nullptr;
+    }
 
-   idx = 0;
-   len = 0;
+    idx = 0;
+    len = 0;
 
-   if(buffer)
-   {
-      efree(buffer);
-      buffer = nullptr;
-   }
+    if(buffer)
+    {
+        efree(buffer);
+        buffer = nullptr;
+    }
 
-   ownFile = false;
+    ownFile = false;
 }
 
 //
@@ -83,17 +85,12 @@ void BufferedFileBase::close()
 //
 void BufferedFileBase::swapULong(uint32_t &x)
 {
-   switch(endian)
-   {
-   case LENDIAN:
-      x = ::SwapULong(x);
-      break;
-   case BENDIAN:
-      x = ::SwapBigULong(x);
-      break;
-   default:
-      break;
-   }
+    switch(endian)
+    {
+    case LENDIAN: x = ::SwapULong(x); break;
+    case BENDIAN: x = ::SwapBigULong(x); break;
+    default:      break;
+    }
 }
 
 //
@@ -101,17 +98,12 @@ void BufferedFileBase::swapULong(uint32_t &x)
 //
 void BufferedFileBase::swapLong(int32_t &x)
 {
-   switch(endian)
-   {
-   case LENDIAN:
-      x = ::SwapLong(x);
-      break;
-   case BENDIAN:
-      x = ::SwapBigLong(x);
-      break;
-   default:
-      break;
-   }
+    switch(endian)
+    {
+    case LENDIAN: x = ::SwapLong(x); break;
+    case BENDIAN: x = ::SwapBigLong(x); break;
+    default:      break;
+    }
 }
 
 //
@@ -119,17 +111,12 @@ void BufferedFileBase::swapLong(int32_t &x)
 //
 void BufferedFileBase::swapUShort(uint16_t &x)
 {
-   switch(endian)
-   {
-   case LENDIAN:
-      x = ::SwapUShort(x);
-      break;
-   case BENDIAN:
-      x = ::SwapBigUShort(x);
-      break;
-   default:
-      break;
-   }
+    switch(endian)
+    {
+    case LENDIAN: x = ::SwapUShort(x); break;
+    case BENDIAN: x = ::SwapBigUShort(x); break;
+    default:      break;
+    }
 }
 
 //
@@ -137,17 +124,12 @@ void BufferedFileBase::swapUShort(uint16_t &x)
 //
 void BufferedFileBase::swapShort(int16_t &x)
 {
-   switch(endian)
-   {
-   case LENDIAN:
-      x = ::SwapShort(x);
-      break;
-   case BENDIAN:
-      x = ::SwapBigShort(x);
-      break;
-   default:
-      break;
-   }
+    switch(endian)
+    {
+    case LENDIAN: x = ::SwapShort(x); break;
+    case BENDIAN: x = ::SwapBigShort(x); break;
+    default:      break;
+    }
 }
 
 //=============================================================================
@@ -163,14 +145,14 @@ void BufferedFileBase::swapShort(int16_t &x)
 //
 bool OutBuffer::createFile(const char *filename, size_t pLen, int pEndian)
 {
-   if(!(f = fopen(filename, "wb")))
-      return false;
+    if(!(f = fopen(filename, "wb")))
+        return false;
 
-   initBuffer(pLen, pEndian);
+    initBuffer(pLen, pEndian);
 
-   ownFile = true;
+    ownFile = true;
 
-   return true;
+    return true;
 }
 
 //
@@ -180,18 +162,18 @@ bool OutBuffer::createFile(const char *filename, size_t pLen, int pEndian)
 //
 bool OutBuffer::flush()
 {
-   if(idx)
-   {
-      if(fwrite(buffer, sizeof(byte), idx, f) < idx)
-      {
-         if(throwing)
-            throw BufferedIOException("fwrite did not write the requested amount");
-         return false;
-      }
-      idx = 0;
-   }
+    if(idx)
+    {
+        if(fwrite(buffer, sizeof(byte), idx, f) < idx)
+        {
+            if(throwing)
+                throw BufferedIOException("fwrite did not write the requested amount");
+            return false;
+        }
+        idx = 0;
+    }
 
-   return true;
+    return true;
 }
 
 //
@@ -201,16 +183,15 @@ bool OutBuffer::flush()
 //
 void OutBuffer::close()
 {
-   try
-   {
-     if(f)
-        flush();
-   }
-   catch(...)
-   {
-   }
-      
-   BufferedFileBase::close();
+    try
+    {
+        if(f)
+            flush();
+    }
+    catch(...)
+    {}
+
+    BufferedFileBase::close();
 }
 
 //
@@ -218,32 +199,32 @@ void OutBuffer::close()
 //
 bool OutBuffer::write(const void *data, size_t size)
 {
-   const byte *lSrc = (const byte *)data;
-   size_t lWriteAmt;
-   size_t lBytesToWrite = size;
+    const byte *lSrc = (const byte *)data;
+    size_t      lWriteAmt;
+    size_t      lBytesToWrite = size;
 
-   while(lBytesToWrite)
-   {
-      lWriteAmt = len - idx;
-      
-      if(!lWriteAmt)
-      {
-         if(!flush())
-            return false;
-         lWriteAmt = len;
-      }
+    while(lBytesToWrite)
+    {
+        lWriteAmt = len - idx;
 
-      if(lBytesToWrite < lWriteAmt)
-         lWriteAmt = lBytesToWrite;
+        if(!lWriteAmt)
+        {
+            if(!flush())
+                return false;
+            lWriteAmt = len;
+        }
 
-      memcpy(&(buffer[idx]), lSrc, lWriteAmt);
+        if(lBytesToWrite < lWriteAmt)
+            lWriteAmt = lBytesToWrite;
 
-      idx  += lWriteAmt;
-      lSrc += lWriteAmt;
-      lBytesToWrite -= lWriteAmt;
-   }
+        memcpy(&(buffer[idx]), lSrc, lWriteAmt);
 
-   return true;
+        idx           += lWriteAmt;
+        lSrc          += lWriteAmt;
+        lBytesToWrite -= lWriteAmt;
+    }
+
+    return true;
 }
 
 //
@@ -251,8 +232,8 @@ bool OutBuffer::write(const void *data, size_t size)
 //
 bool OutBuffer::writeUint64(uint64_t num)
 {
-   SwapUInt64(num);
-   return write(&num, sizeof(uint64_t));
+    SwapUInt64(num);
+    return write(&num, sizeof(uint64_t));
 }
 
 //
@@ -260,8 +241,8 @@ bool OutBuffer::writeUint64(uint64_t num)
 //
 bool OutBuffer::writeSint64(int64_t num)
 {
-   SwapInt64(num);
-   return write(&num, sizeof(int64_t));
+    SwapInt64(num);
+    return write(&num, sizeof(int64_t));
 }
 
 //
@@ -269,8 +250,8 @@ bool OutBuffer::writeSint64(int64_t num)
 //
 bool OutBuffer::writeUint32(uint32_t num)
 {
-   SwapULong(num);
-   return write(&num, sizeof(uint32_t));
+    SwapULong(num);
+    return write(&num, sizeof(uint32_t));
 }
 
 //
@@ -278,8 +259,8 @@ bool OutBuffer::writeUint32(uint32_t num)
 //
 bool OutBuffer::writeSint32(int32_t num)
 {
-   SwapLong(num);
-   return write(&num, sizeof(int32_t));
+    SwapLong(num);
+    return write(&num, sizeof(int32_t));
 }
 
 //
@@ -287,8 +268,8 @@ bool OutBuffer::writeSint32(int32_t num)
 //
 bool OutBuffer::writeUint16(uint16_t num)
 {
-   SwapUShort(num);
-   return write(&num, sizeof(uint16_t));
+    SwapUShort(num);
+    return write(&num, sizeof(uint16_t));
 }
 
 //
@@ -296,8 +277,8 @@ bool OutBuffer::writeUint16(uint16_t num)
 //
 bool OutBuffer::writeSint16(int16_t num)
 {
-   SwapShort(num);
-   return write(&num, sizeof(int16_t));
+    SwapShort(num);
+    return write(&num, sizeof(int16_t));
 }
 
 //
@@ -305,17 +286,17 @@ bool OutBuffer::writeSint16(int16_t num)
 // This is much more efficient than calling M_BufferWrite for individual bytes.
 //
 bool OutBuffer::writeUint8(uint8_t num)
-{     
-   if(idx == len)
-   {
-      if(!flush())
-         return false;
-   }
+{
+    if(idx == len)
+    {
+        if(!flush())
+            return false;
+    }
 
-   buffer[idx] = num;
-   ++idx;
- 
-   return true;
+    buffer[idx] = num;
+    ++idx;
+
+    return true;
 }
 
 //
@@ -323,8 +304,8 @@ bool OutBuffer::writeUint8(uint8_t num)
 // This is much more efficient than calling M_BufferWrite for individual bytes.
 //
 bool OutBuffer::writeSint8(int8_t num)
-{     
-   return writeUint8((uint8_t)num);
+{
+    return writeUint8((uint8_t)num);
 }
 
 //=============================================================================
@@ -339,13 +320,13 @@ bool OutBuffer::writeSint8(int8_t num)
 //
 bool InBuffer::openFile(const char *filename, int pEndian)
 {
-   if(!(f = fopen(filename, "rb")))
-      return false;
+    if(!(f = fopen(filename, "rb")))
+        return false;
 
-   endian  = pEndian;
-   ownFile = true;
+    endian  = pEndian;
+    ownFile = true;
 
-   return true;
+    return true;
 }
 
 //
@@ -353,13 +334,13 @@ bool InBuffer::openFile(const char *filename, int pEndian)
 //
 bool InBuffer::openExisting(FILE *pf, int pEndian)
 {
-   if(!(f = pf))
-      return false;
+    if(!(f = pf))
+        return false;
 
-   endian  = pEndian;
-   ownFile = false;
+    endian  = pEndian;
+    ownFile = false;
 
-   return true;
+    return true;
 }
 
 //
@@ -367,7 +348,7 @@ bool InBuffer::openExisting(FILE *pf, int pEndian)
 //
 int InBuffer::seek(long offset, int origin)
 {
-   return fseek(f, offset, origin);
+    return fseek(f, offset, origin);
 }
 
 //
@@ -376,7 +357,7 @@ int InBuffer::seek(long offset, int origin)
 //
 size_t InBuffer::read(void *dest, size_t size)
 {
-   return fread(dest, 1, size, f);
+    return fread(dest, 1, size, f);
 }
 
 //
@@ -384,7 +365,7 @@ size_t InBuffer::read(void *dest, size_t size)
 //
 int InBuffer::skip(size_t skipAmt)
 {
-   return fseek(f, static_cast<long>(skipAmt), SEEK_CUR);
+    return fseek(f, static_cast<long>(skipAmt), SEEK_CUR);
 }
 
 //
@@ -392,14 +373,14 @@ int InBuffer::skip(size_t skipAmt)
 //
 bool InBuffer::readUint64(uint64_t &num)
 {
-   uint64_t lNum;
+    uint64_t lNum;
 
-   if(read(&lNum, sizeof(lNum)) != sizeof(lNum))
-      return false;
+    if(read(&lNum, sizeof(lNum)) != sizeof(lNum))
+        return false;
 
-   SwapUInt64(lNum);
-   num = lNum;
-   return true;
+    SwapUInt64(lNum);
+    num = lNum;
+    return true;
 }
 
 //
@@ -407,30 +388,29 @@ bool InBuffer::readUint64(uint64_t &num)
 //
 bool InBuffer::readSint64(int64_t &num)
 {
-   int64_t lNum;
+    int64_t lNum;
 
-   if(read(&lNum, sizeof(lNum)) != sizeof(lNum))
-      return false;
+    if(read(&lNum, sizeof(lNum)) != sizeof(lNum))
+        return false;
 
-   SwapInt64(lNum);
-   num = lNum;
-   return true;
+    SwapInt64(lNum);
+    num = lNum;
+    return true;
 }
-
 
 //
 // Read a uint32 value from the input file.
 //
 bool InBuffer::readUint32(uint32_t &num)
 {
-   uint32_t lNum;
+    uint32_t lNum;
 
-   if(read(&lNum, sizeof(lNum)) != sizeof(lNum))
-      return false;
+    if(read(&lNum, sizeof(lNum)) != sizeof(lNum))
+        return false;
 
-   SwapULong(lNum);
-   num = lNum;
-   return true;
+    SwapULong(lNum);
+    num = lNum;
+    return true;
 }
 
 //
@@ -438,14 +418,14 @@ bool InBuffer::readUint32(uint32_t &num)
 //
 bool InBuffer::readSint32(int32_t &num)
 {
-   int32_t lNum;
+    int32_t lNum;
 
-   if(read(&lNum, sizeof(lNum)) != sizeof(lNum))
-      return false;
+    if(read(&lNum, sizeof(lNum)) != sizeof(lNum))
+        return false;
 
-   SwapLong(lNum);
-   num = lNum;
-   return true;
+    SwapLong(lNum);
+    num = lNum;
+    return true;
 }
 
 //
@@ -453,14 +433,14 @@ bool InBuffer::readSint32(int32_t &num)
 //
 bool InBuffer::readUint16(uint16_t &num)
 {
-   uint16_t lNum;
+    uint16_t lNum;
 
-   if(read(&lNum, sizeof(lNum)) != sizeof(lNum))
-      return false;
+    if(read(&lNum, sizeof(lNum)) != sizeof(lNum))
+        return false;
 
-   SwapUShort(lNum);
-   num = lNum;
-   return true;
+    SwapUShort(lNum);
+    num = lNum;
+    return true;
 }
 
 //
@@ -468,14 +448,14 @@ bool InBuffer::readUint16(uint16_t &num)
 //
 bool InBuffer::readSint16(int16_t &num)
 {
-   int16_t lNum;
+    int16_t lNum;
 
-   if(read(&lNum, sizeof(lNum)) != sizeof(lNum))
-      return false;
+    if(read(&lNum, sizeof(lNum)) != sizeof(lNum))
+        return false;
 
-   SwapShort(lNum);
-   num = lNum;
-   return true;
+    SwapShort(lNum);
+    num = lNum;
+    return true;
 }
 
 //
@@ -483,10 +463,10 @@ bool InBuffer::readSint16(int16_t &num)
 //
 bool InBuffer::readUint8(uint8_t &num)
 {
-   if(read(&num, sizeof(num)) != sizeof(num))
-      return false;
+    if(read(&num, sizeof(num)) != sizeof(num))
+        return false;
 
-   return true;
+    return true;
 }
 
 //
@@ -494,10 +474,10 @@ bool InBuffer::readUint8(uint8_t &num)
 //
 bool InBuffer::readSint8(int8_t &num)
 {
-   if(read(&num, sizeof(num)) != sizeof(num))
-      return false;
-   
-   return true;
+    if(read(&num, sizeof(num)) != sizeof(num))
+        return false;
+
+    return true;
 }
 
 // EOF

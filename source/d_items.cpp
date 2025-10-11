@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: The weapon info structure.
+// Authors: James Haley, Max Waine
 //
-// The weapon info structure.
-//
-//-----------------------------------------------------------------------------
 
 // We are referring to sprite numbers.
 #include "d_items.h"
@@ -34,7 +31,6 @@
 // shotgun. This may need to change a bit when dynamic weapons are finished.
 bool enable_ssg = false;
 
-
 // MaxW: 2018/05/30: This comment (mostly) preserved for historical purposes
 
 //
@@ -43,10 +39,9 @@ bool enable_ssg = false;
 //
 void D_InitWeaponInfo()
 {
-   // haleyjd 11/28/08: SSG enable
-   if(GameModeInfo->type == Game_DOOM &&
-      W_CheckNumForNameNS("SHT2A0", lumpinfo_t::ns_sprites) > 0)
-      enable_ssg = true;
+    // haleyjd 11/28/08: SSG enable
+    if(GameModeInfo->type == Game_DOOM && W_CheckNumForNameNS("SHT2A0", lumpinfo_t::ns_sprites) > 0)
+        enable_ssg = true;
 }
 
 //----------------------------------------------------------------------------

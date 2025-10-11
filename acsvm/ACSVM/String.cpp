@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2025 David Hill
 //
 // See COPYING for license information.
 //
@@ -14,6 +14,7 @@
 
 #include "BinaryIO.hpp"
 #include "HashMap.hpp"
+#include "Serial.hpp"
 
 #include <new>
 #include <vector>
@@ -48,7 +49,7 @@ namespace ACSVM
    // String constructor
    //
    String::String(StringData const &data, Word idx_) :
-      StringData{data}, lock{0}, idx{idx_}, len0(static_cast<const Word>(std::strlen(str))), link{this}
+      StringData{data}, lock{0}, idx{idx_}, len0(std::strlen(str)), link{this}
    {
    }
 
@@ -85,7 +86,7 @@ namespace ACSVM
    //
    // String::Read
    //
-   String *String::Read(std::istream &in, Word idx)
+   String *String::Read(Serial &in, Word idx)
    {
       std::size_t len = ReadVLN<std::size_t>(in);
 
@@ -101,7 +102,7 @@ namespace ACSVM
    //
    // String::Write
    //
-   void String::Write(std::ostream &out, String *in)
+   void String::Write(Serial &out, String *in)
    {
       WriteVLN(out, in->len);
       out.write(in->str, in->len);
@@ -171,7 +172,7 @@ namespace ACSVM
             throw std::bad_alloc();
          #endif
 
-         idx = static_cast<Word>(pd->stringByIdx.size());
+         idx = pd->stringByIdx.size();
          pd->stringByIdx.emplace_back(strNone);
          strV = pd->stringByIdx.data();
          strC = pd->stringByIdx.size();
@@ -239,7 +240,7 @@ namespace ACSVM
    //
    // StringTable::loadState
    //
-   void StringTable::loadState(std::istream &in)
+   void StringTable::loadState(Serial &in)
    {
       if(pd)
       {
@@ -259,9 +260,9 @@ namespace ACSVM
 
       for(std::size_t idx = 0; idx != count; ++idx)
       {
-         if(in.get())
+         if(in.readByte())
          {
-            String *str = String::Read(in, static_cast<Word>(idx));
+            String *str = String::Read(in, idx);
             str->lock = ReadVLN<std::size_t>(in);
             pd->stringByIdx[idx] = str;
             pd->stringByData.insert(str);
@@ -269,7 +270,7 @@ namespace ACSVM
          else
          {
             pd->stringByIdx[idx] = strNone;
-            pd->freeIdx.emplace_back(static_cast<Word>(idx));
+            pd->freeIdx.emplace_back(idx);
          }
       }
    }
@@ -277,7 +278,7 @@ namespace ACSVM
    //
    // StringTable::saveState
    //
-   void StringTable::saveState(std::ostream &out) const
+   void StringTable::saveState(Serial &out) const
    {
       WriteVLN(out, pd->stringByIdx.size());
 
@@ -285,13 +286,13 @@ namespace ACSVM
       {
          if(str != strNone)
          {
-            out << '\1';
+            out.writeByte(1);
 
             String::Write(out, str);
             WriteVLN(out, str->lock);
          }
          else
-            out << '\0';
+            out.writeByte(0);
       }
    }
 

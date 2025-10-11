@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Description: 
-//   SNDINFO Parser
+// Purpose: SNDINFO parser.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 
@@ -44,239 +42,211 @@
 class XLSndInfoParser : public XLParser
 {
 protected:
-   static const char *sndInfoKwds[]; // see below class.
-   
-   // keyword enumeration
-   enum
-   {
-     KWD_ALIAS,
-     KWD_AMBIENT,     
-     KWD_ARCHIVEPATH,
-     KWD_ENDIF,
-     KWD_IFDOOM,
-     KWD_IFHERETIC,
-     KWD_IFHEXEN,
-     KWD_IFSTRIFE,
-     KWD_LIMIT,
-     KWD_MAP,
-     KWD_MIDIDEVICE,
-     KWD_MUSICVOLUME,
-     KWD_PITCHSHIFT,
-     KWD_PLAYERALIAS,
-     KWD_PLAYERCOMPAT,
-     KWD_PLAYERSOUND,
-     KWD_PLAYERSOUNDDUP,
-     KWD_RANDOM,
-     KWD_REGISTERED,
-     KWD_ROLLOFF,
-     KWD_SINGULAR,
-     KWD_VOLUME,
-     NUMKWDS
-   };
+    static const char *sndInfoKwds[]; // see below class.
 
-   // state enumeration
-   enum
-   {
-      STATE_EXPECTCMD,
-      STATE_EXPECTMAPNUM,
-      STATE_EXPECTMUSLUMP,
-      STATE_EXPECTSNDLUMP,
-      STATE_EATTOKEN
-   };
+    // keyword enumeration
+    enum
+    {
+        KWD_ALIAS,
+        KWD_AMBIENT,
+        KWD_ARCHIVEPATH,
+        KWD_ENDIF,
+        KWD_IFDOOM,
+        KWD_IFHERETIC,
+        KWD_IFHEXEN,
+        KWD_IFSTRIFE,
+        KWD_LIMIT,
+        KWD_MAP,
+        KWD_MIDIDEVICE,
+        KWD_MUSICVOLUME,
+        KWD_PITCHSHIFT,
+        KWD_PLAYERALIAS,
+        KWD_PLAYERCOMPAT,
+        KWD_PLAYERSOUND,
+        KWD_PLAYERSOUNDDUP,
+        KWD_RANDOM,
+        KWD_REGISTERED,
+        KWD_ROLLOFF,
+        KWD_SINGULAR,
+        KWD_VOLUME,
+        NUMKWDS
+    };
 
-   int     state;
-   qstring soundname;
-   int     musicmapnum;
+    // state enumeration
+    enum
+    {
+        STATE_EXPECTCMD,
+        STATE_EXPECTMAPNUM,
+        STATE_EXPECTMUSLUMP,
+        STATE_EXPECTSNDLUMP,
+        STATE_EATTOKEN
+    };
 
-   void doStateExpectCmd(XLTokenizer &token);
-   void doStateExpectMapNum(XLTokenizer &token);
-   void doStateExpectMusLump(XLTokenizer &token);
-   void doStateExpectSndLump(XLTokenizer &token);
-   void doStateEatToken(XLTokenizer &token);
+    int     state;
+    qstring soundname;
+    int     musicmapnum;
 
-   // State table declaration
-   static void (XLSndInfoParser::*States[])(XLTokenizer &);
+    void doStateExpectCmd(XLTokenizer &token);
+    void doStateExpectMapNum(XLTokenizer &token);
+    void doStateExpectMusLump(XLTokenizer &token);
+    void doStateExpectSndLump(XLTokenizer &token);
+    void doStateEatToken(XLTokenizer &token);
 
-   virtual bool doToken(XLTokenizer &token);
-   virtual void startLump();
+    // State table declaration
+    static void (XLSndInfoParser::*States[])(XLTokenizer &);
+
+    virtual bool doToken(XLTokenizer &token);
+    virtual void startLump();
 
 public:
-   // Constructor
-   XLSndInfoParser() 
-      : XLParser("SNDINFO"), soundname(32), musicmapnum(0)
-   {
-   }
+    // Constructor
+    XLSndInfoParser() : XLParser("SNDINFO"), soundname(32), musicmapnum(0) {}
 };
 
 // Keywords for SNDINFO
-// Note that all ZDoom extensions are included, even though they are not 
+// Note that all ZDoom extensions are included, even though they are not
 // supported yet. This is so that they are properly documented and ignored in
 // the meanwhile.
-const char *XLSndInfoParser::sndInfoKwds[] =
-{
-   "$alias",
-   "$ambient",
-   "$archivepath",
-   "$endif",
-   "$ifdoom",
-   "$ifheretic",
-   "$ifhexen",
-   "$ifstrife",
-   "$limit",
-   "$map",
-   "$mididevice",
-   "$musicvolume",
-   "$pitchshift",
-   "$playeralias",
-   "$playercompat",
-   "$playersound",
-   "$playersounddup",
-   "$random",   
-   "$registered",
-   "$rolloff",
-   "$singular",
-   "$volume"
+const char *XLSndInfoParser::sndInfoKwds[] = {
+    "$alias",      "$ambient",     "$archivepath",  "$endif",       "$ifdoom",         "$ifheretic",
+    "$ifhexen",    "$ifstrife",    "$limit",        "$map",         "$mididevice",     "$musicvolume",
+    "$pitchshift", "$playeralias", "$playercompat", "$playersound", "$playersounddup", "$random",
+    "$registered", "$rolloff",     "$singular",     "$volume",
 };
 
 //
 // State Handlers
 //
-   
+
 // Expecting the start of a SNDINFO command or sound definition
 void XLSndInfoParser::doStateExpectCmd(XLTokenizer &token)
 {
-   int cmdnum;
-   qstring &tokenText = token.getToken();
+    int      cmdnum;
+    qstring &tokenText = token.getToken();
 
-   switch(token.getTokenType())
-   {
-   case XLTokenizer::TOKEN_KEYWORD: // a $ keyword
-      cmdnum = E_StrToNumLinear(sndInfoKwds, NUMKWDS, tokenText.constPtr());
-      switch(cmdnum)
-      {
-      case KWD_ARCHIVEPATH:
-         state = STATE_EATTOKEN; // eat the path token
-         break;
-      case KWD_MAP:
-         state = STATE_EXPECTMAPNUM;
-         break;
-      default: // unknown or inconsequential command (ie. $registered)
-         break;
-      }
-      break;
-   case XLTokenizer::TOKEN_STRING:  // a normal string
-      soundname = tokenText; // remember the sound name
-      state = STATE_EXPECTSNDLUMP;
-      break;
-   default: // unknown token
-      break;
-   }
+    switch(token.getTokenType())
+    {
+    case XLTokenizer::TOKEN_KEYWORD: // a $ keyword
+        cmdnum = E_StrToNumLinear(sndInfoKwds, NUMKWDS, tokenText.constPtr());
+        switch(cmdnum)
+        {
+        case KWD_ARCHIVEPATH:       //
+            state = STATE_EATTOKEN; // eat the path token
+            break;
+        case KWD_MAP: //
+            state = STATE_EXPECTMAPNUM;
+            break;
+        default: // unknown or inconsequential command (ie. $registered)
+            break;
+        }
+        break;
+    case XLTokenizer::TOKEN_STRING: // a normal string
+        soundname = tokenText;      // remember the sound name
+        state     = STATE_EXPECTSNDLUMP;
+        break;
+    default: // unknown token
+        break;
+    }
 }
 
 // Expecting the map number after a $map command
 void XLSndInfoParser::doStateExpectMapNum(XLTokenizer &token)
 {
-   if(token.getTokenType() != XLTokenizer::TOKEN_STRING)
-   {
-      state = STATE_EXPECTCMD;
-      doStateExpectCmd(token);
-   }
-   else
-   {
-      musicmapnum = token.getToken().toInt();
+    if(token.getTokenType() != XLTokenizer::TOKEN_STRING)
+    {
+        state = STATE_EXPECTCMD;
+        doStateExpectCmd(token);
+    }
+    else
+    {
+        musicmapnum = token.getToken().toInt();
 
-      // Expect music lump name next.
-      state = STATE_EXPECTMUSLUMP;
-   }
+        // Expect music lump name next.
+        state = STATE_EXPECTMUSLUMP;
+    }
 }
 
 // Expecting the music lump name after a map number
 void XLSndInfoParser::doStateExpectMusLump(XLTokenizer &token)
 {
-   if(token.getTokenType() != XLTokenizer::TOKEN_STRING)
-   {
-      state = STATE_EXPECTCMD;
-      doStateExpectCmd(token);
-   }
-   else
-   {
-      qstring &muslump = token.getToken();
+    if(token.getTokenType() != XLTokenizer::TOKEN_STRING)
+    {
+        state = STATE_EXPECTCMD;
+        doStateExpectCmd(token);
+    }
+    else
+    {
+        qstring &muslump = token.getToken();
 
-      // Lump must exist
-      if(muslump.length() <= 8 &&
-         waddir->checkNumForName(muslump.constPtr()) != -1)
-      {
-         P_AddSndInfoMusic(musicmapnum, muslump.constPtr());
+        // Lump must exist
+        if(muslump.length() <= 8 && waddir->checkNumForName(muslump.constPtr()) != -1)
+        {
+            P_AddSndInfoMusic(musicmapnum, muslump.constPtr());
 
-         // Return to expecting a command
-         state = STATE_EXPECTCMD;
-      }
-      else // Otherwise we might be off due to unknown tokens; return to ExpectCmd
-      {
-         state = STATE_EXPECTCMD;
-         doStateExpectCmd(token);
-      }
-   }
+            // Return to expecting a command
+            state = STATE_EXPECTCMD;
+        }
+        else // Otherwise we might be off due to unknown tokens; return to ExpectCmd
+        {
+            state = STATE_EXPECTCMD;
+            doStateExpectCmd(token);
+        }
+    }
 }
 
 // Expecting the lump name after a sound definition
 void XLSndInfoParser::doStateExpectSndLump(XLTokenizer &token)
 {
-   if(token.getTokenType() != XLTokenizer::TOKEN_STRING)
-   {
-      // Not a string? We are probably in an error state.
-      // Get out with an immediate call to the expect command state
-      state = STATE_EXPECTCMD;
-      doStateExpectCmd(token);
-   }
-   else
-   {
-      qstring &soundlump = token.getToken();
+    if(token.getTokenType() != XLTokenizer::TOKEN_STRING)
+    {
+        // Not a string? We are probably in an error state.
+        // Get out with an immediate call to the expect command state
+        state = STATE_EXPECTCMD;
+        doStateExpectCmd(token);
+    }
+    else
+    {
+        qstring &soundlump = token.getToken();
 
-      // Lump must exist, otherwise we create erroneous sounds if there are
-      // unknown keywords in the lump. Thanks to ZDoom for defining such a 
-      // clean, context-free, grammar-based language with delimiters :>
-      if(soundlump.length() <= 8 &&
-         waddir->checkNumForName(soundlump.constPtr()) != -1)
-      {
-         sfxinfo_t *sfx;
+        // Lump must exist, otherwise we create erroneous sounds if there are
+        // unknown keywords in the lump. Thanks to ZDoom for defining such a
+        // clean, context-free, grammar-based language with delimiters :>
+        if(soundlump.length() <= 8 && waddir->checkNumForName(soundlump.constPtr()) != -1)
+        {
+            sfxinfo_t *sfx;
 
-         if((sfx = E_SoundForName(soundname.constPtr()))) // defined already?
-         {
-            sfx->flags &= ~SFXF_PREFIX;
-            soundname.copyInto(sfx->name, 9);
-         } 
-         else
-         {
-            // create a new sound
-            E_NewSndInfoSound(soundname.constPtr(), soundlump.constPtr());
-         }
+            if((sfx = E_SoundForName(soundname.constPtr()))) // defined already?
+            {
+                sfx->flags &= ~SFXF_PREFIX;
+                soundname.copyInto(sfx->name, 9);
+            }
+            else
+            {
+                // create a new sound
+                E_NewSndInfoSound(soundname.constPtr(), soundlump.constPtr());
+            }
 
-         // Return to expecting a command
-         state = STATE_EXPECTCMD;
-      }
-      else // Otherwise we might be off due to unknown tokens; return to ExpectCmd
-      {
-         state = STATE_EXPECTCMD;
-         doStateExpectCmd(token);
-      }
-   }
+            // Return to expecting a command
+            state = STATE_EXPECTCMD;
+        }
+        else // Otherwise we might be off due to unknown tokens; return to ExpectCmd
+        {
+            state = STATE_EXPECTCMD;
+            doStateExpectCmd(token);
+        }
+    }
 }
 
 // Throw away a token unconditionally
 void XLSndInfoParser::doStateEatToken(XLTokenizer &token)
 {
-   state = STATE_EXPECTCMD; // return to expecting a command
+    state = STATE_EXPECTCMD; // return to expecting a command
 }
 
 // State table for SNDINFO parser
-void (XLSndInfoParser::* XLSndInfoParser::States[])(XLTokenizer &) =
-{
-   &XLSndInfoParser::doStateExpectCmd,
-   &XLSndInfoParser::doStateExpectMapNum,
-   &XLSndInfoParser::doStateExpectMusLump,
-   &XLSndInfoParser::doStateExpectSndLump,
-   &XLSndInfoParser::doStateEatToken
+void (XLSndInfoParser::*XLSndInfoParser::States[])(XLTokenizer &) = {
+    &XLSndInfoParser::doStateExpectCmd, &XLSndInfoParser::doStateExpectMapNum, &XLSndInfoParser::doStateExpectMusLump,
+    &XLSndInfoParser::doStateExpectSndLump, &XLSndInfoParser::doStateEatToken
 };
 
 //
@@ -286,11 +256,11 @@ void (XLSndInfoParser::* XLSndInfoParser::States[])(XLTokenizer &) =
 //
 bool XLSndInfoParser::doToken(XLTokenizer &token)
 {
-   // Call handler method for the current state. Why is this done from
-   // a virtual call-down? Because parent classes cannot call child
-   // class method pointers! :P
-   (this->*States[state])(token);
-   return true;
+    // Call handler method for the current state. Why is this done from
+    // a virtual call-down? Because parent classes cannot call child
+    // class method pointers! :P
+    (this->*States[state])(token);
+    return true;
 }
 
 //
@@ -300,7 +270,7 @@ bool XLSndInfoParser::doToken(XLTokenizer &token)
 //
 void XLSndInfoParser::startLump()
 {
-   state = STATE_EXPECTCMD; // starting state
+    state = STATE_EXPECTCMD; // starting state
 }
 
 //=============================================================================
@@ -315,9 +285,9 @@ void XLSndInfoParser::startLump()
 //
 void XL_ParseSoundInfo()
 {
-   XLSndInfoParser sndInfoParser;
+    XLSndInfoParser sndInfoParser;
 
-   sndInfoParser.parseAll(wGlobalDir);
+    sndInfoParser.parseAll(wGlobalDir);
 }
 
 // EOF

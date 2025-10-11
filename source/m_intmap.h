@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2021 James Haley et al.
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: Read-only contiguous storage [int: [int]] data map
+//------------------------------------------------------------------------------
+//
+// Purpose: Read-only contiguous storage [int: [int]] data map.
 // Authors: Ioan Chera
 //
 
@@ -33,12 +35,10 @@
 class BaseIntListMap : public ZoneObject
 {
 public:
-   virtual ~BaseIntListMap()
-   {
-      efree(mData);
-   }
+    virtual ~BaseIntListMap() { efree(mData); }
+
 protected:
-   int *mData = nullptr;
+    int *mData = nullptr;
 };
 
 //
@@ -49,8 +49,8 @@ protected:
 class IntListMap : public BaseIntListMap
 {
 public:
-   void load(const Collection<PODCollection<int>> &source);
-   const int *getList(int index, int *length) const;
+    void       load(const Collection<PODCollection<int>> &source);
+    const int *getList(int index, int *length) const;
 };
 
 //
@@ -59,9 +59,8 @@ public:
 class DualIntListMap : public BaseIntListMap
 {
 public:
-   void load(const Collection<PODCollection<int>> &first,
-             const Collection<PODCollection<int>> &second);
-   const int *getList(int index, int which, int *length) const;
+    void       load(const Collection<PODCollection<int>> &first, const Collection<PODCollection<int>> &second);
+    const int *getList(int index, int which, int *length) const;
 };
 
 #endif /* M_INTMAP_H_ */

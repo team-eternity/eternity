@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,13 +18,13 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Video and rendering related buffers which must allocate and deallocate
-//   with screen resolution changes.
+// Purpose: Video and rendering related buffers which must allocate and
+//  deallocate with screen resolution changes.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Stephen McGranahan
+//
 
 #ifndef V_ALLOC_H__
 #define V_ALLOC_H__
@@ -35,22 +34,19 @@
 class VAllocItem
 {
 public:
-   typedef void (*allocfn_t)(int w, int h);
+    using allocfn_t = void (*)(int w, int h);
 
 protected:
-   static DLListItem<VAllocItem> *vAllocList;
+    static DLListItem<VAllocItem> *vAllocList;
 
-   DLListItem<VAllocItem> links;
-   allocfn_t allocator;
+    DLListItem<VAllocItem> links;
+    allocfn_t              allocator;
 
 public:
-   explicit VAllocItem(allocfn_t p_allocator) : links(), allocator(p_allocator) 
-   {
-      links.insert(this, &vAllocList);
-   }
+    explicit VAllocItem(allocfn_t p_allocator) : links(), allocator(p_allocator) { links.insert(this, &vAllocList); }
 
-   static void FreeAllocs();
-   static void SetNewMode(int w, int h);
+    static void FreeAllocs();
+    static void SetNewMode(int w, int h);
 };
 
 #define VALLOCFNNAME(name) VAllocFn_ ## name
@@ -59,9 +55,9 @@ public:
 #define VALLOCFNDEF(name)  static void VALLOCFNNAME(name) (int w, int h)
 
 #define VALLOCATION(name) \
-   VALLOCFNSIG(name);     \
-   VALLOCDECL(name);      \
-   VALLOCFNDEF(name)
+    VALLOCFNSIG(name);    \
+    VALLOCDECL(name);     \
+    VALLOCFNDEF(name)
 
 #endif
 

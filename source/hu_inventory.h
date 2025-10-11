@@ -1,5 +1,6 @@
 //
-// Copyright (C) 2020 James Haley, Ioan Chera et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley, Ioan Chera et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,9 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Purpose: inventory and non-display buffs HUD widget
+// Purpose: Inventory and non-display buffs HUD widget.
 // Authors: Ioan Chera
 //
 

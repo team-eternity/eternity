@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright(C) 2023 James Haley, Ioan Chera, et al.
+// Copyright (C) 2025 James Haley, Ioan Chera, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,9 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Purpose: macOS Objective-C specific Window functions 
+// Purpose: macOS Objective-C specific Window functions.
 // Authors: Ioan Chera
 //
 
@@ -34,25 +34,25 @@
 
 bool I_IsMacViewOccluded(SDL_Window *window)
 {
-   if(!window)
-      return true;
+    if(!window)
+        return true;
    
-   edefstructvar(SDL_SysWMinfo, info);
-   SDL_VERSION(&info.version);
+	SDL_SysWMinfo info = {};
+    SDL_VERSION(&info.version);
    
-   if(!SDL_GetWindowWMInfo(window, &info))
-   {
-      NSLog(@"%s: get WM info failed: %s", __func__, SDL_GetError());
-      return false;
-   }
-   if(info.subsystem != SDL_SYSWM_COCOA)
-   {
-      NSLog(@"%s: bad subsystem %d", __func__, info.subsystem);
-      return false;
-   }
+    if(!SDL_GetWindowWMInfo(window, &info))
+    {
+        NSLog(@"%s: get WM info failed: %s", __func__, SDL_GetError());
+        return false;
+    }
+    if(info.subsystem != SDL_SYSWM_COCOA)
+    {
+        NSLog(@"%s: bad subsystem %d", __func__, info.subsystem);
+        return false;
+    }
    
-   NSWindow *macwindow = info.info.cocoa.window;
-   return !(macwindow.occlusionState & NSWindowOcclusionStateVisible);
+    NSWindow *macwindow = info.info.cocoa.window;
+    return !(macwindow.occlusionState & NSWindowOcclusionStateVisible);
 }
 
 // EOF

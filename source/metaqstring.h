@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,13 +18,13 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: MetaQString adapter class for storage of qstrings as metatable
+//  properties.
 //
-//   MetaQString adapter class for storage of qstrings as metatable properties.
+// Authors: James Haley, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef METAQSTRING_H__
 #define METAQSTRING_H__
@@ -36,41 +35,27 @@
 
 class MetaQString : public MetaObject
 {
-   DECLARE_RTTI_TYPE(MetaQString, MetaObject)
+    DECLARE_RTTI_TYPE(MetaQString, MetaObject)
 
 public:
-   qstring value;
+    qstring value;
 
-   MetaQString() : Super(), value()
-   {
-   }
+    MetaQString() : Super(), value() {}
 
-   explicit MetaQString(const char *key) : Super(key), value()
-   {
-   }
+    explicit MetaQString(const char *key) : Super(key), value() {}
 
-   MetaQString(const char *key, const qstring &initValue)
-      : Super(key), value(initValue)
-   {
-   }
+    MetaQString(const char *key, const qstring &initValue) : Super(key), value(initValue) {}
 
-   MetaQString(const char *key, const char *ccvalue)
-      : Super(key), value(ccvalue)
-   {
-   }
+    MetaQString(const char *key, const char *ccvalue) : Super(key), value(ccvalue) {}
 
-   MetaQString(const MetaQString &other)
-      : Super(other), value(other.value)
-   {
-   }
+    MetaQString(const MetaQString &other) : Super(other), value(other.value) {}
 
-   // Virtuals
-   MetaObject *clone()    const override { return new MetaQString(*this); }
-   const char *toString() const override { return value.constPtr(); }
+    // Virtuals
+    MetaObject *clone() const override { return new MetaQString(*this); }
+    const char *toString() const override { return value.constPtr(); }
 };
 
 #endif
 
 // EOF
-
 

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,36 +18,34 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// General queue code
+// Purpose: General queue code.
+// Authors: James Haley, Charles Gunyon
 //
-// By James Haley
-//
-//-----------------------------------------------------------------------------
 
 #ifndef M_QUEUE_H
 #define M_QUEUE_H
 
 struct mqueueitem_t
 {
-   struct mqueueitem_t *next;
+    struct mqueueitem_t *next;
 };
 
 struct mqueue_t
 {
-   mqueueitem_t head;
-   mqueueitem_t *tail;
-   mqueueitem_t *rover;
-   unsigned int size;
+    mqueueitem_t  head;
+    mqueueitem_t *tail;
+    mqueueitem_t *rover;
+    unsigned int  size;
 };
 
 void          M_QueueInit(mqueue_t *queue);
 void          M_QueueInsert(mqueueitem_t *item, mqueue_t *queue);
 bool          M_QueueIsEmpty(mqueue_t *queue);
-mqueueitem_t* M_QueuePop(mqueue_t *queue);
-mqueueitem_t* M_QueueIterator(mqueue_t *queue);
-mqueueitem_t* M_QueuePeek(mqueue_t *queue);
+mqueueitem_t *M_QueuePop(mqueue_t *queue);
+mqueueitem_t *M_QueueIterator(mqueue_t *queue);
+mqueueitem_t *M_QueuePeek(mqueue_t *queue);
 void          M_QueueResetIterator(mqueue_t *queue);
 void          M_QueueFree(mqueue_t *queue);
 

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Buffered file output.
+// Purpose: Buffered file output.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef M_BUFFER_H__
 #define M_BUFFER_H__
@@ -38,11 +36,11 @@
 class BufferedIOException
 {
 protected:
-   const char *message;
+    const char *message;
 
 public:
-   explicit BufferedIOException(const char *pMsg) : message(pMsg) {}
-   const char *GetMessage() { return message; }
+    explicit BufferedIOException(const char *pMsg) : message(pMsg) {}
+    const char *GetMessage() { return message; }
 };
 
 //
@@ -55,53 +53,49 @@ public:
 class BufferedFileBase
 {
 protected:
-   FILE *f;       // destination or source file
-   byte *buffer;  // buffer
-   size_t len;    // total buffer length
-   size_t idx;    // current index
-   int endian;    // endianness indicator
-   bool throwing; // throws exceptions on IO errors
-   bool ownFile;  // buffer owns the file
-   
-   void initBuffer(size_t pLen, int pEndian);
+    FILE  *f;        // destination or source file
+    byte  *buffer;   // buffer
+    size_t len;      // total buffer length
+    size_t idx;      // current index
+    int    endian;   // endianness indicator
+    bool   throwing; // throws exceptions on IO errors
+    bool   ownFile;  // buffer owns the file
+
+    void initBuffer(size_t pLen, int pEndian);
 
 public:
-   BufferedFileBase() 
-      : f(nullptr), buffer(nullptr), len(0), idx(0), endian(0), throwing(false),
-        ownFile(false)
-   {
-   }
+    BufferedFileBase() : f(nullptr), buffer(nullptr), len(0), idx(0), endian(0), throwing(false), ownFile(false) {}
 
-   virtual ~BufferedFileBase()
-   {
-      if(ownFile && f)
-         fclose(f);
+    virtual ~BufferedFileBase()
+    {
+        if(ownFile && f)
+            fclose(f);
 
-      if(buffer)
-      {
-         efree(buffer);
-         buffer = nullptr;
-      }
-   }
+        if(buffer)
+        {
+            efree(buffer);
+            buffer = nullptr;
+        }
+    }
 
-   long tell();
-   virtual void close();
+    long         tell();
+    virtual void close();
 
-   void swapLong  (int32_t  &x);
-   void swapShort (int16_t  &x);
-   void swapULong (uint32_t &x);
-   void swapUShort(uint16_t &x);
+    void swapLong(int32_t &x);
+    void swapShort(int16_t &x);
+    void swapULong(uint32_t &x);
+    void swapUShort(uint16_t &x);
 
-   void setThrowing(bool val) { throwing = val;  }
-   bool getThrowing() const   { return throwing; }
+    void setThrowing(bool val) { throwing = val; }
+    bool getThrowing() const { return throwing; }
 
-   // endianness values
-   enum
-   {
-      NENDIAN, // doesn't swap shorts or ints
-      LENDIAN, // swaps shorts/ints to little endian
-      BENDIAN  // swaps shorts/ints to big endian
-   };
+    // endianness values
+    enum
+    {
+        NENDIAN, // doesn't swap shorts or ints
+        LENDIAN, // swaps shorts/ints to little endian
+        BENDIAN  // swaps shorts/ints to big endian
+    };
 };
 
 //
@@ -112,19 +106,19 @@ public:
 class OutBuffer : public BufferedFileBase
 {
 public:
-   bool createFile(const char *filename, size_t pLen, int pEndian);
-   bool flush();
-   void close();
+    bool createFile(const char *filename, size_t pLen, int pEndian);
+    bool flush();
+    void close();
 
-   bool write(const void *data, size_t size);
-   bool writeSint64(int64_t  num);
-   bool writeUint64(uint64_t num);
-   bool writeSint32(int32_t  num);
-   bool writeUint32(uint32_t num);
-   bool writeSint16(int16_t  num);
-   bool writeUint16(uint16_t num);
-   bool writeSint8 (int8_t   num);
-   bool writeUint8 (uint8_t  num);
+    bool write(const void *data, size_t size);
+    bool writeSint64(int64_t num);
+    bool writeUint64(uint64_t num);
+    bool writeSint32(int32_t num);
+    bool writeUint32(uint32_t num);
+    bool writeSint16(int16_t num);
+    bool writeUint16(uint16_t num);
+    bool writeSint8(int8_t num);
+    bool writeUint8(uint8_t num);
 };
 
 //
@@ -135,28 +129,25 @@ public:
 class InBuffer : public BufferedFileBase
 {
 public:
-   InBuffer() : BufferedFileBase()
-   {
-   }
+    InBuffer() : BufferedFileBase() {}
 
-   bool openFile(const char *filename, int pEndian);
-   bool openExisting(FILE *f, int pEndian);
+    bool openFile(const char *filename, int pEndian);
+    bool openExisting(FILE *f, int pEndian);
 
-   int    seek(long offset, int origin);
-   size_t read(void *dest, size_t size);
-   int    skip(size_t skipAmt);
-   bool   readSint64(int64_t  &num);
-   bool   readUint64(uint64_t &num);
-   bool   readSint32(int32_t  &num);
-   bool   readUint32(uint32_t &num);
-   bool   readSint16(int16_t  &num);
-   bool   readUint16(uint16_t &num);
-   bool   readSint8 (int8_t   &num);
-   bool   readUint8 (uint8_t  &num);
+    int    seek(long offset, int origin);
+    size_t read(void *dest, size_t size);
+    int    skip(size_t skipAmt);
+    bool   readSint64(int64_t &num);
+    bool   readUint64(uint64_t &num);
+    bool   readSint32(int32_t &num);
+    bool   readUint32(uint32_t &num);
+    bool   readSint16(int16_t &num);
+    bool   readUint16(uint16_t &num);
+    bool   readSint8(int8_t &num);
+    bool   readUint8(uint8_t &num);
 };
 
 #endif
 
 // EOF
-
 

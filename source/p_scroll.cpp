@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Scrollers, carriers, and related effects
+// Purpose: Scrollers, carriers, and related effects.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 
@@ -29,7 +27,7 @@
 #include "doomstat.h"
 #include "ev_specials.h"
 #include "p_mobj.h"
-#include "p_portal.h"   // ioanch 20160115: portal aware
+#include "p_portal.h" // ioanch 20160115: portal aware
 #include "p_portalcross.h"
 #include "p_saveg.h"
 #include "p_scroll.h"
@@ -38,12 +36,11 @@
 #include "r_state.h"
 #include "v_misc.h"
 
-
 struct scrollerlist_t
 {
-   ScrollThinker    *scroller;
-   scrollerlist_t   *next;
-   scrollerlist_t  **prev;
+    ScrollThinker   *scroller;
+    scrollerlist_t  *next;
+    scrollerlist_t **prev;
 };
 
 //
@@ -51,8 +48,8 @@ struct scrollerlist_t
 //
 struct sidelerpinfo_t
 {
-   side_t *side;     // the affected sidedef
-   v2fixed_t offset; // how much this is scrolling
+    side_t   *side;   // the affected sidedef
+    v2fixed_t offset; // how much this is scrolling
 };
 
 //
@@ -60,24 +57,23 @@ struct sidelerpinfo_t
 //
 struct seclerpinfo_t
 {
-   sector_t *sector;
-   bool isceiling;
-   v2fixed_t offset;
+    sector_t *sector;
+    bool      isceiling;
+    v2fixed_t offset;
 };
 
 static scrollerlist_t *scrollers;
 
 static PODCollection<sidelerpinfo_t> pScrolledSides;
-static PODCollection<seclerpinfo_t> pScrolledSectors;
+static PODCollection<seclerpinfo_t>  pScrolledSectors;
 
 // Also for moving through BOOM-scrolling water surface
-inline static bool P_inCarryingWater(const Mobj &thing, const surface_t &floor,
-                                     const surface_t *waterlevel)
+inline static bool P_inCarryingWater(const Mobj &thing, const surface_t &floor, const surface_t *waterlevel)
 {
-   if(!waterlevel)
-      return false;
-   fixed_t waterheight = waterlevel->getZAt(thing.x, thing.y);
-   return waterheight > floor.getZAt(thing.x, thing.y) && thing.z < waterheight;
+    if(!waterlevel)
+        return false;
+    fixed_t waterheight = waterlevel->getZAt(thing.x, thing.y);
+    return waterheight > floor.getZAt(thing.x, thing.y) && thing.z < waterheight;
 }
 
 IMPLEMENT_THINKER_TYPE(ScrollThinker)
@@ -103,108 +99,106 @@ IMPLEMENT_THINKER_TYPE(ScrollThinker)
 //
 void ScrollThinker::Think()
 {
-   fixed_t dx = this->dx, dy = this->dy;
-   
-   if(this->control != -1)
-   {   // compute scroll amounts based on a sector's height changes
-      fixed_t height = sectors[this->control].srf.floor.height +
-         sectors[this->control].srf.ceiling.height;
-      fixed_t delta = height - this->last_height;
-      this->last_height = height;
-      dx = FixedMul(dx, delta);
-      dy = FixedMul(dy, delta);
-   }
+    fixed_t dx = this->dx, dy = this->dy;
 
-   // killough 3/14/98: Add acceleration
-   if(this->accel)
-   {
-      this->vdx = dx += this->vdx;
-      this->vdy = dy += this->vdy;
-   }
+    if(this->control != -1)
+    { // compute scroll amounts based on a sector's height changes
+        fixed_t height    = sectors[this->control].srf.floor.height + sectors[this->control].srf.ceiling.height;
+        fixed_t delta     = height - this->last_height;
+        this->last_height = height;
+        dx                = FixedMul(dx, delta);
+        dy                = FixedMul(dy, delta);
+    }
 
-   if(!(dx | dy))                   // no-op if both (x,y) offsets 0
-      return;
+    // killough 3/14/98: Add acceleration
+    if(this->accel)
+    {
+        this->vdx = dx += this->vdx;
+        this->vdy = dy += this->vdy;
+    }
 
-   side_t *side;
-   sector_t *sec;
-   // killough 4/4/98: add waterheight
-   msecnode_t *node;
-   Mobj *thing;
-   const surface_t *watersurface;
+    if(!(dx | dy)) // no-op if both (x,y) offsets 0
+        return;
 
-   switch(this->type)
-   {
-   case ScrollThinker::sc_side:          // killough 3/7/98: Scroll wall texture
-      side = sides + this->affectee;
-      side->offset_base_x += dx;
-      side->offset_base_y += dy;
-      P_AddScrolledSide(side, dx, dy);
-      break;
+    side_t   *side;
+    sector_t *sec;
+    // killough 4/4/98: add waterheight
+    msecnode_t      *node;
+    Mobj            *thing;
+    const surface_t *watersurface;
 
-   case ScrollThinker::sc_floor:         // killough 3/7/98: Scroll floor texture
-      sec = sectors + this->affectee;
-      sec->srf.floor.offset.x += dx;
-      sec->srf.floor.offset.y += dy;
-      {
-         seclerpinfo_t &info = pScrolledSectors.addNew();
-         info.sector = sec;
-         info.isceiling = false;
-         info.offset.x = dx;
-         info.offset.y = dy;
-      }
-      break;
+    switch(this->type)
+    {
+    case ScrollThinker::sc_side: // killough 3/7/98: Scroll wall texture
+        side                 = sides + this->affectee;
+        side->offset_base_x += dx;
+        side->offset_base_y += dy;
+        P_AddScrolledSide(side, dx, dy);
+        break;
 
-   case ScrollThinker::sc_ceiling:       // killough 3/7/98: Scroll ceiling texture
-      sec = sectors + this->affectee;
-      sec->srf.ceiling.offset.x += dx;
-      sec->srf.ceiling.offset.y += dy;
-      {
-         seclerpinfo_t &info = pScrolledSectors.addNew();
-         info.sector = sec;
-         info.isceiling = true;
-         info.offset.x = dx;
-         info.offset.y = dy;
-      }
-      break;
+    case ScrollThinker::sc_floor: // killough 3/7/98: Scroll floor texture
+        sec                      = sectors + this->affectee;
+        sec->srf.floor.offset.x += dx;
+        sec->srf.floor.offset.y += dy;
+        {
+            seclerpinfo_t &info = pScrolledSectors.addNew();
+            info.sector         = sec;
+            info.isceiling      = false;
+            info.offset.x       = dx;
+            info.offset.y       = dy;
+        }
+        break;
 
-   case ScrollThinker::sc_carry:
-      
-      // killough 3/7/98: Carry things on floor
-      // killough 3/20/98: use new sector list which reflects true members
-      // killough 3/27/98: fix carrier bug
-      // killough 4/4/98: Underwater, carry things even w/o gravity
+    case ScrollThinker::sc_ceiling: // killough 3/7/98: Scroll ceiling texture
+        sec                        = sectors + this->affectee;
+        sec->srf.ceiling.offset.x += dx;
+        sec->srf.ceiling.offset.y += dy;
+        {
+            seclerpinfo_t &info = pScrolledSectors.addNew();
+            info.sector         = sec;
+            info.isceiling      = true;
+            info.offset.x       = dx;
+            info.offset.y       = dy;
+        }
+        break;
 
-      sec = sectors + this->affectee;
-      watersurface = sec->heightsec != -1 ? &sectors[sec->heightsec].srf.floor : nullptr;
+    case ScrollThinker::sc_carry:
 
-      // Move objects only if on floor or underwater,
-      // non-floating, and clipped.
-      
-      // haleyjd: added much-needed MF2_NOTHRUST flag to make some
-      //   objects unmoveable by sector effects
+        // killough 3/7/98: Carry things on floor
+        // killough 3/20/98: use new sector list which reflects true members
+        // killough 3/27/98: fix carrier bug
+        // killough 4/4/98: Underwater, carry things even w/o gravity
 
-      for(node = sec->touching_thinglist; node; node = node->m_snext)
-      {
-         // ioanch 20160115: portal aware
-         if(useportalgroups && full_demo_version >= make_full_version(340, 48) &&
-            !P_SectorTouchesThingVertically(sec, node->m_thing))
-         {
-            continue;
-         }
-         if(!((thing = node->m_thing)->flags & MF_NOCLIP) &&
-            !(thing->flags2 & MF2_NOTHRUST) &&
-            (!(thing->flags & MF_NOGRAVITY || !P_RestingOnGround(*thing, sec->srf.floor)) ||
-             P_inCarryingWater(*thing, sec->srf.floor, watersurface)))
-         {
-            thing->momx += dx;
-            thing->momy += dy;
-         }
-      }
-      break;
+        sec          = sectors + this->affectee;
+        watersurface = sec->heightsec != -1 ? &sectors[sec->heightsec].srf.floor : nullptr;
 
-   case ScrollThinker::sc_carry_ceiling:   // to be added later
-      break;
-   }
+        // Move objects only if on floor or underwater,
+        // non-floating, and clipped.
+
+        // haleyjd: added much-needed MF2_NOTHRUST flag to make some
+        //   objects unmoveable by sector effects
+
+        for(node = sec->touching_thinglist; node; node = node->m_snext)
+        {
+            // ioanch 20160115: portal aware
+            if(useportalgroups && full_demo_version >= make_full_version(340, 48) &&
+               !P_SectorTouchesThingVertically(sec, node->m_thing))
+            {
+                continue;
+            }
+            if(!((thing = node->m_thing)->flags & MF_NOCLIP) && !(thing->flags2 & MF2_NOTHRUST) &&
+               (!(thing->flags & MF_NOGRAVITY || !P_RestingOnGround(*thing, sec->srf.floor)) ||
+                P_inCarryingWater(*thing, sec->srf.floor, watersurface)))
+            {
+                thing->momx += dx;
+                thing->momy += dy;
+            }
+        }
+        break;
+
+    case ScrollThinker::sc_carry_ceiling: // to be added later
+        break;
+    }
 }
 
 //
@@ -214,13 +208,12 @@ void ScrollThinker::Think()
 //
 void ScrollThinker::serialize(SaveArchive &arc)
 {
-   Super::serialize(arc);
+    Super::serialize(arc);
 
-   arc << dx << dy << affectee << control << last_height << vdx << vdy
-       << accel << type;
+    arc << dx << dy << affectee << control << last_height << vdx << vdy << accel << type;
 
-   if(arc.isLoading())
-      addScroller();
+    if(arc.isLoading())
+        addScroller();
 }
 
 //
@@ -228,12 +221,12 @@ void ScrollThinker::serialize(SaveArchive &arc)
 //
 void ScrollThinker::addScroller()
 {
-   list = estructalloc(scrollerlist_t, 1);
-   list->scroller = this;
-   if((list->next = scrollers))
-      list->next->prev = &list->next;
-   list->prev = &scrollers;
-   scrollers = list;
+    list           = estructalloc(scrollerlist_t, 1);
+    list->scroller = this;
+    if((list->next = scrollers))
+        list->next->prev = &list->next;
+    list->prev = &scrollers;
+    scrollers  = list;
 }
 
 //
@@ -241,10 +234,10 @@ void ScrollThinker::addScroller()
 //
 void ScrollThinker::removeScroller()
 {
-   remove();
-   if((*list->prev = list->next))
-      list->next->prev = list->prev;
-   efree(list);
+    remove();
+    if((*list->prev = list->next))
+        list->next->prev = list->prev;
+    efree(list);
 }
 
 //
@@ -254,12 +247,12 @@ void ScrollThinker::removeScroller()
 //
 void ScrollThinker::RemoveAllScrollers()
 {
-   while(scrollers)
-   {
-      scrollerlist_t *next = scrollers->next;
-      efree(scrollers);
-      scrollers = next;
-   }
+    while(scrollers)
+    {
+        scrollerlist_t *next = scrollers->next;
+        efree(scrollers);
+        scrollers = next;
+    }
 }
 
 //
@@ -267,20 +260,20 @@ void ScrollThinker::RemoveAllScrollers()
 //
 static bool EV_stopFlatScrollerBySecnum(int type, int secnum)
 {
-   if(!scrollers)
-      return false;
+    if(!scrollers)
+        return false;
 
-   // search the scrolled sectors
-   scrollerlist_t *sl = scrollers;
-   while(sl)
-   {
-      ScrollThinker *scroller = sl->scroller;
-      sl = sl->next; // MUST do this here or bad things happen
-      if(scroller->affectee == secnum && scroller->type == type)
-         scroller->removeScroller();
-   }
+    // search the scrolled sectors
+    scrollerlist_t *sl = scrollers;
+    while(sl)
+    {
+        ScrollThinker *scroller = sl->scroller;
+        sl                      = sl->next; // MUST do this here or bad things happen
+        if(scroller->affectee == secnum && scroller->type == type)
+            scroller->removeScroller();
+    }
 
-   return true;
+    return true;
 }
 
 //
@@ -300,33 +293,31 @@ static bool EV_stopFlatScrollerBySecnum(int type, int secnum)
 //
 // accel: non-zero if this is an accelerative effect
 //
-void Add_Scroller(int type, fixed_t dx, fixed_t dy,
-                  int control, int affectee, int accel, bool overridescroller)
+void Add_Scroller(int type, fixed_t dx, fixed_t dy, int control, int affectee, int accel, bool overridescroller)
 {
-   ScrollThinker *s = new ScrollThinker;
+    ScrollThinker *s = new ScrollThinker;
 
-   s->type = type;
-   s->dx = dx;
-   s->dy = dy;
-   s->accel = accel;
-   s->vdx = s->vdy = 0;
+    s->type  = type;
+    s->dx    = dx;
+    s->dy    = dy;
+    s->accel = accel;
+    s->vdx = s->vdy = 0;
 
-   if((s->control = control) != -1)
-      s->last_height =
-       sectors[control].srf.floor.height + sectors[control].srf.ceiling.height;
+    if((s->control = control) != -1)
+        s->last_height = sectors[control].srf.floor.height + sectors[control].srf.ceiling.height;
 
-   s->affectee = affectee;
+    s->affectee = affectee;
 
-   if(type != ScrollThinker::sc_side)
-   {
-      if(overridescroller)
-         EV_stopFlatScrollerBySecnum(type, affectee);
-      s->addScroller();
-   }
-   else if(dy) // mark it as vertically scrolling for proper sky rendering
-      sides[affectee].intflags |= SDI_VERTICALLYSCROLLING;
+    if(type != ScrollThinker::sc_side)
+    {
+        if(overridescroller)
+            EV_stopFlatScrollerBySecnum(type, affectee);
+        s->addScroller();
+    }
+    else if(dy) // mark it as vertically scrolling for proper sky rendering
+        sides[affectee].intflags |= SDI_VERTICALLYSCROLLING;
 
-   s->addThinker();
+    s->addThinker();
 }
 
 // Adds wall scroller. Scroll amount is rotated with respect to wall's
@@ -339,22 +330,20 @@ void Add_Scroller(int type, fixed_t dx, fixed_t dy,
 // killough 10/98:
 // fix scrolling aliasing problems, caused by long linedefs causing overflowing
 
-static void Add_WallScroller(int64_t dx, int64_t dy, const line_t *l,
-                             int control, int accel)
+static void Add_WallScroller(int64_t dx, int64_t dy, const line_t *l, int control, int accel)
 {
-   fixed_t x = D_abs(l->dx), y = D_abs(l->dy), d;
-   if(y > x)
-   {
-      d = x;
-      x = y;
-      y = d;
-   }
-   d = FixedDiv(x,
-      finesine[(tantoangle[FixedDiv(y,x)>>DBITS]+ANG90) >> ANGLETOFINESHIFT]);
+    fixed_t x = D_abs(l->dx), y = D_abs(l->dy), d;
+    if(y > x)
+    {
+        d = x;
+        x = y;
+        y = d;
+    }
+    d = FixedDiv(x, finesine[(tantoangle[FixedDiv(y, x) >> DBITS] + ANG90) >> ANGLETOFINESHIFT]);
 
-   x = (int)((dy * -l->dy - dx * l->dx) / d);  // killough 10/98:
-   y = (int)((dy *  l->dx - dx * l->dy) / d);  // Use 64-bit arithmetic
-   Add_Scroller(ScrollThinker::sc_side, x, y, control, *l->sidenum, accel);
+    x = (int)((dy * -l->dy - dx * l->dx) / d); // killough 10/98:
+    y = (int)((dy * l->dx - dx * l->dy) / d);  // Use 64-bit arithmetic
+    Add_Scroller(ScrollThinker::sc_side, x, y, control, *l->sidenum, accel);
 }
 
 // Amount (dx,dy) vector linedef is shifted right to get scroll amount
@@ -372,12 +361,12 @@ static constexpr int ZDSCROLLFACTOR = 10;
 //
 static void P_getAccelControl(const line_t &line, int bits, int &accel, int &control)
 {
-   accel = 0;
-   control = -1;
-   if(bits & ev_Scroll_Bit_Accel)
-      accel = 1;
-   if(bits & (ev_Scroll_Bit_Accel | ev_Scroll_Bit_Displace))
-      control = eindex(sides[*line.sidenum].sector - sectors);
+    accel   = 0;
+    control = -1;
+    if(bits & ev_Scroll_Bit_Accel)
+        accel = 1;
+    if(bits & (ev_Scroll_Bit_Accel | ev_Scroll_Bit_Displace))
+        control = eindex(sides[*line.sidenum].sector - sectors);
 }
 
 // killough 3/7/98: Types 245-249 are same as 250-254 except that the
@@ -388,28 +377,27 @@ static void P_getAccelControl(const line_t &line, int bits, int &accel, int &con
 // killough 3/15/98: Add acceleration. Types 214-218 are the same but
 // are accelerative.
 
-static void P_getScrollParams(const line_t *l, fixed_t &dx, fixed_t &dy,
-                              int &control, int &accel, bool acs = false)
+static void P_getScrollParams(const line_t *l, fixed_t &dx, fixed_t &dy, int &control, int &accel, bool acs = false)
 {
-   int bits = l->args[ev_Scroll_Arg_Bits];
-   if(bits & ev_Scroll_Bit_UseLine)
-   {
-      dx = l->dx >> SCROLL_SHIFT; // direction and speed of scrolling
-      dy = l->dy >> SCROLL_SHIFT;
-   }
-   else if(!acs)
-   {
-      dx = ((l->args[ev_Scroll_Arg_X] - 128) << FRACBITS) >> SCROLL_SHIFT;
-      dy = ((l->args[ev_Scroll_Arg_Y] - 128) << FRACBITS) >> SCROLL_SHIFT;
-   }
-   else
-   {
-      // For some reason ACS Scroll_Floor and Scroll_Ceiling have different
-      // meaning for dx/dy if they're called from ACS. This is a ZDoom thing.
-      dx = ((l->args[ev_Scroll_Arg_X] * ZDSCROLLFACTOR) << FRACBITS) >> SCROLL_SHIFT;
-      dy = ((l->args[ev_Scroll_Arg_Y] * ZDSCROLLFACTOR) << FRACBITS) >> SCROLL_SHIFT;
-   }
-   P_getAccelControl(*l, bits, accel, control);
+    int bits = l->args[ev_Scroll_Arg_Bits];
+    if(bits & ev_Scroll_Bit_UseLine)
+    {
+        dx = l->dx >> SCROLL_SHIFT; // direction and speed of scrolling
+        dy = l->dy >> SCROLL_SHIFT;
+    }
+    else if(!acs)
+    {
+        dx = ((l->args[ev_Scroll_Arg_X] - 128) << FRACBITS) >> SCROLL_SHIFT;
+        dy = ((l->args[ev_Scroll_Arg_Y] - 128) << FRACBITS) >> SCROLL_SHIFT;
+    }
+    else
+    {
+        // For some reason ACS Scroll_Floor and Scroll_Ceiling have different
+        // meaning for dx/dy if they're called from ACS. This is a ZDoom thing.
+        dx = ((l->args[ev_Scroll_Arg_X] * ZDSCROLLFACTOR) << FRACBITS) >> SCROLL_SHIFT;
+        dy = ((l->args[ev_Scroll_Arg_Y] * ZDSCROLLFACTOR) << FRACBITS) >> SCROLL_SHIFT;
+    }
+    P_getAccelControl(*l, bits, accel, control);
 }
 
 //
@@ -423,21 +411,20 @@ static void P_getScrollParams(const line_t *l, fixed_t &dx, fixed_t &dy,
 //
 static void P_spawnCeilingScroller(int staticFn, const line_t *l)
 {
-   fixed_t dx, dy;
-   int control = -1;
-   int accel = 0;
+    fixed_t dx, dy;
+    int     control = -1;
+    int     accel   = 0;
 
-   dx = l->dx >> SCROLL_SHIFT; // direction and speed of scrolling
-   dy = l->dy >> SCROLL_SHIFT;
+    dx = l->dx >> SCROLL_SHIFT; // direction and speed of scrolling
+    dy = l->dy >> SCROLL_SHIFT;
 
-   if(staticFn == EV_STATIC_SCROLL_ACCEL_CEILING)
-      accel = 1;
-   if(staticFn == EV_STATIC_SCROLL_ACCEL_CEILING ||
-      staticFn == EV_STATIC_SCROLL_DISPLACE_CEILING)
-      control = eindex(sides[*l->sidenum].sector - sectors);
+    if(staticFn == EV_STATIC_SCROLL_ACCEL_CEILING)
+        accel = 1;
+    if(staticFn == EV_STATIC_SCROLL_ACCEL_CEILING || staticFn == EV_STATIC_SCROLL_DISPLACE_CEILING)
+        control = eindex(sides[*l->sidenum].sector - sectors);
 
-   for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
-      Add_Scroller(ScrollThinker::sc_ceiling, -dx, dy, control, s, accel);
+    for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
+        Add_Scroller(ScrollThinker::sc_ceiling, -dx, dy, control, s, accel);
 }
 
 // Spawns a parameterised ceiling scroller, either by ACS or by static init.
@@ -445,14 +432,14 @@ static void P_spawnCeilingScroller(int staticFn, const line_t *l)
 // * EV_STATIC_SCROLL_CEILING_PARAM
 void P_SpawnCeilingParam(const line_t *l, bool acs)
 {
-   fixed_t dx, dy;
-   int control = -1;
-   int accel = 0;
+    fixed_t dx, dy;
+    int     control = -1;
+    int     accel   = 0;
 
-   P_getScrollParams(l, dx, dy, control, accel, acs);
+    P_getScrollParams(l, dx, dy, control, accel, acs);
 
-   for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
-      Add_Scroller(ScrollThinker::sc_ceiling, -dx, dy, control, s, accel, acs);
+    for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
+        Add_Scroller(ScrollThinker::sc_ceiling, -dx, dy, control, s, accel, acs);
 }
 
 //
@@ -466,26 +453,25 @@ void P_SpawnCeilingParam(const line_t *l, bool acs)
 //
 static void P_spawnFloorScroller(int staticFn, const line_t *l, bool acs = false)
 {
-   fixed_t dx, dy;
-   int control = -1;
-   int accel = 0;
+    fixed_t dx, dy;
+    int     control = -1;
+    int     accel   = 0;
 
-   if(staticFn == EV_STATIC_SCROLL_FLOOR_PARAM)
-      P_getScrollParams(l, dx, dy, control, accel, acs);
-   else
-   {
-      dx = l->dx >> SCROLL_SHIFT;
-      dy = l->dy >> SCROLL_SHIFT;
+    if(staticFn == EV_STATIC_SCROLL_FLOOR_PARAM)
+        P_getScrollParams(l, dx, dy, control, accel, acs);
+    else
+    {
+        dx = l->dx >> SCROLL_SHIFT;
+        dy = l->dy >> SCROLL_SHIFT;
 
-      if(staticFn == EV_STATIC_SCROLL_ACCEL_FLOOR)
-         accel = 1;
-      if(staticFn == EV_STATIC_SCROLL_ACCEL_FLOOR ||
-         staticFn == EV_STATIC_SCROLL_DISPLACE_FLOOR)
-         control = eindex(sides[*l->sidenum].sector - sectors);
-   }
+        if(staticFn == EV_STATIC_SCROLL_ACCEL_FLOOR)
+            accel = 1;
+        if(staticFn == EV_STATIC_SCROLL_ACCEL_FLOOR || staticFn == EV_STATIC_SCROLL_DISPLACE_FLOOR)
+            control = eindex(sides[*l->sidenum].sector - sectors);
+    }
 
-   for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
-      Add_Scroller(ScrollThinker::sc_floor, -dx, dy, control, s, accel, acs);
+    for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
+        Add_Scroller(ScrollThinker::sc_floor, -dx, dy, control, s, accel, acs);
 }
 
 //
@@ -499,30 +485,29 @@ static void P_spawnFloorScroller(int staticFn, const line_t *l, bool acs = false
 //
 static void P_spawnFloorCarrier(int staticFn, const line_t *l, bool acs = false)
 {
-   fixed_t dx, dy;
-   int control = -1;
-   int accel   =  0;
+    fixed_t dx, dy;
+    int     control = -1;
+    int     accel   = 0;
 
-   if(staticFn == EV_STATIC_SCROLL_FLOOR_PARAM)
-   {
-      P_getScrollParams(l, dx, dy, control, accel, acs);
-      dx = FixedMul(dx, CARRYFACTOR);
-      dy = FixedMul(dy, CARRYFACTOR);
-   }
-   else
-   {
-      dx = FixedMul((l->dx >> SCROLL_SHIFT), CARRYFACTOR);
-      dy = FixedMul((l->dy >> SCROLL_SHIFT), CARRYFACTOR);
+    if(staticFn == EV_STATIC_SCROLL_FLOOR_PARAM)
+    {
+        P_getScrollParams(l, dx, dy, control, accel, acs);
+        dx = FixedMul(dx, CARRYFACTOR);
+        dy = FixedMul(dy, CARRYFACTOR);
+    }
+    else
+    {
+        dx = FixedMul((l->dx >> SCROLL_SHIFT), CARRYFACTOR);
+        dy = FixedMul((l->dy >> SCROLL_SHIFT), CARRYFACTOR);
 
-      if(staticFn == EV_STATIC_CARRY_ACCEL_FLOOR)
-         accel = 1;
-      if(staticFn == EV_STATIC_CARRY_ACCEL_FLOOR ||
-         staticFn == EV_STATIC_CARRY_DISPLACE_FLOOR)
-         control = eindex(sides[*l->sidenum].sector - sectors);
-   }
+        if(staticFn == EV_STATIC_CARRY_ACCEL_FLOOR)
+            accel = 1;
+        if(staticFn == EV_STATIC_CARRY_ACCEL_FLOOR || staticFn == EV_STATIC_CARRY_DISPLACE_FLOOR)
+            control = eindex(sides[*l->sidenum].sector - sectors);
+    }
 
-   for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
-      Add_Scroller(ScrollThinker::sc_carry, dx, dy, control, s, accel, acs);
+    for(int s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
+        Add_Scroller(ScrollThinker::sc_carry, dx, dy, control, s, accel, acs);
 }
 
 //
@@ -536,55 +521,47 @@ static void P_spawnFloorCarrier(int staticFn, const line_t *l, bool acs = false)
 //
 static void P_spawnFloorScrollAndCarry(int staticFn, const line_t *l, bool acs = false)
 {
-   fixed_t dx, dy;
-   int control = -1;
-   int accel = 0;
-   int s;
+    fixed_t dx, dy;
+    int     control = -1;
+    int     accel   = 0;
+    int     s;
 
-   if(staticFn == EV_STATIC_SCROLL_FLOOR_PARAM)
-      P_getScrollParams(l, dx, dy, control, accel, acs);
-   else
-   {
-      dx = l->dx >> SCROLL_SHIFT;
-      dy = l->dy >> SCROLL_SHIFT;
+    if(staticFn == EV_STATIC_SCROLL_FLOOR_PARAM)
+        P_getScrollParams(l, dx, dy, control, accel, acs);
+    else
+    {
+        dx = l->dx >> SCROLL_SHIFT;
+        dy = l->dy >> SCROLL_SHIFT;
 
-      if(staticFn == EV_STATIC_SCROLL_CARRY_ACCEL_FLOOR)
-         accel = 1;
-      if(staticFn == EV_STATIC_SCROLL_CARRY_ACCEL_FLOOR ||
-         staticFn == EV_STATIC_SCROLL_CARRY_DISPLACE_FLOOR)
-         control = eindex(sides[*l->sidenum].sector - sectors);
-   }
+        if(staticFn == EV_STATIC_SCROLL_CARRY_ACCEL_FLOOR)
+            accel = 1;
+        if(staticFn == EV_STATIC_SCROLL_CARRY_ACCEL_FLOOR || staticFn == EV_STATIC_SCROLL_CARRY_DISPLACE_FLOOR)
+            control = eindex(sides[*l->sidenum].sector - sectors);
+    }
 
-   for(s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0; )
-      Add_Scroller(ScrollThinker::sc_floor, -dx, dy, control, s, accel, acs);
+    for(s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
+        Add_Scroller(ScrollThinker::sc_floor, -dx, dy, control, s, accel, acs);
 
-   dx = FixedMul(dx, CARRYFACTOR);
-   dy = FixedMul(dy, CARRYFACTOR);
+    dx = FixedMul(dx, CARRYFACTOR);
+    dy = FixedMul(dy, CARRYFACTOR);
 
-   // NB: don't fold these loops together. Even though it would be more
-   // efficient, we must maintain BOOM-compatible thinker spawning order.
-   for(s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0; )
-      Add_Scroller(ScrollThinker::sc_carry, dx, dy, control, s, accel, acs);
+    // NB: don't fold these loops together. Even though it would be more
+    // efficient, we must maintain BOOM-compatible thinker spawning order.
+    for(s = -1; (s = P_FindSectorFromLineArg0(l, s)) >= 0;)
+        Add_Scroller(ScrollThinker::sc_carry, dx, dy, control, s, accel, acs);
 }
 
 void P_SpawnFloorParam(const line_t *l, bool acs)
 {
-   switch(l->args[ev_Scroll_Arg_Type])
-   {
-      case ev_Scroll_Type_Scroll:
-         P_spawnFloorScroller(EV_STATIC_SCROLL_FLOOR_PARAM, l, acs);
-         break;
-      case ev_Scroll_Type_Carry:
-         P_spawnFloorCarrier(EV_STATIC_SCROLL_FLOOR_PARAM, l, acs);
-         break;
-      case ev_Scroll_Type_ScrollCarry:
-         P_spawnFloorScrollAndCarry(EV_STATIC_SCROLL_FLOOR_PARAM, l, acs);
-         break;
-      default:
-         // wrong arg values will just do nothing, but it's undefined anyway
-         C_Printf(FC_ERROR "Unknown scroll type %d at line %d\a\n",
-                  l->args[ev_Scroll_Arg_Type], (int)(l - lines));
-   }
+    switch(l->args[ev_Scroll_Arg_Type])
+    {
+    case ev_Scroll_Type_Scroll:      P_spawnFloorScroller(EV_STATIC_SCROLL_FLOOR_PARAM, l, acs); break;
+    case ev_Scroll_Type_Carry:       P_spawnFloorCarrier(EV_STATIC_SCROLL_FLOOR_PARAM, l, acs); break;
+    case ev_Scroll_Type_ScrollCarry: P_spawnFloorScrollAndCarry(EV_STATIC_SCROLL_FLOOR_PARAM, l, acs); break;
+    default:
+        // wrong arg values will just do nothing, but it's undefined anyway
+        C_Printf(FC_ERROR "Unknown scroll type %d at line %d\a\n", l->args[ev_Scroll_Arg_Type], (int)(l - lines));
+    }
 }
 
 //
@@ -603,59 +580,60 @@ void P_SpawnFloorParam(const line_t *l, bool acs)
 //
 static void P_spawnDynamicWallScroller(int staticFn, line_t *l, int linenum)
 {
-   fixed_t dx;  // direction and speed of scrolling
-   fixed_t dy;
-   bool byoffset;
-   int control = -1;
-   int accel   =  0;
+    fixed_t dx; // direction and speed of scrolling
+    fixed_t dy;
+    bool    byoffset;
+    int     control = -1;
+    int     accel   = 0;
 
-   switch(staticFn)
-   {
-      case EV_STATIC_SCROLL_BY_OFFSETS_TAG:
-      case EV_STATIC_SCROLL_BY_OFFSETS_TAG_DISPLACE:
-      case EV_STATIC_SCROLL_BY_OFFSETS_TAG_ACCEL:
-      {
-         const side_t &side = sides[l->sidenum[0]];
-         dx = -side.offset_base_x / 8;
-         dy = side.offset_base_y / 8;
-         byoffset = true;
-         break;
-      }
-      default:
-         dx = l->dx >> SCROLL_SHIFT;
-         dy = l->dy >> SCROLL_SHIFT;
-         byoffset = false;
-         break;
-   }
+    switch(staticFn)
+    {
+    case EV_STATIC_SCROLL_BY_OFFSETS_TAG:
+    case EV_STATIC_SCROLL_BY_OFFSETS_TAG_DISPLACE:
+    case EV_STATIC_SCROLL_BY_OFFSETS_TAG_ACCEL:
+    {
+        const side_t &side = sides[l->sidenum[0]];
+        dx                 = -side.offset_base_x / 8;
+        dy                 = side.offset_base_y / 8;
+        byoffset           = true;
+        break;
+    }
+    default:
+        dx       = l->dx >> SCROLL_SHIFT;
+        dy       = l->dy >> SCROLL_SHIFT;
+        byoffset = false;
+        break;
+    }
 
-   if(staticFn == EV_STATIC_SCROLL_WALL_PARAM)
-   {
-      int bits = l->args[ev_Scroll_Arg_Bits];
-      P_getAccelControl(*l, bits, accel, control);
-   }
-   else switch(staticFn)
-   {
-      case EV_STATIC_SCROLL_ACCEL_WALL:
-      case EV_STATIC_SCROLL_BY_OFFSETS_TAG_ACCEL:
-         accel = 1;
-         // go on
-      case EV_STATIC_SCROLL_DISPLACE_WALL:
-      case EV_STATIC_SCROLL_BY_OFFSETS_TAG_DISPLACE:
-         control = eindex(sides[*l->sidenum].sector - sectors);
-   }
+    if(staticFn == EV_STATIC_SCROLL_WALL_PARAM)
+    {
+        int bits = l->args[ev_Scroll_Arg_Bits];
+        P_getAccelControl(*l, bits, accel, control);
+    }
+    else
+        switch(staticFn)
+        {
+        case EV_STATIC_SCROLL_ACCEL_WALL:
+        case EV_STATIC_SCROLL_BY_OFFSETS_TAG_ACCEL:
+            accel = 1;
+            // go on
+        case EV_STATIC_SCROLL_DISPLACE_WALL:
+        case EV_STATIC_SCROLL_BY_OFFSETS_TAG_DISPLACE: //
+            control = eindex(sides[*l->sidenum].sector - sectors);
+        }
 
-   // killough 3/1/98: scroll wall according to linedef
-   // (same direction and speed as scrolling floors)
-   for(int s = -1; (s = P_FindLineFromLineArg0(l, s)) >= 0;)
-   {
-      if(s != linenum)
-      {
-         if(byoffset)
-            Add_Scroller(ScrollThinker::sc_side, dx, dy, control, lines[s].sidenum[0], accel);
-         else
-            Add_WallScroller(dx, dy, lines + s, control, accel);
-      }
-   }
+    // killough 3/1/98: scroll wall according to linedef
+    // (same direction and speed as scrolling floors)
+    for(int s = -1; (s = P_FindLineFromLineArg0(l, s)) >= 0;)
+    {
+        if(s != linenum)
+        {
+            if(byoffset)
+                Add_Scroller(ScrollThinker::sc_side, dx, dy, control, lines[s].sidenum[0], accel);
+            else
+                Add_WallScroller(dx, dy, lines + s, control, accel);
+        }
+    }
 }
 
 //
@@ -673,7 +651,7 @@ static void P_spawnDynamicWallScroller(int staticFn, line_t *l, int linenum)
 //
 static void P_spawnStaticWallScroller(line_t *l, fixed_t dx, fixed_t dy)
 {
-   Add_Scroller(ScrollThinker::sc_side, dx, dy, -1, l->sidenum[0], 0);
+    Add_Scroller(ScrollThinker::sc_side, dx, dy, -1, l->sidenum[0], 0);
 }
 
 //
@@ -681,46 +659,45 @@ static void P_spawnStaticWallScroller(line_t *l, fixed_t dx, fixed_t dy)
 //
 static void P_handleScrollByOffsetsParam(line_t &line)
 {
-   const side_t &side = sides[line.sidenum[0]];
-   v2fixed_t delta = { -side.offset_base_x, side.offset_base_y };
+    const side_t &side  = sides[line.sidenum[0]];
+    v2fixed_t     delta = { -side.offset_base_x, side.offset_base_y };
 
-   // Check args now
-   qstring error;
-   int flags = line.args[0];
-   if(flags < 0 || (flags >= 1 && flags <= 6))
-      error.Printf(64, "Scroll_Texture_Offsets: unsupported edge flags %d", flags);
-   int tag = line.args[1];
-   int accel, control;
-   int bits = line.args[2];
-   if(bits & ~3)
-      error.Printf(64, "Scroll_Texture_Offsets: invalid mode bits %d", bits);
-   P_getAccelControl(line, bits, accel, control);
-   int divider = line.args[3];
-   if(divider <= 0)
-      divider = 1;
+    // Check args now
+    qstring error;
+    int     flags = line.args[0];
+    if(flags < 0 || (flags >= 1 && flags <= 6))
+        error.Printf(64, "Scroll_Texture_Offsets: unsupported edge flags %d", flags);
+    int tag = line.args[1];
+    int accel, control;
+    int bits = line.args[2];
+    if(bits & ~3)
+        error.Printf(64, "Scroll_Texture_Offsets: invalid mode bits %d", bits);
+    P_getAccelControl(line, bits, accel, control);
+    int divider = line.args[3];
+    if(divider <= 0)
+        divider = 1;
 
-   if(!error.empty())
-   {
-      doom_warningf("%s (line=%d)", error.constPtr(), eindex(&line - lines));
-      return;
-   }
+    if(!error.empty())
+    {
+        doom_warningf("%s (line=%d)", error.constPtr(), eindex(&line - lines));
+        return;
+    }
 
-   delta /= divider;
+    delta /= divider;
 
-   if(tag)
-   {
-      int triggernum = eindex(&line - lines);
-      for(int linenum = -1; (linenum = P_FindLineFromTag(tag, linenum)) >= 0;)
-         if(linenum != triggernum)
-         {
-            Add_Scroller(ScrollThinker::sc_side, delta.x, delta.y, control,
-                         lines[linenum].sidenum[0], accel);
-         }
-      return;
-   }
+    if(tag)
+    {
+        int triggernum = eindex(&line - lines);
+        for(int linenum = -1; (linenum = P_FindLineFromTag(tag, linenum)) >= 0;)
+            if(linenum != triggernum)
+            {
+                Add_Scroller(ScrollThinker::sc_side, delta.x, delta.y, control, lines[linenum].sidenum[0], accel);
+            }
+        return;
+    }
 
-   // killough 3/2/98: scroll according to sidedef offsets
-   Add_Scroller(ScrollThinker::sc_side, delta.x, delta.y, control, line.sidenum[0], accel);
+    // killough 3/2/98: scroll according to sidedef offsets
+    Add_Scroller(ScrollThinker::sc_side, delta.x, delta.y, control, line.sidenum[0], accel);
 }
 
 //
@@ -730,110 +707,106 @@ static void P_handleScrollByOffsetsParam(line_t &line)
 //
 void P_SpawnScrollers()
 {
-   line_t *line = lines;
+    line_t *line = lines;
 
-   for(int i = 0; i < numlines; i++, line++)
-   {
-      int staticFn;
-      int special = line->special;
+    for(int i = 0; i < numlines; i++, line++)
+    {
+        int staticFn;
+        int special = line->special;
 
-      // haleyjd 02/03/13: look up special in static init table
-      if(!(staticFn = EV_StaticInitForSpecial(special)))
-         continue;
+        // haleyjd 02/03/13: look up special in static init table
+        if(!(staticFn = EV_StaticInitForSpecial(special)))
+            continue;
 
-      switch(staticFn)
-      {
-      case EV_STATIC_SCROLL_ACCEL_CEILING:
-      case EV_STATIC_SCROLL_DISPLACE_CEILING:
-      case EV_STATIC_SCROLL_CEILING:     // scroll effect ceiling
-         P_spawnCeilingScroller(staticFn, line);
-         break;
-      case EV_STATIC_SCROLL_CEILING_PARAM:
-         P_SpawnCeilingParam(line, false);
-         break;
+        switch(staticFn)
+        {
+        case EV_STATIC_SCROLL_ACCEL_CEILING:
+        case EV_STATIC_SCROLL_DISPLACE_CEILING:
+        case EV_STATIC_SCROLL_CEILING: // scroll effect ceiling
+            P_spawnCeilingScroller(staticFn, line);
+            break;
+        case EV_STATIC_SCROLL_CEILING_PARAM: P_SpawnCeilingParam(line, false); break;
 
-      case EV_STATIC_SCROLL_ACCEL_FLOOR:
-      case EV_STATIC_SCROLL_DISPLACE_FLOOR:
-      case EV_STATIC_SCROLL_FLOOR:       // scroll effect floor
-         P_spawnFloorScroller(staticFn, line);
-         break;
-   
-      case EV_STATIC_CARRY_ACCEL_FLOOR:
-      case EV_STATIC_CARRY_DISPLACE_FLOOR:
-      case EV_STATIC_CARRY_FLOOR:        // carry objects on floor
-         P_spawnFloorCarrier(staticFn, line);
-         break;
-   
-      case EV_STATIC_SCROLL_CARRY_ACCEL_FLOOR:
-      case EV_STATIC_SCROLL_CARRY_DISPLACE_FLOOR:
-      case EV_STATIC_SCROLL_CARRY_FLOOR: // scroll and carry objects on floor
-         P_spawnFloorScrollAndCarry(staticFn, line);
-         break;
-      case EV_STATIC_SCROLL_FLOOR_PARAM:
-         P_SpawnFloorParam(line, false);
-         break;
+        case EV_STATIC_SCROLL_ACCEL_FLOOR:
+        case EV_STATIC_SCROLL_DISPLACE_FLOOR:
+        case EV_STATIC_SCROLL_FLOOR: // scroll effect floor
+            P_spawnFloorScroller(staticFn, line);
+            break;
 
-      case EV_STATIC_SCROLL_ACCEL_WALL:
-      case EV_STATIC_SCROLL_DISPLACE_WALL:
-      case EV_STATIC_SCROLL_WALL_WITH:
-      case EV_STATIC_SCROLL_WALL_PARAM:
-      case EV_STATIC_SCROLL_BY_OFFSETS_TAG:
-      case EV_STATIC_SCROLL_BY_OFFSETS_TAG_DISPLACE:
-      case EV_STATIC_SCROLL_BY_OFFSETS_TAG_ACCEL:
-         // killough 3/1/98: scroll wall according to linedef
-         // (same direction and speed as scrolling floors)
-         P_spawnDynamicWallScroller(staticFn, line, i);
-         break;
-   
-      case EV_STATIC_SCROLL_LINE_LEFT:
-         P_spawnStaticWallScroller(line, FRACUNIT, 0);    // scroll first side
-         break;
-      case EV_STATIC_SCROLL_LINE_RIGHT:
-         P_spawnStaticWallScroller(line, -FRACUNIT, 0);   // jff 1/30/98 2-way scroll
-         break;
-      case EV_STATIC_SCROLL_LINE_UP:
-         P_spawnStaticWallScroller(line, 0, FRACUNIT);    // haleyjd: Strife and PSX type
-         break;
-      case EV_STATIC_SCROLL_LINE_DOWN:
-         P_spawnStaticWallScroller(line, 0, -FRACUNIT);   // haleyjd: Strife and PSX type
-         break;
-      case EV_STATIC_SCROLL_LINE_DOWN_FAST:
-         P_spawnStaticWallScroller(line, 0, -3*FRACUNIT); // haleyjd: Strife type
-         break;
-      case EV_STATIC_SCROLL_BY_OFFSETS:
-         // killough 3/2/98: scroll according to sidedef offsets
-         P_spawnStaticWallScroller(line, 
-            -sides[*line->sidenum].offset_base_x,
-             sides[*line->sidenum].offset_base_y);
-         break;
-      case EV_STATIC_SCROLL_BY_OFFSETS_PARAM:
-         P_handleScrollByOffsetsParam(*line);
-         break;
+        case EV_STATIC_CARRY_ACCEL_FLOOR:
+        case EV_STATIC_CARRY_DISPLACE_FLOOR:
+        case EV_STATIC_CARRY_FLOOR: // carry objects on floor
+            P_spawnFloorCarrier(staticFn, line);
+            break;
 
-      case EV_STATIC_SCROLL_LEFT_PARAM:
-         // haleyjd 02/17/13: Hexen Scroll_Texture_Left
-         P_spawnStaticWallScroller(line, line->args[0] << 10, 0);
-         break;
+        case EV_STATIC_SCROLL_CARRY_ACCEL_FLOOR:
+        case EV_STATIC_SCROLL_CARRY_DISPLACE_FLOOR:
+        case EV_STATIC_SCROLL_CARRY_FLOOR: // scroll and carry objects on floor
+            P_spawnFloorScrollAndCarry(staticFn, line);
+            break;
+        case EV_STATIC_SCROLL_FLOOR_PARAM: //
+            P_SpawnFloorParam(line, false);
+            break;
 
-      case EV_STATIC_SCROLL_RIGHT_PARAM:
-         // haleyjd 02/17/13: Hexen Scroll_Texture_Right
-         P_spawnStaticWallScroller(line, -(line->args[0] << 10), 0);
-         break;
+        case EV_STATIC_SCROLL_ACCEL_WALL:
+        case EV_STATIC_SCROLL_DISPLACE_WALL:
+        case EV_STATIC_SCROLL_WALL_WITH:
+        case EV_STATIC_SCROLL_WALL_PARAM:
+        case EV_STATIC_SCROLL_BY_OFFSETS_TAG:
+        case EV_STATIC_SCROLL_BY_OFFSETS_TAG_DISPLACE:
+        case EV_STATIC_SCROLL_BY_OFFSETS_TAG_ACCEL:
+            // killough 3/1/98: scroll wall according to linedef
+            // (same direction and speed as scrolling floors)
+            P_spawnDynamicWallScroller(staticFn, line, i);
+            break;
 
-      case EV_STATIC_SCROLL_UP_PARAM:
-         // haleyjd 02/17/13: Hexen Scroll_Texture_Up
-         P_spawnStaticWallScroller(line, 0, line->args[0] << 10);
-         break;
+        case EV_STATIC_SCROLL_LINE_LEFT:
+            P_spawnStaticWallScroller(line, FRACUNIT, 0); // scroll first side
+            break;
+        case EV_STATIC_SCROLL_LINE_RIGHT:
+            P_spawnStaticWallScroller(line, -FRACUNIT, 0); // jff 1/30/98 2-way scroll
+            break;
+        case EV_STATIC_SCROLL_LINE_UP:
+            P_spawnStaticWallScroller(line, 0, FRACUNIT); // haleyjd: Strife and PSX type
+            break;
+        case EV_STATIC_SCROLL_LINE_DOWN:
+            P_spawnStaticWallScroller(line, 0, -FRACUNIT); // haleyjd: Strife and PSX type
+            break;
+        case EV_STATIC_SCROLL_LINE_DOWN_FAST:
+            P_spawnStaticWallScroller(line, 0, -3 * FRACUNIT); // haleyjd: Strife type
+            break;
+        case EV_STATIC_SCROLL_BY_OFFSETS:
+            // killough 3/2/98: scroll according to sidedef offsets
+            P_spawnStaticWallScroller(line, -sides[*line->sidenum].offset_base_x, sides[*line->sidenum].offset_base_y);
+            break;
+        case EV_STATIC_SCROLL_BY_OFFSETS_PARAM: //
+            P_handleScrollByOffsetsParam(*line);
+            break;
 
-      case EV_STATIC_SCROLL_DOWN_PARAM:
-         // haleyjd 02/17/13: Hexen Scroll_Texture_Down
-         P_spawnStaticWallScroller(line, 0, -(line->args[0] << 10));
-         break;
+        case EV_STATIC_SCROLL_LEFT_PARAM:
+            // haleyjd 02/17/13: Hexen Scroll_Texture_Left
+            P_spawnStaticWallScroller(line, line->args[0] << 10, 0);
+            break;
 
-      default:
-         break; // not a function handled here
-      }
-   }
+        case EV_STATIC_SCROLL_RIGHT_PARAM:
+            // haleyjd 02/17/13: Hexen Scroll_Texture_Right
+            P_spawnStaticWallScroller(line, -(line->args[0] << 10), 0);
+            break;
+
+        case EV_STATIC_SCROLL_UP_PARAM:
+            // haleyjd 02/17/13: Hexen Scroll_Texture_Up
+            P_spawnStaticWallScroller(line, 0, line->args[0] << 10);
+            break;
+
+        case EV_STATIC_SCROLL_DOWN_PARAM:
+            // haleyjd 02/17/13: Hexen Scroll_Texture_Down
+            P_spawnStaticWallScroller(line, 0, -(line->args[0] << 10));
+            break;
+
+        default:   //
+            break; // not a function handled here
+        }
+    }
 }
 
 //
@@ -841,33 +814,26 @@ void P_SpawnScrollers()
 //
 void P_SpawnFloorUDMF(int s, int type, double scrollx, double scrolly)
 {
-   bool texture = false, carry = false;
-   
-   switch(type)
-   {
-   case SCROLLTYPE_TEXTURE:
-      texture = true;
-      break;
-   case SCROLLTYPE_CARRY:
-      carry = true;
-      break;
-   case SCROLLTYPE_BOTH:
-      texture = carry = true;
-      break;
-   default:
-      return;
-   }
+    bool texture = false, carry = false;
 
-   fixed_t dx = M_DoubleToFixed(scrollx * ZDSCROLLFACTOR) >> SCROLL_SHIFT;
-   fixed_t dy = M_DoubleToFixed(scrolly * ZDSCROLLFACTOR) >> SCROLL_SHIFT;
-   if(texture)
-      Add_Scroller(ScrollThinker::sc_floor, -dx, dy, -1, s, false, false);
-   if(carry)
-   {
-      dx = FixedMul(dx, CARRYFACTOR);
-      dy = FixedMul(dy, CARRYFACTOR);
-      Add_Scroller(ScrollThinker::sc_carry, dx, dy, -1, s, false, false);
-   }
+    switch(type)
+    {
+    case SCROLLTYPE_TEXTURE: texture = true; break;
+    case SCROLLTYPE_CARRY:   carry = true; break;
+    case SCROLLTYPE_BOTH:    texture = carry = true; break;
+    default:                 return;
+    }
+
+    fixed_t dx = M_DoubleToFixed(scrollx * ZDSCROLLFACTOR) >> SCROLL_SHIFT;
+    fixed_t dy = M_DoubleToFixed(scrolly * ZDSCROLLFACTOR) >> SCROLL_SHIFT;
+    if(texture)
+        Add_Scroller(ScrollThinker::sc_floor, -dx, dy, -1, s, false, false);
+    if(carry)
+    {
+        dx = FixedMul(dx, CARRYFACTOR);
+        dy = FixedMul(dy, CARRYFACTOR);
+        Add_Scroller(ScrollThinker::sc_carry, dx, dy, -1, s, false, false);
+    }
 }
 
 //
@@ -875,36 +841,36 @@ void P_SpawnFloorUDMF(int s, int type, double scrollx, double scrolly)
 //
 void P_SpawnCeilingUDMF(int s, int type, double scrollx, double scrolly)
 {
-   bool texture, carry;
+    bool texture, carry;
 
-   switch(type)
-   {
-   case SCROLLTYPE_TEXTURE:
-      texture = true;
-      carry = false;
-      break;
-   case SCROLLTYPE_CARRY:
-      carry = true;
-      texture = false;
-      break;
-   case SCROLLTYPE_BOTH:
-      texture = carry = true;
-      break;
-   default:
-      return;
-   }
+    switch(type)
+    {
+    case SCROLLTYPE_TEXTURE: //
+        texture = true;
+        carry   = false;
+        break;
+    case SCROLLTYPE_CARRY: //
+        carry   = true;
+        texture = false;
+        break;
+    case SCROLLTYPE_BOTH: //
+        texture = carry = true;
+        break;
+    default: //
+        return;
+    }
 
-   fixed_t dx = M_DoubleToFixed(scrollx * ZDSCROLLFACTOR) >> SCROLL_SHIFT;
-   fixed_t dy = M_DoubleToFixed(scrolly * ZDSCROLLFACTOR) >> SCROLL_SHIFT;
-   if(texture)
-      Add_Scroller(ScrollThinker::sc_ceiling, -dx, dy, -1, s, false, false);
-   if(carry)
-   {
-      C_Printf(FC_ERROR "Carrying ceiling scrollers will be added later\a\n");
-      dx = FixedMul(dx, CARRYFACTOR);
-      dy = FixedMul(dy, CARRYFACTOR);
-      Add_Scroller(ScrollThinker::sc_carry_ceiling, dx, dy, -1, s, false, false);
-   }
+    fixed_t dx = M_DoubleToFixed(scrollx * ZDSCROLLFACTOR) >> SCROLL_SHIFT;
+    fixed_t dy = M_DoubleToFixed(scrolly * ZDSCROLLFACTOR) >> SCROLL_SHIFT;
+    if(texture)
+        Add_Scroller(ScrollThinker::sc_ceiling, -dx, dy, -1, s, false, false);
+    if(carry)
+    {
+        C_Printf(FC_ERROR "Carrying ceiling scrollers will be added later\a\n");
+        dx = FixedMul(dx, CARRYFACTOR);
+        dy = FixedMul(dy, CARRYFACTOR);
+        Add_Scroller(ScrollThinker::sc_carry_ceiling, dx, dy, -1, s, false, false);
+    }
 }
 
 //
@@ -913,8 +879,8 @@ void P_SpawnCeilingUDMF(int s, int type, double scrollx, double scrolly)
 //
 void P_TicResetLerpScrolledSides()
 {
-   pScrolledSides.makeEmpty();
-   pScrolledSectors.makeEmpty();
+    pScrolledSides.makeEmpty();
+    pScrolledSectors.makeEmpty();
 }
 
 //
@@ -922,10 +888,10 @@ void P_TicResetLerpScrolledSides()
 //
 void P_AddScrolledSide(side_t *side, fixed_t dx, fixed_t dy)
 {
-   sidelerpinfo_t &info = pScrolledSides.addNew();
-   info.side = side;
-   info.offset.x = dx;
-   info.offset.y = dy;
+    sidelerpinfo_t &info = pScrolledSides.addNew();
+    info.side            = side;
+    info.offset.x        = dx;
+    info.offset.y        = dy;
 }
 
 //
@@ -933,14 +899,14 @@ void P_AddScrolledSide(side_t *side, fixed_t dx, fixed_t dy)
 //
 void P_ForEachScrolledSide(void (*func)(side_t *side, v2fixed_t offset))
 {
-   for(const sidelerpinfo_t &info : pScrolledSides)
-      func(info.side, info.offset);
+    for(const sidelerpinfo_t &info : pScrolledSides)
+        func(info.side, info.offset);
 }
 
 void P_ForEachScrolledSector(void (*func)(sector_t *sector, bool isceiling, v2fixed_t offset))
 {
-   for(const seclerpinfo_t &info : pScrolledSectors)
-      func(info.sector, info.isceiling, info.offset);
+    for(const seclerpinfo_t &info : pScrolledSectors)
+        func(info.sector, info.isceiling, info.offset);
 }
 
 // killough 3/7/98 -- end generalized scroll effects

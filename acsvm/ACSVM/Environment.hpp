@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015-2017 David Hill
+// Copyright (C) 2015-2025 David Hill
 //
 // See COPYING for license information.
 //
@@ -88,6 +88,10 @@ namespace ACSVM
       ModuleName getModuleName(char const *str);
       virtual ModuleName getModuleName(char const *str, std::size_t len);
 
+      // Used to map from a single map number to a scope-id.
+      // Default behavior is to return {0, 0, mapnum}.
+      virtual ScopeID getScopeID(Word mapnum) const;
+
       // Called to translate script type from ACS0 script number.
       // Default behavior is to modulus 1000 the name.
       virtual std::pair<Word /*type*/, Word /*name*/> getScriptTypeACS0(Word name)
@@ -149,12 +153,21 @@ namespace ACSVM
 
       StringTable stringTable;
 
+      // Used when a deferred script is started. Default is null.
+      ScriptStartFunc funcScriptStartDeferred;
+
+      // Used when a deferred forced script is started. Default is null.
+      ScriptStartFunc funcScriptStartForcedDeferred;
+
       // Number of branches allowed per call to Thread::exec. Default of 0
       // means no limit.
       Word branchLimit;
 
       // Default number of script variables. Default is 20.
       Word scriptLocRegC;
+
+      // If true, delays last an extra tic as in Hexen. Default is false.
+      bool longDelay : 1;
 
 
       // Prints an array to a print buffer, truncating elements of the array to

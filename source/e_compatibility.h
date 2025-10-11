@@ -1,5 +1,6 @@
 //
-// Copyright (C) 2020 James Haley, Max Waine, Ioan Chera et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley, Max Waine, Ioan Chera et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,9 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Purpose: EDF compatibility WAD support
+// Purpose: EDF compatibility WAD support.
 // Authors: Ioan Chera
 //
 
@@ -37,8 +38,8 @@ struct cfg_t;
 //
 enum overridableSetting_e
 {
-   overridableSetting_stsTraditionalKeys,
-   NUM_overridableSetting
+    overridableSetting_stsTraditionalKeys,
+    NUM_overridableSetting
 };
 
 extern cfg_opt_t edf_compatibility_opts[];

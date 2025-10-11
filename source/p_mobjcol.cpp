@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,16 +18,16 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Mobj Collections
+// Purpose: Mobj Collections
 //  These are used by stuff like Boss Spawn Spots and D'Sparil landings, and
 //  evolved out of a generalization of the code Lee originally wrote to remove
 //  the boss spot limit in BOOM. The core logic is now based on the generic
 //  PODCollection class, however, and this just adds a bit of utility to it.
 //
-//-----------------------------------------------------------------------------
+// Authors: Stephen McGranahan, James Haley
+//
 
 #include "z_zone.h"
 
@@ -51,25 +50,25 @@
 //
 void MobjCollection::collectThings()
 {
-   Thinker *th;
-   int typenum;
+    Thinker *th;
+    int      typenum;
 
-   if(!enabled || mobjType.empty())
-      return;
+    if(!enabled || mobjType.empty())
+        return;
 
-   if((typenum = E_ThingNumForName(mobjType.constPtr())) < 0)
-      return;
+    if((typenum = E_ThingNumForName(mobjType.constPtr())) < 0)
+        return;
 
-   for(th = thinkercap.next; th != &thinkercap; th = th->next)
-   {
-      Mobj *mo;
+    for(th = thinkercap.next; th != &thinkercap; th = th->next)
+    {
+        Mobj *mo;
 
-      if((mo = thinker_cast<Mobj *>(th)))
-      {
-         if(mo->type == typenum)
-            add(mo);
-      }
-   }
+        if((mo = thinker_cast<Mobj *>(th)))
+        {
+            if(mo->type == typenum)
+                add(mo);
+        }
+    }
 }
 
 //
@@ -80,69 +79,59 @@ void MobjCollection::collectThings()
 // as if a RNG call falls outside the threshold specified for the current
 // game type, the spawn won't take place at all.
 //
-bool MobjCollection::spawnAtRandom(const char *type, pr_class_t prnum,
-                                   int spchance, int coopchance, int dmchance)
+bool MobjCollection::spawnAtRandom(const char *type, pr_class_t prnum, int spchance, int coopchance, int dmchance)
 {
-   int chance;
+    int chance;
 
-   // need spots to spawn at.
-   if(isEmpty())
-      return false;
+    // need spots to spawn at.
+    if(isEmpty())
+        return false;
 
-   // check for failure to spawn
-   switch(GameType)
-   {
-   case gt_single:
-      chance = spchance;
-      break;
-   case gt_coop:
-      chance = coopchance;
-      break;
-   case gt_dm:
-      chance = dmchance;
-      break;
-   default:
-      chance = 0;
-      break;
-   }
+    // check for failure to spawn
+    switch(GameType)
+    {
+    case gt_single: chance = spchance; break;
+    case gt_coop:   chance = coopchance; break;
+    case gt_dm:     chance = dmchance; break;
+    default:        chance = 0; break;
+    }
 
-   if(P_Random(prnum) < chance)
-      return false;
+    if(P_Random(prnum) < chance)
+        return false;
 
-   // get a random spot
-   Mobj *spot;
-   
-   spot = getRandom(prnum);
+    // get a random spot
+    Mobj *spot;
 
-   // spawn the object there
-   P_SpawnMobj(spot->x, spot->y, spot->z, E_SafeThingName(type));
-   return true;
+    spot = getRandom(prnum);
+
+    // spawn the object there
+    P_SpawnMobj(spot->x, spot->y, spot->z, E_SafeThingName(type));
+    return true;
 }
 
 //
 // MobjCollection::startupSpawn
 //
 // Handle a potential startup random spawn associated with a collection.
-// The data necessary for the spawn consists of meta fields on the 
+// The data necessary for the spawn consists of meta fields on the
 // collection's thingtype's mobjinfo.
 //
 bool MobjCollection::startupSpawn()
 {
-   int type = E_ThingNumForName(mobjType.constPtr());
-   if(type < 0)
-      return false;
+    int type = E_ThingNumForName(mobjType.constPtr());
+    if(type < 0)
+        return false;
 
-   MetaTable  *meta = mobjinfo[type]->meta;
-   auto        mcs  = meta->getObjectTypeEx<MetaCollectionSpawn>();
-   bool        res  = false;
+    MetaTable *meta = mobjinfo[type]->meta;
+    auto       mcs  = meta->getObjectTypeEx<MetaCollectionSpawn>();
+    bool       res  = false;
 
-   if(mcs)
-   {
-      res = spawnAtRandom(mcs->type.constPtr(), pr_spotspawn,
-                          mcs->spchance, mcs->coopchance, mcs->dmchance);
-   }
+    if(mcs)
+    {
+        res = spawnAtRandom(mcs->type.constPtr(), pr_spotspawn, mcs->spchance, mcs->coopchance, mcs->dmchance);
+    }
 
-   return res;
+    return res;
 }
 
 //
@@ -152,14 +141,14 @@ bool MobjCollection::startupSpawn()
 //
 void MobjCollection::moveToRandom(Mobj *actor)
 {
-   if(isEmpty())
-      return;
+    if(isEmpty())
+        return;
 
-   P_UnsetThingPosition(actor);
-   actor->copyPosition(getRandom(pr_moverandom));
-   P_SetThingPosition(actor);
-   P_AdjustFloorClip(actor);
-   actor->backupPosition();
+    P_UnsetThingPosition(actor);
+    actor->copyPosition(getRandom(pr_moverandom));
+    P_SetThingPosition(actor);
+    P_AdjustFloorClip(actor);
+    actor->backupPosition();
 }
 
 //=============================================================================
@@ -167,18 +156,15 @@ void MobjCollection::moveToRandom(Mobj *actor)
 // MobjCollectionSet Methods
 //
 
-// mobjCollectionSetPimpl - private implementation idiom object for the 
+// mobjCollectionSetPimpl - private implementation idiom object for the
 // MobjCollectionSet class.
 
 class mobjCollectionSetPimpl : public ZoneObject
 {
 public:
-   EHashTable<MobjCollection, 
-              ENCQStrHashKey, 
-              &MobjCollection::mobjType, 
-              &MobjCollection::hashLinks> collectionHash;
+    EHashTable<MobjCollection, ENCQStrHashKey, &MobjCollection::mobjType, &MobjCollection::hashLinks> collectionHash;
 
-   mobjCollectionSetPimpl() : ZoneObject(), collectionHash(31) {}   
+    mobjCollectionSetPimpl() : ZoneObject(), collectionHash(31) {}
 };
 
 //
@@ -186,7 +172,7 @@ public:
 //
 MobjCollectionSet::MobjCollectionSet()
 {
-   pImpl = new mobjCollectionSetPimpl();
+    pImpl = new mobjCollectionSetPimpl();
 }
 
 //
@@ -197,7 +183,7 @@ MobjCollectionSet::MobjCollectionSet()
 //
 MobjCollection *MobjCollectionSet::collectionForName(const char *name)
 {
-   return pImpl->collectionHash.objectForKey(name);
+    return pImpl->collectionHash.objectForKey(name);
 }
 
 //
@@ -207,12 +193,12 @@ MobjCollection *MobjCollectionSet::collectionForName(const char *name)
 //
 void MobjCollectionSet::addCollection(const char *mobjType)
 {
-   if(!pImpl->collectionHash.objectForKey(mobjType))
-   {
-      MobjCollection *newcol = new MobjCollection();
-      newcol->mobjType = mobjType;
-      pImpl->collectionHash.addObject(newcol);
-   }
+    if(!pImpl->collectionHash.objectForKey(mobjType))
+    {
+        MobjCollection *newcol = new MobjCollection();
+        newcol->mobjType       = mobjType;
+        pImpl->collectionHash.addObject(newcol);
+    }
 }
 
 //
@@ -222,10 +208,10 @@ void MobjCollectionSet::addCollection(const char *mobjType)
 //
 void MobjCollectionSet::setCollectionEnabled(const char *mobjType, bool enabled)
 {
-   MobjCollection *col = pImpl->collectionHash.objectForKey(mobjType);
+    MobjCollection *col = pImpl->collectionHash.objectForKey(mobjType);
 
-   if(col)
-      col->enabled = enabled;
+    if(col)
+        col->enabled = enabled;
 }
 
 //
@@ -236,14 +222,14 @@ void MobjCollectionSet::setCollectionEnabled(const char *mobjType, bool enabled)
 //
 void MobjCollectionSet::collectAllThings()
 {
-   MobjCollection *rover = nullptr;
+    MobjCollection *rover = nullptr;
 
-   while((rover = pImpl->collectionHash.tableIterator(rover)))
-   {
-      rover->clear();
-      rover->collectThings();
-      rover->startupSpawn();
-   }
+    while((rover = pImpl->collectionHash.tableIterator(rover)))
+    {
+        rover->clear();
+        rover->collectThings();
+        rover->startupSpawn();
+    }
 }
 
 // The one and only global MobjCollectionSet

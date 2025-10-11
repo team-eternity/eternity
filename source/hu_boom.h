@@ -1,5 +1,6 @@
 //
-// Copyright (C) 2018 James Haley, Max Waine et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley, Max Waine et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,9 +18,9 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Purpose: Boom HUD. Rewritten and put in a seperate module(seems sensible)
+// Purpose: Boom HUD.
 // Authors: Max Waine
 //
 
@@ -31,23 +32,27 @@
 
 struct VBuffer;
 
+// clang-format off
+
 class BoomHUD : public HUDOverlay
 {
 protected:
-   virtual void DrawStatus (int x, int y);
-   virtual void DrawHealth (int x, int y);
-   virtual void DrawArmor  (int x, int y);
-   virtual void DrawWeapons(int x, int y);
-   virtual void DrawAmmo   (int x, int y);
-   virtual void DrawKeys   (int x, int y);
-   virtual void DrawFrags  (int x, int y);
+    virtual void DrawStatus (int x, int y);
+    virtual void DrawHealth (int x, int y);
+    virtual void DrawArmor  (int x, int y);
+    virtual void DrawWeapons(int x, int y);
+    virtual void DrawAmmo   (int x, int y);
+    virtual void DrawKeys   (int x, int y);
+    virtual void DrawFrags  (int x, int y);
 
-   VBuffer *m_screen;
+    VBuffer *m_screen;
 public:
-   virtual void Setup();
+    virtual void Setup();
 };
 
 extern BoomHUD boom_overlay;
+
+// clang-format on
 
 #endif
 

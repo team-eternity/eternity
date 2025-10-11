@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015-2020 David Hill
+// Copyright (C) 2015-2025 David Hill
 //
 // See COPYING for license information.
 //
@@ -15,6 +15,7 @@
 #include "Action.hpp"
 #include "BinaryIO.hpp"
 #include "Environment.hpp"
+#include "Error.hpp"
 #include "HashMap.hpp"
 #include "HashMapFixed.hpp"
 #include "Init.hpp"
@@ -133,7 +134,7 @@ namespace ACSVM
       // Delegate deferred script actions.
       for(auto itr = scriptAction.begin(), end = scriptAction.end(); itr != end;)
       {
-         auto scope = pd->scopes.find(itr->id.global);
+         auto scope = pd->scopes.find(itr->id.hub);
          if(scope && scope->active)
             itr++->link.relink(&scope->scriptAction);
          else
@@ -192,15 +193,12 @@ namespace ACSVM
 
       in.readSign(Signature::GlobalScope);
 
-      for(auto &arr : arrV)
-         arr.loadState(in);
-
-      for(auto &reg : regV)
-         reg = ReadVLN<Word>(in);
+      LoadArrV(in, arrV, ArrC);
+      LoadRegV(in, regV, RegC);
 
       env->readScriptActions(in, scriptAction);
 
-      active = in.in->get() != '\0';
+      active = in.readByte();
 
       for(auto n = ReadVLN<std::size_t>(in); n--;)
          getHubScope(ReadVLN<Word>(in))->loadState(in);
@@ -243,8 +241,13 @@ namespace ACSVM
    //
    void GlobalScope::reset()
    {
+      for(auto &arr : arrV) arr.clear();
+      for(auto &reg : regV) reg = 0;
+
       while(scriptAction.next->obj)
          delete scriptAction.next->obj;
+
+      active = false;
 
       pd->scopes.free();
    }
@@ -256,15 +259,12 @@ namespace ACSVM
    {
       out.writeSign(Signature::GlobalScope);
 
-      for(auto &arr : arrV)
-         arr.saveState(out);
-
-      for(auto &reg : regV)
-         WriteVLN(out, reg);
+      SaveArrV(out, arrV, ArrC);
+      SaveRegV(out, regV, RegC);
 
       env->writeScriptActions(out, scriptAction);
 
-      out.out->put(active ? '\1' : '\0');
+      out.writeByte(active);
 
       WriteVLN(out, pd->scopes.size());
       for(auto &scope : pd->scopes)
@@ -289,6 +289,62 @@ namespace ACSVM
 
       for(auto &scope : pd->scopes)
          scope.unlockStrings();
+   }
+
+   //
+   // GlobalScope::LoadArrV
+   //
+   void GlobalScope::LoadArrV(Serial &in, Array *arrV, std::size_t arrC)
+   {
+      std::size_t inC = in.version == 0 ? 256 : ReadVLN<std::size_t>(in);
+
+      if(inC > arrC)
+         throw SerialError("too many arrays");
+
+      while(inC--)
+         arrV++->loadState(in);
+   }
+
+   //
+   // GlobalScope::LoadRegV
+   //
+   void GlobalScope::LoadRegV(Serial &in, Word *regV, std::size_t regC)
+   {
+      std::size_t inC = in.version == 0 ? 256 : ReadVLN<std::size_t>(in);
+
+      if(inC > regC)
+         throw SerialError("too many registers");
+
+      while(inC--)
+         *regV++ = ReadVLN<Word>(in);
+   }
+
+   //
+   // GlobalScope::SaveArrV
+   //
+   void GlobalScope::SaveArrV(Serial &out, Array const *arrV, std::size_t arrC)
+   {
+      // Skip trailing empty arrays.
+      while(arrC && !arrV[arrC - 1].empty())
+         --arrC;
+
+      WriteVLN(out, arrC);
+      while(arrC--)
+         arrV++->saveState(out);
+   }
+
+   //
+   // GlobalScope::SaveRegV
+   //
+   void GlobalScope::SaveRegV(Serial &out, Word const *regV, std::size_t regC)
+   {
+      // Skip trailing 0 registers.
+      while(regC && !regV[regC - 1])
+         --regC;
+
+      WriteVLN(out, regC);
+      while(regC--)
+         WriteVLN(out, *regV++);
    }
 
    //
@@ -343,7 +399,7 @@ namespace ACSVM
       // Delegate deferred script actions.
       for(auto itr = scriptAction.begin(), end = scriptAction.end(); itr != end;)
       {
-         auto scope = pd->scopes.find(itr->id.global);
+         auto scope = pd->scopes.find(itr->id.map);
          if(scope && scope->active)
             itr++->link.relink(&scope->scriptAction);
          else
@@ -402,15 +458,12 @@ namespace ACSVM
 
       in.readSign(Signature::HubScope);
 
-      for(auto &arr : arrV)
-         arr.loadState(in);
-
-      for(auto &reg : regV)
-         reg = ReadVLN<Word>(in);
+      GlobalScope::LoadArrV(in, arrV, ArrC);
+      GlobalScope::LoadRegV(in, regV, RegC);
 
       env->readScriptActions(in, scriptAction);
 
-      active = in.in->get() != '\0';
+      active = in.readByte();
 
       for(auto n = ReadVLN<std::size_t>(in); n--;)
          getMapScope(ReadVLN<Word>(in))->loadState(in);
@@ -453,8 +506,13 @@ namespace ACSVM
    //
    void HubScope::reset()
    {
+      for(auto &arr : arrV) arr.clear();
+      for(auto &reg : regV) reg = 0;
+
       while(scriptAction.next->obj)
          delete scriptAction.next->obj;
+
+      active = false;
 
       pd->scopes.free();
    }
@@ -466,15 +524,12 @@ namespace ACSVM
    {
       out.writeSign(Signature::HubScope);
 
-      for(auto &arr : arrV)
-         arr.saveState(out);
-
-      for(auto &reg : regV)
-         WriteVLN(out, reg);
+      GlobalScope::SaveArrV(out, arrV, ArrC);
+      GlobalScope::SaveRegV(out, regV, RegC);
 
       env->writeScriptActions(out, scriptAction);
 
-      out.out->put(active ? '\1' : '\0');
+      out.writeByte(active);
 
       WriteVLN(out, pd->scopes.size());
       for(auto &scope : pd->scopes)
@@ -638,11 +693,13 @@ namespace ACSVM
          if(script) switch(action->action)
          {
          case ScriptAction::Start:
-            scriptStart(script, {action->argV.data(), action->argV.size()});
+            scriptStart(script, {action->argV.data(), action->argV.size(),
+               nullptr, env->funcScriptStartDeferred});
             break;
 
          case ScriptAction::StartForced:
-            scriptStartForced(script, {action->argV.data(), action->argV.size()});
+            scriptStartForced(script, {action->argV.data(), action->argV.size(),
+               nullptr, env->funcScriptStartForcedDeferred});
             break;
 
          case ScriptAction::Stop:
@@ -791,7 +848,7 @@ namespace ACSVM
       in.readSign(Signature::MapScope);
 
       env->readScriptActions(in, scriptAction);
-      active = in.in->get() != '\0';
+      active = in.readByte();
       loadModules(in);
       loadThreads(in);
 
@@ -809,7 +866,7 @@ namespace ACSVM
          thread->link.insert(&threadActive);
          thread->loadState(in);
 
-         if(in.in->get())
+         if(in.readByte())
          {
             auto scrThread = pd->scriptThread.find(thread->script);
             if(scrThread)
@@ -894,7 +951,7 @@ namespace ACSVM
       out.writeSign(Signature::MapScope);
 
       env->writeScriptActions(out, scriptAction);
-      out.out->put(active ? '\1' : '\0');
+      out.writeByte(active);
       saveModules(out);
       saveThreads(out);
 
@@ -912,7 +969,7 @@ namespace ACSVM
          thread.saveState(out);
 
          auto scrThread = pd->scriptThread.find(thread.script);
-         out.out->put(scrThread && *scrThread == &thread ? '\1' : '\0');
+         out.writeByte(scrThread && *scrThread == &thread);
       }
    }
 
@@ -979,9 +1036,8 @@ namespace ACSVM
       else
       {
          thread = env->getFreeThread();
-         thread->start(script, this, info.info, info.argV, static_cast<Word>(info.argC));
+         thread->start(script, this, info.info, info.argV, info.argC);
          if(info.func) info.func(thread);
-         if(info.funcc) info.funcc(thread);
          return true;
       }
    }
@@ -1010,9 +1066,8 @@ namespace ACSVM
    {
       Thread *thread = env->getFreeThread();
 
-      thread->start(script, this, info.info, info.argV, static_cast<Word>(info.argC));
+      thread->start(script, this, info.info, info.argV, info.argC);
       if(info.func) info.func(thread);
-      if(info.funcc) info.funcc(thread);
       return true;
    }
 
@@ -1040,9 +1095,8 @@ namespace ACSVM
    {
       Thread *thread = env->getFreeThread();
 
-      thread->start(script, this, info.info, info.argV, static_cast<Word>(info.argC));
+      thread->start(script, this, info.info, info.argV, info.argC);
       if(info.func) info.func(thread);
-      if(info.funcc) info.funcc(thread);
       thread->exec();
 
       Word result = thread->result;
@@ -1242,11 +1296,8 @@ namespace ACSVM
    {
       in.readSign(Signature::ModuleScope);
 
-      for(auto &arr : selfArrV)
-         arr.loadState(in);
-
-      for(auto &reg : selfRegV)
-         reg = ReadVLN<Word>(in);
+      GlobalScope::LoadArrV(in, selfArrV, ArrC);
+      GlobalScope::LoadRegV(in, selfRegV, RegC);
 
       in.readSign(~Signature::ModuleScope);
    }
@@ -1276,11 +1327,8 @@ namespace ACSVM
    {
       out.writeSign(Signature::ModuleScope);
 
-      for(auto &arr : selfArrV)
-         arr.saveState(out);
-
-      for(auto &reg : selfRegV)
-         WriteVLN(out, reg);
+      GlobalScope::SaveArrV(out, selfArrV, ArrC);
+      GlobalScope::SaveRegV(out, selfRegV, RegC);
 
       out.writeSign(~Signature::ModuleScope);
    }

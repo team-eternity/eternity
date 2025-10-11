@@ -1,6 +1,6 @@
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,13 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// EDF Sprites Module
+// Purpose: EDF sprites module.
+// Authors: James Haley, Max Waine
 //
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #ifndef E_SPRITE_H__
 #define E_SPRITE_H__
@@ -33,15 +31,15 @@
 
 constexpr const char SEC_SPRITE[] = "spritenames";
 
-void    E_ProcessSprites(cfg_t *cfg);
+void E_ProcessSprites(cfg_t *cfg);
 
 #endif
 
 // For DECORATE states in particular:
 bool E_ProcessSingleSprite(const char *sprname);
 
-int E_SpriteNumForName(const char *name);
-int E_SpriteNumForDEHNum(const int num);
+int  E_SpriteNumForName(const char *name);
+int  E_SpriteNumForDEHNum(const int num);
 void E_UpdateSpriteName(const char *oldname, const char *newname, const int newlen);
 void E_UpdateAddSpriteNameForNum(const int num, const char *newname, const int newlen, bool forceupdate);
 

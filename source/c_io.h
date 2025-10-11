@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,15 +15,19 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//
+// Purpose: Console I/O.
+// Authors: James Haley, Ioan Chera, Max Waine
+//
 
 #ifndef C_IO_H__
 #define C_IO_H__
 
 #include "d_keywds.h"
 
-#define INPUTLENGTH 512
-#define LINELENGTH  128
+static constexpr int INPUTLENGTH = 512;
+static constexpr int LINELENGTH  = 128;
 
 struct event_t;
 class qstring;
@@ -33,7 +36,7 @@ void C_Init(void);
 void C_InitBackdrop();
 void C_Ticker(void);
 void C_Drawer(void);
-bool C_Responder(event_t* ev);
+bool C_Responder(event_t *ev);
 void C_Update(void);
 
 void C_Printf(E_FORMAT_STRING(const char *s), ...) E_PRINTF(1, 2);
@@ -53,8 +56,8 @@ void C_DumpMessages(qstring *filename);
 #define consoleactive (Console.current_height || gamestate == GS_CONSOLE)
 #define c_moving      (Console.current_height != Console.current_target)
 
-extern int c_height;     // the height of the console
-extern int c_speed;       // pixels/tic it moves
+extern int c_height; // the height of the console
+extern int c_speed;  // pixels/tic it moves
 
 extern char *c_fontname;
 

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2016 Ioan Chera et al.
+// The Eternity Engine
+// Copyright (C) 2025 Ioan Chera et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,13 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Linked portal clipping. Mostly called from functions like
-//      when map has portals PIT_CheckPosition3D
+// Purpose: Linked portal clipping. Mostly called from functions like
+//  when map has portals PIT_CheckPosition3D.
 //
-//-----------------------------------------------------------------------------
+// Authors: Ioan Chera
+//
 
 #ifndef P_PORTALCLIP_H_
 #define P_PORTALCLIP_H_
@@ -35,12 +34,12 @@ struct polyobj_t;
 //
 enum
 {
-   LINECLIP_OVER3DMIDTEX = 1,    // clip thing is over this 3DMidTex
-   LINECLIP_UNDER3DMIDTEX = 2,   // clip thing is under this 3DMidTex
+    LINECLIP_OVER3DMIDTEX  = 1, // clip thing is over this 3DMidTex
+    LINECLIP_UNDER3DMIDTEX = 2, // clip thing is under this 3DMidTex
 
-   // basic flags
-   LINECLIP_ABOVEPORTAL = 4,     // floor portal is below line, both sides
-   LINECLIP_UNDERPORTAL = 8,     // ceiling portal is above line, both sides
+    // basic flags
+    LINECLIP_ABOVEPORTAL = 4, // floor portal is below line, both sides
+    LINECLIP_UNDERPORTAL = 8, // ceiling portal is above line, both sides
 };
 
 bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context);

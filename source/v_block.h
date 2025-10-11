@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Functions to manipulate linear blocks of graphics data.
+// Purpose: Functions to manipulate linear blocks of graphics data.
+// Authors: James Haley, Stephen McGranahan
 //
-//-----------------------------------------------------------------------------
+//
 
 #ifndef V_BLOCK_H__
 #define V_BLOCK_H__
@@ -34,15 +33,13 @@ struct VBuffer;
 
 void V_ColorBlockScaled(VBuffer *buffer, byte color, int x, int y, int w, int h);
 
-void V_ColorBlockTLScaled(VBuffer *dest, byte color, int x, int y, int w, int h, 
-                          int tl);
+void V_ColorBlockTLScaled(VBuffer *dest, byte color, int x, int y, int w, int h, int tl);
 
 // haleyjd 02/02/05: color block drawing functions
 
 void V_ColorBlock(VBuffer *buffer, byte color, int x, int y, int w, int h);
 
-void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y, int w, 
-                    int h, int tl);
+void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y, int w, int h, int tl);
 
 // buffer fill w/texture
 void V_FillBuffer(VBuffer *buffer, const byte *src, int texw, int texh);
@@ -53,6 +50,4 @@ void V_SetBlockFuncs(VBuffer *, int);
 #endif
 
 // EOF
-
-
 

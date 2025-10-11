@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,25 +15,22 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Player related stuff.
-//      Bobbing POV/weapon, movement.
-//      Pending weapon.
+// Purpose: Player related stuff. Bobbing POV/weapon, movement. Pending weapon.
+// Authors: James Haley, Charles Gunyon, David Hill, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef P_USER_H__
 #define P_USER_H__
 
 struct player_t;
-class  Mobj;
+class Mobj;
 
 // haleyjd 10/31/02: moved to header
 // Index of the special effects (INVUL inverse) map.
 
-#define INVERSECOLORMAP 32
+static constexpr int INVERSECOLORMAP = 32;
 
 void P_PlayerThink(player_t &player);
 void P_CalcHeight(player_t &player);
@@ -45,8 +41,8 @@ void P_SetPlayerAttacker(player_t &player, Mobj *attacker);
 void P_SetDisplayPlayer(int new_displayplayer);
 void P_PlayerStartFlight(player_t &player, bool thrustup);
 void P_PlayerStopFlight(player_t &player);
-void P_GiveRebornInventory(player_t& player);
-bool P_UnmorphPlayer(player_t& player, bool onexit);
+void P_GiveRebornInventory(player_t &player);
+bool P_UnmorphPlayer(player_t &player, bool onexit);
 
 extern bool pitchedflight;
 extern bool default_pitchedflight;

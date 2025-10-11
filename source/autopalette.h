@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Auto-caching of PLAYPAL lump
+// Purpose: Auto-caching of PLAYPAL lump.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef AUTOPALETTE_H__
 #define AUTOPALETTE_H__
@@ -35,25 +33,19 @@
 class AutoPalette
 {
 protected:
-   byte *palette;
+    byte *palette;
 
-   // Not copyable.
-   AutoPalette(const AutoPalette &other) {} 
+    // Not copyable.
+    AutoPalette(const AutoPalette &other) {}
 
 public:
-   explicit AutoPalette(WadDirectory &dir)
-   {
-      palette = static_cast<byte *>(dir.cacheLumpName("PLAYPAL", PU_STATIC));
-   }
+    explicit AutoPalette(WadDirectory &dir) { palette = static_cast<byte *>(dir.cacheLumpName("PLAYPAL", PU_STATIC)); }
 
-   ~AutoPalette()
-   {
-      Z_ChangeTag(palette, PU_CACHE);
-   }
+    ~AutoPalette() { Z_ChangeTag(palette, PU_CACHE); }
 
-   byte *get() const { return palette; }
-   
-   byte operator [] (size_t index) const { return palette[index]; }
+    byte *get() const { return palette; }
+
+    byte operator[](size_t index) const { return palette[index]; }
 };
 
 #endif

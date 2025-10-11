@@ -12,8 +12,8 @@ includeifenabled("heretic/fonts.edf", "HERETIC");
 // Console font
 font ee_consolefont
 {
-   id         4
-   linearlump CONCHARS
+  id         4
+  linearlump CONCHARS
 }
 
 // Commented out from when the Kate memorial was active

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//    Bounding-box routines (clipping, bsp, etc)
-//    
-//-----------------------------------------------------------------------------
+// Purpose: Bounding-box routines (clipping, bsp, etc).
+// Authors: James Haley, Ioan Chera
+//
 
 #ifndef M_BBOX_H__
 #define M_BBOX_H__
@@ -31,10 +29,10 @@
 // Bounding box coordinate storage.
 enum
 {
-   BOXTOP,
-   BOXBOTTOM,
-   BOXLEFT,
-   BOXRIGHT
+    BOXTOP,
+    BOXBOTTOM,
+    BOXLEFT,
+    BOXRIGHT
 };
 
 // Bounding box functions.
@@ -48,8 +46,8 @@ void M_AddToBox2(float *box, float x, float y);
 
 inline static bool M_BoxesTouch(const fixed_t bbox1[4], const fixed_t bbox2[4])
 {
-   return bbox1[BOXTOP] >= bbox2[BOXBOTTOM] && bbox1[BOXBOTTOM] <= bbox2[BOXTOP] &&
-      bbox1[BOXLEFT] <= bbox2[BOXRIGHT] && bbox1[BOXRIGHT] >= bbox2[BOXLEFT];
+    return bbox1[BOXTOP] >= bbox2[BOXBOTTOM] && bbox1[BOXBOTTOM] <= bbox2[BOXTOP] &&
+           bbox1[BOXLEFT] <= bbox2[BOXRIGHT] && bbox1[BOXRIGHT] >= bbox2[BOXLEFT];
 }
 
 #endif

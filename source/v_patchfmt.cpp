@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Patch format verification and load-time processing code
+// Purpose: Patch format verification and load-time processing code.
+// Authors: James Haley, Alison Gray Watson
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 
@@ -44,24 +42,24 @@ size_t PatchLoader::DefaultPatchSize;
 //
 // PatchLoader::GetDefaultPatch
 //
-// haleyjd 02/05/12: static, returns a default patch graphic to use in 
+// haleyjd 02/05/12: static, returns a default patch graphic to use in
 // place of a missing patch. The graphic is allocated using the PU_PERMANENT
 // zone tag (as of 06/09/12) so that client code cannot free or change the
 // tag of the data even if it tries (which it generally will).
 //
 patch_t *PatchLoader::GetDefaultPatch()
 {
-   static patch_t *defaultPatch = nullptr;
+    static patch_t *defaultPatch = nullptr;
 
-   if(!defaultPatch)
-   {
-      byte patchdata[4];
-      patchdata[0] = patchdata[3] = GameModeInfo->blackIndex;
-      patchdata[1] = patchdata[2] = GameModeInfo->whiteIndex;
-      defaultPatch = V_LinearToPatch(patchdata, 2, 2, &DefaultPatchSize, PU_PERMANENT);
-   }
+    if(!defaultPatch)
+    {
+        byte patchdata[4];
+        patchdata[0] = patchdata[3] = GameModeInfo->blackIndex;
+        patchdata[1] = patchdata[2] = GameModeInfo->whiteIndex;
+        defaultPatch                = V_LinearToPatch(patchdata, 2, 2, &DefaultPatchSize, PU_PERMANENT);
+    }
 
-   return defaultPatch;
+    return defaultPatch;
 }
 
 //
@@ -71,77 +69,77 @@ patch_t *PatchLoader::GetDefaultPatch()
 //
 bool PatchLoader::checkData(void *data, size_t size) const
 {
-   // Must be at least as large as the header.
-   if(size < 8)
-      return false; // invalid header
+    // Must be at least as large as the header.
+    if(size < 8)
+        return false; // invalid header
 
-   patch_t *patch  = static_cast<patch_t *>(data);   
-   short    width  = SwapShort(patch->width);
-   short    height = SwapShort(patch->height);
+    patch_t *patch  = static_cast<patch_t *>(data);
+    short    width  = SwapShort(patch->width);
+    short    height = SwapShort(patch->height);
 
-   // Need valid width and height
-   if(width < 0 || height < 0)
-      return false; // invalid graphic size
+    // Need valid width and height
+    if(width < 0 || height < 0)
+        return false; // invalid graphic size
 
-   // Number of bytes needed for columnofs
-   size_t numBytesNeeded = width * sizeof(int32_t);
-   if(size - 8 < numBytesNeeded)
-      return false; // invalid columnofs table size
+    // Number of bytes needed for columnofs
+    size_t numBytesNeeded = width * sizeof(int32_t);
+    if(size - 8 < numBytesNeeded)
+        return false; // invalid columnofs table size
 
-   // Verify all columns
-   for(int i = 0; i < width; i++)
-   {
-      size_t offset = static_cast<size_t>(SwapLong(patch->columnofs[i]));
+    // Verify all columns
+    for(int i = 0; i < width; i++)
+    {
+        size_t offset = static_cast<size_t>(SwapLong(patch->columnofs[i]));
 
-      if(offset >= size)
-         return false; // offset lies outside the data
+        if(offset >= size)
+            return false; // offset lies outside the data
 
-      // Verify the series of posts at that offset
-      byte *base  = reinterpret_cast<byte *>(patch);
-      byte *rover = base + offset;
-      while(*rover != 0xff)
-      {
-         byte *nextPost = rover + *(rover + 1) + 4;
+        // Verify the series of posts at that offset
+        byte *base  = reinterpret_cast<byte *>(patch);
+        byte *rover = base + offset;
+        while(*rover != 0xff)
+        {
+            byte *nextPost = rover + *(rover + 1) + 4;
 
-         if(nextPost >= base + size)
-            return false; // Unterminated series of posts, or too long
+            if(nextPost >= base + size)
+                return false; // Unterminated series of posts, or too long
 
-         rover = nextPost;
-      }
-   }
+            rover = nextPost;
+        }
+    }
 
-   // Patch is valid!
-   return true;
+    // Patch is valid!
+    return true;
 }
 
 static bool isLinearSize(size_t size, int &w, int &h)
 {
-   switch(size)
-   {
-   case 4096:
-   case 4160:
-      w = h = 64;
-      return true;
-   case 8192:
-      w = 64;
-      h = 128;
-      return true;
-   case 16384:
-      w = h = 128;
-      return true;
-   case 64000:
-      w = 320;
-      h = 200;
-      return true;
-   case 65536:
-      w = h = 256;
-      return true;
-   case 262144:
-      w = h = 512;
-      return true;
-   default:
-      return false;
-   }
+    switch(size)
+    {
+    case 4096:
+    case 4160: //
+        w = h = 64;
+        return true;
+    case 8192: //
+        w = 64;
+        h = 128;
+        return true;
+    case 16384: //
+        w = h = 128;
+        return true;
+    case 64000: //
+        w = 320;
+        h = 200;
+        return true;
+    case 65536: //
+        w = h = 256;
+        return true;
+    case 262144: //
+        w = h = 512;
+        return true;
+    default: //
+        return false;
+    }
 }
 
 //
@@ -151,43 +149,43 @@ static bool isLinearSize(size_t size, int &w, int &h)
 //
 WadLumpLoader::Code PatchLoader::verifyData(lumpinfo_t *lump) const
 {
-   lumpinfo_t::lumpformat fmt = formatIndex();
+    lumpinfo_t::lumpformat fmt = formatIndex();
 
-   if(!checkData(lump->cache[fmt], lump->size))
-   {
-      // Maybe it's a PNG?
-      if(lump->size > 8 && VPNGImage::CheckPNGFormat(lump->cache[fmt]))
-      {
-         int curTag = Z_CheckTag(lump->cache[fmt]);
-         Z_Free(lump->cache[fmt]);
-         VPNGImage::LoadAsPatch(lump->selfindex, curTag, &lump->cache[fmt]);
-         if(lump->cache[fmt])
-            return CODE_NOFMT;
-      }
+    if(!checkData(lump->cache[fmt], lump->size))
+    {
+        // Maybe it's a PNG?
+        if(lump->size > 8 && VPNGImage::CheckPNGFormat(lump->cache[fmt]))
+        {
+            int curTag = Z_CheckTag(lump->cache[fmt]);
+            Z_Free(lump->cache[fmt]);
+            VPNGImage::LoadAsPatch(lump->selfindex, curTag, &lump->cache[fmt]);
+            if(lump->cache[fmt])
+                return CODE_NOFMT;
+        }
 
-      // Maybe it's linear?
-      int w = 0, h = 0;
-      if(isLinearSize(lump->size, w, h))
-      {
-         int curTag = Z_CheckTag(lump->cache[fmt]);
-         Z_ChangeTag(lump->cache[fmt], PU_STATIC);
-         ZAutoBuffer buf;
-         buf.alloc(lump->size, false);
-         memcpy(buf.get(), lump->cache[fmt], lump->size);
-         Z_Free(lump->cache[fmt]);
-         V_LinearToPatch(buf.getAs<byte *>(), w, h, nullptr, curTag, &lump->cache[fmt]);
-         if(lump->cache[fmt])
-            return CODE_NOFMT;
-      }
+        // Maybe it's linear?
+        int w = 0, h = 0;
+        if(isLinearSize(lump->size, w, h))
+        {
+            int curTag = Z_CheckTag(lump->cache[fmt]);
+            Z_ChangeTag(lump->cache[fmt], PU_STATIC);
+            ZAutoBuffer buf;
+            buf.alloc(lump->size, false);
+            memcpy(buf.get(), lump->cache[fmt], lump->size);
+            Z_Free(lump->cache[fmt]);
+            V_LinearToPatch(buf.getAs<byte *>(), w, h, nullptr, curTag, &lump->cache[fmt]);
+            if(lump->cache[fmt])
+                return CODE_NOFMT;
+        }
 
-      // Return default patch.
-      if(lump->cache[fmt])
-         Z_Free(lump->cache[fmt]);
-      lump->cache[fmt] = GetDefaultPatch();
-      return CODE_NOFMT;
-   }
+        // Return default patch.
+        if(lump->cache[fmt])
+            Z_Free(lump->cache[fmt]);
+        lump->cache[fmt] = GetDefaultPatch();
+        return CODE_NOFMT;
+    }
 
-   return CODE_OK;
+    return CODE_OK;
 }
 
 //
@@ -197,15 +195,15 @@ WadLumpLoader::Code PatchLoader::verifyData(lumpinfo_t *lump) const
 //
 void PatchLoader::formatRaw(void *data) const
 {
-   patch_t *patch = static_cast<patch_t *>(data);
+    patch_t *patch = static_cast<patch_t *>(data);
 
-   patch->width      = SwapShort(patch->width);
-   patch->height     = SwapShort(patch->height);
-   patch->leftoffset = SwapShort(patch->leftoffset);
-   patch->topoffset  = SwapShort(patch->topoffset);
+    patch->width      = SwapShort(patch->width);
+    patch->height     = SwapShort(patch->height);
+    patch->leftoffset = SwapShort(patch->leftoffset);
+    patch->topoffset  = SwapShort(patch->topoffset);
 
-   for(int i = 0; i < patch->width; i++)
-      patch->columnofs[i] = SwapLong(patch->columnofs[i]);
+    for(int i = 0; i < patch->width; i++)
+        patch->columnofs[i] = SwapLong(patch->columnofs[i]);
 }
 
 //
@@ -215,8 +213,8 @@ void PatchLoader::formatRaw(void *data) const
 //
 WadLumpLoader::Code PatchLoader::formatData(lumpinfo_t *lump) const
 {
-   formatRaw(lump->cache[formatIndex()]);
-   return CODE_OK;
+    formatRaw(lump->cache[formatIndex()]);
+    return CODE_OK;
 }
 
 //
@@ -228,12 +226,12 @@ WadLumpLoader::Code PatchLoader::formatData(lumpinfo_t *lump) const
 //
 bool PatchLoader::VerifyAndFormat(void *data, size_t size)
 {
-   if(patchFmt.checkData(data, size))
-   {
-      patchFmt.formatRaw(data);
-      return true;
-   }
-   return false;
+    if(patchFmt.checkData(data, size))
+    {
+        patchFmt.formatRaw(data);
+        return true;
+    }
+    return false;
 }
 
 //
@@ -243,10 +241,10 @@ bool PatchLoader::VerifyAndFormat(void *data, size_t size)
 //
 patch_t *PatchLoader::CacheNum(WadDirectory &dir, int lumpnum, int tag)
 {
-   if(lumpnum >= 0)
-      return static_cast<patch_t *>(dir.cacheLumpNum(lumpnum, tag, &patchFmt));
-   else
-      return GetDefaultPatch();
+    if(lumpnum >= 0)
+        return static_cast<patch_t *>(dir.cacheLumpNum(lumpnum, tag, &patchFmt));
+    else
+        return GetDefaultPatch();
 }
 
 //
@@ -256,7 +254,7 @@ patch_t *PatchLoader::CacheNum(WadDirectory &dir, int lumpnum, int tag)
 //
 patch_t *PatchLoader::CacheName(WadDirectory &dir, const char *name, int tag, int ns)
 {
-   return PatchLoader::CacheNum(dir, dir.checkNumForName(name, ns), tag);
+    return PatchLoader::CacheNum(dir, dir.checkNumForName(name, ns), tag);
 }
 
 //
@@ -270,24 +268,24 @@ patch_t *PatchLoader::CacheName(WadDirectory &dir, const char *name, int tag, in
 //
 void PatchLoader::GetUsedColors(patch_t *patch, byte *pal)
 {
-   int16_t width = patch->width;
+    int16_t width = patch->width;
 
-   for(int i = 0; i < width; i++)
-   {
-      size_t  offset = static_cast<size_t>(patch->columnofs[i]);
-      byte   *rover  = reinterpret_cast<byte *>(patch) + offset;
+    for(int i = 0; i < width; i++)
+    {
+        size_t offset = static_cast<size_t>(patch->columnofs[i]);
+        byte  *rover  = reinterpret_cast<byte *>(patch) + offset;
 
-      while(*rover != 0xff)
-      {
-         int   count  = *(rover + 1);
-         byte *source = rover + 3;
-         
-         while(count--)
-            pal[*source++] = 1;
+        while(*rover != 0xff)
+        {
+            int   count  = *(rover + 1);
+            byte *source = rover + 3;
 
-         rover = source + 1;
-      }
-   }
+            while(count--)
+                pal[*source++] = 1;
+
+            rover = source + 1;
+        }
+    }
 }
 
 // EOF

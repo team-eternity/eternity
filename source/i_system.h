@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      System specific interface stuff.
+// Purpose: System-specific interface stuff.
+// Authors: James Haley, Max Waine, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef I_SYSTEM_H__
 #define I_SYSTEM_H__
@@ -35,7 +33,7 @@ struct SDL_Window;
 
 using i_errhandler_t = void (*)(char *errmsg);
 
-typedef void (*atexit_func_t)(void);
+using atexit_func_t = void (*)(void);
 // Schedule a function to be called when the program exits.
 void I_AtExit(atexit_func_t func);
 
@@ -72,7 +70,7 @@ void I_StartTicInWindow(SDL_Window *window);
 // This ticcmd will then be modified by the gameloop
 // for normal input.
 
-ticcmd_t* I_BaseTiccmd();
+ticcmd_t *I_BaseTiccmd();
 
 // atexit handler -- killough
 
@@ -85,8 +83,8 @@ void I_QuitFast();
 // haleyjd 05/21/10: error codes for I_FatalError
 enum
 {
-   I_ERR_KILL,  // exit and do not perform shutdown actions
-   I_ERR_ABORT  // call abort()
+    I_ERR_KILL, // exit and do not perform shutdown actions
+    I_ERR_ABORT // call abort()
 };
 
 // haleyjd 06/05/10
@@ -107,9 +105,9 @@ void I_SetErrorHandler(const i_errhandler_t handler);
 #define I_Assert(condition, ...)
 #endif
 
-extern int mousepresent;                // killough
+extern int mousepresent; // killough
 
-void I_EndDoom();         // killough 2/22/98: endgame screen
+void I_EndDoom(); // killough 2/22/98: endgame screen
 
 int I_CheckAbort();
 

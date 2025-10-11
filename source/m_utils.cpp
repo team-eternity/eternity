@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2016 James Haley et al.
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
+//------------------------------------------------------------------------------
+//
 // Purpose: Utility functions
 // Authors: James Haley et al.
 //
@@ -24,9 +26,9 @@
 #include "hal/i_platform.h"
 #include "doomtype.h"
 
-#include "d_main.h"    // for usermsg
-#include "i_system.h"  // for I_Error
-#include "m_qstr.h"    // for qstring
+#include "d_main.h"   // for usermsg
+#include "i_system.h" // for I_Error
+#include "m_qstr.h"   // for qstring
 
 //=============================================================================
 //
@@ -38,21 +40,21 @@
 //
 bool M_WriteFile(char const *name, void *source, size_t length)
 {
-   FILE *fp;
-   bool result;
-   
-   errno = 0;
-   
-   if(!(fp = fopen(name, "wb")))         // Try opening file
-      return 0;                          // Could not open file for writing
-   
-   result = (fwrite(source, 1, length, fp) == length);   // Write data
-   fclose(fp);
-   
-   if(!result)                          // Remove partially written file
-      remove(name);
-   
-   return result;
+    FILE *fp;
+    bool  result;
+
+    errno = 0;
+
+    if(!(fp = fopen(name, "wb"))) // Try opening file
+        return 0;                 // Could not open file for writing
+
+    result = (fwrite(source, 1, length, fp) == length); // Write data
+    fclose(fp);
+
+    if(!result) // Remove partially written file
+        remove(name);
+
+    return result;
 }
 
 //
@@ -60,33 +62,33 @@ bool M_WriteFile(char const *name, void *source, size_t length)
 //
 int M_ReadFile(char const *name, byte **buffer)
 {
-   FILE *fp;
-   
-   errno = 0;
-   
-   if((fp = fopen(name, "rb")))
-   {
-      size_t length;
+    FILE *fp;
 
-      fseek(fp, 0, SEEK_END);
-      length = ftell(fp);
-      fseek(fp, 0, SEEK_SET);
+    errno = 0;
 
-      *buffer = ecalloc(byte *, 1, length);
-      
-      if(fread(*buffer, 1, length, fp) == length)
-      {
-         fclose(fp);
-         return static_cast<int>(length);
-      }
-      fclose(fp);
-   }
+    if((fp = fopen(name, "rb")))
+    {
+        size_t length;
 
-   // sf: do not quit on file not found
-   //  I_Error("Couldn't read file %s: %s", name, 
-   //	  errno ? strerror(errno) : "(Unknown Error)");
-   
-   return -1;
+        fseek(fp, 0, SEEK_END);
+        length = ftell(fp);
+        fseek(fp, 0, SEEK_SET);
+
+        *buffer = ecalloc(byte *, 1, length);
+
+        if(fread(*buffer, 1, length, fp) == length)
+        {
+            fclose(fp);
+            return static_cast<int>(length);
+        }
+        fclose(fp);
+    }
+
+    // sf: do not quit on file not found
+    //  I_Error("Couldn't read file %s: %s", name,
+    //	  errno ? strerror(errno) : "(Unknown Error)");
+
+    return -1;
 }
 
 // Returns the path to a temporary file of the given name, stored
@@ -95,28 +97,28 @@ int M_ReadFile(char const *name, byte **buffer)
 // The returned value must be freed with Z_Free after use.
 char *M_TempFile(const char *s)
 {
-   const char *tempdir;
+    const char *tempdir;
 
 #ifdef _WIN32
 
-   // Check the TEMP environment variable to find the location.
+    // Check the TEMP environment variable to find the location.
 
-   tempdir = getenv("TEMP");
+    tempdir = getenv("TEMP");
 
-   if(tempdir == NULL)
-   {
-      tempdir = ".";
-   }
+    if(tempdir == NULL)
+    {
+        tempdir = ".";
+    }
 #else
-   // In Unix, just use /tmp.
+    // In Unix, just use /tmp.
 
-   tempdir = "/tmp";
+    tempdir = "/tmp";
 #endif
 
-   qstring temp(tempdir);
-   temp.pathConcatenate(s);
+    qstring temp(tempdir);
+    temp.pathConcatenate(s);
 
-   return temp.duplicate();
+    return temp.duplicate();
 }
 
 //
@@ -124,14 +126,14 @@ char *M_TempFile(const char *s)
 //
 long M_FileLength(FILE *f)
 {
-   long curpos, len;
+    long curpos, len;
 
-   curpos = ftell(f);
-   fseek(f, 0, SEEK_END);
-   len = ftell(f);
-   fseek(f, curpos, SEEK_SET);
+    curpos = ftell(f);
+    fseek(f, 0, SEEK_END);
+    len = ftell(f);
+    fseek(f, curpos, SEEK_SET);
 
-   return len;
+    return len;
 }
 
 //
@@ -140,21 +142,21 @@ long M_FileLength(FILE *f)
 //
 char *M_LoadStringFromFile(const char *filename)
 {
-   FILE  *f    = nullptr;
-   char  *buf  = nullptr;
-   size_t len = 0;
-   
-   if(!(f = fopen(filename, "rb")))
-      return nullptr;
+    FILE  *f   = nullptr;
+    char  *buf = nullptr;
+    size_t len = 0;
 
-   // allocate at length + 1 for null termination
-   len = static_cast<size_t>(M_FileLength(f));
-   buf = ecalloc(char *, 1, len + 1);
-   if(fread(buf, 1, len, f) != len)
-      usermsg("M_LoadStringFromFile: warning: could not read file %s\n", filename);
-   fclose(f);
+    if(!(f = fopen(filename, "rb")))
+        return nullptr;
 
-   return buf;
+    // allocate at length + 1 for null termination
+    len = static_cast<size_t>(M_FileLength(f));
+    buf = ecalloc(char *, 1, len + 1);
+    if(fread(buf, 1, len, f) != len)
+        usermsg("M_LoadStringFromFile: warning: could not read file %s\n", filename);
+    fclose(f);
+
+    return buf;
 }
 
 //=============================================================================
@@ -167,11 +169,11 @@ char *M_LoadStringFromFile(const char *filename)
 //
 size_t M_Strnlen(const char *s, size_t count)
 {
-   const char *p = s;
-   while(*p && count-- > 0)
-      p++;
+    const char *p = s;
+    while(*p && count-- > 0)
+        p++;
 
-   return p - s;
+    return p - s;
 }
 
 //
@@ -179,15 +181,15 @@ size_t M_Strnlen(const char *s, size_t count)
 //
 char *M_Strupr(char *string)
 {
-   char *s = string;
+    char *s = string;
 
-   while(*s)
-   {
-      int c = ectype::toUpper(*s);
-      *s++ = c;
-   }
+    while(*s)
+    {
+        int c = ectype::toUpper(*s);
+        *s++  = c;
+    }
 
-   return string;
+    return string;
 }
 
 //
@@ -195,15 +197,15 @@ char *M_Strupr(char *string)
 //
 char *M_Strlwr(char *string)
 {
-   char *s = string;
+    char *s = string;
 
-   while(*s)
-   {
-      int c = ectype::toLower(*s);
-      *s++ = c;
-   }
+    while(*s)
+    {
+        int c = ectype::toLower(*s);
+        *s++  = c;
+    }
 
-   return string;
+    return string;
 }
 
 //
@@ -213,51 +215,51 @@ char *M_Strlwr(char *string)
 char *M_Itoa(int value, char *string, int radix)
 {
 #ifdef EE_HAVE_ITOA
-   return ITOA_NAME(value, string, radix);
+    return ITOA_NAME(value, string, radix);
 #else
-   char tmp[33];
-   char *tp = tmp;
-   int i;
-   unsigned int v;
-   int sign;
-   char *sp;
+    char         tmp[33];
+    char        *tp = tmp;
+    int          i;
+    unsigned int v;
+    int          sign;
+    char        *sp;
 
-   if(radix > 36 || radix <= 1)
-   {
-      errno = EDOM;
-      return 0;
-   }
+    if(radix > 36 || radix <= 1)
+    {
+        errno = EDOM;
+        return 0;
+    }
 
-   sign = (radix == 10 && value < 0);
+    sign = (radix == 10 && value < 0);
 
-   if(sign)
-      v = -value;
-   else
-      v = (unsigned int)value;
+    if(sign)
+        v = -value;
+    else
+        v = (unsigned int)value;
 
-   while(v || tp == tmp)
-   {
-      i = v % radix;
-      v = v / radix;
+    while(v || tp == tmp)
+    {
+        i = v % radix;
+        v = v / radix;
 
-      if(i < 10)
-         *tp++ = i + '0';
-      else
-         *tp++ = i + 'a' - 10;
-   }
+        if(i < 10)
+            *tp++ = i + '0';
+        else
+            *tp++ = i + 'a' - 10;
+    }
 
-   if(string == 0)
-      string = (char *)(malloc)((tp-tmp)+sign+1);
-   sp = string;
+    if(string == 0)
+        string = (char *)(malloc)((tp - tmp) + sign + 1);
+    sp = string;
 
-   if(sign)
-      *sp++ = '-';
+    if(sign)
+        *sp++ = '-';
 
-   while(tp > tmp)
-      *sp++ = *--tp;
-   *sp = 0;
+    while(tp > tmp)
+        *sp++ = *--tp;
+    *sp = 0;
 
-   return string;
+    return string;
 #endif
 }
 
@@ -267,22 +269,22 @@ char *M_Itoa(int value, char *string, int radix)
 //
 int M_CountNumLines(const char *str)
 {
-   const char *rover = str;
-   int numlines = 0;
+    const char *rover    = str;
+    int         numlines = 0;
 
-   if(strlen(str))
-   {
-      numlines = 1;
+    if(strlen(str))
+    {
+        numlines = 1;
 
-      char c;
-      while((c = *rover++))
-      {
-         if(c == '\n')
-            ++numlines;
-      }
-   }
+        char c;
+        while((c = *rover++))
+        {
+            if(c == '\n')
+                ++numlines;
+        }
+    }
 
-   return numlines;
+    return numlines;
 }
 
 //=============================================================================
@@ -296,35 +298,35 @@ int M_CountNumLines(const char *str)
 //
 void M_GetFilePath(const char *fn, char *base, size_t len)
 {
-   bool found_slash = false;
-   char *p;
+    bool  found_slash = false;
+    char *p;
 
-   memset(base, 0, len);
+    memset(base, 0, len);
 
-   p = base + len - 1;
+    p = base + len - 1;
 
-   strncpy(base, fn, len);
-   
-   while(p >= base)
-   {
-      if(*p == '/' || *p == '\\')
-      {
-         found_slash = true; // mark that the path ended with a slash
-         *p = '\0';
-         break;
-      }
-      *p = '\0';
-      p--;
-   }
+    strncpy(base, fn, len);
 
-   // haleyjd: in the case that no slash was ever found, yet the
-   // path string is empty, we are dealing with a file local to the
-   // working directory. The proper path to return for such a string is
-   // not "", but ".", since the format strings add a slash now. When
-   // the string is empty but a slash WAS found, we really do want to
-   // return the empty string, since the path is relative to the root.
-   if(!found_slash && *base == '\0')
-      *base = '.';
+    while(p >= base)
+    {
+        if(*p == '/' || *p == '\\')
+        {
+            found_slash = true; // mark that the path ended with a slash
+            *p          = '\0';
+            break;
+        }
+        *p = '\0';
+        p--;
+    }
+
+    // haleyjd: in the case that no slash was ever found, yet the
+    // path string is empty, we are dealing with a file local to the
+    // working directory. The proper path to return for such a string is
+    // not "", but ".", since the format strings add a slash now. When
+    // the string is empty but a slash WAS found, we really do want to
+    // return the empty string, since the path is relative to the root.
+    if(!found_slash && *base == '\0')
+        *base = '.';
 }
 
 //
@@ -338,29 +340,28 @@ void M_GetFilePath(const char *fn, char *base, size_t len)
 //
 void M_ExtractFileBase(const char *path, char *dest)
 {
-   const char *src = path + strlen(path) - 1;
-   int length;
-   
-   // back up until a \ or the start
-   while(src != path && src[-1] != ':' // killough 3/22/98: allow c:filename
-         && *(src-1) != '\\'
-         && *(src-1) != '/')
-   {
-      src--;
-   }
+    const char *src = path + strlen(path) - 1;
+    int         length;
 
-   // copy up to eight characters
-   // FIXME: insecure, does not ensure null termination of output string!
-   memset(dest, 0, 8);
-   length = 0;
+    // back up until a \ or the start
+    while(src != path && src[-1] != ':' // killough 3/22/98: allow c:filename
+          && *(src - 1) != '\\' && *(src - 1) != '/')
+    {
+        src--;
+    }
 
-   while(*src && *src != '.')
-   {
-      if(length >= 8)
-         break; // stop at 8
+    // copy up to eight characters
+    // FIXME: insecure, does not ensure null termination of output string!
+    memset(dest, 0, 8);
+    length = 0;
 
-      dest[length++] = ectype::toUpper(*src++);
-   }
+    while(*src && *src != '.')
+    {
+        if(length >= 8)
+            break; // stop at 8
+
+        dest[length++] = ectype::toUpper(*src++);
+    }
 }
 
 //
@@ -372,14 +373,15 @@ void M_ExtractFileBase(const char *path, char *dest)
 //
 char *M_AddDefaultExtension(char *path, const char *ext)
 {
-   char *p = path;
-   while(*p++);
-   while(p-- > path && *p != '/' && *p != '\\')
-      if(*p == '.')
-         return path;
-   if(*ext != '.')
-      strcat(path, ".");
-   return strcat(path, ext);
+    char *p = path;
+    while(*p++)
+        ;
+    while(p-- > path && *p != '/' && *p != '\\')
+        if(*p == '.')
+            return path;
+    if(*ext != '.')
+        strcat(path, ".");
+    return strcat(path, ext);
 }
 
 //
@@ -388,40 +390,39 @@ char *M_AddDefaultExtension(char *path, const char *ext)
 //
 void M_NormalizeSlashes(char *str)
 {
-   char *p;
-   char useSlash     = '/'; // The slash type to use for normalization.
-   char replaceSlash = '\\'; // The kind of slash to replace.
-   bool isUNC = false;
+    char *p;
+    char  useSlash     = '/';  // The slash type to use for normalization.
+    char  replaceSlash = '\\'; // The kind of slash to replace.
+    bool  isUNC        = false;
 
-   if(ee_current_platform == EE_PLATFORM_WINDOWS)
-   {
-      // This is an UNC path; it should use backslashes.
-      // NB: We check for both in the event one was changed earlier by mistake.
-      if(strlen(str) > 2 && 
-         ((str[0] == '\\' || str[0] == '/') && str[0] == str[1]))
-      {
-         useSlash = '\\';
-         replaceSlash = '/';
-         isUNC = true;
-      }
-   }
-   
-   // Convert all replaceSlashes to useSlashes
-   for(p = str; *p; p++)
-   {
-      if(*p == replaceSlash)
-         *p = useSlash;
-   }
+    if(ee_current_platform == EE_PLATFORM_WINDOWS)
+    {
+        // This is an UNC path; it should use backslashes.
+        // NB: We check for both in the event one was changed earlier by mistake.
+        if(strlen(str) > 2 && ((str[0] == '\\' || str[0] == '/') && str[0] == str[1]))
+        {
+            useSlash     = '\\';
+            replaceSlash = '/';
+            isUNC        = true;
+        }
+    }
 
-   // Remove trailing slashes
-   while(p > str && *--p == useSlash)
-      *p = 0;
+    // Convert all replaceSlashes to useSlashes
+    for(p = str; *p; p++)
+    {
+        if(*p == replaceSlash)
+            *p = useSlash;
+    }
 
-   // Collapse multiple slashes
-   for(p = str + (isUNC ? 2 : 0); (*str++ = *p); )
-      if(*p++ == useSlash)
-         while(*p == useSlash)
-            p++;
+    // Remove trailing slashes
+    while(p > str && *--p == useSlash)
+        *p = 0;
+
+    // Collapse multiple slashes
+    for(p = str + (isUNC ? 2 : 0); (*str++ = *p);)
+        if(*p++ == useSlash)
+            while(*p == useSlash)
+                p++;
 }
 
 //
@@ -435,54 +436,54 @@ void M_NormalizeSlashes(char *str)
 //
 int M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...)
 {
-   size_t len = extra;
+    size_t len = extra;
 
-   if(numstrs < 1)
-      I_Error("M_StringAlloca: invalid input\n");
+    if(numstrs < 1)
+        I_Error("M_StringAlloca: invalid input\n");
 
-   len += strlen(str1);
+    len += strlen(str1);
 
-   --numstrs;
+    --numstrs;
 
-   if(numstrs != 0)
-   {   
-      va_list args;
-      va_start(args, str1);
-      
-      while(numstrs != 0)
-      {
-         const char *argstr = va_arg(args, const char *);
-         
-         len += strlen(argstr);
-         
-         --numstrs;
-      }
-      
-      va_end(args);
-   }
+    if(numstrs != 0)
+    {
+        va_list args;
+        va_start(args, str1);
 
-   ++len;
+        while(numstrs != 0)
+        {
+            const char *argstr = va_arg(args, const char *);
 
-   *str = static_cast<char *>(Z_Alloca(len));
+            len += strlen(argstr);
 
-   return static_cast<int>(len);
+            --numstrs;
+        }
+
+        va_end(args);
+    }
+
+    ++len;
+
+    *str = static_cast<char *>(Z_Alloca(len));
+
+    return static_cast<int>(len);
 }
 
 //
-// haleyjd 09/10/11: back-adapted from Chocolate Strife to provide secure 
-// file path concatenation with automatic normalization on alloca-provided 
+// haleyjd 09/10/11: back-adapted from Chocolate Strife to provide secure
+// file path concatenation with automatic normalization on alloca-provided
 // buffers.
 //
 char *M_SafeFilePath(const char *pbasepath, const char *newcomponent)
 {
-   int     newstrlen = 0;
-   char   *newstr    = nullptr;
+    int   newstrlen = 0;
+    char *newstr    = nullptr;
 
-   newstrlen = M_StringAlloca(&newstr, 3, 1, pbasepath, "/", newcomponent);
-   psnprintf(newstr, newstrlen, "%s/%s", pbasepath, newcomponent);
-   M_NormalizeSlashes(newstr);
+    newstrlen = M_StringAlloca(&newstr, 3, 1, pbasepath, "/", newcomponent);
+    psnprintf(newstr, newstrlen, "%s/%s", pbasepath, newcomponent);
+    M_NormalizeSlashes(newstr);
 
-   return newstr;
+    return newstr;
 }
 
 //
@@ -491,8 +492,8 @@ char *M_SafeFilePath(const char *pbasepath, const char *newcomponent)
 //
 int M_PositiveModulo(int op1, int op2)
 {
-   int result = op1 % op2;
-   return result < 0 ? result + abs(op2) : result;
+    int result = op1 % op2;
+    return result < 0 ? result + abs(op2) : result;
 }
 
 //
@@ -500,62 +501,62 @@ int M_PositiveModulo(int op1, int op2)
 //
 bool M_IsExMy(const char *name, int *episode, int *map)
 {
-   assert(name);
-   int state = 0;
-   int val = 0, mal = 0;
-   for(int i = 0; i < 8; ++i)
-   {
-      char c = name[i];
-      switch(state)
-      {
-         case 0:  // expect E
+    assert(name);
+    int state = 0;
+    int val = 0, mal = 0;
+    for(int i = 0; i < 8; ++i)
+    {
+        char c = name[i];
+        switch(state)
+        {
+        case 0: // expect E
             if(c != 'E')
-               return false;
+                return false;
             state = 1;
             break;
-         case 1:  // expect digit
+        case 1: // expect digit
             if(c < '0' || c > '9')
-               return false;
+                return false;
             state = 2;
-            val = c - '0';
+            val   = c - '0';
             break;
-         case 2:  // expect digit or M
+        case 2: // expect digit or M
             if(c == 'M')
             {
-               state = 3;
-               mal = 0;
-               break;
+                state = 3;
+                mal   = 0;
+                break;
             }
             if(c < '0' || c > '9')
-               return false;
+                return false;
             val = 10 * val + c - '0';
             break;
-         case 3:  // expect level digit
+        case 3: // expect level digit
             if(c < '0' || c > '9')
-               return false;
+                return false;
             state = 4;
-            mal = c - '0';
+            mal   = c - '0';
             break;
-         case 4:  // more digits or exit
+        case 4: // more digits or exit
             if(c == '\0')
-               break;
+                break;
             if(c < '0' || c > '9')
-               return false;
+                return false;
             mal = 10 * mal + c - '0';
             break;
-      }
-      if(!c)
-         break;
-   }
-   if(state == 4)
-   {
-      if(episode)
-         *episode = val;
-      if(map)
-         *map = mal;
-      return true;
-   }
-   return false;
+        }
+        if(!c)
+            break;
+    }
+    if(state == 4)
+    {
+        if(episode)
+            *episode = val;
+        if(map)
+            *map = mal;
+        return true;
+    }
+    return false;
 }
 
 //
@@ -563,24 +564,22 @@ bool M_IsExMy(const char *name, int *episode, int *map)
 //
 bool M_IsMAPxy(const char *name, int *map)
 {
-   assert(name);
-   if(name[0] != 'M' || name[1] != 'A' || name[2] != 'P' || !isnumchar(name[3]) ||
-      !isnumchar(name[4]))
-   {
-      return false;
-   }
-   for(int i = 5; i < 8; ++i)
-   {
-      if(!name[i])
-         break;
-      if(name[i] < '0' || name[i] > '9')
-         return false;
-   }
-   if(map)
-      *map = atoi(name + 3);
-   return true;
+    assert(name);
+    if(name[0] != 'M' || name[1] != 'A' || name[2] != 'P' || !isnumchar(name[3]) || !isnumchar(name[4]))
+    {
+        return false;
+    }
+    for(int i = 5; i < 8; ++i)
+    {
+        if(!name[i])
+            break;
+        if(name[i] < '0' || name[i] > '9')
+            return false;
+    }
+    if(map)
+        *map = atoi(name + 3);
+    return true;
 }
-
 
 // EOF
 

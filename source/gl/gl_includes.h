@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,14 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   
-//  OpenGL Header Includes
-//  haleyjd 05/15/11
+// Purpose: OpenGL header includes.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef GL_HEADERS_H__
 #define GL_HEADERS_H__
@@ -35,18 +31,18 @@
 
 // haleyjd: Borrowed from SDL for cross-platform support
 #ifdef _WIN32
-   #define WIN32_LEAN_AND_MEAN
-   #ifndef NOMINMAX
-      #define NOMINMAX       /* Don't define min() and max() */
-   #endif
-   #include <windows.h>
+    #define WIN32_LEAN_AND_MEAN
+    #ifndef NOMINMAX
+        #define NOMINMAX       /* Don't define min() and max() */
+    #endif
+    #include <windows.h>
 #endif
 #if defined(__MACOSX__) || defined(__APPLE__)
-   #include <OpenGL/gl.h>  /* Header File For The OpenGL Library */
+    #include <OpenGL/gl.h>  /* Header File For The OpenGL Library */
 #elif defined(__MACOS__)
-   #include <gl.h>         /* Header File For The OpenGL Library */
+    #include <gl.h>         /* Header File For The OpenGL Library */
 #else
-   #include <GL/gl.h>      /* Header File For The OpenGL Library */
+    #include <GL/gl.h>      /* Header File For The OpenGL Library */
 #endif
 
 #endif

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2013 James Haley, Stephen McGranahan, Julian Aubourg, et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley, Stephen McGranahan, Julian Aubourg, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      System interface, sound.
+// Purpose: System interface, sound.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef I_SOUND_H__
 #define I_SOUND_H__
@@ -30,17 +28,17 @@ struct sfxinfo_t;
 
 struct i_sounddriver_t
 {
-   int  (*InitSound)(void);
-   void (*CacheSound)(sfxinfo_t *);
-   void (*UpdateSound)(void);
-   void (*SubmitSound)(void);
-   void (*ShutdownSound)(void);
-   int  (*StartSound)(sfxinfo_t *, int, int, int, int, int, int, bool);
-   int  (*SoundID)(int);
-   void (*StopSound)(int, int);
-   int  (*SoundIsPlaying)(int);
-   void (*UpdateSoundParams)(int, int, int, int);
-   void (*UpdateEQParams)(void);
+    int  (*InitSound)(void);
+    void (*CacheSound)(sfxinfo_t *);
+    void (*UpdateSound)(void);
+    void (*SubmitSound)(void);
+    void (*ShutdownSound)(void);
+    int  (*StartSound)(sfxinfo_t *, int, int, int, int, int, int, bool);
+    int  (*SoundID)(int);
+    void (*StopSound)(int, int);
+    int  (*SoundIsPlaying)(int);
+    void (*UpdateSoundParams)(int, int, int, int);
+    void (*UpdateEQParams)(void);
 };
 
 // Init at program start...
@@ -61,8 +59,7 @@ void I_CacheSound(sfxinfo_t *sound);
 //
 
 // Starts a sound in a particular sound channel.
-int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch,
-                 int pri, int loop, bool reverb);
+int I_StartSound(sfxinfo_t *sound, int cnum, int vol, int sep, int pitch, int pri, int loop, bool reverb);
 
 // Returns unique instance ID for a playing sound.
 int I_SoundID(int handle);
@@ -85,22 +82,22 @@ void I_UpdateSoundParams(int handle, int vol, int sep, int pitch);
 
 struct i_musicdriver_t
 {
-   int  (*InitMusic)(void);
-   void (*ShutdownMusic)(void);
-   void (*SetMusicVolume)(int);
-   void (*PauseSong)(int);
-   void (*ResumeSong)(int);
-   int  (*RegisterSong)(void *, int);
-   void (*PlaySong)(int, int);
-   void (*StopSong)(int);
-   void (*UnRegisterSong)(int);
-   int  (*QrySongPlaying)(int);
+    int  (*InitMusic)(void);
+    void (*ShutdownMusic)(void);
+    void (*SetMusicVolume)(int);
+    void (*PauseSong)(int);
+    void (*ResumeSong)(int);
+    int  (*RegisterSong)(void *, int);
+    void (*PlaySong)(int, int);
+    void (*StopSong)(int);
+    void (*UnRegisterSong)(int);
+    int  (*QrySongPlaying)(int);
 };
 
 void I_InitMusic();
 void I_ShutdownMusic();
 
-#define DEFAULT_MIDI_DEVICE -1 // use saved music module device
+static constexpr int DEFAULT_MIDI_DEVICE = -1; // use saved music module device
 
 // Volume.
 void I_SetMusicVolume(int volume);
@@ -126,36 +123,36 @@ void I_StopSong(int handle);
 void I_UnRegisterSong(int handle);
 
 // Allegro card support jff 1/18/98
-extern  int snd_card;
-extern  int mus_card;
-extern  int detect_voices; // jff 3/4/98 option to disable voice detection
+extern int snd_card;
+extern int mus_card;
+extern int detect_voices; // jff 3/4/98 option to disable voice detection
 
 // haleyjd 04/21/10: equalization parameters
-extern double  s_lowfreq;   // low band cutoff frequency
-extern double  s_highfreq;  // high band cutoff frequency
-extern double  s_eqpreamp;  // preamp factor
-extern double  s_lowgain;   // low band gain
-extern double  s_midgain;   // mid band gain
-extern double  s_highgain;  // high band gain
+extern double s_lowfreq;  // low band cutoff frequency
+extern double s_highfreq; // high band cutoff frequency
+extern double s_eqpreamp; // preamp factor
+extern double s_lowgain;  // low band gain
+extern double s_midgain;  // mid band gain
+extern double s_highgain; // high band gain
 
-extern bool    s_reverbactive;
+extern bool s_reverbactive;
 
-static inline bool I_IsSoundBufferSizePowerOf2(int i)
+inline static bool I_IsSoundBufferSizePowerOf2(int i)
 {
-   return (i & (i - 1)) == 0;
+    return (i & (i - 1)) == 0;
 }
 
-static inline int I_MakeSoundBufferSize(int i)
+inline static int I_MakeSoundBufferSize(int i)
 {
-   --i;
-   i |= i >> 1;
-   i |= i >> 2;
-   i |= i >> 4;
-   i |= i >> 8;
-   i |= i >> 16;
-   ++i;
+    --i;
+    i |= i >> 1;
+    i |= i >> 2;
+    i |= i >> 4;
+    i |= i >> 8;
+    i |= i >> 16;
+    ++i;
 
-   return i;
+    return i;
 }
 
 #endif

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2014 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,13 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-// 
-// Mobj-related line specials. Mostly from Hexen.
+// Purpose: Mobj-related line specials. Mostly from Hexen.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef P_THINGS_H__
 #define P_THINGS_H__
@@ -32,18 +29,18 @@
 
 class LevelActionThinker : public Thinker
 {
-   DECLARE_THINKER_TYPE(LevelActionThinker, Thinker)
+    DECLARE_THINKER_TYPE(LevelActionThinker, Thinker)
 
 protected:
-   int special;
-   int args[NUMLINEARGS];
-   int mobjtype;
+    int special;
+    int args[NUMLINEARGS];
+    int mobjtype;
 
 public:
-   virtual void Think() override;
-   virtual void serialize(SaveArchive &arc) override;
+    virtual void Think() override;
+    virtual void serialize(SaveArchive &arc) override;
 
-   static void Spawn(int pSpecial, int *pArgs, int pMobjType);
+    static void Spawn(int pSpecial, int *pArgs, int pMobjType);
 };
 
 void P_SpawnLevelActions();

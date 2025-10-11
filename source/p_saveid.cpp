@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright(C) 2021 James Haley, Ioan Chera, et al.
+// Copyright (C) 2025 James Haley, Ioan Chera, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: archiving named objects by their name and not index, for forward compatibility.
+//------------------------------------------------------------------------------
+//
+// Purpose: Archiving named objects by their name and not index,
+//  for forward compatibility.
+//
 // Authors: Ioan Chera
 //
 
@@ -47,38 +51,38 @@
 //
 void Archive_Colormap(SaveArchive &arc, int &colormap)
 {
-   if(arc.saveVersion() >= 7)
-   {
-      qstring fieldname;
-      if(arc.isSaving())
-      {
-         const char *name;
-         if(colormap == -1)
-            fieldname = "no map" RAT;
-         else
-         {
-            bool boomkind = !!(colormap & COLORMAP_BOOMKIND);
-            name = R_ColormapNameForNum(boomkind ? colormap & ~COLORMAP_BOOMKIND : colormap);
-            fieldname = name ? name : "no map" RAT;
+    if(arc.saveVersion() >= 7)
+    {
+        qstring fieldname;
+        if(arc.isSaving())
+        {
+            const char *name;
+            if(colormap == -1)
+                fieldname = "no map" RAT;
+            else
+            {
+                bool boomkind = !!(colormap & COLORMAP_BOOMKIND);
+                name          = R_ColormapNameForNum(boomkind ? colormap & ~COLORMAP_BOOMKIND : colormap);
+                fieldname     = name ? name : "no map" RAT;
 
-            // Add a RAT prefix to know whether to flag it
-            if(boomkind && fieldname != "no map" RAT)
-               fieldname = qstring(RAT) + fieldname;
-         }
-      }
-      arc.archiveCachedString(fieldname);
-      if(arc.isLoading())
-      {
-         if(fieldname == "no map" RAT)
-            colormap = -1;
-         else if(!fieldname.strNCmp(RAT, 3))
-            colormap = COLORMAP_BOOMKIND | R_ColormapNumForName(fieldname.constPtr() + 3);
-         else
-            colormap = R_ColormapNumForName(fieldname.constPtr());
-      }
-   }
-   else
-      arc << colormap;
+                // Add a RAT prefix to know whether to flag it
+                if(boomkind && fieldname != "no map" RAT)
+                    fieldname = qstring(RAT) + fieldname;
+            }
+        }
+        arc.archiveCachedString(fieldname);
+        if(arc.isLoading())
+        {
+            if(fieldname == "no map" RAT)
+                colormap = -1;
+            else if(!fieldname.strNCmp(RAT, 3))
+                colormap = COLORMAP_BOOMKIND | R_ColormapNumForName(fieldname.constPtr() + 3);
+            else
+                colormap = R_ColormapNumForName(fieldname.constPtr());
+        }
+    }
+    else
+        arc << colormap;
 }
 
 //
@@ -86,42 +90,41 @@ void Archive_Colormap(SaveArchive &arc, int &colormap)
 //
 void Archive_ColorTranslation(SaveArchive &arc, int &colour)
 {
-   if(arc.saveVersion() >= 7)
-   {
-      qstring fieldname;
-      if(arc.isSaving())
-      {
-         // IMPORTANT: the internal name must be longer than 8 characters.
-         if(colour <= TRANSLATIONCOLOURS)
-            fieldname.Printf(27, "Internal" RAT "%d", colour);
-         else
-            fieldname = R_TranslationNameForNum(colour);
-      }
-      arc.archiveCachedString(fieldname);
-      if(arc.isLoading())
-      {
-         long index;
-         char *endptr;
+    if(arc.saveVersion() >= 7)
+    {
+        qstring fieldname;
+        if(arc.isSaving())
+        {
+            // IMPORTANT: the internal name must be longer than 8 characters.
+            if(colour <= TRANSLATIONCOLOURS)
+                fieldname.Printf(27, "Internal" RAT "%d", colour);
+            else
+                fieldname = R_TranslationNameForNum(colour);
+        }
+        arc.archiveCachedString(fieldname);
+        if(arc.isLoading())
+        {
+            long  index;
+            char *endptr;
 
-         // Check that it's Internal{###} and that ### is entirely a number within range, without
-         // other garbage. If so, use the internal tables
-         if(!fieldname.strNCmp("Internal" RAT, 11) &&
-            (index = strtol(fieldname.constPtr() + 11, &endptr, 10)) <= TRANSLATIONCOLOURS &&
-            index >= 0 && !*endptr)
-         {
-            colour = static_cast<int>(index);
-         }
-         else
-         {
-            // Otherwise look for the lump
-            colour = R_TranslationNumForName(fieldname.constPtr());
-            if(colour == -1)
-               colour = 0; // safe default
-         }
-      }
-   }
-   else
-      arc << colour;
+            // Check that it's Internal{###} and that ### is entirely a number within range, without
+            // other garbage. If so, use the internal tables
+            if(!fieldname.strNCmp("Internal" RAT, 11) &&
+               (index = strtol(fieldname.constPtr() + 11, &endptr, 10)) <= TRANSLATIONCOLOURS && index >= 0 && !*endptr)
+            {
+                colour = static_cast<int>(index);
+            }
+            else
+            {
+                // Otherwise look for the lump
+                colour = R_TranslationNumForName(fieldname.constPtr());
+                if(colour == -1)
+                    colour = 0; // safe default
+            }
+        }
+    }
+    else
+        arc << colour;
 }
 
 //
@@ -129,31 +132,31 @@ void Archive_ColorTranslation(SaveArchive &arc, int &colour)
 //
 void Archive_Flat(SaveArchive &arc, int &flat)
 {
-   if(arc.saveVersion() >= 7)
-   {
-      qstring fieldname;
-      if(arc.isSaving())
-         fieldname = flat == -1 ? "no flat" RAT : textures[flat]->name;
-      arc.archiveCachedString(fieldname);
-      if(arc.isLoading())
-         flat = fieldname == "no flat" RAT ? -1 : R_FindFlat(fieldname.constPtr());
-   }
-   else
-      arc << flat;
+    if(arc.saveVersion() >= 7)
+    {
+        qstring fieldname;
+        if(arc.isSaving())
+            fieldname = flat == -1 ? "no flat" RAT : textures[flat]->name;
+        arc.archiveCachedString(fieldname);
+        if(arc.isLoading())
+            flat = fieldname == "no flat" RAT ? -1 : R_FindFlat(fieldname.constPtr());
+    }
+    else
+        arc << flat;
 }
 void Archive_Flat(SaveArchive &arc, int16_t &flat)
 {
-   if(arc.saveVersion() >= 7)
-   {
-      qstring fieldname;
-      if(arc.isSaving())
-         fieldname = flat == -1 ? "no flat" RAT : textures[flat]->name;
-      arc.archiveCachedString(fieldname);
-      if(arc.isLoading())
-         flat = fieldname == "no flat" RAT ? -1 : R_FindFlat(fieldname.constPtr());
-   }
-   else
-      arc << flat;
+    if(arc.saveVersion() >= 7)
+    {
+        qstring fieldname;
+        if(arc.isSaving())
+            fieldname = flat == -1 ? "no flat" RAT : textures[flat]->name;
+        arc.archiveCachedString(fieldname);
+        if(arc.isLoading())
+            flat = fieldname == "no flat" RAT ? -1 : R_FindFlat(fieldname.constPtr());
+    }
+    else
+        arc << flat;
 }
 
 //
@@ -161,18 +164,18 @@ void Archive_Flat(SaveArchive &arc, int16_t &flat)
 //
 void Archive_MobjState_Save(SaveArchive &arc, const state_t &state)
 {
-   assert(arc.isSaving());
-   if(arc.saveVersion() >= 7)
-   {
-      qstring fieldname;
-      fieldname = state.name;
-      arc.archiveCachedString(fieldname);
-   }
-   else
-   {
-      statenum_t index = state.index;
-      arc << index;
-   }
+    assert(arc.isSaving());
+    if(arc.saveVersion() >= 7)
+    {
+        qstring fieldname;
+        fieldname = state.name;
+        arc.archiveCachedString(fieldname);
+    }
+    else
+    {
+        statenum_t index = state.index;
+        arc << index;
+    }
 }
 
 //
@@ -180,19 +183,19 @@ void Archive_MobjState_Save(SaveArchive &arc, const state_t &state)
 //
 state_t &Archive_MobjState_Load(SaveArchive &arc)
 {
-   int temp;
-   assert(arc.isLoading());
-   if(arc.saveVersion() >= 7)
-   {
-      qstring fieldname;
-      arc.archiveCachedString(fieldname);
-      temp = E_StateNumForNameIncludingDecorate(fieldname.constPtr());
-   }
-   else
-      arc << temp;
-   if(temp < 0 || temp >= NUMSTATES)
-      temp = NullStateNum;
-   return *states[temp];
+    int temp;
+    assert(arc.isLoading());
+    if(arc.saveVersion() >= 7)
+    {
+        qstring fieldname;
+        arc.archiveCachedString(fieldname);
+        temp = E_StateNumForNameIncludingDecorate(fieldname.constPtr());
+    }
+    else
+        arc << temp;
+    if(temp < 0 || temp >= NUMSTATES)
+        temp = NullStateNum;
+    return *states[temp];
 }
 
 //
@@ -200,17 +203,17 @@ state_t &Archive_MobjState_Load(SaveArchive &arc)
 //
 void Archive_MobjType(SaveArchive &arc, mobjtype_t &type)
 {
-   if(arc.saveVersion() >= 7)
-   {
-      qstring fieldname;
-      if(arc.isSaving())
-         fieldname = mobjinfo[type]->name;
-      arc.archiveCachedString(fieldname);
-      if(arc.isLoading())
-         type = E_SafeThingName(fieldname.constPtr());
-   }
-   else
-      arc << type;
+    if(arc.saveVersion() >= 7)
+    {
+        qstring fieldname;
+        if(arc.isSaving())
+            fieldname = mobjinfo[type]->name;
+        arc.archiveCachedString(fieldname);
+        if(arc.isLoading())
+            type = E_SafeThingName(fieldname.constPtr());
+    }
+    else
+        arc << type;
 }
 
 //
@@ -218,12 +221,12 @@ void Archive_MobjType(SaveArchive &arc, mobjtype_t &type)
 //
 void Archive_PlayerClass(SaveArchive &arc, playerclass_t *&pclass)
 {
-   qstring fieldname;
-   if(arc.isSaving())
-      fieldname = pclass ? pclass->mnemonic : "";
-   arc.archiveCachedString(fieldname);
-   if(arc.isLoading())
-      pclass = fieldname.empty() ? nullptr : E_PlayerClassForName(fieldname.constPtr());
+    qstring fieldname;
+    if(arc.isSaving())
+        fieldname = pclass ? pclass->mnemonic : "";
+    arc.archiveCachedString(fieldname);
+    if(arc.isLoading())
+        pclass = fieldname.empty() ? nullptr : E_PlayerClassForName(fieldname.constPtr());
 }
 
 //
@@ -231,17 +234,17 @@ void Archive_PlayerClass(SaveArchive &arc, playerclass_t *&pclass)
 //
 void Archive_PSpriteState_Save(SaveArchive &arc, const state_t *state)
 {
-   assert(arc.isSaving());
-   int statenum = state ? state->index : -1;
-   assert(statenum == -1 || (statenum >= 0 && statenum < NUMSTATES));
-   if(arc.saveVersion() >= 7)
-   {
-      qstring fieldname;
-      fieldname = statenum == -1 ? "no state" RAT : states[statenum]->name;
-      arc.archiveCachedString(fieldname);
-   }
-   else
-      arc << statenum;
+    assert(arc.isSaving());
+    int statenum = state ? state->index : -1;
+    assert(statenum == -1 || (statenum >= 0 && statenum < NUMSTATES));
+    if(arc.saveVersion() >= 7)
+    {
+        qstring fieldname;
+        fieldname = statenum == -1 ? "no state" RAT : states[statenum]->name;
+        arc.archiveCachedString(fieldname);
+    }
+    else
+        arc << statenum;
 }
 
 //
@@ -249,17 +252,17 @@ void Archive_PSpriteState_Save(SaveArchive &arc, const state_t *state)
 //
 state_t *Archive_PSpriteState_Load(SaveArchive &arc)
 {
-   assert(arc.isLoading());
-   int statenum;
-   if(arc.saveVersion() >= 7)
-   {
-      qstring fieldname;
-      arc.archiveCachedString(fieldname);
-      statenum = E_StateNumForNameIncludingDecorate(fieldname.constPtr());
-   }
-   else
-      arc << statenum;
-   return statenum < 0 || statenum >= NUMSTATES ? nullptr : states[statenum];
+    assert(arc.isLoading());
+    int statenum;
+    if(arc.saveVersion() >= 7)
+    {
+        qstring fieldname;
+        arc.archiveCachedString(fieldname);
+        statenum = E_StateNumForNameIncludingDecorate(fieldname.constPtr());
+    }
+    else
+        arc << statenum;
+    return statenum < 0 || statenum >= NUMSTATES ? nullptr : states[statenum];
 }
 
 //
@@ -267,12 +270,12 @@ state_t *Archive_PSpriteState_Load(SaveArchive &arc)
 //
 void Archive_Skin(SaveArchive &arc, skin_t *&skin)
 {
-   qstring fieldname;
-   if(arc.isSaving())
-      fieldname = skin && skin->skinname ? skin->skinname : "";
-   arc.archiveCachedString(fieldname);
-   if(arc.isLoading())
-      skin = fieldname.empty() ? nullptr : P_SkinForName(fieldname.constPtr());
+    qstring fieldname;
+    if(arc.isSaving())
+        fieldname = skin && skin->skinname ? skin->skinname : "";
+    arc.archiveCachedString(fieldname);
+    if(arc.isLoading())
+        skin = fieldname.empty() ? nullptr : P_SkinForName(fieldname.constPtr());
 }
 
 //
@@ -280,21 +283,21 @@ void Archive_Skin(SaveArchive &arc, skin_t *&skin)
 //
 void Archive_SpriteNum(SaveArchive &arc, spritenum_t &sprite)
 {
-   if(arc.saveVersion() >= 7)
-   {
-      qstring fieldname;
-      if(arc.isSaving())
-         fieldname = sprnames[sprite];
-      arc.archiveCachedString(fieldname);
-      if(arc.isLoading())
-      {
-         sprite = E_SpriteNumForName(fieldname.constPtr());
-         if(sprite == -1)
-            sprite = blankSpriteNum;
-      }
-   }
-   else
-      arc << sprite;
+    if(arc.saveVersion() >= 7)
+    {
+        qstring fieldname;
+        if(arc.isSaving())
+            fieldname = sprnames[sprite];
+        arc.archiveCachedString(fieldname);
+        if(arc.isLoading())
+        {
+            sprite = E_SpriteNumForName(fieldname.constPtr());
+            if(sprite == -1)
+                sprite = blankSpriteNum;
+        }
+    }
+    else
+        arc << sprite;
 }
 
 //
@@ -302,31 +305,31 @@ void Archive_SpriteNum(SaveArchive &arc, spritenum_t &sprite)
 //
 void Archive_Texture(SaveArchive &arc, int &texture)
 {
-   if(arc.saveVersion() >= 7)
-   {
-      qstring fieldname;
-      if(arc.isSaving())
-         fieldname = texture == -1 ? "no tex" RAT : textures[texture]->name;
-      arc.archiveCachedString(fieldname);
-      if(arc.isLoading())
-         texture = fieldname == "no tex" RAT ? -1 : R_FindWall(fieldname.constPtr());
-   }
-   else
-      arc << texture;
+    if(arc.saveVersion() >= 7)
+    {
+        qstring fieldname;
+        if(arc.isSaving())
+            fieldname = texture == -1 ? "no tex" RAT : textures[texture]->name;
+        arc.archiveCachedString(fieldname);
+        if(arc.isLoading())
+            texture = fieldname == "no tex" RAT ? -1 : R_FindWall(fieldname.constPtr());
+    }
+    else
+        arc << texture;
 }
 void Archive_Texture(SaveArchive &arc, int16_t &texture)
 {
-   if(arc.saveVersion() >= 7)
-   {
-      qstring fieldname;
-      if(arc.isSaving())
-         fieldname = texture == -1 ? "no tex" RAT : textures[texture]->name;
-      arc.archiveCachedString(fieldname);
-      if(arc.isLoading())
-         texture = fieldname == "no tex" RAT ? -1 : R_FindWall(fieldname.constPtr());
-   }
-   else
-      arc << texture;
+    if(arc.saveVersion() >= 7)
+    {
+        qstring fieldname;
+        if(arc.isSaving())
+            fieldname = texture == -1 ? "no tex" RAT : textures[texture]->name;
+        arc.archiveCachedString(fieldname);
+        if(arc.isLoading())
+            texture = fieldname == "no tex" RAT ? -1 : R_FindWall(fieldname.constPtr());
+    }
+    else
+        arc << texture;
 }
 
 //
@@ -334,17 +337,17 @@ void Archive_Texture(SaveArchive &arc, int16_t &texture)
 //
 void Archive_TranslucencyMap(SaveArchive &arc, int &tranmap)
 {
-   if(arc.saveVersion() >= 7)
-   {
-      qstring fieldname;
-      if(arc.isSaving())
-         fieldname = tranmap >= 0 ? wGlobalDir.getLumpName(tranmap) : "none";
-      arc.archiveCachedString(fieldname);
-      if(arc.isLoading())
-         tranmap = fieldname == "none" ? -1 : W_CheckNumForName(fieldname.constPtr());
-   }
-   else
-      arc << tranmap;
+    if(arc.saveVersion() >= 7)
+    {
+        qstring fieldname;
+        if(arc.isSaving())
+            fieldname = tranmap >= 0 ? wGlobalDir.getLumpName(tranmap) : "none";
+        arc.archiveCachedString(fieldname);
+        if(arc.isLoading())
+            tranmap = fieldname == "none" ? -1 : W_CheckNumForName(fieldname.constPtr());
+    }
+    else
+        arc << tranmap;
 }
 
 // EOF

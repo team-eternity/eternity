@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*- 
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,11 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// Menu Item Classes
+// Purpose: Menu item classes.
+// Authors: James Haley, Max Waine
 //
-//----------------------------------------------------------------------------
 
 #ifndef MN_ITEMS_H__
 #define MN_ITEMS_H__
@@ -36,21 +35,20 @@ struct menuitem_t;
 //
 class MenuItem : public RTTIObject
 {
-   DECLARE_RTTI_TYPE(MenuItem, RTTIObject)
+    DECLARE_RTTI_TYPE(MenuItem, RTTIObject)
 
 protected:
-   virtual int  adjustPatchXCoord(int x, int16_t width) { return x; }
-   virtual bool shouldDrawDescription(menuitem_t *item) { return true; }
+    virtual int  adjustPatchXCoord(int x, int16_t width) { return x; }
+    virtual bool shouldDrawDescription(menuitem_t *item) { return true; }
 
 public:
-   virtual bool drawPatchForItem(menuitem_t *item, int &item_height, int alignment);
-   virtual void drawDescription(menuitem_t *item, int &item_height, int &item_width,
-                                int alignment, int color);
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) {}
-   virtual const char *getHelpString(menuitem_t *item, char *msgbuffer) { return ""; }
-   virtual void onConfirm(menuitem_t *item) {}
-   virtual void onLeft(menuitem_t *item, bool altdown, bool shiftdown) {}
-   virtual void onRight(menuitem_t *item, bool altdown, bool shiftdown) {}
+    virtual bool        drawPatchForItem(menuitem_t *item, int &item_height, int alignment);
+    virtual void        drawDescription(menuitem_t *item, int &item_height, int &item_width, int alignment, int color);
+    virtual void        drawData(menuitem_t *item, int color, int alignment, int desc_width, bool selected) {}
+    virtual const char *getHelpString(menuitem_t *item, char *msgbuffer) { return ""; }
+    virtual void        onConfirm(menuitem_t *item) {}
+    virtual void        onLeft(menuitem_t *item, bool altdown, bool shiftdown) {}
+    virtual void        onRight(menuitem_t *item, bool altdown, bool shiftdown) {}
 };
 
 extern MenuItem *MenuItemInstanceForType[];

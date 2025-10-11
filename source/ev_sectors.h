@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2014 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,25 +18,24 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Generalized sector special system
+// Purpose: Generalized sector special system.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef EV_SECTORS_H__
 #define EV_SECTORS_H__
 
 struct sector_t;
 
-typedef void (*EVSectorSpecialFunc)(sector_t *);
+using EVSectorSpecialFunc = void (*)(sector_t *);
 
 // Sector special binding
 struct ev_sectorbinding_t
 {
-   int special;               // special number
-   EVSectorSpecialFunc apply; // function which applies the special
+    int                 special; // special number
+    EVSectorSpecialFunc apply;   // function which applies the special
 };
 
 void EV_SpawnSectorSpecials();

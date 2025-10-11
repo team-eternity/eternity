@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2012 David Hill, James Haley, et al.
+// The Eternity Engine
+// Copyright (C) 2025 David Hill, James Haley, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,18 +18,18 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//    Base for classes with custom RTTI. Adapted from the original ThinkerType.
+// Purpose: Base for classes with custom RTTI.
+//  Adapted from the original ThinkerType.
 //
-//-----------------------------------------------------------------------------
+// Authors: David Hill, James Haley
+//
 
 #include "e_rtti.h"
 
 #include "d_dehtbl.h"
 #include "i_system.h"
-
 
 RTTIObject::Type RTTIObject::StaticType("RTTIObject", nullptr);
 
@@ -41,13 +40,13 @@ RTTIObject::Type *RTTIObject::Type::rttiTypes[NUMTYPECHAINS];
 //
 RTTIObject::Type *RTTIObject::Type::FindType(const char *pName)
 {
-   unsigned int hashcode = D_HashTableKeyCase(pName) % NUMTYPECHAINS;
-   Type *chain = rttiTypes[hashcode];
+    unsigned int hashcode = D_HashTableKeyCase(pName) % NUMTYPECHAINS;
+    Type        *chain    = rttiTypes[hashcode];
 
-   while(chain && strcmp(chain->name, pName))
-      chain = chain->next;
+    while(chain && strcmp(chain->name, pName))
+        chain = chain->next;
 
-   return chain;
+    return chain;
 }
 
 //
@@ -55,16 +54,16 @@ RTTIObject::Type *RTTIObject::Type::FindType(const char *pName)
 //
 void RTTIObject::Type::addType()
 {
-   unsigned int hashcode;
+    unsigned int hashcode;
 
-   // Types must be singletons with unique names.
-   if(FindType(name))
-      I_Error("RTTIObject::Type: duplicate class registered with name '%s'\n", name);
+    // Types must be singletons with unique names.
+    if(FindType(name))
+        I_Error("RTTIObject::Type: duplicate class registered with name '%s'\n", name);
 
-   // Add it to the hash table; order is unimportant.
-   hashcode = D_HashTableKeyCase(name) % NUMTYPECHAINS;
-   this->next = rttiTypes[hashcode];
-   rttiTypes[hashcode] = this;
+    // Add it to the hash table; order is unimportant.
+    hashcode            = D_HashTableKeyCase(name) % NUMTYPECHAINS;
+    this->next          = rttiTypes[hashcode];
+    rttiTypes[hashcode] = this;
 }
 
 // EOF

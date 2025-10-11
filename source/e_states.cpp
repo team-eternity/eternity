@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,8 +18,10 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: EDF States Module
-// Authors: James Haley
+//------------------------------------------------------------------------------
+//
+// Purpose: EDF states module.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
 
 #include "z_zone.h"
@@ -69,60 +71,59 @@ constexpr const char ITEM_FRAME_CMP[]         = "cmp";
 constexpr const char ITEM_FRAME_SKILL5FAST[]  = "SKILL5FAST";
 constexpr const char ITEM_FRAME_INTERPOLATE[] = "INTERPOLATE";
 
-constexpr const char ITEM_DELTA_NAME[]        = "name";
+constexpr const char ITEM_DELTA_NAME[] = "name";
 
 constexpr const char ITEM_FRAMEBLOCK_FDS[]    = "firststate";
 constexpr const char ITEM_FRAMEBLOCK_STATES[] = "states";
 
 // forward prototype for action function dispatcher
-static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
-                          const char **argv);
+static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv);
 
 //
 // Frame Options
 //
 
 #define FRAME_FIELDS \
-   CFG_STR(ITEM_FRAME_SPRITE,      "BLANK",     CFGF_NONE), \
-   CFG_INT_CB(ITEM_FRAME_SPRFRAME, 0,           CFGF_NONE, E_SpriteFrameCB), \
-   CFG_BOOL(ITEM_FRAME_FULLBRT,    false,       CFGF_NONE), \
-   CFG_INT(ITEM_FRAME_TICS,        1,           CFGF_NONE), \
-   CFG_STRFUNC(ITEM_FRAME_ACTION,  "NULL",      E_ActionFuncCB), \
-   CFG_STR(ITEM_FRAME_NEXTFRAME,   "S_NULL",    CFGF_NONE), \
-   CFG_STR(ITEM_FRAME_MISC1,       "0",         CFGF_NONE), \
-   CFG_STR(ITEM_FRAME_MISC2,       "0",         CFGF_NONE), \
-   CFG_STR(ITEM_FRAME_PTCLEVENT,   "pevt_none", CFGF_NONE), \
-   CFG_STR(ITEM_FRAME_ARGS,        nullptr,     CFGF_LIST), \
-   CFG_INT(ITEM_FRAME_DEHNUM,      -1,          CFGF_NONE), \
-   CFG_FLAG(ITEM_FRAME_SKILL5FAST, 0,           CFGF_SIGNPREFIX), \
-   CFG_FLAG(ITEM_FRAME_INTERPOLATE, 0,          CFGF_SIGNPREFIX), \
-   CFG_END()
+    CFG_STR(ITEM_FRAME_SPRITE,      "BLANK",     CFGF_NONE), \
+    CFG_INT_CB(ITEM_FRAME_SPRFRAME, 0,           CFGF_NONE, E_SpriteFrameCB), \
+    CFG_BOOL(ITEM_FRAME_FULLBRT,    false,       CFGF_NONE), \
+    CFG_INT(ITEM_FRAME_TICS,        1,           CFGF_NONE), \
+    CFG_STRFUNC(ITEM_FRAME_ACTION,  "NULL",      E_ActionFuncCB), \
+    CFG_STR(ITEM_FRAME_NEXTFRAME,   "S_NULL",    CFGF_NONE), \
+    CFG_STR(ITEM_FRAME_MISC1,       "0",         CFGF_NONE), \
+    CFG_STR(ITEM_FRAME_MISC2,       "0",         CFGF_NONE), \
+    CFG_STR(ITEM_FRAME_PTCLEVENT,   "pevt_none", CFGF_NONE), \
+    CFG_STR(ITEM_FRAME_ARGS,        nullptr,     CFGF_LIST), \
+    CFG_INT(ITEM_FRAME_DEHNUM,      -1,          CFGF_NONE), \
+    CFG_FLAG(ITEM_FRAME_SKILL5FAST, 0,           CFGF_SIGNPREFIX), \
+    CFG_FLAG(ITEM_FRAME_INTERPOLATE, 0,          CFGF_SIGNPREFIX), \
+    CFG_END()
 
-cfg_opt_t edf_frame_opts[] =
-{
-   CFG_FLAG(ITEM_FRAME_DECORATE, 0, CFGF_SIGNPREFIX),
-   CFG_STR(ITEM_FRAME_CMP, nullptr, CFGF_NONE),
-   FRAME_FIELDS
+// clang-format off
+
+cfg_opt_t edf_frame_opts[] = {
+     CFG_FLAG(ITEM_FRAME_DECORATE, 0, CFGF_SIGNPREFIX),
+     CFG_STR(ITEM_FRAME_CMP, nullptr, CFGF_NONE),
+     FRAME_FIELDS
 };
 
-cfg_opt_t edf_fdelta_opts[] =
-{
-   CFG_STR(ITEM_DELTA_NAME, nullptr, CFGF_NONE),
-   FRAME_FIELDS
+cfg_opt_t edf_fdelta_opts[] = {
+    CFG_STR(ITEM_DELTA_NAME, nullptr, CFGF_NONE),
+    FRAME_FIELDS
 };
 
-cfg_opt_t edf_fblock_opts[] =
-{
-   CFG_STR(ITEM_FRAMEBLOCK_FDS,    nullptr, CFGF_NONE),
-   CFG_STR(ITEM_FRAMEBLOCK_STATES, nullptr, CFGF_NONE),
-   CFG_END()
+cfg_opt_t edf_fblock_opts[] = {
+    CFG_STR(ITEM_FRAMEBLOCK_FDS,    nullptr, CFGF_NONE),
+    CFG_STR(ITEM_FRAMEBLOCK_STATES, nullptr, CFGF_NONE),
+    CFG_END()
 };
 
-static const dehflags_t frameFlagSet[] =
-{
-   { ITEM_FRAME_SKILL5FAST, STATEF_SKILL5FAST },
-   { ITEM_FRAME_INTERPOLATE, STATEF_INTERPOLATE },
-   { nullptr },
+// clang-format on
+
+static const dehflags_t frameFlagSet[] = {
+    { ITEM_FRAME_SKILL5FAST,  STATEF_SKILL5FAST  },
+    { ITEM_FRAME_INTERPOLATE, STATEF_INTERPOLATE },
+    { nullptr,                0                  },
 };
 
 //
@@ -135,17 +136,14 @@ static const dehflags_t frameFlagSet[] =
 constexpr int NUMSTATECHAINS = 2003;
 
 // hash by name
-static EHashTable<state_t, ENCStringHashKey, 
-                  &state_t::name, &state_t::namelinks> state_namehash(NUMSTATECHAINS);
+static EHashTable<state_t, ENCStringHashKey, &state_t::name, &state_t::namelinks> state_namehash(NUMSTATECHAINS);
 
-// hash of decorate states. Needed for savegame integrity check but otherwise not desired in 
+// hash of decorate states. Needed for savegame integrity check but otherwise not desired in
 // state_namehash
-static EHashTable<state_t, ENCStringHashKey, &state_t::name, &state_t::namelinks> 
-                  decstate_namehash(NUMSTATECHAINS);
+static EHashTable<state_t, ENCStringHashKey, &state_t::name, &state_t::namelinks> decstate_namehash(NUMSTATECHAINS);
 
 // hash by DeHackEd number
-static EHashTable<state_t, EIntHashKey, 
-                  &state_t::dehnum, &state_t::numlinks> state_numhash(NUMSTATECHAINS);
+static EHashTable<state_t, EIntHashKey, &state_t::dehnum, &state_t::numlinks> state_numhash(NUMSTATECHAINS);
 
 //
 // State DeHackEd numbers *were* simply the actual, internal state
@@ -155,17 +153,17 @@ static EHashTable<state_t, EIntHashKey,
 //
 int E_StateNumForDEHNum(int dehnum)
 {
-   state_t *st = nullptr;
-   int ret = -1;
+    state_t *st  = nullptr;
+    int      ret = -1;
 
-   // 08/31/03: return null state for negative numbers, to
-   // please some old, incorrect DeHackEd patches
-   if(dehnum < 0)
-      ret = NullStateNum;
-   else if((st = state_numhash.objectForKey(dehnum)))
-      ret = st->index;
+    // 08/31/03: return null state for negative numbers, to
+    // please some old, incorrect DeHackEd patches
+    if(dehnum < 0)
+        ret = NullStateNum;
+    else if((st = state_numhash.objectForKey(dehnum)))
+        ret = st->index;
 
-   return ret;
+    return ret;
 }
 
 //
@@ -175,12 +173,12 @@ int E_StateNumForDEHNum(int dehnum)
 //
 int E_GetStateNumForDEHNum(int dehnum)
 {
-   int statenum = E_StateNumForDEHNum(dehnum);
+    int statenum = E_StateNumForDEHNum(dehnum);
 
-   if(statenum < 0)
-      I_Error("E_GetStateNumForDEHNum: invalid deh num %d\n", dehnum);
+    if(statenum < 0)
+        I_Error("E_GetStateNumForDEHNum: invalid deh num %d\n", dehnum);
 
-   return statenum;
+    return statenum;
 }
 
 //
@@ -189,12 +187,12 @@ int E_GetStateNumForDEHNum(int dehnum)
 //
 int E_SafeState(int dehnum)
 {
-   int statenum = E_StateNumForDEHNum(dehnum);
+    int statenum = E_StateNumForDEHNum(dehnum);
 
-   if(statenum < 0)
-      statenum = NullStateNum;
+    if(statenum < 0)
+        statenum = NullStateNum;
 
-   return statenum;
+    return statenum;
 }
 
 //
@@ -203,13 +201,13 @@ int E_SafeState(int dehnum)
 //
 int E_StateNumForName(const char *name)
 {
-   state_t *st = nullptr;
-   int ret = -1;
+    state_t *st  = nullptr;
+    int      ret = -1;
 
-   if((st = state_namehash.objectForKey(name)))
-      ret = st->index;
+    if((st = state_namehash.objectForKey(name)))
+        ret = st->index;
 
-   return ret;
+    return ret;
 }
 
 //
@@ -217,19 +215,19 @@ int E_StateNumForName(const char *name)
 //
 int E_StateNumForNameIncludingDecorate(const char *name)
 {
-   const state_t *st = state_namehash.objectForKey(name);
-   if(st)
-      return st->index;
-   st = decstate_namehash.objectForKey(name);
-   if(st)
-      return st->index;
-   return -1;
+    const state_t *st = state_namehash.objectForKey(name);
+    if(st)
+        return st->index;
+    st = decstate_namehash.objectForKey(name);
+    if(st)
+        return st->index;
+    return -1;
 }
 // Or only Decorate
 int E_StateNumForNameOnlyDecorate(const char *name)
 {
-   const state_t *st = decstate_namehash.objectForKey(name);
-   return st ? st->index : -1;
+    const state_t *st = decstate_namehash.objectForKey(name);
+    return st ? st->index : -1;
 }
 
 //
@@ -237,7 +235,7 @@ int E_StateNumForNameOnlyDecorate(const char *name)
 //
 void E_AddDecorateStateNameToHash(state_t *st)
 {
-   decstate_namehash.addObject(st);
+    decstate_namehash.addObject(st);
 }
 
 //
@@ -245,12 +243,12 @@ void E_AddDecorateStateNameToHash(state_t *st)
 //
 int E_GetStateNumForName(const char *name)
 {
-   int statenum = E_StateNumForName(name);
+    int statenum = E_StateNumForName(name);
 
-   if(statenum < 0)
-      I_Error("E_GetStateNumForName: bad frame %s\n", name);
+    if(statenum < 0)
+        I_Error("E_GetStateNumForName: bad frame %s\n", name);
 
-   return statenum;
+    return statenum;
 }
 
 //
@@ -259,41 +257,41 @@ int E_GetStateNumForName(const char *name)
 //
 int E_SafeStateName(const char *name)
 {
-   int statenum = E_StateNumForName(name);
+    int statenum = E_StateNumForName(name);
 
-   if(statenum < 0)
-      statenum = NullStateNum;
+    if(statenum < 0)
+        statenum = NullStateNum;
 
-   return statenum;
+    return statenum;
 }
 
 //
-// Allows lookup of what may either be an EDF global state name, DECORATE state 
+// Allows lookup of what may either be an EDF global state name, DECORATE state
 // label relative to a particular mobjinfo, or a state DeHackEd number.
 //
 int E_SafeStateNameOrLabel(const mobjinfo_t *mi, const char *name)
 {
-   char *pos = nullptr;
-   long  num = strtol(name, &pos, 0);
+    char *pos = nullptr;
+    long  num = strtol(name, &pos, 0);
 
-   // Not a number? It is a state name.
-   if(estrnonempty(pos))
-   {
-      int      statenum;
-      const state_t *state = nullptr;
-      
-      // Try global resolution first.
-      if((statenum = E_StateNumForName(name)) < 0)
-      {
-         // Try DECORATE state label resolution.
-         if((state = E_GetJumpInfo(mi, name)))
-            statenum = state->index;
-      }
+    // Not a number? It is a state name.
+    if(estrnonempty(pos))
+    {
+        int            statenum;
+        const state_t *state = nullptr;
 
-      return statenum;
-   }
-   else
-      return E_SafeState((int)num); // DeHackEd number
+        // Try global resolution first.
+        if((statenum = E_StateNumForName(name)) < 0)
+        {
+            // Try DECORATE state label resolution.
+            if((state = E_GetJumpInfo(mi, name)))
+                statenum = state->index;
+        }
+
+        return statenum;
+    }
+    else
+        return E_SafeState((int)num); // DeHackEd number
 }
 
 // allocation starts at D_MAXINT and works toward 0
@@ -307,33 +305,33 @@ static int edf_alloc_state_dehnum = D_MAXINT;
 //
 bool E_AutoAllocStateDEHNum(int statenum)
 {
-   int dehnum;
-   state_t *st = states[statenum];
+    int      dehnum;
+    state_t *st = states[statenum];
 
 #ifdef RANGECHECK
-   if(st->dehnum != -1)
-      I_Error("E_AutoAllocStateDEHNum: called for state with valid dehnum\n");
+    if(st->dehnum != -1)
+        I_Error("E_AutoAllocStateDEHNum: called for state with valid dehnum\n");
 #endif
 
-   // cannot assign because we're out of dehnums?
-   if(edf_alloc_state_dehnum < 0)
-      return false;
+    // cannot assign because we're out of dehnums?
+    if(edf_alloc_state_dehnum < 0)
+        return false;
 
-   do
-   {
-      dehnum = edf_alloc_state_dehnum--;
-   } 
-   while(dehnum >= 0 && E_StateNumForDEHNum(dehnum) >= 0);
+    do
+    {
+        dehnum = edf_alloc_state_dehnum--;
+    }
+    while(dehnum >= 0 && E_StateNumForDEHNum(dehnum) >= 0);
 
-   // ran out while looking for an unused number?
-   if(dehnum < 0)
-      return false;
+    // ran out while looking for an unused number?
+    if(dehnum < 0)
+        return false;
 
-   // assign it!
-   st->dehnum = dehnum;
-   state_numhash.addObject(st);
+    // assign it!
+    st->dehnum = dehnum;
+    state_numhash.addObject(st);
 
-   return true;
+    return true;
 }
 
 //
@@ -346,24 +344,24 @@ bool E_AutoAllocStateDEHNum(int statenum)
 //
 static unsigned int E_CountUniqueStates(cfg_t *cfg, unsigned int numstates)
 {
-   unsigned int i;
-   unsigned int count = 0;
+    unsigned int i;
+    unsigned int count = 0;
 
-   // if the state name hash is empty, short-circuit for efficiency
-   if(!state_namehash.getNumItems())
-      return numstates;
+    // if the state name hash is empty, short-circuit for efficiency
+    if(!state_namehash.getNumItems())
+        return numstates;
 
-   for(i = 0; i < numstates; ++i)
-   {
-      cfg_t *statecfg  = cfg_getnsec(cfg, EDF_SEC_FRAME, i);
-      const char *name = cfg_title(statecfg);
+    for(i = 0; i < numstates; ++i)
+    {
+        cfg_t      *statecfg = cfg_getnsec(cfg, EDF_SEC_FRAME, i);
+        const char *name     = cfg_title(statecfg);
 
-      // if not in the name table, count it
-      if(E_StateNumForName(name) < 0)
-         ++count;
-   }
+        // if not in the name table, count it
+        if(E_StateNumForName(name) < 0)
+            ++count;
+    }
 
-   return count;
+    return count;
 }
 
 //
@@ -371,213 +369,213 @@ static unsigned int E_CountUniqueStates(cfg_t *cfg, unsigned int numstates)
 //
 void E_ReallocStates(int numnewstates)
 {
-   static int numstatesalloc = 0;
+    static int numstatesalloc = 0;
 
-   // only realloc when needed
-   if(!numstatesalloc || (NUMSTATES < numstatesalloc + numnewstates))
-   {
-      int i;
+    // only realloc when needed
+    if(!numstatesalloc || (NUMSTATES < numstatesalloc + numnewstates))
+    {
+        int i;
 
-      // First time, just allocate the requested number of states.
-      // Afterward:
-      // * If the number of states requested is small, add 2 times as many
-      //   requested, plus a small constant amount.
-      // * If the number is large, just add that number.
+        // First time, just allocate the requested number of states.
+        // Afterward:
+        // * If the number of states requested is small, add 2 times as many
+        //   requested, plus a small constant amount.
+        // * If the number is large, just add that number.
 
-      if(!numstatesalloc)
-         numstatesalloc = numnewstates;
-      else if(numnewstates <= 50)
-         numstatesalloc += numnewstates * 2 + 32;
-      else
-         numstatesalloc += numnewstates;
+        if(!numstatesalloc)
+            numstatesalloc = numnewstates;
+        else if(numnewstates <= 50)
+            numstatesalloc += numnewstates * 2 + 32;
+        else
+            numstatesalloc += numnewstates;
 
-      // reallocate states[]
-      states = erealloc(state_t **, states, numstatesalloc * sizeof(state_t *));
+        // reallocate states[]
+        states = erealloc(state_t **, states, numstatesalloc * sizeof(state_t *));
 
-      // set the new state pointers to nullptr
-      for(i = NUMSTATES; i < numstatesalloc; ++i)
-         states[i] = nullptr;
-   }
+        // set the new state pointers to nullptr
+        for(i = NUMSTATES; i < numstatesalloc; ++i)
+            states[i] = nullptr;
+    }
 
-   // increment NUMSTATES
-   NUMSTATES += numnewstates;
+    // increment NUMSTATES
+    NUMSTATES += numnewstates;
 }
 
 //
-// Pre-creates and hashes by name the states, for purpose of mutual 
+// Pre-creates and hashes by name the states, for purpose of mutual
 // and forward references.
 //
 void E_CollectStates(cfg_t *cfg)
 {
-   unsigned int i;
-   unsigned int numstates;         // number of states defined by the cfg
-   unsigned int numnew;            // number of states that are new
-   unsigned int curnewstate = 0;   // index of current new state being used
-   state_t *statestructs = nullptr;
-   static bool firsttime = true;
+    unsigned int i;
+    unsigned int numstates;        // number of states defined by the cfg
+    unsigned int numnew;           // number of states that are new
+    unsigned int curnewstate  = 0; // index of current new state being used
+    state_t     *statestructs = nullptr;
+    static bool  firsttime    = true;
 
-   // get number of states defined by the cfg
-   numstates = cfg_size(cfg, EDF_SEC_FRAME);
+    // get number of states defined by the cfg
+    numstates = cfg_size(cfg, EDF_SEC_FRAME);
 
-   // get number of new states in the cfg
-   numnew = E_CountUniqueStates(cfg, numstates);
+    // get number of new states in the cfg
+    numnew = E_CountUniqueStates(cfg, numstates);
 
-   // echo counts
-   E_EDFLogPrintf("\t\t%u states defined (%u new)\n", numstates, numnew);
+    // echo counts
+    E_EDFLogPrintf("\t\t%u states defined (%u new)\n", numstates, numnew);
 
-   if(numnew)
-   {
-      unsigned firstnewstate = 0;   // index of first new state
-      // allocate state_t structures for the new states
-      statestructs = estructalloc(state_t, numnew);
+    if(numnew)
+    {
+        unsigned firstnewstate = 0; // index of first new state
+        // allocate state_t structures for the new states
+        statestructs = estructalloc(state_t, numnew);
 
-      // add space to the states array
-      curnewstate = firstnewstate = NUMSTATES;
+        // add space to the states array
+        curnewstate = firstnewstate = NUMSTATES;
 
-      E_ReallocStates((int)numnew);
-      
-      // set pointers in states[] to the proper structures
-      for(i = firstnewstate; i < (unsigned int)NUMSTATES; ++i)
-      {
-         states[i] = &statestructs[i - firstnewstate];
+        E_ReallocStates((int)numnew);
 
-         // haleyjd 06/15/09: set state index
-         states[i]->index = i;
-      }
-   }
+        // set pointers in states[] to the proper structures
+        for(i = firstnewstate; i < (unsigned int)NUMSTATES; ++i)
+        {
+            states[i] = &statestructs[i - firstnewstate];
 
-   // build hash tables
-   E_EDFLogPuts("\t\tBuilding state hash tables\n");
+            // haleyjd 06/15/09: set state index
+            states[i]->index = i;
+        }
+    }
 
-   // cycle through the states defined in the cfg
-   for(i = 0; i < numstates; ++i)
-   {
-      cfg_t *statecfg  = cfg_getnsec(cfg, EDF_SEC_FRAME, i);
-      const char *name = cfg_title(statecfg);
-      int statenum;
+    // build hash tables
+    E_EDFLogPuts("\t\tBuilding state hash tables\n");
 
-      if((statenum = E_StateNumForName(name)) >= 0)
-      {
-         int dehnum;
+    // cycle through the states defined in the cfg
+    for(i = 0; i < numstates; ++i)
+    {
+        cfg_t      *statecfg = cfg_getnsec(cfg, EDF_SEC_FRAME, i);
+        const char *name     = cfg_title(statecfg);
+        int         statenum;
 
-         // a state already exists by this name
-         state_t *st = states[statenum];
+        if((statenum = E_StateNumForName(name)) >= 0)
+        {
+            int dehnum;
 
-         // get dehackednum of libConfuse definition
-         dehnum = cfg_getint(statecfg, ITEM_FRAME_DEHNUM);
+            // a state already exists by this name
+            state_t *st = states[statenum];
 
-         // if not equal to current state dehnum...
-         if(dehnum != st->dehnum)
-         {
-            // if state has a valid dehnum, remove it from the deh hash
-            if(st->dehnum >= 0)
-               state_numhash.removeObject(st);
+            // get dehackednum of libConfuse definition
+            dehnum = cfg_getint(statecfg, ITEM_FRAME_DEHNUM);
 
-            // assign the new dehnum
-            st->dehnum = dehnum;
+            // if not equal to current state dehnum...
+            if(dehnum != st->dehnum)
+            {
+                // if state has a valid dehnum, remove it from the deh hash
+                if(st->dehnum >= 0)
+                    state_numhash.removeObject(st);
 
-            // if valid, add it back to the hash with the new id #
-            if(st->dehnum >= 0)
-               state_numhash.addObject(st);
-         }
-      }
-      else
-      {
-         // this is a new state
-         state_t *st = states[curnewstate++];
+                // assign the new dehnum
+                st->dehnum = dehnum;
 
-         // initialize name
-         st->name = estrdup(name);
+                // if valid, add it back to the hash with the new id #
+                if(st->dehnum >= 0)
+                    state_numhash.addObject(st);
+            }
+        }
+        else
+        {
+            // this is a new state
+            state_t *st = states[curnewstate++];
 
-         // add to name hash
-         state_namehash.addObject(st);
+            // initialize name
+            st->name = estrdup(name);
 
-         // get dehackednum and add state to dehacked hash table if valid
-         if((st->dehnum = cfg_getint(statecfg, ITEM_FRAME_DEHNUM)) >= 0)
-            state_numhash.addObject(st);
-      }
-   }
+            // add to name hash
+            state_namehash.addObject(st);
 
-   // first-time-only events
-   if(firsttime)
-   {
-      // check that at least one frame was defined
-      if(!NUMSTATES)
-         E_EDFLoggedErr(2, "E_CollectStates: no frames defined.\n");
+            // get dehackednum and add state to dehacked hash table if valid
+            if((st->dehnum = cfg_getint(statecfg, ITEM_FRAME_DEHNUM)) >= 0)
+                state_numhash.addObject(st);
+        }
+    }
 
-      // verify the existence of the S_NULL frame
-      NullStateNum = E_StateNumForName("S_NULL");
-      if(NullStateNum < 0)
-         E_EDFLoggedErr(2, "E_CollectStates: 'S_NULL' frame must be defined.\n");
+    // first-time-only events
+    if(firsttime)
+    {
+        // check that at least one frame was defined
+        if(!NUMSTATES)
+            E_EDFLoggedErr(2, "E_CollectStates: no frames defined.\n");
 
-      firsttime = false;
-   }
+        // verify the existence of the S_NULL frame
+        NullStateNum = E_StateNumForName("S_NULL");
+        if(NullStateNum < 0)
+            E_EDFLoggedErr(2, "E_CollectStates: 'S_NULL' frame must be defined.\n");
+
+        firsttime = false;
+    }
 }
 
 int E_GetAddStateNumForDEHNum(int dehnum, bool forceAdd)
 {
-   int statenum = E_StateNumForDEHNum(dehnum);
-   state_t *state = nullptr;
+    int      statenum = E_StateNumForDEHNum(dehnum);
+    state_t *state    = nullptr;
 
-   if(statenum < 0)
-   {
-      unsigned int newstate = NUMSTATES; // index of new state
-      // allocate state_t structure for the new state
-      state = estructalloc(state_t, 1);
+    if(statenum < 0)
+    {
+        unsigned int newstate = NUMSTATES; // index of new state
+        // allocate state_t structure for the new state
+        state = estructalloc(state_t, 1);
 
-      // add space to the states array
+        // add space to the states array
 
-      E_ReallocStates(1);
+        E_ReallocStates(1);
 
-      states[newstate] = state;
-      states[newstate]->index = newstate;
+        states[newstate]        = state;
+        states[newstate]->index = newstate;
 
-      statenum = newstate;
-   }
-   else if(forceAdd && !states[statenum]->adddeh)
-   {
-      state = states[statenum];
+        statenum = newstate;
+    }
+    else if(forceAdd && !states[statenum]->adddeh)
+    {
+        state = states[statenum];
 
-      state_namehash.removeObject(state);
-      state_numhash.removeObject(state);
+        state_namehash.removeObject(state);
+        state_numhash.removeObject(state);
 
-      if(state->args)
-         E_DisposeArgs(state->args);
+        if(state->args)
+            E_DisposeArgs(state->args);
 
-      *state = {};
-   }
+        *state = {};
+    }
 
-   if(state)
-   {
-      qstring name;
-      name.Printf(0, "_S_ADDDEH%d", dehnum);
+    if(state)
+    {
+        qstring name;
+        name.Printf(0, "_S_ADDDEH%d", dehnum);
 
-      state->adddeh = true;
+        state->adddeh = true;
 
-      state->index     = statenum;
-      state->sprite    = blankSpriteNum;
-      state->tics      = -1;
-      state->nextstate = statenum;
-      state->dehnum    = dehnum;
-      state->name      = name.duplicate();
+        state->index     = statenum;
+        state->sprite    = blankSpriteNum;
+        state->tics      = -1;
+        state->nextstate = statenum;
+        state->dehnum    = dehnum;
+        state->name      = name.duplicate();
 
-      state_namehash.addObject(state);
-      state_numhash.addObject(state);
-   }
+        state_namehash.addObject(state);
+        state_numhash.addObject(state);
+    }
 
-   return statenum;
+    return statenum;
 }
 
 //
-// Creates an arglist object for the state, if it does not already have one. 
+// Creates an arglist object for the state, if it does not already have one.
 // Otherwise, the existing arguments are disposed of.
 //
 void E_CreateArgList(state_t *state)
 {
-   if(!state->args)
-      state->args = estructalloc(arglist_t, 1); // create one
-   else
-      E_DisposeArgs(state->args);               // clear it out
+    if(!state->args)
+        state->args = estructalloc(arglist_t, 1); // create one
+    else
+        E_DisposeArgs(state->args); // clear it out
 }
 
 // frame field parsing routines
@@ -587,46 +585,45 @@ void E_CreateArgList(state_t *state)
 //
 static void E_StateSprite(const char *tempstr, int i)
 {
-   // check for special 'BLANK' identifier
-   if(!strcasecmp(tempstr, "BLANK"))
-      states[i]->sprite = blankSpriteNum;
-   else
-   {
-      int sprnum = E_SpriteNumForName(tempstr);
+    // check for special 'BLANK' identifier
+    if(!strcasecmp(tempstr, "BLANK"))
+        states[i]->sprite = blankSpriteNum;
+    else
+    {
+        int sprnum = E_SpriteNumForName(tempstr);
 
-      if(sprnum == -1)
-      {
-         // haleyjd 03/24/10: add implicitly-defined sprite
-         if(!E_ProcessSingleSprite(tempstr))
-         {
-            E_EDFLoggedWarning(2, 
-                               "Warning: frame '%s': couldn't implicitly "
-                               "define sprite '%s'\n", 
-                               states[i]->name, tempstr);
-            sprnum = blankSpriteNum;
-         }
-         else
-            sprnum = E_SpriteNumForName(tempstr);
-      }
-      states[i]->sprite = sprnum;
-   }
+        if(sprnum == -1)
+        {
+            // haleyjd 03/24/10: add implicitly-defined sprite
+            if(!E_ProcessSingleSprite(tempstr))
+            {
+                E_EDFLoggedWarning(2,
+                                   "Warning: frame '%s': couldn't implicitly "
+                                   "define sprite '%s'\n",
+                                   states[i]->name, tempstr);
+                sprnum = blankSpriteNum;
+            }
+            else
+                sprnum = E_SpriteNumForName(tempstr);
+        }
+        states[i]->sprite = sprnum;
+    }
 }
 
 //
-// Callback function for the new function-valued string option used to 
-// specify state action functions. This is called during parsing, not 
+// Callback function for the new function-valued string option used to
+// specify state action functions. This is called during parsing, not
 // processing, and thus we do not look up/resolve anything at this point.
-// We are only interested in populating the cfg's args values with the 
+// We are only interested in populating the cfg's args values with the
 // strings passed to this callback as parameters. The value of the option has
 // already been set to the name of the codepointer by the libConfuse framework.
 //
-static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc, 
-                          const char **argv)
+static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
-   if(argc > 0)
-      cfg_setlistptr(cfg, "args", argc, (const void *)argv);
+    if(argc > 0)
+        cfg_setlistptr(cfg, "args", argc, (const void *)argv);
 
-   return 0; // everything is good
+    return 0; // everything is good
 }
 
 //
@@ -634,105 +631,105 @@ static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
 //
 static void E_StateAction(const char *tempstr, int i)
 {
-   deh_bexptr *dp = D_GetBexPtr(tempstr);
-   
-   if(!dp)
-   {
-      E_EDFLoggedErr(2, "E_ProcessState: frame '%s': bad action '%s'\n",
-                     states[i]->name, tempstr);
-   }
+    deh_bexptr *dp = D_GetBexPtr(tempstr);
 
-   states[i]->action = states[i]->oldaction = dp->cptr;
+    if(!dp)
+    {
+        E_EDFLoggedErr(2, "E_ProcessState: frame '%s': bad action '%s'\n", states[i]->name, tempstr);
+    }
+
+    states[i]->action = states[i]->oldaction = dp->cptr;
 }
 
 enum prefixkwd_e
 {
-   PREFIX_FRAME,
-   PREFIX_THING,
-   PREFIX_SOUND,
-   PREFIX_FLAGS,
-   PREFIX_FLAGS2,
-   PREFIX_FLAGS3,
-   PREFIX_FLAGS4,
-   PREFIX_FLAGS5,
-   PREFIX_BEXPTR,
-   PREFIX_STRING,
-   NUM_MISC_PREFIXES
+    PREFIX_FRAME,
+    PREFIX_THING,
+    PREFIX_SOUND,
+    PREFIX_FLAGS,
+    PREFIX_FLAGS2,
+    PREFIX_FLAGS3,
+    PREFIX_FLAGS4,
+    PREFIX_FLAGS5,
+    PREFIX_BEXPTR,
+    PREFIX_STRING,
+    NUM_MISC_PREFIXES
 };
 
-static const char *misc_prefixes[NUM_MISC_PREFIXES] =
-{
-   "frame",  "thing",  "sound", "flags", "flags2", "flags3", "flags4",
-   "bexptr", "string"
+static const char *misc_prefixes[NUM_MISC_PREFIXES] = {
+    "frame", "thing", "sound", "flags", "flags2", "flags3", "flags4", "bexptr", "string",
 };
 
 static void E_AssignMiscThing(int *target, int thingnum)
 {
-   // 09/19/03: add check for no dehacked number
-   // 03/22/06: auto-allocate dehacked numbers where possible
-   if(mobjinfo[thingnum]->dehnum >= 0 || E_AutoAllocThingDEHNum(thingnum))
-      *target = mobjinfo[thingnum]->dehnum;
-   else
-   {
-      E_EDFLoggedWarning(2, 
-                         "Warning: failed to auto-allocate DeHackEd number "
-                         "for thing %s\n", mobjinfo[thingnum]->name);
-      *target = UnknownThingType;
-   }
+    // 09/19/03: add check for no dehacked number
+    // 03/22/06: auto-allocate dehacked numbers where possible
+    if(mobjinfo[thingnum]->dehnum >= 0 || E_AutoAllocThingDEHNum(thingnum))
+        *target = mobjinfo[thingnum]->dehnum;
+    else
+    {
+        E_EDFLoggedWarning(2,
+                           "Warning: failed to auto-allocate DeHackEd number "
+                           "for thing %s\n",
+                           mobjinfo[thingnum]->name);
+        *target = UnknownThingType;
+    }
 }
 
 static void E_AssignMiscState(int *target, int framenum)
 {
-   // 09/19/03: add check for no dehacked number
-   // 03/22/06: auto-allocate dehacked numbers where possible
-   if(states[framenum]->dehnum >= 0 || E_AutoAllocStateDEHNum(framenum))
-      *target = states[framenum]->dehnum;
-   else
-   {
-      E_EDFLoggedWarning(2,
-                         "Warning: failed to auto-allocate DeHackEd number "
-                         "for frame %s\n", states[framenum]->name);
-      *target = NullStateNum;
-   }
+    // 09/19/03: add check for no dehacked number
+    // 03/22/06: auto-allocate dehacked numbers where possible
+    if(states[framenum]->dehnum >= 0 || E_AutoAllocStateDEHNum(framenum))
+        *target = states[framenum]->dehnum;
+    else
+    {
+        E_EDFLoggedWarning(2,
+                           "Warning: failed to auto-allocate DeHackEd number "
+                           "for frame %s\n",
+                           states[framenum]->name);
+        *target = NullStateNum;
+    }
 }
 
 static void E_AssignMiscSound(int *target, sfxinfo_t *sfx)
 {
-   // 01/04/09: check for nullptr just in case
-   if(!sfx)
-      sfx = &NullSound;
+    // 01/04/09: check for nullptr just in case
+    if(!sfx)
+        sfx = &NullSound;
 
-   // 03/22/06: auto-allocate dehacked numbers where possible
-   if(sfx->dehackednum >= 0 || E_AutoAllocSoundDEHNum(sfx))
-      *target = sfx->dehackednum;
-   else
-   {
-      E_EDFLoggedWarning(2, 
-                         "Warning: failed to auto-allocate DeHackEd number "
-                         "for sound %s\n", sfx->mnemonic);
-      *target = 0;
-   }
+    // 03/22/06: auto-allocate dehacked numbers where possible
+    if(sfx->dehackednum >= 0 || E_AutoAllocSoundDEHNum(sfx))
+        *target = sfx->dehackednum;
+    else
+    {
+        E_EDFLoggedWarning(2,
+                           "Warning: failed to auto-allocate DeHackEd number "
+                           "for sound %s\n",
+                           sfx->mnemonic);
+        *target = 0;
+    }
 }
 
 static void E_AssignMiscString(int *target, edf_string_t *str, const char *name)
 {
-   if(!str || str->numkey < 0)
-   {
-      E_EDFLoggedWarning(2, "Warning: bad string %s\n", name);
-      *target = 0;
-   }
-   else
-      *target = str->numkey;
+    if(!str || str->numkey < 0)
+    {
+        E_EDFLoggedWarning(2, "Warning: bad string %s\n", name);
+        *target = 0;
+    }
+    else
+        *target = str->numkey;
 }
 
 static void E_AssignMiscBexptr(int *target, deh_bexptr *dp, const char *name)
 {
-   if(!dp)
-      E_EDFLoggedErr(2, "E_ParseMiscField: bad bexptr '%s'\n", name);
-   
-   // get the index of this deh_bexptr in the master
-   // deh_bexptrs array, and store it in the arg field
-   *target = eindex(dp - deh_bexptrs);
+    if(!dp)
+        E_EDFLoggedErr(2, "E_ParseMiscField: bad bexptr '%s'\n", name);
+
+    // get the index of this deh_bexptr in the master
+    // deh_bexptrs array, and store it in the arg field
+    *target = eindex(dp - deh_bexptrs);
 }
 
 //
@@ -743,138 +740,124 @@ static void E_AssignMiscBexptr(int *target, deh_bexptr *dp, const char *name)
 //
 static void E_ParseMiscField(const char *value, int *target)
 {
-   char prefix[16];
-   const char *colonloc;
-   
-   memset(prefix, 0, 16);
+    char        prefix[16];
+    const char *colonloc;
 
-   // look for a colon ending a possible prefix
-   colonloc = E_ExtractPrefix(value, prefix, 16);
-   
-   if(colonloc)
-   {
-      // a colon was found, so identify the prefix
-      const char *strval = colonloc + 1;
+    memset(prefix, 0, 16);
 
-      int i = E_StrToNumLinear(misc_prefixes, NUM_MISC_PREFIXES, prefix);
+    // look for a colon ending a possible prefix
+    colonloc = E_ExtractPrefix(value, prefix, 16);
 
-      switch(i)
-      {
-      case PREFIX_FRAME:
-         {
+    if(colonloc)
+    {
+        // a colon was found, so identify the prefix
+        const char *strval = colonloc + 1;
+
+        int i = E_StrToNumLinear(misc_prefixes, NUM_MISC_PREFIXES, prefix);
+
+        switch(i)
+        {
+        case PREFIX_FRAME:
+        {
             int framenum = E_StateNumForName(strval);
             if(framenum < 0)
             {
-               E_EDFLoggedWarning(2, "tWarning: invalid state '%s' in misc field\n",
-                                  strval);
-               *target = NullStateNum;
+                E_EDFLoggedWarning(2, "tWarning: invalid state '%s' in misc field\n", strval);
+                *target = NullStateNum;
             }
             else
-               E_AssignMiscState(target, framenum);
-         }
-         break;
-      case PREFIX_THING:
-         {
+                E_AssignMiscState(target, framenum);
+        }
+        break;
+        case PREFIX_THING:
+        {
             int thingnum = E_ThingNumForName(strval);
             if(thingnum == -1)
             {
-               E_EDFLoggedWarning(2, "Warning: invalid thing '%s' in misc field\n",
-                                  strval);
-               *target = UnknownThingType;
+                E_EDFLoggedWarning(2, "Warning: invalid thing '%s' in misc field\n", strval);
+                *target = UnknownThingType;
             }
             else
-               E_AssignMiscThing(target, thingnum);
-         }
-         break;
-      case PREFIX_SOUND:
-         {
+                E_AssignMiscThing(target, thingnum);
+        }
+        break;
+        case PREFIX_SOUND:
+        {
             sfxinfo_t *sfx = E_EDFSoundForName(strval);
             if(!sfx)
             {
-               // haleyjd 05/31/06: relaxed to warning
-               E_EDFLoggedWarning(2, "Warning: invalid sound '%s' in misc field\n", 
-                                  strval);
-               sfx = &NullSound;
+                // haleyjd 05/31/06: relaxed to warning
+                E_EDFLoggedWarning(2, "Warning: invalid sound '%s' in misc field\n", strval);
+                sfx = &NullSound;
             }
             E_AssignMiscSound(target, sfx);
-         }
-         break;
-      case PREFIX_FLAGS:
-         *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE1);
-         break;
-      case PREFIX_FLAGS2:
-         *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE2);
-         break;
-      case PREFIX_FLAGS3:
-         *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE3);
-         break;
-      case PREFIX_FLAGS4:
-         *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE4);
-         break;
-      case PREFIX_FLAGS5:
-         *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE5);
-         break;
-      case PREFIX_BEXPTR:
-         {
+        }
+        break;
+        case PREFIX_FLAGS:  *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE1); break;
+        case PREFIX_FLAGS2: *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE2); break;
+        case PREFIX_FLAGS3: *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE3); break;
+        case PREFIX_FLAGS4: *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE4); break;
+        case PREFIX_FLAGS5: *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE5); break;
+        case PREFIX_BEXPTR:
+        {
             deh_bexptr *dp = D_GetBexPtr(strval);
             E_AssignMiscBexptr(target, dp, strval);
-         }
-         break;
-      case PREFIX_STRING:
-         {
+        }
+        break;
+        case PREFIX_STRING:
+        {
             edf_string_t *str = E_StringForName(strval);
             E_AssignMiscString(target, str, strval);
-         }
-         break;
-      default:
-         E_EDFLoggedWarning(2, "Warning: unknown value prefix '%s'\n",
-                            prefix);
-         *target = 0;
-         break;
-      }
-   }
-   else
-   {
-      char  *endptr;
-      int    val;
+        }
+        break;
+        default:
+            E_EDFLoggedWarning(2, "Warning: unknown value prefix '%s'\n", prefix);
+            *target = 0;
+            break;
+        }
+    }
+    else
+    {
+        char *endptr;
+        int   val;
 
-      // see if it is a number
-      if(strchr(value, '.')) // has a decimal point?
-      {
-         double dval = strtod(value, &endptr);
+        // see if it is a number
+        if(strchr(value, '.')) // has a decimal point?
+        {
+            double dval = strtod(value, &endptr);
 
-         // convert result to fixed-point
-         val = (fixed_t)(dval * FRACUNIT);
-      }
-      else
-      {
-         // 11/11/03: use strtol to support hex and oct input
-         val = static_cast<int>(strtol(value, &endptr, 0));
-      }
+            // convert result to fixed-point
+            val = (fixed_t)(dval * FRACUNIT);
+        }
+        else
+        {
+            // 11/11/03: use strtol to support hex and oct input
+            val = static_cast<int>(strtol(value, &endptr, 0));
+        }
 
-      // haleyjd 04/02/08:
-      // no? then try certain namespaces in a predefined order of precedence
-      if(*endptr != '\0')
-      {
-         int temp;
-         sfxinfo_t *sfx;
-         edf_string_t *str;
-         deh_bexptr *dp;
-         
-         if((temp = E_ThingNumForName(value)) != -1)           // thingtype?
-            E_AssignMiscThing(target, temp);
-         else if((temp = E_StateNumForName(value)) >= 0)       // frame?
-            E_AssignMiscState(target, temp);
-         else if((sfx = E_EDFSoundForName(value)) != nullptr)  // sound?
-            E_AssignMiscSound(target, sfx);
-         else if((str = E_StringForName(value)) != nullptr)    // string?
-            E_AssignMiscString(target, str, value);
-         else if((dp = D_GetBexPtr(value)) != nullptr)         // bexptr???
-            E_AssignMiscBexptr(target, dp, value);
-      }
-      else
-         *target = val;
-   }
+        // haleyjd 04/02/08:
+        // no? then try certain namespaces in a predefined order of precedence
+        if(*endptr != '\0')
+        {
+            int           temp;
+            sfxinfo_t    *sfx;
+            edf_string_t *str;
+            deh_bexptr   *dp;
+
+            if((temp = E_ThingNumForName(value)) != -1) // thingtype?
+                E_AssignMiscThing(target, temp);
+            else if((temp = E_StateNumForName(value)) >= 0) // frame?
+                E_AssignMiscState(target, temp);
+            else if((sfx = E_EDFSoundForName(value)) != nullptr) // sound?
+                E_AssignMiscSound(target, sfx);
+            else if((str = E_StringForName(value)) != nullptr) // string?
+                E_AssignMiscString(target, str, value);
+            else if((dp = D_GetBexPtr(value)) != nullptr) // bexptr???
+                E_AssignMiscBexptr(target, dp, value);
+        }
+        else
+            *target = val;
+    }
 }
 
 //
@@ -882,68 +865,63 @@ static void E_ParseMiscField(const char *value, int *target)
 //
 static const char *E_GetArgument(const char *value)
 {
-   char prefix[16];
-   const char *colonloc;
-   
-   memset(prefix, 0, 16);
+    char        prefix[16];
+    const char *colonloc;
 
-   // look for a colon ending a possible prefix
-   colonloc = E_ExtractPrefix(value, prefix, 16);
+    memset(prefix, 0, 16);
 
-   return colonloc ? colonloc + 1 : value;
+    // look for a colon ending a possible prefix
+    colonloc = E_ExtractPrefix(value, prefix, 16);
+
+    return colonloc ? colonloc + 1 : value;
 }
 
 enum nspeckwd_e
 {
-   NSPEC_NEXT,
-   NSPEC_PREV,
-   NSPEC_THIS,
-   NSPEC_NULL,
-   NUM_NSPEC_KEYWDS
+    NSPEC_NEXT,
+    NSPEC_PREV,
+    NSPEC_THIS,
+    NSPEC_NULL,
+    NUM_NSPEC_KEYWDS
 };
 
-static const char *nspec_keywds[NUM_NSPEC_KEYWDS] =
-{
-   "next", "prev", "this", "null"
-};
+static const char *nspec_keywds[NUM_NSPEC_KEYWDS] = { "next", "prev", "this", "null" };
 
 //
 // Returns a frame number for a special nextframe value.
 //
 static int E_SpecialNextState(const char *string, int framenum)
 {
-   int i, nextnum = 0;
-   const char *value = string + 1;
+    int         i, nextnum = 0;
+    const char *value = string + 1;
 
-   i = E_StrToNumLinear(nspec_keywds, NUM_NSPEC_KEYWDS, value);
+    i = E_StrToNumLinear(nspec_keywds, NUM_NSPEC_KEYWDS, value);
 
-   switch(i)
-   {
-   case NSPEC_NEXT:
-      if(framenum == NUMSTATES - 1) // can't do it
-      {
-         E_EDFLoggedErr(2, "E_SpecialNextState: invalid frame #%d\n",
-                        NUMSTATES);
-      }
-      nextnum = framenum + 1;
-      break;
-   case NSPEC_PREV:
-      if(framenum == 0) // can't do it
-         E_EDFLoggedErr(2, "E_SpecialNextState: invalid frame -1\n");
-      nextnum = framenum - 1;
-      break;
-   case NSPEC_THIS:
-      nextnum = framenum;
-      break;
-   case NSPEC_NULL:
-      nextnum = NullStateNum;
-      break;
-   default: // ???
-      E_EDFLoggedErr(2, "E_SpecialNextState: invalid specifier '%s'\n",
-                     value);
-   }
+    switch(i)
+    {
+    case NSPEC_NEXT:
+        if(framenum == NUMSTATES - 1) // can't do it
+        {
+            E_EDFLoggedErr(2, "E_SpecialNextState: invalid frame #%d\n", NUMSTATES);
+        }
+        nextnum = framenum + 1;
+        break;
+    case NSPEC_PREV:
+        if(framenum == 0) // can't do it
+            E_EDFLoggedErr(2, "E_SpecialNextState: invalid frame -1\n");
+        nextnum = framenum - 1;
+        break;
+    case NSPEC_THIS: //
+        nextnum = framenum;
+        break;
+    case NSPEC_NULL: //
+        nextnum = NullStateNum;
+        break;
+    default: // ???
+        E_EDFLoggedErr(2, "E_SpecialNextState: invalid specifier '%s'\n", value);
+    }
 
-   return nextnum;
+    return nextnum;
 }
 
 //
@@ -951,36 +929,33 @@ static int E_SpecialNextState(const char *string, int framenum)
 //
 static void E_StateNextFrame(const char *tempstr, int i)
 {
-   int tempint = 0;
+    int tempint = 0;
 
-   // 11/07/03: allow special values in the nextframe field
-   if(tempstr[0] == '@')
-   {
-      tempint = E_SpecialNextState(tempstr, i);
-   }
-   else if((tempint = E_StateNumForName(tempstr)) < 0)
-   {
-      char *endptr = nullptr;
-      int result;
+    // 11/07/03: allow special values in the nextframe field
+    if(tempstr[0] == '@')
+    {
+        tempint = E_SpecialNextState(tempstr, i);
+    }
+    else if((tempint = E_StateNumForName(tempstr)) < 0)
+    {
+        char *endptr = nullptr;
+        int   result;
 
-      result = (int)strtol(tempstr, &endptr, 0);
-      if(*endptr == '\0')
-      {
-         // check for DeHackEd num specification;
-         // the resulting value must be a valid frame deh number
-         tempint = E_GetStateNumForDEHNum(result);
-      }
-      else      
-      {
-         // error
-         E_EDFLoggedErr(2, 
-            "E_ProcessState: frame '%s': bad nextframe '%s'\n",
-            states[i]->name, tempstr);
+        result = (int)strtol(tempstr, &endptr, 0);
+        if(*endptr == '\0')
+        {
+            // check for DeHackEd num specification;
+            // the resulting value must be a valid frame deh number
+            tempint = E_GetStateNumForDEHNum(result);
+        }
+        else
+        {
+            // error
+            E_EDFLoggedErr(2, "E_ProcessState: frame '%s': bad nextframe '%s'\n", states[i]->name, tempstr);
+        }
+    }
 
-      }
-   }
-
-   states[i]->nextstate = tempint;
+    states[i]->nextstate = tempint;
 }
 
 //
@@ -988,21 +963,18 @@ static void E_StateNextFrame(const char *tempstr, int i)
 //
 static void E_StatePtclEvt(const char *tempstr, int i)
 {
-   int tempint = 0;
+    int tempint = 0;
 
-   while(tempint != P_EVENT_NUMEVENTS &&
-         strcasecmp(tempstr, particleEvents[tempint].name))
-   {
-      ++tempint;
-   }
-   if(tempint == P_EVENT_NUMEVENTS)
-   {
-      E_EDFLoggedErr(2, 
-         "E_ProcessState: frame '%s': bad ptclevent '%s'\n",
-         states[i]->name, tempstr);
-   }
+    while(tempint != P_EVENT_NUMEVENTS && strcasecmp(tempstr, particleEvents[tempint].name))
+    {
+        ++tempint;
+    }
+    if(tempint == P_EVENT_NUMEVENTS)
+    {
+        E_EDFLoggedErr(2, "E_ProcessState: frame '%s': bad ptclevent '%s'\n", states[i]->name, tempstr);
+    }
 
-   states[i]->particle_evt = tempint;
+    states[i]->particle_evt = tempint;
 }
 
 // Hack for function-style arguments to action function
@@ -1016,73 +988,73 @@ static bool early_args_end;
 //
 static char *E_CmpTokenizer(const char *text, int *index, qstring *token)
 {
-   char c;
-   int state = 0;
+    char c;
+    int  state = 0;
 
-   // if we're already at the end, return nullptr
-   if(text[*index] == '\0')
-      return nullptr;
+    // if we're already at the end, return nullptr
+    if(text[*index] == '\0')
+        return nullptr;
 
-   token->clear();
+    token->clear();
 
-   while((c = text[*index]) != '\0')
-   {
-      *index += 1;
-      switch(state)
-      {
-      case 0: // default state
-         switch(c)
-         {
-         case ' ':
-         case '\t':
-            continue;  // skip whitespace
-         case '"':
-            state = 1; // enter quoted part
-            continue;
-         case '\'':
-            state = 2; // enter quoted part (single quote support)
-            continue;
-         case '|':     // end of current token
-         case ',':     // 03/01/05: added by user request
-            return token->getBuffer();
-         case '(':
-            if(in_action)
+    while((c = text[*index]) != '\0')
+    {
+        *index += 1;
+        switch(state)
+        {
+        case 0: // default state
+            switch(c)
             {
-               early_args_found = true;
-               return token->getBuffer();
+            case ' ':
+            case '\t':     //
+                continue;  // skip whitespace
+            case '"':      //
+                state = 1; // enter quoted part
+                continue;
+            case '\'':     //
+                state = 2; // enter quoted part (single quote support)
+                continue;
+            case '|': // end of current token
+            case ',': // 03/01/05: added by user request
+                return token->getBuffer();
+            case '(':
+                if(in_action)
+                {
+                    early_args_found = true;
+                    return token->getBuffer();
+                }
+                *token += c;
+                continue;
+            case ')':
+                if(in_action && early_args_found)
+                {
+                    early_args_end = true;
+                    continue;
+                }
+                [[fallthrough]];
+            default: // everything else == part of value
+                *token += c;
+                continue;
             }
-            *token += c;
+        case 1:          // in quoted area (double quotes)
+            if(c == '"') // end of quoted area
+                state = 0;
+            else
+                *token += c; // everything inside is literal
             continue;
-         case ')':
-            if(in_action && early_args_found)
-            {
-               early_args_end = true;
-               continue;
-            }
-            // fall through
-         default:      // everything else == part of value
-            *token += c;
+        case 2:           // in quoted area (single quotes)
+            if(c == '\'') // end of quoted area
+                state = 0;
+            else
+                *token += c; // everything inside is literal
             continue;
-         }
-      case 1: // in quoted area (double quotes)
-         if(c == '"') // end of quoted area
-            state = 0;
-         else
-            *token += c; // everything inside is literal
-         continue;
-      case 2: // in quoted area (single quotes)
-         if(c == '\'') // end of quoted area
-            state = 0;
-         else
-            *token += c; // everything inside is literal
-         continue;
-      default:
-         E_EDFLoggedErr(0, "E_CmpTokenizer: internal error - undefined lexer state\n");
-      }
-   }
+        default: //
+            E_EDFLoggedErr(0, "E_CmpTokenizer: internal error - undefined lexer state\n");
+        }
+    }
 
-   // return final token, next call will return null
-   return token->getBuffer();
+    // return final token, next call will return null
+    return token->getBuffer();
 }
 
 // macros for E_ProcessCmpState:
@@ -1113,138 +1085,136 @@ static char *E_CmpTokenizer(const char *text, int *index, qstring *token)
 // Fields at the end can be left off. "*" in a field means to use
 // the normal default value.
 //
-// haleyjd 06/24/04: rewritten to use a finite-state-automaton lexer, 
-// making the format MUCH more flexible than it was under the former 
-// strtok system. The E_CmpTokenizer function above performs the 
+// haleyjd 06/24/04: rewritten to use a finite-state-automaton lexer,
+// making the format MUCH more flexible than it was under the former
+// strtok system. The E_CmpTokenizer function above performs the
 // lexing, returning each token in the qstring provided to it.
 //
 static void E_ProcessCmpState(const char *value, int i)
 {
-   qstring buffer;
-   char *curtoken = nullptr;
-   int tok_index = 0;
+    qstring buffer;
+    char   *curtoken  = nullptr;
+    int     tok_index = 0;
 
-   // initialize tokenizer variables
-   in_action = false;
-   early_args_found = false;
-   early_args_end = false;
+    // initialize tokenizer variables
+    in_action        = false;
+    early_args_found = false;
+    early_args_end   = false;
 
-   // process sprite
-   NEXTTOKEN();
-   if(DEFAULTS(curtoken))
-      states[i]->sprite = blankSpriteNum;
-   else
-      E_StateSprite(curtoken, i);
+    // process sprite
+    NEXTTOKEN();
+    if(DEFAULTS(curtoken))
+        states[i]->sprite = blankSpriteNum;
+    else
+        E_StateSprite(curtoken, i);
 
-   // process spriteframe
-   NEXTTOKEN();
-   if(DEFAULTS(curtoken))
-      states[i]->frame = 0;
-   else
-   {
-      // call the value-parsing callback explicitly
-      if(E_SpriteFrameCB(nullptr, nullptr, curtoken, &(states[i]->frame)) == -1)
-      {
-         E_EDFLoggedErr(2, 
-            "E_ProcessCmpState: frame '%s': bad spriteframe '%s'\n",
-            states[i]->name, curtoken);
-      }
+    // process spriteframe
+    NEXTTOKEN();
+    if(DEFAULTS(curtoken))
+        states[i]->frame = 0;
+    else
+    {
+        // call the value-parsing callback explicitly
+        if(E_SpriteFrameCB(nullptr, nullptr, curtoken, &(states[i]->frame)) == -1)
+        {
+            E_EDFLoggedErr(2, "E_ProcessCmpState: frame '%s': bad spriteframe '%s'\n", states[i]->name, curtoken);
+        }
 
-      // haleyjd 09/22/07: if blank sprite, force to frame 0
-      if(states[i]->sprite == blankSpriteNum)
-         states[i]->frame = 0;
-   }
+        // haleyjd 09/22/07: if blank sprite, force to frame 0
+        if(states[i]->sprite == blankSpriteNum)
+            states[i]->frame = 0;
+    }
 
-   // process fullbright
-   NEXTTOKEN();
-   if(DEFAULTS(curtoken) == 0)
-   {
-      if(curtoken[0] == 't' || curtoken[0] == 'T')
-         states[i]->frame |= FF_FULLBRIGHT;
-   }
+    // process fullbright
+    NEXTTOKEN();
+    if(DEFAULTS(curtoken) == 0)
+    {
+        if(curtoken[0] == 't' || curtoken[0] == 'T')
+            states[i]->frame |= FF_FULLBRIGHT;
+    }
 
-   // process tics
-   NEXTTOKEN();
-   if(DEFAULTS(curtoken))
-      states[i]->tics = 1;
-   else
-      states[i]->tics = static_cast<int>(strtol(curtoken, nullptr, 0));
+    // process tics
+    NEXTTOKEN();
+    if(DEFAULTS(curtoken))
+        states[i]->tics = 1;
+    else
+        states[i]->tics = static_cast<int>(strtol(curtoken, nullptr, 0));
 
-   // process action
-   in_action = true;
-   NEXTTOKEN();
-   if(DEFAULTS(curtoken))
-      states[i]->action = nullptr;
-   else
-      E_StateAction(curtoken, i);
+    // process action
+    in_action = true;
+    NEXTTOKEN();
+    if(DEFAULTS(curtoken))
+        states[i]->action = nullptr;
+    else
+        E_StateAction(curtoken, i);
 
-   // haleyjd 04/03/08: check for early args found by tokenizer
-   if(early_args_found)
-   {
-      // give the frame an arg list, or clear it out if it has one already
-      E_CreateArgList(states[i]);
+    // haleyjd 04/03/08: check for early args found by tokenizer
+    if(early_args_found)
+    {
+        // give the frame an arg list, or clear it out if it has one already
+        E_CreateArgList(states[i]);
 
-      // process args
-      while(!early_args_end)
-      {
-         NEXTTOKEN();
+        // process args
+        while(!early_args_end)
+        {
+            NEXTTOKEN();
 
-         if(!DEFAULTS(curtoken))
-            E_AddArgToList(states[i]->args, E_GetArgument(curtoken));
-      }
-   }
+            if(!DEFAULTS(curtoken))
+                E_AddArgToList(states[i]->args, E_GetArgument(curtoken));
+        }
+    }
 
-   in_action = false;
+    in_action = false;
 
-   // process nextframe
-   NEXTTOKEN();
-   if(DEFAULTS(curtoken))
-      states[i]->nextstate = NullStateNum;
-   else
-      E_StateNextFrame(curtoken, i);
+    // process nextframe
+    NEXTTOKEN();
+    if(DEFAULTS(curtoken))
+        states[i]->nextstate = NullStateNum;
+    else
+        E_StateNextFrame(curtoken, i);
 
-   // process particle event
-   NEXTTOKEN();
-   if(DEFAULTS(curtoken))
-      states[i]->particle_evt = 0;
-   else
-      E_StatePtclEvt(curtoken, i);
+    // process particle event
+    NEXTTOKEN();
+    if(DEFAULTS(curtoken))
+        states[i]->particle_evt = 0;
+    else
+        E_StatePtclEvt(curtoken, i);
 
-   // process misc1, misc2
-   NEXTTOKEN();
-   if(DEFAULTS(curtoken))
-      states[i]->misc1 = 0;
-   else
-      E_ParseMiscField(curtoken, &(states[i]->misc1));
+    // process misc1, misc2
+    NEXTTOKEN();
+    if(DEFAULTS(curtoken))
+        states[i]->misc1 = 0;
+    else
+        E_ParseMiscField(curtoken, &(states[i]->misc1));
 
-   NEXTTOKEN();
-   if(DEFAULTS(curtoken))
-      states[i]->misc2 = 0;
-   else
-      E_ParseMiscField(curtoken, &(states[i]->misc2));
+    NEXTTOKEN();
+    if(DEFAULTS(curtoken))
+        states[i]->misc2 = 0;
+    else
+        E_ParseMiscField(curtoken, &(states[i]->misc2));
 
-   // NOTE: Argument specification at the end of cmp frames is deprecated!
-   // Do not use this syntax any more. It will not be extended to support
-   // more than 5 arguments.
-   // Use DECORATE-style specification inside parentheses after the action
-   // function name instead.
+    // NOTE: Argument specification at the end of cmp frames is deprecated!
+    // Do not use this syntax any more. It will not be extended to support
+    // more than 5 arguments.
+    // Use DECORATE-style specification inside parentheses after the action
+    // function name instead.
 
-   if(!early_args_found) // do not do if early args specified
-   {
-      // give the frame an args list, or clear out its existing one
-      E_CreateArgList(states[i]);
+    if(!early_args_found) // do not do if early args specified
+    {
+        // give the frame an args list, or clear out its existing one
+        E_CreateArgList(states[i]);
 
-      // process args
-      for(int j = 0; j < 5; ++j) // Only 5 args are supported here. Deprecated.
-      {
-         NEXTTOKEN();
+        // process args
+        for(int j = 0; j < 5; ++j) // Only 5 args are supported here. Deprecated.
+        {
+            NEXTTOKEN();
 
-         if(!DEFAULTS(curtoken))
-            E_AddArgToList(states[i]->args, E_GetArgument(curtoken));
-      }
-   }
+            if(!DEFAULTS(curtoken))
+                E_AddArgToList(states[i]->args, E_GetArgument(curtoken));
+        }
+    }
 
-   early_args_found = early_args_end = false;
+    early_args_found = early_args_end = false;
 }
 
 #undef NEXTTOKEN
@@ -1256,136 +1226,135 @@ static void E_ProcessCmpState(const char *value, int i)
 //
 static void E_ProcessState(int i, cfg_t *const framesec, bool def)
 {
-   int j;
-   int tempint;
-   const char *tempstr;
+    int         j;
+    int         tempint;
+    const char *tempstr;
 
+    // IS_SET: Tests whether or not a particular field should
+    // be set. When applying deltas, we should not retrieve defaults.
+    const auto IS_SET = [framesec, &def](const char *const name) -> bool {
+        return def || cfg_size(framesec, (name)) > 0;
+    };
 
-   // IS_SET: Tests whether or not a particular field should
-   // be set. When applying deltas, we should not retrieve defaults.
-   const auto IS_SET = [framesec, &def](const char *const name) -> bool {
-      return def || cfg_size(framesec, (name)) > 0;
-   };
+    // 11/14/03:
+    // In definitions only, see if the cmp field is defined. If so,
+    // we go into it with E_ProcessCmpState above, and ignore most
+    // other fields in the frame block.
+    // 01/01/12:
+    // In definitions only, see if this state is reserved for definition
+    // in a DECORATE state block by a thingtype.
+    if(def)
+    {
+        int decoratestate = cfg_getflag(framesec, ITEM_FRAME_DECORATE);
 
-   // 11/14/03:
-   // In definitions only, see if the cmp field is defined. If so,
-   // we go into it with E_ProcessCmpState above, and ignore most
-   // other fields in the frame block.
-   // 01/01/12:
-   // In definitions only, see if this state is reserved for definition
-   // in a DECORATE state block by a thingtype.
-   if(def)
-   {
-      int decoratestate = cfg_getflag(framesec, ITEM_FRAME_DECORATE);
+        if(decoratestate)
+        {
+            states[i]->flags |= STATEFI_DECORATE;
+            goto hitdecorate; // skip most processing
+        }
+        else
+            states[i]->flags &= ~STATEFI_DECORATE;
 
-      if(decoratestate)
-      {
-         states[i]->flags |= STATEFI_DECORATE;
-         goto hitdecorate; // skip most processing
-      }
-      else
-         states[i]->flags &= ~STATEFI_DECORATE;
+        if(cfg_size(framesec, ITEM_FRAME_CMP) > 0)
+        {
+            tempstr = cfg_getstr(framesec, ITEM_FRAME_CMP);
 
-      if(cfg_size(framesec, ITEM_FRAME_CMP) > 0)
-      {
-         tempstr = cfg_getstr(framesec, ITEM_FRAME_CMP);
-         
-         E_ProcessCmpState(tempstr, i);
-         def = false; // process remainder as if a frame delta
-         goto hitcmp;
-      }
-   }
+            E_ProcessCmpState(tempstr, i);
+            def = false; // process remainder as if a frame delta
+            goto hitcmp;
+        }
+    }
 
-   // process sprite
-   if(IS_SET(ITEM_FRAME_SPRITE))
-   {
-      tempstr = cfg_getstr(framesec, ITEM_FRAME_SPRITE);
+    // process sprite
+    if(IS_SET(ITEM_FRAME_SPRITE))
+    {
+        tempstr = cfg_getstr(framesec, ITEM_FRAME_SPRITE);
 
-      E_StateSprite(tempstr, i);
-   }
+        E_StateSprite(tempstr, i);
+    }
 
-   // process spriteframe
-   if(IS_SET(ITEM_FRAME_SPRFRAME))
-      states[i]->frame = cfg_getint(framesec, ITEM_FRAME_SPRFRAME);
+    // process spriteframe
+    if(IS_SET(ITEM_FRAME_SPRFRAME))
+        states[i]->frame = cfg_getint(framesec, ITEM_FRAME_SPRFRAME);
 
-   // haleyjd 09/22/07: if sprite == blankSpriteNum, force to frame 0
-   if(states[i]->sprite == blankSpriteNum)
-      states[i]->frame = 0;
+    // haleyjd 09/22/07: if sprite == blankSpriteNum, force to frame 0
+    if(states[i]->sprite == blankSpriteNum)
+        states[i]->frame = 0;
 
-   // check for fullbright
-   if(IS_SET(ITEM_FRAME_FULLBRT))
-   {
-      if(cfg_getbool(framesec, ITEM_FRAME_FULLBRT))
-         states[i]->frame |= FF_FULLBRIGHT;
-   }
+    // check for fullbright
+    if(IS_SET(ITEM_FRAME_FULLBRT))
+    {
+        if(cfg_getbool(framesec, ITEM_FRAME_FULLBRT))
+            states[i]->frame |= FF_FULLBRIGHT;
+    }
 
-   // process tics
-   if(IS_SET(ITEM_FRAME_TICS))
-      states[i]->tics = cfg_getint(framesec, ITEM_FRAME_TICS);
+    // process tics
+    if(IS_SET(ITEM_FRAME_TICS))
+        states[i]->tics = cfg_getint(framesec, ITEM_FRAME_TICS);
 
-   // resolve codepointer
-   if(IS_SET(ITEM_FRAME_ACTION))
-   {
-      tempstr = cfg_getstr(framesec, ITEM_FRAME_ACTION);
+    // resolve codepointer
+    if(IS_SET(ITEM_FRAME_ACTION))
+    {
+        tempstr = cfg_getstr(framesec, ITEM_FRAME_ACTION);
 
-      E_StateAction(tempstr, i);
-   }
+        E_StateAction(tempstr, i);
+    }
 
-   // process nextframe
-   if(IS_SET(ITEM_FRAME_NEXTFRAME))
-   {
-      tempstr = cfg_getstr(framesec, ITEM_FRAME_NEXTFRAME);
-      
-      E_StateNextFrame(tempstr, i);
-   }
+    // process nextframe
+    if(IS_SET(ITEM_FRAME_NEXTFRAME))
+    {
+        tempstr = cfg_getstr(framesec, ITEM_FRAME_NEXTFRAME);
 
-   // 03/30/05: the following fields are now also allowed in cmp frames
+        E_StateNextFrame(tempstr, i);
+    }
+
+    // 03/30/05: the following fields are now also allowed in cmp frames
 hitcmp:
-   // args field parsing (even more complicated, but similar)
-   // Note: deltas can only set the entire args list at once, not
-   // just parts of it.
-   if(IS_SET(ITEM_FRAME_ARGS))
-   {
-      tempint = cfg_size(framesec, ITEM_FRAME_ARGS);
+    // args field parsing (even more complicated, but similar)
+    // Note: deltas can only set the entire args list at once, not
+    // just parts of it.
+    if(IS_SET(ITEM_FRAME_ARGS))
+    {
+        tempint = cfg_size(framesec, ITEM_FRAME_ARGS);
 
-      // create an arg list for the state, or clear out the existing one
-      E_CreateArgList(states[i]);
+        // create an arg list for the state, or clear out the existing one
+        E_CreateArgList(states[i]);
 
-      for(j = 0; j < tempint; ++j)
-      {
-         tempstr = cfg_getnstr(framesec, ITEM_FRAME_ARGS, j);
-         
-         E_AddArgToList(states[i]->args, E_GetArgument(tempstr));
-      }
-   }
+        for(j = 0; j < tempint; ++j)
+        {
+            tempstr = cfg_getnstr(framesec, ITEM_FRAME_ARGS, j);
 
-   // Set flags
-   E_SetFlagsFromPrefixCfg(framesec, states[i]->flags, frameFlagSet);
+            E_AddArgToList(states[i]->args, E_GetArgument(tempstr));
+        }
+    }
 
-   // 01/01/12: the following fields are allowed when processing a 
-   // DECORATE-reserved state
+    // Set flags
+    E_SetFlagsFromPrefixCfg(framesec, states[i]->flags, frameFlagSet);
+
+    // 01/01/12: the following fields are allowed when processing a
+    // DECORATE-reserved state
 hitdecorate:
-   // misc field parsing (complicated)
+    // misc field parsing (complicated)
 
-   if(IS_SET(ITEM_FRAME_MISC1))
-   {
-      tempstr = cfg_getstr(framesec, ITEM_FRAME_MISC1);
-      E_ParseMiscField(tempstr, &(states[i]->misc1));
-   }
+    if(IS_SET(ITEM_FRAME_MISC1))
+    {
+        tempstr = cfg_getstr(framesec, ITEM_FRAME_MISC1);
+        E_ParseMiscField(tempstr, &(states[i]->misc1));
+    }
 
-   if(IS_SET(ITEM_FRAME_MISC2))
-   {
-      tempstr = cfg_getstr(framesec, ITEM_FRAME_MISC2);
-      E_ParseMiscField(tempstr, &(states[i]->misc2));
-   }
+    if(IS_SET(ITEM_FRAME_MISC2))
+    {
+        tempstr = cfg_getstr(framesec, ITEM_FRAME_MISC2);
+        E_ParseMiscField(tempstr, &(states[i]->misc2));
+    }
 
-   // process particle event
-   if(IS_SET(ITEM_FRAME_PTCLEVENT))
-   {
-      tempstr = cfg_getstr(framesec, ITEM_FRAME_PTCLEVENT);
+    // process particle event
+    if(IS_SET(ITEM_FRAME_PTCLEVENT))
+    {
+        tempstr = cfg_getstr(framesec, ITEM_FRAME_PTCLEVENT);
 
-      E_StatePtclEvt(tempstr, i);
-   }
+        E_StatePtclEvt(tempstr, i);
+    }
 }
 
 //
@@ -1393,23 +1362,22 @@ hitdecorate:
 //
 void E_ProcessStates(cfg_t *cfg)
 {
-   unsigned int i, numstates;
+    unsigned int i, numstates;
 
-   E_EDFLogPuts("\t* Processing frame data\n");
+    E_EDFLogPuts("\t* Processing frame data\n");
 
-   numstates = cfg_size(cfg, EDF_SEC_FRAME);
+    numstates = cfg_size(cfg, EDF_SEC_FRAME);
 
-   for(i = 0; i < numstates; ++i)
-   {
-      cfg_t *framesec  = cfg_getnsec(cfg, EDF_SEC_FRAME, i);
-      const char *name = cfg_title(framesec);
-      int statenum     = E_StateNumForName(name);
+    for(i = 0; i < numstates; ++i)
+    {
+        cfg_t      *framesec = cfg_getnsec(cfg, EDF_SEC_FRAME, i);
+        const char *name     = cfg_title(framesec);
+        int         statenum = E_StateNumForName(name);
 
-      E_ProcessState(statenum, framesec, true);
+        E_ProcessState(statenum, framesec, true);
 
-      E_EDFLogPrintf("\t\tFinished frame %s (#%d)\n", 
-                     states[statenum]->name, statenum);
-   }
+        E_EDFLogPrintf("\t\tFinished frame %s (#%d)\n", states[statenum]->name, statenum);
+    }
 }
 
 //
@@ -1419,32 +1387,31 @@ void E_ProcessStates(cfg_t *cfg)
 //
 void E_ProcessStateDeltas(cfg_t *cfg)
 {
-   int i, numdeltas;
+    int i, numdeltas;
 
-   E_EDFLogPuts("\t* Processing frame deltas\n");
+    E_EDFLogPuts("\t* Processing frame deltas\n");
 
-   numdeltas = cfg_size(cfg, EDF_SEC_FRMDELTA);
+    numdeltas = cfg_size(cfg, EDF_SEC_FRMDELTA);
 
-   E_EDFLogPrintf("\t\t%d framedelta(s) defined\n", numdeltas);
+    E_EDFLogPrintf("\t\t%d framedelta(s) defined\n", numdeltas);
 
-   for(i = 0; i < numdeltas; ++i)
-   {
-      const char *tempstr;
-      int stateNum;
-      cfg_t *deltasec = cfg_getnsec(cfg, EDF_SEC_FRMDELTA, i);
+    for(i = 0; i < numdeltas; ++i)
+    {
+        const char *tempstr;
+        int         stateNum;
+        cfg_t      *deltasec = cfg_getnsec(cfg, EDF_SEC_FRMDELTA, i);
 
-      // get state to edit
-      if(!cfg_size(deltasec, ITEM_DELTA_NAME))
-         E_EDFLoggedErr(2, "E_ProcessFrameDeltas: framedelta requires name field\n");
+        // get state to edit
+        if(!cfg_size(deltasec, ITEM_DELTA_NAME))
+            E_EDFLoggedErr(2, "E_ProcessFrameDeltas: framedelta requires name field\n");
 
-      tempstr = cfg_getstr(deltasec, ITEM_DELTA_NAME);
-      stateNum = E_GetStateNumForName(tempstr);
+        tempstr  = cfg_getstr(deltasec, ITEM_DELTA_NAME);
+        stateNum = E_GetStateNumForName(tempstr);
 
-      E_ProcessState(stateNum, deltasec, false);
+        E_ProcessState(stateNum, deltasec, false);
 
-      E_EDFLogPrintf("\t\tApplied framedelta #%d to %s(#%d)\n",
-                     i, states[stateNum]->name, stateNum);
-   }
+        E_EDFLogPrintf("\t\tApplied framedelta #%d to %s(#%d)\n", i, states[stateNum]->name, stateNum);
+    }
 }
 
 //=============================================================================
@@ -1458,28 +1425,28 @@ void E_ProcessStateDeltas(cfg_t *cfg)
 //
 static void E_processFrameBlockGoto(const egoto_t &gotoDef)
 {
-   int statenum = NullStateNum;
-   int calcstatenum;
+    int statenum = NullStateNum;
+    int calcstatenum;
 
-   if((calcstatenum = E_StateNumForName(gotoDef.label)) >= 0)
-   {
-      // get state and compute goto offset
-      state_t *state = states[calcstatenum];
-      calcstatenum = state->index + gotoDef.offset;
+    if((calcstatenum = E_StateNumForName(gotoDef.label)) >= 0)
+    {
+        // get state and compute goto offset
+        state_t *state = states[calcstatenum];
+        calcstatenum   = state->index + gotoDef.offset;
 
-      if(calcstatenum >= 0 && calcstatenum < NUMSTATES)
-      {
-         // success, this is a valid state
-         statenum = calcstatenum;
-      }
-      else
-         E_EDFLoggedWarning(2, "Invalid goto offset %d for state '%s'\n", gotoDef.offset, state->name);
-   }
-   else
-      E_EDFLoggedWarning(2, "Invalid goto target '%s' in frameblock\n", gotoDef.label);
+        if(calcstatenum >= 0 && calcstatenum < NUMSTATES)
+        {
+            // success, this is a valid state
+            statenum = calcstatenum;
+        }
+        else
+            E_EDFLoggedWarning(2, "Invalid goto offset %d for state '%s'\n", gotoDef.offset, state->name);
+    }
+    else
+        E_EDFLoggedWarning(2, "Invalid goto target '%s' in frameblock\n", gotoDef.label);
 
-   // resolve the goto
-   *(gotoDef.nextstate) = statenum;
+    // resolve the goto
+    *(gotoDef.nextstate) = statenum;
 }
 
 //
@@ -1487,65 +1454,64 @@ static void E_processFrameBlockGoto(const egoto_t &gotoDef)
 //
 static void E_processFrameBlock(cfg_t *sec, unsigned int index)
 {
-   const char *firststate = cfg_getstr(sec, ITEM_FRAMEBLOCK_FDS);
-   int firststatenum;
+    const char *firststate = cfg_getstr(sec, ITEM_FRAMEBLOCK_FDS);
+    int         firststatenum;
 
-   if(!firststate || (firststatenum = E_StateNumForName(firststate)) < 0)
-   {
-      E_EDFLoggedWarning(2, "E_processFrameBlock: firststate is required, block %u discarded\n", index);
-      return;
-   }
+    if(!firststate || (firststatenum = E_StateNumForName(firststate)) < 0)
+    {
+        E_EDFLoggedWarning(2, "E_processFrameBlock: firststate is required, block %u discarded\n", index);
+        return;
+    }
 
-   const char *states = cfg_getstr(sec, ITEM_FRAMEBLOCK_STATES);
-   if(!states)
-   {
-      E_EDFLoggedWarning(2, "E_processFrameBlock: states block required, block %u discarded\n", index);
-      return;
-   }
+    const char *states = cfg_getstr(sec, ITEM_FRAMEBLOCK_STATES);
+    if(!states)
+    {
+        E_EDFLoggedWarning(2, "E_processFrameBlock: states block required, block %u discarded\n", index);
+        return;
+    }
 
-   edecstateout_t *dso; 
-   if((dso = E_ParseDecorateStates("fb{}", states, firststate)))
-   {
-      // warn if there are killstates, as these have no meaning
-      if(dso->numkillstates)
-         E_EDFLoggedWarning(2, "E_processFrameBlock: killstates ignored in block %u\n", index);
+    edecstateout_t *dso;
+    if((dso = E_ParseDecorateStates("fb{}", states, firststate)))
+    {
+        // warn if there are killstates, as these have no meaning
+        if(dso->numkillstates)
+            E_EDFLoggedWarning(2, "E_processFrameBlock: killstates ignored in block %u\n", index);
 
-      // fixup external gotos; in the case of global DECORATE state blocks, these must be
-      // the names of global EDF states
-      if(dso->numgotos)
-      {
-         for(int i = 0; i < dso->numgotos; i++)
-            E_processFrameBlockGoto(dso->gotos[i]);
-      }
+        // fixup external gotos; in the case of global DECORATE state blocks, these must be
+        // the names of global EDF states
+        if(dso->numgotos)
+        {
+            for(int i = 0; i < dso->numgotos; i++)
+                E_processFrameBlockGoto(dso->gotos[i]);
+        }
 
-      // done with DSO
-      E_FreeDSO(dso);
-   }
-   else
-      E_EDFLoggedWarning(2, "E_processFrameBlock: could not parse DECORATE in frameblock %u\n", index);
+        // done with DSO
+        E_FreeDSO(dso);
+    }
+    else
+        E_EDFLoggedWarning(2, "E_processFrameBlock: could not parse DECORATE in frameblock %u\n", index);
 }
 
 //
-// Processing for loose DECORATE-format state blocks which can be used to 
+// Processing for loose DECORATE-format state blocks which can be used to
 // populate predefined EDF states.
 //
 void E_ProcessFrameBlocks(cfg_t *cfg)
 {
-   unsigned int i, numblocks;
+    unsigned int i, numblocks;
 
-   E_EDFLogPuts("\t* Processing frameblock data\n");
+    E_EDFLogPuts("\t* Processing frameblock data\n");
 
-   numblocks = cfg_size(cfg, EDF_SEC_FRAMEBLOCK);
+    numblocks = cfg_size(cfg, EDF_SEC_FRAMEBLOCK);
 
-   E_EDFLogPrintf("\t\t%u frameblock(s) defined\n", numblocks);
+    E_EDFLogPrintf("\t\t%u frameblock(s) defined\n", numblocks);
 
-   for(i = 0; i < numblocks; i++)
-   {
-      E_processFrameBlock(cfg_getnsec(cfg, EDF_SEC_FRAMEBLOCK, i), i);
-      E_EDFLogPrintf("\t\t* Processed frameblock %u\n", i);
-   }
+    for(i = 0; i < numblocks; i++)
+    {
+        E_processFrameBlock(cfg_getnsec(cfg, EDF_SEC_FRAMEBLOCK, i), i);
+        E_EDFLogPrintf("\t\t* Processed frameblock %u\n", i);
+    }
 }
-
 
 // EOF
 

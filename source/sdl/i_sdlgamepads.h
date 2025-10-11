@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +18,11 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//    Implementation of SDL classes for Gamepads and Joysticks
+// Purpose: Implementation of SDL classes for gamepads and joysticks.
+// Authors: James Haley, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #ifndef I_SDLGAMEPADS_H__
 #define I_SDLGAMEPADS_H__
@@ -38,10 +36,10 @@
 class SDLGamePadDriver : public HALGamePadDriver
 {
 public:
-   virtual bool initialize();
-   virtual void shutdown();
-   virtual void enumerateDevices();
-   virtual int  getBaseDeviceNum() { return 0; }
+    virtual bool initialize();
+    virtual void shutdown();
+    virtual void enumerateDevices();
+    virtual int  getBaseDeviceNum() { return 0; }
 };
 
 extern SDLGamePadDriver i_sdlGamePadDriver;
@@ -51,19 +49,19 @@ extern SDLGamePadDriver i_sdlGamePadDriver;
 //
 class SDLHapticInterface : public HALHapticInterface
 {
-   DECLARE_RTTI_TYPE(SDLHapticInterface, HALHapticInterface)
+    DECLARE_RTTI_TYPE(SDLHapticInterface, HALHapticInterface)
 
 protected:
-   bool pauseState;
+    bool pauseState;
 
-   void zeroState();
+    void zeroState();
 
 public:
-   SDLHapticInterface();
-   virtual void startEffect(effect_e effect, int data1, int data2) override;
-   virtual void pauseEffects(bool effectsPaused) override;
-   virtual void updateEffects() override;
-   virtual void clearEffects() override;
+    SDLHapticInterface();
+    virtual void startEffect(effect_e effect, int data1, int data2) override;
+    virtual void pauseEffects(bool effectsPaused) override;
+    virtual void updateEffects() override;
+    virtual void clearEffects() override;
 };
 
 //
@@ -72,26 +70,25 @@ public:
 //
 class SDLGamePad : public HALGamePad
 {
-   DECLARE_RTTI_TYPE(SDLGamePad, HALGamePad)
+    DECLARE_RTTI_TYPE(SDLGamePad, HALGamePad)
 
 protected:
-   int sdlIndex; // SDL gamepad number
-   SDLHapticInterface haptics;
+    int                sdlIndex; // SDL gamepad number
+    SDLHapticInterface haptics;
 
-   float normAxis(float value, int threshold, int maxvalue);
-   void  normAxisPair(float &axisx, float &axisy, int threshold, int min, int max);
-
+    float normAxis(float value, int threshold, int maxvalue);
+    void  normAxisPair(float &axisx, float &axisy, int threshold, int min, int max);
 
 public:
-   SDLGamePad(int idx = 0);
+    SDLGamePad(int idx = 0);
 
-   virtual bool select() override;
-   virtual void deselect() override;
-   virtual void poll() override;
+    virtual bool select() override;
+    virtual void deselect() override;
+    virtual void poll() override;
 
-   virtual HALHapticInterface *getHapticInterface() override { return &haptics; }
+    virtual HALHapticInterface *getHapticInterface() override { return &haptics; }
 
-   virtual const char *getAxisName(const int axis) override;
+    virtual const char *getAxisName(const int axis) override;
 };
 
 #endif

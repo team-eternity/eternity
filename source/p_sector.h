@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//   Sector effects.
+// Purpose: Sector effects.
+// Authors: James Haley, Max Waine, Ioan Chera
 //
-//-----------------------------------------------------------------------------
 
 #ifndef P_SECTOR_H__
 #define P_SECTOR_H__
@@ -31,8 +29,8 @@ struct sector_t;
 
 enum ssurftype_e
 {
-   ssurf_floor,
-   ssurf_ceiling,
+    ssurf_floor,
+    ssurf_ceiling,
 };
 
 void P_SaveSectorPositions();
@@ -41,13 +39,11 @@ void P_SaveSectorPosition(const sector_t &sec, ssurftype_e surf);
 void P_NewSectorActionFromMobj(Mobj *actor);
 void P_SetSectorZoneFromMobj(Mobj *actor);
 
-int EV_SectorSetRotation(const line_t *line, int tag, int floorangle,
-                         int ceilingangle);
-int EV_SectorSetCeilingPanning(const line_t *line, int tag, fixed_t xoffs,
-                               fixed_t yoffs);
-int EV_SectorSetFloorPanning(const line_t *line, int tag, fixed_t xoffs,
-                             fixed_t yoffs);
+int EV_SectorSetRotation(const line_t *line, int tag, int floorangle, int ceilingangle);
+int EV_SectorSetCeilingPanning(const line_t *line, int tag, fixed_t xoffs, fixed_t yoffs);
+int EV_SectorSetFloorPanning(const line_t *line, int tag, fixed_t xoffs, fixed_t yoffs);
 int EV_SectorSoundChange(int tag, int sndSeqID);
+int EV_SectorFlagsChange(const line_t *line, int tag, int setflags, int clearflags);
 
 #endif
 

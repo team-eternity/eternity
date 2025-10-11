@@ -1,0 +1,14 @@
+Changes since v4.05.04
+======================
+
+Features
+--------
+* Added support for the "author" property in UMAPINFO.
+* Added DEMOLOOP id24 lump support.
+* Added new ACS function: GiveInventory.
+
+Bug fixes
+---------
+* Fixed A_BFGSpray not using the parameter, and always being locked at 40 rays.
+* Fixed bad rendering of specially paletted PNG file for the Heretic episode 2 ending screen.
+* Fixed bad implementation of TakeInventory.

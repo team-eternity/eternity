@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:  
-//    Hardware Abstraction Layer for Gamepads and Joysticks
+// Purpose: Hardware abstraction layer for gamepads and joysticks.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #include "../z_zone.h"
 #include "../c_runcmd.h"
@@ -57,6 +55,8 @@ int    i_joy_deadzone_left;
 int    i_joy_deadzone_right;
 int    i_joy_deadzone_trigger;
 
+// clang-format off
+
 // haleyjd 04/15/02: joystick sensitivity variables
 VARIABLE_FLOAT(i_joyturnsens,        nullptr, 0.0, 100.0);
 VARIABLE_INT(i_joy_deadzone_left,    nullptr, 0, 32767, nullptr);
@@ -67,6 +67,8 @@ CONSOLE_VARIABLE(i_joyturnsens, i_joyturnsens, 0) {}
 CONSOLE_VARIABLE(i_joy_deadzone_left,    i_joy_deadzone_left,    0) {}
 CONSOLE_VARIABLE(i_joy_deadzone_right,   i_joy_deadzone_right,   0) {}
 CONSOLE_VARIABLE(i_joy_deadzone_trigger, i_joy_deadzone_trigger, 0) {}
+
+// clang-format on
 
 //=============================================================================
 //
@@ -80,7 +82,7 @@ CONSOLE_VARIABLE(i_joy_deadzone_trigger, i_joy_deadzone_trigger, 0) {}
 //
 void HALGamePadDriver::addDevice(HALGamePad *device)
 {
-   devices.add(device);
+    devices.add(device);
 }
 
 //=============================================================================
@@ -93,15 +95,14 @@ IMPLEMENT_RTTI_TYPE(HALGamePad)
 //
 // Constructor
 //
-HALGamePad::HALGamePad()
-   : Super(), num(-1), name(), numAxes(0), numButtons(0)
+HALGamePad::HALGamePad() : Super(), num(-1), name(), numAxes(0), numButtons(0)
 {
-   for(bool &button : state.buttons)
-      button = false;
-   for(float &axis : state.axes)
-      axis = 0.0;
+    for(bool &button : state.buttons)
+        button = false;
+    for(float &axis : state.axes)
+        axis = 0.0;
 
-   backupState();
+    backupState();
 }
 
 //
@@ -112,11 +113,11 @@ HALGamePad::HALGamePad()
 //
 void HALGamePad::backupState()
 {
-   int i;
-   for(i = 0; i < MAXBUTTONS; i++)
-      state.prevbuttons[i] = state.buttons[i];
-   for(i = 0; i < MAXAXES; i++)
-      state.prevaxes[i] = state.axes[i];
+    int i;
+    for(i = 0; i < MAXBUTTONS; i++)
+        state.prevbuttons[i] = state.buttons[i];
+    for(i = 0; i < MAXAXES; i++)
+        state.prevaxes[i] = state.axes[i];
 }
 
 //=============================================================================
@@ -129,44 +130,47 @@ void HALGamePad::backupState()
 //
 struct halpaddriveritem_t
 {
-   int id;                    // HAL driver ID number
-   const char *name;          // name of driver
-   HALGamePadDriver *driver;  // pointer to driver interface, if supported
-   bool isInit;               // if true, successfully initialized
+    int               id;     // HAL driver ID number
+    const char       *name;   // name of driver
+    HALGamePadDriver *driver; // pointer to driver interface, if supported
+    bool              isInit; // if true, successfully initialized
 };
+
+// clang-format off
 
 //
 // Driver Table
 //
-static halpaddriveritem_t halPadDriverTable[] =
-{
-   // SDL 2.0 Driver
-   {
-      0,
-      "SDL",
+static halpaddriveritem_t halPadDriverTable[] = {
+    // SDL 2.0 Driver
+    {
+        0,
+        "SDL",
 #ifdef _SDL_VER
-      &i_sdlGamePadDriver,
+        &i_sdlGamePadDriver,
 #else
-      nullptr,
+        nullptr,
 #endif
-      false
-   },
+        false
+    },
 
-   // XInput Driver for XBox 360 controller and compatibles
-   {
-      1,
-      "XInput",
+    // XInput Driver for XBox 360 controller and compatibles
+    {
+        1,
+        "XInput",
 #ifdef EE_FEATURE_XINPUT
-      &i_xinputGamePadDriver,
+        &i_xinputGamePadDriver,
 #else
-      nullptr,
+        nullptr,
 #endif
-      false
-   },
+        false
+    },
 
-   // Terminating entry
-   { -1, nullptr, nullptr, false }
+    // Terminating entry
+    { -1, nullptr, nullptr, false }
 };
+
+// clang-format on
 
 //
 // Select the gamepad configured in the configuration file, if it can be
@@ -174,41 +178,41 @@ static halpaddriveritem_t halPadDriverTable[] =
 //
 bool I_SelectDefaultGamePad()
 {
-   HALGamePad *pad = nullptr;
+    HALGamePad *pad = nullptr;
 
-   // Deselect any active device first.
-   if(activePad)
-   {
-      activePad->deselect();
-      activePad = nullptr;
-   }
+    // Deselect any active device first.
+    if(activePad)
+    {
+        activePad->deselect();
+        activePad = nullptr;
+    }
 
-   if(i_joystickenabled)
-   {
-      // search through the master directory for a pad with this number
-      PODCollection<HALGamePad *>::iterator itr = masterGamePadList.begin();
+    if(i_joystickenabled)
+    {
+        // search through the master directory for a pad with this number
+        PODCollection<HALGamePad *>::iterator itr = masterGamePadList.begin();
 
-      for(; itr != masterGamePadList.end(); itr++)
-      {
-         if((*itr)->num == i_joysticknum)
-         {
-            pad = *itr; // found it.
-            break;
-         }
-      }
-   }
+        for(; itr != masterGamePadList.end(); itr++)
+        {
+            if((*itr)->num == i_joysticknum)
+            {
+                pad = *itr; // found it.
+                break;
+            }
+        }
+    }
 
-   // Select the device if it was found.
-   if(pad)
-   {
-      if(pad->select())
-         activePad = pad;
-   }
+    // Select the device if it was found.
+    if(pad)
+    {
+        if(pad->select())
+            activePad = pad;
+    }
 
-   if(gamePadChangeCallback)
-      gamePadChangeCallback();
+    if(gamePadChangeCallback)
+        gamePadChangeCallback();
 
-   return (activePad != nullptr);
+    return (activePad != nullptr);
 }
 
 //
@@ -218,31 +222,31 @@ bool I_SelectDefaultGamePad()
 //
 void I_EnumerateGamePads()
 {
-   // Have all supported drivers enumerate their gamepads
-   halpaddriveritem_t *item = halPadDriverTable;
+    // Have all supported drivers enumerate their gamepads
+    halpaddriveritem_t *item = halPadDriverTable;
 
-   while(item->name)
-   {
-      if(item->driver && item->isInit)
-         item->driver->enumerateDevices();
-      ++item;
-   }
+    while(item->name)
+    {
+        if(item->driver && item->isInit)
+            item->driver->enumerateDevices();
+        ++item;
+    }
 
-   // build the master pad directory
-   masterGamePadList.clear();
+    // build the master pad directory
+    masterGamePadList.clear();
 
-   item = halPadDriverTable;
-   while(item->name)
-   {
-      if(item->driver)
-      {
-         PODCollection<HALGamePad *> &pads = item->driver->devices;
+    item = halPadDriverTable;
+    while(item->name)
+    {
+        if(item->driver)
+        {
+            PODCollection<HALGamePad *> &pads = item->driver->devices;
 
-         for(HALGamePad *&pad : pads)
-            masterGamePadList.add(pad);
-      }
-      ++item;
-   }
+            for(HALGamePad *&pad : pads)
+                masterGamePadList.add(pad);
+        }
+        ++item;
+    }
 }
 
 //
@@ -254,22 +258,22 @@ void I_EnumerateGamePads()
 //
 void I_InitGamePads(gamePadChangeCallback_t callback)
 {
-   // Initialize all supported gamepad drivers
-   halpaddriveritem_t *item = halPadDriverTable;
-   gamePadChangeCallback = callback;
+    // Initialize all supported gamepad drivers
+    halpaddriveritem_t *item = halPadDriverTable;
+    gamePadChangeCallback    = callback;
 
-   while(item->name)
-   {
-      if(item->driver)
-         item->isInit = item->driver->initialize();
-      ++item;
-   }
+    while(item->name)
+    {
+        if(item->driver)
+            item->isInit = item->driver->initialize();
+        ++item;
+    }
 
-   // Enumerate gamepads in all supported drivers and build the master lookup
-   I_EnumerateGamePads();
+    // Enumerate gamepads in all supported drivers and build the master lookup
+    I_EnumerateGamePads();
 
-   // Select default pad
-   I_SelectDefaultGamePad();
+    // Select default pad
+    I_SelectDefaultGamePad();
 }
 
 //
@@ -279,14 +283,14 @@ void I_InitGamePads(gamePadChangeCallback_t callback)
 //
 void I_ShutdownGamePads()
 {
-   halpaddriveritem_t *item = halPadDriverTable;
+    halpaddriveritem_t *item = halPadDriverTable;
 
-   while(item->name)
-   {
-      if(item->driver && item->isInit)
-         item->driver->shutdown();
-      ++item;
-   }
+    while(item->name)
+    {
+        if(item->driver && item->isInit)
+            item->driver->shutdown();
+        ++item;
+    }
 }
 
 //
@@ -297,13 +301,13 @@ void I_ShutdownGamePads()
 //
 HALGamePad::padstate_t *I_PollActiveGamePad()
 {
-   if(activePad)
-   {
-      activePad->poll();
-      return &activePad->state;
-   }
-   else
-      return nullptr;
+    if(activePad)
+    {
+        activePad->poll();
+        return &activePad->state;
+    }
+    else
+        return nullptr;
 }
 
 //
@@ -311,7 +315,7 @@ HALGamePad::padstate_t *I_PollActiveGamePad()
 //
 size_t I_GetNumGamePads()
 {
-   return masterGamePadList.getLength();
+    return masterGamePadList.getLength();
 }
 
 //
@@ -319,7 +323,7 @@ size_t I_GetNumGamePads()
 //
 HALGamePad *I_GetGamePad(size_t index)
 {
-   return masterGamePadList[index];
+    return masterGamePadList[index];
 }
 
 //
@@ -327,26 +331,26 @@ HALGamePad *I_GetGamePad(size_t index)
 //
 HALGamePad *I_GetActivePad()
 {
-   return activePad;
+    return activePad;
 }
 
 // Joystick command, disables joysticks if set to -1
 CONSOLE_COMMAND(i_joystick, 0)
 {
-   if(Console.argc != 1)
-      return;
+    if(Console.argc != 1)
+        return;
 
-   // Disable joystick if value is -1
-   i_joysticknum = Console.argv[0]->toInt();
-   if(i_joysticknum < 0)
-   {
-      i_joystickenabled = false;
-      i_joysticknum     = 0;
-   }
-   else
-      i_joystickenabled = true;
+    // Disable joystick if value is -1
+    i_joysticknum = Console.argv[0]->toInt();
+    if(i_joysticknum < 0)
+    {
+        i_joystickenabled = false;
+        i_joysticknum     = 0;
+    }
+    else
+        i_joystickenabled = true;
 
-   I_SelectDefaultGamePad();
+    I_SelectDefaultGamePad();
 }
 
 //=============================================================================
@@ -368,13 +372,13 @@ bool i_forcefeedback;
 //
 void I_StartHaptic(HALHapticInterface::effect_e effect, int data1, int data2)
 {
-   HALHapticInterface *hhi;
-   
-   if(i_forcefeedback && activePad && (hhi = activePad->getHapticInterface()))
-   {
-      hhi->startEffect(effect, data1, data2);
-      I_UpdateHaptics();
-   }
+    HALHapticInterface *hhi;
+
+    if(i_forcefeedback && activePad && (hhi = activePad->getHapticInterface()))
+    {
+        hhi->startEffect(effect, data1, data2);
+        I_UpdateHaptics();
+    }
 }
 
 //
@@ -385,10 +389,10 @@ void I_StartHaptic(HALHapticInterface::effect_e effect, int data1, int data2)
 //
 void I_PauseHaptics(bool effectsPaused)
 {
-   HALHapticInterface *hhi;
+    HALHapticInterface *hhi;
 
-   if(activePad && (hhi = activePad->getHapticInterface()))
-      hhi->pauseEffects(effectsPaused);
+    if(activePad && (hhi = activePad->getHapticInterface()))
+        hhi->pauseEffects(effectsPaused);
 }
 
 //
@@ -399,10 +403,10 @@ void I_PauseHaptics(bool effectsPaused)
 //
 void I_UpdateHaptics()
 {
-   HALHapticInterface *hhi;
+    HALHapticInterface *hhi;
 
-   if(i_forcefeedback && activePad && (hhi = activePad->getHapticInterface()))
-      hhi->updateEffects();
+    if(i_forcefeedback && activePad && (hhi = activePad->getHapticInterface()))
+        hhi->updateEffects();
 }
 
 //
@@ -416,18 +420,18 @@ void I_UpdateHaptics()
 //
 void I_ClearHaptics()
 {
-   HALHapticInterface *hhi;
+    HALHapticInterface *hhi;
 
-   if(activePad && (hhi = activePad->getHapticInterface()))
-      hhi->clearEffects();
+    if(activePad && (hhi = activePad->getHapticInterface()))
+        hhi->clearEffects();
 }
 
 VARIABLE_TOGGLE(i_forcefeedback, nullptr, onoff);
 CONSOLE_VARIABLE(i_forcefeedback, i_forcefeedback, 0)
 {
-   // stop any running effects immediately if false
-   if(!i_forcefeedback)
-      I_ClearHaptics();
+    // stop any running effects immediately if false
+    if(!i_forcefeedback)
+        I_ClearHaptics();
 }
 
 // EOF

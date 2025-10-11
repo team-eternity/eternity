@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2025 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,12 +18,13 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Management of private wad directories for individual level resources
+// Purpose: Management of private wad directories for individual level
+//  resources.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley
+//
 
 #ifndef W_LEVELS_H__
 #define W_LEVELS_H__
@@ -33,22 +33,22 @@ class WadDirectory;
 
 struct wadlevel_t
 {
-   char header[9];    // header lump name
-   int  lumpnum;      // lump number, relative to directory
-   WadDirectory *dir; // parent directory
+    char          header[9]; // header lump name
+    int           lumpnum;   // lump number, relative to directory
+    WadDirectory *dir;       // parent directory
 };
 
 extern char *w_masterlevelsdirname;
 extern char *w_norestpath;
-extern int   inmanageddir;   // non-zero if we are playing a managed dir level
+extern int   inmanageddir; // non-zero if we are playing a managed dir level
 
 // managed directory level/mission types
 enum
 {
-   MD_NONE,         // not in a managed directory
-   MD_MASTERLEVELS, // Master Levels
-   MD_NR4TL,        // No Rest for the Living
-   MD_OTHER         // Hell if I Know
+    MD_NONE,         // not in a managed directory
+    MD_MASTERLEVELS, // Master Levels
+    MD_NR4TL,        // No Rest for the Living
+    MD_OTHER         // Hell if I Know
 };
 
 WadDirectory *W_AddManagedWad(const char *filename);
