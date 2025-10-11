@@ -29,6 +29,7 @@
 #include "d_mod.h"
 #include "doomstat.h"
 #include "e_args.h"
+#include "e_mod.h"
 #include "e_sound.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -830,11 +831,27 @@ void A_VileTarget(actionargs_t *actionargs)
 //
 // Arch-vile attack.
 //
+// args[0] -- sound (default: sfx_barexp)
+// args[1] -- initial damage (default: 20)
+// args[2] -- blast damage (default: 70)
+// args[3] -- blast radius (default: 70)
+// args[4] -- thrust factor (default: 1.0)
+// args[5] -- damage type for initial hit (default: actor->info->mod)
+// args[6] -- damage type for blast (default: actor->info->mod)
+//
 void A_VileAttack(actionargs_t *actionargs)
 {
-    Mobj *actor = actionargs->actor;
-    Mobj *fire;
-    int   an;
+    Mobj         *actor = actionargs->actor;
+    Mobj         *fire;
+    arglist_t    *args = actionargs->args;
+    soundparams_t params{};
+    int           an;
+    int           initialdamage;
+    int           blastdamage;
+    int           blastradius;
+    fixed_t       thrustfactor;
+    int           initialdmgtype;
+    int           blastdmgtype;
 
     if(!actor->target)
         return;
@@ -844,9 +861,24 @@ void A_VileAttack(actionargs_t *actionargs)
     if(!P_CheckSight(actor, actor->target))
         return;
 
-    S_StartSound(actor, sfx_barexp);
-    P_DamageMobj(actor->target, actor, actor, 20, actor->info->mod);
-    actor->target->momz = 1000 * FRACUNIT / actor->target->info->mass;
+    // Get parameters with defaults matching original behavior
+    params.sfx     = E_ArgAsSound(args, 0);
+    initialdamage  = E_ArgAsInt(args, 1, 20);
+    blastdamage    = E_ArgAsInt(args, 2, 70);
+    blastradius    = E_ArgAsInt(args, 3, 70);
+    thrustfactor   = E_ArgAsFixed(args, 4, FRACUNIT);
+    initialdmgtype = E_ArgAsDamageType(args, 5, actor->info->mod)->num;
+    blastdmgtype   = E_ArgAsDamageType(args, 6, actor->info->mod)->num;
+
+    // Play sound - use default if none specified
+    if(params.sfx)
+        S_StartSfxInfo(params.setNormalDefaults(actor));
+    else
+        S_StartSound(actor, sfx_barexp);
+
+    // Deal initial damage and apply thrust
+    P_DamageMobj(actor->target, actor, actor, initialdamage, initialdmgtype);
+    actor->target->momz = 1000 * thrustfactor / actor->target->info->mass;
 
     an = actor->angle >> ANGLETOFINESHIFT;
 
@@ -866,7 +898,7 @@ void A_VileAttack(actionargs_t *actionargs)
     if(full_demo_version >= make_full_version(340, 48))
         fire->groupid = R_PointInSubsector(pos)->sector->groupid;
 
-    P_RadiusAttack(fire, actor, 70, 70, actor->info->mod, 0);
+    P_RadiusAttack(fire, actor, blastdamage, blastradius, blastdmgtype, 0);
 }
 
 //=============================================================================
