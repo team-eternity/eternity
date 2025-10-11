@@ -515,7 +515,7 @@ void A_BFGSpray(actionargs_t *actionargs)
         for(damage = j = 0; j < damageCount; j++)
             damage += (P_Random(pr_bfg) & 7) + 1;
 
-        P_DamageMobj(clip.linetarget, mo->target, mo->target, damage, damageType;
+        P_DamageMobj(clip.linetarget, mo->target, mo->target, damage, damageType);
     }
 }
 

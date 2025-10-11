@@ -1722,50 +1722,6 @@ void A_SelfDestruct(actionargs_t *actionargs)
 
 
 //
-// A_VileTargetEx
-//
-// Generalized version of VileTarget, for spawning custom effects
-//
-// args[0] -- thing to spawn (no default)
-//
-
-void A_VileTargetEx(actionargs_t *actionargs)
-{
-   
-   Mobj *actor = actionargs->actor;
-   Mobj *fog;
-   
-   arglist_t *args = actionargs->args;
-   int thingnum = E_ArgAsThingNumG0(args, 0);
-   
-   if(!actor->target)
-      return;
-   
-   //validate thingtype
-   if(thingnum < 0)
-      return;
-
-   A_FaceTarget(actionargs);
-   
-   fog = P_SpawnMobj(actor->target->x,
-                     demo_version < 203 ? actor->target->x : actor->target->y,
-                     actor->target->z,thingnum);
-   
-   P_SetTarget<Mobj>(&actor->tracer, fog);
-   P_SetTarget<Mobj>(&fog->target, actor);
-   P_SetTarget<Mobj>(&fog->tracer, actor->target);
-   
-   actionargs_t fogaction;
-
-   fogaction.actiontype = actionargs_t::MOBJFRAME;
-   fogaction.actor      = fog;
-   fogaction.args       = ESAFEARGS(fog);
-   fogaction.pspr       = nullptr;
-   
-   A_Fire(&fogaction);
-}
-
-//
 // A_VileAttackEx
 //
 // Generalized version of VileAttack

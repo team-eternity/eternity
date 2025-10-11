@@ -789,19 +789,27 @@ void A_FireCrackle(actionargs_t *actionargs)
 //
 // Spawn the hellfire
 //
+// args[0] -- thing to spawn (default: MT_FIRE)
+//
 void A_VileTarget(actionargs_t *actionargs)
 {
-    Mobj *actor = actionargs->actor;
-    Mobj *fog;
+    Mobj      *actor = actionargs->actor;
+    Mobj      *fog;
+    arglist_t *args     = actionargs->args;
+    int        thingnum = E_ArgAsThingNumG0(args, 0);
 
     if(!actor->target)
         return;
+
+    // validate thingtype
+    if(thingnum < 0)
+        thingnum = E_SafeThingType(MT_FIRE);
 
     A_FaceTarget(actionargs);
 
     // killough 12/98: fix Vile fog coordinates
     fog = P_SpawnMobj(actor->target->x, demo_version < 203 ? actor->target->x : actor->target->y, actor->target->z,
-                      E_SafeThingType(MT_FIRE));
+                      thingnum);
 
     P_SetTarget<Mobj>(&actor->tracer, fog); // killough 11/98
     P_SetTarget<Mobj>(&fog->target, actor);
