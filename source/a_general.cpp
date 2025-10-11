@@ -32,7 +32,6 @@
 #include "d_mod.h"
 #include "doomstat.h"
 #include "e_args.h"
-#include "e_mod.h"
 #include "e_sound.h"
 #include "e_states.h"
 #include "e_string.h"
@@ -53,7 +52,6 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "p_tick.h"
-#include "r_main.h" //sinku 14032024; 
 #include "r_state.h"
 #include "sounds.h"
 #include "s_sound.h"
