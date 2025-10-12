@@ -144,6 +144,7 @@ bool SaveArchive::readSaveVersion()
         I_Error("SaveArchive::readSaveVersion: cannot read version if not loading file!\n");
 
     archiveCString(vread, VERSIONSIZE);
+    vread[VERSIONSIZE - 1] = '\0';
 
     if(!strncmp(vread, "MBF ", 4))
     {
