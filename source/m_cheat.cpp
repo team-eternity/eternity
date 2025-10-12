@@ -175,7 +175,7 @@ cheat_s cheat[CHEAT_NUMCHEATS] = {
     { "iddt",           Game_DOOM,    not_dm,   cheat_ddt,            0                      }, // killough 2/07/98: moved from am_map.c
     { "iddkt",          Game_DOOM,    not_dm,   cheat_reveal_kill,    0                      },
     { "iddit",          Game_DOOM,    not_dm,   cheat_reveal_item,    0                      },
-    { "iddst",          Game_DOOM,    not_dm,   cheat_reveal_secret,  0                      },
+    { "iddst",          Game_DOOM,    always,   cheat_reveal_secret,  0                      },
     { "key",            Game_DOOM,    not_sync, cheat_key,            0                      }, // killough 2/16/98: generalized key cheats
     { "keyr",           Game_DOOM,    not_sync, cheat_keyx,           0                      },
     { "keyy",           Game_DOOM,    not_sync, cheat_keyx,           0                      },
@@ -204,7 +204,7 @@ cheat_s cheat[CHEAT_NUMCHEATS] = {
     { "ravmap",         Game_Heretic, not_dm,   cheat_ddt,            0                      },
     { "ravkmap",        Game_Heretic, not_dm,   cheat_reveal_kill,    0                      },
     { "ravimap",        Game_Heretic, not_dm,   cheat_reveal_item,    0                      },
-    { "ravsmap",        Game_Heretic, not_dm,   cheat_reveal_secret,  0                      },
+    { "ravsmap",        Game_Heretic, always,   cheat_reveal_secret,  0                      },
     { "ravpowerv",      Game_Heretic, not_sync, cheat_pw,             pw_invulnerability     },
     { "ravpowerg",      Game_Heretic, not_sync, cheat_pw,             pw_ghost               },
     { "ravpowera",      Game_Heretic, not_sync, cheat_pw,             pw_allmap              },
