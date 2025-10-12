@@ -374,7 +374,7 @@ static void D_parseMetaData(const char *metatext, int mission)
     int         exitreturn = 0, secretlevel = 0, levelnum = 1, linenum = 0;
     const char *intername = "INTERPIC";
 
-    if(GameModeInfo->missionInfo->id == pack_disk)
+    if(::GameModeInfo->missionInfo->id == pack_disk)
         intername = "DMENUPIC";
 
     // get first line, which is an episode id
@@ -384,7 +384,7 @@ static void D_parseMetaData(const char *metatext, int mission)
     if(D_metaGetLine(buffer, metatext, &index))
     {
         if(mission == MD_NONE) // Not when playing as a mission pack
-            GameModeInfo->versionName = buffer.duplicate(PU_STATIC);
+            ::GameModeInfo->versionName = buffer.duplicate(PU_STATIC);
     }
 
     // get end text
@@ -413,7 +413,7 @@ static void D_parseMetaData(const char *metatext, int mission)
         case 1: // music number
             musicnum = mus_runnin + buffer.toInt() - 1;
 
-            if(musicnum > GameModeInfo->musMin && musicnum < GameModeInfo->numMusic)
+            if(musicnum > ::GameModeInfo->musMin && musicnum < ::GameModeInfo->numMusic)
                 musicname = S_music[musicnum].name;
             else
                 musicname = "";

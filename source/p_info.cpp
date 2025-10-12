@@ -146,13 +146,13 @@ void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
 {
     metainfo_t *mi;
 
-    if(nummetainfo >= nummetainfoalloc)
+    if(::nummetainfo >= ::nummetainfoalloc)
     {
-        nummetainfoalloc = nummetainfoalloc ? nummetainfoalloc * 2 : 10;
-        metainfo         = erealloc(metainfo_t *, metainfo, nummetainfoalloc * sizeof(metainfo_t));
+        ::nummetainfoalloc = ::nummetainfoalloc ? ::nummetainfoalloc * 2 : 10;
+        ::metainfo         = erealloc(metainfo_t *, ::metainfo, ::nummetainfoalloc * sizeof(metainfo_t));
     }
 
-    mi = &metainfo[nummetainfo];
+    mi = &::metainfo[nummetainfo];
 
     mi->level      = map;
     mi->levelname  = levelname;
@@ -165,7 +165,7 @@ void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
     mi->mission    = mission;
     mi->interpic   = interpic;
 
-    ++nummetainfo;
+    ++::nummetainfo;
 }
 
 //=============================================================================
