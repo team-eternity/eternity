@@ -348,7 +348,12 @@ bool InBuffer::openExisting(FILE *pf, int pEndian)
 //
 int InBuffer::seek(long offset, int origin)
 {
-    return fseek(f, offset, origin);
+    int n = fseek(f, offset, origin);
+    if(throwing && n != 0)
+    {
+        throw BufferedIOException(strerror(errno));
+    }
+    return n;
 }
 
 //
@@ -357,7 +362,14 @@ int InBuffer::seek(long offset, int origin)
 //
 size_t InBuffer::read(void *dest, size_t size)
 {
-    return fread(dest, 1, size, f);
+    size_t n = fread(dest, 1, size, f);
+    if(throwing && n < size)
+    {
+        static char c[128];
+        snprintf(c, sizeof(c), "Could not read %zu lines, only read %zu", size, n);
+        throw BufferedIOException(c);
+    }
+    return n;
 }
 
 //
@@ -365,7 +377,10 @@ size_t InBuffer::read(void *dest, size_t size)
 //
 int InBuffer::skip(size_t skipAmt)
 {
-    return fseek(f, static_cast<long>(skipAmt), SEEK_CUR);
+    int n = fseek(f, static_cast<long>(skipAmt), SEEK_CUR);
+    if(throwing && n != 0)
+        throw BufferedIOException(strerror(errno));
+    return n;
 }
 
 //
