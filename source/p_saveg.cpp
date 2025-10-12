@@ -1699,8 +1699,7 @@ void P_LoadGame(const char *filename)
 
     if(!loadfile.openFile(filename, InBuffer::NENDIAN))
     {
-        C_Printf(FC_ERROR "Failed to load savegame %s\n", filename);
-        C_SetConsole();
+        doom_warningf("Failed to load savegame %s\n", filename);
         return;
     }
 
