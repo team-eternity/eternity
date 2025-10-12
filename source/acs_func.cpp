@@ -2753,6 +2753,9 @@ bool ACS_CF_ClearInventory(ACS_CF_ARGS)
         // Take player armor
         player->armorpoints = player->armorfactor = player->armordivisor = 0;
 
+        // Take backpack
+        E_RemoveBackpack(*player);
+
         // Clear inventory slots
         int maxItemCount = E_GetInventoryAllocSize();
         for(int idx = 0; idx != maxItemCount; ++idx)
