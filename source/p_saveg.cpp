@@ -131,6 +131,7 @@ void SaveArchive::archiveLString(char *&str, size_t &len)
         {
             str = ecalloc(char *, 1, len);
             loadfile->read(str, len);
+            str[len - 1] = '\0';
         }
         else
             str = nullptr;
@@ -644,9 +645,13 @@ static void P_loadWeaponCounters(SaveArchive &arc, player_t &p)
             char  *className = nullptr;
 
             arc.archiveLString(className, len);
+            if(!className)
+                I_Error("P_loadWeaponCounters: null weapon class name\n");
             weaponinfo_t *wp = E_WeaponForName(className);
             if(!wp)
                 I_Error("P_loadWeaponCounters: weapon '%s' not found\n", className);
+            efree(className);
+
             WeaponCounter &wc = *weaponCounter;
             if(arc.saveVersion() >= 21)
                 P_ArchiveArray<int>(arc, wc, earrlen(wc));
@@ -737,6 +742,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
                     arc.archiveLString(className, len);
                     if(estrnonempty(className) && !(*weapon = E_WeaponForName(className)))
                         I_Error("P_ArchivePlayers: %s '%s' not found\n", name, className);
+                    efree(className);
                 };
 
                 loadweapon(&p.readyweapon, "readyweapon");
@@ -1128,7 +1134,11 @@ static void P_ArchiveThinkers(SaveArchive &arc)
             if(!(thinkerType = RTTIObject::FindTypeCls<Thinker>(className)))
             {
                 if(!strcmp(className, tc_end))
+                {
+                    efree(className);
+                    className = nullptr;
                     break; // Reached end of thinker list
+                }
                 else
                     I_Error("Unknown tclass %s in savegame\n", className);
             }
@@ -1264,6 +1274,7 @@ static void P_ArchivePolyObj(SaveArchive &arc, polyobj_t *po)
 
         if(!className || strncmp(className, "PointThinker", len))
             I_Error("P_ArchivePolyObj: no PointThinker for polyobject");
+        efree(className);
     }
 
     pt.serialize(arc);
@@ -1854,6 +1865,7 @@ void P_LoadGame(const char *filename)
         else
         {
             size_t dummy = 0;
+            efree(mus_LoadName);
             arc.archiveLString(::mus_LoadName, dummy);
         }
         int tempGameType;
