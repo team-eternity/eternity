@@ -95,7 +95,11 @@ void SaveArchive::archiveCString(char *str, size_t maxLen)
     if(savefile)
         savefile->write(str, maxLen);
     else
+    {
         loadfile->read(str, maxLen);
+        if(maxLen >= 1)
+            str[maxLen - 1] = '\0';
+    }
 }
 
 //
@@ -144,7 +148,6 @@ bool SaveArchive::readSaveVersion()
         I_Error("SaveArchive::readSaveVersion: cannot read version if not loading file!\n");
 
     archiveCString(vread, VERSIONSIZE);
-    vread[VERSIONSIZE - 1] = '\0';
 
     if(!strncmp(vread, "MBF ", 4))
     {
