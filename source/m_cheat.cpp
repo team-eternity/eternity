@@ -66,9 +66,7 @@
 #include "w_levels.h"
 #include "w_wad.h"
 #include "dhticstr.h"
-#include "r_state.h"
 #include "am_map.h"
-#include "p_spec.h"
 
 #define plyr (&players[consoleplayer])     /* the console player */
 
