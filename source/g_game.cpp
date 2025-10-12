@@ -2118,7 +2118,7 @@ static void G_DoSaveGame(void)
 
     G_SaveGameName(name, len, savegameslot);
 
-    P_SaveCurrentLevel(name, savedescription);
+    P_SaveCurrentLevel(name, savedescription, nullptr);
 
     gameaction         = ga_nothing;
     savedescription[0] = 0;
@@ -2129,7 +2129,7 @@ WadDirectory *d_dir;
 static void G_DoLoadGame(void)
 {
     gameaction = ga_nothing;
-    P_LoadGame(savename);
+    P_LoadGame(savename, nullptr);
 }
 
 //
