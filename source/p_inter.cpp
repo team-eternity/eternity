@@ -204,6 +204,31 @@ bool P_GiveAmmoPickup(player_t &player, const itemeffect_t *pickup, bool dropped
 }
 
 //
+// P_TakeAmmoPickup
+//
+// Takes from the player a amount of ammo equal to that given by this
+// AmmoPickup. The skill multiplier is also taken into account
+//
+bool P_TakeAmmoPickup(player_t &player, const itemeffect_t *pickup, int itemamount)
+{
+    if(!pickup)
+        return false;
+
+    itemeffect_t *ammotype = E_ItemEffectForName(pickup->getString("ammo", ""));
+    int           amount   = pickup->getInt("amount", 0);
+
+    bool ignoreskill = !!pickup->getInt("ignoreskill", 0);
+
+    // apply ammo multiplier for baby/nightmare skill
+    if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
+        amount = static_cast<int>(floor(amount * GameModeInfo->skillAmmoMultiplier));
+
+    E_RemoveInventoryItem(player, ammotype, amount * itemamount, true);
+
+    return true;
+}
+
+//
 // P_giveBackpackAmmo
 //
 // ioanch 20151225: this calls P_GiveAmmo for each ammo type, using the backpack
@@ -479,6 +504,32 @@ bool P_GiveBody(player_t &player, const itemeffect_t *effect, int itemamount)
 }
 
 //
+// P_TakeBody
+//
+// Takes the player's health equal to the "amount" of the health item
+// A player's health cannot fall below 1 here
+//
+bool P_TakeBody(player_t &player, const itemeffect_t *effect, int itemamount)
+{
+    if(!effect)
+        return false;
+
+    int amount = E_GetPClassHealth(*effect, "amount", *player.pclass, 0);
+
+    // take the health
+    player.health -= amount * itemamount;
+
+    // cap to minimum
+    if(player.health < 1)
+        player.health = 1;
+
+    // propagate to player's Mobj
+    player.mo->health = player.health;
+
+    return true;
+}
+
+//
 // EV_DoHealThing
 //
 // Returns false if the health isn't needed at all
@@ -546,6 +597,33 @@ bool P_GiveArmor(player_t &player, const itemeffect_t *effect, int itemamount)
     {
         player.armorfactor  = savefactor;
         player.armordivisor = savedivisor;
+    }
+
+    return true;
+}
+
+//
+// P_TakeArmor
+//
+// Takes the player's armor equal to the "saveamount" of the armor item
+// "armorfactor" and "armordivisor" are not taken into account(only if not taking all armor)
+//
+bool P_TakeArmor(player_t &player, const itemeffect_t *effect, int itemamount)
+{
+    if(!effect)
+        return false;
+
+    int amount = effect->getInt("saveamount", 0);
+
+    player.armorpoints -= amount * itemamount;
+
+    if(player.armorpoints <= 0)
+    {
+        player.armorpoints = 0;
+
+        // if we lost all our armorpoints, we lose all armor properties
+        player.armorfactor  = 0;
+        player.armordivisor = 0;
     }
 
     return true;
@@ -628,6 +706,55 @@ bool P_GivePower(player_t &player, int power, int duration, bool permament, bool
     return true;
 }
 
+//
+// P_TakePower
+//
+// Subtracts a player's power effect duration equal to itemamount in ticks
+// If itemamount is negative or power is infinite, removes the entire effect,
+// otherwise only removes the number of ticks equal to itemamount from the current duration
+// Also sister weapon becomes unpowered if power pw_weaponlevel2 is lost
+//
+bool P_TakePower(player_t &player, int powernum, int itemamount)
+{
+    if(powernum == NUMPOWERS || itemamount == 0)
+    {
+        return false;
+    }
+
+    powerduration_t &currentpower = player.powers[powernum];
+
+    if(itemamount > 0 && !currentpower.infinite && powernum != pw_strength && powernum != pw_silencer)
+    {
+        currentpower.tics -= itemamount;
+        if(currentpower.tics < 0)
+            currentpower.tics = 0;
+    }
+    else
+    {
+        currentpower = { 0, false };
+    }
+
+    // Change weapon to unpowered if weaponlevel2 power lost
+    if(!currentpower.isActive() && powernum == pw_weaponlevel2)
+    {
+        if(E_IsPoweredVariant(player.readyweapon))
+        {
+            weaponinfo_t *sister = player.readyweapon->sisterWeapon;
+            if(!E_IsPoweredVariant(sister))
+            {
+                if(sister->readystate != player.readyweapon->readystate || sister->flags & WPF_FORCETOREADY)
+                {
+                    P_SetPsprite(player, ps_weapon, sister->readystate);
+                    player.refire = 0;
+                }
+                player.readyweapon = sister;
+            }
+        }
+    }
+
+    return true;
+}
+
 const char *powerStrings[NUMPOWERS] = {
     POWER_INVULNERABLE, //
     POWER_STRENGTH,     //
@@ -650,6 +777,9 @@ const char *powerStrings[NUMPOWERS] = {
 //
 bool P_GivePowerForItem(player_t &player, const itemeffect_t *power, int itemamount)
 {
+    if(!power)
+        return false;
+
     int         powerNum;
     const char *powerStr;
     bool        additiveTime = false;
@@ -699,6 +829,32 @@ bool P_GivePowerForItem(player_t &player, const itemeffect_t *power, int itemamo
     }
 
     return true;
+}
+
+//
+// P_TakePowerForItem
+//
+// Subtracts a player's power effect duration equal to that given
+// by the selected power artifact
+// If it is infinite power, the entire effect is removed.
+//
+bool P_TakePowerForItem(player_t &player, const itemeffect_t *power, int itemamount)
+{
+    if(!power)
+        return false;
+
+    int         powerNum;
+    const char *powerStr = power->getString("type", "");
+
+    if(!powerStr || !strcmp(powerStr, ""))
+        return false; // There hasn't been a designated power type
+
+    if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
+        return false; // There's no power for the type provided
+
+    int duration = power->getInt("duration", 0);
+
+    return P_TakePower(player, powerNum, itemamount * duration * TICRATE);
 }
 
 //

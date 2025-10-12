@@ -18,11 +18,14 @@ Features
   - damage type for blast (default: actor's MOD)
   Thanks to sink666 for the wish to have parameters in the pull request.
 * Added damage type (MOD) argument to A_BFGSpray (default: BFG_Splash).
+* The ACS function TakeInventory has been heavily improved. Now, it can be used to take all types of items, as well 
+  as health, armor, weapons, backpacks, and all types of power effects from the player. Also, if the function is 
+  passed a amount of item that is greater than the player actually has, the item will be taken away completely 
+  (previously, it was necessary to specify a number of items equal to what was in the player's inventory, which was a bug).
 
 Bug fixes
 ---------
 * Fixed A_BFGSpray not using the parameter, and always being locked at 40 rays.
 * Fixed bad rendering of specially paletted PNG file for the Heretic episode 2 ending screen.
-* Fixed bad implementation of TakeInventory.
 * Fixed A_CustomPlayerMelee wrong implementation of the angle deflection argument. Now it properly avoid rotating player
   if set to "none". Thanks to sink666's pull request for the catch.
