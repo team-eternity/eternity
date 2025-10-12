@@ -1610,7 +1610,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
 
         // jff 3/17/98 save idmus state
         // MaxW: No more idmus state saving
-        int tempGameType = (int)GameType;
+        int tempGameType = (int)::GameType;
         arc << tempGameType;
 
         byte options[GAME_OPTION_SIZE];
@@ -1694,19 +1694,19 @@ void P_LoadGame(const char *filename)
 
     try
     {
-        WadDirectory *tmp_g_dir = g_dir;
-        WadDirectory *tmp_d_dir = d_dir;
+        WadDirectory *tmp_g_dir = ::g_dir;
+        WadDirectory *tmp_d_dir = ::d_dir;
 
-        int     tmp_gamemap         = gamemap;
-        int     tmp_gameepisode     = gameepisode;
-        int     tmp_compatibility   = compatibility;
-        skill_t tmp_gameskill       = gameskill;
-        int     tmp_inmanageddir    = inmanageddir;
-        bool    tmp_vanilla_mode    = vanilla_mode;
-        int     tmp_demo_version    = demo_version;
-        int     tmp_demo_subversion = demo_subversion;
+        int     tmp_gamemap         = ::gamemap;
+        int     tmp_gameepisode     = ::gameepisode;
+        int     tmp_compatibility   = ::compatibility;
+        skill_t tmp_gameskill       = ::gameskill;
+        int     tmp_inmanageddir    = ::inmanageddir;
+        bool    tmp_vanilla_mode    = ::vanilla_mode;
+        int     tmp_demo_version    = ::demo_version;
+        int     tmp_demo_subversion = ::demo_subversion;
         char    tmp_gamemapname[9]  = {};
-        strncpy(tmp_gamemapname, gamemapname, 9);
+        strncpy(tmp_gamemapname, ::gamemapname, 9);
 
         // skip description
         char throwaway[SAVESTRINGSIZE];
@@ -1719,20 +1719,20 @@ void P_LoadGame(const char *filename)
         // killough 2/14/98: load compatibility mode
         // haleyjd 06/16/10: reload "inmasterlevels" state
         int tempskill;
-        arc << compatibility << tempskill << inmanageddir;
-        gameskill = (skill_t)tempskill;
+        arc << ::compatibility << tempskill << ::inmanageddir;
+        ::gameskill = (skill_t)tempskill;
 
-        arc << vanilla_mode; // -vanilla setting
-        if(vanilla_mode)     // use UDoom version (no point for longtics now).
+        arc << ::vanilla_mode; // -vanilla setting
+        if(::vanilla_mode)     // use UDoom version (no point for longtics now).
         {
             // All the other settings (save longtics) are stored in the save
-            demo_version    = 109;
-            demo_subversion = 0;
+            ::demo_version    = 109;
+            ::demo_subversion = 0;
         }
         else
         {
-            demo_version    = version;    // killough 7/19/98: use this version's id
-            demo_subversion = subversion; // haleyjd 06/17/01
+            ::demo_version    = version;    // killough 7/19/98: use this version's id
+            ::demo_subversion = subversion; // haleyjd 06/17/01
         }
 
         // sf: use string rather than episode, map
@@ -1740,14 +1740,14 @@ void P_LoadGame(const char *filename)
         {
             int8_t lvc;
             arc << lvc;
-            gamemapname[i] = (char)lvc;
+            ::gamemapname[i] = (char)lvc;
         }
-        gamemapname[8] = '\0'; // ending nullptr
+        ::gamemapname[8] = '\0'; // ending nullptr
 
         G_SetGameMap(); // get gameepisode, map
 
         // start out g_dir pointing at wGlobalDir again
-        g_dir = &wGlobalDir;
+        ::g_dir = &wGlobalDir;
 
         // haleyjd 06/16/10: if the level was saved in a map loaded under a managed
         // directory, we need to restore the managed directory to g_dir when loading
@@ -1769,7 +1769,7 @@ void P_LoadGame(const char *filename)
             // for a missing wad.
             // Note: set d_dir as well, so G_InitNew won't overwrite with wGlobalDir!
             if((dir = W_GetManagedWad(fn)) || (dir = W_AddManagedWad(fn)))
-                g_dir = d_dir = dir;
+                ::g_dir = ::d_dir = dir;
 
             // done with temporary file name
             efree(fn);
@@ -1777,7 +1777,7 @@ void P_LoadGame(const char *filename)
             // 11/04/12: Since we loaded a managed directory wad, initialize the
             // mission. This will take care of any special data loading
             // requirements, such as metadata for NR4TL.
-            W_InitManagedMission(inmanageddir);
+            W_InitManagedMission(::inmanageddir);
         }
 
         // killough 3/16/98, 12/98: check lump name checksum
@@ -1787,7 +1787,7 @@ void P_LoadGame(const char *filename)
             int      numwadfiles;
             qstring  msg{ "Possibly Incompatible Savegame.\nWads expected:\n\n" };
 
-            checksum = G_Signature(g_dir);
+            checksum = G_Signature(::g_dir);
 
             arc << rchecksum;
             arc << numwadfiles;
@@ -1810,17 +1810,17 @@ void P_LoadGame(const char *filename)
             if(checksum != rchecksum && !forced_loadgame)
             {
                 // If we don't restore some state things will go very awry
-                g_dir           = tmp_g_dir;
-                d_dir           = tmp_d_dir;
-                gamemap         = tmp_gamemap;
-                gameepisode     = tmp_gameepisode;
-                compatibility   = tmp_compatibility;
-                gameskill       = tmp_gameskill;
-                inmanageddir    = tmp_inmanageddir;
-                vanilla_mode    = tmp_vanilla_mode;
-                demo_version    = tmp_demo_version;
-                demo_subversion = tmp_demo_subversion;
-                strncpy(gamemapname, tmp_gamemapname, 9);
+                ::g_dir           = tmp_g_dir;
+                ::d_dir           = tmp_d_dir;
+                ::gamemap         = tmp_gamemap;
+                ::gameepisode     = tmp_gameepisode;
+                ::compatibility   = tmp_compatibility;
+                ::gameskill       = tmp_gameskill;
+                ::inmanageddir    = tmp_inmanageddir;
+                ::vanilla_mode    = tmp_vanilla_mode;
+                ::demo_version    = tmp_demo_version;
+                ::demo_subversion = tmp_demo_subversion;
+                strncpy(::gamemapname, tmp_gamemapname, 9);
 
                 C_Puts(msg.constPtr());
                 G_LoadGameErr(msg.constPtr());
@@ -1831,7 +1831,7 @@ void P_LoadGame(const char *filename)
         }
 
         for(i = 0; i < MAXPLAYERS; ++i)
-            arc << playeringame[i];
+            arc << ::playeringame[i];
 
         for(; i < MIN_MAXPLAYERS; i++) // killough 2/28/98
         {
@@ -1850,12 +1850,12 @@ void P_LoadGame(const char *filename)
         else
         {
             size_t dummy = 0;
-            arc.archiveLString(mus_LoadName, dummy);
+            arc.archiveLString(::mus_LoadName, dummy);
         }
         int tempGameType;
         arc << tempGameType;
 
-        GameType = (gametype_t)tempGameType;
+        ::GameType = (gametype_t)tempGameType;
 
         /* cph 2001/05/23 - Must read options before we set up the level */
         byte options[GAME_OPTION_SIZE];
@@ -1865,10 +1865,10 @@ void P_LoadGame(const char *filename)
 
         // load a base level
         // sf: in hubs, use g_doloadlevel instead of g_initnew
-        if(hub_changelevel)
+        if(::hub_changelevel)
             G_DoLoadLevel();
         else
-            G_InitNew(gameskill, gamemapname);
+            G_InitNew(::gameskill, ::gamemapname);
 
         // killough 3/1/98: Read game options
         // killough 11/98: move down to here
@@ -1879,15 +1879,15 @@ void P_LoadGame(const char *filename)
         G_ReadOptions(options);
 
         // get the times
-        arc << leveltime;
+        arc << ::leveltime;
 
         // killough 11/98: load revenant tracer state
         uint8_t tracerState;
         arc << tracerState;
-        basetic = gametic - tracerState;
+        ::basetic = ::gametic - tracerState;
 
         // haleyjd 04/14/03: load dmflags
-        arc << dmflags;
+        arc << ::dmflags;
 
         // dearchive all the modifications
         P_ArchivePlayers(arc);
@@ -1920,30 +1920,30 @@ void P_LoadGame(const char *filename)
 
     loadfile.close();
 
-    if(setsizeneeded)
+    if(::setsizeneeded)
         R_ExecuteSetViewSize();
 
     // draw the pattern into the back screen
-    R_FillBackScreen(scaledwindow);
+    R_FillBackScreen(::scaledwindow);
 
     // haleyjd 02/09/10: wake up status bar again
     ST_Start();
 
     // killough 12/98: support -recordfrom and -loadgame -playdemo
-    if(!command_loadgame)
-        singledemo = false; // Clear singledemo flag if loading from menu
-    else if(singledemo)
+    if(!::command_loadgame)
+        ::singledemo = false; // Clear singledemo flag if loading from menu
+    else if(::singledemo)
     {
-        gameaction = ga_loadgame; // Mark that we're loading a game before demo
+        ::gameaction = ga_loadgame; // Mark that we're loading a game before demo
         G_DoPlayDemo();           // This will detect it and won't reinit level
     }
     else                        // Loading games from menu isn't allowed during demo recordings,
-        if(demorecording)       // So this can only possibly be a -recordfrom command.
+        if(::demorecording)       // So this can only possibly be a -recordfrom command.
             G_BeginRecording(); // Start the -recordfrom, since the game was loaded.
 
     // sf: if loading a hub level, restore position relative to sector
     //  for 'seamless' travel between levels
-    if(hub_changelevel)
+    if(::hub_changelevel)
         P_RestorePlayerPosition();
 }
 
