@@ -19,6 +19,10 @@ Features
   Thanks to sink666 for the wish to have parameters in the pull request.
 * Added damage type (MOD) argument to A_BFGSpray (default: BFG_Splash).
 
+Improvements
+------------
+* Loading broken or wrong save game files is more robust now, though not perfect.
+
 Bug fixes
 ---------
 * Fixed A_BFGSpray not using the parameter, and always being locked at 40 rays.
