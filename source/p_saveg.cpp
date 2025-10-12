@@ -646,10 +646,15 @@ static void P_loadWeaponCounters(SaveArchive &arc, player_t &p)
 
             arc.archiveLString(className, len);
             if(!className)
-                I_Error("P_loadWeaponCounters: null weapon class name\n");
+                throw std::runtime_error("P_loadWeaponCounters: null weapon class name");
             weaponinfo_t *wp = E_WeaponForName(className);
             if(!wp)
-                I_Error("P_loadWeaponCounters: weapon '%s' not found\n", className);
+            {
+                char format[256];
+                snprintf(format, sizeof(format), "P_loadWeaponCounters: weapon '%s' not found\n", className);
+                efree(className);
+                throw std::runtime_error(format);
+            }
             efree(className);
 
             WeaponCounter &wc = *weaponCounter;
@@ -733,7 +738,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
 
                 arc << inventorySize;
                 if(inventorySize != E_GetInventoryAllocSize())
-                    I_Error("P_ArchivePlayers: inventory size mismatch\n");
+                    throw std::runtime_error("P_ArchivePlayers: inventory size mismatch\n");
 
                 // Load ready and pending weapon via string
                 auto loadweapon = [&arc](weaponinfo_t **weapon, const char *name) {
@@ -741,7 +746,12 @@ static void P_ArchivePlayers(SaveArchive &arc)
                     size_t len;
                     arc.archiveLString(className, len);
                     if(estrnonempty(className) && !(*weapon = E_WeaponForName(className)))
-                        I_Error("P_ArchivePlayers: %s '%s' not found\n", name, className);
+                    {
+                        char format[128];
+                        snprintf(format, sizeof(format), "P_ArchivePlayers: %s '%s' not found\n", name, className);
+                        efree(className);
+                        throw std::runtime_error(format);
+                    }
                     efree(className);
                 };
 
@@ -1037,7 +1047,7 @@ static void P_archiveSectorActions(SaveArchive &arc)
             arc << numActions;
 
             if(numActions != mapNumActions)
-                I_Error("P_archiveSectorActions: sector action count mismatch\n");
+                throw std::runtime_error("P_archiveSectorActions: sector action count mismatch\n");
 
             for(unsigned int j = 0; j < numActions; j++)
             {
@@ -1140,12 +1150,17 @@ static void P_ArchiveThinkers(SaveArchive &arc)
                     break; // Reached end of thinker list
                 }
                 else
-                    I_Error("Unknown tclass %s in savegame\n", className);
+                {
+                    efree(className);
+                    char format[128];
+                    snprintf(format, sizeof(format), "Unknown tclass %s in savegame\n", className);
+                    throw std::runtime_error(format);
+                }
             }
 
             // Too many thinkers?!
             if(idx > num_thinkers)
-                I_Error("P_ArchiveThinkers: too many thinkers in savegame\n");
+                throw std::runtime_error("P_ArchiveThinkers: too many thinkers in savegame\n");
 
             // Create a thinker of the appropriate type and load it
             newThinker = thinkerType->newObject();
@@ -1273,7 +1288,10 @@ static void P_ArchivePolyObj(SaveArchive &arc, polyobj_t *po)
         arc.archiveLString(className, len);
 
         if(!className || strncmp(className, "PointThinker", len))
-            I_Error("P_ArchivePolyObj: no PointThinker for polyobject");
+        {
+            efree(className);
+            throw std::runtime_error("P_ArchivePolyObj: no PointThinker for polyobject");
+        }
         efree(className);
     }
 
@@ -1303,7 +1321,7 @@ static void P_ArchivePolyObjects(SaveArchive &arc)
         arc << numSavedPolys;
 
         if(numSavedPolys != numPolyObjects)
-            I_Error("P_UnArchivePolyObjects: polyobj count inconsistency\n");
+            throw std::runtime_error("P_UnArchivePolyObjects: polyobj count inconsistency");
     }
 
     for(int i = 0; i < numPolyObjects; ++i)
@@ -1343,6 +1361,7 @@ static void P_ArchiveSndSeq(SaveArchive &arc, SndSeq_t *seq)
     // depending on origin type, either save the origin index (sector or polyobj
     // number), or an Mobj number. This differentiation is necessary because
     // degenMobj are not covered by mobj numbering.
+    char format[256];
     switch(seq->originType)
     {
     case SEQ_ORIGIN_SECTOR_F:
@@ -1355,7 +1374,8 @@ static void P_ArchiveSndSeq(SaveArchive &arc, SndSeq_t *seq)
         arc << twizzle;
         break;
     default: //
-        I_Error("P_ArchiveSndSeq: unknown sequence origin type %d\n", seq->originType);
+        snprintf(format, sizeof(format), "P_ArchiveSndSeq: unknown sequence origin type %d\n", seq->originType);
+        throw std::runtime_error(format);
     }
 
     // save basic data
@@ -1377,9 +1397,11 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
     // get corresponding EDF sequence
     arc.archiveCString(name, 33);
 
+    char format[256];
     if(!(newSeq->sequence = E_SequenceForName(name)))
     {
-        I_Error("P_UnArchiveSndSeq: unknown EDF sound sequence %s archived\n", name);
+        snprintf(format, sizeof(format), "P_UnArchiveSndSeq: unknown EDF sound sequence %s archived\n", name);
+        throw std::runtime_error(format);
     }
 
     newSeq->currentSound = nullptr; // not currently playing a sound
@@ -1410,7 +1432,8 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
     case SEQ_ORIGIN_POLYOBJ:
         if(!(po = Polyobj_GetForNum(twizzle)))
         {
-            I_Error("P_UnArchiveSndSeq: origin at unknown polyobject %d\n", twizzle);
+            snprintf(format, sizeof(format), "P_UnArchiveSndSeq: origin at unknown polyobject %d\n", twizzle);
+            throw std::runtime_error(format);
         }
         newSeq->originIdx = po->id;
         newSeq->origin    = &po->spawnSpot;
@@ -1421,7 +1444,9 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
         newSeq->origin    = mo;
         break;
     default: //
-        I_Error("P_UnArchiveSndSeq: corrupted savegame (originType = %d)\n", newSeq->originType);
+        snprintf(format, sizeof(format), "P_UnArchiveSndSeq: corrupted savegame (originType = %d)\n",
+                 newSeq->originType);
+        throw std::runtime_error(format);
     }
 
     // restore delay counter, volume, attenuation, and flags
@@ -1922,10 +1947,18 @@ void P_LoadGame(const char *filename)
         uint8_t cmarker;
         arc << cmarker;
         if(cmarker != 0xE6)
-            I_Error("Bad savegame: last byte is 0x%x\n", cmarker);
+        {
+            char format[128];
+            snprintf(format, sizeof(format), "Bad savegame: last byte is 0x%x\n", cmarker);
+            throw std::runtime_error(format);
+        }
 
         // haleyjd: move up Z_CheckHeap to before Z_Free (safer)
         Z_CheckHeap();
+    }
+    catch(const std::exception &e)
+    {
+        I_Error("P_LoadGame: failed loading game: %s\n", e.what());
     }
     catch(...)
     {
@@ -1950,10 +1983,10 @@ void P_LoadGame(const char *filename)
     else if(::singledemo)
     {
         ::gameaction = ga_loadgame; // Mark that we're loading a game before demo
-        G_DoPlayDemo();           // This will detect it and won't reinit level
+        G_DoPlayDemo();             // This will detect it and won't reinit level
     }
     else                        // Loading games from menu isn't allowed during demo recordings,
-        if(::demorecording)       // So this can only possibly be a -recordfrom command.
+        if(::demorecording)     // So this can only possibly be a -recordfrom command.
             G_BeginRecording(); // Start the -recordfrom, since the game was loaded.
 
     // sf: if loading a hub level, restore position relative to sector

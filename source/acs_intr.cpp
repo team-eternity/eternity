@@ -871,22 +871,22 @@ bool ACS_TerminateScriptS(const char *str, uint32_t mapnum)
 class ACSSerial : public ACSVM::Serial
 {
 public:
-   explicit ACSSerial(SaveArchive &arc_) : arc{arc_} {}
+    explicit ACSSerial(SaveArchive &arc_) : arc{ arc_ } {}
 
-   virtual void read(char *data, std::size_t size)
-   {
-      if(arc.getLoadFile()->read(data, size) != size)
-         throw ACSVM::SerialError("failed read");
-   }
+    virtual void read(char *data, std::size_t size)
+    {
+        if(arc.getLoadFile()->read(data, size) != size)
+            throw ACSVM::SerialError("failed read");
+    }
 
-   virtual void write(char const *data, std::size_t size)
-   {
-      if(!arc.getSaveFile()->write(data, size))
-         throw ACSVM::SerialError("failed write");
-   }
+    virtual void write(char const *data, std::size_t size)
+    {
+        if(!arc.getSaveFile()->write(data, size))
+            throw ACSVM::SerialError("failed write");
+    }
 
 private:
-   SaveArchive &arc;
+    SaveArchive &arc;
 };
 
 //
@@ -899,22 +899,15 @@ void ACS_Archive(SaveArchive &arc)
 
     if(arc.isLoading())
     {
-        ACSSerial in{arc};
+        ACSSerial in{ arc };
 
-        try
-        {
-            in.loadHead();
-            ACSenv.loadState(in);
-            in.loadTail();
-        }
-        catch(ACSVM::SerialError const &e)
-        {
-            I_Error("ACS_Archive: %s\n", e.what());
-        }
+        in.loadHead();
+        ACSenv.loadState(in);
+        in.loadTail();
     }
     else if(arc.isSaving())
     {
-        ACSSerial out{arc};
+        ACSSerial out{ arc };
 
         // Enable debug signatures.
         out.signs = true;
