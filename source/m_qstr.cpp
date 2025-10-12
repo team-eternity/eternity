@@ -512,7 +512,9 @@ qstring &qstring::operator=(qstring &&other)
 //
 char *qstring::copyInto(char *dest, size_t pSize) const
 {
-    return strncpy(dest, buffer, pSize);
+    char *result    = strncpy(dest, buffer, pSize);
+    dest[pSize - 1] = 0;
+    return result;
 }
 
 //

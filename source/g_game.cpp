@@ -764,7 +764,7 @@ void G_DoLoadLevel()
         {
             if(wipesuppress)
                 wipesuppress = false; // don't wipe this time
-            else 
+            else
                 wipegamestate = GS_NOSTATE; // force a wipe
         }
     }
@@ -2394,7 +2394,7 @@ void G_PlayerReborn(int player)
     int            secretcount;
     int            cheats;
     int            playercolour;
-    char           playername[20];
+    char           playername[sizeof(p->name)];
     skin_t        *playerskin;
     playerclass_t *playerclass;
     inventory_t    inventory;
@@ -2403,7 +2403,7 @@ void G_PlayerReborn(int player)
     p = &players[player];
 
     memcpy(frags, p->frags, sizeof frags);
-    strncpy(playername, p->name, 20);
+    strncpy(playername, p->name, sizeof(playername));
 
     killcount    = p->killcount;
     itemcount    = p->itemcount;

@@ -402,7 +402,7 @@ CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
 
     playernum = Console.cmdsrc;
 
-    Console.argv[0]->copyInto(players[playernum].name, 20);
+    Console.argv[0]->copyInto(players[playernum].name, sizeof(players[playernum].name));
 
     if(playernum == consoleplayer)
     {

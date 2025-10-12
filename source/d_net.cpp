@@ -65,7 +65,7 @@ doomdata_t *netbuffer; // points inside doomcom
 // a gametic cannot be run until nettics[] > gametic for all players
 //
 static constexpr int          RESENDCOUNT = 10;
-static constexpr unsigned int PL_DRONE = 0x80; /* bit flag in doomdata->player */
+static constexpr unsigned int PL_DRONE    = 0x80; /* bit flag in doomdata->player */
 
 static ticcmd_t localcmds[BACKUPTICS];
 
@@ -402,7 +402,8 @@ static void D_InitPlayers()
 {
     // haleyjd 04/10/10: brought up out of defunct console net init for now
     players[consoleplayer].colormap = default_colour;
-    strncpy(players[consoleplayer].name, default_name, 20);
+    strncpy(players[consoleplayer].name, default_name, sizeof(players[consoleplayer].name));
+    players[consoleplayer].name[sizeof(players[consoleplayer].name) - 1] = '\0';
 
     for(int i = 0; i < MAXPLAYERS; i++)
     {

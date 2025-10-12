@@ -773,6 +773,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
             for(pspdef_t &psprite : p.psprites)
                 P_ArchivePSprite(arc, psprite);
 
+            static_assert(sizeof(p.name) >= 20);
             arc.archiveCString(p.name, 20);
 
             if(arc.isLoading())
