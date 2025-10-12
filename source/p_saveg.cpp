@@ -65,6 +65,10 @@
 // this makes for smaller savegames
 #define PADSAVEP()      {}
 
+// Maximum safe allocation size for savegame loading to prevent malicious/corrupted
+// save files from causing excessive memory allocation
+static constexpr int SAVEGAME_ALLOC_THRESHOLD = 10000000;
+
 //=============================================================================
 //
 // Basic IO
@@ -131,7 +135,7 @@ void SaveArchive::archiveLString(char *&str, size_t &len)
         archiveSize(len);
         if(len != 0)
         {
-            if(len > 10000000)
+            if(len > SAVEGAME_ALLOC_THRESHOLD)
             {
                 throw std::runtime_error("Bad save game");
             }
@@ -290,7 +294,7 @@ void SaveArchive::archiveSize(size_t &value)
         loadfile->readUint64(uv);
 #if SIZE_MAX < UINT64_MAX
         if(uv > SIZE_MAX)
-            I_Error("Cannot load save game: size_t value out of range on this platform\n");
+            throw std::runtime_error("Cannot load save game: size_t value out of range on this platform");
 #endif
         value = size_t(uv);
     }
@@ -431,7 +435,7 @@ SaveArchive &SaveArchive::operator<<(sector_t *&s)
         loadfile->readSint32(sectornum);
         if(sectornum < 0 || sectornum >= numsectors)
         {
-            I_Error("SaveArchive: sector num %d out of range\n", sectornum);
+            throw std::runtime_error(qstring::Format("SaveArchive: sector num %d out of range", sectornum).constPtr());
         }
         s = &sectors[sectornum];
     }
@@ -457,7 +461,7 @@ SaveArchive &SaveArchive::operator<<(line_t *&ln)
             ln = nullptr;
         else if(linenum < 0 || linenum >= numlinesPlusExtra)
         {
-            I_Error("SaveArchive: line num %d out of range\n", linenum);
+            throw std::runtime_error(qstring::Format("SaveArchive: line num %d out of range", linenum).constPtr());
         }
         else
             ln = &lines[linenum];
@@ -644,7 +648,7 @@ static void P_loadWeaponCounters(SaveArchive &arc, player_t &p)
     arc << numCountedWeapons;
     if(numCountedWeapons)
     {
-        if(numCountedWeapons > 10000000)
+        if(numCountedWeapons > SAVEGAME_ALLOC_THRESHOLD)
         {
             throw std::runtime_error("Too many counted weapons");
         }
@@ -749,6 +753,10 @@ static void P_ArchivePlayers(SaveArchive &arc)
                 arc << inventorySize;
                 if(inventorySize != E_GetInventoryAllocSize())
                     throw std::runtime_error("P_ArchivePlayers: inventory size mismatch\n");
+
+                // Validate inv_ptr to prevent buffer overflow
+                if(p.inv_ptr < 0 || p.inv_ptr >= inventorySize)
+                    p.inv_ptr = 0;
 
                 // Load ready and pending weapon via string
                 auto loadweapon = [&arc](weaponinfo_t **weapon, const char *name) {
@@ -1136,7 +1144,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
         Thinker::Type *thinkerType;
         Thinker       *newThinker;
 
-        if(num_thinkers > 10000000)
+        if(num_thinkers > static_cast<unsigned int>(SAVEGAME_ALLOC_THRESHOLD))
             throw std::runtime_error("Too many thinkers");
 
         // allocate thinker table
@@ -1252,6 +1260,9 @@ static void P_ArchiveMap(SaveArchive &arc)
 
         if(markpointnum)
         {
+            if(markpointnum > SAVEGAME_ALLOC_THRESHOLD)
+                throw std::runtime_error("Bad save game: too many automap marks");
+
             while(markpointnum >= markpointnum_max)
             {
                 markpointnum_max = markpointnum_max ? markpointnum_max * 2 : 16;
@@ -1515,7 +1526,7 @@ static void P_UnArchiveSoundSequences(SaveArchive &arc)
     // get sequence count
     arc << count;
 
-    if(count > 10000000)
+    if(count > SAVEGAME_ALLOC_THRESHOLD)
     {
         throw std::runtime_error("Too many sound sequences");
     }
@@ -1550,7 +1561,7 @@ static void P_ArchiveButtons(SaveArchive &arc)
     // When loading, if not equal, we need to realloc buttonlist
     if(arc.isLoading() && numsaved > 0 && numsaved != numbuttonsalloc)
     {
-        if(numsaved > 10000000)
+        if(numsaved > SAVEGAME_ALLOC_THRESHOLD)
             throw std::runtime_error("Too many button-switches");
         buttonlist      = erealloc(button_t *, buttonlist, numsaved * sizeof(button_t));
         numbuttonsalloc = numsaved;
@@ -1852,6 +1863,9 @@ void P_LoadGame(const char *filename, const PODCollection<byte> *backup)
         size_t len;
         arc.archiveSize(len);
 
+        if(len > SAVEGAME_ALLOC_THRESHOLD)
+            throw std::runtime_error("Bad save game: managed directory path too long");
+
         if(len)
         {
             WadDirectory *dir;
@@ -1887,6 +1901,9 @@ void P_LoadGame(const char *filename, const PODCollection<byte> *backup)
 
             arc << rchecksum;
             arc << numwadfiles;
+
+            if(numwadfiles > SAVEGAME_ALLOC_THRESHOLD)
+                throw std::runtime_error("Bad save game: too many wad files");
 
             for(int i = 0; i < numwadfiles; i++)
             {

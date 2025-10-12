@@ -1327,16 +1327,16 @@ qstring &qstring::makeQuoted()
 }
 
 //
-// qstring::Printf
+// qstring::VPrintf
 //
-// Performs formatted printing into a qstring. If maxlen is > 0, the qstring
-// will be reallocated to a minimum of that size for the formatted printing.
-// Otherwise, the qstring will be allocated to a worst-case size for the given
-// format string, and in this case, the format string MAY NOT contain any
-// padding directives, as they will be ignored, and the resulting output may
-// then be truncated to qstr->size - 1.
+// Internal helper that performs formatted printing into a qstring using a va_list.
+// If maxlen is > 0, the qstring will be reallocated to a minimum of that size for
+// the formatted printing. Otherwise, the qstring will be allocated to a worst-case
+// size for the given format string, and in this case, the format string MAY NOT
+// contain any padding directives, as they will be ignored, and the resulting output
+// may then be truncated to qstr->size - 1.
 //
-int qstring::Printf(size_t maxlen, E_FORMAT_STRING(const char *fmt), ...)
+int qstring::VPrintf(size_t maxlen, E_FORMAT_STRING(const char *fmt), va_list args)
 {
     va_list va2;
     int     returnval;
@@ -1357,14 +1357,14 @@ int qstring::Printf(size_t maxlen, E_FORMAT_STRING(const char *fmt), ...)
     else
     {
         // determine a worst-case size by parsing the fmt string
-        va_list     va1;              // args
+        va_list     va1;              // args copy
         char        c;                // current character
         const char *s        = fmt;   // pointer into format string
         bool        pctstate = false; // seen a percentage?
         const char *dummystr;
         size_t      charcount = fmtsize; // start at strlen of format string
 
-        va_start(va1, fmt);
+        va_copy(va1, args);
         while((c = *s++))
         {
             if(pctstate)
@@ -1431,13 +1431,49 @@ int qstring::Printf(size_t maxlen, E_FORMAT_STRING(const char *fmt), ...)
             clear();
     }
 
-    va_start(va2, fmt);
+    va_copy(va2, args);
     returnval = pvsnprintf(buffer, size, fmt, va2);
     va_end(va2);
 
     index = strlen(buffer);
 
     return returnval;
+}
+
+//
+// qstring::Printf
+//
+// Public method for formatted printing into a qstring.
+// Calls VPrintf internally with a va_list.
+//
+int qstring::Printf(size_t maxlen, E_FORMAT_STRING(const char *fmt), ...)
+{
+    va_list args;
+    int     result;
+
+    va_start(args, fmt);
+    result = VPrintf(maxlen, fmt, args);
+    va_end(args);
+
+    return result;
+}
+
+//
+// qstring::Format
+//
+// Static factory method that creates a qstring with formatted content.
+// Useful for creating temporary formatted strings, e.g. for exception messages.
+//
+qstring qstring::Format(E_FORMAT_STRING(const char *fmt), ...)
+{
+    qstring result;
+    va_list args;
+
+    va_start(args, fmt);
+    result.VPrintf(0, fmt, args);
+    va_end(args);
+
+    return result;
 }
 
 //=============================================================================
