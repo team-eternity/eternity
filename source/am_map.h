@@ -62,6 +62,7 @@ void AM_clearMarks(void);
 class Mobj;
 void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z);
 
+struct sector_t;
 bool AM_getSectorMapCoords(const sector_t *sec, fixed_t &x, fixed_t &y);
 void AM_getMobjMapCoords(const Mobj *mo, fixed_t &x, fixed_t &y);
 void AM_moveCenterToPoint(fixed_t x, fixed_t y);
