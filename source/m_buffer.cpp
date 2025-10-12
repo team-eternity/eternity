@@ -555,151 +555,109 @@ bool InBuffer::readSint8(int8_t &num)
 
 int InMemoryBuffer::seek(long offset, int origin)
 {
-    bool err = false;
+    bool   err       = false;
     size_t backuppos = _pos;
     switch(origin)
     {
     case SEEK_SET:
-        if(offset < 0 || offset > (long)_data.getLength())
+        if(offset < 0 || offset > (long)_data->getLength())
             err = true;
         _pos = (size_t)offset;
         break;
     case SEEK_CUR:
-        if((long)_pos + offset < 0 || (long)_pos + offset > (long)_data.getLength())
+        if((long)_pos + offset < 0 || (long)_pos + offset > (long)_data->getLength())
             err = true;
         _pos = (size_t)((long)_pos + offset);
         break;
     case SEEK_END:
-        if((long)_data.getLength() + offset < 0 || (long)_data.getLength() + offset > (long)_data.getLength())
+        if((long)_data->getLength() + offset < 0 || (long)_data->getLength() + offset > (long)_data->getLength())
             err = true;
-        _pos = (size_t)((long)_data.getLength() + offset);
+        _pos = (size_t)((long)_data->getLength() + offset);
         break;
     }
     if(err)
     {
-        if(throwing)
-            throw BufferedIOException("seek error");
         _pos = backuppos;
-        return false;
+        throw BufferedIOException("seek error");
     }
     return true;
 }
 size_t InMemoryBuffer::read(void *dest, size_t size)
 {
-    if(_pos + size > _data.getLength())
-    {
-        if(throwing)
-            throw BufferedIOException("read error");
-        return false;
-    }
-    memcpy(dest, &_data[_pos], size);
+    if(_pos + size > _data->getLength())
+        throw BufferedIOException("read error");
+    memcpy(dest, &(*_data)[_pos], size);
     _pos += size;
-    return true;
+    return size;
 }
 int InMemoryBuffer::skip(size_t skipAmt)
 {
-    if(_pos + skipAmt > _data.getLength())
-    {
-        if(throwing)
-            throw BufferedIOException("skip error");
-        return -1;
-    }
+    if(_pos + skipAmt > _data->getLength())
+        throw BufferedIOException("skip error");
     _pos += skipAmt;
     return 0;
 }
 bool InMemoryBuffer::readSint64(int64_t &num)
 {
-    if(_pos + 8 > _data.getLength())
-    {
-        if(throwing)
-            throw BufferedIOException("read error");
-        return false;
-    }
-    memcpy(&num, &_data[_pos], 8);
+    if(_pos + 8 > _data->getLength())
+        throw BufferedIOException("read error");
+    memcpy(&num, &(*_data)[_pos], 8);
     _pos += 8;
     return true;
 }
 bool InMemoryBuffer::readUint64(uint64_t &num)
 {
-    if(_pos + 8 > _data.getLength())
-    {
-        if(throwing)
-            throw BufferedIOException("read error");
-        return false;
-    }
-    memcpy(&num, &_data[_pos], 8);
+    if(_pos + 8 > _data->getLength())
+        throw BufferedIOException("read error");
+    memcpy(&num, &(*_data)[_pos], 8);
     _pos += 8;
     return true;
 }
 bool InMemoryBuffer::readSint32(int32_t &num)
 {
-    if(_pos + 4 > _data.getLength())
-    {
-        if(throwing)
-            throw BufferedIOException("read error");
-        return false;
-    }
-    memcpy(&num, &_data[_pos], 4);
+    if(_pos + 4 > _data->getLength())
+        throw BufferedIOException("read error");
+    memcpy(&num, &(*_data)[_pos], 4);
     _pos += 4;
     return true;
 }
 bool InMemoryBuffer::readUint32(uint32_t &num)
 {
-    if(_pos + 4 > _data.getLength())
-    {
-        if(throwing)
-            throw BufferedIOException("read error");
-        return false;
-    }
-    memcpy(&num, &_data[_pos], 4);
+    if(_pos + 4 > _data->getLength())
+        throw BufferedIOException("read error");
+    memcpy(&num, &(*_data)[_pos], 4);
     _pos += 4;
     return true;
 }
 bool InMemoryBuffer::readSint16(int16_t &num)
 {
-    if(_pos + 2 > _data.getLength())
-    {
-        if(throwing)
-            throw BufferedIOException("read error");
-        return false;
-    }
-    memcpy(&num, &_data[_pos], 2);
+    if(_pos + 2 > _data->getLength())
+        throw BufferedIOException("read error");
+    memcpy(&num, &(*_data)[_pos], 2);
     _pos += 2;
     return true;
 }
 bool InMemoryBuffer::readUint16(uint16_t &num)
 {
-    if(_pos + 2 > _data.getLength())
-    {
-        if(throwing)
-            throw BufferedIOException("read error");
-        return false;
-    }
-    memcpy(&num, &_data[_pos], 2);
+    if(_pos + 2 > _data->getLength())
+        throw BufferedIOException("read error");
+    memcpy(&num, &(*_data)[_pos], 2);
     _pos += 2;
     return true;
 }
 bool InMemoryBuffer::readSint8(int8_t &num)
 {
-    if(_pos >= _data.getLength())
-    {
-        if(throwing)
-            throw BufferedIOException("read error");
-        return false;
-    }
-    num = (int8_t)_data[_pos];
+    if(_pos >= _data->getLength())
+        throw BufferedIOException("read error");
+    num = (int8_t)(*_data)[_pos];
     _pos++;
     return true;
 }
 bool InMemoryBuffer::readUint8(uint8_t &num)
 {
-    if(_pos >= _data.getLength())
-    {
-        if(throwing)
-            throw BufferedIOException("read error");
-        return false;
-    }
-    num = (uint8_t)_data[_pos];
+    if(_pos >= _data->getLength())
+        throw BufferedIOException("read error");
+    num = (uint8_t)(*_data)[_pos];
     _pos++;
     return true;
 }

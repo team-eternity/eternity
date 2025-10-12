@@ -139,11 +139,9 @@ public:
     bool writeUint8(uint8_t num) override;
 };
 
-class OutMemoryBuffer : public BufferedFileBase, public IOutBuffer
+class OutMemoryBuffer : public IOutBuffer
 {
 public:
-    OutMemoryBuffer() { initBuffer(1, NENDIAN); }
-
     bool write(const void *data, size_t size) override;
     bool writeSint64(int64_t num) override;
     bool writeUint64(uint64_t num) override;
@@ -164,6 +162,7 @@ class IInBuffer
 {
 public:
     virtual int    seek(long offset, int origin) = 0;
+    virtual long   itell()                       = 0;
     virtual size_t read(void *dest, size_t size) = 0;
     virtual int    skip(size_t skipAmt)          = 0;
     virtual bool   readSint64(int64_t &num)      = 0;
@@ -190,6 +189,7 @@ public:
     bool openExisting(FILE *f, int pEndian);
 
     int    seek(long offset, int origin) override;
+    long   itell() override { return BufferedFileBase::tell(); }
     size_t read(void *dest, size_t size) override;
     int    skip(size_t skipAmt) override;
     bool   readSint64(int64_t &num) override;
@@ -202,12 +202,15 @@ public:
     bool   readUint8(uint8_t &num) override;
 };
 
-class InMemoryBuffer : public BufferedFileBase, public IInBuffer
+class InMemoryBuffer : public IInBuffer
 {
 public:
-    InMemoryBuffer(PODCollection<byte> &&data) : _data(std::move(data)) { endian = NENDIAN; }
+    InMemoryBuffer() : _data{} {}
+    explicit InMemoryBuffer(const PODCollection<byte> *data) : _data(data) {}
+    void setData(const PODCollection<byte> *data) { _data = data; }
 
     int    seek(long offset, int origin) override;
+    long   itell() override { return (long)_pos; }
     size_t read(void *dest, size_t size) override;
     int    skip(size_t skipAmt) override;
     bool   readSint64(int64_t &num) override;
@@ -220,8 +223,8 @@ public:
     bool   readUint8(uint8_t &num) override;
 
 private:
-    size_t              _pos = 0;
-    PODCollection<byte> _data;
+    size_t                     _pos = 0;
+    const PODCollection<byte> *_data;
 };
 
 #endif

@@ -71,7 +71,7 @@
 //
 // Constructs a SaveArchive object in saving mode.
 //
-SaveArchive::SaveArchive(OutBuffer *pSaveFile) : savefile(pSaveFile), loadfile(nullptr), read_save_version(0)
+SaveArchive::SaveArchive(IOutBuffer *pSaveFile) : savefile(pSaveFile), loadfile(nullptr), read_save_version(0)
 {
     if(!pSaveFile)
         I_Error("SaveArchive: created a save file without a valid OutBuffer\n");
@@ -80,7 +80,7 @@ SaveArchive::SaveArchive(OutBuffer *pSaveFile) : savefile(pSaveFile), loadfile(n
 //
 // Constructs a SaveArchive object in loading mode.
 //
-SaveArchive::SaveArchive(InBuffer *pLoadFile) : savefile(nullptr), loadfile(pLoadFile), read_save_version(0)
+SaveArchive::SaveArchive(IInBuffer *pLoadFile) : savefile(nullptr), loadfile(pLoadFile), read_save_version(0)
 {
     if(!pLoadFile)
         I_Error("SaveArchive: created a load file without a valid InBuffer\n");
@@ -129,6 +129,10 @@ void SaveArchive::archiveLString(char *&str, size_t &len)
         archiveSize(len);
         if(len != 0)
         {
+            if(len > 10000000)
+            {
+                throw std::runtime_error("Bad save game");
+            }
             str = ecalloc(char *, 1, len);
             loadfile->read(str, len);
             str[len - 1] = '\0';
@@ -638,6 +642,10 @@ static void P_loadWeaponCounters(SaveArchive &arc, player_t &p)
     arc << numCountedWeapons;
     if(numCountedWeapons)
     {
+        if(numCountedWeapons > 10000000)
+        {
+            throw std::runtime_error("Too many counted weapons");
+        }
         for(int i = 0; i < numCountedWeapons; i++)
         {
             auto   weaponCounter = ecalloc(WeaponCounter *, 1, sizeof(WeaponCounter));
@@ -1126,6 +1134,9 @@ static void P_ArchiveThinkers(SaveArchive &arc)
         Thinker::Type *thinkerType;
         Thinker       *newThinker;
 
+        if(num_thinkers > 10000000)
+            throw std::runtime_error("Too many thinkers");
+
         // allocate thinker table
         thinker_p = ecalloc(Thinker **, num_thinkers + 1, sizeof(Thinker *));
 
@@ -1502,6 +1513,11 @@ static void P_UnArchiveSoundSequences(SaveArchive &arc)
     // get sequence count
     arc << count;
 
+    if(count > 10000000)
+    {
+        throw std::runtime_error("Too many sound sequences");
+    }
+
     // unarchive all sequences; the sound sequence code takes care of
     // distinguishing any special sequences (such as environmental) for us.
     for(i = 0; i < count; ++i)
@@ -1532,6 +1548,8 @@ static void P_ArchiveButtons(SaveArchive &arc)
     // When loading, if not equal, we need to realloc buttonlist
     if(arc.isLoading() && numsaved > 0 && numsaved != numbuttonsalloc)
     {
+        if(numsaved > 10000000)
+            throw std::runtime_error("Too many button-switches");
         buttonlist      = erealloc(button_t *, buttonlist, numsaved * sizeof(button_t));
         numbuttonsalloc = numsaved;
     }
@@ -1563,23 +1581,31 @@ static void P_ArchiveACS(SaveArchive &arc)
 
 static constexpr size_t SAVESTRINGSIZE = 24;
 
-void P_SaveCurrentLevel(char *filename, char *description)
+void P_SaveCurrentLevel(char *filename, char *description, PODCollection<byte> *memoryBackup)
 {
-    int         i;
-    char        name2[VERSIONSIZE];
-    const char *fn;
-    OutBuffer   savefile;
-    SaveArchive arc(&savefile);
+    int             i;
+    char            name2[VERSIONSIZE];
+    const char     *fn;
+    OutBuffer       savefile;
+    OutMemoryBuffer backupBuffer;
 
-    if(!savefile.createFile(filename, 512 * 1024, OutBuffer::NENDIAN))
+    bool        saveToFile = !memoryBackup;
+    IOutBuffer *outBuffer  = memoryBackup ? &backupBuffer : static_cast<IOutBuffer *>(&savefile);
+
+    SaveArchive arc(outBuffer);
+
+    if(saveToFile)
     {
-        const char *str = errno ? strerror(errno) : FC_ERROR "Could not save game: Error unknown";
-        doom_printf("%s", str);
-        return;
-    }
+        if(!savefile.createFile(filename, 512 * 1024, OutBuffer::NENDIAN))
+        {
+            const char *str = errno ? strerror(errno) : FC_ERROR "Could not save game: Error unknown";
+            doom_printf("%s", str);
+            return;
+        }
 
-    // Enable buffered IO exceptions
-    savefile.setThrowing(true);
+        // Enable buffered IO exceptions
+        savefile.setThrowing(true);
+    }
 
     try
     {
@@ -1655,7 +1681,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
 
         byte options[GAME_OPTION_SIZE];
         G_WriteOptions(options); // killough 3/1/98: save game options
-        savefile.write(options, sizeof(options));
+        outBuffer->write(options, sizeof(options));
 
         // killough 11/98: save entire word
         arc << leveltime;
@@ -1695,19 +1721,26 @@ void P_SaveCurrentLevel(char *filename, char *description)
         doom_printf("%s", str);
 
         // Close the file and remove it
-        savefile.setThrowing(false);
-        savefile.close();
-        remove(filename);
+        if(saveToFile)
+        {
+            savefile.setThrowing(false);
+            savefile.close();
+
+            remove(filename);
+        }
         return;
     }
 
     // Close the save file
-    savefile.close();
+    if(saveToFile)
+        savefile.close();
+    else
+        *memoryBackup = backupBuffer.takeData();
 
     // Check the heap.
     Z_CheckHeap();
 
-    if(!hub_changelevel)                          // sf: no 'game saved' message for hubs
+    if(saveToFile && !hub_changelevel)            // sf: no 'game saved' message for hubs
         doom_printf("%s", DEH_String("GGSAVED")); // Ty 03/27/98 - externalized
 }
 
@@ -1716,20 +1749,42 @@ void P_SaveCurrentLevel(char *filename, char *description)
 // Loading -- Main Routine
 //
 
-void P_LoadGame(const char *filename)
+void P_LoadGame(const char *filename, const PODCollection<byte> *backup)
 {
-    int         i;
-    InBuffer    loadfile;
-    SaveArchive arc(&loadfile);
+    int            i;
+    IInBuffer     *inBuffer;
+    InBuffer       loadfile;
+    InMemoryBuffer memoryBuffer;
 
-    if(!loadfile.openFile(filename, InBuffer::NENDIAN))
+    bool loadFromFile = !backup;
+
+    if(loadFromFile)
+        inBuffer = &loadfile;
+    else
     {
-        doom_warningf("Failed to load savegame %s\n", filename);
-        return;
+        memoryBuffer.setData(backup);
+        inBuffer = &memoryBuffer;
     }
 
-    // Enable buffered IO exceptions
-    loadfile.setThrowing(true);
+    SaveArchive arc(inBuffer);
+
+    PODCollection<byte> backupBuffer;
+    if(loadFromFile)
+    {
+        if(!loadfile.openFile(filename, InBuffer::NENDIAN))
+        {
+            doom_warningf("Failed to load savegame %s\n", filename);
+            return;
+        }
+
+        char backupname[SAVESTRINGSIZE] = "backup";
+
+        if((usergame || (demoplayback && !netgame)) && gamestate == GS_LEVEL)
+            P_SaveCurrentLevel(nullptr, backupname, &backupBuffer);
+
+        // Enable buffered IO exceptions
+        loadfile.setThrowing(true);
+    }
 
     try
     {
@@ -1863,7 +1918,8 @@ void P_LoadGame(const char *filename)
 
                 C_Puts(msg.constPtr());
                 G_LoadGameErr(msg.constPtr());
-                loadfile.close();
+                if(loadFromFile)
+                    loadfile.close();
 
                 return;
             }
@@ -1899,7 +1955,7 @@ void P_LoadGame(const char *filename)
 
         /* cph 2001/05/23 - Must read options before we set up the level */
         byte options[GAME_OPTION_SIZE];
-        loadfile.read(options, sizeof(options));
+        inBuffer->read(options, sizeof(options));
 
         G_ReadOptions(options);
 
@@ -1958,7 +2014,23 @@ void P_LoadGame(const char *filename)
     }
     catch(const std::exception &e)
     {
+        if(loadFromFile && !backupBuffer.isEmpty())
+        {
+            P_LoadGame(nullptr, &backupBuffer);
+
+            return;
+        }
         I_Error("P_LoadGame: failed loading game: %s\n", e.what());
+    }
+    catch(BufferedIOException &e)
+    {
+        if(loadFromFile && !backupBuffer.isEmpty())
+        {
+            doom_warningf("P_LoadGame: failed loading game: %s\n", e.GetMessage());
+            P_LoadGame(nullptr, &backupBuffer);
+            return;
+        }
+        I_Error("P_LoadGame: failed loading game: %s\n", e.GetMessage());
     }
     catch(...)
     {
@@ -1966,7 +2038,8 @@ void P_LoadGame(const char *filename)
         I_Error("P_LoadGame: Savegame read error\n");
     }
 
-    loadfile.close();
+    if(loadFromFile)
+        loadfile.close();
 
     if(::setsizeneeded)
         R_ExecuteSetViewSize();
@@ -1993,6 +2066,9 @@ void P_LoadGame(const char *filename)
     //  for 'seamless' travel between levels
     if(::hub_changelevel)
         P_RestorePlayerPosition();
+
+    if(!loadFromFile && backup)
+        doom_warningf("Failed loading damaged save game");
 }
 
 //----------------------------------------------------------------------------

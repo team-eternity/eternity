@@ -330,7 +330,7 @@ static void MN_readSaveStrings()
         for(int j = 0; j < MIN_MAXPLAYERS; j++)
             arc << bdummy;
 
-        auto foo = arc.getLoadFile()->tell();
+        auto foo = arc.getLoadFile()->itell();
 
         // Music num.
         if(arc.saveVersion() < 20)
