@@ -432,6 +432,17 @@ ACSVM::ModuleName ACSEnvironment::getModuleName(char const *str, size_t len)
 }
 
 //
+// ACSEnvironment::getScopeID
+//
+ACSVM::ScopeID ACSEnvironment::getScopeID(ACSVM::Word mapnum) const
+{
+    if(mapnum)
+        return ACSVM::ScopeID(0, 0, mapnum);
+    else
+        return ACSVM::ScopeID(0, 0, gamemap);
+}
+
+//
 // ACSEnvironment::getScriptTypeACS0
 //
 std::pair<ACSVM::Word /*type*/, ACSVM::Word /*name*/> //

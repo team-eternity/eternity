@@ -199,6 +199,8 @@ public:
 
     virtual ACSVM::ModuleName getModuleName(char const *str, size_t len);
 
+    virtual ACSVM::ScopeID getScopeID(ACSVM::Word mapnum) const;
+
     virtual std::pair<ACSVM::Word /*type*/, ACSVM::Word /*name*/> getScriptTypeACS0(ACSVM::Word name);
     virtual ACSVM::Word                                           getScriptTypeACSE(ACSVM::Word type);
 
