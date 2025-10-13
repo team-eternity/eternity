@@ -372,6 +372,27 @@ bool E_PlayerHasAnyWeapons(const player_t &player)
 }
 
 //
+// Check if player has any weapons left
+// if not and setemptyweapon is true, give the "Unknown" dummy weapon
+//
+bool E_PlayerHasAnyWeapons(player_t &player, bool setemptyweapon)
+{
+    bool hasanyweapon = E_PlayerHasAnyWeapons(player);
+    if(!hasanyweapon && setemptyweapon)
+    {
+        weaponinfo_t *emptyWeapon = E_WeaponForName("Unknown");
+        if(emptyWeapon != nullptr)
+        {
+            E_GiveWeapon(player, emptyWeapon);
+            player.pendingweapon     = emptyWeapon;
+            player.pendingweaponslot = E_FindFirstWeaponSlot(player, emptyWeapon);
+        }
+    }
+
+    return hasanyweapon;
+}
+
+//
 // If it doesn't have an alt atkstate, it can't have an alt fire
 //
 bool E_WeaponHasAltFire(const weaponinfo_t *wp)

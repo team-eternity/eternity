@@ -861,30 +861,6 @@ bool ACS_CF_GetCVarString(ACS_CF_ARGS)
 }
 
 //
-// int CheckInventory(str itemname);
-//
-bool ACS_CF_CheckInventory(ACS_CF_ARGS)
-{
-    auto          info     = &static_cast<ACSThread *>(thread)->info;
-    char const   *itemname = thread->scopeMap->getString(argV[0])->str;
-    itemeffect_t *item     = E_ItemEffectForName(itemname);
-
-    // We could use E_GetItemOwnedAmountName but let's inform the player if stuff's broke
-    if(!item)
-    {
-        doom_printf("ACS_CF_CheckInventory: Inventory item '%s' not found\a\n", itemname);
-        thread->dataStk.push(0);
-        return false;
-    }
-
-    if(!info->mo || !info->mo->player)
-        thread->dataStk.push(0);
-    else
-        thread->dataStk.push(E_GetItemOwnedAmount(*info->mo->player, item));
-    return false;
-}
-
-//
 // ACS_GetLevelProp
 //
 uint32_t ACS_GetLevelProp(uint32_t var)
@@ -2654,6 +2630,85 @@ bool ACS_CF_StopSound(ACS_CF_ARGS)
 }
 
 //
+// int CheckInventory(str itemname);
+//
+bool ACS_CF_CheckInventory(ACS_CF_ARGS)
+{
+    auto          info     = &static_cast<ACSThread *>(thread)->info;
+    char const   *itemname = thread->scopeMap->getString(argV[0])->str;
+    itemeffect_t *item     = E_ItemEffectForName(itemname);
+    const int     powernum = E_StrToNumLinear(powerStrings, NUMPOWERS, itemname);
+
+    // We could use E_GetItemOwnedAmountName but let's inform the player if stuff's broke
+    // If the item doesn't exist as an item or a power, complain
+    if(!item && powernum == NUMPOWERS)
+    {
+        doom_printf("ACS_CF_CheckInventory: Inventory item '%s' not found\a\n", itemname);
+        thread->dataStk.push(0);
+        return false;
+    }
+
+    auto checkInventory = [item, powernum](player_t *player) -> int {
+        if(powernum != NUMPOWERS)
+        {
+            // Check power directly
+            return player->powers[powernum].infinite ? -1 : player->powers[powernum].tics;
+        }
+        else
+        {
+            int           powerNum;
+            const char   *powerStr;
+            itemeffect_t *wp;
+
+            // Check item based on its class and properties
+            switch(item->getInt("class", ITEMFX_NONE))
+            {
+                // If health, return player current health
+            case ITEMFX_HEALTH:
+                return player->health;
+
+                // If armor, return player current armor
+            case ITEMFX_ARMOR:
+                return player->armorpoints;
+
+                // If ammo, return current ammo amount for the ammo type designated
+            case ITEMFX_AMMO:
+                return E_GetItemOwnedAmount(*player, E_ItemEffectForName(item->getString("ammo", "")));
+
+                // If power artifact, return remaining duration
+                // If power is infinite or strength/silencer, return -1
+            case ITEMFX_POWER:
+                powerStr = item->getString("type", "");
+                if(!powerStr || !strcmp(powerStr, ""))
+                    return 0; // There hasn't been a designated power type
+                if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
+                    return 0; // There's no power for the type provided
+
+                // If the power is infinite, return -1, otherwise return remaining tics
+                return player->powers[powerNum].infinite || powernum == pw_strength || powernum == pw_silencer ?
+                           -1 :
+                           player->powers[powerNum].tics;
+
+                // If weapon giver, return current weapon amount for the weapon designated
+            case ITEMFX_WEAPONGIVER:
+                wp = E_ItemEffectForName(item->getString("weapon", ""));
+                return wp ? E_GetItemOwnedAmount(*player, wp) : 0;
+
+                // If another artifact, return current amount owned
+            default: return E_GetItemOwnedAmount(*player, item);
+            }
+        }
+    };
+
+    if(!info->mo || !info->mo->player)
+        thread->dataStk.push(0);
+    else
+        thread->dataStk.push(checkInventory(info->mo->player));
+
+    return false;
+}
+
+//
 // void GiveInventory(str itemname, int amount);
 //
 bool ACS_CF_GiveInventory(ACS_CF_ARGS)
@@ -2664,6 +2719,7 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
     itemeffect_t *const item     = E_ItemEffectForName(itemname);
     const int           powernum = E_StrToNumLinear(powerStrings, NUMPOWERS, itemname);
 
+    // If the item doesn't exist as an item or a power, complain
     if(!item && powernum == NUMPOWERS)
     {
         doom_printf("ACS_CF_GiveInventory: Inventory item '%s' not found\a\n", itemname);
@@ -2677,17 +2733,43 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
     auto giveToPlayer = [item, powernum, amount](player_t *player) {
         if(powernum != NUMPOWERS)
         {
+            // Give power directly with amount as duration in tics
             P_GivePower(*player, powernum, amount, false, true);
         }
         else
         {
+            // Give item based on its class and properties
             switch(item->getInt("class", ITEMFX_NONE))
             {
-            case ITEMFX_HEALTH: P_GiveBody(*player, item, amount); break;
-            case ITEMFX_ARMOR:  P_GiveArmor(*player, item, amount); break;
-            case ITEMFX_AMMO:   P_GiveAmmoPickup(*player, item, false, 0, amount); break;
-            case ITEMFX_POWER:  P_GivePowerForItem(*player, item, amount); break;
-            default:            E_GiveInventoryItem(*player, item, amount); break;
+                // If health, give healthamount * itemamount, as usually
+            case ITEMFX_HEALTH:
+                P_GiveBody(*player, item, amount);
+                break;
+
+                // If armor, give saveamount * itemamount, as usually
+            case ITEMFX_ARMOR:
+                P_GiveArmor(*player, item, amount);
+                break;
+
+                // If ammo, give ammoamount * itemamount, skill levels affect how much is given
+            case ITEMFX_AMMO:
+                P_GiveAmmoPickup(*player, item, false, 0, amount);
+                break;
+
+                // If power artifact, give duration * itemamount
+                // If power artifact is not additive, amount is igored and power has fixed duration
+            case ITEMFX_POWER:
+                P_GivePowerForItem(*player, item, amount);
+                break;
+
+                // If weapon giver, give the weapon and ammo * itemamount
+                // Skill levels affect how much ammo is given
+            case ITEMFX_WEAPONGIVER:
+                P_GiveWeaponWithGiver(*player, item, amount);
+                break;
+
+                // If another artifact, just give it to the player
+            default: E_GiveInventoryItem(*player, item, amount); break;
             }
         }
     };
@@ -2720,6 +2802,7 @@ bool ACS_CF_TakeInventory(ACS_CF_ARGS)
     itemeffect_t *const item     = E_ItemEffectForName(itemname);
     const int           powernum = E_StrToNumLinear(powerStrings, NUMPOWERS, itemname);
 
+    // If the item doesn't exist as an item or a power, complain
     if(!item && powernum == NUMPOWERS)
     {
         doom_printf("ACS_CF_TakeInventory: Inventory item '%s' not found\a\n", itemname);
@@ -2734,37 +2817,51 @@ bool ACS_CF_TakeInventory(ACS_CF_ARGS)
     auto takeFromPlayer = [item, powernum, amount, itemname](player_t *player) {
         if(powernum != NUMPOWERS)
         {
+            // Take power directly with amount as duration in tics
             P_TakePower(*player, powernum, amount);
         }
         else
         {
+            // Take item based on its class and properties
             switch(item->getInt("class", ITEMFX_NONE))
             {
-            case ITEMFX_HEALTH: P_TakeBody(*player, item, amount); break;
-            case ITEMFX_ARMOR:  P_TakeArmor(*player, item, amount); break;
-            case ITEMFX_AMMO:   P_TakeAmmoPickup(*player, item, amount); break;
-            case ITEMFX_POWER:  P_TakePowerForItem(*player, item, amount); break;
+                // If health, take healthamount * itemamount, but player health can't go below 1
+            case ITEMFX_HEALTH:
+                P_TakeBody(*player, item, amount);
+                break;
+
+                // If armor, take saveamount * itemamount, if player armor goes below 0, they lose armor properties
+            case ITEMFX_ARMOR:
+                P_TakeArmor(*player, item, amount);
+                break;
+
+                // If ammo, take ammoamount * itemamount, skill levels affect how much is taken
+            case ITEMFX_AMMO:
+                P_TakeAmmoPickup(*player, item, amount);
+                break;
+
+                // If power artifact, take duration * itemamount, infinite powers are removed completely
+            case ITEMFX_POWER:
+                P_TakePowerForItem(*player, item, amount);
+                break;
+
+                // If weapon giver, take the weapon and ammo * itemamount, if no weapons are left, take ammo only
+                // Skill levels affect how much ammo is taken
+            case ITEMFX_WEAPONGIVER:
+                P_TakeWeaponWithGiver(*player, item, amount);
+                break;
+
+                // If another artifact or backpack, just remove it from inventory
             default:
                 if(strcmp(itemname, ARTI_BACKPACKITEM) == 0)
                     E_RemoveBackpack(*player);
                 else
-                {
                     E_RemoveInventoryItem(*player, item, amount, true);
-
-                    // Give the player a empty weapon if they have no weapons left
-                    if(!E_PlayerHasAnyWeapons(*player))
-                    {
-                        weaponinfo_t *emptyWeapon = E_WeaponForName("Unknown");
-                        if(emptyWeapon != nullptr)
-                        {
-                            E_GiveWeapon(*player, emptyWeapon);
-                            player->pendingweapon     = emptyWeapon;
-                            player->pendingweaponslot = E_FindFirstWeaponSlot(*player, emptyWeapon);
-                        }
-                    }
-                }
                 break;
             }
+
+            // Give the player a empty weapon if they have no weapons left
+            E_PlayerHasAnyWeapons(*player, true);
         }
     };
 
@@ -2799,30 +2896,11 @@ bool ACS_CF_ClearInventory(ACS_CF_ARGS)
         // Take backpack
         E_RemoveBackpack(*player);
 
-        // Clear inventory slots
-        int maxItemCount = E_GetInventoryAllocSize();
-        for(int idx = 0; idx != maxItemCount; ++idx)
-        {
-            itemeffect_t *item = E_EffectForInventoryItemID(idx);
+        // Clear inventory slots, ignoring artifacts with UNDROPPABLE flag
+        E_ClearInventory(player, false);
 
-            if (item == nullptr)
-                continue;
-
-            // Dont clear artifacts that are undroppable (except for weapons)
-            if(!(item->getInt(keyUndroppable, 0) && item->getInt(keyArtifactType, ARTI_NORMAL) != ARTI_WEAPON))
-            {
-                E_RemoveInventoryItem(*player, item, -1);
-            }
-        }
-
-        // Give player empty weapon and set as pending
-        weaponinfo_t *emptyWeapon = E_WeaponForName("Unknown");
-        if(emptyWeapon != nullptr)
-        {
-            E_GiveWeapon(*player, emptyWeapon);
-            player->pendingweapon     = emptyWeapon;
-            player->pendingweaponslot = E_FindFirstWeaponSlot(*player, emptyWeapon);
-        }
+        // Give the player a empty weapon if they have no weapons left
+        E_PlayerHasAnyWeapons(*player, true);
     };
 
     if(info->mo)
@@ -2839,6 +2917,109 @@ bool ACS_CF_ClearInventory(ACS_CF_ARGS)
                 clearInventory(&players[pnum]);
         }
     }
+
+    return false;
+}
+
+//
+// void UseInventory(str itemname);
+//
+bool ACS_CF_UseInventory(ACS_CF_ARGS)
+{
+    auto        info     = &static_cast<ACSThread *>(thread)->info;
+    char const *itemname = thread->scopeMap->getString(argV[0])->str;
+
+    auto useInventory = [itemname](player_t *player) -> int {
+        // Check if the player has the item and try to use it
+        if(E_GetItemOwnedAmountName(*player, itemname) >= 1)
+            return E_TryUseItem(*player, E_ItemIDForName(itemname));
+
+        return 0;
+    };
+
+    if(!info->mo || !info->mo->player)
+        thread->dataStk.push(0);
+    else
+        thread->dataStk.push(useInventory(info->mo->player));
+
+    return false;
+}
+
+//
+// void GetMaxInventory(int tid, str itemname);
+//
+bool ACS_CF_GetMaxInventory(ACS_CF_ARGS)
+{
+    auto          info     = &static_cast<ACSThread *>(thread)->info;
+    const int     tid      = argV[0]; // FIXME: Needs to be adapted for nonplayer Mobjs
+    char const   *itemname = thread->scopeMap->getString(argV[1])->str;
+    itemeffect_t *item     = E_ItemEffectForName(itemname);
+    const int     powernum = E_StrToNumLinear(powerStrings, NUMPOWERS, itemname);
+
+    // If the item doesn't exist as an item or a power, complain
+    if(!item && powernum == NUMPOWERS)
+    {
+        doom_printf("ACS_CF_GetMaxInventory: Inventory item '%s' not found\a\n", itemname);
+        thread->dataStk.push(0);
+        return false;
+    }
+
+    auto getMaxInventory = [item, powernum](player_t *player) -> int {
+        if(powernum != NUMPOWERS)
+        {
+            // If power itself is infinite by default, return -1 (infinite)
+            if(powernum == pw_strength || powernum == pw_silencer)
+                return -1;
+
+            return 1;
+        }
+        else
+        {
+            int         powerNum, maxAmount, maxSaveAmount;
+            const char *powerStr;
+
+            switch(item->getInt("class", ITEMFX_NONE))
+            {
+                // If health, retrun maxamount if it exists, otherwise amount
+                // If health item uses player @maxhealth or @superhealth, it will be handled in E_GetPClassHealth
+            case ITEMFX_HEALTH:
+                maxAmount = E_GetPClassHealth(*item, "maxamount", *player->pclass, 0);
+                return maxAmount ? maxAmount : E_GetPClassHealth(*item, "amount", *player->pclass, 0);
+
+                // If armor, return maxsaveamount if it exists, otherwise saveamount
+            case ITEMFX_ARMOR:
+                maxSaveAmount = item->getInt("maxsaveamount", 0);
+                return maxSaveAmount ? maxSaveAmount : item->getInt("saveamount", 0);
+
+                // If ammo, return max amount for the ammo type
+            case ITEMFX_AMMO:
+                return E_GetMaxAmountForArtifact(*player, E_ItemEffectForName(item->getString("ammo", "")));
+
+                // If power artifact, retrun -1 for permanent powers or strength/silencer, otherwise duration in seconds
+            case ITEMFX_POWER:
+                powerStr = item->getString("type", "");
+                if(!powerStr || !strcmp(powerStr, ""))
+                    return 0; // There hasn't been a designated power type
+                if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
+                    return 0; // There's no power for the type provided
+
+                // If power is permanent or it's strength/silencer, return -1 (infinite)
+                if(item->getInt("permanent", 0) || powerNum == pw_strength || powerNum == pw_silencer)
+                    return -1;
+
+                // Otherwise, return duration of the power artifact in seconds
+                return item->getInt("duration", 0);
+
+                // If another artifact, return max amount for that artifact
+            default: return E_GetMaxAmountForArtifact(*player, item);
+            }
+        }
+    };
+
+    if(!info->mo || !info->mo->player)
+        thread->dataStk.push(0);
+    else
+        thread->dataStk.push(getMaxInventory(info->mo->player));
 
     return false;
 }

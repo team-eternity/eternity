@@ -1865,14 +1865,15 @@ static useaction_t *E_addUseAction(itemeffect_t *artifact)
 //
 // E_TryUseItem
 //
-// Tries to use the currently selected item.
+// Tries to use the currently selected item
+// Returns true if item was successfully used, otherwise false
 //
-void E_TryUseItem(player_t &player, inventoryitemid_t ID)
+bool E_TryUseItem(player_t &player, inventoryitemid_t ID)
 {
     invbarstate_t &invbarstate = player.invbarstate;
     itemeffect_t  *artifact    = E_EffectForInventoryItemID(ID);
     if(!artifact)
-        return;
+        return false;
     if(E_getItemEffectType(artifact) == ITEMFX_ARTIFACT)
     {
         if(artifact->getInt(keyArtifactType, -1) == ARTI_NORMAL)
@@ -1898,7 +1899,7 @@ void E_TryUseItem(player_t &player, inventoryitemid_t ID)
                     success = P_GivePowerForItem(player, effect);
                     break;
                 default: //
-                    return;
+                    return false;
                 }
             }
 
@@ -1952,8 +1953,11 @@ void E_TryUseItem(player_t &player, inventoryitemid_t ID)
                 // FIXME: Make this behaviour optional, or remove
                 E_MoveInventoryCursor(player, -1, player.inv_ptr);
             }
+
+            return success;
         }
     }
+    return false;
 }
 
 //
@@ -2397,9 +2401,9 @@ static void E_removeInventorySlot(const player_t *player, inventoryslot_t *slot)
 //
 // Remove some amount of a specific item from the player's inventory, if
 // possible. If amount is less than zero, then all of the item will be removed.
-// 
-// If removemore is true, then if the amount is greater than what is actually 
-// in the inventory, everything will be removed. For compatibility reasons, 
+//
+// If removemore is true, then if the amount is greater than what is actually
+// in the inventory, everything will be removed. For compatibility reasons,
 // this parameter is false by default.
 //
 itemremoved_e E_RemoveInventoryItem(const player_t &player, const itemeffect_t *artifact, int amount, bool removemore)
@@ -2479,12 +2483,20 @@ void E_InventoryEndHub(const player_t *player)
 //
 // Completely clear a player's inventory.
 //
-void E_ClearInventory(player_t *player)
+void E_ClearInventory(player_t *player, bool undroppable)
 {
     invbarstate_t &invbarstate = player->invbarstate;
 
     for(inventoryindex_t i = 0; i < e_maxitemid; i++)
     {
+        if(!undroppable)
+        {
+            itemeffect_t *item = E_EffectForInventoryIndex(*player, i);
+            if(!(item &&
+                 !(item->getInt(keyUndroppable, 0) && item->getInt(keyArtifactType, ARTI_NORMAL) != ARTI_WEAPON)))
+                continue;
+        }
+
         player->inventory[i].amount = 0;
         player->inventory[i].item   = -1;
         // Also unmorph inventory

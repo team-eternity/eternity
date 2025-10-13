@@ -459,6 +459,89 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropp
     return gaveammo;
 }
 
+bool P_GiveWeaponWithGiver(player_t &player, itemeffect_t *giver, bool ignoreskill, int itemamount)
+{
+    bool gaveammo = false;
+
+    weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
+    if(!wp)
+    {
+        doom_printf(FC_ERROR "Invalid weaponinfo given in weapongiver: '%s'\a\n", giver->getKey());
+        return false;
+    }
+
+    // Give weapon
+    E_GiveWeapon(player, wp);
+
+    // Give ammo
+    itemeffect_t *ammogiven = nullptr;
+    while((ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
+    {
+        itemeffect_t *ammo     = nullptr;
+        int           giveammo = 0;
+
+        if(!(ammo = E_ItemEffectForName(ammogiven->getString("type", ""))))
+        {
+            doom_printf(FC_ERROR "Invalid ammo type given in weapongiver: '%s'\a\n", giver->getKey());
+            return false;
+        }
+        else if((giveammo = ammogiven->getInt("ammo.give", -1) * itemamount) < 0)
+        {
+            doom_printf(FC_ERROR "Negative/unspecified ammo amount given for weapongiver: "
+                                 "'%s', ammo: '%s'\a\n",
+                        giver->getKey(), ammo->getKey());
+            return false;
+        }
+
+        // apply ammo multiplier for baby/nightmare skill
+        if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
+            giveammo = static_cast<int>(floor(giveammo * GameModeInfo->skillAmmoMultiplier));
+
+        gaveammo |= giveammo ? E_GiveInventoryItem(player, ammo, giveammo) : false;
+    }
+
+    return gaveammo;
+}
+
+bool P_TakeWeaponWithGiver(player_t &player, itemeffect_t *giver, bool ignoreskill, int itemamount)
+{
+    bool takeammo = false;
+
+    // Take weapon, if can
+    itemeffect_t *wp = E_ItemEffectForName(giver->getString("weapon", ""));
+    if(wp)
+        E_RemoveInventoryItem(player, wp, -1, true);
+
+    // Take ammo
+    itemeffect_t *ammogiven = nullptr;
+    while((ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
+    {
+        itemeffect_t *ammo     = nullptr;
+        int           takeammo = 0;
+
+        if(!(ammo = E_ItemEffectForName(ammogiven->getString("type", ""))))
+        {
+            doom_printf(FC_ERROR "Invalid ammo type given in weapongiver: '%s'\a\n", giver->getKey());
+            return false;
+        }
+        else if((takeammo = ammogiven->getInt("ammo.give", -1) * itemamount) < 0)
+        {
+            doom_printf(FC_ERROR "Negative/unspecified ammo amount given for weapongiver: "
+                                 "'%s', ammo: '%s'\a\n",
+                        giver->getKey(), ammo->getKey());
+            return false;
+        }
+
+        // apply ammo multiplier for baby/nightmare skill
+        if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
+            takeammo = static_cast<int>(floor(takeammo * GameModeInfo->skillAmmoMultiplier));
+
+        takeammo |= takeammo ? E_RemoveInventoryItem(player, ammo, takeammo, true) : false;
+    }
+
+    return takeammo;
+}
+
 //
 // P_GiveBody
 //

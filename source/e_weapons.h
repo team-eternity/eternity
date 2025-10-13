@@ -202,6 +202,7 @@ bool E_PlayerOwnsWeaponForDEHNum(const player_t &player, const int dehnum);
 bool E_PlayerOwnsWeaponInSlot(const player_t &player, const int slot);
 int  E_NumWeaponsInSlotPlayerOwns(const player_t &player, const int slot);
 bool E_PlayerHasAnyWeapons(const player_t &player);
+bool E_PlayerHasAnyWeapons(player_t &player, bool setEmptyWeapon);
 
 state_t *E_GetStateForWeaponInfo(const weaponinfo_t *wi, const char *label);
 
