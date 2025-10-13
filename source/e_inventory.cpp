@@ -2397,8 +2397,12 @@ static void E_removeInventorySlot(const player_t *player, inventoryslot_t *slot)
 //
 // Remove some amount of a specific item from the player's inventory, if
 // possible. If amount is less than zero, then all of the item will be removed.
+// 
+// If removemore is true, then if the amount is greater than what is actually 
+// in the inventory, everything will be removed. For compatibility reasons, 
+// this parameter is false by default.
 //
-itemremoved_e E_RemoveInventoryItem(const player_t &player, const itemeffect_t *artifact, int amount)
+itemremoved_e E_RemoveInventoryItem(const player_t &player, const itemeffect_t *artifact, int amount, bool removemore)
 {
     inventoryslot_t *slot = E_InventorySlotForItem(player, artifact);
 
@@ -2410,9 +2414,14 @@ itemremoved_e E_RemoveInventoryItem(const player_t &player, const itemeffect_t *
     if(amount < 0)
         amount = slot->amount;
 
-    // don't own that many?
     if(slot->amount < amount)
-        return INV_NOTREMOVED;
+    {
+        if(removemore)
+            amount = slot->amount;
+        else
+            // don't own that many?
+            return INV_NOTREMOVED;
+    }
 
     itemremoved_e ret = INV_REMOVED;
 

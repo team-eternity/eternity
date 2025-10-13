@@ -302,7 +302,7 @@ enum autousehealthrestrict_flags : unsigned
 };
 
 // Remove an item from a player's inventory.
-itemremoved_e E_RemoveInventoryItem(const player_t &player, const itemeffect_t *artifact, int amount);
+itemremoved_e E_RemoveInventoryItem(const player_t &player, const itemeffect_t *artifact, int amount, bool removemore = false);
 
 // Call at the end of a hub, or a level that isn't part of a hub, to clear
 // out items that don't persist.

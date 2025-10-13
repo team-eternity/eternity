@@ -66,6 +66,8 @@
 #include "v_misc.h"
 #include "doomstat.h"
 #include "metaapi.h"
+#include "e_lib.h"
+#include "e_player.h"
 
 #include "ACSVM/Scope.hpp"
 #include "ACSVM/Thread.hpp"
@@ -2660,8 +2662,9 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
     char const         *itemname = thread->scopeMap->getString(argV[0])->str;
     const int           amount   = argV[1];
     itemeffect_t *const item     = E_ItemEffectForName(itemname);
+    const int           powernum = E_StrToNumLinear(powerStrings, NUMPOWERS, itemname);
 
-    if(!item)
+    if(!item && powernum == NUMPOWERS)
     {
         doom_printf("ACS_CF_GiveInventory: Inventory item '%s' not found\a\n", itemname);
         return false;
@@ -2671,14 +2674,21 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
     if(amount <= 0)
         return false;
 
-    auto giveToPlayer = [item, amount](player_t *player) {
-        switch(item->getInt("class", ITEMFX_NONE))
+    auto giveToPlayer = [item, powernum, amount](player_t *player) {
+        if(powernum != NUMPOWERS)
         {
-        case ITEMFX_HEALTH: P_GiveBody(*player, item, amount); break;
-        case ITEMFX_ARMOR:  P_GiveArmor(*player, item, amount); break;
-        case ITEMFX_AMMO:   P_GiveAmmoPickup(*player, item, false, 0, amount); break;
-        case ITEMFX_POWER:  P_GivePowerForItem(*player, item, amount); break;
-        default:            E_GiveInventoryItem(*player, item, amount); break;
+            P_GivePower(*player, powernum, amount, false, true);
+        }
+        else
+        {
+            switch(item->getInt("class", ITEMFX_NONE))
+            {
+            case ITEMFX_HEALTH: P_GiveBody(*player, item, amount); break;
+            case ITEMFX_ARMOR:  P_GiveArmor(*player, item, amount); break;
+            case ITEMFX_AMMO:   P_GiveAmmoPickup(*player, item, false, 0, amount); break;
+            case ITEMFX_POWER:  P_GivePowerForItem(*player, item, amount); break;
+            default:            E_GiveInventoryItem(*player, item, amount); break;
+            }
         }
     };
 
@@ -2708,35 +2718,68 @@ bool ACS_CF_TakeInventory(ACS_CF_ARGS)
     char const         *itemname = thread->scopeMap->getString(argV[0])->str;
     const int           amount   = argV[1];
     itemeffect_t *const item     = E_ItemEffectForName(itemname);
+    const int           powernum = E_StrToNumLinear(powerStrings, NUMPOWERS, itemname);
 
-    if(!item)
+    if(!item && powernum == NUMPOWERS)
     {
         doom_printf("ACS_CF_TakeInventory: Inventory item '%s' not found\a\n", itemname);
         return false;
     }
 
-    // Handle negative amounts: treat as 0 (don't remove anything)
-    if(amount <= 0)
+    // Handle negative amounts: treat as 0 (don't remove anything), unless it's a power
+    // If it's a power, negative means remove all
+    if(amount <= 0 && powernum == NUMPOWERS)
         return false;
 
-    auto alwaysRemove = [info, item, amount]() {
-        int owned = E_GetItemOwnedAmount(*info->mo->player, item);
-        // If amount exceeds what player has, take all they have
-        E_RemoveInventoryItem(*info->mo->player, item, emin(owned, amount));
+    auto takeFromPlayer = [item, powernum, amount, itemname](player_t *player) {
+        if(powernum != NUMPOWERS)
+        {
+            P_TakePower(*player, powernum, amount);
+        }
+        else
+        {
+            switch(item->getInt("class", ITEMFX_NONE))
+            {
+            case ITEMFX_HEALTH: P_TakeBody(*player, item, amount); break;
+            case ITEMFX_ARMOR:  P_TakeArmor(*player, item, amount); break;
+            case ITEMFX_AMMO:   P_TakeAmmoPickup(*player, item, amount); break;
+            case ITEMFX_POWER:  P_TakePowerForItem(*player, item, amount); break;
+            default:
+                if(strcmp(itemname, ARTI_BACKPACKITEM) == 0)
+                    E_RemoveBackpack(*player);
+                else
+                {
+                    E_RemoveInventoryItem(*player, item, amount, true);
+
+                    // Give the player a empty weapon if they have no weapons left
+                    if(!E_PlayerHasAnyWeapons(*player))
+                    {
+                        weaponinfo_t *emptyWeapon = E_WeaponForName("Unknown");
+                        if(emptyWeapon != nullptr)
+                        {
+                            E_GiveWeapon(*player, emptyWeapon);
+                            player->pendingweapon     = emptyWeapon;
+                            player->pendingweaponslot = E_FindFirstWeaponSlot(*player, emptyWeapon);
+                        }
+                    }
+                }
+                break;
+            }
+        }
     };
 
     if(info->mo)
     {
         // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
         if(info->mo->player)
-            alwaysRemove();
+            takeFromPlayer(info->mo->player);
     }
     else
     {
         for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
         {
             if(playeringame[pnum])
-                alwaysRemove();
+                takeFromPlayer(&players[pnum]);
         }
     }
     return false;

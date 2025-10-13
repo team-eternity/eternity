@@ -18,6 +18,10 @@ Features
   - damage type for blast (default: actor's MOD)
   Thanks to sink666 for the wish to have parameters in the pull request.
 * Added damage type (MOD) argument to A_BFGSpray (default: BFG_Splash).
+* The ACS function TakeInventory has been heavily improved. Now, it can be used to take all types of items, as well 
+  as health, armor, weapons, backpacks, and all types of power effects from the player. Also, if the function is 
+  passed a amount of item that is greater than the player actually has, the item will be taken away completely 
+  (previously, it was necessary to specify a number of items equal to what was in the player's inventory, which was a bug).
 
 Improvements
 ------------
