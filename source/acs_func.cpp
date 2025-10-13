@@ -2743,6 +2743,64 @@ bool ACS_CF_TakeInventory(ACS_CF_ARGS)
 }
 
 //
+// void ClearInventory();
+//
+bool ACS_CF_ClearInventory(ACS_CF_ARGS)
+{
+    const auto info = &static_cast<ACSThread *>(thread)->info;
+
+    auto clearInventory = [](player_t *player) {
+        // Take player armor
+        player->armorpoints = player->armorfactor = player->armordivisor = 0;
+
+        // Take backpack
+        E_RemoveBackpack(*player);
+
+        // Clear inventory slots
+        int maxItemCount = E_GetInventoryAllocSize();
+        for(int idx = 0; idx != maxItemCount; ++idx)
+        {
+            itemeffect_t *item = E_EffectForInventoryItemID(idx);
+
+            if (item == nullptr)
+                continue;
+
+            // Dont clear artifacts that are undroppable (except for weapons)
+            if(!(item->getInt(keyUndroppable, 0) && item->getInt(keyArtifactType, ARTI_NORMAL) != ARTI_WEAPON))
+            {
+                E_RemoveInventoryItem(*player, item, -1);
+            }
+        }
+
+        // Give player empty weapon and set as pending
+        weaponinfo_t *emptyWeapon = E_WeaponForName("Unknown");
+        if(emptyWeapon != nullptr)
+        {
+            E_GiveWeapon(*player, emptyWeapon);
+            player->pendingweapon     = emptyWeapon;
+            player->pendingweaponslot = E_FindFirstWeaponSlot(*player, emptyWeapon);
+        }
+    };
+
+    if(info->mo)
+    {
+        // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
+        if(info->mo->player)
+            clearInventory(info->mo->player);
+    }
+    else
+    {
+        for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
+        {
+            if(playeringame[pnum])
+                clearInventory(&players[pnum]);
+        }
+    }
+
+    return false;
+}
+
+//
 // ACS_thingCount
 //
 static uint32_t ACS_thingCount(mobjtype_t type, int32_t tid)

@@ -149,7 +149,7 @@ ACSEnvironment::ACSEnvironment() : dir{ nullptr }, global{ getGlobalScope(0) }, 
     addCodeDataACS0(139, {"W",       0, addCallFunc(ACS_CF_SetGravity)});
     addCodeDataACS0(140, {"",        1, addCallFunc(ACS_CF_SetAirControl)});
     addCodeDataACS0(141, {"W",       0, addCallFunc(ACS_CF_SetAirControl)});
-  //addCodeDataACS0(142, {"",        0, addCallFunc(ACS_CF_ClrInventory)});
+    addCodeDataACS0(142, {"",        0, addCallFunc(ACS_CF_ClearInventory)});
     addCodeDataACS0(143, {"",        2, addCallFunc(ACS_CF_GiveInventory)});
     addCodeDataACS0(144, {"WSW",     0, addCallFunc(ACS_CF_GiveInventory)});
     addCodeDataACS0(145, {"",        2, addCallFunc(ACS_CF_TakeInventory)});

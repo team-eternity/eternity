@@ -214,9 +214,10 @@ MetaKeyIndex keyInvBar               (KEY_INVBAR                 );
 MetaKeyIndex keyAmmoGiven            (KEY_AMMOGIVEN              );
 MetaKeyIndex keyAutouseHealthMode    (KEY_AUTOUSE_HEALTH_MODE    );
 MetaKeyIndex keyAutouseHealthRestrict(KEY_AUTOUSE_HEALTH_RESTRICT);
+MetaKeyIndex keyUndroppable          (KEY_UNDROPPABLE            );
+MetaKeyIndex keyArtifactType         (KEY_ARTIFACTTYPE           );
 
 // Static interened metatable keys
-static MetaKeyIndex keyArtifactType  (KEY_ARTIFACTTYPE  );
 static MetaKeyIndex keyFullAmountOnly(KEY_FULLAMOUNTONLY);
 static MetaKeyIndex keyInterHubAmount(KEY_INTERHUBAMOUNT);
 static MetaKeyIndex keyKeepDepleted  (KEY_KEEPDEPLETED  );
