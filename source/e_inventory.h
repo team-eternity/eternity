@@ -328,6 +328,8 @@ extern MetaKeyIndex keyInvBar;
 extern MetaKeyIndex keyAmmoGiven;
 extern MetaKeyIndex keyAutouseHealthRestrict;
 extern MetaKeyIndex keyAutouseHealthMode;
+extern MetaKeyIndex keyUndroppable;
+extern MetaKeyIndex keyArtifactType;
 
 //
 // EDF-Only Definitions

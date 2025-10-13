@@ -149,7 +149,7 @@ ACSEnvironment::ACSEnvironment() : dir{ nullptr }, global{ getGlobalScope(0) }, 
     addCodeDataACS0(139, {"W",       0, addCallFunc(ACS_CF_SetGravity)});
     addCodeDataACS0(140, {"",        1, addCallFunc(ACS_CF_SetAirControl)});
     addCodeDataACS0(141, {"W",       0, addCallFunc(ACS_CF_SetAirControl)});
-  //addCodeDataACS0(142, {"",        0, addCallFunc(ACS_CF_ClrInventory)});
+    addCodeDataACS0(142, {"",        0, addCallFunc(ACS_CF_ClearInventory)});
     addCodeDataACS0(143, {"",        2, addCallFunc(ACS_CF_GiveInventory)});
     addCodeDataACS0(144, {"WSW",     0, addCallFunc(ACS_CF_GiveInventory)});
     addCodeDataACS0(145, {"",        2, addCallFunc(ACS_CF_TakeInventory)});
@@ -429,6 +429,17 @@ ACSVM::ModuleName ACSEnvironment::getModuleName(char const *str, size_t len)
     int lump = dir->checkNumForName(str, lumpinfo_t::ns_acs);
 
     return { name, dir, static_cast<size_t>(lump) };
+}
+
+//
+// ACSEnvironment::getScopeID
+//
+ACSVM::ScopeID ACSEnvironment::getScopeID(ACSVM::Word mapnum) const
+{
+    if(mapnum)
+        return ACSVM::ScopeID(0, 0, mapnum);
+    else
+        return ACSVM::ScopeID(0, 0, gamemap);
 }
 
 //
@@ -871,22 +882,22 @@ bool ACS_TerminateScriptS(const char *str, uint32_t mapnum)
 class ACSSerial : public ACSVM::Serial
 {
 public:
-   explicit ACSSerial(SaveArchive &arc_) : arc{arc_} {}
+    explicit ACSSerial(SaveArchive &arc_) : arc{ arc_ } {}
 
-   virtual void read(char *data, std::size_t size)
-   {
-      if(arc.getLoadFile()->read(data, size) != size)
-         throw ACSVM::SerialError("failed read");
-   }
+    virtual void read(char *data, std::size_t size)
+    {
+        if(arc.getLoadFile()->read(data, size) != size)
+            throw ACSVM::SerialError("failed read");
+    }
 
-   virtual void write(char const *data, std::size_t size)
-   {
-      if(!arc.getSaveFile()->write(data, size))
-         throw ACSVM::SerialError("failed write");
-   }
+    virtual void write(char const *data, std::size_t size)
+    {
+        if(!arc.getSaveFile()->write(data, size))
+            throw ACSVM::SerialError("failed write");
+    }
 
 private:
-   SaveArchive &arc;
+    SaveArchive &arc;
 };
 
 //
@@ -899,22 +910,15 @@ void ACS_Archive(SaveArchive &arc)
 
     if(arc.isLoading())
     {
-        ACSSerial in{arc};
+        ACSSerial in{ arc };
 
-        try
-        {
-            in.loadHead();
-            ACSenv.loadState(in);
-            in.loadTail();
-        }
-        catch(ACSVM::SerialError const &e)
-        {
-            I_Error("ACS_Archive: %s\n", e.what());
-        }
+        in.loadHead();
+        ACSenv.loadState(in);
+        in.loadTail();
     }
     else if(arc.isSaving())
     {
-        ACSSerial out{arc};
+        ACSSerial out{ arc };
 
         // Enable debug signatures.
         out.signs = true;

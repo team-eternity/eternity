@@ -161,7 +161,7 @@ static void SaveHubLevel(void)
     if(!hublevel->tmpfile)
         hublevel->tmpfile = temp_hubfile();
 
-    P_SaveCurrentLevel(hublevel->tmpfile, hubdesc);
+    P_SaveCurrentLevel(hublevel->tmpfile, hubdesc, nullptr);
 }
 
 static void LoadHubLevel(char *levelname)
@@ -252,7 +252,7 @@ void P_SavePlayerPosition(player_t *player, int sectag)
 
     // save mobj so we can restore various bits of data
     // haleyjd 02/04/13: not legit for C++; must replace if rehabilitated
-#if 0   
+#if 0
    memcpy(&save_mobj, player->mo, sizeof(Mobj));
 #endif
 }

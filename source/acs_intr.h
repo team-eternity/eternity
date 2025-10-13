@@ -199,6 +199,8 @@ public:
 
     virtual ACSVM::ModuleName getModuleName(char const *str, size_t len);
 
+    virtual ACSVM::ScopeID getScopeID(ACSVM::Word mapnum) const;
+
     virtual std::pair<ACSVM::Word /*type*/, ACSVM::Word /*name*/> getScriptTypeACS0(ACSVM::Word name);
     virtual ACSVM::Word                                           getScriptTypeACSE(ACSVM::Word type);
 
@@ -423,6 +425,7 @@ bool ACS_CF_FixedSqrt(ACS_CF_ARGS);
 bool ACS_CF_StopSound(ACS_CF_ARGS);
 bool ACS_CF_GiveInventory(ACS_CF_ARGS);
 bool ACS_CF_TakeInventory(ACS_CF_ARGS);
+bool ACS_CF_ClearInventory(ACS_CF_ARGS);
 bool ACS_CF_ThingCount(ACS_CF_ARGS);
 bool ACS_CF_ThingCountName(ACS_CF_ARGS);
 bool ACS_CF_ThingCountSector(ACS_CF_ARGS);
