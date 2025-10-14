@@ -2765,7 +2765,7 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
                 // If weapon giver, give the weapon and ammo * itemamount
                 // Skill levels affect how much ammo is given
             case ITEMFX_WEAPONGIVER:
-                P_GiveWeaponWithGiver(*player, item, amount);
+                P_GiveWeaponByGiver(*player, item, amount);
                 break;
 
                 // If another artifact, just give it to the player
@@ -2809,9 +2809,9 @@ bool ACS_CF_TakeInventory(ACS_CF_ARGS)
         return false;
     }
 
-    // Handle negative amounts: treat as 0 (don't remove anything), unless it's a power
-    // If it's a power, negative means remove all
-    if(amount <= 0 && powernum == NUMPOWERS)
+    // if amount is 0, do nothing
+    // if amount is negative, it means take all
+    if(amount == 0)
         return false;
 
     auto takeFromPlayer = [item, powernum, amount, itemname](player_t *player) {
@@ -2848,7 +2848,7 @@ bool ACS_CF_TakeInventory(ACS_CF_ARGS)
                 // If weapon giver, take the weapon and ammo * itemamount, if no weapons are left, take ammo only
                 // Skill levels affect how much ammo is taken
             case ITEMFX_WEAPONGIVER:
-                P_TakeWeaponWithGiver(*player, item, amount);
+                P_TakeWeaponByGiver(*player, item, amount);
                 break;
 
                 // If another artifact or backpack, just remove it from inventory

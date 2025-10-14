@@ -42,8 +42,8 @@ enum
     LESSER_GOD_BREACH_DAMAGE = 1000,  // this one bypasses less cases but is there (P_DamageMobj)
 };
 
-bool P_GiveWeaponWithGiver(player_t &player, itemeffect_t *giver, bool ignoreskill, int itemamount = 1);
-bool P_TakeWeaponWithGiver(player_t &player, itemeffect_t *giver, bool ignoreskill, int itemamount = 1);
+bool P_GiveWeaponByGiver(player_t &player, itemeffect_t *giver, bool ignoreskill, int itemamount = 1);
+bool P_TakeWeaponByGiver(player_t &player, itemeffect_t *giver, bool ignoreskill, int itemamount = 1);
 bool P_GiveAmmoPickup(player_t &, const itemeffect_t *, bool, int, int itemamount = 1);
 bool P_TakeAmmoPickup(player_t &, const itemeffect_t *, int itemamount = 1);
 bool P_GiveBody(player_t &, const itemeffect_t *, int itemamount = 1);
