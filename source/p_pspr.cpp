@@ -257,6 +257,11 @@ static weaponslot_t *P_findFirstNonNullWeaponSlot(const player_t &player)
 //
 int P_NextWeapon(const player_t &player, uint8_t *slotindex)
 {
+    // If player has no weapons or only dummy weapon, no need to search
+    // Also avoids infinite loop in case player has only dummy weapon
+    if(!E_PlayerHasAnyWeapons(player))
+        return demo_version >= 401 ? -1 : wp_nochange;
+
     const weaponinfo_t             *currentweapon = player.readyweapon;
     const weaponinfo_t             *newweapon     = player.readyweapon;
     const weaponslot_t             *newweaponslot = player.readyweaponslot;
@@ -273,10 +278,6 @@ int P_NextWeapon(const player_t &player, uint8_t *slotindex)
         newweapon     = newweaponlink->bdObject->weapon;
         if(newweaponlink->isDummy())
         {
-            // If player has only dummy weapon, avoid infinite loop
-            if(!E_PlayerHasAnyWeapons(player))
-                return -1;
-
             const int slotindex = newweaponlink->bdObject->slotindex;
             bool      firsttime = true;
             for(int i = (slotindex + 1) % NUMWEAPONSLOTS; i != slotindex + 1 || firsttime; i = (i + 1) % NUMWEAPONSLOTS)
@@ -322,6 +323,11 @@ int P_NextWeapon(const player_t &player, uint8_t *slotindex)
 //
 int P_PrevWeapon(const player_t &player, uint8_t *slotindex)
 {
+    // If player has no weapons or only dummy weapon, no need to search
+    // Also avoids infinite loop in case player has only dummy weapon
+    if(!E_PlayerHasAnyWeapons(player))
+        return demo_version >= 401 ? -1 : wp_nochange;
+
     const weaponinfo_t             *currentweapon = player.readyweapon;
     const weaponinfo_t             *newweapon     = player.readyweapon;
     const weaponslot_t             *newweaponslot = player.readyweaponslot;
@@ -338,10 +344,6 @@ int P_PrevWeapon(const player_t &player, uint8_t *slotindex)
         newweapon     = newweaponlink->bdObject->weapon;
         if(newweaponlink->isDummy())
         {
-            // If player has only dummy weapon, avoid infinite loop
-            if(!E_PlayerHasAnyWeapons(player))
-                return -1;
-
             const int slotindex = newweaponlink->bdObject->slotindex;
             bool      firsttime = true;
             for(int i = slotindex == 0 ? NUMWEAPONSLOTS - 1 : slotindex - 1; i != slotindex - 1 || firsttime;
