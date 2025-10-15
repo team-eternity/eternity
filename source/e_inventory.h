@@ -279,7 +279,7 @@ int E_GetItemOwnedAmountName(const player_t &player, const char *name);
 bool E_PlayerHasPowerName(const player_t &player, const char *name);
 
 // Place an item into a player's inventory.
-bool E_GiveInventoryItem(player_t &player, const itemeffect_t *artifact, int amount = -1);
+bool E_GiveInventoryItem(player_t &player, const itemeffect_t *artifact, int amount = -1, bool givemax = false);
 
 e_pickupfx_t *E_PickupFXForName(const char *name);
 e_pickupfx_t *E_PickupFXForSprNum(spritenum_t sprnum);

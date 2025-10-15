@@ -113,7 +113,7 @@ static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, int num, bool ignor
     if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
         num = static_cast<int>(floor(num * GameModeInfo->skillAmmoMultiplier));
 
-    if(!E_GiveInventoryItem(player, ammo, num))
+    if(!E_GiveInventoryItem(player, ammo, num < 0 ? 1 : num, num < 0))
         return false; // don't need this ammo
 
     // If non zero ammo, don't change up weapons, player was lower on purpose.
@@ -482,21 +482,21 @@ bool P_GiveWeaponByGiver(player_t &player, itemeffect_t *giver, bool ignoreskill
     itemeffect_t *ammogiven = nullptr;
     while((ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
     {
-        itemeffect_t *ammo     = nullptr;
-        int           giveammo = 0;
+        itemeffect_t *ammo = nullptr;
 
         if(!(ammo = E_ItemEffectForName(ammogiven->getString("type", ""))))
         {
             doom_printf(FC_ERROR "Invalid ammo type given in weapongiver: '%s'\a\n", giver->getKey());
             return false;
         }
-        else if((giveammo = ammogiven->getInt("ammo.give", -1) * itemamount) < 0)
+
+        if(itemamount < 0)
         {
-            doom_printf(FC_ERROR "Negative/unspecified ammo amount given for weapongiver: "
-                                 "'%s', ammo: '%s'\a\n",
-                        giver->getKey(), ammo->getKey());
-            return false;
+            result |= E_GiveInventoryItem(player, ammo, 1, true);
+            continue;
         }
+
+        int giveammo = ammogiven->getInt("ammo.give", -1) * itemamount;
 
         // apply ammo multiplier for baby/nightmare skill
         if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
@@ -589,7 +589,12 @@ bool P_GiveBody(player_t &player, const itemeffect_t *effect, int itemamount)
     if(effect->getInt("sethealth", 0))
         player.health = amount; // some items set health directly
     else
-        player.health += amount * itemamount; // most items add to health
+    {
+        if(itemamount < 0)
+            player.health = maxamount;
+        else
+            player.health += amount * itemamount; // most items add to health
+    }
 
     // cap to maxamount
     if(player.health > maxamount)
@@ -689,9 +694,14 @@ bool P_GiveArmor(player_t &player, const itemeffect_t *effect, int itemamount)
 
     if(additive)
     {
-        player.armorpoints += hits * itemamount;
-        if(player.armorpoints > maxsaveamount)
+        if(itemamount < 0)
             player.armorpoints = maxsaveamount;
+        else
+        {
+            player.armorpoints += hits * itemamount;
+            if(player.armorpoints > maxsaveamount)
+                player.armorpoints = maxsaveamount;
+        }
     }
     else
         player.armorpoints = hits;
@@ -910,7 +920,7 @@ bool P_GivePowerForItem(player_t &player, const itemeffect_t *power, int itemamo
     {
         bool permanent = false;
         int  duration  = power->getInt("duration", 0);
-        if(power->getInt("permanent", 0))
+        if(power->getInt("permanent", 0) || itemamount < 0)
             permanent = true;
         else
         {
