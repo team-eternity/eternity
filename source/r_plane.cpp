@@ -1124,16 +1124,6 @@ static void do_draw_plane(cmapcontext_t &context, ZoneHeap &heap, int *const spa
         else
             plane.slope = nullptr;
 
-        if(tex->flatsize == FLAT_NON_POWER_OF_2)
-        {
-            // For NPO2, just use the texture width and height, and treat xmask/ymask as modulus
-            span.xmask = tex->width;
-            span.ymask = tex->height;
-
-            plane.fixedunitx = 65536.0f; // 2^16 for 16.16 fixed point
-            plane.fixedunity = 65536.0f;
-        }
-        else
         {
             int rw, rh;
 

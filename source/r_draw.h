@@ -121,7 +121,6 @@ enum
     FLAT_256,         // 256x256
     FLAT_512,         // 512x512
     FLAT_GENERALIZED, // rectangular texture, power of two dims.
-    FLAT_NON_POWER_OF_2,
     FLAT_NUMSIZES
 };
 
@@ -138,7 +137,8 @@ struct spandrawer_t
     void (*DrawSlope[SPAN_NUMSTYLES][FLAT_NUMSIZES])(const cb_slopespan_t &, const cb_span_t &);
 };
 
-extern spandrawer_t r_spandrawer; // normal
+extern spandrawer_t r_lpspandrawer; // low-precision
+extern spandrawer_t r_spandrawer;   // normal
 
 void R_InitBuffer(int width, int height);
 

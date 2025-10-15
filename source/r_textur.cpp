@@ -116,11 +116,7 @@ static void R_DetermineFlatSize(texture_t *t)
 {
     // If not powers of two, it can't be a flat.
     if((t->width != 1 && t->width & (t->width - 1)) || (t->height != 1 && t->height & (t->height - 1)))
-    {
-        t->flatsize  = FLAT_NON_POWER_OF_2;
-        t->flags    |= TF_CANBEFLAT;
         return;
-    }
 
     t->flags |= TF_CANBEFLAT;
 
