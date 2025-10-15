@@ -767,6 +767,13 @@ inline static const char *P_getSpecialMessage(Mobj *special, const char *def)
     }
 }
 
+e_pickupfx_t *P_GetPickUpEffect(const Mobj *special)
+{
+    if(special->info->pickupfx)
+        return special->info->pickupfx;
+    return E_PickupFXForSprNum(special->sprite);
+}
+
 //
 // P_TouchSpecialThing
 //
@@ -796,11 +803,8 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
     if(special->sprite < 0 || special->sprite >= NUMSPRITES)
         return;
 
-    if(special->info->pickupfx)
-        pickup = special->info->pickupfx;
-    else if((temp = E_PickupFXForSprNum(special->sprite)))
-        pickup = temp;
-    else
+    pickup = P_GetPickUpEffect(special);
+    if(!pickup)
         return;
 
     if(pickup->flags & PFXF_COMMERCIALONLY && (demo_version < 335 && GameModeInfo->id != commercial))
