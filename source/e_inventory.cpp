@@ -214,10 +214,9 @@ MetaKeyIndex keyInvBar               (KEY_INVBAR                 );
 MetaKeyIndex keyAmmoGiven            (KEY_AMMOGIVEN              );
 MetaKeyIndex keyAutouseHealthMode    (KEY_AUTOUSE_HEALTH_MODE    );
 MetaKeyIndex keyAutouseHealthRestrict(KEY_AUTOUSE_HEALTH_RESTRICT);
-MetaKeyIndex keyUndroppable          (KEY_UNDROPPABLE            );
-MetaKeyIndex keyArtifactType         (KEY_ARTIFACTTYPE           );
 
 // Static interened metatable keys
+static MetaKeyIndex keyArtifactType  (KEY_ARTIFACTTYPE  );
 static MetaKeyIndex keyFullAmountOnly(KEY_FULLAMOUNTONLY);
 static MetaKeyIndex keyInterHubAmount(KEY_INTERHUBAMOUNT);
 static MetaKeyIndex keyKeepDepleted  (KEY_KEEPDEPLETED  );
@@ -226,6 +225,7 @@ static MetaKeyIndex keyUseEffect     (KEY_USEEFFECT     );
 static MetaKeyIndex keyUseAction     (KEY_USEACTION     );
 static MetaKeyIndex keyUseSound      (KEY_USESOUND      );
 static MetaKeyIndex keyArgs          (KEY_ARGS          );
+static MetaKeyIndex keyUndroppable   (KEY_UNDROPPABLE   );
 
 // Keys for specially treated artifact types
 static MetaKeyIndex keyBackpackItem  (ARTI_BACKPACKITEM );
@@ -1397,7 +1397,7 @@ int E_GiveAllKeys(player_t &player)
 // Take away every artifact a player has that is of "key" type.
 // Returns the number of keys taken away.
 //
-int E_TakeAllKeys(const player_t &player)
+int E_TakeAllKeys(player_t &player)
 {
     size_t numKeys   = E_GetNumKeyItems();
     int    keysTaken = 0;
@@ -2208,7 +2208,7 @@ bool E_GiveBackpack(player_t &player)
 //
 // Special function to remove a backpack.
 //
-bool E_RemoveBackpack(const player_t &player)
+bool E_RemoveBackpack(player_t &player)
 {
     auto          backpackItem = runtime_cast<itemeffect_t *>(e_effectsTable.getObject(keyBackpackItem));
     bool          removed      = false;
@@ -2407,7 +2407,7 @@ static void E_removeInventorySlot(const player_t *player, inventoryslot_t *slot)
 // in the inventory, everything will be removed. For compatibility reasons,
 // this parameter is false by default.
 //
-itemremoved_e E_RemoveInventoryItem(const player_t &player, const itemeffect_t *artifact, int amount, bool removemore)
+itemremoved_e E_RemoveInventoryItem(player_t &player, const itemeffect_t *artifact, int amount, bool removemore)
 {
     inventoryslot_t *slot = E_InventorySlotForItem(player, artifact);
 
@@ -2447,6 +2447,9 @@ itemremoved_e E_RemoveInventoryItem(const player_t &player, const itemeffect_t *
         }
     }
 
+    // Give the player a empty weapon if they have no weapons left
+    E_PlayerHasAnyWeapons(player, true);
+
     return ret;
 }
 
@@ -2457,7 +2460,7 @@ itemremoved_e E_RemoveInventoryItem(const player_t &player, const itemeffect_t *
 // function to strip all inventory items that are not meant to remain across
 // levels to their max hub amount.
 //
-void E_InventoryEndHub(const player_t *player)
+void E_InventoryEndHub(player_t *player)
 {
     for(inventoryindex_t i = 0; i < e_maxitemid; i++)
     {
@@ -2483,8 +2486,10 @@ void E_InventoryEndHub(const player_t *player)
 // E_ClearInventory
 //
 // Completely clear a player's inventory.
+// If undroppable is true, undroppable items will be kept.
+// If setemptyweapon is true, the player will be given an empty weapon when done.
 //
-void E_ClearInventory(player_t *player, bool undroppable)
+void E_ClearInventory(player_t *player, bool undroppable, bool setemptyweapon)
 {
     invbarstate_t &invbarstate = player->invbarstate;
 
@@ -2507,6 +2512,10 @@ void E_ClearInventory(player_t *player, bool undroppable)
 
     player->inv_ptr = 0;
     invbarstate     = { false, 0 };
+
+    // Give the player a empty weapon if they have no weapons left
+    if(setemptyweapon)
+        E_PlayerHasAnyWeapons(*player, true);
 }
 
 //

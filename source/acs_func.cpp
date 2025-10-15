@@ -2639,7 +2639,6 @@ bool ACS_CF_CheckInventory(ACS_CF_ARGS)
     itemeffect_t *item     = E_ItemEffectForName(itemname);
     const int     powernum = E_StrToNumLinear(powerStrings, NUMPOWERS, itemname);
 
-    // We could use E_GetItemOwnedAmountName but let's inform the player if stuff's broke
     // If the item doesn't exist as an item or a power, complain
     if(!item && powernum == NUMPOWERS)
     {
@@ -2716,6 +2715,7 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
     const auto          info     = &static_cast<ACSThread *>(thread)->info;
     char const         *itemname = thread->scopeMap->getString(argV[0])->str;
     const int           amount   = argV[1];
+    const bool          givemax  = amount < 0; // If amount is negative, give maximum
     itemeffect_t *const item     = E_ItemEffectForName(itemname);
     const int           powernum = E_StrToNumLinear(powerStrings, NUMPOWERS, itemname);
 
@@ -2726,15 +2726,17 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
         return false;
     }
 
-    // Handle negative amounts: treat as 0 (don't give anything)
+    // if amount is 0, do nothing
+    // if amount is negative, it means give maximum
     if(amount == 0)
         return false;
 
-    auto giveToPlayer = [item, powernum, amount](player_t *player) {
+    auto giveToPlayer = [item, powernum, amount, givemax](player_t *player) {
         if(powernum != NUMPOWERS)
         {
             // Give power directly with amount as duration in tics
-            P_GivePower(*player, powernum, amount, amount < 0, true);
+            // If givemax is true, give infinite power
+            P_GivePower(*player, powernum, amount, givemax, true);
         }
         else
         {
@@ -2742,34 +2744,40 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
             switch(item->getInt("class", ITEMFX_NONE))
             {
                 // If health, give healthamount * itemamount, as usually
+                // If givemax is true, set maxamount of health item
             case ITEMFX_HEALTH:
-                P_GiveBody(*player, item, amount);
+                P_GiveBody(*player, item, amount, givemax);
                 break;
 
                 // If armor, give saveamount * itemamount, as usually
+                // If givemax is true, set maxsaveamount of armor item
             case ITEMFX_ARMOR:
-                P_GiveArmor(*player, item, amount);
+                P_GiveArmor(*player, item, amount, givemax);
                 break;
 
                 // If ammo, give ammoamount * itemamount, skill levels affect how much is given
+                // If givemax is true, give max ammo of ammo type
             case ITEMFX_AMMO:
-                P_GiveAmmoPickup(*player, item, false, 0, amount);
+                P_GiveAmmoPickup(*player, item, false, 0, amount, givemax);
                 break;
 
                 // If power artifact, give duration * itemamount
                 // If power artifact is not additive, amount is igored and power has fixed duration
+                // If givemax is true, give infinite power
             case ITEMFX_POWER:
-                P_GivePowerForItem(*player, item, amount);
+                P_GivePowerForItem(*player, item, amount, givemax);
                 break;
 
                 // If weapon giver, give the weapon and ammo * itemamount
                 // Skill levels affect how much ammo is given
+                // If givemax is true, give max ammo of ammo types
             case ITEMFX_WEAPONGIVER:
-                P_GiveWeaponByGiver(*player, item, false, amount);
+                P_GiveWeaponByGiver(*player, item, false, amount, givemax);
                 break;
 
                 // If another artifact, just give it to the player
-            default: E_GiveInventoryItem(*player, item, amount, amount < 0); break;
+                // If givemax is true, give max amount of the item
+            default: E_GiveInventoryItem(*player, item, amount, givemax); break;
             }
         }
     };
@@ -2859,9 +2867,6 @@ bool ACS_CF_TakeInventory(ACS_CF_ARGS)
                     E_RemoveInventoryItem(*player, item, amount, true);
                 break;
             }
-
-            // Give the player a empty weapon if they have no weapons left
-            E_PlayerHasAnyWeapons(*player, true);
         }
     };
 
@@ -2897,10 +2902,7 @@ bool ACS_CF_ClearInventory(ACS_CF_ARGS)
         E_RemoveBackpack(*player);
 
         // Clear inventory slots, ignoring artifacts with UNDROPPABLE flag
-        E_ClearInventory(player, false);
-
-        // Give the player a empty weapon if they have no weapons left
-        E_PlayerHasAnyWeapons(*player, true);
+        E_ClearInventory(player, false, true);
     };
 
     if(info->mo)
@@ -2971,6 +2973,7 @@ bool ACS_CF_GetMaxInventory(ACS_CF_ARGS)
             if(powernum == pw_strength || powernum == pw_silencer)
                 return -1;
 
+            // Otherwise, return 1
             return 1;
         }
         else
