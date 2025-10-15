@@ -1632,7 +1632,7 @@ static int AM_DoorColor(const line_t *line)
     int lockdefID = EV_LockDefIDForLine(line);
 
     if(lockdefID)
-        return E_GetLockDefColor(lockdefID, false);
+        return E_GetLockDefColor(lockdefID);
     else
         return -1;
 }
@@ -1709,7 +1709,7 @@ inline static bool AM_drawAsTeleporter(const line_t *line)
 //
 inline static bool AM_drawAsLockedDoor(const line_t *line)
 {
-    return E_GetLockDefColor(EV_LockDefIDForLine(line), false) != 0;
+    return E_GetLockDefColor(EV_LockDefIDForLine(line)) != 0;
 }
 
 //
@@ -2242,7 +2242,7 @@ static void AM_drawPlayers()
 // Passed colors and colorrange, no longer used
 // Returns nothing
 //
-static void AM_drawThings()
+static void AM_drawThings(int colors, int colorrange)
 {
     fixed_t tx, ty; // SoM: Moved thing coords to variables for linked portals
 
@@ -2262,65 +2262,79 @@ static void AM_drawThings()
                 tx        += link->x;
                 ty        += link->y;
             }
+            // FIXME / HTIC_TODO: Heretic support and EDF editing?
 
             // jff 1/5/98 case over doomednum of thing being drawn
-            // ioanch 20251012: Now uses EDF lockdefs instead of hardcoded doomednums
             if(mapcolor_rkey || mapcolor_ykey || mapcolor_bkey)
             {
-                const mline_t *keyglyph  = nullptr;
+                // FIXME: make this EDF controllable!
+                const mline_t *keyglyph  = nullptr; // shut up compiler
                 size_t         keysize   = 0;
                 double         keyscale  = 0.0;
                 angle_t        keyang    = 0;
                 int            keycolour = -1;
                 bool           havekey   = false;
 
-                // Check if the thing has a pickup effect with key artifacts
-                const e_pickupfx_t *pickupfx = t->info->pickupfx;
-                if(!pickupfx)
-                    pickupfx = E_PickupFXForSprNum(t->sprite);
+                // MAJOR FIXME: MAKE THIS EDF DEPENDENT (the key colours MUST use lockdefs)
 
-                if(pickupfx && pickupfx->numEffects > 0)
+                switch(GameModeInfo->type)
                 {
-                    // Check each effect to find a key artifact with a lockdef color
-                    for(unsigned int i = 0; i < pickupfx->numEffects; i++)
+                case Game_DOOM:
+                    // jff 1/5/98 treat keys special
+                    keyglyph = cross_mark;
+                    keysize  = earrlen(cross_mark);
+                    keyscale = 16.0;
+                    keyang   = t->angle;
+                    switch(t->info->doomednum)
                     {
-                        itemeffect_t *artifact = pickupfx->effects[i];
-
-                        // Get the lockdef ID from the artifact (cached during EDF processing)
-                        int lockID = E_GetLockDefIDForArtifact(artifact);
-                        if(lockID > 0)
-                        {
-                            // Get the color from the lockdef
-                            keycolour = E_GetLockDefColor(lockID, true);
-                            if(keycolour != 0)
-                            {
-                                havekey = true;
-
-                                // Set glyph based on game type
-                                switch(GameModeInfo->type)
-                                {
-                                case Game_DOOM:
-                                default:
-                                    keyglyph = cross_mark;
-                                    keysize  = earrlen(cross_mark);
-                                    keyscale = 16.0;
-                                    keyang   = t->angle;
-                                    break;
-                                case Game_Heretic:
-                                    keyglyph = am_hereticKeySquare;
-                                    keysize  = earrlen(am_hereticKeySquare);
-                                    keyang   = 0;
-                                    break;
-                                }
-                                break; // Found a key, stop checking other effects
-                            }
-                        }
+                    case 13: // jff  red key
+                    case 38: //
+                        keycolour = mapcolor_rkey;
+                        havekey   = true;
+                        break;
+                    case 6:  // jff yellow key
+                    case 39: //
+                        keycolour = mapcolor_ykey;
+                        havekey   = true;
+                        break;
+                    case 5:  // jff blue key
+                    case 40: //
+                        keycolour = mapcolor_bkey;
+                        havekey   = true;
+                        break;
+                    default: //
+                        break;
                     }
+                    break;
+                case Game_Heretic:
+                    keyglyph = am_hereticKeySquare;
+                    keysize  = earrlen(am_hereticKeySquare);
+                    switch(t->info->doomednum)
+                    {
+                    case 7073: //
+                        keycolour = mapcolor_rkey;
+                        havekey   = true;
+                        break;
+                    case 7080: //
+                        keycolour = mapcolor_ykey;
+                        havekey   = true;
+                        break;
+                    case 7079: //
+                        keycolour = mapcolor_bkey;
+                        havekey   = true;
+                        break;
+                    default: //
+                        break;
+                    }
+                    break;
+                default: //
+                    break;
                 }
 
                 if(havekey)
                 {
-                    AM_drawLineCharacter(keyglyph, (int)keysize, keyscale, keyang, keycolour, tx, ty);
+                    AM_drawLineCharacter(keyglyph, (int)keysize, keyscale, keyang,
+                                         keycolour != -1 ? keycolour : mapcolor_sprt, tx, ty);
                     t = t->snext;
                     continue;
                 }
@@ -2450,7 +2464,7 @@ void AM_Drawer()
 
     // FIXME: make showing key a gamemodeinfo (EDF) dependent thing
     if(ddt_cheating == 2 || (GameModeInfo->type == Game_Heretic && gameskill == sk_baby))
-        AM_drawThings(); // jff 1/5/98 default double IDDT sprite
+        AM_drawThings(mapcolor_sprt, 0); // jff 1/5/98 default double IDDT sprite
 
     AM_drawCrosshair(mapcolor_hair); // jff 1/7/98 default crosshair color
     AM_drawMarks();

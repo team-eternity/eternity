@@ -179,7 +179,6 @@ constexpr const char KEY_INTERHUBAMOUNT[]          = "interhubamount";
 constexpr const char KEY_INVBAR[]                  = "invbar";
 constexpr const char KEY_ITEMID[]                  = "itemid";
 constexpr const char KEY_KEEPDEPLETED[]            = "keepdepleted";
-constexpr const char KEY_LOCKDEFID[]               = "lockdefid";
 constexpr const char KEY_LOWMESSAGE[]              = "lowmessage";
 constexpr const char KEY_MAXAMOUNT[]               = "maxamount";
 constexpr const char KEY_MAXSAVEAMOUNT[]           = "maxsaveamount";
@@ -221,7 +220,6 @@ static MetaKeyIndex keyArtifactType  (KEY_ARTIFACTTYPE  );
 static MetaKeyIndex keyFullAmountOnly(KEY_FULLAMOUNTONLY);
 static MetaKeyIndex keyInterHubAmount(KEY_INTERHUBAMOUNT);
 static MetaKeyIndex keyKeepDepleted  (KEY_KEEPDEPLETED  );
-static MetaKeyIndex keyLockDefID     (KEY_LOCKDEFID     );
 static MetaKeyIndex keySortOrder     (KEY_SORTORDER     );
 static MetaKeyIndex keyUseEffect     (KEY_USEEFFECT     );
 static MetaKeyIndex keyUseAction     (KEY_USEACTION     );
@@ -1126,28 +1124,6 @@ static void E_processLockDefColor(lockdef_t *lock, const char *value)
         }
         break;
     }
-
-    // Cache the lockdef ID in each artifact for efficient lookup, but only if:
-    // (1) The artifact doesn't already have a lockdef ID cached
-    // (2) This lockdef has a map color assigned to it
-    if((lock->colorType == LOCKDEF_COLOR_CONSTANT && lock->color >= 0 && lock->color <= 255) ||
-       (lock->colorType == LOCKDEF_COLOR_VARIABLE && lock->colorVar != &mapcolor_clsd))
-    {
-        for(unsigned int i = 0; i < lock->numRequiredKeys; i++)
-        {
-            if(lock->requiredKeys[i] && !lock->requiredKeys[i]->hasKey(KEY_LOCKDEFID))
-                lock->requiredKeys[i]->setInt(keyLockDefID, lock->id);
-        }
-        for(unsigned int i = 0; i < lock->numAnyLists; i++)
-        {
-            anykey_t *any = &lock->anyKeys[i];
-            for(unsigned int keynum = 0; keynum < any->numKeys; keynum++)
-            {
-                if(any->keys[keynum] && !any->keys[keynum]->hasKey(KEY_LOCKDEFID))
-                    any->keys[keynum]->setInt(keyLockDefID, lock->id);
-            }
-        }
-    }
 }
 
 //
@@ -1367,7 +1343,7 @@ bool E_PlayerCanUnlock(const player_t &player, int lockID, bool remote)
 //
 // Get the automap color for a lockdef.
 //
-int E_GetLockDefColor(int lockID, bool iddtCheatItemSubstitution)
+int E_GetLockDefColor(int lockID)
 {
     int              color = 0;
     const lockdef_t *lock;
@@ -1380,19 +1356,7 @@ int E_GetLockDefColor(int lockID, bool iddtCheatItemSubstitution)
             color = lock->color;
             break;
         case LOCKDEF_COLOR_VARIABLE: //
-            if(iddtCheatItemSubstitution)
-            {
-                if(lock->colorVar == &mapcolor_bdor)
-                    color = mapcolor_bkey;
-                else if(lock->colorVar == &mapcolor_ydor)
-                    color = mapcolor_ykey;
-                else if(lock->colorVar == &mapcolor_rdor)
-                    color = mapcolor_rkey;
-                else
-                    color = *lock->colorVar;
-            }
-            else
-                color = *lock->colorVar;
+            color = *lock->colorVar;
             break;
         default: //
             break;
@@ -1400,20 +1364,6 @@ int E_GetLockDefColor(int lockID, bool iddtCheatItemSubstitution)
     }
 
     return color;
-}
-
-//
-// E_GetLockDefIDForArtifact
-//
-// Get the cached lockdef ID for an artifact, if any.
-// Returns 0 if the artifact has no associated lockdef with a map color.
-//
-int E_GetLockDefIDForArtifact(const itemeffect_t *artifact)
-{
-    if(!artifact)
-        return 0;
-
-    return artifact->getInt(keyLockDefID, 0);
 }
 
 //
