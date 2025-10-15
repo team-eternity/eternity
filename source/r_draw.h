@@ -116,11 +116,12 @@ enum
 // haleyjd 06/22/08: Flat sizes enumeration
 enum
 {
-    FLAT_64,          // 64x64
-    FLAT_128,         // 128x128
-    FLAT_256,         // 256x256
-    FLAT_512,         // 512x512
-    FLAT_GENERALIZED, // rectangular texture, power of two dims.
+    FLAT_64,               // 64x64
+    FLAT_128,              // 128x128
+    FLAT_256,              // 256x256
+    FLAT_512,              // 512x512
+    FLAT_GENERALIZED,      // rectangular texture, power of two dims.
+    FLAT_NON_POWER_OF_TWO, // other sizes (required to support by ID24)
     FLAT_NUMSIZES
 };
 
@@ -137,8 +138,7 @@ struct spandrawer_t
     void (*DrawSlope[SPAN_NUMSTYLES][FLAT_NUMSIZES])(const cb_slopespan_t &, const cb_span_t &);
 };
 
-extern spandrawer_t r_lpspandrawer; // low-precision
-extern spandrawer_t r_spandrawer;   // normal
+extern spandrawer_t r_spandrawer; // normal
 
 void R_InitBuffer(int width, int height);
 

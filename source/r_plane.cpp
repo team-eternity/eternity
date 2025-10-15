@@ -1124,6 +1124,17 @@ static void do_draw_plane(cmapcontext_t &context, ZoneHeap &heap, int *const spa
         else
             plane.slope = nullptr;
 
+        if(tex->flatsize == FLAT_NON_POWER_OF_TWO)
+        {
+            // Non-powers of two cannot use the "and" and "or" optimizations for getting the pixel index
+            // Just overload the mask fields with the texture sizes
+            span.xmask = tex->width;
+            span.ymask = tex->height;
+            // Shifting will stay at 16
+            plane.fixedunitx = 65536.0f;
+            plane.fixedunity = 65536.0f;
+        }
+        else
         {
             int rw, rh;
 
