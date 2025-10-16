@@ -124,5 +124,18 @@ void I_GetRealPath(const char *path, qstring &real)
 #endif
 }
 
+FILE* I_fopen(const char* path, const char* mode)
+{
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
+    fs::path pathObject = fs::u8path(path);
+    std::wstring wmode;
+    for(const char *m = mode; *m; ++m)
+        wmode.push_back(static_cast<wchar_t>(*m));
+    return _wfopen(pathObject.wstring().c_str(), wmode.c_str());
+#else
+    return fopen(path, mode);
+#endif
+}
+
 // EOF
 
