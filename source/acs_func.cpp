@@ -2979,8 +2979,9 @@ bool ACS_CF_GetMaxInventory(ACS_CF_ARGS)
         }
         else
         {
-            int         powerNum, maxAmount, maxSaveAmount;
-            const char *powerStr;
+            int           powerNum, maxAmount, maxSaveAmount;
+            const char   *powerStr;
+            itemeffect_t *wp;
 
             switch(item->getInt("class", ITEMFX_NONE))
             {
@@ -3013,6 +3014,11 @@ bool ACS_CF_GetMaxInventory(ACS_CF_ARGS)
 
                 // Otherwise, return duration of the power artifact in seconds
                 return item->getInt("duration", 0);
+
+                // If weapon giver, return max amount for the weapon designated
+            case ITEMFX_WEAPONGIVER:
+                wp = E_ItemEffectForName(item->getString("weapon", ""));
+                return wp ? E_GetMaxAmountForArtifact(*player, wp) : 0;
 
                 // If another artifact, return max amount for that artifact
             default: return E_GetMaxAmountForArtifact(*player, item);
