@@ -71,16 +71,30 @@ static void VerifySDLVersions();
 
 int SDLIsInit;
 
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
+int wmain(int argc, wchar_t **argv)
+#else
 int main(int argc, char **argv)
+#endif
 {
     myargc = argc;
-    myargv = argv;
-
+    
 #if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
+    myargv = new char *[myargc + 1];
+    for(int i = 0; i < myargc; ++i)
+    {
+        int n = WideCharToMultiByte(CP_UTF8, 0, argv[i], -1, nullptr, 0, nullptr, nullptr);
+        myargv[i] = new char[n];
+        WideCharToMultiByte(CP_UTF8, 0, argv[i], -1, myargv[i], n, nullptr, nullptr);
+    }
+    myargv[myargc] = nullptr;
+
     if(I_IsWindowsVistaOrHigher())
         SDL_setenv("SDL_AUDIODRIVER", "wasapi", true);
     else
         SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
+#else
+    myargv = argv;
 #endif
 
 #if (EE_CURRENT_PLATFORM != EE_PLATFORM_WINDOWS) && (__has_include(<xlocale.h>) || __has_include(<locale.h>))
