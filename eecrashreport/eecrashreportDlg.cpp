@@ -5,6 +5,8 @@
 #include "eecrashreport.h"
 #include "eecrashreportDlg.h"
 
+#include <string>
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -238,6 +240,8 @@ void CEECrashReportDlg::LoadErrorFile()
     }
 
     // read file
+    std::wstring wstr;
+
     str = new char[filelen + 1];
     memset(str, 0, filelen + 1);
     fread(str, 1, filelen, f);
@@ -246,7 +250,19 @@ void CEECrashReportDlg::LoadErrorFile()
     fclose(f);
 
     // set string to message box
-    m_ErrorEditBox.SetWindowTextA(str);
+    int n = MultiByteToWideChar(CP_UTF8, 0, str, -1, nullptr, 0);
+    if(n)
+    {
+        // should support unicode
+        wstr.resize(n);
+        MultiByteToWideChar(CP_UTF8, 0, str, -1, const_cast<wchar_t *>(wstr.data()), n);
+        wstr.pop_back();
+        SetWindowTextW(m_ErrorEditBox.m_hWnd, wstr.c_str());
+    }
+    else
+    {
+        m_ErrorEditBox.SetWindowTextA(str);
+    }
 
     // done with string (I hope)
     delete[] str;
