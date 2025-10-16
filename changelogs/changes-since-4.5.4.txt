@@ -21,7 +21,7 @@ Features
   - void GiveInventory(str item_name, int amount):
     Can be used to give all types of items, as well as health, armor, weapons, backpacks, and all types of 
     power effects to the player. 
-    Negative value of amount will mean to give all.
+    Negative value of amount will mean to give maximum.
   - void ClearInventory():
     Takes all armor, backpack, weapons and ammunition, keys, and all items except those marked with the 
     UNDROPPABLE flag.
