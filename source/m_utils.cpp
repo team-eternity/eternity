@@ -22,13 +22,17 @@
 //
 
 #include <assert.h>
+#include <filesystem>
 #include "z_zone.h"
+#include "hal/i_directory.h"
 #include "hal/i_platform.h"
 #include "doomtype.h"
 
 #include "d_main.h"   // for usermsg
 #include "i_system.h" // for I_Error
 #include "m_qstr.h"   // for qstring
+
+namespace fs = std::filesystem;
 
 //=============================================================================
 //
@@ -66,7 +70,7 @@ int M_ReadFile(char const *name, byte **buffer)
 
     errno = 0;
 
-    if((fp = fopen(name, "rb")))
+    if((fp = I_fopen(name, "rb")))
     {
         size_t length;
 
