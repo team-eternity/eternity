@@ -197,31 +197,29 @@ void CEECrashReportDlg::LoadErrorFile()
 {
     char *str;
     FILE *f;
-    char  moduleName[2 * MAX_PATH];
-    char *filename;
+    wchar_t moduleName[2 * MAX_PATH] = {};
+    wchar_t *filename;
 
-    memset(moduleName, 0, sizeof(moduleName));
+    GetModuleFileNameW(NULL, moduleName, MAX_PATH);
 
-    GetModuleFileName(NULL, moduleName, MAX_PATH);
-
-    filename = strrchr(moduleName, '\\');
+    filename = wcsrchr(moduleName, L'\\');
 
     if(filename)
     {
-        char *tmp = filename;
+        wchar_t *tmp = filename;
 
-        while(*filename != '\0')
-            *filename++ = '\0';
+        while(*filename != L'\0')
+            *filename++ = L'\0';
 
-        strcat(moduleName, "\\crashlog.txt");
+        wcscat(moduleName, L"\\crashlog.txt");
     }
     else
     {
         memset(moduleName, 0, sizeof(moduleName));
-        strcpy(moduleName, "crashlog.txt");
+        wcscpy(moduleName, L"crashlog.txt");
     }
 
-    if(!(f = fopen(moduleName, "rb")))
+    if(!(f = _wfopen(moduleName, L"rb")))
     {
         AfxMessageBox("crashlog.txt not found.", MB_OK | MB_ICONEXCLAMATION);
         return;
@@ -248,7 +246,7 @@ void CEECrashReportDlg::LoadErrorFile()
     fclose(f);
 
     // set string to message box
-    m_ErrorEditBox.SetWindowText(str);
+    m_ErrorEditBox.SetWindowTextA(str);
 
     // done with string (I hope)
     delete[] str;
