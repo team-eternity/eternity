@@ -49,7 +49,7 @@ bool M_WriteFile(char const *name, void *source, size_t length)
 
     errno = 0;
 
-    if(!(fp = fopen(name, "wb"))) // Try opening file
+    if(!(fp = I_fopen(name, "wb"))) // Try opening file
         return 0;                 // Could not open file for writing
 
     result = (fwrite(source, 1, length, fp) == length); // Write data
@@ -150,7 +150,7 @@ char *M_LoadStringFromFile(const char *filename)
     char  *buf = nullptr;
     size_t len = 0;
 
-    if(!(f = fopen(filename, "rb")))
+    if(!(f = I_fopen(filename, "rb")))
         return nullptr;
 
     // allocate at length + 1 for null termination

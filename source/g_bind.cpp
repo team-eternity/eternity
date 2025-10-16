@@ -29,6 +29,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 
+#include "hal/i_directory.h"
 #include "hal/i_gamepads.h"
 
 #include "am_map.h"
@@ -947,7 +948,7 @@ void G_SaveDefaults()
     if(!cfg_file) // check defaults have been loaded
         return;
 
-    if(!(file = fopen(cfg_file, "w")))
+    if(!(file = I_fopen(cfg_file, "w")))
     {
         C_Printf(FC_ERROR "Couldn't open keys.csc for write access.\n");
         return;

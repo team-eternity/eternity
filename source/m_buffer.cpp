@@ -25,6 +25,7 @@
 //
 
 #include "z_zone.h"
+#include "hal/i_directory.h"
 #include "i_system.h"
 #include "m_buffer.h"
 #include "m_swap.h"
@@ -145,7 +146,7 @@ void BufferedFileBase::swapShort(int16_t &x)
 //
 bool OutBuffer::createFile(const char *filename, size_t pLen, int pEndian)
 {
-    if(!(f = fopen(filename, "wb")))
+    if(!(f = I_fopen(filename, "wb")))
         return false;
 
     initBuffer(pLen, pEndian);
@@ -378,7 +379,7 @@ bool OutMemoryBuffer::writeUint8(uint8_t num)
 //
 bool InBuffer::openFile(const char *filename, int pEndian)
 {
-    if(!(f = fopen(filename, "rb")))
+    if(!(f = I_fopen(filename, "rb")))
         return false;
 
     endian  = pEndian;

@@ -1862,7 +1862,7 @@ static size_t W_FileReadLump(lumpinfo_t *l, void *dest)
     size_t size     = l->size;
     size_t sizeread = 0;
 
-    if((f = fopen(l->filepath, "rb")))
+    if((f = I_fopen(l->filepath, "rb")))
     {
         sizeread = fread(dest, 1, size, f);
         fclose(f);

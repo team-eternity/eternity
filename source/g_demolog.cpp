@@ -32,6 +32,8 @@
 #include "m_qstr.h"
 #include "i_system.h"
 
+#include "hal/i_directory.h"
+
 FILE *demoLogFile;
 
 static bool demoLogLevelExited;
@@ -48,7 +50,7 @@ static void G_demoLogAtExit()
 void G_DemoLogInit(const char *path)
 {
     // open it for appending
-    demoLogFile = fopen(path, "at");
+    demoLogFile = I_fopen(path, "at");
     if(!demoLogFile)
     {
         usermsg("G_DemoLogInit: failed opening '%s'\n", path);

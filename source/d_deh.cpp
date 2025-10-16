@@ -39,6 +39,7 @@
 #include "e_things.h"
 #include "e_weapons.h"
 #include "g_game.h"
+#include "hal/i_directory.h"
 #include "metaapi.h"
 #include "m_cheat.h"
 #include "m_utils.h"
@@ -780,7 +781,7 @@ static void deh_OpenLog(const char *fn)
 
     if(!strcmp(fn, "-"))
         fileout = stdout;
-    else if(!(fileout = fopen(fn, firstfile ? "wt" : "at")))
+    else if(!(fileout = I_fopen(fn, firstfile ? "wt" : "at")))
     {
         usermsg("Could not open -dehout file %s\n... using stdout.", fn);
         fileout = stdout;
