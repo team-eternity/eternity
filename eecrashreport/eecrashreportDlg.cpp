@@ -211,12 +211,12 @@ void CEECrashReportDlg::LoadErrorFile()
         while(*filename != L'\0')
             *filename++ = L'\0';
 
-        wcscat(moduleName, L"\\crashlog.txt");
+        wcscat_s(moduleName, L"\\crashlog.txt");
     }
     else
     {
         memset(moduleName, 0, sizeof(moduleName));
-        wcscpy(moduleName, L"crashlog.txt");
+        wcscpy_s(moduleName, L"crashlog.txt");
     }
 
     if(!(f = _wfopen(moduleName, L"rb")))
