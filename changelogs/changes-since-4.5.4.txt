@@ -58,7 +58,7 @@ Bug fixes
   if set to "none". Thanks to sink666's pull request for the catch.
 * Fixed a freeze with an infinite loop when the player had only “Unknown” (dummy weapon) left and tried to change 
   a weapon.
-* Fixed a game crash that occurred when a player had only one weapon left and, after firing it, ran out of 
-  ammunition and attempted to switch to a more suitable weapon (which was not existing).
-* Fixed a bug where a player's all weapons was taken via TakeInventory, but they still had the last weapon they 
+* Fixed a game crash that occurred when a player had only one weapon left and, after firing it, ran out of ammo and 
+  attempted to switch to a more suitable weapon (which did not exist).
+* Fixed a bug where a player's all weapons were taken via TakeInventory, but they still had the last weapon they 
   used in their hands (even though that weapon was no longer in the player's inventory).
