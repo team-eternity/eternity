@@ -2954,6 +2954,7 @@ bool ACS_CF_GetMaxInventory(ACS_CF_ARGS)
 {
     auto          info     = &static_cast<ACSThread *>(thread)->info;
     const int     tid      = argV[0]; // FIXME: Needs to be adapted for nonplayer Mobjs
+    Mobj         *mo       = P_FindMobjFromTID(tid, nullptr, info->mo);
     char const   *itemname = thread->scopeMap->getString(argV[1])->str;
     itemeffect_t *item     = E_ItemEffectForName(itemname);
     const int     powernum = E_StrToNumLinear(powerStrings, NUMPOWERS, itemname);
@@ -2983,7 +2984,7 @@ bool ACS_CF_GetMaxInventory(ACS_CF_ARGS)
 
             switch(item->getInt("class", ITEMFX_NONE))
             {
-                // If health, retrun maxamount if it exists, otherwise amount
+                // If health, return maxamount if it exists, otherwise amount
                 // If health item uses player @maxhealth or @superhealth, it will be handled in E_GetPClassHealth
             case ITEMFX_HEALTH:
                 maxAmount = E_GetPClassHealth(*item, "maxamount", *player->pclass, 0);
@@ -3019,10 +3020,10 @@ bool ACS_CF_GetMaxInventory(ACS_CF_ARGS)
         }
     };
 
-    if(!info->mo || !info->mo->player)
+    if(!mo || !mo->player)
         thread->dataStk.push(0);
     else
-        thread->dataStk.push(getMaxInventory(info->mo->player));
+        thread->dataStk.push(getMaxInventory(mo->player));
 
     return false;
 }
