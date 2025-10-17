@@ -257,6 +257,11 @@ static weaponslot_t *P_findFirstNonNullWeaponSlot(const player_t &player)
 //
 int P_NextWeapon(const player_t &player, uint8_t *slotindex)
 {
+    // If player has no weapons or only dummy weapon, no need to search
+    // Also avoids infinite loop in case player has only dummy weapon
+    if(!E_PlayerHasAnyWeapons(player))
+        return demo_version >= 401 ? -1 : wp_nochange;
+
     const weaponinfo_t             *currentweapon = player.readyweapon;
     const weaponinfo_t             *newweapon     = player.readyweapon;
     const weaponslot_t             *newweaponslot = player.readyweaponslot;
@@ -318,6 +323,11 @@ int P_NextWeapon(const player_t &player, uint8_t *slotindex)
 //
 int P_PrevWeapon(const player_t &player, uint8_t *slotindex)
 {
+    // If player has no weapons or only dummy weapon, no need to search
+    // Also avoids infinite loop in case player has only dummy weapon
+    if(!E_PlayerHasAnyWeapons(player))
+        return demo_version >= 401 ? -1 : wp_nochange;
+
     const weaponinfo_t             *currentweapon = player.readyweapon;
     const weaponinfo_t             *newweapon     = player.readyweapon;
     const weaponslot_t             *newweaponslot = player.readyweaponslot;
@@ -519,7 +529,7 @@ bool P_CheckAmmo(player_t &player)
 // Subtracts ammo from weapons in a uniform fashion. Unfortunately, this
 // operation is complicated by compatibility issues and extra features.
 //
-void P_SubtractAmmo(const player_t &player, int compat_amt)
+void P_SubtractAmmo(player_t &player, int compat_amt)
 {
     weaponinfo_t *weapon = player.readyweapon;
     itemeffect_t *ammo;

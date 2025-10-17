@@ -210,7 +210,7 @@ itemeffect_t *E_KeyItemForIndex(size_t idx);
 int E_GiveAllKeys(player_t &player);
 
 // Take all "key" type artifacts from a player
-int E_TakeAllKeys(const player_t &player);
+int E_TakeAllKeys(player_t &player);
 
 // Upon morphing a player, move all original class weapons to a secondary inventory
 void E_StashOriginalMorphWeapons(player_t &player);
@@ -234,7 +234,8 @@ bool E_CanMoveInventoryCursor(const player_t *player, const int amount, const in
 bool E_PlayerHasVisibleInvItem(const player_t &player);
 
 // Tries to use the currently selected item.
-void E_TryUseItem(player_t &player, inventoryitemid_t ID);
+// Returns true if item was successfully used, otherwise false
+bool E_TryUseItem(player_t &player, inventoryitemid_t ID);
 
 // Obtain an item effect definition for its inventory item ID
 itemeffect_t *E_EffectForInventoryItemID(inventoryitemid_t id);
@@ -264,7 +265,7 @@ bool E_PlayerHasBackpack(const player_t &player);
 bool E_GiveBackpack(player_t &player);
 
 // Special function to remove backpack.
-bool E_RemoveBackpack(const player_t &player);
+bool E_RemoveBackpack(player_t &player);
 
 // Lookup the maximum amount a player can carry of a specific artifact type.
 int E_GetMaxAmountForArtifact(const player_t &player, const itemeffect_t *artifact);
@@ -278,7 +279,7 @@ int E_GetItemOwnedAmountName(const player_t &player, const char *name);
 bool E_PlayerHasPowerName(const player_t &player, const char *name);
 
 // Place an item into a player's inventory.
-bool E_GiveInventoryItem(player_t &player, const itemeffect_t *artifact, int amount = -1);
+bool E_GiveInventoryItem(player_t &player, const itemeffect_t *artifact, int amount = -1, bool givemax = false);
 
 e_pickupfx_t *E_PickupFXForName(const char *name);
 e_pickupfx_t *E_PickupFXForSprNum(spritenum_t sprnum);
@@ -302,14 +303,15 @@ enum autousehealthrestrict_flags : unsigned
 };
 
 // Remove an item from a player's inventory.
-itemremoved_e E_RemoveInventoryItem(const player_t &player, const itemeffect_t *artifact, int amount);
+itemremoved_e E_RemoveInventoryItem(player_t &player, const itemeffect_t *artifact, int amount,
+                                    bool removemore = false);
 
 // Call at the end of a hub, or a level that isn't part of a hub, to clear
 // out items that don't persist.
-void E_InventoryEndHub(const player_t *player);
+void E_InventoryEndHub(player_t *player);
 
 // Call to completely clear a player's inventory.
-void E_ClearInventory(player_t *player);
+void E_ClearInventory(player_t *player, bool undroppable = true, bool setemptyweapon = false);
 
 // Get allocated size of player inventory arrays
 int E_GetInventoryAllocSize();

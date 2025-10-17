@@ -149,7 +149,7 @@ ACSEnvironment::ACSEnvironment() : dir{ nullptr }, global{ getGlobalScope(0) }, 
     addCodeDataACS0(139, {"W",       0, addCallFunc(ACS_CF_SetGravity)});
     addCodeDataACS0(140, {"",        1, addCallFunc(ACS_CF_SetAirControl)});
     addCodeDataACS0(141, {"W",       0, addCallFunc(ACS_CF_SetAirControl)});
-  //addCodeDataACS0(142, {"",        0, addCallFunc(ACS_CF_ClrInventory)});
+    addCodeDataACS0(142, {"",        0, addCallFunc(ACS_CF_ClearInventory)});
     addCodeDataACS0(143, {"",        2, addCallFunc(ACS_CF_GiveInventory)});
     addCodeDataACS0(144, {"WSW",     0, addCallFunc(ACS_CF_GiveInventory)});
     addCodeDataACS0(145, {"",        2, addCallFunc(ACS_CF_TakeInventory)});
@@ -252,7 +252,7 @@ ACSEnvironment::ACSEnvironment() : dir{ nullptr }, global{ getGlobalScope(0) }, 
   //addCodeDataACS0(333, {"",        1, addCallFunc(ACS_CF_PrintBind)});
     addCodeDataACS0(334, {"",        3, addCallFunc(ACS_CF_SetActorState)});
     addCodeDataACS0(335, {"",        3, addCallFunc(ACS_CF_Thing_Damage2)});
-  //addCodeDataACS0(336, {"",        1, addCallFunc(ACS_CF_UseInventory)});
+    addCodeDataACS0(336, {"",        1, addCallFunc(ACS_CF_UseInventory)});
   //addCodeDataACS0(337, {"",        2, addCallFunc(ACS_CF_UseThingInv)});
     addCodeDataACS0(338, {"",        2, addCallFunc(ACS_CF_CheckActorCeilingTexture)});
     addCodeDataACS0(339, {"",        2, addCallFunc(ACS_CF_CheckActorFloorTexture)});
@@ -354,7 +354,7 @@ ACSEnvironment::ACSEnvironment() : dir{ nullptr }, global{ getGlobalScope(0) }, 
   //addFuncDataACS0( 90, addCallFunc(ACS_CF_GetThingRoll));
   //addFuncDataACS0( 91, addCallFunc(ACS_CF_QuakeEx));
   //addFuncDataACS0( 92, addCallFunc(ACS_CF_Warp));
-  //addFuncDataACS0( 93, addCallFunc(ACS_CF_GetMaxInventory));
+    addFuncDataACS0( 93, addCallFunc(ACS_CF_GetMaxInventory));
     addFuncDataACS0( 94, addCallFunc(ACS_CF_SetSectorDamage));
   //addFuncDataACS0( 95, addCallFunc(ACS_CF_SetSectorTerrain));
   //addFuncDataACS0( 96, addCallFunc(ACS_CF_SpawnParticle));
