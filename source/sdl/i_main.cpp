@@ -50,7 +50,11 @@
 // For Visual Studio only, in release mode, rename this function to common_main
 // and use the main defined in i_w32main.c, which contains an exception handler.
 #if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) && !defined(_DEBUG)
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS  // a bit pedantic because MSVC tends to be on Windows anyway
+#define wmain common_main
+#else
 #define main common_main
+#endif
 #endif
 
 // MaxW: Necessary for a specific check that seems to help with audio issues

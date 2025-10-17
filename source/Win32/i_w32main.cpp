@@ -39,7 +39,7 @@
 
 extern void I_W32InitExceptionHandler(void);
 extern int __cdecl I_W32ExceptionHandler(PEXCEPTION_POINTERS ep);
-extern int common_main(int argc, char **argv);
+extern int common_main(int argc, wchar_t **argv);
 
 int disable_sysmenu;
 
@@ -78,7 +78,7 @@ static void I_tweakConsole()
 }
 
 #if !defined(_DEBUG)
-int main(int argc, char **argv)
+int wmain(int argc, wchar_t **argv)
 {
     I_W32InitExceptionHandler();
 
