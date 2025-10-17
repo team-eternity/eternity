@@ -237,7 +237,7 @@ bool P_TakeAmmoPickup(player_t &player, const itemeffect_t *pickup, int itemamou
 // amount metatable value. It needs to work this way to have all side effects
 // of the called function (double baby/nightmare ammo, weapon switching).
 //
-static bool P_giveBackpackAmmo(player_t &player)
+static bool P_giveBackpackAmmo(player_t &player, int itemamount = 1)
 {
     static MetaKeyIndex keyBackpackAmount("ammo.backpackamount");
 
@@ -250,7 +250,36 @@ static bool P_giveBackpackAmmo(player_t &player)
         if(!giveamount)
             continue;
         // FIXME: no way to ignoreskill for backpack?
-        given |= P_GiveAmmo(player, ammoType, giveamount, false);
+        given |= P_GiveAmmo(player, ammoType, giveamount * itemamount, false);
+    }
+
+    return given;
+}
+
+//
+// P_takeBackpackAmmo
+//
+// Takes backpack ammo from the player.
+// The skill multiplier is also taken into account
+//
+static bool P_takeBackpackAmmo(player_t &player, bool ignoreskill = false, int itemamount = 1)
+{
+    static MetaKeyIndex keyBackpackAmount("ammo.backpackamount");
+
+    bool   given   = false;
+    size_t numAmmo = E_GetNumAmmoTypes();
+    for(size_t i = 0; i < numAmmo; ++i)
+    {
+        auto ammoType   = E_AmmoTypeForIndex(i);
+        int  giveamount = ammoType->getInt(keyBackpackAmount, 0);
+        if(!giveamount)
+            continue;
+
+        // apply ammo multiplier for baby/nightmare skill
+        if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
+            giveamount = static_cast<int>(floor(giveamount * GameModeInfo->skillAmmoMultiplier));
+
+        given |= E_RemoveInventoryItem(player, ammoType, giveamount * itemamount, true);
     }
 
     return given;
@@ -522,10 +551,13 @@ bool P_GiveInventory(player_t *player, itemeffect_t *item, const int itemamount,
         default:
             E_GiveInventoryItem(*player, item, itemamount, givemax);
 
-            // If the item is a backpack and givemax is true, give max ammo for all ammo types
-            if(strcmp(item->getClassName(), ARTI_BACKPACKITEM) == 0)
+            // If backpack, give backpack ammo as well
+            // If itemamount < -1, give full ammo for all ammo types
+            // If itemamount = -1, do not give any ammo, only give backpack
+            // If itemamount > 0, give backpack ammo * itemamount
+            if(strcmp(item->getKey(), ARTI_BACKPACKITEM) == 0)
             {
-                if(givemax)
+                if(itemamount < -1)
                 {
                     size_t numAmmo = E_GetNumAmmoTypes();
 
@@ -535,10 +567,9 @@ bool P_GiveInventory(player_t *player, itemeffect_t *item, const int itemamount,
                         E_GiveInventoryItem(*player, ammo, 1, true);
                     }
                 }
-                // if itemamount > 1, give backpack ammo bonus too
-                else if(itemamount > 1)
+                else if(itemamount > 0)
                 {
-                    P_giveBackpackAmmo(*player);
+                    P_giveBackpackAmmo(*player, itemamount);
                 }
             }
 
@@ -598,8 +629,29 @@ bool P_TakeInventory(player_t *player, itemeffect_t *item, const int itemamount,
 
             // If another artifact or backpack, just remove it from inventory
         default:
-            if(strcmp(item->getClassName(), ARTI_BACKPACKITEM) == 0)
+            if(strcmp(item->getKey(), ARTI_BACKPACKITEM) == 0)
+            {
                 E_RemoveBackpack(*player);
+
+                // If backpack, take backpack ammo as well
+                // If itemamount < -1, take full ammo for all ammo types
+                // If itemamount = -1, do not take any ammo, only take backpack
+                // If itemamount > 0, take backpack ammo * itemamount
+                if(itemamount < -1)
+                {
+                    size_t numAmmo = E_GetNumAmmoTypes();
+
+                    for(size_t i = 0; i < numAmmo; i++)
+                    {
+                        auto ammo = E_AmmoTypeForIndex(i);
+                        E_RemoveInventoryItem(*player, ammo, -1, true);
+                    }
+                }
+                else if(itemamount > 0)
+                {
+                    P_takeBackpackAmmo(*player, false, itemamount);
+                }
+            }
             else
                 E_RemoveInventoryItem(*player, item, itemamount, true);
             break;
@@ -609,7 +661,7 @@ bool P_TakeInventory(player_t *player, itemeffect_t *item, const int itemamount,
     return true;
 }
 
-// 
+//
 // P_CheckInventory
 //
 // Checks the player inventory for an item or power directly
