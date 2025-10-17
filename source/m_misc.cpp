@@ -24,6 +24,7 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+#include "hal/i_directory.h"
 #include "hal/i_platform.h"
 #include "hal/i_gamepads.h"
 
@@ -1479,7 +1480,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
     // M_NormalizeSlashes(tmpfile);
 
     errno = 0;
-    if(!(f = fopen(tmpfile.constPtr(), "w+"))) // killough 9/21/98
+    if(!(f = I_fopen(tmpfile.constPtr(), "w+"))) // killough 9/21/98
     {
         M_defaultFileWriteError(df, tmpfile.constPtr());
         return;
@@ -1551,7 +1552,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
     rewind(f);
 
     FILE *destf;
-    if(!(destf = fopen(df->fileName, "w")))
+    if(!(destf = I_fopen(df->fileName, "w")))
     {
         M_defaultFileWriteError(df, df->fileName);
         return;
@@ -1673,7 +1674,7 @@ void M_LoadDefaultFile(defaultfile_t *df)
     //
     // killough 9/21/98: Print warning if file missing, and use fgets for reading
 
-    if(!(f = fopen(df->fileName, "r")))
+    if(!(f = I_fopen(df->fileName, "r")))
         printf("Warning: Cannot read %s -- using built-in defaults\n", df->fileName);
     else
     {

@@ -22,13 +22,17 @@
 //
 
 #include <assert.h>
+#include <filesystem>
 #include "z_zone.h"
+#include "hal/i_directory.h"
 #include "hal/i_platform.h"
 #include "doomtype.h"
 
 #include "d_main.h"   // for usermsg
 #include "i_system.h" // for I_Error
 #include "m_qstr.h"   // for qstring
+
+namespace fs = std::filesystem;
 
 //=============================================================================
 //
@@ -45,7 +49,7 @@ bool M_WriteFile(char const *name, void *source, size_t length)
 
     errno = 0;
 
-    if(!(fp = fopen(name, "wb"))) // Try opening file
+    if(!(fp = I_fopen(name, "wb"))) // Try opening file
         return 0;                 // Could not open file for writing
 
     result = (fwrite(source, 1, length, fp) == length); // Write data
@@ -66,7 +70,7 @@ int M_ReadFile(char const *name, byte **buffer)
 
     errno = 0;
 
-    if((fp = fopen(name, "rb")))
+    if((fp = I_fopen(name, "rb")))
     {
         size_t length;
 
@@ -146,7 +150,7 @@ char *M_LoadStringFromFile(const char *filename)
     char  *buf = nullptr;
     size_t len = 0;
 
-    if(!(f = fopen(filename, "rb")))
+    if(!(f = I_fopen(filename, "rb")))
         return nullptr;
 
     // allocate at length + 1 for null termination

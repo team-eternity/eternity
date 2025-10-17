@@ -13,40 +13,43 @@
 
 class CEECrashReportDlg : public CDialog
 {
-// Construction
+    // Construction
 public:
-	CEECrashReportDlg(CWnd* pParent = NULL);	// standard constructor
+    CEECrashReportDlg(CWnd *pParent = NULL); // standard constructor
 
-// Dialog Data
-	//{{AFX_DATA(CEECrashReportDlg)
-	enum { IDD = IDD_EECRASHREPORT_DIALOG };
-	CEdit	m_ErrorEditBox;
-	//}}AFX_DATA
+    // Dialog Data
+    //{{AFX_DATA(CEECrashReportDlg)
+    enum
+    {
+        IDD = IDD_EECRASHREPORT_DIALOG
+    };
+    CEdit m_ErrorEditBox;
+    //}}AFX_DATA
 
-	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CEECrashReportDlg)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
-	//}}AFX_VIRTUAL
-
-// Implementation
+    // ClassWizard generated virtual function overrides
+    //{{AFX_VIRTUAL(CEECrashReportDlg)
 protected:
-	HICON m_hIcon;
-   size_t filelen;
+    virtual void DoDataExchange(CDataExchange *pDX); // DDX/DDV support
+                                                     //}}AFX_VIRTUAL
 
-   // haleyjd: custom methods
-   void LoadErrorFile();
-   void LaunchBrowser();
+    // Implementation
+protected:
+    HICON  m_hIcon;
+    size_t filelen;
 
-	// Generated message map functions
-	//{{AFX_MSG(CEECrashReportDlg)
-	virtual BOOL OnInitDialog();
-	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
-	afx_msg void OnPaint();
-	afx_msg HCURSOR OnQueryDragIcon();
-	virtual void OnOK();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+    // haleyjd: custom methods
+    void LoadErrorFile();
+    void LaunchBrowser();
+
+    // Generated message map functions
+    //{{AFX_MSG(CEECrashReportDlg)
+    virtual BOOL    OnInitDialog();
+    afx_msg void    OnSysCommand(UINT nID, LPARAM lParam);
+    afx_msg void    OnPaint();
+    afx_msg HCURSOR OnQueryDragIcon();
+    virtual void    OnOK();
+    //}}AFX_MSG
+    DECLARE_MESSAGE_MAP()
 };
 
 //{{AFX_INSERT_LOCATION}}

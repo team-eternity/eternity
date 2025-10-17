@@ -27,6 +27,7 @@
 
 #include "z_zone.h"
 
+#include "hal/i_directory.h"
 #include "hal/i_picker.h"
 #include "hal/i_platform.h"
 
@@ -1030,7 +1031,7 @@ void D_CheckIWAD(const char *iwadname, iwadcheck_t &version)
 {
     FILE *fp;
 
-    if(!(fp = fopen(iwadname, "rb")))
+    if(!(fp = I_fopen(iwadname, "rb")))
     {
         if(version.flags & IWADF_FATALNOTOPEN)
         {

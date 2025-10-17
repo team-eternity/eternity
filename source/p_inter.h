@@ -62,16 +62,20 @@ bool P_TakeBody(player_t &, const itemeffect_t *, int itemamount = 1);
 bool P_GiveArmor(player_t &, const itemeffect_t *, int itemamount = 1, bool givemax = false);
 bool P_TakeArmor(player_t &, const itemeffect_t *, int itemamount = 1);
 
+// MaxW 2016/07/23: P_GivePower is no longer required for external use;
+// previously it was used in m_cheats, but the CheatX powereffects mean
+// that P_GivePowerForItem can be used.
 bool P_GivePowerForItem(player_t &, const itemeffect_t *, int itemamount = 1, bool givemax = false);
 bool P_TakePowerForItem(player_t &, const itemeffect_t *, int itemamount = 1);
 
 bool P_GivePower(player_t &player, int power, int duration, bool permanent, bool additiveTime);
 bool P_TakePower(player_t &player, int power, int itemamount = 1);
 
-void P_TouchSpecialThing(Mobj *special, Mobj *toucher);
-void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source, int damage, int mod);
-void P_DropItems(Mobj *actor, bool tossitems);
-bool P_MorphPlayer(const emodmorph_t &minfo, player_t &player);
+e_pickupfx_t *P_GetPickUpEffect(const Mobj *special);
+void          P_TouchSpecialThing(Mobj *special, Mobj *toucher);
+void          P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source, int damage, int mod);
+void          P_DropItems(Mobj *actor, bool tossitems);
+bool          P_MorphPlayer(const emodmorph_t &minfo, player_t &player);
 
 void P_Whistle(Mobj *actor, int mobjtype);
 

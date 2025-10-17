@@ -5,6 +5,7 @@ Features
 --------
 * Added support for the "author" property in UMAPINFO.
 * Added DEMOLOOP id24 lump support.
+* Added support for non-power-of-two flats.
 * Added a parameter to A_VileTarget codepointer: thing type to spawn (defaults to the one with Dehackednum 5, i.e.
   "VileFire" in Doom). Thanks to sink666 for the wish to have this parameter in the pull request.
 * Made A_VileAttack codepointer paremeterized. Added the following args:
@@ -56,7 +57,7 @@ Bug fixes
 * Fixed bad rendering of specially paletted PNG file for the Heretic episode 2 ending screen.
 * Fixed A_CustomPlayerMelee wrong implementation of the angle deflection argument. Now it properly avoid rotating player
   if set to "none". Thanks to sink666's pull request for the catch.
-* Fixed a freeze with an infinite loop when the player had only ìUnknownî (dummy weapon) left and tried to change 
+* Fixed a freeze with an infinite loop when the player had only ‚ÄúUnknown‚Äù (dummy weapon) left and tried to change 
   a weapon.
 * Fixed a game crash that occurred when a player had only one weapon left and, after firing it, ran out of ammo and 
   attempted to switch to a more suitable weapon (which did not exist).

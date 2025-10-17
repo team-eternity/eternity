@@ -32,6 +32,7 @@
 #include "c_io.h"
 #include "doomtype.h"
 #include "e_hash.h"
+#include "hal/i_directory.h"
 #include "m_swap.h"
 #include "v_misc.h"
 #include "v_png.h"
@@ -900,7 +901,7 @@ bool V_WritePNG(byte *linear, int width, int height, const char *filename)
     palette = palcache.get();
 
     // Open file for output
-    if(!(writeData.outf = fopen(filename, "wb")))
+    if(!(writeData.outf = I_fopen(filename, "wb")))
     {
         C_Printf(FC_ERROR "V_WritePNG: could not open %s for write\a", filename);
         return false;

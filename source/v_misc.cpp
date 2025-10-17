@@ -32,6 +32,7 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "e_fonts.h"
+#include "hal/i_directory.h"
 #include "hal/i_timer.h"
 #include "hu_over.h"
 #include "i_system.h"
@@ -653,7 +654,7 @@ CONSOLE_COMMAND(v_fontcolors, 0)
 
     path = userpath / *Console.argv[1];
 
-    if((f = fopen(path.constPtr(), "w")))
+    if((f = I_fopen(path.constPtr(), "w")))
     {
         fprintf(f, "Font %s uses the following colors:\n", fontName);
         for(int i = 0; i < 256; i++)
