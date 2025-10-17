@@ -53,7 +53,7 @@
 // Macros
 //
 
-#define charcount(arr) (sizeof(arr) / sizeof(arr[0]))
+#define charcount(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define LOG_BUFFER_SIZE 8192
 #define MEGABYTE (1024*1024)
 #define RoundMem(amt) (((amt) + MEGABYTE - 1) / MEGABYTE)
@@ -67,13 +67,13 @@
 
 static std::atomic_bool exceptionHandled;
 
-static TCHAR  moduleFileName[MAX_PATH * 2];
-static TCHAR  moduleName[MAX_PATH * 2];
-static TCHAR  crashModulePath[MAX_PATH * 2];
-static HANDLE logFile;
-static TCHAR  logbuffer[LOG_BUFFER_SIZE];
-static int    logidx;
-static TCHAR *fileName;
+static wchar_t  moduleFileName[MAX_PATH * 2];
+static wchar_t  moduleName[MAX_PATH * 2];
+static wchar_t  crashModulePath[MAX_PATH * 2];
+static HANDLE   logFile;
+static TCHAR    logbuffer[LOG_BUFFER_SIZE];
+static int      logidx;
+static wchar_t *fileName;
 
 static PEXCEPTION_RECORD exceptionRecord;
 static PCONTEXT          contextRecord;
@@ -123,6 +123,15 @@ static TCHAR *ExtractFileName(LPCTSTR path)
 
     return ret;
 }
+static wchar_t *ExtractFileName(wchar_t *path)
+{
+    wchar_t *ret;
+    if((ret = wcsrchr(path, L'\\')))
+        ++ret;
+    else
+        ret = path;
+    return ret;
+}
 
 //
 // GetModuleName
@@ -131,22 +140,22 @@ static TCHAR *ExtractFileName(LPCTSTR path)
 //
 static void GetModuleName(void)
 {
-    TCHAR *dot;
+    wchar_t *dot;
 
     ZeroMemory(moduleFileName, sizeof(moduleFileName));
 
-    if(GetModuleFileName(NULL, moduleFileName, charcount(moduleFileName) - 2) <= 0)
-        lstrcpy(moduleFileName, _T("Unknown"));
+    if(GetModuleFileNameW(NULL, moduleFileName, charcount(moduleFileName) - 2) <= 0)
+        wcscpy_s(moduleFileName, L"Unknown");
 
     fileName = ExtractFileName(moduleFileName);
-    lstrcpy(moduleName, fileName);
+    wcscpy_s(moduleName, fileName);
 
     // find extension and remove it
-    if((dot = lstrrchr(moduleName, _T('.'))))
+    if((dot = wcsrchr(moduleName, L'.')))
         dot[0] = 0;
 
     // put filename onto module path
-    lstrcpy(fileName, _T("CRASHLOG.TXT"));
+    wcscpy_s(fileName, charcount(moduleName) - (fileName - moduleName), L"CRASHLOG.TXT");
 }
 
 //=============================================================================
@@ -161,8 +170,8 @@ static void GetModuleName(void)
 //
 static int OpenLogFile(void)
 {
-    logFile = CreateFile(moduleFileName, GENERIC_WRITE, 0, 0, CREATE_ALWAYS,
-                         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 0);
+    logFile = CreateFileW(moduleFileName, GENERIC_WRITE, 0, 0, CREATE_ALWAYS,
+                          FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 0);
 
     if(logFile == INVALID_HANDLE_VALUE)
         return 0;
@@ -285,7 +294,7 @@ static const TCHAR *PhraseForException(DWORD code)
 //
 static void PrintHeader(void)
 {
-    const TCHAR             *crashModuleFn = _T("Unknown");
+    const wchar_t           *crashModuleFn = L"Unknown";
     MEMORY_BASIC_INFORMATION memoryInfo;
 
     ZeroMemory(crashModulePath, sizeof(crashModulePath));
@@ -309,7 +318,8 @@ static void PrintHeader(void)
     // process's code address.
     if(VirtualQuery((void *)contextRecord->Rip, &memoryInfo, sizeof(memoryInfo)))
     {
-        if(GetModuleFileName((HINSTANCE)memoryInfo.AllocationBase, crashModulePath, charcount(crashModulePath) - 2) > 0)
+        if(GetModuleFileNameW((HINSTANCE)memoryInfo.AllocationBase, crashModulePath, charcount(crashModulePath) - 2) >
+           0)
         {
             crashModuleFn = ExtractFileName(crashModulePath);
         }
@@ -821,21 +831,21 @@ void WriteMinidump(_EXCEPTION_POINTERS *pException)
 //
 static int LaunchCrashApp(void)
 {
-    static STARTUPINFO         si;
+    static STARTUPINFOW        si;
     static PROCESS_INFORMATION pi;
-    static TCHAR               cmdline[MAX_PATH * 2];
+    static wchar_t             cmdline[MAX_PATH * 2];
 
     // Replace the filename with our crash report exe file name
-    lstrcpy(fileName, _T("eecrashreport.exe"));
-    lstrcpy(cmdline, moduleFileName);
-    lstrcat(cmdline, _T(" \"")); // surround app name with quotes
+    wcscpy_s(fileName, charcount(moduleName) - (fileName - moduleName), L"eecrashreport.exe");
+    wcscpy_s(cmdline, moduleFileName);
+    wcscat_s(cmdline, L" \""); // surround app name with quotes
 
     ZeroMemory(moduleFileName, sizeof(moduleFileName));
 
-    GetModuleFileName(nullptr, moduleFileName, charcount(moduleFileName) - 2);
+    GetModuleFileNameW(nullptr, moduleFileName, charcount(moduleFileName) - 2);
 
-    lstrcat(cmdline, ExtractFileName(moduleFileName));
-    lstrcat(cmdline, _T("\""));
+    wcscat_s(cmdline, ExtractFileName(moduleFileName));
+    wcscat_s(cmdline, L"\"");
 
     ZeroMemory(&si, sizeof(si));
     ZeroMemory(&pi, sizeof(pi));
@@ -844,7 +854,7 @@ static int LaunchCrashApp(void)
     si.dwFlags     = STARTF_USESHOWWINDOW;
     si.wShowWindow = SW_SHOW;
 
-    return CreateProcess(nullptr, cmdline, nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &pi) ? 1 : 0;
+    return CreateProcessW(nullptr, cmdline, nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &pi) ? 1 : 0;
 }
 
 //=============================================================================
@@ -858,7 +868,7 @@ static int LaunchCrashApp(void)
 void I_W32InitExceptionHandler(void)
 {
     RtlGetVersion =
-        reinterpret_cast<decltype(RtlGetVersion)>(GetProcAddress(GetModuleHandle(_T("ntdll")), "RtlGetVersion"));
+        reinterpret_cast<decltype(RtlGetVersion)>(GetProcAddress(GetModuleHandleW(L"ntdll"), "RtlGetVersion"));
 }
 
 //
