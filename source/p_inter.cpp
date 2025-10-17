@@ -535,6 +535,7 @@ bool P_GiveInventory(player_t *player, itemeffect_t *item, const int itemamount,
                         E_GiveInventoryItem(*player, ammo, 1, true);
                     }
                 }
+                // if itemamount > 1, give backpack ammo bonus too
                 else if(itemamount > 1)
                 {
                     P_giveBackpackAmmo(*player);
