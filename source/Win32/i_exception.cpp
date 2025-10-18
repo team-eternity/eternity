@@ -304,7 +304,7 @@ static void PrintHeader(void)
     // process's code address.
     if(VirtualQuery((void *)contextRecord->Eip, &memoryInfo, sizeof(memoryInfo)))
     {
-        if(GetModuleFileName((HINSTANCE)memoryInfo.AllocationBase, crashModulePath, charcount(crashModulePath) - 2) > 0)
+        if(GetModuleFileNameW((HINSTANCE)memoryInfo.AllocationBase, crashModulePath, charcount(crashModulePath) - 2) > 0)
         {
             crashModuleFn = ExtractFileName(crashModulePath);
         }
