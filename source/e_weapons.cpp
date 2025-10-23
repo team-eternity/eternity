@@ -350,7 +350,7 @@ int E_NumWeaponsInSlotPlayerOwns(const player_t &player, const int slot)
 //
 // Check if player has any weapons left
 //
-bool E_PlayerHasAnyWeapons(const player_t &player)
+bool E_PlayerHasAnyWeapons(const player_t &player, bool onlyWithAmmo)
 {
     for(weaponslot_t *&slot : player.pclass->weaponslots)
     {
@@ -360,7 +360,8 @@ bool E_PlayerHasAnyWeapons(const player_t &player)
         BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(slot);
         do
         {
-            if(E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
+            if(E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon) &&
+               (!onlyWithAmmo || P_WeaponHasAmmo(player, weaponslot->bdObject->weapon)))
                 return true;
 
             weaponslot = weaponslot->bdNext;
@@ -373,17 +374,16 @@ bool E_PlayerHasAnyWeapons(const player_t &player)
 
 //
 // Check if player has any weapons left
-// if not and setemptyweapon is true, give the "Unknown" dummy weapon
+// if not and setemptyweapon is true, select the "Unknown" dummy weapon (without giving it)
 //
-bool E_PlayerHasAnyWeapons(player_t &player, bool setemptyweapon)
+bool E_PlayerHasAnyWeapons(player_t &player, bool onlyWithAmmo, bool setemptyweapon)
 {
-    bool hasanyweapon = E_PlayerHasAnyWeapons(player);
+    bool hasanyweapon = E_PlayerHasAnyWeapons(player, onlyWithAmmo);
     if(!hasanyweapon && setemptyweapon)
     {
         weaponinfo_t *emptyWeapon = E_WeaponForName("Unknown");
         if(emptyWeapon != nullptr)
         {
-            E_GiveWeapon(player, emptyWeapon);
             player.pendingweapon     = emptyWeapon;
             player.pendingweaponslot = E_FindFirstWeaponSlot(player, emptyWeapon);
         }

@@ -342,7 +342,7 @@ ACSEnvironment::ACSEnvironment() : dir{ nullptr }, global{ getGlobalScope(0) }, 
   //addFuncDataACS0( 78, addCallFunc(ACS_CF_GetThingPowerupTics));
     addFuncDataACS0( 79, addCallFunc(ACS_CF_ChangeActorAngle));
     addFuncDataACS0( 80, addCallFunc(ACS_CF_ChangeActorPitch));
-  //addFuncDataACS0( 81, addCallFunc(ACS_CF_GetArmorInfo));
+    addFuncDataACS0( 81, addCallFunc(ACS_CF_GetArmorInfo));
   //addFuncDataACS0( 82, addCallFunc(ACS_CF_DropInventory));
   //addFuncDataACS0( 83, addCallFunc(ACS_CF_PickThing));
   //addFuncDataACS0( 84, addCallFunc(ACS_CF_IsPointerEqual));

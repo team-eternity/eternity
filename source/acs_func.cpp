@@ -2192,7 +2192,11 @@ void ACS_SetThingProp(Mobj *thing, uint32_t var, uint32_t val)
     // clang-format off
     switch(var)
     {
-    case ACS_TP_Health:       thing->health = val; break;
+    case ACS_TP_Health:       
+        thing->health = val; 
+        if (thing->player)
+            thing->player->health = val;
+        break;
     case ACS_TP_Speed:        break;
     case ACS_TP_Damage:       thing->damage = val; break;
     case ACS_TP_Alpha:        thing->translucency = val; break;
@@ -2677,7 +2681,6 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
     if(amount == 0)
         return false;
 
-
     if(info->mo)
     {
         // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
@@ -2769,6 +2772,14 @@ bool ACS_CF_UseInventory(ACS_CF_ARGS)
     char const         *itemname = thread->scopeMap->getString(argV[0])->str;
     itemeffect_t *const item     = E_ItemEffectForName(itemname);
 
+    // If the item doesn't exist, complain
+    if(!item)
+    {
+        doom_printf("ACS_CF_UseInventory: Inventory item '%s' not found\a\n", itemname);
+        thread->dataStk.push(0);
+        return false;
+    }
+
     if(!info->mo || !info->mo->player)
         thread->dataStk.push(0);
     else
@@ -2801,6 +2812,38 @@ bool ACS_CF_GetMaxInventory(ACS_CF_ARGS)
         thread->dataStk.push(0);
     else
         thread->dataStk.push(P_GetMaxInventory(mo->player, item, powernum));
+
+    return false;
+}
+
+//
+// int GetArmorInfo(int infotype);
+//
+bool ACS_CF_GetArmorInfo(ACS_CF_ARGS)
+{
+    auto      info     = &static_cast<ACSThread *>(thread)->info;
+    int const infotype = argV[0];
+
+    if(!info->mo || !info->mo->player)
+        thread->dataStk.push(0);
+    else
+    {
+        switch(infotype)
+        {
+        case 0: // ARMORINFO_ARMORPOINTS
+            thread->dataStk.push(info->mo->player->armorpoints);
+            break;
+        case 1: // ARMORINFO_ARMORFACTOR
+            thread->dataStk.push(info->mo->player->armorfactor);
+            break;
+        case 2: // ARMORINFO_ARMORDIVISOR
+            thread->dataStk.push(info->mo->player->armordivisor);
+            break;
+        default: // UNKNOWN
+            thread->dataStk.push(0);
+            break;
+        }
+    }
 
     return false;
 }

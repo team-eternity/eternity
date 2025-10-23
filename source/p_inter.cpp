@@ -671,10 +671,16 @@ int P_CheckInventory(player_t *player, itemeffect_t *item, const int power)
     if(!player || (!item && power == NUMPOWERS))
         return 0;
 
+    auto checkPower = [](player_t *player, int power) -> int {
+        return player->powers[power].infinite || (player->powers[power].tics != 0 && power == pw_strength) ?
+                   -1 :
+                   player->powers[power].tics;
+    };
+
     if(power != NUMPOWERS)
     {
         // Check power directly
-        return player->powers[power].infinite ? -1 : player->powers[power].tics;
+        return checkPower(player, power);
     }
     else
     {
@@ -698,7 +704,7 @@ int P_CheckInventory(player_t *player, itemeffect_t *item, const int power)
             return E_GetItemOwnedAmount(*player, E_ItemEffectForName(item->getString("ammo", "")));
 
             // If power artifact, return remaining duration
-            // If power is infinite or strength/silencer, return -1
+            // If power is infinite or strength, return -1
         case ITEMFX_POWER:
             powerStr = item->getString("type", "");
             if(!powerStr || !strcmp(powerStr, ""))
@@ -707,9 +713,7 @@ int P_CheckInventory(player_t *player, itemeffect_t *item, const int power)
                 return 0; // There's no power for the type provided
 
             // If the power is infinite, return -1, otherwise return remaining tics
-            return player->powers[powerNum].infinite || powerNum == pw_strength || powerNum == pw_silencer ?
-                       -1 :
-                       player->powers[powerNum].tics;
+            return checkPower(player, powerNum);
 
             // If weapon giver, return current weapon amount for the weapon designated
         case ITEMFX_WEAPONGIVER:
@@ -725,7 +729,7 @@ int P_CheckInventory(player_t *player, itemeffect_t *item, const int power)
 //
 // P_ClearInventory
 //
-// Take armor, backpack and clear all inventory items except undroppable ones
+// Take armor, backpack, all powers and clear all inventory items except undroppable ones
 //
 bool P_ClearInventory(player_t *player)
 {
@@ -737,6 +741,10 @@ bool P_ClearInventory(player_t *player)
 
     // Take backpack
     E_RemoveBackpack(*player);
+
+    // Take all powers
+    for(int i = 0; i < NUMPOWERS; i++)
+        P_TakePower(*player, i, -1);
 
     // Clear inventory slots, ignoring artifacts with UNDROPPABLE flag
     E_ClearInventory(player, false, true);
@@ -756,7 +764,7 @@ bool P_UseInventory(player_t *player, itemeffect_t *item)
 
     // Check if the player has the item and try to use it
     if(E_GetItemOwnedAmount(*player, item) >= 1)
-        return E_TryUseItem(*player, item->getKeyIdx());
+        return E_TryUseItem(*player, item->getInt(keyItemID, -1));
 
     return false;
 }
@@ -775,7 +783,7 @@ int P_GetMaxInventory(player_t *player, itemeffect_t *item, const int power)
     if(power != NUMPOWERS)
     {
         // If power itself is infinite by default, return -1 (infinite)
-        if(power == pw_strength || power == pw_silencer)
+        if(power == pw_strength)
             return -1;
 
         // Otherwise, return 1
@@ -804,7 +812,7 @@ int P_GetMaxInventory(player_t *player, itemeffect_t *item, const int power)
         case ITEMFX_AMMO:
             return E_GetMaxAmountForArtifact(*player, E_ItemEffectForName(item->getString("ammo", "")));
 
-            // If power artifact, retrun -1 for permanent powers or strength/silencer, otherwise duration in seconds
+            // If power artifact, retrun -1 for permanent powers or strength, otherwise duration in seconds
         case ITEMFX_POWER:
             powerStr = item->getString("type", "");
             if(!powerStr || !strcmp(powerStr, ""))
@@ -812,8 +820,8 @@ int P_GetMaxInventory(player_t *player, itemeffect_t *item, const int power)
             if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
                 return 0; // There's no power for the type provided
 
-            // If power is permanent or it's strength/silencer, return -1 (infinite)
-            if(item->getInt("permanent", 0) || powerNum == pw_strength || powerNum == pw_silencer)
+            // If power is permanent or it's strength, return -1 (infinite)
+            if(item->getInt("permanent", 0) || powerNum == pw_strength)
                 return -1;
 
             // Otherwise, return duration of the power artifact in seconds
@@ -1151,10 +1159,6 @@ bool P_GivePower(player_t &player, int power, int duration, bool permament, bool
     case pw_invisibility: //
         player.mo->flags |= MF_SHADOW;
         break;
-    case pw_allmap:
-        if(player.powers[pw_allmap].isActive())
-            return false;
-        break;
     case pw_totalinvis: // haleyjd: total invisibility
         player.mo->flags2 |= MF2_DONTDRAW;
         player.mo->flags4 |= MF4_TOTALINVISIBLE;
@@ -1162,14 +1166,10 @@ bool P_GivePower(player_t &player, int power, int duration, bool permament, bool
     case pw_ghost: // haleyjd: heretic ghost
         player.mo->flags3 |= MF3_GHOST;
         break;
-    case pw_silencer:
-        if(player.powers[pw_silencer].isActive())
-            return false;
-        break;
     case pw_flight: // haleyjd: flight
-        if(player.powers[pw_flight].tics < 0 || player.powers[pw_flight].tics > 4 * 32)
-            return false;
-        P_PlayerStartFlight(player, true);
+        // If the player already has power, prevent the start of the jump
+        if(!player.powers[pw_flight].isActive())
+            P_PlayerStartFlight(player, true); 
         break;
     case pw_weaponlevel2:
         if(!E_IsPoweredVariant(player.readyweapon))
@@ -1215,34 +1215,47 @@ bool P_TakePower(player_t &player, int powernum, int itemamount)
         return false;
     }
 
-    powerduration_t &currentpower = player.powers[powernum];
+    powerduration_t *currentpower = &player.powers[powernum];
 
-    if(itemamount > 0 && !currentpower.infinite && powernum != pw_strength && powernum != pw_silencer)
+    if(itemamount > 0 && !currentpower->infinite && powernum != pw_strength)
     {
-        currentpower.tics -= itemamount;
-        if(currentpower.tics < 0)
-            currentpower.tics = 0;
+        currentpower->tics -= itemamount;
+        if(currentpower->tics < 0)
+            currentpower->tics = 0;
     }
     else
     {
-        currentpower = { 0, false };
+        currentpower->tics     = 0;
+        currentpower->infinite = false;
     }
 
-    // Change weapon to unpowered if weaponlevel2 power lost
-    if(!currentpower.isActive() && powernum == pw_weaponlevel2)
+    // If power is now inactive, remove its effects
+    if(!currentpower->isActive())
     {
-        if(E_IsPoweredVariant(player.readyweapon))
+        switch(powernum)
         {
-            weaponinfo_t *sister = player.readyweapon->sisterWeapon;
-            if(!E_IsPoweredVariant(sister))
+        case pw_invisibility: player.mo->flags &= ~MF_SHADOW; break;
+        case pw_totalinvis:
+            player.mo->flags2 &= ~MF2_DONTDRAW;
+            player.mo->flags4 &= ~MF4_TOTALINVISIBLE;
+            break;
+        case pw_ghost:  player.mo->flags3 &= ~MF3_GHOST; break;
+        case pw_flight: P_PlayerStopFlight(player); break;
+        case pw_weaponlevel2:
+            if(E_IsPoweredVariant(player.readyweapon))
             {
-                if(sister->readystate != player.readyweapon->readystate || sister->flags & WPF_FORCETOREADY)
+                weaponinfo_t *sister = player.readyweapon->sisterWeapon;
+                if(!E_IsPoweredVariant(sister))
                 {
-                    P_SetPsprite(player, ps_weapon, sister->readystate);
-                    player.refire = 0;
+                    if(sister->readystate != player.readyweapon->readystate || sister->flags & WPF_FORCETOREADY)
+                    {
+                        P_SetPsprite(player, ps_weapon, sister->readystate);
+                        player.refire = 0;
+                    }
+                    player.readyweapon = sister;
                 }
-                player.readyweapon = sister;
             }
+            break;
         }
     }
 
@@ -1286,8 +1299,8 @@ bool P_GivePowerForItem(player_t &player, const itemeffect_t *power, int itemamo
 
     const powerduration_t &currentpower = player.powers[powerNum];
 
-    // EDF_FEATURES_FIXME: Strength counts up. Also should additivetime imply overridesself?
-    if(!power->getInt("overridesself", 0) &&
+    // EDF_FEATURES_FIXME: Strength counts up.
+    if(!power->getInt("overridesself", 0) && !power->getInt("additivetime", 0) &&
        (currentpower.tics > 4 * 32 || currentpower.tics < 0 || currentpower.infinite))
         return false;
 
@@ -1302,6 +1315,9 @@ bool P_GivePowerForItem(player_t &player, const itemeffect_t *power, int itemamo
         {
             duration     = duration * TICRATE; // Duration is given in seconds
             additiveTime = power->getInt("additivetime", 0) ? true : false;
+
+            if(additiveTime)
+                duration = duration * itemamount;
         }
 
         if(powerNum == pw_weaponlevel2 && player.morphTics)
@@ -1319,7 +1335,7 @@ bool P_GivePowerForItem(player_t &player, const itemeffect_t *power, int itemamo
             return true;
         }
 
-        return P_GivePower(player, powerNum, duration * itemamount, permanent, additiveTime);
+        return P_GivePower(player, powerNum, duration, permanent, additiveTime);
     }
 
     return true;

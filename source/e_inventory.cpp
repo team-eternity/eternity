@@ -1893,8 +1893,10 @@ bool E_TryUseItem(player_t &player, inventoryitemid_t ID)
 {
     invbarstate_t &invbarstate = player.invbarstate;
     itemeffect_t  *artifact    = E_EffectForInventoryItemID(ID);
+
     if(!artifact)
         return false;
+
     if(E_getItemEffectType(artifact) == ITEMFX_ARTIFACT)
     {
         if(artifact->getInt(keyArtifactType, -1) == ARTI_NORMAL)
@@ -1978,6 +1980,7 @@ bool E_TryUseItem(player_t &player, inventoryitemid_t ID)
             return success;
         }
     }
+
     return false;
 }
 
@@ -2468,8 +2471,8 @@ itemremoved_e E_RemoveInventoryItem(player_t &player, const itemeffect_t *artifa
         }
     }
 
-    // Give the player a empty weapon if they have no weapons left
-    E_PlayerHasAnyWeapons(player, true);
+    // Select an empty weapon if player has no weapons left (without giving dummy weapon)
+    E_PlayerHasAnyWeapons(player, false, true);
 
     return ret;
 }
@@ -2534,9 +2537,9 @@ void E_ClearInventory(player_t *player, bool undroppable, bool setemptyweapon)
     player->inv_ptr = 0;
     invbarstate     = { false, 0 };
 
-    // Give the player a empty weapon if they have no weapons left
+    // Select an empty weapon if player has no weapons left (without giving dummy weapon)
     if(setemptyweapon)
-        E_PlayerHasAnyWeapons(*player, true);
+        E_PlayerHasAnyWeapons(*player, false, true);
 }
 
 //
