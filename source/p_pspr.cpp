@@ -257,6 +257,11 @@ static weaponslot_t *P_findFirstNonNullWeaponSlot(const player_t &player)
 //
 int P_NextWeapon(const player_t &player, uint8_t *slotindex)
 {
+    // If player has no weapons or only dummy weapon, no need to search
+    // Also avoids infinite loop in case player has only dummy weapon
+    if(!E_PlayerHasAnyWeapons(player, false))
+        return demo_version >= 401 ? -1 : wp_nochange;
+
     const weaponinfo_t             *currentweapon = player.readyweapon;
     const weaponinfo_t             *newweapon     = player.readyweapon;
     const weaponslot_t             *newweaponslot = player.readyweaponslot;
@@ -265,6 +270,11 @@ int P_NextWeapon(const player_t &player, uint8_t *slotindex)
     if(newweaponslot == nullptr)
         newweaponslot = P_findFirstNonNullWeaponSlot(player);
     newweaponlink = &newweaponslot->links;
+
+    // Check ahead: does the player have any weapon with ammo?
+    // If not, we can allow any owned weapon.
+    // It needs to awoid infinite loop if only weapons without ammo are owned.
+    bool hasWeaponWithAmmo = E_PlayerHasAnyWeapons(player, true);
 
     bool ownsweapon, canfireweapon, sameweapon, sameweaponslot;
     do
@@ -287,8 +297,9 @@ int P_NextWeapon(const player_t &player, uint8_t *slotindex)
             }
         }
 
+        // if no weapon with ammo, allow any owned weapon
+        canfireweapon  = P_WeaponHasAmmo(player, newweapon) || !hasWeaponWithAmmo;
         ownsweapon     = E_PlayerOwnsWeapon(player, newweapon);
-        canfireweapon  = P_WeaponHasAmmo(player, newweapon);
         sameweapon     = newweapon->id == currentweapon->id;
         sameweaponslot = &newweaponslot->links == newweaponlink;
     }
@@ -318,6 +329,11 @@ int P_NextWeapon(const player_t &player, uint8_t *slotindex)
 //
 int P_PrevWeapon(const player_t &player, uint8_t *slotindex)
 {
+    // If player has no weapons or only dummy weapon, no need to search
+    // Also avoids infinite loop in case player has only dummy weapon
+    if(!E_PlayerHasAnyWeapons(player, false))
+        return demo_version >= 401 ? -1 : wp_nochange;
+
     const weaponinfo_t             *currentweapon = player.readyweapon;
     const weaponinfo_t             *newweapon     = player.readyweapon;
     const weaponslot_t             *newweaponslot = player.readyweaponslot;
@@ -326,6 +342,11 @@ int P_PrevWeapon(const player_t &player, uint8_t *slotindex)
     if(newweaponslot == nullptr)
         newweaponslot = P_findFirstNonNullWeaponSlot(player);
     newweaponlink = &newweaponslot->links;
+
+    // Check ahead: does the player have any weapon with ammo?
+    // If not, we can allow any owned weapon.
+    // It needs to awoid infinite loop if only weapons without ammo are owned.
+    bool hasWeaponWithAmmo = E_PlayerHasAnyWeapons(player, true);
 
     bool ownsweapon, canfireweapon, sameweapon, sameweaponslot;
     do
@@ -345,11 +366,13 @@ int P_PrevWeapon(const player_t &player, uint8_t *slotindex)
                     newweapon     = newweaponlink->bdObject->weapon;
                     break;
                 }
+                firsttime = false;
             }
         }
 
+        // if no weapon with ammo, allow any owned weapon
+        canfireweapon  = P_WeaponHasAmmo(player, newweapon) || !hasWeaponWithAmmo;
         ownsweapon     = E_PlayerOwnsWeapon(player, newweapon);
-        canfireweapon  = P_WeaponHasAmmo(player, newweapon);
         sameweapon     = newweapon->id == currentweapon->id;
         sameweaponslot = &newweaponslot->links == newweaponlink;
     }
@@ -519,7 +542,7 @@ bool P_CheckAmmo(player_t &player)
 // Subtracts ammo from weapons in a uniform fashion. Unfortunately, this
 // operation is complicated by compatibility issues and extra features.
 //
-void P_SubtractAmmo(const player_t &player, int compat_amt)
+void P_SubtractAmmo(player_t &player, int compat_amt)
 {
     weaponinfo_t *weapon = player.readyweapon;
     itemeffect_t *ammo;
