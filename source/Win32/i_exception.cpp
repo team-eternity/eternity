@@ -813,6 +813,9 @@ void WriteMinidump(_EXCEPTION_POINTERS *pException)
         M.ClientPointers    = 0;
 
         GetModuleFileNameW(NULL, Dump_Path, sizeof(Dump_Path));
+        size_t len = wcslen(Dump_Path);
+        if(len < 3)
+            return; // basic safety
         wcscpy(Dump_Path + wcslen(Dump_Path) - 3, L"dmp");
 
         hDump_File = CreateFileW(Dump_Path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
