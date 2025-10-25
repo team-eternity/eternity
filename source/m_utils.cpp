@@ -310,6 +310,7 @@ void M_GetFilePath(const char *fn, char *base, size_t len)
     p = base + len - 1;
 
     strncpy(base, fn, len);
+    base[len - 1] = '\0';
 
     while(p >= base)
     {

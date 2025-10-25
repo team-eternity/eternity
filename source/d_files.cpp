@@ -594,7 +594,7 @@ static int D_CheckBasePath(const qstring &qpath)
     str.rstrip('\\');
     str.rstrip('/');
 
-    path = fs::directory_entry(str.constPtr());
+    path = fs::directory_entry(fs::u8path(str.constPtr()));
 
     if(path.exists()) // check for existence
     {
