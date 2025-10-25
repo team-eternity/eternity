@@ -806,16 +806,16 @@ void WriteMinidump(_EXCEPTION_POINTERS *pException)
     {
         MINIDUMP_EXCEPTION_INFORMATION M;
         HANDLE                         hDump_File;
-        TCHAR                          Dump_Path[MAX_PATH];
+        wchar_t                        Dump_Path[MAX_PATH];
 
         M.ThreadId          = GetCurrentThreadId();
         M.ExceptionPointers = pException;
         M.ClientPointers    = 0;
 
-        GetModuleFileName(NULL, Dump_Path, sizeof(Dump_Path));
-        lstrcpy(Dump_Path + lstrlen(Dump_Path) - 3, _T("dmp"));
+        GetModuleFileNameW(NULL, Dump_Path, sizeof(Dump_Path));
+        wcscpy(Dump_Path + wcslen(Dump_Path) - 3, L"dmp");
 
-        hDump_File = CreateFile(Dump_Path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        hDump_File = CreateFileW(Dump_Path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
         MiniDumpWriteDump_(GetCurrentProcess(), GetCurrentProcessId(), hDump_File, MiniDumpNormal,
                            (pException) ? &M : NULL, NULL, NULL);
