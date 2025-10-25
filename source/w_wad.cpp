@@ -900,7 +900,7 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base, 
 bool WadDirectory::addDirectoryAsArchive(openwad_t &openData, const wfileadd_t &addInfo, int startlump)
 {
     // Check if it's a directory
-    if(std::error_code ec; !fs::is_directory(openData.filename, ec))
+    if(std::error_code ec; !fs::is_directory(fs::u8path(openData.filename), ec))
     {
         handleOpenError(openData, addInfo, openData.filename);
         return false;

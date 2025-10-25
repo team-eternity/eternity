@@ -32,8 +32,6 @@
 #include "i_system.h" // for I_Error
 #include "m_qstr.h"   // for qstring
 
-namespace fs = std::filesystem;
-
 //=============================================================================
 //
 // File IO Routines
