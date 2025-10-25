@@ -59,6 +59,7 @@
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "g_gfs.h"
+#include "hal/i_directory.h"
 #include "hal/i_timer.h"
 #include "hu_stuff.h"
 #include "i_sound.h"
@@ -882,7 +883,7 @@ void D_InitPaths()
     {
         struct stat sbuf; // jff 3/24/98 used to test save path for existence
 
-        if(!stat(myargv[i + 1], &sbuf) && S_ISDIR(sbuf.st_mode)) // and is a dir
+        if(!I_stat(myargv[i + 1], &sbuf) && S_ISDIR(sbuf.st_mode)) // and is a dir
         {
             if(basesavegame)
                 efree(basesavegame);

@@ -161,7 +161,7 @@ static bool D_FindInDoomWadPath(qstring &out, const char *filename, const char *
         qstr.pathConcatenate(filename);
 
         // See if the file exists as-is
-        if(!stat(qstr.constPtr(), &sbuf)) // check for existence
+        if(!I_stat(qstr.constPtr(), &sbuf)) // check for existence
         {
             if(!S_ISDIR(sbuf.st_mode)) // check that it's NOT a directory
             {
@@ -179,7 +179,7 @@ static bool D_FindInDoomWadPath(qstring &out, const char *filename, const char *
             {
                 qstr += extension;
 
-                if(!stat(qstr.constPtr(), &sbuf)) // exists?
+                if(!I_stat(qstr.constPtr(), &sbuf)) // exists?
                 {
                     if(!S_ISDIR(sbuf.st_mode)) // not a dir?
                     {
@@ -577,7 +577,7 @@ static const char *D_doIWADMenu()
             struct stat sbuf;
 
             // 07/06/13: Needs to actually exist.
-            if(!stat(path, &sbuf) && !S_ISDIR(sbuf.st_mode))
+            if(!I_stat(path, &sbuf) && !S_ISDIR(sbuf.st_mode))
             {
                 haveIWADs[i] = true;
                 foundone     = true;
@@ -1075,7 +1075,7 @@ static bool WadFileStatus(qstring &filename, bool *isdir)
     if(i == 0)      // if path nullptr or empty, doesn't exist
         return false;
 
-    if(!stat(filename.constPtr(), &sbuf)) // check for existence
+    if(!I_stat(filename.constPtr(), &sbuf)) // check for existence
     {
         *isdir = S_ISDIR(sbuf.st_mode); // if it does, set whether a dir or not
         return true;                    // return does exist
@@ -1089,7 +1089,7 @@ static bool WadFileStatus(qstring &filename, bool *isdir)
 
     filename.concat(".wad"); // try it with .wad added
 
-    if(!stat(filename.constPtr(), &sbuf)) // if it exists then
+    if(!I_stat(filename.constPtr(), &sbuf)) // if it exists then
     {
         if(S_ISDIR(sbuf.st_mode)) // but is a dir, then say we didn't find it
             return false;

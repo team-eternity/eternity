@@ -36,6 +36,7 @@ const char *I_PlatformInstallDirectory();
 void I_GetRealPath(const char *path, qstring &real);
 
 FILE *I_fopen(const char *path, const char *mode);
+int   I_stat(const char *fileName, struct stat *stat);
 
 #endif
 

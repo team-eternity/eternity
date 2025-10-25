@@ -39,6 +39,7 @@ namespace fs = std::experimental::filesystem;
 #include "d_io.h"
 #include "d_iwad.h"
 #include "d_main.h"
+#include "hal/i_directory.h"
 #include "hal/i_picker.h"
 #include "hal/i_platform.h"
 #include "m_collection.h"
@@ -669,7 +670,7 @@ static void D_findMasterLevels()
                 // Strip everything before the first slash off of the string to concatenate
                 newPath.pathConcatenate(currSubDir.waddir);
 
-                if(!stat(newPath.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
+                if(!I_stat(newPath.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
                 {
                     w_masterlevelsdirname = newPath.duplicate(PU_STATIC);
 
@@ -686,7 +687,7 @@ static void D_findMasterLevels()
     {
         str.pathConcatenate(gogMasterLevelsPath);
 
-        if(!stat(str.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
+        if(!I_stat(str.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
         {
             w_masterlevelsdirname = str.duplicate(PU_STATIC);
             return;
@@ -696,7 +697,7 @@ static void D_findMasterLevels()
 
     // Check for the default DOS path
     str = masterLevelsDOSPath;
-    if(!stat(str.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
+    if(!I_stat(str.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
         w_masterlevelsdirname = str.duplicate(PU_STATIC);
 }
 

@@ -137,5 +137,15 @@ FILE* I_fopen(const char* path, const char* mode)
 #endif
 }
 
+int I_stat(const char* fileName, struct stat* stat)
+{
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
+    fs::path fileNameObject = fs::u8path(fileName);
+    return _wstat(fileNameObject.wstring().c_str(), reinterpret_cast<struct _stat*>(stat));
+#else
+    return stat(fileName, stat);
+#endif
+}
+
 // EOF
 

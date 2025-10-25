@@ -51,6 +51,7 @@ namespace fs = std::experimental::filesystem;
 #include "dstrings.h"
 #include "g_bind.h"
 #include "g_game.h"
+#include "hal/i_directory.h"
 #include "m_buffer.h"
 #include "m_collection.h"
 #include "m_compare.h"
@@ -275,7 +276,7 @@ static void MN_readSaveStrings()
         // File time.
         START_UTF8();
         struct stat statbuf;
-        if(!stat(pathStr.constPtr(), &statbuf))
+        if(!I_stat(pathStr.constPtr(), &statbuf))
         {
             char timeStr[64 + 1];
             strftime(timeStr, sizeof(timeStr), "%a. %b %d %Y\n%r", localtime(&statbuf.st_mtime));

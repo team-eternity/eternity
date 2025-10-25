@@ -127,7 +127,7 @@ void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset, 
     // ioanch: check if it's a directory. Do not allow "subfiles" or special
     // addflags
     struct stat sbuf;
-    if(addflags == DAF_NONE && !fp && !stat(file, &sbuf) && S_ISDIR(sbuf.st_mode))
+    if(addflags == DAF_NONE && !fp && !I_stat(file, &sbuf) && S_ISDIR(sbuf.st_mode))
     {
         flags = WFA_DIRECTORY_ARCHIVE | WFA_OPENFAILFATAL;
     }
@@ -937,7 +937,7 @@ static int D_VerifyGamePath(const char *path)
     int         ret;
     struct stat sbuf;
 
-    if(!stat(path, &sbuf)) // check for existence
+    if(!I_stat(path, &sbuf)) // check for existence
     {
         if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
             ret = BASE_ISGOOD;
@@ -1048,7 +1048,7 @@ static char *D_CheckGamePathFile(const char *name, bool isDir)
 
     // check for existence under user/<game>
     char *fullpath = M_SafeFilePath(usergamepath, name);
-    if(!stat(fullpath, &sbuf))
+    if(!I_stat(fullpath, &sbuf))
     {
         // check that it is or is not a directory as requested
         if(S_ISDIR(sbuf.st_mode) == isDir)
@@ -1057,7 +1057,7 @@ static char *D_CheckGamePathFile(const char *name, bool isDir)
 
     // check for existence under base/<game>
     fullpath = M_SafeFilePath(basegamepath, name);
-    if(!stat(fullpath, &sbuf))
+    if(!I_stat(fullpath, &sbuf))
     {
         if(S_ISDIR(sbuf.st_mode) == isDir)
             return fullpath;
