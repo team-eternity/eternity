@@ -717,7 +717,7 @@ int WadDirectory::addDirectory(const char *dirpath)
     PODCollection<dirfile_t> files;
     lumpinfo_t              *newlumps;
 
-    dir = fs::path(dirpath);
+    dir = fs::u8path(dirpath);
     if(!fs::exists(dir))
         return 0;
 
@@ -830,7 +830,7 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base, 
     qstring path(base);
     path.pathConcatenate(subpath);
 
-    fs::path dir(path.constPtr());
+    fs::path dir(fs::u8path(path.constPtr()));
     if(!fs::exists(dir))
         return;
 

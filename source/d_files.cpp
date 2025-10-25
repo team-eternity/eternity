@@ -760,7 +760,7 @@ static int D_CheckUserPath(const qstring &qpath)
     str.rstrip('\\');
     str.rstrip('/');
 
-    path = fs::directory_entry(str.constPtr());
+    path = fs::directory_entry(fs::u8path(str.constPtr()));
 
     if(path.exists()) // check for existence
     {
@@ -1116,7 +1116,7 @@ void D_EnumerateAutoloadDir()
         if((autoDir = D_CheckGamePathFile("autoload", true)))
         {
             autoload_dirname = autoDir;
-            autoloads        = fs::path(autoload_dirname.constPtr());
+            autoloads        = fs::u8path(autoload_dirname.constPtr());
         }
     }
 }

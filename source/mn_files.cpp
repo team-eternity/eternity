@@ -274,10 +274,10 @@ int MN_ReadDirectory(mndir_t *dir, const char *read_dir, const char *const *read
     dir->dirpath = read_dir;
 
     // test for failure
-    if(std::error_code ec; !fs::is_directory(dir->dirpath, ec))
+    if(std::error_code ec; !fs::is_directory(fs::u8path(dir->dirpath), ec))
         return ec.value();
 
-    const fs::directory_iterator itr(dir->dirpath);
+    const fs::directory_iterator itr(fs::u8path(dir->dirpath));
     for(const fs::directory_entry &ent : itr)
     {
         qstring filename(reinterpret_cast<const char *>(
@@ -304,7 +304,7 @@ int MN_ReadDirectory(mndir_t *dir, const char *read_dir, const char *const *read
     }
 
     // If there's a parent directory then add it
-    if(fs::exists(fs::path(dir->dirpath) / ".."))
+    if(fs::exists(fs::u8path(dir->dirpath) / ".."))
         MN_addFile(dir, "..");
 
     // sort the list

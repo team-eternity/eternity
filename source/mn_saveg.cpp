@@ -240,10 +240,10 @@ static void MN_readSaveStrings()
     e_saveSlots.clear();
 
     // test for failure
-    if(std::error_code ec; !fs::is_directory(basesavegame, ec))
+    if(std::error_code ec; !fs::is_directory(fs::u8path(basesavegame), ec))
         return;
 
-    const fs::directory_iterator itr(basesavegame);
+    const fs::directory_iterator itr(fs::u8path(basesavegame));
     for(const fs::directory_entry &ent : itr)
     {
         size_t      len;
