@@ -31,6 +31,9 @@
 
 #include <windows.h>
 #include <tchar.h>
+#include <wchar.h>
+#include <stdarg.h>
+#include <string>
 
 #if defined(_MSC_VER)
 #pragma warning(push)
@@ -72,6 +75,7 @@ static wchar_t  moduleName[MAX_PATH * 2];
 static wchar_t  crashModulePath[MAX_PATH * 2];
 static HANDLE   logFile;
 static TCHAR    logbuffer[LOG_BUFFER_SIZE];
+static wchar_t  wlogbuffer[LOG_BUFFER_SIZE];
 static int      logidx;
 static wchar_t *fileName;
 
@@ -222,6 +226,24 @@ static void LogPrintf(LPCTSTR fmt, ...)
 
     va_end(args);
 }
+static void LogPrintf(const wchar_t* fmt, ...)
+{
+    static wchar_t widefmt[LOG_BUFFER_SIZE / 2];
+    va_list        args;
+    va_start(args, fmt);
+    _vsnwprintf(widefmt, charcount(widefmt), fmt, args);
+    va_end(args);
+    
+    int n = WideCharToMultiByte(CP_UTF8, 0, widefmt, -1, nullptr, 0, nullptr, nullptr);
+    if(!n)
+        return;
+    std::string res;
+    res.resize(n);
+    WideCharToMultiByte(CP_UTF8, 0, widefmt, -1, res.data(), n, nullptr, nullptr);
+    res.resize(n - 1);
+
+    LogPrintf("%s", res.c_str());
+}
 
 //=============================================================================
 //
@@ -327,7 +349,7 @@ static void PrintHeader(void)
 
     LogPrintf(_T("IMPORTANT!: When submitting a crashlog, DO NOT modify or remove any part of this file.\r\n"));
 
-    LogPrintf(_T("%s caused %s Exception (0x%08x)\r\nin module %s at %04x:%016I64x\r\n\r\n"), moduleName,
+    LogPrintf(L"%s caused %hs Exception (0x%08x)\r\nin module %s at %04x:%016I64x\r\n\r\n", moduleName,
               PhraseForException(exceptionRecord->ExceptionCode), exceptionRecord->ExceptionCode, crashModuleFn,
               contextRecord->SegCs, contextRecord->Rip);
 #endif
@@ -374,21 +396,21 @@ static void PrintTime(void)
 //
 static void PrintUserInfo(void)
 {
-    TCHAR moduleName[MAX_PATH * 2];
-    TCHAR userName[256];
-    DWORD userNameLen;
+    wchar_t moduleName[MAX_PATH * 2];
+    wchar_t userName[256];
+    DWORD   userNameLen;
 
     ZeroMemory(moduleName, sizeof(moduleName));
     ZeroMemory(userName, sizeof(userName));
     userNameLen = charcount(userName) - 2;
 
-    if(GetModuleFileName(0, moduleName, charcount(moduleName) - 2) <= 0)
-        lstrcpy(moduleName, _T("Unknown"));
+    if(GetModuleFileNameW(0, moduleName, charcount(moduleName) - 2) <= 0)
+        wcscpy(moduleName, L"Unknown");
 
-    if(!GetUserName(userName, &userNameLen))
-        lstrcpy(userName, _T("Unknown"));
+    if(!GetUserNameW(userName, &userNameLen))
+        wcscpy(userName, L"Unknown");
 
-    LogPrintf(_T("%s, run by %s.\r\n"), moduleName, userName);
+    LogPrintf(L"%s, run by %s.\r\n", moduleName, userName);
 }
 
 //
