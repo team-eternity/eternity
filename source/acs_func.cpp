@@ -3025,5 +3025,74 @@ bool ACS_CF_TagWait(ACS_CF_ARGS)
     return true;
 }
 
+enum
+{
+    COLORMAP_MID,
+    COLORMAP_TOP,
+    COLORMAP_BOTTOM
+};
+
+//
+// ACS_CF_GetSectorColormap
+//
+// str GetSectorColormap(int tag, int type);
+//
+bool ACS_CF_GetSectorColormap(ACS_CF_ARGS)
+{
+    int const   tag      = argV[0];
+    int const   type     = argV[1];
+    int         secnum   = P_FindSectorFromTag(tag, -1); // Get only first sector with tag
+    sector_t   &sector   = sectors[secnum];
+    char const *colormap = nullptr;
+
+    switch(type)
+    {
+    case COLORMAP_MID:    colormap = R_ColormapNameForNum(sector.midmap); break;
+    case COLORMAP_TOP:    colormap = R_ColormapNameForNum(sector.topmap); break;
+    case COLORMAP_BOTTOM: colormap = R_ColormapNameForNum(sector.bottommap); break;
+    }
+
+    thread->dataStk.push(~ACSenv.getString(!colormap ? 0 : colormap)->idx);
+    return false;
+}
+
+//
+// SetSectorColormap
+//
+// bool SetSectorColormap(int tag, int type, string colormap);
+//
+bool ACS_CF_SetSectorColormap(ACS_CF_ARGS)
+{
+    int const tag      = argV[0];
+    int const type     = argV[1];
+    int const colormap = R_ColormapNumForName(thread->scopeMap->getString(argV[2])->str);
+    int       res      = 0;
+    int       secnum   = -1;
+
+    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0 && colormap != -1)
+    {
+        sector_t &sector = sectors[secnum];
+
+        switch(type)
+        {
+        case COLORMAP_MID:
+            sector.midmap = colormap;
+            res           = 1;
+            break;
+        case COLORMAP_TOP:
+            sector.topmap = colormap;
+            res           = 1;
+            break;
+        case COLORMAP_BOTTOM:
+            sector.bottommap = colormap;
+            res              = 1;
+            break;
+        }
+    }
+
+    thread->dataStk.push(res);
+    return false;
+}
+
 // EOF
 

@@ -366,6 +366,8 @@ ACSEnvironment::ACSEnvironment() : dir{ nullptr }, global{ getGlobalScope(0) }, 
     addFuncDataACS0(301, addCallFunc(ACS_CF_GetLineY));
     addFuncDataACS0(302, addCallFunc(ACS_CF_SetAirFriction));
     addFuncDataACS0(303, addCallFunc(ACS_CF_SetPolyobjXY));
+    addFuncDataACS0(304, addCallFunc(ACS_CF_GetSectorColormap));
+    addFuncDataACS0(305, addCallFunc(ACS_CF_SetSectorColormap));
 
     // clang-format on
 }
