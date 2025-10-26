@@ -124,10 +124,10 @@ void I_GetRealPath(const char *path, qstring &real)
 #endif
 }
 
-FILE* I_fopen(const char* path, const char* mode)
+FILE *I_fopen(const char *path, const char *mode)
 {
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
-    fs::path pathObject = fs::u8path(path);
+    fs::path     pathObject = fs::u8path(path);
     std::wstring wmode;
     for(const char *m = mode; *m; ++m)
         wmode.push_back(static_cast<wchar_t>(*m));
@@ -137,13 +137,13 @@ FILE* I_fopen(const char* path, const char* mode)
 #endif
 }
 
-int I_stat(const char* fileName, struct stat* stat)
+int I_stat(const char *fileName, struct stat *statobj)
 {
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
     fs::path fileNameObject = fs::u8path(fileName);
-    return _wstat(fileNameObject.wstring().c_str(), reinterpret_cast<struct _stat*>(stat));
+    return _wstat(fileNameObject.wstring().c_str(), reinterpret_cast<struct _stat *>(statobj));
 #else
-    return stat(fileName, stat);
+    return stat(fileName, statobj);
 #endif
 }
 
