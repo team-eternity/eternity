@@ -28,6 +28,7 @@
 #include "d_gi.h"
 #include "d_io.h"
 #include "doomstat.h"
+#include "hal/i_directory.h"
 #include "m_buffer.h"
 #include "m_qstr.h"
 #include "m_utils.h"
@@ -616,7 +617,7 @@ void M_ScreenShot()
     // constants rather than integers, some of which were not even
     // correct under DJGPP to begin with (it's a wonder it worked...)
 
-    if(!access(path.constPtr(), W_OK))
+    if(!I_access(path.constPtr(), W_OK))
     {
         static int shot;
         char      *lbmname = nullptr;
@@ -630,7 +631,7 @@ void M_ScreenShot()
             // haleyjd: use format extension.
             psnprintf(lbmname, len, "%s/etrn%02d.%s", path.constPtr(), shot++, format->extension);
         }
-        while(!access(lbmname, F_OK) && --tries);
+        while(!I_access(lbmname, F_OK) && --tries);
 
         if(tries && ob.createFile(lbmname, 512 * 1024, format->endian))
         {

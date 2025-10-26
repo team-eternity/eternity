@@ -1205,14 +1205,14 @@ static void D_findIWADFile(qstring &iwad)
         gameiwad.pathConcatenate(myargv[gamepathparm]);
         gameiwad.addDefaultExtension(".wad");
 
-        if(!access(gameiwad.constPtr(), R_OK)) // only if the file exists do we try to use it.
+        if(!I_access(gameiwad.constPtr(), R_OK)) // only if the file exists do we try to use it.
             basename = gameiwad.constPtr();
         else
         {
             // haleyjd 12/31/10: base/game/game.wad doesn't exist;
             // try matching against appropriate configured IWAD path(s)
             char *cfgpath = D_IWADPathForGame(myargv[gamepathparm]);
-            if(cfgpath && !access(cfgpath, R_OK))
+            if(cfgpath && !I_access(cfgpath, R_OK))
                 basename = cfgpath;
         }
     }
@@ -1301,7 +1301,7 @@ static void D_findIWADFile(qstring &iwad)
     if(customiwad.length())
     {
         char *cfgpath = D_IWADPathForIWADParam(customiwad.constPtr());
-        if(cfgpath && !access(cfgpath, R_OK))
+        if(cfgpath && !I_access(cfgpath, R_OK))
         {
             iwad = cfgpath;
             return;
@@ -1397,7 +1397,7 @@ static void D_loadResourceWad()
     psnprintf(filestr, len, "%s/eternity.pke", basegamepath);
 
     // haleyjd 08/19/07: if not found, fall back to base/doom/eternity.pke
-    if(access(filestr, R_OK))
+    if(I_access(filestr, R_OK))
         psnprintf(filestr, len, "%s/doom/eternity.pke", basepath);
 
     M_NormalizeSlashes(filestr);

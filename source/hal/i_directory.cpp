@@ -124,6 +124,16 @@ void I_GetRealPath(const char *path, qstring &real)
 #endif
 }
 
+int I_access(const char* path, int mode)
+{
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
+    fs::path pathObject = fs::u8path(path);
+    return _waccess(pathObject.wstring().c_str(), mode);
+#else
+    return access(path, mode);
+#endif
+}
+
 FILE *I_fopen(const char *path, const char *mode)
 {
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS

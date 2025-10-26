@@ -39,6 +39,7 @@
 #include "e_player.h" // haleyjd: turbo cmd must alter playerclass info
 #include "f_wipe.h"
 #include "g_game.h"
+#include "hal/i_directory.h"
 #include "hal/i_timer.h"
 #include "hu_stuff.h"
 #include "i_system.h"
@@ -514,7 +515,7 @@ static bool G_TestIWADPath(char *path)
     M_NormalizeSlashes(path);
 
     // test for read access, and warn if non-existent
-    if(access(path, R_OK))
+    if(I_access(path, R_OK))
     {
         if(menuactive)
             MN_ErrorMsg("Warning: cannot access filepath");

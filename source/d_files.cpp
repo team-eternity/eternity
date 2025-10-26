@@ -216,7 +216,7 @@ void D_ProcessGFSDeh(gfs_t *gfs)
             M_NormalizeSlashes(filename);
         }
 
-        if(access(filename, F_OK))
+        if(I_access(filename, F_OK))
             I_Error("Couldn't open .deh or .bex %s\n", filename);
 
         D_QueueDEH(filename, 0); // haleyjd: queue it
@@ -251,7 +251,7 @@ void D_ProcessGFSWads(gfs_t *gfs)
             M_NormalizeSlashes(filename);
         }
 
-        if(access(filename, F_OK))
+        if(I_access(filename, F_OK))
             I_Error("Couldn't open WAD file %s\n", filename);
 
         D_AddFile(filename, lumpinfo_t::ns_global, nullptr, 0, DAF_NONE);
@@ -275,7 +275,7 @@ void D_ProcessGFSCsc(gfs_t *gfs)
             M_NormalizeSlashes(filename);
         }
 
-        if(access(filename, F_OK))
+        if(I_access(filename, F_OK))
             I_Error("Couldn't open CSC file %s\n", filename);
 
         C_RunScriptFromFile(filename);

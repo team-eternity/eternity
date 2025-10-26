@@ -1066,11 +1066,11 @@ static void D_ProcessDehCommandLine(void)
 
                     file = myargv[p];
                     file.addDefaultExtension(".bex");
-                    if(access(file.constPtr(), F_OK)) // nope
+                    if(I_access(file.constPtr(), F_OK)) // nope
                     {
                         file = myargv[p];
                         file.addDefaultExtension(".deh");
-                        if(access(file.constPtr(), F_OK)) // still nope
+                        if(I_access(file.constPtr(), F_OK)) // still nope
                             I_Error("Cannot find .deh or .bex file named '%s'\n", myargv[p]);
                     }
                     // during the beta we have debug output to dehout.txt
@@ -1103,7 +1103,7 @@ static void D_ProcessWadPreincludes()
 
                     file = s;
                     file.addDefaultExtension(".wad");
-                    if(!access(file.constPtr(), R_OK))
+                    if(!I_access(file.constPtr(), R_OK))
                         D_AddFile(file.constPtr(), lumpinfo_t::ns_global, nullptr, 0, DAF_NONE);
                     else
                         printf("\nWarning: could not open '%s'\n", file.constPtr());
@@ -1130,13 +1130,13 @@ static void D_ProcessDehPreincludes(void)
 
                     file = s;
                     file.addDefaultExtension(".bex");
-                    if(!access(file.constPtr(), R_OK))
+                    if(!I_access(file.constPtr(), R_OK))
                         D_QueueDEH(file.constPtr(), 0); // haleyjd: queue it
                     else
                     {
                         file = s;
                         file.addDefaultExtension(".deh");
-                        if(!access(file.constPtr(), R_OK))
+                        if(!I_access(file.constPtr(), R_OK))
                             D_QueueDEH(file.constPtr(), 0); // haleyjd: queue it
                         else
                             printf("\nWarning: could not open '%s' .deh or .bex\n", s);
@@ -1171,7 +1171,7 @@ static void D_AutoExecScripts()
 
                     file = s;
                     file.addDefaultExtension(".csc");
-                    if(!access(file.constPtr(), R_OK))
+                    if(!I_access(file.constPtr(), R_OK))
                         C_RunScriptFromFile(file.constPtr());
                     else
                         usermsg("\nWarning: could not open console script %s\n", s);
@@ -1329,7 +1329,7 @@ static void D_DoomInit()
         // haleyjd 01/19/05: corrected use of AddDefaultExtension
         fn = myargv[p + 1];
         fn.addDefaultExtension(".gfs");
-        if(access(fn.constPtr(), F_OK))
+        if(I_access(fn.constPtr(), F_OK))
             I_Error("GFS file '%s' not found\n", fn.constPtr());
 
         printf("Parsing GFS file '%s'\n", fn.constPtr());
@@ -1347,7 +1347,7 @@ static void D_DoomInit()
 
         fn = basegamepath;
         fn.pathConcatenate("default.gfs");
-        if(!access(fn.constPtr(), R_OK))
+        if(!I_access(fn.constPtr(), R_OK))
         {
             gfs     = G_LoadGFS(fn.constPtr());
             haveGFS = true;
