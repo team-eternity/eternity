@@ -31,6 +31,8 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 #include <string>
+#else
+#include <unistd.h>
 #endif
 
 #include "../z_zone.h"
@@ -124,7 +126,7 @@ void I_GetRealPath(const char *path, qstring &real)
 #endif
 }
 
-int I_access(const char* path, int mode)
+int I_access(const char *path, int mode)
 {
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
     fs::path pathObject = fs::u8path(path);
@@ -147,7 +149,7 @@ FILE *I_fopen(const char *path, const char *mode)
 #endif
 }
 
-char* I_getenv(const char* name)
+char *I_getenv(const char *name)
 {
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
     if(!name)
