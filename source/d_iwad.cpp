@@ -105,7 +105,7 @@ static void D_parseDoomWadPath()
 {
     const char *dwp;
 
-    if((dwp = getenv("DOOMWADPATH")))
+    if((dwp = I_getenv("DOOMWADPATH")))
     {
         char *tempdwp = Z_Strdupa(dwp);
         char *rover   = tempdwp;
@@ -1330,7 +1330,7 @@ static void D_findIWADFile(qstring &iwad)
     {
         char *p;
 
-        if((p = getenv(envvars[i])))
+        if((p = I_getenv(envvars[i])))
         {
             iwad = p;
             iwad.normalizeSlashes();
@@ -1378,7 +1378,7 @@ static void D_findIWADFile(qstring &iwad)
                     } // end else (!*customiwad)
                 } // end else (isdir)
             } // end if(WadFileStatus(...))
-        } // end if((p = getenv(...)))
+        } // end if((p = I_getenv(...)))
     } // end for
 
     iwad = "";

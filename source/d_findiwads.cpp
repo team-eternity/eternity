@@ -356,8 +356,8 @@ static void D_addDoomWadPath(Collection<qstring> &paths)
 //
 static void D_addDoomWadDir(Collection<qstring> &paths)
 {
-    const char *doomWadDir = getenv("DOOMWADDIR");
-    const char *homeDir    = getenv("HOME");
+    const char *doomWadDir = I_getenv("DOOMWADDIR");
+    const char *homeDir    = I_getenv("HOME");
 
     if(estrnonempty(doomWadDir))
         paths.addNew() = doomWadDir;

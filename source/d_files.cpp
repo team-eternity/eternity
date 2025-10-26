@@ -673,7 +673,7 @@ void D_SetBasePath()
     }
 
     // check environment
-    if(res != BASE_ISGOOD && (s = getenv("ETERNITYBASE")))
+    if(res != BASE_ISGOOD && (s = I_getenv("ETERNITYBASE")))
     {
         basedir = s;
 
@@ -826,7 +826,7 @@ void D_SetUserPath()
     }
 
     // check environment
-    if(res != BASE_ISGOOD && (s = getenv("ETERNITYUSER")))
+    if(res != BASE_ISGOOD && (s = I_getenv("ETERNITYUSER")))
     {
         userdir = s;
 

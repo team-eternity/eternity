@@ -137,6 +137,27 @@ FILE *I_fopen(const char *path, const char *mode)
 #endif
 }
 
+char* I_getenv(const char* name)
+{
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
+    if(!name)
+        return nullptr; // trivial safety
+    std::wstring wname;
+    wname.resize(strlen(name) * 2);
+    MultiByteToWideChar(CP_UTF8, 0, name, -1, wname.data(), (int)wname.length() + 1);
+    wchar_t *wresult = _wgetenv(wname.c_str());
+    if(!wresult)
+        return nullptr;
+    static std::string result;
+    result.resize(wcslen(wresult) * 2);
+    int n = WideCharToMultiByte(CP_UTF8, 0, wresult, -1, result.data(), (int)result.length() + 1, nullptr, nullptr);
+    result.resize(n - 1);
+    return result.data();
+#else
+    return getenv(name);
+#endif
+}
+
 int I_stat(const char *fileName, struct stat *statobj)
 {
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
