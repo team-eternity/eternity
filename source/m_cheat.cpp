@@ -344,7 +344,7 @@ static void cheat_pw(const void *arg)
     int pw = *(const int *)arg;
 
     if(plyr->powers[pw].isActive())
-        plyr->powers[pw] = { pw != pw_strength && pw != pw_allmap && pw != pw_silencer, false }; // killough
+        plyr->powers[pw] = { pw != pw_strength, false }; // killough
     else
     {
         static const int tics[NUMPOWERS] = {
@@ -359,7 +359,7 @@ static void cheat_pw(const void *arg)
             FLIGHTTICS, // haleyjd: flight
             INFRATICS,  // haleyjd: torch
         };
-        P_GivePower(*plyr, pw, tics[pw], false, false);
+        P_GivePower(*plyr, pw, tics[pw], pw == pw_allmap || pw == pw_silencer, false);
         if(!getComp(comp_infcheat))
             plyr->powers[pw] = { 0, true };
     }
