@@ -800,6 +800,7 @@ const char *comp_strings[] = {
     "special",    //          08/29/09: special failure behavior
     "ninja",      //          04/18/10: ninja spawn
     "aircontrol", //
+    "thingsectorlight", //
 };
 
 static void Handler_CompTHeights()
@@ -809,7 +810,7 @@ static void Handler_CompTHeights()
 
 void G_AddCompat()
 {
-    for(int i = 0; i < COMP_NUM_USED; i++) // haleyjd: update this regularly
+    for(int i = 0; i < COMP_TOTAL; i++) // haleyjd: update this regularly
     {
         variable_t *variable;
         command_t  *command;

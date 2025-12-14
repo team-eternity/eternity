@@ -1546,7 +1546,9 @@ void R_AddSprites(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext, Zo
             // otherwise the lighting behaviour will look incorrect
             const lighttable_t *const *mobjspritelights;
             {
-                const int mobjlightlevel = R_FakeFlatSpriteLighting(viewpoint, thing->subsector->sector);
+                const int mobjlightlevel = comp[comp_thingsectorlight] ?
+                                               R_FakeFlatSpriteLighting(viewpoint, thing->subsector->sector) :
+                                               thing->subsector->sector->lightlevel;
                 const int mobjlightnum   = (mobjlightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
 
                 if(mobjlightnum < 0)
