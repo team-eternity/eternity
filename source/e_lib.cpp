@@ -25,6 +25,9 @@
 //
 //
 
+#include <filesystem>
+namespace fs = std::filesystem;
+
 #include "z_zone.h"
 #include "i_system.h"
 
@@ -217,9 +220,10 @@ static int E_findFileInclude(cfg_t *src, const char *name)
     qname.replace("\\", '/');
     if(qname[0] != '/')
     {
-        qstring parentdir    = qstring(src->filename);
-        size_t  lastslashloc = parentdir.findLastOf('/');
+        qstring parentdir = (inclump && estrnonempty(inclump->lfn)) ? qstring(inclump->lfn) : qstring(src->filename);
+        size_t lastslashloc = parentdir.findLastOf('/');
         parentdir.truncate(lastslashloc + 1);
+
         includepath << parentdir;
     }
     else
@@ -232,6 +236,7 @@ static int E_findFileInclude(cfg_t *src, const char *name)
 
     includepath << qname;
     includepath.toLower();
+    includepath = fs::path(includepath.constPtr()).lexically_normal().generic_string().c_str();
 
     WadChainIterator wci(wGlobalDir, includepath.constPtr(), true);
 
