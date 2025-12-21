@@ -378,7 +378,7 @@ void D_DoAdvanceDemo()
         // use this secondary 'wipesuppress' variable instead
         if(prevstate && !(prevstate->flags & DSF_ENDWIPE))
         {
-            wipesuppress = true;
+            wipesuppress  = true;
             wipegamestate = GS_LEVEL;
         }
         G_DeferedPlayDemo(state->lumpname);

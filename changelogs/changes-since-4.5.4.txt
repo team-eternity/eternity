@@ -6,7 +6,6 @@ Features
 * Added support for the "author" property in UMAPINFO.
 * Added DEMOLOOP id24 lump support.
 * Added support for non-power-of-two flats.
-* Added new ACS function: GiveInventory.
 * Added a parameter to A_VileTarget codepointer: thing type to spawn (defaults to the one with Dehackednum 5, i.e.
   "VileFire" in Doom). Thanks to sink666 for the wish to have this parameter in the pull request.
 * Made A_VileAttack codepointer paremeterized. Added the following args:
@@ -19,6 +18,38 @@ Features
   - damage type for blast (default: actor's MOD)
   Thanks to sink666 for the wish to have parameters in the pull request.
 * Added damage type (MOD) argument to A_BFGSpray (default: BFG_Splash).
+* Added new ACS functions: 
+  - void GiveInventory(str item_name, int amount):
+    Can be used to give all types of items, as well as health, armor, weapons, backpacks, and all types of 
+    power effects to the player. 
+    Negative value of amount will mean to give maximum.
+  - void ClearInventory():
+    Takes all armor, backpack, weapons and ammunition, keys, all powers and all items except those marked with 
+    the UNDROPPABLE flag.
+  - int UseInventory(str item_name):
+    Uses and consume the item if the player has it in their inventory. Returns true if the use is successful, 
+    otherwise false.
+  - int GetMaxInventory(int tid, str item_name):
+    Returns the current maximum number of items a player can carry. 
+    If a health/armor item is passed, returns the maximum amount of health/armor that this type of item 
+    can heal/repair. 
+    If PowerArtifact is passed, it returns the duration of this artifact (if it is infinite, it returns -1). 
+    If type of PowerEffect is passed directly, it returns -1 if effect is infinite by default, otherwise 1.
+  - int GetArmorInfo(int infotype):
+    Allows to directly get information about the current state of the player's armor. If infotype = 0, the current 
+    amount of armor will be returned; if 1, savefactor will be returned; if 2, savedivisor will be returned. 
+    Otherwise, 0.
+* Next ACS functions has been heavily improved:
+  - void TakeInventory(str item_name, int amount):
+    Now, it can be used to take all types of items, as well as health, armor, weapons, backpacks, and all types of 
+    power effects from the player. 
+    Also, if the function is passed a amount of item that is greater than the player actually has, the item will be
+    taken away completely (previously, it was necessary to specify a number of items equal to what was in the 
+    player's inventory, which was a bug). 
+    Negative value of amount will mean to take all.
+  - int CheckInventory(str item_name):
+    Now, it can be used to check all types of items, as well as health, armor, weapons, backpacks, and all types of
+    power effects with the player. 
 
 Improvements
 ------------
@@ -29,6 +60,16 @@ Bug fixes
 * Fixed failure on Windows to load file paths with unicode (non US English) characters.
 * Fixed A_BFGSpray not using the parameter, and always being locked at 40 rays.
 * Fixed bad rendering of specially paletted PNG file for the Heretic episode 2 ending screen.
-* Fixed bad implementation of TakeInventory.
 * Fixed A_CustomPlayerMelee wrong implementation of the angle deflection argument. Now it properly avoid rotating player
   if set to "none". Thanks to sink666's pull request for the catch.
+* Fixed a freeze with an infinite loop when the player had only “Unknown” (dummy weapon) left and tried to change 
+  a weapon.
+* Fixed a game crash that occurred when a player had only one weapon left and, after firing it, ran out of ammo and 
+  attempted to switch to a more suitable weapon (which did not exist).
+* Fixed a bug where a player's all weapons were taken via TakeInventory, but they still had the last weapon they 
+  used in their hands (even though that weapon was no longer in the player's inventory).
+* PowerFlight, PowerAllMap, and PowerSilencer can now have limited duration and be modded in EDF using the permanent, 
+  additivetime, and overrideself flags, just like other powers. This will not affect vanilla Doom and Heretic, nor will 
+  it affect cheats, and the fix is aimed at modding capabilities in EDF. However, PowerStrength remains infinite 
+  regardless of duration settings.
+* Fixed a bug in the ACS SetActorProperty function where new health was not applied to the player via APROP_Health.

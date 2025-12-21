@@ -97,7 +97,7 @@ int bfgcells = 40; // used in p_pspr.c
 //
 // Returns false if the ammo can't be picked up at all
 //
-static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, int num, bool ignoreskill)
+static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, int num, bool ignoreskill, bool givemax = false)
 {
     if(!ammo)
         return false;
@@ -113,7 +113,7 @@ static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, int num, bool ignor
     if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
         num = static_cast<int>(floor(num * GameModeInfo->skillAmmoMultiplier));
 
-    if(!E_GiveInventoryItem(player, ammo, num))
+    if(!E_GiveInventoryItem(player, ammo, num, givemax))
         return false; // don't need this ammo
 
     // If non zero ammo, don't change up weapons, player was lower on purpose.
@@ -181,7 +181,8 @@ static bool P_GiveAmmo(player_t &player, itemeffect_t *ammo, int num, bool ignor
 //
 // Give the player ammo from an ammoeffect pickup.
 //
-bool P_GiveAmmoPickup(player_t &player, const itemeffect_t *pickup, bool dropped, int dropamount, int itemamount)
+bool P_GiveAmmoPickup(player_t &player, const itemeffect_t *pickup, bool dropped, int dropamount, int itemamount,
+                      bool givemax)
 {
     if(!pickup)
         return false;
@@ -200,7 +201,33 @@ bool P_GiveAmmoPickup(player_t &player, const itemeffect_t *pickup, bool dropped
 
     bool ignoreskill = !!pickup->getInt("ignoreskill", 0);
 
-    return P_GiveAmmo(player, give, giveamount * itemamount, ignoreskill);
+    return P_GiveAmmo(player, give, giveamount * itemamount, ignoreskill, givemax);
+}
+
+//
+// P_TakeAmmoPickup
+//
+// Takes from the player a amount of ammo equal to that given by this
+// AmmoPickup. The skill multiplier is also taken into account
+// If itemamount is negative, take all ammo of this type
+//
+bool P_TakeAmmoPickup(player_t &player, const itemeffect_t *pickup, int itemamount)
+{
+    if(!pickup)
+        return false;
+
+    itemeffect_t *ammotype = E_ItemEffectForName(pickup->getString("ammo", ""));
+    int           amount   = pickup->getInt("amount", 0);
+
+    bool ignoreskill = !!pickup->getInt("ignoreskill", 0);
+
+    // apply ammo multiplier for baby/nightmare skill
+    if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
+        amount = static_cast<int>(floor(amount * GameModeInfo->skillAmmoMultiplier));
+
+    E_RemoveInventoryItem(player, ammotype, amount * itemamount, true);
+
+    return true;
 }
 
 //
@@ -210,7 +237,7 @@ bool P_GiveAmmoPickup(player_t &player, const itemeffect_t *pickup, bool dropped
 // amount metatable value. It needs to work this way to have all side effects
 // of the called function (double baby/nightmare ammo, weapon switching).
 //
-static bool P_giveBackpackAmmo(player_t &player)
+static bool P_giveBackpackAmmo(player_t &player, int itemamount = 1)
 {
     static MetaKeyIndex keyBackpackAmount("ammo.backpackamount");
 
@@ -223,7 +250,36 @@ static bool P_giveBackpackAmmo(player_t &player)
         if(!giveamount)
             continue;
         // FIXME: no way to ignoreskill for backpack?
-        given |= P_GiveAmmo(player, ammoType, giveamount, false);
+        given |= P_GiveAmmo(player, ammoType, giveamount * itemamount, false);
+    }
+
+    return given;
+}
+
+//
+// P_takeBackpackAmmo
+//
+// Takes backpack ammo from the player.
+// The skill multiplier is also taken into account
+//
+static bool P_takeBackpackAmmo(player_t &player, bool ignoreskill = false, int itemamount = 1)
+{
+    static MetaKeyIndex keyBackpackAmount("ammo.backpackamount");
+
+    bool   given   = false;
+    size_t numAmmo = E_GetNumAmmoTypes();
+    for(size_t i = 0; i < numAmmo; ++i)
+    {
+        auto ammoType   = E_AmmoTypeForIndex(i);
+        int  giveamount = ammoType->getInt(keyBackpackAmount, 0);
+        if(!giveamount)
+            continue;
+
+        // apply ammo multiplier for baby/nightmare skill
+        if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
+            giveamount = static_cast<int>(floor(giveamount * GameModeInfo->skillAmmoMultiplier));
+
+        given |= E_RemoveInventoryItem(player, ammoType, giveamount * itemamount, true);
     }
 
     return given;
@@ -435,11 +491,461 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropp
 }
 
 //
+// P_GiveInventory
+//
+// Gives the player an inventory item or power directly
+// Negative itemamount means give max
+//
+bool P_GiveInventory(player_t *player, itemeffect_t *item, const int itemamount, const int power)
+{
+    if(!player || (!item && power == NUMPOWERS))
+        return false;
+
+    const bool givemax = itemamount < 0;
+
+    if(power != NUMPOWERS)
+    {
+        // Give power directly with amount as duration in tics
+        // If givemax is true, give infinite power
+        P_GivePower(*player, power, itemamount, givemax, true);
+    }
+    else
+    {
+        // Give item based on its class and properties
+        switch(item->getInt("class", ITEMFX_NONE))
+        {
+            // If health, give healthamount * itemamount, as usually
+            // If givemax is true, set maxamount of health item
+        case ITEMFX_HEALTH:
+            P_GiveBody(*player, item, itemamount, givemax);
+            break;
+
+            // If armor, give saveamount * itemamount, as usually
+            // If givemax is true, set maxsaveamount of armor item
+        case ITEMFX_ARMOR:
+            P_GiveArmor(*player, item, itemamount, givemax);
+            break;
+
+            // If ammo, give ammoamount * itemamount, skill levels affect how much is given
+            // If givemax is true, give max ammo of ammo type
+        case ITEMFX_AMMO:
+            P_GiveAmmoPickup(*player, item, false, 0, itemamount, givemax);
+            break;
+
+            // If power artifact, give duration * itemamount
+            // If power artifact is not additive, amount is igored and power has fixed duration
+            // If givemax is true, give infinite power
+        case ITEMFX_POWER:
+            P_GivePowerForItem(*player, item, itemamount, givemax);
+            break;
+
+            // If weapon giver, give the weapon and ammo * itemamount
+            // Skill levels affect how much ammo is given
+            // If givemax is true, give max ammo of ammo types
+        case ITEMFX_WEAPONGIVER:
+            P_GiveWeaponByGiver(*player, item, false, itemamount, givemax);
+            break;
+
+            // If another artifact, just give it to the player
+            // If givemax is true, give max amount of the item
+        default:
+            E_GiveInventoryItem(*player, item, itemamount, givemax);
+
+            // If backpack, give backpack ammo as well
+            // If itemamount < -1, give full ammo for all ammo types
+            // If itemamount = -1, do not give any ammo, only give backpack
+            // If itemamount > 0, give backpack ammo * itemamount
+            if(strcmp(item->getKey(), ARTI_BACKPACKITEM) == 0)
+            {
+                if(itemamount < -1)
+                {
+                    size_t numAmmo = E_GetNumAmmoTypes();
+
+                    for(size_t i = 0; i < numAmmo; i++)
+                    {
+                        auto ammo = E_AmmoTypeForIndex(i);
+                        E_GiveInventoryItem(*player, ammo, 1, true);
+                    }
+                }
+                else if(itemamount > 0)
+                {
+                    P_giveBackpackAmmo(*player, itemamount);
+                }
+            }
+
+            break;
+        }
+    }
+
+    return true;
+}
+
+//
+// P_TakeInventory
+//
+// Takes from the player an inventory item or power directly
+// Negative itemamount means take all
+//
+bool P_TakeInventory(player_t *player, itemeffect_t *item, const int itemamount, const int power)
+{
+    if(!player || (!item && power == NUMPOWERS))
+        return false;
+
+    if(power != NUMPOWERS)
+    {
+        // Take power directly with amount as duration in tics
+        P_TakePower(*player, power, itemamount);
+    }
+    else
+    {
+        // Take item based on its class and properties
+        switch(item->getInt("class", ITEMFX_NONE))
+        {
+            // If health, take healthamount * itemamount, but player health can't go below 1
+        case ITEMFX_HEALTH:
+            P_TakeBody(*player, item, itemamount);
+            break;
+
+            // If armor, take saveamount * itemamount, if player armor goes below 0, they lose armor properties
+        case ITEMFX_ARMOR:
+            P_TakeArmor(*player, item, itemamount);
+            break;
+
+            // If ammo, take ammoamount * itemamount, skill levels affect how much is taken
+        case ITEMFX_AMMO:
+            P_TakeAmmoPickup(*player, item, itemamount);
+            break;
+
+            // If power artifact, take duration * itemamount, infinite powers are removed completely
+        case ITEMFX_POWER:
+            P_TakePowerForItem(*player, item, itemamount);
+            break;
+
+            // If weapon giver, take the weapon and ammo * itemamount, if no weapons are left, take ammo only
+            // Skill levels affect how much ammo is taken
+        case ITEMFX_WEAPONGIVER:
+            P_TakeWeaponByGiver(*player, item, false, itemamount);
+            break;
+
+            // If another artifact or backpack, just remove it from inventory
+        default:
+            if(strcmp(item->getKey(), ARTI_BACKPACKITEM) == 0)
+            {
+                E_RemoveBackpack(*player);
+
+                // If backpack, take backpack ammo as well
+                // If itemamount < -1, take full ammo for all ammo types
+                // If itemamount = -1, do not take any ammo, only take backpack
+                // If itemamount > 0, take backpack ammo * itemamount
+                if(itemamount < -1)
+                {
+                    size_t numAmmo = E_GetNumAmmoTypes();
+
+                    for(size_t i = 0; i < numAmmo; i++)
+                    {
+                        auto ammo = E_AmmoTypeForIndex(i);
+                        E_RemoveInventoryItem(*player, ammo, -1, true);
+                    }
+                }
+                else if(itemamount > 0)
+                {
+                    P_takeBackpackAmmo(*player, false, itemamount);
+                }
+            }
+            else
+                E_RemoveInventoryItem(*player, item, itemamount, true);
+            break;
+        }
+    }
+
+    return true;
+}
+
+//
+// P_CheckInventory
+//
+// Checks the player inventory for an item or power directly
+//
+int P_CheckInventory(player_t *player, itemeffect_t *item, const int power)
+{
+    if(!player || (!item && power == NUMPOWERS))
+        return 0;
+
+    auto checkPower = [](player_t *player, int power) -> int {
+        return player->powers[power].infinite || (player->powers[power].tics != 0 && power == pw_strength) ?
+                   -1 :
+                   player->powers[power].tics;
+    };
+
+    if(power != NUMPOWERS)
+    {
+        // Check power directly
+        return checkPower(player, power);
+    }
+    else
+    {
+        int           powerNum;
+        const char   *powerStr;
+        itemeffect_t *wp;
+
+        // Check item based on its class and properties
+        switch(item->getInt("class", ITEMFX_NONE))
+        {
+            // If health, return player current health
+        case ITEMFX_HEALTH:
+            return player->health;
+
+            // If armor, return player current armor
+        case ITEMFX_ARMOR:
+            return player->armorpoints;
+
+            // If ammo, return current ammo amount for the ammo type designated
+        case ITEMFX_AMMO:
+            return E_GetItemOwnedAmount(*player, E_ItemEffectForName(item->getString("ammo", "")));
+
+            // If power artifact, return remaining duration
+            // If power is infinite or strength, return -1
+        case ITEMFX_POWER:
+            powerStr = item->getString("type", "");
+            if(!powerStr || !strcmp(powerStr, ""))
+                return 0; // There hasn't been a designated power type
+            if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
+                return 0; // There's no power for the type provided
+
+            // If the power is infinite, return -1, otherwise return remaining tics
+            return checkPower(player, powerNum);
+
+            // If weapon giver, return current weapon amount for the weapon designated
+        case ITEMFX_WEAPONGIVER:
+            wp = E_ItemEffectForName(item->getString("weapon", ""));
+            return wp ? E_GetItemOwnedAmount(*player, wp) : 0;
+
+            // If another artifact, return current amount owned
+        default: return E_GetItemOwnedAmount(*player, item);
+        }
+    }
+}
+
+//
+// P_ClearInventory
+//
+// Take armor, backpack, all powers and clear all inventory items except undroppable ones
+//
+bool P_ClearInventory(player_t *player)
+{
+    if(!player)
+        return false;
+
+    // Take player armor
+    player->armorpoints = player->armorfactor = player->armordivisor = 0;
+
+    // Take backpack
+    E_RemoveBackpack(*player);
+
+    // Take all powers
+    for(int i = 0; i < NUMPOWERS; i++)
+        P_TakePower(*player, i, -1);
+
+    // Clear inventory slots, ignoring artifacts with UNDROPPABLE flag
+    E_ClearInventory(player, false, true);
+
+    return true;
+}
+
+//
+// P_UseInventory
+//
+// Uses an inventory item from the player's inventory
+//
+bool P_UseInventory(player_t *player, itemeffect_t *item)
+{
+    if(!player || !item)
+        return false;
+
+    // Check if the player has the item and try to use it
+    if(E_GetItemOwnedAmount(*player, item) >= 1)
+        return E_TryUseItem(*player, item->getInt(keyItemID, -1));
+
+    return false;
+}
+
+//
+// P_GetMaxInventory
+//
+// Gets the maximum amount of an inventory item or power the player can have
+// For powers, returns -1 for infinite powers or 1 for others
+//
+int P_GetMaxInventory(player_t *player, itemeffect_t *item, const int power)
+{
+    if(!player || (!item && power == NUMPOWERS))
+        return false;
+
+    if(power != NUMPOWERS)
+    {
+        // If power itself is infinite by default, return -1 (infinite)
+        if(power == pw_strength)
+            return -1;
+
+        // Otherwise, return 1
+        return 1;
+    }
+    else
+    {
+        int           powerNum, maxAmount, maxSaveAmount;
+        const char   *powerStr;
+        itemeffect_t *wp;
+
+        switch(item->getInt("class", ITEMFX_NONE))
+        {
+            // If health, return maxamount if it exists, otherwise amount
+            // If health item uses player @maxhealth or @superhealth, it will be handled in E_GetPClassHealth
+        case ITEMFX_HEALTH:
+            maxAmount = E_GetPClassHealth(*item, "maxamount", *player->pclass, 0);
+            return maxAmount ? maxAmount : E_GetPClassHealth(*item, "amount", *player->pclass, 0);
+
+            // If armor, return maxsaveamount if it exists, otherwise saveamount
+        case ITEMFX_ARMOR:
+            maxSaveAmount = item->getInt("maxsaveamount", 0);
+            return maxSaveAmount ? maxSaveAmount : item->getInt("saveamount", 0);
+
+            // If ammo, return max amount for the ammo type
+        case ITEMFX_AMMO:
+            return E_GetMaxAmountForArtifact(*player, E_ItemEffectForName(item->getString("ammo", "")));
+
+            // If power artifact, retrun -1 for permanent powers or strength, otherwise duration in seconds
+        case ITEMFX_POWER:
+            powerStr = item->getString("type", "");
+            if(!powerStr || !strcmp(powerStr, ""))
+                return 0; // There hasn't been a designated power type
+            if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
+                return 0; // There's no power for the type provided
+
+            // If power is permanent or it's strength, return -1 (infinite)
+            if(item->getInt("permanent", 0) || powerNum == pw_strength)
+                return -1;
+
+            // Otherwise, return duration of the power artifact in seconds
+            return item->getInt("duration", 0);
+
+            // If weapon giver, return max amount for the weapon designated
+        case ITEMFX_WEAPONGIVER:
+            wp = E_ItemEffectForName(item->getString("weapon", ""));
+            return wp ? E_GetMaxAmountForArtifact(*player, wp) : 0;
+
+            // If another artifact, return max amount for that artifact
+        default: return E_GetMaxAmountForArtifact(*player, item);
+        }
+    }
+
+    return true;
+}
+
+//
+// P_GiveWeaponByGiver
+//
+// Give the player a weapon and ammo based on a weapongiver itemeffect
+// Skill levels affect how much ammo is given
+//
+bool P_GiveWeaponByGiver(player_t &player, itemeffect_t *giver, bool ignoreskill, int itemamount, bool givemax)
+{
+    bool result = false;
+
+    weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
+    if(!wp)
+    {
+        doom_printf(FC_ERROR "Invalid weaponinfo given in weapongiver: '%s'\a\n", giver->getKey());
+        return false;
+    }
+
+    // Give weapon
+    E_GiveWeapon(player, wp);
+
+    // Give ammo
+    itemeffect_t *ammogiven = nullptr;
+    while((ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
+    {
+        itemeffect_t *ammo = nullptr;
+
+        if(!(ammo = E_ItemEffectForName(ammogiven->getString("type", ""))))
+        {
+            doom_printf(FC_ERROR "Invalid ammo type given in weapongiver: '%s'\a\n", giver->getKey());
+            return false;
+        }
+
+        if(givemax)
+        {
+            result |= E_GiveInventoryItem(player, ammo, 1, true);
+            continue;
+        }
+
+        int giveammo = ammogiven->getInt("ammo.give", -1) * itemamount;
+
+        // apply ammo multiplier for baby/nightmare skill
+        if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
+            giveammo = static_cast<int>(floor(giveammo * GameModeInfo->skillAmmoMultiplier));
+
+        result |= giveammo ? E_GiveInventoryItem(player, ammo, giveammo) : false;
+    }
+
+    return result;
+}
+
+//
+// P_TakeWeaponByGiver
+//
+// Take from the player a weapon and ammo based on a weapongiver itemeffect
+// Skill levels affect how much ammo is taken
+// If itemamount is negative, take all ammo of the given types
+//
+bool P_TakeWeaponByGiver(player_t &player, itemeffect_t *giver, bool ignoreskill, int itemamount)
+{
+    bool result = false;
+
+    // Take weapon, if can
+    itemeffect_t *wp = E_ItemEffectForName(giver->getString("weapon", ""));
+    if(wp)
+        E_RemoveInventoryItem(player, wp, -1, true);
+
+    // Take ammo
+    itemeffect_t *ammogiven = nullptr;
+    while((ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
+    {
+        itemeffect_t *ammo     = nullptr;
+        int           takeammo = 0;
+
+        if(!(ammo = E_ItemEffectForName(ammogiven->getString("type", ""))))
+        {
+            doom_printf(FC_ERROR "Invalid ammo type given in weapongiver: '%s'\a\n", giver->getKey());
+            return false;
+        }
+        else if((takeammo = ammogiven->getInt("ammo.give", -1) * itemamount) < 0)
+        {
+            // If itemamount is negative, take all ammo of this type
+            if(itemamount < 0)
+                return E_RemoveInventoryItem(player, ammo, -1, true);
+
+            doom_printf(FC_ERROR "Negative/unspecified ammo amount given for weapongiver: "
+                                 "'%s', ammo: '%s'\a\n",
+                        giver->getKey(), ammo->getKey());
+            return false;
+        }
+
+        // apply ammo multiplier for baby/nightmare skill
+        if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
+            takeammo = static_cast<int>(floor(takeammo * GameModeInfo->skillAmmoMultiplier));
+
+        result |= takeammo ? E_RemoveInventoryItem(player, ammo, takeammo, true) : false;
+    }
+
+    return result;
+}
+
+//
 // P_GiveBody
 //
 // Returns false if the body isn't needed at all
 //
-bool P_GiveBody(player_t &player, const itemeffect_t *effect, int itemamount)
+bool P_GiveBody(player_t &player, const itemeffect_t *effect, int itemamount, bool givemax)
 {
     if(!effect)
         return false;
@@ -467,7 +973,12 @@ bool P_GiveBody(player_t &player, const itemeffect_t *effect, int itemamount)
     if(effect->getInt("sethealth", 0))
         player.health = amount; // some items set health directly
     else
-        player.health += amount * itemamount; // most items add to health
+    {
+        if(givemax)
+            player.health = maxamount;
+        else
+            player.health += amount * itemamount; // most items add to health
+    }
 
     // cap to maxamount
     if(player.health > maxamount)
@@ -475,6 +986,40 @@ bool P_GiveBody(player_t &player, const itemeffect_t *effect, int itemamount)
 
     // propagate to player's Mobj
     player.mo->health = player.health;
+    return true;
+}
+
+//
+// P_TakeBody
+//
+// Takes the player's health equal to the "amount" of the health item
+// A player's health cannot fall below 1 here
+// If itemamount is negative, take all health and leave 1 hp
+//
+bool P_TakeBody(player_t &player, const itemeffect_t *effect, int itemamount)
+{
+    if(!effect)
+        return false;
+
+    // If itemamount is negative, take all health and leave 1 hp
+    if(itemamount < 0)
+    {
+        player.mo->health = player.health = 1;
+        return true;
+    }
+
+    int amount = E_GetPClassHealth(*effect, "amount", *player.pclass, 0);
+
+    // take the health
+    player.health -= amount * itemamount;
+
+    // cap to minimum
+    if(player.health < 1)
+        player.health = 1;
+
+    // propagate to player's Mobj
+    player.mo->health = player.health;
+
     return true;
 }
 
@@ -508,7 +1053,7 @@ bool EV_DoHealThing(Mobj *actor, int amount, int max)
 // Returns false if the armor is worse
 // than the current armor.
 //
-bool P_GiveArmor(player_t &player, const itemeffect_t *effect, int itemamount)
+bool P_GiveArmor(player_t &player, const itemeffect_t *effect, int itemamount, bool givemax)
 {
     if(!effect)
         return false;
@@ -533,9 +1078,14 @@ bool P_GiveArmor(player_t &player, const itemeffect_t *effect, int itemamount)
 
     if(additive)
     {
-        player.armorpoints += hits * itemamount;
-        if(player.armorpoints > maxsaveamount)
-            player.armorpoints = maxsaveamount;
+        if(givemax)
+            player.armorpoints = maxsaveamount ? maxsaveamount : hits;
+        else
+        {
+            player.armorpoints += hits * itemamount;
+            if(player.armorpoints > maxsaveamount)
+                player.armorpoints = maxsaveamount;
+        }
     }
     else
         player.armorpoints = hits;
@@ -547,6 +1097,36 @@ bool P_GiveArmor(player_t &player, const itemeffect_t *effect, int itemamount)
         player.armorfactor  = savefactor;
         player.armordivisor = savedivisor;
     }
+
+    return true;
+}
+
+//
+// P_TakeArmor
+//
+// Takes the player's armor equal to the "saveamount" of the armor item
+// "armorfactor" and "armordivisor" are not taken into account(only if not taking all armor)
+// If itemamount is negative, take all armor
+//
+bool P_TakeArmor(player_t &player, const itemeffect_t *effect, int itemamount)
+{
+    if(!effect)
+        return false;
+
+    // If itemamount is negative, take all armor
+    if(itemamount < 0)
+    {
+        player.armorpoints = player.armorfactor = player.armordivisor = 0;
+        return true;
+    }
+
+    int amount = effect->getInt("saveamount", 0);
+
+    player.armorpoints -= amount * itemamount;
+
+    // if we lost all our armorpoints, we lose all armor properties
+    if(player.armorpoints <= 0)
+        player.armorpoints = player.armorfactor = player.armordivisor = 0;
 
     return true;
 }
@@ -572,16 +1152,12 @@ bool P_GiveArmor(player_t &player, const itemeffect_t *effect, int itemamount)
 //
 // Rewritten by Lee Killough
 //
-bool P_GivePower(player_t &player, int power, int duration, bool permament, bool additiveTime, int itemamount)
+bool P_GivePower(player_t &player, int power, int duration, bool permament, bool additiveTime)
 {
     switch(power)
     {
     case pw_invisibility: //
         player.mo->flags |= MF_SHADOW;
-        break;
-    case pw_allmap:
-        if(player.powers[pw_allmap].isActive())
-            return false;
         break;
     case pw_totalinvis: // haleyjd: total invisibility
         player.mo->flags2 |= MF2_DONTDRAW;
@@ -590,14 +1166,10 @@ bool P_GivePower(player_t &player, int power, int duration, bool permament, bool
     case pw_ghost: // haleyjd: heretic ghost
         player.mo->flags3 |= MF3_GHOST;
         break;
-    case pw_silencer:
-        if(player.powers[pw_silencer].isActive())
-            return false;
-        break;
     case pw_flight: // haleyjd: flight
-        if(player.powers[pw_flight].tics < 0 || player.powers[pw_flight].tics > 4 * 32)
-            return false;
-        P_PlayerStartFlight(player, true);
+        // If the player already has power, prevent the start of the jump
+        if(!player.powers[pw_flight].isActive())
+            P_PlayerStartFlight(player, true); 
         break;
     case pw_weaponlevel2:
         if(!E_IsPoweredVariant(player.readyweapon))
@@ -622,7 +1194,69 @@ bool P_GivePower(player_t &player, int power, int duration, bool permament, bool
         if(permament)
             player.powers[power] = { 0, true };
         else
-            player.powers[power].tics = additiveTime ? players->powers[power].tics + duration * itemamount : duration;
+            player.powers[power].tics = additiveTime ? players->powers[power].tics + duration : duration;
+    }
+
+    return true;
+}
+
+//
+// P_TakePower
+//
+// Subtracts a player's power effect duration equal to itemamount in ticks
+// If itemamount is negative or power is infinite, removes the entire effect,
+// otherwise only removes the number of ticks equal to itemamount from the current duration
+// Also sister weapon becomes unpowered if power pw_weaponlevel2 is lost
+//
+bool P_TakePower(player_t &player, int powernum, int itemamount)
+{
+    if(powernum == NUMPOWERS || itemamount == 0)
+    {
+        return false;
+    }
+
+    powerduration_t *currentpower = &player.powers[powernum];
+
+    if(itemamount > 0 && !currentpower->infinite && powernum != pw_strength)
+    {
+        currentpower->tics -= itemamount;
+        if(currentpower->tics < 0)
+            currentpower->tics = 0;
+    }
+    else
+    {
+        currentpower->tics     = 0;
+        currentpower->infinite = false;
+    }
+
+    // If power is now inactive, remove its effects
+    if(!currentpower->isActive())
+    {
+        switch(powernum)
+        {
+        case pw_invisibility: player.mo->flags &= ~MF_SHADOW; break;
+        case pw_totalinvis:
+            player.mo->flags2 &= ~MF2_DONTDRAW;
+            player.mo->flags4 &= ~MF4_TOTALINVISIBLE;
+            break;
+        case pw_ghost:  player.mo->flags3 &= ~MF3_GHOST; break;
+        case pw_flight: P_PlayerStopFlight(player); break;
+        case pw_weaponlevel2:
+            if(E_IsPoweredVariant(player.readyweapon))
+            {
+                weaponinfo_t *sister = player.readyweapon->sisterWeapon;
+                if(!E_IsPoweredVariant(sister))
+                {
+                    if(sister->readystate != player.readyweapon->readystate || sister->flags & WPF_FORCETOREADY)
+                    {
+                        P_SetPsprite(player, ps_weapon, sister->readystate);
+                        player.refire = 0;
+                    }
+                    player.readyweapon = sister;
+                }
+            }
+            break;
+        }
     }
 
     return true;
@@ -648,8 +1282,11 @@ const char *powerStrings[NUMPOWERS] = {
 //
 // Takes a powereffect and applies the power accordingly
 //
-bool P_GivePowerForItem(player_t &player, const itemeffect_t *power, int itemamount)
+bool P_GivePowerForItem(player_t &player, const itemeffect_t *power, int itemamount, bool givemax)
 {
+    if(!power)
+        return false;
+
     int         powerNum;
     const char *powerStr;
     bool        additiveTime = false;
@@ -662,8 +1299,8 @@ bool P_GivePowerForItem(player_t &player, const itemeffect_t *power, int itemamo
 
     const powerduration_t &currentpower = player.powers[powerNum];
 
-    // EDF_FEATURES_FIXME: Strength counts up. Also should additivetime imply overridesself?
-    if(!power->getInt("overridesself", 0) &&
+    // EDF_FEATURES_FIXME: Strength counts up.
+    if(!power->getInt("overridesself", 0) && !power->getInt("additivetime", 0) &&
        (currentpower.tics > 4 * 32 || currentpower.tics < 0 || currentpower.infinite))
         return false;
 
@@ -672,12 +1309,15 @@ bool P_GivePowerForItem(player_t &player, const itemeffect_t *power, int itemamo
     {
         bool permanent = false;
         int  duration  = power->getInt("duration", 0);
-        if(power->getInt("permanent", 0))
+        if(power->getInt("permanent", 0) || givemax)
             permanent = true;
         else
         {
             duration     = duration * TICRATE; // Duration is given in seconds
             additiveTime = power->getInt("additivetime", 0) ? true : false;
+
+            if(additiveTime)
+                duration = duration * itemamount;
         }
 
         if(powerNum == pw_weaponlevel2 && player.morphTics)
@@ -695,10 +1335,37 @@ bool P_GivePowerForItem(player_t &player, const itemeffect_t *power, int itemamo
             return true;
         }
 
-        return P_GivePower(player, powerNum, duration, permanent, additiveTime, itemamount);
+        return P_GivePower(player, powerNum, duration, permanent, additiveTime);
     }
 
     return true;
+}
+
+//
+// P_TakePowerForItem
+//
+// Subtracts a player's power effect duration equal to that given
+// by the selected power artifact
+// If it is infinite power, the entire effect is removed.
+// If itemamount is negative, take all power duration
+//
+bool P_TakePowerForItem(player_t &player, const itemeffect_t *power, int itemamount)
+{
+    if(!power)
+        return false;
+
+    int         powerNum;
+    const char *powerStr = power->getString("type", "");
+
+    if(!powerStr || !strcmp(powerStr, ""))
+        return false; // There hasn't been a designated power type
+
+    if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
+        return false; // There's no power for the type provided
+
+    int duration = power->getInt("duration", 0);
+
+    return P_TakePower(player, powerNum, itemamount * duration * TICRATE);
 }
 
 //

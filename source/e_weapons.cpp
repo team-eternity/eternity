@@ -348,6 +348,51 @@ int E_NumWeaponsInSlotPlayerOwns(const player_t &player, const int slot)
 }
 
 //
+// Check if player has any weapons left
+//
+bool E_PlayerHasAnyWeapons(const player_t &player, bool onlyWithAmmo)
+{
+    for(weaponslot_t *&slot : player.pclass->weaponslots)
+    {
+        if(!slot)
+            continue;
+
+        BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(slot);
+        do
+        {
+            if(E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon) &&
+               (!onlyWithAmmo || P_WeaponHasAmmo(player, weaponslot->bdObject->weapon)))
+                return true;
+
+            weaponslot = weaponslot->bdNext;
+        }
+        while(!weaponslot->isDummy());
+    }
+
+    return false;
+}
+
+//
+// Check if player has any weapons left
+// if not and setemptyweapon is true, select the "Unknown" dummy weapon (without giving it)
+//
+bool E_PlayerHasAnyWeapons(player_t &player, bool onlyWithAmmo, bool setemptyweapon)
+{
+    bool hasanyweapon = E_PlayerHasAnyWeapons(player, onlyWithAmmo);
+    if(!hasanyweapon && setemptyweapon)
+    {
+        weaponinfo_t *emptyWeapon = E_WeaponForName("Unknown");
+        if(emptyWeapon != nullptr)
+        {
+            player.pendingweapon     = emptyWeapon;
+            player.pendingweaponslot = E_FindFirstWeaponSlot(player, emptyWeapon);
+        }
+    }
+
+    return hasanyweapon;
+}
+
+//
 // If it doesn't have an alt atkstate, it can't have an alt fire
 //
 bool E_WeaponHasAltFire(const weaponinfo_t *wp)
@@ -430,7 +475,8 @@ BDListItem<weaponslot_t> *E_LastInSlot(const weaponslot_t *dummyslot)
 //
 static weaponslot_t *E_findEntryForWeaponInSlot(const weaponinfo_t *wp, const weaponslot_t *slot)
 {
-    if(slot == nullptr)
+    // BUGFIX - Prevent attempt to switch to null wp, otherwise the game will crash
+    if(slot == nullptr || wp == nullptr)
         return nullptr;
 
     auto baseslot = E_FirstInSlot(slot);

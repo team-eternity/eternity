@@ -9,6 +9,18 @@
 // Health Effects
 //
 
+//
+// HealthBonus
+//
+// An atomic health unit that can be used with inventory functions (such as 
+// ACS GiveInventory and ACS TakeInventory). It is not used in Heretic itself.
+//
+healtheffect HealthBonus
+{
+  amount    1
+  maxamount @superhealth
+}
+
 healtheffect CrystalVial
 {
   amount    10
@@ -33,6 +45,22 @@ healtheffect MysticUrn
 //
 // Armor Effects
 //
+
+//
+// ArmorBonus
+//
+// An atomic armor unit that can be used with inventory functions (such as 
+// ACS GiveInventory and ACS TakeInventory). It is not used in Heretic itself.
+//
+armoreffect ArmorBonus
+{
+  saveamount    1
+  savefactor    1
+  savedivisor   2   // 50% absorption rate (1/2), if player has no armor
+  maxsaveamount 200
+  +additive
+  -setabsorption
+}
 
 armoreffect SilverShield
 {
@@ -325,6 +353,7 @@ ammoeffect MaceHefty
 //
 // Power Givers
 //
+
 powereffect SuperMap
 {
   duration 1
