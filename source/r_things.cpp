@@ -1546,7 +1546,9 @@ void R_AddSprites(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext, Zo
             // otherwise the lighting behaviour will look incorrect
             const lighttable_t *const *mobjspritelights;
             {
-                const int mobjlightlevel = R_FakeFlatSpriteLighting(viewpoint, thing->subsector->sector);
+                const int mobjlightlevel = comp[comp_thingsectorlight] ?
+                                               R_FakeFlatSpriteLighting(viewpoint, thing->subsector->sector) :
+                                               thing->subsector->sector->lightlevel;
                 const int mobjlightnum   = (mobjlightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
 
                 if(mobjlightnum < 0)
@@ -1766,7 +1768,9 @@ void R_DrawPlayerSprites()
     // (see r_bsp.c for similar calculations for non-player sprites)
 
     R_FakeFlat(r_globalcontext.view, view.sector, &tmpsec, tempslopes, &floorlightlevel, &ceilinglightlevel, 0);
-    lightnum = ((floorlightlevel + ceilinglightlevel) >> (LIGHTSEGSHIFT + 1)) + (extralight * LIGHTBRIGHT);
+    lightnum = (comp[comp_thingsectorlight] ? (floorlightlevel + ceilinglightlevel) :
+                                              (view.sector->lightlevel) >> (LIGHTSEGSHIFT + 1)) +
+               (extralight * LIGHTBRIGHT);
 
     if(lightnum < 0)
         spritelights = r_globalcontext.cmapcontext.scalelight[0];
@@ -2768,7 +2772,7 @@ static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &sprit
 
             R_FakeFlat(viewpoint, sector, &tmpsec, tempslopes, &floorlightlevel, &ceilinglightlevel, false);
 
-            lightnum = (floorlightlevel + ceilinglightlevel) / 2;
+            lightnum = comp[comp_thingsectorlight] ? ((floorlightlevel + ceilinglightlevel) / 2) : sector->lightlevel;
             lightnum = (lightnum >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
 
             if(lightnum >= LIGHTLEVELS || cmapcontext.fixedcolormap)

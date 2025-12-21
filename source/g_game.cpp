@@ -3333,7 +3333,7 @@ byte *G_WriteOptions(byte *demoptr)
     *demoptr++ = monkeys; // byte 26
 
     // killough 10/98: a compatibility vector now
-    for(int i = 0; i < COMP_TOTAL; i++)
+    for(int i = 0; i < MBF_COMP_TOTAL; i++)
         *demoptr++ = comp[i] != 0; // bytes 27 - 58 : comp
 
     // haleyjd 05/23/04: autoaim is sync critical
@@ -3421,7 +3421,7 @@ byte *G_ReadOptions(byte *demoptr)
 
         { // killough 10/98: a compatibility vector now
             int i;
-            for(i = 0; i < COMP_TOTAL; ++i)
+            for(i = 0; i < MBF_COMP_TOTAL; ++i)
                 comp[i] = *demoptr++;
         }
 
