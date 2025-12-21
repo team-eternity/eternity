@@ -34,6 +34,7 @@
 #include "r_defs.h"
 #include "s_musinfo.h"
 #include "s_sound.h"
+#include "d_gi.h"
 
 enum
 {
@@ -82,6 +83,15 @@ static void S_updateMusic()
 {
     if(musinfo.savedmusic < 0)
         return;
+    if(musinfo.savedmusic == 0)
+    {
+        if(*LevelInfo.musicName)
+            S_ChangeMusicName(LevelInfo.musicName, 1);
+        else
+            S_ChangeMusicNum(GameModeInfo->MusicForMap(), 1);
+
+        return;
+    }
     const char *lumpname = P_GetMusInfoMusic(gamemapname, musinfo.savedmusic);
     if(lumpname)
         S_ChangeMusicName(lumpname, 1);
