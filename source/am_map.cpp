@@ -1092,6 +1092,190 @@ void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
 }
 
 //
+// AM_getMobjMapCoords()
+//
+// Calculates mobj coordinates taking into account linked portals 
+// and mapportal_overlay settings
+//
+// Passed sector, x and y coordinates by reference
+// Writes calculated coordinates to x and y
+// 
+// Returns nothing
+//
+void AM_getMobjMapCoords(const Mobj *mo, fixed_t &x, fixed_t &y)
+{
+    x = mo->x;
+    y = mo->y;
+
+    if(mapportal_overlay && mo->subsector->sector->groupid != plr->mo->groupid)
+    {
+        auto link  = P_GetLinkOffset(mo->subsector->sector->groupid, plr->mo->groupid);
+        x         += link->x;
+        y         += link->y;
+    }
+}
+
+//
+// AM_getSectorMapCoords()
+//
+// Calculates sector coordinates taking into account linked portals 
+// and mapportal_overlay settings
+//
+// Passed sector, x and y coordinates by reference
+// Writes coordinates of the first vertex of the sector to x and y
+// 
+// Returns true if the coordinates have been successfully calculated, 
+// otherwise false
+//
+bool AM_getSectorMapCoords(const sector_t *sec, fixed_t &x, fixed_t &y)
+{
+    if (sec && sec->lines && sec->lines[0] && sec->lines[0]->v1)
+    {
+        x = sec->lines[0]->v1->x;
+        y = sec->lines[0]->v1->y;
+
+        if(mapportal_overlay && sec->groupid != plr->mo->groupid)
+        {
+            auto link  = P_GetLinkOffset(sec->groupid, plr->mo->groupid);
+            x         += link->x;
+            y         += link->y;
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+//
+// AM_moveCenterToPoint()
+//
+// Moves automap to the target point, turning off follow mode
+// If automap was not open at the time of the call, it does nothing
+//
+// Passed x and y coordinates
+// 
+// Returns nothing
+//
+void AM_moveCenterToPoint(fixed_t x, fixed_t y)
+{
+    if(!automapactive)
+        return;
+
+    followplayer = false;
+
+    m_x = M_FixedToDouble(x) - m_w / 2;
+    m_y = M_FixedToDouble(y) - m_h / 2;
+
+    AM_changeWindowLoc();
+}
+
+//
+// AM_showNextMobj()
+//
+// Finds the next matching mobj that matches the flags and displays 
+// it on automap
+// If automap was not open at the time of the call, it does nothing
+//
+// Passed boolean "resetseq", flags and boolean "alive"
+// If resetseq is true, the search starts from the beginning
+// Only the flags1 is taken into account, excluding flags2-5
+// If alive is true, only mobjs with non zero health are considered
+//
+// Returns nothing
+//
+void AM_showNextMobj(bool resetseq, int flags, bool alive)
+{
+    if(!automapactive)
+        return;
+
+    static Mobj *lastmobj;
+
+    if(resetseq)
+        lastmobj = nullptr;
+
+    Thinker *th, *start_th;
+
+    if(lastmobj)
+        start_th = th = thinker_cast<Thinker *>(lastmobj);
+    else
+        start_th = th = &thinkercap;
+
+    th = th->next;
+
+    while(th != start_th)
+    {
+        Mobj *mo = thinker_cast<Mobj *>(th);
+
+        if(mo && (!alive || mo->health > 0) && mo->flags & flags)
+        {
+            fixed_t mx, my;
+
+            AM_getMobjMapCoords(mo, mx, my);
+            AM_moveCenterToPoint(mx, my);
+
+            lastmobj = mo;
+
+            break;
+        }
+
+        th = th->next;
+    }
+}
+
+//
+// AM_showNextSector()
+//
+// Finds the next matching secret and displays it on automap
+// If automap was not open at the time of the call, it does nothing
+//
+// Passed boolean "resetseq", boolean "secret"
+// If resetseq is true, the search starts from the beginning
+// If secret is true, only secret sectors are considered
+//
+// Returns nothing
+//
+void AM_showNextSector(bool resetseq, bool secret)
+{
+    if(!automapactive)
+        return;
+
+    static int lastsecret = -1;
+
+    if(resetseq)
+        lastsecret = -1;
+
+    int i, start_i;
+
+    i = lastsecret + 1;
+    if(i >= numsectors)
+        i = 0;
+    start_i = i++;
+
+    while(i != start_i)
+    {
+        sector_t *sec = &sectors[i];
+
+        if(!secret || P_IsSecret(sec))
+        {
+            fixed_t sx, sy;
+
+            if(AM_getSectorMapCoords(sec, sx, sy))
+            {
+                AM_moveCenterToPoint(sx, sy);
+                lastsecret = i;
+                break;
+            }
+        }
+
+        i++;
+
+        if(i >= numsectors)
+            i = 0;
+    }
+}
+
+//
 // AM_Ticker()
 //
 // Updates on gametic - enter follow mode, zoom, or change map location
