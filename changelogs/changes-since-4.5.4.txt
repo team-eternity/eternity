@@ -19,10 +19,15 @@ Features
   - damage type for blast (default: actor's MOD)
   Thanks to sink666 for the wish to have parameters in the pull request.
 * Added damage type (MOD) argument to A_BFGSpray (default: BFG_Splash).
+* Added the comp_thingsectorlight setting, which controls how things are lit in sectors with different floor and ceiling
+  lights. Thanks to elf-alchemist for the contribution! Details here: https://github.com/team-eternity/eternity/pull/740
 
 Improvements
 ------------
 * Loading broken or wrong save game files is more robust now, though not perfect.
+* Added support for music changer types 14100 (reset music) and 14165 (parameterized music ID). Thanks to electricbrass
+  for the contribution! Details here: https://github.com/team-eternity/eternity/pull/741
+* Reimplemented the key automap colour.
 
 Bug fixes
 ---------
@@ -32,3 +37,5 @@ Bug fixes
 * Fixed bad implementation of TakeInventory.
 * Fixed A_CustomPlayerMelee wrong implementation of the angle deflection argument. Now it properly avoid rotating player
   if set to "none". Thanks to sink666's pull request for the catch.
+* Fixed EDF includes from lumps included by lumps in the same folder.
+* Fixed translucent PNGs that use a separate palette from the current WAD.
