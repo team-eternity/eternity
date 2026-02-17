@@ -618,10 +618,18 @@ bool ACS_ChkThingProp(const ACSThread *thread, Mobj *mo, uint32_t var, uint32_t 
     case ACS_TP_Angle: return mo->angle >> 16 == (uint32_t)val;
     case ACS_TP_Armor: return mo->player ? static_cast<uint32_t>(mo->player->armorpoints) == val : false;
     case ACS_TP_CeilTex:
-        return mo->subsector->sector->srf.ceiling.pic == R_FindWall(thread->scopeMap->getString(val)->str);
+    {
+        const char *const textureName = thread->scopeMap->getString(val)->str;
+        const int         pic         = mo->subsector->sector->srf.ceiling.pic;
+        return pic == R_FindFlat(textureName) || pic == R_FindWall(textureName);
+    }
     case ACS_TP_CeilZ: return static_cast<uint32_t>(mo->zref.ceiling) == val;
     case ACS_TP_FloorTex:
-        return mo->subsector->sector->srf.floor.pic == R_FindWall(thread->scopeMap->getString(val)->str);
+    {
+        const char *const textureName = thread->scopeMap->getString(val)->str;
+        const int         pic         = mo->subsector->sector->srf.floor.pic;
+        return pic == R_FindFlat(textureName) || pic == R_FindWall(textureName);
+    }
     case ACS_TP_FloorZ:       return static_cast<uint32_t>(mo->zref.floor) == val;
     case ACS_TP_Frags:        return mo->player ? static_cast<uint32_t>(mo->player->totalfrags) == val : false;
     case ACS_TP_LightLevel:   return static_cast<uint32_t>(mo->subsector->sector->lightlevel) == val;
