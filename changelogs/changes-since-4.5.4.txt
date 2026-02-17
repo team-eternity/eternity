@@ -39,3 +39,5 @@ Bug fixes
   if set to "none". Thanks to sink666's pull request for the catch.
 * Fixed EDF includes from lumps included by lumps in the same folder.
 * Fixed translucent PNGs that use a separate palette from the current WAD.
+* Fixed bug with ACS functions CheckActorCeilingTexture, CheckActorFloorTexture, CheckActorProperty,
+  CheckActorClass.

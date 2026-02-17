@@ -80,7 +80,7 @@
 static bool ACS_ChkThingProp(ACSThread *thread, int32_t tid, uint32_t prop, uint32_t val)
 {
     Mobj *mo = P_FindMobjFromTID(tid, nullptr, thread->info.mo);
-    thread->dataStk.push(mo ? ACS_ChkThingProp(mo, prop, val) : 0);
+    thread->dataStk.push(mo ? ACS_ChkThingProp(thread, mo, prop, val) : 0);
     return false;
 }
 
@@ -556,7 +556,7 @@ bool ACS_CF_CheckActorFloorTexture(ACS_CF_ARGS)
 //
 // ACS_ChkThingProp
 //
-bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
+bool ACS_ChkThingProp(const ACSThread *thread, Mobj *mo, uint32_t var, uint32_t val)
 {
     if(!mo)
         return false;
@@ -615,11 +615,13 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
     case ACS_TP_Counter6:     return static_cast<uint32_t>(mo->counters[6]) == val;
     case ACS_TP_Counter7:     return static_cast<uint32_t>(mo->counters[7]) == val;
 
-    case ACS_TP_Angle:        return mo->angle >> 16 == (uint32_t)val;
-    case ACS_TP_Armor:        return mo->player ? static_cast<uint32_t>(mo->player->armorpoints) == val : false;
-    case ACS_TP_CeilTex:      return mo->subsector->sector->srf.ceiling.pic == R_FindWall(ACSenv.getString(val)->str);
-    case ACS_TP_CeilZ:        return static_cast<uint32_t>(mo->zref.ceiling) == val;
-    case ACS_TP_FloorTex:     return mo->subsector->sector->srf.floor.pic == R_FindWall(ACSenv.getString(val)->str);
+    case ACS_TP_Angle: return mo->angle >> 16 == (uint32_t)val;
+    case ACS_TP_Armor: return mo->player ? static_cast<uint32_t>(mo->player->armorpoints) == val : false;
+    case ACS_TP_CeilTex:
+        return mo->subsector->sector->srf.ceiling.pic == R_FindWall(thread->scopeMap->getString(val)->str);
+    case ACS_TP_CeilZ: return static_cast<uint32_t>(mo->zref.ceiling) == val;
+    case ACS_TP_FloorTex:
+        return mo->subsector->sector->srf.floor.pic == R_FindWall(thread->scopeMap->getString(val)->str);
     case ACS_TP_FloorZ:       return static_cast<uint32_t>(mo->zref.floor) == val;
     case ACS_TP_Frags:        return mo->player ? static_cast<uint32_t>(mo->player->totalfrags) == val : false;
     case ACS_TP_LightLevel:   return static_cast<uint32_t>(mo->subsector->sector->lightlevel) == val;
@@ -630,7 +632,7 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
     case ACS_TP_PlayerNumber: return mo->player ? mo->player - players == val : false;
     case ACS_TP_SigilPieces:  return false;
     case ACS_TP_TID:          return mo->tid == val;
-    case ACS_TP_Type:         return mo->type == E_ThingNumForCompatName(ACSenv.getString(val)->str);
+    case ACS_TP_Type:         return mo->type == E_ThingNumForCompatName(thread->scopeMap->getString(val)->str);
     case ACS_TP_X:            return static_cast<uint32_t>(mo->x) == val;
     case ACS_TP_Y:            return static_cast<uint32_t>(mo->y) == val;
     case ACS_TP_Z:            return static_cast<uint32_t>(mo->z) == val;
