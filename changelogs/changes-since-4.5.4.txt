@@ -43,3 +43,4 @@ Bug fixes
   CheckActorClass.
 * Fixed CheckActorCeilingTexture and CheckActorFloorTexture not detecting flats with same names as
   textures (e.g. STEP1).
+* Fixed ReplaceTextures failing with flats named the same as unrelated wall textures.

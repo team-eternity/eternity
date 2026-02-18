@@ -1674,12 +1674,24 @@ enum
 //
 bool ACS_CF_ReplaceTextures(ACS_CF_ARGS)
 {
-    int      oldtex = R_FindWall(thread->scopeMap->getString(argV[0])->str);
-    int      newtex = R_FindWall(thread->scopeMap->getString(argV[1])->str);
-    uint32_t flags  = argV[2];
+    const char *const oldtexName = thread->scopeMap->getString(argV[0])->str;
+    const char *const newtexName = thread->scopeMap->getString(argV[1])->str;
+    const int         oldtex     = R_FindWall(oldtexName);
+    const int         newtex     = R_FindWall(newtexName);
+    const uint32_t    flags      = argV[2];
+
+    // We may have flats and wall textures with the same name but different looks
+    // like STEP1, STEP2 in Doom.
+    const int oldflat = R_FindFlat(oldtexName);
+    const int newflat = R_FindFlat(newtexName);
 
     R_CacheTexture(newtex);
     R_CacheIfSkyTexture(oldtex, newtex);
+    if(newflat != newtex || oldflat != oldtex)
+    {
+        R_CacheTexture(newflat);
+        R_CacheIfSkyTexture(oldflat, newflat);
+    }
 
     // If doing anything to lines.
     if((flags & RETEX_NOT_LINE) != RETEX_NOT_LINE)
@@ -1702,11 +1714,11 @@ bool ACS_CF_ReplaceTextures(ACS_CF_ARGS)
     {
         for(sector_t *sector = sectors, *end = sector + numsectors; sector != end; ++sector)
         {
-            if(!(flags & RETEX_NOT_FLOOR) && sector->srf.floor.pic == oldtex)
-                sector->srf.floor.pic = newtex;
+            if(!(flags & RETEX_NOT_FLOOR) && sector->srf.floor.pic == oldflat)
+                sector->srf.floor.pic = newflat;
 
-            if(!(flags & RETEX_NOT_CEIL) && sector->srf.ceiling.pic == oldtex)
-                sector->srf.ceiling.pic = newtex;
+            if(!(flags & RETEX_NOT_CEIL) && sector->srf.ceiling.pic == oldflat)
+                sector->srf.ceiling.pic = newflat;
         }
     }
 
