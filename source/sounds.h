@@ -58,7 +58,6 @@ enum
     SFXF_EDF       = 0x00000004, // sfxinfo was born via EDF
     SFXF_SNDINFO   = 0x00000008, // sfxinfo was born via SNDINFO lump
     SFXF_WAD       = 0x00000010, // sfxinfo was born as an implicit wad sound
-    SFXF_ADDDEH    = 0x00000020, // sfxinfo was born via additive dehacked lump
 };
 
 struct sfxinfo_t
@@ -122,11 +121,9 @@ struct sfxinfo_t
     char *pcslfn; // alison: long file name for PC speaker sound
 
     // haleyjd 09/03/03: revised for dynamic EDF sounds
-    DLListItem<sfxinfo_t> namelinks;      // hashing: by name
-    DLListItem<sfxinfo_t> numlinks;       // haleyjd 04/13/08: dehnum hash links
-    DLListItem<sfxinfo_t> adddehnumlinks; // additive dehnum hash links
-    int                   dehackednum;    // dehacked number
-    int                   adddehnum;      // additive dehacked number
+    DLListItem<sfxinfo_t> namelinks;   // hashing: by name
+    DLListItem<sfxinfo_t> numlinks;    // haleyjd 04/13/08: dehnum hash links
+    int                   dehackednum; // dehacked number
 };
 
 //

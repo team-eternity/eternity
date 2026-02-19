@@ -97,9 +97,6 @@ static EHashTable<sfxinfo_t, ENCStringHashKey, &sfxinfo_t::mnemonic, &sfxinfo_t:
     sound_namehash(NUMSFXCHAINS);
 
 static EHashTable<sfxinfo_t, EIntHashKey, &sfxinfo_t::dehackednum, &sfxinfo_t::numlinks> sound_numhash(NUMSFXCHAINS);
-// sprite additive dehacked num hash table
-static EHashTable<sfxinfo_t, EIntHashKey, &sfxinfo_t::adddehnum, &sfxinfo_t::adddehnumlinks>
-    sound_adddehhash(NUMSFXCHAINS);
 
 //
 // Singularity types
@@ -215,23 +212,14 @@ sfxinfo_t *E_SoundForDEHNum(int dehnum)
 
 //
 // Returns a sfxinfo_t pointer given the additive DeHackEd number for that
-// sound. Will return nullptr if the requested sound is not found.
-//
-sfxinfo_t *E_soundForAddDEHNum(int dehnum)
-{
-    return sound_adddehhash.objectForKey(dehnum);
-}
-
-//
-// Returns a sfxinfo_t pointer given the additive DeHackEd number for that
 // sound, creating that sound if it cannot be found.
 //
-sfxinfo_t *E_GetAddSoundForAddDEHNum(int dehnum, bool forceupdate)
+sfxinfo_t *E_GetAddSoundForAddDEHNum(int dehnum)
 {
-    sfxinfo_t *sfx = sound_adddehhash.objectForKey(dehnum);
+    sfxinfo_t *sfx = sound_numhash.objectForKey(dehnum);
     if(!sfx)
-        E_UpdateAddSoundNameForNum(dehnum, nullptr, forceupdate);
-    return sound_adddehhash.objectForKey(dehnum);
+        E_UpdateAddSoundNameForNum(dehnum, nullptr);
+    return sound_numhash.objectForKey(dehnum);
 }
 
 //
@@ -264,25 +252,6 @@ static void E_AddSoundToDEHHash(sfxinfo_t *sfx)
         E_EDFLoggedErr(2, "E_AddSoundToDEHHash: dehackednum zero is reserved!\n");
 
     sound_numhash.addObject(sfx);
-}
-
-//
-// Only used locally. This adds a sound to the DeHackEd number hash
-// table, so that both old and new sounds can be referred to by
-// use of a number. This avoids major code rewrites and compatibility
-// issues. It also naturally extends DeHackEd, too.
-//
-static void E_addSoundToAddDEHHash(sfxinfo_t *sfx)
-{
-#ifdef RANGECHECK
-    if(sfx->adddehnum == -1)
-        I_Error("E_addSoundToAddDEHHash: internal error - dehnum == -1\n");
-#endif
-
-    if(sfx->adddehnum == 0)
-        E_EDFLoggedErr(2, "E_addSoundToAddDEHHash: dehackednum zero is reserved!\n");
-
-    sound_adddehhash.addObject(sfx);
 }
 
 //
@@ -418,37 +387,41 @@ sfxinfo_t *E_NewSndInfoSound(const char *mnemonic, const char *name)
 
 //
 // Updates a sound's name for an according number, or creates that sprite
-// If the new name is nullptr then it will only clear the name if the name update is forced
 //
-void E_UpdateAddSoundNameForNum(const int num, const char *name, bool forceupdate)
+void E_UpdateAddSoundNameForNum(const int num, const char *const name)
 {
     sfxinfo_t *sfx;
 
-    if(!forceupdate && !name)
-        return;
-
-    sfx = forceupdate ? E_soundForAddDEHNum(num) : E_SoundForDEHNum(num);
-    if(sfx && (!forceupdate || sfx->flags & SFXF_ADDDEH))
-        strncpy(sfx->name, name, 9);
+    sfx = E_SoundForDEHNum(num);
+    if(sfx)
+    {
+        if(estrnonempty(name))
+        {
+            strncpy(sfx->name, name, 9);
+            // DSDHacked substitution implies prefix
+            sfx->flags |= SFXF_PREFIX;
+        }
+    }
     else
     {
-        // create a new one and hook into the additive DeHackEd hash table
+        // create a new one and hook into the DeHackEd hash table
         sfx = ecalloc(sfxinfo_t *, 1, sizeof(sfxinfo_t));
 
+        // Name may be added when we reach the [SOUNDS] block, but we can reference a sound number
+        // from thing definitions, before that
         if(estrnonempty(name))
+        {
             strncpy(sfx->name, name, 9);
-
-        sfx->flags         = SFXF_PREFIX | SFXF_ADDDEH; // born via additive dehacked lump
+            sfx->flags = SFXF_PREFIX;
+        }
         sfx->priority      = 127;
         sfx->pitch         = -1;
         sfx->volume        = -1;
         sfx->clipping_dist = S_CLIPPING_DIST;
         sfx->close_dist    = S_CLOSE_DIST;
-        sfx->adddehnum     = num;
-        sfx->dehackednum   = -1;
+        sfx->dehackednum   = num;
 
-        E_AutoAllocSoundDEHNum(sfx);
-        E_addSoundToAddDEHHash(sfx);
+        E_AddSoundToDEHHash(sfx);
     }
 }
 

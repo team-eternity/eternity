@@ -956,7 +956,7 @@ static int deh_getSoundNumForDEHNum(int indexnum)
 {
     sfxinfo_t *sfx;
     if(adddeh && indexnum >= DOOM_NUMSFX)
-        sfx = E_GetAddSoundForAddDEHNum(indexnum, indexnum >= DOOM_NUMSFX);
+        sfx = E_GetAddSoundForAddDEHNum(indexnum);
     else
         sfx = E_SoundForDEHNum(indexnum);
 
@@ -2850,7 +2850,7 @@ static void deh_procBexSounds(DWFILE *fpin, char *line, MetaTable &gatheredData)
             }
 
             if(processAsNumber)
-                E_UpdateAddSoundNameForNum(atoi(key), candidate, atoi(key) >= DOOM_NUMSFX);
+                E_UpdateAddSoundNameForNum(atoi(key), candidate);
         }
 
         if(!processAsNumber)
