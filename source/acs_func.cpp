@@ -1541,11 +1541,11 @@ bool ACS_CF_PlayActorSound(ACS_CF_ARGS)
 
     switch(snd)
     {
-    case SOUND_See:    sfx = E_SoundForDEHNum(mo->info->seesound); break;
-    case SOUND_Attack: sfx = E_SoundForDEHNum(mo->info->attacksound); break;
-    case SOUND_Pain:   sfx = E_SoundForDEHNum(mo->info->painsound); break;
-    case SOUND_Death:  sfx = E_SoundForDEHNum(mo->info->deathsound); break;
-    case SOUND_Active: sfx = E_SoundForDEHNum(mo->info->activesound); break;
+    case SOUND_See:    sfx = E_SoundForUnknownTypeDEHNum(mo->info->seesound); break;
+    case SOUND_Attack: sfx = E_SoundForUnknownTypeDEHNum(mo->info->attacksound); break;
+    case SOUND_Pain:   sfx = E_SoundForUnknownTypeDEHNum(mo->info->painsound); break;
+    case SOUND_Death:  sfx = E_SoundForUnknownTypeDEHNum(mo->info->deathsound); break;
+    case SOUND_Active: sfx = E_SoundForUnknownTypeDEHNum(mo->info->activesound); break;
     default:           sfx = nullptr; break;
     }
 

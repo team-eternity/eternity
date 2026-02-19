@@ -207,6 +207,7 @@ sfxinfo_t *E_EDFSoundForName(const char *name)
 //
 // Returns a sfxinfo_t pointer given the DeHackEd number for that
 // sound. Will return nullptr if the requested sound is not found.
+// E_SoundForUnknownTypeDEHNum should be peferred over this.
 //
 sfxinfo_t *E_SoundForDEHNum(int dehnum)
 {
