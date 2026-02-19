@@ -912,8 +912,8 @@ sfxinfo_t *E_ArgAsSound(arglist_t *al, int index)
         }
         else
         {
-            // it is a DeHackEd number
-            eval.value.s = E_SoundForDEHNum((int)num);
+            // it is a DeHackEd number of some variety
+            eval.value.s = E_SoundForUnknownTypeDEHNum((int)num);
         }
     }
 

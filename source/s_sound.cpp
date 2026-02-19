@@ -670,7 +670,7 @@ void S_StartSoundAtVolume(const PointThinker *origin, int sfx_id, int volume, in
 
     // haleyjd: changed to use EDF DeHackEd number hashing,
     // to enable full use of dynamically defined sounds ^_^
-    if((params.sfx = E_SoundForDEHNum(sfx_id)))
+    if((params.sfx = E_SoundForUnknownTypeDEHNum(sfx_id)))
     {
         params.origin      = origin;
         params.volumeScale = volume;
@@ -688,7 +688,7 @@ static void S_StartSoundAtVolumeLooped(const PointThinker *origin, int sfx_id, i
 
     // haleyjd: changed to use EDF DeHackEd number hashing,
     // to enable full use of dynamically defined sounds ^_^
-    if((params.sfx = E_SoundForDEHNum(sfx_id)))
+    if((params.sfx = E_SoundForUnknownTypeDEHNum(sfx_id)))
     {
         params.origin      = origin;
         params.volumeScale = volume;
@@ -765,7 +765,7 @@ void S_StartInterfaceSound(int sound_id)
 {
     soundparams_t params;
 
-    if((params.sfx = E_SoundForDEHNum(sound_id)))
+    if((params.sfx = E_SoundForUnknownTypeDEHNum(sound_id)))
     {
         params.setNormalDefaults(nullptr);
         params.reverb = false;
