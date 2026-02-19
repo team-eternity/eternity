@@ -41,7 +41,6 @@ Bug fixes
 * Fixed translucent PNGs that use a separate palette from the current WAD.
 * Fixed bug with ACS functions CheckActorCeilingTexture, CheckActorFloorTexture, CheckActorProperty,
   CheckActorClass.
-* Fixed ACS CheckActorCeilingTexture and CheckActorFloorTexture not detecting flats with same names
-  as textures (e.g. STEP1).
-* Fixed ACS ReplaceTextures failing with flats named the same as unrelated wall textures.
-* Fixed A_PlaySound and others not working with DSDHacked newly defined sound effects.
+* Fixed CheckActorCeilingTexture and CheckActorFloorTexture not detecting flats with same names as
+  textures (e.g. STEP1).
+* Fixed ReplaceTextures failing with flats named the same as unrelated wall textures.
