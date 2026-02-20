@@ -44,3 +44,5 @@ Bug fixes
 * Fixed CheckActorCeilingTexture and CheckActorFloorTexture not detecting flats with same names as
   textures (e.g. STEP1).
 * Fixed ReplaceTextures failing with flats named the same as unrelated wall textures.
+* Fixed A_PlaySound (and a few other triggers) not playing DSDHacked newly defined sounds.
+* Fixed EDF gameproperties sound.titlemusic not working.

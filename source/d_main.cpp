@@ -393,17 +393,15 @@ void D_DoAdvanceDemo()
                 wipegamestate = GS_DEMOSCREEN; // block wipe by already setting it to upcoming gamestate
         }
 
-        if(state->musicname)
+        // EDF gameproperties (Eternity-specific) applies on top of any ID24 (base port common) setting
+        if(state->flags & DSF_TITLE && estrnonempty(GameModeInfo->titleMusName))
+            S_ChangeMusicName(GameModeInfo->titleMusName, false);
+        else if(state->musicname) // ID24 controlled, not used by internal arrays
             S_ChangeMusicName(state->musicname, false);
-        else if(state->musicnum > 0)
+        else if(state->musicnum > 0) // From the internal arrays
             S_StartMusic(state->musicnum);
         else if(state->flags & DSF_TITLE)
-        {
-            if(GameModeInfo->titleMusName != nullptr && *GameModeInfo->titleMusName)
-                S_ChangeMusicName(GameModeInfo->titleMusName, false);
-            else
-                S_StartMusic(GameModeInfo->titleMusNum);
-        }
+            S_StartMusic(GameModeInfo->titleMusNum); // Classic fallback
 
         if(state->tics >= 0)
             pagetic = state->tics;
