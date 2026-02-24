@@ -19,6 +19,8 @@ Features
   - damage type for blast (default: actor's MOD)
   Thanks to sink666 for the wish to have parameters in the pull request.
 * Added damage type (MOD) argument to A_BFGSpray (default: BFG_Splash).
+* Added new ACS functions: GetSectorColormap and SetSectorColormap. Now it's possible to change the colormap of a 
+  sector during the gameplay.
 
 Improvements
 ------------

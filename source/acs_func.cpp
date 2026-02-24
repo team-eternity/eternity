@@ -3039,9 +3039,19 @@ enum
 //
 bool ACS_CF_GetSectorColormap(ACS_CF_ARGS)
 {
-    int const   tag      = argV[0];
-    int const   type     = argV[1];
-    int         secnum   = P_FindSectorFromTag(tag, -1); // Get only first sector with tag
+    int const tag    = argV[0];
+    int const type   = argV[1];
+    int       secnum = P_FindSectorFromTag(tag, -1); // Get only first sector with tag
+
+    // If sector with the given tag doesn't exist, return null string
+    if(secnum == -1)
+    {
+        doom_warningf("ACS_CF_GetSectorColormap: No sector found with tag %d", tag);
+
+        thread->dataStk.push(0); // probably not the best way to return null string
+        return false;
+    }
+
     sector_t   &sector   = sectors[secnum];
     char const *colormap = nullptr;
 
@@ -3050,9 +3060,16 @@ bool ACS_CF_GetSectorColormap(ACS_CF_ARGS)
     case COLORMAP_MID:    colormap = R_ColormapNameForNum(sector.midmap); break;
     case COLORMAP_TOP:    colormap = R_ColormapNameForNum(sector.topmap); break;
     case COLORMAP_BOTTOM: colormap = R_ColormapNameForNum(sector.bottommap); break;
+    default:              doom_warningf("ACS_CF_GetSectorColormap: Invalid colormap type %d", type); break;
     }
 
-    thread->dataStk.push(~ACSenv.getString(!colormap ? 0 : colormap)->idx);
+    if(!colormap)
+    {
+        doom_warningf("ACS_CF_GetSectorColormap: No colormap found for sector with tag %d and type %d", tag, type);
+        thread->dataStk.push(0); // probably not the best way to return null string
+    }
+    else
+        thread->dataStk.push(~ACSenv.getString(colormap)->idx);
     return false;
 }
 
@@ -3069,6 +3086,25 @@ bool ACS_CF_SetSectorColormap(ACS_CF_ARGS)
     int       res      = 0;
     int       secnum   = -1;
 
+    // If colormap type is invalid, don't do anything
+    if(type != COLORMAP_MID && type != COLORMAP_TOP && type != COLORMAP_BOTTOM)
+    {
+        doom_warningf("ACS_CF_SetSectorColormap: Invalid colormap type %d", type);
+
+        thread->dataStk.push(0);
+        return false;
+    }
+
+    // If colormap with the given name doesn't exist, don't do anything
+    if(colormap == -1)
+    {
+        doom_warningf("ACS_CF_SetSectorColormap: Colormap '%s' not found", thread->scopeMap->getString(argV[2])->str);
+
+        thread->dataStk.push(0);
+        return false;
+    }
+
+    // Set the colormap for all sectors with the given tag
     while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0 && colormap != -1)
     {
         sector_t &sector = sectors[secnum];
