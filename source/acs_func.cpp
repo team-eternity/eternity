@@ -3070,7 +3070,7 @@ bool ACS_CF_GetSectorColormap(ACS_CF_ARGS)
     {
         doom_warningf("ACS_CF_GetSectorColormap: No sector found with tag %d", tag);
 
-        thread->dataStk.push(0); // probably not the best way to return null string
+        thread->dataStk.push(~ACSenv.getString("")->idx);
         return false;
     }
 
@@ -3088,7 +3088,7 @@ bool ACS_CF_GetSectorColormap(ACS_CF_ARGS)
     if(!colormap)
     {
         doom_warningf("ACS_CF_GetSectorColormap: No colormap found for sector with tag %d and type %d", tag, type);
-        thread->dataStk.push(0); // probably not the best way to return null string
+        thread->dataStk.push(~ACSenv.getString("")->idx);
     }
     else
         thread->dataStk.push(~ACSenv.getString(colormap)->idx);
