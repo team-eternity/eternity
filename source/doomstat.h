@@ -162,8 +162,9 @@ enum
     comp_ninja,      //         04/18/10: ninja spawn in G_CheckSpot
     comp_jump,       // Disable jumping and air control
     comp_aircontrol = comp_jump,
-    COMP_NUM_USED,  // counts the used comps. MUST BE LAST ONE + 1.
-    COMP_TOTAL = 32 // Some extra room for additional variables
+    comp_thingsectorlight,
+    COMP_TOTAL,  // counts the used comps. MUST BE LAST ONE + 1.
+    MBF_COMP_TOTAL = 32 // limit on the MBF demo format
 };
 
 extern int        comp[COMP_TOTAL], default_comp[COMP_TOTAL];

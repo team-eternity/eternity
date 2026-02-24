@@ -207,6 +207,7 @@ sfxinfo_t *E_EDFSoundForName(const char *name)
 //
 // Returns a sfxinfo_t pointer given the DeHackEd number for that
 // sound. Will return nullptr if the requested sound is not found.
+// E_SoundForUnknownTypeDEHNum should be peferred over this.
 //
 sfxinfo_t *E_SoundForDEHNum(int dehnum)
 {
@@ -217,9 +218,22 @@ sfxinfo_t *E_SoundForDEHNum(int dehnum)
 // Returns a sfxinfo_t pointer given the additive DeHackEd number for that
 // sound. Will return nullptr if the requested sound is not found.
 //
-sfxinfo_t *E_soundForAddDEHNum(int dehnum)
+static sfxinfo_t *E_soundForAddDEHNum(int dehnum)
 {
     return sound_adddehhash.objectForKey(dehnum);
+}
+
+//
+// Returns a sfxinfo_t pointer given the additive DeHackEd number for that
+// sound. If it fails it'll check the regular sound num hash.
+// Will return nullptr if the requested sound is not found.
+//
+sfxinfo_t *E_SoundForUnknownTypeDEHNum(int dehnum)
+{
+    sfxinfo_t *sfx = E_soundForAddDEHNum(dehnum);
+    if(!sfx)
+        sfx = E_SoundForDEHNum(dehnum);
+    return sfx;
 }
 
 //

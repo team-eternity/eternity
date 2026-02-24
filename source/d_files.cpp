@@ -127,7 +127,7 @@ void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset, 
     // ioanch: check if it's a directory. Do not allow "subfiles" or special
     // addflags
     struct stat sbuf;
-    if(addflags == DAF_NONE && !fp && !stat(file, &sbuf) && S_ISDIR(sbuf.st_mode))
+    if(addflags == DAF_NONE && !fp && !I_stat(file, &sbuf) && S_ISDIR(sbuf.st_mode))
     {
         flags = WFA_DIRECTORY_ARCHIVE | WFA_OPENFAILFATAL;
     }
@@ -216,7 +216,7 @@ void D_ProcessGFSDeh(gfs_t *gfs)
             M_NormalizeSlashes(filename);
         }
 
-        if(access(filename, F_OK))
+        if(I_access(filename, F_OK))
             I_Error("Couldn't open .deh or .bex %s\n", filename);
 
         D_QueueDEH(filename, 0); // haleyjd: queue it
@@ -251,7 +251,7 @@ void D_ProcessGFSWads(gfs_t *gfs)
             M_NormalizeSlashes(filename);
         }
 
-        if(access(filename, F_OK))
+        if(I_access(filename, F_OK))
             I_Error("Couldn't open WAD file %s\n", filename);
 
         D_AddFile(filename, lumpinfo_t::ns_global, nullptr, 0, DAF_NONE);
@@ -275,7 +275,7 @@ void D_ProcessGFSCsc(gfs_t *gfs)
             M_NormalizeSlashes(filename);
         }
 
-        if(access(filename, F_OK))
+        if(I_access(filename, F_OK))
             I_Error("Couldn't open CSC file %s\n", filename);
 
         C_RunScriptFromFile(filename);
@@ -594,7 +594,7 @@ static int D_CheckBasePath(const qstring &qpath)
     str.rstrip('\\');
     str.rstrip('/');
 
-    path = fs::directory_entry(str.constPtr());
+    path = fs::directory_entry(fs::u8path(str.constPtr()));
 
     if(path.exists()) // check for existence
     {
@@ -673,7 +673,7 @@ void D_SetBasePath()
     }
 
     // check environment
-    if(res != BASE_ISGOOD && (s = getenv("ETERNITYBASE")))
+    if(res != BASE_ISGOOD && (s = I_getenv("ETERNITYBASE")))
     {
         basedir = s;
 
@@ -760,7 +760,7 @@ static int D_CheckUserPath(const qstring &qpath)
     str.rstrip('\\');
     str.rstrip('/');
 
-    path = fs::directory_entry(str.constPtr());
+    path = fs::directory_entry(fs::u8path(str.constPtr()));
 
     if(path.exists()) // check for existence
     {
@@ -826,7 +826,7 @@ void D_SetUserPath()
     }
 
     // check environment
-    if(res != BASE_ISGOOD && (s = getenv("ETERNITYUSER")))
+    if(res != BASE_ISGOOD && (s = I_getenv("ETERNITYUSER")))
     {
         userdir = s;
 
@@ -937,7 +937,7 @@ static int D_VerifyGamePath(const char *path)
     int         ret;
     struct stat sbuf;
 
-    if(!stat(path, &sbuf)) // check for existence
+    if(!I_stat(path, &sbuf)) // check for existence
     {
         if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
             ret = BASE_ISGOOD;
@@ -1048,7 +1048,7 @@ static char *D_CheckGamePathFile(const char *name, bool isDir)
 
     // check for existence under user/<game>
     char *fullpath = M_SafeFilePath(usergamepath, name);
-    if(!stat(fullpath, &sbuf))
+    if(!I_stat(fullpath, &sbuf))
     {
         // check that it is or is not a directory as requested
         if(S_ISDIR(sbuf.st_mode) == isDir)
@@ -1057,7 +1057,7 @@ static char *D_CheckGamePathFile(const char *name, bool isDir)
 
     // check for existence under base/<game>
     fullpath = M_SafeFilePath(basegamepath, name);
-    if(!stat(fullpath, &sbuf))
+    if(!I_stat(fullpath, &sbuf))
     {
         if(S_ISDIR(sbuf.st_mode) == isDir)
             return fullpath;
@@ -1116,7 +1116,7 @@ void D_EnumerateAutoloadDir()
         if((autoDir = D_CheckGamePathFile("autoload", true)))
         {
             autoload_dirname = autoDir;
-            autoloads        = fs::path(autoload_dirname.constPtr());
+            autoloads        = fs::u8path(autoload_dirname.constPtr());
         }
     }
 }

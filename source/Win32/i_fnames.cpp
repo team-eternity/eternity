@@ -56,8 +56,13 @@ extern void M_GetFilePath(const char *fn, char *base, size_t len);
 void WIN_GetExeDir(char *buffer, unsigned int size)
 {
     // get the name of the current process's module
-    DWORD nRet = GetModuleFileName(nullptr, (LPTSTR)buffer, (DWORD)size);
+    wchar_t path[MAX_PATH] = {};
+    DWORD nRet = GetModuleFileNameW(nullptr, path, sizeof(path) / sizeof(*path));
     char *dupstr;
+
+    memset(buffer, 0, size);    // just to be extra safe
+    WideCharToMultiByte(CP_UTF8, 0, path, -1, buffer, size, nullptr, nullptr);
+    buffer[size - 1] = 0;
 
     // if 0 or if the full buffer size, it's not a value we can use
     // and the only available option is to exit the program

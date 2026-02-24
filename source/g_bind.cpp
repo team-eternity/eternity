@@ -917,7 +917,7 @@ void G_LoadDefaults()
 
     cfg_file = temp.duplicate();
 
-    if(access(cfg_file, R_OK))
+    if(I_access(cfg_file, R_OK))
     {
         C_Printf("keys.csc not found, using defaults\n");
         dwfile.openLump(W_GetNumForName("KEYDEFS"));

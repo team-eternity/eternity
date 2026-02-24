@@ -372,6 +372,11 @@ Fixed elastic collisions being far more common than expected.
 2025/07/22
 Fixed crashing on maps with more than 65535 segs.
 
+--------------------------------------------------------------------------------
+2025/11/03
+G'day from Australia, where I live as of the 25th Oct!
+Fixed translucent PNGs that use a separate palette from the current WAD.
+
 ================================================================================
 EOF
 ================================================================================

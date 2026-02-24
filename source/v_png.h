@@ -64,7 +64,7 @@ public:
     // clang-format on
 
     // conversions
-    byte    *getAs8Bit(const byte *outpal) const;
+    byte    *getAs8Bit(const byte *outpal, bool *pixelMaskTable) const;
     byte    *getAs24Bit() const;
     patch_t *getAsPatch(int tag, void **user = nullptr, size_t *size = nullptr) const;
 

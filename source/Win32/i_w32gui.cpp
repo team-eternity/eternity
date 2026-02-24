@@ -36,13 +36,13 @@
 
 qstring I_OpenWindowsDirectory()
 {
-    BROWSEINFOA info{ nullptr, nullptr, nullptr, " Select the folder where your game files (IWADs) are stored",
+    BROWSEINFOW info{ nullptr, nullptr, nullptr, L" Select the folder where your game files (IWADs) are stored",
                       BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE };
 
-    if(LPITEMIDLIST pidl = SHBrowseForFolderA(&info); pidl)
+    if(LPITEMIDLIST pidl = SHBrowseForFolderW(&info); pidl)
     {
-        TCHAR path[MAX_PATH];
-        SHGetPathFromIDListA(pidl, path);
+        wchar_t path[MAX_PATH];
+        SHGetPathFromIDListW(pidl, path);
 
         IMalloc *imalloc = nullptr;
         if(SUCCEEDED(SHGetMalloc(&imalloc)))
@@ -51,7 +51,10 @@ qstring I_OpenWindowsDirectory()
             imalloc->Release();
         }
 
-        return qstring(path);
+        char apath[MAX_PATH];
+        WideCharToMultiByte(CP_UTF8, 0, path, -1, apath, sizeof(apath), nullptr, nullptr);
+
+        return qstring(apath);
     }
 
     return qstring();

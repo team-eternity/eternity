@@ -32,8 +32,6 @@
 #include "i_system.h" // for I_Error
 #include "m_qstr.h"   // for qstring
 
-namespace fs = std::filesystem;
-
 //=============================================================================
 //
 // File IO Routines
@@ -107,7 +105,7 @@ char *M_TempFile(const char *s)
 
     // Check the TEMP environment variable to find the location.
 
-    tempdir = getenv("TEMP");
+    tempdir = I_getenv("TEMP");
 
     if(tempdir == NULL)
     {
@@ -310,6 +308,7 @@ void M_GetFilePath(const char *fn, char *base, size_t len)
     p = base + len - 1;
 
     strncpy(base, fn, len);
+    base[len - 1] = '\0';
 
     while(p >= base)
     {

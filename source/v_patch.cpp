@@ -861,7 +861,7 @@ inline static void PUTLONG(byte *&r, const uint32_t v)
 // Converts a linear graphic to a patch with transparency.
 // Mostly straight from psxwadgen, which is mostly straight from SLADE.
 //
-patch_t *V_LinearToTransPatch(const byte *linear, int width, int height, size_t *memsize, int color_key, int tag,
+patch_t *V_LinearToTransPatch(const byte *linear, int width, int height, size_t *memsize, bool *pixelMaskTable, int tag,
                               void **user)
 {
     Collection<VPatchColumn> columns;
@@ -904,8 +904,7 @@ patch_t *V_LinearToTransPatch(const byte *linear, int width, int height, size_t 
             }
 
             // If the current pixel is not transparent, add it to the current post
-            // FIXME: Make this check mask-based (check mask[offset] > 0)
-            if(linear[offset] != color_key)
+            if(!pixelMaskTable || pixelMaskTable[linear[offset]] == false)
             {
                 // If we're not currently building a post, begin one and set its offset
                 if(!ispost)

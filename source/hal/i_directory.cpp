@@ -31,6 +31,8 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 #include <string>
+#else
+#include <unistd.h>
 #endif
 
 #include "../z_zone.h"
@@ -94,7 +96,7 @@ const char *I_PlatformInstallDirectory()
 void I_GetRealPath(const char *path, qstring &real)
 {
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
-    fs::path pathobj(path);
+    fs::path pathobj(fs::u8path(path));
     pathobj = fs::canonical(pathobj);
 
     // Has to be converted since fs::value_type is wchar_t on Windows
@@ -124,16 +126,57 @@ void I_GetRealPath(const char *path, qstring &real)
 #endif
 }
 
-FILE* I_fopen(const char* path, const char* mode)
+int I_access(const char *path, int mode)
 {
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
     fs::path pathObject = fs::u8path(path);
+    return _waccess(pathObject.wstring().c_str(), mode);
+#else
+    return access(path, mode);
+#endif
+}
+
+FILE *I_fopen(const char *path, const char *mode)
+{
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
+    fs::path     pathObject = fs::u8path(path);
     std::wstring wmode;
     for(const char *m = mode; *m; ++m)
         wmode.push_back(static_cast<wchar_t>(*m));
     return _wfopen(pathObject.wstring().c_str(), wmode.c_str());
 #else
     return fopen(path, mode);
+#endif
+}
+
+char *I_getenv(const char *name)
+{
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
+    if(!name)
+        return nullptr; // trivial safety
+    std::wstring wname;
+    wname.resize(strlen(name) * 2);
+    MultiByteToWideChar(CP_UTF8, 0, name, -1, wname.data(), (int)wname.length() + 1);
+    wchar_t *wresult = _wgetenv(wname.c_str());
+    if(!wresult)
+        return nullptr;
+    static std::string result;
+    result.resize(wcslen(wresult) * 2);
+    int n = WideCharToMultiByte(CP_UTF8, 0, wresult, -1, result.data(), (int)result.length() + 1, nullptr, nullptr);
+    result.resize(n - 1);
+    return result.data();
+#else
+    return getenv(name);
+#endif
+}
+
+int I_stat(const char *fileName, struct stat *statobj)
+{
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
+    fs::path fileNameObject = fs::u8path(fileName);
+    return _wstat(fileNameObject.wstring().c_str(), reinterpret_cast<struct _stat *>(statobj));
+#else
+    return stat(fileName, statobj);
 #endif
 }
 
