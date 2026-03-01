@@ -46,3 +46,5 @@ Bug fixes
 * Fixed ReplaceTextures failing with flats named the same as unrelated wall textures.
 * Fixed A_PlaySound (and a few other triggers) not playing DSDHacked newly defined sounds.
 * Fixed EDF gameproperties sound.titlemusic not working.
+* Fixed empty MIDIs (easily used in mods to silence the music) causing infinite loop errors with the FluidSynth backend
+  under some Linux distros.
