@@ -755,7 +755,8 @@ static void P_buildPortalMap()
             list              = blockmaplump + offset;
 
             // skip 0 delimiter
-            ++list;
+            if(skipblstart)
+                ++list;
 
             // ioanch: also check sector blockmaps
             int *tmplist = list;

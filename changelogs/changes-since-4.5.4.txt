@@ -49,3 +49,4 @@ Bug fixes
 * Fixed empty MIDIs (easily used in mods to silence the music) causing infinite loop errors with the FluidSynth backend
   under some Linux distros.
 * Fixed very large maps having potential collision issues.
+* Fixed blocklist start being ignored when building portal map.
