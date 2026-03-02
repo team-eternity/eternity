@@ -380,7 +380,8 @@ Fixed translucent PNGs that use a separate palette from the current WAD.
 --------------------------------------------------------------------------------
 2026/02/06
 Fixed very large maps having potential collision issues.
-Fix blocklist start being ignored when building portal map.
+Fixed blocklist start being ignored when building portal map.
+Adopted blockmap overflow P_PathTraverse fix from PR+.
 
 ================================================================================
 EOF
