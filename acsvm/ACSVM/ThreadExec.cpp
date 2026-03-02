@@ -21,7 +21,6 @@
 #include "Scope.hpp"
 #include "Script.hpp"
 
-
 //----------------------------------------------------------------------------|
 // Macros                                                                     |
 //
@@ -140,122 +139,120 @@
       Op_##op(*scopeMod->regV[*codePtr++]); \
       NextCase()
 
-
 //----------------------------------------------------------------------------|
 // Static Functions                                                           |
 //
 
 namespace ACSVM
 {
-   //
-   // OpFunc_CmpI_GE
-   //
-   static inline void OpFunc_CmpI_GE(Word &lop, Word rop)
-   {
-      lop = static_cast<SWord>(lop) >= static_cast<SWord>(rop);
-   }
-
-   //
-   // OpFunc_CmpI_GT
-   //
-   static inline void OpFunc_CmpI_GT(Word &lop, Word rop)
-   {
-      lop = static_cast<SWord>(lop) > static_cast<SWord>(rop);
-   }
-
-   //
-   // OpFunc_CmpI_LE
-   //
-   static inline void OpFunc_CmpI_LE(Word &lop, Word rop)
-   {
-      lop = static_cast<SWord>(lop) <= static_cast<SWord>(rop);
-   }
-
-   //
-   // OpFunc_CmpI_LT
-   //
-   static inline void OpFunc_CmpI_LT(Word &lop, Word rop)
-   {
-      lop = static_cast<SWord>(lop) < static_cast<SWord>(rop);
-   }
-
-   //
-   // OpFunc_CmpU_EQ
-   //
-   static inline void OpFunc_CmpU_EQ(Word &lop, Word rop)
-   {
-      lop = lop == rop;
-   }
-
-   //
-   // OpFunc_CmpU_NE
-   //
-   static inline void OpFunc_CmpU_NE(Word &lop, Word rop)
-   {
-      lop = lop != rop;
-   }
-
-   //
-   // OpFunc_DivI
-   //
-   static inline void OpFunc_DivI(Word &lop, Word rop)
-   {
-      lop = rop ? static_cast<SWord>(lop) / static_cast<SWord>(rop) : 0;
-   }
-
-   //
-   // OpFunc_DivX
-   //
-   static inline void OpFunc_DivX(Word &lop, Word rop)
-   {
-      if(rop)
-         lop = (SDWord(SWord(lop)) << 16) / SWord(rop);
-      else
-         lop = 0;
-   }
-
-   //
-   // OpFunc_LAnd
-   //
-   static inline void OpFunc_LAnd(Word &lop, Word rop)
-   {
-      lop = lop && rop;
-   }
-
-   //
-   // OpFunc_LOrI
-   //
-   static inline void OpFunc_LOrI(Word &lop, Word rop)
-   {
-      lop = lop || rop;
-   }
-
-   //
-   // OpFunc_ModI
-   //
-   static inline void OpFunc_ModI(Word &lop, Word rop)
-   {
-      lop = rop ? static_cast<SWord>(lop) % static_cast<SWord>(rop) : 0;
-   }
-
-   //
-   // OpFunc_MulX
-   //
-   static inline void OpFunc_MulX(Word &lop, Word rop)
-   {
-      lop = DWord(SDWord(SWord(lop)) * SWord(rop)) >> 16;
-   }
-
-   //
-   // OpFunc_ShRI
-   //
-   static inline void OpFunc_ShRI(Word &lop, Word rop)
-   {
-      // TODO: Implement this without relying on sign-extending shift.
-      lop = static_cast<SWord>(lop) >> (rop & 31);
-   }
+//
+// OpFunc_CmpI_GE
+//
+static inline void OpFunc_CmpI_GE(Word &lop, Word rop)
+{
+    lop = static_cast<SWord>(lop) >= static_cast<SWord>(rop);
 }
 
+//
+// OpFunc_CmpI_GT
+//
+static inline void OpFunc_CmpI_GT(Word &lop, Word rop)
+{
+    lop = static_cast<SWord>(lop) > static_cast<SWord>(rop);
+}
+
+//
+// OpFunc_CmpI_LE
+//
+static inline void OpFunc_CmpI_LE(Word &lop, Word rop)
+{
+    lop = static_cast<SWord>(lop) <= static_cast<SWord>(rop);
+}
+
+//
+// OpFunc_CmpI_LT
+//
+static inline void OpFunc_CmpI_LT(Word &lop, Word rop)
+{
+    lop = static_cast<SWord>(lop) < static_cast<SWord>(rop);
+}
+
+//
+// OpFunc_CmpU_EQ
+//
+static inline void OpFunc_CmpU_EQ(Word &lop, Word rop)
+{
+    lop = lop == rop;
+}
+
+//
+// OpFunc_CmpU_NE
+//
+static inline void OpFunc_CmpU_NE(Word &lop, Word rop)
+{
+    lop = lop != rop;
+}
+
+//
+// OpFunc_DivI
+//
+static inline void OpFunc_DivI(Word &lop, Word rop)
+{
+    lop = rop ? static_cast<SWord>(lop) / static_cast<SWord>(rop) : 0;
+}
+
+//
+// OpFunc_DivX
+//
+static inline void OpFunc_DivX(Word &lop, Word rop)
+{
+    if(rop)
+        lop = (SDWord(SWord(lop)) << 16) / SWord(rop);
+    else
+        lop = 0;
+}
+
+//
+// OpFunc_LAnd
+//
+static inline void OpFunc_LAnd(Word &lop, Word rop)
+{
+    lop = lop && rop;
+}
+
+//
+// OpFunc_LOrI
+//
+static inline void OpFunc_LOrI(Word &lop, Word rop)
+{
+    lop = lop || rop;
+}
+
+//
+// OpFunc_ModI
+//
+static inline void OpFunc_ModI(Word &lop, Word rop)
+{
+    lop = rop ? static_cast<SWord>(lop) % static_cast<SWord>(rop) : 0;
+}
+
+//
+// OpFunc_MulX
+//
+static inline void OpFunc_MulX(Word &lop, Word rop)
+{
+    lop = DWord(SDWord(SWord(lop)) * SWord(rop)) >> 16;
+}
+
+//
+// OpFunc_ShRI
+//
+static inline void OpFunc_ShRI(Word &lop, Word rop)
+{
+    // TODO: Implement this without relying on sign-extending shift.
+    lop = static_cast<SWord>(lop) >> (rop & 31);
+}
+} // namespace ACSVM
 
 //----------------------------------------------------------------------------|
 // Extern Functions                                                           |
@@ -263,129 +260,151 @@ namespace ACSVM
 
 namespace ACSVM
 {
-   //
-   // Thread::exec
-   //
-   void Thread::exec()
-   {
-      if(delay && --delay)
-         return;
+//
+// Thread::exec
+//
+void Thread::exec()
+{
+    if(delay && --delay)
+        return;
 
-      auto branches = env->branchLimit;
+    auto branches = env->branchLimit;
 
-   exec_intr:
-      switch(state.state)
-      {
-      case ThreadState::Inactive: return;
-      case ThreadState::Stopped:  goto thread_stop;
-      case ThreadState::Paused:   return;
+exec_intr:
+    switch(state.state)
+    {
+    case ThreadState::Inactive: return;
+    case ThreadState::Stopped:  goto thread_stop;
+    case ThreadState::Paused:   return;
 
-      case ThreadState::Running:
-         if(delay)
+    case ThreadState::Running:
+        if(delay)
             return;
-         break;
+        break;
 
-      case ThreadState::WaitScrI:
-         if(scopeMap->isScriptActive(scopeMap->findScript(state.data)))
+    case ThreadState::WaitScrI:
+        if(scopeMap->isScriptActive(scopeMap->findScript(state.data)))
             return;
-         state = ThreadState::Running;
-         break;
+        state = ThreadState::Running;
+        break;
 
-      case ThreadState::WaitScrS:
-         if(scopeMap->isScriptActive(scopeMap->findScript(scopeMap->getString(state.data))))
+    case ThreadState::WaitScrS:
+        if(scopeMap->isScriptActive(scopeMap->findScript(scopeMap->getString(state.data))))
             return;
-         state = ThreadState::Running;
-         break;
+        state = ThreadState::Running;
+        break;
 
-      case ThreadState::WaitTag:
-         if(!module->env->checkTag(state.type, state.data))
+    case ThreadState::WaitTag:
+        if(!module->env->checkTag(state.type, state.data))
             return;
-         state = ThreadState::Running;
-         break;
-      }
+        state = ThreadState::Running;
+        break;
+    }
 
-      #if ACSVM_DynamicGoto
-      static void const *const cases[] =
-      {
-         #define ACSVM_CodeList(name, ...) &&case_Code##name,
-         #include "CodeList.hpp"
-      };
-      #endif
+#if ACSVM_DynamicGoto
+    static void const *const cases[] = {
+#define ACSVM_CodeList(name, ...) &&case_Code##name,
+#include "CodeList.hpp"
+    };
+#endif
 
-      #if ACSVM_DynamicGoto
-      NextCase();
-      #else
-      next_case: switch(*codePtr++)
-      #endif
-      {
-      DeclCase(Nop):
-         NextCase();
+#if ACSVM_DynamicGoto
+    NextCase();
+#else
+next_case:
+    switch(*codePtr++)
+#endif
+    {
+        DeclCase(Nop) : NextCase();
 
-      DeclCase(Kill):
-         module->env->printKill(this, codePtr[0], codePtr[1]);
-         goto thread_stop;
+        DeclCase(Kill) : module->env->printKill(this, codePtr[0], codePtr[1]);
+        goto thread_stop;
 
-         //================================================
-         // Binary operator codes.
-         //
+        //================================================
+        // Binary operator codes.
+        //
 
-         OpSet(AddU);
-         OpSet(AndU);
-         OpSet(DivI);
-         OpSet(ModI);
-         OpSet(MulU);
-         OpSet(OrIU);
-         OpSet(OrXU);
-         OpSet(ShLU);
-         OpSet(ShRI);
-         OpSet(SubU);
+        OpSet(AddU);
+        OpSet(AndU);
+        OpSet(DivI);
+        OpSet(ModI);
+        OpSet(MulU);
+        OpSet(OrIU);
+        OpSet(OrXU);
+        OpSet(ShLU);
+        OpSet(ShRI);
+        OpSet(SubU);
 
-      DeclCase(AddU): Op_AddU(dataStk[1]); NextCase();
-      DeclCase(AndU): Op_AndU(dataStk[1]); NextCase();
-      DeclCase(CmpI_GE): Op_CmpI_GE(dataStk[1]); NextCase();
-      DeclCase(CmpI_GT): Op_CmpI_GT(dataStk[1]); NextCase();
-      DeclCase(CmpI_LE): Op_CmpI_LE(dataStk[1]); NextCase();
-      DeclCase(CmpI_LT): Op_CmpI_LT(dataStk[1]); NextCase();
-      DeclCase(CmpU_EQ): Op_CmpU_EQ(dataStk[1]); NextCase();
-      DeclCase(CmpU_NE): Op_CmpU_NE(dataStk[1]); NextCase();
-      DeclCase(DivI): Op_DivI(dataStk[1]); NextCase();
-      DeclCase(DivX): Op_DivX(dataStk[1]); NextCase();
-      DeclCase(LAnd): Op_LAnd(dataStk[1]); NextCase();
-      DeclCase(LOrI): Op_LOrI(dataStk[1]); NextCase();
-      DeclCase(ModI): Op_ModI(dataStk[1]); NextCase();
-      DeclCase(MulU): Op_MulU(dataStk[1]); NextCase();
-      DeclCase(MulX): Op_MulX(dataStk[1]); NextCase();
-      DeclCase(OrIU): Op_OrIU(dataStk[1]); NextCase();
-      DeclCase(OrXU): Op_OrXU(dataStk[1]); NextCase();
-      DeclCase(ShLU): Op_ShLU(dataStk[1]); NextCase();
-      DeclCase(ShRI): Op_ShRI(dataStk[1]); NextCase();
-      DeclCase(SubU): Op_SubU(dataStk[1]); NextCase();
+        DeclCase(AddU) : Op_AddU(dataStk[1]);
+        NextCase();
+        DeclCase(AndU) : Op_AndU(dataStk[1]);
+        NextCase();
+        DeclCase(CmpI_GE) : Op_CmpI_GE(dataStk[1]);
+        NextCase();
+        DeclCase(CmpI_GT) : Op_CmpI_GT(dataStk[1]);
+        NextCase();
+        DeclCase(CmpI_LE) : Op_CmpI_LE(dataStk[1]);
+        NextCase();
+        DeclCase(CmpI_LT) : Op_CmpI_LT(dataStk[1]);
+        NextCase();
+        DeclCase(CmpU_EQ) : Op_CmpU_EQ(dataStk[1]);
+        NextCase();
+        DeclCase(CmpU_NE) : Op_CmpU_NE(dataStk[1]);
+        NextCase();
+        DeclCase(DivI) : Op_DivI(dataStk[1]);
+        NextCase();
+        DeclCase(DivX) : Op_DivX(dataStk[1]);
+        NextCase();
+        DeclCase(LAnd) : Op_LAnd(dataStk[1]);
+        NextCase();
+        DeclCase(LOrI) : Op_LOrI(dataStk[1]);
+        NextCase();
+        DeclCase(ModI) : Op_ModI(dataStk[1]);
+        NextCase();
+        DeclCase(MulU) : Op_MulU(dataStk[1]);
+        NextCase();
+        DeclCase(MulX) : Op_MulX(dataStk[1]);
+        NextCase();
+        DeclCase(OrIU) : Op_OrIU(dataStk[1]);
+        NextCase();
+        DeclCase(OrXU) : Op_OrXU(dataStk[1]);
+        NextCase();
+        DeclCase(ShLU) : Op_ShLU(dataStk[1]);
+        NextCase();
+        DeclCase(ShRI) : Op_ShRI(dataStk[1]);
+        NextCase();
+        DeclCase(SubU) : Op_SubU(dataStk[1]);
+        NextCase();
 
-         //================================================
-         // Call codes.
-         //
+        //================================================
+        // Call codes.
+        //
 
-      DeclCase(Call_Lit):
-         {
+        DeclCase(Call_Lit) :
+        {
             Function *func;
 
             func = *codePtr < module->functionV.size() ? module->functionV[*codePtr] : nullptr;
             ++codePtr;
 
-         do_call:
-            if(!func) {BranchTo(0); NextCase();}
+        do_call:
+            if(!func)
+            {
+                BranchTo(0);
+                NextCase();
+            }
 
             // Reserve stack space.
             callStk.reserve(CallStkSize);
             dataStk.reserve(DataStkSize);
 
             // Push call frame.
-            callStk.push({codePtr, module, scopeMod, localArr.size(), localReg.size()});
+            callStk.push({ codePtr, module, scopeMod, localArr.size(), localReg.size() });
 
             // Apply function data.
-            codePtr      = &func->module->codeV[func->codeIdx];
-            module       = func->module;
-            scopeMod     = scopeMap->getModuleScope(module);
+            codePtr  = &func->module->codeV[func->codeIdx];
+            module   = func->module;
+            scopeMod = scopeMap->getModuleScope(module);
             localArr.alloc(func->locArrC);
             localReg.alloc(func->locRegC);
 
@@ -395,249 +414,228 @@ namespace ACSVM
 
             NextCase();
 
-      DeclCase(Call_Stk):
-            dataStk.drop();
+            DeclCase(Call_Stk) : dataStk.drop();
             func = env->getFunction(dataStk[0]);
             goto do_call;
-         }
+        }
 
-      DeclCase(CallFunc):
-         {
+        DeclCase(CallFunc) :
+        {
             Word argc = *codePtr++;
             Word func = *codePtr++;
             dataStk.drop(argc);
             if(env->callFunc(this, func, &dataStk[0], argc))
-               goto exec_intr;
-         }
-         NextCase();
+                goto exec_intr;
+        }
+        NextCase();
 
-      DeclCase(CallFunc_Lit):
-         {
-            Word        argc = *codePtr++;
-            Word        func = *codePtr++;
-            Word const *argv =  codePtr;
-            codePtr += argc;
+        DeclCase(CallFunc_Lit) :
+        {
+            Word        argc  = *codePtr++;
+            Word        func  = *codePtr++;
+            Word const *argv  = codePtr;
+            codePtr          += argc;
             if(env->callFunc(this, func, argv, argc))
-               goto exec_intr;
-         }
-         NextCase();
+                goto exec_intr;
+        }
+        NextCase();
 
-      DeclCase(CallSpec):
-         {
+        DeclCase(CallSpec) :
+        {
             Word argc = *codePtr++;
             Word spec = *codePtr++;
             dataStk.drop(argc);
             env->callSpec(this, spec, &dataStk[0], argc);
-         }
-         NextCase();
+        }
+        NextCase();
 
-      DeclCase(CallSpec_Lit):
-         {
-            Word        argc = *codePtr++;
-            Word        spec = *codePtr++;
-            Word const *argv =  codePtr;
-            codePtr += argc;
+        DeclCase(CallSpec_Lit) :
+        {
+            Word        argc  = *codePtr++;
+            Word        spec  = *codePtr++;
+            Word const *argv  = codePtr;
+            codePtr          += argc;
             env->callSpec(this, spec, argv, argc);
-         }
-         NextCase();
+        }
+        NextCase();
 
-      DeclCase(CallSpec_R1):
-         {
+        DeclCase(CallSpec_R1) :
+        {
             Word argc = *codePtr++;
             Word spec = *codePtr++;
             dataStk.drop(argc);
             dataStk.push(env->callSpec(this, spec, &dataStk[0], argc));
-         }
-         NextCase();
-
-      DeclCase(Retn):
-         // If no call frames left, terminate the thread.
-         if(callStk.empty())
-            goto thread_stop;
-
-         // Apply call frame.
-         codePtr     = callStk[1].codePtr;
-         module      = callStk[1].module;
-         scopeMod    = callStk[1].scopeMod;
-         localArr.free(callStk[1].locArrC);
-         localReg.free(callStk[1].locRegC);
-
-         // Drop call frame.
-         callStk.drop();
-
-         NextCase();
-
-         //================================================
-         // Drop codes.
-         //
-
-         OpSet(Drop);
-
-      DeclCase(Drop_Nul):
-        dataStk.drop();
+        }
         NextCase();
 
-      DeclCase(Drop_ScrRet):
-        dataStk.drop();
+        DeclCase(Retn)
+            : // If no call frames left, terminate the thread.
+              if(callStk.empty()) goto thread_stop;
+
+        // Apply call frame.
+        codePtr  = callStk[1].codePtr;
+        module   = callStk[1].module;
+        scopeMod = callStk[1].scopeMod;
+        localArr.free(callStk[1].locArrC);
+        localReg.free(callStk[1].locRegC);
+
+        // Drop call frame.
+        callStk.drop();
+
+        NextCase();
+
+        //================================================
+        // Drop codes.
+        //
+
+        OpSet(Drop);
+
+        DeclCase(Drop_Nul) : dataStk.drop();
+        NextCase();
+
+        DeclCase(Drop_ScrRet) : dataStk.drop();
         result = dataStk[0];
         NextCase();
 
-         //================================================
-         // Jump codes.
-         //
+        //================================================
+        // Jump codes.
+        //
 
-      DeclCase(Jcnd_Lit):
-        if(dataStk[1] == *codePtr++)
+        DeclCase(Jcnd_Lit) : if(dataStk[1] == *codePtr++)
         {
-           dataStk.drop();
-           BranchTo(*codePtr);
+            dataStk.drop();
+            BranchTo(*codePtr);
         }
-        else
-           ++codePtr;
+        else ++codePtr;
         NextCase();
 
-      DeclCase(Jcnd_Nil):
-         if(dataStk.drop(), dataStk[0])
-            ++codePtr;
-         else
-            BranchTo(*codePtr);
-         NextCase();
+        DeclCase(Jcnd_Nil) : if(dataStk.drop(), dataStk[0])++ codePtr;
+        else BranchTo(*codePtr);
+        NextCase();
 
-      DeclCase(Jcnd_Tab):
-         if(auto jump = module->jumpMapV[*codePtr++].table.find(dataStk[1]))
-         {
+        DeclCase(Jcnd_Tab) : if(auto jump = module->jumpMapV[*codePtr++].table.find(dataStk[1]))
+        {
             dataStk.drop();
             BranchTo(*jump);
-         }
-         NextCase();
-
-      DeclCase(Jcnd_Tru):
-         if(dataStk.drop(), dataStk[0])
-            BranchTo(*codePtr);
-         else
-            ++codePtr;
-         NextCase();
-
-      DeclCase(Jump_Lit):
-        BranchTo(*codePtr);
+        }
         NextCase();
 
-      DeclCase(Jump_Stk):
-         dataStk.drop();
-         BranchTo(dataStk[0] < module->jumpV.size() ? module->jumpV[dataStk[0]].codeIdx : 0);
-         NextCase();
+        DeclCase(Jcnd_Tru) : if(dataStk.drop(), dataStk[0]) BranchTo(*codePtr);
+        else ++codePtr;
+        NextCase();
 
-         //================================================
-         // Push codes.
-         //
+        DeclCase(Jump_Lit) : BranchTo(*codePtr);
+        NextCase();
 
-      DeclCase(Pfun_Lit):
-         if(*codePtr < module->functionV.size())
-            dataStk.push(module->functionV[*codePtr]->idx);
-         else
-            dataStk.push(0);
-         ++codePtr;
-         NextCase();
+        DeclCase(Jump_Stk) : dataStk.drop();
+        BranchTo(dataStk[0] < module->jumpV.size() ? module->jumpV[dataStk[0]].codeIdx : 0);
+        NextCase();
 
-      DeclCase(Pstr_Stk):
-         if(dataStk[1] < module->stringV.size())
-            dataStk[1] = ~module->stringV[dataStk[1]]->idx;
-         NextCase();
+        //================================================
+        // Push codes.
+        //
 
-      DeclCase(Push_GblArr): dataStk[1] = scopeGbl->arrV[*codePtr++].find(dataStk[1]); NextCase();
-      DeclCase(Push_GblReg): dataStk.push(scopeGbl->regV[*codePtr++]); NextCase();
-      DeclCase(Push_HubArr): dataStk[1] = scopeHub->arrV[*codePtr++].find(dataStk[1]); NextCase();
-      DeclCase(Push_HubReg): dataStk.push(scopeHub->regV[*codePtr++]); NextCase();
-      DeclCase(Push_Lit):    dataStk.push(*codePtr++); NextCase();
-      DeclCase(Push_LitArr): for(auto i = *codePtr++; i--;) dataStk.push(*codePtr++); NextCase();
-      DeclCase(Push_LocArr): dataStk[1] = localArr[*codePtr++].find(dataStk[1]); NextCase();
-      DeclCase(Push_LocReg): dataStk.push(localReg[*codePtr++]); NextCase();
-      DeclCase(Push_ModArr): dataStk[1] = scopeMod->arrV[*codePtr++]->find(dataStk[1]); NextCase();
-      DeclCase(Push_ModReg): dataStk.push(*scopeMod->regV[*codePtr++]); NextCase();
+        DeclCase(Pfun_Lit) : if(*codePtr < module->functionV.size()) dataStk.push(module->functionV[*codePtr]->idx);
+        else dataStk.push(0);
+        ++codePtr;
+        NextCase();
 
-      DeclCase(Push_StrArs):
-         dataStk.drop();
-         dataStk[1] = scopeMap->getString(dataStk[1])->get(dataStk[0]);
-         NextCase();
+        DeclCase(Pstr_Stk) : if(dataStk[1] < module->stringV.size()) dataStk[1] = ~module->stringV[dataStk[1]]->idx;
+        NextCase();
 
-         //================================================
-         // Script control codes.
-         //
+        DeclCase(Push_GblArr) : dataStk[1] = scopeGbl->arrV[*codePtr++].find(dataStk[1]);
+        NextCase();
+        DeclCase(Push_GblReg) : dataStk.push(scopeGbl->regV[*codePtr++]);
+        NextCase();
+        DeclCase(Push_HubArr) : dataStk[1] = scopeHub->arrV[*codePtr++].find(dataStk[1]);
+        NextCase();
+        DeclCase(Push_HubReg) : dataStk.push(scopeHub->regV[*codePtr++]);
+        NextCase();
+        DeclCase(Push_Lit) : dataStk.push(*codePtr++);
+        NextCase();
+        DeclCase(Push_LitArr) : for(auto i = *codePtr++; i--;) dataStk.push(*codePtr++);
+        NextCase();
+        DeclCase(Push_LocArr) : dataStk[1] = localArr[*codePtr++].find(dataStk[1]);
+        NextCase();
+        DeclCase(Push_LocReg) : dataStk.push(localReg[*codePtr++]);
+        NextCase();
+        DeclCase(Push_ModArr) : dataStk[1] = scopeMod->arrV[*codePtr++]->find(dataStk[1]);
+        NextCase();
+        DeclCase(Push_ModReg) : dataStk.push(*scopeMod->regV[*codePtr++]);
+        NextCase();
 
-      DeclCase(ScrDelay):
-         dataStk.drop();
-         delay = dataStk[0] + env->longDelay;
-         goto exec_intr;
+        DeclCase(Push_StrArs) : dataStk.drop();
+        dataStk[1] = scopeMap->getString(dataStk[1])->get(dataStk[0]);
+        NextCase();
 
-      DeclCase(ScrDelay_Lit):
-         delay = *codePtr++ + env->longDelay;
-         goto exec_intr;
+        //================================================
+        // Script control codes.
+        //
 
-      DeclCase(ScrHalt):
-         state = ThreadState::Paused;
-         goto exec_intr;
+        DeclCase(ScrDelay) : dataStk.drop();
+        delay = dataStk[0] + env->longDelay;
+        goto exec_intr;
 
-      DeclCase(ScrRestart):
-         BranchTo(script->codeIdx);
-         NextCase();
+        DeclCase(ScrDelay_Lit) : delay = *codePtr++ + env->longDelay;
+        goto exec_intr;
 
-      DeclCase(ScrTerm):
-         goto thread_stop;
+        DeclCase(ScrHalt) : state = ThreadState::Paused;
+        goto exec_intr;
 
-      DeclCase(ScrWaitI):
-         dataStk.drop();
-         state = {ThreadState::WaitScrI, dataStk[0]};
-         goto exec_intr;
+        DeclCase(ScrRestart) : BranchTo(script->codeIdx);
+        NextCase();
 
-      DeclCase(ScrWaitI_Lit):
-         state = {ThreadState::WaitScrI, *codePtr++};
-         goto exec_intr;
+        DeclCase(ScrTerm) : goto thread_stop;
 
-      DeclCase(ScrWaitS):
-         dataStk.drop();
-         state = {ThreadState::WaitScrS, dataStk[0]};
-         goto exec_intr;
+        DeclCase(ScrWaitI) : dataStk.drop();
+        state = { ThreadState::WaitScrI, dataStk[0] };
+        goto exec_intr;
 
-      DeclCase(ScrWaitS_Lit):
-         state = {ThreadState::WaitScrS, *codePtr++};
-         goto exec_intr;
+        DeclCase(ScrWaitI_Lit) : state = { ThreadState::WaitScrI, *codePtr++ };
+        goto exec_intr;
 
-         //================================================
-         // Stack control codes.
-         //
+        DeclCase(ScrWaitS) : dataStk.drop();
+        state = { ThreadState::WaitScrS, dataStk[0] };
+        goto exec_intr;
 
-      DeclCase(Copy):
-         {auto temp = dataStk[1]; dataStk.push(temp);}
-         NextCase();
+        DeclCase(ScrWaitS_Lit) : state = { ThreadState::WaitScrS, *codePtr++ };
+        goto exec_intr;
 
-      DeclCase(Swap):
-         std::swap(dataStk[2], dataStk[1]);
-         NextCase();
+        //================================================
+        // Stack control codes.
+        //
 
-         //================================================
-         // Unary operator codes.
-         //
+        DeclCase(Copy) :
+        {
+            auto temp = dataStk[1];
+            dataStk.push(temp);
+        }
+        NextCase();
 
-         OpSet(DecU);
-         OpSet(IncU);
+        DeclCase(Swap) : std::swap(dataStk[2], dataStk[1]);
+        NextCase();
 
-      DeclCase(InvU):
-         dataStk[1] = ~dataStk[1];
-         NextCase();
+        //================================================
+        // Unary operator codes.
+        //
 
-      DeclCase(NegI):
-         dataStk[1] = ~dataStk[1] + 1;
-         NextCase();
+        OpSet(DecU);
+        OpSet(IncU);
 
-      DeclCase(NotU):
-         dataStk[1] = !dataStk[1];
-         NextCase();
-      }
+        DeclCase(InvU) : dataStk[1] = ~dataStk[1];
+        NextCase();
 
-   thread_stop:
-      stop();
-   }
+        DeclCase(NegI) : dataStk[1] = ~dataStk[1] + 1;
+        NextCase();
+
+        DeclCase(NotU) : dataStk[1] = !dataStk[1];
+        NextCase();
+    }
+
+thread_stop:
+    stop();
 }
+} // namespace ACSVM
 
 // EOF
 
