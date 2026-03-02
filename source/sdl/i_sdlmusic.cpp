@@ -47,6 +47,7 @@
 #include "../s_sound.h"
 #include "../mn_engin.h"
 #include "../m_utils.h"
+#include "../hal/i_platform.h"
 
 #ifdef HAVE_SPCLIB
 #include "../../snes_spc/spc.h"
@@ -597,8 +598,7 @@ static int I_TryLoadSPC(void *data, int size)
 }
 #endif
 
-// Currently only called for Linux, otherwise it would trigger compiler warnings
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
+#if EE_CURRENT_PLATFORM != EE_PLATFORM_WINDOWS
 static bool I_isEmptyMIDI(const void *const data, const int size)
 {
     // Check if MIDI data is made only of empty tracks. Some systems don't handle that well.
@@ -648,7 +648,9 @@ static int I_SDLRegisterSong(void *data, int size)
             isMUS = true;
     }
 
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
+    // TODO: also test if OK to use on Windows. It's strictly necessary for Linux, but no harm
+    // blocking empty songs completely.
+#if EE_CURRENT_PLATFORM != EE_PLATFORM_WINDOWS
     if(isMIDI && I_isEmptyMIDI(data, size))
     {
         // We actually need to reject empty MIDI, because on Ubuntu it may fail with an infinite loop with error:
