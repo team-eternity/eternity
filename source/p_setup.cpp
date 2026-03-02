@@ -2230,12 +2230,6 @@ static void P_LoadSideDefs2(int lumpnum)
     Z_Free(lump);
 }
 
-// haleyjd 10/10/11: externalized structure due to pre-C++11 template limitations
-struct bmap_t
-{
-    int n, nalloc, *list;
-}; // blocklist structure
-
 //
 // Boom variant of blockmap creation, which will fix PrBoom+ demos recorded with -complevel 9. Not
 // a solution for MBF -complevel however.
@@ -2612,6 +2606,11 @@ static void P_CreateBlockMap()
     //     the linedef.
 
     {
+        struct bmap_t
+        {
+            int n, nalloc, *list;
+        }; // blocklist structure
+
         unsigned tot  = bmapwidth * bmapheight;               // size of blockmap
         bmap_t  *bmap = ecalloc(bmap_t *, sizeof *bmap, tot); // array of blocklists
 
