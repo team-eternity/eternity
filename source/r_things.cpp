@@ -617,8 +617,8 @@ void R_ClearMarkedSprites(spritecontext_t &context, ZoneHeap &heap)
 //
 // Pushes a new element on the post-BSP stack.
 //
-void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap, const contextbounds_t &bounds,
-                bool pushmasked, pwindow_t *window)
+void R_PushPost(const viewpoint_t &viewpoint, bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
+                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window)
 {
     drawseg_t     *&drawsegs     = bspcontext.drawsegs;
     drawseg_t     *&ds_p         = bspcontext.ds_p;
@@ -689,6 +689,9 @@ void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHe
 
         memcpy(post->masked->ceilingclip, portaltop + bounds.startcolumn, sizeof(*portaltop) * bounds.numcolumns);
         memcpy(post->masked->floorclip, portalbottom + bounds.startcolumn, sizeof(*portalbottom) * bounds.numcolumns);
+
+        post->masked->viewsin = viewpoint.sin;
+        post->masked->viewcos = viewpoint.cos;
     }
     else
         post->masked = nullptr;
@@ -1896,7 +1899,8 @@ static void R_sortVisSpriteRange(spritecontext_t &context, ZoneHeap &heap, int f
 static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext,
                                   const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                                   const contextbounds_t &bounds, drawseg_t *const drawsegs, vissprite_t *spr,
-                                  int firstds, int lastds, float *ptop, float *pbottom)
+                                  int firstds, int lastds, float *ptop, float *pbottom, const fixed_t viewsin,
+                                  const fixed_t viewcos)
 {
     drawseg_t *ds;
     int        x;
@@ -1907,8 +1911,8 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
     //
     // Common handler both for the optimized and basic loops
     //
-    auto handleOverlappingDrawSeg = [](cmapcontext_t &cmapcontext, const viewpoint_t &viewpoint, drawseg_t *ds,
-                                       const vissprite_t *spr) {
+    auto handleOverlappingDrawSeg = [viewsin, viewcos](cmapcontext_t &cmapcontext, const viewpoint_t &viewpoint,
+                                                       drawseg_t *ds, const vissprite_t *spr) {
         // Shout out to ksgws of ACE Engine for the code from here to the if(s1)!
         uint32_t     s1, s2;
         divline_t    sprite_clip;
@@ -1916,8 +1920,8 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
 
         sprite_clip.x  = spr->gx;
         sprite_clip.y  = spr->gy;
-        sprite_clip.dx = viewpoint.sin;
-        sprite_clip.dy = -viewpoint.cos;
+        sprite_clip.dx = viewsin;
+        sprite_clip.dy = -viewcos;
 
         s1 = P_PointOnDivlineSide(seg->v1->x, seg->v1->y, &sprite_clip);
         s2 = P_PointOnDivlineSide(seg->v2->x, seg->v2->y, &sprite_clip);
@@ -2193,7 +2197,8 @@ void R_DrawPostBSP(rendercontext_t &context)
                 {
                     R_drawSpriteInDSRange(context.cmapcontext, spritecontext, context.view, context.cb_view,
                                           context.bounds, drawsegs, spritecontext.vissprite_ptrs[i], firstds, lastds,
-                                          masked->ceilingclip, masked->floorclip); // killough
+                                          masked->ceilingclip, masked->floorclip, masked->viewsin,
+                                          masked->viewcos); // killough
                 }
             }
 

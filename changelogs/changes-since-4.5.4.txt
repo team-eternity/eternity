@@ -51,3 +51,4 @@ Bug fixes
 * Fixed very large maps having potential collision issues.
 * Fixed blocklist start being ignored when building portal map.
 * Fixed memory corruption when running ACS functions early in the game.
+* Fixed sprites being missed when looking through a rotated portal.
