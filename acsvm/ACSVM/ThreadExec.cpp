@@ -21,6 +21,7 @@
 #include "Scope.hpp"
 #include "Script.hpp"
 
+
 //----------------------------------------------------------------------------|
 // Macros                                                                     |
 //
@@ -139,6 +140,7 @@
       Op_##op(*scopeMod->regV[*codePtr++]); \
       NextCase()
 
+
 //----------------------------------------------------------------------------|
 // Static Functions                                                           |
 //
@@ -252,7 +254,8 @@ static inline void OpFunc_ShRI(Word &lop, Word rop)
     // TODO: Implement this without relying on sign-extending shift.
     lop = static_cast<SWord>(lop) >> (rop & 31);
 }
-} // namespace ACSVM
+}
+
 
 //----------------------------------------------------------------------------|
 // Extern Functions                                                           |
@@ -302,7 +305,8 @@ exec_intr:
     }
 
 #if ACSVM_DynamicGoto
-    static void const *const cases[] = {
+      static void const *const cases[] =
+      {
 #define ACSVM_CodeList(name, ...) &&case_Code##name,
 #include "CodeList.hpp"
     };
@@ -311,13 +315,14 @@ exec_intr:
 #if ACSVM_DynamicGoto
     NextCase();
 #else
-next_case:
-    switch(*codePtr++)
+      next_case: switch(*codePtr++)
 #endif
     {
-        DeclCase(Nop) : NextCase();
+      DeclCase(Nop):
+         NextCase();
 
-        DeclCase(Kill) : module->env->printKill(this, codePtr[0], codePtr[1]);
+      DeclCase(Kill):
+         module->env->printKill(this, codePtr[0], codePtr[1]);
         goto thread_stop;
 
         //================================================
@@ -335,46 +340,26 @@ next_case:
         OpSet(ShRI);
         OpSet(SubU);
 
-        DeclCase(AddU) : Op_AddU(dataStk[1]);
-        NextCase();
-        DeclCase(AndU) : Op_AndU(dataStk[1]);
-        NextCase();
-        DeclCase(CmpI_GE) : Op_CmpI_GE(dataStk[1]);
-        NextCase();
-        DeclCase(CmpI_GT) : Op_CmpI_GT(dataStk[1]);
-        NextCase();
-        DeclCase(CmpI_LE) : Op_CmpI_LE(dataStk[1]);
-        NextCase();
-        DeclCase(CmpI_LT) : Op_CmpI_LT(dataStk[1]);
-        NextCase();
-        DeclCase(CmpU_EQ) : Op_CmpU_EQ(dataStk[1]);
-        NextCase();
-        DeclCase(CmpU_NE) : Op_CmpU_NE(dataStk[1]);
-        NextCase();
-        DeclCase(DivI) : Op_DivI(dataStk[1]);
-        NextCase();
-        DeclCase(DivX) : Op_DivX(dataStk[1]);
-        NextCase();
-        DeclCase(LAnd) : Op_LAnd(dataStk[1]);
-        NextCase();
-        DeclCase(LOrI) : Op_LOrI(dataStk[1]);
-        NextCase();
-        DeclCase(ModI) : Op_ModI(dataStk[1]);
-        NextCase();
-        DeclCase(MulU) : Op_MulU(dataStk[1]);
-        NextCase();
-        DeclCase(MulX) : Op_MulX(dataStk[1]);
-        NextCase();
-        DeclCase(OrIU) : Op_OrIU(dataStk[1]);
-        NextCase();
-        DeclCase(OrXU) : Op_OrXU(dataStk[1]);
-        NextCase();
-        DeclCase(ShLU) : Op_ShLU(dataStk[1]);
-        NextCase();
-        DeclCase(ShRI) : Op_ShRI(dataStk[1]);
-        NextCase();
-        DeclCase(SubU) : Op_SubU(dataStk[1]);
-        NextCase();
+      DeclCase(AddU): Op_AddU(dataStk[1]); NextCase();
+      DeclCase(AndU): Op_AndU(dataStk[1]); NextCase();
+      DeclCase(CmpI_GE): Op_CmpI_GE(dataStk[1]); NextCase();
+      DeclCase(CmpI_GT): Op_CmpI_GT(dataStk[1]); NextCase();
+      DeclCase(CmpI_LE): Op_CmpI_LE(dataStk[1]); NextCase();
+      DeclCase(CmpI_LT): Op_CmpI_LT(dataStk[1]); NextCase();
+      DeclCase(CmpU_EQ): Op_CmpU_EQ(dataStk[1]); NextCase();
+      DeclCase(CmpU_NE): Op_CmpU_NE(dataStk[1]); NextCase();
+      DeclCase(DivI): Op_DivI(dataStk[1]); NextCase();
+      DeclCase(DivX): Op_DivX(dataStk[1]); NextCase();
+      DeclCase(LAnd): Op_LAnd(dataStk[1]); NextCase();
+      DeclCase(LOrI): Op_LOrI(dataStk[1]); NextCase();
+      DeclCase(ModI): Op_ModI(dataStk[1]); NextCase();
+      DeclCase(MulU): Op_MulU(dataStk[1]); NextCase();
+      DeclCase(MulX): Op_MulX(dataStk[1]); NextCase();
+      DeclCase(OrIU): Op_OrIU(dataStk[1]); NextCase();
+      DeclCase(OrXU): Op_OrXU(dataStk[1]); NextCase();
+      DeclCase(ShLU): Op_ShLU(dataStk[1]); NextCase();
+      DeclCase(ShRI): Op_ShRI(dataStk[1]); NextCase();
+      DeclCase(SubU): Op_SubU(dataStk[1]); NextCase();
 
         //================================================
         // Call codes.
@@ -388,11 +373,7 @@ next_case:
             ++codePtr;
 
         do_call:
-            if(!func)
-            {
-                BranchTo(0);
-                NextCase();
-            }
+            if(!func) {BranchTo(0); NextCase();}
 
             // Reserve stack space.
             callStk.reserve(CallStkSize);
@@ -414,7 +395,8 @@ next_case:
 
             NextCase();
 
-            DeclCase(Call_Stk) : dataStk.drop();
+      DeclCase(Call_Stk):
+            dataStk.drop();
             func = env->getFunction(dataStk[0]);
             goto do_call;
         }
@@ -468,9 +450,10 @@ next_case:
         }
         NextCase();
 
-        DeclCase(Retn)
-            : // If no call frames left, terminate the thread.
-              if(callStk.empty()) goto thread_stop;
+      DeclCase(Retn):
+         // If no call frames left, terminate the thread.
+         if(callStk.empty())
+            goto thread_stop;
 
         // Apply call frame.
         codePtr  = callStk[1].codePtr;
@@ -490,10 +473,12 @@ next_case:
 
         OpSet(Drop);
 
-        DeclCase(Drop_Nul) : dataStk.drop();
+      DeclCase(Drop_Nul):
+        dataStk.drop();
         NextCase();
 
-        DeclCase(Drop_ScrRet) : dataStk.drop();
+      DeclCase(Drop_ScrRet):
+        dataStk.drop();
         result = dataStk[0];
         NextCase();
 
@@ -501,33 +486,44 @@ next_case:
         // Jump codes.
         //
 
-        DeclCase(Jcnd_Lit) : if(dataStk[1] == *codePtr++)
+      DeclCase(Jcnd_Lit):
+        if(dataStk[1] == *codePtr++)
         {
             dataStk.drop();
             BranchTo(*codePtr);
         }
-        else ++codePtr;
+        else
+           ++codePtr;
         NextCase();
 
-        DeclCase(Jcnd_Nil) : if(dataStk.drop(), dataStk[0])++ codePtr;
-        else BranchTo(*codePtr);
+      DeclCase(Jcnd_Nil):
+         if(dataStk.drop(), dataStk[0])
+            ++codePtr;
+         else
+            BranchTo(*codePtr);
         NextCase();
 
-        DeclCase(Jcnd_Tab) : if(auto jump = module->jumpMapV[*codePtr++].table.find(dataStk[1]))
+      DeclCase(Jcnd_Tab):
+         if(auto jump = module->jumpMapV[*codePtr++].table.find(dataStk[1]))
         {
             dataStk.drop();
             BranchTo(*jump);
         }
         NextCase();
 
-        DeclCase(Jcnd_Tru) : if(dataStk.drop(), dataStk[0]) BranchTo(*codePtr);
-        else ++codePtr;
+      DeclCase(Jcnd_Tru):
+         if(dataStk.drop(), dataStk[0])
+            BranchTo(*codePtr);
+         else
+            ++codePtr;
         NextCase();
 
-        DeclCase(Jump_Lit) : BranchTo(*codePtr);
+      DeclCase(Jump_Lit):
+        BranchTo(*codePtr);
         NextCase();
 
-        DeclCase(Jump_Stk) : dataStk.drop();
+      DeclCase(Jump_Stk):
+         dataStk.drop();
         BranchTo(dataStk[0] < module->jumpV.size() ? module->jumpV[dataStk[0]].codeIdx : 0);
         NextCase();
 
@@ -535,36 +531,32 @@ next_case:
         // Push codes.
         //
 
-        DeclCase(Pfun_Lit) : if(*codePtr < module->functionV.size()) dataStk.push(module->functionV[*codePtr]->idx);
-        else dataStk.push(0);
+      DeclCase(Pfun_Lit):
+         if(*codePtr < module->functionV.size())
+            dataStk.push(module->functionV[*codePtr]->idx);
+         else
+            dataStk.push(0);
         ++codePtr;
         NextCase();
 
-        DeclCase(Pstr_Stk) : if(dataStk[1] < module->stringV.size()) dataStk[1] = ~module->stringV[dataStk[1]]->idx;
+      DeclCase(Pstr_Stk):
+         if(dataStk[1] < module->stringV.size())
+            dataStk[1] = ~module->stringV[dataStk[1]]->idx;
         NextCase();
 
-        DeclCase(Push_GblArr) : dataStk[1] = scopeGbl->arrV[*codePtr++].find(dataStk[1]);
-        NextCase();
-        DeclCase(Push_GblReg) : dataStk.push(scopeGbl->regV[*codePtr++]);
-        NextCase();
-        DeclCase(Push_HubArr) : dataStk[1] = scopeHub->arrV[*codePtr++].find(dataStk[1]);
-        NextCase();
-        DeclCase(Push_HubReg) : dataStk.push(scopeHub->regV[*codePtr++]);
-        NextCase();
-        DeclCase(Push_Lit) : dataStk.push(*codePtr++);
-        NextCase();
-        DeclCase(Push_LitArr) : for(auto i = *codePtr++; i--;) dataStk.push(*codePtr++);
-        NextCase();
-        DeclCase(Push_LocArr) : dataStk[1] = localArr[*codePtr++].find(dataStk[1]);
-        NextCase();
-        DeclCase(Push_LocReg) : dataStk.push(localReg[*codePtr++]);
-        NextCase();
-        DeclCase(Push_ModArr) : dataStk[1] = scopeMod->arrV[*codePtr++]->find(dataStk[1]);
-        NextCase();
-        DeclCase(Push_ModReg) : dataStk.push(*scopeMod->regV[*codePtr++]);
-        NextCase();
+      DeclCase(Push_GblArr): dataStk[1] = scopeGbl->arrV[*codePtr++].find(dataStk[1]); NextCase();
+      DeclCase(Push_GblReg): dataStk.push(scopeGbl->regV[*codePtr++]); NextCase();
+      DeclCase(Push_HubArr): dataStk[1] = scopeHub->arrV[*codePtr++].find(dataStk[1]); NextCase();
+      DeclCase(Push_HubReg): dataStk.push(scopeHub->regV[*codePtr++]); NextCase();
+      DeclCase(Push_Lit):    dataStk.push(*codePtr++); NextCase();
+      DeclCase(Push_LitArr): for(auto i = *codePtr++; i--;) dataStk.push(*codePtr++); NextCase();
+      DeclCase(Push_LocArr): dataStk[1] = localArr[*codePtr++].find(dataStk[1]); NextCase();
+      DeclCase(Push_LocReg): dataStk.push(localReg[*codePtr++]); NextCase();
+      DeclCase(Push_ModArr): dataStk[1] = scopeMod->arrV[*codePtr++]->find(dataStk[1]); NextCase();
+      DeclCase(Push_ModReg): dataStk.push(*scopeMod->regV[*codePtr++]); NextCase();
 
-        DeclCase(Push_StrArs) : dataStk.drop();
+      DeclCase(Push_StrArs):
+         dataStk.drop();
         dataStk[1] = scopeMap->getString(dataStk[1])->get(dataStk[0]);
         NextCase();
 
@@ -572,33 +564,42 @@ next_case:
         // Script control codes.
         //
 
-        DeclCase(ScrDelay) : dataStk.drop();
+      DeclCase(ScrDelay):
+         dataStk.drop();
         delay = dataStk[0] + env->longDelay;
         goto exec_intr;
 
-        DeclCase(ScrDelay_Lit) : delay = *codePtr++ + env->longDelay;
+      DeclCase(ScrDelay_Lit):
+         delay = *codePtr++ + env->longDelay;
         goto exec_intr;
 
-        DeclCase(ScrHalt) : state = ThreadState::Paused;
+      DeclCase(ScrHalt):
+         state = ThreadState::Paused;
         goto exec_intr;
 
-        DeclCase(ScrRestart) : BranchTo(script->codeIdx);
+      DeclCase(ScrRestart):
+         BranchTo(script->codeIdx);
         NextCase();
 
-        DeclCase(ScrTerm) : goto thread_stop;
+      DeclCase(ScrTerm):
+         goto thread_stop;
 
-        DeclCase(ScrWaitI) : dataStk.drop();
+      DeclCase(ScrWaitI):
+         dataStk.drop();
         state = { ThreadState::WaitScrI, dataStk[0] };
         goto exec_intr;
 
-        DeclCase(ScrWaitI_Lit) : state = { ThreadState::WaitScrI, *codePtr++ };
+      DeclCase(ScrWaitI_Lit):
+         state = {ThreadState::WaitScrI, *codePtr++};
         goto exec_intr;
 
-        DeclCase(ScrWaitS) : dataStk.drop();
+      DeclCase(ScrWaitS):
+         dataStk.drop();
         state = { ThreadState::WaitScrS, dataStk[0] };
         goto exec_intr;
 
-        DeclCase(ScrWaitS_Lit) : state = { ThreadState::WaitScrS, *codePtr++ };
+      DeclCase(ScrWaitS_Lit):
+         state = {ThreadState::WaitScrS, *codePtr++};
         goto exec_intr;
 
         //================================================
@@ -606,13 +607,11 @@ next_case:
         //
 
         DeclCase(Copy) :
-        {
-            auto temp = dataStk[1];
-            dataStk.push(temp);
-        }
+         {auto temp = dataStk[1]; dataStk.push(temp);}
         NextCase();
 
-        DeclCase(Swap) : std::swap(dataStk[2], dataStk[1]);
+      DeclCase(Swap):
+         std::swap(dataStk[2], dataStk[1]);
         NextCase();
 
         //================================================
@@ -622,20 +621,23 @@ next_case:
         OpSet(DecU);
         OpSet(IncU);
 
-        DeclCase(InvU) : dataStk[1] = ~dataStk[1];
+      DeclCase(InvU):
+         dataStk[1] = ~dataStk[1];
         NextCase();
 
-        DeclCase(NegI) : dataStk[1] = ~dataStk[1] + 1;
+      DeclCase(NegI):
+         dataStk[1] = ~dataStk[1] + 1;
         NextCase();
 
-        DeclCase(NotU) : dataStk[1] = !dataStk[1];
+      DeclCase(NotU):
+         dataStk[1] = !dataStk[1];
         NextCase();
     }
 
 thread_stop:
     stop();
 }
-} // namespace ACSVM
+}
 
 // EOF
 
