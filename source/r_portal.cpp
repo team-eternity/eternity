@@ -801,6 +801,7 @@ inline static void R_restoreLastView(const savedview_t &last, viewpoint_t &viewp
     viewpoint.x        = last.pos.x;
     viewpoint.y        = last.pos.y;
     viewpoint.z        = last.pos.z;
+    viewpoint.sector   = R_PointInSubsector(viewpoint.x, viewpoint.y)->sector;
     viewpoint.angle    = last.angle;
     viewpoint.sin      = finesine[viewpoint.angle >> ANGLETOFINESHIFT];
     viewpoint.cos      = finecosine[viewpoint.angle >> ANGLETOFINESHIFT];
@@ -1025,12 +1026,13 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
     // SoM 3/10/2005: Use the coordinates stored in the portal struct
     if(portal->type == R_SKYBOX)
     {
-        viewpoint.x    = portal->data.camera->x;
-        viewpoint.y    = portal->data.camera->y;
-        viewpoint.z    = portal->data.camera->z;
-        cb_viewpoint.x = M_FixedToFloat(viewpoint.x);
-        cb_viewpoint.y = M_FixedToFloat(viewpoint.y);
-        cb_viewpoint.z = M_FixedToFloat(viewpoint.z);
+        viewpoint.x      = portal->data.camera->x;
+        viewpoint.y      = portal->data.camera->y;
+        viewpoint.z      = portal->data.camera->z;
+        viewpoint.sector = R_PointInSubsector(viewpoint.x, viewpoint.y)->sector;
+        cb_viewpoint.x   = M_FixedToFloat(viewpoint.x);
+        cb_viewpoint.y   = M_FixedToFloat(viewpoint.y);
+        cb_viewpoint.z   = M_FixedToFloat(viewpoint.z);
 
         // SoM: The viewangle should also be offset by the skybox camera angle.
         viewpoint.angle += portal->data.camera->angle;
@@ -1045,12 +1047,13 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
     }
     else if(portal->type == R_LINKED)
     {
-        viewpoint.x    = window->vx + portal->data.link.delta.x;
-        viewpoint.y    = window->vy + portal->data.link.delta.y;
-        viewpoint.z    = window->vz + portal->data.link.delta.z;
-        cb_viewpoint.x = M_FixedToFloat(viewpoint.x);
-        cb_viewpoint.y = M_FixedToFloat(viewpoint.y);
-        cb_viewpoint.z = M_FixedToFloat(viewpoint.z);
+        viewpoint.x      = window->vx + portal->data.link.delta.x;
+        viewpoint.y      = window->vy + portal->data.link.delta.y;
+        viewpoint.z      = window->vz + portal->data.link.delta.z;
+        viewpoint.sector = R_PointInSubsector(viewpoint.x, viewpoint.y)->sector;
+        cb_viewpoint.x   = M_FixedToFloat(viewpoint.x);
+        cb_viewpoint.y   = M_FixedToFloat(viewpoint.y);
+        cb_viewpoint.z   = M_FixedToFloat(viewpoint.z);
 
         if(window->vangle != viewpoint.angle)
         {
@@ -1067,6 +1070,7 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
         const portaltransform_t &tr = portal->data.anchor.transform;
         viewpoint.x                 = window->vx;
         viewpoint.y                 = window->vy;
+        viewpoint.sector            = R_PointInSubsector(viewpoint.x, viewpoint.y)->sector;
         tr.applyTo(viewpoint.x, viewpoint.y, &cb_viewpoint.x, &cb_viewpoint.y);
         double vz      = M_FixedToDouble(window->vz) + tr.move.z;
         viewpoint.z    = M_DoubleToFixed(vz);

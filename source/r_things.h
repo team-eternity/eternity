@@ -61,6 +61,7 @@ struct maskedrange_t
 
     // for rotated portals and sprite rendering
     fixed_t viewsin, viewcos;
+    int     heightsec;
 
     // for unused head
     struct maskedrange_t *next;

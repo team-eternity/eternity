@@ -1144,6 +1144,7 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
     view.pitch         = (ANG90 - viewpitch) * PI / ANG180;
     view.lerp          = lerp;
     view.sector        = R_PointInSubsector(viewpoint.x, viewpoint.y)->sector;
+    viewpoint.sector   = view.sector;
 
     R_SetupSolidSegs();
     R_PreRenderBSP();
@@ -1264,7 +1265,7 @@ void R_SectorColormap(cmapcontext_t &context, const viewpoint_t &viewpoint, cons
         else
         {
             // find which actual area the viewpoint is in. Must check from the viewer's sector.
-            int hs = view.sector->heightsec;
+            int hs = viewpoint.sector->heightsec;
 
             if(hs == -1)
                 area = ViewArea::normal;

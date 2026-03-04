@@ -690,8 +690,9 @@ void R_PushPost(const viewpoint_t &viewpoint, bspcontext_t &bspcontext, spriteco
         memcpy(post->masked->ceilingclip, portaltop + bounds.startcolumn, sizeof(*portaltop) * bounds.numcolumns);
         memcpy(post->masked->floorclip, portalbottom + bounds.startcolumn, sizeof(*portalbottom) * bounds.numcolumns);
 
-        post->masked->viewsin = viewpoint.sin;
-        post->masked->viewcos = viewpoint.cos;
+        post->masked->viewsin   = viewpoint.sin;
+        post->masked->viewcos   = viewpoint.cos;
+        post->masked->heightsec = viewpoint.sector->heightsec;
     }
     else
         post->masked = nullptr;
@@ -1351,7 +1352,7 @@ static void R_projectSprite(cmapcontext_t &cmapcontext, spritecontext_t &spritec
     if(heightsec != -1) // only clip things which are in special sectors
     {
         auto &hsec = sectors[heightsec];
-        int   phs  = view.sector->heightsec;
+        int   phs  = viewpoint.sector->heightsec;
 
         if(phs != -1 && viewpoint.z < sectors[phs].srf.floor.getZAt(viewpoint.x, viewpoint.y) ?
                thing->z >= hsec.srf.floor.getZAt(spritepos.x, spritepos.y) :
@@ -1900,7 +1901,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
                                   const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                                   const contextbounds_t &bounds, drawseg_t *const drawsegs, vissprite_t *spr,
                                   int firstds, int lastds, float *ptop, float *pbottom, const fixed_t viewsin,
-                                  const fixed_t viewcos)
+                                  const fixed_t viewcos, const int heightsec)
 {
     drawseg_t *ds;
     int        x;
@@ -2010,7 +2011,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
     {
         float h, mh;
 
-        const int phs = view.sector->heightsec;
+        const int phs = heightsec;
 
         fixed_t heightsecheight = sectors[spr->heightsec].srf.floor.getZAt(spr->gx, spr->gy);
         fixed_t phsheight       = phs >= 0 ? sectors[phs].srf.floor.getZAt(viewpoint.x, viewpoint.y) : 0;
@@ -2197,8 +2198,8 @@ void R_DrawPostBSP(rendercontext_t &context)
                 {
                     R_drawSpriteInDSRange(context.cmapcontext, spritecontext, context.view, context.cb_view,
                                           context.bounds, drawsegs, spritecontext.vissprite_ptrs[i], firstds, lastds,
-                                          masked->ceilingclip, masked->floorclip, masked->viewsin,
-                                          masked->viewcos); // killough
+                                          masked->ceilingclip, masked->floorclip, masked->viewsin, masked->viewcos,
+                                          masked->heightsec); // killough
                 }
             }
 
@@ -2720,7 +2721,7 @@ static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &sprit
     // only clip particles which are in special sectors
     if(heightsec != -1)
     {
-        int phs = view.sector->heightsec;
+        const int phs = viewpoint.sector->heightsec;
 
         if(phs != -1 && viewpoint.z < sectors[phs].srf.floor.getZAt(viewpoint.x, viewpoint.y) ?
                particle->z >= sectors[heightsec].srf.floor.getZAt(particle->x, particle->y) :
