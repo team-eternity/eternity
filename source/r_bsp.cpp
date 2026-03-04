@@ -810,7 +810,7 @@ int R_FakeFlatSpriteLighting(const viewpoint_t &viewpoint, const sector_t *sec)
         const sector_t *s = &sectors[sec->heightsec];
 
         // Get from view.sector due to interpolation
-        const int  heightsec = view.sector->heightsec;
+        const int  heightsec = viewpoint.sector->heightsec;
         const bool underwater =
             (heightsec != -1 && viewz <= sectors[heightsec].srf.floor.getZAt(viewpoint.x, viewpoint.y));
 
