@@ -1070,8 +1070,8 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
         const portaltransform_t &tr = portal->data.anchor.transform;
         viewpoint.x                 = window->vx;
         viewpoint.y                 = window->vy;
-        viewpoint.sector            = R_PointInSubsector(viewpoint.x, viewpoint.y)->sector;
         tr.applyTo(viewpoint.x, viewpoint.y, &cb_viewpoint.x, &cb_viewpoint.y);
+        viewpoint.sector = R_PointInSubsector(viewpoint.x, viewpoint.y)->sector;
         double vz      = M_FixedToDouble(window->vz) + tr.move.z;
         viewpoint.z    = M_DoubleToFixed(vz);
         cb_viewpoint.z = static_cast<float>(vz);
