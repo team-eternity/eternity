@@ -28,6 +28,7 @@ Improvements
 * Added support for music changer types 14100 (reset music) and 14165 (parameterized music ID). Thanks to electricbrass
   for the contribution! Details here: https://github.com/team-eternity/eternity/pull/741
 * Reimplemented the key automap colour.
+* Boom fake floor/ceiling transfers and colormaps now render correctly via portals.
 
 Bug fixes
 ---------
@@ -52,3 +53,4 @@ Bug fixes
 * Fixed blocklist start being ignored when building portal map.
 * Fixed memory corruption when running ACS functions early in the game.
 * Fixed sprites being missed when looking through a rotated portal.
+* Fixed comp_thingsectorlight having no effect on "fast" (not "thorough") sprite projection mode.
