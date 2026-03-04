@@ -1515,7 +1515,9 @@ void R_AddSprites(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext, Zo
     // Well, now it will be done.
     spritecontext.sectorvisited[sec - sectors] = true;
 
-    const int lightnum = (lightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
+    // Only use the MBF average light when the compatibility flag is set by user.
+    const int mobjlightlevel = comp[comp_thingsectorlight] ? lightlevel : sec->lightlevel;
+    const int lightnum       = (mobjlightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
 
     if(lightnum < 0)
         spritelights = cmapcontext.scalelight[0];
