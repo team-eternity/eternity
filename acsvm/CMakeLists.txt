@@ -1,6 +1,6 @@
 ##-----------------------------------------------------------------------------
 ##
-## Copyright (C) 2015-2016 David Hill
+## Copyright (C) 2015-2025 David Hill
 ##
 ## See COPYING for license information.
 ##
@@ -10,13 +10,11 @@
 ##
 ##-----------------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.6...3.31)
 
-if(COMMAND cmake_policy)
-    cmake_policy(SET CMP0048 NEW)
-endif(COMMAND cmake_policy)
+cmake_policy(SET CMP0017 NEW)
 
-project(acsvm VERSION 0)
+project(acsvm)
 
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
@@ -42,7 +40,12 @@ endfunction()
 ##
 ## ACSVM_INSTALL_LIB
 ##
-function(ACSVM_INSTALL_LIB name)
+function(ACSVM_INSTALL_LIB name nameAPI pathAPI)
+   if(ACSVM_INSTALL_API)
+      install(FILES ${ACSVM_${nameAPI}_H}
+         DESTINATION include/ACSVM/${pathAPI})
+   endif()
+
    if(ACSVM_INSTALL_LIB)
       if(ACSVM_INSTALL_API)
          install(TARGETS ${name}
@@ -89,14 +92,14 @@ endfunction()
 set(ACSVM_SHARED_DEFAULT ON)
 
 if(NOT ACSVM_NOFLAGS)
-   if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
+   if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
       ACSVM_TRY_C_FLAG(-Wall    Wall)
       ACSVM_TRY_C_FLAG(-Wextra  Wextra)
 
       ACSVM_TRY_C_FLAG(-std=c11 STD_C)
    endif()
 
-   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
       ACSVM_TRY_CXX_FLAG(-Wall    Wall)
       ACSVM_TRY_CXX_FLAG(-Wextra  Wextra)
 
@@ -114,6 +117,28 @@ endif()
 ##----------------------------------------------------------------------------|
 ## Variables                                                                  |
 ##
+
+##
+## ACSVM_ENABLE_EXEC
+##
+if(NOT DEFINED ACSVM_ENABLE_EXEC)
+   if(EXISTS "${CMAKE_SOURCE_DIR}/Exec")
+      set(ACSVM_ENABLE_EXEC ON CACHE BOOL "Enable Exec build.")
+   else()
+      set(ACSVM_ENABLE_EXEC OFF CACHE BOOL "Enable Exec build.")
+   endif()
+endif()
+
+##
+## ACSVM_ENABLE_UTIL
+##
+if(NOT DEFINED ACSVM_ENABLE_UTIL)
+   if(EXISTS "${CMAKE_SOURCE_DIR}/Util")
+      set(ACSVM_ENABLE_UTIL ON CACHE BOOL "Enable Util build.")
+   else()
+      set(ACSVM_ENABLE_UTIL OFF CACHE BOOL "Enable Util build.")
+   endif()
+endif()
 
 ##
 ## ACSVM_INSTALL_API
@@ -179,15 +204,11 @@ include_directories(.)
 
 add_subdirectory(ACSVM)
 
-if(EXISTS "${CMAKE_SOURCE_DIR}/CAPI")
-   add_subdirectory(CAPI)
-endif()
-
-if(EXISTS "${CMAKE_SOURCE_DIR}/Exec")
+if(ACSVM_ENABLE_EXEC)
    add_subdirectory(Exec)
 endif()
 
-if(EXISTS "${CMAKE_SOURCE_DIR}/Util")
+if(ACSVM_ENABLE_UTIL)
    add_subdirectory(Util)
 endif()
 

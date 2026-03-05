@@ -227,6 +227,10 @@ bool P_ProcessUMapInfo(MetaTable *info, const char *mapname, qstring *error)
         }
     }
 
+    strval = info->getString("author", nullptr);
+    if(strval)
+        LevelInfo.creator = strval; // allocation is permanent in the UMAPINFO table
+
     strval = info->getString("levelname", nullptr);
     if(strval)
     {

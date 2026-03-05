@@ -2,6 +2,12 @@ name: Eternity Build
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
   build-windows:
@@ -26,6 +32,7 @@ jobs:
         cmake --build build32 --config Release
 
     - name: Add text files
+      if: github.event_name == 'workflow_dispatch'
       run: |
         Copy-Item COPYING build32/eternity/Release/COPYING.txt
         Copy-Item COPYING-EE build32/eternity/Release/COPYING-EE.txt
@@ -36,6 +43,7 @@ jobs:
         Copy-Item docs/readme.txt "build64/eternity/Release/ee-$(git describe --tags).txt"
 
     - name: Archive release build
+      if: github.event_name == 'workflow_dispatch'
       uses: actions/upload-artifact@v4
       with:
         name: windows-release
@@ -62,6 +70,7 @@ jobs:
           cmake --build build-intel --config Release
 
       - name: Add text files
+        if: github.event_name == 'workflow_dispatch'
         run: |
           cp COPYING build-arm/macosx/launcher/Release/COPYING.txt
           cp COPYING-EE build-arm/macosx/launcher/Release/COPYING-EE.txt
@@ -72,12 +81,14 @@ jobs:
           cp docs/readme.txt "build-intel/macosx/launcher/Release/ee-$(git describe --tags).txt"
 
       - name: build DMG
+        if: github.event_name == 'workflow_dispatch'
         run: |
           hdiutil create -srcfolder build-arm/macosx/launcher/Release/ -volname "ee-$(git describe --tags)-applesilicon" -fs HFS+ -format UDZO ee-$(git describe --tags)-applesilicon.dmg
 
           hdiutil create -srcfolder build-intel/macosx/launcher/Release/ -volname "ee-$(git describe --tags)-intel" -fs HFS+ -format UDZO ee-$(git describe --tags)-intel.dmg
 
       - name: Archive ARM release build
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
           name: macos-release

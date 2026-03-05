@@ -60,11 +60,13 @@
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "g_gfs.h"
+#include "hal/i_directory.h"
 #include "hal/i_timer.h"
 #include "hu_stuff.h"
 #include "i_sound.h"
 #include "i_system.h"
 #include "i_video.h"
+#include "id24_demoloop.h"
 #include "in_lude.h"
 #include "m_argv.h"
 #include "m_compare.h"
@@ -276,80 +278,59 @@ static void D_SetPageName(const char *name)
     pagename = name;
 }
 
-static void D_DrawTitle(const char *name)
-{
-    if(GameModeInfo->titleMusName != nullptr && *GameModeInfo->titleMusName)
-        S_ChangeMusicName(GameModeInfo->titleMusName, false);
-    else
-        S_StartMusic(GameModeInfo->titleMusNum);
-
-    pagetic = GameModeInfo->titleTics;
-
-    if(GameModeInfo->missionInfo->flags & MI_CONBACKTITLE)
-        D_SetPageName(GameModeInfo->consoleBack);
-    else
-        D_SetPageName(name);
-}
-
-static void D_DrawTitleA(const char *name)
-{
-    pagetic = GameModeInfo->advisorTics;
-    D_SetPageName(name);
-}
-
 // killough 11/98: tabulate demo sequences
 
 const demostate_t demostates_doom[] = {
-    { D_DrawTitle,       "TITLEPIC" }, // shareware, registered
-    { G_DeferedPlayDemo, "DEMO1"    },
-    { D_SetPageName,     nullptr    },
-    { G_DeferedPlayDemo, "DEMO2"    },
-    { D_SetPageName,     "HELP2"    },
-    { G_DeferedPlayDemo, "DEMO3"    },
-    { nullptr,           nullptr    }
+    { DSF_TITLE | DSF_ENDWIPE, "TITLEPIC", nullptr, mus_intro, -1 }, // shareware, registered
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO1", nullptr, mus_None, -1 },
+    { DSF_ENDWIPE, nullptr, nullptr, mus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO2", nullptr, mus_None, -1 },
+    { DSF_ENDWIPE, "HELP2", nullptr, mus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO3", nullptr, mus_None, -1 },
+    { DSF_END }
 };
 
 const demostate_t demostates_doom2[] = {
-    { D_DrawTitle,       "TITLEPIC" }, // commercial
-    { G_DeferedPlayDemo, "DEMO1"    },
-    { D_SetPageName,     nullptr    },
-    { G_DeferedPlayDemo, "DEMO2"    },
-    { D_SetPageName,     "CREDIT"   },
-    { G_DeferedPlayDemo, "DEMO3"    },
-    { nullptr,           nullptr    }
+    { DSF_TITLE | DSF_ENDWIPE, "TITLEPIC", nullptr, mus_dm2ttl, -1 }, // commercial
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO1", nullptr, mus_None, -1 },
+    { DSF_ENDWIPE, nullptr, nullptr, mus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO2", nullptr, mus_None, -1 },
+    { DSF_ENDWIPE, "CREDIT", nullptr, mus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO3", nullptr, mus_None, -1 },
+    { DSF_END }
 };
 
 const demostate_t demostates_udoom[] = {
-    { D_DrawTitle,       "TITLEPIC" }, // retail
-    { G_DeferedPlayDemo, "DEMO1"    },
-    { D_SetPageName,     nullptr    },
-    { G_DeferedPlayDemo, "DEMO2"    },
-    { D_SetPageName,     "CREDIT"   },
-    { G_DeferedPlayDemo, "DEMO3"    },
-    { G_DeferedPlayDemo, "DEMO4"    },
-    { nullptr,           nullptr    }
+    { DSF_TITLE | DSF_ENDWIPE, "TITLEPIC", nullptr, mus_intro, -1 }, // retail
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO1", nullptr, mus_None, -1 },
+    { DSF_ENDWIPE, nullptr, nullptr, mus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO2", nullptr, mus_None, -1 },
+    { DSF_ENDWIPE, "CREDIT", nullptr, mus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO3", nullptr, mus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO4", nullptr, mus_None, -1 },
+    { DSF_END }
 };
 
 const demostate_t demostates_hsw[] = {
-    { D_DrawTitle,       "TITLE" }, // heretic shareware
-    { D_DrawTitleA,      "TITLE" },
-    { G_DeferedPlayDemo, "DEMO1" },
-    { D_SetPageName,     "ORDER" },
-    { G_DeferedPlayDemo, "DEMO2" },
-    { D_SetPageName,     nullptr },
-    { G_DeferedPlayDemo, "DEMO3" },
-    { nullptr,           nullptr }
+    { DSF_TITLE, "TITLE", nullptr, hmus_titl, -1 }, // heretic shareware
+    { DSF_ADVISORY | DSF_ENDWIPE, "TITLE", nullptr, hmus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO1", nullptr, hmus_None, -1 },
+    { DSF_ENDWIPE, "ORDER", nullptr, hmus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO2", nullptr, hmus_None, -1 },
+    { DSF_ENDWIPE, nullptr, nullptr, hmus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO3", nullptr, hmus_None, -1 },
+    { DSF_END }
 };
 
 const demostate_t demostates_hreg[] = {
-    { D_DrawTitle,       "TITLE"  }, // heretic registered/sosr
-    { D_DrawTitleA,      "TITLE"  },
-    { G_DeferedPlayDemo, "DEMO1"  },
-    { D_SetPageName,     "CREDIT" },
-    { G_DeferedPlayDemo, "DEMO2"  },
-    { D_SetPageName,     nullptr  },
-    { G_DeferedPlayDemo, "DEMO3"  },
-    { nullptr,           nullptr  }
+    { DSF_TITLE, "TITLE", nullptr, hmus_titl, -1 }, // heretic registered/sosr
+    { DSF_ADVISORY | DSF_ENDWIPE, "TITLE", nullptr, hmus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO1", nullptr, hmus_None, -1 },
+    { DSF_ENDWIPE, "CREDIT", nullptr, hmus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO2", nullptr, hmus_None, -1 },
+    { DSF_ENDWIPE, nullptr, nullptr, hmus_None, -1 },
+    { DSF_DEMO | DSF_ENDWIPE, "DEMO3", nullptr, hmus_None, -1 },
+    { DSF_END }
 };
 
 // NOTE: unused
@@ -381,15 +362,64 @@ void D_DoAdvanceDemo()
 
     // haleyjd 10/08/06: changed to allow DEH/BEX replacement of
     // demo state resource names
+    const demostate_t *prevstate = nullptr;
+    if(demosequence >= 0)
+        prevstate = &(demostates[demosequence]);
     state = &(demostates[++demosequence]);
 
-    if(!state->func) // time to wrap?
+    if(state->flags & DSF_END) // time to wrap?
     {
         demosequence = 0;
         state        = &(demostates[0]);
     }
 
-    state->func(DEH_String(state->name));
+    if(state->flags & DSF_DEMO)
+    {
+        // We can't set wipegamestate to GS_LEVEL because the engine will then force a wipe anyway (via GS_NOSTATE), so
+        // use this secondary 'wipesuppress' variable instead
+        if(prevstate && !(prevstate->flags & DSF_ENDWIPE))
+        {
+            wipesuppress = true;
+            wipegamestate = GS_LEVEL;
+        }
+        G_DeferedPlayDemo(state->lumpname);
+    }
+    else
+    {
+        if(prevstate)
+        {
+            if(!(prevstate->flags & DSF_DEMO) && prevstate->flags & DSF_ENDWIPE)
+                wipegamestate = GS_NOSTATE; // artwork state needs an explicit wipe if so defined
+            else if(prevstate->flags & DSF_DEMO && !(prevstate->flags & DSF_ENDWIPE))
+                wipegamestate = GS_DEMOSCREEN; // block wipe by already setting it to upcoming gamestate
+        }
+
+        // EDF gameproperties (Eternity-specific) applies on top of any ID24 (base port common) setting
+        if(state->flags & DSF_TITLE && estrnonempty(GameModeInfo->titleMusName))
+            S_ChangeMusicName(GameModeInfo->titleMusName, false);
+        else if(state->musicname) // ID24 controlled, not used by internal arrays
+            S_ChangeMusicName(state->musicname, false);
+        else if(state->musicnum > 0) // From the internal arrays
+            S_StartMusic(state->musicnum);
+        else if(state->flags & DSF_TITLE)
+            S_StartMusic(GameModeInfo->titleMusNum); // Classic fallback
+
+        if(state->tics >= 0)
+            pagetic = state->tics;
+        else if(state->flags & DSF_TITLE)
+            pagetic = GameModeInfo->titleTics;
+        else if(state->flags & DSF_ADVISORY)
+            pagetic = GameModeInfo->advisorTics;
+        else
+            pagetic = GameModeInfo->pageTics;
+
+        if(state->lumpname)
+            D_SetPageName(state->lumpname);
+        else if(GameModeInfo->missionInfo->flags & MI_CONBACKTITLE)
+            D_SetPageName(GameModeInfo->consoleBack);
+        else
+            D_SetPageName(nullptr);
+    }
 
     C_InstaPopup(); // make console go away
 }
@@ -415,6 +445,7 @@ void D_StartTitle()
 
 gamestate_t oldgamestate  = GS_NOSTATE; // sf: globaled
 gamestate_t wipegamestate = GS_DEMOSCREEN;
+bool        wipesuppress;
 camera_t   *camera;
 extern bool setsizeneeded;
 int         wipewait; // haleyjd 10/09/07
@@ -851,7 +882,7 @@ void D_InitPaths()
     {
         struct stat sbuf; // jff 3/24/98 used to test save path for existence
 
-        if(!stat(myargv[i + 1], &sbuf) && S_ISDIR(sbuf.st_mode)) // and is a dir
+        if(!I_stat(myargv[i + 1], &sbuf) && S_ISDIR(sbuf.st_mode)) // and is a dir
         {
             if(basesavegame)
                 efree(basesavegame);
@@ -1034,11 +1065,11 @@ static void D_ProcessDehCommandLine(void)
 
                     file = myargv[p];
                     file.addDefaultExtension(".bex");
-                    if(access(file.constPtr(), F_OK)) // nope
+                    if(I_access(file.constPtr(), F_OK)) // nope
                     {
                         file = myargv[p];
                         file.addDefaultExtension(".deh");
-                        if(access(file.constPtr(), F_OK)) // still nope
+                        if(I_access(file.constPtr(), F_OK)) // still nope
                             I_Error("Cannot find .deh or .bex file named '%s'\n", myargv[p]);
                     }
                     // during the beta we have debug output to dehout.txt
@@ -1071,7 +1102,7 @@ static void D_ProcessWadPreincludes()
 
                     file = s;
                     file.addDefaultExtension(".wad");
-                    if(!access(file.constPtr(), R_OK))
+                    if(!I_access(file.constPtr(), R_OK))
                         D_AddFile(file.constPtr(), lumpinfo_t::ns_global, nullptr, 0, DAF_NONE);
                     else
                         printf("\nWarning: could not open '%s'\n", file.constPtr());
@@ -1098,13 +1129,13 @@ static void D_ProcessDehPreincludes(void)
 
                     file = s;
                     file.addDefaultExtension(".bex");
-                    if(!access(file.constPtr(), R_OK))
+                    if(!I_access(file.constPtr(), R_OK))
                         D_QueueDEH(file.constPtr(), 0); // haleyjd: queue it
                     else
                     {
                         file = s;
                         file.addDefaultExtension(".deh");
-                        if(!access(file.constPtr(), R_OK))
+                        if(!I_access(file.constPtr(), R_OK))
                             D_QueueDEH(file.constPtr(), 0); // haleyjd: queue it
                         else
                             printf("\nWarning: could not open '%s' .deh or .bex\n", s);
@@ -1139,7 +1170,7 @@ static void D_AutoExecScripts()
 
                     file = s;
                     file.addDefaultExtension(".csc");
-                    if(!access(file.constPtr(), R_OK))
+                    if(!I_access(file.constPtr(), R_OK))
                         C_RunScriptFromFile(file.constPtr());
                     else
                         usermsg("\nWarning: could not open console script %s\n", s);
@@ -1297,7 +1328,7 @@ static void D_DoomInit()
         // haleyjd 01/19/05: corrected use of AddDefaultExtension
         fn = myargv[p + 1];
         fn.addDefaultExtension(".gfs");
-        if(access(fn.constPtr(), F_OK))
+        if(I_access(fn.constPtr(), F_OK))
             I_Error("GFS file '%s' not found\n", fn.constPtr());
 
         printf("Parsing GFS file '%s'\n", fn.constPtr());
@@ -1315,7 +1346,7 @@ static void D_DoomInit()
 
         fn = basegamepath;
         fn.pathConcatenate("default.gfs");
-        if(!access(fn.constPtr(), R_OK))
+        if(!I_access(fn.constPtr(), R_OK))
         {
             gfs     = G_LoadGFS(fn.constPtr());
             haveGFS = true;
@@ -1607,6 +1638,9 @@ static void D_DoomInit()
 
     // Init bex hash chaining before EDF
     D_BuildBEXHashChains();
+
+    // Load demo loop info (must be before EDF, but after D_InitGMIPostWads)
+    id24::LoadDemoLoop();
 
     // Init Aeon before EDF
     Aeon::ScriptManager::Init();

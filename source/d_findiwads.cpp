@@ -39,6 +39,7 @@ namespace fs = std::experimental::filesystem;
 #include "d_io.h"
 #include "d_iwad.h"
 #include "d_main.h"
+#include "hal/i_directory.h"
 #include "hal/i_picker.h"
 #include "hal/i_platform.h"
 #include "m_collection.h"
@@ -355,8 +356,8 @@ static void D_addDoomWadPath(Collection<qstring> &paths)
 //
 static void D_addDoomWadDir(Collection<qstring> &paths)
 {
-    const char *doomWadDir = getenv("DOOMWADDIR");
-    const char *homeDir    = getenv("HOME");
+    const char *doomWadDir = I_getenv("DOOMWADDIR");
+    const char *homeDir    = I_getenv("HOME");
 
     if(estrnonempty(doomWadDir))
         paths.addNew() = doomWadDir;
@@ -369,7 +370,7 @@ static void D_addDoomWadDir(Collection<qstring> &paths)
 //
 static void D_addSubDirectories(Collection<qstring> &paths, const char *base)
 {
-    const fs::directory_iterator itr(base);
+    const fs::directory_iterator itr(fs::u8path(base));
     for(const fs::directory_entry &ent : itr)
     {
         const auto filename = ent.path().filename().generic_u8string();
@@ -395,11 +396,11 @@ static void D_addDefaultDirectories(Collection<qstring> &paths)
 #endif
 
     // add base/game paths
-    if(fs::is_directory(basepath, ec))
+    if(fs::is_directory(fs::u8path(basepath), ec))
         D_addSubDirectories(paths, basepath);
 
     // add user/game paths, if userpath != basepath
-    if(strcmp(basepath, userpath) && fs::is_directory(userpath, ec))
+    if(strcmp(basepath, userpath) && fs::is_directory(fs::u8path(userpath), ec))
         D_addSubDirectories(paths, userpath);
 
     paths.addNew() = D_DoomExeDir(); // executable directory
@@ -559,7 +560,7 @@ static void D_determineIWADVersion(const qstring &fullpath)
 //
 void D_CheckPathForWADs(const qstring &path)
 {
-    if(std::error_code ec; !fs::is_directory(path.constPtr(), ec))
+    if(std::error_code ec; !fs::is_directory(fs::u8path(path.constPtr()), ec))
     {
         // check to see if this is just a regular .wad file
         const char *dot = path.findSubStrNoCase(".wad");
@@ -568,7 +569,7 @@ void D_CheckPathForWADs(const qstring &path)
         return;
     }
 
-    const fs::directory_iterator itr(path.constPtr());
+    const fs::directory_iterator itr(fs::u8path(path.constPtr()));
     for(const fs::directory_entry &ent : itr)
     {
         const qstring filename =
@@ -621,9 +622,9 @@ static void D_checkForNoRest()
         nrvpath = path;
         nrvpath.removeFileSpec();
 
-        if(std::error_code ec; fs::is_directory(nrvpath.constPtr(), ec))
+        if(std::error_code ec; fs::is_directory(fs::u8path(nrvpath.constPtr()), ec))
         {
-            const fs::directory_iterator itr(nrvpath.constPtr());
+            const fs::directory_iterator itr(fs::u8path(nrvpath.constPtr()));
             for(const fs::directory_entry &ent : itr)
             {
                 const qstring filename =
@@ -669,7 +670,7 @@ static void D_findMasterLevels()
                 // Strip everything before the first slash off of the string to concatenate
                 newPath.pathConcatenate(currSubDir.waddir);
 
-                if(!stat(newPath.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
+                if(!I_stat(newPath.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
                 {
                     w_masterlevelsdirname = newPath.duplicate(PU_STATIC);
 
@@ -686,7 +687,7 @@ static void D_findMasterLevels()
     {
         str.pathConcatenate(gogMasterLevelsPath);
 
-        if(!stat(str.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
+        if(!I_stat(str.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
         {
             w_masterlevelsdirname = str.duplicate(PU_STATIC);
             return;
@@ -696,7 +697,7 @@ static void D_findMasterLevels()
 
     // Check for the default DOS path
     str = masterLevelsDOSPath;
-    if(!stat(str.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
+    if(!I_stat(str.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
         w_masterlevelsdirname = str.duplicate(PU_STATIC);
 }
 

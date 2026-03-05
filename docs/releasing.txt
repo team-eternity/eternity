@@ -27,6 +27,7 @@ When releasing a new version of Eternity, do the following:
     p. Update Known Issues at the bottom
 
 4. For Windows:
+  (NOTE: we now have GitHub Actions for Windows builds)
     a. Generate a clean build32 and build64 folder, using the CMake GUI, and selecting the proper
        Visual Studio generator
     b. Make each build for Release
@@ -36,6 +37,8 @@ When releasing a new version of Eternity, do the following:
     f. Test that it runs.
 
 5. For Mac:
+  (NOTE: even though we have GitHub Actions also for Mac, the product will be non-signed and fail 
+  validation).
     a. Make *from scratch* (delete if existing) build-arm and build-intel folder.
     b. For the build-arm folder, run "cmake .. -G Xcode"
     c. For the build-intel folder, run

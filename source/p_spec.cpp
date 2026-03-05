@@ -2518,7 +2518,7 @@ void P_AttachLines(const line_t *cline, bool ceiling)
 //
 // Moves all attached surfaces.
 //
-bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta, int crush, bool nointerp)
+bool P_MoveAttached(const sector_t *sector, surf_e surf, fixed_t delta, int crush, bool nointerp)
 {
     int i;
 
@@ -2527,16 +2527,8 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta, int cru
 
     bool ok = true;
 
-    if(ceiling)
-    {
-        count = sector->srf.ceiling.asurfacecount;
-        list  = sector->srf.ceiling.asurfaces;
-    }
-    else
-    {
-        count = sector->srf.floor.asurfacecount;
-        list  = sector->srf.floor.asurfaces;
-    }
+    count = sector->srf[surf].asurfacecount;
+    list  = sector->srf[surf].asurfaces;
 
     for(i = 0; i < count; i++)
     {
@@ -2693,7 +2685,7 @@ static void P_attachSectors(UDMFSetupSettings &settings)
                 }
             }
         }
-        if(!floornew.isEmpty())
+        if(attach.floorid && !floornew.isEmpty())
         {
             efree(sectors[i].srf.floor.asurfaces);
             sectors[i].srf.floor.asurfaces     = estructalloctag(attachedsurface_t, floornew.getLength(), PU_LEVEL);
@@ -2701,7 +2693,7 @@ static void P_attachSectors(UDMFSetupSettings &settings)
             memcpy(sectors[i].srf.floor.asurfaces, &floornew[0],
                    sectors[i].srf.floor.asurfacecount * sizeof(attachedsurface_t));
         }
-        if(!ceilingnew.isEmpty())
+        if(attach.ceilingid && !ceilingnew.isEmpty())
         {
             efree(sectors[i].srf.ceiling.asurfaces);
             sectors[i].srf.ceiling.asurfaces     = estructalloctag(attachedsurface_t, ceilingnew.getLength(), PU_LEVEL);

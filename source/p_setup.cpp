@@ -268,8 +268,6 @@ inline static void ShortToNodeChild(int *loc, uint16_t value)
 }
 
 //
-// SafeUintIndex
-//
 // haleyjd 12/04/08: Inline routine to convert an effectively unsigned short
 // index into a long index, safely checking against the provided upper bound
 // and substituting the value of 0 in the event of an overflow.
@@ -288,14 +286,11 @@ inline static int SafeUintIndex(int16_t input, int limit, const char *func, int 
 }
 
 //
-// SafeRealUintIndex
+// Matching routine for indices that are already in uint32_t format.
 //
-// haleyjd 06/14/10: Matching routine for indices that are already in unsigned
-// short format.
-//
-inline static int SafeRealUintIndex(uint16_t input, int limit, const char *func, int index, const char *item)
+inline static int SafeRealUlongIndex(uint32_t input, int limit, const char *func, int index, const char *item)
 {
-    int ret = (int)(SwapUShort(input)) & 0xffff;
+    int ret = (int)(SwapULong(input)) & 0xffffffff;
 
     if(ret >= limit)
     {
@@ -1282,7 +1277,7 @@ static void P_LoadZSegs(byte *data, ZNodeType type)
             continue; // skip strictly GL nodes
         }
 
-        linedef = SafeRealUintIndex(ml.linedef, numlines, "seg", actualSegIndex, "line");
+        linedef = SafeRealUlongIndex(ml.linedef, numlines, "seg", actualSegIndex, "line");
 
         ldef        = &lines[linedef];
         li->linedef = ldef;
@@ -2235,12 +2230,6 @@ static void P_LoadSideDefs2(int lumpnum)
     Z_Free(lump);
 }
 
-// haleyjd 10/10/11: externalized structure due to pre-C++11 template limitations
-struct bmap_t
-{
-    int n, nalloc, *list;
-}; // blocklist structure
-
 //
 // Boom variant of blockmap creation, which will fix PrBoom+ demos recorded with -complevel 9. Not
 // a solution for MBF -complevel however.
@@ -2617,6 +2606,11 @@ static void P_CreateBlockMap()
     //     the linedef.
 
     {
+        struct bmap_t
+        {
+            int n, nalloc, *list;
+        }; // blocklist structure
+
         unsigned tot  = bmapwidth * bmapheight;               // size of blockmap
         bmap_t  *bmap = ecalloc(bmap_t *, sizeof *bmap, tot); // array of blocklists
 
@@ -3389,7 +3383,11 @@ static void P_NewLevelMsg()
 {
     C_Printf("\n");
     C_Separator();
-    C_Printf(FC_GRAY "  %s\n\n", LevelInfo.levelName);
+    C_Printf(FC_GRAY "  %s\n", LevelInfo.levelName);
+    if(estrnonempty(LevelInfo.creator) && strcasecmp(LevelInfo.creator, "unknown"))
+        C_Printf("  by %s\n\n", LevelInfo.creator);
+    else
+        C_Puts("");
     C_InstaPopup(); // put console away
 }
 

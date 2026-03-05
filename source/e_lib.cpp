@@ -25,6 +25,9 @@
 //
 //
 
+#include <filesystem>
+namespace fs = std::filesystem;
+
 #include "z_zone.h"
 #include "i_system.h"
 
@@ -40,6 +43,7 @@
 #include "d_io.h"
 #include "d_main.h"
 #include "doomstat.h"
+#include "hal/i_directory.h"
 #include "m_collection.h"
 #include "m_compare.h"
 #include "m_hash.h"
@@ -214,9 +218,10 @@ int E_FindFileInclude(const char *parentfile, const int includinglumpnum, const 
     qname.replace("\\", '/');
     if(qname[0] != '/')
     {
-        qstring parentdir    = qstring(parentfile);
-        size_t  lastslashloc = parentdir.findLastOf('/');
+        qstring parentdir = (inclump && estrnonempty(inclump->lfn)) ? qstring(inclump->lfn) : qstring(src->filename);
+        size_t lastslashloc = parentdir.findLastOf('/');
         parentdir.truncate(lastslashloc + 1);
+
         includepath << parentdir;
     }
     else
@@ -229,6 +234,7 @@ int E_FindFileInclude(const char *parentfile, const int includinglumpnum, const 
 
     includepath << qname;
     includepath.toLower();
+    includepath = fs::path(includepath.constPtr()).lexically_normal().generic_string().c_str();
 
     WadChainIterator wci(wGlobalDir, includepath.constPtr(), true);
 
@@ -489,7 +495,7 @@ int E_UserInclude(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
     filename = E_BuildDefaultFn(argv[0]);
 
-    return !access(filename, R_OK) ? E_OpenAndCheckInclude(cfg, filename, -1) : 0;
+    return !I_access(filename, R_OK) ? E_OpenAndCheckInclude(cfg, filename, -1) : 0;
 }
 
 //=============================================================================

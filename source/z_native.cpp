@@ -38,6 +38,7 @@
 
 #include "z_zone.h"
 #include "i_system.h"
+#include "hal/i_directory.h"
 #include "doomstat.h"
 #include "m_argv.h"
 #include "m_qstr.h"
@@ -663,7 +664,7 @@ void ZoneHeapBase::print(const char *filename)
 #endif
         ;
 
-    outfile = fopen(filename, "w");
+    outfile = I_fopen(filename, "w");
     if(!outfile)
         return;
 
@@ -727,7 +728,7 @@ void ZoneHeapBase::dumpCore(const char *filename)
 
     dirlen = numentries * 64; // crazy PAK format...
 
-    FILE *f = fopen(filename, "wb");
+    FILE *f = I_fopen(filename, "wb");
     if(!f)
         return;
     fwrite("PACK", 4, 1, f);

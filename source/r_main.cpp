@@ -1144,6 +1144,7 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
     view.pitch         = (ANG90 - viewpitch) * PI / ANG180;
     view.lerp          = lerp;
     view.sector        = R_PointInSubsector(viewpoint.x, viewpoint.y)->sector;
+    viewpoint.sector   = view.sector;
 
     R_SetupSolidSegs();
     R_PreRenderBSP();
@@ -1264,7 +1265,7 @@ void R_SectorColormap(cmapcontext_t &context, const viewpoint_t &viewpoint, cons
         else
         {
             // find which actual area the viewpoint is in. Must check from the viewer's sector.
-            int hs = view.sector->heightsec;
+            int hs = viewpoint.sector->heightsec;
 
             if(hs == -1)
                 area = ViewArea::normal;
@@ -1345,7 +1346,7 @@ void R_RenderViewContext(rendercontext_t &context)
     R_SetMaskedSilhouette(context.bounds, nullptr, nullptr);
 
     // Push the first element on the Post-BSP stack
-    R_PushPost(context.bspcontext, context.spritecontext, *context.heap, context.bounds, true, nullptr);
+    R_PushPost(context.view, context.bspcontext, context.spritecontext, *context.heap, context.bounds, true, nullptr);
 
     // SoM 12/9/03: render the portals.
     R_RenderPortals(context);

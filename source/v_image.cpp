@@ -301,7 +301,9 @@ void VImageManager::determineLinearDimensions(void *data, size_t size, int &w, i
         case 8192: // Hexen 64x128 scrolling flats
             w = h = 64;
             break;
-        default: V_linearOptimalSize(size, w, h); break;
+        default: //
+            V_linearOptimalSize(size, w, h);
+            break;
         }
     }
     else if(expectedFormat == FORMAT_HINT_FONT) // image is a font

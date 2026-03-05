@@ -1,6 +1,6 @@
 ##-----------------------------------------------------------------------------
 ##
-## Copyright (C) 2015-2017 David Hill
+## Copyright (C) 2015-2025 David Hill
 ##
 ## See COPYING for license information.
 ##
@@ -19,6 +19,43 @@ include_directories(.)
 
 
 ##----------------------------------------------------------------------------|
+## Variables                                                                  |
+##
+
+set(ACSVM_ACSVM_H
+   Action.hpp
+   Array.hpp
+   BinaryIO.hpp
+   CallFunc.hpp
+   Code.hpp
+   CodeData.hpp
+   CodeList.hpp
+   Environment.hpp
+   Error.hpp
+   Function.hpp
+   HashMap.hpp
+   HashMapFixed.hpp
+   ID.hpp
+   Init.hpp
+   Jump.hpp
+   List.hpp
+   Module.hpp
+   PrintBuf.hpp
+   Scope.hpp
+   Script.hpp
+   Serial.hpp
+   SerialSTD.hpp
+   Stack.hpp
+   Store.hpp
+   String.hpp
+   Thread.hpp
+   Tracer.hpp
+   Types.hpp
+   Vector.hpp
+)
+
+
+##----------------------------------------------------------------------------|
 ## Targets                                                                    |
 ##
 
@@ -26,63 +63,31 @@ include_directories(.)
 ## acsvm
 ##
 add_library(acsvm ${ACSVM_SHARED_DECL}
+   ${ACSVM_ACSM_H}
    Action.cpp
-   Action.hpp
    Array.cpp
-   Array.hpp
-   BinaryIO.cpp
-   BinaryIO.hpp
    CallFunc.cpp
-   CallFunc.hpp
-   Code.hpp
    CodeData.cpp
-   CodeData.hpp
-   CodeList.hpp
    Environment.cpp
-   Environment.hpp
    Error.cpp
-   Error.hpp
    Function.cpp
-   Function.hpp
-   HashMap.hpp
-   HashMapFixed.hpp
-   ID.hpp
    Init.cpp
-   Init.hpp
    Jump.cpp
-   Jump.hpp
    Module.cpp
-   Module.hpp
    ModuleACS0.cpp
    ModuleACSE.cpp
    PrintBuf.cpp
-   PrintBuf.hpp
    Scope.cpp
-   Scope.hpp
    Script.cpp
-   Script.hpp
    Serial.cpp
-   Serial.hpp
-   Stack.hpp
-   Store.hpp
+   SerialSTD.cpp
    String.cpp
-   String.hpp
    Thread.cpp
-   Thread.hpp
    ThreadExec.cpp
    Tracer.cpp
-   Tracer.hpp
-   Types.hpp
-   Vector.hpp
 )
 
-set_target_properties(acsvm
-   PROPERTIES
-   CXX_STANDARD          11
-   CXX_STANDARD_REQUIRED ON
-)
-
-ACSVM_INSTALL_LIB(acsvm)
+ACSVM_INSTALL_LIB(acsvm ACSVM ACSVM)
 
 ## EOF
 

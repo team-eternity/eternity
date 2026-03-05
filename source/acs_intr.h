@@ -199,6 +199,8 @@ public:
 
     virtual ACSVM::ModuleName getModuleName(char const *str, size_t len);
 
+    virtual ACSVM::ScopeID getScopeID(ACSVM::Word mapnum) const;
+
     virtual std::pair<ACSVM::Word /*type*/, ACSVM::Word /*name*/> getScriptTypeACS0(ACSVM::Word name);
     virtual ACSVM::Word                                           getScriptTypeACSE(ACSVM::Word type);
 
@@ -310,7 +312,7 @@ bool     ACS_TerminateScriptS(const char *name, uint32_t mapnum);
 
 // Utilities.
 uint32_t ACS_GetLevelProp(uint32_t prop);
-bool     ACS_ChkThingProp(Mobj *mo, uint32_t prop, uint32_t val);
+bool     ACS_ChkThingProp(const ACSThread *thread, Mobj *mo, uint32_t prop, uint32_t val);
 uint32_t ACS_GetThingProp(Mobj *mo, uint32_t prop);
 void     ACS_SetThingProp(Mobj *mo, uint32_t prop, uint32_t val);
 
@@ -331,6 +333,7 @@ bool ACS_CF_CheckSight(ACS_CF_ARGS);
 bool ACS_CF_CheckWeapon(ACS_CF_ARGS);
 bool ACS_CF_CheckActorCeilingTexture(ACS_CF_ARGS);
 bool ACS_CF_CheckFlag(ACS_CF_ARGS);
+bool ACS_CF_SetLineActivation(ACS_CF_ARGS);
 bool ACS_CF_CheckActorFloorTexture(ACS_CF_ARGS);
 bool ACS_CF_CheckActorProperty(ACS_CF_ARGS);
 bool ACS_CF_CheckActorClass(ACS_CF_ARGS);
@@ -420,6 +423,7 @@ bool ACS_CF_SpawnSpotFacingForced(ACS_CF_ARGS);
 bool ACS_CF_Sqrt(ACS_CF_ARGS);
 bool ACS_CF_FixedSqrt(ACS_CF_ARGS);
 bool ACS_CF_StopSound(ACS_CF_ARGS);
+bool ACS_CF_GiveInventory(ACS_CF_ARGS);
 bool ACS_CF_TakeInventory(ACS_CF_ARGS);
 bool ACS_CF_ThingCount(ACS_CF_ARGS);
 bool ACS_CF_ThingCountName(ACS_CF_ARGS);

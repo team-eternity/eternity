@@ -1691,7 +1691,8 @@ static cell AMX_NATIVE_CALL sm_movewidget(AMX *amx, cell *params)
         pw->y = params[3];
     }
     break;
-    default: break;
+    default: //
+        break;
     }
 
     efree(name);

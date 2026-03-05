@@ -426,7 +426,9 @@ CONSOLE_COMMAND(mn_startmission, cf_hidden | cf_notnet)
     case 2: // Master Levels
         W_DoMasterLevels(true, skill);
         break;
-    default: C_Printf(FC_ERROR "Unknown mission number %d\a\n", mn_missionNo); break;
+    default: //
+        C_Printf(FC_ERROR "Unknown mission number %d\a\n", mn_missionNo);
+        break;
     }
 }
 
@@ -1542,10 +1544,16 @@ static void MN_BuildVidmodeTables(const tableType_e type)
         {
             switch(userfs)
             {
-            case MN_FULLSCREEN:         description += 'f'; break;
-            case MN_FULLSCREEN_DESKTOP: description += 'd'; break;
+            case MN_FULLSCREEN: //
+                description += 'f';
+                break;
+            case MN_FULLSCREEN_DESKTOP: //
+                description += 'd';
+                break;
             case MN_WINDOWED:
-            default:                    description += 'w'; break;
+            default: //
+                description += 'w';
+                break;
             }
         }
 
@@ -2923,17 +2931,18 @@ static menuitem_t mn_compat2_items[] = {
 };
 
 static menuitem_t mn_compat3_items[] = {
-    { it_title,  "Compatibility",                       nullptr,          "m_compat", 0                 },
-    { it_gap,    nullptr,                               nullptr,          nullptr,    0                 },
-    { it_info,   "Maps",                                nullptr,          nullptr,    MENUITEM_CENTERED },
-    { it_toggle, "Turbo doors make two closing sounds", "comp_blazing",   nullptr,    0                 },
-    { it_toggle, "Disable tagged door light fading",    "comp_doorlight", nullptr,    0                 },
-    { it_toggle, "Use DOOM stairbuilding method",       "comp_stairs",    nullptr,    0                 },
-    { it_toggle, "Use DOOM floor motion behavior",      "comp_floors",    nullptr,    0                 },
-    { it_toggle, "Use DOOM linedef trigger model",      "comp_model",     nullptr,    0                 },
-    { it_toggle, "Line effects work on sector tag 0",   "comp_zerotags",  nullptr,    0                 },
-    { it_toggle, "One-time line effects can break",     "comp_special",   nullptr,    0                 },
-    { it_end,    nullptr,                               nullptr,          nullptr,    0                 }
+    { it_title,  "Compatibility",                       nullptr,                 "m_compat", 0                 },
+    { it_gap,    nullptr,                               nullptr,                 nullptr,    0                 },
+    { it_info,   "Maps",                                nullptr,                 nullptr,    MENUITEM_CENTERED },
+    { it_toggle, "Turbo doors make two closing sounds", "comp_blazing",          nullptr,    0                 },
+    { it_toggle, "Disable tagged door light fading",    "comp_doorlight",        nullptr,    0                 },
+    { it_toggle, "Use DOOM stairbuilding method",       "comp_stairs",           nullptr,    0                 },
+    { it_toggle, "Use DOOM floor motion behavior",      "comp_floors",           nullptr,    0                 },
+    { it_toggle, "Use DOOM linedef trigger model",      "comp_model",            nullptr,    0                 },
+    { it_toggle, "Line effects work on sector tag 0",   "comp_zerotags",         nullptr,    0                 },
+    { it_toggle, "One-time line effects can break",     "comp_special",          nullptr,    0                 },
+    { it_toggle, "MObjs are lit by transferred light",  "comp_thingsectorlight", nullptr,    0                 },
+    { it_end,    nullptr,                               nullptr,                 nullptr,    0                 }
 };
 
 menu_t menu_compat1 = {

@@ -50,7 +50,11 @@
 // For Visual Studio only, in release mode, rename this function to common_main
 // and use the main defined in i_w32main.c, which contains an exception handler.
 #if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) && !defined(_DEBUG)
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS  // a bit pedantic because MSVC tends to be on Windows anyway
+#define wmain common_main
+#else
 #define main common_main
+#endif
 #endif
 
 // MaxW: Necessary for a specific check that seems to help with audio issues
@@ -71,16 +75,30 @@ static void VerifySDLVersions();
 
 int SDLIsInit;
 
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
+int wmain(int argc, wchar_t **argv)
+#else
 int main(int argc, char **argv)
+#endif
 {
     myargc = argc;
-    myargv = argv;
-
+    
 #if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
+    myargv = new char *[myargc + 1];
+    for(int i = 0; i < myargc; ++i)
+    {
+        int n = WideCharToMultiByte(CP_UTF8, 0, argv[i], -1, nullptr, 0, nullptr, nullptr);
+        myargv[i] = new char[n];
+        WideCharToMultiByte(CP_UTF8, 0, argv[i], -1, myargv[i], n, nullptr, nullptr);
+    }
+    myargv[myargc] = nullptr;
+
     if(I_IsWindowsVistaOrHigher())
         SDL_setenv("SDL_AUDIODRIVER", "wasapi", true);
     else
         SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
+#else
+    myargv = argv;
 #endif
 
 #if (EE_CURRENT_PLATFORM != EE_PLATFORM_WINDOWS) && (__has_include(<xlocale.h>) || __has_include(<locale.h>))

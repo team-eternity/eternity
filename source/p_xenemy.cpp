@@ -104,7 +104,7 @@ void QuakeThinker::Think()
                         P_DamageMobj(mo, nullptr, nullptr, P_Random(pr_quakedmg) % 8 + 1, MOD_QUAKE);
                     }
                     thrustangle = (359 * P_Random(pr_quake) / 255) * ANGLE_1;
-                    P_ThrustMobj(mo, thrustangle, this->intensity * FRACUNIT / 2);
+                    P_ThrustMobj(mo, thrustangle, this->intensity * FRACUNIT / 2, false);
                 }
             }
         }

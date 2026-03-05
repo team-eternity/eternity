@@ -35,6 +35,7 @@
 #include "d_mod.h"
 #include "e_args.h"
 #include "e_inventory.h"
+#include "e_mod.h"
 #include "e_player.h"
 #include "e_states.h"
 #include "e_things.h"
@@ -85,7 +86,7 @@ void A_Punch(actionargs_t *actionargs)
     P_WeaponSound(mo, GameModeInfo->playerSounds[sk_punch]);
 
     // turn to face target
-    mo->angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
+    mo->angle = P_PointToAngle(mo->x, mo->y, getThingX(mo, clip.linetarget), getThingY(mo, clip.linetarget));
 }
 
 //
@@ -120,7 +121,7 @@ void A_Saw(actionargs_t *actionargs)
     I_StartHaptic(HALHapticInterface::EFFECT_RUMBLE, 5, 108);
 
     // turn to face target
-    angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
+    angle = P_PointToAngle(mo->x, mo->y, getThingX(mo, clip.linetarget), getThingY(mo, clip.linetarget));
 
     if(angle - mo->angle > ANG180)
     {
@@ -470,6 +471,7 @@ void A_BFGBurst(actionargs_t *actionargs); // haleyjd
 // * args[2] = iterations used to calculate data per ray
 // * args[3] = horizontal field of view of spray
 // * args[4] = maximum distance for each tracer
+// * args[5] = damage type (default MOD_BFG_SPLASH)
 //
 void A_BFGSpray(actionargs_t *actionargs)
 {
@@ -489,13 +491,14 @@ void A_BFGSpray(actionargs_t *actionargs)
     const int     damageCount = E_ArgAsInt(actionargs->args, 2, 15);
     const angle_t fov         = E_ArgAsAngle(actionargs->args, 3, ANG90);
     const fixed_t maxDist     = E_ArgAsFixed(actionargs->args, 4, 16 * 64 * FRACUNIT);
+    const int     damageType  = E_ArgAsDamageType(actionargs->args, 5, MOD_BFG_SPLASH)->num;
 
     Mobj *mo = actionargs->actor;
 
-    for(int i = 0; i < 40; i++) // offset angles from its attack angle
+    for(int i = 0; i < numRays; i++) // offset angles from its attack angle
     {
         int     j, damage;
-        angle_t an = mo->angle - fov / 2 + fov / 40 * i;
+        angle_t an = mo->angle - fov / 2 + fov / numRays * i;
 
         // mo->target is the originator (player) of the missile
 
@@ -512,7 +515,7 @@ void A_BFGSpray(actionargs_t *actionargs)
         for(damage = j = 0; j < damageCount; j++)
             damage += (P_Random(pr_bfg) & 7) + 1;
 
-        P_DamageMobj(clip.linetarget, mo->target, mo->target, damage, MOD_BFG_SPLASH);
+        P_DamageMobj(clip.linetarget, mo->target, mo->target, damage, damageType);
     }
 }
 

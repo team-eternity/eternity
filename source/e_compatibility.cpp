@@ -160,7 +160,7 @@ static void E_setItem(const char *name, bool enable)
     // Look in the list of comp strings
     if(demo_version >= 401 && !strncasecmp(name, "comp_", 5))
     {
-        for(int i = 0; i < COMP_NUM_USED; ++i)
+        for(int i = 0; i < COMP_TOTAL; ++i)
         {
             if(!strcasecmp(name + 5, comp_strings[i]))
             {

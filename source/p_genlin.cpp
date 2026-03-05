@@ -560,7 +560,8 @@ int EV_DoParamCeiling(const line_t *line, int tag, const ceilingdata_t *cd)
                         case CChgTxt: // type is left alone
                             ceiling->type = genCeilingChg;
                             break;
-                        default: break;
+                        default: //
+                            break;
                         }
                     }
                 }

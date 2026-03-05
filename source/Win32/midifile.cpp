@@ -345,7 +345,8 @@ static bool ReadEvent(midi_event_t *event, unsigned int *last_event_type, SDL_RW
     case MIDI_EVENT_CHAN_AFTERTOUCH: //
         return ReadChannelEvent(event, event_type, false, stream);
 
-    default: break;
+    default: //
+        break;
     }
 
     // Specific value?
@@ -356,9 +357,11 @@ static bool ReadEvent(midi_event_t *event, unsigned int *last_event_type, SDL_RW
     case MIDI_EVENT_SYSEX_SPLIT: //
         return ReadSysExEvent(event, event_type, stream);
 
-    case MIDI_EVENT_META: return ReadMetaEvent(event, stream);
+    case MIDI_EVENT_META: //
+        return ReadMetaEvent(event, stream);
 
-    default: break;
+    default: //
+        break;
     }
 
     printf("ReadEvent: Unknown MIDI event type: 0x%x\n", event_type);

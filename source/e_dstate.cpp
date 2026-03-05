@@ -980,7 +980,8 @@ static void doKeyword(pstate_t *ps)
             else if(state->flags & STATEFI_DECORATE)
                 state->nextstate = NullStateNum; // next state is null state
             break;
-        default: break;
+        default: //
+            break;
         }
 
         // move to next buffered state object
@@ -1537,8 +1538,11 @@ static void DoPSNeedFlagOrAction(pstate_t *ps)
             if(!ps->principals)
                 applyStateFlag(STATEF_SKILL5FAST);
             break;
-        case DSFK_OFFSET: applyStateOffset(ps); break;
-        default:          break;
+        case DSFK_OFFSET: //
+            applyStateOffset(ps);
+            break;
+        default: //
+            break;
         }
         // stay in the current state
     }

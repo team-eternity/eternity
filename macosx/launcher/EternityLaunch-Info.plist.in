@@ -11,9 +11,18 @@
 		<dict>
 			<key>CFBundleTypeExtensions</key>
 			<array>
-				<string>wad</string>
-				<string>pke</string>
+				<string>bex</string>
+				<string>cfg</string>
+				<string>csc</string>
+				<string>deh</string>
+				<string>disk</string>
+				<string>edf</string>
+				<string>gfs</string>
+				<string>lmp</string>
 				<string>pk3</string>
+				<string>pke</string>
+				<string>rsp</string>
+				<string>wad</string>
 				<string>zip</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>

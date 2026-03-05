@@ -619,9 +619,9 @@ err:
 // Passed a pointer to the pointer to a MIDI buffer
 // Returns the chunk length at the pointer position
 //
-size_t ReadLength(UBYTE **mid)
+static size_t ReadLength(const UBYTE **mid)
 {
-    UBYTE *midptr = *mid;
+    const UBYTE *midptr = *mid;
 
     size_t length  = (*midptr++) << 24;
     length        += (*midptr++) << 16;
@@ -642,7 +642,7 @@ size_t ReadLength(UBYTE **mid)
 //
 // Returns 0 if successful, BADMIDHDR if the buffer is not MIDI format
 //
-int MidiToMIDI(UBYTE *mid, MIDI *mididata)
+int MidiToMIDI(const UBYTE *mid, MIDI *mididata)
 {
     int i;
     int ntracks;

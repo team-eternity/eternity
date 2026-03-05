@@ -85,7 +85,8 @@ void XLMusInfoParser::doStateExpectMap(XLTokenizer &token)
         mapname = tokenText;        // remember the map name
         state   = STATE_EXPECTMAPNUM;
         break;
-    default: break;
+    default: //
+        break;
     }
 }
 

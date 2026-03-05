@@ -1,10 +1,10 @@
 ===============================================================================
-Title                   : The Eternity Engine v4.04.02 "Glitnir" Update 2
-Filename                : ee-4.04.02-win64.zip, ee-4.04.02-win32.zip,
-                          ee-4.04.02-win-legacy.zip,
-                          ee-4.04.02-macos-applesilicon.dmg,
-                          ee-4.04.02-macos-intel.dmg,
-Release date            : 2024-11-18
+Title                   : The Eternity Engine v4.06.00 "Nidhogg"
+Filename                : ee-4.06.00-win64.zip, ee-4.06.00-win32.zip,
+                          ee-4.06.00-win-legacy.zip,
+                          ee-4.06.00-macos-applesilicon.dmg,
+                          ee-4.06.00-macos-intel.dmg,
+Release date            : 2026-02-16
 Author                  : Team Eternity:
                           Ioan Chera,
                           James "Quasar" Haley,
@@ -104,6 +104,8 @@ Special Thanks to       : - Feature and Patch Contributors -
                               cxong
                               derekmd
                               dotfloat
+                              electricbrass
+                              elf-alchemist
                               FozzeY
                               Gez
                               icecream95
@@ -250,28 +252,37 @@ with any concerns.
 
 
 ===============================================================================
-* Features New to Version 4.04.02 *
+* Features New to Version 4.06.00 *
 
-Bug fixes and quality of life improvements:
+Features
+--------
+* Added support for the "author" property in UMAPINFO.
+* Added DEMOLOOP id24 lump support.
+* Added support for non-power-of-two flats.
+* Added new ACS function: GiveInventory.
+* Added a parameter to A_VileTarget codepointer: thing type to spawn (defaults to the one with Dehackednum 5, i.e.
+  "VileFire" in Doom). Thanks to sink666 for the wish to have this parameter in the pull request.
+* Made A_VileAttack codepointer paremeterized. Added the following args:
+  - sound to play (default: sfx_barexp)
+  - initial damage (default: 20)
+  - blast damage (default: 70)
+  - blast radius (default: 70)
+  - thrust factor (default: 1.0)
+  - damage type for initial hit (default: actor's MOD)
+  - damage type for blast (default: actor's MOD)
+  Thanks to sink666 for the wish to have parameters in the pull request.
+* Added damage type (MOD) argument to A_BFGSpray (default: BFG_Splash).
+* Added the comp_thingsectorlight setting, which controls how things are lit in sectors with different floor and ceiling
+  lights. Thanks to elf-alchemist for the contribution! Details here: https://github.com/team-eternity/eternity/pull/740
 
-* Multithreaded rendering now renders very wide sprites properly (such as the
-  trees in Eviternity 2 MAP14).
-* Confirmation yes/no views (such as for quitting) now accept non-QWERTY
-  keyboard layouts for 'y' and 'n', i.e. the same keys which under QWERTY would
-  be 'y' or 'n' will also work.
-* Do not terminate suddenly if user put flag names in the MBF21 flag
-  codepointer. Just display an in-game error message with sound. Also, the
-  message is more accurate.
-* Explosions now trigger splashes on BOOM deep water surfaces by comparing their
-  heights to the water surface, not to the solid surface beneath.
-* Splash terrain types now work with portal overlays.
-* Heretic Fire Mace projectiles now blow up when hitting anything under Boom
-  water, without bouncing, so as to behave consistently with shallow Heretic
-  water. Currently this doesn't apply to linked portal water however.
-* A_SetFlags, A_UnsetFlags, A_AddFlags and A_RemoveFlags now handle NOSECTOR and
-  NOBLOCKMAP in a stable manner.
+Improvements
+------------
+* Loading broken or wrong save game files is more robust now, though not perfect.
+* Added support for music changer types 14100 (reset music) and 14165 (parameterized music ID). Thanks to electricbrass
+  for the contribution! Details here: https://github.com/team-eternity/eternity/pull/741
+* Reimplemented the key automap colour.
 
-For actual bug fixes, see the end of this document.
+For bug fixes, see the end of this document.
 
 ===============================================================================
 * Coming Soon *
@@ -282,6 +293,7 @@ These are features planned to debut in future versions of the Eternity Engine:
 
   ** ID24 standards support
   ** Aeon scripting system
+  Heretic 2025 Re-Release Support
   Hexen Support
   Strife Support                         (In progress)
   PSX Doom support                       (In progress)
@@ -298,6 +310,14 @@ These are features planned to debut in future versions of the Eternity Engine:
 * Revision History *
 
 * Dates are in mm/dd/yy *
+
+4.06.00 "Nidhogg" -- 2/16/26
+
+  Incremental improvement.
+
+4.05.04 "Citadel" -- 8/23/25
+
+  Bug fix and feature release.
 
 4.04.02 "Glitnir" Update 2 -- 11/18/24
 
@@ -507,15 +527,18 @@ These are features planned to debut in future versions of the Eternity Engine:
 ===============================================================================
 * Bugs Fixed, Known Issues *
 
-Bugs Fixed (between 4.04.01 and 4.04.02):
+Bugs Fixed (between 4.05.04 and 4.06.00):
 
-* Fixed A_JumpIfFlagsSet as it was completely broken.
-* Fixed wrong defaults in A_WeaponBulletAttack.
-* A_SkullRodStorm wasn't line portal aware.
-* Fixed UMAPINFO not recognizing spec-defined Deh_Actor_145 to Deh_Actor_249
+* Fixed failure on Windows to load file paths with unicode (non US English) characters.
+* Fixed A_BFGSpray not using the parameter, and always being locked at 40 rays.
+* Fixed bad rendering of specially paletted PNG file for the Heretic episode 2 ending screen.
+* Fixed bad implementation of TakeInventory.
+* Fixed A_CustomPlayerMelee wrong implementation of the angle deflection argument. Now it properly avoid rotating player
+  if set to "none". Thanks to sink666's pull request for the catch.
+* Fixed EDF includes from lumps included by lumps in the same folder.
+* Fixed translucent PNGs that use a separate palette from the current WAD.
 
-
-Known Issues in v4.04.02:
+Known Issues in v4.06.00:
 
 - Moving polyobject portal movement is not interpolated yet.
 
@@ -532,5 +555,3 @@ Known Issues in v4.04.02:
 
 - Some momentary interpolation glitches occur when an attached horizontal
   portal surface passes through you.
-
-- There are still known vanilla Heretic demos which desync.

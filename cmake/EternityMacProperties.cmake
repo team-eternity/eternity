@@ -23,7 +23,6 @@ function(eternity_set_mac_library_output)
   set_target_properties(ADLMIDI_static PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
   set_target_properties(png_static     PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
   set_target_properties(snes_spc       PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-  set_target_properties(zlibstatic     PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 endfunction()
 
 function(eternity_set_xcode_attributes TARGET)

@@ -761,7 +761,12 @@ void G_DoLoadLevel()
     else
     { // sf: no screen wipe while changing hub level
         if(wipegamestate == GS_LEVEL)
-            wipegamestate = GS_NOSTATE; // force a wipe
+        {
+            if(wipesuppress)
+                wipesuppress = false; // don't wipe this time
+            else
+                wipegamestate = GS_NOSTATE; // force a wipe
+        }
     }
 }
 
@@ -916,9 +921,12 @@ bool G_Responder(const event_t *ev)
 
         return true; // eat events
 
-    case ev_joystick: joyaxes[axisActions[ev->data1]] = ev->data2; return true; // eat events
+    case ev_joystick: //
+        joyaxes[axisActions[ev->data1]] = ev->data2;
+        return true; // eat events
 
-    default: break;
+    default: //
+        break;
     }
 
     return false;
@@ -2110,7 +2118,7 @@ static void G_DoSaveGame(void)
 
     G_SaveGameName(name, len, savegameslot);
 
-    P_SaveCurrentLevel(name, savedescription);
+    P_SaveCurrentLevel(name, savedescription, nullptr);
 
     gameaction         = ga_nothing;
     savedescription[0] = 0;
@@ -2121,7 +2129,7 @@ WadDirectory *d_dir;
 static void G_DoLoadGame(void)
 {
     gameaction = ga_nothing;
-    P_LoadGame(savename);
+    P_LoadGame(savename, nullptr);
 }
 
 //
@@ -2386,7 +2394,7 @@ void G_PlayerReborn(int player)
     int            secretcount;
     int            cheats;
     int            playercolour;
-    char           playername[20];
+    char           playername[sizeof(p->name)];
     skin_t        *playerskin;
     playerclass_t *playerclass;
     inventory_t    inventory;
@@ -2395,7 +2403,7 @@ void G_PlayerReborn(int player)
     p = &players[player];
 
     memcpy(frags, p->frags, sizeof frags);
-    strncpy(playername, p->name, 20);
+    strncpy(playername, p->name, sizeof(playername));
 
     killcount    = p->killcount;
     itemcount    = p->itemcount;
@@ -3325,7 +3333,7 @@ byte *G_WriteOptions(byte *demoptr)
     *demoptr++ = monkeys; // byte 26
 
     // killough 10/98: a compatibility vector now
-    for(int i = 0; i < COMP_TOTAL; i++)
+    for(int i = 0; i < MBF_COMP_TOTAL; i++)
         *demoptr++ = comp[i] != 0; // bytes 27 - 58 : comp
 
     // haleyjd 05/23/04: autoaim is sync critical
@@ -3413,7 +3421,7 @@ byte *G_ReadOptions(byte *demoptr)
 
         { // killough 10/98: a compatibility vector now
             int i;
-            for(i = 0; i < COMP_TOTAL; ++i)
+            for(i = 0; i < MBF_COMP_TOTAL; ++i)
                 comp[i] = *demoptr++;
         }
 

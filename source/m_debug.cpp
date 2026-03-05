@@ -209,7 +209,8 @@ void DebugLogger::checkspace(lastsym newsym)
     lsym        = newsym;
     switch(sym)
     {
-    case ls_start: return; // never add space at beginning
+    case ls_start: //
+        return;    // never add space at beginning
     case ls_char:
     case ls_string:
         if(newsym != ls_number && newsym != ls_char)
@@ -219,7 +220,9 @@ void DebugLogger::checkspace(lastsym newsym)
         if(newsym != ls_char)
             putchar(' ');
         return;
-    default: putchar(' '); return;
+    default: //
+        putchar(' ');
+        return;
     }
 }
 

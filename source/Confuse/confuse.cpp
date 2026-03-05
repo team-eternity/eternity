@@ -1652,14 +1652,23 @@ static void cfg_addlist_internal(cfg_t *cfg, cfg_opt_t *opt, unsigned int nvalue
     {
         switch(opt->type)
         {
-        case CFGT_INT:    cfg_opt_setnint(cfg, opt, va_arg(ap, int), opt->nvalues); break;
-        case CFGT_FLOAT:  cfg_opt_setnfloat(cfg, opt, va_arg(ap, double), opt->nvalues); break;
-        case CFGT_BOOL:   cfg_opt_setnbool(cfg, opt, !!va_arg(ap, int), opt->nvalues); break;
-        case CFGT_STR:    cfg_opt_setnstr(cfg, opt, va_arg(ap, char *), opt->nvalues); break;
+        case CFGT_INT: //
+            cfg_opt_setnint(cfg, opt, va_arg(ap, int), opt->nvalues);
+            break;
+        case CFGT_FLOAT: //
+            cfg_opt_setnfloat(cfg, opt, va_arg(ap, double), opt->nvalues);
+            break;
+        case CFGT_BOOL: //
+            cfg_opt_setnbool(cfg, opt, !!va_arg(ap, int), opt->nvalues);
+            break;
+        case CFGT_STR: //
+            cfg_opt_setnstr(cfg, opt, va_arg(ap, char *), opt->nvalues);
+            break;
         case CFGT_FUNC:
         case CFGT_SEC:
         case CFGT_MVPROP:
-        default:          break;
+        default: //
+            break;
         }
     }
 }
@@ -1720,7 +1729,8 @@ static void cfg_addlistptr_internal(cfg_t *cfg, cfg_opt_t *opt, unsigned int nva
     case CFGT_STR: //
         strptr = (const char **)values;
         break;
-    default: return;
+    default: //
+        return;
     }
 
     for(i = 0; i < nvalues; ++i)
@@ -1743,7 +1753,8 @@ static void cfg_addlistptr_internal(cfg_t *cfg, cfg_opt_t *opt, unsigned int nva
             cfg_opt_setnstr(cfg, opt, *strptr, opt->nvalues);
             ++strptr;
             break;
-        default: break;
+        default: //
+            break;
         }
     }
 }

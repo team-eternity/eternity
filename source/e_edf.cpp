@@ -119,6 +119,8 @@
 #include "e_weapons.h"
 #include "mn_emenu.h"
 
+#include "hal/i_directory.h"
+
 // EDF Keywords used by features implemented in this module
 
 // Sprite variables
@@ -344,10 +346,10 @@ static void E_EDFOpenVerboseLog()
 
         do
             psnprintf(fn, sizeof(fn), "edfout%.2d.txt", lognum++);
-        while(!access(fn, F_OK) && --tries);
+        while(!I_access(fn, F_OK) && --tries);
 
         if(tries)
-            edf_output = fopen(fn, "w");
+            edf_output = I_fopen(fn, "w");
         else
         {
             if(in_textmode)
@@ -432,8 +434,7 @@ void E_EDFLoggedErr(int lv, E_FORMAT_STRING(const char *msg), ...)
     va_end(va);
 }
 
-static int  edf_warning_count;
-static bool edf_warning_out;
+static int edf_warning_count;
 
 //
 // E_EDFLoggedWarning
@@ -459,18 +460,15 @@ void E_EDFLoggedWarning(int lv, E_FORMAT_STRING(const char *msg), ...)
     }
 
     // allow display of warning messages on the system console too
-    if(edf_warning_out)
-    {
-        qstring msg_no_tabs;
-        va_list va;
+    qstring msg_no_tabs;
+    va_list va;
 
-        msg_no_tabs = msg;
-        msg_no_tabs.replace("\t", ' ');
+    msg_no_tabs = msg;
+    msg_no_tabs.replace("\t", ' ');
 
-        va_start(va, msg);
-        vfprintf(stderr, msg_no_tabs.constPtr(), va);
-        va_end(va);
-    }
+    va_start(va, msg);
+    vfprintf(stderr, msg_no_tabs.constPtr(), va);
+    va_end(va);
 }
 
 //
@@ -483,9 +481,6 @@ static void E_EDFPrintWarningCount()
     if(in_textmode && edf_warning_count)
     {
         printf(" %d warnings occured during EDF processing.\n", edf_warning_count);
-
-        if(!edf_warning_out)
-            printf(" To see warnings, run Eternity with the -edf-show-warnings parameter.\n");
     }
 }
 
@@ -497,8 +492,6 @@ static void E_EDFPrintWarningCount()
 static void E_EDFResetWarnings()
 {
     edf_warning_count = 0;
-
-    edf_warning_out = !!M_CheckParm("-edf-show-warnings");
 }
 
 //=============================================================================

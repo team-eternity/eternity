@@ -402,9 +402,12 @@ VARIABLE_INT(spc_bass_boost, nullptr,    0, 31, nullptr);
 #endif
 
 #ifdef HAVE_ADLMIDILIB
-static const char *mididevicestr[] = { "Default", "ADLMIDI" };
-static const char **adlbankstr = const_cast<const char **>(adl_getBankNames());
-static const char *adlemustr[] = { "Nuked 1.8", "Nuked 1.7.4", "Dosbox", "Opal", "Java" };
+static const char        *mididevicestr[] = { "Default", "ADLMIDI" };
+static const char *const *adlbankstr      = adl_getBankNames();
+static const char        *adlemustr[]     = {
+    "Nuked 1.8", "Nuked 1.7.4", "Dosbox",    "Opal",           "Java",           "ESFMu",
+    "MAME OPL2", "YMFM OPL2",   "YMFM OPL3", "Nuked OPL2 LLE", "Nuked OPL3 LLE",
+};
 
 extern int midi_device;
 extern int adlmidi_numchips;
@@ -415,6 +418,8 @@ VARIABLE_INT(midi_device,      nullptr, -1, 0,               mididevicestr);
 VARIABLE_INT(adlmidi_numchips, nullptr,  1, 8,                     nullptr);
 VARIABLE_INT(adlmidi_bank,     nullptr,  0, BANKS_MAX,          adlbankstr);
 VARIABLE_INT(adlmidi_emulator, nullptr,  0, ADLMIDI_EMU_end - 1, adlemustr);
+
+static_assert(earrlen(adlemustr) == ADLMIDI_EMU_end, "Length of adlemustr and number of ADLMIDI emulators not equal.");
 #endif
 
 // Equalizer variables

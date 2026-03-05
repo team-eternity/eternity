@@ -251,14 +251,14 @@ struct variable_t
 {
     // Static type-safe factories
     template<typename T>
-    static variable_t makeInt(T *target, T *defaultTarget, int min, int max, const char **strings)
+    static variable_t makeInt(T *target, T *defaultTarget, int min, int max, const char *const *strings)
     {
         static_assert(sizeof(T) == sizeof(int), "Type T must be int-like");
         return { target, defaultTarget, vt_int, min, max, strings, 0, 0, nullptr, nullptr };
     }
     // Stupid boilerplate though
     template<typename T>
-    static variable_t makeInt(T *target, std::nullptr_t, int min, int max, const char **strings)
+    static variable_t makeInt(T *target, std::nullptr_t, int min, int max, const char *const *strings)
     {
         static_assert(sizeof(T) == sizeof(int), "Type T must be int-like");
         return { target, nullptr, vt_int, min, max, strings, 0, 0, nullptr, nullptr };
@@ -300,14 +300,14 @@ struct variable_t
         return { target, nullptr, vt_string, -1, -1, nullptr, 0, 0, nullptr, nullptr };
     }
 
-    void        *variable;  // NB: for strings, this is char ** not char *
-    void        *v_default; // the default
-    int          type;      // vt_?? variable type: int, string
-    int          min;       // minimum value or string length
-    int          max;       // maximum value/length
-    const char **defines;   // strings representing the value: eg "on" not "1"
-    double       dmin;      // haleyjd 04/21/10: min for double vars
-    double       dmax;      //                   max for double vars
+    void              *variable;  // NB: for strings, this is char ** not char *
+    void              *v_default; // the default
+    int                type;      // vt_?? variable type: int, string
+    int                min;       // minimum value or string length
+    int                max;       // maximum value/length
+    const char *const *defines;   // strings representing the value: eg "on" not "1"
+    double             dmin;      // haleyjd 04/21/10: min for double vars
+    double             dmax;      //                   max for double vars
 
     default_t *cfgDefault; // haleyjd 07/04/10: pointer to config default
     command_t *command;    // haleyjd 08/15/10: parent command

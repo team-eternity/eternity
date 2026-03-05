@@ -65,6 +65,7 @@
 #include "s_sndseq.h"
 #include "v_misc.h"
 #include "doomstat.h"
+#include "metaapi.h"
 
 #include "ACSVM/Scope.hpp"
 #include "ACSVM/Thread.hpp"
@@ -79,7 +80,7 @@
 static bool ACS_ChkThingProp(ACSThread *thread, int32_t tid, uint32_t prop, uint32_t val)
 {
     Mobj *mo = P_FindMobjFromTID(tid, nullptr, thread->info.mo);
-    thread->dataStk.push(mo ? ACS_ChkThingProp(mo, prop, val) : 0);
+    thread->dataStk.push(mo ? ACS_ChkThingProp(thread, mo, prop, val) : 0);
     return false;
 }
 
@@ -470,6 +471,80 @@ bool ACS_CF_CheckFlag(ACS_CF_ARGS)
     return false;
 }
 
+enum
+{
+    SPAC_Cross      = 1,
+    SPAC_Use        = 2,
+    SPAC_MCross     = 4,
+    SPAC_Impact     = 8,
+    SPAC_Push       = 16,
+    SPAC_PCross     = 32,
+    SPAC_UseThrough = 64,
+    SPAC_AnyCross   = 128,
+    SPAC_MUse       = 256,
+    SPAC_MPush      = 512,
+    SPAC_UseBack    = 1024,
+
+    SPAC_None = 0,
+};
+
+//
+// void SetLineActivation(int lineid, int activation[, int repeat])
+//
+bool ACS_CF_SetLineActivation(ACS_CF_ARGS)
+{
+    auto    info = &static_cast<ACSThread *>(thread)->info;
+    line_t *l;
+    int     linenum    = -1;
+    int     activation = argV[1];
+    int     repeat     = argC > 2 ? argV[2] : -1;
+    while((l = P_FindLine(argV[0], &linenum, info->line)) != nullptr)
+    {
+        if(activation == SPAC_None)
+        {
+            l->flags    &= ~ML_PASSUSE;
+            l->extflags &= ~(EX_ML_CROSS | EX_ML_USE | EX_ML_IMPACT | EX_ML_PUSH | EX_ML_PLAYER | EX_ML_MONSTER |
+                             EX_ML_MISSILE | EX_ML_REPEAT | EX_ML_1SONLY | EX_ML_POLYOBJECT);
+        }
+        else
+        {
+            if(activation & SPAC_Cross)
+                l->extflags |= EX_ML_PLAYER | EX_ML_CROSS;
+            if(activation & SPAC_Use)
+                l->extflags |= EX_ML_PLAYER | EX_ML_USE | EX_ML_1SONLY;
+            if(activation & SPAC_MCross)
+                l->extflags |= EX_ML_MONSTER | EX_ML_CROSS;
+            if(activation & SPAC_Impact)
+                l->extflags |= EX_ML_PLAYER | EX_ML_MONSTER | EX_ML_IMPACT;
+            if(activation & SPAC_Push)
+                l->extflags |= EX_ML_PLAYER | EX_ML_PUSH;
+            if(activation & SPAC_PCross)
+                l->extflags |= EX_ML_MISSILE | EX_ML_CROSS;
+            if(activation & SPAC_UseThrough)
+            {
+                l->flags    |= ML_PASSUSE;
+                l->extflags |= EX_ML_PLAYER | EX_ML_USE | EX_ML_1SONLY;
+            }
+            if(activation & SPAC_AnyCross)
+            {
+                l->extflags |= EX_ML_PLAYER | EX_ML_MONSTER | EX_ML_MISSILE | EX_ML_POLYOBJECT | EX_ML_CROSS;
+            }
+            if(activation & SPAC_MUse)
+                l->extflags |= EX_ML_MONSTER | EX_ML_USE | EX_ML_1SONLY;
+            if(activation & SPAC_MPush)
+                l->extflags |= EX_ML_MONSTER | EX_ML_PUSH;
+            if(activation & SPAC_UseBack) // this may clear what was back
+                l->extflags &= ~EX_ML_1SONLY;
+        }
+        if(repeat > 0)
+            l->extflags |= EX_ML_REPEAT;
+        else if(!repeat)
+            l->extflags &= ~EX_ML_REPEAT;
+    }
+    thread->dataStk.push(0);
+    return false;
+}
+
 //
 // int CheckActorFloorTexture(int tid, str texture)
 //
@@ -481,7 +556,7 @@ bool ACS_CF_CheckActorFloorTexture(ACS_CF_ARGS)
 //
 // ACS_ChkThingProp
 //
-bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
+bool ACS_ChkThingProp(const ACSThread *thread, Mobj *mo, uint32_t var, uint32_t val)
 {
     if(!mo)
         return false;
@@ -540,11 +615,21 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
     case ACS_TP_Counter6:     return static_cast<uint32_t>(mo->counters[6]) == val;
     case ACS_TP_Counter7:     return static_cast<uint32_t>(mo->counters[7]) == val;
 
-    case ACS_TP_Angle:        return mo->angle >> 16 == (uint32_t)val;
-    case ACS_TP_Armor:        return mo->player ? static_cast<uint32_t>(mo->player->armorpoints) == val : false;
-    case ACS_TP_CeilTex:      return mo->subsector->sector->srf.ceiling.pic == R_FindWall(ACSenv.getString(val)->str);
-    case ACS_TP_CeilZ:        return static_cast<uint32_t>(mo->zref.ceiling) == val;
-    case ACS_TP_FloorTex:     return mo->subsector->sector->srf.floor.pic == R_FindWall(ACSenv.getString(val)->str);
+    case ACS_TP_Angle: return mo->angle >> 16 == (uint32_t)val;
+    case ACS_TP_Armor: return mo->player ? static_cast<uint32_t>(mo->player->armorpoints) == val : false;
+    case ACS_TP_CeilTex:
+    {
+        const char *const textureName = thread->scopeMap->getString(val)->str;
+        const int         pic         = mo->subsector->sector->srf.ceiling.pic;
+        return pic == R_FindFlat(textureName) || pic == R_FindWall(textureName);
+    }
+    case ACS_TP_CeilZ: return static_cast<uint32_t>(mo->zref.ceiling) == val;
+    case ACS_TP_FloorTex:
+    {
+        const char *const textureName = thread->scopeMap->getString(val)->str;
+        const int         pic         = mo->subsector->sector->srf.floor.pic;
+        return pic == R_FindFlat(textureName) || pic == R_FindWall(textureName);
+    }
     case ACS_TP_FloorZ:       return static_cast<uint32_t>(mo->zref.floor) == val;
     case ACS_TP_Frags:        return mo->player ? static_cast<uint32_t>(mo->player->totalfrags) == val : false;
     case ACS_TP_LightLevel:   return static_cast<uint32_t>(mo->subsector->sector->lightlevel) == val;
@@ -555,7 +640,7 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
     case ACS_TP_PlayerNumber: return mo->player ? mo->player - players == val : false;
     case ACS_TP_SigilPieces:  return false;
     case ACS_TP_TID:          return mo->tid == val;
-    case ACS_TP_Type:         return mo->type == E_ThingNumForCompatName(ACSenv.getString(val)->str);
+    case ACS_TP_Type:         return mo->type == E_ThingNumForCompatName(thread->scopeMap->getString(val)->str);
     case ACS_TP_X:            return static_cast<uint32_t>(mo->x) == val;
     case ACS_TP_Y:            return static_cast<uint32_t>(mo->y) == val;
     case ACS_TP_Z:            return static_cast<uint32_t>(mo->z) == val;
@@ -1456,11 +1541,11 @@ bool ACS_CF_PlayActorSound(ACS_CF_ARGS)
 
     switch(snd)
     {
-    case SOUND_See:    sfx = E_SoundForDEHNum(mo->info->seesound); break;
-    case SOUND_Attack: sfx = E_SoundForDEHNum(mo->info->attacksound); break;
-    case SOUND_Pain:   sfx = E_SoundForDEHNum(mo->info->painsound); break;
-    case SOUND_Death:  sfx = E_SoundForDEHNum(mo->info->deathsound); break;
-    case SOUND_Active: sfx = E_SoundForDEHNum(mo->info->activesound); break;
+    case SOUND_See:    sfx = E_SoundForUnknownTypeDEHNum(mo->info->seesound); break;
+    case SOUND_Attack: sfx = E_SoundForUnknownTypeDEHNum(mo->info->attacksound); break;
+    case SOUND_Pain:   sfx = E_SoundForUnknownTypeDEHNum(mo->info->painsound); break;
+    case SOUND_Death:  sfx = E_SoundForUnknownTypeDEHNum(mo->info->deathsound); break;
+    case SOUND_Active: sfx = E_SoundForUnknownTypeDEHNum(mo->info->activesound); break;
     default:           sfx = nullptr; break;
     }
 
@@ -1589,12 +1674,24 @@ enum
 //
 bool ACS_CF_ReplaceTextures(ACS_CF_ARGS)
 {
-    int      oldtex = R_FindWall(thread->scopeMap->getString(argV[0])->str);
-    int      newtex = R_FindWall(thread->scopeMap->getString(argV[1])->str);
-    uint32_t flags  = argV[2];
+    const char *const oldtexName = thread->scopeMap->getString(argV[0])->str;
+    const char *const newtexName = thread->scopeMap->getString(argV[1])->str;
+    const int         oldtex     = R_FindWall(oldtexName);
+    const int         newtex     = R_FindWall(newtexName);
+    const uint32_t    flags      = argV[2];
+
+    // We may have flats and wall textures with the same name but different looks
+    // like STEP1, STEP2 in Doom.
+    const int oldflat = R_FindFlat(oldtexName);
+    const int newflat = R_FindFlat(newtexName);
 
     R_CacheTexture(newtex);
     R_CacheIfSkyTexture(oldtex, newtex);
+    if(newflat != newtex || oldflat != oldtex)
+    {
+        R_CacheTexture(newflat);
+        R_CacheIfSkyTexture(oldflat, newflat);
+    }
 
     // If doing anything to lines.
     if((flags & RETEX_NOT_LINE) != RETEX_NOT_LINE)
@@ -1617,11 +1714,11 @@ bool ACS_CF_ReplaceTextures(ACS_CF_ARGS)
     {
         for(sector_t *sector = sectors, *end = sector + numsectors; sector != end; ++sector)
         {
-            if(!(flags & RETEX_NOT_FLOOR) && sector->srf.floor.pic == oldtex)
-                sector->srf.floor.pic = newtex;
+            if(!(flags & RETEX_NOT_FLOOR) && sector->srf.floor.pic == oldflat)
+                sector->srf.floor.pic = newflat;
 
-            if(!(flags & RETEX_NOT_CEIL) && sector->srf.ceiling.pic == oldtex)
-                sector->srf.ceiling.pic = newtex;
+            if(!(flags & RETEX_NOT_CEIL) && sector->srf.ceiling.pic == oldflat)
+                sector->srf.ceiling.pic = newflat;
         }
     }
 
@@ -2577,14 +2674,62 @@ bool ACS_CF_StopSound(ACS_CF_ARGS)
 }
 
 //
+// void GiveInventory(str itemname, int amount);
+//
+bool ACS_CF_GiveInventory(ACS_CF_ARGS)
+{
+    const auto          info     = &static_cast<ACSThread *>(thread)->info;
+    char const         *itemname = thread->scopeMap->getString(argV[0])->str;
+    const int           amount   = argV[1];
+    itemeffect_t *const item     = E_ItemEffectForName(itemname);
+
+    if(!item)
+    {
+        doom_printf("ACS_CF_GiveInventory: Inventory item '%s' not found\a\n", itemname);
+        return false;
+    }
+
+    // Handle negative amounts: treat as 0 (don't give anything)
+    if(amount <= 0)
+        return false;
+
+    auto giveToPlayer = [item, amount](player_t *player) {
+        switch(item->getInt("class", ITEMFX_NONE))
+        {
+        case ITEMFX_HEALTH: P_GiveBody(*player, item, amount); break;
+        case ITEMFX_ARMOR:  P_GiveArmor(*player, item, amount); break;
+        case ITEMFX_AMMO:   P_GiveAmmoPickup(*player, item, false, 0, amount); break;
+        case ITEMFX_POWER:  P_GivePowerForItem(*player, item, amount); break;
+        default:            E_GiveInventoryItem(*player, item, amount); break;
+        }
+    };
+
+    if(info->mo)
+    {
+        // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
+        if(info->mo->player)
+            giveToPlayer(info->mo->player);
+    }
+    else
+    {
+        for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
+        {
+            if(playeringame[pnum])
+                giveToPlayer(&players[pnum]);
+        }
+    }
+    return false;
+}
+
+//
 // void TakeInventory(str itemname, int amount);
 //
 bool ACS_CF_TakeInventory(ACS_CF_ARGS)
 {
-    auto          info     = &static_cast<ACSThread *>(thread)->info;
-    char const   *itemname = thread->scopeMap->getString(argV[0])->str;
-    int           amount   = argV[1];
-    itemeffect_t *item     = E_ItemEffectForName(itemname);
+    const auto          info     = &static_cast<ACSThread *>(thread)->info;
+    char const         *itemname = thread->scopeMap->getString(argV[0])->str;
+    const int           amount   = argV[1];
+    itemeffect_t *const item     = E_ItemEffectForName(itemname);
 
     if(!item)
     {
@@ -2592,18 +2737,28 @@ bool ACS_CF_TakeInventory(ACS_CF_ARGS)
         return false;
     }
 
+    // Handle negative amounts: treat as 0 (don't remove anything)
+    if(amount <= 0)
+        return false;
+
+    auto alwaysRemove = [info, item, amount]() {
+        int owned = E_GetItemOwnedAmount(*info->mo->player, item);
+        // If amount exceeds what player has, take all they have
+        E_RemoveInventoryItem(*info->mo->player, item, emin(owned, amount));
+    };
+
     if(info->mo)
     {
         // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
         if(info->mo->player)
-            E_RemoveInventoryItem(*info->mo->player, item, amount);
+            alwaysRemove();
     }
     else
     {
         for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
         {
             if(playeringame[pnum])
-                E_RemoveInventoryItem(players[pnum], item, amount);
+                alwaysRemove();
         }
     }
     return false;

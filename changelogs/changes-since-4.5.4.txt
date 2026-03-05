@@ -1,0 +1,56 @@
+Changes since v4.05.04
+======================
+
+Features
+--------
+* Added support for the "author" property in UMAPINFO.
+* Added DEMOLOOP id24 lump support.
+* Added support for non-power-of-two flats.
+* Added new ACS function: GiveInventory.
+* Added a parameter to A_VileTarget codepointer: thing type to spawn (defaults to the one with Dehackednum 5, i.e.
+  "VileFire" in Doom). Thanks to sink666 for the wish to have this parameter in the pull request.
+* Made A_VileAttack codepointer paremeterized. Added the following args:
+  - sound to play (default: sfx_barexp)
+  - initial damage (default: 20)
+  - blast damage (default: 70)
+  - blast radius (default: 70)
+  - thrust factor (default: 1.0)
+  - damage type for initial hit (default: actor's MOD)
+  - damage type for blast (default: actor's MOD)
+  Thanks to sink666 for the wish to have parameters in the pull request.
+* Added damage type (MOD) argument to A_BFGSpray (default: BFG_Splash).
+* Added the comp_thingsectorlight setting, which controls how things are lit in sectors with different floor and ceiling
+  lights. Thanks to elf-alchemist for the contribution! Details here: https://github.com/team-eternity/eternity/pull/740
+
+Improvements
+------------
+* Loading broken or wrong save game files is more robust now, though not perfect.
+* Added support for music changer types 14100 (reset music) and 14165 (parameterized music ID). Thanks to electricbrass
+  for the contribution! Details here: https://github.com/team-eternity/eternity/pull/741
+* Reimplemented the key automap colour.
+* Boom fake floor/ceiling transfers and colormaps now render correctly via portals.
+
+Bug fixes
+---------
+* Fixed failure on Windows to load file paths with unicode (non US English) characters.
+* Fixed A_BFGSpray not using the parameter, and always being locked at 40 rays.
+* Fixed bad rendering of specially paletted PNG file for the Heretic episode 2 ending screen.
+* Fixed bad implementation of TakeInventory.
+* Fixed A_CustomPlayerMelee wrong implementation of the angle deflection argument. Now it properly avoid rotating player
+  if set to "none". Thanks to sink666's pull request for the catch.
+* Fixed EDF includes from lumps included by lumps in the same folder.
+* Fixed translucent PNGs that use a separate palette from the current WAD.
+* Fixed bug with ACS functions CheckActorCeilingTexture, CheckActorFloorTexture, CheckActorProperty,
+  CheckActorClass.
+* Fixed CheckActorCeilingTexture and CheckActorFloorTexture not detecting flats with same names as
+  textures (e.g. STEP1).
+* Fixed ReplaceTextures failing with flats named the same as unrelated wall textures.
+* Fixed A_PlaySound (and a few other triggers) not playing DSDHacked newly defined sounds.
+* Fixed EDF gameproperties sound.titlemusic not working.
+* Fixed empty MIDIs (easily used in mods to silence the music) causing infinite loop errors with the FluidSynth backend
+  under some Linux distros.
+* Fixed very large maps having potential collision issues.
+* Fixed blocklist start being ignored when building portal map.
+* Fixed memory corruption when running ACS functions early in the game.
+* Fixed sprites being missed when looking through a rotated portal.
+* Fixed comp_thingsectorlight having no effect on "fast" (not "thorough") sprite projection mode.

@@ -47,9 +47,11 @@
 #include "r_state.h"
 #include "s_sound.h"
 #include "sounds.h"
+#include "v_block.h"
 #include "v_font.h"
 #include "v_misc.h"
 #include "v_patchfmt.h"
+#include "v_png.h"
 #include "v_video.h"
 #include "w_wad.h"
 #include "z_auto.h"
@@ -261,7 +263,8 @@ void F_Ticker()
                 case FINALE_HTIC_DEMON: // demon scroller
                     F_InitDemonScroller();
                     break;
-                default: break;
+                default: //
+                    break;
                 }
             }
             else if(!demo_compatibility && midstage)
@@ -700,6 +703,52 @@ static void F_BunnyScroll()
                 PatchLoader::CacheName(wGlobalDir, name, PU_CACHE));
 }
 
+//
+// F_DrawE2End
+//
+// Helper function to draw the E2END image, optionally setting the palette.
+//
+static void F_drawE2End(bool setPalette)
+{
+    int e2end = wGlobalDir.checkNumForName("E2END");
+    VPNGImage png;
+    bool havePNGBlock = false;
+
+    if(e2end >= 0)
+    {
+        auto e2endData = static_cast<byte *>(wGlobalDir.cacheLumpNum(e2end, PU_CACHE));
+        if(png.readImage(e2endData))
+        {
+            if(setPalette)
+            {
+                byte *palette = png.expandPalette();
+                I_SetPalette(palette);
+                efree(palette);
+            }
+
+            byte *linear = png.getAs8Bit(nullptr, nullptr);
+            if(linear)
+            {
+                int x = (vbscreenyscaled.unscaledw - (int)png.getWidth()) / 2;
+                int y = (vbscreenyscaled.unscaledh - (int)png.getHeight()) / 2;
+                V_DrawBlock(x, y, &vbscreenyscaled, png.getWidth(), png.getHeight(), linear);
+                havePNGBlock = true;
+                efree(linear);
+            }
+        }
+    }
+
+    if(!havePNGBlock)
+    {
+        if(setPalette)
+        {
+            byte *palette = (byte *)wGlobalDir.cacheLumpName("E2PAL", PU_CACHE);
+            I_SetPalette(palette);
+        }
+        V_DrawFSBackground(&vbscreenyscaled, e2end);
+    }
+}
+
 // haleyjd: heretic e2 ending -- sort of hackish
 static void F_DrawUnderwater()
 {
@@ -708,17 +757,8 @@ static void F_DrawUnderwater()
     {
     case 1:
         C_InstaPopup(); // put away console if down
-
-        {
-            byte *palette;
-
-            palette = (byte *)wGlobalDir.cacheLumpName("E2PAL", PU_CACHE);
-            I_SetPalette(palette);
-
-            V_DrawFSBackground(&vbscreenyscaled, wGlobalDir.checkNumForName("E2END"));
-
-            finalestage = 3;
-        }
+        F_drawE2End(true); // set palette and draw
+        finalestage = 3;
         [[fallthrough]];
     case 3:
         Console.enabled = false; // let console key fall through
@@ -727,7 +767,7 @@ static void F_DrawUnderwater()
 
         // Redraw to cover possible pillarbox caused by D_Display
         if(initialstage == 3)
-            V_DrawFSBackground(&vbscreenyscaled, wGlobalDir.checkNumForName("E2END"));
+            F_drawE2End(false); // redraw without changing palette
         break;
 
     case 4:

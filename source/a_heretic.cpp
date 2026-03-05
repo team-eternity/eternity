@@ -850,7 +850,7 @@ void A_MakePod(actionargs_t *actionargs)
     angle = P_Random(pr_makepod) << 24;
     move  = 9 * FRACUNIT >> 1;
 
-    P_ThrustMobj(mo, angle, move);
+    P_ThrustMobj(mo, angle, move, false);
 
     // use tracer field to link pod to generator, and increment
     // generator's pod count

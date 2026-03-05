@@ -150,8 +150,8 @@ ACSEnvironment::ACSEnvironment() : dir{ nullptr }, global{ getGlobalScope(0) }, 
     addCodeDataACS0(140, {"",        1, addCallFunc(ACS_CF_SetAirControl)});
     addCodeDataACS0(141, {"W",       0, addCallFunc(ACS_CF_SetAirControl)});
   //addCodeDataACS0(142, {"",        0, addCallFunc(ACS_CF_ClrInventory)});
-  //addCodeDataACS0(143, {"",        2, addCallFunc(ACS_CF_AddInventory)});
-  //addCodeDataACS0(144, {"WSW",     0, addCallFunc(ACS_CF_AddInventory)});
+    addCodeDataACS0(143, {"",        2, addCallFunc(ACS_CF_GiveInventory)});
+    addCodeDataACS0(144, {"WSW",     0, addCallFunc(ACS_CF_GiveInventory)});
     addCodeDataACS0(145, {"",        2, addCallFunc(ACS_CF_TakeInventory)});
     addCodeDataACS0(146, {"WSW",     0, addCallFunc(ACS_CF_TakeInventory)});
     addCodeDataACS0(147, {"",        1, addCallFunc(ACS_CF_CheckInventory)});
@@ -337,7 +337,7 @@ ACSEnvironment::ACSEnvironment() : dir{ nullptr }, global{ getGlobalScope(0) }, 
   //addFuncDataACS0( 73, addCallFunc(ACS_CF_CheckFont));
   //addFuncDataACS0( 74, addCallFunc(ACS_CF_DropItem));
     addFuncDataACS0( 75, addCallFunc(ACS_CF_CheckFlag));
-  //addFuncDataACS0( 76, addCallFunc(ACS_CF_SetLineActivation));
+    addFuncDataACS0( 76, addCallFunc(ACS_CF_SetLineActivation));
   //addFuncDataACS0( 77, addCallFunc(ACS_CF_GetLineActivation));
   //addFuncDataACS0( 78, addCallFunc(ACS_CF_GetThingPowerupTics));
     addFuncDataACS0( 79, addCallFunc(ACS_CF_ChangeActorAngle));
@@ -429,6 +429,17 @@ ACSVM::ModuleName ACSEnvironment::getModuleName(char const *str, size_t len)
     int lump = dir->checkNumForName(str, lumpinfo_t::ns_acs);
 
     return { name, dir, static_cast<size_t>(lump) };
+}
+
+//
+// ACSEnvironment::getScopeID
+//
+ACSVM::ScopeID ACSEnvironment::getScopeID(ACSVM::Word mapnum) const
+{
+    if(mapnum)
+        return ACSVM::ScopeID(0, 0, mapnum);
+    else
+        return ACSVM::ScopeID(0, 0, gamemap);
 }
 
 //
@@ -864,38 +875,29 @@ bool ACS_TerminateScriptS(const char *str, uint32_t mapnum)
 //
 
 //
-// ACSBuffer
+// ACSSerial
 //
-// Wraps an InBuffer or OutBuffer in a std::streambuf for ACSVM serialization.
+// Wraps a SaveArchive for ACSVM serialization.
 //
-class ACSBuffer : public std::streambuf
+class ACSSerial : public ACSVM::Serial
 {
 public:
-    explicit ACSBuffer(InBuffer *in_) : in{ in_ }, out{ nullptr } {}
-    explicit ACSBuffer(OutBuffer *out_) : in{ nullptr }, out{ out_ } {}
+    explicit ACSSerial(SaveArchive &arc_) : arc{ arc_ } {}
 
-    InBuffer  *in;
-    OutBuffer *out;
-
-protected:
-    virtual int overflow(int c)
+    virtual void read(char *data, std::size_t size)
     {
-        // Write single byte to destination.
-        if(!out || !out->writeUint8(c))
-            return EOF;
-        return c;
+        if(arc.getLoadFile()->read(data, size) != size)
+            throw ACSVM::SerialError("failed read");
     }
 
-    virtual int underflow()
+    virtual void write(char const *data, std::size_t size)
     {
-        // Read single byte from source.
-        if(!in || in->read(buf, 1) != 1)
-            return EOF;
-        setg(buf, buf, buf + 1);
-        return static_cast<unsigned char>(buf[0]);
+        if(!arc.getSaveFile()->write(data, size))
+            throw ACSVM::SerialError("failed write");
     }
 
-    char buf[1];
+private:
+    SaveArchive &arc;
 };
 
 //
@@ -908,26 +910,15 @@ void ACS_Archive(SaveArchive &arc)
 
     if(arc.isLoading())
     {
-        ACSBuffer     buf{ arc.getLoadFile() };
-        std::istream  str{ &buf };
-        ACSVM::Serial in{ str };
+        ACSSerial in{ arc };
 
-        try
-        {
-            in.loadHead();
-            ACSenv.loadState(in);
-            in.loadTail();
-        }
-        catch(ACSVM::SerialError const &e)
-        {
-            I_Error("ACS_Archive: %s\n", e.what());
-        }
+        in.loadHead();
+        ACSenv.loadState(in);
+        in.loadTail();
     }
     else if(arc.isSaving())
     {
-        ACSBuffer     buf{ arc.getSaveFile() };
-        std::ostream  str{ &buf };
-        ACSVM::Serial out{ str };
+        ACSSerial out{ arc };
 
         // Enable debug signatures.
         out.signs = true;

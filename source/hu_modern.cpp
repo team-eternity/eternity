@@ -366,7 +366,8 @@ void ModernHUD::Setup()
         SetupOverlay(ol_invcurr, boxx, boxy);
         break;
 
-    default: break;
+    default: //
+        break;
     }
 }
 

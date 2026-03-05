@@ -746,7 +746,8 @@ void P_DrawSplash(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle, int
         color1 = orange;
         color2 = yorange;
         break;
-    default: return;
+    default: //
+        return;
     }
 
     for(; count; count--)
@@ -1017,7 +1018,8 @@ void P_DrawSplash2(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle, in
         color1 = grey3;
         color2 = grey1;
         break;
-    default: return;
+    default: //
+        return;
     }
 
     zvel    = -128;

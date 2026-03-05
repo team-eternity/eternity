@@ -26,7 +26,7 @@ cmake_minimum_required(VERSION 3.16)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum macOS deployment version")
 
 project("Eternity Engine"
-        VERSION 4.4.3
+        VERSION 4.6.0
         LANGUAGES C CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
@@ -126,7 +126,9 @@ add_subdirectory(angelscript/angelscript/projects/cmake)
 target_compile_definitions(${ANGELSCRIPT_LIBRARY_NAME} PRIVATE -DAS_MAX_PORTABILITY)
 
 add_subdirectory(mcpp)
-add_subdirectory(zlib)
+if(NOT APPLE)  # Due to ongoing CI problems, stick to the system zlib on Mac.
+   add_subdirectory(zlib)
+endif()
 add_subdirectory(snes_spc)
 
 # WARNING: this section must be before add_subdirectory(libpng)

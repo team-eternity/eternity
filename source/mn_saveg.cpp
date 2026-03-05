@@ -51,6 +51,7 @@ namespace fs = std::experimental::filesystem;
 #include "dstrings.h"
 #include "g_bind.h"
 #include "g_game.h"
+#include "hal/i_directory.h"
 #include "m_buffer.h"
 #include "m_collection.h"
 #include "m_compare.h"
@@ -239,10 +240,10 @@ static void MN_readSaveStrings()
     e_saveSlots.clear();
 
     // test for failure
-    if(std::error_code ec; !fs::is_directory(basesavegame, ec))
+    if(std::error_code ec; !fs::is_directory(fs::u8path(basesavegame), ec))
         return;
 
-    const fs::directory_iterator itr(basesavegame);
+    const fs::directory_iterator itr(fs::u8path(basesavegame));
     for(const fs::directory_entry &ent : itr)
     {
         size_t      len;
@@ -272,10 +273,10 @@ static void MN_readSaveStrings()
         saveslot_t newSlot;
         newSlot.fileNum = savename.toInt();
 
-        // file time
+        // File time.
         START_UTF8();
         struct stat statbuf;
-        if(!stat(pathStr.constPtr(), &statbuf))
+        if(!I_stat(pathStr.constPtr(), &statbuf))
         {
             char timeStr[64 + 1];
             strftime(timeStr, sizeof(timeStr), "%a. %b %d %Y\n%r", localtime(&statbuf.st_mtime));
@@ -284,7 +285,7 @@ static void MN_readSaveStrings()
         }
         END_UTF8();
 
-        // description
+        // Description.
         memset(description, 0, sizeof(description));
         arc.archiveCString(description, SAVESTRINGSIZE);
         newSlot.description = description;
@@ -293,14 +294,14 @@ static void MN_readSaveStrings()
         if(!arc.readSaveVersion())
         {
             newSlot.saveVersion = 0;
-            // don't try to load anything else...
+            // Don't try to load anything else...
             loadFile.close();
             e_saveSlots.add(newSlot);
             continue;
         }
         newSlot.saveVersion = arc.saveVersion();
 
-        // compatibility, skill level, manager dir, vanilla mode
+        // Compatibility, skill level, manager dir, vanilla mode.
         arc << dummy << newSlot.skill << dummy << bdummy;
 
         // map
@@ -313,7 +314,7 @@ static void MN_readSaveStrings()
         }
         newSlot.mapName[8] = '\0';
 
-        // skip managed directory stuff, checksum (if present), and players
+        // Skip managed directory stuff, checksum (if present), and players.
         arc.archiveSize(len);
         loadFile.skip(len);
         if(arc.saveVersion() >= 4)
@@ -330,21 +331,32 @@ static void MN_readSaveStrings()
         for(int j = 0; j < MIN_MAXPLAYERS; j++)
             arc << bdummy;
 
-        // music num, gametype
-        arc << dummy << dummy;
+        auto foo = arc.getLoadFile()->itell();
 
-        // skip options
+        // Music num.
+        if(arc.saveVersion() < 20)
+            arc.getLoadFile()->skip(sizeof(int));
+        else
+        {
+            arc.archiveSize(len);
+            loadFile.skip(len);
+        }
+
+        // Game type.
+        arc << dummy;
+
+        // Skip options.
         byte options[GAME_OPTION_SIZE];
         loadFile.read(options, sizeof(options));
 
-        // level time
+        // Level time.
         arc << newSlot.levelTime;
 
         loadFile.close();
         e_saveSlots.add(newSlot);
     }
 
-    // Sort the slots from most recent to least recent
+    // Sort the slots from most recent to least recent.
     if(const size_t numSlots = e_saveSlots.getLength(); numSlots != 0)
     {
         Collection<saveslot_t> tempSlots;

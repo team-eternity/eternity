@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2025 David Hill
 //
 // See COPYING for license information.
 //
@@ -80,10 +80,13 @@ namespace ACSVM
          // Insert elements.
          for(Elem &elem : *this)
          {
-            size_type hash = hasher(elem.key) % elemC;
+            Elem **chain = &table[hasher(elem.key) % elemC];
 
-            elem.next = table[hash];
-            table[hash] = &elem;
+            // Walk to the end of the chain.
+            while(*chain) chain = &(*chain)->next;
+
+            // Insert new element.
+            (*chain = &elem)->next = nullptr;
          }
       }
 

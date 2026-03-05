@@ -1058,6 +1058,11 @@ static void Polyobj_moveObjectsInside(const polyobj_t &po, fixed_t dx, fixed_t d
     }
     for(const insideMobjMove_t &imm : moved)
     {
+        R_RemoveMobjProjections(imm.mobj);
+        R_UnlinkSpriteProj(*imm.mobj);
+        R_LinkSpriteProj(*imm.mobj);
+        R_CheckMobjProjections(imm.mobj);
+
         bool p = false;
         if(!imm.onground || imm.mobj->zref.floorgroupid != imm.mobj->groupid)
             p = P_TryMove(imm.mobj, imm.mobj->x + dx, imm.mobj->y + dy, 1);

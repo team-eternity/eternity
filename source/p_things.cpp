@@ -306,9 +306,9 @@ int EV_ThingStop(Mobj *actor, int tid)
 //
 // EV_ThrustThing
 //
-// Implements ThrustThing(angle, speed, reserved, tid)
+// Implements ThrustThing(angle, speed, flags, tid)
 //
-int EV_ThrustThing(Mobj *actor, int side, int byteangle, int ispeed, int tid)
+int EV_ThrustThing(Mobj *actor, int side, int byteangle, int ispeed, int tid, int nolimitflags)
 {
     // Hexen format maps cannot have ExtraData, and in Hexen activation is only
     // done from the front side, so keep compatible with that. Otherwise, in
@@ -318,6 +318,10 @@ int EV_ThrustThing(Mobj *actor, int side, int byteangle, int ispeed, int tid)
     // setting huge speeds (> 30.0)
 
     int success = 0;
+
+    bool nolimit = !!(nolimitflags & 1);
+    if(nolimitflags & ~1)
+        doom_warningf("Undefined ThrustThing third arg value %d", nolimitflags);
 
     // Either thrust if not compatible (i.e. modern) or only if the front
     // side is touched (in Hexen). Back side will have no effect in plain Hexen
@@ -333,7 +337,7 @@ int EV_ThrustThing(Mobj *actor, int side, int byteangle, int ispeed, int tid)
 
         while((mobj = P_FindMobjFromTID(tid, mobj, actor)))
         {
-            P_ThrustMobj(mobj, angle, speed);
+            P_ThrustMobj(mobj, angle, speed, nolimit);
             success = 1;
         }
     }

@@ -521,12 +521,10 @@ const rendersector_t *R_FakeFlat(const viewpoint_t &viewpoint, const sector_t *o
     {
         int underwater; // haleyjd: restructured
 
-        int heightsec;
-
         const sector_t *s = &sectors[sec->heightsec];
 
         // haleyjd 01/07/14: get from view.sector due to interpolation
-        heightsec = view.sector->heightsec;
+        const int heightsec = viewpoint.sector->heightsec;
 
         underwater = (heightsec != -1 && viewpoint.z <= sectors[heightsec].srf.floor.getZAt(viewpoint.x, viewpoint.y));
 
@@ -812,7 +810,7 @@ int R_FakeFlatSpriteLighting(const viewpoint_t &viewpoint, const sector_t *sec)
         const sector_t *s = &sectors[sec->heightsec];
 
         // Get from view.sector due to interpolation
-        const int  heightsec = view.sector->heightsec;
+        const int  heightsec = viewpoint.sector->heightsec;
         const bool underwater =
             (heightsec != -1 && viewz <= sectors[heightsec].srf.floor.getZAt(viewpoint.x, viewpoint.y));
 

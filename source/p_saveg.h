@@ -48,6 +48,8 @@ class Thinker;
 class Mobj;
 class OutBuffer;
 class InBuffer;
+class IOutBuffer;
+class IInBuffer;
 struct inventoryslot_t;
 struct spectransfer_t;
 struct mapthing_t;
@@ -66,15 +68,15 @@ private:
     PODCollection<CachedString *> mCacheStringHolder; // to be cleared on destruction
 
 protected:
-    OutBuffer *savefile; // valid when saving
-    InBuffer  *loadfile; // valid when loading
+    IOutBuffer *savefile; // valid when saving
+    IInBuffer  *loadfile; // valid when loading
 
     static constexpr int WRITE_SAVE_VERSION = 22; // Version of saves that EE writes
     int                  read_save_version;       // Version of currently-read save
 
 public:
-    explicit SaveArchive(OutBuffer *pSaveFile);
-    explicit SaveArchive(InBuffer *pLoadFile);
+    explicit SaveArchive(IOutBuffer *pSaveFile);
+    explicit SaveArchive(IInBuffer *pLoadFile);
     ~SaveArchive()
     {
         for(CachedString *string : mCacheStringHolder)
@@ -82,10 +84,10 @@ public:
     }
 
     // Accessors
-    bool       isSaving() const { return (savefile != nullptr); }
-    bool       isLoading() const { return (loadfile != nullptr); }
-    OutBuffer *getSaveFile() { return savefile; }
-    InBuffer  *getLoadFile() { return loadfile; }
+    bool        isSaving() const { return (savefile != nullptr); }
+    bool        isLoading() const { return (loadfile != nullptr); }
+    IOutBuffer *getSaveFile() { return savefile; }
+    IInBuffer  *getLoadFile() { return loadfile; }
 
     int saveVersion() const
     {
@@ -170,8 +172,8 @@ unsigned int P_NumForThinker(Thinker *th);
 Thinker     *P_ThinkerForNum(unsigned int n);
 void         P_SetNewTarget(Mobj **mop, Mobj *targ);
 
-void P_SaveCurrentLevel(char *filename, char *description);
-void P_LoadGame(const char *filename);
+void P_SaveCurrentLevel(char *filename, char *description, PODCollection<byte> *memoryBackup);
+void P_LoadGame(const char *filename, const PODCollection<byte> *backup);
 
 #endif
 

@@ -492,6 +492,7 @@ static void XL_initRules()
         rules.addObject(rule);
     };
 
+    addRule("author", PropertyType::setString);
     addRule("levelname", PropertyType::setString);
     addRule("label", PropertyType::setStringOrClear);
     addRule("levelpic", PropertyType::setString);

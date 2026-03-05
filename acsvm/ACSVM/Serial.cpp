@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2017 David Hill
+// Copyright (C) 2017-2025 David Hill
 //
 // See COPYING for license information.
 //
@@ -30,14 +30,16 @@ namespace ACSVM
    void Serial::loadHead()
    {
       char buf[6] = {};
-      in->read(buf, 6);
+      read(buf, 6);
 
       if(std::memcmp(buf, "ACSVM\0", 6))
          throw SerialError{"invalid file signature"};
 
-      version = ReadVLN<unsigned int>(*in);
+      version = ReadVLN<unsigned int>(*this);
+      if(version > CurrentVersion)
+         throw SerialError("unknown version");
 
-      auto flags = ReadVLN<std::uint_fast32_t>(*in);
+      auto flags = ReadVLN<std::uint_fast32_t>(*this);
       signs = flags & 0x0001;
    }
 
@@ -50,13 +52,25 @@ namespace ACSVM
    }
 
    //
+   // Serial::readByte
+   //
+   char Serial::readByte()
+   {
+      char buf[1];
+      read(buf, 1);
+      return buf[0];
+   }
+
+   //
    // Serial::readSign
    //
    void Serial::readSign(Signature sign)
    {
       if(!signs) return;
 
-      auto got = static_cast<Signature>(ReadLE4(*in));
+      unsigned char buf[4];
+      read(reinterpret_cast<char *>(buf), 4);
+      auto got = static_cast<Signature>(ReadLE4(buf));
 
       if(sign != got)
          throw SerialSignError{sign, got};
@@ -67,12 +81,12 @@ namespace ACSVM
    //
    void Serial::saveHead()
    {
-      out->write("ACSVM\0", 6);
-      WriteVLN(*out, 0);
+      write("ACSVM\0", 6);
+      WriteVLN(*this, CurrentVersion);
 
       std::uint_fast32_t flags = 0;
       if(signs) flags |= 0x0001;
-      WriteVLN(*out, flags);
+      WriteVLN(*this, flags);
    }
 
    //
@@ -84,13 +98,23 @@ namespace ACSVM
    }
 
    //
+   // Serial::writeByte
+   //
+   void Serial::writeByte(char data)
+   {
+      write(&data, 1);
+   }
+
+   //
    // Serial::writeSign
    //
    void Serial::writeSign(Signature sign)
    {
       if(!signs) return;
 
-      WriteLE4(*out, static_cast<std::uint32_t>(sign));
+      unsigned char buf[4];
+      WriteLE4(buf, static_cast<std::uint32_t>(sign));
+      write(reinterpret_cast<char *>(buf), 4);
    }
 }
 
