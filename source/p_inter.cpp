@@ -1,4 +1,4 @@
-//
+﻿//
 // The Eternity Engine
 // Copyright (C) 2025 James Haley et al.
 //
@@ -965,8 +965,10 @@ bool P_GiveBody(player_t &player, const itemeffect_t *effect, int itemamount, bo
             maxamount = effect->getInt("compatmaxamount", 0);
     }
 
-    // if not alwayspickup, and have more health than the max, don't pick it up
-    if(!effect->getInt("alwayspickup", 0) && player.health >= maxamount)
+    // if not alwayspickup, and have more health than the max, don't pick it u.p
+    // Also if the alwayspickup flag is set and the player picks up health that 
+    // has a maxamount less than what the player already has, do nothing.
+    if(!effect->getInt("alwayspickup", 0) || player.health >= maxamount)
         return false;
 
     // give the health
@@ -1076,6 +1078,13 @@ bool P_GiveArmor(player_t &player, const itemeffect_t *effect, int itemamount, b
         return false; // don't pick up
     }
 
+    // If the alwayspickup flag is set and the player picks up armor with 
+    // a maxsaveamount lower than what the player already has, do nothing.
+    if(effect->getInt("alwayspickup", 0) && player.armorpoints >= (additive ? maxsaveamount : hits))
+    {
+        return false;
+    }
+
     if(additive)
     {
         if(givemax)
@@ -1169,7 +1178,7 @@ bool P_GivePower(player_t &player, int power, int duration, bool permament, bool
     case pw_flight: // haleyjd: flight
         // If the player already has power, prevent the start of the jump
         if(!player.powers[pw_flight].isActive())
-            P_PlayerStartFlight(player, true); 
+            P_PlayerStartFlight(player, true);
         break;
     case pw_weaponlevel2:
         if(!E_IsPoweredVariant(player.readyweapon))

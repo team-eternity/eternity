@@ -1,4 +1,4 @@
-Changes since v4.05.04
+﻿Changes since v4.05.04
 ======================
 
 Features
@@ -72,3 +72,7 @@ Bug fixes
   it affect cheats, and the fix is aimed at modding capabilities in EDF. However, PowerStrength remains infinite 
   regardless of duration settings.
 * Fixed a bug in the ACS SetActorProperty function where new health was not applied to the player via APROP_Health.
+* Fixed a bug with the “alwayspickup” flag for HealthEffect and ArmorEffect. Previously, if a player picked up a 
+  health/armor item with this flag, whose maxamount/maxsaveamount was less than the player's current amount, the 
+  player's health/armor would be reset to the maxamount/maxsaveamount of the picked up item. Now, in such a situation, 
+  the player's current health/armor will not be reset and will remain unchanged.
