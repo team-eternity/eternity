@@ -60,8 +60,9 @@ struct maskedrange_t
     float *ceilingclip;
 
     // for rotated portals and sprite rendering
-    fixed_t viewsin, viewcos;
-    int     heightsec;
+    fixed_t   viewsin, viewcos;
+    v3fixed_t viewpos; // can't just use viewpoint_t due to circular inclusions
+    int       heightsec;
 
     // for unused head
     struct maskedrange_t *next;
