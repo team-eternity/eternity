@@ -1516,7 +1516,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext, Zo
     spritecontext.sectorvisited[sec - sectors] = true;
 
     // Only use the MBF average light when the compatibility flag is set by user.
-    const int mobjlightlevel = comp[comp_thingsectorlight] ? lightlevel : sec->lightlevel;
+    const int mobjlightlevel = getComp(comp_thingsectorlight) ? lightlevel : sec->lightlevel;
     const int lightnum       = (mobjlightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
 
     if(lightnum < 0)
@@ -1552,7 +1552,7 @@ void R_AddSprites(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext, Zo
             // otherwise the lighting behaviour will look incorrect
             const lighttable_t *const *mobjspritelights;
             {
-                const int mobjlightlevel = comp[comp_thingsectorlight] ?
+                const int mobjlightlevel = getComp(comp_thingsectorlight) ?
                                                R_FakeFlatSpriteLighting(viewpoint, thing->subsector->sector) :
                                                thing->subsector->sector->lightlevel;
                 const int mobjlightnum   = (mobjlightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
@@ -1774,9 +1774,10 @@ void R_DrawPlayerSprites()
     // (see r_bsp.c for similar calculations for non-player sprites)
 
     R_FakeFlat(r_globalcontext.view, view.sector, &tmpsec, tempslopes, &floorlightlevel, &ceilinglightlevel, 0);
-    lightnum = ((comp[comp_thingsectorlight] ? (floorlightlevel + ceilinglightlevel) / 2 : view.sector->lightlevel) >>
-                LIGHTSEGSHIFT) +
-               (extralight * LIGHTBRIGHT);
+    lightnum =
+        ((getComp(comp_thingsectorlight) ? (floorlightlevel + ceilinglightlevel) / 2 : view.sector->lightlevel) >>
+         LIGHTSEGSHIFT) +
+        (extralight * LIGHTBRIGHT);
 
     if(lightnum < 0)
         spritelights = r_globalcontext.cmapcontext.scalelight[0];
@@ -2780,7 +2781,8 @@ static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &sprit
 
             R_FakeFlat(viewpoint, sector, &tmpsec, tempslopes, &floorlightlevel, &ceilinglightlevel, false);
 
-            lightnum = comp[comp_thingsectorlight] ? ((floorlightlevel + ceilinglightlevel) / 2) : sector->lightlevel;
+            lightnum =
+                getComp(comp_thingsectorlight) ? ((floorlightlevel + ceilinglightlevel) / 2) : sector->lightlevel;
             lightnum = (lightnum >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
 
             if(lightnum >= LIGHTLEVELS || cmapcontext.fixedcolormap)
