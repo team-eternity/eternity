@@ -62,6 +62,7 @@ public:
     int         color_type;
     int         bit_depth;
     int         color_key;
+    bool        pixel_mask_table[256];
     png_byte    channels;
     byte       *surface;
     int32_t     xoffset;
@@ -85,7 +86,7 @@ public:
     bool  readFromLumpNum(WadDirectory &dir, int lump);
     bool  readFromLumpName(WadDirectory &dir, const char *name);
     void  freeImage();
-    byte *getAs8Bit(const byte *outpal) const;
+    byte *getAs8Bit(const byte *outpal, bool *pixelMaskTable) const;
     byte *getAs24Bit() const;
     byte *buildTranslation(const byte *outpal) const;
 };
@@ -227,6 +228,9 @@ bool VPNGImagePimpl::readImage(const void *data)
         if(color_type == PNG_COLOR_TYPE_GRAY)
             png_set_expand(png_ptr);
 
+        // Default the masked pixel table
+        memset(pixel_mask_table, 0, sizeof(pixel_mask_table));
+
         // Set color key if available
         if(png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
         {
@@ -252,7 +256,10 @@ bool VPNGImagePimpl::readImage(const void *data)
                         break;
                 }
                 if(i == num_trans) // exactly one transparent index
+                {
+                    pixel_mask_table[t] = true;
                     color_key = t;
+                }
                 else // multiple, set to expand
                     png_set_expand(png_ptr);
             }
@@ -420,7 +427,7 @@ static EHashTable<rgbto8bit_t, EIntHashKey, &rgbto8bit_t::key, &rgbto8bit_t::lin
 //
 // Implements conversion of any source PNG to an 8-bit linear buffer.
 //
-byte *VPNGImagePimpl::getAs8Bit(const byte *outpal) const
+byte *VPNGImagePimpl::getAs8Bit(const byte *outpal, bool *pixelMaskTable) const
 {
     if(color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_PALETTE)
     {
@@ -443,6 +450,15 @@ byte *VPNGImagePimpl::getAs8Bit(const byte *outpal) const
 
                     output[y * width + x] = trtbl[px];
                 }
+            }
+
+            for(int i = 0; i < 256; i++)
+                pixelMaskTable[i] = false;
+
+            for(int i = 0; i < 256; i++)
+            {
+                if(pixel_mask_table[i] == true)
+                    pixelMaskTable[trtbl[i]] = true;
             }
 
             // free the translation table
@@ -703,9 +719,9 @@ byte *VPNGImage::expandPalette() const
 // If it is true color:
 //  * outpal must be valid; the colors will be requantized to that palette
 //
-byte *VPNGImage::getAs8Bit(const byte *outpal) const
+byte *VPNGImage::getAs8Bit(const byte *outpal, bool *pixelMaskTable) const
 {
-    return pImpl->getAs8Bit(outpal);
+    return pImpl->getAs8Bit(outpal, pixelMaskTable);
 }
 
 //
@@ -726,11 +742,12 @@ patch_t *VPNGImage::getAsPatch(int tag, void **user, size_t *size) const
 {
     AutoPalette pal(wGlobalDir);
     patch_t    *patch;
-    byte       *linear = getAs8Bit(pal.get());
+    bool        pixelMaskTable[256] = {};
+    byte       *linear = getAs8Bit(pal.get(), pixelMaskTable);
     int         w      = static_cast<int>(getWidth());
     int         h      = static_cast<int>(getHeight());
 
-    patch = V_LinearToTransPatch(linear, w, h, size, pImpl->color_key, tag, user);
+    patch = V_LinearToTransPatch(linear, w, h, size, pixelMaskTable, tag, user);
 
     patch->leftoffset = static_cast<int16_t>(pImpl->xoffset);
     patch->topoffset  = static_cast<int16_t>(pImpl->yoffset);

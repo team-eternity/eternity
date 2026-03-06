@@ -468,6 +468,9 @@ default_t defaults[] = {
     DEFAULT_INT("comp_aircontrol", &default_comp[comp_aircontrol], &comp[comp_aircontrol], 1, 0, 1, default_t::wad_game,
                 "Disable jumping for DOOM/Heretic"),
 
+    DEFAULT_INT("comp_thingsectorlight", &default_comp[comp_thingsectorlight], &comp[comp_thingsectorlight], 0, 0, 1,
+                default_t::wad_game, "MObjs are lit by transfered light"),
+
     // For key bindings, the values stored in the key_* variables       // phares
     // are the internal Doom Codes. The values stored in the default.cfg
     // file are the keyboard codes. I_ScanCode2DoomCode converts from

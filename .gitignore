@@ -17,6 +17,7 @@
 \#*\#
 
 build*/
+.cache/
 *.kdev4
 SDL2.framework
 SDL2_mixer.framework

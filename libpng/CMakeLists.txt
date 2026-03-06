@@ -26,8 +26,9 @@
 # and license in png.h
 
 # [DH] Bumped this from 3.1 to 3.5. Hopefully that will be OK.
-cmake_minimum_required(VERSION 3.5)
-cmake_policy(VERSION 3.5)
+# IOANCH: Bumped to 3.10 due to deprecation warnings
+cmake_minimum_required(VERSION 3.10)
+cmake_policy(VERSION 3.10)
 
 project(libpng C ASM)
 enable_testing()

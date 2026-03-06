@@ -1693,7 +1693,7 @@ static void deh_procSounds(DWFILE *fpin, char *line, MetaTable &gatheredData)
     deh_LogPrintf("Processing Sounds at index %d: %s\n", indexnum, key);
 
     // haleyjd 09/03/03: translate indexnum to sfxinfo_t
-    if(!(sfx = E_SoundForDEHNum(indexnum)))
+    if(!(sfx = E_SoundForUnknownTypeDEHNum(indexnum)))
     {
         deh_LogPrintf("Bad sound number %d\n", indexnum);
         return; // haleyjd: bugfix!

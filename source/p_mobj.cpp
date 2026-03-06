@@ -3000,7 +3000,7 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
         i = E_SafeThingName("EEParticleFountain");
     else if(mthing->type >= 14001 && mthing->type <= 14064) // ambience
         i = E_SafeThingName("EEAmbience");
-    else if(mthing->type >= 14101 && mthing->type <= 14164) // music changer
+    else if(mthing->type >= 14100 && mthing->type <= 14165) // music changer
         i = E_SafeThingName("EEMusicChanger");
     else
     {
@@ -3149,11 +3149,15 @@ spawnit:
         mobj->args[0] = mthing->type - 14000;
 
     // haleyjd: set music number for first 64 types
-    if(mthing->type >= 14101 && mthing->type <= 14164)
+    if(mthing->type >= 14100 && mthing->type <= 14164)
     {
         mobj->intflags |= MIF_MUSICCHANGER;
         mobj->args[0]   = mthing->type - 14100;
     }
+
+    // electricbrass: set musicchanger flag for Hexen/UDMF music changer
+    if(mthing->type == 14165)
+        mobj->intflags |= MIF_MUSICCHANGER;
 
     // MaxW: If the thing inherits from EESectorActionProto then we need to make
     // a new sector action for this Mobj

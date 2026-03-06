@@ -312,7 +312,7 @@ bool     ACS_TerminateScriptS(const char *name, uint32_t mapnum);
 
 // Utilities.
 uint32_t ACS_GetLevelProp(uint32_t prop);
-bool     ACS_ChkThingProp(Mobj *mo, uint32_t prop, uint32_t val);
+bool     ACS_ChkThingProp(const ACSThread *thread, Mobj *mo, uint32_t prop, uint32_t val);
 uint32_t ACS_GetThingProp(Mobj *mo, uint32_t prop);
 void     ACS_SetThingProp(Mobj *mo, uint32_t prop, uint32_t val);
 

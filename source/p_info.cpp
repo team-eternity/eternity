@@ -57,6 +57,7 @@
 #include "e_hash.h"
 #include "e_sound.h"
 #include "f_finale.h"
+#include "hal/i_directory.h"
 #include "m_qstrkeys.h"
 #include "m_utils.h"
 #include "metaqstring.h"
@@ -356,10 +357,10 @@ static char *P_openWadTemplate(const char *wadfile, int *len)
     {
         strcpy(dotloc, ".txt"); // try replacing .wad with .txt
 
-        if(access(fn, R_OK)) // no?
+        if(I_access(fn, R_OK)) // no?
         {
             strcpy(dotloc, ".TXT"); // try with .TXT (for You-neeks systems 9_9)
-            if(access(fn, R_OK))
+            if(I_access(fn, R_OK))
                 return nullptr; // oh well, tough titties.
         }
     }

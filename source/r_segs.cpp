@@ -132,9 +132,9 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const viewpoint_t &viewp
             lightnum = segclip.line->sidedef->light_base >> LIGHTSEGSHIFT;
         else
         {
-            lightnum = R_FakeFlat(viewpoint, segclip.line->frontsector, &tempsec, tempslopes, nullptr, nullptr, false)
-                           ->lightlevel >>
-                       LIGHTSEGSHIFT;
+            lightnum =
+                R_FakeFlat(viewpoint, segclip.line->frontsector, &tempsec, tempslopes, nullptr, false)->lightlevel >>
+                LIGHTSEGSHIFT;
             lightnum += segclip.line->sidedef->light_base >> LIGHTSEGSHIFT;
         }
         lightnum += segclip.line->sidedef->light_mid >> LIGHTSEGSHIFT;

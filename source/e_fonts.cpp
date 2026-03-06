@@ -421,7 +421,7 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt, bool requ
             bool        is8Bit256    = (fontpng.getBitDepth() == 8 && fontpng.getNumColors() == 256);
             bool        doRequantize = (!is8Bit256 || requantize);
 
-            font->data = fontpng.getAs8Bit(doRequantize ? pal.get() : nullptr);
+            font->data = fontpng.getAs8Bit(doRequantize ? pal.get() : nullptr, nullptr);
 
             w = static_cast<int>(fontpng.getWidth());
             h = static_cast<int>(fontpng.getHeight());

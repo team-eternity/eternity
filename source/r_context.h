@@ -154,6 +154,8 @@ struct viewpoint_t
     fixed_t x, y, z;
     angle_t angle; // No pitch as portals don't modify it
     fixed_t sin, cos;
+
+    const sector_t *sector; // per-portal shiftable colormap and heightsec
 };
 
 // Separate for now. Maybe merge later with viewpoint_t

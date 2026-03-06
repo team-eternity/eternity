@@ -51,6 +51,7 @@ namespace fs = std::experimental::filesystem;
 #include "dstrings.h"
 #include "g_bind.h"
 #include "g_game.h"
+#include "hal/i_directory.h"
 #include "m_buffer.h"
 #include "m_collection.h"
 #include "m_compare.h"
@@ -239,10 +240,10 @@ static void MN_readSaveStrings()
     e_saveSlots.clear();
 
     // test for failure
-    if(std::error_code ec; !fs::is_directory(basesavegame, ec))
+    if(std::error_code ec; !fs::is_directory(fs::u8path(basesavegame), ec))
         return;
 
-    const fs::directory_iterator itr(basesavegame);
+    const fs::directory_iterator itr(fs::u8path(basesavegame));
     for(const fs::directory_entry &ent : itr)
     {
         size_t      len;
@@ -275,7 +276,7 @@ static void MN_readSaveStrings()
         // File time.
         START_UTF8();
         struct stat statbuf;
-        if(!stat(pathStr.constPtr(), &statbuf))
+        if(!I_stat(pathStr.constPtr(), &statbuf))
         {
             char timeStr[64 + 1];
             strftime(timeStr, sizeof(timeStr), "%a. %b %d %Y\n%r", localtime(&statbuf.st_mtime));

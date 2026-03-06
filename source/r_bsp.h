@@ -38,6 +38,12 @@ struct rendercontext_t;
 struct rpolynode_t;
 struct rendersector_t;
 
+struct transferredLights_t
+{
+    Surfaces<int> surfaces;
+    int           sprite;
+};
+
 // SoM: mark a range of the screen as being solid (closed).
 // these marks are then added to the solidsegs list by R_addLine after all segments
 // of the line are rendered and the solidsegs array isn't being traversed.. >_<
@@ -57,8 +63,8 @@ void R_RenderBSPNode(rendercontext_t &context, int bspnum);
 
 // killough 4/13/98: fake floors/ceilings for deep water / fake ceilings:
 int                   R_GetSurfaceLightLevel(surf_e surf, const rendersector_t *sec);
-const rendersector_t *R_FakeFlat(const viewpoint_t &, const sector_t *, rendersector_t *, Surfaces<pslope_t> &, int *,
-                                 int *, bool);
+const rendersector_t *R_FakeFlat(const viewpoint_t &, const sector_t *, rendersector_t *, Surfaces<pslope_t> &,
+                                 transferredLights_t *lights, bool);
 int                   R_FakeFlatSpriteLighting(const viewpoint_t &viewpoint, const sector_t *sec);
 bool R_PickNearestBoxLines(const cbviewpoint_t &cb_viewpoint, const float fbox[4], windowlinegen_t &linegen1,
                            windowlinegen_t &linegen2, slopetype_t *slope = nullptr);

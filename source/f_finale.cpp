@@ -726,7 +726,7 @@ static void F_drawE2End(bool setPalette)
                 efree(palette);
             }
 
-            byte *linear = png.getAs8Bit(nullptr);
+            byte *linear = png.getAs8Bit(nullptr, nullptr);
             if(linear)
             {
                 int x = (vbscreenyscaled.unscaledw - (int)png.getWidth()) / 2;

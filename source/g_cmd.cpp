@@ -39,6 +39,7 @@
 #include "e_player.h" // haleyjd: turbo cmd must alter playerclass info
 #include "f_wipe.h"
 #include "g_game.h"
+#include "hal/i_directory.h"
 #include "hal/i_timer.h"
 #include "hu_stuff.h"
 #include "i_system.h"
@@ -514,7 +515,7 @@ static bool G_TestIWADPath(char *path)
     M_NormalizeSlashes(path);
 
     // test for read access, and warn if non-existent
-    if(access(path, R_OK))
+    if(I_access(path, R_OK))
     {
         if(menuactive)
             MN_ErrorMsg("Warning: cannot access filepath");
@@ -799,6 +800,7 @@ const char *comp_strings[] = {
     "special",    //          08/29/09: special failure behavior
     "ninja",      //          04/18/10: ninja spawn
     "aircontrol", //
+    "thingsectorlight", //
 };
 
 static void Handler_CompTHeights()
@@ -808,7 +810,7 @@ static void Handler_CompTHeights()
 
 void G_AddCompat()
 {
-    for(int i = 0; i < COMP_NUM_USED; i++) // haleyjd: update this regularly
+    for(int i = 0; i < COMP_TOTAL; i++) // haleyjd: update this regularly
     {
         variable_t *variable;
         command_t  *command;

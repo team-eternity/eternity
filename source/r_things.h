@@ -59,6 +59,10 @@ struct maskedrange_t
     float *floorclip;
     float *ceilingclip;
 
+    // for rotated portals and sprite rendering
+    fixed_t viewsin, viewcos;
+    int     heightsec;
+
     // for unused head
     struct maskedrange_t *next;
 };
@@ -69,8 +73,8 @@ struct poststack_t
     maskedrange_t *masked;
 };
 
-void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap, const contextbounds_t &bounds,
-                bool pushmasked, pwindow_t *window);
+void R_PushPost(const viewpoint_t &viewpoint, bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
+                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window);
 
 void R_ClearBadSpritesAndFrames();
 

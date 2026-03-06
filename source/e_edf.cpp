@@ -343,7 +343,7 @@ static void E_EDFOpenVerboseLog()
 
         do
             psnprintf(fn, sizeof(fn), "edfout%.2d.txt", lognum++);
-        while(!access(fn, F_OK) && --tries);
+        while(!I_access(fn, F_OK) && --tries);
 
         if(tries)
             edf_output = I_fopen(fn, "w");
