@@ -32,6 +32,7 @@
 #include "p_maputl.h" // ioanch 20160125
 #include "p_portal.h"
 #include "p_slopes.h"
+#include "r_bsp.h"
 #include "r_context.h"
 #include "r_data.h"
 #include "r_draw.h"
@@ -495,20 +496,24 @@ int R_GetSurfaceLightLevel(surf_e surf, const rendersector_t *sec)
 extern camera_t *camera; // haleyjd
 
 const rendersector_t *R_FakeFlat(const viewpoint_t &viewpoint, const sector_t *origsec, rendersector_t *tempsec,
-                                 Surfaces<pslope_t> &tempslopes, int *floorlightlevel, int *ceilinglightlevel,
-                                 bool back)
+                                 Surfaces<pslope_t> &tempslopes, transferredLights_t *lights, bool back)
 {
     const rendersector_t *sec = static_cast<const rendersector_t *>(origsec);
 
     if(!sec)
         return nullptr;
 
-    if(floorlightlevel)
-        *floorlightlevel = R_GetSurfaceLightLevel(surf_floor, sec);
+    int lightcompat = 0; // silence compiler
+    if(lights)
+    {
+        lightcompat            = getComp(comp_thingsectorlight);
+        lights->surfaces.floor = R_GetSurfaceLightLevel(surf_floor, sec);
 
-    // killough 4/11/98
-    if(ceilinglightlevel)
-        *ceilinglightlevel = R_GetSurfaceLightLevel(surf_ceil, sec);
+        // killough 4/11/98
+        lights->surfaces.ceiling = R_GetSurfaceLightLevel(surf_ceil, sec);
+
+        lights->sprite = lightcompat ? (lights->surfaces.floor + lights->surfaces.ceiling) / 2 : sec->lightlevel;
+    }
 
     if(sec->heightsec != -1 || sec->srf.floor.portal || sec->srf.ceiling.portal)
     {
@@ -624,22 +629,21 @@ const rendersector_t *R_FakeFlat(const viewpoint_t &viewpoint, const sector_t *o
 
             tempsec->lightlevel = s->lightlevel;
 
-            if(floorlightlevel)
+            if(lights)
             {
-                *floorlightlevel = (s->flags & SECF_FLOORLIGHTABSOLUTE ? 0 :
-                                    s->srf.floor.lightsec == -1        ? s->lightlevel :
-                                                                         sectors[s->srf.floor.lightsec].lightlevel) +
-                                   s->srf.floor.lightdelta;
+                lights->surfaces.floor = (s->flags & SECF_FLOORLIGHTABSOLUTE ? 0 :
+                                          s->srf.floor.lightsec == -1        ? s->lightlevel :
+                                                                        sectors[s->srf.floor.lightsec].lightlevel) +
+                                         s->srf.floor.lightdelta;
                 // killough 3/16/98
-            }
-
-            if(ceilinglightlevel)
-            {
-                *ceilinglightlevel = (s->flags & SECF_CEILLIGHTABSOLUTE ? 0 :
-                                      s->srf.ceiling.lightsec == -1     ? s->lightlevel :
-                                                                          sectors[s->srf.ceiling.lightsec].lightlevel) +
-                                     s->srf.ceiling.lightdelta;
+                lights->surfaces.ceiling =
+                    (s->flags & SECF_CEILLIGHTABSOLUTE ? 0 :
+                     s->srf.ceiling.lightsec == -1     ? s->lightlevel :
+                                                         sectors[s->srf.ceiling.lightsec].lightlevel) +
+                    s->srf.ceiling.lightdelta;
                 // killough 4/11/98
+
+                lights->sprite = lightcompat ? (lights->surfaces.floor + lights->surfaces.ceiling) / 2 : s->lightlevel;
             }
         }
         else if(heightsec != -1 && viewpoint.z >= sectors[heightsec].srf.ceiling.getZAt(viewpoint.x, viewpoint.y) &&
@@ -706,22 +710,21 @@ const rendersector_t *R_FakeFlat(const viewpoint_t &viewpoint, const sector_t *o
 
             tempsec->lightlevel = s->lightlevel;
 
-            if(floorlightlevel)
+            if(lights)
             {
-                *floorlightlevel = (s->flags & SECF_FLOORLIGHTABSOLUTE ? 0 :
-                                    s->srf.floor.lightsec == -1        ? s->lightlevel :
-                                                                         sectors[s->srf.floor.lightsec].lightlevel) +
-                                   s->srf.floor.lightdelta;
+                lights->surfaces.floor = (s->flags & SECF_FLOORLIGHTABSOLUTE ? 0 :
+                                          s->srf.floor.lightsec == -1        ? s->lightlevel :
+                                                                        sectors[s->srf.floor.lightsec].lightlevel) +
+                                         s->srf.floor.lightdelta;
                 // killough 3/16/98
-            }
-
-            if(ceilinglightlevel)
-            {
-                *ceilinglightlevel = (s->flags & SECF_CEILLIGHTABSOLUTE ? 0 :
-                                      s->srf.ceiling.lightsec == -1     ? s->lightlevel :
-                                                                          sectors[s->srf.ceiling.lightsec].lightlevel) +
-                                     s->srf.ceiling.lightdelta;
+                lights->surfaces.ceiling =
+                    (s->flags & SECF_CEILLIGHTABSOLUTE ? 0 :
+                     s->srf.ceiling.lightsec == -1     ? s->lightlevel :
+                                                         sectors[s->srf.ceiling.lightsec].lightlevel) +
+                    s->srf.ceiling.lightdelta;
                 // killough 4/11/98
+
+                lights->sprite = lightcompat ? (lights->surfaces.floor + lights->surfaces.ceiling) / 2 : s->lightlevel;
             }
         }
         else if(heightsec != -1)
@@ -801,9 +804,10 @@ int R_FakeFlatSpriteLighting(const viewpoint_t &viewpoint, const sector_t *sec)
     if(!sec)
         return 0;
 
-    int           floorlightlevel   = R_GetSurfaceLightLevel(surf_floor, sec);
-    int           ceilinglightlevel = R_GetSurfaceLightLevel(surf_ceil, sec);
-    const fixed_t viewz             = viewpoint.z;
+    int           floorlightlevel, ceilinglightlevel;
+    const fixed_t viewz = viewpoint.z;
+
+    const int lightcompat = getComp(comp_thingsectorlight);
 
     if(sec->heightsec != -1)
     {
@@ -819,6 +823,9 @@ int R_FakeFlatSpriteLighting(const viewpoint_t &viewpoint, const sector_t *sec)
            (heightsec != -1 && viewz >= sectors[heightsec].srf.ceiling.getZAt(viewpoint.x, viewpoint.y) &&
             sec->srf.ceiling.getZAt(viewpoint.x, viewpoint.y) > s->srf.ceiling.getZAt(viewpoint.x, viewpoint.y)))
         {
+            if(!lightcompat)
+                return s->lightlevel;
+
             floorlightlevel = s->srf.floor.lightdelta;
             if(!(s->flags & SECF_FLOORLIGHTABSOLUTE))
             {
@@ -836,8 +843,15 @@ int R_FakeFlatSpriteLighting(const viewpoint_t &viewpoint, const sector_t *sec)
                 else
                     ceilinglightlevel += sectors[s->srf.ceiling.lightsec].lightlevel;
             }
+            return (floorlightlevel + ceilinglightlevel) / 2;
         }
     }
+
+    if(!lightcompat)
+        return sec->lightlevel;
+
+    floorlightlevel   = R_GetSurfaceLightLevel(surf_floor, sec);
+    ceilinglightlevel = R_GetSurfaceLightLevel(surf_ceil, sec);
 
     return (floorlightlevel + ceilinglightlevel) / 2;
 }
@@ -2386,7 +2400,7 @@ static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
     seg.clipsolid = false;
     seg.line      = line;
 
-    seg.backsec = R_FakeFlat(viewpoint, line->backsector, &tempsec, tempslopes, nullptr, nullptr, true);
+    seg.backsec = R_FakeFlat(viewpoint, line->backsector, &tempsec, tempslopes, nullptr, true);
 
     // haleyjd: TEST
     // This seems to fix fiffy5, but smells like a hack to me.
@@ -2966,10 +2980,11 @@ static void R_subsector(rendercontext_t &context, const int num)
     int                count;
     const seg_t       *line;
     const subsector_t *sub;
-    int                floorlightlevel;   // killough 3/16/98: set floor lightlevel
-    int                ceilinglightlevel; // killough 4/11/98
-    float              floorangle;        // haleyjd 01/05/08: plane angles
-    float              ceilingangle;
+    // killough 3/16/98: set floor lightlevel
+    // killough 4/11/98
+    transferredLights_t transferredLights;
+    float               floorangle; // haleyjd 01/05/08: plane angles
+    float               ceilingangle;
 
     bool      visible;
     v3float_t cam;
@@ -2993,7 +3008,7 @@ static void R_subsector(rendercontext_t &context, const int num)
     R_SectorColormap(cmapcontext, viewpoint, seg.frontsec);
 
     // killough 3/8/98, 4/4/98: Deep water / fake ceiling effect
-    seg.frontsec = R_FakeFlat(viewpoint, sub->sector, &tempsec, tempslopes, &floorlightlevel, &ceilinglightlevel,
+    seg.frontsec = R_FakeFlat(viewpoint, sub->sector, &tempsec, tempslopes, &transferredLights,
                               false); // killough 4/11/98
 
     // ioanch: reject all sectors fully above or below a sector portal.
@@ -3043,8 +3058,8 @@ static void R_subsector(rendercontext_t &context, const int num)
                             seg.frontsec->srf.floor.height,
                             seg.frontsec->srf.floor.pflags & PS_USEGLOBALTEX ? seg.portal.floor->globaltex :
                                                                                seg.frontsec->srf.floor.pic,
-                            floorlightlevel,                // killough 3/16/98
-                            seg.frontsec->srf.floor.offset, // killough 3/7/98
+                            transferredLights.surfaces.floor, // killough 3/16/98
+                            seg.frontsec->srf.floor.offset,   // killough 3/7/98
                             seg.frontsec->srf.floor.scale, floorangle, seg.frontsec->srf.floor.slope,
                             seg.frontsec->srf.floor.pflags, fpalpha,
                             portalcontext.portalstates[seg.portal.floor->index].poverlay) :
@@ -3062,8 +3077,8 @@ static void R_subsector(rendercontext_t &context, const int num)
                                     seg.frontsec->sky & PL_SKYFLAT ?
                                 seg.frontsec->sky :
                                 seg.frontsec->srf.floor.pic,
-                            floorlightlevel,                // killough 3/16/98
-                            seg.frontsec->srf.floor.offset, // killough 3/7/98
+                            transferredLights.surfaces.floor, // killough 3/16/98
+                            seg.frontsec->srf.floor.offset,   // killough 3/7/98
                             seg.frontsec->srf.floor.scale, floorangle, seg.frontsec->srf.floor.slope, 0, 255, nullptr) :
                 nullptr;
     }
@@ -3092,8 +3107,8 @@ static void R_subsector(rendercontext_t &context, const int num)
                             seg.frontsec->srf.ceiling.height,
                             seg.frontsec->srf.ceiling.pflags & PS_USEGLOBALTEX ? seg.portal.ceiling->globaltex :
                                                                                  seg.frontsec->srf.ceiling.pic,
-                            ceilinglightlevel,                // killough 3/16/98
-                            seg.frontsec->srf.ceiling.offset, // killough 3/7/98
+                            transferredLights.surfaces.ceiling, // killough 3/16/98
+                            seg.frontsec->srf.ceiling.offset,   // killough 3/7/98
                             seg.frontsec->srf.ceiling.scale, ceilingangle, seg.frontsec->srf.ceiling.slope,
                             seg.frontsec->srf.ceiling.pflags, cpalpha,
                             portalcontext.portalstates[seg.portal.ceiling->index].poverlay) :
@@ -3110,8 +3125,8 @@ static void R_subsector(rendercontext_t &context, const int num)
                                     seg.frontsec->sky & PL_SKYFLAT ?
                                 seg.frontsec->sky :
                                 seg.frontsec->srf.ceiling.pic,
-                            ceilinglightlevel,                // killough 4/11/98
-                            seg.frontsec->srf.ceiling.offset, // killough 3/7/98
+                            transferredLights.surfaces.ceiling, // killough 4/11/98
+                            seg.frontsec->srf.ceiling.offset,   // killough 3/7/98
                             seg.frontsec->srf.ceiling.scale, ceilingangle, seg.frontsec->srf.ceiling.slope, 0, 255,
                             nullptr) :
                 nullptr;
@@ -3131,7 +3146,7 @@ static void R_subsector(rendercontext_t &context, const int num)
     // like passing it as an argument.
 
     R_AddSprites(context.cmapcontext, spritecontext, *context.heap, viewpoint, cb_viewpoint, bounds, portalrender,
-                 sub->sector, (floorlightlevel + ceilinglightlevel) / 2);
+                 sub->sector, transferredLights.sprite);
 
     // haleyjd 02/19/06: draw polyobjects before static lines
     // haleyjd 10/09/06: skip call entirely if no polyobjects
