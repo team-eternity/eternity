@@ -1774,8 +1774,8 @@ void R_DrawPlayerSprites()
     // (see r_bsp.c for similar calculations for non-player sprites)
 
     R_FakeFlat(r_globalcontext.view, view.sector, &tmpsec, tempslopes, &floorlightlevel, &ceilinglightlevel, 0);
-    lightnum = (comp[comp_thingsectorlight] ? (floorlightlevel + ceilinglightlevel) :
-                                              (view.sector->lightlevel) >> (LIGHTSEGSHIFT + 1)) +
+    lightnum = ((comp[comp_thingsectorlight] ? (floorlightlevel + ceilinglightlevel) / 2 : view.sector->lightlevel) >>
+                LIGHTSEGSHIFT) +
                (extralight * LIGHTBRIGHT);
 
     if(lightnum < 0)
