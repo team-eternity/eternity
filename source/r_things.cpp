@@ -1914,8 +1914,9 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
     //
     // Common handler both for the optimized and basic loops
     //
-    auto handleOverlappingDrawSeg = [viewsin, viewcos](cmapcontext_t &cmapcontext, const viewpoint_t &viewpoint,
-                                                       drawseg_t *ds, const vissprite_t *spr) {
+    auto handleOverlappingDrawSeg = [viewsin, viewcos, &viewpos](cmapcontext_t     &cmapcontext,
+                                                                 const viewpoint_t &viewpoint, drawseg_t *ds,
+                                                                 const vissprite_t *spr) {
         // Shout out to ksgws of ACE Engine for the code from here to the if(s1)!
         uint32_t     s1, s2;
         divline_t    sprite_clip;
@@ -1939,7 +1940,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
             {
                 r1 = ds->x1 < spr->x1 ? spr->x1 : ds->x1;
                 r2 = ds->x2 > spr->x2 ? spr->x2 : ds->x2;
-                R_RenderMaskedSegRange(cmapcontext, viewpoint, ds, r1, r2);
+                R_RenderMaskedSegRange(cmapcontext, viewpoint, viewpos.z, ds, r1, r2);
             }
             return; // seg is behind sprite
         }
@@ -2214,7 +2215,7 @@ void R_DrawPostBSP(rendercontext_t &context)
             for(ds = drawsegs + lastds; ds-- > drawsegs + firstds;) // new -- killough
             {
                 if(ds->maskedtexturecol)
-                    R_RenderMaskedSegRange(context.cmapcontext, context.view, ds, ds->x1, ds->x2);
+                    R_RenderMaskedSegRange(context.cmapcontext, context.view, masked->viewpos.z, ds, ds->x1, ds->x2);
             }
 
             // Done with the masked range

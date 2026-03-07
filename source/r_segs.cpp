@@ -61,7 +61,8 @@ void R_FinishMappingLines()
 //
 // R_RenderMaskedSegRange
 //
-void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const viewpoint_t &viewpoint, drawseg_t *ds, int x1, int x2)
+void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const viewpoint_t &viewpoint, const fixed_t viewz,
+                            drawseg_t *ds, int x1, int x2)
 {
     static thread_local rendersector_t     tempsec; // killough 4/13/98
     static thread_local Surfaces<pslope_t> tempslopes;
@@ -166,17 +167,17 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const viewpoint_t &viewp
         column.texmid = segclip.frontsec->srf.floor.height > segclip.backsec->srf.floor.height ?
                             segclip.frontsec->srf.floor.height :
                             segclip.backsec->srf.floor.height;
-        column.texmid = column.texmid + textures[texnum]->heightfrac - viewpoint.z;
+        column.texmid = column.texmid + textures[texnum]->heightfrac - viewz;
     }
     else
     {
         column.texmid = segclip.frontsec->srf.ceiling.height < segclip.backsec->srf.ceiling.height ?
                             segclip.frontsec->srf.ceiling.height :
                             segclip.backsec->srf.ceiling.height;
-        column.texmid = column.texmid - viewpoint.z;
+        column.texmid = column.texmid - viewz;
     }
 
-    column.texmid += segclip.line->sidedef->offset_base_y + segclip.line->sidedef->offset_mid_y - ds->deltaz;
+    column.texmid += segclip.line->sidedef->offset_base_y + segclip.line->sidedef->offset_mid_y;
 
     // SoM 10/19/02: deep water colormap fixes
     // if (fixedcolormap)
@@ -977,7 +978,6 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
     ds_p->diststep      = segclip.diststep;
     ds_p->colormap      = cmapcontext.scalelight;
     ds_p->fixedcolormap = cmapcontext.fixedcolormap;
-    ds_p->deltaz        = 0; // init with 0
 
     if(segclip.clipsolid)
         R_closeDSP(ds_p);
@@ -1045,8 +1045,6 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
             ds_p->maskedtexturecol  = lastopening - segclip.x1;
             ds_p->maskedtextureskew = lastskew - segclip.x1;
-            if(portalrender.active)
-                ds_p->deltaz = viewpoint.z - portalrender.w->vz;
 
             mtc = lastopening;
             mts = lastskew;
