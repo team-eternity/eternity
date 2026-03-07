@@ -1998,6 +1998,17 @@ static void R_2S_Normal(cmapcontext_t &cmapcontext, planecontext_t &planecontext
         seg.b_window = nullptr;
 }
 
+static std::pair<fixed_t, float> R_getZOffset(const line_t &line)
+{
+    if(!line.portal || !R_portalIsAnchored(line.portal))
+        return std::make_pair(0, 0.0f);
+    if(line.portal->type == R_LINKED)
+        return std::make_pair(line.portal->data.link.delta.z, M_FixedToFloat(line.portal->data.link.delta.z));
+    I_Assert(line.portal->type == R_ANCHORED || line.portal->type == R_TWOWAY,
+             "Expected anchored or two-way portal here\n");
+    return std::make_pair(line.portal->data.anchor.transform.zoffset, line.portal->data.anchor.transform.move.z);
+}
+
 //
 // Prepare 1-sided line for rendering (extracted from R_addLine due to size)
 // beyond is the optional sector on the other side of a polyobject/1-sided wall portal
@@ -2014,13 +2025,18 @@ static void R_1SidedLine(cmapcontext_t &cmapcontext, planecontext_t &planecontex
     else
     {
         // ioanch FIXME: copy-paste from R_2S_Normal
-        if(seg.frontsec->srf.ceiling.height > beyond->srf.ceiling.height &&
+        const std::pair<fixed_t, float> zoffset = R_getZOffset(*seg.line->linedef);
+        const Surfaces<fixed_t>         beyondHeightFixed(beyond->srf.floor.height - zoffset.first,
+                                                          beyond->srf.ceiling.height - zoffset.first);
+        const Surfaces<float>           beyondHeightFloat(beyond->srf.floor.heightf - zoffset.second,
+                                                          beyond->srf.ceiling.heightf - zoffset.second);
+        if(seg.frontsec->srf.ceiling.height > beyondHeightFixed.ceiling &&
            !(seg.frontsec->intflags & SIF_SKY && beyond->intflags & SIF_SKY) && side->toptexture)
         {
             seg.toptex  = texturetranslation[side->toptexture];
             seg.toptexh = textures[side->toptexture]->height;
 
-            float texhigh = beyond->srf.ceiling.heightf - cb_viewpoint.z;
+            float texhigh = beyondHeightFloat.ceiling - cb_viewpoint.z;
 
             if(seg.line->linedef->flags & ML_DONTPEGTOP)
                 seg.toptexmid =
@@ -2029,19 +2045,19 @@ static void R_1SidedLine(cmapcontext_t &cmapcontext, planecontext_t &planecontex
                 seg.toptexmid = M_FloatToFixed(texhigh + seg.toptexh + seg.toffset_base_y +
                                                seg.toffset_top_y); // SCALE_TODO: Y scale-factor here
 
-            seg.high     = view.ycenter - ((beyond->srf.ceiling.heightf - cb_viewpoint.z) * i1) - 1.0f;
-            seg.high2    = view.ycenter - ((beyond->srf.ceiling.heightf - cb_viewpoint.z) * i2) - 1.0f;
+            seg.high     = view.ycenter - ((beyondHeightFloat.ceiling - cb_viewpoint.z) * i1) - 1.0f;
+            seg.high2    = view.ycenter - ((beyondHeightFloat.ceiling - cb_viewpoint.z) * i2) - 1.0f;
             seg.highstep = (seg.high2 - seg.high) * pstep;
         }
         else
             seg.toptex = 0;
 
-        if(seg.frontsec->srf.floor.height < beyond->srf.floor.height && side->bottomtexture)
+        if(seg.frontsec->srf.floor.height < beyondHeightFixed.floor && side->bottomtexture)
         {
             seg.bottomtex  = texturetranslation[side->bottomtexture];
             seg.bottomtexh = textures[side->bottomtexture]->height;
 
-            float texlow = beyond->srf.floor.heightf - cb_viewpoint.z;
+            float texlow = beyondHeightFloat.floor - cb_viewpoint.z;
 
             if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
                 seg.bottomtexmid = M_FloatToFixed(textop + seg.toffset_base_y +
@@ -2050,8 +2066,8 @@ static void R_1SidedLine(cmapcontext_t &cmapcontext, planecontext_t &planecontex
                 seg.bottomtexmid = M_FloatToFixed(texlow + seg.toffset_base_y +
                                                   seg.toffset_bottom_y); // SCALE_TODO: Y scale-factor here
 
-            seg.low     = view.ycenter - ((beyond->srf.floor.heightf - cb_viewpoint.z) * i1);
-            seg.low2    = view.ycenter - ((beyond->srf.floor.heightf - cb_viewpoint.z) * i2);
+            seg.low     = view.ycenter - ((beyondHeightFloat.floor - cb_viewpoint.z) * i1);
+            seg.low2    = view.ycenter - ((beyondHeightFloat.floor - cb_viewpoint.z) * i2);
             seg.lowstep = (seg.low2 - seg.low) * pstep;
         }
         else
