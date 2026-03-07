@@ -617,8 +617,9 @@ void R_ClearMarkedSprites(spritecontext_t &context, ZoneHeap &heap)
 //
 // Pushes a new element on the post-BSP stack.
 //
-void R_PushPost(const viewpoint_t &viewpoint, bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
-                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window)
+void R_PushPost(const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint, bspcontext_t &bspcontext,
+                spritecontext_t &spritecontext, ZoneHeap &heap, const contextbounds_t &bounds, bool pushmasked,
+                pwindow_t *window)
 {
     drawseg_t     *&drawsegs     = bspcontext.drawsegs;
     drawseg_t     *&ds_p         = bspcontext.ds_p;
@@ -690,12 +691,13 @@ void R_PushPost(const viewpoint_t &viewpoint, bspcontext_t &bspcontext, spriteco
         memcpy(post->masked->ceilingclip, portaltop + bounds.startcolumn, sizeof(*portaltop) * bounds.numcolumns);
         memcpy(post->masked->floorclip, portalbottom + bounds.startcolumn, sizeof(*portalbottom) * bounds.numcolumns);
 
-        post->masked->viewsin   = viewpoint.sin;
-        post->masked->viewcos   = viewpoint.cos;
-        post->masked->viewpos.x = viewpoint.x;
-        post->masked->viewpos.y = viewpoint.y;
-        post->masked->viewpos.z = viewpoint.z;
-        post->masked->heightsec = viewpoint.sector->heightsec;
+        post->masked->viewsin    = viewpoint.sin;
+        post->masked->viewcos    = viewpoint.cos;
+        post->masked->viewpos.x  = viewpoint.x;
+        post->masked->viewpos.y  = viewpoint.y;
+        post->masked->viewpos.z  = viewpoint.z;
+        post->masked->viewzfloat = cb_viewpoint.z;
+        post->masked->heightsec  = viewpoint.sector->heightsec;
     }
     else
         post->masked = nullptr;
@@ -1898,10 +1900,10 @@ static void R_sortVisSpriteRange(spritecontext_t &context, ZoneHeap &heap, int f
 // Draws a sprite within a given drawseg range, for portals.
 //
 static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext,
-                                  const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
-                                  const contextbounds_t &bounds, drawseg_t *const drawsegs, vissprite_t *spr,
-                                  int firstds, int lastds, float *ptop, float *pbottom, const fixed_t viewsin,
-                                  const fixed_t viewcos, const v3fixed_t &viewpos, const int heightsec)
+                                  const viewpoint_t &viewpoint, const contextbounds_t &bounds,
+                                  drawseg_t *const drawsegs, vissprite_t *spr, int firstds, int lastds, float *ptop,
+                                  float *pbottom, const fixed_t viewsin, const fixed_t viewcos,
+                                  const v3fixed_t &viewpos, float viewzfloat, const int heightsec)
 {
     drawseg_t *ds;
     int        x;
@@ -2016,7 +2018,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
         fixed_t heightsecheight = sectors[spr->heightsec].srf.floor.getZAt(spr->gx, spr->gy);
         fixed_t phsheight       = phs >= 0 ? sectors[phs].srf.floor.getZAt(viewpos.x, viewpos.y) : 0;
 
-        mh = M_FixedToFloat(heightsecheight) - cb_viewpoint.z;
+        mh = M_FixedToFloat(heightsecheight) - viewzfloat;
         if(heightsecheight > spr->gz && (h = view.ycenter - (mh * spr->scale)) >= 0.0f && (h < view.height))
         {
             if(mh <= 0.0 || (phs != -1 && viewpos.z > phsheight))
@@ -2044,7 +2046,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
         heightsecheight = sectors[spr->heightsec].srf.ceiling.getZAt(spr->gx, spr->gy);
         phsheight       = phs >= 0 ? sectors[phs].srf.ceiling.getZAt(viewpos.x, viewpos.y) : 0;
 
-        mh = M_FixedToFloat(heightsecheight) - cb_viewpoint.z;
+        mh = M_FixedToFloat(heightsecheight) - viewzfloat;
         if(heightsecheight < spr->gzt && (h = view.ycenter - (mh * spr->scale)) >= 0.0f && (h < view.height))
         {
             if(phs != -1 && viewpos.z >= phsheight)
@@ -2081,7 +2083,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
         // component.
         float distyscale = spr->dist * view.yfoc;
 
-        mh = M_FixedToFloat(sectorheight) - cb_viewpoint.z;
+        mh = M_FixedToFloat(sectorheight) - viewzfloat;
         if(sector->srf.floor.pflags & PS_PASSABLE && sectorheight > spr->gz)
         {
             h = eclamp(view.ycenter - (mh * distyscale), 0.0f, view.height - 1);
@@ -2095,7 +2097,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
 
         sectorheight = sector->srf.ceiling.getZAt(spr->gx, spr->gy);
 
-        mh = M_FixedToFloat(sectorheight) - cb_viewpoint.z;
+        mh = M_FixedToFloat(sectorheight) - viewzfloat;
         if(sector->srf.ceiling.pflags & PS_PASSABLE && sectorheight < spr->gzt)
         {
             // Add +1 to avoid overdrawing with the bottomclip of the above part
@@ -2196,10 +2198,10 @@ void R_DrawPostBSP(rendercontext_t &context)
 
                 for(int i = lastsprite - firstsprite; --i >= 0;)
                 {
-                    R_drawSpriteInDSRange(context.cmapcontext, spritecontext, context.view, context.cb_view,
-                                          context.bounds, drawsegs, spritecontext.vissprite_ptrs[i], firstds, lastds,
-                                          masked->ceilingclip, masked->floorclip, masked->viewsin, masked->viewcos,
-                                          masked->viewpos, masked->heightsec); // killough
+                    R_drawSpriteInDSRange(context.cmapcontext, spritecontext, context.view, context.bounds, drawsegs,
+                                          spritecontext.vissprite_ptrs[i], firstds, lastds, masked->ceilingclip,
+                                          masked->floorclip, masked->viewsin, masked->viewcos, masked->viewpos,
+                                          masked->viewzfloat, masked->heightsec); // killough
                 }
             }
 

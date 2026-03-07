@@ -61,7 +61,8 @@ struct maskedrange_t
 
     // for rotated portals and sprite rendering
     fixed_t   viewsin, viewcos;
-    v3fixed_t viewpos; // can't just use viewpoint_t due to circular inclusions
+    v3fixed_t viewpos;    // can't just use viewpoint_t due to circular inclusions
+    float     viewzfloat; // some code uses cb_viewpoint_t data
     int       heightsec;
 
     // for unused head
@@ -74,8 +75,9 @@ struct poststack_t
     maskedrange_t *masked;
 };
 
-void R_PushPost(const viewpoint_t &viewpoint, bspcontext_t &bspcontext, spritecontext_t &spritecontext, ZoneHeap &heap,
-                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window);
+void R_PushPost(const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint, bspcontext_t &bspcontext,
+                spritecontext_t &spritecontext, ZoneHeap &heap, const contextbounds_t &bounds, bool pushmasked,
+                pwindow_t *window);
 
 void R_ClearBadSpritesAndFrames();
 
