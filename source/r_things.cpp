@@ -1691,7 +1691,7 @@ static void R_drawPSprite(const pspdef_t *psp, const lighttable_t *const *const 
     vis->scale        = view.pspriteyscale;
     vis->ytop         = (view.height * 0.5f) - (M_FixedToFloat(vis->texturemid) * vis->scale);
     vis->ybottom      = vis->ytop + (spriteheight[lump] * vis->scale);
-    vis->sector       = int(view.sector - sectors);
+    vis->sector       = int(view.boomcolorsector - sectors);
 
     // haleyjd 07/01/07: use actual pixel range to scale graphic
     if(flip)
@@ -1769,13 +1769,13 @@ void R_DrawPlayerSprites()
     if(!showpsprites || viewcamera)
         return;
 
-    R_SectorColormap(r_globalcontext.cmapcontext, r_globalcontext.view, view.sector);
+    R_SectorColormap(r_globalcontext.cmapcontext, r_globalcontext.view, view.boomcolorsector);
 
     // get light level
     // killough 9/18/98: compute lightlevel from floor and ceiling lightlevels
     // (see r_bsp.c for similar calculations for non-player sprites)
 
-    R_FakeFlat(r_globalcontext.view, view.sector, &tmpsec, tempslopes, &transferredLights, 0);
+    R_FakeFlat(r_globalcontext.view, view.boomcolorsector, &tmpsec, tempslopes, &transferredLights, 0);
     lightnum = (transferredLights.sprite >> LIGHTSEGSHIFT) + extralight * LIGHTBRIGHT;
 
     if(lightnum < 0)
