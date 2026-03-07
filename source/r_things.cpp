@@ -1900,10 +1900,10 @@ static void R_sortVisSpriteRange(spritecontext_t &context, ZoneHeap &heap, int f
 // Draws a sprite within a given drawseg range, for portals.
 //
 static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext,
-                                  const viewpoint_t &viewpoint, const contextbounds_t &bounds,
-                                  drawseg_t *const drawsegs, vissprite_t *spr, int firstds, int lastds, float *ptop,
-                                  float *pbottom, const fixed_t viewsin, const fixed_t viewcos,
-                                  const v3fixed_t &viewpos, float viewzfloat, const int heightsec)
+                                  const contextbounds_t &bounds, drawseg_t *const drawsegs, vissprite_t *spr,
+                                  int firstds, int lastds, float *ptop, float *pbottom, const fixed_t viewsin,
+                                  const fixed_t viewcos, const v3fixed_t &viewpos, float viewzfloat,
+                                  const int heightsec)
 {
     drawseg_t *ds;
     int        x;
@@ -1914,9 +1914,8 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
     //
     // Common handler both for the optimized and basic loops
     //
-    auto handleOverlappingDrawSeg = [viewsin, viewcos, &viewpos](cmapcontext_t     &cmapcontext,
-                                                                 const viewpoint_t &viewpoint, drawseg_t *ds,
-                                                                 const vissprite_t *spr) {
+    auto handleOverlappingDrawSeg = [viewsin, viewcos, &viewpos, heightsec](cmapcontext_t &cmapcontext, drawseg_t *ds,
+                                                                            const vissprite_t *spr) {
         // Shout out to ksgws of ACE Engine for the code from here to the if(s1)!
         uint32_t     s1, s2;
         divline_t    sprite_clip;
@@ -1940,7 +1939,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
             {
                 r1 = ds->x1 < spr->x1 ? spr->x1 : ds->x1;
                 r2 = ds->x2 > spr->x2 ? spr->x2 : ds->x2;
-                R_RenderMaskedSegRange(cmapcontext, viewpoint, viewpos.z, ds, r1, r2);
+                R_RenderMaskedSegRange(cmapcontext, viewpos, ds, r1, r2, heightsec);
             }
             return; // seg is behind sprite
         }
@@ -1990,7 +1989,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
             }
             ++dsx;
 
-            handleOverlappingDrawSeg(cmapcontext, viewpoint, ds, spr);
+            handleOverlappingDrawSeg(cmapcontext, ds, spr);
         }
     }
     else
@@ -2004,7 +2003,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
             if(ds->x1 > spr->x2 || ds->x2 < spr->x1 || (!ds->silhouette && !ds->maskedtexturecol))
                 continue; // does not cover sprite
 
-            handleOverlappingDrawSeg(cmapcontext, viewpoint, ds, spr);
+            handleOverlappingDrawSeg(cmapcontext, ds, spr);
         }
     }
 
@@ -2199,7 +2198,7 @@ void R_DrawPostBSP(rendercontext_t &context)
 
                 for(int i = lastsprite - firstsprite; --i >= 0;)
                 {
-                    R_drawSpriteInDSRange(context.cmapcontext, spritecontext, context.view, context.bounds, drawsegs,
+                    R_drawSpriteInDSRange(context.cmapcontext, spritecontext, context.bounds, drawsegs,
                                           spritecontext.vissprite_ptrs[i], firstds, lastds, masked->ceilingclip,
                                           masked->floorclip, masked->viewsin, masked->viewcos, masked->viewpos,
                                           masked->viewzfloat, masked->heightsec); // killough
@@ -2215,7 +2214,7 @@ void R_DrawPostBSP(rendercontext_t &context)
             for(ds = drawsegs + lastds; ds-- > drawsegs + firstds;) // new -- killough
             {
                 if(ds->maskedtexturecol)
-                    R_RenderMaskedSegRange(context.cmapcontext, context.view, masked->viewpos.z, ds, ds->x1, ds->x2);
+                    R_RenderMaskedSegRange(context.cmapcontext, masked->viewpos, ds, ds->x1, ds->x2, masked->heightsec);
             }
 
             // Done with the masked range
