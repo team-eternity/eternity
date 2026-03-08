@@ -2006,7 +2006,7 @@ static std::pair<fixed_t, float> R_getZOffset(const line_t &line)
         return std::make_pair(line.portal->data.link.delta.z, M_FixedToFloat(line.portal->data.link.delta.z));
     I_Assert(line.portal->type == R_ANCHORED || line.portal->type == R_TWOWAY,
              "Expected anchored or two-way portal here\n");
-    return std::make_pair(line.portal->data.anchor.transform.zoffset, line.portal->data.anchor.transform.move.z);
+    return std::make_pair(line.portal->data.anchor.transform.zoffset, (float)line.portal->data.anchor.transform.move.z);
 }
 
 //
