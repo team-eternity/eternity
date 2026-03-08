@@ -806,6 +806,27 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
     return dx ? FixedDiv(dx, finesine[(tantoangle_acc[FixedDiv(dy, dx) >> DBITS] + ANG90) >> ANGLETOFINESHIFT]) : 0;
 }
 
+static void R_checkLastPointer(ZoneHeap &heap, float **const lastPointer, const int lengthRequested,
+                               const int numColumns, renderbuffer_t **const curData)
+{
+    if(*lastPointer + lengthRequested > (*curData)->bufferEnd)
+    {
+        if(!(*curData)->next)
+        {
+            const int             length = numColumns * 16; // don't allocate much more
+            renderbuffer_t *const newData =
+                zhmalloctag(heap, renderbuffer_t *, sizeof(*newData) + length * sizeof(float), PU_VALLOC, nullptr);
+            newData->buffer    = reinterpret_cast<float *>(newData + 1);
+            newData->bufferEnd = newData->buffer + length;
+            newData->next      = nullptr;
+            (*curData)->next   = newData;
+        }
+        *curData = (*curData)->next;
+        // it may undershoot this buffer (see code below), but it will be safely read from [x1] later.
+        *lastPointer = (*curData)->buffer;
+    }
+}
+
 //
 // A wall segment will be drawn
 //  between start and stop pixels (inclusive).
@@ -1050,6 +1071,9 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
             int    xlen;
             xlen = segclip.x2 - segclip.x1 + 1;
 
+            R_checkLastPointer(heap, &lastopening, xlen, bounds.numcolumns, &planecontext.curOpenings);
+            R_checkLastPointer(heap, &lastskew, xlen, bounds.numcolumns, &planecontext.curSkews);
+
             ds_p->maskedtexturecol  = lastopening - segclip.x1;
             ds_p->maskedtextureskew = lastskew - segclip.x1;
 
@@ -1092,6 +1116,8 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
     {
         int xlen = segclip.x2 - segclip.x1 + 1;
 
+        R_checkLastPointer(heap, &lastopening, xlen, bounds.numcolumns, &planecontext.curOpenings);
+
         if(segclip.markflags & SEG_MARKCOVERLAY)
         {
             for(int i = xlen; i-- > 0;)
@@ -1110,6 +1136,8 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
     if((ds_p->silhouette & SIL_BOTTOM || segclip.maskedtex) && !ds_p->sprbottomclip)
     {
         int xlen = segclip.x2 - segclip.x1 + 1;
+
+        R_checkLastPointer(heap, &lastopening, xlen, bounds.numcolumns, &planecontext.curOpenings);
 
         if(segclip.markflags & SEG_MARKFOVERLAY)
         {
