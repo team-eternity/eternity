@@ -822,7 +822,6 @@ static void R_checkLastPointer(ZoneHeap &heap, float **const lastPointer, const 
             (*curData)->next   = newData;
         }
         *curData = (*curData)->next;
-        // it may undershoot this buffer (see code below), but it will be safely read from [x1] later.
         *lastPointer = (*curData)->buffer;
     }
 }
@@ -1073,6 +1072,8 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
             R_checkLastPointer(heap, &lastopening, xlen, bounds.numcolumns, &planecontext.curOpenings);
             R_checkLastPointer(heap, &lastskew, xlen, bounds.numcolumns, &planecontext.curSkews);
+            // NOTE: even though lastopening may point to the start of a buffer, and subtracting x1 from it will
+            // undershoot, when it's time to read maskedtexturecol, it will start from [x1].
 
             ds_p->maskedtexturecol  = lastopening - segclip.x1;
             ds_p->maskedtextureskew = lastskew - segclip.x1;
