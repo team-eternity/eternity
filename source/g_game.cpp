@@ -122,7 +122,7 @@ int             displayplayer; // view being displayed
 int             gametic;
 int             levelstarttic;                       // gametic at level start
 int             basetic;                             // killough 9/29/98: for demo sync
-int             totalkills, totalitems, totalsecret; // for intermission
+int             totalmonsters, totalitems, totalsecret; // for intermission
 bool            democontinue;
 bool            demorecording;
 bool            demoplayback;
@@ -1870,7 +1870,7 @@ static void G_DoCompleted()
     else
         wminfo.nextexplicit = false;
 
-    wminfo.maxkills  = totalkills;
+    wminfo.maxkills  = totalmonsters;
     wminfo.maxitems  = totalitems;
     wminfo.maxsecret = totalsecret;
     wminfo.maxfrags  = 0;

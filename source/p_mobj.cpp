@@ -3101,7 +3101,7 @@ spawnit:
 
     // killough 7/20/98: exclude friends
     if(!((mobj->flags ^ MF_COUNTKILL) & (MF_FRIEND | MF_COUNTKILL)))
-        totalkills++;
+        totalmonsters++;
 
     if(mobj->flags & MF_COUNTITEM)
         totalitems++;

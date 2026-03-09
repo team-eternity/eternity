@@ -1512,7 +1512,7 @@ void HUDStatWidget::ticker()
 
     if(statType == STATTYPE_KILLS)
     {
-        snprintf(statkillstr, sizeof(statkillstr), "K: %i/%i", plr->killcount, totalkills);
+        snprintf(statkillstr, sizeof(statkillstr), "K: %i/%i", plr->killcount, totalmonsters);
         message = statkillstr;
     }
     else if(statType == STATTYPE_ITEMS)

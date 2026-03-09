@@ -273,7 +273,7 @@ extern int displayplayer;
 // Scores, rating.
 // Statistics on a given map, for intermission.
 //
-extern int totalkills;
+extern int totalmonsters;
 extern int totalitems;
 extern int totalsecret;
 

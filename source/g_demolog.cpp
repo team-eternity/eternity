@@ -95,7 +95,7 @@ void G_DemoLogStats()
         allItems  += players[i].itemcount;
         allSecret += players[i].secretcount;
     }
-    G_DemoLog("(k: %d%%, i: %d%%, s: %d%%)", totalkills ? 100 * allKills / totalkills : 0,
+    G_DemoLog("(k: %d%%, i: %d%%, s: %d%%)", totalmonsters ? 100 * allKills / totalmonsters : 0,
               totalitems ? 100 * allItems / totalitems : 0, totalsecret ? 100 * allSecret / totalsecret : 0);
 }
 

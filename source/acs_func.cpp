@@ -906,7 +906,7 @@ uint32_t ACS_GetLevelProp(uint32_t var)
     case ACS_LP_FoundSecrets:   return G_TotalFoundSecrets();
     case ACS_LP_TotalItems:     return totalitems;
     case ACS_LP_FoundItems:     return G_TotalFoundItems();
-    case ACS_LP_TotalMonsters:  return totalkills;
+    case ACS_LP_TotalMonsters:  return totalmonsters;
     case ACS_LP_KilledMonsters: return G_TotalKilledMonsters();
     case ACS_LP_SuckTime:       return 1;
 
