@@ -30,6 +30,7 @@
 #include "e_inventory.h"
 #include "e_player.h"
 #include "e_weapons.h"
+#include "g_game.h"
 #include "hu_modern.h"
 #include "m_qstr.h"
 #include "r_patch.h"
@@ -98,10 +99,12 @@ void ModernHUD::DrawStatus(int x, int y)
     if(hud_overlaylayout == HUD_BOOM)
     {
         tempstr << FC_RED "K" FC_GRAY "  " << totalKilledMonsters << "/" << totalmonsters << //
-            FC_BLUE " I" FC_GRAY "  " << hu_player.itemcount << "/" << totalitems;
+            FC_BLUE " I" FC_GRAY "  " << (GameType == gt_coop ? G_TotalFoundItems() : hu_player.itemcount) << "/"
+                << totalitems;
         if(!hud_hidesecrets)
         {
-            tempstr << FC_GOLD " S" FC_GRAY "  " << hu_player.secretcount << "/" << totalsecret;
+            tempstr << FC_GOLD " S" FC_GRAY "  "
+                    << (GameType == gt_coop ? G_TotalFoundSecrets() : hu_player.secretcount) << "/" << totalsecret;
         }
         V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y, m_screen);
     }
@@ -110,12 +113,14 @@ void ModernHUD::DrawStatus(int x, int y)
         tempstr << FC_RED "KILLS" FC_GRAY "  " << totalKilledMonsters << "/" << totalmonsters;
         V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y - 16, m_screen);
         tempstr.clear();
-        tempstr << FC_BLUE "ITEMS" FC_GRAY "  " << hu_player.itemcount << "/" << totalitems;
+        tempstr << FC_BLUE "ITEMS" FC_GRAY "  " << (GameType == gt_coop ? G_TotalFoundItems() : hu_player.itemcount)
+                << "/" << totalitems;
         V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y - 8, m_screen);
         tempstr.clear();
         if(!hud_hidesecrets)
         {
-            tempstr << FC_GOLD "SCRTS" FC_GRAY "  " << hu_player.secretcount << "/" << totalsecret;
+            tempstr << FC_GOLD "SCRTS" FC_GRAY "  "
+                    << (GameType == gt_coop ? G_TotalFoundSecrets() : hu_player.secretcount) << "/" << totalsecret;
             V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y, m_screen);
         }
     }
@@ -124,12 +129,14 @@ void ModernHUD::DrawStatus(int x, int y)
         tempstr << totalKilledMonsters << "/" << totalmonsters << "  " FC_RED "KILLS";
         FontWriteTextRAlign(hud_fssmall, tempstr.constPtr(), x, y, m_screen);
         tempstr.clear();
-        tempstr << hu_player.itemcount << "/" << totalitems << "  " FC_BLUE "ITEMS";
+        tempstr << (GameType == gt_coop ? G_TotalFoundItems() : hu_player.itemcount) << "/" << totalitems
+                << "  " FC_BLUE "ITEMS";
         FontWriteTextRAlign(hud_fssmall, tempstr.constPtr(), x, y + 8, m_screen);
         tempstr.clear();
         if(!hud_hidesecrets)
         {
-            tempstr << hu_player.secretcount << "/" << totalsecret << "  " FC_GOLD "SCRTS";
+            tempstr << (GameType == gt_coop ? G_TotalFoundSecrets() : hu_player.secretcount) << "/" << totalsecret
+                    << "  " FC_GOLD "SCRTS";
             FontWriteTextRAlign(hud_fssmall, tempstr.constPtr(), x, y + 16, m_screen);
         }
     }

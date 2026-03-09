@@ -1524,12 +1524,30 @@ void HUDStatWidget::ticker()
     }
     else if(statType == STATTYPE_ITEMS)
     {
-        snprintf(statitemstr, sizeof(statitemstr), "I: %i/%i", plr->itemcount, totalitems);
+        if(GameType == gt_coop)
+        {
+            const int total = G_TotalFoundItems();
+            if(plr->itemcount != total)
+                snprintf(statitemstr, sizeof(statitemstr), "I: %i (%i)/%i", total, plr->itemcount, totalitems);
+            else
+                snprintf(statitemstr, sizeof(statitemstr), "I: %i/%i", plr->itemcount, totalitems);
+        }
+        else
+            snprintf(statitemstr, sizeof(statitemstr), "I: %i/%i", plr->itemcount, totalitems);
         message = statitemstr;
     }
     else if(statType == STATTYPE_SECRETS && !hud_hidesecrets)
     {
-        snprintf(statsecrstr, sizeof(statsecrstr), "S: %i/%i", plr->secretcount, totalsecret);
+        if(GameType == gt_coop)
+        {
+            const int total = G_TotalFoundSecrets();
+            if(plr->secretcount != total)
+                snprintf(statsecrstr, sizeof(statsecrstr), "S: %i (%i)/%i", total, plr->secretcount, totalsecret);
+            else
+                snprintf(statsecrstr, sizeof(statsecrstr), "S: %i/%i", plr->secretcount, totalsecret);
+        }
+        else
+            snprintf(statsecrstr, sizeof(statsecrstr), "S: %i/%i", plr->secretcount, totalsecret);
         message = statsecrstr;
     }
     else
