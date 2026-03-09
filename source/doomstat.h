@@ -277,6 +277,8 @@ extern int totalmonsters;
 extern int totalitems;
 extern int totalsecret;
 
+extern int totalKilledMonsters;
+
 // Timer, for scores.
 extern int levelstarttic; // gametic at level start
 extern int basetic;       // killough 9/29/98: levelstarttic, adjusted

@@ -1512,7 +1512,14 @@ void HUDStatWidget::ticker()
 
     if(statType == STATTYPE_KILLS)
     {
-        snprintf(statkillstr, sizeof(statkillstr), "K: %i/%i", plr->killcount, totalmonsters);
+        if(GameType == gt_coop && plr->killcount != totalKilledMonsters)
+        {
+            // Under coop let player see their own kills on the automap.
+            snprintf(statkillstr, sizeof(statkillstr), "K: %i (%i)/%i", totalKilledMonsters, plr->killcount,
+                     totalmonsters);
+        }
+        else
+            snprintf(statkillstr, sizeof(statkillstr), "K: %i/%i", plr->killcount, totalmonsters);
         message = statkillstr;
     }
     else if(statType == STATTYPE_ITEMS)

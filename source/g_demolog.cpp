@@ -91,6 +91,7 @@ void G_DemoLogStats()
     int allKills = 0, allItems = 0, allSecret = 0;
     for(int i = 0; i < MAXPLAYERS; ++i)
     {
+        // don't use totalKilledMonsters for demo logs, don't want to change existing records
         allKills  += players[i].killcount;
         allItems  += players[i].itemcount;
         allSecret += players[i].secretcount;

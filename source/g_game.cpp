@@ -123,6 +123,7 @@ int             gametic;
 int             levelstarttic;                       // gametic at level start
 int             basetic;                             // killough 9/29/98: for demo sync
 int             totalmonsters, totalitems, totalsecret; // for intermission
+int             totalKilledMonsters;
 bool            democontinue;
 bool            demorecording;
 bool            demoplayback;
@@ -3943,7 +3944,7 @@ static int G_totalPlayerParam(int player_t::*tally)
 // Named this way to prevent confusion with similarly named variables
 int G_TotalKilledMonsters()
 {
-    return G_totalPlayerParam(&player_t::killcount);
+    return demo_version >= 406 ? totalKilledMonsters : G_totalPlayerParam(&player_t::killcount);
 }
 int G_TotalFoundItems()
 {
