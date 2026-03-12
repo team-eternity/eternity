@@ -806,6 +806,11 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
     return dx ? FixedDiv(dx, finesine[(tantoangle_acc[FixedDiv(dy, dx) >> DBITS] + ANG90) >> ANGLETOFINESHIFT]) : 0;
 }
 
+inline static bool R_needMoreSpace(const float *const buffer, const float *const bufferEnd, const int requestedLength)
+{
+    return buffer + requestedLength > bufferEnd;
+}
+
 //
 // A wall segment will be drawn
 //  between start and stop pixels (inclusive).
@@ -1044,26 +1049,40 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
         if(segclip.maskedtex)
         {
-            int    i;
-            float *mtc;
-            float *mts;
-            int    xlen;
-            xlen = segclip.x2 - segclip.x1 + 1;
+            const int xlen = segclip.x2 - segclip.x1 + 1;
 
-            ds_p->maskedtexturecol  = lastopening - segclip.x1;
-            ds_p->maskedtextureskew = lastskew - segclip.x1;
-
-            mtc = lastopening;
-            mts = lastskew;
-
-            for(i = 0; i < xlen; i++)
+            if(R_needMoreSpace(lastopening, planecontext.openingsEnd, xlen))
             {
-                mtc[i] = FLT_MAX;
-                mts[i] = 0.0f;
+                ds_p->maskedtexturecol = nullptr;
+                r_requestReallocOpenings.store(true, std::memory_order_relaxed);
             }
+            else
+            {
+                ds_p->maskedtexturecol = lastopening - segclip.x1;
 
-            lastopening += xlen;
-            lastskew    += xlen;
+                float *mtc = lastopening;
+                for(int i = 0; i < xlen; i++)
+                {
+                    mtc[i] = FLT_MAX;
+                }
+                lastopening += xlen;
+            }
+            if (R_needMoreSpace(lastskew, planecontext.skewsEnd, xlen))
+            {
+                ds_p->maskedtextureskew = nullptr;
+                r_requestReallocSkews.store(true, std::memory_order_relaxed);
+            }
+            else
+            {
+                ds_p->maskedtextureskew = lastskew - segclip.x1;
+
+                float *mts = lastskew;
+                for(int i = 0; i < xlen; i++)
+                {
+                    mts[i] = 0.0f;
+                }
+                lastskew += xlen;
+            }
         }
         else
         {
@@ -1088,43 +1107,49 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
     // store clipping arrays
     float *const floorclip   = planecontext.floorclip;
     float *const ceilingclip = planecontext.ceilingclip;
-    if((ds_p->silhouette & SIL_TOP || segclip.maskedtex) && !ds_p->sprtopclip)
+    const int    xlen        = segclip.x2 - segclip.x1 + 1;
+    if (R_needMoreSpace(lastopening, planecontext.openingsEnd, xlen))
     {
-        int xlen = segclip.x2 - segclip.x1 + 1;
-
-        if(segclip.markflags & SEG_MARKCOVERLAY)
-        {
-            for(int i = xlen; i-- > 0;)
-            {
-                float over     = overlaycclip[segclip.x1 + i];
-                float solid    = ceilingclip[segclip.x1 + i];
-                lastopening[i] = over > solid ? over : solid;
-            }
-        }
-        else
-            memcpy(lastopening, ceilingclip + segclip.x1, sizeof(float) * xlen);
-
-        ds_p->sprtopclip  = lastopening - segclip.x1;
-        lastopening      += xlen;
+        r_requestReallocOpenings.store(true, std::memory_order_relaxed);
     }
-    if((ds_p->silhouette & SIL_BOTTOM || segclip.maskedtex) && !ds_p->sprbottomclip)
+    else
     {
-        int xlen = segclip.x2 - segclip.x1 + 1;
-
-        if(segclip.markflags & SEG_MARKFOVERLAY)
+        if((ds_p->silhouette & SIL_TOP || segclip.maskedtex) && !ds_p->sprtopclip)
         {
-            for(int i = xlen; i-- > 0;)
-            {
-                float over     = overlayfclip[segclip.x1 + i];
-                float solid    = floorclip[segclip.x1 + i];
-                lastopening[i] = over < solid ? over : solid;
-            }
-        }
-        else
-            memcpy(lastopening, floorclip + segclip.x1, sizeof(float) * xlen);
 
-        ds_p->sprbottomclip  = lastopening - segclip.x1;
-        lastopening         += xlen;
+            if(segclip.markflags & SEG_MARKCOVERLAY)
+            {
+                for(int i = xlen; i-- > 0;)
+                {
+                    float over     = overlaycclip[segclip.x1 + i];
+                    float solid    = ceilingclip[segclip.x1 + i];
+                    lastopening[i] = over > solid ? over : solid;
+                }
+            }
+            else
+                memcpy(lastopening, ceilingclip + segclip.x1, sizeof(float) * xlen);
+
+            ds_p->sprtopclip  = lastopening - segclip.x1;
+            lastopening      += xlen;
+        }
+        if((ds_p->silhouette & SIL_BOTTOM || segclip.maskedtex) && !ds_p->sprbottomclip)
+        {
+
+            if(segclip.markflags & SEG_MARKFOVERLAY)
+            {
+                for(int i = xlen; i-- > 0;)
+                {
+                    float over     = overlayfclip[segclip.x1 + i];
+                    float solid    = floorclip[segclip.x1 + i];
+                    lastopening[i] = over < solid ? over : solid;
+                }
+            }
+            else
+                memcpy(lastopening, floorclip + segclip.x1, sizeof(float) * xlen);
+
+            ds_p->sprbottomclip  = lastopening - segclip.x1;
+            lastopening         += xlen;
+        }
     }
     if(segclip.maskedtex && !(ds_p->silhouette & SIL_TOP))
     {

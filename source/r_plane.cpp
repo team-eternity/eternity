@@ -98,6 +98,41 @@ constexpr unsigned int visplane_hash(const unsigned int picnum, const unsigned i
 static float *g_openings = nullptr;
 static float *g_skews    = nullptr;
 
+static int g_openingsAllocFactor = 1;
+static int g_skewsAllocFactor = 1;
+
+void R_ReallocateOpenings()
+{
+    C_Puts("Openings reallocated!");
+    r_requestReallocOpenings.store(false, std::memory_order_relaxed);
+    g_openingsAllocFactor *= 2;
+
+    g_openings = erealloctag(float *, g_openings, g_openingsAllocFactor *video.width *video.height * sizeof(float),
+                             PU_VALLOC, nullptr);
+    R_ForEachContext([](rendercontext_t &context) {
+        context.planecontext.openings = g_openings + context.bounds.startcolumn * video.height * g_openingsAllocFactor;
+        context.planecontext.lastopening = context.planecontext.openings;
+        context.planecontext.openingsEnd =
+            context.planecontext.openings + context.bounds.numcolumns * video.height * g_openingsAllocFactor;
+    });
+}
+
+void R_ReallocateSkews()
+{
+    C_Puts("Skews reallocated!");
+    r_requestReallocSkews.store(false, std::memory_order_relaxed);
+    g_skewsAllocFactor *= 2;
+
+    g_skews = erealloctag(float *, g_skews, g_skewsAllocFactor *video.width *video.height * sizeof(float), PU_VALLOC,
+                          nullptr);
+    R_ForEachContext([](rendercontext_t &context) {
+        context.planecontext.skews    = g_skews + context.bounds.startcolumn * video.height * g_skewsAllocFactor;
+        context.planecontext.lastskew = context.planecontext.skews;
+        context.planecontext.skewsEnd =
+            context.planecontext.skews + context.bounds.numcolumns * video.height * g_skewsAllocFactor;
+    });
+}
+
 // killough 8/1/98: set static number of openings to be large enough
 // (a static limit is okay in this case and avoids difficulties in r_segs.c)
 VALLOCATION(openings)
@@ -106,11 +141,16 @@ VALLOCATION(openings)
     g_openings = ecalloctag(float *, w *h, sizeof(float), PU_VALLOC, nullptr);
     g_skews    = ecalloctag(float *, w *h, sizeof(float), PU_VALLOC, nullptr);
 
+    g_openingsAllocFactor = 1;
+    g_skewsAllocFactor    = 1;
+
     R_ForEachContext([w, h](rendercontext_t &context) {
         context.planecontext.openings    = g_openings + context.bounds.startcolumn * h;
         context.planecontext.lastopening = context.planecontext.openings;
+        context.planecontext.openingsEnd = context.planecontext.openings + context.bounds.numcolumns * h;
         context.planecontext.skews       = g_skews + context.bounds.startcolumn * h;
         context.planecontext.lastskew    = context.planecontext.skews;
+        context.planecontext.skewsEnd    = context.planecontext.skews + context.bounds.numcolumns * h;
     });
 }
 

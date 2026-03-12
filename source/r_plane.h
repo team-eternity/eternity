@@ -24,6 +24,8 @@
 #ifndef R_PLANE_H__
 #define R_PLANE_H__
 
+#include <atomic>
+
 struct cb_plane_t;
 struct cbviewpoint_t;
 struct cmapcontext_t;
@@ -50,6 +52,14 @@ void R_ClearPlanes(planecontext_t &context, const contextbounds_t &bounds);
 void R_ClearOverlayClips(const contextbounds_t &bounds);
 void R_DrawPlanes(cmapcontext_t &context, ZoneHeap &heap, planehash_t &mainhash, int *const spanstart,
                   const angle_t viewangle, planehash_t *table);
+
+
+
+inline std::atomic<bool> r_requestReallocOpenings;
+inline std::atomic<bool> r_requestReallocSkews;
+
+void R_ReallocateOpenings();
+void R_ReallocateSkews();
 
 // Planehash stuff
 planehash_t *R_NewPlaneHash(ZoneHeap &heap, int chaincount);

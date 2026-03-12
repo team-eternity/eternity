@@ -1395,11 +1395,23 @@ void R_RenderPlayerView(player_t *player, camera_t *camerapoint)
     else
         player->mo->intflags &= ~MIF_HIDDENBYQUAKE; // zero it otherwise
 
+    r_requestReallocOpenings.store(false, std::memory_order_relaxed);
+    r_requestReallocSkews.store(false, std::memory_order_relaxed);
+
     // We don't need to multithread if we only have one context
     if(r_numcontexts == 1)
         R_RenderViewContext(r_globalcontext);
     else
         R_RunContexts();
+
+    if (r_requestReallocOpenings.load(std::memory_order_relaxed))
+    {
+        R_ReallocateOpenings();
+    }
+    if(r_requestReallocSkews.load(std::memory_order_relaxed))
+    {
+        R_ReallocateSkews();
+    }
 
     R_FinishMappingLines();
     R_ClearBadSpritesAndFrames();
