@@ -190,7 +190,7 @@ struct rendercontext_t
 inline rendercontext_t r_globalcontext;
 
 inline int  r_numcontexts;
-inline bool r_hascontexts;
+inline bool r_hascontexts = false; // Remains false if running in a scenario with no window.
 
 rendercontext_t &R_GetContext(int context);
 void             R_FreeContexts();
