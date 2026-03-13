@@ -813,7 +813,8 @@ static void R_checkLastPointer(ZoneHeap &heap, float **const lastPointer, const 
     {
         if(!(*curData)->next)
         {
-            const int             length = numColumns * 16; // don't allocate much more
+            const size_t length = (*curData)->bufferEnd - (*curData)->buffer;
+
             renderbuffer_t *const newData =
                 zhmalloctag(heap, renderbuffer_t *, sizeof(*newData) + length * sizeof(float), PU_VALLOC, nullptr);
             newData->buffer    = reinterpret_cast<float *>(newData + 1);
@@ -821,7 +822,7 @@ static void R_checkLastPointer(ZoneHeap &heap, float **const lastPointer, const 
             newData->next      = nullptr;
             (*curData)->next   = newData;
         }
-        *curData = (*curData)->next;
+        *curData     = (*curData)->next;
         *lastPointer = (*curData)->buffer;
     }
 }
