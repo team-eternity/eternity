@@ -278,6 +278,8 @@ extern int totalitems;
 extern int totalsecret;
 
 extern int totalKilledMonsters;
+// show the actual monsters on the HUD, for competitive max kills (except in respawn or boss spawner mode)
+extern int realTotalMonsters;
 
 // Timer, for scores.
 extern int levelstarttic; // gametic at level start

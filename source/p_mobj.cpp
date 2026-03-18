@@ -2552,6 +2552,9 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type, bool nolastl
     // Under vanilla Heretic type 0 is the crystal vial, so try to emulate that weirdness where
     // respawned chickens turn into vials
     mobj->unmorph.type = vanilla_heretic ? E_SafeThingName("CrystalVial") : UnknownThingType;
+
+    if(mobj->flags & MF_COUNTKILL && !(mobj->flags & MF_FRIEND))
+        ++realTotalMonsters;
     return mobj;
 }
 
@@ -2843,13 +2846,6 @@ void P_SpawnUnknownThings()
     UnknownThings.clear();
 }
 
-void P_IncrementCountKill(const Mobj &mobj)
-{
-    // killough 7/20/98: exclude friends
-    if(!((mobj.flags ^ MF_COUNTKILL) & (MF_FRIEND | MF_COUNTKILL)))
-        totalmonsters++;
-}
-
 //
 // P_SpawnMapThing
 //
@@ -3106,7 +3102,10 @@ spawnit:
         mobj->updateThinker();    // transfer friendliness flag
     }
 
-    P_IncrementCountKill(*mobj);
+    // killough 7/20/98: exclude friends
+    // printz: simplified the logic
+    if(mobj->flags & MF_COUNTKILL && !(mobj->flags & MF_FRIEND))
+        totalmonsters++;
 
     if(mobj->flags & MF_COUNTITEM)
         totalitems++;

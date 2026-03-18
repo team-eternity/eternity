@@ -124,6 +124,7 @@ int             levelstarttic;                       // gametic at level start
 int             basetic;                             // killough 9/29/98: for demo sync
 int             totalmonsters, totalitems, totalsecret; // for intermission
 int             totalKilledMonsters;
+int             realTotalMonsters;
 bool            democontinue;
 bool            demorecording;
 bool            demoplayback;

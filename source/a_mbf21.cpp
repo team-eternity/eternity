@@ -127,9 +127,6 @@ void A_SpawnObject(actionargs_t *actionargs)
 
     // [XA] don't bother with the dont-inherit-friendliness hack
     // that exists in A_Spawn, 'cause WTF is that about anyway?
-
-    if(demo_version >= 406)
-        P_IncrementCountKill(*mo);
 }
 
 //

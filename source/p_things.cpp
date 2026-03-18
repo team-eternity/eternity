@@ -101,12 +101,7 @@ int EV_ThingProjectile(const int *args, bool gravity)
             newMobj->flags2 |= MF2_LOGRAV;
         }
         if(P_CheckMissileSpawn(newMobj))
-        {
             success = true;
-
-            if(demo_version >= 406)
-                P_IncrementCountKill(*newMobj); // Thing_Projectile can be used for monsters too
-        }
     }
 
     return success;
@@ -168,9 +163,6 @@ int EV_ThingSpawn(const int *args, bool fog)
             newMobj->flags3 |= MF3_NOITEMRESP;
 
             success = true;
-
-            if(demo_version >= 406)
-                P_IncrementCountKill(*newMobj);
         }
     }
 

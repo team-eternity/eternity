@@ -181,8 +181,6 @@ void A_Spawn(actionargs_t *actionargs)
         if(newmobj)
         {
             P_transferFriendship(*newmobj, *mo);
-            if(demo_version >= 406)
-                P_IncrementCountKill(*newmobj);
         }
     }
 }
@@ -430,9 +428,6 @@ void A_SpawnAbove(actionargs_t *actionargs)
 
     if(statenum >= 0 && statenum < NUMSTATES)
         P_SetMobjState(mo, statenum);
-
-    if(demo_version >= 406)
-        P_IncrementCountKill(*mo);
 }
 
 //
@@ -572,8 +567,6 @@ void A_SpawnEx(actionargs_t *actionargs)
     else
     {
         P_transferFriendship(*mo, *actor);
-        if(demo_version >= 406)
-            P_IncrementCountKill(*mo);
         mo->angle = angle;
         mo->momx  = xvel;
         mo->momy  = yvel;
@@ -635,6 +628,11 @@ void A_SetFlags(actionargs_t *actionargs)
         P_UnsetThingSectorLink(actor, false);
     if(!(preflags & MF_NOBLOCKMAP) && flags[0] & MF_NOBLOCKMAP)
         P_UnsetThingBlockLink(actor);
+
+    if(!(preflags & MF_COUNTKILL) && flags[0] & MF_COUNTKILL && !((preflags | flags[0]) & MF_FRIEND))
+        ++realTotalMonsters;
+    else if(preflags & MF_COUNTKILL && !(preflags & MF_FRIEND) && flags[0] & MF_FRIEND)
+        --realTotalMonsters;
 }
 
 //
@@ -679,6 +677,11 @@ void A_UnSetFlags(actionargs_t *actionargs)
         P_SetThingSectorLink(actor, nullptr);
     if(preflags & MF_NOBLOCKMAP && flags[0] & MF_NOBLOCKMAP)
         P_SetThingBlockLink(actor);
+
+    if(preflags & flags[0] & MF_COUNTKILL && preflags & MF_FRIEND && !(flags[0] & MF_FRIEND))
+        ++realTotalMonsters;
+    if(preflags & MF_COUNTKILL && !(preflags & MF_FRIEND) && !(flags[0] & MF_COUNTKILL))
+        --realTotalMonsters;
 }
 
 static const char *kwds_A_StartScript[] = {
@@ -1315,9 +1318,6 @@ void A_ThingSummon(actionargs_t *actionargs)
         }
         return;
     }
-
-    if(demo_version >= 406)
-        P_IncrementCountKill(*newmobj);
 
     // give same target
     P_SetTarget<Mobj>(&newmobj->target, actor->target);
