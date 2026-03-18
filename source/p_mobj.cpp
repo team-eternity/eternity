@@ -2326,7 +2326,7 @@ void Mobj::updateThinker()
     {
         tclass = th_delete;
     }
-    else if(health > 0 && (flags & MF_COUNTKILL || flags3 & MF3_KILLABLE))
+    else if(health > 0 && P_isMonster(*this))
     {
         if(flags & MF_FRIEND)
             tclass = th_friends;
@@ -3045,7 +3045,7 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
         return nullptr;
 
     // don't spawn any monsters if -nomonsters
-    if(nomonsters && ((mobjinfo[i]->flags3 & MF3_KILLABLE) || (mobjinfo[i]->flags & MF_COUNTKILL)))
+    if(nomonsters && P_isMonster(*mobjinfo[i]))
         return nullptr;
 
     // haleyjd 08/18/13: Heretic includes some registered-only items in its
@@ -3966,7 +3966,7 @@ void P_Massacre(int friends)
         if(!(mo = thinker_cast<Mobj *>(think)))
             continue;
 
-        if((mo->flags & MF_COUNTKILL || mo->flags3 & MF3_KILLABLE) && mo->health > 0)
+        if(P_isMonster(*mo) && mo->health > 0)
         {
             switch(friends)
             {

@@ -1406,7 +1406,7 @@ static void P_morphMonster(const emodmorph_t &minfo, Mobj &target)
             switch(*excluded)
             {
             case MorphExcludeInanimate:
-                if(!(target.flags & MF_COUNTKILL) && !(target.flags3 & MF3_KILLABLE))
+                if(!P_isMonster(target))
                     return;
                 continue;
             default:   //

@@ -847,6 +847,12 @@ inline static void P_transferFriendship(Mobj &target, const Mobj &source)
     target.flags = (target.flags & ~MF_FRIEND) | (source.flags & MF_FRIEND);
 }
 
+template<typename MType>
+inline static bool P_isMonster(const MType& mobj)
+{
+    return mobj.flags & MF_COUNTKILL || mobj.flags3 & MF3_KILLABLE;
+}
+
 #endif
 
 //----------------------------------------------------------------------------

@@ -704,7 +704,7 @@ bool ACS_CF_ClassifyActor(ACS_CF_ARGS)
 
         if(mo->flags & MF_MISSILE)
             res |= THINGCLASS_MISSILE;
-        else if(mo->flags3 & MF3_KILLABLE || mo->flags & MF_COUNTKILL)
+        else if(P_isMonster(*mo))
             res |= THINGCLASS_MONSTER;
         else
             res |= THINGCLASS_GENERIC;
@@ -2782,7 +2782,7 @@ static uint32_t ACS_thingCount(mobjtype_t type, int32_t tid)
             if(type == 0 || mo->type == type)
             {
                 // don't count killable things that are dead
-                if(((mo->flags & MF_COUNTKILL) || (mo->flags3 & MF3_KILLABLE)) && mo->health <= 0)
+                if(P_isMonster(*mo) && mo->health <= 0)
                     continue;
                 ++count;
             }
@@ -2795,7 +2795,7 @@ static uint32_t ACS_thingCount(mobjtype_t type, int32_t tid)
             if(type == 0 || mo->type == type)
             {
                 // don't count killable things that are dead
-                if(((mo->flags & MF_COUNTKILL) || (mo->flags3 & MF3_KILLABLE)) && mo->health <= 0)
+                if(P_isMonster(*mo) && mo->health <= 0)
                     continue;
                 ++count;
             }
@@ -2856,7 +2856,7 @@ static uint32_t ACS_thingCountSec(mobjtype_t type, int32_t tid, int32_t tag)
             if((type == 0 || mo->type == type) && (tid == 0 || mo->tid == tid))
             {
                 // don't count killable things that are dead
-                if(((mo->flags & MF_COUNTKILL) || (mo->flags3 & MF3_KILLABLE)) && mo->health <= 0)
+                if(P_isMonster(*mo) && mo->health <= 0)
                     continue;
                 ++count;
             }

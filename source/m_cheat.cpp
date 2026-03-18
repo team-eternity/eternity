@@ -1116,7 +1116,7 @@ int M_NukeMonsters()
             mi = mobjinfo[mo->type];
 
             if(!(mo->flags & mask) && // killough 7/20/98
-               (mo->flags & MF_COUNTKILL || mo->flags3 & MF3_KILLABLE))
+               P_isMonster(*mo))
             {
                 // killough 3/6/98: kill even if PE is dead
                 if(mo->health > 0)

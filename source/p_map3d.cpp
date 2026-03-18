@@ -370,8 +370,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
        (thing->flags & MF_SOLID) && (thing->flags5 & MF5_ACTLIKEBRIDGE))
     {
         // [RH] Let monsters walk on actors as well as floors
-        if(((clip.thing->flags & MF_COUNTKILL) || (clip.thing->flags3 & MF3_KILLABLE)) && topz >= clip.zref.floor &&
-           topz <= clip.thing->z + STEPSIZE)
+        if(P_isMonster(*clip.thing) && topz >= clip.zref.floor && topz <= clip.thing->z + STEPSIZE)
         {
             stepthing              = thing;
             clip.zref.floor        = topz;
@@ -920,8 +919,7 @@ static PushResult P_PushUp(Mobj *thing)
         fixed_t oldz      = intersect->z;
 
         if(/*!(intersect->flags3 & MF3_PASSMOBJ) ||*/
-           (!((intersect->flags & MF_COUNTKILL) || (intersect->flags3 & MF3_KILLABLE)) &&
-            intersect->info->mass > mymass))
+           (!P_isMonster(*intersect) && intersect->info->mass > mymass))
         {
             // Can't push things more massive than ourself
             return PushResult::noFitAbove;
@@ -963,8 +961,7 @@ static int P_PushDown(Mobj *thing)
         fixed_t oldz      = intersect->z;
 
         if(/*!(intersect->flags3 & MF3_PASSMOBJ) || */
-           (!((intersect->flags & MF_COUNTKILL) || (intersect->flags3 & MF3_KILLABLE)) &&
-            intersect->info->mass > mymass))
+           (!P_isMonster(*intersect) && intersect->info->mass > mymass))
         { // Can't push things more massive than ourself
             return 2;
         }
