@@ -1798,7 +1798,6 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
     {
         newmobj->flags  &= ~MF_COUNTKILL;
         newmobj->flags3 |= MF3_KILLABLE;
-        --realTotalMonsters;
     }
 
     if(newmobj->flags & MF_COUNTITEM)

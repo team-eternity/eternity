@@ -2460,6 +2460,9 @@ static Mobj *ACS_spawn(mobjtype_t type, fixed_t x, fixed_t y, fixed_t z, int tid
             return nullptr;
         }
 
+        if(demo_version >= 406)
+            P_IncrementCountKill(*mo);
+
         if(tid)
             P_AddThingTID(mo, tid);
         mo->angle = angle;
