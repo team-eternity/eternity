@@ -609,10 +609,7 @@ void A_AddFlags(actionargs_t *actionargs)
         actor->flags5 |= mbf21flags[DEHFLAGS_MODE5];
     }
     // Must do it after the change, to avoid nested functions interpreting the current state.
-    if(!(preflags & MF_NOSECTOR) && flags & MF_NOSECTOR)
-        P_UnsetThingSectorLink(actor, false);
-    if(!(preflags & MF_NOBLOCKMAP) && flags & MF_NOBLOCKMAP)
-        P_UnsetThingBlockLink(actor);
+    P_UpdateOnFlagSet(preflags, actor);
 }
 
 //
@@ -644,10 +641,7 @@ void A_RemoveFlags(actionargs_t *actionargs)
         actor->flags5 &= ~mbf21flags[DEHFLAGS_MODE5];
     }
 
-    if(preflags & MF_NOSECTOR && flags & MF_NOSECTOR)
-        P_SetThingSectorLink(actor, nullptr);
-    if(preflags & MF_NOBLOCKMAP && flags & MF_NOBLOCKMAP)
-        P_SetThingBlockLink(actor);
+    P_UpdateOnFlagRemove(preflags, actor);
 }
 
 //=============================================================================

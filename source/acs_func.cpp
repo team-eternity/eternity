@@ -2254,8 +2254,21 @@ void ACS_SetThingProp(Mobj *thing, uint32_t var, uint32_t val)
     case ACS_TP_JumpZ:        break;
     case ACS_TP_ChaseGoal:    break;
     case ACS_TP_Frightened:   break;
-    case ACS_TP_Friendly:     if(val) thing->flags |=  MF_FRIEND;
-                              else    thing->flags &= ~MF_FRIEND; break;
+    case ACS_TP_Friendly:     
+    {
+        unsigned preflags = thing->flags;
+        if(val)
+        {
+            thing->flags |=  MF_FRIEND;
+            P_UpdateOnFlagSet(preflags, thing);
+        }
+        else
+        {
+            thing->flags &= ~MF_FRIEND;
+            P_UpdateOnFlagRemove(preflags, thing);
+        }
+        break;
+    }
     case ACS_TP_SpawnHealth:  break;
     case ACS_TP_Dropped:      if(val) thing->flags |=  MF_DROPPED;
                               else    thing->flags &= ~MF_DROPPED; break;

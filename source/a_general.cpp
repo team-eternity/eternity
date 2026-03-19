@@ -624,15 +624,7 @@ void A_SetFlags(actionargs_t *actionargs)
     }
 
     // Must do it after the change, to avoid nested functions interpreting the current state.
-    if(!(preflags & MF_NOSECTOR) && flags[0] & MF_NOSECTOR)
-        P_UnsetThingSectorLink(actor, false);
-    if(!(preflags & MF_NOBLOCKMAP) && flags[0] & MF_NOBLOCKMAP)
-        P_UnsetThingBlockLink(actor);
-
-    if(!(preflags & MF_COUNTKILL) && flags[0] & MF_COUNTKILL && !((preflags | flags[0]) & MF_FRIEND))
-        ++realTotalMonsters;
-    else if(preflags & MF_COUNTKILL && !(preflags & MF_FRIEND) && flags[0] & MF_FRIEND)
-        --realTotalMonsters;
+    P_UpdateOnFlagSet(preflags, actor);
 }
 
 //
@@ -673,15 +665,7 @@ void A_UnSetFlags(actionargs_t *actionargs)
     case 5: actor->flags5 &= ~flags[4]; break;
     }
 
-    if(preflags & MF_NOSECTOR && flags[0] & MF_NOSECTOR)
-        P_SetThingSectorLink(actor, nullptr);
-    if(preflags & MF_NOBLOCKMAP && flags[0] & MF_NOBLOCKMAP)
-        P_SetThingBlockLink(actor);
-
-    if(preflags & flags[0] & MF_COUNTKILL && preflags & MF_FRIEND && !(flags[0] & MF_FRIEND))
-        ++realTotalMonsters;
-    if(preflags & MF_COUNTKILL && !(preflags & MF_FRIEND) && !(flags[0] & MF_COUNTKILL))
-        --realTotalMonsters;
+    P_UpdateOnFlagRemove(preflags, actor);
 }
 
 static const char *kwds_A_StartScript[] = {

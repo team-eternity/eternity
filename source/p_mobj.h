@@ -620,6 +620,9 @@ bool P_CheckFloorCeilingForSpawning(const Mobj &mobj);
 bool P_RestingOnGround(const Mobj &mobj, const surface_t &floor);
 void P_NeutralizeForRemoval(Mobj &mobj);
 
+void P_UpdateOnFlagSet(unsigned preflags, Mobj *actor);
+void P_UpdateOnFlagRemove(unsigned preflags, Mobj *actor);
+
 //=============================================================================
 //
 // Misc. mobj flags
