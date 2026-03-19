@@ -1701,7 +1701,6 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
     if(flagsmode != -1)
     {
         unsigned int *res = deh_ParseFlagsCombined(flags);
-        // TODO: update countkill correctly
 
         switch(flagsmode)
         {
@@ -1799,7 +1798,6 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
     {
         newmobj->flags  &= ~MF_COUNTKILL;
         newmobj->flags3 |= MF3_KILLABLE;
-        // TODO: actually make it smarter
         --realTotalMonsters;
     }
 

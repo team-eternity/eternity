@@ -4425,32 +4425,6 @@ void P_NeutralizeForRemoval(Mobj &mobj)
     mobj.health                        = -1000;
 }
 
-void P_UpdateOnFlagSet(unsigned preflags, Mobj* actor)
-{
-    if(!(preflags & MF_NOSECTOR) && actor->flags & MF_NOSECTOR)
-        P_UnsetThingSectorLink(actor, false);
-    if(!(preflags & MF_NOBLOCKMAP) && actor->flags & MF_NOBLOCKMAP)
-        P_UnsetThingBlockLink(actor);
-
-    if(!(preflags & MF_COUNTKILL) && actor->flags & MF_COUNTKILL && !(actor->flags & MF_FRIEND))
-        ++realTotalMonsters;
-    else if(preflags & MF_COUNTKILL && !(preflags & MF_FRIEND) && actor->flags & MF_FRIEND)
-        --realTotalMonsters;
-}
-
-void P_UpdateOnFlagRemove(unsigned preflags, Mobj* actor)
-{
-    if(preflags & MF_NOSECTOR && !(actor->flags & MF_NOSECTOR))
-        P_SetThingSectorLink(actor, nullptr);
-    if(preflags & MF_NOBLOCKMAP && !(actor->flags & MF_NOBLOCKMAP))
-        P_SetThingBlockLink(actor);
-
-    if(preflags & actor->flags & MF_COUNTKILL && preflags & MF_FRIEND && !(actor->flags & MF_FRIEND))
-        ++realTotalMonsters;
-    if(preflags & MF_COUNTKILL && !(preflags & MF_FRIEND) && !(actor->flags & MF_COUNTKILL))
-        --realTotalMonsters;
-}
-
 #if 0
 //
 // Small natives
