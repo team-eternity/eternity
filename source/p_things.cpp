@@ -75,7 +75,7 @@ int EV_ThingProjectile(const int *args, bool gravity)
     mi = mobjinfo[moType];
 
     // Don't spawn monsters if -nomonsters
-    if(nomonsters && P_isMonster(*mi))
+    if(nomonsters && (mi->flags & MF_COUNTKILL || mi->flags3 & MF3_KILLABLE))
         return false;
 
     angle     = (angle_t)args[2] << 24;
@@ -137,7 +137,7 @@ int EV_ThingSpawn(const int *args, bool fog)
     mi = mobjinfo[moType];
 
     // Don't spawn monsters if -nomonsters
-    if(nomonsters && P_isMonster(*mi))
+    if(nomonsters && (mi->flags & MF_COUNTKILL || mi->flags3 & MF3_KILLABLE))
         return false;
 
     angle  = (angle_t)args[2] << 24;
@@ -189,7 +189,7 @@ int EV_ThingActivate(int tid)
 
     while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
     {
-        if(P_isMonster(*mobj))
+        if((mobj->flags & MF_COUNTKILL) || (mobj->flags3 & MF3_KILLABLE))
         {
             if(mobj->flags2 & MF2_DORMANT)
             {
@@ -224,7 +224,7 @@ int EV_ThingDeactivate(int tid)
 
     while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
     {
-        if(P_isMonster(*mobj))
+        if((mobj->flags & MF_COUNTKILL) || (mobj->flags3 & MF3_KILLABLE))
         {
             if(!(mobj->flags2 & MF2_DORMANT))
             {

@@ -1050,7 +1050,7 @@ static bool PIT_FindTarget(Mobj *mo, void *context)
     Mobj *actor = current_actor;
 
     if(!((mo->flags ^ actor->flags) & MF_FRIEND && // Invalid target
-         mo->health > 0 && P_isMonster(*mo)))
+         mo->health > 0 && (mo->flags & MF_COUNTKILL || mo->flags3 & MF3_KILLABLE)))
         return true;
 
     // If the monster is already engaged in a one-on-one attack
@@ -1103,7 +1103,7 @@ static bool P_HereticMadMelee(Mobj *actor)
         // * killable
         // * not self (will fight same type, however)
         // * alive
-        if(!P_isMonster(*mo) || mo == actor || mo->health <= 0)
+        if(!(mo->flags & MF_COUNTKILL || mo->flags3 & MF3_KILLABLE) || mo == actor || mo->health <= 0)
             continue;
 
         // skip some at random
