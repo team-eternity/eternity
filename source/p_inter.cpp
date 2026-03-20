@@ -1017,6 +1017,10 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
             players->killcount++;
     }
 
+    // Have a global count so it also works for multiplayer
+    if(target->flags & MF_COUNTKILL && !(target->flags & MF_FRIEND))
+        ++totalKilledMonsters;
+
     if(target->player)
     {
         // count environment kills against you

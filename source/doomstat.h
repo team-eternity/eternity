@@ -273,9 +273,11 @@ extern int displayplayer;
 // Scores, rating.
 // Statistics on a given map, for intermission.
 //
-extern int totalkills;
+extern int totalmonsters;
 extern int totalitems;
 extern int totalsecret;
+
+extern int totalKilledMonsters;
 
 // Timer, for scores.
 extern int levelstarttic; // gametic at level start

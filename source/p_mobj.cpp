@@ -2843,6 +2843,13 @@ void P_SpawnUnknownThings()
     UnknownThings.clear();
 }
 
+void P_IncrementCountKill(const Mobj &mobj)
+{
+    // killough 7/20/98: exclude friends
+    if(!((mobj.flags ^ MF_COUNTKILL) & (MF_FRIEND | MF_COUNTKILL)))
+        totalmonsters++;
+}
+
 //
 // P_SpawnMapThing
 //
@@ -3099,9 +3106,7 @@ spawnit:
         mobj->updateThinker();    // transfer friendliness flag
     }
 
-    // killough 7/20/98: exclude friends
-    if(!((mobj->flags ^ MF_COUNTKILL) & (MF_FRIEND | MF_COUNTKILL)))
-        totalkills++;
+    P_IncrementCountKill(*mobj);
 
     if(mobj->flags & MF_COUNTITEM)
         totalitems++;

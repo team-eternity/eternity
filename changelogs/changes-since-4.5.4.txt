@@ -29,6 +29,11 @@ Improvements
   for the contribution! Details here: https://github.com/team-eternity/eternity/pull/741
 * Reimplemented the key automap colour.
 * Boom fake floor/ceiling transfers and colormaps now render correctly via portals.
+* Now under coop and solo-net, all monster deaths are counted for the HUD, not just current player's 
+  kills.
+* Now the monster-spawning actions (except vanilla Doom 2 ones) increment the total count for the
+  level exit score. This was needed because otherwise it would become useless on heavily scripted
+  maps.
 
 Bug fixes
 ---------
@@ -56,3 +61,4 @@ Bug fixes
 * Fixed comp_thingsectorlight having no effect on "fast" (not "thorough") sprite projection mode.
 * Fixed bug with z-offset anchored portals not rendering lower/upper textures correctly for 1-sided portal walls.
 * Fixed crashing on openings overflow.
+* Fixed a possible memory corruption when saving.
