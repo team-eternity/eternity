@@ -32,6 +32,8 @@
 #include "m_qstr.h"
 #include "i_system.h"
 
+#include "hal/i_directory.h"
+
 FILE *demoLogFile;
 
 static bool demoLogLevelExited;
@@ -48,7 +50,7 @@ static void G_demoLogAtExit()
 void G_DemoLogInit(const char *path)
 {
     // open it for appending
-    demoLogFile = fopen(path, "at");
+    demoLogFile = I_fopen(path, "at");
     if(!demoLogFile)
     {
         usermsg("G_DemoLogInit: failed opening '%s'\n", path);
@@ -89,11 +91,12 @@ void G_DemoLogStats()
     int allKills = 0, allItems = 0, allSecret = 0;
     for(int i = 0; i < MAXPLAYERS; ++i)
     {
+        // don't use totalKilledMonsters for demo logs, don't want to change existing records
         allKills  += players[i].killcount;
         allItems  += players[i].itemcount;
         allSecret += players[i].secretcount;
     }
-    G_DemoLog("(k: %d%%, i: %d%%, s: %d%%)", totalkills ? 100 * allKills / totalkills : 0,
+    G_DemoLog("(k: %d%%, i: %d%%, s: %d%%)", totalmonsters ? 100 * allKills / totalmonsters : 0,
               totalitems ? 100 * allItems / totalitems : 0, totalsecret ? 100 * allSecret / totalsecret : 0);
 }
 

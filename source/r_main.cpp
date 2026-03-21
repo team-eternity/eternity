@@ -1135,15 +1135,16 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
     viewpoint.cos = finecosine[viewpoint.angle >> ANGLETOFINESHIFT];
 
     // SoM: Cardboard
-    cb_viewpoint.x     = M_FixedToFloat(viewpoint.x);
-    cb_viewpoint.y     = M_FixedToFloat(viewpoint.y);
-    cb_viewpoint.z     = M_FixedToFloat(viewpoint.z);
-    cb_viewpoint.angle = cb_fixedAngleToFloat(viewpoint.angle);
-    cb_viewpoint.sin   = sinf(cb_viewpoint.angle);
-    cb_viewpoint.cos   = cosf(cb_viewpoint.angle);
-    view.pitch         = (ANG90 - viewpitch) * PI / ANG180;
-    view.lerp          = lerp;
-    view.sector        = R_PointInSubsector(viewpoint.x, viewpoint.y)->sector;
+    cb_viewpoint.x       = M_FixedToFloat(viewpoint.x);
+    cb_viewpoint.y       = M_FixedToFloat(viewpoint.y);
+    cb_viewpoint.z       = M_FixedToFloat(viewpoint.z);
+    cb_viewpoint.angle   = cb_fixedAngleToFloat(viewpoint.angle);
+    cb_viewpoint.sin     = sinf(cb_viewpoint.angle);
+    cb_viewpoint.cos     = cosf(cb_viewpoint.angle);
+    view.pitch           = (ANG90 - viewpitch) * PI / ANG180;
+    view.lerp            = lerp;
+    view.boomcolorsector = R_PointInSubsector(viewpoint.x, viewpoint.y)->sector;
+    viewpoint.sector     = view.boomcolorsector;
 
     R_SetupSolidSegs();
     R_PreRenderBSP();
@@ -1228,9 +1229,10 @@ void R_SectorColormap(cmapcontext_t &context, const viewpoint_t &viewpoint, cons
     // haleyjd: Under BOOM logic, the view sector determines the colormap of all sectors in view.
     // This is supported for backward compatibility.
     if(r_boomcolormaps || demo_version <= 203 || LevelInfo.sectorColormaps == INFO_SECMAP_BOOM)
-        s = view.sector;
-    else if(LevelInfo.sectorColormaps != INFO_SECMAP_SMMU && view.sector->heightsec != -1 &&
-            (view.sector->topmap | view.sector->midmap | view.sector->bottommap) & COLORMAP_BOOMKIND)
+        s = view.boomcolorsector;
+    else if(LevelInfo.sectorColormaps != INFO_SECMAP_SMMU && view.boomcolorsector->heightsec != -1 &&
+            (view.boomcolorsector->topmap | view.boomcolorsector->midmap | view.boomcolorsector->bottommap) &
+                COLORMAP_BOOMKIND)
     {
         // Boom colormap compatibility disabled from both console and EMAPINFO and game mode is modern
         // Eternity.
@@ -1239,7 +1241,7 @@ void R_SectorColormap(cmapcontext_t &context, const viewpoint_t &viewpoint, cons
         // still have Boom-style global colormap changing (as opposed to direct ExtraData/UDMF
         // setting). We're in a fake-surfaces sector which has Boom-style colormaps set on some of the
         // layers. Check each area.
-        const sector_t &heightSector = sectors[view.sector->heightsec];
+        const sector_t &heightSector = sectors[view.boomcolorsector->heightsec];
 
         // Pick area ID the viewer is in
         if(viewz < heightSector.srf.floor.getZAt(viewpoint.x, viewpoint.y))
@@ -1249,11 +1251,11 @@ void R_SectorColormap(cmapcontext_t &context, const viewpoint_t &viewpoint, cons
         else
             area = ViewArea::normal;
 
-        colormapIndex = R_getSectorColormap(*view.sector, area);
+        colormapIndex = R_getSectorColormap(*view.boomcolorsector, area);
         if(colormapIndex & COLORMAP_BOOMKIND) // is it one of those set via the Boom method?
         {
             boomStyleOverride = true;
-            s                 = view.sector;
+            s                 = view.boomcolorsector;
         }
     }
 
@@ -1264,7 +1266,7 @@ void R_SectorColormap(cmapcontext_t &context, const viewpoint_t &viewpoint, cons
         else
         {
             // find which actual area the viewpoint is in. Must check from the viewer's sector.
-            int hs = view.sector->heightsec;
+            int hs = viewpoint.sector->heightsec;
 
             if(hs == -1)
                 area = ViewArea::normal;
@@ -1284,7 +1286,7 @@ void R_SectorColormap(cmapcontext_t &context, const viewpoint_t &viewpoint, cons
         // sector's colormap. Needed to prevent Boom-coloured sectors from showing up when seen from
         // non-coloured sectors.
         if(!r_boomcolormaps && !boomStyleOverride && LevelInfo.sectorColormaps != INFO_SECMAP_SMMU)
-            colormapIndex = R_getSectorColormap(*view.sector, area);
+            colormapIndex = R_getSectorColormap(*view.boomcolorsector, area);
 
         colormapIndex &= ~COLORMAP_BOOMKIND;
     }
@@ -1345,7 +1347,8 @@ void R_RenderViewContext(rendercontext_t &context)
     R_SetMaskedSilhouette(context.bounds, nullptr, nullptr);
 
     // Push the first element on the Post-BSP stack
-    R_PushPost(context.bspcontext, context.spritecontext, *context.heap, context.bounds, true, nullptr);
+    R_PushPost(context.view, context.cb_view, context.bspcontext, context.spritecontext, *context.heap, context.bounds,
+               true, nullptr);
 
     // SoM 12/9/03: render the portals.
     R_RenderPortals(context);

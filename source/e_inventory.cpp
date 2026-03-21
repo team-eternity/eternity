@@ -1124,6 +1124,18 @@ static void E_processLockDefColor(lockdef_t *lock, const char *value)
         }
         break;
     }
+
+    // Only consider single-type locks for assigning color to key artifacts
+    if(lock->numRequiredKeys + lock->numAnyLists == 1)
+    {
+        I_Assert(lock->numRequiredKeys >= 0 && lock->numAnyLists >= 0, "Negative key count");
+        if(lock->numRequiredKeys && !lock->requiredKeys[0]->hasKey("_lockDefID"))
+            lock->requiredKeys[0]->setInt("_lockDefID", lock->id);
+        else if(lock->numAnyLists)
+            for(int i = 0; i < lock->anyKeys[0].numKeys; ++i)
+                if(!lock->anyKeys[0].keys[i]->hasKey("_lockDefID"))
+                    lock->anyKeys[0].keys[i]->setInt("_lockDefID", lock->id);
+    }
 }
 
 //
@@ -1343,7 +1355,7 @@ bool E_PlayerCanUnlock(const player_t &player, int lockID, bool remote)
 //
 // Get the automap color for a lockdef.
 //
-int E_GetLockDefColor(int lockID)
+int E_GetLockDefColor(int lockID, bool keyCheatHack)
 {
     int              color = 0;
     const lockdef_t *lock;
@@ -1357,6 +1369,15 @@ int E_GetLockDefColor(int lockID)
             break;
         case LOCKDEF_COLOR_VARIABLE: //
             color = *lock->colorVar;
+            if(keyCheatHack)
+            {
+                if(color == mapcolor_bdor)
+                    color = mapcolor_bkey;
+                else if(color == mapcolor_ydor)
+                    color = mapcolor_ykey;
+                else if(color == mapcolor_rdor)
+                    color = mapcolor_rkey;
+            }
             break;
         default: //
             break;

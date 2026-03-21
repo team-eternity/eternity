@@ -140,6 +140,32 @@ static void R_DrawSpanSolid_8_GEN(const cb_span_t &span)
     }
 }
 
+static void R_DrawSpanSolid_8_NPOT(const cb_span_t &span)
+{
+    unsigned int              xf = span.xfrac, yf = span.yfrac;
+    const unsigned int        xs = span.xstep, ys = span.ystep;
+    const lighttable_t *const colormap = span.colormap;
+    int                       count    = span.x2 - span.x1 + 1;
+
+    const byte *const source = static_cast<const byte *>(span.source);
+    byte             *dest   = R_ADDRESS(span.x1, span.y);
+
+    int width  = (int)span.xmask;
+    int height = (int)span.ymask;
+
+    while(count-- > 0)
+    {
+        int x  = ((int)xf >> 16) % width;
+        x      = x < 0 ? x + width : x;
+        int y  = ((int)yf >> 16) % height;
+        y      = y < 0 ? y + height : y;
+        *dest  = colormap[source[x * height + y]];
+        dest  += linesize;
+        xf    += xs;
+        yf    += ys;
+    }
+}
+
 #if 0
 // SoM: Archive
 // This is the optimized version of the original flat drawing function.
@@ -254,6 +280,36 @@ static void R_DrawSpanTL_8_GEN(const cb_span_t &span)
     }
 }
 
+static void R_DrawSpanTL_8_NPOT(const cb_span_t &span)
+{
+    unsigned int              t;
+    unsigned int              xf = span.xfrac, yf = span.yfrac;
+    const unsigned int        xs = span.xstep, ys = span.ystep;
+    const lighttable_t *const colormap = span.colormap;
+    int                       count    = span.x2 - span.x1 + 1;
+
+    const byte *const source = static_cast<const byte *>(span.source);
+    byte             *dest   = R_ADDRESS(span.x1, span.y);
+
+    int width  = (int)span.xmask;
+    int height = (int)span.ymask;
+
+    while(count-- > 0)
+    {
+        int x = ((int)xf >> 16) % width;
+        x     = x < 0 ? x + width : x;
+        int y = ((int)yf >> 16) % height;
+        y     = y < 0 ? y + height : y;
+
+        t      = span.bg2rgb[*dest] + span.fg2rgb[colormap[source[x * height + y]]];
+        t     |= 0x01f07c1f;
+        *dest  = RGB32k[0][0][t & (t >> 15)];
+        dest  += linesize;
+        xf    += xs;
+        yf    += ys;
+    }
+}
+
 // Additive blending
 
 template<int xshift, int yshift, int xmask>
@@ -304,6 +360,42 @@ static void R_DrawSpanAdd_8_GEN(const cb_span_t &span)
         unsigned int a, b;
 
         a      = span.bg2rgb[*dest] + span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]];
+        b      = a;
+        a     |= 0x01f07c1f;
+        b     &= 0x40100400;
+        a     &= 0x3fffffff;
+        b      = b - (b >> 5);
+        a     |= b;
+        *dest  = RGB32k[0][0][a & (a >> 15)];
+        dest  += linesize;
+        xf    += xs;
+        yf    += ys;
+    }
+}
+
+static void R_DrawSpanAdd_8_NPOT(const cb_span_t &span)
+{
+    unsigned int              xf = span.xfrac, yf = span.yfrac;
+    const unsigned int        xs = span.xstep, ys = span.ystep;
+    const lighttable_t *const colormap = span.colormap;
+    int                       count    = span.x2 - span.x1 + 1;
+
+    const byte *const source = static_cast<const byte *>(span.source);
+    byte             *dest   = R_ADDRESS(span.x1, span.y);
+
+    int width  = (int)span.xmask;
+    int height = (int)span.ymask;
+
+    while(count-- > 0)
+    {
+        unsigned int a, b;
+
+        int x = ((int)xf >> 16) % width;
+        x     = x < 0 ? x + width : x;
+        int y = ((int)yf >> 16) % height;
+        y     = y < 0 ? y + height : y;
+
+        a      = span.bg2rgb[*dest] + span.fg2rgb[colormap[source[x * height + y]]];
         b      = a;
         a     |= 0x01f07c1f;
         b     &= 0x40100400;
@@ -427,6 +519,89 @@ static void R_DrawSpanSolidMasked_8_GEN(const cb_span_t &span)
         dest += linesize;
     }
 }
+
+static void R_DrawSpanSolidMasked_8_NPOT(const cb_span_t &span)
+{
+    unsigned int              xf = span.xfrac, yf = span.yfrac;
+    const unsigned int        xs = span.xstep, ys = span.ystep;
+    const lighttable_t *const colormap = span.colormap;
+    int                       count    = span.x2 - span.x1 + 1;
+
+    const byte *const source = static_cast<const byte *>(span.source);
+    byte             *dest   = R_ADDRESS(span.x1, span.y);
+
+    int width  = (int)span.xmask;
+    int height = (int)span.ymask;
+
+    const byte *alpham = (byte *)span.alphamask;
+    unsigned    i;
+
+    int x, y;
+
+    while(count >= 4)
+    {
+        x = ((int)xf >> 16) % width;
+        x = x < 0 ? x + width : x;
+        y = ((int)yf >> 16) % height;
+        y = y < 0 ? y + height : y;
+
+        i = x * height + y;
+        if(MASK(alpham, i))
+            dest[0] = colormap[source[i]];
+        xf += xs;
+        yf += ys;
+
+        x = ((int)xf >> 16) % width;
+        x = x < 0 ? x + width : x;
+        y = ((int)yf >> 16) % height;
+        y = y < 0 ? y + height : y;
+
+        i = x * height + y;
+        if(MASK(alpham, i))
+            dest[linesize] = colormap[source[i]];
+        xf += xs;
+        yf += ys;
+
+        x = ((int)xf >> 16) % width;
+        x = x < 0 ? x + width : x;
+        y = ((int)yf >> 16) % height;
+        y = y < 0 ? y + height : y;
+
+        i = x * height + y;
+        if(MASK(alpham, i))
+            dest[linesize * 2] = colormap[source[i]];
+        xf += xs;
+        yf += ys;
+
+        x = ((int)xf >> 16) % width;
+        x = x < 0 ? x + width : x;
+        y = ((int)yf >> 16) % height;
+        y = y < 0 ? y + height : y;
+
+        i = x * height + y;
+        if(MASK(alpham, i))
+            dest[linesize * 3] = colormap[source[i]];
+        xf    += xs;
+        yf    += ys;
+        dest  += linesize * 4;
+        count -= 4;
+    }
+    while(count-- > 0)
+    {
+        x = ((int)xf >> 16) % width;
+        x = x < 0 ? x + width : x;
+        y = ((int)yf >> 16) % height;
+        y = y < 0 ? y + height : y;
+
+        i = x * height + y;
+        if(MASK(alpham, i))
+            *dest = colormap[source[i]];
+        xf   += xs;
+        yf   += ys;
+        dest += linesize;
+    }
+}
+
 template<int xshift, int yshift, int xmask>
 static void R_DrawSpanTLMasked_8(const cb_span_t &span)
 {
@@ -488,6 +663,44 @@ static void R_DrawSpanTLMasked_8_GEN(const cb_span_t &span)
         dest += linesize;
     }
 }
+
+static void R_DrawSpanTLMasked_8_NPOT(const cb_span_t &span)
+{
+    unsigned int              t;
+    unsigned int              xf = span.xfrac, yf = span.yfrac;
+    const unsigned int        xs = span.xstep, ys = span.ystep;
+    const lighttable_t *const colormap = span.colormap;
+    int                       count    = span.x2 - span.x1 + 1;
+
+    const byte *const source = static_cast<const byte *>(span.source);
+    byte             *dest   = R_ADDRESS(span.x1, span.y);
+
+    int width  = (int)span.xmask;
+    int height = (int)span.ymask;
+
+    const byte *alpham = (byte *)span.alphamask;
+    unsigned    i;
+
+    while(count-- > 0)
+    {
+        int x = ((int)xf >> 16) % width;
+        x     = x < 0 ? x + width : x;
+        int y = ((int)yf >> 16) % height;
+        y     = y < 0 ? y + height : y;
+
+        i = x * height + y;
+        if(MASK(alpham, i))
+        {
+            t      = span.bg2rgb[*dest] + span.fg2rgb[colormap[source[i]]];
+            t     |= 0x01f07c1f;
+            *dest  = RGB32k[0][0][t & (t >> 15)];
+        }
+        xf   += xs;
+        yf   += ys;
+        dest += linesize;
+    }
+}
+
 template<int xshift, int yshift, int xmask>
 static void R_DrawSpanAddMasked_8(const cb_span_t &span)
 {
@@ -543,6 +756,49 @@ static void R_DrawSpanAddMasked_8_GEN(const cb_span_t &span)
     while(count-- > 0)
     {
         i = ((xf >> xshift) & xmask) | (yf >> yshift);
+        if(MASK(alpham, i))
+        {
+            unsigned int a, b;
+
+            a      = span.bg2rgb[*dest] + span.fg2rgb[colormap[source[i]]];
+            b      = a;
+            a     |= 0x01f07c1f;
+            b     &= 0x40100400;
+            a     &= 0x3fffffff;
+            b      = b - (b >> 5);
+            a     |= b;
+            *dest  = RGB32k[0][0][a & (a >> 15)];
+        }
+        xf   += xs;
+        yf   += ys;
+        dest += linesize;
+    }
+}
+
+static void R_DrawSpanAddMasked_8_NPOT(const cb_span_t &span)
+{
+    unsigned int              xf = span.xfrac, yf = span.yfrac;
+    const unsigned int        xs = span.xstep, ys = span.ystep;
+    const lighttable_t *const colormap = span.colormap;
+    int                       count    = span.x2 - span.x1 + 1;
+
+    const byte *const source = static_cast<const byte *>(span.source);
+    byte             *dest   = R_ADDRESS(span.x1, span.y);
+
+    int width  = (int)span.xmask;
+    int height = (int)span.ymask;
+
+    const byte *alpham = (byte *)span.alphamask;
+    unsigned    i;
+
+    while(count-- > 0)
+    {
+        int x = ((int)xf >> 16) % width;
+        x     = x < 0 ? x + width : x;
+        int y = ((int)yf >> 16) % height;
+        y     = y < 0 ? y + height : y;
+
+        i = x * height + y;
         if(MASK(alpham, i))
         {
             unsigned int a, b;
@@ -637,6 +893,27 @@ while(count--)
     {                                                                                 \
         colormap = cb_slopespan_t::colormap[mapindex++];                              \
         const unsigned int i = ((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask); \
+        if constexpr(masked == maskedSlope_e::NO)                                     \
+            *dest = Sampler::Sample(colormap[src[i]], *dest, span);                   \
+        else                                                                          \
+        {                                                                             \
+            if(MASK(alpham, i))                                                       \
+                *dest = Sampler::Sample(colormap[src[i]], *dest, span);               \
+        }                                                                             \
+        dest  += linesize;                                                            \
+        ufrac += ustep;                                                               \
+        vfrac += vstep;                                                               \
+    } while(false)
+
+#define DO_SLOPE_SAMPLE_NPOT()                                                        \
+    do                                                                                \
+    {                                                                                 \
+        int x = ((int)vfrac >> 16) % width;                                           \
+        x     = x < 0 ? x + width : x;                                                \
+        int y = ((int)ufrac >> 16) % height;                                          \
+        y     = y < 0 ? y + height : y;                                               \
+        colormap             = cb_slopespan_t::colormap[mapindex++];                  \
+        const unsigned int i = x * height + y;                                        \
         if constexpr(masked == maskedSlope_e::NO)                                     \
             *dest = Sampler::Sample(colormap[src[i]], *dest, span);                   \
         else                                                                          \
@@ -813,6 +1090,88 @@ inline static void R_drawSlope_8_GEN(const cb_slopespan_t &slopespan, const cb_s
     }
 }
 
+template<maskedSlope_e masked, typename Sampler>
+inline static void R_drawSlope_8_NPOT(const cb_slopespan_t &slopespan, const cb_span_t &span)
+{
+    double iu = slopespan.iufrac, iv = slopespan.ivfrac;
+    double ius = slopespan.iustep, ivs = slopespan.ivstep;
+    double id = slopespan.idfrac, ids = slopespan.idstep;
+
+    const byte *colormap;
+    int         count;
+    fixed_t     mapindex = slopespan.x1;
+
+    if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
+        return;
+
+    const byte *const src  = static_cast<const byte *>(slopespan.source);
+    byte             *dest = R_ADDRESS(slopespan.x1, slopespan.y);
+
+    const byte *alpham = static_cast<const byte *>(span.alphamask);
+
+    int width  = (int)span.xmask;
+    int height = (int)span.ymask;
+
+    while(count >= SPANJUMP)
+    {
+        double       ustart, uend;
+        double       vstart, vend;
+        double       mulstart, mulend;
+        unsigned int ustep, vstep, ufrac, vfrac;
+        int          incount;
+
+        mulstart  = 65536.0f / id;
+        id       += ids * SPANJUMP;
+        mulend    = 65536.0f / id;
+
+        ufrac  = R_doubleToUint32(ustart = iu * mulstart);
+        vfrac  = R_doubleToUint32(vstart = iv * mulstart);
+        iu    += ius * SPANJUMP;
+        iv    += ivs * SPANJUMP;
+        uend   = iu * mulend;
+        vend   = iv * mulend;
+
+        ustep = R_doubleToUint32((uend - ustart) * INTERPSTEP);
+        vstep = R_doubleToUint32((vend - vstart) * INTERPSTEP);
+
+        incount = SPANJUMP;
+        while(incount--)
+        {
+            DO_SLOPE_SAMPLE_NPOT();
+        }
+
+        count -= SPANJUMP;
+    }
+    if(count > 0)
+    {
+        double       ustart, uend;
+        double       vstart, vend;
+        double       mulstart, mulend;
+        unsigned int ustep, vstep, ufrac, vfrac;
+        int          incount;
+
+        mulstart  = 65536.0f / id;
+        id       += ids * count;
+        mulend    = 65536.0f / id;
+
+        ufrac  = R_doubleToUint32(ustart = iu * mulstart);
+        vfrac  = R_doubleToUint32(vstart = iv * mulstart);
+        iu    += ius * count;
+        iv    += ivs * count;
+        uend   = iu * mulend;
+        vend   = iv * mulend;
+
+        ustep = R_doubleToUint32((uend - ustart) / count);
+        vstep = R_doubleToUint32((vend - vstart) / count);
+
+        incount = count;
+        while(incount--)
+        {
+            DO_SLOPE_SAMPLE_NPOT();
+        }
+    }
+}
+
 template<int xshift, int xmask, int ymask>
 static void R_drawSlopeSolid_8(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
@@ -822,6 +1181,11 @@ static void R_drawSlopeSolid_8(const cb_slopespan_t &slopespan, const cb_span_t 
 static void R_drawSlopeSolid_8_GEN(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
     R_drawSlope_8_GEN<maskedSlope_e::NO, Sampler::Solid>(slopespan, span);
+}
+
+static void R_drawSlopeSolid_8_NPOT(const cb_slopespan_t &slopespan, const cb_span_t &span)
+{
+    R_drawSlope_8_NPOT<maskedSlope_e::NO, Sampler::Solid>(slopespan, span);
 }
 
 //==============================================================================
@@ -840,6 +1204,11 @@ static void R_drawSlopeTL_8_GEN(const cb_slopespan_t &slopespan, const cb_span_t
     R_drawSlope_8_GEN<maskedSlope_e::NO, Sampler::Translucent>(slopespan, span);
 }
 
+static void R_drawSlopeTL_8_NPOT(const cb_slopespan_t &slopespan, const cb_span_t &span)
+{
+    R_drawSlope_8_NPOT<maskedSlope_e::NO, Sampler::Translucent>(slopespan, span);
+}
+
 // Additive blending
 
 template<int xshift, int xmask, int ymask>
@@ -851,6 +1220,11 @@ static void R_drawSlopeAdd_8(const cb_slopespan_t &slopespan, const cb_span_t &s
 static void R_drawSlopeAdd_8_GEN(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
     R_drawSlope_8_GEN<maskedSlope_e::NO, Sampler::Additive>(slopespan, span);
+}
+
+static void R_drawSlopeAdd_8_NPOT(const cb_slopespan_t &slopespan, const cb_span_t &span)
+{
+    R_drawSlope_8_NPOT<maskedSlope_e::NO, Sampler::Additive>(slopespan, span);
 }
 
 //==============================================================================
@@ -870,6 +1244,11 @@ static void R_drawSlopeSolidMasked_8_GEN(const cb_slopespan_t &slopespan, const 
     R_drawSlope_8_GEN<maskedSlope_e::YES, Sampler::Solid>(slopespan, span);
 }
 
+static void R_drawSlopeSolidMasked_8_NPOT(const cb_slopespan_t &slopespan, const cb_span_t &span)
+{
+    R_drawSlope_8_NPOT<maskedSlope_e::YES, Sampler::Solid>(slopespan, span);
+}
+
 template<int xshift, int xmask, int ymask>
 static void R_drawSlopeTLMasked_8(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
@@ -881,6 +1260,11 @@ static void R_drawSlopeTLMasked_8_GEN(const cb_slopespan_t &slopespan, const cb_
     R_drawSlope_8_GEN<maskedSlope_e::YES, Sampler::Translucent>(slopespan, span);
 }
 
+static void R_drawSlopeTLMasked_8_NPOT(const cb_slopespan_t &slopespan, const cb_span_t &span)
+{
+    R_drawSlope_8_NPOT<maskedSlope_e::YES, Sampler::Translucent>(slopespan, span);
+}
+
 template<int xshift, int xmask, int ymask>
 static void R_drawSlopeAddMasked_8(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
@@ -890,6 +1274,11 @@ static void R_drawSlopeAddMasked_8(const cb_slopespan_t &slopespan, const cb_spa
 static void R_drawSlopeAddMasked_8_GEN(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
     R_drawSlope_8_GEN<maskedSlope_e::YES, Sampler::Additive>(slopespan, span);
+}
+
+static void R_drawSlopeAddMasked_8_NPOT(const cb_slopespan_t &slopespan, const cb_span_t &span)
+{
+    R_drawSlope_8_NPOT<maskedSlope_e::YES, Sampler::Additive>(slopespan, span);
 }
 
 #undef SPANJUMP
@@ -908,14 +1297,15 @@ spandrawer_t r_spandrawer =
     {
         // R_DrawSpan<32-2*n, 32-n, n 1s then n 0s> // 2^n x 2^n
         // NB: n 1s then n 0s can be represented as ((1 << n) - 1) << n
-        
+
         // Solid
         {
             R_DrawSpanSolid_8<20, 26, 0x00FC0>, // 64x64
             R_DrawSpanSolid_8<18, 25, 0x03F80>, // 128x128
             R_DrawSpanSolid_8<16, 24, 0x0FF00>, // 256x256
             R_DrawSpanSolid_8<14, 23, 0x3FE00>, // 512x512
-            R_DrawSpanSolid_8_GEN               // General
+            R_DrawSpanSolid_8_GEN,              // General
+            R_DrawSpanSolid_8_NPOT              // non power of two
         },
         // Translucent
         {
@@ -923,7 +1313,8 @@ spandrawer_t r_spandrawer =
             R_DrawSpanTL_8<18, 25, 0x03F80>,    // 128x128
             R_DrawSpanTL_8<16, 24, 0x0FF00>,    // 256x256
             R_DrawSpanTL_8<14, 23, 0x3FE00>,    // 512x512
-            R_DrawSpanTL_8_GEN                  // General
+            R_DrawSpanTL_8_GEN,                 // General
+            R_DrawSpanTL_8_NPOT                 // non power of two
         },
         // Additive
         {
@@ -931,7 +1322,8 @@ spandrawer_t r_spandrawer =
             R_DrawSpanAdd_8<18, 25, 0x03F80>,   // 128x128
             R_DrawSpanAdd_8<16, 24, 0x0FF00>,   // 256x256
             R_DrawSpanAdd_8<14, 23, 0x3FE00>,   // 512x512
-            R_DrawSpanAdd_8_GEN                 // General
+            R_DrawSpanAdd_8_GEN,                // General
+            R_DrawSpanAdd_8_NPOT                // non power of two
         },
         // Solid masked
         {
@@ -939,7 +1331,8 @@ spandrawer_t r_spandrawer =
             R_DrawSpanSolidMasked_8<18, 25, 0x03F80>, // 128x128
             R_DrawSpanSolidMasked_8<16, 24, 0x0FF00>, // 256x256
             R_DrawSpanSolidMasked_8<14, 23, 0x3FE00>, // 512x512
-            R_DrawSpanSolidMasked_8_GEN               // General
+            R_DrawSpanSolidMasked_8_GEN,              // General
+            R_DrawSpanSolidMasked_8_NPOT              // non power of two
         },
         // Translucent masked
         {
@@ -947,7 +1340,8 @@ spandrawer_t r_spandrawer =
             R_DrawSpanTLMasked_8<18, 25, 0x03F80>,    // 128x128
             R_DrawSpanTLMasked_8<16, 24, 0x0FF00>,    // 256x256
             R_DrawSpanTLMasked_8<14, 23, 0x3FE00>,    // 512x512
-            R_DrawSpanTLMasked_8_GEN                  // General
+            R_DrawSpanTLMasked_8_GEN,                 // General
+            R_DrawSpanTLMasked_8_NPOT                 // non power of two
         },
         // Additive masked
         {
@@ -955,21 +1349,23 @@ spandrawer_t r_spandrawer =
             R_DrawSpanAddMasked_8<18, 25, 0x03F80>,   // 128x128
             R_DrawSpanAddMasked_8<16, 24, 0x0FF00>,   // 256x256
             R_DrawSpanAddMasked_8<14, 23, 0x3FE00>,   // 512x512
-            R_DrawSpanAddMasked_8_GEN                 // General
+            R_DrawSpanAddMasked_8_GEN,                // General
+            R_DrawSpanAddMasked_8_NPOT                // non power of two
         }
     },
-    
+
     // SoM: Sloped span drawers
     {
         // R_DrawSlope<16-n, n 1s then n 0s, n 1s>
         // NB: n 1s can be represented as (1 << n) - 1
-       
+
         {
             R_drawSlopeSolid_8<10, 0x00FC0, 0x03F>, // 64x64
             R_drawSlopeSolid_8< 9, 0x03F80, 0x07F>, // 128x128
             R_drawSlopeSolid_8< 8, 0x0FF00, 0x0FF>, // 256x256
             R_drawSlopeSolid_8< 7, 0x3FE00, 0x1FF>, // 512x512
-            R_drawSlopeSolid_8_GEN                  // General
+            R_drawSlopeSolid_8_GEN,                 // General
+            R_drawSlopeSolid_8_NPOT                 // non power of two
         },
         // Translucent
         {
@@ -977,7 +1373,8 @@ spandrawer_t r_spandrawer =
             R_drawSlopeTL_8< 9, 0x03F80, 0x07F>,    // 128x128
             R_drawSlopeTL_8< 8, 0x0FF00, 0x0FF>,    // 256x256
             R_drawSlopeTL_8< 7, 0x3FE00, 0x1FF>,    // 512x512
-            R_drawSlopeTL_8_GEN                     // General
+            R_drawSlopeTL_8_GEN,                    // General
+            R_drawSlopeTL_8_NPOT                    // non power of two
         },
         // Additive
         {
@@ -985,7 +1382,8 @@ spandrawer_t r_spandrawer =
             R_drawSlopeAdd_8< 9, 0x03F80, 0x07F>,   // 128x128
             R_drawSlopeAdd_8< 8, 0x0FF00, 0x0FF>,   // 256x256
             R_drawSlopeAdd_8< 7, 0x3FE00, 0x1FF>,   // 512x512
-            R_drawSlopeAdd_8_GEN                    // General
+            R_drawSlopeAdd_8_GEN,                   // General
+            R_drawSlopeAdd_8_NPOT                   // non power of two
         },
         // Solid masked
         {
@@ -993,7 +1391,8 @@ spandrawer_t r_spandrawer =
             R_drawSlopeSolidMasked_8< 9, 0x03F80, 0x07F>, // 128x128
             R_drawSlopeSolidMasked_8< 8, 0x0FF00, 0x0FF>, // 256x256
             R_drawSlopeSolidMasked_8< 7, 0x3FE00, 0x1FF>, // 512x512
-            R_drawSlopeSolidMasked_8_GEN                  // General
+            R_drawSlopeSolidMasked_8_GEN,                 // General
+            R_drawSlopeSolidMasked_8_NPOT                 // non power of two
         },
         // Translucent masked
         {
@@ -1001,7 +1400,8 @@ spandrawer_t r_spandrawer =
             R_drawSlopeTLMasked_8< 9, 0x03F80, 0x07F>,    // 128x128
             R_drawSlopeTLMasked_8< 8, 0x0FF00, 0x0FF>,    // 256x256
             R_drawSlopeTLMasked_8< 7, 0x3FE00, 0x1FF>,    // 512x512
-            R_drawSlopeTLMasked_8_GEN                     // General
+            R_drawSlopeTLMasked_8_GEN,                    // General
+            R_drawSlopeTLMasked_8_NPOT                    // non power of two
         },
         // Additive masked
         {
@@ -1009,7 +1409,8 @@ spandrawer_t r_spandrawer =
             R_drawSlopeAddMasked_8< 9, 0x03F80, 0x07F>,   // 128x128
             R_drawSlopeAddMasked_8< 8, 0x0FF00, 0x0FF>,   // 256x256
             R_drawSlopeAddMasked_8< 7, 0x3FE00, 0x1FF>,   // 512x512
-            R_drawSlopeAddMasked_8_GEN                    // General
+            R_drawSlopeAddMasked_8_GEN,                   // General
+            R_drawSlopeAddMasked_8_NPOT                   // non power of two
         }
     }
 };

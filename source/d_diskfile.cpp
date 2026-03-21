@@ -29,6 +29,7 @@
 #include "m_swap.h"
 #include "m_utils.h"
 #include "d_diskfile.h"
+#include "hal/i_directory.h"
 
 //
 // Internal disk file entry structure
@@ -103,7 +104,7 @@ diskfile_t *D_OpenDiskFile(const char *filename)
     df->opaque = dfi;
 
     // open the physical file
-    if(!(dfi->f = fopen(filename, "rb")))
+    if(!(dfi->f = I_fopen(filename, "rb")))
         I_Error("D_OpenDiskFile: couldn't open file %s\n", filename);
 
     // read number of files in the directory

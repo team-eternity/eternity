@@ -222,7 +222,7 @@ void E_UnstashWeaponsForUnmorphing(player_t &player);
 bool E_PlayerCanUnlock(const player_t &player, int lockID, bool remote);
 
 // Get the automap color for a lockdef
-int E_GetLockDefColor(int lockID);
+int E_GetLockDefColor(int lockID, bool keyCheatHack);
 
 // Tries to move the inventory cursor 'amount' right
 bool E_MoveInventoryCursor(const player_t &player, const int amount, int &cursor);

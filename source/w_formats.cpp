@@ -27,6 +27,7 @@
 #include "z_zone.h"
 
 #include "d_iwad.h"
+#include "hal/i_directory.h"
 #include "m_qstr.h"
 #include "m_utils.h"
 #include "w_formats.h"
@@ -67,7 +68,7 @@ FILE *W_TryOpenFile(qstring &filename, bool allowInexact)
     basefn = filename;
 
     // Try opening without an added extension first
-    if((f = fopen(basefn.constPtr(), "rb")))
+    if((f = I_fopen(basefn.constPtr(), "rb")))
         return f;
 
     if(!allowInexact)
@@ -78,7 +79,7 @@ FILE *W_TryOpenFile(qstring &filename, bool allowInexact)
     {
         basefn = filename;
         basefn.addDefaultExtension(W_defaultExtensions[i]);
-        if((f = fopen(basefn.constPtr(), "rb")))
+        if((f = I_fopen(basefn.constPtr(), "rb")))
         {
             filename = basefn;
             return f;
@@ -92,7 +93,7 @@ FILE *W_TryOpenFile(qstring &filename, bool allowInexact)
         const char *path      = D_GetDoomWadPath(i);
         qstring     pathandfn = qstring(path) / filename;
 
-        if((f = fopen(pathandfn.constPtr(), "rb")))
+        if((f = I_fopen(pathandfn.constPtr(), "rb")))
         {
             filename = pathandfn;
             return f;
@@ -104,7 +105,7 @@ FILE *W_TryOpenFile(qstring &filename, bool allowInexact)
             {
                 basefn = pathandfn;
                 basefn.addDefaultExtension(W_defaultExtensions[j]);
-                if((f = fopen(basefn.constPtr(), "rb")))
+                if((f = I_fopen(basefn.constPtr(), "rb")))
                 {
                     filename = basefn;
                     return f;

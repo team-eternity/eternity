@@ -122,7 +122,8 @@ int             displayplayer; // view being displayed
 int             gametic;
 int             levelstarttic;                       // gametic at level start
 int             basetic;                             // killough 9/29/98: for demo sync
-int             totalkills, totalitems, totalsecret; // for intermission
+int             totalmonsters, totalitems, totalsecret; // for intermission
+int             totalKilledMonsters;
 bool            democontinue;
 bool            demorecording;
 bool            demoplayback;
@@ -764,7 +765,7 @@ void G_DoLoadLevel()
         {
             if(wipesuppress)
                 wipesuppress = false; // don't wipe this time
-            else 
+            else
                 wipegamestate = GS_NOSTATE; // force a wipe
         }
     }
@@ -1870,7 +1871,7 @@ static void G_DoCompleted()
     else
         wminfo.nextexplicit = false;
 
-    wminfo.maxkills  = totalkills;
+    wminfo.maxkills  = totalmonsters;
     wminfo.maxitems  = totalitems;
     wminfo.maxsecret = totalsecret;
     wminfo.maxfrags  = 0;
@@ -2118,7 +2119,7 @@ static void G_DoSaveGame(void)
 
     G_SaveGameName(name, len, savegameslot);
 
-    P_SaveCurrentLevel(name, savedescription);
+    P_SaveCurrentLevel(name, savedescription, nullptr);
 
     gameaction         = ga_nothing;
     savedescription[0] = 0;
@@ -2129,7 +2130,7 @@ WadDirectory *d_dir;
 static void G_DoLoadGame(void)
 {
     gameaction = ga_nothing;
-    P_LoadGame(savename);
+    P_LoadGame(savename, nullptr);
 }
 
 //
@@ -2394,7 +2395,7 @@ void G_PlayerReborn(int player)
     int            secretcount;
     int            cheats;
     int            playercolour;
-    char           playername[20];
+    char           playername[sizeof(p->name)];
     skin_t        *playerskin;
     playerclass_t *playerclass;
     inventory_t    inventory;
@@ -2403,7 +2404,7 @@ void G_PlayerReborn(int player)
     p = &players[player];
 
     memcpy(frags, p->frags, sizeof frags);
-    strncpy(playername, p->name, 20);
+    strncpy(playername, p->name, sizeof(playername));
 
     killcount    = p->killcount;
     itemcount    = p->itemcount;
@@ -3335,6 +3336,8 @@ byte *G_WriteOptions(byte *demoptr)
     // killough 10/98: a compatibility vector now
     for(int i = 0; i < COMP_TOTAL; i++)
         *demoptr++ = comp[i] != 0; // bytes 27 - 58 : comp
+    for(int i = COMP_TOTAL; i < MBF_COMP_TOTAL; i++)
+        *demoptr++ = 0; // comp padding
 
     // haleyjd 05/23/04: autoaim is sync critical
     *demoptr++ = autoaim; // byte 59
@@ -3423,6 +3426,8 @@ byte *G_ReadOptions(byte *demoptr)
             int i;
             for(i = 0; i < COMP_TOTAL; ++i)
                 comp[i] = *demoptr++;
+            for(int i = COMP_TOTAL; i < MBF_COMP_TOTAL; i++)
+                demoptr++; // comp padding
         }
 
         G_SetCompatibility();
@@ -3943,7 +3948,7 @@ static int G_totalPlayerParam(int player_t::*tally)
 // Named this way to prevent confusion with similarly named variables
 int G_TotalKilledMonsters()
 {
-    return G_totalPlayerParam(&player_t::killcount);
+    return demo_version >= 406 ? totalKilledMonsters : G_totalPlayerParam(&player_t::killcount);
 }
 int G_TotalFoundItems()
 {

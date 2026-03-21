@@ -174,8 +174,11 @@ struct cb_view_t
     float pspritexscale, pspriteyscale;
     float pspriteystep;
 
-    fixed_t         lerp;   // haleyjd: linear interpolation factor
-    const sector_t *sector; // haleyjd: view sector, because of interpolation
+    fixed_t lerp; // haleyjd: linear interpolation factor
+
+    // haleyjd: view sector, because of interpolation
+    // printz: only used for Boom-kind colormapping
+    const sector_t *boomcolorsector;
 };
 
 // haleyjd 3/11/10: markflags

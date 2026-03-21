@@ -401,13 +401,14 @@ sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, surf_e surf, v2fixed_t *totalde
 // ioanch 20160108: simple variant of the function below, for maps without
 // portals
 //
+template<typename T>
 inline static bool P_simpleBlockWalker(const fixed_t bbox[4], bool xfirst, void *data,
                                        bool (*func)(int x, int y, int groupid, void *data))
 {
-    int xl = (bbox[BOXLEFT] - bmaporgx) >> MAPBLOCKSHIFT;
-    int xh = (bbox[BOXRIGHT] - bmaporgx) >> MAPBLOCKSHIFT;
-    int yl = (bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
-    int yh = (bbox[BOXTOP] - bmaporgy) >> MAPBLOCKSHIFT;
+    int xl = (T(bbox[BOXLEFT]) - bmaporgx) >> MAPBLOCKSHIFT;
+    int xh = (T(bbox[BOXRIGHT]) - bmaporgx) >> MAPBLOCKSHIFT;
+    int yl = (T(bbox[BOXBOTTOM]) - bmaporgy) >> MAPBLOCKSHIFT;
+    int yh = (T(bbox[BOXTOP]) - bmaporgy) >> MAPBLOCKSHIFT;
 
     if(xl < 0)
         xl = 0;
@@ -475,8 +476,6 @@ static bool P_boxTouchesBlockPortal(const portalblockentry_t &entry, const fixed
 }
 
 //
-// P_TransPortalBlockWalker
-//
 // ioanch 20160107
 // Having a bounding box in a group id, visit all blocks it touches as well as
 // whatever is behind portals
@@ -484,11 +483,11 @@ static bool P_boxTouchesBlockPortal(const portalblockentry_t &entry, const fixed
 bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst, void *data,
                               bool (*func)(int x, int y, int groupid, void *data))
 {
-    int gcount = P_PortalGroupCount();
-    if(gcount <= 1 || groupid == R_NOGROUP || full_demo_version < make_full_version(340, 48))
-    {
-        return P_simpleBlockWalker(bbox, xfirst, data, func);
-    }
+    const int gcount = P_PortalGroupCount();
+    if(full_demo_version < make_full_version(340, 48))
+        return P_simpleBlockWalker<fixed_t>(bbox, xfirst, data, func); // Old demos can have blockmap overflows due to data type.
+    else if(gcount <= 1 || groupid == R_NOGROUP)
+        return P_simpleBlockWalker<int64_t>(bbox, xfirst, data, func);
 
     // OPTIMIZE: if needed, use some global store instead of malloc
     bool *accessedgroupids    = ecalloc(bool *, gcount, sizeof(*accessedgroupids));
@@ -509,11 +508,12 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst, v
         movedBBox[BOXRIGHT]  += link->x;
         movedBBox[BOXBOTTOM] += link->y;
         movedBBox[BOXTOP]    += link->y;
-        // set the blocks to be visited
-        int xl = (movedBBox[BOXLEFT] - bmaporgx) >> MAPBLOCKSHIFT;
-        int xh = (movedBBox[BOXRIGHT] - bmaporgx) >> MAPBLOCKSHIFT;
-        int yl = (movedBBox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
-        int yh = (movedBBox[BOXTOP] - bmaporgy) >> MAPBLOCKSHIFT;
+        // Set the blocks to be visited.
+        // The delta needs to be held in an int64_t as it can overflow otherwise.
+        int xl = (int64_t(movedBBox[BOXLEFT]) - bmaporgx) >> MAPBLOCKSHIFT;
+        int xh = (int64_t(movedBBox[BOXRIGHT]) - bmaporgx) >> MAPBLOCKSHIFT;
+        int yl = (int64_t(movedBBox[BOXBOTTOM]) - bmaporgy) >> MAPBLOCKSHIFT;
+        int yh = (int64_t(movedBBox[BOXTOP]) - bmaporgy) >> MAPBLOCKSHIFT;
 
         if(xl < 0)
             xl = 0;

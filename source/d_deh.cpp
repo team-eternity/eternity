@@ -39,6 +39,7 @@
 #include "e_things.h"
 #include "e_weapons.h"
 #include "g_game.h"
+#include "hal/i_directory.h"
 #include "metaapi.h"
 #include "m_cheat.h"
 #include "m_utils.h"
@@ -780,7 +781,7 @@ static void deh_OpenLog(const char *fn)
 
     if(!strcmp(fn, "-"))
         fileout = stdout;
-    else if(!(fileout = fopen(fn, firstfile ? "wt" : "at")))
+    else if(!(fileout = I_fopen(fn, firstfile ? "wt" : "at")))
     {
         usermsg("Could not open -dehout file %s\n... using stdout.", fn);
         fileout = stdout;
@@ -1692,7 +1693,7 @@ static void deh_procSounds(DWFILE *fpin, char *line, MetaTable &gatheredData)
     deh_LogPrintf("Processing Sounds at index %d: %s\n", indexnum, key);
 
     // haleyjd 09/03/03: translate indexnum to sfxinfo_t
-    if(!(sfx = E_SoundForDEHNum(indexnum)))
+    if(!(sfx = E_SoundForUnknownTypeDEHNum(indexnum)))
     {
         deh_LogPrintf("Bad sound number %d\n", indexnum);
         return; // haleyjd: bugfix!

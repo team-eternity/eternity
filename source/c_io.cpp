@@ -39,6 +39,7 @@
 #include "d_main.h"
 #include "doomdef.h"
 #include "g_game.h"
+#include "hal/i_directory.h"
 #include "hu_stuff.h"
 #include "hu_over.h"
 #include "i_system.h"
@@ -824,7 +825,7 @@ void C_DumpMessages(qstring *filename)
 
     memset(tmpmessage, 0, LINELENGTH);
 
-    if(!(outfile = fopen(filename->constPtr(), "a+")))
+    if(!(outfile = I_fopen(filename->constPtr(), "a+")))
     {
         C_Printf(FC_ERROR "Could not append console buffer to file %s\n", filename->constPtr());
         return;
@@ -858,7 +859,7 @@ void C_OpenConsoleLog(qstring *filename)
         return;
 
     // open file in append mode
-    if(!(console_log = fopen(filename->constPtr(), "a+")))
+    if(!(console_log = I_fopen(filename->constPtr(), "a+")))
         C_Printf(FC_ERROR "Couldn't open file %s for console logging\n", filename->constPtr());
     else
         C_Printf("Opened file %s for console logging\n", filename->constPtr());

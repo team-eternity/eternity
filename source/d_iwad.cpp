@@ -27,6 +27,7 @@
 
 #include "z_zone.h"
 
+#include "hal/i_directory.h"
 #include "hal/i_picker.h"
 #include "hal/i_platform.h"
 
@@ -104,7 +105,7 @@ static void D_parseDoomWadPath()
 {
     const char *dwp;
 
-    if((dwp = getenv("DOOMWADPATH")))
+    if((dwp = I_getenv("DOOMWADPATH")))
     {
         char *tempdwp = Z_Strdupa(dwp);
         char *rover   = tempdwp;
@@ -160,7 +161,7 @@ static bool D_FindInDoomWadPath(qstring &out, const char *filename, const char *
         qstr.pathConcatenate(filename);
 
         // See if the file exists as-is
-        if(!stat(qstr.constPtr(), &sbuf)) // check for existence
+        if(!I_stat(qstr.constPtr(), &sbuf)) // check for existence
         {
             if(!S_ISDIR(sbuf.st_mode)) // check that it's NOT a directory
             {
@@ -178,7 +179,7 @@ static bool D_FindInDoomWadPath(qstring &out, const char *filename, const char *
             {
                 qstr += extension;
 
-                if(!stat(qstr.constPtr(), &sbuf)) // exists?
+                if(!I_stat(qstr.constPtr(), &sbuf)) // exists?
                 {
                     if(!S_ISDIR(sbuf.st_mode)) // not a dir?
                     {
@@ -374,7 +375,7 @@ static void D_parseMetaData(const char *metatext, int mission)
     int         exitreturn = 0, secretlevel = 0, levelnum = 1, linenum = 0;
     const char *intername = "INTERPIC";
 
-    if(GameModeInfo->missionInfo->id == pack_disk)
+    if(::GameModeInfo->missionInfo->id == pack_disk)
         intername = "DMENUPIC";
 
     // get first line, which is an episode id
@@ -384,7 +385,7 @@ static void D_parseMetaData(const char *metatext, int mission)
     if(D_metaGetLine(buffer, metatext, &index))
     {
         if(mission == MD_NONE) // Not when playing as a mission pack
-            GameModeInfo->versionName = buffer.duplicate(PU_STATIC);
+            ::GameModeInfo->versionName = buffer.duplicate(PU_STATIC);
     }
 
     // get end text
@@ -413,7 +414,7 @@ static void D_parseMetaData(const char *metatext, int mission)
         case 1: // music number
             musicnum = mus_runnin + buffer.toInt() - 1;
 
-            if(musicnum > GameModeInfo->musMin && musicnum < GameModeInfo->numMusic)
+            if(musicnum > ::GameModeInfo->musMin && musicnum < ::GameModeInfo->numMusic)
                 musicname = S_music[musicnum].name;
             else
                 musicname = "";
@@ -576,7 +577,7 @@ static const char *D_doIWADMenu()
             struct stat sbuf;
 
             // 07/06/13: Needs to actually exist.
-            if(!stat(path, &sbuf) && !S_ISDIR(sbuf.st_mode))
+            if(!I_stat(path, &sbuf) && !S_ISDIR(sbuf.st_mode))
             {
                 haveIWADs[i] = true;
                 foundone     = true;
@@ -1030,7 +1031,7 @@ void D_CheckIWAD(const char *iwadname, iwadcheck_t &version)
 {
     FILE *fp;
 
-    if(!(fp = fopen(iwadname, "rb")))
+    if(!(fp = I_fopen(iwadname, "rb")))
     {
         if(version.flags & IWADF_FATALNOTOPEN)
         {
@@ -1074,7 +1075,7 @@ static bool WadFileStatus(qstring &filename, bool *isdir)
     if(i == 0)      // if path nullptr or empty, doesn't exist
         return false;
 
-    if(!stat(filename.constPtr(), &sbuf)) // check for existence
+    if(!I_stat(filename.constPtr(), &sbuf)) // check for existence
     {
         *isdir = S_ISDIR(sbuf.st_mode); // if it does, set whether a dir or not
         return true;                    // return does exist
@@ -1088,7 +1089,7 @@ static bool WadFileStatus(qstring &filename, bool *isdir)
 
     filename.concat(".wad"); // try it with .wad added
 
-    if(!stat(filename.constPtr(), &sbuf)) // if it exists then
+    if(!I_stat(filename.constPtr(), &sbuf)) // if it exists then
     {
         if(S_ISDIR(sbuf.st_mode)) // but is a dir, then say we didn't find it
             return false;
@@ -1204,14 +1205,14 @@ static void D_findIWADFile(qstring &iwad)
         gameiwad.pathConcatenate(myargv[gamepathparm]);
         gameiwad.addDefaultExtension(".wad");
 
-        if(!access(gameiwad.constPtr(), R_OK)) // only if the file exists do we try to use it.
+        if(!I_access(gameiwad.constPtr(), R_OK)) // only if the file exists do we try to use it.
             basename = gameiwad.constPtr();
         else
         {
             // haleyjd 12/31/10: base/game/game.wad doesn't exist;
             // try matching against appropriate configured IWAD path(s)
             char *cfgpath = D_IWADPathForGame(myargv[gamepathparm]);
-            if(cfgpath && !access(cfgpath, R_OK))
+            if(cfgpath && !I_access(cfgpath, R_OK))
                 basename = cfgpath;
         }
     }
@@ -1300,7 +1301,7 @@ static void D_findIWADFile(qstring &iwad)
     if(customiwad.length())
     {
         char *cfgpath = D_IWADPathForIWADParam(customiwad.constPtr());
-        if(cfgpath && !access(cfgpath, R_OK))
+        if(cfgpath && !I_access(cfgpath, R_OK))
         {
             iwad = cfgpath;
             return;
@@ -1329,7 +1330,7 @@ static void D_findIWADFile(qstring &iwad)
     {
         char *p;
 
-        if((p = getenv(envvars[i])))
+        if((p = I_getenv(envvars[i])))
         {
             iwad = p;
             iwad.normalizeSlashes();
@@ -1377,7 +1378,7 @@ static void D_findIWADFile(qstring &iwad)
                     } // end else (!*customiwad)
                 } // end else (isdir)
             } // end if(WadFileStatus(...))
-        } // end if((p = getenv(...)))
+        } // end if((p = I_getenv(...)))
     } // end for
 
     iwad = "";
@@ -1396,7 +1397,7 @@ static void D_loadResourceWad()
     psnprintf(filestr, len, "%s/eternity.pke", basegamepath);
 
     // haleyjd 08/19/07: if not found, fall back to base/doom/eternity.pke
-    if(access(filestr, R_OK))
+    if(I_access(filestr, R_OK))
         psnprintf(filestr, len, "%s/doom/eternity.pke", basepath);
 
     M_NormalizeSlashes(filestr);

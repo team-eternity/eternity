@@ -80,7 +80,7 @@
 static bool ACS_ChkThingProp(ACSThread *thread, int32_t tid, uint32_t prop, uint32_t val)
 {
     Mobj *mo = P_FindMobjFromTID(tid, nullptr, thread->info.mo);
-    thread->dataStk.push(mo ? ACS_ChkThingProp(mo, prop, val) : 0);
+    thread->dataStk.push(mo ? ACS_ChkThingProp(thread, mo, prop, val) : 0);
     return false;
 }
 
@@ -556,7 +556,7 @@ bool ACS_CF_CheckActorFloorTexture(ACS_CF_ARGS)
 //
 // ACS_ChkThingProp
 //
-bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
+bool ACS_ChkThingProp(const ACSThread *thread, Mobj *mo, uint32_t var, uint32_t val)
 {
     if(!mo)
         return false;
@@ -615,11 +615,21 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
     case ACS_TP_Counter6:     return static_cast<uint32_t>(mo->counters[6]) == val;
     case ACS_TP_Counter7:     return static_cast<uint32_t>(mo->counters[7]) == val;
 
-    case ACS_TP_Angle:        return mo->angle >> 16 == (uint32_t)val;
-    case ACS_TP_Armor:        return mo->player ? static_cast<uint32_t>(mo->player->armorpoints) == val : false;
-    case ACS_TP_CeilTex:      return mo->subsector->sector->srf.ceiling.pic == R_FindWall(ACSenv.getString(val)->str);
-    case ACS_TP_CeilZ:        return static_cast<uint32_t>(mo->zref.ceiling) == val;
-    case ACS_TP_FloorTex:     return mo->subsector->sector->srf.floor.pic == R_FindWall(ACSenv.getString(val)->str);
+    case ACS_TP_Angle: return mo->angle >> 16 == (uint32_t)val;
+    case ACS_TP_Armor: return mo->player ? static_cast<uint32_t>(mo->player->armorpoints) == val : false;
+    case ACS_TP_CeilTex:
+    {
+        const char *const textureName = thread->scopeMap->getString(val)->str;
+        const int         pic         = mo->subsector->sector->srf.ceiling.pic;
+        return pic == R_FindFlat(textureName) || pic == R_FindWall(textureName);
+    }
+    case ACS_TP_CeilZ: return static_cast<uint32_t>(mo->zref.ceiling) == val;
+    case ACS_TP_FloorTex:
+    {
+        const char *const textureName = thread->scopeMap->getString(val)->str;
+        const int         pic         = mo->subsector->sector->srf.floor.pic;
+        return pic == R_FindFlat(textureName) || pic == R_FindWall(textureName);
+    }
     case ACS_TP_FloorZ:       return static_cast<uint32_t>(mo->zref.floor) == val;
     case ACS_TP_Frags:        return mo->player ? static_cast<uint32_t>(mo->player->totalfrags) == val : false;
     case ACS_TP_LightLevel:   return static_cast<uint32_t>(mo->subsector->sector->lightlevel) == val;
@@ -630,7 +640,7 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
     case ACS_TP_PlayerNumber: return mo->player ? mo->player - players == val : false;
     case ACS_TP_SigilPieces:  return false;
     case ACS_TP_TID:          return mo->tid == val;
-    case ACS_TP_Type:         return mo->type == E_ThingNumForCompatName(ACSenv.getString(val)->str);
+    case ACS_TP_Type:         return mo->type == E_ThingNumForCompatName(thread->scopeMap->getString(val)->str);
     case ACS_TP_X:            return static_cast<uint32_t>(mo->x) == val;
     case ACS_TP_Y:            return static_cast<uint32_t>(mo->y) == val;
     case ACS_TP_Z:            return static_cast<uint32_t>(mo->z) == val;
@@ -896,7 +906,7 @@ uint32_t ACS_GetLevelProp(uint32_t var)
     case ACS_LP_FoundSecrets:   return G_TotalFoundSecrets();
     case ACS_LP_TotalItems:     return totalitems;
     case ACS_LP_FoundItems:     return G_TotalFoundItems();
-    case ACS_LP_TotalMonsters:  return totalkills;
+    case ACS_LP_TotalMonsters:  return totalmonsters;
     case ACS_LP_KilledMonsters: return G_TotalKilledMonsters();
     case ACS_LP_SuckTime:       return 1;
 
@@ -1531,11 +1541,11 @@ bool ACS_CF_PlayActorSound(ACS_CF_ARGS)
 
     switch(snd)
     {
-    case SOUND_See:    sfx = E_SoundForDEHNum(mo->info->seesound); break;
-    case SOUND_Attack: sfx = E_SoundForDEHNum(mo->info->attacksound); break;
-    case SOUND_Pain:   sfx = E_SoundForDEHNum(mo->info->painsound); break;
-    case SOUND_Death:  sfx = E_SoundForDEHNum(mo->info->deathsound); break;
-    case SOUND_Active: sfx = E_SoundForDEHNum(mo->info->activesound); break;
+    case SOUND_See:    sfx = E_SoundForUnknownTypeDEHNum(mo->info->seesound); break;
+    case SOUND_Attack: sfx = E_SoundForUnknownTypeDEHNum(mo->info->attacksound); break;
+    case SOUND_Pain:   sfx = E_SoundForUnknownTypeDEHNum(mo->info->painsound); break;
+    case SOUND_Death:  sfx = E_SoundForUnknownTypeDEHNum(mo->info->deathsound); break;
+    case SOUND_Active: sfx = E_SoundForUnknownTypeDEHNum(mo->info->activesound); break;
     default:           sfx = nullptr; break;
     }
 
@@ -1664,12 +1674,24 @@ enum
 //
 bool ACS_CF_ReplaceTextures(ACS_CF_ARGS)
 {
-    int      oldtex = R_FindWall(thread->scopeMap->getString(argV[0])->str);
-    int      newtex = R_FindWall(thread->scopeMap->getString(argV[1])->str);
-    uint32_t flags  = argV[2];
+    const char *const oldtexName = thread->scopeMap->getString(argV[0])->str;
+    const char *const newtexName = thread->scopeMap->getString(argV[1])->str;
+    const int         oldtex     = R_FindWall(oldtexName);
+    const int         newtex     = R_FindWall(newtexName);
+    const uint32_t    flags      = argV[2];
+
+    // We may have flats and wall textures with the same name but different looks
+    // like STEP1, STEP2 in Doom.
+    const int oldflat = R_FindFlat(oldtexName);
+    const int newflat = R_FindFlat(newtexName);
 
     R_CacheTexture(newtex);
     R_CacheIfSkyTexture(oldtex, newtex);
+    if(newflat != newtex || oldflat != oldtex)
+    {
+        R_CacheTexture(newflat);
+        R_CacheIfSkyTexture(oldflat, newflat);
+    }
 
     // If doing anything to lines.
     if((flags & RETEX_NOT_LINE) != RETEX_NOT_LINE)
@@ -1692,11 +1714,11 @@ bool ACS_CF_ReplaceTextures(ACS_CF_ARGS)
     {
         for(sector_t *sector = sectors, *end = sector + numsectors; sector != end; ++sector)
         {
-            if(!(flags & RETEX_NOT_FLOOR) && sector->srf.floor.pic == oldtex)
-                sector->srf.floor.pic = newtex;
+            if(!(flags & RETEX_NOT_FLOOR) && sector->srf.floor.pic == oldflat)
+                sector->srf.floor.pic = newflat;
 
-            if(!(flags & RETEX_NOT_CEIL) && sector->srf.ceiling.pic == oldtex)
-                sector->srf.ceiling.pic = newtex;
+            if(!(flags & RETEX_NOT_CEIL) && sector->srf.ceiling.pic == oldflat)
+                sector->srf.ceiling.pic = newflat;
         }
     }
 
@@ -2437,6 +2459,9 @@ static Mobj *ACS_spawn(mobjtype_t type, fixed_t x, fixed_t y, fixed_t z, int tid
             mo->remove();
             return nullptr;
         }
+
+        if(demo_version >= 406)
+            P_IncrementCountKill(*mo);
 
         if(tid)
             P_AddThingTID(mo, tid);

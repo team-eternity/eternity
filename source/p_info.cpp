@@ -57,6 +57,7 @@
 #include "e_hash.h"
 #include "e_sound.h"
 #include "f_finale.h"
+#include "hal/i_directory.h"
 #include "m_qstrkeys.h"
 #include "m_utils.h"
 #include "metaqstring.h"
@@ -146,13 +147,13 @@ void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
 {
     metainfo_t *mi;
 
-    if(nummetainfo >= nummetainfoalloc)
+    if(::nummetainfo >= ::nummetainfoalloc)
     {
-        nummetainfoalloc = nummetainfoalloc ? nummetainfoalloc * 2 : 10;
-        metainfo         = erealloc(metainfo_t *, metainfo, nummetainfoalloc * sizeof(metainfo_t));
+        ::nummetainfoalloc = ::nummetainfoalloc ? ::nummetainfoalloc * 2 : 10;
+        ::metainfo         = erealloc(metainfo_t *, ::metainfo, ::nummetainfoalloc * sizeof(metainfo_t));
     }
 
-    mi = &metainfo[nummetainfo];
+    mi = &::metainfo[nummetainfo];
 
     mi->level      = map;
     mi->levelname  = levelname;
@@ -165,7 +166,7 @@ void P_CreateMetaInfo(int map, const char *levelname, int par, const char *mus, 
     mi->mission    = mission;
     mi->interpic   = interpic;
 
-    ++nummetainfo;
+    ++::nummetainfo;
 }
 
 //=============================================================================
@@ -356,10 +357,10 @@ static char *P_openWadTemplate(const char *wadfile, int *len)
     {
         strcpy(dotloc, ".txt"); // try replacing .wad with .txt
 
-        if(access(fn, R_OK)) // no?
+        if(I_access(fn, R_OK)) // no?
         {
             strcpy(dotloc, ".TXT"); // try with .TXT (for You-neeks systems 9_9)
-            if(access(fn, R_OK))
+            if(I_access(fn, R_OK))
                 return nullptr; // oh well, tough titties.
         }
     }

@@ -1,10 +1,10 @@
 ===============================================================================
-Title                   : The Eternity Engine v4.05.04 "Citadel"
-Filename                : ee-4.05.04-win64.zip, ee-4.05.04-win32.zip,
-                          ee-4.05.04-win-legacy.zip,
-                          ee-4.05.04-macos-applesilicon.dmg,
-                          ee-4.05.04-macos-intel.dmg,
-Release date            : 2025-08-23
+Title                   : The Eternity Engine v4.06.00 "Nidhogg"
+Filename                : ee-4.06.00-win64.zip, ee-4.06.00-win32.zip,
+                          ee-4.06.00-win-legacy.zip,
+                          ee-4.06.00-macos-applesilicon.dmg,
+                          ee-4.06.00-macos-intel.dmg,
+Release date            : 2026-02-16
 Author                  : Team Eternity:
                           Ioan Chera,
                           James "Quasar" Haley,
@@ -104,6 +104,8 @@ Special Thanks to       : - Feature and Patch Contributors -
                               cxong
                               derekmd
                               dotfloat
+                              electricbrass
+                              elf-alchemist
                               FozzeY
                               Gez
                               icecream95
@@ -250,39 +252,35 @@ with any concerns.
 
 
 ===============================================================================
-* Features New to Version 4.05.04 *
+* Features New to Version 4.06.00 *
 
-Bug fixes and quality of life improvements:
+Features
+--------
+* Added support for the "author" property in UMAPINFO.
+* Added DEMOLOOP id24 lump support.
+* Added support for non-power-of-two flats.
+* Added new ACS function: GiveInventory.
+* Added a parameter to A_VileTarget codepointer: thing type to spawn (defaults to the one with Dehackednum 5, i.e.
+  "VileFire" in Doom). Thanks to sink666 for the wish to have this parameter in the pull request.
+* Made A_VileAttack codepointer paremeterized. Added the following args:
+  - sound to play (default: sfx_barexp)
+  - initial damage (default: 20)
+  - blast damage (default: 70)
+  - blast radius (default: 70)
+  - thrust factor (default: 1.0)
+  - damage type for initial hit (default: actor's MOD)
+  - damage type for blast (default: actor's MOD)
+  Thanks to sink666 for the wish to have parameters in the pull request.
+* Added damage type (MOD) argument to A_BFGSpray (default: BFG_Splash).
+* Added the comp_thingsectorlight setting, which controls how things are lit in sectors with different floor and ceiling
+  lights. Thanks to elf-alchemist for the contribution! Details here: https://github.com/team-eternity/eternity/pull/740
 
-* New lindef parameterized special: Sector_ChangeFlags. Only the flags supported by Eternity are available.
-
-* The ThrustThing linedef special now uses its third parameter: "nolimit" to allow speeds greater than 30.
-
-* New ACS function: SetLineActivation.
-
-* Automap improvements: now you can zoom in with the mouse wheel on the automap. You also have the option to hide all 
-  stats from both the automap and the overlay HUD, and hu_hidesecrets only hides secrets. Special thanks to 
-  SarahCosmosys for the contribution!
-  + New console variable for this purpose: hu_hidestats.
-
-* Now the 'gib' state of the crushed corpses is customizable in EDF in the following ways:
-  + in EDF `thingtype`, using the `crunchstate` property;
-  + in EDF `thingtype` DECORATE-style `state` definition, using either the `Crunch:` or `Crush:` label (the latter is on 
-    par with the name from ZDoom).
-  If unspecified, it will default to the game mode behavior: change to S_GIBS in Doom, or do not change in Heretic. 
-  Thanks to sink666 for the implementation!
-
-* Frames with dehackednums 1085-1088 are now defined as placeholders just like the DEHEXTRA set, because some mods would
-  error out in Eternity but not in other ports. Thanks to aaaqqqddd for the heads-up.
-
-* EDF startup warnings are now always displayed, no more need for -edf-show-warnings.
-
-* Added EDF startup warning in case of missing skinsprite, or one which user didn't add to spritenames.
-
-* macOS: now all the files available in the "add file" dialog box are available for drag-dropping or "opening with" from 
-  Finder.
-
-* Minor improvements with portal error messages.
+Improvements
+------------
+* Loading broken or wrong save game files is more robust now, though not perfect.
+* Added support for music changer types 14100 (reset music) and 14165 (parameterized music ID). Thanks to electricbrass
+  for the contribution! Details here: https://github.com/team-eternity/eternity/pull/741
+* Reimplemented the key automap colour.
 
 For bug fixes, see the end of this document.
 
@@ -312,6 +310,10 @@ These are features planned to debut in future versions of the Eternity Engine:
 * Revision History *
 
 * Dates are in mm/dd/yy *
+
+4.06.00 "Nidhogg" -- 2/16/26
+
+  Incremental improvement.
 
 4.05.04 "Citadel" -- 8/23/25
 
@@ -525,34 +527,18 @@ These are features planned to debut in future versions of the Eternity Engine:
 ===============================================================================
 * Bugs Fixed, Known Issues *
 
-Bugs Fixed (between 4.04.02 and 4.05.04):
+Bugs Fixed (between 4.05.04 and 4.06.00):
 
-* Fixed crash happening when changing multithreaded rendering number of threads before demos start.
-* Fixed sprite glitching shortly followed by crash when starting with multithreaded renderer on a small view, and then 
-  increasing the view.
-* Fixed strange failure to start, happening on some Windows installations because of changes in the runtime.
-  (issue here:
-  https://stackoverflow.com/questions/78598141/first-stdmutexlock-crashes-in-application-built-with-latest-visual-studio)
-* Fixed bug with UDMF attached surfaces happening on unrelated sectors.
-* Fixed sudden termination due to "texture not cached" when playing back multiple level demos, or when the r_precache 
-  cvar was off.
-* Dehacked patch Frame omitted Args* fields didn't resolve to defaults, but 0. This was wrong compared to how ports such 
-  as DSDA-DOOM should handle it.
-* Fixed A_ConsumeAmmo bug when specifying 0 (ammo per shot) ammo.
-* A_BFGSpray no longer crashes when used on a non-projectile thing which didn't acquire an enemy yet. This makes it 
-  compatible with vanilla DOOM Dehacked mods which can use this codepointer liberally.
-* Fixed bug with player melee attacks not being portal aware when adjusting angle towards target.
-* Fixed slopes blocking access when on the other side of one-sided linedef wall portals. 
-* Fixed wrong 3dmidtex physics when on sloped lines.
-* Fixed imprecise dynaseg splitting at high XY coordinates, with bad side effects such as polyobject portal infinite 
-  rendering recursion (and the "refused to draw portal" error popping up).
-* Fixed wrong sprite sector portal clipping when scaled differently from 1.
-* Fixed a possibly harmless access violation happening when rendering middle textures at a certain distance.
-* Fixed phantom sprite cloning when moving in a polyobject cabin with floor and ceiling portals also going outside.
-* Fixed demo desync caused by missing par time counter in the intermission.
-* Fixed harmless access violation happening in demos when getting harmed or killed by a destroyed lost soul.
+* Fixed failure on Windows to load file paths with unicode (non US English) characters.
+* Fixed A_BFGSpray not using the parameter, and always being locked at 40 rays.
+* Fixed bad rendering of specially paletted PNG file for the Heretic episode 2 ending screen.
+* Fixed bad implementation of TakeInventory.
+* Fixed A_CustomPlayerMelee wrong implementation of the angle deflection argument. Now it properly avoid rotating player
+  if set to "none". Thanks to sink666's pull request for the catch.
+* Fixed EDF includes from lumps included by lumps in the same folder.
+* Fixed translucent PNGs that use a separate palette from the current WAD.
 
-Known Issues in v4.05.04:
+Known Issues in v4.06.00:
 
 - Moving polyobject portal movement is not interpolated yet.
 

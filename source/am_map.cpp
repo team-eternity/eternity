@@ -39,10 +39,12 @@
 #include "e_inventory.h"
 #include "ev_specials.h"
 #include "g_bind.h"
+#include "p_inter.h"
 #include "p_maputl.h"
 #include "p_portal.h"
 #include "p_setup.h"
 #include "p_spec.h"
+#include "metaapi.h"
 #include "st_stuff.h"
 #include "r_plane.h"
 #include "r_draw.h"
@@ -1092,12 +1094,12 @@ void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
 //
 // AM_getMobjMapCoords()
 //
-// Calculates mobj coordinates taking into account linked portals 
+// Calculates mobj coordinates taking into account linked portals
 // and mapportal_overlay settings
 //
 // Passed sector, x and y coordinates by reference
 // Writes calculated coordinates to x and y
-// 
+//
 // Returns nothing
 //
 void AM_getMobjMapCoords(const Mobj *mo, fixed_t &x, fixed_t &y)
@@ -1116,18 +1118,18 @@ void AM_getMobjMapCoords(const Mobj *mo, fixed_t &x, fixed_t &y)
 //
 // AM_getSectorMapCoords()
 //
-// Calculates sector coordinates taking into account linked portals 
+// Calculates sector coordinates taking into account linked portals
 // and mapportal_overlay settings
 //
 // Passed sector, x and y coordinates by reference
 // Writes coordinates of the first vertex of the sector to x and y
-// 
-// Returns true if the coordinates have been successfully calculated, 
+//
+// Returns true if the coordinates have been successfully calculated,
 // otherwise false
 //
 bool AM_getSectorMapCoords(const sector_t *sec, fixed_t &x, fixed_t &y)
 {
-    if (sec && sec->lines && sec->lines[0] && sec->lines[0]->v1)
+    if(sec && sec->lines && sec->lines[0] && sec->lines[0]->v1)
     {
         x = sec->lines[0]->v1->x;
         y = sec->lines[0]->v1->y;
@@ -1152,7 +1154,7 @@ bool AM_getSectorMapCoords(const sector_t *sec, fixed_t &x, fixed_t &y)
 // If automap was not open at the time of the call, it does nothing
 //
 // Passed x and y coordinates
-// 
+//
 // Returns nothing
 //
 void AM_moveCenterToPoint(fixed_t x, fixed_t y)
@@ -1171,7 +1173,7 @@ void AM_moveCenterToPoint(fixed_t x, fixed_t y)
 //
 // AM_showNextMobj()
 //
-// Finds the next matching mobj that matches the flags and displays 
+// Finds the next matching mobj that matches the flags and displays
 // it on automap
 // If automap was not open at the time of the call, it does nothing
 //
@@ -1816,7 +1818,7 @@ static int AM_DoorColor(const line_t *line)
     int lockdefID = EV_LockDefIDForLine(line);
 
     if(lockdefID)
-        return E_GetLockDefColor(lockdefID);
+        return E_GetLockDefColor(lockdefID, false);
     else
         return -1;
 }
@@ -1893,7 +1895,7 @@ inline static bool AM_drawAsTeleporter(const line_t *line)
 //
 inline static bool AM_drawAsLockedDoor(const line_t *line)
 {
-    return E_GetLockDefColor(EV_LockDefIDForLine(line)) != 0;
+    return E_GetLockDefColor(EV_LockDefIDForLine(line), false) != 0;
 }
 
 //
@@ -2446,21 +2448,30 @@ static void AM_drawThings(int colors, int colorrange)
                 tx        += link->x;
                 ty        += link->y;
             }
-            // FIXME / HTIC_TODO: Heretic support and EDF editing?
 
             // jff 1/5/98 case over doomednum of thing being drawn
-            if(mapcolor_rkey || mapcolor_ykey || mapcolor_bkey)
+            const mline_t *keyglyph  = nullptr; // shut up compiler
+            size_t         keysize   = 0;
+            double         keyscale  = 0.0;
+            angle_t        keyang    = 0;
+            int            keycolour = -1;
+            bool           havekey   = false;
+
+            // Even though I feel like caching it, it's not a frequent occurrence
+            if(const e_pickupfx_t *effect = P_GetPickUpEffect(t))
+                for(int i = 0; i < effect->numEffects; ++i)
+                {
+                    int lockID = effect->effects[i]->getInt("_lockDefID", -1);
+                    int color  = E_GetLockDefColor(lockID, true);
+                    if(color)
+                    {
+                        keycolour = color;
+                        havekey   = true;
+                    }
+                }
+
+            if(havekey)
             {
-                // FIXME: make this EDF controllable!
-                const mline_t *keyglyph  = nullptr; // shut up compiler
-                size_t         keysize   = 0;
-                double         keyscale  = 0.0;
-                angle_t        keyang    = 0;
-                int            keycolour = -1;
-                bool           havekey   = false;
-
-                // MAJOR FIXME: MAKE THIS EDF DEPENDENT (the key colours MUST use lockdefs)
-
                 switch(GameModeInfo->type)
                 {
                 case Game_DOOM:
@@ -2469,59 +2480,19 @@ static void AM_drawThings(int colors, int colorrange)
                     keysize  = earrlen(cross_mark);
                     keyscale = 16.0;
                     keyang   = t->angle;
-                    switch(t->info->doomednum)
-                    {
-                    case 13: // jff  red key
-                    case 38: //
-                        keycolour = mapcolor_rkey;
-                        havekey   = true;
-                        break;
-                    case 6:  // jff yellow key
-                    case 39: //
-                        keycolour = mapcolor_ykey;
-                        havekey   = true;
-                        break;
-                    case 5:  // jff blue key
-                    case 40: //
-                        keycolour = mapcolor_bkey;
-                        havekey   = true;
-                        break;
-                    default: //
-                        break;
-                    }
                     break;
                 case Game_Heretic:
                     keyglyph = am_hereticKeySquare;
                     keysize  = earrlen(am_hereticKeySquare);
-                    switch(t->info->doomednum)
-                    {
-                    case 7073: //
-                        keycolour = mapcolor_rkey;
-                        havekey   = true;
-                        break;
-                    case 7080: //
-                        keycolour = mapcolor_ykey;
-                        havekey   = true;
-                        break;
-                    case 7079: //
-                        keycolour = mapcolor_bkey;
-                        havekey   = true;
-                        break;
-                    default: //
-                        break;
-                    }
                     break;
                 default: //
                     break;
                 }
 
-                if(havekey)
-                {
-                    AM_drawLineCharacter(keyglyph, (int)keysize, keyscale, keyang,
-                                         keycolour != -1 ? keycolour : mapcolor_sprt, tx, ty);
-                    t = t->snext;
-                    continue;
-                }
+                AM_drawLineCharacter(keyglyph, (int)keysize, keyscale, keyang,
+                                     keycolour != -1 ? keycolour : mapcolor_sprt, tx, ty);
+                t = t->snext;
+                continue;
             }
 
             // jff 1/5/98 end added code for keys

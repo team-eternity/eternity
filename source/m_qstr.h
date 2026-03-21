@@ -53,6 +53,9 @@ private:
 
     void moveFrom(qstring &&other) noexcept;
 
+    // Helper method for printf-style formatting with va_list
+    int VPrintf(size_t maxlen, E_FORMAT_STRING(const char *fmt), va_list args);
+
 public:
     static const size_t npos;
     static const size_t basesize;
@@ -217,6 +220,9 @@ public:
     // Special Formatting
     qstring &makeQuoted();
     int      Printf(size_t maxlen, E_FORMAT_STRING(const char *fmt), ...) E_PRINTF(3, 4);
+
+    // Static factory for formatted strings
+    static qstring Format(E_FORMAT_STRING(const char *fmt), ...) E_PRINTF(1, 2);
 
     // Operators
     bool     operator==(const qstring &other) const;

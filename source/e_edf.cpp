@@ -117,6 +117,8 @@
 #include "e_weapons.h"
 #include "mn_emenu.h"
 
+#include "hal/i_directory.h"
+
 // EDF Keywords used by features implemented in this module
 
 // Sprite variables
@@ -341,10 +343,10 @@ static void E_EDFOpenVerboseLog()
 
         do
             psnprintf(fn, sizeof(fn), "edfout%.2d.txt", lognum++);
-        while(!access(fn, F_OK) && --tries);
+        while(!I_access(fn, F_OK) && --tries);
 
         if(tries)
-            edf_output = fopen(fn, "w");
+            edf_output = I_fopen(fn, "w");
         else
         {
             if(in_textmode)

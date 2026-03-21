@@ -24,6 +24,7 @@
 // haleyjd 11/22/08: I don't understand why this is needed here...
 #define USE_RWOPS
 
+#include <assert.h>
 #include <optional>
 
 #include "SDL.h"
@@ -46,6 +47,7 @@
 #include "../s_sound.h"
 #include "../mn_engin.h"
 #include "../m_utils.h"
+#include "../hal/i_platform.h"
 
 #ifdef HAVE_SPCLIB
 #include "../../snes_spc/spc.h"
@@ -596,6 +598,35 @@ static int I_TryLoadSPC(void *data, int size)
 }
 #endif
 
+#if EE_CURRENT_PLATFORM != EE_PLATFORM_WINDOWS
+static bool I_isEmptyMIDI(const void *const data, const int size)
+{
+    // Check if MIDI data is made only of empty tracks. Some systems don't handle that well.
+
+    // Already assumed from the calling function
+    assert(size >= 14 && !memcmp(data, "MThd", 4));
+
+    MIDI midi{};
+    if(MidiToMIDI(static_cast<const UBYTE *>(data), &midi) != 0)
+        return false; // don't consider malformed empty for this purpose
+    for(int i = 0; i < MIDI_TRACKS; ++i)
+    {
+        const unsigned char *const data = midi.track[i].data;
+        const size_t               len  = midi.track[i].len;
+        if(!data || !len)
+            continue;
+
+        if(len < 4 || data[0] != 0 || data[1] != 0xff || data[2] != 0x2f || data[3] != len - 4)
+        {
+            FreeMIDIData(&midi);
+            return false;
+        }
+    }
+    FreeMIDIData(&midi);
+    return true;
+}
+#endif
+
 //
 // I_SDLRegisterSong
 //
@@ -616,6 +647,18 @@ static int I_SDLRegisterSong(void *data, int size)
         else if(mmuscheckformat((byte *)data, size)) // Is it a MUS?
             isMUS = true;
     }
+
+    // TODO: also test if OK to use on Windows. It's strictly necessary for Linux, but no harm
+    // blocking empty songs completely.
+#if EE_CURRENT_PLATFORM != EE_PLATFORM_WINDOWS
+    if(isMIDI && I_isEmptyMIDI(data, size))
+    {
+        // We actually need to reject empty MIDI, because on Ubuntu it may fail with an infinite loop with error:
+        //  fluidsynth: warning: Ringbuffer full, try increasing synth.polyphony!
+        C_Printf("Detected an empty track MIDI music.\n");
+        return 0;
+    }
+#endif
 
     // If it's a MUS, convert it to MIDI now.
     if(isMUS)
