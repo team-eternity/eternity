@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2025 James Haley et al.
+// Copyright (C) 2026 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -296,6 +296,8 @@ static bool am_needbackscreen; // haleyjd 05/03/13
 // backdrop
 static byte *am_backdrop    = nullptr;
 static bool  am_usebackdrop = false;
+
+static const Mobj *lastCheatLookup;
 
 // haleyjd 08/01/09: this function is unused
 #if 0
@@ -725,6 +727,8 @@ static void AM_LevelInit()
     if(scale_mtof > max_scale_mtof)
         scale_mtof = min_scale_mtof;
     scale_ftom = 1.0 / scale_mtof;
+
+    lastCheatLookup = nullptr;
 }
 
 //
@@ -1189,15 +1193,13 @@ void AM_ShowNextMobj(bool resetseq, int flags, bool alive)
     if(!automapactive)
         return;
 
-    static const Mobj *lastmobj;
-
     if(resetseq)
-        lastmobj = nullptr;
+        lastCheatLookup = nullptr;
 
     const Thinker *th, *start_th;
 
-    if(lastmobj)
-        start_th = th = static_cast<const Thinker *>(lastmobj);
+    if(lastCheatLookup)
+        start_th = th = static_cast<const Thinker *>(lastCheatLookup);
     else
         start_th = th = &thinkercap;
 
@@ -1214,7 +1216,7 @@ void AM_ShowNextMobj(bool resetseq, int flags, bool alive)
             AM_getMobjMapCoords(mo, mx, my);
             AM_moveCenterToPoint(mx, my);
 
-            lastmobj = mo;
+            lastCheatLookup = mo;
 
             break;
         }
