@@ -522,19 +522,19 @@ static void cheat_ddt(const void *arg)
 // Reveal monster on automap
 static void cheat_reveal_kill(const void *arg)
 {
-    AM_showNextMobj(false, MF_COUNTKILL, true);
+    AM_ShowNextMobj(false, MF_COUNTKILL, true);
 }
 
 // Reveal item on automap
 static void cheat_reveal_item(const void *arg)
 {
-    AM_showNextMobj(false, MF_COUNTITEM, false);
+    AM_ShowNextMobj(false, MF_COUNTITEM, false);
 }
 
 // Reveal secret on automap
 static void cheat_reveal_secret(const void *arg)
 {
-    AM_showNextSector(false, true);
+    AM_ShowNextSector(false, true);
 }
 
 // killough 2/7/98: HOM autodetection

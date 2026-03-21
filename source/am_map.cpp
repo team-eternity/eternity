@@ -1102,7 +1102,7 @@ void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
 //
 // Returns nothing
 //
-void AM_getMobjMapCoords(const Mobj *mo, fixed_t &x, fixed_t &y)
+static void AM_getMobjMapCoords(const Mobj *mo, fixed_t &x, fixed_t &y)
 {
     x = mo->x;
     y = mo->y;
@@ -1127,7 +1127,7 @@ void AM_getMobjMapCoords(const Mobj *mo, fixed_t &x, fixed_t &y)
 // Returns true if the coordinates have been successfully calculated,
 // otherwise false
 //
-bool AM_getSectorMapCoords(const sector_t *sec, fixed_t &x, fixed_t &y)
+static bool AM_getSectorMapCoords(const sector_t *sec, fixed_t &x, fixed_t &y)
 {
     if(sec && sec->lines && sec->lines[0] && sec->lines[0]->v1)
     {
@@ -1157,7 +1157,7 @@ bool AM_getSectorMapCoords(const sector_t *sec, fixed_t &x, fixed_t &y)
 //
 // Returns nothing
 //
-void AM_moveCenterToPoint(fixed_t x, fixed_t y)
+static void AM_moveCenterToPoint(fixed_t x, fixed_t y)
 {
     if(!automapactive)
         return;
@@ -1171,7 +1171,7 @@ void AM_moveCenterToPoint(fixed_t x, fixed_t y)
 }
 
 //
-// AM_showNextMobj()
+// AM_ShowNextMobj()
 //
 // Finds the next matching mobj that matches the flags and displays
 // it on automap
@@ -1184,20 +1184,20 @@ void AM_moveCenterToPoint(fixed_t x, fixed_t y)
 //
 // Returns nothing
 //
-void AM_showNextMobj(bool resetseq, int flags, bool alive)
+void AM_ShowNextMobj(bool resetseq, int flags, bool alive)
 {
     if(!automapactive)
         return;
 
-    static Mobj *lastmobj;
+    static const Mobj *lastmobj;
 
     if(resetseq)
         lastmobj = nullptr;
 
-    Thinker *th, *start_th;
+    const Thinker *th, *start_th;
 
     if(lastmobj)
-        start_th = th = thinker_cast<Thinker *>(lastmobj);
+        start_th = th = static_cast<const Thinker *>(lastmobj);
     else
         start_th = th = &thinkercap;
 
@@ -1205,7 +1205,7 @@ void AM_showNextMobj(bool resetseq, int flags, bool alive)
 
     while(th != start_th)
     {
-        Mobj *mo = thinker_cast<Mobj *>(th);
+        const Mobj *mo = thinker_cast<const Mobj *>(th);
 
         if(mo && (!alive || mo->health > 0) && mo->flags & flags)
         {
@@ -1224,7 +1224,7 @@ void AM_showNextMobj(bool resetseq, int flags, bool alive)
 }
 
 //
-// AM_showNextSector()
+// AM_ShowNextSector()
 //
 // Finds the next matching secret and displays it on automap
 // If automap was not open at the time of the call, it does nothing
@@ -1235,7 +1235,7 @@ void AM_showNextMobj(bool resetseq, int flags, bool alive)
 //
 // Returns nothing
 //
-void AM_showNextSector(bool resetseq, bool secret)
+void AM_ShowNextSector(bool resetseq, bool secret)
 {
     if(!automapactive)
         return;
