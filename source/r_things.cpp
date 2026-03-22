@@ -2018,8 +2018,12 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
         fixed_t heightsecheight = sectors[spr->heightsec].srf.floor.getZAt(spr->gx, spr->gy);
         fixed_t phsheight       = phs >= 0 ? sectors[phs].srf.floor.getZAt(viewpos.x, viewpos.y) : 0;
 
+        // Don't use the sprite scale as it will give erroneous results if scaled in EDF. Recalculate it without the EDF
+        // component.
+        const float distyscale = spr->dist * view.yfoc;
+
         mh = M_FixedToFloat(heightsecheight) - viewzfloat;
-        if(heightsecheight > spr->gz && (h = view.ycenter - (mh * spr->scale)) >= 0.0f && (h < view.height))
+        if(heightsecheight > spr->gz && (h = view.ycenter - (mh * distyscale)) >= 0.0f && (h < view.height))
         {
             if(mh <= 0.0 || (phs != -1 && viewpos.z > phsheight))
             {
@@ -2047,7 +2051,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
         phsheight       = phs >= 0 ? sectors[phs].srf.ceiling.getZAt(viewpos.x, viewpos.y) : 0;
 
         mh = M_FixedToFloat(heightsecheight) - viewzfloat;
-        if(heightsecheight < spr->gzt && (h = view.ycenter - (mh * spr->scale)) >= 0.0f && (h < view.height))
+        if(heightsecheight < spr->gzt && (h = view.ycenter - (mh * distyscale)) >= 0.0f && (h < view.height))
         {
             if(phs != -1 && viewpos.z >= phsheight)
             {

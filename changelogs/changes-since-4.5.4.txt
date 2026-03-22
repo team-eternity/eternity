@@ -66,3 +66,5 @@ Bug fixes
 * Fixed bug with z-offset anchored portals not rendering lower/upper textures correctly for 1-sided portal walls.
 * Fixed crashing on openings overflow.
 * Fixed a possible memory corruption when saving.
+* Hopefully reduced a crash on thing frame recursion, by catching it earlier.
+* Fixed wrong scaled sprite rendering on Boom fake floors.
