@@ -870,6 +870,32 @@ bool ACS_CF_GetCVarString(ACS_CF_ARGS)
 }
 
 //
+// int CheckInventory(str itemname);
+//
+bool ACS_CF_CheckInventory(ACS_CF_ARGS)
+{
+    auto          info     = &static_cast<ACSThread *>(thread)->info;
+    char const   *itemname = thread->scopeMap->getString(argV[0])->str;
+    itemeffect_t *item     = E_ItemEffectForName(itemname);
+    const int     powernum = E_StrToNumLinear(powerStrings, NUMPOWERS, itemname);
+
+    // If the item doesn't exist as an item or a power, complain
+    if(!item && powernum == NUMPOWERS)
+    {
+        doom_printf("ACS_CF_CheckInventory: Inventory item '%s' not found\a\n", itemname);
+        thread->dataStk.push(0);
+        return false;
+    }
+
+    if(!info->mo || !info->mo->player)
+        thread->dataStk.push(0);
+    else
+        thread->dataStk.push(P_CheckInventory(info->mo->player, item, powernum));
+
+    return false;
+}
+
+//
 // ACS_GetLevelProp
 //
 uint32_t ACS_GetLevelProp(uint32_t var)
@@ -2214,8 +2240,8 @@ void ACS_SetThingProp(Mobj *thing, uint32_t var, uint32_t val)
     // clang-format off
     switch(var)
     {
-    case ACS_TP_Health:       
-        thing->health = val; 
+    case ACS_TP_Health:
+        thing->health = val;
         if (thing->player)
             thing->player->health = val;
         break;
@@ -2654,32 +2680,6 @@ bool ACS_CF_StopSound(ACS_CF_ARGS)
         S_StopSound(mo, chan);
 
     thread->dataStk.push(0);
-    return false;
-}
-
-//
-// int CheckInventory(str itemname);
-//
-bool ACS_CF_CheckInventory(ACS_CF_ARGS)
-{
-    auto          info     = &static_cast<ACSThread *>(thread)->info;
-    char const   *itemname = thread->scopeMap->getString(argV[0])->str;
-    itemeffect_t *item     = E_ItemEffectForName(itemname);
-    const int     powernum = E_StrToNumLinear(powerStrings, NUMPOWERS, itemname);
-
-    // If the item doesn't exist as an item or a power, complain
-    if(!item && powernum == NUMPOWERS)
-    {
-        doom_printf("ACS_CF_CheckInventory: Inventory item '%s' not found\a\n", itemname);
-        thread->dataStk.push(0);
-        return false;
-    }
-
-    if(!info->mo || !info->mo->player)
-        thread->dataStk.push(0);
-    else
-        thread->dataStk.push(P_CheckInventory(info->mo->player, item, powernum));
-
     return false;
 }
 
