@@ -21,7 +21,8 @@ Features
 * Added damage type (MOD) argument to A_BFGSpray (default: BFG_Splash).
 * Added new cheat codes for automap: iddkt, iddit and iddst (Doom); ravkmap, ravimap and ravsmap (Heretic).
   Each one only works inside the automap, and moves the cursor to a remaining count-kill monster, count-item object or
-  unexplored secret in the level. They're inspired from equivalent cheat codes from other ports.
+  unexplored secret in the level. They're inspired from equivalent cheat codes from other ports. Thanks to DRON12261 for
+  the contribution!
 * Added the comp_thingsectorlight setting, which controls how things are lit in sectors with different floor and ceiling
   lights. Thanks to elf-alchemist for the contribution! Details here: https://github.com/team-eternity/eternity/pull/740
 
