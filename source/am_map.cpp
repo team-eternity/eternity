@@ -1174,19 +1174,15 @@ void MobjLookupCheat::showNext(type_e type)
 
 void SecretSectorLookupCheat::showNext()
 {
-    if(!automapactive)
+    if(!automapactive || !numsectors)
         return;
 
-    int i, start_i;
-
-    i = current + 1;
+    int i = current + 1;
     if(i >= numsectors)
         i = 0;
-    start_i = i++;
-    if(i >= numsectors)
-        i = 0;
+    const int endI = i;
 
-    while(i != start_i)
+    do
     {
         const sector_t *sec = &sectors[i];
 
@@ -1202,6 +1198,7 @@ void SecretSectorLookupCheat::showNext()
         if(i >= numsectors)
             i = 0;
     }
+    while(i != endI);
 }
 
 //
