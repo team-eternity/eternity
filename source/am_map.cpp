@@ -1176,26 +1176,12 @@ static void AM_moveCenterToPoint(fixed_t x, fixed_t y)
 }
 
 //
-// AM_ShowNextMobj()
+// Used by player cheat codes to find tally-relevant items. Flags may be MF_COUNTKILL or MF_COUNTITEM.
 //
-// Finds the next matching mobj that matches the flags and displays
-// it on automap
-// If automap was not open at the time of the call, it does nothing
-//
-// Passed boolean "resetseq", flags and boolean "alive"
-// If resetseq is true, the search starts from the beginning
-// Only the flags1 is taken into account, excluding flags2-5
-// If alive is true, only mobjs with non zero health are considered
-//
-// Returns nothing
-//
-void AM_ShowNextMobj(bool resetseq, int flags, bool alive)
+void AM_ShowNextMobj(int flags, bool mustBeAlive)
 {
     if(!automapactive)
         return;
-
-    if(resetseq)
-        P_ClearTarget(lastCheatLookup);
 
     const Thinker *start_th;
     Thinker       *th;
@@ -1211,7 +1197,7 @@ void AM_ShowNextMobj(bool resetseq, int flags, bool alive)
     {
         Mobj *mo = thinker_cast<Mobj *>(th);
 
-        if(mo && (!alive || mo->health > 0) && mo->flags & flags)
+        if(mo && (!mustBeAlive || mo->health > 0) && mo->flags & flags)
         {
             fixed_t mx, my;
 

@@ -63,7 +63,7 @@ class Mobj;
 void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z);
 
 struct sector_t;
-void AM_ShowNextMobj(bool resetseq, int flags, bool alive);
+void AM_ShowNextMobj(int flags, bool alive);
 void AM_ShowNextSector(bool resetseq, bool secret);
 
 struct mpoint_t

@@ -522,13 +522,13 @@ static void cheat_ddt(const void *arg)
 // Reveal monster on automap
 static void cheat_reveal_kill(const void *arg)
 {
-    AM_ShowNextMobj(false, MF_COUNTKILL, true);
+    AM_ShowNextMobj(MF_COUNTKILL, true);
 }
 
 // Reveal item on automap
 static void cheat_reveal_item(const void *arg)
 {
-    AM_ShowNextMobj(false, MF_COUNTITEM, false);
+    AM_ShowNextMobj(MF_COUNTITEM, false);
 }
 
 // Reveal secret on automap
