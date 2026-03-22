@@ -55,7 +55,7 @@ class SecretSectorLookupCheat
 {
 public:
     void showNext();
-    void levelInit() { current = 0; }
+    void levelInit() { current = -1; }
 
 private:
     int current;
