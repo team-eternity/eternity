@@ -1097,13 +1097,13 @@ void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
     }
 }
 
-static v2fixed_t AM_getMobjMapCoords(const Mobj *mo)
+static v2fixed_t AM_getMapCoords(const PointThinker &thinker)
 {
-    v2fixed_t point = { mo->x, mo->y };
+    v2fixed_t point = { thinker.x, thinker.y };
 
-    if(mapportal_overlay && mo->subsector->sector->groupid != plr->mo->groupid)
+    if(mapportal_overlay && thinker.groupid != plr->mo->groupid)
     {
-        const linkoffset_t *link = P_GetLinkOffset(mo->subsector->sector->groupid, plr->mo->groupid);
+        const linkoffset_t *link = P_GetLinkOffset(thinker.groupid, plr->mo->groupid);
 
         point.x += link->x;
         point.y += link->y;
@@ -1111,32 +1111,6 @@ static v2fixed_t AM_getMobjMapCoords(const Mobj *mo)
     return point;
 }
 
-static v2fixed_t AM_getSectorMapCoords(const sector_t &sec)
-{
-    // We can reuse the sound origin for a convenient center point
-    v2fixed_t point = { sec.soundorg.x, sec.soundorg.y };
-
-    if(mapportal_overlay && sec.groupid != plr->mo->groupid)
-    {
-        const linkoffset_t *link = P_GetLinkOffset(sec.groupid, plr->mo->groupid);
-
-        point.x += link->x;
-        point.y += link->y;
-    }
-
-    return point;
-}
-
-//
-// AM_moveCenterToPoint()
-//
-// Moves automap to the target point, turning off follow mode
-// If automap was not open at the time of the call, it does nothing
-//
-// Passed x and y coordinates
-//
-// Returns nothing
-//
 static void AM_moveCenterToPoint(v2fixed_t point)
 {
     if(!automapactive)
@@ -1189,12 +1163,8 @@ void MobjLookupCheat::showNext(type_e type)
 
         if(mo && (!mustBeAlive || mo->health > 0) && mo->flags & flags)
         {
-            const v2fixed_t point = AM_getMobjMapCoords(mo);
-
-            AM_moveCenterToPoint(point);
-
+            AM_moveCenterToPoint(AM_getMapCoords(*mo));
             P_SetTarget(&current, mo);
-
             break;
         }
 
@@ -1222,7 +1192,7 @@ void SecretSectorLookupCheat::showNext()
 
         if(P_IsSecret(sec))
         {
-            AM_moveCenterToPoint(AM_getSectorMapCoords(*sec));
+            AM_moveCenterToPoint(AM_getMapCoords(sec->soundorg));
             current = i;
             break;
         }
@@ -2397,7 +2367,7 @@ static void AM_drawThings(int colors, int colorrange)
         while(t) // for all things in that sector
         {
             // SoM: Moved thing coords to variables for linked portals
-            const v2fixed_t tpoint = AM_getMobjMapCoords(t);
+            const v2fixed_t tpoint = AM_getMapCoords(*t);
 
             // jff 1/5/98 case over doomednum of thing being drawn
             const mline_t *keyglyph  = nullptr; // shut up compiler
