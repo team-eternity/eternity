@@ -1111,36 +1111,20 @@ static v2fixed_t AM_getMobjMapCoords(const Mobj *mo)
     return point;
 }
 
-//
-// AM_getSectorMapCoords()
-//
-// Calculates sector coordinates taking into account linked portals
-// and mapportal_overlay settings
-//
-// Passed sector, x and y coordinates by reference
-// Writes coordinates of the first vertex of the sector to x and y
-//
-// Returns true if the coordinates have been successfully calculated,
-// otherwise false
-//
-static bool AM_getSectorMapCoords(const sector_t *sec, fixed_t &x, fixed_t &y)
+static v2fixed_t AM_getSectorMapCoords(const sector_t &sec)
 {
-    if(sec && sec->lines && sec->lines[0] && sec->lines[0]->v1)
+    // We can reuse the sound origin for a convenient center point
+    v2fixed_t point = { sec.soundorg.x, sec.soundorg.y };
+
+    if(mapportal_overlay && sec.groupid != plr->mo->groupid)
     {
-        x = sec->lines[0]->v1->x;
-        y = sec->lines[0]->v1->y;
+        const linkoffset_t *link = P_GetLinkOffset(sec.groupid, plr->mo->groupid);
 
-        if(mapportal_overlay && sec->groupid != plr->mo->groupid)
-        {
-            auto link  = P_GetLinkOffset(sec->groupid, plr->mo->groupid);
-            x         += link->x;
-            y         += link->y;
-        }
-
-        return true;
+        point.x += link->x;
+        point.y += link->y;
     }
 
-    return false;
+    return point;
 }
 
 //
@@ -1218,18 +1202,6 @@ void MobjLookupCheat::showNext(type_e type)
     }
 }
 
-//
-// AM_ShowNextSector()
-//
-// Finds the next matching secret and displays it on automap
-// If automap was not open at the time of the call, it does nothing
-//
-// Passed boolean "resetseq", boolean "secret"
-// If resetseq is true, the search starts from the beginning
-// If secret is true, only secret sectors are considered
-//
-// Returns nothing
-//
 void SecretSectorLookupCheat::showNext()
 {
     if(!automapactive)
@@ -1250,14 +1222,9 @@ void SecretSectorLookupCheat::showNext()
 
         if(P_IsSecret(sec))
         {
-            fixed_t sx, sy;
-
-            if(AM_getSectorMapCoords(sec, sx, sy))
-            {
-                AM_moveCenterToPoint({ sx, sy });
-                current = i;
-                break;
-            }
+            AM_moveCenterToPoint(AM_getSectorMapCoords(*sec));
+            current = i;
+            break;
         }
 
         i++;
