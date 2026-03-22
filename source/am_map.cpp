@@ -1106,17 +1106,18 @@ void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
 //
 // Returns nothing
 //
-static void AM_getMobjMapCoords(const Mobj *mo, fixed_t &x, fixed_t &y)
+static v2fixed_t AM_getMobjMapCoords(const Mobj *mo)
 {
-    x = mo->x;
-    y = mo->y;
+    v2fixed_t point = { mo->x, mo->y };
 
     if(mapportal_overlay && mo->subsector->sector->groupid != plr->mo->groupid)
     {
-        auto link  = P_GetLinkOffset(mo->subsector->sector->groupid, plr->mo->groupid);
-        x         += link->x;
-        y         += link->y;
+        const linkoffset_t *link = P_GetLinkOffset(mo->subsector->sector->groupid, plr->mo->groupid);
+
+        point.x += link->x;
+        point.y += link->y;
     }
+    return point;
 }
 
 //
@@ -1161,15 +1162,15 @@ static bool AM_getSectorMapCoords(const sector_t *sec, fixed_t &x, fixed_t &y)
 //
 // Returns nothing
 //
-static void AM_moveCenterToPoint(fixed_t x, fixed_t y)
+static void AM_moveCenterToPoint(v2fixed_t point)
 {
     if(!automapactive)
         return;
 
     followplayer = false;
 
-    m_x = M_FixedToDouble(x) - m_w / 2;
-    m_y = M_FixedToDouble(y) - m_h / 2;
+    m_x = M_FixedToDouble(point.x) - m_w / 2;
+    m_y = M_FixedToDouble(point.y) - m_h / 2;
 
     AM_changeWindowLoc();
 }
@@ -1213,10 +1214,9 @@ void MobjLookupCheat::showNext(type_e type)
 
         if(mo && (!mustBeAlive || mo->health > 0) && mo->flags & flags)
         {
-            fixed_t mx, my;
+            v2fixed_t point = AM_getMobjMapCoords(mo);
 
-            AM_getMobjMapCoords(mo, mx, my);
-            AM_moveCenterToPoint(mx, my);
+            AM_moveCenterToPoint(point);
 
             P_SetTarget(&current, mo);
 
@@ -1266,7 +1266,7 @@ void AM_ShowNextSector(bool resetseq, bool secret)
 
             if(AM_getSectorMapCoords(sec, sx, sy))
             {
-                AM_moveCenterToPoint(sx, sy);
+                AM_moveCenterToPoint({ sx, sy });
                 lastsecret = i;
                 break;
             }
@@ -2434,8 +2434,6 @@ static void AM_drawPlayers()
 //
 static void AM_drawThings(int colors, int colorrange)
 {
-    fixed_t tx, ty; // SoM: Moved thing coords to variables for linked portals
-
     // for all sectors
     for(int i = 0; i < numsectors; i++)
     {
@@ -2443,15 +2441,8 @@ static void AM_drawThings(int colors, int colorrange)
 
         while(t) // for all things in that sector
         {
-            tx = t->x;
-            ty = t->y;
-
-            if(mapportal_overlay && t->subsector->sector->groupid != plr->mo->groupid)
-            {
-                auto link  = P_GetLinkOffset(t->subsector->sector->groupid, plr->mo->groupid);
-                tx        += link->x;
-                ty        += link->y;
-            }
+            // SoM: Moved thing coords to variables for linked portals
+            const v2fixed_t tpoint = AM_getMobjMapCoords(t);
 
             // jff 1/5/98 case over doomednum of thing being drawn
             const mline_t *keyglyph  = nullptr; // shut up compiler
@@ -2494,7 +2485,7 @@ static void AM_drawThings(int colors, int colorrange)
                 }
 
                 AM_drawLineCharacter(keyglyph, (int)keysize, keyscale, keyang,
-                                     keycolour != -1 ? keycolour : mapcolor_sprt, tx, ty);
+                                     keycolour != -1 ? keycolour : mapcolor_sprt, tpoint.x, tpoint.y);
                 t = t->snext;
                 continue;
             }
@@ -2504,7 +2495,8 @@ static void AM_drawThings(int colors, int colorrange)
             if(ddt_cheating == 2)
                 AM_drawLineCharacter(thintriangle_guy, earrlen(thintriangle_guy), 16.0, t->angle,
                                      // killough 8/8/98: mark friends specially
-                                     t->flags & MF_FRIEND && !t->player ? mapcolor_frnd : mapcolor_sprt, tx, ty);
+                                     t->flags & MF_FRIEND && !t->player ? mapcolor_frnd : mapcolor_sprt, tpoint.x,
+                                     tpoint.y);
             t = t->snext;
         } // end if
     } // end for
