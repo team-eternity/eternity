@@ -297,7 +297,7 @@ static bool am_needbackscreen; // haleyjd 05/03/13
 static byte *am_backdrop    = nullptr;
 static bool  am_usebackdrop = false;
 
-static const Mobj *lastCheatLookup;
+static Mobj *lastCheatLookup;
 
 // haleyjd 08/01/09: this function is unused
 #if 0
@@ -728,6 +728,7 @@ static void AM_LevelInit()
         scale_mtof = min_scale_mtof;
     scale_ftom = 1.0 / scale_mtof;
 
+    // On level restart, the old Mobj is freed (PU_LEVEL), so no P_ClearTarget here
     lastCheatLookup = nullptr;
 }
 
@@ -1194,12 +1195,13 @@ void AM_ShowNextMobj(bool resetseq, int flags, bool alive)
         return;
 
     if(resetseq)
-        lastCheatLookup = nullptr;
+        P_ClearTarget(lastCheatLookup);
 
-    const Thinker *th, *start_th;
+    const Thinker *start_th;
+    Thinker       *th;
 
     if(lastCheatLookup)
-        start_th = th = static_cast<const Thinker *>(lastCheatLookup);
+        start_th = th = static_cast<Thinker *>(lastCheatLookup);
     else
         start_th = th = &thinkercap;
 
@@ -1207,7 +1209,7 @@ void AM_ShowNextMobj(bool resetseq, int flags, bool alive)
 
     while(th != start_th)
     {
-        const Mobj *mo = thinker_cast<const Mobj *>(th);
+        Mobj *mo = thinker_cast<Mobj *>(th);
 
         if(mo && (!alive || mo->health > 0) && mo->flags & flags)
         {
@@ -1216,7 +1218,7 @@ void AM_ShowNextMobj(bool resetseq, int flags, bool alive)
             AM_getMobjMapCoords(mo, mx, my);
             AM_moveCenterToPoint(mx, my);
 
-            lastCheatLookup = mo;
+            P_SetTarget(&lastCheatLookup, mo);
 
             break;
         }
