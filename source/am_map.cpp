@@ -94,6 +94,8 @@ int map_secret_after;
 // Antialias map drawing
 bool map_antialias;
 
+MobjLookupCheat am_mobjLookupCheat;
+
 // haleyjd 05/17/08: ability to draw node lines on map
 static bool am_drawnodelines;
 static bool am_dynasegs_bysubsec;
@@ -296,8 +298,6 @@ static bool am_needbackscreen; // haleyjd 05/03/13
 // backdrop
 static byte *am_backdrop    = nullptr;
 static bool  am_usebackdrop = false;
-
-static Mobj *lastCheatLookup;
 
 // haleyjd 08/01/09: this function is unused
 #if 0
@@ -728,8 +728,7 @@ static void AM_LevelInit()
         scale_mtof = min_scale_mtof;
     scale_ftom = 1.0 / scale_mtof;
 
-    // On level restart, the old Mobj is freed (PU_LEVEL), so no P_ClearTarget here
-    lastCheatLookup = nullptr;
+    am_mobjLookupCheat.levelInit();
 }
 
 //
@@ -1176,18 +1175,33 @@ static void AM_moveCenterToPoint(fixed_t x, fixed_t y)
 }
 
 //
-// Used by player cheat codes to find tally-relevant items. Flags may be MF_COUNTKILL or MF_COUNTITEM.
+// Used by player cheat codes to find tally-relevant objects on the map.
 //
-void AM_ShowNextMobj(int flags, bool mustBeAlive)
+void MobjLookupCheat::showNext(type_e type)
 {
     if(!automapactive)
         return;
 
+    bool     mustBeAlive;
+    unsigned flags;
+    switch(type)
+    {
+    default:
+    case kills:
+        mustBeAlive = true;
+        flags       = MF_COUNTKILL;
+        break;
+    case items:
+        mustBeAlive = false;
+        flags       = MF_COUNTITEM;
+        break;
+    }
+
     const Thinker *start_th;
     Thinker       *th;
 
-    if(lastCheatLookup)
-        start_th = th = static_cast<Thinker *>(lastCheatLookup);
+    if(current)
+        start_th = th = static_cast<Thinker *>(current);
     else
         start_th = th = &thinkercap;
 
@@ -1204,7 +1218,7 @@ void AM_ShowNextMobj(int flags, bool mustBeAlive)
             AM_getMobjMapCoords(mo, mx, my);
             AM_moveCenterToPoint(mx, my);
 
-            P_SetTarget(&lastCheatLookup, mo);
+            P_SetTarget(&current, mo);
 
             break;
         }
