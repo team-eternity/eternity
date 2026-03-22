@@ -883,7 +883,7 @@ uint32_t ACS_GetLevelProp(uint32_t var)
     case ACS_LP_FoundSecrets:   return G_TotalFoundSecrets();
     case ACS_LP_TotalItems:     return totalitems;
     case ACS_LP_FoundItems:     return G_TotalFoundItems();
-    case ACS_LP_TotalMonsters:  return totalkills;
+    case ACS_LP_TotalMonsters:  return totalmonsters;
     case ACS_LP_KilledMonsters: return G_TotalKilledMonsters();
     case ACS_LP_SuckTime:       return 1;
 
@@ -2440,6 +2440,9 @@ static Mobj *ACS_spawn(mobjtype_t type, fixed_t x, fixed_t y, fixed_t z, int tid
             mo->remove();
             return nullptr;
         }
+
+        if(demo_version >= 406)
+            P_IncrementCountKill(*mo);
 
         if(tid)
             P_AddThingTID(mo, tid);

@@ -28,6 +28,7 @@
 #include "doomstat.h"
 #include "e_weapons.h"
 #include "e_inventory.h"
+#include "g_game.h"
 #include "hu_boom.h"
 #include "m_qstr.h"
 #include "v_font.h"
@@ -117,12 +118,12 @@ void BoomHUD::DrawStatus(int x, int y)
     x += GAP;
 
     // haleyjd 06/14/06: restored original colors to K/I/S
-    tempstr << FC_RED "K " FC_GREEN << hu_player.killcount << '/' << totalkills << ' ' << FC_BLUE "I " FC_GREEN
-            << hu_player.itemcount << '/' << totalitems << ' ';
+    tempstr << FC_RED "K " FC_GREEN << totalKilledMonsters << '/' << totalmonsters << ' ' << FC_BLUE "I " FC_GREEN
+            << (GameType == gt_coop ? G_TotalFoundItems() : hu_player.itemcount) << '/' << totalitems << ' ';
 
     if(!hud_hidesecrets)
     {
-        tempstr << FC_GOLD "S " FC_GREEN << hu_player.secretcount << '/' << totalsecret;
+        tempstr << FC_GOLD "S " FC_GREEN << (GameType == gt_coop ? G_TotalFoundSecrets() : hu_player.secretcount) << '/' << totalsecret;
     }
 
     HU_WriteText(tempstr.constPtr(), x, y, m_screen);

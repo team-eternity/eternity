@@ -37,7 +37,8 @@ class ZoneHeap;
 
 void R_FinishMappingLines();
 
-void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const viewpoint_t &viewpoint, drawseg_t *ds, int x1, int x2);
+void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const v3fixed_t &viewpos, drawseg_t *ds, int x1, int x2,
+                            int heightsec);
 void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,
                       portalcontext_t &portalcontext, ZoneHeap &heap, const viewpoint_t &viewpoint,
                       const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds, const cb_seg_t &seg,
@@ -69,8 +70,6 @@ struct drawseg_t
     float       *maskedtextureskew;
 
     byte silhouette; // 0=none, 1=bottom, 2=top, 3=both
-
-    fixed_t deltaz; // z offset if seen behind anchored portals
 };
 
 #endif

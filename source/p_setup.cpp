@@ -3414,8 +3414,9 @@ static void P_ClearPlayerVars()
         players[i].attacker = nullptr;
     }
 
-    totalkills = totalitems = totalsecret = wminfo.maxfrags = 0;
-    wminfo.partime                                          = 180;
+    totalmonsters = totalitems = totalsecret = wminfo.maxfrags = 0;
+    totalKilledMonsters                                        = 0;
+    wminfo.partime                                             = 180;
 
     // Initial height of PointOfView will be set by player think.
     players[consoleplayer].viewz = players[consoleplayer].prevviewz = 1;

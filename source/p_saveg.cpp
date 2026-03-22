@@ -859,6 +859,17 @@ static void P_ArchiveWorld(SaveArchive &arc)
     line_t   *li;
     side_t   *si;
 
+    // Global world variables here
+    if(arc.saveVersion() >= 23)
+        arc << totalKilledMonsters << totalmonsters;
+    else if (arc.isLoading())
+    {
+        totalKilledMonsters = 0;
+        for(int i = 0; i < MAXPLAYERS; ++i)
+            if(playeringame[i])
+                totalKilledMonsters += players[i].killcount;
+    }
+
     // do sectors
     for(i = 0, sec = sectors; i < numsectors; ++i, ++sec)
     {

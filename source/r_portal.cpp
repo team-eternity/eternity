@@ -857,7 +857,7 @@ static void R_renderPrimitivePortal(rendercontext_t &context, pwindow_t *window)
         R_produceHorizonPlanes(context, heap, window, sector);
 
     if(window->head == window && window->poverlay)
-        R_PushPost(viewpoint, context.bspcontext, spritecontext, *context.heap, bounds, false, window);
+        R_PushPost(viewpoint, cb_viewpoint, context.bspcontext, spritecontext, *context.heap, bounds, false, window);
 
     R_restoreLastView(last, viewpoint, cb_viewpoint);
 
@@ -1072,9 +1072,9 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
         viewpoint.y                 = window->vy;
         tr.applyTo(viewpoint.x, viewpoint.y, &cb_viewpoint.x, &cb_viewpoint.y);
         viewpoint.sector = R_PointInSubsector(viewpoint.x, viewpoint.y)->sector;
-        double vz      = M_FixedToDouble(window->vz) + tr.move.z;
-        viewpoint.z    = M_DoubleToFixed(vz);
-        cb_viewpoint.z = static_cast<float>(vz);
+        double vz        = M_FixedToDouble(window->vz) + tr.move.z;
+        viewpoint.z      = M_DoubleToFixed(vz);
+        cb_viewpoint.z   = static_cast<float>(vz);
         // IMPORTANT: cast the double first to signed integer, THEN to angle. Otherwise, on 32-bit MSVC
         // at least, it will fail to convert, returning 0xFFFFFFFF instead!
         viewpoint.angle    = window->vangle + R_doubleToUint32(tr.angle * ANG180 / PI);
@@ -1089,7 +1089,7 @@ static void R_renderWorldPortal(rendercontext_t &context, pwindow_t *window)
     R_RenderBSPNode(context, numnodes - 1);
 
     // Only push the overlay if this is the head window
-    R_PushPost(viewpoint, bspcontext, spritecontext, *context.heap, bounds, true,
+    R_PushPost(viewpoint, cb_viewpoint, bspcontext, spritecontext, *context.heap, bounds, true,
                window->head == window ? window : nullptr);
 
     planecontext.floorclip   = floorcliparray;

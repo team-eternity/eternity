@@ -107,10 +107,20 @@ VALLOCATION(openings)
     g_skews    = ecalloctag(float *, w *h, sizeof(float), PU_VALLOC, nullptr);
 
     R_ForEachContext([w, h](rendercontext_t &context) {
-        context.planecontext.openings    = g_openings + context.bounds.startcolumn * h;
-        context.planecontext.lastopening = context.planecontext.openings;
-        context.planecontext.skews       = g_skews + context.bounds.startcolumn * h;
-        context.planecontext.lastskew    = context.planecontext.skews;
+        planecontext_t        &plane  = context.planecontext;
+        const contextbounds_t &bounds = context.bounds;
+
+        plane.openings.buffer    = g_openings + bounds.startcolumn * h;
+        plane.openings.bufferEnd = plane.openings.buffer + bounds.numcolumns * h;
+        plane.openings.next      = nullptr;
+        plane.curOpenings        = &plane.openings;
+        plane.lastopening        = plane.openings.buffer;
+
+        plane.skews.buffer    = g_skews + bounds.startcolumn * h;
+        plane.skews.bufferEnd = plane.skews.buffer + bounds.numcolumns * h;
+        plane.skews.next      = nullptr;
+        plane.curSkews        = &plane.skews;
+        plane.lastskew        = plane.skews.buffer;
     });
 }
 
@@ -546,8 +556,10 @@ void R_ClearPlanes(planecontext_t &context, const contextbounds_t &bounds)
 
     R_ClearPlaneHash(context.freehead, &context.mainhash);
 
-    context.lastopening = context.openings;
-    context.lastskew    = context.skews;
+    context.curOpenings = &context.openings;
+    context.curSkews    = &context.skews;
+    context.lastopening = context.openings.buffer;
+    context.lastskew    = context.skews.buffer;
 }
 
 //

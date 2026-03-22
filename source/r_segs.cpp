@@ -61,7 +61,8 @@ void R_FinishMappingLines()
 //
 // R_RenderMaskedSegRange
 //
-void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const viewpoint_t &viewpoint, drawseg_t *ds, int x1, int x2)
+void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const v3fixed_t &viewpos, drawseg_t *ds, int x1, int x2,
+                            const int heightsec)
 {
     static thread_local rendersector_t     tempsec; // killough 4/13/98
     static thread_local Surfaces<pslope_t> tempslopes;
@@ -132,9 +133,16 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const viewpoint_t &viewp
             lightnum = segclip.line->sidedef->light_base >> LIGHTSEGSHIFT;
         else
         {
-            lightnum =
-                R_FakeFlat(viewpoint, segclip.line->frontsector, &tempsec, tempslopes, nullptr, false)->lightlevel >>
-                LIGHTSEGSHIFT;
+            static thread_local viewpoint_t localViewPoint;
+            static thread_local sector_t    localSector;
+            localSector.heightsec = heightsec;
+            localViewPoint.sector = &localSector;
+            localViewPoint.x      = viewpos.x;
+            localViewPoint.y      = viewpos.y;
+            localViewPoint.z      = viewpos.z;
+            lightnum = R_FakeFlat(localViewPoint, segclip.line->frontsector, &tempsec, tempslopes, nullptr, false)
+                           ->lightlevel >>
+                       LIGHTSEGSHIFT;
             lightnum += segclip.line->sidedef->light_base >> LIGHTSEGSHIFT;
         }
         lightnum += segclip.line->sidedef->light_mid >> LIGHTSEGSHIFT;
@@ -166,17 +174,17 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, const viewpoint_t &viewp
         column.texmid = segclip.frontsec->srf.floor.height > segclip.backsec->srf.floor.height ?
                             segclip.frontsec->srf.floor.height :
                             segclip.backsec->srf.floor.height;
-        column.texmid = column.texmid + textures[texnum]->heightfrac - viewpoint.z;
+        column.texmid = column.texmid + textures[texnum]->heightfrac - viewpos.z;
     }
     else
     {
         column.texmid = segclip.frontsec->srf.ceiling.height < segclip.backsec->srf.ceiling.height ?
                             segclip.frontsec->srf.ceiling.height :
                             segclip.backsec->srf.ceiling.height;
-        column.texmid = column.texmid - viewpoint.z;
+        column.texmid = column.texmid - viewpos.z;
     }
 
-    column.texmid += segclip.line->sidedef->offset_base_y + segclip.line->sidedef->offset_mid_y - ds->deltaz;
+    column.texmid += segclip.line->sidedef->offset_base_y + segclip.line->sidedef->offset_mid_y;
 
     // SoM 10/19/02: deep water colormap fixes
     // if (fixedcolormap)
@@ -798,6 +806,27 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
     return dx ? FixedDiv(dx, finesine[(tantoangle_acc[FixedDiv(dy, dx) >> DBITS] + ANG90) >> ANGLETOFINESHIFT]) : 0;
 }
 
+static void R_checkLastPointer(ZoneHeap &heap, float **const lastPointer, const int lengthRequested,
+                               const int numColumns, renderbuffer_t **const curData)
+{
+    if(*lastPointer + lengthRequested > (*curData)->bufferEnd)
+    {
+        if(!(*curData)->next)
+        {
+            const size_t length = (*curData)->bufferEnd - (*curData)->buffer;
+
+            renderbuffer_t *const newData =
+                zhmalloctag(heap, renderbuffer_t *, sizeof(*newData) + length * sizeof(float), PU_VALLOC, nullptr);
+            newData->buffer    = reinterpret_cast<float *>(newData + 1);
+            newData->bufferEnd = newData->buffer + length;
+            newData->next      = nullptr;
+            (*curData)->next   = newData;
+        }
+        *curData     = (*curData)->next;
+        *lastPointer = (*curData)->buffer;
+    }
+}
+
 //
 // A wall segment will be drawn
 //  between start and stop pixels (inclusive).
@@ -977,7 +1006,6 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
     ds_p->diststep      = segclip.diststep;
     ds_p->colormap      = cmapcontext.scalelight;
     ds_p->fixedcolormap = cmapcontext.fixedcolormap;
-    ds_p->deltaz        = 0; // init with 0
 
     if(segclip.clipsolid)
         R_closeDSP(ds_p);
@@ -1043,10 +1071,13 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
             int    xlen;
             xlen = segclip.x2 - segclip.x1 + 1;
 
+            R_checkLastPointer(heap, &lastopening, xlen, bounds.numcolumns, &planecontext.curOpenings);
+            R_checkLastPointer(heap, &lastskew, xlen, bounds.numcolumns, &planecontext.curSkews);
+            // NOTE: even though lastopening may point to the start of a buffer, and subtracting x1 from it will
+            // undershoot, when it's time to read maskedtexturecol, it will start from [x1].
+
             ds_p->maskedtexturecol  = lastopening - segclip.x1;
             ds_p->maskedtextureskew = lastskew - segclip.x1;
-            if(portalrender.active)
-                ds_p->deltaz = viewpoint.z - portalrender.w->vz;
 
             mtc = lastopening;
             mts = lastskew;
@@ -1087,6 +1118,8 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
     {
         int xlen = segclip.x2 - segclip.x1 + 1;
 
+        R_checkLastPointer(heap, &lastopening, xlen, bounds.numcolumns, &planecontext.curOpenings);
+
         if(segclip.markflags & SEG_MARKCOVERLAY)
         {
             for(int i = xlen; i-- > 0;)
@@ -1105,6 +1138,8 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
     if((ds_p->silhouette & SIL_BOTTOM || segclip.maskedtex) && !ds_p->sprbottomclip)
     {
         int xlen = segclip.x2 - segclip.x1 + 1;
+
+        R_checkLastPointer(heap, &lastopening, xlen, bounds.numcolumns, &planecontext.curOpenings);
 
         if(segclip.markflags & SEG_MARKFOVERLAY)
         {

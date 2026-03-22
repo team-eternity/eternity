@@ -966,7 +966,7 @@ bool P_GiveBody(player_t &player, const itemeffect_t *effect, int itemamount, bo
     }
 
     // if not alwayspickup, and have more health than the max, don't pick it u.p
-    // Also if the alwayspickup flag is set and the player picks up health that 
+    // Also if the alwayspickup flag is set and the player picks up health that
     // has a maxamount less than what the player already has, do nothing.
     if(!effect->getInt("alwayspickup", 0) || player.health >= maxamount)
         return false;
@@ -1078,7 +1078,7 @@ bool P_GiveArmor(player_t &player, const itemeffect_t *effect, int itemamount, b
         return false; // don't pick up
     }
 
-    // If the alwayspickup flag is set and the player picks up armor with 
+    // If the alwayspickup flag is set and the player picks up armor with
     // a maxsaveamount lower than what the player already has, do nothing.
     if(effect->getInt("alwayspickup", 0) && player.armorpoints >= (additive ? maxsaveamount : hits))
     {
@@ -1692,6 +1692,10 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
         if(!(target->flags & MF_FRIEND))
             players->killcount++;
     }
+
+    // Have a global count so it also works for multiplayer
+    if(target->flags & MF_COUNTKILL && !(target->flags & MF_FRIEND))
+        ++totalKilledMonsters;
 
     if(target->player)
     {

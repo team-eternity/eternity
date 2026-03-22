@@ -449,6 +449,7 @@ bool  P_SetMobjState(Mobj *mobj, statenum_t state);
 Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, bool ptcl, Mobj *shooter,
                   const MetaTable *pufftype = nullptr, const Mobj *hitmobj = nullptr);
 void  P_SpawnUnknownThings();
+void  P_IncrementCountKill(const Mobj &mobj);
 Mobj *P_SpawnMapThing(mapthing_t *mt);
 bool  P_CheckMissileSpawn(Mobj *);                                                               // killough 8/2/98
 void  P_ExplodeMissile(Mobj *, const sector_t *topedgesec, const zrefs_t *slopebumpz = nullptr); // killough

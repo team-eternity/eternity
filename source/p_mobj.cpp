@@ -357,13 +357,20 @@ static bool P_checkUnmorph(Mobj &mobj)
 //
 bool P_SetMobjState(Mobj *mobj, statenum_t state)
 {
-    static int recursion;
-    ++recursion;
-
-    if(recursion >= 10000)
+    static int recursionValue;
+    class ScopedStackIncrement
     {
-        doom_printf(FC_ERROR "Warning: State Recursion Detected from %s", mobj->info->name);
-        --recursion;
+    public:
+        ScopedStackIncrement() { ++recursionValue; }
+        ~ScopedStackIncrement() { --recursionValue; }
+
+        int get() const { return recursionValue; }
+
+    } recursion;
+
+    if(recursion.get() >= 2500) // NOTE: this may need to be reduced
+    {
+        doom_printf(FC_ERROR "Warning: State Recursion Suspected from %s", mobj->info->name);
         return true;
     }
 
@@ -443,7 +450,6 @@ bool P_SetMobjState(Mobj *mobj, statenum_t state)
     if(seenstates)
         P_FreeSeenStates(seenstates);
 
-    --recursion;
     return ret;
 }
 
@@ -2843,6 +2849,13 @@ void P_SpawnUnknownThings()
     UnknownThings.clear();
 }
 
+void P_IncrementCountKill(const Mobj &mobj)
+{
+    // killough 7/20/98: exclude friends
+    if(!((mobj.flags ^ MF_COUNTKILL) & (MF_FRIEND | MF_COUNTKILL)))
+        totalmonsters++;
+}
+
 //
 // P_SpawnMapThing
 //
@@ -3099,9 +3112,7 @@ spawnit:
         mobj->updateThinker();    // transfer friendliness flag
     }
 
-    // killough 7/20/98: exclude friends
-    if(!((mobj->flags ^ MF_COUNTKILL) & (MF_FRIEND | MF_COUNTKILL)))
-        totalkills++;
+    P_IncrementCountKill(*mobj);
 
     if(mobj->flags & MF_COUNTITEM)
         totalitems++;
