@@ -534,7 +534,7 @@ static void cheat_reveal_item(const void *arg)
 // Reveal secret on automap
 static void cheat_reveal_secret(const void *arg)
 {
-    AM_ShowNextSector(false, true);
+    am_secretSectorLookupCheat.showNext();
 }
 
 // killough 2/7/98: HOM autodetection

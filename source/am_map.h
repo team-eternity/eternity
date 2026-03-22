@@ -51,6 +51,16 @@ private:
     Mobj *current;
 };
 
+class SecretSectorLookupCheat
+{
+public:
+    void showNext();
+    void levelInit() { current = 0; }
+
+private:
+    int current;
+};
+
 // Called by main loop.
 bool AM_Responder(const event_t *ev);
 
@@ -78,7 +88,6 @@ void AM_clearMarks(void);
 void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z);
 
 struct sector_t;
-void AM_ShowNextSector(bool resetseq, bool secret);
 
 struct mpoint_t
 {
@@ -138,7 +147,8 @@ extern int mapportal_overlay; // julian: changed to int
 
 extern bool map_antialias; // do antialiased line drawing
 
-extern MobjLookupCheat am_mobjLookupCheat;
+extern MobjLookupCheat         am_mobjLookupCheat;
+extern SecretSectorLookupCheat am_secretSectorLookupCheat;
 
 #endif
 

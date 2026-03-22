@@ -94,7 +94,8 @@ int map_secret_after;
 // Antialias map drawing
 bool map_antialias;
 
-MobjLookupCheat am_mobjLookupCheat;
+MobjLookupCheat         am_mobjLookupCheat;
+SecretSectorLookupCheat am_secretSectorLookupCheat;
 
 // haleyjd 05/17/08: ability to draw node lines on map
 static bool am_drawnodelines;
@@ -729,6 +730,7 @@ static void AM_LevelInit()
     scale_ftom = 1.0 / scale_mtof;
 
     am_mobjLookupCheat.levelInit();
+    am_secretSectorLookupCheat.levelInit();
 }
 
 //
@@ -1095,17 +1097,6 @@ void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
     }
 }
 
-//
-// AM_getMobjMapCoords()
-//
-// Calculates mobj coordinates taking into account linked portals
-// and mapportal_overlay settings
-//
-// Passed sector, x and y coordinates by reference
-// Writes calculated coordinates to x and y
-//
-// Returns nothing
-//
 static v2fixed_t AM_getMobjMapCoords(const Mobj *mo)
 {
     v2fixed_t point = { mo->x, mo->y };
@@ -1214,7 +1205,7 @@ void MobjLookupCheat::showNext(type_e type)
 
         if(mo && (!mustBeAlive || mo->health > 0) && mo->flags & flags)
         {
-            v2fixed_t point = AM_getMobjMapCoords(mo);
+            const v2fixed_t point = AM_getMobjMapCoords(mo);
 
             AM_moveCenterToPoint(point);
 
@@ -1239,35 +1230,32 @@ void MobjLookupCheat::showNext(type_e type)
 //
 // Returns nothing
 //
-void AM_ShowNextSector(bool resetseq, bool secret)
+void SecretSectorLookupCheat::showNext()
 {
     if(!automapactive)
         return;
 
-    static int lastsecret = -1;
-
-    if(resetseq)
-        lastsecret = -1;
-
     int i, start_i;
 
-    i = lastsecret + 1;
+    i = current + 1;
     if(i >= numsectors)
         i = 0;
     start_i = i++;
+    if(i >= numsectors)
+        i = 0;
 
     while(i != start_i)
     {
-        sector_t *sec = &sectors[i];
+        const sector_t *sec = &sectors[i];
 
-        if(!secret || P_IsSecret(sec))
+        if(P_IsSecret(sec))
         {
             fixed_t sx, sy;
 
             if(AM_getSectorMapCoords(sec, sx, sy))
             {
                 AM_moveCenterToPoint({ sx, sy });
-                lastsecret = i;
+                current = i;
                 break;
             }
         }
