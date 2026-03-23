@@ -869,18 +869,26 @@ bool ACS_CF_GetCVarString(ACS_CF_ARGS)
     return false;
 }
 
+static ScriptableInventoryItem getScriptableItem(const char *itemname)
+{
+    itemeffect_t *item = E_ItemEffectForName(itemname);
+    if(item)
+        return item;
+    return E_StrToNumLinear(powerStrings, NUMPOWERS, itemname);
+}
+
 //
 // int CheckInventory(str itemname);
 //
 bool ACS_CF_CheckInventory(ACS_CF_ARGS)
 {
-    auto          info     = &static_cast<ACSThread *>(thread)->info;
-    char const   *itemname = thread->scopeMap->getString(argV[0])->str;
-    itemeffect_t *item     = E_ItemEffectForName(itemname);
-    const int     powernum = E_StrToNumLinear(powerStrings, NUMPOWERS, itemname);
+    auto        info     = &static_cast<ACSThread *>(thread)->info;
+    char const *itemname = thread->scopeMap->getString(argV[0])->str;
+
+    ScriptableInventoryItem item = getScriptableItem(itemname);
 
     // If the item doesn't exist as an item or a power, complain
-    if(!item && powernum == NUMPOWERS)
+    if(!P_IsValid(item))
     {
         doom_printf("ACS_CF_CheckInventory: Inventory item '%s' not found\a\n", itemname);
         thread->dataStk.push(0);
@@ -890,7 +898,7 @@ bool ACS_CF_CheckInventory(ACS_CF_ARGS)
     if(!info->mo || !info->mo->player)
         thread->dataStk.push(0);
     else
-        thread->dataStk.push(P_CheckInventory(info->mo->player, item, powernum));
+        thread->dataStk.push(P_CheckInventory(info->mo->player, item));
 
     return false;
 }
@@ -2688,14 +2696,14 @@ bool ACS_CF_StopSound(ACS_CF_ARGS)
 //
 bool ACS_CF_GiveInventory(ACS_CF_ARGS)
 {
-    const auto          info     = &static_cast<ACSThread *>(thread)->info;
-    char const         *itemname = thread->scopeMap->getString(argV[0])->str;
-    const int           amount   = argV[1];
-    itemeffect_t *const item     = E_ItemEffectForName(itemname);
-    const int           powernum = E_StrToNumLinear(powerStrings, NUMPOWERS, itemname);
+    const auto  info     = &static_cast<ACSThread *>(thread)->info;
+    char const *itemname = thread->scopeMap->getString(argV[0])->str;
+    const int   amount   = argV[1];
+
+    ScriptableInventoryItem item = getScriptableItem(itemname);
 
     // If the item doesn't exist as an item or a power, complain
-    if(!item && powernum == NUMPOWERS)
+    if(!P_IsValid(item))
     {
         doom_printf("ACS_CF_GiveInventory: Inventory item '%s' not found\a\n", itemname);
         return false;
@@ -2710,14 +2718,14 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
     {
         // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
         if(info->mo->player)
-            P_GiveInventory(info->mo->player, item, amount, powernum);
+            P_GiveInventory(info->mo->player, item, amount);
     }
     else
     {
         for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
         {
             if(playeringame[pnum])
-                P_GiveInventory(&players[pnum], item, amount, powernum);
+                P_GiveInventory(&players[pnum], item, amount);
         }
     }
     return false;
@@ -3157,4 +3165,3 @@ bool ACS_CF_TagWait(ACS_CF_ARGS)
 }
 
 // EOF
-

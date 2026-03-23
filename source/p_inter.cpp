@@ -491,90 +491,140 @@ static bool P_giveWeapon(player_t &player, const itemeffect_t *giver, bool dropp
 }
 
 //
+// P_GiveWeaponByGiver
+//
+// Give the player a weapon and ammo based on a weapongiver itemeffect
+// Skill levels affect how much ammo is given
+//
+static bool P_giveWeaponByGiver(player_t &player, const itemeffect_t *giver, bool ignoreskill, int itemamount,
+                                bool givemax)
+{
+    bool result = false;
+
+    weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
+    if(!wp)
+    {
+        doom_printf(FC_ERROR "Invalid weaponinfo given in weapongiver: '%s'\a\n", giver->getKey());
+        return false;
+    }
+
+    // Give weapon
+    E_GiveWeapon(player, wp);
+
+    // Give ammo
+    itemeffect_t *ammogiven = nullptr;
+    while((ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
+    {
+        itemeffect_t *ammo = nullptr;
+
+        if(!(ammo = E_ItemEffectForName(ammogiven->getString("type", ""))))
+        {
+            doom_printf(FC_ERROR "Invalid ammo type given in weapongiver: '%s'\a\n", giver->getKey());
+            return false;
+        }
+
+        if(givemax)
+        {
+            result |= E_GiveInventoryItem(player, ammo, 1, true);
+            continue;
+        }
+
+        int giveammo = ammogiven->getInt("ammo.give", -1) * itemamount;
+
+        // apply ammo multiplier for baby/nightmare skill
+        if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
+            giveammo = static_cast<int>(floor(giveammo * GameModeInfo->skillAmmoMultiplier));
+
+        result |= giveammo ? E_GiveInventoryItem(player, ammo, giveammo) : false;
+    }
+
+    return result;
+}
+
+//
 // P_GiveInventory
 //
 // Gives the player an inventory item or power directly
 // Negative itemamount means give max
 //
-bool P_GiveInventory(player_t *player, itemeffect_t *item, const int itemamount, const int power)
+bool P_GiveInventory(player_t *player, const ScriptableInventoryItem &iitem, const int itemamount)
 {
-    if(!player || (!item && power == NUMPOWERS))
+    if(!player || !P_IsValid(iitem))
         return false;
 
     const bool givemax = itemamount < 0;
 
-    if(power != NUMPOWERS)
+    if(const int *power = std::get_if<int>(&iitem))
     {
         // Give power directly with amount as duration in tics
         // If givemax is true, give infinite power
-        P_GivePower(*player, power, itemamount, givemax, true);
+        P_GivePower(*player, *power, itemamount, givemax, true);
     }
-    else
+
+    // Give item based on its class and properties
+    const itemeffect_t *item = std::get<itemeffect_t *>(iitem);
+    switch(item->getInt("class", ITEMFX_NONE))
     {
-        // Give item based on its class and properties
-        switch(item->getInt("class", ITEMFX_NONE))
+        // If health, give healthamount * itemamount, as usually
+        // If givemax is true, set maxamount of health item
+    case ITEMFX_HEALTH:
+        P_GiveBody(*player, item, itemamount, givemax);
+        break;
+
+        // If armor, give saveamount * itemamount, as usually
+        // If givemax is true, set maxsaveamount of armor item
+    case ITEMFX_ARMOR:
+        P_GiveArmor(*player, item, itemamount, givemax);
+        break;
+
+        // If ammo, give ammoamount * itemamount, skill levels affect how much is given
+        // If givemax is true, give max ammo of ammo type
+    case ITEMFX_AMMO:
+        P_GiveAmmoPickup(*player, item, false, 0, itemamount, givemax);
+        break;
+
+        // If power artifact, give duration * itemamount
+        // If power artifact is not additive, amount is igored and power has fixed duration
+        // If givemax is true, give infinite power
+    case ITEMFX_POWER:
+        P_GivePowerForItem(*player, item, itemamount, givemax);
+        break;
+
+        // If weapon giver, give the weapon and ammo * itemamount
+        // Skill levels affect how much ammo is given
+        // If givemax is true, give max ammo of ammo types
+    case ITEMFX_WEAPONGIVER:
+        P_giveWeaponByGiver(*player, item, false, itemamount, givemax);
+        break;
+
+        // If another artifact, just give it to the player
+        // If givemax is true, give max amount of the item
+    default:
+        E_GiveInventoryItem(*player, item, itemamount, givemax);
+
+        // If backpack, give backpack ammo as well
+        // If itemamount < -1, give full ammo for all ammo types
+        // If itemamount = -1, do not give any ammo, only give backpack
+        // If itemamount > 0, give backpack ammo * itemamount
+        if(strcmp(item->getKey(), ARTI_BACKPACKITEM) == 0)
         {
-            // If health, give healthamount * itemamount, as usually
-            // If givemax is true, set maxamount of health item
-        case ITEMFX_HEALTH:
-            P_GiveBody(*player, item, itemamount, givemax);
-            break;
-
-            // If armor, give saveamount * itemamount, as usually
-            // If givemax is true, set maxsaveamount of armor item
-        case ITEMFX_ARMOR:
-            P_GiveArmor(*player, item, itemamount, givemax);
-            break;
-
-            // If ammo, give ammoamount * itemamount, skill levels affect how much is given
-            // If givemax is true, give max ammo of ammo type
-        case ITEMFX_AMMO:
-            P_GiveAmmoPickup(*player, item, false, 0, itemamount, givemax);
-            break;
-
-            // If power artifact, give duration * itemamount
-            // If power artifact is not additive, amount is igored and power has fixed duration
-            // If givemax is true, give infinite power
-        case ITEMFX_POWER:
-            P_GivePowerForItem(*player, item, itemamount, givemax);
-            break;
-
-            // If weapon giver, give the weapon and ammo * itemamount
-            // Skill levels affect how much ammo is given
-            // If givemax is true, give max ammo of ammo types
-        case ITEMFX_WEAPONGIVER:
-            P_GiveWeaponByGiver(*player, item, false, itemamount, givemax);
-            break;
-
-            // If another artifact, just give it to the player
-            // If givemax is true, give max amount of the item
-        default:
-            E_GiveInventoryItem(*player, item, itemamount, givemax);
-
-            // If backpack, give backpack ammo as well
-            // If itemamount < -1, give full ammo for all ammo types
-            // If itemamount = -1, do not give any ammo, only give backpack
-            // If itemamount > 0, give backpack ammo * itemamount
-            if(strcmp(item->getKey(), ARTI_BACKPACKITEM) == 0)
+            if(itemamount < -1)
             {
-                if(itemamount < -1)
-                {
-                    size_t numAmmo = E_GetNumAmmoTypes();
+                size_t numAmmo = E_GetNumAmmoTypes();
 
-                    for(size_t i = 0; i < numAmmo; i++)
-                    {
-                        auto ammo = E_AmmoTypeForIndex(i);
-                        E_GiveInventoryItem(*player, ammo, 1, true);
-                    }
-                }
-                else if(itemamount > 0)
+                for(size_t i = 0; i < numAmmo; i++)
                 {
-                    P_giveBackpackAmmo(*player, itemamount);
+                    auto ammo = E_AmmoTypeForIndex(i);
+                    E_GiveInventoryItem(*player, ammo, 1, true);
                 }
             }
-
-            break;
+            else if(itemamount > 0)
+            {
+                P_giveBackpackAmmo(*player, itemamount);
+            }
         }
+
+        break;
     }
 
     return true;
@@ -661,14 +711,27 @@ bool P_TakeInventory(player_t *player, itemeffect_t *item, const int itemamount,
     return true;
 }
 
+bool P_IsValid(const ScriptableInventoryItem &item)
+{
+    return std::visit(
+        [](auto &&arg) {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr(std::is_same_v<T, itemeffect_t *>)
+                return !!arg;
+            if constexpr(std::is_same_v<T, int>)
+                return arg != NUMPOWERS;
+        },
+        item);
+}
+
 //
 // P_CheckInventory
 //
 // Checks the player inventory for an item or power directly
 //
-int P_CheckInventory(player_t *player, itemeffect_t *item, const int power)
+int P_CheckInventory(player_t *player, const ScriptableInventoryItem &iitem)
 {
-    if(!player || (!item && power == NUMPOWERS))
+    if(!player || !P_IsValid(iitem))
         return 0;
 
     auto checkPower = [](player_t *player, int power) -> int {
@@ -677,52 +740,52 @@ int P_CheckInventory(player_t *player, itemeffect_t *item, const int power)
                    player->powers[power].tics;
     };
 
-    if(power != NUMPOWERS)
+    if(const int *power = std::get_if<int>(&iitem))
     {
         // Check power directly
-        return checkPower(player, power);
+        return checkPower(player, *power);
     }
-    else
+
+    const itemeffect_t *item = std::get<itemeffect_t *>(iitem);
+
+    int           powerNum;
+    const char   *powerStr;
+    itemeffect_t *wp;
+
+    // Check item based on its class and properties
+    switch(item->getInt("class", ITEMFX_NONE))
     {
-        int           powerNum;
-        const char   *powerStr;
-        itemeffect_t *wp;
+        // If health, return player current health
+    case ITEMFX_HEALTH:
+        return player->health;
 
-        // Check item based on its class and properties
-        switch(item->getInt("class", ITEMFX_NONE))
-        {
-            // If health, return player current health
-        case ITEMFX_HEALTH:
-            return player->health;
+        // If armor, return player current armor
+    case ITEMFX_ARMOR:
+        return player->armorpoints;
 
-            // If armor, return player current armor
-        case ITEMFX_ARMOR:
-            return player->armorpoints;
+        // If ammo, return current ammo amount for the ammo type designated
+    case ITEMFX_AMMO:
+        return E_GetItemOwnedAmount(*player, E_ItemEffectForName(item->getString("ammo", "")));
 
-            // If ammo, return current ammo amount for the ammo type designated
-        case ITEMFX_AMMO:
-            return E_GetItemOwnedAmount(*player, E_ItemEffectForName(item->getString("ammo", "")));
+        // If power artifact, return remaining duration
+        // If power is infinite or strength, return -1
+    case ITEMFX_POWER:
+        powerStr = item->getString("type", "");
+        if(!powerStr || !strcmp(powerStr, ""))
+            return 0; // There hasn't been a designated power type
+        if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
+            return 0; // There's no power for the type provided
 
-            // If power artifact, return remaining duration
-            // If power is infinite or strength, return -1
-        case ITEMFX_POWER:
-            powerStr = item->getString("type", "");
-            if(!powerStr || !strcmp(powerStr, ""))
-                return 0; // There hasn't been a designated power type
-            if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
-                return 0; // There's no power for the type provided
+        // If the power is infinite, return -1, otherwise return remaining tics
+        return checkPower(player, powerNum);
 
-            // If the power is infinite, return -1, otherwise return remaining tics
-            return checkPower(player, powerNum);
+        // If weapon giver, return current weapon amount for the weapon designated
+    case ITEMFX_WEAPONGIVER:
+        wp = E_ItemEffectForName(item->getString("weapon", ""));
+        return wp ? E_GetItemOwnedAmount(*player, wp) : 0;
 
-            // If weapon giver, return current weapon amount for the weapon designated
-        case ITEMFX_WEAPONGIVER:
-            wp = E_ItemEffectForName(item->getString("weapon", ""));
-            return wp ? E_GetItemOwnedAmount(*player, wp) : 0;
-
-            // If another artifact, return current amount owned
-        default: return E_GetItemOwnedAmount(*player, item);
-        }
+        // If another artifact, return current amount owned
+    default: return E_GetItemOwnedAmount(*player, item);
     }
 }
 
@@ -838,56 +901,6 @@ int P_GetMaxInventory(player_t *player, itemeffect_t *item, const int power)
     }
 
     return true;
-}
-
-//
-// P_GiveWeaponByGiver
-//
-// Give the player a weapon and ammo based on a weapongiver itemeffect
-// Skill levels affect how much ammo is given
-//
-bool P_GiveWeaponByGiver(player_t &player, itemeffect_t *giver, bool ignoreskill, int itemamount, bool givemax)
-{
-    bool result = false;
-
-    weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
-    if(!wp)
-    {
-        doom_printf(FC_ERROR "Invalid weaponinfo given in weapongiver: '%s'\a\n", giver->getKey());
-        return false;
-    }
-
-    // Give weapon
-    E_GiveWeapon(player, wp);
-
-    // Give ammo
-    itemeffect_t *ammogiven = nullptr;
-    while((ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
-    {
-        itemeffect_t *ammo = nullptr;
-
-        if(!(ammo = E_ItemEffectForName(ammogiven->getString("type", ""))))
-        {
-            doom_printf(FC_ERROR "Invalid ammo type given in weapongiver: '%s'\a\n", giver->getKey());
-            return false;
-        }
-
-        if(givemax)
-        {
-            result |= E_GiveInventoryItem(player, ammo, 1, true);
-            continue;
-        }
-
-        int giveammo = ammogiven->getInt("ammo.give", -1) * itemamount;
-
-        // apply ammo multiplier for baby/nightmare skill
-        if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
-            giveammo = static_cast<int>(floor(giveammo * GameModeInfo->skillAmmoMultiplier));
-
-        result |= giveammo ? E_GiveInventoryItem(player, ammo, giveammo) : false;
-    }
-
-    return result;
 }
 
 //
@@ -2998,4 +3011,3 @@ AMX_NATIVE_INFO pinter_Natives[] = {
 // Lee's Jan 19 sources
 //
 //----------------------------------------------------------------------------
-

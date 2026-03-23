@@ -26,12 +26,15 @@
 #ifndef P_INTER_H__
 #define P_INTER_H__
 
+#include <variant>
+
 struct emodmorph_t;
 struct player_t;
 class Mobj;
 class MetaTable;
 
-using itemeffect_t = MetaTable;
+using itemeffect_t            = MetaTable;
+using ScriptableInventoryItem = std::variant<itemeffect_t *, int>;
 
 // follow a player exlusively for 3 seconds
 static constexpr int16_t BASETHRESHOLD = 100;
@@ -42,15 +45,14 @@ enum
     LESSER_GOD_BREACH_DAMAGE = 1000,  // this one bypasses less cases but is there (P_DamageMobj)
 };
 
-bool P_GiveInventory(player_t *player, itemeffect_t *item, const int itemamount = 1, const int power = NUMPOWERS);
+bool P_IsValid(const ScriptableInventoryItem &item);
+bool P_GiveInventory(player_t *player, const ScriptableInventoryItem &item, int itemamount);
 bool P_TakeInventory(player_t *player, itemeffect_t *item, const int itemamount = 1, const int power = NUMPOWERS);
-int  P_CheckInventory(player_t *player, itemeffect_t *item, const int power = NUMPOWERS);
+int  P_CheckInventory(player_t *player, const ScriptableInventoryItem &item);
 bool P_ClearInventory(player_t *player);
 bool P_UseInventory(player_t *player, itemeffect_t *item);
 int  P_GetMaxInventory(player_t *player, itemeffect_t *item, const int power = NUMPOWERS);
 
-bool P_GiveWeaponByGiver(player_t &player, itemeffect_t *giver, bool ignoreskill, int itemamount = 1,
-                         bool givemax = false);
 bool P_TakeWeaponByGiver(player_t &player, itemeffect_t *giver, bool ignoreskill, int itemamount = 1);
 
 bool P_GiveAmmoPickup(player_t &, const itemeffect_t *, bool, int, int itemamount = 1, bool givemax = false);
