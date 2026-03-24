@@ -33,8 +33,8 @@ struct player_t;
 class Mobj;
 class MetaTable;
 
-using itemeffect_t          = MetaTable;
-using ScriptedInventoryItem = std::variant<itemeffect_t *, int>;
+using itemeffect_t = MetaTable;
+using ScriptedItem = std::variant<itemeffect_t *, int>;
 
 // follow a player exlusively for 3 seconds
 static constexpr int16_t BASETHRESHOLD = 100;
@@ -45,13 +45,13 @@ enum
     LESSER_GOD_BREACH_DAMAGE = 1000,  // this one bypasses less cases but is there (P_DamageMobj)
 };
 
-bool P_IsValid(const ScriptedInventoryItem &item);
-bool P_GiveInventory(player_t *player, const ScriptedInventoryItem &item, int itemamount);
-bool P_TakeInventory(player_t *player, const ScriptedInventoryItem &item, int itemamount);
-int  P_CheckInventory(player_t *player, const ScriptedInventoryItem &item);
+bool P_IsValid(const ScriptedItem &item);
+bool P_GiveInventory(player_t *player, const ScriptedItem &item, int itemamount);
+bool P_TakeInventory(player_t *player, const ScriptedItem &item, int itemamount);
+int  P_CheckInventory(player_t *player, const ScriptedItem &item);
 bool P_ClearInventory(player_t *player);
 bool P_UseInventory(player_t *player, itemeffect_t *item);
-int  P_GetMaxInventory(player_t *player, const ScriptedInventoryItem &item);
+int  P_GetMaxInventory(player_t *player, const ScriptedItem &item);
 
 bool P_GiveAmmoPickup(player_t &, const itemeffect_t *, bool, int, int itemamount = 1, bool givemax = false);
 bool P_TakeAmmoPickup(player_t &, const itemeffect_t *, int itemamount = 1);

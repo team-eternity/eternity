@@ -869,7 +869,7 @@ bool ACS_CF_GetCVarString(ACS_CF_ARGS)
     return false;
 }
 
-static ScriptedInventoryItem getScriptedItem(const char *itemname)
+static ScriptedItem getScriptedItem(const char *itemname)
 {
     itemeffect_t *item = E_ItemEffectForName(itemname);
     if(item)
@@ -885,7 +885,7 @@ bool ACS_CF_CheckInventory(ACS_CF_ARGS)
     auto        info     = &static_cast<ACSThread *>(thread)->info;
     char const *itemname = thread->scopeMap->getString(argV[0])->str;
 
-    ScriptedInventoryItem item = getScriptedItem(itemname);
+    ScriptedItem item = getScriptedItem(itemname);
 
     // If the item doesn't exist as an item or a power, complain
     if(!P_IsValid(item))
@@ -2700,7 +2700,7 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
     char const *itemname = thread->scopeMap->getString(argV[0])->str;
     const int   amount   = argV[1];
 
-    ScriptedInventoryItem item = getScriptedItem(itemname);
+    ScriptedItem item = getScriptedItem(itemname);
 
     // If the item doesn't exist as an item or a power, complain
     if(!P_IsValid(item))
@@ -2736,10 +2736,10 @@ bool ACS_CF_GiveInventory(ACS_CF_ARGS)
 //
 bool ACS_CF_TakeInventory(ACS_CF_ARGS)
 {
-    const auto            info     = &static_cast<ACSThread *>(thread)->info;
-    char const           *itemname = thread->scopeMap->getString(argV[0])->str;
-    const int             amount   = argV[1];
-    ScriptedInventoryItem item     = getScriptedItem(itemname);
+    const auto   info     = &static_cast<ACSThread *>(thread)->info;
+    char const  *itemname = thread->scopeMap->getString(argV[0])->str;
+    const int    amount   = argV[1];
+    ScriptedItem item     = getScriptedItem(itemname);
 
     // If the item doesn't exist as an item or a power, complain
     if(!P_IsValid(item))
@@ -2830,7 +2830,7 @@ bool ACS_CF_GetMaxInventory(ACS_CF_ARGS)
     Mobj       *mo       = P_FindMobjFromTID(tid, nullptr, info->mo);
     char const *itemname = thread->scopeMap->getString(argV[1])->str;
 
-    ScriptedInventoryItem item = getScriptedItem(itemname);
+    ScriptedItem item = getScriptedItem(itemname);
 
     // If the item doesn't exist as an item or a power, complain
     if(!P_IsValid(item))
